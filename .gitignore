@@ -1,0 +1,14 @@
+SillyTavern/
+tools/node_modules/
+logs/
+backups/
+跑团资料/安装前设置.json
+node_modules/
+dist/
+AI检查包/
+AI检查包.zip
+tests/fixtures/private/
+**/secrets.json
+**/.env
+**/.env.*
+*.log

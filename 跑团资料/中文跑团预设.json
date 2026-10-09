@@ -1,0 +1,313 @@
+{
+  "preset_settings_openai": "Default",
+  "temp_openai": 0.8,
+  "freq_pen_openai": 0,
+  "pres_pen_openai": 0,
+  "top_p_openai": 1,
+  "top_k_openai": 0,
+  "min_p_openai": 0,
+  "top_a_openai": 0,
+  "repetition_penalty_openai": 1,
+  "stream_openai": true,
+  "openai_max_context": 65536,
+  "openai_max_tokens": 1800,
+  "prompts": [
+    {
+      "name": "Main Prompt",
+      "system_prompt": true,
+      "role": "system",
+      "content": "你是中文开放世界跑团主持人。依据角色定义、世界书和持久账本主持；公平裁定，尊重玩家意图。使用可用工具实际更新状态和重要记忆，不能只口头宣称执行了操作。",
+      "identifier": "main"
+    },
+    {
+      "name": "Auxiliary Prompt",
+      "system_prompt": true,
+      "role": "system",
+      "content": "",
+      "identifier": "nsfw"
+    },
+    {
+      "identifier": "dialogueExamples",
+      "name": "Chat Examples",
+      "system_prompt": true,
+      "marker": true
+    },
+    {
+      "name": "Post-History Instructions",
+      "system_prompt": true,
+      "role": "system",
+      "content": "回答前核对账本与相关长期记忆。不要重置熟人的态度，不要把承诺写成履行。交易、施法与旅行必须实际记账。只叙述玩家这次明确行动的结果，不擅自换位置或安排下一步。只有已有可见、可听或传话渠道，其他NPC才知道屋内行动。重要新经历用记忆工具存储。叙述用简体中文。",
+      "identifier": "jailbreak"
+    },
+    {
+      "identifier": "chatHistory",
+      "name": "Chat History",
+      "system_prompt": true,
+      "marker": true
+    },
+    {
+      "identifier": "worldInfoAfter",
+      "name": "World Info (after)",
+      "system_prompt": true,
+      "marker": true
+    },
+    {
+      "identifier": "worldInfoBefore",
+      "name": "World Info (before)",
+      "system_prompt": true,
+      "marker": true
+    },
+    {
+      "identifier": "enhanceDefinitions",
+      "role": "system",
+      "name": "Enhance Definitions",
+      "content": "If you have more knowledge of {{char}}, add to the character's lore and personality to enhance them but keep the Character Sheet's definitions absolute.",
+      "system_prompt": true,
+      "marker": false
+    },
+    {
+      "identifier": "charDescription",
+      "name": "Char Description",
+      "system_prompt": true,
+      "marker": true
+    },
+    {
+      "identifier": "charPersonality",
+      "name": "Char Personality",
+      "system_prompt": true,
+      "marker": true
+    },
+    {
+      "identifier": "scenario",
+      "name": "Scenario",
+      "system_prompt": true,
+      "marker": true
+    },
+    {
+      "identifier": "personaDescription",
+      "name": "Persona Description",
+      "system_prompt": true,
+      "marker": true
+    }
+  ],
+  "prompt_order": [
+    {
+      "character_id": 100000,
+      "order": [
+        {
+          "identifier": "main",
+          "enabled": true
+        },
+        {
+          "identifier": "worldInfoBefore",
+          "enabled": true
+        },
+        {
+          "identifier": "charDescription",
+          "enabled": true
+        },
+        {
+          "identifier": "charPersonality",
+          "enabled": true
+        },
+        {
+          "identifier": "scenario",
+          "enabled": true
+        },
+        {
+          "identifier": "enhanceDefinitions",
+          "enabled": false
+        },
+        {
+          "identifier": "nsfw",
+          "enabled": true
+        },
+        {
+          "identifier": "worldInfoAfter",
+          "enabled": true
+        },
+        {
+          "identifier": "dialogueExamples",
+          "enabled": true
+        },
+        {
+          "identifier": "chatHistory",
+          "enabled": true
+        },
+        {
+          "identifier": "jailbreak",
+          "enabled": true
+        }
+      ]
+    },
+    {
+      "character_id": 100001,
+      "order": [
+        {
+          "identifier": "main",
+          "enabled": true
+        },
+        {
+          "identifier": "worldInfoBefore",
+          "enabled": true
+        },
+        {
+          "identifier": "personaDescription",
+          "enabled": true
+        },
+        {
+          "identifier": "charDescription",
+          "enabled": true
+        },
+        {
+          "identifier": "charPersonality",
+          "enabled": true
+        },
+        {
+          "identifier": "scenario",
+          "enabled": true
+        },
+        {
+          "identifier": "enhanceDefinitions",
+          "enabled": false
+        },
+        {
+          "identifier": "nsfw",
+          "enabled": true
+        },
+        {
+          "identifier": "worldInfoAfter",
+          "enabled": true
+        },
+        {
+          "identifier": "dialogueExamples",
+          "enabled": true
+        },
+        {
+          "identifier": "chatHistory",
+          "enabled": true
+        },
+        {
+          "identifier": "jailbreak",
+          "enabled": true
+        }
+      ]
+    }
+  ],
+  "send_if_empty": "请根据当前场景继续，保留我的行动空间。",
+  "impersonation_prompt": "[Write your next reply from the point of view of {{user}}, using the chat history so far as a guideline for the writing style of {{user}}. Write 1 reply only in internet RP style. Don't write as {{char}} or system. Don't describe actions of {{char}}.]",
+  "new_chat_prompt": "[开始新的中文战役]",
+  "new_group_chat_prompt": "[Start a new group chat. Group members: {{group}}]",
+  "new_example_chat_prompt": "[主持示例]",
+  "continue_nudge_prompt": "继续未完成的叙述，不替玩家行动，不重复已提交的交易。",
+  "bias_preset_selected": "Default (none)",
+  "bias_presets": {
+    "Default (none)": [],
+    "Anti-bond": [
+      {
+        "id": "22154f79-dd98-41bc-8e34-87015d6a0eaf",
+        "text": " bond",
+        "value": -50
+      },
+      {
+        "id": "8ad2d5c4-d8ef-49e4-bc5e-13e7f4690e0f",
+        "text": " future",
+        "value": -50
+      },
+      {
+        "id": "52a4b280-0956-4940-ac52-4111f83e4046",
+        "text": " bonding",
+        "value": -50
+      },
+      {
+        "id": "e63037c7-c9d1-4724-ab2d-7756008b433b",
+        "text": " connection",
+        "value": -25
+      }
+    ]
+  },
+  "wi_format": "{0}",
+  "group_nudge_prompt": "[Write the next reply only as {{char}}.]",
+  "scenario_format": "{{scenario}}",
+  "personality_format": "{{personality}}",
+  "sort_models": "alphabetically",
+  "group_models": false,
+  "openai_model": "gpt-4-turbo",
+  "claude_model": "claude-sonnet-5",
+  "google_model": "gemini-3.7-flash",
+  "vertexai_model": "gemini-3.7-flash",
+  "ai21_model": "jamba-large",
+  "mistralai_model": "mistral-large-latest",
+  "cohere_model": "command-r-plus",
+  "perplexity_model": "sonar-pro",
+  "groq_model": "llama-3.3-70b-versatile",
+  "chutes_model": "deepseek-ai/DeepSeek-V3-0324",
+  "siliconflow_model": "deepseek-ai/DeepSeek-V3",
+  "siliconflow_endpoint": "global",
+  "minimax_model": "MiniMax-M2.7",
+  "minimax_endpoint": "global",
+  "electronhub_model": "gpt-4o-mini",
+  "nanogpt_model": "gpt-4o-mini",
+  "nanogpt_provider": "",
+  "nanogpt_payg_override": false,
+  "deepseek_model": "deepseek-flash",
+  "aimlapi_model": "chatgpt-4o-latest",
+  "xai_model": "grok-3-beta",
+  "pollinations_model": "openai",
+  "pollinations_endpoint": "authenticated",
+  "cometapi_model": "gpt-4o",
+  "moonshot_model": "kimi-latest",
+  "fireworks_model": "accounts/fireworks/models/kimi-k2-instruct",
+  "zai_model": "glm-4.6",
+  "zai_endpoint": "common",
+  "workers_ai_model": "@cf/meta/llama-3.3-70b-instruct-fp8-fast",
+  "workers_ai_account_id": "",
+  "azure_base_url": "",
+  "azure_deployment_name": "",
+  "azure_api_version": "2024-02-15-preview",
+  "azure_openai_model": "",
+  "custom_model": "",
+  "custom_url": "",
+  "custom_include_body": "",
+  "custom_exclude_body": "",
+  "custom_include_headers": "",
+  "openrouter_model": "OR_Website",
+  "openrouter_use_fallback": false,
+  "openrouter_providers": [],
+  "openrouter_quantizations": [],
+  "openrouter_allow_fallbacks": true,
+  "openrouter_middleout": "on",
+  "tool_reasoning_mode": "disabled",
+  "reverse_proxy": "",
+  "chat_completion_source": "deepseek",
+  "max_context_unlocked": false,
+  "show_external_models": false,
+  "proxy_password": "",
+  "assistant_prefill": "",
+  "assistant_impersonation": "",
+  "use_sysprompt": false,
+  "vertexai_auth_mode": "express",
+  "vertexai_region": "us-central1",
+  "vertexai_express_project_id": "",
+  "squash_system_messages": false,
+  "media_inlining": true,
+  "inline_image_quality": "auto",
+  "bypass_status_check": false,
+  "continue_prefill": false,
+  "function_calling": true,
+  "tool_call_recurse_limit": 5,
+  "names_behavior": 0,
+  "continue_postfix": " ",
+  "custom_prompt_post_processing": "",
+  "show_thoughts": false,
+  "reasoning_effort": "low",
+  "verbosity": "auto",
+  "enable_web_search": false,
+  "request_images": false,
+  "request_image_aspect_ratio": "",
+  "request_image_resolution": "",
+  "seed": -1,
+  "n": 1,
+  "bind_preset_to_connection": true,
+  "extensions": {}
+}
