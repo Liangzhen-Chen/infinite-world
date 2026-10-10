@@ -153,6 +153,7 @@ export function highWildlifeFoundation(){
         const template=regions[h][8],drops=material?[{item:{hide:'item_rawhide',resin:'item_resin',fish:'item_fish'}[material],amount:units}]:[];
         const possible=['草食','肉食','杂食'].includes(diet),food=diet==='草食'?'item_oats':diet==='肉食'?'item_fish':'item_ration';
         return{id:`monster_${slug}`,name,aliases:[],template,levelRange:[lo,hi],habitatTags:[habitats[h].name],grouping,diet,bodyMassKg,drops,
+            territoriality:diet==='肉食'?'守护巢区与固定伏猎点，接近时先示警，退离后不持续追逐':diet==='土壤养分'||diet==='腐木'?'依附湿土或腐木，触动根体才防御，不追赶远离者':'以食源与休息处为活动中心，受惊时让路，围堵幼体时防御',
             intelligence:1,taming:{possible,conditions:possible?['需要相称等级与高级驯兽知识','持续建立信任并供应实际合适食物']:['需要相关生态知识和专门研究']},
             ...(possible?{tamingRule:{category:'combat',minimumSkill:Math.min(2699,(template-1)*300),minimumPlayerLevel:lo,trustThreshold:Math.min(95,50+template*5),minutes:120,
                 difficulty:template<=4?20:template<=6?25:30,food:[{item:food,hungerRelief:35,trustGain:3}],skills:['辨认口令','跟随训练'],rideable:false,riderWeightKg:60,carryKg:Math.max(1,Math.floor(bodyMassKg/10))}}:{}),
