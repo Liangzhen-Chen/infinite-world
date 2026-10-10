@@ -1,0 +1,15 @@
+{
+  "finishReason": "tool_calls",
+  "raw": "{\"items\": [{\"id\": \"item_stone\", \"description\": \"从旧渡口浅滩捞起或岸边拾得的普通石料，约三公斤一块，表面多带水苔与砂痕。河湾村人补石墙缺口时，把它嵌进松动的墙缝，用碎石片垫平；配重时则码进木框或压在草席边角，防止风掀。它只是原石，未雕成器物，也不是宝石。石面若平整，可临时当砸胡桃的垫板，但硬砸会崩角。低水位时岸滩裸露，搬运最为省力。\", \"inspection\": \"翻面看有无贯穿裂纹，用指节敲击听声；沉闷带浊音往往内部有暗缝，清脆则较完整。掂量重量是否过轻，过轻可能多孔易碎。青苔厚处易滑手，需先刮去。\", \"storage\": \"堆在渡口附近干燥石垛上，下垫木条隔潮，上覆草帘挡雨。避免与铁料混堆，水汽重时石面会生苔、铁料会锈。长期不用可浸水保湿，但冻前须排空缝隙积水。\"}, {\"id\": \"item_iron\", \"name\": \"铁料\", \"basePrice\": 12, \"weight\": 2, \"aliases\": [], \"quality\": \"木\", \"durability\": 100, \"scope\": null, \"origin\": \"bld_hw_forge\", \"shelfLifeDays\": null, \"use\": \"两公斤可回炉铁坯，锻件须另耗燃料；铁料不等于已成形兵器。\", \"seasonality\": \"全年，春修农具时紧张\"}, {\"id\": \"item_herb\", \"name\": \"药草\", \"basePrice\": 3, \"weight\": 0.1, \"aliases\": [], \"quality\": \"木\", \"durability\": 100, \"scope\": null, \"origin\": \"bld_hw_herbs\", \"shelfLifeDays\": 7, \"use\": \"一束未分具体药种的普通药草，需辨认再配方；不直接保证治疗任何病。\", \"seasonality\": \"生长期采集较多\"}]}",
+  "calls": [
+    {
+      "index": 0,
+      "id": "call_00_E7TGYjIc0DwwVVZYvmtR3058",
+      "type": "function",
+      "function": {
+        "name": "submit_item_lore",
+        "arguments": "{\"items\": [{\"id\": \"item_stone\", \"description\": \"从旧渡口浅滩捞起或岸边拾得的普通石料，约三公斤一块，表面多带水苔与砂痕。河湾村人补石墙缺口时，把它嵌进松动的墙缝，用碎石片垫平；配重时则码进木框或压在草席边角，防止风掀。它只是原石，未雕成器物，也不是宝石。石面若平整，可临时当砸胡桃的垫板，但硬砸会崩角。低水位时岸滩裸露，搬运最为省力。\", \"inspection\": \"翻面看有无贯穿裂纹，用指节敲击听声；沉闷带浊音往往内部有暗缝，清脆则较完整。掂量重量是否过轻，过轻可能多孔易碎。青苔厚处易滑手，需先刮去。\", \"storage\": \"堆在渡口附近干燥石垛上，下垫木条隔潮，上覆草帘挡雨。避免与铁料混堆，水汽重时石面会生苔、铁料会锈。长期不用可浸水保湿，但冻前须排空缝隙积水。\"}, {\"id\": \"item_iron\", \"name\": \"铁料\", \"basePrice\": 12, \"weight\": 2, \"aliases\": [], \"quality\": \"木\", \"durability\": 100, \"scope\": null, \"origin\": \"bld_hw_forge\", \"shelfLifeDays\": null, \"use\": \"两公斤可回炉铁坯，锻件须另耗燃料；铁料不等于已成形兵器。\", \"seasonality\": \"全年，春修农具时紧张\"}, {\"id\": \"item_herb\", \"name\": \"药草\", \"basePrice\": 3, \"weight\": 0.1, \"aliases\": [], \"quality\": \"木\", \"durability\": 100, \"scope\": null, \"origin\": \"bld_hw_herbs\", \"shelfLifeDays\": 7, \"use\": \"一束未分具体药种的普通药草，需辨认再配方；不直接保证治疗任何病。\", \"seasonality\": \"生长期采集较多\"}]}"
+      }
+    }
+  ]
+}

@@ -1,0 +1,142 @@
+{
+  "runId": "1791620589657",
+  "batch": 0,
+  "seed": 2318249360,
+  "boneHash": "178d8378d4c335009cd628deea3af550b5172b739984ffe23f08fc4cdbd45621",
+  "loreHash": "5834d73572d007da1c0fc24f851985fd6c99425cca99057ab16cbc8823d8049b",
+  "approved": false,
+  "scope": "待人工随机精读；任何一项不合格整批重做，不逐项拼接修补",
+  "sample": [
+    {
+      "id": "monster_stone_coil_bug",
+      "hash": "2954e20ff9b1c3ac5856165fe50a0f6a34db381100939e79e096c20943b5229b",
+      "scores": [
+        4,
+        4,
+        4,
+        4,
+        4,
+        4
+      ],
+      "notes": "六对细足、塔根碎屑及壳缘刮痕可核对；白昼活动与骨架相符。材料开头仍有无商品的保证句，后文是具体线索，须后续防模板。"
+    },
+    {
+      "id": "monster_short_bill_duck",
+      "hash": "cd7749a594dc4ced6c2a853737f88102bdd9b37b44e1a417d1e1d989e1d27d7a",
+      "scores": [
+        4,
+        4,
+        4,
+        4,
+        4,
+        4
+      ],
+      "notes": "三拍起飞、蹼印与苇根休息对应渡口，食性与白昼作息相符。"
+    },
+    {
+      "id": "monster_spade_dung_beetle",
+      "hash": "92edafe966952cec0b453827fd932a10feb71054a17268157535ad0974e2f0a7",
+      "scores": [
+        4,
+        4,
+        4,
+        4,
+        4,
+        4
+      ],
+      "notes": "铲角浅沟与树根外腐食对应果园，独居及活动时刻符合；肥力否定过强但未改变产物。"
+    },
+    {
+      "id": "monster_orange_flower_bee",
+      "hash": "4d57722308b9a048476055bb993f5141d263cb8a43acb28daf66ba3f448a3785",
+      "scores": [
+        4,
+        4,
+        4,
+        4,
+        4,
+        4
+      ],
+      "notes": "坡洞、桔毛花粉与小群体现独特观察；风险为短时刺痛，白昼访花符合骨架。"
+    },
+    {
+      "id": "monster_grey_field_pipit",
+      "hash": "dc2e1a199053b1630815c2e577bed183e2db0009b7cd715871d28553037e3952",
+      "scores": [
+        4,
+        4,
+        2,
+        4,
+        4,
+        4
+      ],
+      "notes": "虫食骨架被写成啄食草籽与谷穗、造成减产，威胁与指定食性不一致。"
+    },
+    {
+      "id": "monster_thorn_sprout",
+      "hash": "b8346eae7c95b8dec28076889dc08ff41fcf0c8a30c5796055f82683d4f60de5",
+      "scores": [
+        4,
+        4,
+        4,
+        4,
+        4,
+        4
+      ],
+      "notes": "侧根慢移暖砖、白昼活动与树脂100克/180天均与骨架商品相符。"
+    },
+    {
+      "id": "monster_black_throat_marten",
+      "hash": "9a37e7b82cc319e056fc7322b098a69055100ed0dbe95a413a6e889343f1505b",
+      "scores": [
+        4,
+        4,
+        3,
+        4,
+        4,
+        4
+      ],
+      "notes": "高枝松鼠捕食、夜间独居相符；单只貂产整张一公斤皮与体型缺明确依据，保留重量问题。"
+    },
+    {
+      "id": "monster_reed_hare",
+      "hash": "ece487b6e2d903ffd0b4c5c704be011b39c9d966c68b83652fa8af2bb45decce",
+      "scores": [
+        4,
+        4,
+        2,
+        4,
+        4,
+        4
+      ],
+      "notes": "夜行与草窝相符，但兔被写为反刍式咀嚼并出现蹄掌，基础生理错误。"
+    },
+    {
+      "id": "monster_echo_cave_bat",
+      "hash": "f2503935f64b29c79281bd318ab0c4d4a00006dc6ed84d8751987e3817d2e509",
+      "scores": [
+        4,
+        4,
+        4,
+        4,
+        4,
+        4
+      ],
+      "notes": "夜行回声区别薄板与砖壁、四至九只及塔梁粪痕相符，无实体变墙能力。"
+    },
+    {
+      "id": "monster_red_ear_fox",
+      "hash": "b0bbbef2fe607212db5fb505f87a9d6921abec04bb5a5546b150805747fa0b79",
+      "scores": [
+        4,
+        4,
+        2,
+        4,
+        4,
+        4
+      ],
+      "notes": "夜间独居与赤耳辨认相符，但materials无故加入剖鱼工序，鱼不是该物种掉落。"
+    }
+  ],
+  "rejection": "三个样本内在一致性2分：食性、兔生理、跨物种材料；整批不得发布。"
+}

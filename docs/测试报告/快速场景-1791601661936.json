@@ -1,0 +1,2028 @@
+{
+  "date": "2026-10-10",
+  "scope": "当前引擎10个快速场景，各跑3次；不代表完整11.3/11.4验收",
+  "pass": true,
+  "costUpperYuan": 0.08313927999999998,
+  "results": [
+    {
+      "id": "L1",
+      "attempt": 1,
+      "input": "我数出六枚铜币交给林穗，住一晚。",
+      "pass": true,
+      "error": null,
+      "reply": "你把六枚铜币一枚枚数到林穗手心里，她掂了掂，顺手收进柜台下的木匣。\n\n“普通客房，二楼东头那间。”她从钉子上取下一把黄铜钥匙递过来，“被褥是今早晒过的。热水在灶间，自己舀，别把壶端上楼。明早退房把钥匙还我。”\n\n她顿了顿，又补一句：“房钱是房钱，饭钱是饭钱。想搭伙的话另算。”\n\n<回合 时长=\"10分\" 地点=\"bld_hw_qingdeng\" 在场=\"npc_hw_linsui,npc_hw_hezhou\"/>",
+      "events": [
+        {
+          "input": {
+            "tool": "world_trade",
+            "args": {
+              "seller": "npc_hw_linsui",
+              "service": "住宿",
+              "days": 1,
+              "unitPrice": 6
+            },
+            "eventId": "quick_L1_0"
+          },
+          "result": {
+            "ok": true,
+            "contract": "contract_room_quick_L1_0",
+            "cost": 6,
+            "days": 1,
+            "minute": 550,
+            "messages": [
+              "【系统】住宿1天，支付6铜"
+            ],
+            "turnClock": {
+              "startMinute": 540,
+              "minute": 550,
+              "elapsedMinutes": 10,
+              "tailRule": "本回合工具已推进10分钟，包含操作过程中的对白。没有额外独立动作时尾注时长写10分；不能再加默认10分。"
+            }
+          }
+        }
+      ],
+      "player": {
+        "name": "旅人",
+        "level": 1,
+        "xp": 0,
+        "coins": 174,
+        "hp": 12,
+        "maxHp": 12,
+        "mp": 10,
+        "maxMp": 10,
+        "revivalAnchor": "loc_hw",
+        "attributes": {
+          "力量": 10,
+          "敏捷": 10,
+          "体质": 10,
+          "智力": 10,
+          "精神": 10,
+          "魅力": 10
+        },
+        "status": "正常",
+        "freeAttributePoints": 0,
+        "companions": [],
+        "dyingSince": null
+      },
+      "minute": 550
+    },
+    {
+      "id": "L1",
+      "attempt": 2,
+      "input": "我数出六枚铜币交给林穗，住一晚。",
+      "pass": true,
+      "error": null,
+      "reply": "你数出六枚铜币，一枚枚排在柜台木面上。林穗没有多话，取过铜币数了一遍，收进围裙口袋，从柜台下摸出一把铜钥匙递给你。\n\n“楼上左手第二间，窗朝院子。热水在灶上，自己舀。”她顿了顿，“被褥是新晒的，别弄湿。”\n\n钥匙握在手里还带着木屑味。这一晚的房钱已经付清。\n\n<回合 时长=\"10分\" 地点=\"bld_hw_qingdeng\" 在场=\"npc_hw_linsui,npc_hw_hezhou\"/>",
+      "events": [
+        {
+          "input": {
+            "tool": "world_trade",
+            "args": {
+              "seller": "npc_hw_linsui",
+              "service": "住宿",
+              "days": 1
+            },
+            "eventId": "quick_L1_0"
+          },
+          "result": {
+            "ok": true,
+            "contract": "contract_room_quick_L1_0",
+            "cost": 6,
+            "days": 1,
+            "minute": 550,
+            "messages": [
+              "【系统】住宿1天，支付6铜"
+            ],
+            "turnClock": {
+              "startMinute": 540,
+              "minute": 550,
+              "elapsedMinutes": 10,
+              "tailRule": "本回合工具已推进10分钟，包含操作过程中的对白。没有额外独立动作时尾注时长写10分；不能再加默认10分。"
+            }
+          }
+        }
+      ],
+      "player": {
+        "name": "旅人",
+        "level": 1,
+        "xp": 0,
+        "coins": 174,
+        "hp": 12,
+        "maxHp": 12,
+        "mp": 10,
+        "maxMp": 10,
+        "revivalAnchor": "loc_hw",
+        "attributes": {
+          "力量": 10,
+          "敏捷": 10,
+          "体质": 10,
+          "智力": 10,
+          "精神": 10,
+          "魅力": 10
+        },
+        "status": "正常",
+        "freeAttributePoints": 0,
+        "companions": [],
+        "dyingSince": null
+      },
+      "minute": 550
+    },
+    {
+      "id": "L1",
+      "attempt": 3,
+      "input": "我数出六枚铜币交给林穗，住一晚。",
+      "pass": true,
+      "error": null,
+      "reply": "你把六枚铜币数到林穗手心里，她捏着边缘挨个掂了掂，确认成色后收进柜台下的木匣，从墙上取下一把带着房号木牌的钥匙搁在台面上。\n\n“二楼靠里那间，六号。被褥是前日刚晒过的。”她顿了顿，又补一句，“热水在灶上温着，要洗漱自己舀，别把水泼到楼梯上。”说完便低头继续擦她的杯子，像是这桩生意和别的没什么两样。\n\n<回合 时长=\"10分\" 地点=\"bld_hw_qingdeng\" 在场=\"npc_hw_linsui,npc_hw_hezhou\"/>",
+      "events": [
+        {
+          "input": {
+            "tool": "world_trade",
+            "args": {
+              "seller": "npc_hw_linsui",
+              "service": "住宿",
+              "days": 1,
+              "unitPrice": 6
+            },
+            "eventId": "quick_L1_0"
+          },
+          "result": {
+            "ok": true,
+            "contract": "contract_room_quick_L1_0",
+            "cost": 6,
+            "days": 1,
+            "minute": 550,
+            "messages": [
+              "【系统】住宿1天，支付6铜"
+            ],
+            "turnClock": {
+              "startMinute": 540,
+              "minute": 550,
+              "elapsedMinutes": 10,
+              "tailRule": "本回合工具已推进10分钟，包含操作过程中的对白。没有额外独立动作时尾注时长写10分；不能再加默认10分。"
+            }
+          }
+        }
+      ],
+      "player": {
+        "name": "旅人",
+        "level": 1,
+        "xp": 0,
+        "coins": 174,
+        "hp": 12,
+        "maxHp": 12,
+        "mp": 10,
+        "maxMp": 10,
+        "revivalAnchor": "loc_hw",
+        "attributes": {
+          "力量": 10,
+          "敏捷": 10,
+          "体质": 10,
+          "智力": 10,
+          "精神": 10,
+          "魅力": 10
+        },
+        "status": "正常",
+        "freeAttributePoints": 0,
+        "companions": [],
+        "dyingSince": null
+      },
+      "minute": 550
+    },
+    {
+      "id": "G1",
+      "attempt": 1,
+      "input": "我对旧木杖施放已经学会的照明术。",
+      "pass": true,
+      "error": null,
+      "reply": "你把旧木杖握在手里，指尖顺着杖身那道旧裂纹抚过，低声念出照明术的短句。杖头先是浮起一层薄薄的白光，随后凝成一颗拳头大的光团，稳稳悬在木杖顶端，把周围三尺照得清清楚楚。光不烫手，也不摇晃，只是安静地亮着——大约能维持一刻钟左右。\n\n魔力顺着指尖流走一分，你感到胸口微微一空，但很快平复。木杖本身没有变化，只是暂时成了你的灯。\n\n<回合 时长=\"1分\" 地点=\"bld_hw_qingdeng\" 在场=\"npc_hw_linsui,npc_hw_hezhou\"/>",
+      "events": [
+        {
+          "input": {
+            "tool": "world_cast",
+            "args": {
+              "spell": "照明术",
+              "target": "旧木杖"
+            },
+            "eventId": "quick_G1_0"
+          },
+          "result": {
+            "ok": true,
+            "spell": "spell_light",
+            "die": 10,
+            "rolls": [
+              10
+            ],
+            "modifier": 0,
+            "total": 10,
+            "difficulty": 10,
+            "degree": "勉强成功",
+            "success": true,
+            "target": "item_staff",
+            "effect": "quick_G1_0",
+            "expires": 601,
+            "illuminated": true,
+            "checkSuccess": true,
+            "mpCost": 1,
+            "minute": 541,
+            "messages": [
+              "【系统】照明术熟练度 +3",
+              "【系统】照明术施放成功，消耗1魔力"
+            ],
+            "turnClock": {
+              "startMinute": 540,
+              "minute": 541,
+              "elapsedMinutes": 1,
+              "tailRule": "本回合工具已推进1分钟，包含操作过程中的对白。没有额外独立动作时尾注时长写1分；不能再加默认10分。"
+            }
+          }
+        }
+      ],
+      "player": {
+        "name": "旅人",
+        "level": 1,
+        "xp": 0,
+        "coins": 180,
+        "hp": 12,
+        "maxHp": 12,
+        "mp": 9,
+        "maxMp": 10,
+        "revivalAnchor": "loc_hw",
+        "attributes": {
+          "力量": 10,
+          "敏捷": 10,
+          "体质": 10,
+          "智力": 10,
+          "精神": 10,
+          "魅力": 10
+        },
+        "status": "正常",
+        "freeAttributePoints": 0,
+        "companions": [],
+        "dyingSince": null
+      },
+      "minute": 541
+    },
+    {
+      "id": "G1",
+      "attempt": 2,
+      "input": "我对旧木杖施放已经学会的照明术。",
+      "pass": true,
+      "error": null,
+      "reply": "你握住那根旧木杖，指腹贴着已被磨得温润的木纹，低声念出照明术的短句。杖头先是泛起一点微光，随后光晕胀开，像一盏被风吹得晃了晃才站稳的小灯，把酒馆角落的木桌、酒渍和你的手背都照成了暖白色。\n\n光不算亮，却足够照清脚边的路。你感到魔力像退潮一样从身体里抽走了一线，而杖身没有任何损伤，只是从今往后它多了一个能点亮的用处。\n\n<回合 时长=\"1分\" 地点=\"bld_hw_qingdeng\" 在场=\"npc_hw_linsui,npc_hw_hezhou\"/>",
+      "events": [
+        {
+          "input": {
+            "tool": "world_cast",
+            "args": {
+              "spell": "照明术",
+              "target": "item_staff"
+            },
+            "eventId": "quick_G1_0"
+          },
+          "result": {
+            "ok": true,
+            "spell": "spell_light",
+            "die": 10,
+            "rolls": [
+              10
+            ],
+            "modifier": 0,
+            "total": 10,
+            "difficulty": 10,
+            "degree": "勉强成功",
+            "success": true,
+            "target": "item_staff",
+            "effect": "quick_G1_0",
+            "expires": 601,
+            "illuminated": true,
+            "checkSuccess": true,
+            "mpCost": 1,
+            "minute": 541,
+            "messages": [
+              "【系统】照明术熟练度 +3",
+              "【系统】照明术施放成功，消耗1魔力"
+            ],
+            "turnClock": {
+              "startMinute": 540,
+              "minute": 541,
+              "elapsedMinutes": 1,
+              "tailRule": "本回合工具已推进1分钟，包含操作过程中的对白。没有额外独立动作时尾注时长写1分；不能再加默认10分。"
+            }
+          }
+        }
+      ],
+      "player": {
+        "name": "旅人",
+        "level": 1,
+        "xp": 0,
+        "coins": 180,
+        "hp": 12,
+        "maxHp": 12,
+        "mp": 9,
+        "maxMp": 10,
+        "revivalAnchor": "loc_hw",
+        "attributes": {
+          "力量": 10,
+          "敏捷": 10,
+          "体质": 10,
+          "智力": 10,
+          "精神": 10,
+          "魅力": 10
+        },
+        "status": "正常",
+        "freeAttributePoints": 0,
+        "companions": [],
+        "dyingSince": null
+      },
+      "minute": 541
+    },
+    {
+      "id": "G1",
+      "attempt": 3,
+      "input": "我对旧木杖施放已经学会的照明术。",
+      "pass": true,
+      "error": null,
+      "reply": "你对旧木杖施放照明术，杖头浮起一团柔和的冷光，把酒馆角落照得清清楚楚。魔力消耗1点，剩余9/10；照明术熟练度+3，光约持续到10:01。\n\n<回合 时长=\"1分\" 地点=\"bld_hw_qingdeng\" 在场=\"npc_hw_linsui,npc_hw_hezhou\"/>",
+      "events": [
+        {
+          "input": {
+            "tool": "world_cast",
+            "args": {
+              "spell": "照明术",
+              "target": "旧木杖"
+            },
+            "eventId": "quick_G1_0"
+          },
+          "result": {
+            "ok": true,
+            "spell": "spell_light",
+            "die": 10,
+            "rolls": [
+              10
+            ],
+            "modifier": 0,
+            "total": 10,
+            "difficulty": 10,
+            "degree": "勉强成功",
+            "success": true,
+            "target": "item_staff",
+            "effect": "quick_G1_0",
+            "expires": 601,
+            "illuminated": true,
+            "checkSuccess": true,
+            "mpCost": 1,
+            "minute": 541,
+            "messages": [
+              "【系统】照明术熟练度 +3",
+              "【系统】照明术施放成功，消耗1魔力"
+            ],
+            "turnClock": {
+              "startMinute": 540,
+              "minute": 541,
+              "elapsedMinutes": 1,
+              "tailRule": "本回合工具已推进1分钟，包含操作过程中的对白。没有额外独立动作时尾注时长写1分；不能再加默认10分。"
+            }
+          }
+        }
+      ],
+      "player": {
+        "name": "旅人",
+        "level": 1,
+        "xp": 0,
+        "coins": 180,
+        "hp": 12,
+        "maxHp": 12,
+        "mp": 9,
+        "maxMp": 10,
+        "revivalAnchor": "loc_hw",
+        "attributes": {
+          "力量": 10,
+          "敏捷": 10,
+          "体质": 10,
+          "智力": 10,
+          "精神": 10,
+          "魅力": 10
+        },
+        "status": "正常",
+        "freeAttributePoints": 0,
+        "companions": [],
+        "dyingSince": null
+      },
+      "minute": 541
+    },
+    {
+      "id": "T1",
+      "attempt": 1,
+      "input": "我问林穗，今天雨是不是一直没停。",
+      "pass": true,
+      "error": null,
+      "reply": "林穗正拿布擦着柜台上一层薄薄的水汽，听你问，抬眼看了一下门外。\n\n“从后半夜起就没断过。”她把布搭在肩头，侧耳听了听檐下连成线的水声，“雨月头一场，一下就是三五天，河里要涨水了。”\n\n她顿了顿，往灶间方向瞥了一眼：“今天客人少，你要没别的事，坐这儿等雨小点也行——不点东西也成。”\n\n<回合 时长=\"10分\" 地点=\"bld_hw_qingdeng\" 在场=\"npc_hw_linsui,npc_hw_hezhou\"/>",
+      "events": [],
+      "player": {
+        "name": "旅人",
+        "level": 1,
+        "xp": 0,
+        "coins": 180,
+        "hp": 12,
+        "maxHp": 12,
+        "mp": 10,
+        "maxMp": 10,
+        "revivalAnchor": "loc_hw",
+        "attributes": {
+          "力量": 10,
+          "敏捷": 10,
+          "体质": 10,
+          "智力": 10,
+          "精神": 10,
+          "魅力": 10
+        },
+        "status": "正常",
+        "freeAttributePoints": 0,
+        "companions": [],
+        "dyingSince": null
+      },
+      "minute": 550
+    },
+    {
+      "id": "T1",
+      "attempt": 2,
+      "input": "我问林穗，今天雨是不是一直没停。",
+      "pass": true,
+      "error": null,
+      "reply": "林穗正用一块半干的抹布擦着柜台，听见你问，抬眼往窗外瞥了一下。檐口的水线连成串，砸在青石板上溅起细碎的白花。\n\n“从后半夜就没断过，时大时小。”她把抹布搭在台沿上，“这雨月一开头就这样，河湾的水这两天怕是要涨。你要出村的话，得先问过渡船还开不开。”\n\n她顿了顿，语气平常：“不过雨天也没什么好去处，店里坐坐，炉子边暖和。”\n\n<回合 时长=\"10分\" 地点=\"bld_hw_qingdeng\" 在场=\"npc_hw_linsui,npc_hw_hezhou\"/>",
+      "events": [],
+      "player": {
+        "name": "旅人",
+        "level": 1,
+        "xp": 0,
+        "coins": 180,
+        "hp": 12,
+        "maxHp": 12,
+        "mp": 10,
+        "maxMp": 10,
+        "revivalAnchor": "loc_hw",
+        "attributes": {
+          "力量": 10,
+          "敏捷": 10,
+          "体质": 10,
+          "智力": 10,
+          "精神": 10,
+          "魅力": 10
+        },
+        "status": "正常",
+        "freeAttributePoints": 0,
+        "companions": [],
+        "dyingSince": null
+      },
+      "minute": 550
+    },
+    {
+      "id": "T1",
+      "attempt": 3,
+      "input": "我问林穗，今天雨是不是一直没停。",
+      "pass": true,
+      "error": null,
+      "reply": "林穗正擦着柜台，闻言朝窗外抬了抬下巴。雨丝斜斜地挂在檐下，青石院里的水洼已经连成一片。\n\n“从后半夜就没断过，时大时小。”她把抹布搭在肩头，“这种雨月里的连阴雨，最烦的是柴火——堆在檐下那批要是再潮两天，就得挪进灶房烘了。”\n\n她顿了顿，看你一眼：“你要出门的话，斗笠在门后挂着，借你使，别弄丢了就成。”\n\n<回合 时长=\"10分\" 地点=\"bld_hw_qingdeng\" 在场=\"npc_hw_linsui,npc_hw_hezhou\"/>",
+      "events": [],
+      "player": {
+        "name": "旅人",
+        "level": 1,
+        "xp": 0,
+        "coins": 180,
+        "hp": 12,
+        "maxHp": 12,
+        "mp": 10,
+        "maxMp": 10,
+        "revivalAnchor": "loc_hw",
+        "attributes": {
+          "力量": 10,
+          "敏捷": 10,
+          "体质": 10,
+          "智力": 10,
+          "精神": 10,
+          "魅力": 10
+        },
+        "status": "正常",
+        "freeAttributePoints": 0,
+        "companions": [],
+        "dyingSince": null
+      },
+      "minute": 550
+    },
+    {
+      "id": "F8",
+      "attempt": 1,
+      "input": "（场外）我现在有多少铜币？",
+      "pass": true,
+      "error": null,
+      "reply": "你当前持有 **180 铜**。\n\n<回合 时长=\"0分\" 地点=\"bld_hw_qingdeng\" 在场=\"npc_hw_linsui,npc_hw_hezhou\"/>",
+      "events": [],
+      "player": {
+        "name": "旅人",
+        "level": 1,
+        "xp": 0,
+        "coins": 180,
+        "hp": 12,
+        "maxHp": 12,
+        "mp": 10,
+        "maxMp": 10,
+        "revivalAnchor": "loc_hw",
+        "attributes": {
+          "力量": 10,
+          "敏捷": 10,
+          "体质": 10,
+          "智力": 10,
+          "精神": 10,
+          "魅力": 10
+        },
+        "status": "正常",
+        "freeAttributePoints": 0,
+        "companions": [],
+        "dyingSince": null
+      },
+      "minute": 540
+    },
+    {
+      "id": "F8",
+      "attempt": 2,
+      "input": "（场外）我现在有多少铜币？",
+      "pass": true,
+      "error": null,
+      "reply": "你身上有 **180 铜**。\n\n<回合 时长=\"0分\" 地点=\"bld_hw_qingdeng\" 在场=\"npc_hw_linsui,npc_hw_hezhou\"/>",
+      "events": [],
+      "player": {
+        "name": "旅人",
+        "level": 1,
+        "xp": 0,
+        "coins": 180,
+        "hp": 12,
+        "maxHp": 12,
+        "mp": 10,
+        "maxMp": 10,
+        "revivalAnchor": "loc_hw",
+        "attributes": {
+          "力量": 10,
+          "敏捷": 10,
+          "体质": 10,
+          "智力": 10,
+          "精神": 10,
+          "魅力": 10
+        },
+        "status": "正常",
+        "freeAttributePoints": 0,
+        "companions": [],
+        "dyingSince": null
+      },
+      "minute": 540
+    },
+    {
+      "id": "F8",
+      "attempt": 3,
+      "input": "（场外）我现在有多少铜币？",
+      "pass": true,
+      "error": null,
+      "reply": "你当前有 **180 铜币**。",
+      "events": [],
+      "player": {
+        "name": "旅人",
+        "level": 1,
+        "xp": 0,
+        "coins": 180,
+        "hp": 12,
+        "maxHp": 12,
+        "mp": 10,
+        "maxMp": 10,
+        "revivalAnchor": "loc_hw",
+        "attributes": {
+          "力量": 10,
+          "敏捷": 10,
+          "体质": 10,
+          "智力": 10,
+          "精神": 10,
+          "魅力": 10
+        },
+        "status": "正常",
+        "freeAttributePoints": 0,
+        "companions": [],
+        "dyingSince": null
+      },
+      "minute": 540
+    },
+    {
+      "id": "LearningTeacher",
+      "attempt": 1,
+      "input": "我交两枚铜币给陆青，请他教我基础识字。",
+      "pass": true,
+      "error": null,
+      "reply": "你把两枚铜币放进陆青掌心，他在学堂窗边的矮案前坐下，抽出一块磨得发亮的木牍。\n\n“先认自己的名字，再认账。”他用炭笔在牍上写下几个横平竖直的记号，一笔一划都念出声，让你跟着描。起初你握炭笔的手有点僵，画出来的笔画歪歪扭扭，陆青不催，只把写歪的地方抹平，让你重来一遍。\n\n一个时辰下来，木牍上已经积了薄薄一层炭痕。你终于能把那几个字认个大概——虽然写出来仍旧勉强成形，但念得出、看得懂了。\n\n“够用了。”陆青收起炭笔，“往后自己找本书看，就慢慢熟了。”\n\n你花去2铜，学会识字。学费已付。\n\n<回合 时长=\"60分\" 地点=\"bld_hw_school\" 在场=\"npc_hw_luqing\"/>",
+      "events": [
+        {
+          "input": {
+            "tool": "world_learn",
+            "args": {
+              "entity": "skill_literacy",
+              "source": "npc_hw_luqing",
+              "kind": "skill"
+            },
+            "eventId": "quick_LearningTeacher_0"
+          },
+          "result": {
+            "ok": true,
+            "entity": "skill_literacy",
+            "source": {
+              "type": "teacher",
+              "id": "npc_hw_luqing"
+            },
+            "teacher": "npc_hw_luqing",
+            "cost": 2,
+            "minutes": 60,
+            "die": 10,
+            "rolls": [
+              10
+            ],
+            "modifier": 0,
+            "total": 10,
+            "difficulty": 10,
+            "degree": "勉强成功",
+            "success": true,
+            "minute": 600,
+            "messages": [
+              "【系统】学会识字"
+            ],
+            "turnClock": {
+              "startMinute": 540,
+              "minute": 600,
+              "elapsedMinutes": 60,
+              "tailRule": "本回合工具已推进60分钟，包含操作过程中的对白。没有额外独立动作时尾注时长写60分；不能再加默认10分。"
+            }
+          }
+        }
+      ],
+      "player": {
+        "name": "旅人",
+        "level": 1,
+        "xp": 0,
+        "coins": 178,
+        "hp": 12,
+        "maxHp": 12,
+        "mp": 10,
+        "maxMp": 10,
+        "revivalAnchor": "loc_hw",
+        "attributes": {
+          "力量": 10,
+          "敏捷": 10,
+          "体质": 10,
+          "智力": 10,
+          "精神": 10,
+          "魅力": 10
+        },
+        "status": "正常",
+        "freeAttributePoints": 0,
+        "companions": [],
+        "dyingSince": null
+      },
+      "minute": 600
+    },
+    {
+      "id": "LearningTeacher",
+      "attempt": 2,
+      "input": "我交两枚铜币给陆青，请他教我基础识字。",
+      "pass": true,
+      "error": null,
+      "reply": "你把两枚铜币放进陆青掌心。他收了钱，从架子上抽出一块蒙灰的木板，用炭条写下几个字，又描了一遍笔顺——「河」「湾」「水」「田」，一笔一画慢得能让人记住。\n\n「先认这些，够你读懂村口的告示。」他让你照着写，看你握炭条的手势不对，伸手掰了掰你的虎口，「别攥太紧，字是写出来的，不是刻出来的。」\n\n一个时辰过去，你勉强能把那几个字对号入座，笔画也像模像样。陆青收起木板，点头：「底子薄，但肯听。下回再练。」\n\n你学会了技能：识字。\n\n<回合 时长=\"60分\" 地点=\"bld_hw_school\" 在场=\"npc_hw_luqing\"/>",
+      "events": [
+        {
+          "input": {
+            "tool": "world_learn",
+            "args": {
+              "entity": "skill_literacy",
+              "source": "npc_hw_luqing",
+              "kind": "skill"
+            },
+            "eventId": "quick_LearningTeacher_0"
+          },
+          "result": {
+            "ok": true,
+            "entity": "skill_literacy",
+            "source": {
+              "type": "teacher",
+              "id": "npc_hw_luqing"
+            },
+            "teacher": "npc_hw_luqing",
+            "cost": 2,
+            "minutes": 60,
+            "die": 10,
+            "rolls": [
+              10
+            ],
+            "modifier": 0,
+            "total": 10,
+            "difficulty": 10,
+            "degree": "勉强成功",
+            "success": true,
+            "minute": 600,
+            "messages": [
+              "【系统】学会识字"
+            ],
+            "turnClock": {
+              "startMinute": 540,
+              "minute": 600,
+              "elapsedMinutes": 60,
+              "tailRule": "本回合工具已推进60分钟，包含操作过程中的对白。没有额外独立动作时尾注时长写60分；不能再加默认10分。"
+            }
+          }
+        }
+      ],
+      "player": {
+        "name": "旅人",
+        "level": 1,
+        "xp": 0,
+        "coins": 178,
+        "hp": 12,
+        "maxHp": 12,
+        "mp": 10,
+        "maxMp": 10,
+        "revivalAnchor": "loc_hw",
+        "attributes": {
+          "力量": 10,
+          "敏捷": 10,
+          "体质": 10,
+          "智力": 10,
+          "精神": 10,
+          "魅力": 10
+        },
+        "status": "正常",
+        "freeAttributePoints": 0,
+        "companions": [],
+        "dyingSince": null
+      },
+      "minute": 600
+    },
+    {
+      "id": "LearningTeacher",
+      "attempt": 3,
+      "input": "我交两枚铜币给陆青，请他教我基础识字。",
+      "pass": true,
+      "error": null,
+      "reply": "你把两枚铜币放在陆青的案上。他收下钱，先教你认自己的名字，再是“河湾”两个字——笔画拆开、合起来，写满了半张糙纸。你写得歪，但确实记住了。\n\n“慢慢来，认得多了，往后自己看告示就不求人了。”他说着，把笔搁回架上。\n\n学费2铜已付，识字技能已学会。\n\n<回合 时长=\"60分\" 地点=\"bld_hw_school\" 在场=\"npc_hw_luqing\"/>",
+      "events": [
+        {
+          "input": {
+            "tool": "world_learn",
+            "args": {
+              "entity": "skill_literacy",
+              "source": "npc_hw_luqing",
+              "kind": "skill"
+            },
+            "eventId": "quick_LearningTeacher_0"
+          },
+          "result": {
+            "ok": true,
+            "entity": "skill_literacy",
+            "source": {
+              "type": "teacher",
+              "id": "npc_hw_luqing"
+            },
+            "teacher": "npc_hw_luqing",
+            "cost": 2,
+            "minutes": 60,
+            "die": 10,
+            "rolls": [
+              10
+            ],
+            "modifier": 0,
+            "total": 10,
+            "difficulty": 10,
+            "degree": "勉强成功",
+            "success": true,
+            "minute": 600,
+            "messages": [
+              "【系统】学会识字"
+            ],
+            "turnClock": {
+              "startMinute": 540,
+              "minute": 600,
+              "elapsedMinutes": 60,
+              "tailRule": "本回合工具已推进60分钟，包含操作过程中的对白。没有额外独立动作时尾注时长写60分；不能再加默认10分。"
+            }
+          }
+        }
+      ],
+      "player": {
+        "name": "旅人",
+        "level": 1,
+        "xp": 0,
+        "coins": 178,
+        "hp": 12,
+        "maxHp": 12,
+        "mp": 10,
+        "maxMp": 10,
+        "revivalAnchor": "loc_hw",
+        "attributes": {
+          "力量": 10,
+          "敏捷": 10,
+          "体质": 10,
+          "智力": 10,
+          "精神": 10,
+          "魅力": 10
+        },
+        "status": "正常",
+        "freeAttributePoints": 0,
+        "companions": [],
+        "dyingSince": null
+      },
+      "minute": 600
+    },
+    {
+      "id": "GrowthAllocation",
+      "attempt": 1,
+      "input": "把刚升级获得的两个属性点都加到体质上。",
+      "pass": true,
+      "error": null,
+      "reply": "体质已从10提升到12，两个自由属性点用完，待分配点归零。属性上限随之提高，但当前生命仍是12/16，不会立刻回满——休息或治疗才会补上。\n\n<回合 时长=\"10分\" 地点=\"bld_hw_qingdeng\" 在场=\"npc_hw_linsui,npc_hw_hezhou\"/>",
+      "events": [
+        {
+          "input": {
+            "tool": "world_attributes",
+            "args": {
+              "attributes": {
+                "体质": 2
+              }
+            },
+            "eventId": "quick_GrowthAllocation_0"
+          },
+          "result": {
+            "ok": true,
+            "attributes": {
+              "力量": 10,
+              "敏捷": 10,
+              "体质": 12,
+              "智力": 10,
+              "精神": 10,
+              "魅力": 10
+            },
+            "spent": 2,
+            "remaining": 0,
+            "maxHp": 20,
+            "maxMp": 12,
+            "minute": 540,
+            "messages": [
+              "【系统】分配2个自由属性点"
+            ],
+            "turnClock": {
+              "startMinute": 540,
+              "minute": 540,
+              "elapsedMinutes": 0,
+              "tailRule": "本回合工具尚未推进时间，普通对话按实际耗时结算。"
+            }
+          }
+        }
+      ],
+      "player": {
+        "name": "旅人",
+        "level": 2,
+        "xp": 25,
+        "coins": 220,
+        "hp": 12,
+        "maxHp": 20,
+        "mp": 10,
+        "maxMp": 12,
+        "revivalAnchor": "loc_hw",
+        "attributes": {
+          "力量": 10,
+          "敏捷": 10,
+          "体质": 12,
+          "智力": 10,
+          "精神": 10,
+          "魅力": 10
+        },
+        "status": "正常",
+        "freeAttributePoints": 0,
+        "companions": [],
+        "dyingSince": null
+      },
+      "minute": 550
+    },
+    {
+      "id": "GrowthAllocation",
+      "attempt": 2,
+      "input": "把刚升级获得的两个属性点都加到体质上。",
+      "pass": true,
+      "error": null,
+      "reply": "两点自由属性点已全部投入体质：体质 10 → 12，自由点剩余 0。上限随之提高，但当前生命仍是 12/16，不会立刻回满。\n\n<回合 时长=\"10分\" 地点=\"bld_hw_qingdeng\" 在场=\"npc_hw_linsui,npc_hw_hezhou\"/>",
+      "events": [
+        {
+          "input": {
+            "tool": "world_attributes",
+            "args": {
+              "attributes": {
+                "体质": 2
+              }
+            },
+            "eventId": "quick_GrowthAllocation_0"
+          },
+          "result": {
+            "ok": true,
+            "attributes": {
+              "力量": 10,
+              "敏捷": 10,
+              "体质": 12,
+              "智力": 10,
+              "精神": 10,
+              "魅力": 10
+            },
+            "spent": 2,
+            "remaining": 0,
+            "maxHp": 20,
+            "maxMp": 12,
+            "minute": 540,
+            "messages": [
+              "【系统】分配2个自由属性点"
+            ],
+            "turnClock": {
+              "startMinute": 540,
+              "minute": 540,
+              "elapsedMinutes": 0,
+              "tailRule": "本回合工具尚未推进时间，普通对话按实际耗时结算。"
+            }
+          }
+        }
+      ],
+      "player": {
+        "name": "旅人",
+        "level": 2,
+        "xp": 25,
+        "coins": 220,
+        "hp": 12,
+        "maxHp": 20,
+        "mp": 10,
+        "maxMp": 12,
+        "revivalAnchor": "loc_hw",
+        "attributes": {
+          "力量": 10,
+          "敏捷": 10,
+          "体质": 12,
+          "智力": 10,
+          "精神": 10,
+          "魅力": 10
+        },
+        "status": "正常",
+        "freeAttributePoints": 0,
+        "companions": [],
+        "dyingSince": null
+      },
+      "minute": 550
+    },
+    {
+      "id": "GrowthAllocation",
+      "attempt": 3,
+      "input": "把刚升级获得的两个属性点都加到体质上。",
+      "pass": true,
+      "error": null,
+      "reply": "两点自由属性点已全部加到体质上：体质10 → 12，自由点归零。生命上限随之提高到20，但当前生命仍是12/16——上限提升不会立刻回血，要恢复得靠休息或治疗。\n\n<回合 时长=\"10分\" 地点=\"bld_hw_qingdeng\" 在场=\"npc_hw_linsui,npc_hw_hezhou\"/>",
+      "events": [
+        {
+          "input": {
+            "tool": "world_attributes",
+            "args": {
+              "attributes": {
+                "体质": 2
+              }
+            },
+            "eventId": "quick_GrowthAllocation_0"
+          },
+          "result": {
+            "ok": true,
+            "attributes": {
+              "力量": 10,
+              "敏捷": 10,
+              "体质": 12,
+              "智力": 10,
+              "精神": 10,
+              "魅力": 10
+            },
+            "spent": 2,
+            "remaining": 0,
+            "maxHp": 20,
+            "maxMp": 12,
+            "minute": 540,
+            "messages": [
+              "【系统】分配2个自由属性点"
+            ],
+            "turnClock": {
+              "startMinute": 540,
+              "minute": 540,
+              "elapsedMinutes": 0,
+              "tailRule": "本回合工具尚未推进时间，普通对话按实际耗时结算。"
+            }
+          }
+        }
+      ],
+      "player": {
+        "name": "旅人",
+        "level": 2,
+        "xp": 25,
+        "coins": 220,
+        "hp": 12,
+        "maxHp": 20,
+        "mp": 10,
+        "maxMp": 12,
+        "revivalAnchor": "loc_hw",
+        "attributes": {
+          "力量": 10,
+          "敏捷": 10,
+          "体质": 12,
+          "智力": 10,
+          "精神": 10,
+          "魅力": 10
+        },
+        "status": "正常",
+        "freeAttributePoints": 0,
+        "companions": [],
+        "dyingSince": null
+      },
+      "minute": 550
+    },
+    {
+      "id": "RevivalRegistration",
+      "attempt": 1,
+      "input": "我在这里登记复活点，支付规定的登记费。",
+      "pass": true,
+      "error": null,
+      "reply": "登记完成。殿内的执事将你的名字与气息记入白石名册，一笔淡白的符痕落在你手背上，旋即隐去。\n\n\"自此若你身死魂散，可归此殿重塑。\"他收起笔墨，\"别指望太多次——归途也有代价。\"\n\n**支出**：30铜（登记费）｜**余额**：70铜\n**复活点**：白石归途殿\n\n<回合 时长=\"15分\" 地点=\"bld_bs_shrine\" 在场=\"\"/>",
+      "events": [
+        {
+          "input": {
+            "tool": "world_revival",
+            "args": {
+              "location": "bld_bs_shrine"
+            },
+            "eventId": "quick_RevivalRegistration_0"
+          },
+          "result": {
+            "ok": true,
+            "location": "bld_bs_shrine",
+            "fee": 30,
+            "minute": 555,
+            "messages": [
+              "【系统】已登记白石归途殿为复活点，支付30铜"
+            ],
+            "turnClock": {
+              "startMinute": 540,
+              "minute": 555,
+              "elapsedMinutes": 15,
+              "tailRule": "本回合工具已推进15分钟，包含操作过程中的对白。没有额外独立动作时尾注时长写15分；不能再加默认10分。"
+            }
+          }
+        }
+      ],
+      "player": {
+        "name": "旅人",
+        "level": 5,
+        "xp": 0,
+        "coins": 70,
+        "hp": 12,
+        "maxHp": 12,
+        "mp": 10,
+        "maxMp": 10,
+        "revivalAnchor": "bld_bs_shrine",
+        "attributes": {
+          "力量": 10,
+          "敏捷": 10,
+          "体质": 10,
+          "智力": 10,
+          "精神": 10,
+          "魅力": 10
+        },
+        "status": "正常",
+        "freeAttributePoints": 0,
+        "companions": [],
+        "dyingSince": null
+      },
+      "minute": 555
+    },
+    {
+      "id": "RevivalRegistration",
+      "attempt": 2,
+      "input": "我在这里登记复活点，支付规定的登记费。",
+      "pass": true,
+      "error": null,
+      "reply": "神殿的执事核对了你的等级，收下30铜，将你的名字与印记录入白石归途殿的复活名录。香火气里，石壁上属于你的那一行微微亮了一瞬，随即归于平静。\n\n登记完成。自此刻起，若你身死，魂息将被牵引回这座殿堂重聚。\n\n- 登记费：30铜（已付）\n- 余额：70铜\n- 复活点：白石归途殿\n\n<回合 时长=\"15分\" 地点=\"bld_bs_shrine\" 在场=\"\"/>",
+      "events": [
+        {
+          "input": {
+            "tool": "world_revival",
+            "args": {
+              "location": "bld_bs_shrine"
+            },
+            "eventId": "quick_RevivalRegistration_0"
+          },
+          "result": {
+            "ok": true,
+            "location": "bld_bs_shrine",
+            "fee": 30,
+            "minute": 555,
+            "messages": [
+              "【系统】已登记白石归途殿为复活点，支付30铜"
+            ],
+            "turnClock": {
+              "startMinute": 540,
+              "minute": 555,
+              "elapsedMinutes": 15,
+              "tailRule": "本回合工具已推进15分钟，包含操作过程中的对白。没有额外独立动作时尾注时长写15分；不能再加默认10分。"
+            }
+          }
+        }
+      ],
+      "player": {
+        "name": "旅人",
+        "level": 5,
+        "xp": 0,
+        "coins": 70,
+        "hp": 12,
+        "maxHp": 12,
+        "mp": 10,
+        "maxMp": 10,
+        "revivalAnchor": "bld_bs_shrine",
+        "attributes": {
+          "力量": 10,
+          "敏捷": 10,
+          "体质": 10,
+          "智力": 10,
+          "精神": 10,
+          "魅力": 10
+        },
+        "status": "正常",
+        "freeAttributePoints": 0,
+        "companions": [],
+        "dyingSince": null
+      },
+      "minute": 555
+    },
+    {
+      "id": "RevivalRegistration",
+      "attempt": 3,
+      "input": "我在这里登记复活点，支付规定的登记费。",
+      "pass": true,
+      "error": null,
+      "reply": "登记完成。白石归途殿的祭司在名册上记下你的名字，收下30铜登记费，告知你此后若在别处殒命，魂魄会被引回此处重聚。\n\n你现有铜70，复活点：白石归途殿。\n\n<回合 时长=\"15分\" 地点=\"bld_bs_shrine\" 在场=\"\"/>",
+      "events": [
+        {
+          "input": {
+            "tool": "world_revival",
+            "args": {
+              "location": "bld_bs_shrine"
+            },
+            "eventId": "quick_RevivalRegistration_0"
+          },
+          "result": {
+            "ok": true,
+            "location": "bld_bs_shrine",
+            "fee": 30,
+            "minute": 555,
+            "messages": [
+              "【系统】已登记白石归途殿为复活点，支付30铜"
+            ],
+            "turnClock": {
+              "startMinute": 540,
+              "minute": 555,
+              "elapsedMinutes": 15,
+              "tailRule": "本回合工具已推进15分钟，包含操作过程中的对白。没有额外独立动作时尾注时长写15分；不能再加默认10分。"
+            }
+          }
+        }
+      ],
+      "player": {
+        "name": "旅人",
+        "level": 5,
+        "xp": 0,
+        "coins": 70,
+        "hp": 12,
+        "maxHp": 12,
+        "mp": 10,
+        "maxMp": 10,
+        "revivalAnchor": "bld_bs_shrine",
+        "attributes": {
+          "力量": 10,
+          "敏捷": 10,
+          "体质": 10,
+          "智力": 10,
+          "精神": 10,
+          "魅力": 10
+        },
+        "status": "正常",
+        "freeAttributePoints": 0,
+        "companions": [],
+        "dyingSince": null
+      },
+      "minute": 555
+    },
+    {
+      "id": "OpposedCheck",
+      "attempt": 1,
+      "input": "我跟阿砚进行一次不伤人的掰手腕，谁都不让着谁。",
+      "pass": true,
+      "error": null,
+      "reply": "你把右肘往磨盘边缘一压，阿砚也立刻架好手腕，谁也没说“让你三分”。一开始他指尖发白，手腕绷得很稳，看得出常年握刨子的底子；但撑到第三息，他的手背开始往木面上倒。你顺势一压，干脆利落地把他按在了磨盘上。\n\n阿砚抽回手，甩了甩腕子，脸上有点挂不住，却还是咧嘴笑了：“行，你力气是真大。我这手修轴还行，比这个就算了。”他低头看了看自己掌心，又抬眼瞟你一下，像是在重新估量你这个人。\n\n<回合 时长=\"10分\" 地点=\"bld_hw_mill\" 在场=\"npc_hw_ayan\"/>",
+      "events": [
+        {
+          "input": {
+            "tool": "world_check",
+            "args": {
+              "attribute": "力量",
+              "opponent": {
+                "npc": "npc_hw_ayan",
+                "attribute": "力量"
+              },
+              "contextReason": "掰手腕纯粹比力量，双方都全力不让"
+            },
+            "eventId": "quick_OpposedCheck_0"
+          },
+          "result": {
+            "ok": true,
+            "die": 17,
+            "rolls": [
+              17
+            ],
+            "modifier": 0,
+            "total": 17,
+            "difficulty": 5,
+            "degree": "大成功",
+            "success": true,
+            "opponent": {
+              "npc": "npc_hw_ayan",
+              "attribute": "力量",
+              "skill": null,
+              "die": 5,
+              "modifier": 0,
+              "total": 5
+            },
+            "actionScope": {
+              "kind": "judgement",
+              "healthChanged": false,
+              "inventoryChanged": false,
+              "feePaid": 0,
+              "note": "仅结算判断或对抗，并履行已引用的协助；未伤人、毁物或制造。不得从骰点虚构这些变化。"
+            },
+            "minute": 540,
+            "messages": [],
+            "turnClock": {
+              "startMinute": 540,
+              "minute": 540,
+              "elapsedMinutes": 0,
+              "tailRule": "本回合工具尚未推进时间，普通对话按实际耗时结算。"
+            }
+          }
+        }
+      ],
+      "player": {
+        "name": "旅人",
+        "level": 1,
+        "xp": 0,
+        "coins": 180,
+        "hp": 12,
+        "maxHp": 12,
+        "mp": 10,
+        "maxMp": 10,
+        "revivalAnchor": "loc_hw",
+        "attributes": {
+          "力量": 10,
+          "敏捷": 10,
+          "体质": 10,
+          "智力": 10,
+          "精神": 10,
+          "魅力": 10
+        },
+        "status": "正常",
+        "freeAttributePoints": 0,
+        "companions": [],
+        "dyingSince": null
+      },
+      "minute": 550
+    },
+    {
+      "id": "OpposedCheck",
+      "attempt": 2,
+      "input": "我跟阿砚进行一次不伤人的掰手腕，谁都不让着谁。",
+      "pass": true,
+      "error": null,
+      "reply": "你把手肘压上磨坊那张旧木桌，阿砚愣了一下，随即也把袖子挽起来。两只手交握，谁都没说客气话。\n\n开始的几秒僵着。阿砚的手腕绷得很紧，指节发白，眼神盯着桌角，像是在算水流的力道——可你这边一沉，他的手背就慢慢朝桌面压下去。他咬牙又顶回一点，肩膀都耸起来，最后还是“咚”地贴上了木板。\n\n“你力气真大。”他抽回手甩了甩，脸上有点红，不像是服气，倒像是被戳到了什么。“我姐总说我光会看不会干。……你这手，是干过活的。”\n\n他没提再来一局，只是把旁边几根量过水位的木签收拢起来，重新蹲回轴座边上。\n\n<回合 时长=\"10分\" 地点=\"bld_hw_mill\" 在场=\"npc_hw_ayan\"/>",
+      "events": [
+        {
+          "input": {
+            "tool": "world_check",
+            "args": {
+              "attribute": "力量",
+              "opponent": {
+                "npc": "npc_hw_ayan",
+                "attribute": "力量"
+              }
+            },
+            "eventId": "quick_OpposedCheck_0"
+          },
+          "result": {
+            "ok": true,
+            "die": 17,
+            "rolls": [
+              17
+            ],
+            "modifier": 0,
+            "total": 17,
+            "difficulty": 5,
+            "degree": "大成功",
+            "success": true,
+            "opponent": {
+              "npc": "npc_hw_ayan",
+              "attribute": "力量",
+              "skill": null,
+              "die": 5,
+              "modifier": 0,
+              "total": 5
+            },
+            "actionScope": {
+              "kind": "judgement",
+              "healthChanged": false,
+              "inventoryChanged": false,
+              "feePaid": 0,
+              "note": "仅结算判断或对抗，并履行已引用的协助；未伤人、毁物或制造。不得从骰点虚构这些变化。"
+            },
+            "minute": 540,
+            "messages": [],
+            "turnClock": {
+              "startMinute": 540,
+              "minute": 540,
+              "elapsedMinutes": 0,
+              "tailRule": "本回合工具尚未推进时间，普通对话按实际耗时结算。"
+            }
+          }
+        }
+      ],
+      "player": {
+        "name": "旅人",
+        "level": 1,
+        "xp": 0,
+        "coins": 180,
+        "hp": 12,
+        "maxHp": 12,
+        "mp": 10,
+        "maxMp": 10,
+        "revivalAnchor": "loc_hw",
+        "attributes": {
+          "力量": 10,
+          "敏捷": 10,
+          "体质": 10,
+          "智力": 10,
+          "精神": 10,
+          "魅力": 10
+        },
+        "status": "正常",
+        "freeAttributePoints": 0,
+        "companions": [],
+        "dyingSince": null
+      },
+      "minute": 550
+    },
+    {
+      "id": "OpposedCheck",
+      "attempt": 3,
+      "input": "我跟阿砚进行一次不伤人的掰手腕，谁都不让着谁。",
+      "pass": true,
+      "error": null,
+      "reply": "磨坊里光线斜斜落在旧轴上。你挽起袖子，把手肘抵在磨盘边缘的木案上，阿砚犹豫了一下，还是伸出了手——他手指上有木屑划出的旧痕，掌根很硬。\n\n“谁都不让谁。”他低声说，像是给自己定规矩。\n\n一开始他压得很稳，肩膀绷紧，牙关咬着，想用学徒常年搬木料的腕劲把你压在案上。但你的力道来得太快，他的手腕被一点点掰过去，木案发出轻响。他撑到最后也没松劲，直到手背贴到案面，才长长吐出一口气，耳朵有点红。\n\n“……力气真大。”他揉了揉手腕，没找借口，只是看着你，“再来一次，我换个姿势。”\n\n<回合 时长=\"10分\" 地点=\"bld_hw_mill\" 在场=\"npc_hw_ayan\"/>",
+      "events": [
+        {
+          "input": {
+            "tool": "world_check",
+            "args": {
+              "attribute": "力量",
+              "opponent": {
+                "npc": "npc_hw_ayan",
+                "attribute": "力量"
+              },
+              "contextReason": "掰手腕，双方全力"
+            },
+            "eventId": "quick_OpposedCheck_0"
+          },
+          "result": {
+            "ok": true,
+            "die": 17,
+            "rolls": [
+              17
+            ],
+            "modifier": 0,
+            "total": 17,
+            "difficulty": 5,
+            "degree": "大成功",
+            "success": true,
+            "opponent": {
+              "npc": "npc_hw_ayan",
+              "attribute": "力量",
+              "skill": null,
+              "die": 5,
+              "modifier": 0,
+              "total": 5
+            },
+            "actionScope": {
+              "kind": "judgement",
+              "healthChanged": false,
+              "inventoryChanged": false,
+              "feePaid": 0,
+              "note": "仅结算判断或对抗，并履行已引用的协助；未伤人、毁物或制造。不得从骰点虚构这些变化。"
+            },
+            "minute": 540,
+            "messages": [],
+            "turnClock": {
+              "startMinute": 540,
+              "minute": 540,
+              "elapsedMinutes": 0,
+              "tailRule": "本回合工具尚未推进时间，普通对话按实际耗时结算。"
+            }
+          }
+        }
+      ],
+      "player": {
+        "name": "旅人",
+        "level": 1,
+        "xp": 0,
+        "coins": 180,
+        "hp": 12,
+        "maxHp": 12,
+        "mp": 10,
+        "maxMp": 10,
+        "revivalAnchor": "loc_hw",
+        "attributes": {
+          "力量": 10,
+          "敏捷": 10,
+          "体质": 10,
+          "智力": 10,
+          "精神": 10,
+          "魅力": 10
+        },
+        "status": "正常",
+        "freeAttributePoints": 0,
+        "companions": [],
+        "dyingSince": null
+      },
+      "minute": 550
+    },
+    {
+      "id": "PromisedAssistance",
+      "attempt": 1,
+      "input": "阿砚已经答应帮我判断这块木料适不适合削木楔，现在我和他一起检查。",
+      "pass": true,
+      "error": null,
+      "reply": "你和阿砚蹲在那堆木料前，一人翻一头。你照着心里那点模糊印象去看纹理走向、掂分量，手上没个准头——木料表面被雨水浸过又晒干，颜色深浅不一，你越看越拿不准哪面该当楔背。\n\n阿砚凑过来眯眼瞧了半天，手指在木纹上比划了两下，也没能说出个准话。他有点窘，挠了挠后脑勺：“我……光看这个也看不出来，得下刀试才知道。轴那边水流的事我倒有点数，可木头这种，我姐比我强。”\n\n木料一根没动，也没伤着。你只确认了一件事：光凭看和摸，这块料到底合不合适做木楔，眼下还判断不出来。\n\n<回合 时长=\"10分\" 地点=\"bld_hw_mill\" 在场=\"npc_hw_ayan\"/>",
+      "events": [
+        {
+          "input": {
+            "tool": "world_check",
+            "args": {
+              "attribute": "敏捷",
+              "skill": "skill_life_6_core",
+              "difficulty": 15,
+              "helpers": [
+                "obl_prepare_assistance"
+              ]
+            },
+            "eventId": "quick_PromisedAssistance_0"
+          },
+          "result": {
+            "ok": true,
+            "die": 3,
+            "rolls": [
+              3
+            ],
+            "modifier": 0,
+            "total": 3,
+            "difficulty": 15,
+            "degree": "大失败",
+            "success": false,
+            "helpers": [
+              {
+                "obligation": "obl_prepare_assistance",
+                "npc": "npc_hw_ayan",
+                "die": 2,
+                "modifier": 0,
+                "total": 2,
+                "success": false,
+                "bonus": 0
+              }
+            ],
+            "actionScope": {
+              "kind": "judgement",
+              "healthChanged": false,
+              "inventoryChanged": false,
+              "feePaid": 0,
+              "note": "仅结算判断或对抗，并履行已引用的协助；未伤人、毁物或制造。不得从骰点虚构这些变化。"
+            },
+            "minute": 605,
+            "messages": [],
+            "turnClock": {
+              "startMinute": 605,
+              "minute": 605,
+              "elapsedMinutes": 0,
+              "tailRule": "本回合工具尚未推进时间，普通对话按实际耗时结算。"
+            }
+          }
+        }
+      ],
+      "player": {
+        "name": "旅人",
+        "level": 1,
+        "xp": 0,
+        "coins": 170,
+        "hp": 12,
+        "maxHp": 12,
+        "mp": 10,
+        "maxMp": 10,
+        "revivalAnchor": "loc_hw",
+        "attributes": {
+          "力量": 10,
+          "敏捷": 10,
+          "体质": 10,
+          "智力": 10,
+          "精神": 10,
+          "魅力": 10
+        },
+        "status": "正常",
+        "freeAttributePoints": 0,
+        "companions": [],
+        "dyingSince": null
+      },
+      "minute": 615
+    },
+    {
+      "id": "PromisedAssistance",
+      "attempt": 2,
+      "input": "阿砚已经答应帮我判断这块木料适不适合削木楔，现在我和他一起检查。",
+      "pass": true,
+      "error": null,
+      "reply": "你蹲下来，手指顺着木料表面一寸寸摸过去，指尖贴着纹理压了压。阿砚也凑近，把木料侧过来迎着门口的光看，两人看了半晌，谁也没能给出准话。\n\n“纹理像是顺的……”阿砚皱着眉，又不太确定地收回手，“可这头颜色深些，我不敢说里头没有暗裂。顺着它下刀或许没问题，也或许一削就崩。”\n\n你翻过木料背面，有一段纹理走向忽然乱了，再往深处就看不真切。没有斧凿，光靠手和眼睛，判断不出这块料到底能不能当木楔用——至少现在不能。\n\n木料还是原样，没被磕碰，也没掉下一块渣。阿砚挠挠后脑，有些不好意思：“要不……先别急着削？我再想想怎么看。”\n\n<回合 时长=\"10分\" 地点=\"bld_hw_mill\" 在场=\"npc_hw_ayan\"/>",
+      "events": [
+        {
+          "input": {
+            "tool": "world_check",
+            "args": {
+              "attribute": "敏捷",
+              "skill": "skill_life_6_core",
+              "difficulty": 15,
+              "helpers": [
+                "obl_prepare_assistance"
+              ],
+              "contextReason": "阿砚在场，木工熟练度120，能指出纹理走向与隐裂",
+              "context": 2
+            },
+            "eventId": "quick_PromisedAssistance_0"
+          },
+          "result": {
+            "ok": true,
+            "die": 3,
+            "rolls": [
+              3
+            ],
+            "modifier": 2,
+            "total": 5,
+            "difficulty": 15,
+            "degree": "大失败",
+            "success": false,
+            "helpers": [
+              {
+                "obligation": "obl_prepare_assistance",
+                "npc": "npc_hw_ayan",
+                "die": 2,
+                "modifier": 0,
+                "total": 2,
+                "success": false,
+                "bonus": 0
+              }
+            ],
+            "actionScope": {
+              "kind": "judgement",
+              "healthChanged": false,
+              "inventoryChanged": false,
+              "feePaid": 0,
+              "note": "仅结算判断或对抗，并履行已引用的协助；未伤人、毁物或制造。不得从骰点虚构这些变化。"
+            },
+            "minute": 605,
+            "messages": [],
+            "turnClock": {
+              "startMinute": 605,
+              "minute": 605,
+              "elapsedMinutes": 0,
+              "tailRule": "本回合工具尚未推进时间，普通对话按实际耗时结算。"
+            }
+          }
+        }
+      ],
+      "player": {
+        "name": "旅人",
+        "level": 1,
+        "xp": 0,
+        "coins": 170,
+        "hp": 12,
+        "maxHp": 12,
+        "mp": 10,
+        "maxMp": 10,
+        "revivalAnchor": "loc_hw",
+        "attributes": {
+          "力量": 10,
+          "敏捷": 10,
+          "体质": 10,
+          "智力": 10,
+          "精神": 10,
+          "魅力": 10
+        },
+        "status": "正常",
+        "freeAttributePoints": 0,
+        "companions": [],
+        "dyingSince": null
+      },
+      "minute": 615
+    },
+    {
+      "id": "PromisedAssistance",
+      "attempt": 3,
+      "input": "阿砚已经答应帮我判断这块木料适不适合削木楔，现在我和他一起检查。",
+      "pass": true,
+      "error": null,
+      "reply": "你把手掌按在木料上，顺着表面摸过去，又用指节敲了两下。声音闷得没有章法，木纹走向在指尖下也糊成一团——你分不清哪头是顺纹、哪处已经开始内裂，更说不准这块料削成木楔后吃不吃得住轴。\n\n阿砚蹲下来，凑近看了半天，眉头越皱越紧。他伸手比了比木料的厚度，又侧过身对着磨坊门口透进来的光眯眼瞧，最后也只是摇头：“……我看不准。这块料表面还行，可里头怎么样，光这么摸敲，我也不敢说。”他顿了顿，像是怕你觉得他在敷衍，又补了一句，“不是不想帮你，是真看不出来。要判断，得刨开一小片看断面，或者拿它敲个响——可那就动刀了。”\n\n木料仍旧原样躺在那里，没有下刀，也没有任何损耗。你们俩这一次都没能确认它到底适不适合削木楔。\n\n<回合 时长=\"10分\" 地点=\"bld_hw_mill\" 在场=\"npc_hw_ayan\"/>",
+      "events": [
+        {
+          "input": {
+            "tool": "world_check",
+            "args": {
+              "attribute": "敏捷",
+              "skill": "skill_life_6_core",
+              "difficulty": 15,
+              "helpers": [
+                "obl_prepare_assistance"
+              ],
+              "contextReason": "阿砚木工熟练，协助辨识木纹与含水情况"
+            },
+            "eventId": "quick_PromisedAssistance_0"
+          },
+          "result": {
+            "ok": true,
+            "die": 3,
+            "rolls": [
+              3
+            ],
+            "modifier": 0,
+            "total": 3,
+            "difficulty": 15,
+            "degree": "大失败",
+            "success": false,
+            "helpers": [
+              {
+                "obligation": "obl_prepare_assistance",
+                "npc": "npc_hw_ayan",
+                "die": 2,
+                "modifier": 0,
+                "total": 2,
+                "success": false,
+                "bonus": 0
+              }
+            ],
+            "actionScope": {
+              "kind": "judgement",
+              "healthChanged": false,
+              "inventoryChanged": false,
+              "feePaid": 0,
+              "note": "仅结算判断或对抗，并履行已引用的协助；未伤人、毁物或制造。不得从骰点虚构这些变化。"
+            },
+            "minute": 605,
+            "messages": [],
+            "turnClock": {
+              "startMinute": 605,
+              "minute": 605,
+              "elapsedMinutes": 0,
+              "tailRule": "本回合工具尚未推进时间，普通对话按实际耗时结算。"
+            }
+          }
+        }
+      ],
+      "player": {
+        "name": "旅人",
+        "level": 1,
+        "xp": 0,
+        "coins": 170,
+        "hp": 12,
+        "maxHp": 12,
+        "mp": 10,
+        "maxMp": 10,
+        "revivalAnchor": "loc_hw",
+        "attributes": {
+          "力量": 10,
+          "敏捷": 10,
+          "体质": 10,
+          "智力": 10,
+          "精神": 10,
+          "魅力": 10
+        },
+        "status": "正常",
+        "freeAttributePoints": 0,
+        "companions": [],
+        "dyingSince": null
+      },
+      "minute": 615
+    },
+    {
+      "id": "WorkshopCraft",
+      "attempt": 1,
+      "input": "我用已经学会的配方和手里的小刀，在这个工作台削一批榫用木楔。",
+      "pass": true,
+      "error": null,
+      "reply": "小刀落下去第一刀就偏了——木料直纹没找准，薄条削到一半逆了纹，崩开一道口子，四块木楔的料全废了。你在台上试压的那块也裂成两截，碎屑扫了一地。\n\n这一趟白搭：木料1份没了，工作台费2铜照付，小刀也磨钝了一点（80→79）。回收到的只有些刨花碎屑，做不成楔子。\n\n<回合 时长=\"20分\" 地点=\"bld_hw_mill\" 在场=\"npc_hw_ayan\"/>",
+      "events": [
+        {
+          "input": {
+            "tool": "world_craft",
+            "args": {
+              "recipe": "recipe_wooden_pegs"
+            },
+            "eventId": "quick_WorkshopCraft_0"
+          },
+          "result": {
+            "ok": true,
+            "recipe": "recipe_wooden_pegs",
+            "die": 5,
+            "rolls": [
+              5
+            ],
+            "modifier": 1,
+            "total": 6,
+            "difficulty": 10,
+            "degree": "失败",
+            "success": false,
+            "tools": [
+              {
+                "item": "item_whittling_knife",
+                "bonus": 1
+              }
+            ],
+            "toolBonus": 1,
+            "receipt": "crafted_quick_WorkshopCraft_0",
+            "instances": [],
+            "workmanship": null,
+            "salvage": [],
+            "spent": {
+              "feePaid": 2,
+              "minutes": 20,
+              "materials": [
+                {
+                  "item": "item_wood",
+                  "name": "木料",
+                  "quantity": 1
+                }
+              ],
+              "toolWear": [
+                {
+                  "item": "item_whittling_knife",
+                  "name": "削木小刀",
+                  "before": 80,
+                  "after": 79
+                }
+              ]
+            },
+            "healthDelta": 0,
+            "produced": [],
+            "note": "spent已实际支付及消耗，salvage是实际回收物，produced是实际成品。失败不退款；未回收的废料不属于可用库存。",
+            "minute": 600,
+            "messages": [
+              "【系统】制造失败，耗时20分钟，按配方回收0份材料"
+            ],
+            "turnClock": {
+              "startMinute": 580,
+              "minute": 600,
+              "elapsedMinutes": 20,
+              "tailRule": "本回合工具已推进20分钟，包含操作过程中的对白。没有额外独立动作时尾注时长写20分；不能再加默认10分。"
+            }
+          }
+        }
+      ],
+      "player": {
+        "name": "旅人",
+        "level": 1,
+        "xp": 0,
+        "coins": 162,
+        "hp": 12,
+        "maxHp": 12,
+        "mp": 10,
+        "maxMp": 10,
+        "revivalAnchor": "loc_hw",
+        "attributes": {
+          "力量": 10,
+          "敏捷": 10,
+          "体质": 10,
+          "智力": 10,
+          "精神": 10,
+          "魅力": 10
+        },
+        "status": "正常",
+        "freeAttributePoints": 0,
+        "companions": [],
+        "dyingSince": null
+      },
+      "minute": 600
+    },
+    {
+      "id": "WorkshopCraft",
+      "attempt": 2,
+      "input": "我用已经学会的配方和手里的小刀，在这个工作台削一批榫用木楔。",
+      "pass": true,
+      "error": null,
+      "reply": "削到第三根的时候，刀口一滑，顺着木纹劈开了一道长裂纹——那根木料算是废了。阿砚在旁边探过头看了一眼，没笑话你，只是把自己手边一块废木片推过来：“楔子得顺纹下刀，逆着一使劲就崩。”你手上只剩一堆碎屑，没有一个成形的楔子。\n\n工作台使用费2铜已付，木料损耗1份，小刀也磨钝了些。\n\n<回合 时长=\"20分\" 地点=\"bld_hw_mill\" 在场=\"npc_hw_ayan\"/>",
+      "events": [
+        {
+          "input": {
+            "tool": "world_craft",
+            "args": {
+              "recipe": "recipe_wooden_pegs"
+            },
+            "eventId": "quick_WorkshopCraft_0"
+          },
+          "result": {
+            "ok": true,
+            "recipe": "recipe_wooden_pegs",
+            "die": 5,
+            "rolls": [
+              5
+            ],
+            "modifier": 1,
+            "total": 6,
+            "difficulty": 10,
+            "degree": "失败",
+            "success": false,
+            "tools": [
+              {
+                "item": "item_whittling_knife",
+                "bonus": 1
+              }
+            ],
+            "toolBonus": 1,
+            "receipt": "crafted_quick_WorkshopCraft_0",
+            "instances": [],
+            "workmanship": null,
+            "salvage": [],
+            "spent": {
+              "feePaid": 2,
+              "minutes": 20,
+              "materials": [
+                {
+                  "item": "item_wood",
+                  "name": "木料",
+                  "quantity": 1
+                }
+              ],
+              "toolWear": [
+                {
+                  "item": "item_whittling_knife",
+                  "name": "削木小刀",
+                  "before": 80,
+                  "after": 79
+                }
+              ]
+            },
+            "healthDelta": 0,
+            "produced": [],
+            "note": "spent已实际支付及消耗，salvage是实际回收物，produced是实际成品。失败不退款；未回收的废料不属于可用库存。",
+            "minute": 600,
+            "messages": [
+              "【系统】制造失败，耗时20分钟，按配方回收0份材料"
+            ],
+            "turnClock": {
+              "startMinute": 580,
+              "minute": 600,
+              "elapsedMinutes": 20,
+              "tailRule": "本回合工具已推进20分钟，包含操作过程中的对白。没有额外独立动作时尾注时长写20分；不能再加默认10分。"
+            }
+          }
+        }
+      ],
+      "player": {
+        "name": "旅人",
+        "level": 1,
+        "xp": 0,
+        "coins": 162,
+        "hp": 12,
+        "maxHp": 12,
+        "mp": 10,
+        "maxMp": 10,
+        "revivalAnchor": "loc_hw",
+        "attributes": {
+          "力量": 10,
+          "敏捷": 10,
+          "体质": 10,
+          "智力": 10,
+          "精神": 10,
+          "魅力": 10
+        },
+        "status": "正常",
+        "freeAttributePoints": 0,
+        "companions": [],
+        "dyingSince": null
+      },
+      "minute": 600
+    },
+    {
+      "id": "WorkshopCraft",
+      "attempt": 3,
+      "input": "我用已经学会的配方和手里的小刀，在这个工作台削一批榫用木楔。",
+      "pass": true,
+      "error": null,
+      "reply": "你架好木料，按记熟的配方下刀。小刀角度一偏，木纹顺着斜茬劈开，削出的楔片薄厚不匀，几刀下去就崩了口，凑不成能用的榫楔。\n\n工作台使用费2铜已经付掉，一段木料废了，削木小刀也磨钝了些（80→79）。地上那堆碎木屑不成材，捡不回来。\n\n<回合 时长=\"20分\" 地点=\"bld_hw_mill\" 在场=\"npc_hw_ayan\"/>",
+      "events": [
+        {
+          "input": {
+            "tool": "world_craft",
+            "args": {
+              "recipe": "recipe_wooden_pegs"
+            },
+            "eventId": "quick_WorkshopCraft_0"
+          },
+          "result": {
+            "ok": true,
+            "recipe": "recipe_wooden_pegs",
+            "die": 5,
+            "rolls": [
+              5
+            ],
+            "modifier": 1,
+            "total": 6,
+            "difficulty": 10,
+            "degree": "失败",
+            "success": false,
+            "tools": [
+              {
+                "item": "item_whittling_knife",
+                "bonus": 1
+              }
+            ],
+            "toolBonus": 1,
+            "receipt": "crafted_quick_WorkshopCraft_0",
+            "instances": [],
+            "workmanship": null,
+            "salvage": [],
+            "spent": {
+              "feePaid": 2,
+              "minutes": 20,
+              "materials": [
+                {
+                  "item": "item_wood",
+                  "name": "木料",
+                  "quantity": 1
+                }
+              ],
+              "toolWear": [
+                {
+                  "item": "item_whittling_knife",
+                  "name": "削木小刀",
+                  "before": 80,
+                  "after": 79
+                }
+              ]
+            },
+            "healthDelta": 0,
+            "produced": [],
+            "note": "spent已实际支付及消耗，salvage是实际回收物，produced是实际成品。失败不退款；未回收的废料不属于可用库存。",
+            "minute": 600,
+            "messages": [
+              "【系统】制造失败，耗时20分钟，按配方回收0份材料"
+            ],
+            "turnClock": {
+              "startMinute": 580,
+              "minute": 600,
+              "elapsedMinutes": 20,
+              "tailRule": "本回合工具已推进20分钟，包含操作过程中的对白。没有额外独立动作时尾注时长写20分；不能再加默认10分。"
+            }
+          }
+        }
+      ],
+      "player": {
+        "name": "旅人",
+        "level": 1,
+        "xp": 0,
+        "coins": 162,
+        "hp": 12,
+        "maxHp": 12,
+        "mp": 10,
+        "maxMp": 10,
+        "revivalAnchor": "loc_hw",
+        "attributes": {
+          "力量": 10,
+          "敏捷": 10,
+          "体质": 10,
+          "智力": 10,
+          "精神": 10,
+          "魅力": 10
+        },
+        "status": "正常",
+        "freeAttributePoints": 0,
+        "companions": [],
+        "dyingSince": null
+      },
+      "minute": 600
+    }
+  ]
+}

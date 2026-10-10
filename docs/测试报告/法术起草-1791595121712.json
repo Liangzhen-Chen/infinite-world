@@ -1,0 +1,101 @@
+{
+  "date": "2026-10-10",
+  "scope": "按手写法术机制生成世界内说明；仅草稿结构校验，尚未发布或质量验收",
+  "costUpperYuan": 0.7390829600000002,
+  "batches": [
+    {
+      "index": 1,
+      "count": 14,
+      "success": true,
+      "errors": [],
+      "published": false
+    },
+    {
+      "index": 0,
+      "count": 14,
+      "success": true,
+      "errors": [],
+      "published": false
+    },
+    {
+      "index": 2,
+      "count": 14,
+      "success": true,
+      "errors": [],
+      "published": false
+    },
+    {
+      "index": 3,
+      "count": 14,
+      "success": true,
+      "errors": [],
+      "published": false
+    },
+    {
+      "index": 5,
+      "count": 14,
+      "success": true,
+      "errors": [],
+      "published": false
+    },
+    {
+      "index": 4,
+      "count": 14,
+      "success": true,
+      "errors": [
+        {
+          "part": 9,
+          "attempt": 1,
+          "error": "[{\"path\":\"/spells/1/failure\",\"keyword\":\"minLength\",\"params\":{\"limit\":40}},{\"path\":\"/spells/2/failure\",\"keyword\":\"minLength\",\"params\":{\"limit\":40}}]"
+        },
+        {
+          "part": 9,
+          "attempt": 2,
+          "error": "[{\"path\":\"/spells/0\",\"keyword\":\"additionalProperties\",\"params\":{\"additionalProperty\":\"castingNote\"}},{\"path\":\"/spells/1\",\"keyword\":\"additionalProperties\",\"params\":{\"additionalProperty\":\"castingNote\"}},{\"path\":\"/spells/2\",\"keyword\":\"additionalProperties\",\"params\":{\"additionalProperty\":\"castingNote\"}}]"
+        }
+      ],
+      "published": false
+    },
+    {
+      "index": 7,
+      "count": 14,
+      "success": true,
+      "errors": [],
+      "published": false
+    },
+    {
+      "index": 6,
+      "count": 14,
+      "success": true,
+      "errors": [],
+      "published": false
+    },
+    {
+      "index": 9,
+      "count": 14,
+      "success": true,
+      "errors": [],
+      "published": false
+    },
+    {
+      "index": 8,
+      "count": 14,
+      "success": true,
+      "errors": [
+        {
+          "part": 9,
+          "attempt": 1,
+          "error": "[{\"path\":\"/spells/0\",\"keyword\":\"additionalProperties\",\"params\":{\"additionalProperty\":\"proficiencyEffectsNote\"}},{\"path\":\"/spells/1\",\"keyword\":\"additionalProperties\",\"params\":{\"additionalProperty\":\"proficiencyEffectsNote\"}},{\"path\":\"/spells/2\",\"keyword\":\"additionalProperties\",\"params\":{\"additionalProperty\":\"proficiencyEffectsNote\"}}]"
+        }
+      ],
+      "published": false
+    },
+    {
+      "index": 10,
+      "count": 14,
+      "success": true,
+      "errors": [],
+      "published": false
+    }
+  ]
+}

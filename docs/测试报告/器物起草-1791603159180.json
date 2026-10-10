@@ -1,0 +1,58 @@
+{
+  "runId": "1791603159180",
+  "root": "world/drafts/economy/1791603159180",
+  "scope": "日常经济首批骨架的模型起草，未发布，未人工验收；完整400物品200配方尚未完成",
+  "counts": {
+    "plannedItems": 66,
+    "plannedRecipes": 15,
+    "structuredLore": 16
+  },
+  "batches": [
+    {
+      "index": 0,
+      "count": 50,
+      "success": false,
+      "failures": [
+        {
+          "offset": 3,
+          "attempt": 1,
+          "error": "说明编号有遗漏、重复或额外实体"
+        },
+        {
+          "offset": 3,
+          "attempt": 2,
+          "error": "说明编号有遗漏、重复或额外实体"
+        },
+        {
+          "offset": 27,
+          "attempt": 1,
+          "error": "说明编号有遗漏、重复或额外实体"
+        },
+        {
+          "offset": 39,
+          "attempt": 1,
+          "error": "[{\"instancePath\":\"/items/0/description\",\"schemaPath\":\"#/properties/items/items/properties/description/maxLength\",\"keyword\":\"maxLength\",\"params\":{\"limit\":190},\"message\":\"must NOT have more than 190 characters\"}]"
+        },
+        {
+          "offset": 39,
+          "attempt": 2,
+          "error": "说明编号有遗漏、重复或额外实体"
+        },
+        {
+          "offset": 39,
+          "attempt": 3,
+          "error": "说明编号有遗漏、重复或额外实体"
+        }
+      ]
+    },
+    {
+      "index": 1,
+      "count": 16,
+      "success": true,
+      "failures": []
+    }
+  ],
+  "audit": null,
+  "manualApproved": false,
+  "costUpperYuan": 0.21880504000000003
+}

@@ -1,0 +1,54 @@
+{
+  "runId": "1791605549692",
+  "root": "world/drafts/economy/1791605549692",
+  "scope": "日常经济首批骨架的模型起草，未发布，未人工验收；完整400物品200配方尚未完成",
+  "counts": {
+    "plannedItems": 66,
+    "plannedRecipes": 15,
+    "structuredLore": 16
+  },
+  "batches": [
+    {
+      "index": 0,
+      "count": 50,
+      "success": false,
+      "failures": [
+        {
+          "offset": 31,
+          "attempt": 1,
+          "error": "item_cooking_pot: 擅改保存上限为180天，骨架为无固定天数"
+        },
+        {
+          "offset": 31,
+          "attempt": 2,
+          "error": "item_cooking_pot: 擅改保存上限为180天，骨架为无固定天数"
+        },
+        {
+          "offset": 31,
+          "attempt": 3,
+          "error": "item_cooking_pot: 擅改保存上限为180天，骨架为无固定天数"
+        }
+      ]
+    },
+    {
+      "index": 1,
+      "count": 16,
+      "success": true,
+      "failures": [
+        {
+          "offset": 0,
+          "attempt": 1,
+          "error": "item_iron_nail: 擅改保存上限为180天，骨架为无固定天数"
+        },
+        {
+          "offset": 0,
+          "attempt": 2,
+          "error": "item_iron_nail: 擅改保存上限为180天，骨架为无固定天数"
+        }
+      ]
+    }
+  ],
+  "audit": null,
+  "manualApproved": false,
+  "costUpperYuan": 0.14378063999999996
+}

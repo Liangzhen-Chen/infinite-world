@@ -1,0 +1,76 @@
+{
+  "bone": {
+    "id": "monster_stone_coil_bug",
+    "name": "石壳盘虫",
+    "aliases": [],
+    "template": 2,
+    "levelRange": [
+      10,
+      15
+    ],
+    "habitatTags": [
+      "废观测塔林隙"
+    ],
+    "grouping": "五至十二只",
+    "diet": "腐食",
+    "drops": [],
+    "intelligence": 1,
+    "taming": {
+      "possible": true,
+      "conditions": [
+        "有合适食物并建立持续信任",
+        "具备对应阶段驯兽能力"
+      ]
+    },
+    "tamingRule": {
+      "category": "combat",
+      "minimumSkill": 300,
+      "minimumPlayerLevel": 10,
+      "trustThreshold": 60,
+      "minutes": 60,
+      "difficulty": 15,
+      "food": [
+        {
+          "item": "item_ration",
+          "hungerRelief": 35,
+          "trustGain": 5
+        }
+      ],
+      "skills": [
+        "辨认口令",
+        "跟随训练"
+      ],
+      "rideable": false,
+      "riderWeightKg": 60,
+      "carryKg": 1
+    },
+    "wildlife": {
+      "habitat": "habitat_hw_tower",
+      "population": 3,
+      "capacity": 6,
+      "recoveryPerWeek": 1,
+      "activeHours": [
+        360,
+        1080
+      ],
+      "predatorOf": [],
+      "distinction": "盘起时像有裂缝的圆石，爬动露出六对细足",
+      "gather": {
+        "minutes": 20,
+        "tool": null,
+        "consumes": []
+      }
+    }
+  },
+  "habitat": {
+    "id": "habitat_hw_tower",
+    "name": "废观测塔林隙",
+    "location": "site_beilin_tower"
+  },
+  "dailyActivity": "06:00至18:00，其他时段休息；habits必须原样写出两个时间，不能重新换算为相反昼夜",
+  "drops": [],
+  "food": [
+    "干粮"
+  ],
+  "feedback": null
+}

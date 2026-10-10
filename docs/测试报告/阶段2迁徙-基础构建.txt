@@ -1,0 +1,1 @@
+{"hash":"ffc1c7aeebd793e2064a49a35b8fcb2a4393e6b1339b8ddc1651ec8461d5036c","ok":true,"errors":[],"warnings":[],"counts":{"npcs":18,"locations":22,"items":66,"professions":65,"skills":204,"spells":1,"recipes":15,"monsters":50,"bosses":0}}

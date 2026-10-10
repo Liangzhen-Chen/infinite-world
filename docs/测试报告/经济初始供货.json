@@ -1,0 +1,10 @@
+{
+  "sourceHash": "4a98abb2f98c033573d300c4d489e5e05e0a89df6bf2662500c22ba7aae40d9b",
+  "candidateHash": "1bf36e0f1c07f27b2f5471331c8bb0f5fa0f394008bf33cc8033cf753faaf9a7",
+  "planHash": "1715217b6fd9f8c7047b1f949318eaa804f20884cf3b13a4a1af644d976bf149",
+  "published": true,
+  "backup": "C:\\Users\\RobertC\\Documents\\dnd\\backups\\2026-10-10T04-32-28-963Z-stage2-economic-supply-5b2399",
+  "suppliers": 11,
+  "stockLines": 63,
+  "scope": "有限初始供货；只更改源世界，未补充现有战役库存；补货、鲜货变质与年度供需仍待实现"
+}

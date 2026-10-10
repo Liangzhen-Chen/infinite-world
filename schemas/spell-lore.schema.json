@@ -1,0 +1,106 @@
+{
+  "type": "object",
+  "properties": {
+    "spells": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "theory": {
+            "type": "string",
+            "minLength": 70,
+            "maxLength": 180
+          },
+          "casting": {
+            "type": "string",
+            "minLength": 30,
+            "maxLength": 120
+          },
+          "failure": {
+            "type": "string",
+            "minLength": 40,
+            "maxLength": 150
+          },
+          "counters": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 12,
+              "maxLength": 70
+            },
+            "minItems": 2,
+            "maxItems": 4
+          },
+          "socialConsequences": {
+            "type": "string",
+            "minLength": 70,
+            "maxLength": 220
+          },
+          "law": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "river": {
+                "enum": [
+                  "public",
+                  "consent",
+                  "permit",
+                  "crime"
+                ]
+              },
+              "city": {
+                "enum": [
+                  "public",
+                  "consent",
+                  "permit",
+                  "crime"
+                ]
+              },
+              "port": {
+                "enum": [
+                  "public",
+                  "consent",
+                  "permit",
+                  "crime"
+                ]
+              }
+            },
+            "required": [
+              "river",
+              "city",
+              "port"
+            ]
+          },
+          "proficiencyEffects": {
+            "type": "array",
+            "minItems": 4,
+            "maxItems": 4,
+            "items": {
+              "type": "string",
+              "minLength": 15,
+              "maxLength": 80
+            }
+          }
+        },
+        "required": [
+          "id",
+          "theory",
+          "casting",
+          "failure",
+          "counters",
+          "socialConsequences",
+          "law",
+          "proficiencyEffects"
+        ]
+      }
+    }
+  },
+  "required": [
+    "spells"
+  ],
+  "additionalProperties": false
+}

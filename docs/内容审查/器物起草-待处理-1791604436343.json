@@ -1,0 +1,39 @@
+{
+  "runId": "1791604436343",
+  "root": "world/drafts/economy/1791604436343",
+  "scope": "三次失败后停止该批，进入人工处理，不拼接残缺条目发布",
+  "batches": [
+    {
+      "index": 0,
+      "count": 50,
+      "success": false,
+      "failures": [
+        {
+          "offset": 21,
+          "attempt": 1,
+          "error": "[{\"instancePath\":\"/items/1/description\",\"schemaPath\":\"#/properties/items/items/properties/description/minLength\",\"keyword\":\"minLength\",\"params\":{\"limit\":90},\"message\":\"must NOT have fewer than 90 characters\"},{\"instancePath\":\"/items/2/description\",\"schemaPath\":\"#/properties/items/items/properties/description/minLength\",\"keyword\":\"minLength\",\"params\":{\"limit\":90},\"message\":\"must NOT have fewer than 90 characters\"}]"
+        },
+        {
+          "offset": 42,
+          "attempt": 1,
+          "error": "[{\"instancePath\":\"/items/0/storage\",\"schemaPath\":\"#/properties/items/items/properties/storage/minLength\",\"keyword\":\"minLength\",\"params\":{\"limit\":30},\"message\":\"must NOT have fewer than 30 characters\"}]"
+        },
+        {
+          "offset": 45,
+          "attempt": 1,
+          "error": "[{\"instancePath\":\"/items/0/description\",\"schemaPath\":\"#/properties/items/items/properties/description/maxLength\",\"keyword\":\"maxLength\",\"params\":{\"limit\":190},\"message\":\"must NOT have more than 190 characters\"},{\"instancePath\":\"/items/1/description\",\"schemaPath\":\"#/properties/items/items/properties/description/maxLength\",\"keyword\":\"maxLength\",\"params\":{\"limit\":190},\"message\":\"must NOT have more than 190 characters\"}]"
+        },
+        {
+          "offset": 45,
+          "attempt": 2,
+          "error": "item_linen_cloth: 器物说明泄漏目录或游戏保证措辞"
+        },
+        {
+          "offset": 45,
+          "attempt": 3,
+          "error": "item_linen_cloth: 器物说明泄漏目录或游戏保证措辞"
+        }
+      ]
+    }
+  ]
+}

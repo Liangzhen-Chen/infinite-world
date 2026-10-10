@@ -1,0 +1,365 @@
+{
+  "date": "2026-10-10",
+  "scope": "当前引擎5个快速场景，各跑1次；定向复核，不代表全部快速场景；不代表完整11.3/11.4验收",
+  "availableScenarios": 29,
+  "selectedScenarios": [
+    "PetRelease",
+    "BossEntrance",
+    "BossApproach",
+    "BossAdaptation",
+    "BossVacatedLair"
+  ],
+  "pass": true,
+  "costUpperYuan": 0.01510432,
+  "results": [
+    {
+      "id": "PetRelease",
+      "attempt": 1,
+      "fixtureScope": "隔离规则夹具：已有动物归属和已知召唤法术，不代表正式目录或正常取得已完成",
+      "input": "我决定解除这只岸犬的归属，让它自由离开。",
+      "pass": true,
+      "error": null,
+      "reply": "你解开岸犬的归属。它没有立刻跑走——只是抖了抖毛，在酒馆门槛边嗅了嗅空气，随后自己踱向院子的方向，像一只终于不必再看谁脸色的狗。它仍留在青灯酒馆这一带，但从此不再属于你。\n\n<回合 时长=\"0分\" 地点=\"bld_hw_qingdeng\" 在场=\"npc_hw_linsui,npc_hw_hezhou\"/>",
+      "events": [
+        {
+          "input": {
+            "tool": "world_pet",
+            "args": {
+              "operation": "release",
+              "target": "monster_quick_dog"
+            },
+            "eventId": "quick_PetRelease_0"
+          },
+          "result": {
+            "ok": true,
+            "target": "monster_quick_dog",
+            "released": true,
+            "location": "bld_hw_qingdeng",
+            "factSummary": "夹具岸犬已解除归属，目前仍在青灯酒馆。本次完成后地点与生命保持原值。",
+            "actionScope": {
+              "kind": "ownership_release",
+              "instantaneous": true,
+              "locationChanged": false,
+              "note": "仅解除归属，动物仍在登记地点；没有牵绳物品操作、生命变化或迁徙。没有其他独立动作时本回合0分钟。"
+            },
+            "minute": 540,
+            "messages": [],
+            "turnClock": {
+              "startMinute": 540,
+              "minute": 540,
+              "elapsedMinutes": 0,
+              "tailRule": "本次工具明确为即时操作；只有该操作而无其他独立动作时尾注时长写0分，不另加默认10分。普通交谈仍按实际耗时结算。"
+            }
+          }
+        }
+      ],
+      "player": {
+        "name": "旅人",
+        "level": 1,
+        "xp": 0,
+        "coins": 180,
+        "hp": 12,
+        "maxHp": 12,
+        "mp": 10,
+        "maxMp": 10,
+        "revivalAnchor": "loc_hw",
+        "attributes": {
+          "力量": 10,
+          "敏捷": 10,
+          "体质": 10,
+          "智力": 10,
+          "精神": 10,
+          "魅力": 10
+        },
+        "status": "正常",
+        "freeAttributePoints": 0,
+        "companions": [],
+        "dyingSince": null
+      },
+      "minute": 540
+    },
+    {
+      "id": "BossEntrance",
+      "attempt": 1,
+      "fixtureScope": "隔离首领骨架世界：4个首领尚未审核发布；玩家30级/3000生命为安全观察夹具，不是正常成长证据",
+      "input": "只观察北林边的栎根拱洞入口，不进入，也不追踪动物。",
+      "pass": true,
+      "error": null,
+      "reply": "你停在北林边的栎根拱洞外，只从雨幕里看它的入口。\n\n一株老栎树的根须半悬在土坡上，交错成一道低矮拱门。洞口约两人宽、不及一人高，边缘的泥土被反复蹭得发亮，拱口下有一片踩实的湿泥，混着蹄印与爪痕，被雨水泡得模糊。洞里飘出淡淡的腥臊和腐叶气味，深处一片黑，雨声盖住了里面的一切动静。没有活物出现在入口，也没有声音回应你的注视。\n\n你只看到这些，没有进去。\n\n<回合 时长=\"0分\" 地点=\"loc_hw_northwood\" 在场=\"npc_hw_wushuo\"/>",
+      "events": [
+        {
+          "input": {
+            "tool": "world_lair",
+            "args": {
+              "operation": "observe",
+              "lair": "lair_mud_tusk"
+            },
+            "eventId": "quick_BossEntrance_0"
+          },
+          "result": {
+            "ok": true,
+            "lair": "栎根拱洞",
+            "occupant": null,
+            "note": "尚未接触活体，入口观察不能知道未见占据者或其战斗记忆",
+            "actionScope": {
+              "kind": "instant",
+              "instantaneous": true
+            },
+            "minute": 540,
+            "messages": [],
+            "turnClock": {
+              "startMinute": 540,
+              "minute": 540,
+              "elapsedMinutes": 0,
+              "tailRule": "本次工具明确为即时操作；只有该操作而无其他独立动作时尾注时长写0分，不另加默认10分。普通交谈仍按实际耗时结算。"
+            }
+          }
+        }
+      ],
+      "player": {
+        "name": "旅人",
+        "level": 1,
+        "xp": 0,
+        "coins": 180,
+        "hp": 12,
+        "maxHp": 12,
+        "mp": 10,
+        "maxMp": 10,
+        "revivalAnchor": "loc_hw",
+        "attributes": {
+          "力量": 10,
+          "敏捷": 10,
+          "体质": 10,
+          "智力": 10,
+          "精神": 10,
+          "魅力": 10
+        },
+        "status": "正常",
+        "freeAttributePoints": 0,
+        "companions": [],
+        "dyingSince": null
+      },
+      "minute": 540
+    },
+    {
+      "id": "BossApproach",
+      "attempt": 1,
+      "fixtureScope": "隔离首领骨架世界：4个首领尚未审核发布；玩家30级/3000生命为安全观察夹具，不是正常成长证据",
+      "input": "我进入栎根拱洞，见到占据者后停下来，不打、不驯、不拿东西。",
+      "pass": true,
+      "error": null,
+      "reply": "你拨开湿漉漉的栎树根须，低头钻进拱洞。洞里比外面暖，混着泥土、腐叶和野兽的气味。走了十来步，前方地面被踩得光亮，散着啃剩的橡子和骨碴。\n\n洞深处传来低沉的呼噜声。一头庞大的公猪从暗处站起来——鬃毛结着泥浆，干裂的板结像铠甲，獠牙从嘴角斜挑出来，牙根处有一道旧裂痕。它没有立刻冲来，只是把鼻子压低，喉咙里滚着闷响，眼睛盯着你。\n\n在它侧后方，两头半大的路鬃野猪也立起身，鬃毛竖起，不安地刨着地，一左一右贴着洞壁。它们比你矮得多，但那副随时可扑的架势很清楚。\n\n你停在原地，没有伸手，也没有靠近。泥鬃裂牙的呼吸粗重而缓慢，前蹄刨了一下土，泥块溅在洞壁上。它没有进攻，也没有退开——只是把你堵在洞口那段窄路上，等你先动。\n\n<回合 时长=\"10分\" 地点=\"loc_hw_northwood\" 在场=\"npc_hw_wushuo\"/>",
+      "events": [
+        {
+          "input": {
+            "tool": "world_lair",
+            "args": {
+              "operation": "approach",
+              "lair": "栎根拱洞"
+            },
+            "eventId": "quick_BossApproach_0"
+          },
+          "result": {
+            "ok": true,
+            "contact": {
+              "id": "boss_mud_tusk",
+              "name": "泥鬃裂牙",
+              "level": 8,
+              "hp": 109
+            },
+            "minions": [
+              {
+                "id": "monster_instance_3c89b3d2eaffd37b",
+                "name": "路鬃野猪·d37b",
+                "level": 3,
+                "hp": 10
+              },
+              {
+                "id": "monster_instance_da4ff9ff1739589b",
+                "name": "路鬃野猪·589b",
+                "level": 3,
+                "hp": 10
+              }
+            ],
+            "note": "接触巢穴既有首领与实际部下，没有自动攻击、驯服或获得材料",
+            "minute": 550,
+            "messages": [],
+            "turnClock": {
+              "startMinute": 540,
+              "minute": 550,
+              "elapsedMinutes": 10,
+              "tailRule": "本回合工具已推进10分钟，包含操作过程中的对白。没有额外独立动作时尾注时长写10分；不能再加默认10分。"
+            }
+          }
+        }
+      ],
+      "player": {
+        "name": "旅人",
+        "level": 1,
+        "xp": 0,
+        "coins": 180,
+        "hp": 12,
+        "maxHp": 12,
+        "mp": 10,
+        "maxMp": 10,
+        "revivalAnchor": "loc_hw",
+        "attributes": {
+          "力量": 10,
+          "敏捷": 10,
+          "体质": 10,
+          "智力": 10,
+          "精神": 10,
+          "魅力": 10
+        },
+        "status": "正常",
+        "freeAttributePoints": 0,
+        "companions": [],
+        "dyingSince": null
+      },
+      "minute": 550
+    },
+    {
+      "id": "BossAdaptation",
+      "attempt": 1,
+      "fixtureScope": "隔离首领骨架世界：4个首领尚未审核发布；玩家30级/3000生命为安全观察夹具，不是正常成长证据",
+      "input": "我再空手向泥鬃裂牙进攻一次，不追击，也不换武器。",
+      "pass": true,
+      "error": null,
+      "reply": "你空手欺近，在雨中一记重拳砸在泥鬃裂牙的肩颈。鬃毛震落泥水，它闷哼着踉跄，被你打得更虚了。\n\n它没有继续压上来，反倒低头龇牙、四蹄后搓——那副模样像是在找退路。\n\n<回合 时长=\"0分\" 地点=\"loc_hw_northwood\" 在场=\"npc_hw_wushuo\"/>",
+      "events": [
+        {
+          "input": {
+            "tool": "world_combat",
+            "args": {
+              "target": "boss_mud_tusk",
+              "intent": "attack"
+            },
+            "eventId": "quick_BossAdaptation_0"
+          },
+          "result": {
+            "ok": true,
+            "target": "boss_mud_tusk",
+            "damage": 33,
+            "received": 2,
+            "targetHp": 5,
+            "actionScope": {
+              "kind": "combat_exchange",
+              "clockManaged": true,
+              "seconds": 10
+            },
+            "experience": 0,
+            "adaptation": {
+              "tactic": "unarmed",
+              "guarded": true,
+              "note": "对手对已见过的进攻加强防备"
+            },
+            "morale": "撤退",
+            "weather": {
+              "name": "雨",
+              "daylight": true,
+              "hitModifier": -0.05,
+              "nightModifier": 0
+            },
+            "minute": 550,
+            "messages": [
+              "【系统】交锋结束，对方受伤33，你受伤2"
+            ],
+            "turnClock": {
+              "startMinute": 550,
+              "minute": 550,
+              "elapsedMinutes": 0,
+              "tailRule": "本次交锋耗10秒，秒钟已由引擎累计，尚未满一分钟；只有本次交锋时尾注写0分，不再额外加入10分钟。"
+            }
+          }
+        }
+      ],
+      "player": {
+        "name": "旅人",
+        "level": 30,
+        "xp": 0,
+        "coins": 180,
+        "hp": 2995,
+        "maxHp": 3000,
+        "mp": 10,
+        "maxMp": 10,
+        "revivalAnchor": "loc_hw",
+        "attributes": {
+          "力量": 10,
+          "敏捷": 10,
+          "体质": 10,
+          "智力": 10,
+          "精神": 10,
+          "魅力": 10
+        },
+        "status": "正常",
+        "freeAttributePoints": 0,
+        "companions": [],
+        "dyingSince": null
+      },
+      "minute": 550
+    },
+    {
+      "id": "BossVacatedLair",
+      "attempt": 1,
+      "fixtureScope": "隔离首领骨架世界：4个首领尚未审核发布；玩家30级/3000生命为安全观察夹具，不是正常成长证据",
+      "input": "我再进入栎根拱洞，看看现在真正占据它的是什么，不攻击。",
+      "pass": true,
+      "error": null,
+      "reply": "雨丝从栎树冠的缝隙里滴下来，你拨开垂落的湿藤，再次钻进栎根拱洞。洞里没有旧日血腥气，只有潮湿泥土和草根的味道——拱洞深处的浅窝里蹲着一只落叶林兔，编号86e7，耳朵贴着背，正警觉地朝你这边看。这就是现在真正占据拱洞的生灵，一只普通的小动物，不是谁复活归来的旧首领，也没有别的埋伏。\n\n它没有逃走，也没有扑上来，只是鼻尖抽动着，等你先动。\n\n<回合 时长=\"10分\" 地点=\"loc_hw_northwood\" 在场=\"npc_hw_wushuo\"/>",
+      "events": [
+        {
+          "input": {
+            "tool": "world_lair",
+            "args": {
+              "operation": "approach",
+              "lair": "栎根拱洞"
+            },
+            "eventId": "quick_BossVacatedLair_0"
+          },
+          "result": {
+            "ok": true,
+            "contact": {
+              "id": "monster_instance_ae507f5217fa86e7",
+              "name": "落叶林兔·86e7",
+              "status": "正常",
+              "hp": 6
+            },
+            "alreadyPresent": true,
+            "minute": 10640,
+            "messages": [],
+            "turnClock": {
+              "startMinute": 10630,
+              "minute": 10640,
+              "elapsedMinutes": 10,
+              "tailRule": "本回合工具已推进10分钟，包含操作过程中的对白。没有额外独立动作时尾注时长写10分；不能再加默认10分。"
+            }
+          }
+        }
+      ],
+      "player": {
+        "name": "旅人",
+        "level": 30,
+        "xp": 0,
+        "coins": 180,
+        "hp": 2994,
+        "maxHp": 3000,
+        "mp": 10,
+        "maxMp": 10,
+        "revivalAnchor": "loc_hw",
+        "attributes": {
+          "力量": 10,
+          "敏捷": 10,
+          "体质": 10,
+          "智力": 10,
+          "精神": 10,
+          "魅力": 10
+        },
+        "status": "正常",
+        "freeAttributePoints": 0,
+        "companions": [],
+        "dyingSince": null
+      },
+      "minute": 10640
+    }
+  ]
+}

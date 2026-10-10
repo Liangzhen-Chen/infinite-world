@@ -1,0 +1,9 @@
+
+> infinite-fields@0.1.0 test:scenarios
+> node tools/scenarios.mjs --quick --only PetRelease,BossEntrance,BossApproach,BossAdaptation,BossVacatedLair
+
+PetRelease 第1次: 通过
+BossEntrance 第1次: 通过
+BossApproach 第1次: 通过
+BossAdaptation 第1次: 通过
+BossVacatedLair 第1次: 通过

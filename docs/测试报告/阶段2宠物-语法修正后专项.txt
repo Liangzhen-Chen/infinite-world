@@ -1,0 +1,76 @@
+✔ 驯养用实际食物和多日接触，未达到信任不能登记，失败也计时且降低信任 (35.144ms)
+✔ 他人归属、缺技能、级差和已满名额阻止驯服，元素召唤师不能带战斗宠物 (17.9411ms)
+✖ 宠物饥病出走和死亡按世界时钟发生，长等候与分段等候结果一致 (291.4123ms)
+✔ 真实药材治疗病伤，不复制生命，失败耗药；训练增长限每天一次且不能自动回血 (20.6303ms)
+✖ 坐骑实际承载并跟随路线，留守动物不瞬移，疲劳不足或没有坐骑不能骑行 (8.2097ms)
+✔ 首领需要确切特殊条件，条件在长驯服结束前到期则仅消耗时间 (7.5232ms)
+✔ 查看宠物保持只读，旧宠物记录不补造，规则坏引用与非法坐骑条件阻止构建 (193.3938ms)
+✔ 宠物归属、照料和世界时钟在重启、导入导出及删除回合重放中保持一致 (47.0989ms)
+ℹ tests 8
+ℹ suites 0
+ℹ pass 6
+ℹ fail 2
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 1044.9036
+
+✖ failing tests:
+
+test at tests\pets.test.mjs:90:1
+✖ 宠物饥病出走和死亡按世界时钟发生，长等候与分段等候结果一致 (291.4123ms)
+  Error: Property failed after 2 tests
+  { seed: -1662077769, path: "1:1:2:6:3", endOnFailure: true }
+  Counterexample: [11,294]
+  Shrunk 4 time(s)
+  
+  Hint: Enable verbose mode in order to have the list of all failing values encountered during the run
+      at buildError (file:///C:/Users/RobertC/Documents/dnd/node_modules/fast-check/lib/check/runner/utils/RunDetailsFormatter.js:156:19)
+      at asyncThrowIfFailed (file:///C:/Users/RobertC/Documents/dnd/node_modules/fast-check/lib/check/runner/utils/RunDetailsFormatter.js:170:11) {
+    [cause]: AssertionError [ERR_ASSERTION]: Expected values to be strictly deep-equal:
+    + actual - expected
+    ... Skipped lines
+    
+      {
+        monster_fixture_pack: {
+          care: {
+            bond: 30,
+            contactDay: -1,
+    ...
+            neglectHours: 35,
+    +       nextTick: 3540,
+    -       nextTick: 3834,
+            sickHours: 32,
+            sickness: true,
+            skills: {},
+            trainDay: -1,
+            version: 1
+    
+        at file:///C:/Users/RobertC/Documents/dnd/tests/pets.test.mjs:97:16
+        at async AsyncProperty.run (file:///C:/Users/RobertC/Documents/dnd/node_modules/fast-check/lib/check/property/AsyncProperty.generic.js:43:28)
+        at async asyncRunIt (file:///C:/Users/RobertC/Documents/dnd/node_modules/fast-check/lib/check/runner/Runner.js:24:21)
+        at async TestContext.<anonymous> (file:///C:/Users/RobertC/Documents/dnd/tests/pets.test.mjs:92:5)
+        at async Test.run (node:internal/test_runner/test:1110:7)
+        at async Test.processPendingSubtests (node:internal/test_runner/test:785:7) {
+      generatedMessage: true,
+      code: 'ERR_ASSERTION',
+      actual: { monster_fixture_pack: [Object] },
+      expected: { monster_fixture_pack: [Object] },
+      operator: 'deepStrictEqual',
+      diff: 'simple'
+    }
+  }
+
+test at tests\pets.test.mjs:125:1
+✖ 坐骑实际承载并跟随路线，留守动物不瞬移，疲劳不足或没有坐骑不能骑行 (8.2097ms)
+  AssertionError [ERR_ASSERTION]: Missing expected rejection.
+      at async TestContext.<anonymous> (file:///C:/Users/RobertC/Documents/dnd/tests/pets.test.mjs:127:5)
+      at async Test.run (node:internal/test_runner/test:1110:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:785:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: undefined,
+    expected: /实际骑乘/,
+    operator: 'rejects',
+    diff: 'simple'
+  }

@@ -1,0 +1,87 @@
+✔ 气候参数、引用、概率和旬日校验；未知地点不借父级气候生成 (219.2525ms)
+✔ 同一日期气候与调用顺序、引擎重建和战役回放无关，不写或扩增存档 (80.8184ms)
+✔ 按纬度和季节生成昼长，室内不受户外命中修正；旧世界无天气规则保持原行为 (16.696ms)
+✖ 天气观察即时且只读，禁止遥知异地与凭工具改天，湿度实际供生活魔法使用 (8.7203ms)
+✔ 雨雪实际延长路程，暴雨船路关闭，零距离室内出入保持一步耗时 (12.2094ms)
+✔ 季节与天气改变真实粮食入库，长等待与分日结算守恒 (28.9904ms)
+✔ 天气和夜间视线参与实际交锋，同一种子战果重放一致 (8.4863ms)
+ℹ tests 7
+ℹ suites 0
+ℹ pass 6
+ℹ fail 1
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 835.2118
+
+✖ failing tests:
+
+test at tests\weather.test.mjs:46:1
+✖ 天气观察即时且只读，禁止遥知异地与凭工具改天，湿度实际供生活魔法使用 (8.7203ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly deep-equal:
+  + actual - expected
+  ... Skipped lines
+  
+    {
+      manualPins: {},
+      memories: {
+        '开局::状态边界': {
+          content: '抵达时的历史记录：林穗曾报价客房6铜/夜，当时未成交；阿砚带回裂木轴，当时磨坊未修好。后续成交或修复以更新的账本为准。',
+  ...
+        effects: {},
+  +     experienceLedger: {},
+  +     experienceRepeats: {},
+        inventory: {
+          item_bag: {
+            durability: 100,
+            quality: '木',
+            quantity: 1,
+  ...
+        },
+  +     itemInstances: {},
+        learning: {},
+        location: 'loc_hw_dock',
+        minute: 540,
+        npcs: {
+          npc_hw_anhuai: {
+  ...
+        records: {},
+  +     revivalPoints: {
+  +       bld_hw_altar: {
+  +         fee: 0,
+  +         location: 'bld_hw_altar',
+  +         registeredAt: 540,
+  +         source: '原登记点迁移'
+  +       }
+  +     },
+  +     runtimeRuleVersion: 2,
+        settlements: {
+          loc_hw: {
+            food: 420,
+            foodPerDay: 45,
+            iron: 4,
+  ...
+        },
+  +     shrineTreasuries: {},
+        skills: {
+          skill_light: {
+            breakthroughs: [],
+            daily: {},
+            grade: '初级1等',
+  ...
+        weather: {},
+  +     workshopFunds: {}
+      },
+      worldVersion: 'engine-rules-3'
+    }
+  
+      at TestContext.<anonymous> (file:///C:/Users/RobertC/Documents/dnd/tests/weather.test.mjs:48:88)
+      at async Test.run (node:internal/test_runner/test:1110:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:785:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: { schemaVersion: 2, worldVersion: 'engine-rules-3', randomSeed: 'weather-test', memories: { '玩家::身份': [Object], '河湾村::公共财产': [Object], '开局::状态边界': [Object] }, manualPins: {}, state: { minute: 540, location: 'loc_hw_dock', player: [Object], inventory: [Object], skills: [Object], spells: [Object], professions: [Object], npcs: [Object], records: {}, pets: {}, settlements: [Object], buildings: [Object], projects: {}, effects: {}, obligations: {}, quests: {}, quotes: {}, created: {}, weather: {}, turns: {}, checks: {}, learning: {}, recipes: {}, revivalPoints: [Object], shrineTreasuries: {}, experienceLedger: {}, experienceRepeats: {}, itemInstances: {}, workshopFunds: {}, runtimeRuleVersion: 2 } },
+    expected: { schemaVersion: 2, worldVersion: 'engine-rules-3', randomSeed: 'weather-test', memories: { '玩家::身份': [Object], '河湾村::公共财产': [Object], '开局::状态边界': [Object] }, manualPins: {}, state: { minute: 540, location: 'loc_hw_dock', player: [Object], inventory: [Object], skills: [Object], spells: [Object], professions: [Object], npcs: [Object], records: {}, pets: {}, settlements: [Object], buildings: [Object], projects: {}, effects: {}, obligations: {}, quests: {}, quotes: {}, created: {}, weather: {}, turns: {}, checks: {}, learning: {}, recipes: {} } },
+    operator: 'deepStrictEqual',
+    diff: 'simple'
+  }

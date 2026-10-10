@@ -1,0 +1,14 @@
+{
+  "archive": "C:\\Users\\RobertC\\Desktop\\无限原野_Claude完整审查包_20261010_111556.zip",
+  "sha256": "25f551aa6b7b472798529c227e89e600a7e49533a4b8fb309e5714bfd7a854f6",
+  "files": 2074,
+  "MiB": 7.55,
+  "redactedFiles": 1,
+  "omitted": [
+    {
+      "path": "SillyTavern/plugins/infinite-fields",
+      "reason": "当前安装中未找到该目录；不假定已部署"
+    }
+  ],
+  "verified": true
+}

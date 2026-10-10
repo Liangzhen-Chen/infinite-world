@@ -1,0 +1,41 @@
+{
+  "runId": "1791620082773",
+  "batch": 0,
+  "seed": 3823136743,
+  "boneHash": "178d8378d4c335009cd628deea3af550b5172b739984ffe23f08fc4cdbd45621",
+  "loreHash": "77031c6731d46492ad3720b79b207c97d0a4613ffb4793b51f5d68e2eb6fb636",
+  "approved": false,
+  "scope": "待人工随机精读；任何一项不合格整批重做，不逐项拼接修补",
+  "sample": [
+    {
+      "id": "monster_brown_deer",
+      "hash": "1e26aca55ea904f87720cb2168c3ac8b9eb6edeb987287fa1be48ac0fbad3851",
+      "scores": null,
+      "notes": null
+    },
+    {
+      "id": "monster_burrow_badger",
+      "hash": "0f2a398b144e05babcfe4a4a4c262b575208e5a4130f16e97c3d3246962dbc48",
+      "scores": null,
+      "notes": null
+    },
+    {
+      "id": "monster_grey_ridge_wolf",
+      "hash": "db1ea1435de7b981816373985a357d3e3a9fda6067584ad5d8ce0e013c46b986",
+      "scores": null,
+      "notes": null
+    },
+    {
+      "id": "monster_bristle_boar",
+      "hash": "1c110b519afd2e9651bcbe56e04814992fa4bd4b59c2218f6b455e1047ec8c7f",
+      "scores": null,
+      "notes": null
+    },
+    {
+      "id": "monster_red_ear_fox",
+      "hash": "699cf6f5e132f6c3c609c575cac4f1096aee59eb8042ba91625b85d3ad26712f",
+      "scores": null,
+      "notes": null
+    }
+  ]
+}

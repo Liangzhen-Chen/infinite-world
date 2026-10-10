@@ -1,0 +1,79 @@
+✖ 偷窃实际转一件库存并保留唯一身份，失败不转财物，钱币偷取守恒且不会无依据定罪 (37.6135ms)
+✖ 偷窃拒绝空库存、重物、他处目标、睡死伤重与编号冲突，原存档保持不变 (19.3104ms)
+✔ 没被看见不降低个人信任，目击仅记录在场清醒人物，未作证者不能被全局认定知情执法 (36.5678ms)
+✔ 目击必须实际报案，单个证词不足；两人独立作证可裁判，重复作证不加权 (41.3176ms)
+✔ 逮捕须充分证据和在场乡巡，沿路线押解，未审超时释放，不提前罚款 (22.8992ms)
+✔ 法院实际保管原物与罚款，受害人未到场不瞬间获赔，到场领取不复制单件 (26.3002ms)
+✔ 赃物转手保留署名和去向，法院不能从无辜买家口袋复制原物，改以真实钱赔偿 (21.0504ms)
+✔ 劳役/监禁必须经过真实时长，禁止期间自由行动；赔偿债务保留，折役不伪称已收罚金 (62.6294ms)
+✔ 服役长短等待切分无关，法律资金和股票不因失败、导出或重放造出副本 (421.2448ms)
+✖ 法律目录只读、坏角色/辖区/法院及重复法典拒绝，异地不能拿旧父级关系套村社法 (151.547ms)
+✔ 法律案件与赃物在重启、导出导入和删除消息回滚中与原库存一致 (58.179ms)
+ℹ tests 11
+ℹ suites 0
+ℹ pass 8
+ℹ fail 3
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 1374.5884
+
+✖ failing tests:
+
+test at tests\law.test.mjs:42:1
+✖ 偷窃实际转一件库存并保留唯一身份，失败不转财物，钱币偷取守恒且不会无依据定罪 (37.6135ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  
+  440 !== 190
+  
+      at TestContext.<anonymous> (file:///C:/Users/RobertC/Documents/dnd/tests/law.test.mjs:52:120)
+      at async Test.run (node:internal/test_runner/test:1110:7)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:358:3) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 440,
+    expected: 190,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at tests\law.test.mjs:55:1
+✖ 偷窃拒绝空库存、重物、他处目标、睡死伤重与编号冲突，原存档保持不变 (19.3104ms)
+  AssertionError [ERR_ASSERTION]: The input did not match the regular expression /一种/. Input:
+  
+  'Error: 偷窃必须指定一件物品或一笔钱，不能同时指定'
+  
+      at async TestContext.<anonymous> (file:///C:/Users/RobertC/Documents/dnd/tests/law.test.mjs:64:84)
+      at async Test.run (node:internal/test_runner/test:1110:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:785:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: Error: 偷窃必须指定一件物品或一笔钱，不能同时指定
+        at WorldEngine.crimeAction (file:///C:/Users/RobertC/Documents/dnd/server-plugin/law.mjs:55:65)
+        at WorldEngine.crime (file:///C:/Users/RobertC/Documents/dnd/server-plugin/activities.mjs:15:41)
+        at WorldEngine.reduce (file:///C:/Users/RobertC/Documents/dnd/server-plugin/engine.mjs:91:43)
+        at run (file:///C:/Users/RobertC/Documents/dnd/tests/law.test.mjs:21:67)
+        at TestContext.<anonymous> (file:///C:/Users/RobertC/Documents/dnd/tests/law.test.mjs:64:105)
+        at async Test.run (node:internal/test_runner/test:1110:7)
+        at async Test.processPendingSubtests (node:internal/test_runner/test:785:7),
+    expected: /一种/,
+    operator: 'rejects',
+    diff: 'simple'
+  }
+
+test at tests\law.test.mjs:157:1
+✖ 法律目录只读、坏角色/辖区/法院及重复法典拒绝，异地不能拿旧父级关系套村社法 (151.547ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  
+  true !== false
+  
+      at TestContext.<anonymous> (file:///C:/Users/RobertC/Documents/dnd/tests/law.test.mjs:162:61)
+      at async Test.run (node:internal/test_runner/test:1110:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:785:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: true,
+    expected: false,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }

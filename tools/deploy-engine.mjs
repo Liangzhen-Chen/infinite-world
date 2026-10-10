@@ -8,8 +8,7 @@ import {digest}from'../server-plugin/storage.mjs';
 const extensionPath='public/scripts/extensions/third-party/infinite-fields';
 export async function prepareDeployment(destination=path.join(root,'dist','engine-deployment')){
     destination=path.resolve(destination);
-    const sources=[...(await fs.readdir(path.join(root,'server-plugin'))).filter(name=>name.endsWith('.mjs')).map(name=>`server-plugin/${name}`),
-        'tools/load-world.mjs','tests/fixtures/legacy/core.js','tests/fixtures/legacy/seed.json'];
+    const sources=['tools/load-world.mjs','tests/fixtures/legacy/core.js','tests/fixtures/legacy/seed.json'];
     async function copyDirectory(relative){
         for(const name of await fs.readdir(path.join(root,relative))){
             const file=path.join(relative,name),stat=await fs.lstat(path.join(root,file));
@@ -17,7 +16,7 @@ export async function prepareDeployment(destination=path.join(root,'dist','engin
             if(stat.isDirectory())await copyDirectory(file);else sources.push(file);
         }
     }
-    await copyDirectory('world');
+    await copyDirectory('server-plugin');await copyDirectory('world');
     const files=[];
     for(const source of sources){
         const bytes=await fs.readFile(path.join(root,source)),target=path.join(destination,'plugin',source);
@@ -28,7 +27,7 @@ export async function prepareDeployment(destination=path.join(root,'dist','engin
     await fs.writeFile(path.join(destination,'plugin','index.mjs'),entry);
     files.push({path:'plugin/index.mjs',sha256:digest(entry)});
     await fs.mkdir(path.join(destination,'extension'),{recursive:true});
-    for(const name of ['runtime.js','turn.mjs','style.css']){
+    for(const name of ['runtime.js','turn.mjs','state-read.mjs','style.css']){
         const bytes=await fs.readFile(path.join(root,'extension',name));await fs.writeFile(path.join(destination,'extension',name),bytes);
         files.push({path:`extension/${name}`,sha256:digest(bytes.toString('utf8'))});
     }

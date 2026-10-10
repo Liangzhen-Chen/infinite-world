@@ -1,0 +1,142 @@
+{
+  "runId": "1791619646735",
+  "batch": 0,
+  "seed": 4207862069,
+  "boneHash": "8ec3e72d7413058de1383b1e9ef2bfc5a6f50fc801005afad0ac89372a47f711",
+  "loreHash": "5031aeb7893da0d956ced601a1c41fae5fa9d4b2bd5cc79050e82332577817ad",
+  "approved": false,
+  "scope": "待人工随机精读；任何一项不合格整批重做，不逐项拼接修补",
+  "sample": [
+    {
+      "id": "monster_round_marsh_beaver",
+      "hash": "1c491b20f229ec89823b5857925ced578281cd683f54967a852a1440ef9ef778",
+      "scores": [
+        4,
+        4,
+        4,
+        4,
+        4,
+        4
+      ],
+      "notes": "圆额短尾、非筑坝行为及两日湿生皮相符。"
+    },
+    {
+      "id": "monster_whisker_catfish",
+      "hash": "519133c2775e1cb72af5fb711ca5bda2538ef2878c4418309584d42fb1eb1cc3",
+      "scores": [
+        4,
+        4,
+        4,
+        4,
+        4,
+        4
+      ],
+      "notes": "须探泥、独游、三百克去头净鱼相符，材料工序清楚。"
+    },
+    {
+      "id": "monster_grey_otter",
+      "hash": "10f8261f0d0258edca91ea7e9f0f26239e74accd84746f617ab8910f441a769b",
+      "scores": [
+        4,
+        4,
+        4,
+        4,
+        4,
+        4
+      ],
+      "notes": "平石拆鱼、灰颈毛和银鲫捕食相符，已保留湿皮状态。"
+    },
+    {
+      "id": "monster_thorn_sprout",
+      "hash": "51d42c08f12fa95bd203906838c00d9127676bbaedff96f931d84c698d855879",
+      "scores": [
+        4,
+        4,
+        4,
+        4,
+        3,
+        3
+      ],
+      "notes": "骨架事实相符，但“不增肉毒药金属”照抄开发限制，文风不合格。"
+    },
+    {
+      "id": "monster_mud_lamp_frog",
+      "hash": "c602e23c873740d869a261b358009f550b2483d0c136f5ffd078311f80f53744",
+      "scores": [
+        4,
+        4,
+        2,
+        4,
+        4,
+        4
+      ],
+      "notes": "日间作息却写雨夜延后归洞、夜间难辨，与硬时段矛盾。"
+    },
+    {
+      "id": "monster_bristle_boar",
+      "hash": "9feee53ddc346b9c84a0388111489ca52b3ed9dab325be42c04cc5957bc0497f",
+      "scores": [
+        4,
+        4,
+        4,
+        4,
+        4,
+        4
+      ],
+      "notes": "夜间拱食和幼崽警告相符，材料未虚构鞣制。"
+    },
+    {
+      "id": "monster_shadow_mane_jackal",
+      "hash": "6c4b38bfdeb6428abd38ecf1730c0908c1ff0f508b6ea8cd7353564949b5e5ec",
+      "scores": [
+        4,
+        4,
+        2,
+        4,
+        4,
+        4
+      ],
+      "notes": "硬时段06至18点却在threat里夜间绕村觅食，作息矛盾。"
+    },
+    {
+      "id": "monster_grey_ridge_wolf",
+      "hash": "ff0826107a8cb75cb94477a60cd8e98f1516936a74b81b638c2b704def0319da",
+      "scores": [
+        4,
+        4,
+        2,
+        4,
+        4,
+        4
+      ],
+      "notes": "日间活动其他时段休息却夜间围栏徘徊，且folklore又说夜间休息，内部矛盾。"
+    },
+    {
+      "id": "monster_red_water_shrimp",
+      "hash": "12a5721ba4db9d27a6c5539bd156d5ceb1fbd67e8fd09dcefe67a96621c577ab",
+      "scores": [
+        4,
+        4,
+        4,
+        3,
+        3,
+        3
+      ],
+      "notes": "“登记清水、不加工不食用不作商品”是开发限制串，材料与行为没有自然连接。"
+    },
+    {
+      "id": "monster_short_bill_duck",
+      "hash": "d757920957a72f0f7b8296ac7bb48a25096525b4c5786f76214a26cf88007092",
+      "scores": [
+        4,
+        4,
+        4,
+        4,
+        4,
+        4
+      ],
+      "notes": "固定三次拍水、成群作息和水位误解可核对。"
+    }
+  ],
+  "rejection": "十条已全文精读，三条作息一致性2分，另有开发措辞泄漏，整批否决"
+}

@@ -16,6 +16,8 @@ test('部署：冻结包校验在写入前执行，先备份，聊天和旧扩�
     assert.equal(backedUp,true);assert.equal(result.chatsChanged,false);assert.equal(result.restartRequired,true);
     assert.equal(await fs.readFile(path.join(extension,'index.js'),'utf8'),'legacy protected');
     assert.equal(JSON.parse(await fs.readFile(path.join(extension,'manifest.json'),'utf8')).js,'runtime.js');
+    assert.match(await fs.readFile(path.join(extension,'runtime.js'),'utf8'),/from '.\/state-read.mjs'/);
+    assert.match(await fs.readFile(path.join(extension,'state-read.mjs'),'utf8'),/readStateSection/);
     const config=YAML.parse(await fs.readFile(path.join(installation,'config.yaml'),'utf8'));assert.equal(config.enableServerPlugins,true);assert.equal(config.enableServerPluginsAutoUpdate,false);
     await fs.appendFile(path.join(bundle.destination,'extension','runtime.js'),'\n// corrupt');
     backedUp=false;await assert.rejects(activateDeployment(bundle.destination,{installation,makeBackup}),/校验失败/);assert.equal(backedUp,false);

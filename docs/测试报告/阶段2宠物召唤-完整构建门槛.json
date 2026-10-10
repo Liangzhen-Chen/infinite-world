@@ -1,0 +1,22 @@
+{
+  "ok": false,
+  "errors": [
+    "目录数量不足：spells 1<150",
+    "目录数量不足：items 66<400",
+    "目录数量不足：recipes 15<200",
+    "目录数量不足：monsters 0<150",
+    "目录数量不足：bosses 0<40"
+  ],
+  "warnings": [],
+  "counts": {
+    "npcs": 18,
+    "locations": 22,
+    "items": 66,
+    "professions": 65,
+    "skills": 204,
+    "spells": 1,
+    "recipes": 15,
+    "monsters": 0,
+    "bosses": 0
+  }
+}

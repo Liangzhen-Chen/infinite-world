@@ -1,0 +1,47 @@
+{
+  "runId": "1791618982392",
+  "root": "world/drafts/wildlife/1791618982392",
+  "planned": 50,
+  "structured": 5,
+  "audit": {
+    "ok": false,
+    "errors": [
+      "物种遗漏或重复"
+    ],
+    "maximumSimilarity": 0.08974358974358974
+  },
+  "failures": [
+    {
+      "id": "monster_bristle_boar",
+      "attempt": 1,
+      "error": "[{\"instancePath\":\"/habits\",\"schemaPath\":\"#/properties/habits/minLength\",\"keyword\":\"minLength\",\"params\":{\"limit\":90},\"message\":\"must NOT have fewer than 90 characters\"},{\"instancePath\":\"/folklore\",\"schemaPath\":\"#/properties/folklore/minLength\",\"keyword\":\"minLength\",\"params\":{\"limit\":65},\"message\":\"must NOT have fewer than 65 characters\"}]"
+    },
+    {
+      "id": "monster_red_ear_fox",
+      "attempt": 1,
+      "error": "无灵智野兽被赋予人类台词"
+    },
+    {
+      "id": "monster_brush_squirrel",
+      "attempt": 1,
+      "error": "无灵智野兽被赋予人类台词"
+    },
+    {
+      "id": "monster_brush_squirrel",
+      "attempt": 2,
+      "error": "无灵智野兽被赋予人类台词"
+    },
+    {
+      "id": "monster_red_ear_fox",
+      "attempt": 2,
+      "error": "[{\"instancePath\":\"/materials\",\"schemaPath\":\"#/properties/materials/maxLength\",\"keyword\":\"maxLength\",\"params\":{\"limit\":100},\"message\":\"must NOT have more than 100 characters\"}]"
+    },
+    {
+      "id": "monster_brush_squirrel",
+      "attempt": 3,
+      "error": "无灵智野兽被赋予人类台词"
+    }
+  ],
+  "costUpperYuan": 0.061096559999999994,
+  "manualApproved": false
+}

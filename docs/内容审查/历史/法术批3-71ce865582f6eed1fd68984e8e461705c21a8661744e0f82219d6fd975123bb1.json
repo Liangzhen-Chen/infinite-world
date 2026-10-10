@@ -1,0 +1,70 @@
+{
+  "batch": 3,
+  "seed": 20261013,
+  "scope": "待人工精读打分，生成抽样不等于通过",
+  "catalogHash": "71ce865582f6eed1fd68984e8e461705c21a8661744e0f82219d6fd975123bb1",
+  "count": 50,
+  "sample": [
+    {
+      "id": "spell_mind_13",
+      "hash": "bdd1f181c90553f1314bf36327081387b9df8037b1663e4fc1c38ceb986a9ac5",
+      "scores": null,
+      "notes": null
+    },
+    {
+      "id": "spell_faith_03",
+      "hash": "73a1536fd6cf072c07abe9c6ac7fa25f932fa9d8251b674560e543373dcf1734",
+      "scores": null,
+      "notes": null
+    },
+    {
+      "id": "spell_space_04",
+      "hash": "0906f4e26577b54434e06b58476144992c04fc11db8ef99068f591a9a2324a6d",
+      "scores": null,
+      "notes": null
+    },
+    {
+      "id": "spell_space_09",
+      "hash": "2270ed9fe17c9143245b5e99d8a483217c3e20073d8382a4a777871e1db5cba2",
+      "scores": null,
+      "notes": null
+    },
+    {
+      "id": "spell_summon_08",
+      "hash": "2bb6aa43259e464af88cfb2a1a3cfa49d0fc06e2d0452974b6215713556e979e",
+      "scores": null,
+      "notes": null
+    },
+    {
+      "id": "spell_mind_09",
+      "hash": "4bb21205a6174693875e9ff194802315d09e77f28a2e90267234a8de1511d59b",
+      "scores": null,
+      "notes": null
+    },
+    {
+      "id": "spell_space_06",
+      "hash": "1135f43aa12da74fb5ad1e3ac1dc712db8f80bbe97a5c9fb297d4ab59194bd78",
+      "scores": null,
+      "notes": null
+    },
+    {
+      "id": "spell_space_07",
+      "hash": "2517e7ce7f5d415909c5e773566ddd3a99ade6df05eb6ee94c204eaa040c648f",
+      "scores": null,
+      "notes": null
+    },
+    {
+      "id": "spell_summon_01",
+      "hash": "d25f2d515df6c495cfc480e18d1c6a435188862ed39661f3e83258b2b722c3a5",
+      "scores": null,
+      "notes": null
+    },
+    {
+      "id": "spell_mind_11",
+      "hash": "2f67d6b74d7e3ab43d909f3b3b4997a2b975a49126718ef70f762374dc06a9a2",
+      "scores": null,
+      "notes": null
+    }
+  ],
+  "approved": false
+}

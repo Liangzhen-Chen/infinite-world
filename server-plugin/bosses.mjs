@@ -1,0 +1,111 @@
+import {createHash} from 'node:crypto';
+import {monsterStats,tacticDefense} from './combat.mjs';
+const clone=v=>structuredClone(v),key=b=>['state','records',`lair:${b.residence.id}`];
+const living=a=>a&&a.status!=='死亡'&&a.hp>0;
+export function validateBossEcology(world){
+    const errors=[],rules=world.rules.bossEcology;if(!rules)return errors;
+    if(!world.rules.wildlife)errors.push('首领生态需要实际野外种群');
+    const lairs=new Set(),locations=new Set(world.locations.map(l=>l.id)),monsters=new Map(world.monsters.map(s=>[s.id,s]));
+    for(const boss of world.bosses??[]){
+        if(!boss.residence){errors.push(`首领缺巢穴规则：${boss.id}`);continue;}
+        const r=boss.residence,s=monsters.get(boss.monster);
+        if(lairs.has(r.id))errors.push(`巢穴编号重复：${r.id}`);lairs.add(r.id);
+        if(!locations.has(r.location)||r.location!==boss.lair)errors.push(`巢穴位置不符：${boss.id}`);
+        const band=world.rules.monsters.levelRanges[s?.template];
+        if(!s||!band||boss.level<band[0]||boss.level>band[1])errors.push(`首领等级与原物种模板不符：${boss.id}`);
+        const habitat=world.rules.wildlife?.habitats.find(h=>h.id===r.habitat);
+        if(!habitat||habitat.location!==r.location)errors.push(`巢穴栖地不符：${boss.id}`);
+        if(s?.wildlife?.habitat!==r.habitat)errors.push(`原首领物种与巢穴栖地不符：${boss.id}`);
+        if(r.minionCount>0&&!boss.minions?.length)errors.push(`首领部下数量有值却未登记物种：${boss.id}`);
+        for(const id of [...r.replacementSpecies,...boss.minions??[]])if(!monsters.has(id)||monsters.get(id).wildlife?.habitat!==r.habitat)errors.push(`迁入者或部下不是当地物种：${boss.id}`);
+        if(r.replacementSpecies.includes(boss.monster))errors.push(`迁入者不能是原首领同种刷新：${boss.id}`);
+    }return errors;
+}
+export function bossCounter(d,engine,target,tactic){
+    const actor=d.get('state','creatures',target),r=engine.rules.bossEcology;
+    if(!r||!actor?.boss||!living(actor))return{tactic,seen:0,damageMultiplier:1,adapted:false};
+    const seen=actor.battleMemory?.tactics?.[tactic]??0;
+    if(!Number.isSafeInteger(seen)||seen<0)throw new Error('首领战术记忆数据损坏，拒绝伪造防备或覆盖原记录');
+    return{tactic,seen,...tacticDefense(seen,engine.rules),
+        ...(tactic==='flee'&&seen>=r.learningThreshold?{escapeDifficulty:r.escapeDifficulty}:{})};
+}
+export function rememberBossTactic(d,engine,target,tactic,eventId){
+    const actor=d.get('state','creatures',target);if(!engine.rules.bossEcology||!actor?.boss)return;
+    const memory=clone(actor.battleMemory??{tactics:{},lastEvent:null});if(memory.lastEvent===eventId)return;
+    if(!memory.tactics||typeof memory.tactics!=='object'||Array.isArray(memory.tactics))throw new Error('首领战术记忆格式不支持，拒绝覆盖原记录');
+    memory.tactics[tactic]=(memory.tactics[tactic]??0)+1;memory.lastEvent=eventId;memory.lastMinute=d.get('state','minute');
+    d.set(['state','creatures',target,'battleMemory'],memory);
+}
+export function defeatBoss(d,engine,target,eventId){
+    const actor=d.get('state','creatures',target),boss=engine.byId.get(actor?.boss);if(!boss?.residence||living(actor))return null;
+    const r=clone(d.get(...key(boss)));if(r.occupant?.actor!==target)return null;
+    const day=Math.floor(d.get('state','minute')/1440);r.history.push({event:eventId,day,occupant:target,definition:boss.id,type:'败亡'});
+    r.status='空置';r.occupant=null;r.vacantSince=day;r.reoccupyAfter=day+boss.residence.vacancyDays;d.set(key(boss),r);
+    return{lair:boss.residence.name,vacant:true,note:'原首领已死，巢穴空置；不会复活原个体，未来迁入者须来自实际种群'};
+}
+function instantiate(d,engine,{id,species,location,lair,boss=null,eventId}){
+    const definition=engine.byId.get(boss??species),s=engine.byId.get(species),level=boss?definition.level:s.levelRange[0];
+    const stats=monsterStats({level,template:s.template,bossTier:boss?definition.tier:0},engine.rules),name=boss?definition.name:`${s.name}·${id.slice(-4)}`;
+    if(!boss)d.set(['state','created',id],{id,name,aliases:[],monster:species,template:s.template,scope:location});
+    d.set(['state','creatures',id],{name,species,ecology:s.wildlife.habitat,lair,location,level,hp:stats.maxHp,maxHp:stats.maxHp,status:'正常',owner:null,
+        ...(boss?{boss,battleMemory:{tactics:{},lastEvent:null}}:{}),source:eventId});
+    return{id,name,level,hp:stats.maxHp};
+}
+function drawSpecies(d,engine,species,lair,eventId){
+    const s=engine.byId.get(species),habitat=engine.rules.wildlife.habitats.find(h=>h.id===s.wildlife.habitat),path=['state','records',`ecology:${habitat.id}`];
+    const record=clone(d.get(...path)),p=record.populations[species];if(!p?.count)return null;
+    const id=`monster_instance_${createHash('sha256').update(`${d.document.randomSeed}:${eventId}:${species}`).digest('hex').slice(0,16)}`;
+    if(d.get('state','creatures',id)||d.get('state','created',id))throw new Error('巢穴迁入个体编号重复');
+    p.count--;p.withdrawn++;d.set(path,record);
+    return instantiate(d,engine,{id,species,location:habitat.location,lair,eventId});
+}
+export function advanceBosses(d,engine,day){
+    if(!engine.rules.bossEcology)return;
+    for(const boss of engine.world.bosses.filter(b=>b.residence)){
+        const r=clone(d.get(...key(boss)));if(r.lastDay!==day-1)throw new Error('巢穴日结不连续');
+        if(r.occupant?.actor){
+            const actor=d.get('state','creatures',r.occupant.actor);
+            if(actor&&(actor.owner||actor.location!==boss.residence.location)){
+                r.history.push({type:'占据者离开或归属改变',day:day+1,occupant:r.occupant.actor});r.occupant=null;r.status='空置';r.vacantSince=day+1;r.reoccupyAfter=day+1+boss.residence.vacancyDays;
+            }
+        }
+        if(r.status==='空置'&&day+1>=r.reoccupyAfter){
+            for(const species of boss.residence.replacementSpecies){
+                const actor=drawSpecies(d,engine,species,boss.residence.id,`lair_${boss.residence.id}_${day}`);if(!actor)continue;
+                r.occupant={kind:'monster',definition:species,actor:actor.id};r.status='易主';
+                r.history.push({type:'迁入',day:day+1,occupant:actor.id,definition:species});break;
+            }
+        }
+        if(r.occupant?.kind==='monster'&&!living(d.get('state','creatures',r.occupant.actor))){
+            r.history.push({type:'迁入者离去或死亡',day,occupant:r.occupant.actor});r.occupant=null;r.status='空置';r.vacantSince=day;r.reoccupyAfter=day+boss.residence.vacancyDays;
+        }
+        r.lastDay=day;d.set(key(boss),r);
+    }
+}
+export function lairAction(d,args,eventId){
+    if(!this.rules.bossEcology)throw new Error('当前世界没有启用首领巢穴');
+    const here=this.world.bosses.filter(b=>b.residence?.location===d.get('state','location'));
+    const boss=args.lair?here.find(b=>[b.residence.id,b.residence.name].includes(args.lair)):here.length===1?here[0]:null;
+    if(!boss)throw new Error(here.length?'需要明确所在地巢穴名称或编号':'这里没有可接触的巢穴');
+    const r=clone(d.get(...key(boss))),operation=args.operation??'observe';
+    if(operation==='observe'){
+        const actor=r.occupant?.actor?d.get('state','creatures',r.occupant.actor):null;
+        return{lair:boss.residence.name,occupant:actor&&actor.location===d.get('state','location')?{id:r.occupant.actor,name:actor.name,status:actor.status,hp:actor.hp}:null,
+            note:actor?'仅观察已接触个体':'尚未接触活体，入口观察不能知道未见占据者或其战斗记忆',actionScope:{kind:'instant',instantaneous:true}};
+    }
+    if(operation!=='approach')throw new Error('巢穴操作需为observe或approach');
+    this.advance(d,this.rules.bossEcology.approachMinutes,eventId);
+    if(d.get('state','location')!==boss.residence.location||d.get('state','player','status')!=='正常')return{contact:null,note:'进入前失去行动能力或离开此地'};
+    const latest=clone(d.get(...key(boss)));if(!latest.occupant)return{contact:null,note:'巢穴实际空置，进入不会触发原首领重生'};
+    if(latest.occupant.actor){const actor=d.get('state','creatures',latest.occupant.actor);
+        if(!living(actor)||actor.owner||actor.location!==boss.residence.location)return{contact:null,note:'原占据者已不在此处活动，不能隔空接触或重造同一首领'};
+        return{contact:{id:latest.occupant.actor,name:actor.name,status:actor.status,hp:actor.hp},alreadyPresent:true};}
+    if(latest.occupant.kind!=='boss'||latest.occupant.definition!==boss.id)throw new Error('巢穴占据者记录无效');
+    const contact=instantiate(d,this,{id:boss.id,species:boss.monster,boss:boss.id,location:boss.residence.location,lair:boss.residence.id,eventId});
+    latest.occupant.actor=boss.id;d.set(key(boss),latest);
+    const minions=[];for(let i=0;i<boss.residence.minionCount;i++){
+        const species=boss.minions[i%boss.minions.length];if(!species)break;
+        const drawn=drawSpecies(d,this,species,boss.residence.id,`${eventId}_minion_${i}`);if(drawn)minions.push(drawn);
+    }
+    return{contact,minions,note:'接触巢穴既有首领与实际部下，没有自动攻击、驯服或获得材料'};
+}

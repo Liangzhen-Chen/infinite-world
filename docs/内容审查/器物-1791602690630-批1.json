@@ -1,0 +1,162 @@
+{
+  "runId": "1791602690630",
+  "batch": 1,
+  "count": 16,
+  "seed": 20261211,
+  "boneHash": "e169c3383bde5d7c4fdd055b86f0acace1303994c63b01b3e08f7f1fd16d5b5a",
+  "loreHash": "9edf06e402e91c9f9440faac275d0e7d84a164c03e4bb14c778405c4b446cbdd",
+  "scope": "待人工精读，六项均分至少4且单项不低于3；任一不合格须整批重做",
+  "approved": false,
+  "sample": [
+    {
+      "id": "item_book_cook_porridge",
+      "hash": "6a86cbd2e7126f4b9415ed2a14f67fc4a6b6876606f033254e6b5d6b0abe1ef3",
+      "scores": [
+        4,
+        4,
+        3,
+        4,
+        4,
+        4
+      ],
+      "notes": "沸水缓入粉与两份输出一致；把木刨花列作投料顺序却没有明确它只供炉火燃烧，存在误将燃料入锅的歧义。",
+      "mean": 3.8333333333333335
+    },
+    {
+      "id": "item_iron_nail",
+      "hash": "466a69786c4ebbc6e6a72596937353ce1fe6d2a883b3f39be1d30771f892bad0",
+      "scores": [
+        4,
+        4,
+        2,
+        4,
+        3,
+        4
+      ],
+      "notes": "骨架单枚40克，说明称40克约一小把；单件重量和数量混淆，不能发布。",
+      "mean": 3.5
+    },
+    {
+      "id": "item_book_forge_nails",
+      "hash": "a957f150864c3c96bad4bbaa54eb2bdcde364fb7ad0f2f275863e9bcfcd330c8",
+      "scores": [
+        4,
+        4,
+        4,
+        4,
+        4,
+        4
+      ],
+      "notes": "拉条截断锻头、40枚及铁炭份额与配方吻合，识字100已保留。",
+      "mean": 4
+    },
+    {
+      "id": "item_grain_sack",
+      "hash": "b9d38c2550d7df661d865f81202505dd02113cf21ebc0ad7b0694cd8f376aabb",
+      "scores": [
+        4,
+        4,
+        3,
+        4,
+        4,
+        4
+      ],
+      "notes": "袋缝、布眼和串味具体；正文仍有凭空多粮的游戏保证句式，世界内措辞需修。",
+      "mean": 3.8333333333333335
+    },
+    {
+      "id": "item_iron_hinge",
+      "hash": "85b071ea66837641f49b36b2cc332ad1973880b94c1d75084555c35f006e20aa",
+      "scores": [
+        5,
+        4,
+        4,
+        4,
+        4,
+        4
+      ],
+      "notes": "两叶同轴、旧钉孔和转轴润滑有实际工艺联系，重量未改变。",
+      "mean": 4.166666666666667
+    },
+    {
+      "id": "item_book_sew_sack",
+      "hash": "7379be710e6c16d2c8c63e112a7c19aae58b3143c0270f2d34e3f7472fedb7b1",
+      "scores": [
+        4,
+        4,
+        2,
+        4,
+        3,
+        4
+      ],
+      "notes": "已改从现成麻布开始，但把阅读120分钟误当约120页读量；凭空增添页数，需明确时间不是页数。",
+      "mean": 3.5
+    },
+    {
+      "id": "item_book_salt_fish",
+      "hash": "86b5657873af7da206b7874442d8719fad9e88ceeab4fc23ec5fe510afcbc940",
+      "scores": [
+        4,
+        4,
+        4,
+        4,
+        4,
+        4
+      ],
+      "notes": "三小时短腌及三日保存与配方一致，不再增添长期晾晒工序。",
+      "mean": 4
+    },
+    {
+      "id": "item_book_mill_oats",
+      "hash": "d57f0a8370c11837bee34bba086fc0bea6c1ef3642ab69494e576cbc6ece4a15",
+      "scores": [
+        4,
+        4,
+        4,
+        4,
+        4,
+        4
+      ],
+      "notes": "脱壳、磨盘、筛壳与实际工具一致，额外焙炒已消失。",
+      "mean": 4
+    },
+    {
+      "id": "item_book_spin_wool",
+      "hash": "958b64dbc89ac374098bc6f98ab334f80d9ba002e732795715f109f27491b102",
+      "scores": [
+        4,
+        4,
+        2,
+        4,
+        3,
+        4
+      ],
+      "notes": "把skill_life_4_core的目录索引当成生活四级；真实技能是裁缝技艺，不是4级门槛。生成上下文需要提供真实技能名。",
+      "mean": 3.5
+    },
+    {
+      "id": "item_book_dip_candles",
+      "hash": "eda1b6422ca5ff48ac163e21e90ac17cd99bbb9f4e4d15715773bc1ad3816faa",
+      "scores": [
+        4,
+        4,
+        2,
+        4,
+        3,
+        4
+      ],
+      "notes": "把配方木炭燃料写成炭粉辅料，可能混入蜡液改变成品；燃料与入物材料必须明确分工。",
+      "mean": 3.5
+    }
+  ],
+  "criteria": [
+    "具体性",
+    "独特性",
+    "内在一致性",
+    "与世界的连接",
+    "可玩性",
+    "说明文字辨识度"
+  ],
+  "reviewer": "Codex亲自精读随机样本，评分文件独立于生成器",
+  "decisionFile": "docs/内容审查/器物-1791602690630-人工评分.json"
+}

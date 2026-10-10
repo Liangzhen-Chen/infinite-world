@@ -265,5 +265,33 @@
     "closedSeasons": [],
     "toll": 0,
     "risk": 2
+  },
+  {
+    "id": "route_bld_hw_altar",
+    "from": "loc_hw",
+    "to": "bld_hw_altar",
+    "lengthKm": 0.2,
+    "terrainMultiplier": 1,
+    "modes": [
+      "walk",
+      "horse"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 0
+  },
+  {
+    "id": "route_bld_bs_shrine",
+    "from": "loc_bs",
+    "to": "bld_bs_shrine",
+    "lengthKm": 0.2,
+    "terrainMultiplier": 1,
+    "modes": [
+      "walk",
+      "horse"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 0
   }
 ]

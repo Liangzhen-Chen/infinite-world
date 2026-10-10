@@ -1,0 +1,7 @@
+{
+  "published": true,
+  "backup": "C:\\Users\\RobertC\\Documents\\dnd\\backups\\2026-10-10T06-36-20-813Z-stage2-weather-rules-a452db",
+  "sourceHash": "f67a0a8438b8acc218d2ca7e94737379970bb32d9c9836c5c683d13f07ea5b56",
+  "candidateHash": "55cae5422325d59de186f67b7c68f8694b2e9e1b3bc665d1ffa8aede98075ad1",
+  "scope": "旬日集市日期与四个气候区天气、昼长及行路/交锋/基础农产影响；节日、纪年历史、全年粮食平衡和完整NPC天气决策尚未完成。只写world源，未部署在线"
+}

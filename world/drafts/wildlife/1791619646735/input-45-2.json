@@ -1,0 +1,56 @@
+{
+  "bone": {
+    "id": "monster_wax_eater_swarm",
+    "name": "噬蜡蜂群",
+    "aliases": [],
+    "template": 2,
+    "levelRange": [
+      10,
+      16
+    ],
+    "habitatTags": [
+      "南坡蜂场外围"
+    ],
+    "grouping": "群体",
+    "diet": "蜂蜡与花蜜",
+    "drops": [],
+    "intelligence": 1,
+    "taming": {
+      "possible": false,
+      "conditions": [
+        "需要进一步的生态研究"
+      ]
+    },
+    "wildlife": {
+      "habitat": "habitat_hw_apiary",
+      "population": 3,
+      "capacity": 6,
+      "recoveryPerWeek": 1,
+      "activeHours": [
+        1080,
+        360
+      ],
+      "predatorOf": [],
+      "distinction": "翅尖带白粉，从蜂箱裂口搬走小蜡屑而非蜜团",
+      "gather": {
+        "minutes": 20,
+        "tool": null,
+        "consumes": []
+      }
+    }
+  },
+  "habitat": {
+    "id": "habitat_hw_apiary",
+    "name": "南坡蜂场外围",
+    "location": "loc_hw_apiary"
+  },
+  "dailyActivity": "18:00至次日06:00，其他时段休息；habits必须原样写出两个时间，不能重新换算为相反昼夜",
+  "drops": [],
+  "feedback": "[{\"instancePath\":\"/habits\",\"schemaPath\":\"#/properties/habits/minLength\",\"keyword\":\"minLength\",\"params\":{\"limit\":90},\"message\":\"must NOT have fewer than 90 characters\"}]",
+  "constraints": [
+    "distinction是已经确认的习性或能力，folklore的误解不能否定它。火喉穴狸的热气确实能烘干穴口湿草，但不能点火或暖屋。",
+    "取材每份的重量、保存期限和成品状态按drops.catalog.use与storage。刮净生皮仍湿润、未鞣制，不能在20分钟内宣称已经阴干；剖净鲜鱼去头去内脏并剔脊骨，剩余小刺仍在。",
+    "刀具和一份250毫升清水已经登记为实际取材耗材。观察残余标本不新增商品或奖励。",
+    "微小昆虫引起的是短暂干扰，不编造误工半日、重伤或整屋毁坏。"
+  ]
+}

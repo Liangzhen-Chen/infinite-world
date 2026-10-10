@@ -1,0 +1,9 @@
+file:///C:/Users/RobertC/Documents/dnd/tools/economy-content.mjs:61
+    if(!review||!review.approved||review.runId!==source.runId||review.boneHash!==source.boneHash||review.loreHash!==contentHash(lore)||review.sample.length!==expected.length)throw new Error(`器物批${batch}未完成匹配版本的人工验收`);
+                                                                                                                                                                                    ^
+
+Error: 器物批0未完成匹配版本的人工验收
+    at checkEconomyPublication (file:///C:/Users/RobertC/Documents/dnd/tools/economy-content.mjs:61:181)
+    at file:///C:/Users/RobertC/Documents/dnd/tools/prepare-economy-catalog.mjs:11:17
+
+Node.js v24.13.1

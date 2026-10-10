@@ -1,0 +1,87 @@
+{
+  "bone": {
+    "id": "monster_stone_loach",
+    "name": "石斑溪鳅",
+    "aliases": [],
+    "template": 1,
+    "levelRange": [
+      1,
+      2
+    ],
+    "habitatTags": [
+      "旧渡口河滩"
+    ],
+    "grouping": "四至十二尾",
+    "diet": "杂食",
+    "drops": [
+      {
+        "item": "item_fish",
+        "amount": 1
+      }
+    ],
+    "intelligence": 0,
+    "taming": {
+      "possible": true,
+      "conditions": [
+        "有合适食物并建立持续信任",
+        "具备对应阶段驯兽能力"
+      ]
+    },
+    "tamingRule": {
+      "category": "support",
+      "minimumSkill": 100,
+      "minimumPlayerLevel": 1,
+      "trustThreshold": 30,
+      "minutes": 60,
+      "difficulty": 10,
+      "food": [
+        {
+          "item": "item_ration",
+          "hungerRelief": 35,
+          "trustGain": 5
+        }
+      ],
+      "skills": [
+        "辨认口令",
+        "跟随训练"
+      ],
+      "rideable": false,
+      "riderWeightKg": 60,
+      "carryKg": 1
+    },
+    "wildlife": {
+      "habitat": "habitat_hw_water",
+      "population": 12,
+      "capacity": 24,
+      "recoveryPerWeek": 2,
+      "activeHours": [
+        360,
+        1080
+      ],
+      "predatorOf": [],
+      "distinction": "石点斑纹藏在砾底，夏季夜里移向浅水",
+      "gather": {
+        "minutes": 20,
+        "tool": "item_kitchen_knife",
+        "consumes": []
+      }
+    }
+  },
+  "habitat": {
+    "id": "habitat_hw_water",
+    "name": "旧渡口河滩",
+    "location": "loc_hw_dock"
+  },
+  "dailyActivity": "06:00至18:00，其他时段休息；habits必须原样写出两个时间，不能重新换算为相反昼夜",
+  "drops": [
+    {
+      "item": "item_fish",
+      "amount": 1,
+      "name": "剖净鲜鱼"
+    }
+  ],
+  "food": [
+    "干粮"
+  ],
+  "feedback": null
+}

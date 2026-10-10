@@ -1,6 +1,12 @@
 import fs from 'node:fs/promises';
 import { performance } from 'node:perf_hooks';
 
+// Assistant content is required but nullable in DeepSeek's request schema.
+// Some tool-call responses omit it; preserve the call and supply explicit null.
+export function normalizeAssistantContent(messages){
+    return messages.map(message=>message.role==='assistant'&&message.content===undefined?{...message,content:null}:message);
+}
+
 // Peak rates form a conservative ceiling even on weekends. Source verified
 // 2026-10-10: https://api-docs.deepseek.com/zh-cn/quick_start/pricing/
 export class DeepSeekClient {
@@ -12,6 +18,10 @@ export class DeepSeekClient {
         const key = process.env.DEEPSEEK_API_KEY;
         if (!key) throw new Error('DEEPSEEK_API_KEY 环境变量未配置');
         const request = { model: 'deepseek-flash', max_tokens: 1800, stream: false, thinking: { type: 'disabled' }, ...body };
+        if(request.messages)request.messages=normalizeAssistantContent(request.messages);
+        for(const message of request.messages??[]){
+            if(message.role!=='assistant'&&typeof message.content!=='string')throw new Error(`DeepSeek请求的${message.role}消息缺少有效正文，拒绝发送`);
+        }
         function sanitizeSchema(value){
             if(!value||typeof value!=='object')return;
             if(Array.isArray(value.required)&&!value.required.length)delete value.required;
@@ -26,6 +36,7 @@ export class DeepSeekClient {
         if (this.spent + this.reserved + ceiling > this.budgetYuan) throw new Error(`测试达到${this.budgetYuan}元费用上限，已停止`);
         this.reserved += ceiling;
         const started = performance.now();
+        let charged=false;
         try {
             const response = await fetch('https://api.deepseek.com/chat/completions', {
                 method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${key}` }, body: encoded,
@@ -42,6 +53,7 @@ export class DeepSeekClient {
             const miss = usage.prompt_cache_miss_tokens ?? usage.prompt_tokens - hit;
             const costUpperYuan = (hit * this.rates.hit + miss * this.rates.miss + usage.completion_tokens * this.rates.output) / 1e6;
             this.spent += costUpperYuan;
+            charged=true;
             const record = { label, model: request.model, thinking: request.thinking.type, usage, costUpperYuan,
                 cumulativeUpperYuan: this.spent, latencyMs: performance.now() - started, timestamp: new Date().toISOString() };
             await fs.mkdir(new URL('../logs', import.meta.url), { recursive: true });
@@ -50,7 +62,7 @@ export class DeepSeekClient {
         } catch (error) {
             // A transport failure can still have consumed tokens. Charge the
             // reservation conservatively so retries cannot evade the guard.
-            this.spent += ceiling;
+            if(!charged)this.spent += ceiling;
             throw error;
         } finally { this.reserved -= ceiling; }
     }

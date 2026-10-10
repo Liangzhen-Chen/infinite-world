@@ -1,0 +1,36 @@
+
+> infinite-fields@0.1.0 test:scenarios
+> node tools/scenarios.mjs --quick
+
+L1 第1次: 通过
+G1 第1次: 通过
+T1 第1次: 通过
+F8 第1次: 通过
+LearningTeacher 第1次: 通过
+GrowthAllocation 第1次: 通过
+RevivalRegistration 第1次: 通过
+WorkshopRepair 第1次: 通过
+OpposedCheck 第1次: 通过
+PromisedAssistance 第1次: 通过
+WorkshopCraft 第1次: 通过
+WaterIrrigation 第1次: 通过
+CarrySilt 第1次: 通过
+PetFeeding 第1次: 通过
+PetRelease 第1次: 通过
+SummonCarry 第1次: 通过
+CrimeTheft 第1次: 通过
+LawConfession 第1次: 通过
+LawHearing 第1次: 通过
+WeatherObservation 第1次: 通过
+WeatherTravel 第1次: 通过
+AgricultureBuy 第1次: 通过
+AgricultureSow 第1次: 通过
+WildlifeObserve 第1次: 通过
+WildlifeTrack 第1次: 通过
+BossEntrance 第1次: 通过
+BossApproach 第1次: 失败 Expected values to be strictly equal:
+
+2 !== 1
+
+BossAdaptation 第1次: 通过
+BossVacatedLair 第1次: 通过

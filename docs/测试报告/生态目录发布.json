@@ -1,0 +1,9 @@
+{
+  "runId": "1791620776576",
+  "published": true,
+  "backup": "C:\\Users\\RobertC\\Documents\\dnd\\backups\\2026-10-10T08-29-15-802Z-stage2-wildlife-catalog-72b10e",
+  "sourceHash": "ad9024f7dcfd6c562ba9b30dc1a33eddd71552be225314789396539d7c711598",
+  "candidateHash": "1f7bad90c40a0994298c12f6e2ce639d97b4c6c8f8ed10636a136ef40c62868c",
+  "monsters": 50,
+  "scope": "审核后首批物种与有限种群处理器；完整150物种/40首领、季节迁徙、觉醒和巢穴继承仍未完成，在线未部署"
+}

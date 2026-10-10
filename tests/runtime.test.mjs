@@ -20,6 +20,7 @@ test('E2/E19 浏览器：失败对账阻止出站生成，编辑与删除同步�
     const runtime=(await fs.readFile('extension/runtime.js','utf8')).replace("import { getContext } from '../../../extensions.js';","const getContext=()=>window.fixtureContext;");
     await page.route('**/runtime.js',route=>route.fulfill({contentType:'text/javascript',body:runtime}));
     await page.route('**/turn.mjs',async route=>route.fulfill({contentType:'text/javascript',body:await fs.readFile('extension/turn.mjs','utf8')}));
+    await page.route('**/state-read.mjs',async route=>route.fulfill({contentType:'text/javascript',body:await fs.readFile('extension/state-read.mjs','utf8')}));
     await page.route('**/api/plugins/infinite-fields/**',async route=>{
         const request=route.request(),url=new URL(request.url());
         if(failReconcile&&url.pathname.endsWith('/reconcile'))return route.fulfill({status:400,json:{ok:false,error:'故意损坏的回放夹具'}});
@@ -38,6 +39,11 @@ test('E2/E19 浏览器：失败对账阻止出站生成，编辑与删除同步�
             stopGeneration:()=>{window.stopped=true;},eventTypes:new Proxy({},{get:(_,key)=>key}),eventSource:{on:(key,callback)=>handlers.set(key,callback)}};
     },created.reference);
     await page.evaluate(async()=>{await import('/runtime.js');await window.infiniteFieldsV2.refresh();});
+    const read=await page.evaluate(async()=>{
+        const tool=window.fixtureTools.get('world_read');
+        return{inventory:JSON.parse(await tool.action({section:'行囊'})),player:JSON.parse(await tool.action({section:'玩家'})),invalid:JSON.parse(await tool.action({section:'不认识的栏目'}))};
+    });
+    assert.equal(read.inventory.item_staff.quantity,1);assert.equal(read.player.coins,180);assert.equal(read.invalid.ok,false);
     const move=await page.evaluate(()=>window.infiniteFieldsV2.execute('world_move',{destination:'河湾村'},'moved'));assert.equal(move.ok,true);
     const metadata=await page.evaluate(()=>window.savedMetadata.infinite_fields);
     assert.equal(metadata.format,2);assert.equal(metadata.state,undefined);assert.equal(metadata.journal,undefined);

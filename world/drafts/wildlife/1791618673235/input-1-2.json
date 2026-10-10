@@ -1,0 +1,93 @@
+{
+  "bone": {
+    "id": "monster_red_ear_fox",
+    "name": "赤耳林狐",
+    "aliases": [],
+    "template": 1,
+    "levelRange": [
+      1,
+      4
+    ],
+    "habitatTags": [
+      "北林边林下"
+    ],
+    "grouping": "独居",
+    "diet": "肉食",
+    "drops": [
+      {
+        "item": "item_rawhide",
+        "amount": 1
+      }
+    ],
+    "intelligence": 0,
+    "taming": {
+      "possible": true,
+      "conditions": [
+        "有合适食物并建立持续信任",
+        "具备对应阶段驯兽能力"
+      ]
+    },
+    "tamingRule": {
+      "category": "support",
+      "minimumSkill": 100,
+      "minimumPlayerLevel": 1,
+      "trustThreshold": 30,
+      "minutes": 60,
+      "difficulty": 10,
+      "food": [
+        {
+          "item": "item_fish",
+          "hungerRelief": 35,
+          "trustGain": 5
+        }
+      ],
+      "skills": [
+        "辨认口令",
+        "跟随训练"
+      ],
+      "rideable": false,
+      "riderWeightKg": 60,
+      "carryKg": 1
+    },
+    "wildlife": {
+      "habitat": "habitat_hw_wood",
+      "population": 12,
+      "capacity": 24,
+      "recoveryPerWeek": 2,
+      "activeHours": [
+        360,
+        1080
+      ],
+      "predatorOf": [
+        "monster_brush_squirrel"
+      ],
+      "distinction": "赤耳尖从蕨丛露出，把剩余猎物埋在倒木旁",
+      "gather": {
+        "minutes": 20,
+        "tool": "item_kitchen_knife",
+        "consumes": [
+          {
+            "item": "item_water",
+            "amount": 1
+          }
+        ]
+      }
+    }
+  },
+  "habitat": {
+    "id": "habitat_hw_wood",
+    "name": "北林边林下",
+    "location": "loc_hw_northwood"
+  },
+  "drops": [
+    {
+      "item": "item_rawhide",
+      "amount": 1,
+      "name": "刮净生皮"
+    }
+  ],
+  "food": [
+    "剖净鲜鱼"
+  ],
+  "feedback": "[{\"instancePath\":\"/appearance\",\"schemaPath\":\"#/properties/appearance/minLength\",\"keyword\":\"minLength\",\"params\":{\"limit\":65},\"message\":\"must NOT have fewer than 65 characters\"},{\"instancePath\":\"/habits\",\"schemaPath\":\"#/properties/habits/minLength\",\"keyword\":\"minLength\",\"params\":{\"limit\":90},\"message\":\"must NOT have fewer than 90 characters\"},{\"instancePath\":\"/threat\",\"schemaPath\":\"#/properties/threat/minLength\",\"keyword\":\"minLength\",\"params\":{\"limit\":55},\"message\":\"must NOT have fewer than 55 characters\"},{\"instancePath\":\"/folklore\",\"schemaPath\":\"#/properties/folklore/minLength\",\"keyword\":\"minLength\",\"params\":{\"limit\":65},\"message\":\"must NOT have fewer than 65 characters\"},{\"instancePath\":\"/voice\",\"schemaPath\":\"#/properties/voice/minLength\",\"keyword\":\"minLength\",\"params\":{\"limit\":30},\"message\":\"must NOT have fewer than 30 characters\"}]"
+}

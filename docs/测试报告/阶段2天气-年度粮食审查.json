@@ -1,0 +1,536 @@
+{
+  "ok": false,
+  "sourceHash": "55cae5422325d59de186f67b7c68f8694b2e9e1b3bc665d1ffa8aede98075ad1",
+  "seed": "annual-food-audit",
+  "scope": "源规则加保存的旧开局聚落夹具，在隔离文档执行12次30天实际world_time；不修改玩家存档，不代表完整农事/贸易或新LOD0内容验收",
+  "initial": {
+    "loc_hw": {
+      "name": "河湾村",
+      "population": 58,
+      "food": 420,
+      "wood": 28,
+      "stone": 12,
+      "iron": 4,
+      "treasury": 640,
+      "foodPerDay": 45,
+      "woodPerDay": 2,
+      "simulationEnabled": true,
+      "unmetMeals": 0,
+      "starvation": 0
+    }
+  },
+  "final": {
+    "loc_hw": {
+      "name": "河湾村",
+      "population": 39,
+      "food": 0,
+      "wood": 748,
+      "stone": 12,
+      "iron": 4,
+      "treasury": 640,
+      "foodPerDay": 45,
+      "woodPerDay": 2,
+      "simulationEnabled": true,
+      "unmetMeals": 3422,
+      "starvation": 1
+    }
+  },
+  "failures": [
+    "loc_hw"
+  ],
+  "months": [
+    {
+      "month": 1,
+      "produced": {
+        "loc_hw": 979
+      },
+      "before": {
+        "loc_hw": {
+          "name": "河湾村",
+          "population": 58,
+          "food": 420,
+          "wood": 28,
+          "stone": 12,
+          "iron": 4,
+          "treasury": 640,
+          "foodPerDay": 45,
+          "woodPerDay": 2,
+          "simulationEnabled": true,
+          "unmetMeals": 0,
+          "starvation": 0
+        }
+      },
+      "after": {
+        "loc_hw": {
+          "name": "河湾村",
+          "population": 56,
+          "food": 0,
+          "wood": 88,
+          "stone": 12,
+          "iron": 4,
+          "treasury": 640,
+          "foodPerDay": 45,
+          "woodPerDay": 2,
+          "simulationEnabled": true,
+          "unmetMeals": 334,
+          "starvation": 0
+        }
+      },
+      "messages": [
+        "【系统】河湾村发生饥荒死亡",
+        "【系统】河湾村发生饥荒死亡"
+      ]
+    },
+    {
+      "month": 2,
+      "produced": {
+        "loc_hw": 1127
+      },
+      "before": {
+        "loc_hw": {
+          "name": "河湾村",
+          "population": 56,
+          "food": 0,
+          "wood": 88,
+          "stone": 12,
+          "iron": 4,
+          "treasury": 640,
+          "foodPerDay": 45,
+          "woodPerDay": 2,
+          "simulationEnabled": true,
+          "unmetMeals": 334,
+          "starvation": 0
+        }
+      },
+      "after": {
+        "loc_hw": {
+          "name": "河湾村",
+          "population": 52,
+          "food": 0,
+          "wood": 148,
+          "stone": 12,
+          "iron": 4,
+          "treasury": 640,
+          "foodPerDay": 45,
+          "woodPerDay": 2,
+          "simulationEnabled": true,
+          "unmetMeals": 837,
+          "starvation": 2
+        }
+      },
+      "messages": [
+        "【系统】河湾村发生饥荒死亡",
+        "【系统】河湾村发生饥荒死亡",
+        "【系统】河湾村发生饥荒死亡",
+        "【系统】河湾村发生饥荒死亡"
+      ]
+    },
+    {
+      "month": 3,
+      "produced": {
+        "loc_hw": 980
+      },
+      "before": {
+        "loc_hw": {
+          "name": "河湾村",
+          "population": 52,
+          "food": 0,
+          "wood": 148,
+          "stone": 12,
+          "iron": 4,
+          "treasury": 640,
+          "foodPerDay": 45,
+          "woodPerDay": 2,
+          "simulationEnabled": true,
+          "unmetMeals": 837,
+          "starvation": 2
+        }
+      },
+      "after": {
+        "loc_hw": {
+          "name": "河湾村",
+          "population": 48,
+          "food": 0,
+          "wood": 208,
+          "stone": 12,
+          "iron": 4,
+          "treasury": 640,
+          "foodPerDay": 45,
+          "woodPerDay": 2,
+          "simulationEnabled": true,
+          "unmetMeals": 1359,
+          "starvation": 4
+        }
+      },
+      "messages": [
+        "【系统】河湾村发生饥荒死亡",
+        "【系统】河湾村发生饥荒死亡",
+        "【系统】河湾村发生饥荒死亡",
+        "【系统】河湾村发生饥荒死亡"
+      ]
+    },
+    {
+      "month": 4,
+      "produced": {
+        "loc_hw": 1440
+      },
+      "before": {
+        "loc_hw": {
+          "name": "河湾村",
+          "population": 48,
+          "food": 0,
+          "wood": 208,
+          "stone": 12,
+          "iron": 4,
+          "treasury": 640,
+          "foodPerDay": 45,
+          "woodPerDay": 2,
+          "simulationEnabled": true,
+          "unmetMeals": 1359,
+          "starvation": 4
+        }
+      },
+      "after": {
+        "loc_hw": {
+          "name": "河湾村",
+          "population": 48,
+          "food": 41,
+          "wood": 268,
+          "stone": 12,
+          "iron": 4,
+          "treasury": 640,
+          "foodPerDay": 45,
+          "woodPerDay": 2,
+          "simulationEnabled": true,
+          "unmetMeals": 1400,
+          "starvation": 0
+        }
+      },
+      "messages": []
+    },
+    {
+      "month": 5,
+      "produced": {
+        "loc_hw": 1315
+      },
+      "before": {
+        "loc_hw": {
+          "name": "河湾村",
+          "population": 48,
+          "food": 41,
+          "wood": 268,
+          "stone": 12,
+          "iron": 4,
+          "treasury": 640,
+          "foodPerDay": 45,
+          "woodPerDay": 2,
+          "simulationEnabled": true,
+          "unmetMeals": 1400,
+          "starvation": 0
+        }
+      },
+      "after": {
+        "loc_hw": {
+          "name": "河湾村",
+          "population": 47,
+          "food": 11,
+          "wood": 328,
+          "stone": 12,
+          "iron": 4,
+          "treasury": 640,
+          "foodPerDay": 45,
+          "woodPerDay": 2,
+          "simulationEnabled": true,
+          "unmetMeals": 1491,
+          "starvation": 0
+        }
+      },
+      "messages": [
+        "【系统】河湾村发生饥荒死亡"
+      ]
+    },
+    {
+      "month": 6,
+      "produced": {
+        "loc_hw": 1545
+      },
+      "before": {
+        "loc_hw": {
+          "name": "河湾村",
+          "population": 47,
+          "food": 11,
+          "wood": 328,
+          "stone": 12,
+          "iron": 4,
+          "treasury": 640,
+          "foodPerDay": 45,
+          "woodPerDay": 2,
+          "simulationEnabled": true,
+          "unmetMeals": 1491,
+          "starvation": 0
+        }
+      },
+      "after": {
+        "loc_hw": {
+          "name": "河湾村",
+          "population": 47,
+          "food": 146,
+          "wood": 388,
+          "stone": 12,
+          "iron": 4,
+          "treasury": 640,
+          "foodPerDay": 45,
+          "woodPerDay": 2,
+          "simulationEnabled": true,
+          "unmetMeals": 1491,
+          "starvation": 0
+        }
+      },
+      "messages": []
+    },
+    {
+      "month": 7,
+      "produced": {
+        "loc_hw": 1729
+      },
+      "before": {
+        "loc_hw": {
+          "name": "河湾村",
+          "population": 47,
+          "food": 146,
+          "wood": 388,
+          "stone": 12,
+          "iron": 4,
+          "treasury": 640,
+          "foodPerDay": 45,
+          "woodPerDay": 2,
+          "simulationEnabled": true,
+          "unmetMeals": 1491,
+          "starvation": 0
+        }
+      },
+      "after": {
+        "loc_hw": {
+          "name": "河湾村",
+          "population": 47,
+          "food": 465,
+          "wood": 448,
+          "stone": 12,
+          "iron": 4,
+          "treasury": 640,
+          "foodPerDay": 45,
+          "woodPerDay": 2,
+          "simulationEnabled": true,
+          "unmetMeals": 1491,
+          "starvation": 0
+        }
+      },
+      "messages": []
+    },
+    {
+      "month": 8,
+      "produced": {
+        "loc_hw": 1748
+      },
+      "before": {
+        "loc_hw": {
+          "name": "河湾村",
+          "population": 47,
+          "food": 465,
+          "wood": 448,
+          "stone": 12,
+          "iron": 4,
+          "treasury": 640,
+          "foodPerDay": 45,
+          "woodPerDay": 2,
+          "simulationEnabled": true,
+          "unmetMeals": 1491,
+          "starvation": 0
+        }
+      },
+      "after": {
+        "loc_hw": {
+          "name": "河湾村",
+          "population": 47,
+          "food": 803,
+          "wood": 508,
+          "stone": 12,
+          "iron": 4,
+          "treasury": 640,
+          "foodPerDay": 45,
+          "woodPerDay": 2,
+          "simulationEnabled": true,
+          "unmetMeals": 1491,
+          "starvation": 0
+        }
+      },
+      "messages": []
+    },
+    {
+      "month": 9,
+      "produced": {
+        "loc_hw": 1818
+      },
+      "before": {
+        "loc_hw": {
+          "name": "河湾村",
+          "population": 47,
+          "food": 803,
+          "wood": 508,
+          "stone": 12,
+          "iron": 4,
+          "treasury": 640,
+          "foodPerDay": 45,
+          "woodPerDay": 2,
+          "simulationEnabled": true,
+          "unmetMeals": 1491,
+          "starvation": 0
+        }
+      },
+      "after": {
+        "loc_hw": {
+          "name": "河湾村",
+          "population": 47,
+          "food": 1211,
+          "wood": 568,
+          "stone": 12,
+          "iron": 4,
+          "treasury": 640,
+          "foodPerDay": 45,
+          "woodPerDay": 2,
+          "simulationEnabled": true,
+          "unmetMeals": 1491,
+          "starvation": 0
+        }
+      },
+      "messages": []
+    },
+    {
+      "month": 10,
+      "produced": {
+        "loc_hw": 304
+      },
+      "before": {
+        "loc_hw": {
+          "name": "河湾村",
+          "population": 47,
+          "food": 1211,
+          "wood": 568,
+          "stone": 12,
+          "iron": 4,
+          "treasury": 640,
+          "foodPerDay": 45,
+          "woodPerDay": 2,
+          "simulationEnabled": true,
+          "unmetMeals": 1491,
+          "starvation": 0
+        }
+      },
+      "after": {
+        "loc_hw": {
+          "name": "河湾村",
+          "population": 47,
+          "food": 105,
+          "wood": 628,
+          "stone": 12,
+          "iron": 4,
+          "treasury": 640,
+          "foodPerDay": 45,
+          "woodPerDay": 2,
+          "simulationEnabled": true,
+          "unmetMeals": 1491,
+          "starvation": 0
+        }
+      },
+      "messages": []
+    },
+    {
+      "month": 11,
+      "produced": {
+        "loc_hw": 298
+      },
+      "before": {
+        "loc_hw": {
+          "name": "河湾村",
+          "population": 47,
+          "food": 105,
+          "wood": 628,
+          "stone": 12,
+          "iron": 4,
+          "treasury": 640,
+          "foodPerDay": 45,
+          "woodPerDay": 2,
+          "simulationEnabled": true,
+          "unmetMeals": 1491,
+          "starvation": 0
+        }
+      },
+      "after": {
+        "loc_hw": {
+          "name": "河湾村",
+          "population": 44,
+          "food": 0,
+          "wood": 688,
+          "stone": 12,
+          "iron": 4,
+          "treasury": 640,
+          "foodPerDay": 45,
+          "woodPerDay": 2,
+          "simulationEnabled": true,
+          "unmetMeals": 2459,
+          "starvation": 6
+        }
+      },
+      "messages": [
+        "【系统】河湾村发生饥荒死亡",
+        "【系统】河湾村发生饥荒死亡",
+        "【系统】河湾村发生饥荒死亡"
+      ]
+    },
+    {
+      "month": 12,
+      "produced": {
+        "loc_hw": 282
+      },
+      "before": {
+        "loc_hw": {
+          "name": "河湾村",
+          "population": 44,
+          "food": 0,
+          "wood": 688,
+          "stone": 12,
+          "iron": 4,
+          "treasury": 640,
+          "foodPerDay": 45,
+          "woodPerDay": 2,
+          "simulationEnabled": true,
+          "unmetMeals": 2459,
+          "starvation": 6
+        }
+      },
+      "after": {
+        "loc_hw": {
+          "name": "河湾村",
+          "population": 39,
+          "food": 0,
+          "wood": 748,
+          "stone": 12,
+          "iron": 4,
+          "treasury": 640,
+          "foodPerDay": 45,
+          "woodPerDay": 2,
+          "simulationEnabled": true,
+          "unmetMeals": 3422,
+          "starvation": 1
+        }
+      },
+      "messages": [
+        "【系统】河湾村发生饥荒死亡",
+        "【系统】河湾村发生饥荒死亡",
+        "【系统】河湾村发生饥荒死亡",
+        "【系统】河湾村发生饥荒死亡",
+        "【系统】河湾村发生饥荒死亡"
+      ]
+    }
+  ]
+}

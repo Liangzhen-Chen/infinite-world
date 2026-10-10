@@ -1,0 +1,87 @@
+{
+  "bone": {
+    "id": "monster_rust_scale_fish",
+    "name": "锈鳞脊鱼",
+    "aliases": [],
+    "template": 2,
+    "levelRange": [
+      10,
+      15
+    ],
+    "habitatTags": [
+      "旧渡口河滩"
+    ],
+    "grouping": "四至八尾",
+    "diet": "杂食",
+    "drops": [
+      {
+        "item": "item_fish",
+        "amount": 1
+      }
+    ],
+    "intelligence": 1,
+    "taming": {
+      "possible": true,
+      "conditions": [
+        "有合适食物并建立持续信任",
+        "具备对应阶段驯兽能力"
+      ]
+    },
+    "tamingRule": {
+      "category": "combat",
+      "minimumSkill": 300,
+      "minimumPlayerLevel": 10,
+      "trustThreshold": 60,
+      "minutes": 60,
+      "difficulty": 15,
+      "food": [
+        {
+          "item": "item_ration",
+          "hungerRelief": 35,
+          "trustGain": 5
+        }
+      ],
+      "skills": [
+        "辨认口令",
+        "跟随训练"
+      ],
+      "rideable": false,
+      "riderWeightKg": 60,
+      "carryKg": 1
+    },
+    "wildlife": {
+      "habitat": "habitat_hw_water",
+      "population": 3,
+      "capacity": 6,
+      "recoveryPerWeek": 1,
+      "activeHours": [
+        360,
+        1080
+      ],
+      "predatorOf": [],
+      "distinction": "锈色厚鳞抗砂流，泛红水痕来自鳞粉不是血",
+      "gather": {
+        "minutes": 20,
+        "tool": "item_kitchen_knife",
+        "consumes": []
+      }
+    }
+  },
+  "habitat": {
+    "id": "habitat_hw_water",
+    "name": "旧渡口河滩",
+    "location": "loc_hw_dock"
+  },
+  "dailyActivity": "06:00至18:00，其他时段休息；habits必须原样写出两个时间，不能重新换算为相反昼夜",
+  "drops": [
+    {
+      "item": "item_fish",
+      "amount": 1,
+      "name": "剖净鲜鱼"
+    }
+  ],
+  "food": [
+    "干粮"
+  ],
+  "feedback": null
+}

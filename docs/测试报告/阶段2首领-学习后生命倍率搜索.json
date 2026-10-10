@@ -1,0 +1,38 @@
+[
+  {
+    "hp": 4.5,
+    "pass": false,
+    "solo": 0,
+    "team": 0.886
+  },
+  {
+    "hp": 4.8,
+    "pass": false,
+    "solo": 0,
+    "team": 0.821
+  },
+  {
+    "hp": 5,
+    "pass": false,
+    "solo": 0,
+    "team": 0.7625
+  },
+  {
+    "hp": 5.2,
+    "pass": false,
+    "solo": 0,
+    "team": 0.6895
+  },
+  {
+    "hp": 5.4,
+    "pass": true,
+    "solo": 0,
+    "team": 0.62975
+  },
+  {
+    "hp": 5.6,
+    "pass": false,
+    "solo": 0,
+    "team": 0.544
+  }
+]

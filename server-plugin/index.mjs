@@ -4,12 +4,12 @@ import { randomUUID } from 'node:crypto';
 import { CampaignStorage, digest } from './storage.mjs';
 import { WorldEngine } from './engine.mjs';
 import { MemoryIndex } from './retrieval.mjs';
-import { campaignReducer } from './campaign-reducer.mjs';
+import { archivedReducer } from './archived-reducer.mjs';
 import { loadWorld } from '../tools/load-world.mjs';
 import { migrateLegacyChat } from './migrations.mjs';
 import { WorldRegistry } from './world-registry.mjs';
-import { compatibleWorld, planWorldUpgrade } from './world-upgrade.mjs';
 import { atomicJSON } from './storage.mjs';
+import {catalogDefinition}from'./catalog.mjs';
 
 export const info={id:'infinite-fields',name:'无限原野本地战役存储',description:'本项目自有的存档、账本与检索服务器插件'};
 export async function init(router,{ world=null, baseRoot=null }={}){
@@ -20,26 +20,17 @@ export async function init(router,{ world=null, baseRoot=null }={}){
         const root=baseRoot??req.user?.directories?.root;if(!root)throw new Error('没有当前用户的存档目录');
         if(!stores.has(root)){
             const registry=new WorldRegistry(path.join(root,'infinite-fields-worlds'));registries.set(root,registry);
-            const reducer=async(document,input)=>{
-                const hash=input.type==='schema_migration'?input.worldHash:document.worldHash;
-                const selected=hash?await registry.get(hash):engine;
-                if(input.type==='world_upgrade'){
-                    const incoming=await registry.get(input.worldHash);
-                    const {world:merged,retained}=compatibleWorld(selected.world,incoming.world);
-                    const worldHash=await registry.put(merged);
-                    const result=planWorldUpgrade(document,selected.world,merged,{worldHash,eventId:input.eventId,retained});
-                    result.patches.push({op:'set',path:['worldSourceHash'],value:input.worldHash});return result;
-                }
-                const output=await campaignReducer(selected)(document,input);
-                if(input.type==='schema_migration')output.patches.push({op:'set',path:['worldHash'],value:hash});
-                return output;
-            };
+            const reducer=archivedReducer(registry,engine);
             const store=new CampaignStorage(path.join(root,'infinite-fields'),{reducer});store.worldRegistry=registry;stores.set(root,store);
         }
         return stores.get(root);
     };
     const handle=callback=>async(req,res)=>{
-        try{res.json(await callback(req));}catch(error){res.status(error.code==='ENOENT'?404:400).json({ok:false,error:error.message});}
+        try{
+            const result=await callback(req);
+            if(result?.document){const{privateState,...document}=result.document;res.json({...result,document});}
+            else res.json(result);
+        }catch(error){res.status(error.code==='ENOENT'?404:400).json({ok:false,error:error.message});}
     };
     const exportWithWorlds=async(store,id)=>{
         const bundle=await store.export(id),hashes=new Set([bundle.initial.worldHash,
@@ -83,8 +74,9 @@ export async function init(router,{ world=null, baseRoot=null }={}){
         return index;
     };
     router.post('/create',handle(async req=>{
-        const document=engine.initialFromLegacy({state:seed.state,memories:seed.memories},randomUUID());
-        if(req.body.name)document.state.player.name=String(req.body.name).slice(0,60);
+        const legacy={state:seed.state,memories:seed.memories},randomSeed=randomUUID();
+        const document=req.body.character===undefined?engine.initialFromLegacy(legacy,randomSeed):engine.createCharacter(legacy,req.body.character,randomSeed);
+        if(req.body.character===undefined&&req.body.name)document.state.player.name=String(req.body.name).slice(0,60);
         const store=getStore(req),registry=registries.get(baseRoot??req.user.directories.root);
         document.worldHash=await registry.put(world);
         return store.create({worldVersion:world.version,document});
@@ -108,6 +100,10 @@ export async function init(router,{ world=null, baseRoot=null }={}){
         const store=getStore(req),view=await store.read(req.body.campaignId),index=await getIndex(store,req.body.campaignId,view.document);
         if(Array.isArray(req.body.chat))index.syncChat(req.body.chat);
         return {results:index.search(req.body.query??'',{now:view.document.state.minute,scope:view.document.state.location,limit:req.body.limit})};
+    }));
+    router.post('/catalog',handle(async req=>{
+        const store=getStore(req),view=await store.read(req.body.campaignId),selected=await store.worldRegistry.get(view.document.worldHash);
+        return catalogDefinition(selected,view.document,req.body);
     }));
     router.post('/export',handle(async req=>{
         return exportWithWorlds(getStore(req),req.body.campaignId);

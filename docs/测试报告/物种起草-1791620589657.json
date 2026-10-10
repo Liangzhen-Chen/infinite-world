@@ -1,0 +1,20 @@
+{
+  "runId": "1791620589657",
+  "root": "world/drafts/wildlife/1791620589657",
+  "planned": 50,
+  "structured": 50,
+  "audit": {
+    "ok": true,
+    "errors": [],
+    "maximumSimilarity": 0.1633281972265023
+  },
+  "failures": [
+    {
+      "id": "monster_mist_swallow_moth",
+      "attempt": 1,
+      "error": "[{\"instancePath\":\"/materials\",\"schemaPath\":\"#/properties/materials/maxLength\",\"keyword\":\"maxLength\",\"params\":{\"limit\":100},\"message\":\"must NOT have more than 100 characters\"}]"
+    }
+  ],
+  "costUpperYuan": 0.36376967999999993,
+  "manualApproved": false
+}

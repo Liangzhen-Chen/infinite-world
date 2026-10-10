@@ -5,11 +5,14 @@ import fc from 'fast-check';
 import { loadWorld } from '../tools/load-world.mjs';
 import { WorldEngine, xpRequired } from '../server-plugin/engine.mjs';
 import { applyPatches } from '../server-plugin/storage.mjs';
+import {planAgricultureMigration} from '../server-plugin/agriculture-migration.mjs';
+import {planWildlifeMigration} from '../server-plugin/wildlife-migration.mjs';
+import {planFarmPestsMigration} from '../server-plugin/farm-pests-migration.mjs';
 import { createCampaign } from './fixtures/legacy/core.js';
 import { parseTurn } from '../extension/turn.mjs';
 const seed=JSON.parse(await fs.readFile(new URL('fixtures/legacy/seed.json',import.meta.url),'utf8'));
 const engine=new WorldEngine(await loadWorld());
-const fresh=()=>engine.initialFromLegacy(createCampaign(seed),'deterministic-test');
+const fresh=()=>{const c=engine.initialFromLegacy(createCampaign(seed),'deterministic-test'),migrated=applyPatches(c,planAgricultureMigration(c,engine.rules)),wild=applyPatches(migrated,planWildlifeMigration(migrated,engine.rules,engine.world.monsters));return applyPatches(wild,planFarmPestsMigration(wild,engine.rules));};
 const run=async(document,tool,args,eventId='test')=>{
     const output=await engine.reduce(document,{tool,args,eventId});
     return {document:applyPatches(document,output.patches),result:output.result};
@@ -18,6 +21,17 @@ test('编号迁移：原始人物财物与熟练度保留，名字用于显示',
     const c=fresh();assert.equal(c.state.player.coins,180);assert.equal(c.state.inventory.item_ration.quantity,3);
     assert.equal(c.state.npcs.npc_hw_linsui.name,'林穗');assert.equal(c.state.skills.skill_light.proficiency,10);
     assert.equal(c.state.location,'bld_hw_qingdeng');assert.equal(Object.keys(c.state.npcs).length,18);
+});
+
+test('玩家编号和中文称呼引用同一角色，自定义姓名同名居民时拒绝歧义',async()=>{
+    const c=fresh();
+    for(const buyer of['player','玩家','旅人']){
+        const out=await run(c,'world_trade',{buyer,seller:'林穗',service:'住宿'},`rent_${buyer}`);
+        assert.equal(out.document.state.player.coins,174);assert.equal(Object.keys(out.document.state.npcs).length,18);
+    }
+    c.state.player.name='林穗';const before=structuredClone(c);
+    await assert.rejects(run(c,'world_trade',{buyer:'林穗',seller:'贺舟',item:'干粮',quantity:1}),/歧义/);assert.deepEqual(c,before);
+    assert.equal(engine.scoped(c).resolve('林穗','npc'),'npc_hw_linsui');
 });
 test('E5 生命钳制、濒死救治、溢出治疗和具体魔力错误',async()=>{
     let c=fresh();c=(await run(c,'world_health',{delta:-20})).document;assert.equal(c.state.player.hp,0);assert.equal(c.state.player.status,'濒死');
@@ -28,7 +42,7 @@ test('死亡惩罚、濒死超时与登记点复活',async()=>{
     let c=fresh();c.state.player.level=10;c.state.player.xp=1200;
     c=(await run(c,'world_health',{delta:-20})).document;c=(await run(c,'world_time',{minutes:10})).document;
     assert.equal(c.state.player.status,'死亡');assert.equal(c.state.player.xp,200);
-    c=(await run(c,'world_revive',{})).document;assert.equal(c.state.location,'loc_hw');assert.equal(c.state.player.hp,6);assert.equal(c.state.player.mp,5);
+    c=(await run(c,'world_revive',{})).document;assert.equal(c.state.location,'bld_hw_altar');assert.equal(c.state.player.hp,6);assert.equal(c.state.player.mp,5);
     assert.equal(xpRequired(10),1000);
 });
 test('E6 未知法术和直接提交法术拒绝，不能伪造学习来源',async()=>{
@@ -69,7 +83,7 @@ test('E12 多聚落日结，饥荒有实际后果',async()=>{
     assert.ok(c.state.buildings.bld_hw_qingdeng);
 });
 test('E14 检定按属性技能计算，给出成功程度，固定事件重复结果一致',async()=>{
-    const c=fresh();c.state.player.attributes.精神=18;c.state.skills.skill_light.proficiency=450;
+    const c=fresh();c.state.professions.combat='profession_mage';c.state.player.attributes.精神=18;c.state.skills.skill_light.proficiency=450;
     const a=await run(c,'world_check',{attribute:'精神',skill:'照明术',difficulty:15}),b=await run(c,'world_check',{attribute:'精神',skill:'照明术',difficulty:15});
     assert.equal(a.result.modifier,7);assert.deepEqual(a.result,b.result);assert.ok(a.result.degree);
     await assert.rejects(run(c,'world_check',{modifier:15,difficulty:15}),/不能直接指定/);
@@ -77,7 +91,7 @@ test('E14 检定按属性技能计算，给出成功程度，固定事件重复�
 test('E15 施法增长熟练度，持续效果到期移除，不生成永久世界记录',async()=>{
     const c=fresh(),cast=await run(c,'world_cast',{spell:'照明术',target:'木杖'});
     assert.equal(cast.document.state.player.mp,9);assert.ok(cast.document.state.skills.skill_light.proficiency>10);
-    assert.deepEqual(cast.document.state.records,{});
+    assert.deepEqual(cast.document.state.records,c.state.records);
     const later=await run(cast.document,'world_time',{minutes:120},'later');assert.deepEqual(later.document.state.effects,{});
 });
 test('E17 交易物品别名同一编号，双方钱与库存守恒，余额不足原子拒绝',async()=>{

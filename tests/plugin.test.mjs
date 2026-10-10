@@ -10,7 +10,7 @@ import {loadWorld}from'../tools/load-world.mjs';
 test('服务器 API：创建、执行、幂等、拒绝瞬移、检索与路径边界',async t=>{
     const root=await fs.mkdtemp(path.join(os.tmpdir(),'infinite-fields-http-'));
     t.after(()=>fs.rm(root,{recursive:true,force:true}));
-    const app=express();app.use(express.json());const router=express.Router();await init(router,{baseRoot:root});app.use(router);
+    const app=express();app.use(express.json({limit:'500mb'}));const router=express.Router();await init(router,{baseRoot:root});app.use(router);
     const server=app.listen(0,'127.0.0.1');await once(server,'listening');t.after(()=>server.close());
     const request=async(endpoint,body)=>{
         const response=await fetch(`http://127.0.0.1:${server.address().port}${endpoint}`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
@@ -31,7 +31,7 @@ test('服务器 API：创建、执行、幂等、拒绝瞬移、检索与路径�
 });
 
 async function serverFixture(t,{baseRoot=null,world=null,userRoots=null}={}){
-    const app=express();app.use(express.json());
+    const app=express();app.use(express.json({limit:'500mb'}));
     if(userRoots)app.use((req,_res,next)=>{const root=userRoots[req.headers['test-user']??'a'];req.user={directories:{root,chats:path.join(root,'chats')}};next();});
     const router=express.Router();await init(router,{baseRoot,world});app.use(router);
     const server=app.listen(0,'127.0.0.1');await once(server,'listening');t.after(()=>server.close());
@@ -40,6 +40,23 @@ async function serverFixture(t,{baseRoot=null,world=null,userRoots=null}={}){
         return {status:response.status,body:await response.json()};
     };
 }
+
+test('服务器角色创建校验属性与开放出生地，不允许请求指定幸运或等级',async t=>{
+    const root=await fs.mkdtemp(path.join(os.tmpdir(),'infinite-fields-character-'));t.after(()=>fs.rm(root,{recursive:true,force:true}));
+    const request=await serverFixture(t,{baseRoot:root});
+    const created=await request('/create',{character:{name:'创建旅人',gender:'女',appearance:'左手戴旧皮手套。'}});
+    assert.equal(created.status,200,created.body.error);assert.equal(created.body.document.state.player.level,0);
+    assert.equal(created.body.document.state.location,'loc_hw');assert.equal(created.body.document.state.player.gender,'女');
+    assert.equal(created.body.document.privateState,undefined);
+    const exported=(await request('/export',{campaignId:created.body.reference.campaignId})).body;
+    assert.ok(exported.initial.privateState.luck>=1&&exported.initial.privateState.luck<=100);
+    assert.deepEqual((await request('/import',{bundle:exported})).body.document,created.body.document);
+    assert.equal((await request('/read',{campaignId:created.body.reference.campaignId})).body.document.privateState,undefined);
+    assert.equal((await request('/create',{character:{level:200}})).status,400);
+    assert.equal((await request('/create',{character:{birthplace:'王都'}})).status,400);
+    assert.equal((await request('/create',{character:{attributes:{力量:99}}})).status,400);
+    assert.equal((await request('/execute',{campaignId:created.body.reference.campaignId,tool:'world_experience',args:{amount:10000},eventId:'inject-xp'})).status,400);
+});
 
 test('服务器：两个用户的存档、原文索引和导出互相隔离，同分钟记忆更新可检索',async t=>{
     const root=await fs.mkdtemp(path.join(os.tmpdir(),'infinite-fields-users-'));t.after(()=>fs.rm(root,{recursive:true,force:true}));
@@ -69,11 +86,18 @@ test('世界自动迁移：保留已改变的居民资金，加入新居民，�
     const created=(await oldApi('/create',{})).body,campaignId=created.reference.campaignId;
     await oldApi('/execute',{campaignId,tool:'world_trade',args:{seller:'林穗',service:'住宿'},eventId:'rent',anchor:'a'});
     const updated=structuredClone(original);updated.version='edition-3';updated.rules.version=updated.version;
+    updated.skills[0].description='仅新版目录具有的技能说明';
     updated.npcs[0].coins=500;updated.npcs[0].notes+='她现在把客房窗户修好了。';
     updated.npcs[1].coins=220;
     updated.npcs.push({...structuredClone(updated.npcs[0]),id:'npc_hw_new_test',name:'米菱',aliases:[],coins:125});
     const newApi=await serverFixture(t,{baseRoot:root,world:updated});
+    const previousCatalog=await newApi('/catalog',{campaignId,entity:original.skills[0].id,kind:'skill'});
+    assert.equal(previousCatalog.status,200,previousCatalog.body.error);
+    assert.equal(previousCatalog.body.description,original.skills[0].description);
     const upgraded=(await newApi('/read',{campaignId})).body;
+    const currentCatalog=await newApi('/catalog',{campaignId,entity:original.skills[0].id,kind:'skill'});
+    assert.equal(currentCatalog.status,200,currentCatalog.body.error);
+    assert.equal(currentCatalog.body.description,updated.skills[0].description);
     assert.equal(upgraded.document.state.npcs.npc_hw_linsui.coins,456);
     assert.equal(upgraded.document.state.npcs.npc_hw_ayan.coins,220);
     assert.equal(upgraded.document.state.npcs.npc_hw_new_test.coins,125);

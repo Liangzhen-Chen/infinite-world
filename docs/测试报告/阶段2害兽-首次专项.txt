@@ -1,0 +1,42 @@
+✔ 田地、害兽、肉食捕食者、密度门槛和跨区道路均校验，未知或重复配置拒绝 (397.2498ms)
+✔ 旧农事及已收获数据保留，启用时刻之前不追补损失，迁移幂等并拒绝坏账 (36.6766ms)
+✔ 实际追踪并击杀捕食者后田鼠增加且收成下降；击杀不给农田损失的退款 (402.5298ms)
+✖ 夜间非战斗巡田真实耗时，减轻后续损失但不杀动物或恢复已损伤作物 (15.6839ms)
+✔ 重叠巡田不叠加，白昼巡田不保护夜间田鼠；失败仍耗时，不写成功保护 (17.1568ms)
+✔ 成熟后损失冻结，分批收获不倒扣已入库粮食；潜在收成=实际收成+害兽损失 (91.3299ms)
+✔ 两年长等待和逐日等待的农事与生态结果一致；旧规则不加害兽分区 (1263.9061ms)
+✔ 田害与实际巡守在重启/导入/回滚中保留，CLI仅写独立副本 (1120.9936ms)
+ℹ tests 8
+ℹ suites 0
+ℹ pass 7
+ℹ fail 1
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 3644.1811
+
+✖ failing tests:
+
+test at tests\farm-pests.test.mjs:73:1
+✖ 夜间非战斗巡田真实耗时，减轻后续损失但不杀动物或恢复已损伤作物 (15.6839ms)
+  AssertionError [ERR_ASSERTION]: The input did not match the regular expression /本人/. Input:
+  
+  'Error: 这里尚未登记农田及粮仓规则'
+  
+      at async TestContext.<anonymous> (file:///C:/Users/RobertC/Documents/dnd/tests/farm-pests.test.mjs:84:77)
+      at async Test.run (node:internal/test_runner/test:1110:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:785:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: Error: 这里尚未登记农田及粮仓规则
+        at WorldEngine.agricultureAction (file:///C:/Users/RobertC/Documents/dnd/server-plugin/agriculture.mjs:165:17)
+        at WorldEngine.farm (file:///C:/Users/RobertC/Documents/dnd/server-plugin/activities.mjs:21:46)
+        at WorldEngine.reduce (file:///C:/Users/RobertC/Documents/dnd/server-plugin/engine.mjs:106:43)
+        at Object.run (file:///C:/Users/RobertC/Documents/dnd/tests/farm-pests.test.mjs:19:64)
+        at TestContext.<anonymous> (file:///C:/Users/RobertC/Documents/dnd/tests/farm-pests.test.mjs:84:102)
+        at async Test.run (node:internal/test_runner/test:1110:7)
+        at async Test.processPendingSubtests (node:internal/test_runner/test:785:7),
+    expected: /本人/,
+    operator: 'rejects',
+    diff: 'simple'
+  }

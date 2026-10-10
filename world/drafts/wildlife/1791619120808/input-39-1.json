@@ -1,0 +1,76 @@
+{
+  "bone": {
+    "id": "monster_echo_cave_bat",
+    "name": "回声穴蝠",
+    "aliases": [],
+    "template": 2,
+    "levelRange": [
+      12,
+      18
+    ],
+    "habitatTags": [
+      "废观测塔林隙"
+    ],
+    "grouping": "四至九只",
+    "diet": "虫食",
+    "drops": [],
+    "intelligence": 1,
+    "taming": {
+      "possible": true,
+      "conditions": [
+        "有合适食物并建立持续信任",
+        "具备对应阶段驯兽能力"
+      ]
+    },
+    "tamingRule": {
+      "category": "combat",
+      "minimumSkill": 300,
+      "minimumPlayerLevel": 12,
+      "trustThreshold": 60,
+      "minutes": 60,
+      "difficulty": 15,
+      "food": [
+        {
+          "item": "item_ration",
+          "hungerRelief": 35,
+          "trustGain": 5
+        }
+      ],
+      "skills": [
+        "辨认口令",
+        "跟随训练"
+      ],
+      "rideable": false,
+      "riderWeightKg": 60,
+      "carryKg": 1
+    },
+    "wildlife": {
+      "habitat": "habitat_hw_tower",
+      "population": 3,
+      "capacity": 6,
+      "recoveryPerWeek": 1,
+      "activeHours": [
+        1080,
+        360
+      ],
+      "predatorOf": [],
+      "distinction": "把短声折回砖洞，能分开真墙和薄木遮板",
+      "gather": {
+        "minutes": 20,
+        "tool": null,
+        "consumes": []
+      }
+    }
+  },
+  "habitat": {
+    "id": "habitat_hw_tower",
+    "name": "废观测塔林隙",
+    "location": "site_beilin_tower"
+  },
+  "dailyActivity": "18:00至次日06:00，其他时段休息；habits必须原样写出两个时间，不能重新换算为相反昼夜",
+  "drops": [],
+  "food": [
+    "干粮"
+  ],
+  "feedback": null
+}

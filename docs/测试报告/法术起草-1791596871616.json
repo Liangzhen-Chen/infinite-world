@@ -1,0 +1,73 @@
+{
+  "date": "2026-10-10",
+  "scope": "按手写法术机制生成世界内说明；仅草稿结构校验，尚未发布或质量验收",
+  "costUpperYuan": 0.32563319999999996,
+  "batches": [
+    {
+      "index": 0,
+      "count": 14,
+      "success": true,
+      "errors": [],
+      "published": false
+    },
+    {
+      "index": 1,
+      "count": 14,
+      "success": true,
+      "errors": [
+        {
+          "part": 0,
+          "attempt": 1,
+          "error": "[{\"path\":\"/spells/2/proficiencyEffects/1\",\"keyword\":\"minLength\",\"params\":{\"limit\":15}}]"
+        },
+        {
+          "part": 6,
+          "attempt": 1,
+          "error": "[{\"path\":\"/spells/0/failure\",\"keyword\":\"minLength\",\"params\":{\"limit\":40}},{\"path\":\"/spells/2/failure\",\"keyword\":\"minLength\",\"params\":{\"limit\":40}}]"
+        },
+        {
+          "part": 6,
+          "attempt": 2,
+          "error": "spell_water_09: casting使用含糊时间单位，须用分钟或秒且遵守固定上限"
+        },
+        {
+          "part": 9,
+          "attempt": 1,
+          "error": "[{\"path\":\"/spells/0/theory\",\"keyword\":\"minLength\",\"params\":{\"limit\":70}},{\"path\":\"/spells/1/theory\",\"keyword\":\"minLength\",\"params\":{\"limit\":70}},{\"path\":\"/spells/2/theory\",\"keyword\":\"minLength\",\"params\":{\"limit\":70}},{\"path\":\"/spells/2/socialConsequences\",\"keyword\":\"minLength\",\"params\":{\"limit\":70}},{\"path\":\"/spells/2/proficiencyEffects/0\",\"keyword\":\"minLength\",\"params\":{\"limit\":15}},{\"path\":\"/spells/2/proficiencyEffects/1\",\"keyword\":\"minLength\",\"params\":{\"limit\":15}},{\"path\":\"/spells/2/proficiencyEffects/2\",\"keyword\":\"minLength\",\"params\":{\"limit\":15}}]"
+        }
+      ],
+      "published": false
+    },
+    {
+      "index": 3,
+      "count": 14,
+      "success": true,
+      "errors": [
+        {
+          "part": 3,
+          "attempt": 1,
+          "error": "[{\"path\":\"/spells/0\",\"keyword\":\"additionalProperties\",\"params\":{\"additionalProperty\":\"name\"}},{\"path\":\"/spells/0\",\"keyword\":\"additionalProperties\",\"params\":{\"additionalProperty\":\"school\"}},{\"path\":\"/spells/0\",\"keyword\":\"additionalProperties\",\"params\":{\"additionalProperty\":\"stage\"}},{\"path\":\"/spells/0\",\"keyword\":\"additionalProperties\",\"params\":{\"additionalProperty\":\"mp\"}},{\"path\":\"/spells/0\",\"keyword\":\"additionalProperties\",\"params\":{\"additionalProperty\":\"mechanism\"}},{\"path\":\"/spells/0\",\"keyword\":\"additionalProperties\",\"params\":{\"additionalProperty\":\"effect\"}},{\"path\":\"/spells/0\",\"keyword\":\"additionalProperties\",\"params\":{\"additionalProperty\":\"skill\"}},{\"path\":\"/spells/0\",\"keyword\":\"additionalProperties\",\"params\":{\"additionalProperty\":\"minutes\"}},{\"path\":\"/spells/0\",\"keyword\":\"additionalProperties\",\"params\":{\"additionalProperty\":\"duration\"}},{\"path\":\"/spells/0\",\"keyword\":\"additionalProperties\",\"params\":{\"additionalProperty\":\"difficulty\"}},{\"path\":\"/spells/0\",\"keyword\":\"additionalProperties\",\"params\":{\"additionalProperty\":\"learnFee\"}},{\"path\":\"/spells/0\",\"keyword\":\"additionalProperties\",\"params\":{\"additionalProperty\":\"learnMinutes\"}},{\"path\":\"/spells/0\",\"keyword\":\"additionalProperties\",\"params\":{\"additionalProperty\":\"materials\"}},{\"path\":\"/spells/0\",\"keyword\":\"additionalProperties\",\"params\":{\"additionalProperty\":\"rangeMeters\"}},{\"path\":\"/spells/0\",\"keyword\":\"additionalProperties\",\"params\":{\"additionalProperty\":\"teachers\"}},{\"path\":\"/spells/0\",\"keyword\":\"additionalProperties\",\"params\":{\"additionalProperty\":\"aliases\"}},{\"path\":\"/spells/0\",\"keyword\":\"additionalProperties\",\"params\":{\"additionalProperty\":\"scope\"}},{\"path\":\"/spells/0\",\"keyword\":\"additionalProperties\",\"params\":{\"additionalProperty\":\"boundaries\"}},{\"path\":\"/spells/0\",\"keyword\":\"additionalProperties\",\"params\":{\"additionalProperty\":\"durationLimit\"}},{\"path\":\"/spells/1\",\"keyword\":\"additionalProperties\",\"params\":{\"additionalProperty\":\"name\"}},{\"path\":\"/spells/1\",\"keyword\":\"additionalProperties\",\"params\":{\"additionalProperty\":\"school\"}},{\"path\":\"/spells/1\",\"keyword\":\"additionalProperties\",\"params\":{\"additionalProperty\":\"stage\"}},{\"path\":\"/spells/1\",\"keyword\":\"additionalProperties\",\"params\":{\"additionalProperty\":\"mp\"}},{\"path\":\"/spells/1\",\"keyword\":\"additionalProperties\",\"params\":{\"additionalProperty\":\"mechanism\"}},{\"path\":\"/spells/1\",\"keyword\":\"additionalProperties\",\"params\":{\"additionalProperty\":\"effect\"}},{\"path\":\"/spells/1\",\"keyword\":\"additionalProperties\",\"params\":{\"additionalProperty\":\"skill\"}},{\"path\":\"/spells/1\",\"keyword\":\"additionalProperties\",\"params\":{\"additionalProperty\":\"minutes\"}},{\"path\":\"/spells/1\",\"keyword\":\"additionalProperties\",\"params\":{\"additionalProperty\":\"duration\"}},{\"path\":\"/spells/1\",\"keyword\":\"additionalProperties\",\"params\":{\"additionalProperty\":\"difficulty\"}},{\"path\":\"/spells/1\",\"keyword\":\"additionalProperties\",\"params\":{\"additionalProperty\":\"learnFee\"}},{\"path\":\"/spells/1\",\"keyword\":\"additionalProperties\",\"params\":{\"additionalProperty\":\"learnMinutes\"}},{\"path\":\"/spells/1\",\"keyword\":\"additionalProperties\",\"params\":{\"additionalProperty\":\"materials\"}},{\"path\":\"/spells/1\",\"keyword\":\"additionalProperties\",\"params\":{\"additionalProperty\":\"rangeMeters\"}},{\"path\":\"/spells/1\",\"keyword\":\"additionalProperties\",\"params\":{\"additionalProperty\":\"teachers\"}},{\"path\":\"/spells/1\",\"keyword\":\"additionalProperties\",\"params\":{\"additionalProperty\":\"aliases\"}},{\"path\":\"/spells/1\",\"keyword\":\"additionalProperties\",\"params\":{\"additionalProperty\":\"scope\"}},{\"path\":\"/spells/1\",\"keyword\":\"additionalProperties\",\"params\":{\"additionalProperty\":\"boundaries\"}},{\"path\":\"/spells/1\",\"keyword\":\"additionalProperties\",\"params\":{\"additionalProperty\":\"durationLimit\"}},{\"path\":\"/spells/2\",\"keyword\":\"additionalProperties\",\"params\":{\"additionalProperty\":\"name\"}},{\"path\":\"/spells/2\",\"keyword\":\"additionalProperties\",\"params\":{\"additionalProperty\":\"school\"}},{\"path\":\"/spells/2\",\"keyword\":\"additionalProperties\",\"params\":{\"additionalProperty\":\"stage\"}},{\"path\":\"/spells/2\",\"keyword\":\"additionalProperties\",\"params\":{\"additionalProperty\":\"mp\"}},{\"path\":\"/spells/2\",\"keyword\":\"additionalProperties\",\"params\":{\"additionalProperty\":\"mechanism\"}},{\"path\":\"/spells/2\",\"keyword\":\"additionalProperties\",\"params\":{\"additionalProperty\":\"effect\"}},{\"path\":\"/spells/2\",\"keyword\":\"additionalProperties\",\"params\":{\"additionalProperty\":\"skill\"}},{\"path\":\"/spells/2\",\"keyword\":\"additionalProperties\",\"params\":{\"additionalProperty\":\"minutes\"}},{\"path\":\"/spells/2\",\"keyword\":\"additionalProperties\",\"params\":{\"additionalProperty\":\"duration\"}},{\"path\":\"/spells/2\",\"keyword\":\"additionalProperties\",\"params\":{\"additionalProperty\":\"difficulty\"}},{\"path\":\"/spells/2\",\"keyword\":\"additionalProperties\",\"params\":{\"additionalProperty\":\"learnFee\"}},{\"path\":\"/spells/2\",\"keyword\":\"additionalProperties\",\"params\":{\"additionalProperty\":\"learnMinutes\"}},{\"path\":\"/spells/2\",\"keyword\":\"additionalProperties\",\"params\":{\"additionalProperty\":\"materials\"}},{\"path\":\"/spells/2\",\"keyword\":\"additionalProperties\",\"params\":{\"additionalProperty\":\"rangeMeters\"}},{\"path\":\"/spells/2\",\"keyword\":\"additionalProperties\",\"params\":{\"additionalProperty\":\"teachers\"}},{\"path\":\"/spells/2\",\"keyword\":\"additionalProperties\",\"params\":{\"additionalProperty\":\"aliases\"}},{\"path\":\"/spells/2\",\"keyword\":\"additionalProperties\",\"params\":{\"additionalProperty\":\"scope\"}},{\"path\":\"/spells/2\",\"keyword\":\"additionalProperties\",\"params\":{\"additionalProperty\":\"boundaries\"}},{\"path\":\"/spells/2\",\"keyword\":\"additionalProperties\",\"params\":{\"additionalProperty\":\"durationLimit\"}}]"
+        }
+      ],
+      "published": false
+    },
+    {
+      "index": 2,
+      "count": 14,
+      "success": true,
+      "errors": [
+        {
+          "part": 3,
+          "attempt": 1,
+          "error": "[{\"path\":\"/spells/0\",\"keyword\":\"additionalProperties\",\"params\":{\"additionalProperty\":\"castingNote\"}},{\"path\":\"/spells/1\",\"keyword\":\"additionalProperties\",\"params\":{\"additionalProperty\":\"castingNote\"}},{\"path\":\"/spells/2\",\"keyword\":\"additionalProperties\",\"params\":{\"additionalProperty\":\"castingNote\"}}]"
+        },
+        {
+          "part": 12,
+          "attempt": 1,
+          "error": "编号遗漏、重复或出现骨架以外的法术"
+        }
+      ],
+      "published": false
+    }
+  ]
+}

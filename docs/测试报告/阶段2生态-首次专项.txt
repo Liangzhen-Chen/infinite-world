@@ -1,0 +1,102 @@
+✔ 50物种骨架、等级带、栖地、食物和捕食引用有效，错误数据拒绝 (343.3062ms)
+✔ 鸣叫引号不会误判人类台词；野兽人类台词仍拒绝，字数门槛不降低 (0.9061ms)
+✔ 旧文档迁移只建立当前种群，不改人物、财物、时钟和记忆，幂等且拒绝冲突 (10.2758ms)
+✖ 观察只列真实在场个体，不生成动物或泄漏未见种群；异地不能隔空追踪 (12.2882ms)
+✖ 实际追踪扣有限种群、耗时并建独立实例；同名多只要显式编号 (18.1688ms)
+✔ 无种群或休眠时段不能靠目录召出动物，种群不会在空栖地原地重生 (42.9484ms)
+✔ 周度出生与捕食、饥饿死亡改变实际种群；长短等待全年一致 (680.3453ms)
+✔ 怪物生命整数化兼容照料；驯兽不反击也不给野外经验 (11.8668ms)
+✔ 击杀不自动掉进背包；取材需要刀水，已处理或腐坏尸体不能刷 (17.9942ms)
+✔ 猎物变少使相关材料基础报价上涨，其他物品与旧世界不变 (4.9415ms)
+✔ 动物实例、生态账与尸体状态在存储重启/导入导出/删除消息回滚中一致 (119.1271ms)
+ℹ tests 11
+ℹ suites 0
+ℹ pass 9
+ℹ fail 2
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 1560.6846
+
+✖ failing tests:
+
+test at tests\wildlife.test.mjs:49:1
+✖ 观察只列真实在场个体，不生成动物或泄漏未见种群；异地不能隔空追踪 (12.2882ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly deep-equal:
+  + actual - expected
+  ... Skipped lines
+  
+    {
+      manualPins: {},
+      memories: {},
+      privateState: {
+        luck: 4
+  ...
+        effects: {},
+  +     experienceLedger: {},
+  +     experienceRepeats: {},
+        inventory: {
+          item_bag: {
+            durability: 100,
+            quality: '木',
+            quantity: 1,
+  ...
+        },
+  +     itemInstances: {},
+        learning: {},
+        location: 'loc_hw_northwood',
+        minute: 540,
+        npcs: {
+          npc_hw_anhuai: {
+  ...
+        },
+  +     revivalPoints: {
+  +       bld_hw_altar: {
+  +         fee: 0,
+  +         location: 'bld_hw_altar',
+  +         registeredAt: 540,
+  +         source: '原登记点迁移'
+  +       }
+  +     },
+  +     runtimeRuleVersion: 2,
+        settlements: {
+          loc_hw: {
+            food: 8000,
+            foodPerDay: 45,
+            iron: 4,
+  ...
+        },
+  +     shrineTreasuries: {},
+        skills: {},
+        spells: {},
+        turns: {},
+        weather: {},
+  +     workshopFunds: {}
+      },
+      worldVersion: 'engine-rules-3'
+    }
+  
+      at TestContext.<anonymous> (file:///C:/Users/RobertC/Documents/dnd/tests/wildlife.test.mjs:51:12)
+      at async Test.run (node:internal/test_runner/test:1110:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:785:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: { schemaVersion: 2, worldVersion: 'engine-rules-3', randomSeed: 'wildlife-test', memories: {}, manualPins: {}, state: { minute: 540, location: 'loc_hw_northwood', player: [Object], inventory: [Object], skills: {}, spells: {}, professions: [Object], npcs: [Object], records: [Object], pets: {}, settlements: [Object], buildings: [Object], projects: {}, effects: {}, obligations: {}, quests: {}, quotes: {}, created: {}, weather: {}, turns: {}, checks: {}, learning: {}, recipes: {}, discoveries: [Object], revivalPoints: [Object], shrineTreasuries: {}, experienceLedger: {}, experienceRepeats: {}, itemInstances: {}, workshopFunds: {}, runtimeRuleVersion: 2 }, privateState: { luck: 4 } },
+    expected: { schemaVersion: 2, worldVersion: 'engine-rules-3', randomSeed: 'wildlife-test', memories: {}, manualPins: {}, state: { minute: 540, location: 'loc_hw_northwood', player: [Object], inventory: [Object], skills: {}, spells: {}, professions: [Object], npcs: [Object], records: [Object], pets: {}, settlements: [Object], buildings: [Object], projects: {}, effects: {}, obligations: {}, quests: {}, quotes: {}, created: {}, weather: {}, turns: {}, checks: {}, learning: {}, recipes: {}, discoveries: [Object] }, privateState: { luck: 4 } },
+    operator: 'deepStrictEqual',
+    diff: 'simple'
+  }
+
+test at tests\wildlife.test.mjs:54:1
+✖ 实际追踪扣有限种群、耗时并建独立实例；同名多只要显式编号 (18.1688ms)
+  AssertionError [ERR_ASSERTION]: Missing expected rejection.
+      at async TestContext.<anonymous> (file:///C:/Users/RobertC/Documents/dnd/tests/wildlife.test.mjs:58:51)
+      at async Test.run (node:internal/test_runner/test:1110:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:785:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: undefined,
+    expected: /多个同名/,
+    operator: 'rejects',
+    diff: 'simple'
+  }

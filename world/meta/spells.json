@@ -9,6 +9,7 @@
     "minutes": 1,
     "difficulty": 10,
     "stage": 0,
+    "effectSpec": {"kind":"light","power":2},
     "effect": "近处一个物体发出柔光一小时，不造成伤害。",
     "learnFee": 12,
     "learnMinutes": 120,

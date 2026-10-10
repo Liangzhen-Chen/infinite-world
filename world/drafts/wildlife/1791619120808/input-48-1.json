@@ -1,0 +1,94 @@
+{
+  "bone": {
+    "id": "monster_ice_scale_python",
+    "name": "冰鳞溪蟒",
+    "aliases": [],
+    "template": 2,
+    "levelRange": [
+      18,
+      25
+    ],
+    "habitatTags": [
+      "旧渡口河滩"
+    ],
+    "grouping": "独居",
+    "diet": "肉食",
+    "drops": [
+      {
+        "item": "item_rawhide",
+        "amount": 1
+      }
+    ],
+    "intelligence": 1,
+    "taming": {
+      "possible": true,
+      "conditions": [
+        "有合适食物并建立持续信任",
+        "具备对应阶段驯兽能力"
+      ]
+    },
+    "tamingRule": {
+      "category": "combat",
+      "minimumSkill": 300,
+      "minimumPlayerLevel": 18,
+      "trustThreshold": 60,
+      "minutes": 60,
+      "difficulty": 15,
+      "food": [
+        {
+          "item": "item_fish",
+          "hungerRelief": 35,
+          "trustGain": 5
+        }
+      ],
+      "skills": [
+        "辨认口令",
+        "跟随训练"
+      ],
+      "rideable": false,
+      "riderWeightKg": 60,
+      "carryKg": 1
+    },
+    "wildlife": {
+      "habitat": "habitat_hw_water",
+      "population": 3,
+      "capacity": 6,
+      "recoveryPerWeek": 1,
+      "activeHours": [
+        1080,
+        360
+      ],
+      "predatorOf": [
+        "monster_round_marsh_beaver"
+      ],
+      "distinction": "贴水鳞片吸热使周围发凉，离水后鳞色渐暗",
+      "gather": {
+        "minutes": 20,
+        "tool": "item_kitchen_knife",
+        "consumes": [
+          {
+            "item": "item_water",
+            "amount": 1
+          }
+        ]
+      }
+    }
+  },
+  "habitat": {
+    "id": "habitat_hw_water",
+    "name": "旧渡口河滩",
+    "location": "loc_hw_dock"
+  },
+  "dailyActivity": "18:00至次日06:00，其他时段休息；habits必须原样写出两个时间，不能重新换算为相反昼夜",
+  "drops": [
+    {
+      "item": "item_rawhide",
+      "amount": 1,
+      "name": "刮净生皮"
+    }
+  ],
+  "food": [
+    "剖净鲜鱼"
+  ],
+  "feedback": null
+}

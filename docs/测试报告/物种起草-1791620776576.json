@@ -1,0 +1,50 @@
+{
+  "runId": "1791620776576",
+  "root": "world/drafts/wildlife/1791620776576",
+  "planned": 50,
+  "structured": 50,
+  "audit": {
+    "ok": true,
+    "errors": [],
+    "maximumSimilarity": 0.15827338129496402
+  },
+  "failures": [
+    {
+      "id": "monster_brush_squirrel",
+      "attempt": 1,
+      "error": "[{\"instancePath\":\"/appearance\",\"schemaPath\":\"#/properties/appearance/minLength\",\"keyword\":\"minLength\",\"params\":{\"limit\":65},\"message\":\"must NOT have fewer than 65 characters\"}]"
+    },
+    {
+      "id": "monster_hook_toe_civet",
+      "attempt": 1,
+      "error": "[{\"instancePath\":\"/appearance\",\"schemaPath\":\"#/properties/appearance/minLength\",\"keyword\":\"minLength\",\"params\":{\"limit\":65},\"message\":\"must NOT have fewer than 65 characters\"}]"
+    },
+    {
+      "id": "monster_hook_toe_civet",
+      "attempt": 2,
+      "error": "[{\"instancePath\":\"/appearance\",\"schemaPath\":\"#/properties/appearance/minLength\",\"keyword\":\"minLength\",\"params\":{\"limit\":65},\"message\":\"must NOT have fewer than 65 characters\"}]"
+    },
+    {
+      "id": "monster_whisker_catfish",
+      "attempt": 1,
+      "error": "[{\"instancePath\":\"/habits\",\"schemaPath\":\"#/properties/habits/minLength\",\"keyword\":\"minLength\",\"params\":{\"limit\":90},\"message\":\"must NOT have fewer than 90 characters\"}]"
+    },
+    {
+      "id": "monster_whisker_catfish",
+      "attempt": 2,
+      "error": "[{\"instancePath\":\"/habits\",\"schemaPath\":\"#/properties/habits/minLength\",\"keyword\":\"minLength\",\"params\":{\"limit\":90},\"message\":\"must NOT have fewer than 90 characters\"}]"
+    },
+    {
+      "id": "monster_stone_loach",
+      "attempt": 1,
+      "error": "[{\"instancePath\":\"/materials\",\"schemaPath\":\"#/properties/materials/maxLength\",\"keyword\":\"maxLength\",\"params\":{\"limit\":100},\"message\":\"must NOT have more than 100 characters\"}]"
+    },
+    {
+      "id": "monster_striped_bat",
+      "attempt": 1,
+      "error": "[{\"instancePath\":\"/habits\",\"schemaPath\":\"#/properties/habits/minLength\",\"keyword\":\"minLength\",\"params\":{\"limit\":90},\"message\":\"must NOT have fewer than 90 characters\"}]"
+    }
+  ],
+  "costUpperYuan": 0.39692448,
+  "manualApproved": false
+}

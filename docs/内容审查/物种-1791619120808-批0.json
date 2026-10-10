@@ -1,0 +1,142 @@
+{
+  "runId": "1791619120808",
+  "batch": 0,
+  "seed": 3452973920,
+  "boneHash": "377f0d47f5bbf4891a63b51751eaa2c524c7ae8810ec1e388c32b6a1b2890993",
+  "loreHash": "9c0e90ff7ffa7cce533530d25129259c07277b531f918d744829d015c014c092",
+  "approved": false,
+  "scope": "待人工随机精读；任何一项不合格整批重做，不逐项拼接修补",
+  "sample": [
+    {
+      "id": "monster_hook_toe_civet",
+      "hash": "24109596aceb2f4cf7d3658631c39e37339efa3883ff2afc3e86f29ee986e1e7",
+      "scores": [
+        4,
+        4,
+        4,
+        4,
+        4,
+        4
+      ],
+      "notes": "钩趾、储粮、树洞与夜间活动相符；生皮阴干措辞仍需下一批匹配现有湿生皮定义。"
+    },
+    {
+      "id": "monster_stone_loach",
+      "hash": "6583bfac661aff4f8aa416c77336ad0dab835d543129720c4fbf6bf4d4c69b95",
+      "scores": [
+        4,
+        4,
+        2,
+        4,
+        3,
+        4
+      ],
+      "notes": "骨架写夏季夜里移向浅水，时段却为白天；体型未给出，300克净鱼产量须在具体材料信息中说明。"
+    },
+    {
+      "id": "monster_red_water_shrimp",
+      "hash": "d6c98a69741e06b1cee6689a9fb7da45c5117ef71eee3ab2818d7d3dd5a0bf5e",
+      "scores": [
+        4,
+        4,
+        4,
+        4,
+        3,
+        4
+      ],
+      "notes": "抱卵和逃入柳根具体；不产商品，民间溺者故事与其他水生物略雷同。"
+    },
+    {
+      "id": "monster_grey_otter",
+      "hash": "2d9b1c2e6ac1144646befe55b55d8cfad265af5dff3d25c191be6fc26f0104de",
+      "scores": [
+        4,
+        4,
+        4,
+        4,
+        4,
+        4
+      ],
+      "notes": "灰颈湿时发亮、平石拆鱼、银鲫捕食一致；新批须按生皮重量与保存条件取材。"
+    },
+    {
+      "id": "monster_resin_lump",
+      "hash": "e1bb888d98fa64c45fd24d16b937ef182a3a4ee68afbe46a2058deeddf2f7aac",
+      "scores": [
+        4,
+        4,
+        4,
+        4,
+        4,
+        4
+      ],
+      "notes": "腐木食性与松针树脂团形态相符；清洗树脂需要在实际耗材中体现。"
+    },
+    {
+      "id": "monster_ember_throat_civet",
+      "hash": "c0838313d670b6886b29cd4626aaeb972f55186d59e45301cb02358b8d168dc8",
+      "scores": [
+        4,
+        4,
+        2,
+        4,
+        4,
+        4
+      ],
+      "notes": "骨架明确能烘干湿草，folklore却说连湿草都烘不干，既定能力被改写。"
+    },
+    {
+      "id": "monster_mist_swallow_moth",
+      "hash": "71b507c4aa756ec511c09515f98781de42b5ff2f18305f7e8ae1a137289a2d51",
+      "scores": [
+        5,
+        4,
+        3,
+        4,
+        4,
+        4
+      ],
+      "notes": "凝露白斑、湿苇裂缝具体；小型蛾导致误工半日偏夸张，应收敛损失。"
+    },
+    {
+      "id": "monster_brown_deer",
+      "hash": "8167dd573468411adb066ddcbcbcc8c01c9fe53a6daf99dca11c75535c72ba39",
+      "scores": [
+        4,
+        4,
+        4,
+        4,
+        4,
+        4
+      ],
+      "notes": "短腿、角擦树皮与林下群居一致；湿生皮不得写成已经阴干的成品。"
+    },
+    {
+      "id": "monster_bristle_boar",
+      "hash": "b1a185fe176e69ff9f00f70a9d444584fd981e7da8144b03a678752f0af6f6e7",
+      "scores": [
+        4,
+        4,
+        4,
+        4,
+        4,
+        4
+      ],
+      "notes": "拱栎根、泥径与竖毛警告可观察，护仔独居是正常补充。"
+    },
+    {
+      "id": "monster_silver_hedgehog",
+      "hash": "e6d2b1177ba134448b3c91e7137a5e1e67448c702838c6c7ebb9f844792eec48",
+      "scores": [
+        4,
+        4,
+        2,
+        4,
+        3,
+        4
+      ],
+      "notes": "骨架夜间觅食与白天作息相互矛盾，草稿又写夜间进入柴垛；须先修骨架后整批重做。"
+    }
+  ],
+  "rejection": "十条已全文精读，三条内在一致性2分，整批拒绝，不逐条拼接发布"
+}
