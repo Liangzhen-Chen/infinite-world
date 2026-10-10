@@ -3,6 +3,8 @@ import path from 'node:path';
 import seeds from '../world/design/w5-cultures.mjs';
 import {DeepSeekClient} from './deepseek-client.mjs';
 import {runContentPipeline,readApprovedContent,defaultReviewRequest,parseModelJSON} from './content-pipeline.mjs';
+import {loadWorld} from './load-world.mjs';
+import {validateWorld} from './validate-world.mjs';
 export const revision='w5-culture-deity-v1';
 export const root=path.resolve(import.meta.dirname,'../world/drafts/w5');
 const blocked=JSON.parse(await fs.readFile(new URL('../world/meta/blocklist.json',import.meta.url),'utf8'));
@@ -65,10 +67,15 @@ async function draft(){
 async function publish(){
  const approved=await readApprovedContent(root,seeds,{contextFor,revision});
  const drafts=new Map(approved.map(row=>[row.id,row]));
+ for(const entry of seeds){const draft=drafts.get(entry.id);if(draft){const check=validateDraft(draft,entry);if(check.errors.length)throw new Error(`发布时L1拒绝 ${entry.id}: ${check.errors.join('；')}`);}}
  // References between deities form a closed group; never publish a dangling half-group.
  const rows=seeds.filter(row=>drafts.has(row.id)).map(row=>materialize(row,drafts.get(row.id)));
  const ids=new Set([...rows,...places,...people].map(row=>row.id));
  for(const row of rows)for(const ref of row.references)if(!ids.has(ref))throw new Error(`批准内容引用尚未批准 ${row.id} -> ${ref}`);
+ const candidate=await loadWorld();
+ candidate.cultures=rows.filter(row=>row.category==='culture');candidate.deities=rows.filter(row=>row.category==='deity');
+ const validation=validateWorld(candidate,{stage:'release'});
+ if(!validation.ok)throw new Error(`W5发布前校验拒绝：${validation.errors.join('\n')}`);
  await fs.mkdir(new URL('../world/lore',import.meta.url),{recursive:true});
  for(const [category,file]of [['culture','cultures'],['deity','deities']])await fs.writeFile(new URL(`../world/lore/${file}.json`,import.meta.url),JSON.stringify(rows.filter(row=>row.category===category),null,2)+'\n');
  console.log(`W5已发布文化 ${rows.filter(r=>r.category==='culture').length}、神祇 ${rows.filter(r=>r.category==='deity').length}`);

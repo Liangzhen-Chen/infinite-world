@@ -1,15 +1,15 @@
 {
   "total": 22,
-  "passed": 20,
-  "manual": 2,
+  "passed": 22,
+  "manual": 0,
   "pending": 0,
-  "costUpperYuan": 0.3445334400000003,
+  "costUpperYuan": 0.3460977600000003,
   "batches": [
     {
       "index": 0,
-      "fingerprint": "f47c4846f7ec3a3604979801e83299e4837a5fff0f2cbeec718a28c745ba9c80",
+      "fingerprint": "054bccdb6caf2f5b9bcc0064627d6ede139958520db3613bc9a024407073fa79",
       "count": 22,
-      "passed": 20,
+      "passed": 22,
       "ids": [
         "culture_river",
         "culture_civic",
@@ -35,27 +35,24 @@
         "deity_mirror"
       ],
       "rewritten": 8,
-      "manual": [
-        "culture_river",
-        "deity_well"
-      ],
+      "manual": [],
       "pending": [],
       "flagged": [
         "culture_coast"
       ],
       "sample": [
-        "deity_bank",
-        "deity_lintel",
-        "culture_coast",
+        "culture_salt",
+        "deity_return",
         "culture_steppe",
-        "deity_wedge"
+        "deity_canopy",
+        "deity_lintel"
       ],
       "l4": {
         "approved": false,
         "notes": []
       },
-      "costUpperYuan": 0.3445334400000003,
-      "manualRatio": 0.09090909090909091,
+      "costUpperYuan": 0.3460977600000003,
+      "manualRatio": 0,
       "needsSystemicRepair": false
     }
   ],
