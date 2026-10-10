@@ -14,7 +14,7 @@ import {lawView}from'../server-plugin/law.mjs';
 
 const seed=JSON.parse(await fs.readFile('tests/fixtures/legacy/seed.json','utf8'));
 const victim='npc_hw_linsui',guard='npc_hw_gucen',judge='npc_hw_chenbai';
-const money=c=>c.state.player.coins+Object.values(c.state.npcs).reduce((sum,a)=>sum+a.coins,0)+Object.values(c.state.records).filter(r=>['legal_treasury','legal_deposit'].includes(r.category)).reduce((sum,r)=>sum+r.coins,0);
+const money=c=>Object.values(c.state.workshopFunds??{}).reduce((sum,coins)=>sum+coins,0)+c.state.player.coins+Object.values(c.state.npcs).reduce((sum,a)=>sum+a.coins,0)+Object.values(c.state.records).filter(r=>['legal_treasury','legal_deposit'].includes(r.category)).reduce((sum,r)=>sum+r.coins,0);
 async function setup(){
     const world=withLawRules(await loadWorld());
     // These procedure fixtures explicitly place the participants at interviews
@@ -142,7 +142,7 @@ test('法院实际保管原物与罚款，受害人未到场不瞬间获赔，�
     c.state.npcs[victim].location='bld_hw_council';
     const claimed=await run(c,'world_law',{operation:'claim',case:incident.result.case,authority:judge,claimant:victim},'claim');c=claimed.document;
     assert.equal(c.state.npcs[victim].inventory.item_bread.quantity,4);assert.equal(c.state.itemInstances[unit].owner,victim);
-    assert.equal(Object.keys(c.state.itemInstances).length,1);assert.equal(money(c),money(document));
+    assert.equal(Object.values(c.state.itemInstances).filter(row=>row.item==='item_bread').length,1);assert.equal(money(c),money(document));
     await assert.rejects(run(c,'world_law',{operation:'claim',case:incident.result.case,authority:judge,claimant:victim},'claim_twice'),/已经/);
 });
 

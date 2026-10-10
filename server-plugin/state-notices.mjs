@@ -32,6 +32,7 @@ export function stateNotices(before,after,resolveName=id=>id){
         const old=before.effects?.[id],row=after.effects?.[id];
         if(!old&&visibleEffect(row,after))push('effect',`效果生效：${name(row.spell)}${row.status?` · ${row.status}`:''}`);
         if(!row&&visibleEffect(old,before))push('effect',`效果结束：${name(old.spell)}`);
+        if(old?.kind==='protection'&&row?.kind==='protection'&&visibleEffect(row,after)&&row.remaining<old.remaining)push('protection',`${name(row.spell)}吸收 ${old.remaining-row.remaining} 点伤害，剩余防护 ${row.remaining}`);
     }
     for(const [id,row] of Object.entries(after.pets??{})){
         const old=before.pets?.[id];
@@ -67,6 +68,11 @@ export function stateNotices(before,after,resolveName=id=>id){
         if(before.location===after.location&&old.location===before.location&&npc.location===after.location&&old.activity&&npc.activity&&old.activity!==npc.activity)push('activity',`${name(id)}此刻：${npc.activity}`);
         if(npc.trust!==old.trust)push('relationship',`${name(id)}${npc.trust>old.trust?'对你更放心了':'对你更谨慎了'}`);
         if(npc.affection!==old.affection)push('relationship',`${name(id)}${npc.affection>old.affection?'与你更亲近了':'与你疏远了些'}`);
+        if(npc.location===after.location&&old.location===before.location){
+            const a=old.relationships?.player??{},b=npc.relationships?.player??{};
+            for(const [key,increased,decreased]of [['respect','对你更敬重了','对你的敬重减少了'],['fear','对你更畏惧了','对你的畏惧减轻了']])if((a[key]??0)!==(b[key]??0))push('relationship',`${name(id)}${(b[key]??0)>(a[key]??0)?increased:decreased}`);
+            if((b.favors??[]).some(row=>row.status==='未还'&&!(a.favors??[]).some(old=>old.id===row.id)))push('relationship',`${name(id)}记下了欠你的人情`);
+        }
     }
     const professions=value=>[value?.combat,...value?.life??[],...value?.hidden??[]].filter(Boolean);
     const oldJobs=professions(before.professions),newJobs=professions(after.professions);

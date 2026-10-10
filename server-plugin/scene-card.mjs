@@ -5,6 +5,7 @@ import {localWeather} from './weather.mjs';
 import {agricultureView} from './agriculture.mjs';
 import {npcAvailability} from './npc-schedule.mjs';
 import {npcContext}from'./npc-memory.mjs';
+import {relationView}from'./npc-relations.mjs';
 
 const text=(value,limit=200)=>typeof value==='string'?value.replace(/\s+/g,' ').slice(0,limit):'';
 const list=value=>Array.isArray(value)?value.map(row=>typeof row==='string'?row:row.content??row.description??'').filter(Boolean).join('；'):text(value);
@@ -31,8 +32,11 @@ export function sceneCard(engine,document,query='',index=null){
         const base=engine.byId.get(id)??npc;
         const available=npcAvailability(engine,s,id);
         const context=npcContext(engine,document,id,query);
+        const relationship=relationView(engine,s,id,'player');
         const shared=(context?.memories??Object.values(document.memories??{}).filter(m=>m.subject===id).slice(-2)).map(m=>`${engine.calendar(m.minute??0).text} ${m.sourceType??''}：${text(m.content,140)}`);
-        parts.push(`${base.name}（${id}）｜${base.occupation??''}，${base.age??''}岁｜此刻：${text(available.activity)}\n  对你：信任${npc.trust??0} 亲近${npc.affection??0}｜涉及你的经历：${text(shared.join('；'),compactPeople?180:500)||'尚无已核实记录'}\n  说话：${text(base.speakingStyle??base.voice?.register??base.voice)}｜挂心：${text(context?.concern??list(npc.goals??base.goals),130)}\n  TA不知道：${text(list(context?.unknown??npc.unknownFacts??base.knowledge?.unknown??base.unknownFacts),160)}${!context&&base.notes?`\n  人物资料：${text(base.notes,180)}`:''}`);
+        parts.push(`${base.name}（${id}）｜${base.occupation??''}，${base.age??''}岁｜此刻：${text(available.activity)}\n  对你：信任${relationship.trust} 亲近${relationship.affection} 敬重${relationship.respect} 畏惧${relationship.fear}${relationship.favors.some(row=>row.status==='未还')?'，记得欠你的人情':''}｜涉及你的经历：${text(shared.join('；'),compactPeople?180:500)||'尚无已核实记录'}\n  说话：${text(base.speakingStyle??base.voice?.register??base.voice)}｜挂心：${text(context?.concern??list(npc.goals??base.goals),130)}\n  TA不知道：${text(list(context?.unknown??npc.unknownFacts??base.knowledge?.unknown??base.unknownFacts),160)}${!context&&base.notes?`\n  人物资料：${text(base.notes,180)}`:''}`);
+        if(context?.recentActivities?.length)parts.push(`  本人近期经历，玩家未必知情：${text(context.recentActivities.map(row=>`${engine.calendar(row.minute).text} ${row.content}`).join('；'),compactPeople?100:220)}`);
+        if(context?.reflections?.length)parts.push(`  个人判断，可被推翻：${text(context.reflections[0].content,100)}`);
         if(context&&compactPeople)parts.push(`  本人已知：${text(list(context.known),100)}`);
         else if(context)parts.push(`  可见外貌：${text(list(context.appearance),100)}｜说话习惯：${text(list(context.voice.habits),80)}\n  台词范例，非既往经历：${text(context.voice.samples?.[0],80)}\n  本人已知：${text(list(context.known),180)}\n  本人旧事，不代表玩家参与：${text(list(context.seeds),180)}\n  在意：${text(list(context.values),70)}｜弱点：${text(list(context.flaws),70)}\n  行事：${text(Object.values(context.behavior).join('；'),160)}`);
         if(available.services!==null)parts.push(`  当前服务：${available.services.map(service=>service==='teach'?'授课':'交易').join('、')||'暂停'}${available.until?`，本时段至${engine.calendar(available.until).text}`:''}`);

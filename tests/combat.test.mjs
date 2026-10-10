@@ -37,7 +37,7 @@ test('实际交锋：十秒累计为分钟，坏武器和过级装备拒绝，�
     const engine=new WorldEngine(await loadWorld()),seed=JSON.parse(await fs.readFile('tests/fixtures/legacy/seed.json','utf8'));
     let document=engine.initialFromLegacy(seed,'seconds-test');document.state.player.hp=1000;document.state.player.maxHp=1000;document.state.npcs.npc_hw_linsui.hp=1000;document.state.npcs.npc_hw_linsui.maxHp=1000;
     for(let i=0;i<6;i++){const out=await engine.reduce(document,{tool:'world_combat',args:{target:'林穗',intent:'shove'},eventId:`shove_${i}`});document=applyPatches(document,out.patches);}
-    assert.equal(document.state.minute,541);assert.equal(document.state.subMinuteSeconds,0);assert.equal(document.state.npcs.npc_hw_linsui.developments.length,6);assert.equal(document.state.npcs.npc_hw_linsui.trust,-30);
+    assert.equal(document.state.minute,541);assert.equal(document.state.subMinuteSeconds,0);assert.equal(document.state.npcs.npc_hw_linsui.developments.filter(row=>row.type==='被推搡').length,6);assert.equal(document.state.npcs.npc_hw_linsui.trust,-30);
     document.state.inventory.item_staff.durability=0;await assert.rejects(engine.reduce(document,{tool:'world_combat',args:{target:'林穗',weapon:'木杖'},eventId:'broken'}),/损坏/);
     document.state.inventory.item_staff.durability=100;document.state.inventory.item_staff.quality='神';await assert.rejects(engine.reduce(document,{tool:'world_combat',args:{target:'林穗',weapon:'木杖'},eventId:'high'}),/160级/);
 });

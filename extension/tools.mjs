@@ -15,13 +15,13 @@ define('world_summon','查看或解除召唤契约，或令指定役灵在源头
 define('world_revival','在当前神殿或祭坛登记复活点并支付费用。',{location:str},[]);
 define('world_check','依据属性技能做难度检定或对抗，可引用工具与协助义务。',{attribute:str,skill:str,difficulty:int,context:int,contextReason:str,advantage:bool,disadvantage:bool,tools:{type:'array',items:str},helpers:{type:'array',items:str},opponent:object({npc:str,attribute:str,skill:str},['npc'])},[]);
 define('world_cast','向指定目标施放已学法术，可引用所需授权。',{spell:str,target:str,authorization:str,authorizations:{type:'array',items:str,maxItems:8}},['spell','target']);
-define('world_environment','查看当地环境对象、走近目标，或将松泥搬到指定堆放处。',{operation:{enum:['inspect','approach','carry_silt']},target:str,destination:str,grams:int,authorization:str,authorizations:{type:'array',items:str,maxItems:8}},[]);
+define('world_environment','查看当地环境对象、走近目标、搬运松泥，或检查炉温与向炉具加入自己持有的燃料。',{operation:{enum:['inspect','inspect_heat','load_fuel','approach','carry_silt']},target:str,destination:str,grams:int,item:str,quantity:{...int,description:'添料时为1到100份真实物品；其他操作按各自数量规则'},authorization:str,authorizations:{type:'array',items:str,maxItems:8}},[]);
 define('world_learn','向在场导师或通过持有书籍学习指定技能、法术或配方。',{entity:str,source:str,kind:{type:'string',enum:['spell','skill','recipe']}},['entity','source']);
 define('world_practice','练习指定技能或凭来源申请阶段突破。',{skill:str,target:str,gain:int,breakthroughSource:str},['skill']);
 define('world_profession','申请指定职业的认证、退职或升职。',{profession:str,teacher:str,operation:{type:'string',enum:['certify','abandon','promote']},choice:str},['profession']);
 define('world_attributes','按玩家决定分配已有自由属性点。',{attributes:object({'力量':int,'敏捷':int,'体质':int,'智力':int,'精神':int,'魅力':int})},['attributes']);
-define('world_relation','依据具体来源事件调整指定人物的信任。',{npc:str,eventType:str,sourceEvent:str,trustDelta:int},['npc','eventType','sourceEvent']);
-define('world_promise','登记人物的带路、送货、付款、等候、会面或协助承诺。',{promisor:str,promisee:str,type:str,content:str,destination:str,deadline:int,item:str,quantity:int,coins:int,skill:str,attribute:str},['promisor','type','content']);
+define('world_relation','查核真实事件造成的关系变化；双方可用npc或from、to指定。',{npc:str,from:str,to:str,eventType:str,sourceEvent:str,romance:bool},['eventType','sourceEvent']);
+define('world_promise','登记或取消承诺；等候与会面按地点及起止分钟占用时间。',{operation:{enum:['create','cancel']},promisor:str,promisee:str,type:str,content:str,destination:str,location:str,start:int,deadline:int,minutes:int,obligation:str,actor:str,item:str,quantity:int,coins:int,skill:str,attribute:str},[]);
 define('world_remember','为指定主体记录一条有来源的长期事实。',{subject:str,key:str,content:str,source:str,keywords:{type:'array',items:str}},['subject','key','content']);
 define('world_combat','与指定目标结算攻击、防守、脱离或推搡交锋。',{target:str,weapon:str,intent:{type:'string',enum:['attack','defend','flee','shove']}},['target']);
 define('world_lair','观察当地巢穴或接近巢穴中已有的占据者。',{operation:{enum:['observe','approach']},lair:str},[]);

@@ -43,7 +43,7 @@ export function advanceContracts(d,engine,minute){
         }
         if(row.category==='debt'&&row.status==='待偿还'&&row.deadline<=minute){
             d.set(['state','records',id],{...row,status:'逾期',overdueAt:row.deadline});
-            if(row.debtor==='player'&&d.get('state','npcs',row.creditor))engine.relation(d,{npc:row.creditor,eventType:'违约',sourceEvent:id},id);
+            if(row.debtor==='player'&&d.get('state','npcs',row.creditor)&&engine.byId.get(row.creditor)?.tier!=='full')engine.relation(d,{npc:row.creditor,eventType:'违约',sourceEvent:id},id);
             d.say(`欠${engine.byId.get(row.creditor)?.name??'商家'}的${row.amount-row.paid}铜已到期，尚未偿还`);
         }
     }

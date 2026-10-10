@@ -24,7 +24,7 @@ const bundle=await loadPromptBundle(),client=new DeepSeekClient({budgetYuan:30,l
 const host=await loadHostPromptProcessor();
 const blocklist=JSON.parse(await fs.readFile(path.join(root,'world/meta/blocklist.json'),'utf8'));
 const tasks=scenarios.flatMap(scenario=>Array.from({length:repetitions},(_,index)=>({scenario,attempt:index+1}))),results=[];
-const server=await createPlaytestServer();let cursor=0,writes=Promise.resolve();
+const server=await createPlaytestServer({plannerClient:client});let cursor=0,writes=Promise.resolve();
 function summary(){const assertions=results.reduce((n,row)=>n+row.assertions,0),passed=results.reduce((n,row)=>n+row.passed,0);
     const complete=results.length===tasks.length,fullCohort=scenarios.length===all.length;
     const required=['L1','L2','L3','L4','L5','L6','L7','T1','T2','T3','T4','T5','T6','G1','G2','G3','C1','C2','V1','V2','V3'];

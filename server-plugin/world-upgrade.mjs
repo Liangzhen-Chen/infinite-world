@@ -1,6 +1,7 @@
 import {digest,applyPatches} from './storage.mjs';
 import {planWildlifeMigration}from'./wildlife-migration.mjs';
 import {planBossMigration}from'./boss-migration.mjs';
+import {initialNpcState}from'./npc-state.mjs';
 
 const catalogs=['npcs','locations','items','professions','skills','spells','recipes','monsters','bosses','cultures','deities','factions','history','factionPeople','eras'];
 const same=(a,b)=>digest(a??null)===digest(b??null);
@@ -29,9 +30,7 @@ export function planWorldUpgrade(document,oldWorld,newWorld,{worldHash,eventId,r
         const current=document.state.npcs[npc.id],old=before.get(npc.id);
         if(!current){
             // Initial wealth is granted to this resident, never to the player.
-            patches.push({op:'set',path:['state','npcs',npc.id],value:{id:npc.id,name:npc.name,
-                location:npc.location,coins:npc.coins??0,inventory:structuredClone(npc.inventory??{}),
-                trust:npc.trust??0,affection:npc.affection??0,developments:[],relationships:{}}});
+            patches.push({op:'set',path:['state','npcs',npc.id],value:initialNpcState(npc)});
             added.push(npc.id);continue;
         }
         if(!old)continue;

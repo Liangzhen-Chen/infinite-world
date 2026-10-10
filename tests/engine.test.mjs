@@ -79,8 +79,10 @@ test('E7 未突破停299，同目标递减，每日上限',async()=>{
     assert.equal(first.result.gain,10);assert.equal(second.result.gain,5);
 });
 test('E8 别名同一编号、E9 基础人设只读，未成年关系受限',async()=>{
-    const c=fresh();const updated=await run(c,'world_relation',{npc:'林穗姐',eventType:'帮助',sourceEvent:'roof'});
-    assert.equal(updated.document.state.npcs.npc_hw_linsui.trust,3);assert.equal(Object.keys(updated.document.state.npcs).length,18);
+    const c=fresh();await assert.rejects(run(c,'world_relation',{npc:'林穗姐',eventType:'帮助',sourceEvent:'roof'}),/已核验证据/);
+    const traded=await run(c,'world_trade',{seller:'林穗姐',item:'面包',quantity:1},'bread-proof');
+    const updated=await run(traded.document,'world_relation',{npc:'林穗姐',eventType:'交易',sourceEvent:'bread-proof'});
+    assert.equal(updated.document.state.npcs.npc_hw_linsui.trust,1);assert.equal(Object.keys(updated.document.state.npcs).length,18);
     await assert.rejects(run(c,'world_relation',{npc:'林穗',notes:'她是一名刺客',eventType:'帮助',sourceEvent:'roof'}),/只读/);
     await assert.rejects(run(c,'world_relation',{npc:'段禾',romance:true,eventType:'帮助',sourceEvent:'x'}),/未成年/);
 });

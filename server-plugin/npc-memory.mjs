@@ -1,3 +1,4 @@
+import {npcCognitionView}from'./npc-cognition.mjs';
 import {scheduleAt}from'./npc-schedule.mjs';
 import {MemoryIndex}from'./retrieval.mjs';
 
@@ -19,6 +20,7 @@ function witnessedThroughout(engine,before,after,id){
 // supplied by the narrator never become an NPC's witnessed event.
 export function recordNpcMemories(d,engine,before,tool,args,detail,eventId){
     if(!engine.world.npcs.some(npc=>npc.tier==='full'))return;
+    if(tool==='craft'&&args.operation==='repair')tool='repair';
     const after=d.get('state'),name=id=>id==='player'?after.player.name:engine.byId.get(id)?.name??id;
     const resolve=value=>{if(!value)return null;try{return engine.resolve(value);}catch{return null;}};
     const facts=[],add=(key,content,participants,options={})=>facts.push({key,content,participants:[...new Set(participants.filter(Boolean))],location:before.location,minute:after.minute,salience:2,emotion:'平静',...options});
@@ -37,7 +39,7 @@ export function recordNpcMemories(d,engine,before,tool,args,detail,eventId){
     }else if(tool==='cast'){
         const spell=engine.byId.get(detail.spell??resolve(args.spell));
         if(spell)add('cast',`${name('player')}施放${spell.name}，${detail.success?'施法成功':'施法失败'}`,['player',resolve(args.target)],{salience:3});
-    }else if(tool==='conflict'){
+    }else if(tool==='combat'||tool==='conflict'){
         add('conflict',`${name('player')}与${name(detail.target)}交锋，对方受伤${detail.damage}，自己受伤${detail.received}`,['player',detail.target],{salience:4,emotion:'警惕'});
     }else if(tool==='crime'){
         const witnesses=detail.witnesses??[];
@@ -81,7 +83,8 @@ export function recordNpcMemories(d,engine,before,tool,args,detail,eventId){
 
 export function npcContext(engine,document,id,query=''){
     const base=engine.byId.get(id),npc=document.state.npcs[id];if(base?.tier!=='full'||!npc)return null;
-    const memories=(npc.memoryStream??[]).filter(row=>row.participants.includes('player'));
+    const cognition=npcCognitionView(engine,document,id);
+    const memories=cognition.memories.filter(row=>row.participants?.includes('player'));
     const index=new MemoryIndex({entities:engine.entities});
     for(const memory of memories){
         const items=(memory.entities??[]).map(value=>engine.byId.get(value)).filter(row=>row?.id.startsWith('item_'));
@@ -93,6 +96,7 @@ export function npcContext(engine,document,id,query=''){
     const goals=Object.values(npc.goals??base.goals??{}).flat().filter(row=>row.progress<100&&row.status!=='已完成');
     return{appearance:base.appearance,voice:base.voice,values:base.personality.values,flaws:base.personality.flaws,
         concern:goals[0]?.content??'',known:base.knowledge.known.map(row=>row.fact),unknown:base.knowledge.unknown,
-        memories:shared,seeds:base.memorySeeds.slice(0,2).map(row=>row.event),behavior:base.behaviorRules,
+        recentActivities:Object.values(document.state.npcAutonomy?.actions??{}).filter(row=>row.npc===id&&row.minute<=document.state.minute).slice(-2).map(row=>({minute:row.minute,content:row.summary})),
+        memories:shared,reflections:cognition.reflections.filter(row=>row.about==='player').slice(-1),seeds:base.memorySeeds.slice(0,2).map(row=>row.event),behavior:base.behaviorRules,
         relations:base.relationships.map(row=>({with:row.with,type:row.type,note:row.note}))};
 }

@@ -3190,7 +3190,8 @@
                   "container",
                   "channel",
                   "soil",
-                  "silt_heap"
+                  "silt_heap",
+                  "object"
                 ]
               },
               "owner": {
@@ -3301,10 +3302,17 @@
                   },
                   "worked": {
                     "type": "boolean"
-                  }
+                  },
+                  "thermal": false
                 },
                 "required": [],
                 "additionalProperties": true
+              },
+              "thermalModel": {
+                "$ref": "#/$defs/thermalModel"
+              },
+              "thermalInitial": {
+                "$ref": "#/$defs/thermalInitial"
               }
             },
             "required": [
@@ -3316,7 +3324,68 @@
               "position",
               "state"
             ],
-            "additionalProperties": true
+            "additionalProperties": true,
+            "allOf": [
+              {
+                "if": {
+                  "properties": {
+                    "kind": {
+                      "const": "object"
+                    }
+                  },
+                  "required": [
+                    "kind"
+                  ]
+                },
+                "then": {
+                  "required": [
+                    "thermalModel",
+                    "thermalInitial"
+                  ],
+                  "properties": {
+                    "state": {
+                      "type": "object",
+                      "not": {
+                        "properties": {
+                          "waterMl": {}
+                        },
+                        "required": [
+                          "waterMl"
+                        ]
+                      }
+                    },
+                    "thermalModel": {
+                      "$ref": "#/$defs/thermalModel"
+                    },
+                    "thermalInitial": {
+                      "$ref": "#/$defs/thermalInitial"
+                    }
+                  }
+                },
+                "else": {
+                  "not": {
+                    "anyOf": [
+                      {
+                        "required": [
+                          "thermalModel"
+                        ],
+                        "properties": {
+                          "thermalModel": {}
+                        }
+                      },
+                      {
+                        "required": [
+                          "thermalInitial"
+                        ],
+                        "properties": {
+                          "thermalInitial": {}
+                        }
+                      }
+                    ]
+                  }
+                }
+              }
+            ]
           }
         },
         "microclimate": {
@@ -3360,6 +3429,9 @@
                 "type": "integer",
                 "minimum": 0,
                 "maximum": 100000
+              },
+              "thermalRequirement": {
+                "$ref": "#/$defs/thermalRequirement"
               }
             },
             "required": [
@@ -3950,7 +4022,9 @@
                 "status",
                 "light",
                 "environment",
-                "summon"
+                "summon",
+                "protection",
+                "object"
               ]
             },
             "power": {
@@ -3989,6 +4063,7 @@
             },
             "damageType": {
               "enum": [
+                "physical",
                 "fire",
                 "cold",
                 "wind",
@@ -4005,7 +4080,14 @@
                 "sense_water",
                 "irrigate",
                 "clear_silt",
-                "soil_water"
+                "soil_water",
+                "ignite",
+                "extinguish",
+                "heat",
+                "cool",
+                "dry",
+                "sense_heat",
+                "fuel"
               ]
             },
             "unit": {
@@ -4016,13 +4098,72 @@
                 "litre",
                 "gram"
               ]
+            },
+            "damageTypes": {
+              "type": "array",
+              "minItems": 1,
+              "uniqueItems": true,
+              "items": {
+                "enum": [
+                  "physical",
+                  "fire",
+                  "cold",
+                  "wind",
+                  "earth",
+                  "light",
+                  "shadow",
+                  "mind"
+                ]
+              }
+            },
+            "stacking": {
+              "enum": [
+                "strongest"
+              ]
+            },
+            "limitC": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 1200
             }
           },
           "required": [
             "kind",
             "power"
           ],
-          "additionalProperties": true
+          "additionalProperties": true,
+          "allOf": [
+            {
+              "if": {
+                "properties": {
+                  "kind": {
+                    "const": "object"
+                  }
+                },
+                "required": [
+                  "kind"
+                ]
+              },
+              "then": {
+                "required": [
+                  "operation"
+                ],
+                "properties": {
+                  "operation": {
+                    "enum": [
+                      "ignite",
+                      "extinguish",
+                      "heat",
+                      "cool",
+                      "dry",
+                      "sense_heat",
+                      "fuel"
+                    ]
+                  }
+                }
+              }
+            }
+          ]
         },
         "failureDamage": {
           "type": "integer",
@@ -6290,6 +6431,155 @@
         "description"
       ],
       "additionalProperties": true
+    },
+    "thermalModel": {
+      "type": "object",
+      "properties": {
+        "heatCapacityJPerC": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 10000000
+        },
+        "maximumC": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 1200
+        },
+        "ambientC": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 1200
+        },
+        "passiveExchangeJPerMinute": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 1000000
+        },
+        "burnMgPerMinute": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 10000000
+        },
+        "fuelJPerMg": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 100
+        },
+        "efficiencyPermille": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 900
+        },
+        "ashPermille": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 1000
+        },
+        "ignitionMaximumMg": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 5000
+        },
+        "ignitable": {
+          "type": "boolean"
+        },
+        "dryable": {
+          "type": "boolean"
+        },
+        "fuels": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "item": {
+                "type": "string",
+                "pattern": "^item_"
+              },
+              "milligramsPerUnit": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 100000000
+              }
+            },
+            "required": [
+              "item",
+              "milligramsPerUnit"
+            ],
+            "additionalProperties": false
+          },
+          "uniqueItems": true
+        }
+      },
+      "required": [
+        "heatCapacityJPerC",
+        "maximumC",
+        "ambientC",
+        "passiveExchangeJPerMinute",
+        "burnMgPerMinute",
+        "fuelJPerMg",
+        "efficiencyPermille",
+        "ashPermille",
+        "ignitionMaximumMg",
+        "ignitable",
+        "dryable",
+        "fuels"
+      ],
+      "additionalProperties": false
+    },
+    "thermalInitial": {
+      "type": "object",
+      "properties": {
+        "temperatureC": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 1200
+        },
+        "fuelMg": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 100000000
+        },
+        "moistureMg": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 100000000
+        }
+      },
+      "required": [
+        "temperatureC",
+        "fuelMg",
+        "moistureMg"
+      ],
+      "additionalProperties": false
+    },
+    "thermalRequirement": {
+      "type": "object",
+      "properties": {
+        "feature": {
+          "type": "string",
+          "pattern": "^feature_"
+        },
+        "minimumC": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 1200
+        },
+        "maximumC": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 1200
+        },
+        "burning": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "feature",
+        "minimumC",
+        "maximumC",
+        "burning"
+      ],
+      "additionalProperties": false
     }
   }
 }

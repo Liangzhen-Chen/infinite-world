@@ -11,9 +11,10 @@ import { WorldRegistry } from './world-registry.mjs';
 import { atomicJSON } from './storage.mjs';
 import {catalogDefinition}from'./catalog.mjs';
 import {publicLoreEntries}from'./lore.mjs';
+import {settleNpcPlanning}from'./npc-planning-service.mjs';
 
 export const info={id:'infinite-fields',name:'无限原野本地战役存储',description:'本项目自有的存档、账本与检索服务器插件'};
-export async function init(router,{ world=null, baseRoot=null, newCampaignSeed=randomUUID }={}){
+export async function init(router,{ world=null, baseRoot=null, newCampaignSeed=randomUUID, npcPlanner, npcPlanningEnabled=Boolean(process.env.DEEPSEEK_API_KEY), npcPlanningOptions={} }={}){
     world ??= await loadWorld();
     const engine=new WorldEngine(world),stores=new Map(),indexes=new Map(),registries=new Map();
     const seed=JSON.parse(await fs.readFile(new URL('./legacy/seed.json',import.meta.url),'utf8'));
@@ -92,7 +93,16 @@ export async function init(router,{ world=null, baseRoot=null, newCampaignSeed=r
         if(['world_health','world_revive'].includes(tool))throw new Error('生命变化只能由交锋、治疗或死亡结算产生');
         const store=getStore(req),view=await store.read(campaignId);
         if(view.document.schemaVersion!==2)throw new Error('存档尚未升级到新引擎');
-        return store.transact(campaignId,{id:eventId,input:{tool,args,eventId},anchor,expectedSequence},store.reducer);
+        const saved=await store.transact(campaignId,{id:eventId,input:{tool,args,eventId},anchor,expectedSequence},store.reducer);
+        const after=saved.document??(await store.read(campaignId)).document;
+        const crossedDay=Math.floor(after.state.minute/1440)>Math.floor(view.document.state.minute/1440);
+        if(!saved.duplicate&&npcPlanningEnabled&&(crossedDay||after.state.location!==view.document.state.location)){
+            let planning;
+            try{planning=await settleNpcPlanning(store,campaignId,{anchor,enabled:true,...(npcPlanner?{planner:npcPlanner}:{}),options:npcPlanningOptions});}
+            catch(error){planning={status:'failed',reason:'本次人物规划未能保存，已完成的玩家行动仍保留'};}
+            const current=await store.read(campaignId);return{...saved,document:current.document,reference:current.reference,npcPlanning:planning};
+        }
+        return saved;
     }));
     router.post('/reconcile',handle(req=>getStore(req).reconcile(req.body.campaignId,req.body.validAnchors??[],req.body.excludeAnchor)));
     router.post('/feedback',handle(req=>getStore(req).feedback(req.body.campaignId)));

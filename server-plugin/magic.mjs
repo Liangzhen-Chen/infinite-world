@@ -6,18 +6,17 @@ import {validateEnvironmentCatalog,prepareEnvironmentMagic,applyEnvironmentMagic
 import {validateSummonCatalog,prepareSummon,applySummon}from'./summons.mjs';
 import {resolveCreature,recordWildlifeDeath}from'./wildlife.mjs';
 import {bossCounter,rememberBossTactic,defeatBoss}from'./bosses.mjs';
-const clamp=(value,min,max)=>Math.max(min,Math.min(max,value));
-const allowedKinds=new Set(['damage','heal','repair','dry','status','light','environment','summon']);
+import {validateEffectSpec,resolveVitalityPrimitive,applyProtectionPrimitive,consumeMagicProtection}from'./magic-primitives.mjs';
+import {validateObjectCatalog,prepareObjectMagic,applyObjectMagic}from'./magic-object.mjs';
 export function validateMagicCatalog(catalog,{requireHandler=false}={}){
     const spec=catalog.effectSpec,errors=[];
     if(!spec){if(requireHandler||catalog.mechanism)errors.push('此法术机制尚未接入规则，不能叙述已实现');return errors;}
-    if(!allowedKinds.has(spec.kind))errors.push('此法术效果类型尚未接入规则，不能叙述已实现');
-    if(!Number.isSafeInteger(spec.power)||spec.power<1||spec.power>5000)errors.push('法术规则强度非法');
-    if(['status','light'].includes(spec.kind)&&(!Number.isSafeInteger(catalog.duration)||catalog.duration<1||catalog.duration>(catalog.durationLimit??43200)))errors.push('持续效果的时限非法');
+    errors.push(...validateEffectSpec(spec));
+    if(['status','light','protection'].includes(spec.kind)&&(!Number.isSafeInteger(catalog.duration)||catalog.duration<1||catalog.duration>Math.min(catalog.durationLimit??43200,43200)))errors.push('持续效果的时限非法');
     if(spec.kind==='status'&&(!magicStatuses[spec.status]||spec.power>magicStatuses[spec.status].maximum))errors.push('状态效果或强度不在规则表');
-    if(spec.damageType&&!['fire','cold','wind','earth','light','shadow','mind'].includes(spec.damageType))errors.push('伤害门类不在规则表');
     if(spec.kind==='environment')errors.push(...validateEnvironmentCatalog(catalog));
     if(spec.kind==='summon')errors.push(...validateSummonCatalog(catalog));
+    if(spec.kind==='object')errors.push(...validateObjectCatalog(catalog));
     return errors;
 }
 export function prepareMagic(d,catalog,args){
@@ -25,6 +24,7 @@ export function prepareMagic(d,catalog,args){
     const spec=catalog.effectSpec;if(!spec)return null;
     if(spec.kind==='environment')return prepareEnvironmentMagic.call(this,d,catalog,args);
     if(spec.kind==='summon')return prepareSummon.call(this,d,catalog,args);
+    if(spec.kind==='object')return prepareObjectMagic.call(this,d,catalog,args);
     const target=['repair','dry','light'].includes(spec.kind)?this.resolve(args.target??'player'):resolveCreature(this,d,args.target??'player');
     if(['repair','dry','light'].includes(spec.kind)){
         if(!target.startsWith('item_')||this.quantity(d,'player',target)<1)throw new Error('施法需要实际持有的目标物品');
@@ -47,19 +47,25 @@ export function prepareMagic(d,catalog,args){
         const permission=d.get('state','records',args.authorization);
         if(!permission||permission.category!=='authorization'||permission.subject!==target||permission.action!=='healing'||permission.expires!==undefined&&permission.expires<=d.get('state','minute'))throw new Error('治疗需要本人同意；濒死急救除外');
     }
-    if(spec.kind==='status'&&magicStatuses[spec.status].beneficial&&target!=='player'){
+    if((spec.kind==='protection'||spec.kind==='status'&&magicStatuses[spec.status].beneficial)&&target!=='player'){
         const permission=d.get('state','records',args.authorization);
         if(!permission||permission.category!=='authorization'||permission.subject!==target||permission.action!=='support_magic'||permission.expires!==undefined&&permission.expires<=d.get('state','minute'))throw new Error('向他人施加防护需要本人同意');
     }
-    return{target,path:target==='player'?['state','player']:['state',partition,target],actor,derived,spec,catalog};
+    return{target,path:target==='player'?['state','player']:['state',partition,target],actor,derived,spec,catalog,completionArgs:{...args,target}};
 }
 export function applyMagic(d,prepared,id){
     if(!prepared)return{};
-    const{spec,target,path,catalog}=prepared;
+    let{spec,target,path,catalog}=prepared;
     if(spec.kind==='environment')return applyEnvironmentMagic.call(this,d,prepared,id);
     if(spec.kind==='summon')return applySummon.call(this,d,prepared,id);
+    if(spec.kind==='object')return applyObjectMagic.call(this,d,prepared,id);
+    if(prepared.completionArgs){
+        try{prepared=prepareMagic.call(this,d,catalog,prepared.completionArgs);}
+        catch(error){return{target,effectFailed:`施法完成前条件失效：${error.message}`};}
+    }
     const latest=d.get(...path);
     if(!latest||latest.status==='死亡')return{target,effectFailed:'施法完成前目标已离开行囊或死亡，效果未生效'};
+    if(spec.kind==='protection')return applyProtectionPrimitive(d,{spec,target,spell:catalog.id,duration:catalog.duration},id);
     if(spec.kind==='status'||spec.kind==='light'){
         const expires=d.get('state','minute')+catalog.duration;
         const effect={kind:spec.kind,spell:catalog.id,target,power:spec.power,expires,source:id,
@@ -85,8 +91,9 @@ export function applyMagic(d,prepared,id){
     const current=d.get(...path),maximum=current.maxHp??prepared.derived.maxHp,old=current.hp??maximum;
     const protection=magicStatusStats(d,target),resistance=protection[`${spec.damageType}Resistance`]??0;
     const tactic=`magic_${spec.damageType??'untyped'}`,counter=spec.kind==='damage'?bossCounter(d,this,target,tactic):{damageMultiplier:1};
-    const amount=spec.kind==='damage'?Math.max(1,Math.round((spec.power-(prepared.derived.defense+protection.defense)*(spec.armorFactor??0.25))*(1-resistance)*counter.damageMultiplier)):spec.power;
-    const next=clamp(old+(spec.kind==='heal'?amount:-amount),0,maximum);
+    const resolved=resolveVitalityPrimitive({spec,hp:old,maxHp:maximum,defense:prepared.derived.defense+protection.defense,resistance,multiplier:counter.damageMultiplier});
+    const shield=spec.kind==='damage'?consumeMagicProtection(d,target,resolved.rawAmount,spec.damageType??'physical'):{damage:0,absorbed:0};
+    const next=spec.kind==='damage'?Math.max(0,old-shield.damage):resolved.nextHp;
     if(target==='player')this.health(d,{delta:next-old},id);
     else{
         d.set([...path,'hp'],next);d.set([...path,'maxHp'],maximum);
@@ -101,5 +108,5 @@ export function applyMagic(d,prepared,id){
     const killed=spec.kind==='damage'&&!next&&['monster_','boss_'].some(prefix=>target.startsWith(prefix));
     const corpse=killed?recordWildlifeDeath(d,this,target,id):null,lair=killed?defeatBoss(d,this,target,id):null;
     const experience=killed?monsterReward(d,this,target,id):{};
-    return{target,[spec.kind==='heal'?'healed':'damage']:Math.abs(next-old),targetHp:next,...experience,...(corpse?{corpse}:{}),...(lair?{lair}:{}),...(counter.adapted?{adaptation:{tactic,guarded:true}}:{})};
+    return{target,[spec.kind==='heal'?'healed':'damage']:Math.abs(next-old),targetHp:next,...experience,...(shield.absorbed?{absorbed:shield.absorbed,protectionEffect:shield.effect}:{}),...(corpse?{corpse}:{}),...(lair?{lair}:{}),...(counter.adapted?{adaptation:{tactic,guarded:true}}:{})};
 }

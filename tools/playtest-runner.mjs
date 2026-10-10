@@ -11,11 +11,13 @@ import {parseTurn,toolResultWithClock}from'../extension/turn.mjs';
 import {visibleReply}from'../extension/message-view.mjs';
 import {evaluateAssertions}from'./playtest-assertions.mjs';
 import {generationSettings,generationRequest}from'../extension/generation.mjs';
+import {planNpcAutonomy}from'./npc-autonomy-planner.mjs';
 
-export async function createPlaytestServer({world,seed}={}){
+export async function createPlaytestServer({world,seed,plannerClient}={}){
     const directory=await fs.mkdtemp(path.join(os.tmpdir(),'fields-playtests-'));
     const app=express();app.use(express.json({limit:'10mb'}));const router=express.Router();
-    await init(router,{world,baseRoot:directory,newCampaignSeed:seed===undefined?undefined:()=>seed});app.use(router);
+    const npcPlanner=plannerClient?(engine,document,options)=>planNpcAutonomy(engine,document,{...options,client:{generate:plannerClient.generate.bind(plannerClient)}}):undefined;
+    await init(router,{world,baseRoot:directory,newCampaignSeed:seed===undefined?undefined:()=>seed,npcPlanningEnabled:Boolean(plannerClient),npcPlanner});app.use(router);
     const server=app.listen(0,'127.0.0.1');await once(server,'listening');
     const origin=`http://127.0.0.1:${server.address().port}`;
     const api=async(endpoint,body={})=>{

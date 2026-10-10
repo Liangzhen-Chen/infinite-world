@@ -50,7 +50,7 @@ function registerIncident(d,engine,{victim,offense,value=0,stolen=null,witnesses
     for(const witness of witnesses){
         knowledge(d,witness,id,now);
         if(!relationshipApplied&&witness===victim){
-            d.set(['state','npcs',witness,'trust'],Math.max(-100,(d.get('state','npcs',witness,'trust')??0)-5));
+            if(engine.byId.get(witness)?.tier!=='full')d.set(['state','npcs',witness,'trust'],Math.max(-100,(d.get('state','npcs',witness,'trust')??0)-5));
             d.set(['state','npcs',witness,'developments'],[...d.get('state','npcs',witness,'developments')??[],{type:'发现财物侵犯',source:eventId,minute:now}]);
         }
     }

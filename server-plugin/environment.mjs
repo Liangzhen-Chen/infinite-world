@@ -1,5 +1,6 @@
 import {normalize}from'./retrieval.mjs';
 import {waterMechanisms}from'../world/design/water-foundation.mjs';
+import {addObjectFuel,inspectObjectProcess}from'./magic-object.mjs';
 
 const integer=(value,min,max,label)=>{if(!Number.isSafeInteger(value)||value<min||value>max)throw new Error(`${label}无效`);return value;};
 const key=id=>`physical_feature:${id}`;
@@ -129,14 +130,19 @@ export function applyEnvironmentMagic(d,prepared,eventId){
 export function interactEnvironment(d,args,eventId){
     const location=d.get('state','location'),operation=args.operation??'inspect';
     if(operation==='inspect')return environmentCatalog(this,d.document,{entity:args.target});
+    if(operation==='inspect_heat')return{...inspectObjectProcess(d,this,args.target,args),actionScope:{kind:'instant',instantaneous:true}};
     if(!this.rules.environment)throw new Error('此世界尚无环境操作规则');
+    if(operation==='load_fuel'){
+        const item=this.resolve(args.item,'item'),result=addObjectFuel(d,this,{...args,item},eventId);
+        this.advance(d,1,eventId);return{...result,minutes:1,note:'燃料已从自有库存转入炉具；搬放经过一分钟，燃烧按实际时间继续'};
+    }
     const row=feature(this,args.target,location);inReach(d,row,Number.POSITIVE_INFINITY);
     if(operation==='approach'){
         const metres=distance(point(d),row.position),minutes=Math.ceil(metres/this.rules.environment.walkingMetresPerMinute);
         this.advance(d,minutes,eventId);d.set(['state','records','local_player_position'],{category:'local_position',location,point:[...row.position]});
         return{target:row.id,metres,minutes,position:[...row.position]};
     }
-    if(operation!=='carry_silt')throw new Error('环境操作需为inspect、approach或carry_silt');
+    if(operation!=='carry_silt')throw new Error('环境操作需为inspect、inspect_heat、load_fuel、approach或carry_silt');
     const destination=feature(this,args.destination,location),range=3;
     if(row.kind!=='channel'||destination.kind!=='silt_heap')throw new Error('搬泥需要引水沟及登记堆泥处');
     for(const target of[row,destination]){inReach(d,target,range);permission(d,this,target,args);}

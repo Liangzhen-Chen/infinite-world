@@ -8,7 +8,7 @@ import {digest}from'../server-plugin/storage.mjs';
 const extensionPath='public/scripts/extensions/third-party/infinite-fields';
 export async function prepareDeployment(destination=path.join(root,'dist','engine-deployment')){
     destination=path.resolve(destination);
-    const sources=['tools/load-world.mjs','extension/tools.mjs'];
+    const sources=['tools/load-world.mjs','tools/npc-autonomy-planner.mjs','tools/deepseek-client.mjs','extension/tools.mjs'];
     async function copyDirectory(relative){
         for(const name of await fs.readdir(path.join(root,relative))){
             if(relative==='world'&&name==='drafts')continue;

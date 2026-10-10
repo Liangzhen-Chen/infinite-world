@@ -2,6 +2,7 @@ import fs from 'node:fs/promises';
 import Ajv from 'ajv';
 import {EntityResolver,normalize}from'../server-plugin/retrieval.mjs';
 import {validateMagicCatalog}from'../server-plugin/magic.mjs';
+import {validateObjectWorld}from'../server-plugin/magic-object.mjs';
 import {validateWeatherRules}from'../server-plugin/weather.mjs';
 import {validateAgricultureRules}from'../server-plugin/agriculture.mjs';
 import {validateWildlife}from'../server-plugin/wildlife.mjs';
@@ -26,6 +27,7 @@ export function validateWorld(world,{stage='engine'}={}){
     errors.push(...validateWildlife(world));
     errors.push(...validateFarmPests(world));
     errors.push(...validateBossEcology(world));
+    errors.push(...validateObjectWorld(world));
     errors.push(...validateNpcSchedules(world));
     errors.push(...validateNpcProfiles(world));
     const entities=categories.flatMap(key=>world[key]??[]),ids=new Map(),names=new Map();

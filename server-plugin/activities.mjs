@@ -1,6 +1,7 @@
 import {derivedStats,monsterStats,strike,combatRandom}from'./combat.mjs';
 import {careerEquipment,effectiveProficiency}from'./professions.mjs';
 import {magicStatusStats,withMagicStats,magicIlluminates}from'./magic-status.mjs';
+import {consumeMagicProtection}from'./magic-primitives.mjs';
 import {milestone,monsterReward,awardExperience}from'./progression.mjs';
 import {manufacture}from'./manufacturing.mjs';
 import {repair}from'./repair.mjs';
@@ -59,9 +60,13 @@ export const activities={
         const weather=localWeather(this,d.document),night=weather&&!weather.indoors&&!weather.daylight&&!terrain.includes('dark')&&!magicIlluminates(d)?this.rules.combat.terrain.dark.hit:0;
         const hitModifier=terrain.reduce((sum,tag)=>sum+(tag==='dark'&&magicIlluminates(d)?0:this.rules.combat.terrain[tag]?.hit??0),0)+(weather?.hitModifier??0)+night;
         const attack=intent==='flee'?{damage:0,hit:false}:strike(stats,opponent,rng,this.rules,{hitModifier:intent==='shove'?hitModifier-(1-counter.damageMultiplier):hitModifier,damageMultiplier:(intent==='defend'?0.65:intent==='shove'?0:1)*counter.damageMultiplier});
-        const damage=intent==='shove'?(attack.hit?1:0):attack.damage,remaining=Math.max(0,hp-damage);
+        const protection=consumeMagicProtection(d,target,intent==='shove'?(attack.hit?1:0):attack.damage,'physical');
+        const damage=protection.damage,remaining=Math.max(0,hp-damage);
         let escaped=false;if(intent==='flee')escaped=this.check(d,{attribute:'敏捷',difficulty:counter.escapeDifficulty??15},`${id}_escape`).success;
-        let received=0;for(let i=0;i<(opponent.attacks??1);i++)if(remaining>0&&!escaped)received+=strike(opponent,stats,rng,this.rules,{hitModifier,damageMultiplier:intent==='defend'?0.5:1}).damage;
+        let received=0,absorbed=0;for(let i=0;i<(opponent.attacks??1);i++)if(remaining>0&&!escaped){
+            const hit=strike(opponent,stats,rng,this.rules,{hitModifier,damageMultiplier:intent==='defend'?0.5:1});
+            const protectedHit=consumeMagicProtection(d,'player',hit.damage,'physical');received+=protectedHit.damage;absorbed+=protectedHit.absorbed;
+        }
         d.set(['state',partition,target,'hp'],remaining);d.set(['state',partition,target,'maxHp'],maxHp);
         if(!remaining)d.set(['state',partition,target,'status'],'死亡');
         else if(remaining<maxHp*0.25)d.set(['state',partition,target,'activity'],'退让并呼救');
@@ -69,7 +74,7 @@ export const activities={
         if(received)this.health(d,{delta:-received},id);
         const seconds=(d.get('state','subMinuteSeconds')??0)+this.rules.combat.exchangeSeconds;
         this.advance(d,Math.floor(seconds/60),id);d.set(['state','subMinuteSeconds'],seconds%60);
-        if(isNpc)d.set(['state','npcs',target,'trust'],Math.max(-100,npc.trust-5));
+        if(isNpc&&base.tier!=='full')d.set(['state','npcs',target,'trust'],Math.max(-100,npc.trust-5));
         if(weapon)wearItem(d,this,'player',weapon,1);
         if(intent==='shove')d.set(['state',partition,target,'developments'],[...npc.developments??[],{type:'被推搡',source:id,minute:d.get('state','minute'),reaction:remaining<maxHp*0.25?'呼救':'还手'}]);
         if(escaped)d.set(['state','combatDisengaged',target],{minute:d.get('state','minute'),source:id});
@@ -77,7 +82,7 @@ export const activities={
         const lair=!isNpc&&!remaining?defeatBoss(d,this,target,id):null;
         const experience=!isNpc&&!remaining?monsterReward(d,this,target,id):{experience:0};
         const incident=isNpc?recordViolence(d,this,{victim:target,damage,killed:!remaining,intent,eventId:id}):null;
-        d.say(`交锋结束，对方受伤${damage}，你受伤${received}`);return {target,damage,received,targetHp:remaining,actionScope:{kind:'combat_exchange',clockManaged:true,seconds:this.rules.combat.exchangeSeconds},...experience,...(corpse?{corpse}:{}),...(lair?{lair}:{}),...(counter.adapted?{adaptation:{tactic,guarded:true,note:'对手对已见过的进攻加强防备'}}:{}),morale:remaining<maxHp*0.25?'撤退':'交战',...(weather?{weather:{name:weather.name,daylight:weather.daylight,hitModifier:weather.hitModifier,nightModifier:night}}:{}),...(incident?{case:incident}:{})};
+        d.say(`交锋结束，对方受伤${damage}，你受伤${received}`);return {target,damage,received,...(protection.absorbed||absorbed?{absorption:{target:protection.absorbed,player:absorbed}}:{}),targetHp:remaining,actionScope:{kind:'combat_exchange',clockManaged:true,seconds:this.rules.combat.exchangeSeconds},...experience,...(corpse?{corpse}:{}),...(lair?{lair}:{}),...(counter.adapted?{adaptation:{tactic,guarded:true,note:'对手对已见过的进攻加强防备'}}:{}),morale:remaining<maxHp*0.25?'撤退':'交战',...(weather?{weather:{name:weather.name,daylight:weather.daylight,hitModifier:weather.hitModifier,nightModifier:night}}:{}),...(incident?{case:incident}:{})};
     },
     craft(d,args,id){
         if(args.operation==='repair')return repair.call(this,d,args,id);

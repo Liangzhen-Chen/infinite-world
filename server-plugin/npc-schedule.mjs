@@ -23,7 +23,11 @@ export function npcAvailability(engine,state,npcId){
     const npc=state.npcs[npcId],slot=scheduleAt(engine,npcId,state.minute);
     if(!npc)return {activity:'不在战役中',services:[]};
     if(incapacitated(npc))return {activity:npc.status,services:[]};
-    if(npc.scheduleTravel)return {activity:'赶路',services:[]};
+    if(npc.scheduleTravel||npc.cognitionTravel)return {activity:npc.cognitionTravel?'携信赶路':'赶路',services:[]};
+    const work=engine.npcAutonomyBusy?.(state,npcId);
+    if(work)return{activity:'正在处理自己的工作',services:[],until:work.finish};
+    const booking=engine.npcObligationAt?.(state,npcId);
+    if(booking)return{activity:npc.location===booking.location?booking.type:'正在赴约',services:[],until:booking.deadline};
     if(state.player.companions?.includes(npcId))return {activity:'同行',services:[]};
     if(!slot)return {activity:npc.activity??'',services:null};
     if(npc.location!==slot.location)return {activity:npc.activity??'尚未抵达作息地点',services:[]};
@@ -33,6 +37,8 @@ export function npcAvailability(engine,state,npcId){
 export function assertNpcService(d,engine,npcId,service,minutes){
     const state=d.get('state'),npc=state.npcs[npcId];
     if(!npc||npc.location!==state.location)throw new Error('服务者不在场');
+    engine.assertNpcObligationAction?.(d,['player',npcId],{minutes,location:state.location,kind:service});
+    engine.assertNpcAutonomyAction?.(state,['player',npcId],{minutes});
     if(!engine.byId.get(npcId)?.schedule)return; // Archived worlds retain their original service semantics.
     const available=npcAvailability(engine,state,npcId);
     if(available.services!==null&&!available.services.includes(service)){
@@ -54,6 +60,7 @@ export function advanceNpcSchedules(d,engine,before,after){
     for(const npcId of Object.keys(d.get('state','npcs'))){
         if(!engine.byId.get(npcId)?.schedule)continue;
         if(engine.npcScheduleReservations?.has(npcId))continue;
+        if(d.get('state','npcs',npcId,'cognitionTravel')||engine.npcAutonomyBusy?.(d.get('state'),npcId,before))continue;
         const original=d.get('state','npcs',npcId),npc={...original},path=['state','npcs',npcId];
         const activity=value=>{npc.activity=value;};
         let cursor=before;

@@ -2,6 +2,7 @@ import {effectiveProficiency}from'./professions.mjs';
 import {toolBonuses}from'./checks.mjs';
 import {produceItems,wearItem,heldUnit}from'./items.mjs';
 import {milestone}from'./progression.mjs';
+import {prepareThermalWorkstation}from'./magic-object.mjs';
 const integer=(value,min,max,label)=>{if(!Number.isSafeInteger(value)||value<min||value>max)throw new Error(`${label}无效`);return value;};
 export function workstation(d,engine,recipe,args){
     if(!recipe.workstation)return null;
@@ -18,7 +19,8 @@ export function workstation(d,engine,recipe,args){
     if(station.owner?.startsWith('npc_')){
         const owner=d.get('state','npcs',station.owner);if(!owner||['死亡','濒死'].includes(owner.status))throw new Error('工坊主人无法履约');
     }
-    return{...station,fee};
+    const thermalPlan=prepareThermalWorkstation(d,engine,station,recipe.minutes);
+    return{...station,fee,...(thermalPlan?{thermalPlan}:{})};
 }
 export function manufacture(d,args,eventId){
     const recipe=this.world.recipes.find(row=>row.id===args.recipe||row.name===args.recipe||row.aliases?.includes(args.recipe));

@@ -4,6 +4,7 @@ import {activities}from'./activities.mjs';
 import {WorldEngine as Phase1Engine}from'./compat/v2-phase1-engine.mjs';
 import {learn}from'./learning.mjs';
 import {prepareMagic,applyMagic}from'./magic.mjs';
+import {advanceMagicObjects}from'./magic-object.mjs';
 import {profession,effectiveProficiency}from'./professions.mjs';
 import {xpRequired,allocateAttributes,milestone}from'./progression.mjs';
 import {createCharacter}from'./character.mjs';
@@ -22,8 +23,12 @@ import {advanceWildlife,wildlifePriceFactor}from'./wildlife.mjs';
 import {advanceBosses}from'./bosses.mjs';
 import {sceneCard}from'./scene-card.mjs';
 import {stateNotices}from'./state-notices.mjs';
-import {assertNpcService,advanceNpcSchedules}from'./npc-schedule.mjs';
+import {assertNpcService}from'./npc-schedule.mjs';
+import {advanceNpcCognition,nextNpcCognitionMinute}from'./npc-cognition.mjs';
+import {advanceNpcAutonomy,nextNpcAutonomyMinute,npcAutonomyBusy,assertNpcAutonomyAction,applyNpcPlan}from'./npc-autonomy.mjs';
 import {recordNpcMemories}from'./npc-memory.mjs';
+import {createNpcObligation,advanceNpcObligations,assertNpcObligationAction,npcObligationAt}from'./npc-obligations.mjs';
+import {recordNpcRelationEvidence,applyNpcRelation}from'./npc-relations.mjs';
 import {resolveToolCall}from'../extension/tools.mjs';
 import {chargeTrade,repayDebt,advanceContracts}from'./contracts.mjs';
 import {initializeR1,planR1,planPreR1Partitions}from'./migrations/r1.mjs';
@@ -96,6 +101,13 @@ export class WorldEngine {
         if (input.type==='schema_migration') return {patches:input.patches,result:{migration:true}};
         if(input.type==='release_migration'&&input.release==='R1'){const migration=planR1(document,this.world);return{patches:migration.patches,result:migration.report};}
         if(input.type==='rules_state_migration')return{patches:planRuleStateMigration(document,this.rules),result:{migration:true,runtimeRuleVersion}};
+        if(input.type==='npc_plan'){
+            if(document.releaseVersion!==1)throw new Error('人物计划需要完成战役初始化');
+            const d=new Draft(document),session=this.scoped(document),id=text(input.eventId,120);
+            const detail=applyNpcPlan(d,session,input.plan,id);
+            d.set(['state','npcPlanning'],{day:Math.floor(document.state.minute/1440),minute:document.state.minute,location:document.state.location,sourceEvent:id});
+            return{patches:d.patches,result:{ok:true,...detail,minute:d.get('state','minute'),notices:stateNotices(document.state,d.get('state'),key=>session.byId.get(key)?.name)}};
+        }
         const resolved=resolveToolCall(input.tool,input.args??{});
         const d = new Draft(document), args=resolved.args, id=text(input.eventId,120);
         const tool=resolved.tool.replace(/^world_/, '');
@@ -114,11 +126,16 @@ export class WorldEngine {
         if (!['trade','time','move','turn','health','revive','revival','check','practice','cast','learn','profession','attributes','relation','promise','remember',...Object.keys(activities)].includes(tool)) throw new Error('未知工具职责');
         if(d.get('state','player','status')==='死亡'&&!['time','turn','revive'].includes(tool))throw new Error('你已经死亡，需要在登记点醒来后行动');
         if(d.get('state','player','status')==='濒死'&&!['time','turn','health','cast'].includes(tool))throw new Error('你处于濒死状态，只能等待救治或尝试自救');
-        const session=this.scoped(document);session.replaying=Boolean(options.replay);
+        const session=this.scoped(document);session.replaying=Boolean(options.replay);session.npcObligationAction={tool,args};
+        if(tool==='combat'){
+            const target=session.resolve(args.target);
+            for(const task of Object.values(d.get('state','npcAutonomy','tasks')??{}))if(task.status==='进行中'&&[task.npc,task.action.seller].includes(target))d.set(['state','npcAutonomy','tasks',task.id],{...task,status:'中断',reason:'交锋打断了正在进行的工作',interruptedAt:d.get('state','minute'),sourceEvent:id});
+        }
         const detail = await session[tool](d,args,id);
         advancePets(d,session,d.get('state','minute'));
         advanceSummons(d,d.get('state','minute'));
         advanceLaw(d,d.get('state','minute'));
+        recordNpcRelationEvidence(d,session,document.state,tool,args,detail,id);
         recordNpcMemories(d,session,document.state,tool,args,detail,id);
         if(tool==='check')detail.actionScope={kind:'judgement',healthChanged:false,inventoryChanged:false,feePaid:0,
             note:'仅结算判断或对抗，并履行已引用的协助；未伤人、毁物或制造。不得从骰点虚构这些变化。'};
@@ -131,6 +148,10 @@ export class WorldEngine {
         const session=Object.create(this);session.entities=[...this.entities,...created,player];session.resolver=new EntityResolver(session.entities);session.byId=session.resolver.entities;return session;
     }
     actor(d,id) { return id==='player' ? d.get('state','player') : d.get('state','npcs',id); }
+    npcObligationAt(state,npcId,minute){return npcObligationAt(state,npcId,minute);}
+    assertNpcObligationAction(d,actors,action){return assertNpcObligationAction(d,this,actors,action);}
+    npcAutonomyBusy(state,id,minute){return npcAutonomyBusy(state,id,minute);}
+    assertNpcAutonomyAction(state,actors,action){return assertNpcAutonomyAction(state,actors,action);}
     actorPath(id) { return id==='player' ? ['state','player'] : ['state','npcs',id]; }
     bagPath(id) { return id==='player' ? ['state','inventory'] : ['state','npcs',id,'inventory']; }
     quantity(d,id,item) { const value=d.get(...this.bagPath(id),item); return typeof value==='number'?value:value?.quantity ?? 0; }
@@ -173,8 +194,25 @@ export class WorldEngine {
     }
     advance(d,minutes,id) {
         minutes=number(minutes,0,43200,'耗时');
-        const before=d.get('state','minute'),after=before+minutes;d.set(['state','minute'],after);
-        advanceNpcSchedules(d,this,before,after);
+        if(['trade','learn','practice','profession','craft','repair','research','cast','pet','summon','environment','farm','wildlife'].includes(this.npcObligationAction?.tool))assertNpcObligationAction(d,this,['player'],{minutes});
+        const end=d.get('state','minute')+minutes;
+        if(!this.world.npcs.some(n=>n.tier==='full'))return this.advanceInterval(d,minutes,id);
+        if(!minutes)return this.advanceInterval(d,0,id);
+        const patchStart=d.patches.length,npcsBefore=d.get('state','npcs');
+        while(d.get('state','minute')<end){
+            const now=d.get('state','minute'),state=d.get('state');
+            const next=Math.min(end,(Math.floor(now/1440)+1)*1440,nextNpcCognitionMinute(state,now),nextNpcAutonomyMinute(state,now));
+            this.advanceInterval(d,next-now,id);
+        }
+        // Intermediate clock boundaries matter to simulation, not to replay.
+        // Keep one final NPC patch per changed person in this elapsed-time event.
+        const changed=new Set(d.patches.slice(patchStart).filter(p=>p.path[0]==='state'&&p.path[1]==='npcs').map(p=>p.path[2]));
+        d.patches.splice(patchStart,d.patches.length-patchStart,...d.patches.slice(patchStart).filter(p=>!(p.path[0]==='state'&&p.path[1]==='npcs')));
+        for(const npc of changed)if(canonical(npcsBefore[npc])!==canonical(d.get('state','npcs',npc)))d.patches.push({op:'set',path:['state','npcs',npc],value:d.get('state','npcs',npc)});
+    }
+    advanceInterval(d,minutes,id){
+        const beforeState=d.get('state'),before=beforeState.minute,after=before+minutes;d.set(['state','minute'],after);
+        advanceNpcObligations(d,this,before,after,id);
         advanceContracts(d,this,after);
         advanceSummons(d,after);
         advanceLaw(d,after);
@@ -198,6 +236,11 @@ export class WorldEngine {
             const remainingDays=Math.max(0,project.remainingDays-days);d.set(['state','projects',key],{...project,remainingDays,status:remainingDays?'施工中':'已完成'});
             if(!remainingDays&&project.creator==='player')milestone(d,this,'publicContribution',key,id);
         }
+        if(this.world.npcs.some(n=>n.tier==='full')){
+            advanceNpcCognition(d,this,before,after,id,{beforeState});
+            advanceNpcAutonomy(d,this,before,after,id,{beforeState});
+        }
+        advanceMagicObjects(d,this,after);
         for(const [key,effect] of Object.entries(d.get('state','effects'))) if(effect.expires<=after) d.remove(['state','effects',key]);
         const p=d.get('state','player');
         if(p.status==='濒死' && after-p.dyingSince>=this.rules.death.dyingMinutes) this.death(d);
@@ -250,6 +293,7 @@ export class WorldEngine {
         const destination=this.resolve(args.destination),old=d.get('state','location');
         if(old===destination)return {destination,elapsed:0};
         const route=this.route(old,destination,args.mode??'walk',d.get('state','minute'),d.document.randomSeed);
+        assertNpcObligationAction(d,this,['player',...d.get('state','player','companions')??[]],{minutes:route.minutes,location:destination,kind:'move'});
         if(this.rules.petCare)preparePetTravel(d,this,args.mode??'walk',route.movingMinutes);
         if(d.get('state','player','coins')<route.cost)throw new Error('路费不足');
         d.set(['state','player','coins'],d.get('state','player','coins')-route.cost);
@@ -364,6 +408,7 @@ export class WorldEngine {
     }
     attributes(d,args,id){return allocateAttributes.call(this,d,args,id);}
     relation(d,args,id) {
+        const recorded=applyNpcRelation(d,this,args,id);if(recorded)return recorded;
         const npc=this.resolve(args.npc,'npc'),base=this.byId.get(npc),row=d.get('state','npcs',npc);
         if(args.notes!==undefined)throw new Error('基础人设只读，变化应追加发展记录');
         const allowed=['信守约定','违约','帮助','欺骗','威胁','冲突','交谈'];if(!allowed.includes(args.eventType))throw new Error('关系变化需引用已知事件类型');
@@ -376,6 +421,7 @@ export class WorldEngine {
         return {npc,trustDelta:trust};
     }
     promise(d,args,id) {
+        const reserved=createNpcObligation(d,this,args,id);if(reserved)return reserved;
         const promisor=this.resolve(args.promisor),promisee=this.resolve(args.promisee??'player'),type=args.type;
         if(!['带路','送货','付款','等候','会面','协助'].includes(type))throw new Error('义务类别不支持');
         if(promisor!=='player'&&!d.get('state','npcs',promisor))throw new Error('承诺者不在战役中');
@@ -405,6 +451,11 @@ export class WorldEngine {
     deliver(d,key,o,id){
         const source=this.actor(d,o.promisor),target=this.actor(d,o.promisee);if(!source||!target)throw new Error('义务当事人不存在');
         if([source,target].some(actor=>['死亡','濒死'].includes(actor.status)))throw new Error('义务当事人无法清醒履约');
+        if([o.promisor,o.promisee].some(actor=>this.byId.get(actor)?.tier==='full')){
+            const from=o.promisor==='player'?d.get('state','location'):source.location,to=o.promisee==='player'?d.get('state','location'):target.location;
+            if(!from||!to||from!==to)throw new Error('双方尚未在同一地点交付，不能隔空转移钱物');
+            if([source,target].some(actor=>['昏迷','患病'].includes(actor.status)||/(睡眠|熟睡|睡觉)/.test(actor.activity??'')))throw new Error('义务当事人尚不能清醒交付');
+        }
         if(o.type==='送货'){if(this.quantity(d,o.promisor,o.item)<o.quantity)throw new Error('承诺者缺少货物');transferItems(d,this,o.promisor,o.promisee,o.item,o.quantity);}
         if(o.type==='付款'){if(source.coins<o.coins)throw new Error('承诺者资金不足');d.set([...this.actorPath(o.promisor),'coins'],source.coins-o.coins);d.set([...this.actorPath(o.promisee),'coins'],target.coins+o.coins);}
         d.set(['state','obligations',key,'status'],'已完成');d.say(`${o.content}已履行`);
