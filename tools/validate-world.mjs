@@ -7,11 +7,13 @@ import {validateAgricultureRules}from'../server-plugin/agriculture.mjs';
 import {validateWildlife}from'../server-plugin/wildlife.mjs';
 import {validateFarmPests}from'../server-plugin/farm-pests.mjs';
 import {validateBossEcology}from'../server-plugin/bosses.mjs';
+import {catalogMinimum,professionMinimum}from'./catalog-progress.mjs';
 const schema=JSON.parse(await fs.readFile(new URL('../schemas/world.schema.json',import.meta.url),'utf8'));
 const blocklist=JSON.parse(await fs.readFile(new URL('../world/meta/blocklist.json',import.meta.url),'utf8'));
 const validate=new Ajv({allErrors:true,strict:true,allowUnionTypes:true}).compile(schema);
 const categories=['npcs','locations','items','professions','skills','spells','recipes','monsters','bosses'];
 export function validateWorld(world,{stage='engine'}={}){
+    if(!['engine','release','rules','final'].includes(stage))throw new Error(`未知构建阶段：${stage}`);
     const errors=[],warnings=[];
     if(!validate(world))for(const row of validate.errors)errors.push(`schema${row.instancePath}: ${row.message}`);
     if(errors.length)return {ok:false,errors,warnings};
@@ -178,10 +180,9 @@ export function validateWorld(world,{stage='engine'}={}){
         if(row.tools.includes(row.item)||row.materials.some(material=>material.item===row.item||row.tools.includes(material.item)))errors.push(`维修对象、工具或耗材重叠：${row.id}`);
         if((ids.get(row.item)?.durability??0)<=row.maxLoss)errors.push(`维修损耗不留可恢复空间：${row.id}`);
     }
-    if(stage!=='engine'){
-        const minimum={spells:150,items:400,recipes:200,monsters:150,bosses:40};
-        for(const [key,count]of Object.entries(minimum))if((world[key]?.length??0)<count)errors.push(`目录数量不足：${key} ${world[key]?.length??0}<${count}`);
-        for(const [kind,count]of [['combat',12],['life',22],['hidden',30]])if(world.professions.filter(row=>row.kind===kind).length<count)errors.push(`职业数量不足：${kind}`);
+    if(stage==='rules'||stage==='final'){
+        for(const [key,count]of Object.entries(catalogMinimum))if((world[key]?.length??0)<count)errors.push(`目录数量不足：${key} ${world[key]?.length??0}<${count}`);
+        for(const [kind,count]of Object.entries(professionMinimum))if(world.professions.filter(row=>row.kind===kind).length<count)errors.push(`职业数量不足：${kind}`);
         for(const row of world.professions.filter(row=>row.kind==='combat'))if((row.skillTree??[]).length<15)errors.push(`技能树不足15项：${row.id}`);
     }
     try{new EntityResolver(entities);}catch(error){errors.push(error.message);}

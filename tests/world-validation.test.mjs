@@ -3,6 +3,10 @@ import assert from 'node:assert/strict';
 import {loadWorld}from'../tools/load-world.mjs';
 import {validateWorld}from'../tools/validate-world.mjs';
 import {buildWorld}from'../tools/build-world.mjs';
+import fs from 'node:fs/promises';
+import os from 'node:os';
+import path from 'node:path';
+import {catalogProgress}from'../tools/catalog-progress.mjs';
 test('世界校验：兼容种子通过基础结构，全规则数量不足不能标为完成',async()=>{
     const world=await loadWorld();assert.equal(validateWorld(world).ok,true);
     const rules=validateWorld(world,{stage:'rules'});assert.equal(rules.ok,false);assert.ok(rules.errors.some(error=>error.includes('数量不足')));
@@ -32,4 +36,29 @@ test('世界校验拒绝未接入法术与越界防护，不能用文字和数�
     delete spell.mechanism;
     assert.equal(validateWorld(world).ok,true,'旧兼容数据在引擎开发模式仍可读取');
     assert.ok(validateWorld(world,{stage:'rules'}).errors.some(error=>error.includes('法术处理器不完整')));
+});
+
+test('发布构建只放开数量门槛，仍拒绝坏引用、年龄冲突、屏蔽名称和未实现法术',async t=>{
+    const world=await loadWorld(),destination=await fs.mkdtemp(path.join(os.tmpdir(),'infinite-fields-build-'));
+    t.after(()=>fs.rm(destination,{recursive:true,force:true}));
+    assert.equal((await buildWorld({source:world,stage:'release',destination})).ok,true);
+    assert.equal(JSON.parse(await fs.readFile(path.join(destination,'manifest.json'),'utf8')).stage,'release');
+    const final=validateWorld(world,{stage:'final'});
+    assert.equal(final.ok,false);
+    assert.ok(final.errors.every(error=>error.includes('数量不足')),final.errors.join('\n'));
+    assert.deepEqual(final.errors,validateWorld(world,{stage:'rules'}).errors);
+    const mutations=[
+        value=>{value.spells[0].materials=[{item:'item_missing',amount:1}];},
+        value=>{value.npcs[0].age=16;value.npcs[0].flags.romanceable=true;},
+        value=>{value.items[0].name='阿斯兰木剑';},
+        value=>{delete value.spells[0].effectSpec;delete value.spells[0].mechanism;},
+    ];
+    for(const mutate of mutations){
+        const broken=structuredClone(world);mutate(broken);
+        await assert.rejects(buildWorld({source:broken,stage:'release',destination}),/构建拒绝/);
+    }
+    assert.throws(()=>validateWorld(world,{stage:'relase'}),/未知构建阶段/);
+    const progress=catalogProgress(world);
+    assert.equal(progress.catalogs.find(row=>row.catalog==='spells').current,world.spells.length);
+    assert.equal(progress.catalogs.find(row=>row.catalog==='spells').target,150);
 });

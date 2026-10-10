@@ -1,8 +1,0 @@
-file:///C:/Users/RobertC/Documents/dnd/tools/prepare-magic-catalog.mjs:11
-    if(metadata.blueprintHash!==digest(bones.slice(school*14,school*14+14))||metadata.loreHash!==digest(rows))throw new Error(`草稿${school}与机制版本不符，须重新起草`);
-                                                                                                                    ^
-
-Error: 草稿0与机制版本不符，须重新起草
-    at file:///C:/Users/RobertC/Documents/dnd/tools/prepare-magic-catalog.mjs:11:117
-
-Node.js v24.13.1

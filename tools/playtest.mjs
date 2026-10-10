@@ -1,6 +1,6 @@
 import fs from 'node:fs';
 import assert from 'node:assert/strict';
-import {chromium} from './node_modules/playwright-core/index.mjs';
+import {chromium} from 'playwright-core';
 const entry=JSON.parse(fs.readFileSync(new URL('../跑团资料/战役入口.json',import.meta.url)));
 const browser=await chromium.launch({executablePath:'C:/Program Files/Google/Chrome/Application/chrome.exe',headless:true});
 const context=await browser.newContext({locale:'zh-CN'});

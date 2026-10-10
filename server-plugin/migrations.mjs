@@ -1,6 +1,6 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
-import { createCampaign, restoreToAnchors, commit, addMemory, roll } from '../tests/fixtures/legacy/core.js';
+import { createCampaign, restoreToAnchors, commit, addMemory, roll } from './legacy/core.js';
 import { digest, atomicJSON } from './storage.mjs';
 
 export function legacyDocument(campaign) {

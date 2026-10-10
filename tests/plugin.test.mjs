@@ -4,7 +4,7 @@ import fs from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
 import {once}from'node:events';
-import express from '../SillyTavern/node_modules/express/index.js';
+import express from 'express';
 import {init}from'../server-plugin/index.mjs';
 import {loadWorld}from'../tools/load-world.mjs';
 test('服务器 API：创建、执行、幂等、拒绝瞬移、检索与路径边界',async t=>{

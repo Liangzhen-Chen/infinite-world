@@ -1,22 +1,25 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import {fileURLToPath}from'node:url';
-import YAML from '../SillyTavern/node_modules/yaml/dist/index.js';
+import YAML from 'yaml';
 import {backup,root}from'./backup.mjs';
 import {digest}from'../server-plugin/storage.mjs';
 
 const extensionPath='public/scripts/extensions/third-party/infinite-fields';
 export async function prepareDeployment(destination=path.join(root,'dist','engine-deployment')){
     destination=path.resolve(destination);
-    const sources=['tools/load-world.mjs','tests/fixtures/legacy/core.js','tests/fixtures/legacy/seed.json'];
+    const sources=['tools/load-world.mjs'];
     async function copyDirectory(relative){
         for(const name of await fs.readdir(path.join(root,relative))){
+            if(relative==='world'&&name==='drafts')continue;
             const file=path.join(relative,name),stat=await fs.lstat(path.join(root,file));
             if(stat.isSymbolicLink())throw new Error('部署拒绝符号链接');
             if(stat.isDirectory())await copyDirectory(file);else sources.push(file);
         }
     }
     await copyDirectory('server-plugin');await copyDirectory('world');
+    // The plugin must resolve its runtime dependency without the development checkout.
+    await copyDirectory('node_modules/opencc-js');
     const files=[];
     for(const source of sources){
         const bytes=await fs.readFile(path.join(root,source)),target=path.join(destination,'plugin',source);

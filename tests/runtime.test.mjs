@@ -4,8 +4,8 @@ import fs from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
 import {once}from'node:events';
-import express from '../SillyTavern/node_modules/express/index.js';
-import {chromium}from'../tools/node_modules/playwright-core/index.mjs';
+import express from 'express';
+import {chromium}from'playwright-core';
 import {init}from'../server-plugin/index.mjs';
 test('E2/E19 浏览器：失败对账阻止出站生成，编辑与删除同步服务器，元数据只留引用',{timeout:60000},async t=>{
     const directory=await fs.mkdtemp(path.join(os.tmpdir(),'infinite-fields-browser-'));

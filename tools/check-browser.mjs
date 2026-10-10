@@ -1,4 +1,8 @@
-import { chromium } from './node_modules/playwright-core/index.mjs';
+import { chromium } from 'playwright-core';
+import fs from 'node:fs/promises';
+import path from 'node:path';
+const logsDirectory=path.resolve(import.meta.dirname,'../logs');
+await fs.mkdir(logsDirectory,{recursive:true});
 const browser=await chromium.launch({executablePath:'C:/Program Files/Google/Chrome/Application/chrome.exe',headless:true});
 const context=await browser.newContext({locale:'zh-CN'});
 const page=await context.newPage();
@@ -15,6 +19,6 @@ const result=await page.evaluate(async()=>{
 });
 await page.locator('#fields-toolbar button').click();
 await page.locator('#fields-dialog').waitFor({state:'visible'});
-await page.screenshot({path:'C:/Users/RobertC/Documents/dnd/logs/账本检查.png',fullPage:false});
+await page.screenshot({path:path.join(logsDirectory,'账本检查.png'),fullPage:false});
 console.log(JSON.stringify({result,errors}));
 await browser.close();

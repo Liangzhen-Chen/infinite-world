@@ -12,5 +12,7 @@ export async function buildWorld({stage='rules',source=null,destination='dist/wo
     return {hash,...validation};
 }
 if(process.argv[1]&&path.resolve(process.argv[1])===path.resolve(import.meta.filename)){
-    const stage=process.argv.includes('--engine')?'engine':'rules';console.log(JSON.stringify(await buildWorld({stage})));
+    const flags=process.argv.slice(2),allowed=['--engine','--release','--final'];
+    if(flags.length>1||flags.some(flag=>!allowed.includes(flag)))throw new Error('用法：build-world.mjs [--engine|--release|--final]');
+    const stage=flags[0]?.slice(2)??'rules';console.log(JSON.stringify(await buildWorld({stage})));
 }

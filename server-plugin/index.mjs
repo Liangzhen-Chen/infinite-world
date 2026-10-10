@@ -15,7 +15,7 @@ export const info={id:'infinite-fields',name:'无限原野本地战役存储',de
 export async function init(router,{ world=null, baseRoot=null }={}){
     world ??= await loadWorld();
     const engine=new WorldEngine(world),stores=new Map(),indexes=new Map(),registries=new Map();
-    const seed=JSON.parse(await fs.readFile(new URL('../tests/fixtures/legacy/seed.json',import.meta.url),'utf8'));
+    const seed=JSON.parse(await fs.readFile(new URL('./legacy/seed.json',import.meta.url),'utf8'));
     const getStore=req=>{
         const root=baseRoot??req.user?.directories?.root;if(!root)throw new Error('没有当前用户的存档目录');
         if(!stores.has(root)){

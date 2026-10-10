@@ -2,7 +2,7 @@ import fs from 'node:fs/promises';
 import http from 'node:http';
 import { once } from 'node:events';
 import { createHash } from 'node:crypto';
-import { chromium } from './node_modules/playwright-core/index.mjs';
+import { chromium } from 'playwright-core';
 import { setConfigFilePath } from '../SillyTavern/src/util.js';
 setConfigFilePath(new URL('../SillyTavern/config.yaml', import.meta.url).pathname.replace(/^\/([A-Z]:)/, '$1'));
 const converters = await import('../SillyTavern/src/prompt-converters.js');

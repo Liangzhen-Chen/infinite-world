@@ -3,11 +3,17 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import os from 'node:os';
-import YAML from '../SillyTavern/node_modules/yaml/dist/index.js';
+import {pathToFileURL}from'node:url';
+import YAML from 'yaml';
 import {prepareDeployment,activateDeployment}from'../tools/deploy-engine.mjs';
 test('部署：冻结包校验在写入前执行，先备份，聊天和旧扩展保留',async t=>{
     const root=await fs.mkdtemp(path.join(os.tmpdir(),'infinite-fields-deploy-'));t.after(()=>fs.rm(root,{recursive:true,force:true}));
     const bundle=await prepareDeployment(path.join(root,'bundle')),installation=path.join(root,'install');
+    assert.equal(bundle.files.some(file=>file.path.includes('tests/fixtures')),false);
+    assert.equal(bundle.files.some(file=>file.path.includes('world/drafts/')),false);
+    for(const name of ['core.js','seed.json'])assert.ok(bundle.files.some(file=>file.path===`plugin/server-plugin/legacy/${name}`));
+    const packaged=await import(pathToFileURL(path.join(bundle.destination,'plugin/index.mjs')).href);
+    await packaged.init({post(){},get(){}},{baseRoot:path.join(root,'campaigns')});
     await fs.mkdir(installation);await fs.writeFile(path.join(installation,'config.yaml'),'enableServerPlugins: false\nenableServerPluginsAutoUpdate: true\n');
     const extension=path.join(installation,'public/scripts/extensions/third-party/infinite-fields');await fs.mkdir(extension,{recursive:true});
     await fs.writeFile(path.join(extension,'index.js'),'legacy protected');

@@ -55,7 +55,7 @@ test('候选目录的书本学习和铁件制造确实执行，缺锤不扣料�
 test('旧草稿的新事实校验会失败，人工评分不足或哈希改变也拒绝，不重写原输出',async()=>{
  const world=await loadWorld(),bones=economyFoundation(world);
  // Old text is kept as evidence; added checks must reject its actual defects.
- const lore=JSON.parse(await fs.readFile(new URL('../world/drafts/economy/1791602690630/lore.json',import.meta.url),'utf8'));
+ const lore=JSON.parse(await fs.readFile(new URL('./fixtures/content/rejected-economy-lore.json',import.meta.url),'utf8'));
  assert.equal(auditEconomyLore(lore,bones).ok,false);
  const source={runId:'fixture',sourceWorldHash:contentHash(world),boneHash:contentHash(bones),reviewSeeds:[20261210,20261211],bones};
  assert.throws(()=>checkEconomyPublication(world,source,lore,[]),/人工验收|自动审查/);

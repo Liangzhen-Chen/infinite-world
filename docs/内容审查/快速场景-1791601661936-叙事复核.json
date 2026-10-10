@@ -1,7 +1,0 @@
-{
- "report":"docs/测试报告/快速场景-1791601661936.json",
- "scope":"人工精读新增场景回复；30/30只证明现有自动断言",
- "approved":false,
- "issues":[{"scenario":"WorkshopCraft","attempt":1,"excerpt":"回收到的只有些刨花碎屑，做不成楔子。","finding":"回收率0且实际salvage为空，仍声称回收刨花；自动检查漏掉“回收到”表达。"}],
- "action":"补确定的中文factSummary及零回收边界，加入回收到及否定语句的回归。此前报告保留，不宣布叙事全部通过。"
-}
