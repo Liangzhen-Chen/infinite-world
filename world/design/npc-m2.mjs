@@ -53,11 +53,17 @@ function daily(npc,p,{winter=false,rest=false,market=false}={}){
  const place=market&&trade.length&&npc.id!==id('yanzhe')?'loc_hw':work;
  return[slot(0,open,p.home,'睡眠'),slot(open,open+60,place,market?'前往集市、准备摆货':'前往工作地点、整理用具'),slot(open+60,720,place,market?'交换现有货物':p.work,services),slot(720,780,place,'午饭'),slot(780,finish,place,market?'核对集市货单':p.work,services),slot(finish,1200,p.home,p.rest),slot(1200,1440,p.home,'睡眠')];
 }
+export const npcAgeCorrections=[
+ {id:id('chenbai'),field:'age',old:30,new:62,basis:'正式原档notes明确写“六十二岁”，优先于bootstrap-world.mjs第18行的通用30岁默认值。'},
+ {id:id('duanyan'),field:'age',old:30,new:42,basis:'tools/bootstrap-world.mjs:18 对林穗和段禾之外的人统一赋30；tools/world-content.mjs:61 写有女儿段禾，段禾原说明明确16岁。42是本次设计值，父女差26岁，满足指南10.6至少15岁；不补写婚育经历。'},
+ {id:id('zhengshuisheng'),field:'age',old:30,new:46,basis:'tools/bootstrap-world.mjs:18 的30为通用默认；tools/world-content.mjs:65 明确两名成年孩子。46是本次设计值，允许成年子女且满足至少15岁亲子差，不新增孩子身份或精确年龄。'},
+ {id:id('gucen'),field:'age',old:30,new:43,basis:'tools/bootstrap-world.mjs:18 的30为通用默认；tools/world-content.mjs:68 明确十九年前参军。43是本次设计值，对应当时24岁，不杜撰儿童从军经历，也不改变参军距今十九年的原事实。'}
+];
 export function npcM2Foundation(world){
- const corrections=[{id:id('chenbai'),field:'age',old:30,new:62,basis:'正式原档notes明确写“六十二岁”，age=30与同条文字冲突；按该明确人物事实纠正，不改变其他人的原年龄。'}];
+ const corrections=structuredClone(npcAgeCorrections);
  const npcs=world.npcs.map((original,index)=>{
   const key=original.id.replace('npc_hw_',''),p=people[key];if(!p)throw new Error(`未授权扩充人物 ${original.id}`);
-  const n=structuredClone(original),age=p.age??n.age,restDays=key==='yanzhe'?[10,20,30]:[10,20,30];
+  const n=structuredClone(original),age=corrections.find(x=>x.id===n.id)?.new??p.age??n.age,restDays=key==='yanzhe'?[10,20,30]:[10,20,30];
   const professions=world.professions.filter(x=>p.skill!==null&&x.id===`profession_life_${p.skill}`).map(x=>x.id);
   const skills=p.skill===null?{}:{[`skill_life_${p.skill}_core`]:key==='ayan'?120:180+index*10};
   if(key==='xuling')skills.skill_light=300;if(key==='luqing')skills.skill_literacy=450;
@@ -82,7 +88,7 @@ export function npcM2Foundation(world){
    behaviorRules:{bargaining:p.bargain,honesty:p.honesty,risk:p.risk,threatResponse:'先保护自己与近旁的人，事后按亲见事实寻求调解',bribeResponse:p.bribe},
    serviceCatalog,hooks:[],flags:{...n.flags,minor:age<18,romanceable:age<18?false:n.flags.romanceable},ttsVoice:p.voice,
    portraitPrompt:`原创中世纪河谷居民${n.name}，${age}岁，${p.look.join('，')}，${n.occupation}，日常工作环境`,
-   authoredBasis:{existingNotes:n.notes,newFacts:'住处锚点、日程、具体外貌与关系细节为M2手工设计；不生成产权、债务或额外库存。'}};
+   authoredBasis:{existingNotes:n.notes,newFacts:'住处锚点、日程、具体外貌与关系细节为M2手工设计；不生成产权、债务或额外库存。',...(['duanyan','zhengshuisheng','gucen'].includes(key)?{ageCorrection:corrections.find(x=>x.id===n.id)}:{})}};
  });
  return{kind:'existing-npc-m2',npcs,corrections,scope:'既有18名人物的完整档候选，不是新增名册，也不扩大现有服务白名单。'};
 }

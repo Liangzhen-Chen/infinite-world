@@ -1,16 +1,27 @@
 import fs from 'node:fs/promises';
 import assert from 'node:assert/strict';
+import {npcAgeCorrections} from '../world/design/npc-m2.mjs';
 const blocklist=JSON.parse(await fs.readFile(new URL('../world/meta/blocklist.json',import.meta.url),'utf8'));
 export const revision='m2-people-1';
 const hanDigits={零:0,一:1,二:2,两:2,三:3,四:4,五:5,六:6,七:7,八:8,九:9};
 function numeric(text){if(/^\d+$/.test(text))return Number(text);let sum=0,digit=0;for(const c of text){if(c in hanDigits)digit=hanDigits[c];else if({十:10,百:100,千:1000}[c]){sum+=(digit||1)*{十:10,百:100,千:1000}[c];digit=0;}else return NaN;}return sum+digit;}
+export function validateAgeConsistency(npcs){
+ const byId=id=>npcs.find(n=>n.id===`npc_hw_${id}`);
+ assert.ok(byId('duanyan').age-byId('duanhe').age>=15,'段岩须比女儿段禾至少大15岁');
+ assert.ok(byId('zhengshuisheng').age>=18+15,'郑水生已有成年子女，年龄须容纳成年下限及至少15岁亲子差');
+ assert.ok(byId('gucen').age-19>=18,'顾岑十九年前参军须与本次采用的成年参军设计相容；不增设全球征兵规则');
+ for(const n of npcs){
+  for(const m of n.notes.matchAll(/([零一二两三四五六七八九十百\d]+)年前/g))assert.ok(n.age>=numeric(m[1]),`${n.id}亲历年份不能早于出生`);
+  assert.equal(n.birth.year,-n.age,`${n.id}出生年份与元年年初年龄不符`);
+ }
+}
 export function validateFoundation(bones,world){
  const locations=new Set(world.locations.map(x=>x.id)),ids=new Set(world.npcs.map(x=>x.id));
  assert.equal(bones.npcs.length,18);
  for(const n of bones.npcs){
   const original=world.npcs.find(x=>x.id===n.id);assert.ok(original,n.id);
   for(const key of ['name','aliases','coins','inventory','services','skills','intelligence'])assert.deepEqual(n[key],original[key],`${n.id}.${key}`);
-  assert.equal(n.age,n.id==='npc_hw_chenbai'?62:original.age);
+  assert.equal(n.age,npcAgeCorrections.find(x=>x.id===n.id)?.new??original.age);
   assert.ok(n.appearance.length>=3&&n.appearance.length<=5);assert.ok(n.personality.flaws.length);
   assert.ok(locations.has(n.home.location));assert.ok(locations.has(n.workplace.location));
   assert.ok(n.relationships.length>=3);assert.equal(new Set(n.relationships.map(x=>x.with)).size,n.relationships.length);
@@ -31,6 +42,7 @@ export function validateFoundation(bones,world){
   }}
   if(n.age<18){assert.equal(n.flags.minor,true);assert.equal(n.flags.romanceable,false);assert.ok(!n.relationships.some(x=>/恋|情人|配偶/.test(x.type)));}
  }
+ validateAgeConsistency(bones.npcs);
  return {people:bones.npcs.length,schedules:bones.npcs.length*6};
 }
 export function contextFor(entry){return {facts:['手工骨架是事实来源，原notes与age冲突时只陈柏采用明确六十二岁。','目标是尚未完成的愿望；秘密不能在样例台词直接泄漏。','services为实际教学白名单；serviceCatalog不增加服务。库存和现金不能由描述增减。','每月5/15/25为集市日，restDays为另一日程标签。location为时段目标地点，真实路程抵达前不可提供服务。','十八人规模未触发具名人数不少于二十的分布比例检查。'],names:entry.relationships.map(x=>x.with),proseScope:'只起草外部可观察的人物短描写和日常台词，不复述私有秘密、未发生目标、无来源世界事实。'};}

@@ -1,6 +1,6 @@
 {
   "id": "npc_hw_gucen",
-  "fingerprint": "963e7fb0079de35f6792f52c6e78cb9c7701d9546e5dbe3d82c6c95b84016acc",
+  "fingerprint": "c5fb3f68151c8043b17f966747e62b7be07904feb0f5427103fecf644761d9e8",
   "status": "passed",
   "attempts": 1,
   "draft": {
@@ -23,5 +23,17 @@
     "status": "passed",
     "priorDraftHash": "8eb0be37f4f109f57812a2ff0485996cb18be34bda836331a6cc08ee8dac29a1",
     "note": "补齐手工目标资源前提后逐条复核原有正文，未重新起草。"
+  },
+  "ageReview": {
+    "correction": {
+      "id": "npc_hw_gucen",
+      "field": "age",
+      "old": 30,
+      "new": 43,
+      "basis": "tools/bootstrap-world.mjs:18 的30为通用默认；tools/world-content.mjs:68 明确十九年前参军。43是本次设计值，对应当时24岁，不杜撰儿童从军经历，也不改变参军距今十九年的原事实。"
+    },
+    "priorDraftHash": "8eb0be37f4f109f57812a2ff0485996cb18be34bda836331a6cc08ee8dac29a1",
+    "proseChanged": false,
+    "reviewed": true
   }
 }

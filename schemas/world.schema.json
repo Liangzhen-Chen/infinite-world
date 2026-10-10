@@ -3085,6 +3085,12 @@
             "default"
           ],
           "additionalProperties": false
+        },
+        "tier": {
+          "enum": [
+            "full",
+            "roster"
+          ]
         }
       },
       "required": [
@@ -3097,7 +3103,24 @@
         "flags",
         "notes"
       ],
-      "additionalProperties": true
+      "additionalProperties": true,
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "tier": {
+                "const": "full"
+              }
+            },
+            "required": [
+              "tier"
+            ]
+          },
+          "then": {
+            "$ref": "#/$defs/npcProfile"
+          }
+        }
+      ]
     },
     "location": {
       "type": "object",
@@ -5259,6 +5282,1014 @@
         ],
         "additionalProperties": false
       }
+    },
+    "npcScheduleFull": {
+      "type": "object",
+      "properties": {
+        "default": {
+          "$ref": "#/$defs/npcScheduleDay"
+        },
+        "market": {
+          "$ref": "#/$defs/npcScheduleDay"
+        },
+        "rest": {
+          "$ref": "#/$defs/npcScheduleDay"
+        },
+        "restDays": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 30
+          }
+        },
+        "seasonal": {
+          "type": "object",
+          "properties": {
+            "0": {
+              "type": "object",
+              "properties": {
+                "default": {
+                  "$ref": "#/$defs/npcScheduleDay"
+                },
+                "market": {
+                  "$ref": "#/$defs/npcScheduleDay"
+                },
+                "rest": {
+                  "$ref": "#/$defs/npcScheduleDay"
+                }
+              },
+              "additionalProperties": false
+            },
+            "1": {
+              "type": "object",
+              "properties": {
+                "default": {
+                  "$ref": "#/$defs/npcScheduleDay"
+                },
+                "market": {
+                  "$ref": "#/$defs/npcScheduleDay"
+                },
+                "rest": {
+                  "$ref": "#/$defs/npcScheduleDay"
+                }
+              },
+              "additionalProperties": false
+            },
+            "2": {
+              "type": "object",
+              "properties": {
+                "default": {
+                  "$ref": "#/$defs/npcScheduleDay"
+                },
+                "market": {
+                  "$ref": "#/$defs/npcScheduleDay"
+                },
+                "rest": {
+                  "$ref": "#/$defs/npcScheduleDay"
+                }
+              },
+              "additionalProperties": false
+            },
+            "3": {
+              "type": "object",
+              "properties": {
+                "default": {
+                  "$ref": "#/$defs/npcScheduleDay"
+                },
+                "market": {
+                  "$ref": "#/$defs/npcScheduleDay"
+                },
+                "rest": {
+                  "$ref": "#/$defs/npcScheduleDay"
+                }
+              },
+              "additionalProperties": false
+            }
+          },
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "default",
+        "market",
+        "rest",
+        "restDays",
+        "seasonal"
+      ],
+      "additionalProperties": false
+    },
+    "npcProfile": {
+      "type": "object",
+      "properties": {
+        "tier": {
+          "const": "full"
+        },
+        "aliases": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "minItems": 0
+        },
+        "occupation": {
+          "type": "string",
+          "minLength": 1
+        },
+        "intelligence": {
+          "type": "object",
+          "properties": {
+            "level": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 5
+            },
+            "growth": {
+              "type": "integer",
+              "minimum": 0
+            }
+          },
+          "required": [
+            "level",
+            "growth"
+          ],
+          "additionalProperties": true
+        },
+        "sex": {
+          "type": "string",
+          "minLength": 1
+        },
+        "birth": {
+          "type": "object",
+          "properties": {
+            "year": {
+              "type": "integer"
+            },
+            "month": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 12
+            },
+            "day": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 30
+            }
+          },
+          "required": [
+            "year",
+            "month",
+            "day"
+          ],
+          "additionalProperties": true
+        },
+        "culture": {
+          "type": "string",
+          "minLength": 1
+        },
+        "household": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "minItems": 0,
+          "uniqueItems": true
+        },
+        "familyNotes": {
+          "type": "string",
+          "minLength": 1
+        },
+        "appearance": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "minItems": 3,
+          "maxItems": 5
+        },
+        "voice": {
+          "type": "object",
+          "properties": {
+            "register": {
+              "type": "string",
+              "minLength": 1
+            },
+            "accent": {
+              "type": "string",
+              "minLength": 1
+            },
+            "habits": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "minLength": 1
+              },
+              "minItems": 1
+            },
+            "samples": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "minLength": 1
+              },
+              "minItems": 3
+            }
+          },
+          "required": [
+            "register",
+            "accent",
+            "habits",
+            "samples"
+          ],
+          "additionalProperties": true
+        },
+        "personality": {
+          "type": "object",
+          "properties": {
+            "traits": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "minLength": 1
+              },
+              "minItems": 2
+            },
+            "values": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "minLength": 1
+              },
+              "minItems": 1
+            },
+            "flaws": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "minLength": 1
+              },
+              "minItems": 1
+            }
+          },
+          "required": [
+            "traits",
+            "values",
+            "flaws"
+          ],
+          "additionalProperties": true
+        },
+        "proficiencies": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 2699
+          }
+        },
+        "professions": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "minItems": 0,
+          "uniqueItems": true
+        },
+        "level": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "combat": {
+          "type": [
+            "object",
+            "null"
+          ]
+        },
+        "wealth": {
+          "type": "object",
+          "properties": {
+            "cashRange": {
+              "type": "array",
+              "items": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "minItems": 2,
+              "maxItems": 2
+            },
+            "property": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "minLength": 1
+              },
+              "minItems": 0
+            },
+            "valuables": {
+              "type": "array",
+              "items": {},
+              "minItems": 0
+            },
+            "debts": {
+              "type": "array",
+              "items": {},
+              "minItems": 0
+            }
+          },
+          "required": [
+            "cashRange",
+            "property",
+            "valuables",
+            "debts"
+          ],
+          "additionalProperties": true
+        },
+        "home": {
+          "type": "object",
+          "properties": {
+            "location": {
+              "type": "string",
+              "minLength": 1
+            },
+            "access": {
+              "type": "string",
+              "minLength": 1
+            },
+            "ownership": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "required": [
+            "location",
+            "access",
+            "ownership"
+          ],
+          "additionalProperties": true
+        },
+        "workplace": {
+          "type": "object",
+          "properties": {
+            "location": {
+              "type": "string",
+              "minLength": 1
+            },
+            "access": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "required": [
+            "location",
+            "access"
+          ],
+          "additionalProperties": true
+        },
+        "schedule": {
+          "$ref": "#/$defs/npcScheduleFull"
+        },
+        "relationships": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "with": {
+                "type": "string",
+                "minLength": 1
+              },
+              "type": {
+                "type": "string",
+                "minLength": 1
+              },
+              "trust": {
+                "type": "number",
+                "minimum": -100,
+                "maximum": 100
+              },
+              "affection": {
+                "type": "number",
+                "minimum": -100,
+                "maximum": 100
+              },
+              "note": {
+                "type": "string",
+                "minLength": 1
+              }
+            },
+            "required": [
+              "with",
+              "type",
+              "trust",
+              "affection",
+              "note"
+            ],
+            "additionalProperties": true
+          },
+          "minItems": 3
+        },
+        "memorySeeds": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "minLength": 1
+              },
+              "event": {
+                "type": "string",
+                "minLength": 1
+              },
+              "salience": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 5
+              },
+              "knownBy": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "minItems": 1
+              },
+              "reliability": {
+                "type": "string",
+                "minLength": 1
+              }
+            },
+            "required": [
+              "id",
+              "event",
+              "salience",
+              "knownBy",
+              "reliability"
+            ],
+            "additionalProperties": true
+          },
+          "minItems": 2
+        },
+        "goals": {
+          "type": "object",
+          "properties": {
+            "short": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "content": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "progress": {
+                    "type": "number",
+                    "minimum": 0,
+                    "maximum": 100
+                  },
+                  "deadlineDay": {
+                    "type": "integer",
+                    "minimum": 0
+                  },
+                  "resources": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "kind": {
+                          "type": "string",
+                          "minLength": 1
+                        },
+                        "description": {
+                          "type": "string",
+                          "minLength": 1
+                        }
+                      },
+                      "required": [
+                        "kind",
+                        "description"
+                      ],
+                      "additionalProperties": true
+                    },
+                    "minItems": 0
+                  },
+                  "steps": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "content": {
+                          "type": "string",
+                          "minLength": 1
+                        },
+                        "status": {
+                          "type": "string",
+                          "minLength": 1
+                        }
+                      },
+                      "required": [
+                        "content",
+                        "status"
+                      ],
+                      "additionalProperties": true
+                    },
+                    "minItems": 1
+                  }
+                },
+                "required": [
+                  "id",
+                  "content",
+                  "progress",
+                  "deadlineDay",
+                  "resources",
+                  "steps"
+                ],
+                "additionalProperties": true
+              },
+              "minItems": 1
+            },
+            "mid": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "content": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "progress": {
+                    "type": "number",
+                    "minimum": 0,
+                    "maximum": 100
+                  },
+                  "deadlineDay": {
+                    "type": "integer",
+                    "minimum": 0
+                  },
+                  "resources": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "kind": {
+                          "type": "string",
+                          "minLength": 1
+                        },
+                        "description": {
+                          "type": "string",
+                          "minLength": 1
+                        }
+                      },
+                      "required": [
+                        "kind",
+                        "description"
+                      ],
+                      "additionalProperties": true
+                    },
+                    "minItems": 0
+                  },
+                  "steps": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "content": {
+                          "type": "string",
+                          "minLength": 1
+                        },
+                        "status": {
+                          "type": "string",
+                          "minLength": 1
+                        }
+                      },
+                      "required": [
+                        "content",
+                        "status"
+                      ],
+                      "additionalProperties": true
+                    },
+                    "minItems": 1
+                  }
+                },
+                "required": [
+                  "id",
+                  "content",
+                  "progress",
+                  "deadlineDay",
+                  "resources",
+                  "steps"
+                ],
+                "additionalProperties": true
+              },
+              "minItems": 1
+            },
+            "long": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "content": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "progress": {
+                    "type": "number",
+                    "minimum": 0,
+                    "maximum": 100
+                  },
+                  "deadlineDay": {
+                    "type": "integer",
+                    "minimum": 0
+                  },
+                  "resources": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "kind": {
+                          "type": "string",
+                          "minLength": 1
+                        },
+                        "description": {
+                          "type": "string",
+                          "minLength": 1
+                        }
+                      },
+                      "required": [
+                        "kind",
+                        "description"
+                      ],
+                      "additionalProperties": true
+                    },
+                    "minItems": 0
+                  },
+                  "steps": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "content": {
+                          "type": "string",
+                          "minLength": 1
+                        },
+                        "status": {
+                          "type": "string",
+                          "minLength": 1
+                        }
+                      },
+                      "required": [
+                        "content",
+                        "status"
+                      ],
+                      "additionalProperties": true
+                    },
+                    "minItems": 1
+                  }
+                },
+                "required": [
+                  "id",
+                  "content",
+                  "progress",
+                  "deadlineDay",
+                  "resources",
+                  "steps"
+                ],
+                "additionalProperties": true
+              },
+              "minItems": 1
+            }
+          },
+          "required": [
+            "short",
+            "mid",
+            "long"
+          ],
+          "additionalProperties": true
+        },
+        "fears": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "minItems": 1
+        },
+        "redLines": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "minItems": 1
+        },
+        "secrets": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "content": {
+                "type": "string",
+                "minLength": 1
+              },
+              "knownBy": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "minItems": 1
+              }
+            },
+            "required": [
+              "content",
+              "knownBy"
+            ],
+            "additionalProperties": true
+          },
+          "minItems": 1
+        },
+        "knowledge": {
+          "type": "object",
+          "properties": {
+            "known": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "fact": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "reliability": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "source": {
+                    "type": "string",
+                    "minLength": 1
+                  }
+                },
+                "required": [
+                  "fact",
+                  "reliability",
+                  "source"
+                ],
+                "additionalProperties": true
+              },
+              "minItems": 1
+            },
+            "unknown": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "minLength": 1
+              },
+              "minItems": 1
+            }
+          },
+          "required": [
+            "known",
+            "unknown"
+          ],
+          "additionalProperties": true
+        },
+        "opinions": {
+          "type": "object",
+          "properties": {
+            "factions": {
+              "type": "string",
+              "minLength": 1
+            },
+            "magic": {
+              "type": "string",
+              "minLength": 1
+            },
+            "adventurers": {
+              "type": "string",
+              "minLength": 1
+            },
+            "neighbors": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "with": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "view": {
+                    "type": "string",
+                    "minLength": 1
+                  }
+                },
+                "required": [
+                  "with",
+                  "view"
+                ],
+                "additionalProperties": true
+              },
+              "minItems": 0
+            }
+          },
+          "required": [
+            "factions",
+            "magic",
+            "adventurers",
+            "neighbors"
+          ],
+          "additionalProperties": true
+        },
+        "towardPlayer": {
+          "type": "object",
+          "properties": {
+            "baseline": {
+              "type": "object",
+              "properties": {
+                "trust": {
+                  "type": "number",
+                  "minimum": -100,
+                  "maximum": 100
+                },
+                "affection": {
+                  "type": "number",
+                  "minimum": -100,
+                  "maximum": 100
+                }
+              },
+              "required": [
+                "trust",
+                "affection"
+              ],
+              "additionalProperties": true
+            },
+            "raises": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "minLength": 1
+              },
+              "minItems": 1
+            },
+            "lowers": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "minLength": 1
+              },
+              "minItems": 1
+            },
+            "attitude": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "required": [
+            "baseline",
+            "raises",
+            "lowers",
+            "attitude"
+          ],
+          "additionalProperties": true
+        },
+        "behaviorRules": {
+          "type": "object",
+          "properties": {
+            "bargaining": {
+              "type": "string",
+              "minLength": 1
+            },
+            "honesty": {
+              "type": "string",
+              "minLength": 1
+            },
+            "risk": {
+              "type": "string",
+              "minLength": 1
+            },
+            "threatResponse": {
+              "type": "string",
+              "minLength": 1
+            },
+            "bribeResponse": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "required": [
+            "bargaining",
+            "honesty",
+            "risk",
+            "threatResponse",
+            "bribeResponse"
+          ],
+          "additionalProperties": true
+        },
+        "serviceCatalog": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "kind": {
+                "enum": [
+                  "trade",
+                  "teach"
+                ]
+              },
+              "what": {
+                "type": "string",
+                "minLength": 1
+              },
+              "price": {
+                "type": "object"
+              },
+              "unlocksService": {
+                "const": false
+              }
+            },
+            "required": [
+              "kind",
+              "what",
+              "price",
+              "unlocksService"
+            ],
+            "additionalProperties": true
+          },
+          "minItems": 0
+        },
+        "hooks": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "minItems": 0
+        },
+        "ttsVoice": {
+          "type": "string",
+          "minLength": 1
+        },
+        "portraitPrompt": {
+          "type": "string",
+          "minLength": 1
+        },
+        "description": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "required": [
+        "tier",
+        "aliases",
+        "occupation",
+        "intelligence",
+        "sex",
+        "birth",
+        "culture",
+        "household",
+        "familyNotes",
+        "appearance",
+        "voice",
+        "personality",
+        "proficiencies",
+        "professions",
+        "level",
+        "combat",
+        "wealth",
+        "home",
+        "workplace",
+        "schedule",
+        "relationships",
+        "memorySeeds",
+        "goals",
+        "fears",
+        "redLines",
+        "secrets",
+        "knowledge",
+        "opinions",
+        "towardPlayer",
+        "behaviorRules",
+        "serviceCatalog",
+        "hooks",
+        "ttsVoice",
+        "portraitPrompt",
+        "description"
+      ],
+      "additionalProperties": true
     }
   }
 }

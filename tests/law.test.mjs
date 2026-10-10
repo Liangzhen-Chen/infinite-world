@@ -19,7 +19,7 @@ async function setup(){
     const world=withLawRules(await loadWorld());
     // These procedure fixtures explicitly place the participants at interviews
     // and hearings. Their routine travel is tested separately below.
-    for(const npc of world.npcs)if([victim,guard,judge,'npc_hw_hezhou'].includes(npc.id))delete npc.schedule;
+    for(const npc of world.npcs)if([victim,guard,judge,'npc_hw_hezhou'].includes(npc.id)){delete npc.schedule;delete npc.tier;}
     const engine=new WorldEngine(world),document=engine.initialFromLegacy(seed,'law-test');
     document.state.location='bld_hw_qingdeng';document.state.npcs[victim].inventory.item_bread=4;
     const run=async(c,tool,args,eventId)=>{const out=await engine.reduce(c,{tool,args,eventId});return{document:applyPatches(c,out.patches),result:out.result};};

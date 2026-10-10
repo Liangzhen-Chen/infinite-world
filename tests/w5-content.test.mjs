@@ -48,5 +48,9 @@ test('旧测试世界没有lore目录时仍能读取，不要求新内容倒灌�
  t.after(()=>fs.rm(temp,{recursive:true,force:true}));
  for(const folder of ['meta','people','geo'])await fs.cp(new URL(`../world/${folder}`,import.meta.url),path.join(temp,folder),{recursive:true});
  const old=await loadWorld(temp);assert.deepEqual(old.cultures,[]);assert.deepEqual(old.deities,[]);
+ // Current full profiles require their cultural references. Historical worlds
+ // predate the full-profile contract, rather than containing broken full rows.
+ assert.ok(validateWorld(old).errors.some(error=>error.includes('culture')));
+ for(const npc of old.npcs)delete npc.tier;
  assert.equal(validateWorld(old).ok,true);
 });

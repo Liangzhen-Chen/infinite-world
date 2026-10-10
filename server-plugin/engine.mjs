@@ -23,6 +23,7 @@ import {advanceBosses}from'./bosses.mjs';
 import {sceneCard}from'./scene-card.mjs';
 import {stateNotices}from'./state-notices.mjs';
 import {assertNpcService,advanceNpcSchedules}from'./npc-schedule.mjs';
+import {recordNpcMemories}from'./npc-memory.mjs';
 import {resolveToolCall}from'../extension/tools.mjs';
 import {chargeTrade,repayDebt,advanceContracts}from'./contracts.mjs';
 import {initializeR1,planR1,planPreR1Partitions}from'./migrations/r1.mjs';
@@ -118,6 +119,7 @@ export class WorldEngine {
         advancePets(d,session,d.get('state','minute'));
         advanceSummons(d,d.get('state','minute'));
         advanceLaw(d,d.get('state','minute'));
+        recordNpcMemories(d,session,document.state,tool,args,detail,id);
         if(tool==='check')detail.actionScope={kind:'judgement',healthChanged:false,inventoryChanged:false,feePaid:0,
             note:'仅结算判断或对抗，并履行已引用的协助；未伤人、毁物或制造。不得从骰点虚构这些变化。'};
         return { patches:d.patches,result:{ok:true,...detail,minute:d.get('state','minute'),messages:d.messages,

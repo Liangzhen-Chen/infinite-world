@@ -25,7 +25,7 @@ export function readStateSection(state,section){
         return[id,{...row,state:publicState,waterSafety:'毒素和病原尚未检验'}];
     }));
     if(key==='npcs')result=Object.fromEntries(Object.entries(result).map(([id,row])=>{
-        const{legalKnowledge,...view}=row;return[id,view];
+        const{legalKnowledge,memoryStream,cognition,goals,relationships,developments,...view}=row;return[id,view];
     }));
     if(JSON.stringify(result).length>8000)return{ok:false,error:'该栏目超过单次读取上限，请通过检索查看具体人物或记录。'};
     return result;

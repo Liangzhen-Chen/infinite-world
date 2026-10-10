@@ -38,6 +38,23 @@ const scenarios=[
         context:'授课是否开放以人物实际作息及工具回执为准。玩家没有同意等待到次日。',
         assert:(c,{initial,reply})=>{assert.equal(c.state.player.coins,initial.state.player.coins);assert.deepEqual(c.state.learning,initial.state.learning);
             assert.ok(c.state.minute>=1380&&c.state.minute<=1400,'拒绝授课不应偷偷等到明天或花一节课时间');assert.match(reply,/休息|睡|明天|授课时间/);}},
+    {id:'NpcOverdueMemory',input:'林穗，我之前欠你的房钱还清了吗？只问这一件事，先不交钱。',
+        setup:async c=>{
+            for(const [tool,args,eventId]of [['world_trade',{seller:'林穗',service:'住宿',payment:'credit',creditMinutes:60},'memory_rent'],['world_time',{minutes:60},'memory_late']]){
+                const out=await engine.reduce(c,{tool,args,eventId});c=applyPatches(c,out.patches);
+            }
+            c.state.location=c.state.npcs.npc_hw_linsui.location;return c;
+        },
+        assert:(c,{initial,reply})=>{assert.equal(c.state.player.coins,initial.state.player.coins);assert.equal(c.state.records.debt_memory_rent.status,'逾期');assert.match(reply,/(六|6)(枚|个)?铜/);assert.match(reply,/逾期|没还|未还|还没|欠|到期/);}},
+    {id:'NpcRecallPurchase',input:'林穗，上次我在你这里买的吃食是什么来着？我有点记不清了，今天先不买。',
+        setup:async c=>{
+            const bought=await engine.reduce(c,{tool:'world_trade',args:{seller:'林穗',item:'面包',quantity:1},eventId:'memory_bread'});c=applyPatches(c,bought.patches);
+            for(let i=0;i<4;i++){
+                const out=await engine.reduce(c,{tool:'world_trade',args:{seller:'林穗',service:'住宿'},eventId:`memory_room_${i}`});c=applyPatches(c,out.patches);
+            }
+            return c;
+        },
+        assert:(c,{initial,reply})=>{assert.equal(c.state.player.coins,initial.state.player.coins);assert.deepEqual(c.state.inventory,initial.state.inventory);assert.match(reply,/面包/);}},
     {id:'GrowthAllocation',input:'把刚升级获得的两个属性点都加到体质上。',
         setup:async c=>{
             for(let i=0;i<2;i++){

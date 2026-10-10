@@ -70,7 +70,7 @@
     },
     {
       "path": "plugin/server-plugin/engine.mjs",
-      "sha256": "d7d38a27f3a7d1d72cf02be5361c8ee81e210cc0024dd33e32962b37b09c5ea5"
+      "sha256": "716aa3621b8ee54b6a62f5df5ff2f865e7946ba23eae8f94bb1295b90fe7ff57"
     },
     {
       "path": "plugin/server-plugin/environment.mjs",
@@ -94,11 +94,11 @@
     },
     {
       "path": "plugin/server-plugin/law.mjs",
-      "sha256": "4464b2607ef7775dc43a6dfa58d08820053094f495a603633506928bab396ccf"
+      "sha256": "e6fe8a0c2210db75306e836ba77783cff5f8677ce7d34a26c972024963676c7f"
     },
     {
       "path": "plugin/server-plugin/learning.mjs",
-      "sha256": "af6064c9c32e8818459d5c27e2642e833b305425c5193a2bb9bcb5676b5e8de1"
+      "sha256": "fd8496a61ffedd0b969b13edc0a9e6adbccae5fd23af55a450f9c40dd00311ec"
     },
     {
       "path": "plugin/server-plugin/legacy/core.js",
@@ -133,12 +133,20 @@
       "sha256": "f7ff5abed426faca58ee7d32aae75f7f89fcb23d409f83f259fface6ca032021"
     },
     {
+      "path": "plugin/server-plugin/npc-memory.mjs",
+      "sha256": "f0d3e1f1ba1cf3169671d051308eb31be1aa2280eaa956b2c91bc88110c64fee"
+    },
+    {
+      "path": "plugin/server-plugin/npc-schedule.mjs",
+      "sha256": "f6bdf46dafdb2f69c787964078b4a579aaa050460d8a574ae3350d9efd699eb1"
+    },
+    {
       "path": "plugin/server-plugin/pets.mjs",
       "sha256": "cadc3ca359267f9972d918099bf404d3ec32b851419b3f85c20c9ea567a4af79"
     },
     {
       "path": "plugin/server-plugin/professions.mjs",
-      "sha256": "5374cef2fb0b0e3f0a2439089c6d046ca54466b3ed692fef41ada1c2dda39b4f"
+      "sha256": "dc19378f582648d2d721dee80f62e2efacb7d77128e0c80e8866730950e93dc6"
     },
     {
       "path": "plugin/server-plugin/progression.mjs",
@@ -162,7 +170,7 @@
     },
     {
       "path": "plugin/server-plugin/scene-card.mjs",
-      "sha256": "c059fac170be74c0d4fff07f6109a4ef056f64292d22caf21ba4e002e9692735"
+      "sha256": "e1664111d11a6be509c27e74088722a97628c87a0eabf542b903224c698a797e"
     },
     {
       "path": "plugin/server-plugin/seasonal-migration.mjs",
@@ -170,7 +178,7 @@
     },
     {
       "path": "plugin/server-plugin/state-notices.mjs",
-      "sha256": "67b990708ec835a4467ee4e18cae5ce03364f67e1db72cca1005af6f00806dee"
+      "sha256": "805d360668099a74ad6df81aa7f707b0493c444b4875fa498745db5aff3bb183"
     },
     {
       "path": "plugin/server-plugin/storage.mjs",
@@ -182,7 +190,7 @@
     },
     {
       "path": "plugin/server-plugin/weather.mjs",
-      "sha256": "9b18b62f28a05153aca5e0eff1bec386e8a5f1aa9ef4527694eab97c9abfd995"
+      "sha256": "254a9a833d30d2577c5d0e225a0baa547158eea96dc374a02b450af48a07820c"
     },
     {
       "path": "plugin/server-plugin/wildlife-migration.mjs",
@@ -225,6 +233,18 @@
       "sha256": "d0c0dda38b3c0e23bb55053b6b2c3c9d72f8d7ad22f35f9b6fb2c5fdb43c0332"
     },
     {
+      "path": "plugin/world/design/economy-w3-journey-craft.mjs",
+      "sha256": "e2511885d04e8ce00534c48a5395974c5d32f6f6750a0544f70727ba1ea28eda"
+    },
+    {
+      "path": "plugin/world/design/economy-w3-journey-supplies.mjs",
+      "sha256": "f537c30413bed291213adfc804a6826f24695e98d94759323ba08552e749af31"
+    },
+    {
+      "path": "plugin/world/design/economy-w3-journey.mjs",
+      "sha256": "f9e21980be59cf45117f833eaf2b837c07dbddbe1d29f9f9b0371063cc73431a"
+    },
+    {
       "path": "plugin/world/design/economy-w3-trades.mjs",
       "sha256": "6bf421e979f1c37627bb94b2f3ed4d0656e752f85db442f28c0186c1d52855f8"
     },
@@ -251,6 +271,10 @@
     {
       "path": "plugin/world/design/life-professions.mjs",
       "sha256": "933b43e1a5b4ea889b81f579515c9d3f0d02074dda9411a7ad6b34dfd636ad5a"
+    },
+    {
+      "path": "plugin/world/design/npc-m2.mjs",
+      "sha256": "b4a75b10748a88e2ccd59be10c3c06b82b6788a697d036c3fc94f54183567084"
     },
     {
       "path": "plugin/world/design/pet-foundation.mjs",
@@ -287,6 +311,14 @@
     {
       "path": "plugin/world/design/w5-factions.mjs",
       "sha256": "d024cbe85e150daf7d0709221ea400e6242979e576ec8357b00ce96f4c651c54"
+    },
+    {
+      "path": "plugin/world/design/w5-festivals-integration.json",
+      "sha256": "24cfbd374a4a337f4a2a3dff29a1cd2ab16a17ab307c99e864923ee745fc0ca9"
+    },
+    {
+      "path": "plugin/world/design/w5-festivals.mjs",
+      "sha256": "b5751ff272e9f9c64111ddab6263f23c66415ce1398aac8f4e3d6b039909ce0f"
     },
     {
       "path": "plugin/world/design/w5-history.mjs",
@@ -346,7 +378,7 @@
     },
     {
       "path": "plugin/world/meta/items.json",
-      "sha256": "d804e478f8928d33613e0b9b93a5d9db6ed35a14e4071b8b5db352569c870d81"
+      "sha256": "e8e9d7bdb4029a6523a3c901ae1eb86c9fbefddbd58e64891629b4378d0d0281"
     },
     {
       "path": "plugin/world/meta/monsters.json",
@@ -358,7 +390,7 @@
     },
     {
       "path": "plugin/world/meta/recipes.json",
-      "sha256": "eb4ab52d66b9c6b1a20c5a0b24323b3a5f587667342e76179ca7e509e7883ed1"
+      "sha256": "665531509688807a90292c41b6d538cae9f17febe568e9927ebb99dfcdfa01a4"
     },
     {
       "path": "plugin/world/meta/rules.json",
@@ -374,7 +406,7 @@
     },
     {
       "path": "plugin/world/people/baseline.json",
-      "sha256": "5d65f84e5fa89abaf999d90f89e20886effbb1b9585d933b83e8e788defdf762"
+      "sha256": "6e660e8a467e9637d1cba74f8cea46935739497c16bf57d9ca8191799516480d"
     },
     {
       "path": "plugin/node_modules/opencc-js/CHANGELOG.md",
@@ -618,7 +650,7 @@
     },
     {
       "path": "extension/state-read.mjs",
-      "sha256": "4308f85ecaadbf07cc8319917f3b904706540131555252537a49acd6be247680"
+      "sha256": "92eead8f42919bd3655c7c3e75e0f9a30351c75e903c583368f6c4af254ea0a2"
     },
     {
       "path": "extension/tools.mjs",

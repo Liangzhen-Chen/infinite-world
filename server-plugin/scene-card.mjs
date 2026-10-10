@@ -4,6 +4,7 @@ import {summonView} from './summons.mjs';
 import {localWeather} from './weather.mjs';
 import {agricultureView} from './agriculture.mjs';
 import {npcAvailability} from './npc-schedule.mjs';
+import {npcContext}from'./npc-memory.mjs';
 
 const text=(value,limit=200)=>typeof value==='string'?value.replace(/\s+/g,' ').slice(0,limit):'';
 const list=value=>Array.isArray(value)?value.map(row=>typeof row==='string'?row:row.content??row.description??'').filter(Boolean).join('；'):text(value);
@@ -13,6 +14,7 @@ export function sceneCard(engine,document,query='',index=null){
     const name=id=>engine.byId.get(id)?.name??s.created?.[id]?.name??id;
     const present=Object.entries(s.npcs).filter(([,npc])=>npc.location===s.location)
         .sort(([a],[b])=>Number(mentioned.has(b))-Number(mentioned.has(a))||a.localeCompare(b));
+    const compactPeople=Math.min(present.length,engine.rules.prompt.npcLimit)>4;
     const weather=localWeather(engine,document),path=[],seen=new Set();let location=place;
     while(location&&!seen.has(location.id)){seen.add(location.id);path.unshift(location.name);location=engine.byId.get(location.parent);}
     const p=s.player,parts=[`【时间】${engine.calendar(s.minute).text}${weather?`｜${weather.name}｜${weather.temperatureC}℃`:''}`,
@@ -28,8 +30,11 @@ export function sceneCard(engine,document,query='',index=null){
     for(const [id,npc] of present.slice(0,engine.rules.prompt.npcLimit)){
         const base=engine.byId.get(id)??npc;
         const available=npcAvailability(engine,s,id);
-        const shared=Object.values(document.memories??{}).filter(m=>m.subject===id).slice(-2).map(m=>`${m.minute??''}分 ${text(m.content,140)}`);
-        parts.push(`${base.name}（${id}）｜${base.occupation??''}，${base.age??''}岁｜此刻：${text(available.activity)}\n  对你：信任${npc.trust??0} 亲近${npc.affection??0}｜你们之间：${shared.join('；')}\n  说话：${text(base.speakingStyle??base.voice?.register??base.voice)}｜挂心：${text(list(npc.goals??base.goals),130)}\n  TA不知道：${text(list(npc.unknownFacts??base.knowledge?.unknown??base.unknownFacts),160)}${base.notes?`\n  人物资料：${text(base.notes,180)}`:''}`);
+        const context=npcContext(engine,document,id,query);
+        const shared=(context?.memories??Object.values(document.memories??{}).filter(m=>m.subject===id).slice(-2)).map(m=>`${engine.calendar(m.minute??0).text} ${m.sourceType??''}：${text(m.content,140)}`);
+        parts.push(`${base.name}（${id}）｜${base.occupation??''}，${base.age??''}岁｜此刻：${text(available.activity)}\n  对你：信任${npc.trust??0} 亲近${npc.affection??0}｜涉及你的经历：${text(shared.join('；'),compactPeople?180:500)||'尚无已核实记录'}\n  说话：${text(base.speakingStyle??base.voice?.register??base.voice)}｜挂心：${text(context?.concern??list(npc.goals??base.goals),130)}\n  TA不知道：${text(list(context?.unknown??npc.unknownFacts??base.knowledge?.unknown??base.unknownFacts),160)}${!context&&base.notes?`\n  人物资料：${text(base.notes,180)}`:''}`);
+        if(context&&compactPeople)parts.push(`  本人已知：${text(list(context.known),100)}`);
+        else if(context)parts.push(`  可见外貌：${text(list(context.appearance),100)}｜说话习惯：${text(list(context.voice.habits),80)}\n  台词范例，非既往经历：${text(context.voice.samples?.[0],80)}\n  本人已知：${text(list(context.known),180)}\n  本人旧事，不代表玩家参与：${text(list(context.seeds),180)}\n  在意：${text(list(context.values),70)}｜弱点：${text(list(context.flaws),70)}\n  行事：${text(Object.values(context.behavior).join('；'),160)}`);
         if(available.services!==null)parts.push(`  当前服务：${available.services.map(service=>service==='teach'?'授课':'交易').join('、')||'暂停'}${available.until?`，本时段至${engine.calendar(available.until).text}`:''}`);
         if(base.creditPolicy)parts.push(`  赊账条件：未还合计最多${base.creditPolicy.limitCopper}铜，最长${base.creditPolicy.maximumMinutes}分钟，信任至少${base.creditPolicy.minimumTrust}，逾期需先还清。`);
     }
@@ -52,10 +57,10 @@ export function sceneCard(engine,document,query='',index=null){
         if(farm)parts.push(`【本地农事】${name(farm.settlement)}｜${farm.mode}${farm.food!==undefined?`｜存粮${farm.food}，种粮${farm.seed}，可收面积${farm.field.readyHa}公顷`:''}`);
     }
     const pinned=Object.values(document.memories??{}).filter(m=>m.pinned).slice(0,engine.rules.prompt.pinnedLimit);
-    if(pinned.length)parts.push('【固定事实】',...pinned.map(m=>`${name(m.subject)}：${text(m.content,180)}`));
+    if(pinned.length)parts.push('【固定事实，供主持核对，不代表人物知情】',...pinned.map(m=>`${name(m.subject)}：${text(m.content,180)}`));
     if(index){
         const old=index.search(query,{now:s.minute,scope:s.location,present:present.slice(0,8).map(([id])=>id),limit:4});
-        if(old.length)parts.push('【相关旧事】',...old.map(m=>`${m.source??'记忆'}${m.minute!==undefined?`，${engine.calendar(m.minute).text}`:''}：${text(m.text,260)}`));
+        if(old.length)parts.push('【相关旧事，检索线索不代表在场人物知情】',...old.map(m=>`${m.source??'记忆'}${m.minute!==undefined?`，${engine.calendar(m.minute).text}`:''}：${text(m.text,260)}`));
     }
     return parts.join('\n').slice(0,Math.min(6000,engine.rules.prompt.dynamicMaximumCharacters));
 }

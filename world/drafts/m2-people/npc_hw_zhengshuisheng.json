@@ -1,6 +1,6 @@
 {
   "id": "npc_hw_zhengshuisheng",
-  "fingerprint": "cee664c98ea2927626c33b56d0a9f42e9ecf65d39b0576320eff1f786b3c28c8",
+  "fingerprint": "c3cf9f7a8372df9a4cd617bd9fd817fc6ac857cbb2db51965eabfe615a04b665",
   "status": "passed",
   "attempts": 1,
   "draft": {
@@ -23,5 +23,17 @@
     "status": "passed",
     "priorDraftHash": "6a7da80bc46e053312bf65b7a06b0f7766dd5fd8f6cf259f9653860d21bdd0d7",
     "note": "补齐手工目标资源前提后逐条复核原有正文，未重新起草。"
+  },
+  "ageReview": {
+    "correction": {
+      "id": "npc_hw_zhengshuisheng",
+      "field": "age",
+      "old": 30,
+      "new": 46,
+      "basis": "tools/bootstrap-world.mjs:18 的30为通用默认；tools/world-content.mjs:65 明确两名成年孩子。46是本次设计值，允许成年子女且满足至少15岁亲子差，不新增孩子身份或精确年龄。"
+    },
+    "priorDraftHash": "6a7da80bc46e053312bf65b7a06b0f7766dd5fd8f6cf259f9653860d21bdd0d7",
+    "proseChanged": false,
+    "reviewed": true
   }
 }
