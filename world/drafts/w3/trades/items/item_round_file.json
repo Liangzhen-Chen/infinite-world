@@ -1,0 +1,18 @@
+{
+  "id": "item_round_file",
+  "fingerprint": "c16a457ddbbe4deb04c083e137036bcccbfaff7653eb09c56a59010d0a7b966d",
+  "status": "passed",
+  "attempts": 1,
+  "draft": {
+    "id": "item_round_file",
+    "description": "铁匠铺锻制的圆身孔锉，全长约一掌，锉身呈圆柱形，齿纹细密而匀，尾端收成方颈以便握持。专用于修整金属孔缘，沿孔轴推拉磨削，使孔口圆顺、内壁去毛。锉身不可当撬棒使力，遇硬弯即折。作坊与行商按订单补货，现货有限。",
+    "inspection": "先看齿纹是否齐整，有无断齿、糊齿或锈斑；再以指腹顺锉身摸过，凭涩感判断齿锋尚存几成。方颈与锉身接合处细看有无裂纹。轻转锉身对光，检视圆柱是否弯曲。",
+    "storage": "擦净铁屑后薄涂一层油，单支裹布或插木座，齿面互不磕碰；置于干燥处，勿与湿物同放。"
+  },
+  "review": {
+    "contradictions": []
+  },
+  "errors": [],
+  "warnings": [],
+  "feedback": null
+}

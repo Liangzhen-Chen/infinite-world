@@ -1,0 +1,18 @@
+{
+  "id": "item_barley_pea_stew",
+  "fingerprint": "91ac446df4cfa4b2291b765fb4ce868d31e6bbe47ac56b80406cf1e91a98aa4d",
+  "status": "passed",
+  "attempts": 1,
+  "draft": {
+    "id": "item_barley_pea_stew",
+    "description": "青灯酒馆当日小批供应的稠汤，用珍珠麦与干豌豆各一份，配三份水与一份盐熬成。干粮先以部分水泡软，余水入锅煮沸，木匙沿锅底推搅防粘，盐在豆粒将软时调入。煮至豆粒捏开无硬心，汤体挂匙成糊状，麦粒仍留整粒口感。出锅趁热分盛，容器需另备，不随货提供。",
+    "inspection": "揭盖看汤面是否结厚皮、有无霉斑或酸败气味；木匙挑起应缓缓成股落下，豆粒捏开无白硬心。汤色发灰绿、气味发酸或表面起泡者不可食。",
+    "storage": "盛入带盖器皿，阴凉处存放不超过1天；再食前须彻底煮沸，出现酸味即弃。"
+  },
+  "review": {
+    "contradictions": []
+  },
+  "errors": [],
+  "warnings": [],
+  "feedback": null
+}

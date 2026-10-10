@@ -1,0 +1,18 @@
+{
+  "id": "item_leather_hinge",
+  "fingerprint": "a2ed686e1a46fee6323c55194d443bc4fdf31b72af50edfb8fdfddc8908c2caa",
+  "status": "passed",
+  "attempts": 1,
+  "draft": {
+    "id": "item_leather_hinge",
+    "description": "织坊以鞣革与麻线制成的折页软革铰片，长条对折成两叶，中间压出弯折线，两端各锥出安装孔，孔缘用麻线锁边以防撕裂。成品约一掌长，厚薄均匀，弯折处留有自然回弹。用于轻木匣盖与匣身相连，安装钉需另备，不随货附送。",
+    "inspection": "逐片展平查看两叶是否对称，弯折线有无裂纹或发白；指压孔缘确认锁线紧实、无脱散。革面应干爽无霉斑，闻之无酸腐气。孔位偏移或边缘起毛者剔出。",
+    "storage": "置于干燥阴凉处，避免重压与暴晒，勿与油污同放。自制成日起365天内使用。"
+  },
+  "review": {
+    "contradictions": []
+  },
+  "errors": [],
+  "warnings": [],
+  "feedback": null
+}

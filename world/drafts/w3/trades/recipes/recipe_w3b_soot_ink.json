@@ -1,0 +1,19 @@
+{
+  "id": "recipe_w3b_soot_ink",
+  "fingerprint": "505eda9ed0ff42c2b8ac585277555deed248113164dc193f33e22f36f252a892",
+  "status": "passed",
+  "attempts": 2,
+  "draft": {
+    "id": "recipe_w3b_soot_ink",
+    "process": "1份净树胶粒放入石臼，以1份清水中的三分之一浸软，再分次补入剩余清水，研成胶液。将1份烟墨粉全部分次研入，压散干粉团块，用细目工艺筛滤去粗粒，墨液静置沉泡。芦苇笔蘸墨在旧纸上试写，检查墨线是否连续；过稠处继续研散，不再追加材料。全程50分钟，得到一份烟胶墨液，粗渣弃置，容器自备；字迹受水浸仍可能晕开。"
+  },
+  "review": {
+    "contradictions": []
+  },
+  "errors": [],
+  "warnings": [],
+  "feedback": null,
+  "manualCorrection": {
+    "reason": "L4：全部原料已加入后不能再额外补墨粉和清水。"
+  }
+}

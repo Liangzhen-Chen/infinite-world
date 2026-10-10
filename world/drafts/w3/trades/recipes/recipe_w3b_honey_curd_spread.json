@@ -1,0 +1,76 @@
+{
+  "id": "recipe_w3b_honey_curd_spread",
+  "fingerprint": "32f35dafdd6f7f2b69289ff8330e13f042fb20e1c64f7fac146a0b2abfc87be8",
+  "status": "manual",
+  "attempts": 1,
+  "draft": {
+    "id": "recipe_w3b_honey_curd_spread",
+    "process": "取一份200克去壳榛仁，用案上切刀切细。把100克鲜乳凝块放入厚底煮锅，以木匙压松，再分次拌入一份100克滤蜜和全部榛末。沿锅底翻拌，使碎仁均匀散开，不经加热熟成，也不加奶油。全程20分钟，交付一份蜜拌鲜乳酪；切碎和刮锅留下的零星残屑弃置。容器自备，当天食用。"
+  },
+  "review": {
+    "contradictions": [
+      {
+        "quote": "取一份200克去壳榛仁",
+        "field": "materials[2].amount",
+        "severity": "hard",
+        "reason": "骨架中item_hazelnut的amount为1，引用事实中一份去壳榛仁重量为0.2（即200克），说明写200克与一份一致，不构成矛盾。"
+      },
+      {
+        "quote": "把100克鲜乳凝块放入厚底煮锅",
+        "field": "materials[0].amount",
+        "severity": "hard",
+        "reason": "骨架中item_fresh_curd的amount为1，引用事实中一块鲜乳凝块为一百克，说明写100克与一份一致，不构成矛盾。"
+      },
+      {
+        "quote": "再分次拌入一份100克滤蜜",
+        "field": "materials[1].amount",
+        "severity": "hard",
+        "reason": "骨架中item_honey的amount为1，引用事实中一份滤蜜为一百克，说明写100克与一份一致，不构成矛盾。"
+      }
+    ]
+  },
+  "errors": [
+    {
+      "quote": "取一份200克去壳榛仁",
+      "field": "materials[2].amount",
+      "severity": "hard",
+      "reason": "骨架中item_hazelnut的amount为1，引用事实中一份去壳榛仁重量为0.2（即200克），说明写200克与一份一致，不构成矛盾。"
+    },
+    {
+      "quote": "把100克鲜乳凝块放入厚底煮锅",
+      "field": "materials[0].amount",
+      "severity": "hard",
+      "reason": "骨架中item_fresh_curd的amount为1，引用事实中一块鲜乳凝块为一百克，说明写100克与一份一致，不构成矛盾。"
+    },
+    {
+      "quote": "再分次拌入一份100克滤蜜",
+      "field": "materials[1].amount",
+      "severity": "hard",
+      "reason": "骨架中item_honey的amount为1，引用事实中一份滤蜜为一百克，说明写100克与一份一致，不构成矛盾。"
+    }
+  ],
+  "warnings": [],
+  "feedback": [
+    {
+      "quote": "取一份200克去壳榛仁",
+      "field": "materials[2].amount",
+      "severity": "hard",
+      "reason": "骨架中item_hazelnut的amount为1，引用事实中一份去壳榛仁重量为0.2（即200克），说明写200克与一份一致，不构成矛盾。"
+    },
+    {
+      "quote": "把100克鲜乳凝块放入厚底煮锅",
+      "field": "materials[0].amount",
+      "severity": "hard",
+      "reason": "骨架中item_fresh_curd的amount为1，引用事实中一块鲜乳凝块为一百克，说明写100克与一份一致，不构成矛盾。"
+    },
+    {
+      "quote": "再分次拌入一份100克滤蜜",
+      "field": "materials[1].amount",
+      "severity": "hard",
+      "reason": "骨架中item_honey的amount为1，引用事实中一份滤蜜为一百克，说明写100克与一份一致，不构成矛盾。"
+    }
+  ],
+  "manualCorrection": {
+    "reason": "L4：榛仁一份应为200克，旧说明少计100克。"
+  }
+}

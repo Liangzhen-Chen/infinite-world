@@ -1,0 +1,18 @@
+{
+  "id": "item_calcite_chalk",
+  "fingerprint": "2f437792cbfff8bc88ec7cc4d455506c5bbfe03388e90076cafacb02c6de2c54",
+  "status": "passed",
+  "attempts": 1,
+  "draft": {
+    "id": "item_calcite_chalk",
+    "description": "白石镇石料车捎来的软白垩块，色近灰白，断口呈细粉状，指压能留下浅痕。整块约拳头大小，边缘多被磕出钝角，表面偶有浅褐色石纹。可在木板、粗布上划出白线，用于临时记数或标位，遇潮易糊散，不能替代生石灰使用。",
+    "inspection": "取块在干木板上试划一道，看白线是否连续、粉屑是否成细末。再翻看棱角有无贯穿裂纹与夹砂，受潮的块体发暗、捏之成团，不宜带走。",
+    "storage": "置于干燥布袋或木盒内，垫一层干草隔潮，避开水汽与重压，勿与生石灰混放。"
+  },
+  "review": {
+    "contradictions": []
+  },
+  "errors": [],
+  "warnings": [],
+  "feedback": null
+}

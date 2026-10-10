@@ -35,6 +35,8 @@ test('L1拒绝数字保存期矛盾、额外骨架字段、规则泄漏；短文
   assert.ok(validateW3Draft({...good,basePrice:0},entry,block).errors.length);
   assert.ok(validateW3Draft({...good,description:'主持人不要让玩家制造。'},entry,block).errors.length);
   assert.ok(validateW3Draft({...good,description:'重量8公斤。'},entry,block).errors.length);
+  assert.ok(validateW3Draft({...good,description:'重量8斤。'},entry,block).errors.length);
+  assert.deepEqual(validateW3Draft({...good,description:'重量'+entry.weight*2+'斤。'},entry,block).errors,[]);
 });
 
 test('L1核对中文时辰、息和材料单位，不能把一份两公斤铁料写成一公斤',()=>{
@@ -45,6 +47,7 @@ test('L1核对中文时辰、息和材料单位，不能把一份两公斤铁料
   assert.ok(check('取两公斤铁坯入炉，全程八十息。').some(row=>row.includes('耗时')));
   assert.ok(check('取两公斤铁坯入炉，全程一个时辰。').some(row=>row.includes('耗时')));
   assert.deepEqual(check('取两公斤铁坯入炉，全程八十分钟。'),[]);
+  assert.deepEqual(check('取两公斤铁坯入炉，加热约20分钟，锻打30分钟，余时冷却；全程八十分钟。'),[]);
 });
 
 test('world_upgrade引入W3目录且既有财物保留，升级后新工序可制造署名单件',async t=>{

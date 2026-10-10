@@ -1,0 +1,18 @@
+{
+  "id": "item_three_leg_stool",
+  "fingerprint": "bcb33c85a90512b364cc7035b5b2a8482352cd63f42c4f86024e26ff5feaeade",
+  "status": "passed",
+  "attempts": 1,
+  "draft": {
+    "id": "item_three_leg_stool",
+    "description": "旧磨坊出产的斜脚矮凳，座面取厚松板削成圆盘，边缘留一圈细锉痕；三条短脚向外斜张，脚顶斜钻圆孔后以榫木楔贯入座面，楔头略高于板面。凳脚触地一端锉去棱角，通体擦亚麻籽油，色呈浅褐，重约1.45。座面直径不大，可随手提挪，供坐歇或垫脚。",
+    "inspection": "先看座面有无裂纹与翘曲，再逐条摇动凳脚，听榫楔处是否松动；指腹沿脚端与座缘摸过，确认无毛刺。油面发黏或起白霜时，以干布拭净再晾。",
+    "storage": "置于干燥通风处，避免日晒与地面潮气；重物勿久压座面。可叠放，但脚间垫软布防磕碰。"
+  },
+  "review": {
+    "contradictions": []
+  },
+  "errors": [],
+  "warnings": [],
+  "feedback": null
+}

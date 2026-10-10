@@ -1,0 +1,18 @@
+{
+  "id": "item_oak_gall",
+  "fingerprint": "c40c4c23eee4803d5adbb141243c436610d3b65c9dc3e47c5649f479e40ca47e",
+  "status": "passed",
+  "attempts": 1,
+  "draft": {
+    "id": "item_oak_gall",
+    "description": "北林边秋季采下的干树瘿，每包约八十克，收拢成一小扎，用麻线束口。瘿体多为圆鼓状，表面坑洼坚硬，外皮灰褐至深褐，断面呈密实的木色。干树瘿用于鞣色和调制深色写液，须按具体配方加工，不是可食坚果。由北林边商贩有限库存出售。",
+    "inspection": "解开麻线查看：瘿体应干燥硬实，无软陷、无霉斑，掰开断面不见活虫与蛀粉。若有潮软、白毛或虫孔，整包弃用；气味发闷酸腐者同样不可收。",
+    "storage": "扎回麻线，置阴凉干燥处，避潮避晒，可存180天。受潮后摊开阴干，勿烘烤。"
+  },
+  "review": {
+    "contradictions": []
+  },
+  "errors": [],
+  "warnings": [],
+  "feedback": null
+}

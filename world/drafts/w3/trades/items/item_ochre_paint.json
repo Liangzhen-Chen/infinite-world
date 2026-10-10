@@ -1,0 +1,18 @@
+{
+  "id": "item_ochre_paint",
+  "fingerprint": "6fedbd1ac13f392a01fcf32280635aa06e52b71773513257bab244076e61c741",
+  "status": "passed",
+  "attempts": 1,
+  "draft": {
+    "id": "item_ochre_paint",
+    "description": "旧磨坊以赤土、树胶粒与清水调成的木牌用胶彩，每份重0.17。赤土先以石臼研散，过细筛去粗粒，再与泡软的树胶液混匀成稠浆。色泽偏暗红，干后附着力尚可，只作木牌表面颜料，不得用于人体涂药。按订单制作，材料缺货时暂停交付。",
+    "inspection": "开盖先看表层有无干裂、结皮与霉点，再闻是否发酸发臭；随后以笔尖挑起少量，观察浆体是否均匀、有无未研开的粗粒。若气味异常或粗粒明显，即不宜使用。",
+    "storage": "盖严置于阴凉处，避免日晒与霜冻，自制成起3天内用完；容器另备，不随货提供。"
+  },
+  "review": {
+    "contradictions": []
+  },
+  "errors": [],
+  "warnings": [],
+  "feedback": null
+}

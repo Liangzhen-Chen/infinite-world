@@ -1,0 +1,21 @@
+{
+  "id": "item_hen_egg",
+  "fingerprint": "6cd536551132eb9664626fbffdd8badcebd7b13b76a3676f861a00123bcaa36b",
+  "status": "passed",
+  "attempts": 1,
+  "draft": {
+    "id": "item_hen_egg",
+    "description": "南田农户散养母鸡所产的鸡蛋，按四枚一份出售，连壳称约240克。蛋壳多为浅褐或米白，表面带一层薄霜，偶有草屑与泥点。春夏母鸡产蛋勤，冬日天寒则供应稀少。蛋液可煮可煎，须煮熟后食用。此份只计鸡蛋，盛装小篮不随货提供，买家需自备容器。",
+    "inspection": "逐枚对光看壳面有无裂纹与暗斑，轻摇听内部是否晃动；有异味的蛋挑出不用。再称总重核对是否足四枚的分量。",
+    "storage": "置于阴凉通风处，避免日晒与挤压，5天内食用完；天热时可缩短存放时间。"
+  },
+  "review": {
+    "contradictions": []
+  },
+  "errors": [],
+  "warnings": [],
+  "feedback": null,
+  "manualCorrection": {
+    "reason": "四蛋一份含壳240克，原稿误用斤。"
+  }
+}

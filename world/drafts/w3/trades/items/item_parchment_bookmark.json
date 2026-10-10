@@ -1,0 +1,18 @@
+{
+  "id": "item_parchment_bookmark",
+  "fingerprint": "6fa286e4316961bb5c9effc5f2ff442af5cf321ad700514a52838dee93c8ebcc",
+  "status": "passed",
+  "attempts": 2,
+  "draft": {
+    "id": "item_parchment_bookmark",
+    "description": "旧磨坊出品的空白书签，取整张羊皮纸顺纹裁成长条，一端回折成双层折首，用骨压刀反复压平贴实，折首中央以缝皮锥刺一小孔，穿一段麻线打结作系。签面不着一字，可夹入书页标记行止。按订单制作，材料缺货时暂停交付。",
+    "inspection": "查看折首是否压得平伏、有无翘边，麻线结是否牢靠，签面有无受潮发皱或虫蛀小洞；折痕处若发白起毛说明压合不足。",
+    "storage": "置于干燥阴凉处平放，避免重压与潮湿，自制成起365天内使用；受潮后不可暴晒，宜夹于干纸间阴干。"
+  },
+  "review": {
+    "contradictions": []
+  },
+  "errors": [],
+  "warnings": [],
+  "feedback": null
+}

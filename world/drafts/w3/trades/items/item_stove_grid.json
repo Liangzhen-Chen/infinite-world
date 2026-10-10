@@ -1,0 +1,18 @@
+{
+  "id": "item_stove_grid",
+  "fingerprint": "46eb628408635ad2980c771c6abb8d308491cc34738a7511172d3c53e0cb06fc",
+  "status": "passed",
+  "attempts": 2,
+  "draft": {
+    "id": "item_stove_grid",
+    "description": "铁匠铺按订单打制的小炉挡炭栅。取铁料分出四边边框，再截出数根短栅条，以热铆方式逐根连接成格，冷却后用平锉修去铆头毛刺。成品重约1.42，架在小炉口上可挡住大炭块，细灰仍从栅缝落下。材料缺货时暂停交付。",
+    "inspection": "先看边框四角是否平正，再逐根按压短栅条，检查铆接处有无松动；用平锉轻推铆头，确认无毛刺勾手；最后对光看栅缝宽窄是否大致一致。",
+    "storage": "置于铁匠铺干燥木架上，避免靠墙受潮；不与湿炭或水盆同放。长期不用可薄涂一层油脂防锈，取用时擦净。"
+  },
+  "review": {
+    "contradictions": []
+  },
+  "errors": [],
+  "warnings": [],
+  "feedback": null
+}

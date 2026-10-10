@@ -1,0 +1,18 @@
+{
+  "id": "item_dry_peas",
+  "fingerprint": "bafc28df907ccf3210485fe0a662170fe6eb8d6a0c9cc325255a1ee0a57c4472",
+  "status": "passed",
+  "attempts": 1,
+  "draft": {
+    "id": "item_dry_peas",
+    "description": "南田秋后剥荚摊晒的豌豆，豆粒圆而微皱，色作青黄，表皮偶有晒裂的细口。每袋约三百克，收自田边晒场，由林穗按有限库存出售。浸水一夜后煮软可食，破皮只说明吸胀，未必已熟透，须以指捻豆心是否松散为准。",
+    "inspection": "翻看袋底有无虫蛀细孔与絮状霉丝，抓一把听豆粒相碰是否干脆；若有潮软、酸霉气或成团结块，即不可久留。",
+    "storage": "装布袋或陶罐，扎口置于干燥通风处，离地隔潮；自晒干日起可存180天，雨季前后取出复晒。"
+  },
+  "review": {
+    "contradictions": []
+  },
+  "errors": [],
+  "warnings": [],
+  "feedback": null
+}

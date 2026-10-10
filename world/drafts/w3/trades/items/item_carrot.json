@@ -1,0 +1,18 @@
+{
+  "id": "item_carrot",
+  "fingerprint": "1a90ac79ec73d754ecf16614158d612207bbced725affc7f427b9f4d5a48f255",
+  "status": "passed",
+  "attempts": 1,
+  "draft": {
+    "id": "item_carrot",
+    "description": "南田秋收的束装胡萝卜，去叶留根，一束约三根，根身长短略有差别，表皮带土色，切口处偶见细小须根。秋季根肉较甜，夏季则偏细。可切条下锅烹煮，也宜与根茎同炖。一束按份出售，不附带容器，需自备盛具。",
+    "inspection": "先看根身是否挺实，表皮有无发黑、软塌或霉斑，再闻切口与叶痕处气味，若有酸腐气则弃用；无须切开或试尝。",
+    "storage": "置于阴凉干燥处，避免日晒与挤压，可存7天；若表皮转软或渗水，应尽快处理。"
+  },
+  "review": {
+    "contradictions": []
+  },
+  "errors": [],
+  "warnings": [],
+  "feedback": null
+}

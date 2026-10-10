@@ -1,0 +1,18 @@
+{
+  "id": "item_cabbage_barley",
+  "fingerprint": "e066b1472769ea160da86435c3afb4a5a8d9ff99367a83e4da87ae0808f0e750",
+  "status": "passed",
+  "attempts": 1,
+  "draft": {
+    "id": "item_cabbage_barley",
+    "description": "青灯酒馆当日小批供应的木碗烩食。珍珠麦粒先以定量清水煮至外软内韧，甘蓝去硬根与虫损叶后切细丝，于后段入锅，用木匙翻匀，使菜丝刚断生而仍带脆。成品麦粒分明，菜丝青绿间杂，汤汁收得较干，盐味清淡。按当季原料制作，每份约一人食量。",
+    "inspection": "开盖先看菜丝是否仍青绿、麦粒有无发黏结块，再闻有无酸败或霉味；若表面发暗、气味刺鼻即弃置，不试尝变质部分。",
+    "storage": "盛出后1天内食用；放凉加盖，置阴凉处，复热时加少量清水以免麦粒干硬。"
+  },
+  "review": {
+    "contradictions": []
+  },
+  "errors": [],
+  "warnings": [],
+  "feedback": null
+}

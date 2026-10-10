@@ -1,0 +1,21 @@
+{
+  "id": "item_bench_plane",
+  "fingerprint": "59fba27dbb70cf1be47ab9cf0535dba5c2cf1dd2229a917eae12a93fa545d9c4",
+  "status": "passed",
+  "attempts": 1,
+  "draft": {
+    "id": "item_bench_plane",
+    "description": "铁匠铺出的短底木刨，刨身以硬木整块削成，底面短而平，前缘镶一道薄铁口，刃片斜插在刨膛里，用一片木楔从后方顶紧。刃口厚薄靠敲动楔片调，浅进刀适合顺纹修短板边角，遇节疤或铁钉会崩口。铁匠铺有少量备用现货，刨身与刃片分开检查。",
+    "inspection": "先看底面是否翘曲，把刨身翻过来贴一块直板，透光处不应超过一线。再查刃口有无崩缺卷边，木楔与刨膛是否贴合、有无松动。敲楔试进退，听声应实而不空。柄尾与刨身接合处若有裂纹，不宜再施大力。",
+    "storage": "刃片退出刨膛，与刨身分开平放，木楔另收。存于干燥木架或布囊内，避潮避晒，勿与铁器叠压。底面朝上搁置，防止磕碰起毛。"
+  },
+  "review": {
+    "contradictions": []
+  },
+  "errors": [],
+  "warnings": [],
+  "feedback": null,
+  "manualCorrection": {
+    "reason": "L4发现材质错读与虚构行商段砚，删去不实来源。"
+  }
+}

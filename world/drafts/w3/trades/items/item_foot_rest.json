@@ -1,0 +1,18 @@
+{
+  "id": "item_foot_rest",
+  "fingerprint": "d5dee89be8b6507b240f53ad105c405a4c9c9d9c59ca6e4f24dac7caa3ab9d0c",
+  "status": "passed",
+  "attempts": 1,
+  "draft": {
+    "id": "item_foot_rest",
+    "description": "旧磨坊木匠按订单制成的倾面脚凳，侧板前低后高，横板嵌入侧板榫槽，两枚木楔自外侧楔紧，前缘以木锉修圆。整器高约一拃，斜面承足时脚跟不易磕碰。取材松木板，重约1.15，可置于案下或榻前垫脚。木料缺货时暂停交付。",
+    "inspection": "查看侧板与横板接合处是否松动，木楔有无退出或劈裂；手抚前缘，确认锉圆处无毛刺、无起翘木丝；轻摇凳身听有无异响，观察板面是否出现顺纹裂缝。",
+    "storage": "置于干燥通风处，避免贴地与暴晒；梅雨时移入室内，勿压重物。"
+  },
+  "review": {
+    "contradictions": []
+  },
+  "errors": [],
+  "warnings": [],
+  "feedback": null
+}

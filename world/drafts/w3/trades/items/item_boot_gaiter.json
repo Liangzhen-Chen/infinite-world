@@ -1,0 +1,18 @@
+{
+  "id": "item_boot_gaiter",
+  "fingerprint": "f3a7834c789ef5cc11359bb67b265b416618ebe37874866511abc869d5c714c5",
+  "status": "passed",
+  "attempts": 1,
+  "draft": {
+    "id": "item_boot_gaiter",
+    "description": "系带护靴片由织坊制成，取鞣制皮革裁成一对护片，边缘以滚轮压出等距缝痕，再逐孔刺穿、用麻线缝边，上缘留出系带孔。穿戴时覆于靴筒外，靠系带收紧，可挡泥水与碎石，但不增加护甲。单片重约0.42，成对随靴使用。",
+    "inspection": "逐片翻看皮面有无硬结、霉斑与开裂，指压缝边检查麻线是否松脱，数系带孔是否齐全、孔缘有无撕豁；两片对照，长宽与孔位应基本一致。",
+    "storage": "置于干燥通风处，避免雨淋与重压，勿贴地堆放；自制成日起365天内使用，逾期皮革易脆化。"
+  },
+  "review": {
+    "contradictions": []
+  },
+  "errors": [],
+  "warnings": [],
+  "feedback": null
+}

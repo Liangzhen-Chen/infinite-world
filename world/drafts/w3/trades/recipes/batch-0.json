@@ -1,0 +1,168 @@
+{
+  "index": 0,
+  "fingerprint": "9b908cdcdd44551e3cbbb71b527cebfeff214c6c2072499ad3237ccfde66fe54",
+  "count": 25,
+  "passed": 24,
+  "ids": [
+    "recipe_w3b_barley_pea_stew",
+    "recipe_w3b_leek_fish_pot",
+    "recipe_w3b_pea_spread",
+    "recipe_w3b_turnip_oat_cake",
+    "recipe_w3b_honey_nut_cake",
+    "recipe_w3b_onion_egg_soup",
+    "recipe_w3b_honey_curd_spread",
+    "recipe_w3b_vinegar_carrot",
+    "recipe_w3b_cabbage_barley",
+    "recipe_w3b_apple_rye_griddle",
+    "recipe_w3b_lidded_seed_box",
+    "recipe_w3b_three_leg_stool",
+    "recipe_w3b_wall_shelf",
+    "recipe_w3b_foot_rest",
+    "recipe_w3b_bread_board",
+    "recipe_w3b_thread_rack",
+    "recipe_w3b_walking_crutch",
+    "recipe_w3b_shutter_panel",
+    "recipe_w3b_tool_tray",
+    "recipe_w3b_willow_creel",
+    "recipe_w3b_belt_strap",
+    "recipe_w3b_coin_wrap",
+    "recipe_w3b_leather_thimble",
+    "recipe_w3b_scroll_wrap",
+    "recipe_w3b_sheath_pouch"
+  ],
+  "rewritten": 13,
+  "manual": [
+    "recipe_w3b_honey_curd_spread"
+  ],
+  "pending": [],
+  "flagged": [
+    "recipe_w3b_barley_pea_stew",
+    "recipe_w3b_leek_fish_pot",
+    "recipe_w3b_pea_spread",
+    "recipe_w3b_turnip_oat_cake",
+    "recipe_w3b_honey_nut_cake",
+    "recipe_w3b_onion_egg_soup",
+    "recipe_w3b_honey_curd_spread",
+    "recipe_w3b_vinegar_carrot",
+    "recipe_w3b_cabbage_barley",
+    "recipe_w3b_apple_rye_griddle",
+    "recipe_w3b_three_leg_stool",
+    "recipe_w3b_wall_shelf",
+    "recipe_w3b_foot_rest",
+    "recipe_w3b_bread_board",
+    "recipe_w3b_walking_crutch",
+    "recipe_w3b_willow_creel",
+    "recipe_w3b_belt_strap",
+    "recipe_w3b_coin_wrap",
+    "recipe_w3b_leather_thimble",
+    "recipe_w3b_scroll_wrap",
+    "recipe_w3b_sheath_pouch"
+  ],
+  "sample": [
+    "recipe_w3b_shutter_panel",
+    "recipe_w3b_willow_creel",
+    "recipe_w3b_honey_curd_spread",
+    "recipe_w3b_vinegar_carrot",
+    "recipe_w3b_thread_rack"
+  ],
+  "l4": {
+    "approved": false,
+    "notes": [
+      {
+        "id": "recipe_w3b_shutter_panel",
+        "note": "两板分条与余料横档，六钉接合，铰链安装另算，200分钟完整。"
+      },
+      {
+        "id": "recipe_w3b_willow_creel",
+        "note": "L4：补用削木刀；180分钟包含编织及定形，删除无关燃料与食品句。"
+      },
+      {
+        "id": "recipe_w3b_honey_curd_spread",
+        "note": "L4：榛仁一份应为200克，旧说明少计100克。"
+      },
+      {
+        "id": "recipe_w3b_vinegar_carrot",
+        "note": "两瓶果醋共100毫升、盐20克、120分钟短浸相符；余醋弃置，没有长期发酵能力。"
+      },
+      {
+        "id": "recipe_w3b_thread_rack",
+        "note": "两板分出底座立柱，钻孔装四木楔，150分钟，不附线团或纺线能力。"
+      },
+      {
+        "id": "recipe_w3b_barley_pea_stew",
+        "note": "L4：泡发与煮制各段不得超过80分钟；剔除刀背去沙的无效检验。"
+      },
+      {
+        "id": "recipe_w3b_leek_fish_pot",
+        "note": "L4：洗菜用水也从配额分用，不凭空增加清水。"
+      },
+      {
+        "id": "recipe_w3b_pea_spread",
+        "note": "两份水配额不增加，30+35+10分钟小于90分钟总耗时，余时压泥。"
+      },
+      {
+        "id": "recipe_w3b_turnip_oat_cake",
+        "note": "总时长先32后55混淆，改为明确55分钟且不另造工序用量。"
+      },
+      {
+        "id": "recipe_w3b_honey_nut_cake",
+        "note": "一份为四枚蛋，未引入酵种，55分钟烘凝与10分钟收紧均包含在70分钟内。"
+      },
+      {
+        "id": "recipe_w3b_onion_egg_soup",
+        "note": "蛋篮一份与四蛋事实相符，水500毫升、35分钟，盐按味取用但整包扣除无返还。"
+      },
+      {
+        "id": "recipe_w3b_cabbage_barley",
+        "note": "草稿把75分钟写成45分钟，手工恢复完整工序与总时长。"
+      },
+      {
+        "id": "recipe_w3b_apple_rye_griddle",
+        "note": "规定水与油、夹苹果双层糊、45分钟相符；未多加糖或酵种。"
+      },
+      {
+        "id": "recipe_w3b_three_leg_stool",
+        "note": "两板分座与三腿，三楔榫接并油饰；尺寸与承重未作保证。"
+      },
+      {
+        "id": "recipe_w3b_wall_shelf",
+        "note": "两短板分架面和三角托、四钉、140分钟，墙面固定件另备。"
+      },
+      {
+        "id": "recipe_w3b_foot_rest",
+        "note": "L4：两块短板须明确分出横板，不能凭空另取横板。"
+      },
+      {
+        "id": "recipe_w3b_bread_board",
+        "note": "90分钟包含45分钟待表面干爽，仅放包好的干货，不作食品切板。"
+      },
+      {
+        "id": "recipe_w3b_walking_crutch",
+        "note": "L4：交付一件木拐；木楔从原短板截料削出。"
+      },
+      {
+        "id": "recipe_w3b_belt_strap",
+        "note": "L4：材料扣除整团麻线，剩余不再凭空作为可用库存。"
+      },
+      {
+        "id": "recipe_w3b_coin_wrap",
+        "note": "L4：删除消耗后整团余线收回的账物矛盾。"
+      },
+      {
+        "id": "recipe_w3b_leather_thimble",
+        "note": "L4：过紧须拆线重新留缝，剪窄皮条不能使指套变松。"
+      },
+      {
+        "id": "recipe_w3b_scroll_wrap",
+        "note": "皮、麻布和线配额内分用，120分钟，余料弃置；遮尘不保证防浸水。"
+      },
+      {
+        "id": "recipe_w3b_sheath_pouch",
+        "note": "L4：余线不返还；霉腐皮革不能靠重缝恢复。"
+      }
+    ]
+  },
+  "costUpperYuan": 2.9468760400000003,
+  "manualRatio": 0.04,
+  "needsSystemicRepair": false
+}

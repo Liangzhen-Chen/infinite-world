@@ -1,0 +1,18 @@
+{
+  "id": "item_linseed_oil",
+  "fingerprint": "80edf47fdbd4ffd28b91629092b7b76056d689de9b5cc4ccc8d60a8aa174d5ac",
+  "status": "passed",
+  "attempts": 1,
+  "draft": {
+    "id": "item_linseed_oil",
+    "description": "白石镇秋后榨制的木用亚麻油，小瓶来货，油色偏琥珀，瓶底偶有细密沉屑。专供木器表面薄涂，不作食品销售。开瓶后气味带生青与微苦的油腥，涂在木面上收干较慢，需薄层多次。施工布料须摊开晾置，不可团堆。",
+    "inspection": "取瓶对光看，油体应清亮无絮状悬物；嗅之无酸败刺鼻味。瓶口若有结皮，只可整片揭去，不可搅入油中。瓶塞松脱或油面浮膜者不收。",
+    "storage": "阴凉避光立放，塞紧瓶口，远离火源与布料堆。自榨制日起180天内用完，超期先验外观气味。"
+  },
+  "review": {
+    "contradictions": []
+  },
+  "errors": [],
+  "warnings": [],
+  "feedback": null
+}

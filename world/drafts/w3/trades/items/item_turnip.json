@@ -1,0 +1,21 @@
+{
+  "id": "item_turnip",
+  "fingerprint": "c7a54acf4c078a1af97141cf87d4b6f86e4b66a8678922be0e42d1c449c6107b",
+  "status": "passed",
+  "attempts": 1,
+  "draft": {
+    "id": "item_turnip",
+    "description": "南田晚秋至初冬采收的带皮芜菁，一份约400克，外皮灰白微带紫晕，根身紧实。可切片烩煮，入锅前削去根须与坏斑。由梅绫处有限库存售出，入手时多带薄土，宜趁鲜食用。",
+    "inspection": "翻看根身有无软陷、裂口与黑斑，指压应回弹；闻近根蒂处，若有酸腐气即弃去坏处。根须与泥可暂留，待削皮时一并去除。",
+    "storage": "置阴凉通风处摊放，勿堆压受潮，可存10天；若已切开，需以净布覆切口并尽快用尽。"
+  },
+  "review": {
+    "contradictions": []
+  },
+  "errors": [],
+  "warnings": [],
+  "feedback": null,
+  "manualCorrection": {
+    "reason": "修正重量单位与供货者姓名错字。"
+  }
+}

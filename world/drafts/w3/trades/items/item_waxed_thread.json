@@ -1,0 +1,18 @@
+{
+  "id": "item_waxed_thread",
+  "fingerprint": "188668a778efd6746766af0e18ed043028de6d76e83fae49a70dcc2274b36baf",
+  "status": "passed",
+  "attempts": 1,
+  "draft": {
+    "id": "item_waxed_thread",
+    "description": "旧磨坊出产的上蜡麻缝线，取一段麻线贴住蜂蜡块，两手来回拉过，蜡随摩擦一层层吃进纤维，线身由涩转滑；随后用骨压片沿表面轻压贴合，使蜡层匀实不结块。成品绕成线束，余蜡随线束以包纸裹附交付，不另作他用。线径均匀，手感略黏，适合缝制需耐磨的接缝。",
+    "inspection": "取线束摊开，看蜡层是否连续、有无露白麻丝；指腹顺线捋过，查是否结硬蜡粒或粗细突变。闻之应只有蜂蜡甜气，若有酸败味或霉斑即弃。",
+    "storage": "置于阴凉干燥处，避日晒与炉火，包纸勿拆散；自制成起365天内用完，久存蜡层易干裂脱落。"
+  },
+  "review": {
+    "contradictions": []
+  },
+  "errors": [],
+  "warnings": [],
+  "feedback": null
+}

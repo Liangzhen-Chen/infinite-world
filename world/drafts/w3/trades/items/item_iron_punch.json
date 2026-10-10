@@ -1,0 +1,21 @@
+{
+  "id": "item_iron_punch",
+  "fingerprint": "18941672a4c545e3e5c896485395267276ed316abf0d15696cc2176f1c88a2e5",
+  "status": "passed",
+  "attempts": 1,
+  "draft": {
+    "id": "item_iron_punch",
+    "description": "铁匠铺出的短身冲子，杆身粗短，尾端收成方颈以便夹持，冲头略呈锥形，尖端磨出平钝的刃口。整支约一掌长，重约300克，通体留有锻打锤痕与打磨的细纹。配锻锤在热铁片上冲孔，需砧台承托，冲孔时先定冲头，再落锤敲击尾端。由段岩的有限备用工具库存中取得。",
+    "inspection": "查看冲头刃口有无卷边、崩口或退火发蓝，杆身是否有裂纹与弯折；尾端锤击面若塌陷起毛，应修整后再用。",
+    "storage": "置于干燥工具架或木箱内，冲头涂薄油防锈，避免与刃具磕碰；长期不用时裹布单放。"
+  },
+  "review": {
+    "contradictions": []
+  },
+  "errors": [],
+  "warnings": [],
+  "feedback": null,
+  "manualCorrection": {
+    "reason": "修正冲子重量与已登记供货者姓名。"
+  }
+}

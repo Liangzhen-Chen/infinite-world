@@ -1,0 +1,18 @@
+{
+  "id": "item_willow_creel",
+  "fingerprint": "45505398d81d59a78bdff04ff14c1122c8557a9ff0df78f871c4ab7cf5323995",
+  "status": "passed",
+  "attempts": 2,
+  "draft": {
+    "id": "item_willow_creel",
+    "description": "旧磨坊出产的扁口柳条篓，以柔柳条交叉编底，竖经向上收口，篓沿用麻线扎紧；凸出的条头经骨压片压伏，篓口齐平而不带盖。整篓重0.72，可单手提携。柳条本色，条股间留有编压缝隙，用于盛放干物或短途转运。",
+    "inspection": "查看篓沿麻线有无松脱，条股有无折断或翘头；以手轻按篓身，听有无脆裂声，并检查底部交叉处是否磨薄。",
+    "storage": "置于干燥通风处，避免雨淋与重压，远离火源；自制成起180天内使用为宜。"
+  },
+  "review": {
+    "contradictions": []
+  },
+  "errors": [],
+  "warnings": [],
+  "feedback": null
+}

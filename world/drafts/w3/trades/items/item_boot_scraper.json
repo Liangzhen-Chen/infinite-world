@@ -1,0 +1,18 @@
+{
+  "id": "item_boot_scraper",
+  "fingerprint": "c7403318c807da69bed274328d484cee5598ba9b3db92067e88674165786adb3",
+  "status": "passed",
+  "attempts": 2,
+  "draft": {
+    "id": "item_boot_scraper",
+    "description": "铁匠铺以一块铁料和三份木炭锻出的门前刮泥架，通体呈铜色，重0.82。刮泥边被锤面锻平，两端向下弯出两脚，接触鞋底的一侧用扁锉锉钝，不留锐口。使用时把两脚钉牢在门前木台上，台座不随货提供。",
+    "inspection": "先看刮泥边是否平直、两脚弯度是否一致，再摸接触边有无毛刺或卷刃；铜色表面若见裂纹、缺角或脚部松动，即为锻打或使用留下的损伤。",
+    "storage": "置于干燥处，避免雨淋与积泥；长期不用可薄涂一层油脂防锈，勿与酸液同放。"
+  },
+  "review": {
+    "contradictions": []
+  },
+  "errors": [],
+  "warnings": [],
+  "feedback": null
+}

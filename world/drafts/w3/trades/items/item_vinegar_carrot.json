@@ -1,0 +1,18 @@
+{
+  "id": "item_vinegar_carrot",
+  "fingerprint": "56473c303a25ca6ffad0fefcdcc547b42ec42b21c015e30c3175b6f5ba000788",
+  "status": "passed",
+  "attempts": 1,
+  "draft": {
+    "id": "item_vinegar_carrot",
+    "description": "青灯酒馆当日小批制作的短浸小食。胡萝卜削去坏处，切成匀称细条，裹盐略出水后浸入果醋，连切配带短浸共120分钟。成品条身挺脆，酸香清亮，不是长期发酵的酸菜，宜随取随吃。",
+    "inspection": "取一根萝卜条看断面：应挺实、色橙亮，无发暗软塌；凑近闻有清酸果香，无馊味或霉气。若条身黏滑、醋汁浑浊起膜，即不可食用。",
+    "storage": "连醋汁盛放，盖好置阴凉处或冷藏，2天内吃完；取用用干净筷子，勿带生水。"
+  },
+  "review": {
+    "contradictions": []
+  },
+  "errors": [],
+  "warnings": [],
+  "feedback": null
+}

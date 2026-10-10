@@ -1,0 +1,20 @@
+{
+  "id": "item_honey_curd_spread",
+  "fingerprint": "02f21dda0c4a965c51152374781eccee8d4ff0e051f1c3ed6a0a09960541c724",
+  "status": "passed",
+  "attempts": 1,
+  "draft": {
+    "id": "item_honey_curd_spread",
+    "description": "青灯酒馆当日现做的小份乳食，木碗盛装，重约0.38。鲜乳凝块以木匙压松，拌入蜂蜜与切细的榛仁末，质地稠软，乳香里带坚果颗粒。不经熟成，也不加未列奶油，属趁鲜即食的凉拌品，多做当日小批供应。",
+    "inspection": "先看表面有无渗水分层、榛末是否发暗，再俯身闻一闻有无酸败或哈喇气；木匙轻挑一角，凝块应成团不散。气味或外观异常即弃置，不做入口尝试。",
+    "storage": "盛器另备，不随货提供；加盖置阴凉处，1天内食完。"
+  },
+  "review": {
+    "contradictions": []
+  },
+  "errors": [],
+  "warnings": [
+    "storage长度为24，进入L4抽读"
+  ],
+  "feedback": null
+}

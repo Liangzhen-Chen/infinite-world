@@ -1,0 +1,18 @@
+{
+  "id": "item_strap_eye",
+  "fingerprint": "ba90b3b84e017b98a99d5e55be423c195885ea7802f1ce7a6f960b198902cae1",
+  "status": "passed",
+  "attempts": 2,
+  "draft": {
+    "id": "item_strap_eye",
+    "description": "铁匠铺以铁边料压成的短片，长约两指，中段拱起成弧，两端各冲一孔，孔缘冷态锉圆。短片通体呈暗灰铁色，拱背留有锤面压痕，两孔间距约一寸。用于穿带，带与固定钉另备，不随货提供。按订单制作，材料缺货时暂停交付。",
+    "inspection": "先看拱背有无裂纹或折痕，再看两孔孔缘是否锉圆、有无毛刺，最后将短片平放于台面，确认中段拱起均匀、两端不翘。",
+    "storage": "置于干燥木箱或布袋内，避免与湿物同放；长期存放时可薄涂一层油脂防锈。"
+  },
+  "review": {
+    "contradictions": []
+  },
+  "errors": [],
+  "warnings": [],
+  "feedback": null
+}

@@ -1,0 +1,18 @@
+{
+  "id": "item_drawer_pull",
+  "fingerprint": "ab40376c0c07d34e283162b7c0c5f8eff7553b90f1d09553de87149718a20dfd",
+  "status": "passed",
+  "attempts": 2,
+  "draft": {
+    "id": "item_drawer_pull",
+    "description": "铁匠铺锻制的铁质拱背抽屉拉手，重0.42，拱背由整段铁料拉出，两端耳片锻平后各冲一孔，冷却后以扁锉修去孔缘与边角毛刺。安装钉不随货提供，需另行备置。每件耗时100分钟，按订单制作，铁料或木炭缺货时暂停交付。",
+    "inspection": "先看拱背弧度是否匀顺、两端耳片有无歪斜，再以指腹沿孔缘与边角摸查毛刺，最后将拉手平放于台面，观察两耳片是否同时贴实、有无翘动。",
+    "storage": "置于干燥货架或木箱内，避免与湿物、盐渍同放；按规格分堆，勿重压拱背，防止弧度变形。"
+  },
+  "review": {
+    "contradictions": []
+  },
+  "errors": [],
+  "warnings": [],
+  "feedback": null
+}

@@ -1,0 +1,18 @@
+{
+  "id": "item_hand_bellows",
+  "fingerprint": "49f6b0f87b1850a502c48971db4682d9a51c1001ecb584b4cb9a6c6c3a7170fe",
+  "status": "passed",
+  "attempts": 1,
+  "draft": {
+    "id": "item_hand_bellows",
+    "description": "白石镇作坊出的皮囊小风箱，两只木柄夹一片软革囊，囊口接铜嘴，嘴内藏单向风瓣，压合时送风、张开时回气。铜件为铸后锉光，木柄缠麻绳防滑。整器重1.6，单手可持，供小炉或炭盆鼓风，不是储气罐，离火源过近会烤硬革面。",
+    "inspection": "先看革囊有无裂纹、硬化和缝口开线，再压合数次，听风瓣起落是否清脆、铜嘴出风是否连续；木柄与铜嘴接合处若见松动或绿锈渗入革面，则不宜近火使用。",
+    "storage": "挂在作坊干燥木钉上，避开炉口与日晒；革面每季薄擦一次动物油脂，铜嘴朝下防尘。不与尖利工具同堆，免划破革囊。"
+  },
+  "review": {
+    "contradictions": []
+  },
+  "errors": [],
+  "warnings": [],
+  "feedback": null
+}

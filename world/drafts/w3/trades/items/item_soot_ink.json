@@ -1,0 +1,18 @@
+{
+  "id": "item_soot_ink",
+  "fingerprint": "c292187405fd9b076f91a9782c2298a404d6607839450a12cb9b762638684e48",
+  "status": "passed",
+  "attempts": 2,
+  "draft": {
+    "id": "item_soot_ink",
+    "description": "旧磨坊出产的树胶烟墨，取烟粉与泡软树胶在石臼中研合，过细筛去粗粒，再以苇笔试写定浓淡。墨色沉黑，落纸可书，遇水浸仍会晕开。按订单制作，材料缺货时暂停交付。成品一份，容器另备，不随货提供。",
+    "inspection": "先看墨块表面是否开裂、有无霉斑，再闻有无酸败气味；取少量在废纸上试划，看墨线是否均匀、有无砂粒刮笔。",
+    "storage": "置于阴凉干燥处，避免日晒与水汽，7天内用完；已泡开的墨浆不宜久放。"
+  },
+  "review": {
+    "contradictions": []
+  },
+  "errors": [],
+  "warnings": [],
+  "feedback": null
+}

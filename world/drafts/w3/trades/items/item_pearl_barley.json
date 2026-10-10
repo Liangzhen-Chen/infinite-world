@@ -1,0 +1,21 @@
+{
+  "id": "item_pearl_barley",
+  "fingerprint": "ffc3178ba094dd62444f07619e22bd0990ce59362ba65cfe6fb04831bfb11c23",
+  "status": "passed",
+  "attempts": 1,
+  "draft": {
+    "id": "item_pearl_barley",
+    "description": "白石镇秋季收下的脱壳大麦粒，500克一包，粒形圆整、色浅黄带灰白，表面留有碾磨的细纹与少量麸屑。已去壳，不是麦芽，也不作酿酒曲使用，主要用来熬浓汤或与豆类同煮。春末多为隔年存粮，颗粒偏干，煮前需多浸些时候。",
+    "inspection": "抓一把摊在木盘上，看颗粒是否完整、有无虫蛀小孔与霉斑；凑近闻有无酸败或闷仓味。若结块、发黏或气味刺鼻，整包弃用，不作煮前试吃。",
+    "storage": "装进干燥布袋或陶罐，扎口后放在阴凉通风处，离地离墙，避免与气味重的货物同放。保存上限180天，按本批收成日期核对，入夏前翻晒一次。"
+  },
+  "review": {
+    "contradictions": []
+  },
+  "errors": [],
+  "warnings": [],
+  "feedback": null,
+  "manualCorrection": {
+    "reason": "斤与公斤混写，改成500克，并取消收货日重新起算保存期。"
+  }
+}

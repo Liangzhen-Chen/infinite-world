@@ -1,0 +1,18 @@
+{
+  "id": "item_rapeseed_oil",
+  "fingerprint": "4705dcac4dc0a9039a5661f5466f71003804fc0af96a5553323d938452bd2685",
+  "status": "passed",
+  "attempts": 2,
+  "draft": {
+    "id": "item_rapeseed_oil",
+    "description": "白石镇夏季榨坊出的小份菜籽油，色深黄带青，生油气息浓，入锅后烟点偏低。每份约一小提，供少量煎烙调味之用，不作机械润滑。买者须自备容器，随货不附罐瓶。",
+    "inspection": "先看油面是否清亮无絮状悬浮，再闻有无酸败哈喇气；若见分层浑浊或刺鼻异味即弃。油液挂壁应均匀，底部不应有沉淀物。",
+    "storage": "装入自备的干燥洁净容器并封口，置于阴凉避光处，自榨取日起90天内用完；夏日高温时缩短存放。"
+  },
+  "review": {
+    "contradictions": []
+  },
+  "errors": [],
+  "warnings": [],
+  "feedback": null
+}

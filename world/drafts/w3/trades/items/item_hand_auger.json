@@ -1,0 +1,21 @@
+{
+  "id": "item_hand_auger",
+  "fingerprint": "95e8fb0427f8452814ba9ece1bfb720f3a0e660de3205e5d2c8bd7da803a0b02",
+  "status": "passed",
+  "attempts": 1,
+  "draft": {
+    "id": "item_hand_auger",
+    "description": "铁匠铺锻打的铁制横柄手钻，钻杆长逾一掌，顶端横穿一根可卸木柄，柄端缠麻绳防滑。钻头为扁铲式，刃口经淬火呈暗青，钻杆中段有螺旋排屑槽。全重零点六五，双手握横柄向下轻压并旋转即可在木板开孔，遇节疤须减力退屑。作坊与行商按订单补货，现货有限。",
+    "inspection": "先看钻头刃口有无卷缺，再转横柄听杆内有无异响，最后在废木上试钻一孔，观察排屑是否顺畅、孔壁是否齐整。",
+    "storage": "刃口涂薄油，横柄卸下与钻杆分放，裹粗布置于干燥木箱，避免受潮生锈。"
+  },
+  "review": {
+    "contradictions": []
+  },
+  "errors": [],
+  "warnings": [],
+  "feedback": null,
+  "manualCorrection": {
+    "reason": "品质不代表材料；手钻恢复铁制，操作改为双手同时压转横柄。"
+  }
+}

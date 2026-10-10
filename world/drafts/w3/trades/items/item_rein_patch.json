@@ -1,0 +1,18 @@
+{
+  "id": "item_rein_patch",
+  "fingerprint": "a0716e217e3ed1aae275ca36c66b0bd7b0a82819220d5dfa231eb12dea8fd76e",
+  "status": "passed",
+  "attempts": 1,
+  "draft": {
+    "id": "item_rein_patch",
+    "description": "织坊出产的木色鞣革护片，取整块鞣革对折成包覆片，侧边以麻线穿孔缝合，中留一道穿带通道，供缰绳接头处套入承磨。片身约一掌长，边缘因折压而略起浅棱，非完整缰绳，亦不附坐骑。",
+    "inspection": "查看折边有无开裂，缝合麻线是否松脱，穿带通道内壁是否被磨薄起毛；再嗅闻有无霉味或酸败气，外观与气味异常者不作使用。",
+    "storage": "置于干燥通风处，避开直射日光与潮湿地脚；自制成日起365天内使用。"
+  },
+  "review": {
+    "contradictions": []
+  },
+  "errors": [],
+  "warnings": [],
+  "feedback": null
+}

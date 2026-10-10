@@ -1,0 +1,21 @@
+{
+  "id": "item_bucket_handle",
+  "fingerprint": "d77c91e4095cb760b01f86a21a0355fa382d1fcda3a24f5f93b6ce15abc07b79",
+  "status": "passed",
+  "attempts": 3,
+  "draft": {
+    "id": "item_bucket_handle",
+    "description": "铁匠铺按订单打出的铁制提桶梁，净重0.7，半圆弓身，两端各卷出一枚圆耳，耳口经锉平后能扣进木桶已有的桶耳。梁身留有锤打出的细密凹面与锉痕，卷耳内侧较亮。只供应提梁本身，木桶另备，不随货提供。",
+    "inspection": "先看半圆弧度是否左右对称，再翻看两端卷耳有无裂口、耳口锉面是否平整。查看梁身可见锈斑与裂纹，轻合桶耳检查活动是否顺畅；不能只凭声音判断内部夹渣。",
+    "storage": "置于铁匠铺干燥木架上，避免与湿炭、盐渍杂物同堆。长期不用可薄涂一层油脂隔绝潮气，勿压重物以免半圆变形。"
+  },
+  "review": {
+    "contradictions": []
+  },
+  "errors": [],
+  "warnings": [],
+  "feedback": null,
+  "manualCorrection": {
+    "reason": "铁提梁材质纠错并取消听声直接判定夹渣。"
+  }
+}

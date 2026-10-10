@@ -1,0 +1,18 @@
+{
+  "id": "item_gall_wash",
+  "fingerprint": "79ecaa34b37f951702d3e0d8f9bda8aeb3f86f899d93c702af3bf85c2a92aa44",
+  "status": "passed",
+  "attempts": 1,
+  "draft": {
+    "id": "item_gall_wash",
+    "description": "青灯酒馆按单煮制的淡瘿染液，取干瘿一枚入石臼捣成粗粒，与两份清水、一份木炭同入炊锅，慢火煮至液色转浅褐，再以亚麻滤布滤去渣滓，得澄清染液一份，重约零点二四。此液只作淡染打底，未掺铁盐，故色浅而偏黄褐，不可与铁胆墨混称。材料缺货时暂停交付。",
+    "inspection": "先看液面有无浮渣与霉点，再嗅其气：正常者带涩木气，无酸腐味。倾少许于白瓷上对光观察，应为均匀浅褐，无沉淀结块。若液色发黑或生絮状物，即弃之不用。",
+    "storage": "盛于洁净陶罐或玻璃瓶中，避光静置，7天内用完；久置色转深并生霉，不宜再用。"
+  },
+  "review": {
+    "contradictions": []
+  },
+  "errors": [],
+  "warnings": [],
+  "feedback": null
+}

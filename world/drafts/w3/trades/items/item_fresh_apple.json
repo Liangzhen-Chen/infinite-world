@@ -1,0 +1,18 @@
+{
+  "id": "item_fresh_apple",
+  "fingerprint": "3b96d7fd262b7310ba8b8ff85829f0f5bd0aafec1ebac59e7b15a2d8e154b6d8",
+  "status": "passed",
+  "attempts": 1,
+  "draft": {
+    "id": "item_fresh_apple",
+    "description": "晚熟苹果，出自公用果园，秋季采收后入窖暂存，春季便无鲜果可摘。单果约二百五十克，果皮由青黄转深红，阴面留浅色斑，蒂端略陷，果肉紧实多汁，味偏酸甜。可洗净生吃，也可去核后加水煮软作羹。磕碰处易先发暗，须及早挑出处理。",
+    "inspection": "取果托于掌上，先看果皮有无压痕、裂纹与暗斑，再看蒂端是否发黑渗汁；指腹轻按，凹陷不弹起者已伤。凑近闻，酸香清正为常，带酒味或霉味即弃。不必切开尝变质果。",
+    "storage": "置阴凉干燥处，单层摊放，果间留缝，勿与伤果同堆。可存10天；每两日翻看一次，拣出变软发暗者先处理。"
+  },
+  "review": {
+    "contradictions": []
+  },
+  "errors": [],
+  "warnings": [],
+  "feedback": null
+}

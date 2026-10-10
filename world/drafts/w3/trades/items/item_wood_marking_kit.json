@@ -1,0 +1,18 @@
+{
+  "id": "item_wood_marking_kit",
+  "fingerprint": "3a7e3f3e00fe89a2f17974bad69b7a348c92a4bc60fc26aaf3a794a3dfacb6f6",
+  "status": "passed",
+  "attempts": 1,
+  "draft": {
+    "id": "item_wood_marking_kit",
+    "description": "旧磨坊出产的白垩放样条，以一块白垩用铁锉修成便于握持的短条，一端由麻布条裹住，布边自行系紧，不另加绳结。条身约一掌长，白垩断面留有锉齿拉出的细密平行纹，布层边缘可见剪口毛丝。用于在木料表面拖划出浅白线，供下料与开榫前定位；布余片不随货提供，用后弃置。",
+    "inspection": "取条在指间转看：白垩应无贯穿裂纹与掉块，锉面平整不刺手；麻布包裹应紧贴不松脱，系口未散开。若布面沾有油污或白垩受潮发软、表面起粉，则不宜再用于精细划线。",
+    "storage": "置干燥木盒或抽屉内，避免受压与潮湿，勿与油污工具混放。无固定保存期限，受潮发软时可晾干再用。"
+  },
+  "review": {
+    "contradictions": []
+  },
+  "errors": [],
+  "warnings": [],
+  "feedback": null
+}

@@ -1,0 +1,18 @@
+{
+  "id": "item_book_trades_wood",
+  "fingerprint": "867b37e8778d4aa2ba06248d0fffbe7ce593423301e9ef6fed1926ecc5b15d71",
+  "status": "passed",
+  "attempts": 1,
+  "draft": {
+    "id": "item_book_trades_wood",
+    "description": "小学堂按预约誊写的初级图说，白石集市校订本，河谷工匠匿名合抄，共一册。纸页记短板榫接十个工序的用料与手艺，每工序配分解图与尺寸旁注，末页附常见废件对照。识字100可读，通读约300分钟，照图施工仍须达到对应配方熟练度。",
+    "inspection": "逐页翻查：图线是否被水渍晕开，旁注数字有无缺笔，装订麻线是否松脱，末页废件对照是否完整；书脊受潮起皱处轻压看是否掉纸屑。",
+    "storage": "置干燥木架，避雨避晒，勿压重物；每旬翻动一次防潮粘连。自誊写日起365天内可读，逾期纸脆易裂。"
+  },
+  "review": {
+    "contradictions": []
+  },
+  "errors": [],
+  "warnings": [],
+  "feedback": null
+}

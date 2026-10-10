@@ -1,0 +1,21 @@
+{
+  "id": "item_mining_pick",
+  "fingerprint": "8385c4780be06b49a42a045e1fbda19355ea1fb210ba8ee6568aafdefbf99fea",
+  "status": "passed",
+  "attempts": 1,
+  "draft": {
+    "id": "item_mining_pick",
+    "description": "铁匠铺备售的木柄铁镐，镐头一端收尖、一端较扁，柄身留出便于双手交错握持的长段。尖端用来敲开已经松裂的土石，扁端可拨开矿脉表层碎料；碰到坚硬整岩时容易钝口，需要减力换落点。整镐重2.8公斤，使用后应检查柄孔附近的裂纹。",
+    "inspection": "先握住木柄轻晃镐头，查看结合处是否松动，再查尖端有无卷口、缺角与可见裂纹。柄身顺纹裂口扩大时应停用。",
+    "storage": "清掉泥砂后擦干，镐头薄涂保养油，放在干燥工具架上，避开湿墙；柄端落地处垫木块，防止长期吸潮。"
+  },
+  "review": {
+    "contradictions": []
+  },
+  "errors": [],
+  "warnings": [],
+  "feedback": null,
+  "manualCorrection": {
+    "reason": "追加L4发现品质铜误写成铜头；手工恢复木柄铁镐，不新增修理工序或采矿能力。"
+  }
+}

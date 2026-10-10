@@ -1,0 +1,21 @@
+{
+  "id": "item_cabbage",
+  "fingerprint": "f9845cfd51a36f92ecd2d0076e12c8a12ec97563ab150360e2a1010a5957464b",
+  "status": "passed",
+  "attempts": 1,
+  "draft": {
+    "id": "item_cabbage",
+    "description": "南田冷凉季收下的紧叶甘蓝，外叶层层包合，叶球压手，每份500克。叶脉细白，切口带淡青汁水，气味清辛。可切丝炖煮，也可整叶下锅；虫损外叶与硬根需另行剔除，不随货提供容器。",
+    "inspection": "翻看外层叶片，挑出被虫咬出孔洞或边缘发黄的部分；指压叶球，应有回弹而不软塌；闻切口，清辛味正常，酸腐味则弃。",
+    "storage": "置阴凉通风处，避免日晒与挤压，5天内食用；暑天失水快，可先剥去外层再收。"
+  },
+  "review": {
+    "contradictions": []
+  },
+  "errors": [],
+  "warnings": [],
+  "feedback": null,
+  "manualCorrection": {
+    "reason": "纠正份量单位，不把份量强制写成整颗重量。"
+  }
+}

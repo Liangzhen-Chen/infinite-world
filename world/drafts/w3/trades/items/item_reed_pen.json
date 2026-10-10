@@ -1,0 +1,21 @@
+{
+  "id": "item_reed_pen",
+  "fingerprint": "df4be2d67a6b7275d4a490444f1576aec3356105712f7421c0aaea1fcaa6daa8",
+  "status": "passed",
+  "attempts": 1,
+  "draft": {
+    "id": "item_reed_pen",
+    "description": "小学堂备用的斜口芦苇笔，取干透苇秆削成，长约一掌，笔身留有削皮后的纵向棱痕。笔尖斜切出窄斜口，中缝由刀尖划开，缝内可见旧墨积成的暗色薄层。蘸现成墨液书写，笔尖存墨有限，写数字便需再蘸。学堂按订单向行商补货，现货不多。",
+    "inspection": "捏住笔身对光看斜口，检查中缝是否开裂过深、缝口有无毛刺；再在废纸上轻划两笔，查看斜口是否勾纸。笔杆若有横向折痕，即为将断之处。",
+    "storage": "横放于干燥笔盒或木匣内，勿使斜口受压，勿浸水久泡。与现成墨液分开放置，避免笔身吸潮变软。容器需另备，不随货提供。"
+  },
+  "review": {
+    "contradictions": []
+  },
+  "errors": [],
+  "warnings": [],
+  "feedback": null,
+  "manualCorrection": {
+    "reason": "删除不合芦苇笔结构的两指宽口，空划只能检查勾纸。"
+  }
+}

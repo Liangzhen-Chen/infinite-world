@@ -1,0 +1,18 @@
+{
+  "id": "item_apple_rye_griddle",
+  "fingerprint": "7a91cfff06dac55d62b0c1bab3adbe91f54d7711dac0ab6bb68c230e2694aafc",
+  "status": "passed",
+  "attempts": 1,
+  "draft": {
+    "id": "item_apple_rye_griddle",
+    "description": "青灯酒馆当季小批供应的木级吃食。以新鲜苹果去核后切成薄片，黑麦粉加规定清水调成稠糊，锅底抹一层菜籽油，把果片夹在上下两层糊之间，用木柴碎引火烙至两面定型。成品外皮微焦，内里果片软热，趁热吃最宜。",
+    "inspection": "先看两面焦色是否均匀，有无发黑或夹生白斑；再闻黑麦焦香中是否带酸馊气味。若表面黏手、果片渗水或气味发酸，即不可食。正常者外皮干爽，轻按有弹性。",
+    "storage": "当日食用为佳，最多存放1天。放凉后以干布覆盖，置于阴凉通风处，避免叠压受潮。隔日再食须重新烙热。"
+  },
+  "review": {
+    "contradictions": []
+  },
+  "errors": [],
+  "warnings": [],
+  "feedback": null
+}

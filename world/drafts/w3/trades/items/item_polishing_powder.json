@@ -1,0 +1,18 @@
+{
+  "id": "item_polishing_powder",
+  "fingerprint": "3e2491f779b1ac8c790761c705abc0048df10b9104ee196a8f51e86ce5b49505",
+  "status": "passed",
+  "attempts": 1,
+  "draft": {
+    "id": "item_polishing_powder",
+    "description": "旧磨坊出品的浅灰细粉，由轻质磨石分次捣碎后过细筛收得，粗粒一律弃置。粉质干爽松散，手捻略有涩感，不结块。专供木器表面与皮边轻磨抛光，不可入口，也不得用于研磨食品。每份净重约0.22，按订单现制，材料缺货时暂停交付。",
+    "inspection": "取少量摊于白纸，看是否夹杂粗粒、石屑或异色杂质；嗅之应无霉味、油味与酸败气。受潮结块或气味异常者不可用于木面与皮边。",
+    "storage": "装干燥密闭小罐，置于阴凉避潮处，远离水汽与油污。取用后随即封口，勿与食品同放。"
+  },
+  "review": {
+    "contradictions": []
+  },
+  "errors": [],
+  "warnings": [],
+  "feedback": null
+}

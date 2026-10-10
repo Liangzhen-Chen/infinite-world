@@ -1,0 +1,18 @@
+{
+  "id": "item_hazelnut",
+  "fingerprint": "b17d2f494070012e4f2946eae2994e494b6cce97555195f3a23b438279c5a7ff",
+  "status": "passed",
+  "attempts": 1,
+  "draft": {
+    "id": "item_hazelnut",
+    "description": "北林边秋季剥出的榛仁，装袋时约二百克。仁粒多呈圆锥形，腹面留一道浅沟，外覆棕褐色薄种皮，剥去后露出米黄仁肉。供烘食或碾碎拌糕，嚼来油润带清甜。春季所售多为上年存仁，色泽略暗，香气不如新剥时锐利。",
+    "inspection": "取一把摊在掌上翻看：仁粒应饱满少碎屑，种皮紧贴不整片脱落。闻之是干净坚果气，若有霉味、哈喇味或虫蛀细孔，整袋弃用，不必尝。",
+    "storage": "装入干燥布袋或陶罐，扎口后置于阴凉避光处，勿近灶火与水汽。自剥壳日起60天内用完，春末后尤须勤查气味。"
+  },
+  "review": {
+    "contradictions": []
+  },
+  "errors": [],
+  "warnings": [],
+  "feedback": null
+}

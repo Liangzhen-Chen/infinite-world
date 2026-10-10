@@ -1,0 +1,18 @@
+{
+  "id": "item_copper_nameplate",
+  "fingerprint": "fe1dc197c31e2d3f35d2032d488f148a598548f506883ea98be8c33ea49c8c4c",
+  "status": "passed",
+  "attempts": 1,
+  "draft": {
+    "id": "item_copper_nameplate",
+    "description": "铁匠铺出品的素铜空白铭牌，由一片薄铜片经金属剪裁成形，两角各冲一个安装孔，孔缘与四边以扁锉修圆去毛刺。牌面不作任何刻纹或字迹，保留铜片原有的轧制细痕与浅褐色氧化斑，边缘可见锉削留下的细密纹路。可自行找人刻字，也可直接钉在木箱、门板或工具架上作标识。",
+    "inspection": "先看牌面有无折痕、裂纹与穿孔偏位，再摸四边和孔缘是否仍带毛刺；铜色发暗属正常，若出现绿色粉状锈斑则不宜久留。",
+    "storage": "平放于干燥木架或垫纸的抽屉内，避免叠压与潮湿；勿与铁件长期贴放，取用时握边缘，防止留下指印。"
+  },
+  "review": {
+    "contradictions": []
+  },
+  "errors": [],
+  "warnings": [],
+  "feedback": null
+}

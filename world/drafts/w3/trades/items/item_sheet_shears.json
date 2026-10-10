@@ -1,0 +1,18 @@
+{
+  "id": "item_sheet_shears",
+  "fingerprint": "e2d5926838a2ffae72390518831b87b92f8fa67a7ee3b47d664edf43ec11bf37",
+  "status": "passed",
+  "attempts": 1,
+  "draft": {
+    "id": "item_sheet_shears",
+    "description": "铁匠铺锻出的铜制弯柄剪，全长约一拃，两片剪身以中轴铆钉对合，柄端向外弯折成环，握持时掌心贴住弧背。刃口经粗磨开锋，专为薄铜片下料，剪厚铁坯会崩口。剪身留有锤痕与磨痕，中轴略松，合剪时两刃相蹭有声。作坊与行商按订单补货，现货有限。",
+    "inspection": "先看中轴铆钉是否松动，再对光查看刃口有无崩缺与卷边；合剪数次，听两刃相蹭是否均匀，柄环有无裂纹。",
+    "storage": "刃口涂薄油，以干布裹住剪身，平放于木匣内，勿与铁坯同堆，以免磕碰崩口。"
+  },
+  "review": {
+    "contradictions": []
+  },
+  "errors": [],
+  "warnings": [],
+  "feedback": null
+}

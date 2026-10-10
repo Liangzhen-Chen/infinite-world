@@ -1,0 +1,20 @@
+{
+  "id": "item_tool_tray",
+  "fingerprint": "4fda091da5c5c5aabe118f0073d57f75cab31dd945350fa99bd74c579c20d149",
+  "status": "passed",
+  "attempts": 1,
+  "draft": {
+    "id": "item_tool_tray",
+    "description": "旧磨坊出品的开口工具盘，以松木板拼出盘底，四角围浅边，搭口处落四枚铁钉固定，钉帽略陷木面。盘角边缘留有削刀走过的细痕，围边高约两指，盘内空敞，可平放凿、锉一类长柄工具。交货时为空盘，盘内器具需另备，不随货提供。",
+    "inspection": "查看四角搭口是否错位，钉帽有无外凸或松动；沿围边摸一圈，确认无翘边、无未削净的毛刺；盘底平放于台面，看是否晃动。",
+    "storage": "置于干燥木架，避免压重与浸水；盘内不长期存湿物。"
+  },
+  "review": {
+    "contradictions": []
+  },
+  "errors": [],
+  "warnings": [
+    "storage长度为24，进入L4抽读"
+  ],
+  "feedback": null
+}

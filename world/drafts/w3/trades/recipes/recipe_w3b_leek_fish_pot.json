@@ -1,0 +1,19 @@
+{
+  "id": "recipe_w3b_leek_fish_pot",
+  "fingerprint": "4e31669c7e8c93acac65efff4a304b3f060db2563c0a83929d15b930178407b2",
+  "status": "passed",
+  "attempts": 3,
+  "draft": {
+    "id": "recipe_w3b_leek_fish_pot",
+    "process": "韭葱剥去夹泥外叶，以配方内1份清水分出少量清洗，脏水弃置。切刀将净葱切段，鲜鱼切块，放入厚底煮锅，加入余下清水及粗盐。木刨屑只送入灶膛，保持小火慢煨；木匙轻拨鱼块，撇去浮沫，直到鱼肉熟透、葱段软化。全程45分钟，所得一份带汤鱼葱煨，鱼刺仍在，进食时须留意。废叶及残渣弃置，容器另备。"
+  },
+  "review": {
+    "contradictions": []
+  },
+  "errors": [],
+  "warnings": [],
+  "feedback": null,
+  "manualCorrection": {
+    "reason": "L4：洗菜用水也从配额分用，不凭空增加清水。"
+  }
+}

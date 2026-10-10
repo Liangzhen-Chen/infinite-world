@@ -1,0 +1,134 @@
+{
+  "index": 0,
+  "fingerprint": "855ff0af9d3c65a8bac8e829f7bd4dcd8d062f911f14ad609529cb25bd6829be",
+  "count": 34,
+  "passed": 34,
+  "ids": [
+    "item_pearl_barley",
+    "item_dry_peas",
+    "item_turnip",
+    "item_leek",
+    "item_onion",
+    "item_hen_egg",
+    "item_hazelnut",
+    "item_carrot",
+    "item_cabbage",
+    "item_honey",
+    "item_rapeseed_oil",
+    "item_fresh_apple",
+    "item_rye_flour",
+    "item_pine_board",
+    "item_willow_rod",
+    "item_hemp_thread",
+    "item_linseed_oil",
+    "item_copper_sheet",
+    "item_red_ochre",
+    "item_lampblack",
+    "item_calcite_chalk",
+    "item_pumice",
+    "item_parchment",
+    "item_oak_gall",
+    "item_gum_grain",
+    "item_frame_saw",
+    "item_mortise_chisel",
+    "item_wood_mallet",
+    "item_hand_auger",
+    "item_bench_plane",
+    "item_wood_rasp",
+    "item_leather_shears",
+    "item_stitching_awl",
+    "item_bone_folder"
+  ],
+  "rewritten": 1,
+  "manual": [],
+  "pending": [],
+  "flagged": [
+    "item_pearl_barley",
+    "item_turnip",
+    "item_onion",
+    "item_hen_egg",
+    "item_cabbage",
+    "item_willow_rod",
+    "item_copper_sheet",
+    "item_parchment",
+    "item_wood_mallet",
+    "item_hand_auger",
+    "item_bench_plane",
+    "item_leather_shears"
+  ],
+  "sample": [
+    "item_bone_folder",
+    "item_carrot",
+    "item_bench_plane",
+    "item_oak_gall",
+    "item_parchment"
+  ],
+  "l4": {
+    "approved": true,
+    "notes": [
+      {
+        "id": "item_bone_folder",
+        "note": "骨制压片的压折用途、圆端检视及织坊来源相符。"
+      },
+      {
+        "id": "item_carrot",
+        "note": "300克一束与按根数估述相容，未承诺每根固定重量；弃坏根。"
+      },
+      {
+        "id": "item_bench_plane",
+        "note": "L4发现材质错读与虚构行商段砚，删去不实来源。"
+      },
+      {
+        "id": "item_oak_gall",
+        "note": "80克干瘿仅供淡染液，非食物，检查虫孔与霉变。"
+      },
+      {
+        "id": "item_parchment",
+        "note": "保存期不在购买时重置，修正日期基准。"
+      },
+      {
+        "id": "item_pearl_barley",
+        "note": "斤与公斤混写，改成500克，并取消收货日重新起算保存期。"
+      },
+      {
+        "id": "item_turnip",
+        "note": "修正重量单位与供货者姓名错字。"
+      },
+      {
+        "id": "item_onion",
+        "note": "修正斤公斤换算与未登记盐商身份。"
+      },
+      {
+        "id": "item_hen_egg",
+        "note": "四蛋一份含壳240克，原稿误用斤。"
+      },
+      {
+        "id": "item_cabbage",
+        "note": "纠正份量单位，不把份量强制写成整颗重量。"
+      },
+      {
+        "id": "item_willow_rod",
+        "note": "修正重量单位，把柔韧保证改为保存上限与检查。"
+      },
+      {
+        "id": "item_copper_sheet",
+        "note": "薄铜片一张为200克，修正重量单位。"
+      },
+      {
+        "id": "item_wood_mallet",
+        "note": "修正重量单位，删除有裂纹却保证受力的说法。"
+      },
+      {
+        "id": "item_hand_auger",
+        "note": "品质不代表材料；手钻恢复铁制，操作改为双手同时压转横柄。"
+      },
+      {
+        "id": "item_leather_shears",
+        "note": "把石品质错读成石刃，恢复普通金属剪。"
+      }
+    ]
+  },
+  "costUpperYuan": 2.18948604,
+  "manualRatio": 0,
+  "needsSystemicRepair": false
+}

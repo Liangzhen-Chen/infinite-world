@@ -1,0 +1,108 @@
+{
+  "index": 2,
+  "fingerprint": "9c78034fae221e7b50ea3c0b8233ff2b249a72cf6e6ad759e35f653a1766ff08",
+  "count": 33,
+  "passed": 33,
+  "ids": [
+    "item_belt_strap",
+    "item_coin_wrap",
+    "item_leather_thimble",
+    "item_scroll_wrap",
+    "item_sheath_pouch",
+    "item_boot_gaiter",
+    "item_leather_hinge",
+    "item_rein_patch",
+    "item_needle_case",
+    "item_leather_grip",
+    "item_book_trades_leather",
+    "item_drawer_pull",
+    "item_door_latch",
+    "item_boot_scraper",
+    "item_stove_grid",
+    "item_bucket_handle",
+    "item_hinge_pin",
+    "item_tent_stake",
+    "item_strap_eye",
+    "item_pot_lifter",
+    "item_sack_pricker",
+    "item_book_trades_iron",
+    "item_ochre_paint",
+    "item_soot_ink",
+    "item_gall_wash",
+    "item_chalk_powder",
+    "item_polishing_powder",
+    "item_parchment_bookmark",
+    "item_copper_nameplate",
+    "item_waxed_thread",
+    "item_wax_seal_blank",
+    "item_wood_marking_kit",
+    "item_book_trades_artisan"
+  ],
+  "rewritten": 11,
+  "manual": [],
+  "pending": [],
+  "flagged": [
+    "item_leather_grip",
+    "item_door_latch",
+    "item_bucket_handle",
+    "item_hinge_pin",
+    "item_tent_stake",
+    "item_pot_lifter",
+    "item_wax_seal_blank"
+  ],
+  "sample": [
+    "item_sack_pricker",
+    "item_sheath_pouch",
+    "item_leather_grip",
+    "item_copper_nameplate",
+    "item_wax_seal_blank"
+  ],
+  "l4": {
+    "approved": true,
+    "notes": [
+      {
+        "id": "item_sack_pricker",
+        "note": "铁制钝口拆袋器与用途一致，不作匕首。"
+      },
+      {
+        "id": "item_sheath_pouch",
+        "note": "软革套只套钝口工具，250克与365天相符。"
+      },
+      {
+        "id": "item_leather_grip",
+        "note": "骨压片没有刀刃，使用给定工具的正确名称。"
+      },
+      {
+        "id": "item_copper_nameplate",
+        "note": "此件确为铜片制造，空白牌面不附刻字和身份功能。"
+      },
+      {
+        "id": "item_wax_seal_blank",
+        "note": "L4：删除未列的临时粘固用途，保存期null不表示永久完好。"
+      },
+      {
+        "id": "item_door_latch",
+        "note": "门闩铁材被误写铜材且公斤被写成斤，逐项恢复。"
+      },
+      {
+        "id": "item_bucket_handle",
+        "note": "铁提梁材质纠错并取消听声直接判定夹渣。"
+      },
+      {
+        "id": "item_hinge_pin",
+        "note": "铁边料锻成的销子误写铜质，按真实投料纠正。"
+      },
+      {
+        "id": "item_tent_stake",
+        "note": "铁帐钉误写铜材，检查方法恢复可见范围。"
+      },
+      {
+        "id": "item_pot_lifter",
+        "note": "铁坯锻成的夹臂误写铜材，逐词修正。"
+      }
+    ]
+  },
+  "costUpperYuan": 2.6326176399999994,
+  "manualRatio": 0,
+  "needsSystemicRepair": false
+}

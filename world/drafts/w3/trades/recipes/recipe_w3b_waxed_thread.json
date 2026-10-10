@@ -1,0 +1,19 @@
+{
+  "id": "recipe_w3b_waxed_thread",
+  "fingerprint": "da95715da50bc97fc87032287306a13d95ce8060fae0580dcf0d1691424ec04b",
+  "status": "passed",
+  "attempts": 3,
+  "draft": {
+    "id": "recipe_w3b_waxed_thread",
+    "process": "麻线头理顺后，把线身贴着蜂蜡块逐段拉过，转动线束使各面均匀沾蜡，注意不要把线团拉散。把上蜡线束平铺木工台，用骨压片圆端顺线轻压，使蜡附在表面捻缝里。检查局部硬结，压匀后盘回线束，剩余蜡仍附在线束包纸上一起交付。全程30分钟，成品一束，无另列副产品；用于缝革时减少线与针孔的摩擦。"
+  },
+  "review": {
+    "contradictions": []
+  },
+  "errors": [],
+  "warnings": [],
+  "feedback": null,
+  "manualCorrection": {
+    "reason": "原稿分步合计26分钟与30分钟骨架矛盾，恢复完整工时。"
+  }
+}

@@ -1,0 +1,18 @@
+{
+  "id": "item_stitching_awl",
+  "fingerprint": "4f6b2a3147555bc3d8a8359b80e443d33225ca94bee07bf38a9a831fd51374c8",
+  "status": "passed",
+  "attempts": 1,
+  "draft": {
+    "id": "item_stitching_awl",
+    "description": "铁匠铺锻出的缝革扁锥，全长约一掌，锥身由条铁反复锻打后收成扁尖，尖口宽而薄，两侧留有锤痕与磨石修出的斜棱，尾端插入一段短木柄，柄上可见缠布的旧胶印。专用于在熟革上刺开扁缝孔，孔形扁平，便于穿针引线；遇硬木或生皮则力不从心。",
+    "inspection": "先看锥尖是否卷口、有无豁裂，再以指腹沿扁棱轻推，察毛刺；木柄与锥尾接合处试拧，松脱即需重楔。柄身有裂纹或胶印发白的，只作备用。",
+    "storage": "锥尖套一小块软皮，与其余铁器分开放置，避免磕碰卷口；存于干燥处，木柄受潮易胀裂，不可久浸水。"
+  },
+  "review": {
+    "contradictions": []
+  },
+  "errors": [],
+  "warnings": [],
+  "feedback": null
+}

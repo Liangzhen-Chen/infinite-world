@@ -1,0 +1,21 @@
+{
+  "id": "item_lidded_seed_box",
+  "fingerprint": "f1d2e8e66dfaf674b6c32e46b8047a2943e4b2bb3238102bde5b33a129024136",
+  "status": "passed",
+  "attempts": 1,
+  "draft": {
+    "id": "item_lidded_seed_box",
+    "description": "旧磨坊出产的松木分格匣，匣身由两块松木板锯成，四枚铁钉钉合底板，内插隔板分成数格，顶面凿有滑盖槽，盖板可推入槽中闭合。通体薄涂木用油，木纹清晰，边角留有刨削痕。匣内为空，不随货附种子，可直接用匣格收放干燥种子。",
+    "inspection": "查看滑盖推入是否顺畅、槽口有无崩茬，隔板是否松动；四枚铁钉有无外露钉头，底板接缝是否开裂；闻木油气味是否刺鼻，表面有无霉斑或虫蛀孔。",
+    "storage": "置于干燥通风处，避免日晒与潮湿；滑盖保持半开以防槽口胀紧，勿压重物。"
+  },
+  "review": {
+    "contradictions": []
+  },
+  "errors": [],
+  "warnings": [],
+  "feedback": null,
+  "manualCorrection": {
+    "reason": "种子匣本来就是容器，删除还需另备容器的错误句。"
+  }
+}

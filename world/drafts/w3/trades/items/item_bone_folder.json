@@ -1,0 +1,18 @@
+{
+  "id": "item_bone_folder",
+  "fingerprint": "7fe53455cb2e76abf0af511def8c8ad5ee56a9ead204dd3a7e1adf79a6659941",
+  "status": "passed",
+  "attempts": 1,
+  "draft": {
+    "id": "item_bone_folder",
+    "description": "织坊里用剩的粗骨料磨成的压片，长约一掌，两端修成圆弧，正面平直，背面留着一道天然的浅槽。压在熟革折边或纸折线上，能把折痕定住而不割破表面。行商随货捎带，数量不多，按订单补。",
+    "inspection": "先看正面是否平直，再摸两端圆弧有无崩口。对着光看背面浅槽有没有裂纹延伸。压面若起毛刺，用指腹顺走一遍即可察觉。整片不应有贯通裂。",
+    "storage": "收在干燥处，与铁器分开放，避免磕碰崩口。可垫一层布，平放勿压重物。"
+  },
+  "review": {
+    "contradictions": []
+  },
+  "errors": [],
+  "warnings": [],
+  "feedback": null
+}

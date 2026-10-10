@@ -1,0 +1,18 @@
+{
+  "id": "item_walking_crutch",
+  "fingerprint": "542f9afb3df65b94470d457ad2b60aef773e4ebd231c1f4322abd66410d8b0fd",
+  "status": "passed",
+  "attempts": 1,
+  "draft": {
+    "id": "item_walking_crutch",
+    "description": "旧磨坊出品的腋托木拐，以两块松木板锯出拐身与腋托，用穿接榫相接，托部以亚麻布条缠包。全长按固定尺寸制作，拐脚端削出斜面以便着地。木面留有锉刀修整的细痕，榫肩处可见锯口与凿孔边沿。整拐重约1.3，供拄地借力之用，不声明医疗矫正效果。",
+    "inspection": "先看拐身有无顺纹开裂或节疤贯穿，再按穿接榫处是否松动、榫肩有无错位。托部布条应缠紧无散头，拐脚斜面磨耗过甚者不宜再用。逐根手压试其回弹，听有无异响。",
+    "storage": "置于干燥木架或靠墙竖放，避免托部布条受潮发霉；远离炉火与积水地面，勿以重物横压拐身。"
+  },
+  "review": {
+    "contradictions": []
+  },
+  "errors": [],
+  "warnings": [],
+  "feedback": null
+}

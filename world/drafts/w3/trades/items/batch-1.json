@@ -1,0 +1,120 @@
+{
+  "index": 1,
+  "fingerprint": "c343bd35e004ac7907ed0945a13855fce9bd07c0032f0a41a83137ad9533c2ad",
+  "count": 34,
+  "passed": 34,
+  "ids": [
+    "item_grooving_wheel",
+    "item_flat_file",
+    "item_round_file",
+    "item_iron_punch",
+    "item_rivet_set",
+    "item_hand_bellows",
+    "item_stone_mortar",
+    "item_fine_sieve",
+    "item_reed_pen",
+    "item_ink_brush",
+    "item_mining_pick",
+    "item_sheet_shears",
+    "item_barley_pea_stew",
+    "item_leek_fish_pot",
+    "item_pea_spread",
+    "item_turnip_oat_cake",
+    "item_honey_nut_cake",
+    "item_onion_egg_soup",
+    "item_honey_curd_spread",
+    "item_vinegar_carrot",
+    "item_cabbage_barley",
+    "item_apple_rye_griddle",
+    "item_book_trades_kitchen",
+    "item_lidded_seed_box",
+    "item_three_leg_stool",
+    "item_wall_shelf",
+    "item_foot_rest",
+    "item_bread_board",
+    "item_thread_rack",
+    "item_walking_crutch",
+    "item_shutter_panel",
+    "item_tool_tray",
+    "item_willow_creel",
+    "item_book_trades_wood"
+  ],
+  "rewritten": 5,
+  "manual": [],
+  "pending": [],
+  "flagged": [
+    "item_grooving_wheel",
+    "item_iron_punch",
+    "item_stone_mortar",
+    "item_reed_pen",
+    "item_mining_pick",
+    "item_turnip_oat_cake",
+    "item_honey_nut_cake",
+    "item_honey_curd_spread",
+    "item_lidded_seed_box",
+    "item_tool_tray"
+  ],
+  "sample": [
+    "item_foot_rest",
+    "item_rivet_set",
+    "item_iron_punch",
+    "item_reed_pen",
+    "item_lidded_seed_box"
+  ],
+  "l4": {
+    "approved": true,
+    "notes": [
+      {
+        "id": "item_foot_rest",
+        "note": "倾斜木脚凳的用途与接合检视相符，没有宣称医疗纠正。"
+      },
+      {
+        "id": "item_rivet_set",
+        "note": "冲铆头工具仅整形，未新增材料转化功能。"
+      },
+      {
+        "id": "item_iron_punch",
+        "note": "修正冲子重量与已登记供货者姓名。"
+      },
+      {
+        "id": "item_reed_pen",
+        "note": "删除不合芦苇笔结构的两指宽口，空划只能检查勾纸。"
+      },
+      {
+        "id": "item_lidded_seed_box",
+        "note": "种子匣本来就是容器，删除还需另备容器的错误句。"
+      },
+      {
+        "id": "item_grooving_wheel",
+        "note": "把石品质错读成石制缝距轮，恢复金属轮，并按铁材检查锈蚀。"
+      },
+      {
+        "id": "item_stone_mortar",
+        "note": "石臼套装重量是1.8公斤，修正单位。"
+      },
+      {
+        "id": "item_mining_pick",
+        "note": "追加L4发现品质铜误写成铜头；手工恢复木柄铁镐，不新增修理工序或采矿能力。"
+      },
+      {
+        "id": "item_turnip_oat_cake",
+        "note": "不把重新加热写成过期食物的复原办法。"
+      },
+      {
+        "id": "item_honey_nut_cake",
+        "note": "蜜榛糕成品600克，修正单位。"
+      },
+      {
+        "id": "item_honey_curd_spread",
+        "note": "380克成品、当日食用和自备容器吻合；短存储句信息足够。"
+      },
+      {
+        "id": "item_tool_tray",
+        "note": "空木托盘不附工具，短存储句不损失保存要求。"
+      }
+    ]
+  },
+  "costUpperYuan": 2.392922599999999,
+  "manualRatio": 0,
+  "needsSystemicRepair": false
+}

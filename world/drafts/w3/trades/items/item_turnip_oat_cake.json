@@ -1,0 +1,21 @@
+{
+  "id": "item_turnip_oat_cake",
+  "fingerprint": "e915805396778584eae023fef56a0b88a6a0774aee3d2e36f8cfab97e626726a",
+  "status": "passed",
+  "attempts": 1,
+  "draft": {
+    "id": "item_turnip_oat_cake",
+    "description": "青灯酒馆当日现做的小饼，以芜菁细末连汁水拌燕麦粉与盐成糊，菜籽油薄铺锅底烙至两面微黄，边缘略焦处已剔去。饼身约一掌大小，厚薄不匀，表面留有搅糊板压出的浅痕，入口带芜菁清甜与燕麦粗香，宜趁热吃。",
+    "inspection": "翻看饼面有无霉斑、发黏或异味，边缘焦黑过甚者不宜入口；轻按应略有弹性，塌软渗水即已坏。",
+    "storage": "放阴凉通风处，1天内吃完；超过保存期或出现变质征兆时弃置。"
+  },
+  "review": {
+    "contradictions": []
+  },
+  "errors": [],
+  "warnings": [],
+  "feedback": null,
+  "manualCorrection": {
+    "reason": "不把重新加热写成过期食物的复原办法。"
+  }
+}

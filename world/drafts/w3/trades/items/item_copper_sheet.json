@@ -1,0 +1,21 @@
+{
+  "id": "item_copper_sheet",
+  "fingerprint": "2488376e9072c85689c83596fdd9e1c57a44ca26d87de16dfe8ea3c1cca8b74e",
+  "status": "passed",
+  "attempts": 1,
+  "draft": {
+    "id": "item_copper_sheet",
+    "description": "雁渡河市随船运来的薄铜片，厚薄约如两层粗纸，表面留有辊压的细密纹路与暗红氧化斑。整张裁成方片，边缘尚见剪口毛刺。铜质偏软，可冷弯折角，常被匠人裁小做标牌、箱角包片与门饰衬底。单张重约200克，不作承重梁材，遇重压易起褶。",
+    "inspection": "取起对光看，正反两面应无贯穿裂口与绿锈坑；指压弯折处听有无脆响，脆响者已脆化。边缘毛刺可略锉平，不影响使用。若见大面积发黑起皮，则铜质已劣，不宜再弯。",
+    "storage": "平放于干燥木架，垫粗布隔潮，勿与铁器相叠以免生锈斑。受潮后擦干再收，可久存。"
+  },
+  "review": {
+    "contradictions": []
+  },
+  "errors": [],
+  "warnings": [],
+  "feedback": null,
+  "manualCorrection": {
+    "reason": "薄铜片一张为200克，修正重量单位。"
+  }
+}

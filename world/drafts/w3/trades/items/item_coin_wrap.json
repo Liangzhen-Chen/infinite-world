@@ -1,0 +1,18 @@
+{
+  "id": "item_coin_wrap",
+  "fingerprint": "1c1a5d71a4e85793be37177e4da3ba833b5ec9cc6ab3364d81ecdccc17d7fea3",
+  "status": "passed",
+  "attempts": 1,
+  "draft": {
+    "id": "item_coin_wrap",
+    "description": "织坊鞣革手作的小件折口零钱夹，木色评级，重0.2，产自织坊。整张软革对折成两层浅兜，侧边以麻线缝实，折口处用圆压片反复压出平顺折痕，收口靠皮革自身回弹咬合，无扣无带。交付时不附钱币，容器另备亦不随货提供，可另寻他物承装。",
+    "inspection": "翻看折口是否平贴、有无翘边；沿侧边摸麻线针脚，查是否断线、跳针或磨穿革面；对光看革身有无裂口、霉斑与硬结，嗅闻有无酸腐气味。轻折数次听有无脆响。",
+    "storage": "置于干燥阴凉处，避免重压与潮湿，勿长期曝晒；自制成日起365天内使用为佳。"
+  },
+  "review": {
+    "contradictions": []
+  },
+  "errors": [],
+  "warnings": [],
+  "feedback": null
+}

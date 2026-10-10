@@ -1,0 +1,18 @@
+{
+  "id": "item_red_ochre",
+  "fingerprint": "87e70c144e5cbc4f846cfc002bee1cc22d61ef4ccfd88ac3899d79061518a296",
+  "status": "passed",
+  "attempts": 1,
+  "draft": {
+    "id": "item_red_ochre",
+    "description": "白石镇旱季采掘的赤色土块经石碾磨细、粗筛筛过后得到的干粉，色相偏暗红，颗粒粗细不匀。约0.1重量份，用麻纸包成小包，由行商颜哲限量出售。用于木牌着色，须另配黏结材料调成浆，本身不是药物，也不能单独附着于木面。",
+    "inspection": "解开纸包看粉体是否结块、有无霉斑与潮腥气；取少量在指腹搓开，察其粗细与色泽是否均匀。结块受潮者不宜着色，气味异常者弃用。",
+    "storage": "仍以麻纸包好，置干燥木匣内避潮避晒，勿与食物同放。雨季只售干粉，受潮后须摊开阴干再用。"
+  },
+  "review": {
+    "contradictions": []
+  },
+  "errors": [],
+  "warnings": [],
+  "feedback": null
+}

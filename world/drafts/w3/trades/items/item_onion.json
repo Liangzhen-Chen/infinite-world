@@ -1,0 +1,21 @@
+{
+  "id": "item_onion",
+  "fingerprint": "25cfea3f410bcd7c88281250f03d0801fe7304de293b5ac88d6dffd9044e194f",
+  "status": "passed",
+  "attempts": 1,
+  "draft": {
+    "id": "item_onion",
+    "description": "白石镇夏末收下的黄皮洋葱，摊在通风处晒至外层成薄脆干皮，每份250克。剥去干皮后球体紧实，切开时渗出辛味汁液，适合下锅久煮。由镇上的行商以有限库存方式转手，数量随季节与收成变动，春季存放的球茎常从顶部抽芽，风味随之变淡。",
+    "inspection": "翻看外层干皮是否完整，有无霉斑或软塌处；捏球体应坚硬，顶部无绿芽。剥开一颗闻气味，辛味冲鼻者为佳，发酸或腐臭即弃。不尝变质洋葱。",
+    "storage": "置于阴凉通风的干处，避免潮湿与挤压，可存放30天；春季抽芽后尽快用掉。"
+  },
+  "review": {
+    "contradictions": []
+  },
+  "errors": [],
+  "warnings": [],
+  "feedback": null,
+  "manualCorrection": {
+    "reason": "修正斤公斤换算与未登记盐商身份。"
+  }
+}

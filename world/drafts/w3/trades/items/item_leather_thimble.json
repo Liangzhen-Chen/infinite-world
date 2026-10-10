@@ -1,0 +1,18 @@
+{
+  "id": "item_leather_thimble",
+  "fingerprint": "5e21f87b787a031cc6f673e9ff1f64637abfdd9c393e3d33df34647fce7a7bba",
+  "status": "passed",
+  "attempts": 1,
+  "draft": {
+    "id": "item_leather_thimble",
+    "description": "织坊出品的小件护具，取一块鞣制好的小皮条，按指围裁成窄带，绕指成筒，内侧再补折一层加厚。边缘以麻线穿孔缝合，收口处留出顶针的硬面。套上后顶缝针时受力均匀，指腹不被针尾磨破；因通体柔软无硬边，也不挡刀刃。每件约重0.06。",
+    "inspection": "先看皮面有无裂纹、霉斑与硬结，再翻看内侧折层是否脱开，边缘缝线有无断股、跳针。以指试套，应贴合不勒、顶面平整。缝线松脱或皮条发脆者不宜继续使用。",
+    "storage": "置于阴凉干燥处，避免曝晒与潮湿，勿与尖利器物同放。自制成日起365天内使用。"
+  },
+  "review": {
+    "contradictions": []
+  },
+  "errors": [],
+  "warnings": [],
+  "feedback": null
+}

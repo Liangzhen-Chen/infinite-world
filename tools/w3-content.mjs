@@ -2,7 +2,7 @@ import { loreIssues } from './economy-content.mjs';
 import { hashContent } from './content-pipeline.mjs';
 import { validateWorld } from './validate-world.mjs';
 
-const units = { '公斤': ['weight',1], '千克':['weight',1], '克':['weight',.001], '铜币':['basePrice',1], '分钟':['minutes',1], '小时':['minutes',60], '天':['shelfLifeDays',1] };
+const units = { '公斤': ['weight',1], '千克':['weight',1], '斤':['weight',.5], '克':['weight',.001], '铜币':['basePrice',1], '分钟':['minutes',1], '小时':['minutes',60], '天':['shelfLifeDays',1] };
 const numeral='(?:\\d+(?:\\.\\d+)?|[零〇一二两三四五六七八九十百千万点半]+)';
 export function chineseNumber(value){
   if(/^\d/.test(value))return Number(value);if(value==='半')return .5;
@@ -37,15 +37,18 @@ export function validateW3Draft(draft,entry,blocklist,context=null) {
   if(item)errors.push(...loreIssues(draft,entry));
   // Numeric claims in item prose concern this item. Recipes include ingredient
   // quantities, so their other numbers are checked by L2 against named facts.
-  if(item)for(const match of text.matchAll(new RegExp(`(${numeral})\\s*(公斤|千克|克|铜币|分钟|小时)`,'g'))){
+  if(item)for(const match of text.matchAll(new RegExp(`(${numeral})\\s*(公斤|千克|斤|克|铜币|分钟|小时)`,'g'))){
     const[field,factor]=units[match[2]],expected=field==='minutes'?entry.book?.readingMinutes:entry[field];
     if(expected!==undefined&&Math.abs(chineseNumber(match[1])*factor-expected)>.0001)errors.push(`数字${match[0]}与${field}=${expected}矛盾`);
   }
   if(!item){
-    for(const match of draft.process.matchAll(new RegExp(`(?:耗时|用时|历时|总计|全程|前后|过程|活计|需|约)(?:约|为|需|要|一个|一共|共)?\\s*(${numeral})(?:个)?\\s*(分钟|小时|时辰|息)`,'g'))){
+    // Only an explicitly overall duration must equal minutes. A substep such
+    // as "浸泡约30分钟" may use part of a 90-minute process.
+    for(const match of draft.process.matchAll(new RegExp(`(?:总耗时|总用时|总计|全程|前后|整个过程|整件活计|全部)(?:(?:约|为|需|要|一共|共|工时))*\\s*(${numeral})(?:个)?\\s*(分钟|小时|时辰|息)`,'g'))){
       const factor={分钟:1,小时:60,时辰:120}[match[2]];
       if(factor===undefined||chineseNumber(match[1])*factor!==entry.minutes)errors.push(`工序耗时${match[0]}与骨架${entry.minutes}分钟矛盾`);
     }
+    if(new RegExp(`${numeral}息(?:工时|火候|时间)?`).test(draft.process))errors.push('工序时间使用未定义的息，须改为分钟');
     if(context?.materials)for(const match of draft.process.matchAll(new RegExp(`(${numeral})\\s*(公斤|千克|克)(?:的)?(铁坯|铁料|木炭|干木刨屑|筛过黏土|黏土|燕麦粉)`,'g'))){
       const key={铁坯:'item_iron',铁料:'item_iron',木炭:'item_charcoal',干木刨屑:'item_wood_shavings',筛过黏土:'item_clay',黏土:'item_clay',燕麦粉:'item_oat_flour'}[match[3]],material=context.materials.find(row=>row.item===key);
       if(material&&Math.abs(chineseNumber(match[1])*units[match[2]][1]-material.amount*material.facts.weight)>.0001)errors.push(`投料${match[0]}与骨架重量${material.amount*material.facts.weight}公斤矛盾`);

@@ -1,0 +1,21 @@
+{
+  "id": "item_pot_lifter",
+  "fingerprint": "8ca4a1e52478e4e301856eb76187518bf484a885e86840b5c1690d19542e2dde",
+  "status": "passed",
+  "attempts": 1,
+  "draft": {
+    "id": "item_pot_lifter",
+    "description": "铁匠铺锻制的铁质提锅钩，重0.88，由两支夹臂与一枚铰销对合而成。夹臂分锻后卷出耳孔，铰销穿入使两臂开合，夹口经锉平修整，空合时两片贴合。专用于夹住小锅卷边提起，不附耐热手套，容器需另备且不随货提供。",
+    "inspection": "先看铰销是否松动、两臂开合是否顺畅，再看夹口有无卷刃或豁口，最后空合一次，确认两片夹口贴合、不留缝。",
+    "storage": "置于干燥木架或布袋内，避免受潮生锈；铰销处可薄涂一层油脂，勿与重物挤压，以免夹臂变形。"
+  },
+  "review": {
+    "contradictions": []
+  },
+  "errors": [],
+  "warnings": [],
+  "feedback": null,
+  "manualCorrection": {
+    "reason": "铁坯锻成的夹臂误写铜材，逐词修正。"
+  }
+}

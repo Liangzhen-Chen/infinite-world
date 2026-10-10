@@ -1,0 +1,18 @@
+{
+  "id": "item_ink_brush",
+  "fingerprint": "3a4c393abf1ec08d7476a9c69406e62be0e2fbfad93337a237ffe33d5aa9aae6",
+  "status": "passed",
+  "attempts": 1,
+  "draft": {
+    "id": "item_ink_brush",
+    "description": "小学堂常备的短毫画笔，竹制笔杆长约一掌，笔头以细毫扎成，锋尖收拢，适合在木牌或纸面上写小字。杆身留有多处指握磨出的浅亮痕，笔根处可见旧胶色。颜料与水需另备，不随此笔提供。作坊与行商按订单补货，现货有限。",
+    "inspection": "捏住笔杆轻捻，看笔头是否松动；再以指腹顺锋捋过，检查有无散毛、断毫与分叉。杆身若有裂纹或弯折，写细字时会偏锋，宜换一支。",
+    "storage": "笔头朝上插入笔筒或悬于笔架，置于干燥避晒处，勿使毫锋受压弯折；久置前先理顺锋尖。"
+  },
+  "review": {
+    "contradictions": []
+  },
+  "errors": [],
+  "warnings": [],
+  "feedback": null
+}

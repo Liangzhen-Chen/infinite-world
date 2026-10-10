@@ -1,0 +1,16 @@
+{
+  "id": "recipe_w3b_shutter_panel",
+  "fingerprint": "726540271fa9a5c1a6c93be122ebe4ac02520172f6559c3813c3f7c3aaa0d6a9",
+  "status": "passed",
+  "attempts": 1,
+  "draft": {
+    "id": "recipe_w3b_shutter_panel",
+    "process": "取两条风干松木短板，用窄框木锯各截去端头朽裂段，锯路贴线推进，弃去截下的碎料。以短底木刨顺纹刨平四面，刨至板条厚度一致、边缘能相互贴合，刨花扫拢弃置。把板条并排拼拢，背面横放两条余料作档，用枣木敲凿槌将六枚小铁钉逐一分点钉入，钉前先在钉位轻敲定位，避免木条劈裂。拼缝不严时松开该钉，重新刨边再拼。全程约200分钟，含刨削与钉档的间歇。成品为一片拼条窗扇，不自带窗框，铰链与安装作业另算。"
+  },
+  "review": {
+    "contradictions": []
+  },
+  "errors": [],
+  "warnings": [],
+  "feedback": null
+}

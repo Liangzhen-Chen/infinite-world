@@ -1,0 +1,18 @@
+{
+  "id": "item_leek_fish_pot",
+  "fingerprint": "4942aa34a7dba8e2c76106448dcbf04f1f5c1e5f489e3f2daae8fe82e158729d",
+  "status": "passed",
+  "attempts": 1,
+  "draft": {
+    "id": "item_leek_fish_pot",
+    "description": "青灯酒馆当日小批供应的木碗热食，洗净韭葱切段与鱼块同入陶锅，添水加盐后以小火慢煨，木匙不时拨开浮沫，汤色由清转乳白，葱段软塌而鱼块仍成形。盛出时鱼刺未剔，食用需留意。锅具与餐具另备，不随货提供。",
+    "inspection": "查看汤面是否浮有灰白沫，闻韭葱与鱼是否带酸腐气；鱼块应成形不散，葱段软而不烂。若汤色发暗、气味刺鼻则不可食用。",
+    "storage": "盛入带盖陶碗，置于阴凉处，1天内食完；隔夜后不得再食。"
+  },
+  "review": {
+    "contradictions": []
+  },
+  "errors": [],
+  "warnings": [],
+  "feedback": null
+}

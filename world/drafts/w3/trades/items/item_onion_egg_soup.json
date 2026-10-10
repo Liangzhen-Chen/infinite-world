@@ -1,0 +1,18 @@
+{
+  "id": "item_onion_egg_soup",
+  "fingerprint": "45df4cf2dd0221f8ebf9abcc33cd42769f4707b2830dc97be388d47d5d42d6be",
+  "status": "passed",
+  "attempts": 3,
+  "draft": {
+    "id": "item_onion_egg_soup",
+    "description": "青灯酒馆当季小批供应的热汤，取一枚洋葱切薄片，在陶锅中煮至透软出甜，四枚蛋去壳后打散，用木匙贴着汤面引成细流，落锅成絮状蛋花，再调盐起味。汤色清亮微黄，洋葱片沉浮其间，蛋花细嫩，趁热喝下暖胃，适合夜间佐餐。",
+    "inspection": "先看汤面是否清亮、有无浮沫或浑浊，再闻是否有酸败气或蛋腥冲鼻。蛋花应成细絮而非结块，洋葱片软而不烂。若汤色发灰、气味刺鼻，则不可食用。",
+    "storage": "盛入带盖陶碗，置于阴凉处或凉水中降温，1天内食用完毕；再次加热须彻底煮沸。"
+  },
+  "review": {
+    "contradictions": []
+  },
+  "errors": [],
+  "warnings": [],
+  "feedback": null
+}

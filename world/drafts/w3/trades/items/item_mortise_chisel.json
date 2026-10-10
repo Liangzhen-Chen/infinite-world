@@ -1,0 +1,18 @@
+{
+  "id": "item_mortise_chisel",
+  "fingerprint": "85611f724cb91c622f17abd8056392e595846ac07fb1641ba735abc44c9813ec",
+  "status": "passed",
+  "attempts": 1,
+  "draft": {
+    "id": "item_mortise_chisel",
+    "description": "铁匠铺锻成的直口木凿，整条凿身由一块碳钢打制，柄端收成圆头，可承木槌敲击。刃口平直、两棱略收，宽约一指，专用于在木料上开小榫眼。凿身中段留有锻打锤痕，柄部缠过旧布以防滑手。全长约一拃，重0.35，握持时重心靠前，下切须刃口朝离手方向。",
+    "inspection": "先看刃口是否卷边或崩缺，再沿刃线斜视有无豁口；柄端圆头若被敲出翻边，说明受过重击。凿身弯折或与柄接合处松动者不宜再用。可轻敲木料试刃，听声是否发闷。",
+    "storage": "刃口涂薄油，插木塞或套皮片护刃，平放于干燥工具架，勿与铁件堆压。"
+  },
+  "review": {
+    "contradictions": []
+  },
+  "errors": [],
+  "warnings": [],
+  "feedback": null
+}

@@ -1,0 +1,18 @@
+{
+  "id": "item_needle_case",
+  "fingerprint": "f9e23f5d41a8337158ae08340862ee69396f3ad3c133ff9fbdd2ca208fbda6f1",
+  "status": "passed",
+  "attempts": 1,
+  "draft": {
+    "id": "item_needle_case",
+    "description": "织坊出品的扁皮长针夹，取一块鞣制好的皮料裁成长条，对折成浅夹，用麻线把短边与底边缝住，口沿外翻，收针时留出一小段翻边，可把针尖裹在里面。夹身压得扁平，长针横放其中不易戳穿。空夹出售，针需另备，容器亦不随货提供。",
+    "inspection": "先看皮面有无裂纹、霉斑与硬结，再摸缝线是否松脱，翻开口沿查看针尖位是否被磨穿，最后将夹身对折，看两侧是否对称、翻边能否贴住。",
+    "storage": "置于干燥木柜内，避免受潮与重压，勿与尖利铁器同放。自制成起可存365天，逾期皮料易脆裂。"
+  },
+  "review": {
+    "contradictions": []
+  },
+  "errors": [],
+  "warnings": [],
+  "feedback": null
+}

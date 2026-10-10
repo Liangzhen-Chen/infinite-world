@@ -1,0 +1,19 @@
+{
+  "id": "recipe_w3b_drawer_pull",
+  "fingerprint": "b3f5a6cbabc924017df2cf73ded50cc1e775d3bf8f56cd4f8da7807d69d7773d",
+  "status": "passed",
+  "attempts": 3,
+  "draft": {
+    "id": "recipe_w3b_drawer_pull",
+    "process": "取铁料1份入炉，配木炭2袋，鼓风至橙红后以长柄铁钳夹出，置于砧上用锻工手锤把中段拉出拱背，两端反复锻平为耳片，此段约30分钟。趁热将短身冲子对准耳片，以手锤冲穿两孔，孔位偏差时回炉再冲，约15分钟。冲毕自然冷却约20分钟，冷透后换平齿铁锉，顺孔缘与拱背接缝锉去毛边，锉屑扫入废堆，约25分钟。各锻锉步骤共90分钟，另用10分钟收好炉火与工具，全程100分钟。铁料总量未变，仅分锻打与冲孔两段使用；安装钉另备，不随货提供。木炭只入炉，不接触食物；锉屑与火灰弃置，无副产品。"
+  },
+  "review": {
+    "contradictions": []
+  },
+  "errors": [],
+  "warnings": [],
+  "feedback": null,
+  "manualCorrection": {
+    "reason": "90分钟分步加10分钟收尾符合100分钟，删除错误的全程90措辞。"
+  }
+}
