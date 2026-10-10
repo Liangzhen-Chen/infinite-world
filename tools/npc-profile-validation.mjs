@@ -3,7 +3,7 @@
 const digit={零:0,一:1,二:2,两:2,三:3,四:4,五:5,六:6,七:7,八:8,九:9};
 function numeric(text){if(/^\d+$/.test(text))return Number(text);let sum=0,last=0;for(const c of text){if(c in digit)last=digit[c];else if({十:10,百:100}[c]){sum+=(last||1)*{十:10,百:100}[c];last=0;}else return NaN;}return sum+last;}
 export function validateNpcProfiles(world){
- const errors=[],people=new Map([...(world.npcs??[]),...(world.factionPeople??[])].map(n=>[n.id,n]));
+ const errors=[],people=new Map([...(world.npcs??[]),...(world.residents??[]),...(world.factionPeople??[])].map(n=>[n.id,n]));
  const sets=Object.fromEntries(['locations','cultures','skills','professions','items'].map(key=>[key,new Set((world[key]??[]).map(x=>x.id))]));
  const all=new Set(Object.values(world).filter(Array.isArray).flat().filter(x=>x?.id).map(x=>x.id));
  const ref=(id,kind,label)=>{if(!(kind==='people'?people.has(id):kind==='all'?all.has(id):sets[kind].has(id)))errors.push(`完整档引用不存在或类别不符：${label} -> ${id}`);};

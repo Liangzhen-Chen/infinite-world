@@ -27,7 +27,12 @@ test('W5正式内容经world_upgrade进入旧战役检索，保持钱袋与NPC�
  const afterApi=await api(t,root,published),after=await afterApi('/read',{campaignId});
  assert.deepEqual(after.document.state.player,before.document.state.player);
  assert.deepEqual(after.document.memories,before.document.memories);
- assert.deepEqual(after.document.state.npcs,before.document.state.npcs);
+ const oldActors=before.document.state.npcs;assert.equal(Object.keys(oldActors).length,18);
+ for(const [id,actor]of Object.entries(oldActors))assert.deepEqual(after.document.state.npcs[id],actor,id);
+ const added=published.npcs.filter(row=>!Object.hasOwn(oldActors,row.id));assert.equal(added.length,14);
+ assert.deepEqual(Object.keys(after.document.state.npcs).sort(),published.npcs.map(row=>row.id).sort());
+ for(const row of added)assert.deepEqual(after.document.state.npcs[row.id],{id:row.id,name:row.name,location:row.location,coins:row.coins??0,inventory:row.inventory??{},trust:row.trust??0,affection:row.affection??0,developments:[],relationships:{}},row.id);
+ for(const row of [...published.residents,...published.factionPeople])assert.equal(after.document.state.npcs[row.id],undefined,row.id);
  const faith=await afterApi('/search',{campaignId,query:'葭界 阵界'});
  assert.ok(faith.results.some(row=>row.id==='lore_deity_bank'&&row.text.includes('不能凭符纸创造河水')));
  const culture=await afterApi('/search',{campaignId,query:'镜沼篆汀人'});

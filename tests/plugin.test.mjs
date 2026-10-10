@@ -169,7 +169,8 @@ test('世界自动迁移：保留已改变的居民资金，加入新居民，�
     assert.equal(upgraded.document.state.npcs.npc_hw_ayan.coins,220);
     assert.equal(upgraded.document.state.npcs.npc_hw_new_test.coins,125);
     const note=Object.values(upgraded.document.state.records).find(row=>row.category==='world_update');
-    assert.equal(note.conflicts.length,1);assert.deepEqual(note.added,['npc_hw_new_test']);
+    assert.equal(note.conflicts.length,1);assert.deepEqual(note.added,updated.npcs.filter(n=>!created.document.state.npcs[n.id]).map(n=>n.id));
+    assert.ok(note.added.includes('npc_hw_new_test'));assert.ok((updated.residents??[]).every(n=>!upgraded.document.state.npcs[n.id]));
     assert.equal((await newApi('/read',{campaignId})).body.reference.sequence,upgraded.reference.sequence);
     const exported=(await newApi('/export',{campaignId})).body;
     assert.deepEqual((await newApi('/import',{bundle:exported})).body.document,upgraded.document);

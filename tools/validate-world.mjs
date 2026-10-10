@@ -8,15 +8,16 @@ import {validateAgricultureRules}from'../server-plugin/agriculture.mjs';
 import {validateWildlife}from'../server-plugin/wildlife.mjs';
 import {validateFarmPests}from'../server-plugin/farm-pests.mjs';
 import {validateBossEcology}from'../server-plugin/bosses.mjs';
-import {catalogMinimum,professionMinimum}from'./catalog-progress.mjs';
+import {catalogMinimum,professionMinimum,populationMinimum}from'./catalog-progress.mjs';
 import {worldLoreCategories,validateWorldLore}from'./w5-validation.mjs';
 import {socialCategories,validateSocialWorld}from'./w5-social-validation.mjs';
 import {validateNpcSchedules}from'../server-plugin/npc-schedule.mjs';
 import {validateNpcProfiles}from'./npc-profile-validation.mjs';
+import {validatePopulation}from'./population-validation.mjs';
 const schema=JSON.parse(await fs.readFile(new URL('../schemas/world.schema.json',import.meta.url),'utf8'));
 const blocklist=JSON.parse(await fs.readFile(new URL('../world/meta/blocklist.json',import.meta.url),'utf8'));
 const validate=new Ajv({allErrors:true,strict:true,allowUnionTypes:true}).compile(schema);
-const categories=['npcs','locations','items','professions','skills','spells','recipes','monsters','bosses',...worldLoreCategories,...socialCategories];
+const categories=['npcs','residents','locations','items','professions','skills','spells','recipes','monsters','bosses',...worldLoreCategories,...socialCategories];
 export function validateWorld(world,{stage='engine'}={}){
     if(!['engine','release','rules','final'].includes(stage))throw new Error(`未知构建阶段：${stage}`);
     const errors=[],warnings=[];
@@ -30,6 +31,7 @@ export function validateWorld(world,{stage='engine'}={}){
     errors.push(...validateObjectWorld(world));
     errors.push(...validateNpcSchedules(world));
     errors.push(...validateNpcProfiles(world));
+    errors.push(...validatePopulation(world));
     const entities=categories.flatMap(key=>world[key]??[]),ids=new Map(),names=new Map();
     for(const row of entities){
         if(ids.has(row.id))errors.push(`重复编号：${row.id}`);ids.set(row.id,row);
@@ -192,6 +194,9 @@ export function validateWorld(world,{stage='engine'}={}){
         if((ids.get(row.item)?.durability??0)<=row.maxLoss)errors.push(`维修损耗不留可恢复空间：${row.id}`);
     }
     if(stage==='rules'||stage==='final'){
+        const full=world.npcs.filter(row=>row.tier==='full').length;
+        if(full<populationMinimum.full)errors.push(`目录数量不足：npcs.full ${full}<${populationMinimum.full}`);
+        if((world.residents?.length??0)<populationMinimum.residents)errors.push(`目录数量不足：residents ${world.residents?.length??0}<${populationMinimum.residents}`);
         for(const [key,count]of Object.entries(catalogMinimum))if((world[key]?.length??0)<count)errors.push(`目录数量不足：${key} ${world[key]?.length??0}<${count}`);
         for(const [kind,count]of Object.entries(professionMinimum))if(world.professions.filter(row=>row.kind===kind).length<count)errors.push(`职业数量不足：${kind}`);
         for(const row of world.professions.filter(row=>row.kind==='combat'))if((row.skillTree??[]).length<15)errors.push(`技能树不足15项：${row.id}`);

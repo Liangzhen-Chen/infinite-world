@@ -165,7 +165,9 @@ test('旧世界回放不补记忆；目录升级保留财物关系，只记录�
     const old=applyPatches(document,(await archived.reduce(document,input,{replay:true})).patches);
     assert.ok(Object.values(old.state.npcs).every(npc=>!npc.memoryStream));
     const plan=planWorldUpgrade(old,oldWorld,world,{worldHash:'full-profile',eventId:'upgrade'}),upgraded=applyPatches(old,plan.patches);
-    assert.deepEqual(upgraded.state.npcs,old.state.npcs);assert.deepEqual(upgraded.state.player,old.state.player);
+    assert.deepEqual(Object.fromEntries(Object.keys(old.state.npcs).map(id=>[id,upgraded.state.npcs[id]])),old.state.npcs);
+    assert.deepEqual(Object.keys(upgraded.state.npcs).sort(),world.npcs.map(n=>n.id).sort());
+    assert.ok(world.residents.every(n=>!upgraded.state.npcs[n.id]));assert.deepEqual(upgraded.state.player,old.state.player);
     const out=await new WorldEngine(world).reduce(upgraded,{...input,eventId:'new_trade'}),fresh=applyPatches(upgraded,out.patches);
     assert.deepEqual(stream(fresh,merchant).map(row=>row.sourceEvent),['new_trade']);
 });

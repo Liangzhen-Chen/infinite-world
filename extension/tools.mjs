@@ -3,7 +3,7 @@ const object=(properties,required=[])=>({type:'object',properties,...(required.l
 const definitions=[];
 const define=(name,description,properties,required=[])=>definitions.push({type:'function',function:{name,description,parameters:object(properties,required)}});
 define('world_trade','交易物品或住宿，可按商家额度赊账，或用欠款编号偿还。',{buyer:str,seller:str,item:str,quantity:int,unitPrice:int,service:{type:'string',enum:['住宿']},days:int,payment:{type:'string',enum:['cash','credit','repay']},creditMinutes:{...int,description:'赊账约定从现在起多少分钟后到期；一小时填60，不另建付款约定'},debt:str,instances:{type:'array',items:str}},['seller']);
-define('world_move','用地点中文名称或已知编号沿路线抵达目的地，结算同行者与路费。',{destination:str,mode:{type:'string',enum:['walk','horse','cart','boat']}},['destination']);
+define('world_move','用地点中文名称或已知编号沿路线抵达目的地，结算同行者与路费。',{destination:str,mode:{type:'string',enum:['walk','horse','cart','boat']},authorization:{...str,description:'进入私宅时，引用住户已给出的有效进入许可编号；口头叙述不代替许可'}},['destination']);
 define('world_time','等待指定时长用 minutes，到指定钟点用 until 交由引擎计算，二者只选一个。',{minutes:{...int,description:'本次完整时长，例如等一小时填60，不减掉此前耗时'},until:object({dayOffset:{...int,description:'相对当前日期：今天0、明天1'},hour:{...int,minimum:0,maximum:23},minute:{...int,minimum:0,maximum:59}},['dayOffset','hour']),activity:{type:'string',enum:['等待','工作','睡眠','休息']}},[]);
 define('world_weather','查看当前位置的天气、温度和日出日落时间。',{operation:{enum:['inspect']},location:str},[]);
 define('world_farm','查看农田粮仓，或按操作买粮、捐粮、留种、修仓、播种、收获、巡田。',{operation:{enum:['inspect','buy','donate','reserve_seed','repair','sow','harvest','guard','adopt']},settlement:str,quantity:int},[]);
@@ -11,11 +11,11 @@ define('world_wildlife','观察当地动物、追踪指定物种，或从指定�
 define('world_crime','尝试偷取在场目标的一件物品或指定铜币。',{operation:{enum:['steal']},target:str,item:str,coins:int,instance:str},['operation','target']);
 define('world_law','查询法典案件，或按案件编号办理报案、审理、赔付与服役。',{operation:{enum:['inspect','report','confess','search','arrest','hear','pay','labor','prison','compensate','claim']},case:str,authority:str,reporter:str,claimant:str},[]);
 define('world_pet','对指定动物执行喂养、接触、驯服、照料、训练、跟随或骑乘操作。',{operation:{enum:['inspect','feed','contact','tame','groom','treat','train','rest','follow','stay','release','mount','dismount']},target:str,item:str,skill:str,minutes:int,authorization:str},[]);
-define('world_summon','查看或解除召唤契约，或令指定役灵在源头和容器间搬水。',{operation:{enum:['inspect','dismiss','carry_water']},summon:str,source:str,destination:str,millilitres:int,authorization:str,authorizations:{type:'array',items:str,maxItems:8}},[]);
+define('world_summon','查看或解除召唤契约，令役灵搬水，或消耗契约守卫的有限防护额度。',{operation:{enum:['inspect','dismiss','carry_water','guard']},summon:str,source:str,destination:str,millilitres:int,authorization:str,authorizations:{type:'array',items:str,maxItems:8}},[]);
 define('world_revival','在当前神殿或祭坛登记复活点并支付费用。',{location:str},[]);
 define('world_check','依据属性技能做难度检定或对抗，可引用工具与协助义务。',{attribute:str,skill:str,difficulty:int,context:int,contextReason:str,advantage:bool,disadvantage:bool,tools:{type:'array',items:str},helpers:{type:'array',items:str},opponent:object({npc:str,attribute:str,skill:str},['npc'])},[]);
-define('world_cast','向指定目标施放已学法术，可引用所需授权。',{spell:str,target:str,authorization:str,authorizations:{type:'array',items:str,maxItems:8}},['spell','target']);
-define('world_environment','查看当地环境对象、走近目标、搬运松泥，或检查炉温与向炉具加入自己持有的燃料。',{operation:{enum:['inspect','inspect_heat','load_fuel','approach','carry_silt']},target:str,destination:str,grams:int,item:str,quantity:{...int,description:'添料时为1到100份真实物品；其他操作按各自数量规则'},authorization:str,authorizations:{type:'array',items:str,maxItems:8}},[]);
+define('world_cast','向指定目标施放已学法术，可引用施法许可和本人同意；刻记须给出实际文字。',{spell:str,target:str,authorization:str,permit:str,text:{...str,maxLength:80},authorizations:{type:'array',items:str,maxItems:8}},['spell','target']);
+define('world_environment','查看当地环境对象及可见刻记、走近目标、搬运松泥，或检查炉温与添加自有燃料。',{operation:{enum:['inspect','inspect_heat','inspect_marks','load_fuel','approach','carry_silt']},target:str,destination:str,grams:int,item:str,quantity:{...int,description:'添料时为1到100份真实物品；其他操作按各自数量规则'},authorization:str,authorizations:{type:'array',items:str,maxItems:8}},[]);
 define('world_learn','向在场导师或通过持有书籍学习指定技能、法术或配方。',{entity:str,source:str,kind:{type:'string',enum:['spell','skill','recipe']}},['entity','source']);
 define('world_practice','练习指定技能或凭来源申请阶段突破。',{skill:str,target:str,gain:int,breakthroughSource:str},['skill']);
 define('world_profession','申请指定职业的认证、退职或升职。',{profession:str,teacher:str,operation:{type:'string',enum:['certify','abandon','promote']},choice:str},['profession']);

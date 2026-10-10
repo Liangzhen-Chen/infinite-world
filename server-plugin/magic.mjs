@@ -1,5 +1,7 @@
 import {derivedStats,monsterStats}from'./combat.mjs';
-import {magicStatuses,magicStatusStats}from'./magic-status.mjs';
+import {magicStatuses,magicStatusStats,relieveMagicStatuses,applyMagicStatus}from'./magic-status.mjs';
+import {validateTargeting,assertMagicTargeting}from'./magic-targeting.mjs';
+import {validateMarkCatalog,prepareMark,applyMark}from'./magic-marks.mjs';
 import {monsterReward}from'./progression.mjs';
 import {heldUnit,trackSingleItem}from'./items.mjs';
 import {validateEnvironmentCatalog,prepareEnvironmentMagic,applyEnvironmentMagic}from'./environment.mjs';
@@ -12,10 +14,16 @@ export function validateMagicCatalog(catalog,{requireHandler=false}={}){
     const spec=catalog.effectSpec,errors=[];
     if(!spec){if(requireHandler||catalog.mechanism)errors.push('此法术机制尚未接入规则，不能叙述已实现');return errors;}
     errors.push(...validateEffectSpec(spec));
+    errors.push(...validateTargeting(catalog));
     if(['status','light','protection'].includes(spec.kind)&&(!Number.isSafeInteger(catalog.duration)||catalog.duration<1||catalog.duration>Math.min(catalog.durationLimit??43200,43200)))errors.push('持续效果的时限非法');
     if(spec.kind==='status'&&(!magicStatuses[spec.status]||spec.power>magicStatuses[spec.status].maximum))errors.push('状态效果或强度不在规则表');
+    if(spec.kind==='status'&&['dazzle','camouflage','nightvision','illusion','compulsion','travel_calm'].includes(spec.status)&&!catalog.targeting)errors.push('新状态须声明实际目标边界');
+    if(spec.kind==='status'&&['dazzle','illusion'].includes(spec.status)&&catalog.duration!==1)errors.push('瞬时注意力干扰须最多保留一分钟待用');
+    if(spec.kind==='relief'&&(spec.power>3||catalog.duration!==0||catalog.targeting?.consent!=='mental_magic'||catalog.targeting?.permit!=='mental_magic'))errors.push('精神解除须有限强度、本人同意与施法许可');
+    if(spec.kind==='status'&&magicStatuses[spec.status]?.mental&&catalog.targeting?.permit!=='mental_magic')errors.push('精神干扰须明确施法许可');
     if(spec.kind==='environment')errors.push(...validateEnvironmentCatalog(catalog));
-    if(spec.kind==='summon')errors.push(...validateSummonCatalog(catalog));
+    if(['summon','summon_contract'].includes(spec.kind))errors.push(...validateSummonCatalog(catalog));
+    if(spec.kind==='mark')errors.push(...validateMarkCatalog(catalog));
     if(spec.kind==='object')errors.push(...validateObjectCatalog(catalog));
     return errors;
 }
@@ -23,7 +31,8 @@ export function prepareMagic(d,catalog,args){
     const errors=validateMagicCatalog(catalog);if(errors.length)throw new Error(errors.join('；'));
     const spec=catalog.effectSpec;if(!spec)return null;
     if(spec.kind==='environment')return prepareEnvironmentMagic.call(this,d,catalog,args);
-    if(spec.kind==='summon')return prepareSummon.call(this,d,catalog,args);
+    if(['summon','summon_contract'].includes(spec.kind))return prepareSummon.call(this,d,catalog,args);
+    if(spec.kind==='mark')return prepareMark.call(this,d,catalog,args);
     if(spec.kind==='object')return prepareObjectMagic.call(this,d,catalog,args);
     const target=['repair','dry','light'].includes(spec.kind)?this.resolve(args.target??'player'):resolveCreature(this,d,args.target??'player');
     if(['repair','dry','light'].includes(spec.kind)){
@@ -39,6 +48,7 @@ export function prepareMagic(d,catalog,args){
     const actor=target==='player'?d.get('state','player'):d.get('state',partition,target),definition=this.byId.get(target);
     if(!actor||target!=='player'&&actor.location!==d.get('state','location'))throw new Error('法术目标不在场');
     if(actor.status==='死亡')throw new Error('目标已经死亡，此法术不能使死者复生');
+    assertMagicTargeting(d,this,catalog,args,target);
     const derived=target==='player'?{maxHp:actor.maxHp,defense:0}:partition==='npcs'
         ?derivedStats({level:actor.level??definition.level??1,attributes:definition.attributes,profession:Boolean(definition.combatProfession)},this.rules)
         :monsterStats({level:actor.level??definition.level??definition.levelRange?.[0]??1,template:definition.template??this.byId.get(definition.monster)?.template??2,bossTier:definition.tier??0},this.rules);
@@ -57,7 +67,8 @@ export function applyMagic(d,prepared,id){
     if(!prepared)return{};
     let{spec,target,path,catalog}=prepared;
     if(spec.kind==='environment')return applyEnvironmentMagic.call(this,d,prepared,id);
-    if(spec.kind==='summon')return applySummon.call(this,d,prepared,id);
+    if(['summon','summon_contract'].includes(spec.kind))return applySummon.call(this,d,prepared,id);
+    if(spec.kind==='mark')return applyMark.call(this,d,prepared,id);
     if(spec.kind==='object')return applyObjectMagic.call(this,d,prepared,id);
     if(prepared.completionArgs){
         try{prepared=prepareMagic.call(this,d,catalog,prepared.completionArgs);}
@@ -66,11 +77,13 @@ export function applyMagic(d,prepared,id){
     const latest=d.get(...path);
     if(!latest||latest.status==='死亡')return{target,effectFailed:'施法完成前目标已离开行囊或死亡，效果未生效'};
     if(spec.kind==='protection')return applyProtectionPrimitive(d,{spec,target,spell:catalog.id,duration:catalog.duration},id);
+    if(spec.kind==='relief')return relieveMagicStatuses(d,target,spec.statuses,spec.power);
     if(spec.kind==='status'||spec.kind==='light'){
         const expires=d.get('state','minute')+catalog.duration;
-        const effect={kind:spec.kind,spell:catalog.id,target,power:spec.power,expires,source:id,
-            ...(spec.kind==='status'?{status:spec.status}:{owner:'player',targetInstance:trackSingleItem(d,this,'player',target,id)})};
-        d.set(['state','effects',id],effect);
+        if(spec.kind==='status'){
+            const applied=applyMagicStatus(d,{target,status:spec.status,power:spec.power,duration:catalog.duration,source:id,spell:catalog.id},id);
+            if(applied.resisted)return applied;
+        }else d.set(['state','effects',id],{kind:'light',spell:catalog.id,target,power:spec.power,expires,source:id,owner:'player',targetInstance:trackSingleItem(d,this,'player',target,id)});
         if(spec.kind==='status'&&!magicStatuses[spec.status].beneficial&&target.startsWith('npc_')){
             d.set([...path,'trust'],Math.max(-100,(latest.trust??0)-10));
             d.set([...path,'developments'],[...latest.developments??[],{type:'敌意法术',status:spec.status,source:id,minute:d.get('state','minute')}]);

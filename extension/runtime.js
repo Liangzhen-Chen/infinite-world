@@ -10,6 +10,8 @@ const active=()=>ctx().characters[ctx().characterId]?.name==='无限原野·世�
 let view=null,loadedChat=null,blocked=null,chain=Promise.resolve(),mode='normal',turnStart=null;
 let indexedChat=null,indexedMessages=[];
 let labels={},feedback=[];
+let reviewTurn=null;
+const reviewing=new WeakMap();
 const api=async(endpoint,body={})=>{
     const response=await fetch(`/api/plugins/infinite-fields/${endpoint}`,{method:'POST',headers:ctx().getRequestHeaders(),body:JSON.stringify(body)});
     const data=await response.json();if(!response.ok||data.ok===false){const error=new Error(data.error??`本地存档请求失败${response.status}`);error.rejected=response.status>=400&&response.status<500;throw error;}return data;
@@ -50,6 +52,7 @@ window.fetch=async function(input,options){
 async function load(){
     if(!active()){view=null;loadedChat=null;return;}
     if(view&&loadedChat===ctx().chatId)return;
+    reviewTurn=null;
     const chatId=ctx().chatId,reference=ctx().chatMetadata[KEY];
     if(reference?.format!==2){view=null;loadedChat=chatId;labels={};feedback=[];blocked=null;turnStart=null;return;}
     const next=await api('read',{campaignId:reference.campaignId});
@@ -95,16 +98,19 @@ async function refresh(){
         bar=document.createElement('div');bar.id='fields-toolbar';
         const status=document.createElement('span');status.id='fields-status';bar.append(status);
         const book=document.createElement('button');book.textContent='世界账本';book.onclick=showBook;bar.append(book);
+        const reviewLabel=document.createElement('label'),reviewToggle=document.createElement('input');reviewToggle.type='checkbox';reviewToggle.id='fields-consistency-toggle';reviewToggle.checked=ctx().chatMetadata.fields_consistency_enabled!==false;
+        reviewToggle.onchange=async()=>{ctx().chatMetadata.fields_consistency_enabled=reviewToggle.checked;await ctx().saveChat();};reviewLabel.append(reviewToggle,document.createTextNode('回复审查'));bar.append(reviewLabel);
         const repair=document.createElement('button');repair.textContent='重新对账';repair.onclick=()=>queue(async()=>{try{view=await api('reconcile',{campaignId:view.reference.campaignId,validAnchors:validAnchors()});blocked=null;await persist();await refresh();}catch(error){fail(error);}});bar.append(repair);
         const error=document.createElement('div');error.id='fields-error';error.setAttribute('role','alert');error.hidden=true;bar.append(error);
         const pending=document.createElement('div');pending.id='fields-pending';pending.setAttribute('role','status');pending.setAttribute('aria-live','polite');pending.hidden=true;bar.append(pending);
         (document.querySelector('#sheld')??document.querySelector('#chat')?.parentElement)?.prepend(bar);
     }
     const p=view.document.state.player;
+    document.querySelector('#fields-consistency-toggle').checked=ctx().chatMetadata.fields_consistency_enabled!==false;
     document.querySelector('#fields-status').textContent=blocked?`生成已停止：${blocked}`:`${scene.scene.split('\n')[0].replace('【时间】','')} · ${p.coins}铜 · 生命${p.hp}/${p.maxHp} · 魔力${p.mp}/${p.maxMp}`;
     render();
 }
-async function execute(tool,args,eventId=crypto.randomUUID()){
+async function execute(tool,args,eventId=crypto.randomUUID(),reviewId=null){
     return queue(async()=>{
         let sent=false,committed=false;
         try{
@@ -114,7 +120,7 @@ async function execute(tool,args,eventId=crypto.randomUUID()){
             if(isOutOfCharacter(currentUser)&&tool!=='world_turn')throw new Error('场外提问不推进时间或写入世界状态');
             document.querySelector('#fields-error')?.setAttribute('hidden','');
             sent=true;
-            const result=await api('execute',{campaignId:view.reference.campaignId,tool,args,eventId,anchor:anchor(),expectedSequence:view.reference.sequence});committed=true;
+            const result=await api('execute',{campaignId:view.reference.campaignId,tool,args,eventId,anchor:anchor(),expectedSequence:view.reference.sequence,...(reviewId?{reviewId}:{})});committed=true;
             view=await api('read',{campaignId:view.reference.campaignId});
             await persist();await refresh();return toolResultWithClock(result.result,{startMinute,minute:view.document.state.minute});
         }catch(error){
@@ -162,7 +168,13 @@ async function reconcile(type,_options,dryRun){
             if(['regenerate','swipe'].includes(type)){
                 view=await api('reconcile',{campaignId:view.reference.campaignId,validAnchors:validAnchors(),excludeAnchor:anchor()});await persist();
             }
-            turnStart=view.document.state.minute;await refresh();
+            const currentAnchor=anchor();
+            if(!reviewTurn||reviewTurn.anchor!==currentAnchor||reviewTurn.completed||['regenerate','swipe'].includes(type)){
+                turnStart=view.document.state.minute;
+                const user=[...ctx().chat].reverse().find(message=>message.is_user);
+                reviewTurn={...await api('review/begin',{campaignId:view.reference.campaignId,anchor:currentAnchor,playerText:user?.mes??'',expectedSequence:view.reference.sequence,enabled:ctx().chatMetadata.fields_consistency_enabled!==false}),anchor:currentAnchor,chatId:ctx().chatId};
+            }
+            await refresh();
         }catch(error){fail(error);}
     });
 }
@@ -180,14 +192,33 @@ async function onEdited(index){
 async function afterReply(index){
     if(!active()||!view||mode==='quiet'||blocked)return;const message=ctx().chat[index];
     if(!message||message.is_user||message.is_system||message.extra?.tool_invocations||turnStart===null)return;
-    const user=[...ctx().chat].reverse().find(message=>message.is_user);
-    const state=view.document.state;
-    const parsed=parseTurn(message.mes,{location:state.location,startMinute:turnStart,minute:state.minute,
-        present:Object.entries(state.npcs).filter(([,npc])=>npc.location===state.location).map(([id])=>id),outOfCharacter:isOutOfCharacter(user?.mes??'')});
-    const result=await execute('world_turn',parsed.args,`turn_${anchor()}`);
-    if(result.ok===false)fail(new Error(result.error));
-    message.extra??={};message.extra.fields_turn={valid:parsed.valid,warning:parsed.warning??null};
-    await ctx().saveChat();render();
+    if(message.extra?.fields_turn)return;
+    if(reviewing.has(message))return reviewing.get(message);
+    const pending=(async()=>{
+        const user=[...ctx().chat].reverse().find(message=>message.is_user),session=reviewTurn,chatId=ctx().chatId;
+        const prose=document.querySelector(`.mes[mesid="${index}"] .mes_text`);if(prose)prose.hidden=true;
+        message.extra??={};
+        try{
+            if(!session||session.chatId!==chatId||session.anchor!==anchor())throw new Error('本轮审查快照缺失，尾注未提交');
+            const review=await api('review/reply',{campaignId:view.reference.campaignId,token:session.token,draft:message.mes,query:user?.mes??'',expectedSequence:view.reference.sequence});
+            if(chatId!==ctx().chatId||session!==reviewTurn)throw new Error('审查期间聊天已切换，尾注未提交');
+            message.extra.fields_consistency=review;
+            message.mes=review.text;
+            if(Array.isArray(message.swipes)&&Number.isInteger(message.swipe_id))message.swipes[message.swipe_id]=message.mes;
+            ctx().updateMessageBlock?.(index,message);
+            if(!review.canCommit){actionError(review.feedback);await ctx().saveChat();render();return;}
+            const state=view.document.state;
+            const parsed=parseTurn(message.mes,{location:state.location,startMinute:turnStart,minute:state.minute,
+                present:Object.entries(state.npcs).filter(([,npc])=>npc.location===state.location&&!npc.scheduleTravel&&!npc.cognitionTravel).map(([id])=>id),outOfCharacter:isOutOfCharacter(user?.mes??'')});
+            const result=await execute('world_turn',parsed.args,`turn_${session.anchor}`,review.reviewId);
+            if(result.ok===false){actionError(result.error);return;}
+            session.completed=true;
+            message.extra.fields_turn={valid:parsed.valid,warning:parsed.warning??null};
+            if(review.feedback)actionError(review.feedback);
+            await ctx().saveChat();render();
+        }catch(error){message.extra.fields_consistency={status:'unverified',verified:false,original:message.mes,feedback:error.message};if(chatId===ctx().chatId){actionError(`回复未验证：${error.message}。已完成的行动保留。`);await ctx().saveChat();render();}}
+        finally{if(prose)prose.hidden=false;}
+    })();reviewing.set(message,pending);return pending;
 }
 const context=ctx();
 context.eventSource.on(context.eventTypes.CHAT_COMPLETION_PROMPT_READY,({chat})=>{

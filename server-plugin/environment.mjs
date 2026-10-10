@@ -1,6 +1,7 @@
 import {normalize}from'./retrieval.mjs';
 import {waterMechanisms}from'../world/design/water-foundation.mjs';
 import {addObjectFuel,inspectObjectProcess}from'./magic-object.mjs';
+import{inspectMagicMarks}from'./magic-marks.mjs';
 
 const integer=(value,min,max,label)=>{if(!Number.isSafeInteger(value)||value<min||value>max)throw new Error(`${label}无效`);return value;};
 const key=id=>`physical_feature:${id}`;
@@ -131,6 +132,10 @@ export function interactEnvironment(d,args,eventId){
     const location=d.get('state','location'),operation=args.operation??'inspect';
     if(operation==='inspect')return environmentCatalog(this,d.document,{entity:args.target});
     if(operation==='inspect_heat')return{...inspectObjectProcess(d,this,args.target,args),actionScope:{kind:'instant',instantaneous:true}};
+    if(operation==='inspect_marks'){
+        const target=args.target?.startsWith('feature_')?args.target:this.resolve(args.target,'item');
+        return{marks:inspectMagicMarks(d,this,{...args,target},this.magicStatusContext(d,'player')),actionScope:{kind:'instant',instantaneous:true}};
+    }
     if(!this.rules.environment)throw new Error('此世界尚无环境操作规则');
     if(operation==='load_fuel'){
         const item=this.resolve(args.item,'item'),result=addObjectFuel(d,this,{...args,item},eventId);

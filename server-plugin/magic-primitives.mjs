@@ -1,6 +1,6 @@
 // Shared numerical handlers; callers own targeting, consent, costs and death effects.
 export const damageTypes=Object.freeze(['physical','fire','cold','wind','earth','light','shadow','mind']);
-const fields={damage:['damageType','armorFactor'],heal:[],repair:[],dry:[],status:['status'],light:[],environment:['operation','unit'],summon:['summonType','upkeepMp','upkeepMinutes'],protection:['damageTypes','stacking'],object:['operation','limitC']};
+const fields={damage:['damageType','armorFactor'],heal:[],repair:[],dry:[],status:['status'],relief:['statuses'],mark:['medium','visibility'],light:[],environment:['operation','unit'],summon:['summonType','upkeepMp','upkeepMinutes'],summon_contract:['operation','offering'],protection:['damageTypes','stacking'],object:['operation','limitC']};
 export function validateEffectSpec(spec){
  const errors=[];
  if(!spec||typeof spec!=='object'||Array.isArray(spec))return ['法术效果必须是规则对象'];
@@ -10,6 +10,7 @@ export function validateEffectSpec(spec){
  if(!Number.isSafeInteger(spec.power)||spec.power<1||spec.power>5000)errors.push('法术规则强度非法');
  if(spec.damageType!==undefined&&!damageTypes.includes(spec.damageType))errors.push('伤害门类不在规则表');
  if(spec.armorFactor!==undefined&&(!Number.isFinite(spec.armorFactor)||spec.armorFactor<0||spec.armorFactor>1))errors.push('护甲系数须在0至1之间');
+ if(spec.kind==='relief'&&(!Array.isArray(spec.statuses)||!spec.statuses.length||new Set(spec.statuses).size!==spec.statuses.length||spec.statuses.some(x=>!['fear','compulsion'].includes(x))))errors.push('解除只支持已登记恐惧或轻度强迫状态');
  if(spec.kind==='protection'){
   if(!Array.isArray(spec.damageTypes)||!spec.damageTypes.length||new Set(spec.damageTypes).size!==spec.damageTypes.length||spec.damageTypes.some(x=>!damageTypes.includes(x)))errors.push('防护须列出不重复的有效伤害门类');
   if(spec.stacking!=='strongest')errors.push('防护只支持单次伤害取最强吸收层');
@@ -41,6 +42,15 @@ export function consumeMagicProtection(d,target,amount,damageType='physical'){
  const now=d.get('state','minute'),available=[];
  for(const [id,e] of Object.entries(d.get('state','effects')??{})){
   if(e.kind!=='protection'||e.target!==target||e.expires<=now)continue;
+  if(e.summonSource){
+   const s=d.get('state','effects',e.summonSource);
+   if(!s||s.kind!=='summon'||s.owner!=='player'||s.location!==d.get('state','location')||s.expires<=now)continue;
+   if(s.waterFeature){
+    const water=d.get('state','records',`physical_feature:${s.waterFeature}`)?.state?.waterMl??s.initialWaterMl;
+    const p=d.get('state','records','local_player_position'),point=p?.location===s.location?p.point:[0,0];
+    if(!Number.isFinite(water)||water<2000||!Array.isArray(s.waterPoint)||Math.hypot(point[0]-s.waterPoint[0],point[1]-s.waterPoint[1])>1)continue;
+   }
+  }
   const errors=validateEffectSpec({kind:'protection',power:e.power,damageTypes:e.damageTypes,stacking:e.stacking});
   if(errors.length||!Number.isSafeInteger(e.expires)||!Number.isSafeInteger(e.remaining)||e.remaining<0||e.remaining>e.power)throw new Error('防护记录损坏，拒绝错误抵扣');
   if(e.remaining>0&&e.damageTypes.includes(damageType))available.push({...e,id});

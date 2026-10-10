@@ -31,7 +31,7 @@ test('L4或候选正文被改不能绕过发布审核',async()=>{
  }finally{assert.ok(path.resolve(temp).startsWith(path.resolve(os.tmpdir())+path.sep));await fs.rm(temp,{recursive:true,force:true});}
 });
 test('完整档必填和嵌套类型生效，未标full的旧档兼容',()=>{
- const old={...world,npcs:baseline};assert.equal(validateWorld(old).ok,true);
+ const old={...world,npcs:world.npcs.map(n=>baseline.find(row=>row.id===n.id)??n)};assert.equal(validateWorld(old).ok,true);
  for(const change of [n=>delete n.voice,n=>n.voice.samples=['不足三句'],n=>n.goals.short[0].progress=-1,n=>n.birth.month=15,n=>delete n.intelligence]){const w=structuredClone(published.world);change(w.npcs[0]);const result=validateWorld(w);assert.equal(result.ok,false);assert.ok(result.errors.some(x=>x.startsWith('schema')));}
 });
 test('通用引用校验拒绝错类别、重复关系、未知知情者和越界教学',()=>{
@@ -48,7 +48,7 @@ test('人物不能投影本人不知的记忆或秘密，出生日期与元年�
 });
 test('实际写入只在隔离世界执行一次，第二次无写入且不改变字节',async()=>{
  const temp=await fs.mkdtemp(path.join(os.tmpdir(),'m2-publish-'));await fs.cp(path.resolve('world'),temp,{recursive:true,filter:file=>!file.split(path.sep).includes('drafts')});
- try{await fs.writeFile(path.join(temp,'people/baseline.json'),JSON.stringify(world.npcs.map(n=>{const original=baseline.find(x=>x.id===n.id);return {...original,inventory:n.inventory,schedule:n.schedule};}),null,2)+'\n');
+ try{await fs.writeFile(path.join(temp,'people/baseline.json'),JSON.stringify(world.npcs.map(n=>{const original=baseline.find(x=>x.id===n.id);return original?{...original,inventory:n.inventory,schedule:n.schedule}:n;}),null,2)+'\n');
  const first=await publishNpcProfiles({worldRoot:temp,root,write:true});assert.equal(first.written,true);const before=await fs.readFile(path.join(temp,'people/baseline.json'),'utf8');const second=await publishNpcProfiles({worldRoot:temp,root,write:true});assert.equal(second.written,false);assert.equal(await fs.readFile(path.join(temp,'people/baseline.json'),'utf8'),before);
  }finally{assert.ok(path.resolve(temp).startsWith(path.resolve(os.tmpdir())+path.sep));await fs.rm(temp,{recursive:true,force:true});}
 });

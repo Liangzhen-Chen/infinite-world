@@ -13,18 +13,18 @@ import {evaluateAssertions}from'./playtest-assertions.mjs';
 import {generationSettings,generationRequest}from'../extension/generation.mjs';
 import {planNpcAutonomy}from'./npc-autonomy-planner.mjs';
 
-export async function createPlaytestServer({world,seed,plannerClient}={}){
+export async function createPlaytestServer({world,seed,plannerClient,consistencyClient=plannerClient??null,consistencyEnabled=true}={}){
     const directory=await fs.mkdtemp(path.join(os.tmpdir(),'fields-playtests-'));
     const app=express();app.use(express.json({limit:'10mb'}));const router=express.Router();
-    const npcPlanner=plannerClient?(engine,document,options)=>planNpcAutonomy(engine,document,{...options,client:{generate:plannerClient.generate.bind(plannerClient)}}):undefined;
-    await init(router,{world,baseRoot:directory,newCampaignSeed:seed===undefined?undefined:()=>seed,npcPlanningEnabled:Boolean(plannerClient),npcPlanner});app.use(router);
+    const npcPlanner=plannerClient?(engine,document,options)=>planNpcAutonomy(engine,document,{...options,client:options.client??{generate:plannerClient.generate.bind(plannerClient)}}):undefined;
+    await init(router,{world,baseRoot:directory,newCampaignSeed:seed===undefined?undefined:()=>seed,npcPlanningEnabled:Boolean(plannerClient),npcPlanner,consistencyClient,consistencyEnabled});app.use(router);
     const server=app.listen(0,'127.0.0.1');await once(server,'listening');
     const origin=`http://127.0.0.1:${server.address().port}`;
     const api=async(endpoint,body={})=>{
         const response=await fetch(`${origin}/${endpoint}`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
         const data=await response.json();if(!response.ok||data.ok===false)throw new Error(data.error??`HTTP ${response.status}`);return data;
     };
-    return{api,close:async()=>{await new Promise(resolve=>server.close(resolve));await fs.rm(directory,{recursive:true,force:true});}};
+    return{api,directory,close:async()=>{await new Promise(resolve=>server.close(resolve));await fs.rm(directory,{recursive:true,force:true});}};
 }
 
 export async function runPlaytest({scenario,api,client,bundle,attempt=1,processMessages=messages=>messages}){
@@ -60,6 +60,7 @@ export async function runPlaytest({scenario,api,client,bundle,attempt=1,processM
             const before=structuredClone(view.document),startMinute=before.state.minute,anchor=`${scenario.id}-${attempt}-${index}`;
             assertionBefore=before;
             chat.push({is_user:true,mes:step.input,extra:{fields_anchor:anchor}});history.push({role:'user',content:step.input});await sync();
+            const reviewTurn=await api('review/begin',{campaignId,anchor,playerText:step.input,expectedSequence:view.reference.sequence});
             const scene=await api('scene',{campaignId,query:step.input});
             report.sceneBefore=scene.scene;
             let final=false;
@@ -100,10 +101,15 @@ export async function runPlaytest({scenario,api,client,bundle,attempt=1,processM
                 }
             }
             if(!final)throw new Error(`${settings.toolRecursionLimit}轮调用内未返回完整正文`);
+            report.originalReply=report.reply;
+            report.consistency=await api('review/reply',{campaignId,token:reviewTurn.token,draft:report.reply,query:step.input,expectedSequence:view.reference.sequence});
+            report.reply=report.consistency.text;
+            history.at(-1).content=report.reply;
+            if(!report.consistency.canCommit)throw new Error(report.consistency.feedback);
             const state=view.document.state,parsed=parseTurn(report.reply,{location:state.location,startMinute,minute:state.minute,
                 present:Object.entries(state.npcs).filter(([,npc])=>npc.location===state.location).map(([id])=>id),outOfCharacter:isOutOfCharacter(step.input)});
             report.tail={valid:parsed.valid,warning:parsed.warning};
-            const output=await api('execute',{campaignId,tool:'world_turn',args:parsed.args,eventId:`turn_${anchor}`,anchor,expectedSequence:view.reference.sequence});
+            const output=await api('execute',{campaignId,tool:'world_turn',args:parsed.args,eventId:`turn_${anchor}`,anchor,expectedSequence:view.reference.sequence,reviewId:report.consistency.reviewId});
             report.turnResult=output.result;await fresh();
             chat.push({is_user:false,name:'无限原野·世界主持人',mes:report.reply});await sync();
             report.visible=visibleReply(report.reply,scene.labels);
@@ -123,7 +129,11 @@ export async function runPlaytest({scenario,api,client,bundle,attempt=1,processM
         }
     }
     const assertions=reports.flatMap(row=>row.assertions),passed=assertions.filter(row=>row.pass).length;
+    const ledgerPass=assertions.length>0&&passed===assertions.length;
+    const reviews=reports.filter(row=>row.originalReply!==undefined).map(row=>row.consistency);
+    const consistencyVerified=reviews.length>0&&reviews.every(row=>row?.verified===true&&row.canCommit);
     return{id:scenario.id,title:scenario.title,attempt,settings,fixture:scenario.initial??{mode:'new'},requirements:scenario.requirements,
+        ledgerPass,consistencyVerified,acceptancePass:ledgerPass&&consistencyVerified,
         assertions:assertions.length,passed,ratio:passed/Math.max(1,assertions.length),pass:assertions.length>0&&passed===assertions.length,turns:reports,
         finalDocument:view.document};
 }

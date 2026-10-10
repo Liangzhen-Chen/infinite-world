@@ -1,10 +1,12 @@
 import { applyPatches, canonical } from './storage.mjs';
 import { EntityResolver, validateMemory } from './retrieval.mjs';
+import {assertLocationAccess}from'./location-access.mjs';
 import {activities}from'./activities.mjs';
 import {WorldEngine as Phase1Engine}from'./compat/v2-phase1-engine.mjs';
 import {learn}from'./learning.mjs';
 import {prepareMagic,applyMagic}from'./magic.mjs';
 import {advanceMagicObjects}from'./magic-object.mjs';
+import{targetFacts,statusContext}from'./magic-context.mjs';
 import {profession,effectiveProficiency}from'./professions.mjs';
 import {xpRequired,allocateAttributes,milestone}from'./progression.mjs';
 import {createCharacter}from'./character.mjs';
@@ -51,7 +53,7 @@ export class WorldEngine {
     constructor(world) {
         this.world = world; this.rules = world.rules;
         if(![1,2].includes(this.rules.engineRevision??1))throw new Error('此世界使用尚不支持的引擎版本，停止加载');
-        this.entities = [...world.npcs,...world.locations,...world.items,...world.professions,...world.skills,...world.spells,...world.recipes??[],...world.monsters??[],...world.bosses??[],...world.cultures??[],...world.deities??[],...world.factions??[],...world.history??[],...world.factionPeople??[],...world.eras??[]];
+        this.entities = [...world.npcs,...world.residents??[],...world.locations,...world.items,...world.professions,...world.skills,...world.spells,...world.recipes??[],...world.monsters??[],...world.bosses??[],...world.cultures??[],...world.deities??[],...world.factions??[],...world.history??[],...world.factionPeople??[],...world.eras??[]];
         this.resolver = new EntityResolver(this.entities);
         this.byId = this.resolver.entities;
         if((this.rules.engineRevision??1)===1)this.compat=new Phase1Engine(world);
@@ -271,11 +273,16 @@ export class WorldEngine {
     }
     route(from,to,mode,minute,seed='default-campaign',weatherCache=null) {
         const distances=new Map([[from,0]]), movingTimes=new Map([[from,0]]), previous=new Map(),costs=new Map([[from,0]]),pending=new Set(this.world.locations.map(place=>place.id));
+        const season=this.calendar(minute).season,adjacent=new Map();
+        for(const edge of this.world.routes){
+            if(!edge.modes.includes(mode)||edge.closedSeasons.includes(season))continue;
+            for(const node of [edge.from,edge.to]){if(!adjacent.has(node))adjacent.set(node,[]);adjacent.get(node).push(edge);}
+        }
         while(pending.size){
-            const current=[...pending].sort((a,b)=>(distances.get(a)??Infinity)-(distances.get(b)??Infinity))[0];
-            if(!distances.has(current))break;pending.delete(current);if(current===to)break;
-            for(const edge of this.world.routes){
-                if(!edge.modes.includes(mode)||edge.closedSeasons.includes(this.calendar(minute).season))continue;
+            let current,nearest=Infinity;
+            for(const node of pending){const distance=distances.get(node)??Infinity;if(distance<nearest){current=node;nearest=distance;}}
+            if(current===undefined)break;pending.delete(current);if(current===to)break;
+            for(const edge of adjacent.get(current)??[]){
                 const next=edge.from===current?edge.to:edge.to===current?edge.from:null;if(!next||!pending.has(next))continue;
                 const speed=edge.speedKmh??(mode==='cart'?this.rules.travel.cartKmh:this.rules.travel.walkKmh*(mode==='horse'?this.rules.travel.horseMultiplier:1))*(edge.terrainMultiplier??1);
                 const travel=this.rules.weather?weatherEdge(this,seed,{...edge,from:current},mode,minute,distances.get(current),movingTimes.get(current),speed,weatherCache):null;
@@ -293,6 +300,8 @@ export class WorldEngine {
         const destination=this.resolve(args.destination),old=d.get('state','location');
         if(old===destination)return {destination,elapsed:0};
         const route=this.route(old,destination,args.mode??'walk',d.get('state','minute'),d.document.randomSeed);
+        const entered=new Set(route.edges.flatMap(edgeId=>{const edge=this.world.routes.find(row=>row.id===edgeId);return[edge.from,edge.to];}));entered.delete(old);
+        for(const place of entered)assertLocationAccess(d,this,place,{authorization:args.authorization,companions:d.get('state','player','companions')??[],arrivalMinute:d.get('state','minute')+route.minutes});
         assertNpcObligationAction(d,this,['player',...d.get('state','player','companions')??[]],{minutes:route.minutes,location:destination,kind:'move'});
         if(this.rules.petCare)preparePetTravel(d,this,args.mode??'walk',route.movingMinutes);
         if(d.get('state','player','coins')<route.cost)throw new Error('路费不足');
@@ -380,6 +389,8 @@ export class WorldEngine {
         d.set(['state','skills',skill],{...old,proficiency,grade:skillGrade(proficiency),daily});d.say(`${this.byId.get(skill).name}熟练度 +${actual}`);
         return {skill,gain:actual,proficiency,needsBreakthrough:proficiency%300===299};
     }
+    magicTargetFacts(d,target){return targetFacts(d,this,target);}
+    magicStatusContext(d,target){return statusContext(d,this,target);}
     cast(d,args,id) {
         const spell=this.resolve(args.spell,'spell'),known=d.get('state','spells',spell),catalog=this.byId.get(spell);
         if(!known)throw new Error('尚未学会这个法术');

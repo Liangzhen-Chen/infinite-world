@@ -61,7 +61,7 @@ export const npcAgeCorrections=[
 ];
 export function npcM2Foundation(world){
  const corrections=structuredClone(npcAgeCorrections);
- const npcs=world.npcs.map((original,index)=>{
+ const npcs=world.npcs.filter(original=>Object.hasOwn(people,original.id.replace('npc_hw_',''))).map((original,index)=>{
   const key=original.id.replace('npc_hw_',''),p=people[key];if(!p)throw new Error(`未授权扩充人物 ${original.id}`);
   const n=structuredClone(original),age=corrections.find(x=>x.id===n.id)?.new??p.age??n.age,restDays=key==='yanzhe'?[10,20,30]:[10,20,30];
   const professions=world.professions.filter(x=>p.skill!==null&&x.id===`profession_life_${p.skill}`).map(x=>x.id);

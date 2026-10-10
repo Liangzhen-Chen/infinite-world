@@ -25,7 +25,7 @@ test('HTTP目录和搜索共用公开投影，内部目标与历史真相不外�
     faction.privateGoal='密封赤苇暗号';faction.prose.internalLife+='密封赤苇暗号';faction.description=Object.values(faction.prose).join('\n');
     past.accounts.verified.claim='隐秘旧约原本';world.factionPeople[0].concern='密封赤苇暗号';
     const server=await createPlaytestServer({world});t.after(server.close);
-    const initial=await server.api('create',{}),campaignId=initial.reference.campaignId;
+    const initial=await server.api('create',{character:{}}),campaignId=initial.reference.campaignId;
     const entry=await server.api('catalog',{campaignId,entity:faction.name});
     assert.equal(entry.description,faction.publicDescription);assert.equal(entry.contactAnchor,faction.contactAnchor);
     for(const field of['privateGoal','resources','clock','leader','coreMembers','prose','relations'])assert.equal(entry[field],undefined);
@@ -51,7 +51,13 @@ test('旧战役升级加入社会资料不实例化名册或资源，导出往�
     const next=await socialWorld(),server=await createPlaytestServer({world:next});t.after(server.close);
     const imported=await server.api('import',{bundle}),campaignId=imported.reference.campaignId;
     const after=(await server.api('read',{campaignId})).document;
-    for(const key of['player','inventory','npcs','location','minute','settlements','animals'])assert.deepEqual(after.state[key],before.state[key]);
+    for(const key of['player','inventory','location','minute','settlements','animals'])assert.deepEqual(after.state[key],before.state[key]);
+    assert.equal(Object.keys(before.state.npcs).length,18);
+    for(const [id,actor]of Object.entries(before.state.npcs))assert.deepEqual(after.state.npcs[id],actor,id);
+    const added=next.npcs.filter(row=>!Object.hasOwn(before.state.npcs,row.id));assert.equal(added.length,14);
+    assert.deepEqual(Object.keys(after.state.npcs).sort(),next.npcs.map(row=>row.id).sort());
+    for(const row of added)assert.deepEqual(after.state.npcs[row.id],{id:row.id,name:row.name,location:row.location,coins:row.coins??0,inventory:row.inventory??{},trust:row.trust??0,affection:row.affection??0,developments:[],relationships:{}},row.id);
+    for(const row of [...next.factionPeople,...next.residents])assert.equal(after.state.npcs[row.id],undefined,row.id);
     assert.deepEqual(after.memories,before.memories);
     assert.equal((await server.api('catalog',{campaignId,kind:'faction'})).count,40);
     const response=await server.api('search',{campaignId,query:next.factions[0].name});assert.ok(response.results.some(row=>row.id===`lore_${next.factions[0].id}`));

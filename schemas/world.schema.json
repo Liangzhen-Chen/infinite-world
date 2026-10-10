@@ -842,6 +842,24 @@
         ],
         "additionalProperties": false
       }
+    },
+    "residents": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/resident"
+      }
+    },
+    "households": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/household"
+      }
+    },
+    "settlementProfiles": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/settlementProfile"
+      }
     }
   },
   "required": [
@@ -3443,6 +3461,34 @@
             ],
             "additionalProperties": true
           }
+        },
+        "access": {
+          "type": "object",
+          "properties": {
+            "mode": {
+              "enum": [
+                "private"
+              ]
+            },
+            "requiresConsent": {
+              "const": true
+            },
+            "residents": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "minLength": 1
+              },
+              "uniqueItems": true,
+              "minItems": 1
+            }
+          },
+          "required": [
+            "mode",
+            "requiresConsent",
+            "residents"
+          ],
+          "additionalProperties": false
         }
       },
       "required": [
@@ -4024,7 +4070,10 @@
                 "environment",
                 "summon",
                 "protection",
-                "object"
+                "object",
+                "relief",
+                "summon_contract",
+                "mark"
               ]
             },
             "power": {
@@ -4034,7 +4083,10 @@
             },
             "summonType": {
               "enum": [
-                "water_cup"
+                "water_cup",
+                "fire_projection",
+                "water_guard",
+                "elemental_guard"
               ]
             },
             "upkeepMp": {
@@ -4058,7 +4110,13 @@
                 "fire_shield",
                 "mind_guard",
                 "shadow_ward",
-                "fear"
+                "fear",
+                "dazzle",
+                "camouflage",
+                "nightvision",
+                "illusion",
+                "compulsion",
+                "travel_calm"
               ]
             },
             "damageType": {
@@ -4087,7 +4145,10 @@
                 "cool",
                 "dry",
                 "sense_heat",
-                "fuel"
+                "fuel",
+                "inspect",
+                "dismiss",
+                "extend"
               ]
             },
             "unit": {
@@ -4125,6 +4186,49 @@
               "type": "integer",
               "minimum": 0,
               "maximum": 1200
+            },
+            "statuses": {
+              "type": "array",
+              "minItems": 1,
+              "uniqueItems": true,
+              "items": {
+                "enum": [
+                  "fear",
+                  "compulsion"
+                ]
+              }
+            },
+            "medium": {
+              "enum": [
+                "fire",
+                "soil",
+                "ink"
+              ]
+            },
+            "visibility": {
+              "enum": [
+                "normal",
+                "dim"
+              ]
+            },
+            "offering": {
+              "type": "object",
+              "properties": {
+                "item": {
+                  "type": "string",
+                  "pattern": "^item_[a-zA-Z0-9_-]+$"
+                },
+                "amount": {
+                  "type": "integer",
+                  "minimum": 1,
+                  "maximum": 10
+                }
+              },
+              "required": [
+                "item",
+                "amount"
+              ],
+              "additionalProperties": false
             }
           },
           "required": [
@@ -4162,6 +4266,108 @@
                   }
                 }
               }
+            },
+            {
+              "if": {
+                "properties": {
+                  "kind": {
+                    "const": "relief"
+                  }
+                },
+                "required": [
+                  "kind"
+                ]
+              },
+              "then": {
+                "required": [
+                  "statuses"
+                ],
+                "properties": {
+                  "statuses": {
+                    "type": "array",
+                    "minItems": 1,
+                    "uniqueItems": true,
+                    "items": {
+                      "enum": [
+                        "fear",
+                        "compulsion"
+                      ]
+                    }
+                  }
+                }
+              }
+            },
+            {
+              "if": {
+                "properties": {
+                  "kind": {
+                    "const": "mark"
+                  }
+                },
+                "required": [
+                  "kind"
+                ]
+              },
+              "then": {
+                "required": [
+                  "medium",
+                  "visibility"
+                ],
+                "properties": {
+                  "medium": {
+                    "enum": [
+                      "fire",
+                      "soil",
+                      "ink"
+                    ]
+                  },
+                  "visibility": {
+                    "enum": [
+                      "normal",
+                      "dim"
+                    ]
+                  }
+                }
+              }
+            },
+            {
+              "if": {
+                "properties": {
+                  "kind": {
+                    "const": "summon_contract"
+                  }
+                },
+                "required": [
+                  "kind"
+                ]
+              },
+              "then": {
+                "required": [
+                  "operation"
+                ],
+                "properties": {
+                  "operation": {
+                    "enum": [
+                      "condense",
+                      "clean_water",
+                      "sense_water",
+                      "irrigate",
+                      "clear_silt",
+                      "soil_water",
+                      "ignite",
+                      "extinguish",
+                      "heat",
+                      "cool",
+                      "dry",
+                      "sense_heat",
+                      "fuel",
+                      "inspect",
+                      "dismiss",
+                      "extend"
+                    ]
+                  }
+                }
+              }
             }
           ]
         },
@@ -4169,6 +4375,27 @@
           "type": "integer",
           "minimum": 0,
           "maximum": 50
+        },
+        "targeting": {
+          "type": "object",
+          "properties": {
+            "lineOfSight": {
+              "const": true
+            },
+            "consent": {
+              "enum": [
+                "support_magic",
+                "mental_magic"
+              ]
+            },
+            "permit": {
+              "const": "mental_magic"
+            }
+          },
+          "required": [
+            "lineOfSight"
+          ],
+          "additionalProperties": false
         }
       },
       "required": [
@@ -4924,6 +5151,441 @@
             "minionCount"
           ],
           "additionalProperties": true
+        },
+        "mechanics": {
+          "type": "object",
+          "properties": {
+            "adaptation": {
+              "type": "object",
+              "properties": {
+                "tactics": {
+                  "type": "array",
+                  "minItems": 1,
+                  "uniqueItems": true,
+                  "items": {
+                    "type": "string",
+                    "minLength": 1
+                  }
+                },
+                "threshold": {
+                  "type": "integer",
+                  "minimum": 1,
+                  "maximum": 10
+                },
+                "perStep": {
+                  "type": "number",
+                  "exclusiveMinimum": 0,
+                  "maximum": 0.2
+                },
+                "maximum": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 0.5
+                }
+              },
+              "required": [
+                "tactics",
+                "threshold",
+                "perStep",
+                "maximum"
+              ],
+              "additionalProperties": false
+            },
+            "weaknesses": {
+              "type": "array",
+              "maxItems": 3,
+              "items": {
+                "type": "object",
+                "properties": {
+                  "tactic": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "requiresStatus": {
+                    "enum": [
+                      "stone_skin",
+                      "fire_shield",
+                      "mind_guard",
+                      "shadow_ward",
+                      "fear",
+                      "dazzle",
+                      "camouflage",
+                      "nightvision",
+                      "illusion",
+                      "compulsion",
+                      "travel_calm"
+                    ]
+                  },
+                  "ignoreAdaptation": {
+                    "const": true
+                  }
+                },
+                "required": [
+                  "tactic",
+                  "requiresStatus",
+                  "ignoreAdaptation"
+                ],
+                "additionalProperties": false
+              }
+            },
+            "abilities": {
+              "type": "array",
+              "maxItems": 3,
+              "items": {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "string",
+                    "pattern": "^ability_[a-z0-9_]+$"
+                  },
+                  "every": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 10
+                  },
+                  "belowHpPercent": {
+                    "type": "number",
+                    "exclusiveMinimum": 0,
+                    "maximum": 100
+                  },
+                  "effectSpec": {
+                    "type": "object",
+                    "properties": {
+                      "kind": {
+                        "enum": [
+                          "damage",
+                          "heal",
+                          "repair",
+                          "dry",
+                          "status",
+                          "light",
+                          "environment",
+                          "summon",
+                          "protection",
+                          "object",
+                          "relief",
+                          "summon_contract",
+                          "mark"
+                        ]
+                      },
+                      "power": {
+                        "type": "integer",
+                        "minimum": 1,
+                        "maximum": 5000
+                      },
+                      "summonType": {
+                        "enum": [
+                          "water_cup",
+                          "fire_projection",
+                          "water_guard",
+                          "elemental_guard"
+                        ]
+                      },
+                      "upkeepMp": {
+                        "type": "integer",
+                        "minimum": 1,
+                        "maximum": 1000
+                      },
+                      "upkeepMinutes": {
+                        "type": "integer",
+                        "minimum": 1,
+                        "maximum": 1440
+                      },
+                      "armorFactor": {
+                        "type": "number",
+                        "minimum": 0,
+                        "maximum": 1
+                      },
+                      "status": {
+                        "enum": [
+                          "stone_skin",
+                          "fire_shield",
+                          "mind_guard",
+                          "shadow_ward",
+                          "fear",
+                          "dazzle",
+                          "camouflage",
+                          "nightvision",
+                          "illusion",
+                          "compulsion",
+                          "travel_calm"
+                        ]
+                      },
+                      "damageType": {
+                        "enum": [
+                          "physical",
+                          "fire",
+                          "cold",
+                          "wind",
+                          "earth",
+                          "light",
+                          "shadow",
+                          "mind"
+                        ]
+                      },
+                      "operation": {
+                        "enum": [
+                          "condense",
+                          "clean_water",
+                          "sense_water",
+                          "irrigate",
+                          "clear_silt",
+                          "soil_water",
+                          "ignite",
+                          "extinguish",
+                          "heat",
+                          "cool",
+                          "dry",
+                          "sense_heat",
+                          "fuel",
+                          "inspect",
+                          "dismiss",
+                          "extend"
+                        ]
+                      },
+                      "unit": {
+                        "enum": [
+                          "millilitre",
+                          "turbidity_point",
+                          "reading",
+                          "litre",
+                          "gram"
+                        ]
+                      },
+                      "damageTypes": {
+                        "type": "array",
+                        "minItems": 1,
+                        "uniqueItems": true,
+                        "items": {
+                          "enum": [
+                            "physical",
+                            "fire",
+                            "cold",
+                            "wind",
+                            "earth",
+                            "light",
+                            "shadow",
+                            "mind"
+                          ]
+                        }
+                      },
+                      "stacking": {
+                        "enum": [
+                          "strongest"
+                        ]
+                      },
+                      "limitC": {
+                        "type": "integer",
+                        "minimum": 0,
+                        "maximum": 1200
+                      },
+                      "statuses": {
+                        "type": "array",
+                        "minItems": 1,
+                        "uniqueItems": true,
+                        "items": {
+                          "enum": [
+                            "fear",
+                            "compulsion"
+                          ]
+                        }
+                      },
+                      "medium": {
+                        "enum": [
+                          "fire",
+                          "soil",
+                          "ink"
+                        ]
+                      },
+                      "visibility": {
+                        "enum": [
+                          "normal",
+                          "dim"
+                        ]
+                      },
+                      "offering": {
+                        "type": "object",
+                        "properties": {
+                          "item": {
+                            "type": "string",
+                            "pattern": "^item_[a-zA-Z0-9_-]+$"
+                          },
+                          "amount": {
+                            "type": "integer",
+                            "minimum": 1,
+                            "maximum": 10
+                          }
+                        },
+                        "required": [
+                          "item",
+                          "amount"
+                        ],
+                        "additionalProperties": false
+                      }
+                    },
+                    "required": [
+                      "kind",
+                      "power"
+                    ],
+                    "additionalProperties": true,
+                    "allOf": [
+                      {
+                        "if": {
+                          "properties": {
+                            "kind": {
+                              "const": "object"
+                            }
+                          },
+                          "required": [
+                            "kind"
+                          ]
+                        },
+                        "then": {
+                          "required": [
+                            "operation"
+                          ],
+                          "properties": {
+                            "operation": {
+                              "enum": [
+                                "ignite",
+                                "extinguish",
+                                "heat",
+                                "cool",
+                                "dry",
+                                "sense_heat",
+                                "fuel"
+                              ]
+                            }
+                          }
+                        }
+                      },
+                      {
+                        "if": {
+                          "properties": {
+                            "kind": {
+                              "const": "relief"
+                            }
+                          },
+                          "required": [
+                            "kind"
+                          ]
+                        },
+                        "then": {
+                          "required": [
+                            "statuses"
+                          ],
+                          "properties": {
+                            "statuses": {
+                              "type": "array",
+                              "minItems": 1,
+                              "uniqueItems": true,
+                              "items": {
+                                "enum": [
+                                  "fear",
+                                  "compulsion"
+                                ]
+                              }
+                            }
+                          }
+                        }
+                      },
+                      {
+                        "if": {
+                          "properties": {
+                            "kind": {
+                              "const": "mark"
+                            }
+                          },
+                          "required": [
+                            "kind"
+                          ]
+                        },
+                        "then": {
+                          "required": [
+                            "medium",
+                            "visibility"
+                          ],
+                          "properties": {
+                            "medium": {
+                              "enum": [
+                                "fire",
+                                "soil",
+                                "ink"
+                              ]
+                            },
+                            "visibility": {
+                              "enum": [
+                                "normal",
+                                "dim"
+                              ]
+                            }
+                          }
+                        }
+                      },
+                      {
+                        "if": {
+                          "properties": {
+                            "kind": {
+                              "const": "summon_contract"
+                            }
+                          },
+                          "required": [
+                            "kind"
+                          ]
+                        },
+                        "then": {
+                          "required": [
+                            "operation"
+                          ],
+                          "properties": {
+                            "operation": {
+                              "enum": [
+                                "condense",
+                                "clean_water",
+                                "sense_water",
+                                "irrigate",
+                                "clear_silt",
+                                "soil_water",
+                                "ignite",
+                                "extinguish",
+                                "heat",
+                                "cool",
+                                "dry",
+                                "sense_heat",
+                                "fuel",
+                                "inspect",
+                                "dismiss",
+                                "extend"
+                              ]
+                            }
+                          }
+                        }
+                      }
+                    ]
+                  },
+                  "duration": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 5
+                  }
+                },
+                "required": [
+                  "id",
+                  "every",
+                  "belowHpPercent",
+                  "effectSpec",
+                  "duration"
+                ],
+                "additionalProperties": false
+              }
+            }
+          },
+          "required": [
+            "adaptation",
+            "weaknesses",
+            "abilities"
+          ],
+          "additionalProperties": false
         }
       },
       "required": [
@@ -6578,6 +7240,423 @@
         "minimumC",
         "maximumC",
         "burning"
+      ],
+      "additionalProperties": false
+    },
+    "resident": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^npc_[a-zA-Z0-9_-]+$"
+        },
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "aliases": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "uniqueItems": true
+        },
+        "tier": {
+          "const": "roster"
+        },
+        "age": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 300
+        },
+        "sex": {
+          "enum": [
+            "女",
+            "男",
+            "其他"
+          ]
+        },
+        "culture": {
+          "type": "string",
+          "minLength": 1
+        },
+        "settlement": {
+          "type": "string",
+          "minLength": 1
+        },
+        "scope": {
+          "type": "string",
+          "minLength": 1
+        },
+        "householdId": {
+          "type": "string",
+          "minLength": 1
+        },
+        "household": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "uniqueItems": true
+        },
+        "occupation": {
+          "type": "string",
+          "minLength": 1
+        },
+        "traits": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "uniqueItems": true
+        },
+        "home": {
+          "type": "object",
+          "properties": {
+            "location": {
+              "type": "string",
+              "minLength": 1
+            },
+            "access": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "required": [
+            "location",
+            "access"
+          ],
+          "additionalProperties": false
+        },
+        "location": {
+          "type": "string",
+          "minLength": 1
+        },
+        "flags": {
+          "type": "object",
+          "properties": {
+            "minor": {
+              "type": "boolean"
+            },
+            "romanceable": {
+              "type": "boolean"
+            }
+          },
+          "required": [
+            "minor",
+            "romanceable"
+          ],
+          "additionalProperties": false
+        },
+        "currentConcern": {
+          "type": "string",
+          "minLength": 1
+        },
+        "visibleFeature": {
+          "type": "string",
+          "minLength": 1
+        },
+        "socialProfile": {
+          "type": "object",
+          "properties": {
+            "vice": {
+              "type": "object",
+              "properties": {
+                "kind": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "detail": {
+                  "type": "string",
+                  "minLength": 1
+                }
+              },
+              "required": [
+                "kind",
+                "detail"
+              ],
+              "additionalProperties": false
+            },
+            "outsiderAttitude": {
+              "type": "string",
+              "minLength": 1
+            },
+            "pastMisconduct": {
+              "type": "string",
+              "minLength": 1
+            },
+            "liesForBenefit": {
+              "type": "string",
+              "minLength": 1
+            },
+            "conflicts": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "with": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "issue": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "position": {
+                    "type": "string",
+                    "minLength": 1
+                  }
+                },
+                "required": [
+                  "with",
+                  "issue",
+                  "position"
+                ],
+                "additionalProperties": false
+              },
+              "uniqueItems": true
+            }
+          },
+          "required": [],
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "aliases",
+        "tier",
+        "age",
+        "sex",
+        "culture",
+        "settlement",
+        "scope",
+        "householdId",
+        "household",
+        "occupation",
+        "traits",
+        "home",
+        "location",
+        "flags",
+        "currentConcern",
+        "visibleFeature"
+      ],
+      "additionalProperties": false
+    },
+    "household": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^house_[a-zA-Z0-9_-]+$"
+        },
+        "settlement": {
+          "type": "string",
+          "minLength": 1
+        },
+        "homeLocation": {
+          "type": "string",
+          "minLength": 1
+        },
+        "members": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "uniqueItems": true,
+          "minItems": 1
+        },
+        "tenure": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "required": [
+        "id",
+        "settlement",
+        "homeLocation",
+        "members",
+        "tenure"
+      ],
+      "additionalProperties": false
+    },
+    "settlementProfile": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "parent": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "population": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "householdCount": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "residentIds": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "uniqueItems": true
+        },
+        "visitors": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "uniqueItems": true
+        },
+        "commuters": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "uniqueItems": true
+        },
+        "externalRelatives": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "relatedTo": {
+                "type": "string",
+                "minLength": 1
+              },
+              "count": {
+                "type": "integer",
+                "minimum": 1
+              },
+              "status": {
+                "type": "string",
+                "minLength": 1
+              }
+            },
+            "required": [
+              "relatedTo",
+              "count",
+              "status"
+            ],
+            "additionalProperties": false
+          },
+          "uniqueItems": true
+        },
+        "facts": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "uniqueItems": true
+        },
+        "kinship": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "parent": {
+                "type": "string",
+                "minLength": 1
+              },
+              "child": {
+                "type": "string",
+                "minLength": 1
+              }
+            },
+            "required": [
+              "parent",
+              "child"
+            ],
+            "additionalProperties": false
+          },
+          "uniqueItems": true
+        },
+        "coordinates": {
+          "type": "array",
+          "items": {
+            "type": "number"
+          },
+          "minItems": 2,
+          "maxItems": 2
+        },
+        "terrain": {
+          "type": "string",
+          "minLength": 1
+        },
+        "climate": {
+          "type": "string",
+          "minLength": 1
+        },
+        "buildingIds": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "ageStructure": {
+          "type": "object",
+          "properties": {
+            "children": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "youngAdults": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "adults": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "elders": {
+              "type": "integer",
+              "minimum": 0
+            }
+          },
+          "required": [
+            "children",
+            "youngAdults",
+            "adults",
+            "elders"
+          ],
+          "additionalProperties": false
+        },
+        "pendingProfileSections": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      },
+      "required": [
+        "id",
+        "parent",
+        "population",
+        "householdCount",
+        "residentIds",
+        "visitors",
+        "commuters",
+        "externalRelatives",
+        "facts"
       ],
       "additionalProperties": false
     }

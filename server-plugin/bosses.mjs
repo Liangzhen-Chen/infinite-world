@@ -1,5 +1,6 @@
 import {createHash} from 'node:crypto';
 import {monsterStats,tacticDefense} from './combat.mjs';
+import {validateBossMechanics,templateBossCounter}from'./boss-abilities.mjs';
 const clone=v=>structuredClone(v),key=b=>['state','records',`lair:${b.residence.id}`];
 const living=a=>a&&a.status!=='死亡'&&a.hp>0;
 export function validateBossEcology(world){
@@ -7,6 +8,7 @@ export function validateBossEcology(world){
     if(!world.rules.wildlife)errors.push('首领生态需要实际野外种群');
     const lairs=new Set(),locations=new Set(world.locations.map(l=>l.id)),monsters=new Map(world.monsters.map(s=>[s.id,s]));
     for(const boss of world.bosses??[]){
+        errors.push(...validateBossMechanics(boss).map(error=>`${boss.id}:${error}`));
         if(!boss.residence){errors.push(`首领缺巢穴规则：${boss.id}`);continue;}
         const r=boss.residence,s=monsters.get(boss.monster);
         if(lairs.has(r.id))errors.push(`巢穴编号重复：${r.id}`);lairs.add(r.id);
@@ -26,7 +28,7 @@ export function bossCounter(d,engine,target,tactic){
     if(!r||!actor?.boss||!living(actor))return{tactic,seen:0,damageMultiplier:1,adapted:false};
     const seen=actor.battleMemory?.tactics?.[tactic]??0;
     if(!Number.isSafeInteger(seen)||seen<0)throw new Error('首领战术记忆数据损坏，拒绝伪造防备或覆盖原记录');
-    return{tactic,seen,...tacticDefense(seen,engine.rules),
+    return templateBossCounter(d,engine.byId.get(actor.boss),actor,tactic,engine.magicStatusContext?.(d,target))??{tactic,seen,...tacticDefense(seen,engine.rules),
         ...(tactic==='flee'&&seen>=r.learningThreshold?{escapeDifficulty:r.escapeDifficulty}:{})};
 }
 export function rememberBossTactic(d,engine,target,tactic,eventId){

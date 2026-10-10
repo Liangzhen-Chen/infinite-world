@@ -157,7 +157,7 @@ test('在途存档重启、导出和撤销均保持位置与提示一致',async 
     assert.deepEqual((await restart.feedback('schedule')).events,[]);
 });
 
-test('正式18人整月与逐日等待一致，中间作息不膨胀存档补丁',async()=>{
+test('正式人物整月与逐日等待一致，中间作息不膨胀存档补丁',async()=>{
     const engine=new WorldEngine(await loadWorld()),document=engine.createCharacter(legacy,{},'schedule-month');
     const long=await engine.reduce(document,{tool:'world_time',args:{minutes:43200},eventId:'month'});
     let daily=document;
@@ -166,7 +166,7 @@ test('正式18人整月与逐日等待一致，中间作息不膨胀存档补丁
     }
     assert.deepEqual(applyPatches(document,long.patches).state.npcs,daily.state.npcs);
     assert.ok(long.patches.filter(row=>row.path[1]==='npcs').length<=100,'整月作息只保存最终人物状态');
-    assert.equal(engine.world.npcs.filter(row=>row.schedule).length,18);
+    assert.equal(engine.world.npcs.filter(row=>row.schedule).length,engine.world.npcs.length);
 });
 
 test('旧世界启用作息只更新目录，不改旧档位置财物；旧事件仍按旧目录回放',async()=>{
@@ -175,9 +175,12 @@ test('旧世界启用作息只更新目录，不改旧档位置财物；旧事�
     const archived=new WorldEngine(oldWorld),old=archived.initialFromLegacy(legacy,'schedule-upgrade');
     old.state.minute=1380;old.state.location='bld_hw_school';old.state.npcs[teacher].location='bld_hw_school';
     const plan=planWorldUpgrade(old,oldWorld,world,{worldHash:'schedule-edition',eventId:'schedules'}),upgraded=applyPatches(old,plan.patches);
-    assert.deepEqual(upgraded.state.npcs,old.state.npcs);assert.deepEqual(upgraded.state.player,old.state.player);assert.deepEqual(upgraded.state.inventory,old.state.inventory);
+    assert.deepEqual(Object.fromEntries(Object.keys(old.state.npcs).map(id=>[id,upgraded.state.npcs[id]])),old.state.npcs);
+    assert.deepEqual(Object.keys(upgraded.state.npcs).sort(),world.npcs.map(n=>n.id).sort());
+    assert.ok(world.residents.every(n=>!upgraded.state.npcs[n.id]));assert.deepEqual(upgraded.state.player,old.state.player);assert.deepEqual(upgraded.state.inventory,old.state.inventory);
+    const beforeRejected=structuredClone(upgraded);
     const input={tool:'world_learn',args:{entity:'skill_literacy',source:teacher},eventId:'historical_lesson'};
     assert.equal((await archived.reduce(old,input,{replay:true})).result.minutes,60);
     await assert.rejects(new WorldEngine(world).reduce(upgraded,input),/不提供授课/);
-    assert.deepEqual(upgraded.state.npcs,old.state.npcs);
+    assert.deepEqual(upgraded,beforeRejected);
 });

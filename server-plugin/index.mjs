@@ -13,11 +13,16 @@ import {catalogDefinition}from'./catalog.mjs';
 import {publicLoreEntries}from'./lore.mjs';
 import {settleNpcPlanning}from'./npc-planning-service.mjs';
 import {getChronicle,syncChronicleIndex}from'./chronicle.mjs';
+import {beginConsistencyTurn,reviewConsistencyReply,assertConsistencyCommit,sharedModelClient}from'./consistency-service.mjs';
 
 export const info={id:'infinite-fields',name:'无限原野本地战役存储',description:'本项目自有的存档、账本与检索服务器插件'};
-export async function init(router,{ world=null, baseRoot=null, newCampaignSeed=randomUUID, npcPlanner, npcPlanningEnabled=Boolean(process.env.DEEPSEEK_API_KEY), npcPlanningOptions={} }={}){
+export async function init(router,{ world=null, baseRoot=null, newCampaignSeed=randomUUID, npcPlanner, npcPlanningEnabled=Boolean(process.env.DEEPSEEK_API_KEY), npcPlanningOptions={}, consistencyEnabled=true, consistencyClient, consistencyBudgetYuan=20 }={}){
     world ??= await loadWorld();
-    const engine=new WorldEngine(world),stores=new Map(),indexes=new Map(),registries=new Map();
+    const engine=new WorldEngine(world),stores=new Map(),indexes=new Map(),registries=new Map(),modelClients=new Map();
+    const getModelClient=store=>{
+        if(!modelClients.has(store.root))modelClients.set(store.root,sharedModelClient(store,{client:consistencyClient===undefined?npcPlanningOptions.client:consistencyClient,budgetYuan:consistencyBudgetYuan}));
+        return modelClients.get(store.root);
+    };
     const seed=JSON.parse(await fs.readFile(new URL('./legacy/seed.json',import.meta.url),'utf8'));
     const getStore=req=>{
         const root=baseRoot??req.user?.directories?.root;if(!root)throw new Error('没有当前用户的存档目录');
@@ -90,18 +95,27 @@ export async function init(router,{ world=null, baseRoot=null, newCampaignSeed=r
         return store.create({worldVersion:world.version,document});
     }));
     router.post('/read',handle(req=>upgrade(getStore(req),req.body.campaignId)));
+    router.post('/review/begin',handle(req=>beginConsistencyTurn(getStore(req),req.body.campaignId,{anchor:req.body.anchor,playerText:req.body.playerText,expectedSequence:req.body.expectedSequence,enabled:consistencyEnabled&&req.body.enabled!==false})));
+    router.post('/review/reply',handle(async req=>{
+        const store=getStore(req),{campaignId,token,draft,expectedSequence}=req.body;
+        const view=await store.read(campaignId),index=await getIndex(store,campaignId,view.document);
+        const selected=(await store.worldRegistry.get(view.document.worldHash)).scoped(view.document);
+        const scene=selected.scene(view.document,String(req.body.query??'').slice(0,20000),index);
+        return reviewConsistencyReply(store,campaignId,{token,draft,expectedSequence,scene,sceneSequence:view.reference.sequence,client:getModelClient(store)});
+    }));
     router.post('/execute',handle(async req=>{
         const {campaignId,tool,args,eventId,anchor,expectedSequence}=req.body;
         // Health is an internal combat primitive, not a model-controlled tool.
         if(['world_health','world_revive'].includes(tool))throw new Error('生命变化只能由交锋、治疗或死亡结算产生');
         const store=getStore(req),view=await store.read(campaignId);
         if(view.document.schemaVersion!==2)throw new Error('存档尚未升级到新引擎');
+        if(tool==='world_turn'&&req.body.reviewId)await assertConsistencyCommit(store,campaignId,{reviewId:req.body.reviewId,anchor,args,expectedSequence});
         const saved=await store.transact(campaignId,{id:eventId,input:{tool,args,eventId},anchor,expectedSequence},store.reducer);
         const after=saved.document??(await store.read(campaignId)).document;
         const crossedDay=Math.floor(after.state.minute/1440)>Math.floor(view.document.state.minute/1440);
         if(!saved.duplicate&&npcPlanningEnabled&&(crossedDay||after.state.location!==view.document.state.location)){
             let planning;
-            try{planning=await settleNpcPlanning(store,campaignId,{anchor,enabled:true,...(npcPlanner?{planner:npcPlanner}:{}),options:npcPlanningOptions});}
+            try{planning=await settleNpcPlanning(store,campaignId,{anchor,enabled:true,...(npcPlanner?{planner:npcPlanner}:{}),options:{...npcPlanningOptions,client:getModelClient(store)??npcPlanningOptions.client}});}
             catch(error){planning={status:'failed',reason:'本次人物规划未能保存，已完成的玩家行动仍保留'};}
             const current=await store.read(campaignId);return{...saved,document:current.document,reference:current.reference,npcPlanning:planning};
         }
