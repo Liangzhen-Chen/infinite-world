@@ -1,0 +1,45 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import { EntityResolver, MemoryIndex, validateMemory } from '../server-plugin/retrieval.mjs';
+const entities = [{ id: 'npc_hw_linsui', name: '林穗', aliases: ['林穗姐', '老板娘', '林老板', '穗姐'], scope: 'loc_hw' }];
+const make = () => {
+    const index = new MemoryIndex({ entities });
+    index.upsert({ id: 'fact_kitchen', source: '长期事实', text: '第三天玩家帮林穗找回遗失的账簿，她允许玩家借用酒馆厨房',
+        entities: ['npc_hw_linsui'], salience: 5, keywords: ['承诺'] });
+    return index;
+};
+for (const query of ['那本账本', '她的帐本', '我能用灶台吗', '老板娘答应过我什么', '她的賬簿', '能借廚房嗎']) {
+    test(`1.3 检索：${query}`, () => assert.equal(make().search(query)[0]?.id, 'fact_kitchen'));
+}
+test('E8 别名、繁简、异体字归一，未知与歧义拒绝', () => {
+    const resolver = new EntityResolver([...entities, { id: 'other', name: '另一店主', aliases: ['老板娘'], scope: 'loc_bs' }]);
+    assert.equal(resolver.resolve('老闆娘', 'loc_hw'), 'npc_hw_linsui');
+    assert.throws(() => resolver.resolve('老板娘'), /歧义/); assert.throws(() => resolver.resolve('路人甲'), /未登记/);
+});
+test('E16 增量索引重复刷新不读取或重新切词原文，编辑显式更新', () => {
+    const index = make(); let reads = 0;
+    const chat = Array.from({ length: 5000 }, () => ({ is_user: true, get mes() { reads++; return '在河边散步'; } }));
+    index.syncChat(chat); const count = index.tokenizations; reads = 0;
+    index.syncChat(chat); assert.equal(reads, 0); assert.equal(index.tokenizations, count);
+    index.editChat(7, { is_user: true, mes: '找回紫色短笛' });
+    assert.ok(index.search('紫色短笛').some(row => row.id === 'chat_7'));
+});
+test('记忆正文拒绝系统用语，保留原始事件，结果按来源去重', () => {
+    assert.throws(() => validateMemory('以账本为准'), /系统用语/);
+    assert.equal(validateMemory('林穗收到六枚铜币'), '林穗收到六枚铜币');
+    const index = make();
+    index.upsert({ id: 'event_a', eventId: 'evt1', source: '事件', text: '蓝色雁渡船票', salience: 5 });
+    index.upsert({ id: 'chat_a', eventId: 'evt1', source: '原始对话', text: '那张蓝色雁渡船票' });
+    assert.equal(index.search('蓝色船票').filter(row => row.eventId === 'evt1').length, 1);
+});
+
+test('增量索引：缺少前序或尾部消息时拒绝且保留旧索引',()=>{
+    const index=make();index.syncDelta(0,[{mes:'紫色短笛'}],1);
+    assert.throws(()=>index.syncDelta(3,[{mes:'不存在的消息'}],4),/前序/);
+    assert.throws(()=>index.syncDelta(1,[],3),/前序/);
+    assert.throws(()=>index.editChat(7,{mes:'另一消息'}),/已同步/);
+    assert.equal(index.chatMessages.length,1);
+    assert.equal(index.search('紫色短笛')[0].id,'chat_0');
+    index.syncDelta(1,[{mes:'黄色风筝'}],2);
+    assert.equal(index.search('黄色风筝')[0].id,'chat_1');
+});

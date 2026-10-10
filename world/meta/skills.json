@@ -1,0 +1,10 @@
+[
+  {
+    "id": "skill_light",
+    "name": "照明术",
+    "attribute": "精神",
+    "profession": "profession_mage",
+    "aliases": [],
+    "scope": null
+  }
+]

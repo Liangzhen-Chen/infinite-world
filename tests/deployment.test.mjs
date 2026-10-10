@@ -1,0 +1,22 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import fs from 'node:fs/promises';
+import path from 'node:path';
+import os from 'node:os';
+import YAML from '../SillyTavern/node_modules/yaml/dist/index.js';
+import {prepareDeployment,activateDeployment}from'../tools/deploy-engine.mjs';
+test('部署：冻结包校验在写入前执行，先备份，聊天和旧扩展保留',async t=>{
+    const root=await fs.mkdtemp(path.join(os.tmpdir(),'infinite-fields-deploy-'));t.after(()=>fs.rm(root,{recursive:true,force:true}));
+    const bundle=await prepareDeployment(path.join(root,'bundle')),installation=path.join(root,'install');
+    await fs.mkdir(installation);await fs.writeFile(path.join(installation,'config.yaml'),'enableServerPlugins: false\nenableServerPluginsAutoUpdate: true\n');
+    const extension=path.join(installation,'public/scripts/extensions/third-party/infinite-fields');await fs.mkdir(extension,{recursive:true});
+    await fs.writeFile(path.join(extension,'index.js'),'legacy protected');
+    let backedUp=false;const makeBackup=async()=>{assert.equal(YAML.parse(await fs.readFile(path.join(installation,'config.yaml'),'utf8')).enableServerPlugins,false);backedUp=true;return 'verified-test-backup';};
+    const result=await activateDeployment(bundle.destination,{installation,makeBackup});
+    assert.equal(backedUp,true);assert.equal(result.chatsChanged,false);assert.equal(result.restartRequired,true);
+    assert.equal(await fs.readFile(path.join(extension,'index.js'),'utf8'),'legacy protected');
+    assert.equal(JSON.parse(await fs.readFile(path.join(extension,'manifest.json'),'utf8')).js,'runtime.js');
+    const config=YAML.parse(await fs.readFile(path.join(installation,'config.yaml'),'utf8'));assert.equal(config.enableServerPlugins,true);assert.equal(config.enableServerPluginsAutoUpdate,false);
+    await fs.appendFile(path.join(bundle.destination,'extension','runtime.js'),'\n// corrupt');
+    backedUp=false;await assert.rejects(activateDeployment(bundle.destination,{installation,makeBackup}),/校验失败/);assert.equal(backedUp,false);
+});

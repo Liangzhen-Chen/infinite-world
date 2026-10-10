@@ -1,0 +1,26 @@
+{
+  "date": "2026-10-10",
+  "dryRun": true,
+  "originalsModified": false,
+  "destination": "C:\\Users\\RobertC\\Documents\\dnd\\backups\\migration-verification-1791589511178",
+  "results": [
+    {
+      "campaignId": "verified_1",
+      "sourceUnchanged": true,
+      "stateEqual": true,
+      "memoriesEqual": true,
+      "historyEqual": true,
+      "method": "无事件存档直接保留当前状态",
+      "target": "C:\\Users\\RobertC\\Documents\\dnd\\backups\\migration-verification-1791589511178\\verified_1\\migrated-chat.jsonl",
+      "reference": {
+        "format": 2,
+        "campaignId": "verified_1",
+        "sequence": 0,
+        "checksum": "17a6cc4a4e10ed4459c9c5aae8055f40a0da000b37b95b29ec2bd4895a93e190",
+        "head": "17a6cc4a4e10ed4459c9c5aae8055f40a0da000b37b95b29ec2bd4895a93e190"
+      },
+      "reloadEqual": true,
+      "exportImportEqual": true
+    }
+  ]
+}

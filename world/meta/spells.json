@@ -1,0 +1,21 @@
+[
+  {
+    "id": "spell_light",
+    "name": "照明术",
+    "skill": "skill_light",
+    "mp": 1,
+    "materials": [],
+    "duration": 60,
+    "minutes": 1,
+    "difficulty": 10,
+    "stage": 0,
+    "effect": "近处一个物体发出柔光一小时，不造成伤害。",
+    "learnFee": 12,
+    "learnMinutes": 120,
+    "teachers": [
+      "npc_hw_xuling"
+    ],
+    "scope": null,
+    "aliases": []
+  }
+]

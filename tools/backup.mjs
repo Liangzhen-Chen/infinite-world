@@ -6,8 +6,9 @@ import { fileURLToPath } from 'node:url';
 export const root = path.resolve(fileURLToPath(new URL('..', import.meta.url)));
 const sources = ['SillyTavern/data/default-user/chats', 'SillyTavern/data/default-user/characters',
     'SillyTavern/data/default-user/worlds', 'SillyTavern/data/default-user/settings.json',
-    'SillyTavern/data/default-user/infinite-fields', 'SillyTavern/config.yaml',
+    'SillyTavern/data/default-user/infinite-fields', 'SillyTavern/data/default-user/infinite-fields-worlds', 'SillyTavern/config.yaml',
     'SillyTavern/public/scripts/extensions/third-party/infinite-fields',
+    'SillyTavern/plugins/infinite-fields',
     'SillyTavern/public/play-town.html', 'SillyTavern/public/play-town.js', '启动酒馆.ps1', '启动酒馆.cmd'];
 const excluded = name => name === 'secrets.json' || name.startsWith('.env');
 export async function backup(label = 'manual') {

@@ -2,8 +2,8 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import { performance } from 'node:perf_hooks';
-import * as core from '../extension/core.js';
-const seed = JSON.parse(fs.readFileSync(new URL('../tests/fixtures/legacy/seed.json', import.meta.url)));
+import * as core from '../fixtures/legacy/core.js';
+const seed = JSON.parse(fs.readFileSync(new URL('../fixtures/legacy/seed.json', import.meta.url)));
 const fresh = () => core.createCampaign(seed);
 const action = (id, fields = {}) => ({ transaction_id: id, reason: '回归夹具', ...fields });
 
@@ -23,7 +23,7 @@ async function browserRuntime(c) {
         registerFunctionTool() {}, setExtensionPrompt() {}, saveChat: async () => {},
         stopGeneration: () => { stopped = true; },
         eventTypes: new Proxy({}, { get: (_, key) => key }), eventSource: { on: (key, fn) => listeners.set(key, fn) } };
-    let source = fs.readFileSync(new URL('../extension/index.js', import.meta.url), 'utf8');
+    let source = fs.readFileSync(new URL('../fixtures/legacy/index.js', import.meta.url), 'utf8');
     source = source.replace(/^import .*;\r?\n/gm, '').replace(/^const seed = .*;\r?\n/m, 'const seed = fixtureSeed;\n');
     const doc = { querySelector: () => ({ textContent: '', remove() {} }) };
     const window = {};

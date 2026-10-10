@@ -1,0 +1,940 @@
+{
+  "date": "2026-10-10",
+  "scope": "阶段1四个快速场景，各跑5次；不代表完整11.3/11.4验收",
+  "pass": true,
+  "costUpperYuan": 0.043369279999999996,
+  "results": [
+    {
+      "id": "L1",
+      "attempt": 1,
+      "input": "我数出六枚铜币交给林穗，住一晚。",
+      "pass": true,
+      "error": null,
+      "reply": "你把六枚铜币一枚枚排在柜台上，林穗数过一遍，顺手收进围裙口袋，从墙板上取下一把挂着的钥匙递给你。\n\n“楼上左手第二间，被褥是今早晒过的。”她想了想又补一句，“热水在灶间，自己去舀，别把锅端走。”\n\n钥匙是黄铜的，磨得发亮，柄上刻着一道浅浅的划痕。楼上走廊安静，木地板踩上去会响。房间不大，一张床、一张小桌、一扇朝河的窗，窗纸补过两处。\n\n你付了钱，今晚有地方睡了。\n\n<回合 时长=\"10分\" 地点=\"bld_hw_qingdeng\" 在场=\"npc_hw_linsui\"/>",
+      "events": [
+        {
+          "input": {
+            "tool": "world_trade",
+            "args": {
+              "seller": "npc_hw_linsui",
+              "buyer": "player",
+              "service": "住宿",
+              "days": 1,
+              "quantity": 1,
+              "unitPrice": 6
+            },
+            "eventId": "quick_L1_0"
+          },
+          "result": {
+            "ok": true,
+            "contract": "contract_room_quick_L1_0",
+            "cost": 6,
+            "days": 1,
+            "minute": 550,
+            "messages": [
+              "【系统】住宿1天，支付6铜"
+            ]
+          }
+        }
+      ],
+      "player": {
+        "name": "旅人",
+        "level": 1,
+        "xp": 0,
+        "coins": 174,
+        "hp": 12,
+        "maxHp": 12,
+        "mp": 10,
+        "maxMp": 10,
+        "revivalAnchor": "loc_hw",
+        "attributes": {
+          "力量": 10,
+          "敏捷": 10,
+          "体质": 10,
+          "智力": 10,
+          "精神": 10,
+          "魅力": 10
+        },
+        "status": "正常",
+        "freeAttributePoints": 0,
+        "companions": [],
+        "dyingSince": null
+      },
+      "minute": 550
+    },
+    {
+      "id": "L1",
+      "attempt": 2,
+      "input": "我数出六枚铜币交给林穗，住一晚。",
+      "pass": true,
+      "error": null,
+      "reply": "你把六枚铜币搁在柜台上，林穗一枚枚点数过指腹，铜钱碰在木面上发出六声轻响。她收起钱，从墙钉上取下一块薄木牌递给你——上面刻着“丙三”，边缘被前人摸得发亮。\n\n“楼上右转第三间。被褥是今早晒过的，窗闩从里头插紧就行。”她顿了顿，往灶间方向扬了下下巴，“热水在灶上，自己舀，别碰那口炖汤的锅，那是给客人留的。”\n\n木楼梯踩上去吱呀作响，丙三房不大，一张窄床、一只矮凳、一扇朝河的窗。窗外雨月的水汽还没散，河面浮着一层灰白的光。\n\n<回合 时长=\"10分\" 地点=\"bld_hw_qingdeng\" 在场=\"npc_hw_linsui\"/>",
+      "events": [
+        {
+          "input": {
+            "tool": "world_trade",
+            "args": {
+              "buyer": "player",
+              "seller": "npc_hw_linsui",
+              "service": "住宿",
+              "days": 1,
+              "quantity": 1,
+              "unitPrice": 6
+            },
+            "eventId": "quick_L1_0"
+          },
+          "result": {
+            "ok": true,
+            "contract": "contract_room_quick_L1_0",
+            "cost": 6,
+            "days": 1,
+            "minute": 550,
+            "messages": [
+              "【系统】住宿1天，支付6铜"
+            ]
+          }
+        }
+      ],
+      "player": {
+        "name": "旅人",
+        "level": 1,
+        "xp": 0,
+        "coins": 174,
+        "hp": 12,
+        "maxHp": 12,
+        "mp": 10,
+        "maxMp": 10,
+        "revivalAnchor": "loc_hw",
+        "attributes": {
+          "力量": 10,
+          "敏捷": 10,
+          "体质": 10,
+          "智力": 10,
+          "精神": 10,
+          "魅力": 10
+        },
+        "status": "正常",
+        "freeAttributePoints": 0,
+        "companions": [],
+        "dyingSince": null
+      },
+      "minute": 550
+    },
+    {
+      "id": "L1",
+      "attempt": 3,
+      "input": "我数出六枚铜币交给林穗，住一晚。",
+      "pass": true,
+      "error": null,
+      "reply": "你把六枚铜币一枚枚数到林穗掌心里，她指尖一捻便知数目没错，随手丢进柜台下的木匣。\n\n“二楼靠里那间，床板是干的，水在院子里自己打。”她顿了顿，又补一句，“夜里别乱走，后厨的东西不借人。”\n\n房钱已付，一晚便是你的了。\n\n<回合 时长=\"10分\" 地点=\"bld_hw_qingdeng\" 在场=\"npc_hw_linsui\"/>",
+      "events": [
+        {
+          "input": {
+            "tool": "world_trade",
+            "args": {
+              "buyer": "player",
+              "seller": "npc_hw_linsui",
+              "service": "住宿",
+              "days": 1,
+              "unitPrice": 6
+            },
+            "eventId": "quick_L1_2"
+          },
+          "result": {
+            "ok": true,
+            "contract": "contract_room_quick_L1_2",
+            "cost": 6,
+            "days": 1,
+            "minute": 550,
+            "messages": [
+              "【系统】住宿1天，支付6铜"
+            ]
+          }
+        }
+      ],
+      "player": {
+        "name": "旅人",
+        "level": 1,
+        "xp": 0,
+        "coins": 174,
+        "hp": 12,
+        "maxHp": 12,
+        "mp": 10,
+        "maxMp": 10,
+        "revivalAnchor": "loc_hw",
+        "attributes": {
+          "力量": 10,
+          "敏捷": 10,
+          "体质": 10,
+          "智力": 10,
+          "精神": 10,
+          "魅力": 10
+        },
+        "status": "正常",
+        "freeAttributePoints": 0,
+        "companions": [],
+        "dyingSince": null
+      },
+      "minute": 550
+    },
+    {
+      "id": "L1",
+      "attempt": 4,
+      "input": "我数出六枚铜币交给林穗，住一晚。",
+      "pass": true,
+      "error": null,
+      "reply": "你把六枚铜币一枚枚数到林穗手心里，她数了第二遍才收进柜台下的木匣。\n\n“东廊第二间，被褥是今早晒过的。”她递给你一把系着麻绳的铜钥匙，绳头打了个死结，像是提醒人别弄丢，“水缸在院子西角，自己舀。夜里别开临河那扇窗，春汛的潮气重。”\n\n钥匙落到你掌心，还带着她掌心的温度。廊下传来刻刀刮木头的轻响，贺舟正坐在长凳上削一块巴掌大的木料，木屑卷着落了一地。\n\n<回合 时长=\"10分\" 地点=\"bld_hw_qingdeng\" 在场=\"npc_hw_linsui\"/>",
+      "events": [
+        {
+          "input": {
+            "tool": "world_trade",
+            "args": {
+              "seller": "npc_hw_linsui",
+              "buyer": "player",
+              "service": "住宿",
+              "days": 1,
+              "unitPrice": 6
+            },
+            "eventId": "quick_L1_0"
+          },
+          "result": {
+            "ok": true,
+            "contract": "contract_room_quick_L1_0",
+            "cost": 6,
+            "days": 1,
+            "minute": 550,
+            "messages": [
+              "【系统】住宿1天，支付6铜"
+            ]
+          }
+        }
+      ],
+      "player": {
+        "name": "旅人",
+        "level": 1,
+        "xp": 0,
+        "coins": 174,
+        "hp": 12,
+        "maxHp": 12,
+        "mp": 10,
+        "maxMp": 10,
+        "revivalAnchor": "loc_hw",
+        "attributes": {
+          "力量": 10,
+          "敏捷": 10,
+          "体质": 10,
+          "智力": 10,
+          "精神": 10,
+          "魅力": 10
+        },
+        "status": "正常",
+        "freeAttributePoints": 0,
+        "companions": [],
+        "dyingSince": null
+      },
+      "minute": 550
+    },
+    {
+      "id": "L1",
+      "attempt": 5,
+      "input": "我数出六枚铜币交给林穗，住一晚。",
+      "pass": true,
+      "error": null,
+      "reply": "林穗接过铜币，一枚枚在掌心点过，确认是六枚，才收进围裙口袋。\n\n“二楼靠里那间，床铺是干净的。”她从柜台下摸出一把铜钥匙推给你，“热水在灶上，自己去舀。明早退房把钥匙还我。”\n\n说完她继续擦杯子，没多问你的来历。\n\n<回合 时长=\"10分\" 地点=\"bld_hw_qingdeng\" 在场=\"npc_hw_linsui\"/>",
+      "events": [
+        {
+          "input": {
+            "tool": "world_trade",
+            "args": {
+              "seller": "npc_hw_linsui",
+              "buyer": "player",
+              "service": "住宿",
+              "days": 1,
+              "unitPrice": 6
+            },
+            "eventId": "quick_L1_0"
+          },
+          "result": {
+            "ok": true,
+            "contract": "contract_room_quick_L1_0",
+            "cost": 6,
+            "days": 1,
+            "minute": 550,
+            "messages": [
+              "【系统】住宿1天，支付6铜"
+            ]
+          }
+        }
+      ],
+      "player": {
+        "name": "旅人",
+        "level": 1,
+        "xp": 0,
+        "coins": 174,
+        "hp": 12,
+        "maxHp": 12,
+        "mp": 10,
+        "maxMp": 10,
+        "revivalAnchor": "loc_hw",
+        "attributes": {
+          "力量": 10,
+          "敏捷": 10,
+          "体质": 10,
+          "智力": 10,
+          "精神": 10,
+          "魅力": 10
+        },
+        "status": "正常",
+        "freeAttributePoints": 0,
+        "companions": [],
+        "dyingSince": null
+      },
+      "minute": 550
+    },
+    {
+      "id": "G1",
+      "attempt": 1,
+      "input": "我对旧木杖施放已经学会的照明术。",
+      "pass": true,
+      "error": null,
+      "reply": "你捏住杖身，把那点熟悉的暖意顺着掌心压进木纹里。\n\n起先是杖头一暗，接着\"啪\"地绽开一团不晃眼的白光，像有人把一小片清晨挂在了旧木杖上。光很稳，只在杖尖周围轻轻呼吸。木杖本身沉得压手，光却没有一点温度，照得酒馆靠门的桌面泛起细细的纹路。\n\n林穗从柜台后抬了下眼，看清那团光，又低头继续擦杯子，只当没看见。魔力从你身上抽走一丝，像抬手时被风带走的体温。\n\n<回合 时长=\"10分\" 地点=\"bld_hw_qingdeng\" 在场=\"npc_hw_linsui\"/>",
+      "events": [
+        {
+          "input": {
+            "tool": "world_cast",
+            "args": {
+              "spell": "照明术",
+              "target": "旧木杖"
+            },
+            "eventId": "quick_G1_0"
+          },
+          "result": {
+            "ok": true,
+            "spell": "spell_light",
+            "die": 10,
+            "rolls": [
+              10
+            ],
+            "modifier": 0,
+            "total": 10,
+            "difficulty": 10,
+            "degree": "勉强成功",
+            "success": true,
+            "mpCost": 1,
+            "minute": 541,
+            "messages": [
+              "【系统】照明术熟练度 +3",
+              "【系统】照明术施放成功，消耗1魔力"
+            ]
+          }
+        }
+      ],
+      "player": {
+        "name": "旅人",
+        "level": 1,
+        "xp": 0,
+        "coins": 180,
+        "hp": 12,
+        "maxHp": 12,
+        "mp": 9,
+        "maxMp": 10,
+        "revivalAnchor": "loc_hw",
+        "attributes": {
+          "力量": 10,
+          "敏捷": 10,
+          "体质": 10,
+          "智力": 10,
+          "精神": 10,
+          "魅力": 10
+        },
+        "status": "正常",
+        "freeAttributePoints": 0,
+        "companions": [],
+        "dyingSince": null
+      },
+      "minute": 550
+    },
+    {
+      "id": "G1",
+      "attempt": 2,
+      "input": "我对旧木杖施放已经学会的照明术。",
+      "pass": true,
+      "error": null,
+      "reply": "你把旧木杖横在膝上，指尖沿着裂纹缓缓抹过。魔力从掌根渗进去，像一滴油落进干木头里——起初什么也没发生，接着杖头那截最旧的地方亮起一小团冷白的光，像被雨水泡白了的月光。\n\n光不算稳，边缘一直在轻轻抖，映得桌上的木纹忽明忽暗。林穗从柜台后抬了下眼，见是你在弄光亮，没说话，只把手里擦杯子的布翻了个面。魔力耗去一分，人倒不觉得累，只是杖身摸上去比刚才温了些。\n\n<回合 时长=\"10分\" 地点=\"bld_hw_qingdeng\" 在场=\"npc_hw_linsui\"/>",
+      "events": [
+        {
+          "input": {
+            "tool": "world_cast",
+            "args": {
+              "spell": "照明术",
+              "target": "旧木杖"
+            },
+            "eventId": "quick_G1_0"
+          },
+          "result": {
+            "ok": true,
+            "spell": "spell_light",
+            "die": 10,
+            "rolls": [
+              10
+            ],
+            "modifier": 0,
+            "total": 10,
+            "difficulty": 10,
+            "degree": "勉强成功",
+            "success": true,
+            "mpCost": 1,
+            "minute": 541,
+            "messages": [
+              "【系统】照明术熟练度 +3",
+              "【系统】照明术施放成功，消耗1魔力"
+            ]
+          }
+        }
+      ],
+      "player": {
+        "name": "旅人",
+        "level": 1,
+        "xp": 0,
+        "coins": 180,
+        "hp": 12,
+        "maxHp": 12,
+        "mp": 9,
+        "maxMp": 10,
+        "revivalAnchor": "loc_hw",
+        "attributes": {
+          "力量": 10,
+          "敏捷": 10,
+          "体质": 10,
+          "智力": 10,
+          "精神": 10,
+          "魅力": 10
+        },
+        "status": "正常",
+        "freeAttributePoints": 0,
+        "companions": [],
+        "dyingSince": null
+      },
+      "minute": 550
+    },
+    {
+      "id": "G1",
+      "attempt": 3,
+      "input": "我对旧木杖施放已经学会的照明术。",
+      "pass": true,
+      "error": null,
+      "reply": "你指尖按上旧木杖的杖头，低声念完最后一个音节。杖身先是一沉，随即浮起一层浅白的冷光，像把清晨的薄雾拢在了木头里。光不算亮，却稳，照得清你手边三尺的地面。\n\n【时间】春历元年 雨月 1日 09:01\n【你】旅人｜1级｜生命12/12 魔力9/10｜铜180\n\n<回合 时长=\"10分\" 地点=\"bld_hw_qingdeng\" 在场=\"npc_hw_linsui\"/>",
+      "events": [
+        {
+          "input": {
+            "tool": "world_cast",
+            "args": {
+              "spell": "照明术",
+              "target": "旧木杖"
+            },
+            "eventId": "quick_G1_0"
+          },
+          "result": {
+            "ok": true,
+            "spell": "spell_light",
+            "die": 10,
+            "rolls": [
+              10
+            ],
+            "modifier": 0,
+            "total": 10,
+            "difficulty": 10,
+            "degree": "勉强成功",
+            "success": true,
+            "mpCost": 1,
+            "minute": 541,
+            "messages": [
+              "【系统】照明术熟练度 +3",
+              "【系统】照明术施放成功，消耗1魔力"
+            ]
+          }
+        }
+      ],
+      "player": {
+        "name": "旅人",
+        "level": 1,
+        "xp": 0,
+        "coins": 180,
+        "hp": 12,
+        "maxHp": 12,
+        "mp": 9,
+        "maxMp": 10,
+        "revivalAnchor": "loc_hw",
+        "attributes": {
+          "力量": 10,
+          "敏捷": 10,
+          "体质": 10,
+          "智力": 10,
+          "精神": 10,
+          "魅力": 10
+        },
+        "status": "正常",
+        "freeAttributePoints": 0,
+        "companions": [],
+        "dyingSince": null
+      },
+      "minute": 550
+    },
+    {
+      "id": "G1",
+      "attempt": 4,
+      "input": "我对旧木杖施放已经学会的照明术。",
+      "pass": true,
+      "error": null,
+      "reply": "你把旧木杖横在膝上，指尖沿着杖身那道被磨得发亮的浅槽划过去，低声念出照明术的短句。\n\n杖头先是一点，随即漫开一圈柔白的光，像有人在木纹里点了一盏小灯。光不算亮，却稳，落在桌面上把木纹照得清清楚楚。酒馆里早起烧火的烟气被这团光衬得淡了一层。魔力从你胸口抽走一小股，不痛，只是空了一点。\n\n你听见柜台后头传来碗碟轻碰的声音，林穗抬眼看了这边一下，没说什么，又低头擦她的杯子。\n\n<回合 时长=\"10分\" 地点=\"bld_hw_qingdeng\" 在场=\"npc_hw_linsui\"/>",
+      "events": [
+        {
+          "input": {
+            "tool": "world_cast",
+            "args": {
+              "spell": "照明术",
+              "target": "旧木杖"
+            },
+            "eventId": "quick_G1_0"
+          },
+          "result": {
+            "ok": true,
+            "spell": "spell_light",
+            "die": 10,
+            "rolls": [
+              10
+            ],
+            "modifier": 0,
+            "total": 10,
+            "difficulty": 10,
+            "degree": "勉强成功",
+            "success": true,
+            "mpCost": 1,
+            "minute": 541,
+            "messages": [
+              "【系统】照明术熟练度 +3",
+              "【系统】照明术施放成功，消耗1魔力"
+            ]
+          }
+        }
+      ],
+      "player": {
+        "name": "旅人",
+        "level": 1,
+        "xp": 0,
+        "coins": 180,
+        "hp": 12,
+        "maxHp": 12,
+        "mp": 9,
+        "maxMp": 10,
+        "revivalAnchor": "loc_hw",
+        "attributes": {
+          "力量": 10,
+          "敏捷": 10,
+          "体质": 10,
+          "智力": 10,
+          "精神": 10,
+          "魅力": 10
+        },
+        "status": "正常",
+        "freeAttributePoints": 0,
+        "companions": [],
+        "dyingSince": null
+      },
+      "minute": 550
+    },
+    {
+      "id": "G1",
+      "attempt": 5,
+      "input": "我对旧木杖施放已经学会的照明术。",
+      "pass": true,
+      "error": null,
+      "reply": "你把旧木杖横在膝上，指尖顺着木纹抹过。术式勉强凝住——杖头浮起一团不算稳的冷白微光，像被风吹动的烛苗，摇曳片刻才勉强站稳。\n\n魔力 -1（10/10 → 9/10）。照明术熟练度 +3。\n\n酒馆里晨光尚淡，这点光落在桌面上几乎看不出用处，倒是让邻桌的贺舟抬头瞥了一眼，又低头继续削他手里那块木料。\n\n<回合 时长=\"10分\" 地点=\"bld_hw_qingdeng\" 在场=\"npc_hw_linsui\"/>",
+      "events": [
+        {
+          "input": {
+            "tool": "world_cast",
+            "args": {
+              "spell": "照明术",
+              "target": "旧木杖"
+            },
+            "eventId": "quick_G1_0"
+          },
+          "result": {
+            "ok": true,
+            "spell": "spell_light",
+            "die": 10,
+            "rolls": [
+              10
+            ],
+            "modifier": 0,
+            "total": 10,
+            "difficulty": 10,
+            "degree": "勉强成功",
+            "success": true,
+            "mpCost": 1,
+            "minute": 541,
+            "messages": [
+              "【系统】照明术熟练度 +3",
+              "【系统】照明术施放成功，消耗1魔力"
+            ]
+          }
+        }
+      ],
+      "player": {
+        "name": "旅人",
+        "level": 1,
+        "xp": 0,
+        "coins": 180,
+        "hp": 12,
+        "maxHp": 12,
+        "mp": 9,
+        "maxMp": 10,
+        "revivalAnchor": "loc_hw",
+        "attributes": {
+          "力量": 10,
+          "敏捷": 10,
+          "体质": 10,
+          "智力": 10,
+          "精神": 10,
+          "魅力": 10
+        },
+        "status": "正常",
+        "freeAttributePoints": 0,
+        "companions": [],
+        "dyingSince": null
+      },
+      "minute": 550
+    },
+    {
+      "id": "T1",
+      "attempt": 1,
+      "input": "我问林穗，今天雨是不是一直没停。",
+      "pass": true,
+      "error": null,
+      "reply": "你端着还没喝完的热茶走到柜台边，随口问了一句：“今天这雨，是不是一直没停？”\n\n林穗正用一块旧布擦着木杯，闻言抬眼看了看窗外。檐水连成一线，顺着瓦口往下淌，院角的水缸已经积了半满。\n\n“从后半夜就下起来了，没断过。”她把布搭在肩上，语气平常，“这种雨最磨人，出门的少，柴也潮。你要是有事要办，趁早去，晌午后河边的路怕是要烂。”\n\n她顿了顿，又补了一句：“要是打算住下，倒不急。楼上空着两间，一晚六铜，住一周三十五铜，房钱按时给就行。”\n\n<回合 时长=\"10分\" 地点=\"bld_hw_qingdeng\" 在场=\"npc_hw_linsui\"/>",
+      "events": [],
+      "player": {
+        "name": "旅人",
+        "level": 1,
+        "xp": 0,
+        "coins": 180,
+        "hp": 12,
+        "maxHp": 12,
+        "mp": 10,
+        "maxMp": 10,
+        "revivalAnchor": "loc_hw",
+        "attributes": {
+          "力量": 10,
+          "敏捷": 10,
+          "体质": 10,
+          "智力": 10,
+          "精神": 10,
+          "魅力": 10
+        },
+        "status": "正常",
+        "freeAttributePoints": 0,
+        "companions": [],
+        "dyingSince": null
+      },
+      "minute": 550
+    },
+    {
+      "id": "T1",
+      "attempt": 2,
+      "input": "我问林穗，今天雨是不是一直没停。",
+      "pass": true,
+      "error": null,
+      "reply": "林穗正拿布擦着柜台，听见你问，抬眼望了望门外檐下连成线的雨丝。\n\n“嗯，天没亮就下起来了，一直没歇。”她把布搭在肩头，“这种天客人少，你要出门的话，河边那片泥地不好走。”\n\n<回合 时长=\"10分\" 地点=\"bld_hw_qingdeng\" 在场=\"npc_hw_linsui\"/>",
+      "events": [],
+      "player": {
+        "name": "旅人",
+        "level": 1,
+        "xp": 0,
+        "coins": 180,
+        "hp": 12,
+        "maxHp": 12,
+        "mp": 10,
+        "maxMp": 10,
+        "revivalAnchor": "loc_hw",
+        "attributes": {
+          "力量": 10,
+          "敏捷": 10,
+          "体质": 10,
+          "智力": 10,
+          "精神": 10,
+          "魅力": 10
+        },
+        "status": "正常",
+        "freeAttributePoints": 0,
+        "companions": [],
+        "dyingSince": null
+      },
+      "minute": 550
+    },
+    {
+      "id": "T1",
+      "attempt": 3,
+      "input": "我问林穗，今天雨是不是一直没停。",
+      "pass": true,
+      "error": null,
+      "reply": "你问林穗今天这雨是不是一直没停。\n\n林穗正把几只倒扣的木杯摆回架子上，闻言往窗那边瞥了一眼。檐水连成一条细线，砸在门前的石阶上，溅起一层白雾。\n\n“从后半夜就下起来了，没断过。”她擦了擦手，“这种雨最麻烦，客人不进门，柴火还潮。你要出门的话，河边的路这时候不好走，泥能没到脚踝。”\n\n她顿了顿，又补了一句：“要是打算住下，普通客房一晚六铜，一周三十五铜。房钱按天算，我不赊账，但熟客能商量用厨房和院子。”\n\n<回合 时长=\"10分\" 地点=\"bld_hw_qingdeng\" 在场=\"npc_hw_linsui\"/>",
+      "events": [],
+      "player": {
+        "name": "旅人",
+        "level": 1,
+        "xp": 0,
+        "coins": 180,
+        "hp": 12,
+        "maxHp": 12,
+        "mp": 10,
+        "maxMp": 10,
+        "revivalAnchor": "loc_hw",
+        "attributes": {
+          "力量": 10,
+          "敏捷": 10,
+          "体质": 10,
+          "智力": 10,
+          "精神": 10,
+          "魅力": 10
+        },
+        "status": "正常",
+        "freeAttributePoints": 0,
+        "companions": [],
+        "dyingSince": null
+      },
+      "minute": 550
+    },
+    {
+      "id": "T1",
+      "attempt": 4,
+      "input": "我问林穗，今天雨是不是一直没停。",
+      "pass": true,
+      "error": null,
+      "reply": "你靠在柜台边问起天气。林穗正擦着酒杯，闻言抬眼看了看门外。\n\n“从后半夜就没停过。”她把杯子倒扣在架子上，“这种雨月头一场雨，下起来黏黏糊糊，河面又要涨。你要出门的话，路不好走。”\n\n她顿了顿，像是随口一提：“楼上客房还空着几间，一晚六铜。下雨天住店的人少，你要是打算留一晚，跟我说一声就行。”\n\n<回合 时长=\"10分\" 地点=\"bld_hw_qingdeng\" 在场=\"npc_hw_linsui\"/>",
+      "events": [],
+      "player": {
+        "name": "旅人",
+        "level": 1,
+        "xp": 0,
+        "coins": 180,
+        "hp": 12,
+        "maxHp": 12,
+        "mp": 10,
+        "maxMp": 10,
+        "revivalAnchor": "loc_hw",
+        "attributes": {
+          "力量": 10,
+          "敏捷": 10,
+          "体质": 10,
+          "智力": 10,
+          "精神": 10,
+          "魅力": 10
+        },
+        "status": "正常",
+        "freeAttributePoints": 0,
+        "companions": [],
+        "dyingSince": null
+      },
+      "minute": 550
+    },
+    {
+      "id": "T1",
+      "attempt": 5,
+      "input": "我问林穗，今天雨是不是一直没停。",
+      "pass": true,
+      "error": null,
+      "reply": "你搁下杯子，随口朝柜台那边问了句：“林老板，今儿这雨是不是一直没停过？”\n\n林穗正拿着块半旧的抹布擦柜台，闻言抬眼看了看门外檐下挂成线的雨珠，手上没停：“从后半夜就没断过。雨月头一天就这样，往年也差不离——一下起来，河就涨，路也烂。”她把抹布搭在肩头，语气平平淡淡的，像是说一件再寻常不过的事，“你要是今天打算赶路，劝你歇一天。这种天出门，鞋都得泡透。”\n\n说完她又低头忙自己的去了，没多问你的打算。\n\n<回合 时长=\"10分\" 地点=\"bld_hw_qingdeng\" 在场=\"npc_hw_linsui\"/>",
+      "events": [],
+      "player": {
+        "name": "旅人",
+        "level": 1,
+        "xp": 0,
+        "coins": 180,
+        "hp": 12,
+        "maxHp": 12,
+        "mp": 10,
+        "maxMp": 10,
+        "revivalAnchor": "loc_hw",
+        "attributes": {
+          "力量": 10,
+          "敏捷": 10,
+          "体质": 10,
+          "智力": 10,
+          "精神": 10,
+          "魅力": 10
+        },
+        "status": "正常",
+        "freeAttributePoints": 0,
+        "companions": [],
+        "dyingSince": null
+      },
+      "minute": 550
+    },
+    {
+      "id": "F8",
+      "attempt": 1,
+      "input": "（场外）我现在有多少铜币？",
+      "pass": true,
+      "error": null,
+      "reply": "你目前身上有 **180 铜币**。",
+      "events": [],
+      "player": {
+        "name": "旅人",
+        "level": 1,
+        "xp": 0,
+        "coins": 180,
+        "hp": 12,
+        "maxHp": 12,
+        "mp": 10,
+        "maxMp": 10,
+        "revivalAnchor": "loc_hw",
+        "attributes": {
+          "力量": 10,
+          "敏捷": 10,
+          "体质": 10,
+          "智力": 10,
+          "精神": 10,
+          "魅力": 10
+        },
+        "status": "正常",
+        "freeAttributePoints": 0,
+        "companions": [],
+        "dyingSince": null
+      },
+      "minute": 540
+    },
+    {
+      "id": "F8",
+      "attempt": 2,
+      "input": "（场外）我现在有多少铜币？",
+      "pass": true,
+      "error": null,
+      "reply": "你当前有 **180 铜币**。",
+      "events": [],
+      "player": {
+        "name": "旅人",
+        "level": 1,
+        "xp": 0,
+        "coins": 180,
+        "hp": 12,
+        "maxHp": 12,
+        "mp": 10,
+        "maxMp": 10,
+        "revivalAnchor": "loc_hw",
+        "attributes": {
+          "力量": 10,
+          "敏捷": 10,
+          "体质": 10,
+          "智力": 10,
+          "精神": 10,
+          "魅力": 10
+        },
+        "status": "正常",
+        "freeAttributePoints": 0,
+        "companions": [],
+        "dyingSince": null
+      },
+      "minute": 540
+    },
+    {
+      "id": "F8",
+      "attempt": 3,
+      "input": "（场外）我现在有多少铜币？",
+      "pass": true,
+      "error": null,
+      "reply": "你当前有 **180铜**。<回合 时长=\"0分\" 地点=\"bld_hw_qingdeng\" 在场=\"npc_hw_linsui\"/>\n\n（注：场外问题本不应附尾注，但按你先前要求统一格式。如需严格场外回复，我下次可省略尾注。）",
+      "events": [],
+      "player": {
+        "name": "旅人",
+        "level": 1,
+        "xp": 0,
+        "coins": 180,
+        "hp": 12,
+        "maxHp": 12,
+        "mp": 10,
+        "maxMp": 10,
+        "revivalAnchor": "loc_hw",
+        "attributes": {
+          "力量": 10,
+          "敏捷": 10,
+          "体质": 10,
+          "智力": 10,
+          "精神": 10,
+          "魅力": 10
+        },
+        "status": "正常",
+        "freeAttributePoints": 0,
+        "companions": [],
+        "dyingSince": null
+      },
+      "minute": 540
+    },
+    {
+      "id": "F8",
+      "attempt": 4,
+      "input": "（场外）我现在有多少铜币？",
+      "pass": true,
+      "error": null,
+      "reply": "你的账本是 **铜180**，也就是180枚铜币。<回合 时长=\"10分\" 地点=\"bld_hw_qingdeng\" 在场=\"npc_hw_linsui\"/>",
+      "events": [],
+      "player": {
+        "name": "旅人",
+        "level": 1,
+        "xp": 0,
+        "coins": 180,
+        "hp": 12,
+        "maxHp": 12,
+        "mp": 10,
+        "maxMp": 10,
+        "revivalAnchor": "loc_hw",
+        "attributes": {
+          "力量": 10,
+          "敏捷": 10,
+          "体质": 10,
+          "智力": 10,
+          "精神": 10,
+          "魅力": 10
+        },
+        "status": "正常",
+        "freeAttributePoints": 0,
+        "companions": [],
+        "dyingSince": null
+      },
+      "minute": 540
+    },
+    {
+      "id": "F8",
+      "attempt": 5,
+      "input": "（场外）我现在有多少铜币？",
+      "pass": true,
+      "error": null,
+      "reply": "你现有 **180 铜币**。",
+      "events": [],
+      "player": {
+        "name": "旅人",
+        "level": 1,
+        "xp": 0,
+        "coins": 180,
+        "hp": 12,
+        "maxHp": 12,
+        "mp": 10,
+        "maxMp": 10,
+        "revivalAnchor": "loc_hw",
+        "attributes": {
+          "力量": 10,
+          "敏捷": 10,
+          "体质": 10,
+          "智力": 10,
+          "精神": 10,
+          "魅力": 10
+        },
+        "status": "正常",
+        "freeAttributePoints": 0,
+        "companions": [],
+        "dyingSince": null
+      },
+      "minute": 540
+    }
+  ]
+}

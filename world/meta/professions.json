@@ -1,0 +1,288 @@
+[
+  {
+    "id": "profession_warrior",
+    "name": "战士",
+    "kind": "combat",
+    "aliases": [],
+    "fee": 30,
+    "minimumLevel": 10
+  },
+  {
+    "id": "profession_knight",
+    "name": "骑士",
+    "kind": "combat",
+    "aliases": [],
+    "fee": 30,
+    "minimumLevel": 10
+  },
+  {
+    "id": "profession_spellblade",
+    "name": "魔武士",
+    "kind": "combat",
+    "aliases": [],
+    "fee": 30,
+    "minimumLevel": 10
+  },
+  {
+    "id": "profession_swordsman",
+    "name": "侠客",
+    "kind": "combat",
+    "aliases": [
+      "游侠"
+    ],
+    "fee": 30,
+    "minimumLevel": 10
+  },
+  {
+    "id": "profession_assassin",
+    "name": "刺客",
+    "kind": "combat",
+    "aliases": [],
+    "fee": 30,
+    "minimumLevel": 10
+  },
+  {
+    "id": "profession_archer",
+    "name": "弓箭手",
+    "kind": "combat",
+    "aliases": [
+      "弓手"
+    ],
+    "fee": 30,
+    "minimumLevel": 10
+  },
+  {
+    "id": "profession_mage",
+    "name": "法师",
+    "kind": "combat",
+    "aliases": [],
+    "fee": 30,
+    "minimumLevel": 10
+  },
+  {
+    "id": "profession_priest",
+    "name": "祭司",
+    "kind": "combat",
+    "aliases": [],
+    "fee": 30,
+    "minimumLevel": 10
+  },
+  {
+    "id": "profession_monk",
+    "name": "僧侣",
+    "kind": "combat",
+    "aliases": [],
+    "fee": 30,
+    "minimumLevel": 10
+  },
+  {
+    "id": "profession_witch",
+    "name": "巫师",
+    "kind": "combat",
+    "aliases": [],
+    "fee": 30,
+    "minimumLevel": 10
+  },
+  {
+    "id": "profession_taoist",
+    "name": "道士",
+    "kind": "combat",
+    "aliases": [],
+    "fee": 30,
+    "minimumLevel": 10
+  },
+  {
+    "id": "profession_summoner",
+    "name": "元素召唤师",
+    "kind": "combat",
+    "aliases": [],
+    "fee": 30,
+    "minimumLevel": 10
+  },
+  {
+    "id": "profession_life_0",
+    "name": "农夫",
+    "kind": "life",
+    "aliases": [],
+    "fee": 20,
+    "minimumLevel": 1
+  },
+  {
+    "id": "profession_life_1",
+    "name": "猎人",
+    "kind": "life",
+    "aliases": [],
+    "fee": 20,
+    "minimumLevel": 1
+  },
+  {
+    "id": "profession_life_2",
+    "name": "渔夫",
+    "kind": "life",
+    "aliases": [],
+    "fee": 20,
+    "minimumLevel": 1
+  },
+  {
+    "id": "profession_life_3",
+    "name": "厨师",
+    "kind": "life",
+    "aliases": [],
+    "fee": 20,
+    "minimumLevel": 1
+  },
+  {
+    "id": "profession_life_4",
+    "name": "裁缝",
+    "kind": "life",
+    "aliases": [],
+    "fee": 20,
+    "minimumLevel": 1
+  },
+  {
+    "id": "profession_life_5",
+    "name": "铁匠",
+    "kind": "life",
+    "aliases": [],
+    "fee": 20,
+    "minimumLevel": 1
+  },
+  {
+    "id": "profession_life_6",
+    "name": "木匠",
+    "kind": "life",
+    "aliases": [],
+    "fee": 20,
+    "minimumLevel": 1
+  },
+  {
+    "id": "profession_life_7",
+    "name": "建筑师",
+    "kind": "life",
+    "aliases": [],
+    "fee": 20,
+    "minimumLevel": 1
+  },
+  {
+    "id": "profession_life_8",
+    "name": "炼金师",
+    "kind": "life",
+    "aliases": [],
+    "fee": 20,
+    "minimumLevel": 1
+  },
+  {
+    "id": "profession_life_9",
+    "name": "园艺师",
+    "kind": "life",
+    "aliases": [],
+    "fee": 20,
+    "minimumLevel": 1
+  },
+  {
+    "id": "profession_life_10",
+    "name": "鉴定师",
+    "kind": "life",
+    "aliases": [],
+    "fee": 20,
+    "minimumLevel": 1
+  },
+  {
+    "id": "profession_life_11",
+    "name": "地理师",
+    "kind": "life",
+    "aliases": [],
+    "fee": 20,
+    "minimumLevel": 1
+  },
+  {
+    "id": "profession_life_12",
+    "name": "商人",
+    "kind": "life",
+    "aliases": [],
+    "fee": 20,
+    "minimumLevel": 1
+  },
+  {
+    "id": "profession_life_13",
+    "name": "音乐家",
+    "kind": "life",
+    "aliases": [
+      "吟游诗人"
+    ],
+    "fee": 20,
+    "minimumLevel": 1
+  },
+  {
+    "id": "profession_life_14",
+    "name": "雕刻师",
+    "kind": "life",
+    "aliases": [],
+    "fee": 20,
+    "minimumLevel": 1
+  },
+  {
+    "id": "profession_life_15",
+    "name": "驯兽师",
+    "kind": "life",
+    "aliases": [],
+    "fee": 20,
+    "minimumLevel": 1
+  },
+  {
+    "id": "profession_life_16",
+    "name": "画师",
+    "kind": "life",
+    "aliases": [],
+    "fee": 20,
+    "minimumLevel": 1
+  },
+  {
+    "id": "profession_life_17",
+    "name": "挖掘者",
+    "kind": "life",
+    "aliases": [],
+    "fee": 20,
+    "minimumLevel": 1
+  },
+  {
+    "id": "profession_life_18",
+    "name": "首饰工匠",
+    "kind": "life",
+    "aliases": [],
+    "fee": 20,
+    "minimumLevel": 1
+  },
+  {
+    "id": "profession_life_19",
+    "name": "医师",
+    "kind": "life",
+    "aliases": [],
+    "fee": 20,
+    "minimumLevel": 1
+  },
+  {
+    "id": "profession_life_20",
+    "name": "制皮匠",
+    "kind": "life",
+    "aliases": [],
+    "fee": 20,
+    "minimumLevel": 1
+  },
+  {
+    "id": "profession_life_21",
+    "name": "酿酒师",
+    "kind": "life",
+    "aliases": [],
+    "fee": 20,
+    "minimumLevel": 1
+  },
+  {
+    "id": "profession_life_22",
+    "name": "抄写员",
+    "kind": "life",
+    "aliases": [],
+    "fee": 20,
+    "minimumLevel": 1
+  }
+]

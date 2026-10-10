@@ -1,0 +1,327 @@
+[
+  {
+    "id": "loc_hw",
+    "name": "河湾村",
+    "coordinates": [
+      0,
+      0
+    ],
+    "parent": null,
+    "scope": "loc_hw",
+    "aliases": [],
+    "terrain": "平地",
+    "openHours": [
+      0,
+      1440
+    ]
+  },
+  {
+    "id": "bld_hw_qingdeng",
+    "name": "青灯酒馆",
+    "coordinates": [
+      0,
+      0
+    ],
+    "parent": "loc_hw",
+    "scope": "loc_hw",
+    "aliases": [
+      "河湾村·青灯酒馆",
+      "青灯酒馆前厅"
+    ],
+    "terrain": "平地",
+    "openHours": [
+      420,
+      1350
+    ]
+  },
+  {
+    "id": "bld_hw_mill",
+    "name": "旧磨坊",
+    "coordinates": [
+      0.2,
+      0
+    ],
+    "parent": "loc_hw",
+    "scope": "loc_hw",
+    "aliases": [],
+    "terrain": "平地",
+    "openHours": [
+      420,
+      1350
+    ]
+  },
+  {
+    "id": "bld_hw_council",
+    "name": "村务屋",
+    "coordinates": [
+      0.1,
+      0.1
+    ],
+    "parent": "loc_hw",
+    "scope": "loc_hw",
+    "aliases": [],
+    "terrain": "平地",
+    "openHours": [
+      420,
+      1350
+    ]
+  },
+  {
+    "id": "bld_hw_riverhome",
+    "name": "河边小屋",
+    "coordinates": [
+      0.1,
+      -0.1
+    ],
+    "parent": "loc_hw",
+    "scope": "loc_hw",
+    "aliases": [],
+    "terrain": "平地",
+    "openHours": [
+      420,
+      1350
+    ]
+  },
+  {
+    "id": "bld_hw_forge",
+    "name": "铁匠铺",
+    "coordinates": [
+      0.3,
+      0
+    ],
+    "parent": "loc_hw",
+    "scope": "loc_hw",
+    "aliases": [],
+    "terrain": "平地",
+    "openHours": [
+      420,
+      1350
+    ]
+  },
+  {
+    "id": "loc_hw_northwood",
+    "name": "北林边",
+    "coordinates": [
+      2,
+      0
+    ],
+    "parent": "loc_hw",
+    "scope": "loc_hw",
+    "aliases": [],
+    "terrain": "平地",
+    "openHours": [
+      0,
+      1440
+    ]
+  },
+  {
+    "id": "bld_hw_herbs",
+    "name": "药草院",
+    "coordinates": [
+      0.2,
+      0.2
+    ],
+    "parent": "loc_hw",
+    "scope": "loc_hw",
+    "aliases": [],
+    "terrain": "平地",
+    "openHours": [
+      420,
+      1350
+    ]
+  },
+  {
+    "id": "loc_hw_dock",
+    "name": "旧渡口",
+    "coordinates": [
+      0,
+      -0.2
+    ],
+    "parent": "loc_hw",
+    "scope": "loc_hw",
+    "aliases": [],
+    "terrain": "平地",
+    "openHours": [
+      0,
+      1440
+    ]
+  },
+  {
+    "id": "loc_hw_fields",
+    "name": "南田",
+    "coordinates": [
+      0,
+      -1
+    ],
+    "parent": "loc_hw",
+    "scope": "loc_hw",
+    "aliases": [],
+    "terrain": "平地",
+    "openHours": [
+      0,
+      1440
+    ]
+  },
+  {
+    "id": "bld_hw_weaving",
+    "name": "织坊",
+    "coordinates": [
+      0.4,
+      0
+    ],
+    "parent": "loc_hw",
+    "scope": "loc_hw",
+    "aliases": [],
+    "terrain": "平地",
+    "openHours": [
+      420,
+      1350
+    ]
+  },
+  {
+    "id": "loc_hw_gate",
+    "name": "村口",
+    "coordinates": [
+      0.5,
+      0
+    ],
+    "parent": "loc_hw",
+    "scope": "loc_hw",
+    "aliases": [],
+    "terrain": "平地",
+    "openHours": [
+      0,
+      1440
+    ]
+  },
+  {
+    "id": "loc_hw_orchard",
+    "name": "公用果园",
+    "coordinates": [
+      0.4,
+      0.4
+    ],
+    "parent": "loc_hw",
+    "scope": "loc_hw",
+    "aliases": [],
+    "terrain": "平地",
+    "openHours": [
+      0,
+      1440
+    ]
+  },
+  {
+    "id": "loc_bs",
+    "name": "白石镇",
+    "coordinates": [
+      24,
+      0
+    ],
+    "parent": null,
+    "scope": "loc_hw",
+    "aliases": [],
+    "terrain": "平地",
+    "openHours": [
+      0,
+      1440
+    ]
+  },
+  {
+    "id": "bld_hw_school",
+    "name": "小学堂",
+    "coordinates": [
+      0.4,
+      0.1
+    ],
+    "parent": "loc_hw",
+    "scope": "loc_hw",
+    "aliases": [],
+    "terrain": "平地",
+    "openHours": [
+      420,
+      1350
+    ]
+  },
+  {
+    "id": "loc_hw_apiary",
+    "name": "南坡蜂场",
+    "coordinates": [
+      0,
+      -2
+    ],
+    "parent": "loc_hw",
+    "scope": "loc_hw",
+    "aliases": [],
+    "terrain": "平地",
+    "openHours": [
+      0,
+      1440
+    ]
+  },
+  {
+    "id": "bld_hw_post",
+    "name": "小驿站",
+    "coordinates": [
+      0.6,
+      0
+    ],
+    "parent": "loc_hw",
+    "scope": "loc_hw",
+    "aliases": [],
+    "terrain": "平地",
+    "openHours": [
+      420,
+      1350
+    ]
+  },
+  {
+    "id": "site_beilin_tower",
+    "name": "北林废观测塔",
+    "coordinates": [
+      6,
+      0
+    ],
+    "parent": "loc_hw",
+    "scope": "loc_hw",
+    "aliases": [
+      "废观测塔"
+    ],
+    "terrain": "平地",
+    "openHours": [
+      0,
+      1440
+    ]
+  },
+  {
+    "id": "loc_yandu",
+    "name": "雁渡",
+    "coordinates": [
+      0,
+      -32
+    ],
+    "parent": "loc_hw",
+    "scope": "loc_hw",
+    "aliases": [],
+    "terrain": "平地",
+    "openHours": [
+      0,
+      1440
+    ]
+  },
+  {
+    "id": "loc_capital",
+    "name": "王都",
+    "coordinates": [
+      440,
+      0
+    ],
+    "parent": "loc_hw",
+    "scope": "loc_hw",
+    "aliases": [],
+    "terrain": "平地",
+    "openHours": [
+      0,
+      1440
+    ]
+  }
+]

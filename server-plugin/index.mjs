@@ -1,0 +1,145 @@
+import fs from 'node:fs/promises';
+import path from 'node:path';
+import { randomUUID } from 'node:crypto';
+import { CampaignStorage, digest } from './storage.mjs';
+import { WorldEngine } from './engine.mjs';
+import { MemoryIndex } from './retrieval.mjs';
+import { campaignReducer } from './campaign-reducer.mjs';
+import { loadWorld } from '../tools/load-world.mjs';
+import { migrateLegacyChat } from './migrations.mjs';
+import { WorldRegistry } from './world-registry.mjs';
+import { compatibleWorld, planWorldUpgrade } from './world-upgrade.mjs';
+import { atomicJSON } from './storage.mjs';
+
+export const info={id:'infinite-fields',name:'无限原野本地战役存储',description:'本项目自有的存档、账本与检索服务器插件'};
+export async function init(router,{ world=null, baseRoot=null }={}){
+    world ??= await loadWorld();
+    const engine=new WorldEngine(world),stores=new Map(),indexes=new Map(),registries=new Map();
+    const seed=JSON.parse(await fs.readFile(new URL('../tests/fixtures/legacy/seed.json',import.meta.url),'utf8'));
+    const getStore=req=>{
+        const root=baseRoot??req.user?.directories?.root;if(!root)throw new Error('没有当前用户的存档目录');
+        if(!stores.has(root)){
+            const registry=new WorldRegistry(path.join(root,'infinite-fields-worlds'));registries.set(root,registry);
+            const reducer=async(document,input)=>{
+                const hash=input.type==='schema_migration'?input.worldHash:document.worldHash;
+                const selected=hash?await registry.get(hash):engine;
+                if(input.type==='world_upgrade'){
+                    const incoming=await registry.get(input.worldHash);
+                    const {world:merged,retained}=compatibleWorld(selected.world,incoming.world);
+                    const worldHash=await registry.put(merged);
+                    const result=planWorldUpgrade(document,selected.world,merged,{worldHash,eventId:input.eventId,retained});
+                    result.patches.push({op:'set',path:['worldSourceHash'],value:input.worldHash});return result;
+                }
+                const output=await campaignReducer(selected)(document,input);
+                if(input.type==='schema_migration')output.patches.push({op:'set',path:['worldHash'],value:hash});
+                return output;
+            };
+            const store=new CampaignStorage(path.join(root,'infinite-fields'),{reducer});store.worldRegistry=registry;stores.set(root,store);
+        }
+        return stores.get(root);
+    };
+    const handle=callback=>async(req,res)=>{
+        try{res.json(await callback(req));}catch(error){res.status(error.code==='ENOENT'?404:400).json({ok:false,error:error.message});}
+    };
+    const exportWithWorlds=async(store,id)=>{
+        const bundle=await store.export(id),hashes=new Set([bundle.initial.worldHash,
+            ...bundle.events.flatMap(event=>[event.input?.worldHash,event.result?.worldHash])].filter(Boolean));
+        bundle.worlds={};for(const hash of hashes)bundle.worlds[hash]=(await store.worldRegistry.get(hash)).world;
+        return bundle;
+    };
+    const upgrade=async(store,id)=>{
+        const view=await store.read(id);if(view.document.schemaVersion!==2)return view;
+        // The source hash records the edition accepted, even if historical IDs
+        // make the compatible campaign edition differ from the shipped one.
+        const incomingHash=digest(world);
+        if((view.document.worldSourceHash??view.document.worldHash)===incomingHash)return view;
+        await store.worldRegistry.put(world);
+        const backup=path.join(store.directory(id),`before-world-update-${view.reference.sequence}-${incomingHash.slice(0,12)}.json`);
+        await atomicJSON(backup,await exportWithWorlds(store,id));
+        const eventId=`world_update_${incomingHash}_${view.reference.sequence}`;
+        await store.transact(id,{id:eventId,input:{type:'world_upgrade',worldHash:incomingHash,eventId},expectedSequence:view.reference.sequence},store.reducer);
+        return store.read(id);
+    };
+    const getIndex=async(store,id,document)=>{
+        const key=`${store.root}:${id}`;
+        const selectedEngine=(await store.worldRegistry.get(document.worldHash)).scoped(document);
+        const identity=`${document.worldHash}:${digest(document.state.created??{})}`;
+        if(indexes.get(key)?.entityIdentity!==identity){
+            const old=indexes.get(key),next=new MemoryIndex({entities:selectedEngine.entities});
+            next.entityIdentity=identity;
+            if(old){
+                for(const record of old.documents.values())if(!record.id.startsWith('chat_')&&!record.id.startsWith('memory_'))next.upsert({...record,revision:undefined});
+                next.syncChat(old.chatMessages);
+            }
+            indexes.set(key,next);
+        }
+        const index=indexes.get(key),wanted=new Set();
+        for(const [id,memory]of Object.entries(document.memories??{})){
+            wanted.add(`memory_${id}`);index.upsert({id:`memory_${id}`,text:memory.content,source:'长期事实',
+                entities:[memory.subject],keywords:memory.keywords??[],salience:memory.pinned?5:3,minute:memory.minute??0,
+                revision:digest(memory)});
+        }
+        for(const id of index.documents.keys())if(id.startsWith('memory_')&&!wanted.has(id))index.remove(id);
+        return index;
+    };
+    router.post('/create',handle(async req=>{
+        const document=engine.initialFromLegacy({state:seed.state,memories:seed.memories},randomUUID());
+        if(req.body.name)document.state.player.name=String(req.body.name).slice(0,60);
+        const store=getStore(req),registry=registries.get(baseRoot??req.user.directories.root);
+        document.worldHash=await registry.put(world);
+        return store.create({worldVersion:world.version,document});
+    }));
+    router.post('/read',handle(req=>upgrade(getStore(req),req.body.campaignId)));
+    router.post('/execute',handle(async req=>{
+        const {campaignId,tool,args,eventId,anchor,expectedSequence}=req.body;
+        // Health is an internal combat primitive, not a model-controlled tool.
+        if(['world_health','world_revive'].includes(tool))throw new Error('生命变化只能由交锋、治疗或死亡结算产生');
+        const store=getStore(req),view=await store.read(campaignId);
+        if(view.document.schemaVersion!==2)throw new Error('存档尚未升级到新引擎');
+        return store.transact(campaignId,{id:eventId,input:{tool,args,eventId},anchor,expectedSequence},store.reducer);
+    }));
+    router.post('/reconcile',handle(req=>getStore(req).reconcile(req.body.campaignId,req.body.validAnchors??[],req.body.excludeAnchor)));
+    router.post('/scene',handle(async req=>{
+        const store=getStore(req),view=await store.read(req.body.campaignId),selectedEngine=await registries.get(baseRoot??req.user.directories.root).get(view.document.worldHash),index=await getIndex(store,req.body.campaignId,view.document);
+        if(Array.isArray(req.body.chat))index.syncChat(req.body.chat);
+        return {scene:selectedEngine.scoped(view.document).scene(view.document,req.body.query??'',index),reference:view.reference};
+    }));
+    router.post('/search',handle(async req=>{
+        const store=getStore(req),view=await store.read(req.body.campaignId),index=await getIndex(store,req.body.campaignId,view.document);
+        if(Array.isArray(req.body.chat))index.syncChat(req.body.chat);
+        return {results:index.search(req.body.query??'',{now:view.document.state.minute,scope:view.document.state.location,limit:req.body.limit})};
+    }));
+    router.post('/export',handle(async req=>{
+        return exportWithWorlds(getStore(req),req.body.campaignId);
+    }));
+    router.post('/import',handle(async req=>{
+        const store=getStore(req),registry=registries.get(baseRoot??req.user.directories.root),bundle=req.body.bundle;
+        for(const [hash,data]of Object.entries(bundle.worlds??{})){
+            if(digest(data)!==hash)throw new Error('导入的世界版本校验失败');await registry.put(data);
+        }
+        const hashes=new Set([bundle.initial?.worldHash,...(bundle.events??[]).flatMap(event=>[event.input?.worldHash,event.result?.worldHash])].filter(Boolean));
+        for(const hash of hashes)await registry.get(hash);
+        return store.import(bundle);
+    }));
+    router.post('/migrate',handle(async req=>{
+        if(baseRoot)throw new Error('测试隔离服务器不读取真实聊天');
+        const directory=req.user.directories.chats;
+        const character=req.body.character,chatId=req.body.chatId;
+        for(const value of [character,chatId])if(typeof value!=='string'||!value||/[\\/]|^\.{1,2}$/.test(value))throw new Error('聊天路径无效');
+        const source=path.join(directory,character,`${chatId}.jsonl`);
+        const store=getStore(req),id=`campaign_${randomUUID()}`;
+        await migrateLegacyChat({source,store,oldSeed:seed,id});
+        const worldHash=await registries.get(req.user.directories.root).put(world);
+        await store.transact(id,{id:'schema_v2',input:{type:'schema_migration',randomSeed:randomUUID(),worldHash},anchor:null},store.reducer);
+        return store.read(id);
+    }));
+    router.post('/edit-index',handle(async req=>{
+        const store=getStore(req),view=await store.read(req.body.campaignId),index=await getIndex(store,req.body.campaignId,view.document);
+        index.editChat(req.body.index,req.body.message);return {ok:true};
+    }));
+    router.post('/sync-index',handle(async req=>{
+        const store=getStore(req),view=await store.read(req.body.campaignId),index=await getIndex(store,req.body.campaignId,view.document);
+        index.syncDelta(req.body.start,req.body.messages,req.body.total);return {ok:true,messages:index.chatMessages.length};
+    }));
+    router.get('/health',(_req,res)=>res.json({ok:true,worldVersion:world.version,format:2}));
+}

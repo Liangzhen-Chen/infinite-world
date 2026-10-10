@@ -1,0 +1,108 @@
+{
+  "destination": "C:\\Users\\RobertC\\Documents\\dnd\\dist\\engine-deployment",
+  "format": 1,
+  "stage": "prepared",
+  "activation": false,
+  "files": [
+    {
+      "path": "plugin/server-plugin/activities.mjs",
+      "sha256": "66d04b090dbae6d9c58d901a03d2b62a7c5e55ee4010d2b5759cc700a8ac9c41"
+    },
+    {
+      "path": "plugin/server-plugin/campaign-reducer.mjs",
+      "sha256": "0cf8dc4f885846613edf3a9d1d41adf7e1d8c4996ca1bbe97e0a31756a5d2d5d"
+    },
+    {
+      "path": "plugin/server-plugin/engine.mjs",
+      "sha256": "15d03af657f80f281cb41dbb29eb2a7aefb1ef58e733f07e6ce6ea880a1f4ac5"
+    },
+    {
+      "path": "plugin/server-plugin/index.mjs",
+      "sha256": "e5efe68af392ad94b3352dc8a83b6d838afb1284fb9801768674f2875bc9190d"
+    },
+    {
+      "path": "plugin/server-plugin/migrations.mjs",
+      "sha256": "e0141aa51786e50f29b2b4fb9d690a2cc21a03e65c70425363137e9f2230d173"
+    },
+    {
+      "path": "plugin/server-plugin/retrieval.mjs",
+      "sha256": "cce03cc959dd490a5a3438b33558a8063f47c4b6d4c3f40ecf77701a32cf954d"
+    },
+    {
+      "path": "plugin/server-plugin/storage.mjs",
+      "sha256": "877a6ca0f3d2e96d8b51cdc893c576f214e44262c655be81012034ffeccde754"
+    },
+    {
+      "path": "plugin/server-plugin/world-registry.mjs",
+      "sha256": "bd75177f475da79f07d7db3829ac80426fa9ad3eb769a17d6c7b71e4ab35c798"
+    },
+    {
+      "path": "plugin/server-plugin/world-upgrade.mjs",
+      "sha256": "b1406e8e29cdcaa345111798c45816ce68cc16647c5da5536cb26f22358a94c1"
+    },
+    {
+      "path": "plugin/tools/load-world.mjs",
+      "sha256": "9f821c5b84b7964da03db2d06f44d6069a311eeacdc114bc16abf6f0ce7de7ec"
+    },
+    {
+      "path": "plugin/tests/fixtures/legacy/core.js",
+      "sha256": "d288f3d5a0a67594a08fe3adc333818ab8a097b87589eb4efd05e84fd50190b4"
+    },
+    {
+      "path": "plugin/tests/fixtures/legacy/seed.json",
+      "sha256": "76754258a7841e1172d6e60d91ae72e94ca36a9723c8651e3537af01ef03717a"
+    },
+    {
+      "path": "plugin/world/geo/locations.json",
+      "sha256": "e50fb70c1d0614d3eb5dbdeff40054fde554ec5c1d84909a7eeaebee3af9962d"
+    },
+    {
+      "path": "plugin/world/geo/routes.json",
+      "sha256": "18b2b03529fa2a1a3b674167929b6fb2df2db80d3f335dff64fe1dc9e9e94efa"
+    },
+    {
+      "path": "plugin/world/meta/items.json",
+      "sha256": "91f0345fa5c87fcb664aa5a2ed3b895cb966510ad9dcf47feda9a64afb96d064"
+    },
+    {
+      "path": "plugin/world/meta/professions.json",
+      "sha256": "38c3189d8876ee171e1b0242a435f0c50d0d5572bd1b4c8305a6743a6a8c7612"
+    },
+    {
+      "path": "plugin/world/meta/rules.json",
+      "sha256": "baad282ff3756e6a2d657a2218cfdfc180f40e8c3e8676562c90c1e4e828c45c"
+    },
+    {
+      "path": "plugin/world/meta/skills.json",
+      "sha256": "eef4c6921078a92bff62d204f3a44a66e9e09931c921419b8f541ced58207e07"
+    },
+    {
+      "path": "plugin/world/meta/spells.json",
+      "sha256": "e1c626f06c04f86eb3d2f633b17302e68b41e0d142ea7001523b7af6f516d24d"
+    },
+    {
+      "path": "plugin/world/people/baseline.json",
+      "sha256": "acddd65befed981ac2f8c0878baede2d3fb762fd0d765c8476c68b98aaadad17"
+    },
+    {
+      "path": "plugin/index.mjs",
+      "sha256": "555d1b7ad45b293a0b0c0e38285ca46aa55e75a02705f331a8cba67d6a43c2eb"
+    },
+    {
+      "path": "extension/runtime.js",
+      "sha256": "a6acc47a7622df4df554178420d3ea14901171f3ef3bd2f8bcc829ff31a91cac"
+    },
+    {
+      "path": "extension/turn.mjs",
+      "sha256": "78da2fe06638b0a754120a13c62c53eb6ce2a70107db8f3236ff4f0b889f380c"
+    },
+    {
+      "path": "extension/style.css",
+      "sha256": "4bcdd154e5cc283a05e98e7daaf0cf4c793447546516158ffbd795f806fc55dc"
+    },
+    {
+      "path": "extension/manifest.json",
+      "sha256": "9b9489dcfd738f5f71e3f69916f59058dc46be848e008fb573fbb37ff83e9fbc"
+    }
+  ]
+}

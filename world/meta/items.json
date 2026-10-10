@@ -1,0 +1,108 @@
+[
+  {
+    "id": "item_ration",
+    "name": "干粮",
+    "basePrice": 3,
+    "weight": 0.2,
+    "aliases": [
+      "口粮"
+    ],
+    "quality": "木",
+    "durability": 100,
+    "scope": null
+  },
+  {
+    "id": "item_staff",
+    "name": "旧木杖",
+    "basePrice": 4,
+    "weight": 1,
+    "aliases": [
+      "木杖"
+    ],
+    "quality": "木",
+    "durability": 100,
+    "scope": null
+  },
+  {
+    "id": "item_bag",
+    "name": "行囊",
+    "basePrice": 10,
+    "weight": 0.5,
+    "aliases": [],
+    "quality": "木",
+    "durability": 100,
+    "scope": null
+  },
+  {
+    "id": "item_clothes",
+    "name": "普通衣服",
+    "basePrice": 8,
+    "weight": 0.5,
+    "aliases": [],
+    "quality": "木",
+    "durability": 100,
+    "scope": null
+  },
+  {
+    "id": "item_bread",
+    "name": "面包",
+    "basePrice": 2,
+    "weight": 0.15,
+    "aliases": [
+      "热面包"
+    ],
+    "quality": "木",
+    "durability": 100,
+    "scope": null
+  },
+  {
+    "id": "item_wood",
+    "name": "木料",
+    "basePrice": 4,
+    "weight": 2,
+    "aliases": [],
+    "quality": "木",
+    "durability": 100,
+    "scope": null
+  },
+  {
+    "id": "item_stone",
+    "name": "石料",
+    "basePrice": 3,
+    "weight": 3,
+    "aliases": [],
+    "quality": "木",
+    "durability": 100,
+    "scope": null
+  },
+  {
+    "id": "item_iron",
+    "name": "铁料",
+    "basePrice": 12,
+    "weight": 2,
+    "aliases": [],
+    "quality": "木",
+    "durability": 100,
+    "scope": null
+  },
+  {
+    "id": "item_herb",
+    "name": "药草",
+    "basePrice": 3,
+    "weight": 0.1,
+    "aliases": [],
+    "quality": "木",
+    "durability": 100,
+    "scope": null
+  },
+  {
+    "id": "item_resin",
+    "name": "树脂",
+    "basePrice": 2,
+    "weight": 0.1,
+    "aliases": [],
+    "quality": "木",
+    "durability": 100,
+    "scope": null
+  }
+]
