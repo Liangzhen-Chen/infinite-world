@@ -1,0 +1,120 @@
+{
+  "id": "reconcile",
+  "title": "重复、重生成、删除与重新载入",
+  "requirements": [
+    "L6",
+    "M7",
+    "M8"
+  ],
+  "turns": [
+    {
+      "input": "我走进青灯酒馆。",
+      "assertions": [
+        {
+          "kind": "equals",
+          "path": "state.location",
+          "value": "bld_hw_qingdeng"
+        }
+      ]
+    },
+    {
+      "input": "我付六铜住一晚。",
+      "assertions": [
+        {
+          "kind": "delta",
+          "path": "state.player.coins",
+          "value": -6
+        }
+      ],
+      "repeatWrites": true
+    },
+    {
+      "input": "我付六铜住一晚。",
+      "assertions": [
+        {
+          "kind": "delta",
+          "path": "state.player.coins",
+          "value": -6
+        }
+      ],
+      "operation": "regenerate"
+    },
+    {
+      "input": "（场外）刷新后核对我的余额。",
+      "assertions": [
+        {
+          "kind": "equals",
+          "path": "state.player.coins",
+          "value": 174
+        },
+        {
+          "kind": "elapsed",
+          "min": 0,
+          "max": 0
+        }
+      ],
+      "operation": "refresh"
+    },
+    {
+      "input": "我再付六铜续住一天。",
+      "assertions": [
+        {
+          "kind": "delta",
+          "path": "state.player.coins",
+          "value": -6
+        }
+      ]
+    },
+    {
+      "input": "",
+      "assertions": [
+        {
+          "kind": "equals",
+          "path": "state.player.coins",
+          "value": 174
+        }
+      ],
+      "operation": "deleteLast"
+    },
+    {
+      "input": "（场外）上一笔续住已撤销，现在还有多少钱？",
+      "assertions": [
+        {
+          "kind": "equals",
+          "path": "state.player.coins",
+          "value": 174
+        },
+        {
+          "kind": "elapsed",
+          "min": 0,
+          "max": 0
+        }
+      ]
+    },
+    {
+      "input": "（场外）再次重新载入，确认余额没有漂移。",
+      "assertions": [
+        {
+          "kind": "equals",
+          "path": "state.player.coins",
+          "value": 174
+        },
+        {
+          "kind": "elapsed",
+          "min": 0,
+          "max": 0
+        }
+      ],
+      "operation": "refresh"
+    }
+  ],
+  "initial": {
+    "mode": "new"
+  },
+  "rubric": {
+    "truth": "叙述与每回合工具和账本相符，失败不伪造成功",
+    "agency": "不替玩家加购、接任务或作额外决定",
+    "language": "简体中文，正文不泄漏编号、工具或提示词",
+    "continuity": "记住本会话发生的交易、约定和人物处境"
+  }
+}

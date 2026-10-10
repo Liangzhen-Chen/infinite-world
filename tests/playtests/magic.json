@@ -1,0 +1,187 @@
+{
+  "id": "magic",
+  "title": "学照明术与施法",
+  "requirements": [
+    "G1-mana-only",
+    "G3"
+  ],
+  "turns": [
+    {
+      "input": "我去河边小屋拜访许苓。",
+      "assertions": [
+        {
+          "kind": "equals",
+          "path": "state.location",
+          "value": "bld_hw_riverhome"
+        }
+      ]
+    },
+    {
+      "input": "请许苓教我照明术，我愿支付正常的十二铜学费，完整学一次。",
+      "assertions": [
+        {
+          "kind": "delta",
+          "path": "state.player.coins",
+          "value": -12
+        },
+        {
+          "kind": "records",
+          "path": "state.learning",
+          "where": {
+            "entity": "spell_light",
+            "cost": 12
+          },
+          "min": 1
+        },
+        {
+          "kind": "elapsed",
+          "min": 120,
+          "max": 140
+        }
+      ]
+    },
+    {
+      "input": "如果上次没有学会，我再交十二铜学一次；如果学会了，就只确认施法要耗多少魔力。",
+      "assertions": [
+        {
+          "kind": "conditional",
+          "when": {
+            "path": "state.spells.spell_light"
+          },
+          "then": [
+            {
+              "kind": "delta",
+              "path": "state.player.coins",
+              "value": 0
+            }
+          ],
+          "else": [
+            {
+              "kind": "calls",
+              "tool": "world_learn",
+              "args": {},
+              "min": 1
+            },
+            {
+              "kind": "delta",
+              "path": "state.player.coins",
+              "value": -12
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "input": "如果还没学会我再学一次；学会了就对随身旧木杖试着施放一次照明术。",
+      "assertions": [
+        {
+          "kind": "conditional",
+          "when": {
+            "path": "state.spells.spell_light"
+          },
+          "then": [
+            {
+              "kind": "calls",
+              "tool": "world_cast",
+              "args": {},
+              "min": 1
+            },
+            {
+              "kind": "delta",
+              "path": "state.player.coins",
+              "value": 0
+            }
+          ],
+          "else": [
+            {
+              "kind": "calls",
+              "tool": "world_learn",
+              "args": {},
+              "min": 1
+            },
+            {
+              "kind": "delta",
+              "path": "state.player.coins",
+              "value": -12
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "input": "（场外）确认我的法术书和现有魔力。",
+      "assertions": [
+        {
+          "kind": "exists",
+          "path": "state.spells.spell_light"
+        },
+        {
+          "kind": "elapsed",
+          "min": 0,
+          "max": 0
+        }
+      ]
+    },
+    {
+      "input": "我再对旧木杖施放一次已经学会的照明术；只试这一次。",
+      "assertions": [
+        {
+          "kind": "delta",
+          "path": "state.player.mp",
+          "value": -1
+        },
+        {
+          "kind": "calls",
+          "tool": "world_cast",
+          "args": {},
+          "min": 1,
+          "max": 1
+        }
+      ]
+    },
+    {
+      "input": "我试着施放大范围陨石火雨；如果我没有学会就承认做不到，不临时学新术。",
+      "assertions": [
+        {
+          "kind": "delta",
+          "path": "state.player.coins",
+          "value": 0
+        },
+        {
+          "kind": "delta",
+          "path": "state.player.mp",
+          "value": 0
+        }
+      ]
+    },
+    {
+      "input": "我原地休息一个小时，不再施法。",
+      "assertions": [
+        {
+          "kind": "elapsed",
+          "min": 60,
+          "max": 80
+        }
+      ]
+    },
+    {
+      "input": "（场外）刚才那层照明效果是否已经到期？请查实际状态。",
+      "assertions": [
+        {
+          "kind": "elapsed",
+          "min": 0,
+          "max": 0
+        }
+      ]
+    }
+  ],
+  "initial": {
+    "mode": "new"
+  },
+  "rubric": {
+    "truth": "叙述与每回合工具和账本相符，失败不伪造成功",
+    "agency": "不替玩家加购、接任务或作额外决定",
+    "language": "简体中文，正文不泄漏编号、工具或提示词",
+    "continuity": "记住本会话发生的交易、约定和人物处境"
+  }
+}

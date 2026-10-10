@@ -2,7 +2,7 @@ const str={type:'string'},int={type:'integer'},bool={type:'boolean'};
 const object=(properties,required=[])=>({type:'object',properties,...(required.length?{required}:{}),additionalProperties:false});
 const definitions=[];
 const define=(name,description,properties,required=[])=>definitions.push({type:'function',function:{name,description,parameters:object(properties,required)}});
-define('world_trade','交易物品或住宿，提供卖方、物品与数量，住宿另给天数。',{buyer:str,seller:str,item:str,quantity:int,unitPrice:int,service:str,days:int,instances:{type:'array',items:str}},['seller']);
+define('world_trade','交易物品或住宿，提供卖方、物品与数量，住宿另给天数。',{buyer:str,seller:str,item:str,quantity:int,unitPrice:int,service:{type:'string',enum:['住宿']},days:int,instances:{type:'array',items:str}},['seller']);
 define('world_move','沿已登记路线移动到目的地，并结算同行者与路费。',{destination:str,mode:{type:'string',enum:['walk','horse','cart','boat']}},['destination']);
 define('world_time','按分钟等待、工作或睡眠，并推进世界时间。',{minutes:int,activity:str},['minutes']);
 define('world_weather','查看当前位置的天气、温度和日出日落时间。',{operation:{enum:['inspect']},location:str},[]);

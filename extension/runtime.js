@@ -3,7 +3,7 @@ import { parseTurn, toolResultWithClock, lookupToolResult } from './turn.mjs';
 import { readStateSection } from './state-read.mjs';
 import { toolDefinitions } from './tools.mjs';
 import { renderMessages } from './message-view.mjs';
-import { isOutOfCharacter } from './prompt.mjs';
+import { isOutOfCharacter, injectToolExamples } from './prompt.mjs';
 const KEY='infinite_fields';
 const ctx=()=>getContext();
 const active=()=>ctx().characters[ctx().characterId]?.name==='无限原野·世界主持人';
@@ -186,6 +186,9 @@ async function afterReply(index){
     await ctx().saveChat();render();
 }
 const context=ctx();
+context.eventSource.on(context.eventTypes.CHAT_COMPLETION_PROMPT_READY,({chat})=>{
+    if(active()&&view&&!blocked)injectToolExamples(chat,ctx().characters[ctx().characterId]);
+});
 context.eventSource.on(context.eventTypes.APP_READY,()=>queue(refresh).catch(fail));
 context.eventSource.on(context.eventTypes.CHAT_CHANGED,()=>queue(refresh).catch(fail));
 context.eventSource.on(context.eventTypes.CHAT_LOADED,()=>queue(refresh).catch(fail));

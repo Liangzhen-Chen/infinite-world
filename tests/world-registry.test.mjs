@@ -5,6 +5,13 @@ import os from 'node:os';
 import path from 'node:path';
 import {WorldRegistry}from'../server-plugin/world-registry.mjs';
 import {loadWorld}from'../tools/load-world.mjs';
+test('并发创建战役只写一次同版本归档，独立注册器也不会竞争覆盖Windows文件',async t=>{
+    const root=await fs.mkdtemp(path.join(os.tmpdir(),'fields-world-concurrent-'));t.after(()=>fs.rm(root,{recursive:true,force:true}));
+    const world=await loadWorld(),registries=Array.from({length:16},()=>new WorldRegistry(root));
+    const hashes=await Promise.all(registries.map(registry=>registry.put(world)));
+    assert.equal(new Set(hashes).size,1);assert.deepEqual(await fs.readdir(root),[`${hashes[0]}.json`]);
+    assert.deepEqual((await new WorldRegistry(root).get(hashes[0])).world,world);
+});
 test('E1 世界更新不能改写旧战役的冻结规则或人设',async t=>{
     const root=await fs.mkdtemp(path.join(os.tmpdir(),'infinite-fields-versions-'));t.after(()=>fs.rm(root,{recursive:true,force:true}));
     const world=await loadWorld(),registry=new WorldRegistry(root),oldHash=await registry.put(world);

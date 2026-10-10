@@ -133,6 +133,7 @@ export class WorldEngine {
         return changeItems(d,this,id,item,delta);
     }
     async trade(d,args,id) {
+        if(args.service!==undefined&&args.service!=='住宿')throw new Error('未登记该服务；住宿请传 service="住宿" 与 days，购买物品请传 item 与 quantity');
         const buyer=this.resolve(args.buyer ?? 'player'),seller=this.resolve(args.seller);
         if(buyer===seller) throw new Error('交易双方不能相同');
         if(!this.actor(d,buyer)||!this.actor(d,seller)) throw new Error('交易对象不在战役中');
@@ -148,6 +149,7 @@ export class WorldEngine {
                 starts:d.get('state','minute'),expires:d.get('state','minute')+days*1440,paid:cost,status:'有效',content:`林穗收到${cost}铜，允许旅人住${days}天。`});
             this.advance(d,10,id);d.say(`住宿${days}天，支付${cost}铜`);return {contract,cost,days};
         }
+        if(!args.item)throw new Error('缺少交易项目；住宿请传 service="住宿" 与 days，购买物品请传 item 与 quantity');
         const item=this.resolve(args.item,'item');
         const quantity=number(args.quantity,1,100000,'数量'), catalog=this.byId.get(item);
         const quoteKey=`${Math.floor(d.get('state','minute')/1440)}_${seller}_${buyer}_${item}`;

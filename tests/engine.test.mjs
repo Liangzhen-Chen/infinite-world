@@ -38,6 +38,16 @@ test('E5 生命钳制、濒死救治、溢出治疗和具体魔力错误',async(
     c=(await run(c,'world_health',{delta:100},'heal')).document;assert.equal(c.state.player.hp,12);assert.equal(c.state.player.status,'正常');
     c.state.player.mp=0;await assert.rejects(run(c,'world_cast',{spell:'照明术',target:'木杖'}),/魔力不足/);
 });
+
+test('未登记住宿名和缺交易项目返回可纠正参数，拒绝后没有扣款或计时',async()=>{
+    const c=fresh(),before=structuredClone(c);
+    for(const args of[{seller:'林穗',service:'普通客房',days:1},{seller:'林穗',days:1}]){
+        await assert.rejects(run(c,'world_trade',args),/service="住宿".*item.*quantity/);
+        assert.deepEqual(c,before);
+    }
+    const paid=await run(c,'world_trade',{seller:'林穗',service:'住宿',days:1});
+    assert.equal(paid.document.state.player.coins,174);
+});
 test('死亡惩罚、濒死超时与登记点复活',async()=>{
     let c=fresh();c.state.player.level=10;c.state.player.xp=1200;
     c=(await run(c,'world_health',{delta:-20})).document;c=(await run(c,'world_time',{minutes:10})).document;

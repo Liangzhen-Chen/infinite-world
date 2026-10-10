@@ -1,8 +1,9 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import {loadWorld} from './load-world.mjs';
-import {staticMessages,parseExamples} from '../extension/prompt.mjs';
+import {staticMessages,parseExamples,promptSections} from '../extension/prompt.mjs';
 import {toolDefinitions} from '../extension/tools.mjs';
+import {buildToolExamples} from './prompt-examples.mjs';
 
 const root=path.resolve(import.meta.dirname,'..');
 function reference(world){
@@ -28,23 +29,23 @@ export async function loadPromptBundle({world=null,source=path.join(root,'prompt
         scenario:'成年冒险者在河湾村展开生活，当前地点与经历由所载入的战役确定。',first_mes:first.trim(),mes_example:examples.trim(),
         system_prompt:'',post_history_instructions:'',alternate_greetings:[],creator_notes:'新版引擎主持人；首次启用请使用聊天副本。',
         tags:['中文','开放世界'],creator:'无限原野',character_version:'2.0',extensions:{world:'',fields_engine:2}}};
+    card.data.extensions.fields_tool_examples=await buildToolExamples(world);
     const bundle={format:1,constitution:constitution.trim(),style:`${style.trim()}\n\n避免措辞：${JSON.parse(cliches).join('、')}。`,card};
     const staticText=staticMessages(bundle).map(message=>message.content).join('\n');
     if(/world_commit|world_roll|再生者/.test(staticText))throw new Error('提示词残留旧工具或旧身份');
     if(parseExamples(examples).length<12)throw new Error('需要至少六段对话示例');
     for(const match of (examples+first).matchAll(/<q who="([^"]+)"/g))if(!world.npcs.some(npc=>npc.id===match[1]))throw new Error(`对话示例引用未登记人物：${match[1]}`);
     // This estimate is only a build warning; acceptance must measure the real request's usage.
-    const byteBound=Buffer.byteLength(staticText+JSON.stringify(toolDefinitions()));
+    const byteBound=Buffer.byteLength(staticText+JSON.stringify(toolDefinitions())+JSON.stringify(card.data.extensions.fields_tool_examples));
     if(byteBound>48000)throw new Error('静态提示过长，需核对模型分词后再发布');
     bundle.budget={utf8Bytes:byteBound,estimatedTokens:Math.ceil(byteBound/3),limit:12000,exact:false};
     if(bundle.budget.estimatedTokens>bundle.budget.limit)throw new Error('静态提示估算超过12000 token');
     return bundle;
 }
 export function presetFor(bundle){
-    const prompts=[{identifier:'main',name:'Main Prompt',role:'system',system_prompt:true,content:bundle.constitution},
-        {identifier:'charDescription',name:'World Primer',role:'system',marker:true},
-        {identifier:'fields-style',name:'Narrative Style',role:'system',system_prompt:true,content:bundle.style},
-        ...['charPersonality','scenario','dialogueExamples','chatHistory'].map(identifier=>({identifier,name:identifier,role:'system',marker:true}))];
+    const prompts=promptSections(bundle).map(({identifier,name,marker,content})=>({identifier,name,role:'system',
+        ...(marker?{marker:true}:{system_prompt:true,content})}));
+    prompts.push({identifier:'chatHistory',name:'Chat History',role:'system',marker:true});
     return{preset_settings_openai:'无限原野新版',chat_completion_source:'deepseek',deepseek_model:'deepseek-flash',
         temp_openai:0.8,openai_max_context:65536,openai_max_tokens:1800,stream_openai:false,function_calling:true,
         tool_call_recurse_limit:8,tool_reasoning_mode:'disabled',show_thoughts:false,reasoning_effort:'low',
