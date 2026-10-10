@@ -31,6 +31,7 @@ test('E2/E19 浏览器：失败对账阻止出站生成，编辑与删除同步�
     await page.route('**/api/backends/chat-completions/generate',async route=>{generationRequests++;await route.fulfill({json:{error:'不应到达这里'}});});
     await page.route('**/fixture.html',route=>route.fulfill({contentType:'text/html',body:'<div id="sheld"></div><textarea id="send_textarea"></textarea>'}));
     await page.goto(`${origin}/fixture.html`);
+    await page.addStyleTag({content:await fs.readFile('extension/style.css','utf8')});
     await page.evaluate(reference=>{
         const handlers=new Map(),tools=new Map();window.fixtureHandlers=handlers;window.fixtureTools=tools;
         window.fixtureContext={characters:[{name:'无限原野·世界主持人',avatar:'fixture.png'}],characterId:0,chatId:'fixture',
@@ -68,10 +69,11 @@ test('E2/E19 浏览器：失败对账阻止出站生成，编辑与删除同步�
     await page.evaluate(async()=>{
         window.fixtureContext.chat.push({is_system:true,mes:'tool payload',extra:{tool_invocations:[{}]}});
         window.fixtureContext.chat.push({name:'主持人',mes:'<q who="npc_hw_linsui">房间备好了。</q>\n<回合 额外="0分" 地点="bld_hw_qingdeng" 在场="npc_hw_linsui"/>',extra:{fields_notices:[{text:'过期缓存不应出现'}]}});
-        const chat=document.createElement('div');chat.id='chat';chat.innerHTML='<div class="mes" mesid="1"><div class="mes_text"></div></div><div class="mes" mesid="2"><div class="mes_block"><div class="mes_text"></div></div></div>';document.body.append(chat);
+        const chat=document.createElement('div');chat.id='chat';chat.innerHTML='<div class="mes" mesid="1"><div class="mes_text"></div></div><div class="mes" mesid="2"><div class="mes_block"><details class="mes_reasoning_details" open><summary>思考</summary>内部推理</details><div class="mes_text"></div></div></div>';document.body.append(chat);
         await window.fixtureHandlers.get('MESSAGE_RECEIVED')(2);
     });
     assert.equal(await page.locator('.mes[mesid="1"]').isVisible(),false);
+    assert.equal(await page.locator('.mes_reasoning_details').isVisible(),false);
     assert.equal(await page.locator('.mes[mesid="2"] .mes_text').innerText(),'林穗：房间备好了。');
     assert.match(await page.locator('.fields-notices').innerText(),/钱袋 -6铜，现有 174/);
     assert.doesNotMatch(await page.locator('.fields-notices').innerText(),/过期缓存/);
@@ -86,6 +88,18 @@ test('E2/E19 浏览器：失败对账阻止出站生成，编辑与删除同步�
     await page.evaluate(()=>window.infiniteFieldsV2.reconcile('regenerate',{},false));
     assert.equal(await page.locator('.fields-notices').count(),0);
     assert.equal(await page.evaluate(()=>window.infiniteFieldsV2.view.document.state.player.coins),180);
+    const credit=await page.evaluate(()=>window.infiniteFieldsV2.execute('world_trade',{seller:'林穗',service:'住宿',payment:'credit',creditMinutes:60},'credit-ui'));
+    assert.equal(credit.ok,true);
+    assert.match(await page.locator('.fields-notices').innerText(),/欠林穗 6铜 · 待偿还/);
+    await page.getByRole('button',{name:'世界账本',exact:true}).click();
+    assert.match(await page.locator('#fields-dialog').innerText(),/欠款：林穗 · 未还 6铜 · 待偿还/);
+    await page.getByRole('button',{name:'关闭',exact:true}).click();
+    await page.evaluate(()=>window.infiniteFieldsV2.execute('world_time',{minutes:60},'credit-wait-ui'));
+    assert.match(await page.locator('.fields-notices').innerText(),/欠林穗 6铜 · 逾期/);
+    await page.evaluate(()=>window.infiniteFieldsV2.refresh());
+    assert.equal(await page.evaluate(()=>window.infiniteFieldsV2.view.document.state.player.coins),180);
+    await page.evaluate(()=>window.infiniteFieldsV2.reconcile('regenerate',{},false));
+    assert.equal(await page.locator('.fields-notices').count(),0);
     // Opening an old chat must not silently migrate or save its metadata.
     await page.evaluate(async()=>{
         window.fixtureContext.chatId='old-chat';window.fixtureContext.chatMetadata={infinite_fields:{version:1,untouched:true}};
@@ -93,4 +107,5 @@ test('E2/E19 浏览器：失败对账阻止出站生成，编辑与删除同步�
     });
     assert.equal(await page.evaluate(()=>window.savedMetadata),null);
     assert.equal(await page.getByRole('button',{name:'在副本上启用新版'}).count(),1);
+    assert.equal(await page.locator('.mes_reasoning_details').isVisible(),true);
 });

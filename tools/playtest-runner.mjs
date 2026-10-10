@@ -10,11 +10,12 @@ import {readStateSection}from'../extension/state-read.mjs';
 import {parseTurn,toolResultWithClock}from'../extension/turn.mjs';
 import {visibleReply}from'../extension/message-view.mjs';
 import {evaluateAssertions}from'./playtest-assertions.mjs';
+import {generationSettings,generationRequest}from'../extension/generation.mjs';
 
-export async function createPlaytestServer({world}={}){
+export async function createPlaytestServer({world,seed}={}){
     const directory=await fs.mkdtemp(path.join(os.tmpdir(),'fields-playtests-'));
     const app=express();app.use(express.json({limit:'10mb'}));const router=express.Router();
-    await init(router,{world,baseRoot:directory});app.use(router);
+    await init(router,{world,baseRoot:directory,newCampaignSeed:seed===undefined?undefined:()=>seed});app.use(router);
     const server=app.listen(0,'127.0.0.1');await once(server,'listening');
     const origin=`http://127.0.0.1:${server.address().port}`;
     const api=async(endpoint,body={})=>{
@@ -25,6 +26,7 @@ export async function createPlaytestServer({world}={}){
 }
 
 export async function runPlaytest({scenario,api,client,bundle,attempt=1,processMessages=messages=>messages}){
+    const settings=generationSettings(bundle.generation);
     const tools=toolDefinitions(),allowed=new Set(tools.map(row=>row.function.name));
     let view=await api('create',scenario.initial?.mode==='legacy'?{name:'试玩者'}:{character:{name:'试玩者'}});
     const opening=bundle.card.data.first_mes;
@@ -35,7 +37,7 @@ export async function runPlaytest({scenario,api,client,bundle,attempt=1,processM
     // Initial fixtures are the same supported create endpoints used by the extension; no state injection.
     for(const [index,step]of scenario.turns.entries()){
         const report={index,input:step.input,operation:step.operation??'send',calls:[],requests:[],assertions:[],reply:'',errors:[]};reports.push(report);
-        let assertionBefore=null;
+        let assertionBefore=null;const started=performance.now();
         try{
             if(step.operation==='regenerate'||step.operation==='deleteLast'){
                 const frame=frames.pop();if(!frame)throw new Error('没有可以回退的回合');
@@ -58,12 +60,14 @@ export async function runPlaytest({scenario,api,client,bundle,attempt=1,processM
             chat.push({is_user:true,mes:step.input,extra:{fields_anchor:anchor}});history.push({role:'user',content:step.input});await sync();
             const scene=await api('scene',{campaignId,query:step.input});
             let final=false;
-            for(let recursion=0;recursion<8;recursion++){
+            for(let recursion=0;recursion<settings.toolRecursionLimit;recursion++){
                 const current=recursion?await api('scene',{campaignId,query:step.input}):scene;
                 const messages=assembleMessages(bundle,history,current.scene);
-                const response=await client.generate({messages:processMessages(messages,bundle),tools,tool_choice:'auto',max_tokens:1800,temperature:0.8},`${scenario.id}-${attempt}-${index}-${recursion}`);
+                const response=await client.generate({...generationRequest(settings),messages:processMessages(messages,bundle),tools,tool_choice:'auto'},`${scenario.id}-${attempt}-${index}-${recursion}`);
                 if(response.measurement)report.requests.push(response.measurement);
                 const message=response.choices?.[0]?.message;if(!message)throw new Error('模型没有返回消息');
+                report.finish=response.choices[0].finish_reason??null;
+                if(report.finish==='length')throw new Error('输出达到1800 token上限，回复或调用未完成');
                 const normalized={role:'assistant',content:message.content??null,...(message.tool_calls?.length?{tool_calls:message.tool_calls}:{})};
                 messages.push(normalized);history.push(normalized);
                 if(!message.tool_calls?.length){report.reply=message.content??'';final=Boolean(report.reply);break;}
@@ -91,7 +95,7 @@ export async function runPlaytest({scenario,api,client,bundle,attempt=1,processM
                     chat.push({is_system:true,mes:reply.content,extra:{tool_invocations:[{name:tool}]}});
                 }
             }
-            if(!final)throw new Error('八轮工具调用后仍未返回正文');
+            if(!final)throw new Error(`${settings.toolRecursionLimit}轮调用内未返回完整正文`);
             const state=view.document.state,parsed=parseTurn(report.reply,{location:state.location,startMinute,minute:state.minute,
                 present:Object.entries(state.npcs).filter(([,npc])=>npc.location===state.location).map(([id])=>id),outOfCharacter:isOutOfCharacter(step.input)});
             report.tail={valid:parsed.valid,warning:parsed.warning};
@@ -104,6 +108,7 @@ export async function runPlaytest({scenario,api,client,bundle,attempt=1,processM
             report.feedback=(await api('feedback',{campaignId})).events.filter(event=>event.anchor===anchor);
         }catch(error){report.errors.push(error.message);report.assertions.push({kind:'execution',pass:false,actual:error.message});}
         finally{
+            report.latencyMs=performance.now()-started;
             // A generation failure can follow a successful write. Keep every
             // declared assertion and the actual saved state in the report.
             if(assertionBefore){
@@ -114,7 +119,7 @@ export async function runPlaytest({scenario,api,client,bundle,attempt=1,processM
         }
     }
     const assertions=reports.flatMap(row=>row.assertions),passed=assertions.filter(row=>row.pass).length;
-    return{id:scenario.id,title:scenario.title,attempt,fixture:scenario.initial??{mode:'new'},requirements:scenario.requirements,
+    return{id:scenario.id,title:scenario.title,attempt,settings,fixture:scenario.initial??{mode:'new'},requirements:scenario.requirements,
         assertions:assertions.length,passed,ratio:passed/Math.max(1,assertions.length),pass:assertions.length>0&&passed===assertions.length,turns:reports,
         finalDocument:view.document};
 }

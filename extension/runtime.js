@@ -65,8 +65,9 @@ async function syncHistory(){
     indexedMessages=[...chat];
 }
 async function refresh(){
-    if(!active()){ctx().setExtensionPrompt(KEY,'',1,0);document.querySelector('#fields-toolbar')?.remove();return;}
+    if(!active()){document.body.classList.remove('fields-play-active');ctx().setExtensionPrompt(KEY,'',1,0);document.querySelector('#fields-toolbar')?.remove();return;}
     await load();
+    document.body.classList.toggle('fields-play-active',!!view);
     if(!view){
         ctx().setExtensionPrompt(KEY,'',1,0);
         document.querySelector('#fields-toolbar')?.remove();
@@ -143,6 +144,8 @@ function showBook(){
         Object.entries(p.attributes??{}).map(([key,value])=>`${key} ${value}`).join('　'),'行囊',
         ...Object.entries(state.inventory).map(([id,item])=>`${name(id)} × ${item.quantity}${item.durability!==undefined?` · 耐久 ${item.durability}`:''}`),
         ...Object.entries(state.skills??{}).map(([id,skill])=>`${name(id)} · 熟练度 ${skill.proficiency}`),
+        ...Object.values(state.records??{}).filter(row=>row.category==='debt'&&row.debtor==='player').map(row=>`欠款：${name(row.creditor)} · 未还 ${row.amount-row.paid}铜 · ${row.status}${row.status==='待偿还'?` · ${Math.max(0,row.deadline-state.minute)}分钟后到期`:''}`),
+        ...Object.values(state.records??{}).filter(row=>row.category==='contract'&&row.room&&row.parties?.includes('player')).map(row=>`住宿：${row.name} · ${row.status}${row.status==='有效'?` · ${Math.max(0,row.expires-state.minute)}分钟后到期`:''}`),
         ...Object.values(state.obligations??{}).map(row=>`约定：${row.content} · ${row.status}`),
         ...Object.values(state.quests??{}).map(row=>`任务：${row.content??row.name} · ${row.status}`)];
     for(const line of lines){

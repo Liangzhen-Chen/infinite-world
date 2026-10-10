@@ -23,6 +23,18 @@ test('编号迁移：原始人物财物与熟练度保留，名字用于显示',
     assert.equal(c.state.location,'bld_hw_qingdeng');assert.equal(Object.keys(c.state.npcs).length,18);
 });
 
+test('指定明日钟点由引擎计算，休息恢复；冲突和过去时间不结算',async()=>{
+    const c=fresh();c.state.minute=641;c.state.player.hp=2;c.state.player.mp=1;
+    const before=structuredClone(c);
+    const rested=await run(c,'world_time',{until:{dayOffset:1,hour:10},activity:'休息'});
+    assert.equal(rested.document.state.minute,2040);assert.equal(rested.result.elapsed,1399);
+    assert.equal(rested.document.state.player.hp,rested.document.state.player.maxHp);
+    assert.equal(rested.document.state.player.mp,rested.document.state.player.maxMp);
+    for(const args of[{minutes:60,until:{dayOffset:1,hour:10}},{until:{dayOffset:0,hour:9}},{until:{dayOffset:1,hour:24}}])await assert.rejects(run(c,'world_time',args));
+    assert.deepEqual(c,before);
+    assert.equal((await run(c,'world_time',{minutes:60,activity:'等待'})).document.state.minute,701);
+});
+
 test('玩家编号和中文称呼引用同一角色，自定义姓名同名居民时拒绝歧义',async()=>{
     const c=fresh();
     for(const buyer of['player','玩家','旅人']){

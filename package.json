@@ -8,6 +8,7 @@
     "test:baseline": "node tools/run-baseline.mjs",
     "test:scenarios": "node tools/scenarios.mjs",
     "test:playtests": "node tools/playtests.mjs",
+    "test:settings": "node tools/compare-settings.mjs",
     "build-world": "node tools/build-world.mjs",
     "test:balance": "node tools/balance-combat.mjs",
     "backup": "node tools/backup.mjs",

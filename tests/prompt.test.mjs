@@ -15,7 +15,7 @@ test('新卡与预设来自同一提示源，静态在前、场景在尾，禁�
     assert.doesNotMatch(messages.map(row=>row.content).join('\n'),/undefined|world_commit|world_roll|再生者/);
     assert.equal(bundle.card.data.extensions.world,'');assert.equal(bundle.card.data.character_book,undefined);
     const tools=toolDefinitions();assert.ok(tools.every(row=>row.function.description.length<=60));assert.ok(!tools.some(row=>row.function.name==='world_turn'));
-    const preset=presetFor(bundle);assert.equal(preset.show_thoughts,false);assert.equal(preset.function_calling,true);
+    const preset=presetFor(bundle);assert.equal(preset.show_thoughts,true);assert.equal(preset.function_calling,true);
     assert.ok(isOutOfCharacter('  （场外）看看余额'));assert.equal(isOutOfCharacter('我问场外有什么'),false);
     assert.equal(bundle.budget.exact,false);
 });

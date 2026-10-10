@@ -26,6 +26,7 @@ import {planFarmPestsMigration}from'./farm-pests-migration.mjs';
 import {sceneCard}from'./scene-card.mjs';
 import {stateNotices}from'./state-notices.mjs';
 import {resolveToolCall}from'../extension/tools.mjs';
+import {chargeTrade,repayDebt,advanceContracts}from'./contracts.mjs';
 const clone = value => structuredClone(value);
 const number = (value, min = 0, max = 1e9, label = '数值') => {
     if (!Number.isSafeInteger(value) || value < min || value > max) throw new Error(`${label}必须在${min}到${max}之间`);
@@ -142,14 +143,16 @@ export class WorldEngine {
         for(const actor of[buyer,seller])if(['死亡','濒死'].includes(this.actor(d,actor).status))throw new Error('交易一方无法清醒履约');
         const playerLocation=d.get('state','location');
         for(const actor of [buyer,seller]) if(actor!=='player' && this.actor(d,actor).location!==playerLocation) throw new Error('交易对方不在场');
+        if(args.payment==='repay')return repayDebt(d,this,{buyer,seller,debt:args.debt},id);
         if(args.service==='住宿'){
             if(buyer!=='player'||seller!=='npc_hw_linsui')throw new Error('这个人没有登记住宿服务');
             const days=number(args.days??1,1,7,'住宿天数'),cost=days===7?35:days*6;
-            if(this.actor(d,buyer).coins<cost)throw new Error('房钱不足');
-            d.set([...this.actorPath(buyer),'coins'],this.actor(d,buyer).coins-cost);d.set([...this.actorPath(seller),'coins'],this.actor(d,seller).coins+cost);
+            if((args.payment??'cash')==='cash'&&this.actor(d,buyer).coins<cost)throw new Error('房钱不足');
+            const payment=chargeTrade(d,this,{buyer,seller,cost,payment:args.payment,creditMinutes:args.creditMinutes,description:'青灯酒馆房钱'},id);
+            const starts=Math.max(d.get('state','minute'),...Object.values(d.get('state','records')).filter(row=>row.category==='contract'&&row.room==='bld_hw_qingdeng'&&row.parties?.includes('player')&&row.status==='有效').map(row=>row.expires));
             const contract=`contract_room_${id}`;d.set(['state','records',contract],{category:'contract',name:'青灯酒馆住宿',parties:['player',seller],room:'bld_hw_qingdeng',
-                starts:d.get('state','minute'),expires:d.get('state','minute')+days*1440,paid:cost,status:'有效',content:`林穗收到${cost}铜，允许旅人住${days}天。`});
-            this.advance(d,10,id);d.say(`住宿${days}天，支付${cost}铜`);return {contract,cost,days};
+                starts,expires:starts+days*1440,paid:payment.debt?0:cost,...(payment.debt?{debt:payment.debt}:{}),status:'有效',content:payment.debt?`林穗同意赊账${cost}铜，允许旅人住${days}天。`:`林穗收到${cost}铜，允许旅人住${days}天。`});
+            this.advance(d,10,id);d.say(`住宿${days}天，${payment.debt?'赊账':'支付'}${cost}铜`);return {contract,cost,days,...payment};
         }
         if(!args.item)throw new Error('缺少交易项目；住宿请传 service="住宿" 与 days，购买物品请传 item 与 quantity');
         const item=this.resolve(args.item,'item');
@@ -160,16 +163,15 @@ export class WorldEngine {
         const price=existing ?? number(args.unitPrice ?? quoteBase,Math.ceil(quoteBase*0.8),Math.ceil(quoteBase*1.5),'单价');
         const cost=quantity*price;
         if(this.quantity(d,seller,item)<quantity) throw new Error(`对方库存不足：${catalog.name}只剩${this.quantity(d,seller,item)}`);
-        if(this.actor(d,buyer).coins<cost) throw new Error('买方余额不足');
-        d.set([...this.actorPath(buyer),'coins'],this.actor(d,buyer).coins-cost);
-        d.set([...this.actorPath(seller),'coins'],this.actor(d,seller).coins+cost);
+        const payment=chargeTrade(d,this,{buyer,seller,cost,payment:args.payment,creditMinutes:args.creditMinutes,description:`${catalog.name}货款`},id);
         const moved=transferItems(d,this,seller,buyer,item,quantity,args.instances??null);
-        d.set(['state','quotes',quoteKey],price);this.advance(d,5,id);d.say(`${catalog.name}×${quantity}，成交${cost}铜`);
-        return {buyer,seller,item,quantity,cost,instances:moved.instances};
+        d.set(['state','quotes',quoteKey],price);this.advance(d,5,id);d.say(`${catalog.name}×${quantity}，${payment.debt?'赊账':'成交'}${cost}铜`);
+        return {buyer,seller,item,quantity,cost,instances:moved.instances,...payment};
     }
     advance(d,minutes,id) {
         minutes=number(minutes,0,43200,'耗时');
         const before=d.get('state','minute'),after=before+minutes;d.set(['state','minute'],after);
+        advanceContracts(d,this,after);
         advanceSummons(d,after);
         advanceLaw(d,after);
         const days=Math.floor(after/1440)-Math.floor(before/1440);
@@ -203,7 +205,15 @@ export class WorldEngine {
     }
     time(d,args,id) {
         if(d.get('state','player','status')==='死亡')this.revive(d,{},id);
-        const minutes=number(args.minutes,1,43200,'耗时');this.advance(d,minutes,id);
+        if(args.minutes!==undefined&&args.until!==undefined)throw new Error('minutes 与 until 只能选一个');
+        let duration=args.minutes;
+        if(args.until!==undefined){
+            const until=args.until;if(!until||typeof until!=='object'||Array.isArray(until))throw new Error('until 需要 dayOffset、hour 和可选 minute');
+            const day=number(until.dayOffset,0,30,'相对日期'),hour=number(until.hour,0,23,'小时'),minute=number(until.minute??0,0,59,'分钟');
+            const now=d.get('state','minute');duration=(Math.floor(now/1440)+day)*1440+hour*60+minute-now;
+            if(duration<=0)throw new Error('目标钟点必须晚于现在，请核对 dayOffset');
+        }
+        const minutes=number(duration,1,43200,'耗时');this.advance(d,minutes,id);
         if(args.activity==='睡眠'||args.activity==='休息') {
             const p=d.get('state','player');if(p.status==='正常'){
                 d.set(['state','player','hp'],Math.min(p.maxHp,p.hp+Math.floor(minutes/30)));

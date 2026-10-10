@@ -4,6 +4,7 @@ import {loadWorld} from './load-world.mjs';
 import {staticMessages,parseExamples,promptSections} from '../extension/prompt.mjs';
 import {toolDefinitions} from '../extension/tools.mjs';
 import {buildToolExamples} from './prompt-examples.mjs';
+import {generationSettings,generationPreset} from '../extension/generation.mjs';
 
 const root=path.resolve(import.meta.dirname,'..');
 function reference(world){
@@ -20,7 +21,7 @@ function reference(world){
         ...['cultures','deities'].flatMap(key=>(world[key]??[]).map(row=>`${row.name}：${row.description??''}`)),
     ].join('\n\n');
 }
-export async function loadPromptBundle({world=null,source=path.join(root,'prompt')}={}){
+export async function loadPromptBundle({world=null,source=path.join(root,'prompt'),settings={}}={}){
     world??=await loadWorld();
     const read=name=>fs.readFile(path.join(source,name),'utf8');
     const [constitution,primer,style,examples,first,cliches]=await Promise.all(['constitution.md','world-primer.md','style.md','examples.md','first-message.md','cliches.json'].map(read));
@@ -30,7 +31,7 @@ export async function loadPromptBundle({world=null,source=path.join(root,'prompt
         system_prompt:'',post_history_instructions:'',alternate_greetings:[],creator_notes:'新版引擎主持人；首次启用请使用聊天副本。',
         tags:['中文','开放世界'],creator:'无限原野',character_version:'2.0',extensions:{world:'',fields_engine:2}}};
     card.data.extensions.fields_tool_examples=await buildToolExamples(world);
-    const bundle={format:1,constitution:constitution.trim(),style:`${style.trim()}\n\n避免措辞：${JSON.parse(cliches).join('、')}。`,card};
+    const bundle={format:1,generation:generationSettings(settings),constitution:constitution.trim(),style:`${style.trim()}\n\n避免措辞：${JSON.parse(cliches).join('、')}。`,card};
     const staticText=staticMessages(bundle).map(message=>message.content).join('\n');
     if(/world_commit|world_roll|再生者/.test(staticText))throw new Error('提示词残留旧工具或旧身份');
     if(parseExamples(examples).length<12)throw new Error('需要至少六段对话示例');
@@ -46,9 +47,7 @@ export function presetFor(bundle){
     const prompts=promptSections(bundle).map(({identifier,name,marker,content})=>({identifier,name,role:'system',
         ...(marker?{marker:true}:{system_prompt:true,content})}));
     prompts.push({identifier:'chatHistory',name:'Chat History',role:'system',marker:true});
-    return{preset_settings_openai:'无限原野新版',chat_completion_source:'deepseek',deepseek_model:'deepseek-flash',
-        temp_openai:0.8,openai_max_context:65536,openai_max_tokens:1800,stream_openai:false,function_calling:true,
-        tool_call_recurse_limit:8,tool_reasoning_mode:'disabled',show_thoughts:false,reasoning_effort:'low',
+    return{preset_settings_openai:'无限原野新版',...generationPreset(bundle.generation),
         new_chat_prompt:'',new_example_chat_prompt:'',prompts,prompt_order:[100000,100001].map(character_id=>({character_id,order:prompts.map(p=>({identifier:p.identifier,enabled:true}))})),
         extensions:{fields_engine:2}};
 }

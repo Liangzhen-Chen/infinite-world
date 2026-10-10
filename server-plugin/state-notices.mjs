@@ -32,6 +32,10 @@ export function stateNotices(before,after,resolveName=id=>id){
         if(!old||row.status!==old.status||row.following!==old.following)push('pet',`${name(id)}：${row.status}${row.following?'，正在跟随':''}`);
     }
     for(const [id,row] of Object.entries(after.records??{})){
+        if(row.category==='debt'&&row.debtor==='player'){
+            const old=before.records?.[id];
+            if(!old||old.status!==row.status||old.paid!==row.paid)push('debt',`欠${name(row.creditor)} ${row.amount-row.paid}铜 · ${row.status}`);
+        }
         if(row.category!=='contract'||!row.parties?.includes('player'))continue;
         const old=before.records?.[id];
         if(!old||old.status!==row.status)push('contract',`${row.name??'契约'}：${row.status}`);

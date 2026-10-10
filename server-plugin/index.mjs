@@ -12,7 +12,7 @@ import { atomicJSON } from './storage.mjs';
 import {catalogDefinition}from'./catalog.mjs';
 
 export const info={id:'infinite-fields',name:'无限原野本地战役存储',description:'本项目自有的存档、账本与检索服务器插件'};
-export async function init(router,{ world=null, baseRoot=null }={}){
+export async function init(router,{ world=null, baseRoot=null, newCampaignSeed=randomUUID }={}){
     world ??= await loadWorld();
     const engine=new WorldEngine(world),stores=new Map(),indexes=new Map(),registries=new Map();
     const seed=JSON.parse(await fs.readFile(new URL('./legacy/seed.json',import.meta.url),'utf8'));
@@ -77,7 +77,7 @@ export async function init(router,{ world=null, baseRoot=null }={}){
         return index;
     };
     router.post('/create',handle(async req=>{
-        const legacy={state:seed.state,memories:seed.memories},randomSeed=randomUUID();
+        const legacy={state:seed.state,memories:seed.memories},randomSeed=newCampaignSeed();
         const document=req.body.character===undefined?engine.initialFromLegacy(legacy,randomSeed):engine.createCharacter(legacy,req.body.character,randomSeed);
         if(req.body.character===undefined&&req.body.name)document.state.player.name=String(req.body.name).slice(0,60);
         const store=getStore(req),registry=registries.get(baseRoot??req.user.directories.root);

@@ -5,7 +5,7 @@ const compact=turn=>({turn:turn.index,input:turn.input,reply:turn.visible??turn.
 export async function reviewPlaytest(client,result,rubric){
     const parts=[];
     for(let start=0;start<result.turns.length;start+=2){
-        const turns=result.turns.slice(start,start+2).map(compact),previous=result.turns.slice(Math.max(0,start-2),start).map(compact);
+        const turns=result.turns.slice(start,start+2).map(compact),previous=result.turns.slice(0,start).map(compact);
         let response,candidate;
         try{
             response=await client.generate({thinking:{type:'enabled'},reasoning_effort:'low',max_tokens:9000,response_format:{type:'json_object'},messages:[
@@ -24,6 +24,6 @@ export async function reviewPlaytest(client,result,rubric){
         }catch(error){parts.push({start,count:turns.length,error:error.message,measurement:response?.measurement,...(candidate?{invalidReview:candidate}:{})});}
     }
     const complete=parts.length>0&&parts.every(part=>!part.error),total=parts.reduce((n,part)=>n+part.count,0);
-    return {complete,method:'每两回合思考评分；各项按回合数加权，任何分段失败不生成整场分数',manualVerified:false,parts,
+    return {complete,method:'每两回合思考评分，附全部此前回合证据；各项按回合数加权，任何分段失败不生成整场分数',manualVerified:false,parts,
         ...(complete?{scores:Object.fromEntries(criteria.map(key=>[key,parts.reduce((n,part)=>n+part.scores[key]*part.count,0)/total])),findings:parts.flatMap(part=>part.findings)}:{error:'分段评分不完整'})};
 }

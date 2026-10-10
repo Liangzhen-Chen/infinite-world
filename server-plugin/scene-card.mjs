@@ -28,6 +28,7 @@ export function sceneCard(engine,document,query='',index=null){
         const base=engine.byId.get(id)??npc;
         const shared=Object.values(document.memories??{}).filter(m=>m.subject===id).slice(-2).map(m=>`${m.minute??''}分 ${text(m.content,140)}`);
         parts.push(`${base.name}（${id}）｜${base.occupation??''}，${base.age??''}岁｜此刻：${text(npc.activity)}\n  对你：信任${npc.trust??0} 亲近${npc.affection??0}｜你们之间：${shared.join('；')}\n  说话：${text(base.speakingStyle??base.voice)}｜挂心：${text(list(npc.goals??base.goals),130)}\n  TA不知道：${text(list(npc.unknownFacts??base.unknownFacts),160)}${base.notes?`\n  人物资料：${text(base.notes,180)}`:''}`);
+        if(base.creditPolicy)parts.push(`  赊账条件：未还合计最多${base.creditPolicy.limitCopper}铜，最长${base.creditPolicy.maximumMinutes}分钟，信任至少${base.creditPolicy.minimumTrust}，逾期需先还清。`);
     }
     const learned=Object.keys(s.spells??{}).map(id=>engine.byId.get(id)).filter(Boolean);
     if(weather&&/天气|雨|雪|雾|日出|日落|天亮|天黑|湿度|启程|赶路/.test(query))parts.push(`【天气与昼长】${weather.name}，${weather.indoors?'室内':'户外'}；日出${weather.sunrise}，日落${weather.sunset}；湿度${weather.humidityPercent}%${weather.boatClosed?'；船路暂停通行':''}`);
@@ -35,6 +36,8 @@ export function sceneCard(engine,document,query='',index=null){
     const obligations=Object.values(s.obligations??{}).filter(o=>!['已完成','取消'].includes(o.status));
     const quests=Object.values(s.quests??{}).filter(q=>!['已完成','取消'].includes(q.status));
     if(obligations.length||quests.length)parts.push('【进行中】',...[...obligations,...quests].slice(0,8).map(o=>`${text(o.content??o.name,180)}｜${o.status??''}${o.deadline?`｜期限${engine.calendar(o.deadline).text}`:''}`));
+    const contracts=Object.entries(s.records??{}).filter(([,row])=>row.category==='debt'&&row.debtor==='player'&&row.status!=='已还清'||row.category==='contract'&&row.room&&row.parties?.includes('player'));
+    if(contracts.length)parts.push('【住宿与欠款】',...contracts.slice(-6).map(([id,row])=>row.category==='debt'?`${id}｜欠${name(row.creditor)} ${row.amount-row.paid}铜｜${row.status}｜到期${engine.calendar(row.deadline).text}`:`${row.name}｜${row.status}｜期限${engine.calendar(row.expires).text}`));
     const features=environmentCatalog(engine,document).entries;
     if(features.length)parts.push(`【可见环境】${features.slice(0,3).map(row=>`${row.name??name(row.id)}（${row.id}）${row.waterMl!==undefined?`，现有水${row.waterMl}毫升`:''}`).join('；')}`);
     const animals=petView(engine,document).presentAnimals;
