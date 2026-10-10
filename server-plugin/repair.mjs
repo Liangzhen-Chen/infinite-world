@@ -9,7 +9,7 @@ const integer=(value,min,max,label)=>{if(!Number.isSafeInteger(value)||value<min
 export function repair(d,args,eventId){
     if(args.recipe!==undefined)throw new Error('维修不能同时提交制造配方');
     const registered=args.instance?d.get('state','itemInstances',args.instance):null;
-    if(args.instance&&!registered)throw new Error('维修单件编号不存在');
+    if(args.instance&&!registered)throw new Error('维修单件编号不存在；instance 只能取自所持物品的 instances 列表。若只有一件且没有单件编号，请省略 instance，仅传 item 物品名称或类型编号');
     const item=args.item?this.resolve(args.item,'item'):registered?.item;
     if(!item)throw new Error('维修需要物品或单件编号');
     if(registered&&registered.item!==item)throw new Error('维修物品与单件编号不一致');

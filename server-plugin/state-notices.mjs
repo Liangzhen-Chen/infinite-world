@@ -15,11 +15,17 @@ export function stateNotices(before,after,resolveName=id=>id){
         const old=before.inventory?.[id]?.quantity??0,current=after.inventory?.[id]?.quantity??0;
         if(old!==current)push('inventory',`${name(id)} ${delta(current-old)}，现有 ${current}`);
         const a=before.inventory?.[id],b=after.inventory?.[id];
-        if(a&&b&&!b.instances?.length&&a.durability!==b.durability)push('durability',`${name(id)}耐久 ${a.durability} → ${b.durability}`);
+        // A first repair assigns an instance ID. The old aggregate still supplies
+        // its before value; skipping the new instance would hide that repair.
+        if(a&&b&&!(a.instances?.length&&b.instances?.length)){
+            if(a.durability!==b.durability)push('durability',`${name(id)}耐久 ${a.durability} → ${b.durability}`);
+            if(b.maxDurability!==undefined&&a.maxDurability!==b.maxDurability)push('durability',`${name(id)}耐久上限${a.maxDurability===undefined?`现为 ${b.maxDurability}`:` ${a.maxDurability} → ${b.maxDurability}`}`);
+        }
     }
     for(const [id,row] of Object.entries(after.itemInstances??{})){
         const old=before.itemInstances?.[id];
         if(old?.owner==='player'&&row.owner==='player'&&old.durability!==row.durability)push('durability',`${name(row.item)}耐久 ${old.durability} → ${row.durability}`);
+        if(old?.owner==='player'&&row.owner==='player'&&old.maxDurability!==row.maxDurability)push('durability',`${name(row.item)}耐久上限 ${old.maxDurability} → ${row.maxDurability}`);
     }
     const visibleEffect=(row,state)=>row&&(row.target==='player'||row.owner==='player'||state.inventory?.[row.target]);
     for(const id of new Set([...Object.keys(before.effects??{}),...Object.keys(after.effects??{})])){
@@ -32,6 +38,7 @@ export function stateNotices(before,after,resolveName=id=>id){
         if(!old||row.status!==old.status||row.following!==old.following)push('pet',`${name(id)}：${row.status}${row.following?'，正在跟随':''}`);
     }
     for(const [id,row] of Object.entries(after.records??{})){
+        if(row.category==='repair'&&row.mechanic==='player'&&!before.records?.[id])push('repair',`${name(row.item)}修整${row.success?'完成':'未成功'}${row.completionFailure?`：${row.completionFailure}`:''}`);
         if(row.category==='debt'&&row.debtor==='player'){
             const old=before.records?.[id];
             if(!old||old.status!==row.status||old.paid!==row.paid)push('debt',`欠${name(row.creditor)} ${row.amount-row.paid}铜 · ${row.status}`);
@@ -40,6 +47,7 @@ export function stateNotices(before,after,resolveName=id=>id){
         const old=before.records?.[id];
         if(!old||old.status!==row.status)push('contract',`${row.name??'契约'}：${row.status}`);
     }
+    for(const [id,row] of Object.entries(after.learning??{}))if(!before.learning?.[id]&&row.success===false)push('learning',`${name(row.entity)}尚未学会，本次已花费 ${row.cost??0}铜、${row.end-row.start} 分钟`);
     for(const [id,skill] of Object.entries(after.skills??{})){
         const old=before.skills?.[id]?.proficiency??0;
         if(!before.skills?.[id]||old!==skill.proficiency)push('skill',`${name(id)}熟练度 ${delta(skill.proficiency-old)}，现为 ${skill.proficiency}`);

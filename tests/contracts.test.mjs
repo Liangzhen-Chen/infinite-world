@@ -10,6 +10,17 @@ const fresh=()=>engine.initialFromLegacy(seed,'credit-contracts');
 const execute=async(document,tool,args,eventId)=>{const out=await engine.reduce(document,{tool,args,eventId});return{document:applyPatches(document,out.patches),result:out.result};};
 const money=document=>document.state.player.coins+Object.values(document.state.npcs).reduce((sum,row)=>sum+row.coins,0);
 
+test('同一欠款不能再建自动付款义务，还清后跨过期限不重复扣款',async()=>{
+    let c=(await execute(fresh(),'world_trade',{seller:'林穗',service:'住宿',payment:'credit',creditMinutes:60},'rent')).document;
+    const before=structuredClone(c);
+    await assert.rejects(execute(c,'world_promise',{type:'付款',promisor:'player',promisee:'林穗',coins:6,content:'还这笔房钱',deadline:c.state.minute+60},'duplicate-debt'),/已有欠款记录 debt_rent/);
+    assert.deepEqual(c,before);assert.deepEqual(c.state.obligations,{});
+    c=(await execute(c,'world_trade',{seller:'林穗',payment:'repay',debt:'debt_rent'},'paid')).document;
+    const settledCoins=c.state.player.coins;
+    c=(await execute(c,'world_time',{minutes:1440},'next-day')).document;
+    assert.equal(c.state.player.coins,settledCoins);assert.equal(settledCoins,174);
+});
+
 test('赊住宿生成实际欠款；余额不变、限额累计，过期只提醒一次并保留违约后果',async()=>{
     const initial=fresh(),sum=money(initial),trust=initial.state.npcs.npc_hw_linsui.trust;
     const opened=await execute(initial,'world_trade',{seller:'林穗',service:'住宿',days:1,payment:'credit',creditMinutes:60},'credit');

@@ -51,6 +51,8 @@ test('调用统计区分错误职责、查询后漏执行、失败重试和未�
         {index:4,calls:[],assertions:[{kind:'exists',path:'state.spells.spell_light',pass:false}]},
     ]}],scenarios);
     assert.equal(metrics.opportunities,3);assert.equal(metrics.wrong,1);assert.equal(metrics.missed,1);
+    const grouped=toolSelectionMetrics([{id:'grouped',turns:[{index:0,calls:[{tool:'world_field',args:{operation:'wildlife_track'}}],assertions:[]}]}],[{id:'grouped',turns:[{expectedTools:['world_field']}]}]);
+    assert.equal(grouped.wrong,0);assert.equal(grouped.missed,0);assert.equal(grouped.opportunities,1);
     const calls=[{tool:'world_craft',args:{operation:'manufacture'},result:{ok:false}},{tool:'world_craft',args:{operation:'manufacture'},result:{ok:true}}];
     const rule={kind:'calls',tool:'world_craft',args:{operation:'manufacture'},success:true,min:1,max:1};
     assert.equal(evaluateAssertions([rule],{before:{},after:{},calls,reply:''})[0].pass,true);

@@ -34,6 +34,17 @@ test('错误维修工序不会伪报物品不可维修；拒绝不扣费，使�
     assert.equal(result.result.plan,plan.id);assert.ok(result.document.state.minute>document.state.minute);
 });
 
+test('维修误把物品名当单件编号时给出纠正方法，拒绝无副作用，省略后实际结算',async()=>{
+    const{document,run}=await setup(),before=structuredClone(document);
+    for(const instance of['旧木杖','item_staff'])await assert.rejects(run(document,'world_craft',{operation:'repair',item:'旧木杖',instance},'bad-instance'),/省略 instance，仅传 item/);
+    assert.deepEqual(document,before);
+    const repaired=await run(document,'world_craft',{operation:'repair',item:'旧木杖'},'correct-instance');
+    assert.equal(repaired.document.state.player.coins,before.state.player.coins-2);
+    assert.equal(repaired.document.state.minute,before.state.minute+20);
+    assert.equal(repaired.document.state.inventory.item_staff.quantity,1);
+    assert.ok(repaired.document.state.itemInstances[repaired.result.instance]);
+});
+
 test('维修先检查实际损坏、持有、技能、工具、费用与工作台，伪造工序和折断对象不花钱耗时',async()=>{
     const{world,engine,document,run}=await setup();
     for(const alter of[
@@ -57,6 +68,8 @@ test('维修先检查实际损坏、持有、技能、工具、费用与工作�
 
 test('修整既有单件实际收费计时磨损工具，有限恢复且未知制作者不被改成玩家',async()=>{
     const{document,run}=await setup(),out=await outcome(run,document,{item:'旧木杖',restore:100000,maxLoss:0,maker:'player'},true),c=out.document;
+    assert.equal(out.result.notices.filter(row=>row.text==='旧木杖耐久 50 → 70').length,1);
+    assert.ok(out.result.notices.some(row=>row.text==='旧木杖耐久上限现为 99'));
     assert.equal(c.state.player.coins,178);assert.equal(c.state.minute,document.state.minute+20);
     assert.equal(c.state.workshopFunds.station_hw_mill_bench,2);assert.equal(c.state.inventory.item_whittling_knife.durability,79);
     assert.equal(c.state.inventory.item_staff.quantity,1);assert.equal(c.state.inventory.item_staff.durability,70);

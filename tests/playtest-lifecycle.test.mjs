@@ -42,3 +42,14 @@ test('零级实战与死亡会话前置可达：实际追踪、濒死、死亡�
     const undone=await c.api('reconcile',{campaignId:c.campaignId,validAnchors:['prepare']});
     assert.deepEqual(undone.document.state,ready.state);
 });
+
+test('冬季会话前置可达：九个月真实日结后抵达高林，封闭山路原子拒绝',async t=>{
+    const c=await campaign(t,'new','winter-route');
+    for(let i=0;i<9;i++)await c.act('world_time',{minutes:43200,activity:'休息'});
+    await c.act('world_move',{destination:'白冠高林'});
+    const before=await c.read();assert.equal(before.state.location,'site_white_canopy');
+    assert.ok(before.state.minute>=270*1440&&before.state.minute<360*1440);
+    assert.equal(before.state.settlements.loc_hw.population,58);
+    await assert.rejects(c.act('world_move',{destination:'冰回裂谷'}),/没有.*可通行/);
+    assert.deepEqual((await c.read()).state,before.state);
+});

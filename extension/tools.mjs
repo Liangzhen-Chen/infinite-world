@@ -2,7 +2,7 @@ const str={type:'string'},int={type:'integer'},bool={type:'boolean'};
 const object=(properties,required=[])=>({type:'object',properties,...(required.length?{required}:{}),additionalProperties:false});
 const definitions=[];
 const define=(name,description,properties,required=[])=>definitions.push({type:'function',function:{name,description,parameters:object(properties,required)}});
-define('world_trade','交易物品或住宿，可按商家额度赊账，或用欠款编号偿还。',{buyer:str,seller:str,item:str,quantity:int,unitPrice:int,service:{type:'string',enum:['住宿']},days:int,payment:{type:'string',enum:['cash','credit','repay']},creditMinutes:int,debt:str,instances:{type:'array',items:str}},['seller']);
+define('world_trade','交易物品或住宿，可按商家额度赊账，或用欠款编号偿还。',{buyer:str,seller:str,item:str,quantity:int,unitPrice:int,service:{type:'string',enum:['住宿']},days:int,payment:{type:'string',enum:['cash','credit','repay']},creditMinutes:{...int,description:'赊账约定从现在起多少分钟后到期；一小时填60，不另建付款约定'},debt:str,instances:{type:'array',items:str}},['seller']);
 define('world_move','用地点中文名称或已知编号沿路线抵达目的地，结算同行者与路费。',{destination:str,mode:{type:'string',enum:['walk','horse','cart','boat']}},['destination']);
 define('world_time','等待指定时长用 minutes，到指定钟点用 until 交由引擎计算，二者只选一个。',{minutes:{...int,description:'本次完整时长，例如等一小时填60，不减掉此前耗时'},until:object({dayOffset:{...int,description:'相对当前日期：今天0、明天1'},hour:{...int,minimum:0,maximum:23},minute:{...int,minimum:0,maximum:59}},['dayOffset','hour']),activity:{type:'string',enum:['等待','工作','睡眠','休息']}},[]);
 define('world_weather','查看当前位置的天气、温度和日出日落时间。',{operation:{enum:['inspect']},location:str},[]);
@@ -25,7 +25,7 @@ define('world_promise','登记人物的带路、送货、付款、等候、会�
 define('world_remember','为指定主体记录一条有来源的长期事实。',{subject:str,key:str,content:str,source:str,keywords:{type:'array',items:str}},['subject','key','content']);
 define('world_combat','与指定目标结算攻击、防守、脱离或推搡交锋。',{target:str,weapon:str,intent:{type:'string',enum:['attack','defend','flee','shove']}},['target']);
 define('world_lair','观察当地巢穴或接近巢穴中已有的占据者。',{operation:{enum:['observe','approach']},lair:str},[]);
-define('world_craft','按配方制造，或按维修工序修理指定物品单件。',{operation:{enum:['manufacture','repair']},recipe:str,item:str,instance:str,repairPlan:str,authorization:str,helpers:{type:'array',items:str}},[]);
+define('world_craft','按配方制造，或按维修工序修理行囊中已有的物品。',{operation:{enum:['manufacture','repair']},recipe:str,item:{...str,description:'维修物品名称或类型编号；仅有一件时传此字段即可'},instance:{...str,description:'可省略；仅填写行囊 instances 数组中实际存在的单件编号，不填物品名称或 item_ 类型编号'},repairPlan:str,authorization:str,helpers:{type:'array',items:str}},[]);
 define('world_research','建立研究项目，或投入经费与时间继续已有研究。',{operation:str,name:str,concept:str,skills:{type:'array',items:str},project:str,coins:int,minutes:int},['operation']);
 define('world_settlement','凭授权使用指定聚落公共物资开工建设。',{operation:str,settlement:str,authorization:str,name:str,wood:int,stone:int,days:int,beneficiaries:{type:'array',items:str}},['operation','settlement','authorization']);
 define('world_quest','发布、接受或核实完成指定任务及其托管报酬。',{operation:str,publisher:str,personal:bool,grade:str,reward:int,content:str,quest:str,objective:object({type:str,item:str,quantity:int,location:str,project:str},['type'])},['operation']);

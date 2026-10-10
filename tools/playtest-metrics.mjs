@@ -18,7 +18,7 @@ export function toolSelectionMetrics(results,scenarios){
             const expected=[...new Set([...(step?.expectedTools??[]),...branchCalls])];
             if(!expected?.length)continue;
             const selected=turn.calls.map(call=>{try{return resolveToolCall(call.tool,call.args).tool;}catch{return call.tool;}});
-            const matched=selected.some(tool=>expected.includes(tool));
+            const matched=selected.some(tool=>expected.includes(tool))||turn.calls.some(call=>expected.includes(call.tool));
             const wrong=!matched&&selected.some(tool=>!readOnly.has(tool));
             rows.push({session:session.id,turn:turn.index,expected,selected,missing:!matched&&!wrong,wrong});
         }

@@ -53,6 +53,7 @@ test('学习失败实际花时间并留下可重放记录，虚假来源拒绝�
     assert.equal(failed.document.state.player.coins,document.state.player.coins-12);
     assert.equal(failed.document.state.npcs.npc_hw_luqing.coins,document.state.npcs.npc_hw_luqing.coins+12);
     assert.equal(failed.document.state.learning[failed.id].success,false);
+    assert.ok(failed.result.notices.some(row=>row.text==='木榫制作尚未学会，本次已花费 12铜、120 分钟'));
     const replay=await engine.reduce(document,{tool:'world_learn',args:{entity:'skill_joinery',source:'npc_hw_luqing'},eventId:failed.id});
     assert.deepEqual(applyPatches(document,replay.patches),failed.document);
     const before=structuredClone(document);

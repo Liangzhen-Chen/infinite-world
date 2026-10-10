@@ -112,7 +112,7 @@ export class WorldEngine {
         if (!['trade','time','move','turn','health','revive','revival','check','practice','cast','learn','profession','attributes','relation','promise','remember',...Object.keys(activities)].includes(tool)) throw new Error('未知工具职责');
         if(d.get('state','player','status')==='死亡'&&!['time','turn','revive'].includes(tool))throw new Error('你已经死亡，需要在登记点醒来后行动');
         if(d.get('state','player','status')==='濒死'&&!['time','turn','health','cast'].includes(tool))throw new Error('你处于濒死状态，只能等待救治或尝试自救');
-        const session=this.scoped(document);
+        const session=this.scoped(document);session.replaying=Boolean(options.replay);
         const detail = await session[tool](d,args,id);
         advancePets(d,session,d.get('state','minute'));
         advanceSummons(d,d.get('state','minute'));
@@ -379,7 +379,13 @@ export class WorldEngine {
             obligation.status='进行中';d.set(['state','player','companions'],[...new Set([...d.get('state','player','companions'),promisor])]);
         }
         if(type==='送货'){obligation.item=this.resolve(args.item,'item');obligation.quantity=number(args.quantity,1,100000);}
-        if(type==='付款')obligation.coins=number(args.coins,1,1e9);
+        if(type==='付款'){
+            obligation.coins=number(args.coins,1,1e9);
+            if(!this.replaying){
+                const existing=Object.entries(d.get('state','records')??{}).find(([,row])=>row.category==='debt'&&row.debtor===promisor&&row.creditor===promisee&&row.status!=='已还清'&&row.amount-row.paid===obligation.coins);
+                if(existing)throw new Error(`这笔付款已有欠款记录 ${existing[0]}，不能再登记会重复扣款的付款约定；还款请按该欠款编号办理，赊账期限应在交易时用 creditMinutes 设置`);
+            }
+        }
         if(type==='协助'){
             if(promisor==='player'||d.get('state','npcs',promisor,'location')!==d.get('state','location'))throw new Error('协助者必须在场');
             obligation.attribute=args.attribute??'精神';if(!this.rules.attributes.includes(obligation.attribute))throw new Error('协助属性不在规则表');
