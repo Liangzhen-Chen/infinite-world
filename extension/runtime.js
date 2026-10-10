@@ -54,7 +54,8 @@ async function load(){
     if(reference?.format!==2){view=null;loadedChat=chatId;labels={};feedback=[];blocked=null;turnStart=null;return;}
     const next=await api('read',{campaignId:reference.campaignId});
     if(ctx().chatId!==chatId)return;
-    view=next;loadedChat=chatId;blocked=null;await persist();
+    view=next.document.releaseVersion===1?next:null;loadedChat=chatId;blocked=null;
+    if(view)await persist();else{labels={};feedback=[];turnStart=null;}
     indexedChat=null;indexedMessages=[];
 }
 async function syncHistory(){

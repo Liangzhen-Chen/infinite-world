@@ -12,6 +12,7 @@ import {applyPatches,CampaignStorage} from '../server-plugin/storage.mjs';
 import {planWildlifeMigration} from '../server-plugin/wildlife-migration.mjs';
 import {readStateSection} from '../extension/state-read.mjs';
 import {wildlifePriceFactor} from '../server-plugin/wildlife.mjs';
+import {initializeR1} from '../server-plugin/migrations/r1.mjs';
 const legacy=JSON.parse(await fs.readFile('tests/fixtures/legacy/seed.json','utf8')),source=await loadWorld();
 // Explicit pre-migration compatibility fixture, even after source rules publish.
 delete source.rules.wildlife.migration;
@@ -19,8 +20,8 @@ const deer='monster_brown_deer',wood='habitat_hw_wood',field='habitat_hw_field';
 const pool=(c,h,id=deer)=>c.state.records[`ecology:${h}`].populations[id];
 const ledger=c=>c.state.records['wildlife:migration'];
 function setup(world=withSeasonalMigration(source),day=269){
-    const engine=new WorldEngine(world),old=engine.initialFromLegacy(legacy,'seasonal-test');old.state.minute=day*1440+540;
-    const c=applyPatches(old,planWildlifeMigration(old,world.rules,world.monsters));
+    const engine=new WorldEngine(world),old=engine.initialFromLegacy(legacy,'seasonal-test',{prepare:false});old.state.minute=day*1440+540;
+    const c=initializeR1(applyPatches(old,planWildlifeMigration(old,world.rules,world.monsters)),world);
     const run=async(doc,tool,args,id)=>{const out=await engine.reduce(doc,{tool,args,eventId:id});return{document:applyPatches(doc,out.patches),result:out.result};};
     return{engine,world,c,run,old};
 }
@@ -46,7 +47,7 @@ test('迁徙骨架引用连续道路；同日冲突、未知物种、回环、�
     }
 });
 test('已有生态迁移保留种群和旧日结，新增次生栖地为零；不补历史且幂等',()=>{
-    const base=new WorldEngine(source).initialFromLegacy(legacy,'old-eco');base.state.minute=500*1440;
+    const base=new WorldEngine(source).initialFromLegacy(legacy,'old-eco',{prepare:false});base.state.minute=500*1440;
     const old=applyPatches(base,planWildlifeMigration(base,source.rules,source.monsters));pool(old,wood).withdrawn=5;pool(old,wood).count-=5;
     const before=structuredClone(old),world=withSeasonalMigration(source),next=applyPatches(old,planWildlifeMigration(old,world.rules,world.monsters));
     assert.deepEqual(old,before);assert.equal(pool(next,wood).count,pool(old,wood).count);assert.equal(pool(next,wood).withdrawn,5);

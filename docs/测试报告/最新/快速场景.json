@@ -38,7 +38,7 @@
     "FarmPestGuard"
   ],
   "pass": false,
-  "costUpperYuan": 0.3114555200000001,
+  "costUpperYuan": 0.13508463999999995,
   "results": [
     {
       "id": "L1",
@@ -47,17 +47,18 @@
       "input": "我数出六枚铜币交给林穗，住一晚。",
       "pass": true,
       "error": null,
-      "reply": "六枚铜币在柜台上推过去，林穗数了一遍，收进抽屉，从墙上摘下一把铜钥匙放在你手边。\"楼上靠里第二间，被褥是今早晒过的。\"她顿了顿，\"热水在灶上，要喝自己舀，别动后厨那桶备用的。\"\n\n你付了6铜，钱袋余174铜；青灯酒馆的住宿契约已记在你名下。\n\n<回合 额外=\"0分\" 地点=\"bld_hw_qingdeng\" 在场=\"npc_hw_linsui,npc_hw_hezhou\"/>",
+      "reply": "林穗接过六枚铜币，一枚枚拨进柜台后的木盒里，顺手从墙钉上取下把铜钥匙推给你。“二楼东头那间，窗对着河。热水在灶上，自己舀。”\n\n她记下时辰，又补了一句：“明早退房把钥匙放柜台上就行，别落屋里。”\n\n<回合 额外=\"0分\" 地点=\"bld_hw_qingdeng\" 在场=\"npc_hw_linsui,npc_hw_hezhou\"/>",
       "events": [
         {
           "input": {
             "tool": "world_trade",
             "args": {
-              "seller": "林穗",
+              "seller": "npc_hw_linsui",
+              "buyer": "player",
               "service": "住宿",
               "days": 1,
               "payment": "cash",
-              "buyer": "旅人"
+              "unitPrice": 6
             },
             "eventId": "quick_L1_0"
           },
@@ -124,7 +125,7 @@
       "input": "我对旧木杖施放已经学会的照明术。",
       "pass": true,
       "error": null,
-      "reply": "你以指尖抵住旧木杖，低声念出照明术的短句。魔力顺着杖身流走，杖头泛起一层薄薄的暖白光，像雾里点起的一盏小灯。\n\n【照明术】施放成功，勉强成功｜消耗魔力1，现为 9/10｜熟练度 +3（现13）｜效果持续至第601分钟\n\n<回合 额外=\"0分\" 地点=\"bld_hw_qingdeng\" 在场=\"npc_hw_linsui,npc_hw_hezhou\"/>",
+      "reply": "你按住旧木杖，低声念出照明术的咒文。杖头先是“噼”地一响，随后浮起一团勉强成形、微微摇晃的白光——不算漂亮，但确实亮着，把酒馆靠窗的半张桌面照出了一圈暖白。\n\n魔力略减，你感到一丝空落，像刚拎过重物后的手。\n\n<回合 额外=\"0分\" 地点=\"bld_hw_qingdeng\" 在场=\"npc_hw_linsui,npc_hw_hezhou\"/>",
       "events": [
         {
           "input": {
@@ -216,7 +217,7 @@
       "input": "我问林穗，今天雨是不是一直没停。",
       "pass": false,
       "error": "The expression evaluated to a falsy value:\n\n  assert.ok(c.state.minute-540>=5&&c.state.minute-540<=20)\n",
-      "reply": "林穗正擦着柜台上的酒渍，闻言抬眼看了看窗外灰蒙蒙的天。\n\n\"没下大，就是毛毛雨，从后半夜淅淅沥沥到现在。\"她把抹布搭在肩上，\"屋檐下那块地都湿透了，晾在外头的东西收进来吧。这种天，屋里潮，酒也醒得慢。\"\n\n她顿了顿，又补一句：\"你要是打算出门，路不难走，就是河边泥滑，别往陡坡上凑。\"\n\n<回合 额外=\"0分\" 地点=\"bld_hw_qingdeng\" 在场=\"npc_hw_linsui,npc_hw_hezhou\"/>",
+      "reply": "林穗正擦着柜台上的水痕，闻言抬头看了眼窗外：“可不是嘛，从后半夜起就没歇过，檐口的水线一直没断。”她把抹布搭在桶沿，“这种天客人少，你要是出门，河边的路滑，鞋底沾了泥进来记得在门口蹭蹭。”\n\n<回合 额外=\"0分\" 地点=\"bld_hw_qingdeng\" 在场=\"npc_hw_linsui,npc_hw_hezhou\"/>",
       "events": [],
       "player": {
         "name": "旅人",
@@ -245,7 +246,7 @@
       "failedDialogue": [
         {
           "role": "system",
-          "content": "你是中文游戏主持人。所有财物变化必须先调用工具成功后叙述。只回应本次意图，不替玩家安排下一步。普通回复末尾附<回合 额外=\"10分\" 地点=\"bld_hw_qingdeng\" 在场=\"npc_hw_linsui,npc_hw_hezhou\"/>，额外只写工具耗时以外的对话或停留时间；已由工具完成的行动写0分。场外问题不写工具或尾注，不推进时间。林穗愿意出租普通客房，一晚6铜，一周35铜。施法只能使用当前已经学会的法术，消耗按目录与回执结算。当前场景：\n【时间】春历元年 雨月 1日 09:00｜阴｜14℃\n【地点】河湾村 › 青灯酒馆（bld_hw_qingdeng）\n【地点索引】河湾村（loc_hw）\n【你】旅人｜1级｜生命12/12 魔力10/10｜铜180｜同行：无\n【在场】共2人\n林穗（npc_hw_linsui）｜青灯酒馆老板，34岁｜此刻：\n  对你：信任0 亲近0｜你们之间：\n  说话：｜挂心：\n  TA不知道：\n  人物资料：丈夫两年前病逝，照顾弟弟阿砚；希望酒馆有稳定客人而非突然发财。重视按时付房钱，熟人可以商量厨房和院子使用；有过帮忙经历应明确区分借用和擅闯。愿教普通烹饪，但不承担陌生人的长期债务。\n  赊账条件：未还合计最多6铜，最长1440分钟，信任至少0，逾期需先还清。\n贺舟（npc_hw_hezhou）｜流动雕刻师，30岁｜此刻：\n  对你：信任0 亲近0｜你们之间：\n  说话：｜挂心：\n  TA不知道：\n  人物资料：来村里暂住，想在沿河村落收集渡河者的故事，再做一组公共雕刻。珍惜作品署名和人物同意。可能触发艺术与记忆魔法的融合路线，但需真实体验、材料和研究。\n【天气与昼长】阴，室内；日出06:00，日落18:00；湿度60%\n【已学法术】共1：照明术（spell_light，魔力1）\n【可见环境】青灯后厨水桶（feature_hw_kitchen_bucket），现有水8000毫升\n【固定事实】\n玩家：玩家是成年再生者，自由决定生活方向，没有预设救世主使命。当前职业、领地与已会法术以账本为准。\n河湾村：公共仓库和旧磨坊属于村民共同体；陈柏保管钥匙，个人财物与公共资源分开。"
+          "content": "你是中文游戏主持人。所有财物变化必须先调用工具成功后叙述。只回应本次意图，不替玩家安排下一步。普通回复末尾附<回合 额外=\"10分\" 地点=\"bld_hw_qingdeng\" 在场=\"npc_hw_linsui,npc_hw_hezhou\"/>，额外只写工具耗时以外的对话或停留时间；已由工具完成的行动写0分。场外问题不写工具或尾注，不推进时间。林穗愿意出租普通客房，一晚6铜，一周35铜。施法只能使用当前已经学会的法术，消耗按目录与回执结算。当前场景：\n【时间】春历元年 雨月 1日 09:00｜阴｜10℃\n【地点】河湾村 › 青灯酒馆（bld_hw_qingdeng）\n【地点索引】河湾村（loc_hw）\n【你】旅人｜1级｜生命12/12 魔力10/10｜铜180｜同行：无\n【在场】共2人\n林穗（npc_hw_linsui）｜青灯酒馆老板，34岁｜此刻：\n  对你：信任0 亲近0｜你们之间：\n  说话：｜挂心：\n  TA不知道：\n  人物资料：丈夫两年前病逝，照顾弟弟阿砚；希望酒馆有稳定客人而非突然发财。重视按时付房钱，熟人可以商量厨房和院子使用；有过帮忙经历应明确区分借用和擅闯。愿教普通烹饪，但不承担陌生人的长期债务。\n  赊账条件：未还合计最多6铜，最长1440分钟，信任至少0，逾期需先还清。\n贺舟（npc_hw_hezhou）｜流动雕刻师，30岁｜此刻：\n  对你：信任0 亲近0｜你们之间：\n  说话：｜挂心：\n  TA不知道：\n  人物资料：来村里暂住，想在沿河村落收集渡河者的故事，再做一组公共雕刻。珍惜作品署名和人物同意。可能触发艺术与记忆魔法的融合路线，但需真实体验、材料和研究。\n【天气与昼长】阴，室内；日出06:00，日落18:00；湿度65%\n【已学法术】共1：照明术（spell_light，魔力1）\n【可见环境】青灯后厨水桶（feature_hw_kitchen_bucket），现有水8000毫升\n【固定事实】\n玩家：玩家是成年冒险者，自由决定生活方向，没有预设救世主使命。当前职业、领地与已会法术以账本为准。\n河湾村：公共仓库和旧磨坊属于村民共同体；陈柏保管钥匙，个人财物与公共资源分开。"
         },
         {
           "role": "user",
@@ -253,7 +254,7 @@
         },
         {
           "role": "assistant",
-          "content": "林穗正擦着柜台上的酒渍，闻言抬眼看了看窗外灰蒙蒙的天。\n\n\"没下大，就是毛毛雨，从后半夜淅淅沥沥到现在。\"她把抹布搭在肩上，\"屋檐下那块地都湿透了，晾在外头的东西收进来吧。这种天，屋里潮，酒也醒得慢。\"\n\n她顿了顿，又补一句：\"你要是打算出门，路不难走，就是河边泥滑，别往陡坡上凑。\"\n\n<回合 额外=\"0分\" 地点=\"bld_hw_qingdeng\" 在场=\"npc_hw_linsui,npc_hw_hezhou\"/>"
+          "content": "林穗正擦着柜台上的水痕，闻言抬头看了眼窗外：“可不是嘛，从后半夜起就没歇过，檐口的水线一直没断。”她把抹布搭在桶沿，“这种天客人少，你要是出门，河边的路滑，鞋底沾了泥进来记得在门口蹭蹭。”\n\n<回合 额外=\"0分\" 地点=\"bld_hw_qingdeng\" 在场=\"npc_hw_linsui,npc_hw_hezhou\"/>"
         }
       ]
     },
@@ -264,7 +265,7 @@
       "input": "（场外）我现在有多少铜币？",
       "pass": true,
       "error": null,
-      "reply": "你目前有 **180 铜币**。",
+      "reply": "你目前有 **180 铜**。<回合 额外=\"0分\" 地点=\"bld_hw_qingdeng\" 在场=\"npc_hw_linsui,npc_hw_hezhou\"/>",
       "events": [],
       "player": {
         "name": "旅人",
@@ -298,7 +299,7 @@
       "input": "我交两枚铜币给陆青，请他教我基础识字。",
       "pass": true,
       "error": null,
-      "reply": "雨声敲着学堂的木窗，陆青把两枚铜板收进袖袋，从架上抽出一块写了字的旧木板，一笔一画地教你认读自己的名字和几个常用字。一个时辰过去，笔画终于在眼里连成了意思。\n\n你付了2铜（余178铜），学会了识字。\n\n<回合 额外=\"0分\" 地点=\"bld_hw_school\" 在场=\"npc_hw_luqing\"/>",
+      "reply": "陆青收下两枚铜币，把你引到靠窗的矮桌旁。他先教你认自己的名字，再逐字拆解几个常用字的结构——\"木\"加\"木\"是林，\"日\"加\"月\"是明。他讲得不急，遇到你卡壳的地方就蘸水在桌面上重写一遍。\n\n一小时下来，你已经能勉强认出十来个简单的字，也能照样子摹写。陆青点点头：\"底子不差，多认多写就顺了。\"\n\n你学会了【识字】。\n\n<回合 额外=\"0分\" 地点=\"bld_hw_school\" 在场=\"npc_hw_luqing\"/>",
       "events": [
         {
           "input": {
@@ -387,7 +388,7 @@
       "input": "把刚升级获得的两个属性点都加到体质上。",
       "pass": true,
       "error": null,
-      "reply": "两点都落在体质上，你现在是**2级｜体质12｜生命12/20 魔力10/12**。\n\n体质撑起了上限，但伤势不会因此自动愈合——那12点空缺还得靠休息或治疗慢慢补回来。\n\n<回合 额外=\"0分\" 地点=\"bld_hw_qingdeng\" 在场=\"npc_hw_linsui,npc_hw_hezhou\"/>",
+      "reply": "两点自由属性点已全部投入体质：体质 10 → 12。\n\n上限随之提高，生命上限 16 → 20，但你当前仍是 12/20；魔力仍是 10/12。上限增长不会补回已失去的部分。\n\n<回合 额外=\"0分\" 地点=\"bld_hw_qingdeng\" 在场=\"npc_hw_linsui,npc_hw_hezhou\"/>",
       "events": [
         {
           "input": {
@@ -474,7 +475,7 @@
       "input": "我在这里登记复活点，支付规定的登记费。",
       "pass": true,
       "error": null,
-      "reply": "登记已完成。\n\n殿内的执事在名册上写下你的名字，又取过一枚刻着白石的木牌递来，算是凭证。你付了30铜，钱袋里还剩70铜。整个过程约花了15分钟。\n\n从此若你身死，魂灵会被牵引回这座归途殿。\n\n<回合 额外=\"0分\" 地点=\"bld_bs_shrine\" 在场=\"\"/>",
+      "reply": "登记办妥了。\n\n神殿执事在名册上记下你的名字，用蜡封压印，收下30铜。他说了句\"愿归途常明\"，便示意你可以走了。\n\n- 复活点：白石归途殿（已登记）\n- 钱袋：100 → 70铜\n\n<回合 额外=\"0分\" 地点=\"bld_bs_shrine\" 在场=\"\"/>",
       "events": [
         {
           "input": {
@@ -540,105 +541,15 @@
       "attempt": 1,
       "fixtureScope": "源世界与旧角色快照的开发场景",
       "input": "我用买好的削木小刀，在磨坊的木工台修整这根磨损的旧木杖，先做一次。",
-      "pass": true,
-      "error": null,
-      "reply": "木工台前，你把旧木杖横搁在台面上，杖尾垫了块碎木片，先顺着杖身摸了一遍，确认裂纹没往深处走。削木小刀贴着杖头那圈起毛的斜痕刮下去——刀口是利的，可这一刀下得太浅，木屑卷了两卷就断了，毛痕只被削平一小片，杖身整体还是原来那副磨损样子。\n\n你收刀，吹掉台面上的木屑。杖还是那根杖，握处发亮的地方没变，杖尾铁皮也照旧。\n\n<回合 额外=\"0分\" 地点=\"bld_hw_mill\" 在场=\"npc_hw_ayan\"/>",
-      "events": [
-        {
-          "input": {
-            "tool": "world_craft",
-            "args": {
-              "operation": "repair",
-              "item": "item_staff",
-              "repairPlan": "repair_staff_trim"
-            },
-            "eventId": "quick_WorkshopRepair_1"
-          },
-          "result": {
-            "ok": true,
-            "operation": "repair",
-            "item": "item_staff",
-            "instance": "unit_4bc0cced8b7c8d84c9210a32",
-            "plan": "repair_staff_trim",
-            "receipt": "repaired_quick_WorkshopRepair_1",
-            "die": 6,
-            "rolls": [
-              6
-            ],
-            "modifier": 1,
-            "total": 7,
-            "difficulty": 10,
-            "degree": "失败",
-            "success": false,
-            "tools": [
-              {
-                "item": "item_whittling_knife",
-                "bonus": 1
-              }
-            ],
-            "toolBonus": 1,
-            "checkSuccess": false,
-            "completionFailure": null,
-            "before": {
-              "durability": 50,
-              "maxDurability": 100
-            },
-            "after": {
-              "durability": 50,
-              "maxDurability": 100
-            },
-            "provenance": {
-              "maker": null,
-              "makerName": null,
-              "recipe": null,
-              "source": "quick_WorkshopRepair_1"
-            },
-            "restored": 0,
-            "spent": {
-              "feePaid": 2,
-              "minutes": 20,
-              "materials": [],
-              "toolWear": [
-                {
-                  "item": "item_whittling_knife",
-                  "name": "削木小刀",
-                  "before": 80,
-                  "after": 79
-                }
-              ]
-            },
-            "factSummary": "旧木杖修整失败；耐久50变为50，上限100变为100；工坊费2铜已支付，耗时20分钟；原制作者未知，你仅负责这次维修，保留原物品和编号，没有制造新物品。",
-            "minute": 625,
-            "messages": [
-              "【系统】修整失败，旧木杖耐久50→50，上限100→100"
-            ],
-            "notices": [
-              {
-                "type": "coins",
-                "text": "钱袋 -2铜，现有 164"
-              },
-              {
-                "type": "durability",
-                "text": "削木小刀耐久 80 → 79"
-              },
-              {
-                "type": "time",
-                "text": "经过 20 分钟"
-              }
-            ],
-            "turnClock": {
-              "startMinute": 605,
-              "minute": 625,
-              "elapsedMinutes": 20
-            }
-          }
-        }
-      ],
+      "pass": false,
+      "error": "Expected values to be strictly equal:\n\n0 !== 1\n",
+      "reply": "我先在木工台前把旧木杖横放稳，重新核对了工序登记，但维修单件编号这一步没能对上，工具没有受理，所以这次修整没有真正开始——杖还是50/100，小刀也没磨损。你要我换个写法再试一次，还是先看别的？",
+      "events": [],
       "player": {
         "name": "旅人",
         "level": 1,
         "xp": 0,
-        "coins": 164,
+        "coins": 166,
         "hp": 12,
         "maxHp": 12,
         "mp": 10,
@@ -657,7 +568,121 @@
         "companions": [],
         "dyingSince": null
       },
-      "minute": 625
+      "minute": 615,
+      "failedDialogue": [
+        {
+          "role": "system",
+          "content": "你是中文游戏主持人。所有财物变化必须先调用工具成功后叙述。只回应本次意图，不替玩家安排下一步。普通回复末尾附<回合 额外=\"10分\" 地点=\"bld_hw_mill\" 在场=\"npc_hw_ayan\"/>，额外只写工具耗时以外的对话或停留时间；已由工具完成的行动写0分。场外问题不写工具或尾注，不推进时间。林穗愿意出租普通客房，一晚6铜，一周35铜。施法只能使用当前已经学会的法术，消耗按目录与回执结算。已学会木工并实际买入小刀，旧木杖当前耐久50/100。通过world_catalog查询其维修工序后，用world_craft operation repair、item旧木杖执行一次。维修工序已登记，使用费2铜、20分钟、小刀磨损1。按工具回执叙述成功或失败，不另付重复费用或生成新木杖。当前场景：\n【时间】春历元年 雨月 1日 10:05｜晴｜15℃\n【地点】河湾村 › 旧磨坊（bld_hw_mill）\n【地点索引】河湾村（loc_hw）\n【你】旅人｜1级｜生命12/12 魔力10/10｜铜166｜同行：无\n【在场】共1人\n阿砚（npc_hw_ayan）｜修理学徒，19岁｜此刻：\n  对你：信任0 亲近0｜你们之间：\n  说话：｜挂心：\n  TA不知道：\n  人物资料：林穗的弟弟，十九岁，想修好旧磨坊再去白石学机械。会基本木工，擅观察水流，怕被当成只会打杂。旧磨坊轴坏了，修复需要木工、铁箍和上游积水处检查，单一修补魔法不解决全部原因。\n【已学法术】共1：照明术（spell_light，魔力1）\n【固定事实】\n玩家：玩家是成年冒险者，自由决定生活方向，没有预设救世主使命。当前职业、领地与已会法术以账本为准。\n河湾村：公共仓库和旧磨坊属于村民共同体；陈柏保管钥匙，个人财物与公共资源分开。"
+        },
+        {
+          "role": "user",
+          "content": "我用买好的削木小刀，在磨坊的木工台修整这根磨损的旧木杖，先做一次。"
+        },
+        {
+          "role": "assistant",
+          "content": "",
+          "tool_calls": [
+            {
+              "index": 0,
+              "id": "call_00_mKZt73iClthSuugw90cX9698",
+              "type": "function",
+              "function": {
+                "name": "world_catalog",
+                "arguments": "{\"entity\": \"旧木杖\", \"kind\": \"item\"}"
+              }
+            }
+          ]
+        },
+        {
+          "role": "tool",
+          "tool_call_id": "call_00_mKZt73iClthSuugw90cX9698",
+          "content": "{\"id\":\"item_staff\",\"name\":\"旧木杖\",\"basePrice\":4,\"weight\":1,\"aliases\":[\"木杖\"],\"quality\":\"木\",\"durability\":100,\"scope\":null,\"origin\":\"bld_hw_mill\",\"shelfLifeDays\":null,\"use\":\"普通旧木杖用于支撑和探路；承受重击会损坏，照明术需另行施放。\",\"seasonality\":\"全年旧物交易\",\"description\":\"旧磨坊角落翻出的普通木杖，整根取直木削成，杖身约一人高，握处被前手磨得发亮。杖头略粗，留着削刀收尾的斜痕，杖尾包一圈铁皮防裂。旧物摊上常见，多用来撑步、探浅水或拨开低枝。木色深浅不匀，是常年握持与靠墙搁放留下的痕迹，不碍手。\",\"inspection\":\"先看杖身有无顺纹裂口，再掂重量是否偏轻。握中段轻敲地面，听声发闷或发脆都只作参考；杖尾铁皮松脱、杖头削痕起毛时，可换新杖或缠布补握。\",\"storage\":\"靠墙竖放于干燥通风处，杖尾垫木块离地，避免重压与长期日晒；梅雨前后取出查看有无霉斑、虫孔，发现即擦净晾干。\",\"repairs\":[{\"id\":\"repair_staff_trim\",\"name\":\"木杖修整\",\"item\":\"item_staff\",\"skill\":\"skill_life_6_core\",\"attribute\":\"敏捷\",\"minimumProficiency\":0,\"tools\":[\"item_whittling_knife\"],\"materials\":[],\"workstation\":\"woodworking\",\"minutes\":20,\"difficulty\":10,\"toolWear\":1,\"restore\":20,\"maxLoss\":1}]}"
+        },
+        {
+          "role": "assistant",
+          "content": "",
+          "tool_calls": [
+            {
+              "index": 0,
+              "id": "call_00_eZPhXHKwQ2w0q4eFZCFB5260",
+              "type": "function",
+              "function": {
+                "name": "world_craft",
+                "arguments": "{\"operation\": \"repair\", \"item\": \"旧木杖\", \"instance\": \"旧木杖\", \"repairPlan\": \"repair_staff_trim\"}"
+              }
+            }
+          ]
+        },
+        {
+          "role": "tool",
+          "tool_call_id": "call_00_eZPhXHKwQ2w0q4eFZCFB5260",
+          "content": "{\"ok\":false,\"error\":\"维修单件编号不存在\"}"
+        },
+        {
+          "role": "assistant",
+          "content": "",
+          "tool_calls": [
+            {
+              "index": 0,
+              "id": "call_00_RzzpE6egU8Hwl88Pptkj9293",
+              "type": "function",
+              "function": {
+                "name": "world_read",
+                "arguments": "{\"section\": \"行囊\"}"
+              }
+            }
+          ]
+        },
+        {
+          "role": "tool",
+          "tool_call_id": "call_00_RzzpE6egU8Hwl88Pptkj9293",
+          "content": "{\"item_ration\":{\"quantity\":3,\"quality\":\"木\",\"durability\":100,\"weight\":0.2},\"item_staff\":{\"quantity\":1,\"quality\":\"木\",\"durability\":50,\"weight\":1},\"item_bag\":{\"quantity\":1,\"quality\":\"木\",\"durability\":100,\"weight\":0.5},\"item_clothes\":{\"quantity\":1,\"quality\":\"木\",\"durability\":100,\"weight\":0.5},\"item_whittling_knife\":{\"quality\":\"木\",\"durability\":80,\"weight\":0.2,\"quantity\":1}}"
+        },
+        {
+          "role": "assistant",
+          "content": "",
+          "tool_calls": [
+            {
+              "index": 0,
+              "id": "call_00_Epf8XFrI5SldL5kmZ5ch0246",
+              "type": "function",
+              "function": {
+                "name": "world_craft",
+                "arguments": "{\"operation\": \"repair\", \"item\": \"旧木杖\", \"instance\": \"item_staff\", \"repairPlan\": \"repair_staff_trim\"}"
+              }
+            }
+          ]
+        },
+        {
+          "role": "tool",
+          "tool_call_id": "call_00_Epf8XFrI5SldL5kmZ5ch0246",
+          "content": "{\"ok\":false,\"error\":\"维修单件编号不存在\"}"
+        },
+        {
+          "role": "assistant",
+          "content": "",
+          "tool_calls": [
+            {
+              "index": 0,
+              "id": "call_00_HSRcJN2v0XQa56qnoLbp5586",
+              "type": "function",
+              "function": {
+                "name": "world_craft",
+                "arguments": "{\"operation\": \"repair\", \"instance\": \"item_staff\", \"repairPlan\": \"repair_staff_trim\"}"
+              }
+            }
+          ]
+        },
+        {
+          "role": "tool",
+          "tool_call_id": "call_00_HSRcJN2v0XQa56qnoLbp5586",
+          "content": "{\"ok\":false,\"error\":\"维修单件编号不存在\"}"
+        },
+        {
+          "role": "assistant",
+          "content": "我先在木工台前把旧木杖横放稳，重新核对了工序登记，但维修单件编号这一步没能对上，工具没有受理，所以这次修整没有真正开始——杖还是50/100，小刀也没磨损。你要我换个写法再试一次，还是先看别的？"
+        }
+      ]
     },
     {
       "id": "OpposedCheck",
@@ -666,7 +691,7 @@
       "input": "我跟阿砚进行一次不伤人的掰手腕，谁都不让着谁。",
       "pass": true,
       "error": null,
-      "reply": "磨坊里清出一块平整的木板台面。阿砚把袖口往上撸了两圈，手腕搁上去时还特意转了转，像在试轴心。\n\n“说好谁都不让。”他盯着你的手。\n\n两只手一扣上，你立刻感到他掌心的力道——结实、有节奏，是常年握刨子和凿子的手。但他那点劲道是匀着来的，你这边一沉肩，把重心压进肘弯，他的手腕就开始往后倒。阿砚“嘿”了一声，另一只手撑住台沿，脖子上的筋都绷起来，硬是撑了三息。第四息，你的手背稳稳扣在了木板上。\n\n他甩了甩手腕，指尖有点发麻，脸上却先笑了：“行，你力气不小。”他顿了顿，又补一句，像是不想显得太服气，“不过我这是修东西的手，不是掰手腕的手。”\n\n他低头看了眼那截坏掉的传动轴，又看看你，没再说什么。\n\n<回合 额外=\"0分\" 地点=\"bld_hw_mill\" 在场=\"npc_hw_ayan\"/>",
+      "reply": "磨坊里那截旧木台被雨水泡得发沉，你们各占一边，手肘抵住台面，十指扣紧。阿砚先发力，腕骨绷得发白，青筋从手背一路爬到小臂——他没让，一点余地都没留。\n\n但你压得更稳。他的力道撞上来，像撞在一根埋进土里的桩子上，只晃了晃，没退。僵持了几息，你缓缓把他的手往台面压，他咬牙撑住，肩膀都跟着抬了起来，终究还是被按下去，手背贴住木板，发出一声闷响。\n\n“啧。”阿砚甩了甩手腕，脸上没什么好气，倒也没有不服气，“你力气不小。”他看了你一眼，那眼神像在重新量你一遍。<回合 额外=\"0分\" 地点=\"bld_hw_mill\" 在场=\"npc_hw_ayan\"/>",
       "events": [
         {
           "input": {
@@ -677,7 +702,7 @@
                 "npc": "npc_hw_ayan",
                 "attribute": "力量"
               },
-              "contextReason": "掰手腕，双方都不让"
+              "contextReason": "掰手腕，双方全力不放水"
             },
             "eventId": "quick_OpposedCheck_0"
           },
@@ -750,7 +775,7 @@
       "input": "阿砚已经答应帮我判断这块木料适不适合削木楔，现在我和他一起检查。",
       "pass": true,
       "error": null,
-      "reply": "雨点敲在磨坊破瓦上，你们把那截木料翻来覆去看了半晌——你摸不出门道，阿砚皱着眉敲了两下，也摇头。\n\n“看不准。”他老实承认，“纹路这一面看着还行，可芯子是不是干透了，光看外表骗人。真要削楔子，起码得先开个小口瞧断面。”\n\n木料没动过刀，也没损耗。他只是把木料推回原处，抬眼等你决定要不要真开一刀。\n\n<回合 额外=\"0分\" 地点=\"bld_hw_mill\" 在场=\"npc_hw_ayan\"/>",
+      "reply": "我和阿砚轮流上手，翻面、敲了敲、又对着磨坊门口的光看了半晌——结果谁也没能说准。\n\n阿砚皱着眉，把木料转了个方向又放回去：“纹路倒是看得见……可这样敲，听不出里面有没有暗裂。要是干湿不匀，硬削下去楔子会歪。”他顿了顿，有点不确定地补一句，“也可能是我想多了。”\n\n我也判断不出这块料到底合不合用。木料原样放在那儿，没下刀，没损耗。\n\n<回合 额外=\"10分\" 地点=\"bld_hw_mill\" 在场=\"npc_hw_ayan\"/>",
       "events": [
         {
           "input": {
@@ -762,7 +787,7 @@
               "helpers": [
                 "obl_prepare_assistance"
               ],
-              "contextReason": "阿砚履行协助义务，以木工熟练度120的经验帮忙判断木料是否适合削木楔"
+              "contextReason": "与木工熟练度120的阿砚共同检查木料，仅凭观察与触摸判断是否适合削木楔"
             },
             "eventId": "quick_PromisedAssistance_0"
           },
@@ -834,16 +859,16 @@
         "companions": [],
         "dyingSince": null
       },
-      "minute": 605
+      "minute": 615
     },
     {
       "id": "WorkshopCraft",
       "attempt": 1,
       "fixtureScope": "源世界与旧角色快照的开发场景",
       "input": "我用已经学会的配方和手里的小刀，在这个工作台削一批榫用木楔。",
-      "pass": true,
-      "error": null,
-      "reply": "你在木工台前蹲下身，把最后一段木料卡进台钳，小刀顺着纹路一层层往下推。木楔这东西看着简单，可榫头要严丝合缝，楔面得斜得均匀——你手上这一刀吃深了半线，木料顺着纹路裂开，断口斜得没法用。再修，剩下的半截已经不够尺寸。\n\n二十分钟过去，台上只落下一堆崩裂的废木片，没有一件能用的楔子。工作台的租用费两铜照付，小刀的刃口也磨钝了一分。\n\n<回合 额外=\"0分\" 地点=\"bld_hw_mill\" 在场=\"npc_hw_ayan\"/>",
+      "pass": false,
+      "error": "Expected values to be strictly equal:\n\n610 !== 600\n",
+      "reply": "工作台上，你把那截木料抵在台钳边，小刀顺着木纹一下一下地削。头几刀还算顺，到该收出楔口斜面时手一偏，木楔的尖角崩了，接着木料顺着裂纹整根劈开——成了没法再用的废料。\n\n二十分钟白费，木料没了，磨坊的2铜使用费也照付。台面上只留下一堆不成形的碎木屑和两半裂开的残料，没有一件能用的成品，也没能回收出什么可再用的东西。削木小刀卷了点刃，耐久掉了一点。\n\n你现在铜162，木料已用完。\n\n<回合 额外=\"10分\" 地点=\"bld_hw_mill\" 在场=\"npc_hw_ayan\"/>",
       "events": [
         {
           "input": {
@@ -953,7 +978,41 @@
         "companions": [],
         "dyingSince": null
       },
-      "minute": 600
+      "minute": 610,
+      "failedDialogue": [
+        {
+          "role": "system",
+          "content": "你是中文游戏主持人。所有财物变化必须先调用工具成功后叙述。只回应本次意图，不替玩家安排下一步。普通回复末尾附<回合 额外=\"10分\" 地点=\"bld_hw_mill\" 在场=\"npc_hw_ayan\"/>，额外只写工具耗时以外的对话或停留时间；已由工具完成的行动写0分。场外问题不写工具或尾注，不推进时间。林穗愿意出租普通客房，一晚6铜，一周35铜。施法只能使用当前已经学会的法术，消耗按目录与回执结算。配方recipe_wooden_pegs已学会，已实际购入削木小刀和木料。磨坊木工台使用费2铜；world_craft一次处理扣料、付费、工具损耗与20分钟，不再交易重复支付。结果可能失败，按回执叙述。当前场景：\n【时间】春历元年 雨月 1日 09:40｜晴｜13℃\n【地点】河湾村 › 旧磨坊（bld_hw_mill）\n【地点索引】河湾村（loc_hw）\n【你】旅人｜1级｜生命12/12 魔力10/10｜铜164｜同行：无\n【在场】共1人\n阿砚（npc_hw_ayan）｜修理学徒，19岁｜此刻：\n  对你：信任0 亲近0｜你们之间：\n  说话：｜挂心：\n  TA不知道：\n  人物资料：林穗的弟弟，十九岁，想修好旧磨坊再去白石学机械。会基本木工，擅观察水流，怕被当成只会打杂。旧磨坊轴坏了，修复需要木工、铁箍和上游积水处检查，单一修补魔法不解决全部原因。\n【已学法术】共1：照明术（spell_light，魔力1）\n【固定事实】\n玩家：玩家是成年冒险者，自由决定生活方向，没有预设救世主使命。当前职业、领地与已会法术以账本为准。\n河湾村：公共仓库和旧磨坊属于村民共同体；陈柏保管钥匙，个人财物与公共资源分开。"
+        },
+        {
+          "role": "user",
+          "content": "我用已经学会的配方和手里的小刀，在这个工作台削一批榫用木楔。"
+        },
+        {
+          "role": "assistant",
+          "content": "I'll start the crafting session at the mill's workbench.",
+          "tool_calls": [
+            {
+              "index": 0,
+              "id": "call_00_ccbHo76KLbTKWui5mTNP9051",
+              "type": "function",
+              "function": {
+                "name": "world_craft",
+                "arguments": "{\"operation\": \"manufacture\", \"recipe\": \"recipe_wooden_pegs\"}"
+              }
+            }
+          ]
+        },
+        {
+          "role": "tool",
+          "tool_call_id": "call_00_ccbHo76KLbTKWui5mTNP9051",
+          "content": "{\"ok\":true,\"recipe\":\"recipe_wooden_pegs\",\"die\":5,\"rolls\":[5],\"modifier\":1,\"total\":6,\"difficulty\":10,\"degree\":\"失败\",\"success\":false,\"tools\":[{\"item\":\"item_whittling_knife\",\"bonus\":1}],\"toolBonus\":1,\"receipt\":\"crafted_quick_WorkshopCraft_0\",\"instances\":[],\"workmanship\":null,\"salvage\":[],\"spent\":{\"feePaid\":2,\"minutes\":20,\"materials\":[{\"item\":\"item_wood\",\"name\":\"木料\",\"quantity\":1}],\"toolWear\":[{\"item\":\"item_whittling_knife\",\"name\":\"削木小刀\",\"before\":80,\"after\":79}]},\"healthDelta\":0,\"produced\":[],\"factSummary\":\"未得到任何成品；没有回收到任何可用材料；工坊费2铜已支付，耗时20分钟。\",\"note\":\"spent已实际支付及消耗，salvage是实际回收物，produced是实际成品。失败不退款；没有回收时只能描写弃置的废料，不能写回收到刨花或碎屑。\",\"minute\":600,\"messages\":[\"【系统】制造失败，耗时20分钟，按配方回收0份材料\"],\"notices\":[{\"type\":\"coins\",\"text\":\"钱袋 -2铜，现有 162\"},{\"type\":\"durability\",\"text\":\"削木小刀耐久 80 → 79\"},{\"type\":\"inventory\",\"text\":\"木料 -1，现有 0\"},{\"type\":\"time\",\"text\":\"经过 20 分钟\"}],\"turnClock\":{\"startMinute\":580,\"minute\":600,\"elapsedMinutes\":20}}"
+        },
+        {
+          "role": "assistant",
+          "content": "工作台上，你把那截木料抵在台钳边，小刀顺着木纹一下一下地削。头几刀还算顺，到该收出楔口斜面时手一偏，木楔的尖角崩了，接着木料顺着裂纹整根劈开——成了没法再用的废料。\n\n二十分钟白费，木料没了，磨坊的2铜使用费也照付。台面上只留下一堆不成形的碎木屑和两半裂开的残料，没有一件能用的成品，也没能回收出什么可再用的东西。削木小刀卷了点刃，耐久掉了一点。\n\n你现在铜162，木料已用完。\n\n<回合 额外=\"10分\" 地点=\"bld_hw_mill\" 在场=\"npc_hw_ayan\"/>"
+        }
+      ]
     },
     {
       "id": "WaterIrrigation",
@@ -962,7 +1021,7 @@
       "input": "我只施放一次已经学会的引水术，把凹池里的水沿这条沟引向菜圃。",
       "pass": true,
       "error": null,
-      "reply": "引水术起效。你抬手引动水势，凹池的水顺着沟槽涌向菜圃——但沟渠七成淤塞，水走得又慢又漏，最终只有约6000毫升真正淌进田垄，湿度升到45%；凹池还剩24000毫升。污染物随水一同过去，沟里没存下水，也没有任何净水效果。\n\n郑水生在一旁看着，没说话。\n\n<回合 额外=\"0分\" 地点=\"loc_hw_dock\" 在场=\"npc_hw_zhengshuisheng\"/>",
+      "reply": "引水术落在沟渠上，水流顺着沟底往菜圃方向过去。堵塞没清，沟里只走得动一部分——凹池里原有 30000 毫升，实际有 6000 毫升进了田垄，池中还剩 24000 毫升。田垄湿度到了 45%；沟里没有存水，水质也照旧，引水术不会净化什么。\n\n（魔力 36/40，引水术熟练度 123。）\n\n<回合 额外=\"0分\" 地点=\"loc_hw_dock\" 在场=\"npc_hw_zhengshuisheng\"/>",
       "events": [
         {
           "input": {
@@ -1053,10 +1112,53 @@
       "attempt": 1,
       "fixtureScope": "隔离规则夹具：注入两个已知水法术测试模型工具理解，不是正式目录或正常学习取得证据",
       "input": "沟里的泥已经松好了。我把其中一公斤搬到沟旁指定堆泥地，只搬这一趟。",
-      "pass": false,
-      "error": "Expected values to be strictly equal:\n\n0 !== 1\n",
-      "reply": "搬泥这件事没能办成——工具报回“环境对象未登记”，也就是这一处沟与堆泥地没有在环境记录里挂上号，我这边没法把泥真正从沟里挪走。所以这一趟没有发生：泥还在原处，沟的堵塞程度也没变。\n\n<回合 额外=\"0分\" 地点=\"loc_hw_dock\" 在场=\"npc_hw_zhengshuisheng\"/>",
-      "events": [],
+      "pass": true,
+      "error": null,
+      "reply": "这一趟搬泥没成——泥太滑、沟沿又窄，一公斤的泥团在手里散了架，大半又落回沟里，堆泥地上几乎没留下什么。泥仍在沟中，堵塞情况没有变化。\n\n你花了20分钟。\n\n<回合 额外=\"0分\" 地点=\"loc_hw_dock\" 在场=\"npc_hw_zhengshuisheng\"/>",
+      "events": [
+        {
+          "input": {
+            "tool": "world_environment",
+            "args": {
+              "operation": "carry_silt",
+              "target": "feature_hw_channel",
+              "destination": "feature_hw_silt_heap",
+              "grams": 1000
+            },
+            "eventId": "quick_CarrySilt_0"
+          },
+          "result": {
+            "ok": true,
+            "operation": "carry_silt",
+            "die": 8,
+            "rolls": [
+              8
+            ],
+            "modifier": 0,
+            "total": 8,
+            "difficulty": 10,
+            "degree": "失败",
+            "success": false,
+            "removedGrams": 0,
+            "minutes": 20,
+            "target": "feature_hw_channel",
+            "destination": "feature_hw_silt_heap",
+            "minute": 561,
+            "messages": [],
+            "notices": [
+              {
+                "type": "time",
+                "text": "经过 20 分钟"
+              }
+            ],
+            "turnClock": {
+              "startMinute": 541,
+              "minute": 561,
+              "elapsedMinutes": 20
+            }
+          }
+        }
+      ],
       "player": {
         "name": "旅人",
         "level": 1,
@@ -1080,41 +1182,7 @@
         "companions": [],
         "dyingSince": null
       },
-      "minute": 541,
-      "failedDialogue": [
-        {
-          "role": "system",
-          "content": "你是中文游戏主持人。所有财物变化必须先调用工具成功后叙述。只回应本次意图，不替玩家安排下一步。普通回复末尾附<回合 额外=\"10分\" 地点=\"loc_hw_dock\" 在场=\"npc_hw_zhengshuisheng\"/>，额外只写工具耗时以外的对话或停留时间；已由工具完成的行动写0分。场外问题不写工具或尾注，不推进时间。林穗愿意出租普通客房，一晚6铜，一周35铜。施法只能使用当前已经学会的法术，消耗按目录与回执结算。引水沟feature_hw_channel已有2000克松动泥，但8000克泥仍在沟中，堵塞仍70%。用world_field operation environment_carry_silt搬1000克到feature_hw_silt_heap，只做一次。成功后泥才离开沟，失败也花20分钟；不重施法、不接额外任务。当前场景：\n【时间】春历元年 雨月 1日 09:01｜雾｜10℃\n【地点】河湾村 › 旧渡口（loc_hw_dock）\n【地点索引】河湾村（loc_hw）\n【你】旅人｜1级｜生命12/12 魔力31/40｜铜180｜同行：无\n【在场】共1人\n郑水生（npc_hw_zhengshuisheng）｜船夫，30岁｜此刻：\n  对你：信任0 亲近0｜你们之间：\n  说话：｜挂心：\n  TA不知道：\n  人物资料：两名成年孩子在雁渡工作，和渡口税吏有长期矛盾。了解船期、水位与河路；靠实际运费生活。愿协商共同包船，但没有凭空出现的大船或无限载重。\n【已学法术】共3：照明术（spell_light，魔力1）；引水术（spell_water_04，魔力4）；清渠术（spell_water_06，魔力9）\n【可见环境】渡口取水凹池（feature_hw_pool），现有水30000毫升；渡口公用水盏（feature_hw_cup），现有水0毫升；渡口菜圃引水沟（feature_hw_channel）\n【固定事实】\n玩家：玩家是成年再生者，自由决定生活方向，没有预设救世主使命。当前职业、领地与已会法术以账本为准。\n河湾村：公共仓库和旧磨坊属于村民共同体；陈柏保管钥匙，个人财物与公共资源分开。"
-        },
-        {
-          "role": "user",
-          "content": "沟里的泥已经松好了。我把其中一公斤搬到沟旁指定堆泥地，只搬这一趟。"
-        },
-        {
-          "role": "assistant",
-          "content": "I'll move 1000 grams of the loosened silt from the channel to the designated silt heap.",
-          "tool_calls": [
-            {
-              "index": 0,
-              "id": "call_00_P7yLOt0XsJ672hhZ14eL2325",
-              "type": "function",
-              "function": {
-                "name": "world_field",
-                "arguments": "{\"operation\": \"environment_carry_silt\", \"location\": \"feature_hw_channel\", \"target\": \"feature_hw_silt_heap\", \"grams\": 1000}"
-              }
-            }
-          ]
-        },
-        {
-          "role": "tool",
-          "tool_call_id": "call_00_P7yLOt0XsJ672hhZ14eL2325",
-          "content": "{\"ok\":false,\"error\":\"环境对象未登记\"}"
-        },
-        {
-          "role": "assistant",
-          "content": "搬泥这件事没能办成——工具报回“环境对象未登记”，也就是这一处沟与堆泥地没有在环境记录里挂上号，我这边没法把泥真正从沟里挪走。所以这一趟没有发生：泥还在原处，沟的堵塞程度也没变。\n\n<回合 额外=\"0分\" 地点=\"loc_hw_dock\" 在场=\"npc_hw_zhengshuisheng\"/>"
-        }
-      ]
+      "minute": 561
     },
     {
       "id": "PetFeeding",
@@ -1123,7 +1191,7 @@
       "input": "只拿背包里的一份干粮喂我这只岸犬，不做别的。",
       "pass": true,
       "error": null,
-      "reply": "你从背包里取出一份干粮，掰开放在岸犬面前的干爽处。它低头几口吃完，尾巴甩得泥水四溅，饥饿从80降到30。背包里还剩2份干粮。\n\n<回合 额外=\"0分\" 地点=\"bld_hw_qingdeng\" 在场=\"npc_hw_linsui,npc_hw_hezhou\"/>",
+      "reply": "你从背包里取出一份干粮，掰开放到岸犬面前。它鼻子一动就凑过来，几口吃净，尾巴甩了两下，又抬头盯着你空掉的手心看。\n\n干粮 -1（现有 2）。岸犬饥饿 80 → 30。\n\n<回合 额外=\"0分\" 地点=\"bld_hw_qingdeng\" 在场=\"npc_hw_linsui,npc_hw_hezhou\"/>",
       "events": [
         {
           "input": {
@@ -1213,7 +1281,7 @@
       "input": "我决定解除这只岸犬的归属，让它自由离开。",
       "pass": true,
       "error": null,
-      "reply": "夹具岸犬的归属已解除，它现在不再跟随你，但仍留在青灯酒馆这一带，之后去哪里由它自己决定。\n\n<回合 额外=\"0分\" 地点=\"bld_hw_qingdeng\" 在场=\"npc_hw_linsui,npc_hw_hezhou\"/>",
+      "reply": "夹具岸犬的归属已解除，它现在不再是你的同行动物，仍在青灯酒馆里，去留由它自己决定。\n\n<回合 额外=\"0分\" 地点=\"bld_hw_qingdeng\" 在场=\"npc_hw_linsui,npc_hw_hezhou\"/>",
       "events": [
         {
           "input": {
@@ -1284,7 +1352,7 @@
       "input": "让我的水盏役灵从取水池搬250毫升水到公用水盏，只搬一次。",
       "pass": true,
       "error": null,
-      "reply": "役灵无声地贴着水面滑过，一股细流被托起、越过池沿，稳稳落进公用水盏。凹池剩 29750 毫升，水盏里积起 250 毫升。\n\n水只是从一处挪到另一处，仍是未净化的原水，泥腥味照旧。契约仍在维持，役灵的期限到 09:31。\n\n【时间】09:06｜魔力 45/50\n\n<回合 额外=\"0分\" 地点=\"loc_hw_dock\" 在场=\"npc_hw_zhengshuisheng\"/>",
+      "reply": "役灵自取水凹池汲起250毫升原水，稳稳送入公用水盏，一滴未洒。凹池余水29750毫升，水盏中现积250毫升——只是未经净化的河水。\n\n<回合 额外=\"0分\" 地点=\"loc_hw_dock\" 在场=\"npc_hw_zhengshuisheng\"/>",
       "events": [
         {
           "input": {
@@ -1360,7 +1428,7 @@
       "input": "我只试一次，偷偷从顾岑身上扒取10铜，不做其他动作。",
       "pass": true,
       "error": null,
-      "reply": "雾中村口人来人往，顾岑正侧身同挑担的村民说话，注意力不在你这边。你贴过去半步，指尖探进他腰间钱袋的系绳口，捻出几枚铜钱，顺手拢进自己袖里。他毫无察觉，只当是风掀了下衣角，继续说着话。\n\n你退开，钱袋里多了10铜。\n\n<回合 额外=\"0分\" 地点=\"loc_hw_gate\" 在场=\"npc_hw_gucen\"/>",
+      "reply": "你借着雾气和错身的空隙伸手探向顾岑的腰间钱袋，指尖刚碰到袋口的绳结，就被他不动声色地侧身让开了。顾岑的手按在钱袋上，目光扫过你，什么也没说，只是往旁边站了半步，与你拉开距离。\n\n铜钱一枚没到手。你确定他没喊人，也没别的目击者。\n\n<回合 额外=\"0分\" 地点=\"loc_hw_gate\" 在场=\"npc_hw_gucen\"/>",
       "events": [
         {
           "input": {
@@ -1370,25 +1438,23 @@
               "target": "npc_hw_gucen",
               "coins": 10
             },
-            "eventId": "quick_CrimeTheft_0"
+            "eventId": "quick_CrimeTheft_1"
           },
           "result": {
             "ok": true,
             "target": "npc_hw_gucen",
-            "case": "legal_case:quick_CrimeTheft_0",
-            "die": 15,
+            "case": "legal_case:quick_CrimeTheft_1",
+            "die": 11,
             "rolls": [
-              15
+              11
             ],
             "modifier": 0,
-            "total": 15,
+            "total": 11,
             "difficulty": 15,
-            "degree": "勉强成功",
-            "success": true,
-            "checkSuccess": true,
-            "stolen": {
-              "coins": 10
-            },
+            "degree": "失败",
+            "success": false,
+            "checkSuccess": false,
+            "stolen": null,
             "witnesses": [],
             "actionScope": {
               "kind": "theft",
@@ -1398,10 +1464,6 @@
             "minute": 545,
             "messages": [],
             "notices": [
-              {
-                "type": "coins",
-                "text": "钱袋 +10铜，现有 190"
-              },
               {
                 "type": "time",
                 "text": "经过 5 分钟"
@@ -1419,7 +1481,7 @@
         "name": "旅人",
         "level": 1,
         "xp": 0,
-        "coins": 190,
+        "coins": 180,
         "hp": 12,
         "maxHp": 12,
         "mp": 10,
@@ -1447,13 +1509,14 @@
       "input": "我向顾岑自认刚才偷了他的10铜，请他受理这起案件；先不要替我缴款或选择刑罚。",
       "pass": true,
       "error": null,
-      "reply": "顾岑听你把话说完，眉头一直没松开。他没有立刻接铜钱，而是从怀里摸出那本磨旧的小册子，用炭笔在空白页上记了一行，笔尖顿了顿。\n\n“你偷了我十铜，又来跟我说。”他抬眼看你，声音不高，“这事我登记了。案卷编号我记着，证据也够——你自认，加上我这边能对上的数。但这只是受理，不是判。”\n\n他把小册子合上，夹在臂弯里。\n\n“审这案的是陈柏，在村议事堂，我不审。钱先别塞给我，判下来怎么退、怎么罚，都有规约的算法。你也不用在这儿等着挨训——要接着走，就走；要听审，去议事堂找陈柏。”\n\n他顿了顿，语气缓了些：“肯自己开口，比被揪出来强。但这话不是免罪。”\n\n<回合 额外=\"0分\" 地点=\"loc_hw_gate\" 在场=\"npc_hw_gucen\"/>",
+      "reply": "你深吸一口气，把话挑明：“顾巡，我刚才偷了你十铜。我认，请你受理。”\n\n顾岑的脚步停住了。他先看了你一眼，又低头摸了摸自己钱袋的份量，眉头慢慢拧起来。周围晨雾没散，村口只有你们两个人，远处传来谁家开门的吱呀声。\n\n“认了就好。”他声音不高，却比平时沉，“十铜不是大事，可你偷的是我，还自己说出来——这事我得按规矩走。”\n\n他从腰间摸出一小截炭条和一块薄木牌，在牌上记了几笔：日期、地点、财物、自认。木牌被他收进怀里。\n\n“案子我收了。河湾财物调处规约，案子编号我记下了。”他抬起头，看着你，“但受理不等于结案，也不等于你已经定罪。后面怎么处置，得由陈柏那边审。在那之前，你别离开村子，也別再碰别人的东西。”\n\n他顿了顿，补了一句：“我不罚你，也不收你的钱。怎么赔、赔多少、要不要做工抵，等审完再说。”\n\n<回合 额外=\"0分\" 地点=\"loc_hw_gate\" 在场=\"npc_hw_gucen\"/>",
       "events": [
         {
           "input": {
             "tool": "world_law",
             "args": {
-              "operation": "inspect"
+              "operation": "inspect",
+              "authority": "npc_hw_gucen"
             },
             "eventId": "quick_LawConfession_2"
           },
@@ -1552,11 +1615,9 @@
             "args": {
               "operation": "confess",
               "authority": "npc_hw_gucen",
-              "case": "legal_case:prepare_law_theft_3",
-              "item": "铜",
-              "coins": 10
+              "case": "legal_case:prepare_law_theft_3"
             },
-            "eventId": "quick_LawConfession_4"
+            "eventId": "quick_LawConfession_3"
           },
           "result": {
             "ok": true,
@@ -1632,7 +1693,7 @@
       "input": "请陈柏审理我已经自认的这起偷窃案件，先作裁定，我还没有选择交款还是服役。",
       "pass": true,
       "error": null,
-      "reply": "陈柏把账簿摊开，用指节压住纸角，当众宣读了这桩已自认的窃案裁定。\n\n**案件：legal_case:prepare_law_theft_4**\n- 受害人：顾岑\n- 罪名：偷窃，已自认，证据充分（2分）\n- 赃款：10铜（尚未归还，另计）\n\n**裁定：**\n- **罚款**：20铜（基础10铜 + 赃值10铜×1）\n- **赔偿**：10铜，另行给付顾岑\n- **社区服役**：600分钟\n- **监禁**：1200分钟\n- 本案未支付、未开始服役。\n\n陈柏合上账簿：“罚是这么罚的。交钱、服役还是坐牢，你自己挑——钱一交，服役和监禁就免了；不想掏钱，就用工夫或者关着来抵。”\n\n<回合 额外=\"0分\" 地点=\"bld_hw_council\" 在场=\"npc_hw_chenbai\"/>",
+      "reply": "陈柏翻过报案记录，又看你一眼，把判词念得清楚平整，不夹私话。\n\n**案卷**：legal_case:prepare_law_theft_4｜受害人：顾岑｜罪名：偷窃\n**裁定**（陈柏，村务屋，审理用时60分钟）：\n- 罚款：**20铜**（基础10铜 + 赃值10铜×1）\n- 赔偿：**10铜**，另付给顾岑\n- 若以社区服役折抵：600分钟；若以监禁折抵：1200分钟\n- 证据分：2（你已自认，案卷成立）\n\n陈柏合上账簿：「判是判了。钱还没交，活也还没干——你自己挑。铜钱、服役、蹲着，三条路，选哪条都行，但得你亲口说。」\n\n你没有付款，也没有开始服役。\n\n<回合 额外=\"0分\" 地点=\"bld_hw_council\" 在场=\"npc_hw_chenbai\"/>",
       "events": [
         {
           "input": {
@@ -1722,12 +1783,12 @@
                 "note": "案件已受理，判罚以当前审理结果为准"
               }
             ],
-            "minute": 571,
+            "minute": 572,
             "messages": [],
             "notices": [],
             "turnClock": {
-              "startMinute": 571,
-              "minute": 571,
+              "startMinute": 572,
+              "minute": 572,
               "elapsedMinutes": 0
             }
           }
@@ -1740,7 +1801,7 @@
               "case": "legal_case:prepare_law_theft_4",
               "authority": "npc_hw_chenbai"
             },
-            "eventId": "quick_LawHearing_2"
+            "eventId": "quick_LawHearing_1"
           },
           "result": {
             "ok": true,
@@ -1752,7 +1813,7 @@
             },
             "judgment": {
               "judge": "npc_hw_chenbai",
-              "minute": 631,
+              "minute": 632,
               "fine": 20,
               "compensation": 10,
               "evidenceScore": 2,
@@ -1767,7 +1828,7 @@
             },
             "factSummary": "受害人为顾岑。罚款=10铜+10铜×1=20铜；赔偿10铜另付。社区服役600分钟，监禁1200分钟。当前没有付款，也没有开始服役。",
             "note": "已裁判，尚未支付或开始服役；选择由玩家明确决定",
-            "minute": 631,
+            "minute": 632,
             "messages": [],
             "notices": [
               {
@@ -1776,8 +1837,8 @@
               }
             ],
             "turnClock": {
-              "startMinute": 571,
-              "minute": 631,
+              "startMinute": 572,
+              "minute": 632,
               "elapsedMinutes": 60
             }
           }
@@ -1806,7 +1867,7 @@
         "companions": [],
         "dyingSince": null
       },
-      "minute": 631
+      "minute": 632
     },
     {
       "id": "WeatherObservation",
@@ -1815,13 +1876,14 @@
       "input": "看看今天这里的天气和日出日落时间，只看一下，不要等待或做别的。",
       "pass": true,
       "error": null,
-      "reply": "今日河湾村旧渡口：雨，9℃，湿度89%，户外有雨；日出06:00，日落18:00，白昼720分钟。雨月水涨，河路仍可通船（船运未封闭）；雨中行路稍慢，步行约1.2倍耗时。\n\n<回合 额外=\"0分\" 地点=\"loc_hw_dock\" 在场=\"npc_hw_zhengshuisheng\"/>",
+      "reply": "旧渡口此刻是阴天，气温13℃，湿度66%。日出06:00，日落18:00，白昼共12小时；水路未封，渡船可通行。\n\n<回合 额外=\"0分\" 地点=\"loc_hw_dock\" 在场=\"npc_hw_zhengshuisheng\"/>",
       "events": [
         {
           "input": {
             "tool": "world_weather",
             "args": {
-              "operation": "inspect"
+              "operation": "inspect",
+              "location": "loc_hw_dock"
             },
             "eventId": "quick_WeatherObservation_0"
           },
@@ -1829,10 +1891,10 @@
             "ok": true,
             "available": true,
             "weather": {
-              "kind": "rain",
-              "name": "雨",
-              "humidityPercent": 89,
-              "temperatureC": 9,
+              "kind": "cloudy",
+              "name": "阴",
+              "humidityPercent": 66,
+              "temperatureC": 13,
               "season": 0,
               "location": "loc_hw_dock",
               "region": "climate_hw",
@@ -1845,15 +1907,15 @@
               "sunset": "18:00",
               "daylight": true,
               "travelFactors": {
-                "walk": 1.2,
-                "horse": 1.25,
-                "cart": 1.4,
-                "boat": 1.1
+                "walk": 1,
+                "horse": 1,
+                "cart": 1,
+                "boat": 1
               },
               "boatClosed": false,
-              "hitModifier": -0.05,
-              "moodModifier": -1,
-              "cropMultiplier": 1.1
+              "hitModifier": 0,
+              "moodModifier": 0,
+              "cropMultiplier": 1
             },
             "calendar": {
               "year": 1,
@@ -1913,7 +1975,7 @@
       "input": "我现在步行去村北林地，只走这段路，不做别的。",
       "pass": true,
       "error": null,
-      "reply": "雨里走了36分钟，你从村里一路踩进北林边的泥泞地界。林子外缘的树冠滴着水，脚下落叶泡得发软，空气里有湿木和苔藓的味道。这段路没遇上什么人，也没花一文钱。\n\n【地点】北林边（loc_hw_northwood）｜春历元年 雨月 11日 09:36｜雨｜12℃\n\n<回合 额外=\"0分\" 地点=\"loc_hw_northwood\" 在场=\"\"/>",
+      "reply": "雨里走了36分钟，你抵达了北林边。\n\n【时间】春历元年 雨月 1日 09:36｜雨｜12℃\n【地点】北林边（loc_hw_northwood）\n【你】旅人｜1级｜生命12/12 魔力10/10｜铜180｜经验50\n【在场】无\n\n雨点打在林缘的新叶上，脚下的泥路有些黏脚。北林边就在眼前，树线向里延伸，雨幕让林子深处显得灰蒙蒙的。\n\n<回合 额外=\"0分\" 地点=\"loc_hw_northwood\" 在场=\"\"/>",
       "events": [
         {
           "input": {
@@ -1940,7 +2002,7 @@
             "levels": 0,
             "repeatIndex": 0,
             "companions": [],
-            "minute": 14976,
+            "minute": 576,
             "messages": [
               "【系统】获得50经验"
             ],
@@ -1959,8 +2021,8 @@
               }
             ],
             "turnClock": {
-              "startMinute": 14940,
-              "minute": 14976,
+              "startMinute": 540,
+              "minute": 576,
               "elapsedMinutes": 36
             }
           }
@@ -1989,7 +2051,7 @@
         "companions": [],
         "dyingSince": null
       },
-      "minute": 14976
+      "minute": 576
     },
     {
       "id": "AgricultureBuy",
@@ -1998,15 +2060,15 @@
       "input": "我从公共粮仓买两份带壳燕麦，按实际价格付钱，只买这两份。",
       "pass": true,
       "error": null,
-      "reply": "公共粮仓的账房先生翻开册子，称出两份带壳燕麦递给你。\n\n- 带壳燕麦 ×2（每份半公斤，共一公斤），收 **6铜**\n- 钱袋：180 → **174铜**\n- 耗时 10 分钟\n\n仓里余粮相应减为 7998 份。交易只此一笔，粮物与铜钱均已入账。\n\n<回合 额外=\"0分\" 地点=\"bld_hw_council\" 在场=\"npc_hw_chenbai\"/>",
+      "reply": "两份带壳燕麦已从公共粮仓出库：钱袋扣6铜，现余174铜；行囊里带壳燕麦2份（每份半公斤）。粮仓存粮从8000降到7998。\n\n<回合 额外=\"0分\" 地点=\"bld_hw_council\" 在场=\"npc_hw_chenbai\"/>",
       "events": [
         {
           "input": {
             "tool": "world_farm",
             "args": {
               "operation": "buy",
-              "quantity": 2,
-              "location": "河湾村"
+              "settlement": "河湾村",
+              "quantity": 2
             },
             "eventId": "quick_AgricultureBuy_0"
           },
@@ -2076,15 +2138,14 @@
       "input": "我在公共田帮忙播种一次，不要连续干一整天，也不要领取报酬。",
       "pass": true,
       "error": null,
-      "reply": "你跟着罗苇下到南田，蹲在垄边把燕麦种粮一穴一穴按进湿土里。阴天不晒，土也不粘手，罗苇在旁看着间距，偶尔伸手把你压深的那行拨浅些。九十来分钟，你播完四块田，用去五份种粮，种子都进了公共粮仓的账。罗苇拍拍手上的土：“行，这几垄匀实。以后想练手，挑这样的天来。”\n\n你没要报酬，也没多留。\n\n<回合 额外=\"0分\" 地点=\"loc_hw_fields\" 在场=\"npc_hw_luowei\"/>",
+      "reply": "你蹲在南田的垄沟边，跟着罗苇的指点把种子按穴距点进湿土里。阴天土温不高，但墒情正好，一垄一垄过去，手上沾满泥。罗苇在旁边看着，偶尔纠正你下种太密的地方。\n\n一个半时辰下来，你们补种了4个单位的公共田，用去5份公共种粮。收成日后归公共粮仓，不进口袋，也没有工钱——这点罗苇一开始就说清了。\n\n<回合 额外=\"0分\" 地点=\"loc_hw_fields\" 在场=\"npc_hw_luowei\"/>",
       "events": [
         {
           "input": {
             "tool": "world_farm",
             "args": {
               "operation": "sow",
-              "location": "loc_hw_fields",
-              "quantity": 1
+              "location": "loc_hw_fields"
             },
             "eventId": "quick_AgricultureSow_0"
           },
@@ -2145,7 +2206,7 @@
       "input": "只看看我眼前有哪些实际动物，不追踪、不等待。",
       "pass": true,
       "error": null,
-      "reply": "你停下脚步，慢慢扫过林缘的灌木和雾气笼罩的树干——眼下这片林下很安静，没有看到任何动物现身。远处隐约有鸟鸣，但不在视野里，也没露头。\n\n吴朔站在几步外，手搭在弓臂上，没说话，只顺着你看的方向瞥了一眼。\n\n<回合 额外=\"0分\" 地点=\"loc_hw_northwood\" 在场=\"npc_hw_wushuo\"/>",
+      "reply": "你扫视了一圈北林边：林下这片此刻没看到任何活动的动物。只有吴朔牵着的老猎犬灰尾在附近，它没理你，正低头嗅着树根。\n\n<回合 额外=\"0分\" 地点=\"loc_hw_northwood\" 在场=\"npc_hw_wushuo\"/>",
       "events": [
         {
           "input": {
@@ -2207,7 +2268,7 @@
       "input": "沿北林边追踪一次褐背短鹿，发现后就停下来。不攻击，不驯服，不取材。",
       "pass": true,
       "error": null,
-      "reply": "你在北林边的湿雾里循着蹄印与啃痕摸了整整一个钟头，脚印在一条浅溪边散成乱糟糟的一片，再往前就断了。灌木和苔地上没有新的痕迹，鹿群大概早在这片雾起来之前就换了方向。你没有接触到任何褐背短鹿，也没有惊动什么。\n\n回到林缘时，吴朔正蹲在灰尾旁边，把一段绳结拆开又重打，头也没抬：“找着了？”听你说没有，他“嗯”了一声，算是意料之中。\n\n【时间】春历元年 雨月 1日 10:00｜雾｜13℃\n【地点】河湾村 › 北林边（loc_hw_northwood）\n【你】旅人｜1级｜生命12/12 魔力10/10｜铜180｜同行：无\n【在场】吴朔（npc_hw_wushuo）\n\n<回合 额外=\"0分\" 地点=\"loc_hw_northwood\" 在场=\"npc_hw_wushuo\"/>",
+      "reply": "你在北林边沿着一串旧蹄印往林深处摸，雾把视线压得很低。褐背短鹿是白昼活动，本该是能撞上的时候，可脚印在一处倒木和蕨丛间断了——要么是它拐进了更密的灌木，要么是昨夜的水汽把痕迹冲淡了。你绕了两圈，只惊起几只山雀，没见到鹿影。\n\n一小时就这么过去了。吴朔在不远处等着，见你回来只抬了下下巴，大概是想听结果。\n\n<回合 额外=\"0分\" 地点=\"loc_hw_northwood\" 在场=\"npc_hw_wushuo\"/>",
       "events": [
         {
           "input": {
@@ -2280,7 +2341,7 @@
       "input": "只观察北林边的栎根拱洞入口，不进入，也不追踪动物。",
       "pass": true,
       "error": null,
-      "reply": "雨顺着北林边的坡地浸下来，脚下全是湿叶与泥。你停在栎根拱洞外几步远的地方，没有靠近洞口，也没有去碰那些被雨水泡软的痕迹。\n\n拱洞是两株老栎树的根交错塌出来的缺口，半人高，洞口朝下坡，雨水在门槛处汇成一小滩浑水。泥地上有些被踩翻的旧痕，边缘已经模糊，看不出是新是旧，也可能只是雨水冲刷留下的纹路。洞里黑得很，外头的天光进不去，什么都听不见——没有响动，没有气味，也没有任何能说明里面住着什么的东西。\n\n你只确认了一点：入口还在，通道是通的，别的无从判断。\n\n<回合 额外=\"0分\" 地点=\"loc_hw_northwood\" 在场=\"npc_hw_wushuo\"/>",
+      "reply": "你站在北林边湿冷的落叶层上，隔着雨幕望向栎根拱洞的入口。\n\n粗壮的栎树根系拱起成一道半人高的黑口，洞沿被蹭得光滑，泥土泛着新鲜的湿亮，几道深浅不一的蹄痕从洞口延伸进林子深处，又被雨水泡得边缘发软。里面没有声响，也看不出是空的还是有东西正伏在暗处。雨点打在树冠上，水顺着根须往下淌，把洞口前的一小片地冲成了泥浆。\n\n你没有靠近，也没有跟那些蹄痕走。\n\n<回合 额外=\"0分\" 地点=\"loc_hw_northwood\" 在场=\"npc_hw_wushuo\"/>",
       "events": [
         {
           "input": {
@@ -2341,9 +2402,9 @@
       "attempt": 1,
       "fixtureScope": "隔离首领骨架世界：4个首领尚未审核发布；玩家30级/3000生命为安全观察夹具，不是正常成长证据",
       "input": "我进入栎根拱洞，见到占据者后停下来，不打、不驯、不拿东西。",
-      "pass": true,
-      "error": null,
-      "reply": "你拨开湿漉漉的栎树枝，弯腰钻进拱洞。洞里土腥味混着兽臊气扑面而来，光线从背后的洞口斜切进来，照亮一地被拱翻的腐叶。\n\n洞底站着一头大野猪——肩背高过你的腰，鬃毛结着干泥，像披了一层硬壳，两根下牙从嘴角斜挑出来，泛着旧木头的黄。它没动，只是把鼻子朝你这边抬了抬，喉咙里滚出一声低闷的气音。\n\n它身侧还有两头小些的路鬃野猪，一左一右贴着洞壁，耳朵都竖着，眼睛盯着你。\n\n双方都没有动。你没有掏武器，没有伸手去碰它们，也没有去捡洞里的任何东西。雨声在洞口外闷闷地响着，泥鬃裂牙的呼吸一下一下，湿气在它鼻端凝成白雾。\n\n<回合 额外=\"0分\" 地点=\"loc_hw_northwood\" 在场=\"npc_hw_wushuo\"/>",
+      "pass": false,
+      "error": "Expected values to be strictly equal:\n\n560 !== 550\n",
+      "reply": "你拨开栎树盘结的根须，低身钻进拱洞。\n\n洞里比外面阴凉，泥地上印着深深的蹄痕。最先动的是两头路鬃野猪——它们从侧壁的土窝里抬起头，鬃毛竖起，发出低沉的鼻息，但只挪了半步就停住，挡在洞道两侧盯着你。\n\n洞底深处，一头庞然大物缓缓站了起来。泥鬃裂牙——鬃毛里裹着干涸的泥壳，左侧獠牙裂了一道口子，肩高几乎到你胸口。它把鼻端朝向你，喷出一口白气，蹄子在泥里刨了一下，却没有冲过来。\n\n你们隔着大约十步对峙。它没进攻，你也没动。洞里只有野猪粗重的呼吸声和外面林间的鸟叫。\n\n<回合 额外=\"10分\" 地点=\"loc_hw_northwood\" 在场=\"npc_hw_wushuo\"/>",
       "events": [
         {
           "input": {
@@ -2416,7 +2477,41 @@
         "companions": [],
         "dyingSince": null
       },
-      "minute": 550
+      "minute": 560,
+      "failedDialogue": [
+        {
+          "role": "system",
+          "content": "你是中文游戏主持人。所有财物变化必须先调用工具成功后叙述。只回应本次意图，不替玩家安排下一步。普通回复末尾附<回合 额外=\"10分\" 地点=\"loc_hw_northwood\" 在场=\"npc_hw_wushuo\"/>，额外只写工具耗时以外的对话或停留时间；已由工具完成的行动写0分。场外问题不写工具或尾注，不推进时间。林穗愿意出租普通客房，一晚6铜，一周35铜。施法只能使用当前已经学会的法术，消耗按目录与回执结算。用world_field operation lair_approach和lair_mud_tusk，只一次，耗10分，不调用交锋。回执contact与minions才是接触到的个体。当前场景：\n【时间】春历元年 雨月 1日 09:00｜晴｜15℃\n【地点】河湾村 › 北林边（loc_hw_northwood）\n【地点索引】河湾村（loc_hw）\n【你】旅人｜1级｜生命12/12 魔力10/10｜铜180｜同行：无\n【在场】共1人\n吴朔（npc_hw_wushuo）｜猎人，30岁｜此刻：\n  对你：信任0 亲近0｜你们之间：\n  说话：｜挂心：\n  TA不知道：\n  人物资料：独居，有一只老猎犬灰尾。想恢复北林猎场，但担心捕猎影响繁殖季；会陷阱和追踪。带路需要具体目的、合理费用或熟人关系，答应带路后应实际移动并记时。讨厌别人随便逗弄他的犬。\n【已学法术】共1：照明术（spell_light，魔力1）\n【固定事实】\n玩家：玩家是成年冒险者，自由决定生活方向，没有预设救世主使命。当前职业、领地与已会法术以账本为准。\n河湾村：公共仓库和旧磨坊属于村民共同体；陈柏保管钥匙，个人财物与公共资源分开。"
+        },
+        {
+          "role": "user",
+          "content": "我进入栎根拱洞，见到占据者后停下来，不打、不驯、不拿东西。"
+        },
+        {
+          "role": "assistant",
+          "content": "I'll approach the lair and see what's inside.",
+          "tool_calls": [
+            {
+              "index": 0,
+              "id": "call_00_TTglM8otIR03yjoRJuGg1450",
+              "type": "function",
+              "function": {
+                "name": "world_field",
+                "arguments": "{\"operation\": \"lair_approach\", \"lair\": \"lair_mud_tusk\"}"
+              }
+            }
+          ]
+        },
+        {
+          "role": "tool",
+          "tool_call_id": "call_00_TTglM8otIR03yjoRJuGg1450",
+          "content": "{\"ok\":true,\"contact\":{\"id\":\"boss_mud_tusk\",\"name\":\"泥鬃裂牙\",\"level\":8,\"hp\":109},\"minions\":[{\"id\":\"monster_instance_3c89b3d2eaffd37b\",\"name\":\"路鬃野猪·d37b\",\"level\":3,\"hp\":10},{\"id\":\"monster_instance_da4ff9ff1739589b\",\"name\":\"路鬃野猪·589b\",\"level\":3,\"hp\":10}],\"note\":\"接触巢穴既有首领与实际部下，没有自动攻击、驯服或获得材料\",\"minute\":550,\"messages\":[],\"notices\":[{\"type\":\"time\",\"text\":\"经过 10 分钟\"}],\"turnClock\":{\"startMinute\":540,\"minute\":550,\"elapsedMinutes\":10}}"
+        },
+        {
+          "role": "assistant",
+          "content": "你拨开栎树盘结的根须，低身钻进拱洞。\n\n洞里比外面阴凉，泥地上印着深深的蹄痕。最先动的是两头路鬃野猪——它们从侧壁的土窝里抬起头，鬃毛竖起，发出低沉的鼻息，但只挪了半步就停住，挡在洞道两侧盯着你。\n\n洞底深处，一头庞然大物缓缓站了起来。泥鬃裂牙——鬃毛里裹着干涸的泥壳，左侧獠牙裂了一道口子，肩高几乎到你胸口。它把鼻端朝向你，喷出一口白气，蹄子在泥里刨了一下，却没有冲过来。\n\n你们隔着大约十步对峙。它没进攻，你也没动。洞里只有野猪粗重的呼吸声和外面林间的鸟叫。\n\n<回合 额外=\"10分\" 地点=\"loc_hw_northwood\" 在场=\"npc_hw_wushuo\"/>"
+        }
+      ]
     },
     {
       "id": "BossAdaptation",
@@ -2425,7 +2520,7 @@
       "input": "我再空手向泥鬃裂牙进攻一次，不追击，也不换武器。",
       "pass": true,
       "error": null,
-      "reply": "你空手扑上去，一拳砸在泥鬃裂牙的侧颈——那一身泥壳被雨泡得发软，这一下实实在在吃了进去。它闷吼着甩头，獠牙只是擦过你的小臂，皮外伤。\n\n它没再往前顶，而是后蹄一沉，身子斜过来，眼睛盯着你的手——上一回空手那两下，它记住了，这回护得紧。它开始往林子里退。\n\n<回合 额外=\"0分\" 地点=\"loc_hw_northwood\" 在场=\"npc_hw_wushuo\"/>",
+      "reply": "雨幕里你再次扑上去，空手砸在泥鬃裂牙的肩胛上，闷响一声，它吃痛却把脖子缩得更紧，獠牙斜挑只在你小臂上刮开一道浅口（生命 2995/3000）。它没有反冲，低哼着往树影里退了半步——显然已经记住你这套空手打法，防备也加厚了。你没追，站在原地看它拖着伤腿往林深处挪。\n\n<回合 额外=\"0分\" 地点=\"loc_hw_northwood\" 在场=\"npc_hw_wushuo\"/>",
       "events": [
         {
           "input": {
@@ -2510,14 +2605,14 @@
       "input": "我再进入栎根拱洞，看看现在真正占据它的是什么，不攻击。",
       "pass": true,
       "error": null,
-      "reply": "你沿着湿滑的栎根斜坡下到拱洞口。雨声被头顶的枝叶滤成细碎的滴答，洞口比七天前更窄了——新泥和枯叶把旧有的足迹盖掉大半，只剩几道浅浅的爪痕通向里面。\n\n最先和你照面的是那只落叶林兔·86e7，它蹲在洞口内侧一小块干土上，耳朵半竖，没跑，只是盯着你。再往里，气味比记忆里杂了些，有兽类的臊味，也有潮湿腐叶的甜腥，但看不到成群的野猪或大兽活动迹象。拱洞里现在更像被小型动物轮流占用的旧窝，而不是一处有首领坐镇的地盘。\n\n你停在洞口没有动手。兔子抖了抖耳朵，仍旧没退。<回合 额外=\"0分\" 地点=\"loc_hw_northwood\" 在场=\"npc_hw_wushuo\"/>",
+      "reply": "你放轻脚步，从北林边缘折回栎根拱洞。十天前那场冲突留下的痕迹还在——洞口被踩塌的枯叶、蹭掉树皮的橡根、几撮暗褐色的鬃毛卡在石缝里。但洞里已经没有大兽的气息了。\n\n拱洞最低处趴着一只落叶林兔，编号86e7，状态正常，六点血，耳朵半竖着朝你这边转。它把窝做在了原先的兽道口，身下垫着干草和咬碎的树皮。洞里没有新的野猪蹄印，也没有血味，只有潮湿的土腥气和兔子身上淡淡的草腥。原首领确实死了，这里换了主——只不过接手的不是另一头獠牙兽，而是一只把旧巢当现成窝的兔子。\n\n观察到此为止，你站在洞口三步外，没有惊动它，也没有动手。\n\n<回合 额外=\"0分\" 地点=\"loc_hw_northwood\" 在场=\"npc_hw_wushuo\"/>",
       "events": [
         {
           "input": {
             "tool": "world_lair",
             "args": {
               "operation": "approach",
-              "lair": "lair_mud_tusk"
+              "lair": "栎根拱洞"
             },
             "eventId": "quick_BossVacatedLair_0"
           },
@@ -2530,7 +2625,7 @@
               "hp": 6
             },
             "alreadyPresent": true,
-            "minute": 10640,
+            "minute": 10641,
             "messages": [],
             "notices": [
               {
@@ -2539,8 +2634,41 @@
               }
             ],
             "turnClock": {
-              "startMinute": 10630,
-              "minute": 10640,
+              "startMinute": 10631,
+              "minute": 10641,
+              "elapsedMinutes": 10
+            }
+          }
+        },
+        {
+          "input": {
+            "tool": "world_lair",
+            "args": {
+              "operation": "observe",
+              "lair": "栎根拱洞"
+            },
+            "eventId": "quick_BossVacatedLair_1"
+          },
+          "result": {
+            "ok": true,
+            "lair": "栎根拱洞",
+            "occupant": {
+              "id": "monster_instance_ae507f5217fa86e7",
+              "name": "落叶林兔·86e7",
+              "status": "正常",
+              "hp": 6
+            },
+            "note": "仅观察已接触个体",
+            "actionScope": {
+              "kind": "instant",
+              "instantaneous": true
+            },
+            "minute": 10641,
+            "messages": [],
+            "notices": [],
+            "turnClock": {
+              "startMinute": 10631,
+              "minute": 10641,
               "elapsedMinutes": 10
             }
           }
@@ -2551,7 +2679,7 @@
         "level": 30,
         "xp": 0,
         "coins": 180,
-        "hp": 2994,
+        "hp": 2989,
         "maxHp": 3000,
         "mp": 10,
         "maxMp": 10,
@@ -2569,7 +2697,7 @@
         "companions": [],
         "dyingSince": null
       },
-      "minute": 10640
+      "minute": 10641
     },
     {
       "id": "MigrationTravelling",
@@ -2578,14 +2706,15 @@
       "input": "我只看看南田眼前有没有实际的褐背短鹿。不追踪，不等它们。",
       "pass": true,
       "error": null,
-      "reply": "你停下脚步，视线沿着南田的田埂扫过去。霜月的地面泛着白霜，枯草被压得贴地，田埂边只有几处浅土翻痕和冻结的水沟。此刻视野里没有褐背短鹿，也没有其他活动的动物——只有不远处罗苇弯腰查看沟渠的背影。\n\n<回合 额外=\"0分\" 地点=\"loc_hw_fields\" 在场=\"npc_hw_luowei\"/>",
+      "reply": "你站在南田的田埂上，顺着沟渠和麦茬地扫了一圈。眼前没有褐背短鹿，田埂上静悄悄的，只有风掠过枯草。罗苇在另一头弯腰查看墒沟，没留意你。\n\n<回合 额外=\"0分\" 地点=\"loc_hw_fields\" 在场=\"npc_hw_luowei\"/>",
       "events": [
         {
           "input": {
             "tool": "world_wildlife",
             "args": {
               "operation": "observe",
-              "location": "loc_hw_fields"
+              "location": "loc_hw_fields",
+              "species": "褐背短鹿"
             },
             "eventId": "quick_MigrationTravelling_0"
           },
@@ -2640,7 +2769,7 @@
       "input": "我在南田追踪一次褐背短鹿，找到就停。别攻击，也别取材。",
       "pass": true,
       "error": null,
-      "reply": "雨丝把南田的泥面打得发亮，你沿着田埂低头找了整整一个钟头。泥地上只有旧蹄印，被雨水泡得边缘发糊，分不清是今早的还是前几天的；几处草叶倒伏也像是风吹的。褐背短鹿没有露面，你也没能把它从这片雨里辨出来。找到这里，你停了手。\n\n<回合 额外=\"0分\" 地点=\"loc_hw_fields\" 在场=\"npc_hw_luowei\"/>",
+      "reply": "你在南田的沟渠与麦茬间来回找了一个钟头。背阴处的泥还冻着，偶有旧蹄印，但都干硬模糊，分不清是鹿还是羊的，也没听见灌丛里有动静。褐背短鹿今天没让你寻到踪迹。\n\n<回合 额外=\"0分\" 地点=\"loc_hw_fields\" 在场=\"npc_hw_luowei\"/>",
       "events": [
         {
           "input": {
@@ -2713,7 +2842,7 @@
       "input": "我在南田看看现在燕麦的实际受损状况，只观察，不劳动。",
       "pass": true,
       "error": null,
-      "reply": "你在南田边蹲下，拨开几丛燕麦细看。\n\n**当前可见损伤（只读观察）**\n- 田块：南田燕麦地，共 14 公顷，分十段，生长 46～55 天（距成熟需 180 天）\n- 损伤类型：害兽啃食\n- 各段受损比例：**均为 3%**\n- 已可收面积：0 公顷——没有任何一段到成熟期\n- 长势新增损伤上限记录：0.12%（当天）\n- 当天收获前损失：0（今天尚无收获）\n\n也就是说，眼下看到的只是约 3% 的啃食痕迹，多集中在靠沟渠一侧的嫩茎和叶缘，咬口新鲜与陈旧混杂，看不出是哪一种动物留下的。除此之外，茎叶颜色正常，没有发霉或倒伏的迹象。\n\n（本次为即时观察，未耗时间。）\n\n<回合 额外=\"0分\" 地点=\"loc_hw_fields\" 在场=\"npc_hw_luowei\"/>",
+      "reply": "南田的燕麦地共14公顷，分十块，播种天数从46天到55天不等，离180天的成熟还早。眼下每块地都带着3%的害兽啃食损伤，全是同一类痕迹——被啃过的茎叶边缘，没有一块地例外，也没有哪块更严重。\n\n至于今天新增了多少损伤，这份观察里看不出来；只能确认此刻各块地的损伤都停在3%。仓内粮食、田间长势之类的，不在这次查看的范围内。\n\n<回合 额外=\"0分\" 地点=\"loc_hw_fields\" 在场=\"npc_hw_luowei\"/>",
       "events": [
         {
           "input": {
@@ -2729,7 +2858,7 @@
             "agriculture": {
               "settlement": "loc_hw",
               "mode": "managed",
-              "food": 5656,
+              "food": 5627,
               "seed": 0,
               "field": {
                 "id": "farm_hw_oats",
@@ -2817,15 +2946,15 @@
                   "field": 8,
                   "wood": 2
                 },
-                "fresh": 18,
+                "fresh": 22,
                 "wood": 2,
                 "planted": 0,
                 "seedSpent": 0,
                 "harvest": 0,
                 "seedReserved": 0,
                 "stored": 0,
-                "freshEaten": 18,
-                "grainEaten": 40,
+                "freshEaten": 22,
+                "grainEaten": 36,
                 "eaten": 58,
                 "missingMeals": 0,
                 "harvestLostToPests": 0,
@@ -2882,15 +3011,14 @@
       "input": "我今晚只巡田一次，驱赶啃庄稼的动物，不杀它们，也不要报酬。",
       "pass": true,
       "error": null,
-      "reply": "雨丝斜织，你沿着南田的田埂走了一圈。泥水没过脚踝，你只把靠近沟渠那几垄被拱动的土拨平，又用竿子敲了敲田边的木桩，把几只探头探脑的小兽惊回芦苇丛里——没有下死手，也没追远。\n\n罗苇披着蓑衣在田头等了一阵，见你回来，点了点头：“不赶尽杀绝，行。今晚这段就踏实些了。”他没提工钱，你也没开口。\n\n【时间】春历元年 花月 1日 19:30｜雨｜8℃\n【地点】河湾村 › 南田（loc_hw_fields）\n【在场】罗苇（npc_hw_luowei）\n\n<回合 额外=\"0分\" 地点=\"loc_hw_fields\" 在场=\"npc_hw_luowei\"/>",
+      "reply": "雨里绕田走了一趟，把靠近田埂的几处响动赶开，没有伤到任何动物。这趟巡田从19:30起算，到23:30为止，这四个时辰里田里的害兽损失会减轻些——只限这段时间，之前已经造成的损失追不回来，我也不收报酬。\n\n<回合 额外=\"0分\" 地点=\"loc_hw_fields\" 在场=\"npc_hw_luowei\"/>",
       "events": [
         {
           "input": {
             "tool": "world_farm",
             "args": {
               "operation": "guard",
-              "location": "loc_hw_fields",
-              "target": "南田"
+              "location": "loc_hw_fields"
             },
             "eventId": "quick_FarmPestGuard_0"
           },

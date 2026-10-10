@@ -74,7 +74,9 @@ test('雨雪实际延长路程，暴雨船路关闭，零距离室内出入保�
     await assert.rejects(async()=>new WorldEngine(boats).route('loc_hw','loc_yandu','boat',stormDay*1440+540,c.randomSeed),/没有.*路线/);
 });
 test('季节与天气改变真实粮食入库，长等待与分日结算守恒',async()=>{
-    const{engine,c,run}=await setup();c.state.settlements.loc_hw.food=20000;
+    // This verifies the archived daily-production rule; managed agriculture has its own conservation tests.
+    const{engine}=await setup(),c=engine.initialFromLegacy(seed,'weather-test',{prepare:false});c.state.settlements.loc_hw.food=20000;
+    const run=async(doc,tool,args,eventId)=>({document:applyPatches(doc,(await engine.reduce(doc,{tool,args,eventId},{replay:true})).patches)});
     const long=(await run(c,'world_time',{minutes:20*1440},'long')).document;let split=c;
     for(let i=0;i<20;i++)split=(await run(split,'world_time',{minutes:1440},`day_${i}`)).document;
     assert.deepEqual(long.state.settlements,split.state.settlements);

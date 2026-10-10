@@ -43,7 +43,7 @@ test('首领与巢穴规则拒绝坏等级、远程部下、同种刷新和重�
     }
 });
 test('旧首领迁移保留伤势、归属和记忆；已死首领不复活，不补战术',()=>{
-    const{engine}=setup(),old=engine.initialFromLegacy(legacy,'old-boss');old.state.minute=99*1440;
+    const{engine}=setup(),old=engine.initialFromLegacy(legacy,'old-boss',{prepare:false});old.state.minute=99*1440;
     old.state.creatures={boss_mud_tusk:{name:'泥鬃裂牙',hp:0,maxHp:90,status:'死亡',location:'loc_hw_northwood',owner:null}};
     const before=structuredClone(old),next=applyPatches(old,planBossMigration(old,engine.rules,engine.world.bosses));
     assert.deepEqual(old,before);assert.equal(next.state.creatures.boss_mud_tusk.hp,0);assert.equal(next.state.creatures.boss_mud_tusk.status,'死亡');
@@ -132,7 +132,7 @@ test('首领战术、败亡与巢穴更替在存储重启/导入/删除回合中
 test('独立巢穴迁移CLI使用配套世界归档，不改原档，拒绝覆盖和密钥路径',async t=>{
     const{engine}=setup(),base=path.resolve(os.tmpdir()),directory=await fs.mkdtemp(path.join(base,'boss-cli-'));assert.ok(directory.startsWith(base+path.sep));t.after(()=>fs.rm(directory,{recursive:true,force:true}));
     const input=path.join(directory,'old.json'),output=path.join(directory,'new.json'),archive=path.join(directory,'world.json');
-    const old=engine.initialFromLegacy(legacy,'boss-cli');old.state.minute=50*1440;old.state.creatures={boss_mud_tusk:{name:'泥鬃裂牙',hp:0,maxHp:90,status:'死亡',location:'loc_hw_northwood'}};
+    const old=engine.initialFromLegacy(legacy,'boss-cli',{prepare:false});old.state.minute=50*1440;old.state.creatures={boss_mud_tusk:{name:'泥鬃裂牙',hp:0,maxHp:90,status:'死亡',location:'loc_hw_northwood'}};
     const bytes=JSON.stringify(old);await fs.writeFile(input,bytes);await fs.writeFile(archive,JSON.stringify(engine.world));
     const run=(a,b,w=archive)=>spawnSync(process.execPath,['tools/migrate-bosses.mjs',a,b,'--world',w],{encoding:'utf8'});
     const result=run(input,output);assert.equal(result.status,0,result.stderr);assert.equal(await fs.readFile(input,'utf8'),bytes);

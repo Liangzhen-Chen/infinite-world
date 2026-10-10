@@ -16,17 +16,15 @@ import {advancePets,petView,preparePetTravel,movePets}from'./pets.mjs';
 import {advanceSummons,summonView}from'./summons.mjs';
 import {enforceLegalRestriction,advanceLaw,lawView}from'./law.mjs';
 import {localWeather,weatherEdge,cropProduction}from'./weather.mjs';
-import {initializeAgriculture,planAgricultureMigration}from'./agriculture-migration.mjs';
+import {initializeAgriculture}from'./agriculture-migration.mjs';
 import {advanceAgriculture,agricultureView,settleAgricultureExpiry}from'./agriculture.mjs';
-import {planWildlifeMigration}from'./wildlife-migration.mjs';
 import {advanceWildlife,wildlifePriceFactor}from'./wildlife.mjs';
-import {planBossMigration}from'./boss-migration.mjs';
 import {advanceBosses}from'./bosses.mjs';
-import {planFarmPestsMigration}from'./farm-pests-migration.mjs';
 import {sceneCard}from'./scene-card.mjs';
 import {stateNotices}from'./state-notices.mjs';
 import {resolveToolCall}from'../extension/tools.mjs';
 import {chargeTrade,repayDebt,advanceContracts}from'./contracts.mjs';
+import {initializeR1,planR1,planPreR1Partitions}from'./migrations/r1.mjs';
 const clone = value => structuredClone(value);
 const number = (value, min = 0, max = 1e9, label = '数值') => {
     if (!Number.isSafeInteger(value) || value < min || value > max) throw new Error(`${label}必须在${min}到${max}之间`);
@@ -56,7 +54,7 @@ export class WorldEngine {
         if (kind && !id.startsWith(kind + '_')) throw new Error(`需要${kind}类型编号`);
         return id;
     }
-    initialFromLegacy(legacy, randomSeed = 'default-campaign') {
+    initialFromLegacy(legacy, randomSeed = 'default-campaign', {prepare=true}={}) {
         if(this.compat)return this.compat.initialFromLegacy(legacy,randomSeed);
         const old = legacy.state, npcs = {}, inventory = {}, skills = {}, spells = {};
         for (const [name, value] of Object.entries(old.npcs)) {
@@ -76,12 +74,13 @@ export class WorldEngine {
         const player = { ...clone(old.player), attributes:Object.fromEntries(this.rules.attributes.map(name=>[name,10])),
             status:'正常', freeAttributePoints:0, companions:[], revivalAnchor:this.resolve(old.player.revivalAnchor), dyingSince:null };
         const records = clone(old.records);
-        return {schemaVersion:2,worldVersion:this.world.version,randomSeed,memories:clone(legacy.memories),manualPins:clone(legacy.manualPins ?? {}),
+        const document={schemaVersion:2,worldVersion:this.world.version,randomSeed,memories:clone(legacy.memories),manualPins:clone(legacy.manualPins ?? {}),
             state:{minute:old.minute,location:this.resolve(old.location),player,inventory,skills,spells,professions:{combat,life,hidden:clone(old.professions?.hidden ?? [])},
                 npcs,records,pets:clone(old.pets ?? {}),settlements:{loc_hw:{...clone(old.settlement),starvation:0}},
                 buildings:{bld_hw_qingdeng:{owner:'npc_hw_linsui',condition:70}},projects:{},effects:{},obligations:{},quests:{},quotes:{},created:{},weather:{},turns:{},checks:{},learning:{},recipes:{}}};
+        return prepare?initializeR1(document,this.world):document;
     }
-    createCharacter(legacy,options,seed){const c=initializeAgriculture(this,createCharacter.call(this,legacy,options,seed)),wild=applyPatches(c,planWildlifeMigration(c,this.rules,this.world.monsters)),boss=applyPatches(wild,planBossMigration(wild,this.rules,this.world.bosses));return applyPatches(boss,planFarmPestsMigration(boss,this.rules));}
+    createCharacter(legacy,options,seed){return initializeR1(initializeAgriculture(this,createCharacter.call(this,legacy,options,seed)),this.world);}
     calendar(minute) {
         number(minute,0,Number.MAX_SAFE_INTEGER,'分钟');
         const day=Math.floor(minute/1440),month=Math.floor(day/30)%12,year=Math.floor(day/360)+1;
@@ -90,9 +89,10 @@ export class WorldEngine {
             text:`${this.rules.calendar.epoch}${year===1?'元':year}年 ${this.rules.calendar.months[month]} ${day%30+1}日 ${String(Math.floor(minute%1440/60)).padStart(2,'0')}:${String(minute%60).padStart(2,'0')}`};
     }
     formatCalendar(minute){return this.calendar(minute).text;}
-    async reduce(document,input) {
+    async reduce(document,input,options={}) {
         if(this.compat)return this.compat.reduce(document,input);
         if (input.type==='schema_migration') return {patches:input.patches,result:{migration:true}};
+        if(input.type==='release_migration'&&input.release==='R1'){const migration=planR1(document,this.world);return{patches:migration.patches,result:migration.report};}
         if(input.type==='rules_state_migration')return{patches:planRuleStateMigration(document,this.rules),result:{migration:true,runtimeRuleVersion}};
         const resolved=resolveToolCall(input.tool,input.args??{});
         const d = new Draft(document), args=resolved.args, id=text(input.eventId,120);
@@ -103,11 +103,10 @@ export class WorldEngine {
             const detail=await this.scoped(document)[tool](d,args,id);
             return {patches:d.patches,result:{ok:true,...detail,minute:d.get('state','minute'),messages:d.messages,notices:[]}};
         }
-        for(const patch of planRuleStateMigration(document,this.rules))d.set(patch.path,patch.value);
-        for(const patch of planAgricultureMigration(d.document,this.rules))d.set(patch.path,patch.value);
-        for(const patch of planWildlifeMigration(d.document,this.rules,this.world.monsters))d.set(patch.path,patch.value);
-        for(const patch of planBossMigration(d.document,this.rules,this.world.bosses))d.set(patch.path,patch.value);
-        for(const patch of planFarmPestsMigration(d.document,this.rules))d.set(patch.path,patch.value);
+        if(document.releaseVersion!==1){
+            if(!options.replay)throw new Error('此战役尚未完成 R1 初始化，请先在副本上显式迁移');
+            for(const patch of planPreR1Partitions(document,this.world))d.set(patch.path,patch.value);
+        }
         settleAgricultureExpiry(d,this);
         enforceLegalRestriction(d,tool,args);
         if (!['trade','time','move','turn','health','revive','revival','check','practice','cast','learn','profession','attributes','relation','promise','remember',...Object.keys(activities)].includes(tool)) throw new Error('未知工具职责');

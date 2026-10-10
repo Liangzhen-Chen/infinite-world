@@ -40,6 +40,9 @@ test('试玩框架走真实HTTP存储、检索和回滚；场外写入拒绝，�
 test('试玩失败不能因缺字段或空断言冒充成功；预设和测试共用同一静态顺序',async()=>{
     const results=evaluateAssertions([{kind:'equals',path:'state.player.coins',value:6},{kind:'quantity',path:'state.inventory.iron',value:0}],{before:{},after:{state:{inventory:{}}},calls:[],reply:''});
     assert.equal(results[0].pass,false);assert.equal(results[1].pass,true);
+    const status=evaluateAssertions([{kind:'conditional',when:{path:'state.player.status',equals:'濒死'},then:[{kind:'equals',path:'state.player.status',value:'死亡'}],else:[{kind:'unchanged',paths:['state.player']}]}],{before:{state:{player:{status:'濒死'}}},after:{state:{player:{status:'正常'}}},calls:[],reply:''});
+    assert.equal(status[0].pass,false,'濒死后直接变正常不能冒充已经结算死亡');
+    assert.equal(evaluateAssertions([{kind:'oneOf',path:'state.player.status',values:['死亡','濒死']}],{before:{},after:{state:{player:{status:'正常'}}},calls:[],reply:''})[0].pass,false);
     const bundle=await loadPromptBundle(),preset=presetFor(bundle);
     assert.deepEqual(preset.prompts.slice(0,-1).map(p=>p.identifier),promptSections(bundle).map(p=>p.identifier));
 });

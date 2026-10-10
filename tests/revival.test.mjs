@@ -72,7 +72,7 @@ test('永久死亡居民不能交易、发布或接收任务物品，资金和�
     assert.deepEqual(accepted.document,before);assert.equal(before.state.quests[posted.result.quest].escrow,20);
 });
 test('规则分区迁移保留旧财物、关系和记忆，有备份、可重启及导入回退，重复迁移无变化',async t=>{
-    const{world,engine,document}=await setup(),before=structuredClone(document);
+    const{world,engine}=await setup(),document=engine.initialFromLegacy(seed,'old-rule',{prepare:false}),before=structuredClone(document);
     document.memories.promise={content:'林穗答应借厨房。'};document.state.npcs.npc_hw_linsui.trust=40;
     const dir=await fs.mkdtemp(path.join(os.tmpdir(),'infinite-fields-rule-migrate-'));t.after(()=>fs.rm(dir,{recursive:true,force:true}));
     const reducer=(c,input)=>engine.reduce(c,input),store=new CampaignStorage(dir,{reducer});
@@ -106,7 +106,7 @@ test('死亡居民的到期付款记录违约，钱不转移，也不能新增�
 });
 
 test('独立迁移命令重放世界升级历史，备份附所需世界版本，旧档原初快照保留',async t=>{
-    const{world,document}=await setup();
+    const{world,engine}=await setup(),document=engine.initialFromLegacy(seed,'old-rule-cli',{prepare:false});
     const root=await fs.mkdtemp(path.join(os.tmpdir(),'infinite-fields-rule-cli-'));t.after(()=>fs.rm(root,{recursive:true,force:true}));
     const registry=new WorldRegistry(path.join(root,'infinite-fields-worlds')),store=new CampaignStorage(path.join(root,'infinite-fields'),{reducer:archivedReducer(registry)});
     document.worldHash=await registry.put(world);await store.create({id:'cli',worldVersion:world.version,document});

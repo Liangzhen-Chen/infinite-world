@@ -8,6 +8,7 @@ import express from 'express';
 import {init}from'../server-plugin/index.mjs';
 import {loadWorld}from'../tools/load-world.mjs';
 import {createCampaign}from'./fixtures/legacy/core.js';
+import {digest}from'../server-plugin/storage.mjs';
 test('服务器 API：创建、执行、幂等、拒绝瞬移、检索与路径边界',async t=>{
     const root=await fs.mkdtemp(path.join(os.tmpdir(),'infinite-fields-http-'));
     t.after(()=>fs.rm(root,{recursive:true,force:true}));
@@ -61,6 +62,28 @@ test('副本启用：新旧聊天均只写新文件，保留原文、钱袋和�
     assert.equal((await request('/enable-copy',{character:'../outside',chatId:'old'})).status,400);
     assert.equal((await request('/enable-copy',{character:'host',chatId:'old:stream'})).status,400);
     assert.equal((await request('/migrate',{character:'host',chatId:'old'})).status,410);
+});
+
+test('原生格式2旧档只在副本执行R1，读取不迁移，原聊天与历史导出保持不变',async t=>{
+    const root=await fs.mkdtemp(path.join(os.tmpdir(),'fields-native-copy-'));t.after(()=>fs.rm(root,{recursive:true,force:true}));
+    const directory=path.join(root,'chats','host');await fs.mkdir(directory,{recursive:true});
+    const request=await serverFixture(t,{userRoots:{a:root}});
+    const created=await request('/create',{}),bundle=(await request('/export',{campaignId:created.body.reference.campaignId})).body;
+    delete bundle.initial.releaseVersion;
+    bundle.metadata.initialHash=digest(bundle.initial);bundle.checksum=bundle.metadata.initialHash;bundle.documentHash=bundle.metadata.initialHash;
+    const imported=await request('/import',{bundle});assert.equal(imported.status,200,imported.body.error);
+    const ref=imported.body.reference,source=path.join(directory,'native.jsonl');
+    const bytes=JSON.stringify({chat_metadata:{infinite_fields:ref}})+'\n'+JSON.stringify({is_user:true,mes:'原聊天',extra:{fields_anchor:'original'}});
+    await fs.writeFile(source,bytes);
+    const before=(await request('/export',{campaignId:ref.campaignId})).body;
+    assert.equal((await request('/read',{campaignId:ref.campaignId})).body.document.releaseVersion,undefined);
+    const copy=await request('/enable-copy',{character:'host',chatId:'native'});assert.equal(copy.status,200,copy.body.error);
+    const migrated=(await request('/read',{campaignId:copy.body.reference.campaignId})).body;
+    assert.equal(migrated.document.releaseVersion,1);assert.equal(migrated.document.state.player.coins,180);
+    assert.equal(await fs.readFile(source,'utf8'),bytes);
+    assert.deepEqual((await request('/export',{campaignId:ref.campaignId})).body,before);
+    const report=JSON.parse(await fs.readFile(path.join(root,'infinite-fields',copy.body.reference.campaignId,'r1-migration-report.json'),'utf8'));
+    assert.equal(report.sourceUnchanged,true);assert.equal(report.preserved.player,true);
 });
 
 test('服务器角色创建校验属性与开放出生地，不允许请求指定幸运或等级',async t=>{

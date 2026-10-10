@@ -39,7 +39,7 @@ export async function init(router,{ world=null, baseRoot=null, newCampaignSeed=r
         return bundle;
     };
     const upgrade=async(store,id)=>{
-        const view=await store.read(id);if(view.document.schemaVersion!==2)return view;
+        const view=await store.read(id);if(view.document.schemaVersion!==2||view.document.releaseVersion!==1)return view;
         // The source hash records the edition accepted, even if historical IDs
         // make the compatible campaign edition differ from the shipped one.
         const incomingHash=digest(world);
@@ -138,9 +138,17 @@ export async function init(router,{ world=null, baseRoot=null, newCampaignSeed=r
         if(!lines[0]?.chat_metadata)throw new Error('聊天头部缺失');
         const store=getStore(req),id=`campaign_${randomUUID()}`;
         const worldHash=await registries.get(req.user.directories.root).put(world);
-        if(lines[0].chat_metadata.infinite_fields){
+        const previous=lines[0].chat_metadata.infinite_fields;
+        if(previous?.format===2){
+            const exported=await exportWithWorlds(store,previous.campaignId);
+            await store.import(exported,id);
+            const migrated=await store.transact(id,{id:'release_r1',input:{type:'release_migration',release:'R1'},anchor:null},store.reducer);
+            await upgrade(store,id);
+            await atomicJSON(path.join(store.directory(id),'r1-migration-report.json'),{...migrated.result,sourceUnchanged:true,sourceEvents:exported.events.length});
+        }else if(previous){
             await migrateLegacyChat({source,store,oldSeed:seed,id});
-            await store.transact(id,{id:'schema_v2',input:{type:'schema_migration',randomSeed:randomUUID(),worldHash},anchor:null},store.reducer);
+            const migrated=await store.transact(id,{id:'schema_v2',input:{type:'schema_migration',release:'R1',randomSeed:randomUUID(),worldHash},anchor:null},store.reducer);
+            await atomicJSON(path.join(store.directory(id),'r1-migration-report.json'),{...migrated.result.releaseReport,sourceUnchanged:true,sourceEvents:previous.journal.length});
         }else{
             const document=engine.createCharacter({state:seed.state,memories:seed.memories},{},randomUUID());document.worldHash=worldHash;
             await store.create({id,worldVersion:world.version,document});

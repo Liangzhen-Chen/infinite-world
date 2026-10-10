@@ -16,7 +16,7 @@ test('E2/E19 浏览器：失败对账阻止出站生成，编辑与删除同步�
     const response=await fetch(`${origin}/api/plugins/infinite-fields/create`,{method:'POST',headers:{'Content-Type':'application/json'},body:'{}'});
     const created=await response.json();
     const browser=await chromium.launch({executablePath:'C:/Program Files/Google/Chrome/Application/chrome.exe',headless:true});t.after(()=>browser.close());
-    const page=await browser.newPage();let failReconcile=false,generationRequests=0;
+    const page=await browser.newPage();let failReconcile=false,generationRequests=0,preReleaseFixture=false;
     const runtime=(await fs.readFile('extension/runtime.js','utf8')).replace("import { getContext } from '../../../extensions.js';","const getContext=()=>window.fixtureContext;");
     await page.route('**/runtime.js',route=>route.fulfill({contentType:'text/javascript',body:runtime}));
     await page.route('**/turn.mjs',async route=>route.fulfill({contentType:'text/javascript',body:await fs.readFile('extension/turn.mjs','utf8')}));
@@ -26,7 +26,9 @@ test('E2/E19 浏览器：失败对账阻止出站生成，编辑与删除同步�
         const request=route.request(),url=new URL(request.url());
         if(failReconcile&&url.pathname.endsWith('/reconcile'))return route.fulfill({status:400,json:{ok:false,error:'故意损坏的回放夹具'}});
         const actual=await fetch(origin+url.pathname,{method:request.method(),headers:{'Content-Type':'application/json'},body:request.postData()});
-        await route.fulfill({status:actual.status,json:await actual.json()});
+        const json=await actual.json();
+        if(preReleaseFixture&&url.pathname.endsWith('/read'))delete json.document.releaseVersion;
+        await route.fulfill({status:actual.status,json});
     });
     await page.route('**/api/backends/chat-completions/generate',async route=>{generationRequests++;await route.fulfill({json:{error:'不应到达这里'}});});
     await page.route('**/fixture.html',route=>route.fulfill({contentType:'text/html',body:'<div id="sheld"></div><textarea id="send_textarea"></textarea>'}));
@@ -108,4 +110,12 @@ test('E2/E19 浏览器：失败对账阻止出站生成，编辑与删除同步�
     assert.equal(await page.evaluate(()=>window.savedMetadata),null);
     assert.equal(await page.getByRole('button',{name:'在副本上启用新版'}).count(),1);
     assert.equal(await page.locator('.mes_reasoning_details').isVisible(),true);
+    preReleaseFixture=true;
+    await page.evaluate(async reference=>{
+        window.fixtureContext.chatId='pre-release-native';window.fixtureContext.chatMetadata={infinite_fields:reference};
+        window.savedMetadata=null;await window.infiniteFieldsV2.refresh();
+    },created.reference);
+    assert.equal(await page.evaluate(()=>window.savedMetadata),null);
+    assert.equal(await page.evaluate(()=>window.infiniteFieldsV2.view),null);
+    assert.equal(await page.getByRole('button',{name:'在副本上启用新版'}).count(),1);
 });

@@ -40,7 +40,7 @@ test('农业引用、种粮、仓容及保存条件校验，不把任意食物�
 test('新战役按源建粮账；旧存档迁移保留财物和记忆，幂等且拒绝编号冲突',()=>{
     const{engine,c}=setup();assert.equal(c.state.settlements.loc_hw.food,8000);assert.equal(record(c).field.seedBank,1680);conservation(c);
     assert.throws(()=>initializeAgriculture(engine,c),/重复/);
-    const old=engine.initialFromLegacy(legacy,'import'),before=structuredClone(old),patches=planAgricultureMigration(old,engine.rules);
+    const old=engine.initialFromLegacy(legacy,'import',{prepare:false}),before=structuredClone(old),patches=planAgricultureMigration(old,engine.rules);
     const migrated=applyPatches(old,patches);assert.deepEqual(old,before);assert.deepEqual(migrated.state.player,old.state.player);
     assert.deepEqual(migrated.state.inventory,old.state.inventory);assert.deepEqual(migrated.memories,old.memories);
     assert.deepEqual(migrated.state.settlements,old.state.settlements);assert.equal(migrated.state.minute,old.state.minute);
@@ -103,7 +103,9 @@ test('缺劳力或农具会影响生产；修理确实消耗公共木铁，不�
     broken.state.settlements.loc_hw.iron=0;await assert.rejects(run(broken,'world_farm',{operation:'repair'},'no_iron'),/实际公共/);
 });
 test('旧粮账显式切换保留原库存，不赠送种粮；旧世界缺农事规则保留原语义',async()=>{
-    const{engine,run}=setup();let old=engine.initialFromLegacy(legacy,'old');atCounter(old);
+    const{engine}=setup();let old=engine.initialFromLegacy(legacy,'old',{prepare:false});atCounter(old);
+    // The adopt action belongs to verified historical replay; current games use R1.
+    const run=async(doc,tool,args,eventId)=>({document:applyPatches(doc,(await engine.reduce(doc,{tool,args,eventId},{replay:true})).patches)});
     const originalFood=old.state.settlements.loc_hw.food;old=(await run(old,'world_farm',{operation:'adopt'},'adopt')).document;
     assert.equal(old.state.settlements.loc_hw.food,originalFood);assert.equal(record(old).field.seedBank,0);conservation(old);
     old=(await run(old,'world_farm',{operation:'reserve_seed',quantity:120},'old_seed')).document;assert.equal(record(old).field.seedBank,120);assert.equal(old.state.settlements.loc_hw.food,originalFood-120);conservation(old);
@@ -155,7 +157,7 @@ test('加工劳力不足时先吃鲜食，谷物食用不得超过实际加工�
 test('独立迁移CLI保留原文件，仅写新副本，拒绝已有目标和密钥文件路径',async t=>{
     const{engine}=setup(),directory=await fs.mkdtemp(path.join(os.tmpdir(),'agriculture-migration-'));
     t.after(()=>fs.rm(directory,{recursive:true,force:true}));const input=path.join(directory,'original.json'),output=path.join(directory,'migrated.json');
-    const doc=engine.initialFromLegacy(legacy,'migration-cli'),bytes=JSON.stringify(doc);await fs.writeFile(input,bytes);
+    const doc=engine.initialFromLegacy(legacy,'migration-cli',{prepare:false}),bytes=JSON.stringify(doc);await fs.writeFile(input,bytes);
     const command=(a,b)=>spawnSync(process.execPath,['tools/migrate-agriculture.mjs',a,b],{encoding:'utf8'});
     const result=command(input,output);assert.equal(result.status,0,result.stderr);
     assert.equal(await fs.readFile(input,'utf8'),bytes);const migrated=JSON.parse(await fs.readFile(output,'utf8'));

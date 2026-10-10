@@ -71,13 +71,13 @@ const currentHints=value=>value.replace(/world_(weather|farm|wildlife|environmen
 });
 for(const scenario of selected.flatMap(scenario=>Array.from({length:repetitions},(_,attempt)=>({...scenario,attempt:attempt+1})))){
     const activeEngine=scenario.engine??engine;
-    let document=activeEngine.initialFromLegacy({state:seed.state,memories:seed.memories},`quick-${scenario.id}`),counter=0,reply='',error=null;
+    let document=activeEngine.initialFromLegacy({state:seed.state,memories:seed.memories},`quick-${scenario.id}`,{prepare:!scenario.prepareBeforeR1}),counter=0,reply='',error=null;
+    const events=[],messages=[];
+    try{
     const prepared=await scenario.setup?.(document);if(prepared)document=prepared;
     const initial=structuredClone(document),startMinute=document.state.minute;
-    const events=[];
     const present=Object.keys(document.state.npcs).filter(id=>document.state.npcs[id].location===document.state.location);
-    const messages=[{role:'system',content:`你是中文游戏主持人。所有财物变化必须先调用工具成功后叙述。只回应本次意图，不替玩家安排下一步。普通回复末尾附<回合 额外="10分" 地点="${document.state.location}" 在场="${present.join(',')}"/>，额外只写工具耗时以外的对话或停留时间；已由工具完成的行动写0分。场外问题不写工具或尾注，不推进时间。林穗愿意出租普通客房，一晚6铜，一周35铜。施法只能使用当前已经学会的法术，消耗按目录与回执结算。${currentHints(scenario.context??'')}当前场景：\n${activeEngine.scene(document,scenario.input)}`},{role:'user',content:scenario.input}];
-    try{
+    messages.push({role:'system',content:`你是中文游戏主持人。所有财物变化必须先调用工具成功后叙述。只回应本次意图，不替玩家安排下一步。普通回复末尾附<回合 额外="10分" 地点="${document.state.location}" 在场="${present.join(',')}"/>，额外只写工具耗时以外的对话或停留时间；已由工具完成的行动写0分。场外问题不写工具或尾注，不推进时间。林穗愿意出租普通客房，一晚6铜，一周35铜。施法只能使用当前已经学会的法术，消耗按目录与回执结算。${currentHints(scenario.context??'')}当前场景：\n${activeEngine.scene(document,scenario.input)}`},{role:'user',content:scenario.input});
         for(let recursion=0;recursion<8;recursion++){
             const response=await client.generate({messages,tools,max_tokens:900,temperature:0.8},`${scenario.id}-${recursion}`),message=response.choices?.[0]?.message;
             if(!message)throw new Error('模型没有返回消息');messages.push(message);

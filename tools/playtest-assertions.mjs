@@ -8,11 +8,13 @@ export function evaluateAssertions(assertions,{before,after,calls,reply}){
         const value=at(after,rule.path),old=at(before,rule.path);
         switch(rule.kind){
             case'conditional':{
-                const condition=at(before,rule.when.path)!==undefined;
+                const observed=at(before,rule.when.path);
+                const condition=Object.hasOwn(rule.when,'equals')?isDeepStrictEqual(observed,rule.when.equals):observed!==undefined;
                 const branch=condition?rule.then:rule.else;
                 actual=evaluateAssertions(branch,{before,after,calls,reply});pass=actual.length>0&&actual.every(row=>row.pass);break;
             }
             case'equals':actual=value;pass=isDeepStrictEqual(value,rule.value);break;
+            case'oneOf':actual=value;pass=Array.isArray(rule.values)&&rule.values.some(candidate=>isDeepStrictEqual(value,candidate));break;
             case'quantity':actual=typeof value==='number'?value:value?.quantity??0;pass=actual===rule.value;break;
             case'exists':actual=value!==undefined;pass=actual===(rule.value??true);break;
             case'delta':actual=(value??0)-(old??0);pass=actual===(rule.value??0);break;

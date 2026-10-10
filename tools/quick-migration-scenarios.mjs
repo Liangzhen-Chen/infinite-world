@@ -2,16 +2,12 @@ import assert from 'node:assert/strict';
 import {withSeasonalMigration} from '../world/design/seasonal-migration-foundation.mjs';
 import {WorldEngine} from '../server-plugin/engine.mjs';
 import {applyPatches} from '../server-plugin/storage.mjs';
-import {planRuleStateMigration} from '../server-plugin/rule-state-migration.mjs';
-import {planAgricultureMigration} from '../server-plugin/agriculture-migration.mjs';
-import {planWildlifeMigration} from '../server-plugin/wildlife-migration.mjs';
+import {initializeR1} from '../server-plugin/migrations/r1.mjs';
 export function migrationScenarios(sourceEngine){
     const engine=new WorldEngine(withSeasonalMigration(sourceEngine.world));
     const prepare=async(c,days)=>{
         c.state.minute=269*1440+540;c.state.location='loc_hw_fields';
-        let next=applyPatches(c,planRuleStateMigration(c,engine.rules));
-        next=applyPatches(next,planAgricultureMigration(next,engine.rules));
-        next=applyPatches(next,planWildlifeMigration(next,engine.rules,engine.world.monsters));
+        const next=initializeR1(c,engine.world);
         return applyPatches(next,(await engine.reduce(next,{tool:'world_time',args:{minutes:days*1440},eventId:`prepare_winter${days}`})).patches);
     };
     const fixtureScope='迁徙开发规则：两种动物四条季节路线，经真实世界时钟出发/到达；尚未在玩家酒馆启用';
@@ -27,5 +23,5 @@ export function migrationScenarios(sourceEngine){
                 const stock=doc=>doc.state.records['ecology:habitat_hw_field'].populations.monster_brown_deer;
                 assert.equal(stock(c).withdrawn-stock(initial).withdrawn,rows[0].result.success?1:0);
                 if(rows[0].result.success)assert.equal(c.state.creatures[rows[0].result.found.id].ecology,'habitat_hw_field');}},
-    ];
+    ].map(scenario=>({...scenario,prepareBeforeR1:true}));
 }

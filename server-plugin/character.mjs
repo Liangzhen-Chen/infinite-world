@@ -14,7 +14,7 @@ export function createCharacter(legacy,options={},seed){
     if(total!==config.attributeTotal)throw new Error(`初始属性总值必须为${config.attributeTotal}`);
     const birthplace=this.resolve(options.birthplace??'loc_hw','loc');
     if(!(config.openBirthplaces??['loc_hw']).includes(birthplace))throw new Error('该出生地尚未开放');
-    const document=this.initialFromLegacy(legacy,seed),state=document.state,stats=derivedStats({level:0,attributes},this.rules);
+    const document=this.initialFromLegacy(legacy,seed,{prepare:false}),state=document.state,stats=derivedStats({level:0,attributes},this.rules);
     state.player={name:text(options.name,'冒险者',60),gender:text(options.gender,'未指定',40),appearance:text(options.appearance,'一位初到河谷的冒险者。',1000),
         level:0,xp:0,coins:legacy.state.player.coins,attributes:{...attributes},hp:stats.maxHp,maxHp:stats.maxHp,mp:stats.maxMp,maxMp:stats.maxMp,
         freeAttributePoints:0,status:'正常',companions:[],revivalAnchor:birthplace,dyingSince:null};
