@@ -20,7 +20,7 @@ import {migrationScenarios}from'./quick-migration-scenarios.mjs';
 import {farmPestsScenarios}from'./quick-farm-pests-scenarios.mjs';
 if(!process.env.DEEPSEEK_API_KEY)throw new Error('未执行：DEEPSEEK_API_KEY 环境变量未配置，不能读取酒馆密钥文件');
 if(!process.argv.includes('--quick'))throw new Error('当前运行器仅支持开发快速场景，完整11.3/11.4验收尚未实现');
-const engine=new WorldEngine(await loadWorld()),client=new DeepSeekClient({budgetYuan:60}),tools=await toolDefinitions();
+const engine=new WorldEngine(await loadWorld()),client=new DeepSeekClient({budgetYuan:30}),tools=await toolDefinitions();
 const seed=JSON.parse(await fs.readFile('tests/fixtures/legacy/seed.json','utf8'));
 const scenarios=[
     {id:'L1',input:'我数出六枚铜币交给林穗，住一晚。',assert:c=>{assert.equal(c.state.player.coins,174);assert.ok(Object.values(c.state.records).some(r=>r.category==='contract'));}},
@@ -72,7 +72,7 @@ for(const scenario of selected.flatMap(scenario=>Array.from({length:repetitions}
     const initial=structuredClone(document),startMinute=document.state.minute;
     const events=[];
     const present=Object.keys(document.state.npcs).filter(id=>document.state.npcs[id].location===document.state.location);
-    const messages=[{role:'system',content:`你是中文游戏主持人。所有财物变化必须先调用工具成功后叙述。只回应本次意图，不替玩家安排下一步。普通回复末尾附<回合 时长="10分" 地点="${document.state.location}" 在场="${present.join(',')}"/>，时长是整回合总耗时，包括工具已推进的时间。场外问题不写工具或尾注，不推进时间。林穗愿意出租普通客房，一晚6铜，一周35铜。施法只能使用当前已经学会的法术，消耗按目录与回执结算。${scenario.context??''}当前场景：\n${activeEngine.scene(document,scenario.input)}`},{role:'user',content:scenario.input}];
+    const messages=[{role:'system',content:`你是中文游戏主持人。所有财物变化必须先调用工具成功后叙述。只回应本次意图，不替玩家安排下一步。普通回复末尾附<回合 额外="10分" 地点="${document.state.location}" 在场="${present.join(',')}"/>，额外只写工具耗时以外的对话或停留时间；已由工具完成的行动写0分。场外问题不写工具或尾注，不推进时间。林穗愿意出租普通客房，一晚6铜，一周35铜。施法只能使用当前已经学会的法术，消耗按目录与回执结算。${scenario.context??''}当前场景：\n${activeEngine.scene(document,scenario.input)}`},{role:'user',content:scenario.input}];
     try{
         for(let recursion=0;recursion<8;recursion++){
             const response=await client.generate({messages,tools,max_tokens:900,temperature:0.8},`${scenario.id}-${recursion}`),message=response.choices?.[0]?.message;
@@ -94,7 +94,7 @@ for(const scenario of selected.flatMap(scenario=>Array.from({length:repetitions}
         }
         if(!reply)throw new Error('工具递归超过上限或未返回正文');
         if(scenario.id!=='F8'){
-            const parsed=parseTurn(reply,{location:document.state.location,startMinute});
+            const parsed=parseTurn(reply,{location:document.state.location,startMinute,minute:document.state.minute});
             const output=await activeEngine.reduce(document,{tool:'world_turn',args:parsed.args,eventId:`finish_${scenario.id}`});document=applyPatches(document,output.patches);
         }
         scenario.assert(document,{initial,startMinute,reply,events});
@@ -103,5 +103,5 @@ for(const scenario of selected.flatMap(scenario=>Array.from({length:repetitions}
     console.log(`${scenario.id} 第${scenario.attempt}次: ${error?'失败 '+error:'通过'}`);
 }
 const report={date:'2026-10-10',scope:`当前引擎${selected.length}个快速场景，各跑${repetitions}次；${only?'定向复核，不代表全部快速场景；':''}不代表完整11.3/11.4验收`,availableScenarios:scenarios.length,selectedScenarios:selected.map(row=>row.id),pass:results.every(r=>r.pass),costUpperYuan:client.spent,results};
-await fs.writeFile(`docs/测试报告/快速场景-${Date.now()}.json`,JSON.stringify(report,null,2));
-await fs.writeFile('docs/测试报告/快速场景-最新.json',JSON.stringify(report,null,2));if(!report.pass)process.exitCode=1;
+await fs.mkdir('docs/测试报告/最新',{recursive:true});
+await fs.writeFile('docs/测试报告/最新/快速场景.json',JSON.stringify(report,null,2));if(!report.pass)process.exitCode=1;

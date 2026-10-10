@@ -43,6 +43,7 @@ test('world_upgrade把新物种引入已有战役，日结补栖地不改旧账�
     const oldHash=await registry.put(old),newHash=await registry.put(next),doc=new WorldEngine(old).createCharacter(seed,{},'w4-upgrade');
     doc.worldHash=oldHash;const original=structuredClone(doc);await store.create({id:'test',worldVersion:old.version,document:doc});
     await store.transact('test',{id:'upgrade',input:{type:'world_upgrade',worldHash:newHash,eventId:'upgrade'}},reducer);
+    assert.deepEqual(auditPopulations((await store.read('test')).document,bones),[]);
     await store.transact('test',{id:'inspect',input:{tool:'world_turn',args:{outOfCharacter:true},eventId:'inspect'}},reducer);
     const current=await store.read('test');
     assert.deepEqual(current.document.state.player,original.state.player);assert.deepEqual(current.document.state.inventory,original.state.inventory);

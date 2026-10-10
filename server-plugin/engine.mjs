@@ -23,6 +23,8 @@ import {advanceWildlife,wildlifePriceFactor}from'./wildlife.mjs';
 import {planBossMigration}from'./boss-migration.mjs';
 import {advanceBosses}from'./bosses.mjs';
 import {planFarmPestsMigration}from'./farm-pests-migration.mjs';
+import {sceneCard}from'./scene-card.mjs';
+import {stateNotices}from'./state-notices.mjs';
 const clone = value => structuredClone(value);
 const number = (value, min = 0, max = 1e9, label = '数值') => {
     if (!Number.isSafeInteger(value) || value < min || value > max) throw new Error(`${label}必须在${min}到${max}之间`);
@@ -42,7 +44,7 @@ export class WorldEngine {
     constructor(world) {
         this.world = world; this.rules = world.rules;
         if(![1,2].includes(this.rules.engineRevision??1))throw new Error('此世界使用尚不支持的引擎版本，停止加载');
-        this.entities = [...world.npcs,...world.locations,...world.items,...world.professions,...world.skills,...world.spells,...world.recipes??[],...world.monsters??[],...world.bosses??[]];
+        this.entities = [...world.npcs,...world.locations,...world.items,...world.professions,...world.skills,...world.spells,...world.recipes??[],...world.monsters??[],...world.bosses??[],...world.cultures??[],...world.deities??[]];
         this.resolver = new EntityResolver(this.entities);
         this.byId = this.resolver.entities;
         if((this.rules.engineRevision??1)===1)this.compat=new Phase1Engine(world);
@@ -91,13 +93,19 @@ export class WorldEngine {
         if (input.type==='schema_migration') return {patches:input.patches,result:{migration:true}};
         if(input.type==='rules_state_migration')return{patches:planRuleStateMigration(document,this.rules),result:{migration:true,runtimeRuleVersion}};
         const d = new Draft(document), args=input.args ?? {}, id=text(input.eventId,120);
+        const tool=input.tool.replace(/^world_/, '');
+        const readOperations={weather:'inspect',environment:'inspect',pet:'inspect',summon:'inspect',farm:'inspect',wildlife:'observe',lair:'observe'};
+        const noTimeTurn=tool==='turn'&&(args.outOfCharacter||args.extraMinutes===0);
+        if(noTimeTurn||(readOperations[tool]&&(args.operation??readOperations[tool])===readOperations[tool])){
+            const detail=await this.scoped(document)[tool](d,args,id);
+            return {patches:d.patches,result:{ok:true,...detail,minute:d.get('state','minute'),messages:d.messages,notices:[]}};
+        }
         for(const patch of planRuleStateMigration(document,this.rules))d.set(patch.path,patch.value);
         for(const patch of planAgricultureMigration(d.document,this.rules))d.set(patch.path,patch.value);
         for(const patch of planWildlifeMigration(d.document,this.rules,this.world.monsters))d.set(patch.path,patch.value);
         for(const patch of planBossMigration(d.document,this.rules,this.world.bosses))d.set(patch.path,patch.value);
         for(const patch of planFarmPestsMigration(d.document,this.rules))d.set(patch.path,patch.value);
         settleAgricultureExpiry(d,this);
-        const tool=input.tool.replace(/^world_/, '');
         enforceLegalRestriction(d,tool,args);
         if (!['trade','time','move','turn','health','revive','revival','check','practice','cast','learn','profession','attributes','relation','promise','remember',...Object.keys(activities)].includes(tool)) throw new Error('未知工具职责');
         if(d.get('state','player','status')==='死亡'&&!['time','turn','revive'].includes(tool))throw new Error('你已经死亡，需要在登记点醒来后行动');
@@ -109,7 +117,8 @@ export class WorldEngine {
         advanceLaw(d,d.get('state','minute'));
         if(tool==='check')detail.actionScope={kind:'judgement',healthChanged:false,inventoryChanged:false,feePaid:0,
             note:'仅结算判断或对抗，并履行已引用的协助；未伤人、毁物或制造。不得从骰点虚构这些变化。'};
-        return { patches:d.patches,result:{ok:true,...detail,minute:d.get('state','minute'),messages:d.messages} };
+        return { patches:d.patches,result:{ok:true,...detail,minute:d.get('state','minute'),messages:d.messages,
+            notices:stateNotices(document.state,d.document.state,id=>session.byId.get(id)?.name)} };
     }
     scoped(document){
         const created=Object.values(document.state.created??{});
@@ -244,11 +253,13 @@ export class WorldEngine {
         if(d.get('state','turns',id))return {duplicate:true};
         const start=number(args.startMinute,0,Number.MAX_SAFE_INTEGER,'回合起始时间'),now=d.get('state','minute');
         if(start>now)throw new Error('回合起始时间晚于当前时间');
-        const desired=number(args.minutes??10,0,43200,'回合时长'),remaining=Math.max(0,desired-(now-start));
+        // Old event logs keep their total-duration semantics; new tails only add extra time.
+        const remaining=args.extraMinutes!==undefined?number(args.extraMinutes,0,43200,'额外时长'):
+            Math.max(0,number(args.minutes??10,0,43200,'回合时长')-(now-start));
         if(args.location&&this.resolve(args.location)!==d.get('state','location'))throw new Error('尾注地点与实际账本不一致，需先沿路线移动');
         const present=(args.present??[]).map(name=>this.resolve(name,'npc'));
         if(present.some(npc=>d.get('state','npcs',npc,'location')!==d.get('state','location')))throw new Error('尾注包含不在场的人物');
-        this.advance(d,remaining,id);d.set(['state','turns',id],{start,end:d.get('state','minute'),present});
+        if(remaining)this.advance(d,remaining,id);d.set(['state','turns',id],{start,end:d.get('state','minute'),present});
         return {elapsed:remaining,present};
     }
     health(d,args,id) {
@@ -376,36 +387,7 @@ export class WorldEngine {
         d.set(['memories',memoryId],{subject,key,content,keywords:args.keywords??[],pinned:d.get('memories',memoryId,'pinned')??false,minute:d.get('state','minute'),source:args.source??'亲历'});
         return {memoryId};
     }
-    scene(document,query,index=null){
-        const s=document.state,place=this.byId.get(s.location),present=Object.entries(s.npcs).filter(([,npc])=>npc.location===s.location);
-        const mentioned=this.resolver.mentions(query,s.location),ranked=present.sort(([a],[b])=>Number(mentioned.has(b))-Number(mentioned.has(a)));
-        const parts=['【行动依据】财物、伤亡、物品损坏与承诺履行以成功回执为准。纯检定不改变财物和生命。制造失败也可能已收费并损耗工具；按spent、salvage和produced叙述，未回收物不能写成已回收。',
-            `【时间】${this.calendar(s.minute).text}`,`【地点】${place?.name ?? s.location}（${s.location}）`,
-            `【你】${s.player.name}｜${s.player.level}级｜经验${s.player.level>=this.rules.levels.maximum?'已达上限':`${s.player.xp}/${xpRequired(s.player.level+1)}`}｜待分配属性点${s.player.freeAttributePoints??0}｜生命${s.player.hp}/${s.player.maxHp} 魔力${s.player.mp}/${s.player.maxMp}｜铜${s.player.coins}`,
-            `【在场】共${present.length}人`];
-        const learned=Object.keys(s.spells??{}).map(id=>this.byId.get(id)).filter(Boolean).sort((a,b)=>Number(mentioned.has(b.id))-Number(mentioned.has(a.id)));
-        parts.push(`【已学法术】共${learned.length}：${JSON.stringify(learned.slice(0,8).map(row=>({id:row.id,name:row.name,mp:row.mp})))}；技能熟练度与已学法术分别登记，不能只读技能栏就推断未学法术。`);
-        const features=environmentCatalog(this,document).entries;
-        if(features.length)parts.push(`【可见环境】${JSON.stringify(features.slice(0,8))}`);
-        const animals=petView(this,document);
-        if(animals.pets.length||animals.presentAnimals.length)parts.push(`【动物与宠物】${JSON.stringify(animals)}`);
-        const summons=summonView(this,document);
-        if(summons.length)parts.push(`【有效召唤契约】${JSON.stringify(summons.slice(0,this.rules.petCare?.maximumSummons??3))}`);
-        const weather=localWeather(this,document);
-        if(weather)parts.push(`【天气与昼长】${JSON.stringify(weather)}；心情修正是环境倾向，不自动改变关系或让NPC知情。`);
-        const farming=agricultureView(this,document);
-        if(farming)parts.push(`【本地农事】${JSON.stringify(farming)}`);
-        const legal=lawView(this,document);
-        if(legal.cases.length)parts.push(`【本人案件】${JSON.stringify(legal.cases.slice(-8))}`);
-        for(const [id,npc]of ranked.slice(0,this.rules.prompt.npcLimit)){
-            const base=this.byId.get(id);parts.push(`${base?.name ?? id}（${id}）：${base?.occupation??''}；${(base?.notes??'').slice(0,500)}；信任${npc.trust}，亲近${npc.affection}；此刻${npc.activity??'按作息生活'}`);
-        }
-        parts.push('【进行中】');
-        for(const o of Object.values(s.obligations).filter(o=>!['已完成','取消'].includes(o.status)).slice(0,12))parts.push(`${o.id} ${o.content.slice(0,300)} ${o.status}`);
-        const pinned=Object.values(document.memories).filter(m=>m.pinned).slice(0,this.rules.prompt.pinnedLimit);
-        parts.push('【固定事实】',...pinned.map(m=>`${m.subject}：${m.content.slice(0,250)}`));
-        if(index)parts.push('【相关旧事】',...index.search(query,{now:s.minute,scope:s.location,present:ranked.slice(0,8).map(([id])=>id),limit:6}).map(m=>`${m.source}：${m.text.slice(0,500)}`));
-        return parts.join('\n').slice(0,this.rules.prompt.dynamicMaximumCharacters);
-    }
+    scene(document,query,index=null){return sceneCard(this.byId.has('player')?this:this.scoped(document),document,query,index);}
+
 }
 Object.assign(WorldEngine.prototype,activities);

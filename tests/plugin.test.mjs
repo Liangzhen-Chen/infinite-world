@@ -7,6 +7,7 @@ import {once}from'node:events';
 import express from 'express';
 import {init}from'../server-plugin/index.mjs';
 import {loadWorld}from'../tools/load-world.mjs';
+import {createCampaign}from'./fixtures/legacy/core.js';
 test('服务器 API：创建、执行、幂等、拒绝瞬移、检索与路径边界',async t=>{
     const root=await fs.mkdtemp(path.join(os.tmpdir(),'infinite-fields-http-'));
     t.after(()=>fs.rm(root,{recursive:true,force:true}));
@@ -40,6 +41,27 @@ async function serverFixture(t,{baseRoot=null,world=null,userRoots=null}={}){
         return {status:response.status,body:await response.json()};
     };
 }
+
+test('副本启用：新旧聊天均只写新文件，保留原文、钱袋和聊天锚点，拒绝路径穿越',async t=>{
+    const root=await fs.mkdtemp(path.join(os.tmpdir(),'fields-copy-'));t.after(()=>fs.rm(root,{recursive:true,force:true}));
+    const directory=path.join(root,'chats','host');await fs.mkdir(directory,{recursive:true});
+    const seed=JSON.parse(await fs.readFile(new URL('fixtures/legacy/seed.json',import.meta.url),'utf8'));
+    const campaign=createCampaign(seed);campaign.state.player.coins=123;
+    const request=await serverFixture(t,{userRoots:{a:root}});
+    for(const [name,metadata]of [['old',{infinite_fields:campaign}],['new',{}]]){
+        const source=path.join(directory,`${name}.jsonl`),text=[{chat_metadata:metadata},{is_user:true,mes:'在这里住下',extra:{fields_anchor:'keep-me'}}].map(JSON.stringify).join('\r\n');
+        await fs.writeFile(source,text);
+        const copy=await request('/enable-copy',{character:'host',chatId:name});assert.equal(copy.status,200,copy.body.error);
+        assert.equal(await fs.readFile(source,'utf8'),text);assert.match(copy.body.chatId,/^新版试玩-/);
+        const lines=(await fs.readFile(path.join(directory,`${copy.body.chatId}.jsonl`),'utf8')).trim().split('\n').map(JSON.parse);
+        assert.equal(lines[0].chat_metadata.infinite_fields.format,2);assert.equal(lines[1].extra.fields_anchor,'keep-me');
+        const state=(await request('/read',{campaignId:copy.body.reference.campaignId})).body.document.state;
+        if(name==='old')assert.equal(state.player.coins,123);
+    }
+    assert.equal((await request('/enable-copy',{character:'../outside',chatId:'old'})).status,400);
+    assert.equal((await request('/enable-copy',{character:'host',chatId:'old:stream'})).status,400);
+    assert.equal((await request('/migrate',{character:'host',chatId:'old'})).status,410);
+});
 
 test('服务器角色创建校验属性与开放出生地，不允许请求指定幸运或等级',async t=>{
     const root=await fs.mkdtemp(path.join(os.tmpdir(),'infinite-fields-character-'));t.after(()=>fs.rm(root,{recursive:true,force:true}));

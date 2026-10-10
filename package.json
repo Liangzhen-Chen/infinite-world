@@ -12,6 +12,7 @@
     "backup": "node tools/backup.mjs",
     "build:release": "node tools/build-world.mjs --release",
     "build:final": "node tools/build-world.mjs --final",
+    "build:card": "node tools/build-card.mjs",
     "progress": "node tools/catalog-progress.mjs"
   },
   "devDependencies": {

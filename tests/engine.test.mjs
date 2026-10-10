@@ -132,10 +132,20 @@ test('E4 场景预算不会因40个远处的熟人而膨胀',()=>{
 });
 test('尾注解析：合法、缺失、非法、重复与场外，不能信任错误地点',()=>{
     const options={location:'loc_hw',startMinute:540};
-    const valid=parseTurn('雨落下来。<回合 时长="15分" 地点="loc_hw" 在场="npc_hw_linsui"/>',options);
-    assert.equal(valid.valid,true);assert.equal(valid.args.minutes,15);assert.equal(valid.visible,'雨落下来。');
-    for(const value of ['没有尾注','<回合 时长="x分" 地点="loc_hw"/>','<回合 时长="1分" 地点="loc_hw"/><回合 时长="1分" 地点="loc_hw"/>']){
-        assert.equal(parseTurn(value,options).valid,false);assert.equal(parseTurn(value,options).args.minutes,10);
+    const valid=parseTurn('雨落下来。<回合 额外="15分" 地点="loc_hw" 在场="npc_hw_linsui"/>',options);
+    assert.equal(valid.valid,true);assert.equal(valid.args.extraMinutes,15);assert.equal(valid.visible,'雨落下来。');
+    for(const value of ['没有尾注','<回合 额外="x分" 地点="loc_hw"/>','<回合 额外="1分" 地点="loc_hw"/><回合 额外="1分" 地点="loc_hw"/>']){
+        assert.equal(parseTurn(value,options).valid,false);assert.equal(parseTurn(value,options).args.extraMinutes,10);
     }
     assert.equal(parseTurn('场外回答',{...options,outOfCharacter:true}).args.outOfCharacter,true);
+});
+test('即时观察与场外不偷做存档迁移，零时长尾注只登记回合',async()=>{
+    const world=await loadWorld(),engine=new WorldEngine(world);
+    const seed=JSON.parse(await fs.readFile(new URL('./fixtures/legacy/seed.json',import.meta.url),'utf8'));
+    const document=engine.initialFromLegacy(seed,'observe-no-write');
+    for(const input of [{tool:'world_weather',args:{operation:'inspect'}},{tool:'world_turn',args:{outOfCharacter:true}}]){
+        const output=await engine.reduce(document,{...input,eventId:'observe'});assert.deepEqual(output.patches,[]);
+    }
+    const output=await engine.reduce(document,{tool:'world_turn',args:{extraMinutes:0,startMinute:document.state.minute,location:document.state.location},eventId:'finish'});
+    assert.deepEqual(output.patches.map(p=>p.path),[['state','turns','finish']]);assert.equal(output.result.elapsed,0);
 });

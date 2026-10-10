@@ -65,6 +65,9 @@ export async function init(router,{ world=null, baseRoot=null }={}){
             indexes.set(key,next);
         }
         const index=indexes.get(key),wanted=new Set();
+        for(const row of [...selectedEngine.world.cultures??[],...selectedEngine.world.deities??[]])index.upsert({
+            id:`lore_${row.id}`,text:`${row.name}：${row.description}`,source:'公开世界设定',entities:[row.id,...row.references??[]],
+            keywords:row.aliases??[],salience:2,revision:digest(row)});
         for(const [id,memory]of Object.entries(document.memories??{})){
             wanted.add(`memory_${id}`);index.upsert({id:`memory_${id}`,text:memory.content,source:'长期事实',
                 entities:[memory.subject],keywords:memory.keywords??[],salience:memory.pinned?5:3,minute:memory.minute??0,
@@ -91,10 +94,13 @@ export async function init(router,{ world=null, baseRoot=null }={}){
         return store.transact(campaignId,{id:eventId,input:{tool,args,eventId},anchor,expectedSequence},store.reducer);
     }));
     router.post('/reconcile',handle(req=>getStore(req).reconcile(req.body.campaignId,req.body.validAnchors??[],req.body.excludeAnchor)));
+    router.post('/feedback',handle(req=>getStore(req).feedback(req.body.campaignId)));
     router.post('/scene',handle(async req=>{
         const store=getStore(req),view=await store.read(req.body.campaignId),selectedEngine=await registries.get(baseRoot??req.user.directories.root).get(view.document.worldHash),index=await getIndex(store,req.body.campaignId,view.document);
         if(Array.isArray(req.body.chat))index.syncChat(req.body.chat);
-        return {scene:selectedEngine.scoped(view.document).scene(view.document,req.body.query??'',index),reference:view.reference};
+        const scoped=selectedEngine.scoped(view.document);
+        return {scene:scoped.scene(view.document,req.body.query??'',index),reference:view.reference,
+            labels:Object.fromEntries(scoped.entities.map(row=>[row.id,row.name]))};
     }));
     router.post('/search',handle(async req=>{
         const store=getStore(req),view=await store.read(req.body.campaignId),index=await getIndex(store,req.body.campaignId,view.document);
@@ -117,17 +123,33 @@ export async function init(router,{ world=null, baseRoot=null }={}){
         for(const hash of hashes)await registry.get(hash);
         return store.import(bundle);
     }));
-    router.post('/migrate',handle(async req=>{
+    router.post('/migrate',(_req,res)=>res.status(410).json({ok:false,error:'自动迁移已停用，请在副本上启用新版'}));
+    router.post('/enable-copy',handle(async req=>{
         if(baseRoot)throw new Error('测试隔离服务器不读取真实聊天');
         const directory=req.user.directories.chats;
         const character=req.body.character,chatId=req.body.chatId;
-        for(const value of [character,chatId])if(typeof value!=='string'||!value||/[\\/]|^\.{1,2}$/.test(value))throw new Error('聊天路径无效');
+        for(const value of [character,chatId])if(typeof value!=='string'||!value||value.length>180||/[\\/:*?"<>|\x00-\x1f]|[. ]$|^\.{1,2}$/.test(value))throw new Error('聊天路径无效');
         const source=path.join(directory,character,`${chatId}.jsonl`);
+        const root=await fs.realpath(directory),resolved=await fs.realpath(source);
+        const relative=path.relative(root,resolved);
+        if(relative.startsWith('..')||path.isAbsolute(relative))throw new Error('聊天路径超出当前用户目录');
+        if((await fs.lstat(path.dirname(source))).isSymbolicLink()||(await fs.lstat(source)).isSymbolicLink())throw new Error('聊天路径不能是链接');
+        const bytes=await fs.readFile(source,'utf8'),lines=bytes.split(/\r?\n/).filter(Boolean).map(line=>JSON.parse(line));
+        if(!lines[0]?.chat_metadata)throw new Error('聊天头部缺失');
         const store=getStore(req),id=`campaign_${randomUUID()}`;
-        await migrateLegacyChat({source,store,oldSeed:seed,id});
         const worldHash=await registries.get(req.user.directories.root).put(world);
-        await store.transact(id,{id:'schema_v2',input:{type:'schema_migration',randomSeed:randomUUID(),worldHash},anchor:null},store.reducer);
-        return store.read(id);
+        if(lines[0].chat_metadata.infinite_fields){
+            await migrateLegacyChat({source,store,oldSeed:seed,id});
+            await store.transact(id,{id:'schema_v2',input:{type:'schema_migration',randomSeed:randomUUID(),worldHash},anchor:null},store.reducer);
+        }else{
+            const document=engine.createCharacter({state:seed.state,memories:seed.memories},{},randomUUID());document.worldHash=worldHash;
+            await store.create({id,worldVersion:world.version,document});
+        }
+        const view=await store.read(id),copyId=`新版试玩-${new Date().toISOString().slice(0,10)}-${randomUUID().slice(0,8)}`;
+        lines[0].chat_metadata.infinite_fields=view.reference;
+        if(await fs.readFile(source,'utf8')!==bytes)throw new Error('复制期间聊天发生变化，请重试');
+        await fs.writeFile(path.join(path.dirname(source),`${copyId}.jsonl`),lines.map(line=>JSON.stringify(line)).join('\n')+'\n',{flag:'wx'});
+        return {chatId:copyId,reference:view.reference,sourceUnchanged:true};
     }));
     router.post('/edit-index',handle(async req=>{
         const store=getStore(req),view=await store.read(req.body.campaignId),index=await getIndex(store,req.body.campaignId,view.document);

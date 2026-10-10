@@ -184,8 +184,8 @@ test('释放只是解除归属且明确即时，已释放动物可以再次经�
     const{document,id,run}=await setup('support',true),out=await run(document,'world_pet',{operation:'release',target:id},'release');
     assert.equal(out.document.state.creatures[id].location,document.state.location);
     const clock=toolResultWithClock(out.result,{startMinute:document.state.minute,minute:out.document.state.minute});
-    assert.match(clock.turnClock.tailRule,/时长写0分/);assert.equal(clock.actionScope.locationChanged,false);
-    assert.match(toolResultWithClock({ok:true},{startMinute:540,minute:540}).turnClock.tailRule,/普通对话按实际耗时/);
+    assert.equal(clock.turnClock.elapsedMinutes,0);assert.equal(clock.actionScope.locationChanged,false);
+    assert.equal(toolResultWithClock({ok:true},{startMinute:540,minute:540}).turnClock.elapsedMinutes,0);
     const retamed=await sample(run,out.document,{operation:'tame',target:id},true);
     assert.equal(retamed.document.state.creatures[id].owner,'player');assert.equal(retamed.document.state.pets[id].status,'活跃');
 });

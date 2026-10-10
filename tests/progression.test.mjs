@@ -141,8 +141,8 @@ test('工具时间提示来自实际账本，尾注不重复叠加教学与普�
     const{engine,document}=await setup();document.state.location='bld_hw_school';
     const out=await engine.reduce(document,{tool:'world_learn',args:{entity:'skill_literacy',kind:'skill',source:'陆青'},eventId:'clock_learning'});
     const learned=applyPatches(document,out.patches),result=toolResultWithClock(out.result,{startMinute:540,minute:learned.state.minute});
-    assert.equal(result.turnClock.elapsedMinutes,60);assert.ok(result.turnClock.tailRule.includes('不能再加默认10分'));
-    const tail=parseTurn('<回合 时长="60分" 地点="bld_hw_school" 在场="npc_hw_luqing"/>',{startMinute:result.turnClock.startMinute,location:learned.state.location});
+    assert.equal(result.turnClock.elapsedMinutes,60);assert.equal(result.turnClock.tailRule,undefined);
+    const tail=parseTurn('<回合 额外="0分" 地点="bld_hw_school" 在场="npc_hw_luqing"/>',{startMinute:result.turnClock.startMinute,location:learned.state.location});
     const closed=await engine.reduce(learned,{tool:'world_turn',args:tail.args,eventId:'clock_finish'});
     assert.equal(closed.result.elapsed,0);assert.equal(closed.result.minute,600);
 });

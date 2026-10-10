@@ -1,0 +1,29 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import fs from 'node:fs/promises';
+import os from 'node:os';
+import path from 'node:path';
+import {buildCard,loadPromptBundle,presetFor,encodeCardPNG}from'../tools/build-card.mjs';
+import {assembleMessages,isOutOfCharacter}from'../extension/prompt.mjs';
+import {toolDefinitions}from'../extension/tools.mjs';
+
+test('新卡与预设来自同一提示源，静态在前、场景在尾，禁用旧世界书与模型回合工具',async()=>{
+    const bundle=await loadPromptBundle(),messages=assembleMessages(bundle,[{role:'user',content:'住一晚'}],'现在九点');
+    assert.equal(messages[0].content,bundle.constitution);assert.equal(messages.at(-1).content,'现在九点');
+    assert.equal(messages.filter(row=>row.role==='assistant').length,6);
+    assert.doesNotMatch(messages.map(row=>row.content).join('\n'),/undefined|world_commit|world_roll|再生者/);
+    assert.equal(bundle.card.data.extensions.world,'');assert.equal(bundle.card.data.character_book,undefined);
+    const tools=toolDefinitions();assert.ok(tools.every(row=>row.function.description.length<=60));assert.ok(!tools.some(row=>row.function.name==='world_turn'));
+    const preset=presetFor(bundle);assert.equal(preset.show_thoughts,false);assert.equal(preset.function_calling,true);
+    assert.ok(isOutOfCharacter('  （场外）看看余额'));assert.equal(isOutOfCharacter('我问场外有什么'),false);
+    assert.equal(bundle.budget.exact,false);
+});
+
+test('生成PNG可读回完整角色卡，重新嵌入不保留旧卡元数据',async t=>{
+    const destination=await fs.mkdtemp(path.join(os.tmpdir(),'fields-card-'));t.after(()=>fs.rm(destination,{recursive:true,force:true}));
+    await buildCard({destination});const card=JSON.parse(await fs.readFile(path.join(destination,'host.json'),'utf8'));
+    const png=encodeCardPNG(card,await fs.readFile(path.join(destination,'host.png'))),chunks=[];
+    for(let offset=8;offset<png.length;){const length=png.readUInt32BE(offset),kind=png.toString('ascii',offset+4,offset+8);if(kind==='tEXt')chunks.push(png.subarray(offset+8,offset+8+length).toString());offset+=12+length;}
+    const metadata=chunks.filter(row=>row.startsWith('chara\0'));assert.equal(metadata.length,1);
+    assert.deepEqual(JSON.parse(Buffer.from(metadata[0].slice(6),'base64').toString()),card);
+});

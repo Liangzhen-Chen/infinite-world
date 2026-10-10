@@ -1,4 +1,4 @@
-// Domain lookup errors are useful feedback. Storage/transport faults still propagate.
+// Domain lookup failures can be corrected; transport and storage failures propagate.
 export async function lookupToolResult(action){
     try{return await action();}
     catch(error){
@@ -6,24 +6,26 @@ export async function lookupToolResult(action){
         throw error;
     }
 }
-
-export function parseTurn(reply,{location,startMinute,outOfCharacter=false}={}) {
-    if(outOfCharacter)return {valid:true,args:{outOfCharacter:true},visible:reply};
-    const matches=[...reply.matchAll(/<回合\s+([^>]*?)\s*\/>/g)];
-    const fallback={startMinute,minutes:10,location,present:[]};
-    if(matches.length!==1)return {valid:false,warning:'回合尾注缺失或重复，普通对话按10分钟处理',args:fallback,visible:reply.replace(/<回合[^>]*>/g,'')};
-    const attributes=Object.fromEntries([...matches[0][1].matchAll(/([\u4e00-\u9fffa-zA-Z]+)="([^"]*)"/g)].map(match=>[match[1],match[2]]));
-    const duration=/^(\d{1,5})分$/.exec(attributes.时长??'');
-    const minutes=duration?Number(duration[1]):NaN;
-    if(!Number.isSafeInteger(minutes)||minutes<0||minutes>43200||!attributes.地点)return {valid:false,warning:'回合尾注非法，普通对话按10分钟处理',args:fallback,visible:reply.replace(matches[0][0],'')};
-    return {valid:true,args:{startMinute,minutes,location:attributes.地点,present:attributes.在场?attributes.在场.split(',').filter(Boolean):[]},visible:reply.replace(matches[0][0],'')};
+export function stripTurn(reply){return String(reply).replace(/<回合(?=[\s/>])[^>]*\/?\s*>/g,'').trimEnd();}
+export function parseTurn(reply,{location,startMinute,minute=startMinute,present=null,outOfCharacter=false}={}){
+    const matches=[...reply.matchAll(/<回合\s+([^>]*?)\s*\/>/g)],visible=stripTurn(reply);
+    if(outOfCharacter)return{valid:matches.length===0,warning:matches.length?'场外回复包含尾注':null,args:{outOfCharacter:true},visible};
+    const fallback={startMinute,extraMinutes:minute>startMinute?0:10,location,present:[]};
+    const invalid=warning=>({valid:false,warning,args:fallback,visible});
+    if(matches.length!==1)return invalid('回合尾注缺失或重复');
+    const pairs=[...matches[0][1].matchAll(/([\u4e00-\u9fffa-zA-Z]+)="([^"]*)"/g)];
+    const attributes=Object.fromEntries(pairs.map(m=>[m[1],m[2]]));
+    if(new Set(pairs.map(m=>m[1])).size!==pairs.length||Object.keys(attributes).some(key=>!['额外','地点','在场'].includes(key)))return invalid('回合尾注属性非法');
+    const duration=/^(\d{1,5})分$/.exec(attributes.额外??''),extraMinutes=duration?Number(duration[1]):NaN;
+    if(!Number.isSafeInteger(extraMinutes)||extraMinutes>43200||!attributes.地点)return invalid('额外时长或地点缺失');
+    const claimed=(attributes.在场??'').split(',').map(value=>value.trim()).filter(Boolean);
+    const actual=present?claimed.filter(id=>present.includes(id)):claimed;
+    const warnings=[];
+    if(attributes.地点!==location)warnings.push('尾注地点与账本不一致，保留账本地点');
+    if(actual.length!==claimed.length)warnings.push('尾注在场名单与账本不一致，移除未在场者');
+    return{valid:warnings.length===0,warning:warnings.join('；')||null,args:{startMinute,extraMinutes,location,present:actual},visible};
 }
-
 export function toolResultWithClock(result,{startMinute,minute}={}){
     if(!Number.isSafeInteger(startMinute)||!Number.isSafeInteger(minute)||minute<startMinute)return result;
-    const elapsedMinutes=minute-startMinute;
-    return{...result,turnClock:{startMinute,minute,elapsedMinutes,
-        tailRule:elapsedMinutes>0?`本回合工具已推进${elapsedMinutes}分钟，包含操作过程中的对白。没有额外独立动作时尾注时长写${elapsedMinutes}分；不能再加默认10分。`
-            :result.actionScope?.clockManaged?`本次交锋耗${result.actionScope.seconds}秒，秒钟已由引擎累计，尚未满一分钟；只有本次交锋时尾注写0分，不再额外加入10分钟。`
-            :result.actionScope?.instantaneous?'本次工具明确为即时操作；只有该操作而无其他独立动作时尾注时长写0分，不另加默认10分。普通交谈仍按实际耗时结算。':'本回合工具尚未推进时间，普通对话按实际耗时结算。'}};
+    return{...result,turnClock:{startMinute,minute,elapsedMinutes:minute-startMinute}};
 }

@@ -21,6 +21,7 @@ test('E2/E19 浏览器：失败对账阻止出站生成，编辑与删除同步�
     await page.route('**/runtime.js',route=>route.fulfill({contentType:'text/javascript',body:runtime}));
     await page.route('**/turn.mjs',async route=>route.fulfill({contentType:'text/javascript',body:await fs.readFile('extension/turn.mjs','utf8')}));
     await page.route('**/state-read.mjs',async route=>route.fulfill({contentType:'text/javascript',body:await fs.readFile('extension/state-read.mjs','utf8')}));
+    for(const name of ['tools.mjs','prompt.mjs','message-view.mjs'])await page.route(`**/${name}`,async route=>route.fulfill({contentType:'text/javascript',body:await fs.readFile(`extension/${name}`,'utf8')}));
     await page.route('**/api/plugins/infinite-fields/**',async route=>{
         const request=route.request(),url=new URL(request.url());
         if(failReconcile&&url.pathname.endsWith('/reconcile'))return route.fulfill({status:400,json:{ok:false,error:'故意损坏的回放夹具'}});
@@ -60,4 +61,36 @@ test('E2/E19 浏览器：失败对账阻止出站生成，编辑与删除同步�
     assert.equal(await page.evaluate(()=>window.infiniteFieldsV2.view.document.state.location),'bld_hw_qingdeng');
     assert.equal(typeof await page.evaluate(()=>typeof window.fixtureHandlers.get('MESSAGE_EDITED')),'string');
     assert.equal(generationRequests,0);
+    // Real browser rendering consumes active server events, never prose or cached chat extras.
+    await page.evaluate(()=>window.infiniteFieldsV2.reconcile('normal',{},false));
+    const rented=await page.evaluate(()=>window.infiniteFieldsV2.execute('world_trade',{seller:'林穗',service:'住宿',days:1},'rent-ui'));
+    assert.equal(rented.ok,true);assert.match(await page.locator('#fields-pending').innerText(),/钱袋 -6铜，现有 174/);
+    await page.evaluate(async()=>{
+        window.fixtureContext.chat.push({is_system:true,mes:'tool payload',extra:{tool_invocations:[{}]}});
+        window.fixtureContext.chat.push({name:'主持人',mes:'<q who="npc_hw_linsui">房间备好了。</q>\n<回合 额外="0分" 地点="bld_hw_qingdeng" 在场="npc_hw_linsui"/>',extra:{fields_notices:[{text:'过期缓存不应出现'}]}});
+        const chat=document.createElement('div');chat.id='chat';chat.innerHTML='<div class="mes" mesid="1"><div class="mes_text"></div></div><div class="mes" mesid="2"><div class="mes_block"><div class="mes_text"></div></div></div>';document.body.append(chat);
+        await window.fixtureHandlers.get('MESSAGE_RECEIVED')(2);
+    });
+    assert.equal(await page.locator('.mes[mesid="1"]').isVisible(),false);
+    assert.equal(await page.locator('.mes[mesid="2"] .mes_text').innerText(),'林穗：房间备好了。');
+    assert.match(await page.locator('.fields-notices').innerText(),/钱袋 -6铜，现有 174/);
+    assert.doesNotMatch(await page.locator('.fields-notices').innerText(),/过期缓存/);
+    assert.equal(await page.evaluate(()=>window.infiniteFieldsV2.view.document.state.minute),550);
+    await page.evaluate(()=>window.infiniteFieldsV2.refresh());
+    assert.equal(await page.locator('.fields-notices').count(),1);
+    await page.evaluate(()=>window.infiniteFieldsV2.execute('world_trade',{seller:'林穗',service:'住宿',days:1},'rent-ui'));
+    assert.equal(await page.evaluate(()=>window.infiniteFieldsV2.view.document.state.player.coins),174);
+    const failed=await page.evaluate(()=>window.infiniteFieldsV2.execute('world_trade',{seller:'林穗',item:'item_bread',quantity:999999},'bad-ui'));
+    assert.equal(failed.ok,false);assert.match(await page.locator('#fields-error').innerText(),/操作未完成/);
+    assert.equal(await page.evaluate(()=>window.infiniteFieldsV2.view.document.state.player.coins),174);
+    await page.evaluate(()=>window.infiniteFieldsV2.reconcile('regenerate',{},false));
+    assert.equal(await page.locator('.fields-notices').count(),0);
+    assert.equal(await page.evaluate(()=>window.infiniteFieldsV2.view.document.state.player.coins),180);
+    // Opening an old chat must not silently migrate or save its metadata.
+    await page.evaluate(async()=>{
+        window.fixtureContext.chatId='old-chat';window.fixtureContext.chatMetadata={infinite_fields:{version:1,untouched:true}};
+        window.savedMetadata=null;await window.infiniteFieldsV2.refresh();
+    });
+    assert.equal(await page.evaluate(()=>window.savedMetadata),null);
+    assert.equal(await page.getByRole('button',{name:'在副本上启用新版'}).count(),1);
 });

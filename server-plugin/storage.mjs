@@ -112,6 +112,27 @@ export class CampaignStorage {
         this.cache.set(id, state); return state;
     }
     async read(id) { return this.exclusive(id, async () => this.view(await this.load(id))); }
+    async feedback(id) {
+        return this.exclusive(id, async () => {
+            const state = await this.load(id);
+            // A surviving action can have a different balance after an earlier action is removed.
+            // Recompute its display result from the branch instead of reusing the immutable receipt.
+            let projection=state.feedbackProjection;
+            if(projection?.sequence===state.sequence)return {reference:this.reference(state),events:structuredClone(projection.events)};
+            if(!projection||projection.revision!==state.revision){
+                projection={revision:state.revision,sequence:0,events:[],
+                    document:JSON.parse(await fs.readFile(path.join(this.directory(id),'initial.json'),'utf8'))};
+            }else projection={...projection,events:[...projection.events]};
+            for(const event of state.events){
+                if(event.sequence<=projection.sequence||!state.active.has(event.sequence))continue;
+                const output=this.reducer?await this.reducer(projection.document,event.input,{replay:true,result:event.result}):event;
+                projection.document=applyPatches(projection.document,output.patches);
+                if(event.anchor&&output.result?.notices?.length)projection.events.push({sequence:event.sequence,anchor:event.anchor,notices:output.result.notices});
+            }
+            projection.sequence=state.sequence;state.feedbackProjection=projection;
+            return {reference:this.reference(state),events:structuredClone(projection.events)};
+        });
+    }
     async snapshot(id, state) {
         const data = { sequence: state.sequence, revision: state.revision, document: state.document, checksum: digest(state.document), head: state.head, activeSequences: [...state.active] };
         data.envelopeHash = digest(data);

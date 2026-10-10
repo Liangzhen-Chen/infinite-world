@@ -18,6 +18,24 @@ const deduct = (document, input) => {
     if (coins < 0) throw new Error('余额不足');
     return { patches: [{ op: 'set', path: ['state', 'coins'], value: coins }], result: { cost: input.cost, balance: coins } };
 };
+
+test('反馈：拒绝与重复不生成卡片，撤销后重算后续余额，重启保持一致',async t=>{
+    const directory=await fs.mkdtemp(path.join(os.tmpdir(),'fields-feedback-'));t.after(()=>fs.rm(directory,{recursive:true,force:true}));
+    const reducer=(doc,input)=>{const value=deduct(doc,input);value.result.notices=[{type:'coins',text:`剩余${value.result.balance}`}];return value;};
+    const store=new CampaignStorage(directory,{reducer});await store.create({id:'feedback',worldVersion:'test',document:{state:{coins:180}}});
+    const first={id:'a',anchor:'a',input:{cost:6}},second={id:'b',anchor:'b',input:{cost:6}};
+    await store.transact('feedback',first,reducer);await store.transact('feedback',second,reducer);
+    assert.deepEqual((await store.feedback('feedback')).events.map(e=>e.notices[0].text),['剩余174','剩余168']);
+    await store.transact('feedback',second,reducer);
+    await assert.rejects(store.transact('feedback',{id:'bad',anchor:'b',input:{cost:1000}},reducer),/余额不足/);
+    assert.equal((await store.feedback('feedback')).events.length,2);
+    await store.reconcile('feedback',['b']);
+    const feedback=await store.feedback('feedback');assert.equal(feedback.events.length,1);assert.equal(feedback.events[0].notices[0].text,'剩余174');
+    assert.deepEqual(await new CampaignStorage(directory,{reducer}).feedback('feedback'),feedback);
+    await store.transact('feedback',{id:'c',anchor:'c',input:{cost:4}},reducer);
+    assert.equal((await store.feedback('feedback')).events[1].notices[0].text,'剩余170');
+    await store.reconcile('feedback',[]);assert.deepEqual((await store.feedback('feedback')).events,[]);
+});
 test('存储：幂等、拒绝原子性、并发顺序、键序与事件守恒', async t => {
     const { directory, store } = await fixture(t);
     const before = await store.export('test');

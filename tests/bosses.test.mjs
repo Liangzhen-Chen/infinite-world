@@ -75,7 +75,7 @@ test('首领对实际交锋记忆加强防备，换战术有效，拒绝操作�
         const trained=await run(d,'world_combat',{target:'boss_mud_tusk'},`compare${i}`),raw=await run(naive,'world_combat',{target:'boss_mud_tusk'},`compare${i}`);
         if(raw.result.damage>1){assert.ok(trained.result.damage<raw.result.damage);assert.equal(trained.result.adaptation.guarded,true);
             const receipt=toolResultWithClock(trained.result,{startMinute:d.state.minute,minute:trained.document.state.minute});
-            assert.equal(receipt.actionScope.seconds,10);assert.match(receipt.turnClock.tailRule,/尾注写0分/);seen=true;break;}
+            assert.equal(receipt.actionScope.seconds,10);assert.equal(receipt.turnClock.elapsedMinutes,0);assert.equal(receipt.turnClock.tailRule,undefined);seen=true;break;}
     }assert.equal(seen,true);
     const changed=await run(d,'world_combat',{target:'boss_mud_tusk',intent:'defend'},'new_tactic');assert.equal(changed.result.adaptation,undefined);
     assert.equal(changed.document.state.creatures.boss_mud_tusk.battleMemory.tactics.defend,1);

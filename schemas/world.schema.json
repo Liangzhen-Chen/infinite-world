@@ -67,6 +67,18 @@
       "items": {
         "$ref": "#/$defs/boss"
       }
+    },
+    "cultures": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/culture"
+      }
+    },
+    "deities": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/deity"
+      }
     }
   },
   "required": [
@@ -3973,6 +3985,379 @@
         "risk"
       ],
       "additionalProperties": true
+    },
+    "culture": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^(culture|deity)_[a-z][a-z0-9_-]*$"
+        },
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "aliases": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "scope": {
+          "type": "string",
+          "minLength": 1
+        },
+        "description": {
+          "type": "string",
+          "minLength": 1
+        },
+        "references": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "minItems": 1,
+          "uniqueItems": true
+        },
+        "category": {
+          "const": "culture"
+        },
+        "region": {
+          "type": "string",
+          "minLength": 1
+        },
+        "anchor": {
+          "type": "string",
+          "minLength": 1
+        },
+        "focus": {
+          "type": "string",
+          "minLength": 1
+        },
+        "naming": {
+          "type": "object",
+          "properties": {
+            "structure": {
+              "type": "string",
+              "minLength": 1
+            },
+            "syllableCount": {
+              "type": "array",
+              "items": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 8
+              },
+              "minItems": 2,
+              "maxItems": 2
+            }
+          },
+          "required": [
+            "structure",
+            "syllableCount"
+          ],
+          "additionalProperties": false
+        },
+        "facts": {
+          "type": "object",
+          "properties": {
+            "food": {
+              "type": "string",
+              "minLength": 1
+            },
+            "clothing": {
+              "type": "string",
+              "minLength": 1
+            },
+            "architecture": {
+              "type": "string",
+              "minLength": 1
+            },
+            "family": {
+              "type": "string",
+              "minLength": 1
+            },
+            "ageGender": {
+              "type": "string",
+              "minLength": 1
+            },
+            "law": {
+              "type": "string",
+              "minLength": 1
+            },
+            "magicAdventurers": {
+              "type": "string",
+              "minLength": 1
+            },
+            "festivalPractice": {
+              "type": "string",
+              "minLength": 1
+            },
+            "taboo": {
+              "type": "string",
+              "minLength": 1
+            },
+            "arts": {
+              "type": "string",
+              "minLength": 1
+            },
+            "speech": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "required": [
+            "food",
+            "clothing",
+            "architecture",
+            "family",
+            "ageGender",
+            "law",
+            "magicAdventurers",
+            "festivalPractice",
+            "taboo",
+            "arts",
+            "speech"
+          ],
+          "additionalProperties": false
+        },
+        "witness": {
+          "type": "string",
+          "minLength": 1
+        },
+        "witnessRelation": {
+          "type": "string",
+          "minLength": 1
+        },
+        "prose": {
+          "type": "object",
+          "properties": {
+            "dailyLife": {
+              "type": "string",
+              "minLength": 1
+            },
+            "familyAndLaw": {
+              "type": "string",
+              "minLength": 1
+            },
+            "faithAndFestivals": {
+              "type": "string",
+              "minLength": 1
+            },
+            "voice": {
+              "type": "string",
+              "minLength": 1
+            },
+            "proverbs": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "minLength": 1
+              },
+              "minItems": 10,
+              "uniqueItems": true
+            }
+          },
+          "required": [
+            "dailyLife",
+            "familyAndLaw",
+            "faithAndFestivals",
+            "voice",
+            "proverbs"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "aliases",
+        "scope",
+        "description",
+        "references",
+        "category",
+        "region",
+        "anchor",
+        "focus",
+        "naming",
+        "facts",
+        "witness",
+        "witnessRelation",
+        "prose"
+      ],
+      "additionalProperties": false
+    },
+    "deity": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^(culture|deity)_[a-z][a-z0-9_-]*$"
+        },
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "aliases": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "scope": {
+          "type": "string",
+          "minLength": 1
+        },
+        "description": {
+          "type": "string",
+          "minLength": 1
+        },
+        "references": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "minItems": 1,
+          "uniqueItems": true
+        },
+        "category": {
+          "const": "deity"
+        },
+        "culture": {
+          "type": "string",
+          "minLength": 1
+        },
+        "domains": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "minItems": 1,
+          "uniqueItems": true
+        },
+        "symbol": {
+          "type": "string",
+          "minLength": 1
+        },
+        "church": {
+          "type": "object",
+          "properties": {
+            "name": {
+              "type": "string",
+              "minLength": 1
+            },
+            "profession": {
+              "enum": [
+                "祭司",
+                "僧侣",
+                "道士"
+              ]
+            },
+            "organization": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "required": [
+            "name",
+            "profession",
+            "organization"
+          ],
+          "additionalProperties": false
+        },
+        "ritual": {
+          "type": "string",
+          "minLength": 1
+        },
+        "taboo": {
+          "type": "string",
+          "minLength": 1
+        },
+        "miracle": {
+          "type": "object",
+          "properties": {
+            "form": {
+              "type": "string",
+              "minLength": 1
+            },
+            "cost": {
+              "type": "string",
+              "minLength": 1
+            },
+            "directIntervention": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "required": [
+            "form",
+            "cost",
+            "directIntervention"
+          ],
+          "additionalProperties": false
+        },
+        "related": {
+          "type": "string",
+          "minLength": 1
+        },
+        "relation": {
+          "type": "string",
+          "minLength": 1
+        },
+        "prose": {
+          "type": "object",
+          "properties": {
+            "worship": {
+              "type": "string",
+              "minLength": 1
+            },
+            "organization": {
+              "type": "string",
+              "minLength": 1
+            },
+            "miracles": {
+              "type": "string",
+              "minLength": 1
+            },
+            "relations": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "required": [
+            "worship",
+            "organization",
+            "miracles",
+            "relations"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "aliases",
+        "scope",
+        "description",
+        "references",
+        "category",
+        "culture",
+        "domains",
+        "symbol",
+        "church",
+        "ritual",
+        "taboo",
+        "miracle",
+        "related",
+        "relation",
+        "prose"
+      ],
+      "additionalProperties": false
     }
   }
 }

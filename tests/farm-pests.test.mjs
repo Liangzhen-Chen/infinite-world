@@ -90,7 +90,7 @@ test('本地农田只读观察回执明确即时，区分成长损伤和收获�
     const set=setup(),c=await growing(set),before=structuredClone(c),out=await set.run(c,'world_farm',{operation:'inspect'},'inspect');
     assert.deepEqual(out.document,before);assert.equal(out.result.agriculture.field.damageType,'害兽啃食');
     assert.equal(out.result.actionScope.instantaneous,true);
-    assert.match(toolResultWithClock(out.result,{startMinute:c.state.minute,minute:out.document.state.minute}).turnClock.tailRule,/0分/);
+    assert.equal(toolResultWithClock(out.result,{startMinute:c.state.minute,minute:out.document.state.minute}).turnClock.elapsedMinutes,0);
     assert.equal(out.result.agriculture.populations,undefined);assert.equal(out.result.agriculture.field.populations,undefined);
 });
 test('重叠巡田不叠加，白昼巡田不保护夜间田鼠；失败仍耗时，不写成功保护',async()=>{

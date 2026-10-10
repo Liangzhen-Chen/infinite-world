@@ -1,6 +1,8 @@
-import {digest} from './storage.mjs';
+import {digest,applyPatches} from './storage.mjs';
+import {planWildlifeMigration}from'./wildlife-migration.mjs';
+import {planBossMigration}from'./boss-migration.mjs';
 
-const catalogs=['npcs','locations','items','professions','skills','spells','recipes'];
+const catalogs=['npcs','locations','items','professions','skills','spells','recipes','monsters','bosses','cultures','deities'];
 const same=(a,b)=>digest(a??null)===digest(b??null);
 
 // A new edition can add entities, but must keep every ID referenced by history.
@@ -41,6 +43,10 @@ export function planWorldUpgrade(document,oldWorld,newWorld,{worldHash,eventId,r
             else conflicts.push({path,kept:structuredClone(current[field]),proposed:npc[field]});
         }
     }
+    // New habitats and lairs enter the ledger with the edition update, never during an observation.
+    const updated=applyPatches(document,patches);
+    patches.push(...planWildlifeMigration(updated,newWorld.rules,newWorld.monsters??[]));
+    patches.push(...planBossMigration(updated,newWorld.rules,newWorld.bosses??[]));
     patches.push({op:'set',path:['worldHash'],value:worldHash},{op:'set',path:['worldVersion'],value:newWorld.version},
         {op:'set',path:['state','records',`world_update_${eventId}`],value:{category:'world_update',name:'世界更新记录',
             from:document.worldVersion,to:newWorld.version,minute:document.state.minute,added,conflicts,retained}});
