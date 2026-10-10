@@ -1,6 +1,6 @@
 {
   "index": 2,
-  "fingerprint": "7642e3099542cd2a015f24af9789376d1814d58b964fec4d534807bcec28e0aa",
+  "fingerprint": "cfe7c855cb22464f5049cfb4895cc8d92244b0958a4ef91e0899afd82433f428",
   "count": 37,
   "passed": 37,
   "ids": [
@@ -71,10 +71,6 @@
         "note": "L4：敲击声只供参考，不能听声确认内部暗伤。"
       },
       {
-        "id": "item_cheese_rye_panbread",
-        "note": "L4：保存上限1天，不能凭隔日复看继续食用。"
-      },
-      {
         "id": "item_war_pick",
         "note": "L4：锤头是锻钢，木柄不能写成通体锻钢。"
       },
@@ -101,6 +97,10 @@
       {
         "id": "item_rendered_cooking_fat",
         "note": "L4：清脂不夹焦屑；160克仅为脂重，保存7天。"
+      },
+      {
+        "id": "item_cheese_rye_panbread",
+        "note": "W3发布后固定抽样：夹乳酪后再烙两面，恢复既定工序顺序，不改原料。已复读修改后的全文，其余原文不变。"
       }
     ]
   },
