@@ -10,6 +10,7 @@ import { migrateLegacyChat } from './migrations.mjs';
 import { WorldRegistry } from './world-registry.mjs';
 import { atomicJSON } from './storage.mjs';
 import {catalogDefinition}from'./catalog.mjs';
+import {publicLoreEntries}from'./lore.mjs';
 
 export const info={id:'infinite-fields',name:'无限原野本地战役存储',description:'本项目自有的存档、账本与检索服务器插件'};
 export async function init(router,{ world=null, baseRoot=null, newCampaignSeed=randomUUID }={}){
@@ -59,13 +60,13 @@ export async function init(router,{ world=null, baseRoot=null, newCampaignSeed=r
             const old=indexes.get(key),next=new MemoryIndex({entities:selectedEngine.entities});
             next.entityIdentity=identity;
             if(old){
-                for(const record of old.documents.values())if(!record.id.startsWith('chat_')&&!record.id.startsWith('memory_'))next.upsert({...record,revision:undefined});
+                for(const record of old.documents.values())if(!record.id.startsWith('chat_')&&!record.id.startsWith('memory_')&&!record.id.startsWith('lore_'))next.upsert({...record,revision:undefined});
                 next.syncChat(old.chatMessages);
             }
             indexes.set(key,next);
         }
         const index=indexes.get(key),wanted=new Set();
-        for(const row of [...selectedEngine.world.cultures??[],...selectedEngine.world.deities??[]])index.upsert({
+        for(const row of publicLoreEntries(selectedEngine.world))index.upsert({
             id:`lore_${row.id}`,text:`${row.name}：${row.description}`,source:'公开世界设定',entities:[row.id,...row.references??[]],
             keywords:row.aliases??[],salience:2,revision:digest(row)});
         for(const [id,memory]of Object.entries(document.memories??{})){

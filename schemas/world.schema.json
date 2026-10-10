@@ -79,6 +79,769 @@
       "items": {
         "$ref": "#/$defs/deity"
       }
+    },
+    "factions": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "name": {
+            "type": "string",
+            "minLength": 1
+          },
+          "aliases": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "category": {
+            "type": "string",
+            "minLength": 1
+          },
+          "scope": {
+            "type": "string",
+            "minLength": 1
+          },
+          "references": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1
+            },
+            "minItems": 1,
+            "uniqueItems": true
+          },
+          "description": {
+            "type": "string",
+            "minLength": 1
+          },
+          "kind": {
+            "type": "string",
+            "minLength": 1
+          },
+          "culture": {
+            "type": "string",
+            "minLength": 1
+          },
+          "region": {
+            "type": "string",
+            "minLength": 1
+          },
+          "contactAnchor": {
+            "type": "string",
+            "minLength": 1
+          },
+          "contactMode": {
+            "type": "string",
+            "minLength": 1
+          },
+          "foundedYear": {
+            "type": "integer",
+            "maximum": -1
+          },
+          "leader": {
+            "type": "string",
+            "minLength": 1
+          },
+          "coreMembers": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1
+            },
+            "minItems": 1,
+            "uniqueItems": true
+          },
+          "resources": {
+            "type": "object",
+            "properties": {
+              "treasuryCopper": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "memberCount": {
+                "type": "integer",
+                "minimum": 2
+              },
+              "assets": {
+                "type": "string",
+                "minLength": 1
+              },
+              "resourceScope": {
+                "type": "string",
+                "minLength": 1
+              }
+            },
+            "required": [
+              "treasuryCopper",
+              "memberCount",
+              "assets",
+              "resourceScope"
+            ],
+            "additionalProperties": false
+          },
+          "publicGoal": {
+            "type": "string",
+            "minLength": 1
+          },
+          "privateGoal": {
+            "type": "string",
+            "minLength": 1
+          },
+          "method": {
+            "type": "string",
+            "minLength": 1
+          },
+          "divisions": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1
+            },
+            "minItems": 2,
+            "uniqueItems": true
+          },
+          "offers": {
+            "type": "string",
+            "minLength": 1
+          },
+          "demands": {
+            "type": "string",
+            "minLength": 1
+          },
+          "reputation": {
+            "type": "object",
+            "properties": {
+              "trusted": {
+                "type": "object",
+                "properties": {
+                  "minimum": {
+                    "type": "integer",
+                    "minimum": -100,
+                    "maximum": 100
+                  },
+                  "response": {
+                    "type": "string",
+                    "minLength": 1
+                  }
+                },
+                "required": [
+                  "minimum",
+                  "response"
+                ],
+                "additionalProperties": false
+              },
+              "neutral": {
+                "type": "object",
+                "properties": {
+                  "minimum": {
+                    "type": "integer",
+                    "minimum": -100,
+                    "maximum": 100
+                  },
+                  "response": {
+                    "type": "string",
+                    "minLength": 1
+                  }
+                },
+                "required": [
+                  "minimum",
+                  "response"
+                ],
+                "additionalProperties": false
+              },
+              "distrusted": {
+                "type": "object",
+                "properties": {
+                  "maximum": {
+                    "type": "integer",
+                    "minimum": -100,
+                    "maximum": 100
+                  },
+                  "response": {
+                    "type": "string",
+                    "minLength": 1
+                  }
+                },
+                "required": [
+                  "maximum",
+                  "response"
+                ],
+                "additionalProperties": false
+              }
+            },
+            "required": [
+              "trusted",
+              "neutral",
+              "distrusted"
+            ],
+            "additionalProperties": false
+          },
+          "relations": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": "object",
+              "properties": {
+                "faction": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "score": {
+                  "type": "integer",
+                  "minimum": -100,
+                  "maximum": 100
+                },
+                "reason": {
+                  "type": "string",
+                  "minLength": 1
+                }
+              },
+              "required": [
+                "faction",
+                "score",
+                "reason"
+              ],
+              "additionalProperties": false
+            }
+          },
+          "clock": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "minLength": 1
+              },
+              "name": {
+                "type": "string",
+                "minLength": 1
+              },
+              "intervalDays": {
+                "type": "integer",
+                "minimum": 1
+              },
+              "probability": {
+                "type": "number",
+                "exclusiveMinimum": 0,
+                "maximum": 1
+              },
+              "initialStage": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 0
+              },
+              "trigger": {
+                "type": "string",
+                "minLength": 1
+              },
+              "stageEffects": {
+                "type": "array",
+                "minItems": 3,
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "stage": {
+                      "type": "integer",
+                      "minimum": 1
+                    },
+                    "effect": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "requires": {
+                      "type": "string",
+                      "minLength": 1
+                    }
+                  },
+                  "required": [
+                    "stage",
+                    "effect",
+                    "requires"
+                  ],
+                  "additionalProperties": false
+                }
+              },
+              "counterplay": {
+                "type": "string",
+                "minLength": 1
+              },
+              "execution": {
+                "type": "string",
+                "minLength": 1
+              }
+            },
+            "required": [
+              "id",
+              "name",
+              "intervalDays",
+              "probability",
+              "initialStage",
+              "trigger",
+              "stageEffects",
+              "counterplay",
+              "execution"
+            ],
+            "additionalProperties": false
+          },
+          "prose": {
+            "type": "object",
+            "properties": {
+              "conduct": {
+                "type": "string",
+                "minLength": 1
+              },
+              "internalLife": {
+                "type": "string",
+                "minLength": 1
+              },
+              "playerEncounter": {
+                "type": "string",
+                "minLength": 1
+              }
+            },
+            "required": [
+              "conduct",
+              "internalLife",
+              "playerEncounter"
+            ],
+            "additionalProperties": false
+          },
+          "publicDescription": {
+            "type": "string",
+            "minLength": 1
+          },
+          "descriptionVisibility": {
+            "const": "gm_private"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "aliases",
+          "category",
+          "scope",
+          "references",
+          "description",
+          "kind",
+          "culture",
+          "region",
+          "contactAnchor",
+          "contactMode",
+          "foundedYear",
+          "leader",
+          "coreMembers",
+          "resources",
+          "publicGoal",
+          "privateGoal",
+          "method",
+          "divisions",
+          "offers",
+          "demands",
+          "reputation",
+          "relations",
+          "clock",
+          "prose",
+          "publicDescription",
+          "descriptionVisibility"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "history": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "name": {
+            "type": "string",
+            "minLength": 1
+          },
+          "aliases": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "category": {
+            "type": "string",
+            "minLength": 1
+          },
+          "scope": {
+            "type": "string",
+            "minLength": 1
+          },
+          "references": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1
+            },
+            "minItems": 1,
+            "uniqueItems": true
+          },
+          "description": {
+            "type": "string",
+            "minLength": 1
+          },
+          "year": {
+            "type": "integer",
+            "maximum": -1
+          },
+          "dateLabel": {
+            "type": "string",
+            "minLength": 1
+          },
+          "calendar": {
+            "type": "string",
+            "minLength": 1
+          },
+          "era": {
+            "type": "string",
+            "minLength": 1
+          },
+          "region": {
+            "type": "string",
+            "minLength": 1
+          },
+          "culture": {
+            "type": "string",
+            "minLength": 1
+          },
+          "contactAnchor": {
+            "type": "string",
+            "minLength": 1
+          },
+          "locationPrecision": {
+            "type": "string",
+            "minLength": 1
+          },
+          "participants": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": "object",
+              "properties": {
+                "kind": {
+                  "const": "event_local_collective"
+                },
+                "name": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "id": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "lifetime": {
+                  "type": "string",
+                  "minLength": 1
+                }
+              },
+              "required": [
+                "kind",
+                "name",
+                "id",
+                "lifetime"
+              ],
+              "additionalProperties": false
+            }
+          },
+          "occurrence": {
+            "type": "string",
+            "minLength": 1
+          },
+          "presentTrace": {
+            "type": "object",
+            "properties": {
+              "entity": {
+                "type": "string",
+                "minLength": 1
+              },
+              "fact": {
+                "type": "string",
+                "minLength": 1
+              },
+              "type": {
+                "const": "institutional_practice"
+              },
+              "evidenceAccess": {
+                "type": "string",
+                "minLength": 1
+              }
+            },
+            "required": [
+              "entity",
+              "fact",
+              "type",
+              "evidenceAccess"
+            ],
+            "additionalProperties": false
+          },
+          "accounts": {
+            "type": "object",
+            "properties": {
+              "verified": {
+                "type": "object",
+                "properties": {
+                  "source": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "claim": {
+                    "type": "string",
+                    "minLength": 1
+                  }
+                },
+                "required": [
+                  "source",
+                  "claim"
+                ],
+                "additionalProperties": false
+              },
+              "received": {
+                "type": "object",
+                "properties": {
+                  "truth": {
+                    "const": "partial_or_false"
+                  },
+                  "source": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "falseClaim": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "correction": {
+                    "type": "string",
+                    "minLength": 1
+                  }
+                },
+                "required": [
+                  "truth",
+                  "source",
+                  "falseClaim",
+                  "correction"
+                ],
+                "additionalProperties": false
+              }
+            },
+            "required": [
+              "verified",
+              "received"
+            ],
+            "additionalProperties": false
+          },
+          "prose": {
+            "type": "object",
+            "properties": {
+              "trueAccount": {
+                "type": "string",
+                "minLength": 1
+              },
+              "receivedAccount": {
+                "type": "string",
+                "minLength": 1
+              },
+              "presentTrace": {
+                "type": "string",
+                "minLength": 1
+              }
+            },
+            "required": [
+              "trueAccount",
+              "receivedAccount",
+              "presentTrace"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "aliases",
+          "category",
+          "scope",
+          "references",
+          "description",
+          "year",
+          "dateLabel",
+          "calendar",
+          "era",
+          "region",
+          "culture",
+          "contactAnchor",
+          "locationPrecision",
+          "participants",
+          "occurrence",
+          "presentTrace",
+          "accounts",
+          "prose"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "factionPeople": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "name": {
+            "type": "string",
+            "minLength": 1
+          },
+          "aliases": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "category": {
+            "const": "npc_roster"
+          },
+          "detailLevel": {
+            "const": "roster"
+          },
+          "scope": {
+            "type": "string",
+            "minLength": 1
+          },
+          "age": {
+            "type": "integer",
+            "minimum": 18,
+            "maximum": 300
+          },
+          "flags": {
+            "type": "object",
+            "properties": {
+              "minor": {
+                "const": false
+              },
+              "romanceable": {
+                "const": false
+              }
+            },
+            "required": [
+              "minor",
+              "romanceable"
+            ],
+            "additionalProperties": false
+          },
+          "culture": {
+            "type": "string",
+            "minLength": 1
+          },
+          "household": {
+            "type": "string",
+            "minLength": 1
+          },
+          "occupation": {
+            "type": "string",
+            "minLength": 1
+          },
+          "traits": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1
+            },
+            "minItems": 2,
+            "uniqueItems": true
+          },
+          "concern": {
+            "type": "string",
+            "minLength": 1
+          },
+          "visibleFeature": {
+            "type": "string",
+            "minLength": 1
+          },
+          "region": {
+            "type": "string",
+            "minLength": 1
+          },
+          "location": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "availability": {
+            "type": "string",
+            "minLength": 1
+          },
+          "faction": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "aliases",
+          "category",
+          "detailLevel",
+          "scope",
+          "age",
+          "flags",
+          "culture",
+          "household",
+          "occupation",
+          "traits",
+          "concern",
+          "visibleFeature",
+          "region",
+          "location",
+          "availability",
+          "faction"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "eras": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "name": {
+            "type": "string",
+            "minLength": 1
+          },
+          "start": {
+            "type": "integer"
+          },
+          "end": {
+            "type": "integer"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "start",
+          "end"
+        ],
+        "additionalProperties": false
+      }
     }
   },
   "required": [

@@ -19,6 +19,8 @@ export function tradesReviewRequest(entry,draft,context){
  const {quality,...facts}=entry;
  const body=defaultReviewRequest({...facts,...(quality?{qualityGrade:{name:quality,meaning:'装备品质等级；材质由name/use及配方决定'}}:{})},draft,context);
  body.messages[0].content+=' 注意：quality是品质等级，不是材料名称，铜品质也可为铁制。materials.amount是目录份数；“四枚鸡蛋为一份”时amount=1允许四枚蛋。骨架processFacts与引用facts.use均为权威事实。只报告真正相反的句子：理由若是数值一致、不构成矛盾、未声明但相容，就不应列hard。普通工序分步骤耗时可小于总耗时，只有全程或合计与minutes不符才是硬矛盾。木炭与刨屑供炉火，不混入食物或染液，不能要求把燃料吃下。废料弃置与byproducts空数组一致。';
+ body.messages[0].content+=' 返回的是矛盾列表，不是核对清单。数值一致或材料等价的核对结果不得放进contradictions，即使标为soft也不应列入。例如骨架weight=0.1公斤，说明100克，两者一致，正确输出为{\"contradictions\":[]}；若说明200克，则须保留hard并指出200克与100克不符。';
+ if(context?.materials){const payload=JSON.parse(body.messages[1].content);payload.materialUnits=context.materials.map(row=>({id:row.item,portions:row.amount,gramsPerPortion:row.facts.weight*1000,totalGrams:row.amount*row.facts.weight*1000}));body.messages[1].content=JSON.stringify(payload);}
  return body;
 }
 export function assembleTradesCandidate(world,bones,lore){

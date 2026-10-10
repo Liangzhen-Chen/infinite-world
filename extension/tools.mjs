@@ -31,7 +31,7 @@ define('world_settlement','凭授权使用指定聚落公共物资开工建设�
 define('world_quest','发布、接受或核实完成指定任务及其托管报酬。',{operation:str,publisher:str,personal:bool,grade:str,reward:int,content:str,quest:str,objective:object({type:str,item:str,quantity:int,location:str,project:str},['type'])},['operation']);
 define('world_create','登记原创人物或组织，提供名称、类型和人物资料。',{type:str,name:str,project:str,data:object({age:int,occupation:str,notes:str},[])},['type','name','data']);
 define('world_search','按关键词检索长期事实和原始聊天，可指定条数。',{query:str,limit:int},['query']);
-define('world_catalog','按名称或编号查公开规则，可按类别分页列出地点、物品或配方。',{entity:str,kind:{type:'string',enum:['profession','skill','spell','item','recipe','feature','location']},offset:int});
+define('world_catalog','按名称或编号查公开规则与文化、势力、历史资料，可按类别分页列出。',{entity:str,kind:{type:'string',enum:['profession','skill','spell','item','recipe','feature','location','culture','deity','faction','history']},offset:int});
 define('world_read','查看玩家、行囊、人物或约定等已记录状态。',{section:str});
 const routes=new Map();
 function group(name,description,members){

@@ -44,7 +44,7 @@ export class WorldEngine {
     constructor(world) {
         this.world = world; this.rules = world.rules;
         if(![1,2].includes(this.rules.engineRevision??1))throw new Error('此世界使用尚不支持的引擎版本，停止加载');
-        this.entities = [...world.npcs,...world.locations,...world.items,...world.professions,...world.skills,...world.spells,...world.recipes??[],...world.monsters??[],...world.bosses??[],...world.cultures??[],...world.deities??[]];
+        this.entities = [...world.npcs,...world.locations,...world.items,...world.professions,...world.skills,...world.spells,...world.recipes??[],...world.monsters??[],...world.bosses??[],...world.cultures??[],...world.deities??[],...world.factions??[],...world.history??[],...world.factionPeople??[],...world.eras??[]];
         this.resolver = new EntityResolver(this.entities);
         this.byId = this.resolver.entities;
         if((this.rules.engineRevision??1)===1)this.compat=new Phase1Engine(world);

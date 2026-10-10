@@ -1,15 +1,15 @@
 {
   "total": 50,
-  "passed": 49,
-  "manual": 1,
+  "passed": 50,
+  "manual": 0,
   "pending": 0,
-  "costUpperYuan": 3.3600088399999994,
+  "costUpperYuan": 3.3625859599999997,
   "batches": [
     {
       "index": 0,
-      "fingerprint": "9b908cdcdd44551e3cbbb71b527cebfeff214c6c2072499ad3237ccfde66fe54",
+      "fingerprint": "842b1e8e057bd86d8d5da585047fa7aefd8228dcf31eb9b3a0371df8a2bfebed",
       "count": 25,
-      "passed": 24,
+      "passed": 25,
       "ids": [
         "recipe_w3b_barley_pea_stew",
         "recipe_w3b_leek_fish_pot",
@@ -38,9 +38,7 @@
         "recipe_w3b_sheath_pouch"
       ],
       "rewritten": 13,
-      "manual": [
-        "recipe_w3b_honey_curd_spread"
-      ],
+      "manual": [],
       "pending": [],
       "flagged": [
         "recipe_w3b_barley_pea_stew",
@@ -73,7 +71,7 @@
         "recipe_w3b_thread_rack"
       ],
       "l4": {
-        "approved": false,
+        "approved": true,
         "notes": [
           {
             "id": "recipe_w3b_shutter_panel",
@@ -85,7 +83,7 @@
           },
           {
             "id": "recipe_w3b_honey_curd_spread",
-            "note": "L4：榛仁一份应为200克，旧说明少计100克。"
+            "note": "已复读全文：榛仁200克、凝块100克、蜜100克对应各一份，总投入400克，成品380克，残屑弃置；20分钟、当日食用和三项工具相符。明确单位后的定点L2无矛盾，不改骨架与原文。"
           },
           {
             "id": "recipe_w3b_vinegar_carrot",
@@ -170,7 +168,7 @@
         ]
       },
       "costUpperYuan": 2.9468760400000003,
-      "manualRatio": 0.04,
+      "manualRatio": 0,
       "needsSystemicRepair": false
     },
     {

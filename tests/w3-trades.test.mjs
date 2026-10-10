@@ -8,7 +8,9 @@ import{WorldRegistry}from'../server-plugin/world-registry.mjs';
 import{archivedReducer}from'../server-plugin/archived-reducer.mjs';
 import{loadWorld}from'../tools/load-world.mjs';
 import{economyW3Trades}from'../world/design/economy-w3-trades.mjs';
-import{assembleTradesCandidate}from'../tools/w3-trades.mjs';
+import{assembleTradesCandidate,tradesReviewRequest}from'../tools/w3-trades.mjs';
+import{tradesPublicationFiles}from'../tools/w3-trades-publish.mjs';
+import{w3Context}from'../tools/w3-content.mjs';
 import{WorldEngine}from'../server-plugin/engine.mjs';
 import{applyPatches}from'../server-plugin/storage.mjs';
 import{validateWorld}from'../tools/validate-world.mjs';
@@ -42,13 +44,18 @@ test('候选矿镐从段岩真实有限库存购买，双方铜币与镐数量�
 
 
 test('候选 world_upgrade 保留已交易库存和人物变化，新的书及配方目录可检索',async t=>{
- const root=await fs.mkdtemp(path.join(os.tmpdir(),'w3-trades-upgrade-'));t.after(()=>fs.rm(root,{recursive:true,force:true}));
- const registry=new WorldRegistry(path.join(root,'worlds')),store=new CampaignStorage(path.join(root,'saves'),{reducer:archivedReducer(registry)});
- const oldEngine=new WorldEngine(world),seed=JSON.parse(await fs.readFile('tests/fixtures/legacy/seed.json','utf8')),document=oldEngine.initialFromLegacy(seed,'w3-trades-upgrade');
- document.worldHash=await registry.put(world);document.state.player.coins=319;
+    const root=await fs.mkdtemp(path.join(os.tmpdir(),'w3-trades-upgrade-'));t.after(()=>fs.rm(root,{recursive:true,force:true}));
+    const registry=new WorldRegistry(path.join(root,'worlds')),store=new CampaignStorage(path.join(root,'saves'),{reducer:archivedReducer(registry)});
+    // Reconstruct the edition before this batch. Once published, loadWorld()
+    // already contains these supplies and cannot stand in for an old edition.
+    const old=structuredClone(world),addedItems=new Set(bones.items.map(row=>row.id)),addedRecipes=new Set(bones.recipes.map(row=>row.id));
+    old.items=old.items.filter(row=>!addedItems.has(row.id));old.recipes=old.recipes.filter(row=>!addedRecipes.has(row.id));
+    for(const npc of old.npcs)for(const id of Object.keys(npc.inventory??{}))if(addedItems.has(id))delete npc.inventory[id];
+    const oldEngine=new WorldEngine(old),seed=JSON.parse(await fs.readFile('tests/fixtures/legacy/seed.json','utf8')),document=oldEngine.initialFromLegacy(seed,'w3-trades-upgrade');
+    document.worldHash=await registry.put(old);document.state.player.coins=319;
  document.state.npcs.npc_hw_duanyan.coins=731;document.state.npcs.npc_hw_duanyan.trust=19;
  delete document.state.npcs.npc_hw_duanyan.inventory.item_iron;
- const before=structuredClone(document.state),next=assembleTradesCandidate(world,bones,lore);next.version='w3-trades-candidate';next.rules.version=next.version;
+    const before=structuredClone(document.state),next=assembleTradesCandidate(old,bones,lore);next.version='w3-trades-candidate';next.rules.version=next.version;
  await store.create({id:'old',worldVersion:world.version,document});const nextHash=await registry.put(next);
  await store.transact('old',{id:'update',input:{type:'world_upgrade',worldHash:nextHash,eventId:'update'}},store.reducer);
  const after=(await store.read('old')).document,engine=await registry.get(after.worldHash);
@@ -58,4 +65,23 @@ test('候选 world_upgrade 保留已交易库存和人物变化，新的书及�
  const inventoryConflict=after.state.records.world_update_update.conflicts.find(row=>row.path.join('.')==='state.npcs.npc_hw_duanyan.inventory');
  assert.ok(inventoryConflict,'既有库存不被新开局供货计划覆盖，必须记录冲突');
  assert.equal(inventoryConflict.proposed.item_mining_pick,2);assert.equal(after.state.npcs.npc_hw_duanyan.inventory.item_mining_pick,undefined);
+});
+
+
+test('发布计划只补本批缺失库存，不覆盖人物新增字段或已耗尽库存',()=>{
+ const baseline=structuredClone(world.npcs);baseline[0].biography={futureField:'保留后续人物档'};
+ baseline.find(row=>row.id==='npc_hw_duanyan').inventory.item_mining_pick=0;
+ const before=structuredClone(baseline),candidate=assembleTradesCandidate(world,bones,lore),files=tradesPublicationFiles(candidate,bones,baseline);
+ assert.deepEqual(baseline,before);assert.deepEqual(files.map(([file])=>file),['world/meta/items.json','world/meta/recipes.json','world/people/baseline.json']);
+ const people=files[2][1];assert.equal(people.length,baseline.length);assert.deepEqual(people[0].biography,baseline[0].biography);
+ assert.equal(people.find(row=>row.id==='npc_hw_duanyan').inventory.item_mining_pick,0);
+ for(const old of before){const after=people.find(row=>row.id===old.id);for(const [key,value]of Object.entries(old))if(key!=='inventory')assert.deepEqual(after[key],value);for(const [item,quantity]of Object.entries(old.inventory))assert.deepEqual(after.inventory[item],quantity);}
+});
+
+test('L2 请求按目录份数明确克数换算，仍保留原文与矛盾报告要求',()=>{
+ const entry=bones.recipes.find(row=>row.id==='recipe_w3b_honey_curd_spread'),draft={id:entry.id,process:'一份200克榛仁。'},context=w3Context(world,bones,entry);
+ const request=tradesReviewRequest(entry,draft,context),payload=JSON.parse(request.messages[1].content);
+ assert.deepEqual(payload.draft,draft);assert.deepEqual(payload.publishedFacts,JSON.parse(JSON.stringify(context)));
+ assert.deepEqual(payload.materialUnits.find(row=>row.id==='item_hazelnut'),{id:'item_hazelnut',portions:1,gramsPerPortion:200,totalGrams:200});
+ assert.match(request.messages[0].content,/须保留hard/);
 });

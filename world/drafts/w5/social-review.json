@@ -53,5 +53,15 @@
     "sites": 60,
     "rumors": 300
   },
-  "commit": "未提交；由主会话协调独立内容提交"
+  "commit": "未提交；由主会话协调独立内容提交",
+  "formalIntegration": {
+    "date": "2026-10-10",
+    "sourcePublished": true,
+    "publicProjection": true,
+    "rosterInstantiated": false,
+    "clocksExecuted": false,
+    "historyInvestigationImplemented": false,
+    "validation": "新增HTTP与结构测试通过，全量325/325",
+    "deployment": false
+  }
 }

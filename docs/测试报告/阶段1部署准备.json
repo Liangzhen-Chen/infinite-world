@@ -6,11 +6,11 @@
   "files": [
     {
       "path": "plugin/tools/load-world.mjs",
-      "sha256": "77b0d2e9ed554b5dde3a65c712a300d38d08369a9a4e90e9fddd919203f4db0f"
+      "sha256": "8da22094f42e6ad54c7e66b04f6811d48168fa3b57fbddc24d37a7ed3372d0b6"
     },
     {
       "path": "plugin/extension/tools.mjs",
-      "sha256": "14ea848c371985f1d1443a8a8b3e9e6423f482864221c30329e932b3d94790c4"
+      "sha256": "a106246bf7d8ed4c1c99816e895507564b5b0a58fe51fe2bf44232f900e2feac"
     },
     {
       "path": "plugin/server-plugin/activities.mjs",
@@ -42,7 +42,7 @@
     },
     {
       "path": "plugin/server-plugin/catalog.mjs",
-      "sha256": "9a431258ee2e452eeb4c15efb518d0085f627b39b050128a7c5c2074936366a8"
+      "sha256": "ef2363b28e82131a4bbd5bf0df0eaefadcd7360cf78bc1cffff1ae7bfd73a480"
     },
     {
       "path": "plugin/server-plugin/character.mjs",
@@ -70,7 +70,7 @@
     },
     {
       "path": "plugin/server-plugin/engine.mjs",
-      "sha256": "917f368882d3ad36a2b9a4df2a0d345f8bdcc15e60e46c9928143c6c226fc81e"
+      "sha256": "d7d38a27f3a7d1d72cf02be5361c8ee81e210cc0024dd33e32962b37b09c5ea5"
     },
     {
       "path": "plugin/server-plugin/environment.mjs",
@@ -86,7 +86,7 @@
     },
     {
       "path": "plugin/server-plugin/index.mjs",
-      "sha256": "0a283a309e19061343341f254fd204277b70afb417d817d7af2194180a3e4acb"
+      "sha256": "a767a2bf5060bb59be8de49ea76b5695398b8d90dc538bc7737fe52f30ef4d73"
     },
     {
       "path": "plugin/server-plugin/items.mjs",
@@ -107,6 +107,10 @@
     {
       "path": "plugin/server-plugin/legacy/seed.json",
       "sha256": "76754258a7841e1172d6e60d91ae72e94ca36a9723c8651e3537af01ef03717a"
+    },
+    {
+      "path": "plugin/server-plugin/lore.mjs",
+      "sha256": "b266022bf2f4a50bcc59088fb0fd08f48bab571b4c73ac94fac5a6b87bce1889"
     },
     {
       "path": "plugin/server-plugin/magic-status.mjs",
@@ -198,7 +202,7 @@
     },
     {
       "path": "plugin/server-plugin/world-upgrade.mjs",
-      "sha256": "5d4289920520b9796afbc17382ed27ddd62ed886dc046ea2e0a6a0c98abeed58"
+      "sha256": "f962185a977393ea20c688109ea4ef6dde36eb41fe45798a886f21260344b66f"
     },
     {
       "path": "plugin/world/design/agriculture-foundation.mjs",
@@ -286,7 +290,7 @@
     },
     {
       "path": "plugin/world/design/w5-history.mjs",
-      "sha256": "c70b91b59c2feb11c6c5d0d844d50198ef7c7322ca58b3e26bdc8bd693a2b170"
+      "sha256": "61ea9cf2b775e97a1e1f41a08ef95e740220040ff3d61f6680e70bba1d94b139"
     },
     {
       "path": "plugin/world/design/w5-social-integration.json",
@@ -321,12 +325,28 @@
       "sha256": "b70c622ea34fc64868b916de71a1cb53a9486516abb8160fba1e25b156e2a2f3"
     },
     {
+      "path": "plugin/world/lore/eras.json",
+      "sha256": "012f22f1e107317b69732c3eb1bbd3248a937a5485f420cc9e6e433d568eb4c4"
+    },
+    {
+      "path": "plugin/world/lore/factionPeople.json",
+      "sha256": "f72916eb93bbd128abbdd48da8a38867eb032c7e80ef548de5d62b53238a9356"
+    },
+    {
+      "path": "plugin/world/lore/factions.json",
+      "sha256": "9010b91ca27407142cc4c931adae2499c8d2584dba9e07dea2a2da9f1833d005"
+    },
+    {
+      "path": "plugin/world/lore/history.json",
+      "sha256": "ada4cb238bb06da5bbe0050070a8838f47a10cae3e2c83ed17ba655b84dbf690"
+    },
+    {
       "path": "plugin/world/meta/blocklist.json",
       "sha256": "a933a97f1b410dc101f791b5a754599d34de8dccdc823170875e18206edbacac"
     },
     {
       "path": "plugin/world/meta/items.json",
-      "sha256": "9abbeeeb1b016f0abd6a958be05745008cc269a73719970dfcfafab2a1b79353"
+      "sha256": "d804e478f8928d33613e0b9b93a5d9db6ed35a14e4071b8b5db352569c870d81"
     },
     {
       "path": "plugin/world/meta/monsters.json",
@@ -338,7 +358,7 @@
     },
     {
       "path": "plugin/world/meta/recipes.json",
-      "sha256": "8b10862dbc26ba33661f2ba4584c1c2dcd1c298994a0f228269178fe78918ae3"
+      "sha256": "eb4ab52d66b9c6b1a20c5a0b24323b3a5f587667342e76179ca7e509e7883ed1"
     },
     {
       "path": "plugin/world/meta/rules.json",
@@ -354,7 +374,7 @@
     },
     {
       "path": "plugin/world/people/baseline.json",
-      "sha256": "dd86a0938ad83b4f0e0f8d8f1139a9bf69b9b1be0c64c1104631fcf3b7ea8345"
+      "sha256": "5d65f84e5fa89abaf999d90f89e20886effbb1b9585d933b83e8e788defdf762"
     },
     {
       "path": "plugin/node_modules/opencc-js/CHANGELOG.md",
@@ -602,7 +622,7 @@
     },
     {
       "path": "extension/tools.mjs",
-      "sha256": "14ea848c371985f1d1443a8a8b3e9e6423f482864221c30329e932b3d94790c4"
+      "sha256": "a106246bf7d8ed4c1c99816e895507564b5b0a58fe51fe2bf44232f900e2feac"
     },
     {
       "path": "extension/generation.mjs",

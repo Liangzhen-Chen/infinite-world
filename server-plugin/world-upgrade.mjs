@@ -2,7 +2,7 @@ import {digest,applyPatches} from './storage.mjs';
 import {planWildlifeMigration}from'./wildlife-migration.mjs';
 import {planBossMigration}from'./boss-migration.mjs';
 
-const catalogs=['npcs','locations','items','professions','skills','spells','recipes','monsters','bosses','cultures','deities'];
+const catalogs=['npcs','locations','items','professions','skills','spells','recipes','monsters','bosses','cultures','deities','factions','history','factionPeople','eras'];
 const same=(a,b)=>digest(a??null)===digest(b??null);
 
 // A new edition can add entities, but must keep every ID referenced by history.
@@ -13,7 +13,7 @@ export function compatibleWorld(oldWorld,newWorld){
         for(const old of oldWorld[category]??[]){
             const next=incoming.get(old.id);
             if(!next){incoming.set(old.id,structuredClone(old));retained.push({category,id:old.id,reason:'历史实体未删除'});}
-            else next.aliases=[...new Set([...(next.aliases??[]),old.name,...(old.aliases??[])])].filter(name=>name!==next.name);
+            else if(category!=='eras')next.aliases=[...new Set([...(next.aliases??[]),old.name,...(old.aliases??[])])].filter(name=>name!==next.name);
         }
         world[category]=[...incoming.values()];
     }

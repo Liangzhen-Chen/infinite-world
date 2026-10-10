@@ -7,6 +7,8 @@ import{hashContent,parseModelJSON}from'./content-pipeline.mjs';
 import{DeepSeekClient}from'./deepseek-client.mjs';
 const read=async file=>JSON.parse(await fs.readFile(file,'utf8')),write=(file,value)=>fs.writeFile(file,JSON.stringify(value,null,2)+'\n');
 const world=await loadWorld(),bones=economyW3Trades(world),blocklist=await read('world/meta/blocklist.json');
+const onlyId=process.argv.includes('--id')?process.argv[process.argv.indexOf('--id')+1]:null;
+if(process.argv.includes('--id')&&![...bones.items,...bones.recipes].some(row=>row.id===onlyId))throw new Error('--id 必须是当前候选编号');
 let corrections={};try{corrections=await read(`${root}/manual-corrections.json`);}catch(error){if(error.code!=='ENOENT')throw error;}
 const all=[];for(const kind of['items','recipes'])for(const entry of bones[kind]){const file=`${root}/${kind}/${entry.id}.json`,record=await read(file),patch=corrections[entry.id],context=w3Context(world,bones,entry);
  const edited=patch&&record.manualCorrection?.reason!==patch.reason;
@@ -19,7 +21,7 @@ const all=[];for(const kind of['items','recipes'])for(const entry of bones[kind]
 if(process.argv.includes('--review')){
  const client=new DeepSeekClient({budgetYuan:20}),budgetFile='world/drafts/w3/budget.json',budget=await read(budgetFile);client.spent=budget.spentYuan+(budget.reservedYuan??0);
  let saves=Promise.resolve();const save=()=>saves=saves.then(()=>write(budgetFile,{spentYuan:client.spent,reservedYuan:client.reserved,limitYuan:20}));
- const work=all.filter(row=>row.needsReview);let cursor=0;
+ const work=all.filter(row=>row.needsReview&&(!onlyId||row.entry.id===onlyId));let cursor=0;
  await Promise.all(Array.from({length:8},async()=>{for(;;){const index=cursor++;if(index>=work.length)return;const row=work[index],{entry,record,context,file}=row;
   const response=client.generate(tradesReviewRequest(entry,record.draft,context),`content-w3-trades-review-${entry.id}`);response.catch(()=>{});await save();
   try{const review=parseModelJSON(await response);if(!Array.isArray(review.contradictions)||review.contradictions.some(x=>!['hard','soft','style'].includes(x.severity)||!['quote','field','reason'].every(key=>typeof x[key]==='string'&&x[key].trim())))throw new Error('审查格式错误');

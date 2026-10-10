@@ -98,7 +98,7 @@ async function run(selected){
  const client=new DeepSeekClient({budgetYuan:20,logFile:'logs/w5-social-usage.jsonl'});
  for(const key of selected){const result=await runContentPipeline({entries:categories[key],root:path.join(budgetRoot,key),budgetRoot,client,buildDraftRequest,buildReviewRequest,validateDraft,contextFor,revision,concurrency:12,batchSize:40});console.log(JSON.stringify({category:key,...result.summary}));}
 }
-async function candidates(){
+export async function approvedSocialCandidate(){
  const out={factionPeople,eras};
  for(const [key,entries]of Object.entries(categories)){
   const drafts=await readApprovedContent(path.join(budgetRoot,key),entries,{contextFor,revision});
@@ -108,6 +108,10 @@ async function candidates(){
  }
  const validate=new Ajv({allErrors:true,strict:true,allowUnionTypes:true}).compile(candidateSchema);
  if(!validate(out))throw new Error(`W5候选schema拒绝:${JSON.stringify(validate.errors)}`);
+ return out;
+}
+async function candidates(){
+ const out=await approvedSocialCandidate();
  await fs.writeFile(path.join(budgetRoot,'social-candidate.json'),JSON.stringify(out,null,2)+'\n');
  console.log(JSON.stringify({factions:out.factions.length,history:out.history.length,factionPeople:out.factionPeople.length,scope:'仅候选，未发布未实例化'}));
 }
