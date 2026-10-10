@@ -1,0 +1,96 @@
+{
+  "id": "monster_star_fold_griffin",
+  "fingerprint": "0ff634e73860335b08c6a49382c30b57aec52c5d3972424b3de8d13b97c1cc82",
+  "status": "manual",
+  "attempts": 3,
+  "draft": {
+    "id": "monster_star_fold_griffin",
+    "appearance": "翼展约四步，羽色苍灰带暗铁光泽，翼根有白褶，收翼时叠成星芒状，展开时白褶拉平如薄刃。喙短弯，脚爪暗铁色，尾羽末端分叉。护巢时先站到落石上沿，压低前身，白褶随呼吸微微开合。",
+    "habits": "活动集中在06:00与18:00两个时刻，其余时段休息。常成对活动，grouping为两只。肉食，捕食山坳内小型兽类与鸟类；领地行为为守护巢区与固定伏猎点，接近时先示警，退离后不持续追逐。清晨与黄昏沿岩壁低飞，利用落石上沿和星杉三角根印处伏猎，一对占据一片固定猎场。",
+    "threat": "接近巢区或伏猎点会先遭俯冲示警，爪击可破皮甲。若已退离，它不持续追逐。行人应沿山坳中线走，避开落石上沿和星杉根印密集处；遇示警立即后退，不要挥动长杆或奔跑。",
+    "materials": "无固定掉落物。可观察巢区边缘脱落的苍灰短羽、落石上沿的抓痕，以及星杉根印旁被压平的雪窝。这些线索能判断一对苍狮鹫的固定伏猎点与巢区边界，采集羽毛需等其离巢。",
+    "folklore": "山民说星褶苍狮鹫是沉星山坳的夜巡者，专在星落时捕食迷路者。实际它只在06:00与18:00两个时刻活动，其余时段休息，且不主动追人。区别在于：夜巡传说描述的是星杉根印间的风声，而苍狮鹫的示警是短促哨音加俯冲，退离后即停。",
+    "voice": "示警为短促双哨，间隔约一息，随后是翼根白褶展开的轻响；伏猎时发出低沉的咕噜声。"
+  },
+  "review": {
+    "contradictions": [
+      {
+        "quote": "活动集中在06:00与18:00两个时刻，其余时段休息。",
+        "field": "wildlife.activeHours",
+        "severity": "hard",
+        "reason": "骨架 activeHours 为 [360,1080]，即 06:00 至 18:00 的连续时段，并非仅两个时刻活动；说明将其改为两个时刻并称其余时段休息，与骨架相反。"
+      },
+      {
+        "quote": "实际它只在06:00与18:00两个时刻活动，其余时段休息",
+        "field": "wildlife.activeHours",
+        "severity": "hard",
+        "reason": "同上，骨架活动时段为 06:00–18:00 连续区间，不是仅两个时刻。"
+      },
+      {
+        "quote": "捕食山坳内小型兽类与鸟类",
+        "field": "wildlife.predatorOf",
+        "severity": "hard",
+        "reason": "骨架 predatorOf 为空数组，未声明捕食小型兽类与鸟类；说明新增了骨架没有依据的食性对象。"
+      },
+      {
+        "quote": "采集羽毛需等其离巢。",
+        "field": "wildlife.gather",
+        "severity": "hard",
+        "reason": "骨架 gather 仅声明 minutes 110、tool null、consumes 空，未声明可采集羽毛或需等其离巢；说明新增了没有依据的取得途径。"
+      }
+    ]
+  },
+  "errors": [
+    {
+      "quote": "活动集中在06:00与18:00两个时刻，其余时段休息。",
+      "field": "wildlife.activeHours",
+      "severity": "hard",
+      "reason": "骨架 activeHours 为 [360,1080]，即 06:00 至 18:00 的连续时段，并非仅两个时刻活动；说明将其改为两个时刻并称其余时段休息，与骨架相反。"
+    },
+    {
+      "quote": "实际它只在06:00与18:00两个时刻活动，其余时段休息",
+      "field": "wildlife.activeHours",
+      "severity": "hard",
+      "reason": "同上，骨架活动时段为 06:00–18:00 连续区间，不是仅两个时刻。"
+    },
+    {
+      "quote": "捕食山坳内小型兽类与鸟类",
+      "field": "wildlife.predatorOf",
+      "severity": "hard",
+      "reason": "骨架 predatorOf 为空数组，未声明捕食小型兽类与鸟类；说明新增了骨架没有依据的食性对象。"
+    },
+    {
+      "quote": "采集羽毛需等其离巢。",
+      "field": "wildlife.gather",
+      "severity": "hard",
+      "reason": "骨架 gather 仅声明 minutes 110、tool null、consumes 空，未声明可采集羽毛或需等其离巢；说明新增了没有依据的取得途径。"
+    }
+  ],
+  "warnings": [],
+  "feedback": [
+    {
+      "quote": "活动集中在06:00与18:00两个时刻，其余时段休息。",
+      "field": "wildlife.activeHours",
+      "severity": "hard",
+      "reason": "骨架 activeHours 为 [360,1080]，即 06:00 至 18:00 的连续时段，并非仅两个时刻活动；说明将其改为两个时刻并称其余时段休息，与骨架相反。"
+    },
+    {
+      "quote": "实际它只在06:00与18:00两个时刻活动，其余时段休息",
+      "field": "wildlife.activeHours",
+      "severity": "hard",
+      "reason": "同上，骨架活动时段为 06:00–18:00 连续区间，不是仅两个时刻。"
+    },
+    {
+      "quote": "捕食山坳内小型兽类与鸟类",
+      "field": "wildlife.predatorOf",
+      "severity": "hard",
+      "reason": "骨架 predatorOf 为空数组，未声明捕食小型兽类与鸟类；说明新增了骨架没有依据的食性对象。"
+    },
+    {
+      "quote": "采集羽毛需等其离巢。",
+      "field": "wildlife.gather",
+      "severity": "hard",
+      "reason": "骨架 gather 仅声明 minutes 110、tool null、consumes 空，未声明可采集羽毛或需等其离巢；说明新增了没有依据的取得途径。"
+    }
+  ]
+}

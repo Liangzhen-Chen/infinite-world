@@ -1,0 +1,18 @@
+{
+  "id": "item_clay_flowerpot",
+  "fingerprint": "3294b6dfcc2e337d0c88e905740eb0a45622c23f55728c117d8561426b8a5ba7",
+  "status": "passed",
+  "attempts": 1,
+  "draft": {
+    "id": "item_clay_flowerpot",
+    "description": "白石镇陶工以黏土在陶轮上拉出的高腹花盆，盆腹鼓起，盆口微收，盆沿卷厚一圈，便于端持。底心趁湿用竹签开一孔，孔缘修齐，多余泥屑抹平。干坯入窑烧成后呈土红或灰褐色，敲之声音清实。盆壁留有轮转的细密旋纹，指压处略见浅窝。育苗时须另配土与种子，盆只负责盛土与排水。",
+    "inspection": "托起花盆对光看盆壁，旋纹应匀密无断口；翻看盆底，排水孔须通透不塞，孔缘无裂口。以指节轻敲盆腹，声清者坯熟，声闷者或有暗裂，宜退换。",
+    "storage": "置阴凉干燥处，避免叠压与磕碰；无固定保存期，受潮或冻融易生裂纹。"
+  },
+  "review": {
+    "contradictions": []
+  },
+  "errors": [],
+  "warnings": [],
+  "feedback": null
+}

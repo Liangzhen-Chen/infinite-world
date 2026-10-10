@@ -1,0 +1,83 @@
+{
+  "id": "monster_marsh_braid_fox",
+  "fingerprint": "fb7bbaf202ca253557062ed2ddb39a1507780701d511ba39e50c7947d5801a42",
+  "status": "manual",
+  "attempts": 3,
+  "draft": {
+    "id": "monster_marsh_braid_fox",
+    "appearance": "沼辫长狐体长约一米半，肩高及成人膝上，尾毛在潮气里分三绺，像三条湿绳垂在身后。毛色灰褐带黑斑，背脊深，腹侧浅，耳尖圆而黑。脚掌宽，趾间有短蹼，踩芦根跨过泥沟时留下三瓣浅印。",
+    "habits": "沼辫长狐在18:00与06:00两个时刻活动，其余时段休息。两至四只成群，肉食，捕食泥球洲鲶与小型水生动物。领地行为为守护巢区与固定伏猎点，接近时先示警，退离后不持续追逐。",
+    "threat": "成群时可能包抄落单行人，尤其靠近巢区或伏猎点。遇示警低吼应缓步退离，勿背身奔跑或涉入深泥。若被尾随，可绕行硬泥脊并保持两至三米间距，通常退离后不追。",
+    "materials": "击杀后剥取刮净生皮2份，用案上切刀处理，耗时80分钟，消耗清水1份。生皮湿润时柔软，需摊平阴凉通风处，毛面朝下，勿叠压或密封，及时送交鞣制。",
+    "folklore": "民间说沼辫长狐尾毛能拧出灯油，夜里会点火引路。实际尾毛只是潮湿分绺，无油无火；它们不夜间活动，只在黄昏至清晨出没，遇人先示警而非引诱。",
+    "voice": "低沉的咕噜声，示警时转为短促的“咔—咔”喉音，幼狐回应细弱吱叫，远听像泥泡破裂。"
+  },
+  "review": {
+    "contradictions": [
+      {
+        "quote": "沼辫长狐在18:00与06:00两个时刻活动，其余时段休息。",
+        "field": "wildlife.activeHours",
+        "severity": "soft",
+        "reason": "骨架 activeHours 为 [1080,360]，对应 18:00 至次日 06:00 的连续活动时段，而非仅在两个时刻活动、其余休息。"
+      },
+      {
+        "quote": "捕食泥球洲鲶与小型水生动物。",
+        "field": "wildlife.predatorOf",
+        "severity": "soft",
+        "reason": "骨架 predatorOf 仅列 monster_peat_globe_catfish；小型水生动物未在骨架中列为捕食对象，属于新增食性内容。"
+      },
+      {
+        "quote": "若被尾随，可绕行硬泥脊并保持两至三米间距，通常退离后不追。",
+        "field": "territoriality",
+        "severity": "soft",
+        "reason": "骨架只说明接近时先示警、退离后不持续追逐，未声明被尾随或保持两至三米间距等具体行为规则。"
+      },
+      {
+        "quote": "它们不夜间活动，只在黄昏至清晨出没",
+        "field": "wildlife.activeHours",
+        "severity": "hard",
+        "reason": "骨架活动时段为 18:00 至 06:00，包含夜间；说明称不夜间活动与骨架相反。"
+      }
+    ]
+  },
+  "errors": [
+    "未给定的距离或价格 一米",
+    "未给定的距离或价格 三米",
+    {
+      "quote": "它们不夜间活动，只在黄昏至清晨出没",
+      "field": "wildlife.activeHours",
+      "severity": "hard",
+      "reason": "骨架活动时段为 18:00 至 06:00，包含夜间；说明称不夜间活动与骨架相反。"
+    }
+  ],
+  "warnings": [
+    {
+      "quote": "沼辫长狐在18:00与06:00两个时刻活动，其余时段休息。",
+      "field": "wildlife.activeHours",
+      "severity": "soft",
+      "reason": "骨架 activeHours 为 [1080,360]，对应 18:00 至次日 06:00 的连续活动时段，而非仅在两个时刻活动、其余休息。"
+    },
+    {
+      "quote": "捕食泥球洲鲶与小型水生动物。",
+      "field": "wildlife.predatorOf",
+      "severity": "soft",
+      "reason": "骨架 predatorOf 仅列 monster_peat_globe_catfish；小型水生动物未在骨架中列为捕食对象，属于新增食性内容。"
+    },
+    {
+      "quote": "若被尾随，可绕行硬泥脊并保持两至三米间距，通常退离后不追。",
+      "field": "territoriality",
+      "severity": "soft",
+      "reason": "骨架只说明接近时先示警、退离后不持续追逐，未声明被尾随或保持两至三米间距等具体行为规则。"
+    }
+  ],
+  "feedback": [
+    "未给定的距离或价格 一米",
+    "未给定的距离或价格 三米",
+    {
+      "quote": "它们不夜间活动，只在黄昏至清晨出没",
+      "field": "wildlife.activeHours",
+      "severity": "hard",
+      "reason": "骨架活动时段为 18:00 至 06:00，包含夜间；说明称不夜间活动与骨架相反。"
+    }
+  ]
+}

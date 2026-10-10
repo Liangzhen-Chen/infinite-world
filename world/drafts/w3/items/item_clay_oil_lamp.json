@@ -1,0 +1,18 @@
+{
+  "id": "item_clay_oil_lamp",
+  "fingerprint": "8b6c75b8b8cc2af00cf66b946a954a597092b5dd43ccfec1f3e1892cbad77ff5",
+  "status": "passed",
+  "attempts": 1,
+  "draft": {
+    "id": "item_clay_oil_lamp",
+    "description": "白石镇陶工在轮上拉出浅腹圆盏，趁坯半干把盏沿一侧捏出搭芯槽，再修平口沿、刮稳底足，阴干后入窑烧成。成品为素陶空灯，胎色偏灰褐，腹浅口敞，槽口留着指腹压出的浅窝。灯芯搭在槽里，油盛在浅腹中，火苗低而稳，适合放在桌角或窗台。油与灯芯另备，空灯出售。",
+    "inspection": "托起灯盏对光看口沿是否平顺，搭芯槽有无裂纹或缺角；用指腹沿底足转一圈，确认放得稳、不晃。轻敲盏壁听声，闷响带哑说明胎内可能有暗裂，清亮声为好。",
+    "storage": "空灯宜放在干燥木架或草垫上，避免叠压磕碰；受潮后须阴干再用，勿暴晒急烘。无固定保存期。"
+  },
+  "review": {
+    "contradictions": []
+  },
+  "errors": [],
+  "warnings": [],
+  "feedback": null
+}

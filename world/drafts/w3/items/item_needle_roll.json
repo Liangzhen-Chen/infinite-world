@@ -1,0 +1,18 @@
+{
+  "id": "item_needle_roll",
+  "fingerprint": "3d1f4c58b58a460c03252f50024d6137f5c595b9deef683aad5496fed67f4beb",
+  "status": "passed",
+  "attempts": 1,
+  "draft": {
+    "id": "item_needle_roll",
+    "description": "卷式针包用一条亚麻布折出几道浅袋，袋口逐道缝合，再把长边卷拢，用羊毛线系住。卷起后是细长的一卷，展开则见一排插针的窄袋，收缝针时按长短分插，取用不必翻找。缝线在袋口留下细密针脚，卷边处因反复卷折略起柔皱；交付时不附针，空袋交到用者手里。",
+    "inspection": "展开看每道袋口是否缝透，轻扯袋边不脱线；再卷拢一次，看卷身是否齐整、系线能否束住不散。若有跳针或袋口豁开，即为未缝牢。",
+    "storage": "卷拢系好后放在干燥处，避潮避重压，可存365天。受潮易生霉斑，压久则卷形难复原。"
+  },
+  "review": {
+    "contradictions": []
+  },
+  "errors": [],
+  "warnings": [],
+  "feedback": null
+}

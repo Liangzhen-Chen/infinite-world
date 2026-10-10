@@ -51,7 +51,7 @@ export async function runContentPipeline({
   entries, root, client, buildDraftRequest, extractDraft = parseModelJSON,
   validateDraft, contextFor = () => null, buildReviewRequest = defaultReviewRequest,
   extractReview = parseModelJSON, concurrency = 8, batchSize = 40,
-  revision = 'v2', retryManual = false, onBatch = null,
+  revision = 'v2', retryManual = false, onBatch = null, budgetRoot = root,
 }) {
   if (!Array.isArray(entries) || new Set(entries.map(row => row.id)).size !== entries.length) throw new Error('条目编号重复或缺失');
   if (entries.some(row => !/^[a-z][a-z0-9_-]+$/i.test(row.id ?? ''))) throw new Error('条目编号不安全');
@@ -59,17 +59,21 @@ export async function runContentPipeline({
   if (!Number.isInteger(batchSize) || batchSize < 1 || batchSize > 50) throw new Error('批次必须为 1–50；正式波次使用 25–50');
   if (typeof validateDraft !== 'function' || typeof buildDraftRequest !== 'function') throw new Error('缺少起草或 L1 校验接口');
   await fs.mkdir(root, { recursive: true });
-  const ledgerPath = path.join(root, 'budget.json');
+  const ledgerPath = path.join(budgetRoot, 'budget.json');
   const ledger = await readJSON(ledgerPath) ?? { spentYuan: 0 };
-  client.spent = Math.max(client.spent ?? 0, ledger.spentYuan);
+  // Reservations left by a terminated process may already have been charged.
+  client.spent = Math.max(client.spent ?? 0, ledger.spentYuan + (ledger.reservedYuan ?? 0));
   const results = [], batches = [];
   let budgetWrites = Promise.resolve();
   const saveBudget = () => {
-    budgetWrites = budgetWrites.then(() => writeJSON(ledgerPath, { spentYuan: client.spent, limitYuan: client.budgetYuan }));
+    budgetWrites = budgetWrites.then(() => writeJSON(ledgerPath, { spentYuan: client.spent, reservedYuan: client.reserved ?? 0, limitYuan: client.budgetYuan }));
     return budgetWrites;
   };
   async function request(body, label) {
-    try { return await client.generate(body, label); } finally { await saveBudget(); }
+    const pending = client.generate(body, label);
+    pending.catch(() => {});
+    await saveBudget();
+    try { return await pending; } finally { await saveBudget(); }
   }
   async function one(entry) {
     const context = await contextFor(entry);

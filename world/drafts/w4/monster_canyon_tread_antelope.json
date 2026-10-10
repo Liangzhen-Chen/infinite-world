@@ -1,0 +1,106 @@
+{
+  "id": "monster_canyon_tread_antelope",
+  "fingerprint": "fce18142ec95d1be7aa763782a50293893e046a7b449a0f8c8b728c16b8f4c0a",
+  "status": "manual",
+  "attempts": 3,
+  "draft": {
+    "id": "monster_canyon_tread_antelope",
+    "appearance": "峡阶长羚肩高约一米二，体毛灰褐，背脊有浅色纵纹。足后蹄片长窄如楔，跳跃前会侧身试探落点。角短而直，耳尖带黑斑。",
+    "habits": "峡阶长羚在06:00与18:00活动，五至八只成群。以峡谷灌木与草叶为食，活动中心围绕食源与休息处。受惊时让路，围堵幼体时防御。其余时段休息。",
+    "threat": "受惊时让路，围堵幼体时防御。行人应避开幼体，保持距离，勿堵住退路。",
+    "materials": "剥取刮净生皮2份，用案上切刀处理70分钟，消耗清水1份。生皮摊平阴凉通风处，毛面朝下，勿叠压或密封，及时送交鞣制。",
+    "folklore": "民间误传长羚夜间跳跃，但实际仅06:00与18:00活动，其余时段休息。可观察跳跃前侧身试落点，足后蹄片长窄。",
+    "voice": "短促鼻哼与蹄踏碎石声，警戒时发出低哨。"
+  },
+  "review": {
+    "contradictions": [
+      {
+        "quote": "角短而直，耳尖带黑斑。",
+        "field": "appearance",
+        "severity": "soft",
+        "reason": "骨架未提及角与耳尖黑斑，属于新增外观特征，但非功能、数值或能力，按软性矛盾处理。"
+      },
+      {
+        "quote": "以峡谷灌木与草叶为食",
+        "field": "diet",
+        "severity": "soft",
+        "reason": "骨架仅声明草食，未具体说明灌木与草叶；属于对食性的具体化，未与草食相反，按软性矛盾处理。"
+      },
+      {
+        "quote": "剥取刮净生皮2份，用案上切刀处理70分钟，消耗清水1份。",
+        "field": "gather",
+        "severity": "hard",
+        "reason": "骨架中 drops 为 item_rawhide 2，gather 为 70 分钟、工具 item_kitchen_knife、消耗 item_water 1；说明将掉落物与采集行为合并表述，易被理解为用切刀剥取生皮，而骨架未声明切刀用于剥皮，属于新增取得途径。"
+      },
+      {
+        "quote": "生皮摊平阴凉通风处，毛面朝下，勿叠压或密封，及时送交鞣制。",
+        "field": "drops",
+        "severity": "soft",
+        "reason": "骨架 drops 未包含生皮保存说明；该内容来自 publishedFacts 中 item_rawhide 的 storage，属于引用事实，但与骨架 drops 字段无直接对应，按软性矛盾处理。"
+      },
+      {
+        "quote": "民间误传长羚夜间跳跃，但实际仅06:00与18:00活动，其余时段休息。",
+        "field": "folklore",
+        "severity": "soft",
+        "reason": "骨架未声明存在“夜间跳跃”的民间误传；publishedFacts 要求民间误解必须在同段明确纠正，但该误传本身为新增内容，按软性矛盾处理。"
+      },
+      {
+        "quote": "短促鼻哼与蹄踏碎石声，警戒时发出低哨。",
+        "field": "voice",
+        "severity": "soft",
+        "reason": "骨架未提及声音特征，属于新增感官细节，但非功能、数值或能力，按软性矛盾处理。"
+      }
+    ]
+  },
+  "errors": [
+    "未给定的距离或价格 一米",
+    {
+      "quote": "剥取刮净生皮2份，用案上切刀处理70分钟，消耗清水1份。",
+      "field": "gather",
+      "severity": "hard",
+      "reason": "骨架中 drops 为 item_rawhide 2，gather 为 70 分钟、工具 item_kitchen_knife、消耗 item_water 1；说明将掉落物与采集行为合并表述，易被理解为用切刀剥取生皮，而骨架未声明切刀用于剥皮，属于新增取得途径。"
+    }
+  ],
+  "warnings": [
+    "voice 长度需要抽读",
+    {
+      "quote": "角短而直，耳尖带黑斑。",
+      "field": "appearance",
+      "severity": "soft",
+      "reason": "骨架未提及角与耳尖黑斑，属于新增外观特征，但非功能、数值或能力，按软性矛盾处理。"
+    },
+    {
+      "quote": "以峡谷灌木与草叶为食",
+      "field": "diet",
+      "severity": "soft",
+      "reason": "骨架仅声明草食，未具体说明灌木与草叶；属于对食性的具体化，未与草食相反，按软性矛盾处理。"
+    },
+    {
+      "quote": "生皮摊平阴凉通风处，毛面朝下，勿叠压或密封，及时送交鞣制。",
+      "field": "drops",
+      "severity": "soft",
+      "reason": "骨架 drops 未包含生皮保存说明；该内容来自 publishedFacts 中 item_rawhide 的 storage，属于引用事实，但与骨架 drops 字段无直接对应，按软性矛盾处理。"
+    },
+    {
+      "quote": "民间误传长羚夜间跳跃，但实际仅06:00与18:00活动，其余时段休息。",
+      "field": "folklore",
+      "severity": "soft",
+      "reason": "骨架未声明存在“夜间跳跃”的民间误传；publishedFacts 要求民间误解必须在同段明确纠正，但该误传本身为新增内容，按软性矛盾处理。"
+    },
+    {
+      "quote": "短促鼻哼与蹄踏碎石声，警戒时发出低哨。",
+      "field": "voice",
+      "severity": "soft",
+      "reason": "骨架未提及声音特征，属于新增感官细节，但非功能、数值或能力，按软性矛盾处理。"
+    }
+  ],
+  "feedback": [
+    "未给定的距离或价格 一米",
+    {
+      "quote": "剥取刮净生皮2份，用案上切刀处理70分钟，消耗清水1份。",
+      "field": "gather",
+      "severity": "hard",
+      "reason": "骨架中 drops 为 item_rawhide 2，gather 为 70 分钟、工具 item_kitchen_knife、消耗 item_water 1；说明将掉落物与采集行为合并表述，易被理解为用切刀剥取生皮，而骨架未声明切刀用于剥皮，属于新增取得途径。"
+    }
+  ]
+}

@@ -1,0 +1,98 @@
+{
+  "id": "monster_rain_pipe_elephant",
+  "fingerprint": "6485eb4b106ae72a6777c78fe45180f0c4c1a0cf46ecb8ef574b03e2259bd1a6",
+  "status": "manual",
+  "attempts": 3,
+  "draft": {
+    "id": "monster_rain_pipe_elephant",
+    "appearance": "雨管林象肩高近三米，皮厚呈深灰褐，覆一层薄泥浆。鼻端有两道纵沟，从鼻孔延伸至鼻背，沟缘略卷，饮水后水会沿沟向两侧洒落成窄水线。耳小，尾短，四肢粗壮，脚掌宽圆。",
+    "habits": "雨管林象在06:00与18:00两个时刻活动，仅这两个时刻。三至五头结群，以食源与休息处为活动中心。草食，取食低矮蕨叶、嫩枝与落果，不主动捕猎。受惊时让路，围堵幼体时防御；其他时段休息。",
+    "threat": "受惊时会让路，但围堵幼体时会以身体冲撞和鼻卷推搡防御。行人若见象群收拢幼体、鼻端扬起，应缓步后退，绕开食源与休息处，不靠近幼体。",
+    "materials": "刮净生皮：用案上切刀处理80分钟，消耗3份清水，可得7份刮净生皮。湿皮须保湿，不能干燥，及时送交鞣制。",
+    "folklore": "民间误传雨管林象鼻端纵沟能喷出毒雾，或说它夜间会主动袭击营地。实际纵沟只是饮水后向两侧洒落窄水线的结构，象群其他时段休息，不增加夜间活动。",
+    "voice": "低沉的呼噜声，受惊时转为短促的鼻鸣，幼体回应细弱。"
+  },
+  "review": {
+    "contradictions": [
+      {
+        "quote": "雨管林象在06:00与18:00两个时刻活动，仅这两个时刻。",
+        "field": "wildlife.activeHours",
+        "severity": "hard",
+        "reason": "骨架 activeHours 为 [360,1080]，即 06:00 至 18:00 的连续活动时段，并非仅在两个时刻活动；说明将时段曲解为两个瞬时点。"
+      },
+      {
+        "quote": "其他时段休息。",
+        "field": "wildlife.activeHours",
+        "severity": "hard",
+        "reason": "骨架活动时段为 06:00–18:00，说明称其他时段休息，与骨架相反。"
+      },
+      {
+        "quote": "象群其他时段休息，不增加夜间活动。",
+        "field": "wildlife.activeHours",
+        "severity": "hard",
+        "reason": "骨架活动时段为 06:00–18:00，说明称其他时段休息，与骨架相反。"
+      },
+      {
+        "quote": "湿皮须保湿，不能干燥，及时送交鞣制。",
+        "field": "drops[0].catalog.storage",
+        "severity": "hard",
+        "reason": "骨架引用事实规定刮净生皮应摊平阴凉通风处、毛面朝下、勿叠压或密封，并未要求保湿或禁止干燥；新增了与保存方式相反的要求。"
+      }
+    ]
+  },
+  "errors": [
+    "未给定的距离或价格 三米",
+    {
+      "quote": "雨管林象在06:00与18:00两个时刻活动，仅这两个时刻。",
+      "field": "wildlife.activeHours",
+      "severity": "hard",
+      "reason": "骨架 activeHours 为 [360,1080]，即 06:00 至 18:00 的连续活动时段，并非仅在两个时刻活动；说明将时段曲解为两个瞬时点。"
+    },
+    {
+      "quote": "其他时段休息。",
+      "field": "wildlife.activeHours",
+      "severity": "hard",
+      "reason": "骨架活动时段为 06:00–18:00，说明称其他时段休息，与骨架相反。"
+    },
+    {
+      "quote": "象群其他时段休息，不增加夜间活动。",
+      "field": "wildlife.activeHours",
+      "severity": "hard",
+      "reason": "骨架活动时段为 06:00–18:00，说明称其他时段休息，与骨架相反。"
+    },
+    {
+      "quote": "湿皮须保湿，不能干燥，及时送交鞣制。",
+      "field": "drops[0].catalog.storage",
+      "severity": "hard",
+      "reason": "骨架引用事实规定刮净生皮应摊平阴凉通风处、毛面朝下、勿叠压或密封，并未要求保湿或禁止干燥；新增了与保存方式相反的要求。"
+    }
+  ],
+  "warnings": [],
+  "feedback": [
+    "未给定的距离或价格 三米",
+    {
+      "quote": "雨管林象在06:00与18:00两个时刻活动，仅这两个时刻。",
+      "field": "wildlife.activeHours",
+      "severity": "hard",
+      "reason": "骨架 activeHours 为 [360,1080]，即 06:00 至 18:00 的连续活动时段，并非仅在两个时刻活动；说明将时段曲解为两个瞬时点。"
+    },
+    {
+      "quote": "其他时段休息。",
+      "field": "wildlife.activeHours",
+      "severity": "hard",
+      "reason": "骨架活动时段为 06:00–18:00，说明称其他时段休息，与骨架相反。"
+    },
+    {
+      "quote": "象群其他时段休息，不增加夜间活动。",
+      "field": "wildlife.activeHours",
+      "severity": "hard",
+      "reason": "骨架活动时段为 06:00–18:00，说明称其他时段休息，与骨架相反。"
+    },
+    {
+      "quote": "湿皮须保湿，不能干燥，及时送交鞣制。",
+      "field": "drops[0].catalog.storage",
+      "severity": "hard",
+      "reason": "骨架引用事实规定刮净生皮应摊平阴凉通风处、毛面朝下、勿叠压或密封，并未要求保湿或禁止干燥；新增了与保存方式相反的要求。"
+    }
+  ]
+}

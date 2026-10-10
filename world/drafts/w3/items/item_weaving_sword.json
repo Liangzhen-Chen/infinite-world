@@ -1,0 +1,18 @@
+{
+  "id": "item_weaving_sword",
+  "fingerprint": "7224d9ec5f5a4a849759bbad6250c8bf4ff7fe392e59f370197eae304fbada9f",
+  "status": "passed",
+  "attempts": 1,
+  "draft": {
+    "id": "item_weaving_sword",
+    "description": "旧磨坊木工台上削出的薄木片，取一块木料沿纹路顺削成扁长条，宽面平整，两端收薄，边缘只磨圆不留齿口。握在手里轻，压在织口上正合适，用来把刚穿过的纬线压紧实。木纹顺直，削痕细密，边角被磨得发钝，不勾纱线。织架旁常备一两片，旧了再削新。",
+    "inspection": "先看宽面是否平直，再摸边缘有无毛刺或缺口；顺纹对光看有无横裂。压纬时若勾线或压不实，说明边口或厚度不合用。",
+    "storage": "放干燥木箱或织架抽屉内，避潮避晒，防重物压弯。无固定保存期。"
+  },
+  "review": {
+    "contradictions": []
+  },
+  "errors": [],
+  "warnings": [],
+  "feedback": null
+}

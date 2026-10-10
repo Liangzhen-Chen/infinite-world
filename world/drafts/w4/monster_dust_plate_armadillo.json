@@ -1,0 +1,91 @@
+{
+  "id": "monster_dust_plate_armadillo",
+  "fingerprint": "06d1188ac0ee97864786e29ded879ae92bbaeb0c37bf2d69985d43721e71df6a",
+  "status": "manual",
+  "attempts": 3,
+  "draft": {
+    "id": "monster_dust_plate_armadillo",
+    "appearance": "背覆七列灰褐角质板，板缝嵌满细黄砂，远看像一段会移动的干裂土垄。吻端扁钝，前爪三趾粗壮，尾短而覆环板。成年个体体长约一步半，板面常留浅尘槽，槽向与沉沙峡风向一致。",
+    "habits": "只在18:00与06:00两个时刻活动，其余时段休息。独居，以虫食为食，在虫沟两侧挖串联小孔，用前爪翻掘湿土取食幼虫与成虫；以食源与休息处为活动中心，受惊时让路，围堵幼体时防御。领地不靠远距追逐维持，而靠反复翻掘的虫沟与休息凹坑标记。",
+    "threat": "受惊时通常侧身让路，不主动追人；若被围堵在幼体旁，会以板缘撞击和短促前扑防御。行人应避开虫沟两侧的串联小孔，绕行时留出两步以上，不要伸手探入休息凹坑。",
+    "materials": "drops为空。可观察线索：板面浅尘槽的走向、虫沟两侧串联小孔的间距、休息凹坑边缘的爪痕。若需记录，用炭笔拓印尘槽，处理时间约70分钟，无需工具，不消耗材料。",
+    "folklore": "民间误传尘板掘甲兽会喷沙迷眼，或说它整夜巡行。真实可观察的差别是：它只在18:00与06:00活动，其余时段休息；受惊时以让路和板缘撞击应对，并不喷沙。浅尘槽是板面留痕，不是施法痕迹。",
+    "voice": "受惊时发出短促的板缘摩擦声，像砂石刮过陶片；围堵幼体时转为低沉的连续叩击。"
+  },
+  "review": {
+    "contradictions": [
+      {
+        "quote": "只在18:00与06:00两个时刻活动，其余时段休息",
+        "field": "wildlife.activeHours",
+        "severity": "hard",
+        "reason": "骨架 activeHours 为 [1080,360]，对应 18:00 至 06:00 的连续活动时段，而非仅在两个时刻活动；说明将连续活动时段误述为两个瞬时时刻。"
+      },
+      {
+        "quote": "领地不靠远距追逐维持，而靠反复翻掘的虫沟与休息凹坑标记",
+        "field": "territoriality",
+        "severity": "hard",
+        "reason": "骨架 territoriality 仅说明以食源与休息处为活动中心、受惊让路、围堵幼体时防御，未声明领地靠虫沟与休息凹坑标记，属于新增没有依据的功能。"
+      },
+      {
+        "quote": "用前爪翻掘湿土取食幼虫与成虫",
+        "field": "diet",
+        "severity": "soft",
+        "reason": "骨架 diet 为虫食，未限定取食幼虫与成虫；该细节虽与虫食相容，但属于对食性具体对象的额外补充。"
+      },
+      {
+        "quote": "处理时间约70分钟，无需工具，不消耗材料",
+        "field": "gather",
+        "severity": "hard",
+        "reason": "骨架 gather 的 minutes=70、tool=null、consumes=[] 是取材规则；说明将其用于炭笔拓印尘槽的记录行为，改变了取得途径与用途。"
+      }
+    ]
+  },
+  "errors": [
+    {
+      "quote": "只在18:00与06:00两个时刻活动，其余时段休息",
+      "field": "wildlife.activeHours",
+      "severity": "hard",
+      "reason": "骨架 activeHours 为 [1080,360]，对应 18:00 至 06:00 的连续活动时段，而非仅在两个时刻活动；说明将连续活动时段误述为两个瞬时时刻。"
+    },
+    {
+      "quote": "领地不靠远距追逐维持，而靠反复翻掘的虫沟与休息凹坑标记",
+      "field": "territoriality",
+      "severity": "hard",
+      "reason": "骨架 territoriality 仅说明以食源与休息处为活动中心、受惊让路、围堵幼体时防御，未声明领地靠虫沟与休息凹坑标记，属于新增没有依据的功能。"
+    },
+    {
+      "quote": "处理时间约70分钟，无需工具，不消耗材料",
+      "field": "gather",
+      "severity": "hard",
+      "reason": "骨架 gather 的 minutes=70、tool=null、consumes=[] 是取材规则；说明将其用于炭笔拓印尘槽的记录行为，改变了取得途径与用途。"
+    }
+  ],
+  "warnings": [
+    {
+      "quote": "用前爪翻掘湿土取食幼虫与成虫",
+      "field": "diet",
+      "severity": "soft",
+      "reason": "骨架 diet 为虫食，未限定取食幼虫与成虫；该细节虽与虫食相容，但属于对食性具体对象的额外补充。"
+    }
+  ],
+  "feedback": [
+    {
+      "quote": "只在18:00与06:00两个时刻活动，其余时段休息",
+      "field": "wildlife.activeHours",
+      "severity": "hard",
+      "reason": "骨架 activeHours 为 [1080,360]，对应 18:00 至 06:00 的连续活动时段，而非仅在两个时刻活动；说明将连续活动时段误述为两个瞬时时刻。"
+    },
+    {
+      "quote": "领地不靠远距追逐维持，而靠反复翻掘的虫沟与休息凹坑标记",
+      "field": "territoriality",
+      "severity": "hard",
+      "reason": "骨架 territoriality 仅说明以食源与休息处为活动中心、受惊让路、围堵幼体时防御，未声明领地靠虫沟与休息凹坑标记，属于新增没有依据的功能。"
+    },
+    {
+      "quote": "处理时间约70分钟，无需工具，不消耗材料",
+      "field": "gather",
+      "severity": "hard",
+      "reason": "骨架 gather 的 minutes=70、tool=null、consumes=[] 是取材规则；说明将其用于炭笔拓印尘槽的记录行为，改变了取得途径与用途。"
+    }
+  ]
+}

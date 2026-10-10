@@ -1,0 +1,18 @@
+{
+  "id": "item_warm_vinegar_drink",
+  "fingerprint": "f96d8d5bad342288859ecc3c3f7aa8966a7755d115fe0a18fe5f4509d8bb3161",
+  "status": "passed",
+  "attempts": 1,
+  "draft": {
+    "id": "item_warm_vinegar_drink",
+    "description": "青灯酒馆厨房现做的佐餐饮品。取一份果醋兑一份清水入锅，小火温到锅边起细泡、液面微冒白气便离火，不煮沸，以免酸香散尽。成品呈浅琥珀色，入口先酸后回甘，趁热饮下暖喉开胃。因不用发酵，做一锅只需片刻，但放久酸味会变钝、香气走失，宜当顿喝完。",
+    "inspection": "看颜色是否清亮浅琥珀，无浑浊沉渣；凑近闻有果醋的清爽酸香，无焦糊或馊味；以手背贴近碗口，感到温和热气而不烫手即为温得恰好。",
+    "storage": "盛入陶碗或带盖陶壶，置于灶边温热处，须在1天内饮完；隔夜酸味变钝、香气散失，不宜再饮。"
+  },
+  "review": {
+    "contradictions": []
+  },
+  "errors": [],
+  "warnings": [],
+  "feedback": null
+}

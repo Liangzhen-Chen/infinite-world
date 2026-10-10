@@ -1,0 +1,85 @@
+{
+  "id": "monster_stone_fold_hermit",
+  "fingerprint": "ff79de5e88f817a4bb8b1c7fc01858ccae5bbc49ad1ed05af8ed6a17bda0a98e",
+  "status": "manual",
+  "attempts": 3,
+  "draft": {
+    "id": "monster_stone_fold_hermit",
+    "appearance": "壳客的居壳由细灰与碎石层层叠成，呈低矮螺旋，约成人半身高。壳表灰白带褐纹，边缘磨圆。拖行时壳下露出四对褐色短足，步足粗壮，末端有钩爪。头缩在壳口，仅见一对暗色触角。",
+    "habits": "活动时刻为18:00与06:00，其余时段休息。独居，以食源与休息处为活动中心，受惊时让路，围堵幼体时防御。食性为腐食，啃食岩缝中枯草与动物残骸，不主动捕猎。领地行为围绕食源与休息处，用触角摩擦岩面留下气味，同族靠近时以壳撞回应。",
+    "threat": "威胁低。受惊时缩壳让路，不追人；被围堵或踩踏时以壳缘顶撞，可能擦伤小腿。行人绕开其拖行痕迹即可，勿翻动壳口朝上的个体。",
+    "materials": "无商品掉落。可观察线索：壳后拖行留下断续灰痕，四对足印成双列；壳口边缘有新鲜刮屑，说明近期活动。",
+    "folklore": "民间误传壳客夜间会发光引路，实则壳表灰层只反月光，无自发光。真实可观察差别：其触角摆动与拖行灰痕在18:00与06:00前后最明显，其余时段缩壳不动，不增加夜间活动。",
+    "voice": "受惊时壳内发出低哑的摩擦声，似砂石刮过岩面，短促重复。"
+  },
+  "review": {
+    "contradictions": [
+      {
+        "quote": "活动时刻为18:00与06:00，其余时段休息",
+        "field": "wildlife.activeHours",
+        "severity": "hard",
+        "reason": "骨架 activeHours 为 [1080,360]，换算为 18:00 与 06:00，说明与骨架一致，不构成矛盾。"
+      },
+      {
+        "quote": "用触角摩擦岩面留下气味，同族靠近时以壳撞回应",
+        "field": "territoriality",
+        "severity": "hard",
+        "reason": "骨架 territoriality 仅规定以食源与休息处为活动中心、受惊让路、围堵幼体时防御，未声明气味标记或以壳撞回应同族，属于新增没有依据的行为功能。"
+      },
+      {
+        "quote": "壳口边缘有新鲜刮屑，说明近期活动",
+        "field": "drops",
+        "severity": "soft",
+        "reason": "骨架 drops 为空，说明未新增掉落物，仅作为观察线索，不构成取得途径矛盾。"
+      },
+      {
+        "quote": "民间误传壳客夜间会发光引路，实则壳表灰层只反月光，无自发光",
+        "field": "folklore",
+        "severity": "style",
+        "reason": "骨架未声明发光或民间传说，但该段以纠正误解方式呈现，未新增实际功能，属于可接受的风格性补充。"
+      }
+    ]
+  },
+  "errors": [
+    {
+      "quote": "活动时刻为18:00与06:00，其余时段休息",
+      "field": "wildlife.activeHours",
+      "severity": "hard",
+      "reason": "骨架 activeHours 为 [1080,360]，换算为 18:00 与 06:00，说明与骨架一致，不构成矛盾。"
+    },
+    {
+      "quote": "用触角摩擦岩面留下气味，同族靠近时以壳撞回应",
+      "field": "territoriality",
+      "severity": "hard",
+      "reason": "骨架 territoriality 仅规定以食源与休息处为活动中心、受惊让路、围堵幼体时防御，未声明气味标记或以壳撞回应同族，属于新增没有依据的行为功能。"
+    }
+  ],
+  "warnings": [
+    {
+      "quote": "壳口边缘有新鲜刮屑，说明近期活动",
+      "field": "drops",
+      "severity": "soft",
+      "reason": "骨架 drops 为空，说明未新增掉落物，仅作为观察线索，不构成取得途径矛盾。"
+    },
+    {
+      "quote": "民间误传壳客夜间会发光引路，实则壳表灰层只反月光，无自发光",
+      "field": "folklore",
+      "severity": "style",
+      "reason": "骨架未声明发光或民间传说，但该段以纠正误解方式呈现，未新增实际功能，属于可接受的风格性补充。"
+    }
+  ],
+  "feedback": [
+    {
+      "quote": "活动时刻为18:00与06:00，其余时段休息",
+      "field": "wildlife.activeHours",
+      "severity": "hard",
+      "reason": "骨架 activeHours 为 [1080,360]，换算为 18:00 与 06:00，说明与骨架一致，不构成矛盾。"
+    },
+    {
+      "quote": "用触角摩擦岩面留下气味，同族靠近时以壳撞回应",
+      "field": "territoriality",
+      "severity": "hard",
+      "reason": "骨架 territoriality 仅规定以食源与休息处为活动中心、受惊让路、围堵幼体时防御，未声明气味标记或以壳撞回应同族，属于新增没有依据的行为功能。"
+    }
+  ]
+}

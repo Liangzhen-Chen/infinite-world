@@ -1,0 +1,18 @@
+{
+  "id": "item_clay_net_weight",
+  "fingerprint": "39a18810539c47bd93ec87359516d3841d3cddd388a06346f06e5ed06794b874",
+  "status": "passed",
+  "attempts": 1,
+  "draft": {
+    "id": "item_clay_net_weight",
+    "description": "白石镇陶工用本地黏土揉成的长卵形坠子，中段穿一孔，孔缘用湿指抹圆磨平，干透后入窑烧硬。坠身留有指腹压出的浅窝和轮盘转过的细旋纹，颜色随火候呈灰褐或暗红。系在网下缘作配重，使网沉入水中张开；网和绳另备，坠子本身只承担压坠之责。",
+    "inspection": "取两枚对敲，声脆不闷者为烧透；指穿绳孔，内壁应光滑无刺，孔缘无缺裂。坠身若见贯穿裂纹或孔道歪斜过甚，下水后易断绳脱网，不宜使用。",
+    "storage": "陶质耐潮，可堆放在干燥的渔具棚或木箱中，避免重物压砸。无固定保存期，磕碰缺角即弃。"
+  },
+  "review": {
+    "contradictions": []
+  },
+  "errors": [],
+  "warnings": [],
+  "feedback": null
+}

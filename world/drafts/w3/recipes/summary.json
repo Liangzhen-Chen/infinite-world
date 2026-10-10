@@ -1,0 +1,119 @@
+{
+  "total": 50,
+  "passed": 49,
+  "manual": 1,
+  "pending": 0,
+  "costUpperYuan": 2.0132851599999992,
+  "batches": [
+    {
+      "index": 0,
+      "fingerprint": "103038f6548440f8d9370b312ee8b6b91ee1944c1b10cad4f8b44717eb718026",
+      "count": 25,
+      "passed": 24,
+      "ids": [
+        "recipe_w3_oat_crisp",
+        "recipe_w3_milk_oat_mash",
+        "recipe_w3_fruit_paste",
+        "recipe_w3_fish_oat_cake",
+        "recipe_w3_fish_broth",
+        "recipe_w3_warm_vinegar_drink",
+        "recipe_w3_fruit_milk_pudding",
+        "recipe_w3_toasted_oats",
+        "recipe_w3_salted_curd",
+        "recipe_w3_fruit_oat_dumpling",
+        "recipe_w3_linen_apron",
+        "recipe_w3_pot_wrap",
+        "recipe_w3_needle_roll",
+        "recipe_w3_herb_pouch",
+        "recipe_w3_head_wrap",
+        "recipe_w3_wool_wristband",
+        "recipe_w3_linen_filter",
+        "recipe_w3_patch_bundle",
+        "recipe_w3_flax_cord",
+        "recipe_w3_felt_seat",
+        "recipe_w3_wood_spoon",
+        "recipe_w3_mixing_paddle",
+        "recipe_w3_spindle_whorl",
+        "recipe_w3_shuttle",
+        "recipe_w3_weaving_sword"
+      ],
+      "rewritten": 9,
+      "manual": [
+        "recipe_w3_toasted_oats"
+      ],
+      "pending": [],
+      "flagged": [
+        "recipe_w3_fruit_oat_dumpling"
+      ],
+      "sample": [
+        "recipe_w3_patch_bundle",
+        "recipe_w3_head_wrap",
+        "recipe_w3_wool_wristband",
+        "recipe_w3_warm_vinegar_drink",
+        "recipe_w3_fruit_milk_pudding"
+      ],
+      "l4": {
+        "approved": false,
+        "notes": []
+      },
+      "costUpperYuan": 1.903746119999999,
+      "manualRatio": 0.04,
+      "needsSystemicRepair": false
+    },
+    {
+      "index": 1,
+      "fingerprint": "71abaffbbab0dad01ee1f1360b645ad0f2434ee2a6e9ae852302806c109b5047",
+      "count": 25,
+      "passed": 25,
+      "ids": [
+        "recipe_w3_boot_form",
+        "recipe_w3_darning_egg",
+        "recipe_w3_line_winder",
+        "recipe_w3_door_wedge",
+        "recipe_w3_seed_marker",
+        "recipe_w3_s_hook",
+        "recipe_w3_iron_awl",
+        "recipe_w3_belt_buckle",
+        "recipe_w3_seam_rivet",
+        "recipe_w3_lamp_bracket",
+        "recipe_w3_fire_poker",
+        "recipe_w3_hearth_trivet",
+        "recipe_w3_chain_link_set",
+        "recipe_w3_scraper_blade",
+        "recipe_w3_iron_ring",
+        "recipe_w3_clay_bowl",
+        "recipe_w3_clay_oil_lamp",
+        "recipe_w3_clay_funnel",
+        "recipe_w3_clay_spool",
+        "recipe_w3_clay_bead_set",
+        "recipe_w3_clay_lid",
+        "recipe_w3_clay_dish",
+        "recipe_w3_clay_flowerpot",
+        "recipe_w3_clay_roof_tile",
+        "recipe_w3_clay_net_weight"
+      ],
+      "rewritten": 1,
+      "manual": [],
+      "pending": [],
+      "flagged": [
+        "recipe_w3_iron_awl",
+        "recipe_w3_hearth_trivet"
+      ],
+      "sample": [
+        "recipe_w3_fire_poker",
+        "recipe_w3_belt_buckle",
+        "recipe_w3_darning_egg",
+        "recipe_w3_clay_flowerpot",
+        "recipe_w3_clay_net_weight"
+      ],
+      "l4": {
+        "approved": false,
+        "notes": []
+      },
+      "costUpperYuan": 2.0132851599999992,
+      "manualRatio": 0,
+      "needsSystemicRepair": false
+    }
+  ],
+  "scope": "L1/L2 审核结果；尚须 L4 抽读与发布校验"
+}

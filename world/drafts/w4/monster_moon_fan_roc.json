@@ -1,0 +1,133 @@
+{
+  "id": "monster_moon_fan_roc",
+  "fingerprint": "dbf6e33e14fa2595d2aa128e3ce73738a6bdc73461704a388495d7546d53d726",
+  "status": "manual",
+  "attempts": 3,
+  "draft": {
+    "id": "monster_moon_fan_roc",
+    "appearance": "月扇断崖鹏体型如小型马，翼展开阔，羽毛深灰近黑，唯尾羽浅灰，外缘呈扇形白斑，展开时如半轮月。喙短而钩曲，爪粗壮，趾底有厚垫，适合抓握岩台。迎谷风时逐片收拢飞羽，滑翔时几乎无声。",
+    "habits": "活动于06:00与18:00两个时刻，其余时段休息。成对活动，grouping为两只，共同守护巢区与固定伏猎点。肉食，主要捕食崖间小型走兽与鸟类，也捡食腐肉。领地行为上，接近时先示警，退离后不持续追逐。",
+    "threat": "守护巢区与固定伏猎点，接近时先示警，退离后不持续追逐。行人若见其低空盘旋并收翅盯视，应缓步后退，避免直视巢区。不要试图驱赶或投石，以免触发俯冲。",
+    "materials": "无商品掉落。可在岩台边缘找到脱落的浅灰尾羽，羽轴完整，外缘白斑清晰；也可观察爪痕与粪迹判断伏猎点。采集尾羽需等待其离巢，约100分钟可寻得1份。",
+    "folklore": "民间误传月扇断崖鹏只在满月夜捕食，且尾羽能占卜。实际它活动于06:00至18:00，尾羽白斑是固定特征，与月光无关。可观察的差别是：白天见其逐片收羽滑翔，夜间巢区安静。",
+    "voice": "示警时发出短促的“咔—咔”声，连续两次；俯冲前有低沉的“呜”声，如风过窄缝。"
+  },
+  "review": {
+    "contradictions": [
+      {
+        "quote": "活动于06:00与18:00两个时刻，其余时段休息。",
+        "field": "wildlife.activeHours",
+        "severity": "hard",
+        "reason": "骨架 activeHours 为 [360,1080]，即 06:00 至 18:00 的连续活动时段，并非仅在 06:00 与 18:00 两个时刻活动。"
+      },
+      {
+        "quote": "实际它活动于06:00至18:00",
+        "field": "wildlife.activeHours",
+        "severity": "soft",
+        "reason": "该表述与骨架 activeHours [360,1080] 相容，但与前文“活动于06:00与18:00两个时刻”自相矛盾，需统一为连续时段。"
+      },
+      {
+        "quote": "主要捕食崖间小型走兽与鸟类，也捡食腐肉。",
+        "field": "wildlife.predatorOf",
+        "severity": "hard",
+        "reason": "骨架 predatorOf 为空，未声明具体猎物；说明新增了捕食小型走兽、鸟类及捡食腐肉的功能性食性内容。"
+      },
+      {
+        "quote": "采集尾羽需等待其离巢，约100分钟可寻得1份。",
+        "field": "wildlife.gather",
+        "severity": "hard",
+        "reason": "骨架 gather 仅声明 minutes 100、tool null、consumes 空，未声明可采集尾羽或获得1份尾羽；说明新增了取得途径与产物。"
+      },
+      {
+        "quote": "可在岩台边缘找到脱落的浅灰尾羽，羽轴完整，外缘白斑清晰",
+        "field": "drops",
+        "severity": "hard",
+        "reason": "骨架 drops 为空，说明新增了可获取的尾羽材料，属于新增取得途径。"
+      },
+      {
+        "quote": "也可观察爪痕与粪迹判断伏猎点。",
+        "field": "wildlife",
+        "severity": "soft",
+        "reason": "骨架未声明爪痕、粪迹或通过痕迹判断伏猎点的机制，属于新增观察功能。"
+      },
+      {
+        "quote": "尾羽白斑是固定特征，与月光无关。",
+        "field": "wildlife.distinction",
+        "severity": "soft",
+        "reason": "骨架 distinction 仅描述尾羽浅灰外缘如月扇，未声明白斑为固定特征或与月光无关；该纠正性断言超出骨架依据。"
+      }
+    ]
+  },
+  "errors": [
+    {
+      "quote": "活动于06:00与18:00两个时刻，其余时段休息。",
+      "field": "wildlife.activeHours",
+      "severity": "hard",
+      "reason": "骨架 activeHours 为 [360,1080]，即 06:00 至 18:00 的连续活动时段，并非仅在 06:00 与 18:00 两个时刻活动。"
+    },
+    {
+      "quote": "主要捕食崖间小型走兽与鸟类，也捡食腐肉。",
+      "field": "wildlife.predatorOf",
+      "severity": "hard",
+      "reason": "骨架 predatorOf 为空，未声明具体猎物；说明新增了捕食小型走兽、鸟类及捡食腐肉的功能性食性内容。"
+    },
+    {
+      "quote": "采集尾羽需等待其离巢，约100分钟可寻得1份。",
+      "field": "wildlife.gather",
+      "severity": "hard",
+      "reason": "骨架 gather 仅声明 minutes 100、tool null、consumes 空，未声明可采集尾羽或获得1份尾羽；说明新增了取得途径与产物。"
+    },
+    {
+      "quote": "可在岩台边缘找到脱落的浅灰尾羽，羽轴完整，外缘白斑清晰",
+      "field": "drops",
+      "severity": "hard",
+      "reason": "骨架 drops 为空，说明新增了可获取的尾羽材料，属于新增取得途径。"
+    }
+  ],
+  "warnings": [
+    {
+      "quote": "实际它活动于06:00至18:00",
+      "field": "wildlife.activeHours",
+      "severity": "soft",
+      "reason": "该表述与骨架 activeHours [360,1080] 相容，但与前文“活动于06:00与18:00两个时刻”自相矛盾，需统一为连续时段。"
+    },
+    {
+      "quote": "也可观察爪痕与粪迹判断伏猎点。",
+      "field": "wildlife",
+      "severity": "soft",
+      "reason": "骨架未声明爪痕、粪迹或通过痕迹判断伏猎点的机制，属于新增观察功能。"
+    },
+    {
+      "quote": "尾羽白斑是固定特征，与月光无关。",
+      "field": "wildlife.distinction",
+      "severity": "soft",
+      "reason": "骨架 distinction 仅描述尾羽浅灰外缘如月扇，未声明白斑为固定特征或与月光无关；该纠正性断言超出骨架依据。"
+    }
+  ],
+  "feedback": [
+    {
+      "quote": "活动于06:00与18:00两个时刻，其余时段休息。",
+      "field": "wildlife.activeHours",
+      "severity": "hard",
+      "reason": "骨架 activeHours 为 [360,1080]，即 06:00 至 18:00 的连续活动时段，并非仅在 06:00 与 18:00 两个时刻活动。"
+    },
+    {
+      "quote": "主要捕食崖间小型走兽与鸟类，也捡食腐肉。",
+      "field": "wildlife.predatorOf",
+      "severity": "hard",
+      "reason": "骨架 predatorOf 为空，未声明具体猎物；说明新增了捕食小型走兽、鸟类及捡食腐肉的功能性食性内容。"
+    },
+    {
+      "quote": "采集尾羽需等待其离巢，约100分钟可寻得1份。",
+      "field": "wildlife.gather",
+      "severity": "hard",
+      "reason": "骨架 gather 仅声明 minutes 100、tool null、consumes 空，未声明可采集尾羽或获得1份尾羽；说明新增了取得途径与产物。"
+    },
+    {
+      "quote": "可在岩台边缘找到脱落的浅灰尾羽，羽轴完整，外缘白斑清晰",
+      "field": "drops",
+      "severity": "hard",
+      "reason": "骨架 drops 为空，说明新增了可获取的尾羽材料，属于新增取得途径。"
+    }
+  ]
+}

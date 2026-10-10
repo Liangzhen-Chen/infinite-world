@@ -1,0 +1,18 @@
+{
+  "id": "item_fruit_paste",
+  "fingerprint": "fb9a4ce9a02cae254a0b5981b087e294a68a9a693f507efa311aa0c82f16f45a",
+  "status": "passed",
+  "attempts": 2,
+  "draft": {
+    "id": "item_fruit_paste",
+    "description": "青灯酒馆厨房当日现做的粗酱，取干果浸软后以果醋小火煮成。果肉不滤渣，只以厨刀略切，煮到能挂住木勺便离火。颜色深褐，间有半透明的果块，入口先是果醋酸气，随后是干果本身的甜，无糖添加。质地偏稠，冷后更紧，可随餐蘸薄饼。",
+    "inspection": "舀起一勺看挂壁：能缓慢流下、留下薄痕即可。表面若起白膜或闻出酒味，说明已放坏。果块应软而不烂，嚼到硬芯多为浸发不足。",
+    "storage": "盛入干净陶碗，盖布置阴凉处，3天内吃完；天热时当日用完。"
+  },
+  "review": {
+    "contradictions": []
+  },
+  "errors": [],
+  "warnings": [],
+  "feedback": null
+}

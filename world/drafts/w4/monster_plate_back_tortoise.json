@@ -1,0 +1,96 @@
+{
+  "id": "monster_plate_back_tortoise",
+  "fingerprint": "8254b7d24937187736ab77113eab5a85447ae01e5662fa108484e964d6eda77b",
+  "status": "manual",
+  "attempts": 3,
+  "draft": {
+    "id": "monster_plate_back_tortoise",
+    "appearance": "背甲前缘三层叠起，像被铜砾岭的风磨圆的旧盾片，层间夹着浅褐色薄边。甲面有细密放射纹，沾着红褐石粉。头颈灰绿，沿石缝伸颈时露出喉部淡黄褶皮。四肢粗短，爪尖钝白，尾根覆一圈小鳞。",
+    "habits": "独居。activity为06:00与18:00两个时刻，其余时段休息。草食，以矮苔与石缝间可啃的草叶为食，不追捕活物。以食源与休息处为活动中心，受惊时让路，围堵幼体时防御。清晨沿固定石缝啃食，傍晚回到向阳砾石凹处，用前爪刨浅坑卧下。",
+    "threat": "受惊时缩颈让路，不主动追人。围堵幼体或踩到背甲时，会猛然侧撞并咬住近处靴裤。行人应绕开其卧坑，别从坡上直冲，也别翻动幼体；被咬住时用硬物撬开下颌，不要徒手拉扯。",
+    "materials": "drops为空。可观察线索：石缝边留有龟爪划痕，卧坑旁有椭圆形腹甲压痕与灰绿粪段。脱落的背甲薄片可拾，但无实际工具用途；活体不产可采商品。",
+    "folklore": "有人误传叠甲丘龟会吐铜屑，其实它只啃矮苔，甲面铜色来自石粉与氧化薄层。另说它夜间爬行，可观察到的只是休息时轻微换气与缩颈，活动仍集中在06:00与18:00前后。",
+    "voice": "低沉的喉音“咕——咕——”，受惊时短促喷气，像砾石摩擦。"
+  },
+  "review": {
+    "contradictions": [
+      {
+        "quote": "activity为06:00与18:00两个时刻，其余时段休息。",
+        "field": "wildlife.activeHours",
+        "severity": "hard",
+        "reason": "骨架 activeHours 为 [360,1080]（06:00–18:00 的连续活动时段），说明将其改为仅在 06:00 与 18:00 两个时刻活动、其余时段休息，与骨架相反。"
+      },
+      {
+        "quote": "傍晚回到向阳砾石凹处，用前爪刨浅坑卧下。",
+        "field": "wildlife.activeHours",
+        "severity": "hard",
+        "reason": "骨架活动时段为 06:00–18:00，傍晚（18:00 之后）不在活动时段内，说明新增了骨架未声明的傍晚活动。"
+      },
+      {
+        "quote": "可观察线索：石缝边留有龟爪划痕，卧坑旁有椭圆形腹甲压痕与灰绿粪段。",
+        "field": "wildlife.gather",
+        "severity": "hard",
+        "reason": "骨架 gather 的 consumes 为空，说明新增了“可观察线索”作为采集产出，属于骨架未声明的取得途径。"
+      },
+      {
+        "quote": "脱落的背甲薄片可拾，但无实际工具用途；活体不产可采商品。",
+        "field": "wildlife.gather",
+        "severity": "hard",
+        "reason": "骨架 gather 的 consumes 为空且 drops 为空，说明新增了“可拾取脱落的背甲薄片”这一取得途径。"
+      }
+    ]
+  },
+  "errors": [
+    {
+      "quote": "activity为06:00与18:00两个时刻，其余时段休息。",
+      "field": "wildlife.activeHours",
+      "severity": "hard",
+      "reason": "骨架 activeHours 为 [360,1080]（06:00–18:00 的连续活动时段），说明将其改为仅在 06:00 与 18:00 两个时刻活动、其余时段休息，与骨架相反。"
+    },
+    {
+      "quote": "傍晚回到向阳砾石凹处，用前爪刨浅坑卧下。",
+      "field": "wildlife.activeHours",
+      "severity": "hard",
+      "reason": "骨架活动时段为 06:00–18:00，傍晚（18:00 之后）不在活动时段内，说明新增了骨架未声明的傍晚活动。"
+    },
+    {
+      "quote": "可观察线索：石缝边留有龟爪划痕，卧坑旁有椭圆形腹甲压痕与灰绿粪段。",
+      "field": "wildlife.gather",
+      "severity": "hard",
+      "reason": "骨架 gather 的 consumes 为空，说明新增了“可观察线索”作为采集产出，属于骨架未声明的取得途径。"
+    },
+    {
+      "quote": "脱落的背甲薄片可拾，但无实际工具用途；活体不产可采商品。",
+      "field": "wildlife.gather",
+      "severity": "hard",
+      "reason": "骨架 gather 的 consumes 为空且 drops 为空，说明新增了“可拾取脱落的背甲薄片”这一取得途径。"
+    }
+  ],
+  "warnings": [],
+  "feedback": [
+    {
+      "quote": "activity为06:00与18:00两个时刻，其余时段休息。",
+      "field": "wildlife.activeHours",
+      "severity": "hard",
+      "reason": "骨架 activeHours 为 [360,1080]（06:00–18:00 的连续活动时段），说明将其改为仅在 06:00 与 18:00 两个时刻活动、其余时段休息，与骨架相反。"
+    },
+    {
+      "quote": "傍晚回到向阳砾石凹处，用前爪刨浅坑卧下。",
+      "field": "wildlife.activeHours",
+      "severity": "hard",
+      "reason": "骨架活动时段为 06:00–18:00，傍晚（18:00 之后）不在活动时段内，说明新增了骨架未声明的傍晚活动。"
+    },
+    {
+      "quote": "可观察线索：石缝边留有龟爪划痕，卧坑旁有椭圆形腹甲压痕与灰绿粪段。",
+      "field": "wildlife.gather",
+      "severity": "hard",
+      "reason": "骨架 gather 的 consumes 为空，说明新增了“可观察线索”作为采集产出，属于骨架未声明的取得途径。"
+    },
+    {
+      "quote": "脱落的背甲薄片可拾，但无实际工具用途；活体不产可采商品。",
+      "field": "wildlife.gather",
+      "severity": "hard",
+      "reason": "骨架 gather 的 consumes 为空且 drops 为空，说明新增了“可拾取脱落的背甲薄片”这一取得途径。"
+    }
+  ]
+}

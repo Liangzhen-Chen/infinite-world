@@ -1,0 +1,18 @@
+{
+  "id": "item_mixing_paddle",
+  "fingerprint": "c1fa66effd544e70ceec51bb0e9c1ad895067dfbae0fd03f38c86ac442c7211a",
+  "status": "passed",
+  "attempts": 1,
+  "draft": {
+    "id": "item_mixing_paddle",
+    "description": "旧磨坊木工坊出的长柄搅糊板，整块木料削成，头部宽扁，边角倒圆，贴着锅底转也不会刮出沟痕。柄身留出一段顺手握处，末端略收，久搅不易脱手。木面留有刀痕与打磨的细纹，头部因常浸稠糊而颜色偏深，柄上则被掌心磨得发亮。专供搅稠糊，不当作铲或撬棍使。",
+    "inspection": "看头部边缘是否圆润无毛刺，木面有无裂纹或起翘；柄身握处应无刺手感。以指腹沿板面推过，能感到平顺即可；若边缘发白起丝，说明该再打磨。",
+    "storage": "洗净糊渍后阴干，勿泡水或近炉火；平放或柄朝下靠墙，避免压弯。受潮易生霉，干透再收。"
+  },
+  "review": {
+    "contradictions": []
+  },
+  "errors": [],
+  "warnings": [],
+  "feedback": null
+}

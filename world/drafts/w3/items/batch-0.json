@@ -1,0 +1,54 @@
+{
+  "index": 0,
+  "fingerprint": "7a0a43bd0d526d3a77248fe9610f60cbc02b9b56dbbc2b176dad1dd61d2eea93",
+  "count": 26,
+  "passed": 26,
+  "ids": [
+    "item_oat_crisp",
+    "item_milk_oat_mash",
+    "item_fruit_paste",
+    "item_fish_oat_cake",
+    "item_fish_broth",
+    "item_warm_vinegar_drink",
+    "item_fruit_milk_pudding",
+    "item_toasted_oats",
+    "item_salted_curd",
+    "item_fruit_oat_dumpling",
+    "item_linen_apron",
+    "item_pot_wrap",
+    "item_needle_roll",
+    "item_herb_pouch",
+    "item_head_wrap",
+    "item_wool_wristband",
+    "item_linen_filter",
+    "item_patch_bundle",
+    "item_flax_cord",
+    "item_felt_seat",
+    "item_wood_spoon",
+    "item_mixing_paddle",
+    "item_spindle_whorl",
+    "item_shuttle",
+    "item_weaving_sword",
+    "item_boot_form"
+  ],
+  "rewritten": 4,
+  "manual": [],
+  "pending": [],
+  "flagged": [
+    "item_head_wrap"
+  ],
+  "sample": [
+    "item_weaving_sword",
+    "item_shuttle",
+    "item_pot_wrap",
+    "item_wood_spoon",
+    "item_wool_wristband"
+  ],
+  "l4": {
+    "approved": false,
+    "notes": []
+  },
+  "costUpperYuan": 1.6234562799999988,
+  "manualRatio": 0,
+  "needsSystemicRepair": false
+}

@@ -1,0 +1,54 @@
+{
+  "index": 1,
+  "fingerprint": "71abaffbbab0dad01ee1f1360b645ad0f2434ee2a6e9ae852302806c109b5047",
+  "count": 25,
+  "passed": 25,
+  "ids": [
+    "recipe_w3_boot_form",
+    "recipe_w3_darning_egg",
+    "recipe_w3_line_winder",
+    "recipe_w3_door_wedge",
+    "recipe_w3_seed_marker",
+    "recipe_w3_s_hook",
+    "recipe_w3_iron_awl",
+    "recipe_w3_belt_buckle",
+    "recipe_w3_seam_rivet",
+    "recipe_w3_lamp_bracket",
+    "recipe_w3_fire_poker",
+    "recipe_w3_hearth_trivet",
+    "recipe_w3_chain_link_set",
+    "recipe_w3_scraper_blade",
+    "recipe_w3_iron_ring",
+    "recipe_w3_clay_bowl",
+    "recipe_w3_clay_oil_lamp",
+    "recipe_w3_clay_funnel",
+    "recipe_w3_clay_spool",
+    "recipe_w3_clay_bead_set",
+    "recipe_w3_clay_lid",
+    "recipe_w3_clay_dish",
+    "recipe_w3_clay_flowerpot",
+    "recipe_w3_clay_roof_tile",
+    "recipe_w3_clay_net_weight"
+  ],
+  "rewritten": 1,
+  "manual": [],
+  "pending": [],
+  "flagged": [
+    "recipe_w3_iron_awl",
+    "recipe_w3_hearth_trivet"
+  ],
+  "sample": [
+    "recipe_w3_fire_poker",
+    "recipe_w3_belt_buckle",
+    "recipe_w3_darning_egg",
+    "recipe_w3_clay_flowerpot",
+    "recipe_w3_clay_net_weight"
+  ],
+  "l4": {
+    "approved": false,
+    "notes": []
+  },
+  "costUpperYuan": 2.0132851599999992,
+  "manualRatio": 0,
+  "needsSystemicRepair": false
+}

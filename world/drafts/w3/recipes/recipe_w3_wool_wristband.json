@@ -1,0 +1,16 @@
+{
+  "id": "recipe_w3_wool_wristband",
+  "fingerprint": "77a3170ee2b868eb2184b0b755c81a81c08239be9b9acf0b1711f930c2e46aa9",
+  "status": "passed",
+  "attempts": 1,
+  "draft": {
+    "id": "recipe_w3_wool_wristband",
+    "process": "取四团粗毛线，先用削木小刀修去线头处的毛刺与结块，免得穿针时卡在针眼里。粗眼缝针引线后，从腕套开口一端起针，逐圈缠结：每绕一圈便用针尖把线圈压向已缝好的部分，使针脚排得紧密而不叠死。缝到中段时把半成品套上手腕试围，开口须留出活动余量，太紧则拆去两圈重缠。收口时把线尾穿回内侧两三针藏住。一对腕套要缝得圈数相当，不带手指部分。缝完静置干燥，待毛线回弹定型，前后约一个时辰。"
+  },
+  "review": {
+    "contradictions": []
+  },
+  "errors": [],
+  "warnings": [],
+  "feedback": null
+}

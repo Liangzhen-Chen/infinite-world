@@ -1,0 +1,55 @@
+{
+  "index": 0,
+  "fingerprint": "103038f6548440f8d9370b312ee8b6b91ee1944c1b10cad4f8b44717eb718026",
+  "count": 25,
+  "passed": 24,
+  "ids": [
+    "recipe_w3_oat_crisp",
+    "recipe_w3_milk_oat_mash",
+    "recipe_w3_fruit_paste",
+    "recipe_w3_fish_oat_cake",
+    "recipe_w3_fish_broth",
+    "recipe_w3_warm_vinegar_drink",
+    "recipe_w3_fruit_milk_pudding",
+    "recipe_w3_toasted_oats",
+    "recipe_w3_salted_curd",
+    "recipe_w3_fruit_oat_dumpling",
+    "recipe_w3_linen_apron",
+    "recipe_w3_pot_wrap",
+    "recipe_w3_needle_roll",
+    "recipe_w3_herb_pouch",
+    "recipe_w3_head_wrap",
+    "recipe_w3_wool_wristband",
+    "recipe_w3_linen_filter",
+    "recipe_w3_patch_bundle",
+    "recipe_w3_flax_cord",
+    "recipe_w3_felt_seat",
+    "recipe_w3_wood_spoon",
+    "recipe_w3_mixing_paddle",
+    "recipe_w3_spindle_whorl",
+    "recipe_w3_shuttle",
+    "recipe_w3_weaving_sword"
+  ],
+  "rewritten": 9,
+  "manual": [
+    "recipe_w3_toasted_oats"
+  ],
+  "pending": [],
+  "flagged": [
+    "recipe_w3_fruit_oat_dumpling"
+  ],
+  "sample": [
+    "recipe_w3_patch_bundle",
+    "recipe_w3_head_wrap",
+    "recipe_w3_wool_wristband",
+    "recipe_w3_warm_vinegar_drink",
+    "recipe_w3_fruit_milk_pudding"
+  ],
+  "l4": {
+    "approved": false,
+    "notes": []
+  },
+  "costUpperYuan": 1.903746119999999,
+  "manualRatio": 0.04,
+  "needsSystemicRepair": false
+}

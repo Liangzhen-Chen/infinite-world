@@ -13,4 +13,5 @@ try{
     const {summary}=await runContentPipeline({entries:bones.monsters,root,client:new DeepSeekClient({budgetYuan:20,logFile:'logs/w4-usage.jsonl'}),
         contextFor:entry=>wildlifeContext(entry,world),buildDraftRequest:wildlifeDraftRequest,validateDraft:validateWildlifeDraft,concurrency:12,batchSize:50,revision:'w4-v2'});
     console.log(JSON.stringify({total:summary.total,passed:summary.passed,manual:summary.manual,pending:summary.pending,costUpperYuan:summary.costUpperYuan}));
+    if(summary.manual||summary.pending)process.exitCode=1;
 }catch(error){await fs.writeFile(`${root}/failure.json`,JSON.stringify({error:error.message},null,2));process.exitCode=1;}

@@ -1,0 +1,20 @@
+{
+  "id": "item_head_wrap",
+  "fingerprint": "a2129d9502f353b13e4eca53df35cc79af8e12dfb3c9f6406aedf4203c31af50",
+  "status": "passed",
+  "attempts": 2,
+  "draft": {
+    "id": "item_head_wrap",
+    "description": "遮尘麻头巾由织坊整裁的方麻布做成，四边剪齐后，把剪下的窄边搓成细线，沿布边锁一道，防止麻线散脱。包在头上时先对折成三角，压住额发再绕到脑后系紧，磨坊里扬起的细灰会被布面挡下大半，但布纹稀疏，久待仍能觉出灰粉透过经纬落在发间。布面留有搓线时压出的浅痕与针脚。",
+    "inspection": "抖开看四边锁线是否连续，有无脱散的麻丝；对光看布纹是否匀整，有无破洞或抽紧的皱条；搓线处应紧实，轻拉布边不散口。",
+    "storage": "洗净晾干后折平，放干燥处避潮防蛀，可存365天。"
+  },
+  "review": {
+    "contradictions": []
+  },
+  "errors": [],
+  "warnings": [
+    "storage长度为24，进入L4抽读"
+  ],
+  "feedback": null
+}

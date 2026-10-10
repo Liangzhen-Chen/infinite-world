@@ -1,0 +1,16 @@
+{
+  "id": "recipe_w3_warm_vinegar_drink",
+  "fingerprint": "63a68f7b79b60fdbeff1b9ceb2a78ce43e44ca77a2bd293e74a97ce866fb0e3d",
+  "status": "passed",
+  "attempts": 1,
+  "draft": {
+    "id": "recipe_w3_warm_vinegar_drink",
+    "process": "取酸果醋小瓶一份与清水一份，先在厚底煮锅中倒入清水，再以案上切刀刀背轻磕瓶口使封蜡松动，量入五十毫升果醋，搅匀后静置片刻，让酸味散开。灶下铺一百克干木刨屑引火，小火加热，见锅边起细密小泡、液面微微发白汽即离火，不可煮沸，以免酸气冲散。用细布或勺背撇去浮沫，趁温热倒入杯中。全程约十五分钟，含等待木屑燃透与温热的时间。成品一份，无副产物，须当日饮完，不作药用。"
+  },
+  "review": {
+    "contradictions": []
+  },
+  "errors": [],
+  "warnings": [],
+  "feedback": null
+}

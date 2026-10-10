@@ -1,0 +1,18 @@
+{
+  "id": "item_fruit_oat_dumpling",
+  "fingerprint": "e007441a07879c91df76b8faf728c7b28e9c0ff38a4b87bda6e115d8caf9ec32",
+  "status": "passed",
+  "attempts": 1,
+  "draft": {
+    "id": "item_fruit_oat_dumpling",
+    "description": "青灯酒馆当日现做的木色粉团，燕麦粉加水和成，不置酵种，揉压后外皮紧实微糙。内里包入切碎的软干果，果肉吸了水汽，咬开时带一点黏润的甜。入沸水煮至中心熟透，捞出沥水，团身沉实，表面留有指捏的浅窝与刀口压合的细痕。趁热吃最妥，凉后外皮发硬，果香也闷住。是灶边常见的饱腹小食，做工不精，却顶饿。",
+    "inspection": "先看外皮是否完整，有无破口露馅；再按一按，熟透的团子回弹慢、不粘手。掰开看中心，粉心应无白生色，果碎润而不流汁。若外皮发黏或中心干硬，多是不熟或久放。",
+    "storage": "宜趁热食用，凉后外皮变硬。当日未食完的，置阴凉处覆盖存放，1天内吃完；隔夜风味大减，不宜再留。"
+  },
+  "review": {
+    "contradictions": []
+  },
+  "errors": [],
+  "warnings": [],
+  "feedback": null
+}

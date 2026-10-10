@@ -1,0 +1,224 @@
+{
+  "id": "monster_rift_heel_snowcat",
+  "fingerprint": "631b5cf3147df3c49f60964dfac708b7429373c7a13fb1dd24b887ee8f1660ce",
+  "status": "manual",
+  "attempts": 3,
+  "draft": {
+    "id": "monster_rift_heel_snowcat",
+    "appearance": "成年个体约一百九十公斤，肩高及人腰，毛色灰白带浅青，背脊有断续深斑。最显眼是后脚跟毛间一道深缝，裂谷行走时后脚先落、前脚再换位，脚印因此呈前深后浅的错位。尾粗短，耳圆，瞳孔在暮色中泛淡金。",
+    "habits": "活动时刻为18:00与06:00，其余时间休息。以两只为一组，肉食，捕食冰肋重羊。领地行为是守护巢区与固定伏猎点，接近时先示警，退离后不持续追逐。伏猎点多选融雪渗口旁的岩台，两只轮替蹲守，一只驱赶猎物、一只截断退路，得手后拖回巢区撕食。",
+    "threat": "守巢或护食时先低伏、短促喷气，再拍击前爪。行人若见其耳后压、尾尖轻弹，应停步并沿来路缓退，不要跑动或直视。退出伏猎点范围后它通常不追，绕行谷壁上方可避开。",
+    "materials": "剥取可得3份刮净生皮，用案上切刀处理约90分钟，另耗1份清水。生皮仍湿，不可干燥或鞣制，须保持湿润并及时送交下一步处理。",
+    "folklore": "民间说它脚跟裂缝能吞风、夜里召碎冰坠谷。实际裂缝只是毛间深沟，用于裂谷攀爬时换脚，不发声也不引冰。可观察差别是它只在18:00与06:00活跃，其余时间蜷卧巢区，碎冰坠落多由谷风与融雪引起。",
+    "voice": "低沉的喉音呼噜，示警时短促喷气两声，间隔约一息。"
+  },
+  "review": {
+    "contradictions": [
+      {
+        "quote": "活动时刻为18:00与06:00，其余时间休息。",
+        "field": "wildlife.activeHours",
+        "severity": "hard",
+        "reason": "骨架 activeHours 为 [1080,360]，按分钟计为 18:00 与 06:00，说明与骨架一致，不构成矛盾。"
+      },
+      {
+        "quote": "剥取可得3份刮净生皮，用案上切刀处理约90分钟，另耗1份清水。",
+        "field": "wildlife.gather",
+        "severity": "hard",
+        "reason": "骨架 gather 为 90 分钟、工具 item_kitchen_knife、消耗 1 份 item_water，说明与骨架一致，不构成矛盾。"
+      },
+      {
+        "quote": "生皮仍湿，不可干燥或鞣制，须保持湿润并及时送交下一步处理。",
+        "field": "drops[0].catalog.storage",
+        "severity": "hard",
+        "reason": "骨架引用事实说明生皮未浸灰或鞣制、仍会腐败，需在变质前送入下一步处理；说明与引用事实一致，不构成矛盾。"
+      },
+      {
+        "quote": "实际裂缝只是毛间深沟，用于裂谷攀爬时换脚，不发声也不引冰。",
+        "field": "wildlife.distinction",
+        "severity": "hard",
+        "reason": "骨架 distinction 为脚跟毛间有深缝、爬裂谷时先后脚换位；说明与骨架一致，不构成矛盾。"
+      },
+      {
+        "quote": "可观察差别是它只在18:00与06:00活跃，其余时间蜷卧巢区，碎冰坠落多由谷风与融雪引起。",
+        "field": "publishedFacts.activity",
+        "severity": "hard",
+        "reason": "骨架活动时间为 18:00 与 06:00，引用地点描述也提到谷风与融雪；说明与骨架及引用事实一致，不构成矛盾。"
+      },
+      {
+        "quote": "以两只为一组，肉食，捕食冰肋重羊。",
+        "field": "wildlife.predatorOf",
+        "severity": "hard",
+        "reason": "骨架 grouping 为两只、diet 为肉食、predatorOf 为 monster_ice_rib_ram（冰肋重羊）；说明与骨架一致，不构成矛盾。"
+      },
+      {
+        "quote": "领地行为是守护巢区与固定伏猎点，接近时先示警，退离后不持续追逐。",
+        "field": "territoriality",
+        "severity": "hard",
+        "reason": "说明与骨架 territoriality 完全一致，不构成矛盾。"
+      },
+      {
+        "quote": "伏猎点多选融雪渗口旁的岩台，两只轮替蹲守，一只驱赶猎物、一只截断退路，得手后拖回巢区撕食。",
+        "field": "habits",
+        "severity": "soft",
+        "reason": "骨架未声明具体伏猎点位置或双只协作捕猎方式，但属于对肉食、两只一组、守护固定伏猎点行为的合理感官/行为细节，未新增能力或改变骨架事实。"
+      },
+      {
+        "quote": "守巢或护食时先低伏、短促喷气，再拍击前爪。",
+        "field": "threat",
+        "severity": "soft",
+        "reason": "骨架 territoriality 已声明接近时先示警；低伏、喷气、拍击前爪属于示警行为的感官细节，未新增功能。"
+      },
+      {
+        "quote": "行人若见其耳后压、尾尖轻弹，应停步并沿来路缓退，不要跑动或直视。",
+        "field": "threat",
+        "severity": "soft",
+        "reason": "属于对示警与退离行为的合理观察/应对描述，未新增骨架未声明的能力或规则。"
+      },
+      {
+        "quote": "退出伏猎点范围后它通常不追，绕行谷壁上方可避开。",
+        "field": "territoriality",
+        "severity": "soft",
+        "reason": "与骨架“退离后不持续追逐”相容，绕行建议属于合理行为细节，未新增功能。"
+      },
+      {
+        "quote": "民间说它脚跟裂缝能吞风、夜里召碎冰坠谷。",
+        "field": "folklore",
+        "severity": "soft",
+        "reason": "骨架 facts 要求民间误解必须在同段明确纠正；说明随后明确纠正为实际裂缝只是毛间深沟，不发声也不引冰，符合要求。"
+      },
+      {
+        "quote": "低沉的喉音呼噜，示警时短促喷气两声，间隔约一息。",
+        "field": "voice",
+        "severity": "soft",
+        "reason": "骨架未声明声音细节，但属于感官描述，未新增能力或改变骨架事实。"
+      }
+    ]
+  },
+  "errors": [
+    {
+      "quote": "活动时刻为18:00与06:00，其余时间休息。",
+      "field": "wildlife.activeHours",
+      "severity": "hard",
+      "reason": "骨架 activeHours 为 [1080,360]，按分钟计为 18:00 与 06:00，说明与骨架一致，不构成矛盾。"
+    },
+    {
+      "quote": "剥取可得3份刮净生皮，用案上切刀处理约90分钟，另耗1份清水。",
+      "field": "wildlife.gather",
+      "severity": "hard",
+      "reason": "骨架 gather 为 90 分钟、工具 item_kitchen_knife、消耗 1 份 item_water，说明与骨架一致，不构成矛盾。"
+    },
+    {
+      "quote": "生皮仍湿，不可干燥或鞣制，须保持湿润并及时送交下一步处理。",
+      "field": "drops[0].catalog.storage",
+      "severity": "hard",
+      "reason": "骨架引用事实说明生皮未浸灰或鞣制、仍会腐败，需在变质前送入下一步处理；说明与引用事实一致，不构成矛盾。"
+    },
+    {
+      "quote": "实际裂缝只是毛间深沟，用于裂谷攀爬时换脚，不发声也不引冰。",
+      "field": "wildlife.distinction",
+      "severity": "hard",
+      "reason": "骨架 distinction 为脚跟毛间有深缝、爬裂谷时先后脚换位；说明与骨架一致，不构成矛盾。"
+    },
+    {
+      "quote": "可观察差别是它只在18:00与06:00活跃，其余时间蜷卧巢区，碎冰坠落多由谷风与融雪引起。",
+      "field": "publishedFacts.activity",
+      "severity": "hard",
+      "reason": "骨架活动时间为 18:00 与 06:00，引用地点描述也提到谷风与融雪；说明与骨架及引用事实一致，不构成矛盾。"
+    },
+    {
+      "quote": "以两只为一组，肉食，捕食冰肋重羊。",
+      "field": "wildlife.predatorOf",
+      "severity": "hard",
+      "reason": "骨架 grouping 为两只、diet 为肉食、predatorOf 为 monster_ice_rib_ram（冰肋重羊）；说明与骨架一致，不构成矛盾。"
+    },
+    {
+      "quote": "领地行为是守护巢区与固定伏猎点，接近时先示警，退离后不持续追逐。",
+      "field": "territoriality",
+      "severity": "hard",
+      "reason": "说明与骨架 territoriality 完全一致，不构成矛盾。"
+    }
+  ],
+  "warnings": [
+    "voice 长度需要抽读",
+    {
+      "quote": "伏猎点多选融雪渗口旁的岩台，两只轮替蹲守，一只驱赶猎物、一只截断退路，得手后拖回巢区撕食。",
+      "field": "habits",
+      "severity": "soft",
+      "reason": "骨架未声明具体伏猎点位置或双只协作捕猎方式，但属于对肉食、两只一组、守护固定伏猎点行为的合理感官/行为细节，未新增能力或改变骨架事实。"
+    },
+    {
+      "quote": "守巢或护食时先低伏、短促喷气，再拍击前爪。",
+      "field": "threat",
+      "severity": "soft",
+      "reason": "骨架 territoriality 已声明接近时先示警；低伏、喷气、拍击前爪属于示警行为的感官细节，未新增功能。"
+    },
+    {
+      "quote": "行人若见其耳后压、尾尖轻弹，应停步并沿来路缓退，不要跑动或直视。",
+      "field": "threat",
+      "severity": "soft",
+      "reason": "属于对示警与退离行为的合理观察/应对描述，未新增骨架未声明的能力或规则。"
+    },
+    {
+      "quote": "退出伏猎点范围后它通常不追，绕行谷壁上方可避开。",
+      "field": "territoriality",
+      "severity": "soft",
+      "reason": "与骨架“退离后不持续追逐”相容，绕行建议属于合理行为细节，未新增功能。"
+    },
+    {
+      "quote": "民间说它脚跟裂缝能吞风、夜里召碎冰坠谷。",
+      "field": "folklore",
+      "severity": "soft",
+      "reason": "骨架 facts 要求民间误解必须在同段明确纠正；说明随后明确纠正为实际裂缝只是毛间深沟，不发声也不引冰，符合要求。"
+    },
+    {
+      "quote": "低沉的喉音呼噜，示警时短促喷气两声，间隔约一息。",
+      "field": "voice",
+      "severity": "soft",
+      "reason": "骨架未声明声音细节，但属于感官描述，未新增能力或改变骨架事实。"
+    }
+  ],
+  "feedback": [
+    {
+      "quote": "活动时刻为18:00与06:00，其余时间休息。",
+      "field": "wildlife.activeHours",
+      "severity": "hard",
+      "reason": "骨架 activeHours 为 [1080,360]，按分钟计为 18:00 与 06:00，说明与骨架一致，不构成矛盾。"
+    },
+    {
+      "quote": "剥取可得3份刮净生皮，用案上切刀处理约90分钟，另耗1份清水。",
+      "field": "wildlife.gather",
+      "severity": "hard",
+      "reason": "骨架 gather 为 90 分钟、工具 item_kitchen_knife、消耗 1 份 item_water，说明与骨架一致，不构成矛盾。"
+    },
+    {
+      "quote": "生皮仍湿，不可干燥或鞣制，须保持湿润并及时送交下一步处理。",
+      "field": "drops[0].catalog.storage",
+      "severity": "hard",
+      "reason": "骨架引用事实说明生皮未浸灰或鞣制、仍会腐败，需在变质前送入下一步处理；说明与引用事实一致，不构成矛盾。"
+    },
+    {
+      "quote": "实际裂缝只是毛间深沟，用于裂谷攀爬时换脚，不发声也不引冰。",
+      "field": "wildlife.distinction",
+      "severity": "hard",
+      "reason": "骨架 distinction 为脚跟毛间有深缝、爬裂谷时先后脚换位；说明与骨架一致，不构成矛盾。"
+    },
+    {
+      "quote": "可观察差别是它只在18:00与06:00活跃，其余时间蜷卧巢区，碎冰坠落多由谷风与融雪引起。",
+      "field": "publishedFacts.activity",
+      "severity": "hard",
+      "reason": "骨架活动时间为 18:00 与 06:00，引用地点描述也提到谷风与融雪；说明与骨架及引用事实一致，不构成矛盾。"
+    },
+    {
+      "quote": "以两只为一组，肉食，捕食冰肋重羊。",
+      "field": "wildlife.predatorOf",
+      "severity": "hard",
+      "reason": "骨架 grouping 为两只、diet 为肉食、predatorOf 为 monster_ice_rib_ram（冰肋重羊）；说明与骨架一致，不构成矛盾。"
+    },
+    {
+      "quote": "领地行为是守护巢区与固定伏猎点，接近时先示警，退离后不持续追逐。",
+      "field": "territoriality",
+      "severity": "hard",
+      "reason": "说明与骨架 territoriality 完全一致，不构成矛盾。"
+    }
+  ]
+}

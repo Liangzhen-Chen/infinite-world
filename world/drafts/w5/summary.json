@@ -1,0 +1,63 @@
+{
+  "total": 22,
+  "passed": 20,
+  "manual": 2,
+  "pending": 0,
+  "costUpperYuan": 0.3445334400000003,
+  "batches": [
+    {
+      "index": 0,
+      "fingerprint": "f47c4846f7ec3a3604979801e83299e4837a5fff0f2cbeec718a28c745ba9c80",
+      "count": 22,
+      "passed": 20,
+      "ids": [
+        "culture_river",
+        "culture_civic",
+        "culture_steppe",
+        "culture_canopy",
+        "culture_beast",
+        "culture_coast",
+        "culture_north",
+        "culture_salt",
+        "culture_forge",
+        "culture_reed",
+        "deity_furrow",
+        "deity_lintel",
+        "deity_well",
+        "deity_canopy",
+        "deity_scent",
+        "deity_tide",
+        "deity_lamp",
+        "deity_shade",
+        "deity_wedge",
+        "deity_bank",
+        "deity_return",
+        "deity_mirror"
+      ],
+      "rewritten": 8,
+      "manual": [
+        "culture_river",
+        "deity_well"
+      ],
+      "pending": [],
+      "flagged": [
+        "culture_coast"
+      ],
+      "sample": [
+        "deity_bank",
+        "deity_lintel",
+        "culture_coast",
+        "culture_steppe",
+        "deity_wedge"
+      ],
+      "l4": {
+        "approved": false,
+        "notes": []
+      },
+      "costUpperYuan": 0.3445334400000003,
+      "manualRatio": 0.09090909090909091,
+      "needsSystemicRepair": false
+    }
+  ],
+  "scope": "L1/L2 审核结果；尚须 L4 抽读与发布校验"
+}

@@ -1,0 +1,18 @@
+{
+  "id": "item_chain_link_set",
+  "fingerprint": "34a0298fd42d9cd100a898db6d027d39a592652c12afda4224677e85c6e6b4fa",
+  "status": "passed",
+  "attempts": 1,
+  "draft": {
+    "id": "item_chain_link_set",
+    "description": "铁匠铺里打出的六节短链，环环由铁条卷合、搭接后锻闭而成。每节环身留有锤面压平的痕迹，搭口处颜色略深，是烧热后锤合留下的印子。链节大小相近，串起来可作门栓拉手，握在手里沉实，晃动时环与环相碰发出闷响。不作起重链，只承门扇开合的拉扯。",
+    "inspection": "逐节查看搭口是否锻合紧密，有无未闭的缝；轻拉两端，环应不变形、不脱开。环身若有裂纹或锤痕过深，便不算合格。",
+    "storage": "置于干燥处，可抹一层薄油防锈；受潮后及时擦干。无固定保存期。"
+  },
+  "review": {
+    "contradictions": []
+  },
+  "errors": [],
+  "warnings": [],
+  "feedback": null
+}

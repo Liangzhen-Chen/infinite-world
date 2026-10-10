@@ -1,0 +1,18 @@
+{
+  "id": "item_seed_marker",
+  "fingerprint": "9b62a66b1cfe603f31cd5e3c5e12ee20e13d3eb8f777cd637a13872ba4ae5fec",
+  "status": "passed",
+  "attempts": 1,
+  "draft": {
+    "id": "item_seed_marker",
+    "description": "旧磨坊木工台边削出的小件，取一段木料，先削出短尖脚，再把上半部修成宽牌面，边角倒圆免得划手。顶端横刻一道浅槽，槽口宽度恰好夹住纸签，插在苗床边就能辨认作物。牌面交付时保持空白，由用的人自己写。木纹顺着牌面走，削痕细密，尖脚处留一点钝头，插土不易劈裂。",
+    "inspection": "先看尖脚是否居中、钝头完整，再摸牌面有无毛刺和倒刺。顶端浅槽要横直，深浅一致，能夹住纸签不松脱。牌面若有裂纹或斜削过薄，插土时容易折断，不宜收。",
+    "storage": "放在干燥木架上，避潮避晒；受潮后牌面易翘，浅槽会变形。无固定保存期，按需取用。"
+  },
+  "review": {
+    "contradictions": []
+  },
+  "errors": [],
+  "warnings": [],
+  "feedback": null
+}

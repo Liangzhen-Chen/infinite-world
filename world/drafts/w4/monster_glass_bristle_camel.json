@@ -1,0 +1,255 @@
+{
+  "id": "monster_glass_bristle_camel",
+  "fingerprint": "e618a810644aed1156aeefe6420d0930c5c2c25dab81ab5a7d0e05c295a7fcce",
+  "status": "manual",
+  "attempts": 3,
+  "draft": {
+    "id": "monster_glass_bristle_camel",
+    "appearance": "透鬃沙驼肩高近两米，四肢粗壮，蹄掌宽厚。通体毛色灰褐，颈背与肩峰生有一列中空鬃毛，晨光斜照时鬃管透出淡金亮线，逆光下如玻璃丝。鬃毛斜立，不贴伏，远看像沙丘上插着一排细签。",
+    "habits": "透鬃沙驼在06:00与18:00活动，四至七只结群。以沙丘间干草与砾坡短草为食，边啃边反刍，缓慢横移。领地以食源与休息处为中心，受惊时让路，围堵幼体时防御。其余时段休息，卧在背风坡浅坑，把鬃毛顺风斜支。",
+    "threat": "透鬃沙驼平时避人，若被逼到幼驼身边，会低头用肩峰顶撞，蹄掌也能踩踏。行人见驼群让出通道即可，不要从下风处直插幼驼与母驼之间。被围堵时慢慢后退，别挥动长杆或投石。",
+    "materials": "透鬃沙驼掉落刮净生皮5份。用案上切刀处理，需70分钟并消耗清水2份。生皮只刮去内侧残肉与脂肪，毛仍附在皮面，未浸灰或鞣制，仍会腐败，须摊平阴凉通风处，毛面朝下，勿叠压密封，及时送交鞣制。",
+    "folklore": "有人把透鬃沙驼的透光鬃毛说成夜里引路的灯，认为它整夜游走。实际它只在06:00与18:00活动，其余时间休息；鬃毛透光只在晨昏斜照时明显，正午或夜里不发光。",
+    "voice": "透鬃沙驼受惊时从喉间发出短促的“呜——咔”，像沙粒磨过木管；幼驼回应细而连，母驼低哼收拢队伍。"
+  },
+  "review": {
+    "contradictions": [
+      {
+        "quote": "透鬃沙驼肩高近两米",
+        "field": "bodyMassKg",
+        "severity": "soft",
+        "reason": "骨架仅给出体重380公斤，未声明肩高；近两米肩高与380公斤体重组合对骆驼类体型偏瘦高，但骨架未规定体型比例，属未依据的感官细节，不构成功能矛盾。"
+      },
+      {
+        "quote": "蹄掌宽厚",
+        "field": "bodyMassKg",
+        "severity": "style",
+        "reason": "骨架未描述蹄掌形态，属正常感官细节，不新增功能。"
+      },
+      {
+        "quote": "通体毛色灰褐",
+        "field": "distinction",
+        "severity": "style",
+        "reason": "骨架未规定毛色，属正常感官细节。"
+      },
+      {
+        "quote": "颈背与肩峰生有一列中空鬃毛，晨光斜照时鬃管透出淡金亮线，逆光下如玻璃丝",
+        "field": "distinction",
+        "severity": "style",
+        "reason": "与骨架distinction“长鬃中空透光，斜立在晨风里反刍干草”相容，属感官细节扩展。"
+      },
+      {
+        "quote": "鬃毛斜立，不贴伏，远看像沙丘上插着一排细签",
+        "field": "distinction",
+        "severity": "style",
+        "reason": "与骨架“斜立”相容。"
+      },
+      {
+        "quote": "透鬃沙驼在06:00与18:00活动",
+        "field": "wildlife.activeHours",
+        "severity": "style",
+        "reason": "与骨架activeHours [360,1080]及publishedFacts.activity一致。"
+      },
+      {
+        "quote": "四至七只结群",
+        "field": "grouping",
+        "severity": "style",
+        "reason": "与骨架grouping一致。"
+      },
+      {
+        "quote": "以沙丘间干草与砾坡短草为食，边啃边反刍",
+        "field": "diet",
+        "severity": "style",
+        "reason": "与骨架草食及distinction“反刍干草”一致。"
+      },
+      {
+        "quote": "领地以食源与休息处为中心，受惊时让路，围堵幼体时防御",
+        "field": "territoriality",
+        "severity": "style",
+        "reason": "与骨架territoriality一致。"
+      },
+      {
+        "quote": "其余时段休息，卧在背风坡浅坑，把鬃毛顺风斜支",
+        "field": "wildlife.activeHours",
+        "severity": "style",
+        "reason": "与骨架活动时段相容，属感官细节。"
+      },
+      {
+        "quote": "透鬃沙驼平时避人，若被逼到幼驼身边，会低头用肩峰顶撞，蹄掌也能踩踏",
+        "field": "territoriality",
+        "severity": "style",
+        "reason": "与骨架“围堵幼体时防御”相容，顶撞与踩踏为防御行为的感官描述，未新增骨架未声明的能力。"
+      },
+      {
+        "quote": "行人见驼群让出通道即可，不要从下风处直插幼驼与母驼之间",
+        "field": "territoriality",
+        "severity": "style",
+        "reason": "与骨架“受惊时让路”相容的建议。"
+      },
+      {
+        "quote": "被围堵时慢慢后退，别挥动长杆或投石",
+        "field": "territoriality",
+        "severity": "style",
+        "reason": "与骨架防御行为相容的建议。"
+      },
+      {
+        "quote": "透鬃沙驼掉落刮净生皮5份",
+        "field": "drops",
+        "severity": "style",
+        "reason": "与骨架drops item_rawhide amount 5一致。"
+      },
+      {
+        "quote": "用案上切刀处理，需70分钟并消耗清水2份",
+        "field": "wildlife.gather",
+        "severity": "style",
+        "reason": "与骨架gather minutes 70、tool item_kitchen_knife、consumes item_water 2一致。"
+      },
+      {
+        "quote": "生皮只刮去内侧残肉与脂肪，毛仍附在皮面，未浸灰或鞣制，仍会腐败，须摊平阴凉通风处，毛面朝下，勿叠压密封，及时送交鞣制",
+        "field": "drops[0].catalog",
+        "severity": "style",
+        "reason": "与publishedFacts中item_rawhide的use、storage一致。"
+      },
+      {
+        "quote": "有人把透鬃沙驼的透光鬃毛说成夜里引路的灯，认为它整夜游走",
+        "field": "facts",
+        "severity": "style",
+        "reason": "民间误解在同段被纠正，符合facts要求。"
+      },
+      {
+        "quote": "实际它只在06:00与18:00活动，其余时间休息；鬃毛透光只在晨昏斜照时明显，正午或夜里不发光",
+        "field": "wildlife.activeHours",
+        "severity": "style",
+        "reason": "与骨架activeHours及distinction相容，纠正民间误解。"
+      },
+      {
+        "quote": "透鬃沙驼受惊时从喉间发出短促的“呜——咔”，像沙粒磨过木管；幼驼回应细而连，母驼低哼收拢队伍",
+        "field": "intelligence",
+        "severity": "style",
+        "reason": "骨架未规定发声，属正常感官细节，不新增功能。"
+      }
+    ]
+  },
+  "errors": [
+    "未给定的距离或价格 两米"
+  ],
+  "warnings": [
+    {
+      "quote": "透鬃沙驼肩高近两米",
+      "field": "bodyMassKg",
+      "severity": "soft",
+      "reason": "骨架仅给出体重380公斤，未声明肩高；近两米肩高与380公斤体重组合对骆驼类体型偏瘦高，但骨架未规定体型比例，属未依据的感官细节，不构成功能矛盾。"
+    },
+    {
+      "quote": "蹄掌宽厚",
+      "field": "bodyMassKg",
+      "severity": "style",
+      "reason": "骨架未描述蹄掌形态，属正常感官细节，不新增功能。"
+    },
+    {
+      "quote": "通体毛色灰褐",
+      "field": "distinction",
+      "severity": "style",
+      "reason": "骨架未规定毛色，属正常感官细节。"
+    },
+    {
+      "quote": "颈背与肩峰生有一列中空鬃毛，晨光斜照时鬃管透出淡金亮线，逆光下如玻璃丝",
+      "field": "distinction",
+      "severity": "style",
+      "reason": "与骨架distinction“长鬃中空透光，斜立在晨风里反刍干草”相容，属感官细节扩展。"
+    },
+    {
+      "quote": "鬃毛斜立，不贴伏，远看像沙丘上插着一排细签",
+      "field": "distinction",
+      "severity": "style",
+      "reason": "与骨架“斜立”相容。"
+    },
+    {
+      "quote": "透鬃沙驼在06:00与18:00活动",
+      "field": "wildlife.activeHours",
+      "severity": "style",
+      "reason": "与骨架activeHours [360,1080]及publishedFacts.activity一致。"
+    },
+    {
+      "quote": "四至七只结群",
+      "field": "grouping",
+      "severity": "style",
+      "reason": "与骨架grouping一致。"
+    },
+    {
+      "quote": "以沙丘间干草与砾坡短草为食，边啃边反刍",
+      "field": "diet",
+      "severity": "style",
+      "reason": "与骨架草食及distinction“反刍干草”一致。"
+    },
+    {
+      "quote": "领地以食源与休息处为中心，受惊时让路，围堵幼体时防御",
+      "field": "territoriality",
+      "severity": "style",
+      "reason": "与骨架territoriality一致。"
+    },
+    {
+      "quote": "其余时段休息，卧在背风坡浅坑，把鬃毛顺风斜支",
+      "field": "wildlife.activeHours",
+      "severity": "style",
+      "reason": "与骨架活动时段相容，属感官细节。"
+    },
+    {
+      "quote": "透鬃沙驼平时避人，若被逼到幼驼身边，会低头用肩峰顶撞，蹄掌也能踩踏",
+      "field": "territoriality",
+      "severity": "style",
+      "reason": "与骨架“围堵幼体时防御”相容，顶撞与踩踏为防御行为的感官描述，未新增骨架未声明的能力。"
+    },
+    {
+      "quote": "行人见驼群让出通道即可，不要从下风处直插幼驼与母驼之间",
+      "field": "territoriality",
+      "severity": "style",
+      "reason": "与骨架“受惊时让路”相容的建议。"
+    },
+    {
+      "quote": "被围堵时慢慢后退，别挥动长杆或投石",
+      "field": "territoriality",
+      "severity": "style",
+      "reason": "与骨架防御行为相容的建议。"
+    },
+    {
+      "quote": "透鬃沙驼掉落刮净生皮5份",
+      "field": "drops",
+      "severity": "style",
+      "reason": "与骨架drops item_rawhide amount 5一致。"
+    },
+    {
+      "quote": "用案上切刀处理，需70分钟并消耗清水2份",
+      "field": "wildlife.gather",
+      "severity": "style",
+      "reason": "与骨架gather minutes 70、tool item_kitchen_knife、consumes item_water 2一致。"
+    },
+    {
+      "quote": "生皮只刮去内侧残肉与脂肪，毛仍附在皮面，未浸灰或鞣制，仍会腐败，须摊平阴凉通风处，毛面朝下，勿叠压密封，及时送交鞣制",
+      "field": "drops[0].catalog",
+      "severity": "style",
+      "reason": "与publishedFacts中item_rawhide的use、storage一致。"
+    },
+    {
+      "quote": "有人把透鬃沙驼的透光鬃毛说成夜里引路的灯，认为它整夜游走",
+      "field": "facts",
+      "severity": "style",
+      "reason": "民间误解在同段被纠正，符合facts要求。"
+    },
+    {
+      "quote": "实际它只在06:00与18:00活动，其余时间休息；鬃毛透光只在晨昏斜照时明显，正午或夜里不发光",
+      "field": "wildlife.activeHours",
+      "severity": "style",
+      "reason": "与骨架activeHours及distinction相容，纠正民间误解。"
+    },
+    {
+      "quote": "透鬃沙驼受惊时从喉间发出短促的“呜——咔”，像沙粒磨过木管；幼驼回应细而连，母驼低哼收拢队伍",
+      "field": "intelligence",
+      "severity": "style",
+      "reason": "骨架未规定发声，属正常感官细节，不新增功能。"
+    }
+  ],
+  "feedback": [
+    "未给定的距离或价格 两米"
+  ]
+}

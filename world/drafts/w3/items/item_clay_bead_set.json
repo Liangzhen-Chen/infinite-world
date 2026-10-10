@@ -1,0 +1,18 @@
+{
+  "id": "item_clay_bead_set",
+  "fingerprint": "23a5b50a1e9f42bea65728a5c355d9afdf15955ccc01e3db79a174d26a2f900b",
+  "status": "passed",
+  "attempts": 1,
+  "draft": {
+    "id": "item_clay_bead_set",
+    "description": "白石镇工坊里常见的串线陶珠组，一组十二粒，大小相近，颜色随泥料与火候略有深浅。珠子多呈圆扁形，表面留着手捏的细纹，穿线孔从两侧对钻打通，孔口边缘被指腹抹得圆滑，不刮绳。珠子散排入窑烧成，绳具需另备。常用来做门帘坠、腰饰或计数串，也供孩童练习穿线。",
+    "inspection": "逐粒看孔是否打通、有无裂纹缺口，再把珠子凑近耳边轻碰，声音清脆者烧透，闷哑者可能欠火。孔口若带尖边，可用指腹试刮，刮手即需再磨。",
+    "storage": "装进干布袋或木盒，垫软布防磕碰，置于干燥处，避免重压与骤冷骤热。无固定保存期，孔内积尘可用细签挑出。"
+  },
+  "review": {
+    "contradictions": []
+  },
+  "errors": [],
+  "warnings": [],
+  "feedback": null
+}

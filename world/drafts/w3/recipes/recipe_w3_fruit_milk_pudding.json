@@ -1,0 +1,16 @@
+{
+  "id": "recipe_w3_fruit_milk_pudding",
+  "fingerprint": "6773825d4bf3f391a11ce7159eaa4e9d4d582c94353965df5ecbceefc5c83daa",
+  "status": "passed",
+  "attempts": 2,
+  "draft": {
+    "id": "recipe_w3_fruit_milk_pudding",
+    "process": "取干果小袋，以案上切刀切成细碎果粒，刀面压过果肉时能感到韧中带沙。鲜牛乳小壶倾入厚底煮锅，兑入燕麦粉，用锅铲或长柄勺搅成无干粒的稠糊，再拌入果粒。灶下以干木刨屑引火，火势压小，锅底垫稳，文火慢凝，其间不停刮底，糊体由稀转厚、表面泛起细密气泡时离火。整锅移开静置冷却，待糕体定形后倒出，以切刀分作小块。成品软糯带果香，当天吃完；锅壁焦糊处趁温泡软再刷净。"
+  },
+  "review": {
+    "contradictions": []
+  },
+  "errors": [],
+  "warnings": [],
+  "feedback": null
+}
