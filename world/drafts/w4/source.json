@@ -1,5 +1,5 @@
 {
-  "boneHash": "796c10deb428eb816fa179ae43e4f4a6159d18df1acc87da90a10a3050c548cf",
+  "boneHash": "da10f2c40ddc63d2d9443938cf2df0cf3317297509695706c0d8e829d3dd37cd",
   "revision": "w4-v2",
   "bones": {
     "kind": "highWildlife",
@@ -2683,7 +2683,7 @@
           "predatorOf": [
             "monster_disc_heel_runner"
           ],
-          "distinction": "臼齿边缘染灰，日出后退到沙坡背阴猎食",
+          "distinction": "臼齿边缘染灰，临近破晓退到沙坡背阴猎食",
           "gather": {
             "minutes": 70,
             "tool": "item_kitchen_knife",

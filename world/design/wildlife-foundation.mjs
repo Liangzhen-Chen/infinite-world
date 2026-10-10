@@ -82,5 +82,7 @@ export function wildlifeFoundation(){
     return{monsters,rules:{version:1,trackMinutes:60,maximumPresent:6,corpseMinutes:2880,seasonRecovery:[1,1.2,0.8,0.25],
         scarcityMaximum:2,habitats:structuredClone(habitats)}};
 }
-export function withWildlife(world,monsters){const candidate=structuredClone(world),bones=wildlifeFoundation();candidate.rules.wildlife=bones.rules;
+export function withWildlife(world,monsters){const candidate=structuredClone(world),bones=wildlifeFoundation();
+    const habitats=new Map((candidate.rules.wildlife?.habitats??[]).map(h=>[h.id,h]));for(const habitat of bones.rules.habitats)habitats.set(habitat.id,habitat);
+    candidate.rules.wildlife={...bones.rules,habitats:[...habitats.values()]};
     const updates=monsters??bones.monsters,catalog=new Map(candidate.monsters.map(row=>[row.id,row]));for(const row of updates)catalog.set(row.id,row);candidate.monsters=[...catalog.values()];return candidate;}

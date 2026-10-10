@@ -42,7 +42,7 @@ test('鸣叫引号不会误判人类台词；野兽人类台词仍拒绝，字�
     row.appearance='太短';assert.ok(wildlifeLoreIssues(row,bone).some(e=>e.includes('minLength')));
 });
 test('旧文档迁移只建立当前种群，不改人物、财物、时钟和记忆，幂等且拒绝冲突',()=>{
-    const{engine}=setup(),old=engine.initialFromLegacy(legacy,'wildlife-import');old.state.minute=100*1440;const before=structuredClone(old);
+    const{engine}=setup(),old=engine.initialFromLegacy(legacy,'wildlife-import',{prepare:false});old.state.minute=100*1440;const before=structuredClone(old);
     const migrated=applyPatches(old,planWildlifeMigration(old,engine.rules,engine.world.monsters));assert.deepEqual(old,before);
     for(const key of ['player','inventory','npcs','settlements','minute'])assert.deepEqual(migrated.state[key],before.state[key]);assert.deepEqual(migrated.memories,before.memories);
     assert.equal(ecology(migrated).initializedDay,100);assert.equal(ecology(migrated).lastDay,99);conservation(migrated);
@@ -135,7 +135,7 @@ test('动物实例、生态账与尸体状态在存储重启/导入导出/删除
 test('生态迁移CLI只写独立副本，保留旧动物/记忆，重复输出或密钥路径拒绝',async t=>{
     const{engine}=setup(),base=path.resolve(os.tmpdir()),directory=await fs.mkdtemp(path.join(base,'wildlife-migration-'));
     assert.ok(path.resolve(directory).startsWith(base+path.sep));t.after(()=>fs.rm(directory,{recursive:true,force:true}));
-    const old=engine.initialFromLegacy(legacy,'wildlife-cli');old.state.minute=100*1440;
+    const old=engine.initialFromLegacy(legacy,'wildlife-cli',{prepare:false});old.state.minute=100*1440;
     old.state.creatures={old_animal:{name:'旧动物',species:'monster_red_ear_fox',hp:8,maxHp:8,status:'正常',owner:'player',location:'loc_hw_northwood'}};
     const bytes=JSON.stringify(old),input=path.join(directory,'old.json'),output=path.join(directory,'new.json');await fs.writeFile(input,bytes);
     const command=(a,b)=>spawnSync(process.execPath,['tools/migrate-wildlife.mjs',a,b],{encoding:'utf8'});
@@ -144,7 +144,7 @@ test('生态迁移CLI只写独立副本，保留旧动物/记忆，重复输出�
     assert.deepEqual(migrated.memories,old.memories);assert.deepEqual(migrated.state.creatures,old.state.creatures);
     assert.deepEqual(migrated.state.player,old.state.player);assert.deepEqual(migrated.state.inventory,old.state.inventory);
     assert.equal(ecology(migrated).initializedDay,100);assert.equal(ecology(migrated).lastDay,99);
-    assert.equal(Object.values(migrated.state.records).filter(r=>r.category==='ecology').length,6);
+    assert.equal(Object.values(migrated.state.records).filter(r=>r.category==='ecology').length,(await loadWorld()).rules.wildlife.habitats.length);
     assert.notEqual(command(input,output).status,0);assert.equal(await fs.readFile(output,'utf8'),saved);
     assert.notEqual(command(input,input).status,0);const forbidden=command(path.join(directory,'secrets.json'),path.join(directory,'forbidden.json'));
     assert.notEqual(forbidden.status,0);assert.match(forbidden.stderr,/拒绝接触密钥/);

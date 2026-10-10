@@ -22,9 +22,10 @@ export function validateWildlifeDraft(row,bone,context){
     if(errors.length)return{errors,warnings};
     const text=fields.map(f=>row[f]).join('。');
     for(const word of [...blocklist.names,...blocklist.realPeople])if(text.includes(word))errors.push(`命中原创屏蔽词 ${word}`);
-    if(/主持人|提示词|schema|JSON|生成器|编号|系统要求|原地重生|无限刷新|塑料|电池|电动/.test(text))errors.push('世界外术语或未设定技术');
+    if(/主持人|提示词|schema|JSON|生成器|骨架|\b(?:activity|grouping|drops)\b|编号|系统要求|原地重生|无限刷新|塑料|电池|电动/.test(text))errors.push('世界外术语或未设定技术');
     const times=[...row.habits.matchAll(/\d{2}:\d{2}/g)].map(m=>m[0]);
     if(times.join(',')!==context.activity.join(','))errors.push(`habits 活动时段应只写 ${context.activity.join(' 至 ')}`);
+    if(!new RegExp(`${context.activity[0]}\\s*至(?:次日)?\\s*${context.activity[1]}`).test(row.habits)||/仅(?:在)?这两个时刻|仅此二时段|两个时刻(?:前后)?活动/.test(text))errors.push('作息必须是连续活动区间，不能写成两个瞬时时刻');
     if(!row.habits.includes(bone.grouping))errors.push(`habits 应明确原定群居情况：${bone.grouping}`);
     for(const match of text.matchAll(new RegExp(`(${n})\\s*(?:分钟|分鍾)`,'g'))){if(![bone.wildlife.gather.minutes,bone.tamingRule?.minutes].includes(numberValue(match[1])))errors.push(`时长 ${match[0]} 与取材或驯服骨架不符`);}
     for(const match of row.materials.matchAll(new RegExp(`(${n})\\s*(?:天|日)`,'g'))){if(!context.drops.some(drop=>drop.catalog.shelfLifeDays===numberValue(match[1])))errors.push(`材料保存期 ${match[0]} 不符`);}
@@ -39,6 +40,11 @@ export function validateWildlifeDraft(row,bone,context){
 }
 export function wildlifeDraftRequest(entry,feedback,context){
     return{temperature:.5,max_tokens:2000,response_format:{type:'json_object'},messages:[
-        {role:'system',content:'为中文中世纪剑与魔法世界写一条原创野外图鉴。只输出 JSON，键为 id、appearance、habits、threat、materials、folklore、voice，六段均为中文。只补说明，不能改骨架事实。外观约60–120字；习性约90–170字；威胁与避让约60–120字；材料约50–120字；民间误解及真实可观察差别约70–140字；声音约30–70字。长度是建议，不用填空话凑字。habits原样写activity两个时刻且仅这两个时刻，原样包含grouping。写出食性与领地行为。材料只写本条drops商品，drops空时写足迹等观察线索。商品写实际工具和处理时间，份数用阿拉伯数，不添加药效；湿皮保湿不能干燥。无需复述商品重量、期限、价格或物种体重，不另写距离。其他时段休息，民间纠误不能增加夜间活动或否定既定特征。高阶不代表施法；灵智1以动作和声音表达。每段写具体观察和对行人的意义，不说明开发约束、编号、数据、系统权限。不复制其他物种工序。'},
+        {role:'system',content:'为中文中世纪剑与魔法世界写一条原创野外图鉴。只输出 JSON，键为 id、appearance、habits、threat、materials、folklore、voice，六段均为中文。只补说明，不能改骨架事实。外观约60–120字；习性约90–170字；威胁与避让约60–120字；材料约50–120字；民间误解及真实可观察差别约70–140字；声音约30–70字。长度是建议，不用填空话凑字。habits以activity两个端点写完整连续区间，例如06:00至18:00或18:00至次日06:00；并非只在两个瞬间活动。原样包含grouping的中文值，不写英文标签。材料只写本条drops商品，drops空时只观察痕迹，不许承诺采集新商品。写实际工具和处理时间；引用事实规定最终保存方法，生皮取下仍湿不代表必须人为保湿，树脂和鱼更不能抄入湿皮说明。无需复述商品重量、期限、价格或物种体重，不另写距离。民间误解在同段明确纠正，不能否定distinction。高阶不自动施法；灵智1以动作和声音表达。不写骨架、drops、activity、grouping等标签或开发约束。'},
         {role:'user',content:JSON.stringify({skeleton:entry,publishedFacts:context,feedback})}]};
+}
+export function wildlifeReviewRequest(entry,draft,context){
+    return{temperature:0,max_tokens:2000,thinking:{type:'disabled'},response_format:{type:'json_object'},messages:[
+        {role:'system',content:'逐句审查野外图鉴，只输出 JSON {"contradictions":[{"quote":"说明原句","field":"事实字段路径","severity":"hard|soft|style","reason":"具体矛盾"}]}。无矛盾时数组为空，绝不能把理由为一致或不构成矛盾的句子放入数组。只把违反明确事实、数字或新增超自然能力/商品/攻击效果当作hard；合乎体型食性的感官、姿态、普通防御、背景食源细节是允许的，不需要骨架穷举每次动作。predatorOf是参与数量模型的已编目捕食关系，不是排斥微小昆虫/小鱼等背景食源的白名单。activeHours为分钟制连续区间，跨午夜连续；区间外休息不矛盾。drops是从死亡个体按gather工具、时长和耗材取材后得到的总量，不是击杀自动赠送另加一次采集；骨架明确允许此工具用于取材，泛用商品简介不撤销专门规则。商品用途和保存事实同样权威，不能只看骨架编号忽略publishedFacts。drops为空时观察足迹/蜕壳等环境线索是允许的，不生成商品；写能收集并获得材料则为错误。folklore的传言会在同段被否定，不得把明确否定的超能力当作实际能力；纠误也不能否定骨架真实特征。材料必须本条对应，不应强制保湿或禁止鞣制。形容力度和额外推测可以标soft，需要有具体原句与理由。'},
+        {role:'user',content:JSON.stringify({skeleton:entry,publishedFacts:context,draft})}]};
 }

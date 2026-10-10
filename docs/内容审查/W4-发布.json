@@ -1,0 +1,13 @@
+{
+  "published": true,
+  "added": 100,
+  "total": 150,
+  "ecology": {
+    "seeds": 20,
+    "days": 1080,
+    "ok": true
+  },
+  "sourceHash": "2c0965d8e83fd039afb4447a6fbea2421fad2cd0806acc260caa8470e9628ebd",
+  "candidateHash": "b62b53bdee41ce76887d9d6b8b4c5893d6960c6b516e084a727e843234a41e9f",
+  "scope": "仅正式世界源文件；酒馆尚未部署。首领留待M4。"
+}

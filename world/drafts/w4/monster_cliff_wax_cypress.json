@@ -1,114 +1,26 @@
 {
   "id": "monster_cliff_wax_cypress",
   "fingerprint": "80d00a4e45dfd71af3a0c5c0ad4e7666cc4538600e98a1d6fb0bfa6e6ddb807c",
-  "status": "manual",
+  "status": "passed",
   "attempts": 3,
   "draft": {
     "id": "monster_cliff_wax_cypress",
     "appearance": "崖蜡行柏外形似矮柏，高约两人，枝干扭曲如老藤。树皮灰褐，纵裂间嵌浅白蜡环，是树脂沿枝节凝结而成，月下泛微光。根体粗壮，扎入石缝后能翻身移位，留下翻起的湿土与断根。",
-    "habits": "崖蜡行柏在06:00与18:00活动，其余时段休息。常两至四株成丛，以土壤养分为食，不捕猎。领地依附湿土或腐木，触动根体才防御，不追赶远离者。",
-    "threat": "靠近或踩踏根体时，崖蜡行柏会以根鞭横扫，可击断小腿骨。行人应绕开根体裸露的湿土与腐木，若见蜡环密集、根须外伸，退至三丈外。",
-    "materials": "用案上切刀刮取枝节蜡环，每丛共得9份树脂，耗时100分钟，需消耗3份清水润刀。树脂为湿黏块，装入陶罐阴凉干燥处，180天内用完，不可干燥。",
+    "habits": "崖蜡行柏在06:00至18:00活动，其余时段休息。常两至四株成丛，以土壤养分为食，不捕猎。领地依附湿土或腐木，触动根体才防御，不追赶远离者。",
+    "threat": "靠近或踩踏根体时，崖蜡行柏会以根鞭横扫，可击断小腿骨，行人应绕开根体裸露的湿土与腐木，若见蜡环密集、根须外伸。",
+    "materials": "取材时用案上切刀处理100分钟，消耗3份清水，可得9份树脂。取的是渗出的树脂，不削取木材。收入陶罐或皮袋，扎口放在阴凉干燥处，可供黏接或引火。",
     "folklore": "民间说崖蜡行柏是月夜行走的树妖，会拔根追人。其实它只在06:00至18:00活动，根体依附湿土或腐木，触动才防御，不追赶远离者。",
     "voice": "根体受触时发出低沉木裂声，如湿柴在火中爆开，短促连响三至五声，随后归于寂静。"
   },
   "review": {
-    "contradictions": [
-      {
-        "quote": "崖蜡行柏在06:00与18:00活动，其余时段休息。",
-        "field": "wildlife.activeHours",
-        "severity": "hard",
-        "reason": "骨架 activeHours 为 [360,1080]，即 06:00 至 18:00 的连续活动时段，并非仅在 06:00 与 18:00 两个时刻活动。"
-      },
-      {
-        "quote": "其实它只在06:00至18:00活动",
-        "field": "wildlife.activeHours",
-        "severity": "hard",
-        "reason": "骨架 activeHours 为 [360,1080]，即 06:00 至 18:00 的连续活动时段，并非仅在 06:00 与 18:00 两个时刻活动。"
-      },
-      {
-        "quote": "用案上切刀刮取枝节蜡环，每丛共得9份树脂，耗时100分钟，需消耗3份清水润刀。",
-        "field": "gather.tool",
-        "severity": "hard",
-        "reason": "骨架 gather.tool 为 item_kitchen_knife（案上切刀），但该物品用途明确为切食物与修鱼，不作为削木小刀替代；说明将其用于刮取枝节蜡环，属于新增没有依据的功能。"
-      },
-      {
-        "quote": "用案上切刀刮取枝节蜡环，每丛共得9份树脂，耗时100分钟，需消耗3份清水润刀。",
-        "field": "gather.consumes",
-        "severity": "hard",
-        "reason": "骨架 gather.consumes 为消耗3份清水，但说明将其用途改为润刀，属于新增没有依据的功能。"
-      },
-      {
-        "quote": "树脂为湿黏块，装入陶罐阴凉干燥处，180天内用完，不可干燥。",
-        "field": "drops",
-        "severity": "hard",
-        "reason": "骨架 drops 中 item_resin 的 storage 说明为装入陶罐或皮袋，扎口后置阴凉干燥处，自采集起180天内用完；并未声明不可干燥，说明新增了没有依据的保存限制。"
-      }
-    ]
+    "contradictions": []
   },
-  "errors": [
-    {
-      "quote": "崖蜡行柏在06:00与18:00活动，其余时段休息。",
-      "field": "wildlife.activeHours",
-      "severity": "hard",
-      "reason": "骨架 activeHours 为 [360,1080]，即 06:00 至 18:00 的连续活动时段，并非仅在 06:00 与 18:00 两个时刻活动。"
-    },
-    {
-      "quote": "其实它只在06:00至18:00活动",
-      "field": "wildlife.activeHours",
-      "severity": "hard",
-      "reason": "骨架 activeHours 为 [360,1080]，即 06:00 至 18:00 的连续活动时段，并非仅在 06:00 与 18:00 两个时刻活动。"
-    },
-    {
-      "quote": "用案上切刀刮取枝节蜡环，每丛共得9份树脂，耗时100分钟，需消耗3份清水润刀。",
-      "field": "gather.tool",
-      "severity": "hard",
-      "reason": "骨架 gather.tool 为 item_kitchen_knife（案上切刀），但该物品用途明确为切食物与修鱼，不作为削木小刀替代；说明将其用于刮取枝节蜡环，属于新增没有依据的功能。"
-    },
-    {
-      "quote": "用案上切刀刮取枝节蜡环，每丛共得9份树脂，耗时100分钟，需消耗3份清水润刀。",
-      "field": "gather.consumes",
-      "severity": "hard",
-      "reason": "骨架 gather.consumes 为消耗3份清水，但说明将其用途改为润刀，属于新增没有依据的功能。"
-    },
-    {
-      "quote": "树脂为湿黏块，装入陶罐阴凉干燥处，180天内用完，不可干燥。",
-      "field": "drops",
-      "severity": "hard",
-      "reason": "骨架 drops 中 item_resin 的 storage 说明为装入陶罐或皮袋，扎口后置阴凉干燥处，自采集起180天内用完；并未声明不可干燥，说明新增了没有依据的保存限制。"
-    }
-  ],
+  "errors": [],
   "warnings": [],
-  "feedback": [
-    {
-      "quote": "崖蜡行柏在06:00与18:00活动，其余时段休息。",
-      "field": "wildlife.activeHours",
-      "severity": "hard",
-      "reason": "骨架 activeHours 为 [360,1080]，即 06:00 至 18:00 的连续活动时段，并非仅在 06:00 与 18:00 两个时刻活动。"
-    },
-    {
-      "quote": "其实它只在06:00至18:00活动",
-      "field": "wildlife.activeHours",
-      "severity": "hard",
-      "reason": "骨架 activeHours 为 [360,1080]，即 06:00 至 18:00 的连续活动时段，并非仅在 06:00 与 18:00 两个时刻活动。"
-    },
-    {
-      "quote": "用案上切刀刮取枝节蜡环，每丛共得9份树脂，耗时100分钟，需消耗3份清水润刀。",
-      "field": "gather.tool",
-      "severity": "hard",
-      "reason": "骨架 gather.tool 为 item_kitchen_knife（案上切刀），但该物品用途明确为切食物与修鱼，不作为削木小刀替代；说明将其用于刮取枝节蜡环，属于新增没有依据的功能。"
-    },
-    {
-      "quote": "用案上切刀刮取枝节蜡环，每丛共得9份树脂，耗时100分钟，需消耗3份清水润刀。",
-      "field": "gather.consumes",
-      "severity": "hard",
-      "reason": "骨架 gather.consumes 为消耗3份清水，但说明将其用途改为润刀，属于新增没有依据的功能。"
-    },
-    {
-      "quote": "树脂为湿黏块，装入陶罐阴凉干燥处，180天内用完，不可干燥。",
-      "field": "drops",
-      "severity": "hard",
-      "reason": "骨架 drops 中 item_resin 的 storage 说明为装入陶罐或皮袋，扎口后置阴凉干燥处，自采集起180天内用完；并未声明不可干燥，说明新增了没有依据的保存限制。"
-    }
-  ]
+  "feedback": null,
+  "manualEdits": {
+    "method": "Codex按已确认错误作字段修正；不重新起草整条",
+    "fields": [],
+    "review": "completed"
+  }
 }

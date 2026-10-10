@@ -28,7 +28,7 @@ test('图鉴L1拒绝反向作息、虚构数字和新商品，长度只标记抽
     const row={id:bone.id,appearance:'肩鬃向前倒伏。',habits:`06:00至18:00活动，${bone.grouping}沿砾坡啃草。`,threat:'围堵幼体时会低头示警。',materials:'处理留下湿生皮。',folklore:'磨角石被说成路标，其实是角根反复摩擦留下的亮面。',voice:'磨角时蹄底擦过石子。'};
     assert.equal(validateWildlifeDraft(row,bone,context).errors.length,0);
     assert.ok(validateWildlifeDraft(row,bone,context).warnings.length);
-    for(const bad of [{...row,habits:row.habits.replace('06:00至18:00','18:00至06:00')},{...row,materials:'处理需999分钟。'},{...row,materials:'湿生皮保存九百九十九天。'},{...row,materials:'湿生皮每份三百公斤。'},{...row,threat:'会追出十公里。'},{...row,materials:'把湿生皮晒干。'}])assert.ok(validateWildlifeDraft(bad,bone,context).errors.length);
+    for(const bad of [{...row,habits:row.habits.replace('06:00至18:00','18:00至06:00')},{...row,habits:row.habits.replace('06:00至18:00','06:00与18:00两个时刻')},{...row,materials:'drops为空。'},{...row,materials:'处理需999分钟。'},{...row,materials:'湿生皮保存九百九十九天。'},{...row,materials:'湿生皮每份三百公斤。'},{...row,threat:'会追出十公里。'},{...row,materials:'把湿生皮晒干。'}])assert.ok(validateWildlifeDraft(bad,bone,context).errors.length);
     assert.equal(numberValue('一百二十'),120);assert.equal(numberValue('二十五'),25);
 });
 

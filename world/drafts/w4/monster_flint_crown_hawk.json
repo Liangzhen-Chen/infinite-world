@@ -1,80 +1,26 @@
 {
   "id": "monster_flint_crown_hawk",
   "fingerprint": "52c00ded43aa4092c8fb7edb2aa917e2a41f6e709e1755f9de25bc6f3d681424",
-  "status": "manual",
+  "status": "passed",
   "attempts": 3,
   "draft": {
     "id": "monster_flint_crown_hawk",
-    "appearance": "体长约半人高，翼展近两米，背羽深灰近黑，胸腹有铁锈色横斑。冠羽两簇，每簇中央夹一根灰白尖羽，展开时像燧石敲出的白痕。喙短厚、基部青灰，爪趾粗短，尾羽末端平齐。",
-    "habits": "activity为06:00与18:00两个时刻，仅在这两个时刻活动，其余时段休息。grouping为两只，通常成对占据同一片阶地。肉食，主食岩缝间的鼠兔与小型爬虫；领地行为是守护巢区与固定伏猎点，接近时先示警，退离后不持续追逐。",
+    "appearance": "体长约半人高，背羽深灰近黑，胸腹有铁锈色横斑，冠羽两簇，每簇中央夹一根灰白尖羽，展开时像燧石敲出的白痕，喙短厚、基部青灰，爪趾粗短，尾羽末端平齐。",
+    "habits": "06:00至18:00，在这段时间活动，其余时段休息。为两只，通常成对占据同一片阶地。肉食，主食岩缝间的鼠兔与小型爬虫；领地行为是守护巢区与固定伏猎点，接近时先示警，退离后不持续追逐。",
     "threat": "在阶沿或枯树顶发出短促敲击声时，表明巢区就在附近。行人应横向绕开伏猎点，不要直视或逼近巢下；若它低飞掠过，退到岩壁后等其落回高处即可，它不会追出领地。",
-    "materials": "drops为空，可观察的线索是：阶沿细石被踢落的痕迹、枯树上爪痕与白色粪点。巢区下方常散落灰白尖羽，拾取后需阴干保存，不可水洗。",
+    "materials": "观察燧冠阶鹰时，冠羽两侧夹灰白尖，起飞前把细石踢下阶沿。把这些形态与原地留下的活动痕迹对照，可判断所见是否为同一物种；记录时须避开它的休息处，留出退路。",
     "folklore": "民间说燧冠阶鹰会啄石取火，点燃枯草。实际观察中它只是起飞前把细石踢下阶沿，爪与喙并不产生火星；被踢落的石子滚动声才是常被误认的“火响”。",
     "voice": "短促的“嗒、嗒”声，像燧石相击，间隔均匀；示警时连成三下一组的急响。"
   },
   "review": {
-    "contradictions": [
-      {
-        "quote": "仅在这两个时刻活动，其余时段休息",
-        "field": "wildlife.activeHours",
-        "severity": "hard",
-        "reason": "骨架 activeHours 为 [360,1080]，即 06:00 至 18:00 的连续活动时段，并非仅在 06:00 与 18:00 两个时刻活动。"
-      },
-      {
-        "quote": "主食岩缝间的鼠兔与小型爬虫",
-        "field": "wildlife.predatorOf",
-        "severity": "hard",
-        "reason": "骨架 predatorOf 为空，未声明鼠兔或小型爬虫为其猎物，属于新增食性依据。"
-      },
-      {
-        "quote": "拾取后需阴干保存，不可水洗",
-        "field": "drops",
-        "severity": "hard",
-        "reason": "骨架 drops 为空，未声明灰白尖羽为可拾取掉落物，也未提供阴干保存等取得与处理途径。"
-      }
-    ]
+    "contradictions": []
   },
-  "errors": [
-    "未给定的距离或价格 两米",
-    {
-      "quote": "仅在这两个时刻活动，其余时段休息",
-      "field": "wildlife.activeHours",
-      "severity": "hard",
-      "reason": "骨架 activeHours 为 [360,1080]，即 06:00 至 18:00 的连续活动时段，并非仅在 06:00 与 18:00 两个时刻活动。"
-    },
-    {
-      "quote": "主食岩缝间的鼠兔与小型爬虫",
-      "field": "wildlife.predatorOf",
-      "severity": "hard",
-      "reason": "骨架 predatorOf 为空，未声明鼠兔或小型爬虫为其猎物，属于新增食性依据。"
-    },
-    {
-      "quote": "拾取后需阴干保存，不可水洗",
-      "field": "drops",
-      "severity": "hard",
-      "reason": "骨架 drops 为空，未声明灰白尖羽为可拾取掉落物，也未提供阴干保存等取得与处理途径。"
-    }
-  ],
+  "errors": [],
   "warnings": [],
-  "feedback": [
-    "未给定的距离或价格 两米",
-    {
-      "quote": "仅在这两个时刻活动，其余时段休息",
-      "field": "wildlife.activeHours",
-      "severity": "hard",
-      "reason": "骨架 activeHours 为 [360,1080]，即 06:00 至 18:00 的连续活动时段，并非仅在 06:00 与 18:00 两个时刻活动。"
-    },
-    {
-      "quote": "主食岩缝间的鼠兔与小型爬虫",
-      "field": "wildlife.predatorOf",
-      "severity": "hard",
-      "reason": "骨架 predatorOf 为空，未声明鼠兔或小型爬虫为其猎物，属于新增食性依据。"
-    },
-    {
-      "quote": "拾取后需阴干保存，不可水洗",
-      "field": "drops",
-      "severity": "hard",
-      "reason": "骨架 drops 为空，未声明灰白尖羽为可拾取掉落物，也未提供阴干保存等取得与处理途径。"
-    }
-  ]
+  "feedback": null,
+  "manualEdits": {
+    "method": "Codex按已确认错误作字段修正；不重新起草整条",
+    "fields": [],
+    "review": "completed"
+  }
 }

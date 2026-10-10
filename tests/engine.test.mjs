@@ -86,8 +86,9 @@ test('E8 别名同一编号、E9 基础人设只读，未成年关系受限',asy
 });
 test('E10 路线计时与随行，E11 回合尾注只补未结算时间',async()=>{
     let c=fresh();const toVillage=await run(c,'world_move',{destination:'河湾村'});c=toVillage.document;
-    const start=c.state.minute;const moved=await run(c,'world_move',{destination:'白石镇'});assert.equal(moved.result.minutes,360);
-    const turn=await run(moved.document,'world_turn',{startMinute:start,minutes:360,location:'白石镇'},'turn');assert.equal(turn.result.elapsed,0);
+    // The expanded climate catalog changes this fixed seed's weather; the route now takes 432 minutes.
+    const start=c.state.minute;const moved=await run(c,'world_move',{destination:'白石镇'});assert.equal(moved.result.minutes,432);
+    const turn=await run(moved.document,'world_turn',{startMinute:start,minutes:432,location:'白石镇'},'turn');assert.equal(turn.result.elapsed,0);
     const normal=await run(turn.document,'world_turn',{startMinute:turn.document.state.minute},'talk');assert.equal(normal.result.elapsed,10);
     await assert.rejects(run(c,'world_turn',{startMinute:start,location:'王都'}),/实际账本/);
     assert.equal((await run(c,'world_turn',{outOfCharacter:true})).document.state.minute,c.state.minute);
