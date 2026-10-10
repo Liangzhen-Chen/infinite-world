@@ -18,10 +18,11 @@ test('分段评分核对引用，任何截断不生成整场分数；不会用�
 });
 
 test('跨段回顾仍提供早先付款证据，避免把窗口外真实事件判为编造',async()=>{
-    const history=Array.from({length:5},(_,index)=>({...turns[0],index,calls:index===0?[{tool:'world_trade',args:{seller:'林穗',service:'住宿'},result:{ok:true,cost:6}}]:[]}));
+    const history=Array.from({length:5},(_,index)=>({...turns[0],index,sceneBefore:'严辙在场；本人旧事：曾修过车轴',sceneBeforeReply:'阿砚本人近期经历：木楔制成，工坊费2铜',turnResult:{elapsed:5},calls:index===0?[{tool:'world_trade',args:{seller:'林穗',service:'住宿'},result:{ok:true,cost:6}}]:[]}));
     let calls=0;
     const report=await reviewPlaytest({async generate(body){
         const input=JSON.parse(body.messages[1].content);
+        assert.match(input.turns[0].sceneBefore,/严辙在场/);assert.match(input.turns[0].sceneBeforeReply,/工坊费2铜/);assert.equal(input.turns[0].turnResult.elapsed,5);
         if(calls++===2){assert.equal(input.turns[0].turn,4);assert.equal(input.previous[0].calls[0].result.cost,6);}
         return{choices:[{finish_reason:'stop',message:{content:JSON.stringify({scores,findings:[]})}}]};
     }},{id:'historical-payment',turns:history},{});

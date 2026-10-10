@@ -423,7 +423,7 @@ export class WorldEngine {
     promise(d,args,id) {
         const reserved=createNpcObligation(d,this,args,id);if(reserved)return reserved;
         const promisor=this.resolve(args.promisor),promisee=this.resolve(args.promisee??'player'),type=args.type;
-        if(!['带路','送货','付款','等候','会面','协助'].includes(type))throw new Error('义务类别不支持');
+        if(!['带路','送货','付款','等候','会面','协助'].includes(type))throw new Error('义务类别不支持；type 可选：带路、送货、付款、等候、会面、协助');
         if(promisor!=='player'&&!d.get('state','npcs',promisor))throw new Error('承诺者不在战役中');
         for(const actor of[promisor,promisee])if(['死亡','濒死'].includes(this.actor(d,actor)?.status))throw new Error('义务当事人无法清醒履约');
         const obligation={id:`obl_${id}`,type,promisor,promisee,content:text(args.content),status:'待履行',deadline:number(args.deadline??d.get('state','minute')+1440,0,Number.MAX_SAFE_INTEGER)};

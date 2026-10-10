@@ -1,11 +1,10 @@
 import * as OpenCC from 'opencc-js';
+import {RETRIEVAL_DICTIONARY,expandRetrievalText,prepareRetrievalRecord,isSystemMemoryText} from './retrieval-lexicon.mjs';
 const convert = OpenCC.Converter({ from: 'tw', to: 'cn' });
-const groups = [ ['账簿', '账本', '帐本', '帐簿'], ['厨房', '灶台', '炉灶'], ['承诺', '答应', '约定'], ['酒馆', '客栈'] ];
 export const normalize = text => convert(String(text)).toLowerCase().replaceAll('帐', '账').normalize('NFKC');
-const systemLanguage = /账本|工具|事件编号|裁定|模型|提示词|主持人/;
 export function validateMemory(content) {
     if (typeof content !== 'string' || !content.trim() || content.length > 2000) throw new Error('记忆正文为空或过长');
-    if (systemLanguage.test(content)) throw new Error('记忆包含系统用语，请改写成世界内发生的具体事实');
+    if (isSystemMemoryText(content)) throw new Error('记忆包含系统用语，请改写成世界内发生的具体事实');
     return content.trim();
 }
 export class EntityResolver {
@@ -47,13 +46,12 @@ export class EntityResolver {
 
 export class MemoryIndex {
     constructor({ entities = [], dictionary = [] } = {}) {
-        this.resolver = new EntityResolver(entities); this.dictionary = [...dictionary, ...groups.flat()];
+        this.resolver = new EntityResolver(entities); this.dictionary = [...new Set([...dictionary, ...RETRIEVAL_DICTIONARY])];
         this.documents = new Map(); this.postings = new Map(); this.totalLength = 0; this.tokenizations = 0;
         this.chatMessages = []; this.messageRefs = new WeakMap();
     }
     terms(text, expand = false, scope = null) {
-        let value = normalize(text);
-        if (expand) for (const variants of groups) if (variants.some(word => value.includes(normalize(word)))) value += ' ' + variants.join(' ');
+        const value = expand ? expandRetrievalText(text,{normalize,resolver:this.resolver,scope}) : normalize(text);
         const terms = value.match(/[a-z0-9_]{2,}/g) ?? [];
         for (const word of this.dictionary) if (value.includes(normalize(word))) terms.push(normalize(word));
         for (const span of value.match(/[\u3400-\u9fff]{2,}/g) ?? []) for (let i = 0; i < span.length - 1; i++) terms.push(span.slice(i, i + 2));
@@ -67,6 +65,9 @@ export class MemoryIndex {
     }
     upsert(record) {
         if (typeof record.id !== 'string' || !record.id) throw new Error('检索记录缺少编号');
+        const prepared=prepareRetrievalRecord(record,{verified:record.verified===true});
+        if(!prepared){this.remove(record.id);return;}
+        record=prepared;
         if (this.documents.get(record.id)?.revision === record.revision && record.revision !== undefined) return;
         this.remove(record.id); this.tokenizations++;
         const frequencies = new Map();

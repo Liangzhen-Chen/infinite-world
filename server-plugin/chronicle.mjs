@@ -124,9 +124,9 @@ export function searchChronicle(chronicle,query,{entities=[],location=null,parti
  const expanded=expandRetrievalText(query,{normalize,resolver:index.resolver,scope:location});
  return index.search(expanded,{now:chronicle.now,scope:location,present:participants,limit});
 }
-export function chronicleContext(chronicle,{query='',entities=[],location=null,participants=[],budgetChars=1800}={}){
+export function chronicleContext(chronicle,{query='',entities=[],location=null,participants=[],budgetChars=1800,index=null}={}){
  const recent=chronicle.scenes.slice(-3),today=chronicle.days.find(d=>d.day===Math.floor(chronicle.now/DAY));
- const hits=searchChronicle(chronicle,query,{entities,location,participants,limit:8}),events=new Set(hits.map(h=>h.eventId));
+ const hits=index?index.search(query,{now:chronicle.now,scope:location,present:participants,limit:8}):searchChronicle(chronicle,query,{entities,location,participants,limit:8}),events=new Set(hits.map(h=>h.eventId));
  const relevant=chronicle.scenes.filter(s=>!recent.some(r=>r.id===s.id)&&s.sources.events.some(id=>events.has(id))).slice(-3);
  const selected=[];let size=0;for(const row of [...recent,...(today?[today]:[]),...relevant]){if(size+row.text.length>budgetChars)continue;selected.push(clone(row));size+=row.text.length;}
  return {authority:'历史摘要低于当前状态与原始事件；未了事项描述的是当时状态',entries:selected,characters:size};

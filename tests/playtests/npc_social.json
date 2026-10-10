@@ -72,12 +72,17 @@
       ]
     },
     {
-      "input": "我告别后走去铁匠铺找段禾。",
+      "input": "我告别后走去学舍找段禾，在门边等她方便说话。",
       "assertions": [
         {
           "kind": "equals",
           "path": "state.location",
-          "value": "bld_hw_forge"
+          "value": "bld_hw_school"
+        },
+        {
+          "kind": "equals",
+          "path": "state.npcs.npc_hw_duanhe.location",
+          "value": "bld_hw_school"
         }
       ]
     },
@@ -94,7 +99,7 @@
       ]
     },
     {
-      "input": "好，我接受拒绝。那就正常聊聊，你最近在学什么手艺，有没有哪一步特别难？我不让她停工陪我。",
+      "input": "好，我接受拒绝。那就正常聊聊，你最近在练什么画法，有没有哪一步特别难？我不让她停下学习陪我。",
       "assertions": [
         {
           "kind": "unchanged",

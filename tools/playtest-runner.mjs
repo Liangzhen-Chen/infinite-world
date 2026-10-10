@@ -61,9 +61,11 @@ export async function runPlaytest({scenario,api,client,bundle,attempt=1,processM
             assertionBefore=before;
             chat.push({is_user:true,mes:step.input,extra:{fields_anchor:anchor}});history.push({role:'user',content:step.input});await sync();
             const scene=await api('scene',{campaignId,query:step.input});
+            report.sceneBefore=scene.scene;
             let final=false;
             for(let recursion=0;recursion<settings.toolRecursionLimit;recursion++){
                 const current=recursion?await api('scene',{campaignId,query:step.input}):scene;
+                report.sceneBeforeReply=current.scene;
                 const messages=assembleMessages(bundle,history,current.scene);
                 const response=await client.generate({...generationRequest(settings),messages:processMessages(messages,bundle),tools,tool_choice:'auto'},`${scenario.id}-${attempt}-${index}-${recursion}`);
                 if(response.measurement)report.requests.push(response.measurement);

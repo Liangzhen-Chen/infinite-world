@@ -12,6 +12,7 @@ import { atomicJSON } from './storage.mjs';
 import {catalogDefinition}from'./catalog.mjs';
 import {publicLoreEntries}from'./lore.mjs';
 import {settleNpcPlanning}from'./npc-planning-service.mjs';
+import {getChronicle,syncChronicleIndex}from'./chronicle.mjs';
 
 export const info={id:'infinite-fields',name:'无限原野本地战役存储',description:'本项目自有的存档、账本与检索服务器插件'};
 export async function init(router,{ world=null, baseRoot=null, newCampaignSeed=randomUUID, npcPlanner, npcPlanningEnabled=Boolean(process.env.DEEPSEEK_API_KEY), npcPlanningOptions={} }={}){
@@ -76,6 +77,8 @@ export async function init(router,{ world=null, baseRoot=null, newCampaignSeed=r
                 revision:digest(memory)});
         }
         for(const id of index.documents.keys())if(id.startsWith('memory_')&&!wanted.has(id))index.remove(id);
+        index.chronicle=await getChronicle(store,id);
+        syncChronicleIndex(index,index.chronicle);
         return index;
     };
     router.post('/create',handle(async req=>{

@@ -43,6 +43,28 @@ async function serverFixture(t,{baseRoot=null,world=null,userRoots=null}={}){
     };
 }
 
+test('公开搜索与场景复用真实事件编年史，撤销及导入不保留已删除经历',async t=>{
+    const root=await fs.mkdtemp(path.join(os.tmpdir(),'fields-chronicle-http-'));
+    t.after(()=>fs.rm(root,{recursive:true,force:true}));
+    const request=await serverFixture(t,{baseRoot:root});
+    const created=await request('/create',{}),campaignId=created.body.reference.campaignId;
+    const bought=await request('/execute',{campaignId,tool:'world_trade',args:{seller:'林穗',item:'面包',quantity:1},eventId:'bread-history',anchor:'bread-message'});
+    assert.equal(bought.status,200,bought.body.error);
+    const search=await request('/search',{campaignId,query:'我买过什么吃食'});
+    assert.equal(search.status,200,search.body.error);
+    assert.ok(search.body.results.some(row=>row.eventId==='bread-history'&&row.text.includes('面包')));
+    const scene=await request('/scene',{campaignId,query:'买过的食品'});
+    assert.match(scene.body.scene,/历史摘要/);assert.match(scene.body.scene,/面包/);assert.ok(scene.body.scene.length<=6000);
+    const exported=(await request('/export',{campaignId})).body;
+    const imported=await request('/import',{bundle:exported});assert.equal(imported.status,200,imported.body.error);
+    const restored=await request('/search',{campaignId:imported.body.reference.campaignId,query:'买过的食品'});
+    assert.ok(restored.body.results.some(row=>row.eventId==='bread-history'));
+    const rollback=await request('/reconcile',{campaignId,validAnchors:[]});assert.equal(rollback.status,200,rollback.body.error);
+    const after=await request('/search',{campaignId,query:'我买过什么吃食'});
+    assert.ok(after.body.results.every(row=>row.eventId!=='bread-history'));
+    assert.doesNotMatch((await request('/scene',{campaignId,query:'买过的食品'})).body.scene,/历史摘要/);
+});
+
 test('副本启用：新旧聊天均只写新文件，保留原文、钱袋和聊天锚点，拒绝路径穿越',async t=>{
     const root=await fs.mkdtemp(path.join(os.tmpdir(),'fields-copy-'));t.after(()=>fs.rm(root,{recursive:true,force:true}));
     const directory=path.join(root,'chats','host');await fs.mkdir(directory,{recursive:true});

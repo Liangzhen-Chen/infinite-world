@@ -6,6 +6,7 @@ import {agricultureView} from './agriculture.mjs';
 import {npcAvailability} from './npc-schedule.mjs';
 import {npcContext}from'./npc-memory.mjs';
 import {relationView}from'./npc-relations.mjs';
+import {chronicleContext}from'./chronicle.mjs';
 
 const text=(value,limit=200)=>typeof value==='string'?value.replace(/\s+/g,' ').slice(0,limit):'';
 const list=value=>Array.isArray(value)?value.map(row=>typeof row==='string'?row:row.content??row.description??'').filter(Boolean).join('；'):text(value);
@@ -63,6 +64,11 @@ export function sceneCard(engine,document,query='',index=null){
     const pinned=Object.values(document.memories??{}).filter(m=>m.pinned).slice(0,engine.rules.prompt.pinnedLimit);
     if(pinned.length)parts.push('【固定事实，供主持核对，不代表人物知情】',...pinned.map(m=>`${name(m.subject)}：${text(m.content,180)}`));
     if(index){
+        if(index.chronicle){
+            const budget=Math.max(0,Math.min(1200,Math.min(6000,engine.rules.prompt.dynamicMaximumCharacters)-parts.join('\n').length-100));
+            const history=chronicleContext(index.chronicle,{query,entities:engine.entities,location:s.location,participants:present.slice(0,8).map(([id])=>id),budgetChars:budget,index});
+            if(history.entries.length)parts.push('【历史摘要，低于当前状态与原始事件；不代表人物知情】',...history.entries.map(row=>`${engine.calendar(row.from).text}：${row.text}`));
+        }
         const old=index.search(query,{now:s.minute,scope:s.location,present:present.slice(0,8).map(([id])=>id),limit:4});
         if(old.length)parts.push('【相关旧事，检索线索不代表在场人物知情】',...old.map(m=>`${m.source??'记忆'}${m.minute!==undefined?`，${engine.calendar(m.minute).text}`:''}：${text(m.text,260)}`));
     }
