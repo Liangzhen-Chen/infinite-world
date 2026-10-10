@@ -1,0 +1,18 @@
+{
+  "id": "item_quill_knife",
+  "fingerprint": "4bfe9952e09d0ceee8baa60902f30b4396e10c3ba59cad55022c0e993f707879",
+  "status": "passed",
+  "attempts": 1,
+  "draft": {
+    "id": "item_quill_knife",
+    "description": "短锋修羽刀出自小学堂，通体一掌可握，木柄缠有细密刻纹，钢刃短而薄，刃口平直微斜，末端收成窄尖。刃背留有锻打锤痕，柄与刃以铆钉相接，接缝处可见打磨细痕。整刀轻巧，适合在案上修整羽管笔口与纸边。",
+    "inspection": "查看刃口有无卷缺，铆钉是否松动，木柄刻纹内是否积有碎屑；试合刀入鞘，确认柄刃接缝不晃。",
+    "storage": "擦净刃面碎屑，合入随附刀鞘，置于干燥案屉；避免与粗铁件同放磕碰。"
+  },
+  "review": {
+    "contradictions": []
+  },
+  "errors": [],
+  "warnings": [],
+  "feedback": null
+}

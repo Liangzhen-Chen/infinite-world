@@ -1,0 +1,18 @@
+{
+  "id": "item_bristle_handbrush",
+  "fingerprint": "4f84f815f8160948632c205d025d627fd09a62929e6084b741b231bc941634a1",
+  "status": "passed",
+  "attempts": 1,
+  "draft": {
+    "id": "item_bristle_handbrush",
+    "description": "旧磨坊出产的夹鬃小刷，短刷背由山毛榉木坯锯成，背脊开一道浅槽。硬鬃分束穿入钻好的植毛孔，孔距略疏，铁线沿槽夹扎后由细钳压平端头，鬃面齐整微散。木背留有锯痕与钻孔毛边，握持轻便，适合扫落狭缝浮尘。",
+    "inspection": "翻看刷背槽内铁线是否松脱，指压鬃束检查有无整束拔出；木背若有裂纹或端头翘起，鬃束易散。",
+    "storage": "置于干燥木架，鬃面朝上，勿压重物或浸水；受潮后木背易变形，铁线生锈。"
+  },
+  "review": {
+    "contradictions": []
+  },
+  "errors": [],
+  "warnings": [],
+  "feedback": null
+}

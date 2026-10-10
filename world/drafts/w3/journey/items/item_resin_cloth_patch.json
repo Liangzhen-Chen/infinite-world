@@ -1,0 +1,21 @@
+{
+  "id": "item_resin_cloth_patch",
+  "fingerprint": "78788219c42e698a332a88328047e173b1c1643e88285f763f5d9a7a4c7e335e",
+  "status": "passed",
+  "attempts": 3,
+  "draft": {
+    "id": "item_resin_cloth_patch",
+    "description": "帆布剪成的方形补片，一面以松脂低温软化后薄涂，摊开冷却成微亮硬面；边缘留有剪口毛丝，涂层可见木匙背拖出的浅纹，未涂一面仍显麻布原色。只备材料，修补原物须另走实际工序。",
+    "inspection": "翻看两面：涂层应薄而匀，无大片剥落；折角不脆裂，麻布无霉斑与破洞。",
+    "storage": "置阴凉干燥处平放，避热压；自制成起90天内用完，超期涂层易黏连。"
+  },
+  "review": {
+    "contradictions": []
+  },
+  "errors": [],
+  "warnings": [],
+  "feedback": null,
+  "manualCorrection": {
+    "reason": "L1：保存上限90天改为明确数字。"
+  }
+}

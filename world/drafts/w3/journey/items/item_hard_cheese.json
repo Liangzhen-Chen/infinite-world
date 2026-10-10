@@ -1,0 +1,18 @@
+{
+  "id": "item_hard_cheese",
+  "fingerprint": "2c046eef0d635aece911c821f624a759e6b43aaeea52ca087685eed7b9cddf6d",
+  "status": "passed",
+  "attempts": 3,
+  "draft": {
+    "id": "item_hard_cheese",
+    "description": "白石镇集市所售熟成硬乳酪角，呈楔形，重二百克，外皮干硬呈深黄，切开后内部密实、色泽浅黄，带细碎乳香与咸味。外层偶有压痕与轻微污损，切面可见熟成形成的细小孔洞。由盐渍压榨后的乳块经长时间阴凉熟成而成，质地紧实，便于旅途中切配食用。",
+    "inspection": "先看外皮有无霉斑、黏滑与虫蛀，再闻气味是否酸败刺鼻；切面若发绿发黑或渗水，即不可食。",
+    "storage": "以干布包裹置于阴凉通风处，避潮避热，可存至多30天；切开后尽快食完，霉败块不可再售。"
+  },
+  "review": {
+    "contradictions": []
+  },
+  "errors": [],
+  "warnings": [],
+  "feedback": null
+}

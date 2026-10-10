@@ -16,7 +16,11 @@ const seed=JSON.parse(await fs.readFile('tests/fixtures/legacy/seed.json','utf8'
 const victim='npc_hw_linsui',guard='npc_hw_gucen',judge='npc_hw_chenbai';
 const money=c=>c.state.player.coins+Object.values(c.state.npcs).reduce((sum,a)=>sum+a.coins,0)+Object.values(c.state.records).filter(r=>['legal_treasury','legal_deposit'].includes(r.category)).reduce((sum,r)=>sum+r.coins,0);
 async function setup(){
-    const world=withLawRules(await loadWorld()),engine=new WorldEngine(world),document=engine.initialFromLegacy(seed,'law-test');
+    const world=withLawRules(await loadWorld());
+    // These procedure fixtures explicitly place the participants at interviews
+    // and hearings. Their routine travel is tested separately below.
+    for(const npc of world.npcs)if([victim,guard,judge,'npc_hw_hezhou'].includes(npc.id))delete npc.schedule;
+    const engine=new WorldEngine(world),document=engine.initialFromLegacy(seed,'law-test');
     document.state.location='bld_hw_qingdeng';document.state.npcs[victim].inventory.item_bread=4;
     const run=async(c,tool,args,eventId)=>{const out=await engine.reduce(c,{tool,args,eventId});return{document:applyPatches(c,out.patches),result:out.result};};
     return{world,engine,document,run};
@@ -114,6 +118,18 @@ test('逮捕须充分证据和在场乡巡，沿路线押解，未审超时释�
     const released=(await run(arrested.document,'world_time',{minutes:1440},'custody_expired')).document;
     assert.equal(released.state.records[`legal_custody:${incident.result.case}`].status,'已结束');
     await run(released,'world_move',{destination:'loc_hw'},'free_after_expiry');
+});
+
+test('正式作息不会在跨收工时段的押解中把乡巡另派回家',async()=>{
+    const {document,run}=await setup(),incident=await theft(run,document);
+    const c=await confessed(run,incident.document,incident.result.case);
+    c.state.minute=1079;
+    const engine=new WorldEngine(await loadWorld());
+    const result=await engine.reduce(c,{tool:'world_law',args:{operation:'arrest',case:incident.result.case,authority:guard},eventId:'scheduled_arrest'});
+    const after=applyPatches(c,result.patches);
+    assert.ok(after.state.minute>1080);assert.equal(after.state.npcs[guard].location,'bld_hw_council');
+    assert.equal(after.state.npcs[guard].scheduleTravel,undefined);
+    assert.ok(after.state.records[`legal_custody:${incident.result.case}`]);
 });
 
 test('法院实际保管原物与罚款，受害人未到场不瞬间获赔，到场领取不复制单件',async()=>{

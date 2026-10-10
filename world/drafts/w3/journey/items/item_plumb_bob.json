@@ -1,0 +1,18 @@
+{
+  "id": "item_plumb_bob",
+  "fingerprint": "37cfcb5046301ffc87175da7174610bd616c14e37882eaaca0d92ddc9e835c83",
+  "status": "passed",
+  "attempts": 1,
+  "draft": {
+    "id": "item_plumb_bob",
+    "description": "白石镇集市常见的铜壳吊线锤，锤体为黄铜铸壳，内灌配重，壳面留有旋削细纹与合范接缝；顶端小孔穿一段短线，线尾打结固定。握持时铜壳偏凉，短线可绕壳身收拢。悬垂后借自重拉直短线，形成竖直参考，用于避风处核查墙线是否偏斜。",
+    "inspection": "先看铜壳有无凹陷、裂纹与孔口毛刺，再捻短线是否起毛、打结处是否松脱；轻晃听内部配重有无异响，悬起观察线身是否自然下垂。",
+    "storage": "短线绕壳身收拢，铜壳单独放入随身袋内，避免与刃口或硬物相互磕碰；置于干燥处，勿长期受潮。"
+  },
+  "review": {
+    "contradictions": []
+  },
+  "errors": [],
+  "warnings": [],
+  "feedback": null
+}

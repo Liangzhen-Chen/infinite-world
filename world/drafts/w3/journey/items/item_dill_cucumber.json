@@ -1,0 +1,18 @@
+{
+  "id": "item_dill_cucumber",
+  "fingerprint": "87aa4967bb335b5471844f1b74006864220f53f14ef61ff2cb1e9e8571149449",
+  "status": "passed",
+  "attempts": 2,
+  "draft": {
+    "id": "item_dill_cucumber",
+    "description": "青灯酒馆按当季货源小批供应的凉浸瓜段。黄瓜刮去表面细刺，横切成段，莳萝切碎，与盐、果醋拌匀后短时浸渍。瓜段仍带脆感，表皮有刮痕与刀口，浸汁清亮微绿，气味是莳萝的辛香混着醋味。并非发酵泡菜，渗出余液弃置。重0.31千克。",
+    "inspection": "看瓜段是否仍挺脆、断面有无发黏；闻莳萝香与醋味是否清正，若有酸败或霉点即弃。",
+    "storage": "置阴凉处或冷处，加盖盛放，渗出余液弃置；自制成起1天内吃完，逾期不食。"
+  },
+  "review": {
+    "contradictions": []
+  },
+  "errors": [],
+  "warnings": [],
+  "feedback": null
+}

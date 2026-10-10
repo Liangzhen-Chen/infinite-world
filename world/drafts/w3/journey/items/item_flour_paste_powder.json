@@ -1,0 +1,21 @@
+{
+  "id": "item_flour_paste_powder",
+  "fingerprint": "11834e84b50679a9785f519812ede4af65584406c1c68214adb1290be657d37e",
+  "status": "passed",
+  "attempts": 3,
+  "draft": {
+    "id": "item_flour_paste_powder",
+    "description": "小学堂售出的纸工干浆粉，装于纸包内，呈浅灰白细粉，手感干燥松散，偶有细小颗粒结团。以一百克为一包，须用水调开并加热糊化，方能作非食用纸面黏料。粉体由磨细的浆料干燥而成，包口折压封合，外壁留有捆扎压痕。",
+    "inspection": "查看纸包是否破漏、粉体有无受潮结块或异味；干燥松散者可用，结块发黏者不宜。",
+    "storage": "置于干燥避潮处，纸包封口压紧，远离水汽与重压；自制成起90天内用完。"
+  },
+  "review": {
+    "contradictions": []
+  },
+  "errors": [],
+  "warnings": [],
+  "feedback": null,
+  "manualCorrection": {
+    "reason": "L1：保存期90天改为明确数字。"
+  }
+}

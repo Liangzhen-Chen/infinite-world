@@ -1,0 +1,18 @@
+{
+  "id": "item_book_journey_sewing",
+  "fingerprint": "d951d62ce2861c0a36dc006823f7edaade88ffe1741aed22d224ffda0c7e88c2",
+  "status": "passed",
+  "attempts": 2,
+  "draft": {
+    "id": "item_book_journey_sewing",
+    "description": "白石手艺人合抄的中级裁缝图册，河湾供货校对本，由小学堂流出。全书讲解十二种袋套与衬垫的折叠次序、受力缝走线及空件交付，含翻盖帆布挎袋、贴底毛毡鞋垫、软衬扛物肩圈等。纸页木版印线，边角有翻阅折痕，装订线紧实。识字100方可读，通读约450分钟。",
+    "inspection": "翻看封面与装订，页序完整，无缺页；抽查挎袋与鞋垫两节，图线清楚，折叠与受力缝步骤可辨。",
+    "storage": "置干燥处平放，避潮避压；保存期365天，逾期纸页易脆，图线模糊。"
+  },
+  "review": {
+    "contradictions": []
+  },
+  "errors": [],
+  "warnings": [],
+  "feedback": null
+}

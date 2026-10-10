@@ -1,0 +1,18 @@
+{
+  "id": "item_fine_sand",
+  "fingerprint": "db35f9c4e7f6bd341fbff15e6fd25a4640076c6663a9d1ee3eaa12adc9cb2da2",
+  "status": "passed",
+  "attempts": 1,
+  "draft": {
+    "id": "item_fine_sand",
+    "description": "旧渡口滩上筛取的细砂，经清水淘洗、摊晒至干，装袋时可见颗粒匀净，夹有少量暗色矿粒与碎壳屑。触手松散，无黏结成团，不带潮腥气。约三百克一袋，可作磨料或填重，不可当食盐使用。",
+    "inspection": "解开袋口，抓一撮捻开，看是否结块、混入草屑虫体；再闻有无腐臭或潮霉味。若砂粒黏手、气味刺鼻，弃之不用。",
+    "storage": "扎紧袋口，置于干燥通风处，垫高离地，避开灶火与水缸。受潮后摊开晾干再收，勿与食盐、粮袋混放。"
+  },
+  "review": {
+    "contradictions": []
+  },
+  "errors": [],
+  "warnings": [],
+  "feedback": null
+}

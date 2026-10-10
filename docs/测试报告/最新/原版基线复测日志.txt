@@ -2,19 +2,19 @@ TAP version 13
 # Subtest: 性质：成功扣款后钱非负，拒绝事务不改变账本
 ok 1 - 性质：成功扣款后钱非负，拒绝事务不改变账本
   ---
-  duration_ms: 9.9453
+  duration_ms: 9.9037
   type: 'test'
   ...
 # Subtest: 升级经验保留既有公式
 ok 2 - 升级经验保留既有公式
   ---
-  duration_ms: 0.083
+  duration_ms: 0.0785
   type: 'test'
   ...
 # Subtest: E1 战役重放使用自己的初始快照，世界种子改变不能改旧档
 not ok 3 - E1 战役重放使用自己的初始快照，世界种子改变不能改旧档
   ---
-  duration_ms: 1.598
+  duration_ms: 1.6391
   type: 'test'
   location: 'F:\\dnd\\tests\\baseline\\regression.test.mjs:10:1'
   failureType: 'testCodeFailure'
@@ -38,7 +38,7 @@ not ok 3 - E1 战役重放使用自己的初始快照，世界种子改变不能
 # Subtest: E2 重放失败必须停止生成，不能带着旧事件继续
 not ok 4 - E2 重放失败必须停止生成，不能带着旧事件继续
   ---
-  duration_ms: 1.7146
+  duration_ms: 1.7167
   type: 'test'
   location: 'F:\\dnd\\tests\\baseline\\regression.test.mjs:35:1'
   failureType: 'testCodeFailure'
@@ -60,7 +60,7 @@ not ok 4 - E2 重放失败必须停止生成，不能带着旧事件继续
 # Subtest: E3 单次提交不能复制整个事件日志和交易历史
 not ok 5 - E3 单次提交不能复制整个事件日志和交易历史
   ---
-  duration_ms: 1.0756
+  duration_ms: 1.0434
   type: 'test'
   location: 'F:\\dnd\\tests\\baseline\\regression.test.mjs:44:1'
   failureType: 'testCodeFailure'
@@ -86,7 +86,7 @@ not ok 5 - E3 单次提交不能复制整个事件日志和交易历史
 # Subtest: E4 有关系的 NPC 不能全部无预算注入
 not ok 6 - E4 有关系的 NPC 不能全部无预算注入
   ---
-  duration_ms: 2.8027
+  duration_ms: 2.8725
   type: 'test'
   location: 'F:\\dnd\\tests\\baseline\\regression.test.mjs:52:1'
   failureType: 'testCodeFailure'
@@ -112,7 +112,7 @@ not ok 6 - E4 有关系的 NPC 不能全部无预算注入
 # Subtest: E5 致命伤害钳制到零，溢出治疗钳制到上限，MP 不足原因明确
 not ok 7 - E5 致命伤害钳制到零，溢出治疗钳制到上限，MP 不足原因明确
   ---
-  duration_ms: 0.1792
+  duration_ms: 0.1837
   type: 'test'
   location: 'F:\\dnd\\tests\\baseline\\regression.test.mjs:57:1'
   failureType: 'testCodeFailure'
@@ -132,7 +132,7 @@ not ok 7 - E5 致命伤害钳制到零，溢出治疗钳制到上限，MP 不足
 # Subtest: E6 模型不能不引用来源直接登记毁城法术
 not ok 8 - E6 模型不能不引用来源直接登记毁城法术
   ---
-  duration_ms: 0.3028
+  duration_ms: 0.32
   type: 'test'
   location: 'F:\\dnd\\tests\\baseline\\regression.test.mjs:67:1'
   failureType: 'testCodeFailure'
@@ -153,7 +153,7 @@ not ok 8 - E6 模型不能不引用来源直接登记毁城法术
 # Subtest: E7 未突破熟练度停在299
 not ok 9 - E7 未突破熟练度停在299
   ---
-  duration_ms: 0.2665
+  duration_ms: 0.2681
   type: 'test'
   location: 'F:\\dnd\\tests\\baseline\\regression.test.mjs:70:1'
   failureType: 'testCodeFailure'
@@ -179,7 +179,7 @@ not ok 9 - E7 未突破熟练度停在299
 # Subtest: E8 称呼解析到同一 NPC，未知称呼拒绝，不能静默新建
 not ok 10 - E8 称呼解析到同一 NPC，未知称呼拒绝，不能静默新建
   ---
-  duration_ms: 0.2359
+  duration_ms: 0.2518
   type: 'test'
   location: 'F:\\dnd\\tests\\baseline\\regression.test.mjs:75:1'
   failureType: 'testCodeFailure'
@@ -205,7 +205,7 @@ not ok 10 - E8 称呼解析到同一 NPC，未知称呼拒绝，不能静默新�
 # Subtest: E9 不允许覆盖基础人设
 not ok 11 - E9 不允许覆盖基础人设
   ---
-  duration_ms: 0.3235
+  duration_ms: 0.3299
   type: 'test'
   location: 'F:\\dnd\\tests\\baseline\\regression.test.mjs:82:1'
   failureType: 'testCodeFailure'
@@ -233,7 +233,7 @@ not ok 11 - E9 不允许覆盖基础人设
 # Subtest: E10 没有路线与耗时不能瞬移
 not ok 12 - E10 没有路线与耗时不能瞬移
   ---
-  duration_ms: 0.2518
+  duration_ms: 0.2713
   type: 'test'
   location: 'F:\\dnd\\tests\\baseline\\regression.test.mjs:87:1'
   failureType: 'testCodeFailure'
@@ -254,7 +254,7 @@ not ok 12 - E10 没有路线与耗时不能瞬移
 # Subtest: E11 普通对话即使没有显式分钟也推进时间
 not ok 13 - E11 普通对话即使没有显式分钟也推进时间
   ---
-  duration_ms: 0.588
+  duration_ms: 0.7278
   type: 'test'
   location: 'F:\\dnd\\tests\\baseline\\regression.test.mjs:92:1'
   failureType: 'testCodeFailure'
@@ -280,7 +280,7 @@ not ok 13 - E11 普通对话即使没有显式分钟也推进时间
 # Subtest: E12 多聚落分别日结，缺粮有饥饿后果而不只累计缺口
 not ok 14 - E12 多聚落分别日结，缺粮有饥饿后果而不只累计缺口
   ---
-  duration_ms: 0.2627
+  duration_ms: 0.2983
   type: 'test'
   location: 'F:\\dnd\\tests\\baseline\\regression.test.mjs:97:1'
   failureType: 'testCodeFailure'
@@ -306,7 +306,7 @@ not ok 14 - E12 多聚落分别日结，缺粮有饥饿后果而不只累计缺�
 # Subtest: E13 幂等签名与对象键序无关
 not ok 15 - E13 幂等签名与对象键序无关
   ---
-  duration_ms: 0.1574
+  duration_ms: 0.1638
   type: 'test'
   location: 'F:\\dnd\\tests\\baseline\\regression.test.mjs:104:1'
   failureType: 'testCodeFailure'
@@ -325,7 +325,7 @@ not ok 15 - E13 幂等签名与对象键序无关
 # Subtest: E14 检定由属性与技能计算修正，并有成功程度
 not ok 16 - E14 检定由属性与技能计算修正，并有成功程度
   ---
-  duration_ms: 0.212
+  duration_ms: 0.2311
   type: 'test'
   location: 'F:\\dnd\\tests\\baseline\\regression.test.mjs:109:1'
   failureType: 'testCodeFailure'
@@ -351,7 +351,7 @@ not ok 16 - E14 检定由属性与技能计算修正，并有成功程度
 # Subtest: E15 施法不生成永久记录，且增长熟练度
 not ok 17 - E15 施法不生成永久记录，且增长熟练度
   ---
-  duration_ms: 0.2648
+  duration_ms: 0.2773
   type: 'test'
   location: 'F:\\dnd\\tests\\baseline\\regression.test.mjs:114:1'
   failureType: 'testCodeFailure'
@@ -377,7 +377,7 @@ not ok 17 - E15 施法不生成永久记录，且增长熟练度
 # Subtest: E16 同一聊天再次刷新不能重新读取和切词全部原文
 not ok 18 - E16 同一聊天再次刷新不能重新读取和切词全部原文
   ---
-  duration_ms: 1.0582
+  duration_ms: 1.3966
   type: 'test'
   location: 'F:\\dnd\\tests\\baseline\\regression.test.mjs:120:1'
   failureType: 'testCodeFailure'
@@ -399,7 +399,7 @@ not ok 18 - E16 同一聊天再次刷新不能重新读取和切词全部原文
 # Subtest: E17 物品别名同一编号，包含品质耐久重量
 not ok 19 - E17 物品别名同一编号，包含品质耐久重量
   ---
-  duration_ms: 0.2219
+  duration_ms: 0.2297
   type: 'test'
   location: 'F:\\dnd\\tests\\baseline\\regression.test.mjs:126:1'
   failureType: 'testCodeFailure'
@@ -424,7 +424,7 @@ not ok 19 - E17 物品别名同一编号，包含品质耐久重量
 # Subtest: E18 职业必须在目录内并完成认证
 not ok 20 - E18 职业必须在目录内并完成认证
   ---
-  duration_ms: 0.1846
+  duration_ms: 0.2055
   type: 'test'
   location: 'F:\\dnd\\tests\\baseline\\regression.test.mjs:134:1'
   failureType: 'testCodeFailure'
@@ -445,7 +445,7 @@ not ok 20 - E18 职业必须在目录内并完成认证
 # Subtest: E19 编辑玩家消息触发对账
 not ok 21 - E19 编辑玩家消息触发对账
   ---
-  duration_ms: 0.9578
+  duration_ms: 0.8301
   type: 'test'
   location: 'F:\\dnd\\tests\\baseline\\regression.test.mjs:138:1'
   failureType: 'testCodeFailure'
@@ -469,7 +469,7 @@ not ok 21 - E19 编辑玩家消息触发对账
 # Subtest: M3a 检索“那本账本”找回厨房许可而不是系统用语
 not ok 22 - M3a 检索“那本账本”找回厨房许可而不是系统用语
   ---
-  duration_ms: 0.3404
+  duration_ms: 0.356
   type: 'test'
   location: 'F:\\dnd\\tests\\baseline\\regression.test.mjs:144:5'
   failureType: 'testCodeFailure'
@@ -495,7 +495,7 @@ not ok 22 - M3a 检索“那本账本”找回厨房许可而不是系统用语
 # Subtest: M3b 检索“她的帐本”找回厨房许可而不是系统用语
 not ok 23 - M3b 检索“她的帐本”找回厨房许可而不是系统用语
   ---
-  duration_ms: 0.1873
+  duration_ms: 0.4383
   type: 'test'
   location: 'F:\\dnd\\tests\\baseline\\regression.test.mjs:144:5'
   failureType: 'testCodeFailure'
@@ -521,7 +521,7 @@ not ok 23 - M3b 检索“她的帐本”找回厨房许可而不是系统用语
 # Subtest: M3c 检索“我能用灶台吗”找回厨房许可而不是系统用语
 not ok 24 - M3c 检索“我能用灶台吗”找回厨房许可而不是系统用语
   ---
-  duration_ms: 0.3592
+  duration_ms: 0.1661
   type: 'test'
   location: 'F:\\dnd\\tests\\baseline\\regression.test.mjs:144:5'
   failureType: 'testCodeFailure'
@@ -547,7 +547,7 @@ not ok 24 - M3c 检索“我能用灶台吗”找回厨房许可而不是系统�
 # Subtest: M3d 检索“老板娘答应过我什么”找回厨房许可而不是系统用语
 not ok 25 - M3d 检索“老板娘答应过我什么”找回厨房许可而不是系统用语
   ---
-  duration_ms: 0.1577
+  duration_ms: 0.1561
   type: 'test'
   location: 'F:\\dnd\\tests\\baseline\\regression.test.mjs:144:5'
   failureType: 'testCodeFailure'
@@ -578,4 +578,4 @@ not ok 25 - M3d 检索“老板娘答应过我什么”找回厨房许可而不�
 # cancelled 0
 # skipped 0
 # todo 0
-# duration_ms 240.057
+# duration_ms 244.0433

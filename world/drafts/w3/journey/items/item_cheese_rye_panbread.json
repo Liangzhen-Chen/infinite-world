@@ -1,0 +1,21 @@
+{
+  "id": "item_cheese_rye_panbread",
+  "fingerprint": "b65e7bdf60fa455b0bb212867e9080c4170a7f9aff819251d0a44c0409544f5e",
+  "status": "passed",
+  "attempts": 2,
+  "draft": {
+    "id": "item_cheese_rye_panbread",
+    "description": "青灯酒馆灶上现做的果腹吃食：厚锅以黄油润过，黑麦粉加水调成稠糊摊成圆饼，两面烙出焦褐斑纹，再夹入硬乳酪薄片，趁热折合压实。饼身厚实，边缘略脆，酪片遇热微软，表面留有锅底烙痕与手压指印。集市按当季货源小批供应，现货售罄须等另一次实际补货。",
+    "inspection": "先看饼面烙色是否均匀、有无焦黑发苦处，再掰开一角，观酪片是否仍成形、有无异味或黏丝。仅作外观与气味查看，不尝可疑变质者。",
+    "storage": "凉透后用洁净干布或自备容器遮尘，置阴凉处，自制成起1天内食用；过期或出现异味、黏丝时弃置。"
+  },
+  "review": {
+    "contradictions": []
+  },
+  "errors": [],
+  "warnings": [],
+  "feedback": null,
+  "manualCorrection": {
+    "reason": "L4：保存上限1天，不能凭隔日复看继续食用。"
+  }
+}

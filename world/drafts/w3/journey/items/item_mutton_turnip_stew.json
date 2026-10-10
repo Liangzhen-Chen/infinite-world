@@ -1,0 +1,18 @@
+{
+  "id": "item_mutton_turnip_stew",
+  "fingerprint": "a06018a378d21c4d5ec271ecdf6c7121e4a6a78b958708f933617e120d20ceb8",
+  "status": "passed",
+  "attempts": 1,
+  "draft": {
+    "id": "item_mutton_turnip_stew",
+    "description": "青灯酒馆当季小批供应的热食。羊肉与芜菁皆切成适口块状，在配额水中慢煨至肉熟根软，汤色浅褐，浮沫已用木匙拨净，表面偶见细碎肉纤维与芜菁边缘的钝切痕。盛出后汤面微亮，肉块与根块沉浮其间，质地软而不散，入口以咸鲜为主，芜菁带轻微辛甜。集市售罄须等另一次实际补货。",
+    "inspection": "可先观汤色是否清亮、浮沫是否拨净，再看肉块与芜菁块是否完整软熟；嗅其气味有无酸败或异臭。不尝已变质的食物。",
+    "storage": "盛于原锅或洁净容器内加盖，置于阴凉处，保存期1天；天热时尽快食用，复热须彻底煮透。"
+  },
+  "review": {
+    "contradictions": []
+  },
+  "errors": [],
+  "warnings": [],
+  "feedback": null
+}

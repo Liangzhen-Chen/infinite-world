@@ -1,0 +1,18 @@
+{
+  "id": "item_seal_thread_bundle",
+  "fingerprint": "1068ec910fd77677e8b6c352a28e83469c62e257188889e24de6203d10bb3417",
+  "status": "passed",
+  "attempts": 2,
+  "draft": {
+    "id": "item_seal_thread_bundle",
+    "description": "自旧磨坊出产的短段封结线，麻线分剪成小束，薄拉过蜂蜡后以骨片压顺，线端由修刀齐平。束身略带蜡色，捻纹紧实，末端平齐而不散股。线束随附剩余蜡块，用于卷札封结时的临时固定；其本身不具官方印章效力，只作束扎与封记之用。",
+    "inspection": "翻看线束，检查捻纹是否起毛、线端有无散股，并确认随附蜡块尚在。不拉断、不试封。",
+    "storage": "置于干燥处，避免受潮与重压，远离热源。自制成起计，至多保存365天。"
+  },
+  "review": {
+    "contradictions": []
+  },
+  "errors": [],
+  "warnings": [],
+  "feedback": null
+}

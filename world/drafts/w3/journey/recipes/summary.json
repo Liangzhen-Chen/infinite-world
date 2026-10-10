@@ -1,0 +1,193 @@
+{
+  "total": 85,
+  "passed": 85,
+  "manual": 0,
+  "pending": 0,
+  "costUpperYuan": 5.246626640000008,
+  "batches": [
+    {
+      "index": 0,
+      "fingerprint": "1b3ebb8685b4c042d405acf97cf1dc3726177aa170e264eca705f3922220fc2d",
+      "count": 43,
+      "passed": 43,
+      "ids": [
+        "recipe_w3c_cracked_wheat_pot",
+        "recipe_w3c_lentil_leek_stew",
+        "recipe_w3c_broadbean_garlic_mash",
+        "recipe_w3c_parsnip_cream_pot",
+        "recipe_w3c_beet_barley_pot",
+        "recipe_w3c_pear_wheat_gruel",
+        "recipe_w3c_cheese_rye_panbread",
+        "recipe_w3c_walnut_honey_bites",
+        "recipe_w3c_poppy_rye_crisp",
+        "recipe_w3c_caraway_oat_crust",
+        "recipe_w3c_mushroom_barley_pot",
+        "recipe_w3c_mutton_turnip_stew",
+        "recipe_w3c_plum_honey_spread",
+        "recipe_w3c_pear_vinegar_slice",
+        "recipe_w3c_mustard_relish",
+        "recipe_w3c_dill_cucumber",
+        "recipe_w3c_garlic_butter",
+        "recipe_w3c_rendered_cooking_fat",
+        "recipe_w3c_salted_walnut",
+        "recipe_w3c_beet_vinegar_dice",
+        "recipe_w3c_pear_dry_chips",
+        "recipe_w3c_cheese_herb_mash",
+        "recipe_w3c_canvas_satchel",
+        "recipe_w3c_felt_insole_pair",
+        "recipe_w3c_padded_work_collar",
+        "recipe_w3c_folding_haversack",
+        "recipe_w3c_goatskin_document_case",
+        "recipe_w3c_tool_apron_panel",
+        "recipe_w3c_brush_roll",
+        "recipe_w3c_corklined_cup_wrap",
+        "recipe_w3c_felt_knee_pad",
+        "recipe_w3c_horsehair_sieve_cloth",
+        "recipe_w3c_laundry_mesh_bag",
+        "recipe_w3c_travel_sewing_wallet",
+        "recipe_w3c_ash_walking_stick",
+        "recipe_w3c_beech_press_board",
+        "recipe_w3c_reed_drying_mat",
+        "recipe_w3c_bottle_divider_crate",
+        "recipe_w3c_clamping_wood_jaw",
+        "recipe_w3c_peg_drying_rack",
+        "recipe_w3c_beech_spatula",
+        "recipe_w3c_ladle_rest",
+        "recipe_w3c_cork_stop_set"
+      ],
+      "rewritten": 1,
+      "manual": [],
+      "pending": [],
+      "flagged": [
+        "recipe_w3c_lentil_leek_stew"
+      ],
+      "sample": [
+        "recipe_w3c_tool_apron_panel",
+        "recipe_w3c_lentil_leek_stew",
+        "recipe_w3c_cheese_herb_mash",
+        "recipe_w3c_padded_work_collar",
+        "recipe_w3c_cracked_wheat_pot"
+      ],
+      "l4": {
+        "approved": true,
+        "notes": [
+          {
+            "id": "recipe_w3c_tool_apron_panel",
+            "note": "帆布分底和系带，羊革分袋预孔缝合，三种工具都使用，240分钟，不附工具。"
+          },
+          {
+            "id": "recipe_w3c_lentil_leek_stew",
+            "note": "L4：木匙是保留工具，不会作为刨屑副产品交付。"
+          },
+          {
+            "id": "recipe_w3c_cheese_herb_mash",
+            "note": "三种原料全部按份取用，切碎拌油不用鲜乳，20分钟，余料弃置。"
+          },
+          {
+            "id": "recipe_w3c_padded_work_collar",
+            "note": "毡片入帆布层、余布作系带，缝线不返还，160分钟，不提高承重。"
+          },
+          {
+            "id": "recipe_w3c_cracked_wheat_pot",
+            "note": "一麦三水配额泡煮，刀背压裂、木匙防焦，炭屑只入灶，85分钟。"
+          }
+        ]
+      },
+      "costUpperYuan": 4.980806080000007,
+      "manualRatio": 0,
+      "needsSystemicRepair": false
+    },
+    {
+      "index": 1,
+      "fingerprint": "53f69c6fb0f6364afb7f5498a4cb200059099eae4deb011c8e7fa738d9b99843",
+      "count": 42,
+      "passed": 42,
+      "ids": [
+        "recipe_w3c_horn_spoon_blank",
+        "recipe_w3c_slate_writing_tile",
+        "recipe_w3c_folding_map_board",
+        "recipe_w3c_broad_steel_chisel",
+        "recipe_w3c_hooked_pruning_knife",
+        "recipe_w3c_leather_round_knife",
+        "recipe_w3c_carpenters_adze",
+        "recipe_w3c_steel_gouge_tip",
+        "recipe_w3c_small_trowel",
+        "recipe_w3c_wire_mesh_patch",
+        "recipe_w3c_folded_brass_cuff",
+        "recipe_w3c_small_bell_frame",
+        "recipe_w3c_tin_inlay_strip",
+        "recipe_w3c_forged_chain_short",
+        "recipe_w3c_gate_hasps",
+        "recipe_w3c_quill_pen_pair",
+        "recipe_w3c_paste_cup_portion",
+        "recipe_w3c_stitchbound_folio",
+        "recipe_w3c_ledger_cover",
+        "recipe_w3c_paper_cord_tags",
+        "recipe_w3c_ink_wiping_pad",
+        "recipe_w3c_slate_stylus",
+        "recipe_w3c_reed_pen_box",
+        "recipe_w3c_book_spine_tape",
+        "recipe_w3c_seal_thread_bundle",
+        "recipe_w3c_silver_open_ring",
+        "recipe_w3c_bone_toggle_set",
+        "recipe_w3c_shell_button_set",
+        "recipe_w3c_horn_comb",
+        "recipe_w3c_bristle_handbrush",
+        "recipe_w3c_horsehair_dustbrush",
+        "recipe_w3c_reed_whistle",
+        "recipe_w3c_cork_float_set",
+        "recipe_w3c_redwood_dye",
+        "recipe_w3c_leather_wax_grease",
+        "recipe_w3c_seam_pitch_cake",
+        "recipe_w3c_soap_wash_portion",
+        "recipe_w3c_damp_sand_rub",
+        "recipe_w3c_wick_coil",
+        "recipe_w3c_linen_cleaning_swab",
+        "recipe_w3c_felt_polishing_pad",
+        "recipe_w3c_resin_cloth_patch"
+      ],
+      "rewritten": 0,
+      "manual": [],
+      "pending": [],
+      "flagged": [
+        "recipe_w3c_ledger_cover"
+      ],
+      "sample": [
+        "recipe_w3c_wick_coil",
+        "recipe_w3c_small_bell_frame",
+        "recipe_w3c_forged_chain_short",
+        "recipe_w3c_reed_pen_box",
+        "recipe_w3c_ledger_cover"
+      ],
+      "l4": {
+        "approved": true,
+        "notes": [
+          {
+            "id": "recipe_w3c_wick_coil",
+            "note": "灯芯剪段压平，多个短段仍是一份，不附灯油与发光能力，40分钟。"
+          },
+          {
+            "id": "recipe_w3c_small_bell_frame",
+            "note": "铜片与铁线配合剪、冲、锤、钳制成响片架，240分钟，发声未写成远程警报。"
+          },
+          {
+            "id": "recipe_w3c_forged_chain_short",
+            "note": "两公斤铁料分环锻接，冷锉接缝，330分钟，木炭仅为燃料，不作吊人保证。"
+          },
+          {
+            "id": "recipe_w3c_reed_pen_box",
+            "note": "芦管选一根制带节筒，软木塞和麻线扎口，剩余配额弃置，100分钟，不附笔尖。"
+          },
+          {
+            "id": "recipe_w3c_ledger_cover",
+            "note": "L4：缝革扁锥不能穿黄铜片；角片按骨架折夹，不另钻金属孔。"
+          }
+        ]
+      },
+      "costUpperYuan": 5.227914240000006,
+      "manualRatio": 0,
+      "needsSystemicRepair": false
+    }
+  ],
+  "scope": "L1/L2 审核结果；尚须 L4 抽读与发布校验"
+}

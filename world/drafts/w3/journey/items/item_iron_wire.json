@@ -1,0 +1,18 @@
+{
+  "id": "item_iron_wire",
+  "fingerprint": "ff8c31b0e8caf105594843cf1a41605f9c1e6af75462a1b7987cc8b774d1aedb",
+  "status": "passed",
+  "attempts": 2,
+  "draft": {
+    "id": "item_iron_wire",
+    "description": "铁匠铺出品的退火铁线卷，成卷盘绕，线身经火色退软，表面留有拉拔细纹与轻微氧化斑。展开可弯成小环或作绑接，回弹有限，不宜当弹簧钢丝。集市按当季货源小批供应，售罄须等下一次实际补货。",
+    "inspection": "查看线卷外层有无折死弯、裂口与锈蚀，抽出一段试弯，确认退火均匀、无脆断。",
+    "storage": "置于干燥处，按原卷盘绕收存，避免重压与反复折弯；受潮后擦净晾干。"
+  },
+  "review": {
+    "contradictions": []
+  },
+  "errors": [],
+  "warnings": [],
+  "feedback": null
+}

@@ -1,0 +1,16 @@
+{
+  "id": "recipe_w3c_laundry_mesh_bag",
+  "fingerprint": "8376a09713be5e59f65a0848932d9e7f54ec9981dc6a05b486ae8236ec0a4f78",
+  "status": "passed",
+  "attempts": 1,
+  "draft": {
+    "id": "recipe_w3c_laundry_mesh_bag",
+    "process": "在织坊内，取双叉结网梭储绕细捻麻线团，逐结编出疏孔袋身，孔距以梭身宽度为准，编至袋身收窄处停结。另引三股麻绳作袋口缘，以粗眼缝针穿线缝合袋底与侧缝，针脚沿网结间隙走，不刺断结目。缝毕将麻绳穿入袋口缘孔，抽紧收口，两端打结固定。全程一百七十分钟，仅用结网梭与缝针，不附洗剂，亦无自动洗净之效。余料弃置，工具保留。"
+  },
+  "review": {
+    "contradictions": []
+  },
+  "errors": [],
+  "warnings": [],
+  "feedback": null
+}

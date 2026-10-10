@@ -1,0 +1,16 @@
+{
+  "id": "recipe_w3c_salted_walnut",
+  "fingerprint": "135029dc28b193b52162043927c68870d362c38fd731d2057bfe85b67d6e6763",
+  "status": "passed",
+  "attempts": 1,
+  "draft": {
+    "id": "recipe_w3c_salted_walnut",
+    "process": "取粗盐小包，先查看有无沙粒，拣净后倒入厚底煮锅，加部分配额清水搅至溶散。净核桃仁逐块翻看，剔去夹带薄壳与哈喇味仁，倒入锅中与盐水拌匀。锅置小灶上，用偏柄木匙低火不停翻焙，待水汽收干、仁面泛干爽盐霜即离火。余水与废盐渣一并弃置，不返还。全程四十五分钟，得盐焙核桃仁一份，木匙与煮锅保留。"
+  },
+  "review": {
+    "contradictions": []
+  },
+  "errors": [],
+  "warnings": [],
+  "feedback": null
+}

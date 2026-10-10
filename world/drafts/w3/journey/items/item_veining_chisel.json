@@ -1,0 +1,18 @@
+{
+  "id": "item_veining_chisel",
+  "fingerprint": "23c39ba960b4bf4baa1356b44cedccf81e1b63567d697608e174a8de3d2e9672",
+  "status": "passed",
+  "attempts": 3,
+  "draft": {
+    "id": "item_veining_chisel",
+    "description": "白石镇市集所得细线刻纹凿，通体长不盈掌，重0.18千克。窄钢刃经反复锻打修整，刃口平直而薄，斜面留有细密磨痕；木柄旋削成束腰形，末端嵌一圈薄箍，握持时不易滑脱。刃身与柄衔接处可见锤击收口痕，整体呈金属品质等级，供木面刻划细线之用。",
+    "inspection": "先看刃口有无卷缺，再对光察斜面磨痕是否均匀，最后轻摇木柄确认薄箍与刃身衔接无松动。",
+    "storage": "刃口套入干燥木鞘，柄朝外平放于工具格，避免与粗重铁器相互磕碰。"
+  },
+  "review": {
+    "contradictions": []
+  },
+  "errors": [],
+  "warnings": [],
+  "feedback": null
+}

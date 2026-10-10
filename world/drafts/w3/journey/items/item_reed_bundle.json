@@ -1,0 +1,21 @@
+{
+  "id": "item_reed_bundle",
+  "fingerprint": "baa8b707bd1d1dc5e4d8ca83a5eb8f6f20fe113c76a6b71c74ecd05fd34aae9b",
+  "status": "passed",
+  "attempts": 3,
+  "draft": {
+    "id": "item_reed_bundle",
+    "description": "旧渡口捆扎的干直芦管束，去叶后通体呈浅黄褐，节环略鼓，管壁薄而挺直。外圈以两道细篾箍束，端头切口平整，可见刀削斜痕与少量纵向裂纹。单束重零点二千克，供编帘与小管件，裂管宜先挑出另置。",
+    "inspection": "解箍摊开，逐根捻转查看节环有无折裂、管壁有无虫孔，再对光看切口是否平直。",
+    "storage": "置于旧渡口干燥通风处，避水避压，离地平放，自采收起至多180天。"
+  },
+  "review": {
+    "contradictions": []
+  },
+  "errors": [],
+  "warnings": [],
+  "feedback": null,
+  "manualCorrection": {
+    "reason": "L1：保存期180天改为明确数字。"
+  }
+}

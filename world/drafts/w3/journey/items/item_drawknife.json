@@ -1,0 +1,21 @@
+{
+  "id": "item_drawknife",
+  "fingerprint": "86c5e74878f52b170c7af07768b62cb9992f6b1fb59cafccde950718ccc9b847",
+  "status": "passed",
+  "attempts": 3,
+  "draft": {
+    "id": "item_drawknife",
+    "description": "双耳削柄刀在白石镇小批售卖，长条钢刃两端各折出一根柄舌，分别装上木握柄。双手分握两柄，可沿木纹薄削长柄毛坯，宽刃面常留平行磨痕。刃口薄，不能拿去劈铁；木柄与柄舌结合处比刀面更需留意松动。",
+    "inspection": "查看两端木柄是否松动，再对光观察钢刃有无卷缺和裂线，不沿锋口滑动手指；柄根摇晃时先停用。",
+    "storage": "刃口朝外平放于干燥木架，柄间垫软布隔潮；勿与铁器叠压，久置后查看铆钉与刃口。"
+  },
+  "review": {
+    "contradictions": []
+  },
+  "errors": [],
+  "warnings": [],
+  "feedback": null,
+  "manualCorrection": {
+    "reason": "L4：双柄位于长钢刃两端，检查刃口不沿锋面滑指。"
+  }
+}

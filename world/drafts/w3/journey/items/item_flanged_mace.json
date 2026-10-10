@@ -1,0 +1,18 @@
+{
+  "id": "item_flanged_mace",
+  "fingerprint": "0d4c975f57498e0f25aee31ca71c4ac3f0bf982908c0d14268fd3633a054bd2e",
+  "status": "passed",
+  "attempts": 1,
+  "draft": {
+    "id": "item_flanged_mace",
+    "description": "白石镇铁匠铺打制的短柄锤杖，六棱锤头由整块铁料锻出，棱脊经锉修齐整，表面留有细密锤痕与暗灰锻皮。柄芯为硬木，末端收细并嵌铁箍，柄身缠有防滑纹路。整体重心偏前，挥动时锤头压手，适合近身劈砸。",
+    "inspection": "先看锤头棱脊有无卷口或裂纹，再转动木柄检查是否松动、开裂，最后轻敲柄端听有无异响。",
+    "storage": "置于干燥木架或布袋内，锤头朝下悬挂，避免柄身受潮变形与棱脊磕碰。"
+  },
+  "review": {
+    "contradictions": []
+  },
+  "errors": [],
+  "warnings": [],
+  "feedback": null
+}

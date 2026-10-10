@@ -1,0 +1,91 @@
+{
+  "index": 1,
+  "fingerprint": "53f69c6fb0f6364afb7f5498a4cb200059099eae4deb011c8e7fa738d9b99843",
+  "count": 42,
+  "passed": 42,
+  "ids": [
+    "recipe_w3c_horn_spoon_blank",
+    "recipe_w3c_slate_writing_tile",
+    "recipe_w3c_folding_map_board",
+    "recipe_w3c_broad_steel_chisel",
+    "recipe_w3c_hooked_pruning_knife",
+    "recipe_w3c_leather_round_knife",
+    "recipe_w3c_carpenters_adze",
+    "recipe_w3c_steel_gouge_tip",
+    "recipe_w3c_small_trowel",
+    "recipe_w3c_wire_mesh_patch",
+    "recipe_w3c_folded_brass_cuff",
+    "recipe_w3c_small_bell_frame",
+    "recipe_w3c_tin_inlay_strip",
+    "recipe_w3c_forged_chain_short",
+    "recipe_w3c_gate_hasps",
+    "recipe_w3c_quill_pen_pair",
+    "recipe_w3c_paste_cup_portion",
+    "recipe_w3c_stitchbound_folio",
+    "recipe_w3c_ledger_cover",
+    "recipe_w3c_paper_cord_tags",
+    "recipe_w3c_ink_wiping_pad",
+    "recipe_w3c_slate_stylus",
+    "recipe_w3c_reed_pen_box",
+    "recipe_w3c_book_spine_tape",
+    "recipe_w3c_seal_thread_bundle",
+    "recipe_w3c_silver_open_ring",
+    "recipe_w3c_bone_toggle_set",
+    "recipe_w3c_shell_button_set",
+    "recipe_w3c_horn_comb",
+    "recipe_w3c_bristle_handbrush",
+    "recipe_w3c_horsehair_dustbrush",
+    "recipe_w3c_reed_whistle",
+    "recipe_w3c_cork_float_set",
+    "recipe_w3c_redwood_dye",
+    "recipe_w3c_leather_wax_grease",
+    "recipe_w3c_seam_pitch_cake",
+    "recipe_w3c_soap_wash_portion",
+    "recipe_w3c_damp_sand_rub",
+    "recipe_w3c_wick_coil",
+    "recipe_w3c_linen_cleaning_swab",
+    "recipe_w3c_felt_polishing_pad",
+    "recipe_w3c_resin_cloth_patch"
+  ],
+  "rewritten": 0,
+  "manual": [],
+  "pending": [],
+  "flagged": [
+    "recipe_w3c_ledger_cover"
+  ],
+  "sample": [
+    "recipe_w3c_wick_coil",
+    "recipe_w3c_small_bell_frame",
+    "recipe_w3c_forged_chain_short",
+    "recipe_w3c_reed_pen_box",
+    "recipe_w3c_ledger_cover"
+  ],
+  "l4": {
+    "approved": true,
+    "notes": [
+      {
+        "id": "recipe_w3c_wick_coil",
+        "note": "灯芯剪段压平，多个短段仍是一份，不附灯油与发光能力，40分钟。"
+      },
+      {
+        "id": "recipe_w3c_small_bell_frame",
+        "note": "铜片与铁线配合剪、冲、锤、钳制成响片架，240分钟，发声未写成远程警报。"
+      },
+      {
+        "id": "recipe_w3c_forged_chain_short",
+        "note": "两公斤铁料分环锻接，冷锉接缝，330分钟，木炭仅为燃料，不作吊人保证。"
+      },
+      {
+        "id": "recipe_w3c_reed_pen_box",
+        "note": "芦管选一根制带节筒，软木塞和麻线扎口，剩余配额弃置，100分钟，不附笔尖。"
+      },
+      {
+        "id": "recipe_w3c_ledger_cover",
+        "note": "L4：缝革扁锥不能穿黄铜片；角片按骨架折夹，不另钻金属孔。"
+      }
+    ]
+  },
+  "costUpperYuan": 5.227914240000006,
+  "manualRatio": 0,
+  "needsSystemicRepair": false
+}

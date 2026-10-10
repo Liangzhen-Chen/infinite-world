@@ -1,0 +1,16 @@
+{
+  "id": "recipe_w3c_ink_wiping_pad",
+  "fingerprint": "8816d18ed3d8999f22a98b9fbc6244ef14923ba0b2a89ad17feaf87a7d5c377b",
+  "status": "passed",
+  "attempts": 1,
+  "draft": {
+    "id": "recipe_w3c_ink_wiping_pad",
+    "process": "把窄幅麻布平铺，厚毛毡片居中叠上，四边留出等宽包边。用短刃裁革剪沿毡片外缘逐段合剪，剪去多余布角，使包边能翻折盖住毡边。以粗眼缝针穿细捻麻线，从一角起针，沿三边回针缝合，针距匀密，转角处多压一针。缝至第四边时把布边向内折入，收口留在背面，抽紧线尾打结并剪断余线。翻正后压平缝脊，检查毡芯是否移位、四角是否鼓包，合格即得一份吸墨麻布垫。总耗时80分钟。"
+  },
+  "review": {
+    "contradictions": []
+  },
+  "errors": [],
+  "warnings": [],
+  "feedback": null
+}

@@ -1,0 +1,16 @@
+{
+  "id": "recipe_w3c_hooked_pruning_knife",
+  "fingerprint": "b9aab4de2ab422f71c59a06094fd788b61c5e49a1e341fed0e39f2afa61528a0",
+  "status": "passed",
+  "attempts": 1,
+  "draft": {
+    "id": "recipe_w3c_hooked_pruning_knife",
+    "process": "钢条一段入炉烧红，长柄铁钳夹出放在砧上，锻工手锤反复延展，趁热弯出内弧短刃并收出柄舌。刃口留出淬口余量，按配额清水一次水淬，再回火减脆。冷后平齿铁锉修背去毛边，细面刃磨石磨开刃口。柄舌插入小工具木柄铆紧。全程二百六十分钟，炉用木炭三袋，炭屑与铁屑弃置，清水用尽，工具保留。"
+  },
+  "review": {
+    "contradictions": []
+  },
+  "errors": [],
+  "warnings": [],
+  "feedback": null
+}

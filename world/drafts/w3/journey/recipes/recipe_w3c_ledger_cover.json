@@ -1,0 +1,19 @@
+{
+  "id": "recipe_w3c_ledger_cover",
+  "fingerprint": "028d3fe285b97fe6508bfdd66d77948a56a6f86b6e05cbabcacabd695a67b1f8",
+  "status": "passed",
+  "attempts": 1,
+  "draft": {
+    "id": "recipe_w3c_ledger_cover",
+    "process": "将薄鞣山羊革平铺，用短刃裁革剪沿折线裁出封皮两片，革面朝外对折。以缝革扁锥沿三边刺出扁孔，粗眼缝针穿细捻麻线逐孔缝合，针距均匀，收针藏于折边内。黄铜窄带用弯柄金属剪分作四段角片，逐片折夹四角，折边紧贴革角，利用弯折收口夹住革面，不在铜片上另打针孔。缝毕压平封皮，检查角片是否贴伏、线迹是否松脱。总耗时一百八十分钟。成品为一副封皮，账页另备；余料弃置，工具保留。"
+  },
+  "review": {
+    "contradictions": []
+  },
+  "errors": [],
+  "warnings": [],
+  "feedback": null,
+  "manualCorrection": {
+    "reason": "L4：缝革扁锥不能穿黄铜片；角片按骨架折夹，不另钻金属孔。"
+  }
+}

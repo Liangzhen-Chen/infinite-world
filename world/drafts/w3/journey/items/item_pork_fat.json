@@ -1,0 +1,18 @@
+{
+  "id": "item_pork_fat",
+  "fingerprint": "ff9509fe1d23c9cb727cfd91c5063d4cae5cac15842706d1ae2e18b49ee192ac",
+  "status": "passed",
+  "attempts": 2,
+  "draft": {
+    "id": "item_pork_fat",
+    "description": "青灯酒馆经手的食用猪板脂，成块白中带粉，外层覆一层薄筋膜，切面细密，指压留浅痕。表面可见分割刀留下的平直切痕与少量修整缺口，边缘偶有淡红血丝。气味清淡微腥，无酸败气。每块约二百克，须熬炼或熟制后方可食用，并非现成皂料。",
+    "inspection": "翻看块面与切痕，确认筋膜完整、无霉斑与黏滑；近闻气味，仅取清淡微腥者，酸败或发黄渗水者弃用。",
+    "storage": "置于阴凉通风处摊放，避免挤压与日晒，自取得起至多存放2天；逾期或表面黏滑、气味转酸即不再食用。"
+  },
+  "review": {
+    "contradictions": []
+  },
+  "errors": [],
+  "warnings": [],
+  "feedback": null
+}

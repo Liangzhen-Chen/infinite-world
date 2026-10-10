@@ -1,0 +1,18 @@
+{
+  "id": "item_book_journey_desk",
+  "fingerprint": "e068813fa9478b3de399c28f31bd5ae5019a41de2e0e2c3b9aa2708a9c217f29",
+  "status": "passed",
+  "attempts": 2,
+  "draft": {
+    "id": "item_book_journey_desk",
+    "description": "白石手艺人合抄的中级作录，河湾供货校对本，由小学堂流出。书中依次讲解削口鹅羽笔组、纸工熟浆糊、麻订空白册、包角账页封皮、穿绳皮纸吊签、吸墨麻布垫、尖端板岩划笔、芦管笔尖匣、麻缝护脊带与卷札封结线共十种笔册辅料的裁口、穿脊、护边和空白交付。识字100可读，通读约450分钟，各工序另需对应熟练度和工具。",
+    "inspection": "翻看封面与装订处，纸页齐整，麻缝护脊带压痕清楚，版口裁切平直；抽查数页，字迹与图示无缺页、无污损。",
+    "storage": "平放于干燥木架，避潮避晒，远离火源与重压；勿折脊、勿卷页，防虫蛀。保存期365天。"
+  },
+  "review": {
+    "contradictions": []
+  },
+  "errors": [],
+  "warnings": [],
+  "feedback": null
+}

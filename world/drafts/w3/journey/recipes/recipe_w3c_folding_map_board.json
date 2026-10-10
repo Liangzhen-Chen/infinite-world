@@ -1,0 +1,16 @@
+{
+  "id": "recipe_w3c_folding_map_board",
+  "fingerprint": "6e67d789c8ed885c3906ffe49dc8d370cc1da970ec11dd81e79253f72a3ff040",
+  "status": "passed",
+  "attempts": 1,
+  "draft": {
+    "id": "recipe_w3c_folding_map_board",
+    "process": "取风干松木短板，用窄框木锯沿中线锯成对称双页，锯路顺木纹推进。以短底木刨顺纹刨平两面与边棱，刨至两页厚度相近、边缘平直。将折页软革铰片贴于接缝处，锥孔已由铰片自带，四枚小铁钉对准孔位，用枣木敲凿槌轻敲入木，钉前先以槌端轻点防劈。两页内合，检查合拢后是否平整、铰片是否居中，缝隙不匀处再以木刨轻修边。总耗时二百四十分钟。地图另备，不揭示未知地形；余料弃置，工具保留。"
+  },
+  "review": {
+    "contradictions": []
+  },
+  "errors": [],
+  "warnings": [],
+  "feedback": null
+}

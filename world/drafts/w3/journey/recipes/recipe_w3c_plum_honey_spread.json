@@ -1,0 +1,16 @@
+{
+  "id": "recipe_w3c_plum_honey_spread",
+  "fingerprint": "851bbf5950dcbb80b72a9a3232ee0de3806b0eb5b7f39de6af2af71c10c220ab",
+  "status": "passed",
+  "attempts": 1,
+  "draft": {
+    "id": "recipe_w3c_plum_honey_spread",
+    "process": "将去梗紫李置于案板，用案上切刀剖开果肉、剔除硬核，再切成碎块。把碎李移入厚底煮锅，倒入滤蜜小罐份与配额清水，架于小灶上以干木刨屑引火加热。待锅中沸腾转稠，持偏柄木匙沿锅底持续翻动，防果肉粘壁焦苦。煮至木匙划过锅底能留下短暂不即合的痕迹时离火，全部产物为一份蜜煮紫李酱，盛出后余料弃置，煮锅、切刀与木匙保留。总耗时六十五分钟。"
+  },
+  "review": {
+    "contradictions": []
+  },
+  "errors": [],
+  "warnings": [],
+  "feedback": null
+}

@@ -1,0 +1,18 @@
+{
+  "id": "item_cream",
+  "fingerprint": "f2558259bb4545bb471e9218e0ab93e2b0c8d9707f052ae8eca7655cc87adb4a",
+  "status": "passed",
+  "attempts": 2,
+  "draft": {
+    "id": "item_cream",
+    "description": "青灯酒馆当日分取的鲜乳上层稠乳，约二百克，盛于另备的洁净容器中。乳色微黄，表面因静置结起一层柔韧乳皮，边缘留有撇取时刮过的浅痕。稠度介于鲜乳与凝乳之间，带温和奶香。集市按当季货源小批供应，售罄须等另一次实际补货。",
+    "inspection": "揭盖先看乳皮是否完整，再侧倾容器观察有无分层出水；凑近闻气味，若发酸或起刺鼻味即不再食用。不尝变质稠乳。",
+    "storage": "盛器加盖置于阴凉处，自取得起最多存放1天，逾期不可再食；不得从购买日重新计算新鲜度。"
+  },
+  "review": {
+    "contradictions": []
+  },
+  "errors": [],
+  "warnings": [],
+  "feedback": null
+}

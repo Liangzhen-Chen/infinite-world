@@ -1,0 +1,18 @@
+{
+  "id": "item_walnut_honey_bites",
+  "fingerprint": "a7e54175c1af467027ac5bf7badcd16984ccc87f8bb4365b3bcfa726d2186c32",
+  "status": "passed",
+  "attempts": 2,
+  "draft": {
+    "id": "item_walnut_honey_bites",
+    "description": "青灯酒馆小批供应的核桃蜜麦块，深褐方块，表面有刀切痕与烘凝的浅色蜜纹。核桃仁切碎后与去壳蛋、燕麦粉、蜂蜜拌合，厚锅低火烘成，质地紧实，指压有细密回弹。重0.43千克，集市按当季货源现货售罄须等补货。",
+    "inspection": "先看切面是否匀整，再闻蜜香与坚果气，若见霉斑、酸败味或黏手渗液则弃置，不尝变质块。",
+    "storage": "置于干燥阴凉处，避免压挤与潮气，自制成起至多2天，逾期不食。"
+  },
+  "review": {
+    "contradictions": []
+  },
+  "errors": [],
+  "warnings": [],
+  "feedback": null
+}

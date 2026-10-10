@@ -1,0 +1,21 @@
+{
+  "id": "item_beet_barley_pot",
+  "fingerprint": "ecadbec50c17df7efed9710d42f441512d1ec694c7e0e4040467f7f6e0162f65",
+  "status": "passed",
+  "attempts": 3,
+  "draft": {
+    "id": "item_beet_barley_pot",
+    "description": "红根麦饭的菜丁染着深红汁，大麦煮软后仍留椭圆粒形，木匙拌过的表面有浅浅拖痕。甜菜根皮已削去，菜丁与麦粒同煨到柔软，舀起时红汁在颗粒间缓慢回流。青灯酒馆小锅制作，容器由买者自备，整份重800克。",
+    "inspection": "查看表面红汁与麦粒菜丁分布，闻气味，确认无异常酸败或霉变迹象。",
+    "storage": "用自备容器加盖遮尘，置阴凉处，自制成起1天内吃完；过期或见酸败异味时弃置，不靠重煮延长。"
+  },
+  "review": {
+    "contradictions": []
+  },
+  "errors": [],
+  "warnings": [],
+  "feedback": null,
+  "manualCorrection": {
+    "reason": "L1/L4：保存期1天明确数字，删去木品质及配额说明。"
+  }
+}

@@ -1,0 +1,16 @@
+{
+  "id": "recipe_w3c_horsehair_sieve_cloth",
+  "fingerprint": "e75331c3f93c89a2fd391f51596007bbcb8e109a973e62c7cd0ef963f9ad7af9",
+  "status": "passed",
+  "attempts": 1,
+  "draft": {
+    "id": "recipe_w3c_horsehair_sieve_cloth",
+    "process": "将两份洗净马尾毛束拆散，按毛的粗细与长短分作经束和纬束，理齐毛梢后逐束顺向排列。取细捻麻线团，在双叉结网梭上储绕麻线，以梭身逐结穿插马尾经纬，编成小滤片，边结收紧使网目均匀。编完后换粗眼缝针，用余下麻线沿四边锁边，收住散毛与结头。全程在织坊完成，总计一百八十分钟。仅分离粗渣，不去除水中疾病。所得滤片一份，余料弃置，两件工具保留。"
+  },
+  "review": {
+    "contradictions": []
+  },
+  "errors": [],
+  "warnings": [],
+  "feedback": null
+}

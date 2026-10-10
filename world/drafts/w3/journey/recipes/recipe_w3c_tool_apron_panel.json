@@ -1,0 +1,16 @@
+{
+  "id": "recipe_w3c_tool_apron_panel",
+  "fingerprint": "1ce9f9d185ba4764b2b8674042e69db26e789b81cf4d93865014616ee5b705fe",
+  "status": "passed",
+  "attempts": 1,
+  "draft": {
+    "id": "recipe_w3c_tool_apron_panel",
+    "process": "把紧织麻帆布摊在织坊台面，按围腰底样用短刃裁革剪分段合剪，留出余布作系带。薄鞣山羊革同样剪成分袋面，与帆布底对齐后以缝革扁锥在袋侧和袋底刺出扁缝孔，再用粗眼缝针穿细捻麻线，逐孔缝住袋侧与袋底，使分袋贴附于底布。余布折成系带缝固。全程共240分钟。工具用毕各自收存，不另备容器，无额外容量；余料弃置，成品一份。"
+  },
+  "review": {
+    "contradictions": []
+  },
+  "errors": [],
+  "warnings": [],
+  "feedback": null
+}

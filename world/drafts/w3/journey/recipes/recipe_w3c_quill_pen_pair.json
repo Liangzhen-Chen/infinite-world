@@ -1,0 +1,16 @@
+{
+  "id": "recipe_w3c_quill_pen_pair",
+  "fingerprint": "919e55f12b19d8f8805681368ccaca4bc0701e9620f116e4b9fe96d73e81ca23",
+  "status": "passed",
+  "attempts": 1,
+  "draft": {
+    "id": "recipe_w3c_quill_pen_pair",
+    "process": "取一份净鹅羽管组，逐段对光挑出无裂羽管，剔除管壁有暗纹或折痕者。以短锋修羽刀贴管壁向外削出斜口，刀锋沿口缘轻转，使切口齐整；再于斜口背面顺管身开一道细缝，缝不穿透管壁。削毕以指腹试口缘，去毛刺，整组仍作一份交付。全程用四十五分钟。墨液另备，不因削笔而增识字熟练度；余下碎屑弃置，修羽刀保留。"
+  },
+  "review": {
+    "contradictions": []
+  },
+  "errors": [],
+  "warnings": [],
+  "feedback": null
+}

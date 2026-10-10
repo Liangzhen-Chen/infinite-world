@@ -1,0 +1,16 @@
+{
+  "id": "recipe_w3c_tin_inlay_strip",
+  "fingerprint": "23486e4bc444dee7319b02fd05aa962f827e3d948d5e50d95879a41edae31ad7",
+  "status": "passed",
+  "attempts": 1,
+  "draft": {
+    "id": "recipe_w3c_tin_inlay_strip",
+    "process": "取压薄锡片一份，以弯柄金属剪沿长边分次合剪，剪出一条长边饰条，剪口留直边。将饰条平放于铁匠铺砧面，左手扶定，右手持偏口细铆锤轻击圆珠錾点杆尾端，沿条面逐点压出圆点，点距均匀，压力以锡面微凹为度，不得贯穿。压点完毕，把饰条两端向内折钝，使端口不露利边。全程总耗时一百六十分钟。余料弃置，三件工具保留。"
+  },
+  "review": {
+    "contradictions": []
+  },
+  "errors": [],
+  "warnings": [],
+  "feedback": null
+}

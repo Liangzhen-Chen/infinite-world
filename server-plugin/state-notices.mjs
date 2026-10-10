@@ -60,6 +60,11 @@ export function stateNotices(before,after,resolveName=id=>id){
     }
     for(const [id,npc] of Object.entries(after.npcs??{})){
         const old=before.npcs?.[id];if(!old)continue;
+        if(before.location===after.location&&old.location!==npc.location){
+            if(old.location===before.location)push('presence',`${name(id)}离开了这里`);
+            if(npc.location===after.location)push('presence',`${name(id)}来到这里`);
+        }
+        if(before.location===after.location&&old.location===before.location&&npc.location===after.location&&old.activity&&npc.activity&&old.activity!==npc.activity)push('activity',`${name(id)}此刻：${npc.activity}`);
         if(npc.trust!==old.trust)push('relationship',`${name(id)}${npc.trust>old.trust?'对你更放心了':'对你更谨慎了'}`);
         if(npc.affection!==old.affection)push('relationship',`${name(id)}${npc.affection>old.affection?'与你更亲近了':'与你疏远了些'}`);
     }

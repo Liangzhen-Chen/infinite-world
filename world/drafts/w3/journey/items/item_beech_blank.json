@@ -1,0 +1,18 @@
+{
+  "id": "item_beech_blank",
+  "fingerprint": "556d432de52d064d54dd4acb7aed70a206bea535450e03c3b492a1c97901cd44",
+  "status": "passed",
+  "attempts": 1,
+  "draft": {
+    "id": "item_beech_blank",
+    "description": "从旧磨坊木料棚取出的风干山毛榉木坯，表面留着粗刨顺纹的浅沟与几处锯口毛边，端面年轮细密，颜色由浅褐渐深。整体为规整长方料，尚未开料成型，可作手柄或小型压具的起始料。集市按当季货源小批供应，现货售罄须等另一次实际补货。",
+    "inspection": "翻看木坯两端与侧面：端面年轮细密无裂，侧面粗刨痕顺纹，仅边角有轻微磕碰。掂量干燥均匀，未见霉斑与虫孔。",
+    "storage": "置于阴凉干燥处平放，避免暴晒与地面潮气，远离明火；垛放时留出通风缝。"
+  },
+  "review": {
+    "contradictions": []
+  },
+  "errors": [],
+  "warnings": [],
+  "feedback": null
+}

@@ -1,0 +1,16 @@
+{
+  "id": "recipe_w3c_horsehair_dustbrush",
+  "fingerprint": "0d7d3ab1c1ad42974c89733cea2dbdfa3666b98884d330a5f8778cb2c5857b15",
+  "status": "passed",
+  "attempts": 1,
+  "draft": {
+    "id": "recipe_w3c_horsehair_dustbrush",
+    "process": "取山毛榉短坯，以窄框木锯截出手柄长短，锯口沿锯路走直。横柄手钻在柄端钻出穿线绑孔，退屑后修去孔口毛刺。马尾毛束先理顺，按粗细分作数束，麻线穿孔绕过毛根缠紧，逐束勒入孔内固定。短锋修羽刀贴齐毛脚，削去参差长毛，使刷面平顺。全程一百七十分钟，只扫浮尘，不磨金属。余料弃置，工具保留。"
+  },
+  "review": {
+    "contradictions": []
+  },
+  "errors": [],
+  "warnings": [],
+  "feedback": null
+}

@@ -1,0 +1,16 @@
+{
+  "id": "recipe_w3c_damp_sand_rub",
+  "fingerprint": "29b40c68d7d5f1afc8167b8e35836a3bfbc7a66b2ba057fe45638c7def17a948",
+  "status": "passed",
+  "attempts": 1,
+  "draft": {
+    "id": "recipe_w3c_damp_sand_rub",
+    "process": "取洗净细砂一份倾入厚底煮锅，加清水一份，持偏柄木匙沿锅缘翻拌，使水与砂润成湿散粒，并逐一压开结团。全程二十分钟，拌至握之成团、轻触即散即可。所得湿砂去垢料一份，只磨耐磨粗面，不用于伤口或精抛镜面，盛放容器须另备。锅底余砂与匙上残料一并弃置，工具保留。"
+  },
+  "review": {
+    "contradictions": []
+  },
+  "errors": [],
+  "warnings": [],
+  "feedback": null
+}

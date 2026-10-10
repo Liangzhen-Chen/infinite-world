@@ -1,0 +1,16 @@
+{
+  "id": "recipe_w3c_rendered_cooking_fat",
+  "fingerprint": "10b39d8b65d05736d1778916c2f9170c3208e8b3e8f7058e8e4a83dd89a688e8",
+  "status": "passed",
+  "attempts": 1,
+  "draft": {
+    "id": "recipe_w3c_rendered_cooking_fat",
+    "process": "将整块猪板脂置于案上，以切刀改小为均匀碎丁，使受热面尽量一致。厚底煮锅坐于小灶，倾入配额清水，再下碎脂，以偏柄木匙沿锅底推搅，防其贴底。灶下只添干木刨屑引火，保持缓火。待水汽蒸散、脂面渐清，继续以木匙轻推，见碎渣转黄即离火。稍静置，用木匙沿锅缘舀取上层澄清熟脂，注入自备容器。锅底焦渣不作交付，与余屑一并弃置。全程共七十五分钟，得熟猪脂一份，锅具与木匙洗净留存。"
+  },
+  "review": {
+    "contradictions": []
+  },
+  "errors": [],
+  "warnings": [],
+  "feedback": null
+}

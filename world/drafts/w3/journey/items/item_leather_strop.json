@@ -1,0 +1,18 @@
+{
+  "id": "item_leather_strop",
+  "fingerprint": "b68d0f40db3ee82ca283895771815e3775b4fc74f0763ecb50e8806a7c8663c3",
+  "status": "passed",
+  "attempts": 1,
+  "draft": {
+    "id": "item_leather_strop",
+    "description": "白石镇皮匠常备的修刃板：一块窄长硬木板面上绷着熟革，革面平整，四边以细钉压边固定，钉脚在背面回弯。革面留有长期蹭磨的浅亮痕，木背可见刨削纹与握持磨圆的两端。重0.3千克，集市按当季货源小批供应。",
+    "inspection": "查看革面是否起毛、钉脚有无松脱，木背有无裂纹；以指腹顺革面推过，感其平整与钉头是否扎手。",
+    "storage": "挂在干燥通风处，革面朝外，勿压重物，远离潮气与直晒。"
+  },
+  "review": {
+    "contradictions": []
+  },
+  "errors": [],
+  "warnings": [],
+  "feedback": null
+}

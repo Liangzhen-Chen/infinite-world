@@ -34,6 +34,7 @@ test('L1拒绝数字保存期矛盾、额外骨架字段、规则泄漏；短文
   assert.ok(validateW3Draft({...good,storage:'保存上限99天。'},entry,block).errors.length);
   assert.ok(validateW3Draft({...good,basePrice:0},entry,block).errors.length);
   assert.ok(validateW3Draft({...good,description:'主持人不要让玩家制造。'},entry,block).errors.length);
+  assert.ok(validateW3Draft({...good,description:'由npc_hw_yanzhe售卖。'},entry,block).errors.some(x=>x.includes('内部实体编号')));
   assert.ok(validateW3Draft({...good,description:'重量8公斤。'},entry,block).errors.length);
   assert.ok(validateW3Draft({...good,description:'重量8斤。'},entry,block).errors.length);
   assert.deepEqual(validateW3Draft({...good,description:'重量'+entry.weight*2+'斤。'},entry,block).errors,[]);
@@ -41,6 +42,10 @@ test('L1拒绝数字保存期矛盾、额外骨架字段、规则泄漏；短文
 
 test('L1核对中文时辰、息和材料单位，不能把一份两公斤铁料写成一公斤',()=>{
   assert.equal(chineseNumber('一百三十'),130);assert.equal(chineseNumber('零点二'),.2);assert.equal(chineseNumber('半'),.5);
+  const food={id:'item_unit_sample',name:'单位测试样品',weight:.15,basePrice:1,shelfLifeDays:1};
+  const prose={id:food.id,description:'整份重零点一五千克。',inspection:'查看当前外观。',storage:'1天内使用。'};
+  assert.deepEqual(validateW3Draft(prose,food,{names:[],realPeople:[]}).errors,[]);
+  assert.ok(validateW3Draft({...prose,description:'整份重零点一六千克。'},food,{names:[],realPeople:[]}).errors.length);
   const entry=bones.recipes.find(row=>row.id==='recipe_w3_fire_poker'),context=w3Context(world,bones,entry),block={names:[],realPeople:[]};
   const check=process=>validateW3Draft({id:entry.id,process},entry,block,context).errors;
   assert.ok(check('取一公斤铁坯入炉，全程80分钟。').some(row=>row.includes('重量')));

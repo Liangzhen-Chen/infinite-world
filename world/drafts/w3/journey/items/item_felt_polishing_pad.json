@@ -1,0 +1,18 @@
+{
+  "id": "item_felt_polishing_pad",
+  "fingerprint": "026f44f1597c4733451c64244dafec1a930b9f339b6065e25b9413bc6612adca",
+  "status": "passed",
+  "attempts": 2,
+  "draft": {
+    "id": "item_felt_polishing_pad",
+    "description": "织坊出品的薄毡抛光垫，取羊毛毡片剪成圆形工作面，外缘缝一圈麻布作握边，以麻线锁边收口。毡面平整，握边略厚，便于捏持来回擦拭。自身不带磨粉，也不使锈蚀器物恢复耐久。集市按当季货源小批供应，售罄须待另一次实际补货。",
+    "inspection": "先看毡面有无破洞、硬结与夹杂，再摸握边缝线是否松脱，边缘锁线有无散口。",
+    "storage": "置于干燥通风处，避免受潮与重压，防虫蛀；自制成起保存不超过180天。"
+  },
+  "review": {
+    "contradictions": []
+  },
+  "errors": [],
+  "warnings": [],
+  "feedback": null
+}

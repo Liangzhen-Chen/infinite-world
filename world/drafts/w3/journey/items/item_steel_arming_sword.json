@@ -1,0 +1,18 @@
+{
+  "id": "item_steel_arming_sword",
+  "fingerprint": "fe5562a2b69ad04ed7c62b90f6671029da9111afa4ccbcc199696cc285c5f29a",
+  "status": "passed",
+  "attempts": 1,
+  "draft": {
+    "id": "item_steel_arming_sword",
+    "description": "直刃单手剑，钢身自护手起收至尖，两侧留细磨痕；十字护手略外张，缠革柄尾端收圆。总重一千二百五十克，全长约及前臂加半掌。刃口平直，宜近身劈刺，出手后须留回收空间。无元素附伤。品质等级银，与所用材料名称无关。",
+    "inspection": "查看刃口有无卷缺，护手与柄箍是否松动，缠革有无开裂；握持时留意重心与回收余地。",
+    "storage": "擦净后入鞘，悬于干燥通风处，刃面勿贴湿物；不与粗重铁器同堆挤压。"
+  },
+  "review": {
+    "contradictions": []
+  },
+  "errors": [],
+  "warnings": [],
+  "feedback": null
+}

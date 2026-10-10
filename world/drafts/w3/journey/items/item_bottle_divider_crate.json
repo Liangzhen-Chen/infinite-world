@@ -1,0 +1,18 @@
+{
+  "id": "item_bottle_divider_crate",
+  "fingerprint": "3bb8a592b26b19090b603c2b33579fa43bb151998f143a16780b9274d3b61e1a",
+  "status": "passed",
+  "attempts": 1,
+  "draft": {
+    "id": "item_bottle_divider_crate",
+    "description": "旧磨坊出产的松木小箱，箱体由两块松板开料拼成，内以薄板隔出若干窄格，格底各垫一片软木塞片。四角与格板接合处凿有接槽，铁钉分点钉入，钉帽略陷木面。箱盖与箱身相合，内里留有木屑与凿痕，交付时为空箱，不附小瓶。",
+    "inspection": "查看接槽是否开裂、铁钉有无松动，按压格底软木塞片是否移位，开合箱盖听接缝有无异响。",
+    "storage": "置于干燥处，避免重压与浸水；空箱可叠放，格内勿塞硬物以免撑裂隔板。"
+  },
+  "review": {
+    "contradictions": []
+  },
+  "errors": [],
+  "warnings": [],
+  "feedback": null
+}

@@ -1,0 +1,16 @@
+{
+  "id": "recipe_w3c_bone_toggle_set",
+  "fingerprint": "39d86554f876cbc5a5fbeaeab4854d07bf118724df6d990c87ad2be23814d42a",
+  "status": "passed",
+  "attempts": 1,
+  "draft": {
+    "id": "recipe_w3c_bone_toggle_set",
+    "process": "取净骨短坯一块，用细弓镂片锯沿坯身横截成数枚短扣坯，锯口保持平直，转弯处缓推以免崩裂。换横柄手钻，将短扣坯平放垫稳，钻头对准扣面中线两侧轻压旋入，各开一孔，退屑后再钻第二孔，孔距均匀。最后以粗齿木锉逐枚修去边缘棱刺与锯痕，使扣面圆润、孔口无毛边。整组短扣合为一份，不附缝线。总耗时一百三十分钟。"
+  },
+  "review": {
+    "contradictions": []
+  },
+  "errors": [],
+  "warnings": [],
+  "feedback": null
+}

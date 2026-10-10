@@ -1,0 +1,21 @@
+{
+  "id": "item_garlic",
+  "fingerprint": "baf93f5f5f570c16a3dbb0c066163dcfa5faea371b64cf8b7a1687e24de5460b",
+  "status": "passed",
+  "attempts": 3,
+  "draft": {
+    "id": "item_garlic",
+    "description": "白石镇集市上成辫挂售的干蒜，外皮薄脆呈浅褐，瓣间残存晒场细尘与干缩根须。每份约100克，剥开可见紧实蒜瓣，断面微黄。辛香浓烈，用于捣碎调味，不因气味而具驱除怪物之效。",
+    "inspection": "翻看蒜辫，检查外皮是否完整、有无霉斑与软烂瓣；捏压蒜头听其是否空响，闻辛香是否纯正。",
+    "storage": "悬于通风干燥处，避潮避晒，可存至多60天；受潮生霉者弃去，不与鲜食混放。"
+  },
+  "review": {
+    "contradictions": []
+  },
+  "errors": [],
+  "warnings": [],
+  "feedback": null,
+  "manualCorrection": {
+    "reason": "L1/L4：60天用明确数字表示，一份重量不限定每头重量。"
+  }
+}

@@ -1,0 +1,18 @@
+{
+  "id": "item_book_journey_upkeep",
+  "fingerprint": "4746831d9de5dbf61a94a74854e92ee4a7f54473c1062026a4f0154cc06c466c",
+  "status": "passed",
+  "attempts": 1,
+  "draft": {
+    "id": "item_book_journey_upkeep",
+    "description": "白石手艺人合抄的中级抄本，河湾供货校对本，出自小学堂。纸页以麻线穿订，木片作封，边角留有裁切与压痕；内文分列八种护革、擦洗和灯芯耗材的配制步骤，并注明实际维修时的区别。识字100可读，通读约需450分钟，各工序另需对应熟练度和工具。",
+    "inspection": "翻看封面与订线，检查有无脱页、水渍和虫蛀；再抽读护革与灯芯两节，确认字迹清楚、步骤连贯。",
+    "storage": "置于干燥避光处，平放或以木片封面对压，远离潮气与炉火；保存期365天。"
+  },
+  "review": {
+    "contradictions": []
+  },
+  "errors": [],
+  "warnings": [],
+  "feedback": null
+}

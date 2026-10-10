@@ -1,0 +1,18 @@
+{
+  "id": "item_goatskin_document_case",
+  "fingerprint": "b4c8230839cf1002ba01d7cfb7f6ca2b62624360e6a3c15dec0b63fbd93478d7",
+  "status": "passed",
+  "attempts": 1,
+  "draft": {
+    "id": "item_goatskin_document_case",
+    "description": "扁面羊革文书套出自织坊，以羊革为面、麻布为衬，折成扁平套身。边缘由锥开针孔后以针线缝合，折口经骨片压出平直痕。整体轻便，合拢后呈长扁形，可平放入行囊夹层。文件须另备，套身不保证浸水不湿。",
+    "inspection": "翻看套身两面，检查缝线是否均匀、折口压痕是否平直，并屈折套口试其回弹。查看革面有无磨破与衬布脱层。",
+    "storage": "置于干燥处平放，避免重压与尖锐物贴靠；受潮后阴干再合拢，勿暴晒。保存期365天。"
+  },
+  "review": {
+    "contradictions": []
+  },
+  "errors": [],
+  "warnings": [],
+  "feedback": null
+}

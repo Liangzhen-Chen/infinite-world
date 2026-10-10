@@ -1,0 +1,16 @@
+{
+  "id": "recipe_w3c_redwood_dye",
+  "fingerprint": "33e41a0b43cb12f936e00ad6c0825c86504774b88050ebd9fac16d8446efffd8",
+  "status": "passed",
+  "attempts": 1,
+  "draft": {
+    "id": "recipe_w3c_redwood_dye",
+    "process": "取厚底煮锅置于小灶，注入清水两份，投入红染木碎片一份。中火煎出颜色，水面保持微沸而不翻滚，待木片沉软、汤色转深。离火稍停，将宽口滤布搭在自备容器口，倾入煎液，滤去木屑与碎渣，滤布上残渣弃置。趁液尚温，把工艺明矾粒一份加入滤液，持偏柄木匙沿锅缘搅至颗粒完全消融、液色均匀。干木刨屑两份仅作灶下引火与吸拭漏液之用，不混入染液。全程一百分钟，得温煎红木染液一份，非食用非药品，容器自备。"
+  },
+  "review": {
+    "contradictions": []
+  },
+  "errors": [],
+  "warnings": [],
+  "feedback": null
+}

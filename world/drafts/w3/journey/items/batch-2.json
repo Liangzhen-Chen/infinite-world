@@ -1,0 +1,110 @@
+{
+  "index": 2,
+  "fingerprint": "7642e3099542cd2a015f24af9789376d1814d58b964fec4d534807bcec28e0aa",
+  "count": 37,
+  "passed": 37,
+  "ids": [
+    "item_goat_hair_brush",
+    "item_quill_knife",
+    "item_loom_reed",
+    "item_ash_spear",
+    "item_steel_arming_sword",
+    "item_boar_spear",
+    "item_billhook_polearm",
+    "item_flanged_mace",
+    "item_war_pick",
+    "item_singlebit_axe",
+    "item_oak_cudgel",
+    "item_parrying_dagger",
+    "item_estoc",
+    "item_quarterstaff",
+    "item_practice_sword",
+    "item_cracked_wheat_pot",
+    "item_lentil_leek_stew",
+    "item_broadbean_garlic_mash",
+    "item_parsnip_cream_pot",
+    "item_beet_barley_pot",
+    "item_pear_wheat_gruel",
+    "item_cheese_rye_panbread",
+    "item_walnut_honey_bites",
+    "item_poppy_rye_crisp",
+    "item_caraway_oat_crust",
+    "item_mushroom_barley_pot",
+    "item_mutton_turnip_stew",
+    "item_book_journey_grain",
+    "item_plum_honey_spread",
+    "item_pear_vinegar_slice",
+    "item_mustard_relish",
+    "item_dill_cucumber",
+    "item_garlic_butter",
+    "item_rendered_cooking_fat",
+    "item_salted_walnut",
+    "item_beet_vinegar_dice",
+    "item_pear_dry_chips"
+  ],
+  "rewritten": 22,
+  "manual": [],
+  "pending": [],
+  "flagged": [
+    "item_war_pick",
+    "item_oak_cudgel",
+    "item_practice_sword",
+    "item_lentil_leek_stew",
+    "item_broadbean_garlic_mash",
+    "item_beet_barley_pot",
+    "item_cheese_rye_panbread",
+    "item_mushroom_barley_pot",
+    "item_rendered_cooking_fat"
+  ],
+  "sample": [
+    "item_practice_sword",
+    "item_cheese_rye_panbread",
+    "item_war_pick",
+    "item_oak_cudgel",
+    "item_broadbean_garlic_mash"
+  ],
+  "l4": {
+    "approved": true,
+    "notes": [
+      {
+        "id": "item_practice_sword",
+        "note": "L4：敲击声只供参考，不能听声确认内部暗伤。"
+      },
+      {
+        "id": "item_cheese_rye_panbread",
+        "note": "L4：保存上限1天，不能凭隔日复看继续食用。"
+      },
+      {
+        "id": "item_war_pick",
+        "note": "L4：锤头是锻钢，木柄不能写成通体锻钢。"
+      },
+      {
+        "id": "item_oak_cudgel",
+        "note": "L4：闷响不能直接断言木棒内伤。"
+      },
+      {
+        "id": "item_broadbean_garlic_mash",
+        "note": "L4：残皮和焦屑应弃置，不混入成品；容器另备。"
+      },
+      {
+        "id": "item_lentil_leek_stew",
+        "note": "L4：配方未投油，不加油花；1天过期不能重煮恢复。"
+      },
+      {
+        "id": "item_beet_barley_pot",
+        "note": "L1/L4：保存期1天明确数字，删去木品质及配额说明。"
+      },
+      {
+        "id": "item_mushroom_barley_pot",
+        "note": "L4：不赠厚陶罐；重量仅为食物，保存期1天。"
+      },
+      {
+        "id": "item_rendered_cooking_fat",
+        "note": "L4：清脂不夹焦屑；160克仅为脂重，保存7天。"
+      }
+    ]
+  },
+  "costUpperYuan": 4.183401360000006,
+  "manualRatio": 0,
+  "needsSystemicRepair": false
+}

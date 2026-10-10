@@ -1,0 +1,21 @@
+{
+  "id": "item_small_bell_frame",
+  "fingerprint": "6117f7dd4a19a709b2b9fdfe1259214b3d334ca12fb8b3b200c0f6b990324168",
+  "status": "passed",
+  "attempts": 3,
+  "draft": {
+    "id": "item_small_bell_frame",
+    "description": "铁匠铺以铜带分剪出数枚悬片，弯折成框，冲小孔后以铁线绕成挂环，把片悬在框内。晃动时片与框相碰发声，声音清短，不警示远处敌情。整体重250克，挂环在框顶留有可见扭接痕。",
+    "inspection": "查看悬片边缘有无卷口，挂环铁线是否松脱，框身弯折处有无裂纹；轻晃听声。",
+    "storage": "置于干燥处，避免重压与潮湿；悬片勿强掰，铁线挂环防锈。"
+  },
+  "review": {
+    "contradictions": []
+  },
+  "errors": [],
+  "warnings": [],
+  "feedback": null,
+  "manualCorrection": {
+    "reason": "L4：删除外貌里的抽象耐久数值与木品质。"
+  }
+}

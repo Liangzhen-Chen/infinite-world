@@ -10,6 +10,7 @@ import {validateBossEcology}from'../server-plugin/bosses.mjs';
 import {catalogMinimum,professionMinimum}from'./catalog-progress.mjs';
 import {worldLoreCategories,validateWorldLore}from'./w5-validation.mjs';
 import {socialCategories,validateSocialWorld}from'./w5-social-validation.mjs';
+import {validateNpcSchedules}from'../server-plugin/npc-schedule.mjs';
 const schema=JSON.parse(await fs.readFile(new URL('../schemas/world.schema.json',import.meta.url),'utf8'));
 const blocklist=JSON.parse(await fs.readFile(new URL('../world/meta/blocklist.json',import.meta.url),'utf8'));
 const validate=new Ajv({allErrors:true,strict:true,allowUnionTypes:true}).compile(schema);
@@ -24,6 +25,7 @@ export function validateWorld(world,{stage='engine'}={}){
     errors.push(...validateWildlife(world));
     errors.push(...validateFarmPests(world));
     errors.push(...validateBossEcology(world));
+    errors.push(...validateNpcSchedules(world));
     const entities=categories.flatMap(key=>world[key]??[]),ids=new Map(),names=new Map();
     for(const row of entities){
         if(ids.has(row.id))errors.push(`重复编号：${row.id}`);ids.set(row.id,row);

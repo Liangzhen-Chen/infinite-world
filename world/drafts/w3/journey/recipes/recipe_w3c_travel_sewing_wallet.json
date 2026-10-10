@@ -1,0 +1,16 @@
+{
+  "id": "recipe_w3c_travel_sewing_wallet",
+  "fingerprint": "95305d0767059c9d0bc126715161fadfea734925d1d1665d3f14300d3caa02f2",
+  "status": "passed",
+  "attempts": 1,
+  "draft": {
+    "id": "recipe_w3c_travel_sewing_wallet",
+    "process": "将薄鞣山羊革对折试合，用短刃裁革剪裁出两片等大的合页外壳，再按外壳内缘裁一片厚毛毡作插针页。以缝革扁锥沿外壳三边刺出扁缝孔，用粗眼缝针穿细捻麻线，把毡页缝贴到内面，只留脊折一侧作开合。脊折处垫平脊骨压片往复压平，使折线挺直不裂。总耗时一百八十分钟。成品为空夹，针线另装；余料弃置，工具保留。"
+  },
+  "review": {
+    "contradictions": []
+  },
+  "errors": [],
+  "warnings": [],
+  "feedback": null
+}

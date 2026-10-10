@@ -1,0 +1,18 @@
+{
+  "id": "item_riveting_hammer",
+  "fingerprint": "52bd027ef6e3b5a068389fda2481aa5a09669ae84b4433555fba02c1a04117d2",
+  "status": "passed",
+  "attempts": 1,
+  "draft": {
+    "id": "item_riveting_hammer",
+    "description": "白石镇铁匠铺供应的偏口细铆锤，锤头以细钢锻成，一端平正、一端偏口，专为逐点收压软铆头、修整铆边而制。锤头表面留有锉修与打磨痕，木柄经削圆并嵌入锤眼，柄身可见刨痕。通体轻便，适合单手控点，不宜替代重锻锤施力。",
+    "inspection": "检查锤眼是否松动、木柄有无裂纹，偏口刃缘是否卷缺；轻敲铆头试其传力，确认锤头与柄结合稳固。",
+    "storage": "置于干燥工具架或木箱内，锤头朝下平放，避免受潮与重物压柄；远离炉火高温处存放。"
+  },
+  "review": {
+    "contradictions": []
+  },
+  "errors": [],
+  "warnings": [],
+  "feedback": null
+}

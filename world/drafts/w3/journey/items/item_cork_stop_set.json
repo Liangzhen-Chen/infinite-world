@@ -1,0 +1,18 @@
+{
+  "id": "item_cork_stop_set",
+  "fingerprint": "eb4b3c25823182adce744f4245f1cbf6bc6acf6a3d5b2bd4182adcc5048d2da9",
+  "status": "passed",
+  "attempts": 1,
+  "draft": {
+    "id": "item_cork_stop_set",
+    "description": "旧磨坊出的一组贴合软木塞片，取自整张软木片，逐片裁成小圆塞，外缘用锉修去碎粒，边缘略斜，便于按入瓶口。整组按一份交付，片与片厚薄略有差别，须逐个比试瓶口。木色浅褐，带细密孔点，手感轻软，受压后能回弹少许。",
+    "inspection": "先取一片对着光看孔洞是否连成裂纹，再逐片比瓶口松紧，捏压后看回弹与掉屑。",
+    "storage": "置于干燥阴凉处，避免重压与暴晒，整组收拢存放，防潮防尘。保存期180天。"
+  },
+  "review": {
+    "contradictions": []
+  },
+  "errors": [],
+  "warnings": [],
+  "feedback": null
+}

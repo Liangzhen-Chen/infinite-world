@@ -1,0 +1,18 @@
+{
+  "id": "item_salted_walnut",
+  "fingerprint": "e14f78af76ebc0e8fc1035815e744a0915705b3d672776e96e89bdbbe7e5c515",
+  "status": "passed",
+  "attempts": 2,
+  "draft": {
+    "id": "item_salted_walnut",
+    "description": "青灯酒馆出的小食，核桃仁经盐水拌浸后低火翻焙，仁面起细皱，沟纹里挂着淡白盐霜，手捏即碎。翻焙时木勺刮过锅底留下浅痕，碎屑与盐渣一并弃去。入口咸脆带焦香，放久便回潮发软。",
+    "inspection": "拈起看仁面盐霜是否均匀，闻有无酸败气与霉味；受潮发软、变色或气味不正者不尝，整份弃去。",
+    "storage": "装进干燥陶罐或厚纸包，扎口后置于阴凉避光处，从焙成起算至多7天。"
+  },
+  "review": {
+    "contradictions": []
+  },
+  "errors": [],
+  "warnings": [],
+  "feedback": null
+}

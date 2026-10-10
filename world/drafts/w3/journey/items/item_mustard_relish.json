@@ -1,0 +1,18 @@
+{
+  "id": "item_mustard_relish",
+  "fingerprint": "5c6d4472b2a8d6734bb1e63d116648232b57e1bc847f737b2b3ef10a9b731cad",
+  "status": "passed",
+  "attempts": 1,
+  "draft": {
+    "id": "item_mustard_relish",
+    "description": "青灯酒馆小批调制的粗粒芥醋酱，装于矮陶罐中，净重0.085千克。黄芥籽经刀背逐次压裂，粒形大小不一，与果醋、盐拌合后静置吸润，酱体呈浅褐黄，芥粒悬浮其间，醋液略浑，表面无浮沫。气味辛酸直冲，入口先酸后辣，颗粒感明显。不添染料或药材，仅作佐餐调味。",
+    "inspection": "开罐先嗅气味，应辛酸清正；再看酱面有无霉斑、气泡或分层渗水。若酸败发苦或芥粒发黏，不可食用。",
+    "storage": "陶罐加盖置阴凉避光处，避免日晒与高温。开封后冷藏，保存期3天，逾期弃用。"
+  },
+  "review": {
+    "contradictions": []
+  },
+  "errors": [],
+  "warnings": [],
+  "feedback": null
+}

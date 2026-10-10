@@ -1,0 +1,18 @@
+{
+  "id": "item_mutton",
+  "fingerprint": "07199d4bd6942d9e6ddf490c1c1fc954bc9130858a8b7f6ec23db76f9f6bae28",
+  "status": "passed",
+  "attempts": 2,
+  "draft": {
+    "id": "item_mutton",
+    "description": "青灯酒馆经手的去骨羊肉，整块约四百克，取自当季集市货源。肉面留有剔骨刀走过的浅痕，肌理间夹少量细筋，边缘修整平齐，外层覆一层薄脂。生肉与熟食分放，煮透后食用。",
+    "inspection": "翻看肉块两面，确认无灰绿斑、无黏手汁液，指压后凹陷能回弹，闻之只有生肉淡腥，无异臭。",
+    "storage": "以洁净容器盛放，置于阴凉处或冷处，自取得起至多存放1天，逾期不宜再食。"
+  },
+  "review": {
+    "contradictions": []
+  },
+  "errors": [],
+  "warnings": [],
+  "feedback": null
+}

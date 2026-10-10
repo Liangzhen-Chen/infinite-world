@@ -3,6 +3,7 @@ import {petView} from './pets.mjs';
 import {summonView} from './summons.mjs';
 import {localWeather} from './weather.mjs';
 import {agricultureView} from './agriculture.mjs';
+import {npcAvailability} from './npc-schedule.mjs';
 
 const text=(value,limit=200)=>typeof value==='string'?value.replace(/\s+/g,' ').slice(0,limit):'';
 const list=value=>Array.isArray(value)?value.map(row=>typeof row==='string'?row:row.content??row.description??'').filter(Boolean).join('；'):text(value);
@@ -26,8 +27,10 @@ export function sceneCard(engine,document,query='',index=null){
     if(destinations.length)parts.splice(2,0,`【地点索引】${destinations.map(id=>`${name(id)}（${id}）`).join('；')}`);
     for(const [id,npc] of present.slice(0,engine.rules.prompt.npcLimit)){
         const base=engine.byId.get(id)??npc;
+        const available=npcAvailability(engine,s,id);
         const shared=Object.values(document.memories??{}).filter(m=>m.subject===id).slice(-2).map(m=>`${m.minute??''}分 ${text(m.content,140)}`);
-        parts.push(`${base.name}（${id}）｜${base.occupation??''}，${base.age??''}岁｜此刻：${text(npc.activity)}\n  对你：信任${npc.trust??0} 亲近${npc.affection??0}｜你们之间：${shared.join('；')}\n  说话：${text(base.speakingStyle??base.voice)}｜挂心：${text(list(npc.goals??base.goals),130)}\n  TA不知道：${text(list(npc.unknownFacts??base.unknownFacts),160)}${base.notes?`\n  人物资料：${text(base.notes,180)}`:''}`);
+        parts.push(`${base.name}（${id}）｜${base.occupation??''}，${base.age??''}岁｜此刻：${text(available.activity)}\n  对你：信任${npc.trust??0} 亲近${npc.affection??0}｜你们之间：${shared.join('；')}\n  说话：${text(base.speakingStyle??base.voice?.register??base.voice)}｜挂心：${text(list(npc.goals??base.goals),130)}\n  TA不知道：${text(list(npc.unknownFacts??base.knowledge?.unknown??base.unknownFacts),160)}${base.notes?`\n  人物资料：${text(base.notes,180)}`:''}`);
+        if(available.services!==null)parts.push(`  当前服务：${available.services.map(service=>service==='teach'?'授课':'交易').join('、')||'暂停'}${available.until?`，本时段至${engine.calendar(available.until).text}`:''}`);
         if(base.creditPolicy)parts.push(`  赊账条件：未还合计最多${base.creditPolicy.limitCopper}铜，最长${base.creditPolicy.maximumMinutes}分钟，信任至少${base.creditPolicy.minimumTrust}，逾期需先还清。`);
     }
     const learned=Object.keys(s.spells??{}).map(id=>engine.byId.get(id)).filter(Boolean);

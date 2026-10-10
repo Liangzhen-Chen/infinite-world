@@ -1,0 +1,100 @@
+{
+  "index": 3,
+  "fingerprint": "f4218361023c97239dfe8f12fd7474304990ca2daea4630f75fcbb116d615d0e",
+  "count": 37,
+  "passed": 37,
+  "ids": [
+    "item_cheese_herb_mash",
+    "item_book_journey_preserve",
+    "item_canvas_satchel",
+    "item_felt_insole_pair",
+    "item_padded_work_collar",
+    "item_folding_haversack",
+    "item_goatskin_document_case",
+    "item_tool_apron_panel",
+    "item_brush_roll",
+    "item_corklined_cup_wrap",
+    "item_felt_knee_pad",
+    "item_horsehair_sieve_cloth",
+    "item_laundry_mesh_bag",
+    "item_travel_sewing_wallet",
+    "item_book_journey_sewing",
+    "item_ash_walking_stick",
+    "item_beech_press_board",
+    "item_reed_drying_mat",
+    "item_bottle_divider_crate",
+    "item_clamping_wood_jaw",
+    "item_peg_drying_rack",
+    "item_beech_spatula",
+    "item_ladle_rest",
+    "item_cork_stop_set",
+    "item_horn_spoon_blank",
+    "item_slate_writing_tile",
+    "item_folding_map_board",
+    "item_book_journey_wood",
+    "item_broad_steel_chisel",
+    "item_hooked_pruning_knife",
+    "item_leather_round_knife",
+    "item_carpenters_adze",
+    "item_steel_gouge_tip",
+    "item_small_trowel",
+    "item_wire_mesh_patch",
+    "item_folded_brass_cuff",
+    "item_small_bell_frame"
+  ],
+  "rewritten": 19,
+  "manual": [],
+  "pending": [],
+  "flagged": [
+    "item_canvas_satchel",
+    "item_steel_gouge_tip",
+    "item_small_bell_frame"
+  ],
+  "sample": [
+    "item_laundry_mesh_bag",
+    "item_leather_round_knife",
+    "item_felt_insole_pair",
+    "item_tool_apron_panel",
+    "item_cork_stop_set"
+  ],
+  "l4": {
+    "approved": true,
+    "notes": [
+      {
+        "id": "item_laundry_mesh_bag",
+        "note": "疏孔麻线袋配收口绳，空袋无自动洗净能力，365天保存明确。"
+      },
+      {
+        "id": "item_leather_round_knife",
+        "note": "钢料半月刃经淬回火后装木柄，供鞣熟软革，未宣称能切金属。"
+      },
+      {
+        "id": "item_felt_insole_pair",
+        "note": "一对为一份，毡片锁边不含硬板，没有护甲或额外保温数值。"
+      },
+      {
+        "id": "item_tool_apron_panel",
+        "note": "帆布底、羊革分袋与麻线缝合一致，工具另备，仍按原负重计算。"
+      },
+      {
+        "id": "item_cork_stop_set",
+        "note": "组内小塞片厚薄可变，交付一份；使用先比瓶口，未保证水密。"
+      },
+      {
+        "id": "item_canvas_satchel",
+        "note": "挎袋闭合使用腰带扣，交付空袋，365天短存储句仍明确。"
+      },
+      {
+        "id": "item_steel_gouge_tip",
+        "note": "圆口钢凿用途与0.56千克相符；原数值误报由解析修复，短存储含避碰防潮。"
+      },
+      {
+        "id": "item_small_bell_frame",
+        "note": "L4：删除外貌里的抽象耐久数值与木品质。"
+      }
+    ]
+  },
+  "costUpperYuan": 4.454696800000006,
+  "manualRatio": 0,
+  "needsSystemicRepair": false
+}

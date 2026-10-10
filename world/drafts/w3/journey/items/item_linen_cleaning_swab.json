@@ -1,0 +1,18 @@
+{
+  "id": "item_linen_cleaning_swab",
+  "fingerprint": "a7214e2b9cf79e2e55266b927667c820539acec56addb27847a414567fd144d0",
+  "status": "passed",
+  "attempts": 2,
+  "draft": {
+    "id": "item_linen_cleaning_swab",
+    "description": "一截芦管，端口以刀削圆，管身留着削切后的斜茬。管头缠窄麻布，布边收在管侧，以麻线数匝扎牢，线结压在布层下。整体轻短，握处为裸管，可探入小器物内面擦拭，不作医用拭子。出自织坊，集市按当季货源小批供应。",
+    "inspection": "先看芦管端口是否圆滑无裂，再查麻布有无松脱、线结是否压牢；轻拉布头，不应滑脱。",
+    "storage": "置于干燥处，避免重压使芦管开裂；自制成起计，至多存放180天。"
+  },
+  "review": {
+    "contradictions": []
+  },
+  "errors": [],
+  "warnings": [],
+  "feedback": null
+}

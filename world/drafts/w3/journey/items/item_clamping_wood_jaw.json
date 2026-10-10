@@ -1,0 +1,18 @@
+{
+  "id": "item_clamping_wood_jaw",
+  "fingerprint": "d77c028c5078c675d9b847a93490afb2847c80032e207d66084eec7fcc5528f4",
+  "status": "passed",
+  "attempts": 1,
+  "draft": {
+    "id": "item_clamping_wood_jaw",
+    "description": "旧磨坊出产的对合木夹口，以山毛榉木坯剖成两片同形夹板，内侧凿出铰位，板面钻有绑孔，铁铰链嵌入后以亚麻绳穿绑收紧。夹口边缘留有锯切与凿削痕迹，合拢时两片夹面贴合，可夹持轻小木件辅助定位，不宜用于吊运或承重。",
+    "inspection": "检查两片夹口是否同形贴合，铰位有无松动，绑孔与铰链铆接处是否开裂，绳绑能否收紧。",
+    "storage": "置于干燥木架，避免受潮与重压，绳绑保持松弛存放，勿长期夹持物件。"
+  },
+  "review": {
+    "contradictions": []
+  },
+  "errors": [],
+  "warnings": [],
+  "feedback": null
+}

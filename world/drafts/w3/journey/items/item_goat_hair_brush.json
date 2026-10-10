@@ -1,0 +1,18 @@
+{
+  "id": "item_goat_hair_brush",
+  "fingerprint": "5cbff96f9cb0db511541bc25c6d97547a2bef36e1c3d3be28f9a5f6543ef8240",
+  "status": "passed",
+  "attempts": 1,
+  "draft": {
+    "id": "item_goat_hair_brush",
+    "description": "宽根羊毫排刷出自小学堂，木柄修直，一端开扁口，嵌一列齐整羊毫，毫根用细麻缠紧后压入槽中。毫锋宽而略薄，侧面留有修毛的斜切痕，柄身打磨平滑，尾端钻有小孔可穿绳悬挂。并排羊毫夹在木柄上铺涂颜料，不能代替细字笔。",
+    "inspection": "查看毫毛是否齐整、有无断脱，木柄有无裂纹，扁口是否松动，尾孔是否完好。",
+    "storage": "毫锋朝上或平放于干燥处，避免重压与潮湿；长期不用可悬挂尾孔。"
+  },
+  "review": {
+    "contradictions": []
+  },
+  "errors": [],
+  "warnings": [],
+  "feedback": null
+}

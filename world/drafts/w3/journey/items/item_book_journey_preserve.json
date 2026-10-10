@@ -1,0 +1,18 @@
+{
+  "id": "item_book_journey_preserve",
+  "fingerprint": "807385ba9e738e65d8d298f7bc45a02a6d87c5be5801a68e910c692844956d5a",
+  "status": "passed",
+  "attempts": 2,
+  "draft": {
+    "id": "item_book_journey_preserve",
+    "description": "白石手艺人合抄的中级短藏小食辨味册，河湾供货校对本。木封薄册，纸页经压平，书脊以麻线穿孔固定，边角见裁切痕。内收十种短期加工食物的分量、余液处理与弃坏边界，各工序另需对应熟练度和工具。识字100可读，通读约450分钟。",
+    "inspection": "翻看封面与书脊，确认麻线未松脱、纸页无霉斑水渍；抽查数页，核对字迹与工序是否清晰可辨。",
+    "storage": "置于干燥避光处，平放或竖立皆可，避免受潮与重压；自制成起最多存365天。"
+  },
+  "review": {
+    "contradictions": []
+  },
+  "errors": [],
+  "warnings": [],
+  "feedback": null
+}

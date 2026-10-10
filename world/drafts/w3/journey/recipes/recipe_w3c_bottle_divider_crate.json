@@ -1,0 +1,16 @@
+{
+  "id": "recipe_w3c_bottle_divider_crate",
+  "fingerprint": "d9b7354da8787569ad3f1dc1d1771c12990caac355ca10ec322ce4f550352a22",
+  "status": "passed",
+  "attempts": 1,
+  "draft": {
+    "id": "recipe_w3c_bottle_divider_crate",
+    "process": "将两块风干松木短板置于木工台上，以窄框木锯沿墨线开料，锯出箱壁、箱底与横竖分格条。取直口木凿配枣木敲凿槌，在板端凿出小榫眼与接槽，试拼方正后逐处校紧。把八枚小铁钉分点钉入接缝，钉入前先以凿尖引浅孔防劈。软木薄片裁成格底衬片，垫入每格底部。总耗时260分钟。交付一只空箱，不附小瓶；余料弃置，三件工具保留。"
+  },
+  "review": {
+    "contradictions": []
+  },
+  "errors": [],
+  "warnings": [],
+  "feedback": null
+}

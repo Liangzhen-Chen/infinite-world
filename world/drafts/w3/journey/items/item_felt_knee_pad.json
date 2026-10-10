@@ -1,0 +1,18 @@
+{
+  "id": "item_felt_knee_pad",
+  "fingerprint": "5986e617ea891a3e5a1131ae52dabaf4b38fda77485390b42fff1e06caa36756",
+  "status": "passed",
+  "attempts": 2,
+  "draft": {
+    "id": "item_felt_knee_pad",
+    "description": "织坊以羊毛毡片裹入亚麻帆布，裁作两片护垫，余布缝成绑带，边缘针脚压实。垫面可见裁切直边与缝线压痕，绑带末端收针略厚。跪地作业时垫于膝下，绑带绕膝后侧系紧，不用于持械交锋。",
+    "inspection": "翻看垫面有无破口、毡层是否外露，绑带缝线是否松脱，系紧后试跪确认不移位。",
+    "storage": "晾干后卷起，置干燥处避潮防蛀；自制成起保存上限365天，超期毡层易压实变硬。"
+  },
+  "review": {
+    "contradictions": []
+  },
+  "errors": [],
+  "warnings": [],
+  "feedback": null
+}

@@ -1,0 +1,21 @@
+{
+  "id": "item_oak_cudgel",
+  "fingerprint": "b6e15f67f3053336ec16dd5c62c789ee126e8200c912742c6ad51ce44b272f53",
+  "status": "passed",
+  "attempts": 1,
+  "draft": {
+    "id": "item_oak_cudgel",
+    "description": "橡木短棒取自铁匠铺，棒身修圆，尾端套一圈窄铁箍，箍面留有锤击压痕。木纹顺长轴延伸，握段略细，便于掌心合拢。全长约一臂之半，掂在手里沉实，适合近身格打。木表经粗磨，未上漆，触手干涩，节疤处颜色略深。尾箍与木身贴合，不易转动。",
+    "inspection": "先看铁箍是否松动，再沿棒身逐段摸查，寻找贯通裂纹或深劈口；轻敲木面听声，有异常闷响处另查裂纹。若箍口卷边或木身开裂，即不可再用。",
+    "storage": "横放于干燥木架，避免靠墙受潮；勿压重物，勿使尾箍磕碰硬地。久置后取出复查箍口与木身。"
+  },
+  "review": {
+    "contradictions": []
+  },
+  "errors": [],
+  "warnings": [],
+  "feedback": null,
+  "manualCorrection": {
+    "reason": "L4：闷响不能直接断言木棒内伤。"
+  }
+}

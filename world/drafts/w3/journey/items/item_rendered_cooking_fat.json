@@ -1,0 +1,21 @@
+{
+  "id": "item_rendered_cooking_fat",
+  "fingerprint": "00f3ea83cecfa6a96cec9f952d8dd596f4f686478a38317bbb0cf67bf6fdf9b6",
+  "status": "passed",
+  "attempts": 3,
+  "draft": {
+    "id": "item_rendered_cooking_fat",
+    "description": "青灯酒馆小锅熬出的熟猪脂，在自备容器内冷凝成微黄脂块，表面留有舀取时木勺划过的浅弧痕，边缘平滑，焦屑已在舀取前分开。板脂切碎后以配额水慢熬，水汽散尽便舀取澄清脂液，焦渣弃置不交付。脂体紧实，指压留浅印，气味为温和油脂香，重零点一六千克。",
+    "inspection": "查看脂块是否颜色均匀，有无霉斑、水珠或酸败气味；焦黑碎屑及异味均须另查，不作为正常可食痕迹。",
+    "storage": "盖好自备容器，置阴凉干燥处避光，自熬成起7天内用完；霉变或败味时弃置。"
+  },
+  "review": {
+    "contradictions": []
+  },
+  "errors": [],
+  "warnings": [],
+  "feedback": null,
+  "manualCorrection": {
+    "reason": "L4：清脂不夹焦屑；160克仅为脂重，保存7天。"
+  }
+}

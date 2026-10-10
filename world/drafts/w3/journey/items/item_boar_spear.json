@@ -1,0 +1,18 @@
+{
+  "id": "item_boar_spear",
+  "fingerprint": "88b501edb7a8e7199d8aa9effbcdb7a35ef27e13d55175a89147d91581c7a1ae",
+  "status": "passed",
+  "attempts": 3,
+  "draft": {
+    "id": "item_boar_spear",
+    "description": "白石镇集市常见的横翼猎矛，银品质等级，重2.5千克。矛颈处一对横翼向外张开，用以限制刺入深度；长木柄配钢刃，柄身留有旋削与握磨痕。须双手持握控制刺势，横翼本身不会自动束缚猎物。",
+    "inspection": "查看横翼与矛颈接合是否松动，顺光检查钢刃有无卷口、木柄有无纵向裂纹。",
+    "storage": "刃部套护，横翼朝外平放于干燥架，柄身避免受压弯曲。"
+  },
+  "review": {
+    "contradictions": []
+  },
+  "errors": [],
+  "warnings": [],
+  "feedback": null
+}

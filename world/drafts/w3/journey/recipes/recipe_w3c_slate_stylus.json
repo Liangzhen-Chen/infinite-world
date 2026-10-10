@@ -1,0 +1,16 @@
+{
+  "id": "recipe_w3c_slate_stylus",
+  "fingerprint": "925968af83b15202f06b47b72406ed3256c7c424c5319c561f7aa40545c958e4",
+  "status": "passed",
+  "attempts": 1,
+  "draft": {
+    "id": "recipe_w3c_slate_stylus",
+    "process": "取一份平面板岩片，顺层理挑出窄长段作为笔身。以平齿铁锉沿长边往复推锉，把断面收成便于三指捏握的杆形，锉痕顺向留在侧腹，锉下细屑扫入废堆，不混入成品。取一份洗净细砂，兑一份清水调成湿砂，握笔杆在湿砂上转磨侧棱与尾端，使棱口由锐转钝，只留前端一处收尖，供在粗面上划记。全程九十加分钟。"
+  },
+  "review": {
+    "contradictions": []
+  },
+  "errors": [],
+  "warnings": [],
+  "feedback": null
+}

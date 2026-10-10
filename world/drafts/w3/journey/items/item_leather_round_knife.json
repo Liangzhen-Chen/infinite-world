@@ -1,0 +1,18 @@
+{
+  "id": "item_leather_round_knife",
+  "fingerprint": "0db518b30d2e4c257d1e0acb8ede88429838199d9e6293e75d03aba65c2fffc8",
+  "status": "passed",
+  "attempts": 1,
+  "draft": {
+    "id": "item_leather_round_knife",
+    "description": "半月裁革钢刀出自铁匠铺，刃身由钢条锻展成半月弧，尾端留出柄舌，淬火回火后以锉修整弧口，再套入木柄铆固。刃口薄而均匀，弧背留有锤锻与锉磨痕，木柄握处略收。供切裁已鞣软革之用，不宜接触金属。",
+    "inspection": "查看弧口是否连续无崩缺，柄舌与木柄接合是否松动，锉磨痕是否均匀；轻转刀身听有无异响。",
+    "storage": "置于干燥处，刃口朝下平放或挂起，避免与硬物磕碰；木柄勿长期浸水。"
+  },
+  "review": {
+    "contradictions": []
+  },
+  "errors": [],
+  "warnings": [],
+  "feedback": null
+}

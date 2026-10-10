@@ -1,0 +1,21 @@
+{
+  "id": "item_walnut",
+  "fingerprint": "f3d3067f3d3a9f13085a71e34c4f94b7210102bd007a7e438b4a6a2c7290be40",
+  "status": "passed",
+  "attempts": 3,
+  "draft": {
+    "id": "item_walnut",
+    "description": "公用果园当季核桃去青皮后阴干，手工敲壳取仁，拣净碎壳后分装。仁面淡黄，沟纹间偶留褐色薄衣，偶存薄壳须再次挑出。挑去空壳与黑斑仁，装布袋扎口，集市按当季货源小批供应，售罄须等另一次实际补货。重零点一五千克。",
+    "inspection": "翻看仁堆，拣出夹带的薄壳与碎屑，闻有无哈喇味；仁面发暗、油味刺鼻者弃置，只留干爽整仁。",
+    "storage": "扎口布袋置阴凉干燥处，避潮避晒，自加工起保存上限60天；受潮返软或哈喇味起即弃。"
+  },
+  "review": {
+    "contradictions": []
+  },
+  "errors": [],
+  "warnings": [],
+  "feedback": null,
+  "manualCorrection": {
+    "reason": "L4：净仁不能描述成碎壳混装；60天改为明确数字。"
+  }
+}

@@ -1,0 +1,16 @@
+{
+  "id": "recipe_w3c_bristle_handbrush",
+  "fingerprint": "24b6c156cf893f09eaefeb952c7c1d1d6632f23f56a3929f1c7e01d9c872f5a3",
+  "status": "passed",
+  "attempts": 1,
+  "draft": {
+    "id": "recipe_w3c_bristle_handbrush",
+    "process": "取山毛榉短坯，用窄框木锯沿锯路截出短刷背，锯口留浅茬；换横柄手钻在背面排钻植毛孔，遇节疤减力退屑。硬鬃毛束按孔数分束，逐束从孔背穿入，使鬃根露于背槽。退火铁线横嵌背槽，绕束根收紧夹扎，窄嘴饰线钳逐段夹弯压平端头，使铁线贴槽不翘。总耗时180分钟，不附清洁剂。"
+  },
+  "review": {
+    "contradictions": []
+  },
+  "errors": [],
+  "warnings": [],
+  "feedback": null
+}

@@ -1,0 +1,18 @@
+{
+  "id": "item_poppy_seed",
+  "fingerprint": "a038eb3d46c3c11f2f7abddba44b7344f7792752b3faff59ae31e8fe121a5c22",
+  "status": "passed",
+  "attempts": 2,
+  "draft": {
+    "id": "item_poppy_seed",
+    "description": "来自白石镇的成熟食用罂粟籽，五十克一包，籽粒细小近肾形，灰蓝至淡褐，表面有细网纹，干燥松散，气味清淡带油香。筛去碎壳与尘杂后按普通食材小批供应，不含花乳汁，供烘焙时掺入面团或撒在面点表面。",
+    "inspection": "翻看籽粒是否均匀饱满，有无受潮结块、霉斑或虫蛀，闻一闻有无酸败气味；若有异味或霉变则不再食用。",
+    "storage": "装入干燥密闭容器，置于阴凉避光处，防潮防虫；自收得起保存不超过120天。"
+  },
+  "review": {
+    "contradictions": []
+  },
+  "errors": [],
+  "warnings": [],
+  "feedback": null
+}

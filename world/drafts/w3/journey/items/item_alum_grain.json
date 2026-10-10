@@ -1,0 +1,21 @@
+{
+  "id": "item_alum_grain",
+  "fingerprint": "634968c7b5ae3dca2553e8dcbc03b49fb419907abdad64a49ea86c6eea28f142",
+  "status": "passed",
+  "attempts": 3,
+  "draft": {
+    "id": "item_alum_grain",
+    "description": "白石镇集市常见的工艺明矾粒，总重0.05千克，颗粒大小不一，表面带细碎结晶棱面与轻微粉尘。由严辙以有限材料库存出售，按当季货源小批供应，售罄须等下次实际补货。用于配染液作媒染，不用于食品或伤口。",
+    "inspection": "翻看颗粒，检查是否结块、受潮或混入杂色碎屑，并确认包装未破损；不尝不试。",
+    "storage": "置于干燥处密闭存放，避开潮湿与食品；自制成起保存365天。"
+  },
+  "review": {
+    "contradictions": []
+  },
+  "errors": [],
+  "warnings": [],
+  "feedback": null,
+  "manualCorrection": {
+    "reason": "L4：去除供货人内部编号，改为严辙中文名。"
+  }
+}

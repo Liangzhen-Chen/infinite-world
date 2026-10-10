@@ -1,0 +1,18 @@
+{
+  "id": "item_small_trowel",
+  "fingerprint": "2d2040b7a36580f287b7d882d662b3c653d9f3b7be0bf95bc7b88892e11ccb7f",
+  "status": "passed",
+  "attempts": 1,
+  "draft": {
+    "id": "item_small_trowel",
+    "description": "铁匠铺出品的折颈砌缝铲，铲面由铁料锻薄，颈部折出便于探入窄缝的角度，边缘经锉修整后装上木柄。整体紧凑轻便，适合在砖石间抹填细缝，砂浆需另行准备。重0.55千克，铁质品级，耐久280。",
+    "inspection": "看铲面是否平直、折颈有无裂纹，木柄与铁颈结合处是否松动，边缘锉痕是否均匀。",
+    "storage": "置于干燥处，铲面朝上平放或悬挂，避免受潮生锈与重物压弯折颈。"
+  },
+  "review": {
+    "contradictions": []
+  },
+  "errors": [],
+  "warnings": [],
+  "feedback": null
+}

@@ -1,0 +1,18 @@
+{
+  "id": "item_caraway_oat_crust",
+  "fingerprint": "4d22d28d6de33e7f85e13070aa299d15108c98676c56c885b774904404004c61",
+  "status": "passed",
+  "attempts": 2,
+  "draft": {
+    "id": "item_caraway_oat_crust",
+    "description": "青灯酒馆烘制的香籽燕麦硬片，燕麦粉与盐拌糊后分片厚锅烘干，表面留有刀背压裂香芹籽的浅痕与锅底接触的暗色斑。片身薄脆，边缘略不规则，断面可见细密气孔，凑近有香芹籽与烘麦的干香。整份重0.27千克，所有成片合为一份交付。",
+    "inspection": "先看片身有无受潮回软、霉斑或碎裂，再闻香芹籽与烘麦气味是否发闷发酸；仅作外观与气味检查，不尝变质片。",
+    "storage": "置于干燥通风处，避免压叠与潮气；自制成起7天内食用，逾期不再按新鲜口粮看待。"
+  },
+  "review": {
+    "contradictions": []
+  },
+  "errors": [],
+  "warnings": [],
+  "feedback": null
+}

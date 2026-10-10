@@ -1,0 +1,18 @@
+{
+  "id": "item_paper_cord_tags",
+  "fingerprint": "dbacd6414e46262e19e4a5f2072461bf89834fa327d728c7905159e2b8b27b66",
+  "status": "passed",
+  "attempts": 1,
+  "draft": {
+    "id": "item_paper_cord_tags",
+    "description": "旧磨坊出产的皮纸小吊签，整组以麻线分段穿系。每张裁成窄片，四角削齐，边缘留有刀口推削的浅痕，锥孔位于一端，孔径略大于麻线。签面留白，供使用者自行落字。整组按一份交付，轻便易携，适合行旅中标记物件。",
+    "inspection": "检查时翻看签片角边是否削匀、锥孔有无撕裂，并轻拉麻线看穿系是否松脱；签面留白处有无污渍或折痕。",
+    "storage": "置于干燥处平放或松散悬挂，避免受潮与重压；麻线勿缠结，保存期365天。"
+  },
+  "review": {
+    "contradictions": []
+  },
+  "errors": [],
+  "warnings": [],
+  "feedback": null
+}

@@ -1,0 +1,18 @@
+{
+  "id": "item_shell_button_blank",
+  "fingerprint": "51f2f27ce8215786b45ee69a9f41025dd0c763bbb4e4a8113a9e8744c8aacea7",
+  "status": "passed",
+  "attempts": 1,
+  "draft": {
+    "id": "item_shell_button_blank",
+    "description": "白石镇集市上成组售卖的贝片扣坯，取自厚实贝壳，逐片磨去棱脊与粗纹，边缘收成圆钝薄片，表面留有细密磨痕与天然生长纹。此时尚未开孔，需自行钻磨后才能缝作扣具。整组以麻绳松系，大小略有参差，色泽由乳白至淡青不等。",
+    "inspection": "翻看时逐片对光，检查有无贯穿裂纹、分层剥落与未磨平的锐边；再掂量厚度是否均匀，绳结是否松脱。",
+    "storage": "置于干燥布袋或木盒内，避免挤压与潮气；勿与硬物混放，以免薄片崩口。"
+  },
+  "review": {
+    "contradictions": []
+  },
+  "errors": [],
+  "warnings": [],
+  "feedback": null
+}

@@ -1,0 +1,16 @@
+{
+  "id": "recipe_w3c_walnut_honey_bites",
+  "fingerprint": "15c65c55babf198d2a516babecfea2cc795c411548c9672af1df59497a5af2a3",
+  "status": "passed",
+  "attempts": 1,
+  "draft": {
+    "id": "recipe_w3c_walnut_honey_bites",
+    "process": "取一份净核桃仁，用案上切刀逐粒检查并剔去夹带薄壳，哈喇味仁弃置，再切成碎粒。四枚鸡蛋逐个去壳打入厚底煮锅，蛋壳弃置。将燕麦粉与滤蜜一并下锅，以长柄搅糊板搅至无干粉团块。锅置小灶上低火烘凝，其间持续搅动，待糊体厚实成团后离火。趁热用切刀分成小块。干木刨屑两份用于小灶引火，炉用炭屑不混入成品。全程七十整分钟。"
+  },
+  "review": {
+    "contradictions": []
+  },
+  "errors": [],
+  "warnings": [],
+  "feedback": null
+}

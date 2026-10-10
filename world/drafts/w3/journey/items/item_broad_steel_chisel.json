@@ -1,0 +1,18 @@
+{
+  "id": "item_broad_steel_chisel",
+  "fingerprint": "d0396a13b358dc13ff8d2cc3c2924f880e757602d7c1fcff87be028bc4189fe9",
+  "status": "passed",
+  "attempts": 2,
+  "draft": {
+    "id": "item_broad_steel_chisel",
+    "description": "宽刃木作钢凿，出自铁匠铺。钢料锻出宽口与柄舌，口部经配额水淬并回火，冷锉修整后磨刃，装入木柄。刃口平阔，柄舌与木柄衔接紧实，通体留有锻打与锉磨痕。供木作凿削，不凿硬石。重0.65千克。",
+    "inspection": "看刃口有无卷缺，查柄舌与木柄是否松动，再摸锻面与锉痕。",
+    "storage": "置干燥处，刃口朝下平放或悬挂，木柄避潮，不与硬石磕碰。"
+  },
+  "review": {
+    "contradictions": []
+  },
+  "errors": [],
+  "warnings": [],
+  "feedback": null
+}

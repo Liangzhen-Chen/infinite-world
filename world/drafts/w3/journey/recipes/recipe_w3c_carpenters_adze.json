@@ -1,0 +1,16 @@
+{
+  "id": "recipe_w3c_carpenters_adze",
+  "fingerprint": "02681d2d3eeb7822e4a595fb5ec33ca766f099dd014e2355991fff67a42cdcfa",
+  "status": "passed",
+  "attempts": 1,
+  "draft": {
+    "id": "recipe_w3c_carpenters_adze",
+    "process": "将钢条入炉烧透，以长柄铁钳夹出，在砧上用锻工手锤打出横刃与套口，刃口略留余料；套口趁热对合，锤面轻敲使缝贴合。钢坯按配额水淬回火，冷后以平齿铁锉修平刃背、套口与接缝，细屑扫入废堆。白蜡木直料用双耳削柄刀沿纹削圆成柄，柄端削细，试套入套口后敲紧，使刃口与柄轴成横势。炉中木炭烧尽，炭屑留在炉内，不与成品相混。总耗时三百六十分钟。"
+  },
+  "review": {
+    "contradictions": []
+  },
+  "errors": [],
+  "warnings": [],
+  "feedback": null
+}

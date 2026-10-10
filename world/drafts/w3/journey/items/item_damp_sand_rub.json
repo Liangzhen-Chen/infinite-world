@@ -1,0 +1,18 @@
+{
+  "id": "item_damp_sand_rub",
+  "fingerprint": "4e4d9d1a208d1c156c425a94d5f93374d5b856852342b7a042718eec6a798744",
+  "status": "passed",
+  "attempts": 3,
+  "draft": {
+    "id": "item_damp_sand_rub",
+    "description": "织坊按配方取细砂与规定水润成湿散粒，以木匙拌开结团，成品为湿砂去垢料，重0.38千克。砂粒间含水，触之微凉而松散，色泽随砂粒本身深浅不一。只用于耐磨粗面，不用于伤口或精抛镜面，盛放容器须另备。",
+    "inspection": "查看砂粒是否均匀湿润，有无干块或结团；嗅之应无腐臭异味，有则弃用。",
+    "storage": "置于另备容器中，存放阴凉处，保存期1天；期限内未用尽即弃去。"
+  },
+  "review": {
+    "contradictions": []
+  },
+  "errors": [],
+  "warnings": [],
+  "feedback": null
+}

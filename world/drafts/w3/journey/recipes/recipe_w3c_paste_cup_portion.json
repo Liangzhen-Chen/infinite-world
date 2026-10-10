@@ -1,0 +1,16 @@
+{
+  "id": "recipe_w3c_paste_cup_portion",
+  "fingerprint": "173ed80d78f49c82171a990effb849e0e13dbd474ba9c37c234422f10101ae0c",
+  "status": "passed",
+  "attempts": 1,
+  "draft": {
+    "id": "recipe_w3c_paste_cup_portion",
+    "process": "取一份干浆粉置于干处，将一份清水备在旁侧，不可一次倾尽。厚底煮锅坐小灶，先下少量水，再分次撒入浆粉，边撒边以偏柄木匙顺同一方向压散结块。全部粉水入锅后转小火，木匙贴锅底不停刮搅，见浆体由稀转稠、搅痕短暂留存即离火。干木刨屑只用于灶前引火，不得落入锅内。连锅放至温凉，倾入自备容器交付；锅底结皮与余料弃置，木匙与煮锅洗净保留。总耗时三十五分钟。"
+  },
+  "review": {
+    "contradictions": []
+  },
+  "errors": [],
+  "warnings": [],
+  "feedback": null
+}

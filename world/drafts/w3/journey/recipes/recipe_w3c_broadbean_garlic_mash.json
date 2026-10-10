@@ -1,0 +1,16 @@
+{
+  "id": "recipe_w3c_broadbean_garlic_mash",
+  "fingerprint": "b8e6ca83d2026322fa53aebd3b0e53554a62d62e2ec47d7a17fda1fa146d6e10",
+  "status": "passed",
+  "attempts": 1,
+  "draft": {
+    "id": "recipe_w3c_broadbean_garlic_mash",
+    "process": "干蚕豆瓣一份与清水两份入厚底煮锅，浸至软后连水加热煮透，共耗一百分钟。晒皮蒜头一份剥瓣去皮，用案上切刀切细，投入锅中同煮至豆散。离火后以偏柄木匙沿锅缘反复压碾成泥，粗盐一份撒入拌匀。残皮、锅底焦屑与压不散的硬粒一并弃置，干木刨屑两份只作灶下引火，不与食物相混。木匙余料留作一份干刨屑，工具保留。成品一份趁热盛出，不加其他料。"
+  },
+  "review": {
+    "contradictions": []
+  },
+  "errors": [],
+  "warnings": [],
+  "feedback": null
+}

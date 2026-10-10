@@ -22,6 +22,7 @@ import {advanceWildlife,wildlifePriceFactor}from'./wildlife.mjs';
 import {advanceBosses}from'./bosses.mjs';
 import {sceneCard}from'./scene-card.mjs';
 import {stateNotices}from'./state-notices.mjs';
+import {assertNpcService,advanceNpcSchedules}from'./npc-schedule.mjs';
 import {resolveToolCall}from'../extension/tools.mjs';
 import {chargeTrade,repayDebt,advanceContracts}from'./contracts.mjs';
 import {initializeR1,planR1,planPreR1Partitions}from'./migrations/r1.mjs';
@@ -143,6 +144,7 @@ export class WorldEngine {
         const playerLocation=d.get('state','location');
         for(const actor of [buyer,seller]) if(actor!=='player' && this.actor(d,actor).location!==playerLocation) throw new Error('交易对方不在场');
         if(args.payment==='repay')return repayDebt(d,this,{buyer,seller,debt:args.debt},id);
+        for(const actor of [buyer,seller])if(actor!=='player')assertNpcService(d,this,actor,'trade',args.service==='住宿'?10:5);
         if(args.service==='住宿'){
             if(buyer!=='player'||seller!=='npc_hw_linsui')throw new Error('这个人没有登记住宿服务');
             const days=number(args.days??1,1,7,'住宿天数'),cost=days===7?35:days*6;
@@ -170,6 +172,7 @@ export class WorldEngine {
     advance(d,minutes,id) {
         minutes=number(minutes,0,43200,'耗时');
         const before=d.get('state','minute'),after=before+minutes;d.set(['state','minute'],after);
+        advanceNpcSchedules(d,this,before,after);
         advanceContracts(d,this,after);
         advanceSummons(d,after);
         advanceLaw(d,after);
@@ -221,7 +224,7 @@ export class WorldEngine {
         }
         return {elapsed:minutes,date:this.calendar(d.get('state','minute')).text};
     }
-    route(from,to,mode,minute,seed='default-campaign') {
+    route(from,to,mode,minute,seed='default-campaign',weatherCache=null) {
         const distances=new Map([[from,0]]), movingTimes=new Map([[from,0]]), previous=new Map(),costs=new Map([[from,0]]),pending=new Set(this.world.locations.map(place=>place.id));
         while(pending.size){
             const current=[...pending].sort((a,b)=>(distances.get(a)??Infinity)-(distances.get(b)??Infinity))[0];
@@ -230,7 +233,7 @@ export class WorldEngine {
                 if(!edge.modes.includes(mode)||edge.closedSeasons.includes(this.calendar(minute).season))continue;
                 const next=edge.from===current?edge.to:edge.to===current?edge.from:null;if(!next||!pending.has(next))continue;
                 const speed=edge.speedKmh??(mode==='cart'?this.rules.travel.cartKmh:this.rules.travel.walkKmh*(mode==='horse'?this.rules.travel.horseMultiplier:1))*(edge.terrainMultiplier??1);
-                const travel=this.rules.weather?weatherEdge(this,seed,{...edge,from:current},mode,minute,distances.get(current),movingTimes.get(current),speed):null;
+                const travel=this.rules.weather?weatherEdge(this,seed,{...edge,from:current},mode,minute,distances.get(current),movingTimes.get(current),speed,weatherCache):null;
                 if(this.rules.weather&&!travel)continue;
                 const elapsed=Math.max(1,Math.ceil(edge.lengthKm/speed*60)),candidate=travel?.elapsed??distances.get(current)+elapsed;
                 if(candidate<(distances.get(next)??Infinity)){distances.set(next,candidate);movingTimes.set(next,travel?.moving??movingTimes.get(current)+elapsed);previous.set(next,{node:current,edge});costs.set(next,costs.get(current)+edge.toll);}
@@ -258,6 +261,8 @@ export class WorldEngine {
         const experience=discovered?{experience:0}:milestone(d,this,'discovery',destination,id);
         for(const [key,obligation]of Object.entries(d.get('state','obligations')))if(obligation.type==='带路'&&obligation.destination===destination&&obligation.status==='进行中'){
             d.set(['state','obligations',key,'status'],'已完成');d.say(`${this.byId.get(obligation.promisor).name}的带路约定已完成`);
+            const stillGuiding=Object.values(d.get('state','obligations')).some(row=>row.type==='带路'&&row.promisor===obligation.promisor&&row.status==='进行中');
+            if(!stillGuiding&&this.byId.get(obligation.promisor)?.schedule)d.set(['state','player','companions'],d.get('state','player','companions').filter(npc=>npc!==obligation.promisor));
         }
         return {destination,...route,...experience,companions:d.get('state','player','companions')};
     }
@@ -308,6 +313,7 @@ export class WorldEngine {
         if(args.breakthroughSource){
             const teacher=this.resolve(args.breakthroughSource,'npc'),base=this.byId.get(teacher),role=this.byId.get(skill).profession;
             if(!((base.services??[]).includes(role)||(base.services??[]).includes(skill)||(base.skills??[]).includes(skill))||d.get('state','npcs',teacher,'location')!==d.get('state','location'))throw new Error('突破导师不具备资格或不在场');
+            assertNpcService(d,this,teacher,'teach',120);
             if(old.proficiency%300!==299)throw new Error('尚未达到当前阶段上限');
             if(role&&![d.get('state','professions','combat'),...d.get('state','professions','life'),...d.get('state','professions','hidden')].includes(role))throw new Error('未认证职业不能跨越初级阶段');
             const outcome=this.check(d,{attribute:this.byId.get(skill).attribute,difficulty:20},id);

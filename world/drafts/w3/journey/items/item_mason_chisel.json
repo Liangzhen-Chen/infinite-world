@@ -1,0 +1,21 @@
+{
+  "id": "item_mason_chisel",
+  "fingerprint": "0bff0ef64cefa811bb76e485224339457de8950a30f5955c05af414ca6943e57",
+  "status": "passed",
+  "attempts": 1,
+  "draft": {
+    "id": "item_mason_chisel",
+    "description": "白石镇铁匠铺出的阔口修石凿，银级品质。整条钢身由锻打成形，刃口宽而平直，经磨石开锋，凿头与柄座间留有一圈锻合痕。木柄套在尾榫上，以铁箍收口，握处被手汗磨得发暗。凿削石料边口时须先固定石料，再一手扶凿、一手持锤敲击凿尾，适合修整粗坯的棱角与毛边。",
+    "inspection": "先看刃口有无崩缺卷边，再看木柄与铁箍是否松动，最后轻敲凿尾听有无杂音。",
+    "storage": "刃口朝下插入木架槽位，柄端外露，置于干燥通风处，避免与石料堆同放。"
+  },
+  "review": {
+    "contradictions": []
+  },
+  "errors": [],
+  "warnings": [],
+  "feedback": null,
+  "manualCorrection": {
+    "reason": "L4：石料先固定，一手扶凿一手持锤，避免三手操作。"
+  }
+}

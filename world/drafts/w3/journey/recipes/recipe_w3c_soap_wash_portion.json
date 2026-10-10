@@ -1,0 +1,16 @@
+{
+  "id": "recipe_w3c_soap_wash_portion",
+  "fingerprint": "f52583a90396b132c33dfb503fd6eabcaeb972348bd4d6f5c6b2d78ffc96d80c",
+  "status": "passed",
+  "attempts": 1,
+  "draft": {
+    "id": "recipe_w3c_soap_wash_portion",
+    "process": "将刮片硬皂投入厚底煮锅，倒入配额清水，以偏柄木匙顺纹浅匙腹沿锅缘压搅，使皂片在微温中逐渐化散，不令水面翻滚飞溅。皂片全散后停火，仍用木匙搅动至温度下降，液面平稳无浮渣结块。冷却后倒入自备容器，锅壁与匙面残留一并刮入，不另添水冲兑。所得一份温搅皂洗液用于洗布刷具，不作药物。总耗时25分钟。干木刨屑未入锅，留作引火或吸液之用。"
+  },
+  "review": {
+    "contradictions": []
+  },
+  "errors": [],
+  "warnings": [],
+  "feedback": null
+}

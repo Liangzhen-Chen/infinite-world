@@ -1,0 +1,20 @@
+{
+  "id": "item_canvas_satchel",
+  "fingerprint": "09410518ba7ad8b2326bdf95a86e12f209f17fa7efff2423f11882e807bbdbae",
+  "status": "passed",
+  "attempts": 1,
+  "draft": {
+    "id": "item_canvas_satchel",
+    "description": "织坊出产的翻盖帆布挎袋，以亚麻帆布折出袋体与长肩带，锥定位后缝边，翻盖闭合带上装腰带扣。布面见折痕与针脚，肩带接缝略厚，空袋自重轻，可斜挎或单肩背。交付时为空袋，不扩大负重上限。",
+    "inspection": "翻看缝边针脚是否均匀，检查肩带接缝与翻盖扣件是否牢固，袋角有无磨破。",
+    "storage": "空袋折平，置干燥处避潮防霉；保存期365天。"
+  },
+  "review": {
+    "contradictions": []
+  },
+  "errors": [],
+  "warnings": [
+    "storage长度为22，进入L4抽读"
+  ],
+  "feedback": null
+}

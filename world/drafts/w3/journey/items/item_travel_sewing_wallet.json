@@ -1,0 +1,18 @@
+{
+  "id": "item_travel_sewing_wallet",
+  "fingerprint": "7298a953d26846fa4c3b8fa6959a8b92826e60446e3d0c0e9ef8781707a9cc75",
+  "status": "passed",
+  "attempts": 2,
+  "draft": {
+    "id": "item_travel_sewing_wallet",
+    "description": "织坊出品的合页针线夹，薄革对折作壳，脊折以骨片压平，内里缝入羊毛毡页，供针尖插入固定。整体为空夹，不附针线，需另行收纳。革面留有裁切与缝线痕，毡页边缘经修整，折合后厚度均匀，便于随身携带。",
+    "inspection": "翻看革面有无开裂，按压脊折是否平直，拨开毡页查看缝线是否松脱，确认夹内无遗留针具。",
+    "storage": "置于干燥处，避免重压与潮湿，保存上限365天；受潮后须阴干再折合收纳。"
+  },
+  "review": {
+    "contradictions": []
+  },
+  "errors": [],
+  "warnings": [],
+  "feedback": null
+}

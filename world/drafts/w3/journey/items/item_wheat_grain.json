@@ -1,0 +1,18 @@
+{
+  "id": "item_wheat_grain",
+  "fingerprint": "31c76c57ead579891eada0942c622dd93ede7e6cc09d5a19518d893976b3ce90",
+  "status": "passed",
+  "attempts": 2,
+  "draft": {
+    "id": "item_wheat_grain",
+    "description": "白石镇集市上按当季货源小批供应的去杂小麦，颗粒饱满，色泽淡黄，间有少量碎粒与麦芒。五百克一包，来自有限材料库存，须磨粉或煮熟食用，并非带酵种的面团。木品质仅表示品质等级，与材质无关。",
+    "inspection": "翻看包内上下层，拨开表面查看有无结块、霉斑与虫蛀，闻一闻是否带潮闷气味；不尝变质麦粒。",
+    "storage": "置于干燥通风处，避潮避鼠；自收存起计，至多可存180天，超期不宜再食。"
+  },
+  "review": {
+    "contradictions": []
+  },
+  "errors": [],
+  "warnings": [],
+  "feedback": null
+}

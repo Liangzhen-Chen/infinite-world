@@ -1,0 +1,21 @@
+{
+  "id": "item_butter",
+  "fingerprint": "c1d764d36a1d2d25435cd3ca80dc0dc5e73bc351fedc265efd2074c6b787b552",
+  "status": "passed",
+  "attempts": 3,
+  "draft": {
+    "id": "item_butter",
+    "description": "青灯酒馆经手的无盐黄油，整块重零点一千克，约合一百克。淡黄脂体压成方砖，表面留有木模刮平的细痕，边缘因纸包折压略见钝角。气味清润微甜，不带盐腥。融化后能润锅底，若温热久置则败味，宜趁鲜取用。",
+    "inspection": "先看纸包是否渗油，再闻有无酸败气；切面若发暗生斑、触之黏软，即不宜再用。",
+    "storage": "以原纸包好，置于阴凉处，自制成起3天内用完；包装渗油或出现酸败气味时弃置，勿久置灶旁。"
+  },
+  "review": {
+    "contradictions": []
+  },
+  "errors": [],
+  "warnings": [],
+  "feedback": null,
+  "manualCorrection": {
+    "reason": "L4：保存期从制成日起算3天，删除木色品质与取得日起刷新。"
+  }
+}

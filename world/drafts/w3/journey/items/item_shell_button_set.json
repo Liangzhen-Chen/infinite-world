@@ -1,0 +1,18 @@
+{
+  "id": "item_shell_button_set",
+  "fingerprint": "cfd45bf37098afe21aafc0b6ec515fb54d358a84942c4296bb64e7f5512ccbe3",
+  "status": "passed",
+  "attempts": 1,
+  "draft": {
+    "id": "item_shell_button_set",
+    "description": "旧磨坊出品的细孔贝面扣组，整组以浅色贝片扣坯制成，每片中央钻有细针孔，孔口与外缘经细磨石修平，边缘留有轻微磨痕。扣面保留贝料天然纹理，无附加饰物。整组重量很轻，适合缝缀于衣物或囊袋。",
+    "inspection": "逐片查看贝片有无裂纹、缺角，细孔是否居中贯通，孔口与外缘是否留有锐边或毛刺。",
+    "storage": "置于干燥处，避免重压与碰撞，可与同类扣件同袋收存，防止贝片互相刮擦。"
+  },
+  "review": {
+    "contradictions": []
+  },
+  "errors": [],
+  "warnings": [],
+  "feedback": null
+}

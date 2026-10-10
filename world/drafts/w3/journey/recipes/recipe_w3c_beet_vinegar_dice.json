@@ -1,0 +1,16 @@
+{
+  "id": "recipe_w3c_beet_vinegar_dice",
+  "fingerprint": "e4f41e88971bde38008c5776cae0b051e9204c5797e70337b58cb4ceacd1b174",
+  "status": "passed",
+  "attempts": 1,
+  "draft": {
+    "id": "recipe_w3c_beet_vinegar_dice",
+    "process": "取带皮红根甜菜，以案上切刀削去外皮与须根，改刀成均匀小丁；厚底煮锅置灶上，倾入配额清水，下甜菜丁，以干木刨屑引火加热，煮至丁块能被偏柄木匙轻压即软。离火后倾入酸果醋小瓶，用木匙拌匀，使醋液裹住每块甜菜丁。静置冷却至常温，全部盛作一份交付。果醋仅调味，不作长期保鲜保证；煮锅余汁与刨屑残屑一并弃置，工具保留。总耗时八十五分钟。"
+  },
+  "review": {
+    "contradictions": []
+  },
+  "errors": [],
+  "warnings": [],
+  "feedback": null
+}

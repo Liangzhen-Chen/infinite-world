@@ -1,0 +1,18 @@
+{
+  "id": "item_gate_hasps",
+  "fingerprint": "266cb0d992afa3883b0205580a1e040776a5bee4b49254fb9ebbfdb5dd3e862b",
+  "status": "passed",
+  "attempts": 1,
+  "draft": {
+    "id": "item_gate_hasps",
+    "description": "铁匠铺出产的翻舌门扣，由翻舌与穿环底片两部分分锻后组合。底片冲出安装孔，翻舌一端卷成活动眼，与底片铰接可翻转扣合。表面留冷锉修整的细痕，边角磨圆。整体呈深灰铁色，重约一千一百克，配锁需另购，本身不含锁芯。",
+    "inspection": "翻动翻舌，看活动眼是否松旷或卡滞；再对光查看安装孔边缘有无裂纹、卷眼处有无张口。",
+    "storage": "置于干燥处平放，避免翻舌长期受压变形；可薄覆干布防尘，勿与潮物同堆。"
+  },
+  "review": {
+    "contradictions": []
+  },
+  "errors": [],
+  "warnings": [],
+  "feedback": null
+}

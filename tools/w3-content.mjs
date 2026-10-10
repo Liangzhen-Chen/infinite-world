@@ -3,7 +3,7 @@ import { hashContent } from './content-pipeline.mjs';
 import { validateWorld } from './validate-world.mjs';
 
 const units = { '公斤': ['weight',1], '千克':['weight',1], '斤':['weight',.5], '克':['weight',.001], '铜币':['basePrice',1], '分钟':['minutes',1], '小时':['minutes',60], '天':['shelfLifeDays',1] };
-const numeral='(?:\\d+(?:\\.\\d+)?|[零〇一二两三四五六七八九十百千万点半]+)';
+const numeral='(?:\\d+(?:\\.\\d+)?|[零〇一二两三四五六七八九十百千万点半]+?)';
 export function chineseNumber(value){
   if(/^\d/.test(value))return Number(value);if(value==='半')return .5;
   const digits={零:0,〇:0,一:1,二:2,两:2,三:3,四:4,五:5,六:6,七:7,八:8,九:9};
@@ -34,6 +34,7 @@ export function validateW3Draft(draft,entry,blocklist,context=null) {
   const text=fields.map(field=>draft[field]).join('');
   for(const word of [...blocklist.names,...blocklist.realPeople])if(text.includes(word))errors.push(`原创屏蔽词 ${word}`);
   if(/主持人|玩家不能|不要让|禁止|骨架|schema|JSON|系统要求/.test(text))errors.push('泄漏规则措辞');
+  if(/(?:npc|item|recipe|skill|loc|bld)_[a-z0-9_]+/.test(text))errors.push('说明泄漏内部实体编号');
   if(item)errors.push(...loreIssues(draft,entry));
   // Numeric claims in item prose concern this item. Recipes include ingredient
   // quantities, so their other numbers are checked by L2 against named facts.

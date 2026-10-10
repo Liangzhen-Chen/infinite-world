@@ -1,0 +1,18 @@
+{
+  "id": "item_hollow_gouge",
+  "fingerprint": "a8f4a681f81d8865cb715e5ebf85025d1baa7a26c63ece3615fd9476798448e6",
+  "status": "passed",
+  "attempts": 1,
+  "draft": {
+    "id": "item_hollow_gouge",
+    "description": "白石镇铁匠铺常见的圆口雕花凿，桦木柄经车削打磨，尾端收细便于握持，柄首套有薄铁箍。钢刃由整条料锻出，口部弯成半圆，内壁留细密锉痕，刃口斜磨出锋。全长约一掌半，掂在手里沉实，适合沿木纹推出浅弧凹槽。",
+    "inspection": "看刃口有无卷缺，半圆内壁是否残留木屑；柄箍松动、柄身裂纹都需留意。轻敲木柄听声，闷响则内部可能有暗伤。",
+    "storage": "擦净木屑后刃口朝外平放于干燥木架，柄尾垫起离地；勿与石凿混堆，避免磕碰卷刃。"
+  },
+  "review": {
+    "contradictions": []
+  },
+  "errors": [],
+  "warnings": [],
+  "feedback": null
+}

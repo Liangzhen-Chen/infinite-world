@@ -1,0 +1,18 @@
+{
+  "id": "item_horsehair_sieve_cloth",
+  "fingerprint": "3c536b78ed452638273d6ecc1a4e10d8489d097baef498de7d8fedd4ef46af6b",
+  "status": "passed",
+  "attempts": 2,
+  "draft": {
+    "id": "item_horsehair_sieve_cloth",
+    "description": "织坊以马尾毛理成经纬，用结网梭穿插编成小滤片，四缘以麻线锁边。片身轻薄，网目细密而略透光，边缘针脚匀整，毛端偶有短茬。仅用于分离水中粗渣，不能去除水中疾病。集市按当季货源小批供应，现货售罄须等待另一次实际补货。",
+    "inspection": "展开对光查看网目是否均匀，捻摸有无断毛脱结，检查锁边麻线是否松脱；抖落附着的干渣即可。",
+    "storage": "晾干后平放或卷起，置于干燥避压处，勿折重压；自制成起至多保管180天。"
+  },
+  "review": {
+    "contradictions": []
+  },
+  "errors": [],
+  "warnings": [],
+  "feedback": null
+}

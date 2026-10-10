@@ -1,0 +1,16 @@
+{
+  "id": "recipe_w3c_felt_knee_pad",
+  "fingerprint": "2bc0bce30251903c902d92b8b1236a871dfa916d792dfbd64341229c700d75e6",
+  "status": "passed",
+  "attempts": 1,
+  "draft": {
+    "id": "recipe_w3c_felt_knee_pad",
+    "process": "在织坊台面上，用短刃裁革剪把厚毛毡片与紧织麻帆布按膝面大小各剪出两片，毡片夹入帆布之间对齐，四边留出压边余量。取粗眼缝针穿细捻麻线团，沿每片周边逐段合缝压实，使毡层不滑动。余下帆布纵向对折，缝成两条窄绑带，带端回折缝牢，再缝接到护垫两侧。全程一百五十分钟，成品一份。"
+  },
+  "review": {
+    "contradictions": []
+  },
+  "errors": [],
+  "warnings": [],
+  "feedback": null
+}

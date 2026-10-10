@@ -1,0 +1,16 @@
+{
+  "id": "recipe_w3c_mustard_relish",
+  "fingerprint": "fba3b4cc53f7e04cdacb754a6d3ef2fe9c7973d815f3b6b74217b4166a230210",
+  "status": "passed",
+  "attempts": 1,
+  "draft": {
+    "id": "recipe_w3c_mustard_relish",
+    "process": "黄芥籽倒在案上，持案上切刀以刀背分次压裂，只求裂口而不碾成细粉，粗粒留于原处。将压好的芥籽拨入厚底煮锅，倾入酸果醋小瓶，撒下粗盐小包，以偏柄木匙顺同一方向拌至籽粒尽湿。锅不置火，加盖静置吸润，其间再拌两次，使醋盐均匀附着。全程共耗时四十分钟。所得一份粗粒芥醋酱辛香带酸，籽粒仍可辨，不用染料或药材；余料弃置，三件工具保留。"
+  },
+  "review": {
+    "contradictions": []
+  },
+  "errors": [],
+  "warnings": [],
+  "feedback": null
+}

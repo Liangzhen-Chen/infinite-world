@@ -1,0 +1,18 @@
+{
+  "id": "item_beech_press_board",
+  "fingerprint": "2a0c7cb17f68db31f623649174a76d8335576ff09543cbdfe2f0cd229d71eacf",
+  "status": "passed",
+  "attempts": 1,
+  "draft": {
+    "id": "item_beech_press_board",
+    "description": "旧磨坊出品的扁平板，以山毛榉坯锯成，两面刨平，四角锉去薄刺，表面薄涂一层油后阴干。板身厚薄匀称，木纹顺直，边缘留有细锉痕。只作手压承板，平放时贴面稳当，可承手压与纸页叠置。",
+    "inspection": "翻看两面是否平整，摸四角有无薄刺，看涂油处是否表干、有无未干黏手，边缘锉痕是否均匀。",
+    "storage": "置于干燥通风处平放，避免重压叠放与潮湿；勿靠墙斜立，以免板面受潮变形。"
+  },
+  "review": {
+    "contradictions": []
+  },
+  "errors": [],
+  "warnings": [],
+  "feedback": null
+}

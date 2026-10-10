@@ -1,0 +1,21 @@
+{
+  "id": "item_war_pick",
+  "fingerprint": "211aa84b64e73cbe41e293ff940744bd57cce6cb87488e0f27a438d86e80f8ba",
+  "status": "passed",
+  "attempts": 1,
+  "draft": {
+    "id": "item_war_pick",
+    "description": "白石镇集市流通的短喙战锤，锤头以锻钢打造，锤头一端为短喙，另一端为平锤面，喙尖经磨石修整，锤面留有细密锻打痕。木柄嵌入锤头铁箍内，柄身缠有防滑皮条，末端收成圆钝握球。全长约合前臂之半，单手可持，重心偏向锤头，适合近身交锋。",
+    "inspection": "先看锤头与柄接合处铁箍是否松动，再看喙尖有无卷刃或崩口，锤面有无深凹，柄身皮条是否断裂、木柄有无裂纹。持握挥动时听接合处有无异响。",
+    "storage": "存放于干燥处，锤头朝下或平置于木架，避免喙尖受压变形。不与潮湿物同放，柄身皮条定期查看有无霉斑。长期不用时以布裹锤头。"
+  },
+  "review": {
+    "contradictions": []
+  },
+  "errors": [],
+  "warnings": [],
+  "feedback": null,
+  "manualCorrection": {
+    "reason": "L4：锤头是锻钢，木柄不能写成通体锻钢。"
+  }
+}

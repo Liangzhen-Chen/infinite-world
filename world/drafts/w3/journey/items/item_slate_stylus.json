@@ -1,0 +1,18 @@
+{
+  "id": "item_slate_stylus",
+  "fingerprint": "a87a37df1516a99fd9465bb098f3ee73298bb224d53b305fca454f8d9f6954da",
+  "status": "passed",
+  "attempts": 1,
+  "draft": {
+    "id": "item_slate_stylus",
+    "description": "从旧磨坊流出的窄长板岩条，一端以铁锉收成钝尖，杆身留有几道锉齿擦痕，侧棱经湿细砂磨圆，握持不割手。石面呈灰青，夹有浅色层纹，断口处略见细粒剥落。整体无墨槽与笔毫，只宜在粗面留下浅白划痕，作记数或标记之用。",
+    "inspection": "先看尖端是否完整，再以指腹沿杆身摸过，确认无锐棱、无贯穿裂；轻敲听声，闷响者内部多已分层。",
+    "storage": "收在干燥处，避免与硬物互相磕碰；可平放于软布上，勿长期受潮或曝晒。"
+  },
+  "review": {
+    "contradictions": []
+  },
+  "errors": [],
+  "warnings": [],
+  "feedback": null
+}

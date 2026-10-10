@@ -1,0 +1,18 @@
+{
+  "id": "item_honing_stone",
+  "fingerprint": "b06bef7c70b2a4110c80e5baa64c0c1d53ff0593c775d3ade249a4c33c653ea2",
+  "status": "passed",
+  "attempts": 2,
+  "draft": {
+    "id": "item_honing_stone",
+    "description": "白石镇集市流出的细面刃磨石，银品质，重0.5千克。石体为浅青灰细粒天然石，正面经人工找平，留有平行推磨痕；背面保留粗整凿痕，四边倒角防磕。用于修整小钢刃，磨面须先核查平整，油水另备。",
+    "inspection": "先看磨面有无崩口与凹坑，再以指腹横推感受细粒均匀度；侧边凿痕应连续，倒角无裂。轻敲听声，闷哑处不宜继续使用。",
+    "storage": "置于干燥木架或布袋内，避免与硬物磕碰；用后擦去泥浆，阴干再收。不可长时间浸水或曝晒。"
+  },
+  "review": {
+    "contradictions": []
+  },
+  "errors": [],
+  "warnings": [],
+  "feedback": null
+}

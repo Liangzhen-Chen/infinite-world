@@ -1,0 +1,16 @@
+{
+  "id": "recipe_w3c_leather_round_knife",
+  "fingerprint": "5ad696e03a7237d2e140476eb0598818a57aa550d9189fb382a81535738888b2",
+  "status": "passed",
+  "attempts": 1,
+  "draft": {
+    "id": "recipe_w3c_leather_round_knife",
+    "process": "钢条入炉烧透，以长柄铁钳夹出，在砧上用锻工手锤反复锻展成半月形薄刃，尾端留出柄舌。刃口烧至亮红后淬入清水，再回火减脆。冷后以平齿铁锉修整弧口与柄舌接缝，细屑扫入废堆；继用细面刃磨石修整刃线。柄舌插入小工具木柄并敲紧，试切已鞣软革校弧。木炭燃尽，炭屑留在炉内，不混入成品。总耗时二百八十分钟。"
+  },
+  "review": {
+    "contradictions": []
+  },
+  "errors": [],
+  "warnings": [],
+  "feedback": null
+}

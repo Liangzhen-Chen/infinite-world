@@ -1,0 +1,18 @@
+{
+  "id": "item_reed_pen_box",
+  "fingerprint": "c6c4bb0f7b0bf20bae2dd76e5bb88207f9eec46d6c972dca7ac2bf3e8193cd30",
+  "status": "passed",
+  "attempts": 2,
+  "draft": {
+    "id": "item_reed_pen_box",
+    "description": "旧磨坊出产的芦管笔尖匣，以带节芦管截作小筒，筒口内壁留有刀锋斜削的浅痕。软木塞片削成圆片塞入管口，麻线绕筒口数匝扎紧，线头由骨片压伏贴平。匣身轻巧，空置时可容纳干笔尖，管壁节隔保留，底面平整。",
+    "inspection": "查看筒口麻线是否松脱，塞片有无裂纹或缺口；轻摇听内壁有无异物，检查管身刀痕处是否开裂。",
+    "storage": "置于干燥避光处，勿压重物；保存上限180天，逾期麻线易脆断。"
+  },
+  "review": {
+    "contradictions": []
+  },
+  "errors": [],
+  "warnings": [],
+  "feedback": null
+}

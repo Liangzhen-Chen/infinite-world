@@ -1,0 +1,16 @@
+{
+  "id": "recipe_w3c_mushroom_barley_pot",
+  "fingerprint": "2fc114d201b3c59a769a155151ca652ce1fc558cbdccdec7fb62f071b5748bb5",
+  "status": "passed",
+  "attempts": 1,
+  "draft": {
+    "id": "recipe_w3c_mushroom_barley_pot",
+    "process": "干栽培蘑菇片置厚底煮锅内，用规定清水泡发至软，捞出以案上切刀切短，泡液澄清后留用，不掺野菌或肉汁。切料、泡液与脱壳大麦同入锅，小灶上煮至大麦透软，持偏柄木匙沿锅底搅动防粘。粗盐以刀背压碎，起锅前调入。干木刨屑供灶引火，炉用炭屑不混入成品。全程九十钟，得菌片大麦煨一份，余料弃置，三件工具保留。"
+  },
+  "review": {
+    "contradictions": []
+  },
+  "errors": [],
+  "warnings": [],
+  "feedback": null
+}

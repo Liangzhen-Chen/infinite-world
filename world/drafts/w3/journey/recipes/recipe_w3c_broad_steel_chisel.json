@@ -1,0 +1,16 @@
+{
+  "id": "recipe_w3c_broad_steel_chisel",
+  "fingerprint": "6024145df3ca9aec3719d8eb7da647008eb10beb292781a029956b9cd940a587",
+  "status": "passed",
+  "attempts": 1,
+  "draft": {
+    "id": "recipe_w3c_broad_steel_chisel",
+    "process": "将钢条入炉烧至可锻，以长柄铁钳夹持，用锻工手锤在砧上把刃端展宽成凿口，同时收出柄舌。钢料离炉后趁热将凿口浸入配额清水淬硬，再回炉稍作回火以减脆性。冷却后用平齿铁锉修平宽口、柄舌与接缝，锉屑扫入废堆。以细面刃磨石研磨刃口斜面至齐整，最后把小工具木柄装紧于柄舌。总耗时三百分钟。木炭烧尽后炭屑留在炉内，不混入成品。成品一份，供木作凿削，不凿硬石。"
+  },
+  "review": {
+    "contradictions": []
+  },
+  "errors": [],
+  "warnings": [],
+  "feedback": null
+}

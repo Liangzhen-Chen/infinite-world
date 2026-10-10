@@ -1,0 +1,16 @@
+{
+  "id": "recipe_w3c_steel_gouge_tip",
+  "fingerprint": "f1ad6a7f57d5315e61ed0f16aec577d2495f1bcba2aaea3aa86b56fdb0e689b0",
+  "status": "passed",
+  "attempts": 1,
+  "draft": {
+    "id": "recipe_w3c_steel_gouge_tip",
+    "process": "钢条入炉烧至可锻，用长柄铁钳夹出置于砧面，以锻工手锤反复锻打，把一端卷成圆口，另一端留出柄舌。成形后淬口并回火，冷却后以圆身孔锉沿孔轴推拉修整内弧，再用细面刃磨石修整刃口。最后将柄舌装入小工具木柄，校正圆口与柄轴。总耗时三百二十分钟。木炭燃尽后炉内炭屑弃置，不混入成品。"
+  },
+  "review": {
+    "contradictions": []
+  },
+  "errors": [],
+  "warnings": [],
+  "feedback": null
+}

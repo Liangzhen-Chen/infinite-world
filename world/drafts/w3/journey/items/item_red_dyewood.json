@@ -1,0 +1,21 @@
+{
+  "id": "item_red_dyewood",
+  "fingerprint": "9d8d073c3bb91bc3d871f0e6a1347e2ce58c5d332b69116fb294ddfaa80abdca",
+  "status": "passed",
+  "attempts": 3,
+  "draft": {
+    "id": "item_red_dyewood",
+    "description": "白石镇集市上按小批货源售出的红木碎片，木色深红，断口见细密顺纹与锯切毛茬，偶带树皮残迹。一百克可煎取染液，供染布与器物着色，不作食材。整份100克，掂之轻而干爽，指捻有细微木屑落下。",
+    "inspection": "翻看断口与树皮，辨色深浅、有无霉斑与虫蛀孔；拈起轻嗅，应带干木气，无酸腐味。",
+    "storage": "装入干布袋或木匣，置于阴凉干燥处，避潮避晒；自加工起保存上限180天，霉变木片弃置。"
+  },
+  "review": {
+    "contradictions": []
+  },
+  "errors": [],
+  "warnings": [],
+  "feedback": null,
+  "manualCorrection": {
+    "reason": "L4：100克为整份碎木，180天从加工起算。"
+  }
+}

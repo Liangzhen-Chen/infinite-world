@@ -1,0 +1,16 @@
+{
+  "id": "recipe_w3c_caraway_oat_crust",
+  "fingerprint": "d198fad8f98055efdad1ec0078dcea8512c92942c8a6798d4defab06b135827d",
+  "status": "passed",
+  "attempts": 1,
+  "draft": {
+    "id": "recipe_w3c_caraway_oat_crust",
+    "process": "取香芹籽置于案板，以切刀刀背逐粒压裂，令籽壳开缝而不成粉。将燕麦粉倾入厚底煮锅，加粗盐与清水一份，用长柄搅糊板沿锅底翻搅至无干粉块，再拌入压裂的香芹籽，糊体稠厚可挂板。锅下铺干木刨屑两份引火，小火分片烘干：每片摊薄压平，待底面定形后翻面，烘至内外干硬、掰之脆断。全部成片合为一份交付，余下碎屑弃置，工具洗净保留。总耗时80分钟。"
+  },
+  "review": {
+    "contradictions": []
+  },
+  "errors": [],
+  "warnings": [],
+  "feedback": null
+}

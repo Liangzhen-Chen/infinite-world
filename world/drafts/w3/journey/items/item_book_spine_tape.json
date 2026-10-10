@@ -1,0 +1,18 @@
+{
+  "id": "item_book_spine_tape",
+  "fingerprint": "20311b790aff814bc988e4c1d542086768b62f60ef4f861be73ef8caf591ab5a",
+  "status": "passed",
+  "attempts": 2,
+  "draft": {
+    "id": "item_book_spine_tape",
+    "description": "旧磨坊出产的窄长护脊带，取帆布顺纹裁成，两侧锁边，中段折出书脊中线，再以麻线沿线缝实加固。带身平直少弯，边口密实，表面留有剪裁与针脚压痕，可衬于书册脊背，附着时须另备合适黏料。",
+    "inspection": "查看边口有无线头散脱，对折中线是否居中，针脚有无跳线或松脱，带面是否受潮发硬。",
+    "storage": "卷成小卷，置于干燥避光处，防潮防虫；自制成起保存上限365天。"
+  },
+  "review": {
+    "contradictions": []
+  },
+  "errors": [],
+  "warnings": [],
+  "feedback": null
+}

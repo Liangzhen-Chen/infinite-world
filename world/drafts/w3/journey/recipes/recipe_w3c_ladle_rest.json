@@ -1,0 +1,16 @@
+{
+  "id": "recipe_w3c_ladle_rest",
+  "fingerprint": "f1ebe9050ff561d4f321f4d07f3f0013fe7adeb532e454b3b0489609dc35749b",
+  "status": "passed",
+  "attempts": 1,
+  "draft": {
+    "id": "recipe_w3c_ladle_rest",
+    "process": "取风干山毛榉短坯，以窄框木锯沿锯路推进，锯出托座底形并截去余料。换圆口雕花凿，配木槌轻敲，在座面削出承柄的浅弧托槽，槽壁留出钝口。再以粗齿木锉顺曲面锉修托槽与底缘，齿缝积屑随时清理，使棱角转钝不刮手。最后薄涂木用亚麻油，涂布后摊开晾置。总耗时一百三十分钟。此托只搁工具柄，勿直接盛食物。"
+  },
+  "review": {
+    "contradictions": []
+  },
+  "errors": [],
+  "warnings": [],
+  "feedback": null
+}

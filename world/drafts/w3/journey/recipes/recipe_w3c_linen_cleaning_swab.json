@@ -1,0 +1,16 @@
+{
+  "id": "recipe_w3c_linen_cleaning_swab",
+  "fingerprint": "9df6901d665d1786a306cdcc208a6a59572bac038625a08cf4e2d52a6f509919",
+  "status": "passed",
+  "attempts": 1,
+  "draft": {
+    "id": "recipe_w3c_linen_cleaning_swab",
+    "process": "从干直芦管束中挑出无裂的直管一段，以短锋修羽刀沿管口环削，使端口圆滑无毛刺，置旁待用。取窄幅麻布量出略短于管身的一段，用短刃裁革剪逐段合剪成窄条，再自一端向管头缠裹数层，缠至头端略鼓。以细捻麻线团在缠布处绕数匝扎牢，收结藏于布层下，剪去余线。全程共七十五分钟，得缠头拭管条一份；余下芦管碎屑与布头弃置，两件工具保留。"
+  },
+  "review": {
+    "contradictions": []
+  },
+  "errors": [],
+  "warnings": [],
+  "feedback": null
+}

@@ -1,0 +1,16 @@
+{
+  "id": "recipe_w3c_ash_walking_stick",
+  "fingerprint": "28dd5b71454641ef80d40579973d3802f36ba279c7d7ac8e54c0def9f9a06f81",
+  "status": "passed",
+  "attempts": 1,
+  "draft": {
+    "id": "recipe_w3c_ash_walking_stick",
+    "process": "取白蜡木直料一段，先以窄框木锯沿直纹截去端头，锯口顺锯路推进，不横切石料。换双耳削柄刀夹在腋下，沿木纹把杆身削细，上端留出弯首握把的粗坯，刃口只吃木不劈铁。再用粗齿木锉锉圆握首与杖尾触手边，齿缝积屑随时清出。最后薄涂木用亚麻油一遍，涂布摊开晾置，余料弃置。总耗时二百一十分钟。成品为一份手杖，仅作行走倚扶，无战斗加值与医疗保证。"
+  },
+  "review": {
+    "contradictions": []
+  },
+  "errors": [],
+  "warnings": [],
+  "feedback": null
+}

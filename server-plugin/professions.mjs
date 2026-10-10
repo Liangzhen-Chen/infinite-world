@@ -1,4 +1,5 @@
 import {checkPetCareer}from'./pets.mjs';
+import {assertNpcService}from'./npc-schedule.mjs';
 const int=(value,min,max,label)=>{if(!Number.isSafeInteger(value)||value<min||value>max)throw new Error(`${label}不在允许范围`);return value;};
 export function effectiveProficiency(d,engine,skill){
     const value=d.get('state','skills',skill,'proficiency')??0,role=engine.byId.get(skill)?.profession;
@@ -45,6 +46,7 @@ export function profession(d,args,id){
         if((mentor.promotionRanks?.[role]??0)<history.length+1)throw new Error('导师不具备这一阶升职考核资格');
         if(effectiveProficiency(d,this,choice.requiredSkill)<choice.minimumProficiency)throw new Error('升职所需技能不足');
         if(player.coins<choice.fee)throw new Error('升职费用不足');
+        assertNpcService(d,this,teacher,'teach',180);
         const outcome=this.check(d,{attribute:catalog.attribute,skill:choice.requiredSkill,difficulty:20},id);this.advance(d,180,id);
         if(outcome.success){
             d.set(['state','player','coins'],player.coins-choice.fee);d.set(['state','npcs',teacher,'coins'],d.get('state','npcs',teacher,'coins')+choice.fee);
@@ -63,6 +65,7 @@ export function profession(d,args,id){
         if(catalog.attribute&&player.attributes[catalog.attribute]<(entry.minimumAttribute??0))throw new Error('入职主属性不足');
         if(effectiveProficiency(d,this,entry.skill)<entry.minimumProficiency)throw new Error('尚未达到入职手艺或基础技能要求');
     }
+    assertNpcService(d,this,teacher,'teach',entry?.minutes??120);
     const outcome=this.check(d,{attribute:catalog.attribute??'智力',skill:entry?.skill,difficulty:entry?.difficulty??15},id);this.advance(d,entry?.minutes??120,id);
     if(outcome.success){
         d.set(['state','player','coins'],player.coins-catalog.fee);d.set(['state','npcs',teacher,'coins'],d.get('state','npcs',teacher,'coins')+catalog.fee);

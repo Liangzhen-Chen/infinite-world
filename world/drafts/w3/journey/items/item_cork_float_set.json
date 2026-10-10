@@ -1,0 +1,18 @@
+{
+  "id": "item_cork_float_set",
+  "fingerprint": "f9a4b0a86b2af9bfdd8b60d681860ebb76e23f617f98dfaf08a39f63c3e76101",
+  "status": "passed",
+  "attempts": 2,
+  "draft": {
+    "id": "item_cork_float_set",
+    "description": "旧磨坊出品的整组浮子：软木剖成小浮片，外缘修圆，锥刺的系孔边缘留有浅压痕，麻线逐片穿绕成串。木色浅黄，孔位与片距不完全均一，属手作常态。整组交付，需另配渔网，不保证捕鱼。",
+    "inspection": "逐片翻看外缘与系孔，确认无劈裂、孔未豁开；轻拉麻线，看穿绕处是否松脱、有无断股。",
+    "storage": "置于阴凉干燥处，避免挤压与潮湿；保存上限180天，超期麻线易脆、软木易变形。"
+  },
+  "review": {
+    "contradictions": []
+  },
+  "errors": [],
+  "warnings": [],
+  "feedback": null
+}

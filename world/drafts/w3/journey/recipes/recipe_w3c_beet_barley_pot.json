@@ -1,0 +1,16 @@
+{
+  "id": "recipe_w3c_beet_barley_pot",
+  "fingerprint": "b624f8afccf366494e581e3abe564e97c461b5923e97e1e750a29380982cc15d",
+  "status": "passed",
+  "attempts": 1,
+  "draft": {
+    "id": "recipe_w3c_beet_barley_pot",
+    "process": "取红根甜菜洗净，用案上切刀削去根皮并切成小丁，根皮弃置。脱壳大麦放入厚底煮锅，倒入配额清水，架于小灶以木刨屑引火，煮至麦粒软透。用偏柄木匙把甜菜丁拌入锅中，继续煨至菜丁熟软、汤汁转红，撒入粗盐调匀。全程不额外补水，煮成后锅底只留浓红汁。总耗时90分钟，出锅即得一份红根麦饭，趁热食用。"
+  },
+  "review": {
+    "contradictions": []
+  },
+  "errors": [],
+  "warnings": [],
+  "feedback": null
+}

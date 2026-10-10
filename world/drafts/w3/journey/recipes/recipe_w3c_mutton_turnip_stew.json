@@ -1,0 +1,16 @@
+{
+  "id": "recipe_w3c_mutton_turnip_stew",
+  "fingerprint": "697cb87456cdf18fe1915c29c765ea19588ce879c88d05c67ed44f9ecec42de8",
+  "status": "passed",
+  "attempts": 1,
+  "draft": {
+    "id": "recipe_w3c_mutton_turnip_stew",
+    "process": "将去骨羊肉与带皮芜菁分别置于案板，用案上切刀切成适口块状，芜菁根须与坏斑一并削去。厚底煮锅坐于灶上，倾入全部清水，下羊肉与芜菁，取三份干木刨屑引火，慢煨至肉熟根软。其间以偏柄木匙沿锅缘舀取，拨去浮沫，撒入粗盐调味。生肉切毕，刀面擦净。总耗时120分钟。余料弃置，煮锅、切刀与木匙保留。"
+  },
+  "review": {
+    "contradictions": []
+  },
+  "errors": [],
+  "warnings": [],
+  "feedback": null
+}

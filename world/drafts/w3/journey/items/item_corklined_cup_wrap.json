@@ -1,0 +1,18 @@
+{
+  "id": "item_corklined_cup_wrap",
+  "fingerprint": "5233b726e9c153fb99e228c4f9cf421fa761b9a9438099fc8c6bd06ff2e16a14",
+  "status": "passed",
+  "attempts": 2,
+  "draft": {
+    "id": "item_corklined_cup_wrap",
+    "description": "软木分片夹入麻布包层，侧边以麻线缝住，上缘留出开口，空套可套住小杯。布面可见剪裁毛边与针脚压痕，软木片边缘留有刀切斜面。套身柔软可折，套上后不保证液体温度不降。",
+    "inspection": "翻看内外布面与软木片，检查侧边缝线是否松脱、开口是否裂开、软木有无折断或受潮变形。",
+    "storage": "置于干燥通风处，避免重压与潮湿；自制成起计保存上限180天。"
+  },
+  "review": {
+    "contradictions": []
+  },
+  "errors": [],
+  "warnings": [],
+  "feedback": null
+}

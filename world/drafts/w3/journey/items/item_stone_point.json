@@ -1,0 +1,18 @@
+{
+  "id": "item_stone_point",
+  "fingerprint": "483c25803e078c64304c23029c2965613523d476fe3452e7dbd0c384111f009c",
+  "status": "passed",
+  "attempts": 1,
+  "draft": {
+    "id": "item_stone_point",
+    "description": "白石镇铁匠铺打制的加厚开石尖，钢制尖体经锻打与粗磨，尖端略钝而厚重，两侧留有锤击与磨痕；尾部收细，可插入木柄孔中。整体沉实，适合沿岩石原有裂隙下凿，不能凭空发现矿脉。",
+    "inspection": "查看尖体有无卷刃、裂纹与锈斑，尾端是否松动；轻敲木柄听声，辨接合是否牢靠。",
+    "storage": "置于干燥工具架或布袋中，尖头朝下单独存放；避免与刃器磕碰，远离潮气。"
+  },
+  "review": {
+    "contradictions": []
+  },
+  "errors": [],
+  "warnings": [],
+  "feedback": null
+}

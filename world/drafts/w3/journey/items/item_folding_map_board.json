@@ -1,0 +1,18 @@
+{
+  "id": "item_folding_map_board",
+  "fingerprint": "34f464810ce0b9d87e1228115f4ebfdcf7a9e01a1c6a566df04d3420152d9d0b",
+  "status": "passed",
+  "attempts": 2,
+  "draft": {
+    "id": "item_folding_map_board",
+    "description": "旧磨坊出产的折页行图板，重0.85千克。取整块松板对剖成两页，以刨刀修平内面，再用已制皮铰片和四枚铁钉把两页连成可开合的一对。板面留有锯路与刨痕，边缘见钉帽。合拢后夹住地图，展开即成平整承托面，地图需另备，不揭示未知地形。",
+    "inspection": "翻看两页内面是否平整，检查皮铰片有无裂口，四枚钉帽是否松动，开合时两页是否对齐。",
+    "storage": "合拢平放于干燥处，避免受潮与重压，勿使铰片长期折死。"
+  },
+  "review": {
+    "contradictions": []
+  },
+  "errors": [],
+  "warnings": [],
+  "feedback": null
+}

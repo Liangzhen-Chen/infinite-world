@@ -1,0 +1,18 @@
+{
+  "id": "item_pear_wheat_gruel",
+  "fingerprint": "3fcdc471fd0c3b183aae6105accbe86eae7079ab95494ffeafa2cdb9211f8660",
+  "status": "passed",
+  "attempts": 1,
+  "draft": {
+    "id": "item_pear_wheat_gruel",
+    "description": "青灯酒馆当季小批现煮的稠糊，盛在粗陶碗里呈浅麦色，梨块半沉半浮，表面留着刀背压裂的麦粒碎瓣。入口是麦香裹着梨的清甜，稠度靠水量与火候，凉后更黏。集市按当季货源供应，售罄须等下次补货。",
+    "inspection": "先看糊面有无浮沫或酸败气味，梨块是否发暗发软；再以木勺搅动，看是否结块焦底。不尝变质食物。",
+    "storage": "盛入陶碗加盖，置于阴凉处，保存期1天；天热时尽早食用，勿与生肉同放。"
+  },
+  "review": {
+    "contradictions": []
+  },
+  "errors": [],
+  "warnings": [],
+  "feedback": null
+}

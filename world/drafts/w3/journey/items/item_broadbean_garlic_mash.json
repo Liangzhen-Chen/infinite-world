@@ -1,0 +1,21 @@
+{
+  "id": "item_broadbean_garlic_mash",
+  "fingerprint": "40fdc345cb25d5a7ea9c7f0c826b4437ce64b1419e703bafb43d61616fe0ffdb",
+  "status": "passed",
+  "attempts": 2,
+  "draft": {
+    "id": "item_broadbean_garlic_mash",
+    "description": "青灯酒馆按当季货源小批供应的蒜香蚕豆泥，由买者自备容器盛装。干蚕豆泡煮后与去皮细切蒜瓣同煮，木匙压成厚泥，压泥前已挑去残皮，锅底焦屑弃置，蒜香混着豆香，质地稠而不流。重0.48千克。",
+    "inspection": "可看泥面颜色与蒜粒分布，嗅其气味，拨开表层查看是否夹生或焦黑；不尝变质食物。",
+    "storage": "置于阴凉处，加盖遮尘，自制成起至多存放1天；逾时弃置。"
+  },
+  "review": {
+    "contradictions": []
+  },
+  "errors": [],
+  "warnings": [],
+  "feedback": null,
+  "manualCorrection": {
+    "reason": "L4：残皮和焦屑应弃置，不混入成品；容器另备。"
+  }
+}

@@ -1,0 +1,16 @@
+{
+  "id": "recipe_w3c_poppy_rye_crisp",
+  "fingerprint": "b561c754bb8e1584285feb89944ef5c77635be27f31d6586d247c623924e0206",
+  "status": "passed",
+  "attempts": 1,
+  "draft": {
+    "id": "recipe_w3c_poppy_rye_crisp",
+    "process": "取细筛黑麦粉与清水，用长柄搅糊板在厚底煮锅里拌成无干粉稠糊，再把食用罂粟籽全部拌入。锅底以菜籽油薄薄润过，分次舀入糊料摊薄，用干木刨屑引火，小火烘到饼身硬挺、内部干爽，全程不加酵种。翻动时只借搅糊板扁头托起，避免刮伤锅底。共耗时95分钟，得籽香黑麦脆饼一份。"
+  },
+  "review": {
+    "contradictions": []
+  },
+  "errors": [],
+  "warnings": [],
+  "feedback": null
+}

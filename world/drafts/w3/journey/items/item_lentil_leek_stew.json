@@ -1,0 +1,21 @@
+{
+  "id": "item_lentil_leek_stew",
+  "fingerprint": "fcc18a4c6169e26b0256faa7ed625a28f93bc1b41628cabcd60d8364f13db0f4",
+  "status": "passed",
+  "attempts": 3,
+  "draft": {
+    "id": "item_lentil_leek_stew",
+    "description": "青灯酒馆的葱叶扁豆烩，可盛入自备浅碗，扁豆煮至酥软，韭葱段青白相间浮在稠汤上。汤色浑褐，表面留有木匙推开的浅纹，热气里带葱香与豆香。碗沿用木勺刮过，留有搅动防焦的浅痕。整份重零点六四千克。",
+    "inspection": "先看汤面有无浮沫或干边，再拨开葱段确认扁豆是否完整，闻气味是否发酸发闷；不尝。",
+    "storage": "自出锅起1天内食用，用自备容器加盖遮尘，置阴凉处；超过期限或闻到酸败气即弃置，重煮不延长时限。"
+  },
+  "review": {
+    "contradictions": []
+  },
+  "errors": [],
+  "warnings": [],
+  "feedback": null,
+  "manualCorrection": {
+    "reason": "L4：配方未投油，不加油花；1天过期不能重煮恢复。"
+  }
+}

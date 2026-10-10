@@ -1,0 +1,18 @@
+{
+  "id": "item_bristle_bundle",
+  "fingerprint": "5d8bbc50ac1cce578606382734b95545d891d76ea991d2bd2d95c16d025c8009",
+  "status": "passed",
+  "attempts": 2,
+  "draft": {
+    "id": "item_bristle_bundle",
+    "description": "白石镇集市上成束售卖的洗净硬鬃，取自动物背脊，根端齐整、梢部略散。鬃丝粗直，色深而带哑光，手捻有涩感，未见油腻。每束约五十克，以麻绳松松拢住，供小刷植毛时取用，束根需另行夹固。",
+    "inspection": "翻看束内层，抖去浮尘，检查有无虫蛀断丝与夹杂草屑；根端是否齐平，绳结是否松脱。只作外观与手感查看，不浸水。",
+    "storage": "置于干燥通风处，避开潮气与日晒，防虫蛀。自收取起保存上限365天，逾期鬃质变脆，不宜再用于植毛。"
+  },
+  "review": {
+    "contradictions": []
+  },
+  "errors": [],
+  "warnings": [],
+  "feedback": null
+}

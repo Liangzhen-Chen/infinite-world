@@ -1,0 +1,18 @@
+{
+  "id": "item_felt_insole_pair",
+  "fingerprint": "8da7c61ecac6e2f121982fbb3823bf62f3016013aeab24f1ae292cd416702362",
+  "status": "passed",
+  "attempts": 1,
+  "draft": {
+    "id": "item_felt_insole_pair",
+    "description": "一对由厚实毛毡片裁出的鞋垫，轮廓依固定样板，前掌略宽、后跟收窄，左右各一。毡面保留压制时的细密纤维走向，边缘以麻线锁缝一圈，针脚均匀，线结藏于垫底。垫身平整，无衬板也无附加层，贴合鞋内底使用。",
+    "inspection": "查看毡面有无破洞、虫蛀与压痕，沿锁边摸一圈，确认麻线未断、针脚未脱开，两片轮廓是否成对。",
+    "storage": "置于干燥通风处平放，避免重压与潮湿；远离虫鼠，勿折叠，存放期180天。"
+  },
+  "review": {
+    "contradictions": []
+  },
+  "errors": [],
+  "warnings": [],
+  "feedback": null
+}

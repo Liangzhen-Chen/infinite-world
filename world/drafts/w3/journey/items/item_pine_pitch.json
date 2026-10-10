@@ -1,0 +1,18 @@
+{
+  "id": "item_pine_pitch",
+  "fingerprint": "7113a21a647a62759a4798f1a64043fb6010a93fedfbbf394d0ada703a3f5e26",
+  "status": "passed",
+  "attempts": 2,
+  "draft": {
+    "id": "item_pine_pitch",
+    "description": "北林边集市上流通的熬稠松脂块，出自吴朔的有限材料库存，每块约一百克。松脂经慢火熬去稀薄部分，冷凝后呈深琥珀色硬块，边缘留有刮刀切分的斜痕，断面可见细小气泡与未滤净的树皮碎屑。品质等级为木，与材料名称无关。受热即变软，可填入接缝作薄封，不保证高压密封。",
+    "inspection": "翻看块面有无裂纹，指压试探软硬，嗅闻是否有焦糊或酸败气味；断面夹杂物多者不宜用于细缝。",
+    "storage": "置于阴凉干燥处，避热避晒，远离火源；自熬制起至多存放180天，逾期变脆发暗。"
+  },
+  "review": {
+    "contradictions": []
+  },
+  "errors": [],
+  "warnings": [],
+  "feedback": null
+}

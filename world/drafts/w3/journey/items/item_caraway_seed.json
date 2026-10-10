@@ -1,0 +1,18 @@
+{
+  "id": "item_caraway_seed",
+  "fingerprint": "5c22fe2ac2cf4ed6bcc8ab68bf30846c5e267aacfc2f61bb7a701c22d63d4699",
+  "status": "passed",
+  "attempts": 3,
+  "draft": {
+    "id": "item_caraway_seed",
+    "description": "白石镇集市上由颜哲分装的干香料籽，浅褐细粒，两端略尖，带纵向细棱，凑近有清辛草香。籽粒多为整颗，偶见轻微压痕与碎屑，是晾晒和筛分留下的痕迹。每份四十克，研碎少许调入麦食即可，余量仍按配方留用。",
+    "inspection": "取少量摊在掌上，看籽粒是否完整干燥、有无霉斑或虫蛀，再闻气味是否清辛；受潮结块或气味发闷者不宜再用。",
+    "storage": "装入干燥密闭的容器，置于阴凉避光处，远离潮气和异味。自收得起至多存放180天，过期或生虫霉变即弃。"
+  },
+  "review": {
+    "contradictions": []
+  },
+  "errors": [],
+  "warnings": [],
+  "feedback": null
+}

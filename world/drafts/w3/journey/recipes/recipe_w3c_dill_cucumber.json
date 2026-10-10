@@ -1,0 +1,16 @@
+{
+  "id": "recipe_w3c_dill_cucumber",
+  "fingerprint": "d3e08b90202277e06925171394ddc6e2575bd35d80538366d019dd369ebcc21b",
+  "status": "passed",
+  "attempts": 1,
+  "draft": {
+    "id": "recipe_w3c_dill_cucumber",
+    "process": "取短刺黄瓜一根，用案上切刀刮去表面粗刺，横切成适口瓜段，堆入厚底煮锅。鲜莳萝束挑去发黄叶，切碎后撒在瓜段上。粗盐小包若含沙，先以刀背压碎拣净，与酸果醋小瓶一并倒入锅中，用偏柄木匙翻拌，使盐粒化开、醋液裹匀瓜段与莳萝。静置短浸，待瓜段略透味即止，不可久置成发酵泡菜。浸出余液全部弃置，不留作再用。全程共七十五分钟。所得莳萝盐瓜段一份，须当日食用。"
+  },
+  "review": {
+    "contradictions": []
+  },
+  "errors": [],
+  "warnings": [],
+  "feedback": null
+}

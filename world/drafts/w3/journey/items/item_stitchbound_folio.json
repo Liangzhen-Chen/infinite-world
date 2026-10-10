@@ -1,0 +1,18 @@
+{
+  "id": "item_stitchbound_folio",
+  "fingerprint": "d2f314a3063a7f7c46ae1273b9e82c63de7151cd8085ae180e073a08583d6814",
+  "status": "passed",
+  "attempts": 1,
+  "draft": {
+    "id": "item_stitchbound_folio",
+    "description": "三张羊皮纸对折齐边，骨片压出折痕，书脊锥孔后以麻线穿订，修羽刀修去毛边。册页空白，未录文字，故不教授任何技能。封面略糙，纸面可见折叠与压痕，装订处麻线外露。出自旧磨坊，集市按当季货源小批供应，售罄须等实际补货。",
+    "inspection": "翻看册页是否齐整，检查书脊麻线有无松脱、断股，纸面有无破洞或水渍。空白册无可读内容。",
+    "storage": "置于干燥处平放，避潮避压，勿使书脊受扯；自制成起保存期365天。"
+  },
+  "review": {
+    "contradictions": []
+  },
+  "errors": [],
+  "warnings": [],
+  "feedback": null
+}

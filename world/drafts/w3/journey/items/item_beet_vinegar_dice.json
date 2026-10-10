@@ -1,0 +1,18 @@
+{
+  "id": "item_beet_vinegar_dice",
+  "fingerprint": "6d982444c2796e32db60662dc77013719ea3bb2df2f026b007180b0ab953a35a",
+  "status": "passed",
+  "attempts": 3,
+  "draft": {
+    "id": "item_beet_vinegar_dice",
+    "description": "青灯酒馆当季小批供应的凉食，甜菜削皮后切成小方丁，在配额水内煮至软透，离火趁热拌入果醋，摊开冷却后盛出。丁块大小不匀，边缘留有刀痕，醋色浅红，入口酸甜带土根气。果醋只作调味，不承担长期保鲜之效。",
+    "inspection": "先看丁块是否仍成形、表面有无发黏拉丝，再闻醋香是否转酸败或带霉闷气；若有异味或渗水浑浊，不可入口。",
+    "storage": "盛于洁净浅皿，置阴凉处或凉水中镇着，最多存放2天；天热时更易变味，宜尽早吃完。"
+  },
+  "review": {
+    "contradictions": []
+  },
+  "errors": [],
+  "warnings": [],
+  "feedback": null
+}

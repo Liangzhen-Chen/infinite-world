@@ -1,0 +1,18 @@
+{
+  "id": "item_brush_roll",
+  "fingerprint": "b2e782783cb1623edee130bb983a43b84c087a9f6dbfdc8c3b47b36677bfbcd2",
+  "status": "passed",
+  "attempts": 1,
+  "draft": {
+    "id": "item_brush_roll",
+    "description": "薄革裁作长底，面上以麻线缝出数道窄隔格，格口略收，可容已干刷具分插。骨片沿革背压出平直折痕，卷合后由余革束带收拢。革边见裁切斜口与针孔压痕，麻布格壁微起毛边。出自织坊，空卷出售，不随附笔刷，重0.24千克。",
+    "inspection": "展开卷身看隔格缝线是否齐整，捏束带试松紧，翻查革面有无裂口与霉斑；空卷内不应有残刷或碎屑。",
+    "storage": "卷合束紧，置干燥处，避潮避重压；保存期365天，逾期查看革面与缝线。"
+  },
+  "review": {
+    "contradictions": []
+  },
+  "errors": [],
+  "warnings": [],
+  "feedback": null
+}

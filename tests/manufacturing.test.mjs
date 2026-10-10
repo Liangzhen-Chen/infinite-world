@@ -91,7 +91,10 @@ test('制造单件可存储重启、导入和删消息回滚，规则分区1升2
     assert.deepEqual((await store.reconcile('craft',[])).document,migrated);
 });
 test('照明绑定实际单件，卖掉后买回同种别件不恢复光，既有物品不伪造制作者',async()=>{
-    const{document,run}=await setup();document.state.location='bld_hw_qingdeng';
+    const{world,document,run}=await setup();document.state.location='bld_hw_qingdeng';
+    // This item-identity fixture supplies a second seller with an agreed offer.
+    const seller=world.npcs.find(row=>row.id==='npc_hw_hezhou');
+    seller.schedule={default:[{start:0,end:1440,location:'bld_hw_qingdeng',activity:'出售夹具中的木杖',services:['trade']}]};
     let cast;for(let i=0;i<50;i++){cast=await run(document,'world_cast',{spell:'照明术',target:'旧木杖'},`light_${i}`);if(cast.result.success)break;}
     let c=cast.document;const instance=c.state.inventory.item_staff.instances[0];assert.equal(c.state.itemInstances[instance].maker,null);
     const illuminated=c=>magicIlluminates({get:(...path)=>path.reduce((value,key)=>value?.[key],c)});

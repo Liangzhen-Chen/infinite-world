@@ -1,0 +1,16 @@
+{
+  "id": "recipe_w3c_cheese_rye_panbread",
+  "fingerprint": "a08e94494cc5f33d200285f79ae3ee18aeffa7b8f80499d5b31e9b2084cb3c18",
+  "status": "passed",
+  "attempts": 1,
+  "draft": {
+    "id": "recipe_w3c_cheese_rye_panbread",
+    "process": "取熟成硬乳酪角，以案上切刀刮去外层污损，再切成薄片备用。将细筛黑麦粉倾入厚底煮锅，加入清水一份，用长柄搅糊板顺向拌成无干粉稠糊。切下无盐黄油，以小灶加热厚底煮锅使其融化，转动锅身令内壁沾匀。把稠糊分作两团，在锅底摊平，铺上酪片，再覆另一团糊并压合边缘。以小火烙至底面定形，翻面续烙，两面皆熟后取出。干木刨屑仅用于引火，不混入饼中。总耗时五十五分钟。"
+  },
+  "review": {
+    "contradictions": []
+  },
+  "errors": [],
+  "warnings": [],
+  "feedback": null
+}

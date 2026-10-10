@@ -1,0 +1,16 @@
+{
+  "id": "recipe_w3c_book_spine_tape",
+  "fingerprint": "c0990e7cf1496a1363aa938382d97225c0da1438ca871bc10483fb772e199f05",
+  "status": "passed",
+  "attempts": 1,
+  "draft": {
+    "id": "recipe_w3c_book_spine_tape",
+    "process": "取紧织麻帆布平铺于旧磨坊木台，先看经纬走向，用短刃裁革剪沿经线顺纹剪下一条长带，剪口齐直不斜切。以粗眼缝针穿细捻麻线，将长带两长边各向内折入少许，逐段锁边，针脚密排压住散边。再把带身对折，折痕居中作为书脊中线，两侧各缝一道平行缝线加固，缝时绷直带身防止扭斜。全程约六十五分钟，得麻缝护脊带一份。附着书册须另备合适黏料，本次不附。"
+  },
+  "review": {
+    "contradictions": []
+  },
+  "errors": [],
+  "warnings": [],
+  "feedback": null
+}

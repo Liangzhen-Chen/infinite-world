@@ -1,0 +1,92 @@
+{
+  "index": 0,
+  "fingerprint": "1b3ebb8685b4c042d405acf97cf1dc3726177aa170e264eca705f3922220fc2d",
+  "count": 43,
+  "passed": 43,
+  "ids": [
+    "recipe_w3c_cracked_wheat_pot",
+    "recipe_w3c_lentil_leek_stew",
+    "recipe_w3c_broadbean_garlic_mash",
+    "recipe_w3c_parsnip_cream_pot",
+    "recipe_w3c_beet_barley_pot",
+    "recipe_w3c_pear_wheat_gruel",
+    "recipe_w3c_cheese_rye_panbread",
+    "recipe_w3c_walnut_honey_bites",
+    "recipe_w3c_poppy_rye_crisp",
+    "recipe_w3c_caraway_oat_crust",
+    "recipe_w3c_mushroom_barley_pot",
+    "recipe_w3c_mutton_turnip_stew",
+    "recipe_w3c_plum_honey_spread",
+    "recipe_w3c_pear_vinegar_slice",
+    "recipe_w3c_mustard_relish",
+    "recipe_w3c_dill_cucumber",
+    "recipe_w3c_garlic_butter",
+    "recipe_w3c_rendered_cooking_fat",
+    "recipe_w3c_salted_walnut",
+    "recipe_w3c_beet_vinegar_dice",
+    "recipe_w3c_pear_dry_chips",
+    "recipe_w3c_cheese_herb_mash",
+    "recipe_w3c_canvas_satchel",
+    "recipe_w3c_felt_insole_pair",
+    "recipe_w3c_padded_work_collar",
+    "recipe_w3c_folding_haversack",
+    "recipe_w3c_goatskin_document_case",
+    "recipe_w3c_tool_apron_panel",
+    "recipe_w3c_brush_roll",
+    "recipe_w3c_corklined_cup_wrap",
+    "recipe_w3c_felt_knee_pad",
+    "recipe_w3c_horsehair_sieve_cloth",
+    "recipe_w3c_laundry_mesh_bag",
+    "recipe_w3c_travel_sewing_wallet",
+    "recipe_w3c_ash_walking_stick",
+    "recipe_w3c_beech_press_board",
+    "recipe_w3c_reed_drying_mat",
+    "recipe_w3c_bottle_divider_crate",
+    "recipe_w3c_clamping_wood_jaw",
+    "recipe_w3c_peg_drying_rack",
+    "recipe_w3c_beech_spatula",
+    "recipe_w3c_ladle_rest",
+    "recipe_w3c_cork_stop_set"
+  ],
+  "rewritten": 1,
+  "manual": [],
+  "pending": [],
+  "flagged": [
+    "recipe_w3c_lentil_leek_stew"
+  ],
+  "sample": [
+    "recipe_w3c_tool_apron_panel",
+    "recipe_w3c_lentil_leek_stew",
+    "recipe_w3c_cheese_herb_mash",
+    "recipe_w3c_padded_work_collar",
+    "recipe_w3c_cracked_wheat_pot"
+  ],
+  "l4": {
+    "approved": true,
+    "notes": [
+      {
+        "id": "recipe_w3c_tool_apron_panel",
+        "note": "帆布分底和系带，羊革分袋预孔缝合，三种工具都使用，240分钟，不附工具。"
+      },
+      {
+        "id": "recipe_w3c_lentil_leek_stew",
+        "note": "L4：木匙是保留工具，不会作为刨屑副产品交付。"
+      },
+      {
+        "id": "recipe_w3c_cheese_herb_mash",
+        "note": "三种原料全部按份取用，切碎拌油不用鲜乳，20分钟，余料弃置。"
+      },
+      {
+        "id": "recipe_w3c_padded_work_collar",
+        "note": "毡片入帆布层、余布作系带，缝线不返还，160分钟，不提高承重。"
+      },
+      {
+        "id": "recipe_w3c_cracked_wheat_pot",
+        "note": "一麦三水配额泡煮，刀背压裂、木匙防焦，炭屑只入灶，85分钟。"
+      }
+    ]
+  },
+  "costUpperYuan": 4.980806080000007,
+  "manualRatio": 0,
+  "needsSystemicRepair": false
+}

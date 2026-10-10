@@ -58,13 +58,17 @@ export function humidityAt(engine, document, location) {
     if (!current || current.indoors) return engine.byId.get(location)?.microclimate?.humidityPercent;
     return current.humidityPercent;
 }
-export function weatherTravel(engine, seed, edge, mode, minute) {
+export function weatherTravel(engine, seed, edge, mode, minute,cache=null) {
+    if(!edge.lengthKm)return {multiplier:1,closed:false};
+    const key=`${edge.from}:${mode}:${Math.floor(minute/1440)}`;
+    if(cache?.has(key))return cache.get(key);
     const row = weatherAt(engine,seed,edge.from,minute);
     if (!row || !edge.lengthKm) return { multiplier: 1, closed: false };
-    return { multiplier: row.travelFactors[mode], closed: mode === 'boat' && row.boatClosed,
+    const result={ multiplier: row.travelFactors[mode], closed: mode === 'boat' && row.boatClosed,
         region: row.region, weather: row.name, day: row.day };
+    cache?.set(key,result);return result;
 }
-export function weatherEdge(engine, seed, edge, mode, departure, elapsedBefore, movingBefore, speed) {
+export function weatherEdge(engine, seed, edge, mode, departure, elapsedBefore, movingBefore, speed,weatherCache=null) {
     if (!edge.lengthKm) {
         const budget=engine.rules.travel.dailyTravelMinutes,rest=mode!=='boat'&&movingBefore>0&&movingBefore%budget===0?1440-budget:0;
         return { elapsed: elapsedBefore+rest+1, moving: movingBefore+1 };
@@ -74,7 +78,7 @@ export function weatherEdge(engine, seed, edge, mode, departure, elapsedBefore, 
         if(distance<=1e-9)return{elapsed,moving};
         const budget=mode==='boat'?1440:engine.rules.travel.dailyTravelMinutes;
         if(mode!=='boat'&&moving>0&&moving%budget===0)elapsed+=1440-budget;
-        const now=departure+elapsed,conditions=weatherTravel(engine,seed,edge,mode,now);
+        const now=departure+elapsed,conditions=weatherTravel(engine,seed,edge,mode,now,weatherCache);
         if(edge.closedSeasons.includes(engine.calendar(now).season))return null;
         if(conditions.closed)return null;
         const rate=speed/conditions.multiplier/60;

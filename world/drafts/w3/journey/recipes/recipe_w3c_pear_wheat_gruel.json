@@ -1,0 +1,16 @@
+{
+  "id": "recipe_w3c_pear_wheat_gruel",
+  "fingerprint": "e96f96ffbe3be8b0752e09886018e9602cbf94abe39515d751ddb583fab9ba9d",
+  "status": "passed",
+  "attempts": 1,
+  "draft": {
+    "id": "recipe_w3c_pear_wheat_gruel",
+    "process": "取净麦粒一份，以切刀刀背逐粒压裂，露出内里即可，不必碾成细粉。厚底煮锅坐灶，倒入清水两份，投入裂麦，中火煮至麦粒开花、汤水转稠，其间用偏柄木匙沿锅底推搅，免其粘壁。脆肉梨一份先剔去碰伤处，剖开去核，切成小块，待麦糊稠度已足时后段下锅，略煮至梨块透软、果味回甜，不再另加蜂蜜。全程约八十份钟，煮成后趁热盛出，得梨肉麦糊一份。锅底若结薄层，木匙刮起一并盛入，不另留余料；灶内炭屑弃置，不混入成品。"
+  },
+  "review": {
+    "contradictions": []
+  },
+  "errors": [],
+  "warnings": [],
+  "feedback": null
+}

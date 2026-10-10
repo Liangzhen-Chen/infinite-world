@@ -1,0 +1,18 @@
+{
+  "id": "item_goat_skin",
+  "fingerprint": "2617f62fcd81ce89dc1fe073a84752e8d8b179c596456ea24a41d9a77eab81f9",
+  "status": "passed",
+  "attempts": 2,
+  "draft": {
+    "id": "item_goat_skin",
+    "description": "一张薄鞣山羊革，取自织坊熟制余料，皮面呈浅褐，揉折后留下细密褶印。边缘经刮刀修齐，背面可见石灰脱毛后残留的浅色斑驳与手工揉软的折痕。整张柔韧轻软，可反复折叠成包袋或作衬里，不属金属护甲，遇水易回软变形。",
+    "inspection": "对光查看皮面有无虫蛀孔洞与霉斑，再折一角试其回弹；若边缘发硬、背面起白霜，说明受潮已久，不宜继续使用。",
+    "storage": "卷起后用干布包裹，置阴凉通风处，避免压叠与潮气；自鞣成起最多保存365天，逾期皮质易脆裂。"
+  },
+  "review": {
+    "contradictions": []
+  },
+  "errors": [],
+  "warnings": [],
+  "feedback": null
+}

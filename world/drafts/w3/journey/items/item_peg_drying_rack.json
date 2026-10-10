@@ -1,0 +1,18 @@
+{
+  "id": "item_peg_drying_rack",
+  "fingerprint": "1f5d7b378d3eeab5646346950a169702e9ec45efff266b19ef201db97e4a2460",
+  "status": "passed",
+  "attempts": 1,
+  "draft": {
+    "id": "item_peg_drying_rack",
+    "description": "旧磨坊出产的折靠晾布架，以短板分作两侧架与横撑，钻眼后装入六枚木楔固定，麻绳牵制张角，收拢时把绳绕回楔上即可折靠。木面留有锯切与钻孔痕，楔头见槌击压痕。湿布另备，架体只作搭放支撑。",
+    "inspection": "查看两侧架是否同高、横撑楔是否松动、麻绳有无起毛断股，再试折靠一次看张角能否稳住。",
+    "storage": "收绳折靠后置于干燥通风处，避免压重与久潮，勿在绳上挂物。"
+  },
+  "review": {
+    "contradictions": []
+  },
+  "errors": [],
+  "warnings": [],
+  "feedback": null
+}

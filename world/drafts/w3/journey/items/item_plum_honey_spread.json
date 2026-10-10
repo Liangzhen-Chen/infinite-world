@@ -1,0 +1,18 @@
+{
+  "id": "item_plum_honey_spread",
+  "fingerprint": "0c129f73517bfc7ef6012d6d32bbf2f5882851a5754e1d69532477e4d094616b",
+  "status": "passed",
+  "attempts": 2,
+  "draft": {
+    "id": "item_plum_honey_spread",
+    "description": "青灯酒馆小批煮制的紫李酱，取当季李果去硬核切碎，与蜂蜜及配额水同煮至稠，木匙沿底翻动防焦。成品呈深紫褐色稠糊，可见细小果肉与果皮碎点，表面偶有浅色浮沫痕，气味为李果酸甜与蜂蜜暖香。盛装容器不在本件范围内。",
+    "inspection": "开盖先看表面有无霉斑、气泡或渗液，再嗅是否发酸、发苦或带酒气；木匙挑起应能缓慢垂落。不尝已变质的酱。",
+    "storage": "置于阴凉处，盖好防尘防虫；自煮成起算，至多存放3天，逾期不再食用。不得当作可常温久存的密封果酱。"
+  },
+  "review": {
+    "contradictions": []
+  },
+  "errors": [],
+  "warnings": [],
+  "feedback": null
+}

@@ -1,4 +1,5 @@
 import { trackTransferUnit, transferItems, changeItems } from './items.mjs';
+import {advanceWithNpcParticipants}from'./npc-schedule.mjs';
 
 const integer=(value,min,max,label)=>{if(!Number.isSafeInteger(value)||value<min||value>max)throw new Error(`${label}不在允许范围`);return value;};
 const path=id=>['state','records',id];
@@ -180,7 +181,7 @@ export function lawAction(d,args,eventId){
         if(!row.reported||evidenceScore(d,row)<code.evidenceRequired||!['已报案','证据不足'].includes(row.status))throw new Error('没有已报案且足够的证据，不能逮捕');
         const custodyKey=`legal_custody:${row.id}`;unique(d,custodyKey);
         const route=this.route(d.get('state','location'),code.court,'walk',now,d.document.randomSeed);
-        this.advance(d,route.minutes,eventId);d.set(['state','location'],code.court);d.set(['state','npcs',officer,'location'],code.court);
+        advanceWithNpcParticipants(d,this,route.minutes,eventId,[officer]);d.set(['state','location'],code.court);d.set(['state','npcs',officer,'location'],code.court);
         if(d.get('state','player','mount'))d.remove(['state','player','mount']);
         d.set(path(custodyKey),{category:'legal_custody',case:row.id,reason:'待审',location:code.court,status:'生效',started:d.get('state','minute'),expires:d.get('state','minute')+code.maximumDetentionMinutes});
         return{case:row.id,arrested:true,destination:code.court,route,custody:code.maximumDetentionMinutes};

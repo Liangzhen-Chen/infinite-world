@@ -1,0 +1,16 @@
+{
+  "id": "recipe_w3c_garlic_butter",
+  "fingerprint": "08146c9ad8f2572c3c64d7b5fb3a39538e4d3a6fea28e09cb50b970da45e2945",
+  "status": "passed",
+  "attempts": 1,
+  "draft": {
+    "id": "recipe_w3c_garlic_butter",
+    "process": "将晒皮蒜头整颗横放案上，用切刀背轻拍使瓣间松动，逐瓣剥去干皮，切去蒂部硬结，再切成细末。取无盐黄油置于厚底煮锅旁，待其自然回软，不坐灶加热。把蒜末倒入锅中，持偏柄木匙沿锅底反复压拌，使蒜末与黄油均匀相混，不见成块蒜粒。拌好后静置回软，全程共25分钟。煮锅只作盛器，锅壁破裂或内锈脱落时需维修。成品一份，余料弃置，切刀与木匙擦净保留。"
+  },
+  "review": {
+    "contradictions": []
+  },
+  "errors": [],
+  "warnings": [],
+  "feedback": null
+}

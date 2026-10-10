@@ -1,0 +1,118 @@
+{
+  "index": 1,
+  "fingerprint": "b9c1260c699f0af77ae124bf1dd13f2c6f930cc84d5369b3dd81ad8678a09174",
+  "count": 37,
+  "passed": 37,
+  "ids": [
+    "item_horn_blank",
+    "item_red_dyewood",
+    "item_alum_grain",
+    "item_clean_lard",
+    "item_pine_pitch",
+    "item_soap_flake",
+    "item_flour_paste_powder",
+    "item_fine_sand",
+    "item_slate_splinter",
+    "item_linen_wick",
+    "item_steel_dividers",
+    "item_marking_gauge",
+    "item_try_square",
+    "item_drawknife",
+    "item_spokeshave",
+    "item_brace_drill",
+    "item_hollow_gouge",
+    "item_veining_chisel",
+    "item_chasing_punch",
+    "item_jeweler_pliers",
+    "item_jeweler_saw",
+    "item_ingot_mold",
+    "item_swage_block",
+    "item_fuller",
+    "item_riveting_hammer",
+    "item_stone_point",
+    "item_mason_chisel",
+    "item_plumb_bob",
+    "item_line_level",
+    "item_sighting_rule",
+    "item_button_shank_tool",
+    "item_fine_sewing_needle",
+    "item_loop_turner",
+    "item_netting_needle",
+    "item_rope_fid",
+    "item_honing_stone",
+    "item_leather_strop"
+  ],
+  "rewritten": 17,
+  "manual": [],
+  "pending": [],
+  "flagged": [
+    "item_horn_blank",
+    "item_red_dyewood",
+    "item_alum_grain",
+    "item_clean_lard",
+    "item_flour_paste_powder",
+    "item_drawknife",
+    "item_jeweler_saw",
+    "item_fuller",
+    "item_mason_chisel"
+  ],
+  "sample": [
+    "item_jeweler_pliers",
+    "item_alum_grain",
+    "item_jeweler_saw",
+    "item_mason_chisel",
+    "item_hollow_gouge"
+  ],
+  "l4": {
+    "approved": true,
+    "notes": [
+      {
+        "id": "item_jeweler_pliers",
+        "note": "细钢钳弯银丝，银为品质名称，未把钳身材料说成银；夹口和铰接检查相符。"
+      },
+      {
+        "id": "item_alum_grain",
+        "note": "L4：去除供货人内部编号，改为严辙中文名。"
+      },
+      {
+        "id": "item_jeweler_saw",
+        "note": "L4：目视锯齿与轻拨张力，不让指腹顺锋齿滑动。"
+      },
+      {
+        "id": "item_mason_chisel",
+        "note": "L4：石料先固定，一手扶凿一手持锤，避免三手操作。"
+      },
+      {
+        "id": "item_hollow_gouge",
+        "note": "圆口钢刃和木柄供木雕，未变为石凿；细节不影响材料和工具范围。"
+      },
+      {
+        "id": "item_horn_blank",
+        "note": "L4：删除无助于使用的品质与材质解释。"
+      },
+      {
+        "id": "item_red_dyewood",
+        "note": "L4：100克为整份碎木，180天从加工起算。"
+      },
+      {
+        "id": "item_clean_lard",
+        "note": "L4：不赠陶罐，90天后不可另称粗用延长有效期。"
+      },
+      {
+        "id": "item_flour_paste_powder",
+        "note": "L1：保存期90天改为明确数字。"
+      },
+      {
+        "id": "item_drawknife",
+        "note": "L4：双柄位于长钢刃两端，检查刃口不沿锋面滑指。"
+      },
+      {
+        "id": "item_fuller",
+        "note": "L4：锻沟杆扶在热坯上压槽，并非用来扶稳热坯的夹钳。"
+      }
+    ]
+  },
+  "costUpperYuan": 3.910433840000003,
+  "manualRatio": 0,
+  "needsSystemicRepair": false
+}

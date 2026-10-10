@@ -1,0 +1,18 @@
+{
+  "id": "item_poppy_rye_crisp",
+  "fingerprint": "5fb140d455c41bb36ad167cb0119b9610363ec4140d520dd60efd792a0a76ae5",
+  "status": "passed",
+  "attempts": 2,
+  "draft": {
+    "id": "item_poppy_rye_crisp",
+    "description": "青灯酒馆小批供应的黑麦薄饼，饼面密布碾开的食用籽，边缘因贴锅而略焦，中心色深且干。掰开可见细密气孔与层叠摊痕，无酵种带来的大空洞。整体干爽，指压不易回弹，落桌声脆。集市按当季货源供应，售罄须等实际补货。",
+    "inspection": "先看饼面籽粒是否均匀附着，再掰一角听断口脆响，观察内部有无湿软或霉斑，并嗅闻有无酸败气味。",
+    "storage": "置于干燥通风处，避免压叠受潮；自制成起至多存放7天，逾期不宜食用。"
+  },
+  "review": {
+    "contradictions": []
+  },
+  "errors": [],
+  "warnings": [],
+  "feedback": null
+}

@@ -1,0 +1,18 @@
+{
+  "id": "item_padded_work_collar",
+  "fingerprint": "5db33cb38a5cf070e3f1f6a688f04969fc598a5d8a1649ab578eeb37673cb46f",
+  "status": "passed",
+  "attempts": 2,
+  "draft": {
+    "id": "item_padded_work_collar",
+    "description": "织坊出品的开口肩圈，帆布在外，内衬毛毡，折成弧形后沿边缝合，余布裁作系带。整体呈浅灰褐色，布面留有剪裁与针脚痕，衬层略鼓。重0.48千克，套于肩部可缓和绳索或扁担的接触，不提高承重上限。",
+    "inspection": "翻看内外缝边，确认衬层未移位、系带与圈体连接完好；捏压毡层，查看有无破口或硬结。",
+    "storage": "阴凉干燥处平放或卷起，避免重压与潮湿；自制成起保存365天。"
+  },
+  "review": {
+    "contradictions": []
+  },
+  "errors": [],
+  "warnings": [],
+  "feedback": null
+}

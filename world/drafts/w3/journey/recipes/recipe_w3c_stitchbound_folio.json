@@ -1,0 +1,16 @@
+{
+  "id": "recipe_w3c_stitchbound_folio",
+  "fingerprint": "a17df8dd5b6063557cd163cc167cad4076ec63deaa8a8bbb152d418e0575023e",
+  "status": "passed",
+  "attempts": 1,
+  "draft": {
+    "id": "recipe_w3c_stitchbound_folio",
+    "process": "取三张刮薄羊皮纸对折，用平脊骨压片的圆端沿折线反复压平，使折痕定形。以缝革扁锥在书脊折缝处刺出等距扁孔，粗眼缝针穿细捻麻线团，逐孔穿过并回针锁紧，线头打结藏入孔内。短锋修羽刀贴直边修齐册页毛边，再以骨压片压平书脊。全程共一百一十分钟。空白册不教授技能，余料弃置，工具保留。"
+  },
+  "review": {
+    "contradictions": []
+  },
+  "errors": [],
+  "warnings": [],
+  "feedback": null
+}

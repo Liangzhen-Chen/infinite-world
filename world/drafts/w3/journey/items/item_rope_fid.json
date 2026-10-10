@@ -1,0 +1,18 @@
+{
+  "id": "item_rope_fid",
+  "fingerprint": "529f064683da3a309d550ad91536cb4f57d3cf23c1d50d6e3982a6ccbf6fdead",
+  "status": "passed",
+  "attempts": 2,
+  "draft": {
+    "id": "item_rope_fid",
+    "description": "白石镇集市偶见的尖身插绳棒，以磨滑骨料削成，通体呈浅黄，尖端收细而尾端留圆钝握柄。表面留有顺纹锉痕与细密刮削痕，靠近尖处经反复摩挲而发亮。全长约一拃，可握于掌中抵住绳股，撑开粗绳股后穿接他绳。",
+    "inspection": "先看尖端有无崩口与裂纹，再以指腹顺纹抚过，确认无翘起骨刺；尾柄是否松动、握持处是否过分光滑，皆须留意。",
+    "storage": "收入干燥布袋或木匣，避潮避曝晒，勿与刃器同放；久置可取出查看尖端是否干裂。"
+  },
+  "review": {
+    "contradictions": []
+  },
+  "errors": [],
+  "warnings": [],
+  "feedback": null
+}

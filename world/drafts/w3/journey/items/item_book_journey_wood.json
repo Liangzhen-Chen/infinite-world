@@ -1,0 +1,18 @@
+{
+  "id": "item_book_journey_wood",
+  "fingerprint": "edf18197a4df2d557732d62cdcdab309e30b3f7a8ba84d86b4a88f0576085c3f",
+  "status": "passed",
+  "attempts": 2,
+  "draft": {
+    "id": "item_book_journey_wood",
+    "description": "白石手艺人合抄的中级抄本，河湾供货校对本。书中讲解十二种木、角、芦及板岩器件的开料与边缘整修，含弯首白蜡木手杖、双面压纸木板、透风芦管晒帘、分格小瓶木箱、对合木夹口、折靠晾布架、薄舌翻食木铲、槽口木匙托、贴合软木塞组、弧面角片匙、磨边板岩写牌与折页行图板。识字100可读，阅读450分钟，各工序另需对应熟练度和工具。",
+    "inspection": "翻看封面与装订，纸页受潮会起波纹，边角磨损不碍辨字；核对十二项工序名与图样是否齐全。",
+    "storage": "置于干燥避光处，勿近水与火；自抄成起至多365天，逾期字迹与纸页易损。"
+  },
+  "review": {
+    "contradictions": []
+  },
+  "errors": [],
+  "warnings": [],
+  "feedback": null
+}

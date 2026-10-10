@@ -1,0 +1,16 @@
+{
+  "id": "recipe_w3c_silver_open_ring",
+  "fingerprint": "b0b97ea1d8e9df8cbd2be1e4fdc97f755ff1450da5ce7bb853ce005f17666637",
+  "status": "passed",
+  "attempts": 1,
+  "draft": {
+    "id": "recipe_w3c_silver_open_ring",
+    "process": "取一份细银丝束，在旧磨坊木作台上用窄嘴饰线钳分成长度相近的数段，逐段沿同一方向绕合，叠成单只环体，两端留出开口。再以钳嘴夹拢开口两侧，把断口推齐收平，使环缘不翘不咬。随后取细面刃磨石，先核查磨面平整，再沿切口与环缘轻磨，去掉毛刺与锐边，磨时只走石面，不另添油水。全程总耗时一百六十分钟。所得即一只绕合银开口环，装饰环无加护效果；磨下银屑与短头弃置，两件工具保留。"
+  },
+  "review": {
+    "contradictions": []
+  },
+  "errors": [],
+  "warnings": [],
+  "feedback": null
+}

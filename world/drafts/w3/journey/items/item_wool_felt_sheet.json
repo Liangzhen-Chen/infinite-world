@@ -1,0 +1,18 @@
+{
+  "id": "item_wool_felt_sheet",
+  "fingerprint": "4779b6b12dd7fc615b726dd12cf7b8dfeface44c2f88aa33103dbe6ceb1f3be8",
+  "status": "passed",
+  "attempts": 3,
+  "draft": {
+    "id": "item_wool_felt_sheet",
+    "description": "厚毛毡片由织坊将羊毛湿压成密实片体，边缘保留裁切后的短绒，表面可见纤维交错压合的浅纹。整片约半千克，手感厚实微弹，可剪作鞋垫或夹衬。受潮后毡层易板结，须摊开晾透再收。",
+    "inspection": "翻看两面，检查有无虫蛀孔洞、霉斑与压痕处开裂；捏试厚薄是否均匀，抖落浮尘即可。",
+    "storage": "干燥通风处平放，避潮避虫；自制成起保存上限365天，受潮后先晾透再收。"
+  },
+  "review": {
+    "contradictions": []
+  },
+  "errors": [],
+  "warnings": [],
+  "feedback": null
+}

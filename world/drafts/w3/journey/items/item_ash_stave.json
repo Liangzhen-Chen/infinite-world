@@ -1,0 +1,18 @@
+{
+  "id": "item_ash_stave",
+  "fingerprint": "6223efa0ad00e0ec98c9bb512e3fdd94d4659fc3dc6bd1f1be7e5d0321c6f34d",
+  "status": "passed",
+  "attempts": 1,
+  "draft": {
+    "id": "item_ash_stave",
+    "description": "旧磨坊风干的白蜡木直料，长约两臂，端面年轮细密，色浅近骨白。树皮已剥净，表面留细长刨痕与几处节疤，无横裂，通体顺直。重一点五公斤，可挑直段削制长柄，现尚未成器。",
+    "inspection": "查看端面有无横裂与虫孔，再顺木纹摸过刨痕，确认节疤未松脱；轻敲听声，闷响者内部或已朽。",
+    "storage": "平放于干燥通风处，垫起离地，避雨雪与炉火；勿斜靠受压，以免日久弯曲。"
+  },
+  "review": {
+    "contradictions": []
+  },
+  "errors": [],
+  "warnings": [],
+  "feedback": null
+}

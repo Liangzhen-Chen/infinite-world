@@ -1,0 +1,18 @@
+{
+  "id": "item_steel_dividers",
+  "fingerprint": "5fecec3bb48eaf89e9c894bfcb3707132fd421964014f243363ee0c844bcca5c",
+  "status": "passed",
+  "attempts": 1,
+  "draft": {
+    "id": "item_steel_dividers",
+    "description": "白石镇铁匠铺出的小型锁距钢规，两脚由同一根钢条弯折后锉尖，铰接处铆钉略高出侧面，脚背留有锤痕与细锉纹。柄端旋钮可夹紧双脚，使开口在挪动中不易走位。铁质表面呈暗灰，边缘磨亮。用于把木件上的间距移到另一处比对榫肩，不自动量出地形距离。",
+    "inspection": "先看两脚尖是否同高，再合拢双脚观察尖隙；旋钮拧紧后轻推一脚，若开口不动即锁距可靠。铆钉松旷或脚尖卷刃则需修整。",
+    "storage": "收进工具袋的独立插位，双脚合拢、旋钮松开半圈，避免长期夹紧使钢脚疲劳。置于干燥处，勿与粗石同袋磕碰。"
+  },
+  "review": {
+    "contradictions": []
+  },
+  "errors": [],
+  "warnings": [],
+  "feedback": null
+}

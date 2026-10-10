@@ -1,4 +1,5 @@
 import {effectiveProficiency}from'./professions.mjs';
+import {assertNpcService}from'./npc-schedule.mjs';
 const integer=(value,label,maximum=1e9)=>{if(!Number.isSafeInteger(value)||value<0||value>maximum)throw new Error(`${label}不在允许范围`);return value;};
 const grades=['初级','中级','高级','特级','专家级','大师级','宗师级','圣级','神级'];
 const grade=value=>`${grades[Math.min(8,Math.floor(value/300))]}${Math.floor(value%300/100)+1}等`;
@@ -43,6 +44,7 @@ export function learn(d,args,id){
             &&stage<=(sourceDefinition.teachingStages?.[role]??0);
         if(!direct&&!core)throw new Error('导师没有教授这项内容的资格');
         fee=integer(catalog.learnFee??12,'教学费');minutes=integer(catalog.learnMinutes??120,'教学时间',43200);
+        assertNpcService(d,this,source,'teach',minutes);
         if(d.get('state','player','coins')<fee)throw new Error('教学费不足');
         sourceRecord={type:'teacher',id:source};
     }else if(source.startsWith('item_')){

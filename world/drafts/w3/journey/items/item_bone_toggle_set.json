@@ -1,0 +1,18 @@
+{
+  "id": "item_bone_toggle_set",
+  "fingerprint": "f7961ca72d4f4e1c49887c40ce4c6b8fcf843caf7f3bb89a4b661d52541a88c2",
+  "status": "passed",
+  "attempts": 1,
+  "draft": {
+    "id": "item_bone_toggle_set",
+    "description": "旧磨坊出产的双孔骨衣扣，整组为一份。净骨坯先被细齿锯截成短扣，再由手钻轻压钻出两孔，孔缘留有浅压痕；木锉沿边修去锯刺，扣面磨得温润，骨色微黄，孔距匀整。扣身厚薄相近，不附缝线，供缝制时自行配线。",
+    "inspection": "取扣对光查看孔缘有无崩裂，指腹沿边摸过锯痕与锉痕，轻晃整组听骨扣相碰声，确认无隐裂与缺孔。",
+    "storage": "收在干燥布袋或木盒内，避潮避晒，勿与硬金属同袋磕碰；受潮后阴干，勿烘烤。"
+  },
+  "review": {
+    "contradictions": []
+  },
+  "errors": [],
+  "warnings": [],
+  "feedback": null
+}

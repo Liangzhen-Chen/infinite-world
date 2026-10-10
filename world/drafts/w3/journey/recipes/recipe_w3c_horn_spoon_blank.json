@@ -1,0 +1,16 @@
+{
+  "id": "recipe_w3c_horn_spoon_blank",
+  "fingerprint": "bb059ca97253d7433d0a5408af27c7ae5e81e1ea949fcfef0590b3a52cb7c1fe",
+  "status": "passed",
+  "attempts": 1,
+  "draft": {
+    "id": "recipe_w3c_horn_spoon_blank",
+    "process": "取一百二十克空心角片坯置于木作台上，先以细弓镂片锯沿角片原有弧面锯出匙首轮廓，再顺势锯出连柄，锯路转弯处缓推以免崩边。换粗齿木锉，把匙首与柄的棱线锉圆，齿缝积屑随时清理。最后持短锋修羽刀，沿边缘轻刮锯痕与残刺，使口沿顺滑。全程不加热定形，也不新增黏料，仅凭角片自身曲面成勺形。总耗时一百三十分钟，得弧面角片匙一份，余料弃置，三件工具保留。"
+  },
+  "review": {
+    "contradictions": []
+  },
+  "errors": [],
+  "warnings": [],
+  "feedback": null
+}

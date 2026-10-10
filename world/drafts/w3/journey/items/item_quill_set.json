@@ -1,0 +1,18 @@
+{
+  "id": "item_quill_set",
+  "fingerprint": "18b6ccbb1c0073ddc697b5248a64df53715ea03a8cb5eb52705e05bd94b4c3cd",
+  "status": "passed",
+  "attempts": 3,
+  "draft": {
+    "id": "item_quill_set",
+    "description": "一组净鹅羽管，共十五克，出自小学堂。羽管已去绒去脂，管壁半透，尾端留自然空心，未见劈口。裁口后可作蘸墨笔，不附墨液。集市按当季货源小批供应，现货售罄须等待另一次实际补货。",
+    "inspection": "逐根查看管壁有无裂口、弯折与虫蛀，轻弹听声；再核对根数与重量。",
+    "storage": "置于阴凉干燥处，避免重压与受潮，自取得起保存上限180天。"
+  },
+  "review": {
+    "contradictions": []
+  },
+  "errors": [],
+  "warnings": [],
+  "feedback": null
+}

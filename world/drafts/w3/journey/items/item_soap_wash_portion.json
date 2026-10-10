@@ -1,0 +1,18 @@
+{
+  "id": "item_soap_wash_portion",
+  "fingerprint": "485ea8476c1801c5d9c89e6607a1e5d7a3dbe6a00f6aef6fc1647749c2f070f6",
+  "status": "passed",
+  "attempts": 1,
+  "draft": {
+    "id": "item_soap_wash_portion",
+    "description": "青灯酒馆按当季货源小批供应的洗液，呈微浊淡黄，表面偶有细碎泡沫，静置后皂屑沉底。硬皂片以配额水微温搅散，不煮沸飞溅，冷却后装自备容器。用于洗布刷具，不是药物；木柄钢刃等器物可蘸取擦洗。品质等级为木，与材料名称无关。",
+    "inspection": "先看液面有无霉斑或异色浮膜，再闻是否酸败刺鼻，最后轻晃观察沉淀是否均匀；不尝。",
+    "storage": "装自备容器，置阴凉避光处，盖严防尘；自制成起1天内用完。"
+  },
+  "review": {
+    "contradictions": []
+  },
+  "errors": [],
+  "warnings": [],
+  "feedback": null
+}

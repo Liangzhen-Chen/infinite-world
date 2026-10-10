@@ -1,0 +1,16 @@
+{
+  "id": "recipe_w3c_resin_cloth_patch",
+  "fingerprint": "c31438f75134d68341fc1981d4775ccd89cea518a9637e451fb9929349efae0b",
+  "status": "passed",
+  "attempts": 1,
+  "draft": {
+    "id": "recipe_w3c_resin_cloth_patch",
+    "process": "将紧织麻帆布摊平，用短刃裁革剪逐段合剪成一方补片，剪口齐直；木炭小袋取炭入厚底煮锅小灶，炭屑不混入成品。松脂块置锅上低温软化，趁软以偏柄木匙背沿补片一面薄薄推开，只涂一面，脂层匀薄不见堆厚。涂毕摊开静置冷却，至指触不粘即收。全程一百分钟。只备材料，修补原物须另走实际工序；余料弃置，工具保留。"
+  },
+  "review": {
+    "contradictions": []
+  },
+  "errors": [],
+  "warnings": [],
+  "feedback": null
+}

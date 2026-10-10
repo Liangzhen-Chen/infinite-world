@@ -1,0 +1,18 @@
+{
+  "id": "item_ash_walking_stick",
+  "fingerprint": "f3be60364800284154547b296272fc7f06af452329c9323e82c600cbdb1ffdd6",
+  "status": "passed",
+  "attempts": 1,
+  "draft": {
+    "id": "item_ash_walking_stick",
+    "description": "取自旧磨坊的白蜡直料，顶端握首弯成圆润钩状，杖身随木纹略呈浅弧，通体呈淡黄褐本色。表面可见双柄刀顺纹削出的长痕，握首与触手边经木锉磨圆，再薄涂一层亚麻籽油，触感干爽不黏。全长及腰，杖底削平，重量适中，适合长途步行时借力。",
+    "inspection": "先看握首弯处有无顺纹开裂，再沿杖身摸削痕与锉圆边是否起刺，最后将杖底平放地面，查看端面是否磨偏。",
+    "storage": "置于干燥通风处，杖身平放或靠墙直立，避免长期受潮与重压致弯；勿近炉火。"
+  },
+  "review": {
+    "contradictions": []
+  },
+  "errors": [],
+  "warnings": [],
+  "feedback": null
+}

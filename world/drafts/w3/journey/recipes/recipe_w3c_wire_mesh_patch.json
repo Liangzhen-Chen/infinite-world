@@ -1,0 +1,16 @@
+{
+  "id": "recipe_w3c_wire_mesh_patch",
+  "fingerprint": "72fd68bf8f5f0c591ddd755001e5db9f45615d411a4950177df537c2438f2eb0",
+  "status": "passed",
+  "attempts": 1,
+  "draft": {
+    "id": "recipe_w3c_wire_mesh_patch",
+    "process": "将退火铁线卷取一份置于铁匠铺砧台旁，先以窄嘴饰线钳夹住线头，把铁线分段弯成交绕小格，逐段收口压紧，使相邻线段彼此咬住成网。随后换平齿铁锉，沿网片四周与每个交结点锉去锐刺和毛边，锉下的细屑扫入废堆，不混回网片。全程用窄嘴饰线钳与平齿铁锉，不另加料。总耗时一百八十分钟，得交绕铁线网片一份；网孔拦粗物，不作锁具或甲片。失败时仅可回收四分之一铁线，工具保留。"
+  },
+  "review": {
+    "contradictions": []
+  },
+  "errors": [],
+  "warnings": [],
+  "feedback": null
+}

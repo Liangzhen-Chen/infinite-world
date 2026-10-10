@@ -1,0 +1,18 @@
+{
+  "id": "item_parsnip_cream_pot",
+  "fingerprint": "b852a87222978d105d00ea221289ac94fbda02774c8c9c4dd65eefbe34c2af16",
+  "status": "passed",
+  "attempts": 2,
+  "draft": {
+    "id": "item_parsnip_cream_pot",
+    "description": "青灯酒馆当季小批供应的热食，白根削去硬端切薄，先以清水煨至软透，再兑稠乳加热熟匀，用木匙搅成细滑稠羹。盛在陶碗中呈乳白色，表面微起薄皮，散出根茎的清甜与乳香。木品质只标等级，与材质无关。",
+    "inspection": "可看稠度是否均匀、有无结块或浮沫，闻乳香与根香是否正常；不尝已变味的成品。",
+    "storage": "宜趁热食用，存放不超过1天；凉后加盖置于阴凉处，再食前须重新加热熟透。"
+  },
+  "review": {
+    "contradictions": []
+  },
+  "errors": [],
+  "warnings": [],
+  "feedback": null
+}

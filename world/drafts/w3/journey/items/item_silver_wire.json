@@ -1,0 +1,18 @@
+{
+  "id": "item_silver_wire",
+  "fingerprint": "a5aeaa3a5ab15f1bd89b4bb47d685c28fa88cb64f1f9ff1f6901146f71e47383",
+  "status": "passed",
+  "attempts": 1,
+  "draft": {
+    "id": "item_silver_wire",
+    "description": "白石镇集市上成束出售的细银丝，银质偏软，表面留有拉丝时形成的细密纵纹，束身以麻纸条缠腰固定，两端丝头参差。整束约五十克，供绕制饰件、缠柄或作细工嵌线之用；丝径纤细，受拉力易伸长，不能代替铁铆钉承受结构重量。",
+    "inspection": "解开纸腰，看丝束是否散乱、有无折死弯与发黑；指腹顺纹轻捋，试其软硬与回弹，再掂整束分量。",
+    "storage": "以原纸腰束紧，置干燥木盒或布袋内平放，避潮避压；勿与铁器混放，以免磕碰折弯。"
+  },
+  "review": {
+    "contradictions": []
+  },
+  "errors": [],
+  "warnings": [],
+  "feedback": null
+}

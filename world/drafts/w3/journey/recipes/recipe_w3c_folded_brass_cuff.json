@@ -1,0 +1,16 @@
+{
+  "id": "recipe_w3c_folded_brass_cuff",
+  "fingerprint": "eba38ba411747dc5faf77bd433f0cdf755d481aea418f593bce3ce4c8ce33697",
+  "status": "passed",
+  "attempts": 1,
+  "draft": {
+    "id": "recipe_w3c_folded_brass_cuff",
+    "process": "取黄铜窄带一条，以弯柄金属剪短行程分次合剪，裁出腕圈坯。用窄嘴饰线钳夹住坯料两端，沿弧面逐段弯出腕围弧度，再把两条边口向内卷收，使边缘圆钝不刮手。换平齿铁锉，冷态锉平卷边接缝与剪口毛刺，细屑另扫入废堆。开口处留出间隙，便于套入腕部。装饰圈不提供护甲。总耗时二百一十分钟。成品一份，边角余料弃置，三件工具保留。"
+  },
+  "review": {
+    "contradictions": []
+  },
+  "errors": [],
+  "warnings": [],
+  "feedback": null
+}

@@ -33,6 +33,11 @@ const scenarios=[
         context:'此刻在河湾学堂，陆青可教skill_literacy，学费2铜、一次60分钟。用world_learn实际执行，不能先以world_trade重复付费。',
         assert:c=>{assert.equal(c.state.player.coins,178);assert.equal(c.state.npcs.npc_hw_luqing.coins,202);assert.equal(c.state.minute,600);
             assert.ok(Object.values(c.state.learning).some(record=>record.entity==='skill_literacy'&&record.source.id==='npc_hw_luqing'&&record.cost===2));}},
+    {id:'NpcNightTeacher',input:'我想现在请陆青教识字。如果他已经休息就算了，不等到明天，也不先交钱。',
+        setup:c=>{c.state.minute=1380;c.state.location='bld_hw_school';c.state.npcs.npc_hw_luqing.location='bld_hw_school';},
+        context:'授课是否开放以人物实际作息及工具回执为准。玩家没有同意等待到次日。',
+        assert:(c,{initial,reply})=>{assert.equal(c.state.player.coins,initial.state.player.coins);assert.deepEqual(c.state.learning,initial.state.learning);
+            assert.ok(c.state.minute>=1380&&c.state.minute<=1400,'拒绝授课不应偷偷等到明天或花一节课时间');assert.match(reply,/休息|睡|明天|授课时间/);}},
     {id:'GrowthAllocation',input:'把刚升级获得的两个属性点都加到体质上。',
         setup:async c=>{
             for(let i=0;i<2;i++){

@@ -1,0 +1,18 @@
+{
+  "id": "item_leather_wax_grease",
+  "fingerprint": "4b31bc5a1e7fb37aed7eb9720c5c65595dd634af217489a363b7ec183a2ea787",
+  "status": "passed",
+  "attempts": 3,
+  "draft": {
+    "id": "item_leather_wax_grease",
+    "description": "青灯酒馆小批供应的护革用脂蜡，工坊脂与蜂蜡经小火软合，木匙搅匀后凝成浅黄块状，表面留搅痕与冷却收缩的细纹，略带蜡脂气味。取少量薄涂熟革，可润泽皮面；不修复撕裂皮件，也不可入口。",
+    "inspection": "查看块面是否均匀、有无霉斑或异味，脂蜡应无渗油分层；不尝不变质食物。",
+    "storage": "阴凉干燥处密封存放，避免日晒高温，自制成起至多90天。"
+  },
+  "review": {
+    "contradictions": []
+  },
+  "errors": [],
+  "warnings": [],
+  "feedback": null
+}

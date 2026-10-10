@@ -1,0 +1,18 @@
+{
+  "id": "item_netting_needle",
+  "fingerprint": "3844414930b56343c5a0b5a44965f1b51a5c4c5fd49b79d3418f5e05dc6a0f55",
+  "status": "passed",
+  "attempts": 1,
+  "draft": {
+    "id": "item_netting_needle",
+    "description": "白石镇集市常见的手工结网工具，以硬木削出扁长梭身，一端分作双叉，叉口内收成浅槽，麻线绕槽往复储放。梭面留有刀削与刮磨的顺纹痕迹，叉根略厚以承绕线之力，尾端削尖便于穿引网目。整器轻巧，握于掌中即可逐结推线成网。",
+    "inspection": "查看双叉是否对称、叉口有无劈裂，顺纹抚摸梭身有无毛刺；再以指腹轻推叉根，确认无松动。",
+    "storage": "绕线后置干燥处平放，避免叉口受压；勿与潮物同放，久存前清去残线。"
+  },
+  "review": {
+    "contradictions": []
+  },
+  "errors": [],
+  "warnings": [],
+  "feedback": null
+}

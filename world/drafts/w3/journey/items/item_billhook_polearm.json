@@ -1,0 +1,20 @@
+{
+  "id": "item_billhook_polearm",
+  "fingerprint": "788a8ae5fec438433b28ed91bbd3b5c5fe92ee8ca3e95c2a1f7ee99e0ec92b3c",
+  "status": "passed",
+  "attempts": 3,
+  "draft": {
+    "id": "item_billhook_polearm",
+    "description": "白石镇集市所见的钩背长柄刃，长木柄通体刨削，尾端收细便于握持；柄首嵌装钩背钢刃，刃背带钩，刃口经锻打修整。整器重二点八千克，重心偏前，挥动时须以双手控柄。适合近身挑拨或斩击，不能保证破甲。",
+    "inspection": "查看木柄有无裂纹与松动，检视钢刃钩背是否弯折、刃口有无崩缺，并试握柄尾确认嵌装稳固。",
+    "storage": "置于干燥通风处，刃口朝外平放或靠架，避免木柄受潮变形、钢刃磕碰。"
+  },
+  "review": {
+    "contradictions": []
+  },
+  "errors": [],
+  "warnings": [],
+  "feedback": [
+    "数字二点八千克与weight=2.8矛盾"
+  ]
+}

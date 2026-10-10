@@ -1,0 +1,18 @@
+{
+  "id": "item_dry_mushroom",
+  "fingerprint": "c94f606ba8c8ab78ff91915a31c7f4140c9c15f9bc7fb03960719555e9ebaae4",
+  "status": "passed",
+  "attempts": 3,
+  "draft": {
+    "id": "item_dry_mushroom",
+    "description": "青灯酒馆后厨常备的干栽培蘑菇片，菌盖纵切成薄片后以炭火余温烘至卷边，表面带细密褶纹与浅褐斑，边缘偶有刀痕。装入粗布袋时仍留淡淡菌香，无霉点、无虫蛀。每份净重六十克，泡发后煮透可食，不以野生混菇替代。",
+    "inspection": "翻看袋中菌片，检查有无受潮结块、绿黑霉点或虫蛀孔洞；再闻气味，若有酸败或土腥冲鼻则不宜食用。",
+    "storage": "扎紧袋口，置于干燥阴凉处，避免与生肉同放；自加工日起保存不超过120天。"
+  },
+  "review": {
+    "contradictions": []
+  },
+  "errors": [],
+  "warnings": [],
+  "feedback": null
+}

@@ -1,0 +1,16 @@
+{
+  "id": "recipe_w3c_felt_polishing_pad",
+  "fingerprint": "5e742c2e321f8766db75c61572fc566ba1c7cd0afaa51808e98606594bade41b",
+  "status": "passed",
+  "attempts": 1,
+  "draft": {
+    "id": "recipe_w3c_felt_polishing_pad",
+    "process": "将厚毛毡片铺平，用短刃裁革剪剪出圆形工作面，剪下的边角余料不再留用。取窄幅麻布对折成握边，覆在毡片外侧，以粗眼缝针穿细捻麻线逐段缝合，针脚压住布边；再把圆周边线锁合，防止毡层散开。缝好后抻平垫面，检查握边是否牢固、工作面是否平整。总耗时65分钟，全部材料用尽，成品一份，无副产品，工具保留。"
+  },
+  "review": {
+    "contradictions": []
+  },
+  "errors": [],
+  "warnings": [],
+  "feedback": null
+}

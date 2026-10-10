@@ -1,0 +1,18 @@
+{
+  "id": "item_broad_bean",
+  "fingerprint": "580a20110809028846918dd4480436fbea95f35d9b002523eb3b35f525cf504b",
+  "status": "passed",
+  "attempts": 2,
+  "draft": {
+    "id": "item_broad_bean",
+    "description": "青灯酒馆经手的三百克去壳晒干蚕豆瓣，瓣面浅黄，边缘略卷，带晒场浮尘与脱壳留下的浅褐痕。集市按当季货源小批供应，现货售罄须等下一次实际补货。浸软煮透后方可食用，不以生豆充熟食。",
+    "inspection": "翻看豆瓣，挑出霉斑、虫蛀与受潮发软的瓣片，闻一闻有无酸败气；干爽完整者留用。",
+    "storage": "装入干燥容器，置于阴凉通风处，避潮避晒；自晒成起至多存放180天，过期不宜再煮食。"
+  },
+  "review": {
+    "contradictions": []
+  },
+  "errors": [],
+  "warnings": [],
+  "feedback": null
+}

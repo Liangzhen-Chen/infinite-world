@@ -1,0 +1,16 @@
+{
+  "id": "recipe_w3c_parsnip_cream_pot",
+  "fingerprint": "942a3c0b06bac2001f87b75bd6b295c05c14976710b4f94f40f1bdb7c63084f5",
+  "status": "passed",
+  "attempts": 1,
+  "draft": {
+    "id": "recipe_w3c_parsnip_cream_pot",
+    "process": "取白肉欧防风根一份，用案上切刀削去硬端，改切薄片。厚底煮锅置灶上，注入清水一份，下薄片以中火煨至软透。兑入鲜乳上层稠乳一份，续加热至熟，撒粗盐小包调味。持偏柄木匙沿锅缘搅匀，使根片与稠乳相合，不另加奶油。干木刨屑一份仅供灶下引火，不落锅中。全程五十整分钟，得稠乳白根煨一份，趁热盛出。"
+  },
+  "review": {
+    "contradictions": []
+  },
+  "errors": [],
+  "warnings": [],
+  "feedback": null
+}

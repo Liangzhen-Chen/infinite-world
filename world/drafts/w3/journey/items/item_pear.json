@@ -1,0 +1,18 @@
+{
+  "id": "item_pear",
+  "fingerprint": "c543a9c3ded7d7a1d6acb7244e5710e9873371d391d988481e009d08c56fea53",
+  "status": "passed",
+  "attempts": 2,
+  "draft": {
+    "id": "item_pear",
+    "description": "公用果园当季采下的脆肉梨，单份约三百克，果皮黄褐带细密麻点，近梗处有采果剪留下的短梗痕。果肉乳白紧实，切开后断面细润，久放会转绵。去核后可鲜食，也可入水煮软，碰伤发暗的部分先行剔除。",
+    "inspection": "先看果皮有无裂口与压痕，再轻按近蒂处，硬实回弹者尚可；发软渗汁或带酸腐气味的整只弃去，不作试尝。",
+    "storage": "置于阴凉通风处摊开，勿叠压，自采下起至多存放7天；碰伤果先挑出，避免影响其余。"
+  },
+  "review": {
+    "contradictions": []
+  },
+  "errors": [],
+  "warnings": [],
+  "feedback": null
+}

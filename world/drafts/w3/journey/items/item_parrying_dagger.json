@@ -1,0 +1,18 @@
+{
+  "id": "item_parrying_dagger",
+  "fingerprint": "dcbceea1331e1914f0c8fcc7e6fff8e762c80aaf411374a573222fc00ea95bb1",
+  "status": "passed",
+  "attempts": 1,
+  "draft": {
+    "id": "item_parrying_dagger",
+    "description": "白石镇铁匠铺出的小型短刃，全器约半千克。窄钢刃自根部向锋尖收束，刃背留有细密锉痕；叉形护手横出两枝，与柄座一体锻成，木柄缠有粗麻绳圈以防滑脱。刃口经细磨，呈淡灰光泽，护手内侧可见装配时的敲击印。整体重心偏于护手，便于近身格挡与短促突刺。",
+    "inspection": "查看刃口有无卷缺，护手两枝是否松动，木柄麻绳有无磨断，柄座与刃根接缝是否渗裂。",
+    "storage": "收入干燥皮鞘或布套，悬于通风处，勿与重器叠压，避免刃口磕碰与柄部受潮。"
+  },
+  "review": {
+    "contradictions": []
+  },
+  "errors": [],
+  "warnings": [],
+  "feedback": null
+}

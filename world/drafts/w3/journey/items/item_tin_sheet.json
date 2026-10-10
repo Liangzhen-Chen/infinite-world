@@ -1,0 +1,20 @@
+{
+  "id": "item_tin_sheet",
+  "fingerprint": "93ad326abd510f521d96268c5fdd1dbdb38febddea2aa37a38bcc39af4aba0a5",
+  "status": "passed",
+  "attempts": 3,
+  "draft": {
+    "id": "item_tin_sheet",
+    "description": "白石镇集市流出的压薄锡片，呈灰白光面的薄页，边缘留有剪切与轻锤整平的痕迹，表面偶见细浅辊压纹。整片柔韧，可弯折后以钝器压出小面积装饰纹样。单张重零点二千克，适合小型饰件与器物表面的浅浮雕加工。",
+    "inspection": "翻看两面，检查有无裂口、穿孔与折痕发白处；对光观察厚薄是否均匀，边缘是否起毛刺。",
+    "storage": "平放于干燥木板上，勿叠压重物，避免受潮与弯折；远离高温炉火处存放。"
+  },
+  "review": {
+    "contradictions": []
+  },
+  "errors": [],
+  "warnings": [],
+  "feedback": [
+    "数字零点二千克与weight=0.2矛盾"
+  ]
+}

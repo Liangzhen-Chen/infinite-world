@@ -1,0 +1,16 @@
+{
+  "id": "recipe_w3c_small_trowel",
+  "fingerprint": "1a6dacb8f21d5a1a47171a4c77527c282f09213d59fa9b6440a360d3126bc84d",
+  "status": "passed",
+  "attempts": 1,
+  "draft": {
+    "id": "recipe_w3c_small_trowel",
+    "process": "将铁料夹入炉中烧至可锻，以长柄铁钳夹持热坯置于砧面，用锻工手锤反复锤打，使一端延展成薄铲面，另一端折出颈弯；中途回炉补热，直至铲面平整、折颈角度稳定。坯件冷却后，以平齿铁锉修去边缘毛刺与锤痕，把刃口锉钝，再将小工具木柄套装于折颈末端并紧固。全程约二百二十分钟，炉用木炭燃尽后炭屑留在炉内，不混入成品；铁料与木炭按份用尽，无余料留存。"
+  },
+  "review": {
+    "contradictions": []
+  },
+  "errors": [],
+  "warnings": [],
+  "feedback": null
+}

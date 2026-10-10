@@ -1,0 +1,18 @@
+{
+  "id": "item_parsnip",
+  "fingerprint": "a3ebb77214ac30fc6ef544464438cc481fd6dac35a4fb0a4a545e56e0577b79d",
+  "status": "passed",
+  "attempts": 3,
+  "draft": {
+    "id": "item_parsnip",
+    "description": "公用果园当季起出的食用根，重三百五十克，外皮浅黄，根身有横向环纹与切去硬头留下的平口，须根痕细密。集市按当季货源小批供应，售罄须等另一次实际补货。来源明确者方可烹煮，不混售未辨野根。",
+    "inspection": "翻看根身有无软塌、霉斑与虫蛀孔，指压硬头切面是否仍紧实，嗅闻有无酸败气味。",
+    "storage": "置于阴凉通风处，自起出起最多存放7天，逾期或见霉即弃。"
+  },
+  "review": {
+    "contradictions": []
+  },
+  "errors": [],
+  "warnings": [],
+  "feedback": null
+}

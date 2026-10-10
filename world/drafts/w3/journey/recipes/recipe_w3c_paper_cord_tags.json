@@ -1,0 +1,16 @@
+{
+  "id": "recipe_w3c_paper_cord_tags",
+  "fingerprint": "59ad158dd518effd56059ab4a18e730194141942797432bff58e8d0750e291d8",
+  "status": "passed",
+  "attempts": 1,
+  "draft": {
+    "id": "recipe_w3c_paper_cord_tags",
+    "process": "取一张刮薄羊皮纸平铺于木工台面，以短锋修羽刀沿直边将皮纸裁成若干等宽小片，再逐片削齐四角与毛边，使边缘平顺不挂手。取缝革扁锥在每片靠近一端处刺出单个穿绳孔，孔位居中，避免撕裂纸面。将细捻麻线团解开，按吊签数量分段截取，每段对折后穿过锥孔并打结固定，使签片悬于绳端。全部签片处理完毕后归拢为一组，整组作为一份交付；纸面字迹留待使用者自行填写。总耗时70分钟。"
+  },
+  "review": {
+    "contradictions": []
+  },
+  "errors": [],
+  "warnings": [],
+  "feedback": null
+}

@@ -1,0 +1,16 @@
+{
+  "id": "recipe_w3c_small_bell_frame",
+  "fingerprint": "9c91449eb308c86772dbcffe07ff36e2a65050318cb21196b0a8b091fb8986ca",
+  "status": "passed",
+  "attempts": 1,
+  "draft": {
+    "id": "recipe_w3c_small_bell_frame",
+    "process": "将黄铜窄带用弯柄金属剪分次合剪，剪出悬片与弯框料，短行程以免刃口缺损。悬片与框料分别置于砧台，用短身冲子配锻工手锤冲出小孔，孔位对齐后修整边口。退火铁线以窄嘴饰线钳夹弯成挂环，穿过孔位把悬片悬在框内，环口收拢不使脱落。手持框体轻晃，凭悬片相碰发声判断悬挂是否松动，松动处再以钳夹紧。总耗时二百四十分钟。余料弃置，工具保留。"
+  },
+  "review": {
+    "contradictions": []
+  },
+  "errors": [],
+  "warnings": [],
+  "feedback": null
+}

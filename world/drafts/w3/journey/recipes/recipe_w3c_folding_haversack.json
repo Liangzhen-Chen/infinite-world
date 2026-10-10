@@ -1,0 +1,16 @@
+{
+  "id": "recipe_w3c_folding_haversack",
+  "fingerprint": "6b3ad06d9254c42c08c42bea840f0cc9820f675122ac1ff8b4be7c42fe007063",
+  "status": "passed",
+  "attempts": 1,
+  "draft": {
+    "id": "recipe_w3c_folding_haversack",
+    "process": "将紧织麻帆布摊平，用短刃裁革剪沿直边分段合剪，裁出窄长包身布片；对折后以细捻麻线团穿粗眼缝针，从侧缘起针逐段缝合底边与两侧，针脚匀密，缝毕打结收线。把口沿向外反折出一道窄边，再沿折边缝一圈，留出可穿绳的通道；取三股麻绳自通道一端穿入，绕行一周后从另一端引出，两端并齐打结作收口抽绳。翻正包身，检查缝线无跳针、绳道通畅，空包交付。总耗时150分钟。"
+  },
+  "review": {
+    "contradictions": []
+  },
+  "errors": [],
+  "warnings": [],
+  "feedback": null
+}

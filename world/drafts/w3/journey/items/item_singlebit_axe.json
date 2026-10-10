@@ -1,0 +1,18 @@
+{
+  "id": "item_singlebit_axe",
+  "fingerprint": "a33ae9f53524d293b33ab31429db995474e00174608130aa10328fb35b3bd912",
+  "status": "passed",
+  "attempts": 2,
+  "draft": {
+    "id": "item_singlebit_axe",
+    "description": "短柄单刃斧出自铁匠铺，斧头为钢刃，木柄穿过斧眼后以木楔楔紧，柄身留有削整与握磨痕迹。刃口单面开锋，斧背较厚，重心靠近斧头。全长便于单手持握近身劈击，也可双手加压。品质为银，与所用材料名称无关。",
+    "inspection": "查看斧眼木楔是否松动、柄身有无裂纹，再看单刃刃口是否卷缺；握持挥动时留意斧头有无晃动。",
+    "storage": "置于干燥处，刃口朝外平放或悬挂，避免重物压住木柄；远离潮湿与火源。"
+  },
+  "review": {
+    "contradictions": []
+  },
+  "errors": [],
+  "warnings": [],
+  "feedback": null
+}

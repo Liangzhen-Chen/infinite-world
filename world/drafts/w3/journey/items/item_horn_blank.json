@@ -1,0 +1,21 @@
+{
+  "id": "item_horn_blank",
+  "fingerprint": "9b538f1a6ff60e69155f8530cad0692eb11423bd6b9709f5032d2370fdec4da8",
+  "status": "passed",
+  "attempts": 3,
+  "draft": {
+    "id": "item_horn_blank",
+    "description": "北林边集市小批供应的空心角片坯，取自兽角中段，已去髓修边，呈浅黄褐弧片。外弧留细密锉痕与横向锯口，内壁见刮削纹，边缘未抛光，厚薄略不均。单片重零点一二千克，供冷修小件，非完整兽角。",
+    "inspection": "翻看弧面与内壁，确认无贯穿裂纹、虫蛀孔和残留髓屑；指压两端试韧性，听轻敲声是否发闷。",
+    "storage": "置于干燥阴凉处，平放避免重压与暴晒；远离明火和潮湿地面，勿与尖锐金属混放。"
+  },
+  "review": {
+    "contradictions": []
+  },
+  "errors": [],
+  "warnings": [],
+  "feedback": null,
+  "manualCorrection": {
+    "reason": "L4：删除无助于使用的品质与材质解释。"
+  }
+}

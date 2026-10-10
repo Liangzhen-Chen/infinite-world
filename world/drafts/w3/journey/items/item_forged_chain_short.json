@@ -1,0 +1,18 @@
+{
+  "id": "item_forged_chain_short",
+  "fingerprint": "c437ceef51e54db0c6543fdef456d7cc8a1ecfc508313698c5d5b55eb66b5856",
+  "status": "passed",
+  "attempts": 1,
+  "draft": {
+    "id": "item_forged_chain_short",
+    "description": "铁匠铺出品的短链，由数节铁环逐个卷成、穿接相扣，环缝经热合收拢后再以锉刀冷修，接痕略见锉纹。链身沉实，色泽暗灰，环径匀整，两端各留一环便于系挂。整段约重一千四百克，不作吊人负载之诺。",
+    "inspection": "逐节翻看环缝是否合拢，指甲刮过接痕有无毛刺，轻晃链段听扣接声，查看有无裂纹或开口。",
+    "storage": "悬于干燥木钩或平放干布上，避免受潮生锈与重物压弯环扣。"
+  },
+  "review": {
+    "contradictions": []
+  },
+  "errors": [],
+  "warnings": [],
+  "feedback": null
+}

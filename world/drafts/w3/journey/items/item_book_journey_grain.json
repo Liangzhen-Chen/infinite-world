@@ -1,0 +1,18 @@
+{
+  "id": "item_book_journey_grain",
+  "fingerprint": "f15f92ee54262fd8bf66ecd0c003d4e54621b27d3ee3675421203e260bf3380f",
+  "status": "passed",
+  "attempts": 2,
+  "draft": {
+    "id": "item_book_journey_grain",
+    "description": "白石手艺人合抄的中级抄本，河湾供货校对本，出自小学堂。纸页按工序分栏，墨线旁留窄行记水量与火候；封面以薄木片作夹，边角磨圆，装订孔可见手工锥痕。全书讲解十二种麦豆主食的浸泡、收汁与夹馅顺序，识字100可读，通读约450分钟，各工序另需对应熟练度和工具。",
+    "inspection": "翻页检查装订孔与折痕，看墨线是否洇开、栏注有无缺页，木夹有无开裂；不试制、不尝样。",
+    "storage": "置于干燥避潮处，平放或竖靠，勿压重物；自抄成起至多365天，逾期限内仍须防虫防霉。"
+  },
+  "review": {
+    "contradictions": []
+  },
+  "errors": [],
+  "warnings": [],
+  "feedback": null
+}

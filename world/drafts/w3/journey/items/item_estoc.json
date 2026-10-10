@@ -1,0 +1,18 @@
+{
+  "id": "item_estoc",
+  "fingerprint": "c48ec8c0b9f1554ed42dc06082b52b88cec157cfaebcf6b572cb207102a334f2",
+  "status": "passed",
+  "attempts": 1,
+  "draft": {
+    "id": "item_estoc",
+    "description": "白石镇匠人锻成的四棱刺剑，钢身自柄部向细尖渐收，四面留磨削棱线，近柄处可见锤打与锉修痕。木柄缠以素革，护手为简洁十字形，整体偏重突刺，横撬易损细尖。全长约一臂余，重一千三百五十克。",
+    "inspection": "查看棱线是否平直、尖部有无卷缺，握柄革缠是否松脱，护手与剑身接合处有无裂纹。",
+    "storage": "置于干燥架上，剑尖朝下悬放或平搁，避免压弯细尖；不与粗重器物叠压。"
+  },
+  "review": {
+    "contradictions": []
+  },
+  "errors": [],
+  "warnings": [],
+  "feedback": null
+}

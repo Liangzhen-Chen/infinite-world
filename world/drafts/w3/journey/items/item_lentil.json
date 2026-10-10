@@ -1,0 +1,18 @@
+{
+  "id": "item_lentil",
+  "fingerprint": "789171603e0c8c5e75aa8d552cbc51a122f98e5a2b7b506798245300d8fe5b7b",
+  "status": "passed",
+  "attempts": 2,
+  "draft": {
+    "id": "item_lentil",
+    "description": "青灯酒馆经手的褐扁豆，三百克一包，豆粒扁圆，表皮褐中带浅纹，大小略有参差。袋内偶见细砂与碎壳，为晒后脱荚、筛分时留下。集市按当季货源小批供应，售罄须等另一次实际补货。挑净后煮软方可食用，单靠冷泡不足以熟化。",
+    "inspection": "翻看豆堆，拨开表层，查看有无霉斑、虫蛀孔与结块；嗅闻是否带酸败或潮闷气味，不尝变质豆粒。",
+    "storage": "装入干燥容器，置于阴凉避光处，防潮防鼠；自收存起至多存放180天，超期或见霉变、虫蛀即弃。"
+  },
+  "review": {
+    "contradictions": []
+  },
+  "errors": [],
+  "warnings": [],
+  "feedback": null
+}

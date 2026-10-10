@@ -1,0 +1,547 @@
+{
+  "total": 182,
+  "passed": 182,
+  "manual": 0,
+  "pending": 0,
+  "costUpperYuan": 5.246626640000008,
+  "batches": [
+    {
+      "index": 0,
+      "fingerprint": "f69e72b6d179c7c0688359d7b75c0159680a27e2b985052adee3ba2481b0434a",
+      "count": 37,
+      "passed": 37,
+      "ids": [
+        "item_wheat_grain",
+        "item_broad_bean",
+        "item_lentil",
+        "item_parsnip",
+        "item_beet",
+        "item_pear",
+        "item_plum",
+        "item_cucumber",
+        "item_garlic",
+        "item_dill",
+        "item_mutton",
+        "item_pork_fat",
+        "item_butter",
+        "item_cream",
+        "item_hard_cheese",
+        "item_walnut",
+        "item_mustard_seed",
+        "item_poppy_seed",
+        "item_caraway_seed",
+        "item_dry_mushroom",
+        "item_steel_bar",
+        "item_iron_wire",
+        "item_brass_strip",
+        "item_silver_wire",
+        "item_tin_sheet",
+        "item_ash_stave",
+        "item_beech_blank",
+        "item_cork_sheet",
+        "item_linen_canvas",
+        "item_wool_felt_sheet",
+        "item_goat_skin",
+        "item_horsehair_bundle",
+        "item_bristle_bundle",
+        "item_quill_set",
+        "item_reed_bundle",
+        "item_shell_button_blank",
+        "item_bone_blank"
+      ],
+      "rewritten": 31,
+      "manual": [],
+      "pending": [],
+      "flagged": [
+        "item_plum",
+        "item_garlic",
+        "item_dill",
+        "item_butter",
+        "item_walnut",
+        "item_brass_strip",
+        "item_cork_sheet",
+        "item_reed_bundle"
+      ],
+      "sample": [
+        "item_brass_strip",
+        "item_parsnip",
+        "item_bristle_bundle",
+        "item_hard_cheese",
+        "item_plum"
+      ],
+      "l4": {
+        "approved": true,
+        "notes": [
+          {
+            "id": "item_brass_strip",
+            "note": "L4：对光不能确认金属内部无暗裂，改为可见表面检查。"
+          },
+          {
+            "id": "item_parsnip",
+            "note": "350克食用根来源明确，不混售野根，起出后7天上限与弃坏检查一致。"
+          },
+          {
+            "id": "item_bristle_bundle",
+            "note": "50克硬鬃供植毛且根端另夹固，365天保存无额外用途。"
+          },
+          {
+            "id": "item_hard_cheese",
+            "note": "200克熟成酪角与30天保存相符，霉败整块弃置，不把鲜乳块混作熟成品。"
+          },
+          {
+            "id": "item_plum",
+            "note": "L4：供货人名应为梅绫，不是梅岭。"
+          },
+          {
+            "id": "item_garlic",
+            "note": "L1/L4：60天用明确数字表示，一份重量不限定每头重量。"
+          },
+          {
+            "id": "item_dill",
+            "note": "30克调味嫩叶，2天期限明确；短存储文字含避压及通风信息。"
+          },
+          {
+            "id": "item_butter",
+            "note": "L4：保存期从制成日起算3天，删除木色品质与取得日起刷新。"
+          },
+          {
+            "id": "item_walnut",
+            "note": "L4：净仁不能描述成碎壳混装；60天改为明确数字。"
+          },
+          {
+            "id": "item_cork_sheet",
+            "note": "L4：保存365天；软木片不应对折听干脆响声验回弹。"
+          },
+          {
+            "id": "item_reed_bundle",
+            "note": "L1：保存期180天改为明确数字。"
+          }
+        ]
+      },
+      "costUpperYuan": 3.663444840000001,
+      "manualRatio": 0,
+      "needsSystemicRepair": false
+    },
+    {
+      "index": 1,
+      "fingerprint": "b9c1260c699f0af77ae124bf1dd13f2c6f930cc84d5369b3dd81ad8678a09174",
+      "count": 37,
+      "passed": 37,
+      "ids": [
+        "item_horn_blank",
+        "item_red_dyewood",
+        "item_alum_grain",
+        "item_clean_lard",
+        "item_pine_pitch",
+        "item_soap_flake",
+        "item_flour_paste_powder",
+        "item_fine_sand",
+        "item_slate_splinter",
+        "item_linen_wick",
+        "item_steel_dividers",
+        "item_marking_gauge",
+        "item_try_square",
+        "item_drawknife",
+        "item_spokeshave",
+        "item_brace_drill",
+        "item_hollow_gouge",
+        "item_veining_chisel",
+        "item_chasing_punch",
+        "item_jeweler_pliers",
+        "item_jeweler_saw",
+        "item_ingot_mold",
+        "item_swage_block",
+        "item_fuller",
+        "item_riveting_hammer",
+        "item_stone_point",
+        "item_mason_chisel",
+        "item_plumb_bob",
+        "item_line_level",
+        "item_sighting_rule",
+        "item_button_shank_tool",
+        "item_fine_sewing_needle",
+        "item_loop_turner",
+        "item_netting_needle",
+        "item_rope_fid",
+        "item_honing_stone",
+        "item_leather_strop"
+      ],
+      "rewritten": 17,
+      "manual": [],
+      "pending": [],
+      "flagged": [
+        "item_horn_blank",
+        "item_red_dyewood",
+        "item_alum_grain",
+        "item_clean_lard",
+        "item_flour_paste_powder",
+        "item_drawknife",
+        "item_jeweler_saw",
+        "item_fuller",
+        "item_mason_chisel"
+      ],
+      "sample": [
+        "item_jeweler_pliers",
+        "item_alum_grain",
+        "item_jeweler_saw",
+        "item_mason_chisel",
+        "item_hollow_gouge"
+      ],
+      "l4": {
+        "approved": true,
+        "notes": [
+          {
+            "id": "item_jeweler_pliers",
+            "note": "细钢钳弯银丝，银为品质名称，未把钳身材料说成银；夹口和铰接检查相符。"
+          },
+          {
+            "id": "item_alum_grain",
+            "note": "L4：去除供货人内部编号，改为严辙中文名。"
+          },
+          {
+            "id": "item_jeweler_saw",
+            "note": "L4：目视锯齿与轻拨张力，不让指腹顺锋齿滑动。"
+          },
+          {
+            "id": "item_mason_chisel",
+            "note": "L4：石料先固定，一手扶凿一手持锤，避免三手操作。"
+          },
+          {
+            "id": "item_hollow_gouge",
+            "note": "圆口钢刃和木柄供木雕，未变为石凿；细节不影响材料和工具范围。"
+          },
+          {
+            "id": "item_horn_blank",
+            "note": "L4：删除无助于使用的品质与材质解释。"
+          },
+          {
+            "id": "item_red_dyewood",
+            "note": "L4：100克为整份碎木，180天从加工起算。"
+          },
+          {
+            "id": "item_clean_lard",
+            "note": "L4：不赠陶罐，90天后不可另称粗用延长有效期。"
+          },
+          {
+            "id": "item_flour_paste_powder",
+            "note": "L1：保存期90天改为明确数字。"
+          },
+          {
+            "id": "item_drawknife",
+            "note": "L4：双柄位于长钢刃两端，检查刃口不沿锋面滑指。"
+          },
+          {
+            "id": "item_fuller",
+            "note": "L4：锻沟杆扶在热坯上压槽，并非用来扶稳热坯的夹钳。"
+          }
+        ]
+      },
+      "costUpperYuan": 3.910433840000003,
+      "manualRatio": 0,
+      "needsSystemicRepair": false
+    },
+    {
+      "index": 2,
+      "fingerprint": "7642e3099542cd2a015f24af9789376d1814d58b964fec4d534807bcec28e0aa",
+      "count": 37,
+      "passed": 37,
+      "ids": [
+        "item_goat_hair_brush",
+        "item_quill_knife",
+        "item_loom_reed",
+        "item_ash_spear",
+        "item_steel_arming_sword",
+        "item_boar_spear",
+        "item_billhook_polearm",
+        "item_flanged_mace",
+        "item_war_pick",
+        "item_singlebit_axe",
+        "item_oak_cudgel",
+        "item_parrying_dagger",
+        "item_estoc",
+        "item_quarterstaff",
+        "item_practice_sword",
+        "item_cracked_wheat_pot",
+        "item_lentil_leek_stew",
+        "item_broadbean_garlic_mash",
+        "item_parsnip_cream_pot",
+        "item_beet_barley_pot",
+        "item_pear_wheat_gruel",
+        "item_cheese_rye_panbread",
+        "item_walnut_honey_bites",
+        "item_poppy_rye_crisp",
+        "item_caraway_oat_crust",
+        "item_mushroom_barley_pot",
+        "item_mutton_turnip_stew",
+        "item_book_journey_grain",
+        "item_plum_honey_spread",
+        "item_pear_vinegar_slice",
+        "item_mustard_relish",
+        "item_dill_cucumber",
+        "item_garlic_butter",
+        "item_rendered_cooking_fat",
+        "item_salted_walnut",
+        "item_beet_vinegar_dice",
+        "item_pear_dry_chips"
+      ],
+      "rewritten": 22,
+      "manual": [],
+      "pending": [],
+      "flagged": [
+        "item_war_pick",
+        "item_oak_cudgel",
+        "item_practice_sword",
+        "item_lentil_leek_stew",
+        "item_broadbean_garlic_mash",
+        "item_beet_barley_pot",
+        "item_cheese_rye_panbread",
+        "item_mushroom_barley_pot",
+        "item_rendered_cooking_fat"
+      ],
+      "sample": [
+        "item_practice_sword",
+        "item_cheese_rye_panbread",
+        "item_war_pick",
+        "item_oak_cudgel",
+        "item_broadbean_garlic_mash"
+      ],
+      "l4": {
+        "approved": true,
+        "notes": [
+          {
+            "id": "item_practice_sword",
+            "note": "L4：敲击声只供参考，不能听声确认内部暗伤。"
+          },
+          {
+            "id": "item_cheese_rye_panbread",
+            "note": "L4：保存上限1天，不能凭隔日复看继续食用。"
+          },
+          {
+            "id": "item_war_pick",
+            "note": "L4：锤头是锻钢，木柄不能写成通体锻钢。"
+          },
+          {
+            "id": "item_oak_cudgel",
+            "note": "L4：闷响不能直接断言木棒内伤。"
+          },
+          {
+            "id": "item_broadbean_garlic_mash",
+            "note": "L4：残皮和焦屑应弃置，不混入成品；容器另备。"
+          },
+          {
+            "id": "item_lentil_leek_stew",
+            "note": "L4：配方未投油，不加油花；1天过期不能重煮恢复。"
+          },
+          {
+            "id": "item_beet_barley_pot",
+            "note": "L1/L4：保存期1天明确数字，删去木品质及配额说明。"
+          },
+          {
+            "id": "item_mushroom_barley_pot",
+            "note": "L4：不赠厚陶罐；重量仅为食物，保存期1天。"
+          },
+          {
+            "id": "item_rendered_cooking_fat",
+            "note": "L4：清脂不夹焦屑；160克仅为脂重，保存7天。"
+          }
+        ]
+      },
+      "costUpperYuan": 4.183401360000006,
+      "manualRatio": 0,
+      "needsSystemicRepair": false
+    },
+    {
+      "index": 3,
+      "fingerprint": "f4218361023c97239dfe8f12fd7474304990ca2daea4630f75fcbb116d615d0e",
+      "count": 37,
+      "passed": 37,
+      "ids": [
+        "item_cheese_herb_mash",
+        "item_book_journey_preserve",
+        "item_canvas_satchel",
+        "item_felt_insole_pair",
+        "item_padded_work_collar",
+        "item_folding_haversack",
+        "item_goatskin_document_case",
+        "item_tool_apron_panel",
+        "item_brush_roll",
+        "item_corklined_cup_wrap",
+        "item_felt_knee_pad",
+        "item_horsehair_sieve_cloth",
+        "item_laundry_mesh_bag",
+        "item_travel_sewing_wallet",
+        "item_book_journey_sewing",
+        "item_ash_walking_stick",
+        "item_beech_press_board",
+        "item_reed_drying_mat",
+        "item_bottle_divider_crate",
+        "item_clamping_wood_jaw",
+        "item_peg_drying_rack",
+        "item_beech_spatula",
+        "item_ladle_rest",
+        "item_cork_stop_set",
+        "item_horn_spoon_blank",
+        "item_slate_writing_tile",
+        "item_folding_map_board",
+        "item_book_journey_wood",
+        "item_broad_steel_chisel",
+        "item_hooked_pruning_knife",
+        "item_leather_round_knife",
+        "item_carpenters_adze",
+        "item_steel_gouge_tip",
+        "item_small_trowel",
+        "item_wire_mesh_patch",
+        "item_folded_brass_cuff",
+        "item_small_bell_frame"
+      ],
+      "rewritten": 19,
+      "manual": [],
+      "pending": [],
+      "flagged": [
+        "item_canvas_satchel",
+        "item_steel_gouge_tip",
+        "item_small_bell_frame"
+      ],
+      "sample": [
+        "item_laundry_mesh_bag",
+        "item_leather_round_knife",
+        "item_felt_insole_pair",
+        "item_tool_apron_panel",
+        "item_cork_stop_set"
+      ],
+      "l4": {
+        "approved": true,
+        "notes": [
+          {
+            "id": "item_laundry_mesh_bag",
+            "note": "疏孔麻线袋配收口绳，空袋无自动洗净能力，365天保存明确。"
+          },
+          {
+            "id": "item_leather_round_knife",
+            "note": "钢料半月刃经淬回火后装木柄，供鞣熟软革，未宣称能切金属。"
+          },
+          {
+            "id": "item_felt_insole_pair",
+            "note": "一对为一份，毡片锁边不含硬板，没有护甲或额外保温数值。"
+          },
+          {
+            "id": "item_tool_apron_panel",
+            "note": "帆布底、羊革分袋与麻线缝合一致，工具另备，仍按原负重计算。"
+          },
+          {
+            "id": "item_cork_stop_set",
+            "note": "组内小塞片厚薄可变，交付一份；使用先比瓶口，未保证水密。"
+          },
+          {
+            "id": "item_canvas_satchel",
+            "note": "挎袋闭合使用腰带扣，交付空袋，365天短存储句仍明确。"
+          },
+          {
+            "id": "item_steel_gouge_tip",
+            "note": "圆口钢凿用途与0.56千克相符；原数值误报由解析修复，短存储含避碰防潮。"
+          },
+          {
+            "id": "item_small_bell_frame",
+            "note": "L4：删除外貌里的抽象耐久数值与木品质。"
+          }
+        ]
+      },
+      "costUpperYuan": 4.454696800000006,
+      "manualRatio": 0,
+      "needsSystemicRepair": false
+    },
+    {
+      "index": 4,
+      "fingerprint": "2d5fd97db0362d046cd36fd25f959dd71df1dff6d3e15356bbf3a165c58f008b",
+      "count": 34,
+      "passed": 34,
+      "ids": [
+        "item_tin_inlay_strip",
+        "item_forged_chain_short",
+        "item_gate_hasps",
+        "item_book_journey_metal",
+        "item_quill_pen_pair",
+        "item_paste_cup_portion",
+        "item_stitchbound_folio",
+        "item_ledger_cover",
+        "item_paper_cord_tags",
+        "item_ink_wiping_pad",
+        "item_slate_stylus",
+        "item_reed_pen_box",
+        "item_book_spine_tape",
+        "item_seal_thread_bundle",
+        "item_book_journey_desk",
+        "item_silver_open_ring",
+        "item_bone_toggle_set",
+        "item_shell_button_set",
+        "item_horn_comb",
+        "item_bristle_handbrush",
+        "item_horsehair_dustbrush",
+        "item_reed_whistle",
+        "item_cork_float_set",
+        "item_redwood_dye",
+        "item_book_journey_smallcraft",
+        "item_leather_wax_grease",
+        "item_seam_pitch_cake",
+        "item_soap_wash_portion",
+        "item_damp_sand_rub",
+        "item_wick_coil",
+        "item_linen_cleaning_swab",
+        "item_felt_polishing_pad",
+        "item_resin_cloth_patch",
+        "item_book_journey_upkeep"
+      ],
+      "rewritten": 16,
+      "manual": [],
+      "pending": [],
+      "flagged": [
+        "item_horn_comb",
+        "item_resin_cloth_patch"
+      ],
+      "sample": [
+        "item_shell_button_set",
+        "item_gate_hasps",
+        "item_book_spine_tape",
+        "item_book_journey_metal",
+        "item_silver_open_ring"
+      ],
+      "l4": {
+        "approved": true,
+        "notes": [
+          {
+            "id": "item_shell_button_set",
+            "note": "贝片针孔与磨边相符，整组一份不附线，没有宝石附魔。"
+          },
+          {
+            "id": "item_gate_hasps",
+            "note": "一千一百克等于1.1公斤，翻舌底片可活动，需另配锁芯。"
+          },
+          {
+            "id": "item_book_spine_tape",
+            "note": "帆布护脊带锁边，黏料另备，365天；普通材料没有书本学习能力。"
+          },
+          {
+            "id": "item_book_journey_metal",
+            "note": "中级工谱12配方、识字100、阅读450分钟，未把阅读时间当页数。"
+          },
+          {
+            "id": "item_silver_open_ring",
+            "note": "材料确为银丝，开口钳收与磨石修边相符，装饰无加护。"
+          },
+          {
+            "id": "item_horn_comb",
+            "note": "短齿角梳只梳发，齿尖及背面检查相符，短存储句仍含防磕压。"
+          },
+          {
+            "id": "item_resin_cloth_patch",
+            "note": "L1：保存上限90天改为明确数字。"
+          }
+        ]
+      },
+      "costUpperYuan": 4.697241600000005,
+      "manualRatio": 0,
+      "needsSystemicRepair": false
+    }
+  ],
+  "scope": "L1/L2 审核结果；尚须 L4 抽读与发布校验"
+}

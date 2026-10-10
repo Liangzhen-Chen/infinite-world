@@ -1,0 +1,18 @@
+{
+  "id": "item_cucumber",
+  "fingerprint": "fb9e1e45028527cf2046a0f73a60b13b85d6756e53a509f173353742535f7253",
+  "status": "passed",
+  "attempts": 2,
+  "draft": {
+    "id": "item_cucumber",
+    "description": "公用果园当季摘下的短刺黄瓜，长约一掌，表皮深绿带浅色纵纹，瘤刺短密易刮落。单条重三百克，瓜身挺直而两端略钝，蒂部切口尚新。集市由梅玲按当季货源小批摆出，售罄须等下次实际补货。刮去粗刺后切食，清鲜爽脆。",
+    "inspection": "翻看瓜身，瘤刺短密易刮落，蒂部切口尚新，无软塌渗汁。失水变软只说明不新鲜，不等于腌成酸瓜。",
+    "storage": "阴凉通风处摊放，避免挤压堆叠，自采摘起最多保管4天。"
+  },
+  "review": {
+    "contradictions": []
+  },
+  "errors": [],
+  "warnings": [],
+  "feedback": null
+}

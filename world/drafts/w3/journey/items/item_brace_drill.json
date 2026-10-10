@@ -1,0 +1,18 @@
+{
+  "id": "item_brace_drill",
+  "fingerprint": "76c8eca75d34e8783c128461957492332fa425e1068bb787d40d656009c74d77",
+  "status": "passed",
+  "attempts": 2,
+  "draft": {
+    "id": "item_brace_drill",
+    "description": "白石镇工匠常用的银品质曲柄细木钻，重0.7千克。木柄经车削，握处磨得圆润；钢制钻杆与横档铆接，刃口呈细长螺旋。柄尾与横档留有手工锉痕，钻头可拆换。适合在细木榫接处开深孔，孔屑随螺旋分次退出。",
+    "inspection": "先看木柄有无裂纹，再转动横档听铆接是否松动；指腹顺螺旋刃口摸过，确认无卷刃缺口，钻头与柄座咬合紧密。",
+    "storage": "拆下钻头，与柄杆分放于干燥木盒内；避免重压横档，盒内留空隙防潮。久置后取出先空转试松紧。"
+  },
+  "review": {
+    "contradictions": []
+  },
+  "errors": [],
+  "warnings": [],
+  "feedback": null
+}

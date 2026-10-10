@@ -1,0 +1,18 @@
+{
+  "id": "item_folding_haversack",
+  "fingerprint": "90e6814d809d4826fbb7a6129919185ed2ec5bd48ace9091266e7df8f4bce53f",
+  "status": "passed",
+  "attempts": 2,
+  "draft": {
+    "id": "item_folding_haversack",
+    "description": "织坊以亚麻帆布缝制的窄口小包，包身扁平，口沿向外反折并缉出细窄绳道，麻绳穿行其中，抽紧即可收拢袋口。缝线沿边均匀，反折处留有折痕与针孔，绳头以绞合收束。空包交付，不附干粮，也无防腐效果。",
+    "inspection": "查看帆布有无断纱、破洞，反折绳道是否脱线，麻绳能否顺畅抽动收口。",
+    "storage": "空包抖净后卷起，置于干燥处，避免受潮与重压，自制成起可存180天。"
+  },
+  "review": {
+    "contradictions": []
+  },
+  "errors": [],
+  "warnings": [],
+  "feedback": null
+}

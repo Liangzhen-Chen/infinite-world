@@ -1,0 +1,21 @@
+{
+  "id": "item_mushroom_barley_pot",
+  "fingerprint": "e8a501f3a63ea4b7581bfa05ee419c929681a7d9994c08ba3d3d85782bf1a5af",
+  "status": "passed",
+  "attempts": 3,
+  "draft": {
+    "id": "item_mushroom_barley_pot",
+    "description": "青灯酒馆煨成的菌麦食，泡发切短的栽培菌片和大麦粒浸在浅褐稠汤里。菌片边缘卷软，麦粒鼓起，轻搅时能看见两者缓缓翻动。原料在同锅煮透后分装，整份食物重600克，容器由买者自备，不混入未辨野菌。",
+    "inspection": "揭开罐盖，先看汤面有无异色浮沫，再闻气味是否发酸或带霉。用木匙轻推罐底，确认无黏连结块，菌片与麦粒形态完整。",
+    "storage": "装在自备容器中遮尘，置阴凉处，自制成起1天内食完；出现霉味、酸味或异常黏滑即弃置。"
+  },
+  "review": {
+    "contradictions": []
+  },
+  "errors": [],
+  "warnings": [],
+  "feedback": null,
+  "manualCorrection": {
+    "reason": "L4：不赠厚陶罐；重量仅为食物，保存期1天。"
+  }
+}

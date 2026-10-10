@@ -1,0 +1,18 @@
+{
+  "id": "item_laundry_mesh_bag",
+  "fingerprint": "da50c639794602bc23ecf4f688cd2b8d052e9ae366c6bb5d5ffa405d1cb6600a",
+  "status": "passed",
+  "attempts": 2,
+  "draft": {
+    "id": "item_laundry_mesh_bag",
+    "description": "织坊以结网梭储绕麻线，逐结编成疏孔袋身，针缝接底，袋口穿麻绳收束。网眼均匀透气，麻线结扣紧实，袋身柔软可折。用于盛装待洗织物，不附洗剂，也无自动洗净作用。",
+    "inspection": "翻看袋身，检查网眼是否大小一致、结扣有无松脱，缝底针脚是否断线，收口麻绳是否磨损起毛。",
+    "storage": "晾干后折叠，置干燥处避潮防霉；自制成起保存不超过365天。"
+  },
+  "review": {
+    "contradictions": []
+  },
+  "errors": [],
+  "warnings": [],
+  "feedback": null
+}

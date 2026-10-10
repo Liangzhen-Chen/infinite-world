@@ -1,0 +1,16 @@
+{
+  "id": "recipe_w3c_canvas_satchel",
+  "fingerprint": "5116b25423e1447059b9cafa676b63ff7d685ea75284a70c380d2bc6c5690be4",
+  "status": "passed",
+  "attempts": 1,
+  "draft": {
+    "id": "recipe_w3c_canvas_satchel",
+    "process": "将整块紧织麻帆布平铺，按袋体与翻盖折线折出双层袋身，余幅对折成一条长肩带；用短刃裁革剪沿折痕逐段合剪，断口齐直。以缝革扁锥在袋侧、袋底和肩带接合处刺开扁缝孔定位，粗眼缝针穿细捻麻线，自袋口沿边回针缝实，肩带两端分别压入袋侧夹层一并缝牢。翻盖闭合带居中刺孔，折舌腰带扣的框环穿过布带后卷接固定，试扣开合。总耗时210分钟。交付一只空挎袋，余料弃置，三件工具保留。"
+  },
+  "review": {
+    "contradictions": []
+  },
+  "errors": [],
+  "warnings": [],
+  "feedback": null
+}

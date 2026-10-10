@@ -1,0 +1,16 @@
+{
+  "id": "recipe_w3c_leather_wax_grease",
+  "fingerprint": "1e29f2c207299ab8f71e40f86a741f33afd2ff6e92623518a7d0e4795e31a95d",
+  "status": "passed",
+  "attempts": 1,
+  "draft": {
+    "id": "recipe_w3c_leather_wax_grease",
+    "process": "取厚底煮锅坐于小灶，投入净制工坊脂与滤净蜂蜡块，以木炭小袋供小火，候二者软合；持偏柄木匙沿锅缘反复搅动，使脂蜡交融无结块，随即离火静置冷却成膏。全程五十五分钟，火灰留在炉内，不混入脂蜡。所得一份薄涂护革脂蜡，仅薄涂熟革表面；已撕裂皮件不可复原，亦不得入口。"
+  },
+  "review": {
+    "contradictions": []
+  },
+  "errors": [],
+  "warnings": [],
+  "feedback": null
+}

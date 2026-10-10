@@ -1,0 +1,18 @@
+{
+  "id": "item_loop_turner",
+  "fingerprint": "8691cc722cc0c337e2cdb4747ed315e81df352fb5b2bcf3da74976344a5396f0",
+  "status": "passed",
+  "attempts": 1,
+  "draft": {
+    "id": "item_loop_turner",
+    "description": "织坊常用的窄布带翻面工具：细铁杆身，末端弯成圆钩，钩口略外张，便于探入带腔后勾住布头回拉。杆尾收细并嵌短木柄，柄面留有旋削纹。整体轻便，铁件见锻打痕与磨光过渡，钩弧处最易受力变形。",
+    "inspection": "先看钩口是否闭合或外翻，再摸杆身有无裂纹与毛刺；轻转木柄，确认嵌合不松脱。若钩弧明显歪斜，翻带时容易挂伤布口。",
+    "storage": "存放时钩头朝上，杆身平放或悬挂，勿与粗重器物挤压；木柄避潮，铁件保持干燥。长期不用可薄裹干布防尘。"
+  },
+  "review": {
+    "contradictions": []
+  },
+  "errors": [],
+  "warnings": [],
+  "feedback": null
+}

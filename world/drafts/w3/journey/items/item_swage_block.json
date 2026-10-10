@@ -1,0 +1,18 @@
+{
+  "id": "item_swage_block",
+  "fingerprint": "3f69c3275115681de976d1126c7a932ee74b0f2d353bd95e0a5a2835e9af9c14",
+  "status": "passed",
+  "attempts": 1,
+  "draft": {
+    "id": "item_swage_block",
+    "description": "白石镇铁匠铺所出的硬铁小砧，砧面平整，凿出深浅不一的数道凹槽，槽口边缘留有细锉修整的痕迹，底部四角略收以稳放砧座。整体呈暗灰铁色，锤击面经反复锻打而致密。使用时将热铁置于槽内承托，再以锤钳配合炉火压出弧面，自身不发热也不施力。",
+    "inspection": "查看砧面凹槽有无崩口、裂纹，四角与底面是否平整贴合；轻敲听声，闷哑处或有暗裂。热铁未取出前不可徒手触碰槽口。",
+    "storage": "置于干燥砧座或木架上，槽面朝上，避免与湿物、酸液同处；长期不用可覆干布防尘，勿以重物压槽口。"
+  },
+  "review": {
+    "contradictions": []
+  },
+  "errors": [],
+  "warnings": [],
+  "feedback": null
+}

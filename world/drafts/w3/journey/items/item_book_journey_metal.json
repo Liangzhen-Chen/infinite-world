@@ -1,0 +1,18 @@
+{
+  "id": "item_book_journey_metal",
+  "fingerprint": "0561ae8e0e40059d48ec567a7813b68b8eadd9f0ee1cf37815f8a1e67143705a",
+  "status": "passed",
+  "attempts": 1,
+  "draft": {
+    "id": "item_book_journey_metal",
+    "description": "白石手艺人合抄的中级工谱，河湾供货校对本，出自小学堂。纸页以细麻线订入木片封皮，边角磨圆，封面墨书书名。内述十二种钢凿、金属连接件与软金属饰片的锻修次序，附尺寸与火候次序。识字100可读，阅读450分钟，各工序另需对应熟练度和工具。",
+    "inspection": "翻看封面与订线，纸页无缺；抽查数页字迹与图样清楚，边角略有翻旧痕，无受潮粘连。",
+    "storage": "置于干燥木架或布囊内，避潮避水；远离火源与重压，勿与锐器同放。保存期365天。"
+  },
+  "review": {
+    "contradictions": []
+  },
+  "errors": [],
+  "warnings": [],
+  "feedback": null
+}

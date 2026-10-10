@@ -1,0 +1,18 @@
+{
+  "id": "item_line_level",
+  "fingerprint": "3015d5fb012c3adc0e2da8e5a237cbd0821ffbd1ca16ab3811cbccf68ac9a920",
+  "status": "passed",
+  "attempts": 2,
+  "draft": {
+    "id": "item_line_level",
+    "description": "白石镇集市来的木座槽水准，整木刨出浅槽，两端嵌薄银片作读数边，槽底阴刻一道基准线。木面留有细刨痕与刮刀修整痕，银片边缘见锉磨倒角。重0.65千克。槽内空置，不附水；需另取清水注入浅槽，借液面比较短段高低。",
+    "inspection": "查看槽底基准线是否被刨痕遮断，银片读数边有无翘起或锉伤；木座四角与槽沿有无磕缺、开裂。空槽即可判断，不必注水。",
+    "storage": "平放于干燥木架或布垫上，槽口朝上，避免银片受压变形；不与湿物同置，防木座吸潮翘曲。保存期不设时限。"
+  },
+  "review": {
+    "contradictions": []
+  },
+  "errors": [],
+  "warnings": [],
+  "feedback": null
+}

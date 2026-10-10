@@ -1,0 +1,18 @@
+{
+  "id": "item_quill_pen_pair",
+  "fingerprint": "b03f27cfe92a486c21c34c9784ecb358b484c9cbae4f92de8594cf33feae1f12",
+  "status": "passed",
+  "attempts": 2,
+  "draft": {
+    "id": "item_quill_pen_pair",
+    "description": "两根鹅羽笔成对束于旧磨坊出货的细麻束带内，羽管已剔去绒枝，露出半透管壁。管端由修羽刀削成斜口，口缘开一道细缝引墨；握持段保留原羽弧度，便于指节贴合。整组按一份交付，墨液另备。品质等级为木，与材料名称无关。",
+    "inspection": "对光转动羽管，看管壁有无横裂与虫蛀小孔；再以指腹顺斜口抚过，确认缝口平直不挂手，束带未松脱。",
+    "storage": "收进干燥笔匣或布袋，斜口朝上竖放，避开潮气与重压；保存期180天，逾期羽管易脆裂。"
+  },
+  "review": {
+    "contradictions": []
+  },
+  "errors": [],
+  "warnings": [],
+  "feedback": null
+}

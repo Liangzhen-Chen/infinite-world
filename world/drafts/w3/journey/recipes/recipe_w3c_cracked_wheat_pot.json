@@ -1,0 +1,16 @@
+{
+  "id": "recipe_w3c_cracked_wheat_pot",
+  "fingerprint": "e736fef2972504747aae99b787313a75f210fa08ee431aeb292199498bf09c62",
+  "status": "passed",
+  "attempts": 1,
+  "draft": {
+    "id": "recipe_w3c_cracked_wheat_pot",
+    "process": "取净麦粒一份摊在案上，以案上切刀刀背逐粒压出裂口，勿使碎成粉。厚底煮锅坐灶，倾入清水三份，投裂麦，先浸泡待其吸水。干木刨屑两份入灶引火，火起后改稳火，以偏柄木匙贴锅底往复搅动，防沉底结块。煮至麦粒捏开无硬心，粗盐一份全部调入，再搅匀。全程连备料与等待共85分钟。所得碎麦厚煮一份，热时稠厚，可即食；锅底焦层不作成品。"
+  },
+  "review": {
+    "contradictions": []
+  },
+  "errors": [],
+  "warnings": [],
+  "feedback": null
+}

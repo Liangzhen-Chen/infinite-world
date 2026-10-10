@@ -1,0 +1,16 @@
+{
+  "id": "recipe_w3c_horn_comb",
+  "fingerprint": "d5249acfea0c333606a6863a31493b0903335b8d7d57c8d2ac323df18e170d0e",
+  "status": "passed",
+  "attempts": 1,
+  "draft": {
+    "id": "recipe_w3c_horn_comb",
+    "process": "取空心角片坯一份置于木工台上，用细弓镂片锯沿坯面锯出短齿间隙，锯缝保持等距并留足齿根。换粗齿木锉，逐齿锉圆齿尖，并修顺齿列两侧边缘。再持短锋修羽刀，沿梳背轻刮至平直，刀锋只走浅层，遇细裂片即挑出弃置。全程总耗时二百一十分钟。完成后得短齿角梳一份，仅用于梳理发丝。所用锯、锉、刀擦拭后保留。"
+  },
+  "review": {
+    "contradictions": []
+  },
+  "errors": [],
+  "warnings": [],
+  "feedback": null
+}

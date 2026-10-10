@@ -1,0 +1,18 @@
+{
+  "id": "item_ink_wiping_pad",
+  "fingerprint": "2c979dad7cff610505b0bf51831db851ecf37b9a33c249737310bce6a2d327a7",
+  "status": "passed",
+  "attempts": 1,
+  "draft": {
+    "id": "item_ink_wiping_pad",
+    "description": "旧磨坊出产的扁方垫，毡片外包粗麻布，四缘以麻线缝合，收口压在背面中央，正面留一道浅缝痕。布面有剪裁的直边与针脚压痕，触手微糙，吸墨后颜色转深。供擦净笔杆及少量余墨，不承诺擦掉已有文字。",
+    "inspection": "翻看背面收口是否散线，捏压毡芯是否结块，正面缝痕有无裂开，布面墨渍深浅是否均匀。",
+    "storage": "置于干燥通风处，避免受潮与重压；保存期180天，逾期毡芯易结块发霉。"
+  },
+  "review": {
+    "contradictions": []
+  },
+  "errors": [],
+  "warnings": [],
+  "feedback": null
+}

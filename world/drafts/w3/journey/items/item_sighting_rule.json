@@ -1,0 +1,18 @@
+{
+  "id": "item_sighting_rule",
+  "fingerprint": "a6c2fface520e739be89cb31b5cf95f8c84854430d8d6b18528070cc97f70fa5",
+  "status": "passed",
+  "attempts": 1,
+  "draft": {
+    "id": "item_sighting_rule",
+    "description": "白石镇匠人削出的木尺，尺身平直，一端以铰接方式折起金属照准片，片缘留有细锉痕，铰轴处可见轻微锤击印记。尺面刻有等距横线，木纹顺直，握持处因打磨而略浅。收起时照准片贴伏尺背，展开后可贴目核对近处方向与坡度。",
+    "inspection": "先看尺身是否翘曲，再拨动照准片听铰轴有无松响，最后对光检查刻线是否仍齐整。",
+    "storage": "折合照准片，平放于干燥木匣或布套内，勿压重物，避免铰轴受潮生涩。"
+  },
+  "review": {
+    "contradictions": []
+  },
+  "errors": [],
+  "warnings": [],
+  "feedback": null
+}

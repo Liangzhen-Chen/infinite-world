@@ -8,7 +8,7 @@ const seed=JSON.parse(await fs.readFile('tests/fixtures/legacy/seed.json','utf8'
 async function setup(){
     const world=await loadWorld(),mentor=world.npcs.find(row=>row.id==='npc_hw_xuling');mentor.promotionRanks={profession_mage:6};
     const engine=new WorldEngine(world),document=engine.initialFromLegacy(seed,'profession-test');
-    document.state.npcs.npc_hw_xuling.location=document.state.location;document.state.player.level=10;document.state.player.coins=1000;
+    document.state.location='bld_hw_riverhome';document.state.npcs.npc_hw_xuling.location=document.state.location;document.state.player.level=10;document.state.player.coins=1000;
     document.state.skills.skill_light.proficiency=100;
     const run=async(c,args,id)=>{const out=await engine.reduce(c,{tool:'world_profession',args,eventId:id});return{document:applyPatches(c,out.patches),result:out.result};};
     return{world,mentor,engine,document,run};

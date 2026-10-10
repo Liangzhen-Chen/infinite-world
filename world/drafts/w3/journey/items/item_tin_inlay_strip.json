@@ -1,0 +1,18 @@
+{
+  "id": "item_tin_inlay_strip",
+  "fingerprint": "1ea7c9083f282db6e6ba226193ab4e9a94add105770d0a5abfa2be32567ce4ec",
+  "status": "passed",
+  "attempts": 1,
+  "draft": {
+    "id": "item_tin_inlay_strip",
+    "description": "铁匠铺出品的窄长锡饰条，由整片锡料剪成，边口折钝以免割手。表面以錾杆逐点压出圆窝，排布略疏密不匀，是手工敲压留下的痕迹。锡色偏冷灰，轻弯可贴合木面或箱角，仅作贴面装饰，安装另算。",
+    "inspection": "查看剪边是否齐直、圆点有无压穿，折钝端口是否翻起；轻弯饰条试其软硬，留意暗处裂纹与白斑。",
+    "storage": "平放于干燥木架或垫布上，勿叠压重物，避免与硬器磕碰；受潮后擦干再收。"
+  },
+  "review": {
+    "contradictions": []
+  },
+  "errors": [],
+  "warnings": [],
+  "feedback": null
+}

@@ -1,0 +1,18 @@
+{
+  "id": "item_slate_splinter",
+  "fingerprint": "cb17a4b157210e4eaac40bd0802adc482801f7ec1bc96529cce45f165dd374bb",
+  "status": "passed",
+  "attempts": 1,
+  "draft": {
+    "id": "item_slate_splinter",
+    "description": "白石镇集市流出的平面板岩片，呈薄板状，表面留有顺层剥离的浅平痕，边缘为解理断口，略锐。板面平整，便于刮磨改作小写牌；改作前须把四周棱口磨钝，免得划手。单件约二百克，木品质，只作材料看待，不因名称带石而另作他用。",
+    "inspection": "翻看两面是否平整、有无贯穿裂；以指腹轻试边缘锐钝，查看层理处是否起翘分层，并确认无泥砂夹层。",
+    "storage": "平放于干燥处，板面朝上，勿与硬物叠压；避免受潮与磕碰边角。"
+  },
+  "review": {
+    "contradictions": []
+  },
+  "errors": [],
+  "warnings": [],
+  "feedback": null
+}

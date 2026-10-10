@@ -1,0 +1,16 @@
+{
+  "id": "recipe_w3c_pear_vinegar_slice",
+  "fingerprint": "e7441ea5baf4f6cae0240dbd443c643c246289da8197d12775f7332b8dfad131",
+  "status": "passed",
+  "attempts": 1,
+  "draft": {
+    "id": "recipe_w3c_pear_vinegar_slice",
+    "process": "取脆肉梨一份，先剔除碰伤部位，剖开去核，用案上切刀切成薄片。滤蜜小罐份与两小瓶酸果醋倾入厚底煮锅，以偏柄木匙搅至蜜在醋中散开，再把梨片没入液中短浸。全程含切配共90分钟，其间只用木匙翻动，不另添水或余料。浸毕捞出梨片，余汁弃置，成品容器由制作者另备。厚底煮锅、案上切刀与偏柄木匙用后洗净保留。"
+  },
+  "review": {
+    "contradictions": []
+  },
+  "errors": [],
+  "warnings": [],
+  "feedback": null
+}

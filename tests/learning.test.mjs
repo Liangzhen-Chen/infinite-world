@@ -17,7 +17,9 @@ async function setup(){
     world.npcs.find(row=>row.id==='npc_hw_luqing').services.push('skill_joinery','recipe_staff_pair');
     const engine=new WorldEngine(world),document=engine.initialFromLegacy({state:seed.state,memories:seed.memories},'learning-test');
     document.state.skills.skill_literacy={proficiency:100,daily:{},breakthroughs:[]};
+    document.state.location='bld_hw_school';
     document.state.npcs.npc_hw_luqing.location=document.state.location;
+    document.state.npcs.npc_hw_linsui.location=document.state.location; // Present but unqualified teacher fixture.
     for(const id of ['item_test_spellbook','item_test_skillbook','item_test_recipebook'])document.state.inventory[id]={quantity:1,quality:'木',durability:100,weight:0.2};
     const run=async(c,tool,args,id='learn')=>{const output=await engine.reduce(c,{tool,args,eventId:id});return{document:applyPatches(c,output.patches),result:output.result};};
     return{world,engine,document,run};

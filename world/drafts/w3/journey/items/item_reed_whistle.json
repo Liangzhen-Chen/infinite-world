@@ -1,0 +1,18 @@
+{
+  "id": "item_reed_whistle",
+  "fingerprint": "403f108bb31ce81b89e2c789cc62a19eeb3d51e1b9e51a29885e01c5b8404a14",
+  "status": "passed",
+  "attempts": 1,
+  "draft": {
+    "id": "item_reed_whistle",
+    "description": "截短的无裂芦管，一端塞入软木片留出吹气狭道，管身近口处钻有一孔，孔缘与风口经刀修齐。管壁保留芦茎原有节环与细纵纹，切口平整，吹气时气流经狭道掠过孔口发声。通体轻巧，可握于掌中或系绳随身，出自旧磨坊一带的常见手艺。",
+    "inspection": "先看管身有无裂纹与虫蛀，再查软木塞是否松动、狭道是否被碎屑堵住；对光看孔缘与风口是否齐整，轻吹试音。",
+    "storage": "置于干燥通风处，避免重压与浸水；可装入布袋或木盒，勿与尖锐器物同放。保存期180天。"
+  },
+  "review": {
+    "contradictions": []
+  },
+  "errors": [],
+  "warnings": [],
+  "feedback": null
+}

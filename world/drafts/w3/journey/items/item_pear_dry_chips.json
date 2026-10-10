@@ -1,0 +1,18 @@
+{
+  "id": "item_pear_dry_chips",
+  "fingerprint": "2e90da4692fb6d8820a3d0134994ba20596c46bb739a8fa40f7202c1d6116a4c",
+  "status": "passed",
+  "attempts": 2,
+  "draft": {
+    "id": "item_pear_dry_chips",
+    "description": "青灯酒馆按当季货源小批供应的薄梨干片，梨去核后切成薄片，厚底锅以极低余温分轮摊烘，翻面时用刀背拨动，全程不加糖。成品单片轻而微卷，边缘略起薄壳，色泽浅黄褐，表面留有刀背压过的浅痕与烘盘接触的干爽触感，闻起来是清甜梨香。",
+    "inspection": "取一片对光看，应无湿黏、无霉斑与虫蛀，边缘不返潮发软，轻捏能脆断。",
+    "storage": "置于干燥通风处，避潮避晒，自制成起最多存放14天，逾期不宜再食。"
+  },
+  "review": {
+    "contradictions": []
+  },
+  "errors": [],
+  "warnings": [],
+  "feedback": null
+}

@@ -1,0 +1,19 @@
+{
+  "id": "recipe_w3c_lentil_leek_stew",
+  "fingerprint": "b91d6b1dcc9ea0289c2fa47ba3dd5a5a98789981c27a539a3a77bf02801acc56",
+  "status": "passed",
+  "attempts": 1,
+  "draft": {
+    "id": "recipe_w3c_lentil_leek_stew",
+    "process": "取褐扁豆挑去砂粒，从配额清水中分取少量洗切用水，韭葱夹泥处先洗净，切刀将叶与葱白切成段。余下清水入厚底煮锅，下扁豆以小火煮至软透，其间用木匙沿锅底搅动防焦。后段加入韭葱段，继续煨至葱叶软熟、汤汁略稠，以粗盐调味，再搅匀即离火。总耗时70分钟。干木刨屑仅在灶内供火，废渣弃置；木匙、煮锅与切刀用毕擦净收存。"
+  },
+  "review": {
+    "contradictions": []
+  },
+  "errors": [],
+  "warnings": [],
+  "feedback": null,
+  "manualCorrection": {
+    "reason": "L4：木匙是保留工具，不会作为刨屑副产品交付。"
+  }
+}

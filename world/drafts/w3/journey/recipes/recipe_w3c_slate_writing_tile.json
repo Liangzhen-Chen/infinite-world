@@ -1,0 +1,16 @@
+{
+  "id": "recipe_w3c_slate_writing_tile",
+  "fingerprint": "e0abea74a182c2bc8df4d25f1723bf4102ec7025dadc02d8201455e7ec5b9882",
+  "status": "passed",
+  "attempts": 1,
+  "draft": {
+    "id": "recipe_w3c_slate_writing_tile",
+    "process": "取平面板岩片一份置于木工台上，以平齿铁锉沿四边往复推锉，削去崩口与尖棱，使轮廓齐整。将洗净细砂一份与清水一份调成湿砂，趁湿按在边棱上打圈研磨，把锉痕磨细磨圆，直至手触不挂。磨毕以清水冲去残砂，拭干后逐边验看，见棱角圆钝、面无裂纹即成。余砂与浊水一并弃置，不回收再用。全程九十钟，得磨边板岩写牌一份，牌面留白，不附白垩笔。"
+  },
+  "review": {
+    "contradictions": []
+  },
+  "errors": [],
+  "warnings": [],
+  "feedback": null
+}

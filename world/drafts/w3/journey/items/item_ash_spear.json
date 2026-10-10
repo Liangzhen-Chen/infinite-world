@@ -1,0 +1,18 @@
+{
+  "id": "item_ash_spear",
+  "fingerprint": "7960fbb4e088fd6bf15568f85a2bb0691e19ce375b38773374cd116e550ad019",
+  "status": "passed",
+  "attempts": 1,
+  "draft": {
+    "id": "item_ash_spear",
+    "description": "白蜡木长柄，前端套接钢叶矛头，接缝处见锻打锤痕与修整锉痕。柄身经火烤校直，表面留有刮削纹与薄层蜡光。全长近一人高，重心偏前，握持时矛尖略垂。铁匠铺出品，集市按当季货源小批供应。",
+    "inspection": "查看矛头套接是否松动，钢叶有无卷口或裂纹；顺柄身摸查节疤、劈裂与弯折，轻晃听接缝有无异响。",
+    "storage": "矛尖朝上靠墙竖放，柄下垫木块隔潮；勿横压重物，勿近炉火与雨淋处。"
+  },
+  "review": {
+    "contradictions": []
+  },
+  "errors": [],
+  "warnings": [],
+  "feedback": null
+}
