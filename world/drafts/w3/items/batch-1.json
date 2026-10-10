@@ -1,6 +1,6 @@
 {
   "index": 1,
-  "fingerprint": "242253340f2dd38f87f82d30a27a48b73f7bf5e107c648fa62825308b7c1bfff",
+  "fingerprint": "31b7e0eea154aaeb7626bc22861c7c09601e2a9d1b1824800e1bbd8173a7f9c0",
   "count": 25,
   "passed": 25,
   "ids": [
@@ -33,7 +33,12 @@
   "rewritten": 0,
   "manual": [],
   "pending": [],
-  "flagged": [],
+  "flagged": [
+    "item_clay_dish",
+    "item_clay_flowerpot",
+    "item_clay_roof_tile",
+    "item_clay_net_weight"
+  ],
   "sample": [
     "item_clay_roof_tile",
     "item_clay_dish",
@@ -42,8 +47,31 @@
     "item_clay_net_weight"
   ],
   "l4": {
-    "approved": false,
-    "notes": []
+    "approved": true,
+    "reviewer": "Codex",
+    "reviewedAt": "2026-10-10",
+    "notes": [
+      {
+        "id": "item_clay_roof_tile",
+        "note": "已删除烧成瓦遇潮返软的错误，叠搭阶与局部补瓦用途保留；声响只能辅助检查。"
+      },
+      {
+        "id": "item_clay_dish",
+        "note": "隔棱与双份调味用途一致；未投釉料，已把釉面改为素烧。"
+      },
+      {
+        "id": "item_clay_flowerpot",
+        "note": "排水孔、厚盆沿和另备土种均正确；竹签改为手指，听声不再保证烧透。"
+      },
+      {
+        "id": "item_clay_bowl",
+        "note": "无釉、短时盛饭和干坯烧成次序符合骨架；不把陶碗写成密封储物器。"
+      },
+      {
+        "id": "item_clay_net_weight",
+        "note": "孔缘平滑、网与绳另备符合用途；对敲声响已改成有限检查。"
+      }
+    ]
   },
   "costUpperYuan": 1.7365353999999993,
   "manualRatio": 0,

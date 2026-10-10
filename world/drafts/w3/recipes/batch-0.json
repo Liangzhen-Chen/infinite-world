@@ -1,8 +1,8 @@
 {
   "index": 0,
-  "fingerprint": "103038f6548440f8d9370b312ee8b6b91ee1944c1b10cad4f8b44717eb718026",
+  "fingerprint": "5247f2687f58484e9a36b929a5b51d94f564274c9e38320e031245def80326d4",
   "count": 25,
-  "passed": 24,
+  "passed": 25,
   "ids": [
     "recipe_w3_oat_crisp",
     "recipe_w3_milk_oat_mash",
@@ -31,12 +31,18 @@
     "recipe_w3_weaving_sword"
   ],
   "rewritten": 9,
-  "manual": [
-    "recipe_w3_toasted_oats"
-  ],
+  "manual": [],
   "pending": [],
   "flagged": [
-    "recipe_w3_fruit_oat_dumpling"
+    "recipe_w3_fish_broth",
+    "recipe_w3_warm_vinegar_drink",
+    "recipe_w3_fruit_milk_pudding",
+    "recipe_w3_toasted_oats",
+    "recipe_w3_fruit_oat_dumpling",
+    "recipe_w3_needle_roll",
+    "recipe_w3_wool_wristband",
+    "recipe_w3_patch_bundle",
+    "recipe_w3_flax_cord"
   ],
   "sample": [
     "recipe_w3_patch_bundle",
@@ -46,10 +52,53 @@
     "recipe_w3_fruit_milk_pudding"
   ],
   "l4": {
-    "approved": false,
-    "notes": []
+    "approved": true,
+    "reviewer": "Codex",
+    "reviewedAt": "2026-10-10",
+    "notes": [
+      {
+        "id": "recipe_w3_patch_bundle",
+        "note": "锁边线改为从同张布边抽出的麻丝，40分钟与一包产量未变。"
+      },
+      {
+        "id": "recipe_w3_head_wrap",
+        "note": "裁布后的窄边搓线，原料闭合；25分钟，成品一条，无副产物。"
+      },
+      {
+        "id": "recipe_w3_wool_wristband",
+        "note": "四团毛线与一对腕套对应，手指理线和缝针缠结可执行；耗时改正为60分钟。"
+      },
+      {
+        "id": "recipe_w3_warm_vinegar_drink",
+        "note": "果醋50毫升和清水一份正确，15分钟内温热，取消未登记细布勺子和封蜡操作。"
+      },
+      {
+        "id": "recipe_w3_fruit_milk_pudding",
+        "note": "搅糊板已列入必备工具，鲜乳与燕麦粉分清；冷却切块不新增副产品。"
+      },
+      {
+        "id": "recipe_w3_fish_broth",
+        "note": "L1发现半个时辰为60分钟；骨架补入实际撇沫的偏柄木匙。"
+      },
+      {
+        "id": "recipe_w3_toasted_oats",
+        "note": "L3两次后手工修正，恢复手搓脱壳、现有工具和完整35分钟；刨屑供火已有已发布用途依据。"
+      },
+      {
+        "id": "recipe_w3_fruit_oat_dumpling",
+        "note": "两份水在揉面与煮制间分配，不凭空加水；轻晃锅身替代未登记勺子，全程40分钟。"
+      },
+      {
+        "id": "recipe_w3_needle_roll",
+        "note": "L1拒绝用息代替分钟。"
+      },
+      {
+        "id": "recipe_w3_flax_cord",
+        "note": "L1拒绝用息代替分钟。"
+      }
+    ]
   },
   "costUpperYuan": 1.903746119999999,
-  "manualRatio": 0.04,
+  "manualRatio": 0,
   "needsSystemicRepair": false
 }

@@ -5,7 +5,7 @@ import os from 'node:os';
 import path from 'node:path';
 import {loadWorld} from '../tools/load-world.mjs';
 import {economyW3} from '../world/design/economy-w3.mjs';
-import {assembleW3,validateW3Draft} from '../tools/w3-content.mjs';
+import {assembleW3,validateW3Draft,w3Context,chineseNumber} from '../tools/w3-content.mjs';
 import {WorldEngine} from '../server-plugin/engine.mjs';
 import {CampaignStorage,applyPatches} from '../server-plugin/storage.mjs';
 import {WorldRegistry} from '../server-plugin/world-registry.mjs';
@@ -37,12 +37,23 @@ test('L1拒绝数字保存期矛盾、额外骨架字段、规则泄漏；短文
   assert.ok(validateW3Draft({...good,description:'重量8公斤。'},entry,block).errors.length);
 });
 
+test('L1核对中文时辰、息和材料单位，不能把一份两公斤铁料写成一公斤',()=>{
+  assert.equal(chineseNumber('一百三十'),130);assert.equal(chineseNumber('零点二'),.2);assert.equal(chineseNumber('半'),.5);
+  const entry=bones.recipes.find(row=>row.id==='recipe_w3_fire_poker'),context=w3Context(world,bones,entry),block={names:[],realPeople:[]};
+  const check=process=>validateW3Draft({id:entry.id,process},entry,block,context).errors;
+  assert.ok(check('取一公斤铁坯入炉，全程80分钟。').some(row=>row.includes('重量')));
+  assert.ok(check('取两公斤铁坯入炉，全程八十息。').some(row=>row.includes('耗时')));
+  assert.ok(check('取两公斤铁坯入炉，全程一个时辰。').some(row=>row.includes('耗时')));
+  assert.deepEqual(check('取两公斤铁坯入炉，全程八十分钟。'),[]);
+});
+
 test('world_upgrade引入W3目录且既有财物保留，升级后新工序可制造署名单件',async t=>{
   const root=await fs.mkdtemp(path.join(os.tmpdir(),'w3-upgrade-'));t.after(()=>fs.rm(root,{recursive:true,force:true}));
   // Remove only this wave from the fixture world so the test remains a genuine
   // addition after the source catalogue itself has been published.
   const oldWorld=structuredClone(world),ids=new Set([...bones.items,...bones.recipes].map(row=>row.id));
   oldWorld.items=oldWorld.items.filter(row=>!ids.has(row.id));oldWorld.recipes=oldWorld.recipes.filter(row=>!ids.has(row.id));
+  for(const npc of oldWorld.npcs)for(const id of ids)delete npc.inventory?.[id];
   const registry=new WorldRegistry(path.join(root,'worlds')),store=new CampaignStorage(path.join(root,'saves'),{reducer:archivedReducer(registry)});
   const oldEngine=new WorldEngine(oldWorld),document=oldEngine.initialFromLegacy(seed,'w3-fixture');
   document.worldHash=await registry.put(oldWorld);document.state.player.coins=333;

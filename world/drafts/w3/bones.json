@@ -1324,7 +1324,8 @@
       ],
       "tools": [
         "item_cooking_pot",
-        "item_kitchen_knife"
+        "item_kitchen_knife",
+        "item_wood_spoon"
       ],
       "workstation": "cooking",
       "output": {
@@ -1422,7 +1423,8 @@
       ],
       "tools": [
         "item_cooking_pot",
-        "item_kitchen_knife"
+        "item_kitchen_knife",
+        "item_mixing_paddle"
       ],
       "workstation": "cooking",
       "output": {

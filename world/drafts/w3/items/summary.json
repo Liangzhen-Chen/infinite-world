@@ -3,11 +3,11 @@
   "passed": 51,
   "manual": 0,
   "pending": 0,
-  "costUpperYuan": 1.7365353999999993,
+  "costUpperYuan": 2.03451204,
   "batches": [
     {
       "index": 0,
-      "fingerprint": "7a0a43bd0d526d3a77248fe9610f60cbc02b9b56dbbc2b176dad1dd61d2eea93",
+      "fingerprint": "0471d8401e27c2bca10fef36637731dff476897e8429712d1ed9442f8b075ecb",
       "count": 26,
       "passed": 26,
       "ids": [
@@ -42,7 +42,10 @@
       "manual": [],
       "pending": [],
       "flagged": [
-        "item_head_wrap"
+        "item_fish_broth",
+        "item_fruit_milk_pudding",
+        "item_head_wrap",
+        "item_wood_spoon"
       ],
       "sample": [
         "item_weaving_sword",
@@ -52,8 +55,43 @@
         "item_wool_wristband"
       ],
       "l4": {
-        "approved": false,
-        "notes": []
+        "approved": true,
+        "reviewer": "Codex",
+        "reviewedAt": "2026-10-10",
+        "notes": [
+          {
+            "id": "item_weaving_sword",
+            "note": "沿纹薄木片、无齿圆边和压纬用途一致；没有把织架或线材当作随件赠品。"
+          },
+          {
+            "id": "item_shuttle",
+            "note": "钝尖与绕线凹槽可核对，明确只引纬、不承担开经；保存没有额外固定期限。"
+          },
+          {
+            "id": "item_pot_wrap",
+            "note": "麻布与羊毛夹层对应投料，短时隔热边界保留，365天与骨架一致。"
+          },
+          {
+            "id": "item_wood_spoon",
+            "note": "偏柄与浅匙腹符合骨架，刨屑用途已改回引火和少量吸液。"
+          },
+          {
+            "id": "item_wool_wristband",
+            "note": "成对短腕套且不含手指部分，逐圈缠结和365天保存均符合记录。"
+          },
+          {
+            "id": "item_fish_broth",
+            "note": "所属配方补齐撇沫工具；L4补读删去骨架措辞泄漏。"
+          },
+          {
+            "id": "item_fruit_milk_pudding",
+            "note": "所属配方补齐实际搅糊工具；L4补读发现鲜牛乳误写乳粉，逐词改正材料名。"
+          },
+          {
+            "id": "item_head_wrap",
+            "note": "锁边取自裁下布边，无新增缝料；24字保存说明完整覆盖365天，短文本不否决。"
+          }
+        ]
       },
       "costUpperYuan": 1.6234562799999988,
       "manualRatio": 0,
@@ -61,7 +99,7 @@
     },
     {
       "index": 1,
-      "fingerprint": "242253340f2dd38f87f82d30a27a48b73f7bf5e107c648fa62825308b7c1bfff",
+      "fingerprint": "31b7e0eea154aaeb7626bc22861c7c09601e2a9d1b1824800e1bbd8173a7f9c0",
       "count": 25,
       "passed": 25,
       "ids": [
@@ -94,7 +132,12 @@
       "rewritten": 0,
       "manual": [],
       "pending": [],
-      "flagged": [],
+      "flagged": [
+        "item_clay_dish",
+        "item_clay_flowerpot",
+        "item_clay_roof_tile",
+        "item_clay_net_weight"
+      ],
       "sample": [
         "item_clay_roof_tile",
         "item_clay_dish",
@@ -103,8 +146,31 @@
         "item_clay_net_weight"
       ],
       "l4": {
-        "approved": false,
-        "notes": []
+        "approved": true,
+        "reviewer": "Codex",
+        "reviewedAt": "2026-10-10",
+        "notes": [
+          {
+            "id": "item_clay_roof_tile",
+            "note": "已删除烧成瓦遇潮返软的错误，叠搭阶与局部补瓦用途保留；声响只能辅助检查。"
+          },
+          {
+            "id": "item_clay_dish",
+            "note": "隔棱与双份调味用途一致；未投釉料，已把釉面改为素烧。"
+          },
+          {
+            "id": "item_clay_flowerpot",
+            "note": "排水孔、厚盆沿和另备土种均正确；竹签改为手指，听声不再保证烧透。"
+          },
+          {
+            "id": "item_clay_bowl",
+            "note": "无釉、短时盛饭和干坯烧成次序符合骨架；不把陶碗写成密封储物器。"
+          },
+          {
+            "id": "item_clay_net_weight",
+            "note": "孔缘平滑、网与绳另备符合用途；对敲声响已改成有限检查。"
+          }
+        ]
       },
       "costUpperYuan": 1.7365353999999993,
       "manualRatio": 0,

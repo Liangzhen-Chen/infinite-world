@@ -11,7 +11,7 @@ const lore=[];
 for(const kind of ['items','recipes']){
   const rows=await readApprovedContent(`world/drafts/w3/${kind}`,bones[kind],{contextFor:entry=>w3Context(world,bones,entry),revision:w3Revision});
   for(const row of rows){
-    const entry=bones[kind].find(entry=>entry.id===row.id),validation=validateW3Draft(row,entry,blocklist);
+    const entry=bones[kind].find(entry=>entry.id===row.id),validation=validateW3Draft(row,entry,blocklist,w3Context(world,bones,entry));
     if(validation.errors.length)throw new Error(`${row.id}: ${validation.errors.join('；')}`);
     const other=closestW3Similarity(row,[...rows,...world[kind].filter(other=>!bones[kind].some(entry=>entry.id===other.id))]);
     if(other.score>=.35)throw new Error(`${row.id}与${other.id}说明相似度${other.score}，须定点重写`);
@@ -29,7 +29,11 @@ for(const plan of economyW3Supply){
 const validation=validateWorld(candidate,{stage:'engine'});if(!validation.ok)throw new Error(validation.errors.join('\n'));
 if(process.argv.includes('--publish')){
   // Source catalogue only. No user save, dist or SillyTavern file is touched.
-  const files=[['world/meta/items.json',candidate.items],['world/meta/recipes.json',candidate.recipes],['world/people/baseline.json',candidate.npcs]];
+  // loadWorld can merge other waves' roster files. Keep baseline membership
+  // and every unrelated NPC field exactly as this source file currently has it.
+  const baseline=JSON.parse(await fs.readFile('world/people/baseline.json','utf8'));
+  for(const plan of economyW3Supply){const npc=baseline.find(row=>row.id===plan.npc);if(!npc)throw new Error('基础名册缺少供货者');for(const[id,quantity]of Object.entries(plan.stock))if(candidate.items.some(row=>row.id===id)&&!Object.hasOwn(npc.inventory,id))npc.inventory[id]=quantity;}
+  const files=[['world/meta/items.json',candidate.items],['world/meta/recipes.json',candidate.recipes],['world/people/baseline.json',baseline]];
   const previous=await Promise.all(files.map(async([file])=>[file,await fs.readFile(file)]));
   try{for(const[file,value]of files)await atomicJSON(file,value);}catch(error){for(const[file,bytes]of previous)await fs.writeFile(file,bytes);throw error;}
 }

@@ -75,7 +75,7 @@ test('重复编译经济目录稳定且不丢后续器物、配方或其他工�
  extended.locations.find(row=>row.id==='bld_hw_mill').workstations.push({id:'station_future_bench',kind:'woodworking',owner:'loc_hw',fee:7,access:'public'});
  const rebuilt=economyFoundation(extended);assert.deepEqual(rebuilt,bones);
  const twice=assembleEconomy(extended,rebuilt,lore);
- assert.deepEqual(twice,extended);assert.equal(twice.items.length,67);assert.equal(twice.recipes.length,16);
+ assert.deepEqual(twice,extended);assert.equal(twice.items.length,world.items.length+1);assert.equal(twice.recipes.length,world.recipes.length+1);
  assert.equal(new Set(twice.items.map(row=>row.id)).size,twice.items.length);
  assert.equal(new Set(twice.recipes.map(row=>row.id)).size,twice.recipes.length);
  // Existing stations must receive the current hand-authored fee too.

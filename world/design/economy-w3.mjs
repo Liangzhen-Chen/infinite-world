@@ -90,7 +90,7 @@ export function economyW3(world) {
         use:processFacts, acquisition:{recipe:recipeId},
       });
       recipes.push({ id:recipeId, name:`制作${name}`, aliases:[], scope:null, skill:`skill_life_${group.skill}_core`, minimumProficiency, minutes, difficulty:minimumProficiency?15:10,
-        materials, tools:group.tools.map(id), workstation:group.station, output:{item:id(slug),quantity:1},
+        materials, tools:[...group.tools,...(slug==='fish_broth'?['wood_spoon']:slug==='fruit_milk_pudding'?['mixing_paddle']:[])].map(id), workstation:group.station, output:{item:id(slug),quantity:1},
         byproducts:category==='wood'?[{item:'item_wood_shavings',amount:1}]:[],
         learningRequired:true, learnFee:4, learnMinutes:60, teachers:group.teacher?[group.teacher]:[], toolWear:1,
         failure:{recoverFraction:category==='iron'?.25:0,injury:group.injury},

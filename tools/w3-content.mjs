@@ -3,6 +3,14 @@ import { hashContent } from './content-pipeline.mjs';
 import { validateWorld } from './validate-world.mjs';
 
 const units = { '公斤': ['weight',1], '千克':['weight',1], '克':['weight',.001], '铜币':['basePrice',1], '分钟':['minutes',1], '小时':['minutes',60], '天':['shelfLifeDays',1] };
+const numeral='(?:\\d+(?:\\.\\d+)?|[零〇一二两三四五六七八九十百千万点半]+)';
+export function chineseNumber(value){
+  if(/^\d/.test(value))return Number(value);if(value==='半')return .5;
+  const digits={零:0,〇:0,一:1,二:2,两:2,三:3,四:4,五:5,六:6,七:7,八:8,九:9};
+  if(value.includes('点')){const[whole,fraction]=value.split('点');return chineseNumber(whole)+Number('0.'+[...fraction].map(x=>digits[x]).join(''));}
+  if(!/[十百千万]/.test(value))return Number([...value].map(x=>digits[x]).join(''));
+  let sum=0,last=0;for(const c of value){if(c in digits)last=digits[c];else{sum+=(last||1)*({十:10,百:100,千:1000,万:10000}[c]);last=0;}}return sum+last;
+}
 const grams = value => { const clean=value.replace(/[^\p{L}]/gu,''); return new Set(Array.from({length:Math.max(0,clean.length-1)},(_,i)=>clean.slice(i,i+2))); };
 export function closestW3Similarity(draft, others) {
   const corpus = row => ['description','inspection','storage','process'].map(key=>row[key]??'').join('');
@@ -16,7 +24,7 @@ export function w3Context(world,bones,entry) {
   if(entry.id.startsWith('recipe_'))return {materials:entry.materials.map(row=>({...row,facts:fact(row.item)})),tools:entry.tools.map(fact),product:fact(entry.output.item),byproducts:entry.byproducts.map(row=>({...row,facts:fact(row.item)})),skill:fact(entry.skill),workplaces:world.locations.filter(row=>row.workstations?.some(s=>s.kind===entry.workstation)).map(row=>({id:row.id,name:row.name})),teachers:entry.teachers.map(fact)};
   return {origin:fact(entry.origin),recipe:bones.recipes.find(row=>row.output.item===entry.id)??null,book:entry.book?{...entry.book,teaches:entry.book.teaches.map(id=>({id,name:bones.recipes.find(row=>row.id===id)?.name}))}:null};
 }
-export function validateW3Draft(draft,entry,blocklist) {
+export function validateW3Draft(draft,entry,blocklist,context=null) {
   const item=entry.id.startsWith('item_'),fields=item?['description','inspection','storage']:['process'],errors=[],warnings=[];
   if(!draft||typeof draft!=='object'||Array.isArray(draft))return {errors:['说明必须为对象'],warnings};
   if(draft.id!==entry.id)errors.push('说明编号与骨架不一致');
@@ -25,15 +33,24 @@ export function validateW3Draft(draft,entry,blocklist) {
   if(errors.length)return {errors,warnings};
   const text=fields.map(field=>draft[field]).join('');
   for(const word of [...blocklist.names,...blocklist.realPeople])if(text.includes(word))errors.push(`原创屏蔽词 ${word}`);
-  if(/主持人|玩家不能|不要让|禁止|schema|JSON|系统要求/.test(text))errors.push('泄漏规则措辞');
+  if(/主持人|玩家不能|不要让|禁止|骨架|schema|JSON|系统要求/.test(text))errors.push('泄漏规则措辞');
   if(item)errors.push(...loreIssues(draft,entry));
   // Numeric claims in item prose concern this item. Recipes include ingredient
   // quantities, so their other numbers are checked by L2 against named facts.
-  if(item)for(const match of text.matchAll(/(\d+(?:\.\d+)?)\s*(公斤|千克|克|铜币|分钟|小时)/g)){
+  if(item)for(const match of text.matchAll(new RegExp(`(${numeral})\\s*(公斤|千克|克|铜币|分钟|小时)`,'g'))){
     const[field,factor]=units[match[2]],expected=field==='minutes'?entry.book?.readingMinutes:entry[field];
-    if(expected!==undefined&&Math.abs(Number(match[1])*factor-expected)>.0001)errors.push(`数字${match[0]}与${field}=${expected}矛盾`);
+    if(expected!==undefined&&Math.abs(chineseNumber(match[1])*factor-expected)>.0001)errors.push(`数字${match[0]}与${field}=${expected}矛盾`);
   }
-  if(!item)for(const match of draft.process.matchAll(/(?:耗时|用时|历时|总计|全程)(?:约|为)?\s*(\d+(?:\.\d+)?)\s*(分钟|小时)/g))if(Number(match[1])*(match[2]==='小时'?60:1)!==entry.minutes)errors.push(`工序耗时${match[0]}与骨架${entry.minutes}分钟矛盾`);
+  if(!item){
+    for(const match of draft.process.matchAll(new RegExp(`(?:耗时|用时|历时|总计|全程|前后|过程|活计|需|约)(?:约|为|需|要|一个|一共|共)?\\s*(${numeral})(?:个)?\\s*(分钟|小时|时辰|息)`,'g'))){
+      const factor={分钟:1,小时:60,时辰:120}[match[2]];
+      if(factor===undefined||chineseNumber(match[1])*factor!==entry.minutes)errors.push(`工序耗时${match[0]}与骨架${entry.minutes}分钟矛盾`);
+    }
+    if(context?.materials)for(const match of draft.process.matchAll(new RegExp(`(${numeral})\\s*(公斤|千克|克)(?:的)?(铁坯|铁料|木炭|干木刨屑|筛过黏土|黏土|燕麦粉)`,'g'))){
+      const key={铁坯:'item_iron',铁料:'item_iron',木炭:'item_charcoal',干木刨屑:'item_wood_shavings',筛过黏土:'item_clay',黏土:'item_clay',燕麦粉:'item_oat_flour'}[match[3]],material=context.materials.find(row=>row.item===key);
+      if(material&&Math.abs(chineseNumber(match[1])*units[match[2]][1]-material.amount*material.facts.weight)>.0001)errors.push(`投料${match[0]}与骨架重量${material.amount*material.facts.weight}公斤矛盾`);
+    }
+  }
   return {errors,warnings};
 }
 export function assembleW3(world,bones,lore) {

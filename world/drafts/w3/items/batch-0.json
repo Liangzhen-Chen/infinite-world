@@ -1,6 +1,6 @@
 {
   "index": 0,
-  "fingerprint": "7a0a43bd0d526d3a77248fe9610f60cbc02b9b56dbbc2b176dad1dd61d2eea93",
+  "fingerprint": "0471d8401e27c2bca10fef36637731dff476897e8429712d1ed9442f8b075ecb",
   "count": 26,
   "passed": 26,
   "ids": [
@@ -35,7 +35,10 @@
   "manual": [],
   "pending": [],
   "flagged": [
-    "item_head_wrap"
+    "item_fish_broth",
+    "item_fruit_milk_pudding",
+    "item_head_wrap",
+    "item_wood_spoon"
   ],
   "sample": [
     "item_weaving_sword",
@@ -45,8 +48,43 @@
     "item_wool_wristband"
   ],
   "l4": {
-    "approved": false,
-    "notes": []
+    "approved": true,
+    "reviewer": "Codex",
+    "reviewedAt": "2026-10-10",
+    "notes": [
+      {
+        "id": "item_weaving_sword",
+        "note": "沿纹薄木片、无齿圆边和压纬用途一致；没有把织架或线材当作随件赠品。"
+      },
+      {
+        "id": "item_shuttle",
+        "note": "钝尖与绕线凹槽可核对，明确只引纬、不承担开经；保存没有额外固定期限。"
+      },
+      {
+        "id": "item_pot_wrap",
+        "note": "麻布与羊毛夹层对应投料，短时隔热边界保留，365天与骨架一致。"
+      },
+      {
+        "id": "item_wood_spoon",
+        "note": "偏柄与浅匙腹符合骨架，刨屑用途已改回引火和少量吸液。"
+      },
+      {
+        "id": "item_wool_wristband",
+        "note": "成对短腕套且不含手指部分，逐圈缠结和365天保存均符合记录。"
+      },
+      {
+        "id": "item_fish_broth",
+        "note": "所属配方补齐撇沫工具；L4补读删去骨架措辞泄漏。"
+      },
+      {
+        "id": "item_fruit_milk_pudding",
+        "note": "所属配方补齐实际搅糊工具；L4补读发现鲜牛乳误写乳粉，逐词改正材料名。"
+      },
+      {
+        "id": "item_head_wrap",
+        "note": "锁边取自裁下布边，无新增缝料；24字保存说明完整覆盖365天，短文本不否决。"
+      }
+    ]
   },
   "costUpperYuan": 1.6234562799999988,
   "manualRatio": 0,
