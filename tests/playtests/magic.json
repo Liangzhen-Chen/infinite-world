@@ -14,6 +14,9 @@
           "path": "state.location",
           "value": "bld_hw_riverhome"
         }
+      ],
+      "expectedTools": [
+        "world_move"
       ]
     },
     {
@@ -38,6 +41,9 @@
           "min": 120,
           "max": 140
         }
+      ],
+      "expectedTools": [
+        "world_learn"
       ]
     },
     {
@@ -137,7 +143,14 @@
           "min": 1,
           "max": 1
         }
-      ]
+      ],
+      "expectedTools": [
+        "world_cast"
+      ],
+      "toolExpectationAfter": {
+        "path": "state.spells.spell_light",
+        "turn": 4
+      }
     },
     {
       "input": "我试着施放大范围陨石火雨；如果我没有学会就承认做不到，不临时学新术。",
@@ -162,6 +175,9 @@
           "min": 60,
           "max": 80
         }
+      ],
+      "expectedTools": [
+        "world_time"
       ]
     },
     {

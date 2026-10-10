@@ -42,6 +42,9 @@
           "path": "state.location",
           "value": "bld_hw_qingdeng"
         }
+      ],
+      "expectedTools": [
+        "world_move"
       ]
     },
     {
@@ -72,6 +75,9 @@
           "min": 0,
           "max": 0
         }
+      ],
+      "expectedTools": [
+        "world_search"
       ]
     },
     {

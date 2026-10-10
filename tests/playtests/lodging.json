@@ -19,6 +19,9 @@
           "path": "state.location",
           "value": "bld_hw_qingdeng"
         }
+      ],
+      "expectedTools": [
+        "world_move"
       ]
     },
     {
@@ -55,7 +58,10 @@
           "min": 1
         }
       ],
-      "repeatWrites": true
+      "repeatWrites": true,
+      "expectedTools": [
+        "world_trade"
+      ]
     },
     {
       "input": "我问林穗，刚才这笔房钱管到什么时候？不要再续住。",
@@ -109,6 +115,9 @@
           },
           "min": 1
         }
+      ],
+      "expectedTools": [
+        "world_trade"
       ]
     },
     {

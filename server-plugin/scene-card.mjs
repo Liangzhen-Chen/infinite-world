@@ -18,6 +18,12 @@ export function sceneCard(engine,document,query='',index=null){
         `【地点】${path.join(' › ')||s.location}（${s.location}）`,
         `【你】${p.name}｜${p.level}级｜生命${p.hp}/${p.maxHp} 魔力${p.mp}/${p.maxMp}｜铜${p.coins}｜同行：${(p.companions??[]).map(name).join('、')||'无'}`,
         `【在场】共${present.length}人`];
+    const adjacent=new Set([place?.parent,...engine.world.locations.filter(row=>row.parent===s.location).map(row=>row.id),
+        ...engine.world.routes.filter(route=>[route.from,route.to].includes(s.location)).map(route=>route.from===s.location?route.to:route.from)]);
+    adjacent.delete(undefined);adjacent.delete(null);
+    const requested=[...mentioned].filter(id=>/^(loc|bld|site)_/.test(id));
+    const destinations=[...new Set([...requested,...adjacent])].slice(0,12);
+    if(destinations.length)parts.splice(2,0,`【地点索引】${destinations.map(id=>`${name(id)}（${id}）`).join('；')}`);
     for(const [id,npc] of present.slice(0,engine.rules.prompt.npcLimit)){
         const base=engine.byId.get(id)??npc;
         const shared=Object.values(document.memories??{}).filter(m=>m.subject===id).slice(-2).map(m=>`${m.minute??''}分 ${text(m.content,140)}`);

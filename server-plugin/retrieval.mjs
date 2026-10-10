@@ -28,7 +28,13 @@ export class EntityResolver {
         if (scoped.length === 1) return scoped[0];
         if (!scoped.length && candidates.length === 1) return candidates[0];
         if (candidates.length > 1) throw new Error(`称呼“${name}”有歧义，请用编号：${candidates.join('、')}`);
-        throw new Error(`未登记“${name}”，候选：${this.names.filter(alias => alias.includes(normalize(name))).slice(0, 5).join('、') || '无'}；新建实体请使用world_create`);
+        const query=normalize(name),grams=[...query.matchAll(/[\u3400-\u9fff]{2}/gu)].map(match=>match[0]);
+        const suggestions=[...this.entities.values()].map(row=>{
+            const names=[row.name,...row.aliases??[]].map(normalize);
+            return {row,score:Math.max(...names.map(alias=>alias===query?100:alias.includes(query)&&query.length>1?20:grams.filter(gram=>alias.includes(gram)).length))};
+        }).filter(row=>row.score>0).sort((a,b)=>b.score-a.score||a.row.id.localeCompare(b.row.id)).slice(0,5);
+        const candidatesText=suggestions.map(({row})=>`${row.name}（${row.id}）`).join('、')||'无';
+        throw new Error(`未登记“${name}”，候选：${candidatesText}；请使用已登记中文名称或候选编号，公开目录可用world_catalog查询`);
     }
     mentions(text, scope = null) {
         const source = normalize(text), found = new Set();

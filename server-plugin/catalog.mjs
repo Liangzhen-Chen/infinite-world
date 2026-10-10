@@ -1,15 +1,21 @@
 import {environmentCatalog}from'./environment.mjs';
-const publicKinds=new Set(['profession','skill','spell','recipe','item']);
-export function catalogDefinition(engine,document,{entity,kind}={}){
+const publicKinds=new Set(['profession','skill','spell','recipe','item','loc','bld','site']);
+export function catalogDefinition(engine,document,{entity,kind,offset=0}={}){
     const selected=engine.scoped(document);
+    if(!Number.isSafeInteger(offset)||offset<0)throw new Error('目录 offset 必须为非负整数');
+    const locationKinds=new Set(['loc','bld','site']);
     if(kind==='feature'||entity?.startsWith('feature_'))return environmentCatalog(selected,document,{entity});
     if(!entity){
-        if(!publicKinds.has(kind))throw new Error('目录列表需指定profession、skill、spell、recipe或item');
-        const rows=selected.entities.filter(row=>row.id.startsWith(`${kind}_`)&&!(kind==='profession'&&row.kind==='hidden'));
-        return{kind,count:rows.length,entries:rows.slice(0,40).map(row=>({id:row.id,name:row.name})),truncated:rows.length>40};
+        if(!publicKinds.has(kind)&&kind!=='location')throw new Error('目录列表需指定profession、skill、spell、recipe、item或location');
+        const rows=selected.entities.filter(row=>(kind==='location'?locationKinds.has(row.id.split('_')[0]):row.id.startsWith(`${kind}_`))&&!(kind==='profession'&&row.kind==='hidden'));
+        const end=offset+40;
+        return{kind,count:rows.length,entries:rows.slice(offset,end).map(row=>({id:row.id,name:row.name})),truncated:rows.length>end,nextOffset:rows.length>end?end:null};
     }
-    const id=selected.resolve(entity,kind),row=selected.byId.get(id),category=id.split('_')[0];
+    const id=selected.resolve(entity,kind==='location'?undefined:kind),row=selected.byId.get(id),category=id.split('_')[0];
     if(!publicKinds.has(category))throw new Error('这个实体不属于公开规则目录');
+    if(kind==='location'&&!locationKinds.has(category))throw new Error('需要地点名称或编号');
+    if(locationKinds.has(category))return{id,name:row.name,description:row.description??'',parent:row.parent??null,
+        routes:engine.world.routes.filter(route=>[route.from,route.to].includes(id)).map(route=>({destination:route.from===id?route.to:route.from,modes:route.modes,lengthKm:route.lengthKm,closedSeasons:route.closedSeasons}))};
     if(category==='profession'&&row.kind==='hidden'&&!document.state.professions.hidden.includes(id))return{id,available:false,note:'隐藏身份的条件与能力尚未识别'};
     if(category==='profession'&&row.kind==='hidden'){
         const{id,name,ability,cost}=row;return{id,name,ability,cost};

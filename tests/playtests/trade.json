@@ -15,6 +15,9 @@
           "path": "state.location",
           "value": "bld_hw_forge"
         }
+      ],
+      "expectedTools": [
+        "world_move"
       ]
     },
     {
@@ -50,6 +53,9 @@
           "path": "state.npcs.npc_hw_duanyan.inventory.item_iron_hinge",
           "value": 0
         }
+      ],
+      "expectedTools": [
+        "world_trade"
       ]
     },
     {
@@ -82,6 +88,9 @@
             "state.npcs.npc_hw_duanyan.coins"
           ]
         }
+      ],
+      "expectedTools": [
+        "world_trade"
       ]
     },
     {

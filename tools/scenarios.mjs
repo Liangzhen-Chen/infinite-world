@@ -2,6 +2,7 @@ import fs from 'node:fs/promises';
 import assert from 'node:assert/strict';
 import {DeepSeekClient}from'./deepseek-client.mjs';
 import {toolDefinitions}from'./tool-definitions.mjs';
+import {resolveToolCall,modelToolCall}from'../extension/tools.mjs';
 import {loadWorld}from'./load-world.mjs';
 import {WorldEngine}from'../server-plugin/engine.mjs';
 import {applyPatches}from'../server-plugin/storage.mjs';
@@ -65,6 +66,9 @@ const results=[];
 const onlyOption=process.argv.indexOf('--only'),only=onlyOption<0?null:process.argv[onlyOption+1]?.split(',');
 if(onlyOption>=0&&(!only?.length||only.some(id=>!scenarios.some(row=>row.id===id))))throw new Error('指定的快速场景不存在');
 const selected=only?scenarios.filter(row=>only.includes(row.id)):scenarios;
+const currentHints=value=>value.replace(/world_(weather|farm|wildlife|environment|lair|pet|summon|crime)\s+(?:operation\s+)?([a-z_]+)/g,(_,name,operation)=>{
+    const call=modelToolCall(`world_${name}`,{operation});return`${call.tool} operation ${call.args.operation}`;
+});
 for(const scenario of selected.flatMap(scenario=>Array.from({length:repetitions},(_,attempt)=>({...scenario,attempt:attempt+1})))){
     const activeEngine=scenario.engine??engine;
     let document=activeEngine.initialFromLegacy({state:seed.state,memories:seed.memories},`quick-${scenario.id}`),counter=0,reply='',error=null;
@@ -72,7 +76,7 @@ for(const scenario of selected.flatMap(scenario=>Array.from({length:repetitions}
     const initial=structuredClone(document),startMinute=document.state.minute;
     const events=[];
     const present=Object.keys(document.state.npcs).filter(id=>document.state.npcs[id].location===document.state.location);
-    const messages=[{role:'system',content:`你是中文游戏主持人。所有财物变化必须先调用工具成功后叙述。只回应本次意图，不替玩家安排下一步。普通回复末尾附<回合 额外="10分" 地点="${document.state.location}" 在场="${present.join(',')}"/>，额外只写工具耗时以外的对话或停留时间；已由工具完成的行动写0分。场外问题不写工具或尾注，不推进时间。林穗愿意出租普通客房，一晚6铜，一周35铜。施法只能使用当前已经学会的法术，消耗按目录与回执结算。${scenario.context??''}当前场景：\n${activeEngine.scene(document,scenario.input)}`},{role:'user',content:scenario.input}];
+    const messages=[{role:'system',content:`你是中文游戏主持人。所有财物变化必须先调用工具成功后叙述。只回应本次意图，不替玩家安排下一步。普通回复末尾附<回合 额外="10分" 地点="${document.state.location}" 在场="${present.join(',')}"/>，额外只写工具耗时以外的对话或停留时间；已由工具完成的行动写0分。场外问题不写工具或尾注，不推进时间。林穗愿意出租普通客房，一晚6铜，一周35铜。施法只能使用当前已经学会的法术，消耗按目录与回执结算。${currentHints(scenario.context??'')}当前场景：\n${activeEngine.scene(document,scenario.input)}`},{role:'user',content:scenario.input}];
     try{
         for(let recursion=0;recursion<8;recursion++){
             const response=await client.generate({messages,tools,max_tokens:900,temperature:0.8},`${scenario.id}-${recursion}`),message=response.choices?.[0]?.message;
@@ -85,7 +89,7 @@ for(const scenario of selected.flatMap(scenario=>Array.from({length:repetitions}
                 else if(call.function.name==='world_catalog')result=await lookupToolResult(()=>catalogDefinition(activeEngine,document,args));
                 else if(scenario.id==='F8')result={ok:false,error:'场外提问不能写入状态'};
                 else{
-                    const input={tool:call.function.name,args,eventId:`quick_${scenario.id}_${counter++}`};
+                    const input={...resolveToolCall(call.function.name,args),eventId:`quick_${scenario.id}_${counter++}`};
                     try{const output=await activeEngine.reduce(document,input);document=applyPatches(document,output.patches);result=toolResultWithClock(output.result,{startMinute,minute:document.state.minute});events.push({input,result});}
                     catch(e){result={ok:false,error:e.message};}
                 }

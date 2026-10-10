@@ -15,6 +15,9 @@
           "path": "state.location",
           "value": "bld_hw_qingdeng"
         }
+      ],
+      "expectedTools": [
+        "world_move"
       ]
     },
     {
@@ -26,7 +29,10 @@
           "value": -6
         }
       ],
-      "repeatWrites": true
+      "repeatWrites": true,
+      "expectedTools": [
+        "world_trade"
+      ]
     },
     {
       "input": "我付六铜住一晚。",
@@ -37,7 +43,10 @@
           "value": -6
         }
       ],
-      "operation": "regenerate"
+      "operation": "regenerate",
+      "expectedTools": [
+        "world_trade"
+      ]
     },
     {
       "input": "（场外）刷新后核对我的余额。",
@@ -63,6 +72,9 @@
           "path": "state.player.coins",
           "value": -6
         }
+      ],
+      "expectedTools": [
+        "world_trade"
       ]
     },
     {

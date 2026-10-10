@@ -39,6 +39,16 @@ async function judged(run,c,caseId){
     return(await run(c,'world_law',{operation:'hear',case:caseId,authority:judge},'hearing')).document;
 }
 
+test('认罪缺执法者返回可纠正候选；自认标志不与已报案混淆',async()=>{
+    const{document,run,engine}=await setup();document.state.npcs[guard].location=document.state.location;
+    const incident=await theft(run,document),before=structuredClone(incident.document);
+    assert.equal(lawView(engine,before).cases[0].confessed,false);
+    await assert.rejects(run(before,'world_law',{operation:'confess',case:incident.result.case},'bad_confession'),/authority.*顾岑/);
+    assert.deepEqual(incident.document,before);
+    const accepted=await run(before,'world_law',{operation:'confess',case:incident.result.case,authority:guard},'good_confession');
+    assert.equal(lawView(engine,accepted.document).cases[0].confessed,true);
+});
+
 test('偷窃实际转一件库存并保留唯一身份，失败不转财物，钱币偷取守恒且不会无依据定罪',async()=>{
     const{document,run}=await setup(),original=structuredClone(document);
     const good=await theft(run,document),unit=good.result.stolen.unit,c=good.document;

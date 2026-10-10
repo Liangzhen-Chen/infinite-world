@@ -25,6 +25,7 @@ import {advanceBosses}from'./bosses.mjs';
 import {planFarmPestsMigration}from'./farm-pests-migration.mjs';
 import {sceneCard}from'./scene-card.mjs';
 import {stateNotices}from'./state-notices.mjs';
+import {resolveToolCall}from'../extension/tools.mjs';
 const clone = value => structuredClone(value);
 const number = (value, min = 0, max = 1e9, label = '数值') => {
     if (!Number.isSafeInteger(value) || value < min || value > max) throw new Error(`${label}必须在${min}到${max}之间`);
@@ -92,8 +93,9 @@ export class WorldEngine {
         if(this.compat)return this.compat.reduce(document,input);
         if (input.type==='schema_migration') return {patches:input.patches,result:{migration:true}};
         if(input.type==='rules_state_migration')return{patches:planRuleStateMigration(document,this.rules),result:{migration:true,runtimeRuleVersion}};
-        const d = new Draft(document), args=input.args ?? {}, id=text(input.eventId,120);
-        const tool=input.tool.replace(/^world_/, '');
+        const resolved=resolveToolCall(input.tool,input.args??{});
+        const d = new Draft(document), args=resolved.args, id=text(input.eventId,120);
+        const tool=resolved.tool.replace(/^world_/, '');
         const readOperations={weather:'inspect',environment:'inspect',pet:'inspect',summon:'inspect',farm:'inspect',wildlife:'observe',lair:'observe'};
         const noTimeTurn=tool==='turn'&&(args.outOfCharacter||args.extraMinutes===0);
         if(noTimeTurn||(readOperations[tool]&&(args.operation??readOperations[tool])===readOperations[tool])){

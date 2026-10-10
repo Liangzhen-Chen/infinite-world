@@ -1,0 +1,60 @@
+import test from'node:test';
+import assert from'node:assert/strict';
+import {toolDefinitions,resolveToolCall}from'../extension/tools.mjs';
+import {createPlaytestServer}from'../tools/playtest-runner.mjs';
+import {loadWorld}from'../tools/load-world.mjs';
+import {WorldEngine}from'../server-plugin/engine.mjs';
+import {toolSelectionMetrics}from'../tools/playtest-metrics.mjs';
+import {evaluateAssertions}from'../tools/playtest-assertions.mjs';
+
+test('25个工具入口；合并操作保留真实执行、幂等与回滚，原工具仍可回放',async t=>{
+    const tools=toolDefinitions();assert.equal(tools.length,25);assert.ok(tools.every(row=>row.function.description.length<=60));
+    assert.ok(!tools.some(row=>['world_turn','world_pet','world_farm','world_crime'].includes(row.function.name)));
+    assert.throws(()=>resolveToolCall('world_field',{operation:'make_gold'}),/未知操作/);
+    const server=await createPlaytestServer();t.after(()=>server.close());
+    const created=await server.api('create',{character:{name:'测试者'}}),campaignId=created.reference.campaignId;
+    const engine=new WorldEngine(await loadWorld());
+    for(const[tool,args,oldTool,oldArgs]of[
+        ['world_field',{operation:'weather_inspect'},'world_weather',{operation:'inspect'}],
+        ['world_field',{operation:'farm_inspect'},'world_farm',{operation:'inspect'}],
+        ['world_field',{operation:'environment_inspect'},'world_environment',{operation:'inspect'}],
+        ['world_field',{operation:'wildlife_observe'},'world_wildlife',{operation:'observe'}],
+        ['world_field',{operation:'lair_observe'},'world_lair',{operation:'observe'}],
+        ['world_companion',{operation:'pet_inspect'},'world_pet',{operation:'inspect'}],
+        ['world_companion',{operation:'summon_inspect'},'world_summon',{operation:'inspect'}],
+    ]){
+        const fixture=structuredClone(created.document);
+        if(['world_wildlife','world_lair'].includes(oldTool))fixture.state.location='loc_hw_northwood';
+        if(oldTool==='world_lair'){
+            await assert.rejects(engine.reduce(fixture,{tool,args,eventId:'observe'}),/没有启用首领巢穴/);
+            await assert.rejects(engine.reduce(fixture,{tool:oldTool,args:oldArgs,eventId:'observe'}),/没有启用首领巢穴/);
+            continue;
+        }
+        assert.deepEqual(await engine.reduce(fixture,{tool,args,eventId:'observe'}),await engine.reduce(fixture,{tool:oldTool,args:oldArgs,eventId:'observe'}));
+    }
+    await server.api('execute',{campaignId,tool:'world_move',args:{destination:'村口'},eventId:'move',anchor:'walk'});
+    const before=await server.api('read',{campaignId});
+    const request={campaignId,tool:'world_law',args:{operation:'steal',target:'顾岑',coins:1},eventId:'steal',anchor:'attempt'};
+    const stolen=await server.api('execute',request),duplicate=await server.api('execute',request);
+    assert.equal(stolen.result.ok,true);assert.equal(duplicate.duplicate,true);
+    const undone=await server.api('reconcile',{campaignId,validAnchors:['walk']});
+    assert.deepEqual(undone.document.state,before.document.state);
+});
+
+test('调用统计区分错误职责、查询后漏执行、失败重试和未满足前置条件',()=>{
+    const scenarios=[{id:'sample',turns:[{expectedTools:['world_crime']},{expectedTools:['world_learn']},{expectedTools:['world_move']},{expectedTools:['world_cast'],toolExpectationAfter:{turn:4,path:'state.spells.spell_light'}}]}];
+    const metrics=toolSelectionMetrics([{id:'sample',turns:[
+        {index:0,calls:[{tool:'world_law',args:{operation:'steal'}}],assertions:[]},
+        {index:1,calls:[{tool:'world_practice',args:{}}],assertions:[]},
+        {index:2,calls:[{tool:'world_catalog',args:{}}],assertions:[]},
+        {index:3,calls:[],assertions:[]},
+        {index:4,calls:[],assertions:[{kind:'exists',path:'state.spells.spell_light',pass:false}]},
+    ]}],scenarios);
+    assert.equal(metrics.opportunities,3);assert.equal(metrics.wrong,1);assert.equal(metrics.missed,1);
+    const calls=[{tool:'world_craft',args:{operation:'manufacture'},result:{ok:false}},{tool:'world_craft',args:{operation:'manufacture'},result:{ok:true}}];
+    const rule={kind:'calls',tool:'world_craft',args:{operation:'manufacture'},success:true,min:1,max:1};
+    assert.equal(evaluateAssertions([rule],{before:{},after:{},calls,reply:''})[0].pass,true);
+    calls.push(calls[1]);assert.equal(evaluateAssertions([rule],{before:{},after:{},calls,reply:''})[0].pass,false);
+    const evidence={kind:'records',path:'records',where:{reported:true},includes:{path:'evidence',where:{kind:'confession'}}};
+    assert.equal(evaluateAssertions([evidence],{before:{},after:{records:{case:{reported:true,evidence:[]}}},calls:[],reply:''})[0].pass,false);
+});

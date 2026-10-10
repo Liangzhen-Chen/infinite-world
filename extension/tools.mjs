@@ -3,7 +3,7 @@ const object=(properties,required=[])=>({type:'object',properties,...(required.l
 const definitions=[];
 const define=(name,description,properties,required=[])=>definitions.push({type:'function',function:{name,description,parameters:object(properties,required)}});
 define('world_trade','交易物品或住宿，提供卖方、物品与数量，住宿另给天数。',{buyer:str,seller:str,item:str,quantity:int,unitPrice:int,service:{type:'string',enum:['住宿']},days:int,instances:{type:'array',items:str}},['seller']);
-define('world_move','沿已登记路线移动到目的地，并结算同行者与路费。',{destination:str,mode:{type:'string',enum:['walk','horse','cart','boat']}},['destination']);
+define('world_move','用地点中文名称或已知编号沿路线抵达目的地，结算同行者与路费。',{destination:str,mode:{type:'string',enum:['walk','horse','cart','boat']}},['destination']);
 define('world_time','按分钟等待、工作或睡眠，并推进世界时间。',{minutes:int,activity:str},['minutes']);
 define('world_weather','查看当前位置的天气、温度和日出日落时间。',{operation:{enum:['inspect']},location:str},[]);
 define('world_farm','查看农田粮仓，或按操作买粮、捐粮、留种、修仓、播种、收获、巡田。',{operation:{enum:['inspect','buy','donate','reserve_seed','repair','sow','harvest','guard','adopt']},settlement:str,quantity:int},[]);
@@ -31,7 +31,48 @@ define('world_settlement','凭授权使用指定聚落公共物资开工建设�
 define('world_quest','发布、接受或核实完成指定任务及其托管报酬。',{operation:str,publisher:str,personal:bool,grade:str,reward:int,content:str,quest:str,objective:object({type:str,item:str,quantity:int,location:str,project:str},['type'])},['operation']);
 define('world_create','登记原创人物或组织，提供名称、类型和人物资料。',{type:str,name:str,project:str,data:object({age:int,occupation:str,notes:str},[])},['type','name','data']);
 define('world_search','按关键词检索长期事实和原始聊天，可指定条数。',{query:str,limit:int},['query']);
-define('world_catalog','按名称或编号查公开规则，或按类别查看目录和本地环境对象。',{entity:str,kind:{type:'string',enum:['profession','skill','spell','item','recipe','feature']}});
+define('world_catalog','按名称或编号查公开规则，可按类别分页列出地点、物品或配方。',{entity:str,kind:{type:'string',enum:['profession','skill','spell','item','recipe','feature','location']},offset:int});
 define('world_read','查看玩家、行囊、人物或约定等已记录状态。',{section:str});
-export function toolDefinitions(){return structuredClone(definitions);}
+const routes=new Map();
+function group(name,description,members){
+    const selected=definitions.filter(row=>members.includes(row.function.name)),properties={},operations=[],mapping=new Map();
+    for(const row of selected){
+        const tool=row.function.name,prefix=tool.slice(6),schema=row.function.parameters;
+        Object.assign(properties,schema.properties);
+        for(const operation of schema.properties.operation.enum){
+            const key=`${prefix}_${operation}`;operations.push(key);mapping.set(key,{tool,operation,required:schema.required??[]});
+        }
+    }
+    properties.operation={type:'string',enum:operations};routes.set(name,mapping);
+    return {type:'function',function:{name,description,parameters:object(properties,['operation'])}};
+}
+const fieldTools=['world_weather','world_farm','world_wildlife','world_environment','world_lair'];
+const companionTools=['world_pet','world_summon'];
+const field=group('world_field','按操作查看天气、农田、动物、环境或巢穴，并办理采集和农事。',fieldTools);
+const companion=group('world_companion','按操作照料、驯服或骑乘动物，或管理召唤契约及搬水。',companionTools);
+const law=structuredClone(definitions.find(row=>row.function.name==='world_law'));
+law.function.description='偷取目标财物，或指定案件与在场执法者 authority 办理报案、认罪、审理及履行裁决。';
+Object.assign(law.function.parameters.properties,definitions.find(row=>row.function.name==='world_crime').function.parameters.properties);
+law.function.parameters.properties.operation={type:'string',enum:['steal',...definitions.find(row=>row.function.name==='world_law').function.parameters.properties.operation.enum]};
+const hidden=new Set([...fieldTools,...companionTools,'world_crime','world_law']);
+const publicDefinitions=[...definitions.filter(row=>!hidden.has(row.function.name)),field,companion,law];
+export function toolDefinitions(){return structuredClone(publicDefinitions);}
+// Pure routing is shared by the engine and report assertions. Stored old calls
+// remain valid; grouped calls execute exactly the same domain operations.
+export function resolveToolCall(tool,args={}){
+    if(tool==='world_law'&&args.operation==='steal')return{tool:'world_crime',args};
+    const mapping=routes.get(tool);if(!mapping)return{tool,args};
+    const route=mapping.get(args.operation);
+    if(!route)throw new Error(`未知操作；${tool} 的 operation 可选：${[...mapping.keys()].join('、')}`);
+    const absent=route.required.filter(key=>key!=='operation'&&args[key]===undefined);
+    if(absent.length)throw new Error(`${args.operation} 缺少参数：${absent.join('、')}`);
+    return{tool:route.tool,args:{...args,operation:route.operation}};
+}
+export function modelToolCall(tool,args={}){
+    if(tool==='world_crime')return{tool:'world_law',args};
+    for(const[group,mapping]of routes)for(const[operation,route]of mapping){
+        if(route.tool===tool&&route.operation===args.operation)return{tool:group,args:{...args,operation}};
+    }
+    return{tool,args};
+}
 export const readOnlyTools=new Set(['world_search','world_catalog','world_read']);

@@ -15,6 +15,9 @@
           "path": "state.location",
           "value": "loc_hw_northwood"
         }
+      ],
+      "expectedTools": [
+        "world_move"
       ]
     },
     {
@@ -48,6 +51,9 @@
           },
           "min": 1
         }
+      ],
+      "expectedTools": [
+        "world_move"
       ]
     },
     {
@@ -85,6 +91,9 @@
           "path": "state.location",
           "value": "loc_hw"
         }
+      ],
+      "expectedTools": [
+        "world_move"
       ]
     },
     {
@@ -100,6 +109,9 @@
           "min": 300,
           "max": 1200
         }
+      ],
+      "expectedTools": [
+        "world_move"
       ]
     },
     {

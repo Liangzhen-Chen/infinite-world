@@ -34,6 +34,19 @@ test('规则目录只读，公开列表限制大小，不暴露人物私有档�
     assert.throws(()=>catalogDefinition(engine,document,{kind:'npc'}),/指定/);
     assert.deepEqual(document,before);
 });
+
+test('公开地点可查询，目录分页可找到后续物品，错误候选不创建或替换实体',async()=>{
+    const engine=new WorldEngine(await loadWorld()),document=engine.initialFromLegacy(seed,'location-catalog');
+    const places=catalogDefinition(engine,document,{kind:'location'});
+    assert.ok(places.entries.some(row=>row.id==='bld_hw_riverhome'));
+    assert.equal(catalogDefinition(engine,document,{entity:'河边小屋',kind:'location'}).id,'bld_hw_riverhome');
+    const first=catalogDefinition(engine,document,{kind:'item'}),next=catalogDefinition(engine,document,{kind:'item',offset:first.nextOffset});
+    assert.ok(next.entries.length);assert.ok(next.entries.every(row=>!first.entries.some(old=>old.id===row.id)));
+    assert.equal(engine.resolve('铁铰链','item'),'item_iron_hinge');
+    assert.throws(()=>engine.resolve('木楔','recipe'),/recipe_wooden_pegs/);
+    assert.throws(()=>engine.resolve('loc_hw_nonexistent'),/已登记中文名称/);
+    const scene=engine.scene(document,'去河边小屋');assert.match(scene,/河边小屋（bld_hw_riverhome）/);assert.ok(scene.length<=6000);
+});
 test('未取得的隐藏身份不泄露触发条件，取得后仅返回已知能力和代价',async()=>{
     const engine=new WorldEngine(await loadWorld()),document=engine.initialFromLegacy(seed,'hidden-catalog');
     const hidden=engine.world.professions.find(row=>row.kind==='hidden');

@@ -9,7 +9,14 @@ const codeFor=(engine,location)=>engine.rules.law?.codes.find(code=>code.locatio
 function currentCode(d,engine){const code=codeFor(engine,d.get('state','location'));if(!code)throw new Error('当地尚未登记可执行法典');return code;}
 function unique(d,id){if(d.get(...path(id)))throw new Error('法律登记编号已占用，拒绝覆盖');}
 function present(d,engine,name,allowSleeping=false){const id=engine.resolve(name,'npc'),actor=d.get('state','npcs',id);if(!(allowSleeping?alive(actor):awake(actor))||actor.location!==d.get('state','location'))throw new Error('当事人不在场或不能清醒行动');return id;}
-function authority(d,engine,code,name,kind){const id=present(d,engine,name);if(!(kind==='judge'?code.judges:[...code.officers,...code.judges]).includes(id))throw new Error('此人没有该法典的执法或审判资格');return id;}
+function authority(d,engine,code,name,kind){
+    const eligible=kind==='judge'?code.judges:[...code.officers,...code.judges];
+    if(!name){
+        const candidates=eligible.filter(id=>awake(d.get('state','npcs',id))&&d.get('state','npcs',id).location===d.get('state','location'));
+        throw new Error(`需要 authority 指定在场${kind==='judge'?'审判者':'执法者'}；候选：${candidates.map(id=>`${engine.byId.get(id)?.name}（${id}）`).join('、')||'无'}`);
+    }
+    const id=present(d,engine,name);if(!eligible.includes(id))throw new Error('此人没有该法典的执法或审判资格');return id;
+}
 function caseRow(d,engine,id){const row=d.get(...path(id));if(row?.category!=='legal_case')throw new Error('案件未登记');const code=engine.rules.law?.codes.find(c=>c.id===row.law);if(!code)throw new Error('案件对应法典不可用');return{row,code};}
 function safeFund(d,id,category,extra={}){
     const existing=d.get(...path(id));if(existing&&existing.category!==category)throw new Error('法律资金登记键冲突');
@@ -232,7 +239,7 @@ export function lawAction(d,args,eventId){
 export function lawView(engine,document){
     const code=codeFor(engine,document.state.location);
     const d={get:(...parts)=>parts.reduce((v,k)=>v?.[k],document)};
-    return{law:code?structuredClone(code):null,cases:cases(d).filter(([,row])=>row.offender==='player').map(([id,row])=>({id,law:row.law,victim:row.victim,offense:row.offense,status:row.status,reported:row.reported,
+    return{law:code?structuredClone(code):null,cases:cases(d).filter(([,row])=>row.offender==='player').map(([id,row])=>({id,law:row.law,victim:row.victim,offense:row.offense,status:row.status,reported:row.reported,confessed:row.evidence.some(entry=>entry.kind==='confession'&&entry.subject==='player'),
         judgment:structuredClone(row.judgment),location:row.location,stolen:structuredClone(row.stolen),
         note:row.reported?'案件已受理，判罚以当前审理结果为准':'执法人员未获报案，不能当作已通缉或定罪'}))};
 }
