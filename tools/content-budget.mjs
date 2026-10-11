@@ -65,6 +65,6 @@ export async function openContentBudget({file,client,cardId,allocation}){
    ledger.requests[id]={...ledger.requests[id],status:'settled',costUpperYuan:cost,measurement:response.measurement??null};await save(file,ledger);sync();return response;
   }catch(e){ledger.requests[id].status='unknown';ledger.requests[id].error=e.message;await save(file,ledger);sync();throw e;}
  });queue=pending.catch(()=>{});return pending;}
- function claimProtocolRecovery(id,fingerprint){const pending=queue.then(async()=>{const owner=cardId?ledger.cards[cardId]:ledger;owner.protocolRecoveries??={};if(owner.protocolRecoveries[id])return false;owner.protocolRecoveries[id]={fingerprint,claimedAt:new Date().toISOString()};await save(file,ledger);return true;});queue=pending.catch(()=>{});return pending;}
- return{request,get ledger(){return structuredClone(ledger);},claimProtocolRecovery,close:async()=>{await queue;await fs.unlink(lock);}};
+ function claimOnce(field,id,fingerprint){const pending=queue.then(async()=>{const owner=cardId?ledger.cards[cardId]:ledger;owner[field]??={};if(owner[field][id])return false;owner[field][id]={fingerprint,claimedAt:new Date().toISOString()};await save(file,ledger);return true;});queue=pending.catch(()=>{});return pending;}
+ return{request,get ledger(){return structuredClone(ledger);},claimProtocolRecovery:(id,fingerprint)=>claimOnce('protocolRecoveries',id,fingerprint),claimReviewRecovery:(id,fingerprint)=>claimOnce('reviewRecoveries',id,fingerprint),close:async()=>{await queue;await fs.unlink(lock);}};
 }
