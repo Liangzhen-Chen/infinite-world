@@ -1,0 +1,13 @@
+{
+  "capturedAtUtc": "2026-10-11T20:56:51Z",
+  "source": "functions.get_goal",
+  "objective": "根据开发指南v2继续开发，完成整个世界开发直到可玩",
+  "goalCreatedAt": 1791631803,
+  "tokensUsed": 8511770,
+  "timeUsedSeconds": 18066,
+  "previousCalibration": null,
+  "periodTokens": null,
+  "periodTimeUsedSeconds": null,
+  "interpretation": "系统累计计数；不等同账单或净生成token。首次无期初快照，本期增量未知。",
+  "claudeFeedbackReceived": false
+}
