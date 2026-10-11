@@ -6,6 +6,13 @@ const numerals={一:1,两:2,二:2,三:3,四:4,五:5,六:6,七:7,八:8,九:9,十:
 export function explicitSoakTiming(input,startMinute){
  const text=String(input??'').trim();
  if(isOutOfCharacter(text))return{basis:'player-out-of-character',quote:text,range:[0,0]};
+ const sequential=/^(.+?)(?:[，,；;]\s*)?(?:然后|接着|再)(.+)$/.exec(text);
+ if(sequential){
+  const wait=explicitSoakTiming(sequential[1],startMinute),chat=explicitSoakTiming(sequential[2],startMinute);
+  if(['player-explicit-duration','player-explicit-deadline'].includes(wait?.basis)&&chat?.basis==='constitution-dialogue-range')
+   return{basis:'player-explicit-wait-then-dialogue',quote:text,range:chat.range.map(n=>wait.range[0]+n),wait,dialogue:chat};
+  return null;
+ }
  const duration=/^(?:我)?(?:在这里|在此地|在原地)?(?:原地)?(?:等待|等|休息|停留|睡)(?:整整|整)?(\d+|一|两|二|三|四|五|六|七|八|九|十|半)(分钟|小时|天)(?:[，,](?:不做其他事情|不做其他事))?[。.!！]?$/.exec(text);
  if(duration){
   const amount=numerals[duration[1]]??Number(duration[1]),minutes=amount*{分钟:1,小时:60,天:1440}[duration[2]];
@@ -33,6 +40,20 @@ export function assessSoakTiming(replay,{input}={}){
  const receiptTiming={scope:'completed-tool-actions-only; does not establish player-intent coverage',status:receiptComplete?'measured':'unknown',covered:measured.length,total:receipts.length,
   expectedMinutes:measured.length?receiptExpected:null,deviation:receiptComplete?receiptDeviation:null,knownDeviation:receiptDeviation,evidence:receipts};
  const base={version:2,source:'semantic-action-rules',elapsedMinutes:elapsed,receiptTiming,replay};
+ const compound=intent?.basis==='player-explicit-wait-then-dialogue';
+ const waitIntent=compound?intent.wait:['player-explicit-duration','player-explicit-deadline'].includes(intent?.basis)?intent:null;
+ if(waitIntent&&(compound||receipts.length)){
+  // A correct total cannot compensate for an under-wait with extra dialogue.
+  // Bind both stages to the actual time-tool receipts and the committed tail.
+  if(!receiptComplete||receipts.length!==replay.actionCount||receipts.some(r=>r.tool!=='world_time'||!Number.isFinite(r.elapsedMinutes)||r.elapsedMinutes<0)||!Number.isFinite(replay.tailMinutes)||replay.tailMinutes<0||elapsed-receipts.reduce((n,r)=>n+r.elapsedMinutes,0)!==replay.tailMinutes)intent=null;
+  else if(valid){
+   const waited=receipts.reduce((n,r)=>n+r.elapsedMinutes,0),wanted=waitIntent.range[0],talked=elapsed-waited,[lower,upper]=compound?intent.dialogue.range:[0,0];
+   const waitDifference=Math.abs(waited-wanted),talkDifference=Math.max(lower-talked,0,talked-upper),reference=wanted+(talked>upper?upper:lower),difference=waitDifference+talkDifference;
+   return{...base,status:compound?'bounded':'measured',covered:true,basis:intent.basis,evidence:intent,expectedMinutes:compound?null:wanted,expectedRange:intent.range,
+    components:{wait:{expectedMinutes:wanted,elapsedMinutes:waited,deviationMinutes:waitDifference},dialogue:{expectedRange:[lower,upper],elapsedMinutes:talked,deviationMinutes:talkDifference}},
+    withinExpectedRange:difference===0,deviationMinutes:difference,referenceMinutes:reference,deviation:reference?difference/reference:difference===0?0:null};
+  }
+ }
  if(!intent||!valid)return{...base,status:'unknown',covered:false,basis:null,reason:!valid?'缺少实际经过时间':'玩家输入不在可核验的单一行动语法内；回执不能替代玩家原始耗时要求',expectedMinutes:null,expectedRange:null,deviation:null};
  const [lower,upper]=intent.range,difference=Math.max(lower-elapsed,0,elapsed-upper),reference=elapsed>upper?upper:lower;
  return {...base,status:lower===upper?'measured':'bounded',covered:true,basis:intent.basis,evidence:intent,
@@ -48,6 +69,6 @@ export function summarizeSoakTiming(clocks){
  return {status:complete?'measured':'unknown',covered:measured.length,total:clocks.length,coverage:clocks.length?measured.length/clocks.length:null,
   deviation:complete?knownDeviation:null,knownDeviation,unknown:clocks.flatMap((t,i)=>measured.includes(t)?[]:[{index:i,reason:t?.reason??'旧计时证据仅能证明重放或未提供独立语义来源'}]),
   deviationMinutes:difference,referenceMinutes:reference,
-  metric:'相对明确期望或允许区间的绝对偏差；区间外取最近边界为分母，区间内取下界。已知子集不代表全体。',
+  metric:'相对明确期望或允许区间的绝对偏差；等待与交谈分段核验并相加，区间外取最近边界为分母，区间内取下界。已知子集不代表全体。',
   pass:complete&&(difference===0||reference>0&&knownDeviation<=.1)};
 }
