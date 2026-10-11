@@ -1,0 +1,34 @@
+{
+  "index": 1,
+  "fingerprint": "e243d017d504f1482605cee9a9ee9f8fc20b28c5329041d874d96fcf4958e1c8",
+  "count": 5,
+  "passed": 4,
+  "ids": [
+    "npc_yp_yucheng",
+    "npc_yp_qiuyan",
+    "npc_yp_tanghuan",
+    "npc_yp_zhangyi",
+    "npc_yp_lisha"
+  ],
+  "rewritten": 3,
+  "manual": [
+    "npc_yp_tanghuan"
+  ],
+  "pending": [],
+  "flagged": [
+    "npc_yp_tanghuan"
+  ],
+  "sample": [
+    "npc_yp_zhangyi",
+    "npc_yp_yucheng",
+    "npc_yp_qiuyan",
+    "npc_yp_lisha"
+  ],
+  "l4": {
+    "approved": false,
+    "notes": []
+  },
+  "costUpperYuan": 2.764234799999999,
+  "manualRatio": 0.2,
+  "needsSystemicRepair": true
+}
