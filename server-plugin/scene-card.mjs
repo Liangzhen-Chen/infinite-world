@@ -8,6 +8,7 @@ import {npcContext}from'./npc-memory.mjs';
 import {relationView}from'./npc-relations.mjs';
 import {chronicleContext}from'./chronicle.mjs';
 import {settlementScene}from'./settlement-profile.mjs';
+import {selectNpcRumors,assertRumorConversation}from'./npc-rumors.mjs';
 
 const text=(value,limit=200)=>typeof value==='string'?value.replace(/\s+/g,' ').slice(0,limit):'';
 const list=value=>Array.isArray(value)?value.map(row=>typeof row==='string'?row:row.content??row.description??'').filter(Boolean).join('；'):text(value);
@@ -31,6 +32,14 @@ export function sceneCard(engine,document,query='',index=null){
     const destinations=[...new Set([...requested,...adjacent])].slice(0,12);
     if(destinations.length)parts.splice(2,0,`【地点索引】${destinations.map(id=>`${name(id)}（${id}）`).join('；')}`);
     const localProfile=settlementScene(engine,document);if(localProfile)parts.push(localProfile);
+    const rumorTopics=[];
+    for(const [id]of present){
+        const d={get:(...p)=>p.reduce((v,k)=>v?.[k],document),document};
+        try{assertRumorConversation(d,engine,id);}catch{continue;}
+        for(const row of selectNpcRumors(engine,id,query))rumorTopics.push(`  ${name(id)}（${id}）可讲述：${row.claim}｜未核实｜传闻 ${row.id}｜原来源 ${name(row.source)}（${row.source}）`);
+        if(rumorTopics.length>=4)break;
+    }
+    if(rumorTopics.length)parts.push('【可问询的未核实传闻，尚未成为玩家经历】',...rumorTopics.slice(0,4));
     for(const [id,npc] of present.slice(0,engine.rules.prompt.npcLimit)){
         const base=engine.byId.get(id)??npc;
         const available=npcAvailability(engine,s,id);

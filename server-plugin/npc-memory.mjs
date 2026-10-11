@@ -1,6 +1,7 @@
 import {npcCognitionView}from'./npc-cognition.mjs';
 import {scheduleAt}from'./npc-schedule.mjs';
 import {MemoryIndex}from'./retrieval.mjs';
+import {npcRumors}from'./npc-rumors.mjs';
 
 const full=(engine,id)=>engine.byId.get(id)?.tier==='full';
 const awake=npc=>npc&&!['死亡','濒死','昏迷','患病'].includes(npc.status)&&!/(睡眠|熟睡|睡觉)/.test(npc.activity??'');
@@ -24,7 +25,9 @@ export function recordNpcMemories(d,engine,before,tool,args,detail,eventId){
     const after=d.get('state'),name=id=>id==='player'?after.player.name:engine.byId.get(id)?.name??id;
     const resolve=value=>{if(!value)return null;try{return engine.resolve(value);}catch{return null;}};
     const facts=[],add=(key,content,participants,options={})=>facts.push({key,content,participants:[...new Set(participants.filter(Boolean))],location:before.location,minute:after.minute,salience:2,emotion:'平静',...options});
-    if(tool==='trade'){
+    if(tool==='remember'&&detail.rumor&&!detail.duplicate){
+        add(`rumor_${detail.rumor}`,detail.content,['player',detail.source],{observers:[],private:true,reliability:'未核实',rumor:detail.rumor});
+    }else if(tool==='trade'){
         const buyer=detail.buyer??resolve(args.buyer??'player'),seller=detail.seller??resolve(args.seller);
         const what=detail.item?`${name(detail.item)}${detail.quantity}份`:detail.debt&&args.payment==='repay'?'欠款':args.service==='住宿'?`${detail.days}天住宿`:'交易';
         add('trade',`${name(buyer)}向${name(seller)}${args.payment==='repay'?'偿还':detail.payment==='credit'?'赊欠':'支付'}${detail.cost}铜${args.payment==='repay'?'欠款':`，办理${what}`}`, [buyer,seller],{salience:detail.debt?3:2,entities:detail.item?[detail.item]:[]});
@@ -77,7 +80,7 @@ export function recordNpcMemories(d,engine,before,tool,args,detail,eventId){
             const existing=streams.get(npcId)??[...after.npcs[npcId].memoryStream??[]];
             const id=`${eventId}:${fact.key}`;if(existing.some(row=>row.id===id))continue;
             existing.push({id,sourceEvent:eventId,kind:fact.key.split('_')[0],minute:fact.minute,location:fact.location,participants:fact.participants,
-                content:fact.content,...(fact.private?{private:true}:{}),...(fact.entities?.length?{entities:fact.entities}:{}),sourceType:fact.partyNotice?'约定核对':fact.participants.includes(npcId)&&!fact.onlyObservers?'亲历':'目击',salience:fact.salience,emotion:fact.emotion});
+                content:fact.content,...(fact.private?{private:true}:{}),...(fact.rumor?{rumor:fact.rumor,reliability:fact.reliability,permittedRecipients:['player']}:{}),...(fact.entities?.length?{entities:fact.entities}:{}),sourceType:fact.partyNotice?'约定核对':fact.participants.includes(npcId)&&!fact.onlyObservers?'亲历':'目击',salience:fact.salience,emotion:fact.emotion});
             streams.set(npcId,existing);
         }
     }
@@ -107,7 +110,7 @@ export function npcContext(engine,document,id,query=''){
     const shared=memories.filter(row=>selected.has(row.id)).sort((a,b)=>a.minute-b.minute);
     const goals=Object.values(npc.goals??base.goals??{}).flat().filter(row=>row.progress<100&&row.status!=='已完成');
     return{appearance:base.appearance,voice:base.voice,values:base.personality.values,flaws:base.personality.flaws,
-        concern:goals[0]?.content??'',known:base.knowledge.known.map(row=>row.fact),unknown:base.knowledge.unknown,
+        concern:goals[0]?.content??'',known:base.knowledge.known.map(row=>row.fact),unknown:base.knowledge.unknown,rumors:npcRumors(engine,id),
         recentActivities:Object.values(document.state.npcAutonomy?.actions??{}).filter(row=>row.npc===id&&row.minute<=document.state.minute).slice(-2).map(row=>({minute:row.minute,content:row.summary})),
         memories:shared,reflections:cognition.reflections.filter(row=>row.about==='player').slice(-1),seeds:selectNpcSeedMemories(engine,document,id,query),behavior:base.behaviorRules,
         relations:base.relationships.map(row=>({with:row.with,type:row.type,note:row.note}))};
