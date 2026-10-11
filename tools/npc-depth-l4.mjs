@@ -1,7 +1,12 @@
 import fs from 'node:fs/promises';
 import {hashContent} from './content-pipeline.mjs';
-const root='world/drafts/w1/yupo-depth',read=async name=>JSON.parse(await fs.readFile(`${root}/${name}.json`,'utf8'));
+const at=process.argv.indexOf('--batch'),name=at<0?'yupo-depth':process.argv[at+1];if(!['yupo-depth','yupo-depth-next'].includes(name))throw Error('未登记人物批次');
+const root=`world/drafts/w1/${name}`,read=async name=>JSON.parse(await fs.readFile(`${root}/${name}.json`,'utf8'));
 const notes={
+ npc_yp_qinli:'通读；高忻正式性别为女，已补真实引用并定点复审代词。桌位未定、旧磨架未称修好；与朱笙的关联沿既有已审核谈话补全。',
+ npc_yp_gaoxin:'通读；去除同一处和整张纸等未声明细节后复审。愿谈轮换来自人工facts，不是已经定序；不知陶咨空桶归属或弟弟未说出口的心思。',
+ npc_yp_taozi:'通读；去除声线习惯串入的敲空桶动作后复审。衣物归属未知，姐姐停顿与外甥女回避只作可见行为，不断言其内心。',
+ npc_yp_luxia:'通读；衣物与桶件暂存未定序，家务与针线目标仍待行动；记忆只与陶咨共享，不拥有秦砺高忻桌位谈话。',
  npc_yp_zhaofeng:'核对低垄水痕而未定轮次；未知保留乔端私下改沟及未查旧页，原漏行经历没有重写。',
  npc_yp_qiaoduan:'删除样例台词串入的“一指”尺寸后逐条复审；只记与赵枫核痕，不知道对方漏行原因；后续知识句改为两人当面对过水痕，经定点L2无矛盾。',
  npc_yp_wenxu:'穗袋避风与检看通道仍冲突，未替蒋弥同意挪篱；具体分袋核查步骤未宣称完成。',
@@ -9,4 +14,4 @@ const notes={
  npc_yp_hanpei:'共灶门外争执未产生换工或报酬；知情限定两人，私下补圈的旧记忆保持原状；知识句现明确双方尚未约定换工，经定点L2无矛盾。',
  npc_yp_zhusheng:'清扫最后一段仍未分工；与母亲及秦砺的关系具体，未新增修磨能力；知识句现明确双方尚未约定清扫报酬或换工，经定点L2无矛盾。',
 };
-const summary=await read('summary');for(const batch of summary.batches){const records=await Promise.all(batch.ids.map(read));if(records.some(r=>r.status!=='passed'||r.errors.length||r.review.contradictions.some(c=>c.severity==='hard')))throw Error('存在未通过条目');if(hashContent(records.map(r=>({id:r.id,draft:r.draft,review:r.review,status:r.status})))!==batch.fingerprint)throw Error('批次内容改变');batch.l4={approved:true,reviewedAt:new Date().toISOString(),notes:records.map(r=>({id:r.id,note:notes[r.id],draftHash:hashContent(r.draft),reviewHash:hashContent(r.review)}))};await fs.writeFile(`${root}/batch-${batch.index}.json`,JSON.stringify(batch,null,2)+'\n');}await fs.writeFile(`${root}/summary.json`,JSON.stringify(summary,null,2)+'\n');
+const summary=await read('summary');for(const batch of summary.batches){const records=await Promise.all(batch.ids.map(read));if(records.some(r=>!notes[r.id]))throw Error('缺逐条人工阅读记录');if(records.some(r=>r.status!=='passed'||r.errors.length||r.review.contradictions.some(c=>c.severity==='hard')))throw Error('存在未通过条目');if(hashContent(records.map(r=>({id:r.id,draft:r.draft,review:r.review,status:r.status})))!==batch.fingerprint)throw Error('批次内容改变');batch.l4={approved:true,reviewedAt:new Date().toISOString(),notes:records.map(r=>({id:r.id,note:notes[r.id],draftHash:hashContent(r.draft),reviewHash:hashContent(r.review)}))};await fs.writeFile(`${root}/batch-${batch.index}.json`,JSON.stringify(batch,null,2)+'\n');}await fs.writeFile(`${root}/summary.json`,JSON.stringify(summary,null,2)+'\n');

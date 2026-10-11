@@ -39,8 +39,8 @@ export const depthRows=[
  notes:['朱沫在灶间门口急着帮忙，她仍把女儿安排在远离火边的位置；孩子要参与与灶上防烫之间常需重说。','田洁听不清自己短促的喊话，她曾把容器指给母亲看才重说一遍；忙时仍会忘记放慢，让母亲着急。','与秦砺在共用空处说过旧磨架异响，她赞成先停磨再查；这段交谈没有让她取得修磨技能或替人检修的责任。'],
  steps:[['向正在帮饭的人分别问清谁还能留下洗碗','把暂时无人接手的盆碗留在明确位置，不能把沉默当答应'],['请实际用灶者分别说出能承担的收尾动作','把冲突的先后顺序读给双方听，再由本人确认'],['连续几轮记下实际做过收尾的人与未完成的动作','在下一次分工前提出轮换办法，让参与者说明不能承担的时段']]},
 ].map(row=>({...row,id:id(row.key)}));
-export function applyDepthFacts(npc,row){
- const next=structuredClone(npc),shared=sharedEvents[row.event];
+export function applyDepthFacts(npc,row,{events=sharedEvents}={}){
+ const next=structuredClone(npc),shared=events[row.event];
  next.voice.register=row.register;
  next.knowledge={known:[structuredClone(npc.knowledge.known[0]),...row.known.map(([fact,source])=>({fact,source,reliability:'亲历'}))],unknown:[...row.unknown]};
  next.relationships=next.relationships.map((r,i)=>({...r,note:row.notes[i]}));

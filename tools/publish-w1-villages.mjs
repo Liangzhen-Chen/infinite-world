@@ -7,7 +7,7 @@ import {w1VillagesFoundation,villageFacts} from '../world/design/w1-villages.mjs
 import {contextFor,revision,applyProse,projectRoster,projectLocation,validateDraft,validateFoundation,validateProseSimilarity} from './w1-villages-content.mjs';
 import {atomicJSON} from '../server-plugin/storage.mjs';
 import {applyKnowledgeWordingCorrections} from '../world/design/w1-yupo-depth.mjs';
-import {depthEntries,contextFor as depthContext,applyDepthDraft,validateDraft as validateDepthDraft,verifyUnchanged,revision as depthRevision} from './npc-depth-content.mjs';
+import {depthBatches,depthEntries,contextFor as depthContext,applyDepthDraft,validateDraft as validateDepthDraft,verifyUnchanged} from './npc-depth-content.mjs';
 import {approvedProfiles} from './w1-village-profiles-content.mjs';
 
 const merge=(old,rows)=>{const map=new Map(old.map(x=>[x.id,x]));for(const row of rows){if(map.has(row.id)&&hashContent(map.get(row.id))!==hashContent(row))throw Error(`已发布条目冲突：${row.id}`);map.set(row.id,row);}return [...map.values()];};
@@ -55,18 +55,21 @@ export async function publishVillages({root=path.resolve(import.meta.dirname,'..
  expected.residents=expected.residents.map(projectRoster);expected.locations=expected.locations.map(projectLocation);expected.status='reviewed-candidate';expected.formalWrite=false;
  if(hashContent(candidate)!==hashContent(expected))throw Error('候选与已审核内容不符');
  validateFoundation(candidate,original);const similarity=validateProseSimilarity(candidate,original);
- const depthDirectory=path.join(root,'drafts/w1/yupo-depth');let npcAmendments=[];
+ let npcAmendments=[];
+ for(const [depthBatch,config] of Object.entries(depthBatches)){
+ const depthDirectory=path.join(root,'drafts/w1',depthBatch),depthRevision=config.revision;
  if(await fs.stat(depthDirectory).then(s=>s.isDirectory()).catch(e=>{if(e.code==='ENOENT')return false;throw e;})){
   const frozen=JSON.parse(await fs.readFile(path.join(depthDirectory,'base.json'),'utf8'));
   const foundation=JSON.parse(await fs.readFile(path.join(depthDirectory,'foundation.json'),'utf8'));
   for(const n of frozen)if(hashContent(n)!==hashContent(candidate.npcs.find(p=>p.id===n.id)))throw Error(`人物补充原档与已审核候选不符：${n.id}`);
-  const entries=depthEntries(frozen),reference={...original,npcs:[...original.npcs,...candidate.npcs],residents:[...original.residents,...candidate.residents],locations:[...original.locations,...candidate.locations]},ctx=e=>depthContext(e,reference);
+  const entries=depthEntries(frozen,depthBatch),reference={...original,npcs:[...original.npcs,...candidate.npcs],residents:[...original.residents,...candidate.residents],locations:[...original.locations,...candidate.locations]},ctx=e=>depthContext(e,reference);
   if(frozen.length!==entries.length||new Set(frozen.map(n=>n.id)).size!==frozen.length)throw Error('人物补充原档数量不符');
   const expected={revision:depthRevision,entries:entries.map(e=>({id:e.id,baseHash:hashContent(e.before),facts:e.facts,sharedEvent:e.sharedEvent,context:ctx(e)}))};
   if(hashContent(expected)!==hashContent(foundation))throw Error('人物补充骨架或引用事实已改变');
   const drafts=await readApprovedContent(depthDirectory,entries,{contextFor:ctx,revision:depthRevision});
   if(drafts.length!==entries.length)throw Error('人物补充未全部完成审核');
-  npcAmendments=entries.map(e=>{const d=drafts.find(d=>d.id===e.id),check=validateDepthDraft(d,e);if(check.errors.length)throw Error(`${e.id} 人物补充L1：${check.errors.join('；')}`);return applyDepthDraft(e.before,d);});
+  npcAmendments.push(...entries.map(e=>{const d=drafts.find(d=>d.id===e.id),check=validateDepthDraft(d,e);if(check.errors.length)throw Error(`${e.id} 人物补充L1：${check.errors.join('；')}`);return applyDepthDraft(e.before,d);}));
+ }
  }
  const profileDirectory=path.join(root,'drafts/w1/village-profiles');let profileAmendments=[];
  if(await fs.stat(profileDirectory).then(s=>s.isDirectory()).catch(e=>{if(e.code==='ENOENT')return false;throw e;})){

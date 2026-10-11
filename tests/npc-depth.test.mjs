@@ -6,7 +6,7 @@ import path from 'node:path';
 import {loadWorld} from '../tools/load-world.mjs';
 import {knowledgeWordingCorrections} from '../world/design/w1-yupo-depth.mjs';
 import {publishVillages,villagesOriginalWorld} from '../tools/publish-w1-villages.mjs';
-import {verifyUnchanged,depthEntries,applyDepthDraft,validateDraft,contextFor} from '../tools/npc-depth-content.mjs';
+import {verifyUnchanged,depthBatches,depthEntries,applyDepthDraft,validateDraft,contextFor} from '../tools/npc-depth-content.mjs';
 import {validateWorld} from '../tools/validate-world.mjs';
 import {WorldEngine} from '../server-plugin/engine.mjs';
 import {npcContext,selectNpcSeedMemories} from '../server-plugin/npc-memory.mjs';
@@ -15,7 +15,7 @@ import {applyPatches} from '../server-plugin/storage.mjs';
 const root=path.resolve('world/drafts/w1/yupo-depth'),read=async file=>JSON.parse(await fs.readFile(path.join(root,file+'.json'),'utf8'));
 const world=await loadWorld(),base=await read('base'),entries=depthEntries(base),drafts=await Promise.all(entries.map(e=>read(e.id).then(r=>r.draft)));
 const candidate=JSON.parse(await fs.readFile('world/drafts/w1/villages/candidate.json','utf8'));
-async function temporary(t){const dir=await fs.mkdtemp(path.join(os.tmpdir(),'fields-npc-depth-'));t.after(async()=>{assert.ok(path.resolve(dir).startsWith(path.resolve(os.tmpdir())+path.sep));await fs.rm(dir,{recursive:true,force:true});});for(const sub of ['meta','people','geo','lore'])await fs.cp(path.resolve('world',sub),path.join(dir,sub),{recursive:true});await fs.mkdir(path.join(dir,'drafts/w1'),{recursive:true});for(const name of ['villages','yupo-depth','village-profiles'])await fs.cp(path.resolve('world/drafts/w1',name),path.join(dir,'drafts/w1',name),{recursive:true});return dir;}
+async function temporary(t){const dir=await fs.mkdtemp(path.join(os.tmpdir(),'fields-npc-depth-'));t.after(async()=>{assert.ok(path.resolve(dir).startsWith(path.resolve(os.tmpdir())+path.sep));await fs.rm(dir,{recursive:true,force:true});});for(const sub of ['meta','people','geo','lore'])await fs.cp(path.resolve('world',sub),path.join(dir,sub),{recursive:true});await fs.mkdir(path.join(dir,'drafts/w1'),{recursive:true});for(const name of ['villages',...Object.keys(depthBatches),'village-profiles'])await fs.cp(path.resolve('world/drafts/w1',name),path.join(dir,'drafts/w1',name),{recursive:true});return dir;}
 test('六人定点深度不改变身份、钱物、旧记忆和原目标，双方共享事件而非相互全知',()=>{
  for(const [i,e]of entries.entries()){const after=applyDepthDraft(e.before,drafts[i]);verifyUnchanged(e.before,after);assert.deepEqual(validateDraft(drafts[i],e).errors,[]);assert.deepEqual(after,world.npcs.find(n=>n.id===e.id));assert.equal(after.knowledge.known.length,3);assert.notEqual(after.voice.register,after.voice.habits[0]);assert.equal(after.relationships.length,e.before.relationships.length);assert.ok(after.relationships.every((r,j)=>r.note!==e.before.relationships[j].note));const shared=after.memorySeeds.at(-1),other=world.npcs.find(n=>n.id===shared.knownBy.find(id=>id!==e.id));assert.ok(other.memorySeeds.some(m=>m.id===shared.id));assert.ok(after.knowledge.unknown.every(x=>!['本人未在场且无人实际转告的事','他人未公开的私有财物和秘密'].includes(x)));}
  const checked=validateWorld(world,{stage:'release'});assert.equal(checked.ok,true,checked.errors.join('\n'));
