@@ -15,6 +15,8 @@ const simplify=OpenCC.Converter({from:'tw',to:'cn'});
 const root=path.resolve(import.meta.dirname,'..'),destination=path.join(root,'docs/测试报告/最新');
 const args=process.argv.slice(2),option=(name,fallback)=>args.includes(name)?args[args.indexOf(name)+1]:fallback;
 const repetitions=Number(option('--repeat','1')),parallel=Number(option('--parallel','4')),only=option('--only','').split(',').filter(Boolean);
+const milestone=option('--milestone','');
+if(!['','M2'].includes(milestone))throw new Error('当前专项验收支持 --milestone M2；省略则使用完整发布账本门槛');
 if(!Number.isInteger(repetitions)||repetitions<1||repetitions>5||!Number.isInteger(parallel)||parallel<1||parallel>8)throw new Error('试玩重复次数1–5，并发1–8');
 const files=(await fs.readdir(path.join(root,'tests/playtests'))).filter(name=>name.endsWith('.json')).sort();
 const all=await Promise.all(files.map(async file=>JSON.parse(await fs.readFile(path.join(root,'tests/playtests',file),'utf8'))));
@@ -38,7 +40,7 @@ function summary(){const assertions=results.reduce((n,row)=>n+row.assertions,0),
     date:new Date().toISOString(),scope:'真实提示源、正式目录、真实服务器存储与检索；测试夹具非用户存档',complete:results.length===tasks.length,
     targetSessions:tasks.length,completedSessions:results.length,assertions,passed,ledgerRatio:passed/Math.max(1,assertions),
     promptHash:digest(bundle),scenariosHash:digest(scenarios),providerProcessing:host.identity,
-    fullCohort,missingRequirements,
+    fullCohort,missingRequirements,milestone:milestone||'release-ledger',
     releaseLedgerPass:complete&&fullCohort&&!missingRequirements.length&&assertions>0&&passed===assertions,
     m1ThresholdReached:complete&&fullCohort&&assertions>0&&passed/assertions>=.9,
     calls:{total:calls.length,rejected:calls.filter(call=>call.result?.ok===false).length},
@@ -69,5 +71,5 @@ try{
     }));
     const report=summary();await save();
     await atomicJSON(path.join(destination,'真实试玩失败.json'),{date:report.date,scope:report.scope,sessionErrors:results.filter(row=>row.error).map(({id,attempt,error})=>({id,attempt,error})),failures:results.flatMap(result=>result.turns.filter(turn=>turn.errors.length||turn.assertions.some(rule=>!rule.pass)).map(turn=>({session:result.id,attempt:result.attempt,...turn}))),reviews:results.map(row=>({id:row.id,attempt:row.attempt,review:row.review}))});
-    console.log(JSON.stringify({...report,results:undefined}));if(!report.releaseLedgerPass)process.exitCode=1;
+    console.log(JSON.stringify({...report,results:undefined}));if(!(milestone==='M2'?report.complete&&report.m2.thresholdReached:report.releaseLedgerPass))process.exitCode=1;
 }finally{await server.close();}
