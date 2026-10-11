@@ -4,3 +4,15 @@
 body.fields-play-active #chat .mes_reasoning_details{display:none!important}
 
 .fields-consistency-notice{border-left:2px solid #c19d63;margin:8px 0 4px;padding:4px 10px;color:#e5cba2;font-size:.85em;line-height:1.5}.fields-consistency-blocked{border-left-color:#d48b79;color:#f0bdad}
+/* The ledger uses the existing native dialog as a narrow side drawer. */
+#fields-dialog.fields-ledger{box-sizing:border-box;inset:0 0 0 auto;margin:0;width:min(520px,100vw);height:100dvh;max-height:100dvh;max-width:100vw;border-radius:14px 0 0 14px;padding:0;overflow:auto;line-height:1.6;overflow-wrap:anywhere;font-family:inherit;box-shadow:-12px 0 60px #0006}
+#fields-dialog .fields-ledger-header{position:sticky;top:0;display:flex;align-items:center;justify-content:space-between;gap:16px;background:#18231c;z-index:1;padding:14px 22px;border-bottom:1px solid #40503d}
+#fields-dialog .fields-ledger-header h2{margin:0;font-size:21px}
+#fields-dialog .fields-ledger-header button{min-height:44px;min-width:60px;margin:0;flex-shrink:0}
+#fields-ledger-content{padding:0 22px 28px}
+.fields-ledger-intro{padding:20px 0 12px}.fields-ledger-intro h3{font-size:24px;margin:6px 0;color:#efe6c9}.fields-ledger-intro p{margin:4px 0}
+.fields-ledger-section{padding:18px 0;border-top:1px solid #40503d}.fields-ledger-section h3{font-size:16px;color:#e0d3a0;margin:0 0 12px}.fields-ledger-section ul{padding-left:20px;margin:8px 0}.fields-ledger-section li{margin:7px 0}
+.fields-ledger-stats,.fields-ledger-attributes{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin:0 0 14px}.fields-ledger-stats>div,.fields-ledger-attributes>div{background:#223127;border-radius:8px;padding:10px}.fields-ledger-stats dt,.fields-ledger-attributes dt{font-size:12px;color:#b5c0a8}.fields-ledger-stats dd,.fields-ledger-attributes dd{margin:3px 0 0;font-size:18px;color:#f2ead1;font-variant-numeric:tabular-nums}
+.fields-ledger-vitals{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-bottom:14px}.fields-ledger-vitals p{margin:0;font-size:14px}.fields-ledger-vitals progress{width:100%;height:9px;accent-color:#8aa777}.fields-ledger-vitals .fields-mp progress{accent-color:#80a9be}
+.fields-ledger-receipt{border-left:2px solid #899b70;padding:1px 10px;margin:12px 0;background:#1e2c22}.fields-ledger-receipt ul{padding-left:16px}
+@media(max-width:480px){#fields-dialog.fields-ledger{border-radius:0;border-left:0}#fields-ledger-content{padding:0 16px 24px}#fields-dialog .fields-ledger-header{padding:12px 16px}}

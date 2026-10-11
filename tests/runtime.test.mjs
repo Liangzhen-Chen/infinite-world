@@ -21,7 +21,7 @@ test('E2/E19 浏览器：失败对账阻止出站生成，编辑与删除同步�
     await page.route('**/runtime.js',route=>route.fulfill({contentType:'text/javascript',body:runtime}));
     await page.route('**/turn.mjs',async route=>route.fulfill({contentType:'text/javascript',body:await fs.readFile('extension/turn.mjs','utf8')}));
     await page.route('**/state-read.mjs',async route=>route.fulfill({contentType:'text/javascript',body:await fs.readFile('extension/state-read.mjs','utf8')}));
-    for(const name of ['tools.mjs','prompt.mjs','message-view.mjs'])await page.route(`**/${name}`,async route=>route.fulfill({contentType:'text/javascript',body:await fs.readFile(`extension/${name}`,'utf8')}));
+    for(const name of ['tools.mjs','prompt.mjs','message-view.mjs','ledger-view.mjs'])await page.route(`**/${name}`,async route=>route.fulfill({contentType:'text/javascript',body:await fs.readFile(`extension/${name}`,'utf8')}));
     await page.route('**/api/plugins/infinite-fields/**',async route=>{
         const request=route.request(),url=new URL(request.url());
         if(failReconcile&&url.pathname.endsWith('/reconcile'))return route.fulfill({status:400,json:{ok:false,error:'故意损坏的回放夹具'}});
@@ -87,7 +87,16 @@ test('E2/E19 浏览器：失败对账阻止出站生成，编辑与删除同步�
     const failed=await page.evaluate(()=>window.infiniteFieldsV2.execute('world_trade',{seller:'林穗',item:'item_bread',quantity:999999},'bad-ui'));
     assert.equal(failed.ok,false);assert.match(await page.locator('#fields-error').innerText(),/操作未完成/);
     assert.equal(await page.evaluate(()=>window.infiniteFieldsV2.view.document.state.player.coins),174);
+    await page.getByRole('button',{name:'世界账本',exact:true}).click();
+    assert.match(await page.locator('#fields-ledger-content').innerText(),/174 铜/);
+    assert.match(await page.locator('.fields-ledger-recent').innerText(),/钱袋 -6铜，现有 174/);
+    assert.doesNotMatch(await page.locator('#fields-ledger-content').innerText(),/npc_hw_|bld_hw_|item_staff|fields_anchor|过期缓存/);
     await page.evaluate(()=>window.infiniteFieldsV2.reconcile('regenerate',{},false));
+    assert.match(await page.locator('#fields-ledger-content').innerText(),/180 铜/);
+    assert.doesNotMatch(await page.locator('.fields-ledger-recent').innerText(),/钱袋 -6铜/);
+    await page.keyboard.press('Escape');
+    await page.locator('#fields-dialog').waitFor({state:'detached'});
+    assert.equal(await page.locator('#fields-dialog').count(),0);
     assert.equal(await page.locator('.fields-notices').count(),0);
     assert.equal(await page.evaluate(()=>window.infiniteFieldsV2.view.document.state.player.coins),180);
     const credit=await page.evaluate(()=>window.infiniteFieldsV2.execute('world_trade',{seller:'林穗',service:'住宿',payment:'credit',creditMinutes:60},'credit-ui'));
@@ -95,18 +104,36 @@ test('E2/E19 浏览器：失败对账阻止出站生成，编辑与删除同步�
     assert.match(await page.locator('.fields-notices').innerText(),/欠林穗 6铜 · 待偿还/);
     await page.getByRole('button',{name:'世界账本',exact:true}).click();
     assert.match(await page.locator('#fields-dialog').innerText(),/欠款：林穗 · 未还 6铜 · 待偿还/);
+    await fs.mkdir('logs/m6-ledger-ui',{recursive:true});
+    await page.setViewportSize({width:1440,height:900});
+    await page.screenshot({path:'logs/m6-ledger-ui/desktop.png'});
+    await page.setViewportSize({width:390,height:844});
+    assert.equal(await page.locator('#fields-dialog').evaluate(node=>node.scrollWidth<=node.clientWidth),true);
+    assert.equal(await page.locator('#fields-ledger-content').evaluate(node=>node.getBoundingClientRect().right<=innerWidth),true);
+    await page.screenshot({path:'logs/m6-ledger-ui/mobile-state.png'});
+    await page.locator('#fields-dialog').evaluate(node=>{node.scrollTop=node.scrollHeight;});
+    await page.evaluate(()=>new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve))));
+    await page.screenshot({path:'logs/m6-ledger-ui/mobile-changes.png'});
+    assert.equal(await page.getByRole('button',{name:'关闭',exact:true}).isVisible(),true);
     await page.getByRole('button',{name:'关闭',exact:true}).click();
+    await page.getByRole('button',{name:'世界账本',exact:true}).click();
+    assert.match(await page.locator('#fields-dialog').innerText(),/欠款：林穗 · 未还 6铜 · 待偿还/);
     await page.evaluate(()=>window.infiniteFieldsV2.execute('world_time',{minutes:60},'credit-wait-ui'));
     assert.match(await page.locator('.fields-notices').innerText(),/欠林穗 6铜 · 逾期/);
+    assert.match(await page.locator('#fields-ledger-content').innerText(),/欠款：林穗 · 未还 6铜 · 逾期/);
+    assert.match(await page.locator('.fields-ledger-recent').innerText(),/欠林穗 6铜 · 逾期/);
     await page.evaluate(()=>window.infiniteFieldsV2.refresh());
     assert.equal(await page.evaluate(()=>window.infiniteFieldsV2.view.document.state.player.coins),180);
     await page.evaluate(()=>window.infiniteFieldsV2.reconcile('regenerate',{},false));
     assert.equal(await page.locator('.fields-notices').count(),0);
+    assert.doesNotMatch(await page.locator('#fields-ledger-content').innerText(),/欠款：林穗/);
+    assert.match(await page.locator('.fields-ledger-recent').innerText(),/暂无已提交的变化/);
     // Opening an old chat must not silently migrate or save its metadata.
     await page.evaluate(async()=>{
         window.fixtureContext.chatId='old-chat';window.fixtureContext.chatMetadata={infinite_fields:{version:1,untouched:true}};
         window.savedMetadata=null;await window.infiniteFieldsV2.refresh();
     });
+    assert.equal(await page.locator('#fields-dialog').count(),0);
     assert.equal(await page.evaluate(()=>window.savedMetadata),null);
     assert.equal(await page.getByRole('button',{name:'在副本上启用新版'}).count(),1);
     assert.equal(await page.locator('.mes_reasoning_details').isVisible(),true);

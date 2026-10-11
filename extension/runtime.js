@@ -3,13 +3,14 @@ import { parseTurn, toolResultWithClock, lookupToolResult } from './turn.mjs';
 import { readStateSection } from './state-read.mjs';
 import { toolDefinitions } from './tools.mjs';
 import { renderMessages } from './message-view.mjs';
+import { renderLedger } from './ledger-view.mjs';
 import { isOutOfCharacter, injectToolExamples } from './prompt.mjs';
 const KEY='infinite_fields';
 const ctx=()=>getContext();
 const active=()=>ctx().characters[ctx().characterId]?.name==='无限原野·世界主持人';
 let view=null,loadedChat=null,blocked=null,chain=Promise.resolve(),mode='normal',turnStart=null;
 let indexedChat=null,indexedMessages=[];
-let labels={},feedback=[];
+let labels={},feedback=[],ledgerTime='';
 let reviewTurn=null;
 const reviewing=new WeakMap(),reviewEdits=new WeakMap();
 let historyModule=null;
@@ -29,10 +30,13 @@ async function persist(){
     ctx().chatMetadata[KEY]=view.reference;await ctx().saveChat();
 }
 function fail(error){
+    document.querySelector('#fields-dialog')?.remove();
     blocked=error.message;ctx().stopGeneration();
     document.querySelector('#fields-status')?.replaceChildren(document.createTextNode(`存档对账失败，生成已停止：${blocked}`));
 }
 function render(){
+    const book=document.querySelector('#fields-ledger-content');
+    if(book&&view)renderLedger(book,view.document.state,labels,feedback,ledgerTime);
     const pending=renderMessages(ctx(),labels,feedback);
     const box=document.querySelector('#fields-pending');if(!box)return;
     box.replaceChildren();box.hidden=!pending.length;
@@ -54,6 +58,7 @@ async function load(){
     if(!active()){view=null;loadedChat=null;return;}
     if(view&&loadedChat===ctx().chatId)return;
     reviewTurn=null;
+    document.querySelector('#fields-dialog')?.remove();
     const chatId=ctx().chatId,reference=ctx().chatMetadata[KEY];
     if(reference?.format!==2){view=null;loadedChat=chatId;labels={};feedback=[];blocked=null;turnStart=null;return;}
     const next=await api('read',{campaignId:reference.campaignId});
@@ -70,10 +75,11 @@ async function syncHistory(){
     indexedMessages=[...chat];
 }
 async function refresh(){
-    if(!active()){document.body.classList.remove('fields-play-active');ctx().setExtensionPrompt(KEY,'',1,0);document.querySelector('#fields-toolbar')?.remove();return;}
+    if(!active()){document.querySelector('#fields-dialog')?.remove();document.body.classList.remove('fields-play-active');ctx().setExtensionPrompt(KEY,'',1,0);document.querySelector('#fields-toolbar')?.remove();return;}
     await load();
     document.body.classList.toggle('fields-play-active',!!view);
     if(!view){
+        document.querySelector('#fields-dialog')?.remove();
         ctx().setExtensionPrompt(KEY,'',1,0);
         document.querySelector('#fields-toolbar')?.remove();
         const bar=document.createElement('div');bar.id='fields-toolbar';
@@ -91,6 +97,7 @@ async function refresh(){
     const query=document.querySelector('#send_textarea')?.value||[...ctx().chat].reverse().find(message=>message.is_user)?.mes||'';
     const scene=await api('scene',{campaignId:view.reference.campaignId,query});
     labels=scene.labels??{};
+    ledgerTime=scene.scene.split('\n')[0].replace('【时间】','');
     feedback=(await api('feedback',{campaignId:view.reference.campaignId})).events;
     ctx().setExtensionPrompt(KEY,scene.scene,1,0,false,0);
     let bar=document.querySelector('#fields-toolbar');
@@ -145,21 +152,16 @@ for(const definition of toolDefinitions()){
   }});
 }
 function showBook(){
-    const dialog=document.createElement('dialog');dialog.id='fields-dialog';const title=document.createElement('h2');title.textContent='世界账本';dialog.append(title);
-    const close=document.createElement('button');close.textContent='关闭';close.onclick=()=>{dialog.close();dialog.remove();};dialog.append(close);
-    const state=view.document.state,p=state.player,name=id=>labels[id]??'未命名对象';
-    const lines=[`${p.name} · ${p.level}级 · ${p.status}`,`钱袋：${p.coins}铜`,
-        `生命：${p.hp}/${p.maxHp}　魔力：${p.mp}/${p.maxMp}`,`经验：${p.xp}　待分配属性点：${p.freeAttributePoints??0}`,
-        Object.entries(p.attributes??{}).map(([key,value])=>`${key} ${value}`).join('　'),'行囊',
-        ...Object.entries(state.inventory).map(([id,item])=>`${name(id)} × ${item.quantity}${item.durability!==undefined?` · 耐久 ${item.durability}`:''}`),
-        ...Object.entries(state.skills??{}).map(([id,skill])=>`${name(id)} · 熟练度 ${skill.proficiency}`),
-        ...Object.values(state.records??{}).filter(row=>row.category==='debt'&&row.debtor==='player').map(row=>`欠款：${name(row.creditor)} · 未还 ${row.amount-row.paid}铜 · ${row.status}${row.status==='待偿还'?` · ${Math.max(0,row.deadline-state.minute)}分钟后到期`:''}`),
-        ...Object.values(state.records??{}).filter(row=>row.category==='contract'&&row.room&&row.parties?.includes('player')).map(row=>`住宿：${row.name} · ${row.status}${row.status==='有效'?` · ${Math.max(0,row.expires-state.minute)}分钟后到期`:''}`),
-        ...Object.values(state.obligations??{}).map(row=>`约定：${row.content} · ${row.status}`),
-        ...Object.values(state.quests??{}).map(row=>`任务：${row.content??row.name} · ${row.status}`)];
-    for(const line of lines){
-        const paragraph=document.createElement('p');paragraph.textContent=line;dialog.append(paragraph);
-    }
+    if(!view||blocked)return;
+    document.querySelector('#fields-dialog')?.remove();
+    const dialog=document.createElement('dialog');dialog.id='fields-dialog';dialog.className='fields-ledger';dialog.setAttribute('aria-labelledby','fields-ledger-title');
+    const header=document.createElement('header');header.className='fields-ledger-header';
+    const title=document.createElement('h2');title.id='fields-ledger-title';title.textContent='世界账本';
+    const close=document.createElement('button');close.textContent='关闭';close.onclick=()=>dialog.close();
+    dialog.addEventListener('close',()=>dialog.remove());
+    header.append(title,close);dialog.append(header);
+    const content=document.createElement('div');content.id='fields-ledger-content';dialog.append(content);
+    renderLedger(content,view.document.state,labels,feedback,ledgerTime);
     document.body.append(dialog);dialog.showModal();
 }
 async function ensureReviewTurn(){

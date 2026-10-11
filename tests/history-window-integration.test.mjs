@@ -48,7 +48,7 @@ test('原生生成拦截器只裁当前请求副本，不隐藏原文或修改�
  const server=await createPlaytestServer({consistencyEnabled:false});t.after(()=>server.close());const row=await campaign(server),browser=await chromium.launch({executablePath:'C:/Program Files/Google/Chrome/Application/chrome.exe',headless:true});t.after(()=>browser.close());const page=await browser.newPage();
  const runtime=(await fs.readFile('extension/runtime.js','utf8')).replace("import { getContext } from '../../../extensions.js';",'const getContext=()=>window.fixtureContext;');
  await page.route('**/runtime.js',route=>route.fulfill({contentType:'text/javascript',body:runtime}));
- for(const name of ['turn.mjs','state-read.mjs','tools.mjs','prompt.mjs','message-view.mjs','history-window.mjs'])await page.route(`**/${name}`,async route=>route.fulfill({contentType:'text/javascript',body:await fs.readFile(`extension/${name}`,'utf8')}));
+ for(const name of ['turn.mjs','state-read.mjs','tools.mjs','prompt.mjs','message-view.mjs','ledger-view.mjs','history-window.mjs'])await page.route(`**/${name}`,async route=>route.fulfill({contentType:'text/javascript',body:await fs.readFile(`extension/${name}`,'utf8')}));
  await page.route('**/api/plugins/infinite-fields/**',async route=>{
   const endpoint=new URL(route.request().url()).pathname.split('/infinite-fields/')[1];try{await route.fulfill({json:await server.api(endpoint,JSON.parse(route.request().postData()))});}catch(error){await route.fulfill({status:400,json:{ok:false,error:error.message}});}
  });
