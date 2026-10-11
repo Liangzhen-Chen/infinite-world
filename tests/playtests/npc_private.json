@@ -89,6 +89,11 @@
       "input": "我问吴朔：你亲眼看见我刚才在酒馆做了什么吗？我还没把事情告诉他。",
       "assertions": [
         {
+          "kind": "equals",
+          "path": "state.npcs.npc_hw_wushuo.location",
+          "value": "loc_hw_northwood"
+        },
+        {
           "kind": "records",
           "path": "state.npcs.npc_hw_wushuo.memoryStream",
           "where": {
@@ -108,6 +113,11 @@
     {
       "input": "我再问吴朔：我有没有欠老板娘钱，欠了多少、约好何时还？如果不知道就直说。",
       "assertions": [
+        {
+          "kind": "equals",
+          "path": "state.npcs.npc_hw_wushuo.location",
+          "value": "loc_hw_northwood"
+        },
         {
           "kind": "records",
           "path": "state.npcs.npc_hw_wushuo.memoryStream",
