@@ -1,0 +1,173 @@
+{
+  "id": "npc_wt_shiqiao",
+  "fingerprint": "da73adf78d3975d2e8fec85c0f52ff8cfe04abe9ae7b43906c1af1fe4b4e4bc8",
+  "status": "passed",
+  "attempts": 1,
+  "draft": {
+    "id": "npc_wt_shiqiao",
+    "contract": "audit-patch-v1",
+    "patches": [
+      {
+        "path": "knowledge.known[1]",
+        "value": {
+          "fact": "我在施峤户居处居住；家里的施珏是我的女儿。",
+          "source": "bld_wt_home_09",
+          "reliability": "日常亲历"
+        }
+      },
+      {
+        "path": "knowledge.known[2]",
+        "value": {
+          "fact": "我做退下来的撑篙帮工，日常劳动处在浅汀岸口；眼下遇到的是家人不肯让自己靠岸看水。",
+          "source": "npc_wt_shiqiao",
+          "reliability": "本人亲历，问题尚未解决"
+        }
+      },
+      {
+        "path": "knowledge.unknown[0]",
+        "value": "施珏愿不愿陪自己从干岸看退水痕。"
+      },
+      {
+        "path": "knowledge.unknown[1]",
+        "value": "宾然希望自己看水后何时回家吃饭。"
+      },
+      {
+        "path": "voice.register",
+        "value": "讲水纹缓慢温厚，谈出门安排却容易固执。"
+      },
+      {
+        "path": "goals.short[0].steps[0].content",
+        "value": "请施珏陪看一处干稳落脚点，不再独走湿边。"
+      },
+      {
+        "path": "goals.mid[0].steps[0].content",
+        "value": "与家人约出门和回屋时刻，说明只停在干岸。"
+      },
+      {
+        "path": "goals.long[0].steps[0].content",
+        "value": "回家讲清今天看水的位置，询问家人哪段路仍放心不下。"
+      },
+      {
+        "path": "relationships[0].note",
+        "value": "施珏是家里的女儿；谨慎/固执，这件事还需要彼此听完再商量。"
+      },
+      {
+        "path": "relationships[1].note",
+        "value": "宾然是家里的配偶；安静/多虑，这件事还需要彼此听完再商量。"
+      },
+      {
+        "path": "relationships[2].note",
+        "value": "荣晓是家里的外孙女；善问/怕黑，这件事还需要彼此听完再商量。"
+      },
+      {
+        "path": "memorySeeds[2]",
+        "value": {
+          "id": "memory_wt_depth_group_2",
+          "event": "施峤、柯荔、杜珂和刘燕在汀口记事屋外谈过岸边的活。施峤要在干稳处看水，柯荔复述割苇和捆苇的分工，杜珂问菜床外木件转弯的空处，刘燕指出脚步不能压苗边。那次只是相互说明，没有允诺工时或通行范围。",
+          "location": "bld_wt_hall",
+          "salience": 4,
+          "knownBy": [
+            "npc_wt_shiqiao",
+            "npc_wt_keli",
+            "npc_wt_duke",
+            "npc_wt_liuyan"
+          ],
+          "reliability": "共同亲历；未解决的分歧仍待各户核对"
+        }
+      }
+    ]
+  },
+  "review": {
+    "contradictions": []
+  },
+  "errors": [],
+  "warnings": [],
+  "feedback": null,
+  "draftResponse": {
+    "id": "aceb14ea-b663-40d5-8612-1c32e198eb92",
+    "object": "chat.completion",
+    "created": 1791762556,
+    "model": "deepseek-flash",
+    "choices": [
+      {
+        "index": 0,
+        "message": {
+          "role": "assistant",
+          "content": "{\"id\":\"npc_wt_shiqiao\",\"contract\":\"audit-patch-v1\",\"patches\":[{\"path\":\"knowledge.known[1]\",\"value\":{\"fact\":\"我在施峤户居处居住；家里的施珏是我的女儿。\",\"source\":\"bld_wt_home_09\",\"reliability\":\"日常亲历\"}},{\"path\":\"knowledge.known[2]\",\"value\":{\"fact\":\"我做退下来的撑篙帮工，日常劳动处在浅汀岸口；眼下遇到的是家人不肯让自己靠岸看水。\",\"source\":\"npc_wt_shiqiao\",\"reliability\":\"本人亲历，问题尚未解决\"}},{\"path\":\"knowledge.unknown[0]\",\"value\":\"施珏愿不愿陪自己从干岸看退水痕。\"},{\"path\":\"knowledge.unknown[1]\",\"value\":\"宾然希望自己看水后何时回家吃饭。\"},{\"path\":\"voice.register\",\"value\":\"讲水纹缓慢温厚，谈出门安排却容易固执。\"},{\"path\":\"goals.short[0].steps[0].content\",\"value\":\"请施珏陪看一处干稳落脚点，不再独走湿边。\"},{\"path\":\"goals.mid[0].steps[0].content\",\"value\":\"与家人约出门和回屋时刻，说明只停在干岸。\"},{\"path\":\"goals.long[0].steps[0].content\",\"value\":\"回家讲清今天看水的位置，询问家人哪段路仍放心不下。\"},{\"path\":\"relationships[0].note\",\"value\":\"施珏是家里的女儿；谨慎/固执，这件事还需要彼此听完再商量。\"},{\"path\":\"relationships[1].note\",\"value\":\"宾然是家里的配偶；安静/多虑，这件事还需要彼此听完再商量。\"},{\"path\":\"relationships[2].note\",\"value\":\"荣晓是家里的外孙女；善问/怕黑，这件事还需要彼此听完再商量。\"},{\"path\":\"memorySeeds[2]\",\"value\":{\"id\":\"memory_wt_depth_group_2\",\"event\":\"施峤、柯荔、杜珂和刘燕在汀口记事屋外谈过岸边的活。施峤要在干稳处看水，柯荔复述割苇和捆苇的分工，杜珂问菜床外木件转弯的空处，刘燕指出脚步不能压苗边。那次只是相互说明，没有允诺工时或通行范围。\",\"location\":\"bld_wt_hall\",\"salience\":4,\"knownBy\":[\"npc_wt_shiqiao\",\"npc_wt_keli\",\"npc_wt_duke\",\"npc_wt_liuyan\"],\"reliability\":\"共同亲历；未解决的分歧仍待各户核对\"}}]}"
+        },
+        "logprobs": null,
+        "finish_reason": "stop"
+      }
+    ],
+    "usage": {
+      "prompt_tokens": 7436,
+      "completion_tokens": 575,
+      "total_tokens": 8011,
+      "prompt_tokens_details": {
+        "cached_tokens": 0
+      },
+      "prompt_cache_hit_tokens": 0,
+      "prompt_cache_miss_tokens": 7436
+    },
+    "system_fingerprint": "aeb56401ca74e127821c4f9126dcb669",
+    "measurement": {
+      "label": "content-sourced-npc_wt_shiqiao-draft0",
+      "model": "deepseek-flash",
+      "thinking": "disabled",
+      "usage": {
+        "prompt_tokens": 7436,
+        "completion_tokens": 575,
+        "total_tokens": 8011,
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        },
+        "prompt_cache_hit_tokens": 0,
+        "prompt_cache_miss_tokens": 7436
+      },
+      "costUpperYuan": 0.019472,
+      "cumulativeUpperYuan": 3.2544444799999983,
+      "latencyMs": 2514.159399999997,
+      "timestamp": "2026-10-11T23:49:19.689Z"
+    }
+  },
+  "measurements": [
+    {
+      "label": "content-sourced-npc_wt_shiqiao-draft0",
+      "model": "deepseek-flash",
+      "thinking": "disabled",
+      "usage": {
+        "prompt_tokens": 7436,
+        "completion_tokens": 575,
+        "total_tokens": 8011,
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        },
+        "prompt_cache_hit_tokens": 0,
+        "prompt_cache_miss_tokens": 7436
+      },
+      "costUpperYuan": 0.019472,
+      "cumulativeUpperYuan": 3.2544444799999983,
+      "latencyMs": 2514.159399999997,
+      "timestamp": "2026-10-11T23:49:19.689Z"
+    },
+    {
+      "label": "content-sourced-npc_wt_shiqiao-review0",
+      "model": "deepseek-flash",
+      "thinking": "disabled",
+      "usage": {
+        "prompt_tokens": 14441,
+        "completion_tokens": 7,
+        "total_tokens": 14448,
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        },
+        "prompt_cache_hit_tokens": 0,
+        "prompt_cache_miss_tokens": 14441
+      },
+      "costUpperYuan": 0.028938,
+      "cumulativeUpperYuan": 3.2833824799999984,
+      "latencyMs": 997.8682999999946,
+      "timestamp": "2026-10-11T23:49:20.695Z"
+    }
+  ]
+}
