@@ -54,7 +54,7 @@ export function recordNpcMemories(d,engine,before,tool,args,detail,eventId){
         add('permission',`${name(permit.grantor)}${permit.revoked?'收回':'给予'}${name('player')}进入${name(permit.subject)}的拜访许可`,['player',permit.grantor],{salience:3,observers:[],private:true});
     }else if(tool==='quest'&&detail.quest){
         const quest=after.quests[detail.quest];
-        if(quest?.taker==='player')add('quest',`${name('player')}参与的委托“${quest.content??quest.name}”现为${quest.status}`,['player',quest.publisher],{salience:3,observers:[]});
+        if(quest?.taker==='player')add('quest',`${name('player')}参与的委托“${quest.content??quest.name}”现为${quest.status}`,['player',quest.publisher],{salience:3,observers:[],private:true});
     }
     for(const [id,obligation]of Object.entries(after.obligations??{})){
         const old=before.obligations?.[id];if(old?.status===obligation.status)continue;
