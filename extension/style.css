@@ -2,3 +2,5 @@
 .fields-notices,#fields-pending{border-left:2px solid #899b70;margin:10px 0 4px;padding:4px 10px;color:#d3dec4;font-size:.9em;line-height:1.5}.fields-notices p,#fields-pending p{margin:2px 0}#fields-pending,#fields-error{flex-basis:100%}#fields-error{color:#ffd5b3;padding:5px 0}.mes[hidden],#fields-pending[hidden],#fields-error[hidden]{display:none!important}
 /* Keep model reasoning out of the game view, including messages still streaming. */
 body.fields-play-active #chat .mes_reasoning_details{display:none!important}
+
+.fields-consistency-notice{border-left:2px solid #c19d63;margin:8px 0 4px;padding:4px 10px;color:#e5cba2;font-size:.85em;line-height:1.5}.fields-consistency-blocked{border-left-color:#d48b79;color:#f0bdad}

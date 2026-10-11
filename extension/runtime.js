@@ -11,7 +11,7 @@ let view=null,loadedChat=null,blocked=null,chain=Promise.resolve(),mode='normal'
 let indexedChat=null,indexedMessages=[];
 let labels={},feedback=[];
 let reviewTurn=null;
-const reviewing=new WeakMap();
+const reviewing=new WeakMap(),reviewEdits=new WeakMap();
 let historyModule=null;
 const api=async(endpoint,body={})=>{
     const response=await fetch(`/api/plugins/infinite-fields/${endpoint}`,{method:'POST',headers:ctx().getRequestHeaders(),body:JSON.stringify(body)});
@@ -213,7 +213,12 @@ async function onDeleted(){
     if(!active())return;return queue(async()=>{try{await load();if(!view)return;view=await api('reconcile',{campaignId:view.reference.campaignId,validAnchors:validAnchors()});await persist();await refresh();}catch(error){fail(error);}});
 }
 async function onEdited(index){
-    const message=ctx().chat[index];if(!active()||!message?.is_user)return;
+    const message=ctx().chat[index];if(!active()||!message)return;
+    if(!message.is_user){
+        reviewEdits.set(message,(reviewEdits.get(message)??0)+1);
+        if(message.extra?.fields_consistency){delete message.extra.fields_consistency;await ctx().saveChat();}
+        render();return;
+    }
     await load();if(!view)return;
     for(let i=index;i<ctx().chat.length;i++){ctx().chat[i].extra??={};ctx().chat[i].extra.fields_invalidated=true;}
     message.extra.fields_anchor=crypto.randomUUID();message.extra.fields_invalidated=false;
@@ -227,14 +232,17 @@ async function afterReply(index){
     if(reviewing.has(message))return reviewing.get(message);
     const pending=(async()=>{
         const user=[...ctx().chat].reverse().find(message=>message.is_user),session=reviewTurn,chatId=ctx().chatId;
+        let reviewedText=message.mes;const editVersion=reviewEdits.get(message)??0;
+        const replyUnchanged=()=>ctx().chat[index]===message&&message.mes===reviewedText&&!message.extra?.fields_invalidated&&(reviewEdits.get(message)??0)===editVersion;
         const prose=document.querySelector(`.mes[mesid="${index}"] .mes_text`);if(prose)prose.hidden=true;
         message.extra??={};
         try{
             if(!session||session.chatId!==chatId||session.anchor!==anchor())throw new Error('本轮审查快照缺失，尾注未提交');
             const review=await api('review/reply',{campaignId:view.reference.campaignId,token:session.token,draft:message.mes,query:user?.mes??'',expectedSequence:view.reference.sequence});
+            if(!replyUnchanged())return;
             if(chatId!==ctx().chatId||session!==reviewTurn)throw new Error('审查期间聊天已切换，尾注未提交');
             message.extra.fields_consistency=review;
-            message.mes=review.text;
+            message.mes=review.text;reviewedText=message.mes;
             if(Array.isArray(message.swipes)&&Number.isInteger(message.swipe_id))message.swipes[message.swipe_id]=message.mes;
             ctx().updateMessageBlock?.(index,message);
             if(!review.canCommit){actionError(review.feedback);await ctx().saveChat();render();return;}
@@ -247,7 +255,7 @@ async function afterReply(index){
             message.extra.fields_turn={valid:parsed.valid,warning:parsed.warning??null};
             if(review.feedback)actionError(review.feedback);
             await ctx().saveChat();render();
-        }catch(error){message.extra.fields_consistency={status:'unverified',verified:false,original:message.mes,feedback:error.message};if(chatId===ctx().chatId){actionError(`回复未验证：${error.message}。已完成的行动保留。`);await ctx().saveChat();render();}}
+        }catch(error){if(!replyUnchanged())return;message.extra.fields_consistency={status:'unverified',verified:false,canCommit:false,original:message.mes,feedback:error.message};if(chatId===ctx().chatId){actionError(`回复未验证：${error.message}。已完成的行动保留。`);await ctx().saveChat();render();}}
         finally{if(prose)prose.hidden=false;}
     })();reviewing.set(message,pending);return pending;
 }

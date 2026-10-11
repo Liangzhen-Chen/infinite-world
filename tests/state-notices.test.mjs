@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {stateNotices}from'../server-plugin/state-notices.mjs';
-import {messageFeedback,visibleReply}from'../extension/message-view.mjs';
+import {messageFeedback,visibleReply,consistencyNotice}from'../extension/message-view.mjs';
 
 test('状态反馈包含玩家可见变化，不泄露幸运、NPC私产或其他人的效果',()=>{
     const before={player:{coins:12,hp:10,maxHp:10,mp:3,maxMp:5,attributes:{力量:10}},inventory:{staff:{quantity:1,durability:10}},npcs:{npc:{coins:100,trust:0,affection:0}},effects:{light:{target:'staff',spell:'light'}},pets:{},skills:{},records:{},minute:0};
@@ -21,4 +21,14 @@ test('反馈挂在对应回合最后一条叙述，跳过工具消息，撤销�
     assert.equal(messageFeedback(chat,[]).messages.size,0);
     chat[0].extra.fields_invalidated=true;assert.equal(messageFeedback(chat,events).messages.size,0);
     assert.equal(visibleReply('<q who="npc">你好。</q><回合 额外="0分" 地点="酒馆"/>',{npc:'林穗'}),'林穗：你好。');
+});
+
+test('每条回复审稿仅显示安全状态，已改正文或作废消息不沿用旧结果',()=>{
+ const message={mes:'柜台前的谈话。',extra:{fields_consistency:{status:'issues',verified:true,canCommit:true,text:'柜台前的谈话。',issues:[{severity:'warning',reason:'私密凭据 token=secret npc_private'}],feedback:'prompt内部证据'}}};
+ assert.equal(consistencyNotice(message).kind,'review');assert.doesNotMatch(consistencyNotice(message).text,/secret|token|npc_|prompt/);
+ const n=structuredClone(message);n.extra.fields_consistency.status='unverified';n.extra.fields_consistency.verified=false;assert.equal(consistencyNotice(n).kind,'unverified');n.extra.fields_consistency.canCommit=false;assert.equal(consistencyNotice(n).kind,'blocked');assert.match(consistencyNotice(n).text,/未验证.*收尾已暂停/);
+ n.mes='用户修改过正文';assert.equal(consistencyNotice(n),null);n.mes=message.mes;n.extra.fields_invalidated=true;assert.equal(consistencyNotice(n),null);
+ for(const change of [m=>m.is_user=true,m=>m.is_system=true,m=>m.extra.tool_invocations=[{}],m=>delete m.extra.fields_consistency.text]){const value=structuredClone(message);change(value);assert.equal(consistencyNotice(value),null);}
+ const good=structuredClone(message);good.extra.fields_consistency={status:'verified',verified:true,canCommit:true,text:good.mes,issues:[]};assert.equal(consistencyNotice(good),null);
+ const caught={mes:'正文',extra:{fields_consistency:{status:'unverified',verified:false,canCommit:false,original:'正文'}}};assert.equal(consistencyNotice(caught).kind,'blocked');
 });
