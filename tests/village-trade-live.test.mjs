@@ -300,8 +300,8 @@ test.after(async () => {
                 })),
             })),
         };
-        await fs.mkdir(path.dirname(process.env.T23_REPORT), {recursive: true});
-        await fs.writeFile(process.env.T23_REPORT, JSON.stringify(output, null, 2) + '\n');
+        await fs.mkdir(new URL('../docs/测试报告/最新/', import.meta.url), {recursive: true});
+        await fs.writeFile(new URL('../docs/测试报告/最新/T23-trade-live.json', import.meta.url), JSON.stringify(output, null, 2) + '\n');
     }
 });
 
