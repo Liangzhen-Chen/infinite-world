@@ -97,7 +97,11 @@ test('E10 路线计时与随行，E11 回合尾注只补未结算时间',async()
 });
 test('带路承诺创建同行者，玩家移动后 NPC 一同抵达并完成义务',async()=>{
     let c=fresh();c.state.location='loc_hw_northwood';
-    c=(await run(c,'world_promise',{promisor:'吴朔',type:'带路',destination:'北林废观测塔',content:'带去塔下'},'guide')).document;
+    const before=structuredClone(c),promised=await run(c,'world_promise',{promisor:'吴朔',type:'带路',destination:'北林废观测塔',content:'带去塔下'},'guide');c=promised.document;
+    const planned=engine.route(before.state.location,'site_beilin_tower','walk',before.state.minute,before.randomSeed);
+    assert.equal(promised.result.routePreview.minutes,planned.minutes);assert.equal(promised.result.routePreview.estimate,true);
+    assert.equal(promised.result.routePreview.calculatedAt,before.state.minute);assert.equal(c.state.minute,before.state.minute);
+    assert.deepEqual(c.state.inventory,before.state.inventory);assert.equal(c.state.player.coins,before.state.player.coins);
     assert.ok(c.state.player.companions.includes('npc_hw_wushuo'));
     c=(await run(c,'world_move',{destination:'北林废观测塔'},'travel')).document;
     assert.equal(c.state.npcs.npc_hw_wushuo.location,'site_beilin_tower');assert.equal(c.state.obligations.obl_guide.status,'已完成');
