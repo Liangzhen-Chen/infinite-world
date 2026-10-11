@@ -1,0 +1,58 @@
+{
+  "index": 0,
+  "fingerprint": "ad9dcfc64986c5f6e83c7552d238ca5c0bc6e4d370d55601e9f39bac57465fe0",
+  "count": 25,
+  "passed": 22,
+  "ids": [
+    "npc_yp_zhaofeng",
+    "npc_yp_qiaoduan",
+    "npc_yp_wenxu",
+    "npc_yp_jiangmi",
+    "npc_yp_hanpei",
+    "npc_yp_zhusheng",
+    "npc_yp_qinli",
+    "npc_yp_gaoxin",
+    "npc_yp_taozi",
+    "npc_yp_luxia",
+    "npc_yp_panju",
+    "npc_yp_renbo",
+    "npc_yp_caoyun",
+    "npc_yp_xunhe",
+    "npc_yp_yinrong",
+    "npc_yp_weichi",
+    "npc_yp_genglu",
+    "npc_yp_xicun",
+    "npc_yp_miaopu",
+    "npc_yp_baoyin",
+    "npc_yp_fengya",
+    "npc_yp_shiling",
+    "npc_yp_shaoruo",
+    "npc_yp_lingwan",
+    "npc_yp_kongfu"
+  ],
+  "rewritten": 15,
+  "manual": [
+    "npc_yp_weichi",
+    "npc_yp_xicun",
+    "npc_yp_kongfu"
+  ],
+  "pending": [],
+  "flagged": [
+    "npc_yp_weichi",
+    "npc_yp_kongfu"
+  ],
+  "sample": [
+    "npc_yp_miaopu",
+    "npc_yp_shaoruo",
+    "npc_yp_gaoxin",
+    "npc_yp_fengya",
+    "npc_yp_hanpei"
+  ],
+  "l4": {
+    "approved": false,
+    "notes": []
+  },
+  "costUpperYuan": 2.398130959999999,
+  "manualRatio": 0.12,
+  "needsSystemicRepair": true
+}
