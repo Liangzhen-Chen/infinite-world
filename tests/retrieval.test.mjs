@@ -1,6 +1,13 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { EntityResolver, MemoryIndex, validateMemory } from '../server-plugin/retrieval.mjs';
+import fs from 'node:fs/promises';
+import os from 'node:os';
+import path from 'node:path';
+import {once} from 'node:events';
+import express from 'express';
+import {loadWorld} from '../tools/load-world.mjs';
+import {init} from '../server-plugin/index.mjs';
 const entities = [{ id: 'npc_hw_linsui', name: '林穗', aliases: ['林穗姐', '老板娘', '林老板', '穗姐'], scope: 'loc_hw' }];
 const make = () => {
     const index = new MemoryIndex({ entities });
@@ -55,4 +62,32 @@ test('不精确物品名只推荐同类候选，短实物名称不被工序册�
         assert.doesNotMatch(error.message,/recipe_oats/);
         return true;
     });
+});
+
+test('world_search 真实HTTP入口检索四村公开资料，获知前不返回传闻，查询不改世界',async t=>{
+    const world=await loadWorld(),original=structuredClone(world),root=await fs.mkdtemp(path.join(os.tmpdir(),'fields-village-search-'));
+    t.after(()=>fs.rm(root,{recursive:true,force:true}));
+    const app=express();app.use(express.json());const router=express.Router();
+    await init(router,{baseRoot:root,world,npcPlanningEnabled:false,consistencyEnabled:false});app.use(router);
+    const server=app.listen(0,'127.0.0.1');await once(server,'listening');t.after(()=>{server.closeAllConnections();server.close();});
+    const request=async(endpoint,body)=>{const res=await fetch(`http://127.0.0.1:${server.address().port}${endpoint}`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});const result=await res.json();assert.equal(res.status,200,result.error);return result;};
+    const created=await request('/create',{character:{name:'未访四村的旅人'}}),campaignId=created.reference.campaignId,before=await request('/read',{campaignId});
+    for(const profile of world.settlementProfiles.filter(p=>p.details)){
+        const p=profile.details;
+        for(const [query,key]of [['公共燕麦田年粮产量','production_0'],['公共粮仓当前库存','current'],['村级头人执法权限','governance'],[p.problems[0].title,`issue_${p.problems[0].id}`],['集市赶集日','market'],[p.calendar.festivals[0].name,'festival_0']]){
+            const result=await request('/search',{campaignId,query:`${p.name}${query}`});
+            assert.ok(result.results.some(row=>row.id===`settlement_${p.id}_${key}`),`${p.name}${query}`);
+        }
+        const unknown=await request('/search',{campaignId,query:`${p.name}传闻 ${p.rumors[0].claim}`,limit:12});
+        for(const r of p.rumors){assert.ok(unknown.results.every(row=>!row.text.includes(r.fact)&&!row.text.includes(r.claim)));}
+        assert.ok(unknown.results.every(row=>!row.text.includes(p.hiddenPlaces[0].detail)&&!row.text.includes(p.problems[0].options[0].proposal)));
+    }
+    assert.deepEqual(await request('/read',{campaignId}),before);assert.deepEqual(world,original);
+    const profile=world.settlementProfiles.find(p=>p.details),rumor=profile.details.rumors[0],source=world.npcs.find(p=>p.id===rumor.source).name;
+    const chat=[{name:source,is_user:false,mes:`${source}对我说：“${rumor.claim}”` }];
+    const acquired=await request('/search',{campaignId,query:rumor.claim,chat,limit:12});
+    const spoken=acquired.results.find(row=>row.id==='chat_0');assert.ok(spoken);assert.match(spoken.text,new RegExp(source));assert.ok(spoken.text.includes(rumor.claim));assert.equal(spoken.text.includes(rumor.fact),false);
+    assert.ok(acquired.results.filter(row=>row.id.startsWith('settlement_')).every(row=>!row.text.includes(rumor.claim)));
+    const forgotten=await request('/search',{campaignId,query:rumor.claim,chat:[],limit:12});assert.ok(forgotten.results.every(row=>row.id!=='chat_0'));
+    assert.deepEqual(await request('/read',{campaignId}),before);assert.deepEqual(world,original);
 });

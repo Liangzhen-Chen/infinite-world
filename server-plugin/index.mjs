@@ -68,12 +68,13 @@ export async function init(router,{ world=null, baseRoot=null, newCampaignSeed=r
             const old=indexes.get(key),next=new MemoryIndex({entities:selectedEngine.entities});
             next.entityIdentity=identity;
             if(old){
-                for(const record of old.documents.values())if(!record.id.startsWith('chat_')&&!record.id.startsWith('memory_')&&!record.id.startsWith('lore_'))next.upsert({...record,revision:undefined});
+                for(const record of old.documents.values())if(!record.id.startsWith('chat_')&&!record.id.startsWith('memory_')&&!record.id.startsWith('lore_')&&!record.id.startsWith('settlement_'))next.upsert({...record,revision:undefined});
                 next.syncChat(old.chatMessages);
             }
             indexes.set(key,next);
         }
         const index=indexes.get(key),wanted=new Set();
+        index.syncSettlements(selectedEngine.world,document);
         for(const row of publicLoreEntries(selectedEngine.world))index.upsert({
             id:`lore_${row.id}`,text:`${row.name}：${row.description}`,source:'公开世界设定',entities:[row.id,...row.references??[]],
             keywords:row.aliases??[],salience:2,revision:digest(row)});

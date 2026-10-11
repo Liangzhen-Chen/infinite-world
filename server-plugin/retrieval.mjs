@@ -1,5 +1,6 @@
 import * as OpenCC from 'opencc-js';
 import {RETRIEVAL_DICTIONARY,expandRetrievalText,prepareRetrievalRecord,isSystemMemoryText} from './retrieval-lexicon.mjs';
+import {publicSettlementEntries} from './settlement-profile.mjs';
 const convert = OpenCC.Converter({ from: 'tw', to: 'cn' });
 export const normalize = text => convert(String(text)).toLowerCase().replaceAll('帐', '账').normalize('NFKC');
 export function validateMemory(content) {
@@ -76,6 +77,13 @@ export class MemoryIndex {
         const document = { ...record, frequencies, length: terms.length, salience: record.salience ?? 3, minute: record.minute ?? 0 };
         this.documents.set(record.id, document); this.totalLength += terms.length;
         for (const term of frequencies.keys()) { const set = this.postings.get(term) ?? new Set(); set.add(record.id); this.postings.set(term, set); }
+    }
+    syncSettlements(world,document=null){
+        const wanted=new Set();
+        for(const row of publicSettlementEntries(world,document)){
+            wanted.add(row.id);this.upsert({...row,revision:JSON.stringify(row)});
+        }
+        for(const id of this.documents.keys())if(id.startsWith('settlement_')&&!wanted.has(id))this.remove(id);
     }
     syncChat(chat) {
         // Edits invalidate their message through editChat; ordinary refreshes
