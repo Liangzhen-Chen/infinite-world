@@ -19,7 +19,7 @@ test('浏览器 MESSAGE_RECEIVED 等待纯文字改写后再提交唯一尾注�
  const page=await browser.newPage(),endpoints=[];
  const runtime=(await fs.readFile('extension/runtime.js','utf8')).replace("import { getContext } from '../../../extensions.js';",'const getContext=()=>window.fixtureContext;');
  await page.route('**/runtime.js',route=>route.fulfill({contentType:'text/javascript',body:runtime}));
- for(const name of ['turn.mjs','state-read.mjs','tools.mjs','prompt.mjs','message-view.mjs'])await page.route(`**/${name}`,async route=>route.fulfill({contentType:'text/javascript',body:await fs.readFile(`extension/${name}`,'utf8')}));
+ for(const name of ['turn.mjs','state-read.mjs','tools.mjs','prompt.mjs','message-view.mjs','ledger-view.mjs'])await page.route(`**/${name}`,async route=>route.fulfill({contentType:'text/javascript',body:await fs.readFile(`extension/${name}`,'utf8')}));
  await page.route('**/api/plugins/infinite-fields/**',async route=>{
   const endpoint=new URL(route.request().url()).pathname.split('/infinite-fields/')[1],body=JSON.parse(route.request().postData());endpoints.push({endpoint,body});
   try{const result=await server.api(endpoint,body);if(endpoint==='review/reply'&&holdReviewReply)await holdReviewReply;await route.fulfill({json:result});}catch(error){await route.fulfill({status:400,json:{ok:false,error:error.message}});}
