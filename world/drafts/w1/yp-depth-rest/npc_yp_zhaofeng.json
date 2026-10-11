@@ -1,0 +1,15 @@
+{
+  "id": "npc_yp_zhaofeng",
+  "fingerprint": "2ac90e31a33bb6d979fb0c83bb18c3c9fae99f33eb5106bdc123186b8c854627",
+  "status": "manual",
+  "attempts": 3,
+  "draft": null,
+  "review": null,
+  "errors": [
+    "Expected values to be strictly deep-equal:\n+ actual - expected\n\n  {\n+   candidate: {\n+     contract: 'audit-patch-v1',\n+     id: 'npc_yp_zhaofeng',\n+     patches: [\n+       {\n+         path: 'opinions.neighbors[2].view',\n+         value: '雨后曾与乔端逐段核对低垄水痕；他要先对原簿，她要先止住沟口受损，对先做哪件事尚有分歧。'\n+       }\n+     ]\n+   }\n-   contract: 'audit-patch-v1',\n-   id: 'npc_yp_zhaofeng',\n-   patches: [\n-     {\n-       path: 'opinions.neighbors[2].view',\n-       value: '雨后曾与乔端逐段核对低垄水痕；他要先对原簿，她要先止住沟口受损，对先做哪件事尚有分歧。'\n-     }\n-   ]\n  }\n"
+  ],
+  "warnings": [],
+  "feedback": [
+    "Expected values to be strictly deep-equal:\n+ actual - expected\n\n  {\n+   candidate: {\n+     contract: 'audit-patch-v1',\n+     id: 'npc_yp_zhaofeng',\n+     patches: [\n+       {\n+         path: 'opinions.neighbors[2].view',\n+         value: '雨后曾与乔端逐段核对低垄水痕；他要先对原簿，她要先止住沟口受损，对先做哪件事尚有分歧。'\n+       }\n+     ]\n+   }\n-   contract: 'audit-patch-v1',\n-   id: 'npc_yp_zhaofeng',\n-   patches: [\n-     {\n-       path: 'opinions.neighbors[2].view',\n-       value: '雨后曾与乔端逐段核对低垄水痕；他要先对原簿，她要先止住沟口受损，对先做哪件事尚有分歧。'\n-     }\n-   ]\n  }\n"
+  ]
+}
