@@ -151,6 +151,11 @@
     }
   ],
   "rubric": {
+    "blindVoice": {
+      "speakers": ["npc_hw_linsui", "npc_hw_hezhou", "npc_hw_shijin"],
+      "turns": [2, 6, 7],
+      "minimumPerSpeaker": 2
+    },
     "truth": "本人经历须有正式人物资料或真实事件依据，不编造玩家过去的帮助。",
     "agency": "讨论椅子不执行制造，不擅自接取委托。",
     "language": "三人的用词、句式和关注点须符合各自正式档案；避免轮流使用同一模板。",

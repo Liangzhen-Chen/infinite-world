@@ -50,14 +50,26 @@
       "input": "我在白石镇停留整整十天。不购买、不接委托，也不替河湾的人作决定；十天过完才继续。",
       "assertions": [
         {
+          "kind": "equals",
+          "path": "state.location",
+          "value": "loc_bs"
+        },
+        {
+          "kind": "calls",
+          "tool": "world_move",
+          "min": 0,
+          "max": 0
+        },
+        {
           "kind": "elapsed",
           "min": 14400,
           "max": 14400
         },
         {
-          "kind": "records",
+          "kind": "newRecordsDuringTurn",
           "path": "state.npcAutonomy.actions",
           "where": {
+            "npc": "npc_hw_ayan",
             "kind": "craft"
           },
           "min": 1
@@ -130,6 +142,6 @@
     "truth": "叙述必须服从真实回执与账本；未知经历明确不知道，不能补造事件。",
     "agency": "不替玩家接受委托、替NPC凭空变更钱物，拒绝请求后仍可正常交谈。",
     "language": "简体中文，正文不出现工具、编号或内部提示。",
-    "continuity": "N17回来后自然提及阿砚真实自主工作至少一件，成败、材料、工坊费用须与记录一致。玩家离开时不能远程获知私有经历；不能把NPC工作说成玩家做的。"
+    "continuity": "N17回来后自然提及阿砚在离开等待期间新增的自主工作至少一件，按newRecordsDuringTurn的actual.records核对具体行动、spent.materials、spent.fee和outcome。规则自治和智能规划产生的真实行动均有效，不能用离开前的旧记录替代；制作失败可以如实讲述。玩家离开时不能远程获知私有经历；不能把NPC工作说成玩家做的。"
   }
 }
