@@ -5,6 +5,7 @@ import {approvedProfiles,validateDraft,contextFor} from '../tools/w1-village-pro
 import {depthBatches} from '../tools/npc-depth-content.mjs';
 import {publishVillages} from '../tools/publish-w1-villages.mjs';import {publicSettlement,settlementScene} from '../server-plugin/settlement-profile.mjs';
 import {catalogDefinition} from '../server-plugin/catalog.mjs';import {WorldEngine} from '../server-plugin/engine.mjs';
+import {MemoryIndex} from '../server-plugin/retrieval.mjs';
 const world=await loadWorld(),profiles=await approvedProfiles({world}),withProfiles={...world,settlementProfiles:world.settlementProfiles.map(p=>{const d=profiles.find(d=>d.id===p.id);return d?{...p,details:d,pendingProfileSections:d.pendingProfileSections}:p;})};
 const seed=JSON.parse(await fs.readFile('tests/fixtures/legacy/seed.json','utf8'));
 test('四村问题立场都有原当事人依据，经济/官职登记且传播缺口保留',()=>{
@@ -29,6 +30,28 @@ test('重复发布的审核上下文不引用自身档案，任意改稿不能�
  assert.deepEqual(await approvedProfiles({world:withProfiles}),profiles);
  const tmp=await fs.mkdtemp(path.join(os.tmpdir(),'village-profile-review-'));
  try{await fs.cp('world/drafts/w1/village-ledgers',tmp,{recursive:true});const file=path.join(tmp,'loc_bs_yupo.json'),r=JSON.parse(await fs.readFile(file,'utf8'));r.draft.rumors[0].truth='false';await fs.writeFile(file,JSON.stringify(r));await assert.rejects(approvedProfiles({world,root:tmp}),/审查后内容已改变/);}finally{await fs.rm(tmp,{recursive:true,force:true});}
+});
+
+test('四村自然中文搜索命中公开数值、治理、问题和日历，作者秘密不进入索引',()=>{
+ const engine=new WorldEngine(withProfiles),doc=engine.createCharacter(seed,{},'settlement-search'),before=structuredClone(doc),index=new MemoryIndex({entities:engine.entities});
+ index.syncSettlements(withProfiles,doc);
+ for(const p of profiles){
+  for(const [question,key]of [['公共燕麦田一年产量多少','production_0'],['粮仓期初库存多少','opening'],['粮约税率多少','tax'],['和邻村的粮食贸易怎么结算','trade_0'],['运输价格系数多少','price'],['期初贸易收付多少','tradeLedger'],['村里头人执法者谁能搜查','governance'],[p.problems[0].title,`issue_${p.problems[0].id}`],['每月什么时候赶集','market'],[p.calendar.festivals[0].name,'festival_0']]){
+   const hits=index.search(`${p.name}${question}`);assert.ok(hits.some(row=>row.id===`settlement_${p.id}_${key}`),`${p.name}${question}`);
+  }
+  const views=JSON.stringify([...index.documents.values()].filter(row=>row.scope===p.id));
+  for(const rumor of p.rumors){assert.equal(views.includes(rumor.fact),false);assert.equal(views.includes(rumor.claim),false);assert.equal(views.includes(rumor.id),false);}
+  for(const hidden of p.hiddenPlaces){assert.equal(views.includes(hidden.detail),false);assert.equal(views.includes(hidden.name),false);}
+  for(const issue of p.problems)for(const option of issue.options)assert.equal(views.includes(option.proposal),false);
+  assert.ok(p.problems.every(problem=>problem.options.length>=2));
+ }
+ assert.deepEqual(doc,before);const count=index.tokenizations;index.syncSettlements(withProfiles,doc);assert.equal(index.tokenizations,count);
+ const revised=structuredClone(withProfiles);for(const p of revised.settlementProfiles.filter(row=>row.details)){
+  p.details.economy.production[0].truth='私有真相标记';p.details.governance.appointment.privateMemo='私有任命备注';p.details.governance.permissions.hidden='私有搜查解法';
+ }
+ index.syncSettlements(revised,doc);assert.equal(JSON.stringify([...index.documents.values()]).includes('私有'),false);
+ doc.state.settlements.loc_bs_yupo.food=7;index.syncSettlements(withProfiles,doc);assert.match(index.documents.get('settlement_loc_bs_yupo_current').text,/粮食7粮单位/);
+ index.syncSettlements({...withProfiles,settlementProfiles:[]},doc);assert.equal([...index.documents.keys()].some(id=>id.startsWith('settlement_')),false);
 });
 test('聚落档案出版保留人物补充，重复零写入，篡改 details 被拒绝',async()=>{
  const tmp=await fs.mkdtemp(path.join(os.tmpdir(),'village-profile-publish-'));

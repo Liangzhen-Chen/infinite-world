@@ -56,3 +56,29 @@ test('未取得的隐藏身份不泄露触发条件，取得后仅返回已知�
     document.state.professions.hidden.push(hidden.id);
     assert.deepEqual(Object.keys(catalogDefinition(engine,document,{entity:hidden.id})).sort(),['ability','cost','id','name']);
 });
+
+test('四村公共目录区分登记产量、期初库存和当前结算，治理权限仅按任命展示',async()=>{
+    const world=await loadWorld(),engine=new WorldEngine(world),document=engine.createCharacter(seed,{},'public-village-account'),before=structuredClone(document);
+    for(const profile of world.settlementProfiles.filter(row=>row.details)){
+        const view=catalogDefinition(engine,document,{entity:profile.id,kind:'location'}).settlement,e=view.economy,g=view.governance;
+        assert.equal(e.units.foodUnitKg,.5);assert.equal(e.units.treasury,'铜币');assert.equal(e.period.startDay,0);assert.equal(e.period.endDay,360);
+        assert.equal(e.production[0].quantity,profile.details.economy.production[0].quantity);assert.equal(e.production[0].cycleDays,360);
+        assert.equal(e.publicStock.closing,null);assert.equal(e.publicStock.openingDay,0);assert.match(e.publicStock.closingReason,/尚未结算/);
+        assert.equal(e.currentStock.asOfMinute,document.state.minute);assert.equal(e.currentStock.food,document.state.settlements[profile.id].food);
+        assert.equal(e.tradeContracts[0].status,'unfulfilled');assert.equal(e.tradeLedger.openingReceivedCopper,0);assert.equal(e.tax.openingReceiptsCopper,0);
+        assert.equal(g.head.id,profile.details.governance.head);assert.deepEqual(g.enforcers.map(row=>row.id),profile.details.governance.enforcers);
+        assert.deepEqual(g.jurisdiction,profile.details.governance.jurisdiction);assert.match(g.permissions.coordinators.join('；'),/自愿协调/);assert.match(g.limits.join('；'),/无权/);
+        assert.equal(g.appointment.effectiveDay,0);assert.equal(g.referral.status,'referral-only');
+        e.production[0].quantity=0;g.permissions.head.push('随意搜查');assert.notEqual(profile.details.economy.production[0].quantity,0);assert.ok(!profile.details.governance.permissions.head.includes('随意搜查'));
+    }
+    assert.deepEqual(document,before);
+    const id='loc_bs_yupo';document.state.minute+=1440;document.state.settlements[id].food=7;
+    document.state.records[`agriculture:${id}`].lastDay=1;
+    document.state.records[`village-fiscal:${id}`]={taxReceiptsCopper:3,advanceCopper:0,salesGrossCopper:60,salesNetCopper:57};
+    const contract=world.settlementProfiles.find(p=>p.id===id).details.economy.tradeContracts[0];
+    document.state.records[`village-trade:${contract.id}`]={status:'delivered',paidCopper:60,receivedCopper:60,taxCopper:3,prepaidCopper:0,privateCargo:'不可公开'};
+    const view=catalogDefinition(engine,document,{entity:id,kind:'location'}).settlement.economy;
+    assert.equal(view.currentStock.food,7);assert.equal(view.currentStock.lastSettlementDay,1);assert.equal(view.publicStock.food,18000);
+    assert.equal(view.currentFiscal.taxReceiptsCopper,3);assert.equal(view.tradeContracts[0].settlement.status,'delivered');assert.equal(view.tradeContracts[0].settlement.asOfMinute,document.state.minute);
+    assert.equal(JSON.stringify(view).includes('不可公开'),false);
+});
