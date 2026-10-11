@@ -30,6 +30,8 @@
 
 当前内容费用沿用 `F:/dnd/world/drafts/m4-object/budget.json` 共享持久账，它含旧混合来源；各卡的 W1/W2 名称不构成新建零余额预算的理由。主会话分配运行槽时读取实际 spent/reserved 并记录本卡差值，增量上限和已有累计上限同时有效；模型预算文件只由取得运行槽的任务串行更新。
 
+预算阻断修订：T06 中断后共享账为 spent=1.10760808、reserved=0.083736、limit=2.94801504；后一个数来自本卡起始 0.94801504 加增量 2，不是波次 20 元授权的变更。当前流水线不把旧 ledger.limit 直接用作下一卡限额，因此不能断言它已直接卡住 T07；但元数据混淆且旧卡绝对累计阈值会被其他卡花费挤占，归 T22 修复。T06/T07 真实审核在 T22 验收前冻结，保留全部 spent/reserved，未知终止请求不退款。
+
 ## 近期完整任务卡
 
 ### T01 已验证旧分支增量收尾
@@ -86,6 +88,8 @@
 
 验收：`node --test tests/npc-depth-yp.test.mjs`、CORE；`node tools/npc-depth.mjs --design world/design/w1-yp-depth-rest.mjs --root world/drafts/w1/yp-depth-rest --prepare` 后在取得模型槽时用同参数加 `--budget-root` 运行审核。增量预算 2 元且 W1 累计不超过 20；L1/L2 无硬错、L4 完成、全部 30 人合并视图过 T04；提交候选与逐条审核。不要做：重复改已达标字段、新增 NPC、整批重写、发布其他村。依赖：T02/T04/T05；并行：作者阶段与 T07–T10 文件隔离，模型阶段独占。
 
+本轮阻断：候选已在 `41f4998` 保存，30 人合并审计零缺口、prepare 与相关/CORE 通过；真实起草出现 `{candidate:{id,contract,patches}}`，顶层严格合同拒绝，25 次已发生请求费用 0.15959304 元，L2/L4 未完成。候选准备完成不等于审核通过。T22 通过后只续跑受此接口错误影响的 id，保留原失败及用量，不重做合格旧正文、不重跑游戏，仍沿同一 T06 的 2 元增量额度。
+
 ### T07 苇汀人物深度
 
 目标：苇汀现有 30 份 full 档达到 T04。涉及文件：新增 `world/design/w1-wt-depth.mjs`、`world/drafts/w1/wt-depth/`、`tests/npc-depth-wt.test.mjs`。
@@ -93,6 +97,8 @@
 实现要点：依据 `world/design/w1-villages-weiting.mjs` 和四村档案中苇束、认户等本地问题，每次派生 3–5 当事人的具体认知、未知事项、行动步骤及共同经历；全村剩余字段按 T04 的 id/field/code 清单定点补，包含报错的 opinions/notes 等设定叶子。复用 T05，不删字段或数组成员，不改合格兄弟字段；仅措辞修正不新增共享记忆。候选不改正式 baseline，保留原身份财物和审核正文中未失败部分。
 
 验收：`node --test tests/npc-depth-wt.test.mjs`、CORE；T05 命令的 design/root 换成本卡路径，prepare 后在独占槽审核。增量预算 3 元且计入 W1 20 元；L1/L2/L4 通过，30 人合并视图无 T04 缺口。不要做：复制榆坡事实、扩大人口、通过编造已完成交易丰富经历。依赖：T02/T04/T05；并行：作者阶段可与 T06/T08/T09/T10，模型独占。
+
+两次修法后规划复核：丁素原档为渔家杂活雇工，当前问题是两户约的杂活撞时。`knowledge.unknown[0]` 改为“雇她做岸边杂活、时段撞在一起的两户，分别愿意将哪一段杂活改约到什么时段。”这明确了雇佣关系和撞时对象，保留工序与新时段两个实际未知，不新增客户姓名、已同意改约或已完成结果；不要仅为了正则将“约”换成“约定”，不改 validator 词表。仅重跑此叶子的候选验证及本卡相关测试；全 401 项最后一项过后保存候选，真实审核等 T22 及模型运行槽。
 
 ### T08 砾泉人物深度
 
@@ -213,6 +219,22 @@
 验收：`node --test tests/village-rumor-access.test.mjs tests/npc-memory.test.mjs tests/npc-cognition.test.mjs tests/chronicle.test.mjs tests/m3-retrieval.test.mjs` 及 CORE 全过，模型预算 0。新增测试覆盖全部 40 条源/携带者投影和非持有者隔离，并对各条登记 claim 通过受校验的实际引擎动作产生可追溯获知，不仅检查静态数组；每村至少一条经合法移动/等候接近人物→话题场景→真实工具路由交谈→Store 持久事件→真实 `/search` 的完整链。测试可用隔离世界/存档，不能向聊天、玩家记忆或 heard 记录直接塞 claim 代替交谈，也不能直接改 NPC 位置绕过到场。首次交谈前自然关键词搜不到未获知 claim，交谈后能搜到带讲述者和未核实标记的 claim；未到场、睡眠/失能、冒充 source、改 claim、请求 truth、只看 public catalog 均不得产生获知。覆盖重放/重复、重启、导入导出和撤销后索引清除；静态 NPC 内容前后不变，公共工具仍 25 个。给出链路证据，不宣称本卡通过了真实模型叙述。
 
 不要做：重复核验 37 人缺口、改写 40 条已审核正文或静态 NPC 合格字段、新增人口、公开真假、自动全村传播、借此完成 300 传闻或世界时钟、调用真实模型、降低知识门槛。依赖：T02 已合入；按 T03 已确认的检索合同实施，最终联合验收要求 T03 完成。并行：可与 T03 和 T06–T10 作者块并行，因为文件所有权分开；不与 T13/T15 或任何 engine/npc-memory/scene-card/chronicle/tools 改动并行。新树 `F:/dnd-wt/T21`、分支 `t21`；本卡是用户第 1 项四村完成前置，也是 T11/T13 依赖。
+
+### T22 人物起草顶层合同与共享/单卡预算护栏
+
+目标：修复 T06 反复返回 candidate 外壳的接口不一致，严格事实/字段校验不变；将稳定单卡额度与共享 20 元总账分开，使中断和交错续跑不多花、不假退款。涉及文件：`tools/npc-depth-content.mjs` 的 `patchDraftRequest`/`extractDraft`、`tools/npc-depth.mjs` 的 allocation/运行与恢复、`tools/content-pipeline.mjs` 的请求/记账/定点恢复；必要时新增 `tools/content-budget.mjs`，新增 `tests/npc-depth-contract.test.mjs`、`tests/npc-depth-budget.test.mjs`，补 `tests/npc-depth-pipeline.test.mjs`、`tests/content-pipeline.test.mjs`。不改作者 design、30 人补丁正文、T04 验证器或发布白名单；实际失败记录的受控恢复由主会话在本卡通过后执行，不在测试中改真实预算账。
+
+合同实现：`patchDraftRequest` 明确顶层且仅有 `{id,contract:'audit-patch-v1',patches:[{path,value}]}`，给实际字段 schema/示例，去掉“返回 candidate JSON”歧义。如保留有限 unwrap，只接受顶层恰好一个 candidate 键、值为非数组对象、内层恰好 id/contract/patches 的单层外壳；标准顶层仍支持。两种格式最终都必须与 `patchDraft(entry)` 严格 deepEqual，再走原 `validateDraft`、失败路径授权、preservedShape 和 `verifyUnchanged`；不修正模型给错的 id/contract/path/value，不丢多余键、不合并内外层、不递归寻找候选。其他旧人物批次合同保持不变。mock 必须使用本次赵枫失败中的单层外壳形状，不能只返回从请求里取出的理想 candidate。
+
+定点恢复：现有 pipeline 对同指纹 manual 默认跳过，attempts=3 即使 retryManual 也无下一次循环；不能只修提示后宣布可续跑。增加显式、可审计的协议恢复入口和 CLI 帮助，以调用者指定的受影响 id 为白名单，只处理有该合同错误证据、尚无合格 L2 的记录。保留原 attempts/错误/指纹/用量，独立记录一次协议恢复机会，不重置内容重写次数；passed 条目始终跳过，无关 manual 不受影响。若原完整响应确实保存，可先以新解析器离线恢复合法 draft；本次单条 JSON 仅见 assert 错误差异时，不能把错误字符串当原始响应伪造成功，使用保存的冻结候选进行一次受限恢复请求，然后正常 L1/L2/L4。仍出合同错就停，不再盲试；不清整批记录，不凭新 revision 重跑全部审核。
+
+预算事实与方案：现有 `runContentPipeline` 会把 client.budgetYuan 写入共享 limitYuan，而 `runDepth` 将本卡起始共享余额加增量当 client 上限，正常 finally 才恢复 20；强杀后 finally 不运行。下一卡使用新 client，所以旧 2.94801504 不直接限制它，但旧卡复跑时其他卡的费用会消耗其固定阈值。改为共享账固定 waveLimitYuan=20、总 spent/reserved 与每个稳定 card/allocation 的累计 spent/reserved/增量上限分别核验；T06 上限 2，T07 上限 3，换输出目录、revision、重启都不得新领额度。共享额度是所有卡花费之和，单卡只计本卡；保留历史混合余额不强行分给新卡。可将分卡分录与共享聚合放在同一原子写入中，避免两份账间强杀导致漏记；如果分文件，须有请求标识和保守恢复合同及相应故障测试。仍同一时间只跑一个真实模型块，不引入并发调度系统。
+
+请求发出前同时检查并持久化共享与单卡预留，成功按响应 measurement 结算；无最终用量的终止请求继续保留预留或显式转为等额“未知费用上界”，两种账的占用总额均不得下降且只计一次。旧账迁移必须检查匹配的 allocation 中 waveLimitYuan=20、increment=2、startingSpent=0.94801504 与 legacy limit=2.94801504，未知来源的低限额不能擅自提高。本次 T06 已知归属为请求费用 0.15959304 加未决预留 0.083736，共占用 0.24332904；本卡剩余最多 1.75667096，共享剩余最多 18.80865592。后续 T07 单卡最多 3，仍逐请求受剩余共享额约束。用量的二进制浮点尾差可按既有精度容差处理，不得把真实预留归零。移除依靠 finally 改回共享上限的办法，流水线预算写入须保留分卡元数据；恢复前后出具账面差异，不能以初始化空 budget.json 修复。
+
+验收命令：`node --test tests/npc-depth-contract.test.mjs tests/npc-depth-budget.test.mjs tests/npc-depth-pipeline.test.mjs tests/content-pipeline.test.mjs tests/deepseek-transport.test.mjs` 及 CORE；模型预算 0，只用 mock 和临时账。合同测试覆盖合法顶层/有限外壳、wrong id、wrong contract、改 path/value、增删 patch、额外键、混合内外层、数组/null/多层壳，非法内容仍拒绝。恢复测试覆盖 manual+attempts3 仅指定协议错误可获一次恢复、passed 零调用、无关 manual 不重跑、L2 仍必需且失败不算完成。预算测试用当前精确余额重现强杀残留，在预留后中断与跨卡交错后，T06 恢复不被 T07 费用挤占/不重领额度，T07 不能超过 3，共享不能超过 20；卡/共享任一不足都在调用 mock 前拒绝，遗留 0.083736 不丢失不重复扣计。验证原旧内容流水线合同仍可运行，不仅测试新适配器。
+
+不要做：真实模型试探格式、重跑游戏、改人物事实或知识门槛、批量放宽 JSON、伪造 L2/L4、清空预算/预留/失败记录、新建空账、把未知费用当已退款。依赖：T05 与已保存的 T06 失败证据；独立 `F:/dnd-wt/T22`、`t22`。可并行：T07 仅本村最后叶子的离线修订、T08–T10 候选作者、T21 引擎传闻；不可与任何改公共内容流水线的块并行，T06/T07 真实审核冻结到本卡及合后 CORE 通过，由主会话按原增量额度逐卡恢复。
 
 ## 后续粗卡：全部待细化
 
