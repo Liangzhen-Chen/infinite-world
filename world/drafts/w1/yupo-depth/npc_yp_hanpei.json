@@ -1,6 +1,6 @@
 {
   "id": "npc_yp_hanpei",
-  "fingerprint": "50e81f466c31224836f212a0287e82b24dfbc3ca1ba488382c765a6df7e91d1d",
+  "fingerprint": "2249e3b0ff83dedc09c937701a360e0bf74b3014742b4aa80382ccdf1e7eee84",
   "status": "passed",
   "attempts": 2,
   "draft": {
@@ -30,7 +30,7 @@
           "reliability": "亲历"
         },
         {
-          "fact": "坡口共灶屋门外的最后一段清扫尚未分定，争执不等于已经约好换工。",
+          "fact": "坡口共灶屋门外的最后一段清扫尚未分定，双方尚未约定换工。",
           "source": "bld_yp_kitchen",
           "reliability": "亲历"
         }
@@ -177,5 +177,6 @@
   },
   "errors": [],
   "warnings": [],
-  "feedback": null
+  "feedback": null,
+  "manualCorrection": "将主持式措辞改为同义事实句：坡口共灶屋门外的最后一段清扫尚未分定，争执不等于已经约好换工。 → 坡口共灶屋门外的最后一段清扫尚未分定，双方尚未约定换工。"
 }

@@ -4,6 +4,7 @@ import fs from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
 import {loadWorld} from '../tools/load-world.mjs';
+import {knowledgeWordingCorrections} from '../world/design/w1-yupo-depth.mjs';
 import {publishVillages,villagesOriginalWorld} from '../tools/publish-w1-villages.mjs';
 import {verifyUnchanged,depthEntries,applyDepthDraft,validateDraft,contextFor} from '../tools/npc-depth-content.mjs';
 import {validateWorld} from '../tools/validate-world.mjs';
@@ -47,4 +48,13 @@ test('同场共事者与具体提问能唤起第三条共享旧事，旁人仍�
  doc.state.npcs[other].location='bld_yp_home_02';assert.ok(selectNpcSeedMemories(engine,doc,first,'你和乔端核对水痕时商定轮次了吗').some(s=>s.includes('乔端')));
  assert.ok(selectNpcSeedMemories(engine,doc,outsider,'赵枫和乔端核对水痕').every(s=>!s.includes('核对水痕')));
  const scene=engine.scene(doc,'你和乔端核对水痕时商定轮次了吗');assert.match(scene,/未.*商定|没商定/);
+});
+
+test('三条已审核旧措辞可定点升级，其他同字段篡改不能借措辞修正通过',async t=>{
+ const dir=await temporary(t),file=path.join(dir,'people/baseline.json'),rows=JSON.parse(await fs.readFile(file,'utf8'));
+ for(const correction of knowledgeWordingCorrections){const person=rows.find(n=>n.id===correction.id),fact=person.knowledge.known.find(f=>f.fact===correction.to);assert.ok(fact);fact.fact=correction.from;}
+ await fs.writeFile(file,JSON.stringify(rows));assert.deepEqual((await publishVillages({root:dir,publish:true})).changed,['people/baseline.json']);
+ const after=JSON.parse(await fs.readFile(file,'utf8'));for(const correction of knowledgeWordingCorrections)assert.ok(after.find(n=>n.id===correction.id).knowledge.known.some(f=>f.fact===correction.to));
+ assert.deepEqual((await publishVillages({root:dir,publish:true})).changed,[]);
+ after.find(n=>n.id===knowledgeWordingCorrections[0].id).knowledge.known[1].fact+='而且知道另一人的私密账';await fs.writeFile(file,JSON.stringify(after));await assert.rejects(publishVillages({root:dir,publish:true}),/人物补充冲突/);
 });

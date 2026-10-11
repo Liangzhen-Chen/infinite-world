@@ -6,6 +6,7 @@ import {hashContent,readApprovedContent} from './content-pipeline.mjs';
 import {w1VillagesFoundation,villageFacts} from '../world/design/w1-villages.mjs';
 import {contextFor,revision,applyProse,projectRoster,projectLocation,validateDraft,validateFoundation,validateProseSimilarity} from './w1-villages-content.mjs';
 import {atomicJSON} from '../server-plugin/storage.mjs';
+import {applyKnowledgeWordingCorrections} from '../world/design/w1-yupo-depth.mjs';
 import {depthEntries,contextFor as depthContext,applyDepthDraft,validateDraft as validateDepthDraft,verifyUnchanged,revision as depthRevision} from './npc-depth-content.mjs';
 
 const merge=(old,rows)=>{const map=new Map(old.map(x=>[x.id,x]));for(const row of rows){if(map.has(row.id)&&hashContent(map.get(row.id))!==hashContent(row))throw Error(`已发布条目冲突：${row.id}`);map.set(row.id,row);}return [...map.values()];};
@@ -24,7 +25,7 @@ export function mergeVillages(world,candidate,{npcAmendments=[]}={}){
    // Only live cash/stock are preserved outside the exact approved amendment.
    // Identity and all unrelated profile fields must still match either edition.
    const strip=n=>{const {coins,inventory,...rest}=n;return rest;};
-   if(![before,after].some(n=>hashContent(strip(n))===hashContent(strip(old))))throw Error(`已发布人物补充冲突：${id}`);
+   if(![before,after].some(n=>hashContent(strip(n))===hashContent(strip(applyKnowledgeWordingCorrections(old)))))throw Error(`已发布人物补充冲突：${id}`);
    current.set(id,{...after,coins:old.coins,inventory:structuredClone(old.inventory)});
   }else current.set(id,after);
  }

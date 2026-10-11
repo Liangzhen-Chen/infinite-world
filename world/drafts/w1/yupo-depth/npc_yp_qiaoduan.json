@@ -1,6 +1,6 @@
 {
   "id": "npc_yp_qiaoduan",
-  "fingerprint": "97b0d7c91cc17501c09a9fb0da8928f70af3fb27427ed2c35689e74ded808cbc",
+  "fingerprint": "683db7b30ae184d3c46407bd4de64e4b962396d1f3c08f7c0cbc2892f8168204",
   "status": "passed",
   "attempts": 1,
   "draft": {
@@ -25,7 +25,7 @@
           "source": "npc_yp_qiaoduan"
         },
         {
-          "fact": "赵枫已经在低垄边见过石片标下的豁口，不能把这件事说成只听自己抱怨。",
+          "fact": "赵枫已在低垄边见过石片标下的豁口，两人当面对过水痕。",
           "source": "npc_yp_zhaofeng",
           "reliability": "亲历"
         },
@@ -178,5 +178,5 @@
   "errors": [],
   "warnings": [],
   "feedback": null,
-  "manualCorrection": "L4删除从台词样例移入共同事件的无据尺寸；仅复审本条。"
+  "manualCorrection": "L4删除从台词样例移入共同事件的无据尺寸；仅复审本条。；将主持式措辞改为同义事实句：赵枫已经在低垄边见过石片标下的豁口，不能把这件事说成只听自己抱怨。 → 赵枫已在低垄边见过石片标下的豁口，两人当面对过水痕。"
 }

@@ -1,6 +1,6 @@
 {
   "id": "npc_yp_zhusheng",
-  "fingerprint": "c4c624b62517e2b8e424bf8ed335d198679d486982a434337818627ea0cf6034",
+  "fingerprint": "a2a99defbcd48a37b0e7e9851b15722b1e456f2c502f5e3dbbdf43835b8dd905",
   "status": "passed",
   "attempts": 1,
   "draft": {
@@ -30,7 +30,7 @@
           "reliability": "亲历"
         },
         {
-          "fact": "坡口共灶屋入灶路需要清理，争执没有形成任何新报酬或换工约定。",
+          "fact": "坡口共灶屋入灶路需要清理，双方尚未约定清扫报酬或换工安排。",
           "source": "bld_yp_kitchen",
           "reliability": "亲历"
         }
@@ -177,5 +177,6 @@
   },
   "errors": [],
   "warnings": [],
-  "feedback": null
+  "feedback": null,
+  "manualCorrection": "将主持式措辞改为同义事实句：坡口共灶屋入灶路需要清理，争执没有形成任何新报酬或换工约定。 → 坡口共灶屋入灶路需要清理，双方尚未约定清扫报酬或换工安排。"
 }

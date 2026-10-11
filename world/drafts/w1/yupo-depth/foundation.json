@@ -1353,7 +1353,7 @@
               "source": "npc_yp_qiaoduan"
             },
             {
-              "fact": "赵枫已经在低垄边见过石片标下的豁口，不能把这件事说成只听自己抱怨。",
+              "fact": "赵枫已在低垄边见过石片标下的豁口，两人当面对过水痕。",
               "source": "npc_yp_zhaofeng",
               "reliability": "亲历"
             },
@@ -3722,7 +3722,7 @@
               "reliability": "亲历"
             },
             {
-              "fact": "坡口共灶屋门外的最后一段清扫尚未分定，争执不等于已经约好换工。",
+              "fact": "坡口共灶屋门外的最后一段清扫尚未分定，双方尚未约定换工。",
               "source": "bld_yp_kitchen",
               "reliability": "亲历"
             }
@@ -4499,7 +4499,7 @@
               "reliability": "亲历"
             },
             {
-              "fact": "坡口共灶屋入灶路需要清理，争执没有形成任何新报酬或换工约定。",
+              "fact": "坡口共灶屋入灶路需要清理，双方尚未约定清扫报酬或换工安排。",
               "source": "bld_yp_kitchen",
               "reliability": "亲历"
             }
