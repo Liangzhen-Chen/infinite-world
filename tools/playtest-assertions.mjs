@@ -22,6 +22,13 @@ export function evaluateAssertions(assertions,{before,after,calls,reply}){
             case'elapsed':actual=after.state.minute-before.state.minute;pass=actual>=rule.min&&actual<=rule.max;break;
             case'unchanged':actual=(rule.paths??['state']).filter(path=>!isDeepStrictEqual(at(before,path),at(after,path)));pass=!actual.length;break;
             case'records':actual=Object.values(value??{}).filter(row=>matches(row,rule.where)&&(!rule.includes||Array.isArray(at(row,rule.includes.path))&&at(row,rule.includes.path).some(entry=>matches(entry,rule.includes.where)))).length;pass=actual>=(rule.min??1)&&actual<=(rule.max??Infinity);break;
+            case'newRecordsDuringTurn':{
+                const from=before.state?.minute,to=after.state?.minute;
+                const records=Object.entries(value??{}).filter(([id,row])=>!Object.hasOwn(old??{},id)&&matches(row,rule.where)&&
+                    Number.isSafeInteger(row.minute)&&row.minute>from&&row.minute<=to).map(([,row])=>structuredClone(row));
+                actual={from,to,count:records.length,records};
+                pass=Number.isSafeInteger(from)&&Number.isSafeInteger(to)&&to>from&&records.length>=(rule.min??1)&&records.length<=(rule.max??Infinity);break;
+            }
             case'calls':actual=calls.filter(call=>{let routed;try{routed=resolveToolCall(call.tool,call.args);}catch{return false;}return routed.tool===rule.tool&&matches(routed.args,rule.args)&&(!rule.success||call.result?.ok===true);}).length;pass=actual>=(rule.min??1)&&actual<=(rule.max??Infinity);break;
             case'conservation':actual=rule.paths.reduce((sum,path)=>sum+(at(after,path)??0)-(at(before,path)??0),0);pass=actual===0;break;
             case'replyContains':actual=rule.text;pass=reply.includes(rule.text);break;
