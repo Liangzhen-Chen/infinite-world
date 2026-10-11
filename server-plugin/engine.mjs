@@ -29,7 +29,7 @@ import {assertNpcService}from'./npc-schedule.mjs';
 import {advanceNpcCognition,nextNpcCognitionMinute}from'./npc-cognition.mjs';
 import {advanceNpcAutonomy,nextNpcAutonomyMinute,npcAutonomyBusy,assertNpcAutonomyAction,applyNpcPlan}from'./npc-autonomy.mjs';
 import {recordNpcMemories}from'./npc-memory.mjs';
-import {createNpcObligation,advanceNpcObligations,assertNpcObligationAction,npcObligationAt}from'./npc-obligations.mjs';
+import {createNpcObligation,advanceNpcObligations,assertNpcObligationAction,npcObligationAt,nextNpcObligationMinute}from'./npc-obligations.mjs';
 import {recordNpcRelationEvidence,applyNpcRelation}from'./npc-relations.mjs';
 import {resolveToolCall}from'../extension/tools.mjs';
 import {chargeTrade,repayDebt,advanceContracts}from'./contracts.mjs';
@@ -128,7 +128,7 @@ export class WorldEngine {
         if (!['trade','time','move','turn','health','revive','revival','check','practice','cast','learn','profession','attributes','relation','promise','remember',...Object.keys(activities)].includes(tool)) throw new Error('未知工具职责');
         if(d.get('state','player','status')==='死亡'&&!['time','turn','revive'].includes(tool))throw new Error('你已经死亡，需要在登记点醒来后行动');
         if(d.get('state','player','status')==='濒死'&&!['time','turn','health','cast'].includes(tool))throw new Error('你处于濒死状态，只能等待救治或尝试自救');
-        const session=this.scoped(document);session.replaying=Boolean(options.replay);session.npcObligationAction={tool,args};
+        const session=this.scoped(document);session.replaying=Boolean(options.replay);session.replayResult=options.result;session.npcObligationAction={tool,args};
         if(tool==='combat'){
             const target=session.resolve(args.target);
             for(const task of Object.values(d.get('state','npcAutonomy','tasks')??{}))if(task.status==='进行中'&&[task.npc,task.action.seller].includes(target))d.set(['state','npcAutonomy','tasks',task.id],{...task,status:'中断',reason:'交锋打断了正在进行的工作',interruptedAt:d.get('state','minute'),sourceEvent:id});
@@ -203,7 +203,7 @@ export class WorldEngine {
         const patchStart=d.patches.length,npcsBefore=d.get('state','npcs');
         while(d.get('state','minute')<end){
             const now=d.get('state','minute'),state=d.get('state');
-            const next=Math.min(end,(Math.floor(now/1440)+1)*1440,nextNpcCognitionMinute(state,now),nextNpcAutonomyMinute(state,now));
+            const next=Math.min(end,(Math.floor(now/1440)+1)*1440,nextNpcCognitionMinute(state,now),nextNpcAutonomyMinute(state,now),nextNpcObligationMinute(state,now));
             this.advanceInterval(d,next-now,id);
         }
         // Intermediate clock boundaries matter to simulation, not to replay.
@@ -247,8 +247,11 @@ export class WorldEngine {
         const p=d.get('state','player');
         if(p.status==='濒死' && after-p.dyingSince>=this.rules.death.dyingMinutes) this.death(d);
         for(const [key,obligation] of Object.entries(d.get('state','obligations'))) {
-            if(obligation.status==='待履行' && obligation.deadline<=after && ['送货','付款'].includes(obligation.type)) {
-                try { this.deliver(d,key,obligation,id); } catch(error) { d.set(['state','obligations',key],{...obligation,status:'违约',reason:error.message}); }
+            if((obligation.status==='待履行'||obligation.deliveryVersion===1&&obligation.status==='进行中') && obligation.deadline<=after && ['送货','付款'].includes(obligation.type)) {
+                try { this.deliver(d,key,obligation,id); } catch(error) {
+                    const courier=obligation.deliveryVersion===1;
+                    d.set(['state','obligations',key],{...obligation,status:'违约',reason:error.message,...(courier?{resolvedAt:after,breachedBy:[error.deliveryResponsibility??obligation.promisor]}:{})});
+                }
             }
         }
     }
@@ -312,6 +315,7 @@ export class WorldEngine {
         for(const npc of d.get('state','player','companions'))d.set(['state','npcs',npc,'location'],destination);
         movePets(d,this,old,destination,route.movingMinutes);
         for(const[key,effect]of Object.entries(d.get('state','effects')))if(effect.kind==='summon'&&effect.owner==='player'&&effect.location===old)d.set(['state','effects',key,'location'],destination);
+        this.npcObligationAction.arrivalMinute=d.get('state','minute')+route.minutes;
         this.advance(d,route.minutes,id);
         const experience=discovered?{experience:0}:milestone(d,this,'discovery',destination,id);
         for(const [key,obligation]of Object.entries(d.get('state','obligations')))if(obligation.type==='带路'&&obligation.destination===destination&&obligation.status==='进行中'){
@@ -462,6 +466,13 @@ export class WorldEngine {
     }
     deliver(d,key,o,id){
         const source=this.actor(d,o.promisor),target=this.actor(d,o.promisee);if(!source||!target)throw new Error('义务当事人不存在');
+        if(o.deliveryVersion===1){
+            const to=o.promisee==='player'?d.get('state','location'):target.location;
+            if(source.location!==o.location||source.scheduleTravel||source.cognitionTravel)throw new Error('送货者未能按时抵达约定地点');
+            if(to!==o.location||target.scheduleTravel||target.cognitionTravel)throw Object.assign(new Error('收件人未在约定地点，货物仍由送货者持有'),{deliveryResponsibility:o.promisee});
+            if((o.promisee==='player'||d.get('state','player','companions')?.includes(o.promisee))&&this.npcObligationAction?.tool==='move'&&d.get('state','minute')<this.npcObligationAction.arrivalMinute)throw Object.assign(new Error('收件人仍在途中，尚未到达约定地点'),{deliveryResponsibility:o.promisee});
+        }
+        if(o.deliveryVersion===1&&(['死亡','濒死','昏迷','患病'].includes(target.status)||/(睡眠|熟睡|睡觉)/.test(target.activity??'')||o.promisee==='player'&&this.npcObligationAction?.args?.activity==='睡眠'))throw Object.assign(new Error('收件人无法清醒接收货物'),{deliveryResponsibility:o.promisee});
         if([source,target].some(actor=>['死亡','濒死'].includes(actor.status)))throw new Error('义务当事人无法清醒履约');
         if([o.promisor,o.promisee].some(actor=>this.byId.get(actor)?.tier==='full')){
             const from=o.promisor==='player'?d.get('state','location'):source.location,to=o.promisee==='player'?d.get('state','location'):target.location;
@@ -470,7 +481,7 @@ export class WorldEngine {
         }
         if(o.type==='送货'){if(this.quantity(d,o.promisor,o.item)<o.quantity)throw new Error('承诺者缺少货物');transferItems(d,this,o.promisor,o.promisee,o.item,o.quantity);}
         if(o.type==='付款'){if(source.coins<o.coins)throw new Error('承诺者资金不足');d.set([...this.actorPath(o.promisor),'coins'],source.coins-o.coins);d.set([...this.actorPath(o.promisee),'coins'],target.coins+o.coins);}
-        d.set(['state','obligations',key,'status'],'已完成');d.say(`${o.content}已履行`);
+        d.set(['state','obligations',key,'status'],'已完成');if(o.deliveryVersion===1)d.set(['state','obligations',key,'resolvedAt'],d.get('state','minute'));d.say(`${o.content}已履行`);
     }
     remember(d,args,id) {
         const subject=this.resolve(args.subject),content=validateMemory(args.content),key=text(args.key,100),memoryId=`${subject}::${key}`;
