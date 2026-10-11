@@ -55,6 +55,15 @@ export function validatePopulation(world){
   }
   if(row.ageStructure)check(Object.values(row.ageStructure).reduce((sum,value)=>sum+value,0)===row.population,`人口年龄结构合计不符：${row.id}`);
   for(const id of row.buildingIds??[])check(places.has(id)&&places.get(id).parent===row.id,`聚落建筑归属不符：${row.id}/${id}`);
+  if(row.details){const d=row.details;
+   for(const key of ['id','population','householdCount'])check(d[key]===row[key],`聚落档案登记不符：${row.id}/${key}`);
+   check(JSON.stringify(d.buildingIds)===JSON.stringify(row.buildingIds)&&JSON.stringify(d.ageStructure)===JSON.stringify(row.ageStructure),`聚落档案建筑或年龄结构不符：${row.id}`);
+   const ids=new Set();for(const entry of [...d.problems,...d.rumors,...d.hiddenPlaces]){check(!ids.has(entry.id),`聚落详情编号重复：${entry.id}`);ids.add(entry.id);}
+   for(const p of d.problems){check(places.get(p.location)?.parent===row.id,`地方问题地点不符：${p.id}`);for(const s of p.stakeholders)check(people.get(s.person)?.settlement===row.id,`地方问题当事人不符：${p.id}/${s.person}`);}
+   for(const r of d.rumors){check(d.problems.some(p=>p.id===r.sourceProblem),`传闻缺来源问题：${r.id}`);for(const id of [r.source,...r.carriers,...r.witnesses])check(people.get(id)?.settlement===row.id,`传闻来源人物不符：${r.id}/${id}`);}
+   for(const id of [...d.governance.coordinators,...d.calendar.festivals.map(f=>f.host),...d.hiddenPlaces.flatMap(h=>h.knownBy)])check(people.get(id)?.settlement===row.id&&people.get(id)?.age>=18,`聚落责任人不符：${row.id}/${id}`);
+   for(const id of [d.governance.meetingPlace,...d.calendar.festivals.map(f=>f.location),...d.hiddenPlaces.map(h=>h.location)])check(places.get(id)?.parent===row.id,`聚落详情地点不符：${row.id}/${id}`);
+  }
   const locals=new Set(row.residentIds),homes=[...households.values()].filter(h=>h.settlement===row.id);
   check(homes.length===(seeded?row.registeredHouseholdCount:row.householdCount),`人口册户数不符：${row.id}`);
   const registered=new Set(homes.flatMap(h=>h.members));

@@ -7,6 +7,7 @@ import {npcAvailability} from './npc-schedule.mjs';
 import {npcContext}from'./npc-memory.mjs';
 import {relationView}from'./npc-relations.mjs';
 import {chronicleContext}from'./chronicle.mjs';
+import {settlementScene}from'./settlement-profile.mjs';
 
 const text=(value,limit=200)=>typeof value==='string'?value.replace(/\s+/g,' ').slice(0,limit):'';
 const list=value=>Array.isArray(value)?value.map(row=>typeof row==='string'?row:row.content??row.description??'').filter(Boolean).join('；'):text(value);
@@ -29,6 +30,7 @@ export function sceneCard(engine,document,query='',index=null){
     const requested=[...mentioned].filter(id=>/^(loc|bld|site)_/.test(id));
     const destinations=[...new Set([...requested,...adjacent])].slice(0,12);
     if(destinations.length)parts.splice(2,0,`【地点索引】${destinations.map(id=>`${name(id)}（${id}）`).join('；')}`);
+    const localProfile=settlementScene(engine,document);if(localProfile)parts.push(localProfile);
     for(const [id,npc] of present.slice(0,engine.rules.prompt.npcLimit)){
         const base=engine.byId.get(id)??npc;
         const available=npcAvailability(engine,s,id);
