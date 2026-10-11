@@ -56,7 +56,12 @@ test('十天等待已完整计时，无新增交谈时尾注不得再次加十�
  const extra={playerText:'我在这里等十天。',receipts:[{tool:'world_time',args:{minutes:14400},result:{ok:true,minute:14940}}],clock:{location:'bld_hw_mill',startMinute:540,minute:14940,present:['npc_hw_linsui']}};
  const tail='<回合 额外="10分" 地点="bld_hw_mill" 在场="npc_hw_linsui"/>';
  const bad=deterministicConsistencyReview(sample(`十天过去了，窗外又亮起来。${tail}`,extra));assert.ok(bad.issues.some(i=>i.category==='time'&&i.severity==='error'));
- const good=deterministicConsistencyReview(sample(`<q who="npc_hw_linsui">刚歇下来？我和你说说这几天的变化。</q>${tail}`,extra));assert.deepEqual(good.issues,[]);
+ const speech=`<q who="npc_hw_linsui">刚歇下来？我和你说说这几天的变化。</q>${tail}`;
+ assert.ok(deterministicConsistencyReview(sample(speech,extra)).issues.some(i=>i.category==='time'&&i.severity==='error'));
+ const good=deterministicConsistencyReview(sample(speech,{...extra,playerText:'我等十天，然后问林穗这几天有什么变化。'}));assert.deepEqual(good.issues,[]);
+ const clockWait={...extra,playerText:'我在这里等到傍晚六点半，不找人聊天。',receipts:[{tool:'world_time',args:{until:{dayOffset:0,hour:18,minute:30}},result:{ok:true,elapsed:570}}],clock:{...extra.clock,minute:1110}};
+ assert.ok(deterministicConsistencyReview(sample(speech,clockWait)).issues.some(i=>i.category==='time'));
+ assert.ok(deterministicConsistencyReview(sample(speech,{...extra,playerText:'我停留十天，之后不再聊天。'})).issues.some(i=>i.category==='time'));
 });
 test('一次非思考模型审查必须引用草稿及真实证据，不接受伪引文或改账字段',async()=>{
  const input=sample('工坊费没有扣。'),body=consistencyReviewRequest(input);assert.equal(body.thinking.type,'disabled');const evidence=JSON.parse(body.messages[1].content).evidence;

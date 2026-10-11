@@ -101,11 +101,13 @@ function fixedIssues(input,context){
  }
  if(input.clock){const parsed=parseTurn(context.raw,{...input.clock,outOfCharacter:context.outOfCharacter});
   if(!parsed.valid){const quote=context.raw.match(/<回合[^>]*\/>/)?.[0]??context.visible.slice(0,100);add('time',quote,parsed.warning,[cite('clock')],{severity:'warning'});}
-  const timedWait=context.receipts.findIndex(r=>r.result.ok!==false&&String(r.tool).replace(/^world_/,'')==='time'&&Number.isSafeInteger(r.args?.minutes)&&r.args.minutes>0);
-  const conversation=dialogue.length>0||/交谈|寒暄|开口|说(?:道|了)|问(?:道|了)|回答|聊(?:了|起)/.test(context.visible);
-  if(parsed.valid&&!context.outOfCharacter&&parsed.args.extraMinutes>0&&timedWait>=0&&!conversation&&/等(?:待)?|休息|睡|跳过/.test(context.playerText)){
-   const elapsed=input.clock.minute-input.clock.startMinute,requested=context.receipts[timedWait].args.minutes;
-   if(elapsed===requested)add('time',context.raw.match(/<回合[^>]*\/>/)[0],'请求的等待已由真实回执完整计时，正文没有独立交谈，尾注再次追加了时间',[cite(`receipt:${timedWait}`),cite('clock')]);
+  const waitDuration=r=>r.result.elapsed??r.args?.minutes;
+  const timedWait=context.receipts.findIndex(r=>r.result.ok!==false&&String(r.tool).replace(/^world_/,'')==='time'&&Number.isSafeInteger(waitDuration(r))&&waitDuration(r)>0);
+  // Generated NPC speech alone cannot authorize time beyond the player's wait.
+  const requestedConversation=/(?<!不|别|勿|不要)(?:然后|之后|以后|过后|后|再)(?:(?!不|别|勿|不要)[^。！？；]){0,24}(?:问|交谈|聊天|聊聊|寒暄|说说)/.test(context.playerText);
+  if(parsed.valid&&!context.outOfCharacter&&parsed.args.extraMinutes>0&&timedWait>=0&&!requestedConversation&&/等(?:待)?|停留|待满|休息|睡|跳过/.test(context.playerText)){
+   const elapsed=input.clock.minute-input.clock.startMinute,requested=waitDuration(context.receipts[timedWait]);
+   if(elapsed===requested)add('time',context.raw.match(/<回合[^>]*\/>/)[0],'请求的等待已由真实回执完整计时，玩家没有另行要求等待后的交谈，尾注再次追加了时间',[cite(`receipt:${timedWait}`),cite('clock'),cite('player')]);
   }
  }
  return issues;
