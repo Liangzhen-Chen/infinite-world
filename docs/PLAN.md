@@ -20,7 +20,7 @@
 
 ## 调度依据与门槛
 
-2026-10-11 初始核查主线为 `69aad08`，规划期间主会话报告 `4bf28de` 已作为 `f11af04` 合入且相关与核心通过。四村档案和沿路线送货已经在主线，不能重新做一遍。四村 `details.economy.production/publicStock/priceFactor/tax` 仍为 null，测试明确保护这一未完成状态，治理没有头人及执法者实例；当前公开查询也未包含数值账。T02、T03 完成后才能关闭四村收尾。
+2026-10-11 初始核查主线为 `69aad08`，规划期间主会话报告 `4bf28de` 已作为 `f11af04` 合入且相关与核心通过。四村档案和沿路线送货已经在主线，不能重新做一遍。初始四村经济数值和治理权限缺口归 T02；T03 负责公开资料真实检索。后续已确认 40 条传闻仍为 authored-seed/pending-event，源 NPC 无完整 claim，故新增 T21 闭合本人认知到实际获知路径。T02、T03、T21 全部完成才能关闭用户第 1 项的四村收尾，只有公开检索或往聊天塞入 claim 的测试不足以关闭。
 
 已有完整档 152、轻量名册 294，不代表人物深度达标。榆坡已修 6 人，`70011af` 已选择性合入另外 4 人；T04 本次审计记录为 152 full、1840 项字段缺口，实际执行以同一基线的 `auditNpcDepth` 输出为准。10 名已深修人物的六类深度已通过，但 `opinions.neighbors[].view` 等旧设定仍有规则式措辞，不能按整个人“已修”而跳过 L1。原 17 人 traits 已由 `legacyTraitsAuditIds`/`legacyTraitsExpected` 对照提交 `1bc8f3b` 的固定名单和值核验通过，后续只核验，禁止再改。T06–T10 按 id/field/code 清单只补不达标项；T11 通过前不新增任何人口，之后仍先做 M2 验收、14 条法术，再扩人口。
 
@@ -55,6 +55,8 @@
 实现要点：沿 `publicSettlement` 公共白名单、`settlementScene`、`catalogDefinition` 与 `MemoryIndex` 的现有检索入口；T02 数值显示单位与结算时点。地方问题每村至少 5 项且有两种以上解法，作者解法不作为 NPC 已同意。40 条有来源的传闻保存在权威档案，玩家检索只暴露已经合法获知的 claim/source；truth/fact、隐秘处、未授权解决方案不得进入公开索引。检索到日历不等于节日已举办，场景上限 6000 字符不变。
 
 验收：上述 3 文件定向测试及 CORE 通过；四村均以自然中文关键词命中公开资料，未接触角色看不到传闻真相，query 不改世界。模型预算 0。不要做：自动让全村知道传闻、免费发库存、重做通用检索架构。依赖：T02；并行：可与 T04 单独验证器工作并行，不能与 T15 检索/审稿接口改动并行。
+
+验收边界：本卡已能证明公共经济/权限自然检索与 truth 隔离；“把 claim 塞进聊天后能搜到”仅证明已有聊天可检索。真实证据为四村源 NPC 分别 10/9/9/9，共 37 人，knowledge/memorySeeds/authoredFacts 没有完整 claim，npcContext/scene 没有传闻入口；采用此结论，不再重查 37 人。玩家通过源人物实际听到传闻并进入长期检索的缺口归 T21，本卡完成不等于四村收尾完成。
 
 ### T04 完整人物质量门槛与字段审计
 
@@ -122,7 +124,7 @@
 
 实现要点：按审核指纹串行应用 T06–T10 补丁，不直接复制各树 baseline；合并已存在 memorySeeds 及既有更晚修订，冲突停在具体 id。逐条核对补丁属于冻结审计失败叶子，原有字段/数组成员未被删空，17 人 traits 固定值保留；新审核清单接入旧四村发布器，重复发布不得恢复旧 opinions/notes 或抹掉新补丁。全部候选合并视图必须经 `validateNpcDepth` 全项和 `findNpcRuleWording` 无缺口，不仅是六类深度；再将质量验证强制接入 `validateWorld` 的 release/final 分支，同一提交包含正式内容和入口，不留跳过开关。T04 测试里“现有正式数据存在缺口”的阶段性断言改为合格正式源和独立缺口夹具，保留所有负例及 17 人固定值回归；engine 旧夹具结构约定保持。复用 `world_upgrade`，旧文档状态、财物、记忆与消耗库存不回退。正式数量仍为现有人口；审查抽样包含各村地方问题当事人及原人物。
 
-验收：`node tools/publish-npc-depth.mjs --manifest world/drafts/w1/depth-publication.json` 预演后 `--publish`，重跑零写入；`node --test tests/npc-profile-publication.test.mjs tests/w1-villages-publish.test.mjs tests/npc-depth-gate.test.mjs`、CORE；主会话在波次检查运行 `npm run build:release`，预期人物质量零缺口。如其他类别构建失败明确登记，不能降低门槛。随机 10 人平均至少 4、单项至少 3；不调用新模型。不要做：增加人口、部署；依赖：T03/T06–T10；并行：不可与写人物或版本数据的卡并行。通过后主会话打 `review-w1-depth` 并派规划审核。
+验收：`node tools/publish-npc-depth.mjs --manifest world/drafts/w1/depth-publication.json` 预演后 `--publish`，重跑零写入；`node --test tests/npc-profile-publication.test.mjs tests/w1-villages-publish.test.mjs tests/npc-depth-gate.test.mjs`、CORE；主会话在波次检查运行 `npm run build:release`，预期人物质量零缺口。如其他类别构建失败明确登记，不能降低门槛。随机 10 人平均至少 4、单项至少 3；不调用新模型。不要做：增加人口、部署；依赖：T03/T06–T10/T21；并行：不可与写人物或版本数据的卡并行。通过后主会话打 `review-w1-depth` 并派规划审核。
 
 ### T12 修复 M2 审核截断和引用失败
 
@@ -140,7 +142,7 @@
 
 实现要点：依据最新失败回合定位实际服务时间、位置和物品可得路径；等待 60 分钟必须实际 60，乡巡链按真实在场权限走，燕麦只买到指定商品才继续条件委托。N12 三人同时在场可说话，从现有作息路径安排，不能直接移人；N17 使用离开十天窗口内新增结算行动。前置改变不能把“60 分钟”改成当前错误的 13 分钟，不能在玩家句里提示工具名。新增离线前置测试用真实引擎和现有工具路由，测试夹具不强制成功骰点。
 
-验收：`node --test tests/playtest-runner.test.mjs tests/playtest-npc-evidence.test.mjs tests/npc-obligations.test.mjs tests/law.test.mjs`，改动农业时仅其对应命名测试，CORE；新增 `tests/m2-preconditions.test.mjs` 全部链路通，日志有实际位置/分钟/钱物证据。模型预算 0，真实复测统一 T17。不要做：虚构到货和库存、改断言掩盖失败、为每条叙述加新工具。依赖：T01/T03；并行：不与 T02 或任何 engine/law/agriculture 改动并行，可与 T12。
+验收：`node --test tests/playtest-runner.test.mjs tests/playtest-npc-evidence.test.mjs tests/npc-obligations.test.mjs tests/law.test.mjs`，改动农业时仅其对应命名测试，CORE；新增 `tests/m2-preconditions.test.mjs` 全部链路通，日志有实际位置/分钟/钱物证据。模型预算 0，真实复测统一 T17。不要做：虚构到货和库存、改断言掩盖失败、为每条叙述加新工具。依赖：T01/T03/T21；并行：不与 T02 或任何 engine/law/agriculture 改动并行，可与 T12。
 
 ### T14 原送货树的 M3 语义耗时 WIP 收尾
 
@@ -197,6 +199,20 @@
 实现要点：只收尾已存在的玩家可读账本投影，读引擎真实状态，正常面板不泄漏 raw JSON、未知 NPC 私密信息或调试字段。打包入口可改文件清单，不执行 activate/deploy。在隔离页面验证渲染、历史剪裁、审核提示与移动视口，沿现有 Playwright 测试设施截图。
 
 验收：上述三个测试和 CORE，隔离页面 390×844 无横溢/控制台错，截图及浏览器验证报告归最新报告；模型预算 0。不要做：借此重做完整界面、动用户酒馆、启动图像或语音付费服务。依赖：无，确认原树已停止；并行：可与 T01/T14，不能与 extension/runtime 的其他卡并行。
+
+### T21 四村传闻从源人物到玩家获知的可达性
+
+目标：40 条已有来源传闻能先进入 source/carriers 本人的未核实认知，再通过真实在场交谈让玩家获知，并由现有编年史/记忆索引检索。涉及文件：新增 `server-plugin/npc-rumors.mjs` 和 `tests/village-rumor-access.test.mjs`；接入 `server-plugin/npc-memory.mjs`、`server-plugin/scene-card.mjs`、`server-plugin/engine.mjs` 的 remember 分支、`server-plugin/chronicle.mjs`、`extension/tools.mjs`。本卡不改 T03 的 settlement-profile/catalog/retrieval/index 文件与测试，不改 T06–T10 的 world/design、world/drafts、baseline 或人物验证器；若发现非改这些文件不可，先回主会话调整所有权，不自行扩大范围。
+
+实现要点：只读 `world.settlementProfiles[].details.rumors`，复用既有 `{id,claim,source,carriers,status,propagation}`；新增 helper 返回最小投影 `{id,claim,source,reliability:'未核实'}`，只给 source 或明确 carriers 本人，不把 witnesses 自动视为已听过 claim。动态投影单独放入 npcContext 的传闻字段，scene 按当前在场者及查询选择相关条目；每条 claim 可通过对应话题读到，不被 known 前 100/180 字截断永久遮蔽，场景仍不超过 6000 字符。该投影不改任何已达标的静态 knowledge/memorySeeds/opinions 叶子，不预先写 player 记忆，不把全村种子塞进自动传播的 memoryStream。`truth`、`fact`、verification、hiddenPlaces 和作者解法均不进入人物提示、工具返回、事件摘记或玩家搜索。
+
+优先复用既有安全入口：当前 `WorldEngine.remember` 只验证自由文本，`shareNpcMemory` 要求收件人为完整 NPC；两者原样均不足以证明玩家合法获知。最小方案是在现有 `world_remember` 增加可选 `rumor` 引用，沿已有 subject/key/source/content 接入受校验分支，不新增公共工具。调用合同为 subject 指玩家、rumor 与 key 指同一登记传闻、source 指当前讲述者；content 只能与该人可讲的 claim 一致，实际回执与记忆文本从登记 claim 生成，不能相信模型传入的真相或篡改说法。该动作代表一次实际问询/讲述，校验玩家可行动、讲述者清醒在场、既有义务/活动允许交谈，并按现有会话计时约定结算一次；不能因两人仅同处一地就自动获知全部传闻。若执行者找到已有同时满足这些条件的安全调用，直接复用，说明证据，不再添加可选字段。
+
+获知后记录的权威事实是“玩家在何时何地听到某人说 claim，尚未核实”，不是 claim 的内容为真。将该交谈产生的、仅说话人与玩家可见的确定性事件交给 `recordNpcMemories`/`collectChronicleFacts` 既有链，复用 `syncChronicleIndex` 和真实 `/search`；若用交谈 memoryStream，保留参与人、sourceEvent、sourceType 及未核实措辞，使事件摘记知道听说来源，不能仅把自由文本 `remember.content` 提升为 verified。去重依事件/传闻/讲述者与现有回放语义，重复调用不重复计时或新增同一获知；撤销/重生成、重启、导入导出后，获知与索引同步。新增事件不得被现有自动 NPC 传播当作向全村公开的许可，本卡不接完整传播路线/失真机制，仍归 R08/R09。
+
+验收：`node --test tests/village-rumor-access.test.mjs tests/npc-memory.test.mjs tests/npc-cognition.test.mjs tests/chronicle.test.mjs tests/m3-retrieval.test.mjs` 及 CORE 全过，模型预算 0。新增测试覆盖全部 40 条源/携带者投影和非持有者隔离，并对各条登记 claim 通过受校验的实际引擎动作产生可追溯获知，不仅检查静态数组；每村至少一条经合法移动/等候接近人物→话题场景→真实工具路由交谈→Store 持久事件→真实 `/search` 的完整链。测试可用隔离世界/存档，不能向聊天、玩家记忆或 heard 记录直接塞 claim 代替交谈，也不能直接改 NPC 位置绕过到场。首次交谈前自然关键词搜不到未获知 claim，交谈后能搜到带讲述者和未核实标记的 claim；未到场、睡眠/失能、冒充 source、改 claim、请求 truth、只看 public catalog 均不得产生获知。覆盖重放/重复、重启、导入导出和撤销后索引清除；静态 NPC 内容前后不变，公共工具仍 25 个。给出链路证据，不宣称本卡通过了真实模型叙述。
+
+不要做：重复核验 37 人缺口、改写 40 条已审核正文或静态 NPC 合格字段、新增人口、公开真假、自动全村传播、借此完成 300 传闻或世界时钟、调用真实模型、降低知识门槛。依赖：T02 已合入；按 T03 已确认的检索合同实施，最终联合验收要求 T03 完成。并行：可与 T03 和 T06–T10 作者块并行，因为文件所有权分开；不与 T13/T15 或任何 engine/npc-memory/scene-card/chronicle/tools 改动并行。新树 `F:/dnd-wt/T21`、分支 `t21`；本卡是用户第 1 项四村完成前置，也是 T11/T13 依赖。
 
 ## 后续粗卡：全部待细化
 
