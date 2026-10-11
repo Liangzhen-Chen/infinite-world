@@ -142,8 +142,10 @@ export async function runPlaytest({scenario,api,client,bundle,attempt=1,processM
     const ledgerPass=assertions.length>0&&passed===assertions.length;
     const reviews=reports.filter(row=>row.originalReply!==undefined).map(row=>row.consistency);
     const consistencyVerified=reviews.length>0&&reviews.every(row=>row?.verified===true&&row.canCommit);
+    const consistencyIssues=reviews.flatMap(row=>row?.issues??[]);
+    const consistencyPass=consistencyVerified&&reviews.every(row=>row.status==='verified')&&consistencyIssues.length===0;
     return{id:scenario.id,title:scenario.title,attempt,settings,fixture:scenario.initial??{mode:'new'},requirements:scenario.requirements,
-        ledgerPass,consistencyVerified,acceptancePass:ledgerPass&&consistencyVerified,
+        ledgerPass,consistencyVerified,consistencyPass,consistencyIssues,reviewRequired:!consistencyPass,acceptancePass:ledgerPass&&consistencyPass,
         assertions:assertions.length,passed,ratio:passed/Math.max(1,assertions.length),pass:assertions.length>0&&passed===assertions.length,turns:reports,
         session:{campaignId,chat,history,historyCursor},finalDocument:view.document};
 }

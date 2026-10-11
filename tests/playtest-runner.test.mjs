@@ -57,3 +57,17 @@ test('工具已经扣款但正文生成失败时，仍核对所有原定账本�
     assert.equal(result.pass,false);assert.equal(result.assertions,2);assert.equal(result.passed,1);
     assert.equal(result.turns[0].player.coins,174);assert.match(result.turns[0].errors[0],/中断/);
 });
+
+test('审查完成且允许提交的warning仍需复核，不能冒充整场验收通过',async t=>{
+    const server=await createPlaytestServer();t.after(()=>server.close());
+    const warning={category:'meta',severity:'warning',quote:'测试原句',reason:'待复核'};
+    const api=async(name,args)=>{
+        const result=await server.api(name,args);
+        return name==='review/reply'?{...result,verified:true,canCommit:true,status:'issues',issues:[warning]}:result;
+    };
+    const client={async generate(){return{choices:[{message:{role:'assistant',content:'已核对。'}}]};}};
+    const result=await runPlaytest({scenario:{id:'warning-review',turns:[{input:'（场外）只核对，不推进时间。',assertions:[{kind:'elapsed',min:0,max:0}]}]},api,client,bundle:await loadPromptBundle()});
+    assert.equal(result.ledgerPass,true);assert.equal(result.consistencyVerified,true);
+    assert.equal(result.consistencyPass,false);assert.equal(result.reviewRequired,true);assert.equal(result.acceptancePass,false);
+    assert.deepEqual(result.consistencyIssues,[warning]);
+});
