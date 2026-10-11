@@ -30,6 +30,12 @@
             "state.player.coins",
             "state.inventory"
           ]
+        },
+        {
+          "kind": "present",
+          "npcs": [
+            "npc_hw_ayan"
+          ]
         }
       ]
     },
@@ -72,7 +78,8 @@
             "npc": "npc_hw_ayan",
             "kind": "craft"
           },
-          "min": 1
+          "min": 1,
+          "settled": true
         }
       ],
       "expectedTools": [
@@ -122,6 +129,12 @@
           "paths": [
             "state.inventory"
           ]
+        },
+        {
+          "kind": "present",
+          "npcs": [
+            "npc_hw_ayan"
+          ]
         }
       ]
     },
@@ -133,6 +146,12 @@
           "paths": [
             "state.inventory",
             "state.player.coins"
+          ]
+        },
+        {
+          "kind": "present",
+          "npcs": [
+            "npc_hw_ayan"
           ]
         }
       ]

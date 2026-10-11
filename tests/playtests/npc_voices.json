@@ -46,6 +46,14 @@
           "kind": "equals",
           "path": "state.npcs.npc_hw_shijin.location",
           "value": "bld_hw_qingdeng"
+        },
+        {
+          "kind": "present",
+          "npcs": [
+            "npc_hw_linsui",
+            "npc_hw_hezhou",
+            "npc_hw_shijin"
+          ]
         }
       ]
     },
@@ -66,6 +74,14 @@
           "kind": "equals",
           "path": "state.npcs.npc_hw_shijin.location",
           "value": "bld_hw_qingdeng"
+        },
+        {
+          "kind": "present",
+          "npcs": [
+            "npc_hw_linsui",
+            "npc_hw_hezhou",
+            "npc_hw_shijin"
+          ]
         }
       ]
     },
@@ -77,6 +93,14 @@
           "paths": [
             "state.player.coins",
             "state.inventory"
+          ]
+        },
+        {
+          "kind": "present",
+          "npcs": [
+            "npc_hw_linsui",
+            "npc_hw_hezhou",
+            "npc_hw_shijin"
           ]
         }
       ]
@@ -90,6 +114,14 @@
             "state.player.coins",
             "state.inventory"
           ]
+        },
+        {
+          "kind": "present",
+          "npcs": [
+            "npc_hw_linsui",
+            "npc_hw_hezhou",
+            "npc_hw_shijin"
+          ]
         }
       ]
     },
@@ -102,11 +134,19 @@
             "state.player.coins",
             "state.inventory"
           ]
+        },
+        {
+          "kind": "present",
+          "npcs": [
+            "npc_hw_linsui",
+            "npc_hw_hezhou",
+            "npc_hw_shijin"
+          ]
         }
       ]
     },
     {
-      "input": "我把话题换成修一把用了很久的椅子。三位会先看哪里、怎么决定修不修？只讨论，不实际拿椅子开工。",
+      "input": "我把话题换成修一把用了很久的椅子，仍请林穗、贺舟、施锦这三位各说自己的看法：会先看哪里、怎么决定修不修？只讨论，不实际拿椅子开工。",
       "assertions": [
         {
           "kind": "unchanged",
@@ -114,6 +154,14 @@
             "state.player.coins",
             "state.inventory",
             "state.projects"
+          ]
+        },
+        {
+          "kind": "present",
+          "npcs": [
+            "npc_hw_linsui",
+            "npc_hw_hezhou",
+            "npc_hw_shijin"
           ]
         }
       ]
@@ -127,6 +175,14 @@
             "state.player.coins",
             "state.inventory",
             "state.quests"
+          ]
+        },
+        {
+          "kind": "present",
+          "npcs": [
+            "npc_hw_linsui",
+            "npc_hw_hezhou",
+            "npc_hw_shijin"
           ]
         }
       ]
@@ -152,8 +208,16 @@
   ],
   "rubric": {
     "blindVoice": {
-      "speakers": ["npc_hw_linsui", "npc_hw_hezhou", "npc_hw_shijin"],
-      "turns": [2, 6, 7],
+      "speakers": [
+        "npc_hw_linsui",
+        "npc_hw_hezhou",
+        "npc_hw_shijin"
+      ],
+      "turns": [
+        2,
+        6,
+        7
+      ],
       "minimumPerSpeaker": 2
     },
     "truth": "本人经历须有正式人物资料或真实事件依据，不编造玩家过去的帮助。",
