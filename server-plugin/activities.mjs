@@ -135,6 +135,7 @@ export const activities={
         throw new Error('未知聚落事务');
     },
     quest(d,args,id){
+        if(!['publish','accept','complete'].includes(args.operation))throw new Error('未知任务操作；发布用publish，接受用accept，完成用complete');
         if(args.operation==='publish'){
             const publisher=this.resolve(args.publisher,'npc'),npc=d.get('state','npcs',publisher),grade=args.grade;
             if(!npc||['死亡','濒死'].includes(npc.status))throw new Error('任务发布者无法清醒履约');

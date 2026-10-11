@@ -43,3 +43,16 @@ test('增量索引：缺少前序或尾部消息时拒绝且保留旧索引',()=
     index.syncDelta(1,[{mes:'黄色风筝'}],2);
     assert.equal(index.search('黄色风筝')[0].id,'chat_1');
 });
+
+test('不精确物品名只推荐同类候选，短实物名称不被工序册挤掉',()=>{
+    const resolver=new EntityResolver([
+        ...Array.from({length:6},(_,i)=>({id:`item_book_${i}`,name:`燕麦加工工序册第${i}卷`})),
+        {id:'recipe_oats',name:'燕麦'}, {id:'item_oats',name:'带壳燕麦'}, {id:'item_flour',name:'燕麦粉'},
+    ]);
+    assert.throws(()=>resolver.resolve('燕麦',null,'item'),error=>{
+        assert.match(error.message,/带壳燕麦（item_oats）/);
+        assert.match(error.message,/燕麦粉（item_flour）/);
+        assert.doesNotMatch(error.message,/recipe_oats/);
+        return true;
+    });
+});

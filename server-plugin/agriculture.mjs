@@ -182,6 +182,7 @@ export function agricultureAction(d,args,eventId){
         counter(d,this,p);
         const quantity=operation==='repair'?0:int(args.quantity);
         const item=this.rules.agriculture.grainItem;
+        if(!this.replaying&&['buy','donate','reserve_seed'].includes(operation)&&args.item!==undefined&&this.resolve(args.item,'item')!==item)throw new Error(`粮仓此操作只办理${this.byId.get(item).name}，不能替换指定物品；其他商品请向实际商家交易`);
         if(operation==='buy'){
             const reserve=s.population*p.reserveDays,available=Math.max(0,r.batches.filter(b=>b.kind==='grain').reduce((n,b)=>n+b.amount,0)-reserve),price=this.byId.get(item).basePrice,cost=quantity*price;
             if(quantity>available)throw new Error('粮仓没有这份可售余粮，过冬储粮和种粮不出售');if(d.get('state','player','coins')<cost)throw new Error('买粮余额不足');

@@ -23,6 +23,14 @@ test('任务：身份额度、托管、领取、可核验交付和一次结算',
     assert.equal(c.state.player.coins,200);assert.equal(c.state.inventory.item_ration.quantity,2);assert.equal(c.state.quests.quest_offer.escrow,0);
     await assert.rejects(run(c,'world_quest',{operation:'complete',quest:'quest_offer'},'repeat'),/可结算/);
 });
+
+test('无效任务操作直接提示支持的操作且不改变账本',async()=>{
+    const c=fresh(),before=structuredClone(c);
+    for(const operation of ['create','finish',undefined]){
+        await assert.rejects(run(c,'world_quest',{operation,publisher:'林穗',personal:true,grade:'D',reward:20,content:'交粮',objective:{type:'deliver',item:'干粮',quantity:1}}),/发布用publish.*接受用accept.*完成用complete/);
+        assert.deepEqual(c,before);
+    }
+});
 test('运行时 NPC：稳定编号、年龄标记、重复名称拒绝、不能白送钱物',async()=>{
     const c=fresh();const created=await run(c,'world_create',{type:'npc',name:'测试赶车人',data:{age:16,occupation:'赶车人学徒',notes:'正在等舅舅修轮轴',coins:1000}},'cartboy');
     assert.equal(created.document.state.created.npc_created_cartboy.flags.minor,true);

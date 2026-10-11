@@ -75,6 +75,19 @@ test('粮仓买卖、交粮和留种转移真实谷物与铜钱，并保留种�
     await assert.rejects(run(doc,'world_farm',{operation:'buy',quantity:8000},'oversell'),/余粮/);
     await assert.rejects(run(doc,'world_farm',{operation:'donate',quantity:10},'fake_donate'),/行囊/);
 });
+test('粮仓拒绝用谷物替代指定商品；正确物品可交易，历史事件仍可回放',async()=>{
+    const{engine,c,run}=setup();atCounter(c);const before=structuredClone(c);
+    for(const operation of ['buy','donate','reserve_seed']){
+        await assert.rejects(run(c,'world_field',{operation:`farm_${operation}`,quantity:1,item:'燕麦粉'},`wrong_${operation}`),/只办理带壳燕麦.*不能替换/);
+        assert.deepEqual(c,before);
+    }
+    const purchased=await run(c,'world_field',{operation:'farm_buy',quantity:1,item:'带壳燕麦'},'correct');
+    assert.equal(purchased.document.state.inventory.item_oats.quantity,1);
+    const historic=await engine.reduce(c,{tool:'world_field',args:{operation:'farm_buy',quantity:1,item:'燕麦粉'},eventId:'historic'},{replay:true});
+    assert.equal(applyPatches(c,historic.patches).state.inventory.item_oats.quantity,1);
+    assert.deepEqual(c,before);
+});
+
 test('柜台在场、清醒和开放要求；被拒操作不改变输入存档',async()=>{
     const{c,run}=setup();atCounter(c);
     for(const change of [d=>d.state.location='loc_hw',d=>d.state.npcs.npc_hw_chenbai.status='睡眠',
