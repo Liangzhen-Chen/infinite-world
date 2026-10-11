@@ -2918,6 +2918,12 @@
             ],
             "additionalProperties": true
           }
+        },
+        "npcStockUpdateVersion": {
+          "type": "integer",
+          "enum": [
+            1
+          ]
         }
       },
       "required": [
@@ -7645,6 +7651,90 @@
             "type": "string",
             "minLength": 1
           }
+        },
+        "registrationMode": {
+          "type": "string",
+          "enum": [
+            "complete",
+            "seeded-on-demand"
+          ]
+        },
+        "populationSeed": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "^[a-z0-9][a-z0-9_-]*$"
+        },
+        "registeredPopulation": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "pendingPopulation": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "registeredHouseholdCount": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "pendingHouseholdCount": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "registeredAgeStructure": {
+          "type": "object",
+          "properties": {
+            "children": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "youngAdults": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "adults": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "elders": {
+              "type": "integer",
+              "minimum": 0
+            }
+          },
+          "required": [
+            "children",
+            "youngAdults",
+            "adults",
+            "elders"
+          ],
+          "additionalProperties": false
+        },
+        "pendingAgeStructure": {
+          "type": "object",
+          "properties": {
+            "children": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "youngAdults": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "adults": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "elders": {
+              "type": "integer",
+              "minimum": 0
+            }
+          },
+          "required": [
+            "children",
+            "youngAdults",
+            "adults",
+            "elders"
+          ],
+          "additionalProperties": false
         }
       },
       "required": [

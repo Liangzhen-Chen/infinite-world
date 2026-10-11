@@ -12,17 +12,23 @@ const merge=(existing,incoming)=>{
  return [...values.values()];
 };
 export function mergeHewan(world,candidate){
- for(const [id,hash]of Object.entries(candidate.preservedHashes))if(hashContent(world.npcs.find(n=>n.id===id))!==hash)throw Error(`原有人物事实变化：${id}`);
  const profile={...candidate.settlement,kinship:candidate.kinship};
+ // An installed batch must never reset subsequent catalog development. Partial
+ // installations still need the original facts, and owned rows remain immutable.
+ const installed=Object.entries({npcs:candidate.npcs,residents:candidate.residents,households:candidate.households,settlementProfiles:[profile],locations:candidate.locations,routes:candidate.routes})
+  .every(([key,rows])=>rows.every(row=>(world[key]??[]).some(current=>current.id===row.id&&hashContent(current)===hashContent(row))));
+ if(!installed)for(const [id,hash]of Object.entries(candidate.preservedHashes))if(hashContent(world.npcs.find(n=>n.id===id))!==hash)throw Error(`原有人物事实变化：${id}`);
  return {...world,npcs:merge(world.npcs,candidate.npcs),residents:merge(world.residents??[],candidate.residents),households:merge(world.households??[],candidate.households),
   settlementProfiles:merge(world.settlementProfiles??[],[profile]),locations:merge(world.locations,candidate.locations),routes:merge(world.routes,candidate.routes)};
 }
 export async function publishHewan({root=path.resolve(import.meta.dirname,'..','world'),publish=false}={}){
  const world=await loadWorld(root),directory=path.join(root,'drafts/w1/hewan'),read=name=>fs.readFile(path.join(directory,name+'.json'),'utf8').then(JSON.parse);
- const [candidate,foundation,audit]=await Promise.all([read('candidate'),read('foundation'),read('validation')]);
+ const [candidate,foundation,audit,preserved]=await Promise.all([read('candidate'),read('foundation'),read('validation'),read('preserved-npcs')]);
  if(['L1','L2','L4'].some(key=>audit[key]!=='passed'))throw Error('河湾内容尚未完成审核');
+ if(hashContent(candidate.preservedHashes)!==hashContent(foundation.preservedHashes)||preserved.length!==Object.keys(candidate.preservedHashes).length||new Set(preserved.map(n=>n.id)).size!==preserved.length)throw Error('冻结原人物审核资料不符');
+ for(const row of preserved)if(hashContent(row)!==candidate.preservedHashes[row.id])throw Error(`冻结原人物审核资料不符：${row.id}`);
  const remove=(rows,added)=>rows.filter(row=>!added.some(n=>n.id===row.id));
- const original={...world,npcs:remove(world.npcs,candidate.npcs),residents:remove(world.residents??[],candidate.residents),locations:remove(world.locations,candidate.locations),routes:remove(world.routes,candidate.routes)};
+ const original={...world,npcs:remove(world.npcs,candidate.npcs).map(n=>preserved.find(row=>row.id===n.id)??n),residents:remove(world.residents??[],candidate.residents),locations:remove(world.locations,candidate.locations),routes:remove(world.routes,candidate.routes)};
  validateFoundation(candidate,original);
  for(const kind of ['npcs','residents','locations']){
   const approved=await readApprovedContent(path.join(directory,kind),foundation[kind],{contextFor:entry=>contextFor(entry,foundation,original),revision});

@@ -26,9 +26,8 @@ test('25个工具入口；合并操作保留真实执行、幂等与回滚，原
         const fixture=structuredClone(created.document);
         if(['world_wildlife','world_lair'].includes(oldTool))fixture.state.location='loc_hw_northwood';
         if(oldTool==='world_lair'){
-            await assert.rejects(engine.reduce(fixture,{tool,args,eventId:'observe'}),/没有启用首领巢穴/);
-            await assert.rejects(engine.reduce(fixture,{tool:oldTool,args:oldArgs,eventId:'observe'}),/没有启用首领巢穴/);
-            continue;
+            const boss=engine.world.bosses[0];assert.ok(boss?.residence);
+            fixture.state.location=boss.residence.location;args.lair=boss.residence.id;oldArgs.lair=boss.residence.id;
         }
         assert.deepEqual(await engine.reduce(fixture,{tool,args,eventId:'observe'}),await engine.reduce(fixture,{tool:oldTool,args:oldArgs,eventId:'observe'}));
     }
@@ -39,6 +38,16 @@ test('25个工具入口；合并操作保留真实执行、幂等与回滚，原
     assert.equal(stolen.result.ok,true);assert.equal(duplicate.duplicate,true);
     const undone=await server.api('reconcile',{campaignId,validAnchors:['walk']});
     assert.deepEqual(undone.document.state,before.document.state);
+});
+
+test('旧目录未启用首领时，新旧观察入口均拒绝且不改变存档',async t=>{
+    const world=await loadWorld();world.bosses=[];delete world.rules.bossEcology;
+    const engine=new WorldEngine(world),server=await createPlaytestServer();t.after(()=>server.close());
+    const {document}=await server.api('create',{character:{name:'旧目录测试者'}});document.state.location='loc_hw_northwood';
+    const before=structuredClone(document);
+    await assert.rejects(engine.reduce(document,{tool:'world_field',args:{operation:'lair_observe'},eventId:'observe'}),/没有启用首领巢穴/);
+    await assert.rejects(engine.reduce(document,{tool:'world_lair',args:{operation:'observe'},eventId:'observe'}),/没有启用首领巢穴/);
+    assert.deepEqual(document,before);
 });
 
 test('调用统计区分错误职责、查询后漏执行、失败重试和未满足前置条件',()=>{

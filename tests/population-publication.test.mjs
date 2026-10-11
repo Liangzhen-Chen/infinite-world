@@ -10,8 +10,9 @@ import {validatePopulation} from '../tools/population-validation.mjs';
 import {WorldEngine} from '../server-plugin/engine.mjs';
 import {compatibleWorld,planWorldUpgrade} from '../server-plugin/world-upgrade.mjs';
 import {applyPatches} from '../server-plugin/storage.mjs';
-const source=await loadWorld(),candidate=JSON.parse(await fs.readFile('world/drafts/w1/hewan/candidate.json','utf8'));
-const addedIds=new Set(candidate.npcs.map(n=>n.id)),original={...source,npcs:source.npcs.filter(n=>!addedIds.has(n.id)),residents:[],households:[],settlementProfiles:[],locations:source.locations.filter(n=>!candidate.locations.some(l=>l.id===n.id)),routes:source.routes.filter(n=>!candidate.routes.some(r=>r.id===n.id))};
+import {villagesOriginalWorld} from '../tools/publish-w1-villages.mjs';
+const source=villagesOriginalWorld(await loadWorld()),candidate=JSON.parse(await fs.readFile('world/drafts/w1/hewan/candidate.json','utf8')),preserved=JSON.parse(await fs.readFile('world/drafts/w1/hewan/preserved-npcs.json','utf8'));
+const addedIds=new Set(candidate.npcs.map(n=>n.id)),original={...source,npcs:preserved,residents:[],households:[],settlementProfiles:[],locations:source.locations.filter(n=>!candidate.locations.some(l=>l.id===n.id)),routes:source.routes.filter(n=>!candidate.routes.some(r=>r.id===n.id))};
 const world=mergeHewan(original,candidate),legacy=JSON.parse(await fs.readFile('tests/fixtures/legacy/seed.json','utf8'));
 
 test('河湾发布核对逐条审核且只写正式目录，重复发布零写入',async t=>{
@@ -23,6 +24,13 @@ test('河湾发布核对逐条审核且只写正式目录，重复发布零写�
  const preview=await publishHewan({root});assert.equal(preview.published,false);assert.equal((await loadWorld(root)).npcs.length,18);
  const first=await publishHewan({root,publish:true});assert.equal(first.changed.length,6);assert.equal((await loadWorld(root)).npcs.length,32);
  assert.deepEqual((await publishHewan({root,publish:true})).changed,[]);
+ // Later books, skills and factual edits are not the old population batch's
+ // property. Review fingerprints continue to use its immutable original facts.
+ const later=await loadWorld(root),luqing=later.npcs.find(n=>n.id==='npc_hw_luqing');luqing.inventory[later.items[0].id]=3;luqing.notes+='后续目录说明';
+ await fs.writeFile(path.join(root,'people/baseline.json'),JSON.stringify(later.npcs));
+ assert.deepEqual((await publishHewan({root,publish:true})).changed,[]);assert.deepEqual((await loadWorld(root)).npcs,later.npcs);
+ const frozenPath=path.join(root,'drafts/w1/hewan/preserved-npcs.json'),frozenRaw=await fs.readFile(frozenPath,'utf8'),tampered=JSON.parse(frozenRaw);tampered[0].coins++;
+ await fs.writeFile(frozenPath,JSON.stringify(tampered));await assert.rejects(publishHewan({root,publish:true}),/冻结原人物审核资料不符/);await fs.writeFile(frozenPath,frozenRaw);
  const changed=structuredClone(candidate);changed.residents[0].currentConcern+='无据新事';await fs.writeFile(path.join(root,'drafts/w1/hewan/candidate.json'),JSON.stringify(changed));
  await assert.rejects(publishHewan({root,publish:true}),/已审核内容不符/);
 });

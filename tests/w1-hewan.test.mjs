@@ -7,7 +7,8 @@ import {w1HewanFoundation} from '../world/design/w1-hewan.mjs';
 import {w1RegionPlan} from '../world/design/w1-region-plan.mjs';
 import {validateFoundation,validateDraft,applyProse} from '../tools/w1-hewan-content.mjs';
 import {WorldEngine} from '../server-plugin/engine.mjs';
-const loaded=await loadWorld(),bones=w1HewanFoundation(loaded);
+import {villagesOriginalWorld} from '../tools/publish-w1-villages.mjs';
+const loaded=villagesOriginalWorld(await loadWorld()),bones=w1HewanFoundation(loaded);
 // Keep the original foundation fixture after this batch is formally published.
 const world={...loaded,npcs:loaded.npcs.filter(n=>!bones.npcs.some(row=>row.id===n.id)),residents:[],households:[],settlementProfiles:[],locations:loaded.locations.filter(n=>!bones.locations.some(row=>row.id===n.id)),routes:loaded.routes.filter(n=>!bones.routes.some(row=>row.id===n.id))};
 test('河湾58常住22户及30full口径不含暂住和通勤，原18档保持原文',()=>{

@@ -24,11 +24,39 @@ export function validatePopulation(world){
  for(const row of world.settlementProfiles??[]){
   check(!profiles.has(row.id),`聚落人口册重复：${row.id}`);profiles.set(row.id,row);
   check(places.has(row.id)&&(!row.parent||places.has(row.parent)),`人口册聚落不存在：${row.id}`);
-  check(row.residentIds.length===row.population,`人口册人数不符：${row.id}`);
+  const seeded=row.registrationMode==='seeded-on-demand';
+  check(row.registrationMode===undefined||['complete','seeded-on-demand'].includes(row.registrationMode),`人口登记模式无效：${row.id}`);
+  check(new Set(row.residentIds).size===row.residentIds.length,`人口册人物重复：${row.id}`);
+  if(seeded){
+   for(const key of ['registeredPopulation','pendingPopulation','registeredHouseholdCount','pendingHouseholdCount'])check(Number.isInteger(row[key])&&row[key]>=0,`种子人口缺少非负整数：${row.id}/${key}`);
+   check(typeof row.populationSeed==='string'&&/^[a-z0-9][a-z0-9_-]*$/.test(row.populationSeed),`种子人口缺少稳定种子：${row.id}`);
+   check(row.registeredPopulation+row.pendingPopulation===row.population,`种子人口登记与待生成合计不符：${row.id}`);
+   check(row.registeredHouseholdCount+row.pendingHouseholdCount===row.householdCount,`种子户籍登记与待生成合计不符：${row.id}`);
+   check(row.pendingPopulation>=row.pendingHouseholdCount,`待生成户数超过待生成人口：${row.id}`);
+   check(row.pendingPopulation===0||row.pendingHouseholdCount>0,`待生成人口没有待生成住户：${row.id}`);
+  }else{
+   check(row.populationSeed===undefined,`完整人口册不得声明待生成种子：${row.id}`);
+   check(row.registeredPopulation===undefined||row.registeredPopulation===row.population,`完整人口册登记人数不符：${row.id}`);
+   check(row.pendingPopulation===undefined||row.pendingPopulation===0,`完整人口册不得留待生成人口：${row.id}`);
+   check(row.registeredHouseholdCount===undefined||row.registeredHouseholdCount===row.householdCount,`完整人口册登记户数不符：${row.id}`);
+   check(row.pendingHouseholdCount===undefined||row.pendingHouseholdCount===0,`完整人口册不得留待生成户籍：${row.id}`);
+  }
+  check(row.residentIds.length===(seeded?row.registeredPopulation:row.population),`人口册人数不符：${row.id}`);
+  if(seeded){
+   const keys=['children','youngAdults','adults','elders'],ages={children:0,youngAdults:0,adults:0,elders:0};
+   for(const id of row.residentIds){const age=people.get(id)?.age;if(Number.isFinite(age))ages[age<18?'children':age<35?'youngAdults':age<60?'adults':'elders']++;}
+   check(row.ageStructure&&row.registeredAgeStructure&&row.pendingAgeStructure,`种子人口缺少分层年龄结构：${row.id}`);
+   for(const key of keys){
+    check(row.registeredAgeStructure?.[key]===ages[key],`已登记年龄结构不符：${row.id}/${key}`);
+    check(Number.isInteger(row.pendingAgeStructure?.[key])&&row.pendingAgeStructure[key]>=0,`待生成年龄结构无效：${row.id}/${key}`);
+    check(row.ageStructure?.[key]===row.registeredAgeStructure?.[key]+row.pendingAgeStructure?.[key],`种子年龄结构合计不符：${row.id}/${key}`);
+   }
+   check(keys.reduce((sum,key)=>sum+(row.pendingAgeStructure?.[key]??NaN),0)===row.pendingPopulation,`待生成年龄人数不符：${row.id}`);
+  }
   if(row.ageStructure)check(Object.values(row.ageStructure).reduce((sum,value)=>sum+value,0)===row.population,`人口年龄结构合计不符：${row.id}`);
   for(const id of row.buildingIds??[])check(places.has(id)&&places.get(id).parent===row.id,`聚落建筑归属不符：${row.id}/${id}`);
   const locals=new Set(row.residentIds),homes=[...households.values()].filter(h=>h.settlement===row.id);
-  check(homes.length===row.householdCount,`人口册户数不符：${row.id}`);
+  check(homes.length===(seeded?row.registeredHouseholdCount:row.householdCount),`人口册户数不符：${row.id}`);
   const registered=new Set(homes.flatMap(h=>h.members));
   check(registered.size===locals.size&&[...registered].every(id=>locals.has(id)),`常住名单与户籍不一致：${row.id}`);
   for(const id of [...row.residentIds,...row.visitors??[],...row.commuters??[]])check(people.has(id),`人口册人物不存在：${row.id}/${id}`);
