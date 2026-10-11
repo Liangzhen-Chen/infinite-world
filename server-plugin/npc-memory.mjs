@@ -56,7 +56,7 @@ export function recordNpcMemories(d,engine,before,tool,args,detail,eventId){
     for(const [id,obligation]of Object.entries(after.obligations??{})){
         const old=before.obligations?.[id];if(old?.status===obligation.status)continue;
         const terms=obligation.type==='付款'?`${obligation.coins}铜付款`:obligation.type==='送货'?`${name(obligation.item)}${obligation.quantity}份送货`:obligation.type;
-        add(`obligation_${id}`,`${name(obligation.promisor)}对${name(obligation.promisee)}的${terms}约定：${obligation.status}`,[obligation.promisor,obligation.promisee],{observers:[],partyNotice:Boolean(old),...(old?{location:null,noticeKey:`:obligation_${id}`}:{ }),salience:4,emotion:obligation.status==='违约'?'失望':'认真'});
+        add(`obligation_${id}`,`${name(obligation.promisor)}对${name(obligation.promisee)}的${terms}约定：${obligation.status}`,[obligation.promisor,obligation.promisee],{observers:[],partyNotice:Boolean(old),...(obligation.deliveryVersion===1&&Number.isSafeInteger(obligation.resolvedAt)?{minute:obligation.resolvedAt}:{}),...(old?{location:null,noticeKey:`:obligation_${id}`}:{ }),salience:4,emotion:obligation.status==='违约'?'失望':'认真'});
     }
     // Debt parties know the state of their agreement; bystanders do not learn
     // a debt or its amount from a later, off-screen deadline calculation.
