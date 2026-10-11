@@ -1,17 +1,30 @@
 {
-  "capturedAtUtc": "2026-10-11T21:26:21.2964425Z",
-  "source": "functions.get_goal",
-  "objective": "根据开发指南v2继续开发，完成整个世界开发直到可玩",
-  "goalCreatedAt": 1791631803,
-  "tokensUsed": 9298782,
-  "timeUsedSeconds": 19823,
-  "previousCalibration": {
-    "timeUsedSeconds": 18066,
-    "capturedAtUtc": "2026-10-11T20:56:51Z",
-    "tokensUsed": 8511770
+  "capturedAtUtc": "2026-10-11 22:37:10 UTC",
+  "threadId": "01a12d06-8fd3-7d00-8f62-78c510ce571a",
+  "goalStatus": "active",
+  "systemCumulativeTokens": 693538,
+  "systemActiveTimeSeconds": 1329,
+  "source": "get_goal; 系统计数，非净生成token或模型账单。当前主会话首次可核验快照；此前本期净用量未知。",
+  "modelCostYuan": null,
+  "previousGoalSnapshot": {
+    "capturedAtUtc": "2026-10-11T21:26:21.2964425Z",
+    "source": "functions.get_goal",
+    "objective": "根据开发指南v2继续开发，完成整个世界开发直到可玩",
+    "goalCreatedAt": 1791631803,
+    "tokensUsed": 9298782,
+    "timeUsedSeconds": 19823,
+    "previousCalibration": {
+      "timeUsedSeconds": 18066,
+      "capturedAtUtc": "2026-10-11T20:56:51Z",
+      "tokensUsed": 8511770
+    },
+    "periodTokens": 787012,
+    "periodTimeUsedSeconds": 1757,
+    "interpretation": "系统累计计数及相邻快照差，不等同账单、净生成 token 或实际墙钟时间；本轮反馈已收到，原文见Claude校准.md。",
+    "claudeFeedbackReceived": true
   },
-  "periodTokens": 787012,
-  "periodTimeUsedSeconds": 1757,
-  "interpretation": "系统累计计数及相邻快照差，不等同账单、净生成 token 或实际墙钟时间；本轮反馈已收到，原文见Claude校准.md。",
-  "claudeFeedbackReceived": true
+  "periodTokens": null,
+  "periodTimeUsedSeconds": null,
+  "claudeFeedbackReceived": false,
+  "interpretation": "不同目标的累计系统计数不可相减。本目标首份可核验快照建立于capturedAtUtc；截至该快照的本期净token、有效工作时间及Codex模型费用未知。后续只比较同目标系统快照差，不能冒充净生成或账单；Claude连通性测试不计整体校准。"
 }
