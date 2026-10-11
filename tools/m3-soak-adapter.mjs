@@ -33,7 +33,7 @@ export async function soakClient(directory,{client,budgetYuan}={}){
 // frozen before their dependent tool calls. Pending writes retain event IDs.
 export async function createSoakAdapter({directory,client,budgetYuan=50,bundle,processMessages,countTokens,historyWindow,world,afterHttp,createBody=null}={}){
  directory=path.resolve(directory);await fs.mkdir(path.join(directory,'tasks'),{recursive:true});
- const shared=await soakClient(directory,{client,budgetYuan});bundle??=await loadPromptBundle();processMessages??=(await loadHostPromptProcessor()).process;
+ const shared=await soakClient(directory,{client,budgetYuan});bundle??=await loadPromptBundle();
  const server=await createPlaytestServer({world,directory:path.join(directory,'server'),seed:'m3-continuous-soak',plannerClient:shared,consistencyClient:shared});
  async function initialSession(persona){
   const file=path.join(directory,`initial-${persona}.json`),existing=await optional(file,null);if(existing)return existing;
@@ -66,6 +66,7 @@ export async function createSoakAdapter({directory,client,budgetYuan=50,bundle,p
    // Creating an empty campaign cannot transfer resources. Save its reference
    // before the first game action; a crash here can only leave an empty branch.
    if(!tape.session){tape.session=task.checkpoint??await initialSession(task.persona);await save();}
+   processMessages??=(await loadHostPromptProcessor()).process;
    const result=await runPlaytest({scenario:{id:task.id,turns:[{input:task.input,anchor:task.id}]},session:tape.session,api,client:narrator,bundle,processMessages,countTokens,historyWindow});
    tape.report=result;await save();const turn=result.turns[0];
    if(turn.errors.length||!turn.consistency?.reviewId)throw Error(`回合未验证：${turn.errors.join('；')||turn.consistency?.status}`);

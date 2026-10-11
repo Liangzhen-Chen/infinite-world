@@ -29,3 +29,29 @@ test('未知回合和旧回放指标不能被已知子集0稀释，全零期望�
  const out=assessSoakTiming({...replay,elapsedMinutes:1},{input:'（场外）解释一下规则。'});assert.equal(out.expectedMinutes,0);assert.equal(summarizeSoakTiming([out]).pass,false);
  assert.equal(summarizeSoakTiming([known]).pass,true);
 });
+
+test('13分钟短等与六小时误作六时辰分别保留玩家原文和实际偏差',()=>{
+ const short=assessSoakTiming({...replay,elapsedMinutes:13},{input:'我等60分钟。'});
+ assert.equal(short.expectedMinutes,60);assert.equal(short.deviation,47/60);assert.equal(summarizeSoakTiming([short]).pass,false);
+ const doubled=assessSoakTiming({...replay,elapsedMinutes:720},{input:'我等六小时。'});
+ assert.equal(doubled.expectedMinutes,360);assert.equal(doubled.deviation,1);assert.equal(summarizeSoakTiming([doubled]).pass,false);
+});
+
+test('明确等待后交谈分开核验，短等不能用额外交谈补齐总时间',()=>{
+ const evidence=(waited,talked,tool='world_time')=>({...replay,elapsedMinutes:waited+talked,actionMinutes:waited,tailMinutes:talked,
+  receipts:[{eventId:'wait',tool,args:{minutes:waited},declaredMinutes:waited,elapsedMinutes:waited}]});
+ const input='我等60分钟，然后我问林穗：“最近好吗？”';
+ for(const talked of [5,12,20]){
+  const timing=assessSoakTiming(evidence(60,talked),{input});assert.equal(timing.status,'bounded');assert.equal(timing.deviation,0);
+  assert.deepEqual(timing.expectedRange,[65,80]);assert.equal(timing.components.wait.expectedMinutes,60);assert.equal(summarizeSoakTiming([timing]).pass,true);
+ }
+ const shortened=assessSoakTiming(evidence(36,34),{input});assert.equal(shortened.elapsedMinutes,70);assert.equal(shortened.deviationMinutes,38);
+ assert.equal(shortened.components.wait.deviationMinutes,24);assert.equal(shortened.components.dialogue.deviationMinutes,14);assert.equal(summarizeSoakTiming([shortened]).pass,false);
+ const duplicate=assessSoakTiming(evidence(60,30),{input});assert.equal(duplicate.components.dialogue.deviationMinutes,10);
+ const masked=assessSoakTiming(evidence(36,24),{input:'我等60分钟。'});assert.equal(masked.elapsedMinutes,60);assert.equal(masked.deviationMinutes,48);
+ const countedTwice=assessSoakTiming(evidence(60,10),{input:'我等60分钟。'});assert.equal(countedTwice.components.dialogue.deviationMinutes,10);
+ for(const row of [replay,evidence(60,10,'world_trade'),{...evidence(60,10),tailMinutes:0}])assert.equal(assessSoakTiming(row,{input}).status,'unknown');
+ assert.equal(assessSoakTiming(evidence(60,10,'world_trade'),{input:'我等60分钟。'}).status,'unknown');
+ assert.equal(explicitSoakTiming('我等到今天10:00，接着谢谢。',540).range[0],65);
+ assert.equal(explicitSoakTiming('我等60分钟然后买面包。',540),null);
+});

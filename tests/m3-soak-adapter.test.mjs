@@ -10,11 +10,11 @@ import {createSoakAdapter,assessSoakTiming} from '../tools/m3-soak-adapter.mjs';
 import {runSoak} from '../tools/m3-soak-runner.mjs';
 import {openSoakRun,nextSoakTask,summarizeSoak} from '../tools/m3-soak.mjs';
 async function temporary(t){const dir=await fs.mkdtemp(path.join(os.tmpdir(),'fields-soak-adapter-'));t.after(()=>fs.rm(dir,{recursive:true,force:true}));return dir;}
-function fake({warning=false,waitMinutes}={}){return {async generate(body,label){let message,finish_reason='stop';
+function fake({warning=false,waitMinutes,tailMinutes=0}={}){return {async generate(body,label){let message,finish_reason='stop';
  if(label.startsWith('consistency:')){finish_reason='tool_calls';message={tool_calls:[{id:'review',type:'function',function:{name:'report_consistency_issues',arguments:JSON.stringify({issues:warning?[{category:'knowledge',severity:'warning',quote:'你买到了一个面包。',reason:'警告需保留供叙述复核',evidence:[{id:'player',quote:'我向林穗买一个面包。'}]}]:[]})}}]};}
  else if(label.startsWith('npc'))throw Error('测试禁止模型规划');
  else if(label.endsWith('-0')){finish_reason='tool_calls';message={content:null,tool_calls:[{id:'action',type:'function',function:{name:waitMinutes===undefined?'world_trade':'world_time',arguments:JSON.stringify(waitMinutes===undefined?{seller:'林穗',item:'面包',quantity:1}:{minutes:waitMinutes})}}]};}
- else message={content:`${waitMinutes===undefined?'你买到了一个面包。':'你等了一会儿。'}<回合 额外="0分" 地点="bld_hw_qingdeng" 在场="npc_hw_linsui"/>`};
+ else message={content:`${waitMinutes===undefined?'你买到了一个面包。':'你等了一会儿。'}${tailMinutes?'你问林穗最近好吗。':''}<回合 额外="${tailMinutes}分" 地点="bld_hw_qingdeng" 在场="npc_hw_linsui"/>`};
  return {choices:[{finish_reason,message}],measurement:{costUpperYuan:.001,usage:{prompt_cache_hit_tokens:90,prompt_cache_miss_tokens:10},label}};
  }};}
 const options=client=>({client,processMessages:m=>m,countTokens:()=>20,createBody:{name:'试玩者'}});
@@ -63,12 +63,34 @@ test('时间验收缺语义计划时不借回放和回执冒充整轮通过，�
  assert.equal(chat.expectedMinutes,null);assert.deepEqual(chat.expectedRange,[5,20]);assert.equal(chat.elapsedMinutes,2);assert.equal(chat.deviation,.6);
 });
 
-test('真实HTTP要求等60却只执行36分钟，即使重放完全相等也报告40%语义偏差',async t=>{
- const directory=await temporary(t),adapter=await createSoakAdapter({directory,budgetYuan:2,...options(fake({waitMinutes:36}))});t.after(()=>adapter.close());
- const result=await adapter.execute({id:'soak-short-wait',persona:'merchant',turn:1,kind:'turn',input:'我原地等一小时，不做其他事情。',checkpoint:null});
- assert.equal(result.timing.replay.expectedMinutes,36);assert.equal(result.timing.elapsedMinutes,36);assert.equal(result.timing.expectedMinutes,60);
- assert.equal(result.timing.deviation,.4);assert.equal(result.timing.evidence.quote,'我原地等一小时，不做其他事情。');
- assert.equal(result.timing.receiptTiming.evidence[0].declaredMinutes,36);assert.equal(result.timing.receiptTiming.deviation,0);
+test('真实HTTP要求等60却只执行13或36分钟，回放相等仍暴露语义偏差',async t=>{
+ for(const minutes of [13,36]){
+  const directory=await temporary(t),adapter=await createSoakAdapter({directory,budgetYuan:2,...options(fake({waitMinutes:minutes}))});t.after(()=>adapter.close());
+  const result=await adapter.execute({id:`soak-short-wait-${minutes}`,persona:'merchant',turn:1,kind:'turn',input:'我原地等一小时，不做其他事情。',checkpoint:null});
+  assert.equal(result.timing.replay.expectedMinutes,minutes);assert.equal(result.timing.elapsedMinutes,minutes);assert.equal(result.timing.expectedMinutes,60);
+  assert.equal(result.timing.deviation,(60-minutes)/60);assert.equal(result.timing.evidence.quote,'我原地等一小时，不做其他事情。');
+  assert.equal(result.timing.receiptTiming.evidence[0].declaredMinutes,minutes);assert.equal(result.timing.receiptTiming.deviation,0);
+ }
+});
+
+test('真实HTTP合法等待后明确交谈计入尾注，恢复不重复测量或模型费用',async t=>{
+ const directory=await temporary(t);let disconnected=false;
+ let adapter=await createSoakAdapter({directory,budgetYuan:2,...options(fake({waitMinutes:60,tailMinutes:10})),afterHttp(endpoint,body){
+  if(endpoint==='execute'&&body.tool==='world_time'&&!disconnected){disconnected=true;throw Error('等待已保存后断开');}
+ }});
+ const task={id:'soak-wait-chat-resume',persona:'merchant',turn:1,kind:'turn',input:'我等60分钟，然后我问林穗：“最近好吗？”',checkpoint:null};
+ await assert.rejects(adapter.execute(task),/已保存后断开/);await adapter.close();
+ adapter=await createSoakAdapter({directory,budgetYuan:2,...options(fake({waitMinutes:60,tailMinutes:10}))});t.after(()=>adapter.close());
+ const result=await adapter.execute(task);assert.equal(result.timing.status,'bounded');assert.equal(result.timing.deviation,0);
+ assert.equal(result.timing.elapsedMinutes,70);assert.equal(result.timing.components.wait.elapsedMinutes,60);assert.equal(result.timing.components.dialogue.elapsedMinutes,10);
+ const calls=adapter.client.ledger.calls.length,cost=adapter.client.ledger.spentYuan;
+ assert.deepEqual(await adapter.execute(task),result);assert.equal(adapter.client.ledger.calls.length,calls);assert.equal(adapter.client.ledger.spentYuan,cost);
+ const tapeFile=path.join(directory,'tasks',(await fs.readdir(path.join(directory,'tasks'))).find(name=>name.endsWith('.json'))),tape=JSON.parse(await fs.readFile(tapeFile,'utf8'));
+ delete tape.result;await fs.writeFile(tapeFile,JSON.stringify(tape));
+ assert.deepEqual(await adapter.execute(task),result);assert.equal(adapter.client.ledger.calls.length,calls);assert.equal(adapter.client.ledger.spentYuan,cost);
+ const exported=await adapter.server.api('export',{campaignId:result.checkpoint.campaignId});
+ assert.equal(exported.events.filter(e=>e.input?.tool==='world_time').length,1);assert.equal(exported.events.filter(e=>e.input?.tool==='world_turn').length,1);
+ assert.equal(result.timing.receiptTiming.total,1);
 });
 
 test('连续会话保留警告，并可只读恢复旧 HTTP verified 标记而不再调用模型',async t=>{
