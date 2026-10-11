@@ -4,8 +4,10 @@ import fs from 'node:fs/promises';
 import {loadWorld} from '../tools/load-world.mjs';
 import {auditNpcDepth} from '../tools/audit-npc-depth.mjs';
 import {depthEntries,validatePatchResults,patchDraft,applyDepthDraft,verifyUnchanged,validateDraft,contextFor,getPath} from '../tools/npc-depth-content.mjs';
-import {hashContent} from '../tools/content-pipeline.mjs';
-import * as design from '../world/design/w1-wt-depth.mjs';
+import {hashContent,readApprovedContent} from '../tools/content-pipeline.mjs';
+import {fileURLToPath} from 'node:url';
+import * as original from '../world/design/w1-wt-depth.mjs';
+import * as design from '../world/drafts/w1/wt-depth/sourced/design.mjs';
 
 const world=await loadWorld(),ids=new Set(design.patchRows.map(r=>r.id));
 const entries=()=>depthEntries(design.patchRows.map(r=>r.before),design,world);
@@ -73,17 +75,47 @@ test('冻结叶子拒绝身份、财物和合格声音字段改动',()=>{
 });
 
 test('prepare的候选、基础与manifest均绑定冻结设计，正式源保留原档',async()=>{
- const root=new URL('../world/drafts/w1/wt-depth/',import.meta.url);
+ const root=new URL('../world/drafts/w1/wt-depth/sourced/',import.meta.url);
  const read=async name=>JSON.parse(await fs.readFile(new URL(name+'.json',root),'utf8'));
  const [base,foundation,candidate,manifest]=await Promise.all(['base','foundation','candidate','manifest'].map(read));
  assert.deepEqual(base,design.patchRows.map(r=>r.before));
  assert.deepEqual(candidate,entries().map(patchDraft));
  assert.equal(manifest.contract,'audit-patch-v1');
- assert.equal(manifest.design,'design/w1-wt-depth.mjs');
- assert.equal(manifest.root,'drafts/w1/wt-depth');
+ assert.equal(manifest.design,'drafts/w1/wt-depth/sourced/design.mjs');
+ assert.equal(manifest.root,'drafts/w1/wt-depth/sourced');
  assert.equal(manifest.foundationHash,hashContent(foundation));
  assert.equal(foundation.revision,design.revision);
  for(const row of foundation.entries)assert.equal(hashContent(row.before),row.baseHash);
- const source=JSON.parse(await fs.readFile(new URL('source.json',root),'utf8'));
+ const source=JSON.parse(await fs.readFile(new URL('../source.json',root),'utf8'));
  assert.equal(source.issues.length,design.patchRows.reduce((n,r)=>n+r.issues.length,0));
+});
+
+test('来源扩展保持原候选、revision与冻结原档，只投影本人关系及本组旧记忆',()=>{
+ assert.equal(design.revision,original.revision);
+ assert.equal(design.incrementLimitYuan,original.incrementLimitYuan);
+ for(const [i,row]of design.patchRows.entries()){
+  const {referenceRelationshipIds,referenceMemoryIds,...unchanged}=row;
+  assert.deepEqual(unchanged,original.patchRows[i]);
+  assert.deepEqual(referenceRelationshipIds,[row.id]);
+  assert.deepEqual(referenceMemoryIds,design.authorBatches.find(b=>b.ids.includes(row.id)).ids);
+  const entry=entries()[i],context=contextFor(entry,world);
+  for(const person of context.people){
+   const source=[...world.npcs,...world.residents].find(p=>p.id===person.id);
+   if(person.id===row.id)assert.deepEqual(person.relationships,source.relationships);
+   else assert.equal(Object.hasOwn(person,'relationships'),false);
+   if(referenceMemoryIds.includes(person.id))assert.deepEqual(person.memorySeeds,source.memorySeeds);
+   else assert.equal(Object.hasOwn(person,'memorySeeds'),false);
+   assert.equal(Object.hasOwn(person,'secrets'),false);
+   assert.equal(Object.hasOwn(person,'knowledge'),false);
+  }
+ }
+});
+
+test('真实首批存在失败且未完成L4，发布读取必须拒绝',async()=>{
+ const root=fileURLToPath(new URL('../world/drafts/w1/wt-depth/sourced/',import.meta.url));
+ const summary=JSON.parse(await fs.readFile(root+'/summary.json','utf8'));
+ assert.equal(summary.total,30);
+ assert.ok(summary.manual>0);
+ assert.ok(summary.batches.every(batch=>!batch.l4.approved));
+ await assert.rejects(()=>readApprovedContent(root,entries(),{revision:design.revision,contextFor:entry=>contextFor(entry,world)}),/尚未完成 L4|人工队列/);
 });

@@ -1,0 +1,288 @@
+{
+  "id": "npc_wt_jingyao",
+  "fingerprint": "de2fc6cb8989fac7370ba213b3f366fcd4c911837efd0f846c2b7e22cc5585e7",
+  "status": "passed",
+  "attempts": 1,
+  "draft": {
+    "id": "npc_wt_jingyao",
+    "contract": "audit-patch-v1",
+    "patches": [
+      {
+        "path": "knowledge.known[1]",
+        "value": {
+          "fact": "我在景遥户居处居住；家里的景丰是我的父亲。",
+          "source": "bld_wt_home_22",
+          "reliability": "日常亲历"
+        }
+      },
+      {
+        "path": "knowledge.known[2]",
+        "value": {
+          "fact": "我做岸景描图学工，日常劳动处在汀口记事屋；眼下遇到的是图上的岸弯和老人说的不同。",
+          "source": "npc_wt_jingyao",
+          "reliability": "本人亲历，问题尚未解决"
+        }
+      },
+      {
+        "path": "knowledge.unknown[0]",
+        "value": "老人所说的岸弯究竟对应现在图上的哪一段。"
+      },
+      {
+        "path": "knowledge.unknown[1]",
+        "value": "斌兰能否从图上的符号认出干岸回屋的方向。"
+      },
+      {
+        "path": "voice.register",
+        "value": "核图用安静而完整的问句，拿不准时愿意反复确认。"
+      },
+      {
+        "path": "goals.short[0].steps[0].content",
+        "value": "保留画错的稿，指着岸湾请老人说明不同的位置。"
+      },
+      {
+        "path": "goals.mid[0].steps[0].content",
+        "value": "从干岸核对可见树位，再把看不见的湿边留作待问。"
+      },
+      {
+        "path": "goals.long[0].steps[0].content",
+        "value": "请斌兰顺着图说回屋路线，核查哪些符号仍让外人误读。"
+      },
+      {
+        "path": "relationships[0].note",
+        "value": "景丰是家里的父亲；务实/怕浪费，这件事还需要彼此听完再商量。"
+      },
+      {
+        "path": "relationships[1].note",
+        "value": "斌兰是家里的母亲；温和/好学，这件事还需要彼此听完再商量。"
+      },
+      {
+        "path": "relationships[2].note",
+        "value": "与范水有同村往来；对方在范水户居处做家中席垫整理老人，见面时还需问清当日劳作与通行安排。"
+      },
+      {
+        "path": "memorySeeds[2]",
+        "value": {
+          "id": "memory_wt_depth_group_5",
+          "event": "龚潞、景遥、范水、单苴和董霏在苇席收边屋外谈过手上的记号。龚潞说明湿网两头轻重不同，景遥指着图问岸湾，范水提起旧垫松刺，单苴说认垛要看扎口，董霏读了一条灶房简记。几人听完后仍各自有待核对，没交料或排定工序。",
+          "location": "bld_wt_workroom",
+          "salience": 4,
+          "knownBy": [
+            "npc_wt_gonglu",
+            "npc_wt_jingyao",
+            "npc_wt_fanshui",
+            "npc_wt_shanju",
+            "npc_wt_dongfei"
+          ],
+          "reliability": "共同亲历；未解决的分歧仍待各户核对"
+        }
+      },
+      {
+        "path": "opinions.neighbors[2].view",
+        "value": "范水在范水户居处做家中席垫整理老人；与他谈通行和劳作时，我会先问清当日安排。"
+      }
+    ]
+  },
+  "review": {
+    "contradictions": [
+      {
+        "quote": "景丰是家里的父亲；务实/怕浪费，这件事还需要彼此听完再商量。",
+        "field": "relationships[0].note",
+        "severity": "soft",
+        "reason": "骨架中景丰的既有事实仅有“菜圃农工”与“女儿画坏便揉纸让他心疼：纸也是换来的，他舍不得丢”，并未登记“务实/怕浪费”这一性格标签，属于新增无依据的性格定性。"
+      },
+      {
+        "quote": "斌兰是家里的母亲；温和/好学，这件事还需要彼此听完再商量。",
+        "field": "relationships[1].note",
+        "severity": "soft",
+        "reason": "骨架中斌兰的既有事实为“家务”与“想学看女儿画的弯岸符号”，并未登记“温和”这一性格标签，属于新增无依据的性格定性。"
+      },
+      {
+        "quote": "与范水有同村往来；对方在范水户居处做家中席垫整理老人，见面时还需问清当日劳作与通行安排。",
+        "field": "relationships[2].note",
+        "severity": "soft",
+        "reason": "骨架中范水的既有事实为“家中席垫整理老人”，但“见面时还需问清当日劳作与通行安排”属于新增的交往规则，骨架未声明景遥与范水之间存在通行或劳作安排需要核实的规则。"
+      },
+      {
+        "quote": "范水在范水户居处做家中席垫整理老人；与他谈通行和劳作时，我会先问清当日安排。",
+        "field": "opinions.neighbors[2].view",
+        "severity": "soft",
+        "reason": "同上，新增了骨架未声明的“谈通行和劳作时先问清当日安排”这一交往规则。"
+      },
+      {
+        "quote": "请斌兰顺着图说回屋路线，核查哪些符号仍让外人误读。",
+        "field": "goals.long[0].steps[0].content",
+        "severity": "soft",
+        "reason": "骨架中斌兰的既有事实为“想学看女儿画的弯岸符号”，并未登记“回屋路线”或“干岸回屋方向”这一具体内容，属于新增无依据的具体目标。"
+      },
+      {
+        "quote": "斌兰能否从图上的符号认出干岸回屋的方向。",
+        "field": "knowledge.unknown[1]",
+        "severity": "soft",
+        "reason": "同上，新增了骨架未声明的“干岸回屋方向”这一具体未知事项。"
+      },
+      {
+        "quote": "从干岸核对可见树位，再把看不见的湿边留作待问。",
+        "field": "goals.mid[0].steps[0].content",
+        "severity": "soft",
+        "reason": "骨架中景遥的既有事实为“在安全岸沿核对可见轮廓”，并未登记“干岸”“湿边”等具体地理概念，属于新增无依据的具体操作。"
+      },
+      {
+        "quote": "保留画错的稿，指着岸湾请老人说明不同的位置。",
+        "field": "goals.short[0].steps[0].content",
+        "severity": "soft",
+        "reason": "骨架中景遥的既有缺点为“画不准就把纸揉掉”，而此步骤要求“保留画错的稿”，与既有性格设定存在张力，属于新增无依据的行为方式。"
+      },
+      {
+        "quote": "龚潞、景遥、范水、单苴和董霏在苇席收边屋外谈过手上的记号。龚潞说明湿网两头轻重不同，景遥指着图问岸湾，范水提起旧垫松刺，单苴说认垛要看扎口，董霏读了一条灶房简记。几人听完后仍各自有待核对，没交料或排定工序。",
+        "field": "memorySeeds[2]",
+        "severity": "soft",
+        "reason": "该共享记忆新增了龚潞、范水、单苴、董霏四人的具体言行细节，但骨架中这些人物仅有各自独立的记忆种子，并未登记此五人共同在场的事件；且“湿网两头轻重不同”“旧垫松刺”“认垛要看扎口”“灶房简记”等具体内容在骨架中无对应来源。"
+      }
+    ]
+  },
+  "errors": [],
+  "warnings": [
+    {
+      "quote": "景丰是家里的父亲；务实/怕浪费，这件事还需要彼此听完再商量。",
+      "field": "relationships[0].note",
+      "severity": "soft",
+      "reason": "骨架中景丰的既有事实仅有“菜圃农工”与“女儿画坏便揉纸让他心疼：纸也是换来的，他舍不得丢”，并未登记“务实/怕浪费”这一性格标签，属于新增无依据的性格定性。"
+    },
+    {
+      "quote": "斌兰是家里的母亲；温和/好学，这件事还需要彼此听完再商量。",
+      "field": "relationships[1].note",
+      "severity": "soft",
+      "reason": "骨架中斌兰的既有事实为“家务”与“想学看女儿画的弯岸符号”，并未登记“温和”这一性格标签，属于新增无依据的性格定性。"
+    },
+    {
+      "quote": "与范水有同村往来；对方在范水户居处做家中席垫整理老人，见面时还需问清当日劳作与通行安排。",
+      "field": "relationships[2].note",
+      "severity": "soft",
+      "reason": "骨架中范水的既有事实为“家中席垫整理老人”，但“见面时还需问清当日劳作与通行安排”属于新增的交往规则，骨架未声明景遥与范水之间存在通行或劳作安排需要核实的规则。"
+    },
+    {
+      "quote": "范水在范水户居处做家中席垫整理老人；与他谈通行和劳作时，我会先问清当日安排。",
+      "field": "opinions.neighbors[2].view",
+      "severity": "soft",
+      "reason": "同上，新增了骨架未声明的“谈通行和劳作时先问清当日安排”这一交往规则。"
+    },
+    {
+      "quote": "请斌兰顺着图说回屋路线，核查哪些符号仍让外人误读。",
+      "field": "goals.long[0].steps[0].content",
+      "severity": "soft",
+      "reason": "骨架中斌兰的既有事实为“想学看女儿画的弯岸符号”，并未登记“回屋路线”或“干岸回屋方向”这一具体内容，属于新增无依据的具体目标。"
+    },
+    {
+      "quote": "斌兰能否从图上的符号认出干岸回屋的方向。",
+      "field": "knowledge.unknown[1]",
+      "severity": "soft",
+      "reason": "同上，新增了骨架未声明的“干岸回屋方向”这一具体未知事项。"
+    },
+    {
+      "quote": "从干岸核对可见树位，再把看不见的湿边留作待问。",
+      "field": "goals.mid[0].steps[0].content",
+      "severity": "soft",
+      "reason": "骨架中景遥的既有事实为“在安全岸沿核对可见轮廓”，并未登记“干岸”“湿边”等具体地理概念，属于新增无依据的具体操作。"
+    },
+    {
+      "quote": "保留画错的稿，指着岸湾请老人说明不同的位置。",
+      "field": "goals.short[0].steps[0].content",
+      "severity": "soft",
+      "reason": "骨架中景遥的既有缺点为“画不准就把纸揉掉”，而此步骤要求“保留画错的稿”，与既有性格设定存在张力，属于新增无依据的行为方式。"
+    },
+    {
+      "quote": "龚潞、景遥、范水、单苴和董霏在苇席收边屋外谈过手上的记号。龚潞说明湿网两头轻重不同，景遥指着图问岸湾，范水提起旧垫松刺，单苴说认垛要看扎口，董霏读了一条灶房简记。几人听完后仍各自有待核对，没交料或排定工序。",
+      "field": "memorySeeds[2]",
+      "severity": "soft",
+      "reason": "该共享记忆新增了龚潞、范水、单苴、董霏四人的具体言行细节，但骨架中这些人物仅有各自独立的记忆种子，并未登记此五人共同在场的事件；且“湿网两头轻重不同”“旧垫松刺”“认垛要看扎口”“灶房简记”等具体内容在骨架中无对应来源。"
+    }
+  ],
+  "feedback": null,
+  "draftResponse": {
+    "id": "6d01fc8e-c591-4d41-8ff5-383346d5222f",
+    "object": "chat.completion",
+    "created": 1791762702,
+    "model": "deepseek-flash",
+    "choices": [
+      {
+        "index": 0,
+        "message": {
+          "role": "assistant",
+          "content": "{\"id\":\"npc_wt_jingyao\",\"contract\":\"audit-patch-v1\",\"patches\":[{\"path\":\"knowledge.known[1]\",\"value\":{\"fact\":\"我在景遥户居处居住；家里的景丰是我的父亲。\",\"source\":\"bld_wt_home_22\",\"reliability\":\"日常亲历\"}},{\"path\":\"knowledge.known[2]\",\"value\":{\"fact\":\"我做岸景描图学工，日常劳动处在汀口记事屋；眼下遇到的是图上的岸弯和老人说的不同。\",\"source\":\"npc_wt_jingyao\",\"reliability\":\"本人亲历，问题尚未解决\"}},{\"path\":\"knowledge.unknown[0]\",\"value\":\"老人所说的岸弯究竟对应现在图上的哪一段。\"},{\"path\":\"knowledge.unknown[1]\",\"value\":\"斌兰能否从图上的符号认出干岸回屋的方向。\"},{\"path\":\"voice.register\",\"value\":\"核图用安静而完整的问句，拿不准时愿意反复确认。\"},{\"path\":\"goals.short[0].steps[0].content\",\"value\":\"保留画错的稿，指着岸湾请老人说明不同的位置。\"},{\"path\":\"goals.mid[0].steps[0].content\",\"value\":\"从干岸核对可见树位，再把看不见的湿边留作待问。\"},{\"path\":\"goals.long[0].steps[0].content\",\"value\":\"请斌兰顺着图说回屋路线，核查哪些符号仍让外人误读。\"},{\"path\":\"relationships[0].note\",\"value\":\"景丰是家里的父亲；务实/怕浪费，这件事还需要彼此听完再商量。\"},{\"path\":\"relationships[1].note\",\"value\":\"斌兰是家里的母亲；温和/好学，这件事还需要彼此听完再商量。\"},{\"path\":\"relationships[2].note\",\"value\":\"与范水有同村往来；对方在范水户居处做家中席垫整理老人，见面时还需问清当日劳作与通行安排。\"},{\"path\":\"memorySeeds[2]\",\"value\":{\"id\":\"memory_wt_depth_group_5\",\"event\":\"龚潞、景遥、范水、单苴和董霏在苇席收边屋外谈过手上的记号。龚潞说明湿网两头轻重不同，景遥指着图问岸湾，范水提起旧垫松刺，单苴说认垛要看扎口，董霏读了一条灶房简记。几人听完后仍各自有待核对，没交料或排定工序。\",\"location\":\"bld_wt_workroom\",\"salience\":4,\"knownBy\":[\"npc_wt_gonglu\",\"npc_wt_jingyao\",\"npc_wt_fanshui\",\"npc_wt_shanju\",\"npc_wt_dongfei\"],\"reliability\":\"共同亲历；未解决的分歧仍待各户核对\"}},{\"path\":\"opinions.neighbors[2].view\",\"value\":\"范水在范水户居处做家中席垫整理老人；与他谈通行和劳作时，我会先问清当日安排。\"}]}"
+        },
+        "logprobs": null,
+        "finish_reason": "stop"
+      }
+    ],
+    "usage": {
+      "prompt_tokens": 8938,
+      "completion_tokens": 659,
+      "total_tokens": 9597,
+      "prompt_tokens_details": {
+        "cached_tokens": 0
+      },
+      "prompt_cache_hit_tokens": 0,
+      "prompt_cache_miss_tokens": 8938
+    },
+    "system_fingerprint": "aeb56401ca74e127821c4f9126dcb669",
+    "measurement": {
+      "label": "content-sourced-npc_wt_jingyao-draft0",
+      "model": "deepseek-flash",
+      "thinking": "disabled",
+      "usage": {
+        "prompt_tokens": 8938,
+        "completion_tokens": 659,
+        "total_tokens": 9597,
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        },
+        "prompt_cache_hit_tokens": 0,
+        "prompt_cache_miss_tokens": 8938
+      },
+      "costUpperYuan": 0.023148,
+      "cumulativeUpperYuan": 4.14033728,
+      "latencyMs": 2846.0068999999785,
+      "timestamp": "2026-10-11T23:51:46.378Z"
+    }
+  },
+  "measurements": [
+    {
+      "label": "content-sourced-npc_wt_jingyao-draft0",
+      "model": "deepseek-flash",
+      "thinking": "disabled",
+      "usage": {
+        "prompt_tokens": 8938,
+        "completion_tokens": 659,
+        "total_tokens": 9597,
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        },
+        "prompt_cache_hit_tokens": 0,
+        "prompt_cache_miss_tokens": 8938
+      },
+      "costUpperYuan": 0.023148,
+      "cumulativeUpperYuan": 4.14033728,
+      "latencyMs": 2846.0068999999785,
+      "timestamp": "2026-10-11T23:51:46.378Z"
+    },
+    {
+      "label": "content-sourced-npc_wt_jingyao-review0",
+      "model": "deepseek-flash",
+      "thinking": "disabled",
+      "usage": {
+        "prompt_tokens": 16019,
+        "completion_tokens": 839,
+        "total_tokens": 16858,
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        },
+        "prompt_cache_hit_tokens": 0,
+        "prompt_cache_miss_tokens": 16019
+      },
+      "costUpperYuan": 0.03875,
+      "cumulativeUpperYuan": 4.17908728,
+      "latencyMs": 4574.895600000018,
+      "timestamp": "2026-10-11T23:51:50.961Z"
+    }
+  ]
+}

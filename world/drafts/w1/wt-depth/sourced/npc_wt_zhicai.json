@@ -1,0 +1,323 @@
+{
+  "id": "npc_wt_zhicai",
+  "fingerprint": "f8a30c94b097ad215e9a6e6340d183d480d5a247600e8288181155aab00c201e",
+  "status": "manual",
+  "attempts": 3,
+  "draft": {
+    "id": "npc_wt_zhicai",
+    "contract": "audit-patch-v1",
+    "patches": [
+      {
+        "path": "knowledge.known[1]",
+        "value": {
+          "fact": "我在支采户居处居住；家里的支络是我的儿子。",
+          "source": "bld_wt_home_14",
+          "reliability": "日常亲历"
+        }
+      },
+      {
+        "path": "knowledge.known[2]",
+        "value": {
+          "fact": "我做小衣修补人，日常劳动处在苇席收边屋；眼下遇到的是送补衣的两户都要先拿。",
+          "source": "npc_wt_zhicai",
+          "reliability": "本人亲历，问题尚未解决"
+        }
+      },
+      {
+        "path": "knowledge.unknown[0]",
+        "value": "两户分别何时需要取回送补的小衣。"
+      },
+      {
+        "path": "knowledge.unknown[1]",
+        "value": "姚蓉愿不愿陪自己听支络说明衣口怎么扯破。"
+      },
+      {
+        "path": "voice.register",
+        "value": "讲针线尺寸细致温和，谈孩子扯衣却容易护短。"
+      },
+      {
+        "path": "goals.short[0].steps[0].content",
+        "value": "翻出原先答应的交还次序，逐户询问急用时刻。"
+      },
+      {
+        "path": "goals.mid[0].steps[0].content",
+        "value": "回交前将衣服抖开查针，告诉物主尚未补完的部位。"
+      },
+      {
+        "path": "goals.long[0].steps[0].content",
+        "value": "请物主下次送衣时当面核对磨薄处，说明自己可承诺的交还时段。"
+      },
+      {
+        "path": "relationships[0].note",
+        "value": "支络是家里的儿子；好动/爱说笑，这件事还需要彼此听完再商量。"
+      },
+      {
+        "path": "relationships[1].note",
+        "value": "姚蓉是家里的母亲；诚恳/倔强，这件事还需要彼此听完再商量。"
+      },
+      {
+        "path": "relationships[2].note",
+        "value": "与薛萤有同村往来；对方在薛萤户居处做苇根泥清理老人，见面时还需问清当日劳作与通行安排。"
+      },
+      {
+        "path": "memorySeeds[2]",
+        "value": {
+          "id": "memory_wt_depth_group_3",
+          "event": "湛鸥、支采、薛萤和雷芷在汀口记事屋前说过进出和传话的麻烦。湛鸥解释退水便道不能当常路，支采说送补衣两户都催先拿，薛萤说旧根留在门边，雷芷追问含混称呼住哪一户。几人仍要回去分别询问家人与物主。",
+          "location": "bld_wt_hall",
+          "salience": 4,
+          "knownBy": [
+            "npc_wt_zhangou",
+            "npc_wt_zhicai",
+            "npc_wt_xueying",
+            "npc_wt_leizhi"
+          ],
+          "reliability": "共同亲历；未解决的分歧仍待各户核对"
+        }
+      },
+      {
+        "path": "opinions.neighbors[2].view",
+        "value": "薛萤在薛萤户居处做苇根泥清理老人；与他谈通行和劳作时，我会先问清当日安排。"
+      }
+    ]
+  },
+  "review": {
+    "contradictions": [
+      {
+        "quote": "支络是家里的儿子；好动/爱说笑，这件事还需要彼此听完再商量。",
+        "field": "relationships[0].note",
+        "severity": "soft",
+        "reason": "骨架与 publishedFacts 中支络的 concern 是衣服扯坏后怕母亲替自己掩饰、越遮掩越不敢主动开口认错，并未登记“好动/爱说笑”的性格；该描述为新增无依据的性格事实。"
+      },
+      {
+        "quote": "姚蓉是家里的母亲；诚恳/倔强，这件事还需要彼此听完再商量。",
+        "field": "relationships[1].note",
+        "severity": "soft",
+        "reason": "骨架与 publishedFacts 中姚蓉的 concern 是女儿总替孩子辩解使她不满、饭桌上话到一半便收住，并未登记“诚恳/倔强”的性格；该描述为新增无依据的性格事实。"
+      },
+      {
+        "quote": "薛萤在薛萤户居处做苇根泥清理老人；与他谈通行和劳作时，我会先问清当日安排。",
+        "field": "opinions.neighbors[2].view",
+        "severity": "hard",
+        "reason": "薛萤为女性（publishedFacts 中 npc_wt_xueying 为女，记忆用“她”），此处用“他”指代，与骨架性别事实相反。"
+      },
+      {
+        "quote": "薛萤在薛萤户居处做苇根泥清理老人；与他谈通行和劳作时，我会先问清当日安排。",
+        "field": "opinions.neighbors[2].view",
+        "severity": "soft",
+        "reason": "原观点为“认识同村薛萤，不因此知道对方秘密或财产”，修订后新增“在薛萤户居处做苇根泥清理老人”的劳作地点细节；publishedFacts 仅登记薛萤职业为苇根泥清理老人，未登记其劳作地点在自家居处，属新增无依据事实。"
+      },
+      {
+        "quote": "与薛萤有同村往来；对方在薛萤户居处做苇根泥清理老人，见面时还需问清当日劳作与通行安排。",
+        "field": "relationships[2].note",
+        "severity": "soft",
+        "reason": "原关系注为“认识同村薛萤，不因此知道对方秘密或财产”，修订后新增“在薛萤户居处做苇根泥清理老人”的劳作地点细节；publishedFacts 未登记薛萤劳作地点在自家居处，属新增无依据事实。"
+      }
+    ]
+  },
+  "errors": [
+    {
+      "quote": "薛萤在薛萤户居处做苇根泥清理老人；与他谈通行和劳作时，我会先问清当日安排。",
+      "field": "opinions.neighbors[2].view",
+      "severity": "hard",
+      "reason": "薛萤为女性（publishedFacts 中 npc_wt_xueying 为女，记忆用“她”），此处用“他”指代，与骨架性别事实相反。"
+    }
+  ],
+  "warnings": [
+    {
+      "quote": "支络是家里的儿子；好动/爱说笑，这件事还需要彼此听完再商量。",
+      "field": "relationships[0].note",
+      "severity": "soft",
+      "reason": "骨架与 publishedFacts 中支络的 concern 是衣服扯坏后怕母亲替自己掩饰、越遮掩越不敢主动开口认错，并未登记“好动/爱说笑”的性格；该描述为新增无依据的性格事实。"
+    },
+    {
+      "quote": "姚蓉是家里的母亲；诚恳/倔强，这件事还需要彼此听完再商量。",
+      "field": "relationships[1].note",
+      "severity": "soft",
+      "reason": "骨架与 publishedFacts 中姚蓉的 concern 是女儿总替孩子辩解使她不满、饭桌上话到一半便收住，并未登记“诚恳/倔强”的性格；该描述为新增无依据的性格事实。"
+    },
+    {
+      "quote": "薛萤在薛萤户居处做苇根泥清理老人；与他谈通行和劳作时，我会先问清当日安排。",
+      "field": "opinions.neighbors[2].view",
+      "severity": "soft",
+      "reason": "原观点为“认识同村薛萤，不因此知道对方秘密或财产”，修订后新增“在薛萤户居处做苇根泥清理老人”的劳作地点细节；publishedFacts 仅登记薛萤职业为苇根泥清理老人，未登记其劳作地点在自家居处，属新增无依据事实。"
+    },
+    {
+      "quote": "与薛萤有同村往来；对方在薛萤户居处做苇根泥清理老人，见面时还需问清当日劳作与通行安排。",
+      "field": "relationships[2].note",
+      "severity": "soft",
+      "reason": "原关系注为“认识同村薛萤，不因此知道对方秘密或财产”，修订后新增“在薛萤户居处做苇根泥清理老人”的劳作地点细节；publishedFacts 未登记薛萤劳作地点在自家居处，属新增无依据事实。"
+    }
+  ],
+  "feedback": [
+    {
+      "quote": "薛萤在薛萤户居处做苇根泥清理老人；与他谈通行和劳作时，我会先问清当日安排。",
+      "field": "opinions.neighbors[2].view",
+      "severity": "hard",
+      "reason": "薛萤为女性（publishedFacts 中 npc_wt_xueying 为女，记忆用“她”），此处用“他”指代，与骨架性别事实相反。"
+    }
+  ],
+  "draftResponse": {
+    "id": "76127c00-44a5-407c-942f-32d3fc483ca5",
+    "object": "chat.completion",
+    "created": 1791762616,
+    "model": "deepseek-flash",
+    "choices": [
+      {
+        "index": 0,
+        "message": {
+          "role": "assistant",
+          "content": "{\"id\":\"npc_wt_zhicai\",\"contract\":\"audit-patch-v1\",\"patches\":[{\"path\":\"knowledge.known[1]\",\"value\":{\"fact\":\"我在支采户居处居住；家里的支络是我的儿子。\",\"source\":\"bld_wt_home_14\",\"reliability\":\"日常亲历\"}},{\"path\":\"knowledge.known[2]\",\"value\":{\"fact\":\"我做小衣修补人，日常劳动处在苇席收边屋；眼下遇到的是送补衣的两户都要先拿。\",\"source\":\"npc_wt_zhicai\",\"reliability\":\"本人亲历，问题尚未解决\"}},{\"path\":\"knowledge.unknown[0]\",\"value\":\"两户分别何时需要取回送补的小衣。\"},{\"path\":\"knowledge.unknown[1]\",\"value\":\"姚蓉愿不愿陪自己听支络说明衣口怎么扯破。\"},{\"path\":\"voice.register\",\"value\":\"讲针线尺寸细致温和，谈孩子扯衣却容易护短。\"},{\"path\":\"goals.short[0].steps[0].content\",\"value\":\"翻出原先答应的交还次序，逐户询问急用时刻。\"},{\"path\":\"goals.mid[0].steps[0].content\",\"value\":\"回交前将衣服抖开查针，告诉物主尚未补完的部位。\"},{\"path\":\"goals.long[0].steps[0].content\",\"value\":\"请物主下次送衣时当面核对磨薄处，说明自己可承诺的交还时段。\"},{\"path\":\"relationships[0].note\",\"value\":\"支络是家里的儿子；好动/爱说笑，这件事还需要彼此听完再商量。\"},{\"path\":\"relationships[1].note\",\"value\":\"姚蓉是家里的母亲；诚恳/倔强，这件事还需要彼此听完再商量。\"},{\"path\":\"relationships[2].note\",\"value\":\"与薛萤有同村往来；对方在薛萤户居处做苇根泥清理老人，见面时还需问清当日劳作与通行安排。\"},{\"path\":\"memorySeeds[2]\",\"value\":{\"id\":\"memory_wt_depth_group_3\",\"event\":\"湛鸥、支采、薛萤和雷芷在汀口记事屋前说过进出和传话的麻烦。湛鸥解释退水便道不能当常路，支采说送补衣两户都催先拿，薛萤说旧根留在门边，雷芷追问含混称呼住哪一户。几人仍要回去分别询问家人与物主。\",\"location\":\"bld_wt_hall\",\"salience\":4,\"knownBy\":[\"npc_wt_zhangou\",\"npc_wt_zhicai\",\"npc_wt_xueying\",\"npc_wt_leizhi\"],\"reliability\":\"共同亲历；未解决的分歧仍待各户核对\"}},{\"path\":\"opinions.neighbors[2].view\",\"value\":\"薛萤在薛萤户居处做苇根泥清理老人；与他谈通行和劳作时，我会先问清当日安排。\"}]}"
+        },
+        "logprobs": null,
+        "finish_reason": "stop"
+      }
+    ],
+    "usage": {
+      "prompt_tokens": 8713,
+      "completion_tokens": 646,
+      "total_tokens": 9359,
+      "prompt_tokens_details": {
+        "cached_tokens": 8576
+      },
+      "prompt_cache_hit_tokens": 8576,
+      "prompt_cache_miss_tokens": 137
+    },
+    "system_fingerprint": "aeb56401ca74e127821c4f9126dcb669",
+    "measurement": {
+      "label": "content-sourced-npc_wt_zhicai-draft2",
+      "model": "deepseek-flash",
+      "thinking": "disabled",
+      "usage": {
+        "prompt_tokens": 8713,
+        "completion_tokens": 646,
+        "total_tokens": 9359,
+        "prompt_tokens_details": {
+          "cached_tokens": 8576
+        },
+        "prompt_cache_hit_tokens": 8576,
+        "prompt_cache_miss_tokens": 137
+      },
+      "costUpperYuan": 0.00578504,
+      "cumulativeUpperYuan": 3.62771528,
+      "latencyMs": 2682.6054000000004,
+      "timestamp": "2026-10-11T23:50:19.906Z"
+    }
+  },
+  "measurements": [
+    {
+      "label": "content-sourced-npc_wt_zhicai-draft0",
+      "model": "deepseek-flash",
+      "thinking": "disabled",
+      "usage": {
+        "prompt_tokens": 8597,
+        "completion_tokens": 646,
+        "total_tokens": 9243,
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        },
+        "prompt_cache_hit_tokens": 0,
+        "prompt_cache_miss_tokens": 8597
+      },
+      "costUpperYuan": 0.022362,
+      "cumulativeUpperYuan": 3.5642727999999995,
+      "latencyMs": 2694.5206999999937,
+      "timestamp": "2026-10-11T23:50:02.101Z"
+    },
+    {
+      "label": "content-sourced-npc_wt_zhicai-review0",
+      "model": "deepseek-flash",
+      "thinking": "disabled",
+      "usage": {
+        "prompt_tokens": 15612,
+        "completion_tokens": 1271,
+        "total_tokens": 16883,
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        },
+        "prompt_cache_hit_tokens": 0,
+        "prompt_cache_miss_tokens": 15612
+      },
+      "costUpperYuan": 0.041392,
+      "cumulativeUpperYuan": 3.6056647999999996,
+      "latencyMs": 6883.873099999997,
+      "timestamp": "2026-10-11T23:50:08.991Z"
+    },
+    {
+      "label": "content-sourced-npc_wt_zhicai-draft1",
+      "model": "deepseek-flash",
+      "thinking": "disabled",
+      "usage": {
+        "prompt_tokens": 9258,
+        "completion_tokens": 646,
+        "total_tokens": 9904,
+        "prompt_tokens_details": {
+          "cached_tokens": 8576
+        },
+        "prompt_cache_hit_tokens": 8576,
+        "prompt_cache_miss_tokens": 682
+      },
+      "costUpperYuan": 0.00687504,
+      "cumulativeUpperYuan": 3.6125398399999997,
+      "latencyMs": 2986.406899999987,
+      "timestamp": "2026-10-11T23:50:11.983Z"
+    },
+    {
+      "label": "content-sourced-npc_wt_zhicai-review1",
+      "model": "deepseek-flash",
+      "thinking": "disabled",
+      "usage": {
+        "prompt_tokens": 15612,
+        "completion_tokens": 1034,
+        "total_tokens": 16646,
+        "prompt_tokens_details": {
+          "cached_tokens": 15360
+        },
+        "prompt_cache_hit_tokens": 15360,
+        "prompt_cache_miss_tokens": 252
+      },
+      "costUpperYuan": 0.0093904,
+      "cumulativeUpperYuan": 3.6219302399999997,
+      "latencyMs": 5224.315400000007,
+      "timestamp": "2026-10-11T23:50:17.214Z"
+    },
+    {
+      "label": "content-sourced-npc_wt_zhicai-draft2",
+      "model": "deepseek-flash",
+      "thinking": "disabled",
+      "usage": {
+        "prompt_tokens": 8713,
+        "completion_tokens": 646,
+        "total_tokens": 9359,
+        "prompt_tokens_details": {
+          "cached_tokens": 8576
+        },
+        "prompt_cache_hit_tokens": 8576,
+        "prompt_cache_miss_tokens": 137
+      },
+      "costUpperYuan": 0.00578504,
+      "cumulativeUpperYuan": 3.62771528,
+      "latencyMs": 2682.6054000000004,
+      "timestamp": "2026-10-11T23:50:19.906Z"
+    },
+    {
+      "label": "content-sourced-npc_wt_zhicai-review2",
+      "model": "deepseek-flash",
+      "thinking": "disabled",
+      "usage": {
+        "prompt_tokens": 15612,
+        "completion_tokens": 514,
+        "total_tokens": 16126,
+        "prompt_tokens_details": {
+          "cached_tokens": 15360
+        },
+        "prompt_cache_hit_tokens": 15360,
+        "prompt_cache_miss_tokens": 252
+      },
+      "costUpperYuan": 0.0052304,
+      "cumulativeUpperYuan": 3.6329456799999997,
+      "latencyMs": 2989.3246999999974,
+      "timestamp": "2026-10-11T23:50:22.902Z"
+    }
+  ]
+}

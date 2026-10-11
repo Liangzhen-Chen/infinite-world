@@ -1,0 +1,349 @@
+{
+  "id": "npc_wt_heqin",
+  "fingerprint": "46450f8ed9994e5913db5f950d7241f52e1dc78a625735b25f4ed1a1552c63e4",
+  "status": "manual",
+  "attempts": 3,
+  "draft": {
+    "id": "npc_wt_heqin",
+    "contract": "audit-patch-v1",
+    "patches": [
+      {
+        "path": "knowledge.known[1]",
+        "value": {
+          "fact": "我在贺芩户居处居住；家里的贺岑是我的儿子。",
+          "source": "bld_wt_home_07",
+          "reliability": "日常亲历"
+        }
+      },
+      {
+        "path": "knowledge.known[2]",
+        "value": {
+          "fact": "我做苇席收边工，日常劳动处在苇席收边屋；眼下遇到的是两户送来的席边混了记号。",
+          "source": "npc_wt_heqin",
+          "reliability": "本人亲历，问题尚未解决"
+        }
+      },
+      {
+        "path": "knowledge.unknown[0]",
+        "value": "混记号的两户何时能各自来认旧补处。"
+      },
+      {
+        "path": "knowledge.unknown[1]",
+        "value": "吕沫下一次备灶何时必须取回干净盆。"
+      },
+      {
+        "path": "voice.register",
+        "value": "谈席边细节干脆，被问错还时语气会绷紧。"
+      },
+      {
+        "path": "goals.short[0].steps[0].content",
+        "value": "把两份席边分别摆开，请物主指出自己认得的旧补。"
+      },
+      {
+        "path": "goals.mid[0].steps[0].content",
+        "value": "先问吕沫备灶时段与盆的物主，再提出一小段湿处理的截止点。"
+      },
+      {
+        "path": "goals.long[0].steps[0].content",
+        "value": "回交前请物主读回席边记号，核查拿走的是否为自家席料。"
+      },
+      {
+        "path": "relationships[0].note",
+        "value": "贺岑是家里的儿子；活泼/怕生，这件事还需要彼此听完再商量。"
+      },
+      {
+        "path": "relationships[1].note",
+        "value": "苏玛是家里的母亲；温和/恋旧，这件事还需要彼此听完再商量。"
+      },
+      {
+        "path": "relationships[2].note",
+        "value": "郝渝是家里的配偶；爽朗/护短，这件事还需要彼此听完再商量。"
+      },
+      {
+        "path": "memorySeeds[2]",
+        "value": {
+          "id": "memory_wt_depth_group_1",
+          "event": "魏涟、黄霆、贺芩和吕沫在苇席收边屋歇手时核对过各自工序。魏涟说旧网要迎光，黄霆说空响石边要腾空；贺芩和吕沫又谈到湿席与备灶争用水盆。四人只讲清了各自顾虑，还没有定下交换位置或交盆时刻。",
+          "location": "bld_wt_workroom",
+          "salience": 4,
+          "knownBy": [
+            "npc_wt_weilian",
+            "npc_wt_huangting",
+            "npc_wt_heqin",
+            "npc_wt_lvmo"
+          ],
+          "reliability": "共同亲历；未解决的分歧仍待各户核对"
+        }
+      }
+    ]
+  },
+  "review": {
+    "contradictions": [
+      {
+        "quote": "贺岑是家里的儿子；活泼/怕生，这件事还需要彼此听完再商量。",
+        "field": "relationships[0].note",
+        "severity": "hard",
+        "reason": "骨架与 publishedFacts 中贺岑的既有设定为幼童、concern 描述其绕着待补席边跑、被喊住仍盯着席面，并未登记“怕生”这一性格；新增“活泼/怕生”属于无依据新增人物特征。"
+      },
+      {
+        "quote": "苏玛是家里的母亲；温和/恋旧，这件事还需要彼此听完再商量。",
+        "field": "relationships[1].note",
+        "severity": "hard",
+        "reason": "publishedFacts 中苏玛的既有设定为贪小利（共用晒处总先铺开自己那张席），并未登记“温和/恋旧”；新增“温和/恋旧”与既有贪小利设定相冲突且无来源支持。"
+      },
+      {
+        "quote": "郝渝是家里的配偶；爽朗/护短，这件事还需要彼此听完再商量。",
+        "field": "relationships[2].note",
+        "severity": "hard",
+        "reason": "publishedFacts 中郝渝的既有设定为贪杯、想替妻子挡下催活的人又怕嘴笨说错话，并未登记“爽朗/护短”；新增“爽朗/护短”属于无依据新增人物特征。"
+      },
+      {
+        "quote": "先问吕沫备灶时段与盆的物主，再提出一小段湿处理的截止点。",
+        "field": "goals.mid[0].steps[0].content",
+        "severity": "hard",
+        "reason": "该步骤把中期目标“当面请物主认旧补处”替换为处理与吕沫共用水盆的备灶时段，改变了目标指向；且“盆的物主”身份在骨架与 publishedFacts 中均未登记，属于新增无依据事实。"
+      },
+      {
+        "quote": "吕沫下一次备灶何时必须取回干净盆。",
+        "field": "knowledge.unknown[1]",
+        "severity": "soft",
+        "reason": "骨架 knowledge.unknown 原为泛化条目“他人未公开的私有财物和秘密”，替换为具体指向吕沫备灶取盆时间；该具体信息在骨架中未登记为贺芩的未知项，属于新增具体事实。"
+      },
+      {
+        "quote": "魏涟、黄霆、贺芩和吕沫在苇席收边屋歇手时核对过各自工序。魏涟说旧网要迎光，黄霆说空响石边要腾空；贺芩和吕沫又谈到湿席与备灶争用水盆。四人只讲清了各自顾虑，还没有定下交换位置或交盆时刻。",
+        "field": "memorySeeds[2]",
+        "severity": "soft",
+        "reason": "该共享记忆新增了四人共同在场核对工序的具体事件，骨架 memorySeeds 中并无此条；虽与 publishedFacts 中魏涟、黄霆、吕沫的既有设定相容，但作为新增共享记忆需确认双方核对，当前仅以候选文字自身为据。"
+      }
+    ]
+  },
+  "errors": [
+    {
+      "quote": "贺岑是家里的儿子；活泼/怕生，这件事还需要彼此听完再商量。",
+      "field": "relationships[0].note",
+      "severity": "hard",
+      "reason": "骨架与 publishedFacts 中贺岑的既有设定为幼童、concern 描述其绕着待补席边跑、被喊住仍盯着席面，并未登记“怕生”这一性格；新增“活泼/怕生”属于无依据新增人物特征。"
+    },
+    {
+      "quote": "苏玛是家里的母亲；温和/恋旧，这件事还需要彼此听完再商量。",
+      "field": "relationships[1].note",
+      "severity": "hard",
+      "reason": "publishedFacts 中苏玛的既有设定为贪小利（共用晒处总先铺开自己那张席），并未登记“温和/恋旧”；新增“温和/恋旧”与既有贪小利设定相冲突且无来源支持。"
+    },
+    {
+      "quote": "郝渝是家里的配偶；爽朗/护短，这件事还需要彼此听完再商量。",
+      "field": "relationships[2].note",
+      "severity": "hard",
+      "reason": "publishedFacts 中郝渝的既有设定为贪杯、想替妻子挡下催活的人又怕嘴笨说错话，并未登记“爽朗/护短”；新增“爽朗/护短”属于无依据新增人物特征。"
+    },
+    {
+      "quote": "先问吕沫备灶时段与盆的物主，再提出一小段湿处理的截止点。",
+      "field": "goals.mid[0].steps[0].content",
+      "severity": "hard",
+      "reason": "该步骤把中期目标“当面请物主认旧补处”替换为处理与吕沫共用水盆的备灶时段，改变了目标指向；且“盆的物主”身份在骨架与 publishedFacts 中均未登记，属于新增无依据事实。"
+    }
+  ],
+  "warnings": [
+    {
+      "quote": "吕沫下一次备灶何时必须取回干净盆。",
+      "field": "knowledge.unknown[1]",
+      "severity": "soft",
+      "reason": "骨架 knowledge.unknown 原为泛化条目“他人未公开的私有财物和秘密”，替换为具体指向吕沫备灶取盆时间；该具体信息在骨架中未登记为贺芩的未知项，属于新增具体事实。"
+    },
+    {
+      "quote": "魏涟、黄霆、贺芩和吕沫在苇席收边屋歇手时核对过各自工序。魏涟说旧网要迎光，黄霆说空响石边要腾空；贺芩和吕沫又谈到湿席与备灶争用水盆。四人只讲清了各自顾虑，还没有定下交换位置或交盆时刻。",
+      "field": "memorySeeds[2]",
+      "severity": "soft",
+      "reason": "该共享记忆新增了四人共同在场核对工序的具体事件，骨架 memorySeeds 中并无此条；虽与 publishedFacts 中魏涟、黄霆、吕沫的既有设定相容，但作为新增共享记忆需确认双方核对，当前仅以候选文字自身为据。"
+    }
+  ],
+  "feedback": [
+    {
+      "quote": "贺岑是家里的儿子；活泼/怕生，这件事还需要彼此听完再商量。",
+      "field": "relationships[0].note",
+      "severity": "hard",
+      "reason": "骨架与 publishedFacts 中贺岑的既有设定为幼童、concern 描述其绕着待补席边跑、被喊住仍盯着席面，并未登记“怕生”这一性格；新增“活泼/怕生”属于无依据新增人物特征。"
+    },
+    {
+      "quote": "苏玛是家里的母亲；温和/恋旧，这件事还需要彼此听完再商量。",
+      "field": "relationships[1].note",
+      "severity": "hard",
+      "reason": "publishedFacts 中苏玛的既有设定为贪小利（共用晒处总先铺开自己那张席），并未登记“温和/恋旧”；新增“温和/恋旧”与既有贪小利设定相冲突且无来源支持。"
+    },
+    {
+      "quote": "郝渝是家里的配偶；爽朗/护短，这件事还需要彼此听完再商量。",
+      "field": "relationships[2].note",
+      "severity": "hard",
+      "reason": "publishedFacts 中郝渝的既有设定为贪杯、想替妻子挡下催活的人又怕嘴笨说错话，并未登记“爽朗/护短”；新增“爽朗/护短”属于无依据新增人物特征。"
+    },
+    {
+      "quote": "先问吕沫备灶时段与盆的物主，再提出一小段湿处理的截止点。",
+      "field": "goals.mid[0].steps[0].content",
+      "severity": "hard",
+      "reason": "该步骤把中期目标“当面请物主认旧补处”替换为处理与吕沫共用水盆的备灶时段，改变了目标指向；且“盆的物主”身份在骨架与 publishedFacts 中均未登记，属于新增无依据事实。"
+    }
+  ],
+  "draftResponse": {
+    "id": "60a444bf-69a4-41d1-970a-a9a68c769bd8",
+    "object": "chat.completion",
+    "created": 1791762545,
+    "model": "deepseek-flash",
+    "choices": [
+      {
+        "index": 0,
+        "message": {
+          "role": "assistant",
+          "content": "{\"id\":\"npc_wt_heqin\",\"contract\":\"audit-patch-v1\",\"patches\":[{\"path\":\"knowledge.known[1]\",\"value\":{\"fact\":\"我在贺芩户居处居住；家里的贺岑是我的儿子。\",\"source\":\"bld_wt_home_07\",\"reliability\":\"日常亲历\"}},{\"path\":\"knowledge.known[2]\",\"value\":{\"fact\":\"我做苇席收边工，日常劳动处在苇席收边屋；眼下遇到的是两户送来的席边混了记号。\",\"source\":\"npc_wt_heqin\",\"reliability\":\"本人亲历，问题尚未解决\"}},{\"path\":\"knowledge.unknown[0]\",\"value\":\"混记号的两户何时能各自来认旧补处。\"},{\"path\":\"knowledge.unknown[1]\",\"value\":\"吕沫下一次备灶何时必须取回干净盆。\"},{\"path\":\"voice.register\",\"value\":\"谈席边细节干脆，被问错还时语气会绷紧。\"},{\"path\":\"goals.short[0].steps[0].content\",\"value\":\"把两份席边分别摆开，请物主指出自己认得的旧补。\"},{\"path\":\"goals.mid[0].steps[0].content\",\"value\":\"先问吕沫备灶时段与盆的物主，再提出一小段湿处理的截止点。\"},{\"path\":\"goals.long[0].steps[0].content\",\"value\":\"回交前请物主读回席边记号，核查拿走的是否为自家席料。\"},{\"path\":\"relationships[0].note\",\"value\":\"贺岑是家里的儿子；活泼/怕生，这件事还需要彼此听完再商量。\"},{\"path\":\"relationships[1].note\",\"value\":\"苏玛是家里的母亲；温和/恋旧，这件事还需要彼此听完再商量。\"},{\"path\":\"relationships[2].note\",\"value\":\"郝渝是家里的配偶；爽朗/护短，这件事还需要彼此听完再商量。\"},{\"path\":\"memorySeeds[2]\",\"value\":{\"id\":\"memory_wt_depth_group_1\",\"event\":\"魏涟、黄霆、贺芩和吕沫在苇席收边屋歇手时核对过各自工序。魏涟说旧网要迎光，黄霆说空响石边要腾空；贺芩和吕沫又谈到湿席与备灶争用水盆。四人只讲清了各自顾虑，还没有定下交换位置或交盆时刻。\",\"location\":\"bld_wt_workroom\",\"salience\":4,\"knownBy\":[\"npc_wt_weilian\",\"npc_wt_huangting\",\"npc_wt_heqin\",\"npc_wt_lvmo\"],\"reliability\":\"共同亲历；未解决的分歧仍待各户核对\"}}]}"
+        },
+        "logprobs": null,
+        "finish_reason": "stop"
+      }
+    ],
+    "usage": {
+      "prompt_tokens": 8478,
+      "completion_tokens": 596,
+      "total_tokens": 9074,
+      "prompt_tokens_details": {
+        "cached_tokens": 7808
+      },
+      "prompt_cache_hit_tokens": 7808,
+      "prompt_cache_miss_tokens": 670
+    },
+    "system_fingerprint": "aeb56401ca74e127821c4f9126dcb669",
+    "measurement": {
+      "label": "content-sourced-npc_wt_heqin-draft2",
+      "model": "deepseek-flash",
+      "thinking": "disabled",
+      "usage": {
+        "prompt_tokens": 8478,
+        "completion_tokens": 596,
+        "total_tokens": 9074,
+        "prompt_tokens_details": {
+          "cached_tokens": 7808
+        },
+        "prompt_cache_hit_tokens": 7808,
+        "prompt_cache_miss_tokens": 670
+      },
+      "costUpperYuan": 0.006420319999999999,
+      "cumulativeUpperYuan": 3.1752065599999986,
+      "latencyMs": 3120.0662999999986,
+      "timestamp": "2026-10-11T23:49:09.678Z"
+    }
+  },
+  "measurements": [
+    {
+      "label": "content-sourced-npc_wt_heqin-draft0",
+      "model": "deepseek-flash",
+      "thinking": "disabled",
+      "usage": {
+        "prompt_tokens": 7865,
+        "completion_tokens": 596,
+        "total_tokens": 8461,
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        },
+        "prompt_cache_hit_tokens": 0,
+        "prompt_cache_miss_tokens": 7865
+      },
+      "costUpperYuan": 0.020498,
+      "cumulativeUpperYuan": 3.118071999999999,
+      "latencyMs": 2877.3137999999963,
+      "timestamp": "2026-10-11T23:48:53.499Z"
+    },
+    {
+      "label": "content-sourced-npc_wt_heqin-review0",
+      "model": "deepseek-flash",
+      "thinking": "disabled",
+      "usage": {
+        "prompt_tokens": 15018,
+        "completion_tokens": 803,
+        "total_tokens": 15821,
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        },
+        "prompt_cache_hit_tokens": 0,
+        "prompt_cache_miss_tokens": 15018
+      },
+      "costUpperYuan": 0.03646,
+      "cumulativeUpperYuan": 3.154531999999999,
+      "latencyMs": 5154.732100000001,
+      "timestamp": "2026-10-11T23:48:58.660Z"
+    },
+    {
+      "label": "content-sourced-npc_wt_heqin-draft1",
+      "model": "deepseek-flash",
+      "thinking": "disabled",
+      "usage": {
+        "prompt_tokens": 8496,
+        "completion_tokens": 596,
+        "total_tokens": 9092,
+        "prompt_tokens_details": {
+          "cached_tokens": 7808
+        },
+        "prompt_cache_hit_tokens": 7808,
+        "prompt_cache_miss_tokens": 688
+      },
+      "costUpperYuan": 0.00645632,
+      "cumulativeUpperYuan": 3.1609883199999986,
+      "latencyMs": 2617.366900000001,
+      "timestamp": "2026-10-11T23:49:01.317Z"
+    },
+    {
+      "label": "content-sourced-npc_wt_heqin-review1",
+      "model": "deepseek-flash",
+      "thinking": "disabled",
+      "usage": {
+        "prompt_tokens": 15018,
+        "completion_tokens": 858,
+        "total_tokens": 15876,
+        "prompt_tokens_details": {
+          "cached_tokens": 14848
+        },
+        "prompt_cache_hit_tokens": 14848,
+        "prompt_cache_miss_tokens": 170
+      },
+      "costUpperYuan": 0.00779792,
+      "cumulativeUpperYuan": 3.1687862399999984,
+      "latencyMs": 5228.454899999997,
+      "timestamp": "2026-10-11T23:49:06.551Z"
+    },
+    {
+      "label": "content-sourced-npc_wt_heqin-draft2",
+      "model": "deepseek-flash",
+      "thinking": "disabled",
+      "usage": {
+        "prompt_tokens": 8478,
+        "completion_tokens": 596,
+        "total_tokens": 9074,
+        "prompt_tokens_details": {
+          "cached_tokens": 7808
+        },
+        "prompt_cache_hit_tokens": 7808,
+        "prompt_cache_miss_tokens": 670
+      },
+      "costUpperYuan": 0.006420319999999999,
+      "cumulativeUpperYuan": 3.1752065599999986,
+      "latencyMs": 3120.0662999999986,
+      "timestamp": "2026-10-11T23:49:09.678Z"
+    },
+    {
+      "label": "content-sourced-npc_wt_heqin-review2",
+      "model": "deepseek-flash",
+      "thinking": "disabled",
+      "usage": {
+        "prompt_tokens": 15018,
+        "completion_tokens": 640,
+        "total_tokens": 15658,
+        "prompt_tokens_details": {
+          "cached_tokens": 14848
+        },
+        "prompt_cache_hit_tokens": 14848,
+        "prompt_cache_miss_tokens": 170
+      },
+      "costUpperYuan": 0.00605392,
+      "cumulativeUpperYuan": 3.1812604799999984,
+      "latencyMs": 3982.0723999999973,
+      "timestamp": "2026-10-11T23:49:13.666Z"
+    }
+  ]
+}
