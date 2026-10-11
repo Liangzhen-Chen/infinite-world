@@ -1,0 +1,27 @@
+{
+  "status": "reviewed-and-published-to-source",
+  "ids": [
+    "npc_yp_zhaofeng",
+    "npc_yp_qiaoduan",
+    "npc_yp_wenxu",
+    "npc_yp_jiangmi",
+    "npc_yp_hanpei",
+    "npc_yp_zhusheng"
+  ],
+  "L1": "passed",
+  "L2": "passed",
+  "L4": "passed",
+  "changedCatalogs": [
+    "world/people/baseline.json"
+  ],
+  "incrementSpentYuan": 0.13646952000000034,
+  "waveCumulativeYuan": 6.290221280000006,
+  "waveLimitYuan": 20,
+  "scope": "仅榆坡六人认知、语域、关系来由、目标步骤及三对共享旧事。其余人物与四村聚落档案未修复。",
+  "checks": {
+    "related": "18/18",
+    "core": "38/38 engine/storage/plugin"
+  },
+  "realModelPlaytest": "not-run",
+  "deployment": false
+}

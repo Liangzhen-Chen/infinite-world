@@ -1,0 +1,70 @@
+{
+  "index": 0,
+  "fingerprint": "75c3387b5a4ef053307bfb8ec9e81c1ef5413197b3a6e7f0be1a874b84a51e59",
+  "count": 6,
+  "passed": 6,
+  "ids": [
+    "npc_yp_zhaofeng",
+    "npc_yp_qiaoduan",
+    "npc_yp_wenxu",
+    "npc_yp_jiangmi",
+    "npc_yp_hanpei",
+    "npc_yp_zhusheng"
+  ],
+  "rewritten": 2,
+  "manual": [],
+  "pending": [],
+  "flagged": [],
+  "sample": [
+    "npc_yp_qiaoduan",
+    "npc_yp_hanpei",
+    "npc_yp_zhusheng",
+    "npc_yp_jiangmi",
+    "npc_yp_zhaofeng"
+  ],
+  "l4": {
+    "approved": true,
+    "reviewedAt": "2026-10-11T21:22:10.292Z",
+    "notes": [
+      {
+        "id": "npc_yp_zhaofeng",
+        "note": "核对低垄水痕而未定轮次；未知保留乔端私下改沟及未查旧页，原漏行经历没有重写。",
+        "draftHash": "9bf13b18dfc14782c4088e3cfe88d3a6f60f0e3006f8cca95b0a3fe5572273dc",
+        "reviewHash": "a56bf6664c1bc7f02948b9fa3bb9cee42b31501f44171ae784ba11a5b1b95c67"
+      },
+      {
+        "id": "npc_yp_qiaoduan",
+        "note": "删除样例台词串入的“一指”尺寸后逐条复审；只记与赵枫核痕，不知道对方漏行原因。",
+        "draftHash": "04cc4f091429087e83b9ed68099a1a9dc8d364cd08309d3960633b1c35f8e1f0",
+        "reviewHash": "a56bf6664c1bc7f02948b9fa3bb9cee42b31501f44171ae784ba11a5b1b95c67"
+      },
+      {
+        "id": "npc_yp_wenxu",
+        "note": "穗袋避风与检看通道仍冲突，未替蒋弥同意挪篱；具体分袋核查步骤未宣称完成。",
+        "draftHash": "77b40f4346a1279426260fe9a37b3217074239858d6d16cd6373da12df197767",
+        "reviewHash": "a56bf6664c1bc7f02948b9fa3bb9cee42b31501f44171ae784ba11a5b1b95c67"
+      },
+      {
+        "id": "npc_yp_jiangmi",
+        "note": "共享木作院谈话只涉及占位，不知道温绪袋内用途；邻户同意仍未知。",
+        "draftHash": "365f6086f17d4af330c5cef81eda5f26bd725534d9764845c2875e3874eae226",
+        "reviewHash": "a56bf6664c1bc7f02948b9fa3bb9cee42b31501f44171ae784ba11a5b1b95c67"
+      },
+      {
+        "id": "npc_yp_hanpei",
+        "note": "共灶门外争执未产生换工或报酬；知情限定两人，私下补圈的旧记忆保持原状。",
+        "draftHash": "c9c31c6c5882399d01d30d64f81d908098fc3ed4a03b0937e58492b428a6542a",
+        "reviewHash": "a56bf6664c1bc7f02948b9fa3bb9cee42b31501f44171ae784ba11a5b1b95c67"
+      },
+      {
+        "id": "npc_yp_zhusheng",
+        "note": "清扫最后一段仍未分工；与母亲及秦砺的关系具体，未新增修磨能力。",
+        "draftHash": "b33b298afeb47814bcadda597e70bacacda9911e6e79799cc756598a821774f5",
+        "reviewHash": "a56bf6664c1bc7f02948b9fa3bb9cee42b31501f44171ae784ba11a5b1b95c67"
+      }
+    ]
+  },
+  "costUpperYuan": 6.290221280000006,
+  "manualRatio": 0,
+  "needsSystemicRepair": false
+}

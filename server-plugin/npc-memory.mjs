@@ -84,6 +84,15 @@ export function recordNpcMemories(d,engine,before,tool,args,detail,eventId){
     for(const [id,stream]of streams)d.set(['state','npcs',id,'memoryStream'],stream);
 }
 
+export function selectNpcSeedMemories(engine,document,id,query=''){
+    const base=engine.byId.get(id);if(base?.tier!=='full')return [];
+    const seeds=base.memorySeeds.filter(row=>row.knownBy?.includes(id)),index=new MemoryIndex({entities:engine.entities});
+    for(const row of seeds)index.upsert({id:row.id,text:row.event,entities:row.knownBy.filter(other=>other!==id),salience:row.salience,minute:0});
+    const near=present(document.state).filter(other=>other!==id);
+    const relevant=index.search(query,{present:near,limit:2}).map(row=>row.id);
+    return [...new Set([...relevant,...seeds.map(row=>row.id)])].slice(0,2).map(key=>seeds.find(row=>row.id===key).event);
+}
+
 export function npcContext(engine,document,id,query=''){
     const base=engine.byId.get(id),npc=document.state.npcs[id];if(base?.tier!=='full'||!npc)return null;
     const cognition=npcCognitionView(engine,document,id);
@@ -100,6 +109,6 @@ export function npcContext(engine,document,id,query=''){
     return{appearance:base.appearance,voice:base.voice,values:base.personality.values,flaws:base.personality.flaws,
         concern:goals[0]?.content??'',known:base.knowledge.known.map(row=>row.fact),unknown:base.knowledge.unknown,
         recentActivities:Object.values(document.state.npcAutonomy?.actions??{}).filter(row=>row.npc===id&&row.minute<=document.state.minute).slice(-2).map(row=>({minute:row.minute,content:row.summary})),
-        memories:shared,reflections:cognition.reflections.filter(row=>row.about==='player').slice(-1),seeds:base.memorySeeds.slice(0,2).map(row=>row.event),behavior:base.behaviorRules,
+        memories:shared,reflections:cognition.reflections.filter(row=>row.about==='player').slice(-1),seeds:selectNpcSeedMemories(engine,document,id,query),behavior:base.behaviorRules,
         relations:base.relationships.map(row=>({with:row.with,type:row.type,note:row.note}))};
 }
