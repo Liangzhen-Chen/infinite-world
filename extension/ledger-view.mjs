@@ -2,7 +2,8 @@
 export function renderLedger(container,state,labels,events,time=''){
     const doc=container.ownerDocument;
     const element=(tag,text,className)=>{const node=doc.createElement(tag);if(text!==undefined)node.textContent=String(text);if(className)node.className=className;return node;};
-    const name=id=>labels[id]??state.created?.[id]?.name??'未命名对象';
+    // Scene labels already apply the player's knowledge boundary.
+    const name=id=>labels[id]??'未识别对象';
     const section=(title,empty)=>{const node=element('section',undefined,'fields-ledger-section');node.append(element('h3',title));if(empty)node.append(element('p',empty,'fields-note'));return node;};
     const list=(section,rows,empty)=>{if(!rows.length){section.append(element('p',empty,'fields-note'));return;}const ul=element('ul');for(const text of rows)ul.append(element('li',text));section.append(ul);};
     const fragment=doc.createDocumentFragment(),p=state.player;
@@ -22,7 +23,8 @@ export function renderLedger(container,state,labels,events,time=''){
         if(row.category==='debt'&&row.debtor==='player')rows.push({due:row.deadline,text:`欠款：${name(row.creditor)} · 未还 ${row.amount-row.paid}铜 · ${row.status}${row.status==='待偿还'?` · ${Math.max(0,row.deadline-state.minute)}分钟后到期`:''}`});
         if(row.category==='contract'&&row.room&&row.parties?.includes('player'))rows.push({due:row.expires,text:`住宿：${row.name} · ${row.status}${row.status==='有效'?` · ${Math.max(0,row.expires-state.minute)}分钟后到期`:''}`});
     }
-    for(const [key,label]of [['obligations','约定'],['quests','任务']])for(const row of Object.values(state[key]??{}))rows.push({due:row.deadline,text:`${label}：${row.content??row.name} · ${row.status}`});
+    for(const row of Object.values(state.obligations??{}))if([row.promisor,row.promisee].includes('player'))rows.push({due:row.deadline,text:`约定：${row.content} · ${row.status}`});
+    for(const row of Object.values(state.quests??{}))if([row.publisher,row.taker].includes('player'))rows.push({due:row.deadline,text:`任务：${row.content} · ${row.status}`});
     rows.sort((a,b)=>(a.due??Infinity)-(b.due??Infinity));list(commitments,rows.map(row=>row.text),'暂无已登记的任务或约定。');fragment.append(commitments);
     const recent=section('近期变化');recent.classList.add('fields-ledger-recent');recent.append(element('p','仅显示已提交的变化，最近的在前。回复审查提示保留在对应消息旁。','fields-note'));
     const receipts=(events??[]).filter(event=>event.notices?.length).slice(-8).reverse();
