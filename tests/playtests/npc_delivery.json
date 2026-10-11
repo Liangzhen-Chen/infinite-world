@@ -118,12 +118,35 @@
           "min": 1
         }
       ]
+    },
+    {
+      "input": "我试着再向林穗赊买一份面包，明天付钱。如果她因我刚才违约要求现付，我就不买，也不擅自拿面包。",
+      "assertions": [
+        {
+          "kind": "unchanged",
+          "paths": [
+            "state.player.coins",
+            "state.inventory"
+          ]
+        },
+        {
+          "kind": "records",
+          "path": "state.records",
+          "where": {
+            "category": "debt",
+            "debtor": "player",
+            "creditor": "npc_hw_linsui"
+          },
+          "min": 0,
+          "max": 0
+        }
+      ]
     }
   ],
   "rubric": {
     "truth": "事实以工具与账本为准，拒绝和未完成不能叙述成成功。",
     "agency": "不额外接任务、送礼或转移钱物。",
     "language": "简体中文，不暴露工具或内部编号。",
-    "continuity": "N11说明玩家未在约定地点当面交付，不捏造货物已送到或NPC替玩家送货。林穗记得实际违约，面包仍留玩家库存。此会话覆盖失败及具体原因分支。"
+    "continuity": "N11说明玩家未在约定地点当面交付，不捏造货物已送到或NPC替玩家送货。林穗记得实际违约，面包仍留玩家库存。此会话覆盖失败及具体原因分支。 N11末轮须因实际失信要求现付，不能继续赊账或自动改成现金成交。"
   }
 }

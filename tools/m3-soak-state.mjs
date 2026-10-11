@@ -150,4 +150,3 @@ export function summarizeSoak(run){
   cache:{hitTokens:hit,missTokens:miss,ratio:cacheRatio,complete:cacheCoverage},
   pass:run.config.turns===150&&!run.pending&&people.every(p=>p.pass)&&cacheRatio!==null&&cacheRatio>=.7&&run.spentYuan<=run.config.budgetYuan};
 }
-
