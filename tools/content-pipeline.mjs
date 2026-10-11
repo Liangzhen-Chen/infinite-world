@@ -1,6 +1,8 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import { createHash, randomInt } from 'node:crypto';
+import assert from 'node:assert/strict';
+import {openContentBudget} from './content-budget.mjs';
 
 export const hashContent = value => createHash('sha256').update(JSON.stringify(value)).digest('hex');
 export function parseModelJSON(response) {
@@ -43,6 +45,15 @@ function randomSample(rows, count) {
   for (let i = pool.length - 1; i > 0; i--) { const j = randomInt(i + 1); [pool[i], pool[j]] = [pool[j], pool[i]]; }
   return pool.slice(0, count);
 }
+function hasWrapperEvidence(record,entry){
+  const expected={id:entry.id,contract:'audit-patch-v1',patches:structuredClone(entry.patches)};
+  // Compare the complete historical assertion, including its values. A loose
+  // substring match could grant recovery to a factual or id mismatch.
+  let wrapperError;try{assert.deepEqual({candidate:expected},expected);}catch(e){wrapperError=e.message;}
+  if(record.errors?.includes(wrapperError))return true;
+  if(!record.draftResponse||record.errorCode!=='AUDIT_PATCH_PROTOCOL')return false;
+  try{assert.deepEqual(parseModelJSON(record.draftResponse),{candidate:expected});return true;}catch{return false;}
+}
 
 // Entries contain hand-authored mechanics. Request builders supply category
 // prompts; this runner owns bounded rewrites, factual review, costs and resume.
@@ -52,6 +63,7 @@ export async function runContentPipeline({
   validateDraft, contextFor = () => null, buildReviewRequest = defaultReviewRequest,
   extractReview = parseModelJSON, concurrency = 8, batchSize = 40,
   revision = 'v2', retryManual = false, onBatch = null, budgetRoot = root,
+  cardId, allocation, protocolRecoveryIds = [],
 }) {
   if (!Array.isArray(entries) || new Set(entries.map(row => row.id)).size !== entries.length) throw new Error('条目编号重复或缺失');
   if (entries.some(row => !/^[a-z][a-z0-9_-]+$/i.test(row.id ?? ''))) throw new Error('条目编号不安全');
@@ -60,40 +72,40 @@ export async function runContentPipeline({
   if (typeof validateDraft !== 'function' || typeof buildDraftRequest !== 'function') throw new Error('缺少起草或 L1 校验接口');
   await fs.mkdir(root, { recursive: true });
   const ledgerPath = path.join(budgetRoot, 'budget.json');
-  const ledger = await readJSON(ledgerPath) ?? { spentYuan: 0 };
-  // Reservations left by a terminated process may already have been charged.
-  client.spent = Math.max(client.spent ?? 0, ledger.spentYuan + (ledger.reservedYuan ?? 0));
+  if(!Array.isArray(protocolRecoveryIds)||protocolRecoveryIds.some(id=>!entries.some(e=>e.id===id)))throw Error('协议恢复 id 不在冻结条目中');
+  const budget=await openContentBudget({file:ledgerPath,client,cardId,allocation});
   const results = [], batches = [];
-  let budgetWrites = Promise.resolve();
-  const saveBudget = () => {
-    budgetWrites = budgetWrites.then(() => writeJSON(ledgerPath, { spentYuan: client.spent, reservedYuan: client.reserved ?? 0, limitYuan: client.budgetYuan }));
-    return budgetWrites;
-  };
-  async function request(body, label) {
-    const pending = client.generate(body, label);
-    pending.catch(() => {});
-    await saveBudget();
-    try { return await pending; } finally { await saveBudget(); }
-  }
+  const request=(body,label)=>budget.request(body,label);
   async function one(entry) {
     const context = await contextFor(entry);
     const fingerprint = hashContent({ entry, context, revision });
     const file = path.join(root, `${entry.id}.json`);
     let record = await readJSON(file);
-    if (record?.fingerprint === fingerprint && (record.status === 'passed' || record.status === 'manual' && !retryManual)) return record;
+    const recovering=protocolRecoveryIds.length>0;
+    let eligible=recovering&&protocolRecoveryIds.includes(entry.id)&&entry.contract==='audit-patch-v1'&&record?.fingerprint===fingerprint&&record.status==='manual'&&!record.review&&!record.protocolRecovery&&
+      hasWrapperEvidence(record,entry);
+    if(eligible)eligible=await budget.claimProtocolRecovery(entry.id,fingerprint);
+    if(recovering&&!eligible)return record??{id:entry.id,fingerprint,status:'pending',attempts:0,draft:null,review:null,errors:[],warnings:[]};
+    if (!eligible&&record?.fingerprint === fingerprint && (record.status === 'passed' || record.status === 'manual' && !retryManual)) return record;
     let feedback = record?.fingerprint === fingerprint ? record.feedback : null;
     const priorAttempts = record?.fingerprint === fingerprint ? record.attempts ?? 0 : 0;
-    record = { id: entry.id, fingerprint, status: 'pending', attempts: priorAttempts, draft: null, review: null, errors: [], warnings: [], feedback };
-    for (let attempt = priorAttempts; attempt < 3; attempt++) {
-      record.attempts = attempt + 1;
+    if(eligible){record.protocolRecovery={kind:'audit-patch-v1-single-wrapper',startedAt:new Date().toISOString(),prior:structuredClone(record),status:'started'};record.status='pending';await writeJSON(file,record);}
+    else record = { id: entry.id, fingerprint, status: 'pending', attempts: priorAttempts, draft: null, review: null, errors: [], warnings: [], feedback };
+    for (let attempt = priorAttempts; attempt < (eligible?priorAttempts+1:3); attempt++) {
+      if(!eligible)record.attempts = attempt + 1;
       try {
-        const response = await request(await buildDraftRequest(entry, feedback, context), `content-${path.basename(root)}-${entry.id}-draft${attempt}`);
+        const offline=eligible?record.protocolRecovery.prior.draftResponse:null;
+        const response = offline??await request(await buildDraftRequest(entry, feedback, context), `content-${path.basename(root)}-${entry.id}-${eligible?'protocol-recovery':'draft'+attempt}`);
+        record.draftResponse=response;
+        record.measurements??=[];if(!offline&&response.measurement)record.measurements.push(response.measurement);
+        await writeJSON(file,record);
         record.draft = await extractDraft(response, entry);
         const validation = await validateDraft(record.draft, entry, context);
         record.errors = Array.isArray(validation) ? validation : validation.errors ?? [];
         record.warnings = Array.isArray(validation) ? [] : validation.warnings ?? [];
         // L2 covers every syntactically usable draft, even if L1 found errors.
         const reviewResponse = await request(await buildReviewRequest(entry, record.draft, context), `content-${path.basename(root)}-${entry.id}-review${attempt}`);
+        if(reviewResponse.measurement)record.measurements.push(reviewResponse.measurement);
         record.review = await extractReview(reviewResponse, entry);
         const issues = reviewIssues(record.review);
         record.errors.push(...issues.filter(row => row.severity === 'hard'));
@@ -101,10 +113,12 @@ export async function runContentPipeline({
         if (!record.errors.length) { record.status = 'passed'; record.feedback = null; break; }
         feedback = record.errors;
       } catch (error) {
+        record.errorCode=error.code??null;
         feedback = [String(error.message)]; record.errors = feedback;
         // Transport and budget failures are resumable, not a consumed rewrite.
         if (/费用上限|环境变量|fetch failed|timeout|timed out|HTTP (429|5\d\d)/i.test(error.message)) {
-          record.attempts = attempt; record.status = 'pending'; record.feedback = feedback;
+          if(!eligible)record.attempts = attempt; record.status = eligible?'manual':'pending'; record.feedback = feedback;
+          if(eligible)record.protocolRecovery.status='failed';
           await writeJSON(file, record); return record;
         }
       }
@@ -112,10 +126,11 @@ export async function runContentPipeline({
       await writeJSON(file, record);
     }
     if (record.status !== 'passed') record.status = 'manual';
+    if(eligible)record.protocolRecovery.status=record.status==='passed'?'passed-L1-L2':'failed';
     await writeJSON(file, record);
     return record;
   }
-  for (let start = 0; start < entries.length; start += batchSize) {
+  try { for (let start = 0; start < entries.length; start += batchSize) {
     const slice = entries.slice(start, start + batchSize), rows = new Array(slice.length);
     let cursor = 0;
     await Promise.all(Array.from({ length: Math.min(concurrency, slice.length) }, async () => {
@@ -134,16 +149,17 @@ export async function runContentPipeline({
       flagged: rows.filter(row => row.warnings.length).map(row => row.id),
       sample: prior?.fingerprint === fingerprint ? prior.sample : randomSample(passed, 5).map(row => row.id),
       l4: prior?.fingerprint === fingerprint ? prior.l4 : { approved: false, notes: [] },
-      costUpperYuan: client.spent,
+      costUpperYuan: client.spent+(client.reserved??0),
     };
     batch.manualRatio = batch.manual.length / batch.count;
     batch.needsSystemicRepair = batch.manualRatio > 0.1;
     batches.push(batch); await writeJSON(file, batch);
     if (onBatch) await onBatch(batch, rows);
   }
-  const summary = { total: entries.length, passed: results.filter(row => row.status === 'passed').length, manual: results.filter(row => row.status === 'manual').length, pending: results.filter(row => row.status === 'pending').length, costUpperYuan: client.spent, batches, scope: 'L1/L2 审核结果；尚须 L4 抽读与发布校验' };
+  const summary = { total: entries.length, passed: results.filter(row => row.status === 'passed').length, manual: results.filter(row => row.status === 'manual').length, pending: results.filter(row => row.status === 'pending').length, costUpperYuan: client.spent+(client.reserved??0), budget:budget.ledger, batches, scope: 'L1/L2 审核结果；尚须 L4 抽读与发布校验' };
   await writeJSON(path.join(root, 'summary.json'), summary);
   return { results, summary };
+  } finally {await budget.close();}
 }
 
 export async function readApprovedContent(root, entries, { contextFor = () => null, revision = 'v2' } = {}) {
