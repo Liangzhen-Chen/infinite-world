@@ -1,0 +1,15 @@
+{
+  "id": "npc_yp_zhusheng",
+  "fingerprint": "32743e5c7e090c3f7083dc2b711157f05bf8f33c78bbc566fc1d522e7e725868",
+  "status": "manual",
+  "attempts": 3,
+  "draft": null,
+  "review": null,
+  "errors": [
+    "Expected values to be strictly deep-equal:\n+ actual - expected\n\n  {\n+   candidate: {\n+     contract: 'audit-patch-v1',\n+     id: 'npc_yp_zhusheng',\n+     patches: [\n+       {\n+         path: 'opinions.neighbors[2].view',\n+         value: '与秦砺在共用空处说过旧磨架异响，她赞成先停磨再查；这段交谈没有让她取得修磨技能或替人检修的责任。'\n+       }\n+     ]\n+   }\n-   contract: 'audit-patch-v1',\n-   id: 'npc_yp_zhusheng',\n-   patches: [\n-     {\n-       path: 'opinions.neighbors[2].view',\n-       value: '与秦砺在共用空处说过旧磨架异响，她赞成先停磨再查；这段交谈没有让她取得修磨技能或替人检修的责任。'\n-     }\n-   ]\n  }\n"
+  ],
+  "warnings": [],
+  "feedback": [
+    "Expected values to be strictly deep-equal:\n+ actual - expected\n\n  {\n+   candidate: {\n+     contract: 'audit-patch-v1',\n+     id: 'npc_yp_zhusheng',\n+     patches: [\n+       {\n+         path: 'opinions.neighbors[2].view',\n+         value: '与秦砺在共用空处说过旧磨架异响，她赞成先停磨再查；这段交谈没有让她取得修磨技能或替人检修的责任。'\n+       }\n+     ]\n+   }\n-   contract: 'audit-patch-v1',\n-   id: 'npc_yp_zhusheng',\n-   patches: [\n-     {\n-       path: 'opinions.neighbors[2].view',\n-       value: '与秦砺在共用空处说过旧磨架异响，她赞成先停磨再查；这段交谈没有让她取得修磨技能或替人检修的责任。'\n-     }\n-   ]\n  }\n"
+  ]
+}
