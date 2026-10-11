@@ -22,11 +22,13 @@
 
 2026-10-11 初始核查主线为 `69aad08`，规划期间主会话报告 `4bf28de` 已作为 `f11af04` 合入且相关与核心通过。四村档案和沿路线送货已经在主线，不能重新做一遍。四村 `details.economy.production/publicStock/priceFactor/tax` 仍为 null，测试明确保护这一未完成状态，治理没有头人及执法者实例；当前公开查询也未包含数值账。T02、T03 完成后才能关闭四村收尾。
 
-已有完整档 152、轻量名册 294，不代表人物深度达标。榆坡已修 6 人，`70011af` 已选择性合入另外 4 人；原 17 人 traits 已修，需核验回归而非全部重写。T04 应输出逐人逐字段清单，T06–T10 只补不达标项。T11 通过前不新增任何人口；之后仍先做 M2 验收、14 条法术，再开始扩人口。
+已有完整档 152、轻量名册 294，不代表人物深度达标。榆坡已修 6 人，`70011af` 已选择性合入另外 4 人；T04 本次审计记录为 152 full、1840 项字段缺口，实际执行以同一基线的 `auditNpcDepth` 输出为准。10 名已深修人物的六类深度已通过，但 `opinions.neighbors[].view` 等旧设定仍有规则式措辞，不能按整个人“已修”而跳过 L1。原 17 人 traits 已由 `legacyTraitsAuditIds`/`legacyTraitsExpected` 对照提交 `1bc8f3b` 的固定名单和值核验通过，后续只核验，禁止再改。T06–T10 按 id/field/code 清单只补不达标项；T11 通过前不新增任何人口，之后仍先做 M2 验收、14 条法术，再扩人口。
 
 旧树清单：`w1-village-profiles/codex/yupo-depth-next` 的 `70011af`、`review-calibration/codex/review-calibration` 的 `e4abb2b` 已检查合入。`npc-delivery/codex/soak-semantic-time` 的 `241552d` 与 `npc-depth/codex/npc-depth` 的 `035d792` 是已停止并保存的未验证 WIP，分别归 T14、T20；原目录名不表示现任务内容。交接见 `docs/交接.md`，开工再次确认状态与归属。
 
 初始可并行组为 T01、T14、T20，它们在三个原树分别收尾；主线整合串行。T02 与任何修改 `server-plugin/engine.mjs`、`world/meta/rules.json` 的卡不能并行。T06–T10 候选作者只改各自目录，可并行起草；审核槽和 T11 正式发布串行。新增测试文件名或 CLI 在下文明确标为新增，不能当作现有已运行证据。
+
+当前内容费用沿用 `F:/dnd/world/drafts/m4-object/budget.json` 共享持久账，它含旧混合来源；各卡的 W1/W2 名称不构成新建零余额预算的理由。主会话分配运行槽时读取实际 spent/reserved 并记录本卡差值，增量上限和已有累计上限同时有效；模型预算文件只由取得运行槽的任务串行更新。
 
 ## 近期完整任务卡
 
@@ -40,9 +42,9 @@
 
 ### T02 四村产业、税贸账与治理权限
 
-目标：四村档案不再以 null 代替用户要求的经济与权限资料，数字能由引擎读取并核对。涉及文件：`world/design/w1-village-profiles.mjs`、`world/geo/settlements.json`、`world/meta/rules.json`、对应 `world/drafts/w1/village-profiles/`、`tools/w1-village-profiles-content.mjs`、`tools/population-validation.mjs`、`tools/publish-w1-villages.mjs`，必要时 `server-plugin/agriculture.mjs`、`server-plugin/law.mjs`、`server-plugin/engine.mjs`；测试 `tests/w1-village-profiles.test.mjs`、新增 `tests/village-ledgers.test.mjs`。
+目标：四村档案不再以 null 代替用户要求的经济与权限资料，数字能由引擎读取并核对。涉及文件：`world/design/w1-village-profiles.mjs`、`world/geo/settlements.json`、`world/meta/rules.json`、对应 `world/drafts/w1/village-profiles/` 与 `world/drafts/w1/village-ledgers/`、`tools/w1-village-profiles-content.mjs`、`tools/population-validation.mjs`、`tools/publish-w1-villages.mjs`、`extension/tools.mjs`、`schemas/world.schema.json`，必要时 `server-plugin/agriculture.mjs`、`server-plugin/agriculture-migration.mjs`、`server-plugin/law.mjs`、`server-plugin/engine.mjs`；测试 `tests/w1-village-profiles.test.mjs`、新增 `tests/village-ledgers.test.mjs`。农事初始化适配仅服务开发世界/测试副本，不在本卡新增发布迁移或操作原存档。
 
-实现要点：保留 `settlementProfiles[].details` 与已审核 problems/rumors/calendar；把 `economy` 从 `pending-ledger` 迁为有单位、周期、来源、期初期末的生产/库存/税/贸易记录。粮食复用 `rules.agriculture.settlements`、`state.settlements` 和 `advanceAgriculture` 的守恒，跨村贸易必须有两端同量记账，未发生的合同不得计为已收付。新经济明细由 world 数据提供，旧世界升级不重置耗尽库存或私人财产。治理复用 `rules.law.codes` 与 `law.mjs` 的 `authority` 在场检查，明示官员、执法区域、可执行事项和转交机构；普通协调者不得自动获搜查征税权。现有缺口断言改为验证新账及拒绝无权操作，保持原问题、传闻来源及秘密隔离。
+实现要点：保留 `settlementProfiles[].details` 与已审核 problems/rumors/calendar；把 `economy` 从 `pending-ledger` 迁为有单位、周期、来源、期初期末的生产/库存/税/贸易记录。粮食复用 `rules.agriculture.settlements`、`state.settlements` 和 `advanceAgriculture` 的守恒，跨村贸易必须有两端同量记账，未发生的合同不得计为已收付。实际公共调用是 `world_field` 携带 `operation:'farm_settle_trade'`、`contract`、`phase:'pickup'|'deliver'`、`authority`；内部 `world_farm/settle_trade` 通过既有 `modelToolCall` 映射，不新增第 26 个公共工具。新经济明细由 world 数据提供，旧世界升级不重置耗尽库存或私人财产。治理复用 `rules.law.codes` 与 `law.mjs` 的 `authority` 在场检查，明示官员、执法区域、可执行事项和转交机构；普通协调者不得自动获搜查征税权。现有缺口断言改为验证新账及拒绝无权操作，保持原问题、传闻来源及秘密隔离。本卡只闭合四村登记粮约与税贸，不扩到全世界自动贸易。
 
 验收：新定向测试覆盖每村年粮等式、税贸双方对账、期初/结算分离、无权拒绝、重复升级及重放；`node --test tests/village-ledgers.test.mjs tests/w1-village-profiles.test.mjs tests/w1-villages-publish.test.mjs tests/law.test.mjs`、CORE 通过。仅跑农业相关命名测试，不启动旧三年全批。事实变更走现有 `reviewProfiles`/`--review`，为本卡补显式候选目录/预算参数，4 村增量上限 1.2 元且计入 W1 20 元总账，L1/L2 无硬错、L4 完成后才写正式源。不要做：凭空补用户粮食、扩人口、全世界周贸易系统；后者归 R07。依赖：T01；并行：不能与其他引擎、规则、四村发布器改动并行。
 
@@ -64,17 +66,21 @@
 
 ### T05 可复用的定点人物修订流水线
 
-目标：后续按村准备 3–5 当事人小批，保留已有达标字段及审核证据，正式人物文件只由统一发布步骤写。涉及文件：`tools/npc-depth.mjs`、`tools/npc-depth-content.mjs`、`tools/npc-depth-review.mjs`、`tools/npc-depth-l4.mjs`、`tools/publish-w1-villages.mjs`，新增 `tools/publish-npc-depth.mjs`、`tests/npc-depth-pipeline.test.mjs`。
+目标：后续按村准备 3–5 当事人小批，保留已有达标字段及审核证据，正式人物文件只由统一发布步骤写。涉及文件：`tools/npc-depth.mjs`、`tools/npc-depth-content.mjs`、`tools/npc-depth-review.mjs`、`tools/npc-depth-l4.mjs`，新增 `tools/publish-npc-depth.mjs`、`tests/npc-depth-pipeline.test.mjs`。本卡不改 T02 正在使用的 `tools/publish-w1-villages.mjs`，旧发布器对新补丁的兼容接入归 T11；不改 T04 验证器。
 
-实现要点：复用 `depthEntries`、`contextFor`、`applyDepthDraft`、`verifyUnchanged`、`sourceFingerprint`、`runContentPipeline` 和 `readApprovedContent`；把旧榆坡硬编码参数化，同时保留已审核版本的原指纹。新增显式 `--design`、`--root`、`--budget-root`，发布器新增 `--manifest` 与预演/`--publish`，参数需 CLI 帮助和测试。允许 patch 只含 T04 失败字段；shared memory 不能一方知晓秘密就自动给另一方。冻结 before，核对 hash 后合入，保留钱物、身份、年龄、技能、服务、旧记忆和已达标目标内容；同一条补丁重跑零写入。候选全部在各自 world 目录，不并发写 baseline。
+实现要点：复用 `depthEntries`、`contextFor`、`applyDepthDraft`、`verifyUnchanged`、`sourceFingerprint`、`runContentPipeline` 和 `readApprovedContent`；保留旧榆坡两批的原调用、五字段 `changedFields` 及已审核指纹，为新增批次实现按审计路径的修订合同。新增显式 `--design`、`--root`、`--budget-root`，发布器新增 `--manifest` 与预演/`--publish`，参数需 CLI 帮助和测试。新 design 冻结 before/baseHash、对应 `auditNpcDepth(...).issues` 的 id/field/code 及实际 patch 路径，字段范围从失败项推导，不能把任意顶层字段加入通用白名单。
 
-验收：`node --test tests/npc-depth-pipeline.test.mjs tests/npc-depth.test.mjs tests/npc-depth-next.test.mjs tests/w1-villages-publish.test.mjs` 及 CORE；prepare 不调用模型、过期指纹/篡改审核拒绝、已有两批仍可重发、不同村候选可独立准备。模型预算 0。不要做：通用框架重构、重审无改动条目、写 PROGRESS。依赖：T01/T04；并行：不与 T02 四村发布器工作并行，完成后解锁 T06–T10。
+准确白名单：六类深度字段之外，`findNpcRuleWording` 扫描的 `notes`、`familyNotes`、`description`、`personality`、`opinions`、`secrets`、`authoredFacts` 仅在对应叶子路径实际报 `rule-wording` 时允许修正；例如 `opinions.neighbors[0].view` 只改 view，保留 with 和其他邻居项。`knowledge`、`voice`、`relationships`、`memorySeeds`、`goals` 同样只修报错的具体项；条目缺失类 issue 才允许向该数组补足必要条目。保留已达标兄弟字段、数组成员及对象键，不允许删除、清空、改成 null 或减少数组来逃门槛。规则措辞改为已有来源支持的具体事实，不能用另一句“并非全知”代换。
+
+仅措辞补丁允许没有 sharedEvent、memoryNarrative 或新记忆；当前 `verifyUnchanged` 强制 memorySeeds 加一只保留在旧两批合同，新批次按失败路径判断。旧记忆的 event 若自身报规则措辞，只改有问题的文字，保持 id、knownBy、地点、事实和其他历史内容；确有共享记忆缺口才补共享事件，优先选择同批存在相同缺口的当事人，不把一方秘密传播给另一方。冻结所有非失败字段、钱物、身份、年龄、技能、服务以及原 17 人 traits。L2 输入覆盖本次全部修订叶子，含 opinions/notes，不能仍只审共享记忆；同一补丁重跑零写入。候选全部在各自 world 目录，不并发写 baseline。
+
+验收：`node --test tests/npc-depth-pipeline.test.mjs tests/npc-depth.test.mjs tests/npc-depth-next.test.mjs tests/w1-villages-publish.test.mjs` 及 CORE；prepare 不调用模型、过期指纹/篡改审核拒绝、旧两批仍可重发、不同村候选可独立准备。新增回归须证明：opinions-only 与 notes-only 修复不增记忆，未报错叶子和原 17 traits 改动被拒绝，删除/清空字段或数组成员被拒绝，L2 上下文确实含每个新修订项。模型预算 0。不要做：通用框架重构、重审无改动条目、重写已达标六类、写 PROGRESS。依赖：T01/T04；并行：T04 合入后可与 T02/T03 并行，严格不改旧四村发布器/验证器；完成后解锁 T06–T10。
 
 ### T06 榆坡剩余人物深度
 
 目标：榆坡 30 份已有 full 档全部达到 T04，仅修剩余不达标字段。涉及文件：新增 `world/design/w1-yp-depth-rest.mjs`、`world/drafts/w1/yp-depth-rest/`、`tests/npc-depth-yp.test.mjs`；不直接改 baseline 或共用工具。
 
-实现要点：已修 10 人沿 T01 证据保留；从 `details.problems` 的轮水册、工场占位等实际问题每次选择 3–5 当事人，补 known/unknown/steps/共享经历和关系来由。剩余居民也依据各自家庭/地点实际事实补缺，不复制一套措辞。复用 T05 CLI，design 的 before/patch/sharedEvent 形状由 T05 定义；共享经历双方兼容，无新增钱物或秘密授权。
+实现要点：已修 10 人的合格六类内容沿 T01 证据保留，但逐人修审计命中的 opinions/notes 等规则措辞，不能整人跳过或追加无必要的记忆。从 `details.problems` 的轮水册、工场占位等实际问题每次选择 3–5 当事人，按失败路径补 known/unknown/steps/共享经历和关系来由。剩余居民也依据各自家庭/地点实际事实补缺，不复制一套措辞。复用 T05 CLI，design 使用 before/baseHash/issues/patch，sharedEvent 仅在实际共享记忆缺口时存在；共享经历双方兼容，无新增钱物或秘密授权。
 
 验收：`node --test tests/npc-depth-yp.test.mjs`、CORE；`node tools/npc-depth.mjs --design world/design/w1-yp-depth-rest.mjs --root world/drafts/w1/yp-depth-rest --prepare` 后在取得模型槽时用同参数加 `--budget-root` 运行审核。增量预算 2 元且 W1 累计不超过 20；L1/L2 无硬错、L4 完成、全部 30 人合并视图过 T04；提交候选与逐条审核。不要做：重复改已达标字段、新增 NPC、整批重写、发布其他村。依赖：T02/T04/T05；并行：作者阶段与 T07–T10 文件隔离，模型阶段独占。
 
@@ -82,7 +88,7 @@
 
 目标：苇汀现有 30 份 full 档达到 T04。涉及文件：新增 `world/design/w1-wt-depth.mjs`、`world/drafts/w1/wt-depth/`、`tests/npc-depth-wt.test.mjs`。
 
-实现要点：依据 `world/design/w1-villages-weiting.mjs` 和四村档案中苇束、认户等本地问题，每次派生 3–5 当事人的具体认知、未知事项、行动步骤及共同经历；全村剩余字段按 T04 清单定点补。复用 T05，候选不改正式 baseline，保留原身份财物和审核正文。
+实现要点：依据 `world/design/w1-villages-weiting.mjs` 和四村档案中苇束、认户等本地问题，每次派生 3–5 当事人的具体认知、未知事项、行动步骤及共同经历；全村剩余字段按 T04 的 id/field/code 清单定点补，包含报错的 opinions/notes 等设定叶子。复用 T05，不删字段或数组成员，不改合格兄弟字段；仅措辞修正不新增共享记忆。候选不改正式 baseline，保留原身份财物和审核正文中未失败部分。
 
 验收：`node --test tests/npc-depth-wt.test.mjs`、CORE；T05 命令的 design/root 换成本卡路径，prepare 后在独占槽审核。增量预算 3 元且计入 W1 20 元；L1/L2/L4 通过，30 人合并视图无 T04 缺口。不要做：复制榆坡事实、扩大人口、通过编造已完成交易丰富经历。依赖：T02/T04/T05；并行：作者阶段可与 T06/T08/T09/T10，模型独占。
 
@@ -90,7 +96,7 @@
 
 目标：砾泉现有 30 份 full 档达到 T04。涉及文件：新增 `world/design/w1-lq-depth.mjs`、`world/drafts/w1/lq-depth/`、`tests/npc-depth-lq.test.mjs`。
 
-实现要点：依据 `world/design/w1-villages-liquan.mjs`、旧标辨字等具体问题，分 3–5 人小批补认知与共同过去；区分居民听过的说法和本人亲历，unknown 不直接泄露问题答案。T04 清单覆盖全部不达标字段，使用 T05 patch 和指纹约定。
+实现要点：依据 `world/design/w1-villages-liquan.mjs`、旧标辨字等具体问题，分 3–5 人小批补认知与共同过去；区分居民听过的说法和本人亲历，unknown 不直接泄露问题答案。T04 的 id/field/code 清单覆盖全部不达标字段，包含 opinions/notes 等设定叶子，使用 T05 patch 和指纹约定；不删字段或数组成员，不改合格兄弟字段，仅措辞修正不新增记忆。
 
 验收：`node --test tests/npc-depth-lq.test.mjs`、CORE；T05 的 design/root 用本卡路径，prepare 与正式事实审核分开。增量上限 3 元且 W1 总额不超过 20；L1/L2/L4 完成，30 人合并视图无 T04 缺口。不要做：把古迹传言写成真相、给角色新增技能和授权、新增人口。依赖：T02/T04/T05；并行：作者阶段可与其他村，模型独占。
 
@@ -98,7 +104,7 @@
 
 目标：桑坂现有 30 份 full 档达到 T04。涉及文件：新增 `world/design/w1-sb-depth.mjs`、`world/drafts/w1/sb-depth/`、`tests/npc-depth-sb.test.mjs`。
 
-实现要点：依据 `world/design/w1-villages-sangban.mjs`、晒纹与公共工场等地方问题，以 3–5 当事人构造兼容的已知事实和共享记忆；目标步骤保持未完成，不把参观花样写成已掌握技能。按 T04 修全村缺口，复用 T05 审核流水线。
+实现要点：依据 `world/design/w1-villages-sangban.mjs`、晒纹与公共工场等地方问题，以 3–5 当事人构造兼容的已知事实和共享记忆；目标步骤保持未完成，不把参观花样写成已掌握技能。按 T04 的 id/field/code 修全村缺口，包含 opinions/notes 等设定叶子，复用 T05；不删字段或数组成员，不改合格兄弟字段，仅措辞修正不新增记忆。
 
 验收：`node --test tests/npc-depth-sb.test.mjs`、CORE；T05 命令使用本卡 design/root；增量上限 3 元且 W1 总额不超过 20，L1/L2/L4 通过，30 人合并视图无 T04 缺口。不要做：整批替换文案、未经许可共享私人物资、新增人口。依赖：T02/T04/T05；并行：作者阶段可与其他村，模型独占。
 
@@ -106,15 +112,15 @@
 
 目标：152 人中四村以外的 full 档也达到门槛，原 17 名 traits 修复经验证保留，知识规则句改成具体事实。涉及文件：新增 `world/design/w1-existing-depth.mjs`、`world/drafts/w1/existing-depth/`、`tests/npc-depth-existing.test.mjs`；现有 `world/drafts/m2/` 仅按审计定位读取，不整目录读写。
 
-实现要点：T04 按集合差异得出具体 id，不假定原 18 人都不合格；复用原已审核性格作为 traits 的唯一修复依据。已发布经历、服务、关系数值不变；只给明确缺少跨人/跨地点事实、具体未知、共享经历或关系来由的字段补丁。把“主持人不要……”改为人物确知的事件陈述，真实法律禁令可用有出处的事实表达，保持 L1 规则措辞检查。
+实现要点：T04 按集合差异得出具体 id，不假定原 18 人六类都不合格；原 17 人 traits 已按 `1bc8f3b` 固定值通过，保持不变并继续核验。每次 3–5 当事人小批，只改审计失败的深度字段和 opinions/notes/familyNotes 等具体设定叶子；已发布经历事实、服务、关系数值及合格兄弟字段不变。把“主持人不要……”等规则话改为有出处的世界内事实，不能清空或删除字段/数组项；仅措辞修正不追加记忆。真实法律禁令保留事实和发布者，继续过 `findNpcRuleWording`。
 
 验收：`node --test tests/npc-depth-existing.test.mjs tests/m2-people-content.test.mjs tests/npc-profile-publication.test.mjs`、CORE；T05 命令使用本卡 design/root；增量上限 3 元且 W1 总额不超过 20，L1/L2/L4 完成，原 17 人 traits 无占位，四村外合并视图过 T04。不要做：把原人物再造一遍、重置教学/库存、假造用户旧经历。依赖：T04/T05；并行：候选与四村文件不重叠可并行，模型独占。
 
 ### T11 人物补丁发布及四村/人物波次检查
 
-目标：正式源全体 full 档达到新门槛，将 T04 验证器强制接入 release/final，重复发布保留后续世界变化。涉及文件：`tools/validate-world.mjs`、必要的 `tools/build-world.mjs` 入口、T05 发布器输出的 `world/people/baseline.json`、必要的版本元数据及 `world/drafts/w1/depth-publication.json` 清单；`tests/world-validation.test.mjs`、`tests/npc-profile-publication.test.mjs`、`tests/w1-villages-publish.test.mjs`。
+目标：正式源全体 full 档达到新门槛，将 T04 验证器强制接入 release/final，重复发布保留后续世界变化。涉及文件：`tools/validate-world.mjs`、必要的 `tools/build-world.mjs` 入口、`tools/publish-w1-villages.mjs` 的新补丁兼容、T05 发布器输出的 `world/people/baseline.json`、必要的版本元数据及 `world/drafts/w1/depth-publication.json` 清单；`tests/world-validation.test.mjs`、`tests/npc-profile-publication.test.mjs`、`tests/w1-villages-publish.test.mjs`、`tests/npc-depth-gate.test.mjs`。
 
-实现要点：按审核指纹串行应用 T06–T10 补丁，不直接复制各树 baseline；合并已存在 memorySeeds 及既有更晚修订，冲突停在具体 id。全部候选合并视图先经 T04 无缺口，再将质量验证强制接入 `validateWorld` 的 release/final 分支，同一提交包含正式内容和入口，不留跳过开关；engine 旧夹具结构约定保持。复用 `world_upgrade`，旧文档状态、财物、记忆与消耗库存不回退。正式数量仍为现有人口；审查抽样包含各村地方问题当事人及原人物。
+实现要点：按审核指纹串行应用 T06–T10 补丁，不直接复制各树 baseline；合并已存在 memorySeeds 及既有更晚修订，冲突停在具体 id。逐条核对补丁属于冻结审计失败叶子，原有字段/数组成员未被删空，17 人 traits 固定值保留；新审核清单接入旧四村发布器，重复发布不得恢复旧 opinions/notes 或抹掉新补丁。全部候选合并视图必须经 `validateNpcDepth` 全项和 `findNpcRuleWording` 无缺口，不仅是六类深度；再将质量验证强制接入 `validateWorld` 的 release/final 分支，同一提交包含正式内容和入口，不留跳过开关。T04 测试里“现有正式数据存在缺口”的阶段性断言改为合格正式源和独立缺口夹具，保留所有负例及 17 人固定值回归；engine 旧夹具结构约定保持。复用 `world_upgrade`，旧文档状态、财物、记忆与消耗库存不回退。正式数量仍为现有人口；审查抽样包含各村地方问题当事人及原人物。
 
 验收：`node tools/publish-npc-depth.mjs --manifest world/drafts/w1/depth-publication.json` 预演后 `--publish`，重跑零写入；`node --test tests/npc-profile-publication.test.mjs tests/w1-villages-publish.test.mjs tests/npc-depth-gate.test.mjs`、CORE；主会话在波次检查运行 `npm run build:release`，预期人物质量零缺口。如其他类别构建失败明确登记，不能降低门槛。随机 10 人平均至少 4、单项至少 3；不调用新模型。不要做：增加人口、部署；依赖：T03/T06–T10；并行：不可与写人物或版本数据的卡并行。通过后主会话打 `review-w1-depth` 并派规划审核。
 
@@ -125,6 +131,8 @@
 实现要点：保留 `reviewNpcRequirements` 的逐字 quote、合法回合和完整编号校验，按单个 N 项或有限窗口组织证据，避免一次整场 5000 token 输出截断；缺项、length、编造引文都失败，不用人工 true 代替。复用已保存 `sceneBeforeReply`、calls/assertions、N17 新增行动证据；新增 CLI `--input`、`--output`、`--budget` 只重评已存报告，不调用游戏工具、不覆盖旧失败原文。`reviewPlaytest` 的两回合分段保留完整性聚合。
 
 验收：上述 3 测试及 CORE；mock 覆盖 length、错误引文、缺 N 项、重复 N 项，任何不完整均未通过；只读旧报告重评命令在 T17 才调用模型，本卡预算 0。不要做：放宽引文、删低分会话、重启已完成进程。依赖：T01；并行：可与人物候选，无重叠测试/工具时可与 T14。
+
+已知恢复限制：已合入实现以 `logs/playtest-review-budget/<evidenceHash>.json.lock` 的 `wx` 排他创建保护预算，正常退出在 finally 删锁；强制终止可以遗留空锁，现有锁不带可核验的 PID/启动身份。保守判定为可人工恢复的已知限度，本次不新增自动解锁卡，也不宣称强杀后能安全自动恢复。重跑前主会话确认原运行进程及其后续任务确已结束、没有同证据哈希的其他重评；无法确认则不删锁。确认后仅移除该确切 `.lock`，保留同哈希预算 JSON、usage 日志及 spent/reserved，绝不清预算或仅凭文件年龄解锁；恢复客户端会将旧预留计入费用上界。原输出可能为空或不完整，保留并换新的输出文件名，同一份输入证据继续使用同哈希累计预算；不修改输入来换预算。若后续证据显示锁拥有者无法确认或无人值守反复被此阻断，再拆带身份核验和强杀回归的小卡。
 
 ### T13 M2 真实前置与行动链修复
 
