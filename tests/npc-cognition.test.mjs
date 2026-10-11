@@ -61,3 +61,11 @@ test('每日关系传播只观察真实同场，语义记录不依赖父事件�
  const run=parent=>{const d=draft(structuredClone(doc));d.set(['state','minute'],1440);advanceNpcCognition(d,engine,540,1440,parent,{beforeState:doc.state});return d.document;};
  const a=run('one'),b=run('different');assert.deepEqual(a,b);assert.ok(a.state.npcs[to].memoryStream.some(m=>m.sourceType==='听说'));
 });
+
+
+test('委托记忆的默认传播边界仍适用于旧存档，明确许可后才允许合法转述',async()=>{
+ const {engine,d}=await setup();d.set(['state','npcs',from,'memoryStream'],[fact('task',{kind:'quest',content:'林穗托旅人送十份燕麦。'})]);
+ const before=structuredClone(d.document);assert.throws(()=>shareNpcMemory(d,engine,{from,to,memoryId:'task'}),/私密/);assert.deepEqual(d.document,before);
+ d.set(['state','npcs',from,'memoryStream'],[fact('task',{kind:'quest',content:'林穗托旅人送十份燕麦。',permittedRecipients:[to]})]);shareNpcMemory(d,engine,{from,to,memoryId:'task',eventId:'legal'});
+ const heard=d.get('state','npcs',to,'memoryStream')[0];assert.equal(heard.sourceType,'听说');assert.equal(heard.heardFrom,from);assert.equal(heard.sourceEvent,'task');
+});

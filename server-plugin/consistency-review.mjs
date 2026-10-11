@@ -12,6 +12,17 @@ const quantity=value=>typeof value==='number'?value:value?.quantity??0;
 const future=/下次|明日|明天|以后|将来|假如|如果|要是|或许|也许|打算|说不定|上次|上回|昨天|昨晚|此前|去年|曾经/;
 const negated=/(?:没有|没能|未能|未曾|尚未|不曾|并未|无法|不能|不是|不算).{0,9}(?:制成|做好|打造|做出|回收|收回|署名|制作者)/;
 const normalizedReceipt=receipt=>({...receipt,result:receipt.result?.result??receipt.result??{}});
+const chineseNumber=value=>{if(/^\d+$/.test(value))return Number(value);const digits='零一二三四五六七八九';if(value==='两')return 2;if(value==='十')return 10;if(value.includes('十')){const [a,b]=value.split('十');return (a?digits.indexOf(a):1)*10+(b?digits.indexOf(b):0);}return digits.indexOf(value);};
+const uncertain=text=>/[？?吗]|不知|不清楚|没听说|没看见|没有.{0,6}(?:见|听)|如果|假如|可能|也许/.test(text);
+function contractMention(text,contract,labels,entities=[]){
+ const facts=contract.facts??{},literal=[contract.reference,facts.name,facts.content].filter(x=>typeof x==='string'&&x.length>=4);
+ if(literal.some(x=>text.includes(x)))return true;
+ const itemId=facts.objective?.item??facts.item,item=entities.find(entity=>entity.id===itemId),itemNames=[labels[itemId],...item?.aliases??[]].filter(Boolean);
+ const directed=/你|您|旅人|试玩者/.test(text)||(contract.parties??[]).some(id=>labels[id]&&text.includes(labels[id]));
+ if(directed&&itemNames.some(name=>text.includes(name)||name.length>=4&&text.includes(name.slice(-2)))&&/(?:委托|送|交)/.test(text))return true;
+ if(directed&&contract.kind==='debt'&&!/我(?:曾|还)?欠/.test(text)&&/欠|赊|还钱|房钱/.test(text)&&[...text.matchAll(/([\d零一二两三四五六七八九十]+)(?:个)?铜/g)].some(m=>chineseNumber(m[1])===facts.amount))return true;
+ return false;
+}
 function compactState(value){
  const s=stateOf(value);return {...reviewPlayerFacts(s),minute:s.minute,location:s.location,player:s.player?Object.fromEntries(['name','coins','hp','maxHp','mp','maxMp','level','status'].filter(k=>s.player[k]!==undefined).map(k=>[k,s.player[k]])):undefined,
   inventory:Object.fromEntries(Object.entries(s.inventory??{}).map(([id,row])=>[id,{quantity:quantity(row),...(typeof row==='object'?{durability:row.durability,maker:row.maker}:{})}])),
@@ -59,6 +70,40 @@ function fixedIssues(input,context){
   for(const unknown of input.knowledge?.[id]?.unknown??[]){const fact=typeof unknown==='string'?unknown:unknown.fact;
    if(fact&&text.includes(fact)&&!/[？?]|不知|不清楚|没听说|如果|假如/.test(text))add('knowledge',text,'人物把明确未知的信息当作自己已经知道的事',[cite(`knowledge:${id}`)]);
   }
+  const knowledge=input.knowledge?.[id];
+  for(const clause of text.match(/[^。！？；\n]+[。！？；]?/g)??[]){
+   for(const contract of knowledge?.contracts??[]){
+    if(!contractMention(clause,contract,context.labels,context.entities)||uncertain(clause))continue;
+    const addressed=context.entities.filter(entity=>entity.id?.startsWith('npc_')&&[entity.name,...entity.aliases??[]].some(name=>['告诉','告知','对','向','跟'].some(verb=>context.playerText.includes(verb+name))));
+    const told=knowledge.present&&(!addressed.length||addressed.some(entity=>entity.id===id))&&contractMention(context.playerText,contract,context.labels,context.entities)&&!/[？?]|不.{0,5}(?:告知|告诉|透露)|有没有|知道.{0,8}吗/.test(context.playerText);
+    if(contract.awareness==='no-recorded-channel'&&!told)add('knowledge',clause,'该人物没有这件契约的亲历或合法转述来源，却断言其私密内容',[cite(`knowledge:${id}`)]);
+    if(contract.awareness==='recorded-memory'&&contract.memories.length&&contract.memories.every(memory=>memory.sourceType==='听说')&&/亲眼|亲自|我看见|我在场/.test(clause))add('knowledge',clause,'该人物仅有转述记录，却将其说成亲历',[cite(`knowledge:${id}`)]);
+   }
+  }
+  const recall=knowledge?.recall;
+  if(recall?.awareness==='personal-record'&&recall.actions.length&&/(?:这|那|过去|离开).{0,5}十天|这阵子|已有经历/.test(context.playerText+' '+text)){
+   const total=recall.totals,evidence=[cite(`knowledge:${id}`,JSON.stringify(recall))];
+   for(const clause of text.split(/[。！？；\n]/).filter(Boolean)){
+    if(uncertain(clause)||/下回|下次|如果|打算|将来/.test(clause))continue;
+    for(const match of clause.matchAll(/([\d零一二两三四五六七八九十]+)(?:回|次)都(?:成了|成功)|([\d零一二两三四五六七八九十]+)(?:回|次)全成/g))if(chineseNumber(match[1]??match[2])!==total.attempts||total.failures>0)add('fact',clause,'本次离开窗口有已扣材料和工坊费的失败制作，不能将全部经历写成少数几次均成功',evidence);
+    for(const match of clause.matchAll(/(?:只|一共|总共|合计)?(?:做|试|修|尝试)(?:了|过)?([\d零一二两三四五六七八九十]+)(?:回|次)/g))if(!/其中|有一|那一/.test(clause)&&chineseNumber(match[1])!==total.attempts)add('fact',clause,'回忆的制作总次数与本次离开窗口的结算不符',evidence);
+    for(const match of clause.matchAll(/([\d零一二两三四五六七八九十]+)(?:回|次)(成功|失败)/g))if(chineseNumber(match[1])>(match[2]==='成功'?total.successes:total.failures))add('fact',clause,'回忆的成败次数超过本次离开窗口的真实结果',evidence);
+    for(const match of clause.matchAll(/(?:工坊.{0,8}(?:收了|收)|工坊费(?:一共|总共|合计)?)([\d零一二两三四五六七八九十]+)(?:个)?铜/g))if(!/每|一回|一次/.test(clause)&&chineseNumber(match[1])!==total.fee)add('fact',clause,'回忆的工坊总费用与窗口内包含失败成本的账本不符',evidence);
+    if(/(?:没有|没|未)(?:做坏|失败)|都(?:成了|成功)/.test(clause)&&total.failures>0)add('fact',clause,'离开窗口的结算有制作失败，正文否认了失败',evidence);
+    if(/边角料|旧料|旧柄拆|没拿.{0,5}整料/.test(clause)&&Object.keys(total.materials).length)add('fact',clause,'制作实际消耗了结算列明的材料，不能替换成没有来源记录的免费旧料',evidence);
+    for(const [item,amount] of Object.entries(total.materials)){
+     const name=context.labels[item];if(!name||!clause.includes(name)||/其中|那一|一回|一次|每/.test(clause))continue;
+     for(const match of clause.matchAll(/(?:共|合计|一共|用了)([\d零一二两三四五六七八九十]+)份/g))if(chineseNumber(match[1])!==amount)add('fact',clause,'回忆的材料总量与本次离开窗口的实际消耗不符',evidence);
+    }
+   }
+  }
+ }
+ // When the player names the speakers individually, another present NPC may
+ // not silently occupy the omitted person's turn.
+ if(/三位|三人|各自|各说/.test(context.playerText)){
+  const requested=context.entities.filter(entity=>entity.id?.startsWith('npc_')&&[entity.name,...entity.aliases??[]].some(name=>name&&context.playerText.includes(name)));
+  const speakers=new Set(dialogue.map(match=>match[1]));
+  if(requested.length>=3&&requested.some(entity=>!speakers.has(entity.id)))for(const match of dialogue)if(!requested.some(entity=>entity.id===match[1]))add('agency',match[0],'玩家明确点名的说话人被另一人物代替',[cite('player'),cite('registry')]);
  }
  if(!context.outOfCharacter){
   for(const match of context.visible.matchAll(/\b(?:npc|item|loc|bld|recipe|spell|skill|faction)_[a-z0-9_]+\b|\bworld_[a-z_]+\b|【(?:行动依据|场景卡|工具结果|系统提示)】|以账本为准|根据工具结果|提示词|事件编号/g))add('meta',match[0],'可见正文泄漏了技术字段或工具外壳',[cite('registry')],{severity:'warning'});
