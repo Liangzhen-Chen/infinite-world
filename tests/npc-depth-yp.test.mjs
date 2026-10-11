@@ -30,3 +30,19 @@ test('L2引用上下文覆盖全部新叶子，地方当事人与作者小批有
  const groups=JSON.parse(await fs.readFile(new URL('../world/drafts/w1/yp-depth-rest/author-batches.json',import.meta.url)));assert.deepEqual(groups.batches.flat().map(k=>'npc_yp_'+k).sort(),entries.map(e=>e.id).sort());assert.ok(groups.batches.every(b=>b.length>=3&&b.length<=5));
 });
 
+
+test('授权重绑定可由真实旧失败恢复原批哈希，最终汤桓修订仅一叶',async()=>{
+ const root=new URL('../world/drafts/w1/yp-depth-rest/',import.meta.url),read=async f=>JSON.parse(await fs.readFile(new URL(f,root))),evidence=await read('content-revision-1-evidence.json'),rebound=await read('authorized-rebind-evidence.json');
+ for(const snapshot of rebound.snapshots){const records=await Promise.all(snapshot.batch.ids.map(id=>read(id+'.json')));const prior=records.map(r=>evidence.priorFailedRecords[r.id]??r);assert.equal(hashContent(prior.map(({id,draft,review,status})=>({id,draft,review,status}))),snapshot.batch.fingerprint);}
+ const final=await read('final-tanghuan-revision-evidence.json');assert.equal(final.change.path,'knowledge.unknown[0]');assert.equal(final.preserved.length,29);assert.ok(final.sharedMemoryBothSidesUnchanged);assert.equal(final.budgetWrites,0);assert.equal(final.modelCalls,0);
+ for(const row of final.preserved){const record=await read(row.id+'.json'),entry=entries.find(e=>e.id===row.id);assert.equal(row.recordHash,hashContent(record));assert.equal(row.entryHash,hashContent(entry));assert.equal(row.contextHash,hashContent(contextFor(entry,world)));}
+ for(const file of ['kongfu-final-source-evidence.json','tanghuan-final-source-evidence.json']){const source=await read(file);for(const row of source.sourceRecords){const original=[...world.npcs,...world.residents].find(n=>n.id===row.id);for(const [k,value]of Object.entries(row))assert.deepEqual(value,original[k]);}}
+});
+
+test('真实29人L2和L4哈希保留，汤桓硬错所在批拒绝整卡发布',async()=>{
+ const root=new URL('../world/drafts/w1/yp-depth-rest/',import.meta.url),read=async f=>JSON.parse(await fs.readFile(new URL(f,root))),summary=await read('summary.json'),notes=await read('human-notes.json');assert.equal(summary.passed,29);assert.equal(summary.manual,1);assert.equal(summary.pending,0);assert.equal(notes.length,29);
+ for(const n of notes){const record=await read(n.id+'.json');assert.equal(record.status,'passed');assert.deepEqual(record.errors,[]);assert.equal(n.draftHash,hashContent(record.draft));assert.equal(n.reviewHash,hashContent(record.review));}
+ assert.ok(summary.batches[0].l4.approved);assert.equal(summary.batches[0].l4.notes.length,25);assert.equal(summary.batches[1].l4.approved,false);assert.equal(summary.batches[1].l4.notes.length,4);
+ const failed=await read('npc_yp_tanghuan.json');assert.equal(failed.status,'manual');assert.equal(failed.attempts,3);assert.equal(failed.reviewRecovery.status,'failed');assert.ok(failed.errors.some(e=>e.field==='memorySeeds[2]'));assert.equal(failed.reviewRecovery.response.choices[0].finish_reason,'stop');
+ const {readApprovedContent}=await import('../tools/content-pipeline.mjs');await assert.rejects(readApprovedContent(root.pathname.replace(/^\/(\w:)/,'$1'),entries,{contextFor:e=>contextFor(e,world),revision:design.revision}),/尚未完成 L4/);
+});
