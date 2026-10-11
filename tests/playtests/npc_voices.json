@@ -9,7 +9,7 @@
   },
   "turns": [
     {
-      "input": "我到青灯酒馆，看看林穗、贺舟和施锦是否在场。",
+      "input": "我到青灯酒馆，先看看谁在场。",
       "assertions": [
         {
           "kind": "equals",
@@ -19,6 +19,34 @@
       ],
       "expectedTools": [
         "world_move"
+      ]
+    },
+    {
+      "input": "我在酒馆等到今天傍晚六点半，等候期间不交易、不找人聊天。到时看看林穗、贺舟和施锦是否都在场并醒着。",
+      "expectedTools": [
+        "world_time"
+      ],
+      "assertions": [
+        {
+          "kind": "equals",
+          "path": "state.minute",
+          "value": 1110
+        },
+        {
+          "kind": "equals",
+          "path": "state.npcs.npc_hw_linsui.location",
+          "value": "bld_hw_qingdeng"
+        },
+        {
+          "kind": "equals",
+          "path": "state.npcs.npc_hw_hezhou.location",
+          "value": "bld_hw_qingdeng"
+        },
+        {
+          "kind": "equals",
+          "path": "state.npcs.npc_hw_shijin.location",
+          "value": "bld_hw_qingdeng"
+        }
       ]
     },
     {
