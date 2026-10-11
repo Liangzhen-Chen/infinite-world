@@ -12,6 +12,6 @@
   },
   "periodTokens": 787012,
   "periodTimeUsedSeconds": 1757,
-  "interpretation": "系统累计计数及相邻快照差，不等同账单、净生成 token 或本轮实际墙钟时间；true 表示上一轮反馈已收到，本轮待校准。",
+  "interpretation": "系统累计计数及相邻快照差，不等同账单、净生成 token 或实际墙钟时间；本轮反馈已收到，原文见Claude校准.md。",
   "claudeFeedbackReceived": true
 }
