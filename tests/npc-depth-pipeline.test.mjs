@@ -77,4 +77,6 @@ test('发布清单迁移到另一world目录后有效，无关新增人物不使
 test('CLI帮助和参数检测说明设计、预算、候选目录与预演发布',async()=>{
  for(const name of ['npc-depth','npc-depth-review','npc-depth-l4','publish-npc-depth']){const {stdout}=await exec(process.execPath,[tool(name),'--help']);assert.match(stdout,name==='publish-npc-depth'?/--manifest.*--publish/:/--design/);}
  assert.throws(()=>depthOptions(['--design']),/缺少参数/);assert.equal(depthOptions(['--root','world/drafts/custom','--budget-root','world/drafts/budget']).root,path.resolve('world/drafts/custom'));
+ const recover=depthOptions(['--card','T06','--recover-protocol','npc_yp_zhaofeng,npc_yp_other']);assert.equal(recover.cardId,'T06');assert.deepEqual(recover.protocolRecoveryIds,['npc_yp_zhaofeng','npc_yp_other']);assert.throws(()=>depthOptions(['--recover-protocol']),/缺少参数/);
+ const {stdout}=await exec(process.execPath,[tool('npc-depth'),'--help']);assert.match(stdout,/--card/);assert.match(stdout,/--recover-protocol/);
 });
