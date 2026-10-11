@@ -274,24 +274,34 @@ export class WorldEngine {
         }
         return {elapsed:minutes,date:this.calendar(d.get('state','minute')).text};
     }
-    route(from,to,mode,minute,seed='default-campaign',weatherCache=null) {
-        const distances=new Map([[from,0]]), movingTimes=new Map([[from,0]]), previous=new Map(),costs=new Map([[from,0]]),pending=new Set(this.world.locations.map(place=>place.id));
-        const season=this.calendar(minute).season,adjacent=new Map();
-        for(const edge of this.world.routes){
-            if(!edge.modes.includes(mode)||edge.closedSeasons.includes(season))continue;
-            for(const node of [edge.from,edge.to]){if(!adjacent.has(node))adjacent.set(node,[]);adjacent.get(node).push(edge);}
+    route(from,to,mode,minute,seed='default-campaign',weatherCache=null,graphCache=null) {
+        const distances=new Map([[from,0]]), movingTimes=new Map([[from,0]]), previous=new Map(),costs=new Map([[from,0]]);
+        const season=this.calendar(minute).season,key=`${mode}:${season}`;
+        // Callers may reuse topology only within one synchronous schedule
+        // advance; weather and per-person departure times are never cached here.
+        let graph=graphCache?.get(key);
+        if(!graph){
+            const order=new Map(this.world.locations.map((place,index)=>[place.id,index])),adjacent=new Map();
+            for(const edge of this.world.routes){
+                if(!edge.modes.includes(mode)||edge.closedSeasons.includes(season))continue;
+                for(const node of [edge.from,edge.to]){if(!adjacent.has(node))adjacent.set(node,[]);adjacent.get(node).push(edge);}
+            }
+            graph={order,adjacent};graphCache?.set(key,graph);
         }
+        const {order,adjacent}=graph,pending=new Set(order.has(from)?[from]:[]),settled=new Set();
         while(pending.size){
             let current,nearest=Infinity;
-            for(const node of pending){const distance=distances.get(node)??Infinity;if(distance<nearest){current=node;nearest=distance;}}
-            if(current===undefined)break;pending.delete(current);if(current===to)break;
+            // Scan only discovered nodes. Equal distances retain the original
+            // world-location order, including its chosen path and toll total.
+            for(const node of pending){const distance=distances.get(node)??Infinity;if(distance<nearest||distance===nearest&&order.get(node)<order.get(current)){current=node;nearest=distance;}}
+            if(current===undefined)break;pending.delete(current);settled.add(current);if(current===to)break;
             for(const edge of adjacent.get(current)??[]){
-                const next=edge.from===current?edge.to:edge.to===current?edge.from:null;if(!next||!pending.has(next))continue;
+                const next=edge.from===current?edge.to:edge.to===current?edge.from:null;if(!next||!order.has(next)||settled.has(next))continue;
                 const speed=edge.speedKmh??(mode==='cart'?this.rules.travel.cartKmh:this.rules.travel.walkKmh*(mode==='horse'?this.rules.travel.horseMultiplier:1))*(edge.terrainMultiplier??1);
                 const travel=this.rules.weather?weatherEdge(this,seed,{...edge,from:current},mode,minute,distances.get(current),movingTimes.get(current),speed,weatherCache):null;
                 if(this.rules.weather&&!travel)continue;
                 const elapsed=Math.max(1,Math.ceil(edge.lengthKm/speed*60)),candidate=travel?.elapsed??distances.get(current)+elapsed;
-                if(candidate<(distances.get(next)??Infinity)){distances.set(next,candidate);movingTimes.set(next,travel?.moving??movingTimes.get(current)+elapsed);previous.set(next,{node:current,edge});costs.set(next,costs.get(current)+edge.toll);}
+                if(candidate<(distances.get(next)??Infinity)){distances.set(next,candidate);movingTimes.set(next,travel?.moving??movingTimes.get(current)+elapsed);previous.set(next,{node:current,edge});costs.set(next,costs.get(current)+edge.toll);pending.add(next);}
             }
         }
         if(!distances.has(to))throw new Error('没有当前季节可通行的路线，不能瞬移');

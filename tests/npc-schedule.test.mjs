@@ -165,7 +165,10 @@ test('正式人物整月与逐日等待一致，中间作息不膨胀存档补�
         const out=await engine.reduce(daily,{tool:'world_time',args:{minutes:1440},eventId:`day_${day}`});daily=applyPatches(daily,out.patches);
     }
     assert.deepEqual(applyPatches(document,long.patches).state.npcs,daily.state.npcs);
-    assert.ok(long.patches.filter(row=>row.path[1]==='npcs').length<=100,'整月作息只保存最终人物状态');
+    const npcPatches=long.patches.filter(row=>row.path[1]==='npcs');
+    assert.equal(npcPatches.length,new Set(npcPatches.map(row=>row.path[2])).size,'整月每人只写一次最终状态，不随经过天数重复');
+    assert.ok(npcPatches.every(row=>row.op==='set'&&row.path.length===3),'人物补丁是最终完整状态');
+    assert.ok(npcPatches.length<=Object.keys(document.state.npcs).length,'补丁不超过实际人物数');
     assert.equal(engine.world.npcs.filter(row=>row.schedule).length,engine.world.npcs.length);
 });
 
