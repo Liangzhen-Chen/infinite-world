@@ -1,5 +1,6 @@
 import {environmentCatalog}from'./environment.mjs';
 import {publicLore}from'./lore.mjs';
+import {publicSettlement}from'./settlement-profile.mjs';
 const publicKinds=new Set(['profession','skill','spell','recipe','item','loc','bld','site','culture','deity','faction','history']);
 export function catalogDefinition(engine,document,{entity,kind,offset=0}={}){
     const selected=engine.scoped(document);
@@ -17,6 +18,7 @@ export function catalogDefinition(engine,document,{entity,kind,offset=0}={}){
     if(['culture','deity','faction','history'].includes(category))return publicLore(row);
     if(kind==='location'&&!locationKinds.has(category))throw new Error('需要地点名称或编号');
     if(locationKinds.has(category))return{id,name:row.name,description:row.description??'',parent:row.parent??null,
+        ...(publicSettlement(selected.world,id)?{settlement:publicSettlement(selected.world,id)}:{}),
         routes:engine.world.routes.filter(route=>[route.from,route.to].includes(id)).map(route=>({destination:route.from===id?route.to:route.from,modes:route.modes,lengthKm:route.lengthKm,closedSeasons:route.closedSeasons}))};
     if(category==='profession'&&row.kind==='hidden'&&!document.state.professions.hidden.includes(id))return{id,available:false,note:'隐藏身份的条件与能力尚未识别'};
     if(category==='profession'&&row.kind==='hidden'){

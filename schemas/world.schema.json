@@ -7735,6 +7735,9 @@
             "elders"
           ],
           "additionalProperties": false
+        },
+        "details": {
+          "$ref": "#/$defs/settlementDetails"
         }
       },
       "required": [
@@ -7747,6 +7750,546 @@
         "commuters",
         "externalRelatives",
         "facts"
+      ],
+      "additionalProperties": false
+    },
+    "settlementDetails": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "parent": {
+          "type": "string",
+          "minLength": 1
+        },
+        "coordinates": {
+          "type": "array",
+          "items": {
+            "type": "number"
+          },
+          "minItems": 2,
+          "maxItems": 2
+        },
+        "terrain": {
+          "type": "string",
+          "minLength": 1
+        },
+        "climate": {
+          "type": "string",
+          "minLength": 1
+        },
+        "population": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "householdCount": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "ageStructure": {
+          "type": "object",
+          "properties": {
+            "children": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "youngAdults": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "adults": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "elders": {
+              "type": "integer",
+              "minimum": 0
+            }
+          },
+          "required": [
+            "children",
+            "youngAdults",
+            "adults",
+            "elders"
+          ],
+          "additionalProperties": false
+        },
+        "outsiderRatio": {
+          "type": "null"
+        },
+        "outsiderRatioReason": {
+          "type": "string",
+          "minLength": 1
+        },
+        "buildingIds": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "economy": {
+          "type": "object",
+          "properties": {
+            "industries": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "minLength": 1
+              },
+              "minItems": 1
+            },
+            "production": {
+              "type": "null"
+            },
+            "publicStock": {
+              "type": "null"
+            },
+            "priceFactor": {
+              "type": "null"
+            },
+            "tax": {
+              "type": "null"
+            },
+            "tradePartners": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "minLength": 1
+              }
+            },
+            "status": {
+              "const": "pending-ledger"
+            },
+            "reason": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "required": [
+            "industries",
+            "production",
+            "publicStock",
+            "priceFactor",
+            "tax",
+            "tradePartners",
+            "status",
+            "reason"
+          ],
+          "additionalProperties": false
+        },
+        "governance": {
+          "type": "object",
+          "properties": {
+            "coordinators": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "minLength": 1
+              },
+              "minItems": 1
+            },
+            "meetingPlace": {
+              "type": "string",
+              "minLength": 1
+            },
+            "meeting": {
+              "type": "string",
+              "minLength": 1
+            },
+            "customs": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "minLength": 1
+              },
+              "minItems": 1
+            },
+            "head": {
+              "type": "null"
+            },
+            "enforcers": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "minLength": 1
+              },
+              "maxItems": 0
+            },
+            "authority": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "required": [
+            "coordinators",
+            "meetingPlace",
+            "meeting",
+            "customs",
+            "head",
+            "enforcers",
+            "authority"
+          ],
+          "additionalProperties": false
+        },
+        "problems": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "minLength": 1
+              },
+              "title": {
+                "type": "string",
+                "minLength": 1
+              },
+              "location": {
+                "type": "string",
+                "minLength": 1
+              },
+              "status": {
+                "const": "unresolved"
+              },
+              "stakeholders": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "person": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "position": {
+                      "type": "string",
+                      "minLength": 1
+                    }
+                  },
+                  "required": [
+                    "person",
+                    "position"
+                  ],
+                  "additionalProperties": false
+                },
+                "minItems": 2
+              },
+              "options": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "proposal": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "costOrLimit": {
+                      "type": "string",
+                      "minLength": 1
+                    }
+                  },
+                  "required": [
+                    "proposal",
+                    "costOrLimit"
+                  ],
+                  "additionalProperties": false
+                },
+                "minItems": 2
+              },
+              "public": {
+                "const": true
+              }
+            },
+            "required": [
+              "id",
+              "title",
+              "location",
+              "status",
+              "stakeholders",
+              "options",
+              "public"
+            ],
+            "additionalProperties": false
+          },
+          "minItems": 5
+        },
+        "rumors": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "minLength": 1
+              },
+              "claim": {
+                "type": "string",
+                "minLength": 1
+              },
+              "truth": {
+                "enum": [
+                  "true",
+                  "partial",
+                  "false"
+                ]
+              },
+              "source": {
+                "type": "string",
+                "minLength": 1
+              },
+              "carriers": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "minItems": 1
+              },
+              "witnesses": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "minItems": 1
+              },
+              "sourceProblem": {
+                "type": "string",
+                "minLength": 1
+              },
+              "fact": {
+                "type": "string",
+                "minLength": 1
+              },
+              "verification": {
+                "type": "string",
+                "minLength": 1
+              },
+              "status": {
+                "const": "authored-seed"
+              },
+              "propagation": {
+                "const": "pending-event"
+              },
+              "distortion": {
+                "type": "string",
+                "minLength": 1
+              }
+            },
+            "required": [
+              "id",
+              "claim",
+              "truth",
+              "source",
+              "carriers",
+              "witnesses",
+              "sourceProblem",
+              "fact",
+              "verification",
+              "status",
+              "propagation",
+              "distortion"
+            ],
+            "additionalProperties": false
+          },
+          "minItems": 10
+        },
+        "calendar": {
+          "type": "object",
+          "properties": {
+            "marketDays": {
+              "type": "array",
+              "items": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 30
+              },
+              "minItems": 0
+            },
+            "marketLocation": {
+              "type": "string",
+              "minLength": 1
+            },
+            "marketNote": {
+              "type": "string",
+              "minLength": 1
+            },
+            "festivals": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "month": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 12
+                  },
+                  "day": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 30
+                  },
+                  "host": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "practice": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "location": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "status": {
+                    "const": "custom-only"
+                  }
+                },
+                "required": [
+                  "name",
+                  "month",
+                  "day",
+                  "host",
+                  "practice",
+                  "location",
+                  "status"
+                ],
+                "additionalProperties": false
+              },
+              "minItems": 1
+            }
+          },
+          "required": [
+            "marketDays",
+            "marketLocation",
+            "marketNote",
+            "festivals"
+          ],
+          "additionalProperties": false
+        },
+        "sensory": {
+          "type": "object",
+          "properties": {
+            "seasonal": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "minLength": 1
+              },
+              "minItems": 4,
+              "maxItems": 4
+            },
+            "daily": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "minLength": 1
+              },
+              "minItems": 4,
+              "maxItems": 4
+            }
+          },
+          "required": [
+            "seasonal",
+            "daily"
+          ],
+          "additionalProperties": false
+        },
+        "hiddenPlaces": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "minLength": 1
+              },
+              "name": {
+                "type": "string",
+                "minLength": 1
+              },
+              "location": {
+                "type": "string",
+                "minLength": 1
+              },
+              "knownBy": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "minItems": 1
+              },
+              "detail": {
+                "type": "string",
+                "minLength": 1
+              },
+              "clue": {
+                "type": "string",
+                "minLength": 1
+              },
+              "access": {
+                "type": "string",
+                "minLength": 1
+              },
+              "status": {
+                "const": "unregistered-feature"
+              }
+            },
+            "required": [
+              "id",
+              "name",
+              "location",
+              "knownBy",
+              "detail",
+              "clue",
+              "access",
+              "status"
+            ],
+            "additionalProperties": false
+          },
+          "minItems": 1
+        },
+        "pendingProfileSections": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "minItems": 1
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "parent",
+        "coordinates",
+        "terrain",
+        "climate",
+        "population",
+        "householdCount",
+        "ageStructure",
+        "outsiderRatio",
+        "outsiderRatioReason",
+        "buildingIds",
+        "economy",
+        "governance",
+        "problems",
+        "rumors",
+        "calendar",
+        "sensory",
+        "hiddenPlaces",
+        "pendingProfileSections"
       ],
       "additionalProperties": false
     }

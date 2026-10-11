@@ -8,13 +8,14 @@ import {contextFor,revision,applyProse,projectRoster,projectLocation,validateDra
 import {atomicJSON} from '../server-plugin/storage.mjs';
 import {applyKnowledgeWordingCorrections} from '../world/design/w1-yupo-depth.mjs';
 import {depthEntries,contextFor as depthContext,applyDepthDraft,validateDraft as validateDepthDraft,verifyUnchanged,revision as depthRevision} from './npc-depth-content.mjs';
+import {approvedProfiles} from './w1-village-profiles-content.mjs';
 
 const merge=(old,rows)=>{const map=new Map(old.map(x=>[x.id,x]));for(const row of rows){if(map.has(row.id)&&hashContent(map.get(row.id))!==hashContent(row))throw Error(`已发布条目冲突：${row.id}`);map.set(row.id,row);}return [...map.values()];};
 export function villagesOriginalWorld(world,foundation=w1VillagesFoundation()){
  const own=new Set([...foundation.npcs,...foundation.residents,...foundation.locations,...foundation.routes,...foundation.households,...foundation.settlements].map(x=>x.id));
  return {...world,...Object.fromEntries(['npcs','residents','locations','routes','households','settlementProfiles'].map(k=>[k,(world[k]??[]).filter(x=>!own.has(x.id))]))};
 }
-export function mergeVillages(world,candidate,{npcAmendments=[]}={}){
+export function mergeVillages(world,candidate,{npcAmendments=[],profileAmendments=[]}={}){
  const amended=new Map(npcAmendments.map(row=>[row.id,row]));
  if(amended.size!==npcAmendments.length)throw Error('人物补充编号重复');
  const current=new Map(world.npcs.map(n=>[n.id,n]));
@@ -31,8 +32,13 @@ export function mergeVillages(world,candidate,{npcAmendments=[]}={}){
  }
  const untouched=candidate.npcs.filter(n=>!amended.has(n.id));
  const nextNpcs=merge([...current.values()],untouched);
- const profiles=candidate.settlements.map(s=>({...s,kinship:candidate.kinship.filter(r=>s.residentIds.includes(r.parent))}));
- return {...world,npcs:nextNpcs,residents:merge(world.residents??[],candidate.residents),households:merge(world.households??[],candidate.households),settlementProfiles:merge(world.settlementProfiles??[],profiles),locations:merge(world.locations,candidate.locations),routes:merge(world.routes,candidate.routes)};
+ const profiles=candidate.settlements.map(s=>({...s,kinship:candidate.kinship.filter(r=>s.residentIds.includes(r.parent))})),profileMap=new Map((world.settlementProfiles??[]).map(p=>[p.id,p]));
+ if(new Set(profileAmendments.map(p=>p.id)).size!==profileAmendments.length)throw Error('聚落补充编号重复');
+ for(const details of profileAmendments){const index=profiles.findIndex(p=>p.id===details.id);if(index<0)throw Error(`聚落补充不在原候选：${details.id}`);const before=profiles[index],after={...before,details,pendingProfileSections:details.pendingProfileSections},old=profileMap.get(details.id);
+  if(old&&![before,after].some(p=>hashContent(p)===hashContent(old)))throw Error(`已发布聚落补充冲突：${details.id}`);
+  profiles[index]=after;profileMap.delete(details.id);
+ }
+ return {...world,npcs:nextNpcs,residents:merge(world.residents??[],candidate.residents),households:merge(world.households??[],candidate.households),settlementProfiles:merge((world.settlementProfiles??[]).map(p=>profileMap.has(p.id)?p:profiles.find(row=>row.id===p.id)),profiles),locations:merge(world.locations,candidate.locations),routes:merge(world.routes,candidate.routes)};
 }
 export async function publishVillages({root=path.resolve(import.meta.dirname,'../world'),publish=false}={}){
  const world=await loadWorld(root),directory=path.join(root,'drafts/w1/villages'),read=name=>fs.readFile(path.join(directory,`${name}.json`),'utf8').then(JSON.parse);
@@ -62,12 +68,17 @@ export async function publishVillages({root=path.resolve(import.meta.dirname,'..
   if(drafts.length!==entries.length)throw Error('人物补充未全部完成审核');
   npcAmendments=entries.map(e=>{const d=drafts.find(d=>d.id===e.id),check=validateDepthDraft(d,e);if(check.errors.length)throw Error(`${e.id} 人物补充L1：${check.errors.join('；')}`);return applyDepthDraft(e.before,d);});
  }
- const next=mergeVillages(world,candidate,{npcAmendments}),validation=validateWorld(next,{stage:'release'});
+ const profileDirectory=path.join(root,'drafts/w1/village-profiles');let profileAmendments=[];
+ if(await fs.stat(profileDirectory).then(s=>s.isDirectory()).catch(e=>{if(e.code==='ENOENT')return false;throw e;})){
+  const reference={...world,npcs:[...original.npcs,...candidate.npcs],residents:[...original.residents,...candidate.residents],locations:[...original.locations,...candidate.locations],settlementProfiles:[...original.settlementProfiles,...candidate.settlements.map(s=>({...s,kinship:candidate.kinship.filter(r=>s.residentIds.includes(r.parent))}))]};
+  profileAmendments=await approvedProfiles({world:reference,root:profileDirectory});
+ }
+ const next=mergeVillages(world,candidate,{npcAmendments,profileAmendments}),validation=validateWorld(next,{stage:'release'});
  if(!validation.ok)throw Error(validation.errors.join('\n'));
  const outputs={'people/baseline.json':next.npcs,'people/residents.json':next.residents,'people/households.json':next.households,'geo/settlements.json':next.settlementProfiles,'geo/locations.json':next.locations,'geo/routes.json':next.routes};
  const changed=[];
  for(const [file,value]of Object.entries(outputs)){let before;try{before=JSON.parse(await fs.readFile(path.join(root,file),'utf8'));}catch(e){if(e.code!=='ENOENT')throw e;}if(hashContent(before??null)!==hashContent(value))changed.push(file);}
  if(publish)for(const file of changed)await atomicJSON(path.join(root,file),outputs[file]);
- return {published:publish,changed,stage:'release',full:next.npcs.length,roster:next.residents.length,newFull:120,newRoster:266,newLocations:156,newRoutes:156,amendedNpcIds:npcAmendments.map(n=>n.id),settlements:candidate.settlements.map(s=>({id:s.id,population:s.population,full:30,households:s.householdCount})),candidateHash:hashContent(candidate),similarity,warnings:validation.warnings};
+ return {published:publish,changed,stage:'release',full:next.npcs.length,roster:next.residents.length,newFull:120,newRoster:266,newLocations:156,newRoutes:156,amendedNpcIds:npcAmendments.map(n=>n.id),amendedProfileIds:profileAmendments.map(p=>p.id),settlements:candidate.settlements.map(s=>({id:s.id,population:s.population,full:30,households:s.householdCount})),candidateHash:hashContent(candidate),similarity,warnings:validation.warnings};
 }
 if(process.argv[1]&&path.resolve(process.argv[1])===path.resolve(import.meta.filename)){const at=process.argv.indexOf('--root');console.log(JSON.stringify(await publishVillages({publish:process.argv.includes('--publish'),...(at>=0?{root:path.resolve(process.argv[at+1])}:{})})));}
