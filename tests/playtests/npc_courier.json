@@ -48,7 +48,7 @@
       ]
     },
     {
-      "input": "我请林穗帮忙送一份她现有的面包：今天上午十一点在村务屋当面交给我。我先去那里等她，这次请她明确同意后登记送货约定，现在不交货、不另行交易，也不把她加入同行队伍。",
+      "input": "我确认愿意付两铜买一份现有面包，请林穗今天上午十一点送到村务屋当面交给我，到时我同时付她两铜。我先去那里等。请她明确同意后登记她的送货约定和我的两铜付款约定，两份都在今天十一点履行；现在不交货、不付款，也不加入同行队伍。",
       "expectedTools": [
         "world_promise"
       ],
@@ -80,6 +80,19 @@
           "kind": "equals",
           "path": "state.player.companions",
           "value": []
+        },
+        {
+          "kind": "records",
+          "path": "state.obligations",
+          "where": {
+            "type": "付款",
+            "promisor": "player",
+            "promisee": "npc_hw_linsui",
+            "coins": 2,
+            "deadline": 660
+          },
+          "min": 1,
+          "max": 1
         }
       ]
     },
@@ -133,7 +146,7 @@
       ]
     },
     {
-      "input": "我在村务屋原地等到今天上午十一点，期间不做别的事。到时核对刚才约定的面包是否当面交到我手里。",
+      "input": "我在村务屋原地等到今天上午十一点，期间不做别的事。到时依刚才的两份约定当面收一份面包、付两铜，只各执行一次。",
       "expectedTools": [
         "world_time"
       ],
@@ -167,10 +180,21 @@
           "value": 1
         },
         {
-          "kind": "unchanged",
-          "paths": [
-            "state.player.coins"
-          ]
+          "kind": "delta",
+          "path": "state.player.coins",
+          "value": -2
+        },
+        {
+          "kind": "records",
+          "path": "state.obligations",
+          "where": {
+            "type": "付款",
+            "promisor": "player",
+            "promisee": "npc_hw_linsui",
+            "status": "已完成"
+          },
+          "min": 1,
+          "max": 1
         }
       ]
     },
