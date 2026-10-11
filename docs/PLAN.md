@@ -180,7 +180,7 @@
 
 实现要点：先用 T12 重评工具核查保留失败，重评不算修复后的试玩；用真实 HTTP 存储与 MemoryIndex、正式角色卡/提示源、实际模型前缀和历史，禁止伪造工具结果。主会话独占模型槽，保存 prompt/scenario hashes、实际 token 和花费上界、选错/漏调用分母。测试前置失败是失败，不用人工改世界续场。
 
-验收：`npm run test:playtests -- --milestone M2 --only npc_social,npc_private,npc_shove,guide,npc_delivery,npc_quest_social,npc_home_visit,npc_offscreen,npc_voices,npc_courier --repeat 1 --parallel 4`；这些 id 已在现有 JSON 核对，若 T13 新增必要 N 项会话则同步加入。单轮总预算 30 元，T12 重评增量最多 2 元并合并预算，缺环境变量记阻碍，不读密钥文件。至少 12 项完整覆盖且通过率不低于 90%，账本断言至少 90%，N6/N16 零泄漏，N17 十天新增行动自然呈现，选错工具率为实测数且有分母；N12 若计入必须匿名盲辨通过。每条失败最多一次复测，失败保留并交规划拆修复卡。主会话跑 CORE、`npm test`、`npm run build:release` 作为里程碑检查；子代理不跑全量。不要做：反复整批重跑、自动宣告 M2 完成。依赖：T11–T16 全部完成；并行：模型阶段不可与任何模型卡并行。达标打 `review-m2`。
+验收：`npm run test:playtests -- --milestone M2 --only npc_social,npc_private,npc_shove,guide,npc_delivery,npc_quest_social,npc_home_visit,npc_offscreen,npc_voices,npc_courier --repeat 1 --parallel 4`；这些 id 已在现有 JSON 核对，若 T13 新增必要 N 项会话则同步加入。单轮总预算 30 元，T12 重评增量最多 2 元并合并预算，缺环境变量记阻碍，不读密钥文件。至少 12 项完整覆盖且通过率不低于 90%，账本断言至少 90%，N6/N16 零泄漏，N17 十天新增行动自然呈现，选错工具率为实测数且有分母；N12 若计入必须匿名盲辨通过。每条失败最多一次复测，失败保留并交规划拆修复卡。主会话跑 CORE、`npm test`、`npm run build:release` 作为里程碑检查；子代理不跑全量。不要做：反复整批重跑、自动宣告 M2 完成。依赖：T11–T16 及 T23 全部完成；并行：模型阶段不可与任何模型卡并行。达标打 `review-m2`。
 
 ### T18 已审核 14 法术的学习来源
 
@@ -235,6 +235,16 @@
 验收命令：`node --test tests/npc-depth-contract.test.mjs tests/npc-depth-budget.test.mjs tests/npc-depth-pipeline.test.mjs tests/content-pipeline.test.mjs tests/deepseek-transport.test.mjs` 及 CORE；模型预算 0，只用 mock 和临时账。合同测试覆盖合法顶层/有限外壳、wrong id、wrong contract、改 path/value、增删 patch、额外键、混合内外层、数组/null/多层壳，非法内容仍拒绝。恢复测试覆盖 manual+attempts3 仅指定协议错误可获一次恢复、passed 零调用、无关 manual 不重跑、L2 仍必需且失败不算完成。预算测试用当前精确余额重现强杀残留，在预留后中断与跨卡交错后，T06 恢复不被 T07 费用挤占/不重领额度，T07 不能超过 3，共享不能超过 20；卡/共享任一不足都在调用 mock 前拒绝，遗留 0.083736 不丢失不重复扣计。验证原旧内容流水线合同仍可运行，不仅测试新适配器。
 
 不要做：真实模型试探格式、重跑游戏、改人物事实或知识门槛、批量放宽 JSON、伪造 L2/L4、清空预算/预留/失败记录、新建空账、把未知费用当已退款。依赖：T05 与已保存的 T06 失败证据；独立 `F:/dnd-wt/T22`、`t22`。可并行：T07 仅本村最后叶子的离线修订、T08–T10 候选作者、T21 引擎传闻；不可与任何改公共内容流水线的块并行，T06/T07 真实审核冻结到本卡及合后 CORE 通过，由主会话按原增量额度逐卡恢复。
+
+### T23 review-001 四村税贸真实作息联动验证
+
+目标：补齐 P2 验收证据缺口。`tests/village-ledgers.test.mjs:16` 删除全部 NPC schedule/tier，且 `at` 与送达前直接摆放管理员；现有检查证明账本守恒和权限拒绝，尚不能证明保留正式作息时可完整办理。抽样四村管理员的默认柜台时段均为 480–720、780–1020 分钟，未发现柜台永久不可达，故本卡不把缺证据说成已确认功能故障，也不阻塞人物离线修订。
+
+涉及文件：新增 `tests/village-trade-live.test.mjs`；只拥有该测试文件，不改已审核世界内容、T22 流水线或现有税贸实现。实现要点：复用 `loadWorld`、`WorldEngine.createCharacter/reduce`、`applyPatches` 与现有 `modelToolCall` 公共路由，在正式日程未删改的新建内存存档中，从默认出生点以 `world_move/world_time` 到卖方议事屋，按 `world_field` 的 `farm_settle_trade` 提粮，再走现有道路到买方实际在场窗口交付。四份试行粮约分别使用独立存档，保持原开局资源；不得修改 NPC 位置、活动、状态、日程、tier 或直接增加粮钱来造成功。路途中实际扣费、吃粮、损耗照实保留；对照分阶段 ledger 的 prepaid/paid/received/tax 和玩家、买卖双方实际铜钱增量，不用旅途中总差额误判税贸守恒。至少一条链验证休息/不在场时拒绝且无扣款，再正常等待到实际柜台窗口成功；重复请求与导出重载不能重复收付。产量仍只是天气前潜力，未经模拟不推断长期生存。
+
+验收命令：`node --test tests/village-trade-live.test.mjs tests/village-ledgers.test.mjs` 与 CORE；四份粮约在保留正式作息和实际行走后均完成，源方预收归零、总货价 60 铜分列净额 57/税 3、买方实际支付与库存变化一致，报告保留关键分钟、位置、玩家及买卖双方钱物快照。模型预算 0；不运行真实模型或长年农业模拟。如果真实前置失败，最多按执行规则试两种修法，保存复现证据后交规划定点拆卡，不能在本卡扩大引擎文件所有权。
+
+不要做：删日程、强移 NPC、强制骰点、静默补资源、部署、拿本卡代替模型自然叙述验收、重复 T21 的 40 条传闻验证。依赖：T02/T21 已合入；新树 `F:/dnd-wt/T23`、分支 `t23`。可并行：T22、T06–T10 内容作者和审核；与修改 agriculture/engine/作息运行的卡串行，避免验收版本漂移。本卡完成后作为 T17 前置证据归档；T13 可先执行，T17 开始前须完成本卡或处理其实际失败。
 
 ## 后续粗卡：全部待细化
 
