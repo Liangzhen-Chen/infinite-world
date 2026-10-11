@@ -56,7 +56,7 @@ export function assertNpcService(d,engine,npcId,service,minutes){
 
 export function advanceNpcSchedules(d,engine,before,after){
     if(after<=before)return;
-    const weatherCache=new Map(); // One immutable world/seed and time advance only.
+    const weatherCache=new Map(),graphCache=new Map(); // One immutable world/seed and time advance only.
     for(const npcId of Object.keys(d.get('state','npcs'))){
         if(!engine.byId.get(npcId)?.schedule)continue;
         if(engine.npcScheduleReservations?.has(npcId))continue;
@@ -77,7 +77,7 @@ export function advanceNpcSchedules(d,engine,before,after){
             const slot=scheduleAt(engine,npcId,cursor);
             if(npc.location!==slot.location){
                 let route;
-                try{route=engine.route(npc.location,slot.location,'walk',cursor,d.document.randomSeed,weatherCache);}
+                try{route=engine.route(npc.location,slot.location,'walk',cursor,d.document.randomSeed,weatherCache,graphCache);}
                 catch{activity('行程受阻');}
                 if(route&&npc.coins<route.cost){route=null;activity('路费不足，暂留原处');}
                 if(route){
