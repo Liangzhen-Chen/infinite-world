@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import {evaluateAssertions} from '../tools/playtest-assertions.mjs';
 import {reviewPlaytest,playtestAutonomyEvidence} from '../tools/playtest-review.mjs';
 import {prepareVoiceBlind,reviewVoiceBlind} from '../tools/playtest-voice-blind.mjs';
+import {reviewNpcRequirements} from '../tools/npc-acceptance.mjs';
 
 const scores={truth:100,agency:100,language:100,continuity:100};
 const respond=value=>({choices:[{finish_reason:'stop',message:{content:JSON.stringify(value)}}]});
@@ -33,6 +34,18 @@ test('N17跨段评分附实际spent/outcome且不给早先回合未来证据',as
   return respond({scores,findings:[]});
  }},{id:'npc_offscreen',requirements:['N17'],turns},{});
  assert.equal(report.complete,true);assert.equal(count,3);
+});
+
+test('逐N17审核读取旧报告新增行动原记录，并用实际assertions连续原文作证',async()=>{
+ const checked=evaluateAssertions([rule],{before:state(100,{}),after:state(200,{fresh:action}),calls:[],reply:''});
+ const turns=[{index:0,input:'离开十天',reply:'木柄做坏了一回。',calls:[],assertions:checked,sceneBeforeReply:'近期经历：失败的木柄'}];
+ const reviewed=await reviewNpcRequirements({async generate(body){
+  const input=JSON.parse(body.messages[1].content);
+  assert.deepEqual(input.turns[0].assertions[0].actual.records,[action]);
+  assert.equal(input.turns[0].sceneBeforeReply,'近期经历：失败的木柄');
+  return respond({requirements:[{id:'N17',pass:true,reason:'有实际失败记录及回访台词',evidence:[{turn:0,quote:'"fee":2'},{turn:0,quote:'木柄做坏了一回。'}]}]});
+ }},{id:'offscreen',attempt:1,turns},{requirements:['N17']});
+ assert.equal(reviewed.complete,true);assert.equal(reviewed.requirements[0].pass,true);
 });
 
 const world={npcs:[

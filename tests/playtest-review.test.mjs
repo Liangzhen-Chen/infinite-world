@@ -12,9 +12,15 @@ test('分段评分核对引用，任何截断不生成整场分数；不会用�
     }};
     const report=await reviewPlaytest(client,{id:'sample',attempt:1,turns},{});
     assert.equal(report.complete,false);assert.equal(report.parts.length,2);assert.equal(report.scores,undefined);assert.match(report.parts[1].error,/length/);
+    assert.equal(report.parts[1].rawReview,'');assert.equal(report.parts[1].finishReason,'length');
     const bad=await reviewPlaytest({async generate(){return{choices:[{finish_reason:'stop',message:{content:JSON.stringify({scores,findings:[{turn:0,criterion:'truth',quote:'编造引文',reason:'x'}]})}}]};}},{id:'bad',turns:turns.slice(0,1)},{});
     assert.equal(bad.complete,false);assert.match(bad.parts[0].error,/真实原句/);
     assert.equal(bad.parts[0].invalidReview.findings[0].quote,'编造引文');
+});
+
+test('重复和缺失回合不能生成完整评分',async()=>{
+    const client={async generate(){assert.fail('回合缺失时不调用模型');}};
+    for(const invalid of [[],[turns[0],turns[0]],[turns[0],turns[2]]])assert.equal((await reviewPlaytest(client,{turns:invalid},{})).complete,false);
 });
 
 test('跨段回顾仍提供早先付款证据，避免把窗口外真实事件判为编造',async()=>{
