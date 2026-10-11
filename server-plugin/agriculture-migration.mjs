@@ -13,7 +13,7 @@ export function initializeAgriculture(engine,document){
     const doc=structuredClone(document),day=Math.floor(doc.state.minute/1440);
     if(day!==0)throw new Error('源农事开局仅对应第一日；不能把过往收成或源储粮回填到中途战役');
     for(const p of engine.rules.agriculture.settlements){
-        if(!doc.state.settlements[p.settlement])continue;
+        if(!doc.state.settlements[p.settlement]){if(!p.opening||!engine.byId.has(p.settlement)||!engine.byId.has(p.manager))continue;doc.state.settlements[p.settlement]={...structuredClone(p.opening),food:0,starvation:0};}
         if(doc.state.records[key(p.settlement)])throw new Error('新战役农业记录已存在，拒绝重复初始化补粮');
         doc.state.records[key(p.settlement)]=agricultureState(p,day,{fresh:true});
         doc.state.settlements[p.settlement].food=p.initialFood;

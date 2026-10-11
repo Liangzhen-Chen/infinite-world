@@ -15,7 +15,8 @@ import {planFarmPestsMigration}from'../server-plugin/farm-pests-migration.mjs';
 import {spellBlueprints}from'../world/design/spell-blueprints.mjs';
 const seed=JSON.parse(await fs.readFile('tests/fixtures/legacy/seed.json','utf8'));
 async function setup(){
-    const world=withWeatherRules(await loadWorld()),engine=new WorldEngine(world),legacy=engine.initialFromLegacy(seed,'weather-test');
+    const source=await loadWorld(),world=withWeatherRules(source);world.rules.weather.regions.push(...source.rules.weather.regions.filter(r=>r.sequenceScope==='local'));
+    const engine=new WorldEngine(world),legacy=engine.initialFromLegacy(seed,'weather-test');
     const migrated=applyPatches(legacy,planRuleStateMigration(legacy,world.rules)),farm=applyPatches(migrated,planAgricultureMigration(migrated,world.rules)),wild=applyPatches(farm,planWildlifeMigration(farm,world.rules,world.monsters)),c=applyPatches(wild,planFarmPestsMigration(wild,world.rules));
     const run=async(doc,tool,args,id)=>{const out=await engine.reduce(doc,{tool,args,eventId:id});return{document:applyPatches(doc,out.patches),result:out.result};};
     return{world,engine,c,run};
@@ -117,4 +118,17 @@ test('户外凝露实际使用生成湿度，跨年天气重建与存档往返�
         const doc=structuredClone(c);doc.state.minute=minute;
         assert.deepEqual(localWeather(engine,doc),localWeather(new WorldEngine(JSON.parse(JSON.stringify(world))),JSON.parse(JSON.stringify(doc))));
     }
+});
+
+test('新增局部气候区保留旧区逐日天气，新区可独立重建和重放',async()=>{
+ const source=await loadWorld(),old=structuredClone(source);old.rules.weather.regions=old.rules.weather.regions.filter(r=>r.sequenceScope!=='local');
+ const prior=new WorldEngine(old),current=new WorldEngine(source),reordered=structuredClone(source);reordered.rules.weather.regions=[...old.rules.weather.regions,...source.rules.weather.regions.filter(r=>r.sequenceScope==='local').reverse()];const reorderedEngine=new WorldEngine(reordered),rebuilt=new WorldEngine(source);
+ const oldLocations=old.rules.weather.regions.map(r=>r.locations[0]);
+ for(let day=0;day<720;day++)for(const location of oldLocations)assert.deepEqual(weatherAt(current,'compatible-village-weather',location,day*1440+540),weatherAt(prior,'compatible-village-weather',location,day*1440+540));
+ const local=source.rules.weather.regions.filter(r=>r.sequenceScope==='local');assert.equal(local.length,4);
+ for(const region of local)for(const day of [0,29,90,179,270,359,360,719]){const actual=weatherAt(current,'local-village-weather',region.locations[0],day*1440+540);assert.deepEqual(actual,weatherAt(rebuilt,'local-village-weather',region.locations[0],day*1440+540));assert.deepEqual(actual,weatherAt(reorderedEngine,'local-village-weather',region.locations[0],day*1440+540));}
+ const changed=structuredClone(source);changed.rules.weather.regions.find(r=>r.id===local[0].id).temperatures[0]+=5;const changedEngine=new WorldEngine(changed);
+ assert.notEqual(weatherAt(changedEngine,'local-village-weather',local[0].locations[0],540).temperatureC,weatherAt(current,'local-village-weather',local[0].locations[0],540).temperatureC);
+ assert.deepEqual(weatherAt(changedEngine,'local-village-weather',local[1].locations[0],540),weatherAt(current,'local-village-weather',local[1].locations[0],540));
+ const bad=structuredClone(source);bad.rules.weather.regions.find(r=>r.sequenceScope==='local').sequenceScope='global';assert.equal(validateWorld(bad).ok,false);
 });

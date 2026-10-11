@@ -1,6 +1,6 @@
 import {villageFacts} from './w1-villages.mjs';
 
-// These proposals expand local life, not purses, ownership or enforceable law.
+// Problems remain proposals. The T02 source charter separately registers public accounts and authority.
 // Resolution options remain proposals until the parties actually agree.
 const raw={
  yp:{
@@ -127,13 +127,62 @@ export function villageProfileCandidates(world){
    population:existing.population,householdCount:existing.householdCount,ageStructure:existing.ageStructure,
    outsiderRatio:null,outsiderRatioReason:'常住登记未记录出生地与迁入史；访客名单为空不能推算外来常住人口为零。',
    buildingIds:existing.buildingIds,
-   economy:{industries:r.industries,production:null,publicStock:null,priceFactor:null,tax:null,tradePartners:[],status:'pending-ledger',reason:'职业与劳动地点已有登记；四村尚无可结算的田亩、产出、公共库存、税约或交易来源。白石镇有道路相连，不因此视为已有贸易合同。'},
-   governance:{coordinators:r.coordinators.map(k=>pid(v,k)),meetingPlace:lid(v,'hall'),meeting:r.meeting,customs:[r.custom,'私人材料与各户财物不因放在共用场地而共有。'],head:null,enforcers:[],authority:'协调与记录；没有新增强制征税、搜查、处罚或代表缺席住户签约的权限。'},
+   economy:villageEconomy(world,v,r.industries),
+   governance:villageGovernance(world,v,r),
    problems,
    rumors:r.rumors.map(([claim,truth,source,witness,title,fact,verification],i)=>({id:`rumor_${v}_${i+1}`,claim,truth,source:pid(v,source),carriers:[pid(v,source)],witnesses:[pid(v,witness)],sourceProblem:problems.find(p=>p.title===title).id,fact,verification,status:'authored-seed',propagation:'pending-event',distortion:'把当事人的需要说成全村规矩，或把尚未办完的工事说成已有结果。'})),
    calendar:{marketDays:[...world.rules.calendar.marketDays],marketLocation:'loc_bs',marketNote:'沿用白石镇每月集日；村内没有因此增加摊商、库存或自动前往赶集的作息。',festivals:[{...r.festival,location:lid(v,r.festival.place),host:pid(v,r.festival.host),status:'custom-only'}].map(({place,...row})=>row)},
    sensory:{seasonal:r.seasonal,daily:r.daily},hiddenPlaces:[{id:`hidden_${v}_1`,name:r.hidden.name,location:lid(v,r.hidden.place),knownBy:[pid(v,r.hidden.keeper)],detail:r.hidden.detail,clue:r.hidden.clue,access:r.hidden.access,status:'unregistered-feature'}],
-   pendingProfileSections:['产业产量与税贸账','头人及执法者权限','外来常住人口比例','传闻事件种子与沿路传播','节日参与作息','隐秘处发现与物权登记'],
+   pendingProfileSections:['外来常住人口比例','传闻事件种子与沿路传播','节日参与作息','隐秘处发现与物权登记'],
   };
  });
+}
+
+// These are new-world opening allocations, never a grant to an imported save.
+export const ledgerRevision='w1-village-ledgers-1';
+export const previousProfileHashes={loc_bs_yupo:'7a91077ea81f9b5d36f0608b6b35a5e11894bb589864657a00ac2a384098dcda',loc_bs_weiting:'3a65547f599b6ff65f359144852cc40c8b61de546199b1e0bea8de8def41ca95',loc_bs_liquan:'fe8e9672e9ec003de05829b5d4d4e51b419abfb42b4991241456572fa94b8ade',loc_bs_sangban:'9482a046d2a08ba8b56a8427548e1aa24e3379bf9500fd966d76475eab24927e'};
+const ledgerSeeds={yp:{area:1800,food:18000,fresh:35,field:'fields',wood:4},wt:{area:1600,food:22000,fresh:55,field:'garden',wood:3},lq:{area:2100,food:22000,fresh:38,field:'fields',wood:4},sb:{area:2400,food:25000,fresh:45,field:'fields',wood:3}};
+export function villageLedgerRules(world){
+ const base=world.rules.agriculture.settlements.find(p=>p.settlement==='loc_hw'),crop=world.rules.agriculture.crop;
+ return Object.entries(ledgerSeeds).map(([v,s])=>({ ...base,settlement:villageFacts[v].id,counter:lid(v,'hall'),manager:pid(v,raw[v].coordinators[0]),fieldLocation:lid(v,s.field),fieldId:`farm_${v}_oats`,areaUnits:s.area,farmWorkers:12,freshWorkers:10,processingWorkers:4,toolCapacity:12,freshFoodPerDay:s.fresh,granaryCapacity:50000,initialFood:s.food,initialSeed:Math.ceil(s.area*crop.seedPerHa/crop.areaUnitsPerHa),opening:{name:villageFacts[v].name,population:world.settlementProfiles.find(p=>p.id===villageFacts[v].id).population,treasury:1200,wood:60,iron:12,woodPerDay:s.wood,foodPerDay:0},source:`${ledgerRevision}/公共田与粮仓开局登记`,tradeContract:{id:`trade_${v}_oats_1`,seller:villageFacts[v].id,buyer:villageFacts[Object.keys(ledgerSeeds)[(Object.keys(ledgerSeeds).indexOf(v)+1)%4]].id,item:world.rules.agriculture.grainItem,quantity:20,unitPriceCopper:3,taxBps:500,status:'unfulfilled',source:`${ledgerRevision}/四村试行粮约`,deliveryDays:7}}));
+}
+export function villageLawCodes(world){
+ const template=world.rules.law.codes.find(c=>c.id==='law_hw_property');
+ return Object.entries(raw).map(([v,r])=>({...template,id:`law_${v}_property`,name:`${villageFacts[v].name}公共粮约与财物规约`,locations:[villageFacts[v].id,...world.locations.filter(l=>l.parent===villageFacts[v].id).map(l=>l.id)],officers:[pid(v,r.coordinators[2])],judges:[pid(v,r.coordinators[0])],court:lid(v,'hall')}));
+}
+function villageEconomy(world,v,industries){
+ const p=villageLedgerRules(world).find(p=>p.settlement===villageFacts[v].id),c=world.rules.agriculture.crop;
+ return {status:'registered-opening',industries,source:p.source,period:{startDay:0,endDay:360,status:'unsettled',calendar:'360日年'},production:[{name:'公共燕麦田',location:p.fieldLocation,item:world.rules.agriculture.grainItem,areaHa:p.areaUnits/c.areaUnitsPerHa,quantity:p.areaUnits*c.yieldPerHa/c.areaUnitsPerHa,unit:'粮单位',unitKg:world.rules.agriculture.foodUnitKg,cycleDays:360,status:'potential-before-weather',source:'田亩×既有燕麦每公顷产量；实际收成沿advanceAgriculture受天气、劳动与仓储影响'}, {name:v==='wt'?'鱼菜等当日农副产':'菜圃等当日农副产',quantity:p.freshFoodPerDay,unit:'粮单位',unitKg:world.rules.agriculture.foodUnitKg,cycleDays:1,seasonFactors:[...p.freshSeasonFactors],status:'potential-before-weather',source:'公共农副产班组登记；只在实际日结产粮'}, {name:'公共木料',quantity:p.opening.woodPerDay,unit:'木料单位',cycleDays:1,status:'worker-limited',source:'既有农事剩余劳力木料公式；私人手艺产物不计入公共仓'}],publicStock:{openingDay:0,food:p.initialFood,seed:p.initialSeed,treasuryCopper:p.opening.treasury,wood:p.opening.wood,iron:p.opening.iron,source:p.source,closing:null,closingReason:'尚未结算；实时期末由state.settlements与agriculture账读取'},priceFactor:{region:1,transport:1,season:1,shop:1,source:'开局公共粮约固定价；不改私人商家的报价'},tax:{basis:'已交割公共粮约的货价',rateBps:500,collector:p.manager,recipient:p.settlement,openingReceiptsCopper:0,source:`${ledgerRevision}/村级粮约税章`,note:'只从实际收款内分列5%；不额外扣私人钱包，不对尚未履约合同入账'},tradePartners:[p.tradeContract.buyer],tradeContracts:[p.tradeContract],tradeLedger:{openingPaidCopper:0,openingReceivedCopper:0,openingExportedFood:0,openingImportedFood:0,status:'unsettled',source:'未履约试行合同；提粮与送达分别落账，不自动沿周结算'}};
+}
+function villageGovernance(world,v,r){
+ const p=villageLedgerRules(world).find(p=>p.settlement===villageFacts[v].id),code=villageLawCodes(world).find(c=>c.court===p.counter);
+ return {coordinators:r.coordinators.map(k=>pid(v,k)),meetingPlace:p.counter,meeting:r.meeting,customs:[r.custom,'私人材料与各户财物不因放在共用场地而共有。'],head:p.manager,enforcers:code.officers,authority:'源开局村级任命单列权限；其余协调者只记录和联络，不因职业获得搜查或征税权。',appointment:{source:`${ledgerRevision}/白石镇村级任命册`,effectiveDay:0,head:p.manager,officers:code.officers,lawCode:code.id},jurisdiction:[...code.locations],permissions:{head:['在登记议事屋核验粮约、分列已收税款','本人在场时按本村法典审理财物案'],enforcers:['本人在场时按已报案件和本村法典搜查、拘押'],coordinators:['自愿协调、记录口述、转交申诉']},limits:['不得代表缺席户签约','无权扣取私人税款或跨村搜查','粮约仅从公共仓与实际携货结算'],referral:{institution:'白石镇议事机构',location:'loc_bs',matters:['跨村权限争议','任命申诉','超出本村法典的争议'],status:'referral-only',note:'转交不等于镇内已创建执法NPC或自动作出裁决'}};
+}
+export function validateVillageLedger(details,world){
+ const errors=[],check=(ok,message)=>{if(!ok)errors.push(message);},e=details.economy,g=details.governance;
+ const p=villageLedgerRules(world).find(p=>p.settlement===details.id),code=villageLawCodes(world).find(c=>c.id===g.appointment?.lawCode);
+ const actual=world.rules.agriculture?.settlements.find(row=>row.settlement===details.id),actualCode=world.rules.law?.codes.find(row=>row.id===g.appointment?.lawCode);
+ if(actual)check(JSON.stringify(actual)===JSON.stringify(p),'运行农事规则与审核开局账不符');
+ if(actualCode)check(JSON.stringify(actualCode)===JSON.stringify(code),'运行法典与审核任命不符');
+ check(e.status==='registered-opening'&&e.period?.startDay===0&&e.period?.endDay===360&&e.period?.status==='unsettled','经济账周期或状态无效');
+ check(p&&e.publicStock?.food===p.initialFood&&e.publicStock?.seed===p.initialSeed&&e.publicStock?.treasuryCopper===p.opening?.treasury&&e.publicStock?.closing===null,'开局账与农事源不符或冒充期末结算');
+ check(p&&e.production?.[0]?.quantity===p.areaUnits*world.rules.agriculture.crop.yieldPerHa/world.rules.agriculture.crop.areaUnitsPerHa&&e.production[0].unitKg===world.rules.agriculture.foodUnitKg,'年粮潜力数值或单位不符');
+ check(e.production?.every(row=>row.quantity>=0&&row.cycleDays>0&&row.source),'产业产量缺单位周期或来源');
+ check(e.tax?.rateBps===p?.tradeContract?.taxBps&&e.tax?.collector===p?.manager&&e.tax?.openingReceiptsCopper===0,'税章或未收税款不符');
+ check(e.tradeContracts?.length===1&&JSON.stringify(e.tradeContracts[0])===JSON.stringify(p?.tradeContract)&&Object.values(e.tradeLedger??{}).filter(v=>typeof v==='number').every(v=>v===0),'未履约合同不得记已收付');
+ check(code&&g.head===p?.manager&&code.judges.includes(g.head)&&JSON.stringify(g.enforcers)===JSON.stringify(code.officers)&&JSON.stringify(g.jurisdiction)===JSON.stringify(code.locations),'任命或执法辖区与法典不符');
+ check(g.appointment?.effectiveDay===0&&g.appointment.source&&g.referral?.location==='loc_bs','权限来源或转交机构缺失');
+ return errors;
+}
+
+export function withVillageLedgerRules(world){
+ const next=structuredClone(world),profiles=villageLedgerRules(world),laws=villageLawCodes(world);
+ const replace=(rows,incoming,key)=>[...rows.filter(row=>!incoming.some(p=>p[key]===row[key])),...incoming];
+ next.rules.agriculture.settlements=replace(next.rules.agriculture.settlements,profiles,'settlement');
+ next.rules.law.codes=replace(next.rules.law.codes,laws,'id');
+ for(const p of profiles){
+  const places=world.locations.filter(l=>l.parent===p.settlement),climate={id:`climate_${p.settlement}`,sequenceScope:'local',locations:[p.settlement,...places.map(l=>l.id)],indoor:places.filter(l=>l.id.startsWith('bld_')).map(l=>l.id),latitude:42,temperatures:[10,23,12,-2]};
+  next.rules.weather.regions=replace(next.rules.weather.regions,[climate],'id');
+ }
+ return next;
 }

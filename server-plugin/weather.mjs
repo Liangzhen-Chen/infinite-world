@@ -7,7 +7,10 @@ const kinds = ['clear','cloudy','rain','storm','snow','fog'];
 const clamp = (value, lo, hi) => Math.max(lo, Math.min(hi, value));
 const validMinute = minute => { if (!Number.isSafeInteger(minute) || minute < 0) throw new Error('天气分钟必须是非负整数'); };
 function dailySequence(rules, seed, region, year) {
-    const fingerprint = createHash('sha256').update(canonical([rules,seed,region.id,year])).digest('hex');
+    // New local regions must not reshuffle the weather history of existing regions.
+    const sequenceRules={...rules,regions:rules.regions.filter(row=>row.sequenceScope!=='local')};
+    const regionKey=region.sequenceScope==='local'?region:region.id;
+    const fingerprint = createHash('sha256').update(canonical([sequenceRules,seed,regionKey,year])).digest('hex');
     if (cache.has(fingerprint)) { const rows = cache.get(fingerprint); cache.delete(fingerprint); cache.set(fingerprint, rows); return rows; }
     const names = kinds, rows = []; let previous = null;
     for (let day = 0; day < 360; day++) {

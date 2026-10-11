@@ -135,7 +135,7 @@ export function agricultureView(engine,document){
             ...(farmPestProfile(engine,p.settlement)?{damageType:'害兽啃食'}:{}),
             growing:r.field.cohorts.filter(c=>!c.ready).map(c=>({areaHa:c.areaUnits/100,grownDays:c.grownDays,requiredDays:engine.rules.agriculture.crop.growthDays,...(c.pestDamageBps!==undefined?{pestDamagePercent:c.pestDamageBps/100}:{})})),
             readyHa:r.field.cohorts.filter(c=>c.ready).reduce((n,c)=>n+c.areaUnits-c.harvestedUnits,0)/100},
-        granary:r.granary,tools:r.tools,lastReport:r.lastReport};
+        granary:r.granary,tools:r.tools,lastReport:r.lastReport,ledger:clone(r.ledger),fiscal:clone(document.state.records[`village-fiscal:${p.settlement}`]??null),contracts:(engine.rules.agriculture.settlements.map(p=>p.tradeContract).filter(c=>c&&[c.seller,c.buyer].includes(p.settlement))).map(c=>({...clone(c),settlement:clone(document.state.records[`village-trade:${c.id}`]??null)}))};
 }
 export function validateAgricultureRules(world){
     const errors=[],r=world.rules.agriculture;if(!r)return errors;
@@ -162,9 +162,68 @@ function counter(d,engine,p){
     const hours=engine.byId.get(p.counter)?.openHours,clock=d.get('state','minute')%1440;
     if(hours&&(clock<hours[0]||clock>=hours[1]))throw new Error('柜台当前不在登记开放时段');
 }
+
+function balancedFiscal(row){
+ const fields=['openingTreasuryCopper','advanceCopper','salesGrossCopper','salesNetCopper','taxReceiptsCopper','purchasesCopper','exportedFood','importedFood'];
+ if(row.category!=='village_fiscal'||!Array.isArray(row.entries)||fields.some(k=>!Number.isSafeInteger(row[k])||row[k]<0))throw Error('税贸账字段不完整或非法，拒绝结算');
+ const sum=k=>row.entries.reduce((n,e)=>n+(e[k]??0),0);
+ if(row.salesGrossCopper!==row.salesNetCopper+row.taxReceiptsCopper||row.advanceCopper!==sum('advanceCopper')||row.salesNetCopper!==sum('netCopper')||row.taxReceiptsCopper!==sum('taxCopper')||row.purchasesCopper!==-row.entries.filter(e=>e.phase==='deliver').reduce((n,e)=>n+e.copper,0)||row.exportedFood!==-row.entries.filter(e=>e.phase==='pickup').reduce((n,e)=>n+e.food,0)||row.importedFood!==row.entries.filter(e=>e.phase==='deliver').reduce((n,e)=>n+e.food,0))throw Error('税贸明细与总账不守恒，拒绝覆盖或补齐');
+}
+function settleVillageTrade(d,engine,p,args,eventId){
+ const contracts=engine.rules.agriculture.settlements.map(p=>p.tradeContract).filter(Boolean),contract=contracts.find(c=>c.id===args.contract);
+ if(!contract)throw Error('粮约未登记；口头计划不能结算税贸款');
+ if(!['pickup','deliver'].includes(args.phase))throw Error('粮约须明确pickup提粮或deliver送达');
+ const expected=args.phase==='pickup'?contract.seller:contract.buyer;
+ if(p.settlement!==expected)throw Error('必须本人到粮约本阶段的登记柜台，不可隔空交割');
+ counter(d,engine,p);
+ const official=engine.resolve(args.authority??'','npc'),code=engine.rules.law?.codes.find(c=>c.locations.includes(p.settlement));
+ if(official!==p.manager||!code?.judges.includes(official))throw Error('此人没有粮约收款及税章权限；普通协调者不能征税');
+ const tradeKey=`village-trade:${contract.id}`,old=d.get('state','records',tradeKey);
+ if(old&&old.category!=='village_trade')throw Error('粮约账编号冲突，拒绝覆盖');
+ if(old?.status==='delivered'||args.phase==='pickup'&&old?.status==='in-transit')return{contract:contract.id,status:old.status,alreadySettled:true,actionScope:{kind:'instant'}};
+ const r=clone(d.get(...path(p.settlement))),stock=clone(d.get('state','settlements',p.settlement));
+ if(r?.mode!=='managed'||!stock)throw Error('公共粮账尚未采用；旧档不能按新开局库存结算');
+ balanced(r,stock);
+ const day=Math.floor(d.get('state','minute')/1440),cost=contract.quantity*contract.unitPriceCopper,tax=Math.floor(cost*contract.taxBps/10000);
+ const fiscalKey=`village-fiscal:${p.settlement}`,fiscal=clone(d.get('state','records',fiscalKey)??{category:'village_fiscal',openingTreasuryCopper:stock.treasury,advanceCopper:0,salesGrossCopper:0,salesNetCopper:0,taxReceiptsCopper:0,purchasesCopper:0,exportedFood:0,importedFood:0,entries:[]});
+ balancedFiscal(fiscal);
+ if(args.phase==='pickup'){
+  if(old)throw Error('粮约账状态冲突');
+  const surplus=r.batches.filter(b=>b.kind==='grain').reduce((n,b)=>n+b.amount,0)-stock.population*p.reserveDays;
+  if(surplus<contract.quantity)throw Error('没有实际可出口余粮，口头预计产量不能履约');
+  if(d.get('state','player','coins')<cost)throw Error('提粮须实际支付货款；未经同意不得扣取NPC铜钱');
+  const goods=takeGrain(r,stock,contract.quantity,true);
+  engine.itemDelta(d,'player',contract.item,contract.quantity);
+  d.set(['state','player','coins'],d.get('state','player','coins')-cost);stock.treasury+=cost;r.ledger.sold+=contract.quantity;
+  fiscal.advanceCopper+=cost;fiscal.exportedFood+=contract.quantity;
+  fiscal.entries.push({eventId,contract:contract.id,phase:'pickup',other:'player',food:-contract.quantity,copper:cost,advanceCopper:cost,taxCopper:0});
+  d.set(['state','records',tradeKey],{category:'village_trade',contract:contract.id,seller:contract.seller,buyer:contract.buyer,carrier:'player',item:contract.item,quantity:contract.quantity,prepaidCopper:cost,paidCopper:0,receivedCopper:0,taxCopper:0,expectedTaxCopper:tax,status:'in-transit',pickupDay:day,dueDay:day+contract.deliveryDays,batches:goods.parts,pickupEvent:eventId});
+ }else{
+  if(old?.status!=='in-transit'||old.carrier!=='player')throw Error('尚未实际提粮付款，不能把合同记为已送达');
+  if(day>old.dueDay||old.batches.some(b=>b.expiresDay<=day))throw Error('粮约已逾期或原粮批已过期，不能作为正常履约');
+  if(engine.quantity(d,'player',contract.item)<contract.quantity)throw Error('携带粮物不足；登记提粮不是已完成送达');
+  if(stock.treasury<cost)throw Error('收货村没有实际铜钱，不能凭空付款');
+  if(stock.food+r.field.seedBank+contract.quantity>r.granary.capacity)throw Error('收货仓容不足，不能确认未入仓粮物');
+  engine.itemDelta(d,'player',contract.item,-contract.quantity);
+  for(const [i,b] of old.batches.entries())addBatch(r,stock,p,b.amount,{id:`trade:${eventId}:${i}`,day:b.harvestDay,expiresDay:b.expiresDay,source:`粮约${contract.id}实际送达`});
+  r.ledger.donated+=contract.quantity;stock.treasury-=cost;d.set(['state','player','coins'],d.get('state','player','coins')+cost);
+  fiscal.purchasesCopper+=cost;fiscal.importedFood+=contract.quantity;
+  fiscal.entries.push({eventId,contract:contract.id,phase:'deliver',other:'player',food:contract.quantity,copper:-cost});
+  const sourceFiscalKey=`village-fiscal:${contract.seller}`,sourceFiscal=clone(d.get('state','records',sourceFiscalKey));
+  balancedFiscal(sourceFiscal??{});
+  if(sourceFiscal.advanceCopper<cost)throw Error('源村预付款账不符，拒绝不守恒结算');
+  sourceFiscal.advanceCopper-=cost;sourceFiscal.salesGrossCopper+=cost;sourceFiscal.salesNetCopper+=cost-tax;sourceFiscal.taxReceiptsCopper+=tax;
+  sourceFiscal.entries.push({eventId,contract:contract.id,phase:'recognized',other:contract.buyer,food:0,copper:0,advanceCopper:-cost,netCopper:cost-tax,taxCopper:tax});
+  balancedFiscal(sourceFiscal);d.set(['state','records',sourceFiscalKey],sourceFiscal);
+  d.set(['state','records',tradeKey],{...old,prepaidCopper:0,paidCopper:cost,receivedCopper:cost,taxCopper:tax,status:'delivered',deliveryDay:day,deliveryEvent:eventId});
+ }
+ balanced(r,stock);balancedFiscal(fiscal);d.set(path(p.settlement),r);d.set(['state','settlements',p.settlement],stock);d.set(['state','records',fiscalKey],fiscal);
+ return{contract:contract.id,status:args.phase==='pickup'?'in-transit':'delivered',quantity:contract.quantity,paidCopper:args.phase==='pickup'?0:cost,prepaidCopper:args.phase==='pickup'?cost:0,taxCopper:args.phase==='pickup'?0:tax,note:'提粮记预付款和在途；本人携货沿路线到收货村验收入仓后确认货款和税，不另扣私人铜钱。',actionScope:{kind:'instant'}};
+}
 export function agricultureAction(d,args,eventId){
     const operation=args.operation??'inspect',id=args.settlement?this.resolve(args.settlement,'loc'):this.rules.agriculture?.settlements.find(p=>[p.settlement,p.counter,p.fieldLocation].includes(d.get('state','location')))?.settlement,p=profile(this,id);
     if(!p)throw new Error('这里尚未登记农田及粮仓规则');
+    if(operation==='settle_trade')return settleVillageTrade(d,this,p,args,eventId);
     if(operation==='inspect'){
         if(![p.settlement,p.counter,p.fieldLocation].includes(d.get('state','location')))throw new Error('不能隔空观察异地农事');
         return{agriculture:agricultureView(this,d.document),actionScope:{kind:'instant',instantaneous:true,note:'只读观察，不推进时间。'}};

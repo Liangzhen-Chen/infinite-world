@@ -3,10 +3,10 @@ import path from 'node:path';
 import {loadWorld} from './load-world.mjs';
 import {DeepSeekClient} from './deepseek-client.mjs';
 import {runContentPipeline,defaultReviewRequest,readApprovedContent,hashContent} from './content-pipeline.mjs';
-import {villageProfileCandidates} from '../world/design/w1-village-profiles.mjs';
+import {villageProfileCandidates,villageLedgerRules,villageLawCodes,validateVillageLedger,ledgerRevision} from '../world/design/w1-village-profiles.mjs';
 import {w1VillagesFoundation} from '../world/design/w1-villages.mjs';
 
-export const revision='w1-village-profiles-1';
+export const revision=ledgerRevision;
 export function contextFor(entry,world){
  const people=[...world.npcs,...world.residents].filter(p=>p.settlement===entry.id);
  const {details,...population}=world.settlementProfiles.find(p=>p.id===entry.id);
@@ -15,7 +15,7 @@ export function contextFor(entry,world){
  return {population,
   people:people.filter(p=>entry.governance.coordinators.includes(p.id)||entry.problems.some(x=>x.stakeholders.some(s=>s.person===p.id))||entry.calendar.festivals.some(f=>f.host===p.id)).map(p=>({id:p.id,name:p.name,age:p.age,occupation:p.occupation,conflicts:p.socialProfile?.conflicts,workplace:p.workplace,services:p.services})),
   locations:world.locations.filter(p=>p.parent===entry.id).map(p=>({id:p.id,name:p.name,purpose:p.purpose,owner:p.owner,openHours:p.openHours,access:p.access,inventory:p.inventory})),
-  calendar:world.rules.calendar,limits:'四村没有经济结算/税收/官员权限初始化。本批新节俗与隐秘处只作为创作种子；不保证人到场，不赋予免费财物或进入权。传闻是待接入的作者种子，不表示携带者当前已经听说或玩家知情。待协商方案不是已完成事件。'};
+  charter:{agriculture:villageLedgerRules(world).find(p=>p.settlement===entry.id),law:villageLawCodes(world).find(c=>c.locations.includes(entry.id)),source:ledgerRevision,effectiveDay:0,scope:'本批创作公共开局账和明确村级任命；不回填旧档粮钱，不据职业自动授予协调者权限。苇汀岸上菜圃划出燕麦条田，日常菜圃仍在。'},calendar:world.rules.calendar,limits:'本批新开局账为来源登记；未履约合同、年产潜力与期末结算严格分开。本批新节俗与隐秘处只作为创作种子；不保证人到场，不赋予免费财物或进入权。传闻是待接入的作者种子，不表示携带者当前已经听说或玩家知情。待协商方案不是已完成事件。'};
 }
 export function validateDraft(draft,entry,world){
  const errors=[],warnings=[],check=(ok,note)=>{if(!ok)errors.push(note);};
@@ -42,29 +42,37 @@ export function validateDraft(draft,entry,world){
   check(r.fact?.length>10&&r.verification?.length>=6,`${r.id}缺真相或可查证路径`);
  }
  for(const id of [...draft.governance.coordinators,...draft.calendar.festivals.map(f=>f.host),...draft.hiddenPlaces.flatMap(h=>h.knownBy)])check(people.get(id)?.age>=18&&people.get(id)?.settlement===entry.id,`责任者无效：${id}`);
- check(draft.economy.status==='pending-ledger'&&['production','publicStock','priceFactor','tax'].every(k=>draft.economy[k]===null),'未落账经济不得冒充正式数值');
- check(draft.governance.head===null&&draft.governance.enforcers.length===0,'不从职业虚构官员');
+ for(const error of validateVillageLedger(draft,world))errors.push(error);
  check(draft.outsiderRatio===null&&draft.outsiderRatioReason.length>20,'出生来源未登记不能推算外来比例');
  check(hashContent(draft.calendar.marketDays)===hashContent(world.rules.calendar.marketDays),'集日须沿用世界日历');
  for(const f of draft.calendar.festivals){const place=world.locations.find(l=>l.id===f.location);check(Number.isInteger(f.month)&&f.month>=1&&f.month<=12&&Number.isInteger(f.day)&&f.day>=1&&f.day<=30&&place?.parent===entry.id&&f.status==='custom-only',`节俗地点/日期无效：${f.name}`);}
  check(draft.sensory.seasonal.length===4&&draft.sensory.daily.length===4,'缺四季或昼夜素材');
  for(const h of draft.hiddenPlaces)check(h.status==='unregistered-feature'&&world.locations.some(l=>l.id===h.location&&l.parent===entry.id)&&h.access.length>20,`隐秘处须限制发现/物权：${h.id}`);
- check(draft.pendingProfileSections.length>=5,'未落地项不能标为完成');
+ check(draft.pendingProfileSections.length>=4,'未落地项不能标为完成');
  return {errors,warnings};
 }
-export function buildReviewRequest(e,d,c){const r=defaultReviewRequest(e,d,c);r.max_tokens=2200;r.messages[0].content+=' 本批由人工作者提供完整聚落档案，不需要重写。重点核对publishedFacts人物的身份、已有矛盾立场、地点、人口、日历；方案必须是未执行的提议，不能虚构已完成经历。真假传闻的claim可以故意不实，但fact须正确且不能把传闻种子说成已传播。新增节俗/非功能性隐秘处是本批创作内容，允许合理新增，不要仅因旧地点未提到夹格就报冲突；不能新增可领取库存、可通行密道、自动参加节日、已成立贸易/税收/官职。产量等缺口null是诚实保留，不是事实矛盾。';return r;}
+export function buildReviewRequest(e,d,c){const r=defaultReviewRequest(e,d,c);r.max_tokens=2200;r.messages[0].content+=' 本批由人工作者提供完整聚落档案，不需要重写。重点核对publishedFacts人物的身份、已有矛盾立场、地点、人口、日历；方案必须是未执行的提议，不能虚构已完成经历。真假传闻的claim可以故意不实，但fact须正确且不能把传闻种子说成已传播。新增节俗/非功能性隐秘处是本批创作内容，允许合理新增，不要仅因旧地点未提到夹格就报冲突；不能新增可领取库存、可通行密道、自动参加节日、未发生的贸易收付。本批charter是明确创作的新开局公共账与村级任命来源，允许以此登记年粮潜力、库存、合同、税章和官职，不把旧档库存重置。数量与单位周期须守恒，官职来自任命而非职业推断。';return r;}
 
-export async function reviewProfiles({world,root=path.resolve('world/drafts/w1/village-profiles'),budgetRoot=path.resolve('F:/dnd/world/drafts/m4-object')}={}){
+export async function reviewProfiles({world,root=path.resolve('world/drafts/w1/village-ledgers'),budgetRoot=path.resolve('F:/dnd/world/drafts/m4-object'),incrementBudgetYuan=1.2}={}){
+ if(!(incrementBudgetYuan>0&&incrementBudgetYuan<=1.2))throw Error('四村增量预算须大于0且不超过1.2元');
  world??=await loadWorld();
  const entries=villageProfileCandidates(world),client=new DeepSeekClient({budgetYuan:20,logFile:path.resolve('logs/w1-village-profiles-usage.jsonl')});
  const generate=client.generate.bind(client);
+ const ledger=JSON.parse(await fs.readFile(path.join(budgetRoot,'budget.json'),'utf8'));
+ await fs.mkdir(root,{recursive:true});
+ const incrementFile=path.join(root,'increment-budget.json');
+ const prior=await fs.readFile(incrementFile,'utf8').then(JSON.parse).catch(e=>{if(e.code==='ENOENT')return null;throw e;});
+ const increment=prior??{startSpentYuan:ledger.spentYuan+(ledger.reservedYuan??0),limitYuan:incrementBudgetYuan,sharedBudgetRoot:path.resolve(budgetRoot)};
+ if(increment.limitYuan!==incrementBudgetYuan||increment.sharedBudgetRoot!==path.resolve(budgetRoot))throw Error('增量预算账不能重置或更换共用预算');
+ if(!prior)await fs.writeFile(incrementFile,JSON.stringify(increment,null,2)+'\n');
+ const ceiling=Math.min(20,increment.startSpentYuan+increment.limitYuan);
  // The ordinary pipeline still fingerprints, validates, resumes and samples.
  // Drafts are explicitly local authored submissions; only L2 calls the model.
- client.generate=async(body,label)=>body.localAuthoredDraft?{choices:[{message:{content:JSON.stringify(body.localAuthoredDraft)}}]}:generate(body,label);
- return runContentPipeline({entries,root,budgetRoot,client,revision,concurrency:4,batchSize:4,
+ client.generate=async(body,label)=>{if(body.localAuthoredDraft)return{choices:[{message:{content:JSON.stringify(body.localAuthoredDraft)}}]};const totalLimit=client.budgetYuan;client.budgetYuan=ceiling;try{return await generate(body,label);}finally{client.budgetYuan=totalLimit;}};
+ return runContentPipeline({entries,root,budgetRoot,client,revision,concurrency:1,batchSize:4,
   contextFor:e=>contextFor(e,world),buildDraftRequest:(e,feedback)=>{if(feedback)throw Error('人工稿需定点修正，保留上一轮审查意见');return {localAuthoredDraft:e};},buildReviewRequest,validateDraft:(d,e)=>validateDraft(d,e,world)});
 }
-export async function approvedProfiles({world,root=path.resolve('world/drafts/w1/village-profiles')}={}){
+export async function approvedProfiles({world,root=path.resolve('world/drafts/w1/village-ledgers')}={}){
  world??=await loadWorld();
  const entries=villageProfileCandidates(world),rows=await readApprovedContent(root,entries,{contextFor:e=>contextFor(e,world),revision});
  if(rows.length!==4)throw Error('四村档案尚未全部通过审核');
@@ -72,6 +80,8 @@ export async function approvedProfiles({world,root=path.resolve('world/drafts/w1
  return rows;
 }
 if(process.argv[1]&&path.resolve(process.argv[1])===path.resolve(import.meta.filename)){
- if(process.argv.includes('--review'))console.log(JSON.stringify((await reviewProfiles()).summary));
- if(process.argv.includes('--candidate')){const profiles=await approvedProfiles();await fs.writeFile('world/drafts/w1/village-profiles/candidate.json',JSON.stringify({status:'reviewed-candidate',profiles},null,2)+'\n');console.log(JSON.stringify({profiles:profiles.length,problems:profiles.flatMap(p=>p.problems).length,rumors:profiles.flatMap(p=>p.rumors).length}));}
+ const arg=(name,fallback)=>{const at=process.argv.indexOf(name);return at<0?fallback:process.argv[at+1];};
+ const root=path.resolve(arg('--root','world/drafts/w1/village-ledgers'));
+ if(process.argv.includes('--review'))console.log(JSON.stringify((await reviewProfiles({root,budgetRoot:path.resolve(arg('--budget-root','F:/dnd/world/drafts/m4-object')),incrementBudgetYuan:Number(arg('--budget-yuan',1.2))})).summary));
+ if(process.argv.includes('--candidate')){const profiles=await approvedProfiles({root});await fs.writeFile(path.join(root,'candidate.json'),JSON.stringify({status:'reviewed-candidate',profiles},null,2)+'\n');console.log(JSON.stringify({profiles:profiles.length,problems:profiles.flatMap(p=>p.problems).length,rumors:profiles.flatMap(p=>p.rumors).length}));}
 }
