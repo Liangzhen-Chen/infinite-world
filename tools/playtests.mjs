@@ -8,6 +8,7 @@ import {digest}from'../server-plugin/storage.mjs';
 import {loadHostPromptProcessor}from'./host-prompt.mjs';
 import {toolSelectionMetrics}from'./playtest-metrics.mjs';
 import {reviewPlaytest}from'./playtest-review.mjs';
+import {reviewNpcRequirements,summarizeNpcAcceptance}from'./npc-acceptance.mjs';
 import * as OpenCC from'opencc-js';
 const simplify=OpenCC.Converter({from:'tw',to:'cn'});
 
@@ -42,6 +43,7 @@ function summary(){const assertions=results.reduce((n,row)=>n+row.assertions,0),
     m1ThresholdReached:complete&&fullCohort&&assertions>0&&passed/assertions>=.9,
     calls:{total:calls.length,rejected:calls.filter(call=>call.result?.ok===false).length},
     toolSelection:toolSelectionMetrics(results,scenarios),
+    m2:summarizeNpcAcceptance(results,scenarios,repetitions),
     requests:{total:requests.length,medianMs:latencies[Math.floor(latencies.length/2)]??null,p95Ms:latencies[Math.min(latencies.length-1,Math.floor(latencies.length*.95))]??null},
     costUpperYuan:client.spent,limitYuan:30,results};}
 async function save(){writes=writes.then(()=>atomicJSON(path.join(destination,'真实试玩.json'),summary()));await writes;}
@@ -51,6 +53,7 @@ async function score(result,scenario){
         exposedInternals:/world_[a-z]+|(?:npc|item|loc|bld|spell|skill)_[a-z0-9_]+|【场景卡】/.test(visible),
         blockedNames:[...blocklist.names,...blocklist.realPeople].filter(name=>visible.includes(name))};
     result.review=await reviewPlaytest(client,result,scenario.rubric);
+    result.npcAcceptance=await reviewNpcRequirements(client,result,scenario);
 }
 try{
     await save();
