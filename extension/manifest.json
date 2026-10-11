@@ -4,6 +4,7 @@
   "requires": [],
   "optional": [],
   "js": "index.js",
+  "generate_interceptor": "infiniteFieldsHistoryInterceptor",
   "css": "style.css",
   "author": "Local configuration",
   "version": "1.0.0"

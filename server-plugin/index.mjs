@@ -13,6 +13,7 @@ import {catalogDefinition}from'./catalog.mjs';
 import {publicLoreEntries}from'./lore.mjs';
 import {settleNpcPlanning}from'./npc-planning-service.mjs';
 import {getChronicle,syncChronicleIndex}from'./chronicle.mjs';
+import {groupHistory}from'../extension/history-window.mjs';
 import {beginConsistencyTurn,reviewConsistencyReply,assertConsistencyCommit,sharedModelClient}from'./consistency-service.mjs';
 
 export const info={id:'infinite-fields',name:'无限原野本地战役存储',description:'本项目自有的存档、账本与检索服务器插件'};
@@ -95,6 +96,26 @@ export async function init(router,{ world=null, baseRoot=null, newCampaignSeed=r
         return store.create({worldVersion:world.version,document});
     }));
     router.post('/read',handle(req=>upgrade(getStore(req),req.body.campaignId)));
+    router.post('/history/coverage',handle(async req=>{
+        const store=getStore(req),{campaignId,expectedSequence}=req.body,view=await store.read(campaignId);
+        if(view.reference.sequence!==expectedSequence)throw new Error('历史覆盖检查前账本已变化');
+        const index=await getIndex(store,campaignId,view.document),chronicle=index.chronicle;
+        const chat=index.chatMessages.filter(message=>!message.is_system||message.extra?.tool_invocations);
+        const groups=await groupHistory(chat,{format:'host',tokenCounts:chat.map(()=>0)});
+        return store.exclusive(campaignId,async()=>{
+            const state=await store.load(campaignId);if(state.sequence!==expectedSequence||chronicle.reference.sequence!==expectedSequence)throw new Error('历史覆盖检查期间账本已变化');
+            const events=state.events.filter(event=>state.active.has(event.sequence)),anchors={};
+            for(const group of groups){if(!group.anchor)continue;
+                const matched=events.filter(event=>event.anchor===group.anchor),terminal=matched.find(event=>event.input?.tool==='world_turn');
+                const texts=group.messages.filter(message=>!message.is_system&&!message.extra?.tool_invocations);
+                const indexed=texts.every(message=>index.chatMessages.some((row,i)=>row===message&&index.documents.has(`chat_${i}`)));
+                anchors[group.anchor]={processed:Boolean(terminal)&&matched.every(event=>event.sequence<=chronicle.reference.sequence),indexed,
+                    complete:Boolean(terminal)&&group.closed&&!group.invalidated,fingerprint:group.fingerprint,
+                    eventIds:matched.map(event=>event.id),factIds:chronicle.facts.filter(fact=>fact.anchor===group.anchor).map(fact=>fact.id)};
+            }
+            return {reference:store.reference(state),revision:state.revision,anchors};
+        });
+    }));
     router.post('/review/begin',handle(req=>beginConsistencyTurn(getStore(req),req.body.campaignId,{anchor:req.body.anchor,playerText:req.body.playerText,expectedSequence:req.body.expectedSequence,enabled:consistencyEnabled&&req.body.enabled!==false})));
     router.post('/review/reply',handle(async req=>{
         const store=getStore(req),{campaignId,token,draft,expectedSequence}=req.body;

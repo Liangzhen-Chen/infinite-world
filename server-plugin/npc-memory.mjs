@@ -46,6 +46,9 @@ export function recordNpcMemories(d,engine,before,tool,args,detail,eventId){
         add('crime',`${name('player')}试图偷取${name(detail.target)}的财物`,['player',detail.target],{observers:witnesses,onlyObservers:true,salience:4,emotion:'警惕'});
     }else if(tool==='move'&&before.location!==after.location){
         for(const companion of before.player.companions??[])if(after.npcs[companion]?.location===after.location)add(`travel_${companion}`,`${name(companion)}与${name('player')}一同从${name(before.location)}抵达${name(after.location)}`,['player',companion],{location:after.location,observers:[],salience:3});
+    }else if(tool==='promise'&&detail.permission&&!detail.duplicate){
+        const permit=detail.permission;
+        add('permission',`${name(permit.grantor)}${permit.revoked?'收回':'给予'}${name('player')}进入${name(permit.subject)}的拜访许可`,['player',permit.grantor],{salience:3,observers:[],private:true});
     }else if(tool==='quest'&&detail.quest){
         const quest=after.quests[detail.quest];
         if(quest?.taker==='player')add('quest',`${name('player')}参与的委托“${quest.content??quest.name}”现为${quest.status}`,['player',quest.publisher],{salience:3,observers:[]});
@@ -74,7 +77,7 @@ export function recordNpcMemories(d,engine,before,tool,args,detail,eventId){
             const existing=streams.get(npcId)??[...after.npcs[npcId].memoryStream??[]];
             const id=`${eventId}:${fact.key}`;if(existing.some(row=>row.id===id))continue;
             existing.push({id,sourceEvent:eventId,kind:fact.key.split('_')[0],minute:fact.minute,location:fact.location,participants:fact.participants,
-                content:fact.content,...(fact.entities?.length?{entities:fact.entities}:{}),sourceType:fact.partyNotice?'约定核对':fact.participants.includes(npcId)&&!fact.onlyObservers?'亲历':'目击',salience:fact.salience,emotion:fact.emotion});
+                content:fact.content,...(fact.private?{private:true}:{}),...(fact.entities?.length?{entities:fact.entities}:{}),sourceType:fact.partyNotice?'约定核对':fact.participants.includes(npcId)&&!fact.onlyObservers?'亲历':'目击',salience:fact.salience,emotion:fact.emotion});
             streams.set(npcId,existing);
         }
     }

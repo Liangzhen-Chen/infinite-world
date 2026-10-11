@@ -12,6 +12,7 @@ let indexedChat=null,indexedMessages=[];
 let labels={},feedback=[];
 let reviewTurn=null;
 const reviewing=new WeakMap();
+let historyModule=null;
 const api=async(endpoint,body={})=>{
     const response=await fetch(`/api/plugins/infinite-fields/${endpoint}`,{method:'POST',headers:ctx().getRequestHeaders(),body:JSON.stringify(body)});
     const data=await response.json();if(!response.ok||data.ok===false){const error=new Error(data.error??`本地存档请求失败${response.status}`);error.rejected=response.status>=400&&response.status<500;throw error;}return data;
@@ -115,6 +116,7 @@ async function execute(tool,args,eventId=crypto.randomUUID(),reviewId=null){
         let sent=false,committed=false;
         try{
             await load();if(blocked)throw new Error(blocked);if(!view)throw new Error('请先在副本上启用新版');
+            if(tool!=='world_turn')await ensureReviewTurn();
             const startMinute=turnStart??view.document.state.minute;
             const currentUser=[...ctx().chat].reverse().find(message=>message.is_user)?.mes??'';
             if(isOutOfCharacter(currentUser)&&tool!=='world_turn')throw new Error('场外提问不推进时间或写入世界状态');
@@ -160,6 +162,37 @@ function showBook(){
     }
     document.body.append(dialog);dialog.showModal();
 }
+async function ensureReviewTurn(){
+    if(!view||mode==='quiet')return;
+    const currentAnchor=anchor(),user=[...ctx().chat].reverse().find(message=>message.is_user);
+    if(!currentAnchor)return;
+    if(!reviewTurn||reviewTurn.anchor!==currentAnchor||reviewTurn.chatId!==ctx().chatId||reviewTurn.completed){
+        turnStart=view.document.state.minute;
+        reviewTurn={...await api('review/begin',{campaignId:view.reference.campaignId,anchor:currentAnchor,playerText:user?.mes??'',expectedSequence:view.reference.sequence,enabled:ctx().chatMetadata.fields_consistency_enabled!==false}),anchor:currentAnchor,chatId:ctx().chatId};
+    }
+}
+async function historyInterceptor(coreChat,contextSize,abort,type){
+    if(!active()||type==='quiet')return;
+    return queue(async()=>{
+        try{
+            await load();if(!view||blocked)throw new Error(blocked??'请先在副本上启用新版');
+            await ensureReviewTurn();await syncHistory();
+            if(typeof ctx().getTokenCountAsync!=='function')throw new Error('宿主未提供 token 计数，无法安全裁剪历史');
+            historyModule??=await import('./history-window.mjs');
+            const count=text=>ctx().getTokenCountAsync(text),card=ctx().characters[ctx().characterId]?.data??ctx().characters[ctx().characterId];
+            const tokenCounts=await Promise.all(coreChat.map(message=>count(JSON.stringify({role:message.is_user?'user':'assistant',text:message.mes,tools:message.extra?.tool_invocations}))));
+            const reservedTokens=1024+await count(JSON.stringify({prompts:ctx().chatCompletionSettings?.prompts??[],card:{description:card?.description,personality:card?.personality,scenario:card?.scenario,examples:card?.mes_example,system:card?.system_prompt},dynamic:ctx().extensionPrompts??{},tools:toolDefinitions()}));
+            const groups=await historyModule.groupHistory(coreChat,{format:'host',tokenCounts});
+            const coverage=await api('history/coverage',{campaignId:view.reference.campaignId,expectedSequence:view.reference.sequence});
+            const planned=historyModule.planHistoryWindow(groups,{cursor:ctx().chatMetadata.fields_history_window,coverage,contextTokens:contextSize,reservedTokens});
+            if(!planned.canSend)throw new Error(planned.needsCoverage?'旧历史尚未获得编年史和原文索引覆盖，已停止发送超长上下文':'最近完整回合已经超过上下文预算，已停止生成');
+            ctx().chatMetadata.fields_history_window=planned.cursor;
+            ctx().chatMetadata.fields_history_usage={reason:planned.reason,reset:planned.reset,beforeTokens:planned.beforeTokens,afterTokens:planned.afterTokens,batch:planned.batch};
+            coreChat.splice(0,coreChat.length,...planned.messages);await ctx().saveChat();
+        }catch(error){abort(true);actionError(`历史上下文未准备好：${error.message}`);}
+    });
+}
+globalThis.infiniteFieldsHistoryInterceptor=historyInterceptor;
 async function reconcile(type,_options,dryRun){
     if(!active()||dryRun)return;mode=type;
     return queue(async()=>{
@@ -167,13 +200,11 @@ async function reconcile(type,_options,dryRun){
             await load();if(!view)throw new Error('请先在副本上启用新版');if(blocked)throw new Error(blocked);
             if(['regenerate','swipe'].includes(type)){
                 view=await api('reconcile',{campaignId:view.reference.campaignId,validAnchors:validAnchors(),excludeAnchor:anchor()});await persist();
+                reviewTurn=null;
             }
-            const currentAnchor=anchor();
-            if(!reviewTurn||reviewTurn.anchor!==currentAnchor||reviewTurn.completed||['regenerate','swipe'].includes(type)){
-                turnStart=view.document.state.minute;
-                const user=[...ctx().chat].reverse().find(message=>message.is_user);
-                reviewTurn={...await api('review/begin',{campaignId:view.reference.campaignId,anchor:currentAnchor,playerText:user?.mes??'',expectedSequence:view.reference.sequence,enabled:ctx().chatMetadata.fields_consistency_enabled!==false}),anchor:currentAnchor,chatId:ctx().chatId};
-            }
+            // The host emits GENERATION_STARTED before sendMessageAsUser.
+            // MESSAGE_SENT and the native interceptor capture the new input.
+            if(ctx().chat.at(-1)?.is_user)await ensureReviewTurn();
             await refresh();
         }catch(error){fail(error);}
     });
@@ -229,10 +260,10 @@ context.eventSource.on(context.eventTypes.CHAT_CHANGED,()=>queue(refresh).catch(
 context.eventSource.on(context.eventTypes.CHAT_LOADED,()=>queue(refresh).catch(fail));
 context.eventSource.on(context.eventTypes.GENERATION_STARTED,reconcile);
 context.eventSource.on(context.eventTypes.GENERATION_AFTER_COMMANDS,()=>{if(blocked)ctx().stopGeneration();});
-context.eventSource.on(context.eventTypes.MESSAGE_SENT,()=>{if(active()&&view&&loadedChat===ctx().chatId)anchor();});
+context.eventSource.on(context.eventTypes.MESSAGE_SENT,()=>{if(active()&&view&&loadedChat===ctx().chatId)return queue(async()=>{await ensureReviewTurn();await refresh();}).catch(fail);});
 context.eventSource.on(context.eventTypes.MESSAGE_DELETED,onDeleted);
 context.eventSource.on(context.eventTypes.MESSAGE_EDITED,onEdited);
 context.eventSource.on(context.eventTypes.MESSAGE_RECEIVED,afterReply);
 for(const event of [context.eventTypes.CHARACTER_MESSAGE_RENDERED,context.eventTypes.MESSAGE_UPDATED])if(event)context.eventSource.on(event,()=>{if(active()&&view)render();});
 context.eventSource.on(context.eventTypes.GENERATION_ENDED,()=>{mode='normal';});
-window.infiniteFieldsV2={load,refresh,execute,reconcile,onEdited,onDeleted,get view(){return view;},get blocked(){return blocked;}};
+window.infiniteFieldsV2={load,refresh,execute,reconcile,onEdited,onDeleted,historyInterceptor,get view(){return view;},get blocked(){return blocked;}};

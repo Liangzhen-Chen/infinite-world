@@ -24,26 +24,29 @@ test('浏览器 MESSAGE_RECEIVED 等待纯文字改写后再提交唯一尾注�
   const endpoint=new URL(route.request().url()).pathname.split('/infinite-fields/')[1],body=JSON.parse(route.request().postData());endpoints.push({endpoint,body});
   try{await route.fulfill({json:await server.api(endpoint,body)});}catch(error){await route.fulfill({status:400,json:{ok:false,error:error.message}});}
  });
- await page.route('**/fixture.html',route=>route.fulfill({contentType:'text/html',body:'<div id="sheld"></div><div class="mes" mesid="1"><div class="mes_block"><div class="mes_text"></div></div></div>'}));
+ await page.route('**/fixture.html',route=>route.fulfill({contentType:'text/html',body:'<div id="sheld"></div><div class="mes" mesid="2"><div class="mes_block"><div class="mes_text"></div></div></div>'}));
  await page.goto('http://fields.test/fixture.html');
  await page.evaluate(reference=>{
   const handlers=new Map();window.fixtureHandlers=handlers;
   window.fixtureContext={characters:[{name:'无限原野·世界主持人'}],characterId:0,chatId:'review-fixture',chatMetadata:{infinite_fields:reference},
-   chat:[{is_user:true,mes:'我付钱买一个面包',extra:{fields_anchor:'browser-bread'}}],
+   chat:[{mes:'柜台前有空位。',name:'主持人'}],
    getRequestHeaders:()=>({'Content-Type':'application/json'}),saveChat:async()=>{},setExtensionPrompt:()=>{},registerFunctionTool:()=>{},stopGeneration:()=>{},
    eventTypes:new Proxy({},{get:(_,key)=>key}),eventSource:{on:(event,handler)=>handlers.set(event,handler)}};
  },created.reference);
- await page.evaluate(async()=>{await import('/runtime.js');await window.infiniteFieldsV2.refresh();await window.fixtureHandlers.get('GENERATION_STARTED')('normal',{},false);});
+ await page.evaluate(async()=>{await import('/runtime.js');await window.infiniteFieldsV2.refresh();await window.fixtureHandlers.get('GENERATION_STARTED')('normal',{},false);
+  window.fixtureContext.chat.push({is_user:true,mes:'我付钱买一个面包',extra:{fields_anchor:'browser-bread'}});await window.fixtureHandlers.get('MESSAGE_SENT')(1);
+ });
+ assert.equal(endpoints.filter(row=>row.endpoint==='review/begin').length,1);assert.equal(endpoints.find(row=>row.endpoint==='review/begin').body.playerText,'我付钱买一个面包');
  assert.equal(await page.locator('#fields-consistency-toggle').isChecked(),true);
  await page.evaluate(()=>window.infiniteFieldsV2.execute('world_trade',{seller:'林穗',item:'面包',quantity:1},'browser-trade'));
  await page.evaluate(()=>{
   window.fixtureContext.chat.push({mes:'<q who="npc_unregistered">面包给你。</q><回合 额外="0分" 地点="bld_hw_qingdeng" 在场="npc_hw_linsui"/>',name:'主持人'});
-  window.reviewPromise=Promise.all([window.fixtureHandlers.get('MESSAGE_RECEIVED')(1),window.fixtureHandlers.get('MESSAGE_RECEIVED')(1)]);
+  window.reviewPromise=Promise.all([window.fixtureHandlers.get('MESSAGE_RECEIVED')(2),window.fixtureHandlers.get('MESSAGE_RECEIVED')(2)]);
  });
  await page.waitForFunction(()=>document.querySelector('.mes_text').hidden);
  assert.equal(endpoints.filter(r=>r.body.tool==='world_turn').length,0);
  releaseRewrite();await page.evaluate(()=>window.reviewPromise);
- const message=await page.evaluate(()=>window.fixtureContext.chat[1]);
+ const message=await page.evaluate(()=>window.fixtureContext.chat[2]);
  assert.equal(message.mes,final);assert.equal(message.extra.fields_consistency.status,'verified');assert.equal(message.extra.fields_consistency.attempts,1);
  assert.equal(endpoints.filter(r=>r.body.tool==='world_trade').length,1);assert.equal(endpoints.filter(r=>r.body.tool==='world_turn').length,1);assert.equal(requests.length,3);
  assert.equal(await page.locator('.mes_text').innerText(),'林穗：面包给你。');assert.equal(await page.locator('.mes_text').isVisible(),true);

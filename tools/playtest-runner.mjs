@@ -12,9 +12,11 @@ import {visibleReply}from'../extension/message-view.mjs';
 import {evaluateAssertions}from'./playtest-assertions.mjs';
 import {generationSettings,generationRequest}from'../extension/generation.mjs';
 import {planNpcAutonomy}from'./npc-autonomy-planner.mjs';
+import {groupHistory,planHistoryWindow}from'../extension/history-window.mjs';
+import {loadHistoryTokenizer}from'./m3-history-tokenizer.mjs';
 
-export async function createPlaytestServer({world,seed,plannerClient,consistencyClient=plannerClient??null,consistencyEnabled=true}={}){
-    const directory=await fs.mkdtemp(path.join(os.tmpdir(),'fields-playtests-'));
+export async function createPlaytestServer({world,seed,plannerClient,consistencyClient=plannerClient??null,consistencyEnabled=true,directory:persistentDirectory=null}={}){
+    const directory=persistentDirectory?path.resolve(persistentDirectory):await fs.mkdtemp(path.join(os.tmpdir(),'fields-playtests-'));await fs.mkdir(directory,{recursive:true});
     const app=express();app.use(express.json({limit:'10mb'}));const router=express.Router();
     const npcPlanner=plannerClient?(engine,document,options)=>planNpcAutonomy(engine,document,{...options,client:options.client??{generate:plannerClient.generate.bind(plannerClient)}}):undefined;
     await init(router,{world,baseRoot:directory,newCampaignSeed:seed===undefined?undefined:()=>seed,npcPlanningEnabled:Boolean(plannerClient),npcPlanner,consistencyClient,consistencyEnabled});app.use(router);
@@ -22,20 +24,21 @@ export async function createPlaytestServer({world,seed,plannerClient,consistency
     const origin=`http://127.0.0.1:${server.address().port}`;
     const api=async(endpoint,body={})=>{
         const response=await fetch(`${origin}/${endpoint}`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
-        const data=await response.json();if(!response.ok||data.ok===false)throw new Error(data.error??`HTTP ${response.status}`);return data;
+        const data=await response.json();if(!response.ok||data.ok===false){const error=new Error(data.error??`HTTP ${response.status}`);error.httpStatus=response.status;throw error;}return data;
     };
-    return{api,directory,close:async()=>{await new Promise(resolve=>server.close(resolve));await fs.rm(directory,{recursive:true,force:true});}};
+    return{api,directory,close:async()=>{await new Promise(resolve=>server.close(resolve));if(!persistentDirectory)await fs.rm(directory,{recursive:true,force:true});}};
 }
 
-export async function runPlaytest({scenario,api,client,bundle,attempt=1,processMessages=messages=>messages}){
+export async function runPlaytest({scenario,api,client,bundle,attempt=1,processMessages=messages=>messages,countTokens=null,historyWindow={},session=null}={}){
     const settings=generationSettings(bundle.generation);
+    countTokens??=await loadHistoryTokenizer();let historyCursor=structuredClone(session?.historyCursor??null);
     const tools=toolDefinitions(),allowed=new Set(tools.map(row=>row.function.name));
-    let view=await api('create',scenario.initial?.mode==='legacy'?{name:'试玩者'}:{character:{name:'试玩者'}});
+    let view=session?await api('read',{campaignId:session.campaignId}):await api('create',scenario.initial?.mode==='legacy'?{name:'试玩者'}:{character:{name:'试玩者'}});
     const opening=bundle.card.data.first_mes;
-    const campaignId=view.reference.campaignId,chat=[{is_user:false,name:bundle.card.data.name,mes:opening}],history=[{role:'assistant',content:opening}],reports=[],frames=[];
+    const campaignId=view.reference.campaignId,chat=structuredClone(session?.chat??[{is_user:false,name:bundle.card.data.name,mes:opening}]),history=structuredClone(session?.history??[{role:'assistant',content:opening}]),reports=[],frames=[];
     const sync=()=>api('sync-index',{campaignId,start:0,messages:chat,total:chat.length});
     const fresh=async()=>{view=await api('read',{campaignId});return view.document;};
-    const checkpoint=()=>({chat:structuredClone(chat),history:structuredClone(history),document:structuredClone(view.document)});
+    const checkpoint=()=>({chat:structuredClone(chat),history:structuredClone(history),document:structuredClone(view.document),historyCursor:structuredClone(historyCursor)});
     // Initial fixtures are the same supported create endpoints used by the extension; no state injection.
     for(const [index,step]of scenario.turns.entries()){
         const report={index,input:step.input,operation:step.operation??'send',calls:[],requests:[],assertions:[],reply:'',errors:[]};reports.push(report);
@@ -45,7 +48,7 @@ export async function runPlaytest({scenario,api,client,bundle,attempt=1,processM
                 const frame=frames.pop();if(!frame)throw new Error('没有可以回退的回合');
                 const anchored=chat.filter(row=>row.is_user).map(row=>row.extra.fields_anchor);
                 await api('reconcile',{campaignId,validAnchors:anchored.slice(0,-1)});
-                chat.splice(0,chat.length,...frame.chat);history.splice(0,history.length,...frame.history);await fresh();await sync();
+                chat.splice(0,chat.length,...frame.chat);history.splice(0,history.length,...frame.history);historyCursor=frame.historyCursor;await fresh();await sync();
                 const same=JSON.stringify(view.document.state)===JSON.stringify(frame.document.state);
                 report.assertions.push({kind:'rollback',pass:same});
                 if(step.operation==='deleteLast'){
@@ -57,7 +60,7 @@ export async function runPlaytest({scenario,api,client,bundle,attempt=1,processM
                 report.assertions.push({kind:'reload',pass:JSON.stringify(view.document)===JSON.stringify(before)});
             }
             frames.push(checkpoint());
-            const before=structuredClone(view.document),startMinute=before.state.minute,anchor=`${scenario.id}-${attempt}-${index}`;
+            const before=structuredClone(view.document),startMinute=before.state.minute,anchor=step.anchor??`${scenario.id}-${attempt}-${index}`;
             assertionBefore=before;
             chat.push({is_user:true,mes:step.input,extra:{fields_anchor:anchor}});history.push({role:'user',content:step.input});await sync();
             const reviewTurn=await api('review/begin',{campaignId,anchor,playerText:step.input,expectedSequence:view.reference.sequence});
@@ -67,7 +70,14 @@ export async function runPlaytest({scenario,api,client,bundle,attempt=1,processM
             for(let recursion=0;recursion<settings.toolRecursionLimit;recursion++){
                 const current=recursion?await api('scene',{campaignId,query:step.input}):scene;
                 report.sceneBeforeReply=current.scene;
-                const messages=assembleMessages(bundle,history,current.scene);
+                const anchors=chat.filter(message=>message.is_user).map(message=>message.extra.fields_anchor);
+                const groups=await groupHistory(history,{format:'api',anchors,tokenCounts:await Promise.all(history.map(message=>countTokens(JSON.stringify(message))))});
+                const reservedTokens=1024+await countTokens(JSON.stringify(assembleMessages(bundle,[],current.scene)))+await countTokens(JSON.stringify(tools));
+                const coverage=await api('history/coverage',{campaignId,expectedSequence:view.reference.sequence});
+                const planned=planHistoryWindow(groups,{...historyWindow,cursor:historyCursor,coverage,contextTokens:historyWindow.contextTokens??settings.maxContextTokens-settings.maxOutputTokens,reservedTokens});
+                if(!planned.canSend)throw new Error('历史上下文超限，或待裁剪回合缺少编年史及原文覆盖');
+                historyCursor=planned.cursor;report.historyWindow={reason:planned.reason,reset:planned.reset,beforeTokens:planned.beforeTokens,afterTokens:planned.afterTokens,batch:planned.batch,removedAnchors:planned.cursor.removed.map(row=>row.anchor)};
+                const messages=assembleMessages(bundle,planned.messages,current.scene);
                 const response=await client.generate({...generationRequest(settings),messages:processMessages(messages,bundle),tools,tool_choice:'auto'},`${scenario.id}-${attempt}-${index}-${recursion}`);
                 if(response.measurement)report.requests.push(response.measurement);
                 const message=response.choices?.[0]?.message;if(!message)throw new Error('模型没有返回消息');
@@ -135,5 +145,5 @@ export async function runPlaytest({scenario,api,client,bundle,attempt=1,processM
     return{id:scenario.id,title:scenario.title,attempt,settings,fixture:scenario.initial??{mode:'new'},requirements:scenario.requirements,
         ledgerPass,consistencyVerified,acceptancePass:ledgerPass&&consistencyVerified,
         assertions:assertions.length,passed,ratio:passed/Math.max(1,assertions.length),pass:assertions.length>0&&passed===assertions.length,turns:reports,
-        finalDocument:view.document};
+        session:{campaignId,chat,history,historyCursor},finalDocument:view.document};
 }

@@ -39,6 +39,12 @@ export function stateNotices(before,after,resolveName=id=>id){
         if(!old||row.status!==old.status||row.following!==old.following)push('pet',`${name(id)}：${row.status}${row.following?'，正在跟随':''}`);
     }
     for(const [id,row] of Object.entries(after.records??{})){
+        if(row.category==='authorization'&&row.action==='enter_home'&&row.grantee==='player'){
+            const old=before.records?.[id];
+            if(!old&&!row.revoked&&row.expires>after.minute)push('permission',`${name(row.grantor)}允许你${row.guests?.length?`和${row.guests.map(name).join('、')}`:''}进入${name(row.subject)}，有效${row.expires-after.minute}分钟`);
+            else if(old&&!old.revoked&&row.revoked)push('permission',`${name(row.grantor)}收回了进入${name(row.subject)}的许可`);
+            else if(old&&!row.revoked&&before.minute<row.expires&&row.expires<=after.minute)push('permission',`进入${name(row.subject)}的许可已到期`);
+        }
         if(row.category==='repair'&&row.mechanic==='player'&&!before.records?.[id])push('repair',`${name(row.item)}修整${row.success?'完成':'未成功'}${row.completionFailure?`：${row.completionFailure}`:''}`);
         if(row.category==='debt'&&row.debtor==='player'){
             const old=before.records?.[id];

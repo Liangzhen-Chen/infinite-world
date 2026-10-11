@@ -1,6 +1,6 @@
 import { applyPatches, canonical } from './storage.mjs';
 import { EntityResolver, validateMemory } from './retrieval.mjs';
-import {assertLocationAccess}from'./location-access.mjs';
+import {assertLocationAccess,homePermission}from'./location-access.mjs';
 import {activities}from'./activities.mjs';
 import {WorldEngine as Phase1Engine}from'./compat/v2-phase1-engine.mjs';
 import {learn}from'./learning.mjs';
@@ -432,6 +432,7 @@ export class WorldEngine {
         return {npc,trustDelta:trust};
     }
     promise(d,args,id) {
+        const permission=homePermission(d,this,args,id);if(permission)return permission;
         const reserved=createNpcObligation(d,this,args,id);if(reserved)return reserved;
         const promisor=this.resolve(args.promisor),promisee=this.resolve(args.promisee??'player'),type=args.type;
         if(!['带路','送货','付款','等候','会面','协助'].includes(type))throw new Error('义务类别不支持；type 可选：带路、送货、付款、等候、会面、协助');

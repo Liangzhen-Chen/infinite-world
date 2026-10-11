@@ -8,7 +8,7 @@ import {digest}from'../server-plugin/storage.mjs';
 const extensionPath='public/scripts/extensions/third-party/infinite-fields';
 export async function prepareDeployment(destination=path.join(root,'dist','engine-deployment')){
     destination=path.resolve(destination);
-    const sources=['tools/load-world.mjs','tools/npc-autonomy-planner.mjs','tools/deepseek-client.mjs','tools/narrative-claims.mjs','extension/tools.mjs','extension/message-view.mjs','extension/turn.mjs','extension/prompt.mjs','prompt/constitution.md','prompt/style.md'];
+    const sources=['tools/load-world.mjs','tools/npc-autonomy-planner.mjs','tools/deepseek-client.mjs','tools/narrative-claims.mjs','extension/tools.mjs','extension/message-view.mjs','extension/turn.mjs','extension/prompt.mjs','extension/history-window.mjs','prompt/constitution.md','prompt/style.md'];
     async function copyDirectory(relative){
         for(const name of await fs.readdir(path.join(root,relative))){
             if(relative==='world'&&name==='drafts')continue;
@@ -30,7 +30,7 @@ export async function prepareDeployment(destination=path.join(root,'dist','engin
     await fs.writeFile(path.join(destination,'plugin','index.mjs'),entry);
     files.push({path:'plugin/index.mjs',sha256:digest(entry)});
     await fs.mkdir(path.join(destination,'extension'),{recursive:true});
-    for(const name of ['runtime.js','turn.mjs','state-read.mjs','tools.mjs','generation.mjs','prompt.mjs','message-view.mjs','style.css']){
+    for(const name of ['runtime.js','turn.mjs','state-read.mjs','tools.mjs','generation.mjs','prompt.mjs','message-view.mjs','history-window.mjs','style.css']){
         const bytes=await fs.readFile(path.join(root,'extension',name));await fs.writeFile(path.join(destination,'extension',name),bytes);
         files.push({path:`extension/${name}`,sha256:digest(bytes.toString('utf8'))});
     }
