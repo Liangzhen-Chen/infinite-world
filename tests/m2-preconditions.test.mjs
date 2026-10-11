@@ -124,6 +124,40 @@ test('燕麦从在场粮仓柜台购买，准确入袋及两端钱粮对账后�
     assert.equal(s.document.state.player.coins,170);
 });
 
+test('已观察到的濒死样本不能硬走；实际死亡、登记点复活后仍可自认并审理',async t=>{
+    const engine=new WorldEngine(world);
+    let document=engine.createCharacter(legacy,{},'m2-preconditions'),sequence=0;
+    const trace=[];
+    // Retain the event labels from the first offline reproduction; no retry,
+    // chosen successful roll, edited attributes, healing patch, or extra stock.
+    async function call(tool,args){
+        const output=await engine.reduce(document,{...modelToolCall(tool,args),eventId:`p_${sequence++}`});
+        document=applyPatches(document,output.patches);
+        trace.push({tool,minute:document.state.minute,location:document.state.location,
+            hp:document.state.player.hp,status:document.state.player.status,coins:document.state.player.coins});
+        return output.result;
+    }
+    await call('world_move',{destination:'青灯酒馆'});
+    const hit=await call('world_combat',{target:'林穗',intent:'shove'});
+    assert.equal(document.state.player.status,'濒死');
+    assert.equal(document.state.player.hp,0);
+    const injured=structuredClone(document);
+    await assert.rejects(call('world_move',{destination:'村口'}),/濒死/);
+    assert.deepEqual(document,injured);
+    await call('world_time',{minutes:10,activity:'等待'});
+    assert.equal(document.state.player.status,'死亡');
+    await call('world_time',{minutes:1,activity:'等待'});
+    assert.equal(document.state.player.status,'正常');
+    assert.equal(document.state.location,'bld_hw_altar');
+    await call('world_move',{destination:'村口'});
+    await call('world_law',{operation:'confess',case:hit.case,authority:'顾岑'});
+    await call('world_law',{operation:'arrest',case:hit.case,authority:'顾岑'});
+    await call('world_law',{operation:'hear',case:hit.case,authority:'陈柏'});
+    assert.equal(document.state.records[hit.case].status,'已裁定');
+    assert.equal(document.state.records[hit.case].finePaid??0,0);
+    t.diagnostic(JSON.stringify({scope:'原濒死前置的离线复现，未运行模型',received:hit.received,trace}));
+});
+
 test('N12依正式日程等到18:30；原三位在实际交谈窗口均在场清醒',async t=>{
     const s=await session(t,'npc_voices');
     await s.turn(0,async()=>[await s.call('world_move',{destination:'青灯酒馆'})]);
