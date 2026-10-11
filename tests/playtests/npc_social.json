@@ -19,6 +19,9 @@
           "path": "state.location",
           "value": "bld_hw_qingdeng"
         }
+      ],
+      "expectedTools": [
+        "world_move"
       ]
     },
     {
@@ -57,6 +60,9 @@
           },
           "min": 1
         }
+      ],
+      "expectedTools": [
+        "world_trade"
       ]
     },
     {
@@ -84,6 +90,9 @@
           "path": "state.npcs.npc_hw_duanhe.location",
           "value": "bld_hw_school"
         }
+      ],
+      "expectedTools": [
+        "world_move"
       ]
     },
     {

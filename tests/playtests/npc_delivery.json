@@ -16,6 +16,9 @@
           "path": "state.location",
           "value": "bld_hw_qingdeng"
         }
+      ],
+      "expectedTools": [
+        "world_move"
       ]
     },
     {
@@ -29,6 +32,9 @@
           },
           "min": 1
         }
+      ],
+      "expectedTools": [
+        "world_trade"
       ]
     },
     {
@@ -43,6 +49,9 @@
           },
           "min": 1
         }
+      ],
+      "expectedTools": [
+        "world_promise"
       ]
     },
     {
@@ -53,6 +62,9 @@
           "path": "state.location",
           "value": "bld_hw_mill"
         }
+      ],
+      "expectedTools": [
+        "world_move"
       ]
     },
     {
@@ -72,6 +84,9 @@
           },
           "min": 1
         }
+      ],
+      "expectedTools": [
+        "world_time"
       ]
     },
     {
@@ -97,6 +112,9 @@
           "path": "state.location",
           "value": "bld_hw_qingdeng"
         }
+      ],
+      "expectedTools": [
+        "world_move"
       ]
     },
     {

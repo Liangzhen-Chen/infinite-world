@@ -60,6 +60,9 @@ test('调用统计区分错误职责、查询后漏执行、失败重试和未�
         {index:4,calls:[],assertions:[{kind:'exists',path:'state.spells.spell_light',pass:false}]},
     ]}],scenarios);
     assert.equal(metrics.opportunities,3);assert.equal(metrics.wrong,1);assert.equal(metrics.missed,1);
+    assert.equal(metrics.measurement,'measured');
+    const unmeasured=toolSelectionMetrics([{id:'plain',turns:[{index:0,calls:[],assertions:[]}]}],[{id:'plain',turns:[{input:'只聊天'}]}]);
+    assert.equal(unmeasured.measurement,'not-measured');assert.equal(unmeasured.wrongRatio,null);assert.equal(unmeasured.missedRatio,null);
     const grouped=toolSelectionMetrics([{id:'grouped',turns:[{index:0,calls:[{tool:'world_field',args:{operation:'wildlife_track'}}],assertions:[]}]}],[{id:'grouped',turns:[{expectedTools:['world_field']}]}]);
     assert.equal(grouped.wrong,0);assert.equal(grouped.missed,0);assert.equal(grouped.opportunities,1);
     const calls=[{tool:'world_craft',args:{operation:'manufacture'},result:{ok:false}},{tool:'world_craft',args:{operation:'manufacture'},result:{ok:true}}];

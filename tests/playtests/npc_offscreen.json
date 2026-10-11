@@ -16,6 +16,9 @@
           "path": "state.location",
           "value": "bld_hw_mill"
         }
+      ],
+      "expectedTools": [
+        "world_move"
       ]
     },
     {
@@ -38,6 +41,9 @@
           "path": "state.location",
           "value": "loc_bs"
         }
+      ],
+      "expectedTools": [
+        "world_move"
       ]
     },
     {
@@ -56,6 +62,9 @@
           },
           "min": 1
         }
+      ],
+      "expectedTools": [
+        "world_time"
       ]
     },
     {
@@ -66,6 +75,9 @@
           "path": "state.location",
           "value": "loc_hw"
         }
+      ],
+      "expectedTools": [
+        "world_move"
       ]
     },
     {
@@ -76,6 +88,9 @@
           "path": "state.location",
           "value": "bld_hw_mill"
         }
+      ],
+      "expectedTools": [
+        "world_move"
       ]
     },
     {

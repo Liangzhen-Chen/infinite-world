@@ -24,6 +24,6 @@ export function toolSelectionMetrics(results,scenarios){
         }
     }
     const missed=rows.filter(row=>row.missing).length,wrong=rows.filter(row=>row.wrong).length;
-    return {scope:'明确行动及已触发条件分支；参数错误单列，前置条件不满足的施法排除，未标注回合不计',opportunities:rows.length,missed,wrong,
+    return {measurement:rows.length?'measured':'not-measured',scope:'明确行动及已触发条件分支；参数错误单列，前置条件不满足的施法排除，未标注回合不计',opportunities:rows.length,missed,wrong,
         missedRatio:rows.length?missed/rows.length:null,wrongRatio:rows.length?wrong/rows.length:null,rows};
 }

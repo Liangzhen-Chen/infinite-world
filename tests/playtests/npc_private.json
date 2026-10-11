@@ -16,6 +16,9 @@
           "path": "state.location",
           "value": "bld_hw_qingdeng"
         }
+      ],
+      "expectedTools": [
+        "world_move"
       ]
     },
     {
@@ -31,6 +34,9 @@
           },
           "min": 1
         }
+      ],
+      "expectedTools": [
+        "world_trade"
       ]
     },
     {
@@ -52,6 +58,9 @@
           "path": "state.location",
           "value": "loc_hw_northwood"
         }
+      ],
+      "expectedTools": [
+        "world_move"
       ]
     },
     {
@@ -71,6 +80,9 @@
           },
           "min": 1
         }
+      ],
+      "expectedTools": [
+        "world_time"
       ]
     },
     {
