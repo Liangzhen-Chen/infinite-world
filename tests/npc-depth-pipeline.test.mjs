@@ -80,3 +80,8 @@ test('CLI帮助和参数检测说明设计、预算、候选目录与预演发�
  const recover=depthOptions(['--card','T06','--recover-protocol','npc_yp_zhaofeng,npc_yp_other']);assert.equal(recover.cardId,'T06');assert.deepEqual(recover.protocolRecoveryIds,['npc_yp_zhaofeng','npc_yp_other']);assert.throws(()=>depthOptions(['--recover-protocol']),/缺少参数/);
  const {stdout}=await exec(process.execPath,[tool('npc-depth'),'--help']);assert.match(stdout,/--card/);assert.match(stdout,/--recover-protocol/);
 });
+test('已冻结foundation不能因新增关系或记忆引用而自动覆盖',async t=>{
+ const p=await prepared(t),file=path.join(p.root,'foundation.json'),original=await fs.readFile(file,'utf8');p.config.patchRows[0].referenceRelationshipIds=['npc_yp_gaoxin'];p.config.patchRows[0].referenceMemoryIds=['npc_yp_gaoxin'];
+ await fs.writeFile(p.design,'export const revision='+JSON.stringify(p.config.revision)+';\nexport const incrementLimitYuan=.2;\nexport const patchRows='+JSON.stringify(p.config.patchRows)+';\n');
+ await assert.rejects(prepareDepth({design:p.design,root:p.root,worldRoot:p.worldRoot,batch:'test'}),/骨架或引用已变/);assert.equal(await fs.readFile(file,'utf8'),original);
+});

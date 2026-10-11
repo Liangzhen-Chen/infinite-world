@@ -88,20 +88,31 @@ export function patchEntries(base,config,world){
   assert.deepEqual(row.before,before,'design before 与冻结档案不同');assert.equal(row.baseHash,hashContent(before),'baseHash 已过期或被篡改');
   assert.ok(Array.isArray(row.issues)&&row.issues.length,'缺少审计失败路径');
   for(const issue of row.issues){assert.equal(issue.id,row.id);assert.ok(actual.has(issueKey(issue)),`非实际审计失败项 ${issue.field}/${issue.code}`);}
-  const entry={id:row.id,contract,before:structuredClone(before),baseHash:row.baseHash,issues:structuredClone(row.issues),patches:structuredClone(row.patches)};
+  const entry={id:row.id,contract,before:structuredClone(before),baseHash:row.baseHash,issues:structuredClone(row.issues),patches:structuredClone(row.patches),...Object.fromEntries(['referenceRelationshipIds','referenceMemoryIds'].filter(key=>Object.hasOwn(row,key)).map(key=>[key,structuredClone(row[key])]))};
   assert.ok(Array.isArray(entry.patches)&&entry.patches.length,'缺少修订项');const paths=new Set();
   for(const patch of entry.patches){assert.deepEqual(Object.keys(patch).sort(),['path','value']);pathParts(patch.path);assert.ok(!paths.has(patch.path),'补丁路径重复');paths.add(patch.path);assert.ok(permitted(entry,patch,frozen),`未报错叶子禁止修订 ${patch.path}`);assert.notDeepEqual(patch.value,getPath(before,patch.path),'禁止无改动补丁');}
   for(const a of paths)for(const b of paths)if(a!==b)assert.ok(!b.startsWith(a+'.')&&!b.startsWith(a+'['),'补丁路径重叠');
   // Validate append indices in order and preserve every existing key and member.
   const after=applyDepthDraft(before,patchDraft(entry));preservedShape(before,after,'');
-  entry.facts=after;return entry;
+  entry.facts=after;validateSourceSelections(entry,frozen);return entry;
  });
 }
-function patchContext(entry,world){
+function patchPeople(entry,world){
  const body=JSON.stringify(entry.facts),ids=new Set([entry.id,...(entry.before.relationships??[]).map(r=>r.with)]);
- const people=[...world.npcs,...(world.residents??[]),...(world.factionPeople??[])].filter(p=>ids.has(p.id)||body.includes(p.id)||body.includes(p.name));
+ return [...world.npcs,...(world.residents??[]),...(world.factionPeople??[])].filter(p=>ids.has(p.id)||body.includes(p.id)||body.includes(p.name));
+}
+function validateSourceSelections(entry,world,people=patchPeople(entry,world)){
+ const all=[...world.npcs,...(world.residents??[]),...(world.factionPeople??[])];
+ for(const [key,field] of [['referenceRelationshipIds','relationships'],['referenceMemoryIds','memorySeeds']]){
+  if(!Object.hasOwn(entry,key))continue;
+  const ids=entry[key];assert.ok(Array.isArray(ids)&&ids.every(id=>typeof id==='string'&&id.trim())&&new Set(ids).size===ids.length,`来源选择 ${key} 必须为不重复的 id 数组`);
+  for(const id of ids){const source=all.find(p=>p.id===id);assert.ok(source,`来源人物不存在 ${id}`);assert.ok(people.some(p=>p.id===id),`来源人物与修订无关联 ${id}`);assert.ok(Array.isArray(source[field]),`正式原来源缺少 ${id}.${field}`);}
+ }
+}
+function patchContext(entry,world){
+ const body=JSON.stringify(entry.facts),people=patchPeople(entry,world);validateSourceSelections(entry,world,people);
  const localProblems=(world.settlementProfiles??[]).flatMap(p=>(p.details?.problems??[]).filter(problem=>problem.stakeholders?.some(s=>s.person===entry.id)||body.includes(problem.id)).map(problem=>({settlement:p.id,...structuredClone(problem)})));
- return {people:people.map(p=>({id:p.id,name:p.name,occupation:p.occupation,age:p.age,home:p.home,concern:p.currentConcern,socialProfile:p.socialProfile})),places:(world.locations??[]).filter(p=>body.includes(p.id)||body.includes(p.name)).map(p=>({id:p.id,name:p.name,purpose:p.purpose,access:p.access})),localProblems,revisions:entry.patches.map(p=>({path:p.path,before:getPath(entry.before,p.path)??null,after:p.value,issues:entry.issues})),rules:['只修改实际失败的叶子或追加缺失条目。原有身份、财物、技能、服务、合格兄弟字段和旧记忆保持冻结。','知识仍为本人私有，候选新增事实必须有既有来源支持，共享事件双方核对，不传播秘密。','地方问题中作者提出的解法尚未得到当事人同意；当事人身份不自动授予另一人的秘密知情权。']};
+ return {people:people.map(p=>({id:p.id,name:p.name,occupation:p.occupation,age:p.age,home:p.home,concern:p.currentConcern,socialProfile:p.socialProfile,...(entry.referenceRelationshipIds?.includes(p.id)?{relationships:structuredClone(p.relationships)}:{}),...(entry.referenceMemoryIds?.includes(p.id)?{memorySeeds:structuredClone(p.memorySeeds)}:{})})),places:(world.locations??[]).filter(p=>body.includes(p.id)||body.includes(p.name)).map(p=>({id:p.id,name:p.name,purpose:p.purpose,access:p.access})),localProblems,revisions:entry.patches.map(p=>({path:p.path,before:getPath(entry.before,p.path)??null,after:p.value,issues:entry.issues})),rules:['只修改实际失败的叶子或追加缺失条目。原有身份、财物、技能、服务、合格兄弟字段和旧记忆保持冻结。','知识仍为本人私有，候选新增事实必须有既有来源支持，共享事件双方核对，不传播秘密。','地方问题中作者提出的解法尚未得到当事人同意；当事人身份不自动授予另一人的秘密知情权。']};
 }
 function patchDraftRequest(entry,feedback,context){return{thinking:{type:'disabled'},temperature:0,max_tokens:6000,response_format:{type:'json_object'},messages:[{role:'system',content:'只返回顶层 JSON 对象，且仅有 id、contract、patches 三个键。contract 必须为 audit-patch-v1；patches 是对象数组，每项仅有 path 和 value。按用户提供的 candidate 原样输出其三个字段，不输出 candidate 外壳或 context。不得增加、删除或改写补丁、路径和值。修订仅限已列出的审计失败路径。'},{role:'user',content:JSON.stringify({schema:{type:'object',additionalProperties:false,required:['id','contract','patches'],properties:{id:{const:entry.id},contract:{const:contract},patches:{type:'array',items:{type:'object',additionalProperties:false,required:['path','value'],properties:{path:{type:'string'},value:{}}}}}},example:patchDraft(entry),candidate:patchDraft(entry),context,corrections:feedback})}]};}
 function validatePatchDraft(draft,entry){const errors=[];try{assert.deepEqual(draft,patchDraft(entry),'候选与冻结补丁不符');const after=applyDepthDraft(entry.before,draft);verifyUnchanged(entry.before,after,entry);const prior=new Set(findNpcRuleWording(entry.before).map(issueKey));for(const issue of findNpcRuleWording(after))if(!prior.has(issueKey(issue))||entry.issues.some(x=>issueKey(x)===issueKey(issue)))throw Error(`${issue.field}: 规则措辞未修复`);}catch(e){errors.push(e.message);}return{errors,warnings:[]};}
