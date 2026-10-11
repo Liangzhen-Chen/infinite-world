@@ -453,8 +453,11 @@ export class WorldEngine {
         if(promisor!=='player'&&!d.get('state','npcs',promisor))throw new Error('承诺者不在战役中');
         for(const actor of[promisor,promisee])if(['死亡','濒死'].includes(this.actor(d,actor)?.status))throw new Error('义务当事人无法清醒履约');
         const obligation={id:`obl_${id}`,type,promisor,promisee,content:text(args.content),status:'待履行',deadline:number(args.deadline??d.get('state','minute')+1440,0,Number.MAX_SAFE_INTEGER)};
+        let routePreview;
         if(type==='带路'){
-            obligation.destination=this.resolve(args.destination);this.route(d.get('state','location'),obligation.destination,'walk',d.get('state','minute'),d.document.randomSeed);
+            obligation.destination=this.resolve(args.destination);
+            const from=d.get('state','location'),calculatedAt=d.get('state','minute'),route=this.route(from,obligation.destination,'walk',calculatedAt,d.document.randomSeed);
+            routePreview={from,destination:obligation.destination,minutes:route.minutes,movingMinutes:route.movingMinutes,cost:route.cost,calculatedAt,estimate:true};
             if(promisor==='player'||d.get('state','npcs',promisor,'location')!==d.get('state','location'))throw new Error('带路者必须在场');
             obligation.status='进行中';d.set(['state','player','companions'],[...new Set([...d.get('state','player','companions'),promisor])]);
         }
@@ -472,7 +475,7 @@ export class WorldEngine {
             obligation.skill=args.skill?this.resolve(args.skill,'skill'):null;
             if(obligation.skill&&npcProficiency(d,this,promisor,obligation.skill)<(this.rules.check.helperMinimumProficiency??100))throw new Error('协助者技能不足');
         }
-        d.set(['state','obligations',obligation.id],obligation);return {obligation};
+        d.set(['state','obligations',obligation.id],obligation);return {obligation,...(routePreview?{routePreview}:{})};
     }
     deliver(d,key,o,id){
         const source=this.actor(d,o.promisor),target=this.actor(d,o.promisee);if(!source||!target)throw new Error('义务当事人不存在');
