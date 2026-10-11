@@ -2,6 +2,7 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 import {atomicJSON,digest} from '../server-plugin/storage.mjs';
 import {normalize} from '../server-plugin/retrieval.mjs';
+import {summarizeSoakTiming} from './m3-soak-timing.mjs';
 
 export const SOAK_DEFAULTS=Object.freeze({turns:150,budgetYuan:50,probeEvery:25,probeCount:5,minAge:50,maxAge:200,personas:['merchant','builder']});
 const clone=value=>structuredClone(value),read=async file=>JSON.parse(await fs.readFile(file,'utf8'));
@@ -134,14 +135,13 @@ export function summarizeSoak(run){
   const totalIssues=key=>reviews.reduce((sum,r)=>sum+(Number.isInteger(r?.[key])&&r[key]>0?r[key]:0),0);
   const original=totalIssues('originalErrors'),residual=totalIssues('residualErrors');
   const warnings={original:totalIssues('originalWarnings'),residual:totalIssues('residualWarnings'),reviewRequired:reviews.some(r=>r?.residualWarnings>0)};
-  const clocks=row.turns.map(turn=>turn.result.timing),timed=clocks.filter(t=>t?.source==='action-rules'&&t.covered===true&&Number.isFinite(t.expectedMinutes)&&t.expectedMinutes>=0&&Number.isFinite(t.elapsedMinutes)&&t.elapsedMinutes>=0);
-  const expected=timed.reduce((n,t)=>n+t.expectedMinutes,0),difference=timed.reduce((n,t)=>n+Math.abs(t.elapsedMinutes-t.expectedMinutes),0);
+  const timing=summarizeSoakTiming(row.turns.map(turn=>turn.result.timing));
   const structured=ratio('structured'),detail=ratio('detail'),latencies=row.turns.map(t=>t.latencyMs);
   const complete=row.turns.length===run.config.turns&&row.probes.every(p=>p.status==='notEligible'?p.turn<=run.config.minAge:p.status==='complete'&&p.scores?.length===run.config.probeCount)&&row.probes.length===Math.floor(run.config.turns/run.config.probeEvery);
   return {persona,turns:row.turns.length,complete,structured,detail,verified,warnings,originalContradictionsPer100:row.turns.length?original*100/row.turns.length:null,residualContradictionsPer100:row.turns.length?residual*100/row.turns.length:null,
    recallCoverage:row.probes.map(p=>({turn:p.turn,status:p.status,samples:p.scores?.length??0})),latencyMs:{p50:percentile(latencies,.5),p95:percentile(latencies,.95)},
-   timing:{covered:timed.length,total:clocks.length,deviation:expected?difference/expected:difference===0&&timed.length===clocks.length?0:null},
-   pass:complete&&structured.ratio>=.95&&detail.ratio>=.8&&verified===row.turns.length&&reviews.every(r=>Number.isInteger(r.originalErrors)&&Number.isInteger(r.residualErrors))&&original*100/row.turns.length<=1&&residual===0&&timed.length===clocks.length&&(expected?difference/expected<=.1:difference===0)};
+   timing,
+   pass:complete&&structured.ratio>=.95&&detail.ratio>=.8&&verified===row.turns.length&&reviews.every(r=>Number.isInteger(r.originalErrors)&&Number.isInteger(r.residualErrors))&&original*100/row.turns.length<=1&&residual===0&&timing.pass};
  });
  const usage=run.measurements.filter(m=>m.runtime!==false),hit=usage.reduce((n,m)=>n+(m.usage?.prompt_cache_hit_tokens??0),0),miss=usage.reduce((n,m)=>n+(m.usage?.prompt_cache_miss_tokens??0),0);
  const cacheCoverage=usage.length>0&&usage.every(m=>Number.isSafeInteger(m.usage?.prompt_cache_hit_tokens)&&m.usage.prompt_cache_hit_tokens>=0&&Number.isSafeInteger(m.usage?.prompt_cache_miss_tokens)&&m.usage.prompt_cache_miss_tokens>=0);

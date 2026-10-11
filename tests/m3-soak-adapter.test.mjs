@@ -10,11 +10,11 @@ import {createSoakAdapter,assessSoakTiming} from '../tools/m3-soak-adapter.mjs';
 import {runSoak} from '../tools/m3-soak-runner.mjs';
 import {openSoakRun,nextSoakTask,summarizeSoak} from '../tools/m3-soak.mjs';
 async function temporary(t){const dir=await fs.mkdtemp(path.join(os.tmpdir(),'fields-soak-adapter-'));t.after(()=>fs.rm(dir,{recursive:true,force:true}));return dir;}
-function fake({warning=false}={}){return {async generate(body,label){let message,finish_reason='stop';
+function fake({warning=false,waitMinutes}={}){return {async generate(body,label){let message,finish_reason='stop';
  if(label.startsWith('consistency:')){finish_reason='tool_calls';message={tool_calls:[{id:'review',type:'function',function:{name:'report_consistency_issues',arguments:JSON.stringify({issues:warning?[{category:'knowledge',severity:'warning',quote:'你买到了一个面包。',reason:'警告需保留供叙述复核',evidence:[{id:'player',quote:'我向林穗买一个面包。'}]}]:[]})}}]};}
  else if(label.startsWith('npc'))throw Error('测试禁止模型规划');
- else if(label.endsWith('-0')){finish_reason='tool_calls';message={content:null,tool_calls:[{id:'bread',type:'function',function:{name:'world_trade',arguments:JSON.stringify({seller:'林穗',item:'面包',quantity:1})}}]};}
- else message={content:'你买到了一个面包。<回合 额外="0分" 地点="bld_hw_qingdeng" 在场="npc_hw_linsui"/>'};
+ else if(label.endsWith('-0')){finish_reason='tool_calls';message={content:null,tool_calls:[{id:'action',type:'function',function:{name:waitMinutes===undefined?'world_trade':'world_time',arguments:JSON.stringify(waitMinutes===undefined?{seller:'林穗',item:'面包',quantity:1}:{minutes:waitMinutes})}}]};}
+ else message={content:`${waitMinutes===undefined?'你买到了一个面包。':'你等了一会儿。'}<回合 额外="0分" 地点="bld_hw_qingdeng" 在场="npc_hw_linsui"/>`};
  return {choices:[{finish_reason,message}],measurement:{costUpperYuan:.001,usage:{prompt_cache_hit_tokens:90,prompt_cache_miss_tokens:10},label}};
  }};}
 const options=client=>({client,processMessages:m=>m,countTokens:()=>20,createBody:{name:'试玩者'}});
@@ -26,7 +26,7 @@ test('同一真实 HTTP 会话跨进程恢复，交易响应丢失后同编号�
  adapter=await createSoakAdapter({directory,budgetYuan:2,...options(fake())});t.after(()=>adapter.close());
  const result=await adapter.execute(task);assert.equal(result.completed,true);const exported=await adapter.server.api('export',{campaignId:result.checkpoint.campaignId});
  assert.equal(exported.events.filter(e=>e.input?.tool==='world_trade').length,1);assert.equal(exported.events.filter(e=>e.input?.tool==='world_turn').length,1);
- assert.equal(result.timing.elapsedMinutes,result.timing.expectedMinutes);assert.ok(result.facts.some(f=>f.expected==='面包'));
+ assert.equal(result.timing.elapsedMinutes,result.timing.replay.expectedMinutes);assert.equal(result.timing.status,'unknown');assert.equal(result.timing.expectedMinutes,null);assert.ok(result.facts.some(f=>f.expected==='面包'));
  assert.deepEqual(await adapter.execute(task),result);
 });
 test('两人格 300 轮计划完整，25/50 轮不能冒充已完成回忆测验',async t=>{
@@ -53,14 +53,22 @@ test('真实 CLI 能启动执行器并在零任务预算处退出，不发生顶
  assert.equal(stderr,'');const report=JSON.parse(stdout);assert.equal(report.status,'task-limit');assert.equal(report.calls,0);assert.equal(report.complete,false);
 });
 
-test('时间验收独立检查尾注，不用存档重放相等掩盖重复计时',()=>{
+test('时间验收缺语义计划时不借回放和回执冒充整轮通过，对话保留允许区间',()=>{
  const replay={source:'replay',expectedMinutes:15,elapsedMinutes:15,actionMinutes:5,tailMinutes:10,actionCount:1};
  const measured=assessSoakTiming(replay,{input:'我买一个面包。',reply:'你买了面包。'});
- assert.equal(measured.covered,true);assert.equal(measured.expectedMinutes,5);assert.equal(measured.elapsedMinutes,15);
+ assert.equal(measured.covered,false);assert.equal(measured.expectedMinutes,null);assert.equal(measured.elapsedMinutes,15);
  const mixed=assessSoakTiming(replay,{input:'买了面包后聊聊。',reply:'<q who="npc_hw_linsui">聊些什么？</q>'});
  assert.equal(mixed.covered,false);assert.equal(mixed.expectedMinutes,null);
  const chat=assessSoakTiming({...replay,actionCount:0,actionMinutes:0,elapsedMinutes:2},{input:'你好。',reply:'<q who="npc_hw_linsui">你好。</q>'});
- assert.equal(chat.expectedMinutes,5);assert.equal(chat.elapsedMinutes,2);
+ assert.equal(chat.expectedMinutes,null);assert.deepEqual(chat.expectedRange,[5,20]);assert.equal(chat.elapsedMinutes,2);assert.equal(chat.deviation,.6);
+});
+
+test('真实HTTP要求等60却只执行36分钟，即使重放完全相等也报告40%语义偏差',async t=>{
+ const directory=await temporary(t),adapter=await createSoakAdapter({directory,budgetYuan:2,...options(fake({waitMinutes:36}))});t.after(()=>adapter.close());
+ const result=await adapter.execute({id:'soak-short-wait',persona:'merchant',turn:1,kind:'turn',input:'我原地等一小时，不做其他事情。',checkpoint:null});
+ assert.equal(result.timing.replay.expectedMinutes,36);assert.equal(result.timing.elapsedMinutes,36);assert.equal(result.timing.expectedMinutes,60);
+ assert.equal(result.timing.deviation,.4);assert.equal(result.timing.evidence.quote,'我原地等一小时，不做其他事情。');
+ assert.equal(result.timing.receiptTiming.evidence[0].declaredMinutes,36);assert.equal(result.timing.receiptTiming.deviation,0);
 });
 
 test('连续会话保留警告，并可只读恢复旧 HTTP verified 标记而不再调用模型',async t=>{
