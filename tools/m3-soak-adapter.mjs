@@ -6,7 +6,8 @@ import {runPlaytest,createPlaytestServer} from './playtest-runner.mjs';
 import {DeepSeekClient} from './deepseek-client.mjs';
 import {loadPromptBundle} from './build-card.mjs';
 import {loadHostPromptProcessor} from './host-prompt.mjs';
-import {isOutOfCharacter} from '../extension/prompt.mjs';
+import {assessSoakTiming} from './m3-soak-timing.mjs';
+export {assessSoakTiming} from './m3-soak-timing.mjs';
 import {publicConsistencyResult} from '../server-plugin/consistency-service.mjs';
 const read=async file=>JSON.parse(await fs.readFile(file,'utf8'));
 async function optional(file,fallback){try{return await read(file);}catch(e){if(e.code!=='ENOENT')throw e;return fallback;}}
@@ -90,18 +91,24 @@ export async function createSoakAdapter({directory,client,budgetYuan=50,bundle,p
 }
 
 export async function deriveSoakEvidence(exported,anchor,turn){
- let document=structuredClone(exported.initial),expected=0,elapsed=0,actionMinutes=0,tailMinutes=0,actionCount=0;const facts=[],eventIds=[],engines=new Map();
+ let document=structuredClone(exported.initial),expected=0,elapsed=0,actionMinutes=0,tailMinutes=0,actionCount=0,startMinute=null;const facts=[],eventIds=[],engines=new Map(),receipts=[];
  for(const event of exported.events){
   if(event.kind==='reconcile')throw Error('浸泡样本包含撤销，需重新建立有效分支样本');
   if(!engines.has(document.worldHash))engines.set(document.worldHash,new WorldEngine(exported.worlds[document.worldHash]));const engine=engines.get(document.worldHash);
   const computed=await engine.reduce(document,event.input,{replay:true,result:event.result}),after=applyPatches(document,computed.patches);
   if(event.anchor===anchor){
+   startMinute??=document.state.minute;
    eventIds.push(event.id);expected+=after.state.minute-document.state.minute;
    if(event.input?.tool==='world_turn')tailMinutes+=after.state.minute-document.state.minute;
    else if(event.input?.tool){actionMinutes+=after.state.minute-document.state.minute;actionCount++;}
    const persisted=applyPatches(document,event.patches);elapsed+=persisted.state.minute-document.state.minute;
    const label=engine.formatCalendar(after.state.minute),add=(suffix,category,question,value)=>facts.push({id:`${event.id}:${suffix}`,sourceEvent:event.id,authority:'event-derived',category,question,expected:value});
    const receipt=computed.result??{},name=id=>id==='player'?document.state.player.name??'玩家':engine.byId.get(id)?.name??id;
+   if(event.input?.tool&&event.input.tool!=='world_turn'){
+    const saved=event.result??{},declared=saved.minutes??saved.elapsed??saved.spent?.minutes;
+    receipts.push({eventId:event.id,tool:event.input.tool,args:structuredClone(event.input.args??{}),declaredMinutes:Number.isFinite(declared)?declared:null,
+     elapsedMinutes:persisted.state.minute-document.state.minute,source:'persisted-tool-receipt'});
+   }
    if(event.input?.tool==='world_trade'&&receipt.item&&Number.isFinite(receipt.quantity)){
     const {item,seller,buyer,quantity}=receipt,buying=buyer==='player',counterparty=buying?seller:buyer,verb=buying?'购买':'售出';
     add('quantity','structured',`${label}与${name(counterparty)}交易${name(item)}，当次${verb}数量是多少？`,quantity);
@@ -123,19 +130,5 @@ export async function deriveSoakEvidence(exported,anchor,turn){
   }
   document=after;
  }
- return {eventIds,facts,timing:{source:'replay',expectedMinutes:expected,elapsedMinutes:elapsed,actionMinutes,tailMinutes,actionCount}};
-}
-
-// Replaying the same event proves storage consistency, not sensible action
-// duration. Evaluate narrative-only time independently against the shared
-// constitution. Ambiguous mixed action/dialogue remains explicitly uncovered.
-export function assessSoakTiming(replay,{input,reply}={}){
- const dialogue=/<q\s+who="(?!player")[^"]+"\s*>[\s\S]*?<\/q>/.test(reply??'');
- let range=null,basis=null;
- if(isOutOfCharacter(input??'')){range=[0,0];basis='out-of-character';}
- else if(replay.actionCount===0&&dialogue){range=[5,20];basis='ordinary-dialogue';}
- else if(!dialogue&&(replay.actionCount>0||/看一眼|观察|看看|检查.*(?:行囊|背包|天气|环境)/.test(input??''))){range=[0,0];basis='action-already-timed-or-instant-observation';}
- const elapsed=replay.elapsedMinutes;
- const lower=range?replay.actionMinutes+range[0]:null,upper=range?replay.actionMinutes+range[1]:null;
- return {source:'action-rules',covered:range!==null,basis,expectedMinutes:range?Math.min(upper,Math.max(lower,elapsed)):null,elapsedMinutes:elapsed,expectedRange:range?[lower,upper]:null,replay};
+ return {eventIds,facts,timing:{source:'replay',expectedMinutes:expected,elapsedMinutes:elapsed,actionMinutes,tailMinutes,actionCount,startMinute,receipts}};
 }
