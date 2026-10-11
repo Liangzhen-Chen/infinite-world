@@ -1,13 +1,17 @@
 {
-  "capturedAtUtc": "2026-10-11T20:56:51Z",
+  "capturedAtUtc": "2026-10-11T21:26:21.2964425Z",
   "source": "functions.get_goal",
   "objective": "根据开发指南v2继续开发，完成整个世界开发直到可玩",
   "goalCreatedAt": 1791631803,
-  "tokensUsed": 8511770,
-  "timeUsedSeconds": 18066,
-  "previousCalibration": null,
-  "periodTokens": null,
-  "periodTimeUsedSeconds": null,
-  "interpretation": "系统累计计数；不等同账单或净生成token。首次无期初快照，本期增量未知。",
-  "claudeFeedbackReceived": false
+  "tokensUsed": 9298782,
+  "timeUsedSeconds": 19823,
+  "previousCalibration": {
+    "timeUsedSeconds": 18066,
+    "capturedAtUtc": "2026-10-11T20:56:51Z",
+    "tokensUsed": 8511770
+  },
+  "periodTokens": 787012,
+  "periodTimeUsedSeconds": 1757,
+  "interpretation": "系统累计计数及相邻快照差，不等同账单、净生成 token 或本轮实际墙钟时间；true 表示上一轮反馈已收到，本轮待校准。",
+  "claudeFeedbackReceived": true
 }
