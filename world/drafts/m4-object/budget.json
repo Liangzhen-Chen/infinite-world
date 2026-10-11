@@ -1,12 +1,12 @@
 {
-  "spentYuan": 2.766534799999999,
+  "spentYuan": 2.776678879999999,
   "reservedYuan": 0.083736,
   "limitYuan": 20,
   "waveLimitYuan": 20,
   "cards": {
     "T06": {
       "limitYuan": 2,
-      "spentYuan": 1.8185197599999994,
+      "spentYuan": 1.8286638399999993,
       "reservedYuan": 0.083736,
       "protocolRecoveries": {
         "npc_yp_zhaofeng": {
@@ -40,6 +40,16 @@
         "npc_yp_gaoxin": {
           "fingerprint": "986f802d40cf207b3acee1f84d2a293a6a48b8fcb6f7caf1c10e733c31525d68",
           "claimedAt": "2026-10-11T23:16:50.640Z"
+        }
+      },
+      "reviewRecoveries": {
+        "npc_yp_kongfu": {
+          "fingerprint": "b8ea6b85c832674a4f77c75e56988f97b003a1461737c251a89771f173e326e2",
+          "claimedAt": "2026-10-11T23:36:44.943Z"
+        },
+        "npc_yp_tanghuan": {
+          "fingerprint": "048e0aec72e3ea86009c9677419bdcc06029fdf77a0bb37cfbf5b1c1c5294d32",
+          "claimedAt": "2026-10-11T23:38:23.941Z"
         }
       }
     }
@@ -2467,6 +2477,58 @@
         "cumulativeUpperYuan": 2.766534799999999,
         "latencyMs": 712.3274999999994,
         "timestamp": "2026-10-11T23:22:45.820Z"
+      }
+    },
+    "63d4e774-3579-4323-8bcd-f8a8842ba9a2": {
+      "card": "T06",
+      "label": "content-T06-npc_yp_kongfu-manual-review",
+      "reservedYuan": 0.058978,
+      "status": "settled",
+      "costUpperYuan": 0.00433848,
+      "measurement": {
+        "label": "content-T06-npc_yp_kongfu-manual-review",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 5779,
+          "completion_tokens": 7,
+          "total_tokens": 5786,
+          "prompt_tokens_details": {
+            "cached_tokens": 3712
+          },
+          "prompt_cache_hit_tokens": 3712,
+          "prompt_cache_miss_tokens": 2067
+        },
+        "costUpperYuan": 0.00433848,
+        "cumulativeUpperYuan": 2.770873279999999,
+        "latencyMs": 839.1572000000001,
+        "timestamp": "2026-10-11T23:36:45.789Z"
+      }
+    },
+    "939a73ce-6cb2-4f86-a27b-713e01167179": {
+      "card": "T06",
+      "label": "content-T06-npc_yp_tanghuan-manual-review",
+      "reservedYuan": 0.060776,
+      "status": "settled",
+      "costUpperYuan": 0.0058056,
+      "measurement": {
+        "label": "content-T06-npc_yp_tanghuan-manual-review",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 6130,
+          "completion_tokens": 134,
+          "total_tokens": 6264,
+          "prompt_tokens_details": {
+            "cached_tokens": 3840
+          },
+          "prompt_cache_hit_tokens": 3840,
+          "prompt_cache_miss_tokens": 2290
+        },
+        "costUpperYuan": 0.0058056,
+        "cumulativeUpperYuan": 2.776678879999999,
+        "latencyMs": 1633.5583,
+        "timestamp": "2026-10-11T23:38:25.581Z"
       }
     }
   },
