@@ -53,3 +53,4 @@
 
 2026-10-11 子代理配置：新增 astra_planner 与 sol_worker 定义，分别使用 gpt-6-astra/high、gpt-6.1-sol/high；TOML 核验和 engine/storage/plugin 核心冒烟通过，未启动子代理。
 2026-10-11：用户换窗口收尾；保存十场M2真实批完整报告及失败，明确待合提交和独立树，不重启已结束任务；同步compact后6.1-sol子代理校准规则。
+2026-10-11：停止当前开发线，将被中断的语义计时和账本面板保存为未验证WIP提交；分支与接续说明在docs/交接.md。
