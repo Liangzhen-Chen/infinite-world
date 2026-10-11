@@ -7,7 +7,7 @@ import {once}from'node:events';
 import express from 'express';
 import {chromium}from'playwright-core';
 import {init}from'../server-plugin/index.mjs';
-test('E2/E19 浏览器：失败对账阻止出站生成，编辑与删除同步服务器，元数据只留引用',{timeout:60000},async t=>{
+test('E2/E19 浏览器：失败对账阻止出站生成，编辑撤销刷新玩家账本，元数据只留引用',{timeout:60000},async t=>{
     const directory=await fs.mkdtemp(path.join(os.tmpdir(),'infinite-fields-browser-'));
     t.after(()=>fs.rm(directory,{recursive:true,force:true}));
     const app=express();app.use(express.json());const router=express.Router();await init(router,{baseRoot:directory});app.use('/api/plugins/infinite-fields',router);
@@ -16,7 +16,10 @@ test('E2/E19 浏览器：失败对账阻止出站生成，编辑与删除同步�
     const response=await fetch(`${origin}/api/plugins/infinite-fields/create`,{method:'POST',headers:{'Content-Type':'application/json'},body:'{}'});
     const created=await response.json();
     const browser=await chromium.launch({executablePath:'C:/Program Files/Google/Chrome/Application/chrome.exe',headless:true});t.after(()=>browser.close());
-    const page=await browser.newPage();let failReconcile=false,generationRequests=0,preReleaseFixture=false;
+    const page=await browser.newPage(),pageErrors=[],consoleErrors=[];let failReconcile=false,generationRequests=0,preReleaseFixture=false;
+    page.on('pageerror',error=>pageErrors.push(error.message));
+    page.on('console',message=>{if(message.type()==='error')consoleErrors.push(message.text());});
+    await page.route('**/favicon.ico',route=>route.fulfill({status:204}));
     const runtime=(await fs.readFile('extension/runtime.js','utf8')).replace("import { getContext } from '../../../extensions.js';","const getContext=()=>window.fixtureContext;");
     await page.route('**/runtime.js',route=>route.fulfill({contentType:'text/javascript',body:runtime}));
     await page.route('**/turn.mjs',async route=>route.fulfill({contentType:'text/javascript',body:await fs.readFile('extension/turn.mjs','utf8')}));
@@ -104,17 +107,34 @@ test('E2/E19 浏览器：失败对账阻止出站生成，编辑与删除同步�
     assert.match(await page.locator('.fields-notices').innerText(),/欠林穗 6铜 · 待偿还/);
     await page.getByRole('button',{name:'世界账本',exact:true}).click();
     assert.match(await page.locator('#fields-dialog').innerText(),/欠款：林穗 · 未还 6铜 · 待偿还/);
-    await fs.mkdir('logs/m6-ledger-ui',{recursive:true});
+    const reportDirectory='docs/测试报告/最新';
+    await fs.mkdir(reportDirectory,{recursive:true});
+    const consoleStart=consoleErrors.length;
     await page.setViewportSize({width:1440,height:900});
-    await page.screenshot({path:'logs/m6-ledger-ui/desktop.png'});
+    await page.screenshot({path:`${reportDirectory}/T20-ledger-desktop.png`});
     await page.setViewportSize({width:390,height:844});
-    assert.equal(await page.locator('#fields-dialog').evaluate(node=>node.scrollWidth<=node.clientWidth),true);
-    assert.equal(await page.locator('#fields-ledger-content').evaluate(node=>node.getBoundingClientRect().right<=innerWidth),true);
-    await page.screenshot({path:'logs/m6-ledger-ui/mobile-state.png'});
+    const layout=await page.evaluate(()=>({document:document.documentElement.scrollWidth<=innerWidth,dialog:document.querySelector('#fields-dialog').scrollWidth<=document.querySelector('#fields-dialog').clientWidth,content:document.querySelector('#fields-ledger-content').getBoundingClientRect().right<=innerWidth}));
+    assert.deepEqual(layout,{document:true,dialog:true,content:true});
+    await page.screenshot({path:`${reportDirectory}/T20-ledger-mobile-state.png`});
     await page.locator('#fields-dialog').evaluate(node=>{node.scrollTop=node.scrollHeight;});
     await page.evaluate(()=>new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve))));
-    await page.screenshot({path:'logs/m6-ledger-ui/mobile-changes.png'});
+    await page.screenshot({path:`${reportDirectory}/T20-ledger-mobile-changes.png`});
     assert.equal(await page.getByRole('button',{name:'关闭',exact:true}).isVisible(),true);
+    assert.deepEqual(pageErrors,[]);
+    assert.deepEqual(consoleErrors.slice(consoleStart),[]);
+    // NPC-to-NPC commitments and unaccepted public quests are not the player's ledger.
+    const projection=await page.evaluate(async()=>{
+        const {renderLedger}=await import('/ledger-view.mjs'),state=structuredClone(window.infiniteFieldsV2.view.document.state),container=document.createElement('div');
+        state.obligations={mine:{promisor:'npc_hw_linsui',promisee:'player',content:'我与林穗约定收取包裹',status:'待履行'},private:{promisor:'npc_secret_a',promisee:'npc_secret_b',content:'秘密会面细节',status:'进行中'}};
+        state.quests={accepted:{publisher:'npc_hw_linsui',taker:'player',content:'我已接下的送货',status:'进行中'},posted:{publisher:'player',taker:null,content:'我发布的修理委托',status:'公开'},unseen:{publisher:'npc_secret_a',taker:null,content:'未知告示内容',status:'公开'}};
+        state.created={npc_secret_a:{name:'未获知的真名'}};state.player.companions=['npc_secret_a'];
+        renderLedger(container,state,{},[], '当前日期');return container.textContent;
+    });
+    assert.match(projection,/我与林穗约定收取包裹/);
+    assert.match(projection,/我已接下的送货/);
+    assert.match(projection,/我发布的修理委托/);
+    assert.doesNotMatch(projection,/秘密会面细节|未知告示内容|未获知的真名|npc_secret/);
+    const ledgerReport={pass:true,fixture:'isolated local server and temporary campaign; no user saves',viewport:{width:390,height:844},layout,pageErrors,consoleErrors:consoleErrors.slice(consoleStart),consoleScope:'Ledger screenshots only; deliberate failed API fixtures earlier in this test are outside this scope',checks:['current server receipts and balances','edit rollback removes stale balances and receipts','only player obligations and accepted or player-published quests','unknown created names stay hidden','literal DOM text instead of raw JSON','Escape and close button','390x844 document and drawer have no horizontal overflow'],screenshots:['T20-ledger-desktop.png','T20-ledger-mobile-state.png','T20-ledger-mobile-changes.png'],scope:'Player ledger drawer only; M6 full interface and deployed SillyTavern remain unverified'};
     await page.getByRole('button',{name:'关闭',exact:true}).click();
     await page.getByRole('button',{name:'世界账本',exact:true}).click();
     assert.match(await page.locator('#fields-dialog').innerText(),/欠款：林穗 · 未还 6铜 · 待偿还/);
@@ -145,4 +165,6 @@ test('E2/E19 浏览器：失败对账阻止出站生成，编辑与删除同步�
     assert.equal(await page.evaluate(()=>window.savedMetadata),null);
     assert.equal(await page.evaluate(()=>window.infiniteFieldsV2.view),null);
     assert.equal(await page.getByRole('button',{name:'在副本上启用新版'}).count(),1);
+    assert.deepEqual(pageErrors,[]);
+    await fs.writeFile(`${reportDirectory}/T20-ledger-browser.json`,JSON.stringify({...ledgerReport,generatedAt:new Date().toISOString()},null,2)+'\n');
 });
