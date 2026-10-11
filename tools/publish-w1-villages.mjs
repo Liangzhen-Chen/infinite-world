@@ -8,6 +8,7 @@ import {contextFor,revision,applyProse,projectRoster,projectLocation,validateDra
 import {atomicJSON} from '../server-plugin/storage.mjs';
 import {applyKnowledgeWordingCorrections} from '../world/design/w1-yupo-depth.mjs';
 import {depthBatches,depthEntries,contextFor as depthContext,applyDepthDraft,validateDraft as validateDepthDraft,verifyUnchanged} from './npc-depth-content.mjs';
+import {withVillageLedgerRules,previousProfileHashes} from '../world/design/w1-village-profiles.mjs';
 import {approvedProfiles} from './w1-village-profiles-content.mjs';
 
 const merge=(old,rows)=>{const map=new Map(old.map(x=>[x.id,x]));for(const row of rows){if(map.has(row.id)&&hashContent(map.get(row.id))!==hashContent(row))throw Error(`已发布条目冲突：${row.id}`);map.set(row.id,row);}return [...map.values()];};
@@ -35,7 +36,8 @@ export function mergeVillages(world,candidate,{npcAmendments=[],profileAmendment
  const profiles=candidate.settlements.map(s=>({...s,kinship:candidate.kinship.filter(r=>s.residentIds.includes(r.parent))})),profileMap=new Map((world.settlementProfiles??[]).map(p=>[p.id,p]));
  if(new Set(profileAmendments.map(p=>p.id)).size!==profileAmendments.length)throw Error('聚落补充编号重复');
  for(const details of profileAmendments){const index=profiles.findIndex(p=>p.id===details.id);if(index<0)throw Error(`聚落补充不在原候选：${details.id}`);const before=profiles[index],after={...before,details,pendingProfileSections:details.pendingProfileSections},old=profileMap.get(details.id);
-  if(old&&![before,after].some(p=>hashContent(p)===hashContent(old)))throw Error(`已发布聚落补充冲突：${details.id}`);
+  const prior=old&&hashContent(old.details)===previousProfileHashes[details.id]?{...before,details:old.details,pendingProfileSections:old.details.pendingProfileSections}:null;
+  if(old&&![before,after,prior].filter(Boolean).some(p=>hashContent(p)===hashContent(old)))throw Error(`已发布聚落补充冲突：${details.id}`);
   profiles[index]=after;profileMap.delete(details.id);
  }
  return {...world,npcs:nextNpcs,residents:merge(world.residents??[],candidate.residents),households:merge(world.households??[],candidate.households),settlementProfiles:merge((world.settlementProfiles??[]).map(p=>profileMap.has(p.id)?p:profiles.find(row=>row.id===p.id)),profiles),locations:merge(world.locations,candidate.locations),routes:merge(world.routes,candidate.routes)};
@@ -71,14 +73,14 @@ export async function publishVillages({root=path.resolve(import.meta.dirname,'..
   npcAmendments.push(...entries.map(e=>{const d=drafts.find(d=>d.id===e.id),check=validateDepthDraft(d,e);if(check.errors.length)throw Error(`${e.id} 人物补充L1：${check.errors.join('；')}`);return applyDepthDraft(e.before,d);}));
  }
  }
- const profileDirectory=path.join(root,'drafts/w1/village-profiles');let profileAmendments=[];
+ const profileDirectory=path.join(root,'drafts/w1/village-ledgers');let profileAmendments=[];
  if(await fs.stat(profileDirectory).then(s=>s.isDirectory()).catch(e=>{if(e.code==='ENOENT')return false;throw e;})){
   const reference={...world,npcs:[...original.npcs,...candidate.npcs],residents:[...original.residents,...candidate.residents],locations:[...original.locations,...candidate.locations],settlementProfiles:[...original.settlementProfiles,...candidate.settlements.map(s=>({...s,kinship:candidate.kinship.filter(r=>s.residentIds.includes(r.parent))}))]};
   profileAmendments=await approvedProfiles({world:reference,root:profileDirectory});
  }
- const next=mergeVillages(world,candidate,{npcAmendments,profileAmendments}),validation=validateWorld(next,{stage:'release'});
+ const merged=mergeVillages(world,candidate,{npcAmendments,profileAmendments}),next=profileAmendments.length?withVillageLedgerRules(merged):merged,validation=validateWorld(next,{stage:'release'});
  if(!validation.ok)throw Error(validation.errors.join('\n'));
- const outputs={'people/baseline.json':next.npcs,'people/residents.json':next.residents,'people/households.json':next.households,'geo/settlements.json':next.settlementProfiles,'geo/locations.json':next.locations,'geo/routes.json':next.routes};
+ const outputs={...(profileAmendments.length?{'meta/rules.json':next.rules}:{}),'people/baseline.json':next.npcs,'people/residents.json':next.residents,'people/households.json':next.households,'geo/settlements.json':next.settlementProfiles,'geo/locations.json':next.locations,'geo/routes.json':next.routes};
  const changed=[];
  for(const [file,value]of Object.entries(outputs)){let before;try{before=JSON.parse(await fs.readFile(path.join(root,file),'utf8'));}catch(e){if(e.code!=='ENOENT')throw e;}if(hashContent(before??null)!==hashContent(value))changed.push(file);}
  if(publish)for(const file of changed)await atomicJSON(path.join(root,file),outputs[file]);

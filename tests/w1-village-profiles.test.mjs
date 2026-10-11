@@ -7,9 +7,9 @@ import {publishVillages} from '../tools/publish-w1-villages.mjs';import {publicS
 import {catalogDefinition} from '../server-plugin/catalog.mjs';import {WorldEngine} from '../server-plugin/engine.mjs';
 const world=await loadWorld(),profiles=await approvedProfiles({world}),withProfiles={...world,settlementProfiles:world.settlementProfiles.map(p=>{const d=profiles.find(d=>d.id===p.id);return d?{...p,details:d,pendingProfileSections:d.pendingProfileSections}:p;})};
 const seed=JSON.parse(await fs.readFile('tests/fixtures/legacy/seed.json','utf8'));
-test('四村问题立场都有原当事人依据，经济/官职与传播缺口保留',()=>{
+test('四村问题立场都有原当事人依据，经济/官职登记且传播缺口保留',()=>{
  assert.equal(profiles.length,4);assert.equal(profiles.flatMap(p=>p.problems).length,20);assert.equal(profiles.flatMap(p=>p.rumors).length,40);
- for(const p of profiles){assert.deepEqual(validateDraft(p,p,world).errors,[]);assert.equal(p.economy.production,null);assert.equal(p.outsiderRatio,null);assert.deepEqual(new Set(p.rumors.map(r=>r.truth)),new Set(['true','partial','false']));}
+ for(const p of profiles){assert.deepEqual(validateDraft(p,p,world).errors,[]);assert.equal(p.economy.status,'registered-opening');assert.equal(p.economy.publicStock.closing,null);assert.equal(p.outsiderRatio,null);assert.deepEqual(new Set(p.rumors.map(r=>r.truth)),new Set(['true','partial','false']));}
  assert.equal(validateWorld(withProfiles,{stage:'release'}).ok,true);
  const bad=structuredClone(profiles[0]);bad.problems[0].stakeholders[0].person='npc_sb_zhangluo';assert.ok(validateDraft(bad,bad,world).errors.some(e=>e.includes('当事人')));
  const broken=structuredClone(withProfiles);broken.settlementProfiles.find(p=>p.details).details.rumors[0].source='npc_missing';assert.ok(validateWorld(broken).errors.some(e=>e.includes('传闻来源')));
@@ -28,7 +28,7 @@ test('重复发布的审核上下文不引用自身档案，任意改稿不能�
  for(const p of profiles)assert.deepEqual(contextFor(p,withProfiles),contextFor(p,world));
  assert.deepEqual(await approvedProfiles({world:withProfiles}),profiles);
  const tmp=await fs.mkdtemp(path.join(os.tmpdir(),'village-profile-review-'));
- try{await fs.cp('world/drafts/w1/village-profiles',tmp,{recursive:true});const file=path.join(tmp,'loc_bs_yupo.json'),r=JSON.parse(await fs.readFile(file,'utf8'));r.draft.rumors[0].truth='false';await fs.writeFile(file,JSON.stringify(r));await assert.rejects(approvedProfiles({world,root:tmp}),/审查后内容已改变/);}finally{await fs.rm(tmp,{recursive:true,force:true});}
+ try{await fs.cp('world/drafts/w1/village-ledgers',tmp,{recursive:true});const file=path.join(tmp,'loc_bs_yupo.json'),r=JSON.parse(await fs.readFile(file,'utf8'));r.draft.rumors[0].truth='false';await fs.writeFile(file,JSON.stringify(r));await assert.rejects(approvedProfiles({world,root:tmp}),/审查后内容已改变/);}finally{await fs.rm(tmp,{recursive:true,force:true});}
 });
 test('聚落档案出版保留人物补充，重复零写入，篡改 details 被拒绝',async()=>{
  const tmp=await fs.mkdtemp(path.join(os.tmpdir(),'village-profile-publish-'));

@@ -2081,6 +2081,9 @@
                       "minimum": -50,
                       "maximum": 50
                     }
+                  },
+                  "sequenceScope": {
+                    "const": "local"
                   }
                 },
                 "required": [
@@ -7835,108 +7838,762 @@
           }
         },
         "economy": {
-          "type": "object",
-          "properties": {
-            "industries": {
-              "type": "array",
-              "items": {
-                "type": "string",
-                "minLength": 1
+          "anyOf": [
+            {
+              "type": "object",
+              "properties": {
+                "industries": {
+                  "type": "array",
+                  "items": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "minItems": 1
+                },
+                "production": {
+                  "type": "null"
+                },
+                "publicStock": {
+                  "type": "null"
+                },
+                "priceFactor": {
+                  "type": "null"
+                },
+                "tax": {
+                  "type": "null"
+                },
+                "tradePartners": {
+                  "type": "array",
+                  "items": {
+                    "type": "string",
+                    "minLength": 1
+                  }
+                },
+                "status": {
+                  "const": "pending-ledger"
+                },
+                "reason": {
+                  "type": "string",
+                  "minLength": 1
+                }
               },
-              "minItems": 1
+              "required": [
+                "industries",
+                "production",
+                "publicStock",
+                "priceFactor",
+                "tax",
+                "tradePartners",
+                "status",
+                "reason"
+              ],
+              "additionalProperties": false
             },
-            "production": {
-              "type": "null"
-            },
-            "publicStock": {
-              "type": "null"
-            },
-            "priceFactor": {
-              "type": "null"
-            },
-            "tax": {
-              "type": "null"
-            },
-            "tradePartners": {
-              "type": "array",
-              "items": {
-                "type": "string",
-                "minLength": 1
-              }
-            },
-            "status": {
-              "const": "pending-ledger"
-            },
-            "reason": {
-              "type": "string",
-              "minLength": 1
+            {
+              "type": "object",
+              "properties": {
+                "status": {
+                  "const": "registered-opening"
+                },
+                "industries": {
+                  "type": "array",
+                  "items": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "minItems": 1
+                },
+                "source": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "period": {
+                  "type": "object",
+                  "properties": {
+                    "startDay": {
+                      "type": "integer",
+                      "minimum": 0
+                    },
+                    "endDay": {
+                      "type": "integer",
+                      "minimum": 0
+                    },
+                    "status": {
+                      "const": "unsettled"
+                    },
+                    "calendar": {
+                      "type": "string",
+                      "minLength": 1
+                    }
+                  },
+                  "required": [
+                    "startDay",
+                    "endDay",
+                    "status",
+                    "calendar"
+                  ],
+                  "additionalProperties": false
+                },
+                "production": {
+                  "type": "array",
+                  "items": {
+                    "anyOf": [
+                      {
+                        "type": "object",
+                        "properties": {
+                          "name": {
+                            "type": "string",
+                            "minLength": 1
+                          },
+                          "location": {
+                            "type": "string",
+                            "minLength": 1
+                          },
+                          "item": {
+                            "type": "string",
+                            "minLength": 1
+                          },
+                          "areaHa": {
+                            "type": "integer",
+                            "minimum": 0
+                          },
+                          "quantity": {
+                            "type": "integer",
+                            "minimum": 0
+                          },
+                          "unit": {
+                            "type": "string",
+                            "minLength": 1
+                          },
+                          "unitKg": {
+                            "type": "number",
+                            "minimum": 0
+                          },
+                          "cycleDays": {
+                            "type": "integer",
+                            "minimum": 0
+                          },
+                          "status": {
+                            "type": "string",
+                            "minLength": 1
+                          },
+                          "source": {
+                            "type": "string",
+                            "minLength": 1
+                          }
+                        },
+                        "required": [
+                          "name",
+                          "location",
+                          "item",
+                          "areaHa",
+                          "quantity",
+                          "unit",
+                          "unitKg",
+                          "cycleDays",
+                          "status",
+                          "source"
+                        ],
+                        "additionalProperties": false
+                      },
+                      {
+                        "type": "object",
+                        "properties": {
+                          "name": {
+                            "type": "string",
+                            "minLength": 1
+                          },
+                          "quantity": {
+                            "type": "integer",
+                            "minimum": 0
+                          },
+                          "unit": {
+                            "type": "string",
+                            "minLength": 1
+                          },
+                          "unitKg": {
+                            "type": "number",
+                            "minimum": 0
+                          },
+                          "cycleDays": {
+                            "type": "integer",
+                            "minimum": 0
+                          },
+                          "seasonFactors": {
+                            "type": "array",
+                            "items": {
+                              "anyOf": [
+                                {
+                                  "type": "integer",
+                                  "minimum": 0
+                                },
+                                {
+                                  "type": "number",
+                                  "minimum": 0
+                                }
+                              ]
+                            },
+                            "minItems": 1
+                          },
+                          "status": {
+                            "type": "string",
+                            "minLength": 1
+                          },
+                          "source": {
+                            "type": "string",
+                            "minLength": 1
+                          }
+                        },
+                        "required": [
+                          "name",
+                          "quantity",
+                          "unit",
+                          "unitKg",
+                          "cycleDays",
+                          "seasonFactors",
+                          "status",
+                          "source"
+                        ],
+                        "additionalProperties": false
+                      },
+                      {
+                        "type": "object",
+                        "properties": {
+                          "name": {
+                            "type": "string",
+                            "minLength": 1
+                          },
+                          "quantity": {
+                            "type": "integer",
+                            "minimum": 0
+                          },
+                          "unit": {
+                            "type": "string",
+                            "minLength": 1
+                          },
+                          "cycleDays": {
+                            "type": "integer",
+                            "minimum": 0
+                          },
+                          "status": {
+                            "type": "string",
+                            "minLength": 1
+                          },
+                          "source": {
+                            "type": "string",
+                            "minLength": 1
+                          }
+                        },
+                        "required": [
+                          "name",
+                          "quantity",
+                          "unit",
+                          "cycleDays",
+                          "status",
+                          "source"
+                        ],
+                        "additionalProperties": false
+                      }
+                    ]
+                  },
+                  "minItems": 1
+                },
+                "publicStock": {
+                  "type": "object",
+                  "properties": {
+                    "openingDay": {
+                      "type": "integer",
+                      "minimum": 0
+                    },
+                    "food": {
+                      "type": "integer",
+                      "minimum": 0
+                    },
+                    "seed": {
+                      "type": "integer",
+                      "minimum": 0
+                    },
+                    "treasuryCopper": {
+                      "type": "integer",
+                      "minimum": 0
+                    },
+                    "wood": {
+                      "type": "integer",
+                      "minimum": 0
+                    },
+                    "iron": {
+                      "type": "integer",
+                      "minimum": 0
+                    },
+                    "source": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "closing": {
+                      "type": "null"
+                    },
+                    "closingReason": {
+                      "type": "string",
+                      "minLength": 1
+                    }
+                  },
+                  "required": [
+                    "openingDay",
+                    "food",
+                    "seed",
+                    "treasuryCopper",
+                    "wood",
+                    "iron",
+                    "source",
+                    "closing",
+                    "closingReason"
+                  ],
+                  "additionalProperties": false
+                },
+                "priceFactor": {
+                  "type": "object",
+                  "properties": {
+                    "region": {
+                      "type": "integer",
+                      "minimum": 0
+                    },
+                    "transport": {
+                      "type": "integer",
+                      "minimum": 0
+                    },
+                    "season": {
+                      "type": "integer",
+                      "minimum": 0
+                    },
+                    "shop": {
+                      "type": "integer",
+                      "minimum": 0
+                    },
+                    "source": {
+                      "type": "string",
+                      "minLength": 1
+                    }
+                  },
+                  "required": [
+                    "region",
+                    "transport",
+                    "season",
+                    "shop",
+                    "source"
+                  ],
+                  "additionalProperties": false
+                },
+                "tax": {
+                  "type": "object",
+                  "properties": {
+                    "basis": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "rateBps": {
+                      "type": "integer",
+                      "minimum": 0
+                    },
+                    "collector": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "recipient": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "openingReceiptsCopper": {
+                      "type": "integer",
+                      "minimum": 0
+                    },
+                    "source": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "note": {
+                      "type": "string",
+                      "minLength": 1
+                    }
+                  },
+                  "required": [
+                    "basis",
+                    "rateBps",
+                    "collector",
+                    "recipient",
+                    "openingReceiptsCopper",
+                    "source",
+                    "note"
+                  ],
+                  "additionalProperties": false
+                },
+                "tradePartners": {
+                  "type": "array",
+                  "items": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "minItems": 1
+                },
+                "tradeContracts": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "id": {
+                        "type": "string",
+                        "minLength": 1
+                      },
+                      "seller": {
+                        "type": "string",
+                        "minLength": 1
+                      },
+                      "buyer": {
+                        "type": "string",
+                        "minLength": 1
+                      },
+                      "item": {
+                        "type": "string",
+                        "minLength": 1
+                      },
+                      "quantity": {
+                        "type": "integer",
+                        "minimum": 0
+                      },
+                      "unitPriceCopper": {
+                        "type": "integer",
+                        "minimum": 0
+                      },
+                      "taxBps": {
+                        "type": "integer",
+                        "minimum": 0
+                      },
+                      "status": {
+                        "type": "string",
+                        "minLength": 1
+                      },
+                      "source": {
+                        "type": "string",
+                        "minLength": 1
+                      },
+                      "deliveryDays": {
+                        "type": "integer",
+                        "minimum": 0
+                      }
+                    },
+                    "required": [
+                      "id",
+                      "seller",
+                      "buyer",
+                      "item",
+                      "quantity",
+                      "unitPriceCopper",
+                      "taxBps",
+                      "status",
+                      "source",
+                      "deliveryDays"
+                    ],
+                    "additionalProperties": false
+                  },
+                  "minItems": 1
+                },
+                "tradeLedger": {
+                  "type": "object",
+                  "properties": {
+                    "openingPaidCopper": {
+                      "type": "integer",
+                      "minimum": 0
+                    },
+                    "openingReceivedCopper": {
+                      "type": "integer",
+                      "minimum": 0
+                    },
+                    "openingExportedFood": {
+                      "type": "integer",
+                      "minimum": 0
+                    },
+                    "openingImportedFood": {
+                      "type": "integer",
+                      "minimum": 0
+                    },
+                    "status": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "source": {
+                      "type": "string",
+                      "minLength": 1
+                    }
+                  },
+                  "required": [
+                    "openingPaidCopper",
+                    "openingReceivedCopper",
+                    "openingExportedFood",
+                    "openingImportedFood",
+                    "status",
+                    "source"
+                  ],
+                  "additionalProperties": false
+                }
+              },
+              "required": [
+                "status",
+                "industries",
+                "source",
+                "period",
+                "production",
+                "publicStock",
+                "priceFactor",
+                "tax",
+                "tradePartners",
+                "tradeContracts",
+                "tradeLedger"
+              ],
+              "additionalProperties": false
             }
-          },
-          "required": [
-            "industries",
-            "production",
-            "publicStock",
-            "priceFactor",
-            "tax",
-            "tradePartners",
-            "status",
-            "reason"
-          ],
-          "additionalProperties": false
+          ]
         },
         "governance": {
-          "type": "object",
-          "properties": {
-            "coordinators": {
-              "type": "array",
-              "items": {
-                "type": "string",
-                "minLength": 1
+          "anyOf": [
+            {
+              "type": "object",
+              "properties": {
+                "coordinators": {
+                  "type": "array",
+                  "items": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "minItems": 1
+                },
+                "meetingPlace": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "meeting": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "customs": {
+                  "type": "array",
+                  "items": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "minItems": 1
+                },
+                "head": {
+                  "type": "null"
+                },
+                "enforcers": {
+                  "type": "array",
+                  "items": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "maxItems": 0
+                },
+                "authority": {
+                  "type": "string",
+                  "minLength": 1
+                }
               },
-              "minItems": 1
+              "required": [
+                "coordinators",
+                "meetingPlace",
+                "meeting",
+                "customs",
+                "head",
+                "enforcers",
+                "authority"
+              ],
+              "additionalProperties": false
             },
-            "meetingPlace": {
-              "type": "string",
-              "minLength": 1
-            },
-            "meeting": {
-              "type": "string",
-              "minLength": 1
-            },
-            "customs": {
-              "type": "array",
-              "items": {
-                "type": "string",
-                "minLength": 1
+            {
+              "type": "object",
+              "properties": {
+                "coordinators": {
+                  "type": "array",
+                  "items": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "minItems": 1
+                },
+                "meetingPlace": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "meeting": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "customs": {
+                  "type": "array",
+                  "items": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "minItems": 1
+                },
+                "head": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "enforcers": {
+                  "type": "array",
+                  "items": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "minItems": 1
+                },
+                "authority": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "appointment": {
+                  "type": "object",
+                  "properties": {
+                    "source": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "effectiveDay": {
+                      "type": "integer",
+                      "minimum": 0
+                    },
+                    "head": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "officers": {
+                      "type": "array",
+                      "items": {
+                        "type": "string",
+                        "minLength": 1
+                      },
+                      "minItems": 1
+                    },
+                    "lawCode": {
+                      "type": "string",
+                      "minLength": 1
+                    }
+                  },
+                  "required": [
+                    "source",
+                    "effectiveDay",
+                    "head",
+                    "officers",
+                    "lawCode"
+                  ],
+                  "additionalProperties": false
+                },
+                "jurisdiction": {
+                  "type": "array",
+                  "items": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "minItems": 1
+                },
+                "permissions": {
+                  "type": "object",
+                  "properties": {
+                    "head": {
+                      "type": "array",
+                      "items": {
+                        "type": "string",
+                        "minLength": 1
+                      },
+                      "minItems": 1
+                    },
+                    "enforcers": {
+                      "type": "array",
+                      "items": {
+                        "type": "string",
+                        "minLength": 1
+                      },
+                      "minItems": 1
+                    },
+                    "coordinators": {
+                      "type": "array",
+                      "items": {
+                        "type": "string",
+                        "minLength": 1
+                      },
+                      "minItems": 1
+                    }
+                  },
+                  "required": [
+                    "head",
+                    "enforcers",
+                    "coordinators"
+                  ],
+                  "additionalProperties": false
+                },
+                "limits": {
+                  "type": "array",
+                  "items": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "minItems": 1
+                },
+                "referral": {
+                  "type": "object",
+                  "properties": {
+                    "institution": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "location": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "matters": {
+                      "type": "array",
+                      "items": {
+                        "type": "string",
+                        "minLength": 1
+                      },
+                      "minItems": 1
+                    },
+                    "status": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "note": {
+                      "type": "string",
+                      "minLength": 1
+                    }
+                  },
+                  "required": [
+                    "institution",
+                    "location",
+                    "matters",
+                    "status",
+                    "note"
+                  ],
+                  "additionalProperties": false
+                }
               },
-              "minItems": 1
-            },
-            "head": {
-              "type": "null"
-            },
-            "enforcers": {
-              "type": "array",
-              "items": {
-                "type": "string",
-                "minLength": 1
-              },
-              "maxItems": 0
-            },
-            "authority": {
-              "type": "string",
-              "minLength": 1
+              "required": [
+                "coordinators",
+                "meetingPlace",
+                "meeting",
+                "customs",
+                "head",
+                "enforcers",
+                "authority",
+                "appointment",
+                "jurisdiction",
+                "permissions",
+                "limits",
+                "referral"
+              ],
+              "additionalProperties": false
             }
-          },
-          "required": [
-            "coordinators",
-            "meetingPlace",
-            "meeting",
-            "customs",
-            "head",
-            "enforcers",
-            "authority"
-          ],
-          "additionalProperties": false
+          ]
         },
         "problems": {
           "type": "array",

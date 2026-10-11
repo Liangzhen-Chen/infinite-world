@@ -1,3 +1,4 @@
+import {validateVillageLedger} from '../world/design/w1-village-profiles.mjs';
 // Read-only population and household catalogs. Roster entries identify people;
 // they never create purse, inventory, service or presence state.
 export function validatePopulation(world){
@@ -56,6 +57,7 @@ export function validatePopulation(world){
   if(row.ageStructure)check(Object.values(row.ageStructure).reduce((sum,value)=>sum+value,0)===row.population,`人口年龄结构合计不符：${row.id}`);
   for(const id of row.buildingIds??[])check(places.has(id)&&places.get(id).parent===row.id,`聚落建筑归属不符：${row.id}/${id}`);
   if(row.details){const d=row.details;
+   if(d.economy?.status==='registered-opening')errors.push(...validateVillageLedger(d,world).map(e=>`${row.id}：${e}`));
    for(const key of ['id','population','householdCount'])check(d[key]===row[key],`聚落档案登记不符：${row.id}/${key}`);
    check(JSON.stringify(d.buildingIds)===JSON.stringify(row.buildingIds)&&JSON.stringify(d.ageStructure)===JSON.stringify(row.ageStructure),`聚落档案建筑或年龄结构不符：${row.id}`);
    const ids=new Set();for(const entry of [...d.problems,...d.rumors,...d.hiddenPlaces]){check(!ids.has(entry.id),`聚落详情编号重复：${entry.id}`);ids.add(entry.id);}

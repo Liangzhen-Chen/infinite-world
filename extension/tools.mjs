@@ -6,7 +6,7 @@ define('world_trade','交易物品或住宿，可按商家额度赊账，或用�
 define('world_move','用地点中文名称或已知编号沿路线抵达目的地，结算同行者与路费。',{destination:str,mode:{type:'string',enum:['walk','horse','cart','boat']},authorization:{...str,description:'进入私宅时，引用住户已给出的有效进入许可编号；口头叙述不代替许可'}},['destination']);
 define('world_time','等待指定时长用 minutes，到指定钟点用 until 交由引擎计算，二者只选一个。',{minutes:{...int,description:'本次完整时长，例如等一小时填60，不减掉此前耗时'},until:object({dayOffset:{...int,description:'相对当前日期：今天0、明天1'},hour:{...int,minimum:0,maximum:23},minute:{...int,minimum:0,maximum:59}},['dayOffset','hour']),activity:{type:'string',enum:['等待','工作','睡眠','休息']}},[]);
 define('world_weather','查看当前位置的天气、温度和日出日落时间。',{operation:{enum:['inspect']},location:str},[]);
-define('world_farm','查看农田粮仓，或按操作买粮、捐粮、留种、修仓、播种、收获、巡田。',{operation:{enum:['inspect','buy','donate','reserve_seed','repair','sow','harvest','guard','adopt']},settlement:str,quantity:int},[]);
+define('world_farm','查看农田粮仓，或按操作买粮、捐粮、留种、修仓、播种、收获、巡田，或持登记粮约分两地提粮送达并结算税贸账。',{operation:{enum:['inspect','buy','donate','reserve_seed','repair','sow','harvest','guard','adopt','settle_trade']},settlement:str,quantity:int,contract:str,phase:{enum:['pickup','deliver']},authority:str},[]);
 define('world_wildlife','观察当地动物、追踪指定物种，或从指定真实尸体取材。',{operation:{enum:['observe','track','gather']},species:str,target:str},[]);
 define('world_crime','尝试偷取在场目标的一件物品或指定铜币。',{operation:{enum:['steal']},target:str,item:str,coins:int,instance:str},['operation','target']);
 define('world_law','查询法典案件，或按案件编号办理报案、审理、赔付与服役。',{operation:{enum:['inspect','report','confess','search','arrest','hear','pay','labor','prison','compensate','claim']},case:str,authority:str,reporter:str,claimant:str},[]);
