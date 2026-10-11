@@ -1,0 +1,57 @@
+{
+  "id": "npc_courier",
+  "title": "托NPC按真实路线送货到固定交接点",
+  "requirements": ["N5"],
+  "initial": {"mode": "new"},
+  "turns": [
+    {
+      "input": "我走进青灯酒馆找林穗。",
+      "expectedTools": ["world_move"],
+      "assertions": [
+        {"kind": "equals", "path": "state.location", "value": "bld_hw_qingdeng"},
+        {"kind": "equals", "path": "state.npcs.npc_hw_linsui.location", "value": "bld_hw_qingdeng"}
+      ]
+    },
+    {
+      "input": "我请林穗帮忙送一份她现有的面包：今天上午十一点在村务屋当面交给我。我先去那里等她，这次请她明确同意后登记送货约定，现在不交货、不另行交易，也不把她加入同行队伍。",
+      "expectedTools": ["world_promise"],
+      "assertions": [
+        {"kind": "records", "path": "state.obligations", "where": {"type": "送货", "promisor": "npc_hw_linsui", "promisee": "player", "deliveryVersion": 1, "location": "bld_hw_council", "deadline": 660, "item": "item_bread", "quantity": 1}, "min": 1, "max": 1},
+        {"kind": "unchanged", "paths": ["state.inventory", "state.player.coins"]},
+        {"kind": "equals", "path": "state.player.companions", "value": []}
+      ]
+    },
+    {
+      "input": "我自己去村务屋等她，不带路、不召唤，也不让她改变交接地点。",
+      "expectedTools": ["world_move"],
+      "assertions": [
+        {"kind": "equals", "path": "state.location", "value": "bld_hw_council"},
+        {"kind": "unchanged", "paths": ["state.inventory"]}
+      ]
+    },
+    {
+      "input": "我在村务屋原地等到今天上午十一点，期间不做别的事。到时核对刚才约定的面包是否当面交到我手里。",
+      "expectedTools": ["world_time"],
+      "assertions": [
+        {"kind": "equals", "path": "state.minute", "value": 660},
+        {"kind": "records", "path": "state.obligations", "where": {"type": "送货", "promisor": "npc_hw_linsui", "deliveryVersion": 1, "status": "已完成", "resolvedAt": 660}, "min": 1, "max": 1},
+        {"kind": "equals", "path": "state.npcs.npc_hw_linsui.location", "value": "bld_hw_council"},
+        {"kind": "quantity", "path": "state.inventory.item_bread", "value": 1},
+        {"kind": "unchanged", "paths": ["state.player.coins"]}
+      ]
+    },
+    {
+      "input": "（场外）只核对一次这份送货约定的完成状态和我手里的面包数量，不再收货、交易或推进时间。",
+      "assertions": [
+        {"kind": "elapsed", "min": 0, "max": 0},
+        {"kind": "unchanged", "paths": ["state.inventory", "state.player.coins", "state.obligations"]}
+      ]
+    }
+  ],
+  "rubric": {
+    "truth": "真实路线、库存与义务回执为准；未登记、被拒、未到场不能叙述成交付成功。",
+    "agency": "不得擅自交易、复制面包、用同行或瞬移代替独立送货，不更改固定交接地点。",
+    "language": "简体中文，不暴露工具或内部编号。",
+    "continuity": "N5成功分支：送货者亲自履约，交付只发生一次；失败时保留具体原因，不伪造成功。此脚本的成功断言不会因解释失败原因而放宽。"
+  }
+}
