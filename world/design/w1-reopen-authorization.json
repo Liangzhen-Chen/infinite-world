@@ -48,9 +48,12 @@
           "id": "npc_yp_qiuyan",
           "recordHash": "a4e8e9dbdf20536a4286bf84480ae60377e8faf6d5c9b70d2d514a2107cc04a6",
           "paths": [
-            "memorySeeds[2]"
+            "memorySeeds[2]",
+            "knowledge.unknown[0]",
+            "relationships[1].note",
+            "opinions.neighbors[1].view"
           ],
-          "reason": "T06原L2拒绝共享经历；汤桓与裘砚必须同步修订同一事件。",
+          "reason": "T06原L2拒绝共享经历；双方同步修订同一事件，并清理裘砚原候选中仍关联无源货签情节的三叶。本次允许路径与已合0e6e345受控计划一致。",
           "failurePaths": [
             "knowledge.known[1]",
             "knowledge.known[2]",
@@ -360,9 +363,10 @@
           "paths": [
             "relationships[0].note",
             "relationships[1].note",
-            "opinions.neighbors[2].view"
+            "opinions.neighbors[2].view",
+            "knowledge.unknown[0]"
           ],
-          "reason": "原controlled修订/背景尚未完成本ID L2；复用旧规划允许叶。",
+          "reason": "原controlled修订/背景尚未完成本ID L2；复用旧规划允许叶。 本次新增允许路径与已合受控离线计划 T07-user-reopen-20261012-01-offline-1 的实际失败及关联修订逐项一致。",
           "failurePaths": [
             "knowledge.known[1]",
             "knowledge.known[2]",
@@ -442,9 +446,14 @@
           "paths": [
             "relationships[0].note",
             "relationships[1].note",
-            "opinions.neighbors[2].view"
+            "opinions.neighbors[2].view",
+            "knowledge.unknown[0]",
+            "knowledge.unknown[1]",
+            "goals.short[0].steps[0].content",
+            "goals.mid[0].steps[0].content",
+            "goals.long[0].steps[0].content"
           ],
-          "reason": "原controlled修订/背景尚未完成本ID L2；复用旧规划允许叶。",
+          "reason": "原controlled修订/背景尚未完成本ID L2；复用旧规划允许叶。 本次新增允许路径与已合受控离线计划 T07-user-reopen-20261012-01-offline-1 的实际失败及关联修订逐项一致。",
           "originalHardFindings": [
             {
               "quote": "龚妍愿不愿陪自己向邻人说明下次换肩的安排。",
@@ -620,9 +629,10 @@
           "paths": [
             "relationships[0].note",
             "relationships[1].note",
-            "opinions.neighbors[2].view"
+            "opinions.neighbors[2].view",
+            "memorySeeds[2]"
           ],
-          "reason": "原controlled修订/背景尚未完成本ID L2；复用旧规划允许叶。",
+          "reason": "原controlled修订/背景尚未完成本ID L2；复用旧规划允许叶。 本次新增允许路径与已合受控离线计划 T07-user-reopen-20261012-01-offline-1 的实际失败及关联修订逐项一致。",
           "failurePaths": [
             "knowledge.known[1]",
             "knowledge.known[2]",
@@ -644,9 +654,10 @@
           "recordHash": "61d70d477d8778ae9b127c3cf030cc639b271e3953631455c77e5b3679e7275c",
           "paths": [
             "relationships[0].note",
-            "relationships[1].note"
+            "relationships[1].note",
+            "memorySeeds[2]"
           ],
-          "reason": "原controlled修订/背景尚未完成本ID L2；复用旧规划允许叶。",
+          "reason": "原controlled修订/背景尚未完成本ID L2；复用旧规划允许叶。 本次新增允许路径与已合受控离线计划 T07-user-reopen-20261012-01-offline-1 的实际失败及关联修订逐项一致。",
           "failurePaths": [
             "knowledge.known[1]",
             "knowledge.known[2]",
@@ -669,9 +680,10 @@
           "paths": [
             "relationships[0].note",
             "relationships[1].note",
-            "opinions.neighbors[2].view"
+            "opinions.neighbors[2].view",
+            "memorySeeds[2]"
           ],
-          "reason": "原controlled修订/背景尚未完成本ID L2；复用旧规划允许叶。",
+          "reason": "原controlled修订/背景尚未完成本ID L2；复用旧规划允许叶。 本次新增允许路径与已合受控离线计划 T07-user-reopen-20261012-01-offline-1 的实际失败及关联修订逐项一致。",
           "failurePaths": [
             "knowledge.known[1]",
             "knowledge.known[2]",
@@ -693,9 +705,10 @@
           "recordHash": "458cbb8b00625eee5546a28445582a4eb1a9fb9bed08b89f6fa7f89c883322e7",
           "paths": [
             "relationships[0].note",
-            "relationships[1].note"
+            "relationships[1].note",
+            "memorySeeds[2]"
           ],
-          "reason": "原controlled修订/背景尚未完成本ID L2；复用旧规划允许叶。",
+          "reason": "原controlled修订/背景尚未完成本ID L2；复用旧规划允许叶。 本次新增允许路径与已合受控离线计划 T07-user-reopen-20261012-01-offline-1 的实际失败及关联修订逐项一致。",
           "failurePaths": [
             "knowledge.known[1]",
             "knowledge.known[2]",
@@ -718,9 +731,14 @@
           "paths": [
             "relationships[0].note",
             "relationships[1].note",
-            "opinions.neighbors[2].view"
+            "opinions.neighbors[2].view",
+            "knowledge.known[1]",
+            "knowledge.unknown[0]",
+            "knowledge.unknown[1]",
+            "goals.mid[0].steps[0].content",
+            "memorySeeds[2]"
           ],
-          "reason": "原controlled修订/背景尚未完成本ID L2；复用旧规划允许叶。",
+          "reason": "原controlled修订/背景尚未完成本ID L2；复用旧规划允许叶。 本次新增允许路径与已合受控离线计划 T07-user-reopen-20261012-01-offline-1 的实际失败及关联修订逐项一致。",
           "originalHardFindings": [
             {
               "quote": "我在向祯户居处居住；家里的向菲是我的配偶。",
@@ -1040,9 +1058,10 @@
           "paths": [
             "relationships[0].note",
             "relationships[2].note",
-            "opinions.neighbors[2].view"
+            "opinions.neighbors[2].view",
+            "relationships[1].note"
           ],
-          "reason": "骨架与 publishedFacts 中符审的私密不当行为是“曾让熟人插次后恢复原次”，misconductIsPrivate=true，秘密仅 knownBy npc_lq_fushen；该 note 新增“被人追问”“夫妻争论”把私密偏排扩散到符珍并形成已发生的追问/争论，超出既有知情范围且无来源支持。；骨架与 publishedFacts 中符审与皮菁仅为同村日常往来，且符审未参与 memory_lq_depth_readback 之外的“读回记录”交流；该 note 新增符审与皮菁谈过读回记录并留下未确认项的具体互动，无来源支持。；同 relationships[2].note，新增符审与皮菁就“读回记录”的具体交流，超出骨架中“认识同村皮菁，不因此知道对方秘密或财产”的既有关系范围。",
+          "reason": "骨架与 publishedFacts 中符审的私密不当行为是“曾让熟人插次后恢复原次”，misconductIsPrivate=true，秘密仅 knownBy npc_lq_fushen；该 note 新增“被人追问”“夫妻争论”把私密偏排扩散到符珍并形成已发生的追问/争论，超出既有知情范围且无来源支持。；骨架与 publishedFacts 中符审与皮菁仅为同村日常往来，且符审未参与 memory_lq_depth_readback 之外的“读回记录”交流；该 note 新增符审与皮菁谈过读回记录并留下未确认项的具体互动，无来源支持。；同 relationships[2].note，新增符审与皮菁就“读回记录”的具体交流，超出骨架中“认识同村皮菁，不因此知道对方秘密或财产”的既有关系范围。 本次新增允许路径与已合受控离线计划 user-reopen-20261012-01 的实际失败及关联修订逐项一致。",
           "originalHardFindings": [
             {
               "quote": "符珍因符审替熟人换次被人追问，夫妻争论该怎样说明这次偏排。 各自保有财物。",
@@ -1125,9 +1144,11 @@
             "knowledge.unknown[0]",
             "knowledge.unknown[1]",
             "relationships[2].note",
-            "opinions.neighbors[2].view"
+            "opinions.neighbors[2].view",
+            "relationships[0].note",
+            "relationships[1].note"
           ],
-          "reason": "该共同亲历事件仅由 authoredBackground 授权，但 knowledge.known[2] 的 source 写为 loc_lq_spring，而该事件在 originalSources 中的来源是 settlementProfiles.loc_bs_liquan.details.problems[1] 与 loc_lq_spring 的 name/purpose/owner 等字段；把地点 id 当作事实来源与骨架既有 source 语义（如 knowledge.known[0].source=npc_lq_suili）不一致，属于取得途径/来源错误。；骨架 secrets[0] 明确隋莉“自己忘清过一次细泥堵口”为私有秘密，knownBy 仅 npc_lq_suili；该 unknown 条目把“细泥堵口”与沟尾偏干并列写入本人知识未知项，等于把私有秘密当作可公开核实的观察对象，扩大了秘密知情范围。；骨架未记载隋莉与储茵之间存在可对照的“自家沟尾记录”，也未授权隋莉知悉储茵上段菜沟的湿干变化；该条新增了骨架没有依据的跨户观察关系与记录渠道。；骨架 relationships[2] 仅登记“同村日常往来，不因此知道对方秘密或财产”，沙萝职业为村口工签抄录人；该 note 新增隋莉“核对清沟帮工姓名和时段”的职责与同沙萝的沟段核对关系，属于骨架未声明的功能与归属。；同 relationships[2].note，opinions.neighbors[2].view 新增隋莉核对清沟帮工姓名时段并与沙萝核对沟段的职责，骨架 opinions.neighbors[2] 仅登记“认识同村沙萝，不因此知道对方秘密或财产”。",
+          "reason": "该共同亲历事件仅由 authoredBackground 授权，但 knowledge.known[2] 的 source 写为 loc_lq_spring，而该事件在 originalSources 中的来源是 settlementProfiles.loc_bs_liquan.details.problems[1] 与 loc_lq_spring 的 name/purpose/owner 等字段；把地点 id 当作事实来源与骨架既有 source 语义（如 knowledge.known[0].source=npc_lq_suili）不一致，属于取得途径/来源错误。；骨架 secrets[0] 明确隋莉“自己忘清过一次细泥堵口”为私有秘密，knownBy 仅 npc_lq_suili；该 unknown 条目把“细泥堵口”与沟尾偏干并列写入本人知识未知项，等于把私有秘密当作可公开核实的观察对象，扩大了秘密知情范围。；骨架未记载隋莉与储茵之间存在可对照的“自家沟尾记录”，也未授权隋莉知悉储茵上段菜沟的湿干变化；该条新增了骨架没有依据的跨户观察关系与记录渠道。；骨架 relationships[2] 仅登记“同村日常往来，不因此知道对方秘密或财产”，沙萝职业为村口工签抄录人；该 note 新增隋莉“核对清沟帮工姓名和时段”的职责与同沙萝的沟段核对关系，属于骨架未声明的功能与归属。；同 relationships[2].note，opinions.neighbors[2].view 新增隋莉核对清沟帮工姓名时段并与沙萝核对沟段的职责，骨架 opinions.neighbors[2] 仅登记“认识同村沙萝，不因此知道对方秘密或财产”。 本次新增允许路径与已合受控离线计划 user-reopen-20261012-01 的实际失败及关联修订逐项一致。",
           "originalHardFindings": [
             {
               "quote": "储茵、胥珑、隋莉、莫谷和满渠在砾泉槽边看过清槽泥与菜沟口的距离。储茵指出水进沟的口，胥珑说明泥暂放在哪里，隋莉把沟尾偏干的事提出来。莫谷和满渠沿提水脚路看了泥边。几人没有认定缺水的原因，也没有答应替谁转运泥土。",
