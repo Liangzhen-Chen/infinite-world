@@ -4,19 +4,22 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 import {execFile} from 'node:child_process';
 import {promisify} from 'node:util';
+import {createHash} from 'node:crypto';
 import {loadWorld} from '../tools/load-world.mjs';
 import {auditNpcDepth} from '../tools/audit-npc-depth.mjs';
 import {validateNpcProfiles,findNpcRuleWording} from '../tools/npc-profile-validation.mjs';
 import {hashContent} from '../tools/content-pipeline.mjs';
 import {depthEntries,patchDraft,applyDepthDraft,validateDraft,validatePatchResults,contextFor,buildReviewRequest,getPath} from '../tools/npc-depth-content.mjs';
 import * as design from '../world/design/w1-lq-depth.mjs';
+import {liquanRoster} from '../world/design/w1-villages-liquan.mjs';
 
 const world=await loadWorld(path.resolve('world'));
 const originals=world.npcs.filter(n=>n.id.startsWith('npc_lq_'));
 const entries=depthEntries(originals,design,world);
 const merged=validatePatchResults(entries,world);
 const ids=new Set(originals.map(n=>n.id));
-const root=path.resolve('world/drafts/w1/lq-depth');
+const legacyRoot=path.resolve('world/drafts/w1/lq-depth');
+const root=path.join(legacyRoot,'author-v2');
 const exec=promisify(execFile);
 
 test('砾泉全30人按冻结408项实际审计补缺，合并后没有字段或规则措辞缺口',()=>{
@@ -111,11 +114,11 @@ test('补丁合同拒绝未报错叶子、已存在知识和原秘密的改写',
 
 test('真实prepare CLI重复执行零模型零正式写入，冻结产物一致且没有审核冒认',async()=>{
  const baseline=path.resolve('world/people/baseline.json'),baselineHash=hashContent(await fs.readFile(baseline,'utf8'));
- const files=['base.json','audit.json','foundation.json','candidate.json','manifest.json'];
+ const files=['base.json','foundation.json','candidate.json','manifest.json','author-source-checklist.json'];
  const snapshots=await Promise.all(files.map(async file=>({file,hash:hashContent(await fs.readFile(path.join(root,file),'utf8')),mtime:(await fs.stat(path.join(root,file))).mtimeMs})));
  const env={...process.env};delete env.DEEPSEEK_API_KEY;
  for(let i=0;i<2;i++){
-  const {stdout}=await exec(process.execPath,['tools/npc-depth.mjs','--design','world/design/w1-lq-depth.mjs','--root',root,'--budget-root',path.join(root,'not-an-allocated-budget'),'--prepare'],{env});
+  const {stdout}=await exec(process.execPath,['tools/npc-depth.mjs','--design','world/design/w1-lq-depth.mjs','--root',root,'--budget-root',path.join(root,'not-an-allocated-budget'),'--card','T08','--prepare'],{env});
   assert.deepEqual(JSON.parse(stdout),{entries:30,formalWrite:false,modelCalls:0});
  }
  assert.equal(hashContent(await fs.readFile(baseline,'utf8')),baselineHash);
@@ -125,5 +128,55 @@ test('真实prepare CLI重复执行零模型零正式写入，冻结产物一致
  for(const artifact of ['budget.json','allocation.json','terminal.json','batch-0.json',entries[0].id+'.json'])await assert.rejects(fs.stat(path.join(root,artifact)),/ENOENT/);
  const report=JSON.parse(await fs.readFile(path.join(root,'offline-report.json'),'utf8'));
  assert.equal(report.stage,'prepared-offline');assert.equal(report.modelCalls,0);assert.equal(report.formalPublished,false);
- assert.deepEqual(report.pending,['L2','L4','T11 publication']);
+ assert.deepEqual(report.pending,['T25 explicit background opt-in','L2','L4','T11 publication']);
+});
+
+test('原v1完整hash证据保留，新版18处实际变化逐id/path对应原目标或正式家属处境',async()=>{
+ const preserved=JSON.parse(await fs.readFile(path.join(legacyRoot,'offline-v1-evidence/original-hashes.json'),'utf8'));
+ assert.equal(preserved.sourceCommit,'89546d6');
+ for(const f of preserved.files){const bytes=await fs.readFile(path.join(legacyRoot,f.path));assert.equal(createHash('sha256').update(bytes).digest('hex'),f.sha256);}
+ const report=JSON.parse(await fs.readFile(path.join(root,'author-source-checklist.json'),'utf8'));
+ assert.equal(report.changes.length,18);assert.equal(report.personChecks.length,30);assert.equal(report.patchSources.length,384);
+ const sourcePeople=[...world.npcs,...world.residents];
+ const roster=liquanRoster.trim().split(/\r?\n/).map(r=>r.split('|'));
+ assert.ok(roster.every(r=>r.length===9));
+ assert.deepEqual(report.rosterColumns.traits,6);assert.deepEqual(report.rosterColumns.concern,7);
+ for(const person of report.personChecks)for(const reference of person.references){
+  const actual=sourcePeople.find(p=>p.id===reference.id);assert.equal(reference.name,actual.name);assert.equal(reference.sex,actual.sex);assert.equal(reference.occupation,actual.occupation);
+  const row=roster.find(r=>'npc_lq_'+r[1]===reference.id);if(row){assert.equal(reference.rosterConcern,row[7]);assert.equal(reference.rosterTraits,row[6]);assert.equal(reference.formalConcern,actual.currentConcern);}
+ }
+ const original=JSON.parse(await fs.readFile(path.join(legacyRoot,'candidate.json'),'utf8'));
+ for(const change of report.changes){
+  const entry=entries.find(e=>e.id===change.id),source=sourcePeople.find(p=>p.id===(change.originalSource.id??change.id));
+  assert.deepEqual(getPath(source,change.originalSource.field),change.originalSource.value);
+  assert.equal(original.find(e=>e.id===change.id).patches.find(p=>p.path===change.path).value,change.previous);
+  assert.equal(entry.patches.find(p=>p.path===change.path).value,change.revised);
+  assert.notEqual(change.revised,change.previous);
+ }
+ for(const record of report.sourceRecords){const actual=sourcePeople.find(p=>p.id===record.id);for(const key of Object.keys(record))assert.deepEqual(record[key],actual[key]);}
+});
+
+test('作者回归检查阻止中期步骤改谈另一事务，家属等待状态不再写成催促',()=>{
+ // These regressions catch observed author mistakes. They are not an L4 score.
+ const midRegressions={chuyin:/逐段.*(?:水痕|渗湿)/,ningye:/清路.*松碎石.*移出脚路/,ganqi:/带班.*提前.*灶房/,minghe:/清走.*坐下.*空地/,tanyu:/两户物主.*绳记.*洗晒前.*留下/,yike:/旧结.*约定.*不再解动/,mogu:/歇息.*复工.*两个时点/};
+ for(const [key,pattern] of Object.entries(midRegressions))assert.match(entries.find(e=>e.id==='npc_lq_'+key).facts.goals.mid[0].steps[0].content,pattern);
+ const corrected={shenshu:[1,/茄敏迟迟不收/],fengji:[1,/蔓桂不追问/],huaniu:[1,/庞果.*任待检物占着门口/]};
+ for(const [key,[index,pattern]] of Object.entries(corrected)){const note=entries.find(e=>e.id==='npc_lq_'+key).facts.relationships[index].note;assert.match(note,pattern);assert.doesNotMatch(note,/催/);}
+});
+
+test('六次共同会面均标明新增背景，旧个人来源不充当会面证明或L2/L4凭证',async()=>{
+ const report=JSON.parse(await fs.readFile(path.join(root,'author-source-checklist.json'),'utf8'));
+ assert.equal(report.stage,'author-precheck-only');assert.equal(report.modelCalls,0);
+ assert.equal(report.newSharedBackgrounds.length,6);
+ for(const background of report.newSharedBackgrounds){
+  assert.equal(background.classification,'new-public-background');assert.equal(background.existingJointExperienceSource,null);
+  assert.equal(background.reviewStatus,'pending-T25-opt-in-L2-L4');assert.ok(background.privateRisk);
+ }
+ for(const e of entries){
+  const oldSource=contextFor(e,world).people.find(p=>p.id===e.id);
+  assert.deepEqual(oldSource.memorySeeds,e.before.memorySeeds);assert.deepEqual(oldSource.relationships,e.before.relationships);
+  const newMemory=e.patches.find(p=>p.path.startsWith('memorySeeds['));
+  assert.equal(report.patchSources.find(p=>p.id===e.id&&p.path===newMemory.path).kind,'new-public-background');
+  assert.equal(report.patchSources.find(p=>p.id===e.id&&p.path==='knowledge.known[2]').kind,'new-public-background');
+ }
 });
