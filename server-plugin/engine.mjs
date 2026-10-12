@@ -5,6 +5,7 @@ import {activities}from'./activities.mjs';
 import {WorldEngine as Phase1Engine}from'./compat/v2-phase1-engine.mjs';
 import {learn}from'./learning.mjs';
 import {prepareMagic,applyMagic}from'./magic.mjs';
+import {settleMagicAreas,nextMagicAreaMinute,prepareAreaMagic,applyAreaMagic}from'./magic-area.mjs';
 import {advanceMagicObjects}from'./magic-object.mjs';
 import{targetFacts,statusContext}from'./magic-context.mjs';
 import {profession,effectiveProficiency}from'./professions.mjs';
@@ -134,7 +135,9 @@ export class WorldEngine {
             const target=session.resolve(args.target);
             for(const task of Object.values(d.get('state','npcAutonomy','tasks')??{}))if(task.status==='进行中'&&[task.npc,task.action.seller].includes(target))d.set(['state','npcAutonomy','tasks',task.id],{...task,status:'中断',reason:'交锋打断了正在进行的工作',interruptedAt:d.get('state','minute'),sourceEvent:id});
         }
+        settleMagicAreas(d,session);
         const detail = await session[tool](d,args,id);
+        settleMagicAreas(d,session);
         advancePets(d,session,d.get('state','minute'));
         advanceSummons(d,d.get('state','minute'));
         advanceLaw(d,d.get('state','minute'));
@@ -199,12 +202,12 @@ export class WorldEngine {
         minutes=number(minutes,0,43200,'耗时');
         if(['trade','learn','practice','profession','craft','repair','research','cast','pet','summon','environment','farm','wildlife'].includes(this.npcObligationAction?.tool))assertNpcObligationAction(d,this,['player'],{minutes});
         const end=d.get('state','minute')+minutes;
-        if(!this.world.npcs.some(n=>n.tier==='full'))return this.advanceInterval(d,minutes,id);
+        if(!this.world.npcs.some(n=>n.tier==='full')&&!Object.values(d.get('state','effects')??{}).some(e=>e.kind==='area'))return this.advanceInterval(d,minutes,id);
         if(!minutes)return this.advanceInterval(d,0,id);
         const patchStart=d.patches.length,npcsBefore=d.get('state','npcs');
         while(d.get('state','minute')<end){
             const now=d.get('state','minute'),state=d.get('state');
-            const next=Math.min(end,(Math.floor(now/1440)+1)*1440,nextNpcCognitionMinute(state,now),nextNpcAutonomyMinute(state,now),nextNpcObligationMinute(state,now));
+            const next=Math.min(end,(Math.floor(now/1440)+1)*1440,nextNpcCognitionMinute(state,now),nextNpcAutonomyMinute(state,now),nextNpcObligationMinute(state,now),nextMagicAreaMinute(state,now));
             this.advanceInterval(d,next-now,id);
         }
         // Intermediate clock boundaries matter to simulation, not to replay.
@@ -243,7 +246,11 @@ export class WorldEngine {
             advanceNpcCognition(d,this,before,after,id,{beforeState});
             advanceNpcAutonomy(d,this,before,after,id,{beforeState});
         }
+        for(const[npc,actor]of Object.entries(d.get('state','npcs')??{}))if(beforeState.npcs?.[npc]?.location!==actor.location||actor.scheduleTravel||actor.cognitionTravel){
+            const key=`local_actor_position:${npc}`;if(d.get('state','records',key))d.remove(['state','records',key]);
+        }
         advanceMagicObjects(d,this,after);
+        settleMagicAreas(d,this);
         for(const [key,effect] of Object.entries(d.get('state','effects'))) if(effect.expires<=after) d.remove(['state','effects',key]);
         const p=d.get('state','player');
         if(p.status==='濒死' && after-p.dyingSince>=this.rules.death.dyingMinutes) this.death(d);
@@ -327,7 +334,10 @@ export class WorldEngine {
         movePets(d,this,old,destination,route.movingMinutes);
         for(const[key,effect]of Object.entries(d.get('state','effects')))if(effect.kind==='summon'&&effect.owner==='player'&&effect.location===old)d.set(['state','effects',key,'location'],destination);
         this.npcObligationAction.arrivalMinute=d.get('state','minute')+route.minutes;
+        const areaTravel=Object.values(d.get('state','effects')??{}).some(e=>e.kind==='area');
+        if(areaTravel)d.set(['state','records','magic_area_transit'],{category:'magic_area_transit',subjects:['player',...d.get('state','player','companions')],start:d.get('state','minute'),arrival:this.npcObligationAction.arrivalMinute,source:id});
         this.advance(d,route.minutes,id);
+        if(areaTravel)d.remove(['state','records','magic_area_transit']);
         const experience=discovered?{experience:0}:milestone(d,this,'discovery',destination,id);
         for(const [key,obligation]of Object.entries(d.get('state','obligations')))if(obligation.type==='带路'&&obligation.destination===destination&&obligation.status==='进行中'){
             d.set(['state','obligations',key,'status'],'已完成');d.say(`${this.byId.get(obligation.promisor).name}的带路约定已完成`);
@@ -403,6 +413,9 @@ export class WorldEngine {
         for(const key of Object.keys(daily))if(Number(key)<Number(day)-1)delete daily[key];
         d.set(['state','skills',skill],{...old,proficiency,grade:skillGrade(proficiency),daily});d.say(`${this.byId.get(skill).name}熟练度 +${actual}`);
         return {skill,gain:actual,proficiency,needsBreakthrough:proficiency%300===299};
+    }
+    applyMagicArea(d,catalog,args,id,source='player'){
+        return applyAreaMagic.call(this,d,prepareAreaMagic.call(this,d,catalog,args,{source}),id);
     }
     magicTargetFacts(d,target){return targetFacts(d,this,target);}
     magicStatusContext(d,target){return statusContext(d,this,target);}
