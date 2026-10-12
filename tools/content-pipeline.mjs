@@ -106,6 +106,10 @@ export async function runContentPipeline({
         // L2 covers every syntactically usable draft, even if L1 found errors.
         const reviewResponse = await request(await buildReviewRequest(entry, record.draft, context), `content-${path.basename(root)}-${entry.id}-review${attempt}`);
         if(reviewResponse.measurement)record.measurements.push(reviewResponse.measurement);
+        if(reviewResponse.rawProviderReviewResponse){
+          record.rawProviderReviewResponses??=[];
+          record.rawProviderReviewResponses.push({attempt:attempt+1,response:reviewResponse.rawProviderReviewResponse,hash:reviewResponse.rawProviderReviewResponseHash});
+        }
         record.review = await extractReview(reviewResponse, entry);
         const issues = reviewIssues(record.review);
         record.errors.push(...issues.filter(row => row.severity === 'hard'));

@@ -78,12 +78,12 @@ export async function publishVillages({root=path.resolve(import.meta.dirname,'..
   const reference={...world,npcs:[...original.npcs,...candidate.npcs],residents:[...original.residents,...candidate.residents],locations:[...original.locations,...candidate.locations],settlementProfiles:[...original.settlementProfiles,...candidate.settlements.map(s=>({...s,kinship:candidate.kinship.filter(r=>s.residentIds.includes(r.parent))}))]};
   profileAmendments=await approvedProfiles({world:reference,root:profileDirectory});
  }
- const merged=mergeVillages(world,candidate,{npcAmendments,profileAmendments}),next=profileAmendments.length?withVillageLedgerRules(merged):merged,validation=validateWorld(next,{stage:'release'});
+ const merged=mergeVillages(world,candidate,{npcAmendments,profileAmendments}),next=profileAmendments.length?withVillageLedgerRules(merged):merged,validation=validateWorld(next,{stage:'engine'});
  if(!validation.ok)throw Error(validation.errors.join('\n'));
  const outputs={...(profileAmendments.length?{'meta/rules.json':next.rules}:{}),'people/baseline.json':next.npcs,'people/residents.json':next.residents,'people/households.json':next.households,'geo/settlements.json':next.settlementProfiles,'geo/locations.json':next.locations,'geo/routes.json':next.routes};
  const changed=[];
  for(const [file,value]of Object.entries(outputs)){let before;try{before=JSON.parse(await fs.readFile(path.join(root,file),'utf8'));}catch(e){if(e.code!=='ENOENT')throw e;}if(hashContent(before??null)!==hashContent(value))changed.push(file);}
  if(publish)for(const file of changed)await atomicJSON(path.join(root,file),outputs[file]);
- return {published:publish,changed,stage:'release',full:next.npcs.length,roster:next.residents.length,newFull:120,newRoster:266,newLocations:156,newRoutes:156,amendedNpcIds:npcAmendments.map(n=>n.id),amendedProfileIds:profileAmendments.map(p=>p.id),settlements:candidate.settlements.map(s=>({id:s.id,population:s.population,full:30,households:s.householdCount})),candidateHash:hashContent(candidate),similarity,warnings:validation.warnings};
+ return {published:publish,changed,stage:'engine',full:next.npcs.length,roster:next.residents.length,newFull:120,newRoster:266,newLocations:156,newRoutes:156,amendedNpcIds:npcAmendments.map(n=>n.id),amendedProfileIds:profileAmendments.map(p=>p.id),settlements:candidate.settlements.map(s=>({id:s.id,population:s.population,full:30,households:s.householdCount})),candidateHash:hashContent(candidate),similarity,warnings:validation.warnings};
 }
 if(process.argv[1]&&path.resolve(process.argv[1])===path.resolve(import.meta.filename)){const at=process.argv.indexOf('--root');console.log(JSON.stringify(await publishVillages({publish:process.argv.includes('--publish'),...(at>=0?{root:path.resolve(process.argv[at+1])}:{})})));}
