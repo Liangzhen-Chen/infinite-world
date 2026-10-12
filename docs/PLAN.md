@@ -146,13 +146,23 @@ T07 六名 manual 补充复核（属于同一次规划处理）：冻结报告�
 
 验收：`node --test tests/npc-depth-existing.test.mjs tests/m2-people-content.test.mjs tests/npc-profile-publication.test.mjs`、CORE；T05 命令使用本卡 design/root；增量上限 3 元且 W1 总额不超过 20，L1/L2/L4 完成，原 17 人 traits 无占位，四村外合并视图过 T04。不要做：把原人物再造一遍、重置教学/库存、假造用户旧经历。依赖：T04/T05；并行：候选与四村文件不重叠可并行，模型独占。
 
-### T11 人物补丁发布及四村/人物波次检查
+### T11 人物分批原子整合与全体质量门槛
 
-目标：正式源全体 full 档达到新门槛，将 T04 验证器强制接入 release/final，重复发布保留后续世界变化。涉及文件：`tools/validate-world.mjs`、必要的 `tools/build-world.mjs` 入口、`tools/publish-w1-villages.mjs` 的新补丁兼容、T05 发布器输出的 `world/people/baseline.json`、必要的版本元数据及 `world/drafts/w1/depth-publication.json` 清单；`tests/world-validation.test.mjs`、`tests/npc-profile-publication.test.mjs`、`tests/w1-villages-publish.test.mjs`、`tests/npc-depth-gate.test.mjs`。
+调度依据：用户明确的硬限制是第 1、2 项完成前不得新增人口，并要求卡住后继续其他块；人物优先级不等于让已卡住 T06 阻断全部无关验收。指南 D.3 第 1 项要求原有 18 人完整档，D.6 的 W1 允许 M2 期间并行；C.4 的全量测试及 release 仍是里程碑关闭条件。故允许先整合已完整审核的河湾 32 人并进行 M2 专项验收。T06 保持卡住/待用户决定，不拆分其失败记录规避停止规则，不增加人口，不将分批整合称为全体人物达标。
 
-实现要点：按审核指纹串行应用 T06–T10 补丁，不直接复制各树 baseline；合并已存在 memorySeeds 及既有更晚修订，冲突停在具体 id。逐条核对补丁属于冻结审计失败叶子，原有字段/数组成员未被删空，17 人 traits 固定值保留；新审核清单接入旧四村发布器，重复发布不得恢复旧 opinions/notes 或抹掉新补丁。全部候选合并视图必须经 `validateNpcDepth` 全项和 `findNpcRuleWording` 无缺口，不仅是六类深度；再将质量验证强制接入 `validateWorld` 的 release/final 分支，同一提交包含正式内容和入口，不留跳过开关。T04 测试里“现有正式数据存在缺口”的阶段性断言改为合格正式源和独立缺口夹具，保留所有负例及 17 人固定值回归；engine 旧夹具结构约定保持。复用 `world_upgrade`，旧文档状态、财物、记忆与消耗库存不回退。正式数量仍为现有人口；审查抽样包含各村地方问题当事人及原人物。
+T11-A 完整任务卡：目标是提供按批准内容卡分批、整批原子 preview/apply 的发布机制，并将 T04 全体 full 深度门槛接入 release/final。涉及 `tools/publish-npc-depth.mjs`、`tools/validate-world.mjs`、必要的 `tools/build-world.mjs` 入口、新增 `tests/npc-depth-batch-publication.test.mjs`、`tests/npc-depth-gate.test.mjs`、`tests/world-validation.test.mjs`；与 T25 对公共发布器的修改串行，复用其旧/新审核凭证，不能另造绕审核的入口。新增明确 `--batch-manifest <world内清单>`，清单列本次已批准的完整卡 manifest、原世界 hash 和预期 id 集合；默认 preview，`--publish` 才 apply。现有单 manifest 合同保留。优先一次整合 T10 全部 32 人，随后 T08/T09/T07 各卡审核完整后可逐批；本次不提供把 T06 的通过人物拆出来的特殊通道。
 
-验收：`node tools/publish-npc-depth.mjs --manifest world/drafts/w1/depth-publication.json` 预演后 `--publish`，重跑零写入；`node --test tests/npc-profile-publication.test.mjs tests/w1-villages-publish.test.mjs tests/npc-depth-gate.test.mjs`、CORE；主会话在波次检查运行 `npm run build:release`，预期人物质量零缺口。如其他类别构建失败明确登记，不能降低门槛。随机 10 人平均至少 4、单项至少 3；不调用新模型。不要做：增加人口、部署；依赖：T03/T06–T10/T21；并行：不可与写人物或版本数据的卡并行。通过后主会话打 `review-w1-depth` 并派规划审核。
+实现要点：复用现有单卡 foundation/candidate/context/record/L2/L4 hash 与原审计权限校验，将无写入准备提成公共函数；在同一当前世界快照上逐卡构造 next，确认所有卡通过后才对 people/baseline.json 做一次原子替换，发布前再次检查磁盘原文件 hash 防并发覆盖。任何一张卡、任一引用或跨人约束失败均零写入，不能先写通过的前一张卡。新共享事件必须闭合：所有参与者在本批已批准候选中一起更新，或正式源已经存在同 event id/地点/事实/knownBy 的相容审核结果；另一参与者仍待审、卡住或内容不同则整组延后，不发布半边记忆。对事件依赖形成的连通组检查完整覆盖，普通关系引用仍要合法且不修改对方合格字段。保留原有及后来 memorySeeds、17 人固定 traits、运行钱物和正式教学服务；基线冲突停在具体字段，不直接复制 worktree baseline。preview 返回精确 id/path 变化、事件闭合结果、源/结果 hash 和全世界质量缺口；所选人物必须零缺口，全世界未选人物缺口照实保留。
+
+release/final 门槛独立于发布批次：validateWorld 的 release/final 必须遍历正式源全体 full，调用 validateNpcDepth 和 findNpcRuleWording，不接受 selectedIds、地区过滤、跳过参数或仅验证本批；仍保留全部负例及 17 人 traits 回归。未修全时 build:release 非零退出是正确行为，不能用局部通过替代。分批 apply 写经完整审核的世界源不等于发行构建成功；门槛接入可先完成，其失败清单作为 T11-C 的未完成证据。不要提前将 T04 的阶段性缺口断言改成“所有正式源合格”，改用明确阶段状态及独立负例，不删除失败测试。
+
+T11-A 验收：`node --test tests/npc-depth-batch-publication.test.mjs tests/npc-depth-gate.test.mjs tests/world-validation.test.mjs tests/npc-profile-publication.test.mjs` 与 CORE。临时目录证明两张全审卡成功一次写入、第二卡坏 hash/缺 L4/共享伙伴未批准时第一卡也零写入，预演零写入、并发磁盘变化拒绝、重复 apply changed=[]；正式钱物/教学服务/traits 不变，后续兼容回放不丢记忆。门槛测试用“所选32人合格、未选任一full不合格”世界，release/final仍拒绝；修全才通过。模型预算0，不调用模型、不修改审核正文、不部署。依赖 T04/T05/T24/T25；与公共 publisher、validate-world 或世界人口写入串行，可与各村独立候选审核并行。
+
+T11-B 完整任务卡：目标是把已完成 L1/L2/L4 的原有/河湾 32 人按 T11-A 合法整合，形成 M2 可用的正式源快照；以后以相同流程逐卡整合其他全审村。涉及本批 `world/drafts/w1/depth-publication.json` 或独立具名清单、`world/people/baseline.json`、必要的现有版本元数据，以及 `tools/publish-w1-villages.mjs`、必要的 `tools/m2-people-publish.mjs` 对已审核补丁的幂等保留；相关 `tests/w1-villages-publish.test.mjs`、`tests/npc-profile-publication.test.mjs`。执行前核对本次全部人物的真实 L1/L2/L4、批次成员与新旧凭证，不把 offline 零缺口当已批准。T10 32 人与原 M2 18 人 id 包含关系和 M2 会话实际 NPC 引用逐一作机器集合检查；若场景还引用未批准 full，延后该场景并报告，不删场景凑12项。初始人物总数保持152 full/294名册，版本升级只沿现有 world_upgrade，旧文档状态、财物、记忆与消耗库存不回退。
+
+T11-B 验收：`node tools/publish-npc-depth.mjs --batch-manifest world/drafts/w1/depth-publication.json` 预演、核对批准闭包后同命令加 `--publish`，再预演 changed=[]；运行 `node --test tests/npc-depth-batch-publication.test.mjs tests/npc-profile-publication.test.mjs tests/w1-villages-publish.test.mjs tests/npc-depth-gate.test.mjs` 及 CORE。保存32人逐人质量零缺口、全世界剩余缺口及精确世界/hash清单；主会话运行 build:release，未选 full 尚缺时必须失败并归 T11-C，不修改退出码。没有任何卡内或跨卡半边共享事件；旧发布重跑须通过已校验的补丁发布凭证识别合法后续修订，不恢复旧 opinions/notes、不抹新补丁；无凭证或与凭证不符的后续变化仍拒绝，不删除旧冲突断言。模型预算0，原卡审核成本仍在原卡；不得借本卡复审T06。依赖 T11-A、T10 真正审核完成、T03/T21/T24；其他村批次各依赖其原卡完整审核，不依赖T06。世界写入串行，完成后可审核本子块，不打完整人物波次达标标签。
+
+T11-C 全体人物质量关闭：只有 T06–T10 全部所需人物和事件完成并整合后才可关闭。全体正式 full 的 validateNpcDepth/findNpcRuleWording 零缺口，原17traits固定值不变，随机10人平均至少4、单项至少3；主会话跑 npm run build:release 并须成功，保留其他类别失败；必要相关测试和CORE通过后打 review-w1-depth 并派审核。依赖全体内容卡及 T11-A/B，当前随 T06 保持卡住，不通过拆批假称本卡全部完成。原第1、2项完成前不新增人口的限制一直有效。
 
 ### T12 修复 M2 审核截断和引用失败
 
@@ -198,11 +208,11 @@ T07 六名 manual 补充复核（属于同一次规划处理）：冻结报告�
 
 ### T17 M2 里程碑真实验收
 
-目标：以修复后的正式提示栈取得 M2 联合验收证据。涉及文件：仅 `docs/测试报告/最新/` 的报告、失败摘要及费用记录；执行前读取实际脚本 id，默认十场 id 为 npc_social,npc_private,npc_shove,guide,npc_delivery,npc_quest_social,npc_home_visit,npc_offscreen,npc_voices,npc_courier，若文件内 id 不同以实际值构造 `--only`。
+目标：以修复后的正式提示栈取得 M2 联合验收证据；真实专项证据与全世界 release/里程碑关闭分别报告。涉及文件：仅 `docs/测试报告/最新/` 的报告、失败摘要及费用记录；执行前读取实际脚本 id，默认十场 id 为 npc_social,npc_private,npc_shove,guide,npc_delivery,npc_quest_social,npc_home_visit,npc_offscreen,npc_voices,npc_courier，若文件内 id 不同以实际值构造 `--only`。
 
-实现要点：先用 T12 重评工具核查保留失败，重评不算修复后的试玩；用真实 HTTP 存储与 MemoryIndex、正式角色卡/提示源、实际模型前缀和历史，禁止伪造工具结果。主会话独占模型槽，保存 prompt/scenario hashes、实际 token 和花费上界、选错/漏调用分母。测试前置失败是失败，不用人工改世界续场。
+实现要点：河湾32人须先完成真实L1/L2/L4并通过T11-B整合；执行前核对本轮场景全部NPC、显式/隐式共享事件参与者及离屏自治依赖均来自批准正式源，保存源hash，不能仅凭“场景都在河湾”推断无依赖。已确认的默认十场无四村显式NPC引用；若运行前置发现实际依赖未审内容则针对该场停止，不能删场景降低至少12项要求。运行器读取这份正式源与现行提示，不得用旧dist、删减世界快照或改build开关绕全体门槛。先用 T12 重评工具核查保留失败，重评不算修复后的试玩；用真实 HTTP 存储与 MemoryIndex、正式角色卡/提示源、实际模型前缀和历史，禁止伪造工具结果。主会话独占模型槽，保存 prompt/scenario hashes、实际 token 和花费上界、选错/漏调用分母。测试前置失败是失败，不用人工改世界续场。
 
-验收：`npm run test:playtests -- --milestone M2 --only npc_social,npc_private,npc_shove,guide,npc_delivery,npc_quest_social,npc_home_visit,npc_offscreen,npc_voices,npc_courier --repeat 1 --parallel 4`；这些 id 已在现有 JSON 核对，若 T13 新增必要 N 项会话则同步加入。单轮总预算 30 元，T12 重评增量最多 2 元并合并预算，缺环境变量记阻碍，不读密钥文件。至少 12 项完整覆盖且通过率不低于 90%，账本断言至少 90%，N6/N16 零泄漏，N17 十天新增行动自然呈现，选错工具率为实测数且有分母；N12 若计入必须匿名盲辨通过。每条失败最多一次复测，失败保留并交规划拆修复卡。主会话跑 CORE、`npm test`、`npm run build:release` 作为里程碑检查；子代理不跑全量。不要做：反复整批重跑、自动宣告 M2 完成。依赖：T11–T16 及 T23 全部完成；并行：模型阶段不可与任何模型卡并行。达标打 `review-m2`。
+验收：`npm run test:playtests -- --milestone M2 --only npc_social,npc_private,npc_shove,guide,npc_delivery,npc_quest_social,npc_home_visit,npc_offscreen,npc_voices,npc_courier --repeat 1 --parallel 4`；这些 id 已在现有 JSON 核对，若 T13 新增必要 N 项会话则同步加入。单轮总预算 30 元，T12 重评增量最多 2 元并合并预算，缺环境变量记阻碍，不读密钥文件。至少 12 项完整覆盖且通过率不低于 90%，账本断言至少 90%，N6/N16 零泄漏，N17 十天新增行动自然呈现，选错工具率为实测数且有分母；N12 若计入必须匿名盲辨通过。每条失败最多一次复测，失败保留并交规划拆修复卡。主会话跑 CORE、`npm test`、`npm run build:release` 作为里程碑检查；子代理不跑全量。不要做：反复整批重跑、自动宣告 M2 完成。启动依赖：T10真实L1/L2/L4、T11-A及T11-B河湾批、T12–T16及T23完成；不依赖仍卡住的T11-C。并行：模型阶段不可与任何模型卡并行。N类联合指标达到可记录“M2专项通过”，打 `review-m2-evidence` 供审核；若 npm test/build:release 仍失败，M2完整里程碑和发布门槛保持未关闭，不能打完整 `review-m2` 达标标签。T11-C完成且全检查通过后才关闭；已取得模型证据保留，后续只在相关人物/引擎/提示/场景变化使证据失效时按原预算和单条复测限制补验，不为等待全世界修全再整轮付费重跑。
 
 ### T18 已审核 14 法术的学习来源
 
