@@ -44,3 +44,10 @@ test('原始已选来源变化同时改变context和foundation哈希；未选字
  const thirdContext=hashContent(contextFor(entry,p.world)),thirdFoundation=hashContent(depthFoundation(entries,p.world,p.config.revision));source.coins+=100;source.secrets=['未选秘密'];assert.equal(hashContent(contextFor(entry,p.world)),thirdContext);assert.equal(hashContent(depthFoundation(entries,p.world,p.config.revision)),thirdFoundation);
  const withoutSelections=structuredClone(entry);delete withoutSelections.referenceRelationshipIds;delete withoutSelections.referenceMemoryIds;assert.notEqual(hashContent(entry),hashContent(withoutSelections));
 });
+// Explicit source selection exposes frozen identity/workplace only to review.
+test('显式性别和工作地点投影保持真实数据形状，未选择的旧合同不变化',()=>{
+ const p=audited(),[old]=p.entries(),plain=contextFor(old,p.world);p.config.patchRows[0].referenceSexIds=['npc_yp_gaoxin'];p.config.patchRows[0].referenceWorkplaceIds=['npc_yp_gaoxin'];
+ const [entry]=p.entries(),context=contextFor(entry,p.world),neighbor=context.people.find(n=>n.id==='npc_yp_gaoxin'),source=p.world.npcs.find(n=>n.id==='npc_yp_gaoxin');assert.equal(neighbor.sex,source.sex);assert.deepEqual(neighbor.workplace,source.workplace);assert.equal(plain.people.find(n=>n.id===neighbor.id).sex,undefined);assert.equal(plain.people.find(n=>n.id===neighbor.id).workplace,undefined);assert.deepEqual(entry.facts,old.facts);
+ const previous=hashContent(context);source.workplace.location='loc_new';assert.notEqual(hashContent(contextFor(entry,p.world)),previous);
+ for(const key of ['referenceSexIds','referenceWorkplaceIds']){const bad=audited();bad.config.patchRows[0][key]=['npc_absent'];assert.throws(()=>bad.entries(),/来源/);}
+});
