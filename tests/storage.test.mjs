@@ -19,6 +19,51 @@ const deduct = (document, input) => {
     return { patches: [{ op: 'set', path: ['state', 'coins'], value: coins }], result: { cost: input.cost, balance: coins } };
 };
 
+test('新回执JSON规范化后首次/重复/缓存/落盘/重启/导入保持同一哈希，回滚不重复扣款',async t=>{
+    const {directory,store}=await fixture(t);
+    const reducer=(doc,input)=>({...deduct(doc,input),result:{cost:input.cost,status:undefined,teacher:undefined,nested:{missing:undefined},list:[undefined,NaN,Infinity]}});
+    const request={id:'normalized',anchor:'a',input:{cost:6}};
+    const first=await store.transact('test',request,reducer),expected={cost:6,nested:{},list:[null,null,null]};
+    assert.deepEqual(first.result,expected);
+    assert.deepEqual((await store.transact('test',request,reducer)).result,expected);
+    const bundle=await store.export('test'),persisted=JSON.parse((await fs.readFile(path.join(directory,'test/events/00000000.jsonl'),'utf8')).trim());
+    assert.deepEqual(bundle.events[0],persisted);assert.deepEqual(persisted.result,first.result);
+    const {hash,...body}=persisted;assert.equal(digest(body),hash);
+    const fresh=new CampaignStorage(directory,{reducer:deduct});
+    assert.deepEqual(await fresh.export('test'),bundle);
+    assert.deepEqual((await fresh.transact('test',request,reducer)).result,expected);
+    assert.equal((await fresh.read('test')).document.state.coins,174);
+    const imported=await fresh.import(JSON.parse(JSON.stringify(bundle)),'normalized_copy');
+    assert.equal(imported.document.state.coins,174);
+    assert.deepEqual((await fresh.export('normalized_copy')).events,bundle.events);
+    assert.deepEqual((await fresh.transact('normalized_copy',request,reducer)).result,expected);
+    await fresh.reconcile('test',[]);
+    await fresh.transact('test',{...request,input:{cost:3}},reducer);
+    assert.equal((await new CampaignStorage(directory,{reducer:deduct}).read('test')).document.state.coins,177);
+});
+
+test('result/patches/previous/sequence/checksum/documentHash篡改导入均零写；坏磁盘链不修复',async t=>{
+    const {directory,store}=await fixture(t);
+    await store.transact('test',{id:'original',input:{cost:6}},deduct);
+    const valid=await store.export('test'),entries=await fs.readdir(directory),before=await fs.readFile(path.join(directory,'test/events/00000000.jsonl'),'utf8');
+    for(const [index,edit]of [b=>b.events[0].result.balance++,b=>b.events[0].patches[0].value++,b=>b.events[0].previous='tampered',b=>b.events[0].sequence++,b=>b.checksum='tampered',b=>b.documentHash='tampered'].entries()){
+        const broken=structuredClone(valid);edit(broken);
+        await assert.rejects(store.import(broken,`tampered_${index}`),/校验|重放/);
+        assert.deepEqual(await fs.readdir(directory),entries);
+        assert.deepEqual(await store.export('test'),valid);
+        assert.equal(await fs.readFile(path.join(directory,'test/events/00000000.jsonl'),'utf8'),before);
+    }
+    const event=structuredClone(valid.events[0]);event.result.balance++;
+    const corrupt=JSON.stringify(event)+'\n';await fs.writeFile(path.join(directory,'test/events/00000000.jsonl'),corrupt);
+    await assert.rejects(new CampaignStorage(directory,{reducer:deduct}).read('test'),/事件1校验失败/);
+    assert.equal(await fs.readFile(path.join(directory,'test/events/00000000.jsonl'),'utf8'),corrupt);
+    // A historical undefined-key hash that did not survive JSON is a bad chain.
+    const {hash,...payload}=valid.events[0],old={...payload,result:{...payload.result,status:undefined}};
+    const malformed={...valid,events:[{...old,hash:digest(old)}],checksum:digest(old)};
+    await assert.rejects(store.import(JSON.parse(JSON.stringify(malformed)),'bad_old_chain'),/事件校验/);
+    assert.deepEqual(await fs.readdir(directory),entries);
+});
+
 test('反馈：拒绝与重复不生成卡片，撤销后重算后续余额，重启保持一致',async t=>{
     const directory=await fs.mkdtemp(path.join(os.tmpdir(),'fields-feedback-'));t.after(()=>fs.rm(directory,{recursive:true,force:true}));
     const reducer=(doc,input)=>{const value=deduct(doc,input);value.result.notices=[{type:'coins',text:`剩余${value.result.balance}`}];return value;};

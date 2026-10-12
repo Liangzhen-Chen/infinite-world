@@ -1,6 +1,6 @@
 {
-  "spentYuan": 7.177488559999994,
-  "reservedYuan": 0.08373599999999998,
+  "spentYuan": 10.817678639999988,
+  "reservedYuan": 0.08373599999999987,
   "limitYuan": 20,
   "waveLimitYuan": 20,
   "cards": {
@@ -55,8 +55,62 @@
     },
     "T07": {
       "limitYuan": 3,
-      "spentYuan": 1.9930475200000002,
-      "reservedYuan": 0
+      "spentYuan": 2.7626301600000005,
+      "reservedYuan": 0,
+      "reviewRecoveries": {
+        "npc_wt_heqin": {
+          "fingerprint": "f8456937c38d19c168dcc424830c70d744edd782dc616cf643c17a108412c01f",
+          "claimedAt": "2026-10-12T01:25:43.107Z"
+        },
+        "npc_wt_zhengxi": {
+          "fingerprint": "c11a6f87f85b75727be5b2fa11fdec76276ec84315e5656996d90b332e50166d",
+          "claimedAt": "2026-10-12T01:27:12.754Z"
+        },
+        "npc_wt_wangpu": {
+          "fingerprint": "0fff35b151fc8aa34deda95dc7cba1dc21d73b75761f31c82b1e8eba4c3e4bef",
+          "claimedAt": "2026-10-12T01:27:15.088Z"
+        },
+        "npc_wt_zhouzhu": {
+          "fingerprint": "48f93c3d31635169df120549e9f3605cf3be93abab9d0aef3da243acccb7895a",
+          "claimedAt": "2026-10-12T01:27:17.414Z"
+        },
+        "npc_wt_wupeng": {
+          "fingerprint": "e33d5caca02889ce5a1b0c005014175c458de0c0eee12f70d95b6281d51e5c20",
+          "claimedAt": "2026-10-12T01:27:19.407Z"
+        },
+        "npc_wt_weilian": {
+          "fingerprint": "589d9848f6bd35803fbd059a7e1b560e41e16210fda65824c08141cd0c79e067",
+          "claimedAt": "2026-10-12T01:27:21.747Z"
+        },
+        "npc_wt_huangting": {
+          "fingerprint": "d882be3e4e95f6f6dae6f007085dae8cadead44756f9e0d9219bfabdf3db668c",
+          "claimedAt": "2026-10-12T01:27:23.844Z"
+        },
+        "npc_wt_lvmo": {
+          "fingerprint": "a94d5f850021a38d9286bdcdad1a257e5066d3bb6f73b221701bfbd6cc7297c7",
+          "claimedAt": "2026-10-12T01:27:26.154Z"
+        },
+        "npc_wt_shiqiao": {
+          "fingerprint": "9e9986c7e341585ced50af4751189bd1115298c2f49d8e2948775300b9a48876",
+          "claimedAt": "2026-10-12T01:27:28.304Z"
+        },
+        "npc_wt_keli": {
+          "fingerprint": "7ae00a6f6ea56dc0c5dced38354c9eb15f15ea076d7708bccffc9c9ef259fe39",
+          "claimedAt": "2026-10-12T01:27:30.526Z"
+        },
+        "npc_wt_duke": {
+          "fingerprint": "aa9bbe5e531e126ab7a151adca011493dc2ac688f59c510dde5c704227b0c998",
+          "claimedAt": "2026-10-12T01:27:32.715Z"
+        },
+        "npc_wt_liuyan": {
+          "fingerprint": "ab0a7e4355030dfbe0c75a55d8bb6ba9776bfbd1ff8f7c54bfa905251d043d74",
+          "claimedAt": "2026-10-12T01:27:34.837Z"
+        },
+        "npc_wt_zhangou": {
+          "fingerprint": "66a49a38c3e20b6980e6d32c4ed6ac2b371cca78a2b9577d6f0a2d76be7de4d9",
+          "claimedAt": "2026-10-12T01:27:39.870Z"
+        }
+      }
     },
     "T10": {
       "limitYuan": 3,
@@ -116,6 +170,11 @@
           "claimedAt": "2026-10-12T01:06:14.177Z"
         }
       }
+    },
+    "T08": {
+      "limitYuan": 3,
+      "spentYuan": 2.8706074399999992,
+      "reservedYuan": 0
     }
   },
   "requests": {
@@ -8703,6 +8762,2424 @@
         "cumulativeUpperYuan": 7.177488559999994,
         "latencyMs": 2079.844399999998,
         "timestamp": "2026-10-12T01:06:16.265Z"
+      }
+    },
+    "6f840cea-ad0f-46b0-afa9-3425c5e4fc75": {
+      "card": "T07",
+      "label": "content-T07-npc_wt_heqin-manual-review",
+      "reservedYuan": 0.211388,
+      "status": "settled",
+      "costUpperYuan": 0.059264239999999996,
+      "measurement": {
+        "label": "content-T07-npc_wt_heqin-manual-review",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 28955,
+          "completion_tokens": 232,
+          "total_tokens": 29187,
+          "prompt_tokens_details": {
+            "cached_tokens": 256
+          },
+          "prompt_cache_hit_tokens": 256,
+          "prompt_cache_miss_tokens": 28699
+        },
+        "costUpperYuan": 0.059264239999999996,
+        "cumulativeUpperYuan": 7.236752799999994,
+        "latencyMs": 1623.4162999999999,
+        "timestamp": "2026-10-12T01:25:44.751Z"
+      }
+    },
+    "af30f610-45d1-48a2-9f5e-4fa3e4acb4cb": {
+      "card": "T07",
+      "label": "content-T07-npc_wt_zhengxi-manual-review",
+      "reservedYuan": 0.210756,
+      "status": "settled",
+      "costUpperYuan": 0.05872624,
+      "measurement": {
+        "label": "content-T07-npc_wt_zhengxi-manual-review",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 28690,
+          "completion_tokens": 231,
+          "total_tokens": 28921,
+          "prompt_tokens_details": {
+            "cached_tokens": 256
+          },
+          "prompt_cache_hit_tokens": 256,
+          "prompt_cache_miss_tokens": 28434
+        },
+        "costUpperYuan": 0.05872624,
+        "cumulativeUpperYuan": 7.295479039999995,
+        "latencyMs": 1973.2144999999998,
+        "timestamp": "2026-10-12T01:27:14.740Z"
+      }
+    },
+    "c16208ce-f47f-4d17-95a9-4962490e29ac": {
+      "card": "T07",
+      "label": "content-T07-npc_wt_wangpu-manual-review",
+      "reservedYuan": 0.209652,
+      "status": "settled",
+      "costUpperYuan": 0.058079599999999995,
+      "measurement": {
+        "label": "content-T07-npc_wt_wangpu-manual-review",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 28743,
+          "completion_tokens": 231,
+          "total_tokens": 28974,
+          "prompt_tokens_details": {
+            "cached_tokens": 640
+          },
+          "prompt_cache_hit_tokens": 640,
+          "prompt_cache_miss_tokens": 28103
+        },
+        "costUpperYuan": 0.058079599999999995,
+        "cumulativeUpperYuan": 7.353558639999995,
+        "latencyMs": 1974.0879000000004,
+        "timestamp": "2026-10-12T01:27:17.071Z"
+      }
+    },
+    "e751aef8-cca4-456a-88f9-9106cc2a0f02": {
+      "card": "T07",
+      "label": "content-T07-npc_wt_zhouzhu-manual-review",
+      "reservedYuan": 0.210388,
+      "status": "settled",
+      "costUpperYuan": 0.057899599999999996,
+      "measurement": {
+        "label": "content-T07-npc_wt_zhouzhu-manual-review",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 28653,
+          "completion_tokens": 231,
+          "total_tokens": 28884,
+          "prompt_tokens_details": {
+            "cached_tokens": 640
+          },
+          "prompt_cache_hit_tokens": 640,
+          "prompt_cache_miss_tokens": 28013
+        },
+        "costUpperYuan": 0.057899599999999996,
+        "cumulativeUpperYuan": 7.411458239999995,
+        "latencyMs": 1638.9663999999993,
+        "timestamp": "2026-10-12T01:27:19.062Z"
+      }
+    },
+    "503ad64a-d71d-4d00-ad47-3be603afd1e5": {
+      "card": "T07",
+      "label": "content-T07-npc_wt_wupeng-manual-review",
+      "reservedYuan": 0.210048,
+      "status": "settled",
+      "costUpperYuan": 0.0579456,
+      "measurement": {
+        "label": "content-T07-npc_wt_wupeng-manual-review",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 28676,
+          "completion_tokens": 231,
+          "total_tokens": 28907,
+          "prompt_tokens_details": {
+            "cached_tokens": 640
+          },
+          "prompt_cache_hit_tokens": 640,
+          "prompt_cache_miss_tokens": 28036
+        },
+        "costUpperYuan": 0.0579456,
+        "cumulativeUpperYuan": 7.469403839999995,
+        "latencyMs": 1989.2071999999998,
+        "timestamp": "2026-10-12T01:27:21.406Z"
+      }
+    },
+    "87f2b2a5-9d14-4b46-9a57-446f2e779019": {
+      "card": "T07",
+      "label": "content-T07-npc_wt_weilian-manual-review",
+      "reservedYuan": 0.211816,
+      "status": "settled",
+      "costUpperYuan": 0.0584836,
+      "measurement": {
+        "label": "content-T07-npc_wt_weilian-manual-review",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 28941,
+          "completion_tokens": 232,
+          "total_tokens": 29173,
+          "prompt_tokens_details": {
+            "cached_tokens": 640
+          },
+          "prompt_cache_hit_tokens": 640,
+          "prompt_cache_miss_tokens": 28301
+        },
+        "costUpperYuan": 0.0584836,
+        "cumulativeUpperYuan": 7.527887439999994,
+        "latencyMs": 1745.8543999999983,
+        "timestamp": "2026-10-12T01:27:23.502Z"
+      }
+    },
+    "eac2df82-cbbc-4710-92d9-bed9f2fd245c": {
+      "card": "T07",
+      "label": "content-T07-npc_wt_huangting-manual-review",
+      "reservedYuan": 0.210782,
+      "status": "settled",
+      "costUpperYuan": 0.0582296,
+      "measurement": {
+        "label": "content-T07-npc_wt_huangting-manual-review",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 28814,
+          "completion_tokens": 232,
+          "total_tokens": 29046,
+          "prompt_tokens_details": {
+            "cached_tokens": 640
+          },
+          "prompt_cache_hit_tokens": 640,
+          "prompt_cache_miss_tokens": 28174
+        },
+        "costUpperYuan": 0.0582296,
+        "cumulativeUpperYuan": 7.586117039999994,
+        "latencyMs": 1963.3642,
+        "timestamp": "2026-10-12T01:27:25.816Z"
+      }
+    },
+    "5c95a3be-aa54-487c-a865-3bbdc4b7d4d3": {
+      "card": "T07",
+      "label": "content-T07-npc_wt_lvmo-manual-review",
+      "reservedYuan": 0.211704,
+      "status": "settled",
+      "costUpperYuan": 0.05925824,
+      "measurement": {
+        "label": "content-T07-npc_wt_lvmo-manual-review",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 28936,
+          "completion_tokens": 236,
+          "total_tokens": 29172,
+          "prompt_tokens_details": {
+            "cached_tokens": 256
+          },
+          "prompt_cache_hit_tokens": 256,
+          "prompt_cache_miss_tokens": 28680
+        },
+        "costUpperYuan": 0.05925824,
+        "cumulativeUpperYuan": 7.645375279999994,
+        "latencyMs": 1800.326000000001,
+        "timestamp": "2026-10-12T01:27:27.964Z"
+      }
+    },
+    "2e8295ba-15f4-4716-b752-cf4f7cb3e5c7": {
+      "card": "T07",
+      "label": "content-T07-npc_wt_shiqiao-manual-review",
+      "reservedYuan": 0.207226,
+      "status": "settled",
+      "costUpperYuan": 0.05774624,
+      "measurement": {
+        "label": "content-T07-npc_wt_shiqiao-manual-review",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 28204,
+          "completion_tokens": 230,
+          "total_tokens": 28434,
+          "prompt_tokens_details": {
+            "cached_tokens": 256
+          },
+          "prompt_cache_hit_tokens": 256,
+          "prompt_cache_miss_tokens": 27948
+        },
+        "costUpperYuan": 0.05774624,
+        "cumulativeUpperYuan": 7.7031215199999945,
+        "latencyMs": 1864.1324000000004,
+        "timestamp": "2026-10-12T01:27:30.178Z"
+      }
+    },
+    "b5dda089-1ff0-4e80-ab49-95e857e2d359": {
+      "card": "T07",
+      "label": "content-T07-npc_wt_keli-manual-review",
+      "reservedYuan": 0.206312,
+      "status": "settled",
+      "costUpperYuan": 0.0567396,
+      "measurement": {
+        "label": "content-T07-npc_wt_keli-manual-review",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 28077,
+          "completion_tokens": 230,
+          "total_tokens": 28307,
+          "prompt_tokens_details": {
+            "cached_tokens": 640
+          },
+          "prompt_cache_hit_tokens": 640,
+          "prompt_cache_miss_tokens": 27437
+        },
+        "costUpperYuan": 0.0567396,
+        "cumulativeUpperYuan": 7.759861119999995,
+        "latencyMs": 1770.4958000000006,
+        "timestamp": "2026-10-12T01:27:32.306Z"
+      }
+    },
+    "5ac13eae-8b91-4bfa-8ea2-e5811fe3ecc6": {
+      "card": "T07",
+      "label": "content-T07-npc_wt_duke-manual-review",
+      "reservedYuan": 0.209108,
+      "status": "settled",
+      "costUpperYuan": 0.05846224,
+      "measurement": {
+        "label": "content-T07-npc_wt_duke-manual-review",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 28526,
+          "completion_tokens": 239,
+          "total_tokens": 28765,
+          "prompt_tokens_details": {
+            "cached_tokens": 256
+          },
+          "prompt_cache_hit_tokens": 256,
+          "prompt_cache_miss_tokens": 28270
+        },
+        "costUpperYuan": 0.05846224,
+        "cumulativeUpperYuan": 7.818323359999995,
+        "latencyMs": 1734.6210000000028,
+        "timestamp": "2026-10-12T01:27:34.461Z"
+      }
+    },
+    "4103786d-7175-4cb1-8c0c-b85e1f3e8804": {
+      "card": "T07",
+      "label": "content-T07-npc_wt_liuyan-manual-review",
+      "reservedYuan": 0.209782,
+      "status": "settled",
+      "costUpperYuan": 0.0615416,
+      "measurement": {
+        "label": "content-T07-npc_wt_liuyan-manual-review",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 28606,
+          "completion_tokens": 698,
+          "total_tokens": 29304,
+          "prompt_tokens_details": {
+            "cached_tokens": 640
+          },
+          "prompt_cache_hit_tokens": 640,
+          "prompt_cache_miss_tokens": 27966
+        },
+        "costUpperYuan": 0.0615416,
+        "cumulativeUpperYuan": 7.879864959999995,
+        "latencyMs": 4648.659299999999,
+        "timestamp": "2026-10-12T01:27:39.496Z"
+      }
+    },
+    "0f34e078-d583-4c11-9478-d5c84ead4348": {
+      "card": "T07",
+      "label": "content-T07-npc_wt_zhangou-manual-review",
+      "reservedYuan": 0.209146,
+      "status": "settled",
+      "costUpperYuan": 0.06720623999999999,
+      "measurement": {
+        "label": "content-T07-npc_wt_zhangou-manual-review",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 28498,
+          "completion_tokens": 1339,
+          "total_tokens": 29837,
+          "prompt_tokens_details": {
+            "cached_tokens": 256
+          },
+          "prompt_cache_hit_tokens": 256,
+          "prompt_cache_miss_tokens": 28242
+        },
+        "costUpperYuan": 0.06720623999999999,
+        "cumulativeUpperYuan": 7.947071199999995,
+        "latencyMs": 7410.8361,
+        "timestamp": "2026-10-12T01:27:47.291Z"
+      }
+    },
+    "c7175cfe-2770-4f82-9540-4d71de4d03d4": {
+      "card": "T08",
+      "label": "content-first-review-npc_lq_luanpei-draft0",
+      "reservedYuan": 0.145104,
+      "status": "settled",
+      "costUpperYuan": 0.033526,
+      "measurement": {
+        "label": "content-first-review-npc_lq_luanpei-draft0",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 13899,
+          "completion_tokens": 716,
+          "total_tokens": 14615,
+          "prompt_tokens_details": {
+            "cached_tokens": 0
+          },
+          "prompt_cache_hit_tokens": 0,
+          "prompt_cache_miss_tokens": 13899
+        },
+        "costUpperYuan": 0.033526,
+        "cumulativeUpperYuan": 7.980597199999995,
+        "latencyMs": 4124.2597000000005,
+        "timestamp": "2026-10-12T08:30:15.584Z"
+      }
+    },
+    "3e96ba6f-4483-4acd-8777-0c7c6befa2f3": {
+      "card": "T08",
+      "label": "content-first-review-npc_lq_luanpei-review0",
+      "reservedYuan": 0.240718,
+      "status": "settled",
+      "costUpperYuan": 0.07886512,
+      "measurement": {
+        "label": "content-first-review-npc_lq_luanpei-review0",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 34234,
+          "completion_tokens": 1331,
+          "total_tokens": 35565,
+          "prompt_tokens_details": {
+            "cached_tokens": 128
+          },
+          "prompt_cache_hit_tokens": 128,
+          "prompt_cache_miss_tokens": 34106
+        },
+        "costUpperYuan": 0.07886512,
+        "cumulativeUpperYuan": 8.059462319999994,
+        "latencyMs": 7288.034699999999,
+        "timestamp": "2026-10-12T08:30:22.883Z"
+      }
+    },
+    "73a891a5-7361-4620-aecd-6ec3191542cc": {
+      "card": "T08",
+      "label": "content-first-review-npc_lq_jiaoyan-draft0",
+      "reservedYuan": 0.144498,
+      "status": "settled",
+      "costUpperYuan": 0.033674,
+      "measurement": {
+        "label": "content-first-review-npc_lq_jiaoyan-draft0",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 13997,
+          "completion_tokens": 710,
+          "total_tokens": 14707,
+          "prompt_tokens_details": {
+            "cached_tokens": 0
+          },
+          "prompt_cache_hit_tokens": 0,
+          "prompt_cache_miss_tokens": 13997
+        },
+        "costUpperYuan": 0.033674,
+        "cumulativeUpperYuan": 8.093136319999994,
+        "latencyMs": 3897.905200000001,
+        "timestamp": "2026-10-12T08:30:26.798Z"
+      }
+    },
+    "d9caba5f-73b7-4586-81f2-58d56f08677b": {
+      "card": "T08",
+      "label": "content-first-review-npc_lq_jiaoyan-review0",
+      "reservedYuan": 0.239788,
+      "status": "settled",
+      "costUpperYuan": 0.0808036,
+      "measurement": {
+        "label": "content-first-review-npc_lq_jiaoyan-review0",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 34149,
+          "completion_tokens": 1720,
+          "total_tokens": 35869,
+          "prompt_tokens_details": {
+            "cached_tokens": 640
+          },
+          "prompt_cache_hit_tokens": 640,
+          "prompt_cache_miss_tokens": 33509
+        },
+        "costUpperYuan": 0.0808036,
+        "cumulativeUpperYuan": 8.173939919999993,
+        "latencyMs": 10186.816,
+        "timestamp": "2026-10-12T08:30:36.995Z"
+      }
+    },
+    "5632189c-6f5a-4ddf-b36a-38215272ff1a": {
+      "card": "T08",
+      "label": "content-first-review-npc_lq_chuyin-draft0",
+      "reservedYuan": 0.142236,
+      "status": "settled",
+      "costUpperYuan": 0.032796,
+      "measurement": {
+        "label": "content-first-review-npc_lq_chuyin-draft0",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 13678,
+          "completion_tokens": 680,
+          "total_tokens": 14358,
+          "prompt_tokens_details": {
+            "cached_tokens": 0
+          },
+          "prompt_cache_hit_tokens": 0,
+          "prompt_cache_miss_tokens": 13678
+        },
+        "costUpperYuan": 0.032796,
+        "cumulativeUpperYuan": 8.206735919999993,
+        "latencyMs": 3384.766499999998,
+        "timestamp": "2026-10-12T08:30:40.394Z"
+      }
+    },
+    "78ae5b7b-ae82-4b68-93e9-9d2b78f3393b": {
+      "card": "T08",
+      "label": "content-first-review-npc_lq_chuyin-review0",
+      "reservedYuan": 0.238248,
+      "status": "settled",
+      "costUpperYuan": 0.07692424,
+      "measurement": {
+        "label": "content-first-review-npc_lq_chuyin-review0",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 34009,
+          "completion_tokens": 1176,
+          "total_tokens": 35185,
+          "prompt_tokens_details": {
+            "cached_tokens": 256
+          },
+          "prompt_cache_hit_tokens": 256,
+          "prompt_cache_miss_tokens": 33753
+        },
+        "costUpperYuan": 0.07692424,
+        "cumulativeUpperYuan": 8.283660159999993,
+        "latencyMs": 6694.3459,
+        "timestamp": "2026-10-12T08:30:47.098Z"
+      }
+    },
+    "55570854-e915-4ce7-89fc-b57b63c3dff9": {
+      "card": "T08",
+      "label": "content-first-review-npc_lq_xulong-draft0",
+      "reservedYuan": 0.141506,
+      "status": "settled",
+      "costUpperYuan": 0.032726,
+      "measurement": {
+        "label": "content-first-review-npc_lq_xulong-draft0",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 13603,
+          "completion_tokens": 690,
+          "total_tokens": 14293,
+          "prompt_tokens_details": {
+            "cached_tokens": 0
+          },
+          "prompt_cache_hit_tokens": 0,
+          "prompt_cache_miss_tokens": 13603
+        },
+        "costUpperYuan": 0.032726,
+        "cumulativeUpperYuan": 8.316386159999993,
+        "latencyMs": 3812.7934000000023,
+        "timestamp": "2026-10-12T08:30:50.923Z"
+      }
+    },
+    "0ea466c2-c3b5-4d50-bab3-5d7aa51a6689": {
+      "card": "T08",
+      "label": "content-first-review-npc_lq_xulong-review0",
+      "reservedYuan": 0.2374,
+      "status": "settled",
+      "costUpperYuan": 0.07211160000000001,
+      "measurement": {
+        "label": "content-first-review-npc_lq_xulong-review0",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 33919,
+          "completion_tokens": 691,
+          "total_tokens": 34610,
+          "prompt_tokens_details": {
+            "cached_tokens": 640
+          },
+          "prompt_cache_hit_tokens": 640,
+          "prompt_cache_miss_tokens": 33279
+        },
+        "costUpperYuan": 0.07211160000000001,
+        "cumulativeUpperYuan": 8.388497759999993,
+        "latencyMs": 4436.772500000006,
+        "timestamp": "2026-10-12T08:30:55.369Z"
+      }
+    },
+    "0815fa5a-86de-4d52-8c6c-31d190e55cd8": {
+      "card": "T08",
+      "label": "content-first-review-npc_lq_shenshu-draft0",
+      "reservedYuan": 0.145226,
+      "status": "settled",
+      "costUpperYuan": 0.033892,
+      "measurement": {
+        "label": "content-first-review-npc_lq_shenshu-draft0",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 14038,
+          "completion_tokens": 727,
+          "total_tokens": 14765,
+          "prompt_tokens_details": {
+            "cached_tokens": 0
+          },
+          "prompt_cache_hit_tokens": 0,
+          "prompt_cache_miss_tokens": 14038
+        },
+        "costUpperYuan": 0.033892,
+        "cumulativeUpperYuan": 8.422389759999993,
+        "latencyMs": 3626.8256000000038,
+        "timestamp": "2026-10-12T08:30:59.008Z"
+      }
+    },
+    "b36b3059-e501-4768-a6a5-ddf7322d6e92": {
+      "card": "T08",
+      "label": "content-first-review-npc_lq_shenshu-review0",
+      "reservedYuan": 0.240836,
+      "status": "settled",
+      "costUpperYuan": 0.0697536,
+      "measurement": {
+        "label": "content-first-review-npc_lq_shenshu-review0",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 34228,
+          "completion_tokens": 319,
+          "total_tokens": 34547,
+          "prompt_tokens_details": {
+            "cached_tokens": 640
+          },
+          "prompt_cache_hit_tokens": 640,
+          "prompt_cache_miss_tokens": 33588
+        },
+        "costUpperYuan": 0.0697536,
+        "cumulativeUpperYuan": 8.492143359999993,
+        "latencyMs": 2542.6644000000015,
+        "timestamp": "2026-10-12T08:31:01.560Z"
+      }
+    },
+    "9852d2bd-bf3d-4a50-af7d-1f1d0e426f54": {
+      "card": "T08",
+      "label": "content-first-review-npc_lq_ningye-draft0",
+      "reservedYuan": 0.143914,
+      "status": "settled",
+      "costUpperYuan": 0.03328,
+      "measurement": {
+        "label": "content-first-review-npc_lq_ningye-draft0",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 13784,
+          "completion_tokens": 714,
+          "total_tokens": 14498,
+          "prompt_tokens_details": {
+            "cached_tokens": 0
+          },
+          "prompt_cache_hit_tokens": 0,
+          "prompt_cache_miss_tokens": 13784
+        },
+        "costUpperYuan": 0.03328,
+        "cumulativeUpperYuan": 8.525423359999992,
+        "latencyMs": 3709.0418999999965,
+        "timestamp": "2026-10-12T08:31:05.281Z"
+      }
+    },
+    "8534fa77-f100-47a5-b4b6-a2c25c3c9786": {
+      "card": "T08",
+      "label": "content-first-review-npc_lq_ningye-review0",
+      "reservedYuan": 0.239338,
+      "status": "settled",
+      "costUpperYuan": 0.0749996,
+      "measurement": {
+        "label": "content-first-review-npc_lq_ningye-review0",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 33971,
+          "completion_tokens": 1039,
+          "total_tokens": 35010,
+          "prompt_tokens_details": {
+            "cached_tokens": 640
+          },
+          "prompt_cache_hit_tokens": 640,
+          "prompt_cache_miss_tokens": 33331
+        },
+        "costUpperYuan": 0.0749996,
+        "cumulativeUpperYuan": 8.600422959999992,
+        "latencyMs": 6341.412000000004,
+        "timestamp": "2026-10-12T08:31:11.631Z"
+      }
+    },
+    "b105b5d7-d5a0-4bb0-ae00-78295b953fd7": {
+      "card": "T08",
+      "label": "content-first-review-npc_lq_zhenxi-draft0",
+      "reservedYuan": 0.150036,
+      "status": "settled",
+      "costUpperYuan": 0.03598,
+      "measurement": {
+        "label": "content-first-review-npc_lq_zhenxi-draft0",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 14878,
+          "completion_tokens": 778,
+          "total_tokens": 15656,
+          "prompt_tokens_details": {
+            "cached_tokens": 0
+          },
+          "prompt_cache_hit_tokens": 0,
+          "prompt_cache_miss_tokens": 14878
+        },
+        "costUpperYuan": 0.03598,
+        "cumulativeUpperYuan": 8.636402959999993,
+        "latencyMs": 4012.8634999999995,
+        "timestamp": "2026-10-12T08:31:15.655Z"
+      }
+    },
+    "c35e80db-9ae8-41c9-8e65-37a34690a7f5": {
+      "card": "T08",
+      "label": "content-first-review-npc_lq_zhenxi-review0",
+      "reservedYuan": 0.238384,
+      "status": "settled",
+      "costUpperYuan": 0.07961224,
+      "measurement": {
+        "label": "content-first-review-npc_lq_zhenxi-review0",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 34097,
+          "completion_tokens": 1490,
+          "total_tokens": 35587,
+          "prompt_tokens_details": {
+            "cached_tokens": 256
+          },
+          "prompt_cache_hit_tokens": 256,
+          "prompt_cache_miss_tokens": 33841
+        },
+        "costUpperYuan": 0.07961224,
+        "cumulativeUpperYuan": 8.716015199999992,
+        "latencyMs": 8149.057399999998,
+        "timestamp": "2026-10-12T08:31:23.813Z"
+      }
+    },
+    "c7a13995-d5f7-47db-933e-88021c1d290d": {
+      "card": "T08",
+      "label": "content-first-review-npc_lq_zhenxi-draft1",
+      "reservedYuan": 0.155018,
+      "status": "settled",
+      "costUpperYuan": 0.00812392,
+      "measurement": {
+        "label": "content-first-review-npc_lq_zhenxi-draft1",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 15501,
+          "completion_tokens": 778,
+          "total_tokens": 16279,
+          "prompt_tokens_details": {
+            "cached_tokens": 14848
+          },
+          "prompt_cache_hit_tokens": 14848,
+          "prompt_cache_miss_tokens": 653
+        },
+        "costUpperYuan": 0.00812392,
+        "cumulativeUpperYuan": 8.724139119999991,
+        "latencyMs": 3812.2819000000018,
+        "timestamp": "2026-10-12T08:31:27.634Z"
+      }
+    },
+    "2a1ce1e1-746b-4ff6-89e6-2413146fc811": {
+      "card": "T08",
+      "label": "content-first-review-npc_lq_zhenxi-review1",
+      "reservedYuan": 0.238384,
+      "status": "settled",
+      "costUpperYuan": 0.013502799999999999,
+      "measurement": {
+        "label": "content-first-review-npc_lq_zhenxi-review1",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 34097,
+          "completion_tokens": 1474,
+          "total_tokens": 35571,
+          "prompt_tokens_details": {
+            "cached_tokens": 33920
+          },
+          "prompt_cache_hit_tokens": 33920,
+          "prompt_cache_miss_tokens": 177
+        },
+        "costUpperYuan": 0.013502799999999999,
+        "cumulativeUpperYuan": 8.73764191999999,
+        "latencyMs": 7556.304699999993,
+        "timestamp": "2026-10-12T08:31:35.201Z"
+      }
+    },
+    "ce693a14-ccd6-4c38-ab98-7cad760a8cbd": {
+      "card": "T08",
+      "label": "content-first-review-npc_lq_ganqi-draft0",
+      "reservedYuan": 0.15064,
+      "status": "settled",
+      "costUpperYuan": 0.035924,
+      "measurement": {
+        "label": "content-first-review-npc_lq_ganqi-draft0",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 14942,
+          "completion_tokens": 755,
+          "total_tokens": 15697,
+          "prompt_tokens_details": {
+            "cached_tokens": 0
+          },
+          "prompt_cache_hit_tokens": 0,
+          "prompt_cache_miss_tokens": 14942
+        },
+        "costUpperYuan": 0.035924,
+        "cumulativeUpperYuan": 8.77356591999999,
+        "latencyMs": 3993.983500000002,
+        "timestamp": "2026-10-12T08:31:39.246Z"
+      }
+    },
+    "baa910b6-f30a-4eb1-bce0-8b480eaf37ed": {
+      "card": "T08",
+      "label": "content-first-review-npc_lq_ganqi-review0",
+      "reservedYuan": 0.239564,
+      "status": "settled",
+      "costUpperYuan": 0.07442560000000001,
+      "measurement": {
+        "label": "content-first-review-npc_lq_ganqi-review0",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 34180,
+          "completion_tokens": 915,
+          "total_tokens": 35095,
+          "prompt_tokens_details": {
+            "cached_tokens": 640
+          },
+          "prompt_cache_hit_tokens": 640,
+          "prompt_cache_miss_tokens": 33540
+        },
+        "costUpperYuan": 0.07442560000000001,
+        "cumulativeUpperYuan": 8.84799151999999,
+        "latencyMs": 5488.329499999993,
+        "timestamp": "2026-10-12T08:31:44.787Z"
+      }
+    },
+    "05f342ad-ec04-4b05-9bff-c8df226b70d0": {
+      "card": "T08",
+      "label": "content-first-review-npc_lq_ganqi-draft1",
+      "reservedYuan": 0.155398,
+      "status": "settled",
+      "costUpperYuan": 0.00799792,
+      "measurement": {
+        "label": "content-first-review-npc_lq_ganqi-draft1",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 15530,
+          "completion_tokens": 755,
+          "total_tokens": 16285,
+          "prompt_tokens_details": {
+            "cached_tokens": 14848
+          },
+          "prompt_cache_hit_tokens": 14848,
+          "prompt_cache_miss_tokens": 682
+        },
+        "costUpperYuan": 0.00799792,
+        "cumulativeUpperYuan": 8.85598943999999,
+        "latencyMs": 3387.5235000000102,
+        "timestamp": "2026-10-12T08:31:48.227Z"
+      }
+    },
+    "0cf99b61-9eec-4645-8a25-f78b4452b58d": {
+      "card": "T08",
+      "label": "content-first-review-npc_lq_ganqi-review1",
+      "reservedYuan": 0.239564,
+      "status": "settled",
+      "costUpperYuan": 0.00726184,
+      "measurement": {
+        "label": "content-first-review-npc_lq_ganqi-review1",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 34180,
+          "completion_tokens": 704,
+          "total_tokens": 34884,
+          "prompt_tokens_details": {
+            "cached_tokens": 34046
+          },
+          "prompt_cache_hit_tokens": 34046,
+          "prompt_cache_miss_tokens": 134
+        },
+        "costUpperYuan": 0.00726184,
+        "cumulativeUpperYuan": 8.86325127999999,
+        "latencyMs": 3951.9504000000015,
+        "timestamp": "2026-10-12T08:31:52.234Z"
+      }
+    },
+    "1f5128f2-b108-4155-af45-f3d7e62704a9": {
+      "card": "T08",
+      "label": "content-first-review-npc_lq_zhouwu-draft0",
+      "reservedYuan": 0.149272,
+      "status": "settled",
+      "costUpperYuan": 0.035856,
+      "measurement": {
+        "label": "content-first-review-npc_lq_zhouwu-draft0",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 14768,
+          "completion_tokens": 790,
+          "total_tokens": 15558,
+          "prompt_tokens_details": {
+            "cached_tokens": 0
+          },
+          "prompt_cache_hit_tokens": 0,
+          "prompt_cache_miss_tokens": 14768
+        },
+        "costUpperYuan": 0.035856,
+        "cumulativeUpperYuan": 8.89910727999999,
+        "latencyMs": 3986.137300000002,
+        "timestamp": "2026-10-12T08:31:56.235Z"
+      }
+    },
+    "bde915c7-ea9b-44ef-afd3-276fa8beaca1": {
+      "card": "T08",
+      "label": "content-first-review-npc_lq_zhouwu-review0",
+      "reservedYuan": 0.237772,
+      "status": "settled",
+      "costUpperYuan": 0.07761624,
+      "measurement": {
+        "label": "content-first-review-npc_lq_zhouwu-review0",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 33999,
+          "completion_tokens": 1265,
+          "total_tokens": 35264,
+          "prompt_tokens_details": {
+            "cached_tokens": 256
+          },
+          "prompt_cache_hit_tokens": 256,
+          "prompt_cache_miss_tokens": 33743
+        },
+        "costUpperYuan": 0.07761624,
+        "cumulativeUpperYuan": 8.97672351999999,
+        "latencyMs": 7168.0095,
+        "timestamp": "2026-10-12T08:32:03.412Z"
+      }
+    },
+    "aa6c498e-df23-4e54-bea7-9e683b245d8f": {
+      "card": "T08",
+      "label": "content-first-review-npc_lq_huoji-draft0",
+      "reservedYuan": 0.150358,
+      "status": "settled",
+      "costUpperYuan": 0.03617,
+      "measurement": {
+        "label": "content-first-review-npc_lq_huoji-draft0",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 14993,
+          "completion_tokens": 773,
+          "total_tokens": 15766,
+          "prompt_tokens_details": {
+            "cached_tokens": 0
+          },
+          "prompt_cache_hit_tokens": 0,
+          "prompt_cache_miss_tokens": 14993
+        },
+        "costUpperYuan": 0.03617,
+        "cumulativeUpperYuan": 9.01289351999999,
+        "latencyMs": 3911.9774000000034,
+        "timestamp": "2026-10-12T08:32:07.376Z"
+      }
+    },
+    "298d7ab6-e2a7-48ef-befd-bd71b8af202e": {
+      "card": "T08",
+      "label": "content-first-review-npc_lq_huoji-review0",
+      "reservedYuan": 0.239894,
+      "status": "settled",
+      "costUpperYuan": 0.0782676,
+      "measurement": {
+        "label": "content-first-review-npc_lq_huoji-review0",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 34337,
+          "completion_tokens": 1356,
+          "total_tokens": 35693,
+          "prompt_tokens_details": {
+            "cached_tokens": 640
+          },
+          "prompt_cache_hit_tokens": 640,
+          "prompt_cache_miss_tokens": 33697
+        },
+        "costUpperYuan": 0.0782676,
+        "cumulativeUpperYuan": 9.09116111999999,
+        "latencyMs": 8191.248800000001,
+        "timestamp": "2026-10-12T08:32:15.621Z"
+      }
+    },
+    "cb705423-2c2d-4805-a228-19c0ee2df714": {
+      "card": "T08",
+      "label": "content-first-review-npc_lq_huoji-draft1",
+      "reservedYuan": 0.158644,
+      "status": "settled",
+      "costUpperYuan": 0.009372799999999999,
+      "measurement": {
+        "label": "content-first-review-npc_lq_huoji-draft1",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 16020,
+          "completion_tokens": 773,
+          "total_tokens": 16793,
+          "prompt_tokens_details": {
+            "cached_tokens": 14720
+          },
+          "prompt_cache_hit_tokens": 14720,
+          "prompt_cache_miss_tokens": 1300
+        },
+        "costUpperYuan": 0.009372799999999999,
+        "cumulativeUpperYuan": 9.10053391999999,
+        "latencyMs": 3626.181700000001,
+        "timestamp": "2026-10-12T08:32:19.298Z"
+      }
+    },
+    "b99ae67e-7f35-476b-9cc6-e3eb8c8ca173": {
+      "card": "T08",
+      "label": "content-first-review-npc_lq_huoji-review1",
+      "reservedYuan": 0.239894,
+      "status": "settled",
+      "costUpperYuan": 0.012305040000000001,
+      "measurement": {
+        "label": "content-first-review-npc_lq_huoji-review1",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 34337,
+          "completion_tokens": 1327,
+          "total_tokens": 35664,
+          "prompt_tokens_details": {
+            "cached_tokens": 34176
+          },
+          "prompt_cache_hit_tokens": 34176,
+          "prompt_cache_miss_tokens": 161
+        },
+        "costUpperYuan": 0.012305040000000001,
+        "cumulativeUpperYuan": 9.112838959999989,
+        "latencyMs": 6817.5246999999945,
+        "timestamp": "2026-10-12T08:32:26.169Z"
+      }
+    },
+    "e1cc3a5f-f6a0-44cb-8d3a-7f20d3966888": {
+      "card": "T08",
+      "label": "content-first-review-npc_lq_huoji-draft2",
+      "reservedYuan": 0.154404,
+      "status": "settled",
+      "costUpperYuan": 0.00811992,
+      "measurement": {
+        "label": "content-first-review-npc_lq_huoji-draft2",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 15519,
+          "completion_tokens": 773,
+          "total_tokens": 16292,
+          "prompt_tokens_details": {
+            "cached_tokens": 14848
+          },
+          "prompt_cache_hit_tokens": 14848,
+          "prompt_cache_miss_tokens": 671
+        },
+        "costUpperYuan": 0.00811992,
+        "cumulativeUpperYuan": 9.12095887999999,
+        "latencyMs": 3911.8519000000088,
+        "timestamp": "2026-10-12T08:32:30.136Z"
+      }
+    },
+    "d5a908de-29f6-462e-926b-6933f376beb5": {
+      "card": "T08",
+      "label": "content-first-review-npc_lq_huoji-review2",
+      "reservedYuan": 0.239894,
+      "status": "settled",
+      "costUpperYuan": 0.010265040000000001,
+      "measurement": {
+        "label": "content-first-review-npc_lq_huoji-review2",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 34337,
+          "completion_tokens": 1072,
+          "total_tokens": 35409,
+          "prompt_tokens_details": {
+            "cached_tokens": 34176
+          },
+          "prompt_cache_hit_tokens": 34176,
+          "prompt_cache_miss_tokens": 161
+        },
+        "costUpperYuan": 0.010265040000000001,
+        "cumulativeUpperYuan": 9.13122391999999,
+        "latencyMs": 6055.989499999996,
+        "timestamp": "2026-10-12T08:32:36.254Z"
+      }
+    },
+    "7e691269-c369-4b69-95bc-d0d29a9b9667": {
+      "card": "T08",
+      "label": "content-first-review-npc_lq_minghe-draft0",
+      "reservedYuan": 0.150274,
+      "status": "settled",
+      "costUpperYuan": 0.036374,
+      "measurement": {
+        "label": "content-first-review-npc_lq_minghe-draft0",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 15027,
+          "completion_tokens": 790,
+          "total_tokens": 15817,
+          "prompt_tokens_details": {
+            "cached_tokens": 0
+          },
+          "prompt_cache_hit_tokens": 0,
+          "prompt_cache_miss_tokens": 15027
+        },
+        "costUpperYuan": 0.036374,
+        "cumulativeUpperYuan": 9.16759791999999,
+        "latencyMs": 4112.824200000003,
+        "timestamp": "2026-10-12T08:32:40.428Z"
+      }
+    },
+    "1fc61613-e332-40d1-86ca-fb78b8ec1a6b": {
+      "card": "T08",
+      "label": "content-first-review-npc_lq_minghe-review0",
+      "reservedYuan": 0.239146,
+      "status": "settled",
+      "costUpperYuan": 0.07457224000000001,
+      "measurement": {
+        "label": "content-first-review-npc_lq_minghe-review0",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 34293,
+          "completion_tokens": 811,
+          "total_tokens": 35104,
+          "prompt_tokens_details": {
+            "cached_tokens": 256
+          },
+          "prompt_cache_hit_tokens": 256,
+          "prompt_cache_miss_tokens": 34037
+        },
+        "costUpperYuan": 0.07457224000000001,
+        "cumulativeUpperYuan": 9.24217015999999,
+        "latencyMs": 5245.647700000001,
+        "timestamp": "2026-10-12T08:32:45.725Z"
+      }
+    },
+    "b1c2d4df-3fd3-4115-803f-a0e606ddde00": {
+      "card": "T08",
+      "label": "content-first-review-npc_lq_yunxiu-draft0",
+      "reservedYuan": 0.150292,
+      "status": "settled",
+      "costUpperYuan": 0.036688,
+      "measurement": {
+        "label": "content-first-review-npc_lq_yunxiu-draft0",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 15208,
+          "completion_tokens": 784,
+          "total_tokens": 15992,
+          "prompt_tokens_details": {
+            "cached_tokens": 0
+          },
+          "prompt_cache_hit_tokens": 0,
+          "prompt_cache_miss_tokens": 15208
+        },
+        "costUpperYuan": 0.036688,
+        "cumulativeUpperYuan": 9.27885815999999,
+        "latencyMs": 4067.3197999999975,
+        "timestamp": "2026-10-12T08:32:49.806Z"
+      }
+    },
+    "6e8ea589-1fd5-4a99-a8cf-14cbfe571b1b": {
+      "card": "T08",
+      "label": "content-first-review-npc_lq_yunxiu-review0",
+      "reservedYuan": 0.238712,
+      "status": "settled",
+      "costUpperYuan": 0.0733956,
+      "measurement": {
+        "label": "content-first-review-npc_lq_yunxiu-review0",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 34281,
+          "completion_tokens": 761,
+          "total_tokens": 35042,
+          "prompt_tokens_details": {
+            "cached_tokens": 640
+          },
+          "prompt_cache_hit_tokens": 640,
+          "prompt_cache_miss_tokens": 33641
+        },
+        "costUpperYuan": 0.0733956,
+        "cumulativeUpperYuan": 9.35225375999999,
+        "latencyMs": 4514.812200000015,
+        "timestamp": "2026-10-12T08:32:54.332Z"
+      }
+    },
+    "7685cf3b-c40c-455a-a46b-258c59269a4b": {
+      "card": "T08",
+      "label": "content-first-review-npc_lq_fushen-draft0",
+      "reservedYuan": 0.154562,
+      "status": "settled",
+      "costUpperYuan": 0.036316,
+      "measurement": {
+        "label": "content-first-review-npc_lq_fushen-draft0",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 15234,
+          "completion_tokens": 731,
+          "total_tokens": 15965,
+          "prompt_tokens_details": {
+            "cached_tokens": 0
+          },
+          "prompt_cache_hit_tokens": 0,
+          "prompt_cache_miss_tokens": 15234
+        },
+        "costUpperYuan": 0.036316,
+        "cumulativeUpperYuan": 9.388569759999989,
+        "latencyMs": 3997.7430000000168,
+        "timestamp": "2026-10-12T08:32:58.380Z"
+      }
+    },
+    "13710e26-c91e-406a-98dd-56ea61bf41af": {
+      "card": "T08",
+      "label": "content-first-review-npc_lq_fushen-review0",
+      "reservedYuan": 0.244072,
+      "status": "settled",
+      "costUpperYuan": 0.07520224,
+      "measurement": {
+        "label": "content-first-review-npc_lq_fushen-review0",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 34604,
+          "completion_tokens": 812,
+          "total_tokens": 35416,
+          "prompt_tokens_details": {
+            "cached_tokens": 256
+          },
+          "prompt_cache_hit_tokens": 256,
+          "prompt_cache_miss_tokens": 34348
+        },
+        "costUpperYuan": 0.07520224,
+        "cumulativeUpperYuan": 9.463771999999988,
+        "latencyMs": 5168.333299999998,
+        "timestamp": "2026-10-12T08:33:03.600Z"
+      }
+    },
+    "31fc2c0b-f1f2-4074-b7f1-82c51b324bf3": {
+      "card": "T08",
+      "label": "content-first-review-npc_lq_fushen-draft1",
+      "reservedYuan": 0.158528,
+      "status": "settled",
+      "costUpperYuan": 0.00790504,
+      "measurement": {
+        "label": "content-first-review-npc_lq_fushen-draft1",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 15705,
+          "completion_tokens": 731,
+          "total_tokens": 16436,
+          "prompt_tokens_details": {
+            "cached_tokens": 14976
+          },
+          "prompt_cache_hit_tokens": 14976,
+          "prompt_cache_miss_tokens": 729
+        },
+        "costUpperYuan": 0.00790504,
+        "cumulativeUpperYuan": 9.471677039999989,
+        "latencyMs": 3551.3310000000056,
+        "timestamp": "2026-10-12T08:33:07.203Z"
+      }
+    },
+    "e3b872ae-4ef5-453b-9af6-e2b86f761519": {
+      "card": "T08",
+      "label": "content-first-review-npc_lq_fushen-review1",
+      "reservedYuan": 0.244072,
+      "status": "settled",
+      "costUpperYuan": 0.008313280000000001,
+      "measurement": {
+        "label": "content-first-review-npc_lq_fushen-review1",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 34604,
+          "completion_tokens": 824,
+          "total_tokens": 35428,
+          "prompt_tokens_details": {
+            "cached_tokens": 34432
+          },
+          "prompt_cache_hit_tokens": 34432,
+          "prompt_cache_miss_tokens": 172
+        },
+        "costUpperYuan": 0.008313280000000001,
+        "cumulativeUpperYuan": 9.479990319999988,
+        "latencyMs": 4939.363599999982,
+        "timestamp": "2026-10-12T08:33:12.197Z"
+      }
+    },
+    "b092ce17-b94c-41cc-bdff-de6d1b9b4528": {
+      "card": "T08",
+      "label": "content-first-review-npc_lq_fushen-draft2",
+      "reservedYuan": 0.158642,
+      "status": "settled",
+      "costUpperYuan": 0.00792904,
+      "measurement": {
+        "label": "content-first-review-npc_lq_fushen-draft2",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 15717,
+          "completion_tokens": 731,
+          "total_tokens": 16448,
+          "prompt_tokens_details": {
+            "cached_tokens": 14976
+          },
+          "prompt_cache_hit_tokens": 14976,
+          "prompt_cache_miss_tokens": 741
+        },
+        "costUpperYuan": 0.00792904,
+        "cumulativeUpperYuan": 9.487919359999989,
+        "latencyMs": 3691.0728000000236,
+        "timestamp": "2026-10-12T08:33:15.942Z"
+      }
+    },
+    "3506c60f-02b6-4ee2-8990-6c43a8b5c6ba": {
+      "card": "T08",
+      "label": "content-first-review-npc_lq_fushen-review2",
+      "reservedYuan": 0.244072,
+      "status": "settled",
+      "costUpperYuan": 0.00785728,
+      "measurement": {
+        "label": "content-first-review-npc_lq_fushen-review2",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 34604,
+          "completion_tokens": 767,
+          "total_tokens": 35371,
+          "prompt_tokens_details": {
+            "cached_tokens": 34432
+          },
+          "prompt_cache_hit_tokens": 34432,
+          "prompt_cache_miss_tokens": 172
+        },
+        "costUpperYuan": 0.00785728,
+        "cumulativeUpperYuan": 9.495776639999988,
+        "latencyMs": 4715.785899999988,
+        "timestamp": "2026-10-12T08:33:20.714Z"
+      }
+    },
+    "9b852c63-3809-47fb-977b-b1a954cc818b": {
+      "card": "T08",
+      "label": "content-first-review-npc_lq_pijing-draft0",
+      "reservedYuan": 0.150754,
+      "status": "settled",
+      "costUpperYuan": 0.035092,
+      "measurement": {
+        "label": "content-first-review-npc_lq_pijing-draft0",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 14594,
+          "completion_tokens": 738,
+          "total_tokens": 15332,
+          "prompt_tokens_details": {
+            "cached_tokens": 0
+          },
+          "prompt_cache_hit_tokens": 0,
+          "prompt_cache_miss_tokens": 14594
+        },
+        "costUpperYuan": 0.035092,
+        "cumulativeUpperYuan": 9.530868639999989,
+        "latencyMs": 3336.1749999999884,
+        "timestamp": "2026-10-12T08:33:24.069Z"
+      }
+    },
+    "75d927d7-416f-4a2d-80e2-9fa3c286e054": {
+      "card": "T08",
+      "label": "content-first-review-npc_lq_pijing-review0",
+      "reservedYuan": 0.24004,
+      "status": "settled",
+      "costUpperYuan": 0.08208624,
+      "measurement": {
+        "label": "content-first-review-npc_lq_pijing-review0",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 34094,
+          "completion_tokens": 1800,
+          "total_tokens": 35894,
+          "prompt_tokens_details": {
+            "cached_tokens": 256
+          },
+          "prompt_cache_hit_tokens": 256,
+          "prompt_cache_miss_tokens": 33838
+        },
+        "costUpperYuan": 0.08208624,
+        "cumulativeUpperYuan": 9.61295487999999,
+        "latencyMs": 10427.023400000005,
+        "timestamp": "2026-10-12T08:33:34.507Z"
+      }
+    },
+    "312b9697-5182-4f7f-90bc-28be944a5c6e": {
+      "card": "T08",
+      "label": "content-first-review-npc_lq_pijing-draft1",
+      "reservedYuan": 0.151098,
+      "status": "settled",
+      "costUpperYuan": 0.007077440000000001,
+      "measurement": {
+        "label": "content-first-review-npc_lq_pijing-draft1",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 14636,
+          "completion_tokens": 738,
+          "total_tokens": 15374,
+          "prompt_tokens_details": {
+            "cached_tokens": 14336
+          },
+          "prompt_cache_hit_tokens": 14336,
+          "prompt_cache_miss_tokens": 300
+        },
+        "costUpperYuan": 0.007077440000000001,
+        "cumulativeUpperYuan": 9.62003231999999,
+        "latencyMs": 3381.137400000007,
+        "timestamp": "2026-10-12T08:33:37.897Z"
+      }
+    },
+    "caa87e75-83e8-40dc-a586-6de7dc9d2d65": {
+      "card": "T08",
+      "label": "content-first-review-npc_lq_pijing-review1",
+      "reservedYuan": 0.24004,
+      "status": "settled",
+      "costUpperYuan": 0.0068648,
+      "measurement": {
+        "label": "content-first-review-npc_lq_pijing-review1",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 34094,
+          "completion_tokens": 645,
+          "total_tokens": 34739,
+          "prompt_tokens_details": {
+            "cached_tokens": 33920
+          },
+          "prompt_cache_hit_tokens": 33920,
+          "prompt_cache_miss_tokens": 174
+        },
+        "costUpperYuan": 0.0068648,
+        "cumulativeUpperYuan": 9.62689711999999,
+        "latencyMs": 3809.154200000019,
+        "timestamp": "2026-10-12T08:33:41.716Z"
+      }
+    },
+    "7051199c-b514-424b-979c-7b78d8b36b08": {
+      "card": "T08",
+      "label": "content-first-review-npc_lq_yinzhi-draft0",
+      "reservedYuan": 0.148956,
+      "status": "settled",
+      "costUpperYuan": 0.035498,
+      "measurement": {
+        "label": "content-first-review-npc_lq_yinzhi-draft0",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 14725,
+          "completion_tokens": 756,
+          "total_tokens": 15481,
+          "prompt_tokens_details": {
+            "cached_tokens": 0
+          },
+          "prompt_cache_hit_tokens": 0,
+          "prompt_cache_miss_tokens": 14725
+        },
+        "costUpperYuan": 0.035498,
+        "cumulativeUpperYuan": 9.66239511999999,
+        "latencyMs": 3553.685300000012,
+        "timestamp": "2026-10-12T08:33:45.322Z"
+      }
+    },
+    "a396fa6f-6c5d-4b2c-a6a6-2e4b7b25c329": {
+      "card": "T08",
+      "label": "content-first-review-npc_lq_yinzhi-review0",
+      "reservedYuan": 0.237624,
+      "status": "settled",
+      "costUpperYuan": 0.0811096,
+      "measurement": {
+        "label": "content-first-review-npc_lq_yinzhi-review0",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 33982,
+          "completion_tokens": 1800,
+          "total_tokens": 35782,
+          "prompt_tokens_details": {
+            "cached_tokens": 640
+          },
+          "prompt_cache_hit_tokens": 640,
+          "prompt_cache_miss_tokens": 33342
+        },
+        "costUpperYuan": 0.0811096,
+        "cumulativeUpperYuan": 9.74350471999999,
+        "latencyMs": 8977.882500000007,
+        "timestamp": "2026-10-12T08:33:54.352Z"
+      }
+    },
+    "3db3d208-7f8f-4887-98ed-6033168d038b": {
+      "card": "T08",
+      "label": "content-first-review-npc_lq_yinzhi-draft1",
+      "reservedYuan": 0.1493,
+      "status": "settled",
+      "costUpperYuan": 0.00723256,
+      "measurement": {
+        "label": "content-first-review-npc_lq_yinzhi-draft1",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 14767,
+          "completion_tokens": 756,
+          "total_tokens": 15523,
+          "prompt_tokens_details": {
+            "cached_tokens": 14464
+          },
+          "prompt_cache_hit_tokens": 14464,
+          "prompt_cache_miss_tokens": 303
+        },
+        "costUpperYuan": 0.00723256,
+        "cumulativeUpperYuan": 9.75073727999999,
+        "latencyMs": 3528.1222000000125,
+        "timestamp": "2026-10-12T08:33:57.935Z"
+      }
+    },
+    "da7c9a4c-880b-4e9e-a119-126973e4a1a6": {
+      "card": "T08",
+      "label": "content-first-review-npc_lq_yinzhi-review1",
+      "reservedYuan": 0.237624,
+      "status": "settled",
+      "costUpperYuan": 0.01194768,
+      "measurement": {
+        "label": "content-first-review-npc_lq_yinzhi-review1",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 33982,
+          "completion_tokens": 1277,
+          "total_tokens": 35259,
+          "prompt_tokens_details": {
+            "cached_tokens": 33792
+          },
+          "prompt_cache_hit_tokens": 33792,
+          "prompt_cache_miss_tokens": 190
+        },
+        "costUpperYuan": 0.01194768,
+        "cumulativeUpperYuan": 9.76268495999999,
+        "latencyMs": 7455.180099999998,
+        "timestamp": "2026-10-12T08:34:05.443Z"
+      }
+    },
+    "c472de67-4258-4b0b-a2e8-c50760cbed0b": {
+      "card": "T08",
+      "label": "content-first-review-npc_lq_tanyu-draft0",
+      "reservedYuan": 0.151944,
+      "status": "settled",
+      "costUpperYuan": 0.03705,
+      "measurement": {
+        "label": "content-first-review-npc_lq_tanyu-draft0",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 15305,
+          "completion_tokens": 805,
+          "total_tokens": 16110,
+          "prompt_tokens_details": {
+            "cached_tokens": 0
+          },
+          "prompt_cache_hit_tokens": 0,
+          "prompt_cache_miss_tokens": 15305
+        },
+        "costUpperYuan": 0.03705,
+        "cumulativeUpperYuan": 9.799734959999991,
+        "latencyMs": 3667.601800000004,
+        "timestamp": "2026-10-12T08:34:09.167Z"
+      }
+    },
+    "40f3fb76-aa45-4d39-bf34-7b5d98594d99": {
+      "card": "T08",
+      "label": "content-first-review-npc_lq_tanyu-review0",
+      "reservedYuan": 0.241346,
+      "status": "settled",
+      "costUpperYuan": 0.07265360000000001,
+      "measurement": {
+        "label": "content-first-review-npc_lq_tanyu-review0",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 34626,
+          "completion_tokens": 582,
+          "total_tokens": 35208,
+          "prompt_tokens_details": {
+            "cached_tokens": 640
+          },
+          "prompt_cache_hit_tokens": 640,
+          "prompt_cache_miss_tokens": 33986
+        },
+        "costUpperYuan": 0.07265360000000001,
+        "cumulativeUpperYuan": 9.872388559999992,
+        "latencyMs": 3905.043399999995,
+        "timestamp": "2026-10-12T08:34:13.124Z"
+      }
+    },
+    "23597ecd-5b9d-4c84-a706-b7287b1934ec": {
+      "card": "T08",
+      "label": "content-first-review-npc_lq_tanyu-draft1",
+      "reservedYuan": 0.154016,
+      "status": "settled",
+      "costUpperYuan": 0.008201040000000001,
+      "measurement": {
+        "label": "content-first-review-npc_lq_tanyu-draft1",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 15557,
+          "completion_tokens": 805,
+          "total_tokens": 16362,
+          "prompt_tokens_details": {
+            "cached_tokens": 14976
+          },
+          "prompt_cache_hit_tokens": 14976,
+          "prompt_cache_miss_tokens": 581
+        },
+        "costUpperYuan": 0.008201040000000001,
+        "cumulativeUpperYuan": 9.880589599999992,
+        "latencyMs": 3541.1320000000123,
+        "timestamp": "2026-10-12T08:34:16.717Z"
+      }
+    },
+    "4d3961a1-59eb-489a-9074-90ff531d25a0": {
+      "card": "T08",
+      "label": "content-first-review-npc_lq_tanyu-review1",
+      "reservedYuan": 0.241346,
+      "status": "settled",
+      "costUpperYuan": 0.00783728,
+      "measurement": {
+        "label": "content-first-review-npc_lq_tanyu-review1",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 34626,
+          "completion_tokens": 759,
+          "total_tokens": 35385,
+          "prompt_tokens_details": {
+            "cached_tokens": 34432
+          },
+          "prompt_cache_hit_tokens": 34432,
+          "prompt_cache_miss_tokens": 194
+        },
+        "costUpperYuan": 0.00783728,
+        "cumulativeUpperYuan": 9.888426879999992,
+        "latencyMs": 4312.079800000007,
+        "timestamp": "2026-10-12T08:34:21.084Z"
+      }
+    },
+    "092f64bb-53d5-4d31-92f1-18c991d90e0f": {
+      "card": "T08",
+      "label": "content-first-review-npc_lq_tanyu-draft2",
+      "reservedYuan": 0.153594,
+      "status": "settled",
+      "costUpperYuan": 0.00784816,
+      "measurement": {
+        "label": "content-first-review-npc_lq_tanyu-draft2",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 15506,
+          "completion_tokens": 805,
+          "total_tokens": 16311,
+          "prompt_tokens_details": {
+            "cached_tokens": 15104
+          },
+          "prompt_cache_hit_tokens": 15104,
+          "prompt_cache_miss_tokens": 402
+        },
+        "costUpperYuan": 0.00784816,
+        "cumulativeUpperYuan": 9.896275039999992,
+        "latencyMs": 3751.1314999999886,
+        "timestamp": "2026-10-12T08:34:24.888Z"
+      }
+    },
+    "69261143-db25-4fb3-90b0-5319d4ff7472": {
+      "card": "T08",
+      "label": "content-first-review-npc_lq_tanyu-review2",
+      "reservedYuan": 0.241346,
+      "status": "settled",
+      "costUpperYuan": 0.0061652799999999995,
+      "measurement": {
+        "label": "content-first-review-npc_lq_tanyu-review2",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 34626,
+          "completion_tokens": 550,
+          "total_tokens": 35176,
+          "prompt_tokens_details": {
+            "cached_tokens": 34432
+          },
+          "prompt_cache_hit_tokens": 34432,
+          "prompt_cache_miss_tokens": 194
+        },
+        "costUpperYuan": 0.0061652799999999995,
+        "cumulativeUpperYuan": 9.902440319999991,
+        "latencyMs": 3280.0859000000055,
+        "timestamp": "2026-10-12T08:34:28.224Z"
+      }
+    },
+    "5f45cb6d-e0cb-4b51-9e68-6d627f0b5a5e": {
+      "card": "T08",
+      "label": "content-first-review-npc_lq_fengji-draft0",
+      "reservedYuan": 0.149216,
+      "status": "settled",
+      "costUpperYuan": 0.03544,
+      "measurement": {
+        "label": "content-first-review-npc_lq_fengji-draft0",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 14684,
+          "completion_tokens": 759,
+          "total_tokens": 15443,
+          "prompt_tokens_details": {
+            "cached_tokens": 0
+          },
+          "prompt_cache_hit_tokens": 0,
+          "prompt_cache_miss_tokens": 14684
+        },
+        "costUpperYuan": 0.03544,
+        "cumulativeUpperYuan": 9.93788031999999,
+        "latencyMs": 3454.3381000000227,
+        "timestamp": "2026-10-12T08:34:31.737Z"
+      }
+    },
+    "e60b3045-60ef-44a0-a541-06964015dc6c": {
+      "card": "T08",
+      "label": "content-first-review-npc_lq_fengji-review0",
+      "reservedYuan": 0.238058,
+      "status": "settled",
+      "costUpperYuan": 0.08106160000000001,
+      "measurement": {
+        "label": "content-first-review-npc_lq_fengji-review0",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 33958,
+          "completion_tokens": 1800,
+          "total_tokens": 35758,
+          "prompt_tokens_details": {
+            "cached_tokens": 640
+          },
+          "prompt_cache_hit_tokens": 640,
+          "prompt_cache_miss_tokens": 33318
+        },
+        "costUpperYuan": 0.08106160000000001,
+        "cumulativeUpperYuan": 10.01894191999999,
+        "latencyMs": 9940.293800000014,
+        "timestamp": "2026-10-12T08:34:41.727Z"
+      }
+    },
+    "24643b6c-e965-4d92-aaf4-488056dd6710": {
+      "card": "T08",
+      "label": "content-first-review-npc_lq_fengji-draft1",
+      "reservedYuan": 0.14956,
+      "status": "settled",
+      "costUpperYuan": 0.006923680000000001,
+      "measurement": {
+        "label": "content-first-review-npc_lq_fengji-draft1",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 14726,
+          "completion_tokens": 759,
+          "total_tokens": 15485,
+          "prompt_tokens_details": {
+            "cached_tokens": 14592
+          },
+          "prompt_cache_hit_tokens": 14592,
+          "prompt_cache_miss_tokens": 134
+        },
+        "costUpperYuan": 0.006923680000000001,
+        "cumulativeUpperYuan": 10.02586559999999,
+        "latencyMs": 3778.0236999999615,
+        "timestamp": "2026-10-12T08:34:45.555Z"
+      }
+    },
+    "e656cf45-068e-4924-8027-e17c79e6431e": {
+      "card": "T08",
+      "label": "content-first-review-npc_lq_fengji-review1",
+      "reservedYuan": 0.238058,
+      "status": "settled",
+      "costUpperYuan": 0.01608368,
+      "measurement": {
+        "label": "content-first-review-npc_lq_fengji-review1",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 33958,
+          "completion_tokens": 1800,
+          "total_tokens": 35758,
+          "prompt_tokens_details": {
+            "cached_tokens": 33792
+          },
+          "prompt_cache_hit_tokens": 33792,
+          "prompt_cache_miss_tokens": 166
+        },
+        "costUpperYuan": 0.01608368,
+        "cumulativeUpperYuan": 10.04194927999999,
+        "latencyMs": 10688.605099999986,
+        "timestamp": "2026-10-12T08:34:56.297Z"
+      }
+    },
+    "8ee4a503-2508-4339-bdb8-15741a41f83c": {
+      "card": "T08",
+      "label": "content-first-review-npc_lq_fengji-draft2",
+      "reservedYuan": 0.14956,
+      "status": "settled",
+      "costUpperYuan": 0.006923680000000001,
+      "measurement": {
+        "label": "content-first-review-npc_lq_fengji-draft2",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 14726,
+          "completion_tokens": 759,
+          "total_tokens": 15485,
+          "prompt_tokens_details": {
+            "cached_tokens": 14592
+          },
+          "prompt_cache_hit_tokens": 14592,
+          "prompt_cache_miss_tokens": 134
+        },
+        "costUpperYuan": 0.006923680000000001,
+        "cumulativeUpperYuan": 10.04887295999999,
+        "latencyMs": 3448.6546999999555,
+        "timestamp": "2026-10-12T08:34:59.800Z"
+      }
+    },
+    "ddd17f21-451f-4c55-9ade-806ca8ea319b": {
+      "card": "T08",
+      "label": "content-first-review-npc_lq_fengji-review2",
+      "reservedYuan": 0.238058,
+      "status": "settled",
+      "costUpperYuan": 0.01560368,
+      "measurement": {
+        "label": "content-first-review-npc_lq_fengji-review2",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 33958,
+          "completion_tokens": 1740,
+          "total_tokens": 35698,
+          "prompt_tokens_details": {
+            "cached_tokens": 33792
+          },
+          "prompt_cache_hit_tokens": 33792,
+          "prompt_cache_miss_tokens": 166
+        },
+        "costUpperYuan": 0.01560368,
+        "cumulativeUpperYuan": 10.06447663999999,
+        "latencyMs": 9714.335699999996,
+        "timestamp": "2026-10-12T08:35:09.570Z"
+      }
+    },
+    "30877508-8418-42a1-af8b-7c8a00083bec": {
+      "card": "T08",
+      "label": "content-first-review-npc_lq_suili-draft0",
+      "reservedYuan": 0.148414,
+      "status": "settled",
+      "costUpperYuan": 0.035012,
+      "measurement": {
+        "label": "content-first-review-npc_lq_suili-draft0",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 14622,
+          "completion_tokens": 721,
+          "total_tokens": 15343,
+          "prompt_tokens_details": {
+            "cached_tokens": 0
+          },
+          "prompt_cache_hit_tokens": 0,
+          "prompt_cache_miss_tokens": 14622
+        },
+        "costUpperYuan": 0.035012,
+        "cumulativeUpperYuan": 10.09948863999999,
+        "latencyMs": 3795.7037000000128,
+        "timestamp": "2026-10-12T08:35:13.383Z"
+      }
+    },
+    "d4007411-5625-47ac-8466-6c6732f5cc46": {
+      "card": "T08",
+      "label": "content-first-review-npc_lq_suili-review0",
+      "reservedYuan": 0.237556,
+      "status": "settled",
+      "costUpperYuan": 0.07439224,
+      "measurement": {
+        "label": "content-first-review-npc_lq_suili-review0",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 33899,
+          "completion_tokens": 887,
+          "total_tokens": 34786,
+          "prompt_tokens_details": {
+            "cached_tokens": 256
+          },
+          "prompt_cache_hit_tokens": 256,
+          "prompt_cache_miss_tokens": 33643
+        },
+        "costUpperYuan": 0.07439224,
+        "cumulativeUpperYuan": 10.17388087999999,
+        "latencyMs": 5838.03350000002,
+        "timestamp": "2026-10-12T08:35:19.231Z"
+      }
+    },
+    "ccf25601-f4a2-46b1-9918-40c5a9fb98df": {
+      "card": "T08",
+      "label": "content-first-review-npc_lq_suili-draft1",
+      "reservedYuan": 0.151442,
+      "status": "settled",
+      "costUpperYuan": 0.007185680000000001,
+      "measurement": {
+        "label": "content-first-review-npc_lq_suili-draft1",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 15009,
+          "completion_tokens": 721,
+          "total_tokens": 15730,
+          "prompt_tokens_details": {
+            "cached_tokens": 14592
+          },
+          "prompt_cache_hit_tokens": 14592,
+          "prompt_cache_miss_tokens": 417
+        },
+        "costUpperYuan": 0.007185680000000001,
+        "cumulativeUpperYuan": 10.181066559999989,
+        "latencyMs": 3646.297599999991,
+        "timestamp": "2026-10-12T08:35:22.886Z"
+      }
+    },
+    "49524d58-86de-4aba-8f1b-a285cfa47717": {
+      "card": "T08",
+      "label": "content-first-review-npc_lq_suili-review1",
+      "reservedYuan": 0.237556,
+      "status": "settled",
+      "costUpperYuan": 0.00920856,
+      "measurement": {
+        "label": "content-first-review-npc_lq_suili-review1",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 33899,
+          "completion_tokens": 924,
+          "total_tokens": 34823,
+          "prompt_tokens_details": {
+            "cached_tokens": 33664
+          },
+          "prompt_cache_hit_tokens": 33664,
+          "prompt_cache_miss_tokens": 235
+        },
+        "costUpperYuan": 0.00920856,
+        "cumulativeUpperYuan": 10.190275119999988,
+        "latencyMs": 5552.198800000013,
+        "timestamp": "2026-10-12T08:35:28.447Z"
+      }
+    },
+    "0c19dd59-1a2f-4c19-b752-f146653442c1": {
+      "card": "T08",
+      "label": "content-first-review-npc_lq_suili-draft2",
+      "reservedYuan": 0.153424,
+      "status": "settled",
+      "costUpperYuan": 0.00761168,
+      "measurement": {
+        "label": "content-first-review-npc_lq_suili-draft2",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 15222,
+          "completion_tokens": 721,
+          "total_tokens": 15943,
+          "prompt_tokens_details": {
+            "cached_tokens": 14592
+          },
+          "prompt_cache_hit_tokens": 14592,
+          "prompt_cache_miss_tokens": 630
+        },
+        "costUpperYuan": 0.00761168,
+        "cumulativeUpperYuan": 10.197886799999988,
+        "latencyMs": 3355.614799999981,
+        "timestamp": "2026-10-12T08:35:31.811Z"
+      }
+    },
+    "5aad0f56-b2c3-4f51-877c-df43abf782c3": {
+      "card": "T08",
+      "label": "content-first-review-npc_lq_suili-review2",
+      "reservedYuan": 0.237556,
+      "status": "settled",
+      "costUpperYuan": 0.01171256,
+      "measurement": {
+        "label": "content-first-review-npc_lq_suili-review2",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 33899,
+          "completion_tokens": 1237,
+          "total_tokens": 35136,
+          "prompt_tokens_details": {
+            "cached_tokens": 33664
+          },
+          "prompt_cache_hit_tokens": 33664,
+          "prompt_cache_miss_tokens": 235
+        },
+        "costUpperYuan": 0.01171256,
+        "cumulativeUpperYuan": 10.209599359999988,
+        "latencyMs": 6818.098300000012,
+        "timestamp": "2026-10-12T08:35:38.639Z"
+      }
+    },
+    "b325dfbe-cf33-4862-9f52-546ba0225013": {
+      "card": "T08",
+      "label": "content-first-review-npc_lq_shaluo-draft0",
+      "reservedYuan": 0.153982,
+      "status": "settled",
+      "costUpperYuan": 0.036558,
+      "measurement": {
+        "label": "content-first-review-npc_lq_shaluo-draft0",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 15231,
+          "completion_tokens": 762,
+          "total_tokens": 15993,
+          "prompt_tokens_details": {
+            "cached_tokens": 0
+          },
+          "prompt_cache_hit_tokens": 0,
+          "prompt_cache_miss_tokens": 15231
+        },
+        "costUpperYuan": 0.036558,
+        "cumulativeUpperYuan": 10.246157359999987,
+        "latencyMs": 3756.7686000000103,
+        "timestamp": "2026-10-12T08:35:42.408Z"
+      }
+    },
+    "9ee9362a-e923-427a-82d1-a3a6ed8b68d2": {
+      "card": "T08",
+      "label": "content-first-review-npc_lq_shaluo-review0",
+      "reservedYuan": 0.242892,
+      "status": "settled",
+      "costUpperYuan": 0.07877872,
+      "measurement": {
+        "label": "content-first-review-npc_lq_shaluo-review0",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 34546,
+          "completion_tokens": 1399,
+          "total_tokens": 35945,
+          "prompt_tokens_details": {
+            "cached_tokens": 768
+          },
+          "prompt_cache_hit_tokens": 768,
+          "prompt_cache_miss_tokens": 33778
+        },
+        "costUpperYuan": 0.07877872,
+        "cumulativeUpperYuan": 10.324936079999988,
+        "latencyMs": 8286.941700000025,
+        "timestamp": "2026-10-12T08:35:50.704Z"
+      }
+    },
+    "01919113-7ca7-40ef-bcf2-1782ae6afd7e": {
+      "card": "T08",
+      "label": "content-first-review-npc_lq_mogu-draft0",
+      "reservedYuan": 0.148938,
+      "status": "settled",
+      "costUpperYuan": 0.034954,
+      "measurement": {
+        "label": "content-first-review-npc_lq_mogu-draft0",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 14541,
+          "completion_tokens": 734,
+          "total_tokens": 15275,
+          "prompt_tokens_details": {
+            "cached_tokens": 0
+          },
+          "prompt_cache_hit_tokens": 0,
+          "prompt_cache_miss_tokens": 14541
+        },
+        "costUpperYuan": 0.034954,
+        "cumulativeUpperYuan": 10.359890079999989,
+        "latencyMs": 3849.0683000000427,
+        "timestamp": "2026-10-12T08:35:54.607Z"
+      }
+    },
+    "8ea2f82a-aa17-47dc-b812-b9e6cebea9fc": {
+      "card": "T08",
+      "label": "content-first-review-npc_lq_mogu-review0",
+      "reservedYuan": 0.238744,
+      "status": "settled",
+      "costUpperYuan": 0.0749456,
+      "measurement": {
+        "label": "content-first-review-npc_lq_mogu-review0",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 34044,
+          "completion_tokens": 1014,
+          "total_tokens": 35058,
+          "prompt_tokens_details": {
+            "cached_tokens": 640
+          },
+          "prompt_cache_hit_tokens": 640,
+          "prompt_cache_miss_tokens": 33404
+        },
+        "costUpperYuan": 0.0749456,
+        "cumulativeUpperYuan": 10.434835679999988,
+        "latencyMs": 6428.393900000025,
+        "timestamp": "2026-10-12T08:36:01.085Z"
+      }
+    },
+    "a309147d-dd91-4764-8917-4aa70704b809": {
+      "card": "T08",
+      "label": "content-first-review-npc_lq_huaniu-draft0",
+      "reservedYuan": 0.149028,
+      "status": "settled",
+      "costUpperYuan": 0.035636,
+      "measurement": {
+        "label": "content-first-review-npc_lq_huaniu-draft0",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 14730,
+          "completion_tokens": 772,
+          "total_tokens": 15502,
+          "prompt_tokens_details": {
+            "cached_tokens": 0
+          },
+          "prompt_cache_hit_tokens": 0,
+          "prompt_cache_miss_tokens": 14730
+        },
+        "costUpperYuan": 0.035636,
+        "cumulativeUpperYuan": 10.470471679999989,
+        "latencyMs": 3848.9086000000243,
+        "timestamp": "2026-10-12T08:36:04.988Z"
+      }
+    },
+    "0ecd9016-5cd9-43e5-8464-ed0e60721e0b": {
+      "card": "T08",
+      "label": "content-first-review-npc_lq_huaniu-review0",
+      "reservedYuan": 0.238024,
+      "status": "settled",
+      "costUpperYuan": 0.0716996,
+      "measurement": {
+        "label": "content-first-review-npc_lq_huaniu-review0",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 34001,
+          "completion_tokens": 619,
+          "total_tokens": 34620,
+          "prompt_tokens_details": {
+            "cached_tokens": 640
+          },
+          "prompt_cache_hit_tokens": 640,
+          "prompt_cache_miss_tokens": 33361
+        },
+        "costUpperYuan": 0.0716996,
+        "cumulativeUpperYuan": 10.54217127999999,
+        "latencyMs": 3819.709900000016,
+        "timestamp": "2026-10-12T08:36:08.859Z"
+      }
+    },
+    "6d3a2abb-489b-4bdf-9fed-35dba8b1cb76": {
+      "card": "T08",
+      "label": "content-first-review-npc_lq_huaniu-draft1",
+      "reservedYuan": 0.151484,
+      "status": "settled",
+      "costUpperYuan": 0.00786656,
+      "measurement": {
+        "label": "content-first-review-npc_lq_huaniu-draft1",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 15020,
+          "completion_tokens": 772,
+          "total_tokens": 15792,
+          "prompt_tokens_details": {
+            "cached_tokens": 14464
+          },
+          "prompt_cache_hit_tokens": 14464,
+          "prompt_cache_miss_tokens": 556
+        },
+        "costUpperYuan": 0.00786656,
+        "cumulativeUpperYuan": 10.55003783999999,
+        "latencyMs": 3683.91320000001,
+        "timestamp": "2026-10-12T08:36:12.594Z"
+      }
+    },
+    "b445cad0-7b71-4e38-958f-b92aa3a9cca9": {
+      "card": "T08",
+      "label": "content-first-review-npc_lq_huaniu-review1",
+      "reservedYuan": 0.238024,
+      "status": "settled",
+      "costUpperYuan": 0.00802568,
+      "measurement": {
+        "label": "content-first-review-npc_lq_huaniu-review1",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 34001,
+          "completion_tokens": 782,
+          "total_tokens": 34783,
+          "prompt_tokens_details": {
+            "cached_tokens": 33792
+          },
+          "prompt_cache_hit_tokens": 33792,
+          "prompt_cache_miss_tokens": 209
+        },
+        "costUpperYuan": 0.00802568,
+        "cumulativeUpperYuan": 10.558063519999989,
+        "latencyMs": 4893.490500000014,
+        "timestamp": "2026-10-12T08:36:17.541Z"
+      }
+    },
+    "42062b6c-d32d-4f3f-817b-d88594ffd82a": {
+      "card": "T08",
+      "label": "content-first-review-npc_lq_wenqi-draft0",
+      "reservedYuan": 0.150164,
+      "status": "settled",
+      "costUpperYuan": 0.03622,
+      "measurement": {
+        "label": "content-first-review-npc_lq_wenqi-draft0",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 15030,
+          "completion_tokens": 770,
+          "total_tokens": 15800,
+          "prompt_tokens_details": {
+            "cached_tokens": 0
+          },
+          "prompt_cache_hit_tokens": 0,
+          "prompt_cache_miss_tokens": 15030
+        },
+        "costUpperYuan": 0.03622,
+        "cumulativeUpperYuan": 10.594283519999989,
+        "latencyMs": 3780.8775000000023,
+        "timestamp": "2026-10-12T08:36:21.377Z"
+      }
+    },
+    "3ca27c96-c9b5-4cc6-9c34-dd8bf5979339": {
+      "card": "T08",
+      "label": "content-first-review-npc_lq_wenqi-review0",
+      "reservedYuan": 0.239122,
+      "status": "settled",
+      "costUpperYuan": 0.0813016,
+      "measurement": {
+        "label": "content-first-review-npc_lq_wenqi-review0",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 34266,
+          "completion_tokens": 1753,
+          "total_tokens": 36019,
+          "prompt_tokens_details": {
+            "cached_tokens": 640
+          },
+          "prompt_cache_hit_tokens": 640,
+          "prompt_cache_miss_tokens": 33626
+        },
+        "costUpperYuan": 0.0813016,
+        "cumulativeUpperYuan": 10.675585119999988,
+        "latencyMs": 9152.366000000038,
+        "timestamp": "2026-10-12T08:36:30.580Z"
+      }
+    },
+    "5b2ca2a3-18ea-4a97-b6f1-c6c415399bf2": {
+      "card": "T08",
+      "label": "content-first-review-npc_lq_wenqi-draft1",
+      "reservedYuan": 0.161382,
+      "status": "settled",
+      "costUpperYuan": 0.0102148,
+      "measurement": {
+        "label": "content-first-review-npc_lq_wenqi-draft1",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 16453,
+          "completion_tokens": 770,
+          "total_tokens": 17223,
+          "prompt_tokens_details": {
+            "cached_tokens": 14720
+          },
+          "prompt_cache_hit_tokens": 14720,
+          "prompt_cache_miss_tokens": 1733
+        },
+        "costUpperYuan": 0.0102148,
+        "cumulativeUpperYuan": 10.685799919999988,
+        "latencyMs": 3628.5001000000047,
+        "timestamp": "2026-10-12T08:36:34.260Z"
+      }
+    },
+    "42a9c442-d171-45df-8617-c44453bda19e": {
+      "card": "T08",
+      "label": "content-first-review-npc_lq_wenqi-review1",
+      "reservedYuan": 0.239122,
+      "status": "settled",
+      "costUpperYuan": 0.01618992,
+      "measurement": {
+        "label": "content-first-review-npc_lq_wenqi-review1",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 34266,
+          "completion_tokens": 1799,
+          "total_tokens": 36065,
+          "prompt_tokens_details": {
+            "cached_tokens": 34048
+          },
+          "prompt_cache_hit_tokens": 34048,
+          "prompt_cache_miss_tokens": 218
+        },
+        "costUpperYuan": 0.01618992,
+        "cumulativeUpperYuan": 10.701989839999989,
+        "latencyMs": 9898.484999999986,
+        "timestamp": "2026-10-12T08:36:44.213Z"
+      }
+    },
+    "76466506-faf2-4056-8afa-aebf86410ce9": {
+      "card": "T08",
+      "label": "content-first-review-npc_lq_wenqi-draft2",
+      "reservedYuan": 0.150508,
+      "status": "settled",
+      "costUpperYuan": 0.0074528,
+      "measurement": {
+        "label": "content-first-review-npc_lq_wenqi-draft2",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 15072,
+          "completion_tokens": 770,
+          "total_tokens": 15842,
+          "prompt_tokens_details": {
+            "cached_tokens": 14720
+          },
+          "prompt_cache_hit_tokens": 14720,
+          "prompt_cache_miss_tokens": 352
+        },
+        "costUpperYuan": 0.0074528,
+        "cumulativeUpperYuan": 10.709442639999988,
+        "latencyMs": 3318.1562000000267,
+        "timestamp": "2026-10-12T08:36:47.585Z"
+      }
+    },
+    "db6d69ec-bfc1-43f9-8f4d-1669bcf36af7": {
+      "card": "T08",
+      "label": "content-first-review-npc_lq_jushu-draft0",
+      "reservedYuan": 0.152998,
+      "status": "settled",
+      "costUpperYuan": 0.036494,
+      "measurement": {
+        "label": "content-first-review-npc_lq_jushu-draft0",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 15195,
+          "completion_tokens": 763,
+          "total_tokens": 15958,
+          "prompt_tokens_details": {
+            "cached_tokens": 0
+          },
+          "prompt_cache_hit_tokens": 0,
+          "prompt_cache_miss_tokens": 15195
+        },
+        "costUpperYuan": 0.036494,
+        "cumulativeUpperYuan": 10.745936639999988,
+        "latencyMs": 3501.8116000000155,
+        "timestamp": "2026-10-12T08:36:51.152Z"
+      }
+    },
+    "89711755-237d-48e3-8a92-e14a6979d300": {
+      "card": "T08",
+      "label": "content-first-review-npc_lq_cuifan-draft0",
+      "reservedYuan": 0.148748,
+      "status": "settled",
+      "costUpperYuan": 0.03564,
+      "measurement": {
+        "label": "content-first-review-npc_lq_cuifan-draft0",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 14832,
+          "completion_tokens": 747,
+          "total_tokens": 15579,
+          "prompt_tokens_details": {
+            "cached_tokens": 0
+          },
+          "prompt_cache_hit_tokens": 0,
+          "prompt_cache_miss_tokens": 14832
+        },
+        "costUpperYuan": 0.03564,
+        "cumulativeUpperYuan": 10.781576639999988,
+        "latencyMs": 3305.440200000012,
+        "timestamp": "2026-10-12T08:36:54.514Z"
+      }
+    },
+    "917f482b-41f7-423e-bafd-8fb85257e572": {
+      "card": "T08",
+      "label": "content-first-review-npc_lq_qinglan-draft0",
+      "reservedYuan": 0.150438,
+      "status": "settled",
+      "costUpperYuan": 0.036102,
+      "measurement": {
+        "label": "content-first-review-npc_lq_qinglan-draft0",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 14939,
+          "completion_tokens": 778,
+          "total_tokens": 15717,
+          "prompt_tokens_details": {
+            "cached_tokens": 0
+          },
+          "prompt_cache_hit_tokens": 0,
+          "prompt_cache_miss_tokens": 14939
+        },
+        "costUpperYuan": 0.036102,
+        "cumulativeUpperYuan": 10.817678639999988,
+        "latencyMs": 4072.410600000003,
+        "timestamp": "2026-10-12T08:36:58.643Z"
       }
     }
   },

@@ -7,7 +7,7 @@ import {consumeMagicProtection}from'./magic-primitives.mjs';
 import {milestone,monsterReward,awardExperience}from'./progression.mjs';
 import {manufacture}from'./manufacturing.mjs';
 import {repair}from'./repair.mjs';
-import {interactEnvironment}from'./environment.mjs';
+import {interactEnvironment,recordLocalContact}from'./environment.mjs';
 import {petAction}from'./pets.mjs';
 import {summonAction}from'./summons.mjs';
 import {crimeAction,lawAction,recordViolence}from'./law.mjs';
@@ -16,12 +16,17 @@ import {localWeather}from'./weather.mjs';
 import {agricultureAction}from'./agriculture.mjs';
 import {wildlifeAction,resolveCreature,recordWildlifeDeath}from'./wildlife.mjs';
 import {lairAction,bossCounter,rememberBossTactic,defeatBoss}from'./bosses.mjs';
+import {civicAction,recordDonationContribution,publicProjectApproval,donationReceipt,saveDonationReceipt}from'./civic.mjs';
 const integer=(value,min=0,max=1e9)=>{if(!Number.isSafeInteger(value)||value<min||value>max)throw new Error(`数值需在${min}到${max}之间`);return value;};
 const requiredText=value=>{if(typeof value!=='string'||!value.trim()||value.length>1200)throw new Error('记录文字无效');return value.trim();};
 export const activities={
     lair(d,args,id){return lairAction.call(this,d,args,id);},
     wildlife(d,args,id){return wildlifeAction.call(this,d,args,id);},
-    farm(d,args,id){return agricultureAction.call(this,d,args,id);},
+    farm(d,args,id){
+        const old=donationReceipt(d,this,args,id);if(old)return old;
+        const result=agricultureAction.call(this,d,args,id),contribution=recordDonationContribution(d,this,result,id),receipt={...result,...(contribution?{contribution}:{})};
+        saveDonationReceipt(d,receipt,id);return receipt;
+    },
     weather(d,args){
         if(args.operation&&args.operation!=='inspect')throw new Error('天气只允许观察，不能由模型直接改天');
         if(args.location&&this.resolve(args.location)!==d.get('state','location'))throw new Error('只能观察本人所在地天气，不远程得知异地情况');
@@ -65,6 +70,7 @@ export const activities={
         const hitModifier=terrain.reduce((sum,tag)=>sum+(tag==='dark'&&magicIlluminates(d)?0:this.rules.combat.terrain[tag]?.hit??0),0)+(weather?.hitModifier??0)+night;
         const playerHit=visibilityPenalty(hitModifier,magicStatusStats(d,'player',playerContext),playerContext);
         const attack=intent==='flee'?{damage:0,hit:false}:strike(stats,opponent,rng,this.rules,{hitModifier:intent==='shove'?playerHit-(1-counter.damageMultiplier):playerHit,damageMultiplier:(intent==='defend'?0.65:intent==='shove'?0:1)*counter.damageMultiplier});
+        if(attack.hit)recordLocalContact(d,this,target,id);
         if(intent!=='flee')consumeTransientMagic(d,'player',playerContext);
         const protection=consumeMagicProtection(d,target,intent==='shove'?(attack.hit?1:0):attack.damage,'physical');
         const damage=protection.damage,remaining=Math.max(0,hp-damage);
@@ -73,6 +79,7 @@ export const activities={
             const currentOpponent=withMagicStats(opponentBase,magicStatusStats(d,target,opponentContext)),currentPlayer=withMagicStats(playerBase,magicStatusStats(d,'player',playerContext));
             const opponentHit=visibilityPenalty(hitModifier,magicStatusStats(d,target,opponentContext),opponentContext);
             const hit=strike(currentOpponent,currentPlayer,rng,this.rules,{hitModifier:opponentHit,damageMultiplier:intent==='defend'?0.5:1});
+            if(hit.hit)recordLocalContact(d,this,target,id);
             consumeTransientMagic(d,target,opponentContext);
             const ability=isNpc?null:applyBossCounterAbility(d,this,target,{eventId:id,attackIndex:i,hit:hit.hit,defense:currentPlayer.defense,remainingHp:remaining});
             if(ability)bossAbilities.push(ability);
@@ -89,12 +96,19 @@ export const activities={
         if(isNpc&&base.tier!=='full')d.set(['state','npcs',target,'trust'],Math.max(-100,npc.trust-5));
         if(weapon)wearItem(d,this,'player',weapon,1);
         if(intent==='shove')d.set(['state',partition,target,'developments'],[...npc.developments??[],{type:'被推搡',source:id,minute:d.get('state','minute'),reaction:remaining<maxHp*0.25?'呼救':'还手'}]);
-        if(escaped)d.set(['state','combatDisengaged',target],{minute:d.get('state','minute'),source:id});
+        if(escaped){
+            d.set(['state','combatDisengaged',target],{minute:d.get('state','minute'),source:id});
+            if(d.get('state','records',`local_actor_position:${target}`))d.remove(['state','records',`local_actor_position:${target}`]);
+        }
         const corpse=!isNpc&&!remaining?recordWildlifeDeath(d,this,target,id):null;
         const lair=!isNpc&&!remaining?defeatBoss(d,this,target,id):null;
         const experience=!isNpc&&!remaining?monsterReward(d,this,target,id):{experience:0};
         const incident=isNpc?recordViolence(d,this,{victim:target,damage,killed:!remaining,intent,eventId:id}):null;
-        d.say(`交锋结束，对方受伤${damage}，你受伤${received}`);return {target,damage,received,...(bossAbilities.length?{abilities:bossAbilities}:{}),...(protection.absorbed||absorbed?{absorption:{target:protection.absorbed,player:absorbed}}:{}),targetHp:remaining,actionScope:{kind:'combat_exchange',clockManaged:true,seconds:this.rules.combat.exchangeSeconds},...experience,...(corpse?{corpse}:{}),...(lair?{lair}:{}),...(counter.adapted?{adaptation:{tactic,guarded:true,note:'对手对已见过的进攻加强防备'}}:{}),morale:remaining<maxHp*0.25?'撤退':'交战',...(weather?{weather:{name:weather.name,daylight:weather.daylight,hitModifier:weather.hitModifier,nightModifier:night}}:{}),...(incident?{case:incident}:{})};
+        for(let i=0;i<bossAbilities.length;i++)if(bossAbilities[i].pendingArea){
+            const {catalog,id:areaId,source}=bossAbilities[i].pendingArea;
+            bossAbilities[i]={ability:bossAbilities[i].ability,...this.applyMagicArea(d,catalog,{target:source},areaId,source)};
+        }
+        d.say(`交锋结束，对方受伤${damage}，你受伤${received}`);return {target,damage,received,...(bossAbilities.length?{abilities:bossAbilities}:{}),...(protection.absorbed||absorbed?{absorption:{target:protection.absorbed,player:absorbed}}:{}),targetHp:d.get('state',partition,target,'hp'),actionScope:{kind:'combat_exchange',clockManaged:true,seconds:this.rules.combat.exchangeSeconds},...experience,...(corpse?{corpse}:{}),...(lair?{lair}:{}),...(counter.adapted?{adaptation:{tactic,guarded:true,note:'对手对已见过的进攻加强防备'}}:{}),morale:remaining<maxHp*0.25?'撤退':'交战',...(weather?{weather:{name:weather.name,daylight:weather.daylight,hitModifier:weather.hitModifier,nightModifier:night}}:{}),...(incident?{case:incident}:{})};
     },
     craft(d,args,id){
         if(args.operation==='repair')return repair.call(this,d,args,id);
@@ -121,6 +135,7 @@ export const activities={
         return {project:key,stage,...outcome,note:stage==='打磨'?'研究成果需进入受限实体登记，才能获得规则认可':'原型未被系统承认，不能宣称已学会新法术'};
     },
     settlement(d,args,id){
+        if(args.operation?.startsWith('civic_'))return civicAction.call(this,d,args,id);
         const settlement=this.resolve(args.settlement,'loc'),row=d.get('state','settlements',settlement);
         if(!row)throw new Error('没有该聚落公共账目');
         const authorization=d.get('state','records',args.authorization);
@@ -129,7 +144,8 @@ export const activities={
             const wood=integer(args.wood,1,10000),stone=integer(args.stone??0,0,10000),days=integer(args.days,1,365);
             if(row.wood<wood||row.stone<stone)throw new Error('公共工程材料不足');
             d.set(['state','settlements',settlement,'wood'],row.wood-wood);d.set(['state','settlements',settlement,'stone'],row.stone-stone);
-            const project=`project_${id}`;d.set(['state','projects',project],{id:project,type:'工程',creator:'player',name:requiredText(args.name),settlement,remainingDays:days,wood,stone,status:'施工中',beneficiaries:args.beneficiaries??[]});
+            const civicApproval=publicProjectApproval(d,this,settlement,args.authorization,args.beneficiaries);
+            const project=`project_${id}`;d.set(['state','projects',project],{id:project,type:'工程',creator:'player',name:requiredText(args.name),settlement,remainingDays:days,wood,stone,status:'施工中',beneficiaries:args.beneficiaries??[],sourceEvent:id,...(civicApproval?{civicApproval}:{})});
             return {project};
         }
         throw new Error('未知聚落事务');

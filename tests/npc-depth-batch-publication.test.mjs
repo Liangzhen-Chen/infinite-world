@@ -8,13 +8,13 @@ import {promisify} from 'node:util';
 import {loadWorld} from '../tools/load-world.mjs';
 import {validateNpcDepth,legacyTraitsAuditIds} from '../tools/npc-profile-validation.mjs';
 import {depthEntries,contextFor,patchDraft,buildDraftRequest,buildReviewRequest,extractDraft,validateDraft} from '../tools/npc-depth-content.mjs';
-import {depthFoundation} from '../tools/npc-depth.mjs';
+import {depthFoundation,runDepth} from '../tools/npc-depth.mjs';
 import {hashContent,runContentPipeline} from '../tools/content-pipeline.mjs';
 import {publishNpcDepth,prepareNpcDepthBatch,batchContract} from '../tools/publish-npc-depth.mjs';
 const execute=promisify(execFile),source=await loadWorld(),ids=['npc_yp_qinli','npc_yp_gaoxin'];
 const read=async file=>JSON.parse(await fs.readFile(file,'utf8'));
 const write=(file,value)=>fs.writeFile(file,JSON.stringify(value,null,2)+'\n');
-async function fixture(t,{shared=false,oneSided=false}={}){
+async function fixture(t,{shared=false,oneSided=false,firstSource=false}={}){
  const temp=await fs.mkdtemp(path.join(os.tmpdir(),'npc-depth-batch-')),worldRoot=path.join(temp,'world');
  t.after(async()=>{assert.ok(path.resolve(temp).startsWith(path.resolve(os.tmpdir())+path.sep));await fs.rm(temp,{recursive:true,force:true});});
  for(const folder of ['meta','people','geo','lore'])await fs.cp(path.resolve('world',folder),path.join(worldRoot,folder),{recursive:true});
@@ -32,12 +32,18 @@ async function fixture(t,{shared=false,oneSided=false}={}){
   }
   const config={revision:`test-complete-card-${index}`,patchRows:[{id,before:structuredClone(before),baseHash:hashContent(before),issues:issues.map(({id,field,code})=>({id,field,code})),patches}]};
   const root=path.join(worldRoot,`drafts/card-${index}`),design=path.join(worldRoot,`design/card-${index}.mjs`);await fs.mkdir(root,{recursive:true});await fs.mkdir(path.dirname(design),{recursive:true});
-  await fs.writeFile(design,`export const revision=${JSON.stringify(config.revision)};\nexport const patchRows=${JSON.stringify(config.patchRows)};\n`);
+  await fs.writeFile(design,`export const revision=${JSON.stringify(config.revision)};\nexport const incrementLimitYuan=2;\nexport const patchRows=${JSON.stringify(config.patchRows)};\n`);
   const entries=depthEntries([before],config,world),foundation=depthFoundation(entries,world,config.revision),manifest={contract:'audit-patch-v1',design:`design/card-${index}.mjs`,root:`drafts/card-${index}`,worldRoot:'../..',foundationHash:hashContent(foundation)};
   await write(path.join(root,'base.json'),[before]);await write(path.join(root,'candidate.json'),entries.map(patchDraft));await write(path.join(root,'foundation.json'),foundation);await write(path.join(root,'manifest.json'),manifest);
   // Local deterministic review substitutes exercise the actual L1/L2/L4 receipts.
-  const client={spent:0,reserved:0,budgetYuan:0,generate:async request=>{const value=JSON.parse(request.messages[1].content);return{choices:[{message:{content:JSON.stringify(value.candidate??{contradictions:[]})}}]};}};
-  const result=await runContentPipeline({entries,root,budgetRoot:root,client,revision:config.revision,contextFor:e=>contextFor(e,world),buildDraftRequest,buildReviewRequest,extractDraft,validateDraft,concurrency:1,batchSize:25});
+  const client={spent:0,reserved:0,budgetYuan:20,rates:{miss:2,output:3},generate:async request=>{const value=JSON.parse(request.messages[1].content);return{choices:[{message:{content:JSON.stringify(value.candidate??{contradictions:[]})}}],measurement:{costUpperYuan:0}};}};
+  let result;
+  if(firstSource){
+   const sourceFile=path.join(root,'sources.json'),sourceEvidenceMap=path.join(root,'sources-map.json');
+   await write(sourceFile,{sourceRecords:ids.map(other=>{const n=world.npcs.find(n=>n.id===other);return{id:other,name:n.name,sex:n.sex,...(other===id?{notes:n.notes}:{})};}),reviewBoundary:'原字段仅供逐叶核验，不能传播私人知识。'});await write(sourceEvidenceMap,{[id]:'sources.json'});await write(path.join(root,'budget.json'),{spentYuan:0,reservedYuan:0,limitYuan:20});
+   result=await runDepth({worldRoot,design,root,budgetRoot:root,cardId:'T45',sourceEvidenceMap,compactRequest:true},{client});
+  }else result=await runContentPipeline({entries,root,budgetRoot:root,client,revision:config.revision,contextFor:e=>contextFor(e,world),buildDraftRequest,buildReviewRequest,reviewDraftFor:patchDraft,extractDraft,validateDraft,concurrency:1,batchSize:25});
+  for(const record of result.results){assert.equal(record.status,'passed',JSON.stringify(record.errors));assert.deepEqual(record.errors,[]);}
   const notes=result.results.map(r=>({id:r.id,note:'测试替身按冻结原档逐条核对叶子。',draftHash:hashContent(r.draft),reviewHash:hashContent(r.review)})),notesFile=path.join(root,'human-notes.json');await write(notesFile,notes);
   await execute(process.execPath,[path.resolve('tools/npc-depth-l4.mjs'),'--design',design,'--root',root,'--notes',notesFile]);cards.push(root);
  }
@@ -107,4 +113,11 @@ test('正式源已存在相容且由批准批写入的伙伴事件，可以补�
  const rows=await read(p.baseline),index=rows.findIndex(n=>n.id===ids[0]);rows[index]=structuredClone(p.world.npcs.find(n=>n.id===ids[0]));await write(p.baseline,rows);
  await write(p.batchManifest,{...p.plan,manifests:[p.plan.manifests[0]],expectedIds:[ids[0]],sourceHash:hashContent(await loadWorld(p.worldRoot))});
  const preview=await publishNpcDepth({batchManifest:p.batchManifest});assert.equal(preview.eventClosure.length,1);assert.deepEqual(preview.selectedQuality.issues,[]);const partner=structuredClone(rows.find(n=>n.id===ids[1]));await publishNpcDepth({batchManifest:p.batchManifest,publish:true});assert.deepEqual((await read(p.baseline)).find(n=>n.id===ids[1]),partner);assert.deepEqual((await publishNpcDepth({batchManifest:p.batchManifest,publish:true})).changed,[]);
+});
+
+test('首次原源附件完整两卡官方出站，批发布与合法重发重放附件并保留原子校验',async t=>{
+ t.mock.method(console,'log',()=>{});const p=await fixture(t,{firstSource:true}),bytes=await fs.readFile(p.baseline,'utf8');
+ const preview=await publishNpcDepth({batchManifest:p.batchManifest});assert.deepEqual(preview.amendedNpcIds,ids);assert.equal(await fs.readFile(p.baseline,'utf8'),bytes);
+ await publishNpcDepth({batchManifest:p.batchManifest,publish:true});assert.deepEqual((await publishNpcDepth({batchManifest:p.batchManifest,publish:true})).changed,[]);
+ const applied=await fs.readFile(p.baseline,'utf8');await fs.unlink(path.join(p.cards[1],'sources.json'));await assert.rejects(publishNpcDepth({batchManifest:p.batchManifest,publish:true}));assert.equal(await fs.readFile(p.baseline,'utf8'),applied);
 });

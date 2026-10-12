@@ -10,13 +10,15 @@ import {applyKnowledgeWordingCorrections} from '../world/design/w1-yupo-depth.mj
 import {depthBatches,depthEntries,contextFor as depthContext,applyDepthDraft,validateDraft as validateDepthDraft,verifyUnchanged} from './npc-depth-content.mjs';
 import {withVillageLedgerRules,previousProfileHashes} from '../world/design/w1-village-profiles.mjs';
 import {approvedProfiles} from './w1-village-profiles-content.mjs';
+import {readPublishedNpcDepth,verifiedNpcDepth,reviewedDepthPerson} from './npc-depth-publication-sources.mjs';
 
 const merge=(old,rows)=>{const map=new Map(old.map(x=>[x.id,x]));for(const row of rows){if(map.has(row.id)&&hashContent(map.get(row.id))!==hashContent(row))throw Error(`已发布条目冲突：${row.id}`);map.set(row.id,row);}return [...map.values()];};
 export function villagesOriginalWorld(world,foundation=w1VillagesFoundation()){
  const own=new Set([...foundation.npcs,...foundation.residents,...foundation.locations,...foundation.routes,...foundation.households,...foundation.settlements].map(x=>x.id));
  return {...world,...Object.fromEntries(['npcs','residents','locations','routes','households','settlementProfiles'].map(k=>[k,(world[k]??[]).filter(x=>!own.has(x.id))]))};
 }
-export function mergeVillages(world,candidate,{npcAmendments=[],profileAmendments=[]}={}){
+export function mergeVillages(world,candidate,{npcAmendments=[],profileAmendments=[],depthReceipt=undefined}={}){
+ const revisions=verifiedNpcDepth(depthReceipt,world.npcs);
  const amended=new Map(npcAmendments.map(row=>[row.id,row]));
  if(amended.size!==npcAmendments.length)throw Error('人物补充编号重复');
  const current=new Map(world.npcs.map(n=>[n.id,n]));
@@ -24,14 +26,16 @@ export function mergeVillages(world,candidate,{npcAmendments=[],profileAmendment
   const before=candidate.npcs.find(n=>n.id===id);if(!before)throw Error(`人物补充不在原候选：${id}`);
   verifyUnchanged(before,after);
   const old=current.get(id);if(old){
+   if(reviewedDepthPerson(revisions.get(id),old,after)){current.set(id,structuredClone(old));continue;}
    // Only live cash/stock are preserved outside the exact approved amendment.
    // Identity and all unrelated profile fields must still match either edition.
-   const strip=n=>{const {coins,inventory,...rest}=n;return rest;};
-   if(![before,after].some(n=>hashContent(strip(n))===hashContent(strip(applyKnowledgeWordingCorrections(old)))))throw Error(`已发布人物补充冲突：${id}`);
-   current.set(id,{...after,coins:old.coins,inventory:structuredClone(old.inventory)});
+   const strip=n=>{const {coins,inventory,memorySeeds,...rest}=n;return rest;};
+   const frozen=[after,before].find(n=>hashContent(strip(n))===hashContent(strip(applyKnowledgeWordingCorrections(old)))&&hashContent(n.memorySeeds)===hashContent(old.memorySeeds.slice(0,n.memorySeeds.length)));
+   if(!frozen)throw Error(`已发布人物补充冲突：${id}`);
+   current.set(id,{...after,coins:old.coins,inventory:structuredClone(old.inventory),memorySeeds:[...after.memorySeeds,...structuredClone(old.memorySeeds.slice(frozen.memorySeeds.length))]});
   }else current.set(id,after);
  }
- const untouched=candidate.npcs.filter(n=>!amended.has(n.id));
+ const untouched=candidate.npcs.filter(n=>!amended.has(n.id)).map(n=>reviewedDepthPerson(revisions.get(n.id),current.get(n.id),n)?structuredClone(current.get(n.id)):n);
  const nextNpcs=merge([...current.values()],untouched);
  const profiles=candidate.settlements.map(s=>({...s,kinship:candidate.kinship.filter(r=>s.residentIds.includes(r.parent))})),profileMap=new Map((world.settlementProfiles??[]).map(p=>[p.id,p]));
  if(new Set(profileAmendments.map(p=>p.id)).size!==profileAmendments.length)throw Error('聚落补充编号重复');
@@ -78,7 +82,10 @@ export async function publishVillages({root=path.resolve(import.meta.dirname,'..
   const reference={...world,npcs:[...original.npcs,...candidate.npcs],residents:[...original.residents,...candidate.residents],locations:[...original.locations,...candidate.locations],settlementProfiles:[...original.settlementProfiles,...candidate.settlements.map(s=>({...s,kinship:candidate.kinship.filter(r=>s.residentIds.includes(r.parent))}))]};
   profileAmendments=await approvedProfiles({world:reference,root:profileDirectory});
  }
- const merged=mergeVillages(world,candidate,{npcAmendments,profileAmendments}),next=profileAmendments.length?withVillageLedgerRules(merged):merged,validation=validateWorld(next,{stage:'engine'});
+ let depthReceipt;
+ const hasDepth=await fs.access(path.join(root,'drafts/w1/depth-publication.json')).then(()=>true,error=>{if(error.code==='ENOENT')return false;throw error;});
+ if(hasDepth)depthReceipt=await readPublishedNpcDepth({world,worldRoot:root});
+ const merged=mergeVillages(world,candidate,{npcAmendments,profileAmendments,depthReceipt}),next=profileAmendments.length?withVillageLedgerRules(merged):merged,validation=validateWorld(next,{stage:'engine'});
  if(!validation.ok)throw Error(validation.errors.join('\n'));
  const outputs={...(profileAmendments.length?{'meta/rules.json':next.rules}:{}),'people/baseline.json':next.npcs,'people/residents.json':next.residents,'people/households.json':next.households,'geo/settlements.json':next.settlementProfiles,'geo/locations.json':next.locations,'geo/routes.json':next.routes};
  const changed=[];

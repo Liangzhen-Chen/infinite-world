@@ -1,9 +1,10 @@
 {
   "id": "magic",
-  "title": "学照明术与施法",
+  "title": "学习照明术、研读暮纹术并购买耗材施放",
   "requirements": [
-    "G1-mana-only",
-    "G3"
+    "G1",
+    "G3",
+    "L6"
   ],
   "turns": [
     {
@@ -47,7 +48,7 @@
       ]
     },
     {
-      "input": "如果上次没有学会，我再交十二铜学一次；如果学会了，就只确认施法要耗多少魔力。",
+      "input": "如果上次没有学会，我等到下午一点再交十二铜完整学一次；如果学会了，就只确认施法要耗多少魔力。",
       "assertions": [
         {
           "kind": "conditional",
@@ -78,7 +79,7 @@
       ]
     },
     {
-      "input": "如果还没学会我再学一次；学会了就对随身旧木杖试着施放一次照明术。",
+      "input": "如果还没学会，我等到许苓下一个能完成整堂课的教学时段再学一次；学会了就对随身旧木杖试着施放一次照明术。",
       "assertions": [
         {
           "kind": "conditional",
@@ -189,6 +190,334 @@
           "max": 0
         }
       ]
+    },
+    {
+      "input": "我去小学堂找陆青，在这里休息到明天早上九点，准备读一本讲纸面留痕的书。",
+      "assertions": [
+        {
+          "kind": "equals",
+          "path": "state.location",
+          "value": "bld_hw_school"
+        }
+      ],
+      "expectedTools": [
+        "world_move"
+      ]
+    },
+    {
+      "input": "请陆青教我基础识字，我按正常价格付费，完整学一遍。",
+      "assertions": [
+        {
+          "kind": "calls",
+          "tool": "world_learn",
+          "args": {
+            "entity": "基础识字",
+            "source": "陆青"
+          },
+          "min": 1
+        },
+        {
+          "kind": "delta",
+          "path": "state.player.coins",
+          "value": -2
+        }
+      ],
+      "expectedTools": [
+        "world_learn"
+      ]
+    },
+    {
+      "input": "如果还没学会识字，我等到下午一点再付费学一遍；学会了就不重复交学费。",
+      "assertions": [
+        {
+          "kind": "conditional",
+          "when": {
+            "path": "state.skills.skill_literacy"
+          },
+          "then": [
+            {
+              "kind": "unchanged",
+              "paths": [
+                "state.player.coins"
+              ]
+            }
+          ],
+          "else": [
+            {
+              "kind": "calls",
+              "tool": "world_learn",
+              "args": {
+                "entity": "基础识字",
+                "source": "陆青"
+              },
+              "min": 1
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "input": "如果识字还未学会，我等到陆青下一个能完成整堂课的教学时段，最后再完整学一次；随后核对我是否确实学会。",
+      "assertions": [
+        {
+          "kind": "conditional",
+          "when": {
+            "path": "state.skills.skill_literacy"
+          },
+          "then": [
+            {
+              "kind": "unchanged",
+              "paths": [
+                "state.player.coins"
+              ]
+            }
+          ],
+          "else": [
+            {
+              "kind": "calls",
+              "tool": "world_learn",
+              "args": {
+                "entity": "基础识字",
+                "source": "陆青"
+              },
+              "min": 1
+            }
+          ]
+        },
+        {
+          "kind": "exists",
+          "path": "state.skills.skill_literacy"
+        }
+      ]
+    },
+    {
+      "input": "我向陆青买一本纸土留痕初抄和一张刮薄羊皮纸。",
+      "assertions": [
+        {
+          "kind": "quantity",
+          "path": "state.inventory.item_book_m4_surface",
+          "value": 1
+        },
+        {
+          "kind": "quantity",
+          "path": "state.inventory.item_parchment",
+          "value": 1
+        },
+        {
+          "kind": "conservation",
+          "paths": [
+            "state.player.coins",
+            "state.npcs.npc_hw_luqing.coins"
+          ]
+        }
+      ],
+      "expectedTools": [
+        "world_trade"
+      ]
+    },
+    {
+      "input": "我留在这里练识字，今天和接下来三天每天练一遍抄本，每遍争取三十点熟练度；每次练完休息到次日早上九点，第四遍结束就停下。",
+      "assertions": [
+        {
+          "kind": "range",
+          "path": "state.skills.skill_literacy.proficiency",
+          "min": 100,
+          "max": 120
+        },
+        {
+          "kind": "elapsed",
+          "min": 3600,
+          "max": 4320
+        },
+        {
+          "kind": "unchanged",
+          "paths": [
+            "state.player.coins",
+            "state.inventory.item_book_m4_surface",
+            "state.inventory.item_parchment"
+          ]
+        }
+      ],
+      "expectedTools": [
+        "world_time",
+        "world_practice"
+      ]
+    },
+    {
+      "input": "现在我完整研读纸土留痕初抄中的暮纹术一节，尝试学会它。",
+      "assertions": [
+        {
+          "kind": "calls",
+          "tool": "world_learn",
+          "args": {
+            "entity": "暮纹术",
+            "source": "纸土留痕初抄"
+          },
+          "min": 1
+        },
+        {
+          "kind": "elapsed",
+          "min": 120,
+          "max": 140
+        },
+        {
+          "kind": "unchanged",
+          "paths": [
+            "state.player.coins"
+          ]
+        }
+      ],
+      "expectedTools": [
+        "world_learn"
+      ]
+    },
+    {
+      "input": "暮纹术如果还没学会，我最多再完整研读两遍，学会就停；不能把没有领会写成已经学会。",
+      "assertions": [
+        {
+          "kind": "conditional",
+          "when": {
+            "path": "state.spells.spell_shadow_03"
+          },
+          "then": [
+            {
+              "kind": "unchanged",
+              "paths": [
+                "state.player.coins"
+              ]
+            }
+          ],
+          "else": [
+            {
+              "kind": "calls",
+              "tool": "world_learn",
+              "args": {
+                "entity": "暮纹术",
+                "source": "纸土留痕初抄"
+              },
+              "min": 1
+            }
+          ]
+        },
+        {
+          "kind": "exists",
+          "path": "state.spells.spell_shadow_03"
+        },
+        {
+          "kind": "unchanged",
+          "paths": [
+            "state.player.coins"
+          ]
+        }
+      ]
+    },
+    {
+      "input": "（场外）确认暮纹术已在法术书里，木炭还没有购买。",
+      "assertions": [
+        {
+          "kind": "exists",
+          "path": "state.spells.spell_shadow_03"
+        },
+        {
+          "kind": "quantity",
+          "path": "state.inventory.item_charcoal",
+          "value": 0
+        },
+        {
+          "kind": "elapsed",
+          "min": 0,
+          "max": 0
+        }
+      ]
+    },
+    {
+      "input": "今天是集市日，我去河湾村口集市找段岩，向他买一袋木炭，只买这一袋。",
+      "assertions": [
+        {
+          "kind": "equals",
+          "path": "state.location",
+          "value": "loc_hw"
+        },
+        {
+          "kind": "quantity",
+          "path": "state.inventory.item_charcoal",
+          "value": 1
+        },
+        {
+          "kind": "conservation",
+          "paths": [
+            "state.player.coins",
+            "state.npcs.npc_hw_duanyan.coins"
+          ]
+        },
+        {
+          "kind": "present",
+          "npcs": [
+            "npc_hw_duanyan"
+          ]
+        },
+        {
+          "kind": "calls",
+          "tool": "world_trade",
+          "args": {
+            "seller": "段岩",
+            "item": "木炭小袋",
+            "quantity": 1
+          },
+          "min": 1,
+          "max": 1
+        }
+      ],
+      "expectedTools": [
+        "world_move",
+        "world_trade"
+      ]
+    },
+    {
+      "input": "我把自己的那张羊皮纸摊开，施放一次暮纹术，留下“明早到小学堂读书”这几个暗字；只尝试一次。",
+      "assertions": [
+        {
+          "kind": "calls",
+          "tool": "world_cast",
+          "args": {
+            "spell": "暮纹术",
+            "target": "刮薄羊皮纸",
+            "text": "明早到小学堂读书"
+          },
+          "min": 1,
+          "max": 1
+        },
+        {
+          "kind": "delta",
+          "path": "state.player.mp",
+          "value": -3
+        },
+        {
+          "kind": "quantity",
+          "path": "state.inventory.item_charcoal",
+          "value": 0
+        },
+        {
+          "kind": "quantity",
+          "path": "state.inventory.item_parchment",
+          "value": 1
+        },
+        {
+          "kind": "unchanged",
+          "paths": [
+            "state.player.coins"
+          ]
+        },
+        {
+          "kind": "elapsed",
+          "min": 1,
+          "max": 1
+        }
+      ],
+      "expectedTools": [
+        "world_cast"
+      ],
+      "repeatWrites": true
     }
   ],
   "initial": {

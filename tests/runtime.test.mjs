@@ -7,6 +7,9 @@ import {once}from'node:events';
 import express from 'express';
 import {chromium}from'playwright-core';
 import {init}from'../server-plugin/index.mjs';
+import {loadWorld}from'../tools/load-world.mjs';
+import {WorldEngine}from'../server-plugin/engine.mjs';
+import {applyPatches}from'../server-plugin/storage.mjs';
 test('E2/E19 浏览器：失败对账阻止出站生成，编辑撤销刷新玩家账本，元数据只留引用',{timeout:60000},async t=>{
     const directory=await fs.mkdtemp(path.join(os.tmpdir(),'infinite-fields-browser-'));
     t.after(()=>fs.rm(directory,{recursive:true,force:true}));
@@ -24,7 +27,7 @@ test('E2/E19 浏览器：失败对账阻止出站生成，编辑撤销刷新玩�
     await page.route('**/runtime.js',route=>route.fulfill({contentType:'text/javascript',body:runtime}));
     await page.route('**/turn.mjs',async route=>route.fulfill({contentType:'text/javascript',body:await fs.readFile('extension/turn.mjs','utf8')}));
     await page.route('**/state-read.mjs',async route=>route.fulfill({contentType:'text/javascript',body:await fs.readFile('extension/state-read.mjs','utf8')}));
-    for(const name of ['tools.mjs','prompt.mjs','message-view.mjs','ledger-view.mjs'])await page.route(`**/${name}`,async route=>route.fulfill({contentType:'text/javascript',body:await fs.readFile(`extension/${name}`,'utf8')}));
+    for(const name of ['tools.mjs','prompt.mjs','message-view.mjs','ledger-view.mjs','history-window.mjs'])await page.route(`**/${name}`,async route=>route.fulfill({contentType:'text/javascript',body:await fs.readFile(`extension/${name}`,'utf8')}));
     await page.route('**/api/plugins/infinite-fields/**',async route=>{
         const request=route.request(),url=new URL(request.url());
         if(failReconcile&&url.pathname.endsWith('/reconcile'))return route.fulfill({status:400,json:{ok:false,error:'故意损坏的回放夹具'}});
@@ -51,6 +54,25 @@ test('E2/E19 浏览器：失败对账阻止出站生成，编辑撤销刷新玩�
         return{inventory:JSON.parse(await tool.action({section:'行囊'})),player:JSON.parse(await tool.action({section:'玩家'})),invalid:JSON.parse(await tool.action({section:'不认识的栏目'}))};
     });
     assert.equal(read.inventory.item_staff.quantity,1);assert.equal(read.player.coins,180);assert.equal(read.invalid.ok,false);
+    // The actual extension hook begins capture, and its registered tool sends
+    // that server token. Both calls reach the temporary HTTP server.
+    const searchEvidence=await page.evaluate(async()=>{
+        const calls=[];const originalFetch=window.fetch;
+        window.fetch=async(url,options)=>{if(String(url).includes('/api/plugins/infinite-fields/'))calls.push({endpoint:String(url).split('/').at(-1),body:JSON.parse(options.body)});return originalFetch(url,options);};
+        window.fixtureContext.getTokenCountAsync=async()=>1;
+        await window.infiniteFieldsV2.historyInterceptor(window.fixtureContext.chat,8192,()=>{},'normal');
+        const before=await originalFetch('/api/plugins/infinite-fields/export',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({campaignId:window.infiniteFieldsV2.view.reference.campaignId})}).then(r=>r.json());
+        const found=await window.fixtureTools.get('world_search').action({query:'林穗'});
+        const after=await originalFetch('/api/plugins/infinite-fields/export',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({campaignId:window.infiniteFieldsV2.view.reference.campaignId})}).then(r=>r.json());
+        window.fetch=originalFetch;return {calls,found,before,after};
+    });
+    const beginRequest=searchEvidence.calls.find(row=>row.endpoint==='begin'),searchRequest=searchEvidence.calls.find(row=>row.endpoint==='search');
+    assert.equal(beginRequest.body.captureSearch,true);assert.match(searchRequest.body.token,/^[a-f0-9]{64}$/);
+    assert.equal(searchRequest.body.anchor,'original');assert.equal(searchRequest.body.campaignId,created.reference.campaignId);
+    assert.equal(searchRequest.body.expectedSequence,created.reference.sequence);assert.ok(searchEvidence.found.results.length);
+    assert.deepEqual(searchEvidence.after.events,searchEvidence.before.events);assert.deepEqual(searchEvidence.after.initial,searchEvidence.before.initial);
+    const captured=JSON.parse(await fs.readFile(path.join(directory,'infinite-fields',created.reference.campaignId,'consistency',`${searchRequest.body.token}.json`),'utf8'));
+    assert.deepEqual(captured.retrieval.calls[0].result,searchEvidence.found);
     const move=await page.evaluate(()=>window.infiniteFieldsV2.execute('world_move',{destination:'河湾村'},'moved'));assert.equal(move.ok,true);
     const metadata=await page.evaluate(()=>window.savedMetadata.infinite_fields);
     assert.equal(metadata.format,2);assert.equal(metadata.state,undefined);assert.equal(metadata.journal,undefined);
@@ -167,4 +189,35 @@ test('E2/E19 浏览器：失败对账阻止出站生成，编辑撤销刷新玩�
     assert.equal(await page.getByRole('button',{name:'在副本上启用新版'}).count(),1);
     assert.deepEqual(pageErrors,[]);
     await fs.writeFile(`${reportDirectory}/T20-ledger-browser.json`,JSON.stringify({...ledgerReport,generatedAt:new Date().toISOString()},null,2)+'\n');
+});
+
+test('T41 浏览器：现有账本显示实际居民与分村贡献，重绘不叠加且不展示其他人物贡献',{timeout:30000},async t=>{
+    const world=await loadWorld();for(const npc of world.npcs){delete npc.schedule;delete npc.tier;}
+    const engine=new WorldEngine(world),legacy=JSON.parse(await fs.readFile('tests/fixtures/legacy/seed.json'));
+    let doc=engine.createCharacter(legacy,{},'civic-browser');doc.state.player.coins=1000;doc.state.location='bld_hw_qingdeng';doc.state.npcs.npc_hw_linsui.location=doc.state.location;
+    const run=async(tool,args,eventId)=>{const out=await engine.reduce(doc,{tool,args,eventId});doc=applyPatches(doc,out.patches);return out.result;};
+    await run('world_trade',{seller:'npc_hw_linsui',service:'住宿',days:7},'room');
+    doc.state.minute=doc.state.records.contract_room_room.starts+3*1440;doc.state.location='bld_hw_council';
+    for(const id of ['npc_hw_linsui','npc_hw_chenbai']){doc.state.npcs[id].location=doc.state.location;doc.state.npcs[id].activity='商谈';}
+    const args={settlement:'loc_hw',sponsor:'npc_hw_linsui',authority:'npc_hw_chenbai'};
+    await run('world_settlement',{...args,operation:'civic_residence'},'residence');
+    await run('world_settlement',{...args,operation:'civic_sponsor'},'sponsor');
+    await run('world_settlement',{...args,operation:'civic_apply_resident'},'resident');
+    doc.state.inventory.item_oats={quantity:10};
+    const donation=await run('world_farm',{operation:'donate',settlement:'loc_hw',quantity:10},'grain');
+    const other={category:'civic_contribution',subject:'npc_hw_luqing',settlement:'loc_bs_yupo',kind:'teaching',points:99};
+    doc.state.records['civic_source:private-teacher']=other;
+    const browser=await chromium.launch({executablePath:'C:/Program Files/Google/Chrome/Application/chrome.exe',headless:true});t.after(()=>browser.close());
+    const page=await browser.newPage({viewport:{width:390,height:844}});
+    await page.route('http://ledger.fixture/**',async route=>route.fulfill({contentType:route.request().url().endsWith('.mjs')?'text/javascript':'text/html',body:route.request().url().endsWith('.mjs')?await fs.readFile('extension/ledger-view.mjs','utf8'):'<div id="ledger"></div>'}));
+    await page.goto('http://ledger.fixture/');await page.addStyleTag({content:await fs.readFile('extension/style.css','utf8')});
+    const payload={state:doc.state,labels:Object.fromEntries(engine.entities.map(row=>[row.id,row.name])),events:[{notices:donation.notices}]};
+    await page.evaluate(async payload=>{window.civicPayload=payload;window.renderCivic=(await import('/ledger-view.mjs')).renderLedger;window.renderCivic(document.querySelector('#ledger'),payload.state,payload.labels,payload.events);},payload);
+    let text=await page.locator('#ledger').innerText();
+    assert.match(text,/户籍与聚落贡献/);assert.match(text,/河湾村 · 居住起日 1/);assert.match(text,/居民 · 已登记 · 已付 5铜/);assert.match(text,/河湾村 · 贡献 2/);
+    assert.doesNotMatch(text,/贡献 99|private-teacher|公民 · 已登记/);
+    await page.evaluate(()=>window.renderCivic(document.querySelector('#ledger'),window.civicPayload.state,window.civicPayload.labels,window.civicPayload.events));
+    assert.equal(await page.locator('#ledger').innerText(),text);
+    await page.evaluate(()=>window.renderCivic(document.querySelector('#ledger'),{...window.civicPayload.state,records:{}},window.civicPayload.labels,[]));
+    text=await page.locator('#ledger').innerText();assert.match(text,/居住史尚未登记/);assert.doesNotMatch(text,/居民 · 已登记|贡献 2/);
 });

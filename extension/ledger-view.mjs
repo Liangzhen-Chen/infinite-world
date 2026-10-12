@@ -26,6 +26,14 @@ export function renderLedger(container,state,labels,events,time=''){
     for(const row of Object.values(state.obligations??{}))if([row.promisor,row.promisee].includes('player'))rows.push({due:row.deadline,text:`约定：${row.content} · ${row.status}`});
     for(const row of Object.values(state.quests??{}))if([row.publisher,row.taker].includes('player'))rows.push({due:row.deadline,text:`任务：${row.content} · ${row.status}`});
     rows.sort((a,b)=>(a.due??Infinity)-(b.due??Infinity));list(commitments,rows.map(row=>row.text),'暂无已登记的任务或约定。');fragment.append(commitments);
+    const civic=section('户籍与聚落贡献'),civicRows=[],contributions=new Map();
+    for(const row of Object.values(state.records??{}))if(row.subject==='player'){
+        if(row.category==='civic_residence')civicRows.push(`${name(row.settlement)} · 居住起日 ${Math.floor(row.since/1440)+1} · 已核验住宿契约`);
+        if(['civic_resident','civic_citizen'].includes(row.category))civicRows.push(`${name(row.settlement)} · ${row.category==='civic_citizen'?'公民':'居民'} · ${row.status} · 已付 ${row.fee}铜`);
+        if(row.category==='civic_contribution')contributions.set(row.settlement,(contributions.get(row.settlement)??0)+row.points);
+    }
+    for(const [settlement,points]of contributions)civicRows.push(`${name(settlement)} · 贡献 ${points}`);
+    list(civic,civicRows,'居住史尚未登记；旧档不补造起日。');civic.append(element('p','贡献达标只开放申请，土地与官职仍需授权。','fields-note'));fragment.append(civic);
     const recent=section('近期变化');recent.classList.add('fields-ledger-recent');recent.append(element('p','仅显示已提交的变化，最近的在前。回复审查提示保留在对应消息旁。','fields-note'));
     const receipts=(events??[]).filter(event=>event.notices?.length).slice(-8).reverse();
     if(!receipts.length)recent.append(element('p','暂无已提交的变化。','fields-note'));

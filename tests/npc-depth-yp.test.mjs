@@ -46,3 +46,31 @@ test('真实29人L2和L4哈希保留，汤桓硬错所在批拒绝整卡发布',
  const failed=await read('npc_yp_tanghuan.json');assert.equal(failed.status,'manual');assert.equal(failed.attempts,3);assert.equal(failed.reviewRecovery.status,'failed');assert.ok(failed.errors.some(e=>e.field==='memorySeeds[2]'));assert.equal(failed.reviewRecovery.response.choices[0].finish_reason,'stop');
  const {readApprovedContent}=await import('../tools/content-pipeline.mjs');await assert.rejects(readApprovedContent(root.pathname.replace(/^\/(\w:)/,'$1'),entries,{contextFor:e=>contextFor(e,world),revision:design.revision}),/尚未完成 L4/);
 });
+
+test('新授权离线双人修订冻结原record/原源/旧proof，所有历史文件逐字保留',async()=>{
+ const {check}=await import('../world/drafts/w1/yp-depth-rest/reopen/prepare-offline.mjs'),report=await check();
+ assert.equal(report.authorizationId,'user-reopen-20261012-01');assert.equal(report.planningId,'T06-user-reopen-20261012-01-offline-1');
+ assert.equal(report.preservedIds.length,28);assert.equal(report.modelCalls,0);assert.equal(report.budgetWrites,0);assert.equal(report.formalWrites,0);
+ assert.equal(report.realL2,false);assert.equal(report.realL4,false);assert.deepEqual(report.L1Errors,[]);assert.deepEqual(report.targetedAuditIssues,[]);
+ const recorded=JSON.parse(await fs.readFile(new URL('../world/drafts/w1/yp-depth-rest/reopen/offline-report.json',import.meta.url)));
+ assert.equal(recorded.authorizationHash,report.authorizationHash);assert.equal(recorded.guard,'T06继续冻结');assert.deepEqual(recorded.changedPaths,report.changedPaths);
+});
+
+test('受控新候选只改双方共享事件及裘砚实际关联叶，正确兄弟和其他28人不变',async()=>{
+ const reopened=await import('../world/drafts/w1/yp-depth-rest/reopen/design.mjs'),next=depthEntries(base,reopened,world),pairs=['npc_yp_tanghuan','npc_yp_qiuyan'];
+ const expected={npc_yp_tanghuan:['memorySeeds[2]'],npc_yp_qiuyan:['knowledge.unknown[0]','memorySeeds[2]','relationships[1].note','opinions.neighbors[1].view']};
+ for(const entry of next){const old=entries.find(e=>e.id===entry.id),changed=entry.patches.filter(p=>hashContent(p.value)!==hashContent(old.patches.find(o=>o.path===p.path).value)).map(p=>p.path);assert.deepEqual(changed,expected[entry.id]??[]);
+  assert.deepEqual(entry.before,old.before);assert.deepEqual(entry.issues,old.issues);assert.equal(entry.baseHash,old.baseHash);verifyUnchanged(old.before,entry.facts,entry);assert.deepEqual(entry.facts.memorySeeds.slice(0,old.before.memorySeeds.length),old.before.memorySeeds);
+ }
+ const memories=pairs.map(id=>next.find(e=>e.id===id).facts.memorySeeds.at(-1));assert.deepEqual(memories[0],memories[1]);assert.equal(memories[0].id,'memory_yp_rest_qiuyan_tanghuan');assert.equal(memories[0].event,'裘砚认识同村汤桓，两人在榆坡村有同村日常往来。');
+ assert.doesNotMatch(JSON.stringify(next.find(e=>e.id===pairs[1]).patches.filter(p=>expected[pairs[1]].includes(p.path))),/货签|相认|约工|认出|帮忙/);
+ const view=validatePatchResults(next,world);assert.deepEqual(auditNpcDepth(view).issues.filter(i=>i.id.startsWith('npc_yp_')),[]);assert.ok(auditNpcDepth(view).legacyTraits.ok);
+});
+
+test('旧裘砚L2只对应旧事件，新候选未获批准且单侧漏改仍拒绝结构合并',async()=>{
+ const reopened=await import('../world/drafts/w1/yp-depth-rest/reopen/design.mjs'),next=depthEntries(base,reopened,world),root=new URL('../world/drafts/w1/yp-depth-rest/',import.meta.url),read=async f=>JSON.parse(await fs.readFile(new URL(f,root)));
+ const old=await read('npc_yp_qiuyan.json'),newEntry=next.find(e=>e.id===old.id);assert.equal(old.status,'passed');assert.notEqual(old.fingerprint,hashContent({entry:newEntry,context:contextFor(newEntry,world),revision:reopened.revision}));
+ const {readApprovedContent}=await import('../tools/content-pipeline.mjs');await assert.rejects(readApprovedContent(root.pathname.replace(/^\/(\w:)/,'$1'),next,{contextFor:e=>contextFor(e,world),revision:reopened.revision}),/发布骨架或引用事实已改变|尚未完成 L4/);
+ const oneSided=next.map(e=>e.id==='npc_yp_qiuyan'?entries.find(old=>old.id===e.id):e);assert.throws(()=>validatePatchResults(oneSided,world),/npc_yp_qiuyan\/memorySeeds\[2\]\/memory-shared/);
+ const invalidations=await read('reopen/l4-invalidations.json');assert.deepEqual(invalidations.records.map(r=>r.operativeStatus),['invalidated-by-L4','invalidated-by-L4']);assert.equal(invalidations.records.find(r=>r.id===old.id).reviewHash,hashContent(old.review));
+});

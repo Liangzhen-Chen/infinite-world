@@ -1,3 +1,5 @@
+import {movementKinds,validateMovementCatalog,prepareMovement,applyMovement}from'./magic-movement.mjs';
+import {validateAreaCatalog,prepareAreaMagic,applyAreaMagic}from'./magic-area.mjs';
 import {derivedStats,monsterStats}from'./combat.mjs';
 import {magicStatuses,magicStatusStats,relieveMagicStatuses,applyMagicStatus}from'./magic-status.mjs';
 import {validateTargeting,assertMagicTargeting}from'./magic-targeting.mjs';
@@ -13,7 +15,7 @@ import {validateObjectCatalog,prepareObjectMagic,applyObjectMagic}from'./magic-o
 export function validateMagicCatalog(catalog,{requireHandler=false}={}){
     const spec=catalog.effectSpec,errors=[];
     if(!spec){if(requireHandler||catalog.mechanism)errors.push('此法术机制尚未接入规则，不能叙述已实现');return errors;}
-    errors.push(...validateEffectSpec(spec));
+    errors.push(...(movementKinds.includes(spec.kind)?validateMovementCatalog(catalog):validateEffectSpec(spec)));
     errors.push(...validateTargeting(catalog));
     if(['status','light','protection'].includes(spec.kind)&&(!Number.isSafeInteger(catalog.duration)||catalog.duration<1||catalog.duration>Math.min(catalog.durationLimit??43200,43200)))errors.push('持续效果的时限非法');
     if(spec.kind==='status'&&(!magicStatuses[spec.status]||spec.power>magicStatuses[spec.status].maximum))errors.push('状态效果或强度不在规则表');
@@ -21,15 +23,18 @@ export function validateMagicCatalog(catalog,{requireHandler=false}={}){
     if(spec.kind==='status'&&['dazzle','illusion'].includes(spec.status)&&catalog.duration!==1)errors.push('瞬时注意力干扰须最多保留一分钟待用');
     if(spec.kind==='relief'&&(spec.power>3||catalog.duration!==0||catalog.targeting?.consent!=='mental_magic'||catalog.targeting?.permit!=='mental_magic'))errors.push('精神解除须有限强度、本人同意与施法许可');
     if(spec.kind==='status'&&magicStatuses[spec.status]?.mental&&catalog.targeting?.permit!=='mental_magic')errors.push('精神干扰须明确施法许可');
+    if(spec.kind==='area')errors.push(...validateAreaCatalog(catalog));
     if(spec.kind==='environment')errors.push(...validateEnvironmentCatalog(catalog));
     if(['summon','summon_contract'].includes(spec.kind))errors.push(...validateSummonCatalog(catalog));
     if(spec.kind==='mark')errors.push(...validateMarkCatalog(catalog));
     if(spec.kind==='object')errors.push(...validateObjectCatalog(catalog));
     return errors;
 }
-export function prepareMagic(d,catalog,args){
+export function prepareMagic(d,catalog,args,context={}){
     const errors=validateMagicCatalog(catalog);if(errors.length)throw new Error(errors.join('；'));
     const spec=catalog.effectSpec;if(!spec)return null;
+    if(movementKinds.includes(spec.kind))return prepareMovement.call(this,d,catalog,args);
+    if(spec.kind==='area')return prepareAreaMagic.call(this,d,catalog,args,context);
     if(spec.kind==='environment')return prepareEnvironmentMagic.call(this,d,catalog,args);
     if(['summon','summon_contract'].includes(spec.kind))return prepareSummon.call(this,d,catalog,args);
     if(spec.kind==='mark')return prepareMark.call(this,d,catalog,args);
@@ -46,9 +51,11 @@ export function prepareMagic(d,catalog,args){
     const partition=target.startsWith('npc_')?'npcs':target.startsWith('monster_')||target.startsWith('boss_')?'creatures':null;
     if(target!=='player'&&!partition)throw new Error('法术需要实际生命目标');
     const actor=target==='player'?d.get('state','player'):d.get('state',partition,target),definition=this.byId.get(target);
-    if(!actor||target!=='player'&&actor.location!==d.get('state','location'))throw new Error('法术目标不在场');
+    if(!actor||target!=='player'&&actor.location!==(context.location??d.get('state','location')))throw new Error('法术目标不在场');
     if(actor.status==='死亡')throw new Error('目标已经死亡，此法术不能使死者复生');
-    assertMagicTargeting(d,this,catalog,args,target);
+    const targetingEngine=Object.create(this);
+    if(context.targetFacts)targetingEngine.magicTargetFacts=()=>context.targetFacts;
+    assertMagicTargeting(d,targetingEngine,catalog,args,target);
     const derived=target==='player'?{maxHp:actor.maxHp,defense:0}:partition==='npcs'
         ?derivedStats({level:actor.level??definition.level??1,attributes:definition.attributes,profession:Boolean(definition.combatProfession)},this.rules)
         :monsterStats({level:actor.level??definition.level??definition.levelRange?.[0]??1,template:definition.template??this.byId.get(definition.monster)?.template??2,bossTier:definition.tier??0},this.rules);
@@ -61,17 +68,19 @@ export function prepareMagic(d,catalog,args){
         const permission=d.get('state','records',args.authorization);
         if(!permission||permission.category!=='authorization'||permission.subject!==target||permission.action!=='support_magic'||permission.expires!==undefined&&permission.expires<=d.get('state','minute'))throw new Error('向他人施加防护需要本人同意');
     }
-    return{target,path:target==='player'?['state','player']:['state',partition,target],actor,derived,spec,catalog,completionArgs:{...args,target}};
+    return{target,path:target==='player'?['state','player']:['state',partition,target],actor,derived,spec,catalog,context,completionArgs:{...args,target}};
 }
 export function applyMagic(d,prepared,id){
     if(!prepared)return{};
     let{spec,target,path,catalog}=prepared;
+    if(movementKinds.includes(spec.kind))return applyMovement.call(this,d,prepared,id);
+    if(spec.kind==='area')return applyAreaMagic.call(this,d,prepared,id);
     if(spec.kind==='environment')return applyEnvironmentMagic.call(this,d,prepared,id);
     if(['summon','summon_contract'].includes(spec.kind))return applySummon.call(this,d,prepared,id);
     if(spec.kind==='mark')return applyMark.call(this,d,prepared,id);
     if(spec.kind==='object')return applyObjectMagic.call(this,d,prepared,id);
     if(prepared.completionArgs){
-        try{prepared=prepareMagic.call(this,d,catalog,prepared.completionArgs);}
+        try{prepared=prepareMagic.call(this,d,catalog,prepared.completionArgs,prepared.context);}
         catch(error){return{target,effectFailed:`施法完成前条件失效：${error.message}`};}
     }
     const latest=d.get(...path);
@@ -112,7 +121,7 @@ export function applyMagic(d,prepared,id){
         d.set([...path,'hp'],next);d.set([...path,'maxHp'],maximum);
         if(!next)d.set([...path,'status'],'死亡');
         else if(spec.kind==='heal'&&current.status==='濒死'){d.set([...path,'status'],'正常');d.set([...path,'dyingSince'],null);}
-        if(spec.kind==='damage'&&target.startsWith('npc_')){
+        if(spec.kind==='damage'&&target.startsWith('npc_')&&(prepared.context?.source??'player')==='player'){
             d.set([...path,'trust'],Math.max(-100,(current.trust??0)-10));
             d.set([...path,'developments'],[...current.developments??[],{type:'法术伤害',source:id,minute:d.get('state','minute'),damage:old-next}]);
         }
@@ -120,6 +129,7 @@ export function applyMagic(d,prepared,id){
     if(spec.kind==='damage')rememberBossTactic(d,this,target,tactic,id);
     const killed=spec.kind==='damage'&&!next&&['monster_','boss_'].some(prefix=>target.startsWith(prefix));
     const corpse=killed?recordWildlifeDeath(d,this,target,id):null,lair=killed?defeatBoss(d,this,target,id):null;
-    const experience=killed?monsterReward(d,this,target,id):{};
+    if(corpse&&(prepared.context?.source??'player')!=='player')d.set(['state','creatures',target,'corpse','killedBy'],prepared.context.source);
+    const experience=killed&&(prepared.context?.source??'player')==='player'?monsterReward(d,this,target,id):{};
     return{target,[spec.kind==='heal'?'healed':'damage']:Math.abs(next-old),targetHp:next,...experience,...(shield.absorbed?{absorbed:shield.absorbed,protectionEffect:shield.effect}:{}),...(corpse?{corpse}:{}),...(lair?{lair}:{}),...(counter.adapted?{adaptation:{tactic,guarded:true}}:{})};
 }
