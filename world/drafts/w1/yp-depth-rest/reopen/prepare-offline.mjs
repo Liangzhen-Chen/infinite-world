@@ -58,10 +58,21 @@ async function generate(){
 export async function check(){
  const world=await loadWorld(),base=await read('base.json'),foundation=await read('foundation.json'),candidate=await read('candidate.json'),freeze=await read('reopen/freeze.json'),plan=await read('reopen/controlled-plan.json');
  const oldEntries=depthEntries(base,originalDesign,world),nextDesign=await import('./design.mjs'),entries=depthEntries(base,nextDesign,world),changes=await read('reopen/patch-diff.json');
+ let proof=null;try{proof=await read('incremental-proof.json');}catch(error){if(error.code!=='ENOENT')throw error;}
+ let originalPublication=null;
+ if(proof){assert.equal(proof.authorizationHash,freeze.authorizationHash);assert.equal(proof.planHash,hashContent(plan));assert.equal(proof.reopenAuthorization.id,authorizationId);originalPublication=await read('reopen/prior-publication-state.json');}
+ const reviewedRecords=proof?await Promise.all(ids.map(id=>read(id+'.json'))):[];
  assert.equal(plan.authorizationId,authorizationId);assert.equal(plan.planningId,planningId);assert.equal(freeze.authorizationHash,hashContent(plan));
  const checkout=freeze.checkoutEvidence;
  for(const file of freeze.originalFiles){
-  const rawHash=hashContent(await fs.readFile(path.join(root,file.file),'utf8')),alternative=checkout?.files.find(row=>row.file===file.file);
+  let originalRaw;
+  if(proof&&ids.some(id=>file.file===id+'.json')){
+   const id=file.file.slice(0,-5),oldRecord=proof.oldRecords.find(r=>r.id===id),current=await read(file.file);
+   assert.equal(hashContent(oldRecord),freeze.records.find(r=>r.id===id).recordHash);assert.deepEqual(current.reviewRecovery.prior,oldRecord);
+   assert.equal(current.incremental.authorizationHash,freeze.authorizationHash);assert.equal(current.incremental.originalRecordHash,hashContent(oldRecord));continue;
+  }
+  if(proof&&['summary.json','batch-1.json'].includes(file.file)){const saved=originalPublication.files[file.file];assert.equal(hashContent(saved.raw),saved.rawHash);originalRaw=saved.raw;}
+  const rawHash=hashContent(originalRaw??await fs.readFile(path.join(root,file.file),'utf8')),alternative=checkout?.files.find(row=>row.file===file.file);
   assert.ok(rawHash===file.rawHash||alternative&&rawHash===alternative.mainRawHash,'原文件改变 '+file.file);
  }
  for(const [key,value]of Object.entries({baseHash:hashContent(base),candidateHash:hashContent(candidate),foundationHash:hashContent(foundation)})){assert.equal(plan[key],value);assert.equal(freeze[key],value);}
@@ -70,8 +81,8 @@ export async function check(){
  for(const source of plan.sourceHashes)assert.equal(source.hash,hashContent(await read(source.file)));
  for(const quote of await read('reopen/source-quotes.json')){assert.equal(hashContent(quote.quote),quote.hash);assert.deepEqual(getPath(world[quote.collection].find(n=>n.id===quote.id),quote.field),quote.quote);}
  const oldRecords=await read('reopen/old-records.json');
- for(const record of freeze.records)assert.equal(record.recordHash,hashContent(await read(record.id+'.json')),'原完整record改变 '+record.id);
- for(const item of plan.authorized){const old=oldRecords.find(r=>r.id===item.id);assert.equal(item.recordHash,hashContent(old));assert.deepEqual(old,await read(item.id+'.json'));assert.equal(item.draftHash,hashContent(old.draft));assert.equal(item.reviewHash,hashContent(old.review));}
+ for(const record of freeze.records)assert.equal(record.recordHash,hashContent(proof&&ids.includes(record.id)?proof.oldRecords.find(r=>r.id===record.id):await read(record.id+'.json')),'原完整record改变 '+record.id);
+ for(const item of plan.authorized){const old=oldRecords.find(r=>r.id===item.id);assert.equal(item.recordHash,hashContent(old));assert.deepEqual(old,proof?proof.oldRecords.find(r=>r.id===item.id):await read(item.id+'.json'));assert.equal(item.draftHash,hashContent(old.draft));assert.equal(item.reviewHash,hashContent(old.review));}
  const errors=entries.flatMap(e=>validateDraft(patchDraft(e),e).errors.map(error=>({id:e.id,error})));assert.deepEqual(errors,[]);
  assert.deepEqual(await read('reopen/candidate-after.json'),entries.map(patchDraft));
  const preserved=entries.filter(e=>!ids.includes(e.id)).map(e=>{const old=oldEntries.find(o=>o.id===e.id);assert.deepEqual(e,old);assert.deepEqual(contextFor(e,world),contextFor(old,world));return e.id;});assert.equal(preserved.length,28);
@@ -86,7 +97,7 @@ export async function check(){
  for(const entry of entries)assert.deepEqual(entry.facts.memorySeeds.slice(0,entry.before.memorySeeds.length),entry.before.memorySeeds);
  const shared=ids.map(id=>entries.find(e=>e.id===id).facts.memorySeeds.at(-1));assert.deepEqual(shared[0],shared[1]);
  const memoryIssues=validateNpcDepth(merged).issues.filter(i=>ids.includes(i.id)&&i.field.startsWith('memorySeeds'));assert.deepEqual(memoryIssues,[]);
- return{authorizationId,planningId,authorizationHash:hashContent(plan),changedPaths:changes.map(({id,path})=>({id,path})),L1Errors:errors,targetedAuditIssues:issues,preservedIds:preserved,preservedSiblings,sharedEvent:{id:shared[0].id,participants:shared[0].knownBy,oldEvent:leaf(oldEntries.find(e=>e.id===ids[0]),'memorySeeds[2]').event,newEvent:shared[0].event,closed:true,compatible:true,oldMemoriesPreserved:true},guard:null,realL2:false,realL4:false,modelCalls:0,budgetWrites:0,formalWrites:0,budgetHistory:{spentYuan:1.82866384,unknownReservedYuan:.083736,newCumulativeLimitYuan:2.5,maxRemainingYuan:.58760016,firstIdLimitYuan:.50,phase:'reference-only-no-grant-or-request'},recordedAt:new Date().toISOString()};
+ return{authorizationId,planningId,authorizationHash:hashContent(plan),changedPaths:changes.map(({id,path})=>({id,path})),L1Errors:errors,targetedAuditIssues:issues,preservedIds:preserved,preservedSiblings,sharedEvent:{id:shared[0].id,participants:shared[0].knownBy,oldEvent:leaf(oldEntries.find(e=>e.id===ids[0]),'memorySeeds[2]').event,newEvent:shared[0].event,closed:true,compatible:true,oldMemoriesPreserved:true},guard:null,realL2:!!proof&&reviewedRecords.every(r=>r.status==='passed'&&r.reviewRecovery.status==='passed-L1-L2'&&!r.errors.length),realL4:!!proof&&(await read('batch-1.json')).l4.approved,modelCalls:0,budgetWrites:0,formalWrites:0,budgetHistory:{spentYuan:1.82866384,unknownReservedYuan:.083736,newCumulativeLimitYuan:2.5,maxRemainingYuan:.58760016,firstIdLimitYuan:.50,phase:'reference-only-no-grant-or-request'},recordedAt:new Date().toISOString()};
 }
 if(process.argv[1]&&import.meta.url===pathToFileURL(path.resolve(process.argv[1])).href){
  const report=process.argv.includes('--check')?await check():await generate();

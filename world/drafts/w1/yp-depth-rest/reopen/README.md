@@ -1,26 +1,23 @@
-# T06 本次授权的离线双人修订
+# T06 授权双人闭合，待主会话正式整合
 
-本目录绑定 `user-reopen-20261012-01`，规划标识为 `T06-user-reopen-20261012-01-offline-1`。`controlled-plan.json` 沿用已有受控修订形状，冻结原 foundation、base 和 candidate，并串接最终汤桓修订与旧批次重绑定 proof。`freeze.json` 固定原目录全部历史文件的逐字 hash，`old-records.json` 保存双方完整旧 record，`source-quotes.json` 保存正式原源的逐字段引文。
+本次固定授权为 `user-reopen-20261012-01`，原规划标识 `T06-user-reopen-20261012-01-offline-1`、计划hash和旧foundation保持不变。2026-10-12两次真实DeepSeek完整L2依次审核汤桓、裘砚，均首次通过，无hard或其他标记，全部14叶coverage齐全，未付费回显候选。28名未变合格人物沿原L2复用，完整record hash相同。当前record的 `reviewRecovery.prior` 和 `incremental-proof.oldRecords` 保留旧失败及旧通过。
 
-合入前只读核对发现主线与原任务树的历史文件存在LF/CRLF差异。`freeze.json.checkoutEvidence` 保存两处实际读到的字节hash，登记前逐文件确认差异仅为换行；检查只接受这两个固定hash，不在运行时规范化或扩展来源白名单。原源JSON内容hash继续沿公共工具的 `hashContent`，没有修改任何公共源码或主线文件。
+批1实际阅读俞澄、裘砚、汤桓、章颐和利莎，覆盖实际flag与随机5。阅读窗口上界242077毫秒，六项评分平均4.37，最低3，备注在 `batch-1-reading.json`。两名修订者经官方 `npc-depth-review --l4-notes` 登记新逐叶L4，现有L4 CLI检查30人的候选与审核hash后批准；批0保留原已批准的逐字凭证，复用有效L4。俞澄关系备注句式重复，独特性计3，留作后续骨架要求改善，没有整批重写。
 
-`patch-diff.json` 记录五个 old→new：双方 `memorySeeds[2]`，以及裘砚 `knowledge.unknown[0]`、`relationships[1].note`、`opinions.neighbors[1].view`。新事件只写原源登记的认识和同村日常往来，不设当面相认或货签共同经历；交谈前询问时间保持待问，未发生且未承诺。原记忆、其他28人的候选和双方正确兄弟叶保持原值；29份旧通过记录均原样保留，裘砚的旧通过只对应旧事件，修后两人均未获真实L2或L4批准。
+现有发布器单卡预演与T11完整批预演均通过，30人selectedQuality零缺口，20条新增共享记忆闭合，原17traits保持。两次结果均 `published=false`，没有写正式baseline或原存档，未新增人口。世界其他人物在预演后仍有1192项缺口，不能称为全体达标。全量、两构建和真实酒馆验收未做；波次正式发布后的随机10评分由整合会话执行。
 
-`design.mjs` 在原候选上应用逐叶差异，`candidate-after.json` 保存完整30人修后候选，原设计与原候选文件没有改写。离线证明在 `offline-report.json`：L1及T04榆坡缺口为零，双方共享事件地点/知情者/正文一致，原记忆保留。此证明不代表真实人物审核或正式发布预演通过。当前 `npc-depth-review` 对本卡受控修订实际返回 `T06继续冻结`，旧汤桓还存在已用 `reviewRecovery`；这些 guard 未删除，T49尚未集成。
+本轮两次调用费用上界合计0.06993360元，原卡spent从1.82866384变为1.89859744元，未知reserved仍0.083736元，累计上限2.5元，剩余上界0.51766656元。共享spent为10.88761224元、reserved为0.083736元，wave20和goal100未增加。原公共入口保存逐次provider响应，完整请求、原文及用量在双方record和共享预算responseEvidence中，总览见 `complete-report.json`。完整控制台结果见 `tanghuan-real-console.txt` 与 `qiuyan-real-console.txt`。
 
-只读检查命令在工作目录 `F:/dnd-wt/T06` 执行，检查不会进入模型或预算入口：
-
-```powershell
-node world/drafts/w1/yp-depth-rest/reopen/prepare-offline.mjs --check
-```
-
-以下是当前公共 CLI 可解析的完整输入，已知被冻结 guard 阻断。本阶段没有执行真实请求；T49定版后须先登记该固定授权及这份计划的 hash，并依其真实接口补齐显式重开参数，再授模型槽执行。不能把下列旧接口命令视为已获得新轮运行授权，也不能删除旧复审字段来让它运行。
+主会话可直接读取已完成的正规批预演输入；以下命令仅预演：
 
 ```powershell
-node tools/npc-depth-review.mjs --id npc_yp_tanghuan --design world/drafts/w1/yp-depth-rest/reopen/design.mjs --root world/drafts/w1/yp-depth-rest --budget-root F:/dnd/world/drafts/m4-object --card T06 --controlled-revision world/drafts/w1/yp-depth-rest/reopen/controlled-plan.json --authorization-hash 683e66df84290477d4bfe63814e14e1476c2aa0eed19461db6aa2435a2cb75fc --source-evidence world/drafts/w1/yp-depth-rest/reopen/source-evidence.json
-node tools/npc-depth-review.mjs --id npc_yp_qiuyan --design world/drafts/w1/yp-depth-rest/reopen/design.mjs --root world/drafts/w1/yp-depth-rest --budget-root F:/dnd/world/drafts/m4-object --card T06 --controlled-revision world/drafts/w1/yp-depth-rest/reopen/controlled-plan.json --authorization-hash 683e66df84290477d4bfe63814e14e1476c2aa0eed19461db6aa2435a2cb75fc --source-evidence world/drafts/w1/yp-depth-rest/reopen/source-evidence.json
+node tools/publish-npc-depth.mjs --batch-manifest world/drafts/w1/yp-depth-rest/reopen/publication-batch.json
 ```
 
-先审汤桓，完整请求上界适配且协议/来源通过后再审裘砚；两人的新L2通过后仍须重新实际阅读受影响批的flag与随机5并登记新L4。原卡spent为1.82866384元，未知reserved为0.083736元；新累计上限2.5元，最多可再用0.58760016元，首ID限0.50元，均仅是后续预算参考。本期没有改allocation、预算或锁，没有正式写入、部署或动原存档。
+单卡清单为 `publication-manifest.json`，明确加载修后 `reopen/design.mjs`；原manifest作为历史材料保留。`publication-batch.json`绑定world原快照hash及完整30人集合，`publication-batch-preview.json`为T11批预演原文，`publication-preview.json`为单卡预演原文。正式整合由主会话完成，不重跑已通过L2。
 
-第一次相关测试完整原文保存在 `related-first-failure.json` 的 `outputRaw`，保留原输出空行与空格。批发布旧夹具没有向T46入口提供确定候选与可核验预留费率，发出请求前即停止；夹具已提供冻结patchDraft、完整请求费率和零实际费用，生产预算/审核规则未变。修复后原文见 `related-rerun-results.txt`，换行证据及完整旧record核验后的相关原文见 `related-final-results.txt`，提交前CORE原文见 `core-results.txt`。
+`patch-diff.json`记录双方 `memorySeeds[2]` 和裘砚 `knowledge.unknown[0]`、`relationships[1].note`、`opinions.neighbors[1].view` 五处差异。共享事件只保留原源认识和同村往来，双方同文；交谈时间仍待问，没有新增认字能力、约工或私密获知。正确兄弟叶与原记忆保持原值，逐字段引文在 `source-quotes.json`。
+
+`freeze.json`保留原任务树与主线两处已实测LF/CRLF字节hash，不在运行时规范化来源。公共工具更新record、批1和summary的原状态另存于 `old-records.json`、`incremental-proof.oldRecords` 及由提交0e6e345读取的 `prior-publication-state.json`。原sourceDeclaration、base、candidate、foundation和历史请求响应未覆写。`prepare-offline.mjs --check`重放不可变来源、历史链与修后L1/T04，不触及模型或预算。
+
+旧 `T49-guard-blocked.json`、`T49-blocked-request-ceilings.json` 和 `offline-report.json`是先行证据。当时授权漏三叶导致零请求；主会话补齐后正式预检通过，本期才真实执行。首轮测试失败原文在 `related-first-failure.json`，T46夹具已补冻结候选与可核验费率，生产guard没有降低。最终相关与CORE见 `complete-related-results.txt`、`complete-core-results.txt`。
