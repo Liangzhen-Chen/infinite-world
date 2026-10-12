@@ -1,0 +1,1 @@
+{"geoIndexExactSourceMatch":true,"outsideGeoIndex":0,"newSettled":0,"cachedUnchanged":true,"executions":[2,2,2,2,2,2,2,2,2,2],"budget":{"spentYuan":0.28484248,"reservedYuan":6.372890000000001,"upperYuan":6.657732480000001,"previousReservedYuan":3.239056,"addedConservativeReserveYuan":3.1338340000000007,"limitYuan":30}}

@@ -1,0 +1,383 @@
+{
+  "capturedAt": "2026-10-12T02:13:15.905Z",
+  "card": "T17",
+  "resumeCount": 1,
+  "modelCallsSettledAdded": 0,
+  "requestHash": "3c415fe30d11b3a5300737302f025d2e8d6036416228d1b2a49b1a4426f02706",
+  "label": "guide-1-1-1",
+  "path": "request.messages[0].content",
+  "geoIndexSpan": [
+    3231,
+    4242
+  ],
+  "geoIndexExactSourceMatch": true,
+  "geoIndexHash": "051e9a9d4435bce360eff13e1e223a4b297688f499dbfdc84c3d4e6501fe9ab1",
+  "geoSource": "tools/build-card.mjs reference(world), world/geo/locations.json names",
+  "geoIndexText": "其他已登记地点：白石归途殿、铜砾岭、盘根洼、乌岩阶、盐苇湾、透砂坡、沉沙峡、雨石盆地、黑泥洲、白冠高林、冰回裂谷、赤褶山麓、圆月断崖、冠雪台原、沉星山坳、榆坡村、坡口议事屋、上下坡麦田、榆枝木作院、坡口共灶屋、南坡缝线屋、坡腰果树地、背风菜圃、榆坡路口、赵枫户居处、乔端户居处、温绪户居处、蒋弥户居处、韩培户居处、朱笙户居处、秦砺户居处、高忻户居处、陶咨户居处、卢夏户居处、潘菊户居处、任泊户居处、曹芸户居处、荀禾户居处、殷茸户居处、卫迟户居处、耿麓户居处、席存户居处、缪朴户居处、包印户居处、冯雅户居处、石苓户居处、邵若户居处、凌宛户居处、孔馥户居处、俞澄户居处、裘砚户居处、汤桓户居处、章颐户居处、利莎户居处、苇汀村、汀口记事屋、浅汀岸口、苇束堆放地、修篓木台院、汀口共灶屋、苇席收边屋、岸上菜圃、苇汀干路口、郑汐户居处、王浦户居处、周渚户居处、伍蓬户居处、魏涟户居处、黄霆户居处、贺芩户居处、吕沫户居处、施峤户居处、柯荔户居处、杜珂户居处、刘燕户居处、湛鸥户居处、支采户居处、薛萤户居处、雷芷户居处、倪筠户居处、屈槐户居处、丁素户居处、茹芹户居处、龚潞户居处、景遥户居处、范水户居处、单苴户居处、董霏户居处、裴纯户居处、宿蕙户居处、戚鹭户居处、花茵户居处、向祯户居处、砾泉村、泉标记事屋、砾泉槽边、砾石整边院、砾泉共灶屋、旧柄缝补屋、泉侧菜床、泉下坡田、砾泉坡路口、栾佩户居处、焦岩户居处、储茵户居处、胥珑户居处、慎书户居处、宁野户居处、甄希户居处、甘祺户居处、宙梧户居处、霍霁户居处、明禾户居处、云绣户居处、符审户居处、皮菁户居处、尹致户居处、檀羽户居处、封济户居处、隋莉户居处、沙萝户居处、莫谷户居处、华钮户居处、闻琪户居处、鞠舒户居处、崔帆户居处、青岚户居处、衡庐户居处、易可户居处、满渠户居处、聂雅户居处、匡叶户居处、桑坂村、桑坂换工屋、桑坡树地、桑坡边沟田、梭架修整院、桑坂共灶屋、晒线缝补屋、南坂菜圃、桑坂园外路口、张洛户居处、袁卿户居处、钟岚户居处、田陌户居处、甄芸户居处、顾露户居处、叶荀户居处、竺钗户居处、潘瑶户居处、高枢户居处、周薇户居处、丛思户居处、茅俪户居处、解安户居处、白舒户居处、鲁玮户居处、史葵户居处、孔柳户居处、费清户居处、商筠户居处、池杉户居处、查悦户居处、秦婉户居处、龙芙户居处、诸弦户居处、扶瑜户居处、全立户居处、晏珏户居处、向荷户居处、邸叶户居处。详细地理通过目录与检索查阅。",
+  "unapprovedReferenceCount": 120,
+  "unapprovedOutsideGeoIndex": [],
+  "guardRejectedDepthClosure": [
+    "npc_lq_chuyin",
+    "npc_lq_cuifan",
+    "npc_lq_fengji",
+    "npc_lq_fushen",
+    "npc_lq_ganqi",
+    "npc_lq_henglu",
+    "npc_lq_huaniu",
+    "npc_lq_huoji",
+    "npc_lq_jiaoyan",
+    "npc_lq_jushu",
+    "npc_lq_kuangye",
+    "npc_lq_luanpei",
+    "npc_lq_manqu",
+    "npc_lq_minghe",
+    "npc_lq_mogu",
+    "npc_lq_nieya",
+    "npc_lq_ningye",
+    "npc_lq_pijing",
+    "npc_lq_qinglan",
+    "npc_lq_shaluo",
+    "npc_lq_shenshu",
+    "npc_lq_suili",
+    "npc_lq_tanyu",
+    "npc_lq_wenqi",
+    "npc_lq_xulong",
+    "npc_lq_yike",
+    "npc_lq_yinzhi",
+    "npc_lq_yunxiu",
+    "npc_lq_zhenxi",
+    "npc_lq_zhouwu",
+    "npc_sb_baishu",
+    "npc_sb_chayue",
+    "npc_sb_chishan",
+    "npc_sb_congsi",
+    "npc_sb_diye",
+    "npc_sb_feiqing",
+    "npc_sb_fuyu",
+    "npc_sb_gaoshu",
+    "npc_sb_gulu",
+    "npc_sb_jiean",
+    "npc_sb_kongliu",
+    "npc_sb_longfu",
+    "npc_sb_luwei",
+    "npc_sb_maoli",
+    "npc_sb_panyao",
+    "npc_sb_qinwan",
+    "npc_sb_quanli",
+    "npc_sb_shangyun",
+    "npc_sb_shikui",
+    "npc_sb_tianmo",
+    "npc_sb_xianghe",
+    "npc_sb_yanjue",
+    "npc_sb_yexun",
+    "npc_sb_yuanqing",
+    "npc_sb_zhangluo",
+    "npc_sb_zhenyun",
+    "npc_sb_zhonglan",
+    "npc_sb_zhouwei",
+    "npc_sb_zhuchai",
+    "npc_sb_zhuxian",
+    "npc_wt_dingsu",
+    "npc_wt_dongfei",
+    "npc_wt_duke",
+    "npc_wt_fanshui",
+    "npc_wt_gonglu",
+    "npc_wt_heqin",
+    "npc_wt_huangting",
+    "npc_wt_huayin",
+    "npc_wt_jingyao",
+    "npc_wt_keli",
+    "npc_wt_leizhi",
+    "npc_wt_liuyan",
+    "npc_wt_lvmo",
+    "npc_wt_niyun",
+    "npc_wt_peichun",
+    "npc_wt_qilu",
+    "npc_wt_quhuai",
+    "npc_wt_ruqin",
+    "npc_wt_shanju",
+    "npc_wt_shiqiao",
+    "npc_wt_suhui",
+    "npc_wt_wangpu",
+    "npc_wt_weilian",
+    "npc_wt_wupeng",
+    "npc_wt_xiangzhen",
+    "npc_wt_xueying",
+    "npc_wt_zhangou",
+    "npc_wt_zhengxi",
+    "npc_wt_zhicai",
+    "npc_wt_zhouzhu",
+    "npc_yp_baoyin",
+    "npc_yp_caoyun",
+    "npc_yp_fengya",
+    "npc_yp_gaoxin",
+    "npc_yp_genglu",
+    "npc_yp_hanpei",
+    "npc_yp_jiangmi",
+    "npc_yp_kongfu",
+    "npc_yp_lingwan",
+    "npc_yp_lisha",
+    "npc_yp_luxia",
+    "npc_yp_miaopu",
+    "npc_yp_panju",
+    "npc_yp_qiaoduan",
+    "npc_yp_qinli",
+    "npc_yp_qiuyan",
+    "npc_yp_renbo",
+    "npc_yp_shaoruo",
+    "npc_yp_shiling",
+    "npc_yp_tanghuan",
+    "npc_yp_taozi",
+    "npc_yp_weichi",
+    "npc_yp_wenxu",
+    "npc_yp_xicun",
+    "npc_yp_xunhe",
+    "npc_yp_yinrong",
+    "npc_yp_yucheng",
+    "npc_yp_zhangyi",
+    "npc_yp_zhaofeng",
+    "npc_yp_zhusheng"
+  ],
+  "scope": "姓名扫描将正式地名目录中的户居处名称认作人物深度依赖。没有证据表明这些120人的完整profile进入实际请求；本次授权没有新增地名投影豁免，唯一恢复已用，不再修源scope或再次resume。零模型检查只覆盖原拒发的consistency请求，未预检全部保存主持请求地名嵌入，属仪器验收缺口。",
+  "cachedResponses": [
+    {
+      "id": "2cd69c47506ff961bcdc58acbdc772a4037c6d921685f4a980d77bf119ba2fe0",
+      "oldResponseId": "4ea8cfa9-fc6d-4eed-a894-dd2535182f2d",
+      "sameResponse": true,
+      "attemptsBefore": 1,
+      "attemptsAfter": 1
+    },
+    {
+      "id": "e308ae97045164c2252f7c87f29dad2c85a39f50550e5c22acf96a4d44a4aef9",
+      "oldResponseId": "136da439-aa8f-4c5a-8aa5-cf6071c71116",
+      "sameResponse": true,
+      "attemptsBefore": 1,
+      "attemptsAfter": 1
+    },
+    {
+      "id": "fa02425980e2a5e591c1cf3b7a3f1a13b538a6639d03e59eae994494a031afd3",
+      "oldResponseId": "0321a1a9-9d6d-4f34-aaea-7a1c549be70b",
+      "sameResponse": true,
+      "attemptsBefore": 1,
+      "attemptsAfter": 1
+    },
+    {
+      "id": "106dfff720769edba19913bea2d4b1351991ec33af3037e0c503b6e11caa9439",
+      "oldResponseId": "b047af5d-c895-4c1d-a731-a49d65f55dda",
+      "sameResponse": true,
+      "attemptsBefore": 1,
+      "attemptsAfter": 1
+    },
+    {
+      "id": "19a36db95858844ea92d614f1b6f063d22e36113edd556f9e6151aaae5f6b0b9",
+      "oldResponseId": "edfe21e4-1067-4bee-b117-1966ebdb0cba",
+      "sameResponse": true,
+      "attemptsBefore": 1,
+      "attemptsAfter": 1
+    },
+    {
+      "id": "325fcc4ac21d3dc0d7b888ecd2b25ee8e009b823833c9b701aaa38cda0827803",
+      "oldResponseId": "b80ace4f-4f0d-4f59-9792-bd797b17d7c2",
+      "sameResponse": true,
+      "attemptsBefore": 1,
+      "attemptsAfter": 1
+    },
+    {
+      "id": "06e32ddd05b572da78b8918d90ad1a07ddec79bcc848ad9e3981abd6566fcd04",
+      "oldResponseId": "f60ab046-02f2-4580-a325-b6012dd1c60d",
+      "sameResponse": true,
+      "attemptsBefore": 1,
+      "attemptsAfter": 1
+    },
+    {
+      "id": "da8abdffd852011eb8ba45b7b6053f6d43c2c1e34761c996198e26754939199a",
+      "oldResponseId": "d6b3e104-5b56-4165-84ae-ed86fc8f9ab1",
+      "sameResponse": true,
+      "attemptsBefore": 1,
+      "attemptsAfter": 1
+    },
+    {
+      "id": "1aaa34f96452a893a79b2c579d92bb3be37bb94f859ab3cf2006f5f66477e510",
+      "oldResponseId": "970b6059-2b9a-4160-a495-56a41d28d511",
+      "sameResponse": true,
+      "attemptsBefore": 1,
+      "attemptsAfter": 1
+    },
+    {
+      "id": "0bf8ba52bab729d373de94cf668e44edc1d159d6536aa9e8fa9d23440576d8e9",
+      "oldResponseId": "47d1274b-082b-4e19-84ac-684ed869a213",
+      "sameResponse": true,
+      "attemptsBefore": 1,
+      "attemptsAfter": 1
+    },
+    {
+      "id": "5d0f9d29dc77188a7c7b6f5585254b88738813a09645dcd089bea7671a788d73",
+      "oldResponseId": "44496566-1266-4f0f-aed9-e123760beb39",
+      "sameResponse": true,
+      "attemptsBefore": 1,
+      "attemptsAfter": 1
+    },
+    {
+      "id": "2383a913fe2a16fa13665bfc64ae8a4dceff812400a9b11ef3878ea58953f8f3",
+      "oldResponseId": "d332805b-da26-4679-a5be-2e9488096774",
+      "sameResponse": true,
+      "attemptsBefore": 1,
+      "attemptsAfter": 1
+    },
+    {
+      "id": "49e05fa43128d380762c086c8080fc8be4bcecdf70200977e93666c848ad43e9",
+      "oldResponseId": "1779c44b-7f4b-4d86-8ec5-ada3617327ba",
+      "sameResponse": true,
+      "attemptsBefore": 1,
+      "attemptsAfter": 1
+    },
+    {
+      "id": "17275a6de25c33071dbeb37a08a242c96fe9f065dac0a93c4163298146c25642",
+      "oldResponseId": "10d54552-e0c8-42ea-8ec9-3aebf32bbc8f",
+      "sameResponse": true,
+      "attemptsBefore": 1,
+      "attemptsAfter": 1
+    },
+    {
+      "id": "8f49b3c1afdc286f35ae1099b0f0fe1414e9589142ad4ad1107931b782fe966c",
+      "oldResponseId": "523ec61d-86b7-4063-ba8a-615ef5c46207",
+      "sameResponse": true,
+      "attemptsBefore": 1,
+      "attemptsAfter": 1
+    },
+    {
+      "id": "df4519e91737e557f8f7ea77bbef71803c9dea70b1a7e9b90109ae389e35e124",
+      "oldResponseId": "4c8ef9f0-cc48-47ff-afbb-55f8e3569b0f",
+      "sameResponse": true,
+      "attemptsBefore": 1,
+      "attemptsAfter": 1
+    },
+    {
+      "id": "fab97feaa8fd1c3a8d39f5dcaa8ca4a39e7fee61953d7bafda0e7e4dcaa2f66c",
+      "oldResponseId": "fc786de0-d445-4e2e-a147-2015ad6df59d",
+      "sameResponse": true,
+      "attemptsBefore": 1,
+      "attemptsAfter": 1
+    },
+    {
+      "id": "2839542ea659e77486b6f3b7c9a0e7961c6840d584fa2e086cc2c45d3dcdc8d5",
+      "oldResponseId": "0f3bce8d-3a83-4295-b53d-27385a325f8c",
+      "sameResponse": true,
+      "attemptsBefore": 1,
+      "attemptsAfter": 1
+    },
+    {
+      "id": "6d541f26018b545f17f07b244be79d48bb1f4c2a6dc7363662823c13e71889bf",
+      "oldResponseId": "a86f3dbc-4484-4978-a4aa-27cb57030c3d",
+      "sameResponse": true,
+      "attemptsBefore": 1,
+      "attemptsAfter": 1
+    },
+    {
+      "id": "e24e594f6d1004f12e60294fe31c457934c399228d91f542f9cc200641f0b496",
+      "oldResponseId": "a877ada6-e7a7-4af1-91d4-e98ca69457eb",
+      "sameResponse": true,
+      "attemptsBefore": 1,
+      "attemptsAfter": 1
+    },
+    {
+      "id": "4c75e7289508e5b7648bc1e46f1b2c224e26adc51a2d2ae57dd89e355892242f",
+      "oldResponseId": "42bd707f-9fb3-4bf5-8126-c4316ef73d9e",
+      "sameResponse": true,
+      "attemptsBefore": 1,
+      "attemptsAfter": 1
+    },
+    {
+      "id": "022a0e41434794d0bb5a7f500008edcba0c204bbcd5f12ea94c1a557c10f724b",
+      "oldResponseId": "bd60f290-4796-4180-8f42-f4e58d0ea53c",
+      "sameResponse": true,
+      "attemptsBefore": 1,
+      "attemptsAfter": 1
+    },
+    {
+      "id": "ba9e6c742e3893cb878353bebe2f4bc104ce9453219aeee89015093cc2c9d8b3",
+      "oldResponseId": "80a5d7ac-d341-4798-afe2-ca2b480d196a",
+      "sameResponse": true,
+      "attemptsBefore": 1,
+      "attemptsAfter": 1
+    },
+    {
+      "id": "9efa933fc61df2571696d612c49ac72728ea66f32bd1917e2878d7b0b3ec2586",
+      "oldResponseId": "613848ce-f5b3-48fa-ad73-ffd8e9bd828e",
+      "sameResponse": true,
+      "attemptsBefore": 1,
+      "attemptsAfter": 1
+    }
+  ],
+  "tasks": [
+    {
+      "file": "00319db7e73a755258deecbe3d5105a98a95d9dbcd9db0cdf2f6e74ba3ec60da.json",
+      "executions": 2,
+      "originals": 1,
+      "recoveryRuns": 1
+    },
+    {
+      "file": "2b7a143b6340d5352f80120fe2ced2759fcd42801c6fb05d491c6a13f3ba9ee8.json",
+      "executions": 2,
+      "originals": 1,
+      "recoveryRuns": 1
+    },
+    {
+      "file": "447fe136c6493ab1b970251f87e121469d479ea943815ebdfea80676da0b2d7f.json",
+      "executions": 2,
+      "originals": 1,
+      "recoveryRuns": 1
+    },
+    {
+      "file": "4bfe35806154c7dcbd4c4f119223e22888a30e21946b5e3bacbbd79bead2dd43.json",
+      "executions": 2,
+      "originals": 1,
+      "recoveryRuns": 1
+    },
+    {
+      "file": "584c874a45f9bf24754dfc77de72a66cb0045de2acd930dcf90dd78531e39613.json",
+      "executions": 2,
+      "originals": 1,
+      "recoveryRuns": 1
+    },
+    {
+      "file": "5acae3302a9820cfe3876c6204834d40e98332712e36e0ca5b5e92419d0f4029.json",
+      "executions": 2,
+      "originals": 1,
+      "recoveryRuns": 1
+    },
+    {
+      "file": "826c153ab682973b8286aa1833aca2a5447e3cc1b5cb7a5fd48d58598a8725ce.json",
+      "executions": 2,
+      "originals": 1,
+      "recoveryRuns": 1
+    },
+    {
+      "file": "c076503256420e5aba8da29ca0cdfe369999367a52edd22f3cc6539b4b5d2385.json",
+      "executions": 2,
+      "originals": 1,
+      "recoveryRuns": 1
+    },
+    {
+      "file": "c9bbfdb324fe4f3ea08ef7d351ffa85dae089fc4842226b0f339a624f18f225f.json",
+      "executions": 2,
+      "originals": 1,
+      "recoveryRuns": 1
+    },
+    {
+      "file": "eb49f146d9bfac0bd5ed1d49a5c0701fb9004df912ef3098554e27cef30a0e12.json",
+      "executions": 2,
+      "originals": 1,
+      "recoveryRuns": 1
+    }
+  ],
+  "budget": {
+    "spentYuan": 0.28484248,
+    "reservedYuan": 6.372890000000001,
+    "upperYuan": 6.657732480000001,
+    "previousReservedYuan": 3.239056,
+    "addedConservativeReserveYuan": 3.1338340000000007,
+    "limitYuan": 30
+  },
+  "stop": "真实模型进程结束；无再次resume、无退款、无源码改动。"
+}
