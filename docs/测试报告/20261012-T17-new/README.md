@@ -1,21 +1,17 @@
-# T17-A 零模型准备
+# T56 零模型来源续修
 
-地点投影修正、旧拒发回放和反例检查已通过。十场正常 HTTP 预检仍有四场被严格出处守卫拒绝，`preflightReady=false`，不能提交 T17-B 付费运行。完整正式世界未删减，原断言保留，预检脚本使用本地确定性响应，不计作 M2 的真实叙述、账本或盲辨验收。
+原十场正常 HTTP 预检已完整走完，`preflightReady=true`。`paymentReady=false`，T56 在历史费用归属处卡住，T17-B 不能开始付费运行。完整正式世界、十场输入和原断言均保留；本地确定性响应不计 M2 的有效 N、叙述质量或账本验收。
 
-已正常合入主线 T38 周贸易与时钟路径，最终输入和必要 HTTP 预检基于合后世界重新冻结。相关测试与 CORE 已在合后树重跑通过。没有要求当前全 world hash 等于旧 T11-B hash；河湾人物及事件仍逐项核对原发布凭证。
+榆坡30人沿原 publication-batch 由正式 publisher 重放 L1/L2/L4 与事件闭包，结果仍为零差异。当前人物 hash 逐 ID 验证后进入动态 guard，河湾32人与原18人的原凭证继续核验，不要求其他村整批审核，也不要求全世界 hash 等于旧 T11-B 发布时的值。
 
-`preflight.json` 核对河湾32人的当前档 hash、原18人及逐事件参与者闭包。榆坡30人沿原 publication-batch 的 L1/L2/L4/事件发布预演核验为零差异，证据单列为 `yupoPublished`。本卡保持原动态守卫的河湾32人授权范围，没有按“已经发布”整批豁免实际正文。
+原四处来源依赖已接入实际已审 entry 与 current source。覆盖榆坡 problem_yp_1、榆坡/苇汀/砾泉税章和砾泉 problem_lq_3；完整续跑另遇桑坂 problem_sb_2 与 problem_sb_4，同样逐行核验原审核和公共投影，未授权桑坂人物全档。`runtime-guard.mjs` 只登记现有 `WorldEngine.scene` 在正常 HTTP 服务中实际渲染的场景，公开行的 span、contentHash、sceneHash、documentHash 和 source 保存在请求证据中。host 转换后的 user 容器与 review 的 sceneBefore/sceneBeforeReply 使用同一权威，不按消息 role 或人物名字整体放行。
 
-`frozen-inputs.json` 保存当前完整 `loadWorld`、`loadPromptBundle`、十场场景及真实 host 转换后的静态消息。`preflight.json` 保存源文件 hash 和 host 转换器、util、config 的 hash。`zero-model-requests.jsonl` 保存正常 runner 产生的主持、一致性、审稿请求和真实工具对象，离屏请求复用原 `npcPlanningRequest`。唯一源码改动是一行导出该现有函数；没有复制请求模板或开启规划预算。
+`frozen-inputs.json` 保存完整 world、bundle、十场场景与 host 输入，源正文和 hash 一并冻结；`preflight.json` 保存发布凭证、逐人闭包与真实渲染权威。`zero-model-requests.jsonl` 保留主持、一致性、审稿、规划和工具对象，并按实际场景记录 roleCoverage。三人对白只填入明确的零模型占位台词，使正常盲辨请求进入守卫；本地判断固定 unknown，不记为声线通过。离屏场景通过实际 HTTP 推进到第16320分钟。
 
-`guard-check.json` 的通过仅指出处守卫检查。两条旧拒发请求逐字 hash 不变，均可无损回放；正式地点 id/name、固定消息位置和整段内容 hash 同时匹配时才授予投影。公开行篡改、秘密混入及真实工具对象仍按原出处闭包处理。
+`guard-check.mjs` 保留原27项检查类型和两条旧拒发请求的逐字 hash。榆坡已逐项批准，未批准正文与工具目标反例改用砾泉慎书，避免将已经合法发布的榆坡人物伪称为未批准。新增实际 HTTP 场景、错公开 span/hash、假现场及私密混入检查；正式公开投影不能授权真实人物工具目标。所有冻结请求无损重算，实际无未批准依赖。
 
-正常预检完整走完 guide、npc_delivery、npc_home_visit、npc_offscreen、npc_private、npc_social。npc_offscreen 的真实 HTTP 时间推进超过十天。其他四场的停止回合和所有原断言实际结果均在 `preflight.json`，没有将本地模拟回复的结果写成真实模型通过。
+`payment-history.json` 只读核验原账。初版与 resume 的 request/attempt 逐项前缀一致，同 run 只计最新累计值；24笔已结算请求分别关联原请求 key、responseId、用量和时间，spent 0.28484248元，未知 reserved 6.372890000000001元全部保留。没有新建预算、释放未知预留或增加模型调用。
 
-剩余输入缺口精确见 `dependency-gaps.json`。实际检索行只有 `settlement_loc_bs_yupo_issue_problem_yp_1`、`settlement_loc_bs_yupo_tax`、`settlement_loc_bs_weiting_tax`、`settlement_loc_bs_liquan_tax` 和 `settlement_loc_bs_liquan_issue_problem_lq_3`。旧榆坡公开问题已有源证据，host 转换后进入 user 场景容器，旧 guard 不授予该位置投影；另外四行尚未逐行绑定公开出处。审稿实际断言另携带已发布榆坡人物 ID，旧 guard 将这些 ID 展开到全档闭包。郑汐和栾佩的闭包额外牵出王蒲、焦岩，这些不是新的地点投影。
+更早 M2 报告上界5.770631280000002元，可与原 usage 日志310笔累计核对。报告直接承载200笔用量，其余110笔缺少该旧 run 的请求或 responseId 关联证据，包含12笔规划、90笔一致性、5笔改写和3笔失败验收；逐笔 label、timestamp、costUpperYuan 已列在 payment-history.json 的 legacy.unattributed 与 gaps。最小补证是这110笔各自的原请求/run/responseId 关联，不需要重跑模型或改旧账。旧历史、新 run 已发生与未知预留、已授权新增8元相加上界20.42836376元，低于单轮30元；金额未超额不能替代请求归属证据。
 
-后续只需补这些实际行的原源证据、host 场景渲染位置绑定及榆坡实际 ID 的逐人已发布凭证。无需等待苇汀、砾泉、桑坂整村人物审核。补齐后重冻完整输入并重新完成十场预检，再交 T17-B；本卡没有扩展旧公开投影或改变原世界源。
-
-旧 run `t17-m2-20261012-01` 的失败、恢复计数和账本未改。新轮建议 ID 及旧预算证据只作关联，没有创建新预算或释放未知预留。历史费用尚未去重，`paymentReady=false`。旧 spent 0.28484248 元、未知 reserved 6.372890000000001 元仍保留。
-
-运行 `node docs/测试报告/20261012-T17-new/preflight.mjs` 会在当前缺口下以退出码1保留拒绝证据。随后运行 `node docs/测试报告/20261012-T17-new/guard-check.mjs` 核验两条旧拒发回放、反例和所有冻结请求。相关三个测试文件及 CORE 的实际结果分别在 `tests-related.txt`、`tests-core.txt`。首次相关测试缺 worktree 内酒馆 tokenizer 路径；接入既有安装 junction 后重跑通过。未跑全量测试或构建，未调用外部模型，未部署或操作用户存档。
+相关 playtest-runner、playtest-npc-evidence、playtest-budget 测试及 CORE 已实跑通过，原结果分别保存在 tests-related.txt 与 tests-core.txt。守卫反例和旧拒发回放结果见 guard-check.json。未跑全量测试或构建，未调用外部 API，未修改引擎、世界正文、用户原档或酒馆部署；用户酒馆可玩内容没有变化。
