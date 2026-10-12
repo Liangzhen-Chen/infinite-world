@@ -121,3 +121,13 @@ test('正常world_promise签发本人精神同意，world_cast投递及收回闭
  const revoked=await s.run(linked.doc,'world_promise',{operation:'revoke_access',promisor:target,authorization:linkGrant.result.authorization},'public-revoke');assert.equal(revoked.doc.state.effects[linked.result.effect],undefined);
  const later=await s.run(revoked.doc,'world_time',{minutes:6},'public-revoked-wait');assert.equal(later.doc.state.player.mp,revoked.doc.state.player.mp);
 });
+
+test('真实行路期间不能用提前写入的目的地维持连接或交付；睡眠停止维持MP',async()=>{
+ const s=await fixture(),g=await s.ready('consent_link'),r=await s.cast(g.doc,'consent_link',{authorization:g.result.authorization,text:'平静'});
+ const departure=structuredClone(r.doc);departure.state.player.companions=[];
+ const moved=await s.run(departure,'world_move',{destination:'loc_hw_northwood'},'linked-walk');
+ assert.equal(moved.doc.state.location,'loc_hw_northwood');assert.equal(moved.doc.state.effects[r.id],undefined);assert.equal(moved.doc.state.player.mp,r.doc.state.player.mp);
+ assert.match(moved.doc.state.records[`ended_link:${r.id}`].reason,/途中/);assert.equal(messages(moved.doc)[0].status,'中止');assert.equal(heard(moved.doc).length,0);
+ const sleeping=await s.run(r.doc,'world_time',{minutes:6,activity:'睡眠'},'linked-sleep');
+ assert.equal(sleeping.doc.state.effects[r.id],undefined);assert.equal(sleeping.doc.state.player.mp,r.doc.state.player.mp);assert.match(sleeping.doc.state.records[`ended_link:${r.id}`].reason,/睡眠/);assert.equal(heard(sleeping.doc).length,0);
+});

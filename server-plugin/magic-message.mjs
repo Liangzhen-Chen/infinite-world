@@ -17,7 +17,9 @@ export function validateMessageCatalog(catalog){
 // Same-place actors need actual contact evidence. Between places the trusted
 // route length is the distance rule; an unknown route length never becomes zero.
 export function messageDistance(d,engine,target){
- const actor=d.get('state','npcs',target),location=d.get('state','location');
+ const actor=d.get('state','npcs',target),location=d.get('state','location'),action=engine.npcObligationAction;
+ if(action?.tool==='move'&&d.get('state','minute')<action.arrivalMinute)throw Error('玩家正在途中，没有可确认的传讯位置');
+ if(action?.tool==='time'&&action.args?.activity==='睡眠')throw Error('玩家正在睡眠，不能维持自愿精神连接或传讯');
  if(!awake(actor)||!actor.location||!awake(d.get('state','player')))throw Error('传讯双方须清醒且有实际位置，途中不能传讯');
  if(actor.location===location){
   const point=localPlayerPoint(d),facts=areaTargetFacts(d,engine,target,location,point);
