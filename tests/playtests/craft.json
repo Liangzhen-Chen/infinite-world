@@ -716,6 +716,201 @@
           ]
         }
       ]
+    },
+    {
+      "input": "我留在磨坊休息到今天早上九点半，等阿砚正常上工，不做买卖或修整。",
+      "assertions": [
+        {
+          "kind": "equals",
+          "path": "state.minute",
+          "value": 2010
+        },
+        {
+          "kind": "present",
+          "npcs": [
+            "npc_hw_ayan"
+          ]
+        },
+        {
+          "kind": "unchanged",
+          "paths": [
+            "state.inventory",
+            "state.player.coins",
+            "state.records"
+          ]
+        }
+      ]
+    },
+    {
+      "input": "如果木杖还没修好，我请阿砚按木匠基础手艺在旁指点这一次修整；双方约定成立后，只登记这一次协助，不动刀、不先收费。已经修好就只向他说明已保存的结果，不再请他协助修整。",
+      "assertions": [
+        {
+          "kind": "conditional",
+          "when": {
+            "path": "state.inventory.item_staff.maxDurability",
+            "equals": 99
+          },
+          "then": [
+            {
+              "kind": "elapsed",
+              "min": 0,
+              "max": 0
+            },
+            {
+              "kind": "unchanged",
+              "paths": [
+                "state.inventory",
+                "state.player.coins",
+                "state.records",
+                "state.obligations"
+              ]
+            }
+          ],
+          "else": [
+            {
+              "kind": "calls",
+              "tool": "world_promise",
+              "args": {
+                "type": "协助",
+                "attribute": "敏捷"
+              },
+              "min": 1,
+              "max": 1,
+              "success": true
+            },
+            {
+              "kind": "records",
+              "path": "state.obligations",
+              "where": {
+                "type": "协助",
+                "promisor": "npc_hw_ayan",
+                "promisee": "player",
+                "skill": "skill_life_6_core",
+                "attribute": "敏捷",
+                "status": "待履行"
+              },
+              "min": 1,
+              "max": 1
+            },
+            {
+              "kind": "present",
+              "npcs": [
+                "npc_hw_ayan"
+              ]
+            },
+            {
+              "kind": "unchanged",
+              "paths": [
+                "state.inventory",
+                "state.player.coins",
+                "state.workshopFunds"
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "input": "如果木杖还没修好，我按刚才成立的一次协助约定，在阿砚指点下用小刀修整旧木杖一次，支付正常工坊费。无论成败都停下，不能把这次协助再用一遍；已经修好就只查看杖身，不再收费或动刀。",
+      "assertions": [
+        {
+          "kind": "conditional",
+          "when": {
+            "path": "state.inventory.item_staff.maxDurability",
+            "equals": 99
+          },
+          "then": [
+            {
+              "kind": "elapsed",
+              "min": 0,
+              "max": 0
+            },
+            {
+              "kind": "unchanged",
+              "paths": [
+                "state.inventory",
+                "state.player.coins",
+                "state.records",
+                "state.obligations"
+              ]
+            }
+          ],
+          "else": [
+            {
+              "kind": "calls",
+              "tool": "world_craft",
+              "args": {
+                "operation": "repair"
+              },
+              "min": 1,
+              "max": 1,
+              "success": true
+            },
+            {
+              "kind": "delta",
+              "path": "state.player.coins",
+              "value": -2
+            },
+            {
+              "kind": "delta",
+              "path": "state.workshopFunds.station_hw_mill_bench",
+              "value": 2
+            },
+            {
+              "kind": "elapsed",
+              "min": 20,
+              "max": 20
+            },
+            {
+              "kind": "delta",
+              "path": "state.inventory.item_whittling_knife.durability",
+              "value": -1
+            },
+            {
+              "kind": "quantity",
+              "path": "state.inventory.item_staff",
+              "value": 1
+            },
+            {
+              "kind": "unchanged",
+              "paths": [
+                "state.inventory.item_wood"
+              ]
+            },
+            {
+              "kind": "records",
+              "path": "state.obligations",
+              "where": {
+                "type": "协助",
+                "status": "已完成",
+                "promisor": "npc_hw_ayan"
+              },
+              "min": 1,
+              "max": 1
+            },
+            {
+              "kind": "records",
+              "path": "state.records",
+              "where": {
+                "category": "repair",
+                "item": "item_staff"
+              },
+              "min": 4,
+              "max": 4
+            }
+          ]
+        },
+        {
+          "kind": "equals",
+          "path": "state.inventory.item_staff.maxDurability",
+          "value": 99
+        },
+        {
+          "kind": "equals",
+          "path": "state.inventory.item_staff.durability",
+          "value": 99
+        }
+      ]
     }
   ],
   "initial": {

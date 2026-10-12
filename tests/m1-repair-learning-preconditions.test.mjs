@@ -65,7 +65,7 @@ async function session(t,id){
             assert.equal(document.state.records[result.receipt].success,result.success);
             if(result.success){assert.equal(result.after.maxDurability,result.before.maxDurability-1);assert.ok(result.restored>0);}
             else{assert.deepEqual(result.after,result.before);assert.equal(result.restored,0);}
-            repairs.push({eventId,success:result.success,before:result.before,after:result.after});
+            repairs.push({eventId,success:result.success,die:result.die,total:result.total,helpers:result.helpers??[],before:result.before,after:result.after});
         }
         return{...routed,result,eventId};
     }
@@ -141,9 +141,43 @@ test('制造真实磨损小刀；实际交锋磨损正式木杖后经公共repai
     await s.turn(14,async()=>result.success?[]:[await s.call('world_craft',{operation:'repair',item:'旧木杖'})]);
     await s.turn(15,async()=>s.repairs.at(-1).success?[]:[await s.call('world_craft',{operation:'repair',item:'旧木杖'})]);
     await s.turn(16);await s.roundTrip();
+    // The public promise is the supplied lawful agreement for this engine precondition.
+    // This does not claim autonomous NPC consent in a real model conversation.
+    await s.turn(17,async()=>[await s.call('world_time',{minutes:2010-s.document.state.minute,activity:'休息'})]);
+    const teacher=s.document.state.npcs.npc_hw_ayan;
+    assert.equal(teacher.location,s.document.state.location);
+    assert.ok(!teacher.scheduleTravel&&!teacher.cognitionTravel);
+    assert.ok(!['死亡','濒死','昏迷','患病'].includes(teacher.status));
+    assert.doesNotMatch(teacher.activity??'',/睡眠|熟睡|睡觉/);
+    assert.equal(world.npcs.find(row=>row.id==='npc_hw_ayan').skills.skill_life_6_core,120);
+    await s.reject('world_promise',{operation:'create',promisor:'阿砚',type:'协助',skill:'识字',attribute:'智力',content:'指点认字'},/协助者技能不足/);
+    const promised=await s.turn(18,async()=>[await s.call('world_promise',{operation:'create',promisor:'阿砚',
+        promisee:'player',type:'协助',skill:'木匠基础手艺',attribute:'敏捷',deadline:s.document.state.minute+60,
+        content:'在木工台指导这一次旧木杖修整'})]);
+    const obligation=promised.calls[0].result.obligation;
+    assert.equal(obligation.skill,'skill_life_6_core');assert.equal(obligation.status,'待履行');
+    await s.reject('world_craft',{operation:'repair',item:'旧木杖',helpers:['阿砚']},/协助需要/);
+    const assisted=await s.turn(19,async()=>[await s.call('world_craft',{operation:'repair',item:'旧木杖',helpers:[obligation.id]})]);
+    const helped=assisted.calls[0],helper=helped.result.helpers[0];
+    assert.equal(helped.result.helpers.length,1);assert.equal(helper.obligation,obligation.id);assert.equal(helper.npc,'npc_hw_ayan');
+    assert.equal(helper.bonus,helper.success?2:0);
+    assert.equal(helped.result.modifier,1+helper.bonus,'原角色敏捷与工艺没有被测试改写');
+    assert.equal(s.document.state.obligations[obligation.id].status,'已完成');
+    assert.equal(s.document.state.obligations[obligation.id].completion.source,helped.eventId);
+    assert.equal(s.document.state.obligations[obligation.id].completion.success,helper.success);
+    assert.equal(s.document.state.npcs.npc_hw_ayan.developments.filter(row=>row.source===helped.eventId&&row.type==='协助行动').length,1);
+    const after=structuredClone(s.document);
+    const retry=await s.request('/execute',{campaignId:s.campaignId,...modelToolCall('world_craft',{
+        operation:'repair',item:'旧木杖',helpers:[obligation.id]}),eventId:helped.eventId});
+    assert.equal(retry.body.duplicate,true);assert.deepEqual(retry.body.result,helped.result);
+    assert.deepEqual((await s.request('/read',{campaignId:s.campaignId})).body.document,after);
+    await s.reject('world_check',{attribute:'敏捷',skill:'木匠基础手艺',difficulty:10,helpers:[obligation.id]},/尚有效且未履行/);
+    await s.roundTrip();
+    assert.deepEqual(s.repairs.slice(0,3).map(row=>[row.eventId,row.success]),[
+        ['craft_offline_33',false],['craft_offline_35',false],['craft_offline_37',false]]);
     assert.ok(s.lessons.some(row=>!row.success));assert.ok(s.lessons.some(row=>row.success));
     assert.ok(s.repairs.some(row=>!row.success),'保留第一轮实际失败');
-    assert.ok(s.repairs.some(row=>row.success),'最多三次明示付费修整中保留实际成功证据');
+    assert.ok(s.repairs.some(row=>row.success),'前三次失败及一次正规协助修整中保留实际成功证据');
 });
 
 test('识字真实付费学习与合法检定失败分别对账；按保存结果练习，原学会目标保留',async t=>{
