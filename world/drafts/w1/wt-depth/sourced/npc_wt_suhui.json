@@ -1,0 +1,228 @@
+{
+  "id": "npc_wt_suhui",
+  "fingerprint": "fe52d4d822c529c73b860dd5d431357cce86a62fa8982a964a18dc38a53853d5",
+  "status": "passed",
+  "attempts": 1,
+  "draft": {
+    "id": "npc_wt_suhui",
+    "contract": "audit-patch-v1",
+    "patches": [
+      {
+        "path": "knowledge.known[1]",
+        "value": {
+          "fact": "我在宿蕙户居处居住；家里的宿弦是我的母亲。",
+          "source": "bld_wt_home_27",
+          "reliability": "日常亲历"
+        }
+      },
+      {
+        "path": "knowledge.known[2]",
+        "value": {
+          "fact": "我做近岸菜叶清拣工，日常劳动处在岸上菜圃；眼下遇到的是菜叶被搬苇扬起的泥点弄脏。",
+          "source": "npc_wt_suhui",
+          "reliability": "本人亲历，问题尚未解决"
+        }
+      },
+      {
+        "path": "knowledge.unknown[0]",
+        "value": "搬苇人何时会再从菜叶床边经过。"
+      },
+      {
+        "path": "knowledge.unknown[1]",
+        "value": "廖莞愿不愿陪自己把泥点影响当面讲给邻工。"
+      },
+      {
+        "path": "voice.register",
+        "value": "对熟人说话轻而具体，陌生人追问时常缩成短句。"
+      },
+      {
+        "path": "goals.short[0].steps[0].content",
+        "value": "先把溅泥处指给邻工看，说明哪些叶片已重洗。"
+      },
+      {
+        "path": "goals.mid[0].steps[0].content",
+        "value": "询问搬运路线与时段，再提出经过时不甩湿束的办法。"
+      },
+      {
+        "path": "goals.long[0].steps[0].content",
+        "value": "请廖莞听自己试说一次劳动边界，再由自己向邻工讲明。"
+      },
+      {
+        "path": "relationships[0].note",
+        "value": "宿弦是家里的母亲；沉静/强势，这件事还需要彼此听完再商量。"
+      },
+      {
+        "path": "relationships[1].note",
+        "value": "廖莞是家里的合住者；开朗/怕麻烦，这件事还需要彼此听完再商量。"
+      },
+      {
+        "path": "relationships[2].note",
+        "value": "与戚鹭有同村往来；对方在戚鹭户居处做退役渔工，见面时还需问清当日劳作与通行安排。"
+      },
+      {
+        "path": "memorySeeds[2]",
+        "value": {
+          "id": "memory_wt_depth_group_6",
+          "event": "裴纯、宿蕙、戚鹭、花茵和向祯在岸上菜圃外的干处说过雨后劳动。裴纯讲桩根湿泥挡住裂处，宿蕙指溅到叶上的泥点，戚鹭区分听来的旧水情，花茵翻看阴处叶背，向祯说枯苇遮住更路记号。大家只核对可见处和待问处，还没解决各自的问题。",
+          "location": "loc_wt_garden",
+          "salience": 4,
+          "knownBy": [
+            "npc_wt_peichun",
+            "npc_wt_suhui",
+            "npc_wt_qilu",
+            "npc_wt_huayin",
+            "npc_wt_xiangzhen"
+          ],
+          "reliability": "共同亲历；未解决的分歧仍待各户核对"
+        }
+      },
+      {
+        "path": "opinions.neighbors[2].view",
+        "value": "戚鹭在戚鹭户居处做退役渔工；与他谈通行和劳作时，我会先问清当日安排。"
+      }
+    ]
+  },
+  "review": {
+    "contradictions": [
+      {
+        "quote": "宿弦是家里的母亲；沉静/强势，这件事还需要彼此听完再商量。",
+        "field": "relationships[0].note",
+        "severity": "soft",
+        "reason": "骨架与 publishedFacts 中宿弦的 concern 为“女儿在外受了气，回家只闷头做事，不肯对人讲；她几次想问，话到嘴边又压回去，怕逼急了更不肯开口”，并未声明其性格为“沉静/强势”，该性格标签为新增无依据描述。"
+      },
+      {
+        "quote": "廖莞是家里的合住者；开朗/怕麻烦，这件事还需要彼此听完再商量。",
+        "field": "relationships[1].note",
+        "severity": "soft",
+        "reason": "骨架与 publishedFacts 中廖莞的 concern 为“同住者把不快憋着不吭声，家务怎么分、什么时候商量，常常要她先开口试探，久了也嫌麻烦”，并未声明其性格为“开朗/怕麻烦”，该性格标签为新增无依据描述。"
+      },
+      {
+        "quote": "与戚鹭有同村往来；对方在戚鹭户居处做退役渔工，见面时还需问清当日劳作与通行安排。",
+        "field": "relationships[2].note",
+        "severity": "soft",
+        "reason": "publishedFacts 中戚鹭的职业为“退役渔工”，但骨架未声明其“在戚鹭户居处做退役渔工”这一具体工作地点归属；该表述为新增无依据的工作地点信息。"
+      },
+      {
+        "quote": "戚鹭在戚鹭户居处做退役渔工；与他谈通行和劳作时，我会先问清当日安排。",
+        "field": "opinions.neighbors[2].view",
+        "severity": "soft",
+        "reason": "publishedFacts 中戚鹭的职业为“退役渔工”，但骨架未声明其“在戚鹭户居处做退役渔工”这一具体工作地点归属；该表述为新增无依据的工作地点信息。"
+      }
+    ]
+  },
+  "errors": [],
+  "warnings": [
+    {
+      "quote": "宿弦是家里的母亲；沉静/强势，这件事还需要彼此听完再商量。",
+      "field": "relationships[0].note",
+      "severity": "soft",
+      "reason": "骨架与 publishedFacts 中宿弦的 concern 为“女儿在外受了气，回家只闷头做事，不肯对人讲；她几次想问，话到嘴边又压回去，怕逼急了更不肯开口”，并未声明其性格为“沉静/强势”，该性格标签为新增无依据描述。"
+    },
+    {
+      "quote": "廖莞是家里的合住者；开朗/怕麻烦，这件事还需要彼此听完再商量。",
+      "field": "relationships[1].note",
+      "severity": "soft",
+      "reason": "骨架与 publishedFacts 中廖莞的 concern 为“同住者把不快憋着不吭声，家务怎么分、什么时候商量，常常要她先开口试探，久了也嫌麻烦”，并未声明其性格为“开朗/怕麻烦”，该性格标签为新增无依据描述。"
+    },
+    {
+      "quote": "与戚鹭有同村往来；对方在戚鹭户居处做退役渔工，见面时还需问清当日劳作与通行安排。",
+      "field": "relationships[2].note",
+      "severity": "soft",
+      "reason": "publishedFacts 中戚鹭的职业为“退役渔工”，但骨架未声明其“在戚鹭户居处做退役渔工”这一具体工作地点归属；该表述为新增无依据的工作地点信息。"
+    },
+    {
+      "quote": "戚鹭在戚鹭户居处做退役渔工；与他谈通行和劳作时，我会先问清当日安排。",
+      "field": "opinions.neighbors[2].view",
+      "severity": "soft",
+      "reason": "publishedFacts 中戚鹭的职业为“退役渔工”，但骨架未声明其“在戚鹭户居处做退役渔工”这一具体工作地点归属；该表述为新增无依据的工作地点信息。"
+    }
+  ],
+  "feedback": null,
+  "draftResponse": {
+    "id": "38af4bc1-a067-4f92-a783-9a2bb7930de8",
+    "object": "chat.completion",
+    "created": 1791762764,
+    "model": "deepseek-flash",
+    "choices": [
+      {
+        "index": 0,
+        "message": {
+          "role": "assistant",
+          "content": "{\"id\":\"npc_wt_suhui\",\"contract\":\"audit-patch-v1\",\"patches\":[{\"path\":\"knowledge.known[1]\",\"value\":{\"fact\":\"我在宿蕙户居处居住；家里的宿弦是我的母亲。\",\"source\":\"bld_wt_home_27\",\"reliability\":\"日常亲历\"}},{\"path\":\"knowledge.known[2]\",\"value\":{\"fact\":\"我做近岸菜叶清拣工，日常劳动处在岸上菜圃；眼下遇到的是菜叶被搬苇扬起的泥点弄脏。\",\"source\":\"npc_wt_suhui\",\"reliability\":\"本人亲历，问题尚未解决\"}},{\"path\":\"knowledge.unknown[0]\",\"value\":\"搬苇人何时会再从菜叶床边经过。\"},{\"path\":\"knowledge.unknown[1]\",\"value\":\"廖莞愿不愿陪自己把泥点影响当面讲给邻工。\"},{\"path\":\"voice.register\",\"value\":\"对熟人说话轻而具体，陌生人追问时常缩成短句。\"},{\"path\":\"goals.short[0].steps[0].content\",\"value\":\"先把溅泥处指给邻工看，说明哪些叶片已重洗。\"},{\"path\":\"goals.mid[0].steps[0].content\",\"value\":\"询问搬运路线与时段，再提出经过时不甩湿束的办法。\"},{\"path\":\"goals.long[0].steps[0].content\",\"value\":\"请廖莞听自己试说一次劳动边界，再由自己向邻工讲明。\"},{\"path\":\"relationships[0].note\",\"value\":\"宿弦是家里的母亲；沉静/强势，这件事还需要彼此听完再商量。\"},{\"path\":\"relationships[1].note\",\"value\":\"廖莞是家里的合住者；开朗/怕麻烦，这件事还需要彼此听完再商量。\"},{\"path\":\"relationships[2].note\",\"value\":\"与戚鹭有同村往来；对方在戚鹭户居处做退役渔工，见面时还需问清当日劳作与通行安排。\"},{\"path\":\"memorySeeds[2]\",\"value\":{\"id\":\"memory_wt_depth_group_6\",\"event\":\"裴纯、宿蕙、戚鹭、花茵和向祯在岸上菜圃外的干处说过雨后劳动。裴纯讲桩根湿泥挡住裂处，宿蕙指溅到叶上的泥点，戚鹭区分听来的旧水情，花茵翻看阴处叶背，向祯说枯苇遮住更路记号。大家只核对可见处和待问处，还没解决各自的问题。\",\"location\":\"loc_wt_garden\",\"salience\":4,\"knownBy\":[\"npc_wt_peichun\",\"npc_wt_suhui\",\"npc_wt_qilu\",\"npc_wt_huayin\",\"npc_wt_xiangzhen\"],\"reliability\":\"共同亲历；未解决的分歧仍待各户核对\"}},{\"path\":\"opinions.neighbors[2].view\",\"value\":\"戚鹭在戚鹭户居处做退役渔工；与他谈通行和劳作时，我会先问清当日安排。\"}]}"
+        },
+        "logprobs": null,
+        "finish_reason": "stop"
+      }
+    ],
+    "usage": {
+      "prompt_tokens": 8709,
+      "completion_tokens": 660,
+      "total_tokens": 9369,
+      "prompt_tokens_details": {
+        "cached_tokens": 0
+      },
+      "prompt_cache_hit_tokens": 0,
+      "prompt_cache_miss_tokens": 8709
+    },
+    "system_fingerprint": "aeb56401ca74e127821c4f9126dcb669",
+    "measurement": {
+      "label": "content-sourced-npc_wt_suhui-draft0",
+      "model": "deepseek-flash",
+      "thinking": "disabled",
+      "usage": {
+        "prompt_tokens": 8709,
+        "completion_tokens": 660,
+        "total_tokens": 9369,
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        },
+        "prompt_cache_hit_tokens": 0,
+        "prompt_cache_miss_tokens": 8709
+      },
+      "costUpperYuan": 0.022698,
+      "cumulativeUpperYuan": 4.49566368,
+      "latencyMs": 2586.0394999999553,
+      "timestamp": "2026-10-11T23:52:48.089Z"
+    }
+  },
+  "measurements": [
+    {
+      "label": "content-sourced-npc_wt_suhui-draft0",
+      "model": "deepseek-flash",
+      "thinking": "disabled",
+      "usage": {
+        "prompt_tokens": 8709,
+        "completion_tokens": 660,
+        "total_tokens": 9369,
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        },
+        "prompt_cache_hit_tokens": 0,
+        "prompt_cache_miss_tokens": 8709
+      },
+      "costUpperYuan": 0.022698,
+      "cumulativeUpperYuan": 4.49566368,
+      "latencyMs": 2586.0394999999553,
+      "timestamp": "2026-10-11T23:52:48.089Z"
+    },
+    {
+      "label": "content-sourced-npc_wt_suhui-review0",
+      "model": "deepseek-flash",
+      "thinking": "disabled",
+      "usage": {
+        "prompt_tokens": 15888,
+        "completion_tokens": 407,
+        "total_tokens": 16295,
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        },
+        "prompt_cache_hit_tokens": 0,
+        "prompt_cache_miss_tokens": 15888
+      },
+      "costUpperYuan": 0.035032,
+      "cumulativeUpperYuan": 4.53069568,
+      "latencyMs": 2348.402400000021,
+      "timestamp": "2026-10-11T23:52:50.445Z"
+    }
+  ]
+}

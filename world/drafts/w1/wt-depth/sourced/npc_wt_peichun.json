@@ -1,0 +1,316 @@
+{
+  "id": "npc_wt_peichun",
+  "fingerprint": "43425a02c1e47219d65be588d0fd2437f1304d8a11ce1bd39baf4e63160aa8b9",
+  "status": "passed",
+  "attempts": 3,
+  "draft": {
+    "id": "npc_wt_peichun",
+    "contract": "audit-patch-v1",
+    "patches": [
+      {
+        "path": "knowledge.known[1]",
+        "value": {
+          "fact": "我在裴纯户居处居住；家里的裴溪是我的儿子。",
+          "source": "bld_wt_home_26",
+          "reliability": "日常亲历"
+        }
+      },
+      {
+        "path": "knowledge.known[2]",
+        "value": {
+          "fact": "我做岸边木桩检看工，日常劳动处在修篓木台院；眼下遇到的是桩根的湿泥遮住了裂处。",
+          "source": "npc_wt_peichun",
+          "reliability": "本人亲历，问题尚未解决"
+        }
+      },
+      {
+        "path": "knowledge.unknown[0]",
+        "value": "下一次退水何时能露出需要查看的桩根。"
+      },
+      {
+        "path": "knowledge.unknown[1]",
+        "value": "裴溪愿不愿陪物主一起核对检看的范围。"
+      },
+      {
+        "path": "voice.register",
+        "value": "检看桩木用审慎的判断句，被提醒时常重复验证。"
+      },
+      {
+        "path": "goals.short[0].steps[0].content",
+        "value": "先从干岸标出被湿泥遮住的位置，说明目前看不见哪里。"
+      },
+      {
+        "path": "goals.mid[0].steps[0].content",
+        "value": "询问物主可陪同的退水时刻，核查露出桩侧后才检看。"
+      },
+      {
+        "path": "goals.long[0].steps[0].content",
+        "value": "把亲见的裂处和听来的经验分开讲，请物主读回尚待检查处。"
+      },
+      {
+        "path": "relationships[0].note",
+        "value": "裴溪是家里的儿子；谨慎/嘴直，这件事还需要彼此听完再商量。"
+      },
+      {
+        "path": "relationships[1].note",
+        "value": "郭荦是家里的配偶；细致/怕冷，这件事还需要彼此听完再商量。"
+      },
+      {
+        "path": "relationships[2].note",
+        "value": "与宿蕙有同村往来；对方在岸上菜圃做近岸菜叶清拣工，见面时还需问清当日劳作与通行安排。"
+      },
+      {
+        "path": "memorySeeds[2]",
+        "value": {
+          "id": "memory_wt_depth_group_6",
+          "event": "裴纯、宿蕙、戚鹭、花茵和向祯在岸上菜圃外的干处说过雨后劳动。裴纯讲桩根湿泥挡住裂处，宿蕙指溅到叶上的泥点，戚鹭区分听来的旧水情，花茵翻看阴处叶背，向祯说枯苇遮住更路记号。大家只核对可见处和待问处，还没解决各自的问题。",
+          "location": "loc_wt_garden",
+          "salience": 4,
+          "knownBy": [
+            "npc_wt_peichun",
+            "npc_wt_suhui",
+            "npc_wt_qilu",
+            "npc_wt_huayin",
+            "npc_wt_xiangzhen"
+          ],
+          "reliability": "共同亲历；未解决的分歧仍待各户核对"
+        }
+      },
+      {
+        "path": "opinions.neighbors[2].view",
+        "value": "宿蕙在岸上菜圃做近岸菜叶清拣工；与他谈通行和劳作时，我会先问清当日安排。"
+      }
+    ]
+  },
+  "review": {
+    "contradictions": [
+      {
+        "quote": "裴溪愿不愿陪物主一起核对检看的范围。",
+        "field": "knowledge.unknown[1]",
+        "severity": "soft",
+        "reason": "骨架中裴溪的既有设定是退水后提醒父亲先看桩根、父亲照旧先摸桩顶后便不再开口、只在岸上站着等；新增“裴溪愿不愿陪物主一起核对检看的范围”把裴溪的意愿设为未知，与既有“已不再开口、只在岸上等”的设定存在张力，且骨架未声明裴溪会参与物主陪同检看。"
+      },
+      {
+        "quote": "郭荦是家里的配偶；细致/怕冷，这件事还需要彼此听完再商量。",
+        "field": "relationships[1].note",
+        "severity": "soft",
+        "reason": "“细致”为新增性格描述，骨架及既有事实中郭荦仅有“怕冷”与惦记丈夫受寒的设定，未声明其细致。"
+      },
+      {
+        "quote": "裴溪是家里的儿子；谨慎/嘴直，这件事还需要彼此听完再商量。",
+        "field": "relationships[0].note",
+        "severity": "soft",
+        "reason": "“谨慎/嘴直”为新增性格描述，骨架及既有事实中裴溪仅有退水后提醒父亲先看桩根、被无视后不再开口的设定，未声明其谨慎或嘴直。"
+      },
+      {
+        "quote": "裴纯、宿蕙、戚鹭、花茵和向祯在岸上菜圃外的干处说过雨后劳动。裴纯讲桩根湿泥挡住裂处，宿蕙指溅到叶上的泥点，戚鹭区分听来的旧水情，花茵翻看阴处叶背，向祯说枯苇遮住更路记号。大家只核对可见处和待问处，还没解决各自的问题。",
+        "field": "memorySeeds[2]",
+        "severity": "soft",
+        "reason": "该共享记忆把戚鹭“区分听来的旧水情”写入共同亲历事件，但戚鹭的既有设定是其把别人险遇说成自己经历属私密不当行为（misconductIsPrivate:true），且其记忆显示他是在家被追问后才改口承认只是听人讲的；在公开共同场合主动区分听来旧水情与既有私密设定存在张力。"
+      },
+      {
+        "quote": "宿蕙在岸上菜圃做近岸菜叶清拣工；与他谈通行和劳作时，我会先问清当日安排。",
+        "field": "opinions.neighbors[2].view",
+        "severity": "soft",
+        "reason": "“与他谈通行和劳作时，我会先问清当日安排”为新增行为倾向，骨架中裴纯与宿蕙仅为同村日常往来、见面只算同村招呼的交情，未声明会就通行与劳作向宿蕙问清安排。"
+      }
+    ]
+  },
+  "errors": [],
+  "warnings": [
+    {
+      "quote": "裴溪愿不愿陪物主一起核对检看的范围。",
+      "field": "knowledge.unknown[1]",
+      "severity": "soft",
+      "reason": "骨架中裴溪的既有设定是退水后提醒父亲先看桩根、父亲照旧先摸桩顶后便不再开口、只在岸上站着等；新增“裴溪愿不愿陪物主一起核对检看的范围”把裴溪的意愿设为未知，与既有“已不再开口、只在岸上等”的设定存在张力，且骨架未声明裴溪会参与物主陪同检看。"
+    },
+    {
+      "quote": "郭荦是家里的配偶；细致/怕冷，这件事还需要彼此听完再商量。",
+      "field": "relationships[1].note",
+      "severity": "soft",
+      "reason": "“细致”为新增性格描述，骨架及既有事实中郭荦仅有“怕冷”与惦记丈夫受寒的设定，未声明其细致。"
+    },
+    {
+      "quote": "裴溪是家里的儿子；谨慎/嘴直，这件事还需要彼此听完再商量。",
+      "field": "relationships[0].note",
+      "severity": "soft",
+      "reason": "“谨慎/嘴直”为新增性格描述，骨架及既有事实中裴溪仅有退水后提醒父亲先看桩根、被无视后不再开口的设定，未声明其谨慎或嘴直。"
+    },
+    {
+      "quote": "裴纯、宿蕙、戚鹭、花茵和向祯在岸上菜圃外的干处说过雨后劳动。裴纯讲桩根湿泥挡住裂处，宿蕙指溅到叶上的泥点，戚鹭区分听来的旧水情，花茵翻看阴处叶背，向祯说枯苇遮住更路记号。大家只核对可见处和待问处，还没解决各自的问题。",
+      "field": "memorySeeds[2]",
+      "severity": "soft",
+      "reason": "该共享记忆把戚鹭“区分听来的旧水情”写入共同亲历事件，但戚鹭的既有设定是其把别人险遇说成自己经历属私密不当行为（misconductIsPrivate:true），且其记忆显示他是在家被追问后才改口承认只是听人讲的；在公开共同场合主动区分听来旧水情与既有私密设定存在张力。"
+    },
+    {
+      "quote": "宿蕙在岸上菜圃做近岸菜叶清拣工；与他谈通行和劳作时，我会先问清当日安排。",
+      "field": "opinions.neighbors[2].view",
+      "severity": "soft",
+      "reason": "“与他谈通行和劳作时，我会先问清当日安排”为新增行为倾向，骨架中裴纯与宿蕙仅为同村日常往来、见面只算同村招呼的交情，未声明会就通行与劳作向宿蕙问清安排。"
+    }
+  ],
+  "feedback": null,
+  "draftResponse": {
+    "id": "6aae6d84-aac0-4eec-9640-8de7f3a6b6a6",
+    "object": "chat.completion",
+    "created": 1791762757,
+    "model": "deepseek-flash",
+    "choices": [
+      {
+        "index": 0,
+        "message": {
+          "role": "assistant",
+          "content": "{\"id\":\"npc_wt_peichun\",\"contract\":\"audit-patch-v1\",\"patches\":[{\"path\":\"knowledge.known[1]\",\"value\":{\"fact\":\"我在裴纯户居处居住；家里的裴溪是我的儿子。\",\"source\":\"bld_wt_home_26\",\"reliability\":\"日常亲历\"}},{\"path\":\"knowledge.known[2]\",\"value\":{\"fact\":\"我做岸边木桩检看工，日常劳动处在修篓木台院；眼下遇到的是桩根的湿泥遮住了裂处。\",\"source\":\"npc_wt_peichun\",\"reliability\":\"本人亲历，问题尚未解决\"}},{\"path\":\"knowledge.unknown[0]\",\"value\":\"下一次退水何时能露出需要查看的桩根。\"},{\"path\":\"knowledge.unknown[1]\",\"value\":\"裴溪愿不愿陪物主一起核对检看的范围。\"},{\"path\":\"voice.register\",\"value\":\"检看桩木用审慎的判断句，被提醒时常重复验证。\"},{\"path\":\"goals.short[0].steps[0].content\",\"value\":\"先从干岸标出被湿泥遮住的位置，说明目前看不见哪里。\"},{\"path\":\"goals.mid[0].steps[0].content\",\"value\":\"询问物主可陪同的退水时刻，核查露出桩侧后才检看。\"},{\"path\":\"goals.long[0].steps[0].content\",\"value\":\"把亲见的裂处和听来的经验分开讲，请物主读回尚待检查处。\"},{\"path\":\"relationships[0].note\",\"value\":\"裴溪是家里的儿子；谨慎/嘴直，这件事还需要彼此听完再商量。\"},{\"path\":\"relationships[1].note\",\"value\":\"郭荦是家里的配偶；细致/怕冷，这件事还需要彼此听完再商量。\"},{\"path\":\"relationships[2].note\",\"value\":\"与宿蕙有同村往来；对方在岸上菜圃做近岸菜叶清拣工，见面时还需问清当日劳作与通行安排。\"},{\"path\":\"memorySeeds[2]\",\"value\":{\"id\":\"memory_wt_depth_group_6\",\"event\":\"裴纯、宿蕙、戚鹭、花茵和向祯在岸上菜圃外的干处说过雨后劳动。裴纯讲桩根湿泥挡住裂处，宿蕙指溅到叶上的泥点，戚鹭区分听来的旧水情，花茵翻看阴处叶背，向祯说枯苇遮住更路记号。大家只核对可见处和待问处，还没解决各自的问题。\",\"location\":\"loc_wt_garden\",\"salience\":4,\"knownBy\":[\"npc_wt_peichun\",\"npc_wt_suhui\",\"npc_wt_qilu\",\"npc_wt_huayin\",\"npc_wt_xiangzhen\"],\"reliability\":\"共同亲历；未解决的分歧仍待各户核对\"}},{\"path\":\"opinions.neighbors[2].view\",\"value\":\"宿蕙在岸上菜圃做近岸菜叶清拣工；与他谈通行和劳作时，我会先问清当日安排。\"}]}"
+        },
+        "logprobs": null,
+        "finish_reason": "stop"
+      }
+    ],
+    "usage": {
+      "prompt_tokens": 9225,
+      "completion_tokens": 670,
+      "total_tokens": 9895,
+      "prompt_tokens_details": {
+        "cached_tokens": 8832
+      },
+      "prompt_cache_hit_tokens": 8832,
+      "prompt_cache_miss_tokens": 393
+    },
+    "system_fingerprint": "aeb56401ca74e127821c4f9126dcb669",
+    "measurement": {
+      "label": "content-sourced-npc_wt_peichun-draft2",
+      "model": "deepseek-flash",
+      "thinking": "disabled",
+      "usage": {
+        "prompt_tokens": 9225,
+        "completion_tokens": 670,
+        "total_tokens": 9895,
+        "prompt_tokens_details": {
+          "cached_tokens": 8832
+        },
+        "prompt_cache_hit_tokens": 8832,
+        "prompt_cache_miss_tokens": 393
+      },
+      "costUpperYuan": 0.00649928,
+      "cumulativeUpperYuan": 4.46723392,
+      "latencyMs": 2786.5971000000136,
+      "timestamp": "2026-10-11T23:52:41.581Z"
+    }
+  },
+  "measurements": [
+    {
+      "label": "content-sourced-npc_wt_peichun-draft0",
+      "model": "deepseek-flash",
+      "thinking": "disabled",
+      "usage": {
+        "prompt_tokens": 8895,
+        "completion_tokens": 670,
+        "total_tokens": 9565,
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        },
+        "prompt_cache_hit_tokens": 0,
+        "prompt_cache_miss_tokens": 8895
+      },
+      "costUpperYuan": 0.02315,
+      "cumulativeUpperYuan": 4.4085996,
+      "latencyMs": 2779.6022999999986,
+      "timestamp": "2026-10-11T23:52:26.798Z"
+    },
+    {
+      "label": "content-sourced-npc_wt_peichun-review0",
+      "model": "deepseek-flash",
+      "thinking": "disabled",
+      "usage": {
+        "prompt_tokens": 15943,
+        "completion_tokens": 954,
+        "total_tokens": 16897,
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        },
+        "prompt_cache_hit_tokens": 0,
+        "prompt_cache_miss_tokens": 15943
+      },
+      "costUpperYuan": 0.039518,
+      "cumulativeUpperYuan": 4.4481176,
+      "latencyMs": 5604.372000000003,
+      "timestamp": "2026-10-11T23:52:32.410Z"
+    },
+    {
+      "label": "content-sourced-npc_wt_peichun-draft1",
+      "model": "deepseek-flash",
+      "thinking": "disabled",
+      "usage": {
+        "prompt_tokens": 9138,
+        "completion_tokens": 670,
+        "total_tokens": 9808,
+        "prompt_tokens_details": {
+          "cached_tokens": 8832
+        },
+        "prompt_cache_hit_tokens": 8832,
+        "prompt_cache_miss_tokens": 306
+      },
+      "costUpperYuan": 0.00632528,
+      "cumulativeUpperYuan": 4.45444288,
+      "latencyMs": 2809.4476999999897,
+      "timestamp": "2026-10-11T23:52:35.227Z"
+    },
+    {
+      "label": "content-sourced-npc_wt_peichun-review1",
+      "model": "deepseek-flash",
+      "thinking": "disabled",
+      "usage": {
+        "prompt_tokens": 15943,
+        "completion_tokens": 658,
+        "total_tokens": 16601,
+        "prompt_tokens_details": {
+          "cached_tokens": 15744
+        },
+        "prompt_cache_hit_tokens": 15744,
+        "prompt_cache_miss_tokens": 199
+      },
+      "costUpperYuan": 0.00629176,
+      "cumulativeUpperYuan": 4.46073464,
+      "latencyMs": 3554.287500000006,
+      "timestamp": "2026-10-11T23:52:38.789Z"
+    },
+    {
+      "label": "content-sourced-npc_wt_peichun-draft2",
+      "model": "deepseek-flash",
+      "thinking": "disabled",
+      "usage": {
+        "prompt_tokens": 9225,
+        "completion_tokens": 670,
+        "total_tokens": 9895,
+        "prompt_tokens_details": {
+          "cached_tokens": 8832
+        },
+        "prompt_cache_hit_tokens": 8832,
+        "prompt_cache_miss_tokens": 393
+      },
+      "costUpperYuan": 0.00649928,
+      "cumulativeUpperYuan": 4.46723392,
+      "latencyMs": 2786.5971000000136,
+      "timestamp": "2026-10-11T23:52:41.581Z"
+    },
+    {
+      "label": "content-sourced-npc_wt_peichun-review2",
+      "model": "deepseek-flash",
+      "thinking": "disabled",
+      "usage": {
+        "prompt_tokens": 15943,
+        "completion_tokens": 588,
+        "total_tokens": 16531,
+        "prompt_tokens_details": {
+          "cached_tokens": 15744
+        },
+        "prompt_cache_hit_tokens": 15744,
+        "prompt_cache_miss_tokens": 199
+      },
+      "costUpperYuan": 0.00573176,
+      "cumulativeUpperYuan": 4.47296568,
+      "latencyMs": 3905.5690000000177,
+      "timestamp": "2026-10-11T23:52:45.494Z"
+    }
+  ]
+}

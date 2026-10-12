@@ -1,0 +1,177 @@
+{
+  "id": "npc_wt_ruqin",
+  "fingerprint": "1d1fa97eb6ea8ef98847ce02f5820890cf7e6dd0b92042f90751727c83cbe340",
+  "status": "passed",
+  "attempts": 1,
+  "draft": {
+    "id": "npc_wt_ruqin",
+    "contract": "audit-patch-v1",
+    "patches": [
+      {
+        "path": "knowledge.known[1]",
+        "value": {
+          "fact": "我在茹芹户居处居住；家里的茹纾是我的女儿。",
+          "source": "bld_wt_home_20",
+          "reliability": "日常亲历"
+        }
+      },
+      {
+        "path": "knowledge.known[2]",
+        "value": {
+          "fact": "我做席料软硬挑选人，日常劳动处在苇席收边屋；眼下遇到的是柔硬不同的苇料又被捆在一起。",
+          "source": "npc_wt_ruqin",
+          "reliability": "本人亲历，问题尚未解决"
+        }
+      },
+      {
+        "path": "knowledge.unknown[0]",
+        "value": "茹纾能否从弯曲时的反应分出脆料。"
+      },
+      {
+        "path": "knowledge.unknown[1]",
+        "value": "邢波希望家里旧席料先整理哪一堆。"
+      },
+      {
+        "path": "voice.register",
+        "value": "讲挑料用缓慢细致的手艺话，对凭颜色判断会直接反驳。"
+      },
+      {
+        "path": "goals.short[0].steps[0].content",
+        "value": "取一段物主允许试弯的料，先看受力处再说明软硬。"
+      },
+      {
+        "path": "goals.mid[0].steps[0].content",
+        "value": "请帮工各指出颜色相近的两段料，问清为何用来收边。"
+      },
+      {
+        "path": "goals.long[0].steps[0].content",
+        "value": "让茹纾说出承力收边所需韧性，再针对误判的一段重新示范。"
+      },
+      {
+        "path": "relationships[0].note",
+        "value": "茹纾是家里的女儿；勤恳/急躁，这件事还需要彼此听完再商量。"
+      },
+      {
+        "path": "relationships[1].note",
+        "value": "邢波是家里的配偶；随和/恋旧，这件事还需要彼此听完再商量。"
+      },
+      {
+        "path": "relationships[2].note",
+        "value": "与龚潞有同村往来；对方在浅汀岸口做渔网搬运帮工，见面时还需问清当日劳作与通行安排。"
+      },
+      {
+        "path": "memorySeeds[2]",
+        "value": {
+          "id": "memory_wt_depth_group_4",
+          "event": "倪筠、屈槐、丁素和茹芹在苇席收边屋外歇过脚。倪筠比划晒架旁转身的空隙，屈槐说篱障缺口老被当道，丁素提到两户杂活撞时，茹芹指出软硬苇料不该只按颜色分。大家各说了一处难办的活，没有替物主答应改动。",
+          "location": "bld_wt_workroom",
+          "salience": 4,
+          "knownBy": [
+            "npc_wt_niyun",
+            "npc_wt_quhuai",
+            "npc_wt_dingsu",
+            "npc_wt_ruqin"
+          ],
+          "reliability": "共同亲历；未解决的分歧仍待各户核对"
+        }
+      },
+      {
+        "path": "opinions.neighbors[2].view",
+        "value": "龚潞在浅汀岸口做渔网搬运帮工；与他谈通行和劳作时，我会先问清当日安排。"
+      }
+    ]
+  },
+  "review": {
+    "contradictions": []
+  },
+  "errors": [],
+  "warnings": [],
+  "feedback": null,
+  "draftResponse": {
+    "id": "c05cc5ea-b5c6-46bd-9e23-2192be8a1dae",
+    "object": "chat.completion",
+    "created": 1791762677,
+    "model": "deepseek-flash",
+    "choices": [
+      {
+        "index": 0,
+        "message": {
+          "role": "assistant",
+          "content": "{\"id\":\"npc_wt_ruqin\",\"contract\":\"audit-patch-v1\",\"patches\":[{\"path\":\"knowledge.known[1]\",\"value\":{\"fact\":\"我在茹芹户居处居住；家里的茹纾是我的女儿。\",\"source\":\"bld_wt_home_20\",\"reliability\":\"日常亲历\"}},{\"path\":\"knowledge.known[2]\",\"value\":{\"fact\":\"我做席料软硬挑选人，日常劳动处在苇席收边屋；眼下遇到的是柔硬不同的苇料又被捆在一起。\",\"source\":\"npc_wt_ruqin\",\"reliability\":\"本人亲历，问题尚未解决\"}},{\"path\":\"knowledge.unknown[0]\",\"value\":\"茹纾能否从弯曲时的反应分出脆料。\"},{\"path\":\"knowledge.unknown[1]\",\"value\":\"邢波希望家里旧席料先整理哪一堆。\"},{\"path\":\"voice.register\",\"value\":\"讲挑料用缓慢细致的手艺话，对凭颜色判断会直接反驳。\"},{\"path\":\"goals.short[0].steps[0].content\",\"value\":\"取一段物主允许试弯的料，先看受力处再说明软硬。\"},{\"path\":\"goals.mid[0].steps[0].content\",\"value\":\"请帮工各指出颜色相近的两段料，问清为何用来收边。\"},{\"path\":\"goals.long[0].steps[0].content\",\"value\":\"让茹纾说出承力收边所需韧性，再针对误判的一段重新示范。\"},{\"path\":\"relationships[0].note\",\"value\":\"茹纾是家里的女儿；勤恳/急躁，这件事还需要彼此听完再商量。\"},{\"path\":\"relationships[1].note\",\"value\":\"邢波是家里的配偶；随和/恋旧，这件事还需要彼此听完再商量。\"},{\"path\":\"relationships[2].note\",\"value\":\"与龚潞有同村往来；对方在浅汀岸口做渔网搬运帮工，见面时还需问清当日劳作与通行安排。\"},{\"path\":\"memorySeeds[2]\",\"value\":{\"id\":\"memory_wt_depth_group_4\",\"event\":\"倪筠、屈槐、丁素和茹芹在苇席收边屋外歇过脚。倪筠比划晒架旁转身的空隙，屈槐说篱障缺口老被当道，丁素提到两户杂活撞时，茹芹指出软硬苇料不该只按颜色分。大家各说了一处难办的活，没有替物主答应改动。\",\"location\":\"bld_wt_workroom\",\"salience\":4,\"knownBy\":[\"npc_wt_niyun\",\"npc_wt_quhuai\",\"npc_wt_dingsu\",\"npc_wt_ruqin\"],\"reliability\":\"共同亲历；未解决的分歧仍待各户核对\"}},{\"path\":\"opinions.neighbors[2].view\",\"value\":\"龚潞在浅汀岸口做渔网搬运帮工；与他谈通行和劳作时，我会先问清当日安排。\"}]}"
+        },
+        "logprobs": null,
+        "finish_reason": "stop"
+      }
+    ],
+    "usage": {
+      "prompt_tokens": 8851,
+      "completion_tokens": 656,
+      "total_tokens": 9507,
+      "prompt_tokens_details": {
+        "cached_tokens": 0
+      },
+      "prompt_cache_hit_tokens": 0,
+      "prompt_cache_miss_tokens": 8851
+    },
+    "system_fingerprint": "aeb56401ca74e127821c4f9126dcb669",
+    "measurement": {
+      "label": "content-sourced-npc_wt_ruqin-draft0",
+      "model": "deepseek-flash",
+      "thinking": "disabled",
+      "usage": {
+        "prompt_tokens": 8851,
+        "completion_tokens": 656,
+        "total_tokens": 9507,
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        },
+        "prompt_cache_hit_tokens": 0,
+        "prompt_cache_miss_tokens": 8851
+      },
+      "costUpperYuan": 0.02295,
+      "cumulativeUpperYuan": 3.995191679999999,
+      "latencyMs": 2854.416900000011,
+      "timestamp": "2026-10-11T23:51:21.401Z"
+    }
+  },
+  "measurements": [
+    {
+      "label": "content-sourced-npc_wt_ruqin-draft0",
+      "model": "deepseek-flash",
+      "thinking": "disabled",
+      "usage": {
+        "prompt_tokens": 8851,
+        "completion_tokens": 656,
+        "total_tokens": 9507,
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        },
+        "prompt_cache_hit_tokens": 0,
+        "prompt_cache_miss_tokens": 8851
+      },
+      "costUpperYuan": 0.02295,
+      "cumulativeUpperYuan": 3.995191679999999,
+      "latencyMs": 2854.416900000011,
+      "timestamp": "2026-10-11T23:51:21.401Z"
+    },
+    {
+      "label": "content-sourced-npc_wt_ruqin-review0",
+      "model": "deepseek-flash",
+      "thinking": "disabled",
+      "usage": {
+        "prompt_tokens": 16001,
+        "completion_tokens": 7,
+        "total_tokens": 16008,
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        },
+        "prompt_cache_hit_tokens": 0,
+        "prompt_cache_miss_tokens": 16001
+      },
+      "costUpperYuan": 0.032058,
+      "cumulativeUpperYuan": 4.027249679999999,
+      "latencyMs": 875.406799999997,
+      "timestamp": "2026-10-11T23:51:22.283Z"
+    }
+  ]
+}

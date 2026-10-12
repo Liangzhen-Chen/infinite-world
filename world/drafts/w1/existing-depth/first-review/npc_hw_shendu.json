@@ -1,0 +1,422 @@
+{
+  "id": "npc_hw_shendu",
+  "fingerprint": "8f429cd7858135005778bd20ffb6f7be520205f78201a012605cea4b50a6041c",
+  "status": "manual",
+  "attempts": 3,
+  "draft": {
+    "id": "npc_hw_shendu",
+    "contract": "audit-patch-v1",
+    "patches": [
+      {
+        "path": "knowledge.known[1]",
+        "value": {
+          "fact": "抄公开公告时发现名字相似，从此逐项核对收件人",
+          "source": "npc_hw_shendu",
+          "reliability": "亲历"
+        }
+      },
+      {
+        "path": "knowledge.known[2]",
+        "value": {
+          "fact": "陆青和沈渡谈抄记的引文与来源，公开记录和私人邮件分开保管，封缄信件仍留给收件人。",
+          "source": "npc_hw_shendu",
+          "reliability": "亲历"
+        }
+      },
+      {
+        "path": "knowledge.unknown[0]",
+        "value": "郑水生哪班船实际抵达，原登记是否需要补上迟到时刻。"
+      },
+      {
+        "path": "knowledge.unknown[1]",
+        "value": "陆青整理的公开抄本哪页还缺引文来源。"
+      },
+      {
+        "path": "goals.short[0].steps[1].content",
+        "value": "逐条核对今天已到达的公开消息，把实际时刻补在登记旁。"
+      },
+      {
+        "path": "goals.mid[0].steps[1].content",
+        "value": "对照地图或首发现记录的署名与引用材料，缺项另列。"
+      },
+      {
+        "path": "goals.long[0].steps[1].content",
+        "value": "把公开公告和封缄信件分别保管，接递时核对收件人。"
+      },
+      {
+        "path": "voice.register",
+        "value": "驿站抄记口吻，来源和时刻明确，私人来信只谈寄递"
+      },
+      {
+        "path": "memorySeeds[2]",
+        "value": {
+          "id": "memory_t10_record-sources",
+          "event": "在旧渡口公用水盏周边，陆青和沈渡谈抄记的引文与来源，公开记录和私人邮件分开保管，封缄信件仍留给收件人。",
+          "knownBy": [
+            "npc_hw_luqing",
+            "npc_hw_shendu"
+          ],
+          "salience": 3,
+          "reliability": "亲历",
+          "location": "loc_hw_dock"
+        }
+      }
+    ]
+  },
+  "review": {
+    "contradictions": [
+      {
+        "severity": "hard",
+        "field": "reviewedPaths",
+        "quote": "出处及候选覆盖凭证",
+        "reason": "L2漏审修订叶子\n+ actual - expected\n\n+ []\n- [\n-   'goals.long[0].steps[1].content',\n-   'goals.mid[0].steps[1].content',\n-   'goals.short[0].steps[1].content',\n-   'knowledge.known[1]',\n-   'knowledge.known[2]',\n-   'knowledge.unknown[0]',\n-   'knowledge.unknown[1]',\n-   'memorySeeds[2]',\n-   'voice.register'\n- ]\n"
+      }
+    ],
+    "backgroundReviews": [
+      {
+        "eventId": "memory_t10_record-sources",
+        "sourceHash": "d4cb722ab2388cc077c9011a337f0e7a81f70f0cf60d5655e925ee8e479dc1d9",
+        "reviewedRiskPaths": [
+          "npc_hw_luqing.secrets[0]",
+          "npc_hw_shendu.secrets[0]"
+        ],
+        "contradictions": []
+      }
+    ]
+  },
+  "errors": [
+    {
+      "severity": "hard",
+      "field": "reviewedPaths",
+      "quote": "出处及候选覆盖凭证",
+      "reason": "L2漏审修订叶子\n+ actual - expected\n\n+ []\n- [\n-   'goals.long[0].steps[1].content',\n-   'goals.mid[0].steps[1].content',\n-   'goals.short[0].steps[1].content',\n-   'knowledge.known[1]',\n-   'knowledge.known[2]',\n-   'knowledge.unknown[0]',\n-   'knowledge.unknown[1]',\n-   'memorySeeds[2]',\n-   'voice.register'\n- ]\n"
+    }
+  ],
+  "warnings": [],
+  "feedback": [
+    {
+      "severity": "hard",
+      "field": "reviewedPaths",
+      "quote": "出处及候选覆盖凭证",
+      "reason": "L2漏审修订叶子\n+ actual - expected\n\n+ []\n- [\n-   'goals.long[0].steps[1].content',\n-   'goals.mid[0].steps[1].content',\n-   'goals.short[0].steps[1].content',\n-   'knowledge.known[1]',\n-   'knowledge.known[2]',\n-   'knowledge.unknown[0]',\n-   'knowledge.unknown[1]',\n-   'memorySeeds[2]',\n-   'voice.register'\n- ]\n"
+    }
+  ],
+  "draftResponse": {
+    "id": "a58f7bce-a920-4e70-8d11-17b0dd55ba72",
+    "object": "chat.completion",
+    "created": 1791765616,
+    "model": "deepseek-flash",
+    "choices": [
+      {
+        "index": 0,
+        "message": {
+          "role": "assistant",
+          "content": "{\"id\":\"npc_hw_shendu\",\"contract\":\"audit-patch-v1\",\"patches\":[{\"path\":\"knowledge.known[1]\",\"value\":{\"fact\":\"抄公开公告时发现名字相似，从此逐项核对收件人\",\"source\":\"npc_hw_shendu\",\"reliability\":\"亲历\"}},{\"path\":\"knowledge.known[2]\",\"value\":{\"fact\":\"陆青和沈渡谈抄记的引文与来源，公开记录和私人邮件分开保管，封缄信件仍留给收件人。\",\"source\":\"npc_hw_shendu\",\"reliability\":\"亲历\"}},{\"path\":\"knowledge.unknown[0]\",\"value\":\"郑水生哪班船实际抵达，原登记是否需要补上迟到时刻。\"},{\"path\":\"knowledge.unknown[1]\",\"value\":\"陆青整理的公开抄本哪页还缺引文来源。\"},{\"path\":\"goals.short[0].steps[1].content\",\"value\":\"逐条核对今天已到达的公开消息，把实际时刻补在登记旁。\"},{\"path\":\"goals.mid[0].steps[1].content\",\"value\":\"对照地图或首发现记录的署名与引用材料，缺项另列。\"},{\"path\":\"goals.long[0].steps[1].content\",\"value\":\"把公开公告和封缄信件分别保管，接递时核对收件人。\"},{\"path\":\"voice.register\",\"value\":\"驿站抄记口吻，来源和时刻明确，私人来信只谈寄递\"},{\"path\":\"memorySeeds[2]\",\"value\":{\"id\":\"memory_t10_record-sources\",\"event\":\"在旧渡口公用水盏周边，陆青和沈渡谈抄记的引文与来源，公开记录和私人邮件分开保管，封缄信件仍留给收件人。\",\"knownBy\":[\"npc_hw_luqing\",\"npc_hw_shendu\"],\"salience\":3,\"reliability\":\"亲历\",\"location\":\"loc_hw_dock\"}}]}"
+        },
+        "logprobs": null,
+        "finish_reason": "stop"
+      }
+    ],
+    "usage": {
+      "prompt_tokens": 8215,
+      "completion_tokens": 430,
+      "total_tokens": 8645,
+      "prompt_tokens_details": {
+        "cached_tokens": 8064
+      },
+      "prompt_cache_hit_tokens": 8064,
+      "prompt_cache_miss_tokens": 151
+    },
+    "system_fingerprint": "aeb56401ca74e127821c4f9126dcb669",
+    "measurement": {
+      "label": "content-first-review-npc_hw_shendu-draft2",
+      "model": "deepseek-flash",
+      "thinking": "disabled",
+      "usage": {
+        "prompt_tokens": 8215,
+        "completion_tokens": 430,
+        "total_tokens": 8645,
+        "prompt_tokens_details": {
+          "cached_tokens": 8064
+        },
+        "prompt_cache_hit_tokens": 8064,
+        "prompt_cache_miss_tokens": 151
+      },
+      "costUpperYuan": 0.00406456,
+      "cumulativeUpperYuan": 5.985429519999999,
+      "latencyMs": 2230.984300000011,
+      "timestamp": "2026-10-12T00:40:20.046Z"
+    }
+  },
+  "measurements": [
+    {
+      "label": "content-first-review-npc_hw_shendu-draft0",
+      "model": "deepseek-flash",
+      "thinking": "disabled",
+      "usage": {
+        "prompt_tokens": 8047,
+        "completion_tokens": 430,
+        "total_tokens": 8477,
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        },
+        "prompt_cache_hit_tokens": 0,
+        "prompt_cache_miss_tokens": 8047
+      },
+      "costUpperYuan": 0.019534,
+      "cumulativeUpperYuan": 5.93066312,
+      "latencyMs": 1873.3867000000027,
+      "timestamp": "2026-10-12T00:40:12.521Z"
+    },
+    {
+      "label": "content-first-review-npc_hw_shendu-review0",
+      "model": "deepseek-flash",
+      "thinking": "disabled",
+      "usage": {
+        "prompt_tokens": 21843,
+        "completion_tokens": 104,
+        "total_tokens": 21947,
+        "prompt_tokens_details": {
+          "cached_tokens": 128
+        },
+        "prompt_cache_hit_tokens": 128,
+        "prompt_cache_miss_tokens": 21715
+      },
+      "costUpperYuan": 0.04426712,
+      "cumulativeUpperYuan": 5.97493024,
+      "latencyMs": 1748.087599999999,
+      "timestamp": "2026-10-12T00:40:14.276Z"
+    },
+    {
+      "label": "content-first-review-npc_hw_shendu-draft1",
+      "model": "deepseek-flash",
+      "thinking": "disabled",
+      "usage": {
+        "prompt_tokens": 8215,
+        "completion_tokens": 430,
+        "total_tokens": 8645,
+        "prompt_tokens_details": {
+          "cached_tokens": 7936
+        },
+        "prompt_cache_hit_tokens": 7936,
+        "prompt_cache_miss_tokens": 279
+      },
+      "costUpperYuan": 0.00431544,
+      "cumulativeUpperYuan": 5.97924568,
+      "latencyMs": 2068.738799999992,
+      "timestamp": "2026-10-12T00:40:16.354Z"
+    },
+    {
+      "label": "content-first-review-npc_hw_shendu-review1",
+      "model": "deepseek-flash",
+      "thinking": "disabled",
+      "usage": {
+        "prompt_tokens": 21843,
+        "completion_tokens": 104,
+        "total_tokens": 21947,
+        "prompt_tokens_details": {
+          "cached_tokens": 21632
+        },
+        "prompt_cache_hit_tokens": 21632,
+        "prompt_cache_miss_tokens": 211
+      },
+      "costUpperYuan": 0.00211928,
+      "cumulativeUpperYuan": 5.98136496,
+      "latencyMs": 1445.440499999997,
+      "timestamp": "2026-10-12T00:40:17.807Z"
+    },
+    {
+      "label": "content-first-review-npc_hw_shendu-draft2",
+      "model": "deepseek-flash",
+      "thinking": "disabled",
+      "usage": {
+        "prompt_tokens": 8215,
+        "completion_tokens": 430,
+        "total_tokens": 8645,
+        "prompt_tokens_details": {
+          "cached_tokens": 8064
+        },
+        "prompt_cache_hit_tokens": 8064,
+        "prompt_cache_miss_tokens": 151
+      },
+      "costUpperYuan": 0.00406456,
+      "cumulativeUpperYuan": 5.985429519999999,
+      "latencyMs": 2230.984300000011,
+      "timestamp": "2026-10-12T00:40:20.046Z"
+    },
+    {
+      "label": "content-first-review-npc_hw_shendu-review2",
+      "model": "deepseek-flash",
+      "thinking": "disabled",
+      "usage": {
+        "prompt_tokens": 21843,
+        "completion_tokens": 104,
+        "total_tokens": 21947,
+        "prompt_tokens_details": {
+          "cached_tokens": 21632
+        },
+        "prompt_cache_hit_tokens": 21632,
+        "prompt_cache_miss_tokens": 211
+      },
+      "costUpperYuan": 0.00211928,
+      "cumulativeUpperYuan": 5.987548799999999,
+      "latencyMs": 1415.338000000018,
+      "timestamp": "2026-10-12T00:40:21.469Z"
+    }
+  ],
+  "rawProviderReviewResponses": [
+    {
+      "attempt": 1,
+      "response": {
+        "id": "de504ef3-1a11-4a4b-8860-b53245e24695",
+        "object": "chat.completion",
+        "created": 1791765611,
+        "model": "deepseek-flash",
+        "choices": [
+          {
+            "index": 0,
+            "message": {
+              "role": "assistant",
+              "content": "{\"contradictions\":[],\"backgroundReviews\":[{\"eventId\":\"memory_t10_record-sources\",\"sourceHash\":\"d4cb722ab2388cc077c9011a337f0e7a81f70f0cf60d5655e925ee8e479dc1d9\",\"reviewedRiskPaths\":[\"npc_hw_luqing.secrets[0]\",\"npc_hw_shendu.secrets[0]\"],\"contradictions\":[]}]}"
+            },
+            "logprobs": null,
+            "finish_reason": "stop"
+          }
+        ],
+        "usage": {
+          "prompt_tokens": 21843,
+          "completion_tokens": 104,
+          "total_tokens": 21947,
+          "prompt_tokens_details": {
+            "cached_tokens": 128
+          },
+          "prompt_cache_hit_tokens": 128,
+          "prompt_cache_miss_tokens": 21715
+        },
+        "system_fingerprint": "aeb56401ca74e127821c4f9126dcb669",
+        "measurement": {
+          "label": "content-first-review-npc_hw_shendu-review0",
+          "model": "deepseek-flash",
+          "thinking": "disabled",
+          "usage": {
+            "prompt_tokens": 21843,
+            "completion_tokens": 104,
+            "total_tokens": 21947,
+            "prompt_tokens_details": {
+              "cached_tokens": 128
+            },
+            "prompt_cache_hit_tokens": 128,
+            "prompt_cache_miss_tokens": 21715
+          },
+          "costUpperYuan": 0.04426712,
+          "cumulativeUpperYuan": 5.97493024,
+          "latencyMs": 1748.087599999999,
+          "timestamp": "2026-10-12T00:40:14.276Z"
+        }
+      },
+      "hash": "3a649d5225ed2b21d537c32aee9ed1f079e7f289e14b3ae363a3df0566728e23"
+    },
+    {
+      "attempt": 2,
+      "response": {
+        "id": "69bd5576-bc10-445e-a28e-62b438ca01ab",
+        "object": "chat.completion",
+        "created": 1791765615,
+        "model": "deepseek-flash",
+        "choices": [
+          {
+            "index": 0,
+            "message": {
+              "role": "assistant",
+              "content": "{\"contradictions\":[],\"backgroundReviews\":[{\"eventId\":\"memory_t10_record-sources\",\"sourceHash\":\"d4cb722ab2388cc077c9011a337f0e7a81f70f0cf60d5655e925ee8e479dc1d9\",\"reviewedRiskPaths\":[\"npc_hw_luqing.secrets[0]\",\"npc_hw_shendu.secrets[0]\"],\"contradictions\":[]}]}"
+            },
+            "logprobs": null,
+            "finish_reason": "stop"
+          }
+        ],
+        "usage": {
+          "prompt_tokens": 21843,
+          "completion_tokens": 104,
+          "total_tokens": 21947,
+          "prompt_tokens_details": {
+            "cached_tokens": 21632
+          },
+          "prompt_cache_hit_tokens": 21632,
+          "prompt_cache_miss_tokens": 211
+        },
+        "system_fingerprint": "aeb56401ca74e127821c4f9126dcb669",
+        "measurement": {
+          "label": "content-first-review-npc_hw_shendu-review1",
+          "model": "deepseek-flash",
+          "thinking": "disabled",
+          "usage": {
+            "prompt_tokens": 21843,
+            "completion_tokens": 104,
+            "total_tokens": 21947,
+            "prompt_tokens_details": {
+              "cached_tokens": 21632
+            },
+            "prompt_cache_hit_tokens": 21632,
+            "prompt_cache_miss_tokens": 211
+          },
+          "costUpperYuan": 0.00211928,
+          "cumulativeUpperYuan": 5.98136496,
+          "latencyMs": 1445.440499999997,
+          "timestamp": "2026-10-12T00:40:17.807Z"
+        }
+      },
+      "hash": "c62639c80f3fca6f720c4a1382a3bdd92e3ce4cc6cadb282a8dd623da673362f"
+    },
+    {
+      "attempt": 3,
+      "response": {
+        "id": "0e0bfe81-9a97-4aa5-a81a-d247bd42291b",
+        "object": "chat.completion",
+        "created": 1791765619,
+        "model": "deepseek-flash",
+        "choices": [
+          {
+            "index": 0,
+            "message": {
+              "role": "assistant",
+              "content": "{\"contradictions\":[],\"backgroundReviews\":[{\"eventId\":\"memory_t10_record-sources\",\"sourceHash\":\"d4cb722ab2388cc077c9011a337f0e7a81f70f0cf60d5655e925ee8e479dc1d9\",\"reviewedRiskPaths\":[\"npc_hw_luqing.secrets[0]\",\"npc_hw_shendu.secrets[0]\"],\"contradictions\":[]}]}"
+            },
+            "logprobs": null,
+            "finish_reason": "stop"
+          }
+        ],
+        "usage": {
+          "prompt_tokens": 21843,
+          "completion_tokens": 104,
+          "total_tokens": 21947,
+          "prompt_tokens_details": {
+            "cached_tokens": 21632
+          },
+          "prompt_cache_hit_tokens": 21632,
+          "prompt_cache_miss_tokens": 211
+        },
+        "system_fingerprint": "aeb56401ca74e127821c4f9126dcb669",
+        "measurement": {
+          "label": "content-first-review-npc_hw_shendu-review2",
+          "model": "deepseek-flash",
+          "thinking": "disabled",
+          "usage": {
+            "prompt_tokens": 21843,
+            "completion_tokens": 104,
+            "total_tokens": 21947,
+            "prompt_tokens_details": {
+              "cached_tokens": 21632
+            },
+            "prompt_cache_hit_tokens": 21632,
+            "prompt_cache_miss_tokens": 211
+          },
+          "costUpperYuan": 0.00211928,
+          "cumulativeUpperYuan": 5.987548799999999,
+          "latencyMs": 1415.338000000018,
+          "timestamp": "2026-10-12T00:40:21.469Z"
+        }
+      },
+      "hash": "a8dedd72419ac3b929f99d1b395be87b2beeecc5340933e3d977af1f643e12a8"
+    }
+  ]
+}
