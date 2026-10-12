@@ -11,8 +11,10 @@ const world=await loadWorld(),root=path.resolve('world/drafts/m2-people');
 const baseline=JSON.parse(await fs.readFile(path.join(root,'baseline.json'),'utf8'));
 const candidate=JSON.parse(await fs.readFile(path.join(root,'candidate.json'),'utf8'));
 const published=await prepareNpcPublication({world,root});
+// Direct calls have no receipt and keep the original strict M2 contract.
+const legacyCurrent=()=>world.npcs.map(n=>{const original=baseline.find(row=>row.id===n.id);return original?{...structuredClone(n),services:structuredClone(original.services),skills:structuredClone(original.skills)}:structuredClone(n);});
 test('发布接受已审查18人，所有当前经济和运行字段保持，重复合并幂等',()=>{
- const current=structuredClone(world.npcs);current[0].coins=987;current[0].inventory.item_wood=123;current[0].trust=17;current[0].affection=9;
+ const current=legacyCurrent();current[0].coins=987;current[0].inventory.item_wood=123;current[0].trust=17;current[0].affection=9;
  // Catalog input can already contain the previous run's full profile.
  for(const n of current)for(const key of ['wealth','towardPlayer'])delete n[key];
  const merged=mergeNpcProfiles(current,candidate,baseline);
@@ -20,9 +22,9 @@ test('发布接受已审查18人，所有当前经济和运行字段保持，重
  assert.deepEqual(merged[0].wealth.cashRange,[987,987]);assert.deepEqual(mergeNpcProfiles(merged,candidate,baseline),merged);
 });
 test('正式来源人物事实或已审查作息改变时拒绝，额外人物保留',()=>{
- let current=structuredClone(world.npcs);current[0].notes+='新增未经审查经历';assert.throws(()=>mergeNpcProfiles(current,candidate,baseline),/正式来源事实/);
- current=structuredClone(world.npcs);current[0].schedule.default[0].activity='新的活动';assert.throws(()=>mergeNpcProfiles(current,candidate,baseline),/正式作息/);
- current=structuredClone(world.npcs);current.push({...current[0],id:'npc_extra_unreviewed',name:'额外旧人物'});assert.deepEqual(mergeNpcProfiles(current,candidate,baseline).at(-1),current.at(-1));
+ let current=legacyCurrent();current[0].notes+='新增未经审查经历';assert.throws(()=>mergeNpcProfiles(current,candidate,baseline),/正式来源事实/);
+ current=legacyCurrent();current[0].schedule.default[0].activity='新的活动';assert.throws(()=>mergeNpcProfiles(current,candidate,baseline),/正式作息/);
+ current=legacyCurrent();current.push({...current[0],id:'npc_extra_unreviewed',name:'额外旧人物'});assert.deepEqual(mergeNpcProfiles(current,candidate,baseline).at(-1),current.at(-1));
 });
 test('L4或候选正文被改不能绕过发布审核',async()=>{
  const temp=await fs.mkdtemp(path.join(os.tmpdir(),'m2-review-'));await fs.cp(root,temp,{recursive:true});
