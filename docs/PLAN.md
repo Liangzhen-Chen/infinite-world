@@ -71,6 +71,12 @@ T17旧spent=0.28484248、reserved=6.372890、upper=6.65773248保留；新轮先1
 
 验收tests/{npc-depth-wt,npc-depth-review,npc-depth-authored-background}.test.mjs及CORE；30人L1/L2完整，失效L4重新实际阅读、逐flag+随机5及规则12评分，事件闭合/T04/预演通过后交T11，不改正式人口或正确叶。
 
+本次prepare窄修：81df67e仅离线提议基准；42叶中20项before不等于old-records真实draft，未正式通过。修reopen/design.mjs及派生检查/视图：从sourced/foundation及incremental-proof重放父链；18待审ID取reopen/old-records.json冻结draft.patches，再套批准42叶after。其余兄弟叶恢复record原值；12未经新授权ID严格等于父proof重放entry。row.before/baseHash仍是原baseline，sourceRefs不变，record不作事实源。
+
+同步patch-diff/plan的before及hash、candidate-after和必要freeze/report元数据；旧报告注明提议基准。原source/foundation/baseline、旧请求/record/proof不改。保留已补previousPlanFile/previousPlanHash/previousProofHash及换行凭证，不增权限或换nonce；CLI用hashContent现算新plan，禁硬码fcf449。不得删guard或降断言。
+
+原Sol在实际原tree用官方prepareDepthRevision零调用通过，输入root=sourced、design=reopen/design.mjs、controlledRevision=reopen/controlled-plan.json、authoredBackground=reopen/authored-background.json、sourceCheckoutEvidence=controlled/source-checkout-evidence.json；reopenAuthorization=world/design/w1-reopen-authorization.json，cardId=T07，worldRoot=world，authorizationHash现算。除world路径外以上相对wt-depth；不用offline helper替代。通过后原聊天等待主会话模型顺位3，沿原账完成真实L2/L4和预演。仍失败按原两修后一次规划停止线卡住，不拆卡再领机会。
+
 ### T08 砾泉失败与家庭缺口修订【授权受控重开，模型顺位2】
 
 拥有world/design/w1-lq-depth.mjs、world/drafts/w1/lq-depth/及tests/npc-depth-lq.test.mjs。先读first-real-review-report.json的sourceFindings：luanpei、yunxiu、jushu、qinglan、yike、nieya六人家庭叶逐原源修正，未说出口不写成已讨论；即使属于17 passed也按实际失效重审。原4 manual/9 pending逐ID处理，有效未变L2不重跑。
