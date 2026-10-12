@@ -14,21 +14,20 @@ const target='npc_hw_linsui',third='npc_hw_hezhou';
 function draft(document){return{document,get(...p){return p.reduce((x,k)=>x?.[k],this.document);},set(path,value){this.document=applyPatches(this.document,[{op:'set',path,value}]);},remove(path){this.document=applyPatches(this.document,[{op:'delete',path}]);},say(){}};}
 async function fixture(){
  const world=await loadWorld(),base=world.spells[0];
- for(const kind of ['message','consent_link']){
+ for(const kind of ['message','mind_message','consent_link','team_link']){
   const id=`spell_message_${kind}`,skill=`skill_message_${kind}`;
   world.skills.push({id:skill,name:skill,attribute:'精神',profession:null});
-  world.spells.push({...base,id,name:id,skill,mp:2,minutes:1,materials:[],duration:kind==='consent_link'?8:0,effectSpec:{kind,power:1,maxChars:80,maxDistanceMeters:100000,delayMinutes:2,...(kind==='consent_link'?{upkeepMp:3,upkeepMinutes:2}:{})}});
+  world.spells.push({...base,id,name:id,skill,mp:2,minutes:1,materials:[],duration:['consent_link','team_link'].includes(kind)?8:0,effectSpec:{kind,power:1,maxChars:80,maxDistanceMeters:100000,delayMinutes:2,...(['consent_link','team_link'].includes(kind)?{upkeepMp:3,upkeepMinutes:2}:{}),...(kind==='team_link'?{maxMembers:4}:{}),...(kind==='mind_message'?{markText:'心音符'}:{})}});
  }
  const engine=new WorldEngine(world),doc=engine.initialFromLegacy(seed,'message-test');
  Object.assign(doc.state.player,{mp:100,maxMp:100,hp:10000,maxHp:10000,companions:[target,third]});
  for(const id of[target,third])Object.assign(doc.state.npcs[id],{hp:10000,maxHp:10000,location:doc.state.location,activity:'交谈'});
- for(const kind of ['message','consent_link']){doc.state.spells[`spell_message_${kind}`]={source:{type:'fixture'}};doc.state.skills[`skill_message_${kind}`]={proficiency:200,breakthroughs:[],daily:{}};}
+ const markSpell={...base,id:'spell_message_mark',name:'传讯符刻',skill:'skill_message_message',mp:2,minutes:1,materials:[],duration:8,rangeMeters:3,effectSpec:{kind:'mark',power:40,medium:'fire',visibility:'normal'}};world.spells.push(markSpell);engine.entities.push(markSpell);engine.byId.set(markSpell.id,markSpell);doc.state.spells[markSpell.id]={source:{type:'fixture'}};doc.state.inventory.item_whittling_knife={quantity:1,durability:100};
+ for(const kind of ['message','mind_message','consent_link','team_link']){doc.state.spells[`spell_message_${kind}`]={source:{type:'fixture'}};doc.state.skills[`skill_message_${kind}`]={proficiency:200,breakthroughs:[],daily:{}};}
  const run=async(d,tool,args,id)=>{const out=await engine.reduce(d,{tool,args,eventId:id});return{doc:applyPatches(d,out.patches),result:out.result,id};};
  let serial=0;
- const contact=async d=>{for(let i=0;i<100;i++){const r=await run(d,'world_combat',{target,intent:'defend'},`contact-${serial++}`);if(r.doc.state.records[`local_actor_position:${target}`])return r.doc;}throw Error('未形成真实接触');};
- // The permission processor produces the ledger row; the public-tool hook is
- // separately verified when its file ownership is assigned to this card.
- const grant=async(d,kind='message',minutes=60)=>{const a=draft(d),result=magicMessagePermission(a,engine,{operation:'grant_access',promisor:target,location:kind==='message'?'mental_message':'consent_link',content:'本人愿意接收主动发送的私密文字或简单情绪',minutes},`grant-${serial++}`);return{doc:a.document,result};};
+ const contact=async(d,id=target)=>{for(let i=0;i<100;i++){const r=await run(d,'world_combat',{target:id,intent:'defend'},`contact-${serial++}`);if(r.doc.state.records[`local_actor_position:${id}`])return r.doc;}throw Error('未形成真实接触');};
+ const grant=(d,kind='message',minutes=60)=>run(d,'world_promise',{operation:'grant_access',promisor:target,location:kind==='message'?'mental_message':'consent_link',content:'本人愿意接收主动发送的私密文字或简单情绪',minutes},`grant-${serial++}`);
  const cast=async(d,kind='message',extra={})=>{for(let i=0;i<100;i++){const r=await run(d,'world_cast',{spell:`spell_message_${kind}`,target,...extra},`cast-${serial++}`);if(r.result.success)return r;}throw Error('未取得成功检定');};
  const ready=async(kind='message',minutes=60)=>grant(await contact(doc),kind,minutes);
  return{world,engine,doc,run,contact,grant,cast,ready};
@@ -86,8 +85,8 @@ test('有效精神连接可再次主动发送情绪且不重置维持时钟；�
 });
 test('本人收回许可与魔力不足均停止连接，不收取后续费用',async()=>{
  const s=await fixture(),g=await s.ready('consent_link'),r=await s.cast(g.doc,'consent_link',{authorization:g.result.authorization,text:'紧张'}),a=draft(r.doc);
- const revoked=magicMessagePermission(a,s.engine,{operation:'revoke_access',promisor:target,authorization:g.result.authorization},'revoke');assert.equal(revoked.consent.revoked,true);assert.equal(a.document.state.effects[r.id],undefined);
- const later=await s.run(a.document,'world_time',{minutes:6},'revoked-wait');assert.equal(later.doc.state.player.mp,r.doc.state.player.mp);assert.equal(heard(later.doc).length,0);
+ const revoked=await s.run(r.doc,'world_promise',{operation:'revoke_access',promisor:target,authorization:g.result.authorization},'revoke');assert.equal(revoked.result.consent.revoked,true);assert.equal(revoked.doc.state.effects[r.id],undefined);
+ const later=await s.run(revoked.doc,'world_time',{minutes:6},'revoked-wait');assert.equal(later.doc.state.player.mp,r.doc.state.player.mp);assert.equal(heard(later.doc).length,0);
  const poor=structuredClone(r.doc);poor.state.player.mp=2;const ended=await s.run(poor,'world_time',{minutes:6},'poor');assert.equal(ended.doc.state.player.mp,2);assert.equal(ended.doc.state.effects[r.id],undefined);assert.match(ended.doc.state.records[`ended_link:${r.id}`].reason,/魔力不足/);assert.equal(heard(ended.doc).length,0);
 });
 test('跨地点沿可信路线距离投递，未知道路距离不能按零处理',async()=>{
@@ -130,4 +129,96 @@ test('真实行路期间不能用提前写入的目的地维持连接或交付�
  assert.match(moved.doc.state.records[`ended_link:${r.id}`].reason,/途中/);assert.equal(messages(moved.doc)[0].status,'中止');assert.equal(heard(moved.doc).length,0);
  const sleeping=await s.run(r.doc,'world_time',{minutes:6,activity:'睡眠'},'linked-sleep');
  assert.equal(sleeping.doc.state.effects[r.id],undefined);assert.equal(sleeping.doc.state.player.mp,r.doc.state.player.mp);assert.match(sleeping.doc.state.records[`ended_link:${r.id}`].reason,/睡眠/);assert.equal(heard(sleeping.doc).length,0);
+});
+
+const playerHeard=d=>Object.values(d.memories??{}).filter(m=>m.kind==='magic_message');
+async function mark(s,doc,text='心音符'){
+ for(let i=0;i<100;i++){const r=await s.run(doc,'world_cast',{spell:'spell_message_mark',target:'item_whittling_knife',text},`mark-${text}-${i}`);if(r.result.success)return r;}throw Error('未得到真实符记');
+}
+async function group(s,ids=[target,third]){
+ let doc=structuredClone(s.doc);doc.state.player.companions=ids;
+ for(const id of ids)Object.assign(doc.state.npcs[id],{location:doc.state.location,status:'正常',activity:'交谈',hp:10000,maxHp:10000});
+ for(const id of ids)doc=await s.contact(doc,id);
+ const keys=[];
+ for(const id of ids){const grant=await s.run(doc,'world_promise',{operation:'grant_access',promisor:id,location:'team_link',guests:ids.filter(x=>x!==id),content:'本人愿意向这些小队成员发送有限节奏',minutes:60},`group-grant-${id}`);doc=grant.doc;keys.push(grant.result.authorization);}
+ return{doc,keys,args:{authorization:keys[0],authorizations:keys.slice(1)}};
+}
+test('心音符由正常刻记施法生产，缺符、错误文字、失去实物和过期在真实链拒绝',async()=>{
+ const s=await fixture(),g=await s.ready(),args={spell:'spell_message_mind_message',target,authorization:g.result.authorization,text:'我晚些回来。'};
+ await denied(s,g.doc,args,/符记/);
+ const wrong=await mark(s,g.doc,'普通字迹');await denied(s,wrong.doc,{...args,permit:wrong.result.mark},/符记/);
+ const m=await mark(s,g.doc),sent=await s.cast(m.doc,'mind_message',{authorization:g.result.authorization,permit:m.result.mark,text:args.text});
+ assert.equal(messages(sent.doc)[0].mark,m.result.mark);const arrived=await s.run(sent.doc,'world_time',{minutes:2},'marked-arrival');assert.equal(heard(arrived.doc)[0].content,args.text);
+ const stale=structuredClone(m.doc);stale.state.records[m.result.mark].expires=stale.state.minute+3;await denied(s,stale,{...args,permit:m.result.mark},/符记/);
+ const broken=structuredClone(m.doc);broken.state.itemInstances[broken.state.records[m.result.mark].targetInstance].durability=0;await denied(s,broken,{...args,permit:m.result.mark},/符记/);
+ const selling=structuredClone(sent.doc);selling.state.player.companions=[];
+ const sold=await s.run(selling,'world_trade',{seller:'player',buyer:target,item:'item_whittling_knife',quantity:1},'sell-mark');
+ const aborted=await s.run(sold.doc,'world_time',{minutes:2},'sold-arrival');assert.equal(messages(aborted.doc)[0].status,'中止');assert.equal(heard(aborted.doc).length,0);
+});
+test('NPC通过正常world_promise主动声明情绪，到达才进入玩家记忆和可见回复',async()=>{
+ const s=await fixture(),g=await s.ready('consent_link'),linked=await s.cast(g.doc,'consent_link',{authorization:g.result.authorization});
+ const args={operation:'grant_access',promisor:target,location:'consent_link',authorization:g.result.authorization,obligation:linked.result.effect,content:'紧张'};
+ const sent=await s.run(linked.doc,'world_promise',args,'npc-emotion');assert.equal(sent.result.from,target);assert.equal(playerHeard(sent.doc).length,0);assert.equal(heard(sent.doc,third).length,0);
+ assert.equal(messages(sent.doc)[0].sourceEvent,'npc-emotion');assert.equal(messages(sent.doc)[0].from,target);
+ await assert.rejects(s.run(sent.doc,'world_promise',args,'npc-repeat'),/尚在传送/);
+ await assert.rejects(s.run(linked.doc,'world_promise',{...args,content:'何舟答应替我付钱'},'npc-false'),/有限情绪/);
+ const arrived=await s.run(sent.doc,'world_time',{minutes:2},'npc-emotion-arrival');assert.equal(playerHeard(arrived.doc)[0].content,'紧张');assert.equal(playerHeard(arrived.doc)[0].sourceType,'听说');assert.equal(playerHeard(arrived.doc)[0].heardFrom,target);assert.ok(arrived.result.messages.some(x=>x.includes('主动传来：紧张')));assert.equal(heard(arrived.doc,third).length,0);
+ const revoked=await s.run(sent.doc,'world_promise',{operation:'revoke_access',promisor:target,authorization:g.result.authorization},'npc-withdraw');const cancelled=await s.run(revoked.doc,'world_time',{minutes:3},'npc-cancelled');assert.equal(playerHeard(cancelled.doc).length,0);assert.equal(cancelled.doc.state.player.mp,revoked.doc.state.player.mp);
+});
+test('多人连接逐人取得许可，玩家广播与NPC主动节奏真正抵达不同收者并按人数扣MP',async()=>{
+ const s=await fixture(),g=await group(s),linked=await s.cast(g.doc,'team_link',{...g.args,text:'防守'});
+ assert.deepEqual(new Set(linked.result.members),new Set(['player',target,third]));assert.equal(linked.result.upkeepTotalMp,6);assert.equal(linked.result.messageIds.length,2);assert.equal(heard(linked.doc).length,0);assert.equal(heard(linked.doc,third).length,0);
+ const first=await s.run(linked.doc,'world_time',{minutes:2},'team-first-arrival');assert.equal(heard(first.doc)[0].content,'防守');assert.equal(heard(first.doc,third)[0].content,'防守');assert.equal(first.doc.state.player.mp,linked.doc.state.player.mp-6);
+ const sent=await s.run(first.doc,'world_promise',{operation:'grant_access',promisor:third,location:'team_link',authorization:g.keys[1],obligation:linked.result.effect,content:'撤退'},'npc-team-signal');assert.deepEqual(new Set(sent.result.recipients),new Set(['player',target]));assert.equal(playerHeard(sent.doc).length,0);assert.equal(heard(sent.doc).length,1);
+ const arrived=await s.run(sent.doc,'world_time',{minutes:2},'npc-team-arrival');assert.equal(playerHeard(arrived.doc)[0].content,'撤退');assert.equal(heard(arrived.doc).at(-1).content,'撤退');assert.equal(heard(arrived.doc).at(-1).heardFrom,third);assert.equal(heard(arrived.doc,third).length,1);assert.equal(arrived.doc.state.player.mp,first.doc.state.player.mp-6);
+ assert.equal(heard(arrived.doc,'npc_hw_ayan').length,0);
+});
+test('多人缺独立同意、人数超限、许可未覆盖队友、未知成员位置均原子拒绝',async()=>{
+ const s=await fixture(),g=await group(s),args={spell:'spell_message_team_link',target,...g.args,text:'前进'};
+ await denied(s,g.doc,{...args,authorizations:[]},/独立/);await denied(s,g.doc,{...args,authorizations:[g.keys[0]]},/独立/);
+ const narrow=await s.run(g.doc,'world_promise',{operation:'grant_access',promisor:third,location:'team_link',content:'只同意与玩家',minutes:60},'narrow-grant');await denied(s,narrow.doc,{...args,authorizations:[narrow.result.authorization]},/未覆盖/);
+ const unknown=structuredClone(g.doc);delete unknown.state.records[`local_actor_position:${third}`];await denied(s,unknown,args,/实际距离/);
+ await denied(s,g.doc,{...args,text:'别人必须服从我'},/有限情绪/);
+ const crowded=await group(await fixture(),[target,third,'npc_hw_ayan']);const f=await fixture();f.world.spells.find(x=>x.id==='spell_message_team_link').effectSpec.maxMembers=3;await denied(f,crowded.doc,{...args,authorization:crowded.keys[0],authorizations:crowded.keys.slice(1)},/成员超限/);
+});
+test('独立撤销或到期删除该成员，剩余多人连接继续且不再收取退出者维持费',async()=>{
+ const s=await fixture(),ids=[target,third,'npc_hw_ayan'],g=await group(s,ids),linked=await s.cast(g.doc,'team_link',g.args);
+ const withdrawn=await s.run(linked.doc,'world_promise',{operation:'revoke_access',promisor:'npc_hw_ayan',authorization:g.keys[2]},'team-withdraw');assert.equal(withdrawn.doc.state.effects[linked.id].members.npc_hw_ayan,undefined);
+ const stayed=await s.run(withdrawn.doc,'world_time',{minutes:2},'team-stay');assert.equal(stayed.doc.state.player.mp,withdrawn.doc.state.player.mp-6);assert.deepEqual(Object.keys(stayed.doc.state.effects[linked.id].members).sort(),[target,third].sort());
+ const last=await s.run(stayed.doc,'world_promise',{operation:'revoke_access',promisor:third,authorization:g.keys[1]},'team-too-few');assert.equal(last.doc.state.effects[linked.id],undefined);
+ const later=await s.run(last.doc,'world_time',{minutes:2},'no-team-fee');assert.equal(later.doc.state.player.mp,last.doc.state.player.mp);
+ const f=await fixture(),h=await group(f,ids);const fresh=await f.run(h.doc,'world_promise',{operation:'grant_access',promisor:'npc_hw_ayan',location:'team_link',guests:[target,third],content:'本人短期参与',minutes:3},'short-grant');const expiring=await f.cast(fresh.doc,'team_link',{authorization:h.keys[0],authorizations:[h.keys[1],fresh.result.authorization]});
+ const expired=await f.run(expiring.doc,'world_time',{minutes:2},'member-expiry');assert.equal(expired.doc.state.effects[expiring.id].members.npc_hw_ayan,undefined);assert.equal(expired.doc.state.player.mp,expiring.doc.state.player.mp-6);
+});
+
+test('多人长短步费用一致，费用不足不部分扣费且中止全部未抵达消息',async()=>{
+ const s=await fixture(),g=await group(s),linked=await s.cast(g.doc,'team_link',{...g.args,text:'停步'});
+ const big=await s.run(linked.doc,'world_time',{minutes:4},'team-big');let small=linked.doc;for(let i=0;i<4;i++)small=(await s.run(small,'world_time',{minutes:1},`team-small-${i}`)).doc;
+ assert.equal(big.doc.state.player.mp,linked.doc.state.player.mp-12);assert.equal(small.state.player.mp,big.doc.state.player.mp);assert.deepEqual(small.state.effects,big.doc.state.effects);assert.deepEqual(messages(small),messages(big.doc));
+ const poor=structuredClone(linked.doc);poor.state.player.mp=5;const stopped=await s.run(poor,'world_time',{minutes:2},'team-poor');assert.equal(stopped.doc.state.player.mp,5);assert.equal(stopped.doc.state.effects[linked.id],undefined);assert.equal(stopped.doc.state.records[`ended_link:${linked.id}`].spentMp,0);assert.ok(messages(stopped.doc).every(m=>m.status==='中止'));assert.equal(heard(stopped.doc).length,0);assert.equal(heard(stopped.doc,third).length,0);
+});
+test('正常签发、多人施法、NPC反向消息和到达在事件存储重启导入与撤销中守恒',async t=>{
+ const s=await fixture();let doc=await s.contact(s.doc);doc=await s.contact(doc,third);
+ const dir=await fs.mkdtemp(path.join(os.tmpdir(),'dnd-team-message-'));t.after(()=>fs.rm(dir,{recursive:true,force:true}));const reducer=s.engine.reduce.bind(s.engine),store=new CampaignStorage(dir,{reducer});await store.create({id:'team',worldVersion:doc.worldVersion,document:doc});
+ const transact=async(id,tool,args)=>{const result=await store.transact('team',{id,anchor:id,input:{eventId:id,tool,args}},reducer);return result;};
+ for(const [id,who,other]of[['grant-one',target,third],['grant-two',third,target]])await transact(id,'world_promise',{operation:'grant_access',promisor:who,location:'team_link',guests:[other],content:'本人主动参与限定节奏连接',minutes:60});
+ let before=(await store.read('team')).document;const args={spell:'spell_message_team_link',target,authorization:'permission_grant-one',authorizations:['permission_grant-two']},cast=await s.cast(before,'team_link',args);
+ await transact(cast.id,'world_cast',args);const linked=(await store.read('team')).document;assert.equal(linked.state.player.mp,before.state.player.mp-2);
+ const declaration={operation:'grant_access',promisor:third,location:'team_link',authorization:'permission_grant-two',obligation:cast.id,content:'合围'};await transact('emit','world_promise',declaration);const queued=(await store.read('team')).document;
+ await transact('emit','world_promise',declaration);assert.deepEqual((await store.read('team')).document,queued);assert.equal(playerHeard(queued).length,0);
+ await transact('arrival','world_time',{minutes:2});const arrived=(await store.read('team')).document;assert.equal(playerHeard(arrived)[0].content,'合围');assert.equal(heard(arrived)[0].content,'合围');assert.equal(arrived.state.player.mp,linked.state.player.mp-6);
+ const reopened=new CampaignStorage(dir,{reducer});assert.deepEqual((await reopened.read('team')).document,arrived);const bundle=JSON.parse(JSON.stringify(await reopened.export('team')));assert.deepEqual((await reopened.import(bundle,'copy')).document,arrived);
+ await reopened.reconcile('team',['grant-one','grant-two',cast.id,'emit'],null);const recovered=(await reopened.read('team')).document;assert.deepEqual(recovered,queued);assert.equal(playerHeard(recovered).length,0);
+ await reopened.reconcile('team',['grant-one','grant-two',cast.id],null);assert.deepEqual((await reopened.read('team')).document,linked);
+});
+
+test('面对面签发后沿真实路线远离，NPC仍可主动回传并自行远程收回同意',async()=>{
+ const s=await fixture(),g=await s.ready('consent_link'),depart=structuredClone(g.doc);depart.state.player.companions=[];
+ const moved=await s.run(depart,'world_move',{destination:'loc_hw_northwood'},'remote-walk');const linked=await s.cast(moved.doc,'consent_link',{authorization:g.result.authorization});
+ const args={operation:'grant_access',promisor:target,location:'consent_link',authorization:g.result.authorization,obligation:linked.result.effect,content:'难过'};
+ const sent=await s.run(linked.doc,'world_promise',args,'remote-emotion');assert.equal(playerHeard(sent.doc).length,0);
+ const arrived=await s.run(sent.doc,'world_time',{minutes:2},'remote-emotion-arrival');assert.equal(playerHeard(arrived.doc)[0].content,'难过');assert.equal(heard(arrived.doc,third).length,0);
+ const again=await s.run(arrived.doc,'world_promise',{...args,content:'平静'},'remote-again');
+ const revoked=await s.run(again.doc,'world_promise',{operation:'revoke_access',promisor:target,authorization:g.result.authorization},'remote-revoke');assert.equal(revoked.result.consent.revoked,true);assert.equal(revoked.doc.state.effects[linked.id],undefined);
+ const later=await s.run(revoked.doc,'world_time',{minutes:3},'remote-after-revoke');assert.equal(playerHeard(later.doc).length,1);assert.equal(later.doc.state.player.mp,revoked.doc.state.player.mp);
 });
