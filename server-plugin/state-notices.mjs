@@ -39,6 +39,10 @@ export function stateNotices(before,after,resolveName=id=>id){
         if(!old||row.status!==old.status||row.following!==old.following)push('pet',`${name(id)}：${row.status}${row.following?'，正在跟随':''}`);
     }
     for(const [id,row] of Object.entries(after.records??{})){
+        if(row.subject==='player'&&!before.records?.[id]){
+            if(['civic_resident','civic_citizen'].includes(row.category))push('civic',`${name(row.settlement)}：${row.category==='civic_citizen'?'公民':'居民'}已登记，费用 ${row.fee}铜`);
+            if(row.category==='civic_contribution')push('contribution',`${name(row.settlement)}贡献 +${row.points} · ${row.kind==='donation'?'实际捐赠':row.kind==='project'?'公共工程':'教学'}`);
+        }
         if(row.category==='authorization'&&row.action==='enter_home'&&row.grantee==='player'){
             const old=before.records?.[id];
             if(!old&&!row.revoked&&row.expires>after.minute)push('permission',`${name(row.grantor)}允许你${row.guests?.length?`和${row.guests.map(name).join('、')}`:''}进入${name(row.subject)}，有效${row.expires-after.minute}分钟`);
