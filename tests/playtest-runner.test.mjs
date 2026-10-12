@@ -4,6 +4,69 @@ import {createPlaytestServer,runPlaytest}from'../tools/playtest-runner.mjs';
 import {evaluateAssertions}from'../tools/playtest-assertions.mjs';
 import {loadPromptBundle,presetFor}from'../tools/build-card.mjs';
 import {promptSections}from'../extension/prompt.mjs';
+import {toolSelectionMetrics,playtestAcceptance}from'../tools/playtest-metrics.mjs';
+
+test('选工具实测逐行动列出类别、参数、目标及漏调用；空样本与全部漏调不能报零风险',()=>{
+    const expected={kind:'calls',tool:'world_trade',args:{seller:'林穗',days:1},min:1};
+    const scenario={id:'metrics',turns:[
+        {input:'住一晚',expectedTools:['world_trade'],assertions:[expected]},
+        {input:'住一晚',expectedTools:['world_trade'],assertions:[expected]},
+        {input:'住一晚',expectedTools:['world_trade'],assertions:[expected]},
+        {input:'住一晚',expectedTools:['world_trade'],assertions:[expected]},
+        {input:'只听故事',assertions:[]},
+    ]};
+    const calls=[[],[{tool:'world_move',args:{destination:'酒馆'}}],[{tool:'world_trade',args:{seller:'林穗',days:2}}],[{tool:'world_trade',args:{seller:'阿砚',days:1}}],[{tool:'world_move',args:{destination:'酒馆'}}]];
+    const result={id:'metrics',attempt:2,turns:calls.map((calls,index)=>({index,input:scenario.turns[index].input,calls,assertions:[]}))};
+    const metrics=toolSelectionMetrics([result],[scenario]);
+    assert.equal(metrics.opportunities,4);assert.equal(metrics.missed,2);assert.equal(metrics.wrong,1);
+    assert.equal(metrics.parameterWrong,1);assert.equal(metrics.targetWrong,1);assert.equal(metrics.wrongRatio,1/4);assert.equal(metrics.missedRatio,2/4);
+    assert.equal(metrics.parameterOpportunities,2);assert.equal(metrics.targetOpportunities,2);
+    assert.equal(metrics.parameterWrongRatio,.5);assert.equal(metrics.targetWrongRatio,.5);
+    assert.equal(metrics.failureRatio,1);assert.equal(metrics.argumentOpportunities,2);assert.equal(metrics.zeroSelectionErrors,false);
+    assert.equal(metrics.rows[0].attempt,2);assert.equal(metrics.rows[0].input,'住一晚');assert.equal(metrics.unannotatedTurns,1);
+    const empty=toolSelectionMetrics([{id:'none',turns:[{index:0,input:'聊天',calls:[]}]}],[{id:'none',turns:[{input:'聊天',assertions:[]}]}]);
+    assert.equal(empty.measurement,'not-measured');assert.equal(empty.wrongRatio,null);assert.equal(empty.zeroSelectionErrors,false);
+    const categoryOnly=toolSelectionMetrics([{id:'only',turns:[{index:0,input:'去酒馆',calls:[{tool:'world_move',args:{destination:'酒馆'}}]}]}],
+        [{id:'only',turns:[{input:'去酒馆',expectedTools:['world_move'],assertions:[{kind:'calls',tool:'world_move',args:{},min:1}]}]}]);
+    assert.equal(categoryOnly.parameterWrongRatio,null);assert.equal(categoryOnly.targetWrongRatio,null,'空参数断言不能证明目标正确');
+    const missing=toolSelectionMetrics([{id:'metrics',turns:[{index:0,input:'住一晚',calls:[],assertions:[]}]}],[scenario]);
+    assert.equal(missing.wrongRatio,0);assert.equal(missing.missedRatio,1);assert.equal(missing.zeroSelectionErrors,false);
+    assert.equal(missing.parameterWrongRatio,null);assert.equal(missing.targetWrongRatio,null);
+    assert.equal(playtestAcceptance({milestone:'M2',complete:true,m2:{thresholdReached:true},toolSelection:missing}),false);
+    const both=toolSelectionMetrics([{id:'metrics',turns:[{index:0,input:'住一晚',calls:[{tool:'world_trade',args:{seller:'林穗',days:1}},{tool:'world_move',args:{destination:'别处'}}]}]}],[scenario]);
+    assert.equal(both.wrong,1,'已调用正确类别不能掩盖另一次错类调用');assert.equal(both.missed,0);
+    const corrected=toolSelectionMetrics([{id:'metrics',turns:[{index:0,input:'住一晚',calls:[
+        {tool:'world_trade',args:{seller:'阿砚',days:1}},
+        {tool:'world_trade',args:{seller:'林穗',days:2}},
+        {tool:'world_trade',args:{seller:'林穗',days:1}},
+    ]}]}],[scenario]);
+    assert.equal(corrected.targetWrong,1);assert.equal(corrected.parameterWrong,1,'补调正确调用不能抹去错误尝试');
+    const outdated=toolSelectionMetrics([{id:'metrics',turns:[{index:0,input:'旧脚本的另一动作',calls:[]}]}],[scenario]);
+    assert.equal(outdated.opportunities,0);assert.equal(outdated.complete,false);assert.equal(outdated.excluded[0].reason,'scenario-input-not-measured');
+});
+
+test('选工具只计实际触发的嵌套分支及前置，未取得条件证据不假定触发',()=>{
+    const learn={kind:'calls',tool:'world_learn',args:{},min:1};
+    const nested={kind:'conditional',when:{path:'state.recipes.pegs'},then:[{kind:'elapsed',min:0,max:0}],else:[learn]};
+    const outer={kind:'conditional',when:{path:'state.skills.wood'},then:[nested],else:[learn]};
+    const scenario={id:'branches',turns:[{input:'未学会才学',assertions:[outer]},
+        {input:'会法术才施放',expectedTools:['world_cast'],toolExpectationAfter:{turn:0,path:'state.spells.light'},assertions:[]}]};
+    const evaluate=before=>evaluateAssertions([outer],{before,after:before,calls:[],reply:''});
+    const measured={id:'branches',turns:[{index:0,input:'未学会才学',calls:[],assertions:evaluate({state:{minute:0,skills:{wood:1},recipes:{}}})}]};
+    const report=toolSelectionMetrics([measured],[scenario]);assert.equal(report.opportunities,1);assert.equal(report.missed,1);
+    assert.deepEqual(report.rows[0].expectations[0].conditions.map(c=>c.branch),['then','else']);
+    measured.turns[0].assertions=evaluate({state:{minute:0,skills:{wood:1},recipes:{pegs:1}}});
+    assert.equal(toolSelectionMetrics([measured],[scenario]).opportunities,0,'已学会且无需行动的分支不算机会');
+    measured.turns.push({index:1,input:'会法术才施放',calls:[],assertions:[]});
+    let missing=toolSelectionMetrics([measured],[scenario]);assert.equal(missing.opportunities,0);assert.equal(missing.complete,false);
+    assert.ok(missing.excluded.some(row=>row.reason==='prerequisite-not-measured'));
+    measured.turns[0].assertions.push({kind:'exists',path:'state.spells.light',pass:false,actual:false});
+    missing=toolSelectionMetrics([measured],[scenario]);assert.ok(missing.excluded.some(row=>row.reason==='prerequisite-not-met'));
+    measured.turns[0].assertions.at(-1).actual=true;measured.turns[0].assertions.at(-1).pass=true;
+    missing=toolSelectionMetrics([measured],[scenario]);assert.equal(missing.opportunities,1);assert.equal(missing.rows[0].conditions[0].actual,true);
+    measured.turns[0].assertions=[];
+    const unknown=toolSelectionMetrics([measured],[scenario]);assert.equal(unknown.complete,false);assert.ok(unknown.excluded.some(r=>r.reason==='conditional-not-measured'));
+});
 
 test('试玩框架走真实HTTP存储、检索和回滚；场外写入拒绝，重复扣款幂等',async t=>{
     const server=await createPlaytestServer();t.after(()=>server.close());const bundle=await loadPromptBundle();let callId=0,sawSearch=false;
