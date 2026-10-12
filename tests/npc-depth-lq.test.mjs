@@ -287,7 +287,7 @@ test('官方authored-background prepare冻结新版首审产物，author-v2及�
  const files=['base.json','candidate.json','foundation.json','manifest.json'];
  const frozen=await Promise.all(files.map(async name=>({name,hash:hashContent(JSON.parse(await fs.readFile(path.join(firstReviewRoot,name),'utf8'))),mtime:(await fs.stat(path.join(firstReviewRoot,name))).mtimeMs})));
  const env={...process.env};delete env.DEEPSEEK_API_KEY;
- const {stdout}=await exec(process.execPath,['tools/npc-depth.mjs','--design','world/design/w1-lq-depth.mjs','--root',firstReviewRoot,'--authored-background',backgroundFile,'--budget-root',path.join(firstReviewRoot,'no-allocated-budget'),'--card','T08','--prepare'],{env});
+ const {stdout}=await exec(process.execPath,['tools/npc-depth.mjs','--design','world/design/w1-lq-depth.mjs','--root',firstReviewRoot,'--authored-background',backgroundFile,'--source-evidence-map',path.join(firstReviewRoot,'source-evidence-map.json'),'--compact-request','--budget-root',path.join(firstReviewRoot,'no-allocated-budget'),'--card','T08','--prepare'],{env});
  assert.deepEqual(JSON.parse(stdout),{entries:30,formalWrite:false,modelCalls:0});
  for(const old of frozen){assert.equal(hashContent(JSON.parse(await fs.readFile(path.join(firstReviewRoot,old.name),'utf8'))),old.hash);assert.equal((await fs.stat(path.join(firstReviewRoot,old.name))).mtimeMs,old.mtime);}
  const manifest=JSON.parse(await fs.readFile(path.join(firstReviewRoot,'manifest.json'),'utf8'));
@@ -295,5 +295,45 @@ test('官方authored-background prepare冻结新版首审产物，author-v2及�
  const candidate=JSON.parse(await fs.readFile(path.join(firstReviewRoot,'candidate.json'),'utf8'));
  assert.deepEqual(candidate,JSON.parse(await fs.readFile(path.join(root,'candidate.json'),'utf8')));
  for(const entry of backgroundEntries)assert.deepEqual(entry.facts.memorySeeds.slice(0,-1),entry.before.memorySeeds);
- for(const name of ['allocation.json','budget.json','terminal.json','batch-0.json','incremental-l4.json','npc_lq_luanpei.json'])await assert.rejects(fs.stat(path.join(firstReviewRoot,name)),/ENOENT/);
+ // The frozen opt-in remains historical; subsequent official review records
+ // live beside it and must not replace the original candidate/source files.
+ await assert.rejects(fs.stat(path.join(firstReviewRoot,'budget.json')),/ENOENT/);
+});
+
+test('T45官方首审预检冻结原证据，实际附件进入完整请求且逐请求最终UTF8预留合法',async()=>{
+ const report=JSON.parse(await fs.readFile(path.join(firstReviewRoot,'T45-official-preflight.json'),'utf8'));
+ assert.equal(report.modelCalls,0);assert.equal(report.l2Approved,false);assert.equal(report.l1,'passed');
+ assert.equal(report.entries,30);assert.equal(report.changedLeaves,384);assert.equal(report.supplements,15);assert.equal(report.sexPeople,16);
+ assert.equal(report.eventIds.length,6);assert.equal(report.budgetBefore.card.limitYuan,3);
+ assert.equal(report.budgetBefore.spentYuan,7.947071199999995);assert.equal(report.budgetBefore.reservedYuan,0.08373599999999998);
+ assert.deepEqual(report.budgetBefore.previousRequests,[]);
+ for(const frozen of report.frozen){
+  const raw=await fs.readFile(path.resolve('world',frozen.file),'utf8');
+  assert.equal(createHash('sha256').update(raw.replace(/\r\n/g,'\n')).digest('hex'),frozen.sha256LF);
+  if(frozen.contentHash)assert.equal(hashContent(JSON.parse(raw)),frozen.contentHash);
+ }
+ const map=JSON.parse(await fs.readFile(path.join(firstReviewRoot,'source-evidence-map.json'),'utf8'));
+ assert.equal(hashContent(map),report.sourceEvidenceMapHash);
+ const registry=JSON.parse(await fs.readFile(path.join(firstReviewRoot,'first-source-evidence.json'),'utf8'));
+ assert.equal(hashContent(registry),report.registrationHash);assert.equal(registry.compactRequest,true);
+ let total=0;
+ for(const row of report.requests){
+  const entry=backgroundEntries.find(e=>e.id===row.id),context=contextFor(entry,world);
+  assert.deepEqual(row.paths,entry.patches.map(p=>p.path));
+  const source=map[row.id]?JSON.parse(await fs.readFile(path.join(firstReviewRoot,map[row.id]),'utf8')):null;
+  for(const phase of ['draft','full','compact']){
+   const body=row[phase].request;
+   if(source)assert.deepEqual(JSON.parse(body.messages.at(-1).content),source);
+   const encoded={model:'deepseek-flash',max_tokens:1800,stream:false,thinking:{type:'disabled'},...body};
+   assert.equal(Buffer.byteLength(JSON.stringify(encoded)),row[phase].utf8Bytes);
+   assert.equal((row[phase].utf8Bytes*2+encoded.max_tokens*8)/1e6,row[phase].ceilingYuan);
+   assert.ok(row[phase].ceilingYuan<=3);
+  }
+  const payload=JSON.parse(row.compact.request.messages[1].content);
+  assert.deepEqual(payload.skeleton.before,entry.before);assert.deepEqual(payload.draft,patchDraft(entry));
+  assert.deepEqual(payload.publishedFacts.authoredBackground,context.authoredBackground);
+  assert.equal(payload.skeleton.facts,undefined);assert.equal(payload.publishedFacts.revisions,undefined);
+  total=total+row.draft.ceilingYuan+row.compact.ceilingYuan;
+ }
+ assert.equal(total,report.totalCompactDraftCeilingYuan);assert.equal(report.perRequestBudgetSufficient,true);
 });
