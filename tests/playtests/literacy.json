@@ -26,6 +26,13 @@
           "kind": "delta",
           "path": "state.player.coins",
           "value": 0
+        },
+        {
+          "kind": "unchanged",
+          "paths": [
+            "state.inventory",
+            "state.learning"
+          ]
         }
       ]
     },
@@ -42,7 +49,8 @@
           "path": "state.learning",
           "where": {
             "entity": "skill_literacy",
-            "cost": 2
+            "cost": 2,
+            "source.id": "npc_hw_luqing"
           },
           "min": 1
         },
@@ -50,6 +58,17 @@
           "kind": "elapsed",
           "min": 60,
           "max": 80
+        },
+        {
+          "kind": "delta",
+          "path": "state.npcs.npc_hw_luqing.coins",
+          "value": 2
+        },
+        {
+          "kind": "unchanged",
+          "paths": [
+            "state.inventory"
+          ]
         }
       ],
       "expectedTools": [
@@ -60,11 +79,60 @@
       "input": "如果还没掌握基础识字，我愿再花两铜上一节；已经学会就练习认字一次。",
       "assertions": [
         {
-          "kind": "calls",
-          "tool": "world_learn",
-          "args": {},
-          "min": 0,
-          "max": 1
+          "kind": "conditional",
+          "when": {
+            "path": "state.skills.skill_literacy"
+          },
+          "then": [
+            {
+              "kind": "calls",
+              "tool": "world_practice",
+              "args": {
+                "skill": "识字"
+              },
+              "min": 1,
+              "max": 1,
+              "success": true
+            },
+            {
+              "kind": "delta",
+              "path": "state.player.coins",
+              "value": 0
+            }
+          ],
+          "else": [
+            {
+              "kind": "calls",
+              "tool": "world_learn",
+              "args": {
+                "entity": "skill_literacy"
+              },
+              "min": 1,
+              "max": 1,
+              "success": true
+            },
+            {
+              "kind": "delta",
+              "path": "state.player.coins",
+              "value": -2
+            },
+            {
+              "kind": "delta",
+              "path": "state.npcs.npc_hw_luqing.coins",
+              "value": 2
+            },
+            {
+              "kind": "elapsed",
+              "min": 60,
+              "max": 60
+            }
+          ]
+        },
+        {
+          "kind": "unchanged",
+          "paths": [
+            "state.inventory"
+          ]
         }
       ]
     },
@@ -80,8 +148,17 @@
             {
               "kind": "calls",
               "tool": "world_practice",
-              "args": {},
-              "min": 1
+              "args": {
+                "skill": "识字"
+              },
+              "min": 1,
+              "max": 1,
+              "success": true
+            },
+            {
+              "kind": "delta",
+              "path": "state.player.coins",
+              "value": 0
             }
           ],
           "else": [
@@ -91,13 +168,31 @@
               "args": {
                 "entity": "skill_literacy"
               },
-              "min": 1
+              "min": 1,
+              "max": 1,
+              "success": true
             },
             {
               "kind": "delta",
               "path": "state.player.coins",
               "value": -2
+            },
+            {
+              "kind": "delta",
+              "path": "state.npcs.npc_hw_luqing.coins",
+              "value": 2
+            },
+            {
+              "kind": "elapsed",
+              "min": 60,
+              "max": 60
             }
+          ]
+        },
+        {
+          "kind": "unchanged",
+          "paths": [
+            "state.inventory"
           ]
         }
       ]
@@ -113,6 +208,14 @@
           "kind": "elapsed",
           "min": 0,
           "max": 0
+        },
+        {
+          "kind": "unchanged",
+          "paths": [
+            "state.player.coins",
+            "state.inventory",
+            "state.learning"
+          ]
         }
       ]
     },
@@ -123,6 +226,22 @@
           "kind": "delta",
           "path": "state.player.coins",
           "value": 0
+        },
+        {
+          "kind": "calls",
+          "tool": "world_practice",
+          "args": {
+            "skill": "识字"
+          },
+          "min": 1,
+          "max": 1,
+          "success": true
+        },
+        {
+          "kind": "unchanged",
+          "paths": [
+            "state.inventory"
+          ]
         }
       ]
     },
@@ -133,6 +252,13 @@
           "kind": "equals",
           "path": "state.location",
           "value": "loc_hw"
+        },
+        {
+          "kind": "unchanged",
+          "paths": [
+            "state.player.coins",
+            "state.inventory"
+          ]
         }
       ],
       "expectedTools": [

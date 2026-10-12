@@ -6,6 +6,7 @@ import {hashContent,readApprovedContent} from './content-pipeline.mjs';
 import {depthEntries,contextFor,patchDraft,applyDepthDraft,validateDraft,validatePatchResults,checkIncrementalReview} from './npc-depth-content.mjs';
 import {loadDepthConfig,depthFoundation,prepareDepthRevision} from './npc-depth.mjs';
 import assert from 'node:assert/strict';
+import {replayFirstSourceEvidence} from './npc-depth-source-evidence.mjs';
 import {randomUUID} from 'node:crypto';
 import {validateNpcDepth,validateNpcProfiles,legacyTraitsAuditIds} from './npc-profile-validation.mjs';
 export const batchContract='npc-depth-batch-v1';
@@ -19,11 +20,12 @@ export async function prepareNpcDepth({manifest,worldRoot,world:snapshot}={}){
  let config=await loadDepthConfig({design});if(plan.authoredBackground){const source=path.resolve(target,plan.authoredBackground);assert.ok(!path.relative(target,source).startsWith('..')&&!/secrets\.json$/i.test(source),'作者出处路径非法');const bundle=await read(source);assert.equal(hashContent(bundle),plan.authoredBackgroundHash,'新出处hash过期');config={...config,authoredBackground:bundle};}const world=snapshot??await loadWorld(target),base=await read(path.join(root,'base.json'));
  const reference={...world,npcs:world.npcs.map(n=>base.find(b=>b.id===n.id)??n)};let entries=depthEntries(base,config,reference),foundation=depthFoundation(entries,reference,config.revision),incremental=null;
  try{incremental=await read(path.join(root,'incremental-proof.json'));}catch(e){if(e.code!=='ENOENT')throw e;}
- if(incremental){const prepared=await prepareDepthRevision({design,root,worldRoot:target,controlledRevision:path.resolve(root,incremental.planFile),authorizationHash:incremental.authorizationHash,authoredBackground:incremental.backgroundFile?path.resolve(root,incremental.backgroundFile):undefined});entries=prepared.entries;foundation=prepared.foundation;incremental={...incremental,prepared};}
+ if(incremental){const prepared=await prepareDepthRevision({design,root,worldRoot:target,controlledRevision:path.resolve(root,incremental.planFile),authorizationHash:incremental.authorizationHash,authoredBackground:incremental.backgroundFile?path.resolve(root,incremental.backgroundFile):undefined,sourceCheckoutEvidence:incremental.sourceCheckoutEvidence?path.resolve(root,incremental.sourceCheckoutEvidence.file):undefined});entries=prepared.entries;foundation=prepared.foundation;incremental={...incremental,prepared};}
  for(const entry of entries){const current=world.npcs.find(n=>n.id===entry.id);assert.ok(current,`正式人物缺失 ${entry.id}`);mergeEntry(current,entry,patchDraft(entry));}
  assert.equal(hashContent(foundation),plan.foundationHash,'发布清单骨架指纹已过期');assert.equal(hashContent(await read(path.join(root,'foundation.json'))),hashContent(foundation),'冻结骨架或引用事实已改变');
  if(!incremental)assert.deepEqual(await read(path.join(root,'candidate.json')),entries.map(patchDraft),'冻结候选已篡改');
  const reviewContext=e=>incremental?.prepared.contexts.get(e.id)??contextFor(e,reference);
+ await replayFirstSourceEvidence({root,worldRoot:target,entries,world:reference,foundation,revision:config.revision,contextFor:reviewContext});
  const drafts=await readApprovedContent(root,entries,{contextFor:reviewContext,revision:config.revision});assert.equal(drafts.length,entries.length,'并非所有人物均已审核通过');
  const summary=await read(path.join(root,'summary.json')),covered=[];
  for(const batch of summary.batches){

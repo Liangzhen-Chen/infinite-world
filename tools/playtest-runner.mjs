@@ -29,7 +29,7 @@ export async function createPlaytestServer({world,seed,plannerClient,consistency
     return{api,directory,close:async()=>{await new Promise(resolve=>server.close(resolve));if(!persistentDirectory)await fs.rm(directory,{recursive:true,force:true});}};
 }
 
-export async function runPlaytest({scenario,api,client,bundle,attempt=1,processMessages=messages=>messages,countTokens=null,historyWindow={},session=null}={}){
+export async function runPlaytest({scenario,api,client,bundle,attempt=1,processMessages=messages=>messages,countTokens=null,historyWindow={},session=null,stopOnFailure=false}={}){
     const settings=generationSettings(bundle.generation);
     countTokens??=await loadHistoryTokenizer();let historyCursor=structuredClone(session?.historyCursor??null);
     const tools=toolDefinitions(),allowed=new Set(tools.map(row=>row.function.name));
@@ -137,6 +137,7 @@ export async function runPlaytest({scenario,api,client,bundle,attempt=1,processM
                 report.player=view.document.state.player;report.minute=view.document.state.minute;report.location=view.document.state.location;
             }
         }
+        if(stopOnFailure&&report.errors.length)break;
     }
     const assertions=reports.flatMap(row=>row.assertions),passed=assertions.filter(row=>row.pass).length;
     const ledgerPass=assertions.length>0&&passed===assertions.length;
