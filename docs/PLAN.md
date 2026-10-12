@@ -20,13 +20,15 @@
 
 ## 最新调度与门槛
 
-2026-10-12 用户最新授权“追加预算 重开没问题我授权 只要高效”，覆盖旧T06/T07/T08冻结及单卡追加需决定的限制，T09允许增额，T17修好源缺陷后允许新一轮真实验收。旧失败与原账继续保留；部署、原存档和补粮仍未授权。T27/T30及T30-R1/T34及T34-R1/T45/T46已合，不重复派工；T35/T41继续各自原卡，所有权不变。
+2026-10-12 用户最新授权“追加预算 重开没问题我授权 只要高效”，覆盖旧T06/T07/T08冻结及单卡追加需决定的限制，T09允许增额，T17修好源缺陷后允许新一轮真实验收。旧失败与原账继续保留；部署、原存档和补粮仍未授权。T27/T30及T30-R1/T34及T34-R1/T45/T46已合，不重复派工；其他活动卡沿主会话最新调度，所有权不变。
 
-下一入口是T49零模型补齐显式增额与受控重开。T06/T07/T08可在各自候选树并行准备实质修订，模型独占顺序为T06双人闭合→T08剩余及六处家庭缺口→T07失效/未审→T09首审，先完成最接近闭合的村。每卡先一个ID，累计新调用及预留最多0.50元；完整单次上界不适配时零调用停止，不截正文。协议和源覆盖确认后沿同授权继续，仅审实际失败、未审或有真实失效证据的ID；合格且未变的L2复用，L4仍实际阅读。前一卡遇停止线就保存证据并让出模型槽，不阻断其他人物。
+T49已合，T06榆坡30人已正式发布。T08于59fca09停止，17次新L2后累计4.21283504/4.5元；23passed/7manual含五人共享背景失效，不等于23人来源闭合。T07当前独占模型并使用同一manifest，T09在其后首审；T08先按下卡零模型定位，闭合受授权叶及鞠舒次数阻断，不抢槽。T48正式预检已兼容T46/T49。未变合格L2继续复用，L4实际阅读；完整请求上界不适配就未发停止，不截正文。
 
-T48只适配T09正式预检，排在其首审前，与T49公共工具定版串行验收，不新建审核流水线。四村候选经L1/L2/L4、事件闭合与预演后由主会话沿T11入口整合；人物深度审计与本轮引用事件闭包整合后再做T17新轮；其他目录导致的release失败仍保留，不用全局构建造成M2与法术发布的循环依赖。后续仍人物→M2→150法术/40首领→白石LOD0→W5→M3→M5/M6/M7→M8。人物优先，空槽只做无重叠的既有机制卡；T35/T41不被本次入口卡占文件，T18零模型来源准备可先行。
+T07自然结束并释放模型/预算锁后，主会话核对原共享账的spent、reserved和未用额度，再按已授权追加预算作串行修订。现world/design/w1-reopen-authorization.json已被原grant/proof按hash冻结，不能直接改文件；保留其原件及旧allocation，沿原账追加可追溯的授权修订凭证和额度差额，工具仅补所需继承支持，不换nonce重领。五人来源变更须显式补齐ID/叶权限；鞠舒第三次不包含在本卡，仍待真正决定。全程不提高波次20/goal100、不释放未知0.083736。当前只能准备差异，不能并行改公共工具、manifest或额度。
 
-共享账快照spent=10.81767864、未知reserved=0.083736，原W1波次20元，剩余上界9.09858536。以下是本次增额后的累计单卡上限，原allocation和grant前快照留档，不能从零记新卡；T09旧花费为0。
+T17-A可现在零模型准备。指南D.3要求原18人完整档和N1–N17至少12项/90%、十天离屏；D.6允许W1在M2期间并行。因此河湾32人及本轮实际引用事件/事实闭包核验后，可先跑T17-B，无须等苇汀、砾泉、桑坂全部闭合。保留完整正式世界与动态出处guard；出现未批准实际人物依赖就停止。河湾专项通过不关闭T11-C，也不替代C.4/C.5的里程碑验收。人物模型优先，T07/T09结束或遇停止线后让槽给已就绪T17-B；T08只有真正解除阻碍才回队列。T18零模型来源准备可并行，后续原完整目标顺序不变。
+
+以下保留首次增额前历史快照：spent=10.81767864、未知reserved=0.083736，当时波次20元、剩余9.09858536；表内余额不是当前可用额。原allocation和grant留档，不能从零记新卡；当前T08仅余0.28716496，T07运行中的余额以原账为准。
 
 | 原卡 | 原上限→新上限 | 追加额度 | 扣旧spent及reserved后最多可再用 |
 |---|---:|---:|---:|
@@ -35,13 +37,15 @@ T48只适配T09正式预检，排在其首审前，与T49公共工具定版串�
 | T08 | 3→4.5 | 1.5 | 1.62939256 |
 | T09 | 3→4.5 | 1.5 | 4.5 |
 
-四卡剩余合计8.45436256元，波次保留0.64422280元未分配；首ID的0.50元是卡内试运行上限，非额外授额。按正式完整请求最高费率预留，逐次结算及确定未发退款后才推进；未知0.083736不释放。T09原120请求、373叶/15背景、172原hash/60私密风险保留，旧11.497666–13.315548元只是全30人首轮上界合计，不作实际账单或整批预付。任何增额都需在原账记录授权/旧值/新值/时间并幂等；不得提高波次20或goal100。余额不足即未发停队列，主会话可在本次用户授权与剩余额度内重新分配，不能另起空账。
+该历史快照四卡剩余合计8.45436256元，波次当时保留0.64422280元未分配；首ID的0.50元是卡内试运行上限，非额外授额。按正式完整请求最高费率预留，逐次结算及确定未发退款后才推进；未知0.083736不释放。T09原120请求、373叶/15背景、172原hash/60私密风险保留，旧11.497666–13.315548元只是全30人首轮上界合计，不作实际账单或整批预付。任何增额都需在原账记录授权/旧值/新值/时间并幂等；不得提高波次20或goal100。余额不足即未发停队列，主会话可在本次用户授权与剩余额度内重新分配，不能另起空账。
 
 T17旧spent=0.28484248、reserved=6.372890、upper=6.65773248保留；新轮先1元试运行，确认正式源守卫与账本后本轮新增最多8元，含试运行及所有角色/复测费用，合计上界14.65773248仍低于原单轮30。旧run不清零，新轮绑定旧run与此次授权并汇总旧未知预留；与内容账分开，统一计goal100。主会话授槽前去重核对全部历史费用及预留，无法核齐则只做零模型准备，不能把100减局部快照充余额。
 
 受控重开使用固定授权标识user-reopen-20261012-01，逐卡绑定实际旧记录与源hash、修订ID/叶路径和有界新尝试记录。每轮仍最多两种实质修法及一次规划，失败后停该块，不反复更换授权标识；同文重复送审不算新修法。L2强审、逐flag+随机5的L4和波次评分不降，原缺失provider原文不得补造。
 
-正式仍152full/294名册、全体1517缺口，新增人口禁令保持。T28存档undefined已修、相关31/32，旧候选release与CLI前置未闭合；本次具体恢复队列不包含T28，先做人物，禁止借T31绕路。R01–R18完整目标保留。T35释放magic后接T36/T37，T41后接T42；T38/T43只在文件锁允许且不占人物槽时执行，T39接T38、T40接T42、T44接T38/T42。
+正式仍152full/294名册、榆坡发布后全体1192缺口，新增人口禁令保持。T28存档undefined已修、相关31/32，旧候选release与CLI前置未闭合；本次具体恢复队列不包含T28，先做人物，禁止借T31绕路。R01–R18完整目标保留。T35释放magic后接T36/T37，T41后接T42；T38/T43只在文件锁允许且不占人物槽时执行，T39接T38、T40接T42、T44接T38/T42。
+
+review-002-yp=782a49e阶段审核通过，范围限T06正式发布与c64163d修订。已读review-001以来stat及t06-published-merged-core.log，抽样正式裘砚与汤桓：核签留白待确认、补墙收尾及各自未知事项可进入交谈，两人共同记忆仅同村往来；现金33/75、原库存与旧记忆均与冻结before一致。npc-depth-yp.test.mjs分别断言首次20条事件闭合及已发布重发零差异，合后CORE40的现成日志通过；本次未复跑。用户酒馆仍旧版，全体W1未关闭。
 
 ## 近期完整任务卡
 
@@ -55,15 +59,9 @@ T17旧spent=0.28484248、reserved=6.372890、upper=6.65773248保留；新轮先1
 
 ### T05 已完成：定点叶子合同/冻结指纹/可迁移manifest与预演发布已合入；相关与合后CORE通过，无真实模型。 完整验收见[已完成卡](PLAN_已完成.md#t05)。
 
-### T06 榆坡双人闭合【授权受控重开，模型顺位1】
+### T06 已完成：榆坡30人真实L1/L2/L4、T04与事件闭合及正式发布已合；28旧通过复用、双人新L2通过，L4五抽样mean4.37/min3，重发零差异，不再派工。
 
-拥有world/design/w1-yp-depth-rest.mjs、world/drafts/w1/yp-depth-rest/及tests/npc-depth-yp.test.mjs。沿原card/候选，先冻结汤桓、裘砚旧记录及原源hash；把共享旧事双方同步改为原源确认的认识/同村往来，去掉无来源货签、约工或当面相认细节。仅改实际失败叶及其事件对应方；不把裘砚旧通过当新事件已审。
-
-依T49，用npc-depth-review.mjs显式授权轮逐ID复审，不付费重回显候选；先汤桓，协议/来源通过后裘砚，其他未变合格L2复用。总限2.5元，旧spent1.82866384/未知0.083736保留，最多再用0.58760016；首ID≤0.50，停止线同开头。
-
-验收tests/{npc-depth-yp,npc-depth-batch-publication}.test.mjs及CORE；双人新L2、受影响批L4实际逐flag+随机5、30人T04零缺口、事件完全相容、发布预演无缺口后交T11。原冻结档/正确兄弟叶不改，不增人口。
-
-### T07 苇汀失效条目续审【授权受控重开，模型顺位3】
+### T07 苇汀失效条目续审【授权受控重开，当前独占模型】
 
 拥有world/design/w1-wt-depth.mjs、world/drafts/w1/wt-depth/及tests/npc-depth-wt.test.mjs。沿原controlled候选和sourced/l4-invalidations.json，逐条处理湛鸥7hard及真实L4失效；核对17未复审ID。已有12 passed只在实际失效或叶改动时重审。原源hash及钉死LF/CRLF出处凭证保留，新增修订继承旧proof，不覆盖旧规划。
 
@@ -75,17 +73,19 @@ T17旧spent=0.28484248、reserved=6.372890、upper=6.65773248保留；新轮先1
 
 同步patch-diff/plan的before及hash、candidate-after和必要freeze/report元数据；旧报告注明提议基准。原source/foundation/baseline、旧请求/record/proof不改。保留已补previousPlanFile/previousPlanHash/previousProofHash及换行凭证，不增权限或换nonce；CLI用hashContent现算新plan，禁硬码fcf449。不得删guard或降断言。
 
-原Sol在实际原tree用官方prepareDepthRevision零调用通过，输入root=sourced、design=reopen/design.mjs、controlledRevision=reopen/controlled-plan.json、authoredBackground=reopen/authored-background.json、sourceCheckoutEvidence=controlled/source-checkout-evidence.json；reopenAuthorization=world/design/w1-reopen-authorization.json，cardId=T07，worldRoot=world，authorizationHash现算。除world路径外以上相对wt-depth；不用offline helper替代。通过后原聊天等待主会话模型顺位3，沿原账完成真实L2/L4和预演。仍失败按原两修后一次规划停止线卡住，不拆卡再领机会。
+原Sol在实际原tree用官方prepareDepthRevision零调用通过，输入root=sourced、design=reopen/design.mjs、controlledRevision=reopen/controlled-plan.json、authoredBackground=reopen/authored-background.json、sourceCheckoutEvidence=controlled/source-checkout-evidence.json；reopenAuthorization=world/design/w1-reopen-authorization.json，cardId=T07，worldRoot=world，authorizationHash现算。除world路径外以上相对wt-depth；不用offline helper替代。当前原聊天已获独占模型槽，沿原账完成真实L2/L4和预演。仍失败按原两修后一次规划停止线卡住，不拆卡再领机会。
 
-### T08 砾泉失败与家庭缺口修订【授权受控重开，模型顺位2】
+### T08 砾泉最小修卡【零模型；整卡卡住】
 
-拥有world/design/w1-lq-depth.mjs、world/drafts/w1/lq-depth/及tests/npc-depth-lq.test.mjs。先读first-real-review-report.json的sourceFindings：luanpei、yunxiu、jushu、qinglan、yike、nieya六人家庭叶逐原源修正，未说出口不写成已讨论；即使属于17 passed也按实际失效重审。原4 manual/9 pending逐ID处理，有效未变L2不重跑。
+据59fca09的reopen-complete/{next-gap.txt,background-source-block.json,neighbor-request-guard-block.json,stopped-report.json}。23passed/7manual，五人背景失效，最多21闭合；余额0.28716496。鞠舒两次已尽，第三次须真正决定，增额不重置次数。
 
-依T49，沿author-v2/first-review、原card T08及共享账，用显式授权轮冻结旧record/源hash后实质改失败叶；先一名家庭缺口ID≤0.50元确认，随后只续修失败/待审。复用合法已存draft或冻结候选，禁止反复付费回显。总限4.5，旧spent2.87060744，最多再用1.62939256；旧80请求和原文缺失记录保留。
+拥有world/design/w1-lq-depth.mjs、world/drafts/w1/lq-depth/；T07释放后才接tools/{npc-depth,npc-depth-content}.mjs及tests/{npc-depth-lq,npc-depth-reopen}.test.mjs。沿continuation-plan父proof重放，只刷新当前entry派生revisions.after，保留原源；官方prepare/full/compact一致，先验崔帆/衡庐四叶，不跳guard。
 
-验收npc-depth-lq、来源/修订相关及CORE；六缺口清零，30人L1/L2、真实L4逐flag+随机5及评分，事件闭合/T04/预演后交T11。私密/知识门槛与停止线同开头。
+共享源仅另存memory_lq_depth_readback修订：narrative、designedFacts[2]、sourceRefs[12,13].publicSpeech、associations五份narrative/factsHash及匡叶viewpoint；五人memorySeeds[2]与knowledge.known[2]同步。依据匡叶原occupation/goals及三项risks，删“被本人回绝”，只谈本人确认原则；原秘密/旧记忆/refs哈希和参与者不改。新背景revision继承父源，foundation.revision不换；旧proof读旧背景，新元数据仅验本事件差异。
 
-### T09 桑坂逐ID首审【授权增额，模型顺位4】
+现grant缺沙萝及五人完整共享叶权限，不能执行该源修订；先交精确差异，依调度串行补授权支持。其余仅七manual的hard叶；未变通过者复用。来源五人重审后才L4/闭合预演；相关及CORE，保留旧80请求与费用，禁止新nonce/重领。
+
+### T09 桑坂逐ID首审【授权增额，T07释放模型后】
 
 拥有world/design/w1-sb-depth.mjs、world/drafts/w1/sb-depth/及tests/npc-depth-sb.test.mjs；与T48串行。保留30候选/manifest、172原hash/60私密风险及373叶/15背景，11原附件全出站，不重起草正文。
 
@@ -97,13 +97,13 @@ T17旧spent=0.28484248、reserved=6.372890、upper=6.65773248保留；新轮先1
 
 ### T11 人物分批原子整合与全体质量门槛
 
-调度依据：用户明确的硬限制是第 1、2 项完成前不得新增人口，并要求卡住后继续其他块；人物优先级不等于让已卡住 T06 阻断全部无关验收。指南 D.3 第 1 项要求原有 18 人完整档，D.6 的 W1 允许 M2 期间并行；C.4 的全量测试及 release 仍是里程碑关闭条件。故允许先整合已完整审核的河湾 32 人并进行 M2 专项验收。T06按本次授权受控重开，原失败与新增轮分别记录，不拆分失败记录规避停止规则，不增加人口，不将分批整合称为全体人物达标。
+调度依据：用户明确的硬限制是第 1、2 项完成前不得新增人口，并要求卡住后继续其他块；人物优先级不应让个别村卡住阻断无关验收。指南 D.3 第 1 项要求原有 18 人完整档，D.6 的 W1 允许 M2 期间并行；C.4 的全量测试及 release 仍是里程碑关闭条件。故允许先整合已完整审核的河湾 32 人并进行 M2 专项验收。T06现已正式发布，原失败与新增轮分别保留；不增加人口，不将分批整合称为全体人物达标。
 
 T11-A 已完成：同快照原子预演/写入、事件闭合与全体full的release/final强门槛已合；原验收见 `git show bb4c575:docs/PLAN.md`，不重建发布器。
 
-T11-B 已完成：da431e4正式整合河湾32人、15事件闭合，幂等/旧记忆与原17traits保留；全体1517缺口仍拒release，原88项合后证据见PROGRESS，原验收同上。
+T11-B 已完成：da431e4正式整合河湾32人、15事件闭合，幂等/旧记忆与原17traits保留；当时全体1517缺口仍拒release，原88项合后证据见PROGRESS，原验收同上。
 
-T11-C 全体人物质量关闭：只有 T06–T10 全部所需人物和事件完成并整合后才可关闭。全体正式 full 的 validateNpcDepth/findNpcRuleWording 零缺口，原17traits固定值不变，随机10人平均至少4、单项至少3；主会话跑 npm run build:release 并须成功，保留其他类别失败；必要相关测试和CORE通过后打 review-w1-depth 并派审核。依赖全体内容卡及 T11-A/B，当前待T06–T09本次恢复闭合，不通过拆批假称本卡全部完成。原第1、2项完成前不新增人口的限制一直有效。
+T11-C 全体人物质量关闭：只有 T06–T10 全部所需人物和事件完成并整合后才可关闭。全体正式 full 的 validateNpcDepth/findNpcRuleWording 零缺口，原17traits固定值不变，随机10人平均至少4、单项至少3；主会话跑 npm run build:release 并须成功，保留其他类别失败；必要相关测试和CORE通过后打 review-w1-depth 并派审核。依赖全体内容卡及 T11-A/B，当前待T07–T09恢复闭合，不通过拆批假称本卡全部完成。原第1、2项完成前不新增人口的限制一直有效。
 
 ### T12 已完成：单N完整审核及旧报告CLI已合入；mock/相关/合后CORE通过，真实调用0，旧失败不改。 完整验收见[已完成卡](PLAN_已完成.md#t12)。
 
@@ -115,13 +115,21 @@ T11-C 全体人物质量关闭：只有 T06–T10 全部所需人物和事件完
 
 ### T16 已完成：有效N/账本/知情/盲辨及工具实测口径合入，相关18/合后CORE过；原真实失败报告不变，模型0。 完整验收见[已完成卡](PLAN_已完成.md#t16)。
 
-### T17 M2新轮真实验收【已授权，人物闭合后】
+### T17-A 新轮来源准备【零模型，可先执行】
 
-拥有原docs/测试报告/20261012-T17/的运行/守卫脚本及新增本轮子目录；必要tools/playtests.mjs、playtest-budget.mjs及tests/playtest-budget.test.mjs，禁止碰T35/T41文件。旧run与十任务executions=2/recoveryRuns=1不改，旧有效N=0/失败/6.65773248费用上界保留。
+拥有新增docs/测试报告/20261012-T17-new/内preflight.mjs、runtime-guard.mjs、guard-check.mjs及输入证据；只读F:/dnd-wt/T17原报告/脚本，不覆盖旧run。复用原守卫，修build-card.reference的“其他已登记地点”：按正式locations的id/name及渲染位置、整段hash核验，仅该span作地名投影。同名正文、秘密混入、地名篡改和实际工具对象仍走出处闭包。
 
-先修静态地点名“某某户居处”的原源投影：绑定正式build-card.reference逐字段hash，区分公开地名和NPC私密正文，不扩全局白名单；完整提示栈零模型核查姓名同串、地名篡改和秘密混入都可判。人物深度/引用闭包整合后冻结新版输入，新增授权轮关联旧run，禁止伪造旧resume计数。
+以当前loadWorld、loadPromptBundle及host转换器冻结输入。逐人/逐事件核对T11-B已发布河湾32人及原18人完整档；榆坡发布改变全world hash，不能要求等于旧T11-B全量hash。保留旧公开问题行与严格名称索引凭证；核验十场、主持/审核/一致性/离屏请求及工具目标，未知实际依赖拒发，不删完整世界。
 
-先1元验证源守卫/账本，再累计新增≤8元含全部角色/重试，旧加新≤14.65773248且受30/goal100。跑原T17相关及CORE；真实至少12项N/90%、零知情泄漏、十天行动及工具实测，完整失败留证。每条真实失败最多复测一次；守卫/预算未过零调用，不部署/原档。
+验收沿正常playtests运行链的隔离HTTP零模型预检、原拒发请求回放与上述反例、tests/{playtest-runner,playtest-npc-evidence,playtest-budget}.test.mjs及CORE。只刷新证据，不新建守卫框架；通过交T17-B，付费前若正式输入变化须重新冻结。
+
+### T17-B 河湾M2新轮【已授权；依T17-A与模型槽】
+
+拥有新轮报告目录的运行/汇总证据；必要tools/playtest-budget.mjs及tests/playtest-budget.test.mjs只做旧新轮关联和累计限额，确需CLI接线才改tools/playtests.mjs。主会话确认无文件锁后派工。旧run十任务executions=2/recoveryRuns=1、spent0.28484248/unknown reserved6.372890不变。
+
+沿test:playtests正常HTTP/检索/真实提示栈，复用旧preflight十场ID、repeat=1、parallel=4；用新run-id绑定旧run与用户授权，禁止第三次旧resume。先新增≤1元验证来源和账本，再累计新增≤8元，旧新上界≤14.65773248且受单轮30/goal100；每笔预留与全部模型角色费用入账，未知不退，历史去重核不齐则零调用。
+
+验收N1–N17至少12项完整有效、通过率≥90%；N6/N16零泄漏有实测，N17离开十天回来见自主行动，N12真实盲辨；账本/时间/存档100%，工具选择/参数/target分母如实报告。每条真实失败最多复测一次，旧失败保留；相关及CORE，不部署。专项可先过，M2关闭仍待C.4/C.5，T11-C全体门槛不变。
 
 ### T18 已审核 14 法术的学习来源
 
@@ -155,7 +163,7 @@ T11-C 全体人物质量关闭：只有 T06–T10 全部所需人物和事件完
 
 ## 下一批完整卡：T27–T44【按实际状态选择】
 
-调度以开头最新授权段为准；T06–T09优先恢复，T17待人物闭合，T11-B已完成。本批不抢占其模型槽或同文件工作。只有前序卡卡住、等待独占资源或无可执行工作时，主会话才选择下列无依赖块。源码机制可在人物阻断期间推进，模型验收和内容发布另按卡内依赖。新增人口仍禁止，T06仅按本次受控授权重开，T11-C及全体full的release/final门槛不变；原23项预期失败保留。所有世界定义仅写world/，测试在隔离存档，CORE指三个既定核心文件，提交前必跑。新增测试/CLI在卡内明确注明，不能当现成通过记录。
+调度以开头最新授权段为准；T06已完成，T07/T09人物优先，T08卡住，T17依河湾实际引用闭包可先专项，T11-B已完成。本批不抢占其模型槽或同文件工作。只有前序卡卡住、等待独占资源或无可执行工作时，主会话才选择下列无依赖块。源码机制可在人物阻断期间推进，模型验收和内容发布另按卡内依赖。新增人口仍禁止，T06已正式发布，T11-C及全体full的release/final门槛不变；原23项预期失败保留。所有世界定义仅写world/，测试在隔离存档，CORE指三个既定核心文件，提交前必跑。新增测试/CLI在卡内明确注明，不能当现成通过记录。
 
 本批细化R01/R02/R03/R07/R08的一部分；这些粗卡仍保存未覆盖范围。M4当前已有共享伤害、防护、状态、物件热过程、首领反制；M3已有编年史/检索/审查/历史窗口；不重新建同类系统。T34–T37只补机制图明确标missing-consumer的四类。治疗病理、空气/地形/仪式等剩余消费者、NPC教学成长、完整政体及远方内容仍在原粗卡，做完本批再细化，不以本批代替全部指南。
 
@@ -251,7 +259,7 @@ T28-R1修好新回执undefined规范化并保留严格篡改拒绝，相关31/32
 
 后续卡沿开头队列和实际文件锁调度；T40依赖T42，T42不依赖T40。T31依T28仍阻断，不借M3接走未实现CLI；T32/T33尚无真实模型资格。
 
-扩波依赖不变：R04法术150与R05首领40含8智能存在，先T18/T19及适用消费者/真实平衡；缺消费者保持待细化，不用研究型标签减少正式目标。R06新人口严格依T11-C全体达标及原第1项、T17验收、T19，当前不可执行；R14再依W1完成。M5/M3机制或局部专项通过不会解禁人口，也不替代全体full构建门槛。需要用户决定的原档、部署继续跳过；T06本次恢复仍守新轮停止线，不在本批增开询问。
+扩波依赖不变：R04法术150与R05首领40含8智能存在，先T18/T19及适用消费者/真实平衡；缺消费者保持待细化，不用研究型标签减少正式目标。R06新人口严格依T11-C全体达标及原第1项、T17验收、T19，当前不可执行；R14再依W1完成。M5/M3机制或局部专项通过不会解禁人口，也不替代全体full构建门槛。需要用户决定的原档、部署继续跳过；T06已关闭；T08依本次停止判断，不在本批绕过。
 
 ### T45 已完成：54e0201 首次附件/完整请求预留/发布重放已由主会话以 a64f348 合入；相关74与CORE38实跑全过，bb4c575已登记。首次draft/L2实际出站及预演重放、篡改拒绝合同保留，勿重派；完整验收见 `git show bb4c575:docs/PLAN.md`，mock不等于T08真实审核。
 
@@ -267,7 +275,7 @@ T28-R1修好新回执undefined规范化并保留严格篡改拒绝，相关31/32
 
 依T49定版后刷新直接L2首审请求；原draft请求仍留作历史对照。验收新测试、npc-depth-sb及CORE；373叶/15背景/11附件和原hash不变。实测不足整轮零调用、拒绝停队列；汇报每ID预留与新4.5元及旧账余额的关系，旧总和不作预付。模型/费用0，未知保留；通过后交T09，失败遵守两修停止线。
 
-### T49 显式增额与受控重开入口【零模型，下一执行卡】
+### T49 显式增额与受控重开入口【已完成，原验收保留】
 
 仅拥有tools/{content-budget,content-pipeline,npc-depth,npc-depth-review,npc-depth-content,publish-npc-depth}.mjs及对应测试，新增tests/npc-depth-reopen.test.mjs、world/design/w1-reopen-authorization.json；不改人物正文。与T06–T09模型阶段串行，不碰T35/T41。
 
