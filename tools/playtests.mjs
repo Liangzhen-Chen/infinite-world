@@ -12,6 +12,8 @@ import {reviewNpcRequirements,summarizeNpcAcceptance}from'./npc-acceptance.mjs';
 import * as OpenCC from'opencc-js';
 import {execFile}from'node:child_process';
 import {promisify}from'node:util';
+import {pathToFileURL}from'node:url';
+import {loadHistoryTokenizer}from'./m3-history-tokenizer.mjs';
 import {openPlaytestBudget,openPlaytestTape,readOptional}from'./playtest-budget.mjs';
 const simplify=OpenCC.Converter({from:'tw',to:'cn'});
 
@@ -30,12 +32,15 @@ if(only.some(id=>!all.some(row=>row.id===id)))throw new Error('指定会话不�
 const scenarios=all.filter(row=>!only.length||only.includes(row.id));
 for(const scenario of scenarios)if(scenario.turns.length<8||scenario.turns.length>20||scenario.turns.some(row=>!Array.isArray(row.assertions)||!row.assertions.length))throw new Error(`${scenario.id} 不满足8–20回合与逐回合断言`);
 const bundle=await loadPromptBundle();
-const host=await loadHostPromptProcessor();
+const host=await loadHostPromptProcessor(option('--host-installation'));
+const countTokens=option('--host-installation')?await loadHistoryTokenizer(option('--host-installation')):null;
 const blocklist=JSON.parse(await fs.readFile(path.join(root,'world/meta/blocklist.json'),'utf8'));
 const tasks=scenarios.flatMap(scenario=>Array.from({length:repetitions},(_,index)=>({scenario,attempt:index+1}))),results=[];
 const common=(await promisify(execFile)('git',['rev-parse','--git-common-dir'],{cwd:root})).stdout.trim();
 const registryDir=path.join(path.resolve(root,common),'playtest-runs');
 const identity={promptHash:digest(bundle),scenariosHash:digest(scenarios),providerProcessing:host.identity,repetitions,milestone};
+const proof=option('--budget-proof')?await import(pathToFileURL(path.resolve(root,option('--budget-proof'))).href):null;
+if(proof){await proof.refreshProof();identity.authorization=proof.authorization;}
 let legacyReport=null;
 if(option('--legacy-report')){
  if(option('--legacy-reserved')===undefined)throw Error('历史费用接续须明确 --legacy-reserved 未知请求上界');
@@ -44,6 +49,7 @@ if(option('--legacy-report')){
  legacyReport={report:JSON.parse(await fs.readFile(legacyFile,'utf8')),reservedYuan:Number(option('--legacy-reserved'))};
 }
 const client=await openPlaytestBudget({registryDir,runDir:destination,runId,cardId,increment,identity,legacyReport,
+ beforeReserve:proof?.beforeReserve,requireResponseId:Boolean(proof),
  client:new DeepSeekClient({budgetYuan:30,logFile:path.join(registryDir,runId,'usage.jsonl')})});
 await fs.mkdir(destination,{recursive:true});
 const taskDirectory=path.join(client.directory,'tasks');await fs.mkdir(taskDirectory,{recursive:true});
@@ -91,6 +97,11 @@ async function score(result,scenario){
 }
 try{
     server=await createPlaytestServer({plannerClient:client,directory:path.join(client.directory,'server')});
+    if(proof&&!await readOptional(path.join(path.dirname(path.resolve(root,option('--budget-proof'))),'initial-probe.json'))){
+        const initial=scenarios.find(s=>s.id==='npc_social')??scenarios[0];
+        const result=await runPlaytest({scenario:{...initial,id:initial.id+'-probe',requirements:[],turns:initial.turns.slice(0,1)},api:server.api,client,bundle,processMessages:host.process,countTokens,stopOnFailure:true});
+        await proof.verifyProbe(result,client);console.log('初探正式源/账本100%通过；继续同run新增累计≤8元');
+    }
     // Reports are projections of durable tasks, never the source of resume state.
     for(const {scenario,attempt}of tasks){const stored=await readOptional(path.join(taskDirectory,`${digest([cardId,scenario.id,attempt])}.json`));if(stored?.result)results.push(stored.result);}
     await save();
@@ -108,7 +119,7 @@ try{
                 if(task.gameResult&&!task.gameResult.turns.some(row=>row.errors.length))result=structuredClone(task.gameResult);
                 else{
                     const tape=await openPlaytestTape({file:taskFile+'.tape.json',identity:{runId,cardId,scenario,attempt,promptHash:identity.promptHash},api:server.api,client});
-                    result=await runPlaytest({scenario,attempt,api:tape.api,client:tape.client,bundle,processMessages:host.process,stopOnFailure:true});
+                    result=await runPlaytest({scenario,attempt,api:tape.api,client:tape.client,bundle,processMessages:host.process,countTokens,stopOnFailure:true});
                     task.gameResult=structuredClone(result);await atomicJSON(taskFile,task);
                 }
             }

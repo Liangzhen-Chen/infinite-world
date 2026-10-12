@@ -8,7 +8,7 @@ import {once} from 'node:events';
 import {execFile} from 'node:child_process';
 import {promisify} from 'node:util';
 import {fileURLToPath,pathToFileURL} from 'node:url';
-import {openPlaytestBudget,openPlaytestTape,requestCeiling} from '../tools/playtest-budget.mjs';
+import {openPlaytestBudget,openPlaytestTape,requestCeiling,budgetUpperProof} from '../tools/playtest-budget.mjs';
 
 const identity={scenariosHash:'frozen',promptHash:'source'};
 const body={messages:[{role:'user',content:'测试中文请求'}],max_tokens:1800};
@@ -20,6 +20,19 @@ async function setup(t,client,increment=30){
  const options={registryDir:path.join(directory,'registry'),runDir:path.join(directory,'reports'),runId:'T17-wave',cardId:'T17',increment,identity,client};
  const budget=await openPlaytestBudget(options);t.after(()=>budget.close());return {directory,options,budget};
 }
+test('完整保守上界允许历史归属未知；缺金额/hash和超限均拒绝',()=>{
+ const args={oldSpentYuan:.28484248,oldReservedYuan:6.37289,legacyYuan:5.77063128,content:[{shared:true,spentYuan:14.7517424,reservedYuan:.083736,hash:'a'.repeat(64)},{spentYuan:19.5480174,reservedYuan:0,hash:'b'.repeat(64)}]};
+ const proof=budgetUpperProof(args);assert.ok(proof.budgetUpperSafe);assert.ok(Math.abs(proof.roundUpperYuan-20.42836376)<1e-10);assert.ok(proof.goalUpperYuan<100);
+ assert.throws(()=>budgetUpperProof({...args,legacyYuan:undefined}),/金额缺失/);
+ assert.throws(()=>budgetUpperProof({...args,content:[{...args.content[0],hash:''}]}),/hash/);
+ assert.throws(()=>budgetUpperProof({...args,oldReservedYuan:30}),/超限/);
+ assert.throws(()=>budgetUpperProof({...args,extraYuan:100}),/超限/);
+});
+test('发送前预算proof拒绝时零provider调用；严格responseId缺失保留预留',async t=>{
+ let calls=0;const {budget,options}=await setup(t,{async generate(){calls++;const r=response();delete r.id;return r;}});await budget.close();
+ const refused=await openPlaytestBudget({...options,beforeReserve:()=>{throw Error('保守上界缺金额');}});await assert.rejects(refused.generate(body),/缺金额/);assert.equal(calls,0);assert.equal(refused.reserved,0);await refused.close();
+ const strict=await openPlaytestBudget({...options,requireResponseId:true,beforeReserve:()=>({budgetUpperSafe:true})});t.after(()=>strict.close());await assert.rejects(strict.generate(body),/responseId/);assert.equal(calls,1);assert.equal(strict.reserved,requestCeiling(body));assert.equal(strict.ledger.requests[Object.keys(strict.ledger.requests)[0]].request.messages[0].content,body.messages[0].content);
+});
 
 test('缓存只有真实 usage 才结算；同请求与重复 provider response 不双计或退款',async t=>{
  let calls=0;const {budget}=await setup(t,{async generate(){calls++;return response();}});

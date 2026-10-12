@@ -6,6 +6,16 @@ import {atomicJSON,digest} from '../server-plugin/storage.mjs';
 const amount=value=>Number.isFinite(value)&&value>=0;
 const safeId=value=>typeof value==='string'&&/^[a-zA-Z0-9_-]{1,100}$/.test(value)&&!['__proto__','prototype','constructor'].includes(value);
 const rates=Object.freeze({hit:.04,miss:2,output:8});
+export function budgetUpperProof({oldSpentYuan,oldReservedYuan,legacyYuan,content,extraYuan=0,newLimitYuan=8}){
+ if(![oldSpentYuan,oldReservedYuan,legacyYuan,extraYuan,newLimitYuan].every(amount)||newLimitYuan<=0||!Array.isArray(content)||!content.length)throw Error('完整预算金额缺失，拒绝发送');
+ for(const row of content)if(!amount(row.spentYuan)||!amount(row.reservedYuan)||typeof row.hash!=='string'||!/^[a-f0-9]{64}$/.test(row.hash))throw Error('预算来源/hash/金额缺失，拒绝发送');
+ const roundUpperYuan=oldSpentYuan+oldReservedYuan+legacyYuan+newLimitYuan;
+ const contentUpperYuan=content.reduce((n,row)=>n+(row.shared?20:row.spentYuan+row.reservedYuan),0);
+ if(content.filter(row=>row.shared).length!==1||content.some(row=>row.shared&&row.spentYuan+row.reservedYuan>20+1e-12))throw Error('共享内容20元上界不完整');
+ const goalUpperYuan=roundUpperYuan+contentUpperYuan+extraYuan;
+ if(roundUpperYuan>30+1e-12||goalUpperYuan>100+1e-12)throw Error('保守试玩/goal预算超限，拒绝发送');
+ return {budgetUpperSafe:true,roundUpperYuan,goalUpperYuan,contentUpperYuan,newLimitYuan};
+}
 export async function readOptional(file,fallback=null){try{return JSON.parse(await fs.readFile(file,'utf8'));}catch(error){if(error.code!=='ENOENT')throw error;return fallback;}}
 export function requestCeiling(body){
  const request={model:'deepseek-flash',max_tokens:1800,stream:false,thinking:{type:'disabled'},...body};
@@ -26,7 +36,7 @@ const role=label=>label.startsWith('consistency-rewrite:')?'rewrite':label.start
 
 // The registry is independent of report destinations. The CLI places it in
 // git's common directory so worktree changes cannot reset the same run.
-export async function openPlaytestBudget({registryDir,runId,cardId,increment,client,runDir,identity,legacyReport=null}){
+export async function openPlaytestBudget({registryDir,runId,cardId,increment,client,runDir,identity,legacyReport=null,beforeReserve=null,requireResponseId=false}){
  if(!safeId(runId)||!safeId(cardId)||!amount(increment)||increment<=0||increment>30)throw Error('须明确 run-id/card/increment；增量最多30元');
  const directory=path.join(path.resolve(registryDir),runId),file=path.join(directory,'budget.json'),lock=path.join(directory,'run.lock');
  await fs.mkdir(directory,{recursive:true});
@@ -87,16 +97,18 @@ export async function openPlaytestBudget({registryDir,runId,cardId,increment,cli
    row=ledger.requests[requestId];
    if(row){if(row.key!==key||row.card!==cardId)throw Error('恢复模型请求身份改变');if(row.status==='settled')return structuredClone(row.response);if(row.attempts.length>=2)throw Error('同一失败请求已重跑一次');}
    const ceiling=requestCeiling(body),card=ledger.cards[cardId];
+   const envelope=beforeReserve?await beforeReserve({ledger:structuredClone(ledger),ceiling,body,label}):null;
    if(ledger.spentYuan+ledger.reservedYuan+ceiling>30+1e-12||card.spentYuan+card.reservedYuan+ceiling>card.limitYuan+1e-12)throw Error('试玩波次或单卡增量费用不足，拒绝发送');
-   row??={key,card:cardId,label,role:role(label),attempts:[]};
+   row??={key,card:cardId,label,role:role(label),request:structuredClone(body),attempts:[]};
    if(row.status==='inflight')throw Error('同一请求正在发送');
-   row.attempts.push({reservedYuan:ceiling,status:'reserved',at:new Date().toISOString()});row.status='inflight';ledger.requests[requestId]=row;
+   row.attempts.push({reservedYuan:ceiling,status:'reserved',at:new Date().toISOString(),...(envelope?{envelope}: {})});row.status='inflight';ledger.requests[requestId]=row;
    ledger.reservedYuan+=ceiling;card.reservedYuan+=ceiling;await atomicJSON(file,ledger);return null;
   });
   if(cached)return cached;
   const attempt=row.attempts.at(-1);
   try{
    const response=await client.generate(body,label),cost=measuredCost(response);
+   if(requireResponseId&&(typeof response.id!=='string'||!response.id))throw Error('模型缺少 responseId，保留预留');
    await mutate(async()=>{
     if(cost>attempt.reservedYuan+1e-12){ledger.blocked='真实用量超出请求预留';throw Error('真实用量超出请求预留，停止');}
     if(response.id&&ledger.responseIds[response.id]&&ledger.responseIds[response.id]!==requestId)throw Error('provider 重复 response id，拒绝再次结算');
@@ -106,7 +118,7 @@ export async function openPlaytestBudget({registryDir,runId,cardId,increment,cli
     Object.assign(attempt,{status:'settled',costUpperYuan:cost,measurement:response.measurement??{usage:response.usage,costUpperYuan:cost}});
     row.status='settled';row.response=structuredClone(response);await atomicJSON(file,ledger);
    });return response;
-  }catch(error){await mutate(async()=>{attempt.status='unknown';attempt.error=error.message;row.status='unknown';await atomicJSON(file,ledger);});throw error;}
+  }catch(error){await mutate(async()=>{attempt.status='unknown';attempt.error=error.message;if(error.providerResponse)attempt.response=structuredClone(error.providerResponse);row.status='unknown';await atomicJSON(file,ledger);});throw error;}
  }
  // A process killed during generate cannot confirm failure or refund usage.
  await mutate(async()=>{for(const row of Object.values(ledger.requests))if(row.status==='inflight'){row.status='unknown';Object.assign(row.attempts.at(-1),{status:'unknown',error:'进程中断，结果未知'});}await atomicJSON(file,ledger);});
