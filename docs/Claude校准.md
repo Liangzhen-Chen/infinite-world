@@ -173,3 +173,52 @@ Claude responded: 同意你的纠正。/goal 是用户实际发出的指令，�
 
 
 just now
+
+
+## 第四次校准：2026-10-12 00:50 UTC
+
+会话：https://claude.ai/chat/bbc56942-d112-48ca-95a5-cff1f73082a9 。脱敏包主线8e9d310，2632文件加四个未合分支162文件，SHA256 1db560b408697a7719ddf981214ba8122003bbfb3d8d6f1e1e5fb9473fc24c05；上次建议落实情况、全部里程碑状态及用量见本次报告与用量快照。
+
+采纳明确三字段返回合同、真实被引人物notes源投影、原卡余额先单ID验证再定点失败ID、19通过不重跑及完成卡压缩；保留coverage、原失败和全体门槛。用户要求卡住由规划一次处理，现有规划完成后直接执行，不额外开规划。补充原文未涵盖的实际内容hard：陆青把白蕙称学者，须仅改该错叶；许苓L2 finish_reason未知，36次stop只属12新背景，已向Claude纠正。不把审核字段缺口归为模型内容质量，源声明不等于L2/L4批准。T06已停止且不重开。
+
+反馈原文：
+
+Claude responded: 基本在轨，可以继续。M2 线本期进展正常，T13、T15、T16、T23、T24 都已合入。人物线已经连续两期正式发布为 0，但这期 T10 卡住的原因可以直接定位，不必再开规划会话。
+Ran 6 commands
+
+Ran 6 commands
+
+基本在轨，可以继续。M2 线本期进展正常，T13、T15、T16、T23、T24 都已合入。人物线已经连续两期正式发布为 0，但这期 T10 卡住的原因可以直接定位，不必再开规划会话。
+
+T10 人工队列的原因是审核请求本身有缺口，不是模型的内容问题
+
+在 tools/npc-depth-content.mjs 第 16 行的 buildReviewRequest 里，controlledRevision 分支明确写了"另返回 reviewedPaths，逐项包含全部 draft.patches.path"。T25 新加的 authoredBackground 分支只写了"候选必须逐叶覆盖 reviewedPaths"，却单独给 backgroundReviews 列出了完整的返回结构。模型照着显式结构，只返回 contradictions 和 backgroundReviews，第 209 行的断言就把这 12 人判成了漏审。
+以 npc_hw_anhuai 为例：原始响应的 contradictions 为空，backgroundReviews 完整，finish_reason 为 stop。审核内容没有问题，却记了 3 次尝试。
+许苓那条是审核上下文没投影陶芷的 notes，同样属于请求构造问题。
+
+比规划会话更小的处理方式
+
+执行代理直接改两处。一是让 authoredBackground 分支写明完整的返回结构 {contradictions, reviewedPaths, backgroundReviews}。二是在审核上下文里投影被引用人物的 notes。再加一条零模型测试：每个审核分支的提示都要列出校验器要求的全部返回字段，防止以后新分支再出现同类缺口。
+先对 1 人重跑 L2，确认返回了 reviewedPaths，约 0.06 元。确认后再重跑其余 12 人和许苓，按单价估算在 T10 剩余的约 1 元以内。reviewedPaths 的要求不变，原失败记录照常保留。
+记录时写作"T25 引入的请求字段说明缺口"，不要写成"模型漏审"。
+
+投入
+
+本期约 4,820 秒，合入 5 张卡，T10 的 32 人用 120 次调用、1.99 元，代价可以接受。损耗主要来自上面那个缺口：被判人工的条目，每条都多耗了几次尝试。
+
+文档压缩还没落实
+
+上期同意的压缩没有做：PLAN.md 从 69 KB 涨到了 92 KB，当前状态.md 仍是 85 行。下次提交时把已完成的卡各压成一行。
+
+下一期完成标准
+
+T10 的 13 条重跑完成，L4 完成。
+河湾 32 人批准，并通过 T11-B 整合。
+按用户的规定跑一次 M2 专项实测，单模型槽。
+T07 在原单卡上限内恢复受控计划。
+
+
+
+
+
+just now
