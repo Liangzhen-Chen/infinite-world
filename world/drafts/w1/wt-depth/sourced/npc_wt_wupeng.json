@@ -1,0 +1,173 @@
+{
+  "id": "npc_wt_wupeng",
+  "fingerprint": "753899c3667e88ccf68edd1081621d846b76b4d7b265bb061c9c5819c889ebe5",
+  "status": "passed",
+  "attempts": 1,
+  "draft": {
+    "id": "npc_wt_wupeng",
+    "contract": "audit-patch-v1",
+    "patches": [
+      {
+        "path": "knowledge.known[1]",
+        "value": {
+          "fact": "我在伍蓬户居处居住；家里的伍茉是我的妹妹。",
+          "source": "bld_wt_home_04",
+          "reliability": "日常亲历"
+        }
+      },
+      {
+        "path": "knowledge.known[2]",
+        "value": {
+          "fact": "我做割苇雇工，日常劳动处在苇束堆放地；眼下遇到的是捆苇时总夹进短茎。",
+          "source": "npc_wt_wupeng",
+          "reliability": "本人亲历，问题尚未解决"
+        }
+      },
+      {
+        "path": "knowledge.unknown[0]",
+        "value": "周渚下岸需要留出的斜向空道究竟有多宽。"
+      },
+      {
+        "path": "knowledge.unknown[1]",
+        "value": "伍茉何时能陪自己核查短茎分堆。"
+      },
+      {
+        "path": "voice.register",
+        "value": "讲劳作用爽快的短句，被指出混料时容易急着辩解。"
+      },
+      {
+        "path": "goals.short[0].steps[0].content",
+        "value": "停下捆扎，先把短茎挑在一边再请物主辨看。"
+      },
+      {
+        "path": "goals.mid[0].steps[0].content",
+        "value": "问周渚什么时候下岸，说明自己分趟搬束可否错开。"
+      },
+      {
+        "path": "goals.long[0].steps[0].content",
+        "value": "请雇主按扎口逐束检查夹料，不拿割得快代替束料齐整。"
+      },
+      {
+        "path": "relationships[0].note",
+        "value": "伍茉是家里的妹妹；能干/多虑，这件事还需要彼此听完再商量。"
+      },
+      {
+        "path": "relationships[1].note",
+        "value": "赫欢是家里的母亲；温厚/直言，这件事还需要彼此听完再商量。"
+      },
+      {
+        "path": "relationships[2].note",
+        "value": "傅江是家里的外甥；开朗/急躁，这件事还需要彼此听完再商量。"
+      },
+      {
+        "path": "memorySeeds[2]",
+        "value": {
+          "id": "memory_wt_depth_group_0",
+          "event": "郑汐、王浦、周渚和伍蓬在汀口记事屋门外说过各自需要的空位。王浦比了翻篓时的宽处，周渚说明苇束挡退脚，伍蓬说搬远要分趟；郑汐将两处地点分开复述。门前与下岸的摆放都还没商定。",
+          "location": "bld_wt_hall",
+          "salience": 4,
+          "knownBy": [
+            "npc_wt_zhengxi",
+            "npc_wt_wangpu",
+            "npc_wt_zhouzhu",
+            "npc_wt_wupeng"
+          ],
+          "reliability": "共同亲历；未解决的分歧仍待各户核对"
+        }
+      }
+    ]
+  },
+  "review": {
+    "contradictions": []
+  },
+  "errors": [],
+  "warnings": [],
+  "feedback": null,
+  "draftResponse": {
+    "id": "13be2afc-779d-4704-9e72-7325cdbe8ad8",
+    "object": "chat.completion",
+    "created": 1791762507,
+    "model": "deepseek-flash",
+    "choices": [
+      {
+        "index": 0,
+        "message": {
+          "role": "assistant",
+          "content": "{\"id\":\"npc_wt_wupeng\",\"contract\":\"audit-patch-v1\",\"patches\":[{\"path\":\"knowledge.known[1]\",\"value\":{\"fact\":\"我在伍蓬户居处居住；家里的伍茉是我的妹妹。\",\"source\":\"bld_wt_home_04\",\"reliability\":\"日常亲历\"}},{\"path\":\"knowledge.known[2]\",\"value\":{\"fact\":\"我做割苇雇工，日常劳动处在苇束堆放地；眼下遇到的是捆苇时总夹进短茎。\",\"source\":\"npc_wt_wupeng\",\"reliability\":\"本人亲历，问题尚未解决\"}},{\"path\":\"knowledge.unknown[0]\",\"value\":\"周渚下岸需要留出的斜向空道究竟有多宽。\"},{\"path\":\"knowledge.unknown[1]\",\"value\":\"伍茉何时能陪自己核查短茎分堆。\"},{\"path\":\"voice.register\",\"value\":\"讲劳作用爽快的短句，被指出混料时容易急着辩解。\"},{\"path\":\"goals.short[0].steps[0].content\",\"value\":\"停下捆扎，先把短茎挑在一边再请物主辨看。\"},{\"path\":\"goals.mid[0].steps[0].content\",\"value\":\"问周渚什么时候下岸，说明自己分趟搬束可否错开。\"},{\"path\":\"goals.long[0].steps[0].content\",\"value\":\"请雇主按扎口逐束检查夹料，不拿割得快代替束料齐整。\"},{\"path\":\"relationships[0].note\",\"value\":\"伍茉是家里的妹妹；能干/多虑，这件事还需要彼此听完再商量。\"},{\"path\":\"relationships[1].note\",\"value\":\"赫欢是家里的母亲；温厚/直言，这件事还需要彼此听完再商量。\"},{\"path\":\"relationships[2].note\",\"value\":\"傅江是家里的外甥；开朗/急躁，这件事还需要彼此听完再商量。\"},{\"path\":\"memorySeeds[2]\",\"value\":{\"id\":\"memory_wt_depth_group_0\",\"event\":\"郑汐、王浦、周渚和伍蓬在汀口记事屋门外说过各自需要的空位。王浦比了翻篓时的宽处，周渚说明苇束挡退脚，伍蓬说搬远要分趟；郑汐将两处地点分开复述。门前与下岸的摆放都还没商定。\",\"location\":\"bld_wt_hall\",\"salience\":4,\"knownBy\":[\"npc_wt_zhengxi\",\"npc_wt_wangpu\",\"npc_wt_zhouzhu\",\"npc_wt_wupeng\"],\"reliability\":\"共同亲历；未解决的分歧仍待各户核对\"}}]}"
+        },
+        "logprobs": null,
+        "finish_reason": "stop"
+      }
+    ],
+    "usage": {
+      "prompt_tokens": 7668,
+      "completion_tokens": 577,
+      "total_tokens": 8245,
+      "prompt_tokens_details": {
+        "cached_tokens": 0
+      },
+      "prompt_cache_hit_tokens": 0,
+      "prompt_cache_miss_tokens": 7668
+    },
+    "system_fingerprint": "aeb56401ca74e127821c4f9126dcb669",
+    "measurement": {
+      "label": "content-sourced-npc_wt_wupeng-draft0",
+      "model": "deepseek-flash",
+      "thinking": "disabled",
+      "usage": {
+        "prompt_tokens": 7668,
+        "completion_tokens": 577,
+        "total_tokens": 8245,
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        },
+        "prompt_cache_hit_tokens": 0,
+        "prompt_cache_miss_tokens": 7668
+      },
+      "costUpperYuan": 0.019952,
+      "cumulativeUpperYuan": 2.946110879999999,
+      "latencyMs": 2635.283599999999,
+      "timestamp": "2026-10-11T23:48:30.630Z"
+    }
+  },
+  "measurements": [
+    {
+      "label": "content-sourced-npc_wt_wupeng-draft0",
+      "model": "deepseek-flash",
+      "thinking": "disabled",
+      "usage": {
+        "prompt_tokens": 7668,
+        "completion_tokens": 577,
+        "total_tokens": 8245,
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        },
+        "prompt_cache_hit_tokens": 0,
+        "prompt_cache_miss_tokens": 7668
+      },
+      "costUpperYuan": 0.019952,
+      "cumulativeUpperYuan": 2.946110879999999,
+      "latencyMs": 2635.283599999999,
+      "timestamp": "2026-10-11T23:48:30.630Z"
+    },
+    {
+      "label": "content-sourced-npc_wt_wupeng-review0",
+      "model": "deepseek-flash",
+      "thinking": "disabled",
+      "usage": {
+        "prompt_tokens": 14757,
+        "completion_tokens": 7,
+        "total_tokens": 14764,
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        },
+        "prompt_cache_hit_tokens": 0,
+        "prompt_cache_miss_tokens": 14757
+      },
+      "costUpperYuan": 0.02957,
+      "cumulativeUpperYuan": 2.975680879999999,
+      "latencyMs": 856.3188000000009,
+      "timestamp": "2026-10-11T23:48:31.492Z"
+    }
+  ]
+}

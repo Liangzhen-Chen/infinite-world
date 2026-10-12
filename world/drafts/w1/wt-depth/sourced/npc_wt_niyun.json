@@ -1,0 +1,371 @@
+{
+  "id": "npc_wt_niyun",
+  "fingerprint": "4f3c18d9bdee1713b3c4ab952d415c3fa1798dd4d692a8c17552cc58d80dc27d",
+  "status": "manual",
+  "attempts": 3,
+  "draft": {
+    "id": "npc_wt_niyun",
+    "contract": "audit-patch-v1",
+    "patches": [
+      {
+        "path": "knowledge.known[1]",
+        "value": {
+          "fact": "我在倪筠户居处居住；家里的倪梅是我的配偶。",
+          "source": "bld_wt_home_17",
+          "reliability": "日常亲历"
+        }
+      },
+      {
+        "path": "knowledge.known[2]",
+        "value": {
+          "fact": "我做晒架木工，日常劳动处在修篓木台院；眼下遇到的是晒架位置挡了邻人的转身处。",
+          "source": "npc_wt_niyun",
+          "reliability": "本人亲历，问题尚未解决"
+        }
+      },
+      {
+        "path": "knowledge.unknown[0]",
+        "value": "使用晒架的人转身究竟需要留多少空隙。"
+      },
+      {
+        "path": "knowledge.unknown[1]",
+        "value": "倪梅何时愿意与自己核对收工清扫次序。"
+      },
+      {
+        "path": "voice.register",
+        "value": "讲木作用直白的尺寸话，收尾被催时常拖长回应。"
+      },
+      {
+        "path": "goals.short[0].steps[0].content",
+        "value": "请使用者空手站在架旁试转身，先看架脚是否挡路。"
+      },
+      {
+        "path": "goals.mid[0].steps[0].content",
+        "value": "在物主同意后逐个比架脚位置，询问挪动范围。"
+      },
+      {
+        "path": "goals.long[0].steps[0].content",
+        "value": "收工前沿工位查木屑，再请接手者指出是否还有脚下障碍。"
+      },
+      {
+        "path": "relationships[0].note",
+        "value": "倪梅是家里的配偶；干练/暴脾气，这件事还需要彼此听完再商量。"
+      },
+      {
+        "path": "relationships[1].note",
+        "value": "倪茹是家里的女儿；爱问/固执，这件事还需要彼此听完再商量。"
+      },
+      {
+        "path": "relationships[2].note",
+        "value": "与屈槐有同村往来；对方在苇束堆放地做水边篱障看护人，见面时还需问清当日劳作与通行安排。"
+      },
+      {
+        "path": "memorySeeds[2]",
+        "value": {
+          "id": "memory_wt_depth_group_4",
+          "event": "倪筠、屈槐、丁素和茹芹在苇席收边屋外歇过脚。倪筠比划晒架旁转身的空隙，屈槐说篱障缺口老被当道，丁素提到两户杂活撞时，茹芹指出软硬苇料不该只按颜色分。大家各说了一处难办的活，没有替物主答应改动。",
+          "location": "bld_wt_workroom",
+          "salience": 4,
+          "knownBy": [
+            "npc_wt_niyun",
+            "npc_wt_quhuai",
+            "npc_wt_dingsu",
+            "npc_wt_ruqin"
+          ],
+          "reliability": "共同亲历；未解决的分歧仍待各户核对"
+        }
+      },
+      {
+        "path": "opinions.neighbors[2].view",
+        "value": "屈槐在苇束堆放地做水边篱障看护人；与他谈通行和劳作时，我会先问清当日安排。"
+      }
+    ]
+  },
+  "review": {
+    "contradictions": [
+      {
+        "quote": "倪梅是家里的配偶；干练/暴脾气，这件事还需要彼此听完再商量。",
+        "field": "relationships[0].note",
+        "severity": "hard",
+        "reason": "骨架与已发布事实中倪梅的职业为菜圃雇工，其关切是丈夫木屑堆在门边、话压着没发作；修订新增“干练/暴脾气”的性格定性，骨架未声明，属于新增无依据的人物属性。"
+      },
+      {
+        "quote": "倪茹是家里的女儿；爱问/固执，这件事还需要彼此听完再商量。",
+        "field": "relationships[1].note",
+        "severity": "hard",
+        "reason": "骨架与已发布事实中倪茹为6岁学生，其关切是不明白架子为何不能搭到路边、问过几回仍不服气；修订新增“爱问/固执”的性格定性，骨架未声明，属于新增无依据的人物属性。"
+      },
+      {
+        "quote": "与屈槐有同村往来；对方在苇束堆放地做水边篱障看护人，见面时还需问清当日劳作与通行安排。",
+        "field": "relationships[2].note",
+        "severity": "hard",
+        "reason": "骨架中屈槐的职业为水边篱障看护人，但未声明其工作地点在苇束堆放地；已发布事实中苇束堆放地是割苇与分垛地点，修订新增“在苇束堆放地做”这一地点归属，无骨架依据。"
+      },
+      {
+        "quote": "屈槐在苇束堆放地做水边篱障看护人；与他谈通行和劳作时，我会先问清当日安排。",
+        "field": "opinions.neighbors[2].view",
+        "severity": "hard",
+        "reason": "同上，骨架未声明屈槐在苇束堆放地工作，修订新增该地点归属，无依据。"
+      },
+      {
+        "quote": "倪筠、屈槐、丁素和茹芹在苇席收边屋外歇过脚。倪筠比划晒架旁转身的空隙，屈槐说篱障缺口老被当道，丁素提到两户杂活撞时，茹芹指出软硬苇料不该只按颜色分。大家各说了一处难办的活，没有替物主答应改动。",
+        "field": "memorySeeds[2]",
+        "severity": "hard",
+        "reason": "新增共享记忆事件，涉及屈槐、丁素、茹芹三人共同在场并各自发言。骨架中倪筠与屈槐仅为同村日常往来，与丁素、茹芹无任何关系登记；该事件新增了四人共同亲历的社交事实，且将丁素、茹芹的私人关切（撞工、软硬苇料）暴露给倪筠，超出骨架声明的知情范围。"
+      },
+      {
+        "quote": "使用晒架的人转身究竟需要留多少空隙。",
+        "field": "knowledge.unknown[0]",
+        "severity": "soft",
+        "reason": "骨架中倪筠的短期目标即为“晒架位置挡了邻人的转身处”，且其行为习惯是让人站进去试转身，说明他已在处理该问题；将其列为“未知”与骨架中他正着手解决该问题的设定存在张力。"
+      },
+      {
+        "quote": "倪梅何时愿意与自己核对收工清扫次序。",
+        "field": "knowledge.unknown[1]",
+        "severity": "soft",
+        "reason": "骨架中倪梅的关切是木屑堆在门边、话压着没发作，修订将其转为“何时愿意核对清扫次序”，引入了骨架未声明的“核对清扫次序”这一互动安排。"
+      }
+    ]
+  },
+  "errors": [
+    {
+      "quote": "倪梅是家里的配偶；干练/暴脾气，这件事还需要彼此听完再商量。",
+      "field": "relationships[0].note",
+      "severity": "hard",
+      "reason": "骨架与已发布事实中倪梅的职业为菜圃雇工，其关切是丈夫木屑堆在门边、话压着没发作；修订新增“干练/暴脾气”的性格定性，骨架未声明，属于新增无依据的人物属性。"
+    },
+    {
+      "quote": "倪茹是家里的女儿；爱问/固执，这件事还需要彼此听完再商量。",
+      "field": "relationships[1].note",
+      "severity": "hard",
+      "reason": "骨架与已发布事实中倪茹为6岁学生，其关切是不明白架子为何不能搭到路边、问过几回仍不服气；修订新增“爱问/固执”的性格定性，骨架未声明，属于新增无依据的人物属性。"
+    },
+    {
+      "quote": "与屈槐有同村往来；对方在苇束堆放地做水边篱障看护人，见面时还需问清当日劳作与通行安排。",
+      "field": "relationships[2].note",
+      "severity": "hard",
+      "reason": "骨架中屈槐的职业为水边篱障看护人，但未声明其工作地点在苇束堆放地；已发布事实中苇束堆放地是割苇与分垛地点，修订新增“在苇束堆放地做”这一地点归属，无骨架依据。"
+    },
+    {
+      "quote": "屈槐在苇束堆放地做水边篱障看护人；与他谈通行和劳作时，我会先问清当日安排。",
+      "field": "opinions.neighbors[2].view",
+      "severity": "hard",
+      "reason": "同上，骨架未声明屈槐在苇束堆放地工作，修订新增该地点归属，无依据。"
+    },
+    {
+      "quote": "倪筠、屈槐、丁素和茹芹在苇席收边屋外歇过脚。倪筠比划晒架旁转身的空隙，屈槐说篱障缺口老被当道，丁素提到两户杂活撞时，茹芹指出软硬苇料不该只按颜色分。大家各说了一处难办的活，没有替物主答应改动。",
+      "field": "memorySeeds[2]",
+      "severity": "hard",
+      "reason": "新增共享记忆事件，涉及屈槐、丁素、茹芹三人共同在场并各自发言。骨架中倪筠与屈槐仅为同村日常往来，与丁素、茹芹无任何关系登记；该事件新增了四人共同亲历的社交事实，且将丁素、茹芹的私人关切（撞工、软硬苇料）暴露给倪筠，超出骨架声明的知情范围。"
+    }
+  ],
+  "warnings": [
+    {
+      "quote": "使用晒架的人转身究竟需要留多少空隙。",
+      "field": "knowledge.unknown[0]",
+      "severity": "soft",
+      "reason": "骨架中倪筠的短期目标即为“晒架位置挡了邻人的转身处”，且其行为习惯是让人站进去试转身，说明他已在处理该问题；将其列为“未知”与骨架中他正着手解决该问题的设定存在张力。"
+    },
+    {
+      "quote": "倪梅何时愿意与自己核对收工清扫次序。",
+      "field": "knowledge.unknown[1]",
+      "severity": "soft",
+      "reason": "骨架中倪梅的关切是木屑堆在门边、话压着没发作，修订将其转为“何时愿意核对清扫次序”，引入了骨架未声明的“核对清扫次序”这一互动安排。"
+    }
+  ],
+  "feedback": [
+    {
+      "quote": "倪梅是家里的配偶；干练/暴脾气，这件事还需要彼此听完再商量。",
+      "field": "relationships[0].note",
+      "severity": "hard",
+      "reason": "骨架与已发布事实中倪梅的职业为菜圃雇工，其关切是丈夫木屑堆在门边、话压着没发作；修订新增“干练/暴脾气”的性格定性，骨架未声明，属于新增无依据的人物属性。"
+    },
+    {
+      "quote": "倪茹是家里的女儿；爱问/固执，这件事还需要彼此听完再商量。",
+      "field": "relationships[1].note",
+      "severity": "hard",
+      "reason": "骨架与已发布事实中倪茹为6岁学生，其关切是不明白架子为何不能搭到路边、问过几回仍不服气；修订新增“爱问/固执”的性格定性，骨架未声明，属于新增无依据的人物属性。"
+    },
+    {
+      "quote": "与屈槐有同村往来；对方在苇束堆放地做水边篱障看护人，见面时还需问清当日劳作与通行安排。",
+      "field": "relationships[2].note",
+      "severity": "hard",
+      "reason": "骨架中屈槐的职业为水边篱障看护人，但未声明其工作地点在苇束堆放地；已发布事实中苇束堆放地是割苇与分垛地点，修订新增“在苇束堆放地做”这一地点归属，无骨架依据。"
+    },
+    {
+      "quote": "屈槐在苇束堆放地做水边篱障看护人；与他谈通行和劳作时，我会先问清当日安排。",
+      "field": "opinions.neighbors[2].view",
+      "severity": "hard",
+      "reason": "同上，骨架未声明屈槐在苇束堆放地工作，修订新增该地点归属，无依据。"
+    },
+    {
+      "quote": "倪筠、屈槐、丁素和茹芹在苇席收边屋外歇过脚。倪筠比划晒架旁转身的空隙，屈槐说篱障缺口老被当道，丁素提到两户杂活撞时，茹芹指出软硬苇料不该只按颜色分。大家各说了一处难办的活，没有替物主答应改动。",
+      "field": "memorySeeds[2]",
+      "severity": "hard",
+      "reason": "新增共享记忆事件，涉及屈槐、丁素、茹芹三人共同在场并各自发言。骨架中倪筠与屈槐仅为同村日常往来，与丁素、茹芹无任何关系登记；该事件新增了四人共同亲历的社交事实，且将丁素、茹芹的私人关切（撞工、软硬苇料）暴露给倪筠，超出骨架声明的知情范围。"
+    }
+  ],
+  "draftResponse": {
+    "id": "e5c3b6c2-757e-4b7f-acc1-cc9af369e217",
+    "object": "chat.completion",
+    "created": 1791762641,
+    "model": "deepseek-flash",
+    "choices": [
+      {
+        "index": 0,
+        "message": {
+          "role": "assistant",
+          "content": "{\"id\":\"npc_wt_niyun\",\"contract\":\"audit-patch-v1\",\"patches\":[{\"path\":\"knowledge.known[1]\",\"value\":{\"fact\":\"我在倪筠户居处居住；家里的倪梅是我的配偶。\",\"source\":\"bld_wt_home_17\",\"reliability\":\"日常亲历\"}},{\"path\":\"knowledge.known[2]\",\"value\":{\"fact\":\"我做晒架木工，日常劳动处在修篓木台院；眼下遇到的是晒架位置挡了邻人的转身处。\",\"source\":\"npc_wt_niyun\",\"reliability\":\"本人亲历，问题尚未解决\"}},{\"path\":\"knowledge.unknown[0]\",\"value\":\"使用晒架的人转身究竟需要留多少空隙。\"},{\"path\":\"knowledge.unknown[1]\",\"value\":\"倪梅何时愿意与自己核对收工清扫次序。\"},{\"path\":\"voice.register\",\"value\":\"讲木作用直白的尺寸话，收尾被催时常拖长回应。\"},{\"path\":\"goals.short[0].steps[0].content\",\"value\":\"请使用者空手站在架旁试转身，先看架脚是否挡路。\"},{\"path\":\"goals.mid[0].steps[0].content\",\"value\":\"在物主同意后逐个比架脚位置，询问挪动范围。\"},{\"path\":\"goals.long[0].steps[0].content\",\"value\":\"收工前沿工位查木屑，再请接手者指出是否还有脚下障碍。\"},{\"path\":\"relationships[0].note\",\"value\":\"倪梅是家里的配偶；干练/暴脾气，这件事还需要彼此听完再商量。\"},{\"path\":\"relationships[1].note\",\"value\":\"倪茹是家里的女儿；爱问/固执，这件事还需要彼此听完再商量。\"},{\"path\":\"relationships[2].note\",\"value\":\"与屈槐有同村往来；对方在苇束堆放地做水边篱障看护人，见面时还需问清当日劳作与通行安排。\"},{\"path\":\"memorySeeds[2]\",\"value\":{\"id\":\"memory_wt_depth_group_4\",\"event\":\"倪筠、屈槐、丁素和茹芹在苇席收边屋外歇过脚。倪筠比划晒架旁转身的空隙，屈槐说篱障缺口老被当道，丁素提到两户杂活撞时，茹芹指出软硬苇料不该只按颜色分。大家各说了一处难办的活，没有替物主答应改动。\",\"location\":\"bld_wt_workroom\",\"salience\":4,\"knownBy\":[\"npc_wt_niyun\",\"npc_wt_quhuai\",\"npc_wt_dingsu\",\"npc_wt_ruqin\"],\"reliability\":\"共同亲历；未解决的分歧仍待各户核对\"}},{\"path\":\"opinions.neighbors[2].view\",\"value\":\"屈槐在苇束堆放地做水边篱障看护人；与他谈通行和劳作时，我会先问清当日安排。\"}]}"
+        },
+        "logprobs": null,
+        "finish_reason": "stop"
+      }
+    ],
+    "usage": {
+      "prompt_tokens": 8925,
+      "completion_tokens": 647,
+      "total_tokens": 9572,
+      "prompt_tokens_details": {
+        "cached_tokens": 8576
+      },
+      "prompt_cache_hit_tokens": 8576,
+      "prompt_cache_miss_tokens": 349
+    },
+    "system_fingerprint": "aeb56401ca74e127821c4f9126dcb669",
+    "measurement": {
+      "label": "content-sourced-npc_wt_niyun-draft2",
+      "model": "deepseek-flash",
+      "thinking": "disabled",
+      "usage": {
+        "prompt_tokens": 8925,
+        "completion_tokens": 647,
+        "total_tokens": 9572,
+        "prompt_tokens_details": {
+          "cached_tokens": 8576
+        },
+        "prompt_cache_hit_tokens": 8576,
+        "prompt_cache_miss_tokens": 349
+      },
+      "costUpperYuan": 0.00621704,
+      "cumulativeUpperYuan": 3.8173552799999992,
+      "latencyMs": 2707.8795999999857,
+      "timestamp": "2026-10-11T23:50:45.553Z"
+    }
+  },
+  "measurements": [
+    {
+      "label": "content-sourced-npc_wt_niyun-draft0",
+      "model": "deepseek-flash",
+      "thinking": "disabled",
+      "usage": {
+        "prompt_tokens": 8586,
+        "completion_tokens": 647,
+        "total_tokens": 9233,
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        },
+        "prompt_cache_hit_tokens": 0,
+        "prompt_cache_miss_tokens": 8586
+      },
+      "costUpperYuan": 0.022348,
+      "cumulativeUpperYuan": 3.7634576799999993,
+      "latencyMs": 2833.1144000000204,
+      "timestamp": "2026-10-11T23:50:33.506Z"
+    },
+    {
+      "label": "content-sourced-npc_wt_niyun-review0",
+      "model": "deepseek-flash",
+      "thinking": "disabled",
+      "usage": {
+        "prompt_tokens": 15740,
+        "completion_tokens": 480,
+        "total_tokens": 16220,
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        },
+        "prompt_cache_hit_tokens": 0,
+        "prompt_cache_miss_tokens": 15740
+      },
+      "costUpperYuan": 0.03532,
+      "cumulativeUpperYuan": 3.7987776799999993,
+      "latencyMs": 2966.120200000005,
+      "timestamp": "2026-10-11T23:50:36.479Z"
+    },
+    {
+      "label": "content-sourced-npc_wt_niyun-draft1",
+      "model": "deepseek-flash",
+      "thinking": "disabled",
+      "usage": {
+        "prompt_tokens": 9059,
+        "completion_tokens": 647,
+        "total_tokens": 9706,
+        "prompt_tokens_details": {
+          "cached_tokens": 8576
+        },
+        "prompt_cache_hit_tokens": 8576,
+        "prompt_cache_miss_tokens": 483
+      },
+      "costUpperYuan": 0.00648504,
+      "cumulativeUpperYuan": 3.805262719999999,
+      "latencyMs": 2744.31779999999,
+      "timestamp": "2026-10-11T23:50:39.229Z"
+    },
+    {
+      "label": "content-sourced-npc_wt_niyun-review1",
+      "model": "deepseek-flash",
+      "thinking": "disabled",
+      "usage": {
+        "prompt_tokens": 15740,
+        "completion_tokens": 594,
+        "total_tokens": 16334,
+        "prompt_tokens_details": {
+          "cached_tokens": 15488
+        },
+        "prompt_cache_hit_tokens": 15488,
+        "prompt_cache_miss_tokens": 252
+      },
+      "costUpperYuan": 0.00587552,
+      "cumulativeUpperYuan": 3.811138239999999,
+      "latencyMs": 3603.8269000000146,
+      "timestamp": "2026-10-11T23:50:42.839Z"
+    },
+    {
+      "label": "content-sourced-npc_wt_niyun-draft2",
+      "model": "deepseek-flash",
+      "thinking": "disabled",
+      "usage": {
+        "prompt_tokens": 8925,
+        "completion_tokens": 647,
+        "total_tokens": 9572,
+        "prompt_tokens_details": {
+          "cached_tokens": 8576
+        },
+        "prompt_cache_hit_tokens": 8576,
+        "prompt_cache_miss_tokens": 349
+      },
+      "costUpperYuan": 0.00621704,
+      "cumulativeUpperYuan": 3.8173552799999992,
+      "latencyMs": 2707.8795999999857,
+      "timestamp": "2026-10-11T23:50:45.553Z"
+    },
+    {
+      "label": "content-sourced-npc_wt_niyun-review2",
+      "model": "deepseek-flash",
+      "thinking": "disabled",
+      "usage": {
+        "prompt_tokens": 15740,
+        "completion_tokens": 731,
+        "total_tokens": 16471,
+        "prompt_tokens_details": {
+          "cached_tokens": 15488
+        },
+        "prompt_cache_hit_tokens": 15488,
+        "prompt_cache_miss_tokens": 252
+      },
+      "costUpperYuan": 0.00697152,
+      "cumulativeUpperYuan": 3.8243267999999992,
+      "latencyMs": 4341.119500000001,
+      "timestamp": "2026-10-11T23:50:49.900Z"
+    }
+  ]
+}

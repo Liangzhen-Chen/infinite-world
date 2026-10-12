@@ -1,0 +1,456 @@
+{
+  "id": "npc_wt_xiangzhen",
+  "fingerprint": "79493fc48f674285fef4f24ca091d87988e18eb0a24063b8a15e6c2c12ce69ed",
+  "status": "manual",
+  "attempts": 3,
+  "draft": {
+    "id": "npc_wt_xiangzhen",
+    "contract": "audit-patch-v1",
+    "patches": [
+      {
+        "path": "knowledge.known[1]",
+        "value": {
+          "fact": "我在向祯户居处居住；家里的向菲是我的配偶。",
+          "source": "bld_wt_home_30",
+          "reliability": "日常亲历"
+        }
+      },
+      {
+        "path": "knowledge.known[2]",
+        "value": {
+          "fact": "我做苇汀更路记录人，日常劳动处在苇汀干路口；眼下遇到的是夜路旧记号被新苇遮住。",
+          "source": "npc_wt_xiangzhen",
+          "reliability": "本人亲历，问题尚未解决"
+        }
+      },
+      {
+        "path": "knowledge.unknown[0]",
+        "value": "向菲夜归时究竟在哪一个岔口看不清记号。"
+      },
+      {
+        "path": "knowledge.unknown[1]",
+        "value": "郑汐何时能听自己说明白日路与夜路的区别。"
+      },
+      {
+        "path": "voice.register",
+        "value": "报更路用简洁的方位句，解释偏路时常显得敷衍。"
+      },
+      {
+        "path": "goals.short[0].steps[0].content",
+        "value": "白日从干路找回被枯苇遮住的拐点，先核对旧痕。"
+      },
+      {
+        "path": "goals.mid[0].steps[0].content",
+        "value": "请向菲从安全路段指出误认处，再核查岔口方向。"
+      },
+      {
+        "path": "goals.long[0].steps[0].content",
+        "value": "请晚归者读回天色和水势条件，对没看清的偏路继续标为待核。"
+      },
+      {
+        "path": "relationships[0].note",
+        "value": "向菲是家里的配偶；谨慎/利落，这件事还需要彼此听完再商量。"
+      },
+      {
+        "path": "relationships[1].note",
+        "value": "向涛是家里的儿子；活泼/恋家，这件事还需要彼此听完再商量。"
+      },
+      {
+        "path": "relationships[2].note",
+        "value": "与郑汐有同村往来；对方在汀口记事屋做水岸议事记录人，见面时还需问清当日劳作与通行安排。"
+      },
+      {
+        "path": "memorySeeds[2]",
+        "value": {
+          "id": "memory_wt_depth_group_6",
+          "event": "裴纯、宿蕙、戚鹭、花茵和向祯在岸上菜圃外的干处说过雨后劳动。裴纯讲桩根湿泥挡住裂处，宿蕙指溅到叶上的泥点，戚鹭区分听来的旧水情，花茵翻看阴处叶背，向祯说枯苇遮住更路记号。大家只核对可见处和待问处，还没解决各自的问题。",
+          "location": "loc_wt_garden",
+          "salience": 4,
+          "knownBy": [
+            "npc_wt_peichun",
+            "npc_wt_suhui",
+            "npc_wt_qilu",
+            "npc_wt_huayin",
+            "npc_wt_xiangzhen"
+          ],
+          "reliability": "共同亲历；未解决的分歧仍待各户核对"
+        }
+      },
+      {
+        "path": "opinions.neighbors[2].view",
+        "value": "郑汐在汀口记事屋做水岸议事记录人；与他谈通行和劳作时，我会先问清当日安排。"
+      }
+    ]
+  },
+  "review": {
+    "contradictions": [
+      {
+        "quote": "我在向祯户居处居住；家里的向菲是我的配偶。",
+        "field": "knowledge.known[1]",
+        "severity": "hard",
+        "reason": "该事实以向祯第一人称表述，但向祯本人就是户主，不会称自己的居处为“向祯户居处”；且“向菲是我的配偶”与向祯已有配偶关系重复，属于以本人视角新增无依据的自我指称事实。"
+      },
+      {
+        "quote": "我做苇汀更路记录人，日常劳动处在苇汀干路口；眼下遇到的是夜路旧记号被新苇遮住。",
+        "field": "knowledge.known[2]",
+        "severity": "soft",
+        "reason": "“日常劳动处在苇汀干路口”与骨架 workplace.location=loc_wt_path（苇汀干路口）相容，但“眼下遇到的是夜路旧记号被新苇遮住”是骨架 notes/goals 中已有的问题陈述，作为 knowledge.known 条目属于把待解决问题当作已知事实登记，与 goals 中该问题 progress=0、status=pending 的未解决状态相冲突。"
+      },
+      {
+        "quote": "向菲夜归时究竟在哪一个岔口看不清记号。",
+        "field": "knowledge.unknown[0]",
+        "severity": "hard",
+        "reason": "骨架未声明向菲夜归时看不清记号，也未声明向菲有夜归行为；该未知项新增了向菲的具体行为与困难，无骨架依据。"
+      },
+      {
+        "quote": "郑汐何时能听自己说明白日路与夜路的区别。",
+        "field": "knowledge.unknown[1]",
+        "severity": "hard",
+        "reason": "骨架未声明向祯需要向郑汐说明白日路与夜路的区别，也未声明郑汐对此有听取意愿；该未知项新增了向祯与郑汐之间无依据的待办事项。"
+      },
+      {
+        "quote": "报更路用简洁的方位句，解释偏路时常显得敷衍。",
+        "field": "voice.register",
+        "severity": "soft",
+        "reason": "“解释偏路时常显得敷衍”与骨架 personality.flaws“别人问偏路就想敷衍”相容，但“报更路用简洁的方位句”替换了原 register“报路时先说天色和水势”，而骨架 voice.habits 与 samples 仍以“先说天色和水势”为核心特征，register 改动后与 habits/samples 不一致。"
+      },
+      {
+        "quote": "白日从干路找回被枯苇遮住的拐点，先核对旧痕。",
+        "field": "goals.short[0].steps[0].content",
+        "severity": "soft",
+        "reason": "“枯苇”与骨架 memorySeeds[0]“枯苇”相容，但骨架 goals.short[0].content 为“夜路旧记号被新苇遮住”，步骤改为“白日从干路找回”与 short 目标“夜路”场景存在昼夜不一致。"
+      },
+      {
+        "quote": "请向菲从安全路段指出误认处，再核查岔口方向。",
+        "field": "goals.mid[0].steps[0].content",
+        "severity": "hard",
+        "reason": "骨架未声明向菲能指出误认处或参与岔口核查；该步骤新增了向菲的具体能力与协作行为，无骨架依据。"
+      },
+      {
+        "quote": "请晚归者读回天色和水势条件，对没看清的偏路继续标为待核。",
+        "field": "goals.long[0].steps[0].content",
+        "severity": "soft",
+        "reason": "“读回天色和水势条件”与骨架 voice.habits 相容，但“请晚归者读回”新增了向祯要求他人复述的互动行为，骨架 long 目标仅为“让晚归的人少靠猜路”，未声明此具体做法。"
+      },
+      {
+        "quote": "向菲是家里的配偶；谨慎/利落，这件事还需要彼此听完再商量。",
+        "field": "relationships[0].note",
+        "severity": "hard",
+        "reason": "“谨慎/利落”为向菲新增的性格特质，骨架未声明；“这件事还需要彼此听完再商量”新增了向祯与向菲之间关于某事的协商状态，无骨架依据。"
+      },
+      {
+        "quote": "向涛是家里的儿子；活泼/恋家，这件事还需要彼此听完再商量。",
+        "field": "relationships[1].note",
+        "severity": "hard",
+        "reason": "“活泼/恋家”为向涛新增的性格特质，骨架未声明；“这件事还需要彼此听完再商量”新增了向祯与向涛之间关于某事的协商状态，无骨架依据。"
+      },
+      {
+        "quote": "与郑汐有同村往来；对方在汀口记事屋做水岸议事记录人，见面时还需问清当日劳作与通行安排。",
+        "field": "relationships[2].note",
+        "severity": "soft",
+        "reason": "“郑汐在汀口记事屋做水岸议事记录人”与 publishedFacts 中郑汐 occupation=水岸议事记录人、bld_wt_hall 用途相容，但“见面时还需问清当日劳作与通行安排”新增了向祯与郑汐之间无骨架依据的具体互动安排。"
+      },
+      {
+        "quote": "裴纯、宿蕙、戚鹭、花茵和向祯在岸上菜圃外的干处说过雨后劳动。裴纯讲桩根湿泥挡住裂处，宿蕙指溅到叶上的泥点，戚鹭区分听来的旧水情，花茵翻看阴处叶背，向祯说枯苇遮住更路记号。大家只核对可见处和待问处，还没解决各自的问题。",
+        "field": "memorySeeds[2]",
+        "severity": "hard",
+        "reason": "该共享记忆新增了裴纯、宿蕙、戚鹭、花茵、向祯五人在岸上菜圃外共同谈论雨后劳动的具体事件，骨架 memorySeeds 仅有向祯两条亲历记忆，无此五人共同经历；且“戚鹭区分听来的旧水情”涉及戚鹭 pastMisconduct 秘密（把别人险遇说成自己经历），共享记忆可能使向祯获知戚鹭未公开的隐私，违反 rules 中“不传播秘密”与“当事人身份不自动授予另一人的秘密知情权”。"
+      },
+      {
+        "quote": "郑汐在汀口记事屋做水岸议事记录人；与他谈通行和劳作时，我会先问清当日安排。",
+        "field": "opinions.neighbors[2].view",
+        "severity": "soft",
+        "reason": "“郑汐在汀口记事屋做水岸议事记录人”与 publishedFacts 相容，但“与他谈通行和劳作时，我会先问清当日安排”新增了向祯与郑汐之间无骨架依据的具体互动模式。"
+      }
+    ]
+  },
+  "errors": [
+    {
+      "quote": "我在向祯户居处居住；家里的向菲是我的配偶。",
+      "field": "knowledge.known[1]",
+      "severity": "hard",
+      "reason": "该事实以向祯第一人称表述，但向祯本人就是户主，不会称自己的居处为“向祯户居处”；且“向菲是我的配偶”与向祯已有配偶关系重复，属于以本人视角新增无依据的自我指称事实。"
+    },
+    {
+      "quote": "向菲夜归时究竟在哪一个岔口看不清记号。",
+      "field": "knowledge.unknown[0]",
+      "severity": "hard",
+      "reason": "骨架未声明向菲夜归时看不清记号，也未声明向菲有夜归行为；该未知项新增了向菲的具体行为与困难，无骨架依据。"
+    },
+    {
+      "quote": "郑汐何时能听自己说明白日路与夜路的区别。",
+      "field": "knowledge.unknown[1]",
+      "severity": "hard",
+      "reason": "骨架未声明向祯需要向郑汐说明白日路与夜路的区别，也未声明郑汐对此有听取意愿；该未知项新增了向祯与郑汐之间无依据的待办事项。"
+    },
+    {
+      "quote": "请向菲从安全路段指出误认处，再核查岔口方向。",
+      "field": "goals.mid[0].steps[0].content",
+      "severity": "hard",
+      "reason": "骨架未声明向菲能指出误认处或参与岔口核查；该步骤新增了向菲的具体能力与协作行为，无骨架依据。"
+    },
+    {
+      "quote": "向菲是家里的配偶；谨慎/利落，这件事还需要彼此听完再商量。",
+      "field": "relationships[0].note",
+      "severity": "hard",
+      "reason": "“谨慎/利落”为向菲新增的性格特质，骨架未声明；“这件事还需要彼此听完再商量”新增了向祯与向菲之间关于某事的协商状态，无骨架依据。"
+    },
+    {
+      "quote": "向涛是家里的儿子；活泼/恋家，这件事还需要彼此听完再商量。",
+      "field": "relationships[1].note",
+      "severity": "hard",
+      "reason": "“活泼/恋家”为向涛新增的性格特质，骨架未声明；“这件事还需要彼此听完再商量”新增了向祯与向涛之间关于某事的协商状态，无骨架依据。"
+    },
+    {
+      "quote": "裴纯、宿蕙、戚鹭、花茵和向祯在岸上菜圃外的干处说过雨后劳动。裴纯讲桩根湿泥挡住裂处，宿蕙指溅到叶上的泥点，戚鹭区分听来的旧水情，花茵翻看阴处叶背，向祯说枯苇遮住更路记号。大家只核对可见处和待问处，还没解决各自的问题。",
+      "field": "memorySeeds[2]",
+      "severity": "hard",
+      "reason": "该共享记忆新增了裴纯、宿蕙、戚鹭、花茵、向祯五人在岸上菜圃外共同谈论雨后劳动的具体事件，骨架 memorySeeds 仅有向祯两条亲历记忆，无此五人共同经历；且“戚鹭区分听来的旧水情”涉及戚鹭 pastMisconduct 秘密（把别人险遇说成自己经历），共享记忆可能使向祯获知戚鹭未公开的隐私，违反 rules 中“不传播秘密”与“当事人身份不自动授予另一人的秘密知情权”。"
+    }
+  ],
+  "warnings": [
+    {
+      "quote": "我做苇汀更路记录人，日常劳动处在苇汀干路口；眼下遇到的是夜路旧记号被新苇遮住。",
+      "field": "knowledge.known[2]",
+      "severity": "soft",
+      "reason": "“日常劳动处在苇汀干路口”与骨架 workplace.location=loc_wt_path（苇汀干路口）相容，但“眼下遇到的是夜路旧记号被新苇遮住”是骨架 notes/goals 中已有的问题陈述，作为 knowledge.known 条目属于把待解决问题当作已知事实登记，与 goals 中该问题 progress=0、status=pending 的未解决状态相冲突。"
+    },
+    {
+      "quote": "报更路用简洁的方位句，解释偏路时常显得敷衍。",
+      "field": "voice.register",
+      "severity": "soft",
+      "reason": "“解释偏路时常显得敷衍”与骨架 personality.flaws“别人问偏路就想敷衍”相容，但“报更路用简洁的方位句”替换了原 register“报路时先说天色和水势”，而骨架 voice.habits 与 samples 仍以“先说天色和水势”为核心特征，register 改动后与 habits/samples 不一致。"
+    },
+    {
+      "quote": "白日从干路找回被枯苇遮住的拐点，先核对旧痕。",
+      "field": "goals.short[0].steps[0].content",
+      "severity": "soft",
+      "reason": "“枯苇”与骨架 memorySeeds[0]“枯苇”相容，但骨架 goals.short[0].content 为“夜路旧记号被新苇遮住”，步骤改为“白日从干路找回”与 short 目标“夜路”场景存在昼夜不一致。"
+    },
+    {
+      "quote": "请晚归者读回天色和水势条件，对没看清的偏路继续标为待核。",
+      "field": "goals.long[0].steps[0].content",
+      "severity": "soft",
+      "reason": "“读回天色和水势条件”与骨架 voice.habits 相容，但“请晚归者读回”新增了向祯要求他人复述的互动行为，骨架 long 目标仅为“让晚归的人少靠猜路”，未声明此具体做法。"
+    },
+    {
+      "quote": "与郑汐有同村往来；对方在汀口记事屋做水岸议事记录人，见面时还需问清当日劳作与通行安排。",
+      "field": "relationships[2].note",
+      "severity": "soft",
+      "reason": "“郑汐在汀口记事屋做水岸议事记录人”与 publishedFacts 中郑汐 occupation=水岸议事记录人、bld_wt_hall 用途相容，但“见面时还需问清当日劳作与通行安排”新增了向祯与郑汐之间无骨架依据的具体互动安排。"
+    },
+    {
+      "quote": "郑汐在汀口记事屋做水岸议事记录人；与他谈通行和劳作时，我会先问清当日安排。",
+      "field": "opinions.neighbors[2].view",
+      "severity": "soft",
+      "reason": "“郑汐在汀口记事屋做水岸议事记录人”与 publishedFacts 相容，但“与他谈通行和劳作时，我会先问清当日安排”新增了向祯与郑汐之间无骨架依据的具体互动模式。"
+    }
+  ],
+  "feedback": [
+    {
+      "quote": "我在向祯户居处居住；家里的向菲是我的配偶。",
+      "field": "knowledge.known[1]",
+      "severity": "hard",
+      "reason": "该事实以向祯第一人称表述，但向祯本人就是户主，不会称自己的居处为“向祯户居处”；且“向菲是我的配偶”与向祯已有配偶关系重复，属于以本人视角新增无依据的自我指称事实。"
+    },
+    {
+      "quote": "向菲夜归时究竟在哪一个岔口看不清记号。",
+      "field": "knowledge.unknown[0]",
+      "severity": "hard",
+      "reason": "骨架未声明向菲夜归时看不清记号，也未声明向菲有夜归行为；该未知项新增了向菲的具体行为与困难，无骨架依据。"
+    },
+    {
+      "quote": "郑汐何时能听自己说明白日路与夜路的区别。",
+      "field": "knowledge.unknown[1]",
+      "severity": "hard",
+      "reason": "骨架未声明向祯需要向郑汐说明白日路与夜路的区别，也未声明郑汐对此有听取意愿；该未知项新增了向祯与郑汐之间无依据的待办事项。"
+    },
+    {
+      "quote": "请向菲从安全路段指出误认处，再核查岔口方向。",
+      "field": "goals.mid[0].steps[0].content",
+      "severity": "hard",
+      "reason": "骨架未声明向菲能指出误认处或参与岔口核查；该步骤新增了向菲的具体能力与协作行为，无骨架依据。"
+    },
+    {
+      "quote": "向菲是家里的配偶；谨慎/利落，这件事还需要彼此听完再商量。",
+      "field": "relationships[0].note",
+      "severity": "hard",
+      "reason": "“谨慎/利落”为向菲新增的性格特质，骨架未声明；“这件事还需要彼此听完再商量”新增了向祯与向菲之间关于某事的协商状态，无骨架依据。"
+    },
+    {
+      "quote": "向涛是家里的儿子；活泼/恋家，这件事还需要彼此听完再商量。",
+      "field": "relationships[1].note",
+      "severity": "hard",
+      "reason": "“活泼/恋家”为向涛新增的性格特质，骨架未声明；“这件事还需要彼此听完再商量”新增了向祯与向涛之间关于某事的协商状态，无骨架依据。"
+    },
+    {
+      "quote": "裴纯、宿蕙、戚鹭、花茵和向祯在岸上菜圃外的干处说过雨后劳动。裴纯讲桩根湿泥挡住裂处，宿蕙指溅到叶上的泥点，戚鹭区分听来的旧水情，花茵翻看阴处叶背，向祯说枯苇遮住更路记号。大家只核对可见处和待问处，还没解决各自的问题。",
+      "field": "memorySeeds[2]",
+      "severity": "hard",
+      "reason": "该共享记忆新增了裴纯、宿蕙、戚鹭、花茵、向祯五人在岸上菜圃外共同谈论雨后劳动的具体事件，骨架 memorySeeds 仅有向祯两条亲历记忆，无此五人共同经历；且“戚鹭区分听来的旧水情”涉及戚鹭 pastMisconduct 秘密（把别人险遇说成自己经历），共享记忆可能使向祯获知戚鹭未公开的隐私，违反 rules 中“不传播秘密”与“当事人身份不自动授予另一人的秘密知情权”。"
+    }
+  ],
+  "draftResponse": {
+    "id": "fbdce3a4-07a5-4c8b-a77c-988cacc1c768",
+    "object": "chat.completion",
+    "created": 1791762809,
+    "model": "deepseek-flash",
+    "choices": [
+      {
+        "index": 0,
+        "message": {
+          "role": "assistant",
+          "content": "{\"id\":\"npc_wt_xiangzhen\",\"contract\":\"audit-patch-v1\",\"patches\":[{\"path\":\"knowledge.known[1]\",\"value\":{\"fact\":\"我在向祯户居处居住；家里的向菲是我的配偶。\",\"source\":\"bld_wt_home_30\",\"reliability\":\"日常亲历\"}},{\"path\":\"knowledge.known[2]\",\"value\":{\"fact\":\"我做苇汀更路记录人，日常劳动处在苇汀干路口；眼下遇到的是夜路旧记号被新苇遮住。\",\"source\":\"npc_wt_xiangzhen\",\"reliability\":\"本人亲历，问题尚未解决\"}},{\"path\":\"knowledge.unknown[0]\",\"value\":\"向菲夜归时究竟在哪一个岔口看不清记号。\"},{\"path\":\"knowledge.unknown[1]\",\"value\":\"郑汐何时能听自己说明白日路与夜路的区别。\"},{\"path\":\"voice.register\",\"value\":\"报更路用简洁的方位句，解释偏路时常显得敷衍。\"},{\"path\":\"goals.short[0].steps[0].content\",\"value\":\"白日从干路找回被枯苇遮住的拐点，先核对旧痕。\"},{\"path\":\"goals.mid[0].steps[0].content\",\"value\":\"请向菲从安全路段指出误认处，再核查岔口方向。\"},{\"path\":\"goals.long[0].steps[0].content\",\"value\":\"请晚归者读回天色和水势条件，对没看清的偏路继续标为待核。\"},{\"path\":\"relationships[0].note\",\"value\":\"向菲是家里的配偶；谨慎/利落，这件事还需要彼此听完再商量。\"},{\"path\":\"relationships[1].note\",\"value\":\"向涛是家里的儿子；活泼/恋家，这件事还需要彼此听完再商量。\"},{\"path\":\"relationships[2].note\",\"value\":\"与郑汐有同村往来；对方在汀口记事屋做水岸议事记录人，见面时还需问清当日劳作与通行安排。\"},{\"path\":\"memorySeeds[2]\",\"value\":{\"id\":\"memory_wt_depth_group_6\",\"event\":\"裴纯、宿蕙、戚鹭、花茵和向祯在岸上菜圃外的干处说过雨后劳动。裴纯讲桩根湿泥挡住裂处，宿蕙指溅到叶上的泥点，戚鹭区分听来的旧水情，花茵翻看阴处叶背，向祯说枯苇遮住更路记号。大家只核对可见处和待问处，还没解决各自的问题。\",\"location\":\"loc_wt_garden\",\"salience\":4,\"knownBy\":[\"npc_wt_peichun\",\"npc_wt_suhui\",\"npc_wt_qilu\",\"npc_wt_huayin\",\"npc_wt_xiangzhen\"],\"reliability\":\"共同亲历；未解决的分歧仍待各户核对\"}},{\"path\":\"opinions.neighbors[2].view\",\"value\":\"郑汐在汀口记事屋做水岸议事记录人；与他谈通行和劳作时，我会先问清当日安排。\"}]}"
+        },
+        "logprobs": null,
+        "finish_reason": "stop"
+      }
+    ],
+    "usage": {
+      "prompt_tokens": 9629,
+      "completion_tokens": 667,
+      "total_tokens": 10296,
+      "prompt_tokens_details": {
+        "cached_tokens": 8960
+      },
+      "prompt_cache_hit_tokens": 8960,
+      "prompt_cache_miss_tokens": 669
+    },
+    "system_fingerprint": "aeb56401ca74e127821c4f9126dcb669",
+    "measurement": {
+      "label": "content-sourced-npc_wt_xiangzhen-draft2",
+      "model": "deepseek-flash",
+      "thinking": "disabled",
+      "usage": {
+        "prompt_tokens": 9629,
+        "completion_tokens": 667,
+        "total_tokens": 10296,
+        "prompt_tokens_details": {
+          "cached_tokens": 8960
+        },
+        "prompt_cache_hit_tokens": 8960,
+        "prompt_cache_miss_tokens": 669
+      },
+      "costUpperYuan": 0.007032399999999999,
+      "cumulativeUpperYuan": 4.75750064,
+      "latencyMs": 2711.362400000042,
+      "timestamp": "2026-10-11T23:53:32.667Z"
+    }
+  },
+  "measurements": [
+    {
+      "label": "content-sourced-npc_wt_xiangzhen-draft0",
+      "model": "deepseek-flash",
+      "thinking": "disabled",
+      "usage": {
+        "prompt_tokens": 8995,
+        "completion_tokens": 667,
+        "total_tokens": 9662,
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        },
+        "prompt_cache_hit_tokens": 0,
+        "prompt_cache_miss_tokens": 8995
+      },
+      "costUpperYuan": 0.023326,
+      "cumulativeUpperYuan": 4.691366080000001,
+      "latencyMs": 2873.916799999948,
+      "timestamp": "2026-10-11T23:53:15.436Z"
+    },
+    {
+      "label": "content-sourced-npc_wt_xiangzhen-review0",
+      "model": "deepseek-flash",
+      "thinking": "disabled",
+      "usage": {
+        "prompt_tokens": 15982,
+        "completion_tokens": 1001,
+        "total_tokens": 16983,
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        },
+        "prompt_cache_hit_tokens": 0,
+        "prompt_cache_miss_tokens": 15982
+      },
+      "costUpperYuan": 0.039972,
+      "cumulativeUpperYuan": 4.7313380800000004,
+      "latencyMs": 5181.5371999999625,
+      "timestamp": "2026-10-11T23:53:20.625Z"
+    },
+    {
+      "label": "content-sourced-npc_wt_xiangzhen-draft1",
+      "model": "deepseek-flash",
+      "thinking": "disabled",
+      "usage": {
+        "prompt_tokens": 9813,
+        "completion_tokens": 667,
+        "total_tokens": 10480,
+        "prompt_tokens_details": {
+          "cached_tokens": 8960
+        },
+        "prompt_cache_hit_tokens": 8960,
+        "prompt_cache_miss_tokens": 853
+      },
+      "costUpperYuan": 0.0074004,
+      "cumulativeUpperYuan": 4.73873848,
+      "latencyMs": 2770.1334999999963,
+      "timestamp": "2026-10-11T23:53:23.397Z"
+    },
+    {
+      "label": "content-sourced-npc_wt_xiangzhen-review1",
+      "model": "deepseek-flash",
+      "thinking": "disabled",
+      "usage": {
+        "prompt_tokens": 15982,
+        "completion_tokens": 1328,
+        "total_tokens": 17310,
+        "prompt_tokens_details": {
+          "cached_tokens": 15744
+        },
+        "prompt_cache_hit_tokens": 15744,
+        "prompt_cache_miss_tokens": 238
+      },
+      "costUpperYuan": 0.01172976,
+      "cumulativeUpperYuan": 4.75046824,
+      "latencyMs": 6545.17379999999,
+      "timestamp": "2026-10-11T23:53:29.950Z"
+    },
+    {
+      "label": "content-sourced-npc_wt_xiangzhen-draft2",
+      "model": "deepseek-flash",
+      "thinking": "disabled",
+      "usage": {
+        "prompt_tokens": 9629,
+        "completion_tokens": 667,
+        "total_tokens": 10296,
+        "prompt_tokens_details": {
+          "cached_tokens": 8960
+        },
+        "prompt_cache_hit_tokens": 8960,
+        "prompt_cache_miss_tokens": 669
+      },
+      "costUpperYuan": 0.007032399999999999,
+      "cumulativeUpperYuan": 4.75750064,
+      "latencyMs": 2711.362400000042,
+      "timestamp": "2026-10-11T23:53:32.667Z"
+    },
+    {
+      "label": "content-sourced-npc_wt_xiangzhen-review2",
+      "model": "deepseek-flash",
+      "thinking": "disabled",
+      "usage": {
+        "prompt_tokens": 15982,
+        "completion_tokens": 1390,
+        "total_tokens": 17372,
+        "prompt_tokens_details": {
+          "cached_tokens": 15744
+        },
+        "prompt_cache_hit_tokens": 15744,
+        "prompt_cache_miss_tokens": 238
+      },
+      "costUpperYuan": 0.01222576,
+      "cumulativeUpperYuan": 4.7697264,
+      "latencyMs": 6990.676200000045,
+      "timestamp": "2026-10-11T23:53:39.665Z"
+    }
+  ]
+}

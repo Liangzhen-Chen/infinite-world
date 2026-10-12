@@ -1,25 +1,25 @@
 {
-  "capturedAtUtc": "2026-10-11 23:23:24 UTC",
+  "capturedAtUtc": "2026-10-12 00:43:40 UTC",
   "threadId": "01a12d06-8fd3-7d00-8f62-78c510ce571a",
   "goalCreatedAt": 1791756768,
   "goalStatus": "active",
-  "systemCumulativeTokens": 1748049,
-  "systemActiveTimeSeconds": 4118,
-  "periodTokens": 1054511,
-  "periodTimeUsedSeconds": 2789,
-  "periodStartUtc": "2026-10-11 22:37:10 UTC",
-  "source": "get_goal 同一目标的累计系统计数及首次快照差；不是净生成token、有效墙钟工作时长或账单。",
+  "systemCumulativeTokens": 4127982,
+  "systemActiveTimeSeconds": 8938,
+  "periodTokens": 2379933,
+  "periodTimeUsedSeconds": 4820,
+  "periodStartUtc": "2026-10-11 23:23:24 UTC",
+  "source": "get_goal 同目标系统累计计数差；非净生成、账单或持续墙钟工作时长。",
   "modelCostYuan": null,
   "deepSeekSharedLedger": {
-    "spentYuan": 2.7665348,
+    "spentYuan": 6.76070248,
     "reservedYuan": 0.083736,
     "limitYuan": 20,
-    "periodStartSpentYuan": 0.94801504,
-    "periodIncrementSpentYuan": 1.81851976,
-    "source": "world/drafts/m4-object/budget.json 与 f79496f 同文件；客户端记录，未核验账单；其他试玩/其他账本费用不混加"
+    "periodStartSpentYuan": 2.7665348,
+    "periodIncrementSpentYuan": 3.99416768,
+    "source": "共享持久客户端费用记录；非已核验供应商账单。其他试玩账本不混加。"
   },
   "claudeFeedbackReceived": true,
-  "interpretation": "此前目标累计9298782 token/19823秒与本目标不可相减；跨目标本期与整体净用量、Codex/Claude金额未知。",
+  "interpretation": "跨目标总净用量、Codex/Claude费用未知；不倒推期初、不计跨日间隔为工作。",
   "feedbackChat": "https://claude.ai/chat/bbc56942-d112-48ca-95a5-cff1f73082a9",
-  "packageSha256": "158aec2a8a04cbc6bfb419ff7fb073a575b61cc5ce74e632a11016fd3b259466"
+  "packageSha256": "1db560b408697a7719ddf981214ba8122003bbfb3d8d6f1e1e5fb9473fc24c05"
 }

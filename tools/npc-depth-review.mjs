@@ -28,6 +28,7 @@ export function reviewOptions(argv=process.argv.slice(2)){
 export function compactReviewRequest(request){
  const copy=structuredClone(request),payload=JSON.parse(copy.messages[1].content),entry=payload.skeleton;
  if(entry.contract!=='audit-patch-v1')throw Error('精简请求仅支持审计叶子合同');
+ assert.deepEqual(payload.draft, {id:entry.id,contract:entry.contract,patches:entry.patches},'draft 不能重建冻结 patches');
  assert.deepEqual(entry.facts,applyDepthDraft(entry.before,{id:entry.id,contract:entry.contract,patches:entry.patches}),'facts 不能由冻结 before 和 patches 重建');
  const revisions=entry.patches.map(p=>({path:p.path,before:getPath(entry.before,p.path)??null,after:p.value,issues:entry.issues}));
  assert.deepEqual(payload.publishedFacts.revisions,revisions,'revisions 包含不可去重的来源字段');

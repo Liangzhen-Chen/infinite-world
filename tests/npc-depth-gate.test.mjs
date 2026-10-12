@@ -71,7 +71,7 @@ test('人物定点润色L1使用相同规则检查，保持原审核候选可读
  assert.ok(validateDraft(undefined,entry).errors.length,'坏结构仍按原合同返回errors而非抛出');
  const bad=structuredClone(draft);bad.memorySeeds.at(-1).event='主持人不要让玩家接触这段记忆。';assert.ok(validateDraft(bad,entry).errors.some(error=>error.includes('人物事实或设定')));
 });
-test('现有完整档审计不冒充构建已接入，准确核验提交修复的17人traits',async()=>{
+test('当前正式完整档仍有缺口，准确核验提交修复的17人traits',async()=>{
  const world=await loadWorld(),report=auditNpcDepth(world);
  assert.equal(report.checked,world.npcs.filter(n=>n.tier==='full').length);
  assert.equal(report.ok,false,'现有字段缺口须如实报告');
