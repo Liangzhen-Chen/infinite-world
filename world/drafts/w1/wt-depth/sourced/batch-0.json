@@ -1,8 +1,8 @@
 {
   "index": 0,
-  "fingerprint": "fe99f2f67158a277f26483176acf1c8058d67668eb6a4a8807325f54df6accd9",
+  "fingerprint": "2a9f857f46cf15ffcaf706c3e5be0900f136d1971c649094e69ac5c0ec5f656b",
   "count": 25,
-  "passed": 20,
+  "passed": 12,
   "ids": [
     "npc_wt_zhengxi",
     "npc_wt_wangpu",
@@ -32,18 +32,24 @@
   ],
   "rewritten": 10,
   "manual": [
-    "npc_wt_heqin",
+    "npc_wt_zhangou",
     "npc_wt_zhicai",
+    "npc_wt_xueying",
+    "npc_wt_leizhi",
     "npc_wt_niyun",
+    "npc_wt_quhuai",
     "npc_wt_dingsu",
-    "npc_wt_gonglu"
+    "npc_wt_ruqin",
+    "npc_wt_gonglu",
+    "npc_wt_jingyao",
+    "npc_wt_fanshui",
+    "npc_wt_shanju",
+    "npc_wt_dongfei"
   ],
   "pending": [],
   "flagged": [
-    "npc_wt_huangting",
-    "npc_wt_heqin",
-    "npc_wt_keli",
-    "npc_wt_duke",
+    "npc_wt_liuyan",
+    "npc_wt_zhangou",
     "npc_wt_zhicai",
     "npc_wt_niyun",
     "npc_wt_dingsu",
@@ -52,17 +58,113 @@
     "npc_wt_fanshui"
   ],
   "sample": [
-    "npc_wt_shanju",
-    "npc_wt_lvmo",
-    "npc_wt_keli",
-    "npc_wt_quhuai",
-    "npc_wt_zhengxi"
+    "npc_wt_shiqiao",
+    "npc_wt_wangpu",
+    "npc_wt_huangting",
+    "npc_wt_duke",
+    "npc_wt_keli"
   ],
   "l4": {
     "approved": false,
     "notes": []
   },
-  "costUpperYuan": 4.469185599999999,
-  "manualRatio": 0.2,
-  "needsSystemicRepair": true
+  "costUpperYuan": 8.030807199999995,
+  "manualRatio": 0.52,
+  "needsSystemicRepair": true,
+  "operativeInvalidated": [
+    "npc_wt_zhangou",
+    "npc_wt_zhicai",
+    "npc_wt_xueying",
+    "npc_wt_leizhi",
+    "npc_wt_niyun",
+    "npc_wt_quhuai",
+    "npc_wt_dingsu",
+    "npc_wt_ruqin",
+    "npc_wt_gonglu",
+    "npc_wt_jingyao",
+    "npc_wt_fanshui",
+    "npc_wt_shanju",
+    "npc_wt_dongfei"
+  ],
+  "l4History": [
+    {
+      "approved": false,
+      "notes": [],
+      "supersededBy": "npc_wt_heqin",
+      "priorFingerprint": "fe99f2f67158a277f26483176acf1c8058d67668eb6a4a8807325f54df6accd9"
+    },
+    {
+      "approved": false,
+      "notes": [],
+      "supersededBy": "npc_wt_zhengxi",
+      "priorFingerprint": "abd72c890afeeca901a8d35ee545f6a8d8363c2c7539b00feac30d55011a9520"
+    },
+    {
+      "approved": false,
+      "notes": [],
+      "supersededBy": "npc_wt_wangpu",
+      "priorFingerprint": "fd599858dcfcb8ecbb7dbed6e3c6139b8054d6289aa7bb900958fb8ee4c61542"
+    },
+    {
+      "approved": false,
+      "notes": [],
+      "supersededBy": "npc_wt_zhouzhu",
+      "priorFingerprint": "e3b56f62165672bfa7d1031b129a99504803d9016bb1bca8b909cd793484ec95"
+    },
+    {
+      "approved": false,
+      "notes": [],
+      "supersededBy": "npc_wt_wupeng",
+      "priorFingerprint": "e668fceb1e8d643b52487030297d5075607fd5a33cedb32e6551a58a3a637e2f"
+    },
+    {
+      "approved": false,
+      "notes": [],
+      "supersededBy": "npc_wt_weilian",
+      "priorFingerprint": "df4142c0273f1b2a2eb805fd5506b1d86e7002d90b90aa81b822772fdf5c131f"
+    },
+    {
+      "approved": false,
+      "notes": [],
+      "supersededBy": "npc_wt_huangting",
+      "priorFingerprint": "f1b20a59e5ac1652d9e6055f3f4723a48b9f49672d3db875fb541f0231271106"
+    },
+    {
+      "approved": false,
+      "notes": [],
+      "supersededBy": "npc_wt_lvmo",
+      "priorFingerprint": "c5309c84ea3059f0f686ba007cda23950f46dca5a64df5f71664a8cd37ebca5a"
+    },
+    {
+      "approved": false,
+      "notes": [],
+      "supersededBy": "npc_wt_shiqiao",
+      "priorFingerprint": "d3450bb079ddf1802160bb304afa9d5cc07b44b6a3359763418bafb42a09c0a2"
+    },
+    {
+      "approved": false,
+      "notes": [],
+      "supersededBy": "npc_wt_keli",
+      "priorFingerprint": "5f2ea666d8bd59a48cc314736f9d7a1b37da734692362b2a5e4d4429152af82a"
+    },
+    {
+      "approved": false,
+      "notes": [],
+      "supersededBy": "npc_wt_duke",
+      "priorFingerprint": "d1d8ee113ea4a4ea3a146fa00b6644beff9e711bcd4f8e51832c8866ecc0ee8c"
+    },
+    {
+      "approved": false,
+      "notes": [],
+      "supersededBy": "npc_wt_liuyan",
+      "priorFingerprint": "0be3f1dd640d9cfafe5949f8380530c2701ac86f004917ac9a4d59fc1407a668"
+    },
+    {
+      "approved": false,
+      "notes": [],
+      "supersededBy": "npc_wt_zhangou",
+      "priorFingerprint": "ccfcc3859a5557349261b3a59c7f90bf15d81294115a8f12f10ca0195398813b"
+    }
+  ],
+  "foundationHash": "fffc337e121742c3c32d56a90dbaa8445d2e9ad28166c3c548f398bba1755bae"
 }
