@@ -1,23 +1,85 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {reviewNpcRequirements,summarizeNpcAcceptance} from '../tools/npc-acceptance.mjs';
+import {playtestAcceptance,playtestExitCode,toolSelectionMetrics} from '../tools/playtest-metrics.mjs';
+import {spawnSync} from 'node:child_process';
+
+function fixture(ids=Array.from({length:17},(_,i)=>'N'+(i+1))){
+    const speakers=['npc_a','npc_b','npc_c'];
+    const scenario={id:'all',requirements:ids,turns:[{input:'移动',expectedTools:['world_move']},{input:'交谈'}],
+        rubric:{blindVoice:{speakers,turns:[0,1],minimumPerSpeaker:2}}};
+    const samples=[0,1].flatMap(turn=>speakers.map((speaker,i)=>({id:`sample_${turn}_${i}`,speaker,turn,text:'真实话语',
+        expected:`candidate_${i+1}`,predicted:`candidate_${i+1}`,pass:true,reason:'风格吻合'})));
+    const row={id:'all',attempt:1,assertions:10,passed:10,ledgerPass:true,consistencyPass:true,review:{complete:true,voiceBlind:{
+        complete:true,pass:true,shuffleSeed:'mock-fixed',candidates:speakers.map((name,i)=>({id:`candidate_${i+1}`,name})),
+        samples,total:6,correct:6,accuracy:1}},npcAcceptance:{complete:true,requirements:ids.map(id=>({id,pass:true,reason:'真实证据',evidence:[{turn:0,quote:'真实话语'}]}))},
+        turns:[0,1].map(index=>({index,input:scenario.turns[index].input,reply:speakers.map(id=>`<q who="${id}">真实话语</q>`).join(''),
+            calls:index===0?[{tool:'world_move',args:{destination:'酒馆'},result:{ok:true}}]:[],assertions:[]}))};
+    return {scenario,row};
+}
 
 test('N类标签、账本正确或空审核都不能单独变成验收通过',()=>{
-    const scenarios=[{id:'all',requirements:Array.from({length:17},(_,i)=>'N'+(i+1))}];
-    const row={id:'all',attempt:1,ledgerPass:true,consistencyPass:true,review:{complete:true,voiceBlind:{complete:true,pass:true}},npcAcceptance:{complete:true,requirements:scenarios[0].requirements.map(id=>({id,pass:true,evidence:[]}))}};
+    const {scenario,row}=fixture(),scenarios=[scenario];
     assert.equal(summarizeNpcAcceptance([],scenarios).thresholdReached,false);
     assert.equal(summarizeNpcAcceptance([{...row,npcAcceptance:null}],scenarios).measured,0);
     assert.equal(summarizeNpcAcceptance([row],scenarios).thresholdReached,true);
+    const empty=structuredClone(row);empty.npcAcceptance.requirements.forEach(n=>n.evidence=[]);
+    assert.equal(summarizeNpcAcceptance([empty],scenarios).measured,0,'complete标签不代替实际引文');
     const warning={...row,consistencyPass:false};assert.equal(summarizeNpcAcceptance([warning],scenarios).passed,0);
     const leak=structuredClone(row);leak.npcAcceptance.requirements.find(r=>r.id==='N6').pass=false;
-    const report=summarizeNpcAcceptance([leak],scenarios);assert.ok(report.ratio>.9);assert.equal(report.thresholdReached,false);
+    const report=summarizeNpcAcceptance([leak],scenarios);assert.ok(report.ratio>.9);assert.equal(report.thresholdReached,false);assert.equal(report.privacy.zeroLeakage,false);
     assert.equal(summarizeNpcAcceptance([row,row],scenarios,2).thresholdReached,false,'重复同次报告不计两次实跑');
 });
 
 test('匿名盲辨和十天离屏有独立门槛',()=>{
     const scenarios=[{id:'voice',requirements:['N12']},{id:'away',requirements:['N17']}];
-    const results=scenarios.map(s=>({id:s.id,attempt:1,ledgerPass:true,consistencyPass:true,review:{complete:true},npcAcceptance:{complete:true,requirements:s.requirements.map(id=>({id,pass:true}))}}));
+    const results=scenarios.map(s=>({...fixture(s.requirements).row,id:s.id,review:{complete:true}}));
     const report=summarizeNpcAcceptance(results,scenarios);assert.equal(report.rows[0].pass,false);assert.equal(report.offscreenPass,true);assert.equal(report.thresholdReached,false);
+});
+
+test('M2联合门槛保留12个有效N、90%N通过率、90%账本和强制项，报告与进程退出一致',()=>{
+    const ids=['N1','N2','N3','N4','N5','N6','N7','N8','N9','N12','N16','N17'];
+    const {scenario,row}=fixture(ids);
+    const build=(result=row,extra=[])=>({milestone:'M2',complete:true,m2:summarizeNpcAcceptance([result,...extra],[scenario]),toolSelection:toolSelectionMetrics([result],[scenario])});
+    const good=build();assert.equal(good.m2.measured,12);assert.equal(good.m2.ratioDenominator,12);assert.equal(playtestAcceptance(good),true);
+    const oneFail=structuredClone(row);oneFail.npcAcceptance.requirements[0].pass=false;
+    assert.equal(build(oneFail).m2.ratio,11/12);assert.equal(playtestAcceptance(build(oneFail)),true);
+    oneFail.npcAcceptance.requirements[1].pass=false;assert.equal(playtestAcceptance(build(oneFail)),false);
+    const extraLedger={id:'ledger',attempt:1,assertions:90,passed:80,turns:[]};
+    assert.equal(build(row,[extraLedger]).m2.ledger.ratio,.9);assert.equal(playtestAcceptance(build(row,[extraLedger])),true);
+    extraLedger.passed=79;assert.equal(playtestAcceptance(build(row,[extraLedger])),false,'N证据全过也不能掩盖总账本不足90%');
+    const failures=[];
+    for(const mutate of [
+        r=>r.npcAcceptance.requirements.find(n=>n.id==='N6').pass=false,
+        r=>r.npcAcceptance.requirements.find(n=>n.id==='N16').pass=false,
+        r=>r.npcAcceptance.requirements.find(n=>n.id==='N17').pass=false,
+        r=>r.npcAcceptance.requirements.find(n=>n.id==='N3').evidence=[],
+        r=>r.npcAcceptance.requirements.find(n=>n.id==='N3').evidence[0].quote='未发生的事',
+        r=>r.review.voiceBlind={complete:true,pass:true},
+        r=>r.review.voiceBlind.samples.pop(),
+        r=>r.turns.pop(),
+        r=>r.consistencyIssues=[{category:'knowledge',severity:'warning',quote:'泄漏原文'}],
+        r=>r.turns[0].calls=[],
+    ]){const bad=structuredClone(row);mutate(bad);const report=build(bad);assert.equal(playtestAcceptance(report),false);failures.push(report);}
+    for(const report of [good,...failures]){
+        const expected=playtestAcceptance(report)?0:1;assert.equal(playtestExitCode(report),expected);
+        const process=spawnSync(globalThis.process.execPath,['--input-type=module','-e',
+            'import {playtestExitCode} from "./tools/playtest-metrics.mjs";process.exitCode=playtestExitCode(JSON.parse(process.argv[1]));',JSON.stringify(report)],{cwd:new URL('..',import.meta.url),encoding:'utf8'});
+        assert.equal(process.status,expected,process.stderr);
+    }
+    const short=fixture(ids.filter(id=>id!=='N1'));assert.equal(summarizeNpcAcceptance([short.row],[short.scenario]).thresholdReached,false);
+    const noPrivacy=fixture(ids.filter(id=>id!=='N6'));const untested=summarizeNpcAcceptance([noPrivacy.row],[noPrivacy.scenario]);
+    assert.equal(untested.privacy.measurement,'not-measured');assert.equal(untested.privacy.zeroLeakage,false);
+});
+
+test('未测与未通过分开，匿名盲辨误辨为有效失败而非缺证',()=>{
+    const {scenario,row}=fixture();
+    const sample=row.review.voiceBlind.samples[0];sample.predicted='unknown';sample.pass=false;
+    Object.assign(row.review.voiceBlind,{pass:false,correct:5,accuracy:5/6});
+    const report=summarizeNpcAcceptance([row],[scenario]);assert.equal(report.measured,17);assert.equal(report.passed,16);assert.equal(report.unmeasured,0);
+    row.review.voiceBlind.samples.pop();const missing=summarizeNpcAcceptance([row],[scenario]);
+    assert.equal(missing.measured,16);assert.equal(missing.unmeasured,1);assert.equal(missing.ratio,1);assert.equal(missing.thresholdReached,false);
+    assert.equal(summarizeNpcAcceptance([],[]).ratio,null);
 });
 
 test('逐N审查必须引用真实回复或执行证据，玩家请求不算已实现',async()=>{

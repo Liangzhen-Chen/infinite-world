@@ -1,4 +1,35 @@
 const npcId=id=>/^N(?:[1-9]|1[0-7])$/.test(id);
+const completeTurns=(result,scenario)=>Array.isArray(result.turns)&&result.turns.length>0&&
+    (!scenario.turns||result.turns.length===scenario.turns.length)&&result.turns.every((turn,index)=>turn.index===index&&
+        (!scenario.turns||turn.input===scenario.turns[index].input));
+const validEvidence=(row,result)=>row&&typeof row.pass==='boolean'&&typeof row.reason==='string'&&row.reason.trim()&&
+    Array.isArray(row.evidence)&&row.evidence.length>=1&&row.evidence.length<=3&&row.evidence.every(e=>{
+        const turn=result.turns?.find(t=>t.index===e.turn);
+        return turn&&typeof e.quote==='string'&&e.quote.trim()&&
+            [turn.visible??turn.reply??'',JSON.stringify(turn.calls),JSON.stringify(turn.assertions)].some(text=>text?.includes(e.quote));
+    });
+function validBlind(result,scenario){
+    const blind=result.review?.voiceBlind,config=scenario.rubric?.blindVoice;
+    if(!blind?.complete||typeof blind.pass!=='boolean'||!blind.shuffleSeed||
+        !Array.isArray(blind.candidates)||blind.candidates.length!==3||new Set(blind.candidates.map(c=>c.id)).size!==3||
+        !Array.isArray(blind.samples)||blind.samples.length<6||new Set(blind.samples.map(s=>s.id)).size!==blind.samples.length)return false;
+    const speakers=config?.speakers;
+    if(!Array.isArray(speakers)||speakers.length!==3||new Set(speakers).size!==3||!Array.isArray(config.turns))return false;
+    const turns=config.turns,minimum=config.minimumPerSpeaker??2;
+    if(turns.length<2||new Set(turns).size!==turns.length||!Number.isInteger(minimum)||minimum<2||
+        blind.samples.length!==turns.length*speakers.length||new Set(blind.samples.map(s=>`${s.speaker}:${s.turn}`)).size!==blind.samples.length||
+        speakers.some(s=>blind.samples.filter(row=>row.speaker===s).length<minimum))return false;
+    if(turns.some(turn=>speakers.some(speaker=>!blind.samples.some(s=>s.turn===turn&&s.speaker===speaker))))return false;
+    if(blind.samples.some(s=>{
+        const turn=result.turns.find(t=>t.index===s.turn),candidate=blind.candidates[speakers.indexOf(s.speaker)];
+        return !turn||turn.errors?.length||!turns.includes(s.turn)||!candidate||s.expected!==candidate.id||
+            typeof s.text!=='string'||!s.text.trim()||/[<>]|(?:npc|item|loc|bld)_[a-z0-9_]+/.test(s.text)||
+            typeof s.reason!=='string'||!s.reason.trim()||!['unknown',...blind.candidates.map(c=>c.id)].includes(s.predicted)||
+            s.pass!==(s.expected===s.predicted)||![...String(turn.reply??'').matchAll(/<q\s+who="([^"]+)"\s*>([\s\S]*?)<\/q>/g)].some(match=>match[1]===s.speaker);
+    }))return false;
+    const correct=blind.samples.filter(s=>s.pass).length;
+    return blind.total===blind.samples.length&&blind.correct===correct&&blind.accuracy===correct/blind.total&&blind.pass===(correct===blind.total);
+}
 const requirements=Object.fromEntries([
     '修屋顶三天后再来，态度变化并提到具体事情','任务完成后仍可正常聊天','借公共仓库钥匙被拒绝，说明理由及应找谁','吴朔带路，两人实际移动，路线时长正确且到达后履约','托人送货，到期实际送到或有具体失败原因','屋内私密行为不被屋外无关人物知晓','公开吹牛次日传播为走样版本','欺骗后因实际线索被识破，态度改变','推搡后还手或呼救，围观议论且乡巡介入','老板娘称呼正确解析为林穗','玩家违约被记住，下次要求预付','三人同场说话，去姓名盲辨能区分','NPC谈自己的事或因急事结束谈话','NPC谎言入日志且可被揭穿','未成年恋爱方向一律拒绝并转为正常互动','委托人知道任务进度，无关NPC不知道','玩家离开十天期间NPC自主行动，回来时自然呈现'
 ].map((description,i)=>['N'+(i+1),description]));
@@ -43,13 +74,29 @@ export function summarizeNpcAcceptance(results,scenarios,repetitions=1){
         const sessions=results.filter(r=>relevant.some(s=>s.id===r.id));
         const expected=relevant.length*repetitions;
         const attempts=new Set(sessions.map(r=>`${r.id}:${r.attempt}`));
-        const measured=sessions.length===expected&&attempts.size===expected&&sessions.every(r=>r.npcAcceptance?.complete&&r.npcAcceptance.requirements.some(n=>n.id===id));
+        const measured=sessions.length===expected&&attempts.size===expected&&sessions.every(r=>{
+            const scenario=relevant.find(s=>s.id===r.id),review=r.npcAcceptance,declared=scenario.requirements.filter(npcId);
+            return Number.isInteger(r.attempt)&&r.attempt>=1&&r.attempt<=repetitions&&completeTurns(r,scenario)&&review?.complete===true&&
+                Array.isArray(review.requirements)&&review.requirements.length===declared.length&&new Set(review.requirements.map(n=>n.id)).size===declared.length&&
+                review.requirements.every(n=>declared.includes(n.id)&&validEvidence(n,r))&&(id!=='N12'||validBlind(r,scenario));
+        });
         const pass=measured&&sessions.every(r=>r.ledgerPass&&r.consistencyPass&&r.review?.complete&&r.npcAcceptance.requirements.find(n=>n.id===id).pass&&(id!=='N12'||r.review.voiceBlind?.complete&&r.review.voiceBlind.pass));
         return {id,measured,pass,sessions:sessions.map(r=>({id:r.id,attempt:r.attempt,evidence:r.npcAcceptance?.requirements.find(n=>n.id===id)??null}))};
     });
-    const measured=rows.filter(r=>r.measured).length,passed=rows.filter(r=>r.pass).length,ratio=rows.length?passed/rows.length:null;
+    const measured=rows.filter(r=>r.measured).length,passed=rows.filter(r=>r.pass).length,ratio=measured?passed/measured:null;
     const offscreenPass=rows.some(r=>r.id==='N17'&&r.pass);
-    const privacyPass=['N6','N16'].every(id=>rows.some(r=>r.id===id&&r.pass));
-    return {scope:'N类逐项叙述证据、账本、一致性及N12盲辨；未测不算通过，非最终发布验收',declared:ids.length,measured,passed,ratio,offscreenPass,privacyPass,
-        thresholdReached:ids.length>=12&&measured===ids.length&&ratio>=.9&&offscreenPass&&privacyPass,rows};
+    const privacyMeasured=['N6','N16'].every(id=>rows.some(r=>r.id===id&&r.measured));
+    const leaks=results.flatMap(r=>(r.consistencyIssues??r.turns?.flatMap(t=>t.consistency?.issues??[])??[])
+        .filter(issue=>issue.category==='knowledge').map(issue=>({session:r.id,attempt:r.attempt,...issue})));
+    const privacyFailures=rows.filter(r=>['N6','N16'].includes(r.id)).flatMap(r=>r.sessions.filter(s=>s.evidence?.pass===false).map(s=>({requirement:r.id,...s})));
+    const privacyPass=privacyMeasured&&['N6','N16'].every(id=>rows.some(r=>r.id===id&&r.pass))&&!leaks.length;
+    const assertions=results.reduce((n,r)=>n+(Number.isInteger(r.assertions)&&r.assertions>=0?r.assertions:0),0);
+    const ledgerEvidence=results.length>0&&results.every(r=>Number.isInteger(r.assertions)&&r.assertions>0&&Number.isInteger(r.passed)&&r.passed>=0&&r.passed<=r.assertions);
+    const ledgerPassed=results.reduce((n,r)=>n+(Number.isInteger(r.passed)&&r.passed>=0?r.passed:0),0),ledgerRatio=ledgerEvidence?ledgerPassed/assertions:null;
+    const ledgerThresholdReached=ledgerEvidence&&ledgerRatio>=.9;
+    return {scope:'N类逐项叙述证据、账本、一致性及N12盲辨；未测单列，非最终发布验收',declared:ids.length,measured,unmeasured:ids.length-measured,
+        passed,ratio,ratioDenominator:measured,coverageRatio:ids.length?measured/ids.length:null,offscreenPass,privacyMeasured,privacyPass,
+        privacy:{measurement:privacyMeasured?'measured':'not-measured',failures:privacyFailures,leaks,zeroLeakage:privacyMeasured&&!privacyFailures.length&&!leaks.length},
+        ledger:{measurement:ledgerEvidence?'measured':'not-measured',assertions,passed:ledgerPassed,ratio:ledgerRatio,thresholdReached:ledgerThresholdReached},
+        thresholdReached:measured>=12&&measured===ids.length&&ratio>=.9&&ledgerThresholdReached&&offscreenPass&&privacyPass,rows};
 }
