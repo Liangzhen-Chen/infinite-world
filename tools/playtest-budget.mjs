@@ -97,7 +97,8 @@ export async function openPlaytestBudget({registryDir,runId,cardId,increment,cli
    row=ledger.requests[requestId];
    if(row){if(row.key!==key||row.card!==cardId)throw Error('恢复模型请求身份改变');if(row.status==='settled')return structuredClone(row.response);if(row.attempts.length>=2)throw Error('同一失败请求已重跑一次');}
    const ceiling=requestCeiling(body),card=ledger.cards[cardId];
-   const envelope=beforeReserve?await beforeReserve({ledger:structuredClone(ledger),ceiling,body,label}):null;
+   let envelope=null;
+   if(beforeReserve)try{envelope=await beforeReserve({ledger:structuredClone(ledger),ceiling,body,label});}catch(error){ledger.blocked='预算proof拒发：'+error.message;await atomicJSON(file,ledger);throw error;}
    if(ledger.spentYuan+ledger.reservedYuan+ceiling>30+1e-12||card.spentYuan+card.reservedYuan+ceiling>card.limitYuan+1e-12)throw Error('试玩波次或单卡增量费用不足，拒绝发送');
    row??={key,card:cardId,label,role:role(label),request:structuredClone(body),attempts:[]};
    if(row.status==='inflight')throw Error('同一请求正在发送');
@@ -105,9 +106,9 @@ export async function openPlaytestBudget({registryDir,runId,cardId,increment,cli
    ledger.reservedYuan+=ceiling;card.reservedYuan+=ceiling;await atomicJSON(file,ledger);return null;
   });
   if(cached)return cached;
-  const attempt=row.attempts.at(-1);
+  const attempt=row.attempts.at(-1);let receivedResponse;
   try{
-   const response=await client.generate(body,label),cost=measuredCost(response);
+   const response=receivedResponse=await client.generate(body,label),cost=measuredCost(response);
    if(requireResponseId&&(typeof response.id!=='string'||!response.id))throw Error('模型缺少 responseId，保留预留');
    await mutate(async()=>{
     if(cost>attempt.reservedYuan+1e-12){ledger.blocked='真实用量超出请求预留';throw Error('真实用量超出请求预留，停止');}
@@ -118,7 +119,7 @@ export async function openPlaytestBudget({registryDir,runId,cardId,increment,cli
     Object.assign(attempt,{status:'settled',costUpperYuan:cost,measurement:response.measurement??{usage:response.usage,costUpperYuan:cost}});
     row.status='settled';row.response=structuredClone(response);await atomicJSON(file,ledger);
    });return response;
-  }catch(error){await mutate(async()=>{attempt.status='unknown';attempt.error=error.message;if(error.providerResponse)attempt.response=structuredClone(error.providerResponse);row.status='unknown';await atomicJSON(file,ledger);});throw error;}
+  }catch(error){await mutate(async()=>{attempt.status='unknown';attempt.error=error.message;if(error.providerResponse||receivedResponse)attempt.response=structuredClone(error.providerResponse??receivedResponse);if(requireResponseId&&(error.providerResponse||/responseId|用量/.test(error.message)))ledger.blocked=error.message;row.status='unknown';await atomicJSON(file,ledger);});throw error;}
  }
  // A process killed during generate cannot confirm failure or refund usage.
  await mutate(async()=>{for(const row of Object.values(ledger.requests))if(row.status==='inflight'){row.status='unknown';Object.assign(row.attempts.at(-1),{status:'unknown',error:'进程中断，结果未知'});}await atomicJSON(file,ledger);});
@@ -147,10 +148,10 @@ export async function openPlaytestTape({file,identity,api,client}){
   if(old&&old.key!==key)throw Error('试玩恢复 HTTP 顺序改变');
   if(old?.response)return structuredClone(old.response);
   if(old?.status==='pending'){failed=true;throw Error('HTTP 请求执行结果未知，保留检查点，需核查');}
-  if(old?.error){failed=true;throw Error(old.error);}
+  if(old?.error){if(!old.httpStatus)failed=true;const error=Error(old.error);error.httpStatus=old.httpStatus;throw error;}
   const row={key,endpoint,body,status:'pending'};tape.http[index]=row;await save();
   try{const response=await api(endpoint,body);row.response=response;row.status='complete';await save();return structuredClone(response);}
-  catch(error){if(error.httpStatus){row.error=error.message;row.status='failed';await save();}failed=true;throw error;}
+  catch(error){if(error.httpStatus){row.error=error.message;row.httpStatus=error.httpStatus;row.status='failed';await save();}else failed=true;throw error;}
  };
  const wrappedClient={async generate(body,label){
   const index=modelIndex++,key=digest([body,label]),old=tape.models[index];

@@ -31,7 +31,14 @@ test('完整保守上界允许历史归属未知；缺金额/hash和超限均拒
 test('发送前预算proof拒绝时零provider调用；严格responseId缺失保留预留',async t=>{
  let calls=0;const {budget,options}=await setup(t,{async generate(){calls++;const r=response();delete r.id;return r;}});await budget.close();
  const refused=await openPlaytestBudget({...options,beforeReserve:()=>{throw Error('保守上界缺金额');}});await assert.rejects(refused.generate(body),/缺金额/);assert.equal(calls,0);assert.equal(refused.reserved,0);await refused.close();
- const strict=await openPlaytestBudget({...options,requireResponseId:true,beforeReserve:()=>({budgetUpperSafe:true})});t.after(()=>strict.close());await assert.rejects(strict.generate(body),/responseId/);assert.equal(calls,1);assert.equal(strict.reserved,requestCeiling(body));assert.equal(strict.ledger.requests[Object.keys(strict.ledger.requests)[0]].request.messages[0].content,body.messages[0].content);
+ const reopened=await openPlaytestBudget({...options});await assert.rejects(reopened.generate(body),/冻结/);assert.equal(calls,0);await reopened.close();
+ const strict=await openPlaytestBudget({...options,runId:'strict-fixture',requireResponseId:true,beforeReserve:()=>({budgetUpperSafe:true})});t.after(()=>strict.close());await assert.rejects(strict.generate(body),/responseId/);assert.equal(calls,1);assert.equal(strict.reserved,requestCeiling(body));const row=strict.ledger.requests[Object.keys(strict.ledger.requests)[0]];assert.equal(row.request.messages[0].content,body.messages[0].content);assert.deepEqual(row.attempts[0].response.usage,response().usage);await assert.rejects(strict.generate(body,'host','next'),/冻结/);assert.equal(calls,1);
+});
+test('已确认HTTP规则拒绝可解释后续回合；恢复重放拒绝原文而不重新发出写入',async t=>{
+ const {budget,directory}=await setup(t,{async generate(){return response();}});let rejected=0,writes=0;
+ const options={file:path.join(directory,'rejected-tape.json'),identity:{case:'confirmed-rejection'},client:budget,api:async(endpoint)=>{if(endpoint==='reject'){rejected++;const error=Error('规则拒绝');error.httpStatus=400;throw error;}writes++;return {ok:true};}};
+ let tape=await openPlaytestTape(options);await assert.rejects(tape.api('reject'),/规则拒绝/);assert.deepEqual(await tape.api('execute',{tool:'world_turn'}),{ok:true});
+ tape=await openPlaytestTape(options);await assert.rejects(tape.api('reject'),/规则拒绝/);assert.deepEqual(await tape.api('execute',{tool:'world_turn'}),{ok:true});assert.equal(rejected,1);assert.equal(writes,1);
 });
 
 test('缓存只有真实 usage 才结算；同请求与重复 provider response 不双计或退款',async t=>{

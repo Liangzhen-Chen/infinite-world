@@ -22,6 +22,8 @@ const args=process.argv.slice(2),option=(name,fallback)=>args.includes(name)?arg
 for(const name of ['--run-dir','--run-id','--card','--increment'])if(!option(name))throw Error(`真实试玩须明确 ${name}，不能重新领取默认30元`);
 const destination=path.resolve(root,option('--run-dir')),runId=option('--run-id'),cardId=option('--card'),increment=Number(option('--increment'));
 const resume=args.includes('--resume');
+const retestOnly=option('--retest-only','').split(',').filter(Boolean);
+if(retestOnly.length&&!resume)throw Error('真实失败复测须明确 --resume，沿同run保留原失败');
 const repetitions=Number(option('--repeat','1')),parallel=Number(option('--parallel','4')),only=option('--only','').split(',').filter(Boolean);
 const milestone=option('--milestone','');
 if(!['','M2'].includes(milestone))throw new Error('当前专项验收支持 --milestone M2；省略则使用完整发布账本门槛');
@@ -30,6 +32,7 @@ const files=(await fs.readdir(path.join(root,'tests/playtests'))).filter(name=>n
 const all=await Promise.all(files.map(async file=>JSON.parse(await fs.readFile(path.join(root,'tests/playtests',file),'utf8'))));
 if(only.some(id=>!all.some(row=>row.id===id)))throw new Error('指定会话不存在');
 const scenarios=all.filter(row=>!only.length||only.includes(row.id));
+if(retestOnly.some(id=>!scenarios.some(s=>s.id===id)))throw Error('复测必须属于同一原十场');
 for(const scenario of scenarios)if(scenario.turns.length<8||scenario.turns.length>20||scenario.turns.some(row=>!Array.isArray(row.assertions)||!row.assertions.length))throw new Error(`${scenario.id} 不满足8–20回合与逐回合断言`);
 const bundle=await loadPromptBundle();
 const host=await loadHostPromptProcessor(option('--host-installation'));
@@ -108,6 +111,8 @@ try{
     await Promise.all(Array.from({length:Math.min(parallel,tasks.length)},async()=>{
         while(cursor<tasks.length){const{scenario,attempt}=tasks[cursor++];
             const taskFile=path.join(taskDirectory,`${digest([cardId,scenario.id,attempt])}.json`),task=await readOptional(taskFile,{executions:0,originals:[]});
+            if(retestOnly.length&&!retestOnly.includes(scenario.id))continue;
+            if(retestOnly.length&&(!task.result||task.result.acceptancePass===true))throw Error('仅已保存的真实失败允许复测');
             if(task.result&&(!resume||task.result.recoveryComplete===true||task.executions>=2))continue;
             if(task.executions&&!resume)throw Error('中断任务须用 --resume 原身份接续');
             if(task.executions>=2)throw Error('同一失败会话已续跑一次');
@@ -116,9 +121,9 @@ try{
             console.log(`开始 ${scenario.id} 第${attempt}次`);
             let result;
             try{
-                if(task.gameResult&&!task.gameResult.turns.some(row=>row.errors.length))result=structuredClone(task.gameResult);
+                if(!retestOnly.length&&task.gameResult&&!task.gameResult.turns.some(row=>row.errors.length))result=structuredClone(task.gameResult);
                 else{
-                    const tape=await openPlaytestTape({file:taskFile+'.tape.json',identity:{runId,cardId,scenario,attempt,promptHash:identity.promptHash},api:server.api,client});
+                    const tape=await openPlaytestTape({file:taskFile+(retestOnly.length?'.retest.tape.json':'.tape.json'),identity:{runId,cardId,scenario,attempt,promptHash:identity.promptHash,...(retestOnly.length?{retest:1}:{})},api:server.api,client});
                     result=await runPlaytest({scenario,attempt,api:tape.api,client:tape.client,bundle,processMessages:host.process,countTokens,stopOnFailure:true});
                     task.gameResult=structuredClone(result);await atomicJSON(taskFile,task);
                 }
