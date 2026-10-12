@@ -55,7 +55,7 @@ function permission(d,engine,row,args){
 }
 function visible(row,state){
     const out={id:row.id,name:row.name,kind:row.kind,owner:row.owner,access:row.access,position:[...row.position],links:{...row.links??{}}};
-    for(const name of['capacityMl','waterMl','turbidity','odor','siltGrams','loosenedSiltGrams','blockagePercent','flowLimitMl','moisturePercent'])if(state[name]!==undefined)out[name]=state[name];
+    for(const name of['capacityMl','waterMl','nutrientMg','growthConsumedWaterMl','growthConsumedNutrientMg','turbidity','odor','siltGrams','loosenedSiltGrams','blockagePercent','flowLimitMl','moisturePercent'])if(state[name]!==undefined)out[name]=state[name];
     if(state.waterMl!==undefined)out.waterSafety='毒素和病原尚未检验；外观清澈不等于可安全饮用';return out;
 }
 export function environmentCatalog(engine,document,{entity}={}){

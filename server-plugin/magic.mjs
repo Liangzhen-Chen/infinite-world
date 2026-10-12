@@ -1,3 +1,4 @@
+import {validateGrowthCatalog,prepareGrowthMagic,applyGrowthMagic}from'./magic-growth.mjs';
 import {messageKinds,validateMessageCatalog,prepareMessage,applyMessage}from'./magic-message.mjs';
 import {movementKinds,validateMovementCatalog,prepareMovement,applyMovement}from'./magic-movement.mjs';
 import {validateAreaCatalog,prepareAreaMagic,applyAreaMagic}from'./magic-area.mjs';
@@ -16,7 +17,7 @@ import {validateObjectCatalog,prepareObjectMagic,applyObjectMagic}from'./magic-o
 export function validateMagicCatalog(catalog,{requireHandler=false}={}){
     const spec=catalog.effectSpec,errors=[];
     if(!spec){if(requireHandler||catalog.mechanism)errors.push('此法术机制尚未接入规则，不能叙述已实现');return errors;}
-    errors.push(...(movementKinds.includes(spec.kind)?validateMovementCatalog(catalog):messageKinds.includes(spec.kind)?validateMessageCatalog(catalog):validateEffectSpec(spec)));
+    errors.push(...(movementKinds.includes(spec.kind)?validateMovementCatalog(catalog):messageKinds.includes(spec.kind)?validateMessageCatalog(catalog):spec.kind==='growth'?validateGrowthCatalog(catalog):validateEffectSpec(spec)));
     errors.push(...validateTargeting(catalog));
     if(['status','light','protection'].includes(spec.kind)&&(!Number.isSafeInteger(catalog.duration)||catalog.duration<1||catalog.duration>Math.min(catalog.durationLimit??43200,43200)))errors.push('持续效果的时限非法');
     if(spec.kind==='status'&&(!magicStatuses[spec.status]||spec.power>magicStatuses[spec.status].maximum))errors.push('状态效果或强度不在规则表');
@@ -41,6 +42,7 @@ export function prepareMagic(d,catalog,args,context={}){
     if(['summon','summon_contract'].includes(spec.kind))return prepareSummon.call(this,d,catalog,args);
     if(spec.kind==='mark')return prepareMark.call(this,d,catalog,args);
     if(spec.kind==='object')return prepareObjectMagic.call(this,d,catalog,args);
+    if(spec.kind==='growth')return prepareGrowthMagic.call(this,d,catalog,args);
     const target=['repair','dry','light'].includes(spec.kind)?this.resolve(args.target??'player'):resolveCreature(this,d,args.target??'player');
     if(['repair','dry','light'].includes(spec.kind)){
         if(!target.startsWith('item_')||this.quantity(d,'player',target)<1)throw new Error('施法需要实际持有的目标物品');
@@ -82,6 +84,7 @@ export function applyMagic(d,prepared,id){
     if(['summon','summon_contract'].includes(spec.kind))return applySummon.call(this,d,prepared,id);
     if(spec.kind==='mark')return applyMark.call(this,d,prepared,id);
     if(spec.kind==='object')return applyObjectMagic.call(this,d,prepared,id);
+    if(spec.kind==='growth')return applyGrowthMagic.call(this,d,prepared,id);
     if(prepared.completionArgs){
         try{prepared=prepareMagic.call(this,d,catalog,prepared.completionArgs,prepared.context);}
         catch(error){return{target,effectFailed:`施法完成前条件失效：${error.message}`};}
