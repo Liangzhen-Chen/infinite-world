@@ -1,9 +1,10 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
-import {randomUUID} from 'node:crypto';
+import {randomUUID,createHash} from 'node:crypto';
 
 const near=(a,b)=>Number.isFinite(a)&&Math.abs(a-b)<1e-10;
 const amount=x=>Number.isFinite(x)&&x>=0;
+const hash=value=>createHash('sha256').update(JSON.stringify(value)).digest('hex');
 async function save(file,value){const temp=`${file}.${process.pid}.tmp`;await fs.writeFile(temp,JSON.stringify(value,null,2)+'\n');await fs.rename(temp,file);}
 export function migrateDepthBudget(ledger,card,allocation){
  const out=structuredClone(ledger);
@@ -46,25 +47,62 @@ export async function openContentBudget({file,client,cardId,allocation}){
   await save(file,ledger);
  }catch(e){await fs.unlink(lock);throw e;}
  function sync(){client.spent=ledger.spentYuan;client.reserved=ledger.reservedYuan;client.budgetYuan=ledger.waveLimitYuan??ledger.limitYuan??client.budgetYuan;}
- sync();let queue=Promise.resolve();
- function request(body,label){const pending=queue.then(async()=>{
+ sync();let queue=Promise.resolve(),stopped=null;
+ const ownedReservations=new Set();
+ function enqueue(action){const pending=queue.then(action);queue=pending.catch(()=>{});return pending;}
+ function stop(message){stopped??=Object.assign(Error(message),{code:'CONTENT_BUDGET_STOP'});return stopped;}
+ function guard(){if(stopped)throw stopped;}
+ function estimate(body){
   const encodedRequest={model:'deepseek-flash',max_tokens:1800,stream:false,thinking:{type:'disabled'},...body};
   if(encodedRequest.messages)encodedRequest.messages=encodedRequest.messages.map(m=>m.role==='assistant'&&m.content===undefined?{...m,content:null}:m);
-  const ceiling=typeof client.estimateCostYuan==='function'?client.estimateCostYuan(body):client.rates?(Buffer.byteLength(JSON.stringify(encodedRequest))*client.rates.miss+encodedRequest.max_tokens*client.rates.output)/1e6:cardId?NaN:0;
-  if(!amount(ceiling))throw Error('缺少可验证的请求费用预留');
+  const ceiling=client.rates?(Buffer.byteLength(JSON.stringify(encodedRequest))*client.rates.miss+encodedRequest.max_tokens*client.rates.output)/1e6:typeof client.estimateCostYuan==='function'?client.estimateCostYuan(body):NaN;
+  if(!amount(ceiling))throw stop('缺少可验证的请求费用预留，已停止');
+  return ceiling;
+ }
+ function reserveRound(requests){return enqueue(async()=>{
+  guard();
+  const rows=requests.map(({body,label})=>({card:cardId??null,label,requestHash:hash(body),reservedYuan:estimate(body),status:'reserved'}));
+  const ceiling=rows.reduce((n,r)=>n+r.reservedYuan,0);
   const card=cardId&&ledger.cards[cardId],limit=ledger.waveLimitYuan??ledger.limitYuan??client.budgetYuan;
-  if(ledger.spentYuan+ledger.reservedYuan+ceiling>limit+1e-12||card&&card.spentYuan+card.reservedYuan+ceiling>card.limitYuan+1e-12)throw Error('共享或单卡费用上限，已停止');
-  const id=randomUUID(),priorSpent=client.spent;
-  ledger.requests[id]={card:cardId??null,label,reservedYuan:ceiling,status:'reserved'};ledger.reservedYuan+=ceiling;if(card)card.reservedYuan+=ceiling;
+  if(ledger.spentYuan+ledger.reservedYuan+ceiling>limit+1e-12||card&&card.spentYuan+card.reservedYuan+ceiling>card.limitYuan+1e-12)throw stop('共享或单卡费用上限，已停止');
+  const ids=rows.map(row=>{const id=randomUUID();ledger.requests[id]=row;ownedReservations.add(id);return id;});
+  ledger.reservedYuan+=ceiling;if(card)card.reservedYuan+=ceiling;
   await save(file,ledger);
+  sync();return ids;
+ });}
+ function releaseRound(ids){return enqueue(async()=>{
+  for(const id of ids){const row=ledger.requests[id];
+   // Only this process's provably unsent reservations can be released.
+   if(!ownedReservations.has(id)||row?.status!=='reserved')continue;
+   ledger.reservedYuan=Math.max(0,ledger.reservedYuan-row.reservedYuan);if(cardId)ledger.cards[cardId].reservedYuan=Math.max(0,ledger.cards[cardId].reservedYuan-row.reservedYuan);
+   row.status='cancelled-unissued';
+  }
+  await save(file,ledger);sync();
+ });}
+ async function request(body,label,{reservationId}={}){
+  const id=reservationId??(await reserveRound([{body,label}]))[0];
+  return enqueue(async()=>{
+  guard();
+  const row=ledger.requests[id],ceiling=estimate(body),card=cardId&&ledger.cards[cardId];
+  if(!ownedReservations.has(id)||row?.status!=='reserved'||row.label!==label||row.requestHash!==hash(body)||ceiling>row.reservedYuan+1e-12)throw stop('请求不符本轮预留，已停止');
+  const priorSpent=client.spent;
+  row.status='sent';await save(file,ledger);
+  // The transport also reserves its current call; keep the future review held.
+  client.reserved=ledger.reservedYuan-row.reservedYuan;
   // Persist before generate. A killed process leaves both reservations intact.
   try{
-   const response=await client.generate(body,label),cost=response.measurement?.costUpperYuan??client.spent-priorSpent;
-   if(!amount(cost)||cost>ceiling+1e-12&&(cardId||client.rates))throw Error('最终用量超出预留或无法核实');
-   ledger.spentYuan+=cost;ledger.reservedYuan-=ceiling;if(card){card.spentYuan+=cost;card.reservedYuan-=ceiling;}
-   ledger.requests[id]={...ledger.requests[id],status:'settled',costUpperYuan:cost,measurement:response.measurement??null};await save(file,ledger);sync();return response;
-  }catch(e){ledger.requests[id].status='unknown';ledger.requests[id].error=e.message;await save(file,ledger);sync();throw e;}
- });queue=pending.catch(()=>{});return pending;}
+   const generate=client.generateRaw??client.generate;
+   const response=await generate.call(client,body,label),cost=response.measurement?.costUpperYuan??client.spent-priorSpent;
+   const responseFile=path.join(path.dirname(file),'budget-responses',`${id}.json`);
+   const evidence={requestId:id,card:cardId??null,label,request:body,requestHash:hash(body),response, responseHash:hash(response),usage:response.usage??null,measurement:response.measurement??null,costUpperYuan:cost,savedAt:new Date().toISOString()};
+   await fs.mkdir(path.dirname(responseFile),{recursive:true});await save(responseFile,evidence);
+   row.responseEvidence={file:path.relative(path.dirname(file),responseFile).replaceAll('\\','/'),requestHash:evidence.requestHash,responseHash:evidence.responseHash};
+   if(!amount(cost)||cost>ceiling+1e-12)throw stop('最终用量超出预留或无法核实，已停止');
+   ledger.spentYuan+=cost;ledger.reservedYuan=Math.max(0,ledger.reservedYuan-row.reservedYuan);if(card){card.spentYuan+=cost;card.reservedYuan=Math.max(0,card.reservedYuan-row.reservedYuan);}
+   Object.assign(row,{status:'settled',costUpperYuan:cost,measurement:response.measurement??null});await save(file,ledger);sync();
+   return typeof client.processResponse==='function'?await client.processResponse(response,body):response;
+  }catch(e){if(row.status!=='settled')row.status='unknown';row.error=e.message;await save(file,ledger);sync();throw /费用上限/.test(e.message)?stop(e.message):e;}
+ });}
  function claimOnce(field,id,fingerprint){const pending=queue.then(async()=>{const owner=cardId?ledger.cards[cardId]:ledger;owner[field]??={};if(owner[field][id])return false;owner[field][id]={fingerprint,claimedAt:new Date().toISOString()};await save(file,ledger);return true;});queue=pending.catch(()=>{});return pending;}
- return{request,get ledger(){return structuredClone(ledger);},claimProtocolRecovery:(id,fingerprint)=>claimOnce('protocolRecoveries',id,fingerprint),claimReviewRecovery:(id,fingerprint)=>claimOnce('reviewRecoveries',id,fingerprint),close:async()=>{await queue;await fs.unlink(lock);}};
+ return{request,reserveRound,releaseRound,stop,get stopped(){return stopped;},get ledger(){return structuredClone(ledger);},claimProtocolRecovery:(id,fingerprint)=>claimOnce('protocolRecoveries',id,fingerprint),claimReviewRecovery:(id,fingerprint)=>claimOnce('reviewRecoveries',id,fingerprint),close:async()=>{await queue;await fs.unlink(lock);}};
 }

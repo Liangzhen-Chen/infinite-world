@@ -32,7 +32,7 @@ async function makePrepared(t,{background=true,notes=false}={}){
 }
 function reviewFor(entry,context){return{contradictions:[],reviewedPaths:entry.patches.map(p=>p.path),backgroundReviews:(context.authoredBackground?.events??[]).map(e=>({eventId:e.id,sourceHash:context.authoredBackground.sourceHash,reviewedRiskPaths:e.risks.map(r=>`${r.id}.${r.field}`),contradictions:[]}))};}
 async function approve(p){
- const requests=[],client={spent:0,reserved:0,budgetYuan:0,async generate(request){const body=JSON.parse(request.messages[1].content);requests.push(request);if(body.candidate)return{choices:[{message:{content:JSON.stringify(body.candidate)}}]};return{choices:[{message:{content:JSON.stringify(reviewFor(body.skeleton,body.publishedFacts))}}]};}};
+ const requests=[],client={spent:0,reserved:0,budgetYuan:0,estimateCostYuan:()=>0,async generate(request){const body=JSON.parse(request.messages[1].content);requests.push(request);if(body.candidate)return{choices:[{message:{content:JSON.stringify(body.candidate)}}]};return{choices:[{message:{content:JSON.stringify(reviewFor(body.skeleton,body.publishedFacts))}}]};}};
  await runContentPipeline({entries:p.entries,root:p.root,budgetRoot:p.root,client:depthReviewClient(client),revision:p.config.revision,contextFor:e=>contextFor(e,p.world),buildDraftRequest,buildReviewRequest,extractDraft,validateDraft,concurrency:1,batchSize:25});return requests;
 }
 async function l4(p,options=p.options){

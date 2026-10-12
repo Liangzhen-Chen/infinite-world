@@ -64,6 +64,7 @@ export async function runContentPipeline({
   extractReview = parseModelJSON, concurrency = 8, batchSize = 40,
   revision = 'v2', retryManual = false, onBatch = null, budgetRoot = root,
   cardId, allocation, protocolRecoveryIds = [], requestTransform,
+  reviewDraftFor = buildDraftRequest?.reviewDraftFor,
 }) {
   if (!Array.isArray(entries) || new Set(entries.map(row => row.id)).size !== entries.length) throw new Error('条目编号重复或缺失');
   if (entries.some(row => !/^[a-z][a-z0-9_-]+$/i.test(row.id ?? ''))) throw new Error('条目编号不安全');
@@ -74,20 +75,21 @@ export async function runContentPipeline({
   const ledgerPath = path.join(budgetRoot, 'budget.json');
   if(!Array.isArray(protocolRecoveryIds)||protocolRecoveryIds.some(id=>!entries.some(e=>e.id===id)))throw Error('协议恢复 id 不在冻结条目中');
   const budget=await openContentBudget({file:ledgerPath,client,cardId,allocation});
-  const results = [], batches = [];
-  async function request(body,label,details){
-    if(!requestTransform)return budget.request(body,label);
-    const transformed=await requestTransform({...details,body}),receipt=transformed.receipt;
-    if(!receipt)return budget.request(transformed.body,label);
+  const results = [], batches = [], recordsById=new Map();
+  async function prepareRequest(body,details){return requestTransform?requestTransform({...details,body}):{body};}
+  async function request(transformed,label,details,reservationId){
+    const receipt=transformed.receipt;
+    if(!receipt)return budget.request(transformed.body,label,{reservationId});
     await writeJSON(details.file,details.record);
-    try{const response=await budget.request(transformed.body,label);receipt.status='completed';receipt.responseHash=hashContent(response);if(details.phase==='review')details.record.firstSourceEvidence.reviewResponse=structuredClone(response);await writeJSON(details.file,details.record);return response;}
+    try{const response=await budget.request(transformed.body,label,{reservationId});receipt.status='completed';receipt.responseHash=hashContent(response);if(details.phase==='review')details.record.firstSourceEvidence.reviewResponse=structuredClone(response);await writeJSON(details.file,details.record);return response;}
     catch(error){receipt.status='failed';receipt.error=error.message;await writeJSON(details.file,details.record);throw error;}
   }
   async function one(entry) {
     const context = await contextFor(entry);
     const fingerprint = hashContent({ entry, context, revision });
     const file = path.join(root, `${entry.id}.json`);
-    let record = await readJSON(file);
+    let record = recordsById.get(entry.id);
+    if(record?.budgetStop){budget.stop(record.budgetStop.message);return record;}
     const recovering=protocolRecoveryIds.length>0;
     let eligible=recovering&&protocolRecoveryIds.includes(entry.id)&&entry.contract==='audit-patch-v1'&&record?.fingerprint===fingerprint&&record.status==='manual'&&!record.review&&!record.protocolRecovery&&
       hasWrapperEvidence(record,entry);
@@ -97,21 +99,39 @@ export async function runContentPipeline({
     let feedback = record?.fingerprint === fingerprint ? record.feedback : null;
     const priorAttempts = record?.fingerprint === fingerprint ? record.attempts ?? 0 : 0;
     if(eligible){record.protocolRecovery={kind:'audit-patch-v1-single-wrapper',startedAt:new Date().toISOString(),prior:structuredClone(record),status:'started'};record.status='pending';await writeJSON(file,record);}
-    else record = { id: entry.id, fingerprint, status: 'pending', attempts: priorAttempts, draft: null, review: null, errors: [], warnings: [], feedback, ...(record?.fingerprint===fingerprint&&record.firstSourceEvidence?{firstSourceEvidence:record.firstSourceEvidence}:{}) };
+    else record = record?.fingerprint===fingerprint?structuredClone(record):{ id: entry.id, fingerprint, status: 'pending', attempts: priorAttempts, draft: null, review: null, errors: [], warnings: [], feedback };
+    record.status='pending';
     for (let attempt = priorAttempts; attempt < (eligible?priorAttempts+1:3); attempt++) {
-      if(!eligible)record.attempts = attempt + 1;
+      let reservations=[],preparedDraft;
       try {
+        if(budget.stopped)throw budget.stopped;
         const offline=eligible?record.protocolRecovery.prior.draftResponse:null;
-        const response = offline??await request(await buildDraftRequest(entry, feedback, context), `content-${path.basename(root)}-${entry.id}-${eligible?'protocol-recovery':'draft'+attempt}`, {entry,context,phase:'draft',feedback,record,file});
+        const draftLabel=`content-${path.basename(root)}-${entry.id}-${eligible?'protocol-recovery':'draft'+attempt}`,reviewLabel=`content-${path.basename(root)}-${entry.id}-review${attempt}`;
+        const expectedDraft=offline?await extractDraft(offline,entry):await reviewDraftFor?.(entry,feedback,context);
+        const draftDetails={entry,context,phase:'draft',feedback,record,file};
+        if(!offline)preparedDraft=await prepareRequest(await buildDraftRequest(entry,feedback,context),draftDetails);
+        if(expectedDraft===undefined)throw budget.stop('候选未定且无法证明完整审核请求上界，已停止');
+        // Preflight on a copy so the future review has no emitted receipt yet.
+        const plannedReview=await prepareRequest(await buildReviewRequest(entry,expectedDraft,context),{entry,context,phase:'review',draft:expectedDraft,record:structuredClone(record),file});
+        reservations=await budget.reserveRound([...(offline?[]:[{body:preparedDraft.body,label:draftLabel}]),{body:plannedReview.body,label:reviewLabel}]);
+        if(!eligible)record.attempts=attempt+1;
+        const response = offline??await request(preparedDraft,draftLabel,draftDetails,reservations[0]);
         record.draftResponse=response;
+        record.responseEvidence??=[];
+        if(!offline)record.responseEvidence.push({phase:'draft',attempt:attempt+1,requestId:reservations[0],...budget.ledger.requests[reservations[0]].responseEvidence});
         record.measurements??=[];if(!offline&&response.measurement)record.measurements.push(response.measurement);
         await writeJSON(file,record);
         record.draft = await extractDraft(response, entry);
+        assert.deepEqual(record.draft,expectedDraft,'起草结果不符已预留的固定候选');
         const validation = await validateDraft(record.draft, entry, context);
         record.errors = Array.isArray(validation) ? validation : validation.errors ?? [];
         record.warnings = Array.isArray(validation) ? [] : validation.warnings ?? [];
         // L2 covers every syntactically usable draft, even if L1 found errors.
-        const reviewResponse = await request(await buildReviewRequest(entry, record.draft, context), `content-${path.basename(root)}-${entry.id}-review${attempt}`, {entry,context,phase:'review',draft:record.draft,record,file});
+        const reviewDetails={entry,context,phase:'review',draft:record.draft,record,file};
+        const preparedReview=await prepareRequest(await buildReviewRequest(entry,record.draft,context),reviewDetails);
+        const reviewId=reservations.at(-1),reviewResponse=await request(preparedReview,reviewLabel,reviewDetails,reviewId);
+        record.responseEvidence.push({phase:'review',attempt:attempt+1,requestId:reviewId,...budget.ledger.requests[reviewId].responseEvidence});
+        await writeJSON(file,record);
         if(reviewResponse.measurement)record.measurements.push(reviewResponse.measurement);
         if(reviewResponse.rawProviderReviewResponse){
           record.rawProviderReviewResponses??=[];
@@ -124,15 +144,24 @@ export async function runContentPipeline({
         if (!record.errors.length) { record.status = 'passed'; record.feedback = null; break; }
         feedback = record.errors;
       } catch (error) {
+        if(error.code==='CONTENT_BUDGET_STOP'){
+          // A queued reservation is not a sent rewrite. Preserve all old attempts.
+          if(!eligible&&reservations.length&&budget.ledger.requests[reservations[0]].status==='reserved')record.attempts=attempt;
+          record.budgetStop={code:error.code,message:error.message,at:new Date().toISOString()};
+          record.status=eligible?'manual':'pending';
+          if(preparedDraft?.receipt&&preparedDraft.receipt.status==='started'){preparedDraft.receipt.status='failed';preparedDraft.receipt.error=error.message;}
+          if(eligible)record.protocolRecovery.status='budget-stopped';
+          await writeJSON(file,record);return record;
+        }
         record.errorCode=error.code??null;
         feedback = [String(error.message)]; record.errors = feedback;
-        // Transport and budget failures are resumable, not a consumed rewrite.
+        // Transport failure keeps an already sent attempt and its unknown cost.
         if (/费用上限|环境变量|fetch failed|timeout|timed out|HTTP (429|5\d\d)/i.test(error.message)) {
-          if(!eligible)record.attempts = attempt; record.status = eligible?'manual':'pending'; record.feedback = feedback;
+          record.status = eligible?'manual':'pending'; record.feedback = feedback;
           if(eligible)record.protocolRecovery.status='failed';
           await writeJSON(file, record); return record;
         }
-      }
+      } finally {if(reservations.length)await budget.releaseRound(reservations);}
       record.feedback = feedback;
       await writeJSON(file, record);
     }
@@ -141,7 +170,11 @@ export async function runContentPipeline({
     await writeJSON(file, record);
     return record;
   }
-  try { for (let start = 0; start < entries.length; start += batchSize) {
+  try {
+  const oldRecords=await Promise.all(entries.map(entry=>readJSON(path.join(root,`${entry.id}.json`))));
+  entries.forEach((entry,index)=>recordsById.set(entry.id,oldRecords[index]));
+  const priorStop=oldRecords.find(record=>record?.budgetStop);if(priorStop)budget.stop(priorStop.budgetStop.message);
+  for (let start = 0; start < entries.length; start += batchSize) {
     const slice = entries.slice(start, start + batchSize), rows = new Array(slice.length);
     let cursor = 0;
     await Promise.all(Array.from({ length: Math.min(concurrency, slice.length) }, async () => {
