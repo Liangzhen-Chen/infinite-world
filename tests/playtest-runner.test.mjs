@@ -5,6 +5,10 @@ import {evaluateAssertions}from'../tools/playtest-assertions.mjs';
 import {loadPromptBundle,presetFor}from'../tools/build-card.mjs';
 import {promptSections}from'../extension/prompt.mjs';
 import {toolSelectionMetrics,playtestAcceptance}from'../tools/playtest-metrics.mjs';
+import fs from'node:fs/promises';
+import path from'node:path';
+import os from'node:os';
+import {openPlaytestBudget,openPlaytestTape}from'../tools/playtest-budget.mjs';
 
 test('选工具实测逐行动列出类别、参数、目标及漏调用；空样本与全部漏调不能报零风险',()=>{
     const expected={kind:'calls',tool:'world_trade',args:{seller:'林穗',days:1},min:1};
@@ -133,4 +137,28 @@ test('审查完成且允许提交的warning仍需复核，不能冒充整场验�
     assert.equal(result.ledgerPass,true);assert.equal(result.consistencyVerified,true);
     assert.equal(result.consistencyPass,false);assert.equal(result.reviewRequired,true);assert.equal(result.acceptancePass,false);
     assert.deepEqual(result.consistencyIssues,[warning]);
+});
+
+test('持久续跑从付款后的失败正文恢复，原失败保留且HTTP执行不重发',async t=>{
+    const directory=await fs.mkdtemp(path.join(os.tmpdir(),'fields-runner-resume-'));t.after(()=>fs.rm(directory,{recursive:true,force:true}));
+    const server=await createPlaytestServer({directory:path.join(directory,'server')});t.after(()=>server.close());
+    let calls=0,executeCount=0;
+    const provider={async generate(){
+        calls++;if(calls===2)throw Error('付款后正文中断');
+        const message=calls===1?{tool_calls:[{id:'rent',type:'function',function:{name:'world_trade',arguments:JSON.stringify({seller:'林穗',service:'住宿',days:1})}}]}:{content:'已经住下。<回合 额外="0分" 地点="bld_hw_qingdeng" 在场="npc_hw_linsui"/>'};
+        const usage={prompt_tokens:10,completion_tokens:10};return {id:`resume-${calls}`,usage,measurement:{usage,costUpperYuan:.0001},choices:[{finish_reason:'stop',message}]};
+    }};
+    const budget=await openPlaytestBudget({registryDir:path.join(directory,'registry'),runId:'resume',cardId:'T17',increment:30,identity:{},client:provider});t.after(()=>budget.close());
+    const api=async(name,args)=>{if(name==='execute')executeCount++;return server.api(name,args);};
+    const scenario={id:'paid-resume',initial:{mode:'legacy'},turns:[{input:'付六铜住一晚',assertions:[{kind:'delta',path:'state.player.coins',value:-6}]}]},bundle=await loadPromptBundle();
+    const options={file:path.join(directory,'tape.json'),identity:{scenario},api,client:budget};
+    let tape=await openPlaytestTape(options);
+    const failed=await runPlaytest({scenario,api:tape.api,client:tape.client,bundle,stopOnFailure:true});assert.equal(failed.pass,false);assert.equal(failed.finalDocument.state.player.coins,174);assert.equal(executeCount,1);
+    tape=await openPlaytestTape(options);
+    const restored=await runPlaytest({scenario,api:tape.api,client:tape.client,bundle,stopOnFailure:true});
+    assert.equal(restored.pass,true,JSON.stringify(restored.turns));assert.equal(restored.finalDocument.state.player.coins,174);
+    assert.equal(executeCount,2,'只发送新正文的world_turn；付款不重发');assert.equal(calls,3);assert.match(failed.turns[0].errors[0],/中断/);
+    assert.equal(tape.tape.failures.length,1);assert.ok(budget.reserved>0);
+    tape=await openPlaytestTape(options);await runPlaytest({scenario,api:tape.api,client:tape.client,bundle,stopOnFailure:true});
+    assert.equal(executeCount,2);assert.equal(calls,3,'已成功续跑不会再次调用模型');
 });
