@@ -134,7 +134,12 @@ test('真实prepare CLI重复执行零模型零正式写入，冻结产物一致
 test('原v1完整hash证据保留，新版18处实际变化逐id/path对应原目标或正式家属处境',async()=>{
  const preserved=JSON.parse(await fs.readFile(path.join(legacyRoot,'offline-v1-evidence/original-hashes.json'),'utf8'));
  assert.equal(preserved.sourceCommit,'89546d6');
- for(const f of preserved.files){const bytes=await fs.readFile(path.join(legacyRoot,f.path));assert.equal(createHash('sha256').update(bytes).digest('hex'),f.sha256);}
+ for(const f of preserved.files){
+  const text=await fs.readFile(path.join(legacyRoot,f.path),'utf8');assert.equal(f.originalLineEnding,'LF');
+  for(const checkoutText of [text.replace(/\r\n/g,'\n'),text.replace(/\r\n/g,'\n').replace(/\n/g,'\r\n')]){
+   const bytes=Buffer.from(checkoutText.replace(/\r\n/g,'\n'),'utf8');assert.equal(bytes.length,f.bytes);assert.equal(createHash('sha256').update(bytes).digest('hex'),f.sha256);
+  }
+ }
  const report=JSON.parse(await fs.readFile(path.join(root,'author-source-checklist.json'),'utf8'));
  assert.equal(report.changes.length,18);assert.equal(report.personChecks.length,30);assert.equal(report.patchSources.length,384);
  const sourcePeople=[...world.npcs,...world.residents];
