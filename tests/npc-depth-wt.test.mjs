@@ -162,6 +162,7 @@ test('受控修订只改变真实L2/L4错叶，旧记录与原来源hash保持�
  const root=new URL('../world/drafts/w1/wt-depth/',import.meta.url),read=async file=>JSON.parse(await fs.readFile(new URL(file,root),'utf8'));
  const [plan,invalidations,diff,foundation,base,candidate,after]=await Promise.all(['controlled/controlled-plan.json','controlled/l4-invalidations-normalized.json','controlled/patch-diff.json','sourced/foundation.json','sourced/base.json','sourced/candidate.json','controlled/candidate-after.json'].map(read));
  let receipt=null;try{receipt=await read('sourced/incremental-proof.json');}catch(error){if(error.code!=='ENOENT')throw error;}
+ while(receipt?.previousProof)receipt=receipt.previousProof;
  assert.equal(plan.cardId,'T07');assert.equal(plan.revision,foundation.revision);
  assert.equal(plan.foundationHash,hashContent(foundation));assert.equal(plan.baseHash,hashContent(base));assert.equal(plan.candidateHash,hashContent(candidate));
  assert.equal(plan.invalidationHash,hashContent(invalidations));
@@ -170,7 +171,8 @@ test('受控修订只改变真实L2/L4错叶，旧记录与原来源hash保持�
  for(const item of plan.authorized){
   const current=await read('sourced/'+item.id+'.json'),record=receipt?.oldRecords.find(r=>r.id===item.id)??current,proof=invalidations.records.find(r=>r.id===item.id);
   assert.equal(item.recordHash,hashContent(record));assert.equal(item.draftHash,hashContent(record.draft));assert.equal(item.reviewHash,hashContent(record.review));
-  if(current.incremental){assert.equal(current.incremental.originalRecordHash,item.recordHash);assert.equal(hashContent(current.reviewRecovery.prior),item.recordHash);assert.deepEqual(current.draft,after.find(r=>r.id===item.id));}
+  let stage=current;while(stage.incremental&&stage.incremental.authorizationHash!==hashContent(plan))stage=stage.reviewRecovery.prior;
+  if(stage.incremental){assert.equal(stage.incremental.originalRecordHash,item.recordHash);assert.equal(hashContent(stage.reviewRecovery.prior),item.recordHash);assert.deepEqual(stage.draft,after.find(r=>r.id===item.id));}
   assert.equal(proof.recordHash,item.recordHash);assert.equal(proof.draftHash,item.draftHash);assert.equal(proof.reviewHash,item.reviewHash);
   const findings=[...proof.findings,...record.review.contradictions.filter(r=>r.severity==='hard').map(r=>({path:r.field,quote:r.quote}))];
   const next=after.find(r=>r.id===item.id),prior=candidate.find(r=>r.id===item.id);
@@ -215,7 +217,7 @@ test('换行凭证贯穿官方准备、mock复审收据及发布重放，不授�
  const root=path.join(worldRoot,'drafts/w1/wt-depth/sourced'),controlled=path.join(worldRoot,'drafts/w1/wt-depth/controlled'),witnessFile=path.join(controlled,'source-checkout-evidence.json');
  // The mock starts from preserved history in this temporary copy. Live review
  // records and recovery claims remain untouched.
- try{const historical=JSON.parse(await fs.readFile(path.join(root,'incremental-proof.json'),'utf8'));for(const record of historical.oldRecords)await fs.writeFile(path.join(root,record.id+'.json'),JSON.stringify(record));const terminal=JSON.parse(await fs.readFile(path.join(root,'terminal.json'),'utf8'));await fs.writeFile(path.join(root,'summary.json'),JSON.stringify(terminal.summary));for(const batch of terminal.summary.batches)await fs.writeFile(path.join(root,`batch-${batch.index}.json`),JSON.stringify(batch));await fs.rm(path.join(root,'incremental-proof.json'));}catch(error){if(error.code!=='ENOENT')throw error;}
+ try{let historical=JSON.parse(await fs.readFile(path.join(root,'incremental-proof.json'),'utf8'));while(historical.previousProof)historical=historical.previousProof;for(const record of historical.oldRecords)await fs.writeFile(path.join(root,record.id+'.json'),JSON.stringify(record));const terminal=JSON.parse(await fs.readFile(path.join(root,'terminal.json'),'utf8'));await fs.writeFile(path.join(root,'summary.json'),JSON.stringify(terminal.summary));for(const batch of terminal.summary.batches)await fs.writeFile(path.join(root,`batch-${batch.index}.json`),JSON.stringify(batch));await fs.rm(path.join(root,'incremental-proof.json'));}catch(error){if(error.code!=='ENOENT')throw error;}
  const plan=JSON.parse(await fs.readFile(path.join(controlled,'controlled-plan.json'),'utf8')),witness=JSON.parse(await fs.readFile(witnessFile,'utf8'));
  const options={root,worldRoot,design:path.join(root,'design.mjs'),controlledRevision:path.join(controlled,'controlled-plan.json'),authoredBackground:path.join(worldRoot,'drafts/w1/wt-depth/authored-background.json'),authorizationHash:hashContent(plan),cardId:'T07',sourceCheckoutEvidence:witnessFile};
  const file=path.join(worldRoot,'design/w1-villages-weiting.mjs');await fs.writeFile(file,witness.gitBlob.text);
@@ -276,7 +278,7 @@ test('T07实际record基准经官方prepare后须原样复用12有效passed完�
 
 test('湛鸥只修七个真实hard，家属不自动转告，未同意的步骤保持pending',async()=>{
  const reopened=await import('../world/drafts/w1/wt-depth/reopen/design.mjs'),next=depthEntries(design.patchRows.map(r=>r.before),reopened,world);
- const root=new URL('../world/drafts/w1/wt-depth/',import.meta.url),record=JSON.parse(await fs.readFile(new URL('sourced/npc_wt_zhangou.json',root),'utf8'));
+ const root=new URL('../world/drafts/w1/wt-depth/',import.meta.url),record=JSON.parse(await fs.readFile(new URL('reopen/old-records.json',root),'utf8')).find(r=>r.id==='npc_wt_zhangou');
  const current=next.find(e=>e.id===record.id),previous=entries().find(e=>e.id===record.id);
  const changed=current.patches.filter(p=>hashContent(p.value)!==hashContent(previous.patches.find(o=>o.path===p.path).value)).map(p=>p.path);
  assert.deepEqual(changed.sort(),record.errors.map(e=>e.field).sort());assert.equal(changed.length,7);
@@ -310,7 +312,7 @@ test('未说出口的原关切不能变成已提出，向菲天黑前回村及�
 test('未提供显式重开授权时原T07 proof仍拒绝新规划，不移除冻结守卫',async()=>{
  const root=fileURLToPath(new URL('../world/drafts/w1/wt-depth/',import.meta.url)),here=path.join(root,'reopen');
  const plan=JSON.parse(await fs.readFile(path.join(here,'controlled-plan.json'),'utf8'));
- await assert.rejects(()=>prepareDepthRevision({root:path.join(root,'sourced'),worldRoot:path.resolve('world'),cardId:'T07',design:path.join(here,'design.mjs'),controlledRevision:path.join(here,'controlled-plan.json'),authorizationHash:hashContent(plan),authoredBackground:path.join(here,'authored-background.json'),sourceCheckoutEvidence:path.join(root,'controlled/source-checkout-evidence.json')}),/本次规划已冻结/);
+ await assert.rejects(()=>prepareDepthRevision({root:path.join(root,'sourced'),worldRoot:path.resolve('world'),cardId:'T07',design:path.join(here,'design.mjs'),controlledRevision:path.join(here,'controlled-plan.json'),authorizationHash:hashContent(plan),authoredBackground:path.join(here,'authored-background.json'),sourceCheckoutEvidence:path.join(root,'controlled/source-checkout-evidence.json')}),/本次规划已冻结|旧候选指纹不匹配/);
 });
 
 test('18实际draft基准与42授权after逐值匹配，12未授权基准重放父proof',async()=>{
@@ -320,7 +322,7 @@ test('18实际draft基准与42授权after逐值匹配，12未授权基准重放�
  assert.equal(records.length,18);assert.equal(diff.length,42);assert.equal(prepared.revision.changes.length,42);
  for(const change of diff){const old=records.find(r=>r.id===change.id).draft.patches.find(p=>p.path===change.path).value;assert.deepEqual(change.before,old);assert.equal(hashContent(old),change.beforeHash);assert.deepEqual(prepared.entries.find(e=>e.id===change.id).patches.find(p=>p.path===change.path).value,change.after);}
  for(const record of records){const row=basis.find(e=>e.id===record.id);assert.deepEqual(row.patches,record.draft.patches);const entry=prepared.entries.find(e=>e.id===record.id);for(const patch of record.draft.patches)if(!diff.some(c=>c.id===record.id&&c.path===patch.path))assert.deepEqual(entry.patches.find(p=>p.path===patch.path).value,patch.value);}
- const replay=foundation.entries.map(({context,facts,contract,...row})=>structuredClone(row));for(const c of proof.changes)replay.find(e=>e.id===c.id).patches.find(p=>p.path===c.path).value=c.after;
+ const replay=foundation.entries.map(({context,facts,contract,...row})=>structuredClone(row));function replayProof(p){if(p.previousProof)replayProof(p.previousProof);for(const c of p.changes)replay.find(e=>e.id===c.id).patches.find(p=>p.path===c.path).value=c.after;}replayProof(proof);
  const preserved=basis.filter(e=>!records.some(r=>r.id===e.id));assert.equal(preserved.length,12);for(const row of preserved)assert.deepEqual(row,replay.find(e=>e.id===row.id));
  const background=await read('reopen/authored-background.json'),oldBackground=await read('authored-background.json'),changedEvent=background.events.find(e=>hashContent(e)!==hashContent(oldBackground.events.find(old=>old.id===e.id)));
  assert.equal(background.events.filter(e=>hashContent(e)!==hashContent(oldBackground.events.find(old=>old.id===e.id))).length,1);
@@ -331,4 +333,18 @@ test('18实际draft基准与42授权after逐值匹配，12未授权基准重放�
   for(const event of context.authoredBackground.events){const {originalSources,privateRisks,...sourceEvent}=event;assert.deepEqual(sourceEvent,expected.events.find(e=>e.id===event.id));}
   for(const patch of entry.patches)assert.deepEqual(context.revisions.find(r=>r.path===patch.path).after,patch.value);
  }
+});
+
+test('T07真实首ID协议齐全但共享来源hard不升级为通过，旧七hard和12有效record均保留',async()=>{
+ const root=new URL('../world/drafts/w1/wt-depth/',import.meta.url),read=async f=>JSON.parse(await fs.readFile(new URL(f,root),'utf8'));
+ const [record,pilot,snapshot,proposal]=await Promise.all(['sourced/npc_wt_zhangou.json','reopen/complete-003/pilot-results.json','reopen/complete-003/pre-review.json','reopen/complete-003/shared-repair-guard.json'].map(read));
+ assert.equal(pilot.length,1);assert.equal(pilot[0].status,'manual');assert.equal(record.status,'manual');assert.equal(record.reviewRecovery.status,'failed');
+ assert.deepEqual([...record.review.reviewedPaths].sort(),record.draft.patches.map(p=>p.path).sort());
+ assert.equal(record.review.backgroundReviews.length,1);assert.equal(record.review.backgroundReviews[0].reviewedRiskPaths.length,4);
+ assert.ok(record.review.contradictions.some(c=>c.severity==='hard'&&c.field==='memorySeeds[2].event'));
+ assert.equal(record.reviewRecovery.prior.errors.filter(e=>e.severity==='hard').length,7);
+ assert.equal(hashContent(record.reviewRecovery.response),record.responseEvidence.at(-1).responseHash);
+ for(const row of snapshot.protected){assert.equal(hashContent(await fs.readFile(new URL('sourced/'+row.id+'.json',root),'utf8')),row.rawHash);}
+ assert.equal(snapshot.protected.length,12);assert.equal(proposal.changes.length,4);assert.equal(proposal.newModelCalls,0);assert.equal(proposal.authorSourceNotApproved,true);
+ assert.equal(proposal.guard,'正确兄弟叶不得修改');assert.deepEqual(proposal.lateFailures,[]);
 });

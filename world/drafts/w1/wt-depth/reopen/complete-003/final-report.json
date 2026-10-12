@@ -1,0 +1,110 @@
+{
+  "status": "stopped-pilot-L2-shared-hard",
+  "authorizationId": "user-reopen-20261012-01",
+  "authorizationHash": "d6581c2f613dfa44bcd904b650c1d62fa779a36973b94e1d02cbe39f9604aa07",
+  "officialPrepare": {
+    "changedPaths": 42,
+    "protectedFingerprints": 12,
+    "L1Errors": [],
+    "T04Issues": [],
+    "sourceInheritancePassed": true
+  },
+  "realModelCalls": 1,
+  "newCostYuan": 0.05495808000000002,
+  "T07": {
+    "spentYuan": 2.8175882400000005,
+    "reservedYuan": 0,
+    "limitYuan": 4.5,
+    "maxRemainingYuan": 1.6824117599999995
+  },
+  "shared": {
+    "spentYuan": 14.751742399999992,
+    "reservedYuan": 0.08373599999999973,
+    "limitYuan": 20
+  },
+  "pilot": {
+    "id": "npc_wt_zhangou",
+    "status": "manual",
+    "coverage": [
+      "knowledge.known[1]",
+      "knowledge.known[2]",
+      "knowledge.unknown[0]",
+      "knowledge.unknown[1]",
+      "voice.register",
+      "goals.short[0].steps[0].content",
+      "goals.mid[0].steps[0].content",
+      "goals.long[0].steps[0].content",
+      "relationships[0].note",
+      "relationships[1].note",
+      "relationships[2].note",
+      "memorySeeds[2]",
+      "opinions.neighbors[2].view"
+    ],
+    "hard": [
+      {
+        "quote": "湛鸥、支采、薛萤和雷芷在汀口记事屋前说过进出和传话的麻烦。湛鸥解释退水便道不能当常路，支采说送补衣两户都催先拿，薛萤说旧根留在门边，雷芷追问含混称呼住哪一户。几人仍要回去分别询问家人与物主。",
+        "field": "memorySeeds[2].event",
+        "severity": "hard",
+        "reason": "该共同记忆把支采、薛萤、雷芷的私有目标内容（送补衣两户都催先拿、旧根留在门边、含混称呼住哪一户）作为已向湛鸥当面说出的事实，扩大了各人秘密与私有目标的知情范围；原档只允许各人按publicSpeech范围发言，且这些内容属未公开的私有目标/秘密。"
+      }
+    ],
+    "backgroundHard": [
+      {
+        "quote": "湛鸥、支采、薛萤和雷芷在汀口记事屋前说过进出和传话的麻烦。湛鸥解释退水便道不能当常路，支采说送补衣两户都催先拿，薛萤说旧根留在门边，雷芷追问含混称呼住哪一户。几人仍要回去分别询问家人与物主。",
+        "field": "memorySeeds[2].event",
+        "severity": "hard",
+        "reason": "该共同记忆把支采、薛萤、雷芷的私有目标内容（送补衣两户都催先拿、旧根留在门边、含混称呼住哪一户）作为已向湛鸥当面说出的事实，扩大了各人秘密与私有目标的知情范围；原档只允许各人按publicSpeech范围发言，且这些内容属未公开的私有目标/秘密。"
+      }
+    ],
+    "sourceHash": "c8d3de769a848c9338e1acc00c97650e0bbfaccd18b2e2647f62a856736e348d",
+    "requestHash": "c4c65472f3d0a59239b819babc70ae2e6d413d7c5d9d13563543b9b51f2c0a8a",
+    "responseHash": "76a28d38847cd70ab6c30d9683ad84e265e1b123810812c91a399b5438ed668b",
+    "claimCount": 1,
+    "maxAttempts": 2,
+    "pilotPassed": false
+  },
+  "parentReplay": {
+    "changedSiblings": 23,
+    "ids": [
+      "npc_wt_zhicai",
+      "npc_wt_xueying",
+      "npc_wt_leizhi",
+      "npc_wt_niyun",
+      "npc_wt_quhuai",
+      "npc_wt_dingsu",
+      "npc_wt_ruqin",
+      "npc_wt_gonglu",
+      "npc_wt_jingyao",
+      "npc_wt_shanju",
+      "npc_wt_peichun",
+      "npc_wt_suhui",
+      "npc_wt_qilu",
+      "npc_wt_huayin",
+      "npc_wt_xiangzhen"
+    ],
+    "file": "parent-replay-diff.json"
+  },
+  "guard": "正确兄弟叶不得修改",
+  "correctedMemoryProposal": "shared-repair-{diff,background,candidate,plan}.json",
+  "protected12RecordsUnchanged": true,
+  "unreviewed17RecordsUnchanged": true,
+  "previousProofHash": "4d12b1acfd03670c6caeac1ad065d627c363cf76e083978042590deb6ffe402b",
+  "oldHardHistoryPreserved": 7,
+  "newL2Passed": 0,
+  "newL4": "not registered",
+  "rule12Scoring": "not done",
+  "publicationPreview": "not run",
+  "formalPublish": false,
+  "baselineWrites": 0,
+  "verification": {
+    "relatedPassed": 65,
+    "relatedFailed": 0,
+    "corePassed": 40,
+    "coreFailed": 0,
+    "fullSuite": "not run",
+    "releaseBuild": "not run",
+    "finalBuild": "not run"
+  },
+  "stopReason": "首ID未通过，continue未启用；子plan正规预检实际拒正确兄弟叶，子字段hard也未映射到memorySeeds[2]父叶，其他三方原grant未列共享叶。禁止修改冻结manifest/重复同文或领取第三次。第二次仍未领取。",
+  "recordedAt": "2026-10-12T14:58:33.510Z"
+}
