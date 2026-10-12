@@ -38,7 +38,7 @@
       ]
     },
     {
-      "input": "请阿砚教我基础木工，我愿付正常学费认真学一次。",
+      "input": "请阿砚教我木匠基础手艺，我愿付正常学费认真学一次。",
       "assertions": [
         {
           "kind": "records",
@@ -47,6 +47,23 @@
             "entity": "skill_life_6_core"
           },
           "min": 1
+        },
+        {
+          "kind": "delta",
+          "path": "state.player.coins",
+          "value": -6
+        },
+        {
+          "kind": "conservation",
+          "paths": [
+            "state.player.coins",
+            "state.npcs.npc_hw_ayan.coins"
+          ]
+        },
+        {
+          "kind": "elapsed",
+          "min": 60,
+          "max": 60
         }
       ],
       "expectedTools": [
@@ -54,7 +71,7 @@
       ]
     },
     {
-      "input": "还没学会基础木工就再付费学一次；已经学会就请阿砚教我削制榫用木楔。",
+      "input": "如果还没掌握木匠基础手艺，就跟阿砚付六铜学一次；已掌握手艺但不会削制榫用木楔，就付四铜学一次木楔工序；都学会就停下，不重复交钱。",
       "assertions": [
         {
           "kind": "conditional",
@@ -72,19 +89,33 @@
                   "kind": "delta",
                   "path": "state.player.coins",
                   "value": 0
+                },
+                {
+                  "kind": "elapsed",
+                  "min": 0,
+                  "max": 0
                 }
               ],
               "else": [
                 {
                   "kind": "calls",
                   "tool": "world_learn",
-                  "args": {},
-                  "min": 1
+                  "args": {
+                    "entity": "recipe_wooden_pegs"
+                  },
+                  "min": 1,
+                  "max": 1,
+                  "success": true
                 },
                 {
                   "kind": "delta",
                   "path": "state.player.coins",
                   "value": -4
+                },
+                {
+                  "kind": "elapsed",
+                  "min": 30,
+                  "max": 30
                 }
               ]
             }
@@ -93,71 +124,194 @@
             {
               "kind": "calls",
               "tool": "world_learn",
-              "args": {},
-              "min": 1
+              "args": {
+                "entity": "skill_life_6_core"
+              },
+              "min": 1,
+              "max": 1,
+              "success": true
+            },
+            {
+              "kind": "delta",
+              "path": "state.player.coins",
+              "value": -6
+            },
+            {
+              "kind": "elapsed",
+              "min": 60,
+              "max": 60
             }
+          ]
+        },
+        {
+          "kind": "conservation",
+          "paths": [
+            "state.player.coins",
+            "state.npcs.npc_hw_ayan.coins"
           ]
         }
       ]
     },
     {
-      "input": "我继续学削制榫用木楔，没学会就再试一次，已经会了就不重复交钱。",
+      "input": "如果还没掌握木匠基础手艺，就跟阿砚付六铜学一次；已掌握手艺但不会削制榫用木楔，就付四铜学一次木楔工序；都学会就停下，不重复交钱。",
       "assertions": [
         {
           "kind": "conditional",
           "when": {
-            "path": "state.recipes.recipe_wooden_pegs"
+            "path": "state.skills.skill_life_6_core"
           },
           "then": [
             {
-              "kind": "delta",
-              "path": "state.player.coins",
-              "value": 0
+              "kind": "conditional",
+              "when": {
+                "path": "state.recipes.recipe_wooden_pegs"
+              },
+              "then": [
+                {
+                  "kind": "delta",
+                  "path": "state.player.coins",
+                  "value": 0
+                },
+                {
+                  "kind": "elapsed",
+                  "min": 0,
+                  "max": 0
+                }
+              ],
+              "else": [
+                {
+                  "kind": "calls",
+                  "tool": "world_learn",
+                  "args": {
+                    "entity": "recipe_wooden_pegs"
+                  },
+                  "min": 1,
+                  "max": 1,
+                  "success": true
+                },
+                {
+                  "kind": "delta",
+                  "path": "state.player.coins",
+                  "value": -4
+                },
+                {
+                  "kind": "elapsed",
+                  "min": 30,
+                  "max": 30
+                }
+              ]
             }
           ],
           "else": [
             {
               "kind": "calls",
               "tool": "world_learn",
-              "args": {},
-              "min": 1
+              "args": {
+                "entity": "skill_life_6_core"
+              },
+              "min": 1,
+              "max": 1,
+              "success": true
             },
             {
               "kind": "delta",
               "path": "state.player.coins",
-              "value": -4
+              "value": -6
+            },
+            {
+              "kind": "elapsed",
+              "min": 60,
+              "max": 60
             }
+          ]
+        },
+        {
+          "kind": "conservation",
+          "paths": [
+            "state.player.coins",
+            "state.npcs.npc_hw_ayan.coins"
           ]
         }
       ]
     },
     {
-      "input": "如果还没掌握削制榫用木楔，就最后再跟阿砚学一次；已经学会就结束这次学习，等我决定何时制作。",
+      "input": "如果还没掌握木匠基础手艺，就跟阿砚付六铜学一次；已掌握手艺但不会削制榫用木楔，就付四铜学一次木楔工序；都学会就停下，不重复交钱。",
       "assertions": [
         {
           "kind": "conditional",
           "when": {
-            "path": "state.recipes.recipe_wooden_pegs"
+            "path": "state.skills.skill_life_6_core"
           },
           "then": [
             {
-              "kind": "delta",
-              "path": "state.player.coins",
-              "value": 0
+              "kind": "conditional",
+              "when": {
+                "path": "state.recipes.recipe_wooden_pegs"
+              },
+              "then": [
+                {
+                  "kind": "delta",
+                  "path": "state.player.coins",
+                  "value": 0
+                },
+                {
+                  "kind": "elapsed",
+                  "min": 0,
+                  "max": 0
+                }
+              ],
+              "else": [
+                {
+                  "kind": "calls",
+                  "tool": "world_learn",
+                  "args": {
+                    "entity": "recipe_wooden_pegs"
+                  },
+                  "min": 1,
+                  "max": 1,
+                  "success": true
+                },
+                {
+                  "kind": "delta",
+                  "path": "state.player.coins",
+                  "value": -4
+                },
+                {
+                  "kind": "elapsed",
+                  "min": 30,
+                  "max": 30
+                }
+              ]
             }
           ],
           "else": [
             {
               "kind": "calls",
               "tool": "world_learn",
-              "args": {},
-              "min": 1
+              "args": {
+                "entity": "skill_life_6_core"
+              },
+              "min": 1,
+              "max": 1,
+              "success": true
             },
             {
               "kind": "delta",
               "path": "state.player.coins",
-              "value": -4
+              "value": -6
+            },
+            {
+              "kind": "elapsed",
+              "min": 60,
+              "max": 60
             }
+          ]
+        },
+        {
+          "kind": "conservation",
+          "paths": [
+            "state.player.coins",
+            "state.npcs.npc_hw_ayan.coins"
           ]
         }
       ]
@@ -179,6 +333,26 @@
           "kind": "delta",
           "path": "state.inventory.item_wood.quantity",
           "value": -1
+        },
+        {
+          "kind": "delta",
+          "path": "state.inventory.item_whittling_knife.durability",
+          "value": -1
+        },
+        {
+          "kind": "delta",
+          "path": "state.player.coins",
+          "value": -2
+        },
+        {
+          "kind": "delta",
+          "path": "state.workshopFunds.station_hw_mill_bench",
+          "value": 2
+        },
+        {
+          "kind": "elapsed",
+          "min": 20,
+          "max": 20
         }
       ],
       "expectedTools": [
@@ -244,7 +418,7 @@
       ]
     },
     {
-      "input": "我用随身旧木杖攻击刚找到的那头活野猪，最多结算两次交锋；任何一方倒下就停，不继续攻击，也不取材。",
+      "input": "我用随身旧木杖防守刚找到的那头活野猪，结算两次交锋；任何一方倒下就停，不继续攻击，也不取材。",
       "expectedTools": [
         "world_combat"
       ],
@@ -252,7 +426,7 @@
         {
           "kind": "calls",
           "tool": "world_combat",
-          "min": 1,
+          "min": 2,
           "max": 2
         },
         {
@@ -266,6 +440,11 @@
           "paths": [
             "state.player.coins"
           ]
+        },
+        {
+          "kind": "delta",
+          "path": "state.inventory.item_staff.durability",
+          "value": -2
         }
       ]
     },
@@ -342,6 +521,180 @@
           "kind": "quantity",
           "path": "state.inventory.item_staff",
           "value": 1
+        },
+        {
+          "kind": "delta",
+          "path": "state.inventory.item_whittling_knife.durability",
+          "value": -1
+        },
+        {
+          "kind": "delta",
+          "path": "state.workshopFunds.station_hw_mill_bench",
+          "value": 2
+        },
+        {
+          "kind": "unchanged",
+          "paths": [
+            "state.inventory.item_wood"
+          ]
+        }
+      ]
+    },
+    {
+      "input": "如果刚才没修好木杖，我再按同样工序付费修整一次，这次也只做一次；已经修好就只查看杖身，不再收费或动刀。",
+      "assertions": [
+        {
+          "kind": "conditional",
+          "when": {
+            "path": "state.inventory.item_staff.maxDurability",
+            "equals": 99
+          },
+          "then": [
+            {
+              "kind": "delta",
+              "path": "state.player.coins",
+              "value": 0
+            },
+            {
+              "kind": "elapsed",
+              "min": 0,
+              "max": 0
+            },
+            {
+              "kind": "unchanged",
+              "paths": [
+                "state.inventory",
+                "state.records"
+              ]
+            }
+          ],
+          "else": [
+            {
+              "kind": "calls",
+              "tool": "world_craft",
+              "args": {
+                "operation": "repair"
+              },
+              "min": 1,
+              "max": 1,
+              "success": true
+            },
+            {
+              "kind": "delta",
+              "path": "state.player.coins",
+              "value": -2
+            },
+            {
+              "kind": "elapsed",
+              "min": 20,
+              "max": 20
+            },
+            {
+              "kind": "delta",
+              "path": "state.inventory.item_whittling_knife.durability",
+              "value": -1
+            },
+            {
+              "kind": "delta",
+              "path": "state.workshopFunds.station_hw_mill_bench",
+              "value": 2
+            },
+            {
+              "kind": "unchanged",
+              "paths": [
+                "state.inventory.item_wood"
+              ]
+            },
+            {
+              "kind": "records",
+              "path": "state.records",
+              "where": {
+                "category": "repair",
+                "item": "item_staff"
+              },
+              "min": 2,
+              "max": 2
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "input": "如果前两次都没有修好，我最后再付费试一次同样的修整工序，今天总共最多三次；已经修好就不动刀，只查看保存的维修结果。",
+      "assertions": [
+        {
+          "kind": "conditional",
+          "when": {
+            "path": "state.inventory.item_staff.maxDurability",
+            "equals": 99
+          },
+          "then": [
+            {
+              "kind": "delta",
+              "path": "state.player.coins",
+              "value": 0
+            },
+            {
+              "kind": "elapsed",
+              "min": 0,
+              "max": 0
+            },
+            {
+              "kind": "unchanged",
+              "paths": [
+                "state.inventory",
+                "state.records"
+              ]
+            }
+          ],
+          "else": [
+            {
+              "kind": "calls",
+              "tool": "world_craft",
+              "args": {
+                "operation": "repair"
+              },
+              "min": 1,
+              "max": 1,
+              "success": true
+            },
+            {
+              "kind": "delta",
+              "path": "state.player.coins",
+              "value": -2
+            },
+            {
+              "kind": "elapsed",
+              "min": 20,
+              "max": 20
+            },
+            {
+              "kind": "delta",
+              "path": "state.inventory.item_whittling_knife.durability",
+              "value": -1
+            },
+            {
+              "kind": "delta",
+              "path": "state.workshopFunds.station_hw_mill_bench",
+              "value": 2
+            },
+            {
+              "kind": "unchanged",
+              "paths": [
+                "state.inventory.item_wood"
+              ]
+            },
+            {
+              "kind": "records",
+              "path": "state.records",
+              "where": {
+                "category": "repair",
+                "item": "item_staff"
+              },
+              "min": 3,
+              "max": 3
+            }
+          ]
         }
       ]
     },
@@ -352,6 +705,15 @@
           "kind": "elapsed",
           "min": 0,
           "max": 0
+        },
+        {
+          "kind": "unchanged",
+          "paths": [
+            "state.inventory",
+            "state.player.coins",
+            "state.learning",
+            "state.records"
+          ]
         }
       ]
     }
