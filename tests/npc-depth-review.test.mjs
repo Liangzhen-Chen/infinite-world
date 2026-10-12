@@ -9,19 +9,20 @@ import {runDepthReview,reviewOptions,compactReviewRequest} from '../tools/npc-de
 import {hashContent,readApprovedContent} from '../tools/content-pipeline.mjs';
 import {migrateDepthBudget} from '../tools/content-budget.mjs';
 import {depthFoundation} from '../tools/npc-depth.mjs';
+import {loadWorld} from '../tools/load-world.mjs';
 import {patchDraft,contextFor,buildReviewRequest,applyDepthDraft} from '../tools/npc-depth-content.mjs';
 const exec=promisify(execFile),read=file=>fs.readFile(file,'utf8').then(JSON.parse),near=(a,b)=>assert.ok(Math.abs(a-b)<1e-10);
 const hard={quote:'旧文字',field:'notes',severity:'hard',reason:'旧事实审查失败'};
 const allocation={cardId:'T06',waveLimitYuan:20,incrementLimitYuan:2,startingSpentYuan:.94801504,startingReservedYuan:0,limitYuan:2.94801504};
 function entryFor(id){const before={id,name:'测试人物',notes:'主持人不要让玩家凭空知道另一人的秘密。',relationships:[],memorySeeds:[{id:'old',event:'旧事',knownBy:[id]}],coins:3},patches=[{path:'notes',value:'她在院内与邻人核对过桌位，仍未商定先后。'}];return{id,contract:'audit-patch-v1',before,baseHash:hashContent(before),issues:[{id,field:'notes',code:'rule-wording'}],patches,facts:{...before,notes:patches[0].value}};}
-async function fixture(t){
+async function fixture(t,{pending=false,ids,manualCount=1}={}){
  const dir=await fs.mkdtemp(path.join(os.tmpdir(),'npc-depth-review-'));t.after(()=>fs.rm(dir,{recursive:true,force:true}));const root=path.join(dir,'candidate'),budgetRoot=path.join(dir,'shared');await fs.mkdir(root);await fs.mkdir(budgetRoot);
- const entries=['npc_review_bad','npc_review_other'].map(entryFor),world={npcs:entries.map(e=>e.before),residents:[],locations:[],settlementProfiles:[]},config={revision:'same-review-v1'},foundation=depthFoundation(entries,world,config.revision);
- const records=entries.map((entry,i)=>({id:entry.id,fingerprint:hashContent({entry,context:contextFor(entry,world),revision:config.revision}),status:i?'passed':'manual',attempts:3,draft:patchDraft(entry),review:{contradictions:i?[]:[hard]},errors:i?[]:[hard],warnings:[],feedback:i?null:[hard],measurements:[{costUpperYuan:.123}]}));
- const fingerprint=hashContent(records.map(({id,draft,review,status})=>({id,draft,review,status}))),batch={index:0,fingerprint,ids:records.map(r=>r.id),count:2,passed:1,manual:[records[0].id],pending:[],flagged:[],sample:[records[1].id],needsSystemicRepair:true,l4:{approved:false,notes:[{id:records[1].id,note:'原阅读证据'}]}};
+ const entries=(ids??['npc_review_bad','npc_review_other']).map(entryFor);if(pending){Object.assign(entries[0].before,{sex:'女',workplace:{location:'loc_review'},goals:{mid:[{content:'当面请物主核对',progress:0,steps:[{content:'询问何时能一起看',status:'pending'}]}]}});entries[0].facts=applyDepthDraft(entries[0].before,patchDraft(entries[0]));}const world={npcs:entries.map(e=>e.before),residents:[],locations:[],settlementProfiles:[]},config={revision:'same-review-v1'},foundation=depthFoundation(entries,world,config.revision);
+ const records=entries.map((entry,i)=>({id:entry.id,fingerprint:hashContent({entry,context:contextFor(entry,world),revision:config.revision}),status:i>=manualCount?'passed':'manual',attempts:3,draft:patchDraft(entry),review:{contradictions:i>=manualCount?[]:[hard]},errors:i>=manualCount?[]:[hard],warnings:[],feedback:i>=manualCount?null:[hard],measurements:[{costUpperYuan:.123}]}));
+ const fingerprint=hashContent(records.map(({id,draft,review,status})=>({id,draft,review,status}))),batch={index:0,fingerprint,ids:records.map(r=>r.id),count:records.length,passed:records.length-manualCount,manual:records.slice(0,manualCount).map(r=>r.id),pending:[],flagged:[],sample:[records[manualCount].id],needsSystemicRepair:true,l4:{approved:false,notes:[{id:records[manualCount].id,note:'原阅读证据'}]}};
  const ledger=migrateDepthBudget({spentYuan:1.10760808,reservedYuan:.083736,limitYuan:2.94801504,origin:'mixed-history'},'T06',allocation);ledger.cards.T07={limitYuan:3,spentYuan:0,reservedYuan:0};ledger.requests.unrelated={card:'T07',status:'settled',costUpperYuan:0};
  const write=(file,value)=>fs.writeFile(file,JSON.stringify(value,null,2)+'\n');for(const record of records)await write(path.join(root,record.id+'.json'),record);
- await write(path.join(root,'allocation.json'),allocation);await write(path.join(root,'foundation.json'),foundation);await write(path.join(root,'batch-0.json'),batch);await write(path.join(root,'summary.json'),{total:2,passed:1,manual:1,pending:0,batches:[batch],scope:'L1/L2'});await write(path.join(budgetRoot,'budget.json'),ledger);
+ await write(path.join(root,'allocation.json'),allocation);await write(path.join(root,'foundation.json'),foundation);await write(path.join(root,'batch-0.json'),batch);await write(path.join(root,'summary.json'),{total:records.length,passed:records.length-manualCount,manual:manualCount,pending:0,batches:[batch],scope:'L1/L2'});await write(path.join(budgetRoot,'budget.json'),ledger);
  const calls=[],client={spent:0,reserved:0,budgetYuan:20,estimateCostYuan:()=>.02,async generate(body,label){calls.push({body,label});this.spent+=.01;return{choices:[{message:{content:JSON.stringify({contradictions:[]})}}],measurement:{costUpperYuan:.01,usage:{completion_tokens:1}}};}};
  const options={root,budgetRoot,id:records[0].id,cardId:'T06',batch:'test'},dependencies={client,prepare:async()=>({config,entries,world,foundation})};
  return{dir,root,budgetRoot,entries,world,config,foundation,records,batch,ledger,write,calls,client,options,dependencies};
@@ -92,4 +93,35 @@ test('来源结构、伪造源字段及不可重建冗余均拒绝，附件按UT
  const ledger=structuredClone(p.ledger);ledger.cards.T06.spentYuan=2-.083736-.09774424;ledger.spentYuan=ledger.historicalUnallocatedSpentYuan+ledger.cards.T06.spentYuan;await p.write(path.join(p.budgetRoot,'budget.json'),ledger);
  delete p.client.estimateCostYuan;p.client.rates={miss:2,hit:.04,output:8};const result=await runDepthReview({...p.options,sourceEvidence:file,compactRequest:true},p.dependencies);assert.equal(result.status,'manual');assert.equal(p.calls.length,0);near(result.budgetAfter.cards.T06.spentYuan,ledger.cards.T06.spentYuan);near(result.budgetAfter.reservedYuan,.083736);assert.deepEqual(result.budgetAfter.requests,ledger.requests);
  const record=await read(path.join(p.root,p.options.id+'.json'));assert.match(record.reviewRecovery.error,/费用上限/);assert.equal(record.reviewRecovery.sourceEvidence.contentHash,hashContent(data));
+});
+// No candidate rewrite is required to give a future question its old goal context.
+test('未知询问与pending步骤不升为已经获授权；审核来源附件包含真实目标但不公开秘密',async t=>{
+ const p=await fixture(t,{pending:true});
+ const sourceEvidence=path.join(p.dir,'pending-sources.json'),data={sourceRecords:[{id:p.options.id,name:p.world.npcs[0].name,sex:'女',workplace:p.world.npcs[0].workplace,goals:p.world.npcs[0].goals}],reviewBoundary:'询问何时能看是未定同意，pending步骤尚未发生；不能因此完成原目标或扩大任何秘密knownBy。'};await p.write(sourceEvidence,data);await runDepthReview({...p.options,sourceEvidence},p.dependencies);
+ assert.equal(p.calls.length,1);assert.deepEqual(JSON.parse(p.calls[0].body.messages.at(-1).content),data);assert.equal(data.sourceRecords[0].goals.mid[0].progress,0);assert.equal(data.sourceRecords[0].goals.mid[0].steps[0].status,'pending');
+});
+
+test('许苓补件可包含陶芷冻结原notes，篡改notes及原源不存在字段在请求前拒绝',async t=>{
+ const world=await loadWorld(),taozhi=world.npcs.find(n=>n.id==='npc_hw_taozhi');assert.match(taozhi.notes,/照顾患关节病的母亲/);
+ for(const mode of ['legal','forged-notes','absent-field']){
+  const p=await fixture(t,{ids:['npc_hw_xuling','npc_review_other']}),sourceEvidence=path.join(p.dir,'xuling-notes.json');p.world.npcs.push(structuredClone(taozhi));
+  const data={sourceRecords:[{id:p.options.id,name:p.entries[0].before.name},{id:taozhi.id,name:taozhi.name,notes:taozhi.notes}],reviewBoundary:'陶芷notes只作为冻结原私有出处核验，不因此公开母亲病情或授予许苓其他秘密。'};
+  if(mode==='forged-notes')data.sourceRecords[1].notes+='伪造新事实';if(mode==='absent-field')data.sourceRecords[1].inventedSourceField='候选自证';await p.write(sourceEvidence,data);
+  if(mode==='legal'){assert.equal((await runDepthReview({...p.options,sourceEvidence,compactRequest:true},p.dependencies)).status,'passed');assert.deepEqual(JSON.parse(p.calls[0].body.messages.at(-1).content),data);const saved=await read(path.join(p.root,p.options.id+'.json'));assert.equal(saved.reviewRecovery.sourceEvidence.contentHash,hashContent(data));}
+  else{await assert.rejects(runDepthReview({...p.options,sourceEvidence},p.dependencies),/来源字段与冻结 world 不符|来源没有该字段/);assert.equal(p.calls.length,0);assert.deepEqual(await read(path.join(p.budgetRoot,'budget.json')),p.ledger);}
+ }
+});
+
+test('T10 mock 19个passed零请求，13失败白名单沿原入口各一次且保留原历史预算与T06停止状态',async t=>{
+ const ids=Array.from({length:32},(_,i)=>'npc_t10_mock_'+i),p=await fixture(t,{ids,manualCount:13}),failed=new Set(ids.slice(0,13)),passed=p.records.slice(13);
+ const ledger=structuredClone(p.ledger);ledger.cards.T10={limitYuan:3,spentYuan:1.99097608,reservedYuan:0};ledger.spentYuan+=1.99097608;ledger.cards.T06.reviewRecoveries={stopped:{fingerprint:'frozen-stop'}};ledger.requests.stopped={card:'T06',status:'unknown',reservedYuan:0};
+ await p.write(path.join(p.budgetRoot,'budget.json'),ledger);await p.write(path.join(p.root,'allocation.json'),{cardId:'T10',incrementLimitYuan:3,waveLimitYuan:20});
+ const options={...p.options,cardId:'T10'},saved=await Promise.all(passed.map(r=>fs.readFile(path.join(p.root,r.id+'.json'),'utf8')));
+ for(const r of passed)assert.equal((await runDepthReview({...options,id:r.id},{client:p.client,prepare:async()=>{throw Error('passed不得准备');}})).skipped,true);
+ assert.equal(p.calls.length,0);assert.deepEqual(await read(path.join(p.budgetRoot,'budget.json')),ledger);
+ const generate=p.client.generate.bind(p.client);p.client.generate=async(request,label)=>{const id=JSON.parse(request.messages[1].content).draft.id;assert.ok(failed.has(id),'不得请求白名单以外id');return generate(request,label);};
+ for(const id of failed){assert.equal((await runDepthReview({...options,id},p.dependencies)).status,'passed');await runDepthReview({...options,id},p.dependencies);const record=await read(path.join(p.root,id+'.json'));assert.equal(record.attempts,3);assert.deepEqual(record.reviewRecovery.prior,p.records.find(r=>r.id===id));assert.equal(record.reviewRecovery.prior.errors[0].severity,'hard');}
+ assert.equal(p.calls.length,13);assert.deepEqual(new Set(p.calls.map(c=>JSON.parse(c.body.messages[1].content).draft.id)),failed);
+ for(const [i,r] of passed.entries())assert.equal(await fs.readFile(path.join(p.root,r.id+'.json'),'utf8'),saved[i]);
+ const after=await read(path.join(p.budgetRoot,'budget.json'));near(after.cards.T10.spentYuan,ledger.cards.T10.spentYuan+.13);near(after.reservedYuan,ledger.reservedYuan);assert.deepEqual(after.cards.T06,ledger.cards.T06);assert.deepEqual(after.requests.legacyT06,ledger.requests.legacyT06);assert.deepEqual(after.requests.stopped,ledger.requests.stopped);assert.equal(after.cards.T10.limitYuan,3);assert.equal(Object.keys(after.cards.T10.reviewRecoveries).length,13);assert.equal((await read(path.join(p.root,'batch-0.json'))).l4.approved,false);
 });

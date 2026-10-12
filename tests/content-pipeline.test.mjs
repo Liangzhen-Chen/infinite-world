@@ -9,18 +9,31 @@ import {extractDraft,buildDraftRequest} from '../tools/npc-depth-content.mjs';
 test('逐条审查、最多两次重写、失败不拒绝同批、通过条目断点续跑', async t => {
   const root = await fs.mkdtemp(path.join(os.tmpdir(), 'content-pipeline-'));
   t.after(() => fs.rm(root, { recursive: true, force: true }));
-  const calls = [], client = { spent: 0, budgetYuan: 20, async generate(body, label) {
+  const calls = [], client = { spent: 0, budgetYuan: 20, estimateCostYuan:()=>.01, async generate(body, label) {
     calls.push(label); this.spent += 0.01;
     const review = label.includes('-review');
     const out = review ? { contradictions: label.includes('item_bad') ? [{ quote: '错误能力', field: 'use', severity: 'hard', reason: '骨架无此能力' }] : [] } : { id: body.id, description: body.id };
-    return { choices: [{ message: { content: JSON.stringify(out) } }] };
+    return { choices: [{ message: { content: JSON.stringify(out) } }],usage:{completion_tokens:11},measurement:{costUpperYuan:.01} };
   } };
-  const options = { root, client, entries: [{ id: 'item_good' }, { id: 'item_bad' }], buildDraftRequest: entry => ({ id: entry.id }), validateDraft: () => [], concurrency: 2 };
+  const options = { root, client, entries: [{ id: 'item_good' }, { id: 'item_bad' }], buildDraftRequest: entry => ({ id: entry.id }), reviewDraftFor:entry=>({id:entry.id,description:entry.id}),validateDraft: () => [], concurrency: 2 };
   const first = await runContentPipeline(options);
   assert.equal(first.summary.passed, 1); assert.equal(first.summary.manual, 1);
   assert.equal(first.results[1].attempts, 3); assert.equal(calls.length, 8);
+  const ledger=JSON.parse(await fs.readFile(path.join(root,'budget.json'),'utf8'));
+  const reviews=Object.entries(ledger.requests).filter(([,r])=>r.label.includes('item_bad-review'));
+  assert.equal(reviews.length,3);
+  for(const [id,r] of reviews){
+    const evidence=JSON.parse(await fs.readFile(path.join(root,r.responseEvidence.file),'utf8'));
+    assert.equal(evidence.requestId,id);assert.equal(evidence.requestHash,hashContent(evidence.request));assert.equal(evidence.responseHash,hashContent(evidence.response));
+    assert.equal(evidence.response.choices[0].message.content,JSON.stringify({contradictions:[{quote:'错误能力',field:'use',severity:'hard',reason:'骨架无此能力'}]}));
+    assert.equal(evidence.costUpperYuan,.01);
+    assert.equal(evidence.usage.completion_tokens,11);
+  }
+  assert.equal(new Set(reviews.map(([,r])=>r.responseEvidence.file)).size,3);
+  const originalGood=await fs.readFile(path.join(root,'item_good.json'),'utf8');
   const second = await runContentPipeline(options);
   assert.equal(calls.length, 8); assert.equal(second.summary.passed, 1);
+  assert.equal(await fs.readFile(path.join(root,'item_good.json'),'utf8'),originalGood);
   assert.equal(second.summary.batches[0].needsSystemicRepair, true);
 });
 
@@ -28,11 +41,11 @@ test('累计预算续跑且骨架改变使旧通过结果失效', async t => {
   const root = await fs.mkdtemp(path.join(os.tmpdir(), 'content-pipeline-'));
   t.after(() => fs.rm(root, { recursive: true, force: true }));
   let calls = 0;
-  const client = { spent: 0, budgetYuan: 20, async generate(body, label) {
+  const client = { spent: 0, budgetYuan: 20, estimateCostYuan:()=>1,async generate(body, label) {
     calls++; this.spent += 1;
     return { choices: [{ message: { content: JSON.stringify(label.includes('-review') ? { contradictions: [] } : { id: 'item_one' }) } }] };
   } };
-  const options = { root, client, entries: [{ id: 'item_one', weight: 1 }], buildDraftRequest: () => ({}), validateDraft: () => [] };
+  const options = { root, client, entries: [{ id: 'item_one', weight: 1 }], buildDraftRequest: () => ({}),reviewDraftFor:()=>({id:'item_one'}),validateDraft: () => [] };
   await runContentPipeline(options); client.spent = 0;
   await runContentPipeline({ ...options, entries: [{ id: 'item_one', weight: 2 }] });
   assert.equal(calls, 4); assert.equal(client.spent, 4);
@@ -46,7 +59,7 @@ async function recoveryFixture(t,{raw=false,hard=false,bad=false}={}){
  const original={id:entry.id,fingerprint:hashContent({entry,context:null,revision:'v2'}),status:'manual',attempts:3,draft:null,review:null,errors:[error],warnings:[],feedback:[error],measurements:[{costUpperYuan:.123}]};
  if(raw)original.draftResponse=response({candidate:structuredClone(entry)});
  await fs.writeFile(path.join(root,entry.id+'.json'),JSON.stringify(original));
- const calls=[],client={spent:0,budgetYuan:20,async generate(body,label){calls.push(label);this.spent+=.01;return response(label.includes('-review')?{contradictions:hard?[{quote:'旧文字',field:'opinions',severity:'hard',reason:'仍然存在事实错误'}]:[]}:{candidate:bad?{...entry,id:'npc_wrong'}:structuredClone(entry)});}};
+ const calls=[],client={spent:0,budgetYuan:20,estimateCostYuan:()=>.01,async generate(body,label){calls.push(label);this.spent+=.01;return response(label.includes('-review')?{contradictions:hard?[{quote:'旧文字',field:'opinions',severity:'hard',reason:'仍然存在事实错误'}]:[]}:{candidate:bad?{...entry,id:'npc_wrong'}:structuredClone(entry)});}};
  const options={root,client,entries:[entry],buildDraftRequest,extractDraft,validateDraft:()=>[],protocolRecoveryIds:[entry.id],concurrency:1};
  return{root,entry,original,calls,options};
 }
@@ -65,4 +78,47 @@ test('一次恢复合同仍错或L2有硬错就停，不能获第二次恢复或
 test('无关manual、非白名单、已有L2与passed均零调用',async t=>{
  const p=await recoveryFixture(t);for(const change of [r=>r.errors=['正文事实错误'],r=>{try{assert.deepEqual({candidate:{...p.entry,id:'wrong'}},p.entry);}catch(e){r.errors=[e.message];r.errorCode='AUDIT_PATCH_PROTOCOL';}},r=>r.status='passed',r=>r.review={contradictions:[]},r=>r.fingerprint='changed']){const record=structuredClone(p.original);change(record);await fs.writeFile(path.join(p.root,p.entry.id+'.json'),JSON.stringify(record));await runContentPipeline(p.options);assert.equal(p.calls.length,0);}
  const other={...p.entry,id:'npc_unlisted'},record={...p.original,id:other.id,fingerprint:hashContent({entry:other,context:null,revision:'v2'})};await fs.writeFile(path.join(p.root,other.id+'.json'),JSON.stringify(record));await runContentPipeline({...p.options,entries:[p.entry,other]});assert.equal(p.calls.length,0);
+});
+
+async function budgetFixture(t,{limit=.15,ids=['item_one'],unknown=false,hard=false}={}){
+ const root=await fs.mkdtemp(path.join(os.tmpdir(),'pipeline-round-'));t.after(()=>fs.rm(root,{recursive:true,force:true}));
+ const calls=[],client={spent:0,reserved:0,budgetYuan:limit,estimateCostYuan:()=>.1,async generate(body,label){
+  // Match the transport's second guard, which adds its own reservation.
+  assert.ok(this.spent+this.reserved+.1<=this.budgetYuan+1e-12);
+  calls.push(label);this.spent+=.1;
+  return{choices:[{message:{content:JSON.stringify(label.includes('-review')?{contradictions:hard?[{quote:'秘密',field:'notes',severity:'hard',reason:'未授权传播'}]:[]}:{id:body.id})}}],usage:{prompt_tokens:17,completion_tokens:9},measurement:{costUpperYuan:.1}};
+ }};
+ const options={root,client,entries:ids.map(id=>({id})),buildDraftRequest:e=>({id:e.id}),...(unknown?{}:{reviewDraftFor:e=>({id:e.id})}),validateDraft:()=>[],concurrency:2};
+ return{root,calls,client,options};
+}
+test('够draft但不够必要review时零调用，预算拒绝不覆盖旧attempts/反馈，重启不重领',async t=>{
+ const p=await budgetFixture(t),entry=p.options.entries[0],old={id:entry.id,fingerprint:hashContent({entry,context:null,revision:'v2'}),status:'pending',attempts:2,draft:{id:entry.id},review:{contradictions:[]},errors:['原有内容错误'],warnings:[],feedback:['原有内容错误'],measurements:[{costUpperYuan:.07}]};
+ await fs.writeFile(path.join(p.root,entry.id+'.json'),JSON.stringify(old));
+ const first=await runContentPipeline(p.options),record=first.results[0];assert.equal(p.calls.length,0);assert.equal(record.status,'pending');assert.equal(record.attempts,2);assert.deepEqual(record.errors,old.errors);assert.deepEqual(record.feedback,old.feedback);assert.deepEqual(record.measurements,old.measurements);assert.equal(record.budgetStop.code,'CONTENT_BUDGET_STOP');
+ assert.equal(first.summary.manual,0);assert.deepEqual(first.summary.budget.requests,{});
+ // Even a changed in-memory limit is not authority to resume a stopped record.
+ p.client.budgetYuan=20;await runContentPipeline(p.options);await runContentPipeline({...p.options,revision:'new-revision',entries:[{...entry,newField:'changed'}]});assert.equal(p.calls.length,0);
+});
+test('并发整轮拒绝后全批未发队列停止，已预留未发请求可核实取消',async t=>{
+ const p=await budgetFixture(t,{limit:.3,ids:['item_one','item_two','item_three','item_four']});
+ const result=await runContentPipeline(p.options);assert.equal(p.calls.length,0);assert.equal(result.summary.pending,4);assert.equal(result.summary.manual,0);
+ assert.ok(result.results.every(r=>r.budgetStop&&r.attempts===0));assert.equal(result.summary.budget.reservedYuan,0);
+ assert.ok(Object.values(result.summary.budget.requests).every(r=>r.status==='cancelled-unissued'));
+ await runContentPipeline(p.options);assert.equal(p.calls.length,0);
+});
+test('自由候选无法证明完整review上界时零调用',async t=>{
+ const p=await budgetFixture(t,{limit:20,unknown:true}),result=await runContentPipeline(p.options);assert.equal(p.calls.length,0);assert.match(result.results[0].budgetStop.message,/无法证明/);assert.equal(result.results[0].attempts,0);
+});
+test('一次hard后下轮预算拒绝保留已发attempt和hard，不能把拒绝作为付费修文',async t=>{
+ const p=await budgetFixture(t,{limit:.3,hard:true}),result=await runContentPipeline(p.options),record=result.results[0];
+ assert.equal(p.calls.length,2);assert.equal(record.attempts,1);assert.equal(record.status,'pending');assert.equal(record.errors[0].reason,'未授权传播');assert.deepEqual(record.feedback,record.errors);assert.ok(record.budgetStop);assert.equal(record.responseEvidence.length,2);
+ await runContentPipeline({...p.options,retryManual:true});assert.equal(p.calls.length,2);
+});
+test('坏JSON的每次paid原文在extract前持久保存，后轮不覆盖',async t=>{
+ const p=await budgetFixture(t,{limit:20});let turn=0;
+ p.client.generate=async(body,label)=>{p.calls.push(label);p.client.spent+=.1;return{choices:[{message:{content:`坏JSON第${++turn}轮`}}],usage:{completion_tokens:turn},measurement:{costUpperYuan:.1}};};
+ const result=await runContentPipeline(p.options);assert.equal(result.summary.manual,1);assert.equal(p.calls.length,3);
+ const ledger=result.summary.budget,rows=Object.values(ledger.requests).filter(r=>r.status==='settled');assert.equal(rows.length,3);
+ for(const [i,row] of rows.entries()){const saved=JSON.parse(await fs.readFile(path.join(p.root,row.responseEvidence.file),'utf8'));assert.equal(saved.response.choices[0].message.content,`坏JSON第${i+1}轮`);assert.equal(saved.usage.completion_tokens,i+1);assert.equal(saved.responseHash,hashContent(saved.response));}
+ assert.equal(ledger.reservedYuan,0);
 });

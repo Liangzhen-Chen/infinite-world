@@ -1,0 +1,215 @@
+{
+  "id": "npc_wt_duke",
+  "fingerprint": "ec88df693f18187d47e998c6c3f2a32c2397607124452309288ea8bc700315f5",
+  "status": "passed",
+  "attempts": 1,
+  "draft": {
+    "id": "npc_wt_duke",
+    "contract": "audit-patch-v1",
+    "patches": [
+      {
+        "path": "knowledge.known[1]",
+        "value": {
+          "fact": "我在杜珂户居处居住；家里的杜晴是我的配偶。",
+          "source": "bld_wt_home_11",
+          "reliability": "日常亲历"
+        }
+      },
+      {
+        "path": "knowledge.known[2]",
+        "value": {
+          "fact": "我做水边木台检查工，日常劳动处在修篓木台院；眼下遇到的是木台边板踩下会翘。",
+          "source": "npc_wt_duke",
+          "reliability": "本人亲历，问题尚未解决"
+        }
+      },
+      {
+        "path": "knowledge.unknown[0]",
+        "value": "刘燕菜床外的转弯处能否容得下待搬木件。"
+      },
+      {
+        "path": "knowledge.unknown[1]",
+        "value": "杜晴何时能听自己说明检看后回家的时刻。"
+      },
+      {
+        "path": "voice.register",
+        "value": "说明木台时先讲可见的受力处，面对催问会硬声回应。"
+      },
+      {
+        "path": "goals.short[0].steps[0].content",
+        "value": "请用台的人先离开边板，再从干处核对翘起的位置。"
+      },
+      {
+        "path": "goals.mid[0].steps[0].content",
+        "value": "空手到菜床外比转弯空间，先问刘燕认可的通行边。"
+      },
+      {
+        "path": "goals.long[0].steps[0].content",
+        "value": "在物主陪同下逐处说明检看范围，把背面尚未看见的裂口另记。"
+      },
+      {
+        "path": "relationships[0].note",
+        "value": "杜晴是家里的配偶；细心/急性子，这件事还需要彼此听完再商量。"
+      },
+      {
+        "path": "relationships[1].note",
+        "value": "杜松是家里的儿子；爱画/怕斥责，这件事还需要彼此听完再商量。"
+      },
+      {
+        "path": "relationships[2].note",
+        "value": "与刘燕有同村往来；对方在岸上菜圃做水岸菜圃种植户，见面时还需问清当日劳作与通行安排。"
+      },
+      {
+        "path": "memorySeeds[2]",
+        "value": {
+          "id": "memory_wt_depth_group_2",
+          "event": "施峤、柯荔、杜珂和刘燕在汀口记事屋外谈过岸边的活。施峤要在干稳处看水，柯荔复述割苇和捆苇的分工，杜珂问菜床外木件转弯的空处，刘燕指出脚步不能压苗边。那次只是相互说明，没有允诺工时或通行范围。",
+          "location": "bld_wt_hall",
+          "salience": 4,
+          "knownBy": [
+            "npc_wt_shiqiao",
+            "npc_wt_keli",
+            "npc_wt_duke",
+            "npc_wt_liuyan"
+          ],
+          "reliability": "共同亲历；未解决的分歧仍待各户核对"
+        }
+      },
+      {
+        "path": "opinions.neighbors[2].view",
+        "value": "刘燕在岸上菜圃做水岸菜圃种植户；与他谈通行和劳作时，我会先问清当日安排。"
+      }
+    ]
+  },
+  "review": {
+    "contradictions": [
+      {
+        "quote": "杜晴是家里的配偶；细心/急性子，这件事还需要彼此听完再商量。",
+        "field": "relationships[0].note",
+        "severity": "soft",
+        "reason": "新增“细心/急性子”的性格描述，骨架与已发布事实中杜晴仅有“菜圃劳作”及“怕饭菜凉了又催不动人”的关切，未登记其性格为细心或急性子，属于无依据新增人物特征。"
+      },
+      {
+        "quote": "杜松是家里的儿子；爱画/怕斥责，这件事还需要彼此听完再商量。",
+        "field": "relationships[1].note",
+        "severity": "soft",
+        "reason": "新增“爱画/怕斥责”的性格描述，已发布事实中杜松仅有“学生”及“画的木台被父亲说少了支脚……怕再被说画错”的关切，未登记其性格为爱画或怕斥责，属于无依据新增人物特征。"
+      },
+      {
+        "quote": "在物主陪同下逐处说明检看范围，把背面尚未看见的裂口另记。",
+        "field": "goals.long[0].steps[0].content",
+        "severity": "soft",
+        "reason": "“背面尚未看见的裂口”与骨架秘密“自己曾漏看过背面裂口”相冲突：秘密表明他已知晓自己漏看过背面裂口，而该步骤称裂口“尚未看见”，改变了秘密的知情状态。"
+      }
+    ]
+  },
+  "errors": [],
+  "warnings": [
+    {
+      "quote": "杜晴是家里的配偶；细心/急性子，这件事还需要彼此听完再商量。",
+      "field": "relationships[0].note",
+      "severity": "soft",
+      "reason": "新增“细心/急性子”的性格描述，骨架与已发布事实中杜晴仅有“菜圃劳作”及“怕饭菜凉了又催不动人”的关切，未登记其性格为细心或急性子，属于无依据新增人物特征。"
+    },
+    {
+      "quote": "杜松是家里的儿子；爱画/怕斥责，这件事还需要彼此听完再商量。",
+      "field": "relationships[1].note",
+      "severity": "soft",
+      "reason": "新增“爱画/怕斥责”的性格描述，已发布事实中杜松仅有“学生”及“画的木台被父亲说少了支脚……怕再被说画错”的关切，未登记其性格为爱画或怕斥责，属于无依据新增人物特征。"
+    },
+    {
+      "quote": "在物主陪同下逐处说明检看范围，把背面尚未看见的裂口另记。",
+      "field": "goals.long[0].steps[0].content",
+      "severity": "soft",
+      "reason": "“背面尚未看见的裂口”与骨架秘密“自己曾漏看过背面裂口”相冲突：秘密表明他已知晓自己漏看过背面裂口，而该步骤称裂口“尚未看见”，改变了秘密的知情状态。"
+    }
+  ],
+  "feedback": null,
+  "draftResponse": {
+    "id": "b307066b-9dcc-4757-b6d8-ae4fc2c29afc",
+    "object": "chat.completion",
+    "created": 1791762566,
+    "model": "deepseek-flash",
+    "choices": [
+      {
+        "index": 0,
+        "message": {
+          "role": "assistant",
+          "content": "{\"id\":\"npc_wt_duke\",\"contract\":\"audit-patch-v1\",\"patches\":[{\"path\":\"knowledge.known[1]\",\"value\":{\"fact\":\"我在杜珂户居处居住；家里的杜晴是我的配偶。\",\"source\":\"bld_wt_home_11\",\"reliability\":\"日常亲历\"}},{\"path\":\"knowledge.known[2]\",\"value\":{\"fact\":\"我做水边木台检查工，日常劳动处在修篓木台院；眼下遇到的是木台边板踩下会翘。\",\"source\":\"npc_wt_duke\",\"reliability\":\"本人亲历，问题尚未解决\"}},{\"path\":\"knowledge.unknown[0]\",\"value\":\"刘燕菜床外的转弯处能否容得下待搬木件。\"},{\"path\":\"knowledge.unknown[1]\",\"value\":\"杜晴何时能听自己说明检看后回家的时刻。\"},{\"path\":\"voice.register\",\"value\":\"说明木台时先讲可见的受力处，面对催问会硬声回应。\"},{\"path\":\"goals.short[0].steps[0].content\",\"value\":\"请用台的人先离开边板，再从干处核对翘起的位置。\"},{\"path\":\"goals.mid[0].steps[0].content\",\"value\":\"空手到菜床外比转弯空间，先问刘燕认可的通行边。\"},{\"path\":\"goals.long[0].steps[0].content\",\"value\":\"在物主陪同下逐处说明检看范围，把背面尚未看见的裂口另记。\"},{\"path\":\"relationships[0].note\",\"value\":\"杜晴是家里的配偶；细心/急性子，这件事还需要彼此听完再商量。\"},{\"path\":\"relationships[1].note\",\"value\":\"杜松是家里的儿子；爱画/怕斥责，这件事还需要彼此听完再商量。\"},{\"path\":\"relationships[2].note\",\"value\":\"与刘燕有同村往来；对方在岸上菜圃做水岸菜圃种植户，见面时还需问清当日劳作与通行安排。\"},{\"path\":\"memorySeeds[2]\",\"value\":{\"id\":\"memory_wt_depth_group_2\",\"event\":\"施峤、柯荔、杜珂和刘燕在汀口记事屋外谈过岸边的活。施峤要在干稳处看水，柯荔复述割苇和捆苇的分工，杜珂问菜床外木件转弯的空处，刘燕指出脚步不能压苗边。那次只是相互说明，没有允诺工时或通行范围。\",\"location\":\"bld_wt_hall\",\"salience\":4,\"knownBy\":[\"npc_wt_shiqiao\",\"npc_wt_keli\",\"npc_wt_duke\",\"npc_wt_liuyan\"],\"reliability\":\"共同亲历；未解决的分歧仍待各户核对\"}},{\"path\":\"opinions.neighbors[2].view\",\"value\":\"刘燕在岸上菜圃做水岸菜圃种植户；与他谈通行和劳作时，我会先问清当日安排。\"}]}"
+        },
+        "logprobs": null,
+        "finish_reason": "stop"
+      }
+    ],
+    "usage": {
+      "prompt_tokens": 8800,
+      "completion_tokens": 652,
+      "total_tokens": 9452,
+      "prompt_tokens_details": {
+        "cached_tokens": 0
+      },
+      "prompt_cache_hit_tokens": 0,
+      "prompt_cache_miss_tokens": 8800
+    },
+    "system_fingerprint": "aeb56401ca74e127821c4f9126dcb669",
+    "measurement": {
+      "label": "content-sourced-npc_wt_duke-draft0",
+      "model": "deepseek-flash",
+      "thinking": "disabled",
+      "usage": {
+        "prompt_tokens": 8800,
+        "completion_tokens": 652,
+        "total_tokens": 9452,
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        },
+        "prompt_cache_hit_tokens": 0,
+        "prompt_cache_miss_tokens": 8800
+      },
+      "costUpperYuan": 0.022816,
+      "cumulativeUpperYuan": 3.3595264799999986,
+      "latencyMs": 2637.527900000001,
+      "timestamp": "2026-10-11T23:49:30.306Z"
+    }
+  },
+  "measurements": [
+    {
+      "label": "content-sourced-npc_wt_duke-draft0",
+      "model": "deepseek-flash",
+      "thinking": "disabled",
+      "usage": {
+        "prompt_tokens": 8800,
+        "completion_tokens": 652,
+        "total_tokens": 9452,
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        },
+        "prompt_cache_hit_tokens": 0,
+        "prompt_cache_miss_tokens": 8800
+      },
+      "costUpperYuan": 0.022816,
+      "cumulativeUpperYuan": 3.3595264799999986,
+      "latencyMs": 2637.527900000001,
+      "timestamp": "2026-10-11T23:49:30.306Z"
+    },
+    {
+      "label": "content-sourced-npc_wt_duke-review0",
+      "model": "deepseek-flash",
+      "thinking": "disabled",
+      "usage": {
+        "prompt_tokens": 15840,
+        "completion_tokens": 299,
+        "total_tokens": 16139,
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        },
+        "prompt_cache_hit_tokens": 0,
+        "prompt_cache_miss_tokens": 15840
+      },
+      "costUpperYuan": 0.034072,
+      "cumulativeUpperYuan": 3.3935984799999988,
+      "latencyMs": 2322.6924,
+      "timestamp": "2026-10-11T23:49:32.635Z"
+    }
+  ]
+}

@@ -40,3 +40,21 @@ test('稳定单卡恢复机会不因目录、revision或旧记录副本重新领
  budget=await openContentBudget({file,client:mock(0),cardId:'T06',allocation:{...allocation,startingSpentYuan:99}});assert.equal(await budget.claimProtocolRecovery('npc_yp_zhaofeng','other-revision'),false);near(budget.ledger.reservedYuan,.083736);await budget.close();
  await assert.rejects(openContentBudget({file,client:mock(0),cardId:'T06',allocation:{...allocation,incrementLimitYuan:3}}),/额度已改变/);
 });
+
+test('同队列拒绝后便宜请求也不得出站，已发响应结算及原未知预留保持',async t=>{
+ const {file}=await temporary(t),calls=[];let started,complete;
+ const began=new Promise(resolve=>started=resolve),finish=new Promise(resolve=>complete=resolve);
+ const client=mock(.1);client.estimateCostYuan=body=>body.ceiling;client.generate=async(body,label)=>{calls.push(label);started();await finish;client.spent+=body.ceiling;return{choices:[{message:{content:'provider原文'}}],usage:{completion_tokens:7},measurement:{costUpperYuan:body.ceiling}};};
+ const budget=await openContentBudget({file,client,cardId:'T06',allocation});
+ const first=budget.request({ceiling:.4},'already-sent');await began;
+ const denied=assert.rejects(budget.request({ceiling:1.5},'reject'),e=>e.code==='CONTENT_BUDGET_STOP');
+ const cheap=assert.rejects(budget.request({ceiling:.01},'queued-cheap'),e=>e.code==='CONTENT_BUDGET_STOP');
+ complete();await first;await denied;await cheap;assert.deepEqual(calls,['already-sent']);near(budget.ledger.reservedYuan,.083736);near(budget.ledger.cards.T06.spentYuan,.55959304);
+ const row=Object.values(budget.ledger.requests).find(r=>r.label==='already-sent');assert.equal(row.status,'settled');const saved=JSON.parse(await fs.readFile(path.join(path.dirname(file),row.responseEvidence.file),'utf8'));assert.equal(saved.response.choices[0].message.content,'provider原文');assert.equal(saved.usage.completion_tokens,7);await budget.close();
+});
+test('整轮预留在进程中断后原账保持，不释放遗留未发或未知占用',async t=>{
+ const {file}=await temporary(t);let budget=await openContentBudget({file,client:mock(.9),cardId:'T06',allocation});
+ await assert.rejects(budget.reserveRound([{body:{},label:'draft'},{body:{},label:'review'}]),/费用上限/);near(budget.ledger.reservedYuan,.083736);await budget.close();
+ budget=await openContentBudget({file,client:mock(.5),cardId:'T06',allocation});const ids=await budget.reserveRound([{body:{},label:'draft'},{body:{},label:'review'}]);await budget.close();
+ budget=await openContentBudget({file,client:mock(.8),cardId:'T06',allocation});await budget.releaseRound(ids);near(budget.ledger.reservedYuan,1.083736);assert.ok(ids.every(id=>budget.ledger.requests[id].status==='reserved'));await assert.rejects(budget.request({},'restart'),/费用上限/);await budget.close();
+});

@@ -90,7 +90,26 @@
       ]
     },
     {
-      "input": "我到村务屋，向粮仓柜台购买十份燕麦，现付钱。",
+      "input": "我回到村务屋，先看看公共粮仓柜台的陈柏是否在场并醒着。若不在，我等到他实际回来再办理。",
+      "expectedTools": [
+        "world_move"
+      ],
+      "assertions": [
+        {
+          "kind": "equals",
+          "path": "state.location",
+          "value": "bld_hw_council"
+        },
+        {
+          "kind": "present",
+          "npcs": [
+            "npc_hw_chenbai"
+          ]
+        }
+      ]
+    },
+    {
+      "input": "我向公共粮仓柜台按粮仓账购买十份带壳燕麦，一份半公斤，现付三十铜；买的是这种谷物，不能换成别的商品。请核对实际入袋数量。",
       "assertions": [
         {
           "kind": "equals",
@@ -101,6 +120,21 @@
           "kind": "quantity",
           "path": "state.inventory.item_oats",
           "value": 10
+        },
+        {
+          "kind": "delta",
+          "path": "state.player.coins",
+          "value": -30
+        },
+        {
+          "kind": "delta",
+          "path": "state.settlements.loc_hw.treasury",
+          "value": 30
+        },
+        {
+          "kind": "delta",
+          "path": "state.settlements.loc_hw.food",
+          "value": -10
         }
       ],
       "expectedTools": [
@@ -108,7 +142,7 @@
       ]
     },
     {
-      "input": "我把买好的燕麦带回青灯酒馆，先问林穗还记得我的委托和约定数量吗；这句话还不交货。",
+      "input": "如果行囊里确实已有十份带壳燕麦，我才把粮带回青灯酒馆，问林穗还记得我的委托和约定数量吗，先不交货。若没买到，我留在柜台说明还未备齐，不把委托写成完成。",
       "assertions": [
         {
           "kind": "equals",
@@ -127,6 +161,12 @@
             "status": "进行中"
           },
           "min": 1
+        },
+        {
+          "kind": "present",
+          "npcs": [
+            "npc_hw_linsui"
+          ]
         }
       ],
       "expectedTools": [
@@ -134,7 +174,7 @@
       ]
     },
     {
-      "input": "我现在把那十份燕麦当面交给林穗，请她验收并结清委托。",
+      "input": "只有确实买到并带来那十份带壳燕麦，我才当面交给林穗，请她验收并结清委托；若粮没备齐就说明尚未交货，不能领取报酬。",
       "assertions": [
         {
           "kind": "quantity",

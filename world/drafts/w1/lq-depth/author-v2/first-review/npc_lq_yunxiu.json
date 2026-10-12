@@ -1,0 +1,262 @@
+{
+  "id": "npc_lq_yunxiu",
+  "fingerprint": "56242dc230a9e15fb71895b99df634078831fbe159e156b80afb6b24e6283ac9",
+  "status": "passed",
+  "attempts": 1,
+  "draft": {
+    "id": "npc_lq_yunxiu",
+    "contract": "audit-patch-v1",
+    "patches": [
+      {
+        "path": "knowledge.known[1]",
+        "value": {
+          "fact": "云绣在旧柄缝补屋拆看过磨薄衣角，脏衣遮住原缝时曾退回说明。",
+          "source": "bld_lq_workroom",
+          "reliability": "亲历"
+        }
+      },
+      {
+        "path": "knowledge.known[2]",
+        "value": {
+          "fact": "明禾、云绣、檀羽、青岚和闻琪在旧柄缝补屋门外谈过东西混放后怎么认回。云绣讲附灰会遮住缝线，檀羽讲湿袋叠放会藏住绳结，青岚说交衣先后也得看姓名记号。闻琪说明待洗锅与净锅要分开，明禾拿挑坏荚作比较。那次只交换了各自劳动中的辨认办法，没有收取、归还或替人洗补物件。",
+          "source": "bld_lq_workroom",
+          "reliability": "共同亲历"
+        }
+      },
+      {
+        "path": "voice.register",
+        "value": "缝补人少话的细声，先点磨薄处，拒接时会停顿再说明"
+      },
+      {
+        "path": "memorySeeds[2]",
+        "value": {
+          "id": "memory_lq_depth_wash-identify",
+          "event": "明禾、云绣、檀羽、青岚和闻琪在旧柄缝补屋门外谈过东西混放后怎么认回。云绣讲附灰会遮住缝线，檀羽讲湿袋叠放会藏住绳结，青岚说交衣先后也得看姓名记号。闻琪说明待洗锅与净锅要分开，明禾拿挑坏荚作比较。那次只交换了各自劳动中的辨认办法，没有收取、归还或替人洗补物件。",
+          "location": "bld_lq_workroom",
+          "salience": 4,
+          "knownBy": [
+            "npc_lq_minghe",
+            "npc_lq_yunxiu",
+            "npc_lq_tanyu",
+            "npc_lq_qinglan",
+            "npc_lq_wenqi"
+          ],
+          "reliability": "亲历"
+        }
+      },
+      {
+        "path": "knowledge.unknown[0]",
+        "value": "这件工衣需拆看哪一处原缝，才能确认泥灰下面是否磨断。"
+      },
+      {
+        "path": "knowledge.unknown[1]",
+        "value": "送衣人愿不愿先刷净附灰再拿来，何时能交回可辨的衣物。"
+      },
+      {
+        "path": "goals.short[0].steps[0].content",
+        "value": "先展开衣角，指出看不清原线的泥灰处"
+      },
+      {
+        "path": "goals.mid[0].steps[0].content",
+        "value": "请送衣人刷去附灰，等其答复再定能检查的范围"
+      },
+      {
+        "path": "goals.long[0].steps[0].content",
+        "value": "下一次接补前当面说清暂不能接的情形与原因"
+      },
+      {
+        "path": "relationships[0].note",
+        "value": "云澜想摸送补的脏工衣被云绣拦下，母子要说明厚泥折里可能看不清针尖。 各自保有财物。"
+      },
+      {
+        "path": "relationships[1].note",
+        "value": "闵巧催云绣把嫌脏而暂不接的事说清，母女常商量如何开口退衣。 各自保有财物。"
+      },
+      {
+        "path": "relationships[2].note",
+        "value": "符审协调泉槽队次，云绣请他核对刷灰所用洗具时段与取水时段的区别。"
+      },
+      {
+        "path": "opinions.neighbors[2].view",
+        "value": "符审协调泉槽队次，云绣请他核对刷灰所用洗具时段与取水时段的区别。"
+      }
+    ]
+  },
+  "review": {
+    "contradictions": [
+      {
+        "quote": "云澜想摸送补的脏工衣被云绣拦下，母子要说明厚泥折里可能看不清针尖。 各自保有财物。",
+        "field": "relationships[0].note",
+        "severity": "soft",
+        "reason": "骨架与 publishedFacts 中云澜的 concern 是“母亲不让他摸送补的脏工衣，他站在门边看那件衣服被翻面，想问又忍住”，并未记载“母子要说明厚泥折里可能看不清针尖”这一交流内容；该新增互动细节无既有来源支持。"
+      },
+      {
+        "quote": "闵巧催云绣把嫌脏而暂不接的事说清，母女常商量如何开口退衣。 各自保有财物。",
+        "field": "relationships[1].note",
+        "severity": "soft",
+        "reason": "publishedFacts 中闵巧的 concern 是“女儿嫌工衣脏却不好当面回绝，闵巧收着那件旧衣，想等她肯开口说不穿”，属闵巧单方内心关切，未记载“催云绣说清”“母女常商量如何开口退衣”的互动；新增互动无依据。"
+      },
+      {
+        "quote": "符审协调泉槽队次，云绣请他核对刷灰所用洗具时段与取水时段的区别。",
+        "field": "relationships[2].note",
+        "severity": "soft",
+        "reason": "骨架原 note 为“认识同村符审，不因此知道对方秘密或财产”，未记载云绣与符审就“刷灰所用洗具时段与取水时段”进行核对这一具体往来；该新增互动无既有来源支持。"
+      },
+      {
+        "quote": "符审协调泉槽队次，云绣请他核对刷灰所用洗具时段与取水时段的区别。",
+        "field": "opinions.neighbors[2].view",
+        "severity": "soft",
+        "reason": "同 relationships[2].note，骨架原 view 仅记载认识同村符审且不知其秘密或财产，新增“请他核对刷灰所用洗具时段与取水时段”的具体往来无依据。"
+      }
+    ],
+    "reviewedPaths": [
+      "knowledge.known[1]",
+      "knowledge.known[2]",
+      "voice.register",
+      "memorySeeds[2]",
+      "knowledge.unknown[0]",
+      "knowledge.unknown[1]",
+      "goals.short[0].steps[0].content",
+      "goals.mid[0].steps[0].content",
+      "goals.long[0].steps[0].content",
+      "relationships[0].note",
+      "relationships[1].note",
+      "relationships[2].note",
+      "opinions.neighbors[2].view"
+    ],
+    "backgroundReviews": [
+      {
+        "eventId": "memory_lq_depth_wash-identify",
+        "sourceHash": "21ca23cebd763bdbba238d1ce51f31c4329c504d52d8023d0c87911d3b34a46b",
+        "reviewedRiskPaths": [
+          "npc_lq_minghe.secrets[0]",
+          "npc_lq_minghe.authoredFacts.privateFact",
+          "npc_lq_yunxiu.secrets[0]",
+          "npc_lq_yunxiu.authoredFacts.privateFact",
+          "npc_lq_tanyu.secrets[0]",
+          "npc_lq_tanyu.authoredFacts.privateFact",
+          "npc_lq_qinglan.secrets[0]",
+          "npc_lq_qinglan.authoredFacts.privateFact",
+          "npc_lq_wenqi.secrets[0]",
+          "npc_lq_wenqi.authoredFacts.privateFact"
+        ],
+        "contradictions": []
+      }
+    ]
+  },
+  "errors": [],
+  "warnings": [
+    {
+      "quote": "云澜想摸送补的脏工衣被云绣拦下，母子要说明厚泥折里可能看不清针尖。 各自保有财物。",
+      "field": "relationships[0].note",
+      "severity": "soft",
+      "reason": "骨架与 publishedFacts 中云澜的 concern 是“母亲不让他摸送补的脏工衣，他站在门边看那件衣服被翻面，想问又忍住”，并未记载“母子要说明厚泥折里可能看不清针尖”这一交流内容；该新增互动细节无既有来源支持。"
+    },
+    {
+      "quote": "闵巧催云绣把嫌脏而暂不接的事说清，母女常商量如何开口退衣。 各自保有财物。",
+      "field": "relationships[1].note",
+      "severity": "soft",
+      "reason": "publishedFacts 中闵巧的 concern 是“女儿嫌工衣脏却不好当面回绝，闵巧收着那件旧衣，想等她肯开口说不穿”，属闵巧单方内心关切，未记载“催云绣说清”“母女常商量如何开口退衣”的互动；新增互动无依据。"
+    },
+    {
+      "quote": "符审协调泉槽队次，云绣请他核对刷灰所用洗具时段与取水时段的区别。",
+      "field": "relationships[2].note",
+      "severity": "soft",
+      "reason": "骨架原 note 为“认识同村符审，不因此知道对方秘密或财产”，未记载云绣与符审就“刷灰所用洗具时段与取水时段”进行核对这一具体往来；该新增互动无既有来源支持。"
+    },
+    {
+      "quote": "符审协调泉槽队次，云绣请他核对刷灰所用洗具时段与取水时段的区别。",
+      "field": "opinions.neighbors[2].view",
+      "severity": "soft",
+      "reason": "同 relationships[2].note，骨架原 view 仅记载认识同村符审且不知其秘密或财产，新增“请他核对刷灰所用洗具时段与取水时段”的具体往来无依据。"
+    }
+  ],
+  "feedback": null,
+  "draftResponse": {
+    "id": "bf6ea994-bc68-40c6-b7fd-db372e09bf5e",
+    "object": "chat.completion",
+    "created": 1791793965,
+    "model": "deepseek-flash",
+    "choices": [
+      {
+        "index": 0,
+        "message": {
+          "role": "assistant",
+          "content": "{\"id\":\"npc_lq_yunxiu\",\"contract\":\"audit-patch-v1\",\"patches\":[{\"path\":\"knowledge.known[1]\",\"value\":{\"fact\":\"云绣在旧柄缝补屋拆看过磨薄衣角，脏衣遮住原缝时曾退回说明。\",\"source\":\"bld_lq_workroom\",\"reliability\":\"亲历\"}},{\"path\":\"knowledge.known[2]\",\"value\":{\"fact\":\"明禾、云绣、檀羽、青岚和闻琪在旧柄缝补屋门外谈过东西混放后怎么认回。云绣讲附灰会遮住缝线，檀羽讲湿袋叠放会藏住绳结，青岚说交衣先后也得看姓名记号。闻琪说明待洗锅与净锅要分开，明禾拿挑坏荚作比较。那次只交换了各自劳动中的辨认办法，没有收取、归还或替人洗补物件。\",\"source\":\"bld_lq_workroom\",\"reliability\":\"共同亲历\"}},{\"path\":\"voice.register\",\"value\":\"缝补人少话的细声，先点磨薄处，拒接时会停顿再说明\"},{\"path\":\"memorySeeds[2]\",\"value\":{\"id\":\"memory_lq_depth_wash-identify\",\"event\":\"明禾、云绣、檀羽、青岚和闻琪在旧柄缝补屋门外谈过东西混放后怎么认回。云绣讲附灰会遮住缝线，檀羽讲湿袋叠放会藏住绳结，青岚说交衣先后也得看姓名记号。闻琪说明待洗锅与净锅要分开，明禾拿挑坏荚作比较。那次只交换了各自劳动中的辨认办法，没有收取、归还或替人洗补物件。\",\"location\":\"bld_lq_workroom\",\"salience\":4,\"knownBy\":[\"npc_lq_minghe\",\"npc_lq_yunxiu\",\"npc_lq_tanyu\",\"npc_lq_qinglan\",\"npc_lq_wenqi\"],\"reliability\":\"亲历\"}},{\"path\":\"knowledge.unknown[0]\",\"value\":\"这件工衣需拆看哪一处原缝，才能确认泥灰下面是否磨断。\"},{\"path\":\"knowledge.unknown[1]\",\"value\":\"送衣人愿不愿先刷净附灰再拿来，何时能交回可辨的衣物。\"},{\"path\":\"goals.short[0].steps[0].content\",\"value\":\"先展开衣角，指出看不清原线的泥灰处\"},{\"path\":\"goals.mid[0].steps[0].content\",\"value\":\"请送衣人刷去附灰，等其答复再定能检查的范围\"},{\"path\":\"goals.long[0].steps[0].content\",\"value\":\"下一次接补前当面说清暂不能接的情形与原因\"},{\"path\":\"relationships[0].note\",\"value\":\"云澜想摸送补的脏工衣被云绣拦下，母子要说明厚泥折里可能看不清针尖。 各自保有财物。\"},{\"path\":\"relationships[1].note\",\"value\":\"闵巧催云绣把嫌脏而暂不接的事说清，母女常商量如何开口退衣。 各自保有财物。\"},{\"path\":\"relationships[2].note\",\"value\":\"符审协调泉槽队次，云绣请他核对刷灰所用洗具时段与取水时段的区别。\"},{\"path\":\"opinions.neighbors[2].view\",\"value\":\"符审协调泉槽队次，云绣请他核对刷灰所用洗具时段与取水时段的区别。\"}]}"
+        },
+        "logprobs": null,
+        "finish_reason": "stop"
+      }
+    ],
+    "usage": {
+      "prompt_tokens": 15208,
+      "completion_tokens": 784,
+      "total_tokens": 15992,
+      "prompt_tokens_details": {
+        "cached_tokens": 0
+      },
+      "prompt_cache_hit_tokens": 0,
+      "prompt_cache_miss_tokens": 15208
+    },
+    "system_fingerprint": "aeb56401ca74e127821c4f9126dcb669",
+    "measurement": {
+      "label": "content-first-review-npc_lq_yunxiu-draft0",
+      "model": "deepseek-flash",
+      "thinking": "disabled",
+      "usage": {
+        "prompt_tokens": 15208,
+        "completion_tokens": 784,
+        "total_tokens": 15992,
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        },
+        "prompt_cache_hit_tokens": 0,
+        "prompt_cache_miss_tokens": 15208
+      },
+      "costUpperYuan": 0.036688,
+      "cumulativeUpperYuan": 9.27885815999999,
+      "latencyMs": 4067.3197999999975,
+      "timestamp": "2026-10-12T08:32:49.806Z"
+    }
+  },
+  "measurements": [
+    {
+      "label": "content-first-review-npc_lq_yunxiu-draft0",
+      "model": "deepseek-flash",
+      "thinking": "disabled",
+      "usage": {
+        "prompt_tokens": 15208,
+        "completion_tokens": 784,
+        "total_tokens": 15992,
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        },
+        "prompt_cache_hit_tokens": 0,
+        "prompt_cache_miss_tokens": 15208
+      },
+      "costUpperYuan": 0.036688,
+      "cumulativeUpperYuan": 9.27885815999999,
+      "latencyMs": 4067.3197999999975,
+      "timestamp": "2026-10-12T08:32:49.806Z"
+    },
+    {
+      "label": "content-first-review-npc_lq_yunxiu-review0",
+      "model": "deepseek-flash",
+      "thinking": "disabled",
+      "usage": {
+        "prompt_tokens": 34281,
+        "completion_tokens": 761,
+        "total_tokens": 35042,
+        "prompt_tokens_details": {
+          "cached_tokens": 640
+        },
+        "prompt_cache_hit_tokens": 640,
+        "prompt_cache_miss_tokens": 33641
+      },
+      "costUpperYuan": 0.0733956,
+      "cumulativeUpperYuan": 9.35225375999999,
+      "latencyMs": 4514.812200000015,
+      "timestamp": "2026-10-12T08:32:54.332Z"
+    }
+  ]
+}

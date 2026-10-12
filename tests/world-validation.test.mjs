@@ -7,6 +7,26 @@ import fs from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
 import {catalogProgress}from'../tools/catalog-progress.mjs';
+import {validateNpcDepth} from '../tools/npc-profile-validation.mjs';
+import {pathParts} from '../tools/npc-depth-content.mjs';
+
+// Synthetic complete world tests the build boundary; no authored source is changed.
+function completeDepth(world){
+ const full=world.npcs.filter(n=>n.tier==='full');
+ for(const [index,n] of full.entries()){
+  const other=full[index%2===0?index+1:index-1]??full[0],location=world.locations.find(l=>l.id===n.location);
+  n.knowledge={known:[{fact:`曾在${location.name}核对木料账。`,source:location.id,reliability:'亲历'},{fact:`${other.name}曾帮忙搬运木板。`,source:other.id,reliability:'亲历'},{fact:'雨后保留了旧账页，尚未商定补桥次序。',source:n.id,reliability:'亲历'}],unknown:['石桥缺口是否需要先补木板']};
+  for(const goals of Object.values(n.goals))for(const goal of goals)goal.steps=[{content:'到石桥核对旧木板数量',status:'pending'}];
+  n.voice.register='话语平缓，使用完整句子';n.voice.habits[0]='开口先叫对方姓名';
+  for(const relation of n.relationships)relation.note='雨后曾一起核对木料账，对漏记一行仍有分歧。';
+  n.memorySeeds=[{id:`quality_pair_${Math.floor(index/2)}`,event:'雨后在石桥核对木料账，还没商定补桥次序。',knownBy:[n.id,other.id].sort(),location:world.locations[0].id,reliability:'亲历',salience:5},{id:`quality_private_${index}`,event:'雨后在石桥检查过一块木板。',knownBy:[n.id],reliability:'亲历',salience:3}];
+  n.traits=n.traits.map(t=>/待扩|待补/.test(t)?'守时':t);n.personality.traits=['守时','谨慎'];
+ }
+ for(const issue of validateNpcDepth(world).issues.filter(i=>i.code==='rule-wording')){
+  const n=world.npcs.find(n=>n.id===issue.id),parts=pathParts(issue.field),last=parts.pop();parts.reduce((v,k)=>v[k],n)[last]='曾在石桥核对木料账，尚未商定补桥次序。';
+ }
+ assert.deepEqual(validateNpcDepth(world).issues,[]);return world;
+}
 test('世界校验：兼容种子通过基础结构，全规则数量不足不能标为完成',async()=>{
     const world=await loadWorld();assert.equal(validateWorld(world).ok,true);
     const rules=validateWorld(world,{stage:'rules'});assert.equal(rules.ok,false);assert.ok(rules.errors.some(error=>error.includes('数量不足')));
@@ -38,9 +58,11 @@ test('世界校验拒绝未接入法术与越界防护，不能用文字和数�
     assert.ok(validateWorld(world,{stage:'rules'}).errors.some(error=>error.includes('法术处理器不完整')));
 });
 
-test('发布构建只放开数量门槛，仍拒绝坏引用、年龄冲突、屏蔽名称和未实现法术',async t=>{
-    const world=await loadWorld(),destination=await fs.mkdtemp(path.join(os.tmpdir(),'infinite-fields-build-'));
+test('发布构建要求全体人物深度，仍拒绝坏引用、年龄冲突、屏蔽名称和未实现法术',async t=>{
+    const current=await loadWorld(),world=completeDepth(structuredClone(current)),destination=await fs.mkdtemp(path.join(os.tmpdir(),'infinite-fields-build-'));
     t.after(()=>fs.rm(destination,{recursive:true,force:true}));
+    assert.ok(validateWorld(current,{stage:'release'}).errors.some(e=>e.startsWith('完整人物深度：')),'正式世界当前仍有真实缺口');
+    await assert.rejects(buildWorld({source:current,stage:'release',destination}),/完整人物深度/);
     assert.equal((await buildWorld({source:world,stage:'release',destination})).ok,true);
     assert.equal(JSON.parse(await fs.readFile(path.join(destination,'manifest.json'),'utf8')).stage,'release');
     const final=validateWorld(world,{stage:'final'});
@@ -61,4 +83,19 @@ test('发布构建只放开数量门槛，仍拒绝坏引用、年龄冲突、�
     const progress=catalogProgress(world);
     assert.equal(progress.catalogs.find(row=>row.catalog==='spells').current,world.spells.length);
     assert.equal(progress.catalogs.find(row=>row.catalog==='spells').target,150);
+});
+
+
+test('release/final不接受所选32人、地区或skip过滤，未选任一full缺口仍拒绝',async()=>{
+ const world=completeDepth(await loadWorld()),selectedIds=world.npcs.filter(n=>n.tier==='full').slice(0,32).map(n=>n.id),unselected=world.npcs.find(n=>n.tier==='full'&&!selectedIds.includes(n.id));
+ unselected.voice.register=unselected.voice.habits[0];
+ for(const stage of ['release','final']){
+  const result=validateWorld(world,{stage,selectedIds,region:'河湾',skipNpcDepth:true});
+  assert.ok(result.errors.some(e=>e.includes(unselected.id)&&e.includes('voice.register')));
+  await assert.rejects(buildWorld({source:world,stage}),/完整人物深度/);
+ }
+ unselected.voice.register='说话缓慢，停顿清楚';
+ for(const stage of ['release','final'])assert.ok(!validateWorld(world,{stage}).errors.some(e=>e.startsWith('完整人物深度：')));
+ unselected.notes='主持人不要让玩家查看木料账。';
+ for(const stage of ['release','final'])assert.ok(validateWorld(world,{stage}).errors.some(e=>e.includes(`${unselected.id}/notes`)));
 });

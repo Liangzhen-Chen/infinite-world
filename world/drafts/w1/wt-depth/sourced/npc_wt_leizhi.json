@@ -1,0 +1,177 @@
+{
+  "id": "npc_wt_leizhi",
+  "fingerprint": "cd6c96c5a1ff290736328361bca00987e6c5ed8adac219b090ddecf42ba25220",
+  "status": "passed",
+  "attempts": 1,
+  "draft": {
+    "id": "npc_wt_leizhi",
+    "contract": "audit-patch-v1",
+    "patches": [
+      {
+        "path": "knowledge.known[1]",
+        "value": {
+          "fact": "我在雷芷户居处居住；家里的雷华是我的儿子。",
+          "source": "bld_wt_home_16",
+          "reliability": "日常亲历"
+        }
+      },
+      {
+        "path": "knowledge.known[2]",
+        "value": {
+          "fact": "我做渡岸往来口信抄录人，日常劳动处在汀口记事屋；眼下遇到的是口信里一个称呼指向两人。",
+          "source": "npc_wt_leizhi",
+          "reliability": "本人亲历，问题尚未解决"
+        }
+      },
+      {
+        "path": "knowledge.unknown[0]",
+        "value": "托话者说的称呼究竟指哪一户的哪位人。"
+      },
+      {
+        "path": "knowledge.unknown[1]",
+        "value": "可菁能否把桌上未认清的称呼便条分开放置。"
+      },
+      {
+        "path": "voice.register",
+        "value": "复述口信时句子谨慎完整，遇含混称呼会反复核对。"
+      },
+      {
+        "path": "goals.short[0].steps[0].content",
+        "value": "把原称呼读给托话者，请他说明对方住处。"
+      },
+      {
+        "path": "goals.mid[0].steps[0].content",
+        "value": "先问要照原话还是转意，再读回自己抄下的整句。"
+      },
+      {
+        "path": "goals.long[0].steps[0].content",
+        "value": "请托话者逐句核对遗漏的半句，未确认的称呼另作待问记号。"
+      },
+      {
+        "path": "relationships[0].note",
+        "value": "雷华是家里的儿子；耿直/怕生，这件事还需要彼此听完再商量。"
+      },
+      {
+        "path": "relationships[1].note",
+        "value": "可菁是家里的配偶；稳重/少言，这件事还需要彼此听完再商量。"
+      },
+      {
+        "path": "relationships[2].note",
+        "value": "与倪筠有同村往来；对方在修篓木台院做晒架木工，见面时还需问清当日劳作与通行安排。"
+      },
+      {
+        "path": "memorySeeds[2]",
+        "value": {
+          "id": "memory_wt_depth_group_3",
+          "event": "湛鸥、支采、薛萤和雷芷在汀口记事屋前说过进出和传话的麻烦。湛鸥解释退水便道不能当常路，支采说送补衣两户都催先拿，薛萤说旧根留在门边，雷芷追问含混称呼住哪一户。几人仍要回去分别询问家人与物主。",
+          "location": "bld_wt_hall",
+          "salience": 4,
+          "knownBy": [
+            "npc_wt_zhangou",
+            "npc_wt_zhicai",
+            "npc_wt_xueying",
+            "npc_wt_leizhi"
+          ],
+          "reliability": "共同亲历；未解决的分歧仍待各户核对"
+        }
+      },
+      {
+        "path": "opinions.neighbors[2].view",
+        "value": "倪筠在修篓木台院做晒架木工；与他谈通行和劳作时，我会先问清当日安排。"
+      }
+    ]
+  },
+  "review": {
+    "contradictions": []
+  },
+  "errors": [],
+  "warnings": [],
+  "feedback": null,
+  "draftResponse": {
+    "id": "1188fb77-ddeb-4aad-b57a-8c71f6f63d86",
+    "object": "chat.completion",
+    "created": 1791762626,
+    "model": "deepseek-flash",
+    "choices": [
+      {
+        "index": 0,
+        "message": {
+          "role": "assistant",
+          "content": "{\"id\":\"npc_wt_leizhi\",\"contract\":\"audit-patch-v1\",\"patches\":[{\"path\":\"knowledge.known[1]\",\"value\":{\"fact\":\"我在雷芷户居处居住；家里的雷华是我的儿子。\",\"source\":\"bld_wt_home_16\",\"reliability\":\"日常亲历\"}},{\"path\":\"knowledge.known[2]\",\"value\":{\"fact\":\"我做渡岸往来口信抄录人，日常劳动处在汀口记事屋；眼下遇到的是口信里一个称呼指向两人。\",\"source\":\"npc_wt_leizhi\",\"reliability\":\"本人亲历，问题尚未解决\"}},{\"path\":\"knowledge.unknown[0]\",\"value\":\"托话者说的称呼究竟指哪一户的哪位人。\"},{\"path\":\"knowledge.unknown[1]\",\"value\":\"可菁能否把桌上未认清的称呼便条分开放置。\"},{\"path\":\"voice.register\",\"value\":\"复述口信时句子谨慎完整，遇含混称呼会反复核对。\"},{\"path\":\"goals.short[0].steps[0].content\",\"value\":\"把原称呼读给托话者，请他说明对方住处。\"},{\"path\":\"goals.mid[0].steps[0].content\",\"value\":\"先问要照原话还是转意，再读回自己抄下的整句。\"},{\"path\":\"goals.long[0].steps[0].content\",\"value\":\"请托话者逐句核对遗漏的半句，未确认的称呼另作待问记号。\"},{\"path\":\"relationships[0].note\",\"value\":\"雷华是家里的儿子；耿直/怕生，这件事还需要彼此听完再商量。\"},{\"path\":\"relationships[1].note\",\"value\":\"可菁是家里的配偶；稳重/少言，这件事还需要彼此听完再商量。\"},{\"path\":\"relationships[2].note\",\"value\":\"与倪筠有同村往来；对方在修篓木台院做晒架木工，见面时还需问清当日劳作与通行安排。\"},{\"path\":\"memorySeeds[2]\",\"value\":{\"id\":\"memory_wt_depth_group_3\",\"event\":\"湛鸥、支采、薛萤和雷芷在汀口记事屋前说过进出和传话的麻烦。湛鸥解释退水便道不能当常路，支采说送补衣两户都催先拿，薛萤说旧根留在门边，雷芷追问含混称呼住哪一户。几人仍要回去分别询问家人与物主。\",\"location\":\"bld_wt_hall\",\"salience\":4,\"knownBy\":[\"npc_wt_zhangou\",\"npc_wt_zhicai\",\"npc_wt_xueying\",\"npc_wt_leizhi\"],\"reliability\":\"共同亲历；未解决的分歧仍待各户核对\"}},{\"path\":\"opinions.neighbors[2].view\",\"value\":\"倪筠在修篓木台院做晒架木工；与他谈通行和劳作时，我会先问清当日安排。\"}]}"
+        },
+        "logprobs": null,
+        "finish_reason": "stop"
+      }
+    ],
+    "usage": {
+      "prompt_tokens": 8636,
+      "completion_tokens": 647,
+      "total_tokens": 9283,
+      "prompt_tokens_details": {
+        "cached_tokens": 0
+      },
+      "prompt_cache_hit_tokens": 0,
+      "prompt_cache_miss_tokens": 8636
+    },
+    "system_fingerprint": "aeb56401ca74e127821c4f9126dcb669",
+    "measurement": {
+      "label": "content-sourced-npc_wt_leizhi-draft0",
+      "model": "deepseek-flash",
+      "thinking": "disabled",
+      "usage": {
+        "prompt_tokens": 8636,
+        "completion_tokens": 647,
+        "total_tokens": 9283,
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        },
+        "prompt_cache_hit_tokens": 0,
+        "prompt_cache_miss_tokens": 8636
+      },
+      "costUpperYuan": 0.022448,
+      "cumulativeUpperYuan": 3.7092436799999993,
+      "latencyMs": 2656.8829000000114,
+      "timestamp": "2026-10-11T23:50:29.820Z"
+    }
+  },
+  "measurements": [
+    {
+      "label": "content-sourced-npc_wt_leizhi-draft0",
+      "model": "deepseek-flash",
+      "thinking": "disabled",
+      "usage": {
+        "prompt_tokens": 8636,
+        "completion_tokens": 647,
+        "total_tokens": 9283,
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        },
+        "prompt_cache_hit_tokens": 0,
+        "prompt_cache_miss_tokens": 8636
+      },
+      "costUpperYuan": 0.022448,
+      "cumulativeUpperYuan": 3.7092436799999993,
+      "latencyMs": 2656.8829000000114,
+      "timestamp": "2026-10-11T23:50:29.820Z"
+    },
+    {
+      "label": "content-sourced-npc_wt_leizhi-review0",
+      "model": "deepseek-flash",
+      "thinking": "disabled",
+      "usage": {
+        "prompt_tokens": 15905,
+        "completion_tokens": 7,
+        "total_tokens": 15912,
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        },
+        "prompt_cache_hit_tokens": 0,
+        "prompt_cache_miss_tokens": 15905
+      },
+      "costUpperYuan": 0.031866,
+      "cumulativeUpperYuan": 3.741109679999999,
+      "latencyMs": 836.7485999999917,
+      "timestamp": "2026-10-11T23:50:30.664Z"
+    }
+  ]
+}

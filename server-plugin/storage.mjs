@@ -191,14 +191,16 @@ export class CampaignStorage {
                 return { ok: true, duplicate: true, result: structuredClone(previous.result), reference: this.reference(state) };
             }
             if (request.expectedSequence !== undefined && request.expectedSequence !== state.sequence) throw new Error('存档已被另一页面更新，请重新读取后操作');
-            const { patches, result } = await reducer(state.document, request.input);
+            const { patches, result: receipt } = await reducer(state.document, request.input);
+            // Hash and retain the same receipt that JSON can persist and return.
+            const result = JSON.parse(JSON.stringify(receipt));
             const document = applyPatches(state.document, patches);
             const event = await this.append(id, state, { kind: 'action', id: request.id, signature, input: request.input,
                 anchor: request.anchor ?? null, patches, result });
             state.document = document; state.active.add(event.sequence);
             state.transactions.set(request.id, { signature, sequence: event.sequence });
             if (state.sequence % this.snapshotEvery === 0) await this.snapshot(id, state);
-            return { ok: true, result: structuredClone(result), reference: this.reference(state) };
+            return { ok: true, result: structuredClone(event.result), reference: this.reference(state) };
         });
     }
     reference(state) {

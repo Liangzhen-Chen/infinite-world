@@ -17,6 +17,28 @@ const stateOf=(d,row)=>{
 };
 const store=(d,row,state)=>d.set(['state','records',key(row.id)],{id:row.id,category:'physical_feature',location:row.location,state});
 function point(d){const row=d.get('state','records','local_player_position');return row?.location===d.get('state','location')?row.point:[0,0];}
+export function localPlayerPoint(d){return [...point(d)];}
+// A successful melee exchange supplies contact evidence, never mere co-presence.
+export function recordLocalContact(d,engine,target,eventId){
+    const location=d.get('state','location'),actor=d.get('state',target.startsWith('npc_')?'npcs':'creatures',target),position=point(d);
+    if(!actor||actor.location!==location||actor.scheduleTravel||actor.cognitionTravel||!localSightClear(d,engine,location,position,position))return false;
+    const source=`physical_contact:${eventId}:${target}`,minute=d.get('state','minute'),expires=minute+10;
+    const evidence={category:'physical_contact',subject:target,location,point:[...position],visibleFrom:[...position],event:eventId,minute,expires,activity:actor.activity??null};
+    d.set(['state','records',source],evidence);
+    d.set(['state','records',`local_actor_position:${target}`],{category:'local_position',subject:target,location,point:[...position],source,minute,expires,activity:actor.activity??null});
+    return true;
+}
+export function localSightClear(d,engine,location,from,to){
+    for(const row of environmentFeatures(engine).filter(f=>f.location===location)){
+        const state=stateOf(d,row);if(state?.blocksSight!==true)continue;
+        const radius=state.sightRadiusMeters;
+        if(!Number.isFinite(radius)||radius<0)return false;
+        const dx=to[0]-from[0],dy=to[1]-from[1],length=dx*dx+dy*dy;
+        const t=length?Math.max(0,Math.min(1,((row.position[0]-from[0])*dx+(row.position[1]-from[1])*dy)/length)):0;
+        if(Math.hypot(row.position[0]-from[0]-t*dx,row.position[1]-from[1]-t*dy)<=radius)return false;
+    }
+    return true;
+}
 const distance=(a,b)=>Math.hypot(a[0]-b[0],a[1]-b[1]);
 function inReach(d,row,range){
     if(row.location!==d.get('state','location'))throw new Error('环境对象不在当前位置');
@@ -144,7 +166,9 @@ export function interactEnvironment(d,args,eventId){
     const row=feature(this,args.target,location);inReach(d,row,Number.POSITIVE_INFINITY);
     if(operation==='approach'){
         const metres=distance(point(d),row.position),minutes=Math.ceil(metres/this.rules.environment.walkingMetresPerMinute);
-        this.advance(d,minutes,eventId);d.set(['state','records','local_player_position'],{category:'local_position',location,point:[...row.position]});
+        this.advance(d,minutes,eventId);
+        if(d.get('state','location')!==location||d.get('state','player','status')!=='正常')return{target:row.id,metres,minutes,arrived:false};
+        d.set(['state','records','local_player_position'],{category:'local_position',subject:'player',location,point:[...row.position],source:eventId,anchor:row.id,minute:d.get('state','minute')});
         return{target:row.id,metres,minutes,position:[...row.position]};
     }
     if(operation!=='carry_silt')throw new Error('环境操作需为inspect、inspect_heat、load_fuel、approach或carry_silt');

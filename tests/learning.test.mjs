@@ -123,3 +123,20 @@ test('专家级以上法术不由普通导师或普通书授予，稀有终极�
     const learned=await outcome(run,document,'world_learn',{entity:'spell_light',source:'item_test_spellbook'},true);
     assert.equal(learned.result.minutes,1920);assert.equal(learned.document.state.minute,document.state.minute+1920);
 });
+
+test('正式识字别名经真实移动和导师授课解析，未登记木工名称拒绝不产生学习账',async()=>{
+    const world=await loadWorld(),engine=new WorldEngine(world);
+    let document=engine.createCharacter(seed,{},'learning-formal-names');
+    const move=await engine.reduce(document,{tool:'world_move',args:{destination:'小学堂'},eventId:'formal_move'});
+    document=applyPatches(document,move.patches);const before=structuredClone(document);
+    await assert.rejects(engine.reduce(document,{tool:'world_learn',args:{entity:'基础木工',source:'陆青'},eventId:'unknown_name'}),/未登记/);
+    assert.deepEqual(document,before);
+    const learned=await engine.reduce(document,{tool:'world_learn',args:{entity:'基础识字',source:'陆青'},eventId:'formal_lesson'});
+    const after=applyPatches(document,learned.patches),result=learned.result;
+    assert.equal(result.entity,'skill_literacy');assert.equal(result.teacher,'npc_hw_luqing');
+    assert.equal(after.state.player.coins,before.state.player.coins-2);
+    assert.equal(after.state.npcs.npc_hw_luqing.coins,before.state.npcs.npc_hw_luqing.coins+2);
+    assert.equal(after.state.minute,before.state.minute+60);assert.deepEqual(after.state.inventory,before.state.inventory);
+    assert.equal(after.state.learning.formal_lesson.success,result.success);
+    assert.equal(Boolean(after.state.skills.skill_literacy),result.success);
+});

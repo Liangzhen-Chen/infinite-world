@@ -1,0 +1,37 @@
+{
+  "index": 1,
+  "fingerprint": "aa0a38a0aa62a0d5728bfd7fc4934e859baf2d212a928cd00debbf5e0ce3b1b3",
+  "count": 5,
+  "passed": 4,
+  "ids": [
+    "npc_wt_peichun",
+    "npc_wt_suhui",
+    "npc_wt_qilu",
+    "npc_wt_huayin",
+    "npc_wt_xiangzhen"
+  ],
+  "rewritten": 3,
+  "manual": [
+    "npc_wt_xiangzhen"
+  ],
+  "pending": [],
+  "flagged": [
+    "npc_wt_peichun",
+    "npc_wt_suhui",
+    "npc_wt_qilu",
+    "npc_wt_xiangzhen"
+  ],
+  "sample": [
+    "npc_wt_qilu",
+    "npc_wt_huayin",
+    "npc_wt_peichun",
+    "npc_wt_suhui"
+  ],
+  "l4": {
+    "approved": false,
+    "notes": []
+  },
+  "costUpperYuan": 4.8534624,
+  "manualRatio": 0.2,
+  "needsSystemicRepair": true
+}

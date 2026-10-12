@@ -29,7 +29,7 @@ export async function createPlaytestServer({world,seed,plannerClient,consistency
     return{api,directory,close:async()=>{await new Promise(resolve=>server.close(resolve));if(!persistentDirectory)await fs.rm(directory,{recursive:true,force:true});}};
 }
 
-export async function runPlaytest({scenario,api,client,bundle,attempt=1,processMessages=messages=>messages,countTokens=null,historyWindow={},session=null}={}){
+export async function runPlaytest({scenario,api,client,bundle,attempt=1,processMessages=messages=>messages,countTokens=null,historyWindow={},session=null,stopOnFailure=false}={}){
     const settings=generationSettings(bundle.generation);
     countTokens??=await loadHistoryTokenizer();let historyCursor=structuredClone(session?.historyCursor??null);
     const tools=toolDefinitions(),allowed=new Set(tools.map(row=>row.function.name));
@@ -63,7 +63,7 @@ export async function runPlaytest({scenario,api,client,bundle,attempt=1,processM
             const before=structuredClone(view.document),startMinute=before.state.minute,anchor=step.anchor??`${scenario.id}-${attempt}-${index}`;
             assertionBefore=before;
             chat.push({is_user:true,mes:step.input,extra:{fields_anchor:anchor}});history.push({role:'user',content:step.input});await sync();
-            const reviewTurn=await api('review/begin',{campaignId,anchor,playerText:step.input,expectedSequence:view.reference.sequence});
+            const reviewTurn=await api('review/begin',{campaignId,anchor,playerText:step.input,expectedSequence:view.reference.sequence,captureSearch:true});
             const scene=await api('scene',{campaignId,query:step.input});
             report.sceneBefore=scene.scene;
             let final=false;
@@ -92,7 +92,7 @@ export async function runPlaytest({scenario,api,client,bundle,attempt=1,processM
                         args=JSON.parse(call.function.arguments);if(!allowed.has(tool))throw new Error('模型调用未注册工具');
                         if(isOutOfCharacter(step.input)&&!readOnlyTools.has(tool))throw new Error('场外不能写入世界');
                         if(tool==='world_read')result=readStateSection(view.document.state,args.section);
-                        else if(tool==='world_search')result=await api('search',{...args,campaignId});
+                        else if(tool==='world_search')result=await api('search',{...args,campaignId,token:reviewTurn.token,anchor,expectedSequence:view.reference.sequence});
                         else if(tool==='world_catalog')result=await api('catalog',{...args,campaignId});
                         else{
                             const eventId=`${anchor}-${report.calls.length}`;
@@ -137,6 +137,7 @@ export async function runPlaytest({scenario,api,client,bundle,attempt=1,processM
                 report.player=view.document.state.player;report.minute=view.document.state.minute;report.location=view.document.state.location;
             }
         }
+        if(stopOnFailure&&report.errors.length)break;
     }
     const assertions=reports.flatMap(row=>row.assertions),passed=assertions.filter(row=>row.pass).length;
     const ledgerPass=assertions.length>0&&passed===assertions.length;
