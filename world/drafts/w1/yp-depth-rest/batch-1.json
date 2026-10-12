@@ -1,0 +1,107 @@
+{
+  "index": 1,
+  "fingerprint": "6b786da1ee950772399549b3e99719479210f8a25cfe3b41e382fa1bd261f3cb",
+  "count": 5,
+  "passed": 4,
+  "ids": [
+    "npc_yp_yucheng",
+    "npc_yp_qiuyan",
+    "npc_yp_tanghuan",
+    "npc_yp_zhangyi",
+    "npc_yp_lisha"
+  ],
+  "rewritten": 3,
+  "manual": [
+    "npc_yp_tanghuan"
+  ],
+  "pending": [],
+  "flagged": [
+    "npc_yp_tanghuan"
+  ],
+  "sample": [
+    "npc_yp_zhangyi",
+    "npc_yp_yucheng",
+    "npc_yp_qiuyan",
+    "npc_yp_lisha"
+  ],
+  "l4": {
+    "approved": false,
+    "reviewedAt": "2026-10-11T23:39:58.979Z",
+    "readingWindowUpperBoundStart": "2026-10-11T23:38:25.584Z",
+    "readingWindowUpperBoundMs": 93395,
+    "notes": [
+      {
+        "id": "npc_yp_yucheng",
+        "note": "重读全部修订叶与L2；受潮栏门开合和物主腾空门边有原档支持，后续检看与使用者反馈未称完成。与孔馥回忆两方相同，未交付工具、新增门或能力。",
+        "draftHash": "15d481ad0e175806a72f77bcff3d03e1956dbb35c8bee0e31e3aa38da11b53d2",
+        "reviewHash": "a56bf6664c1bc7f02948b9fa3bb9cee42b31501f44171ae784ba11a5b1b95c67",
+        "readAt": "2026-10-11T23:39:58.979Z"
+      },
+      {
+        "id": "npc_yp_qiuyan",
+        "note": "重读全部修订叶与L2；含糊收货人未补成真实姓名，未知汤桓认字能力未断言已会。与汤桓回忆候选同文，但另一方L2仍因共享事件来源hard，本所属批不批准发布。",
+        "draftHash": "e387c8db7d50f97692452c0034edf67e1cf24a3c0829812dd3cf2e2f7499c6ee",
+        "reviewHash": "a56bf6664c1bc7f02948b9fa3bb9cee42b31501f44171ae784ba11a5b1b95c67",
+        "readAt": "2026-10-11T23:39:58.979Z"
+      },
+      {
+        "id": "npc_yp_zhangyi",
+        "note": "重读全部修订叶与L2；章采同户和旧具混叫依原档，拿不准的叫法仍待问。与利莎回忆没有替住户答应出工，不把年轻人听过解释说成已掌握用途。",
+        "draftHash": "6f9f4ddbd5a05c9a6b3e974518d97553fd3496c4cb3cfae2503387d9f77b1adc",
+        "reviewHash": "a56bf6664c1bc7f02948b9fa3bb9cee42b31501f44171ae784ba11a5b1b95c67",
+        "readAt": "2026-10-11T23:39:58.979Z"
+      },
+      {
+        "id": "npc_yp_lisha",
+        "note": "重读全部修订叶与L2；工日相撞保持未解决，逐人核问时段和照护限制均为future pending。章颐叫法和利帆空闲仍待确认，没有替任何户答应工日。",
+        "draftHash": "0c56dac8c2d9a55c85ff3c2df081922a98732af2d206ab363ab30d8ad65c1837",
+        "reviewHash": "a56bf6664c1bc7f02948b9fa3bb9cee42b31501f44171ae784ba11a5b1b95c67",
+        "readAt": "2026-10-11T23:39:58.979Z"
+      }
+    ],
+    "blocked": [
+      {
+        "id": "npc_yp_tanghuan",
+        "errors": [
+          {
+            "quote": "裘砚与汤桓在榆坡村有过当面往来，认得彼此。裘砚核抄货签，汤桓抹补泥墙；相认没有替含糊货签确定收货人。",
+            "field": "memorySeeds[2]",
+            "severity": "hard",
+            "reason": "来源仅登记裘砚与汤桓为“同村日常往来”并“认识同村汤桓”，未记载两人有过当面往来或共享事件；该记忆新增了来源没有依据的共享经历，且“相认没有替含糊货签确定收货人”引入来源未声明的货签情节。"
+          }
+        ]
+      }
+    ]
+  },
+  "costUpperYuan": 2.860414879999999,
+  "manualRatio": 0.2,
+  "needsSystemicRepair": true,
+  "l4History": [
+    {
+      "approved": false,
+      "notes": [],
+      "priorFingerprint": "e243d017d504f1482605cee9a9ee9f8fc20b28c5329041d874d96fcf4958e1c8",
+      "supersededBy": "authorized-T06-content-revision-1"
+    },
+    {
+      "approved": false,
+      "notes": [],
+      "priorFingerprint": "4fb1b89ec00dc2bd637433e8acaefc3c602864610fda0756f4dfca3e5ba2921f",
+      "supersededBy": "T06-final-unknown-only"
+    },
+    {
+      "approved": false,
+      "notes": [],
+      "supersededBy": "npc_yp_tanghuan",
+      "priorFingerprint": "017f17ab106e719dd4d1d77dfe0a3d6bb1050fdd6d127ef026cf8ac360995fce"
+    }
+  ],
+  "rebind": {
+    "kind": "authorized-T06-content-revision-1",
+    "evidenceHash": "f52d827bcdb8a28e65d4d9e230fe45072562fefb6ca2afe9278b2e2f5f3d68de",
+    "oldFingerprint": "e243d017d504f1482605cee9a9ee9f8fc20b28c5329041d874d96fcf4958e1c8",
+    "verifiedUntouched": 26,
+    "recordedAt": "2026-10-11T23:36:39.823Z"
+  },
+  "foundationHash": "3e70154f9f33ba6ab1380c7a06c1b3980a5f5af488cd705b83093c7ee7dccd90"
+}

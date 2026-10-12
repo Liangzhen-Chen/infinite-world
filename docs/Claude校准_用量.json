@@ -18,6 +18,8 @@
     "periodIncrementSpentYuan": 1.81851976,
     "source": "world/drafts/m4-object/budget.json 与 f79496f 同文件；客户端记录，未核验账单；其他试玩/其他账本费用不混加"
   },
-  "claudeFeedbackReceived": false,
-  "interpretation": "此前目标累计9298782 token/19823秒与本目标不可相减；跨目标本期与整体净用量、Codex/Claude金额未知。"
+  "claudeFeedbackReceived": true,
+  "interpretation": "此前目标累计9298782 token/19823秒与本目标不可相减；跨目标本期与整体净用量、Codex/Claude金额未知。",
+  "feedbackChat": "https://claude.ai/chat/bbc56942-d112-48ca-95a5-cff1f73082a9",
+  "packageSha256": "158aec2a8a04cbc6bfb419ff7fb073a575b61cc5ce74e632a11016fd3b259466"
 }
