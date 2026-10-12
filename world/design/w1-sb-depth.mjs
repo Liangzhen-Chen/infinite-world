@@ -1,6 +1,6 @@
 // Frozen audit leaves; formal sources are unchanged. L2/L4 remain pending.
 import base from '../drafts/w1/sb-depth/base.json' with {type:'json'};
-export const revision='w1-sb-depth-v1';
+export const revision='w1-sb-depth-v2-offline-precheck';
 export const incrementLimitYuan=3;
 export const cohorts=[
   {
@@ -527,7 +527,7 @@ const rows=[
       },
       {
         "path": "goals.mid[0].steps[0].content",
-        "value": "交叶时把表层与里层分别展示，请接料人复述看到的状态。"
+        "value": "翻检后把每堆里层仍潮的位置分别记下，再请接料人核对记录指的是哪一堆。"
       },
       {
         "path": "goals.long[0].steps[0].content",
@@ -1465,7 +1465,7 @@ const rows=[
       },
       {
         "path": "goals.mid[0].steps[0].content",
-        "value": "请使用者描述发响时的动作，再与空架检看结果逐项比较。"
+        "value": "等织架空下时逐处查看接合，把使用者说过的异响位置和检看处对照。"
       },
       {
         "path": "goals.long[0].steps[0].content",
@@ -2001,7 +2001,7 @@ const rows=[
       },
       {
         "path": "goals.mid[0].steps[0].content",
-        "value": "把能看见的磨痕指出给物主，问是否需要调整便于检看的摆法。"
+        "value": "待木架空下后请使用者指出湿盆惯常朝哪边摆，再沿对应架脚核对磨痕。"
       },
       {
         "path": "goals.long[0].steps[0].content",
@@ -2666,11 +2666,11 @@ const rows=[
       },
       {
         "path": "goals.mid[0].steps[0].content",
-        "value": "对着原松档指出标记位置，请物主确认认得停用原因。"
+        "value": "请物主在旁一起看松动横档，问清可用的标记方式，经物主同意后当面标出需停用的位置。"
       },
       {
         "path": "goals.long[0].steps[0].content",
-        "value": "下次有人问借梯时先问是否见过松档标记，向物主转达借用请求。"
+        "value": "与物主约清坏梯停用的标记，让问借的人先看到停用原因，复查前不安排转借。"
       },
       {
         "path": "memorySeeds[2]",
@@ -3532,7 +3532,7 @@ const rows=[
       },
       {
         "path": "goals.mid[0].steps[0].content",
-        "value": "向下一道工序的人说明暂放边界，请其复认哪堆仍有毛刺。"
+        "value": "请搬板人一起选只供暂放的空处，再把修好与待修木板的暂放边界说明给下一道工序的人。"
       },
       {
         "path": "goals.long[0].steps[0].content",
@@ -3558,7 +3558,7 @@ const rows=[
       },
       {
         "path": "relationships[1].note",
-        "value": "毕祺与诸弦同住诸弦户居处，在家中见面；丈夫错骂人后不好意思道歉。"
+        "value": "毕祺与诸弦同住诸弦户居处，在家中见面；丈夫曾错骂人，毕祺夹在中间，觉得应当有个说法。"
       },
       {
         "path": "relationships[2].note",
@@ -3824,7 +3824,7 @@ const rows=[
       },
       {
         "path": "goals.short[0].steps[0].content",
-        "value": "陪问路者指认园外的转弯处，先说公共路走向再问其目的地。"
+        "value": "到原路记处查明遮挡的垂枝，先向园主问清可整理的范围，再说明尚可辨认的转弯点。"
       },
       {
         "path": "goals.mid[0].steps[0].content",

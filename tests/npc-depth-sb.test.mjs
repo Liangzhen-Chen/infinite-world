@@ -4,11 +4,13 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 import {execFile} from 'node:child_process';
 import {promisify} from 'node:util';
+import crypto from 'node:crypto';
 import {loadWorld} from '../tools/load-world.mjs';
 import {auditNpcDepth} from '../tools/audit-npc-depth.mjs';
 import {hashContent} from '../tools/content-pipeline.mjs';
 import {depthEntries,patchDraft,applyDepthDraft,verifyUnchanged,validateDraft,validatePatchResults,getPath,contextFor,buildReviewRequest} from '../tools/npc-depth-content.mjs';
 import * as config from '../world/design/w1-sb-depth.mjs';
+import {sangbanRoster,sangbanFull} from '../world/design/w1-villages-sangban.mjs';
 
 const exec=promisify(execFile),world=await loadWorld(),root=path.resolve('world/drafts/w1/sb-depth');
 const entries=depthEntries(config.patchRows.map(r=>r.before),config,world);
@@ -94,4 +96,36 @@ test('prepare重复执行不写正式档和冻结文件，不创建预算或审�
  const manifest=JSON.parse(await read('manifest'));assert.equal(manifest.worldRoot,'../../..');assert.equal(manifest.design,'design/w1-sb-depth.mjs');assert.equal(manifest.root,'drafts/w1/sb-depth');
  assert.equal(manifest.foundationHash,hashContent(JSON.parse(await read('foundation'))));
  assert.deepEqual(JSON.parse(await read('candidate')),entries.map(patchDraft));
+});
+
+test('来源预检只改变8个原许可叶，保留v1原字节证据和365个正确补丁',async()=>{
+ const report=JSON.parse(await read('author-precheck')),previous=JSON.parse(await fs.readFile(path.join(root,'offline-v1-evidence/candidate.json'),'utf8'));
+ const differences=[];
+ for(const old of previous){const current=config.patchRows.find(r=>r.id===old.id);assert.equal(current.patches.length,old.patches.length);
+  for(const patch of old.patches){const next=current.patches.find(p=>p.path===patch.path);assert.ok(next);if(JSON.stringify(next.value)!==JSON.stringify(patch.value))differences.push({id:old.id,field:patch.path,before:patch.value,after:next.value});}
+ }
+ assert.equal(differences.length,8);assert.deepEqual(differences.map(d=>[d.id,d.field]).sort(),report.changes.map(d=>[d.id,d.field]).sort());
+ for(const difference of differences){const note=report.changes.find(d=>d.id===difference.id&&d.field===difference.field);assert.deepEqual(difference.before,note.before);assert.deepEqual(difference.after,note.after);assert.ok(config.patchRows.find(r=>r.id===difference.id).issues.some(i=>i.field===difference.field));}
+ assert.deepEqual(JSON.parse(await fs.readFile(path.join(root,'offline-v1-evidence/base.json'),'utf8')),config.patchRows.map(r=>r.before));
+ for(const snapshot of report.snapshots){const raw=await fs.readFile(path.resolve(snapshot.rawPath));const original=snapshot.originalEol==='CRLF'?raw.toString('utf8').replaceAll('\r\n','\n').replaceAll('\n','\r\n'):raw.toString('utf8').replaceAll('\r\n','\n');assert.equal(crypto.createHash('sha256').update(original).digest('hex'),snapshot.sha256);}
+ assert.equal(report.approvals.L4,'not-approved');assert.equal(report.approvals.L2,'not-run');assert.equal(report.approvals.T25OptIn,false);
+});
+
+test('桑坂实际名册/目标列、正式性别和全部代词叶的出处可逐项核验',async()=>{
+ const packets=JSON.parse(await read('source-reading-packets')),pronouns=JSON.parse(await read('pronoun-precheck'));
+ const roster=new Map(sangbanRoster.trim().split('\n').map(l=>{const r=l.split('|');return ['npc_sb_'+r[1],r];})),full=new Map(sangbanFull.trim().split('\n').map(l=>{const r=l.split('|');return ['npc_sb_'+r[0],r];}));
+ assert.equal(packets.relationshipChecks.length,89);assert.equal(packets.goalChecks.length,90);
+ for(const check of packets.relationshipChecks){const r=roster.get(check.with);if(r){assert.equal(check.source.quote,r[7]);assert.equal(check.source.traits,r[6]);assert.equal(check.name,r[2]);}assert.equal(check.sex,world.npcs.concat(world.residents).find(n=>n.id===check.with).sex);}
+ for(const check of packets.goalChecks){const term=check.path.match(/^goals\.(short|mid|long)\[/)[1];assert.equal(check.source.authorRow.goalIndex,{short:10,mid:11,long:12}[term]);assert.equal(check.source.goal.content,full.get(check.id)[check.source.authorRow.goalIndex]);}
+ const actual=entries.flatMap(e=>e.patches.filter(p=>typeof p.value==='string'&&/[他她]/.test(p.value)).map(p=>[e.id,p.path]));assert.deepEqual(actual.sort(),pronouns.checks.map(c=>[c.id,c.path]).sort());
+ for(const check of pronouns.checks){const person=world.npcs.concat(world.residents).find(n=>n.id===check.referent);assert.ok(person);assert.equal(person.sex,check.pronoun==='他'?'男':'女');assert.equal(check.text,entries.find(e=>e.id===check.id).patches.find(p=>p.path===check.path).value);}
+});
+
+test('15个新共同事件没有冒充原明确亲历，出处哈希只指正式来源，未启用T25',async()=>{
+ const classification=JSON.parse(await read('source-classification'));assert.equal(classification.T25OptIn,false);assert.equal(classification.backgrounds.length,15);
+ assert.equal(classification.leafClassifications.length,373);assert.ok(classification.leafClassifications.every(c=>c.approval==='unreviewed-L2-L4'));
+ for(const background of classification.backgrounds){assert.equal(background.oldSameEventExplicitlySupported,false);assert.equal(background.classification,'new-authored-public-background');assert.ok(background.sourceRefs.length>=3);
+  for(const ref of background.sourceRefs){const collection={'people/baseline.json':world.npcs,'geo/settlements.json':world.settlementProfiles,'geo/locations.json':world.locations}[ref.file];assert.ok(collection);assert.deepEqual(getPath(collection.find(n=>n.id===ref.id),ref.field),ref.value);assert.equal(hashContent(ref.value),ref.contentHash);assert.doesNotMatch(ref.field,/secrets|privateFact/);}
+  assert.ok(background.newFacts.includes('具体共同在场地点'));assert.ok(background.forbiddenResults.some(s=>s.includes('私密')));
+ }
 });

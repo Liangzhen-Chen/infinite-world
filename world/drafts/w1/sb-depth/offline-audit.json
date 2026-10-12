@@ -1,6 +1,6 @@
 {
   "stage": "offline-authored-awaiting-L2-L4",
-  "revision": "w1-sb-depth-v1",
+  "revision": "w1-sb-depth-v2-offline-precheck",
   "modelCalls": 0,
   "formalWrite": false,
   "people": 30,
@@ -19,11 +19,12 @@
   "mergedIssues": [],
   "legacyTraitsRetained": true,
   "baseHash": "356373c630934ded876f1dfc346ae843265e0bf219abfc4826dec992401f6b3c",
-  "candidateHash": "9be1a99e58dc2b9481d01e931ea3a449df9e5d9983d95f2174bda8ab6d607581",
-  "foundationHash": "4d07f7f3e881df83bb9058c9e76b98e8940f26888efdae0eec5adcb5971403cd",
+  "candidateHash": "7cd613567e1f88619e7cf0b433c455ac0d4281cca7fb5a82c021332a333d5c1b",
+  "foundationHash": "2a09f4e273035531fad8c6be657ada9a5e897afd52757ed06a814ffe5de69c83",
   "pending": [
+    "T25显式opt-in及新背景独立审核",
     "真实L2事实审核",
-    "L4逐条阅读",
+    "正式L4批准",
     "统一正式发布"
   ]
 }
