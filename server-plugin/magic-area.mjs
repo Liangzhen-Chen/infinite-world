@@ -1,5 +1,5 @@
 // Areas use trusted world/state coordinates. Presence alone never implies range.
-import {environmentFeatures}from'./environment.mjs';
+import {environmentFeatures,localSightClear}from'./environment.mjs';
 import {validateEffectSpec}from'./magic-primitives.mjs';
 import {validateMagicCatalog,prepareMagic,applyMagic}from'./magic.mjs';
 const pointValid=p=>Array.isArray(p)&&p.length===2&&p.every(Number.isFinite);
@@ -12,11 +12,14 @@ export function areaTargetFacts(d,engine,target,location,center){
  if(transit?.subjects?.includes(target)&&d.get('state','minute')<transit.arrival)return null;
  if(target==='player'){
   const row=d.get('state','records','local_player_position'),point=row?.location===location?row.point:[0,0];
-  return pointValid(point)?{point,lineOfSight:!center||Math.hypot(point[0]-center[0],point[1]-center[1])===0}:null;
+  return pointValid(point)?{point,lineOfSight:(!center||Math.hypot(point[0]-center[0],point[1]-center[1])===0)&&localSightClear(d,engine,location,center??point,point)}:null;
  }
  const row=d.get('state','records',`local_actor_position:${target}`);
  if(row?.category!=='local_position'||row.subject!==target||row.location!==location||typeof row.source!=='string'||!row.source||!pointValid(row.point))return null;
- return{point:row.point,lineOfSight:row.lineOfSight===true};
+ const proof=d.get('state','records',row.source),now=d.get('state','minute');
+ if(proof?.category!=='physical_contact'||proof.subject!==target||proof.location!==location||typeof proof.event!=='string'||!proof.event||row.source!==`physical_contact:${proof.event}:${target}`||!pointValid(proof.point)||proof.point.some((x,i)=>x!==row.point[i])||!Number.isSafeInteger(proof.minute)||proof.minute>now||proof.expires!==proof.minute+10||proof.expires<=now||row.minute!==proof.minute||row.expires!==proof.expires)return null;
+ const origin=center??row.point,visible=pointValid(proof.visibleFrom)&&(origin.every((x,i)=>x===row.point[i])||origin.every((x,i)=>x===proof.visibleFrom[i]));
+ return{point:row.point,lineOfSight:visible&&row.lineOfSight!==false&&localSightClear(d,engine,location,origin,row.point)};
 }
 function facts(d,engine,target,location,center){
  const actor=living(d,target),transit=d.get('state','records','magic_area_transit');
@@ -139,6 +142,7 @@ export function nextMagicAreaMinute(state,now){
  for(const area of Object.values(state.effects??{}))if(area.kind==='area'){
   if(!Number.isSafeInteger(area.nextPulse)||area.nextPulse<=now||!Number.isSafeInteger(area.expires)||area.expires<=now)throw Error('区域触发游标损坏');
   next=Math.min(next,area.nextPulse,area.expires);
+  for(const row of Object.values(state.records??{}))if(row.category==='local_position'&&row.subject!=='player'&&Number.isSafeInteger(row.expires)&&row.expires>now)next=Math.min(next,row.expires);
   for(const key of [...area.authorizations,area.permit].filter(Boolean)){const expires=state.records?.[key]?.expires;if(Number.isSafeInteger(expires)&&expires>now)next=Math.min(next,expires);}
  }
  return next;

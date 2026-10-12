@@ -15,7 +15,12 @@ const shield={kind:'protection',power:12,damageTypes:['fire'],stacking:'stronges
 const area=(effect=damage)=>({kind:'area',power:effect.power,radiusMeters:2,intervalMinutes:2,trigger:effect.kind==='protection'?'presence':'pulse',effect});
 function draft(document){return{document,patches:[],get(...p){return p.reduce((v,k)=>v?.[k],this.document);},set(p,v){const patch={op:'set',path:p,value:structuredClone(v)};this.patches.push(patch);this.document=applyPatches(this.document,[patch]);},remove(p){const patch={op:'delete',path:p};this.patches.push(patch);this.document=applyPatches(this.document,[patch]);},say(){}};}
 const actorId='npc_hw_linsui';
-function position(c,target,point,location=c.state.location){c.state.records[`local_actor_position:${target}`]={category:'local_position',subject:target,point,location,lineOfSight:true,source:'fixture-observed-position'};}
+// Synthetic geometry evidence is confined to these original mathematical tests.
+function position(c,target,point,location=c.state.location){
+ const source=`physical_contact:fixture:${target}`,minute=c.state.minute,expires=minute+10,activity=(target.startsWith('npc_')?c.state.npcs[target]:c.state.creatures[target])?.activity??null;
+ c.state.records[source]={category:'physical_contact',subject:target,point,visibleFrom:[0,0],location,event:'fixture',minute,expires,activity};
+ c.state.records[`local_actor_position:${target}`]={category:'local_position',subject:target,point,location,lineOfSight:true,source,minute,expires,activity};
+}
 function consent(c,target=actorId,expires=c.state.minute+100,action='support_magic'){
  const key=`consent:${target}`;c.state.records[key]={category:'authorization',subject:target,grantor:target,grantee:'player',action,expires};return key;
 }
