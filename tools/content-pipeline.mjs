@@ -63,7 +63,7 @@ export async function runContentPipeline({
   validateDraft, contextFor = () => null, buildReviewRequest = defaultReviewRequest,
   extractReview = parseModelJSON, concurrency = 8, batchSize = 40,
   revision = 'v2', retryManual = false, onBatch = null, budgetRoot = root,
-  cardId, allocation, protocolRecoveryIds = [],
+  cardId, allocation, protocolRecoveryIds = [], requestTransform,
 }) {
   if (!Array.isArray(entries) || new Set(entries.map(row => row.id)).size !== entries.length) throw new Error('条目编号重复或缺失');
   if (entries.some(row => !/^[a-z][a-z0-9_-]+$/i.test(row.id ?? ''))) throw new Error('条目编号不安全');
@@ -75,7 +75,14 @@ export async function runContentPipeline({
   if(!Array.isArray(protocolRecoveryIds)||protocolRecoveryIds.some(id=>!entries.some(e=>e.id===id)))throw Error('协议恢复 id 不在冻结条目中');
   const budget=await openContentBudget({file:ledgerPath,client,cardId,allocation});
   const results = [], batches = [];
-  const request=(body,label)=>budget.request(body,label);
+  async function request(body,label,details){
+    if(!requestTransform)return budget.request(body,label);
+    const transformed=await requestTransform({...details,body}),receipt=transformed.receipt;
+    if(!receipt)return budget.request(transformed.body,label);
+    await writeJSON(details.file,details.record);
+    try{const response=await budget.request(transformed.body,label);receipt.status='completed';receipt.responseHash=hashContent(response);if(details.phase==='review')details.record.firstSourceEvidence.reviewResponse=structuredClone(response);await writeJSON(details.file,details.record);return response;}
+    catch(error){receipt.status='failed';receipt.error=error.message;await writeJSON(details.file,details.record);throw error;}
+  }
   async function one(entry) {
     const context = await contextFor(entry);
     const fingerprint = hashContent({ entry, context, revision });
@@ -90,12 +97,12 @@ export async function runContentPipeline({
     let feedback = record?.fingerprint === fingerprint ? record.feedback : null;
     const priorAttempts = record?.fingerprint === fingerprint ? record.attempts ?? 0 : 0;
     if(eligible){record.protocolRecovery={kind:'audit-patch-v1-single-wrapper',startedAt:new Date().toISOString(),prior:structuredClone(record),status:'started'};record.status='pending';await writeJSON(file,record);}
-    else record = { id: entry.id, fingerprint, status: 'pending', attempts: priorAttempts, draft: null, review: null, errors: [], warnings: [], feedback };
+    else record = { id: entry.id, fingerprint, status: 'pending', attempts: priorAttempts, draft: null, review: null, errors: [], warnings: [], feedback, ...(record?.fingerprint===fingerprint&&record.firstSourceEvidence?{firstSourceEvidence:record.firstSourceEvidence}:{}) };
     for (let attempt = priorAttempts; attempt < (eligible?priorAttempts+1:3); attempt++) {
       if(!eligible)record.attempts = attempt + 1;
       try {
         const offline=eligible?record.protocolRecovery.prior.draftResponse:null;
-        const response = offline??await request(await buildDraftRequest(entry, feedback, context), `content-${path.basename(root)}-${entry.id}-${eligible?'protocol-recovery':'draft'+attempt}`);
+        const response = offline??await request(await buildDraftRequest(entry, feedback, context), `content-${path.basename(root)}-${entry.id}-${eligible?'protocol-recovery':'draft'+attempt}`, {entry,context,phase:'draft',feedback,record,file});
         record.draftResponse=response;
         record.measurements??=[];if(!offline&&response.measurement)record.measurements.push(response.measurement);
         await writeJSON(file,record);
@@ -104,7 +111,7 @@ export async function runContentPipeline({
         record.errors = Array.isArray(validation) ? validation : validation.errors ?? [];
         record.warnings = Array.isArray(validation) ? [] : validation.warnings ?? [];
         // L2 covers every syntactically usable draft, even if L1 found errors.
-        const reviewResponse = await request(await buildReviewRequest(entry, record.draft, context), `content-${path.basename(root)}-${entry.id}-review${attempt}`);
+        const reviewResponse = await request(await buildReviewRequest(entry, record.draft, context), `content-${path.basename(root)}-${entry.id}-review${attempt}`, {entry,context,phase:'review',draft:record.draft,record,file});
         if(reviewResponse.measurement)record.measurements.push(reviewResponse.measurement);
         if(reviewResponse.rawProviderReviewResponse){
           record.rawProviderReviewResponses??=[];
