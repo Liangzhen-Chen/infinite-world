@@ -30,7 +30,7 @@ async function makePrepared(t,{background=true,notes=false}={}){
  const saveDesign=async()=>fs.writeFile(design,`export const revision=${JSON.stringify(p.config.revision)};\nexport const incrementLimitYuan=3;\nexport const patchRows=${JSON.stringify(p.config.patchRows)};\n`);await saveDesign();
  const options={root,design,worldRoot,...(background?{authoredBackground}:{})},prepared=await prepareDepth(options);return{...p,...prepared,config:p.config,dir,worldRoot,root,design,authoredBackground,options,saveDesign,manifest:path.join(root,'manifest.json')};
 }
-function reviewFor(entry,context){return{contradictions:[],reviewedPaths:entry.patches.map(p=>p.path),...(context.authoredBackground?{backgroundReviews:context.authoredBackground.events.map(e=>({eventId:e.id,sourceHash:context.authoredBackground.sourceHash,reviewedRiskPaths:e.risks.map(r=>`${r.id}.${r.field}`),contradictions:[]}))}:{})};}
+function reviewFor(entry,context){return{contradictions:[],reviewedPaths:entry.patches.map(p=>p.path),backgroundReviews:(context.authoredBackground?.events??[]).map(e=>({eventId:e.id,sourceHash:context.authoredBackground.sourceHash,reviewedRiskPaths:e.risks.map(r=>`${r.id}.${r.field}`),contradictions:[]}))};}
 async function approve(p){
  const requests=[],client={spent:0,reserved:0,budgetYuan:0,async generate(request){const body=JSON.parse(request.messages[1].content);requests.push(request);if(body.candidate)return{choices:[{message:{content:JSON.stringify(body.candidate)}}]};return{choices:[{message:{content:JSON.stringify(reviewFor(body.skeleton,body.publishedFacts))}}]};}};
  await runContentPipeline({entries:p.entries,root:p.root,budgetRoot:p.root,client:depthReviewClient(client),revision:p.config.revision,contextFor:e=>contextFor(e,p.world),buildDraftRequest,buildReviewRequest,extractDraft,validateDraft,concurrency:1,batchSize:25});return requests;
@@ -96,6 +96,25 @@ test('冻结新出处不能靠换revision或删除opt-in变成旧已审核源',a
 });
 test('共同事实保持一致时保留各人冻结视角文字，不能靠单侧候选添加新事实',()=>{
  const p=fixture(),event=p.bundle.events[0];for(const association of event.associations){association.narrative=p.w.npcs.find(n=>n.id===association.id).name+'记得：'+event.narrative;association.factsHash=hashContent(event.designedFacts);p.config.patchRows.find(r=>r.id===association.id).patches[0].value.event=association.narrative;}p.config.authoredBackground=p.bundle;assert.equal(p.entries().length,2);event.associations[1].factsHash='another-fact';assert.throws(()=>p.entries(),/事实hash/);
+});
+
+test('事件ID按精确字符串值识别，_1不误拒_10/_11，未参与者精确引用与原叙述仍拒',()=>{
+ const p=fixture(),event=p.bundle.events[0];event.id='memory_sb_depth_shared_1';for(const row of p.config.patchRows)row.patches[0].value.id=event.id;
+ const entries=p.entries(),outsider={id:'npc_yp_wenxu',patches:[{path:'memorySeeds[9]',value:{id:event.id+'0',event:'另一事件的独立叙述',knownBy:['npc_yp_wenxu']}}]};
+ for(const id of [event.id+'0',event.id+'1']){outsider.patches[0].value.id=id;assert.ok(validateAuthoredBackground(p.bundle,[...entries,outsider],p.w));}
+ for(const value of [{id:event.id},{nested:{references:[event.id]}},{id:event.id+'0',event:'记忆：'+event.narrative}]){outsider.patches[0].value=value;assert.throws(()=>validateAuthoredBackground(p.bundle,[...entries,outsider],p.w),/未参与者不得新增获知/);}
+});
+
+test('T10显式规划受控修订沿原manifest设计可审可发布，任意card/hash/无真实hard路径仍拒',async t=>{
+ async function t10(){
+  const p=await controlled(t,{status:'manual'});p.plan.cardId='T10';p.plan.planningId='T10-controlled-plan-one';await write(p.options.controlledRevision,p.plan);p.options.cardId='T10';p.options.authorizationHash=hashContent(p.plan);
+  p.ledger.cards.T10={limitYuan:3,spentYuan:1.99097608,reservedYuan:0};p.ledger.spentYuan+=1.99097608;await write(path.join(p.budgetRoot,'budget.json'),p.ledger);await write(path.join(p.root,'allocation.json'),{cardId:'T10',incrementLimitYuan:3,waveLimitYuan:20});return p;
+ }
+ const p=await t10(),prepared=await prepareDepthRevision(p.options);assert.equal(prepared.plan.cardId,'T10');assert.equal(p.calls.length,0);
+ assert.equal((await runDepthReview(p.options,{client:p.client})).status,'passed');const record=await read(path.join(p.root,p.options.id+'.json'));assert.deepEqual(record.reviewRecovery.prior,p.records[0]);assert.equal(record.attempts,p.records[0].attempts);assert.equal(p.calls.length,1);
+ await assert.rejects(publishNpcDepth({manifest:p.manifest}),/L4/);await l4(p,p.options);await publishNpcDepth({manifest:p.manifest,publish:true});await runDepthReview(p.options,{client:p.client});assert.equal(p.calls.length,1);
+ const ledger=await read(path.join(p.budgetRoot,'budget.json'));assert.deepEqual(ledger.cards.T06,p.ledger.cards.T06);assert.deepEqual(ledger.requests.stopped,p.ledger.requests.stopped);assert.equal(ledger.cards.T10.limitYuan,3);assert.equal(ledger.reservedYuan,.083736);
+ for(const mode of ['card','hash','hard-path','card-mismatch']){const bad=await t10();if(mode==='card')bad.plan.cardId=bad.options.cardId='T08';if(mode==='hard-path')bad.plan.authorized[0].paths=['voice.register'];if(mode==='card-mismatch')bad.options.cardId='T07';await write(bad.options.controlledRevision,bad.plan);bad.options.authorizationHash=mode==='hash'?'fake':hashContent(bad.plan);await assert.rejects(runDepthReview(bad.options,{client:bad.client}));assert.equal(bad.calls.length,0);assert.deepEqual(await read(path.join(bad.budgetRoot,'budget.json')),bad.ledger);}
 });
 test('受控复审后篡改旧历史、规划或新L4绑定拒发，未授权的passed保持零调用',async t=>{
  const p=await controlled(t);await runDepthReview(p.options,{client:p.client});await l4(p,p.options);
