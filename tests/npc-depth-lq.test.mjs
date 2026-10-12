@@ -9,7 +9,7 @@ import {loadWorld} from '../tools/load-world.mjs';
 import {auditNpcDepth} from '../tools/audit-npc-depth.mjs';
 import {validateNpcProfiles,findNpcRuleWording} from '../tools/npc-profile-validation.mjs';
 import {hashContent} from '../tools/content-pipeline.mjs';
-import {depthEntries,patchDraft,applyDepthDraft,validateDraft,validatePatchResults,contextFor,buildReviewRequest,getPath} from '../tools/npc-depth-content.mjs';
+import {depthEntries,patchDraft,applyDepthDraft,validateDraft,validatePatchResults,contextFor,buildReviewRequest,getPath,validateAuthoredBackground,checkIncrementalReview} from '../tools/npc-depth-content.mjs';
 import * as design from '../world/design/w1-lq-depth.mjs';
 import {liquanRoster} from '../world/design/w1-villages-liquan.mjs';
 
@@ -184,4 +184,72 @@ test('六次共同会面均标明新增背景，旧个人来源不充当会面�
   assert.equal(report.patchSources.find(p=>p.id===e.id&&p.path===newMemory.path).kind,'new-public-background');
   assert.equal(report.patchSources.find(p=>p.id===e.id&&p.path==='knowledge.known[2]').kind,'new-public-background');
  }
+});
+
+const firstReviewRoot=path.join(root,'first-review');
+const backgroundFile=path.join(firstReviewRoot,'authored-background.json');
+const background=JSON.parse(await fs.readFile(backgroundFile,'utf8'));
+const backgroundEntries=depthEntries(originals,{...design,authoredBackground:background},world);
+
+test('T25官方纯验证接受六个独立未审背景，原出处和30人视角逐项冻结',()=>{
+ const source=validateAuthoredBackground(background,entries,world);
+ assert.equal(source.events.length,6);assert.equal(background.reviewStatus,'pending-independent-L2-L4');
+ assert.equal(new Set(source.events.flatMap(e=>e.actors)).size,30);
+ for(const event of source.events){
+  assert.equal(event.network.actors.length,5);assert.equal(event.actors.length,5);
+  const p=event.network.problemRef;
+  assert.equal(p.collection,'settlementProfiles');
+  const publishedProblem=getPath(world.settlementProfiles.find(row=>row.id===p.id),p.field);
+  assert.equal(publishedProblem.public,true);assert.ok(publishedProblem.id.startsWith('problem_lq_'));
+  assert.equal(p.hash,hashContent(publishedProblem));
+  for(const r of event.sourceRefs){
+   assert.equal(r.hash,hashContent(getPath(world[r.collection].find(row=>row.id===r.id),r.field)));
+   if(r.collection==='npcs'){assert.equal(r.visibility,'private');assert.ok(r.publicSpeech);assert.doesNotMatch(r.field,/secrets|memorySeeds|knowledge|privateFact/);}
+  }
+  for(const actorId of event.actors){
+   const actor=world.npcs.find(n=>n.id===actorId);assert.ok(event.narrative.includes(actor.name));
+   for(const [i,secret] of actor.secrets.entries())assert.ok(event.risks.some(r=>r.id===actorId&&r.field===`secrets[${i}]`&&r.hash===hashContent(secret)));
+   assert.ok(event.risks.some(r=>r.id===actorId&&r.field==='authoredFacts.privateFact'&&r.hash===hashContent(actor.authoredFacts.privateFact)));
+   const association=event.associations.find(a=>a.id===actorId),entry=entries.find(e=>e.id===actorId);
+   assert.equal(association.factsHash,hashContent(event.designedFacts));assert.ok(association.viewpoint);
+   const memory=entry.patches.find(p=>p.path===association.path).value;
+   assert.equal(memory.location,event.location);assert.equal(memory.event,association.narrative);assert.deepEqual(new Set(memory.knownBy),new Set(event.actors));
+  }
+ }
+ for(const entry of backgroundEntries)assert.deepEqual(patchDraft(entry),patchDraft(entries.find(e=>e.id===entry.id)));
+});
+
+test('首审出处拒绝候选自证、过期原字段和漏秘密风险，L2请求必须另审背景',()=>{
+ for(const change of [b=>b.events[0].sourceRefs[0].collection='candidate',b=>b.events[0].sourceRefs[0].hash='stale',b=>b.events[0].risks.splice(0,1),b=>b.events[0].sourceRefs.find(r=>r.collection==='npcs').visibility='public']){
+  const invalid=structuredClone(background);change(invalid);assert.throws(()=>validateAuthoredBackground(invalid,entries,world));
+ }
+ for(const entry of backgroundEntries){
+  const context=contextFor(entry,world),request=buildReviewRequest(entry,patchDraft(entry),context),payload=JSON.parse(request.messages[1].content);
+  assert.equal(payload.publishedFacts.authoredBackground.sourceHash,hashContent(background));
+  const event=payload.publishedFacts.authoredBackground.events[0];
+  assert.deepEqual(event.originalSources.map(r=>r.hash),background.events.find(e=>e.id===event.id).sourceRefs.map(r=>r.hash));
+  assert.equal(event.privateRisks.length,event.risks.length);
+  assert.match(request.messages[0].content,/独立审核/);
+  // No mock approval is saved. A response that only approves the candidate is
+  // insufficient because it has not reviewed the independent background.
+  assert.throws(()=>checkIncrementalReview({contradictions:[],reviewedPaths:entry.patches.map(p=>p.path)},entry,context),/缺独立事件出处L2/);
+ }
+});
+
+test('官方authored-background prepare冻结新版首审产物，author-v2及原记忆没有改动',async()=>{
+ const optIn=JSON.parse(await fs.readFile(path.join(firstReviewRoot,'opt-in-evidence.json'),'utf8'));
+ assert.equal(optIn.cardId,'T08');assert.equal(optIn.modelCalls,0);assert.deepEqual(optIn.candidateChanges,[]);
+ for(const old of optIn.previousFiles)assert.equal(hashContent(JSON.parse(await fs.readFile(path.resolve(firstReviewRoot,old.path),'utf8'))),old.contentHash);
+ const files=['base.json','candidate.json','foundation.json','manifest.json'];
+ const frozen=await Promise.all(files.map(async name=>({name,hash:hashContent(JSON.parse(await fs.readFile(path.join(firstReviewRoot,name),'utf8'))),mtime:(await fs.stat(path.join(firstReviewRoot,name))).mtimeMs})));
+ const env={...process.env};delete env.DEEPSEEK_API_KEY;
+ const {stdout}=await exec(process.execPath,['tools/npc-depth.mjs','--design','world/design/w1-lq-depth.mjs','--root',firstReviewRoot,'--authored-background',backgroundFile,'--budget-root',path.join(firstReviewRoot,'no-allocated-budget'),'--card','T08','--prepare'],{env});
+ assert.deepEqual(JSON.parse(stdout),{entries:30,formalWrite:false,modelCalls:0});
+ for(const old of frozen){assert.equal(hashContent(JSON.parse(await fs.readFile(path.join(firstReviewRoot,old.name),'utf8'))),old.hash);assert.equal((await fs.stat(path.join(firstReviewRoot,old.name))).mtimeMs,old.mtime);}
+ const manifest=JSON.parse(await fs.readFile(path.join(firstReviewRoot,'manifest.json'),'utf8'));
+ assert.equal(manifest.authoredBackgroundHash,hashContent(background));
+ const candidate=JSON.parse(await fs.readFile(path.join(firstReviewRoot,'candidate.json'),'utf8'));
+ assert.deepEqual(candidate,JSON.parse(await fs.readFile(path.join(root,'candidate.json'),'utf8')));
+ for(const entry of backgroundEntries)assert.deepEqual(entry.facts.memorySeeds.slice(0,-1),entry.before.memorySeeds);
+ for(const name of ['allocation.json','budget.json','terminal.json','batch-0.json','incremental-l4.json','npc_lq_luanpei.json'])await assert.rejects(fs.stat(path.join(firstReviewRoot,name)),/ENOENT/);
 });
