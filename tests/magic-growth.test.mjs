@@ -77,6 +77,7 @@ test('unplanted, missing water/nutrient state, absent materials and exact consen
   [d=>{delete d.state.records.permit;},/同意/],
   [d=>{d.state.records.permit.subject='another_field';},/同意/],
   [d=>{d.state.records.permit.revoked=true;},/同意/],
+  [d=>{delete d.state.npcs[f.p.manager];},/履约/],
   [d=>{d.state.records.permit.expires=d.state.minute;},/同意/],
   [d=>{d.state.records['physical_feature:feature_growth']={id:'feature_growth',category:'physical_feature',location:f.p.fieldLocation,state:{waterMl:1,capacityMl:100}};},/营养/],
   [d=>{d.state.records['physical_feature:feature_growth']={id:'feature_growth',category:'physical_feature',location:f.p.fieldLocation,state:{waterMl:0,capacityMl:100,nutrientMg:100}};},/资源/],
@@ -91,6 +92,13 @@ test('plant binding uses actual crop cohorts; no unknown plants, diagnoses or fi
  assert.ok(farm(d).field.cohorts[0].growthBonusTicks>0);conservation(d);
  await assert.rejects(f.cast(f.sown,'unknown','unknown_plant'),/登记/);
  assert.ok(validateMagicCatalog({...catalog,effectSpec:{...catalog.effectSpec,cureDisease:true}}).length);
+});
+test('player-owned resource labels cannot authorize an NPC field; player farm ownership requires an explicit farm registration',async()=>{
+ const f=await setup();f.feature.owner='player';
+ await assert.rejects(f.cast(f.sown,'fake-owner'),/田主登记/);
+ f.p.fieldOwner='player';const doc=structuredClone(f.sown);delete doc.state.records.permit;
+ const out=await successfulCast(f,doc,'player-owned');assert.equal(out.result.field,f.p.fieldId);
+ const grown=(await f.wait(out.document,1440,'own-farm-day')).document;assert.ok(farm(grown).field.cohorts[0].growthBonusTicks>0);conservation(grown);
 });
 test('partial days, season crossing, large/small waits and JSON restart produce identical agricultural and resource ledgers',async()=>{
  const f=await setup({day:87}),out=await successfulCast(f);const input=out.document;

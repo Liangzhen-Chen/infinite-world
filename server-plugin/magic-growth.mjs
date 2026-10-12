@@ -27,7 +27,8 @@ function binding(engine,target){
  const f=p?features.find(f=>f.id===p.growthFeature):features.find(f=>f.id===target);
  const profile=p??engine.rules.agriculture?.settlements.find(p=>p.settlement===f?.growth?.settlement&&p.fieldId===f?.growth?.field);
  if(!profile||!f||!['soil','plant'].includes(f.kind)||f.growth?.field!==profile.fieldId||f.growth?.settlement!==profile.settlement||f.location!==profile.fieldLocation)throw Error('田块或植物缺少已登记的农事批次和资源绑定');
- if(f.owner!=='player'&&f.owner!==profile.settlement&&f.owner!==profile.manager)throw Error('生长资源与田主登记不符');
+ const owner=profile.fieldOwner??profile.settlement;
+ if(f.owner!==owner||owner!=='player'&&owner!==profile.settlement&&owner!==profile.manager)throw Error('生长资源与田主登记不符');
  return{p:profile,f,key:`agriculture:${profile.settlement}`};
 }
 export function validateGrowthWorld(world){
@@ -43,7 +44,8 @@ function permission(d,p,f,args,minute){
  if(f.owner==='player')return null;
  const a=d.get('state','records',args.authorization);
  if(a?.category!=='authorization'||a.action!=='growth_magic'||a.subject!==p.fieldId||a.grantor!==(f.owner===p.settlement?p.manager:f.owner)||a.grantee!=='player'||a.revoked||!Number.isSafeInteger(a.expires)||a.expires<=minute)throw Error('田块生长需要田主有效同意；公用访问不授权施法');
- if(['死亡','濒死'].includes(d.get('state','npcs',a.grantor,'status')))throw Error('田主无法继续履约');
+ const owner=d.get('state','npcs',a.grantor);
+ if(!owner||['死亡','濒死'].includes(owner.status))throw Error('田主无法继续履约');
  return a;
 }
 function readResource(d,f){
