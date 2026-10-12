@@ -5,6 +5,7 @@ import {assertNpcObligationAction,npcObligationAt} from './npc-obligations.mjs';
 import {changeItems,transferItems,heldUnit,wearItem} from './items.mjs';
 import {derivedStats} from './combat.mjs';
 import {wildlifePriceFactor} from './wildlife.mjs';
+import {advanceGovernance} from './governance.mjs';
 
 const DAY=1440,clone=x=>structuredClone(x),safe=n=>Number.isSafeInteger(n)&&n>=0;
 const awake=n=>n?.location&&!n.scheduleTravel&&!n.cognitionTravel&&!['死亡','濒死','昏迷','患病'].includes(n.status)&&!/睡眠|睡觉|熟睡/.test(n.activity??'');
@@ -110,7 +111,7 @@ function executeAction(target,engine,id,action,{at,presence,actionId,start,ignor
 }
 
 export function advanceNpcAutonomy(d,engine,before,after,eventId,{beforeState}={}){
- const results=[];
+ const results=advanceGovernance(d,engine,before,after,{beforeState});
  const settle=()=>{for(const task of Object.values(d.get('state','npcAutonomy','tasks')??{}).sort((a,b)=>a.finish-b.finish||a.id.localeCompare(b.id))){
   if(task.status!=='进行中'||task.finish>after)continue;
   try{const row=executeAction(d,engine,task.npc,task.action,{at:task.finish,start:task.start,presence:task.presence,actionId:task.id,ignoreTask:true});d.set(['state','npcAutonomy','tasks',task.id,'status'],row.outcome.success?'已完成':'失败');results.push(row);}

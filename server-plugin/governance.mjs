@@ -1,0 +1,233 @@
+import {digest} from './storage.mjs';
+import {npcPresenceAt} from './npc-cognition.mjs';
+import {npcObligationAt} from './npc-obligations.mjs';
+
+const DAY=1440;
+const path=id=>['state','records',id];
+const safe=n=>Number.isSafeInteger(n)&&n>=0;
+const awake=n=>n&&!n.scheduleTravel&&!n.cognitionTravel&&!['死亡','濒死','昏迷','患病'].includes(n.status)&&!/睡眠|睡觉|熟睡/.test(n.activity??'');
+const number=(n,min,max)=>{if(!Number.isSafeInteger(n)||n<min||n>max)throw Error('事务数值不在允许范围');return n;};
+const text=n=>{if(typeof n!=='string'||!n.trim()||n.length>1200)throw Error('需要实际事务文字');return n.trim();};
+const unavailable='现有任命未授予建房审批、公共工程支出或转授审批权；须转交白石镇议事机构，转交不等于批准';
+
+// Read the four existing charters. Neither occupation nor a player-authored
+// authorization record can supply an appointment missing from these sources.
+function profile(engine,settlement){
+    const p=engine.world.settlementProfiles?.find(p=>p.id===settlement);
+    const g=p?.details?.governance,ag=engine.rules.agriculture?.settlements.find(p=>p.settlement===settlement);
+    if(!g?.appointment?.source||g.referral?.status!=='referral-only'||!ag||g.head!==ag.manager)throw Error('本流程仅支持已有村级任命与转交机构的四村');
+    return {p,g,ag};
+}
+function source(engine,settlement,at){
+    const {g,ag}=profile(engine,settlement),a=g.appointment;
+    const law=engine.rules.law?.codes.find(c=>c.id===a.lawCode);
+    if(!safe(a.effectiveDay)||a.effectiveDay*DAY>at||a.head!==g.head||!law?.judges.includes(g.head)||!law.locations.includes(ag.counter))throw Error('任命来源、主体、法典或生效日不能核验');
+    return a.source;
+}
+function local(engine,location,settlement){
+    const seen=new Set();
+    while(location&&!seen.has(location)){if(location===settlement)return true;seen.add(location);location=engine.byId.get(location)?.parent;}
+    return false;
+}
+function eligible(engine,settlement){
+    const {p}=profile(engine,settlement);
+    const people=new Map([...(engine.world.residents??[]),...engine.world.npcs].map(p=>[p.id,p]));
+    return p.residentIds.filter(id=>(people.get(id)?.age??0)>=18&&engine.world.households?.some(h=>h.settlement===settlement&&h.members.includes(id))).sort();
+}
+function person(d,engine,name){
+    const id=engine.resolve(name,'npc'),actor=d.get('state','npcs',id);
+    if(!engine.world.npcs.some(n=>n.id===id)||!awake(actor)||actor.location!==d.get('state','location'))throw Error('需要既有人物实际在场且清醒；名册不代替参与');
+    return id;
+}
+function chair(d,engine,settlement,name){
+    const {g}=profile(engine,settlement);
+    if(d.get('state','location')!==g.meetingPlace)throw Error('须在本村登记议事屋办理');
+    if(!name||name==='player'||person(d,engine,name)!==g.head)throw Error('须指定有来源的本村在场头人');
+    source(engine,settlement,d.get('state','minute'));return g.head;
+}
+function record(d,id,category,settlement){
+    const r=d.get(...path(id));
+    if(r?.category!==category||r.settlement!==settlement)throw Error('事务编号不存在或属于其他村');
+    return r;
+}
+function unique(d,id){if(d.get(...path(id)))throw Error('事务编号已占用');}
+function proposal(d,engine,args,eventId,settlement){
+    const {g,p}=profile(engine,settlement);
+    if(d.get('state','location')!==g.meetingPlace)throw Error('须在本村登记议事屋提出议案');
+    const plot=engine.resolve(args.plot);
+    if(!engine.world.locations.some(p=>p.id===plot)||!local(engine,plot,settlement))throw Error('地块不属于本村');
+    const issue=args.issue?p.details.problems.find(i=>i.id===args.issue):null;
+    if(args.issue&&(!issue||issue.location!==plot))throw Error('议案问题与现有地点不相符');
+    const all=eligible(engine,settlement),affected=issue?[...new Set(issue.stakeholders.map(s=>s.person))].sort():all;
+    if(affected.some(id=>!all.includes(id)))throw Error('当事人资格缺少成年住户依据');
+    const id=`governance_proposal:${eventId}`;unique(d,id);
+    const row={category:'governance_proposal',id,settlement,proposer:'player',name:text(args.name),plot,
+        issue:issue?.id??null,wood:number(args.wood??0,0,10000),stone:number(args.stone??0,0,10000),days:number(args.days??1,1,365),
+        budget:number(args.budget??0,0,1000000),fee:number(args.proposedFee??0,0,1000000),
+        taxBps:number(args.taxBps??p.details.economy.tax.rateBps,0,10000),
+        eligible:all,affected,opinions:[],status:'议事中',minute:d.get('state','minute'),sourceEvent:eventId};
+    d.set(path(id),row);return {proposal:id,meeting:row,note:'须逐人当面登记意见；意见通过不授予官职、地权或支出权限。'};
+}
+
+function permission(d,engine,id,settlement,at){
+    const a=record(d,id,'authorization',settlement),{g}=profile(engine,settlement);
+    // Only the normal grant tool's receipt and the unchanged source appointment
+    // support this permission; a bare category/action record is insufficient.
+    const receipt=d.get(...path(`governance_source:${a.sourceEvent}`));
+    if(a.action!=='account_report'||a.grantor!==g.head||a.appointmentSource!==source(engine,settlement,at)||
+        receipt?.result?.authorization!==id||receipt?.result?.permission?.sourceEvent!==a.sourceEvent||
+        receipt.result.permission.grantee!==a.grantee||digest(a)!==digest(receipt.result.permission)||
+        !safe(a.createdAt)||a.createdAt>at||!safe(a.expires)||a.expires<=at||a.revoked||
+        a.scope?.actions?.length!==1||a.scope.actions[0]!=='account_report'||a.scope.budget!==0||a.scope.fee!==0||
+        !eligible(engine,settlement).includes(a.grantee))throw Error('授权来源不成立、已撤销、到期或超出范围');
+    return a;
+}
+function runRequest(d,engine,requestId,authorization,at,presence=d.get('state')){
+    const request=d.get(...path(requestId));
+    if(request?.category!=='governance_request')throw Error('没有该待办事务');
+    const a=permission(d,engine,authorization,request.settlement,at);
+    if(request.authorization!==authorization)throw Error('待办未交给该管事');
+    const old=d.get(...path(`governance_execution:${requestId}`));
+    if(old)return {...old,duplicate:true};
+    if(at<request.due)throw Error('待办尚未到约定办理时间');
+    const actor=presence.npcs[a.grantee],actual=d.get('state','npcs',a.grantee);
+    if(!awake(actor)||!awake(actual)||actor.location!==a.scope.counter||presence.player.companions?.includes(a.grantee))throw Error('管事未实际在登记议事屋清醒办事');
+    if(npcObligationAt(d.get('state'),a.grantee,at)||Object.values(d.get('state','npcAutonomy','tasks')??{}).some(t=>t.status==='进行中'&&[t.npc,t.action.seller].includes(a.grantee)&&t.start<=at&&at<t.finish))throw Error('管事正在履行已登记约定或自主工作，不能同时代办');
+    if(request.kind!=='account_report'){
+        const result={category:'governance_execution',request:requestId,settlement:request.settlement,authorization,steward:a.grantee,
+            status:'待权限决定',reason:unavailable,minute:at,sourceEvent:`governance_execution:${requestId}`,charged:0};
+        d.set(path(result.sourceEvent),result);d.set(path(requestId),{...request,status:result.status});return result;
+    }
+    const account=d.get('state','settlements',request.settlement);
+    if(!account||!safe(account.treasury)||!safe(account.wood))throw Error('公账余额或库存未知，不能报结算成功');
+    const result={category:'governance_execution',request:requestId,settlement:request.settlement,authorization,steward:a.grantee,
+        status:'已完成',minute:at,sourceEvent:`governance_execution:${requestId}`,charged:0,
+        report:{treasury:account.treasury,wood:account.wood,stone:account.stone??null,
+            fiscal:structuredClone(d.get(...path(`village-fiscal:${request.settlement}`))??null)}};
+    d.set(path(result.sourceEvent),result);d.set(path(requestId),{...request,status:'已完成'});
+    d.set(['state','npcs',a.grantee,'memoryStream'],[...d.get('state','npcs',a.grantee,'memoryStream')??[],{
+        id:result.sourceEvent,sourceEvent:result.sourceEvent,kind:'governance',minute:at,location:a.scope.counter,
+        participants:[a.grantee],sourceType:'亲历',content:`按限期授权核对${engine.byId.get(request.settlement).name}现存公账：公款${account.treasury}铜，木料${account.wood}。`,salience:3}]);
+    return result;
+}
+
+function action(d,args,eventId){
+    const settlement=this.resolve(args.settlement,'loc'),{g,p}=profile(this,settlement),now=d.get('state','minute');
+    switch(args.operation){
+    case 'governance_inspect':return {settlement,appointment:structuredClone(g.appointment),permissions:structuredClone(g.permissions),
+        eligible:eligible(this,settlement),referral:structuredClone(g.referral),note:unavailable,
+        records:Object.entries(d.get('state','records')??{}).filter(([,r])=>r.settlement===settlement&&
+            (r.category?.startsWith('governance_')||r.category==='authorization'&&r.action==='account_report')).map(([id,row])=>({id,...row})),actionScope:{kind:'instant'}};
+    case 'governance_propose':return proposal(d,this,args,eventId,settlement);
+    case 'governance_opinion':{
+        const row=record(d,args.proposal,'governance_proposal',settlement);
+        if(row.status!=='议事中')throw Error('议案已闭合，不能追加或改写意见');
+        if(d.get('state','location')!==g.meetingPlace)throw Error('须在本村登记议事屋发言');
+        const speaker=args.speaker==='player'?'player':person(d,this,args.speaker);
+        if(speaker==='player'){
+            const citizen=d.get(...path(`civic_citizen:${settlement}:player`));
+            if(citizen?.category!=='civic_citizen'||citizen.subject!=='player'||citizen.settlement!==settlement||citizen.status!=='已登记')throw Error('玩家参加大会表决须有本村公民登记');
+        }else if(!row.eligible.includes(speaker)||!eligible(this,settlement).includes(speaker))throw Error('发言人没有本村成年住户资格');
+        if(!['approve','reject','abstain'].includes(args.opinion))throw Error('意见须为approve、reject或abstain');
+        const entry={speaker,opinion:args.opinion,content:text(args.content),minute:now,sourceEvent:eventId};
+        const old=row.opinions.find(o=>o.speaker===speaker);
+        if(old){if(old.opinion!==entry.opinion||old.content!==entry.content)throw Error('该参与者已有意见，不能替换原话');return {proposal:row.id,opinion:old,duplicate:true};}
+        d.set(path(row.id),{...row,opinions:[...row.opinions,entry]});return {proposal:row.id,opinion:entry};
+    }
+    case 'governance_close':{
+        const authority=chair(d,this,settlement,args.authority),row=record(d,args.proposal,'governance_proposal',settlement);
+        if(row.status!=='议事中')return {proposal:row.id,meeting:row,duplicate:true};
+        const rejected=row.opinions.filter(o=>o.opinion==='reject'),missing=row.affected.filter(id=>!row.opinions.some(o=>o.speaker===id&&o.opinion==='approve'));
+        if(!rejected.length&&missing.length)return {proposal:row.id,status:'议事中',missing,note:'受影响住户未逐人同意；不代投、不按先到者人数推算多数。'};
+        const closed={...row,status:rejected.length?'已否决':'意见已确认',closedAt:now,authority,appointmentSource:source(this,settlement,now),closeEvent:eventId};
+        d.set(path(row.id),closed);return {proposal:row.id,meeting:closed,note:rejected.length?'否决后不得开工、收费或扣公共材料。':unavailable};
+    }
+    case 'governance_appointment':{
+        chair(d,this,settlement,args.authority);
+        const id=`governance_referral:${eventId}`;unique(d,id);
+        const row={category:'governance_referral',settlement,applicant:'player',requestedOffice:text(args.name),
+            status:'待上级决定',authority:g.head,appointmentSource:source(this,settlement,now),referral:structuredClone(g.referral),minute:now,sourceEvent:eventId,reason:'村长由上级依据贡献与村民意见任命；上级执行主体未登记，不能签发玩家官职'};
+        d.set(path(id),row);return {referral:id,request:row,granted:false};
+    }
+    case 'governance_grant':{
+        const authority=chair(d,this,settlement,args.authority);
+        if(args.action!=='account_report')throw Error(unavailable);
+        // A report only copies public balances, within the source head's existing
+        // ledger duties. It confers no fiscal, judicial or land approval powers.
+        if(!g.permissions.head.includes('在登记议事屋核验粮约、分列已收税款'))throw Error('任命没有可核验的公账记录权限');
+        const steward=person(d,this,args.steward);
+        if(steward===authority||!eligible(this,settlement).includes(steward)||args.consent!==true)throw Error('管事须为另一个在场成年住户并明确同意');
+        if((args.budget??0)!==0||(args.proposedFee??0)!==0||args.taxBps!==undefined&&args.taxBps!==p.details.economy.tax.rateBps)throw Error('公账报告授权无支出或收费额度，不能修改税率');
+        const minutes=number(args.minutes,1,30*DAY),id=`governance_permission:${eventId}`;unique(d,id);
+        const a={category:'authorization',action:'account_report',settlement,grantor:authority,grantee:steward,appointmentSource:source(this,settlement,now),
+            scope:{actions:['account_report'],counter:g.meetingPlace,budget:0,fee:0,taxBps:p.details.economy.tax.rateBps},
+            createdAt:now,expires:now+minutes,revoked:false,consentEvent:eventId,sourceEvent:eventId};
+        d.set(path(id),a);return {authorization:id,permission:a};
+    }
+    case 'governance_revoke':{
+        const authority=chair(d,this,settlement,args.authority),a=record(d,args.authorization,'authorization',settlement);
+        if(a.grantor!==authority||a.action!=='account_report')throw Error('只有原签发者可撤销该范围的授权');
+        if(a.revoked)return {authorization:args.authorization,permission:a,duplicate:true};
+        const revoked={...a,revoked:true,revokedAt:now,revokedBy:authority};d.set(path(args.authorization),revoked);return {authorization:args.authorization,permission:revoked};
+    }
+    case 'governance_queue':{
+        const a=permission(d,this,args.authorization,settlement,now);
+        chair(d,this,settlement,args.authority);
+        if(!['account_report','housing'].includes(args.action))throw Error('待办类型未实现');
+        let proposal=null;
+        if(args.action==='housing'){
+            const r=record(d,args.proposal,'governance_proposal',settlement);
+            if(r.status==='已否决')throw Error('大会已否决，不能交管事开工或收费');
+            proposal=r.id;
+        }
+        const due=number(args.due??(Math.floor(now/DAY)*DAY+600>now?Math.floor(now/DAY)*DAY+600:(Math.floor(now/DAY)+1)*DAY+600),now,now+30*DAY);
+        if(due>=a.expires)throw Error('约定办理时间超出授权期限');
+        const id=`governance_request:${eventId}`;unique(d,id);
+        const row={category:'governance_request',id,settlement,authorization:args.authorization,steward:a.grantee,kind:args.action,proposal,
+            status:'待办理',due,minute:now,sourceEvent:eventId};d.set(path(id),row);return {request:id,pending:row};
+    }
+    case 'governance_process':{
+        const a=permission(d,this,args.authorization,settlement,now);
+        if(person(d,this,args.steward)!==a.grantee)throw Error('此人不是获授权管事');
+        record(d,args.request,'governance_request',settlement);
+        return {execution:runRequest(d,this,args.request,args.authorization,now)};
+    }
+    default:throw Error('未知治理操作');
+    }
+}
+export function governanceAction(d,args,eventId){
+    const key=`governance_source:${eventId}`,old=d.get(...path(key)),fingerprint=digest(args);
+    if(old){if(old.category!=='governance_receipt'||old.fingerprint!==fingerprint)throw Error('治理sourceEvent已占用，不能改写事务');return {...structuredClone(old.result),duplicate:true};}
+    const result=action.call(this,d,args,eventId);
+    if(args.operation!=='governance_inspect')d.set(path(key),{category:'governance_receipt',settlement:this.resolve(args.settlement,'loc'),fingerprint,result:structuredClone(result)});
+    return result;
+}
+
+// Existing autonomy boundaries visit minute 600 each day. Requests share the
+// same executor with the manual tool and retain a stable per-request receipt.
+export function advanceGovernance(d,engine,before,after,{beforeState}={}){
+    if(!beforeState)return [];
+    const results=[];
+    for(let day=Math.floor(before/DAY);day<=Math.floor(after/DAY);day++){
+        const at=day*DAY+600;if(at<=before||at>after)continue;
+        const presence=at===after?d.get('state'):npcPresenceAt(engine,beforeState,before,at,d.document.randomSeed);
+        for(const [id,r]of Object.entries(d.get('state','records')??{}).sort(([a],[b])=>a.localeCompare(b))){
+            if(r.category!=='governance_request'||r.status!=='待办理'||r.due>at||presence.npcs[r.steward]?.location===presence.location)continue;
+            try{results.push(runRequest(d,engine,id,r.authorization,at,presence));}
+            catch(error){
+                const key=`governance_attempt:${day}:${id}`;
+                if(!d.get(...path(key)))d.set(path(key),{category:'governance_attempt',settlement:r.settlement,request:id,steward:r.steward,minute:at,sourceEvent:key,status:'未执行',reason:error.message,charged:0});
+            }
+        }
+    }
+    return results;
+}
+
+export function assertGovernedProject(d,engine,settlement,args){
+    if(!engine.world.settlementProfiles?.find(p=>p.id===settlement)?.details?.governance?.appointment)return;
+    profile(engine,settlement);
+    if(args.proposal){const r=record(d,args.proposal,'governance_proposal',settlement);if(r.status==='已否决')throw Error('大会已否决，不能落公共工程');}
+    // All four current appointments explicitly lack this power. Do not accept
+    // a hand-written authorization as a replacement for a normal source tool.
+    throw Error(unavailable);
+}

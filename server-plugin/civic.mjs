@@ -85,6 +85,9 @@ export function saveDonationReceipt(d,result,eventId){
     if(result.operation==='donate')d.set(recordPath(`civic_donation:${eventId}`),{category:'civic_donation',subject:'player',result});
 }
 export function publicProjectApproval(d,engine,settlement,authorization,beneficiaries){
+    // Four village charters currently provide tax-ledger and judicial duties,
+    // without public construction approval. A bare authorization cannot add it.
+    if(engine.world.settlementProfiles?.find(p=>p.id===settlement)?.details?.governance?.appointment)return null;
     const p=profile(engine,settlement),a=d.get(...recordPath(authorization)),now=d.get('state','minute');
     if(a?.category!=='authorization'||a.action!=='public_project'||a.settlement!==settlement||a.grantor!==p.manager||a.grantee!=='player'||a.revoked||!integer(a.expires)||a.expires<=now||!beneficiaries?.includes(settlement)||beneficiaries.includes('player'))return null;
     const actor=d.get('state','npcs',p.manager);
