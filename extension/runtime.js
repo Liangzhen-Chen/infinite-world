@@ -146,7 +146,7 @@ for(const definition of toolDefinitions()){
   action:async args=>{
    await load();if(!view)throw new Error('请先在副本上启用新版');
    if(name==='world_read')return JSON.stringify(readStateSection(view.document.state,args.section));
-   if(name==='world_search')return api('search',{campaignId:view.reference.campaignId,...args});
+   if(name==='world_search')return lookupToolResult(()=>api('search',{...args,campaignId:view.reference.campaignId,token:reviewTurn?.token,anchor:anchor(),expectedSequence:view.reference.sequence}));
    if(name==='world_catalog')return lookupToolResult(()=>api('catalog',{campaignId:view.reference.campaignId,...args}));
    return execute(name,args);
   }});
@@ -170,7 +170,7 @@ async function ensureReviewTurn(){
     if(!currentAnchor)return;
     if(!reviewTurn||reviewTurn.anchor!==currentAnchor||reviewTurn.chatId!==ctx().chatId||reviewTurn.completed){
         turnStart=view.document.state.minute;
-        reviewTurn={...await api('review/begin',{campaignId:view.reference.campaignId,anchor:currentAnchor,playerText:user?.mes??'',expectedSequence:view.reference.sequence,enabled:ctx().chatMetadata.fields_consistency_enabled!==false}),anchor:currentAnchor,chatId:ctx().chatId};
+        reviewTurn={...await api('review/begin',{campaignId:view.reference.campaignId,anchor:currentAnchor,playerText:user?.mes??'',expectedSequence:view.reference.sequence,enabled:ctx().chatMetadata.fields_consistency_enabled!==false,captureSearch:true}),anchor:currentAnchor,chatId:ctx().chatId};
     }
 }
 async function historyInterceptor(coreChat,contextSize,abort,type){

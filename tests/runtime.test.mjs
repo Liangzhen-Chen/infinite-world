@@ -24,7 +24,7 @@ test('E2/E19 浏览器：失败对账阻止出站生成，编辑撤销刷新玩�
     await page.route('**/runtime.js',route=>route.fulfill({contentType:'text/javascript',body:runtime}));
     await page.route('**/turn.mjs',async route=>route.fulfill({contentType:'text/javascript',body:await fs.readFile('extension/turn.mjs','utf8')}));
     await page.route('**/state-read.mjs',async route=>route.fulfill({contentType:'text/javascript',body:await fs.readFile('extension/state-read.mjs','utf8')}));
-    for(const name of ['tools.mjs','prompt.mjs','message-view.mjs','ledger-view.mjs'])await page.route(`**/${name}`,async route=>route.fulfill({contentType:'text/javascript',body:await fs.readFile(`extension/${name}`,'utf8')}));
+    for(const name of ['tools.mjs','prompt.mjs','message-view.mjs','ledger-view.mjs','history-window.mjs'])await page.route(`**/${name}`,async route=>route.fulfill({contentType:'text/javascript',body:await fs.readFile(`extension/${name}`,'utf8')}));
     await page.route('**/api/plugins/infinite-fields/**',async route=>{
         const request=route.request(),url=new URL(request.url());
         if(failReconcile&&url.pathname.endsWith('/reconcile'))return route.fulfill({status:400,json:{ok:false,error:'故意损坏的回放夹具'}});
@@ -51,6 +51,25 @@ test('E2/E19 浏览器：失败对账阻止出站生成，编辑撤销刷新玩�
         return{inventory:JSON.parse(await tool.action({section:'行囊'})),player:JSON.parse(await tool.action({section:'玩家'})),invalid:JSON.parse(await tool.action({section:'不认识的栏目'}))};
     });
     assert.equal(read.inventory.item_staff.quantity,1);assert.equal(read.player.coins,180);assert.equal(read.invalid.ok,false);
+    // The actual extension hook begins capture, and its registered tool sends
+    // that server token. Both calls reach the temporary HTTP server.
+    const searchEvidence=await page.evaluate(async()=>{
+        const calls=[];const originalFetch=window.fetch;
+        window.fetch=async(url,options)=>{if(String(url).includes('/api/plugins/infinite-fields/'))calls.push({endpoint:String(url).split('/').at(-1),body:JSON.parse(options.body)});return originalFetch(url,options);};
+        window.fixtureContext.getTokenCountAsync=async()=>1;
+        await window.infiniteFieldsV2.historyInterceptor(window.fixtureContext.chat,8192,()=>{},'normal');
+        const before=await originalFetch('/api/plugins/infinite-fields/export',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({campaignId:window.infiniteFieldsV2.view.reference.campaignId})}).then(r=>r.json());
+        const found=await window.fixtureTools.get('world_search').action({query:'林穗'});
+        const after=await originalFetch('/api/plugins/infinite-fields/export',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({campaignId:window.infiniteFieldsV2.view.reference.campaignId})}).then(r=>r.json());
+        window.fetch=originalFetch;return {calls,found,before,after};
+    });
+    const beginRequest=searchEvidence.calls.find(row=>row.endpoint==='begin'),searchRequest=searchEvidence.calls.find(row=>row.endpoint==='search');
+    assert.equal(beginRequest.body.captureSearch,true);assert.match(searchRequest.body.token,/^[a-f0-9]{64}$/);
+    assert.equal(searchRequest.body.anchor,'original');assert.equal(searchRequest.body.campaignId,created.reference.campaignId);
+    assert.equal(searchRequest.body.expectedSequence,created.reference.sequence);assert.ok(searchEvidence.found.results.length);
+    assert.deepEqual(searchEvidence.after.events,searchEvidence.before.events);assert.deepEqual(searchEvidence.after.initial,searchEvidence.before.initial);
+    const captured=JSON.parse(await fs.readFile(path.join(directory,'infinite-fields',created.reference.campaignId,'consistency',`${searchRequest.body.token}.json`),'utf8'));
+    assert.deepEqual(captured.retrieval.calls[0].result,searchEvidence.found);
     const move=await page.evaluate(()=>window.infiniteFieldsV2.execute('world_move',{destination:'河湾村'},'moved'));assert.equal(move.ok,true);
     const metadata=await page.evaluate(()=>window.savedMetadata.infinite_fields);
     assert.equal(metadata.format,2);assert.equal(metadata.state,undefined);assert.equal(metadata.journal,undefined);

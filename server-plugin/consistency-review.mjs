@@ -43,6 +43,7 @@ function prepare(input){
   {id:'blocklist',kind:'registry',text:JSON.stringify(input.blocklist??[])}];
  if(input.clock)evidence.push({id:'clock',kind:'clock',text:JSON.stringify(input.clock)});
  if(typeof input.scene==='string')evidence.push({id:'scene',kind:'scene',text:input.scene});
+ if(input.retrieval)evidence.push({id:'retrieval',kind:'retrieval',text:JSON.stringify(input.retrieval)});
  for(const [index,row] of (input.priorEvidence??[]).entries()){
   if(typeof row.text!=='string')throw Error('旧事证据需要原文');
   evidence.push({id:`prior:${index}`,kind:row.kind??'history',text:row.text});
@@ -61,6 +62,19 @@ function fixedIssues(input,context){
  // Quoted player claims and questions do not assert that the debt history
  // changed. Repayment retains overdueAt in the authoritative debt record.
  const assertions=stripTurn(context.raw).replace(/<q\s+who="[^"]+"\s*>[\s\S]*?<\/q>/g,'').replace(/“[^”]*”|「[^」]*」|"[^"]*"/g,'').match(/[^。！？；\n]+[。！？；]?/g)??[];
+ for(const clause of assertions){
+  if(/[？?]|吗|是否|打算|准备|计划|如果|假如|下次|将来|昨天|上次|上回|此前|曾经|(?:没有|未能|没能|尚未|不能|不代表|不是|并未).{0,8}(?:检索|查|搜)|(?:你|玩家|他|她).{0,8}(?:说|提到|声称|查|检索)/.test(clause))continue;
+  const claim=clause.match(/已(?:经)?(?:查(?:到|过|阅)|检索(?:到|过)?|搜索(?:到|过)?)|(?:检索|搜索|查)到了?|我(?:已经|刚刚|刚才)?(?:查过|查阅了|检索过)|(?:检索|搜索)完毕/);
+  if(!claim)continue;
+  const retrieval=input.retrieval;
+  if(retrieval?.status!=='complete'||retrieval.sealed!==true){
+   if(retrieval)add('fact',claim[0],'只读检索留证不完整，无法确认该检索断言',[cite('retrieval')],{severity:'warning'});
+   continue;
+  }
+  const searches=context.receipts.filter(row=>row.tool==='world_search'&&Array.isArray(row.result.results));
+  if(!searches.length)add('fact',claim[0],'完整封口的本回合没有调用 world_search，不能声称已检索',[cite('retrieval')]);
+  else if(/到/.test(claim[0])&&searches.every(row=>row.result.results.length===0))add('fact',claim[0],'本回合真实检索均为空，查过不能证明已查到',[cite('retrieval')]);
+ }
  const overdue=Object.entries(reviewPlayerFacts(stateOf(input.after)).debts).find(([,row])=>row.debtor==='player'&&(row.status==='逾期'||Number.isSafeInteger(row.overdueAt)));
  if(overdue)for(const clause of assertions){
   if(/[？?]|吗|是否|打算|如果|假如|下次|将来|(?:并非|不是|不代表|不等于|不能说|不能认定|并不表示).{0,12}(?:无|没有|从未|不曾)/.test(clause))continue;
@@ -200,7 +214,9 @@ export function consistencyReviewRequest(input,{maxTokens=1800}={}){
  request.tools[0].function.parameters.properties.issues.items={oneOf:[
   {...structuredClone(item),required:[...item.required,'entityName','entityKind'],properties:{...structuredClone(item.properties),category:{const:'naming'}}},
   {...structuredClone(item),properties:{...structuredClone(item.properties),category:{enum:categories.filter(name=>name!=='naming')}}}
- ]};return request;
+ ]};
+ request.messages[0].content+='检索留证 retrieval 仅 status=complete 且 sealed=true 才能证明本回合调用完整；零调用才证明未检索，unknown 或缺回执最多给 warning。scene 中的旧事不是 world_search 调用，空 results 只能证明查过，不能证明找到。';
+ return request;
 }
 export function validateConsistencyResponse(response,input){
  const context=prepare(input),choice=response.choices?.[0],calls=choice?.message?.tool_calls;

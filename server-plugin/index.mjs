@@ -14,7 +14,7 @@ import {publicLoreEntries}from'./lore.mjs';
 import {settleNpcPlanning}from'./npc-planning-service.mjs';
 import {getChronicle,syncChronicleIndex}from'./chronicle.mjs';
 import {groupHistory}from'../extension/history-window.mjs';
-import {beginConsistencyTurn,reviewConsistencyReply,assertConsistencyCommit,sharedModelClient}from'./consistency-service.mjs';
+import {beginConsistencyTurn,captureConsistencySearch,reconcileConsistencyTurn,reviewConsistencyReply,assertConsistencyCommit,sharedModelClient}from'./consistency-service.mjs';
 
 export const info={id:'infinite-fields',name:'无限原野本地战役存储',description:'本项目自有的存档、账本与检索服务器插件'};
 export async function init(router,{ world=null, baseRoot=null, newCampaignSeed=randomUUID, npcPlanner, npcPlanningEnabled=Boolean(process.env.DEEPSEEK_API_KEY), npcPlanningOptions={}, consistencyEnabled=true, consistencyClient, consistencyBudgetYuan=20 }={}){
@@ -60,7 +60,7 @@ export async function init(router,{ world=null, baseRoot=null, newCampaignSeed=r
         await store.transact(id,{id:eventId,input:{type:'world_upgrade',worldHash:incomingHash,eventId},expectedSequence:view.reference.sequence},store.reducer);
         return store.read(id);
     };
-    const getIndex=async(store,id,document)=>{
+    const getIndex=async(store,id,document,chronicle)=>{
         const key=`${store.root}:${id}`;
         const selectedEngine=(await store.worldRegistry.get(document.worldHash)).scoped(document);
         const identity=`${document.worldHash}:${digest(document.state.created??{})}`;
@@ -84,7 +84,7 @@ export async function init(router,{ world=null, baseRoot=null, newCampaignSeed=r
                 revision:digest(memory)});
         }
         for(const id of index.documents.keys())if(id.startsWith('memory_')&&!wanted.has(id))index.remove(id);
-        index.chronicle=await getChronicle(store,id);
+        index.chronicle=chronicle??await getChronicle(store,id);
         syncChronicleIndex(index,index.chronicle);
         return index;
     };
@@ -117,7 +117,7 @@ export async function init(router,{ world=null, baseRoot=null, newCampaignSeed=r
             return {reference:store.reference(state),revision:state.revision,anchors};
         });
     }));
-    router.post('/review/begin',handle(req=>beginConsistencyTurn(getStore(req),req.body.campaignId,{anchor:req.body.anchor,playerText:req.body.playerText,expectedSequence:req.body.expectedSequence,enabled:consistencyEnabled&&req.body.enabled!==false})));
+    router.post('/review/begin',handle(req=>beginConsistencyTurn(getStore(req),req.body.campaignId,{anchor:req.body.anchor,playerText:req.body.playerText,expectedSequence:req.body.expectedSequence,enabled:consistencyEnabled&&req.body.enabled!==false,captureSearch:req.body.captureSearch===true})));
     router.post('/review/reply',handle(async req=>{
         const store=getStore(req),{campaignId,token,draft,expectedSequence}=req.body;
         const view=await store.read(campaignId),index=await getIndex(store,campaignId,view.document);
@@ -143,7 +143,11 @@ export async function init(router,{ world=null, baseRoot=null, newCampaignSeed=r
         }
         return saved;
     }));
-    router.post('/reconcile',handle(req=>getStore(req).reconcile(req.body.campaignId,req.body.validAnchors??[],req.body.excludeAnchor)));
+    router.post('/reconcile',handle(async req=>{
+        const store=getStore(req),{campaignId,excludeAnchor}=req.body,validAnchors=req.body.validAnchors??[];
+        const view=await store.reconcile(campaignId,validAnchors,excludeAnchor);
+        await reconcileConsistencyTurn(store,campaignId,validAnchors,excludeAnchor);return view;
+    }));
     router.post('/feedback',handle(req=>getStore(req).feedback(req.body.campaignId)));
     router.post('/scene',handle(async req=>{
         const store=getStore(req),view=await store.read(req.body.campaignId),selectedEngine=await registries.get(baseRoot??req.user.directories.root).get(view.document.worldHash),index=await getIndex(store,req.body.campaignId,view.document);
@@ -153,9 +157,19 @@ export async function init(router,{ world=null, baseRoot=null, newCampaignSeed=r
             labels:Object.fromEntries(scoped.entities.map(row=>[row.id,row.name]))};
     }));
     router.post('/search',handle(async req=>{
-        const store=getStore(req),view=await store.read(req.body.campaignId),index=await getIndex(store,req.body.campaignId,view.document);
-        if(Array.isArray(req.body.chat))index.syncChat(req.body.chat);
-        return {results:index.search(req.body.query??'',{now:view.document.state.minute,scope:view.document.state.location,limit:req.body.limit})};
+        const store=getStore(req),{campaignId,token,anchor,expectedSequence,limit}=req.body,query=req.body.query??'';
+        // Chronicle preparation uses the campaign queue itself. Prepare first,
+        // then verify its sequence again while search and receipt hold that queue.
+        let chronicle,preparationError;
+        try{chronicle=await getChronicle(store,campaignId);}catch(error){preparationError=error;}
+        return captureConsistencySearch(store,campaignId,{token,anchor,expectedSequence,query,limit},async state=>{
+            if(preparationError)throw preparationError;
+            if(chronicle.reference.sequence!==state.sequence)throw Error('检索准备期间账本已变化');
+            if(typeof query!=='string'||limit!==undefined&&(!Number.isSafeInteger(limit)||limit<1||limit>100))throw Error('检索参数无效');
+            const index=await getIndex(store,campaignId,state.document,chronicle);
+            if(Array.isArray(req.body.chat))index.syncChat(req.body.chat);
+            return {results:index.search(query,{now:state.document.state.minute,scope:state.document.state.location,limit})};
+        });
     }));
     router.post('/catalog',handle(async req=>{
         const store=getStore(req),view=await store.read(req.body.campaignId),selected=await store.worldRegistry.get(view.document.worldHash);
