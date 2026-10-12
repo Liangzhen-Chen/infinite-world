@@ -346,6 +346,15 @@ T08/T09 风险核查：T08 的 `lq-depth/author-v2/first-review/authored-backgro
 
 扩波依赖不变：R04法术150与R05首领40含8智能存在，先T18/T19及适用消费者/真实平衡；缺消费者保持待细化，不用研究型标签减少正式目标。R06新人口严格依T11-C全体达标及原第1项、T17验收、T19，当前不可执行；R14再依W1完成。M5/M3机制或局部专项通过不会解禁人口，也不替代全体full构建门槛。需要用户决定的原档、部署和T06停止上限继续跳过，不在本批增开询问。
 
+### T45 首次人物起草/L2接入冻结原来源附件【T08直接前置，0模型】
+
+目标：修复首次 `runDepth → runContentPipeline` 未接原来源附件的实证缺口。T08 15份逐ID附件覆盖16名被引用人物的原sex；本人before.sex不能证明他人性别，full/compact的新背景originalSources也未包含这些值。只接现有必要证据，不重建原source、foundation、manifest或candidate。
+涉及文件：`tools/npc-depth.mjs`、`tools/npc-depth-review.mjs`、`tools/content-pipeline.mjs`，新增小模块 `tools/npc-depth-source-evidence.mjs` 与 `tests/npc-depth-source-evidence.test.mjs`；仅确有需要时改 `tools/npc-depth-content.mjs`。`tools/publish-npc-depth.mjs` 只加附件重放校验钩子，相关测试 `tests/npc-depth-batch-publication.test.mjs`；T11B目前不改该文件，可独立实现；若T11B扩大到同文件则先串行，禁止覆盖批量原子发布改动。T08现成附件及索引由原内容卡持有，T45不改世界正文。
+实现要点：抽出并复用现有loadEvidence的 `{sourceRecords:[{id,name,...原字段}],reviewBoundary}` 严格校验，逐字段匹配prepareDepth返回的冻结reference，保留本人记录、重复ID/未知字段拒绝；只接受显式逐ID来源索引，文件须在world内。必要sex或notes须声明具体人物/字段，不能自动扩全体私人字段。首次CLI增加可选 `--source-evidence-map <world内索引JSON>`，映射ID到现成附件；单人复审保留原 `--source-evidence`。在原buildDraftRequest/buildReviewRequest生成之后、compact完成之后、budget.request预留之前追加同一已验附件user消息；draft和L2各自留实际请求原文/hash、附件raw/content hash、ID及原entry/context/revision/foundation指纹的独立收据。附件不进入context/entry指纹或冒充新背景来源；无附件时原请求逐字相同，不新增默认字段。不允许custom client暗注入，失败/未知请求也保存已发请求凭证。首次登记的索引和收据不可静默替换；既有passed/manual及其旧hash/attempts不因附件选项重跑或改写，有记录但缺该证据时明确拒绝并走原受控路径。
+发布约定：preview/apply使用同一校验器，将收据绑定到本轮draft/review及L4证据，重放原builder与compact选择、附件顺序和最终请求hash，并对冻结reference重验每个原值；附件丢失、换ID、篡改hash/请求/数据、删附件后继续审批都拒绝。不得仅记录“附件存在”；原L1、逐叶coverage、背景风险、秘密边界及L4继续严格执行。复用现有发布入口，仅增加可选证据重放，不重写publisher或预算框架。
+验收：`node --test tests/npc-depth-source-evidence.test.mjs tests/npc-depth-review.test.mjs tests/npc-depth-review-output.test.mjs tests/npc-depth-authored-background.test.mjs tests/npc-depth-lq.test.mjs tests/npc-depth-batch-publication.test.mjs tests/content-pipeline.test.mjs tests/content-budget.test.mjs` 全过；提交前CORE。mock必须走官方runDepth/runContentPipeline及发布preview，证明首次draft/L2真实出站含对应sex附件、full/compact都保留；按追加后的完整UTF-8请求预留，增大附件导致余额不足时0请求且spent/未知reserved不变；伪造sex/notes、陌生字段/ID、缺本人或错候选绑定在发请求前拒绝；原foundation/source/candidate/entry指纹及既有通过record逐字不变。无附件回归请求逐字一致，模型漏coverage/隐私hard仍失败，合法收据可重放、篡改或缺失不可发布。只跑离线测试，不以mock通过冒充L2/L4完成。
+不要做：不修改模型限额、原allocation/预算账/通过状态，不重开T06，不清未知预留或恢复尝试数，不自动扩大源字段，不通过删审查字段压费用。依赖/预算：T26及T08的737382d附件已到主线；T45预算0元，实际T08首次审核仍用原卡增量3元和共享20元账，完整请求预检超额就停止，不授权新费用。可否并行：公共npc-depth/content/review文件独占，禁止与T08/T09审核入口改动并行；T07换行钩子已完成。T11B当前另有文件边界，可并行实现，合并及发布相关回归串行；若其扩大到共享文件则等待释放。完成后先让T08重做官方0模型请求/预算预检，再按原调度占唯一模型槽。
+
 ## 后续粗卡：全部待细化
 
 粗卡不得直接交执行代理。近期卡完成后规划代理按最新源码和证据拆成同样字段的可执行卡，仍保留以下完整范围；已有实现先审计差距再派增量。部署 R1–R5/正式版均单独列为待用户确认，不是源码开发的依赖。
