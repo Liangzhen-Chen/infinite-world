@@ -175,7 +175,7 @@ test('新root仅补12人的新增记忆范围及陆青已绑定的学员纠词�
  assert.equal(auditNpcDepth(after).legacyTraits.ok,true);
 });
 
-test('零模型恢复备件仅授权原13失败，绑定真实hard与必要原notes，不改paid records',async()=>{
+test('受控恢复仅授权原13失败，绑定真实hard与必要原notes，保留全部原paid证据',async()=>{
  const recovery=path.join(root,'first-review/recovery');
  const plan=JSON.parse(await fs.readFile(path.join(recovery,'controlled-plan.json'),'utf8'));
  const failure=JSON.parse(await fs.readFile(path.join(root,'first-review/protocol-failure-evidence.json'),'utf8'));
@@ -189,12 +189,15 @@ test('零模型恢复备件仅授权原13失败，绑定真实hard与必要原no
  assert.equal(hard.reference.value,world.npcs.find(n=>n.id==='npc_hw_baihui').occupation);
  for(const item of plan.authorized){
   const record=JSON.parse(await fs.readFile(path.join(root,'first-review',item.id+'.json'),'utf8'));
-  assert.equal(item.recordHash,hashContent(record));assert.equal(item.draftHash,hashContent(record.draft));assert.equal(item.reviewHash,hashContent(record.review));
+  const original=record.reviewRecovery?.prior??record;
+  assert.equal(item.recordHash,hashContent(original));assert.equal(item.draftHash,hashContent(original.draft));assert.equal(item.reviewHash,hashContent(original.review));
+  if(record.reviewRecovery){assert.equal(record.incremental.authorizationHash,hashContent(plan));assert.equal(record.incremental.originalRecordHash,item.recordHash);assert.equal(record.reviewRecovery.status,'passed-L1-L2');assert.equal(record.status,'passed');}
   if(item.id==='npc_hw_luqing')assert.deepEqual(item.paths,[hard.field]);else{assert.deepEqual(item.paths,[]);assert.equal(item.sourceOnly,true);}
  }
  for(const old of snapshot.records){
-  assert.equal(old.recordHash,hashContent(JSON.parse(await fs.readFile(path.join(root,'first-review',old.id+'.json'),'utf8'))));
-  if(old.status==='passed')assert.ok(!plan.authorized.some(a=>a.id===old.id));
+  const record=JSON.parse(await fs.readFile(path.join(root,'first-review',old.id+'.json'),'utf8'));
+  assert.equal(old.recordHash,hashContent(record.reviewRecovery?.prior??record));
+  if(old.status==='passed'){assert.ok(!plan.authorized.some(a=>a.id===old.id));assert.ok(!record.reviewRecovery);assert.equal(old.recordHash,hashContent(record));}
  }
  const source=JSON.parse(await fs.readFile(path.join(recovery,'xuling-source-evidence.json'),'utf8'));
  assert.deepEqual(source.sourceRecords.map(r=>r.id),['npc_hw_xuling','npc_hw_taozhi']);
