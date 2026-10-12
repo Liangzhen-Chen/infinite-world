@@ -11,16 +11,30 @@ import {WorldEngine} from '../server-plugin/engine.mjs';
 import {compatibleWorld,planWorldUpgrade} from '../server-plugin/world-upgrade.mjs';
 import {applyPatches} from '../server-plugin/storage.mjs';
 import {villagesOriginalWorld} from '../tools/publish-w1-villages.mjs';
-const source=villagesOriginalWorld(await loadWorld()),candidate=JSON.parse(await fs.readFile('world/drafts/w1/hewan/candidate.json','utf8')),preserved=JSON.parse(await fs.readFile('world/drafts/w1/hewan/preserved-npcs.json','utf8'));
+const formal=await loadWorld(),source=structuredClone(villagesOriginalWorld(formal)),candidate=JSON.parse(await fs.readFile('world/drafts/w1/hewan/candidate.json','utf8')),preserved=JSON.parse(await fs.readFile('world/drafts/w1/hewan/preserved-npcs.json','utf8'));
+// This historical fixture omits four villages, including their dependent rules.
+// Only references to those deliberately removed entities are projected out.
+const removedLocations=new Set(formal.locations.filter(row=>!source.locations.some(location=>location.id===row.id)).map(row=>row.id));
+source.rules.weather.regions=source.rules.weather.regions.map(row=>({...row,locations:row.locations.filter(id=>!removedLocations.has(id)),indoor:row.indoor.filter(id=>!removedLocations.has(id))})).filter(row=>row.locations.length);
+source.rules.agriculture.settlements=source.rules.agriculture.settlements.filter(row=>!removedLocations.has(row.settlement));
+source.rules.law.codes=source.rules.law.codes.filter(row=>!removedLocations.has(row.court));
 const addedIds=new Set(candidate.npcs.map(n=>n.id)),original={...source,npcs:preserved,residents:[],households:[],settlementProfiles:[],locations:source.locations.filter(n=>!candidate.locations.some(l=>l.id===n.id)),routes:source.routes.filter(n=>!candidate.routes.some(r=>r.id===n.id))};
 const world=mergeHewan(original,candidate),legacy=JSON.parse(await fs.readFile('tests/fixtures/legacy/seed.json','utf8'));
+
+test('正式源engine校验零错，历史夹具依赖闭合且release人物深度仍阻断',()=>{
+ assert.deepEqual(validateWorld(formal).errors,[]);
+ assert.ok(validateWorld(villagesOriginalWorld(formal)).errors.length>0,'删村未同步引用的原始投影不能误报无错');
+ assert.deepEqual(validateWorld(world).errors,[]);
+ const release=validateWorld(formal,{stage:'release'});assert.equal(release.ok,false);
+ assert.ok(release.errors.some(error=>error.startsWith('完整人物深度：')));
+});
 
 test('河湾发布核对逐条审核且只写正式目录，重复发布零写入',async t=>{
  const root=await fs.mkdtemp(path.join(os.tmpdir(),'fields-population-publish-'));
  t.after(async()=>{const target=path.resolve(root);assert.ok(target.startsWith(path.resolve(os.tmpdir())+path.sep));await fs.rm(target,{recursive:true,force:true});});
  await fs.cp(path.resolve('world'),root,{recursive:true,filter:file=>!file.split(path.sep).includes('drafts')});
  await fs.mkdir(path.join(root,'drafts/w1'),{recursive:true});await fs.cp(path.resolve('world/drafts/w1/hewan'),path.join(root,'drafts/w1/hewan'),{recursive:true});
- for(const [file,value]of Object.entries({'people/baseline.json':original.npcs,'people/residents.json':[],'people/households.json':[],'geo/settlements.json':[],'geo/locations.json':original.locations,'geo/routes.json':original.routes}))await fs.writeFile(path.join(root,file),JSON.stringify(value));
+ for(const [file,value]of Object.entries({'meta/rules.json':original.rules,'people/baseline.json':original.npcs,'people/residents.json':[],'people/households.json':[],'geo/settlements.json':[],'geo/locations.json':original.locations,'geo/routes.json':original.routes}))await fs.writeFile(path.join(root,file),JSON.stringify(value));
  const preview=await publishHewan({root});assert.equal(preview.published,false);assert.equal((await loadWorld(root)).npcs.length,18);
  const first=await publishHewan({root,publish:true});assert.equal(first.changed.length,6);assert.equal((await loadWorld(root)).npcs.length,32);
  assert.deepEqual((await publishHewan({root,publish:true})).changed,[]);
