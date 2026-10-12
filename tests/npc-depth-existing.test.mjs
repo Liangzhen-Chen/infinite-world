@@ -3,11 +3,12 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import * as config from '../world/design/w1-existing-depth.mjs';
+import * as firstReview from '../world/design/w1-existing-depth-first-review.mjs';
 import {loadWorld} from '../tools/load-world.mjs';
 import {auditNpcDepth} from '../tools/audit-npc-depth.mjs';
 import {legacyTraitsExpected,findNpcRuleWording} from '../tools/npc-profile-validation.mjs';
 import {hashContent} from '../tools/content-pipeline.mjs';
-import {depthEntries,patchDraft,validateDraft,validatePatchResults,contextFor,buildReviewRequest,getPath,verifyUnchanged} from '../tools/npc-depth-content.mjs';
+import {depthEntries,patchDraft,validateDraft,validatePatchResults,contextFor,buildReviewRequest,getPath,verifyUnchanged,validateAuthoredBackground,checkIncrementalReview} from '../tools/npc-depth-content.mjs';
 import {prepareDepth} from '../tools/npc-depth.mjs';
 import {publishNpcDepth} from '../tools/publish-npc-depth.mjs';
 
@@ -112,4 +113,97 @@ test('离线候选未经L2和L4时不能发布正式人物',async()=>{
  const before=await fs.readFile('world/people/baseline.json','utf8');
  await assert.rejects(publishNpcDepth({manifest:path.join(root,'manifest.json'),publish:true}));
  assert.equal(await fs.readFile('world/people/baseline.json','utf8'),before);
+});
+
+test('首次审核出处区分10条原共同经历和5条独立新背景，正式字段hash不是候选的hash',async()=>{
+ const provenance=JSON.parse(await fs.readFile(path.join(root,'first-review/event-provenance.json'),'utf8'));
+ assert.equal(provenance.events.length,15);
+ assert.equal(provenance.events.filter(e=>e.kind==='original-shared-event').length,10);
+ assert.equal(provenance.events.filter(e=>e.kind==='new-authored-background').length,5);
+ assert.equal(firstReview.authoredBackground.events.length,5);
+ for(const event of provenance.events)for(const ref of event.sourceRefs){
+  assert.ok(['npcs','residents'].includes(ref.collection));
+  const value=getPath(world[ref.collection].find(n=>n.id===ref.id),ref.field);
+  assert.equal(ref.hash,hashContent(value));assert.equal(ref.visibility,'private');
+ }
+ for(const event of firstReview.authoredBackground.events){
+  assert.equal(event.status,'past-but-unresolved');
+  assert.ok(event.network.actors.length>=3&&event.network.actors.length<=5);
+  assert.equal(event.network.problemRef.collection,'npcs');
+  assert.match(event.network.problemRef.field,/^goals\.(short|mid|long)\[\d+\]\.content$/);
+  assert.notEqual(event.narrative,event.associations[0].narrative);
+  assert.equal(event.associations[0].factsHash,hashContent(event.designedFacts));
+  assert.ok(event.pendingOutcomes.length);
+  for(const ref of event.sourceRefs){
+   assert.ok(['npcs','residents','locations','settlementProfiles'].includes(ref.collection));
+   assert.equal(ref.hash,hashContent(getPath(world[ref.collection].find(n=>n.id===ref.id),ref.field)));
+   assert.doesNotMatch(ref.field,/^(secrets|knowledge|memorySeeds)(\.|\[|$)/);
+   if(ref.collection==='npcs'){assert.equal(ref.visibility,'private');assert.ok(ref.publicSpeech?.trim());}
+  }
+ }
+});
+
+test('新root只补12人的新增记忆地点和限定视角，旧记忆及合格叶保持原样',()=>{
+ const nextEntries=depthEntries(firstReview.base,firstReview,world),after=validatePatchResults(nextEntries,world);
+ assert.deepEqual(auditNpcDepth(after).issues.filter(i=>targetIds.has(i.id)),[]);
+ assert.equal(firstReview.incrementLimitYuan,config.incrementLimitYuan);
+ let changed=0;
+ for(const entry of nextEntries){
+  const original=entries.find(e=>e.id===entry.id),event=firstReview.authoredBackground.events.find(e=>e.actors.includes(entry.id));
+  assert.deepEqual(entry.before,original.before);assert.equal(entry.baseHash,original.baseHash);
+  assert.deepEqual(entry.issues,original.issues);assert.equal(entry.patches.length,original.patches.length);
+  for(const patch of entry.patches){
+   const old=original.patches.find(p=>p.path===patch.path);
+   if(!event||!patch.path.startsWith('memorySeeds[')){assert.deepEqual(patch,old);continue;}
+   changed++;
+   const {event:oldText,location:oldLocation,...oldRest}=old.value;
+   const {event:newText,location:newLocation,...newRest}=patch.value;
+   assert.deepEqual(newRest,oldRest);assert.equal(newLocation,'loc_hw_dock');
+   assert.equal(newText,'在旧渡口公用水盏周边，'+oldText);
+   assert.equal(event.associations.find(a=>a.id===entry.id).narrative,newText);
+  }
+  assert.deepEqual(entry.facts.memorySeeds.slice(0,entry.before.memorySeeds.length),entry.before.memorySeeds);
+  for(const key of ['goals','skills','services','traits','secrets','coins','inventory','flags'])assert.deepEqual(entry.facts[key],original.facts[key]);
+ }
+ assert.equal(changed,12);
+ assert.equal(auditNpcDepth(after).legacyTraits.ok,true);
+});
+
+test('5条新背景的公共feature、原私有问题和秘密风险必须独立核验',()=>{
+ const nextEntries=depthEntries(firstReview.base,firstReview,world);
+ const valid=validateAuthoredBackground(firstReview.authoredBackground,nextEntries,world);
+ assert.equal(valid.sourceHash,hashContent(firstReview.authoredBackground));
+ for(const event of valid.events){
+  const feature=getPath(world.locations.find(p=>p.id===event.publicFeatureRef.id),event.publicFeatureRef.field);
+  assert.equal(feature.access,'public');assert.match(event.narrative,new RegExp(feature.name));
+  assert.ok(event.sourceRefs.some(r=>r.collection==='locations'&&r.field===event.publicFeatureRef.field&&r.hash===event.publicFeatureRef.hash));
+  for(const a of event.associations)assert.ok(a.narrative.includes(feature.name));
+ }
+ const staleWorld=structuredClone(world),problem=valid.events[0].network.problemRef;
+ staleWorld.npcs.find(n=>n.id===problem.id).goals.mid[0].content+='新的关切';
+ assert.throws(()=>validateAuthoredBackground(firstReview.authoredBackground,nextEntries,staleWorld),/hash/);
+ const privateWorld=structuredClone(world),bundle=structuredClone(firstReview.authoredBackground);
+ const privateFeature=privateWorld.locations.find(p=>p.id==='loc_hw_dock').features[1];privateFeature.access='private';
+ for(const event of bundle.events){event.publicFeatureRef.hash=hashContent(privateFeature);event.sourceRefs.find(r=>r.collection==='locations').hash=hashContent(privateFeature);}
+ assert.throws(()=>validateAuthoredBackground(bundle,nextEntries,privateWorld),/公开|公共|public/);
+ const noRisk=structuredClone(firstReview.authoredBackground);noRisk.events[0].risks=[];
+ assert.throws(()=>validateAuthoredBackground(noRisk,nextEntries,world),/秘密/);
+});
+
+test('首次L2请求单列作者事实及风险，候选视角不能替代独立出处审核',()=>{
+ const nextEntries=depthEntries(firstReview.base,firstReview,world);
+ let count=0;
+ for(const entry of nextEntries){
+  const context=contextFor(entry,world),event=firstReview.authoredBackground.events.find(e=>e.actors.includes(entry.id));
+  if(!event){assert.equal(context.authoredBackground,undefined);continue;}
+  count++;
+  assert.equal(context.authoredBackground.sourceHash,hashContent(firstReview.authoredBackground));
+  assert.deepEqual(context.authoredBackground.events[0].designedFacts,event.designedFacts);
+  assert.ok(context.authoredBackground.events[0].privateRisks.length);
+  const request=JSON.parse(buildReviewRequest(entry,patchDraft(entry),context).messages[1].content);
+  assert.deepEqual(request.publishedFacts.authoredBackground.events[0].designedFacts,event.designedFacts);
+  assert.deepEqual(request.publishedFacts.revisions.map(r=>r.path),entry.patches.map(p=>p.path));
+  assert.throws(()=>checkIncrementalReview({contradictions:[],reviewedPaths:entry.patches.map(p=>p.path)},entry,context),/独立事件出处/);
+ }
+ assert.equal(count,12);
 });

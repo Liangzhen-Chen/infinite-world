@@ -1,0 +1,433 @@
+{
+  "id": "npc_hw_xinglu",
+  "fingerprint": "85e05f6a06003b93a74f98eb0f07cc0b874ac08afaf2aaca2a216941230070ef",
+  "status": "manual",
+  "attempts": 3,
+  "draft": {
+    "id": "npc_hw_xinglu",
+    "contract": "audit-patch-v1",
+    "patches": [
+      {
+        "path": "knowledge.known[1]",
+        "value": {
+          "fact": "华慈有回走泥路险些滑倒，从那以后他给她挑较干的路走，雨天更盯着她脚下。",
+          "source": "npc_hw_xinglu",
+          "reliability": "亲历"
+        }
+      },
+      {
+        "path": "knowledge.known[2]",
+        "value": {
+          "fact": "罗苇、邢芦和谢堇谈田边用水。邢芦与罗苇看过南田沟口淤塞，谢堇向罗苇询问用水先后；各户的清沟分工和用水次序仍须商议。",
+          "source": "npc_hw_xinglu",
+          "reliability": "亲历"
+        }
+      },
+      {
+        "path": "knowledge.unknown[0]",
+        "value": "罗苇愿先清南田哪段沟，两家分工能否说清。"
+      },
+      {
+        "path": "knowledge.unknown[1]",
+        "value": "谢堇希望哪一轮用水先排，是否会使自家段再积水。"
+      },
+      {
+        "path": "goals.short[0].steps[1].content",
+        "value": "对照田埂与沟口位置，把自家这次积水处单独记下。"
+      },
+      {
+        "path": "goals.mid[0].steps[1].content",
+        "value": "把可做的工时和自家沟段列给罗苇，先问相邻农户的安排。"
+      },
+      {
+        "path": "goals.long[0].steps[1].content",
+        "value": "先查看雨后较干的路段，再向华慈说明可以避开的泥处。"
+      },
+      {
+        "path": "voice.register",
+        "value": "佃农轮工口吻，指明沟段，逐句算可承担的工时"
+      },
+      {
+        "path": "memorySeeds[2]",
+        "value": {
+          "id": "memory_t10_south-water",
+          "event": "在旧渡口公用水盏周边，罗苇、邢芦和谢堇谈田边用水。邢芦与罗苇看过南田沟口淤塞，谢堇向罗苇询问用水先后；各户的清沟分工和用水次序仍须商议。",
+          "knownBy": [
+            "npc_hw_luowei",
+            "npc_hw_xinglu",
+            "npc_hw_xiejin"
+          ],
+          "salience": 3,
+          "reliability": "亲历",
+          "location": "loc_hw_dock"
+        }
+      },
+      {
+        "path": "relationships[0].note",
+        "value": "华慈走泥路险滑后，邢芦为母亲挑较干的路，雨天留意脚下。"
+      },
+      {
+        "path": "relationships[2].note",
+        "value": "与罗苇一起看过南田沟口淤塞，谁先清哪段仍要分开商议。"
+      }
+    ]
+  },
+  "review": {
+    "contradictions": [
+      {
+        "severity": "hard",
+        "field": "reviewedPaths",
+        "quote": "出处及候选覆盖凭证",
+        "reason": "L2漏审修订叶子\n+ actual - expected\n\n+ []\n- [\n-   'goals.long[0].steps[1].content',\n-   'goals.mid[0].steps[1].content',\n-   'goals.short[0].steps[1].content',\n-   'knowledge.known[1]',\n-   'knowledge.known[2]',\n-   'knowledge.unknown[0]',\n-   'knowledge.unknown[1]',\n-   'memorySeeds[2]',\n-   'relationships[0].note',\n-   'relationships[2].note',\n-   'voice.register'\n- ]\n"
+      }
+    ],
+    "backgroundReviews": [
+      {
+        "eventId": "memory_t10_south-water",
+        "sourceHash": "d4cb722ab2388cc077c9011a337f0e7a81f70f0cf60d5655e925ee8e479dc1d9",
+        "reviewedRiskPaths": [
+          "npc_hw_luowei.secrets[0]",
+          "npc_hw_xinglu.secrets[0]",
+          "npc_hw_xiejin.secrets[0]",
+          "npc_hw_xinglu.memorySeeds[0]"
+        ],
+        "contradictions": []
+      }
+    ]
+  },
+  "errors": [
+    {
+      "severity": "hard",
+      "field": "reviewedPaths",
+      "quote": "出处及候选覆盖凭证",
+      "reason": "L2漏审修订叶子\n+ actual - expected\n\n+ []\n- [\n-   'goals.long[0].steps[1].content',\n-   'goals.mid[0].steps[1].content',\n-   'goals.short[0].steps[1].content',\n-   'knowledge.known[1]',\n-   'knowledge.known[2]',\n-   'knowledge.unknown[0]',\n-   'knowledge.unknown[1]',\n-   'memorySeeds[2]',\n-   'relationships[0].note',\n-   'relationships[2].note',\n-   'voice.register'\n- ]\n"
+    }
+  ],
+  "warnings": [],
+  "feedback": [
+    {
+      "severity": "hard",
+      "field": "reviewedPaths",
+      "quote": "出处及候选覆盖凭证",
+      "reason": "L2漏审修订叶子\n+ actual - expected\n\n+ []\n- [\n-   'goals.long[0].steps[1].content',\n-   'goals.mid[0].steps[1].content',\n-   'goals.short[0].steps[1].content',\n-   'knowledge.known[1]',\n-   'knowledge.known[2]',\n-   'knowledge.unknown[0]',\n-   'knowledge.unknown[1]',\n-   'memorySeeds[2]',\n-   'relationships[0].note',\n-   'relationships[2].note',\n-   'voice.register'\n- ]\n"
+    }
+  ],
+  "draftResponse": {
+    "id": "c3301be2-cbee-49df-9ab5-860570571ab4",
+    "object": "chat.completion",
+    "created": 1791765644,
+    "model": "deepseek-flash",
+    "choices": [
+      {
+        "index": 0,
+        "message": {
+          "role": "assistant",
+          "content": "{\"id\":\"npc_hw_xinglu\",\"contract\":\"audit-patch-v1\",\"patches\":[{\"path\":\"knowledge.known[1]\",\"value\":{\"fact\":\"华慈有回走泥路险些滑倒，从那以后他给她挑较干的路走，雨天更盯着她脚下。\",\"source\":\"npc_hw_xinglu\",\"reliability\":\"亲历\"}},{\"path\":\"knowledge.known[2]\",\"value\":{\"fact\":\"罗苇、邢芦和谢堇谈田边用水。邢芦与罗苇看过南田沟口淤塞，谢堇向罗苇询问用水先后；各户的清沟分工和用水次序仍须商议。\",\"source\":\"npc_hw_xinglu\",\"reliability\":\"亲历\"}},{\"path\":\"knowledge.unknown[0]\",\"value\":\"罗苇愿先清南田哪段沟，两家分工能否说清。\"},{\"path\":\"knowledge.unknown[1]\",\"value\":\"谢堇希望哪一轮用水先排，是否会使自家段再积水。\"},{\"path\":\"goals.short[0].steps[1].content\",\"value\":\"对照田埂与沟口位置，把自家这次积水处单独记下。\"},{\"path\":\"goals.mid[0].steps[1].content\",\"value\":\"把可做的工时和自家沟段列给罗苇，先问相邻农户的安排。\"},{\"path\":\"goals.long[0].steps[1].content\",\"value\":\"先查看雨后较干的路段，再向华慈说明可以避开的泥处。\"},{\"path\":\"voice.register\",\"value\":\"佃农轮工口吻，指明沟段，逐句算可承担的工时\"},{\"path\":\"memorySeeds[2]\",\"value\":{\"id\":\"memory_t10_south-water\",\"event\":\"在旧渡口公用水盏周边，罗苇、邢芦和谢堇谈田边用水。邢芦与罗苇看过南田沟口淤塞，谢堇向罗苇询问用水先后；各户的清沟分工和用水次序仍须商议。\",\"knownBy\":[\"npc_hw_luowei\",\"npc_hw_xinglu\",\"npc_hw_xiejin\"],\"salience\":3,\"reliability\":\"亲历\",\"location\":\"loc_hw_dock\"}},{\"path\":\"relationships[0].note\",\"value\":\"华慈走泥路险滑后，邢芦为母亲挑较干的路，雨天留意脚下。\"},{\"path\":\"relationships[2].note\",\"value\":\"与罗苇一起看过南田沟口淤塞，谁先清哪段仍要分开商议。\"}]}"
+        },
+        "logprobs": null,
+        "finish_reason": "stop"
+      }
+    ],
+    "usage": {
+      "prompt_tokens": 10760,
+      "completion_tokens": 559,
+      "total_tokens": 11319,
+      "prompt_tokens_details": {
+        "cached_tokens": 10624
+      },
+      "prompt_cache_hit_tokens": 10624,
+      "prompt_cache_miss_tokens": 136
+    },
+    "system_fingerprint": "aeb56401ca74e127821c4f9126dcb669",
+    "measurement": {
+      "label": "content-first-review-npc_hw_xinglu-draft2",
+      "model": "deepseek-flash",
+      "thinking": "disabled",
+      "usage": {
+        "prompt_tokens": 10760,
+        "completion_tokens": 559,
+        "total_tokens": 11319,
+        "prompt_tokens_details": {
+          "cached_tokens": 10624
+        },
+        "prompt_cache_hit_tokens": 10624,
+        "prompt_cache_miss_tokens": 136
+      },
+      "costUpperYuan": 0.00516896,
+      "cumulativeUpperYuan": 6.269670319999997,
+      "latencyMs": 2734.26430000001,
+      "timestamp": "2026-10-12T00:40:48.282Z"
+    }
+  },
+  "measurements": [
+    {
+      "label": "content-first-review-npc_hw_xinglu-draft0",
+      "model": "deepseek-flash",
+      "thinking": "disabled",
+      "usage": {
+        "prompt_tokens": 10570,
+        "completion_tokens": 559,
+        "total_tokens": 11129,
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        },
+        "prompt_cache_hit_tokens": 0,
+        "prompt_cache_miss_tokens": 10570
+      },
+      "costUpperYuan": 0.025612,
+      "cumulativeUpperYuan": 6.206477359999997,
+      "latencyMs": 2394.2822999999917,
+      "timestamp": "2026-10-12T00:40:40.111Z"
+    },
+    {
+      "label": "content-first-review-npc_hw_xinglu-review0",
+      "model": "deepseek-flash",
+      "thinking": "disabled",
+      "usage": {
+        "prompt_tokens": 24718,
+        "completion_tokens": 136,
+        "total_tokens": 24854,
+        "prompt_tokens_details": {
+          "cached_tokens": 128
+        },
+        "prompt_cache_hit_tokens": 128,
+        "prompt_cache_miss_tokens": 24590
+      },
+      "costUpperYuan": 0.050273120000000004,
+      "cumulativeUpperYuan": 6.256750479999997,
+      "latencyMs": 1542.2737999999954,
+      "timestamp": "2026-10-12T00:40:41.661Z"
+    },
+    {
+      "label": "content-first-review-npc_hw_xinglu-draft1",
+      "model": "deepseek-flash",
+      "thinking": "disabled",
+      "usage": {
+        "prompt_tokens": 10760,
+        "completion_tokens": 559,
+        "total_tokens": 11319,
+        "prompt_tokens_details": {
+          "cached_tokens": 10496
+        },
+        "prompt_cache_hit_tokens": 10496,
+        "prompt_cache_miss_tokens": 264
+      },
+      "costUpperYuan": 0.00541984,
+      "cumulativeUpperYuan": 6.262170319999997,
+      "latencyMs": 2369.0275000000256,
+      "timestamp": "2026-10-12T00:40:44.041Z"
+    },
+    {
+      "label": "content-first-review-npc_hw_xinglu-review1",
+      "model": "deepseek-flash",
+      "thinking": "disabled",
+      "usage": {
+        "prompt_tokens": 24718,
+        "completion_tokens": 133,
+        "total_tokens": 24851,
+        "prompt_tokens_details": {
+          "cached_tokens": 24576
+        },
+        "prompt_cache_hit_tokens": 24576,
+        "prompt_cache_miss_tokens": 142
+      },
+      "costUpperYuan": 0.00233104,
+      "cumulativeUpperYuan": 6.264501359999997,
+      "latencyMs": 1485.564400000003,
+      "timestamp": "2026-10-12T00:40:45.538Z"
+    },
+    {
+      "label": "content-first-review-npc_hw_xinglu-draft2",
+      "model": "deepseek-flash",
+      "thinking": "disabled",
+      "usage": {
+        "prompt_tokens": 10760,
+        "completion_tokens": 559,
+        "total_tokens": 11319,
+        "prompt_tokens_details": {
+          "cached_tokens": 10624
+        },
+        "prompt_cache_hit_tokens": 10624,
+        "prompt_cache_miss_tokens": 136
+      },
+      "costUpperYuan": 0.00516896,
+      "cumulativeUpperYuan": 6.269670319999997,
+      "latencyMs": 2734.26430000001,
+      "timestamp": "2026-10-12T00:40:48.282Z"
+    },
+    {
+      "label": "content-first-review-npc_hw_xinglu-review2",
+      "model": "deepseek-flash",
+      "thinking": "disabled",
+      "usage": {
+        "prompt_tokens": 24718,
+        "completion_tokens": 133,
+        "total_tokens": 24851,
+        "prompt_tokens_details": {
+          "cached_tokens": 24576
+        },
+        "prompt_cache_hit_tokens": 24576,
+        "prompt_cache_miss_tokens": 142
+      },
+      "costUpperYuan": 0.00233104,
+      "cumulativeUpperYuan": 6.272001359999996,
+      "latencyMs": 1365.952099999995,
+      "timestamp": "2026-10-12T00:40:49.658Z"
+    }
+  ],
+  "rawProviderReviewResponses": [
+    {
+      "attempt": 1,
+      "response": {
+        "id": "d17b317d-511a-4674-838a-fdb4e0629794",
+        "object": "chat.completion",
+        "created": 1791765639,
+        "model": "deepseek-flash",
+        "choices": [
+          {
+            "index": 0,
+            "message": {
+              "role": "assistant",
+              "content": "{\"contradictions\":[],\"backgroundReviews\":[{\"eventId\":\"memory_t10_south-water\",\"sourceHash\":\"d4cb722ab2388cc077c9011a337f0e7a81f70f0cf60d5655e925ee8e479dc1d9\",\"reviewedRiskPaths\":[\"npc_hw_luowei:secrets[0]\",\"npc_hw_xinglu:secrets[0]\",\"npc_hw_xiejin:secrets[0]\",\"npc_hw_xinglu:memorySeeds[0]\"],\"contradictions\":[]}]}"
+            },
+            "logprobs": null,
+            "finish_reason": "stop"
+          }
+        ],
+        "usage": {
+          "prompt_tokens": 24718,
+          "completion_tokens": 136,
+          "total_tokens": 24854,
+          "prompt_tokens_details": {
+            "cached_tokens": 128
+          },
+          "prompt_cache_hit_tokens": 128,
+          "prompt_cache_miss_tokens": 24590
+        },
+        "system_fingerprint": "aeb56401ca74e127821c4f9126dcb669",
+        "measurement": {
+          "label": "content-first-review-npc_hw_xinglu-review0",
+          "model": "deepseek-flash",
+          "thinking": "disabled",
+          "usage": {
+            "prompt_tokens": 24718,
+            "completion_tokens": 136,
+            "total_tokens": 24854,
+            "prompt_tokens_details": {
+              "cached_tokens": 128
+            },
+            "prompt_cache_hit_tokens": 128,
+            "prompt_cache_miss_tokens": 24590
+          },
+          "costUpperYuan": 0.050273120000000004,
+          "cumulativeUpperYuan": 6.256750479999997,
+          "latencyMs": 1542.2737999999954,
+          "timestamp": "2026-10-12T00:40:41.661Z"
+        }
+      },
+      "hash": "da806c3df33f9494a169521327fa3a79a99bdd30ba068027c00e3df2d2c40f55"
+    },
+    {
+      "attempt": 2,
+      "response": {
+        "id": "bcf8fe54-b3d6-4142-9d82-ee0f6f80a356",
+        "object": "chat.completion",
+        "created": 1791765643,
+        "model": "deepseek-flash",
+        "choices": [
+          {
+            "index": 0,
+            "message": {
+              "role": "assistant",
+              "content": "{\"contradictions\":[],\"backgroundReviews\":[{\"eventId\":\"memory_t10_south-water\",\"sourceHash\":\"d4cb722ab2388cc077c9011a337f0e7a81f70f0cf60d5655e925ee8e479dc1d9\",\"reviewedRiskPaths\":[\"npc_hw_luowei.secrets[0]\",\"npc_hw_xinglu.secrets[0]\",\"npc_hw_xiejin.secrets[0]\",\"npc_hw_xinglu.memorySeeds[0]\"],\"contradictions\":[]}]}"
+            },
+            "logprobs": null,
+            "finish_reason": "stop"
+          }
+        ],
+        "usage": {
+          "prompt_tokens": 24718,
+          "completion_tokens": 133,
+          "total_tokens": 24851,
+          "prompt_tokens_details": {
+            "cached_tokens": 24576
+          },
+          "prompt_cache_hit_tokens": 24576,
+          "prompt_cache_miss_tokens": 142
+        },
+        "system_fingerprint": "aeb56401ca74e127821c4f9126dcb669",
+        "measurement": {
+          "label": "content-first-review-npc_hw_xinglu-review1",
+          "model": "deepseek-flash",
+          "thinking": "disabled",
+          "usage": {
+            "prompt_tokens": 24718,
+            "completion_tokens": 133,
+            "total_tokens": 24851,
+            "prompt_tokens_details": {
+              "cached_tokens": 24576
+            },
+            "prompt_cache_hit_tokens": 24576,
+            "prompt_cache_miss_tokens": 142
+          },
+          "costUpperYuan": 0.00233104,
+          "cumulativeUpperYuan": 6.264501359999997,
+          "latencyMs": 1485.564400000003,
+          "timestamp": "2026-10-12T00:40:45.538Z"
+        }
+      },
+      "hash": "944c1a18924afeb1784cdd8bd4a2c9a67fb672c69d2604165a168870694f1e32"
+    },
+    {
+      "attempt": 3,
+      "response": {
+        "id": "f1776516-9199-45f7-bc1f-1bbcf8412f79",
+        "object": "chat.completion",
+        "created": 1791765647,
+        "model": "deepseek-flash",
+        "choices": [
+          {
+            "index": 0,
+            "message": {
+              "role": "assistant",
+              "content": "{\"contradictions\":[],\"backgroundReviews\":[{\"eventId\":\"memory_t10_south-water\",\"sourceHash\":\"d4cb722ab2388cc077c9011a337f0e7a81f70f0cf60d5655e925ee8e479dc1d9\",\"reviewedRiskPaths\":[\"npc_hw_luowei.secrets[0]\",\"npc_hw_xinglu.secrets[0]\",\"npc_hw_xiejin.secrets[0]\",\"npc_hw_xinglu.memorySeeds[0]\"],\"contradictions\":[]}]}"
+            },
+            "logprobs": null,
+            "finish_reason": "stop"
+          }
+        ],
+        "usage": {
+          "prompt_tokens": 24718,
+          "completion_tokens": 133,
+          "total_tokens": 24851,
+          "prompt_tokens_details": {
+            "cached_tokens": 24576
+          },
+          "prompt_cache_hit_tokens": 24576,
+          "prompt_cache_miss_tokens": 142
+        },
+        "system_fingerprint": "aeb56401ca74e127821c4f9126dcb669",
+        "measurement": {
+          "label": "content-first-review-npc_hw_xinglu-review2",
+          "model": "deepseek-flash",
+          "thinking": "disabled",
+          "usage": {
+            "prompt_tokens": 24718,
+            "completion_tokens": 133,
+            "total_tokens": 24851,
+            "prompt_tokens_details": {
+              "cached_tokens": 24576
+            },
+            "prompt_cache_hit_tokens": 24576,
+            "prompt_cache_miss_tokens": 142
+          },
+          "costUpperYuan": 0.00233104,
+          "cumulativeUpperYuan": 6.272001359999996,
+          "latencyMs": 1365.952099999995,
+          "timestamp": "2026-10-12T00:40:49.658Z"
+        }
+      },
+      "hash": "32e19eac29db2028855c1dcf5954da779f7ed540a078185688c1e05eec606605"
+    }
+  ]
+}
