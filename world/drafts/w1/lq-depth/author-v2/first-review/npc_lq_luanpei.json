@@ -1,0 +1,341 @@
+{
+  "id": "npc_lq_luanpei",
+  "fingerprint": "64af2019286458582a8648af3e5d4b72b3838e3c4ea263a04e6697f8af2acee2",
+  "status": "passed",
+  "attempts": 1,
+  "draft": {
+    "id": "npc_lq_luanpei",
+    "contract": "audit-patch-v1",
+    "patches": [
+      {
+        "path": "knowledge.known[1]",
+        "value": {
+          "fact": "栾佩在泉标记事屋分别记取水和洗具时段，争议处会留待确认空行。",
+          "source": "bld_lq_hall",
+          "reliability": "亲历"
+        }
+      },
+      {
+        "path": "knowledge.known[2]",
+        "value": {
+          "fact": "栾佩、焦岩、慎书、宁野和皮菁在砾泉坡路口看过旧石标与新路记。慎书指着缺了半边的字说明哪些笔画还能看见，宁野从来路指认看记号的位置，皮菁对着路口比过草图。栾佩问旧字与轮用簿是否真能对应，焦岩提醒挪石前要看受力边。那次没有补全残字，也没有商定新记号的朝向。",
+          "source": "loc_lq_path",
+          "reliability": "共同亲历"
+        }
+      },
+      {
+        "path": "voice.register",
+        "value": "用对簿时的短问句说事，碰到争议逐行读回，语气端正而怕丢面子"
+      },
+      {
+        "path": "memorySeeds[2]",
+        "value": {
+          "id": "memory_lq_depth_stone-mark",
+          "event": "栾佩、焦岩、慎书、宁野和皮菁在砾泉坡路口看过旧石标与新路记。慎书指着缺了半边的字说明哪些笔画还能看见，宁野从来路指认看记号的位置，皮菁对着路口比过草图。栾佩问旧字与轮用簿是否真能对应，焦岩提醒挪石前要看受力边。那次没有补全残字，也没有商定新记号的朝向。",
+          "location": "loc_lq_path",
+          "salience": 4,
+          "knownBy": [
+            "npc_lq_luanpei",
+            "npc_lq_jiaoyan",
+            "npc_lq_shenshu",
+            "npc_lq_ningye",
+            "npc_lq_pijing"
+          ],
+          "reliability": "亲历"
+        }
+      },
+      {
+        "path": "knowledge.unknown[0]",
+        "value": "旧泉标缺笔处究竟是哪一个字，慎书能从哪些残笔支持读法。"
+      },
+      {
+        "path": "knowledge.unknown[1]",
+        "value": "焦岩翻看踏石时需要多宽的安全边，能否容下分次对簿的人。"
+      },
+      {
+        "path": "goals.short[0].steps[0].content",
+        "value": "请说错用途的人指出轮用簿中所指的那一行"
+      },
+      {
+        "path": "goals.mid[0].steps[0].content",
+        "value": "把取水与洗具的说法分列，请当事人分别读回"
+      },
+      {
+        "path": "goals.long[0].steps[0].content",
+        "value": "在下一次对簿前询问外户怎样提出异议，并记下待核项"
+      },
+      {
+        "path": "relationships[0].note",
+        "value": "栾瑜提新意见时，栾佩常解释成旧规矩里已有，母女为该怎样记新要求争论。 各自保有财物。"
+      },
+      {
+        "path": "relationships[1].note",
+        "value": "谦木常在家听到来人找栾佩争泉槽时段，两人要商量何时停止在家对簿。 各自保有财物。"
+      },
+      {
+        "path": "relationships[2].note",
+        "value": "芬灵说旧取水小阶走着费力，栾佩要听母亲指出哪一级最难落脚。 各自保有财物。"
+      }
+    ]
+  },
+  "review": {
+    "contradictions": [
+      {
+        "quote": "栾佩在泉标记事屋分别记取水和洗具时段，争议处会留待确认空行。",
+        "field": "knowledge.known[1]",
+        "severity": "soft",
+        "reason": "骨架中栾佩的既有记忆只记载读回泉槽用时簿与留待确认空行，未记载她分别记取水和洗具时段；该新增事实无既有来源支持，属于新增未授权功能。"
+      },
+      {
+        "quote": "栾佩、焦岩、慎书、宁野和皮菁在砾泉坡路口看过旧石标与新路记。慎书指着缺了半边的字说明哪些笔画还能看见，宁野从来路指认看记号的位置，皮菁对着路口比过草图。栾佩问旧字与轮用簿是否真能对应，焦岩提醒挪石前要看受力边。那次没有补全残字，也没有商定新记号的朝向。",
+        "field": "knowledge.known[2]",
+        "severity": "soft",
+        "reason": "该共同亲历事件虽在authoredBackground中作为新背景授权，但骨架before的knowledge.known仅有一条本人亲历事实，新增共同亲历知识需以memorySeeds[2]的共享事件为来源；此处与memorySeeds[2]重复且未在before中登记，属于新增未授权知识条目。"
+      },
+      {
+        "quote": "用对簿时的短问句说事，碰到争议逐行读回，语气端正而怕丢面子",
+        "field": "voice.register",
+        "severity": "style",
+        "reason": "骨架voice.register为“先问哪次轮到谁”，新值改变了语域描述，虽与人物性格相容，但属于风格性改写而非事实矛盾。"
+      },
+      {
+        "quote": "旧泉标缺笔处究竟是哪一个字，慎书能从哪些残笔支持读法。",
+        "field": "knowledge.unknown[0]",
+        "severity": "soft",
+        "reason": "骨架unknown仅泛化记载“本人未在场且无人实际转告的事”与“他人未公开的私有财物和秘密”，新增具体未知项指向慎书的辨字能力，属于新增未授权具体未知。"
+      },
+      {
+        "quote": "焦岩翻看踏石时需要多宽的安全边，能否容下分次对簿的人。",
+        "field": "knowledge.unknown[1]",
+        "severity": "soft",
+        "reason": "骨架unknown未记载此项具体未知，新增指向焦岩的安全边问题，属于新增未授权具体未知。"
+      },
+      {
+        "quote": "请说错用途的人指出轮用簿中所指的那一行",
+        "field": "goals.short[0].steps[0].content",
+        "severity": "soft",
+        "reason": "骨架short目标步骤为“有人把洗具时段说成取水时段”，新步骤改为请说错用途的人指出轮用簿中所指的那一行，属于新增未授权具体行动步骤。"
+      },
+      {
+        "quote": "把取水与洗具的说法分列，请当事人分别读回",
+        "field": "goals.mid[0].steps[0].content",
+        "severity": "soft",
+        "reason": "骨架mid目标步骤为“分别核对两种用途的旧约”，新步骤改为把取水与洗具的说法分列并请当事人分别读回，属于新增未授权具体行动步骤。"
+      },
+      {
+        "quote": "在下一次对簿前询问外户怎样提出异议，并记下待核项",
+        "field": "goals.long[0].steps[0].content",
+        "severity": "soft",
+        "reason": "骨架long目标步骤为“泉槽分用不再靠熟人先占”，新步骤改为询问外户怎样提出异议并记下待核项，属于新增未授权具体行动步骤。"
+      },
+      {
+        "quote": "栾瑜提新意见时，栾佩常解释成旧规矩里已有，母女为该怎样记新要求争论。 各自保有财物。",
+        "field": "relationships[0].note",
+        "severity": "soft",
+        "reason": "骨架note仅记载“栾瑜为栾佩的女儿；各自保有财物”，新增母女争论的具体情节无既有来源支持，属于新增未授权关系细节。"
+      },
+      {
+        "quote": "谦木常在家听到来人找栾佩争泉槽时段，两人要商量何时停止在家对簿。 各自保有财物。",
+        "field": "relationships[1].note",
+        "severity": "soft",
+        "reason": "骨架note仅记载“谦木为栾佩的配偶；各自保有财物”，新增两人商量停止在家对簿的情节无既有来源支持，属于新增未授权关系细节。"
+      },
+      {
+        "quote": "芬灵说旧取水小阶走着费力，栾佩要听母亲指出哪一级最难落脚。 各自保有财物。",
+        "field": "relationships[2].note",
+        "severity": "soft",
+        "reason": "骨架note仅记载“芬灵为栾佩的母亲；各自保有财物”，新增芬灵说旧取水小阶费力及栾佩要听母亲指出哪一级最难落脚的情节无既有来源支持，属于新增未授权关系细节。"
+      }
+    ],
+    "reviewedPaths": [
+      "knowledge.known[1]",
+      "knowledge.known[2]",
+      "voice.register",
+      "memorySeeds[2]",
+      "knowledge.unknown[0]",
+      "knowledge.unknown[1]",
+      "goals.short[0].steps[0].content",
+      "goals.mid[0].steps[0].content",
+      "goals.long[0].steps[0].content",
+      "relationships[0].note",
+      "relationships[1].note",
+      "relationships[2].note"
+    ],
+    "backgroundReviews": [
+      {
+        "eventId": "memory_lq_depth_stone-mark",
+        "sourceHash": "21ca23cebd763bdbba238d1ce51f31c4329c504d52d8023d0c87911d3b34a46b",
+        "reviewedRiskPaths": [
+          "npc_lq_luanpei.secrets[0]",
+          "npc_lq_luanpei.authoredFacts.privateFact",
+          "npc_lq_jiaoyan.secrets[0]",
+          "npc_lq_jiaoyan.authoredFacts.privateFact",
+          "npc_lq_shenshu.secrets[0]",
+          "npc_lq_shenshu.authoredFacts.privateFact",
+          "npc_lq_ningye.secrets[0]",
+          "npc_lq_ningye.authoredFacts.privateFact",
+          "npc_lq_pijing.secrets[0]",
+          "npc_lq_pijing.authoredFacts.privateFact"
+        ],
+        "contradictions": []
+      }
+    ]
+  },
+  "errors": [],
+  "warnings": [
+    {
+      "quote": "栾佩在泉标记事屋分别记取水和洗具时段，争议处会留待确认空行。",
+      "field": "knowledge.known[1]",
+      "severity": "soft",
+      "reason": "骨架中栾佩的既有记忆只记载读回泉槽用时簿与留待确认空行，未记载她分别记取水和洗具时段；该新增事实无既有来源支持，属于新增未授权功能。"
+    },
+    {
+      "quote": "栾佩、焦岩、慎书、宁野和皮菁在砾泉坡路口看过旧石标与新路记。慎书指着缺了半边的字说明哪些笔画还能看见，宁野从来路指认看记号的位置，皮菁对着路口比过草图。栾佩问旧字与轮用簿是否真能对应，焦岩提醒挪石前要看受力边。那次没有补全残字，也没有商定新记号的朝向。",
+      "field": "knowledge.known[2]",
+      "severity": "soft",
+      "reason": "该共同亲历事件虽在authoredBackground中作为新背景授权，但骨架before的knowledge.known仅有一条本人亲历事实，新增共同亲历知识需以memorySeeds[2]的共享事件为来源；此处与memorySeeds[2]重复且未在before中登记，属于新增未授权知识条目。"
+    },
+    {
+      "quote": "用对簿时的短问句说事，碰到争议逐行读回，语气端正而怕丢面子",
+      "field": "voice.register",
+      "severity": "style",
+      "reason": "骨架voice.register为“先问哪次轮到谁”，新值改变了语域描述，虽与人物性格相容，但属于风格性改写而非事实矛盾。"
+    },
+    {
+      "quote": "旧泉标缺笔处究竟是哪一个字，慎书能从哪些残笔支持读法。",
+      "field": "knowledge.unknown[0]",
+      "severity": "soft",
+      "reason": "骨架unknown仅泛化记载“本人未在场且无人实际转告的事”与“他人未公开的私有财物和秘密”，新增具体未知项指向慎书的辨字能力，属于新增未授权具体未知。"
+    },
+    {
+      "quote": "焦岩翻看踏石时需要多宽的安全边，能否容下分次对簿的人。",
+      "field": "knowledge.unknown[1]",
+      "severity": "soft",
+      "reason": "骨架unknown未记载此项具体未知，新增指向焦岩的安全边问题，属于新增未授权具体未知。"
+    },
+    {
+      "quote": "请说错用途的人指出轮用簿中所指的那一行",
+      "field": "goals.short[0].steps[0].content",
+      "severity": "soft",
+      "reason": "骨架short目标步骤为“有人把洗具时段说成取水时段”，新步骤改为请说错用途的人指出轮用簿中所指的那一行，属于新增未授权具体行动步骤。"
+    },
+    {
+      "quote": "把取水与洗具的说法分列，请当事人分别读回",
+      "field": "goals.mid[0].steps[0].content",
+      "severity": "soft",
+      "reason": "骨架mid目标步骤为“分别核对两种用途的旧约”，新步骤改为把取水与洗具的说法分列并请当事人分别读回，属于新增未授权具体行动步骤。"
+    },
+    {
+      "quote": "在下一次对簿前询问外户怎样提出异议，并记下待核项",
+      "field": "goals.long[0].steps[0].content",
+      "severity": "soft",
+      "reason": "骨架long目标步骤为“泉槽分用不再靠熟人先占”，新步骤改为询问外户怎样提出异议并记下待核项，属于新增未授权具体行动步骤。"
+    },
+    {
+      "quote": "栾瑜提新意见时，栾佩常解释成旧规矩里已有，母女为该怎样记新要求争论。 各自保有财物。",
+      "field": "relationships[0].note",
+      "severity": "soft",
+      "reason": "骨架note仅记载“栾瑜为栾佩的女儿；各自保有财物”，新增母女争论的具体情节无既有来源支持，属于新增未授权关系细节。"
+    },
+    {
+      "quote": "谦木常在家听到来人找栾佩争泉槽时段，两人要商量何时停止在家对簿。 各自保有财物。",
+      "field": "relationships[1].note",
+      "severity": "soft",
+      "reason": "骨架note仅记载“谦木为栾佩的配偶；各自保有财物”，新增两人商量停止在家对簿的情节无既有来源支持，属于新增未授权关系细节。"
+    },
+    {
+      "quote": "芬灵说旧取水小阶走着费力，栾佩要听母亲指出哪一级最难落脚。 各自保有财物。",
+      "field": "relationships[2].note",
+      "severity": "soft",
+      "reason": "骨架note仅记载“芬灵为栾佩的母亲；各自保有财物”，新增芬灵说旧取水小阶费力及栾佩要听母亲指出哪一级最难落脚的情节无既有来源支持，属于新增未授权关系细节。"
+    }
+  ],
+  "feedback": null,
+  "draftResponse": {
+    "id": "0d60e860-404c-4946-8a64-d401f00e62e5",
+    "object": "chat.completion",
+    "created": 1791793811,
+    "model": "deepseek-flash",
+    "choices": [
+      {
+        "index": 0,
+        "message": {
+          "role": "assistant",
+          "content": "{\"id\":\"npc_lq_luanpei\",\"contract\":\"audit-patch-v1\",\"patches\":[{\"path\":\"knowledge.known[1]\",\"value\":{\"fact\":\"栾佩在泉标记事屋分别记取水和洗具时段，争议处会留待确认空行。\",\"source\":\"bld_lq_hall\",\"reliability\":\"亲历\"}},{\"path\":\"knowledge.known[2]\",\"value\":{\"fact\":\"栾佩、焦岩、慎书、宁野和皮菁在砾泉坡路口看过旧石标与新路记。慎书指着缺了半边的字说明哪些笔画还能看见，宁野从来路指认看记号的位置，皮菁对着路口比过草图。栾佩问旧字与轮用簿是否真能对应，焦岩提醒挪石前要看受力边。那次没有补全残字，也没有商定新记号的朝向。\",\"source\":\"loc_lq_path\",\"reliability\":\"共同亲历\"}},{\"path\":\"voice.register\",\"value\":\"用对簿时的短问句说事，碰到争议逐行读回，语气端正而怕丢面子\"},{\"path\":\"memorySeeds[2]\",\"value\":{\"id\":\"memory_lq_depth_stone-mark\",\"event\":\"栾佩、焦岩、慎书、宁野和皮菁在砾泉坡路口看过旧石标与新路记。慎书指着缺了半边的字说明哪些笔画还能看见，宁野从来路指认看记号的位置，皮菁对着路口比过草图。栾佩问旧字与轮用簿是否真能对应，焦岩提醒挪石前要看受力边。那次没有补全残字，也没有商定新记号的朝向。\",\"location\":\"loc_lq_path\",\"salience\":4,\"knownBy\":[\"npc_lq_luanpei\",\"npc_lq_jiaoyan\",\"npc_lq_shenshu\",\"npc_lq_ningye\",\"npc_lq_pijing\"],\"reliability\":\"亲历\"}},{\"path\":\"knowledge.unknown[0]\",\"value\":\"旧泉标缺笔处究竟是哪一个字，慎书能从哪些残笔支持读法。\"},{\"path\":\"knowledge.unknown[1]\",\"value\":\"焦岩翻看踏石时需要多宽的安全边，能否容下分次对簿的人。\"},{\"path\":\"goals.short[0].steps[0].content\",\"value\":\"请说错用途的人指出轮用簿中所指的那一行\"},{\"path\":\"goals.mid[0].steps[0].content\",\"value\":\"把取水与洗具的说法分列，请当事人分别读回\"},{\"path\":\"goals.long[0].steps[0].content\",\"value\":\"在下一次对簿前询问外户怎样提出异议，并记下待核项\"},{\"path\":\"relationships[0].note\",\"value\":\"栾瑜提新意见时，栾佩常解释成旧规矩里已有，母女为该怎样记新要求争论。 各自保有财物。\"},{\"path\":\"relationships[1].note\",\"value\":\"谦木常在家听到来人找栾佩争泉槽时段，两人要商量何时停止在家对簿。 各自保有财物。\"},{\"path\":\"relationships[2].note\",\"value\":\"芬灵说旧取水小阶走着费力，栾佩要听母亲指出哪一级最难落脚。 各自保有财物。\"}]}"
+        },
+        "logprobs": null,
+        "finish_reason": "stop"
+      }
+    ],
+    "usage": {
+      "prompt_tokens": 13899,
+      "completion_tokens": 716,
+      "total_tokens": 14615,
+      "prompt_tokens_details": {
+        "cached_tokens": 0
+      },
+      "prompt_cache_hit_tokens": 0,
+      "prompt_cache_miss_tokens": 13899
+    },
+    "system_fingerprint": "aeb56401ca74e127821c4f9126dcb669",
+    "measurement": {
+      "label": "content-first-review-npc_lq_luanpei-draft0",
+      "model": "deepseek-flash",
+      "thinking": "disabled",
+      "usage": {
+        "prompt_tokens": 13899,
+        "completion_tokens": 716,
+        "total_tokens": 14615,
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        },
+        "prompt_cache_hit_tokens": 0,
+        "prompt_cache_miss_tokens": 13899
+      },
+      "costUpperYuan": 0.033526,
+      "cumulativeUpperYuan": 7.980597199999995,
+      "latencyMs": 4124.2597000000005,
+      "timestamp": "2026-10-12T08:30:15.584Z"
+    }
+  },
+  "measurements": [
+    {
+      "label": "content-first-review-npc_lq_luanpei-draft0",
+      "model": "deepseek-flash",
+      "thinking": "disabled",
+      "usage": {
+        "prompt_tokens": 13899,
+        "completion_tokens": 716,
+        "total_tokens": 14615,
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        },
+        "prompt_cache_hit_tokens": 0,
+        "prompt_cache_miss_tokens": 13899
+      },
+      "costUpperYuan": 0.033526,
+      "cumulativeUpperYuan": 7.980597199999995,
+      "latencyMs": 4124.2597000000005,
+      "timestamp": "2026-10-12T08:30:15.584Z"
+    },
+    {
+      "label": "content-first-review-npc_lq_luanpei-review0",
+      "model": "deepseek-flash",
+      "thinking": "disabled",
+      "usage": {
+        "prompt_tokens": 34234,
+        "completion_tokens": 1331,
+        "total_tokens": 35565,
+        "prompt_tokens_details": {
+          "cached_tokens": 128
+        },
+        "prompt_cache_hit_tokens": 128,
+        "prompt_cache_miss_tokens": 34106
+      },
+      "costUpperYuan": 0.07886512,
+      "cumulativeUpperYuan": 8.059462319999994,
+      "latencyMs": 7288.034699999999,
+      "timestamp": "2026-10-12T08:30:22.883Z"
+    }
+  ]
+}

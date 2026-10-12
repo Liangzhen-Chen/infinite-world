@@ -337,3 +337,26 @@ test('T45官方首审预检冻结原证据，实际附件进入完整请求且�
  }
  assert.equal(total,report.totalCompactDraftCeilingYuan);assert.equal(report.perRequestBudgetSufficient,true);
 });
+
+test('真实首审按原卡结算并保留未过状态、来源缺口及provider原文留证限制',async()=>{
+ const read=name=>fs.readFile(path.join(firstReviewRoot,name+'.json'),'utf8').then(JSON.parse);
+ const report=await read('first-real-review-report'),gaps=await read('closure-gap-report'),terminal=await read('terminal');
+ assert.equal(terminal.status,'finished');assert.deepEqual(report.summary,{total:30,passed:17,manual:4,pending:9});
+ assert.equal(report.l2AllPassed,false);assert.equal(report.l4Approved,false);assert.equal(report.formalWrite,false);
+ assert.equal(gaps.completed,false);assert.equal(gaps.publicationPreviewRun,false);
+ assert.equal(gaps.candidateL1.offline,30);assert.equal(gaps.candidateL1.actualModelDrafts,25);assert.deepEqual(gaps.candidateL1.errors,[]);
+ const requests=Object.values(terminal.budgetAfter.requests).filter(r=>r.card==='T08');
+ assert.equal(requests.length,80);assert.equal(requests.filter(r=>r.status==='settled').length,80);assert.deepEqual(report.unknownRequests,[]);
+ let cost=0;for(const request of requests){const u=request.measurement.usage;const computed=((u.prompt_cache_hit_tokens??0)*.04+(u.prompt_cache_miss_tokens??u.prompt_tokens-(u.prompt_cache_hit_tokens??0))*2+u.completion_tokens*8)/1e6;assert.equal(computed,request.costUpperYuan);assert.ok(request.costUpperYuan<=request.reservedYuan);cost+=computed;}
+ assert.ok(Math.abs(cost-2.87060744)<1e-10);assert.ok(Math.abs(report.actualCostUpperYuan-cost)<1e-10);
+ assert.equal(terminal.budgetAfter.cards.T08.limitYuan,3);assert.equal(terminal.budgetAfter.cards.T08.reservedYuan,0);
+ assert.ok(gaps.remainingCardYuan<gaps.minimumBlockedReviewCeilingYuan);
+ for(const [id,request] of Object.entries(terminal.budgetBefore.requests))assert.deepEqual(terminal.budgetAfter.requests[id],request);
+ for(const row of report.rows){const actual=await read(row.id);assert.equal(row.status,actual.status);assert.equal(row.draftHash,actual.draft?hashContent(actual.draft):null);assert.equal(row.reviewHash,actual.review?hashContent(actual.review):null);if(actual.draft)assert.deepEqual(actual.draft,patchDraft(backgroundEntries.find(e=>e.id===row.id)));if(row.status==='manual')assert.equal(row.attempts,3);}
+ for(const finding of report.sourceFindings){const source=world[finding.source.collection].find(p=>p.id===finding.source.id);assert.equal(finding.source.value,source.currentConcern);assert.equal(finding.source.valueHash,hashContent(source.currentConcern));assert.equal(finding.l4Approved,false);}
+ assert.equal(report.sourceFindings.length,6);
+ assert.deepEqual(gaps.sharedToolFindings.map(f=>f.code),['frozen-draft-retries','continue-after-entry-budget-block','earlier-provider-response-gap']);
+ assert.ok(Math.abs(gaps.sharedToolFindings[1].costUpperYuan-.108236)<1e-10);
+ assert.equal(gaps.sharedToolFindings[2].affectedManualIds.filter(r=>r.finalOriginalProviderReviewAvailable).length,3);
+ await assert.rejects(fs.stat(path.join(firstReviewRoot,'incremental-l4.json')),/ENOENT/);
+});
