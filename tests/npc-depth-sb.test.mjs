@@ -8,9 +8,12 @@ import crypto from 'node:crypto';
 import {loadWorld} from '../tools/load-world.mjs';
 import {auditNpcDepth} from '../tools/audit-npc-depth.mjs';
 import {hashContent} from '../tools/content-pipeline.mjs';
-import {depthEntries,patchDraft,applyDepthDraft,verifyUnchanged,validateDraft,validatePatchResults,getPath,contextFor,buildReviewRequest,validateAuthoredBackground,checkIncrementalReview} from '../tools/npc-depth-content.mjs';
+import {depthEntries,patchDraft,applyDepthDraft,verifyUnchanged,validateDraft,validatePatchResults,getPath,contextFor,buildDraftRequest,buildReviewRequest,validateAuthoredBackground,checkIncrementalReview} from '../tools/npc-depth-content.mjs';
 import * as config from '../world/design/w1-sb-depth.mjs';
 import {sangbanRoster,sangbanFull} from '../world/design/w1-villages-sangban.mjs';
+import {prepareDepth} from '../tools/npc-depth.mjs';
+import {compactReviewRequest,validateSourceEvidence} from '../tools/npc-depth-source-evidence.mjs';
+import {requestMeasure,sourceRequirements} from '../world/drafts/w1/sb-depth/request-preflight.mjs';
 
 const exec=promisify(execFile),world=await loadWorld(),root=path.resolve('world/drafts/w1/sb-depth');
 const entries=depthEntries(config.patchRows.map(r=>r.before),config,world);
@@ -185,4 +188,53 @@ test('官方来源prepare保持原产物与候选，首审冻结目录重跑零�
  assert.deepEqual(JSON.parse(await fs.readFile(path.join(firstReviewRoot,'candidate.json'),'utf8')),JSON.parse(await read('candidate')));
  assert.deepEqual(JSON.parse(await fs.readFile(path.join(firstReviewRoot,'base.json'),'utf8')),JSON.parse(await read('base')));
  for(const name of ['budget.json','allocation.json','terminal.json','batch-0.json','incremental-l4.json','npc_sb_zhangluo.json'])await assert.rejects(fs.stat(path.join(firstReviewRoot,name)),/ENOENT/);
+});
+
+test('T09官方零模型预检保留120份完整请求，最小性别附件逐值匹配原源且不改变指纹',async()=>{
+ const report=JSON.parse(await fs.readFile(path.join(firstReviewRoot,'request-preflight.json'),'utf8'));
+ const prepared=await prepareDepth({worldRoot:path.resolve('world'),design:path.resolve('world/design/w1-sb-depth.mjs'),root:firstReviewRoot,authoredBackground:backgroundFile,cardId:'T09'});
+ const {gaps,supplements}=await sourceRequirements(prepared);
+ assert.equal(report.modelCalls,0);assert.equal(report.approvals.L2,'not-run');assert.equal(report.approvals.L4,'not-approved');
+ assert.deepEqual(report.sourceGapsBefore,gaps);assert.equal(gaps.length,16);assert.equal(gaps.filter(g=>g.missingIn.includes('review')).length,12);assert.equal(gaps.filter(g=>g.sourceId===g.id).length,4);assert.equal(supplements.size,11);assert.deepEqual(report.remainingSourceGaps,[]);
+ assert.deepEqual(report.sourceCoverage,{originalSourceOccurrences:172,uniqueOriginalFields:145,privateRiskOccurrences:60,patchLeaves:373,events:15});
+ const map=JSON.parse(await fs.readFile(path.join(firstReviewRoot,'source-evidence-map.json'),'utf8'));
+ assert.deepEqual(new Set(Object.keys(map)),new Set(supplements.keys()));
+ for(const frozen of report.frozen){const raw=await fs.readFile(path.resolve(frozen.file));assert.equal(crypto.createHash('sha256').update(raw).digest('hex'),frozen.sha256);if(frozen.contentHash)assert.equal(hashContent(JSON.parse(raw)),frozen.contentHash);}
+ for(const attachment of report.attachments){
+  const raw=await fs.readFile(path.join(firstReviewRoot,attachment.file),'utf8'),data=JSON.parse(raw),entry=prepared.entries.find(e=>e.id===attachment.id);
+  assert.deepEqual(data,supplements.get(entry.id));validateSourceEvidence(data,entry,prepared.world);
+  // Preserve preflight's emitted bytes separately from checkout line endings.
+  assert.equal(hashContent(attachment.raw),attachment.rawHash);assert.equal(crypto.createHash('sha256').update(attachment.raw).digest('hex'),attachment.sha256);assert.deepEqual(JSON.parse(attachment.raw),data);assert.equal(hashContent(data),attachment.contentHash);
+  assert.ok(data.sourceRecords.every(row=>Object.keys(row).every(k=>['id','name','sex'].includes(k))));
+  const invalid=structuredClone(data);invalid.sourceRecords[1].sex='未知';assert.throws(()=>validateSourceEvidence(invalid,entry,prepared.world));
+ }
+ for(const format of ['full','compact']){
+  let draftSum=0,reviewSum=0;
+  for(const entry of prepared.entries){
+   const context=contextFor(entry,prepared.world),draft=patchDraft(entry);
+   const requests=JSON.parse(await fs.readFile(path.join(firstReviewRoot,'request-preflight',format,entry.id+'.json'),'utf8'));
+   // Draft builder is independent of full/compact. Review compact only removes
+   // data that the official validator proves reconstructible.
+   const expectedDraft=buildDraftRequest(entry,null,context),expectedReview=format==='compact'?compactReviewRequest(buildReviewRequest(entry,draft,context)):buildReviewRequest(entry,draft,context);
+   if(supplements.has(entry.id))for(const request of [expectedDraft,expectedReview])request.messages.push({role:'user',content:JSON.stringify(supplements.get(entry.id))});
+   assert.deepEqual(requests.draft,requestMeasure(expectedDraft));assert.deepEqual(requests.review,requestMeasure(expectedReview));
+   const payload=JSON.parse(requests.review.body.messages[1].content);
+   assert.equal(payload.publishedFacts.authoredBackground.sourceHash,hashContent(background));
+   for(const event of payload.publishedFacts.authoredBackground.events){
+    assert.equal(event.originalSources.length,event.sourceRefs.length);assert.equal(event.privateRisks.length,event.risks.length);
+    for(const ref of event.originalSources){assert.equal(hashContent(ref.value),ref.hash);assert.deepEqual(ref.value,getPath(prepared.world[ref.collection].find(n=>n.id===ref.id),ref.field));}
+   }
+   const coverage=report.coverage.find(c=>c.id===entry.id);assert.equal(coverage.entryHash,hashContent(entry));assert.equal(coverage.contextHash,hashContent(context));assert.deepEqual(coverage.patchPaths,entry.patches.map(p=>p.path));
+   const contract={contradictions:[],reviewedPaths:coverage.patchPaths,backgroundReviews:coverage.backgrounds.map(e=>({...e,contradictions:[]}))};
+   assert.deepEqual(checkIncrementalReview(contract,entry,context),[]);
+   const lost=structuredClone(contract);lost.backgroundReviews[0].reviewedRiskPaths.pop();assert.throws(()=>checkIncrementalReview(lost,entry,context));
+   draftSum+=requests.draft.ceilingYuan;reviewSum+=requests.review.ceilingYuan;
+  }
+  const measured=report.formats[format];assert.equal(measured.providerCalls,0);assert.equal(measured.isolatedReservationYuan,0);assert.equal(measured.officialDraftBudgetProbes,30);assert.equal(measured.reviewBuilderBudgetHandoffProbes,30);
+  assert.equal(draftSum,measured.draftCeilingYuan);assert.equal(reviewSum,measured.reviewCeilingYuan);assert.ok(Math.abs(draftSum+reviewSum-measured.totalCeilingYuan)<1e-10);
+  assert.ok(draftSum>3);assert.equal(measured.fitsOriginalCard,false);assert.equal(measured.fitsSharedCeilingSum,false);
+ }
+ assert.equal(report.sharedBudget.root,'F:/dnd/world/drafts/m4-object');assert.equal(report.sharedBudget.readOnly,true);assert.equal(report.sharedBudget.unchanged,true);assert.equal(report.sharedBudget.sha256,report.sharedBudget.sha256After);
+ assert.ok(report.reservationEnvelopeYuan.lower>3);assert.ok(report.reservationEnvelopeYuan.upper>report.reservationEnvelopeYuan.lower);
+ for(const name of ['budget.json','allocation.json','terminal.json','first-source-evidence.json','batch-0.json','incremental-l4.json'])await assert.rejects(fs.stat(path.join(firstReviewRoot,name)),/ENOENT/);
 });
