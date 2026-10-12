@@ -1,0 +1,453 @@
+{
+  "id": "npc_hw_luqing",
+  "fingerprint": "9e41a3ef441132d199cdf535b3ac2edeac771e13d60360d03775a8dee446020c",
+  "status": "manual",
+  "attempts": 3,
+  "draft": {
+    "id": "npc_hw_luqing",
+    "contract": "audit-patch-v1",
+    "patches": [
+      {
+        "path": "knowledge.known[1]",
+        "value": {
+          "fact": "整理散页时发现缺了来源的传闻很难再核实",
+          "source": "npc_hw_luqing",
+          "reliability": "亲历"
+        }
+      },
+      {
+        "path": "knowledge.known[2]",
+        "value": {
+          "fact": "陆青和沈渡谈抄记的引文与来源，公开记录和私人邮件分开保管，封缄信件仍留给收件人。",
+          "source": "npc_hw_luqing",
+          "reliability": "亲历"
+        }
+      },
+      {
+        "path": "knowledge.unknown[0]",
+        "value": "白蕙是否读清这次学过的常用字，何时上课能避开田间活。"
+      },
+      {
+        "path": "knowledge.unknown[1]",
+        "value": "沈渡何时方便核对公开抄本的引文，哪页缺了来源。"
+      },
+      {
+        "path": "goals.short[0].steps[1].content",
+        "value": "逐页整理现有抄本，把缺页和缺来源的地方分别记下。"
+      },
+      {
+        "path": "goals.mid[0].steps[1].content",
+        "value": "询问借阅者可用时间，再与有关住户商量保管和归还办法。"
+      },
+      {
+        "path": "goals.long[0].steps[1].content",
+        "value": "用公开公告和合同练习识字，逐句核对白蕙等学者读懂的部分。"
+      },
+      {
+        "path": "voice.register",
+        "value": "学堂讲解口吻，用日常事物解释词义，注明读到的来源"
+      },
+      {
+        "path": "memorySeeds[2]",
+        "value": {
+          "id": "memory_t10_record-sources",
+          "event": "在旧渡口公用水盏周边，陆青和沈渡谈抄记的引文与来源，公开记录和私人邮件分开保管，封缄信件仍留给收件人。",
+          "knownBy": [
+            "npc_hw_luqing",
+            "npc_hw_shendu"
+          ],
+          "salience": 3,
+          "reliability": "亲历",
+          "location": "loc_hw_dock"
+        }
+      }
+    ]
+  },
+  "review": {
+    "contradictions": [
+      {
+        "quote": "用公开公告和合同练习识字，逐句核对白蕙等学者读懂的部分。",
+        "field": "goals.long[0].steps[1].content",
+        "severity": "hard",
+        "reason": "白蕙的公开身份是“学识字的田间雇工”，并非“学者”；该步骤把白蕙称为学者，与已发布人物事实相反。"
+      },
+      {
+        "quote": "白蕙是否读清这次学过的常用字，何时上课能避开田间活。",
+        "field": "knowledge.unknown[0]",
+        "severity": "soft",
+        "reason": "“这次学过的常用字”暗示已发生一次具体识字课，但骨架与已发布事实未记载陆青与白蕙有过这次教学事件，属于新增未依据的具体事件。"
+      },
+      {
+        "severity": "hard",
+        "field": "reviewedPaths",
+        "quote": "出处及候选覆盖凭证",
+        "reason": "L2漏审修订叶子\n+ actual - expected\n\n+ []\n- [\n-   'goals.long[0].steps[1].content',\n-   'goals.mid[0].steps[1].content',\n-   'goals.short[0].steps[1].content',\n-   'knowledge.known[1]',\n-   'knowledge.known[2]',\n-   'knowledge.unknown[0]',\n-   'knowledge.unknown[1]',\n-   'memorySeeds[2]',\n-   'voice.register'\n- ]\n"
+      }
+    ],
+    "backgroundReviews": [
+      {
+        "eventId": "memory_t10_record-sources",
+        "sourceHash": "d4cb722ab2388cc077c9011a337f0e7a81f70f0cf60d5655e925ee8e479dc1d9",
+        "reviewedRiskPaths": [
+          "npc_hw_luqing.secrets[0]",
+          "npc_hw_shendu.secrets[0]"
+        ],
+        "contradictions": []
+      }
+    ]
+  },
+  "errors": [
+    {
+      "quote": "用公开公告和合同练习识字，逐句核对白蕙等学者读懂的部分。",
+      "field": "goals.long[0].steps[1].content",
+      "severity": "hard",
+      "reason": "白蕙的公开身份是“学识字的田间雇工”，并非“学者”；该步骤把白蕙称为学者，与已发布人物事实相反。"
+    },
+    {
+      "severity": "hard",
+      "field": "reviewedPaths",
+      "quote": "出处及候选覆盖凭证",
+      "reason": "L2漏审修订叶子\n+ actual - expected\n\n+ []\n- [\n-   'goals.long[0].steps[1].content',\n-   'goals.mid[0].steps[1].content',\n-   'goals.short[0].steps[1].content',\n-   'knowledge.known[1]',\n-   'knowledge.known[2]',\n-   'knowledge.unknown[0]',\n-   'knowledge.unknown[1]',\n-   'memorySeeds[2]',\n-   'voice.register'\n- ]\n"
+    }
+  ],
+  "warnings": [
+    {
+      "quote": "白蕙是否读清这次学过的常用字，何时上课能避开田间活。",
+      "field": "knowledge.unknown[0]",
+      "severity": "soft",
+      "reason": "“这次学过的常用字”暗示已发生一次具体识字课，但骨架与已发布事实未记载陆青与白蕙有过这次教学事件，属于新增未依据的具体事件。"
+    }
+  ],
+  "feedback": [
+    {
+      "quote": "用公开公告和合同练习识字，逐句核对白蕙等学者读懂的部分。",
+      "field": "goals.long[0].steps[1].content",
+      "severity": "hard",
+      "reason": "白蕙的公开身份是“学识字的田间雇工”，并非“学者”；该步骤把白蕙称为学者，与已发布人物事实相反。"
+    },
+    {
+      "severity": "hard",
+      "field": "reviewedPaths",
+      "quote": "出处及候选覆盖凭证",
+      "reason": "L2漏审修订叶子\n+ actual - expected\n\n+ []\n- [\n-   'goals.long[0].steps[1].content',\n-   'goals.mid[0].steps[1].content',\n-   'goals.short[0].steps[1].content',\n-   'knowledge.known[1]',\n-   'knowledge.known[2]',\n-   'knowledge.unknown[0]',\n-   'knowledge.unknown[1]',\n-   'memorySeeds[2]',\n-   'voice.register'\n- ]\n"
+    }
+  ],
+  "draftResponse": {
+    "id": "83beaf5c-5c55-4bb8-8d92-c40bded15083",
+    "object": "chat.completion",
+    "created": 1791765590,
+    "model": "deepseek-flash",
+    "choices": [
+      {
+        "index": 0,
+        "message": {
+          "role": "assistant",
+          "content": "{\"id\":\"npc_hw_luqing\",\"contract\":\"audit-patch-v1\",\"patches\":[{\"path\":\"knowledge.known[1]\",\"value\":{\"fact\":\"整理散页时发现缺了来源的传闻很难再核实\",\"source\":\"npc_hw_luqing\",\"reliability\":\"亲历\"}},{\"path\":\"knowledge.known[2]\",\"value\":{\"fact\":\"陆青和沈渡谈抄记的引文与来源，公开记录和私人邮件分开保管，封缄信件仍留给收件人。\",\"source\":\"npc_hw_luqing\",\"reliability\":\"亲历\"}},{\"path\":\"knowledge.unknown[0]\",\"value\":\"白蕙是否读清这次学过的常用字，何时上课能避开田间活。\"},{\"path\":\"knowledge.unknown[1]\",\"value\":\"沈渡何时方便核对公开抄本的引文，哪页缺了来源。\"},{\"path\":\"goals.short[0].steps[1].content\",\"value\":\"逐页整理现有抄本，把缺页和缺来源的地方分别记下。\"},{\"path\":\"goals.mid[0].steps[1].content\",\"value\":\"询问借阅者可用时间，再与有关住户商量保管和归还办法。\"},{\"path\":\"goals.long[0].steps[1].content\",\"value\":\"用公开公告和合同练习识字，逐句核对白蕙等学者读懂的部分。\"},{\"path\":\"voice.register\",\"value\":\"学堂讲解口吻，用日常事物解释词义，注明读到的来源\"},{\"path\":\"memorySeeds[2]\",\"value\":{\"id\":\"memory_t10_record-sources\",\"event\":\"在旧渡口公用水盏周边，陆青和沈渡谈抄记的引文与来源，公开记录和私人邮件分开保管，封缄信件仍留给收件人。\",\"knownBy\":[\"npc_hw_luqing\",\"npc_hw_shendu\"],\"salience\":3,\"reliability\":\"亲历\",\"location\":\"loc_hw_dock\"}}]}"
+        },
+        "logprobs": null,
+        "finish_reason": "stop"
+      }
+    ],
+    "usage": {
+      "prompt_tokens": 8389,
+      "completion_tokens": 432,
+      "total_tokens": 8821,
+      "prompt_tokens_details": {
+        "cached_tokens": 8064
+      },
+      "prompt_cache_hit_tokens": 8064,
+      "prompt_cache_miss_tokens": 325
+    },
+    "system_fingerprint": "aeb56401ca74e127821c4f9126dcb669",
+    "measurement": {
+      "label": "content-first-review-npc_hw_luqing-draft2",
+      "model": "deepseek-flash",
+      "thinking": "disabled",
+      "usage": {
+        "prompt_tokens": 8389,
+        "completion_tokens": 432,
+        "total_tokens": 8821,
+        "prompt_tokens_details": {
+          "cached_tokens": 8064
+        },
+        "prompt_cache_hit_tokens": 8064,
+        "prompt_cache_miss_tokens": 325
+      },
+      "costUpperYuan": 0.00442856,
+      "cumulativeUpperYuan": 5.758168240000001,
+      "latencyMs": 1964.7820000000065,
+      "timestamp": "2026-10-12T00:39:53.217Z"
+    }
+  },
+  "measurements": [
+    {
+      "label": "content-first-review-npc_hw_luqing-draft0",
+      "model": "deepseek-flash",
+      "thinking": "disabled",
+      "usage": {
+        "prompt_tokens": 8135,
+        "completion_tokens": 432,
+        "total_tokens": 8567,
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        },
+        "prompt_cache_hit_tokens": 0,
+        "prompt_cache_miss_tokens": 8135
+      },
+      "costUpperYuan": 0.019726,
+      "cumulativeUpperYuan": 5.697542400000001,
+      "latencyMs": 2024.8061000000016,
+      "timestamp": "2026-10-12T00:39:44.199Z"
+    },
+    {
+      "label": "content-first-review-npc_hw_luqing-review0",
+      "model": "deepseek-flash",
+      "thinking": "disabled",
+      "usage": {
+        "prompt_tokens": 23188,
+        "completion_tokens": 275,
+        "total_tokens": 23463,
+        "prompt_tokens_details": {
+          "cached_tokens": 128
+        },
+        "prompt_cache_hit_tokens": 128,
+        "prompt_cache_miss_tokens": 23060
+      },
+      "costUpperYuan": 0.04832512,
+      "cumulativeUpperYuan": 5.745867520000001,
+      "latencyMs": 2672.5323999999964,
+      "timestamp": "2026-10-12T00:39:46.879Z"
+    },
+    {
+      "label": "content-first-review-npc_hw_luqing-draft1",
+      "model": "deepseek-flash",
+      "thinking": "disabled",
+      "usage": {
+        "prompt_tokens": 8382,
+        "completion_tokens": 432,
+        "total_tokens": 8814,
+        "prompt_tokens_details": {
+          "cached_tokens": 8064
+        },
+        "prompt_cache_hit_tokens": 8064,
+        "prompt_cache_miss_tokens": 318
+      },
+      "costUpperYuan": 0.00441456,
+      "cumulativeUpperYuan": 5.750282080000001,
+      "latencyMs": 2153.082600000009,
+      "timestamp": "2026-10-12T00:39:49.040Z"
+    },
+    {
+      "label": "content-first-review-npc_hw_luqing-review1",
+      "model": "deepseek-flash",
+      "thinking": "disabled",
+      "usage": {
+        "prompt_tokens": 23188,
+        "completion_tokens": 280,
+        "total_tokens": 23468,
+        "prompt_tokens_details": {
+          "cached_tokens": 23040
+        },
+        "prompt_cache_hit_tokens": 23040,
+        "prompt_cache_miss_tokens": 148
+      },
+      "costUpperYuan": 0.0034576,
+      "cumulativeUpperYuan": 5.753739680000001,
+      "latencyMs": 2198.956999999995,
+      "timestamp": "2026-10-12T00:39:51.245Z"
+    },
+    {
+      "label": "content-first-review-npc_hw_luqing-draft2",
+      "model": "deepseek-flash",
+      "thinking": "disabled",
+      "usage": {
+        "prompt_tokens": 8389,
+        "completion_tokens": 432,
+        "total_tokens": 8821,
+        "prompt_tokens_details": {
+          "cached_tokens": 8064
+        },
+        "prompt_cache_hit_tokens": 8064,
+        "prompt_cache_miss_tokens": 325
+      },
+      "costUpperYuan": 0.00442856,
+      "cumulativeUpperYuan": 5.758168240000001,
+      "latencyMs": 1964.7820000000065,
+      "timestamp": "2026-10-12T00:39:53.217Z"
+    },
+    {
+      "label": "content-first-review-npc_hw_luqing-review2",
+      "model": "deepseek-flash",
+      "thinking": "disabled",
+      "usage": {
+        "prompt_tokens": 23188,
+        "completion_tokens": 258,
+        "total_tokens": 23446,
+        "prompt_tokens_details": {
+          "cached_tokens": 23040
+        },
+        "prompt_cache_hit_tokens": 23040,
+        "prompt_cache_miss_tokens": 148
+      },
+      "costUpperYuan": 0.0032816,
+      "cumulativeUpperYuan": 5.761449840000001,
+      "latencyMs": 1977.9964000000036,
+      "timestamp": "2026-10-12T00:39:55.202Z"
+    }
+  ],
+  "rawProviderReviewResponses": [
+    {
+      "attempt": 1,
+      "response": {
+        "id": "07ac3570-6322-46f0-b4d0-8eccfeed59ac",
+        "object": "chat.completion",
+        "created": 1791765583,
+        "model": "deepseek-flash",
+        "choices": [
+          {
+            "index": 0,
+            "message": {
+              "role": "assistant",
+              "content": "{\"contradictions\":[{\"quote\":\"用公开公告和合同练习识字，逐句核对白蕙等学者读懂的部分。\",\"field\":\"goals.long[0].steps[1].content\",\"severity\":\"hard\",\"reason\":\"白蕙的公开身份是“学识字的田间雇工”，并非学者；将其称为学者与已发布事实相反，且新增了其识字水平/身份能力。\"},{\"quote\":\"白蕙是否读清这次学过的常用字，何时上课能避开田间活。\",\"field\":\"knowledge.unknown[0]\",\"severity\":\"soft\",\"reason\":\"“这次学过的常用字”暗示已发生一次具体教学，但骨架与来源未记载陆青已给白蕙上过课；作为未知项可保留待知，但该措辞把未发生事件当作已发生。\"},{\"quote\":\"沈渡何时方便核对公开抄本的引文，哪页缺了来源。\",\"field\":\"knowledge.unknown[1]\",\"severity\":\"soft\",\"reason\":\"“哪页缺了来源”暗示已存在具体缺来源的公开抄本页，但骨架仅记载“整理散页时发现缺了来源的传闻很难再核实”，未记载具体缺页抄本；作为未知项可询问，但措辞预设了未记载的具体缺页事实。\"}]}"
+            },
+            "logprobs": null,
+            "finish_reason": "stop"
+          }
+        ],
+        "usage": {
+          "prompt_tokens": 23188,
+          "completion_tokens": 275,
+          "total_tokens": 23463,
+          "prompt_tokens_details": {
+            "cached_tokens": 128
+          },
+          "prompt_cache_hit_tokens": 128,
+          "prompt_cache_miss_tokens": 23060
+        },
+        "system_fingerprint": "aeb56401ca74e127821c4f9126dcb669",
+        "measurement": {
+          "label": "content-first-review-npc_hw_luqing-review0",
+          "model": "deepseek-flash",
+          "thinking": "disabled",
+          "usage": {
+            "prompt_tokens": 23188,
+            "completion_tokens": 275,
+            "total_tokens": 23463,
+            "prompt_tokens_details": {
+              "cached_tokens": 128
+            },
+            "prompt_cache_hit_tokens": 128,
+            "prompt_cache_miss_tokens": 23060
+          },
+          "costUpperYuan": 0.04832512,
+          "cumulativeUpperYuan": 5.745867520000001,
+          "latencyMs": 2672.5323999999964,
+          "timestamp": "2026-10-12T00:39:46.879Z"
+        }
+      },
+      "hash": "becb537c34840e8b0b7ef0310e1bd33fb8521f71496194ed331804639bdc2362"
+    },
+    {
+      "attempt": 2,
+      "response": {
+        "id": "e950a55a-30f9-4b15-912e-024d5c85ab93",
+        "object": "chat.completion",
+        "created": 1791765588,
+        "model": "deepseek-flash",
+        "choices": [
+          {
+            "index": 0,
+            "message": {
+              "role": "assistant",
+              "content": "{\"contradictions\":[{\"quote\":\"用公开公告和合同练习识字，逐句核对白蕙等学者读懂的部分。\",\"field\":\"goals.long[0].steps[1].content\",\"severity\":\"hard\",\"reason\":\"白蕙的公开身份是“学识字的田间雇工”，并非学者；该步骤把白蕙称为学者，与已发布人物事实相反，且新增了骨架未支持的“学者”身份。\"},{\"quote\":\"白蕙是否读清这次学过的常用字，何时上课能避开田间活。\",\"field\":\"knowledge.unknown[0]\",\"severity\":\"soft\",\"reason\":\"“这次学过的常用字”暗示已发生一次具体识字教学，但骨架与已发布事实未记载陆青与白蕙之间已有这次教学；作为未知项可保留待知，但表述预设了未记载的既有教学事件。\"}],\"backgroundReviews\":[{\"eventId\":\"memory_t10_record-sources\",\"sourceHash\":\"d4cb722ab2388cc077c9011a337f0e7a81f70f0cf60d5655e925ee8e479dc1d9\",\"reviewedRiskPaths\":[\"npc_hw_luqing.secrets[0]\",\"npc_hw_shendu.secrets[0]\"],\"contradictions\":[]}]}"
+            },
+            "logprobs": null,
+            "finish_reason": "stop"
+          }
+        ],
+        "usage": {
+          "prompt_tokens": 23188,
+          "completion_tokens": 280,
+          "total_tokens": 23468,
+          "prompt_tokens_details": {
+            "cached_tokens": 23040
+          },
+          "prompt_cache_hit_tokens": 23040,
+          "prompt_cache_miss_tokens": 148
+        },
+        "system_fingerprint": "aeb56401ca74e127821c4f9126dcb669",
+        "measurement": {
+          "label": "content-first-review-npc_hw_luqing-review1",
+          "model": "deepseek-flash",
+          "thinking": "disabled",
+          "usage": {
+            "prompt_tokens": 23188,
+            "completion_tokens": 280,
+            "total_tokens": 23468,
+            "prompt_tokens_details": {
+              "cached_tokens": 23040
+            },
+            "prompt_cache_hit_tokens": 23040,
+            "prompt_cache_miss_tokens": 148
+          },
+          "costUpperYuan": 0.0034576,
+          "cumulativeUpperYuan": 5.753739680000001,
+          "latencyMs": 2198.956999999995,
+          "timestamp": "2026-10-12T00:39:51.245Z"
+        }
+      },
+      "hash": "4ba612599f3033ab881ce9bbe7c56a00d001ff93006efc3051eb6cc8bc76e53d"
+    },
+    {
+      "attempt": 3,
+      "response": {
+        "id": "68286f10-9bd3-499f-91e5-38e8e814c9cc",
+        "object": "chat.completion",
+        "created": 1791765592,
+        "model": "deepseek-flash",
+        "choices": [
+          {
+            "index": 0,
+            "message": {
+              "role": "assistant",
+              "content": "{\"contradictions\":[{\"quote\":\"用公开公告和合同练习识字，逐句核对白蕙等学者读懂的部分。\",\"field\":\"goals.long[0].steps[1].content\",\"severity\":\"hard\",\"reason\":\"白蕙的公开身份是“学识字的田间雇工”，并非“学者”；该步骤把白蕙称为学者，与已发布人物事实相反。\"},{\"quote\":\"白蕙是否读清这次学过的常用字，何时上课能避开田间活。\",\"field\":\"knowledge.unknown[0]\",\"severity\":\"soft\",\"reason\":\"“这次学过的常用字”暗示已发生一次具体识字课，但骨架与已发布事实未记载陆青与白蕙有过这次教学事件，属于新增未依据的具体事件。\"}],\"backgroundReviews\":[{\"eventId\":\"memory_t10_record-sources\",\"sourceHash\":\"d4cb722ab2388cc077c9011a337f0e7a81f70f0cf60d5655e925ee8e479dc1d9\",\"reviewedRiskPaths\":[\"npc_hw_luqing.secrets[0]\",\"npc_hw_shendu.secrets[0]\"],\"contradictions\":[]}]}"
+            },
+            "logprobs": null,
+            "finish_reason": "stop"
+          }
+        ],
+        "usage": {
+          "prompt_tokens": 23188,
+          "completion_tokens": 258,
+          "total_tokens": 23446,
+          "prompt_tokens_details": {
+            "cached_tokens": 23040
+          },
+          "prompt_cache_hit_tokens": 23040,
+          "prompt_cache_miss_tokens": 148
+        },
+        "system_fingerprint": "aeb56401ca74e127821c4f9126dcb669",
+        "measurement": {
+          "label": "content-first-review-npc_hw_luqing-review2",
+          "model": "deepseek-flash",
+          "thinking": "disabled",
+          "usage": {
+            "prompt_tokens": 23188,
+            "completion_tokens": 258,
+            "total_tokens": 23446,
+            "prompt_tokens_details": {
+              "cached_tokens": 23040
+            },
+            "prompt_cache_hit_tokens": 23040,
+            "prompt_cache_miss_tokens": 148
+          },
+          "costUpperYuan": 0.0032816,
+          "cumulativeUpperYuan": 5.761449840000001,
+          "latencyMs": 1977.9964000000036,
+          "timestamp": "2026-10-12T00:39:55.202Z"
+        }
+      },
+      "hash": "ad76afe317007da96ec05e4b887307310ee09907d6b73e1034914ce0623e2ed4"
+    }
+  ]
+}

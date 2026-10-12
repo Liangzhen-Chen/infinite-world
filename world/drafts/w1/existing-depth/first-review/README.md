@@ -11,3 +11,9 @@
 最终准备命令为 `node tools/npc-depth.mjs --design world/design/w1-existing-depth-first-review.mjs --root world/drafts/w1/existing-depth/first-review --card T10 --authored-background world/drafts/w1/existing-depth/first-review/authored-background.json --prepare`。准备不调用模型；真实审核须等待主会话分配运行槽，并沿同一共享预算。
 
 官方 prepare 及重跑零写入核验已完成：32 份候选、5 条独立新背景，合并审计零缺口，原 17 人 traits 保留。三份相关测试 27 项和 CORE 38 项通过，日志与源哈希见 `offline-report.json`。原作者目录的五份冻结 artifact 与 `4f0bfe4` 的哈希一致；本次没有新额度或模型费用，L2、L4 未跑。
+
+首次真实轮已自然结束并停止付费请求，结果见 `real-review-report.json`：19 人通过 L1/L2，13 人为 manual，120 个已结算请求共 1.99097608 元。T10 上限仍为 3 元，预留为零；共享账保留 T06 的 0.083736 元未知预留。离线报告是运行前快照，不能代表这次真实结果。
+
+12 个新背景参与者的 provider 响应缺少 `reviewedPaths`，其中陆青还把学识字田间雇工白蕙称为“学者”，构成真实身份措辞 hard。许苓另因原引用投影未包含陶芷 notes 中的母亲关节病而失败。36 份新背景原始 L2 响应的 `finish_reason` 均为 `stop`；许苓旧合同未持久化 L2 transport，结束原因未知，不能用 draft 的 `stop` 代替。候选和出处均未改，coverage 没有放宽。
+
+19 条通过记录和五条独立背景已有逐叶、逐风险阅读 notes，但 13 条未过阻止原批与独立出处 L4 正式注册，整体未发布。只相关测试 27 项与 CORE 38 项再次通过。后续修订交主会话规划，原失败、费用、候选和来源证据保留，不重复抽签式审核。

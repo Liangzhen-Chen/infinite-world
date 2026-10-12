@@ -1,0 +1,476 @@
+{
+  "id": "npc_hw_gucen",
+  "fingerprint": "e73509817267da6da42c1c08eb298aade147ec54a3067178fb3419d4c0cac2ad",
+  "status": "manual",
+  "attempts": 3,
+  "draft": {
+    "id": "npc_hw_gucen",
+    "contract": "audit-patch-v1",
+    "patches": [
+      {
+        "path": "knowledge.known[1]",
+        "value": {
+          "fact": "在一次纠纷中听完双方才明白先到场的人也会省略细节",
+          "source": "npc_hw_gucen",
+          "reliability": "亲历"
+        }
+      },
+      {
+        "path": "knowledge.known[2]",
+        "value": {
+          "fact": "费铠做屋檐登高工作前向顾岑说清外侧檐下的危险，提醒底下这段先避开行人。",
+          "source": "npc_hw_gucen",
+          "reliability": "亲历"
+        }
+      },
+      {
+        "path": "knowledge.unknown[0]",
+        "value": "费铠哪次准备查看外侧屋檐，需要避开哪段行人。"
+      },
+      {
+        "path": "knowledge.unknown[1]",
+        "value": "沈渡收到的公开消息来源是谁，实际抵达时刻是否核清。"
+      },
+      {
+        "path": "goals.short[0].steps[1].content",
+        "value": "把亲见巡查和转述证词分栏，逐项写清来源。"
+      },
+      {
+        "path": "goals.mid[0].steps[1].content",
+        "value": "先请年轻人分别复述争执经过，再练习核对时间和在场者。"
+      },
+      {
+        "path": "goals.long[0].steps[1].content",
+        "value": "就具体纠纷听证词和已有证据，再与陈柏核对可调解的范围。"
+      },
+      {
+        "path": "voice.register",
+        "value": "乡巡调解口吻，措辞稳重，分别复述各人的证词"
+      },
+      {
+        "path": "memorySeeds[2]",
+        "value": {
+          "id": "memory_t10_eaves-warning",
+          "event": "在旧渡口公用水盏周边，费铠做屋檐登高工作前向顾岑说清外侧檐下的危险，提醒底下这段先避开行人。",
+          "knownBy": [
+            "npc_hw_feikai",
+            "npc_hw_gucen"
+          ],
+          "salience": 3,
+          "reliability": "亲历",
+          "location": "loc_hw_dock"
+        }
+      },
+      {
+        "path": "relationships[0].note",
+        "value": "与陈柏共同做村内调解，先听证词，再核对会议和账簿记录。"
+      }
+    ]
+  },
+  "review": {
+    "contradictions": [
+      {
+        "quote": "费铠做屋檐登高工作前向顾岑说清外侧檐下的危险，提醒底下这段先避开行人。",
+        "field": "knowledge.known[2]",
+        "severity": "soft",
+        "reason": "该事实来自费铠的私有 voice.samples[2] 与私有关系备注，原档未记载顾岑亲历此提醒；将其写成顾岑亲历的已知事实，等于把费铠的私有说话内容转为顾岑的私有知识，超出原来源的公开说话范围。"
+      },
+      {
+        "quote": "费铠哪次准备查看外侧屋檐，需要避开哪段行人。",
+        "field": "knowledge.unknown[0]",
+        "severity": "soft",
+        "reason": "若顾岑已亲历费铠的登高前提醒（见 knowledge.known[2]），则“哪次准备查看外侧屋檐”已部分获知，与同档已知事实自相矛盾；未知项应指向尚未获知的具体事项。"
+      },
+      {
+        "quote": "沈渡收到的公开消息来源是谁，实际抵达时刻是否核清。",
+        "field": "knowledge.unknown[1]",
+        "severity": "soft",
+        "reason": "沈渡的 goals.mid[0].content 与 notes 为私有来源，原档未记载顾岑与沈渡有该消息核对往来；将其列为顾岑的具体未知事项，暗示顾岑已知沈渡收到某公开消息，超出原关系备注“只核对获准公开的消息”的范围。"
+      },
+      {
+        "quote": "与陈柏共同做村内调解，先听证词，再核对会议和账簿记录。",
+        "field": "relationships[0].note",
+        "severity": "soft",
+        "reason": "“核对会议和账簿记录”来自陈柏的私有 notes，原关系备注仅写“共同处理村务但可相互反对”；新增具体核对会议与账簿的持续做法，超出原关系备注所载范围。"
+      },
+      {
+        "quote": "在旧渡口公用水盏周边，费铠做屋檐登高工作前向顾岑说清外侧檐下的危险，提醒底下这段先避开行人。",
+        "field": "memorySeeds[2]",
+        "severity": "soft",
+        "reason": "该共享记忆的双方 knownBy 为费铠与顾岑，但原档中费铠的 voice.samples[2] 是私有样例且注明“原样例不是已经发生的修缮记录”；将其固化为已发生的共享亲历记忆，超出原来源授权。"
+      },
+      {
+        "severity": "hard",
+        "field": "reviewedPaths",
+        "quote": "出处及候选覆盖凭证",
+        "reason": "L2漏审修订叶子\n+ actual - expected\n\n+ []\n- [\n-   'goals.long[0].steps[1].content',\n-   'goals.mid[0].steps[1].content',\n-   'goals.short[0].steps[1].content',\n-   'knowledge.known[1]',\n-   'knowledge.known[2]',\n-   'knowledge.unknown[0]',\n-   'knowledge.unknown[1]',\n-   'memorySeeds[2]',\n-   'relationships[0].note',\n-   'voice.register'\n- ]\n"
+      }
+    ]
+  },
+  "errors": [
+    {
+      "severity": "hard",
+      "field": "reviewedPaths",
+      "quote": "出处及候选覆盖凭证",
+      "reason": "L2漏审修订叶子\n+ actual - expected\n\n+ []\n- [\n-   'goals.long[0].steps[1].content',\n-   'goals.mid[0].steps[1].content',\n-   'goals.short[0].steps[1].content',\n-   'knowledge.known[1]',\n-   'knowledge.known[2]',\n-   'knowledge.unknown[0]',\n-   'knowledge.unknown[1]',\n-   'memorySeeds[2]',\n-   'relationships[0].note',\n-   'voice.register'\n- ]\n"
+    }
+  ],
+  "warnings": [
+    {
+      "quote": "费铠做屋檐登高工作前向顾岑说清外侧檐下的危险，提醒底下这段先避开行人。",
+      "field": "knowledge.known[2]",
+      "severity": "soft",
+      "reason": "该事实来自费铠的私有 voice.samples[2] 与私有关系备注，原档未记载顾岑亲历此提醒；将其写成顾岑亲历的已知事实，等于把费铠的私有说话内容转为顾岑的私有知识，超出原来源的公开说话范围。"
+    },
+    {
+      "quote": "费铠哪次准备查看外侧屋檐，需要避开哪段行人。",
+      "field": "knowledge.unknown[0]",
+      "severity": "soft",
+      "reason": "若顾岑已亲历费铠的登高前提醒（见 knowledge.known[2]），则“哪次准备查看外侧屋檐”已部分获知，与同档已知事实自相矛盾；未知项应指向尚未获知的具体事项。"
+    },
+    {
+      "quote": "沈渡收到的公开消息来源是谁，实际抵达时刻是否核清。",
+      "field": "knowledge.unknown[1]",
+      "severity": "soft",
+      "reason": "沈渡的 goals.mid[0].content 与 notes 为私有来源，原档未记载顾岑与沈渡有该消息核对往来；将其列为顾岑的具体未知事项，暗示顾岑已知沈渡收到某公开消息，超出原关系备注“只核对获准公开的消息”的范围。"
+    },
+    {
+      "quote": "与陈柏共同做村内调解，先听证词，再核对会议和账簿记录。",
+      "field": "relationships[0].note",
+      "severity": "soft",
+      "reason": "“核对会议和账簿记录”来自陈柏的私有 notes，原关系备注仅写“共同处理村务但可相互反对”；新增具体核对会议与账簿的持续做法，超出原关系备注所载范围。"
+    },
+    {
+      "quote": "在旧渡口公用水盏周边，费铠做屋檐登高工作前向顾岑说清外侧檐下的危险，提醒底下这段先避开行人。",
+      "field": "memorySeeds[2]",
+      "severity": "soft",
+      "reason": "该共享记忆的双方 knownBy 为费铠与顾岑，但原档中费铠的 voice.samples[2] 是私有样例且注明“原样例不是已经发生的修缮记录”；将其固化为已发生的共享亲历记忆，超出原来源授权。"
+    }
+  ],
+  "feedback": [
+    {
+      "severity": "hard",
+      "field": "reviewedPaths",
+      "quote": "出处及候选覆盖凭证",
+      "reason": "L2漏审修订叶子\n+ actual - expected\n\n+ []\n- [\n-   'goals.long[0].steps[1].content',\n-   'goals.mid[0].steps[1].content',\n-   'goals.short[0].steps[1].content',\n-   'knowledge.known[1]',\n-   'knowledge.known[2]',\n-   'knowledge.unknown[0]',\n-   'knowledge.unknown[1]',\n-   'memorySeeds[2]',\n-   'relationships[0].note',\n-   'voice.register'\n- ]\n"
+    }
+  ],
+  "draftResponse": {
+    "id": "2257f036-44cb-4687-8387-aa5efc77cc2b",
+    "object": "chat.completion",
+    "created": 1791765550,
+    "model": "deepseek-flash",
+    "choices": [
+      {
+        "index": 0,
+        "message": {
+          "role": "assistant",
+          "content": "{\"id\":\"npc_hw_gucen\",\"contract\":\"audit-patch-v1\",\"patches\":[{\"path\":\"knowledge.known[1]\",\"value\":{\"fact\":\"在一次纠纷中听完双方才明白先到场的人也会省略细节\",\"source\":\"npc_hw_gucen\",\"reliability\":\"亲历\"}},{\"path\":\"knowledge.known[2]\",\"value\":{\"fact\":\"费铠做屋檐登高工作前向顾岑说清外侧檐下的危险，提醒底下这段先避开行人。\",\"source\":\"npc_hw_gucen\",\"reliability\":\"亲历\"}},{\"path\":\"knowledge.unknown[0]\",\"value\":\"费铠哪次准备查看外侧屋檐，需要避开哪段行人。\"},{\"path\":\"knowledge.unknown[1]\",\"value\":\"沈渡收到的公开消息来源是谁，实际抵达时刻是否核清。\"},{\"path\":\"goals.short[0].steps[1].content\",\"value\":\"把亲见巡查和转述证词分栏，逐项写清来源。\"},{\"path\":\"goals.mid[0].steps[1].content\",\"value\":\"先请年轻人分别复述争执经过，再练习核对时间和在场者。\"},{\"path\":\"goals.long[0].steps[1].content\",\"value\":\"就具体纠纷听证词和已有证据，再与陈柏核对可调解的范围。\"},{\"path\":\"voice.register\",\"value\":\"乡巡调解口吻，措辞稳重，分别复述各人的证词\"},{\"path\":\"memorySeeds[2]\",\"value\":{\"id\":\"memory_t10_eaves-warning\",\"event\":\"在旧渡口公用水盏周边，费铠做屋檐登高工作前向顾岑说清外侧檐下的危险，提醒底下这段先避开行人。\",\"knownBy\":[\"npc_hw_feikai\",\"npc_hw_gucen\"],\"salience\":3,\"reliability\":\"亲历\",\"location\":\"loc_hw_dock\"}},{\"path\":\"relationships[0].note\",\"value\":\"与陈柏共同做村内调解，先听证词，再核对会议和账簿记录。\"}]}"
+        },
+        "logprobs": null,
+        "finish_reason": "stop"
+      }
+    ],
+    "usage": {
+      "prompt_tokens": 9087,
+      "completion_tokens": 445,
+      "total_tokens": 9532,
+      "prompt_tokens_details": {
+        "cached_tokens": 8832
+      },
+      "prompt_cache_hit_tokens": 8832,
+      "prompt_cache_miss_tokens": 255
+    },
+    "system_fingerprint": "aeb56401ca74e127821c4f9126dcb669",
+    "measurement": {
+      "label": "content-first-review-npc_hw_gucen-draft2",
+      "model": "deepseek-flash",
+      "thinking": "disabled",
+      "usage": {
+        "prompt_tokens": 9087,
+        "completion_tokens": 445,
+        "total_tokens": 9532,
+        "prompt_tokens_details": {
+          "cached_tokens": 8832
+        },
+        "prompt_cache_hit_tokens": 8832,
+        "prompt_cache_miss_tokens": 255
+      },
+      "costUpperYuan": 0.00442328,
+      "cumulativeUpperYuan": 5.48526968,
+      "latencyMs": 2243.033599999995,
+      "timestamp": "2026-10-12T00:39:13.842Z"
+    }
+  },
+  "measurements": [
+    {
+      "label": "content-first-review-npc_hw_gucen-draft0",
+      "model": "deepseek-flash",
+      "thinking": "disabled",
+      "usage": {
+        "prompt_tokens": 8908,
+        "completion_tokens": 445,
+        "total_tokens": 9353,
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        },
+        "prompt_cache_hit_tokens": 0,
+        "prompt_cache_miss_tokens": 8908
+      },
+      "costUpperYuan": 0.021376,
+      "cumulativeUpperYuan": 5.42573176,
+      "latencyMs": 2119.1312999999936,
+      "timestamp": "2026-10-12T00:39:05.343Z"
+    },
+    {
+      "label": "content-first-review-npc_hw_gucen-review0",
+      "model": "deepseek-flash",
+      "thinking": "disabled",
+      "usage": {
+        "prompt_tokens": 22877,
+        "completion_tokens": 376,
+        "total_tokens": 23253,
+        "prompt_tokens_details": {
+          "cached_tokens": 128
+        },
+        "prompt_cache_hit_tokens": 128,
+        "prompt_cache_miss_tokens": 22749
+      },
+      "costUpperYuan": 0.048511120000000005,
+      "cumulativeUpperYuan": 5.474242879999999,
+      "latencyMs": 3026.6772000000055,
+      "timestamp": "2026-10-12T00:39:08.377Z"
+    },
+    {
+      "label": "content-first-review-npc_hw_gucen-draft1",
+      "model": "deepseek-flash",
+      "thinking": "disabled",
+      "usage": {
+        "prompt_tokens": 9087,
+        "completion_tokens": 445,
+        "total_tokens": 9532,
+        "prompt_tokens_details": {
+          "cached_tokens": 8832
+        },
+        "prompt_cache_hit_tokens": 8832,
+        "prompt_cache_miss_tokens": 255
+      },
+      "costUpperYuan": 0.00442328,
+      "cumulativeUpperYuan": 5.4786661599999995,
+      "latencyMs": 2080.5037999999913,
+      "timestamp": "2026-10-12T00:39:10.463Z"
+    },
+    {
+      "label": "content-first-review-npc_hw_gucen-review1",
+      "model": "deepseek-flash",
+      "thinking": "disabled",
+      "usage": {
+        "prompt_tokens": 22877,
+        "completion_tokens": 104,
+        "total_tokens": 22981,
+        "prompt_tokens_details": {
+          "cached_tokens": 22656
+        },
+        "prompt_cache_hit_tokens": 22656,
+        "prompt_cache_miss_tokens": 221
+      },
+      "costUpperYuan": 0.00218024,
+      "cumulativeUpperYuan": 5.4808464,
+      "latencyMs": 1121.5141999999905,
+      "timestamp": "2026-10-12T00:39:11.591Z"
+    },
+    {
+      "label": "content-first-review-npc_hw_gucen-draft2",
+      "model": "deepseek-flash",
+      "thinking": "disabled",
+      "usage": {
+        "prompt_tokens": 9087,
+        "completion_tokens": 445,
+        "total_tokens": 9532,
+        "prompt_tokens_details": {
+          "cached_tokens": 8832
+        },
+        "prompt_cache_hit_tokens": 8832,
+        "prompt_cache_miss_tokens": 255
+      },
+      "costUpperYuan": 0.00442328,
+      "cumulativeUpperYuan": 5.48526968,
+      "latencyMs": 2243.033599999995,
+      "timestamp": "2026-10-12T00:39:13.842Z"
+    },
+    {
+      "label": "content-first-review-npc_hw_gucen-review2",
+      "model": "deepseek-flash",
+      "thinking": "disabled",
+      "usage": {
+        "prompt_tokens": 22877,
+        "completion_tokens": 504,
+        "total_tokens": 23381,
+        "prompt_tokens_details": {
+          "cached_tokens": 22656
+        },
+        "prompt_cache_hit_tokens": 22656,
+        "prompt_cache_miss_tokens": 221
+      },
+      "costUpperYuan": 0.00538024,
+      "cumulativeUpperYuan": 5.49064992,
+      "latencyMs": 3840.616300000009,
+      "timestamp": "2026-10-12T00:39:17.690Z"
+    }
+  ],
+  "rawProviderReviewResponses": [
+    {
+      "attempt": 1,
+      "response": {
+        "id": "57d8e87a-7ea9-4f15-991d-24db0d3cd294",
+        "object": "chat.completion",
+        "created": 1791765544,
+        "model": "deepseek-flash",
+        "choices": [
+          {
+            "index": 0,
+            "message": {
+              "role": "assistant",
+              "content": "{\"contradictions\":[{\"quote\":\"费铠做屋檐登高工作前向顾岑说清外侧檐下的危险，提醒底下这段先避开行人。\",\"field\":\"knowledge.known[2]\",\"severity\":\"soft\",\"reason\":\"该事实来自费铠 voice.samples[2] 的语意冻结，原样例明确不是已经发生的修缮记录；此处作为顾岑亲历的已发生事件写入，把候选语意当成已发生事实，超出原来源授权。\"},{\"quote\":\"费铠哪次准备查看外侧屋檐，需要避开哪段行人。\",\"field\":\"knowledge.unknown[0]\",\"severity\":\"soft\",\"reason\":\"与同一事件已写入 knowledge.known[2] 的“亲历”相冲突：若顾岑亲历了费铠登高前提醒，则不应把“哪次准备查看外侧屋檐、避开哪段行人”列为未知；两处对同一事件的发生与知情状态不一致。\"},{\"quote\":\"与陈柏共同做村内调解，先听证词，再核对会议和账簿记录。\",\"field\":\"relationships[0].note\",\"severity\":\"soft\",\"reason\":\"新增“核对会议和账簿记录”超出原关系备注“共同处理村务但可相互反对”的范围，且陈柏的会议与账簿权限属于其私有 notes 范围，未在顾岑关系来源中授权。\"},{\"quote\":\"沈渡收到的公开消息来源是谁，实际抵达时刻是否核清。\",\"field\":\"knowledge.unknown[1]\",\"severity\":\"soft\",\"reason\":\"沈渡的封缄来信与消息来源属于其私有 notes 范围，顾岑关系仅限“只核对获准公开的消息”；将沈渡具体消息来源与抵达时刻列为顾岑待知事项，超出公开消息核对边界。\"}]}"
+            },
+            "logprobs": null,
+            "finish_reason": "stop"
+          }
+        ],
+        "usage": {
+          "prompt_tokens": 22877,
+          "completion_tokens": 376,
+          "total_tokens": 23253,
+          "prompt_tokens_details": {
+            "cached_tokens": 128
+          },
+          "prompt_cache_hit_tokens": 128,
+          "prompt_cache_miss_tokens": 22749
+        },
+        "system_fingerprint": "aeb56401ca74e127821c4f9126dcb669",
+        "measurement": {
+          "label": "content-first-review-npc_hw_gucen-review0",
+          "model": "deepseek-flash",
+          "thinking": "disabled",
+          "usage": {
+            "prompt_tokens": 22877,
+            "completion_tokens": 376,
+            "total_tokens": 23253,
+            "prompt_tokens_details": {
+              "cached_tokens": 128
+            },
+            "prompt_cache_hit_tokens": 128,
+            "prompt_cache_miss_tokens": 22749
+          },
+          "costUpperYuan": 0.048511120000000005,
+          "cumulativeUpperYuan": 5.474242879999999,
+          "latencyMs": 3026.6772000000055,
+          "timestamp": "2026-10-12T00:39:08.377Z"
+        }
+      },
+      "hash": "b46978d3b542ed432bc7f131b201b7bab529febe68d8ea474e6ec503088b7fa6"
+    },
+    {
+      "attempt": 2,
+      "response": {
+        "id": "8b68744d-ad28-4383-b6a8-f53696f911e4",
+        "object": "chat.completion",
+        "created": 1791765549,
+        "model": "deepseek-flash",
+        "choices": [
+          {
+            "index": 0,
+            "message": {
+              "role": "assistant",
+              "content": "{\"contradictions\":[],\"backgroundReviews\":[{\"eventId\":\"memory_t10_eaves-warning\",\"sourceHash\":\"d4cb722ab2388cc077c9011a337f0e7a81f70f0cf60d5655e925ee8e479dc1d9\",\"reviewedRiskPaths\":[\"npc_hw_feikai.secrets[0]\",\"npc_hw_gucen.secrets[0]\"],\"contradictions\":[]}]}"
+            },
+            "logprobs": null,
+            "finish_reason": "stop"
+          }
+        ],
+        "usage": {
+          "prompt_tokens": 22877,
+          "completion_tokens": 104,
+          "total_tokens": 22981,
+          "prompt_tokens_details": {
+            "cached_tokens": 22656
+          },
+          "prompt_cache_hit_tokens": 22656,
+          "prompt_cache_miss_tokens": 221
+        },
+        "system_fingerprint": "aeb56401ca74e127821c4f9126dcb669",
+        "measurement": {
+          "label": "content-first-review-npc_hw_gucen-review1",
+          "model": "deepseek-flash",
+          "thinking": "disabled",
+          "usage": {
+            "prompt_tokens": 22877,
+            "completion_tokens": 104,
+            "total_tokens": 22981,
+            "prompt_tokens_details": {
+              "cached_tokens": 22656
+            },
+            "prompt_cache_hit_tokens": 22656,
+            "prompt_cache_miss_tokens": 221
+          },
+          "costUpperYuan": 0.00218024,
+          "cumulativeUpperYuan": 5.4808464,
+          "latencyMs": 1121.5141999999905,
+          "timestamp": "2026-10-12T00:39:11.591Z"
+        }
+      },
+      "hash": "1d54acdfb618d1790ce9b24e97fa814c5ebb82f200a45d2b3be81360148b8db3"
+    },
+    {
+      "attempt": 3,
+      "response": {
+        "id": "31d2dbd1-cc53-4531-9051-0886d126e2a1",
+        "object": "chat.completion",
+        "created": 1791765553,
+        "model": "deepseek-flash",
+        "choices": [
+          {
+            "index": 0,
+            "message": {
+              "role": "assistant",
+              "content": "{\"contradictions\":[{\"quote\":\"费铠做屋檐登高工作前向顾岑说清外侧檐下的危险，提醒底下这段先避开行人。\",\"field\":\"knowledge.known[2]\",\"severity\":\"soft\",\"reason\":\"该事实来自费铠的私有 voice.samples[2] 与私有关系备注，原档未记载顾岑亲历此提醒；将其写成顾岑亲历的已知事实，等于把费铠的私有说话内容转为顾岑的私有知识，超出原来源的公开说话范围。\"},{\"quote\":\"费铠哪次准备查看外侧屋檐，需要避开哪段行人。\",\"field\":\"knowledge.unknown[0]\",\"severity\":\"soft\",\"reason\":\"若顾岑已亲历费铠的登高前提醒（见 knowledge.known[2]），则“哪次准备查看外侧屋檐”已部分获知，与同档已知事实自相矛盾；未知项应指向尚未获知的具体事项。\"},{\"quote\":\"沈渡收到的公开消息来源是谁，实际抵达时刻是否核清。\",\"field\":\"knowledge.unknown[1]\",\"severity\":\"soft\",\"reason\":\"沈渡的 goals.mid[0].content 与 notes 为私有来源，原档未记载顾岑与沈渡有该消息核对往来；将其列为顾岑的具体未知事项，暗示顾岑已知沈渡收到某公开消息，超出原关系备注“只核对获准公开的消息”的范围。\"},{\"quote\":\"与陈柏共同做村内调解，先听证词，再核对会议和账簿记录。\",\"field\":\"relationships[0].note\",\"severity\":\"soft\",\"reason\":\"“核对会议和账簿记录”来自陈柏的私有 notes，原关系备注仅写“共同处理村务但可相互反对”；新增具体核对会议与账簿的持续做法，超出原关系备注所载范围。\"},{\"quote\":\"在旧渡口公用水盏周边，费铠做屋檐登高工作前向顾岑说清外侧檐下的危险，提醒底下这段先避开行人。\",\"field\":\"memorySeeds[2]\",\"severity\":\"soft\",\"reason\":\"该共享记忆的双方 knownBy 为费铠与顾岑，但原档中费铠的 voice.samples[2] 是私有样例且注明“原样例不是已经发生的修缮记录”；将其固化为已发生的共享亲历记忆，超出原来源授权。\"}]}"
+            },
+            "logprobs": null,
+            "finish_reason": "stop"
+          }
+        ],
+        "usage": {
+          "prompt_tokens": 22877,
+          "completion_tokens": 504,
+          "total_tokens": 23381,
+          "prompt_tokens_details": {
+            "cached_tokens": 22656
+          },
+          "prompt_cache_hit_tokens": 22656,
+          "prompt_cache_miss_tokens": 221
+        },
+        "system_fingerprint": "aeb56401ca74e127821c4f9126dcb669",
+        "measurement": {
+          "label": "content-first-review-npc_hw_gucen-review2",
+          "model": "deepseek-flash",
+          "thinking": "disabled",
+          "usage": {
+            "prompt_tokens": 22877,
+            "completion_tokens": 504,
+            "total_tokens": 23381,
+            "prompt_tokens_details": {
+              "cached_tokens": 22656
+            },
+            "prompt_cache_hit_tokens": 22656,
+            "prompt_cache_miss_tokens": 221
+          },
+          "costUpperYuan": 0.00538024,
+          "cumulativeUpperYuan": 5.49064992,
+          "latencyMs": 3840.616300000009,
+          "timestamp": "2026-10-12T00:39:17.690Z"
+        }
+      },
+      "hash": "88d48e5dee31a55f1774dc19d9b6b8eb1a829d317945dd1b141203022758e0e4"
+    }
+  ]
+}
