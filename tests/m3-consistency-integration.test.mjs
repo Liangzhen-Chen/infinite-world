@@ -97,3 +97,51 @@ test('警告保留为 issues，已完成审查与可提交分别报告且重读�
  assert.deepEqual(saved.result.firstReview.issues,review.issues);assert.deepEqual(saved.result.review.issues,review.issues);
  const exported=await server.api('export',{campaignId:row.campaignId});assert.equal(exported.events.filter(e=>e.input?.tool==='world_trade').length,1);assert.equal(exported.events.filter(e=>e.input?.tool==='world_turn').length,1);
 });
+
+const recalledFailure='<q who="npc_hw_ayan">这十天我没闲着。两回都成了，工坊那边收了两个铜。</q><回合 额外="5分" 地点="bld_hw_mill" 在场="npc_hw_ayan"/>';
+
+test('N17 服务端实际十天结算只允许一次文字改写，不重做、不重复收费，仍失败阻止尾注',async t=>{
+ for(const badRewrite of [false,true]){
+  let rewriteCalls=0,reviewCalls=0;
+  const client={async generate(body,label){
+   if(label.startsWith('consistency-rewrite:')){
+    rewriteCalls++;assert.equal(body.tools,undefined);
+    const payload=JSON.parse(body.messages.at(-1).content),recall=JSON.parse(payload.evidence.find(row=>row.id==='recall:npc_hw_ayan').text),totals=recall.totals;
+    assert.equal(recall.speaker,'npc_hw_ayan');assert.ok(totals.failures>0);assert.ok(totals.attempts>2);assert.equal(totals.fee,totals.attempts*2);assert.equal(totals.materials.item_wood,totals.attempts);
+    for(const row of payload.evidence.filter(row=>['before','after'].includes(row.id)))assert.equal(JSON.parse(row.text).quests,undefined);
+    const content=badRewrite?recalledFailure:'<q who="npc_hw_ayan">这十天试了'+totals.attempts+'次，有'+totals.successes+'次成功，'+totals.failures+'次失败，工坊费合计'+totals.fee+'铜，用了'+totals.materials.item_wood+'份木料。失败也付了工坊费。</q><回合 额外="5分" 地点="bld_hw_mill" 在场="npc_hw_ayan"/>';
+    return {choices:[{finish_reason:'stop',message:{content}}]};
+   }
+   reviewCalls++;const payload=JSON.parse(body.messages[1].content);assert.ok(payload.evidence.some(row=>row.id==='scene'&&row.text.includes('旧磨坊')));return issuesResponse([]);
+  }};
+  const server=await createPlaytestServer({consistencyClient:client});t.after(()=>server.close());
+  let view=await server.api('create',{});const campaignId=view.reference.campaignId;
+  async function act(tool,args,id){await server.api('execute',{campaignId,anchor:id,eventId:id,tool,args,expectedSequence:view.reference.sequence});view=await server.api('read',{campaignId});}
+  await act('world_move',{destination:'旧磨坊'},'mill');await act('world_move',{destination:'白石镇'},'leave');
+  await act('world_time',{minutes:14400},'ten-days');await act('world_move',{destination:'旧磨坊'},'return');
+  await act('world_time',{until:{dayOffset:1,hour:8,minute:0}},'awake');
+  const before=structuredClone(view.document),anchor='recall';
+  const begun=await server.api('review/begin',{campaignId,anchor,playerText:'我问阿砚这十天忙了什么。只听已有经历，不替他制作。',expectedSequence:view.reference.sequence});
+  const request={campaignId,token:begun.token,draft:recalledFailure,expectedSequence:view.reference.sequence};
+  const reviewed=await server.api('review/reply',request);assert.equal(reviewed.attempts,1);assert.equal(rewriteCalls,1);assert.equal(reviewCalls,2);assert.equal(reviewed.canCommit,!badRewrite);
+  assert.equal(reviewed.rewritten,!badRewrite);if(badRewrite)assert.equal(reviewed.status,'unverified');else assert.equal(reviewed.status,'verified');
+  assert.deepEqual((await server.api('read',{campaignId})).document,before,'回忆审稿和文字改写不得改变任何账本');
+  assert.deepEqual(await server.api('review/reply',request),reviewed);assert.equal(rewriteCalls,1);assert.equal(reviewCalls,2);
+  if(badRewrite)await assert.rejects(server.api('execute',{campaignId,anchor,eventId:'tail',tool:'world_turn',args:reviewed.tail.args,reviewId:reviewed.reviewId,expectedSequence:reviewed.sequence}),/不一致/);
+ }
+});
+
+test('无关说话人泄漏私密委托自动删除，改写提示无全局私密任务且不教给人物',async t=>{
+ let attempts=0;
+ const client={async generate(body,label){
+  if(label.startsWith('consistency-rewrite:')){attempts++;const payload=JSON.parse(body.messages.at(-1).content);for(const row of payload.evidence.filter(row=>['before','after'].includes(row.id)))assert.equal(JSON.parse(row.text).quests,undefined);assert.ok(!payload.evidence.some(row=>row.id.startsWith('knowledge:')));return {choices:[{finish_reason:'stop',message:{content:'<q who="npc_hw_wushuo">我没听说，不知道。</q><回合 额外="5分" 地点="loc_hw_northwood" 在场="npc_hw_wushuo"/>'}}]};}
+  return issuesResponse([]);
+ }};
+ const server=await createPlaytestServer({consistencyClient:client});t.after(()=>server.close());
+ let view=await server.api('create',{});const campaignId=view.reference.campaignId;
+ async function act(tool,args,id){const r=await server.api('execute',{campaignId,anchor:id,eventId:id,tool,args,expectedSequence:view.reference.sequence});view=await server.api('read',{campaignId});return r;}
+ const published=await act('world_quest',{operation:'publish',publisher:'npc_hw_linsui',grade:'D',personal:true,reward:20,content:'替酒馆备齐燕麦',objective:{type:'deliver',item:'item_oats',quantity:10}},'publish');await act('world_quest',{operation:'accept',quest:published.result.quest},'accept');await act('world_move',{destination:'北林边'},'woods');
+ const before=structuredClone(view.document),anchor='unknown';const begun=await server.api('review/begin',{campaignId,anchor,playerText:'我没告诉吴朔任务内容，只问他知不知道。',expectedSequence:view.reference.sequence});
+ const result=await server.api('review/reply',{campaignId,token:begun.token,expectedSequence:view.reference.sequence,draft:'<q who="npc_hw_wushuo">林穗让你送十份燕麦。</q><回合 额外="5分" 地点="loc_hw_northwood" 在场="npc_hw_wushuo"/>'});
+ assert.equal(result.status,'verified');assert.equal(result.rewritten,true);assert.equal(attempts,1);assert.deepEqual((await server.api('read',{campaignId})).document,before);
+});

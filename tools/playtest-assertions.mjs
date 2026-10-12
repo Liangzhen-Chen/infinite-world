@@ -20,12 +20,24 @@ export function evaluateAssertions(assertions,{before,after,calls,reply}){
             case'delta':actual=(value??0)-(old??0);pass=actual===(rule.value??0);break;
             case'range':actual=value;pass=Number.isFinite(value)&&value>=(rule.min??-Infinity)&&value<=(rule.max??Infinity);break;
             case'elapsed':actual=after.state.minute-before.state.minute;pass=actual>=rule.min&&actual<=rule.max;break;
+            case'present':{
+                actual=(rule.npcs??[]).map(npc=>{
+                    const actor=after.state.npcs?.[npc];
+                    return{npc,location:actor?.location,activity:actor?.activity,status:actor?.status,
+                        available:Boolean(actor&&actor.location===after.state.location&&!actor.scheduleTravel&&!actor.cognitionTravel&&
+                            !['死亡','濒死','昏迷','患病'].includes(actor.status)&&!/睡眠|熟睡|睡觉/.test(actor.activity??''))};
+                });
+                pass=actual.length>0&&actual.every(row=>row.available);break;
+            }
             case'unchanged':actual=(rule.paths??['state']).filter(path=>!isDeepStrictEqual(at(before,path),at(after,path)));pass=!actual.length;break;
             case'records':actual=Object.values(value??{}).filter(row=>matches(row,rule.where)&&(!rule.includes||Array.isArray(at(row,rule.includes.path))&&at(row,rule.includes.path).some(entry=>matches(entry,rule.includes.where)))).length;pass=actual>=(rule.min??1)&&actual<=(rule.max??Infinity);break;
             case'newRecordsDuringTurn':{
                 const from=before.state?.minute,to=after.state?.minute;
                 const records=Object.entries(value??{}).filter(([id,row])=>!Object.hasOwn(old??{},id)&&matches(row,rule.where)&&
-                    Number.isSafeInteger(row.minute)&&row.minute>from&&row.minute<=to).map(([,row])=>structuredClone(row));
+                    Number.isSafeInteger(row.minute)&&row.minute>from&&row.minute<=to&&(!rule.settled||
+                        Number.isSafeInteger(row.start)&&row.start>=0&&row.start<row.minute&&
+                        row.spent?.minutes===row.minute-row.start&&Number.isSafeInteger(row.spent?.fee)&&row.spent.fee>=0&&
+                        Array.isArray(row.spent?.materials)&&typeof row.outcome?.success==='boolean')).map(([,row])=>structuredClone(row));
                 actual={from,to,count:records.length,records};
                 pass=Number.isSafeInteger(from)&&Number.isSafeInteger(to)&&to>from&&records.length>=(rule.min??1)&&records.length<=(rule.max??Infinity);break;
             }

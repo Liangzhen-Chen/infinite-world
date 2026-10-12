@@ -6,7 +6,7 @@ import {createPlaytestServer,runPlaytest}from'./playtest-runner.mjs';
 import {atomicJSON}from'../server-plugin/storage.mjs';
 import {digest}from'../server-plugin/storage.mjs';
 import {loadHostPromptProcessor}from'./host-prompt.mjs';
-import {toolSelectionMetrics}from'./playtest-metrics.mjs';
+import {toolSelectionMetrics,playtestAcceptance,playtestExitCode}from'./playtest-metrics.mjs';
 import {reviewPlaytest}from'./playtest-review.mjs';
 import {reviewNpcRequirements,summarizeNpcAcceptance}from'./npc-acceptance.mjs';
 import * as OpenCC from'opencc-js';
@@ -36,7 +36,7 @@ function summary(){const assertions=results.reduce((n,row)=>n+row.assertions,0),
     const calls=results.flatMap(row=>row.turns.flatMap(turn=>turn.calls));
     const requests=results.flatMap(row=>row.turns.flatMap(turn=>turn.requests));
     const latencies=requests.map(row=>row.latencyMs).sort((a,b)=>a-b);
-    return{
+    const report={
     date:new Date().toISOString(),scope:'真实提示源、正式目录、真实服务器存储与检索；测试夹具非用户存档',complete:results.length===tasks.length,
     targetSessions:tasks.length,completedSessions:results.length,assertions,passed,ledgerRatio:passed/Math.max(1,assertions),
     promptHash:digest(bundle),scenariosHash:digest(scenarios),providerProcessing:host.identity,
@@ -47,7 +47,9 @@ function summary(){const assertions=results.reduce((n,row)=>n+row.assertions,0),
     toolSelection:toolSelectionMetrics(results,scenarios),
     m2:summarizeNpcAcceptance(results,scenarios,repetitions),
     requests:{total:requests.length,medianMs:latencies[Math.floor(latencies.length/2)]??null,p95Ms:latencies[Math.min(latencies.length-1,Math.floor(latencies.length*.95))]??null},
-    costUpperYuan:client.spent,limitYuan:30,results};}
+    costUpperYuan:client.spent,limitYuan:30,results};
+    report.acceptancePass=playtestAcceptance(report);
+    return report;}
 async function save(){writes=writes.then(()=>atomicJSON(path.join(destination,'真实试玩.json'),summary()));await writes;}
 async function score(result,scenario){
     const visible=result.turns.map(row=>row.visible??'').join('\n');
@@ -71,5 +73,5 @@ try{
     }));
     const report=summary();await save();
     await atomicJSON(path.join(destination,'真实试玩失败.json'),{date:report.date,scope:report.scope,sessionErrors:results.filter(row=>row.error).map(({id,attempt,error})=>({id,attempt,error})),failures:results.flatMap(result=>result.turns.filter(turn=>turn.errors.length||turn.assertions.some(rule=>!rule.pass)).map(turn=>({session:result.id,attempt:result.attempt,...turn}))),reviews:results.map(row=>({id:row.id,attempt:row.attempt,review:row.review}))});
-    console.log(JSON.stringify({...report,results:undefined}));if(!(milestone==='M2'?report.complete&&report.m2.thresholdReached:report.releaseLedgerPass))process.exitCode=1;
+    console.log(JSON.stringify({...report,results:undefined}));process.exitCode=playtestExitCode(report);
 }finally{await server.close();}

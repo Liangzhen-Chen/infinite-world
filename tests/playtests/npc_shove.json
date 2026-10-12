@@ -78,12 +78,37 @@
       ]
     },
     {
-      "input": "我到村口找乡巡顾岑。",
+      "input": "我先留在原地休息十分钟，不再攻击。若已经濒死，我原地等待，不能硬撑着走；若随后死亡，我继续等待在登记的复活点醒来，再确认自己能够行动。不假定有人已经治好我。",
+      "expectedTools": [
+        "world_time"
+      ],
+      "assertions": [
+        {
+          "kind": "equals",
+          "path": "state.player.status",
+          "value": "正常"
+        },
+        {
+          "kind": "calls",
+          "tool": "world_combat",
+          "min": 0,
+          "max": 0
+        }
+      ]
+    },
+    {
+      "input": "我能够行动后到村口找乡巡顾岑；如果他不在或已经睡下，我在村口等到次日早上九点，等他实际到场再说。",
       "assertions": [
         {
           "kind": "equals",
           "path": "state.location",
           "value": "loc_hw_gate"
+        },
+        {
+          "kind": "present",
+          "npcs": [
+            "npc_hw_gucen"
+          ]
         }
       ],
       "expectedTools": [
@@ -132,6 +157,13 @@
             "status": "生效"
           },
           "min": 1
+        },
+        {
+          "kind": "present",
+          "npcs": [
+            "npc_hw_gucen",
+            "npc_hw_chenbai"
+          ]
         }
       ],
       "expectedTools": [
@@ -154,6 +186,12 @@
           "kind": "unchanged",
           "paths": [
             "state.player.coins"
+          ]
+        },
+        {
+          "kind": "present",
+          "npcs": [
+            "npc_hw_chenbai"
           ]
         }
       ],

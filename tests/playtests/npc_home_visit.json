@@ -18,6 +18,12 @@
           "kind": "equals",
           "path": "state.npcs.npc_hw_miaozhen.location",
           "value": "loc_hw_fields"
+        },
+        {
+          "kind": "present",
+          "npcs": [
+            "npc_hw_miaozhen"
+          ]
         }
       ],
       "expectedTools": [
@@ -86,7 +92,7 @@
       ]
     },
     {
-      "input": "我在院里安静待满一小时，期间不干活、不拿东西。",
+      "input": "我从现在起再在院里安静等整整一小时。之前走路和看屋子的时间不算在这一小时里，期间不干活、不拿东西。",
       "assertions": [
         {
           "kind": "elapsed",
