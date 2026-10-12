@@ -56,7 +56,7 @@ async function generate(){
 }
 
 export async function check(){
- const world=await loadWorld(),base=await read('base.json'),foundation=await read('foundation.json'),candidate=await read('candidate.json'),freeze=await read('reopen/freeze.json'),plan=await read('reopen/controlled-plan.json');
+ const currentWorld=await loadWorld(),base=await read('base.json'),world={...currentWorld,npcs:currentWorld.npcs.map(n=>base.find(b=>b.id===n.id)??n)},foundation=await read('foundation.json'),candidate=await read('candidate.json'),freeze=await read('reopen/freeze.json'),plan=await read('reopen/controlled-plan.json');
  const oldEntries=depthEntries(base,originalDesign,world),nextDesign=await import('./design.mjs'),entries=depthEntries(base,nextDesign,world),changes=await read('reopen/patch-diff.json');
  let proof=null;try{proof=await read('incremental-proof.json');}catch(error){if(error.code!=='ENOENT')throw error;}
  let originalPublication=null;
@@ -97,7 +97,9 @@ export async function check(){
  for(const entry of entries)assert.deepEqual(entry.facts.memorySeeds.slice(0,entry.before.memorySeeds.length),entry.before.memorySeeds);
  const shared=ids.map(id=>entries.find(e=>e.id===id).facts.memorySeeds.at(-1));assert.deepEqual(shared[0],shared[1]);
  const memoryIssues=validateNpcDepth(merged).issues.filter(i=>ids.includes(i.id)&&i.field.startsWith('memorySeeds'));assert.deepEqual(memoryIssues,[]);
- return{authorizationId,planningId,authorizationHash:hashContent(plan),changedPaths:changes.map(({id,path})=>({id,path})),L1Errors:errors,targetedAuditIssues:issues,preservedIds:preserved,preservedSiblings,sharedEvent:{id:shared[0].id,participants:shared[0].knownBy,oldEvent:leaf(oldEntries.find(e=>e.id===ids[0]),'memorySeeds[2]').event,newEvent:shared[0].event,closed:true,compatible:true,oldMemoriesPreserved:true},guard:null,realL2:!!proof&&reviewedRecords.every(r=>r.status==='passed'&&r.reviewRecovery.status==='passed-L1-L2'&&!r.errors.length),realL4:!!proof&&(await read('batch-1.json')).l4.approved,modelCalls:0,budgetWrites:0,formalWrites:0,budgetHistory:{spentYuan:1.82866384,unknownReservedYuan:.083736,newCumulativeLimitYuan:2.5,maxRemainingYuan:.58760016,firstIdLimitYuan:.50,phase:'reference-only-no-grant-or-request'},recordedAt:new Date().toISOString()};
+ const unpublished=entries.every(e=>hashContent(currentWorld.npcs.find(n=>n.id===e.id))===hashContent(e.before)),currentStage=unpublished?'frozen-before':'published-approved';
+ if(!unpublished)for(const entry of entries)assert.deepEqual(currentWorld.npcs.find(n=>n.id===entry.id),entry.facts,'正式源不等于批准视图 '+entry.id);
+ return{authorizationId,planningId,authorizationHash:hashContent(plan),currentStage,formalSourceMatchesApproved:!unpublished,changedPaths:changes.map(({id,path})=>({id,path})),L1Errors:errors,targetedAuditIssues:issues,preservedIds:preserved,preservedSiblings,sharedEvent:{id:shared[0].id,participants:shared[0].knownBy,oldEvent:leaf(oldEntries.find(e=>e.id===ids[0]),'memorySeeds[2]').event,newEvent:shared[0].event,closed:true,compatible:true,oldMemoriesPreserved:true},guard:null,realL2:!!proof&&reviewedRecords.every(r=>r.status==='passed'&&r.reviewRecovery.status==='passed-L1-L2'&&!r.errors.length),realL4:!!proof&&(await read('batch-1.json')).l4.approved,modelCalls:0,budgetWrites:0,formalWrites:0,budgetHistory:{spentYuan:1.82866384,unknownReservedYuan:.083736,newCumulativeLimitYuan:2.5,maxRemainingYuan:.58760016,firstIdLimitYuan:.50,phase:'reference-only-no-grant-or-request'},recordedAt:new Date().toISOString()};
 }
 if(process.argv[1]&&import.meta.url===pathToFileURL(path.resolve(process.argv[1])).href){
  const report=process.argv.includes('--check')?await check():await generate();

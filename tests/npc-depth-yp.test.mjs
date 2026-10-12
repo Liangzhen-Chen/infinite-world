@@ -1,16 +1,31 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
+import os from 'node:os';
+import path from 'node:path';
+import {fileURLToPath} from 'node:url';
 import {loadWorld} from '../tools/load-world.mjs';
 import {auditNpcDepth} from '../tools/audit-npc-depth.mjs';
 import {validateNpcDepth} from '../tools/npc-profile-validation.mjs';
 import {depthEntries,validatePatchResults,verifyUnchanged,getPath,contextFor} from '../tools/npc-depth-content.mjs';
 import {hashContent} from '../tools/content-pipeline.mjs';
 import * as design from '../world/design/w1-yp-depth-rest.mjs';
-const world=await loadWorld(),base=design.patchRows.map(r=>r.before),entries=depthEntries(base,design,world),merged=validatePatchResults(entries,world);
+const publishedWorld=await loadWorld(),base=design.patchRows.map(r=>r.before),world={...publishedWorld,npcs:publishedWorld.npcs.map(n=>base.find(b=>b.id===n.id)??n)},entries=depthEntries(base,design,world),merged=validatePatchResults(entries,world);
 const draftRoot=new URL('../world/drafts/w1/yp-depth-rest/',import.meta.url),readFile=async f=>JSON.parse(await fs.readFile(new URL(f,draftRoot))),optional=async f=>{try{return await readFile(f);}catch(error){if(error.code==='ENOENT')return null;throw error;}};
 const realProof=await optional('incremental-proof.json'),priorPublication=await optional('reopen/prior-publication-state.json');
 const readHistory=async f=>{if(realProof&&/^npc_yp_.*\.json$/.test(f)){const old=realProof.oldRecords.find(r=>r.id===f.slice(0,-5));if(old)return old;}if(priorPublication?.files[f])return JSON.parse(priorPublication.files[f].raw);return readFile(f);};
+async function frozenWorldFixture(t){
+ const temporary=await fs.mkdtemp(path.join(os.tmpdir(),'t06-before-world-')),worldRoot=path.join(temporary,'world'),source=fileURLToPath(new URL('../world/',import.meta.url));
+ assert.equal(path.dirname(path.resolve(temporary)),path.resolve(os.tmpdir()));assert.ok(path.basename(temporary).startsWith('t06-before-world-'));
+ t.after(()=>fs.rm(temporary,{recursive:true,force:true}));
+ for(const directory of ['meta','geo','lore','people'])await fs.cp(path.join(source,directory),path.join(worldRoot,directory),{recursive:true});
+ await fs.mkdir(path.join(worldRoot,'design'),{recursive:true});
+ for(const file of ['w1-yp-depth-rest.mjs','w1-reopen-authorization.json'])await fs.copyFile(path.join(source,'design',file),path.join(worldRoot,'design',file));
+ const root=path.join(worldRoot,'drafts/w1/yp-depth-rest');await fs.cp(fileURLToPath(draftRoot),root,{recursive:true});
+ const baseline=path.join(worldRoot,'people/baseline.json');await fs.writeFile(baseline,JSON.stringify(world.npcs,null,2)+'\n');
+ const plan=await readFile('reopen/publication-batch.json');assert.equal(hashContent(await loadWorld(worldRoot)),plan.sourceHash,'隔离before须与原发布快照一致，不改原sourceHash');
+ return{worldRoot,baseline,manifest:path.join(root,'reopen/publication-manifest.json'),batchManifest:path.join(root,'reopen/publication-batch.json')};
+}
 test('榆坡既有30人合并视图逐字段过独立深度门槛，其他村审计不变',()=>{
  assert.equal(entries.length,30);assert.equal(merged.npcs.filter(n=>n.id.startsWith('npc_yp_')).length,30);
  for(const validate of [auditNpcDepth,validateNpcDepth])assert.deepEqual(validate(merged).issues.filter(i=>i.id.startsWith('npc_yp_')),[]);
@@ -55,6 +70,7 @@ test('新授权离线双人修订冻结原record/原源/旧proof，所有历史�
  assert.equal(report.authorizationId,'user-reopen-20261012-01');assert.equal(report.planningId,'T06-user-reopen-20261012-01-offline-1');
  assert.equal(report.preservedIds.length,28);assert.equal(report.modelCalls,0);assert.equal(report.budgetWrites,0);assert.equal(report.formalWrites,0);
  assert.equal(report.realL2,!!realProof);assert.equal(report.realL4,!!realProof);assert.deepEqual(report.L1Errors,[]);assert.deepEqual(report.targetedAuditIssues,[]);
+ assert.equal(report.currentStage,'published-approved');assert.equal(report.formalSourceMatchesApproved,true);
  const recorded=JSON.parse(await fs.readFile(new URL('../world/drafts/w1/yp-depth-rest/reopen/offline-report.json',import.meta.url)));
  assert.equal(recorded.authorizationHash,report.authorizationHash);assert.equal(recorded.guard,'T06继续冻结');assert.deepEqual(recorded.changedPaths,report.changedPaths);
 });
@@ -78,7 +94,7 @@ test('旧裘砚L2只对应旧事件，缺受控上下文及单侧漏改仍拒绝
  const invalidations=await read('reopen/l4-invalidations.json');assert.deepEqual(invalidations.records.map(r=>r.operativeStatus),['invalidated-by-L4','invalidated-by-L4']);assert.equal(invalidations.records.find(r=>r.id===old.id).reviewHash,hashContent(old.review));
 });
 
-test('双人完整真实L2及实际L4绑定新候选，官方整村预演闭合且正式源零写',async()=>{
+test('双人完整真实L2及实际L4绑定新候选，当前正式源等于批准视图并保留钱物身份与旧记忆',async()=>{
  const reopened=await import('../world/drafts/w1/yp-depth-rest/reopen/design.mjs'),next=depthEntries(base,reopened,world),plan=await readFile('reopen/controlled-plan.json'),{parseModelJSON}=await import('../tools/content-pipeline.mjs');
  assert.ok(realProof);assert.equal(realProof.authorizationHash,hashContent(plan));assert.equal(realProof.reopenAuthorization.id,'user-reopen-20261012-01');
  let cost=0;for(const id of ['npc_yp_tanghuan','npc_yp_qiuyan']){const record=await readFile(id+'.json'),entry=next.find(e=>e.id===id);assert.equal(record.status,'passed');assert.deepEqual(record.errors,[]);assert.equal(record.reviewRecovery.status,'passed-L1-L2');assert.deepEqual(parseModelJSON(record.reviewRecovery.response),record.review);assert.deepEqual([...record.review.reviewedPaths].sort(),entry.patches.map(p=>p.path).sort());assert.deepEqual(record.review.backgroundReviews,[]);assert.deepEqual(record.draft.patches,entry.patches);assert.deepEqual(record.reviewRecovery.prior,realProof.oldRecords.find(r=>r.id===id));assert.equal(record.reviewRecovery.request.max_tokens,1800);cost+=record.reviewRecovery.response.measurement.costUpperYuan;}
@@ -86,7 +102,21 @@ test('双人完整真实L2及实际L4绑定新候选，官方整村预演闭合�
  const reading=await readFile('reopen/batch-1-reading.json'),batch=await readFile('batch-1.json');assert.ok(reading.readingWindowUpperBoundMs<=600000);assert.deepEqual([...new Set([...batch.flagged,...batch.sample])].sort(),[...reading.readIds].sort());assert.ok(reading.scores.mean>=4);assert.ok(reading.scores.min>=3);
  assert.deepEqual(await fs.readFile(new URL('batch-0.json',draftRoot)),await fs.readFile(new URL('reopen/batch-0-preserved.json',draftRoot)));
  const extra=await readFile('incremental-l4.json');assert.equal(extra.authorizationHash,hashContent(plan));for(const id of plan.authorized.map(a=>a.id)){const note=extra.candidates.find(n=>n.id===id),entry=next.find(e=>e.id===id),record=await readFile(id+'.json');assert.equal(note.entryHash,hashContent(entry));assert.equal(note.draftHash,hashContent(record.draft));assert.equal(note.reviewHash,hashContent(record.review));assert.deepEqual([...note.reviewedPaths].sort(),entry.patches.map(p=>p.path).sort());}
- const baseline=new URL('../world/people/baseline.json',import.meta.url),before=await fs.readFile(baseline),{publishNpcDepth}=await import('../tools/publish-npc-depth.mjs'),manifest=new URL('reopen/publication-manifest.json',draftRoot).pathname.replace(/^\/(\w:)/,'$1'),preview=await publishNpcDepth({manifest});
- assert.equal(preview.published,false);assert.deepEqual(preview.amendedNpcIds.sort(),next.map(e=>e.id).sort());assert.deepEqual(preview.selectedQuality.issues,[]);assert.equal(preview.eventClosure.length,20);assert.ok(preview.eventClosure.every(e=>e.closed));assert.deepEqual(await fs.readFile(baseline),before);
- const batchManifest=new URL('reopen/publication-batch.json',draftRoot).pathname.replace(/^\/(\w:)/,'$1'),batchPreview=await publishNpcDepth({batchManifest});assert.equal(batchPreview.published,false);assert.deepEqual(batchPreview.amendedNpcIds.sort(),next.map(e=>e.id).sort());assert.deepEqual(batchPreview.selectedQuality.issues,[]);assert.ok(batchPreview.eventClosure.every(e=>e.closed));assert.deepEqual(await fs.readFile(baseline),before);
+ assert.deepEqual(publishedWorld.npcs.map(n=>n.id),world.npcs.map(n=>n.id));
+ for(const entry of next){const current=publishedWorld.npcs.find(n=>n.id===entry.id);assert.deepEqual(current,entry.facts);verifyUnchanged(entry.before,current,entry);
+  for(const field of ['id','age','coins','inventory','traits','personality','home','occupation','skills','proficiencies','services','secrets','schedule'])assert.deepEqual(current[field],entry.before[field],`${entry.id}.${field}`);
+  assert.deepEqual(current.memorySeeds.slice(0,entry.before.memorySeeds.length),entry.before.memorySeeds);
+ }
+ assert.deepEqual(auditNpcDepth(publishedWorld).issues.filter(i=>i.id.startsWith('npc_yp_')),[]);assert.ok(auditNpcDepth(publishedWorld).legacyTraits.ok);
+});
+
+test('隔离冻结before的首次官方单卡和T11整村预演仍有20条闭合，预演不写任何baseline',async t=>{
+ const fixture=await frozenWorldFixture(t),{publishNpcDepth}=await import('../tools/publish-npc-depth.mjs'),formal=new URL('../world/people/baseline.json',import.meta.url),formalBefore=await fs.readFile(formal),before=await fs.readFile(fixture.baseline);
+ for(const options of [{manifest:fixture.manifest},{batchManifest:fixture.batchManifest}]){const preview=await publishNpcDepth(options);assert.equal(preview.published,false);assert.deepEqual(preview.changed,['people/baseline.json']);assert.deepEqual(preview.amendedNpcIds.sort(),base.map(n=>n.id).sort());assert.deepEqual(preview.selectedQuality.issues,[]);assert.equal(preview.eventClosure.length,20);assert.ok(preview.eventClosure.every(e=>e.closed));assert.equal(new Set(preview.eventClosure.map(e=>e.eventId)).size,10);assert.deepEqual(await fs.readFile(fixture.baseline),before);}
+ assert.deepEqual(await fs.readFile(formal),formalBefore);
+});
+
+test('已发布正式世界重发幂等：单卡和T11批预演零差异、无新增事件、零写',async()=>{
+ const {publishNpcDepth}=await import('../tools/publish-npc-depth.mjs'),baseline=new URL('../world/people/baseline.json',import.meta.url),before=await fs.readFile(baseline);
+ for(const [key,file]of [['manifest','publication-manifest.json'],['batchManifest','publication-batch.json']]){const options={[key]:fileURLToPath(new URL('reopen/'+file,draftRoot))};const first=await publishNpcDepth(options),again=await publishNpcDepth(options);assert.deepEqual(again,first);assert.equal(first.published,false);assert.deepEqual(first.changed,[]);assert.deepEqual(first.changes,[]);assert.deepEqual(first.eventClosure,[]);assert.equal(first.baselineSourceHash,first.baselineResultHash);assert.deepEqual(first.amendedNpcIds.sort(),base.map(n=>n.id).sort());assert.deepEqual(first.selectedQuality.issues,[]);assert.deepEqual(await fs.readFile(baseline),before);}
 });
