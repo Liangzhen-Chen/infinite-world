@@ -1,0 +1,294 @@
+{
+  "id": "npc_lq_shaluo",
+  "fingerprint": "a065bfcf4c1e01029e1d38ee43b2476473ee9140dd4b6488d1e4c3024c0ff520",
+  "status": "passed",
+  "attempts": 1,
+  "draft": {
+    "id": "npc_lq_shaluo",
+    "contract": "audit-patch-v1",
+    "patches": [
+      {
+        "path": "knowledge.known[1]",
+        "value": {
+          "fact": "沙萝在泉标记事屋抄工签，为讥笑被当面回绝后曾给错签补抄全称。",
+          "source": "bld_lq_hall",
+          "reliability": "亲历"
+        }
+      },
+      {
+        "path": "knowledge.known[2]",
+        "value": {
+          "fact": "符审、沙萝、鞠舒、易可和匡叶在泉标记事屋谈过记号与口头答应的差别。符审读回一段取水队次，沙萝问姓名应怎样读全，鞠舒说沟边标枝容易被误作走道边。易可提到解开的结未必认得回，匡叶说明代人答应换班曾被本人回绝。几人没有替未到的人确认轮次，也没有定下新的共同约定。",
+          "source": "bld_lq_hall",
+          "reliability": "共同亲历"
+        }
+      },
+      {
+        "path": "voice.register",
+        "value": "抄工签时按姓名数字读回，嘴快而带刻薄，听解释时需要放慢"
+      },
+      {
+        "path": "memorySeeds[2]",
+        "value": {
+          "id": "memory_lq_depth_readback",
+          "event": "符审、沙萝、鞠舒、易可和匡叶在泉标记事屋谈过记号与口头答应的差别。符审读回一段取水队次，沙萝问姓名应怎样读全，鞠舒说沟边标枝容易被误作走道边。易可提到解开的结未必认得回，匡叶说明代人答应换班曾被本人回绝。几人没有替未到的人确认轮次，也没有定下新的共同约定。",
+          "location": "bld_lq_hall",
+          "salience": 4,
+          "knownBy": [
+            "npc_lq_fushen",
+            "npc_lq_shaluo",
+            "npc_lq_jushu",
+            "npc_lq_yike",
+            "npc_lq_kuangye"
+          ],
+          "reliability": "亲历"
+        }
+      },
+      {
+        "path": "knowledge.unknown[0]",
+        "value": "不肯来对账的短工愿不愿当面核对哪一张错签，以及姓名全称该如何更正。"
+      },
+      {
+        "path": "knowledge.unknown[1]",
+        "value": "这次工签报的哪一段时长与短工本人说法不同。"
+      },
+      {
+        "path": "goals.short[0].steps[0].content",
+        "value": "先询问短工愿否说完报工经过，不模仿其口音"
+      },
+      {
+        "path": "goals.mid[0].steps[0].content",
+        "value": "先听短工讲完整的报工经过，再读回姓名全称与时长，请本人指出错处"
+      },
+      {
+        "path": "goals.long[0].steps[0].content",
+        "value": "保留更正前后记录，下次先问对方希望怎样核签"
+      },
+      {
+        "path": "relationships[0].note",
+        "value": "沙琳因沙萝学别人报工口音难堪，母女谈读签方式时有分歧。 各自保有财物。"
+      },
+      {
+        "path": "relationships[1].note",
+        "value": "狄芸怕沙萝越谈工签越大声，母女要商量家中何时停止对账争论。 各自保有财物。"
+      },
+      {
+        "path": "relationships[2].note",
+        "value": "莫谷出工暂停与复工需讲明，沙萝核对他的工签时要分别询问两段时点。"
+      },
+      {
+        "path": "opinions.neighbors[2].view",
+        "value": "莫谷出工暂停与复工需讲明，沙萝核对他的工签时要分别询问两段时点。"
+      }
+    ]
+  },
+  "review": {
+    "contradictions": [
+      {
+        "quote": "沙萝在泉标记事屋抄工签，为讥笑被当面回绝后曾给错签补抄全称。",
+        "field": "knowledge.known[1]",
+        "severity": "soft",
+        "reason": "该条把两条既有亲历记忆（学腔被回绝、给错签补抄全称）合并为一条知识，来源标为bld_lq_hall，但补抄全称的既有来源是本人亲历而非记事屋；来源字段与事实内容不完全对应，属来源标注不精确。"
+      },
+      {
+        "quote": "符审、沙萝、鞠舒、易可和匡叶在泉标记事屋谈过记号与口头答应的差别。符审读回一段取水队次，沙萝问姓名应怎样读全，鞠舒说沟边标枝容易被误作走道边。易可提到解开的结未必认得回，匡叶说明代人答应换班曾被本人回绝。几人没有替未到的人确认轮次，也没有定下新的共同约定。",
+        "field": "knowledge.known[2]",
+        "severity": "soft",
+        "reason": "该条把匡叶“代人答应换班曾被本人回绝”写入沙萝的已知事实，但匡叶该经历在privateRisks中列为秘密（secrets[0]“替人答应过一次值守后撤回”），且其publicSpeech仅限“代答不算本人答复”这一句；沙萝作为共同在场者可以亲历听到该句，但将其作为“已知事实”记录并标为共同亲历，与匡叶秘密的知情范围边界存在张力，需确认是否仅限该句公开范围。"
+      },
+      {
+        "quote": "符审、沙萝、鞠舒、易可和匡叶在泉标记事屋谈过记号与口头答应的差别。符审读回一段取水队次，沙萝问姓名应怎样读全，鞠舒说沟边标枝容易被误作走道边。易可提到解开的结未必认得回，匡叶说明代人答应换班曾被本人回绝。几人没有替未到的人确认轮次，也没有定下新的共同约定。",
+        "field": "memorySeeds[2]",
+        "severity": "soft",
+        "reason": "该记忆种子将匡叶“代人答应换班曾被本人回绝”作为共同亲历事件写入，knownBy包含全部五人；但匡叶该经历在privateRisks中列为秘密，其公开说话范围仅限“代答不算本人答复”，将“曾被本人回绝”的具体经过作为共享记忆可能超出其秘密边界。"
+      },
+      {
+        "quote": "莫谷出工暂停与复工需讲明，沙萝核对他的工签时要分别询问两段时点。",
+        "field": "relationships[2].note",
+        "severity": "soft",
+        "reason": "该note新增了“莫谷出工暂停与复工需讲明”及“分别询问两段时点”的具体互动内容，但publishedFacts中沙萝与莫谷的关系note仅为“认识同村莫谷，不因此知道对方秘密或财产”，且莫谷的publicSpeech未涉及出工暂停与复工；该新增内容缺乏既有来源支持，属对关系细节的过度具体化。"
+      },
+      {
+        "quote": "莫谷出工暂停与复工需讲明，沙萝核对他的工签时要分别询问两段时点。",
+        "field": "opinions.neighbors[2].view",
+        "severity": "soft",
+        "reason": "该view与relationships[2].note内容相同，同样新增了莫谷出工暂停与复工的具体互动细节，缺乏publishedFacts中莫谷相关公开来源支持，属对邻居看法的过度具体化。"
+      }
+    ],
+    "reviewedPaths": [
+      "knowledge.known[1]",
+      "knowledge.known[2]",
+      "voice.register",
+      "memorySeeds[2]",
+      "knowledge.unknown[0]",
+      "knowledge.unknown[1]",
+      "goals.short[0].steps[0].content",
+      "goals.mid[0].steps[0].content",
+      "goals.long[0].steps[0].content",
+      "relationships[0].note",
+      "relationships[1].note",
+      "relationships[2].note",
+      "opinions.neighbors[2].view"
+    ],
+    "backgroundReviews": [
+      {
+        "eventId": "memory_lq_depth_readback",
+        "sourceHash": "21ca23cebd763bdbba238d1ce51f31c4329c504d52d8023d0c87911d3b34a46b",
+        "reviewedRiskPaths": [
+          "npc_lq_fushen.secrets[0]",
+          "npc_lq_fushen.authoredFacts.privateFact",
+          "npc_lq_shaluo.secrets[0]",
+          "npc_lq_shaluo.authoredFacts.privateFact",
+          "npc_lq_jushu.secrets[0]",
+          "npc_lq_jushu.authoredFacts.privateFact",
+          "npc_lq_yike.secrets[0]",
+          "npc_lq_yike.authoredFacts.privateFact",
+          "npc_lq_kuangye.secrets[0]",
+          "npc_lq_kuangye.authoredFacts.privateFact",
+          "npc_lq_kuangye.memorySeeds[1]"
+        ],
+        "contradictions": [
+          {
+            "quote": "匡叶说明代人答应换班曾被本人回绝。",
+            "field": "npc_lq_kuangye.secrets[0]",
+            "severity": "soft",
+            "reason": "匡叶的secrets[0]为“替人答应过一次值守后撤回”，其publicSpeech仅限“代答不算本人答复”；事件叙述中“代人答应换班曾被本人回绝”虽与publicSpeech方向一致，但“曾被本人回绝”的具体经过可能超出其秘密边界，需确认是否仅限公开说话范围。"
+          },
+          {
+            "quote": "匡叶说明代人答应换班曾被本人回绝。",
+            "field": "npc_lq_kuangye.authoredFacts.privateFact",
+            "severity": "soft",
+            "reason": "匡叶的authoredFacts.privateFact为“替人答应过一次值守后撤回”，事件叙述将其具体化为“代人答应换班曾被本人回绝”，可能超出其私有事实的公开边界。"
+          },
+          {
+            "quote": "匡叶说明代人答应换班曾被本人回绝。",
+            "field": "npc_lq_kuangye.memorySeeds[1]",
+            "severity": "soft",
+            "reason": "匡叶的memorySeeds[1]为“在泉边，他公开更正过自己先前作出的承诺”，事件叙述将其具体化为“代人答应换班曾被本人回绝”，可能超出该记忆种子的公开范围。"
+          }
+        ]
+      }
+    ]
+  },
+  "errors": [],
+  "warnings": [
+    {
+      "quote": "沙萝在泉标记事屋抄工签，为讥笑被当面回绝后曾给错签补抄全称。",
+      "field": "knowledge.known[1]",
+      "severity": "soft",
+      "reason": "该条把两条既有亲历记忆（学腔被回绝、给错签补抄全称）合并为一条知识，来源标为bld_lq_hall，但补抄全称的既有来源是本人亲历而非记事屋；来源字段与事实内容不完全对应，属来源标注不精确。"
+    },
+    {
+      "quote": "符审、沙萝、鞠舒、易可和匡叶在泉标记事屋谈过记号与口头答应的差别。符审读回一段取水队次，沙萝问姓名应怎样读全，鞠舒说沟边标枝容易被误作走道边。易可提到解开的结未必认得回，匡叶说明代人答应换班曾被本人回绝。几人没有替未到的人确认轮次，也没有定下新的共同约定。",
+      "field": "knowledge.known[2]",
+      "severity": "soft",
+      "reason": "该条把匡叶“代人答应换班曾被本人回绝”写入沙萝的已知事实，但匡叶该经历在privateRisks中列为秘密（secrets[0]“替人答应过一次值守后撤回”），且其publicSpeech仅限“代答不算本人答复”这一句；沙萝作为共同在场者可以亲历听到该句，但将其作为“已知事实”记录并标为共同亲历，与匡叶秘密的知情范围边界存在张力，需确认是否仅限该句公开范围。"
+    },
+    {
+      "quote": "符审、沙萝、鞠舒、易可和匡叶在泉标记事屋谈过记号与口头答应的差别。符审读回一段取水队次，沙萝问姓名应怎样读全，鞠舒说沟边标枝容易被误作走道边。易可提到解开的结未必认得回，匡叶说明代人答应换班曾被本人回绝。几人没有替未到的人确认轮次，也没有定下新的共同约定。",
+      "field": "memorySeeds[2]",
+      "severity": "soft",
+      "reason": "该记忆种子将匡叶“代人答应换班曾被本人回绝”作为共同亲历事件写入，knownBy包含全部五人；但匡叶该经历在privateRisks中列为秘密，其公开说话范围仅限“代答不算本人答复”，将“曾被本人回绝”的具体经过作为共享记忆可能超出其秘密边界。"
+    },
+    {
+      "quote": "莫谷出工暂停与复工需讲明，沙萝核对他的工签时要分别询问两段时点。",
+      "field": "relationships[2].note",
+      "severity": "soft",
+      "reason": "该note新增了“莫谷出工暂停与复工需讲明”及“分别询问两段时点”的具体互动内容，但publishedFacts中沙萝与莫谷的关系note仅为“认识同村莫谷，不因此知道对方秘密或财产”，且莫谷的publicSpeech未涉及出工暂停与复工；该新增内容缺乏既有来源支持，属对关系细节的过度具体化。"
+    },
+    {
+      "quote": "莫谷出工暂停与复工需讲明，沙萝核对他的工签时要分别询问两段时点。",
+      "field": "opinions.neighbors[2].view",
+      "severity": "soft",
+      "reason": "该view与relationships[2].note内容相同，同样新增了莫谷出工暂停与复工的具体互动细节，缺乏publishedFacts中莫谷相关公开来源支持，属对邻居看法的过度具体化。"
+    }
+  ],
+  "feedback": null,
+  "draftResponse": {
+    "id": "090892f5-880c-4c18-acc7-066c934b5176",
+    "object": "chat.completion",
+    "created": 1791794138,
+    "model": "deepseek-flash",
+    "choices": [
+      {
+        "index": 0,
+        "message": {
+          "role": "assistant",
+          "content": "{\"id\":\"npc_lq_shaluo\",\"contract\":\"audit-patch-v1\",\"patches\":[{\"path\":\"knowledge.known[1]\",\"value\":{\"fact\":\"沙萝在泉标记事屋抄工签，为讥笑被当面回绝后曾给错签补抄全称。\",\"source\":\"bld_lq_hall\",\"reliability\":\"亲历\"}},{\"path\":\"knowledge.known[2]\",\"value\":{\"fact\":\"符审、沙萝、鞠舒、易可和匡叶在泉标记事屋谈过记号与口头答应的差别。符审读回一段取水队次，沙萝问姓名应怎样读全，鞠舒说沟边标枝容易被误作走道边。易可提到解开的结未必认得回，匡叶说明代人答应换班曾被本人回绝。几人没有替未到的人确认轮次，也没有定下新的共同约定。\",\"source\":\"bld_lq_hall\",\"reliability\":\"共同亲历\"}},{\"path\":\"voice.register\",\"value\":\"抄工签时按姓名数字读回，嘴快而带刻薄，听解释时需要放慢\"},{\"path\":\"memorySeeds[2]\",\"value\":{\"id\":\"memory_lq_depth_readback\",\"event\":\"符审、沙萝、鞠舒、易可和匡叶在泉标记事屋谈过记号与口头答应的差别。符审读回一段取水队次，沙萝问姓名应怎样读全，鞠舒说沟边标枝容易被误作走道边。易可提到解开的结未必认得回，匡叶说明代人答应换班曾被本人回绝。几人没有替未到的人确认轮次，也没有定下新的共同约定。\",\"location\":\"bld_lq_hall\",\"salience\":4,\"knownBy\":[\"npc_lq_fushen\",\"npc_lq_shaluo\",\"npc_lq_jushu\",\"npc_lq_yike\",\"npc_lq_kuangye\"],\"reliability\":\"亲历\"}},{\"path\":\"knowledge.unknown[0]\",\"value\":\"不肯来对账的短工愿不愿当面核对哪一张错签，以及姓名全称该如何更正。\"},{\"path\":\"knowledge.unknown[1]\",\"value\":\"这次工签报的哪一段时长与短工本人说法不同。\"},{\"path\":\"goals.short[0].steps[0].content\",\"value\":\"先询问短工愿否说完报工经过，不模仿其口音\"},{\"path\":\"goals.mid[0].steps[0].content\",\"value\":\"先听短工讲完整的报工经过，再读回姓名全称与时长，请本人指出错处\"},{\"path\":\"goals.long[0].steps[0].content\",\"value\":\"保留更正前后记录，下次先问对方希望怎样核签\"},{\"path\":\"relationships[0].note\",\"value\":\"沙琳因沙萝学别人报工口音难堪，母女谈读签方式时有分歧。 各自保有财物。\"},{\"path\":\"relationships[1].note\",\"value\":\"狄芸怕沙萝越谈工签越大声，母女要商量家中何时停止对账争论。 各自保有财物。\"},{\"path\":\"relationships[2].note\",\"value\":\"莫谷出工暂停与复工需讲明，沙萝核对他的工签时要分别询问两段时点。\"},{\"path\":\"opinions.neighbors[2].view\",\"value\":\"莫谷出工暂停与复工需讲明，沙萝核对他的工签时要分别询问两段时点。\"}]}"
+        },
+        "logprobs": null,
+        "finish_reason": "stop"
+      }
+    ],
+    "usage": {
+      "prompt_tokens": 15231,
+      "completion_tokens": 762,
+      "total_tokens": 15993,
+      "prompt_tokens_details": {
+        "cached_tokens": 0
+      },
+      "prompt_cache_hit_tokens": 0,
+      "prompt_cache_miss_tokens": 15231
+    },
+    "system_fingerprint": "aeb56401ca74e127821c4f9126dcb669",
+    "measurement": {
+      "label": "content-first-review-npc_lq_shaluo-draft0",
+      "model": "deepseek-flash",
+      "thinking": "disabled",
+      "usage": {
+        "prompt_tokens": 15231,
+        "completion_tokens": 762,
+        "total_tokens": 15993,
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        },
+        "prompt_cache_hit_tokens": 0,
+        "prompt_cache_miss_tokens": 15231
+      },
+      "costUpperYuan": 0.036558,
+      "cumulativeUpperYuan": 10.246157359999987,
+      "latencyMs": 3756.7686000000103,
+      "timestamp": "2026-10-12T08:35:42.408Z"
+    }
+  },
+  "measurements": [
+    {
+      "label": "content-first-review-npc_lq_shaluo-draft0",
+      "model": "deepseek-flash",
+      "thinking": "disabled",
+      "usage": {
+        "prompt_tokens": 15231,
+        "completion_tokens": 762,
+        "total_tokens": 15993,
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        },
+        "prompt_cache_hit_tokens": 0,
+        "prompt_cache_miss_tokens": 15231
+      },
+      "costUpperYuan": 0.036558,
+      "cumulativeUpperYuan": 10.246157359999987,
+      "latencyMs": 3756.7686000000103,
+      "timestamp": "2026-10-12T08:35:42.408Z"
+    },
+    {
+      "label": "content-first-review-npc_lq_shaluo-review0",
+      "model": "deepseek-flash",
+      "thinking": "disabled",
+      "usage": {
+        "prompt_tokens": 34546,
+        "completion_tokens": 1399,
+        "total_tokens": 35945,
+        "prompt_tokens_details": {
+          "cached_tokens": 768
+        },
+        "prompt_cache_hit_tokens": 768,
+        "prompt_cache_miss_tokens": 33778
+      },
+      "costUpperYuan": 0.07877872,
+      "cumulativeUpperYuan": 10.324936079999988,
+      "latencyMs": 8286.941700000025,
+      "timestamp": "2026-10-12T08:35:50.704Z"
+    }
+  ]
+}

@@ -1,0 +1,16 @@
+{
+  "id": "npc_lq_manqu",
+  "fingerprint": "b84d222de4f592b9c0746241332f8dc6ca8dadab2886577549339063743a6c52",
+  "status": "pending",
+  "attempts": 0,
+  "draft": null,
+  "review": null,
+  "errors": [
+    "共享或单卡费用上限，已停止"
+  ],
+  "warnings": [],
+  "feedback": [
+    "共享或单卡费用上限，已停止"
+  ],
+  "errorCode": null
+}
