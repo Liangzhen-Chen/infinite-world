@@ -244,7 +244,7 @@ test('首次L2请求单列作者事实及风险，候选视角不能替代独立
   const request=JSON.parse(buildReviewRequest(entry,patchDraft(entry),context).messages[1].content);
   assert.deepEqual(request.publishedFacts.authoredBackground.events[0].designedFacts,event.designedFacts);
   assert.deepEqual(request.publishedFacts.revisions.map(r=>r.path),entry.patches.map(p=>p.path));
-  assert.throws(()=>checkIncrementalReview({contradictions:[],reviewedPaths:entry.patches.map(p=>p.path)},entry,context),/独立事件出处/);
+  assert.throws(()=>checkIncrementalReview({contradictions:[],reviewedPaths:entry.patches.map(p=>p.path),backgroundReviews:[]},entry,context),/独立事件出处/);
  }
  assert.equal(count,12);
 });
