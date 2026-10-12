@@ -1,6 +1,6 @@
 // Shared numerical handlers; callers own targeting, consent, costs and death effects.
 export const damageTypes=Object.freeze(['physical','fire','cold','wind','earth','light','shadow','mind']);
-const fields={damage:['damageType','armorFactor'],heal:[],repair:[],dry:[],status:['status'],relief:['statuses'],mark:['medium','visibility'],light:[],environment:['operation','unit'],summon:['summonType','upkeepMp','upkeepMinutes'],summon_contract:['operation','offering'],protection:['damageTypes','stacking'],object:['operation','limitC']};
+const fields={damage:['damageType','armorFactor'],heal:[],repair:[],dry:[],status:['status'],relief:['statuses'],mark:['medium','visibility'],light:[],environment:['operation','unit'],summon:['summonType','upkeepMp','upkeepMinutes'],summon_contract:['operation','offering'],protection:['damageTypes','stacking'],object:['operation','limitC'],area:['radiusMeters','intervalMinutes','trigger','effect']};
 export function validateEffectSpec(spec){
  const errors=[];
  if(!spec||typeof spec!=='object'||Array.isArray(spec))return ['法术效果必须是规则对象'];
@@ -10,6 +10,14 @@ export function validateEffectSpec(spec){
  if(!Number.isSafeInteger(spec.power)||spec.power<1||spec.power>5000)errors.push('法术规则强度非法');
  if(spec.damageType!==undefined&&!damageTypes.includes(spec.damageType))errors.push('伤害门类不在规则表');
  if(spec.armorFactor!==undefined&&(!Number.isFinite(spec.armorFactor)||spec.armorFactor<0||spec.armorFactor>1))errors.push('护甲系数须在0至1之间');
+ if(spec.kind==='area'){
+  if(!Number.isFinite(spec.radiusMeters)||spec.radiusMeters<=0||spec.radiusMeters>100)errors.push('区域半径须在0至100米之间');
+  if(!Number.isSafeInteger(spec.intervalMinutes)||spec.intervalMinutes<1||spec.intervalMinutes>1440)errors.push('区域触发间隔非法');
+  if(!['pulse','presence'].includes(spec.trigger))errors.push('区域触发类型未实现');
+  if(!['damage','heal','protection'].includes(spec.effect?.kind))errors.push('区域子效果尚无消费者');
+  else{errors.push(...validateEffectSpec(spec.effect));if(spec.effect.power!==spec.power)errors.push('区域与子效果强度须一致');}
+  if(spec.trigger==='presence'&&spec.effect?.kind!=='protection'||spec.trigger==='pulse'&&!['damage','heal'].includes(spec.effect?.kind))errors.push('区域触发与子效果不匹配');
+ }
  if(spec.kind==='relief'&&(!Array.isArray(spec.statuses)||!spec.statuses.length||new Set(spec.statuses).size!==spec.statuses.length||spec.statuses.some(x=>!['fear','compulsion'].includes(x))))errors.push('解除只支持已登记恐惧或轻度强迫状态');
  if(spec.kind==='protection'){
   if(!Array.isArray(spec.damageTypes)||!spec.damageTypes.length||new Set(spec.damageTypes).size!==spec.damageTypes.length||spec.damageTypes.some(x=>!damageTypes.includes(x)))errors.push('防护须列出不重复的有效伤害门类');
