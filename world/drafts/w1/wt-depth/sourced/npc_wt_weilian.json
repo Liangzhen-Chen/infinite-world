@@ -1,0 +1,211 @@
+{
+  "id": "npc_wt_weilian",
+  "fingerprint": "b15c1deebbf96c688609d3bef081e2524db28476847cb7bdaad45e5b6c5fae6c",
+  "status": "passed",
+  "attempts": 2,
+  "draft": {
+    "id": "npc_wt_weilian",
+    "contract": "audit-patch-v1",
+    "patches": [
+      {
+        "path": "knowledge.known[1]",
+        "value": {
+          "fact": "我在魏涟户居处居住；家里的魏涵是我的儿子。",
+          "source": "bld_wt_home_05",
+          "reliability": "日常亲历"
+        }
+      },
+      {
+        "path": "knowledge.known[2]",
+        "value": {
+          "fact": "我做旧网目辨看人，日常劳动处在修篓木台院；眼下遇到的是家人认不出旧网上的补处。",
+          "source": "npc_wt_weilian",
+          "reliability": "本人亲历，问题尚未解决"
+        }
+      },
+      {
+        "path": "knowledge.unknown[0]",
+        "value": "黄霆要检看的空响石究竟在哪一块网角下。"
+      },
+      {
+        "path": "knowledge.unknown[1]",
+        "value": "魏舒能否辨清旧补处和收紧处的两种结记。"
+      },
+      {
+        "path": "voice.register",
+        "value": "解释旧网时细缓耐心，遇新结法会先追问用处。"
+      },
+      {
+        "path": "goals.short[0].steps[0].content",
+        "value": "迎光指出旧补网眼，先让家人看见两处不同结记。"
+      },
+      {
+        "path": "goals.mid[0].steps[0].content",
+        "value": "与黄霆核对检看石的位置，再询问哪段网必须先挪。"
+      },
+      {
+        "path": "goals.long[0].steps[0].content",
+        "value": "请魏舒逐处说明结记用处，听不清的地方重新拆讲。"
+      },
+      {
+        "path": "relationships[0].note",
+        "value": "魏涵是家里的儿子；肯干/贪闲，这件事还需要彼此听完再商量。"
+      },
+      {
+        "path": "relationships[1].note",
+        "value": "尤敏是家里的配偶；随和/慢性子，这件事还需要彼此听完再商量。"
+      },
+      {
+        "path": "relationships[2].note",
+        "value": "魏舒是家里的孙女；专注/怕虫，这件事还需要彼此听完再商量。"
+      },
+      {
+        "path": "memorySeeds[2]",
+        "value": {
+          "id": "memory_wt_depth_group_1",
+          "event": "魏涟、黄霆、贺芩和吕沫在苇席收边屋歇手时核对过各自工序。魏涟说旧网要迎光，黄霆说空响石边要腾空；贺芩和吕沫又谈到湿席与备灶争用水盆。四人只讲清了各自顾虑，还没有定下交换位置或交盆时刻。",
+          "location": "bld_wt_workroom",
+          "salience": 4,
+          "knownBy": [
+            "npc_wt_weilian",
+            "npc_wt_huangting",
+            "npc_wt_heqin",
+            "npc_wt_lvmo"
+          ],
+          "reliability": "共同亲历；未解决的分歧仍待各户核对"
+        }
+      }
+    ]
+  },
+  "review": {
+    "contradictions": []
+  },
+  "errors": [],
+  "warnings": [],
+  "feedback": null,
+  "draftResponse": {
+    "id": "8407c76d-ef20-4d7f-974f-837f074a8390",
+    "object": "chat.completion",
+    "created": 1791762518,
+    "model": "deepseek-flash",
+    "choices": [
+      {
+        "index": 0,
+        "message": {
+          "role": "assistant",
+          "content": "{\"id\":\"npc_wt_weilian\",\"contract\":\"audit-patch-v1\",\"patches\":[{\"path\":\"knowledge.known[1]\",\"value\":{\"fact\":\"我在魏涟户居处居住；家里的魏涵是我的儿子。\",\"source\":\"bld_wt_home_05\",\"reliability\":\"日常亲历\"}},{\"path\":\"knowledge.known[2]\",\"value\":{\"fact\":\"我做旧网目辨看人，日常劳动处在修篓木台院；眼下遇到的是家人认不出旧网上的补处。\",\"source\":\"npc_wt_weilian\",\"reliability\":\"本人亲历，问题尚未解决\"}},{\"path\":\"knowledge.unknown[0]\",\"value\":\"黄霆要检看的空响石究竟在哪一块网角下。\"},{\"path\":\"knowledge.unknown[1]\",\"value\":\"魏舒能否辨清旧补处和收紧处的两种结记。\"},{\"path\":\"voice.register\",\"value\":\"解释旧网时细缓耐心，遇新结法会先追问用处。\"},{\"path\":\"goals.short[0].steps[0].content\",\"value\":\"迎光指出旧补网眼，先让家人看见两处不同结记。\"},{\"path\":\"goals.mid[0].steps[0].content\",\"value\":\"与黄霆核对检看石的位置，再询问哪段网必须先挪。\"},{\"path\":\"goals.long[0].steps[0].content\",\"value\":\"请魏舒逐处说明结记用处，听不清的地方重新拆讲。\"},{\"path\":\"relationships[0].note\",\"value\":\"魏涵是家里的儿子；肯干/贪闲，这件事还需要彼此听完再商量。\"},{\"path\":\"relationships[1].note\",\"value\":\"尤敏是家里的配偶；随和/慢性子，这件事还需要彼此听完再商量。\"},{\"path\":\"relationships[2].note\",\"value\":\"魏舒是家里的孙女；专注/怕虫，这件事还需要彼此听完再商量。\"},{\"path\":\"memorySeeds[2]\",\"value\":{\"id\":\"memory_wt_depth_group_1\",\"event\":\"魏涟、黄霆、贺芩和吕沫在苇席收边屋歇手时核对过各自工序。魏涟说旧网要迎光，黄霆说空响石边要腾空；贺芩和吕沫又谈到湿席与备灶争用水盆。四人只讲清了各自顾虑，还没有定下交换位置或交盆时刻。\",\"location\":\"bld_wt_workroom\",\"salience\":4,\"knownBy\":[\"npc_wt_weilian\",\"npc_wt_huangting\",\"npc_wt_heqin\",\"npc_wt_lvmo\"],\"reliability\":\"共同亲历；未解决的分歧仍待各户核对\"}}]}"
+        },
+        "logprobs": null,
+        "finish_reason": "stop"
+      }
+    ],
+    "usage": {
+      "prompt_tokens": 8487,
+      "completion_tokens": 592,
+      "total_tokens": 9079,
+      "prompt_tokens_details": {
+        "cached_tokens": 7680
+      },
+      "prompt_cache_hit_tokens": 7680,
+      "prompt_cache_miss_tokens": 807
+    },
+    "system_fingerprint": "aeb56401ca74e127821c4f9126dcb669",
+    "measurement": {
+      "label": "content-sourced-npc_wt_weilian-draft1",
+      "model": "deepseek-flash",
+      "thinking": "disabled",
+      "usage": {
+        "prompt_tokens": 8487,
+        "completion_tokens": 592,
+        "total_tokens": 9079,
+        "prompt_tokens_details": {
+          "cached_tokens": 7680
+        },
+        "prompt_cache_hit_tokens": 7680,
+        "prompt_cache_miss_tokens": 807
+      },
+      "costUpperYuan": 0.006657199999999999,
+      "cumulativeUpperYuan": 3.039638079999999,
+      "latencyMs": 2761.995500000001,
+      "timestamp": "2026-10-11T23:48:42.117Z"
+    }
+  },
+  "measurements": [
+    {
+      "label": "content-sourced-npc_wt_weilian-draft0",
+      "model": "deepseek-flash",
+      "thinking": "disabled",
+      "usage": {
+        "prompt_tokens": 7805,
+        "completion_tokens": 592,
+        "total_tokens": 8397,
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        },
+        "prompt_cache_hit_tokens": 0,
+        "prompt_cache_miss_tokens": 7805
+      },
+      "costUpperYuan": 0.020346,
+      "cumulativeUpperYuan": 2.996026879999999,
+      "latencyMs": 2663.2173000000003,
+      "timestamp": "2026-10-11T23:48:34.164Z"
+    },
+    {
+      "label": "content-sourced-npc_wt_weilian-review0",
+      "model": "deepseek-flash",
+      "thinking": "disabled",
+      "usage": {
+        "prompt_tokens": 14985,
+        "completion_tokens": 873,
+        "total_tokens": 15858,
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        },
+        "prompt_cache_hit_tokens": 0,
+        "prompt_cache_miss_tokens": 14985
+      },
+      "costUpperYuan": 0.036954,
+      "cumulativeUpperYuan": 3.0329808799999993,
+      "latencyMs": 5178.632300000001,
+      "timestamp": "2026-10-11T23:48:39.348Z"
+    },
+    {
+      "label": "content-sourced-npc_wt_weilian-draft1",
+      "model": "deepseek-flash",
+      "thinking": "disabled",
+      "usage": {
+        "prompt_tokens": 8487,
+        "completion_tokens": 592,
+        "total_tokens": 9079,
+        "prompt_tokens_details": {
+          "cached_tokens": 7680
+        },
+        "prompt_cache_hit_tokens": 7680,
+        "prompt_cache_miss_tokens": 807
+      },
+      "costUpperYuan": 0.006657199999999999,
+      "cumulativeUpperYuan": 3.039638079999999,
+      "latencyMs": 2761.995500000001,
+      "timestamp": "2026-10-11T23:48:42.117Z"
+    },
+    {
+      "label": "content-sourced-npc_wt_weilian-review1",
+      "model": "deepseek-flash",
+      "thinking": "disabled",
+      "usage": {
+        "prompt_tokens": 14985,
+        "completion_tokens": 7,
+        "total_tokens": 14992,
+        "prompt_tokens_details": {
+          "cached_tokens": 14848
+        },
+        "prompt_cache_hit_tokens": 14848,
+        "prompt_cache_miss_tokens": 137
+      },
+      "costUpperYuan": 0.00092392,
+      "cumulativeUpperYuan": 3.040561999999999,
+      "latencyMs": 1172.5630999999994,
+      "timestamp": "2026-10-11T23:48:43.297Z"
+    }
+  ]
+}

@@ -1,0 +1,436 @@
+{
+  "id": "npc_hw_anhuai",
+  "fingerprint": "96f32d7376544c3770eeef7b4cdbf1fb8f1337dfb0b10a46fe1c6c43294cc8a2",
+  "status": "manual",
+  "attempts": 3,
+  "draft": {
+    "id": "npc_hw_anhuai",
+    "contract": "audit-patch-v1",
+    "patches": [
+      {
+        "path": "knowledge.known[1]",
+        "value": {
+          "fact": "一次风大时停下操作，留意到授粉需要稳妥的天气条件",
+          "source": "npc_hw_anhuai",
+          "reliability": "亲历"
+        }
+      },
+      {
+        "path": "knowledge.known[2]",
+        "value": {
+          "fact": "吴朔、梅绫和安槐谈林果边界。吴朔关心少惊扰繁殖地，梅绫照护公用果园，安槐说明蜂群授粉的想法；共同试验仍须另行商量。",
+          "source": "npc_hw_anhuai",
+          "reliability": "亲历"
+        }
+      },
+      {
+        "path": "knowledge.unknown[0]",
+        "value": "梅绫想在果园哪处先观察花期，是否需要避开林缘繁殖地。"
+      },
+      {
+        "path": "knowledge.unknown[1]",
+        "value": "罗苇愿不愿开放自家哪段田地作观察，何时再谈试验条件。"
+      },
+      {
+        "path": "goals.short[0].steps[1].content",
+        "value": "把蜂群活动与租地边界说给来询问的邻户，逐项问他们的顾虑。"
+      },
+      {
+        "path": "goals.mid[0].steps[1].content",
+        "value": "先询问田主意愿，再核对天气和观察范围。"
+      },
+      {
+        "path": "goals.long[0].steps[1].content",
+        "value": "记录不同风势下的蜂群活动，再向许苓询问工具可行性。"
+      },
+      {
+        "path": "voice.register",
+        "value": "蜂农交流口吻，先报蜂群状况，设想用商量语气"
+      },
+      {
+        "path": "memorySeeds[2]",
+        "value": {
+          "id": "memory_t10_orchard-boundary",
+          "event": "在旧渡口公用水盏周边，吴朔、梅绫和安槐谈林果边界。吴朔关心少惊扰繁殖地，梅绫照护公用果园，安槐说明蜂群授粉的想法；共同试验仍须另行商量。",
+          "knownBy": [
+            "npc_hw_wushuo",
+            "npc_hw_meiling",
+            "npc_hw_anhuai"
+          ],
+          "salience": 3,
+          "reliability": "亲历",
+          "location": "loc_hw_dock"
+        }
+      },
+      {
+        "path": "relationships[0].note",
+        "value": "与梅绫谈蜂场和果园的授粉往来，先核对花期和观察边界。"
+      },
+      {
+        "path": "relationships[1].note",
+        "value": "想与罗苇做农业试验，先核对田主愿意允许的范围和时间。"
+      },
+      {
+        "path": "relationships[2].note",
+        "value": "与陶芷谈草木观察，核对本人所见的花期与植物差别。"
+      }
+    ]
+  },
+  "review": {
+    "contradictions": [
+      {
+        "severity": "hard",
+        "field": "reviewedPaths",
+        "quote": "出处及候选覆盖凭证",
+        "reason": "L2漏审修订叶子\n+ actual - expected\n\n+ []\n- [\n-   'goals.long[0].steps[1].content',\n-   'goals.mid[0].steps[1].content',\n-   'goals.short[0].steps[1].content',\n-   'knowledge.known[1]',\n-   'knowledge.known[2]',\n-   'knowledge.unknown[0]',\n-   'knowledge.unknown[1]',\n-   'memorySeeds[2]',\n-   'relationships[0].note',\n-   'relationships[1].note',\n-   'relationships[2].note',\n-   'voice.register'\n- ]\n"
+      }
+    ],
+    "backgroundReviews": [
+      {
+        "eventId": "memory_t10_orchard-boundary",
+        "sourceHash": "d4cb722ab2388cc077c9011a337f0e7a81f70f0cf60d5655e925ee8e479dc1d9",
+        "reviewedRiskPaths": [
+          "npc_hw_wushuo.secrets[0]",
+          "npc_hw_meiling.secrets[0]",
+          "npc_hw_anhuai.secrets[0]"
+        ],
+        "contradictions": []
+      }
+    ]
+  },
+  "errors": [
+    {
+      "severity": "hard",
+      "field": "reviewedPaths",
+      "quote": "出处及候选覆盖凭证",
+      "reason": "L2漏审修订叶子\n+ actual - expected\n\n+ []\n- [\n-   'goals.long[0].steps[1].content',\n-   'goals.mid[0].steps[1].content',\n-   'goals.short[0].steps[1].content',\n-   'knowledge.known[1]',\n-   'knowledge.known[2]',\n-   'knowledge.unknown[0]',\n-   'knowledge.unknown[1]',\n-   'memorySeeds[2]',\n-   'relationships[0].note',\n-   'relationships[1].note',\n-   'relationships[2].note',\n-   'voice.register'\n- ]\n"
+    }
+  ],
+  "warnings": [],
+  "feedback": [
+    {
+      "severity": "hard",
+      "field": "reviewedPaths",
+      "quote": "出处及候选覆盖凭证",
+      "reason": "L2漏审修订叶子\n+ actual - expected\n\n+ []\n- [\n-   'goals.long[0].steps[1].content',\n-   'goals.mid[0].steps[1].content',\n-   'goals.short[0].steps[1].content',\n-   'knowledge.known[1]',\n-   'knowledge.known[2]',\n-   'knowledge.unknown[0]',\n-   'knowledge.unknown[1]',\n-   'memorySeeds[2]',\n-   'relationships[0].note',\n-   'relationships[1].note',\n-   'relationships[2].note',\n-   'voice.register'\n- ]\n"
+    }
+  ],
+  "draftResponse": {
+    "id": "66feed82-ca3d-4534-a999-4225889c0773",
+    "object": "chat.completion",
+    "created": 1791765606,
+    "model": "deepseek-flash",
+    "choices": [
+      {
+        "index": 0,
+        "message": {
+          "role": "assistant",
+          "content": "{\"id\":\"npc_hw_anhuai\",\"contract\":\"audit-patch-v1\",\"patches\":[{\"path\":\"knowledge.known[1]\",\"value\":{\"fact\":\"一次风大时停下操作，留意到授粉需要稳妥的天气条件\",\"source\":\"npc_hw_anhuai\",\"reliability\":\"亲历\"}},{\"path\":\"knowledge.known[2]\",\"value\":{\"fact\":\"吴朔、梅绫和安槐谈林果边界。吴朔关心少惊扰繁殖地，梅绫照护公用果园，安槐说明蜂群授粉的想法；共同试验仍须另行商量。\",\"source\":\"npc_hw_anhuai\",\"reliability\":\"亲历\"}},{\"path\":\"knowledge.unknown[0]\",\"value\":\"梅绫想在果园哪处先观察花期，是否需要避开林缘繁殖地。\"},{\"path\":\"knowledge.unknown[1]\",\"value\":\"罗苇愿不愿开放自家哪段田地作观察，何时再谈试验条件。\"},{\"path\":\"goals.short[0].steps[1].content\",\"value\":\"把蜂群活动与租地边界说给来询问的邻户，逐项问他们的顾虑。\"},{\"path\":\"goals.mid[0].steps[1].content\",\"value\":\"先询问田主意愿，再核对天气和观察范围。\"},{\"path\":\"goals.long[0].steps[1].content\",\"value\":\"记录不同风势下的蜂群活动，再向许苓询问工具可行性。\"},{\"path\":\"voice.register\",\"value\":\"蜂农交流口吻，先报蜂群状况，设想用商量语气\"},{\"path\":\"memorySeeds[2]\",\"value\":{\"id\":\"memory_t10_orchard-boundary\",\"event\":\"在旧渡口公用水盏周边，吴朔、梅绫和安槐谈林果边界。吴朔关心少惊扰繁殖地，梅绫照护公用果园，安槐说明蜂群授粉的想法；共同试验仍须另行商量。\",\"knownBy\":[\"npc_hw_wushuo\",\"npc_hw_meiling\",\"npc_hw_anhuai\"],\"salience\":3,\"reliability\":\"亲历\",\"location\":\"loc_hw_dock\"}},{\"path\":\"relationships[0].note\",\"value\":\"与梅绫谈蜂场和果园的授粉往来，先核对花期和观察边界。\"},{\"path\":\"relationships[1].note\",\"value\":\"想与罗苇做农业试验，先核对田主愿意允许的范围和时间。\"},{\"path\":\"relationships[2].note\",\"value\":\"与陶芷谈草木观察，核对本人所见的花期与植物差别。\"}]}"
+        },
+        "logprobs": null,
+        "finish_reason": "stop"
+      }
+    ],
+    "usage": {
+      "prompt_tokens": 12219,
+      "completion_tokens": 560,
+      "total_tokens": 12779,
+      "prompt_tokens_details": {
+        "cached_tokens": 12032
+      },
+      "prompt_cache_hit_tokens": 12032,
+      "prompt_cache_miss_tokens": 187
+    },
+    "system_fingerprint": "aeb56401ca74e127821c4f9126dcb669",
+    "measurement": {
+      "label": "content-first-review-npc_hw_anhuai-draft2",
+      "model": "deepseek-flash",
+      "thinking": "disabled",
+      "usage": {
+        "prompt_tokens": 12219,
+        "completion_tokens": 560,
+        "total_tokens": 12779,
+        "prompt_tokens_details": {
+          "cached_tokens": 12032
+        },
+        "prompt_cache_hit_tokens": 12032,
+        "prompt_cache_miss_tokens": 187
+      },
+      "costUpperYuan": 0.0053352799999999995,
+      "cumulativeUpperYuan": 5.90871776,
+      "latencyMs": 2367.619100000011,
+      "timestamp": "2026-10-12T00:40:09.376Z"
+    }
+  },
+  "measurements": [
+    {
+      "label": "content-first-review-npc_hw_anhuai-draft0",
+      "model": "deepseek-flash",
+      "thinking": "disabled",
+      "usage": {
+        "prompt_tokens": 12018,
+        "completion_tokens": 560,
+        "total_tokens": 12578,
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        },
+        "prompt_cache_hit_tokens": 0,
+        "prompt_cache_miss_tokens": 12018
+      },
+      "costUpperYuan": 0.028516,
+      "cumulativeUpperYuan": 5.84229584,
+      "latencyMs": 2844.7783000000054,
+      "timestamp": "2026-10-12T00:40:01.536Z"
+    },
+    {
+      "label": "content-first-review-npc_hw_anhuai-review0",
+      "model": "deepseek-flash",
+      "thinking": "disabled",
+      "usage": {
+        "prompt_tokens": 26194,
+        "completion_tokens": 119,
+        "total_tokens": 26313,
+        "prompt_tokens_details": {
+          "cached_tokens": 128
+        },
+        "prompt_cache_hit_tokens": 128,
+        "prompt_cache_miss_tokens": 26066
+      },
+      "costUpperYuan": 0.053089120000000004,
+      "cumulativeUpperYuan": 5.89538496,
+      "latencyMs": 1651.3016999999963,
+      "timestamp": "2026-10-12T00:40:03.194Z"
+    },
+    {
+      "label": "content-first-review-npc_hw_anhuai-draft1",
+      "model": "deepseek-flash",
+      "thinking": "disabled",
+      "usage": {
+        "prompt_tokens": 12219,
+        "completion_tokens": 560,
+        "total_tokens": 12779,
+        "prompt_tokens_details": {
+          "cached_tokens": 11904
+        },
+        "prompt_cache_hit_tokens": 11904,
+        "prompt_cache_miss_tokens": 315
+      },
+      "costUpperYuan": 0.00558616,
+      "cumulativeUpperYuan": 5.90097112,
+      "latencyMs": 2403.1016999999993,
+      "timestamp": "2026-10-12T00:40:05.604Z"
+    },
+    {
+      "label": "content-first-review-npc_hw_anhuai-review1",
+      "model": "deepseek-flash",
+      "thinking": "disabled",
+      "usage": {
+        "prompt_tokens": 26194,
+        "completion_tokens": 119,
+        "total_tokens": 26313,
+        "prompt_tokens_details": {
+          "cached_tokens": 25984
+        },
+        "prompt_cache_hit_tokens": 25984,
+        "prompt_cache_miss_tokens": 210
+      },
+      "costUpperYuan": 0.00241136,
+      "cumulativeUpperYuan": 5.90338248,
+      "latencyMs": 1390.3656000000192,
+      "timestamp": "2026-10-12T00:40:07.002Z"
+    },
+    {
+      "label": "content-first-review-npc_hw_anhuai-draft2",
+      "model": "deepseek-flash",
+      "thinking": "disabled",
+      "usage": {
+        "prompt_tokens": 12219,
+        "completion_tokens": 560,
+        "total_tokens": 12779,
+        "prompt_tokens_details": {
+          "cached_tokens": 12032
+        },
+        "prompt_cache_hit_tokens": 12032,
+        "prompt_cache_miss_tokens": 187
+      },
+      "costUpperYuan": 0.0053352799999999995,
+      "cumulativeUpperYuan": 5.90871776,
+      "latencyMs": 2367.619100000011,
+      "timestamp": "2026-10-12T00:40:09.376Z"
+    },
+    {
+      "label": "content-first-review-npc_hw_anhuai-review2",
+      "model": "deepseek-flash",
+      "thinking": "disabled",
+      "usage": {
+        "prompt_tokens": 26194,
+        "completion_tokens": 119,
+        "total_tokens": 26313,
+        "prompt_tokens_details": {
+          "cached_tokens": 25984
+        },
+        "prompt_cache_hit_tokens": 25984,
+        "prompt_cache_miss_tokens": 210
+      },
+      "costUpperYuan": 0.00241136,
+      "cumulativeUpperYuan": 5.91112912,
+      "latencyMs": 1251.4990999999864,
+      "timestamp": "2026-10-12T00:40:10.635Z"
+    }
+  ],
+  "rawProviderReviewResponses": [
+    {
+      "attempt": 1,
+      "response": {
+        "id": "e35be9d4-7c08-4176-add4-8022d8fdda8a",
+        "object": "chat.completion",
+        "created": 1791765600,
+        "model": "deepseek-flash",
+        "choices": [
+          {
+            "index": 0,
+            "message": {
+              "role": "assistant",
+              "content": "{\"contradictions\":[],\"backgroundReviews\":[{\"eventId\":\"memory_t10_orchard-boundary\",\"sourceHash\":\"d4cb722ab2388cc077c9011a337f0e7a81f70f0cf60d5655e925ee8e479dc1d9\",\"reviewedRiskPaths\":[\"npc_hw_wushuo.secrets[0]\",\"npc_hw_meiling.secrets[0]\",\"npc_hw_anhuai.secrets[0]\"],\"contradictions\":[]}]}"
+            },
+            "logprobs": null,
+            "finish_reason": "stop"
+          }
+        ],
+        "usage": {
+          "prompt_tokens": 26194,
+          "completion_tokens": 119,
+          "total_tokens": 26313,
+          "prompt_tokens_details": {
+            "cached_tokens": 128
+          },
+          "prompt_cache_hit_tokens": 128,
+          "prompt_cache_miss_tokens": 26066
+        },
+        "system_fingerprint": "aeb56401ca74e127821c4f9126dcb669",
+        "measurement": {
+          "label": "content-first-review-npc_hw_anhuai-review0",
+          "model": "deepseek-flash",
+          "thinking": "disabled",
+          "usage": {
+            "prompt_tokens": 26194,
+            "completion_tokens": 119,
+            "total_tokens": 26313,
+            "prompt_tokens_details": {
+              "cached_tokens": 128
+            },
+            "prompt_cache_hit_tokens": 128,
+            "prompt_cache_miss_tokens": 26066
+          },
+          "costUpperYuan": 0.053089120000000004,
+          "cumulativeUpperYuan": 5.89538496,
+          "latencyMs": 1651.3016999999963,
+          "timestamp": "2026-10-12T00:40:03.194Z"
+        }
+      },
+      "hash": "f8e47a07dacc46f8912120478b77c464ccdb377bc2c524cb7627285f3e012250"
+    },
+    {
+      "attempt": 2,
+      "response": {
+        "id": "7b6cfaae-6db6-4bcd-82c6-ccfcee83a7db",
+        "object": "chat.completion",
+        "created": 1791765604,
+        "model": "deepseek-flash",
+        "choices": [
+          {
+            "index": 0,
+            "message": {
+              "role": "assistant",
+              "content": "{\"contradictions\":[],\"backgroundReviews\":[{\"eventId\":\"memory_t10_orchard-boundary\",\"sourceHash\":\"d4cb722ab2388cc077c9011a337f0e7a81f70f0cf60d5655e925ee8e479dc1d9\",\"reviewedRiskPaths\":[\"npc_hw_wushuo.secrets[0]\",\"npc_hw_meiling.secrets[0]\",\"npc_hw_anhuai.secrets[0]\"],\"contradictions\":[]}]}"
+            },
+            "logprobs": null,
+            "finish_reason": "stop"
+          }
+        ],
+        "usage": {
+          "prompt_tokens": 26194,
+          "completion_tokens": 119,
+          "total_tokens": 26313,
+          "prompt_tokens_details": {
+            "cached_tokens": 25984
+          },
+          "prompt_cache_hit_tokens": 25984,
+          "prompt_cache_miss_tokens": 210
+        },
+        "system_fingerprint": "aeb56401ca74e127821c4f9126dcb669",
+        "measurement": {
+          "label": "content-first-review-npc_hw_anhuai-review1",
+          "model": "deepseek-flash",
+          "thinking": "disabled",
+          "usage": {
+            "prompt_tokens": 26194,
+            "completion_tokens": 119,
+            "total_tokens": 26313,
+            "prompt_tokens_details": {
+              "cached_tokens": 25984
+            },
+            "prompt_cache_hit_tokens": 25984,
+            "prompt_cache_miss_tokens": 210
+          },
+          "costUpperYuan": 0.00241136,
+          "cumulativeUpperYuan": 5.90338248,
+          "latencyMs": 1390.3656000000192,
+          "timestamp": "2026-10-12T00:40:07.002Z"
+        }
+      },
+      "hash": "f1189fdcc20ebb23974374ba73f147eb5a8ddc54eae4189a69f7739c80b335d7"
+    },
+    {
+      "attempt": 3,
+      "response": {
+        "id": "fea61bf3-12ec-4546-bec8-d1a61c4491d9",
+        "object": "chat.completion",
+        "created": 1791765608,
+        "model": "deepseek-flash",
+        "choices": [
+          {
+            "index": 0,
+            "message": {
+              "role": "assistant",
+              "content": "{\"contradictions\":[],\"backgroundReviews\":[{\"eventId\":\"memory_t10_orchard-boundary\",\"sourceHash\":\"d4cb722ab2388cc077c9011a337f0e7a81f70f0cf60d5655e925ee8e479dc1d9\",\"reviewedRiskPaths\":[\"npc_hw_wushuo.secrets[0]\",\"npc_hw_meiling.secrets[0]\",\"npc_hw_anhuai.secrets[0]\"],\"contradictions\":[]}]}"
+            },
+            "logprobs": null,
+            "finish_reason": "stop"
+          }
+        ],
+        "usage": {
+          "prompt_tokens": 26194,
+          "completion_tokens": 119,
+          "total_tokens": 26313,
+          "prompt_tokens_details": {
+            "cached_tokens": 25984
+          },
+          "prompt_cache_hit_tokens": 25984,
+          "prompt_cache_miss_tokens": 210
+        },
+        "system_fingerprint": "aeb56401ca74e127821c4f9126dcb669",
+        "measurement": {
+          "label": "content-first-review-npc_hw_anhuai-review2",
+          "model": "deepseek-flash",
+          "thinking": "disabled",
+          "usage": {
+            "prompt_tokens": 26194,
+            "completion_tokens": 119,
+            "total_tokens": 26313,
+            "prompt_tokens_details": {
+              "cached_tokens": 25984
+            },
+            "prompt_cache_hit_tokens": 25984,
+            "prompt_cache_miss_tokens": 210
+          },
+          "costUpperYuan": 0.00241136,
+          "cumulativeUpperYuan": 5.91112912,
+          "latencyMs": 1251.4990999999864,
+          "timestamp": "2026-10-12T00:40:10.635Z"
+        }
+      },
+      "hash": "a63dffe6f6c0f69bf6b6ced0c53c69f7dfd5a0d51d881b7badffc119e2f4b2bb"
+    }
+  ]
+}

@@ -18,7 +18,7 @@ export async function runAudit({root=path.resolve('world'),json=false,write=cons
  const report=auditNpcDepth(await loadWorld(root));
  if(json)write(JSON.stringify(report,null,2));
  else {
-  write(`完整档审计：${report.checked}人，${report.issues.length}项缺口；独立验证器，正式release/final入口待T11接入。`);
+  write(`完整档审计：${report.checked}人，${report.issues.length}项缺口；正式release/final已接入全体完整档门槛。`);
   for(const row of report.issues)write(`${row.id}\t${row.field}\t${row.code}\t${row.reason}`);
   write(`旧17人traits回归：来源${report.legacyTraits.source}，${report.legacyTraits.ok?'通过':'存在缺口'}；仅核验，无内容改写。`);
   for(const row of report.legacyTraits.rows)write(`${row.id}\t${row.field}\t${row.ok?'OK':'FAIL'}\t${row.reason}`);

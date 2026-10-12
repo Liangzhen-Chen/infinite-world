@@ -1,0 +1,67 @@
+{
+  "index": 0,
+  "fingerprint": "92320295e305a45ea25e313ecb082e06a5e1269518348e347a83633666cda426",
+  "count": 25,
+  "passed": 14,
+  "ids": [
+    "npc_hw_linsui",
+    "npc_hw_ayan",
+    "npc_hw_chenbai",
+    "npc_hw_xuling",
+    "npc_hw_duanyan",
+    "npc_hw_duanhe",
+    "npc_hw_wushuo",
+    "npc_hw_taozhi",
+    "npc_hw_zhengshuisheng",
+    "npc_hw_luowei",
+    "npc_hw_sulan",
+    "npc_hw_gucen",
+    "npc_hw_meiling",
+    "npc_hw_yanzhe",
+    "npc_hw_luqing",
+    "npc_hw_hezhou",
+    "npc_hw_anhuai",
+    "npc_hw_shendu",
+    "npc_hw_baihui",
+    "npc_hw_fanrong",
+    "npc_hw_shijin",
+    "npc_hw_miaozhen",
+    "npc_hw_xinglu",
+    "npc_hw_ranmo",
+    "npc_hw_puduo"
+  ],
+  "rewritten": 13,
+  "manual": [
+    "npc_hw_chenbai",
+    "npc_hw_xuling",
+    "npc_hw_wushuo",
+    "npc_hw_luowei",
+    "npc_hw_gucen",
+    "npc_hw_meiling",
+    "npc_hw_yanzhe",
+    "npc_hw_luqing",
+    "npc_hw_anhuai",
+    "npc_hw_shendu",
+    "npc_hw_xinglu"
+  ],
+  "pending": [],
+  "flagged": [
+    "npc_hw_xuling",
+    "npc_hw_gucen",
+    "npc_hw_luqing"
+  ],
+  "sample": [
+    "npc_hw_linsui",
+    "npc_hw_hezhou",
+    "npc_hw_ranmo",
+    "npc_hw_puduo",
+    "npc_hw_sulan"
+  ],
+  "l4": {
+    "approved": false,
+    "notes": []
+  },
+  "costUpperYuan": 6.457421679999996,
+  "manualRatio": 0.44,
+  "needsSystemicRepair": true
+}

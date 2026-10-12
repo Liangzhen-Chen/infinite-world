@@ -8,7 +8,7 @@ import crypto from 'node:crypto';
 import {loadWorld} from '../tools/load-world.mjs';
 import {auditNpcDepth} from '../tools/audit-npc-depth.mjs';
 import {hashContent} from '../tools/content-pipeline.mjs';
-import {depthEntries,patchDraft,applyDepthDraft,verifyUnchanged,validateDraft,validatePatchResults,getPath,contextFor,buildReviewRequest} from '../tools/npc-depth-content.mjs';
+import {depthEntries,patchDraft,applyDepthDraft,verifyUnchanged,validateDraft,validatePatchResults,getPath,contextFor,buildReviewRequest,validateAuthoredBackground,checkIncrementalReview} from '../tools/npc-depth-content.mjs';
 import * as config from '../world/design/w1-sb-depth.mjs';
 import {sangbanRoster,sangbanFull} from '../world/design/w1-villages-sangban.mjs';
 
@@ -128,4 +128,61 @@ test('15个新共同事件没有冒充原明确亲历，出处哈希只指正式
   for(const ref of background.sourceRefs){const collection={'people/baseline.json':world.npcs,'geo/settlements.json':world.settlementProfiles,'geo/locations.json':world.locations}[ref.file];assert.ok(collection);assert.deepEqual(getPath(collection.find(n=>n.id===ref.id),ref.field),ref.value);assert.equal(hashContent(ref.value),ref.contentHash);assert.doesNotMatch(ref.field,/secrets|privateFact/);}
   assert.ok(background.newFacts.includes('具体共同在场地点'));assert.ok(background.forbiddenResults.some(s=>s.includes('私密')));
  }
+});
+
+const firstReviewRoot=path.join(root,'first-review'),backgroundFile=path.join(firstReviewRoot,'authored-background.json');
+const background=JSON.parse(await fs.readFile(backgroundFile,'utf8'));
+
+test('T25官方纯验证接受15组独立出处，3人网络不扩大二人共享知情者',()=>{
+ const validated=validateAuthoredBackground(background,entries,world);
+ assert.equal(validated.events.length,15);assert.equal(background.reviewStatus,'pending-independent-L2-L4');
+ assert.equal(new Set(validated.events.flatMap(e=>e.actors)).size,30);
+ for(const [index,event] of background.events.entries()){
+  assert.equal(event.network.actors.length,3);assert.equal(event.actors.length,2);assert.equal(event.network.nonWitnessActors.length,1);
+  assert.ok(!event.actors.includes(event.network.nonWitnessActors[0]));
+  const person=world.residents.find(n=>n.id===event.network.nonWitnessActors[0]);assert.ok(person.age>=18);
+  assert.ok(event.actors.some(id=>world.npcs.find(n=>n.id===id).household.includes(person.id)));
+  const p=event.network.problemRef,problem=getPath(world[p.collection].find(row=>row.id===p.id),p.field);
+  assert.equal(p.hash,hashContent(problem));
+  if(index<5){assert.equal(p.collection,'settlementProfiles');assert.equal(problem.public,true);assert.equal(problem.id,`problem_sb_${index+1}`);}
+  else {assert.equal(p.collection,'npcs');assert.equal(p.visibility,'private');assert.ok(p.publicSpeech);assert.equal(p.field,'goals.short[0].content');}
+  for(const ref of event.sourceRefs){assert.equal(ref.hash,hashContent(getPath(world[ref.collection].find(row=>row.id===ref.id),ref.field)));if(['npcs','residents'].includes(ref.collection)){assert.equal(ref.visibility,'private');assert.doesNotMatch(ref.field,/secrets|privateFact|knowledge|memorySeeds/);}}
+  for(const actor of event.actors){const n=world.npcs.find(n=>n.id===actor);for(const [i,secret] of n.secrets.entries())assert.ok(event.risks.some(r=>r.id===actor&&r.field===`secrets[${i}]`&&r.hash===hashContent(secret)));assert.ok(event.risks.some(r=>r.id===actor&&r.field==='authoredFacts.privateFact'&&r.hash===hashContent(n.authoredFacts.privateFact)));
+   const association=event.associations.find(a=>a.id===actor),entry=entries.find(e=>e.id===actor),memory=entry.patches.find(p=>p.path===association.path).value;
+   assert.ok(association.viewpoint);assert.equal(association.factsHash,hashContent(event.designedFacts));assert.equal(memory.event,association.narrative);assert.equal(memory.location,event.location);assert.deepEqual(memory.knownBy,event.actors);
+  }
+ }
+});
+
+test('桑坂独立出处拒绝候选自证、过期字段、泄密及未参加者获知',()=>{
+ for(const change of [b=>b.events[0].sourceRefs[0].collection='candidate',b=>b.events[0].sourceRefs[0].hash='stale',b=>b.events[0].risks.splice(0,1),b=>b.events[0].sourceRefs.find(r=>r.collection==='npcs').visibility='public',b=>b.events[0].designedFacts.push(world.npcs.find(n=>n.id===b.events[0].actors[0]).secrets[0].content)]){
+  const invalid=structuredClone(background);change(invalid);assert.throws(()=>validateAuthoredBackground(invalid,entries,world));
+ }
+ // This is an actual extra copy of event 1, unlike memory ID 10 sharing a prefix.
+ const changed=structuredClone(entries),outsider=changed.find(e=>e.id==='npc_sb_feiqing');
+ outsider.patches.find(p=>p.path.startsWith('memorySeeds[')).value.event=background.events[0].narrative;
+ assert.throws(()=>validateAuthoredBackground(background,changed,world),/未参与者|事件事实/);
+ const included=depthEntries(config.patchRows.map(r=>r.before),{...config,authoredBackground:background},world);
+ for(const entry of included){const context=contextFor(entry,world),request=buildReviewRequest(entry,patchDraft(entry),context),payload=JSON.parse(request.messages[1].content);
+  assert.equal(payload.publishedFacts.authoredBackground.sourceHash,hashContent(background));
+  assert.ok(payload.publishedFacts.authoredBackground.events.every(event=>event.privateRisks.length===event.risks.length));
+  assert.throws(()=>checkIncrementalReview({contradictions:[],reviewedPaths:entry.patches.map(p=>p.path)},entry,context),/完整三字段/);
+  assert.throws(()=>checkIncrementalReview({contradictions:[],reviewedPaths:entry.patches.map(p=>p.path),backgroundReviews:[]},entry,context),/缺独立事件出处L2/);
+ }
+});
+
+test('官方来源prepare保持原产物与候选，首审冻结目录重跑零写入且无预算',async()=>{
+ const evidence=JSON.parse(await fs.readFile(path.join(firstReviewRoot,'opt-in-evidence.json'),'utf8'));
+ assert.equal(evidence.cardId,'T09');assert.equal(evidence.modelCalls,0);assert.deepEqual(evidence.candidateChanges,[]);
+ for(const old of evidence.previousFiles)assert.equal(hashContent(JSON.parse(await fs.readFile(path.resolve(firstReviewRoot,old.path),'utf8'))),old.contentHash);
+ const files=['base.json','candidate.json','foundation.json','manifest.json','authored-background.json'];
+ const before=await Promise.all(files.map(async name=>({name,hash:hashContent(JSON.parse(await fs.readFile(path.join(firstReviewRoot,name),'utf8'))),mtime:(await fs.stat(path.join(firstReviewRoot,name))).mtimeMs})));
+ const env={...process.env};delete env.DEEPSEEK_API_KEY;
+ const result=await exec(process.execPath,['tools/npc-depth.mjs','--design','world/design/w1-sb-depth.mjs','--root',firstReviewRoot,'--authored-background',backgroundFile,'--card','T09','--prepare'],{env});
+ assert.deepEqual(JSON.parse(result.stdout),{entries:30,formalWrite:false,modelCalls:0});
+ for(const old of before){assert.equal(hashContent(JSON.parse(await fs.readFile(path.join(firstReviewRoot,old.name),'utf8'))),old.hash);assert.equal((await fs.stat(path.join(firstReviewRoot,old.name))).mtimeMs,old.mtime);}
+ const manifest=JSON.parse(await fs.readFile(path.join(firstReviewRoot,'manifest.json'),'utf8'));assert.equal(manifest.authoredBackgroundHash,hashContent(background));
+ assert.deepEqual(JSON.parse(await fs.readFile(path.join(firstReviewRoot,'candidate.json'),'utf8')),JSON.parse(await read('candidate')));
+ assert.deepEqual(JSON.parse(await fs.readFile(path.join(firstReviewRoot,'base.json'),'utf8')),JSON.parse(await read('base')));
+ for(const name of ['budget.json','allocation.json','terminal.json','batch-0.json','incremental-l4.json','npc_sb_zhangluo.json'])await assert.rejects(fs.stat(path.join(firstReviewRoot,name)),/ENOENT/);
 });
