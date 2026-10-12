@@ -4,7 +4,7 @@
   "authorizationId": "user-reopen-20261012-01",
   "planningId": "T07-user-reopen-20261012-01-offline-1",
   "revision": "w1-wt-depth-audit-1",
-  "status": "offline-pending-T49",
+  "status": "actual-record-basis-pending-official-prepare",
   "foundationHash": "fffc337e121742c3c32d56a90dbaa8445d2e9ad28166c3c548f398bba1755bae",
   "baseHash": "2ed37836b34c5549531fbe11a3cda2a25638e63893e1d66be43e05d45881b9d7",
   "candidateHash": "4060a8a8fd82e66d10cbe5eb7b57bc33922a96017f8eeeabfe9fd82ebe05ca87",
@@ -67,7 +67,7 @@
     }
   ],
   "invalidationFile": "../reopen/l4-invalidations.json",
-  "invalidationHash": "e8a2e7c56a99cb9c121c3c7d4bd70d8d64e7fe5a4751c7532754bd024389d4cf",
+  "invalidationHash": "23ff54783a63bd6bb2282a1447290a723e9f4a1e049fc7c234aa2f5d1e5a8eef",
   "authorized": [
     {
       "id": "npc_wt_zhangou",
@@ -2747,9 +2747,9 @@
     {
       "id": "npc_wt_zhicai",
       "path": "relationships[0].note",
-      "before": "支络是家里的儿子；衣服扯坏后怕母亲替自己掩饰，这件事还需要彼此听完再商量。",
+      "before": "支络是家里的儿子；好动/爱说笑，这件事还需要彼此听完再商量。",
       "after": "支络是我的儿子；补衣前还需问他衣口扯破的原因，不能把他没开口当作认错。",
-      "beforeHash": "25250d4e6f927d1ba5609e7c18af6ff93ff9c4e86cc52c9a80c456352599c522",
+      "beforeHash": "36d6a101a0a6ebcc070f8cbc171ae5f37ed96c5f3e13a8e052d1b8f6acdca6d3",
       "afterHash": "5245fdd1a0143d0b9b4d9dd24ca0fcb60c4a547d3e45052225398c7a231af092",
       "reason": "原居民currentConcern包含私下想法或未说出口的顾虑；原本人关系只证明亲属身份，不证明这段内容已转告。",
       "sourceRefs": [
@@ -2788,9 +2788,9 @@
     {
       "id": "npc_wt_zhicai",
       "path": "relationships[1].note",
-      "before": "姚蓉是家里的母亲；女儿总替孩子辩解使她不满，这件事还需要彼此听完再商量。",
+      "before": "姚蓉是家里的母亲；诚恳/倔强，这件事还需要彼此听完再商量。",
       "after": "姚蓉是我的母亲；她对我替孩子说话有什么意见尚待问清，饭桌上收住的话不能当作已经说明。",
-      "beforeHash": "d4b1f391f88d5e78cec63955158ba98d9bcb6f03db1250053a9bbbfca00c0924",
+      "beforeHash": "604c1fc0daf6f33809b68126bfd8ea5770344d466b184c345a66f9997c8a5457",
       "afterHash": "481debae5cfbfb6bdd1fdf361a8b99e61c9e867a56059be99a8eac129d64cc8c",
       "reason": "原居民currentConcern包含私下想法或未说出口的顾虑；原本人关系只证明亲属身份，不证明这段内容已转告。",
       "sourceRefs": [
@@ -2829,9 +2829,9 @@
     {
       "id": "npc_wt_xueying",
       "path": "relationships[1].note",
-      "before": "谭瑶是家里的儿媳；想清掉旧根又怕婆母伤心，这件事还需要彼此听完再商量。",
+      "before": "谭瑶是家里的儿媳；爱干净/怕麻烦，这件事还需要彼此听完再商量。",
       "after": "谭瑶是我的儿媳；是否清掉门边旧根还需先问她的想法，未把她收拾中停手当作同意或反对。",
-      "beforeHash": "64d0c1649650827e11a688111e1298de9547714c58795b26a4d31fe4a77ca41e",
+      "beforeHash": "3b5799cc45c6cfaba44e3bcfe541b27b40f56d2aee6b5347a3b43f47d4d8f1d4",
       "afterHash": "d41806e25ddbbaff294a88e78b984c6aa3bb0418f21150a60e6765a6b957dfc0",
       "reason": "原居民currentConcern包含私下想法或未说出口的顾虑；原本人关系只证明亲属身份，不证明这段内容已转告。",
       "sourceRefs": [
@@ -2870,9 +2870,9 @@
     {
       "id": "npc_wt_leizhi",
       "path": "relationships[0].note",
-      "before": "雷华是家里的儿子；母亲总想多问托话人的私事，这件事还需要彼此听完再商量。",
+      "before": "雷华是家里的儿子；耿直/怕生，这件事还需要彼此听完再商量。",
       "after": "雷华是我的儿子；他愿意谈多少托话人的事尚待问清，饭桌上的沉默不说明他是否害怕被追问。",
-      "beforeHash": "11366c89612e71c474d06e212031fdf9a8fcabdaade4d88fc1d56d4df3cfc2ec",
+      "beforeHash": "59bac508727fbc5e6aa18f16465434848825dded34ce236d7b317f23a8df3562",
       "afterHash": "cc8cbcffc1808b3bb84d03d5a777581a5d1aed3e0a8182c5e611f98acf0830fc",
       "reason": "原居民currentConcern包含私下想法或未说出口的顾虑；原本人关系只证明亲属身份，不证明这段内容已转告。",
       "sourceRefs": [
@@ -2911,9 +2911,9 @@
     {
       "id": "npc_wt_niyun",
       "path": "relationships[0].note",
-      "before": "倪梅是家里的配偶；丈夫留下木屑却说回来再扫，这件事还需要彼此听完再商量。",
+      "before": "倪梅是家里的配偶；干练/暴脾气，这件事还需要彼此听完再商量。",
       "after": "倪梅是我的配偶；门边木屑妨碍她进出到什么程度尚待询问，她压着没说的话不能当作已经商量。",
-      "beforeHash": "34bb7044fe8fd33dfb46aa9d9a748c57a256ee2edad8315145ff0c3ef108b1c4",
+      "beforeHash": "5e3a02e079bcb1b74f6c33fdb8f3a60abf3b4ec317e2cc428f173145d3dd7ab3",
       "afterHash": "dfe3d2375d2c5afa6723986fcb68c759c377d6bd32cf1634dfb84cd562f1e082",
       "reason": "原居民currentConcern包含私下想法或未说出口的顾虑；原本人关系只证明亲属身份，不证明这段内容已转告。",
       "sourceRefs": [
@@ -2952,9 +2952,9 @@
     {
       "id": "npc_wt_quhuai",
       "path": "relationships[0].note",
-      "before": "屈荷是家里的配偶；丈夫高声责骂让邻家孩子怕他，这件事还需要彼此听完再商量。",
+      "before": "屈荷是家里的配偶；温和/谨慎，这件事还需要彼此听完再商量。",
       "after": "屈荷是我的配偶；她对我在篱口高声说话有什么意见尚待询问，未把她的私下想法当作已转告。",
-      "beforeHash": "4049161137eafb3fa0feccafb98e6ed7f050b2dcabe65fca422324ea20bf157a",
+      "beforeHash": "dbc8bd1ed5269e9f7c0a70fdd64570af10d63a487e933babaff56d4606a1b4d1",
       "afterHash": "1b036ff5bc5b5c8ae2a281818d49e221f9649c125077e56899dfe18dd2fb5a30",
       "reason": "原居民currentConcern包含私下想法或未说出口的顾虑；原本人关系只证明亲属身份，不证明这段内容已转告。",
       "sourceRefs": [
@@ -2993,9 +2993,9 @@
     {
       "id": "npc_wt_quhuai",
       "path": "relationships[1].note",
-      "before": "屈健是家里的儿子；想换一种篱绳结却怕父亲发火，这件事还需要彼此听完再商量。",
+      "before": "屈健是家里的儿子；爽快/好强，这件事还需要彼此听完再商量。",
       "after": "屈健是我的儿子；他是否想换用别的篱绳结尚待询问，具体结法与试用时段未获知，也未同意改篱口。",
-      "beforeHash": "c1c9b6464ab8cab5a8b48bd90f4254b1083a73ad87316f33ef4d22fdbdeb05fd",
+      "beforeHash": "9c2a44ca627682885516787f806ec0ffc9ee2f844f53ce8f3d724e718cad5157",
       "afterHash": "64de1b031d108a20e8f3c5fbe279470a0d504466ffab4674870509a8eab6f694",
       "reason": "原居民currentConcern包含私下想法或未说出口的顾虑；原本人关系只证明亲属身份，不证明这段内容已转告。",
       "sourceRefs": [
@@ -3034,9 +3034,9 @@
     {
       "id": "npc_wt_gonglu",
       "path": "relationships[0].note",
-      "before": "龚妍是家里的配偶；丈夫挑轻头的事让她被邻人问起，这件事还需要彼此听完再商量。",
+      "before": "龚妍是家里的配偶；公道/刻薄，这件事还需要彼此听完再商量。",
       "after": "龚妍是我的配偶；邻人是否向她问过搬网的事尚待问清，我没有获知她私下怎样想。",
-      "beforeHash": "feda3cc5faf5606ca475b2621237bced8fea924af0952e34582754df7e660451",
+      "beforeHash": "a6455726193b1bb31bd84dd37677993a4abb69f1c1af89c48f36f020cdce0258",
       "afterHash": "bbee7ad7d0a32992375a4b7681e5b06355e6b0b4529cf08bcde27db97fb0f44c",
       "reason": "原居民currentConcern包含私下想法或未说出口的顾虑；原本人关系只证明亲属身份，不证明这段内容已转告。",
       "sourceRefs": [
@@ -3075,9 +3075,9 @@
     {
       "id": "npc_wt_gonglu",
       "path": "relationships[1].note",
-      "before": "龚宛是家里的女儿；大人说湿网重却不让她试抬，这件事还需要彼此听完再商量。",
+      "before": "龚宛是家里的女儿；安静/有耐心，这件事还需要彼此听完再商量。",
       "after": "龚宛是我的女儿；她是否想帮着理网边还需询问，没有让她试抬湿网或认定她能承担搬网。",
-      "beforeHash": "8ed1a8d68fc8ec8dddfcfbf210abf3bb1118cb5e9824fcdf9b2f5031e5f378f7",
+      "beforeHash": "e57f7041503adde79817bb144e0c48135e25f71b9bfd8f3306e6302e14966b29",
       "afterHash": "b4f8aff048dcda10e7838ec7702e43b72516a04529f336181abc964bb2accdd7",
       "reason": "原居民currentConcern包含私下想法或未说出口的顾虑；原本人关系只证明亲属身份，不证明这段内容已转告。",
       "sourceRefs": [
@@ -3116,9 +3116,9 @@
     {
       "id": "npc_wt_jingyao",
       "path": "relationships[0].note",
-      "before": "景丰是家里的父亲；女儿画坏便揉纸让他心疼，这件事还需要彼此听完再商量。",
+      "before": "景丰是家里的父亲；务实/怕浪费，这件事还需要彼此听完再商量。",
       "after": "景丰是我的父亲；他对我揉掉画坏的纸有什么意见尚待询问，未说出口的心疼不能当作已经告诉我。",
-      "beforeHash": "72cc242c81823b4c9e9e0ae18137d5bc6057e996b479cd9b7c018d54babf0090",
+      "beforeHash": "788cd81a22a775767bbe680398ac6c4f7a6321d53705fc5ce9cf6bde2444cfef",
       "afterHash": "03bc25bc0adb7e2bb0e28ecd1cabc93041443d431996c09848f86ad1407a1b5b",
       "reason": "原居民currentConcern包含私下想法或未说出口的顾虑；原本人关系只证明亲属身份，不证明这段内容已转告。",
       "sourceRefs": [
@@ -3157,9 +3157,9 @@
     {
       "id": "npc_wt_fanshui",
       "path": "relationships[0].note",
-      "before": "范柳是家里的女儿；父亲借收垫子留人说话误了出工，这件事还需要彼此听完再商量。",
+      "before": "范柳是家里的女儿；稳妥/急性子，这件事还需要彼此听完再商量。",
       "after": "范柳是我的女儿；她出工前能陪我谈多久尚待询问，站在门口时心里是否发急并未获知。",
-      "beforeHash": "949865ea0e26618cb7995d9cbcf3d8e809a20f199e49921cca91804479302fd6",
+      "beforeHash": "e45fd927183de0e9a79240796611df409c56875f6e3d6436fda2981b9ecdb0f1",
       "afterHash": "e95ef8099ebbbc1e6549e5002f8579d0165e9e0bd4e1c524bad5cb4b8f4bf673",
       "reason": "原居民currentConcern包含私下想法或未说出口的顾虑；原本人关系只证明亲属身份，不证明这段内容已转告。",
       "sourceRefs": [
@@ -3198,9 +3198,9 @@
     {
       "id": "npc_wt_fanshui",
       "path": "relationships[1].note",
-      "before": "解芷是家里的外孙女；祖父旧事讲太长她不敢打断，这件事还需要彼此听完再商量。",
+      "before": "解芷是家里的外孙女；耐心/爱画，这件事还需要彼此听完再商量。",
       "after": "解芷是我的外孙女；听旧事会不会误了她回屋温书尚待询问，不把她怕打断的想法当作已说过。",
-      "beforeHash": "879497499af0f38b2127189f6644fb237bbad8f3b8ba6b581b3c4e31e8feff93",
+      "beforeHash": "67b6bd861063346f9f646b018519effd8bb8b5f1211e3e2e01fcc924b90cddbc",
       "afterHash": "1e990e3168f33551c782dec481aa44011b633375920eb623a86fba33a937195b",
       "reason": "原居民currentConcern包含私下想法或未说出口的顾虑；原本人关系只证明亲属身份，不证明这段内容已转告。",
       "sourceRefs": [
@@ -3239,9 +3239,9 @@
     {
       "id": "npc_wt_shanju",
       "path": "relationships[0].note",
-      "before": "单馨是家里的配偶；丈夫分垛时讲亲疏惹人不快，这件事还需要彼此听完再商量。",
+      "before": "单馨是家里的配偶；利落/贪闲，这件事还需要彼此听完再商量。",
       "after": "单馨是我的配偶；邻里说分垛的事时她有什么顾虑尚待询问，未让她替我认错或代作承诺。",
-      "beforeHash": "e87b6644d1cf39199244709fdeaa55b93334eb73a82b118a24ad0dc152f40432",
+      "beforeHash": "eacb009c83514bb518497411a9d35ed4294f6a1125f5de6b9c70e5e53f5db4a8",
       "afterHash": "19b309663309e5819c6cb10a6a34a2cc328e266eee19382611edf03d9ae5ccfe",
       "reason": "原居民currentConcern包含私下想法或未说出口的顾虑；原本人关系只证明亲属身份，不证明这段内容已转告。",
       "sourceRefs": [
@@ -3280,9 +3280,9 @@
     {
       "id": "npc_wt_dongfei",
       "path": "relationships[0].note",
-      "before": "董露是家里的女儿；母亲说话像报活使她紧张，这件事还需要彼此听完再商量。",
+      "before": "董露是家里的女儿；敏感/认真，这件事还需要彼此听完再商量。",
       "after": "董露是我的女儿；我说话交代活的语气会不会让她紧张尚待询问，不从她翻作业本推定她的心思。",
-      "beforeHash": "0f57b089cf7ad80507f0f3a30ec5ee56de09997093e6eb7430e5297ed6dea8ed",
+      "beforeHash": "69d3bbdbcba3fbdcadffcadf6ba4c1169265a455a12db7f783f3ec6643430c9c",
       "afterHash": "07e3fc500c304ed9d477aa5758804951c712cb65994dd9dfed58b509b3723dae",
       "reason": "原居民currentConcern包含私下想法或未说出口的顾虑；原本人关系只证明亲属身份，不证明这段内容已转告。",
       "sourceRefs": [
@@ -3321,9 +3321,9 @@
     {
       "id": "npc_wt_dongfei",
       "path": "relationships[1].note",
-      "before": "扈惠是家里的母亲；看不懂女儿记活的缩字，这件事还需要彼此听完再商量。",
+      "before": "扈惠是家里的母亲；温和/爱唠叨，这件事还需要彼此听完再商量。",
       "after": "扈惠是我的母亲；柴火简记哪些缩字她没认清尚待询问，没追问不等于她都看懂了。",
-      "beforeHash": "0ff8c0d1ecf3faba945ab5fe71f326ec5ded923ba152c247b0b223cbd940967d",
+      "beforeHash": "7b9413bc8b539aae454cae4c2376b3ad4d3bf45909c9aefb8fd002406968b0e5",
       "afterHash": "bd872baf2c2243872bc225ba2577f5c89134a8282ea2d4ee34b745d688697901",
       "reason": "原居民currentConcern包含私下想法或未说出口的顾虑；原本人关系只证明亲属身份，不证明这段内容已转告。",
       "sourceRefs": [
@@ -3362,9 +3362,9 @@
     {
       "id": "npc_wt_suhui",
       "path": "relationships[0].note",
-      "before": "宿弦是家里的母亲；女儿受了气不愿对人讲，这件事还需要彼此听完再商量。",
+      "before": "宿弦是家里的母亲；沉静/强势，这件事还需要彼此听完再商量。",
       "after": "宿弦是我的母亲；我回家不说话时她有什么担心尚待询问，她压回去的问题没有成为已经发生的交谈。",
-      "beforeHash": "907949e86ac596d93d8e185724ff0a9bfcded292e53c073b6996165f53558838",
+      "beforeHash": "cbc8fc901ef339b231cb2df6167629fb89a4bf721da1f2fb55a46493002a28be",
       "afterHash": "899cd2fed320c8eae95d6aedb327450b7635cf05f31791b3e51a70bb1fbadc7b",
       "reason": "原居民currentConcern包含私下想法或未说出口的顾虑；原本人关系只证明亲属身份，不证明这段内容已转告。",
       "sourceRefs": [
@@ -3403,9 +3403,9 @@
     {
       "id": "npc_wt_qilu",
       "path": "relationships[1].note",
-      "before": "戚梅是家里的女儿；怕孩子学祖父把听说讲成亲历，这件事还需要彼此听完再商量。",
+      "before": "戚梅是家里的女儿；仔细/慢热，这件事还需要彼此听完再商量。",
       "after": "戚梅是我的女儿；她对我说旧水情有什么意见尚待询问，放下筷子不表示她已经说明了自己的顾虑。",
-      "beforeHash": "73ebb2c58301aea9af6a1e468cc7255e909edae395c5947abb0c2bf2e08a5e7c",
+      "beforeHash": "ec553ca81673733b059e3f8df6fc0e115e5055944fdf6672d46a9f8e1070a796",
       "afterHash": "91eb4bc5437c6a1eb9beb36eff49a2b57ec8f94f19ed5484b8d5561c63e1b707",
       "reason": "原居民currentConcern包含私下想法或未说出口的顾虑；原本人关系只证明亲属身份，不证明这段内容已转告。",
       "sourceRefs": [
@@ -3444,9 +3444,9 @@
     {
       "id": "npc_wt_huayin",
       "path": "relationships[1].note",
-      "before": "贾苗是家里的母亲；自己看草叶经验和女儿不同，这件事还需要彼此听完再商量。",
+      "before": "贾苗是家里的母亲；宽厚/倔强，这件事还需要彼此听完再商量。",
       "after": "贾苗是我的母亲；她的旧看叶经验与我眼下做法哪里不相符尚待问清，不把心里搁着的意见当作已经谈过。",
-      "beforeHash": "32cf9a6b364ae972b672665ac677cd5eba5747dfef3f8bdc4c00187bc887dbfa",
+      "beforeHash": "d02bd31081c640fd213806073faac2c42af2b98d8ad0bf5fa653aa5d74862772",
       "afterHash": "49aedfb86043673d08af7e75c41f2127c420bafc5c8160e0dcc50dcf57f53419",
       "reason": "原居民currentConcern包含私下想法或未说出口的顾虑；原本人关系只证明亲属身份，不证明这段内容已转告。",
       "sourceRefs": [
@@ -3485,9 +3485,9 @@
     {
       "id": "npc_wt_xiangzhen",
       "path": "relationships[0].note",
-      "before": "向菲是家里的配偶；晚归时看不清丈夫说的新记号，这件事还需要彼此听完再商量。",
+      "before": "向菲是家里的配偶；谨慎/利落，这件事还需要彼此听完再商量。",
       "after": "向菲是我的配偶；她天黑前回村时能否辨认新记号尚待询问，未预设她夜归或已指出误认岔口。",
-      "beforeHash": "d586f1a2da649698f64b8a4fd178d7c98efe30a29ebcc1d05973fa405455c657",
+      "beforeHash": "f665667922a5fbc51a31943d3fae430cce7aefa25fdaad3121a18f79b93fe999",
       "afterHash": "26c097db92580f7c7a6d531afff6a5c3bd46a1ba329f054df17ba04fd2f3f181",
       "reason": "原居民currentConcern包含私下想法或未说出口的顾虑；原本人关系只证明亲属身份，不证明这段内容已转告。",
       "sourceRefs": [
@@ -3526,9 +3526,9 @@
     {
       "id": "npc_wt_xiangzhen",
       "path": "relationships[1].note",
-      "before": "向涛是家里的儿子；父亲夜路记号画得像自己的涂画，这件事还需要彼此听完再商量。",
+      "before": "向涛是家里的儿子；活泼/恋家，这件事还需要彼此听完再商量。",
       "after": "向涛是我的儿子；他能否分清路记号与随手画的圈尚待询问，未让他参加夜路核查。",
-      "beforeHash": "1a99b58020b24b52050c107a7d0b708712853d91ccfda09a3fb265d493372199",
+      "beforeHash": "6a1b83d8ee3575e18bfd64c5374351b9f501848b5fbb9993c63c2e39b8887bf8",
       "afterHash": "7a6969fdb1922f3d4c222d07e91279fa4b9e86fe11c8d6771ec3cf9ee25c51ae",
       "reason": "原居民currentConcern包含私下想法或未说出口的顾虑；原本人关系只证明亲属身份，不证明这段内容已转告。",
       "sourceRefs": [
