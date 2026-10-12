@@ -61,23 +61,42 @@ review-002-yp=782a49e阶段审核通过，范围限T06正式发布与c64163d修�
 
 ### T06 已完成：榆坡30人真实L1/L2/L4、T04与事件闭合及正式发布已合；28旧通过复用、双人新L2通过，L4五抽样mean4.37/min3，重发零差异，不再派工。
 
-### T07 苇汀失效条目续审【公共来源继承阻碍，待T54】
+### T07 苇汀失效条目续审【真实共享源hard；待T58】
 
 拥有world/design/w1-wt-depth.mjs、world/drafts/w1/wt-depth/及tests/npc-depth-wt.test.mjs。沿原controlled候选和sourced/l4-invalidations.json，逐条处理湛鸥7hard及真实L4失效；核对17未复审ID。已有12 passed只在实际失效或叶改动时重审。原源hash及钉死LF/CRLF出处凭证保留，新增修订继承旧proof，不覆盖旧规划。
 
-依T49，先湛鸥做有原源支持的最小叶修订，首ID≤0.50元；源证据不足保留未知，不用候选证明新背景。沿npc-depth-review.mjs授权轮逐ID，必要审核原独立背景/私密风险；总限4.5，旧spent2.76263016，最多再用1.73736984，停止线同开头。
+29eeeca已合及主CORE40。reopen/complete-003/final-report.json记录湛鸥首轮13叶/1事件/4risk合同完整，memorySeeds[2].event为source hard；支采“两户都催先拿”超过原publicSpeech，不作模型故障重送同文。新增0.05495808元、累计2.81758824/4.5、余1.68241176；首ID已领1/2，第二未领，17后续未发，12记录未变。真实L4与发布预演未完成。
 
 验收tests/{npc-depth-wt,npc-depth-review,npc-depth-authored-background}.test.mjs及CORE；30人L1/L2完整，失效L4重新实际阅读、逐flag+随机5及规则12评分，事件闭合/T04/预演通过后交T11，不改正式人口或正确叶。
 
-2c026c6已完成真实record基准窄修，尚未合入；不再重做before/兄弟叶。只读F:/dnd-wt/T07的reopen/official-prepare-report.json及prepare-complete.mjs：官方prepare成功42 changes。T53实际重放父proof逐项比较12未授权entry，仅authoredBackground不同，context相同；恢复父凭证后全部匹配原record完整fingerprint。新背景hash从c8d3de76变为badf6e23，公共prepare把整包新凭证附至全部30人；旧背景则拒五人已授权收窄事实。失败测试为npc-depth-wt第262行，旧48/49不能写成全过。
+T50真实before/兄弟叶与T54逐entry背景继承已修好，不重做42 changes/12指纹准备。新阻碍见同目录parent-replay-diff.json：tools/npc-depth.mjs父proof仅重放changes，缺真实old-record draft basis，15人23兄弟叶漂移。shared-repair-diff列四方各memorySeeds[2]；background仅group_3.narrative改变，candidate四方同步，其余原sourceRefs/risks/participants不改。shared-repair-plan仍是被拒提议，不能直接视为授权或已通过准备。
 
-共同缺陷定位tools/npc-depth.mjs:138–140：新entry整体换背景而context整体继承父值；T08的revisions.after因此仍为旧稿。T54只修这条派生链；原T07树只读，先集成2c026c6，再在执行树验证。L4登记器tools/npc-depth-review.mjs:150–153也只取首entry的sourceHash且按eventId去重，故必须同发布读取一起窄修；不扩展预算或审核框架。T07真实L2/L4及预演仍未完成，模型槽已释放。
+权限精确范围为npc_wt_zhangou、npc_wt_zhicai、npc_wt_xueying、npc_wt_leizhi各memorySeeds[2]，source仅memory_wt_depth_group_3.narrative。湛鸥provider子字段映射原failurePaths父叶；另三人须新增source权限侧凭证。冻结world/design/w1-reopen-authorization.json祖先hash为f23eb0e7c49f472e75e47fce1946469e6c906a6314e9bf341aa6b77a2bfd3195；原record绑定如下，shared-repair-plan.authorized逐人的inheritedAuthorizationHash继续保留。
+
+| ID | 原grant绑定record hash |
+|---|---|
+| npc_wt_zhangou | eb019f7032173a2fd23085cd778f9dadc856cd797a789d3a88d6724b2160d637 |
+| npc_wt_zhicai | 3f150064b3ae9b26936e94398ef271e9637ac66916db8f5f91b36902811aafc3 |
+| npc_wt_xueying | ec4c2bb7b1b26f72a3c119d76c426220abe86489c1a3fb3a8fb73accd085fa3b |
+| npc_wt_leizhi | 57f901ab78d02a41c7bf1699bc33ca0356ecfa7332b549a3b019c80760716926 |
+
+湛鸥首轮后record为5f18f3b4b4c3ad25f6ebcfad0bd020208ea4d16d513a31bd325d19946d5739c6，须沿prior链核到表内原hash，不能替换祖先。全goal已授权现NPC source编修，主会话可串行维护精确来源凭证，不把普通补证一律转交用户；预算及次数不变。余17/原12只是本次未变快照，T58若使通过者实际context改变，按证据失效重L2。
+
+### T58 T07父basis与四方源唯一续修【零模型】
+
+拥有tools/npc-depth{,-content}.mjs最少helper及review/publish调用点、T07 source/candidate与对应tests。父proof绑定冻结原record hash还原draft basis，再叠changes；record只重建候选，不作事实源。持久/预检/full/compact/发布共用重放，拒篡改越权。
+
+group_3仅narrative及四方memorySeeds[2]同步收窄；沿原publicSpeech，不假定同意，不改sourceRefs/risks/participants。湛鸥finding memorySeeds[2].event映射已准父叶；支采/薛萤/雷芷补共享叶权限。主串行提供source侧凭证，列ID/pointer、原record及grant祖先hash；继承冻结manifest、budget ID/hash/attempt/限额，禁改冻JSON或换nonce空账。
+
+先真实子plan零模型prepare通过；实际已准备父entry与四方修订均须真实测试，禁mock替代，覆盖各消费者及hash/兄弟叶负例。context改变者失效重L2，未变者全指纹/record保持，不硬保12。相关+CORE；不重做42/12或预算框架。T08仅实证同根才复用helper，不扩正文。
+
+权限/quota核过由主复用T07原chat领第二次，本卡0模型。余1.68241176/限4.5/波次20，保留失败和未知预留。仍fail即卡住，不拆卡重领；后续验收沿T07。
 
 ### T08 砾泉最小修卡【零模型；整卡卡住】
 
 据59fca09的reopen-complete/{next-gap.txt,background-source-block.json,neighbor-request-guard-block.json,stopped-report.json}。23passed/7manual，五人背景失效，最多21闭合；余额0.28716496。鞠舒两次已尽，第三次须真正决定，增额不重置次数。
 
-拥有world/design/w1-lq-depth.mjs、world/drafts/w1/lq-depth/；公共工具及对应测试交T54，本卡等待。实际neighbor-request-guard-block.json显示崔帆两叶仍携“向她解释过”，新after为“需先问她是否愿意谈”；衡庐另两叶同类。用neighbor-repair-plan.json继承continuation-plan父proof及neighbor-repair-proposed-diff.json四叶，在临时副本重放；只刷新派生after，原来源保留。
+拥有world/design/w1-lq-depth.mjs、world/drafts/w1/lq-depth/；T54已完成逐entry背景/context继承，本卡仍受来源授权及次数阻断。原neighbor-request-guard-block.json显示崔帆两叶携“向她解释过”，新after为“需先问她是否愿意谈”；衡庐另两叶同类。T58父basis helper仅在实际T08父proof重放证实同根时复用，不扩本卡正文、不重做已过四叶准备。
 
 共享源仅另存memory_lq_depth_readback修订：narrative、designedFacts[2]、sourceRefs[12,13].publicSpeech、associations五份narrative/factsHash及匡叶viewpoint；五人memorySeeds[2]与knowledge.known[2]同步。依据匡叶原occupation/goals及三项risks，删“被本人回绝”，只谈本人确认原则；原秘密/旧记忆/refs哈希和参与者不改。新背景revision继承父源，foundation.revision不换；旧proof读旧背景，新元数据仅验本事件差异。
 
