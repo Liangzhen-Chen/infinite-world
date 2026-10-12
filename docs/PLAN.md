@@ -83,23 +83,17 @@ review-002-yp=782a49e阶段审核通过，范围限T06正式发布与c64163d修�
 
 现grant缺沙萝及五人完整共享叶权限，不能执行该源修订；先交精确差异，依调度串行补授权支持。其余仅七manual的hard叶；未变通过者复用。来源五人重审后才L4/闭合预演；相关及CORE，保留旧80请求与费用，禁止新nonce/重领。
 
-### T54 父来源逐entry继承【零模型；唯一公共续修】
+### T54 已完成：63613dc已合；真实T07的42 changes/12指纹保持，T08父proof四叶及逐event+sourceHash的L4/发布重放通过，相关87/CORE40；0模型，T07真实复审与T08来源授权仍归原卡。原验收见 `git show ee0f4e6:docs/PLAN.md`。
 
-依T07的2c026c6及T08现证据。仅拥有tools/{npc-depth,npc-depth-content,npc-depth-review,publish-npc-depth}.mjs和tests/{npc-depth-wt,npc-depth-lq,npc-depth-reopen,npc-depth-authored-background,npc-depth-review}.test.mjs必要改动。
+### T09 桑坂两人一次规划【卡住；第三次待人类决定】
 
-沿父proof逐entry继承：未受影响者保持旧entry/context；实际授权修订影响的事件参与者才绑定继承父source的新凭证，缺权限即拒。当前patch派生revisions.after，冻结来源不重算。L4登记/发布按eventId+sourceHash重放，旧proof仍读旧源，保留单源兼容；不能拿旧hash标新事实或忽略背景比较。
+0323dc2的first-review/complete-002/stopped-report.json：42次直接L2、2.46694448元，28passed/2manual；13事件26人闭合，shared_11池杉/查悦与shared_12秦婉/龙芙未闭，L4未批准。首审及补证两次attempts已尽；不自动第三call、新nonce或重领。
 
-验收实际T07官方prepare42 changes及12完整fingerprint逐项恒等，L1/T04和原record不变；实际T08父proof加崔帆/衡庐四叶，full/compact当前after一致。实证入口见两卡，夹具只在临时副本派生；新旧L4登记/发布重放及篡改拒绝必须一致，未审仍拒；相关测试+CORE，不交mock替代实证。
+只准备原world/design/w1-sb-depth.mjs两人失败叶的最小差异。池杉known[2]/memorySeeds[2]改为明确“池杉说…；查悦说…”的原publicSpeech归属；独立first-review/authored-background.json的shared_11已载双方公开说话，hard把有限发言判为私密属证据冲突，不能据此扩大knownBy。若牵动共享正文，列出查悦受影响叶，不覆盖旧通过。
 
-原hash/出处/历史审核/预算nonce保留，不改正文、授权JSON或预算；T08新增source仍缺授权，不执行。T09全30直接L2与T52另文件并行，T54不占模型槽。失败标卡住，不拆卡重领；不发布。
+龙芙原memorySeeds[1]支持湿布记忆、独立shared_12支持招呼，不能因before.known未列就判无源；pending步骤不算已做。voice.register恢复“先指叶背再谈土”并仅补原notes的重复旧例；亲属备注收窄为原sourceRecords可见动作，删“使他不耐烦”等推断，unknown保留未知边界。逐hard绑定独立源/原hash，缺源不编造；保留失败，不能手工改passed。
 
-### T09 桑坂逐ID首审【授权增额，T07释放模型后】
-
-拥有world/design/w1-sb-depth.mjs、world/drafts/w1/sb-depth/及tests/npc-depth-sb.test.mjs；与T48串行。保留30候选/manifest、172原hash/60私密风险及373叶/15背景，11原附件全出站，不重起草正文。
-
-依T49和T48，先正式零模型刷新完整请求/每ID上界，再沿原first-review、card T09、F:/dnd/world/drafts/m4-object，以显式授权轮逐ID审冻结候选。首ID≤0.50元，原总限3增至4.5，旧费用0，不为整30人预付；每次必要review预留/结算后才继续，不再付费回显已有定稿，未知0.083736保留。
-
-验收npc-depth-sb、npc-depth-authored-background及CORE；L1/L2全量、实际逐flag+随机5的L4和规则12评分、30人T04零缺口及事件闭合、预演通过才交T11。仅真实失败叶可受控修订，未变通过者不重审，预算拒绝停未发队列；不增人口、不放宽覆盖。
+无第三次授权，执行仍卡住。未变28人复用；后续若获真实决定，原账总限4.5、未知预留不退，原L1/L2/L4、30人T04与事件闭合/预演及相关+CORE门槛不变；不新增人口或发布。原范围/验收见 `git show ee0f4e6:docs/PLAN.md`。
 
 ### T10 已完成：32人和五独立源L1/L2/L4闭合已合，候选合后56过；后经T11-B正式整合，不重审；原卡累计2.40776216元。 完整原验收见 `git show bb4c575:docs/PLAN.md` 对应卡。
 
@@ -123,17 +117,25 @@ T11-C 全体人物质量关闭：只有 T06–T10 全部所需人物和事件完
 
 ### T16 已完成：有效N/账本/知情/盲辨及工具实测口径合入，相关18/合后CORE过；原真实失败报告不变，模型0。 完整验收见[已完成卡](PLAN_已完成.md#t16)。
 
-### T17-A 新轮来源准备【零模型，可先执行】
+### T17-A 新轮来源准备【T52部分已合；仅续T56】
 
-拥有新增docs/测试报告/20261012-T17-new/内preflight.mjs、runtime-guard.mjs、guard-check.mjs及输入证据；只读F:/dnd-wt/T17原报告/脚本，不覆盖旧run。复用原守卫，修build-card.reference的“其他已登记地点”：按正式locations的id/name及渲染位置、整段hash核验，仅该span作地名投影。同名正文、秘密混入、地名篡改和实际工具对象仍走出处闭包。
+8c2243d/d391ebf已合；地点精确span及27反例通过，guide、npc_delivery/home_visit/offscreen/private/social六场完整，含十天离屏；四场实际依赖拒发。榆坡30人已正式发布且publisher重放零差异；preflight仅把河湾32人含原18人放入approvedIds，不能以旧T11-B全world hash阻挡新发布源。
 
-以当前loadWorld、loadPromptBundle及host转换器冻结输入。逐人/逐事件核对T11-B已发布河湾32人及原18人完整档；榆坡发布改变全world hash，不能要求等于旧T11-B全量hash。保留旧公开问题行与严格名称索引凭证；核验十场、主持/审核/一致性/离屏请求及工具目标，未知实际依赖拒发，不删完整世界。
+证据限docs/测试报告/20261012-T17-new/dependency-gaps.json及zero-model-requests.jsonl：46/48–49为courier榆坡问题行及30人闭包，245/247–248为shove同类；233/237–239为quest_social三村tax，郑汐/栾佩展开王浦/焦岩；283/285–286为voices的problem_lq_3慎书/宁野。host实际位置分别messages[9]/[22]/[5].content；review的sceneBefore/sceneBeforeReply需同源绑定，assertions.actual的ID是拒发错误串，不能豁免，应重跑消除。当前尚无私密正文必需依赖的独立证据；若续跑真实遇到，逐ID/字段/源/场景拒发留证，六场与已发布河湾/榆坡可用范围不能冒充十场或有效N通过。
 
-验收沿正常playtests运行链的隔离HTTP零模型预检、原拒发请求回放与上述反例、tests/{playtest-runner,playtest-npc-evidence,playtest-budget}.test.mjs及CORE。只刷新证据，不新建守卫框架；通过交T17-B，付费前若正式输入变化须重新冻结。
+### T56 T17-A唯一续修【零模型；完成正常十场/paymentReady】
 
-### T17-B 河湾M2新轮【已授权；依T17-A与模型槽】
+只改上述目录preflight.mjs、runtime-guard.mjs、guard-check.mjs及证据，复用现guard。按实际已审entry/current source逐行接yupo problem_yp_1、yupo/weiting/liquan tax、liquan problem_lq_3；核验源hash、渲染span与现场authority，覆盖host-user及review场景，禁止按role或NPC名全局放行。
 
-拥有新轮报告目录的运行/汇总证据；必要tools/playtest-budget.mjs及tests/playtest-budget.test.mjs只做旧新轮关联和累计限额，确需CLI接线才改tools/playtests.mjs。主会话确认无文件锁后派工。旧run十任务executions=2/recoveryRuns=1、spent0.28484248/unknown reserved6.372890不变。
+T11凭证按实际已发布entry及当前source投影继承：榆坡30 ID逐项L1/L2/L4/事件闭包与正式hash验证后接动态guard，保留河湾32/原18；不要求等其他村，不改原凭证、不编源。原地点27反例保留，补同名正文/私密混入/错span或hash/假现场/实际tool目标拒绝。
+
+冻结完整world/bundle/host后走原十场正常HTTP全角色链并回放拒发；不得缩世界、换场或降N。若仍有未approved实际依赖，精确列ID/字段/源/场景及已发布范围关系，保持paymentReady=false。十场完整无阻断且原账历史去重、授权/上界核对均过才置true，禁止硬编码；只读旧run及预算，未知6.372890保留。
+
+验收tests/{playtest-runner,playtest-npc-evidence,playtest-budget}.test.mjs及CORE、guard反例和十场零模型证据后交B。B已授权，仍先1元/新增8元；不新建框架、不付费、不部署。唯一续修仍失败即卡住。
+
+### T17-B 河湾M2新轮【已授权；依T56与模型槽】
+
+拥有新轮报告目录的运行/汇总证据；必要tools/playtest-budget.mjs及tests/playtest-budget.test.mjs只做旧新轮关联和累计限额，确需CLI接线才改tools/playtests.mjs。T56的preflightReady/paymentReady均真且主会话确认无文件锁后派工；M2新轮无需再次授权。旧run十任务executions=2/recoveryRuns=1、spent0.28484248/unknown reserved6.372890不变。
 
 沿test:playtests正常HTTP/检索/真实提示栈，复用旧preflight十场ID、repeat=1、parallel=4；用新run-id绑定旧run与用户授权，禁止第三次旧resume。先新增≤1元验证来源和账本，再累计新增≤8元，旧新上界≤14.65773248且受单轮30/goal100；每笔预留与全部模型角色费用入账，未知不退，历史去重核不齐则零调用。
 
@@ -211,11 +213,7 @@ T28-R1修好新回执undefined规范化并保留严格篡改拒绝，相关31/32
 
 验收：`node --test tests/magic-movement.test.mjs tests/home-permission.test.mjs tests/magic.test.mjs tests/npc-obligations.test.mjs`、CORE；许可撤销、载荷超额、失败原子、重复/导入重放及同行位置一致。模型0。不要做：默认王都瞬移、绕过私宅/司法、新增远方人口。依赖现有目标及权限模块；与T34/T36同magic文件串行，可并行T30。正式法术发布另走T19/R04。
 
-### T36 M4限距传讯与自愿精神连接【待调度】
-
-目标：补传讯/consent_link消费者，禁止把精神状态当同意或记忆改写。涉及：新增server-plugin/magic-message.mjs、tests/magic-message.test.mjs，magic.mjs、npc-cognition.mjs必要接点。实现：沿state.effects与npcCognition消息队列、sourceEvent/knownBy，记录发送者/收者、字数、距离、到达分钟、许可和维持消耗；到达才产生听说记忆，断联/过期停止后续消费。复用magic-status有限状态，拒绝秘密自动填充、人格控制和替人承诺；原mind_message/team_link未支持部分仍明确缺口。
-
-验收：`node --test tests/magic-message.test.mjs tests/npc-cognition.test.mjs tests/npc-memory.test.mjs tests/magic-status.test.mjs`、CORE；越距/超字数/无同意拒绝，到达前未知、合法收者单次获知、私聊无旁人泄漏、重放守恒。模型0。不要做：新工具、自动全知、无限通信、发布新法术。依赖既有认知/状态机制；与T34/T35及认知写者串行，可与T27/T29并行。
+### T36 已完成：b4c72e9已合；正常传讯符记、NPC反向有限情绪及team_link逐人许可/撤销/到达私有记忆已闭合，相关56/CORE40、合后CORE40；0模型。原验收见 `git show ee0f4e6:docs/PLAN.md`。
 
 ### T37 M4受资源约束的作物生长【待调度】
 
@@ -223,11 +221,7 @@ T28-R1修好新回执undefined规范化并保留严格篡改拒绝，相关31/32
 
 验收：`node --test tests/magic-growth.test.mjs tests/magic-object.test.mjs tests/village-ledgers.test.mjs`、CORE；无种/无授权拒绝，有限加速、资源账守恒、跨季及跳步一致、同田不叠无限收益、旧档零补发。模型0。不要做：重写热系统/农业、整年全量长模拟、新法术正文。依赖现有农业/目标；与agriculture/magic/rules写者串行，可与T30并行；正式内容仍独立审核。
 
-### T38 M5周度贸易流和区域价格【待调度】
-
-目标：把四村试行粮约之外的规则周贸易接成有来源的结算。涉及：新增server-plugin/settlement-trade.mjs、tests/settlement-trade.test.mjs，engine.mjs时间接点、world/design/m5-trade-rules.mjs与必要rules配置。实现：复用T02 actual stock/fiscal、天气route通行、quotes每日锁价；只在现有聚落配置明确供需/运力/路线，记录发货/在途/到货/税账。量由实际余粮/资金/仓容约束，按距离和路况耗时，税从真实交易分列，不自动完成玩家carry合同；income为来源可核验转账而非每日印钱。
-
-验收：`node --test tests/settlement-trade.test.mjs tests/village-ledgers.test.mjs tests/economy-supply.test.mjs tests/weather.test.mjs`、CORE；跨周/封路/钱粮不足/到货腐坏、大小步和重启一致、报价同日不漂，旧档不生成新公仓。模型0。不要做：人口增长、虚构供货NPC、原档补粮、重复T23。依赖T02/T23；源码不依赖人物批准，真实S/F依赖批准源；与T37及engine时间写者串行。
+### T38 已完成：f55e901已合；正常world_time周贸易与world_trade区域同日锁价通过，专项17/CORE40、合后CORE40；相关34/35的village-ledgers:33旧人物worldrelease1192错误仍保留，整体发布门槛未关。原验收见 `git show ee0f4e6:docs/PLAN.md`。
 
 ### T39 M5租赁雇佣采购与开店账【待调度】
 
