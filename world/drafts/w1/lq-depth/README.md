@@ -1,4 +1,10 @@
-T08 当前处于作者预检和离线 prepare 阶段。L2、L4、T11 发布均未运行。
+T08 原作者预检和 prepare 历史保留。T45 官方附件已登记，真实审核结果以 `author-v2/first-review/terminal.json` 和逐 ID 记录为准；本卡不发布正式人物。
+
+首次真实审核已自然停止：17 passed、4 manual、9 pending，80 次实际请求的结算上界 2.87060744 元，原卡余额 0.12939256 元。最小待审完整 review 预留为 0.236606 元，停止继续调用。正式人物和冻结候选未变；L4 与波次评分未批准，发布预演未运行。逐 ID 结果和原来源核查六处缺口见 `first-real-review-report.json`。
+
+`closure-gap-report.json` 保留公共路径缺陷的实际证据：四个人工条目各三次仍回显原候选；闻琪单 ID 预算阻断后，流水线继续生成三个无 L2 的 draft，费用 0.108236 元；普通 hard 的早先 provider 原文未全部落盘。现存最终 review、所有 usage 及已登记附件的响应 hash 保留，不能冒称三轮完整原文齐全。主会话规划一次后决定受控错叶与公共路径处理，本卡不自行恢复，不重置原卡额度。
+
+2026-10-12 的零模型请求证据在 `author-v2/first-review/T45-official-preflight.json`，登记 15 份附件、30 人 384 叶及六个独立背景。实际 compact 出站与官方 transform 逐值一致，最终编码最大单请求预留 0.244072 元。全体首次 draft 加 compact L2 的保守预留合计 11.658594 元仅是各请求上界之和，不能当作实际费用或一次性全卡预留；每条仍受原卡 3 元和共享波次 20 元约束。
 
 T25 显式出处已在 `author-v2/first-review/` 完成零模型准备。`authored-background.json` 是独立未审的作者背景，六组均引用砾泉已发布的公开地方问题，列明原字段 hash、有限公开说话、未定结果及全部参与者秘密风险。官方纯验证器和 `--authored-background --prepare` 通过只表示合同与冻结关联有效；新背景仍未获 L2/L4 批准。原 author-v2 的全部文件保持不变，首次审核候选也未改文字。
 

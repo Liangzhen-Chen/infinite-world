@@ -61,7 +61,7 @@ async function rewriteMessages(input,review){
  // A text rewrite must not acquire private contract details from the global
  // reviewer ledger. Supply only the named speaker's proven personal recall.
  for(const row of evidence.evidence)if(['before','after'].includes(row.id)){
-  const ledger=JSON.parse(row.text);delete ledger.quests;delete ledger.authorizations;delete ledger.obligations;row.text=JSON.stringify(ledger);
+  const ledger=JSON.parse(row.text);delete ledger.quests;delete ledger.authorizations;delete ledger.obligations;if(!isOutOfCharacter(input.playerText))delete ledger.debts;row.text=JSON.stringify(ledger);
  }
  const speakers=new Set([...input.draft.matchAll(/<q\s+who="([^"]+)"/g)].map(match=>match[1]));
  for(const [id,knowledge] of Object.entries(input.knowledge??{}))if(speakers.has(id)&&knowledge.recall?.awareness==='personal-record')evidence.evidence.push({id:`recall:${id}`,kind:'personal-recall',text:JSON.stringify({speaker:id,...knowledge.recall})});
