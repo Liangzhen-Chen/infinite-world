@@ -7,6 +7,7 @@ import {validateWorld} from './validate-world.mjs';
 import {readApprovedContent,hashContent} from './content-pipeline.mjs';
 import {validateFoundation,validateDraft,contextFor,revision} from './m2-people-content.mjs';
 import {npcProfileSchema} from './npc-profile-schema.mjs';
+import {readPublishedNpcIncrements,verifiedNpcIncrements} from './npc-publication-sources.mjs';
 export const protectedNpcFields=['schedule','coins','inventory','services','skills','intelligence','aliases','flags','location','trust','affection','creditPolicy'];
 export const profileFields=[...Object.keys(npcProfileSchema.properties).filter(k=>!protectedNpcFields.includes(k)),'authoredBasis'];
 const stableSourceFields=['id','name','notes','occupation','scope'];
@@ -26,7 +27,8 @@ export function syncReviewedNpcTraits(current,candidate,baseline){
   return {...structuredClone(n),traits:reviewedTraits(n,profile,originals.get(n.id))};
  });
 }
-export function mergeNpcProfiles(current,candidate,baseline){
+export function mergeNpcProfiles(current,candidate,baseline,incrementsReceipt=undefined){
+ const increments=verifiedNpcIncrements(incrementsReceipt,current);
  const profiles=new Map(candidate.npcs.map(n=>[n.id,n])),originals=new Map(baseline.map(n=>[n.id,n]));
  assert.equal(profiles.size,candidate.npcs.length,'候选人物编号重复');
  for(const id of profiles.keys())assert.ok(current.some(n=>n.id===id),`正式人物缺失:${id}`);
@@ -34,7 +36,11 @@ export function mergeNpcProfiles(current,candidate,baseline){
   const profile=profiles.get(n.id);if(!profile)return structuredClone(n);
   const original=originals.get(n.id);assert.ok(original,`缺少审查原档:${n.id}`);
   for(const key of stableSourceFields)assert.deepEqual(n[key],original[key],`正式来源事实变动，须重新审核:${n.id}.${key}`);
-  for(const key of ['services','skills','intelligence','aliases','flags'])assert.deepEqual(n[key],original[key],`正式服务或人物身份变动，须重新审核:${n.id}.${key}`);
+  for(const key of ['services','skills','intelligence','aliases','flags']){
+   const additions=increments.get(n.id)?.[key];
+   const expected=additions?[...new Set([...original[key],...additions])]:original[key];
+   assert.deepEqual(n[key],expected,`正式服务或人物身份变动，须重新审核:${n.id}.${key}`);
+  }
   assert.deepEqual(n.schedule,profile.schedule,`正式作息与审核骨架不同:${n.id}`);
   const correction=candidate.corrections.find(x=>x.id===n.id&&x.field==='age');
   assert.ok(n.age===profile.age||correction&&n.age===correction.old&&profile.age===correction.new,`正式年龄来源变动:${n.id}`);
@@ -67,15 +73,17 @@ async function readReviewedProfiles(world,root){
  assert.deepEqual(candidate.npcs,rebuilt,'候选不等于已审核骨架和正文');assert.deepEqual(candidate.corrections,bones.corrections,'年龄修正凭据变更');
  return {candidate,baseline};
 }
-export async function prepareNpcPublication({world=undefined,root=path.resolve('world/drafts/m2-people'),traitsOnly=false}={}){
- world??=await loadWorld();const {candidate,baseline}=await readReviewedProfiles(world,root);
- const npcs=traitsOnly?syncReviewedNpcTraits(world.npcs,candidate,baseline):mergeNpcProfiles(world.npcs,candidate,baseline),result={...world,npcs};
+export async function prepareNpcPublication({world=undefined,worldRoot=path.resolve('world'),root=path.join(worldRoot,'drafts/m2-people'),traitsOnly=false}={}){
+ world??=await loadWorld(worldRoot);const {candidate,baseline}=await readReviewedProfiles(world,root);
+ const needsIncrements=!traitsOnly&&baseline.some(original=>candidate.npcs.some(n=>n.id===original.id)&&['services','skills'].some(key=>hashContent(world.npcs.find(n=>n.id===original.id)?.[key])!==hashContent(original[key])));
+ const receipt=needsIncrements?await readPublishedNpcIncrements({world,worldRoot}):undefined;
+ const npcs=traitsOnly?syncReviewedNpcTraits(world.npcs,candidate,baseline):mergeNpcProfiles(world.npcs,candidate,baseline,receipt),result={...world,npcs};
  const validation=validateWorld(result);assert.ok(validation.ok,validation.errors.join('\n'));
  return {world:result,candidate,baseline,validation,changed:hashContent(npcs)!==hashContent(world.npcs)};
 }
 export async function publishNpcProfiles({worldRoot=path.resolve('world'),root=path.resolve('world/drafts/m2-people'),write=false,traitsOnly=false}={}){
  const file=path.join(worldRoot,'people/baseline.json'),before=await fs.readFile(file,'utf8');
- const world=await loadWorld(worldRoot),result=await prepareNpcPublication({world,root,traitsOnly});
+ const world=await loadWorld(worldRoot),result=await prepareNpcPublication({world,worldRoot,root,traitsOnly});
  assert.equal(await fs.readFile(file,'utf8'),before,'正式目录在审核期间已改变，停止以避免覆盖并发写入');
  if(write&&result.changed){const temporary=`${file}.${process.pid}.tmp`;await fs.writeFile(temporary,JSON.stringify(result.world.npcs,null,before.includes('\n  ')?2:undefined)+'\n');await fs.rename(temporary,file);}
  return {people:result.candidate.npcs.length,traitsOnly,changed:result.changed,written:write&&result.changed,protectedFields:protectedNpcFields,sourceHash:hashContent(JSON.parse(before)),resultHash:hashContent(result.world.npcs),warnings:result.validation.warnings};

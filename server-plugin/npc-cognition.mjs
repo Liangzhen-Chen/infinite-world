@@ -10,7 +10,7 @@ const relation=(engine,state,from,to)=>state.npcs[from]?.relationships?.[to]||en
 const originalId=row=>row.rootMemoryId??row.id;
 const known=(state,id,memory)=>state.npcs[id]?.memoryStream?.some(row=>originalId(row)===originalId(memory));
 function permitted(memory,to){
- const privateFact=memory.private===true||memory.visibility==='private'||memory.visibility==='secret'||['secret','debt','obligation'].includes(memory.kind)||memory.sourceType==='约定核对';
+ const privateFact=memory.private===true||memory.visibility==='private'||memory.visibility==='secret'||['secret','debt','obligation','quest'].includes(memory.kind)||memory.sourceType==='约定核对';
  return !privateFact||(memory.permittedRecipients??memory.knownBy??[]).includes(to);
 }
 function memoryFor(state,from,id,at){
