@@ -180,6 +180,9 @@ test('官方来源prepare保持原产物与候选，首审冻结目录重跑零�
  for(const old of evidence.previousFiles)assert.equal(hashContent(JSON.parse(await fs.readFile(path.resolve(firstReviewRoot,old.path),'utf8'))),old.contentHash);
  const files=['base.json','candidate.json','foundation.json','manifest.json','authored-background.json'];
  const before=await Promise.all(files.map(async name=>({name,hash:hashContent(JSON.parse(await fs.readFile(path.join(firstReviewRoot,name),'utf8'))),mtime:(await fs.stat(path.join(firstReviewRoot,name))).mtimeMs})));
+ const runtimeFiles=['budget.json','allocation.json','terminal.json','batch-0.json','incremental-l4.json','npc_sb_zhangluo.json'];
+ const optionalBytes=name=>fs.readFile(path.join(firstReviewRoot,name),'utf8').catch(e=>{if(e.code==='ENOENT')return null;throw e;});
+ const runtimeBefore=await Promise.all(runtimeFiles.map(optionalBytes));
  const env={...process.env};delete env.DEEPSEEK_API_KEY;
  const result=await exec(process.execPath,['tools/npc-depth.mjs','--design','world/design/w1-sb-depth.mjs','--root',firstReviewRoot,'--authored-background',backgroundFile,'--card','T09','--prepare'],{env});
  assert.deepEqual(JSON.parse(result.stdout),{entries:30,formalWrite:false,modelCalls:0});
@@ -187,7 +190,7 @@ test('官方来源prepare保持原产物与候选，首审冻结目录重跑零�
  const manifest=JSON.parse(await fs.readFile(path.join(firstReviewRoot,'manifest.json'),'utf8'));assert.equal(manifest.authoredBackgroundHash,hashContent(background));
  assert.deepEqual(JSON.parse(await fs.readFile(path.join(firstReviewRoot,'candidate.json'),'utf8')),JSON.parse(await read('candidate')));
  assert.deepEqual(JSON.parse(await fs.readFile(path.join(firstReviewRoot,'base.json'),'utf8')),JSON.parse(await read('base')));
- for(const name of ['budget.json','allocation.json','terminal.json','batch-0.json','incremental-l4.json','npc_sb_zhangluo.json'])await assert.rejects(fs.stat(path.join(firstReviewRoot,name)),/ENOENT/);
+ assert.deepEqual(await Promise.all(runtimeFiles.map(optionalBytes)),runtimeBefore,'零模型prepare不能改变任何已存在的真实审核/预算记录，也不能创建缺失记录');
 });
 
 test('T09官方零模型预检保留120份完整请求，最小性别附件逐值匹配原源且不改变指纹',async()=>{
@@ -199,7 +202,13 @@ test('T09官方零模型预检保留120份完整请求，最小性别附件逐�
  assert.deepEqual(report.sourceCoverage,{originalSourceOccurrences:172,uniqueOriginalFields:145,privateRiskOccurrences:60,patchLeaves:373,events:15});
  const map=JSON.parse(await fs.readFile(path.join(firstReviewRoot,'source-evidence-map.json'),'utf8'));
  assert.deepEqual(new Set(Object.keys(map)),new Set(supplements.keys()));
- for(const frozen of report.frozen){const raw=await fs.readFile(path.resolve(frozen.file));assert.equal(crypto.createHash('sha256').update(raw).digest('hex'),frozen.sha256);if(frozen.contentHash)assert.equal(hashContent(JSON.parse(raw)),frozen.contentHash);}
+ const checkout=JSON.parse(await fs.readFile(path.join(firstReviewRoot,'complete-002/checkout-byte-witness.json'),'utf8'));
+ for(const frozen of report.frozen){
+  const raw=await fs.readFile(path.resolve(frozen.file),'utf8'),witness=checkout.witnesses.find(w=>w.file===frozen.file),sha=text=>crypto.createHash('sha256').update(text).digest('hex');
+  if(witness){assert.equal(witness.originalSha256,frozen.sha256);assert.equal(witness.originalEol,'CRLF');assert.equal(witness.checkoutEol,'LF');assert.ok([witness.checkoutSha256,witness.originalSha256].includes(sha(raw)),'检出字节必须精确匹配已记录的两种换行凭证之一');assert.equal(sha(raw.replaceAll('\r\n','\n')),witness.checkoutSha256);assert.equal(sha(raw.replaceAll('\r\n','\n').replaceAll('\n','\r\n')),frozen.sha256);}
+  else assert.equal(sha(raw),frozen.sha256);
+  if(frozen.contentHash)assert.equal(hashContent(JSON.parse(raw)),frozen.contentHash);
+ }
  for(const attachment of report.attachments){
   const raw=await fs.readFile(path.join(firstReviewRoot,attachment.file),'utf8'),data=JSON.parse(raw),entry=prepared.entries.find(e=>e.id===attachment.id);
   assert.deepEqual(data,supplements.get(entry.id));validateSourceEvidence(data,entry,prepared.world);
@@ -236,5 +245,28 @@ test('T09官方零模型预检保留120份完整请求，最小性别附件逐�
  }
  assert.equal(report.sharedBudget.root,'F:/dnd/world/drafts/m4-object');assert.equal(report.sharedBudget.readOnly,true);assert.equal(report.sharedBudget.unchanged,true);assert.equal(report.sharedBudget.sha256,report.sharedBudget.sha256After);
  assert.ok(report.reservationEnvelopeYuan.lower>3);assert.ok(report.reservationEnvelopeYuan.upper>report.reservationEnvelopeYuan.lower);
- for(const name of ['budget.json','allocation.json','terminal.json','first-source-evidence.json','batch-0.json','incremental-l4.json'])await assert.rejects(fs.stat(path.join(firstReviewRoot,name)),/ENOENT/);
+ for(const name of ['budget.json','allocation.json','terminal.json','first-source-evidence.json','incremental-l4.json'])await assert.rejects(fs.stat(path.join(firstReviewRoot,name)),/ENOENT/);
+});
+
+test('T09真实直接L2保留两轮原文和费用，已过候选不重审，hard与两次停止线阻止整村批准',async()=>{
+ const prepared=await prepareDepth({worldRoot:path.resolve('world'),design:path.resolve('world/design/w1-sb-depth.mjs'),root:firstReviewRoot,authoredBackground:backgroundFile,cardId:'T09'});
+ const first=JSON.parse(await fs.readFile(path.join(firstReviewRoot,'complete-002/first-l2-records.json'),'utf8'));
+ const rows=await Promise.all(prepared.entries.map(e=>fs.readFile(path.join(firstReviewRoot,e.id+'.json'),'utf8').then(JSON.parse)));
+ assert.equal(first.filter(r=>r.status==='passed').length,18);assert.equal(rows.filter(r=>r.status==='passed').length,28);assert.deepEqual(rows.filter(r=>r.status==='manual').map(r=>r.id),['npc_sb_chishan','npc_sb_longfu']);
+ let calls=0,cost=0;
+ for(const row of rows){
+  const entry=prepared.entries.find(e=>e.id===row.id),old=first.find(r=>r.id===row.id),context=contextFor(entry,prepared.world);
+  assert.deepEqual(row.draft,patchDraft(entry));assert.equal(row.draftResponse,undefined,'不得伪造模型draft回显');
+  if(old.status==='passed')assert.deepEqual(row,old,'未变passed不得重审或改写原文');
+  else {assert.deepEqual(row.reviewRecovery.prior,old);assert.equal(row.responseEvidence.length,2);}
+  assert.equal(row.reviewRecovery.requestHash,hashContent(row.reviewRecovery.request));
+  assert.deepEqual(checkIncrementalReview(row.review,entry,context).filter(e=>e.severity==='hard'),row.errors);
+  const response=row.reviewRecovery.response;assert.deepEqual(JSON.parse(response.choices[0].message.content),row.review);
+  for(const proof of row.responseEvidence){assert.equal(proof.phase,'review');assert.ok(proof.requestId);}
+  calls+=row.responseEvidence.length;cost+=row.measurements.reduce((n,m)=>n+m.costUpperYuan,0);
+ }
+ assert.equal(calls,42);assert.ok(Math.abs(cost-2.46694448)<1e-10);
+ assert.ok(rows.filter(r=>r.status==='manual').every(r=>r.errors.some(e=>e.severity==='hard')));
+ const summary=JSON.parse(await fs.readFile(path.join(firstReviewRoot,'summary.json'),'utf8'));assert.equal(summary.passed,28);assert.equal(summary.manual,2);assert.equal(summary.pending,0);assert.equal(summary.budget.cards.T09.limitYuan,4.5);assert.equal(summary.budget.cards.T09.reservedYuan,0);
+ assert.ok(summary.batches.every(b=>b.l4.approved===false));
 });

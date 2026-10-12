@@ -1,0 +1,76 @@
+{
+  "index": 1,
+  "ids": [
+    "npc_sb_fuyu",
+    "npc_sb_quanli",
+    "npc_sb_yanjue",
+    "npc_sb_xianghe",
+    "npc_sb_diye"
+  ],
+  "fingerprint": "48191072adf99c7850b4c60bdce04d86b3049bcee836027ccdbb8841bd57ae36",
+  "count": 5,
+  "passed": 5,
+  "manual": [],
+  "pending": [],
+  "flagged": [
+    "npc_sb_fuyu",
+    "npc_sb_quanli",
+    "npc_sb_yanjue",
+    "npc_sb_xianghe",
+    "npc_sb_diye"
+  ],
+  "sample": [
+    "npc_sb_xianghe",
+    "npc_sb_yanjue",
+    "npc_sb_fuyu",
+    "npc_sb_quanli",
+    "npc_sb_diye"
+  ],
+  "l4": {
+    "approved": false,
+    "notes": []
+  },
+  "operativeInvalidated": [],
+  "manualRatio": 0,
+  "needsSystemicRepair": false,
+  "l4History": [
+    {
+      "approved": false,
+      "notes": [],
+      "supersededBy": "npc_sb_fuyu",
+      "priorFingerprint": "d480a20be1215fbed00499d3d833285d25fcff780581e2019797d4e08dafcaab"
+    },
+    {
+      "approved": false,
+      "notes": [],
+      "supersededBy": "npc_sb_quanli",
+      "priorFingerprint": "581d1e45ee678339a66327e8429ecb9b159a09d7892759873a95b4b3c1f144c6"
+    },
+    {
+      "approved": false,
+      "notes": [],
+      "supersededBy": "npc_sb_yanjue",
+      "priorFingerprint": "2cfd02bf59f71bb9da6fcb9b48e95eca3ff1ccdf5ac2a527980b8a7191371410"
+    },
+    {
+      "approved": false,
+      "notes": [],
+      "supersededBy": "npc_sb_xianghe",
+      "priorFingerprint": "4bd647e9d24986797cdc7e50a7807dcd343e85353e78975393a53d0edb58a798"
+    },
+    {
+      "approved": false,
+      "notes": [],
+      "supersededBy": "npc_sb_diye",
+      "priorFingerprint": "f8ef2670ae0b8ec84dd5ca378004886f7cdc621afa7b9f3d7e15c18722cad5e7"
+    },
+    {
+      "approved": false,
+      "notes": [],
+      "supersededBy": "npc_sb_xianghe",
+      "priorFingerprint": "4ad57f545b52619af92f304fbcd826b7d167977b9df83bef4a1cce59f94c8edd"
+    }
+  ],
+  "foundationHash": "1a826cc94aa8230a81108ba6c7e0df9070d44d09e75e9aadbc3676f769172cba",
+  "costUpperYuan": 14.780520319999992
+}
