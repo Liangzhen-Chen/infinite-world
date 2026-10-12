@@ -1,6 +1,8 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
+import os from 'node:os';
+import path from 'node:path';
 import {loadWorld} from '../tools/load-world.mjs';
 import {auditNpcDepth} from '../tools/audit-npc-depth.mjs';
 import {depthEntries,validatePatchResults,patchDraft,applyDepthDraft,verifyUnchanged,validateDraft,contextFor,getPath} from '../tools/npc-depth-content.mjs';
@@ -9,6 +11,9 @@ import {fileURLToPath} from 'node:url';
 import * as original from '../world/design/w1-wt-depth.mjs';
 import * as design from '../world/drafts/w1/wt-depth/sourced/design.mjs';
 import {weitingRoster} from '../world/design/w1-villages-weiting.mjs';
+import {frozenT07SourceText,prepareDepthRevision,depthOptions} from '../tools/npc-depth.mjs';
+import {runDepthReview,reviewOptions} from '../tools/npc-depth-review.mjs';
+import {prepareNpcDepth} from '../tools/publish-npc-depth.mjs';
 
 const world=await loadWorld(),ids=new Set(design.patchRows.map(r=>r.id));
 const entries=()=>depthEntries(design.patchRows.map(r=>r.before),design,world);
@@ -177,10 +182,60 @@ test('受控修订只改变真实L2/L4错叶，旧记录与原来源hash保持�
  }
  for(const source of plan.sourceHashes){
   const url=new URL(source.file,new URL('sourced/',root)),raw=await fs.readFile(url,'utf8');
-  assert.equal(source.hash,hashContent(source.file.endsWith('.mjs')?raw:JSON.parse(raw)));
+  if(source.file.endsWith('.mjs')){const witness=await read('controlled/source-checkout-evidence.json');assert.equal(source.hash,hashContent(frozenT07SourceText(source,raw,witness,plan)));}
+  else assert.equal(source.hash,hashContent(JSON.parse(raw)));
  }
  assert.equal(world.npcs.filter(n=>n.tier==='full').length,152);
  assert.equal(world.npcs.filter(n=>n.id.startsWith('npc_hw_')&&n.tier==='full').length,32);
+});
+
+test('钉死T07来源仅接受完整LF或原CRLF，字段篡改、混合换行和伪凭证拒绝',async()=>{
+ const root=new URL('../world/drafts/w1/wt-depth/controlled/',import.meta.url);
+ const [plan,evidence]=await Promise.all(['controlled-plan.json','source-checkout-evidence.json'].map(f=>fs.readFile(new URL(f,root),'utf8').then(JSON.parse)));
+ const source=plan.sourceHashes.find(s=>s.file===evidence.sourceFile),lf=evidence.gitBlob.text,crlf=lf.replace(/\n/g,'\r\n');
+ for(const raw of [lf,crlf])assert.equal(hashContent(frozenT07SourceText(source,raw,evidence,plan)),source.hash);
+ for(const raw of [lf.replace('母亲议界线总忘按时歇息','母亲议界线每天按时歇息'),lf.replace('\n','\r\n'),lf+'\n'])assert.throws(()=>frozenT07SourceText(source,raw,evidence,plan),/已改变/);
+ for(const mutate of [e=>e.planHash='fake',e=>e.sourceFile='../source.json',e=>e.originalHash='fake',e=>e.gitBlob.oid='fake',e=>e.gitBlob.text+='\n']){const forged=structuredClone(evidence);mutate(forged);assert.throws(()=>frozenT07SourceText(source,lf,forged,plan));}
+ for(const cardId of ['T06','T10'])assert.throws(()=>frozenT07SourceText(source,lf,evidence,{...plan,cardId}));
+ assert.throws(()=>frozenT07SourceText({...source,file:'base.json'},lf,evidence,plan));
+ assert.equal(Object.hasOwn(depthOptions([]),'sourceCheckoutEvidence'),false);
+ const parsed=reviewOptions(['--id','npc_wt_zhengxi','--design','world/drafts/w1/wt-depth/sourced/design.mjs','--root','world/drafts/w1/wt-depth/sourced','--budget-root','world/drafts/m4-object','--card','T07','--source-checkout-evidence','world/drafts/w1/wt-depth/controlled/source-checkout-evidence.json']);
+ assert.equal(parsed.sourceCheckoutEvidence,path.resolve('world/drafts/w1/wt-depth/controlled/source-checkout-evidence.json'));
+});
+
+test('换行凭证贯穿官方准备、mock复审收据及发布重放，不授予真实审核或发布',async t=>{
+ const temp=await fs.mkdtemp(path.join(os.tmpdir(),'wt-checkout-'));t.after(()=>fs.rm(temp,{recursive:true,force:true}));
+ const worldRoot=path.join(temp,'world');
+ for(const dir of ['meta','geo','people','lore'])await fs.cp(path.resolve('world',dir),path.join(worldRoot,dir),{recursive:true});
+ await fs.mkdir(path.join(worldRoot,'design'),{recursive:true});
+ for(const file of ['w1-wt-depth.mjs','w1-villages-weiting.mjs'])await fs.copyFile(path.resolve('world/design',file),path.join(worldRoot,'design',file));
+ await fs.cp(path.resolve('world/drafts/w1/wt-depth'),path.join(worldRoot,'drafts/w1/wt-depth'),{recursive:true});
+ const root=path.join(worldRoot,'drafts/w1/wt-depth/sourced'),controlled=path.join(worldRoot,'drafts/w1/wt-depth/controlled'),witnessFile=path.join(controlled,'source-checkout-evidence.json');
+ const plan=JSON.parse(await fs.readFile(path.join(controlled,'controlled-plan.json'),'utf8')),witness=JSON.parse(await fs.readFile(witnessFile,'utf8'));
+ const options={root,worldRoot,design:path.join(root,'design.mjs'),controlledRevision:path.join(controlled,'controlled-plan.json'),authoredBackground:path.join(worldRoot,'drafts/w1/wt-depth/authored-background.json'),authorizationHash:hashContent(plan),cardId:'T07',sourceCheckoutEvidence:witnessFile};
+ const file=path.join(worldRoot,'design/w1-villages-weiting.mjs');await fs.writeFile(file,witness.gitBlob.text);
+ const {sourceCheckoutEvidence,...without}=options;
+ await assert.rejects(prepareDepthRevision(without),/冻结原来源hash/);
+ const lf=await prepareDepthRevision(options);assert.equal(lf.revision.changes.length,82);assert.equal(lf.background.events.length,7);
+ assert.deepEqual(lf.sourceCheckoutEvidence,{file:'../controlled/source-checkout-evidence.json',hash:hashContent(witness)});
+ await fs.writeFile(file,witness.gitBlob.text.replace(/\n/g,'\r\n'));
+ assert.deepEqual((await prepareDepthRevision(options)).sourceHashes,lf.sourceHashes);
+ await fs.writeFile(file,witness.gitBlob.text);
+ const budgetRoot=path.join(temp,'mock-budget');await fs.mkdir(budgetRoot);
+ await fs.writeFile(path.join(budgetRoot,'budget.json'),JSON.stringify({spentYuan:1.99304752,reservedYuan:0,limitYuan:20,waveLimitYuan:20,cards:{T07:{limitYuan:3,spentYuan:1.99304752,reservedYuan:0}},requests:{}}));
+ let mockCalls=0;
+ const client={spent:0,reserved:0,budgetYuan:20,estimateCostYuan:()=>.01,generate:async request=>{mockCalls++;const payload=JSON.parse(request.messages[1].content),context=payload.publishedFacts;return{choices:[{message:{content:JSON.stringify({contradictions:[],reviewedPaths:payload.draft.patches.map(p=>p.path),backgroundReviews:context.authoredBackground.events.map(e=>({eventId:e.id,sourceHash:context.authoredBackground.sourceHash,reviewedRiskPaths:e.risks.map(r=>`${r.id}.${r.field}`),contradictions:[]}))})}}],measurement:{costUpperYuan:.001}};}};
+ await runDepthReview({...options,id:'npc_wt_zhengxi',budgetRoot},{client});assert.equal(mockCalls,1);
+ const receipt=JSON.parse(await fs.readFile(path.join(root,'incremental-proof.json'),'utf8'));assert.deepEqual(receipt.sourceCheckoutEvidence,lf.sourceCheckoutEvidence);
+ await assert.rejects(prepareDepthRevision(without),/冻结原来源hash|换行凭证收据/);
+ const manifest=path.join(root,'manifest.json');
+ await assert.rejects(prepareNpcDepth({manifest,worldRoot}),/L4|人工队列/);
+ receipt.sourceCheckoutEvidence.hash='forged';await fs.writeFile(path.join(root,'incremental-proof.json'),JSON.stringify(receipt));
+ await assert.rejects(prepareNpcDepth({manifest,worldRoot}),/换行凭证收据/);
+ receipt.sourceCheckoutEvidence.hash=lf.sourceCheckoutEvidence.hash;await fs.writeFile(path.join(root,'incremental-proof.json'),JSON.stringify(receipt));
+ await fs.writeFile(file,witness.gitBlob.text.replace('母亲议界线总忘按时歇息','母亲议界线每天按时歇息'));
+ await assert.rejects(prepareNpcDepth({manifest,worldRoot}),/已改变/);
+ assert.equal(mockCalls,1);
 });
 
 test('独立新背景与正式来源相容，原候选记忆及私密知情范围保持冻结',async()=>{
