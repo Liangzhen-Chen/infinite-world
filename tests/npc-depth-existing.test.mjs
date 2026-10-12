@@ -12,13 +12,25 @@ import {depthEntries,patchDraft,validateDraft,validatePatchResults,contextFor,bu
 import {prepareDepth} from '../tools/npc-depth.mjs';
 import {publishNpcDepth} from '../tools/publish-npc-depth.mjs';
 
-const world=await loadWorld();
+const formalWorld=await loadWorld();
+// Original review/source hashes describe the frozen pre-publication catalog.
+const world={...formalWorld,npcs:formalWorld.npcs.map(n=>config.base.find(row=>row.id===n.id)??n)};
 const root=path.resolve('world/drafts/w1/existing-depth');
 const design=path.resolve('world/design/w1-existing-depth.mjs');
 const entries=depthEntries(config.base,config,world);
 const merged=validatePatchResults(entries,world);
 const targetIds=new Set(config.scopeAudit.targetIds);
 const sources=JSON.parse(await fs.readFile(path.join(root,'source-evidence.json'),'utf8'));
+
+test('T11-B正式32人等于已批准的首次审核补丁，原审核快照仍保留323缺口',()=>{
+ const approved=validatePatchResults(depthEntries(firstReview.base,firstReview,world),world);
+ for(const id of config.scopeAudit.targetIds)assert.deepEqual(formalWorld.npcs.find(n=>n.id===id),approved.npcs.find(n=>n.id===id));
+ const currentReport=auditNpcDepth(formalWorld),frozenReport=auditNpcDepth(world);
+ assert.deepEqual(currentReport.issues.filter(i=>config.scopeAudit.targetIds.includes(i.id)),[]);
+ assert.equal(frozenReport.issues.filter(i=>config.scopeAudit.targetIds.includes(i.id)).length,323);
+ assert.equal(currentReport.issues.length,frozenReport.issues.length-323);
+ assert.equal(currentReport.ok,false,'未选full真实缺口仍拒绝全体达标');
+});
 
 test('T10集合差是152 full减四村120，冻结实际32个id与323项缺口',()=>{
  const fourVillages=new Set(['loc_bs_yupo','loc_bs_weiting','loc_bs_liquan','loc_bs_sangban']);
