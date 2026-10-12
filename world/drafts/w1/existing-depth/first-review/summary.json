@@ -1,12 +1,12 @@
 {
   "total": 32,
-  "passed": 19,
-  "manual": 13,
+  "passed": 32,
+  "manual": 0,
   "pending": 0,
-  "costUpperYuan": 6.8444384799999956,
+  "costUpperYuan": 7.261224559999994,
   "budget": {
-    "spentYuan": 6.7607024799999955,
-    "reservedYuan": 0.08373600000000002,
+    "spentYuan": 7.177488559999994,
+    "reservedYuan": 0.08373599999999998,
     "limitYuan": 20,
     "waveLimitYuan": 20,
     "cards": {
@@ -66,8 +66,62 @@
       },
       "T10": {
         "limitYuan": 3,
-        "spentYuan": 1.9909760800000003,
-        "reservedYuan": 0
+        "spentYuan": 2.4077621600000003,
+        "reservedYuan": 0,
+        "reviewRecoveries": {
+          "npc_hw_luowei": {
+            "fingerprint": "97e12c222d1d7aefb06281568788d925cff888de885895dd07e17dfadfef73d5",
+            "claimedAt": "2026-10-12T01:03:43.103Z"
+          },
+          "npc_hw_chenbai": {
+            "fingerprint": "a7c58737e72827ad6d5f8cc78d44af8694e9284267273c913ba73945b2619182",
+            "claimedAt": "2026-10-12T01:05:46.419Z"
+          },
+          "npc_hw_xuling": {
+            "fingerprint": "c4e55de124bc43f3dc1dd6824f12de52cea7710bf4a71aa560c3e3a7b271f997",
+            "claimedAt": "2026-10-12T01:05:49.072Z"
+          },
+          "npc_hw_wushuo": {
+            "fingerprint": "8b21757dc70a33e809b2322be136d5eb836b2a3140c2189f41a292581b6b1c11",
+            "claimedAt": "2026-10-12T01:05:50.764Z"
+          },
+          "npc_hw_gucen": {
+            "fingerprint": "b540ac9b0698687ce924e159343e562774b504f30a8c8725d562be48ce29ab2c",
+            "claimedAt": "2026-10-12T01:05:52.883Z"
+          },
+          "npc_hw_meiling": {
+            "fingerprint": "bb721f02975102ceb3ecd1f7b4046a7d6296e18951945882d4147016a2f93208",
+            "claimedAt": "2026-10-12T01:05:54.928Z"
+          },
+          "npc_hw_yanzhe": {
+            "fingerprint": "84cc3e74de0150f3d2ede93a5da3c25173c6cdd765490763aa4d491176dfb882",
+            "claimedAt": "2026-10-12T01:05:57.028Z"
+          },
+          "npc_hw_luqing": {
+            "fingerprint": "9503e1c676d9e1938da86caa326443f40c6fd115f9f2a5212f92e7290d47851c",
+            "claimedAt": "2026-10-12T01:05:59.651Z"
+          },
+          "npc_hw_anhuai": {
+            "fingerprint": "90c5f1f91849c648d7651a1dd5b9d02ecec025ec8c5684009a5ade348028a539",
+            "claimedAt": "2026-10-12T01:06:01.846Z"
+          },
+          "npc_hw_shendu": {
+            "fingerprint": "a4d9eff36107b7227279997842298a33351140a2e31da65727b269ff1174fd53",
+            "claimedAt": "2026-10-12T01:06:04.406Z"
+          },
+          "npc_hw_xinglu": {
+            "fingerprint": "ab59a3a23ef96e6e540bbb55ea4bf4cccd5d2b67417ee4bbe9d98e8805505f2a",
+            "claimedAt": "2026-10-12T01:06:06.588Z"
+          },
+          "npc_hw_feikai": {
+            "fingerprint": "49e8597391e7df02c2a6cbceccaaed87e3eeb9dfa7000a616070e55b9dcf2450",
+            "claimedAt": "2026-10-12T01:06:08.890Z"
+          },
+          "npc_hw_xiejin": {
+            "fingerprint": "9cc2ba2445060fa7d225452009202a0ecf482a3eb9c7ee6118e53ac64ced608e",
+            "claimedAt": "2026-10-12T01:06:14.177Z"
+          }
+        }
       }
     },
     "requests": {
@@ -8318,6 +8372,344 @@
           "latencyMs": 1027.9786000000022,
           "timestamp": "2026-10-12T00:41:38.219Z"
         }
+      },
+      "7210b141-7600-42e5-a7d1-26cdbda4deea": {
+        "card": "T10",
+        "label": "content-T10-npc_hw_luowei-manual-review",
+        "reservedYuan": 0.131902,
+        "status": "settled",
+        "costUpperYuan": 0.035692,
+        "measurement": {
+          "label": "content-T10-npc_hw_luowei-manual-review",
+          "model": "deepseek-flash",
+          "thinking": "disabled",
+          "usage": {
+            "prompt_tokens": 16938,
+            "completion_tokens": 227,
+            "total_tokens": 17165,
+            "prompt_tokens_details": {
+              "cached_tokens": 0
+            },
+            "prompt_cache_hit_tokens": 0,
+            "prompt_cache_miss_tokens": 16938
+          },
+          "costUpperYuan": 0.035692,
+          "cumulativeUpperYuan": 6.796394479999996,
+          "latencyMs": 1982.0634,
+          "timestamp": "2026-10-12T01:03:45.100Z"
+        }
+      },
+      "1e861afb-c29e-4a3a-87e0-956c091c2811": {
+        "card": "T10",
+        "label": "content-T10-npc_hw_chenbai-manual-review",
+        "reservedYuan": 0.125942,
+        "status": "settled",
+        "costUpperYuan": 0.03261224,
+        "measurement": {
+          "label": "content-T10-npc_hw_chenbai-manual-review",
+          "model": "deepseek-flash",
+          "thinking": "disabled",
+          "usage": {
+            "prompt_tokens": 15753,
+            "completion_tokens": 201,
+            "total_tokens": 15954,
+            "prompt_tokens_details": {
+              "cached_tokens": 256
+            },
+            "prompt_cache_hit_tokens": 256,
+            "prompt_cache_miss_tokens": 15497
+          },
+          "costUpperYuan": 0.03261224,
+          "cumulativeUpperYuan": 6.829006719999995,
+          "latencyMs": 2092.3355,
+          "timestamp": "2026-10-12T01:05:48.523Z"
+        }
+      },
+      "d4fdae00-700d-423c-8bf9-3c3cde5c3b8a": {
+        "card": "T10",
+        "label": "content-T10-npc_hw_xuling-manual-review",
+        "reservedYuan": 0.06154,
+        "status": "settled",
+        "costUpperYuan": 0.01187424,
+        "measurement": {
+          "label": "content-T10-npc_hw_xuling-manual-review",
+          "model": "deepseek-flash",
+          "thinking": "disabled",
+          "usage": {
+            "prompt_tokens": 5788,
+            "completion_tokens": 100,
+            "total_tokens": 5888,
+            "prompt_tokens_details": {
+              "cached_tokens": 256
+            },
+            "prompt_cache_hit_tokens": 256,
+            "prompt_cache_miss_tokens": 5532
+          },
+          "costUpperYuan": 0.01187424,
+          "cumulativeUpperYuan": 6.840880959999995,
+          "latencyMs": 1176.0608000000002,
+          "timestamp": "2026-10-12T01:05:50.256Z"
+        }
+      },
+      "ce1c24b9-60a0-4705-b625-3c60a7ef0336": {
+        "card": "T10",
+        "label": "content-T10-npc_hw_wushuo-manual-review",
+        "reservedYuan": 0.129858,
+        "status": "settled",
+        "costUpperYuan": 0.034274240000000004,
+        "measurement": {
+          "label": "content-T10-npc_hw_wushuo-manual-review",
+          "model": "deepseek-flash",
+          "thinking": "disabled",
+          "usage": {
+            "prompt_tokens": 16536,
+            "completion_tokens": 213,
+            "total_tokens": 16749,
+            "prompt_tokens_details": {
+              "cached_tokens": 256
+            },
+            "prompt_cache_hit_tokens": 256,
+            "prompt_cache_miss_tokens": 16280
+          },
+          "costUpperYuan": 0.034274240000000004,
+          "cumulativeUpperYuan": 6.875155199999996,
+          "latencyMs": 1613.7020000000002,
+          "timestamp": "2026-10-12T01:05:52.387Z"
+        }
+      },
+      "a1d67b1e-548c-494e-aa4e-6bf94bd78211": {
+        "card": "T10",
+        "label": "content-T10-npc_hw_gucen-manual-review",
+        "reservedYuan": 0.124646,
+        "status": "settled",
+        "costUpperYuan": 0.032116240000000004,
+        "measurement": {
+          "label": "content-T10-npc_hw_gucen-manual-review",
+          "model": "deepseek-flash",
+          "thinking": "disabled",
+          "usage": {
+            "prompt_tokens": 15541,
+            "completion_tokens": 192,
+            "total_tokens": 15733,
+            "prompt_tokens_details": {
+              "cached_tokens": 256
+            },
+            "prompt_cache_hit_tokens": 256,
+            "prompt_cache_miss_tokens": 15285
+          },
+          "costUpperYuan": 0.032116240000000004,
+          "cumulativeUpperYuan": 6.907271439999995,
+          "latencyMs": 1539.1744000000008,
+          "timestamp": "2026-10-12T01:05:54.430Z"
+        }
+      },
+      "b58956e6-d537-46bc-a63f-4599ab71d397": {
+        "card": "T10",
+        "label": "content-T10-npc_hw_meiling-manual-review",
+        "reservedYuan": 0.130492,
+        "status": "settled",
+        "costUpperYuan": 0.034448240000000005,
+        "measurement": {
+          "label": "content-T10-npc_hw_meiling-manual-review",
+          "model": "deepseek-flash",
+          "thinking": "disabled",
+          "usage": {
+            "prompt_tokens": 16599,
+            "completion_tokens": 219,
+            "total_tokens": 16818,
+            "prompt_tokens_details": {
+              "cached_tokens": 256
+            },
+            "prompt_cache_hit_tokens": 256,
+            "prompt_cache_miss_tokens": 16343
+          },
+          "costUpperYuan": 0.034448240000000005,
+          "cumulativeUpperYuan": 6.941719679999995,
+          "latencyMs": 1591.0311999999994,
+          "timestamp": "2026-10-12T01:05:56.528Z"
+        }
+      },
+      "81cc9f85-cb60-48e3-b461-59262fef4fe1": {
+        "card": "T10",
+        "label": "content-T10-npc_hw_yanzhe-manual-review",
+        "reservedYuan": 0.126108,
+        "status": "settled",
+        "costUpperYuan": 0.03241248,
+        "measurement": {
+          "label": "content-T10-npc_hw_yanzhe-manual-review",
+          "model": "deepseek-flash",
+          "thinking": "disabled",
+          "usage": {
+            "prompt_tokens": 15904,
+            "completion_tokens": 201,
+            "total_tokens": 16105,
+            "prompt_tokens_details": {
+              "cached_tokens": 512
+            },
+            "prompt_cache_hit_tokens": 512,
+            "prompt_cache_miss_tokens": 15392
+          },
+          "costUpperYuan": 0.03241248,
+          "cumulativeUpperYuan": 6.974132159999995,
+          "latencyMs": 2118.9624999999996,
+          "timestamp": "2026-10-12T01:05:59.155Z"
+        }
+      },
+      "ee5227df-d010-4f71-b126-d4e78363196d": {
+        "card": "T10",
+        "label": "content-T10-npc_hw_luqing-manual-review",
+        "reservedYuan": 0.127958,
+        "status": "settled",
+        "costUpperYuan": 0.03337624000000001,
+        "measurement": {
+          "label": "content-T10-npc_hw_luqing-manual-review",
+          "model": "deepseek-flash",
+          "thinking": "disabled",
+          "usage": {
+            "prompt_tokens": 16195,
+            "completion_tokens": 186,
+            "total_tokens": 16381,
+            "prompt_tokens_details": {
+              "cached_tokens": 256
+            },
+            "prompt_cache_hit_tokens": 256,
+            "prompt_cache_miss_tokens": 15939
+          },
+          "costUpperYuan": 0.03337624000000001,
+          "cumulativeUpperYuan": 7.0075083999999945,
+          "latencyMs": 1688.0686000000005,
+          "timestamp": "2026-10-12T01:06:01.347Z"
+        }
+      },
+      "927afcb3-cda4-4a01-b750-111bc3078af8": {
+        "card": "T10",
+        "label": "content-T10-npc_hw_anhuai-manual-review",
+        "reservedYuan": 0.130818,
+        "status": "settled",
+        "costUpperYuan": 0.033671599999999996,
+        "measurement": {
+          "label": "content-T10-npc_hw_anhuai-manual-review",
+          "model": "deepseek-flash",
+          "thinking": "disabled",
+          "usage": {
+            "prompt_tokens": 16587,
+            "completion_tokens": 219,
+            "total_tokens": 16806,
+            "prompt_tokens_details": {
+              "cached_tokens": 640
+            },
+            "prompt_cache_hit_tokens": 640,
+            "prompt_cache_miss_tokens": 15947
+          },
+          "costUpperYuan": 0.033671599999999996,
+          "cumulativeUpperYuan": 7.041179999999994,
+          "latencyMs": 2054.0649999999987,
+          "timestamp": "2026-10-12T01:06:03.909Z"
+        }
+      },
+      "c47cfa10-963f-4dd4-9786-8ebae4bd8a00": {
+        "card": "T10",
+        "label": "content-T10-npc_hw_shendu-manual-review",
+        "reservedYuan": 0.122908,
+        "status": "settled",
+        "costUpperYuan": 0.03130848,
+        "measurement": {
+          "label": "content-T10-npc_hw_shendu-manual-review",
+          "model": "deepseek-flash",
+          "thinking": "disabled",
+          "usage": {
+            "prompt_tokens": 15412,
+            "completion_tokens": 186,
+            "total_tokens": 15598,
+            "prompt_tokens_details": {
+              "cached_tokens": 512
+            },
+            "prompt_cache_hit_tokens": 512,
+            "prompt_cache_miss_tokens": 14900
+          },
+          "costUpperYuan": 0.03130848,
+          "cumulativeUpperYuan": 7.072488479999994,
+          "latencyMs": 1674.8734000000004,
+          "timestamp": "2026-10-12T01:06:06.089Z"
+        }
+      },
+      "b53dc82c-c342-44bf-b4c5-a4c13e00790b": {
+        "card": "T10",
+        "label": "content-T10-npc_hw_xinglu-manual-review",
+        "reservedYuan": 0.128944,
+        "status": "settled",
+        "costUpperYuan": 0.03469024,
+        "measurement": {
+          "label": "content-T10-npc_hw_xinglu-manual-review",
+          "model": "deepseek-flash",
+          "thinking": "disabled",
+          "usage": {
+            "prompt_tokens": 16688,
+            "completion_tokens": 227,
+            "total_tokens": 16915,
+            "prompt_tokens_details": {
+              "cached_tokens": 256
+            },
+            "prompt_cache_hit_tokens": 256,
+            "prompt_cache_miss_tokens": 16432
+          },
+          "costUpperYuan": 0.03469024,
+          "cumulativeUpperYuan": 7.107178719999994,
+          "latencyMs": 1802.1647000000012,
+          "timestamp": "2026-10-12T01:06:08.399Z"
+        }
+      },
+      "2d61702e-c383-4fbd-8cfd-d991dca6ed3d": {
+        "card": "T10",
+        "label": "content-T10-npc_hw_feikai-manual-review",
+        "reservedYuan": 0.124254,
+        "status": "settled",
+        "costUpperYuan": 0.03610224000000001,
+        "measurement": {
+          "label": "content-T10-npc_hw_feikai-manual-review",
+          "model": "deepseek-flash",
+          "thinking": "disabled",
+          "usage": {
+            "prompt_tokens": 15658,
+            "completion_tokens": 661,
+            "total_tokens": 16319,
+            "prompt_tokens_details": {
+              "cached_tokens": 256
+            },
+            "prompt_cache_hit_tokens": 256,
+            "prompt_cache_miss_tokens": 15402
+          },
+          "costUpperYuan": 0.03610224000000001,
+          "cumulativeUpperYuan": 7.143280959999994,
+          "latencyMs": 4771.0039,
+          "timestamp": "2026-10-12T01:06:13.669Z"
+        }
+      },
+      "198960b3-f3d4-4035-aac4-7881039066c2": {
+        "card": "T10",
+        "label": "content-T10-npc_hw_xiejin-manual-review",
+        "reservedYuan": 0.13067,
+        "status": "settled",
+        "costUpperYuan": 0.0342076,
+        "measurement": {
+          "label": "content-T10-npc_hw_xiejin-manual-review",
+          "model": "deepseek-flash",
+          "thinking": "disabled",
+          "usage": {
+            "prompt_tokens": 16823,
+            "completion_tokens": 227,
+            "total_tokens": 17050,
+            "prompt_tokens_details": {
+              "cached_tokens": 640
+            },
+            "prompt_cache_hit_tokens": 640,
+            "prompt_cache_miss_tokens": 16183
+          },
+          "costUpperYuan": 0.0342076,
+          "cumulativeUpperYuan": 7.177488559999994,
+          "latencyMs": 2079.844399999998,
+          "timestamp": "2026-10-12T01:06:16.265Z"
+        }
       }
     },
     "historicalUnallocatedSpentYuan": 0.9480150399999997,
@@ -8342,9 +8734,9 @@
   "batches": [
     {
       "index": 0,
-      "fingerprint": "92320295e305a45ea25e313ecb082e06a5e1269518348e347a83633666cda426",
+      "fingerprint": "6231cf893efc782260b394bdf8b31b5d4ff88cc1d20420468c5ab779983d4cf3",
       "count": 25,
-      "passed": 14,
+      "passed": 25,
       "ids": [
         "npc_hw_linsui",
         "npc_hw_ayan",
@@ -8373,45 +8765,253 @@
         "npc_hw_puduo"
       ],
       "rewritten": 13,
-      "manual": [
-        "npc_hw_chenbai",
-        "npc_hw_xuling",
-        "npc_hw_wushuo",
-        "npc_hw_luowei",
-        "npc_hw_gucen",
-        "npc_hw_meiling",
-        "npc_hw_yanzhe",
-        "npc_hw_luqing",
-        "npc_hw_anhuai",
-        "npc_hw_shendu",
-        "npc_hw_xinglu"
-      ],
+      "manual": [],
       "pending": [],
       "flagged": [
-        "npc_hw_xuling",
-        "npc_hw_gucen",
-        "npc_hw_luqing"
+        "npc_hw_xinglu"
       ],
       "sample": [
-        "npc_hw_linsui",
-        "npc_hw_hezhou",
-        "npc_hw_ranmo",
+        "npc_hw_miaozhen",
+        "npc_hw_duanhe",
         "npc_hw_puduo",
-        "npc_hw_sulan"
+        "npc_hw_anhuai",
+        "npc_hw_chenbai"
       ],
       "l4": {
-        "approved": false,
-        "notes": []
+        "approved": true,
+        "reviewedAt": "2026-10-12T01:12:52.632Z",
+        "notes": [
+          {
+            "id": "npc_hw_linsui",
+            "note": "逐叶通读本人留饭旧事、贺舟先询问再记录及房钱/学机械未知项；核账、长住询价和学习开销步骤仍pending，没有赊账新增或厨房权限扩大，原家庭经历保留。",
+            "draftHash": "95a82316e9d5ec628f19812b405481314418476811bcb2c1fcd8c922baa035a0",
+            "reviewHash": "a56bf6664c1bc7f02948b9fa3bb9cee42b31501f44171ae784ba11a5b1b95c67"
+          },
+          {
+            "id": "npc_hw_ayan",
+            "note": "逐叶通读旧木楔和尹葛松榫对照的原来源；上游原因原合格未知项保留，只补工作台时段。量轴、询问铁箍和白石学习均未完成，磨坊仍坏，材料和教学技能未增。",
+            "draftHash": "af64cd2ce871801c60b2555d42321d922a72b4c97d8d0e52d0c3eba72a571aa7",
+            "reviewHash": "a56bf6664c1bc7f02948b9fa3bb9cee42b31501f44171ae784ba11a5b1b95c67"
+          },
+          {
+            "id": "npc_hw_chenbai",
+            "note": "逐叶重读先对记录再发言旧事与严辙权限核对。原notes只在公开说话范围说明会议账簿和任命权边界，贷款担忧及漏看条款秘密未扩散。公用土地仍交居民讨论，合同未签、职位未授、仓库款物未交付，苏岚未被列为交谈参与者。",
+            "draftHash": "a039ed0d4f68af9e8492ff86c4971c532b8ab3cc7dcf7d6641c51d06004e6b40",
+            "reviewHash": "36d9fccd088ce853712473923926e754281c5de9279c4c10cd05dc62d0959032"
+          },
+          {
+            "id": "npc_hw_xuling",
+            "note": "逐叶重读照明教学、手伤旧事、照护谈话与原陶芷notes完整补源。关节病来自原母女照护设定，不赋予诊断能力；练习说明空处、器具用途和症状仍待询问，许苓原4项教学服务未改。",
+            "draftHash": "751fc04544bce8a2e0d92c70f408ce4581fb1c2b1baecc24af4e36f927293fd6",
+            "reviewHash": "3a646aa0f847cefc1ba71f8689e47c2ddaec9a0654a0d6bc130777bf80191797"
+          },
+          {
+            "id": "npc_hw_duanyan",
+            "note": "逐叶通读炭烟停炉旧事与父女进货记号共忆，实际来货数量和铁箍尺寸仍待核对；库存对账、查风道及实际工序议价不是已交货或修好炉子，原服务与父女关系数值保留。",
+            "draftHash": "e25abb6286ba06e61102ba3b462137d877f79adcd7ea23a76952428ba0fb9be6",
+            "reviewHash": "a56bf6664c1bc7f02948b9fa3bb9cee42b31501f44171ae784ba11a5b1b95c67"
+          },
+          {
+            "id": "npc_hw_duanhe",
+            "note": "逐叶通读桥/植物旧事和父亲教批次记号共忆；图注与比例仅作学习步骤，未新增地图师认证。十六岁与未成年边界保留，不新增恋爱、王都秘密或远路线知识。",
+            "draftHash": "2e7c6f515cb803945ec94d000ee25f00bb45b00e6f88566fa04774f45d5a987c",
+            "reviewHash": "a56bf6664c1bc7f02948b9fa3bb9cee42b31501f44171ae784ba11a5b1b95c67"
+          },
+          {
+            "id": "npc_hw_wushuo",
+            "note": "逐叶重读繁殖季惊散动物旧事和林果三人谈话。只谈减少惊扰，不报巢地位置；路线、边界和授粉试验仍待核对，灰尾年老后的私人顾虑未公开，也没有新增捕猎许可。",
+            "draftHash": "75748b25a2bd08de2166c3e9d8ce44b26b3ad74eab77d9ecb2e8976327decd38",
+            "reviewHash": "6c9352c4e82f9c3f6c8f4849e1bc027916b6637e12a2e0cd7952f408b246d511"
+          },
+          {
+            "id": "npc_hw_taozhi",
+            "note": "逐叶通读分草叶旧事、照护器具关系来由、具体未知事项与草药园步骤；症状和来历仍需核实，共忆未断言完成诊断、治病或试种，没有赠珍药或新增教学服务。",
+            "draftHash": "761cfbbd04ccb928d038d205a073ae3710b5ffa983fd982a0b1e7623c64b6422",
+            "reviewHash": "a56bf6664c1bc7f02948b9fa3bb9cee42b31501f44171ae784ba11a5b1b95c67"
+          },
+          {
+            "id": "npc_hw_zhengshuisheng",
+            "note": "逐叶通读税吏收费核对旧事和蒲铎获准看裂口的双方经历；船期、水位、载重和运费分开核查，没有自动到船、包船已成交或材料交付，采访署名仍须询问。",
+            "draftHash": "84170b6153491579181c3c2a15d6d5932102c18df42a0b484a5d4cc6f25810bb",
+            "reviewHash": "a56bf6664c1bc7f02948b9fa3bb9cee42b31501f44171ae784ba11a5b1b95c67"
+          },
+          {
+            "id": "npc_hw_luowei",
+            "note": "逐叶重读受潮种子旧事及三人用水谈话。察看沟口只属罗苇和邢芦旧亲历，谢堇只参与用水讨论；清沟工日、田段分界和取水次序未定，不知道邢芦归因上游的秘密，也未替田主同意试验。",
+            "draftHash": "d09b1f83bb407d9efcd196cb7b573199754ae543fd94609c2c0c173b7cd6ce66",
+            "reviewHash": "b53229cdaa08a61c813b1ebfbec8fcf220d9540119ecfa346f7c0b874ef855c9"
+          },
+          {
+            "id": "npc_hw_sulan",
+            "note": "逐叶通读旧卖布后分记用料工时与召集织户谈出售的共忆；冉默未急着答应，杭梨工时分成和严辙期限仍待问，没有追加订单、利润或织坊产权。",
+            "draftHash": "a449db4410790c88fb100d5a8de48680ea7dc13ee341f3497d72e22bceb4db2e",
+            "reviewHash": "a56bf6664c1bc7f02948b9fa3bb9cee42b31501f44171ae784ba11a5b1b95c67"
+          },
+          {
+            "id": "npc_hw_gucen",
+            "note": "逐叶重读双方证词旧事及费铠事前提醒。本人仅知外檐下通行风险，仍问具体时间，未给屋主许可；亲见与转述分栏，私下反复核证秘密未传播，执法权限未增。",
+            "draftHash": "6ecbc560b856ce41066998135e469983cfc98f4119325baed6693dc0b559055c",
+            "reviewHash": "22be4b5b74154d4b2ba29ab05af7883939aa9ba1ff16815ab5c016d7e3e2ec11"
+          },
+          {
+            "id": "npc_hw_meiling",
+            "note": "逐叶重读洪水后仪式修渠原旧事与林果讨论。公共谈话只说果园照护，幼树、排水和工时仍待查看或询问；未把已冲走树位的秘密告诉新当事人，未完成授粉试验或替住户同意。",
+            "draftHash": "e15bd4e701b72878de5245bdcf145fa9de350fe31e95b05d90ae3ea90b416fb7",
+            "reviewHash": "897ed09592b90cd89df9fe910c251c451388ab0f97c4f0954ffe17a31e625fef"
+          },
+          {
+            "id": "npc_hw_yanzhe",
+            "note": "逐叶重读交货不明旧单习惯、陈柏权限讨论及采购运输步骤。担保、货数、船期和地方批准均待核实，不能把愿建立订单当已建立；不公开看不准新供货人的秘密，不取得地方权力。",
+            "draftHash": "ce4bac3b25e0b7c1865ce70ce8b9ad13ecbd31b463e0c81efdda6531b6ec7121",
+            "reviewHash": "36d9fccd088ce853712473923926e754281c5de9279c4c10cd05dc62d0959032"
+          },
+          {
+            "id": "npc_hw_luqing",
+            "note": "逐叶重读散页来源旧事、沈渡记录谈话及唯一受控修订goals.long[0].steps[1].content。白蕙为学识字的田间雇工，改称学员避免学者身份错；课堂步骤仍待行动。私人邮件不被打开，旧抄错页秘密未变，段禾只是网络成员未获得本次记忆。",
+            "draftHash": "e97aae551a2ebe851d6423afb9d57bedcae2681ccda0c2e9b0ba66c4077cb5f4",
+            "reviewHash": "2c3bd0b0ba378c88c75beb64aee1a934583e1c2a98b5c274567f3135f53df03a"
+          },
+          {
+            "id": "npc_hw_hezhou",
+            "note": "逐叶通读署名旧事与林穗认可先询问再记录；郑水生故事用途、段禾草图和场地同意仍需问，不因暂住取得店铺库存或全部住客私事，作品仍为待试作目标。",
+            "draftHash": "95489dad10eee3e1423fc7e24d3be9f4baac27da0dc23b4b0e6f822e70167976",
+            "reviewHash": "a56bf6664c1bc7f02948b9fa3bb9cee42b31501f44171ae784ba11a5b1b95c67"
+          },
+          {
+            "id": "npc_hw_anhuai",
+            "note": "逐叶重读风大暂停操作旧事、蜂群授粉设想和三人林果讨论。田主意愿、天气、范围均待核对，原被视为过客的私心未公开；土地未开放、蜂场未开放、蜂蜜未赠送、法术工具未获得。",
+            "draftHash": "c30a747c634e1d1a17e0db748ef0d53a3bc36382d82c6f6f2a6ca2606355f788",
+            "reviewHash": "897ed09592b90cd89df9fe910c251c451388ab0f97c4f0954ffe17a31e625fef"
+          },
+          {
+            "id": "npc_hw_shendu",
+            "note": "逐叶重读名字相似核收件人旧事和陆青来源谈话。今日到达时刻、引文、首发现材料仍须核对，封缄信件归收件人，不转述私信或未抵达消息，私留作废时刻纸未公开。",
+            "draftHash": "6decf5456fa2a0bff2085339c78c5f992d38ca9dbfb8ed2026d1471390bb339d",
+            "reviewHash": "2c3bd0b0ba378c88c75beb64aee1a934583e1c2a98b5c274567f3135f53df03a"
+          },
+          {
+            "id": "npc_hw_baihui",
+            "note": "逐叶通读原小学堂学习及与焦柚分账的既有来源；字是否认清、课时和工约字句仍待核对，没有把学习识字变成可提供教学，个人花费不合并。",
+            "draftHash": "a467c3fe3b8d696226ca7d5d53bdf82405fac21ed64b29c71329c099c38d10fe",
+            "reviewHash": "a56bf6664c1bc7f02948b9fa3bb9cee42b31501f44171ae784ba11a5b1b95c67"
+          },
+          {
+            "id": "npc_hw_fanrong",
+            "note": "逐叶通读陶芷搬凳的原经历、坐着筛种往来和来访先问方便的备注；关节疼休息与按允许场地晾巾仍保留，不将筛种讨论变为田间劳力或治疗已奏效。实际attempts=2，重审后L1/L2通过。",
+            "draftHash": "b37b2b440e95933206fa4f38805fc0e1d56c27737c84664bd92dc67e4cf618cb",
+            "reviewHash": "a56bf6664c1bc7f02948b9fa3bb9cee42b31501f44171ae784ba11a5b1b95c67"
+          },
+          {
+            "id": "npc_hw_shijin",
+            "note": "逐叶通读教罗荇认袋记号的原旧事、与杭梨挪晾架留干路及夫妻分留种食粮；雨前收晒顺序仍待罗苇核对，不新增收成和仓储，孩子只做不负重家务。",
+            "draftHash": "d85fa6591887adca100332730bee522ede4b365596977f1a2af000cffa7a9968",
+            "reviewHash": "a56bf6664c1bc7f02948b9fa3bb9cee42b31501f44171ae784ba11a5b1b95c67"
+          },
+          {
+            "id": "npc_hw_miaozhen",
+            "note": "逐叶通读原女儿换筛次序争论、与范蓉谈坐着筛种及同户轻活来由；留种理由和当前播期要与家人比较，未称母女分歧已解或筛种办法适用所有年景。",
+            "draftHash": "c6b997b5a2f8a4643b9536dd54ff8f670363c064c0856e25b584b22deaae610a",
+            "reviewHash": "a56bf6664c1bc7f02948b9fa3bb9cee42b31501f44171ae784ba11a5b1b95c67"
+          },
+          {
+            "id": "npc_hw_xinglu",
+            "note": "逐叶重读母亲险滑、挑干路及公共用水谈话。原淤塞亲历保留，忘清沟口秘密未传播；自家工时、相邻户安排和清沟分工都须另问，谈话没有确定共同工程。",
+            "draftHash": "9d2a15571155d48f2ffd48c619f97c5cbb69599ea29a5a24701e5779761e93d1",
+            "reviewHash": "ccd3a8e1d07e2de336f860f170d301fedeeb662b924c9d485b474e7c24b1e7c2"
+          },
+          {
+            "id": "npc_hw_ranmo",
+            "note": "逐叶通读教外孙解废线和苏岚销售议事的原事实；只记长短松紧需说清，未答应统一分成。整经/坏线判断步骤仍pending，既有结头私事未传播，新记忆不增产权。",
+            "draftHash": "64bca09b5b399b16dc631650ca9fb2aa3da91ce654a2ac64e87fc11dcae72d73",
+            "reviewHash": "a56bf6664c1bc7f02948b9fa3bb9cee42b31501f44171ae784ba11a5b1b95c67"
+          },
+          {
+            "id": "npc_hw_puduo",
+            "note": "逐叶通读本人膝痛搬料休息和郑水生请看旧木件裂口原经历；没有动材料或完成补缝，工主时段与蒲薪重活意愿仍待问，原知情范围和财物保留。实际attempts=2，重审后L1/L2通过。",
+            "draftHash": "5cee369c3a590dd54c43ebadcbd8e032b65a0d3e40a741df6a91dcc37f4f025e",
+            "reviewHash": "a56bf6664c1bc7f02948b9fa3bb9cee42b31501f44171ae784ba11a5b1b95c67"
+          }
+        ]
       },
-      "costUpperYuan": 6.457421679999996,
-      "manualRatio": 0.44,
-      "needsSystemicRepair": true
+      "costUpperYuan": 7.190914719999994,
+      "manualRatio": 0,
+      "needsSystemicRepair": false,
+      "operativeInvalidated": [],
+      "l4History": [
+        {
+          "approved": false,
+          "notes": [],
+          "supersededBy": "npc_hw_luowei",
+          "priorFingerprint": "92320295e305a45ea25e313ecb082e06a5e1269518348e347a83633666cda426"
+        },
+        {
+          "approved": false,
+          "notes": [],
+          "supersededBy": "npc_hw_chenbai",
+          "priorFingerprint": "82cf724d2bf9820543175616cc2da407dafa3fa3115beb050a7c6c4e8afb689b"
+        },
+        {
+          "approved": false,
+          "notes": [],
+          "supersededBy": "npc_hw_xuling",
+          "priorFingerprint": "81eb538df80a0bb7a79c999f7ef6b3ee2ea9e250f8db0dd804216c114a5d5a4a"
+        },
+        {
+          "approved": false,
+          "notes": [],
+          "supersededBy": "npc_hw_wushuo",
+          "priorFingerprint": "f14bf79328cb31186e0cad4c3765d752f5c2ab24e119c6b6c544ffd112a89023"
+        },
+        {
+          "approved": false,
+          "notes": [],
+          "supersededBy": "npc_hw_gucen",
+          "priorFingerprint": "0da7d7dcf46cd75c24ff5c2543a4be71088a46bf1d55352e1fd2cd70b25cb63e"
+        },
+        {
+          "approved": false,
+          "notes": [],
+          "supersededBy": "npc_hw_meiling",
+          "priorFingerprint": "6936230c9fec40fb74aaadb2a24bb0cd88af11a4695311f977412bac06d8034e"
+        },
+        {
+          "approved": false,
+          "notes": [],
+          "supersededBy": "npc_hw_yanzhe",
+          "priorFingerprint": "fccefdbc6e9d99d3f29be080fa1eeb321d949466b89871d49a2057df053f8b4c"
+        },
+        {
+          "approved": false,
+          "notes": [],
+          "supersededBy": "npc_hw_luqing",
+          "priorFingerprint": "a5bbf799a6427dca78b5e6ade460c328e57c532f3b1c265e68752e82040efa4f"
+        },
+        {
+          "approved": false,
+          "notes": [],
+          "supersededBy": "npc_hw_anhuai",
+          "priorFingerprint": "3fb8c8c7ed8c574c517ee81b4798bccca85137fd6180480fe37568bd2ab72f90"
+        },
+        {
+          "approved": false,
+          "notes": [],
+          "supersededBy": "npc_hw_shendu",
+          "priorFingerprint": "b2dc6064e3a881df03d82b75cb9cc59180f73cb071796ce7324dc43961477172"
+        },
+        {
+          "approved": false,
+          "notes": [],
+          "supersededBy": "npc_hw_xinglu",
+          "priorFingerprint": "5075cde59954de752174aeba3b9fee2a5d98d7738d59293ef392bd25aa53a693"
+        }
+      ],
+      "foundationHash": "734f3b05619ce59696923d650450ad94199aad31a088215d40c5b69c1ab87228"
     },
     {
       "index": 1,
-      "fingerprint": "b6b3162ab931fd5c6623c9347b7770fb931a7e382caf9ebb48eef2924a897990",
+      "fingerprint": "8ac6418bcb3f21f0ef81b46db71ebc62ee8cb0db77d1ed3a75aa0655a7132431",
       "count": 7,
-      "passed": 5,
+      "passed": 7,
       "ids": [
         "npc_hw_wengqiao",
         "npc_hw_feikai",
@@ -8422,27 +9022,88 @@
         "npc_hw_yinge"
       ],
       "rewritten": 2,
-      "manual": [
+      "manual": [],
+      "pending": [],
+      "flagged": [
         "npc_hw_feikai",
         "npc_hw_xiejin"
       ],
-      "pending": [],
-      "flagged": [],
       "sample": [
-        "npc_hw_wengqiao",
-        "npc_hw_yinge",
-        "npc_hw_hangli",
         "npc_hw_zhongxiu",
-        "npc_hw_jiaoyou"
+        "npc_hw_yinge",
+        "npc_hw_jiaoyou",
+        "npc_hw_feikai",
+        "npc_hw_hangli"
       ],
       "l4": {
-        "approved": false,
-        "notes": []
+        "approved": true,
+        "reviewedAt": "2026-10-12T01:12:52.635Z",
+        "notes": [
+          {
+            "id": "npc_hw_wengqiao",
+            "note": "逐叶通读旧船期纠错与钟岫常谈熟路；新未知项询问当前哪班船和家中重活，不声称收到新船讯。扫湿叶和孙辈分清亲见/听说是未完成步骤，不给他人膝痛秘密真相。",
+            "draftHash": "69681081197a874f0d22a35d97fbbb3ec3bddc7cd88c249eb8e185a9c76b5fac",
+            "reviewHash": "a56bf6664c1bc7f02948b9fa3bb9cee42b31501f44171ae784ba11a5b1b95c67"
+          },
+          {
+            "id": "npc_hw_feikai",
+            "note": "逐叶重读湿衣旧事、顾岑通行提醒、屋主许可和成年女儿关系。L2四项soft已逐项核对：独立出处status=past-but-unresolved明确过去提醒，顾岑在actors中；询问屋主许可仍待完成，顾岑只听通行风险无批准权。具体关系备注保留危险作业事前提醒语意；未宣称登高、查漏或修缮完成，杭梨仅网络关联未获新记忆，迟修自家漏水秘密未传播。",
+            "draftHash": "5951eb596ab5748db14fedb55f8c034fee2d207d0f6d08d76ded5b0eb0eee4bf",
+            "reviewHash": "504fe9d424ca9113de4b2080cc50c9c18bb532af96bcd2e88378cbc11cde190a"
+          },
+          {
+            "id": "npc_hw_hangli",
+            "note": "逐叶通读苏岚谈分成的原经历、与施锦挪架留干路和提醒费铠换湿衣；晾位、收料顺序、洗晒分成仍待谈，没有默认多得分成或替苏岚同意，新共忆与施锦一致。",
+            "draftHash": "5fcd9c71f407d472fa1a6af5e7ad701b3562d81fe7781394a83d21879ccffa06",
+            "reviewHash": "a56bf6664c1bc7f02948b9fa3bb9cee42b31501f44171ae784ba11a5b1b95c67"
+          },
+          {
+            "id": "npc_hw_jiaoyou",
+            "note": "逐叶通读原合住后记账习惯与双方费用分开安排，以及点单/自家备菜的未知和核对步骤；未重写灶边提醒旧事，没有店铺库存转移、住处财物合并或已攒够淡季余钱。",
+            "draftHash": "5833073bb386744b1b931f5fd184ecf4450755d50a008d558c6a7e14ecb576c7",
+            "reviewHash": "a56bf6664c1bc7f02948b9fa3bb9cee42b31501f44171ae784ba11a5b1b95c67"
+          },
+          {
+            "id": "npc_hw_zhongxiu",
+            "note": "逐叶通读给钟芽补袖口的原旧事与翁荞常谈熟路；补边料和查看路面步骤未声称旧伤痊愈。原家人照顾及布料数量不变，不把闲谈当作已扫清所有落叶。",
+            "draftHash": "c4501fd4bbf3617a583ce7db56ad122cb8e689ca993fcd2822e3bc54ef9e4eda",
+            "reviewHash": "a56bf6664c1bc7f02948b9fa3bb9cee42b31501f44171ae784ba11a5b1b95c67"
+          },
+          {
+            "id": "npc_hw_xiejin",
+            "note": "逐叶重读女儿独立家务旧事及三人用水谈话。未新增察看沟口的本人旧经历；母亲轻活与孩子课时仍待核对，私藏水纹图未传播，取水次序未排定。",
+            "draftHash": "9667eb2f1a2c8aacd613522d51ced2bf9f16f3a69b4daacc740cdd9d2fdf9420",
+            "reviewHash": "b53229cdaa08a61c813b1ebfbec8fcf220d9540119ecfa346f7c0b874ef855c9"
+          },
+          {
+            "id": "npc_hw_yinge",
+            "note": "逐叶通读靳苹提醒修旧/换新及与阿砚在磨坊对照松榫的原亲历；工作台时段、物主意愿与修补是否合算仍待问，不把木作交流写成磨坊已修好或物主已经同意。",
+            "draftHash": "b34d51c6643547f491d45682077f5188fa676246be9f2a2f22740a61b8a2a1ec",
+            "reviewHash": "a56bf6664c1bc7f02948b9fa3bb9cee42b31501f44171ae784ba11a5b1b95c67"
+          }
+        ]
       },
-      "costUpperYuan": 6.8444384799999956,
-      "manualRatio": 0.2857142857142857,
-      "needsSystemicRepair": true
+      "costUpperYuan": 7.261224559999994,
+      "manualRatio": 0,
+      "needsSystemicRepair": false,
+      "operativeInvalidated": [],
+      "l4History": [
+        {
+          "approved": false,
+          "notes": [],
+          "supersededBy": "npc_hw_feikai",
+          "priorFingerprint": "b6b3162ab931fd5c6623c9347b7770fb931a7e382caf9ebb48eef2924a897990"
+        },
+        {
+          "approved": false,
+          "notes": [],
+          "supersededBy": "npc_hw_xiejin",
+          "priorFingerprint": "a9997a8293c1f64a0c901764ef8e57bc4c016029d6b50465aee54ecd8826161c"
+        }
+      ],
+      "foundationHash": "734f3b05619ce59696923d650450ad94199aad31a088215d40c5b69c1ab87228"
     }
   ],
-  "scope": "L1/L2 审核结果；尚须 L4 抽读与发布校验"
+  "scope": "L1/L2 审核结果；尚须 L4 抽读与发布校验",
+  "foundationHash": "734f3b05619ce59696923d650450ad94199aad31a088215d40c5b69c1ab87228"
 }

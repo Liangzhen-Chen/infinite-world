@@ -10,6 +10,7 @@ import {hashContent} from '../tools/content-pipeline.mjs';
 import {WorldEngine} from '../server-plugin/engine.mjs';
 import {compatibleWorld,planWorldUpgrade} from '../server-plugin/world-upgrade.mjs';
 import {applyPatches} from '../server-plugin/storage.mjs';
+import {readPublishedNpcDepth} from '../tools/npc-depth-publication-sources.mjs';
 const candidate=JSON.parse(await fs.readFile('world/drafts/w1/villages/candidate.json','utf8')),original=villagesOriginalWorld(await loadWorld()),world=mergeVillages(original,candidate);
 const files={'people/baseline.json':'npcs','people/residents.json':'residents','people/households.json':'households','geo/settlements.json':'settlementProfiles','geo/locations.json':'locations','geo/routes.json':'routes'};
 async function temporary(t){const root=await fs.mkdtemp(path.join(os.tmpdir(),'fields-four-villages-'));t.after(async()=>{const resolved=path.resolve(root);assert.ok(resolved.startsWith(path.resolve(os.tmpdir())+path.sep));await fs.rm(resolved,{recursive:true,force:true});});for(const dir of ['meta','people','geo','lore'])await fs.cp(path.resolve('world',dir),path.join(root,dir),{recursive:true});await fs.mkdir(path.join(root,'drafts/w1'),{recursive:true});await fs.cp(path.resolve('world/drafts/w1/villages'),path.join(root,'drafts/w1/villages'),{recursive:true});for(const[file,key]of Object.entries(files))await fs.writeFile(path.join(root,file),JSON.stringify(original[key]));return root;}
@@ -39,4 +40,28 @@ test('升级只加入120 full，旧钱物和在场状态保留，轻册无运行
  const reopened=JSON.parse(JSON.stringify(after));assert.deepEqual(reopened,after);assert.equal(planWorldUpgrade(reopened,incoming,incoming,{worldHash:'four-villages',eventId:'again'}).result.added.length,0);assert.deepEqual(new WorldEngine(incoming).resolver.resolve(candidate.residents[0].name,candidate.residents[0].scope),candidate.residents[0].id);
  // Replaying the same immutable upgrade event is an assignment, never a second grant.
  assert.deepEqual(applyPatches(after,plan.patches),after);
+});
+
+test('四村合并仅精确已审before/after可保留深度修订，fake凭证、后续冲突和错误旧版本仍拒绝',async()=>{
+ const formal=await loadWorld(),base=JSON.parse(await fs.readFile('world/drafts/w1/existing-depth/first-review/base.json','utf8'));
+ const old={npcs:base,residents:[],households:[],settlements:[],kinship:[],locations:[],routes:[]};
+ const depthReceipt=await readPublishedNpcDepth({world:formal});
+ assert.deepEqual(mergeVillages(formal,old,{depthReceipt}),formal);
+ assert.throws(()=>mergeVillages(formal,old),/已发布条目冲突/);
+ assert.throws(()=>mergeVillages(formal,old,{depthReceipt:{}}),/凭证无效/);
+ assert.throws(()=>mergeVillages(formal,old,{depthReceipt:structuredClone(depthReceipt)}),/凭证无效/);
+ const drift=structuredClone(formal);drift.npcs.find(n=>n.id===base[0].id).notes+='未经审核的后事';
+ assert.throws(()=>mergeVillages(drift,old,{depthReceipt}),/凭证与当前世界不符/);
+ const wrong=structuredClone(old);wrong.npcs[0].opinions.neighbors[0].view+='不是冻结旧版本';
+ assert.throws(()=>mergeVillages(formal,wrong,{depthReceipt}),/已发布条目冲突/);
+ assert.deepEqual((await publishVillages()).changed,[]);
+});
+
+test('四村原已审补充重发保留后续记忆和运行财物，原记忆篡改仍拒绝',async()=>{
+ const formal=await loadWorld(),person=formal.npcs.find(n=>n.id==='npc_yp_qinli'),amendment=structuredClone(person);
+ person.coins=9;person.inventory.item_wood=0;person.memorySeeds.push({id:'later_t11b_yupo',event:'雨后又检查议事屋桌边木板。',knownBy:[person.id],salience:3,reliability:'亲历'});
+ const result=mergeVillages(formal,candidate,{npcAmendments:[amendment,...candidate.npcs.filter(n=>n.id!==person.id&&hashContent(n)!==hashContent(formal.npcs.find(p=>p.id===n.id))).map(n=>formal.npcs.find(p=>p.id===n.id))],profileAmendments:formal.settlementProfiles.map(p=>p.details).filter(Boolean)});
+ assert.deepEqual(result.npcs.find(n=>n.id===person.id),person);
+ const drift=structuredClone(formal);drift.npcs.find(n=>n.id===person.id).memorySeeds[0].event+='未经审核';
+ assert.throws(()=>mergeVillages(drift,candidate,{npcAmendments:[amendment]}),/人物补充冲突/);
 });

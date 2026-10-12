@@ -6,6 +6,7 @@ import {hashContent,readApprovedContent} from './content-pipeline.mjs';
 import {depthEntries,contextFor,patchDraft,applyDepthDraft,validateDraft,validatePatchResults,checkIncrementalReview} from './npc-depth-content.mjs';
 import {loadDepthConfig,depthFoundation,prepareDepthRevision} from './npc-depth.mjs';
 import assert from 'node:assert/strict';
+import {replayFirstSourceEvidence} from './npc-depth-source-evidence.mjs';
 import {randomUUID} from 'node:crypto';
 import {validateNpcDepth,validateNpcProfiles,legacyTraitsAuditIds} from './npc-profile-validation.mjs';
 export const batchContract='npc-depth-batch-v1';
@@ -24,6 +25,7 @@ export async function prepareNpcDepth({manifest,worldRoot,world:snapshot}={}){
  assert.equal(hashContent(foundation),plan.foundationHash,'发布清单骨架指纹已过期');assert.equal(hashContent(await read(path.join(root,'foundation.json'))),hashContent(foundation),'冻结骨架或引用事实已改变');
  if(!incremental)assert.deepEqual(await read(path.join(root,'candidate.json')),entries.map(patchDraft),'冻结候选已篡改');
  const reviewContext=e=>incremental?.prepared.contexts.get(e.id)??contextFor(e,reference);
+ await replayFirstSourceEvidence({root,worldRoot:target,entries,world:reference,foundation,revision:config.revision,contextFor:reviewContext});
  const drafts=await readApprovedContent(root,entries,{contextFor:reviewContext,revision:config.revision});assert.equal(drafts.length,entries.length,'并非所有人物均已审核通过');
  const summary=await read(path.join(root,'summary.json')),covered=[];
  for(const batch of summary.batches){

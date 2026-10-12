@@ -8,6 +8,7 @@ import {readApprovedContent,hashContent} from './content-pipeline.mjs';
 import {validateFoundation,validateDraft,contextFor,revision} from './m2-people-content.mjs';
 import {npcProfileSchema} from './npc-profile-schema.mjs';
 import {readPublishedNpcIncrements,verifiedNpcIncrements} from './npc-publication-sources.mjs';
+import {readPublishedNpcDepth,verifiedNpcDepth,reviewedDepthField} from './npc-depth-publication-sources.mjs';
 export const protectedNpcFields=['schedule','coins','inventory','services','skills','intelligence','aliases','flags','location','trust','affection','creditPolicy'];
 export const profileFields=[...Object.keys(npcProfileSchema.properties).filter(k=>!protectedNpcFields.includes(k)),'authoredBasis'];
 const stableSourceFields=['id','name','notes','occupation','scope'];
@@ -27,15 +28,16 @@ export function syncReviewedNpcTraits(current,candidate,baseline){
   return {...structuredClone(n),traits:reviewedTraits(n,profile,originals.get(n.id))};
  });
 }
-export function mergeNpcProfiles(current,candidate,baseline,incrementsReceipt=undefined){
+export function mergeNpcProfiles(current,candidate,baseline,incrementsReceipt=undefined,depthReceipt=undefined){
  const increments=verifiedNpcIncrements(incrementsReceipt,current);
+ const revisions=verifiedNpcDepth(depthReceipt,current);
  const profiles=new Map(candidate.npcs.map(n=>[n.id,n])),originals=new Map(baseline.map(n=>[n.id,n]));
  assert.equal(profiles.size,candidate.npcs.length,'候选人物编号重复');
  for(const id of profiles.keys())assert.ok(current.some(n=>n.id===id),`正式人物缺失:${id}`);
  return current.map(n=>{
   const profile=profiles.get(n.id);if(!profile)return structuredClone(n);
   const original=originals.get(n.id);assert.ok(original,`缺少审查原档:${n.id}`);
-  for(const key of stableSourceFields)assert.deepEqual(n[key],original[key],`正式来源事实变动，须重新审核:${n.id}.${key}`);
+  for(const key of stableSourceFields)if(!reviewedDepthField(revisions.get(n.id),n,original[key],key))assert.deepEqual(n[key],original[key],`正式来源事实变动，须重新审核:${n.id}.${key}`);
   for(const key of ['services','skills','intelligence','aliases','flags']){
    const additions=increments.get(n.id)?.[key];
    const expected=additions?[...new Set([...original[key],...additions])]:original[key];
@@ -49,13 +51,15 @@ export function mergeNpcProfiles(current,candidate,baseline,incrementsReceipt=un
    assert.ok(Object.hasOwn(profile,key),`缺少发布字段:${n.id}.${key}`);
    const value=structuredClone(profile[key]);if(key==='wealth')value.cashRange=[n.coins,n.coins];
    // Repeated publication must not silently overwrite subsequent profile edits.
-   if(Object.hasOwn(n,key))assert.deepEqual(n[key],value,`已发布档案发生后续修改:${n.id}.${key}`);
-   merged[key]=value;
+   if(reviewedDepthField(revisions.get(n.id),n,profile[key],key))merged[key]=structuredClone(n[key]);
+   else{if(Object.hasOwn(n,key))assert.deepEqual(n[key],value,`已发布档案发生后续修改:${n.id}.${key}`);merged[key]=value;}
   }
   merged.traits=reviewedTraits(n,profile,original);
   merged.age=profile.age;
   // Profile money remains a description of the live catalog, not a transfer.
-  merged.wealth.cashRange=[n.coins,n.coins];
+  // Replaying an older profile keeps the immutable reviewed depth edition;
+  // operational cash is already preserved above and never transferred here.
+  if(!reviewedDepthField(revisions.get(n.id),n,profile.wealth,'wealth'))merged.wealth.cashRange=[n.coins,n.coins];
   for(const key of protectedNpcFields)assert.deepEqual(merged[key],n[key],`禁止覆盖正式字段:${n.id}.${key}`);
   return merged;
  });
@@ -77,7 +81,10 @@ export async function prepareNpcPublication({world=undefined,worldRoot=path.reso
  world??=await loadWorld(worldRoot);const {candidate,baseline}=await readReviewedProfiles(world,root);
  const needsIncrements=!traitsOnly&&baseline.some(original=>candidate.npcs.some(n=>n.id===original.id)&&['services','skills'].some(key=>hashContent(world.npcs.find(n=>n.id===original.id)?.[key])!==hashContent(original[key])));
  const receipt=needsIncrements?await readPublishedNpcIncrements({world,worldRoot}):undefined;
- const npcs=traitsOnly?syncReviewedNpcTraits(world.npcs,candidate,baseline):mergeNpcProfiles(world.npcs,candidate,baseline,receipt),result={...world,npcs};
+ const needsDepth=!traitsOnly&&candidate.npcs.some(profile=>{const current=world.npcs.find(n=>n.id===profile.id);return profileFields.some(key=>key!=='wealth'&&Object.hasOwn(current,key)&&hashContent(current[key])!==hashContent(profile[key]));});
+ let depthReceipt;
+ if(needsDepth)try{depthReceipt=await readPublishedNpcDepth({world,worldRoot});}catch(error){throw Error(`已发布档案发生后续修改；深度补丁来源核验失败：${error.message}`,{cause:error});}
+ const npcs=traitsOnly?syncReviewedNpcTraits(world.npcs,candidate,baseline):mergeNpcProfiles(world.npcs,candidate,baseline,receipt,depthReceipt),result={...world,npcs};
  const validation=validateWorld(result);assert.ok(validation.ok,validation.errors.join('\n'));
  return {world:result,candidate,baseline,validation,changed:hashContent(npcs)!==hashContent(world.npcs)};
 }
