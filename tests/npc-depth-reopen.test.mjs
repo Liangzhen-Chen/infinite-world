@@ -33,11 +33,30 @@ async function fixture(t,{card='T08',missing=false,shared=false}={}){
  const plan={kind:'controlled-depth-revision',planningId:'fixed-new-plan',cardId:card,revision:config.revision,foundationHash:grant.foundationHash,baseHash:grant.baseHash,candidateHash:grant.candidateHash,sourceHashes:grant.sourceHashes,previousProofHash:null,authorized:records.map(r=>({id:r.id,recordHash:hashContent(r),draftHash:hashContent(r.draft),reviewHash:hashContent(r.review),paths:r.draft.patches.map(p=>p.path)}))};options.controlledRevision=path.join(root,'plan.json');options.authorizationHash=hashContent(plan);await write(options.controlledRevision,plan);return plan;}
  return{dir,worldRoot,root,design,options,prepared,records,batch,ledger,budgetRoot,client,calls,grant,authorization,revision,config,saveDesign};
 }
+test('显式授权叶可替换旧版本引文；无授权仍拒绝，移除叶权限也拒绝且零调用',async t=>{
+ const p=await fixture(t,{card:'T07'}),record=p.records[0];record.review.contradictions[0].quote='另一旧版本的引文';delete record.reviewRecovery;
+ await write(path.join(p.root,record.id+'.json'),record);p.grant.allowed[0].recordHash=hashContent(record);await write(p.options.reopenAuthorization,p.authorization);await p.revision();
+ const before=await fs.readFile(path.join(p.budgetRoot,'budget.json'),'utf8');
+ await assert.rejects(prepareDepthRevision({...p.options,reopenAuthorization:undefined}),/失效quote与原候选不符/);
+ const prepared=await prepareDepthRevision(p.options);assert.equal(prepared.revision.changes.length,1);
+ p.grant.allowed[0].paths=[];await write(p.options.reopenAuthorization,p.authorization);await assert.rejects(prepareDepthRevision(p.options),/未授权重开叶/);
+ assert.equal(p.calls.length,0);assert.equal(await fs.readFile(path.join(p.budgetRoot,'budget.json'),'utf8'),before);
+});
 test('固定增额幂等、原allocation/请求/未知保留；无授权、换nonce、错误快照零写',async t=>{
  const p=await fixture(t),first=grantDepthBudget(p.ledger,'T08',p.grant.allocation,p.authorization);near(first.cards.T08.limitYuan,4.5);near(first.spentYuan,p.ledger.spentYuan);assert.deepEqual(first.requests,p.ledger.requests);assert.deepEqual(first.cards.T06,p.ledger.cards.T06);assert.deepEqual(grantDepthBudget(first,'T08',p.grant.allocation,p.authorization),first);
  assert.throws(()=>grantDepthBudget(first,'T08',p.grant.allocation,{...p.authorization,id:'another'}));assert.throws(()=>grantDepthBudget(first,'T08',p.grant.allocation,{...p.authorization,nonce:'new'}));
  const original=await fs.readFile(path.join(p.budgetRoot,'budget.json'),'utf8');await assert.rejects(openContentBudget({file:path.join(p.budgetRoot,'budget.json'),client:p.client,cardId:'T08',allocation:{...p.grant.allocation,incrementLimitYuan:4.5}}));assert.equal(await fs.readFile(path.join(p.budgetRoot,'budget.json'),'utf8'),original);
  await p.revision();p.grant.spentYuan+=.1;await write(p.options.reopenAuthorization,p.authorization);await assert.rejects(runDepthReview(p.options,{client:p.client}),/快照/);assert.equal(p.calls.length,0);assert.equal(await fs.readFile(path.join(p.budgetRoot,'budget.json'),'utf8'),original);
+});
+test('未审且无provider草稿的授权叶可先修订再完整L2，原未审记录保留',async t=>{
+ const p=await fixture(t),plan=await p.revision(),record=p.records[0];record.status='pending';record.draft=null;record.review=null;record.errors=[];delete record.reviewRecovery;
+ await write(path.join(p.root,record.id+'.json'),record);p.grant.allowed[0].recordHash=hashContent(record);await write(p.options.reopenAuthorization,p.authorization);
+ const batch={...p.batch,manual:[],pending:[record.id],l4:{approved:false},fingerprint:hashContent([{id:record.id,draft:null,review:null,status:'pending'}])};
+ await write(path.join(p.root,'batch-0.json'),batch);await write(path.join(p.root,'summary.json'),{batches:[batch]});
+ Object.assign(plan.authorized[0],{recordHash:hashContent(record),draftHash:hashContent(null),reviewHash:hashContent(null)});p.options.authorizationHash=hashContent(plan);await write(p.options.controlledRevision,plan);
+ await assert.rejects(prepareDepthRevision({...p.options,reopenAuthorization:undefined}));await prepareDepthRevision(p.options);
+ const result=await runDepthReview(p.options,{client:p.client}),current=await read(path.join(p.root,record.id+'.json'));
+ assert.equal(result.status,'passed');assert.equal(p.calls.length,1);assert.equal(current.reviewRecovery.prior.draft,null);assert.equal(current.draftResponse,undefined);
 });
 test('T06双方同步授权复审，不付费回显；旧复审/停止/费用保留，L4失效并需重读',async t=>{
  const p=await fixture(t,{card:'T06',shared:true});await p.revision();const prior=structuredClone(p.records[0]),result=await runDepthReview(p.options,{client:p.client});assert.equal(result.status,'passed');assert.equal(p.calls.length,1);const record=await read(path.join(p.root,p.options.id+'.json'));assert.equal(record.attempts,3);assert.deepEqual(record.reviewRecovery.prior,prior);assert.deepEqual(record.budgetStopHistory,[prior.budgetStop]);assert.equal(record.draftResponse,undefined);assert.equal(record.responseEvidence.length,1);const batch=await read(path.join(p.root,'batch-0.json'));assert.equal(batch.l4.approved,false);assert.deepEqual(batch.l4History[0].notes,p.batch.l4.notes);near(result.budgetAfter.reservedYuan,.083736);near(result.budgetAfter.cards.T06.spentYuan,1.83866384);

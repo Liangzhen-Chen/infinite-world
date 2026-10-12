@@ -249,6 +249,7 @@ export function validateControlledRevision(plan,{entries,foundation,records,worl
  for(const item of plan.authorized??[]){
   assert.ok(!authorized.has(item.id),'授权ID重复');authorized.add(item.id);
   const old=foundation.entries.find(e=>e.id===item.id),entry=entries.find(e=>e.id===item.id),record=records.find(r=>r.id===item.id);
+  const priorDraft=record?.draft??(reopen?candidate.find(d=>d.id===item.id):null);
   assert.ok(old&&entry&&record,'未授权/缺档ID');assert.equal(item.recordHash,hashContent(record),'旧完整record hash不符');
   assert.equal(hashContent(contextFor(Object.fromEntries(Object.entries(old).filter(([key])=>key!=='context')),world)),hashContent(old.context),'原冻结来源/声明改变');
   assert.deepEqual(entry.before,old.before,'原baseline改变');assert.deepEqual(entry.issues,old.issues,'原审计许可改变');assert.equal(entry.baseHash,old.baseHash,'原baseHash改变');
@@ -268,7 +269,7 @@ export function validateControlledRevision(plan,{entries,foundation,records,worl
   if(reopen){assert.ok(permission.reason?.trim(),'重开缺真实失败/未审证据');actual.push(...(item.paths??[]).map(path=>({path,kind:'reopen',quote:''})));}
   assert.ok(actual.length||reopen&&item.sourceOnly,'缺真实L2/L4失效');
   const paths=new Set(item.paths??[]);assert.ok(paths.size||item.sourceOnly,'缺授权修订路径或source-only标识');
-  for(const field of paths){const prior=old.patches.find(p=>p.path===field);assert.ok(prior&&permitted(entry,prior,world),'路径不在原audit许可');const issue=actual.find(f=>f.path===field);assert.ok(issue,'路径不在真实失效清单');const value=getPath(applyDepthDraft(old.before,record.draft),field);assert.ok(issue.kind==='reopen'||JSON.stringify(value).includes(issue.quote),'失效quote与原候选不符');}
+  for(const field of paths){const prior=old.patches.find(p=>p.path===field);assert.ok(prior&&permitted(entry,prior,world),'路径不在原audit许可');const issue=actual.find(f=>f.path===field&&f.kind==='reopen')??actual.find(f=>f.path===field);assert.ok(issue,'路径不在真实失效清单');const value=getPath(applyDepthDraft(old.before,priorDraft),field);assert.ok(issue.kind==='reopen'||JSON.stringify(value).includes(issue.quote),'失效quote与原候选不符');}
   assert.deepEqual(entry.patches.map(p=>p.path),old.patches.map(p=>p.path),'禁止新增/删除补丁成员');
   for(const prior of (reopen?record.draft?.patches??old.patches:old.patches)){const next=entry.patches.find(p=>p.path===prior.path);if(hashContent(prior.value)!==hashContent(next.value)){assert.ok(paths.has(prior.path),'正确兄弟叶不得修改');changes.push({id:item.id,path:prior.path,before:prior.value,after:next.value});}}
   const oldMetadata=Object.fromEntries(Object.entries(old).filter(([key])=>!['context','facts','patches'].includes(key))),newMetadata=Object.fromEntries(Object.entries(entry).filter(([key])=>!['facts','patches'].includes(key)));assert.deepEqual(newMetadata,oldMetadata,'原来源选择/声明不得变更');

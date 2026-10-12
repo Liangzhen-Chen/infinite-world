@@ -4277,5 +4277,8 @@
   "backgroundFile": "../reopen/authored-background.json",
   "attemptLimit": 2,
   "realL2": false,
-  "realL4": false
+  "realL4": false,
+  "previousPlanFile": "../controlled/controlled-plan.json",
+  "previousPlanHash": "9c58016d9680c2ff5b11469648c8ed3d216d626aee4f7434b4815df8f538fcd6",
+  "previousProofHash": "4d12b1acfd03670c6caeac1ad065d627c363cf76e083978042590deb6ffe402b"
 }
