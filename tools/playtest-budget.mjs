@@ -141,6 +141,7 @@ export async function openPlaytestTape({file,identity,api,client}){
  if(digest(tape.identity)!==digest(identity))throw Error('试玩恢复输入改变');
  let httpIndex=0,modelIndex=0,failed=false;
  const save=()=>atomicJSON(file,tape);
+ const confirmedRejection=error=>Number.isInteger(error.httpStatus)&&error.httpStatus>=400&&error.httpStatus<500;
  await save();
  const wrappedApi=async(endpoint,body={})=>{
   if(failed){if(endpoint!=='read'&&endpoint!=='feedback')throw Error('失败后禁止继续写入');return api(endpoint,body);} // runner's failure accounting
@@ -148,10 +149,10 @@ export async function openPlaytestTape({file,identity,api,client}){
   if(old&&old.key!==key)throw Error('试玩恢复 HTTP 顺序改变');
   if(old?.response)return structuredClone(old.response);
   if(old?.status==='pending'){failed=true;throw Error('HTTP 请求执行结果未知，保留检查点，需核查');}
-  if(old?.error){if(!old.httpStatus)failed=true;const error=Error(old.error);error.httpStatus=old.httpStatus;throw error;}
+  if(old?.error){if(!confirmedRejection(old))failed=true;const error=Error(old.error);error.httpStatus=old.httpStatus;throw error;}
   const row={key,endpoint,body,status:'pending'};tape.http[index]=row;await save();
   try{const response=await api(endpoint,body);row.response=response;row.status='complete';await save();return structuredClone(response);}
-  catch(error){if(error.httpStatus){row.error=error.message;row.httpStatus=error.httpStatus;row.status='failed';await save();}else failed=true;throw error;}
+  catch(error){if(error.httpStatus){row.error=error.message;row.httpStatus=error.httpStatus;row.status=confirmedRejection(error)?'failed':'unknown';await save();}if(!confirmedRejection(error))failed=true;throw error;}
  };
  const wrappedClient={async generate(body,label){
   const index=modelIndex++,key=digest([body,label]),old=tape.models[index];

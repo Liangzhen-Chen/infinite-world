@@ -1,18 +1,1 @@
-node:internal/modules/run_main:107
-    triggerUncaughtException(
-    ^
-
-AssertionError [ERR_ASSERTION]: The expression evaluated to a falsy value:
-
-  assert.ok(real)
-
-    at file:///F:/dnd-wt/T60/docs/%E6%B5%8B%E8%AF%95%E6%8A%A5%E5%91%8A/20261012-T60/guard-check.mjs:42:90 {
-  generatedMessage: true,
-  code: 'ERR_ASSERTION',
-  actual: undefined,
-  expected: true,
-  operator: '==',
-  diff: 'simple'
-}
-
-Node.js v24.13.1
+{"pass":true,"modelCalls":0,"checks":33,"replayed":2,"requests":393,"requestsByRole":{"host":138,"consistency":87,"review":59,"planning":10,"tool":98,"blind":1}}

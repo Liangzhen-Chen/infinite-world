@@ -40,6 +40,12 @@ test('已确认HTTP规则拒绝可解释后续回合；恢复重放拒绝原文�
  let tape=await openPlaytestTape(options);await assert.rejects(tape.api('reject'),/规则拒绝/);assert.deepEqual(await tape.api('execute',{tool:'world_turn'}),{ok:true});
  tape=await openPlaytestTape(options);await assert.rejects(tape.api('reject'),/规则拒绝/);assert.deepEqual(await tape.api('execute',{tool:'world_turn'}),{ok:true});assert.equal(rejected,1);assert.equal(writes,1);
 });
+test('HTTP 500不能证明写入未发生，当前及恢复均阻止后续写入',async t=>{
+ const {budget,directory}=await setup(t,{async generate(){return response();}});let calls=0;
+ const options={file:path.join(directory,'ambiguous-tape.json'),identity:{case:'server-unknown'},client:budget,api:async()=>{calls++;const error=Error('服务端执行异常');error.httpStatus=500;throw error;}};
+ for(let i=0;i<2;i++){const tape=await openPlaytestTape(options);await assert.rejects(tape.api('execute',{tool:'world_trade'}),/服务端执行异常/);await assert.rejects(tape.api('execute',{tool:'world_turn'}),/禁止继续写入/);assert.equal(tape.tape.http[0].status,'unknown');}
+ assert.equal(calls,1);
+});
 
 test('缓存只有真实 usage 才结算；同请求与重复 provider response 不双计或退款',async t=>{
  let calls=0;const {budget}=await setup(t,{async generate(){calls++;return response();}});
@@ -153,7 +159,7 @@ DeepSeekClient.prototype.generate=async()=>{await fs.writeFile(${JSON.stringify(
  async function run(destination,extra=[]){try{await promisify(execFile)(process.execPath,[...base,'--run-dir',destination,...extra],{timeout:30000});assert.fail('额度不足不能验收通过');}catch(error){assert.equal(error.code,1,error.stderr??error.message);assert.match(error.stdout,/completedSessions/,error.stderr);}}
  await run(runDir);const first=JSON.parse(await fs.readFile(path.join(runDir,'真实试玩.json'),'utf8'));
  assert.equal(first.runId,'cli-wave');assert.equal(first.cardId,'T17');assert.equal(first.costUpperYuan,0);assert.equal(first.results[0].recoveryRuns,0);
- await run(movedDir,['--resume']);const restored=JSON.parse(await fs.readFile(path.join(movedDir,'真实试玩.json'),'utf8'));
+ await run(movedDir,['--resume','--retest-only','out_of_character']);const restored=JSON.parse(await fs.readFile(path.join(movedDir,'真实试玩.json'),'utf8'));
  assert.equal(restored.budgetFile,first.budgetFile);assert.equal(restored.results[0].recoveryRuns,1);assert.equal(restored.results[0].originalFailures.length,1);
  await run(movedDir,['--resume']);const final=JSON.parse(await fs.readFile(path.join(movedDir,'真实试玩.json'),'utf8'));
  assert.equal(final.results[0].recoveryRuns,1);assert.equal(final.results[0].originalFailures.length,1);assert.equal(final.reservedYuan,0);
