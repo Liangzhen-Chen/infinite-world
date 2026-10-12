@@ -6,7 +6,11 @@ import os from 'node:os';
 import {loadWorld} from '../tools/load-world.mjs';
 import {prepareNpcPublication,publishNpcProfiles,mergeNpcProfiles,protectedNpcFields} from '../tools/m2-people-publish.mjs';
 import {readPublishedNpcIncrements} from '../tools/npc-publication-sources.mjs';
-const world=await loadWorld(),root=path.resolve('world/drafts/m2-people');
+import {readPublishedNpcDepth} from '../tools/npc-depth-publication-sources.mjs';
+const formal=await loadWorld(),root=path.resolve('world/drafts/m2-people');
+// T24's existing negative fixtures stay on their frozen pre-depth catalog.
+const depthBefore=JSON.parse(await fs.readFile('world/drafts/w1/existing-depth/first-review/base.json','utf8'));
+const world={...formal,npcs:formal.npcs.map(n=>depthBefore.find(row=>row.id===n.id)??n)};
 const read=async file=>JSON.parse(await fs.readFile(file,'utf8'));
 const [baseline,candidate]=await Promise.all(['baseline.json','candidate.json'].map(file=>read(path.join(root,file))));
 const teacher=w=>w.npcs.find(n=>n.id==='npc_hw_xuling');
@@ -18,15 +22,17 @@ async function temporary(t){
 async function sourceCopy(t){const dir=await temporary(t);await fs.cp(path.resolve('world/drafts/m4-batch2'),path.join(dir,'drafts/m4-batch2'),{recursive:true});return dir;}
 
 test('真实正式世界prepare保留四项教学、17人特征和钱物，直接纯函数仍须有效凭证',async()=>{
- const prepared=await prepareNpcPublication({world,root});assert.equal(prepared.changed,false);
+ const prepared=await prepareNpcPublication({world:formal,root});assert.equal(prepared.changed,false);
  assert.deepEqual(teacher(prepared.world).services,['spell_light','profession_mage','spell_earth_03','spell_fire_07']);
  assert.deepEqual(teacher(prepared.world).skills,['skill_light','skill_fire_07','skill_earth_03']);
- assert.deepEqual(prepared.world.npcs,world.npcs);
+ assert.deepEqual(prepared.world.npcs,formal.npcs);
  const traitsIds=baseline.filter(n=>n.traits?.[0]==='原档待扩充').map(n=>n.id);assert.equal(traitsIds.length,17);
  for(const id of traitsIds)assert.deepEqual(prepared.world.npcs.find(n=>n.id===id).traits,world.npcs.find(n=>n.id===id).traits);
  assert.throws(()=>mergeNpcProfiles(world.npcs,candidate,baseline),/许苓|npc_hw_xuling.services/);
  assert.throws(()=>mergeNpcProfiles(world.npcs,candidate,baseline,{worldRoot:path.resolve('world')}),/凭证无效/);
  const receipt=await readPublishedNpcIncrements({world});assert.deepEqual(mergeNpcProfiles(world.npcs,candidate,baseline,receipt),world.npcs);
+ const teaching=await readPublishedNpcIncrements({world:formal}),depth=await readPublishedNpcDepth({world:formal});
+ assert.deepEqual(mergeNpcProfiles(formal.npcs,candidate,baseline,teaching,depth),formal.npcs);
  assert.throws(()=>mergeNpcProfiles(world.npcs,candidate,baseline,structuredClone(receipt)),/凭证无效/);
  const changed=structuredClone(world);teacher(changed).skills.push('skill_unknown');
  assert.throws(()=>mergeNpcProfiles(changed.npcs,candidate,baseline,receipt),/凭证与当前世界不符/);
