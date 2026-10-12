@@ -36,14 +36,14 @@ async function fixture(t,{shared=false,oneSided=false,firstSource=false}={}){
   const entries=depthEntries([before],config,world),foundation=depthFoundation(entries,world,config.revision),manifest={contract:'audit-patch-v1',design:`design/card-${index}.mjs`,root:`drafts/card-${index}`,worldRoot:'../..',foundationHash:hashContent(foundation)};
   await write(path.join(root,'base.json'),[before]);await write(path.join(root,'candidate.json'),entries.map(patchDraft));await write(path.join(root,'foundation.json'),foundation);await write(path.join(root,'manifest.json'),manifest);
   // Local deterministic review substitutes exercise the actual L1/L2/L4 receipts.
-  const client={spent:0,reserved:0,budgetYuan:0,generate:async request=>{const value=JSON.parse(request.messages[1].content);return{choices:[{message:{content:JSON.stringify(value.candidate??{contradictions:[]})}}]};}};
+  const client={spent:0,reserved:0,budgetYuan:20,rates:{miss:2,output:3},generate:async request=>{const value=JSON.parse(request.messages[1].content);return{choices:[{message:{content:JSON.stringify(value.candidate??{contradictions:[]})}}],measurement:{costUpperYuan:0}};}};
   let result;
   if(firstSource){
    const sourceFile=path.join(root,'sources.json'),sourceEvidenceMap=path.join(root,'sources-map.json');
    await write(sourceFile,{sourceRecords:ids.map(other=>{const n=world.npcs.find(n=>n.id===other);return{id:other,name:n.name,sex:n.sex,...(other===id?{notes:n.notes}:{})};}),reviewBoundary:'原字段仅供逐叶核验，不能传播私人知识。'});await write(sourceEvidenceMap,{[id]:'sources.json'});await write(path.join(root,'budget.json'),{spentYuan:0,reservedYuan:0,limitYuan:20});
-   client.rates={miss:2,output:3};const generate=client.generate;client.generate=async body=>({...await generate(body),measurement:{costUpperYuan:0}});
    result=await runDepth({worldRoot,design,root,budgetRoot:root,cardId:'T45',sourceEvidenceMap,compactRequest:true},{client});
-  }else result=await runContentPipeline({entries,root,budgetRoot:root,client,revision:config.revision,contextFor:e=>contextFor(e,world),buildDraftRequest,buildReviewRequest,extractDraft,validateDraft,concurrency:1,batchSize:25});
+  }else result=await runContentPipeline({entries,root,budgetRoot:root,client,revision:config.revision,contextFor:e=>contextFor(e,world),buildDraftRequest,buildReviewRequest,reviewDraftFor:patchDraft,extractDraft,validateDraft,concurrency:1,batchSize:25});
+  for(const record of result.results){assert.equal(record.status,'passed',JSON.stringify(record.errors));assert.deepEqual(record.errors,[]);}
   const notes=result.results.map(r=>({id:r.id,note:'测试替身按冻结原档逐条核对叶子。',draftHash:hashContent(r.draft),reviewHash:hashContent(r.review)})),notesFile=path.join(root,'human-notes.json');await write(notesFile,notes);
   await execute(process.execPath,[path.resolve('tools/npc-depth-l4.mjs'),'--design',design,'--root',root,'--notes',notesFile]);cards.push(root);
  }
