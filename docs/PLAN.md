@@ -379,3 +379,14 @@ T17 现状覆盖旧恢复资格：171f0b8已在原树执行上述唯一resume，
 ## 主会话交接边界
 
 实时状态由主会话更新PROGRESS/CHANGELOG/当前状态，本规划只交PLAN与logs/sessions/planner-client-001.final.txt。已完成卡压为一行，原完整合同留在PLAN_已完成或bb4c575历史版本；压缩不删验收。每次派工先核对分支/未提交差异与活动会话，不凭旧表创建重复任务。聊天改名工具在本客户端不可用，期望标题“无限原野 Astra 规划 001”交主会话报告。
+
+
+### T30-R1 检索回执窄修【唯一规划续修】
+
+依赖主会话验收302af8d；沿T30原树。继承T30文件权，追加server-plugin/index.mjs、extension/runtime.js、tools/playtest-runner.mjs及tests/{runtime,playtest-runner}.test.mjs，仅改检索绑定。共用文件串行；避开T08/T28/T34，不改预算/世界。
+
+按8.5/11.3：新版begin显式启用留证；两调用方传服务端token，绑定campaign/anchor/revision及检索时sequence。同campaign锁内验证回合有效、执行真实search，将query与原返回原子存入consistency记录；审查封口后拒绝追加。不写事件，不改账本钱物分钟。换回合/回滚/跨存档拒绝旧token；重试幂等，重启可读。旧协议、留证失败或无token检索使开放记录unknown并留warning；缺回执不判未检索，仅完整封口零调用可判。空结果证明查过，不证明找到；拒收客户端伪造结果，scene检索不冒充world_search。
+
+验收：保留112行原只读断言，扩展真实HTTP命中/空结果/未调用/失败/旧协议，跨回合、回滚、重启重试及伪造回执；肯定“已查到”按证据审查，计划/引述无误报。严重未修拒交，一次纯文字改写，原文及warning保留；前后document/events全等。运行T30原四测试、上述两调用方测试及CORE，0模型，不宣称M3通过。
+
+原两修停止线不重置；本方案执行仍失败即卡住，保存成果与失败，不再规划复审。
