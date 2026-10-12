@@ -12,6 +12,7 @@ import {hashContent} from '../tools/content-pipeline.mjs';
 import {depthEntries,patchDraft,applyDepthDraft,validateDraft,validatePatchResults,contextFor,buildReviewRequest,getPath,validateAuthoredBackground,checkIncrementalReview} from '../tools/npc-depth-content.mjs';
 import * as design from '../world/design/w1-lq-depth.mjs';
 import {liquanRoster} from '../world/design/w1-villages-liquan.mjs';
+import {compactReviewRequest} from '../tools/npc-depth-review.mjs';
 
 const world=await loadWorld(path.resolve('world'));
 const originals=world.npcs.filter(n=>n.id.startsWith('npc_lq_'));
@@ -232,8 +233,51 @@ test('首审出处拒绝候选自证、过期原字段和漏秘密风险，L2请
   assert.match(request.messages[0].content,/独立审核/);
   // No mock approval is saved. A response that only approves the candidate is
   // insufficient because it has not reviewed the independent background.
-  assert.throws(()=>checkIncrementalReview({contradictions:[],reviewedPaths:entry.patches.map(p=>p.path)},entry,context),/缺独立事件出处L2/);
+  assert.throws(()=>checkIncrementalReview({contradictions:[],reviewedPaths:entry.patches.map(p=>p.path),backgroundReviews:[]},entry,context),/缺独立事件出处L2/);
  }
+});
+
+test('T26实际full及compact请求引用现存字段，严格三字段fixture覆盖全部候选与出处任务',()=>{
+ for(const entry of backgroundEntries){
+  const context=contextFor(entry,world),full=buildReviewRequest(entry,patchDraft(entry),context),compact=compactReviewRequest(full);
+  for(const request of [full,compact]){
+   const payload=JSON.parse(request.messages[1].content);
+   assert.deepEqual(payload.draft,patchDraft(entry));
+   for(const field of ['sex','workplace','notes'])assert.deepEqual(payload.skeleton.before[field],entry.before[field]);
+   assert.match(request.messages[0].content,/draft\.patches/);assert.match(request.messages[0].content,/skeleton\.before/);assert.match(request.messages[0].content,/publishedFacts/);
+   const tasks=JSON.parse(request.messages[0].content.split('本条待审清单：')[1].split('。')[0]);
+   assert.deepEqual(tasks.patchPaths,entry.patches.map(p=>p.path));
+   assert.deepEqual(tasks.backgrounds.map(b=>b.eventId),context.authoredBackground.events.map(e=>e.id));
+   for(const event of payload.publishedFacts.authoredBackground.events)for(const ref of event.originalSources)assert.deepEqual(ref.value,getPath(world[ref.collection].find(s=>s.id===ref.id),ref.field));
+   const fixture={contradictions:[],reviewedPaths:tasks.patchPaths,backgroundReviews:tasks.backgrounds.map(b=>({eventId:b.eventId,sourceHash:b.sourceHash,reviewedRiskPaths:b.riskPaths,contradictions:[]}))};
+   assert.deepEqual(checkIncrementalReview(fixture,entry,context),[]);
+   for(const invalidate of [r=>delete r.backgroundReviews,r=>r.reviewedPaths.pop(),r=>r.reviewedPaths.push(r.reviewedPaths[0]),r=>r.backgroundReviews[0].reviewedRiskPaths.pop(),r=>r.unreviewed=true]){
+    const invalid=structuredClone(fixture);invalidate(invalid);assert.throws(()=>checkIncrementalReview(invalid,entry,context));
+   }
+  }
+  const trimmed=JSON.parse(compact.messages[1].content);assert.equal(trimmed.skeleton.facts,undefined);assert.equal(trimmed.publishedFacts.revisions,undefined);
+  assert.deepEqual(trimmed.publishedFacts.authoredBackground,JSON.parse(full.messages[1].content).publishedFacts.authoredBackground);
+ }
+});
+
+test('性别补件只包含实际代词所指的16人，字段逐值匹配且没有扩入私人经历',async()=>{
+ const report=JSON.parse(await fs.readFile(path.join(firstReviewRoot,'T26-contract-preflight.json'),'utf8'));
+ assert.equal(report.modelCalls,0);assert.equal(report.referencedSexPeople,16);assert.equal(report.sourceRefsChecked,84);
+ assert.equal(report.sourceHash,hashContent(background));
+ assert.equal(report.manifestHash,hashContent(JSON.parse(await fs.readFile(path.join(firstReviewRoot,'manifest.json'),'utf8'))));
+ const sourcePeople=[...world.npcs,...world.residents];
+ for(const appendix of report.sexSupplements){
+  const data=JSON.parse(await fs.readFile(path.join(firstReviewRoot,appendix.file),'utf8'));
+  assert.deepEqual(Object.keys(data).sort(),['reviewBoundary','sourceRecords']);
+  assert.ok(data.sourceRecords.some(r=>r.id===appendix.id));
+  for(const record of data.sourceRecords){
+   assert.ok(Object.keys(record).every(k=>['id','name','sex'].includes(k)));
+   const actual=sourcePeople.find(p=>p.id===record.id);for(const key of Object.keys(record))assert.deepEqual(record[key],actual[key]);
+  }
+ }
+ assert.equal(report.firstPipelineAutomaticallyAppendsSupplements,false);
+ assert.equal(report.fullCeilingYuan,13.601916);assert.equal(report.compactL2CeilingYuan,11.63691);
+ assert.equal(report.costBasis,'UTF-8 bytes as conservative token ceiling; not measured API usage');
 });
 
 test('官方authored-background prepare冻结新版首审产物，author-v2及原记忆没有改动',async()=>{
