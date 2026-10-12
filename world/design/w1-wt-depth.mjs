@@ -8,7 +8,7 @@ export const incrementLimitYuan=3;
 const id=key=>'npc_wt_'+key;
 const people=new Map(source.people.map(n=>[n.id,n]));
 const places=new Map(source.places.map(p=>[p.id,p.name]));
-const relatives=new Map(weitingRoster.trim().split('\n').map(line=>{const row=line.split('|');return[id(row[1]),{name:row[2],concern:row[6]}];}));
+const relatives=new Map(weitingRoster.trim().split('\n').map(line=>{const row=line.split('|');return[id(row[1]),{name:row[2],concern:row[7]}];}));
 
 // Each row specifies register, two unresolved questions, then pending short,
 // medium and long actions. Goal content, deadlines and progress stay frozen.
@@ -19,7 +19,7 @@ zhouzhu|谈下水处措辞直接，解释水情时分清上下游|伍蓬搬苇�
 wupeng|讲劳作用爽快的短句，被指出混料时容易急着辩解|周渚下岸需要留出的斜向空道究竟有多宽|伍茉何时能陪自己核查短茎分堆|停下捆扎，先把短茎挑在一边再请物主辨看|问周渚什么时候下岸，说明自己分趟搬束可否错开|请雇主按扎口逐束检查夹料，不拿割得快代替束料齐整
 weilian|解释旧网时细缓耐心，遇新结法会先追问用处|黄霆要检看的空响石究竟在哪一块网角下|魏舒能否辨清旧补处和收紧处的两种结记|迎光指出旧补网眼，先让家人看见两处不同结记|与黄霆核对检看石的位置，再询问哪段网必须先挪|请魏舒逐处说明结记用处，听不清的地方重新拆讲
 huangting|检看时语句短而审慎，对尚未看清的石面会留余地|魏涟何时能让出迎光网角下面的岸阶|栗萝回家愿意绕哪一段干路|退水后先在干处敲比石音，把不能判断的部位标明|请魏涟说明辨网动作所需空间，再核对可卸重的石边|带栗萝从干路看一遍绕行拐点，询问她是否认得回程方向
-heqin|谈席边细节干脆，被问错还时语气会绷紧|混记号的两户何时能各自来认旧补处|吕沫下一次备灶何时必须取回干净盆|把两份席边分别摆开，请物主指出自己认得的旧补|先问吕沫备灶时段与盆的物主，再提出一小段湿处理的截止点|回交前请物主读回席边记号，核查拿走的是否为自家席料
+heqin|谈席边细节干脆，被问错还时语气会绷紧|混记号的两户何时能各自来认旧补处|吕沫下一次备灶何时必须取回干净盆|把两份席边分别摆开，请物主指出自己认得的旧补|把两份混记号的席边分别摆给各物主看，请各自指出旧补处，再核对各自认出的部分|回交前请物主读回席边记号，核查拿走的是否为自家席料
 lvmo|灶边交代洗备次序很快，提醒器皿时容易带刺|贺芩湿处理哪一小段能赶在备灶前结束|吕芯能否按新位置找出生盆和熟盆|先将生熟盆分边放置，逐盆问清是否已刷洗|与贺芩核对借盆时段，询问清洗后何时能交接|让新帮厨指出盆的收放位置，听对方解释分法再改急话
 shiqiao|讲水纹缓慢温厚，谈出门安排却容易固执|施珏愿不愿陪自己从干岸看退水痕|宾然希望自己看水后何时回家吃饭|请施珏陪看一处干稳落脚点，不再独走湿边|与家人约出门和回屋时刻，说明只停在干岸|回家讲清今天看水的位置，询问家人哪段路仍放心不下
 keli|读写时语句完整而谨慎，遇催促会先停下来核实|柯芳当天究竟做了割苇还是捆苇|柯彤何时能帮着读回分工工条|先念姓名再分读割苇和捆苇两栏，问当事人有没有错行|请柯芳分别说明两段劳作，按实际工序核对而不先填数|请交条的人逐句读回自己的活名，把未核清的分工另列待问
@@ -72,7 +72,7 @@ export const patchRows=authored.map(([key,register,u0,u1,short,mid,long])=>{
  ];
  for(const issue of issues.filter(i=>i.code==='rule-wording')){
   if(patches.some(p=>p.path===issue.field))continue;
-  if(/^opinions\.neighbors\[\d+\]\.view$/.test(issue.field)){const index=Number(issue.field.match(/\d+/)[0]),other=people.get(before.opinions.neighbors[index].with);patches.push({path:issue.field,value:`${other.name}在${places.get(other.workplace.location)}做${other.occupation}；与他谈通行和劳作时，我会先问清当日安排。`});}
+  if(/^opinions\.neighbors\[\d+\]\.view$/.test(issue.field)){const index=Number(issue.field.match(/\d+/)[0]),other=people.get(before.opinions.neighbors[index].with);patches.push({path:issue.field,value:`${other.name}在${places.get(other.workplace.location)}做${other.occupation}；与${other.sex==='女'?'她':other.sex==='男'?'他':other.name}谈通行和劳作时，我会先问清当日安排。`});}
   else if(before.id===id('lvmo')&&issue.field==='personality.description')patches.push({path:issue.field,value:'麻利、急躁，最看重灶边忙时器皿分得清。手快嘴也快，见人洗得慢就刺一句，说完自己照旧接着干；不占别人东西，也会拒绝别人占她的东西。'});
   else throw Error('未处理规则叶子 '+before.id+'/'+issue.field);
  }
