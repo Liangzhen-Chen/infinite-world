@@ -161,14 +161,16 @@ test('邻人按冻结性别指代，贺芩中期步骤仍核对物主旧补处',
 test('受控修订只改变真实L2/L4错叶，旧记录与原来源hash保持完整',async()=>{
  const root=new URL('../world/drafts/w1/wt-depth/',import.meta.url),read=async file=>JSON.parse(await fs.readFile(new URL(file,root),'utf8'));
  const [plan,invalidations,diff,foundation,base,candidate,after]=await Promise.all(['controlled/controlled-plan.json','controlled/l4-invalidations-normalized.json','controlled/patch-diff.json','sourced/foundation.json','sourced/base.json','sourced/candidate.json','controlled/candidate-after.json'].map(read));
+ let receipt=null;try{receipt=await read('sourced/incremental-proof.json');}catch(error){if(error.code!=='ENOENT')throw error;}
  assert.equal(plan.cardId,'T07');assert.equal(plan.revision,foundation.revision);
  assert.equal(plan.foundationHash,hashContent(foundation));assert.equal(plan.baseHash,hashContent(base));assert.equal(plan.candidateHash,hashContent(candidate));
  assert.equal(plan.invalidationHash,hashContent(invalidations));
  assert.equal(diff.changes.length,82);assert.equal(plan.authorized.length,30);
  assert.deepEqual(after,entries().map(patchDraft));
  for(const item of plan.authorized){
-  const record=await read('sourced/'+item.id+'.json'),proof=invalidations.records.find(r=>r.id===item.id);
+  const current=await read('sourced/'+item.id+'.json'),record=receipt?.oldRecords.find(r=>r.id===item.id)??current,proof=invalidations.records.find(r=>r.id===item.id);
   assert.equal(item.recordHash,hashContent(record));assert.equal(item.draftHash,hashContent(record.draft));assert.equal(item.reviewHash,hashContent(record.review));
+  if(current.incremental){assert.equal(current.incremental.originalRecordHash,item.recordHash);assert.equal(hashContent(current.reviewRecovery.prior),item.recordHash);assert.deepEqual(current.draft,after.find(r=>r.id===item.id));}
   assert.equal(proof.recordHash,item.recordHash);assert.equal(proof.draftHash,item.draftHash);assert.equal(proof.reviewHash,item.reviewHash);
   const findings=[...proof.findings,...record.review.contradictions.filter(r=>r.severity==='hard').map(r=>({path:r.field,quote:r.quote}))];
   const next=after.find(r=>r.id===item.id),prior=candidate.find(r=>r.id===item.id);
@@ -211,6 +213,9 @@ test('换行凭证贯穿官方准备、mock复审收据及发布重放，不授�
  for(const file of ['w1-wt-depth.mjs','w1-villages-weiting.mjs'])await fs.copyFile(path.resolve('world/design',file),path.join(worldRoot,'design',file));
  await fs.cp(path.resolve('world/drafts/w1/wt-depth'),path.join(worldRoot,'drafts/w1/wt-depth'),{recursive:true});
  const root=path.join(worldRoot,'drafts/w1/wt-depth/sourced'),controlled=path.join(worldRoot,'drafts/w1/wt-depth/controlled'),witnessFile=path.join(controlled,'source-checkout-evidence.json');
+ // The mock starts from preserved history in this temporary copy. Live review
+ // records and recovery claims remain untouched.
+ try{const historical=JSON.parse(await fs.readFile(path.join(root,'incremental-proof.json'),'utf8'));for(const record of historical.oldRecords)await fs.writeFile(path.join(root,record.id+'.json'),JSON.stringify(record));const terminal=JSON.parse(await fs.readFile(path.join(root,'terminal.json'),'utf8'));await fs.writeFile(path.join(root,'summary.json'),JSON.stringify(terminal.summary));for(const batch of terminal.summary.batches)await fs.writeFile(path.join(root,`batch-${batch.index}.json`),JSON.stringify(batch));await fs.rm(path.join(root,'incremental-proof.json'));}catch(error){if(error.code!=='ENOENT')throw error;}
  const plan=JSON.parse(await fs.readFile(path.join(controlled,'controlled-plan.json'),'utf8')),witness=JSON.parse(await fs.readFile(witnessFile,'utf8'));
  const options={root,worldRoot,design:path.join(root,'design.mjs'),controlledRevision:path.join(controlled,'controlled-plan.json'),authoredBackground:path.join(worldRoot,'drafts/w1/wt-depth/authored-background.json'),authorizationHash:hashContent(plan),cardId:'T07',sourceCheckoutEvidence:witnessFile};
  const file=path.join(worldRoot,'design/w1-villages-weiting.mjs');await fs.writeFile(file,witness.gitBlob.text);
