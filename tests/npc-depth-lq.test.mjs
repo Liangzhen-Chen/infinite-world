@@ -2,6 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
 import path from 'node:path';
+import os from 'node:os';
 import {execFile} from 'node:child_process';
 import {promisify} from 'node:util';
 import {createHash} from 'node:crypto';
@@ -13,6 +14,7 @@ import {depthEntries,patchDraft,applyDepthDraft,validateDraft,validatePatchResul
 import * as design from '../world/design/w1-lq-depth.mjs';
 import {liquanRoster} from '../world/design/w1-villages-liquan.mjs';
 import {compactReviewRequest} from '../tools/npc-depth-review.mjs';
+import {prepareDepthRevision} from '../tools/npc-depth.mjs';
 
 const liveWorld=await loadWorld(path.resolve('world'));
 const originals=JSON.parse(await fs.readFile(path.resolve('world/drafts/w1/lq-depth/base.json'),'utf8'));
@@ -547,4 +549,33 @@ test('真实背景hard使五人来源不闭合，未发的邻居修订保持提�
  assert.equal(guard.restoredActiveDesign,true);assert.equal(guard.unclaimedAttemptPreserved,true);
  const proposals=await completed('neighbor-repair-proposed-diff');assert.equal(proposals.length,4);
  for(const proposal of proposals){const entry=entries.find(e=>e.id===proposal.id);assert.equal(getPath(entry.facts,proposal.path),proposal.before);assert.equal(proposal.called,false);}
+});
+
+test('T08实际continuation父proof加四叶提议经官方prepare，full和compact只携当前after且保留原证据',async t=>{
+ const temp=await fs.mkdtemp(path.join(os.tmpdir(),'lq-neighbor-parent-'));t.after(()=>fs.rm(temp,{recursive:true,force:true}));
+ const worldRoot=path.join(temp,'world');
+ for(const folder of ['meta','people','geo','lore'])await fs.cp(path.resolve('world',folder),path.join(worldRoot,folder),{recursive:true});
+ await fs.cp(legacyRoot,path.join(worldRoot,'drafts/w1/lq-depth'),{recursive:true});
+ await fs.mkdir(path.join(worldRoot,'design'),{recursive:true});
+ await fs.copyFile(path.resolve('world/design/w1-reopen-authorization.json'),path.join(worldRoot,'design/w1-reopen-authorization.json'));
+ const root=path.join(worldRoot,'drafts/w1/lq-depth/author-v2/first-review'),read=async file=>JSON.parse(await fs.readFile(path.join(root,file),'utf8'));
+ const proof=await read('incremental-proof.json'),foundation=await read('foundation.json'),plan=await read('../../reopen-complete/neighbor-repair-plan.json'),diff=await read('../../reopen-complete/neighbor-repair-proposed-diff.json');
+ assert.equal(proof.planFile,'../../reopen-complete/continuation-plan.json');assert.equal(hashContent(proof),plan.previousProofHash);
+ const rows=foundation.entries.map(({context,authoredBackground,...row})=>structuredClone(row));
+ const replay=p=>{if(p.previousProof)replay(p.previousProof);for(const change of p.changes)rows.find(e=>e.id===change.id).patches.find(p=>p.path===change.path).value=structuredClone(change.after);};replay(proof);
+ for(const change of diff){const row=rows.find(e=>e.id===change.id),record=await read(change.id+'.json');assert.equal(hashContent(record),plan.authorized.find(a=>a.id===change.id).recordHash);assert.equal(row.patches.find(p=>p.path===change.path).value,change.before);row.patches.find(p=>p.path===change.path).value=change.after;}
+ const design=path.join(worldRoot,'design/neighbor-temp.mjs');await fs.writeFile(design,`export const revision=${JSON.stringify(foundation.revision)};\nexport const patchRows=${JSON.stringify(rows)};\n`);
+ const originals=await Promise.all(['base.json','foundation.json','candidate.json','incremental-proof.json',...rows.map(r=>r.id+'.json')].map(async file=>[file,await fs.readFile(path.join(root,file),'utf8')]));
+ const options={worldRoot,root,design,cardId:'T08',controlledRevision:path.join(root,'../../reopen-complete/neighbor-repair-plan.json'),authorizationHash:hashContent(plan),authoredBackground:path.join(root,'authored-background.json'),reopenAuthorization:path.join(worldRoot,'design/w1-reopen-authorization.json')};
+ const prepared=await prepareDepthRevision(options);assert.equal(prepared.revision.changes.length,4);assert.deepEqual(prepared.previousProof,proof);
+ for(const change of diff){
+  const entry=prepared.entries.find(e=>e.id===change.id),context=prepared.contexts.get(entry.id),draft=patchDraft(entry),full=buildReviewRequest(entry,draft,context),compact=compactReviewRequest(full),payload=JSON.parse(full.messages[1].content);
+  assert.equal(draft.patches.find(p=>p.path===change.path).value,change.after);assert.equal(payload.publishedFacts.revisions.find(r=>r.path===change.path).after,change.after);
+  assert.equal(payload.publishedFacts.controlledRevision.changes.find(c=>c.path===change.path).before,change.before);
+  const reduced=JSON.parse(compact.messages[1].content);assert.equal(reduced.draft.patches.find(p=>p.path===change.path).value,change.after);
+  assert.deepEqual(entry.authoredBackground,foundation.entries.find(e=>e.id===entry.id).authoredBackground);
+  assert.deepEqual(context.authoredBackground,foundation.entries.find(e=>e.id===entry.id).context.authoredBackground);
+ }
+ for(const [file,raw] of originals)assert.equal(await fs.readFile(path.join(root,file),'utf8'),raw,file+' 原记录改变');
+ assert.deepEqual(validateDraft(patchDraft(prepared.entries.find(e=>e.id===diff[0].id)),prepared.entries.find(e=>e.id===diff[0].id)).errors,[]);
 });

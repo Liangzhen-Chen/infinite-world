@@ -322,4 +322,13 @@ test('18实际draft基准与42授权after逐值匹配，12未授权基准重放�
  for(const record of records){const row=basis.find(e=>e.id===record.id);assert.deepEqual(row.patches,record.draft.patches);const entry=prepared.entries.find(e=>e.id===record.id);for(const patch of record.draft.patches)if(!diff.some(c=>c.id===record.id&&c.path===patch.path))assert.deepEqual(entry.patches.find(p=>p.path===patch.path).value,patch.value);}
  const replay=foundation.entries.map(({context,facts,contract,...row})=>structuredClone(row));for(const c of proof.changes)replay.find(e=>e.id===c.id).patches.find(p=>p.path===c.path).value=c.after;
  const preserved=basis.filter(e=>!records.some(r=>r.id===e.id));assert.equal(preserved.length,12);for(const row of preserved)assert.deepEqual(row,replay.find(e=>e.id===row.id));
+ const background=await read('reopen/authored-background.json'),oldBackground=await read('authored-background.json'),changedEvent=background.events.find(e=>hashContent(e)!==hashContent(oldBackground.events.find(old=>old.id===e.id)));
+ assert.equal(background.events.filter(e=>hashContent(e)!==hashContent(oldBackground.events.find(old=>old.id===e.id))).length,1);
+ assert.deepEqual(prepared.entries.filter(e=>e.authoredBackground.sourceHash===hashContent(background)).map(e=>e.id).sort(),[...changedEvent.actors].sort());
+ for(const entry of prepared.entries){
+  const context=prepared.contexts.get(entry.id),expected=changedEvent.actors.includes(entry.id)?background:oldBackground;
+  assert.equal(entry.authoredBackground.sourceHash,hashContent(expected));assert.equal(context.authoredBackground.sourceHash,hashContent(expected));
+  for(const event of context.authoredBackground.events){const {originalSources,privateRisks,...sourceEvent}=event;assert.deepEqual(sourceEvent,expected.events.find(e=>e.id===event.id));}
+  for(const patch of entry.patches)assert.deepEqual(context.revisions.find(r=>r.path===patch.path).after,patch.value);
+ }
 });

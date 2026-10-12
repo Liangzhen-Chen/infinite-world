@@ -8,22 +8,31 @@ import {promisify} from 'node:util';
 import {loadWorld} from '../tools/load-world.mjs';
 import {auditNpcDepth} from '../tools/audit-npc-depth.mjs';
 import {hashContent,runContentPipeline} from '../tools/content-pipeline.mjs';
-import {depthEntries,patchDraft,contextFor,buildDraftRequest,buildReviewRequest,extractDraft,validateDraft,validateAuthoredBackground,checkIncrementalReview,depthReviewClient} from '../tools/npc-depth-content.mjs';
+import {depthEntries,patchDraft,contextFor,buildDraftRequest,buildReviewRequest,extractDraft,validateDraft,validateAuthoredBackground,checkIncrementalReview,depthReviewClient,depthBackgroundSources} from '../tools/npc-depth-content.mjs';
 import {prepareDepth,prepareDepthRevision} from '../tools/npc-depth.mjs';
 import {runDepthReview,recordDepthIncrementalL4} from '../tools/npc-depth-review.mjs';
 import {publishNpcDepth} from '../tools/publish-npc-depth.mjs';
 const exec=promisify(execFile),world=await loadWorld(),ids=['npc_yp_qinli','npc_yp_gaoxin'],read=f=>fs.readFile(f,'utf8').then(JSON.parse),write=(f,v)=>fs.writeFile(f,JSON.stringify(v,null,2)+'\n');
 const reply=v=>({choices:[{message:{content:JSON.stringify(v)}}],measurement:{costUpperYuan:.001}});
 function sourceRef(w,collection,id,field,visibility){const value=field.split('.').reduce((o,k)=>o[k],w[collection].find(s=>s.id===id));return{collection,id,field,visibility,hash:hashContent(value)};}
-function fixture(){
+function fixture(actorIds=ids){
+ const ids=actorIds;
  const w=structuredClone(world);for(const id of ids){const n=w.npcs.find(n=>n.id===id);n.memorySeeds=n.memorySeeds.filter(m=>m.knownBy.length===1);}
  const narrative='秦砺与高忻在榆枝木作院核对桌位，两人说过各自还需询问的安排，先后仍未商定。',event={id:'author-table-talk',revision:'event-1',actors:[...ids],location:'bld_yp_yard',status:'past-but-unresolved',network:{actors:[...ids,'npc_yp_wenxu'],problemRef:{id:'loc_bs_yupo',field:'details.problems[1]'}},narrative,designedFacts:['两人在木作院共同讨论桌位。'],pendingOutcomes:['桌位先后未定；没有付款、交付或替物主同意。'],sourceRefs:[sourceRef(w,'locations','bld_yp_yard','purpose','public'),...ids.map(id=>sourceRef(w,'npcs',id,'occupation','private')),{collection:'settlementProfiles',id:'loc_bs_yupo',field:'details.problems[1]',visibility:'public',hash:hashContent(w.settlementProfiles.find(p=>p.id==='loc_bs_yupo').details.problems[1])}],risks:ids.flatMap(id=>w.npcs.find(n=>n.id===id).secrets.map((s,i)=>({id,field:`secrets[${i}]`,hash:hashContent(s),reason:'不得从本次一般讨论推断原私下行为。'}))),associations:ids.map(id=>({id,path:`memorySeeds[${w.npcs.find(n=>n.id===id).memorySeeds.length}]`}))};
  const issues=auditNpcDepth(w).issues,config={revision:'authored-test-v1',incrementLimitYuan:3,patchRows:ids.map(id=>{const before=structuredClone(w.npcs.find(n=>n.id===id));return{id,before,baseHash:hashContent(before),issues:issues.filter(i=>i.id===id&&i.code==='memory-shared'&&i.field==='memorySeeds'),patches:[{path:event.associations.find(a=>a.id===id).path,value:{id:event.id,event:narrative,location:event.location,knownBy:[...ids]}}]};})},bundle={kind:'authored-background',revision:'bundle-1',events:[event]};
  return{w,config,bundle,entries:()=>depthEntries(config.patchRows.map(r=>r.before),config,w)};
 }
 async function temp(t){const dir=await fs.mkdtemp(path.join(os.tmpdir(),'npc-authored-'));t.after(()=>fs.rm(dir,{recursive:true,force:true}));return dir;}
-async function makePrepared(t,{background=true,notes=false}={}){
- const dir=await temp(t),worldRoot=path.join(dir,'world'),p=fixture();
+async function makePrepared(t,{background=true,notes=false,split=false}={}){
+ const dir=await temp(t),worldRoot=path.join(dir,'world'),p=fixture(split?[...ids,'npc_yp_wenxu','npc_yp_jiangmi']:ids);
+ if(split){
+  const original=p.bundle.events[0];p.bundle.events=[ids,['npc_yp_wenxu','npc_yp_jiangmi']].map((actors,i)=>{
+   const event=structuredClone(original);event.id+='-'+i;event.actors=actors;event.network.actors=[...actors,i?ids[0]:'npc_yp_wenxu'];event.narrative=i?'温绪与蒋弥在榆枝木作院谈过空桌的位置，桌位先后仍待询问。':original.narrative;
+   event.sourceRefs=event.sourceRefs.filter(r=>r.collection!=='npcs'||actors.includes(r.id));event.risks=event.risks.filter(r=>actors.includes(r.id));event.associations=event.associations.filter(r=>actors.includes(r.id));
+   for(const actor of actors){const memory=p.config.patchRows.find(r=>r.id===actor).patches[0].value;memory.id=event.id;memory.event=event.narrative;memory.knownBy=actors;}
+   return event;
+  });
+ }
  if(notes){p.config.patchRows=p.config.patchRows.slice(0,1);const n=p.w.npcs.find(n=>n.id===ids[0]);n.notes='主持人不要让玩家知道家事。';const before=structuredClone(n);p.config.patchRows=[{id:n.id,before,baseHash:hashContent(before),issues:auditNpcDepth(p.w).issues.filter(i=>i.id===n.id&&i.field==='notes'),patches:[{path:'notes',value:'秦砺在院内把空桌的位置说给高忻听，仍未商定桌位。'}]}];}
  for(const sub of ['meta','people','geo','lore'])await fs.cp(path.resolve('world',sub),path.join(worldRoot,sub),{recursive:true});await write(path.join(worldRoot,'people/baseline.json'),p.w.npcs);
  const root=path.join(worldRoot,'drafts/test'),design=path.join(worldRoot,'design.mjs'),authoredBackground=path.join(worldRoot,'background.json');await write(authoredBackground,p.bundle);
@@ -37,8 +46,8 @@ async function approve(p){
 }
 async function l4(p,options=p.options){
  const prepared=options.controlledRevision?await prepareDepthRevision(options):await prepareDepth(options),records=await Promise.all(prepared.entries.map(e=>read(path.join(p.root,e.id+'.json')))),notes=records.map(r=>({id:r.id,note:'mock逐叶对照原事实、目标待定与秘密边界。',draftHash:hashContent(r.draft),reviewHash:hashContent(r.review)})),file=path.join(p.dir,'batch-notes.json');await write(file,notes);await exec(process.execPath,[path.resolve('tools/npc-depth-l4.mjs'),'--design',p.design,'--root',p.root,'--notes',file]);
- const backgrounds=[...new Map(prepared.entries.flatMap(e=>e.authoredBackground?.events??[]).map(e=>[e.id,e])).values()],sourceHash=prepared.entries.find(e=>e.authoredBackground)?.authoredBackground.sourceHash;
- const extra={candidates:records.filter(r=>prepared.entries.find(e=>e.id===r.id).authoredBackground||prepared.plan?.authorized.some(a=>a.id===r.id)).map(r=>{const entry=prepared.entries.find(e=>e.id===r.id);return{...notes.find(n=>n.id===r.id),entryHash:hashContent(entry),reviewedPaths:entry.patches.map(p=>p.path)};}),backgrounds:backgrounds.map(e=>({eventId:e.id,sourceHash,eventHash:hashContent(e),note:'mock单独阅读新背景及全部秘密风险，待定结果未发生。',reviewedRiskPaths:e.risks.map(r=>`${r.id}.${r.field}`)}))};const extraFile=path.join(p.dir,'extra-notes.json');await write(extraFile,extra);await recordDepthIncrementalL4({...options,l4Notes:extraFile});return extra;
+ const backgrounds=depthBackgroundSources(prepared.entries);
+ const extra={candidates:records.filter(r=>prepared.entries.find(e=>e.id===r.id).authoredBackground||prepared.plan?.authorized.some(a=>a.id===r.id)).map(r=>{const entry=prepared.entries.find(e=>e.id===r.id);return{...notes.find(n=>n.id===r.id),entryHash:hashContent(entry),reviewedPaths:entry.patches.map(p=>p.path)};}),backgrounds:backgrounds.map(({event:e,sourceHash})=>({eventId:e.id,sourceHash,eventHash:hashContent(e),note:'mock单独阅读新背景及全部秘密风险，待定结果未发生。',reviewedRiskPaths:e.risks.map(r=>`${r.id}.${r.field}`)}))};const extraFile=path.join(p.dir,'extra-notes.json');await write(extraFile,extra);await recordDepthIncrementalL4({...options,l4Notes:extraFile});return extra;
 }
 test('显式新背景允许三人网络内两人过去交流，保留旧事实/秘密/目标；请求分列出处与待定结果',()=>{
  const p=fixture(),entries=p.entries(),background=validateAuthoredBackground(p.bundle,entries,p.w);assert.equal(background.sourceHash,hashContent(p.bundle));p.config.authoredBackground=p.bundle;
@@ -60,6 +69,46 @@ test('首次正常pipeline冻结显式出处并完成独立L2/L4/发布；篡改
  const cases=[['background.json',v=>v.events[0].designedFacts.push('付款完成')],['drafts/test/incremental-l4.json',v=>v.backgrounds[0].sourceHash='stale'],['drafts/test/incremental-l4.json',v=>v.candidates[0].reviewedPaths=[]],[`drafts/test/${ids[0]}.json`,v=>v.review.backgroundReviews=[]],[`drafts/test/${ids[1]}.json`,v=>v.draft.patches[0].value.event='单侧变更']];
  for(const [relative,change] of cases){const file=path.join(p.worldRoot,relative),saved=await fs.readFile(file,'utf8'),value=JSON.parse(saved);change(value);await write(file,value);await assert.rejects(publishNpcDepth({manifest:p.manifest,publish:true}));assert.equal(await fs.readFile(baseline,'utf8'),before);await fs.writeFile(file,saved);}
  await publishNpcDepth({manifest:p.manifest,publish:true});assert.deepEqual((await publishNpcDepth({manifest:p.manifest,publish:true})).changed,[]);
+});
+test('父proof逐事件保留旧来源，混合L4按事件和sourceHash登记重放，缺授权、错绑及未审拒发',async t=>{
+ const p=await makePrepared(t,{split:true});await approve(p);
+ const records=await Promise.all(p.entries.map(e=>read(path.join(p.root,e.id+'.json')))),sourceHashes=[{file:'base.json',hash:hashContent(await read(path.join(p.root,'base.json')))}],allocation={cardId:'T08',waveLimitYuan:20,incrementLimitYuan:3};
+ await write(path.join(p.root,'allocation.json'),allocation);
+ const grant={oldLimitYuan:3,newLimitYuan:4.5,incrementYuan:1.5,spentYuan:0,reservedYuan:0,pilotLimitYuan:.5,maxAttempts:2,allocation,foundationHash:hashContent(p.foundation),baseHash:sourceHashes[0].hash,candidateHash:hashContent(await read(path.join(p.root,'candidate.json'))),previousProofHash:null,sourceHashes,allowed:records.map(r=>({id:r.id,recordHash:hashContent(r),paths:[],failurePaths:[],reason:'本测试单独重审待定交流来源。'}))};
+ const authorization={kind:'w1-reopen-authorization',id:'user-reopen-20261012-01',waveLimitYuan:20,goalLimitYuan:100,budgetSnapshot:{spentYuan:0,reservedYuan:0},cards:{T08:grant}},reopenAuthorization=path.join(p.worldRoot,'authorization.json'),budgetRoot=path.join(p.dir,'budget');
+ await write(reopenAuthorization,authorization);await fs.mkdir(budgetRoot);await write(path.join(budgetRoot,'budget.json'),{spentYuan:0,reservedYuan:0,waveLimitYuan:20,limitYuan:20,cards:{T08:{limitYuan:3,spentYuan:0,reservedYuan:0}},requests:{}});
+ const item=r=>({id:r.id,recordHash:hashContent(r),draftHash:hashContent(r.draft),reviewHash:hashContent(r.review),paths:[],sourceOnly:true});
+ const plan={kind:'controlled-depth-revision',planningId:'parent-source-check',cardId:'T08',revision:p.config.revision,foundationHash:grant.foundationHash,baseHash:grant.baseHash,candidateHash:grant.candidateHash,sourceHashes,previousProofHash:null,authorized:records.map(item)},planFile=path.join(p.root,'plan.json');await write(planFile,plan);
+ const options={...p.options,budgetRoot,cardId:'T08',reopenAuthorization,controlledRevision:planFile,authorizationHash:hashContent(plan)};
+ let calls=0;const client={spent:0,reserved:0,budgetYuan:20,estimateCostYuan:()=>.01,generate:async request=>{calls++;const payload=JSON.parse(request.messages[1].content);return reply(reviewFor(payload.skeleton,payload.publishedFacts));}};
+ for(const [index,entry] of p.entries.entries())assert.equal((await runDepthReview({...options,id:entry.id,continueReopen:index>0},{client})).status,'passed');
+ const parentProof=await read(path.join(p.root,'incremental-proof.json')),parent=await prepareDepthRevision(options),oldHash=hashContent(p.bundle),unchanged=parent.entries.filter(e=>!ids.includes(e.id)),oldRecords=await Promise.all(unchanged.map(e=>fs.readFile(path.join(p.root,e.id+'.json'),'utf8')));
+ const nextBundle=structuredClone(p.bundle);nextBundle.revision='bundle-2';nextBundle.events[0].pendingOutcomes.push('本人仍需核对空桌安排。');const backgroundFile=path.join(p.worldRoot,'background-2.json');await write(backgroundFile,nextBundle);
+ const pair=await Promise.all(ids.map(id=>read(path.join(p.root,id+'.json')))),nextPlan={...plan,planningId:'source-event-one-only',previousProofHash:hashContent(parentProof),previousPlanFile:'plan.json',previousPlanHash:hashContent(plan),authorized:pair.map(item)},nextFile=path.join(p.root,'plan-2.json');await write(nextFile,nextPlan);
+ const nextOptions={...options,controlledRevision:nextFile,authorizationHash:hashContent(nextPlan),authoredBackground:backgroundFile};
+ const prepared=await prepareDepthRevision(nextOptions),newHash=hashContent(nextBundle);assert.notEqual(oldHash,newHash);
+ for(const entry of unchanged){const next=prepared.entries.find(e=>e.id===entry.id);assert.deepEqual(next,entry);assert.deepEqual(prepared.contexts.get(entry.id),parent.contexts.get(entry.id));const record=JSON.parse(oldRecords[unchanged.indexOf(entry)]);assert.equal(record.fingerprint,hashContent({entry:next,context:prepared.contexts.get(entry.id),revision:p.config.revision}));}
+ for(const id of ids){assert.equal(prepared.entries.find(e=>e.id===id).authoredBackground.sourceHash,newHash);assert.equal(prepared.contexts.get(id).authoredBackground.sourceHash,newHash);}
+ const missing={...nextPlan,authorized:nextPlan.authorized.slice(0,1)};await write(nextFile,missing);await assert.rejects(prepareDepthRevision({...nextOptions,authorizationHash:hashContent(missing)}),/来源修订参与者缺授权/);await write(nextFile,nextPlan);
+ await assert.rejects(publishNpcDepth({manifest:p.manifest}),/L4|并非|指纹/);
+ for(const id of ids)assert.equal((await runDepthReview({...nextOptions,id,continueReopen:true},{client})).status,'passed');assert.equal(calls,6);
+ for(let i=0;i<unchanged.length;i++)assert.equal(await fs.readFile(path.join(p.root,unchanged[i].id+'.json'),'utf8'),oldRecords[i]);
+ await assert.rejects(recordDepthIncrementalL4({...nextOptions,l4Notes:path.join(p.dir,'missing.json')}),/ENOENT/);
+ const notes=await l4(p,nextOptions),proofFile=path.join(p.root,'incremental-l4.json'),proof=await read(proofFile),noteFile=path.join(p.dir,'extra-notes.json');
+ assert.equal(proof.sourceHash,null);assert.deepEqual(proof.sourceHashes,[oldHash,newHash].sort());assert.equal(proof.backgrounds.length,2);await publishNpcDepth({manifest:p.manifest});
+ for(const change of [n=>n.backgrounds.pop(),n=>n.backgrounds.push(n.backgrounds[0]),n=>n.backgrounds[0].sourceHash=oldHash,n=>n.backgrounds[0].eventHash='stale',n=>n.backgrounds[0].reviewedRiskPaths=[]]){const bad=structuredClone(notes);change(bad);await write(noteFile,bad);await assert.rejects(recordDepthIncrementalL4({...nextOptions,l4Notes:noteFile}));await write(proofFile,{...proof,backgrounds:bad.backgrounds});await assert.rejects(publishNpcDepth({manifest:p.manifest}));await write(proofFile,proof);}
+ await write(proofFile,{...proof,sourceHashes:[oldHash]});await assert.rejects(publishNpcDepth({manifest:p.manifest}),/多源hash/);await write(proofFile,proof);
+ const file=path.join(p.root,ids[0]+'.json'),saved=await fs.readFile(file,'utf8'),record=JSON.parse(saved);record.review.backgroundReviews[0].sourceHash=oldHash;await write(file,record);await assert.rejects(publishNpcDepth({manifest:p.manifest}));await fs.writeFile(file,saved);
+ const historical=await fs.readFile(path.join(p.root,'incremental-proof.json'),'utf8'),tampered=JSON.parse(historical);tampered.previousProof.oldRecords[0].attempts++;await write(path.join(p.root,'incremental-proof.json'),tampered);await assert.rejects(publishNpcDepth({manifest:p.manifest}));await fs.writeFile(path.join(p.root,'incremental-proof.json'),historical);
+ await publishNpcDepth({manifest:p.manifest});
+});
+test('同一事件的两个真实bundle hash分别登记L4，不能按eventId折叠或错配旧sourceHash',async t=>{
+ const p=await makePrepared(t),background=validateAuthoredBackground({...p.bundle,revision:'second-source'},p.entries,p.world),entries=structuredClone(p.entries);entries[1].authoredBackground=background;
+ const prepared={...p,entries};await approve(prepared);
+ const records=await Promise.all(entries.map(e=>read(path.join(p.root,e.id+'.json')))),sources=depthBackgroundSources(entries);assert.equal(sources.length,2);assert.equal(sources[0].event.id,sources[1].event.id);assert.notEqual(sources[0].sourceHash,sources[1].sourceHash);
+ const notes={candidates:records.map(r=>({id:r.id,draftHash:hashContent(r.draft),reviewHash:hashContent(r.review),entryHash:hashContent(entries.find(e=>e.id===r.id)),reviewedPaths:r.draft.patches.map(p=>p.path),note:'mock逐叶核对。'})),backgrounds:sources.map(({event,sourceHash})=>({eventId:event.id,sourceHash,eventHash:hashContent(event),reviewedRiskPaths:event.risks.map(r=>`${r.id}.${r.field}`),note:'mock分别核对两个来源。'}))},l4Notes=path.join(p.dir,'pair-notes.json'),options={...p.options,l4Notes};await write(l4Notes,notes);
+ await recordDepthIncrementalL4(options,{prepare:async()=>prepared});const proof=await read(path.join(p.root,'incremental-l4.json'));assert.equal(proof.backgrounds.length,2);assert.deepEqual(proof.sourceHashes,sources.map(s=>s.sourceHash).sort());
+ for(const change of [n=>n.backgrounds.pop(),n=>n.backgrounds[1].sourceHash=n.backgrounds[0].sourceHash,n=>n.backgrounds[1].eventHash='stale']){const bad=structuredClone(notes);change(bad);await write(l4Notes,bad);await assert.rejects(recordDepthIncrementalL4(options,{prepare:async()=>prepared}));assert.deepEqual(await read(path.join(p.root,'incremental-l4.json')),proof);}
 });
 async function controlled(t,{status='passed',background=false,sourceOnly=false}={}){
  const p=await makePrepared(t,{background:false,notes:!background});await approve(p);const records=await Promise.all(p.entries.map(e=>read(path.join(p.root,e.id+'.json')))),prior=records[0];

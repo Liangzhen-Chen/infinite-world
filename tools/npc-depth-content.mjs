@@ -223,6 +223,16 @@ export function authoredReviewContext(context,background,entry,world){
  }));
  return{...context,authoredBackground:{sourceHash:background.sourceHash,events:reviewedEvents},rules:[...context.rules,'新增事件须另审来源与候选；私有出处不自动公开，公开说话只限显式范围，所有待定结果保持未发生。publicFeatureRef只授权该公共feature周边交流，不代表其所属整处场地、私宅或工坊开放，也不授权取用其财物。']};
 }
+export function depthBackgroundSources(entries){
+ const sources=new Map();
+ for(const entry of entries)for(const event of entry.authoredBackground?.events??[]){
+  if(!event.actors.includes(entry.id))continue;
+  const sourceHash=entry.authoredBackground.sourceHash,key=JSON.stringify([event.id,sourceHash]),prior=sources.get(key);
+  if(prior)assert.equal(hashContent(prior.event),hashContent(event),'同一来源事件内容改变');
+  else sources.set(key,{event,sourceHash});
+ }
+ return [...sources.values()];
+}
 export function checkIncrementalReview(review,entry,context){
  assert.ok(Array.isArray(review?.contradictions),'无效复审结果');
  assert.deepEqual(Object.keys(review).sort(),['backgroundReviews','contradictions','reviewedPaths'],'增量审核仅接受完整三字段');
@@ -272,9 +282,10 @@ export function validateControlledRevision(plan,{entries,foundation,records,worl
   for(const field of paths){const prior=old.patches.find(p=>p.path===field);assert.ok(prior&&permitted(entry,prior,world),'路径不在原audit许可');const issue=actual.find(f=>f.path===field&&f.kind==='reopen')??actual.find(f=>f.path===field);assert.ok(issue,'路径不在真实失效清单');const value=getPath(applyDepthDraft(old.before,priorDraft),field);assert.ok(issue.kind==='reopen'||JSON.stringify(value).includes(issue.quote),'失效quote与原候选不符');}
   assert.deepEqual(entry.patches.map(p=>p.path),old.patches.map(p=>p.path),'禁止新增/删除补丁成员');
   for(const prior of (reopen?record.draft?.patches??old.patches:old.patches)){const next=entry.patches.find(p=>p.path===prior.path);if(hashContent(prior.value)!==hashContent(next.value)){assert.ok(paths.has(prior.path),'正确兄弟叶不得修改');changes.push({id:item.id,path:prior.path,before:prior.value,after:next.value});}}
-  const oldMetadata=Object.fromEntries(Object.entries(old).filter(([key])=>!['context','facts','patches'].includes(key))),newMetadata=Object.fromEntries(Object.entries(entry).filter(([key])=>!['facts','patches'].includes(key)));assert.deepEqual(newMetadata,oldMetadata,'原来源选择/声明不得变更');
+  const metadataSource=previousEntries?.find(e=>e.id===entry.id)??old;
+  const oldMetadata=Object.fromEntries(Object.entries(metadataSource).filter(([key])=>!['context','facts','patches'].includes(key))),newMetadata=Object.fromEntries(Object.entries(entry).filter(([key])=>!['facts','patches'].includes(key)));assert.deepEqual(newMetadata,oldMetadata,'原来源选择/声明不得变更');
  }
- for(const entry of entries)if(!authorized.has(entry.id)){const old=foundation.entries.find(e=>e.id===entry.id);assert.ok(old,'未授权ID');assert.deepEqual(entry,(previousEntries?.find(e=>e.id===entry.id)?Object.fromEntries(Object.entries(previousEntries.find(e=>e.id===entry.id)).filter(([key])=>key!=='authoredBackground'||!!entry.authoredBackground)):null)??Object.fromEntries(Object.entries(old).filter(([key])=>key!=='context')),'未授权ID候选改变');}
+ for(const entry of entries)if(!authorized.has(entry.id)){const old=foundation.entries.find(e=>e.id===entry.id);assert.ok(old,'未授权ID');assert.deepEqual(entry,previousEntries?.find(e=>e.id===entry.id)??Object.fromEntries(Object.entries(old).filter(([key])=>key!=='context')),'未授权ID候选改变');}
  assert.deepEqual(entries.map(e=>e.id),foundation.entries.map(e=>e.id),'成员列表不得改变');
  if(reopen){
   for(const change of changes.filter(c=>c.path.startsWith('memorySeeds['))){if(previousEntries?.find(e=>e.id===change.id)?.patches.some(p=>p.path===change.path&&hashContent(p.value)===hashContent(change.after)))continue;const memory=change.after,old=change.before;
