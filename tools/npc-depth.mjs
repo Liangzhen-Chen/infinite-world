@@ -110,34 +110,95 @@ async function sourceWitnessPlan(root,plan,read,safeFile){
  if(!plan.previousPlanFile)return plan;
  const old=await read(safeFile(plan.previousPlanFile));assert.equal(hashContent(old),plan.previousPlanHash,'原源凭证规划hash改变');return sourceWitnessPlan(root,old,read,safeFile);
 }
+// A proof's old records are candidate history. They never supply world facts.
+// Bind each draft to the frozen plan before replaying its permitted changes.
+export async function replayDepthProof(foundation,proof,{readPlan,readCandidate}){
+ const entries=foundation.entries.map(({context,...entry})=>structuredClone(entry));
+ async function replay(current){
+  if(current.previousProof){assert.equal(hashContent(current.previousProof),current.previousProofHash,'父proof hash改变');await replay(current.previousProof);}
+  const plan=await readPlan(current.planFile);
+  assert.equal(hashContent(plan),current.planHash,'父规划hash改变');assert.equal(current.authorizationHash,current.planHash,'父授权hash改变');
+  assert.equal(current.foundationHash,hashContent(foundation),'父foundation hash改变');
+  for(const item of plan.authorized){
+   const record=current.oldRecords.find(r=>r.id===item.id),entry=entries.find(e=>e.id===item.id);
+   assert.ok(record&&entry,'父basis缺完整record');assert.equal(hashContent(record),item.recordHash,'父basis record hash改变');
+   assert.equal(hashContent(record.draft),item.draftHash,'父basis draft hash改变');
+   if(current.reopenAuthorization){
+    const draft=record.draft??(await readCandidate?.())?.find(d=>d.id===entry.id);
+    assert.ok(draft,'父basis缺冻结draft/candidate');
+    if(!record.draft)assert.equal(hashContent(draft),item.candidateDraftHash,'父basis冻结candidate hash改变');
+    assert.equal(draft.id,entry.id,'父basis ID改变');
+    assert.deepEqual(draft.patches.map(p=>p.path),entry.patches.map(p=>p.path),'父basis路径改变');
+    entry.patches=structuredClone(draft.patches);
+   }
+  }
+  for(const change of current.changes){
+   const item=plan.authorized.find(a=>a.id===change.id),patch=entries.find(e=>e.id===change.id)?.patches.find(p=>p.path===change.path);
+   assert.ok(item?.paths.includes(change.path)&&patch,'父proof越权叶');assert.deepEqual(patch.value,change.before,'父proof before不符');patch.value=structuredClone(change.after);
+  }
+ }
+ await replay(proof);for(const entry of entries)entry.facts=applyDepthDraft(entry.before,patchDraft(entry));return entries;
+}
+export function depthRevisionProof(options,prepared,reopenAuthorization){
+ const {root}=options;
+ return prepared.receipt??{kind:'incremental-depth-proof',authorizationHash:options.authorizationHash,planHash:hashContent(prepared.plan),planFile:path.relative(root,options.controlledRevision).replaceAll('\\','/'),worldRoot:path.relative(root,prepared.worldRoot).replaceAll('\\','/'),backgroundFile:options.authoredBackground?path.relative(root,options.authoredBackground).replaceAll('\\','/'):null,backgroundHash:prepared.background?.sourceHash??null,foundationHash:hashContent(prepared.foundation),entryHash:hashContent(prepared.entries),oldRecords:prepared.records,changes:prepared.revision.changes,records:{},...(prepared.sourceCheckoutEvidence?{sourceCheckoutEvidence:prepared.sourceCheckoutEvidence}:{}),...(prepared.reopening?{reopenAuthorization,previousProof:prepared.previousProof??null,previousProofHash:prepared.previousProof?hashContent(prepared.previousProof):null}:{})};
+}
+async function sourceAuthorization(plan,reopening,records,previousPrepared,background,read,safeFile){
+ if(!plan.sourceAuthorization)return reopening;
+ assert.ok(reopening&&plan.cardId==='T07','来源凭证仅用于原T07重开');
+ const credential=await read(safeFile(plan.sourceAuthorization.file));
+ assert.equal(hashContent(credential),plan.sourceAuthorization.hash,'来源凭证hash改变');
+ assert.deepEqual(Object.keys(credential).sort(),['kind','cardId','authorizationId','parentManifestHash','parentGrantHash','source','allowed'].sort(),'来源凭证字段越权');
+ assert.equal(credential.kind,'depth-source-authorization');assert.equal(credential.cardId,plan.cardId);assert.equal(credential.authorizationId,reopening.manifest.id);
+ assert.equal(credential.parentManifestHash,reopening.manifestHash,'来源凭证祖先manifest改变');assert.equal(credential.parentGrantHash,hashContent(reopening.grant),'来源凭证父grant改变');
+ const binding=credential.source;assert.equal(binding.eventId,'memory_wt_depth_group_3','来源凭证事件越权');assert.equal(binding.path,'narrative','来源凭证pointer越权');
+ assert.deepEqual(Object.keys(binding).sort(),['eventId','path','beforeHash','afterHash'].sort(),'来源pointer字段越权');
+ const prior=previousPrepared?.background.events.find(e=>e.id===binding.eventId),next=background?.events.find(e=>e.id===binding.eventId);assert.ok(prior&&next,'来源凭证缺父事件');
+ assert.equal(hashContent(prior.narrative),binding.beforeHash,'来源凭证before改变');assert.equal(hashContent(next.narrative),binding.afterHash,'来源凭证after改变');
+ assert.deepEqual({...next,narrative:prior.narrative},prior,'来源凭证只授权narrative');
+ const {sourceHash,...oldBundle}=previousPrepared.background;
+ assert.deepEqual({...background,events:background.events.map(e=>e.id===next.id?prior:e)},oldBundle,'来源凭证不得扩其它事件');
+ assert.deepEqual(credential.allowed.map(a=>a.id).sort(),[...prior.actors].sort(),'来源凭证四方ID越权或缺失');
+ for(const permission of credential.allowed){
+  assert.deepEqual(Object.keys(permission).sort(),['id','paths','recordHash'].sort(),'来源权限字段越权');
+  assert.deepEqual(permission.paths,['memorySeeds[2]'],'来源权限叶越权');
+  assert.equal(prior.associations.find(a=>a.id===permission.id)?.path,permission.paths[0],'来源权限不是事件父叶');
+  const original=reopening.grant.allowed.find(a=>a.id===permission.id),record=records.find(r=>r.id===permission.id);
+  assert.equal(permission.recordHash,original?.recordHash,'来源权限原record绑定改变');assert.ok(recordHasHash(record,permission.recordHash),'来源权限原record链改变');
+ }
+ return{...reopening,sourcePermissions:credential.allowed};
+}
 export async function prepareDepthRevision({worldRoot=path.resolve('world'),...options}){
  const read=async file=>JSON.parse(await fs.readFile(file,'utf8')),root=options.root;
  for(const file of [options.controlledRevision,options.authoredBackground,options.sourceCheckoutEvidence].filter(Boolean)){const relative=path.relative(path.resolve(worldRoot),path.resolve(file));if(relative.startsWith('..')||path.isAbsolute(relative)||/secrets\.json$/i.test(file))throw Error('增量出处/规划须在world且非私人文件');}
  const plan=await read(options.controlledRevision);
  if(options.cardId&&options.cardId!==plan.cardId)throw Error('规划card与原card不匹配');
  const foundation=await read(path.join(root,'foundation.json')),base=await read(path.join(root,'base.json')),candidate=await read(path.join(root,'candidate.json'));
- const config=await loadDepthConfig(options);if(config.revision!==foundation.revision)throw Error('不得换revision领取机会');const live=await loadWorld(worldRoot),world={...live,npcs:live.npcs.map(n=>base.find(b=>b.id===n.id)??n)},entries=options.entriesOverride??depthEntries(base,{...config,authoredBackground:undefined},world);
+ const config=await loadDepthConfig(options);if(config.revision!==foundation.revision)throw Error('不得换revision领取机会');const live=await loadWorld(worldRoot),world={...live,npcs:live.npcs.map(n=>base.find(b=>b.id===n.id)??n)};let entries=options.entriesOverride??depthEntries(base,{...config,authoredBackground:undefined},world);
  const safeFile=relative=>{const file=path.resolve(root,relative),rel=path.relative(path.resolve(worldRoot),file);if(path.isAbsolute(rel)||rel.startsWith('..')||!/\.(json|mjs)$/i.test(file)||/secrets\.json$/i.test(file))throw Error('凭证路径须位于world且非私人文件');return file;};
  let checkout=null,sourceCheckoutEvidence=null;
  if(options.sourceCheckoutEvidence){const file=safeFile(path.relative(root,options.sourceCheckoutEvidence));assert.ok(file.endsWith('.json'),'换行凭证须为world内JSON');checkout=await read(file);sourceCheckoutEvidence={file:path.relative(root,file).replaceAll('\\','/'),hash:hashContent(checkout)};const source=plan.sourceHashes?.find(s=>s.file===checkout.sourceFile);assert.ok(source,'换行凭证不是本规划原来源');frozenT07SourceText(source,checkout.gitBlob?.text,checkout,await sourceWitnessPlan(root,plan,read,safeFile));}
  const sourceHashes=[],frozenSources={};for(const source of plan.sourceHashes??[]){const file=safeFile(source.file);let data;if(/\.mjs$/i.test(file)){if(path.relative(path.resolve(worldRoot),file).replaceAll('\\','/')!=='design/w1-villages-weiting.mjs')throw Error('本次名册出处须为原苇汀设计，候选不得当源');let raw=await fs.readFile(file,'utf8');if(checkout)raw=frozenT07SourceText(source,raw,checkout,await sourceWitnessPlan(root,plan,read,safeFile));sourceHashes.push({...source,hash:hashContent(raw)});const roster=raw.match(/export const weitingRoster\s*=\s*`([\s\S]*?)`/);if(roster)frozenSources[source.file]=roster[1].trim().split(/\r?\n/).map(line=>line.split('|')).map(row=>{const people=[...(world.npcs??[]),...(world.residents??[])].filter(p=>p.id.endsWith('_'+row[1])&&p.name===row[2]);return{id:people.length===1?people[0].id:null,name:row[2],concern:row[7]};});}else{data=await read(file);sourceHashes.push({...source,hash:hashContent(data)});}}
  const invalidations=plan.invalidationFile?await read(safeFile(plan.invalidationFile)):null;
  let receipt=options.proofOverride??null;if(options.proofOverride===undefined)try{receipt=await read(path.join(root,'incremental-proof.json'));}catch(e){if(e.code!=='ENOENT')throw e;}
- const reopening=options.reopenAuthorization?await loadDepthReopen({...options,worldRoot},{foundation,worldRoot,world}):null;
+ let reopening=options.reopenAuthorization?await loadDepthReopen({...options,worldRoot},{foundation,worldRoot,world}):null;
  let previousProof=null,previousPrepared=null;
  if(reopening){previousProof=receipt?.authorizationHash===options.authorizationHash?receipt.previousProof:receipt;if(receipt?.authorizationHash!==options.authorizationHash)receipt=null;
   assert.equal(plan.previousProofHash??null,previousProof?hashContent(previousProof):null,'新proof必须继承实际旧链');
   if(previousProof?.backgroundFile&&!options.authoredBackground)throw Error('继承旧proof须保留原独立背景');
-  if(previousProof){const oldEntries=foundation.entries.map(({context,...entry})=>structuredClone(entry));const applyProof=proof=>{if(proof.previousProof)applyProof(proof.previousProof);for(const change of proof.changes){const entry=oldEntries.find(e=>e.id===change.id);entry.patches.find(p=>p.path===change.path).value=structuredClone(change.after);}};applyProof(previousProof);for(const entry of oldEntries)entry.facts=applyDepthDraft(entry.before,patchDraft(entry));previousPrepared=await prepareDepthRevision({...options,worldRoot,entriesOverride:oldEntries,controlledRevision:safeFile(previousProof.planFile),authorizationHash:previousProof.authorizationHash,authoredBackground:previousProof.backgroundFile?safeFile(previousProof.backgroundFile):undefined,sourceCheckoutEvidence:previousProof.sourceCheckoutEvidence?safeFile(previousProof.sourceCheckoutEvidence.file):undefined,reopenAuthorization:previousProof.reopenAuthorization?safeFile(previousProof.reopenAuthorization.file):undefined,proofOverride:previousProof});}
+  if(previousProof){const oldEntries=await replayDepthProof(foundation,previousProof,{readPlan:file=>read(safeFile(file)),readCandidate:async()=>candidate});previousPrepared=await prepareDepthRevision({...options,worldRoot,entriesOverride:oldEntries,controlledRevision:safeFile(previousProof.planFile),authorizationHash:previousProof.authorizationHash,authoredBackground:previousProof.backgroundFile?safeFile(previousProof.backgroundFile):undefined,sourceCheckoutEvidence:previousProof.sourceCheckoutEvidence?safeFile(previousProof.sourceCheckoutEvidence.file):undefined,reopenAuthorization:previousProof.reopenAuthorization?safeFile(previousProof.reopenAuthorization.file):undefined,proofOverride:previousProof});}
  }
  if(receipt&&(receipt.authorizationHash!==options.authorizationHash||receipt.planHash!==hashContent(plan)))throw Error('本次规划已冻结，不得换nonce重领');
+ if(receipt&&!options.entriesOverride)entries=await replayDepthProof(foundation,receipt,{readPlan:file=>read(safeFile(file)),readCandidate:async()=>candidate});
  if(receipt&&(receipt.sourceCheckoutEvidence||sourceCheckoutEvidence))assert.deepEqual(receipt.sourceCheckoutEvidence,sourceCheckoutEvidence,'换行凭证收据路径/hash改变或缺失');
  // Bind metadata to the actual parent before validating leaf permissions. A
  // bundle hash changing does not invalidate entries whose events did not change.
  for(const entry of entries){const prior=previousPrepared?.entries.find(e=>e.id===entry.id)??foundation.entries.find(e=>e.id===entry.id);if(prior.authoredBackground)entry.authoredBackground=structuredClone(prior.authoredBackground);else delete entry.authoredBackground;}
  const records=await Promise.all(foundation.entries.map(async e=>receipt?.oldRecords?.find(r=>r.id===e.id)??await read(path.join(root,e.id+'.json'))));
+ const backgroundBundle=options.authoredBackground?await read(options.authoredBackground):null;
+ reopening=await sourceAuthorization(plan,reopening,records,previousPrepared,backgroundBundle,read,safeFile);
  const revision=validateControlledRevision(plan,{entries,foundation,records,world,candidate,base,invalidations,authorizationHash:options.authorizationHash,sourceHashes,frozenSources,reopen:reopening,previousEntries:previousPrepared?.entries});
- const background=options.authoredBackground?validateAuthoredBackground(await read(options.authoredBackground),entries,world):null;
+ const background=backgroundBundle?validateAuthoredBackground(backgroundBundle,entries,world):null;
  if(background){
   const parentBackground=previousPrepared?.background??foundation.entries.find(e=>e.authoredBackground)?.authoredBackground;
   const changed=parentBackground?background.events.filter(event=>hashContent(event)!==hashContent(parentBackground.events.find(e=>e.id===event.id))):background.events;

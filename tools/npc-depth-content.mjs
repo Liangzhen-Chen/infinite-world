@@ -267,7 +267,14 @@ export function validateControlledRevision(plan,{entries,foundation,records,worl
   if(!reopen)assert.deepEqual(record.draft,candidate.find(d=>d.id===item.id),'原record/candidate不匹配');
   assert.equal(hashContent(record.draft),item.draftHash,'旧draft hash不符');assert.equal(hashContent(record.review),item.reviewHash,'旧review hash不符');
   if(!reopen)assert.ok(!record.reviewRecovery,'本次机会已使用');
-  const permission=reopen?.grant.allowed.find(a=>a.id===item.id);if(reopen){assert.ok(permission,'ID未获重开授权');const lateFailures=record.reopenAuthorization?.id===reopen.manifest.id?(record.review?.contradictions??[]).filter(f=>f.severity==='hard').flatMap(f=>(permission.failurePaths??[]).filter(p=>p===f.field||p.startsWith(f.field+'[')||p.startsWith(f.field+'.'))):[];assert.ok((item.paths??[]).every(p=>permission.paths.includes(p)||lateFailures.includes(p)),'未授权重开叶');}
+  const permission=reopen?.grant.allowed.find(a=>a.id===item.id);
+  if(reopen){
+   assert.ok(permission,'ID未获重开授权');
+   const lateFailures=record.reopenAuthorization?.id===reopen.manifest.id
+    ?(record.review?.contradictions??[]).filter(f=>f.severity==='hard').flatMap(f=>(permission.failurePaths??[]).filter(p=>p===f.field||p.startsWith(f.field+'[')||p.startsWith(f.field+'.')||p==='memorySeeds[2]'&&f.field===p+'.event')):[];
+   const sourcePaths=reopen.sourcePermissions?.find(a=>a.id===item.id)?.paths??[];
+   assert.ok((item.paths??[]).every(p=>permission.paths.includes(p)||lateFailures.includes(p)||sourcePaths.includes(p)),'未授权重开叶');
+  }
   const actual=[];
   if(record.status==='manual')for(const finding of record.review?.contradictions??[])if(finding.severity==='hard')actual.push({path:finding.field,quote:finding.quote,kind:'L2'});
   const invalidation=invalidations?.records?.find(r=>r.id===item.id);
