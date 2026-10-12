@@ -36,7 +36,7 @@ async function fixture(t,{shared=false,oneSided=false,firstSource=false}={}){
   const entries=depthEntries([before],config,world),foundation=depthFoundation(entries,world,config.revision),manifest={contract:'audit-patch-v1',design:`design/card-${index}.mjs`,root:`drafts/card-${index}`,worldRoot:'../..',foundationHash:hashContent(foundation)};
   await write(path.join(root,'base.json'),[before]);await write(path.join(root,'candidate.json'),entries.map(patchDraft));await write(path.join(root,'foundation.json'),foundation);await write(path.join(root,'manifest.json'),manifest);
   // Local deterministic review substitutes exercise the actual L1/L2/L4 receipts.
-  const client={spent:0,reserved:0,budgetYuan:0,generate:async request=>{const value=JSON.parse(request.messages[1].content);return{choices:[{message:{content:JSON.stringify(value.candidate??{contradictions:[]})}}]};}};
+  const client={spent:0,reserved:0,budgetYuan:0,estimateCostYuan:()=>0,generate:async request=>{const value=JSON.parse(request.messages[1].content);return{choices:[{message:{content:JSON.stringify(value.candidate??{contradictions:[]})}}]};}};
   let result;
   if(firstSource){
    const sourceFile=path.join(root,'sources.json'),sourceEvidenceMap=path.join(root,'sources-map.json');

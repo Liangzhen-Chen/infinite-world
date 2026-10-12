@@ -64,7 +64,7 @@ export async function runContentPipeline({
   extractReview = parseModelJSON, concurrency = 8, batchSize = 40,
   revision = 'v2', retryManual = false, onBatch = null, budgetRoot = root,
   cardId, allocation, protocolRecoveryIds = [], requestTransform,
-  reviewDraftFor = buildDraftRequest?.reviewDraftFor,
+  reviewDraftFor = buildDraftRequest?.reviewDraftFor, reuseFrozenDrafts = false,
 }) {
   if (!Array.isArray(entries) || new Set(entries.map(row => row.id)).size !== entries.length) throw new Error('条目编号重复或缺失');
   if (entries.some(row => !/^[a-z][a-z0-9_-]+$/i.test(row.id ?? ''))) throw new Error('条目编号不安全');
@@ -106,22 +106,24 @@ export async function runContentPipeline({
       try {
         if(budget.stopped)throw budget.stopped;
         const offline=eligible?record.protocolRecovery.prior.draftResponse:null;
+        const frozen=reuseFrozenDrafts&&!eligible?(record.draft??await reviewDraftFor?.(entry,feedback,context)):null;
         const draftLabel=`content-${path.basename(root)}-${entry.id}-${eligible?'protocol-recovery':'draft'+attempt}`,reviewLabel=`content-${path.basename(root)}-${entry.id}-review${attempt}`;
-        const expectedDraft=offline?await extractDraft(offline,entry):await reviewDraftFor?.(entry,feedback,context);
+        const expectedDraft=frozen??(offline?await extractDraft(offline,entry):await reviewDraftFor?.(entry,feedback,context));
+        if(frozen){const check=await validateDraft(frozen,entry,context);const errors=Array.isArray(check)?check:check.errors??[];if(errors.length)throw Error(errors.join('\n'));record.frozenCandidate={entryHash:hashContent(entry),draftHash:hashContent(frozen)};}
         const draftDetails={entry,context,phase:'draft',feedback,record,file};
-        if(!offline)preparedDraft=await prepareRequest(await buildDraftRequest(entry,feedback,context),draftDetails);
+        if(!offline&&!frozen)preparedDraft=await prepareRequest(await buildDraftRequest(entry,feedback,context),draftDetails);
         if(expectedDraft===undefined)throw budget.stop('候选未定且无法证明完整审核请求上界，已停止');
         // Preflight on a copy so the future review has no emitted receipt yet.
         const plannedReview=await prepareRequest(await buildReviewRequest(entry,expectedDraft,context),{entry,context,phase:'review',draft:expectedDraft,record:structuredClone(record),file});
-        reservations=await budget.reserveRound([...(offline?[]:[{body:preparedDraft.body,label:draftLabel}]),{body:plannedReview.body,label:reviewLabel}]);
-        if(!eligible)record.attempts=attempt+1;
-        const response = offline??await request(preparedDraft,draftLabel,draftDetails,reservations[0]);
-        record.draftResponse=response;
+        reservations=await budget.reserveRound([...(offline||frozen?[]:[{body:preparedDraft.body,label:draftLabel}]),{body:plannedReview.body,label:reviewLabel}]);
+        if(!eligible&&!frozen)record.attempts=attempt+1;
+        const response = frozen?null:offline??await request(preparedDraft,draftLabel,draftDetails,reservations[0]);
+        if(response)record.draftResponse=response;
         record.responseEvidence??=[];
-        if(!offline)record.responseEvidence.push({phase:'draft',attempt:attempt+1,requestId:reservations[0],...budget.ledger.requests[reservations[0]].responseEvidence});
-        record.measurements??=[];if(!offline&&response.measurement)record.measurements.push(response.measurement);
+        if(!offline&&!frozen)record.responseEvidence.push({phase:'draft',attempt:attempt+1,requestId:reservations[0],...budget.ledger.requests[reservations[0]].responseEvidence});
+        record.measurements??=[];if(!offline&&!frozen&&response.measurement)record.measurements.push(response.measurement);
         await writeJSON(file,record);
-        record.draft = await extractDraft(response, entry);
+        record.draft = frozen??await extractDraft(response, entry);
         assert.deepEqual(record.draft,expectedDraft,'起草结果不符已预留的固定候选');
         const validation = await validateDraft(record.draft, entry, context);
         record.errors = Array.isArray(validation) ? validation : validation.errors ?? [];
@@ -142,7 +144,7 @@ export async function runContentPipeline({
         record.errors.push(...issues.filter(row => row.severity === 'hard'));
         record.warnings.push(...issues.filter(row => row.severity !== 'hard'));
         if (!record.errors.length) { record.status = 'passed'; record.feedback = null; break; }
-        feedback = record.errors;
+        feedback = record.errors;if(frozen)break;
       } catch (error) {
         if(error.code==='CONTENT_BUDGET_STOP'){
           // A queued reservation is not a sent rewrite. Preserve all old attempts.

@@ -15,13 +15,13 @@ export function extractDraft(response,entry){if(entry.contract==='audit-patch-v1
 buildDraftRequest.reviewDraftFor=entry=>entry.contract==='audit-patch-v1'?patchDraft(entry):undefined;
 export function applyDepthDraft(before,draft){if(draft.contract==='audit-patch-v1'){assert.equal(draft.id,before.id);const after=structuredClone(before);for(const patch of draft.patches)setPath(after,patch.path,patch.value);return after;}return{...structuredClone(before),...structuredClone(draft)};}
 export function validateDraft(draft,entry){if(entry.contract==='audit-patch-v1')return validatePatchDraft(draft,entry);const errors=[],warnings=[];try{assert.deepEqual(Object.keys(draft).sort(),['id',...changedFields].sort());assert.equal(draft.id,entry.id);const expected=Object.fromEntries(changedFields.map(k=>[k,structuredClone(entry.facts[k])])),actual=structuredClone(draft);delete actual.id;expected.memorySeeds.at(-1).event=actual.memorySeeds?.at(-1)?.event;assert.deepEqual(actual,expected,'除共享记忆说明外不得改变设计事实');assert.equal(typeof actual.memorySeeds.at(-1).event,'string');assert.ok(actual.memorySeeds.at(-1).event.trim());assert.notEqual(draft.voice.register,draft.voice.habits[0]);assert.ok(draft.knowledge.known.length>=3);for(const goal of Object.values(draft.goals).flat())assert.ok(goal.steps.every(s=>s.content!==goal.content&&s.status==='pending'));assert.deepEqual(draft.memorySeeds.slice(0,-1),entry.before.memorySeeds);assert.deepEqual(draft.memorySeeds.at(-1).knownBy,entry.sharedEvent.participants);if(/npc_|loc_|bld_|JSON|骨架|主持人|系统设定/.test(draft.memorySeeds.at(-1).event))throw Error('新增记忆包含内部术语');}catch(e){errors.push(e.message);}errors.push(...findNpcRuleWording(draft).map(row=>`${row.field}: ${row.reason}`));return{errors,warnings};}
-export function buildReviewRequest(entry,draft,context){
+export function buildReviewRequest(entry,draft,context,{requireLeafCoverage=false}={}){
  const request=defaultReviewRequest(entry,draft,context);
  if(entry.contract!=='audit-patch-v1'){
   request.messages[0].content+=' facts 是经设计补入的权威事实；before 是不得改动的原人物。共享事件属于过去亲历，但未解决的分歧必须仍未解决。请逐句检查所有新增knowledge、relationship.note、goals.steps与共享记忆，不仅检查台词。未知问题包含具体姓名不等于知道问题答案。目标步骤是在提议、询问或核对，不得误判为已经转移财物。';
   return request;
  }
- if(context.authoredBackground||context.controlledRevision){
+ if(requireLeafCoverage||context.authoredBackground||context.controlledRevision){
   const tasks={patchPaths:draft.patches.map(p=>p.path),backgrounds:(context.authoredBackground?.events??[]).map(e=>({eventId:e.id,sourceHash:context.authoredBackground.sourceHash,riskPaths:e.risks.map(r=>`${r.id}.${r.field}`)}))};
   request.messages[0].content='你是游戏内容事实审查员。只返回顶层 JSON 对象，且仅有 contradictions、reviewedPaths、backgroundReviews 三个键。唯一输出 schema：{"contradictions":[{"quote":"说明原句","field":"字段路径","severity":"hard|soft|style","reason":"具体原因"}],"reviewedPaths":["逐个实际审过的 draft.patches.path"],"backgroundReviews":[{"eventId":"事件id","sourceHash":"出处hash","reviewedRiskPaths":["逐个实际审过的 id.field"],"contradictions":[]}]}。三个顶层字段都必须为数组；路径、eventId、sourceHash、quote、field、severity、reason 都必须为字符串。两处 contradictions 的每项都必须有非空 quote、field、severity、reason，severity 只允许 hard、soft、style。hard 表示数值、材料、用途、能力、食性、归属、时间、取得途径等与骨架相反或新增没有依据的功能。正常且相容的感官细节不是新增功能。不推测骨架没有声明的规则。不因没有重述全部骨架字段报错。必须保留真实 hard 的原句和具体原因，不能因新背景、输出长度或覆盖要求省略；无矛盾才 contradictions=[]。逐叶核查后 reviewedPaths 必须精确覆盖以下全部 patchPaths；逐事件独立核查后 backgroundReviews 必须精确覆盖以下全部事件，sourceHash 须相符，reviewedRiskPaths 必须精确覆盖该事件全部 riskPaths。重复、遗漏或额外路径/事件均拒绝。清单只是待审任务，不能未审照抄覆盖凭证。无新背景时 backgroundReviews 必须为 []。本条待审清单：'+JSON.stringify(tasks)+'。';
  }
@@ -237,9 +237,9 @@ export function checkIncrementalReview(review,entry,context){
  }else assert.deepEqual(review.backgroundReviews,[],'无新背景时出处审核必须为空');
  return[...review.contradictions,...(review.backgroundReviews??[]).flatMap(r=>r.contradictions)];
 }
-export function validateControlledRevision(plan,{entries,foundation,records,world,candidate,base,invalidations,authorizationHash,sourceHashes,frozenSources={}}){
+export function validateControlledRevision(plan,{entries,foundation,records,world,candidate,base,invalidations,authorizationHash,sourceHashes,frozenSources={},reopen=null,previousEntries}){
  assert.equal(hashContent(plan),authorizationHash,'规划授权hash不匹配');
- assert.equal(plan.kind,'controlled-depth-revision');assert.ok(['T07','T10'].includes(plan.cardId),'本次仅授权T07/T10，T06继续冻结');
+ assert.equal(plan.kind,'controlled-depth-revision');assert.ok(reopen||['T07','T10'].includes(plan.cardId),'本次仅授权T07/T10，T06继续冻结');
  assert.ok(typeof plan.planningId==='string'&&plan.planningId.trim(),'缺本次规划标识');
  assert.equal(plan.revision,foundation.revision,'不得换revision领取机会');
  assert.equal(plan.foundationHash,hashContent(foundation),'原foundation hash不符');assert.equal(plan.baseHash,hashContent(base),'原base hash不符');assert.equal(plan.candidateHash,hashContent(candidate),'原candidate hash不符');
@@ -252,27 +252,36 @@ export function validateControlledRevision(plan,{entries,foundation,records,worl
   assert.ok(old&&entry&&record,'未授权/缺档ID');assert.equal(item.recordHash,hashContent(record),'旧完整record hash不符');
   assert.equal(hashContent(contextFor(Object.fromEntries(Object.entries(old).filter(([key])=>key!=='context')),world)),hashContent(old.context),'原冻结来源/声明改变');
   assert.deepEqual(entry.before,old.before,'原baseline改变');assert.deepEqual(entry.issues,old.issues,'原审计许可改变');assert.equal(entry.baseHash,old.baseHash,'原baseHash改变');
-  assert.equal(record.fingerprint,hashContent({entry:Object.fromEntries(Object.entries(old).filter(([key])=>key!=='context')),context:old.context,revision:foundation.revision}),'旧候选指纹不匹配');
-  assert.deepEqual(record.draft,candidate.find(d=>d.id===item.id),'原record/candidate不匹配');
+  if(!reopen)assert.equal(record.fingerprint,hashContent({entry:Object.fromEntries(Object.entries(old).filter(([key])=>key!=='context')),context:old.context,revision:foundation.revision}),'旧候选指纹不匹配');
+  if(!reopen)assert.deepEqual(record.draft,candidate.find(d=>d.id===item.id),'原record/candidate不匹配');
   assert.equal(hashContent(record.draft),item.draftHash,'旧draft hash不符');assert.equal(hashContent(record.review),item.reviewHash,'旧review hash不符');
-  assert.ok(!record.reviewRecovery,'本次机会已使用');
+  if(!reopen)assert.ok(!record.reviewRecovery,'本次机会已使用');
+  const permission=reopen?.grant.allowed.find(a=>a.id===item.id);if(reopen){assert.ok(permission,'ID未获重开授权');const lateFailures=record.reopenAuthorization?.id===reopen.manifest.id?(record.review?.contradictions??[]).filter(f=>f.severity==='hard').flatMap(f=>(permission.failurePaths??[]).filter(p=>p===f.field||p.startsWith(f.field+'[')||p.startsWith(f.field+'.'))):[];assert.ok((item.paths??[]).every(p=>permission.paths.includes(p)||lateFailures.includes(p)),'未授权重开叶');}
   const actual=[];
   if(record.status==='manual')for(const finding of record.review?.contradictions??[])if(finding.severity==='hard')actual.push({path:finding.field,quote:finding.quote,kind:'L2'});
   const invalidation=invalidations?.records?.find(r=>r.id===item.id);
-  if(record.status==='passed'||invalidation){
+  if(!reopen&&(record.status==='passed'||invalidation)||invalidation){
    assert.ok(invalidation&&invalidation.operativeStatus==='invalidated-by-L4','passed缺真实L4失效');
    assert.equal(invalidation.draftHash,hashContent(record.draft),'L4失效draft hash不符');assert.equal(invalidation.reviewHash,hashContent(record.review),'L4失效review hash不符');
    for(const finding of invalidation.findings??[]){assert.ok(typeof finding.reason==='string'&&finding.reason.trim(),'L4失效缺原因');const sourceValue=finding.sourceConcern??finding.sourceSex;assert.ok(typeof sourceValue==='string','L4失效缺原出处事实');assert.equal(finding.sourceHash,hashContent(sourceValue),'L4原出处hash不符');const ref=item.invalidationSources?.find(r=>r.path===finding.path);assert.ok(ref&&['npcs','residents','locations','settlementProfiles','frozen-roster'].includes(ref.collection),'L4失效缺冻结原字段出处');const source=ref.collection==='frozen-roster'?frozenSources[ref.file]?.find(r=>r.id===ref.id):world[ref.collection]?.find(r=>r.id===ref.id);assert.ok(source,'L4原出处不存在');if(ref.collection==='frozen-roster'){assert.equal(ref.field,'concern','本次名册只允许原concern列');const person=[...(world.npcs??[]),...(world.residents??[])].find(r=>r.id===ref.id);assert.equal(source.name,person?.name,'名册原人物不符');}if(finding.sourceId)assert.equal(ref.id,finding.sourceId,'L4失效来源人物不符');assert.deepEqual(getPath(source,ref.field),sourceValue,'L4失效原事实伪造');assert.equal(ref.hash,finding.sourceHash,'L4失效原字段hash不符');actual.push({...finding,kind:'L4'});}
   }
-  assert.ok(actual.length,'缺真实L2/L4失效');
+  if(reopen){assert.ok(permission.reason?.trim(),'重开缺真实失败/未审证据');actual.push(...(item.paths??[]).map(path=>({path,kind:'reopen',quote:''})));}
+  assert.ok(actual.length||reopen&&item.sourceOnly,'缺真实L2/L4失效');
   const paths=new Set(item.paths??[]);assert.ok(paths.size||item.sourceOnly,'缺授权修订路径或source-only标识');
-  for(const field of paths){const prior=old.patches.find(p=>p.path===field);assert.ok(prior&&permitted(entry,prior,world),'路径不在原audit许可');const issue=actual.find(f=>f.path===field);assert.ok(issue,'路径不在真实失效清单');const value=getPath(applyDepthDraft(old.before,record.draft),field);assert.ok(JSON.stringify(value).includes(issue.quote),'失效quote与原候选不符');}
+  for(const field of paths){const prior=old.patches.find(p=>p.path===field);assert.ok(prior&&permitted(entry,prior,world),'路径不在原audit许可');const issue=actual.find(f=>f.path===field);assert.ok(issue,'路径不在真实失效清单');const value=getPath(applyDepthDraft(old.before,record.draft),field);assert.ok(issue.kind==='reopen'||JSON.stringify(value).includes(issue.quote),'失效quote与原候选不符');}
   assert.deepEqual(entry.patches.map(p=>p.path),old.patches.map(p=>p.path),'禁止新增/删除补丁成员');
-  for(const prior of old.patches){const next=entry.patches.find(p=>p.path===prior.path);if(hashContent(prior.value)!==hashContent(next.value)){assert.ok(paths.has(prior.path),'正确兄弟叶不得修改');changes.push({id:item.id,path:prior.path,before:prior.value,after:next.value});}}
+  for(const prior of (reopen?record.draft?.patches??old.patches:old.patches)){const next=entry.patches.find(p=>p.path===prior.path);if(hashContent(prior.value)!==hashContent(next.value)){assert.ok(paths.has(prior.path),'正确兄弟叶不得修改');changes.push({id:item.id,path:prior.path,before:prior.value,after:next.value});}}
   const oldMetadata=Object.fromEntries(Object.entries(old).filter(([key])=>!['context','facts','patches'].includes(key))),newMetadata=Object.fromEntries(Object.entries(entry).filter(([key])=>!['facts','patches'].includes(key)));assert.deepEqual(newMetadata,oldMetadata,'原来源选择/声明不得变更');
  }
- for(const entry of entries)if(!authorized.has(entry.id)){const old=foundation.entries.find(e=>e.id===entry.id);assert.ok(old,'未授权ID');assert.deepEqual(entry,Object.fromEntries(Object.entries(old).filter(([key])=>key!=='context')),'未授权ID候选改变');}
+ for(const entry of entries)if(!authorized.has(entry.id)){const old=foundation.entries.find(e=>e.id===entry.id);assert.ok(old,'未授权ID');assert.deepEqual(entry,(previousEntries?.find(e=>e.id===entry.id)?Object.fromEntries(Object.entries(previousEntries.find(e=>e.id===entry.id)).filter(([key])=>key!=='authoredBackground'||!!entry.authoredBackground)):null)??Object.fromEntries(Object.entries(old).filter(([key])=>key!=='context')),'未授权ID候选改变');}
  assert.deepEqual(entries.map(e=>e.id),foundation.entries.map(e=>e.id),'成员列表不得改变');
+ if(reopen){
+  for(const change of changes.filter(c=>c.path.startsWith('memorySeeds['))){if(previousEntries?.find(e=>e.id===change.id)?.patches.some(p=>p.path===change.path&&hashContent(p.value)===hashContent(change.after)))continue;const memory=change.after,old=change.before;
+   if((old?.knownBy?.length??0)<2)continue;
+   assert.deepEqual(memory.knownBy,old.knownBy,'共享事件知情成员不得改变');assert.equal(memory.id,old.id,'共享事件ID不得改变');
+   for(const id of old.knownBy){const entry=entries.find(e=>e.id===id),peer=entry?.patches.find(p=>p.value?.id===old.id);assert.ok(peer&&authorized.has(id),'共享事件双方必须同步获授权');assert.equal(peer.value.event,memory.event,'共享事件双方叙述不相容');assert.equal(peer.value.location,memory.location,'共享事件双方地点不相容');}
+  }
+ }
  return{planningId:plan.planningId,authorizationHash,changes};
 }
 // Keep the transport measurement intact when the model omits source/leaf
