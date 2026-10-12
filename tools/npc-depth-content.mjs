@@ -264,10 +264,14 @@ export function depthReviewClient(client){
    let review;try{review=parseModelJSON(response);checkIncrementalReview(review,payload.skeleton,payload.publishedFacts);}catch(error){
     const contradictions=Array.isArray(review?.contradictions)?review.contradictions:[];
     review={...(review&&typeof review==='object'?review:{}),contradictions:[...contradictions,{severity:'hard',field:'reviewedPaths',quote:'出处及候选覆盖凭证',reason:error.message}]};
-    return{...response,choices:[{message:{content:JSON.stringify(review)}}]};
+    return preservedProviderReview(response,review);
    }
    const sourceHard=(review.backgroundReviews??[]).flatMap(r=>r.contradictions).filter(r=>r.severity==='hard');
-   return sourceHard.length?{...response,choices:[{message:{content:JSON.stringify({...review,contradictions:[...review.contradictions,...sourceHard]})}}]}:response;
+   return sourceHard.length?preservedProviderReview(response,{...review,contradictions:[...review.contradictions,...sourceHard]}):response;
   };
  }});
+}
+
+function preservedProviderReview(response,review){
+ return{...response,rawProviderReviewResponse:structuredClone(response),rawProviderReviewResponseHash:hashContent(response),choices:[{message:{content:JSON.stringify(review)}}]};
 }
