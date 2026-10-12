@@ -46,8 +46,9 @@ test('未登记朱家老屋及明确命名的物品拒绝，普通家具、隐�
  const place=judge('他指向朱家老屋。').find(row=>row.entityName==='朱家老屋');
  assert.equal(place?.entityKind,'location');assert.equal(place?.severity,'error');
  assert.ok(judge('门外就是赵家宅院。').some(row=>row.entityKind==='location'));
+ assert.ok(judge('门外就是方家老屋。').some(row=>row.entityName==='方家老屋'),'普通姓氏方仍需登记');
  assert.ok(judge('一柄名为“银叶”的法杖靠在墙边。').some(row=>row.entityName==='银叶'&&row.entityKind==='item'));
- for(const draft of ['一张木椅摆在老屋门边。','他家老屋的门开着。','冷意像一根名为寒意的针。','冷意像一柄名为“霜意”的刀。','一把普通木杖靠在墙边。','这段名为“劳作”的生活仍在继续。'])assert.deepEqual(judge(draft),[],draft);
+ for(const draft of ['一张木椅摆在老屋门边。','他家老屋的门开着。','他指向对方家老屋。','双方家宅院的门都开着。','各方家宅院都有普通木椅。','冷意像一根名为寒意的针。','冷意像一柄名为“霜意”的刀。','一把普通木杖靠在墙边。','这段名为“劳作”的生活仍在继续。'])assert.deepEqual(judge(draft),[],draft);
  const registry=[...entities,{id:'bld_house',name:'旧宅',aliases:['朱家老屋']},{id:'item_staff',name:'银叶',kind:'item'}];
  assert.deepEqual(judge('他指向朱家老屋，拿起名为“银叶”的法杖。',{allowedEntities:registry}),[]);
 });

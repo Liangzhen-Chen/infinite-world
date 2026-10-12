@@ -136,7 +136,10 @@ function fixedIssues(input,context){
   }
   // Surname-qualified household locations are names even without a naming
   // verb. Pronouns such as 他家 and ordinary 老屋 are not household names.
-  for(const match of context.visible.matchAll(/(?:[朱王李张刘陈杨黄赵吴周徐孙马胡郭何林罗高郑梁谢宋唐许韩冯邓曹彭曾肖田董袁潘于蒋蔡余杜叶程苏魏吕丁任沈姚卢姜崔钟谭陆汪范金石廖贾夏韦付方白邹孟熊秦邱江尹薛阎段雷侯龙史陶黎贺顾毛郝龚邵万钱严覃武戴莫孔向汤]|欧阳|司马|上官|诸葛)家(?:老屋|宅院|庄园|祠堂)/g))if(!names.has(normalize(match[0])))add('naming',match[0],'该具名地点尚未登记，登记前须改为既有地点或无专名描写',[cite('registry')],{entityName:match[0],entityKind:'location'});
+  for(const match of context.visible.matchAll(/(?:[朱王李张刘陈杨黄赵吴周徐孙马胡郭何林罗高郑梁谢宋唐许韩冯邓曹彭曾肖田董袁潘于蒋蔡余杜叶程苏魏吕丁任沈姚卢姜崔钟谭陆汪范金石廖贾夏韦付方白邹孟熊秦邱江尹薛阎段雷侯龙史陶黎贺顾毛郝龚邵万钱严覃武戴莫孔向汤]|欧阳|司马|上官|诸葛)家(?:老屋|宅院|庄园|祠堂)/g)){
+   if(match[0].startsWith('方家')&&/[对双各]$/.test(context.visible.slice(0,match.index)))continue;
+   if(!names.has(normalize(match[0])))add('naming',match[0],'该具名地点尚未登记，登记前须改为既有地点或无专名描写',[cite('registry')],{entityName:match[0],entityKind:'location'});
+  }
   for(const word of input.blocklist??[]){if(typeof word!=='string'||word==='天际'||!context.visible.includes(word))continue;
    if(word.length<3&&!['名叫','名唤','自称','叫作','“','「'].some(prefix=>context.visible.includes(prefix+word)))continue;
    add('blocked',word,'正文使用了屏蔽表中的专名',[cite('blocklist',word)]);
