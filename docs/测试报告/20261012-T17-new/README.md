@@ -2,6 +2,8 @@
 
 地点投影修正、旧拒发回放和反例检查已通过。十场正常 HTTP 预检仍有四场被严格出处守卫拒绝，`preflightReady=false`，不能提交 T17-B 付费运行。完整正式世界未删减，原断言保留，预检脚本使用本地确定性响应，不计作 M2 的真实叙述、账本或盲辨验收。
 
+已正常合入主线 T38 周贸易与时钟路径，最终输入和必要 HTTP 预检基于合后世界重新冻结。相关测试与 CORE 已在合后树重跑通过。没有要求当前全 world hash 等于旧 T11-B hash；河湾人物及事件仍逐项核对原发布凭证。
+
 `preflight.json` 核对河湾32人的当前档 hash、原18人及逐事件参与者闭包。榆坡30人沿原 publication-batch 的 L1/L2/L4/事件发布预演核验为零差异，证据单列为 `yupoPublished`。本卡保持原动态守卫的河湾32人授权范围，没有按“已经发布”整批豁免实际正文。
 
 `frozen-inputs.json` 保存当前完整 `loadWorld`、`loadPromptBundle`、十场场景及真实 host 转换后的静态消息。`preflight.json` 保存源文件 hash 和 host 转换器、util、config 的 hash。`zero-model-requests.jsonl` 保存正常 runner 产生的主持、一致性、审稿请求和真实工具对象，离屏请求复用原 `npcPlanningRequest`。唯一源码改动是一行导出该现有函数；没有复制请求模板或开启规划预算。

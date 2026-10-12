@@ -43,10 +43,11 @@ assert.equal(renderings.length,2);
 const oldPre=JSON.parse(await fs.readFile(path.join(oldDir,'preflight.json'),'utf8')),oldBudget=JSON.parse(await fs.readFile(path.join(oldDir,'resume-persistent-budget.json'),'utf8'));
 assert.equal(oldBudget.runId,oldPre.runId);assert.equal(oldBudget.spentYuan,.28484248);assert.equal(oldBudget.reservedYuan,6.372890000000001);
 const sourcePaths=[...prior.sources.map(s=>'world/'+s.file),'world/drafts/w1/t11b-publication/evidence.json','tools/load-world.mjs','tools/build-card.mjs','tools/host-prompt.mjs','tools/npc-autonomy-planner.mjs',...dependencies.map(s=>s.file),...(await fs.readdir(path.join(root,'prompt'))).map(f=>'prompt/'+f)];
-sourcePaths.push(yupoManifest,'docs/测试报告/20261012-T17-new/runtime-guard.mjs');
+sourcePaths.push(yupoManifest,'docs/测试报告/20261012-T17-new/runtime-guard.mjs','tools/playtest-runner.mjs','extension/prompt.mjs','extension/tools.mjs','extension/turn.mjs','server-plugin/engine.mjs','server-plugin/settlement-trade.mjs');
 const sources=await Promise.all(sourcePaths.map(async file=>({file,sha256:digest(await fs.readFile(path.join(root,file),'utf8'))})));
 const hostSources=await Promise.all(['src/prompt-converters.js','src/util.js','config.yaml'].map(async file=>({file,sha256:digest(await fs.readFile(path.join(hostInstallation,file),'utf8'))})));
 const pre={card:'T17-A',capturedAt:new Date().toISOString(),commit:execFileSync('git',['rev-parse','HEAD'],{cwd:root,encoding:'utf8'}).trim(),diff:execFileSync('git',['diff','--stat'],{cwd:root,encoding:'utf8'}).trim(),modelCalls:0,spentYuan:0,reservedYuan:0,worldHash:digest(world),promptHash:digest(bundle),scenariosHash:digest(scenarios),hostInstallation,providerProcessing:host.identity,approvedIds,profiles,events,originalIds:prior.m2.originalIds,dependencies,sources,locationProjection:{source:'tools/build-card.mjs:reference / world/geo/locations.json',rows,text,textHash:digest(text),renderings},oldRun:{runId:oldPre.runId,budgetFile:path.join(oldDir,'resume-persistent-budget.json'),budgetHash:digest(oldBudget),spentYuan:oldBudget.spentYuan,unknownReservedYuan:oldBudget.reservedYuan,newRunId:'t17-m2-20261012-02',newIncrementCeilingYuan:8,combinedUpperCeilingYuan:14.65773248,historyDeduplication:'not-verified',paymentReady:false},scope:'完整正式world/bundle/host转换输入；不新开预算、不恢复旧run；本地响应只核查请求出处，不计M2真实验收'};
+pre.yupoPublished=yupoPublished;pre.hostSources=hostSources;
 await atomicJSON(path.join(out,'preflight.json'),pre);
 await atomicJSON(path.join(out,'frozen-inputs.json'),{world,bundle,scenarios,providerProcessing:host.identity,convertedStaticMessages:converted});
 const {analyzeRequest,closure}=await import('./runtime-guard.mjs');
@@ -71,13 +72,13 @@ try{for(const scenario of scenarios){
    if(scenario.id==='npc_quest_social'&&i===5)calls=[{tool:'world_trade',args:{seller:'npc_hw_chenbai',item:'带壳燕麦',quantity:10,unitPrice:3,payment:'cash'}}];
    // Replay targets are checked as real tool objects, never name metadata.
    if(calls.length){const proposed=calls.map(c=>call(c.tool,c.args));capture({calls:proposed},label+':targets','tool');return response(null,proposed);}}
-  const scene=await server.api('scene',{campaignId:campaignByScenario.get(scenario.id),query:step.input});const view=await server.api('read',{campaignId:campaignByScenario.get(scenario.id)});
+  const view=await server.api('read',{campaignId:campaignByScenario.get(scenario.id)});
   const state=view.document.state,present=Object.entries(state.npcs).filter(([,n])=>n.location===state.location).map(([id])=>id).join(',');
   return response(isOutOfCharacter(step.input)?'零模型预检记录。':`零模型预检记录。<回合 额外="0分" 地点="${state.location}" 在场="${present}"/>`);
  }};
  const campaignByScenario=new Map();
  const api=async(endpoint,body)=>{const value=await server.api(endpoint,body);if(endpoint==='create')campaignByScenario.set(scenario.id,value.reference.campaignId);if(endpoint==='execute'&&body.tool!=='world_turn')capture({tool:body.tool,args:body.args},`${scenario.id}:HTTP:${body.tool}`,'tool');return value;};
- const result=await runPlaytest({scenario,api,client,bundle,processMessages:host.process,countTokens:async t=>Buffer.byteLength(t),stopOnFailure:true});
+ const result=await runPlaytest({scenario,api,client,bundle,processMessages:host.process,stopOnFailure:true});
  const context=npcPlanningContext(new WorldEngine(world),result.finalDocument);capture(npcPlanningRequest(context,3000),`${scenario.id}:planning`,'planning');
  const scoring={async generate(body,label){capture(body,label,'review');if(label.includes('npc-acceptance')){const id=label.split('-').at(-1);return response(JSON.stringify({requirements:[{id,pass:false,reason:'零模型预检不计真实证据',evidence:[{turn:0,quote:'零模型预检记录。'}]}]}));}if(label.endsWith('voice-blind'))throw Error('零模型预检不做真实盲辨');return response(JSON.stringify({scores:{truth:0,agency:0,language:0,continuity:0},findings:[]}));}};
  await reviewPlaytest(scoring,result,scenario.rubric,{world});await reviewNpcRequirements(scoring,result,scenario);
