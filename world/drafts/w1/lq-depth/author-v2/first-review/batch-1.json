@@ -1,8 +1,8 @@
 {
   "index": 1,
-  "fingerprint": "cf4390791a4b47e4eeb58b69499f2ed92ac3ca641d669aa04a71bac87de013ca",
+  "fingerprint": "b3cffe03f32a260a21e9e1f4c45ccc3e249e432c1aa15b2e1b49849d4dad0233",
   "count": 5,
-  "passed": 0,
+  "passed": 1,
   "ids": [
     "npc_lq_henglu",
     "npc_lq_yike",
@@ -11,21 +11,67 @@
     "npc_lq_kuangye"
   ],
   "rewritten": 0,
-  "manual": [],
-  "pending": [
+  "manual": [
+    "npc_lq_henglu",
+    "npc_lq_yike",
+    "npc_lq_nieya",
+    "npc_lq_kuangye"
+  ],
+  "pending": [],
+  "flagged": [
     "npc_lq_henglu",
     "npc_lq_yike",
     "npc_lq_manqu",
     "npc_lq_nieya",
     "npc_lq_kuangye"
   ],
-  "flagged": [],
-  "sample": [],
+  "sample": [
+    "npc_lq_manqu"
+  ],
   "l4": {
     "approved": false,
     "notes": []
   },
-  "costUpperYuan": 10.901414639999988,
-  "manualRatio": 0,
-  "needsSystemicRepair": false
+  "costUpperYuan": 12.313575839999988,
+  "manualRatio": 0.8,
+  "needsSystemicRepair": true,
+  "operativeInvalidated": [
+    "npc_lq_henglu",
+    "npc_lq_yike",
+    "npc_lq_nieya",
+    "npc_lq_kuangye"
+  ],
+  "l4History": [
+    {
+      "approved": false,
+      "notes": [],
+      "supersededBy": "npc_lq_henglu",
+      "priorFingerprint": "cf4390791a4b47e4eeb58b69499f2ed92ac3ca641d669aa04a71bac87de013ca"
+    },
+    {
+      "approved": false,
+      "notes": [],
+      "supersededBy": "npc_lq_yike",
+      "priorFingerprint": "5d672af34859e3b1969240d288771bd977d9f1c07143795645139b7b6d6e0ec5"
+    },
+    {
+      "approved": false,
+      "notes": [],
+      "supersededBy": "npc_lq_manqu",
+      "priorFingerprint": "c0bcee6d2a45b40f40d7e28cf4ca539f3ef37f639c0233afe3e152b3de29a3a6"
+    },
+    {
+      "approved": false,
+      "notes": [],
+      "supersededBy": "npc_lq_nieya",
+      "priorFingerprint": "124dce5f99786a328b3ae7cbbdfd94ba36e7bf2fa58a4607c6312b9de1ca2b29"
+    },
+    {
+      "approved": false,
+      "notes": [],
+      "supersededBy": "npc_lq_kuangye",
+      "priorFingerprint": "02158fd0517dd4472e08582a4bf3beab4d0251d66f07a2858787cb349416655f"
+    }
+  ],
+  "foundationHash": "159326c32f416a9ad9592fb587a86dd54959ebbf19d721ee592da3592e48fcb9"
 }
