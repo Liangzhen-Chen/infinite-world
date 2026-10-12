@@ -259,22 +259,19 @@ test('独立新背景与正式来源相容，原候选记忆及私密知情范�
  assert.ok(qilu.risks.some(r=>r.id==='npc_wt_qilu'&&r.reason.includes('不能把旧秘密')));
 });
 
-test('T07离线重开沿旧proof与钉死出处保存18人队列，不重审12有效passed',async()=>{
- const {check}=await import('../world/drafts/w1/wt-depth/reopen/prepare-offline.mjs'),report=await check();
+test('T07实际record基准经官方prepare后须原样复用12有效passed完整指纹',async()=>{
+ const {officialCheck}=await import('../world/drafts/w1/wt-depth/reopen/prepare-complete.mjs'),report=await officialCheck();
  const root=new URL('../world/drafts/w1/wt-depth/reopen/',import.meta.url),read=async file=>JSON.parse(await fs.readFile(new URL(file,root),'utf8'));
  const recorded=await read('offline-report.json'),plan=await read('controlled-plan.json');
- assert.equal(report.authorizationId,'user-reopen-20261012-01');assert.equal(report.authorizationHash,recorded.authorizationHash);
- assert.equal(report.pendingIds.length,18);assert.equal(report.pendingIds.filter(r=>r.controlledL2Unreviewed).length,17);
- assert.equal(report.pendingIds.filter(r=>r.state==='failed-latest-L2').length,1);
- assert.equal(report.pendingIds.filter(r=>r.state==='historical-failed-unreviewed-controlled-L2').length,5);
- assert.equal(report.pendingIds.filter(r=>r.state==='L4-invalidated-unreviewed-controlled-L2').length,12);
- assert.equal(report.preservedPassedIds.length,12);
- assert.ok(report.preservedPassedIds.every(id=>!plan.authorized.some(a=>a.id===id)));
- assert.deepEqual(report.L1Errors,[]);assert.deepEqual(report.targetedAuditIssues,[]);assert.deepEqual(report.structuralErrors,[]);
- assert.equal(report.events.length,7);assert.ok(report.events.every(e=>e.closed&&e.authorSourceUnreviewed));
- assert.equal(report.modelCalls,0);assert.equal(report.newSpendYuan,0);assert.equal(report.budgetWrites,0);assert.equal(report.formalWrites,0);
- assert.equal(report.realL2,false);assert.equal(report.realL4,false);assert.match(recorded.guard,/换行凭证规划不匹配/);
- assert.equal(plan.attemptLimit,2);assert.equal(report.budgetHistory.spentYuan,2.76263016);assert.equal(report.budgetHistory.maxRemainingYuan,1.73736984);
+ assert.equal(report.authorizationId,'user-reopen-20261012-01');assert.equal(plan.authorized.length,18);
+ assert.equal(plan.authorized.filter(r=>r.controlledL2Unreviewed).length,17);
+ assert.equal(plan.authorized.filter(r=>r.state==='failed-latest-L2').length,1);
+ assert.equal(plan.authorized.filter(r=>r.state==='historical-failed-unreviewed-controlled-L2').length,5);
+ assert.equal(plan.authorized.filter(r=>r.state==='L4-invalidated-unreviewed-controlled-L2').length,12);
+ assert.equal(report.protectedIds.length,12);assert.ok(report.protectedIds.every(id=>!plan.authorized.some(a=>a.id===id)));
+ assert.deepEqual(report.L1Errors,[]);assert.deepEqual(report.issues,[]);
+ assert.equal(report.modelCalls,0);assert.equal(report.budgetWrites,0);
+ assert.equal(report.realL2,false);assert.equal(report.realL4,false);assert.equal(plan.attemptLimit,2);
 });
 
 test('湛鸥只修七个真实hard，家属不自动转告，未同意的步骤保持pending',async()=>{
@@ -310,8 +307,28 @@ test('未说出口的原关切不能变成已提出，向菲天黑前回村及�
  assert.throws(()=>validateAuthoredBackground(forged,next,world),/原字段出处hash过期/);
 });
 
-test('T49未合入时继承原T07换行凭证仍拒绝新规划，不移除冻结守卫',async()=>{
+test('未提供显式重开授权时原T07 proof仍拒绝新规划，不移除冻结守卫',async()=>{
  const root=fileURLToPath(new URL('../world/drafts/w1/wt-depth/',import.meta.url)),here=path.join(root,'reopen');
  const plan=JSON.parse(await fs.readFile(path.join(here,'controlled-plan.json'),'utf8'));
- await assert.rejects(()=>prepareDepthRevision({root:path.join(root,'sourced'),worldRoot:path.resolve('world'),cardId:'T07',design:path.join(here,'design.mjs'),controlledRevision:path.join(here,'controlled-plan.json'),authorizationHash:hashContent(plan),authoredBackground:path.join(here,'authored-background.json'),sourceCheckoutEvidence:path.join(root,'controlled/source-checkout-evidence.json')}),/换行凭证规划不匹配/);
+ await assert.rejects(()=>prepareDepthRevision({root:path.join(root,'sourced'),worldRoot:path.resolve('world'),cardId:'T07',design:path.join(here,'design.mjs'),controlledRevision:path.join(here,'controlled-plan.json'),authorizationHash:hashContent(plan),authoredBackground:path.join(here,'authored-background.json'),sourceCheckoutEvidence:path.join(root,'controlled/source-checkout-evidence.json')}),/本次规划已冻结/);
+});
+
+test('18实际draft基准与42授权after逐值匹配，12未授权基准重放父proof',async()=>{
+ const {completeOptions}=await import('../world/drafts/w1/wt-depth/reopen/prepare-complete.mjs'),options=await completeOptions();
+ const prepared=await prepareDepthRevision(options),root=new URL('../world/drafts/w1/wt-depth/',import.meta.url),read=async file=>JSON.parse(await fs.readFile(new URL(file,root),'utf8'));
+ const [records,diff,basis,foundation,proof]=await Promise.all(['reopen/old-records.json','reopen/patch-diff.json','reopen/basis-rows.json','sourced/foundation.json','sourced/incremental-proof.json'].map(read));
+ assert.equal(records.length,18);assert.equal(diff.length,42);assert.equal(prepared.revision.changes.length,42);
+ for(const change of diff){const old=records.find(r=>r.id===change.id).draft.patches.find(p=>p.path===change.path).value;assert.deepEqual(change.before,old);assert.equal(hashContent(old),change.beforeHash);assert.deepEqual(prepared.entries.find(e=>e.id===change.id).patches.find(p=>p.path===change.path).value,change.after);}
+ for(const record of records){const row=basis.find(e=>e.id===record.id);assert.deepEqual(row.patches,record.draft.patches);const entry=prepared.entries.find(e=>e.id===record.id);for(const patch of record.draft.patches)if(!diff.some(c=>c.id===record.id&&c.path===patch.path))assert.deepEqual(entry.patches.find(p=>p.path===patch.path).value,patch.value);}
+ const replay=foundation.entries.map(({context,facts,contract,...row})=>structuredClone(row));for(const c of proof.changes)replay.find(e=>e.id===c.id).patches.find(p=>p.path===c.path).value=c.after;
+ const preserved=basis.filter(e=>!records.some(r=>r.id===e.id));assert.equal(preserved.length,12);for(const row of preserved)assert.deepEqual(row,replay.find(e=>e.id===row.id));
+ const background=await read('reopen/authored-background.json'),oldBackground=await read('authored-background.json'),changedEvent=background.events.find(e=>hashContent(e)!==hashContent(oldBackground.events.find(old=>old.id===e.id)));
+ assert.equal(background.events.filter(e=>hashContent(e)!==hashContent(oldBackground.events.find(old=>old.id===e.id))).length,1);
+ assert.deepEqual(prepared.entries.filter(e=>e.authoredBackground.sourceHash===hashContent(background)).map(e=>e.id).sort(),[...changedEvent.actors].sort());
+ for(const entry of prepared.entries){
+  const context=prepared.contexts.get(entry.id),expected=changedEvent.actors.includes(entry.id)?background:oldBackground;
+  assert.equal(entry.authoredBackground.sourceHash,hashContent(expected));assert.equal(context.authoredBackground.sourceHash,hashContent(expected));
+  for(const event of context.authoredBackground.events){const {originalSources,privateRisks,...sourceEvent}=event;assert.deepEqual(sourceEvent,expected.events.find(e=>e.id===event.id));}
+  for(const patch of entry.patches)assert.deepEqual(context.revisions.find(r=>r.path===patch.path).after,patch.value);
+ }
 });

@@ -8,7 +8,7 @@ import {DeepSeekClient} from './deepseek-client.mjs';
 import {runContentPipeline,hashContent} from './content-pipeline.mjs';
 import {migrateDepthBudget,validateReopenAuthorization} from './content-budget.mjs';
 import {prepareFirstSourceEvidence,compactReviewRequest} from './npc-depth-source-evidence.mjs';
-import {depthBatches,depthEntries,contextFor,buildDraftRequest,buildReviewRequest,extractDraft,validateDraft,patchDraft,validatePatchResults,validateAuthoredBackground,validateControlledRevision,depthReviewClient,applyDepthDraft} from './npc-depth-content.mjs';
+import {depthBatches,depthEntries,contextFor,buildDraftRequest,buildReviewRequest,extractDraft,validateDraft,patchDraft,validatePatchResults,validateAuthoredBackground,validateControlledRevision,depthReviewClient,applyDepthDraft,authoredReviewContext} from './npc-depth-content.mjs';
 export const depthHelp='npc-depth --batch <旧批次> | --design <设计.mjs> --root <world候选目录> --prepare | --budget-root <共用预算目录> --card <T编号> [--source-evidence-map <world内逐ID索引JSON>] [--compact-request] [--recover-protocol <id,id>] [--authored-background <world内json>]\nsource-evidence-map 为 {人物id:相对索引文件的附件路径}，只追加逐字段匹配冻结原档的资料；compact-request 精简L2可重建的重复事实。card 是稳定授权编号，换目录或 revision 仍使用原编号。recover-protocol 只为指定的合同失败提供一次恢复，保留 attempts 与原错误，仍须 L1/L2/L4。新设计导出 revision, patchRows:[{id,before,baseHash,issues:[{id,field,code}],patches:[{path,value}]}]。prepare 不调用模型；正式文件由 publish-npc-depth --manifest <manifest.json> [--publish] 写入。\n --reuse-frozen-drafts 显式复用合法定稿直接完整L2，无模型draft响应；--reopen-authorization <world内JSON> --id <单id> 沿原账授权轮，后续经首ID通过使用--reopen-continue；--prepare仍零模型。\n --source-checkout-evidence <world内JSON> 仅用于原T07规划的固定LF/CRLF出处凭证；缺省保持原逐字校验，复审收据和发布重放冻结凭证路径及hash。';
 export function depthOptions(argv=process.argv.slice(2)){
  const option=name=>{const i=argv.indexOf(name);if(i<0)return undefined;if(!argv[i+1]||argv[i+1].startsWith('--'))throw Error(`缺少参数 ${name}`);return argv[i+1];};
@@ -116,7 +116,7 @@ export async function prepareDepthRevision({worldRoot=path.resolve('world'),...o
  const plan=await read(options.controlledRevision);
  if(options.cardId&&options.cardId!==plan.cardId)throw Error('规划card与原card不匹配');
  const foundation=await read(path.join(root,'foundation.json')),base=await read(path.join(root,'base.json')),candidate=await read(path.join(root,'candidate.json'));
- const config=await loadDepthConfig(options);if(config.revision!==foundation.revision)throw Error('不得换revision领取机会');const live=await loadWorld(worldRoot),world={...live,npcs:live.npcs.map(n=>base.find(b=>b.id===n.id)??n)},entryConfig=options.reopenAuthorization&&foundation.entries.some(e=>e.authoredBackground)&&options.authoredBackground?{...config,authoredBackground:await read(options.authoredBackground)}:config,entries=options.entriesOverride??depthEntries(base,entryConfig,world);
+ const config=await loadDepthConfig(options);if(config.revision!==foundation.revision)throw Error('不得换revision领取机会');const live=await loadWorld(worldRoot),world={...live,npcs:live.npcs.map(n=>base.find(b=>b.id===n.id)??n)},entries=options.entriesOverride??depthEntries(base,{...config,authoredBackground:undefined},world);
  const safeFile=relative=>{const file=path.resolve(root,relative),rel=path.relative(path.resolve(worldRoot),file);if(path.isAbsolute(rel)||rel.startsWith('..')||!/\.(json|mjs)$/i.test(file)||/secrets\.json$/i.test(file))throw Error('凭证路径须位于world且非私人文件');return file;};
  let checkout=null,sourceCheckoutEvidence=null;
  if(options.sourceCheckoutEvidence){const file=safeFile(path.relative(root,options.sourceCheckoutEvidence));assert.ok(file.endsWith('.json'),'换行凭证须为world内JSON');checkout=await read(file);sourceCheckoutEvidence={file:path.relative(root,file).replaceAll('\\','/'),hash:hashContent(checkout)};const source=plan.sourceHashes?.find(s=>s.file===checkout.sourceFile);assert.ok(source,'换行凭证不是本规划原来源');frozenT07SourceText(source,checkout.gitBlob?.text,checkout,await sourceWitnessPlan(root,plan,read,safeFile));}
@@ -132,11 +132,32 @@ export async function prepareDepthRevision({worldRoot=path.resolve('world'),...o
  }
  if(receipt&&(receipt.authorizationHash!==options.authorizationHash||receipt.planHash!==hashContent(plan)))throw Error('本次规划已冻结，不得换nonce重领');
  if(receipt&&(receipt.sourceCheckoutEvidence||sourceCheckoutEvidence))assert.deepEqual(receipt.sourceCheckoutEvidence,sourceCheckoutEvidence,'换行凭证收据路径/hash改变或缺失');
+ // Bind metadata to the actual parent before validating leaf permissions. A
+ // bundle hash changing does not invalidate entries whose events did not change.
+ for(const entry of entries){const prior=previousPrepared?.entries.find(e=>e.id===entry.id)??foundation.entries.find(e=>e.id===entry.id);if(prior.authoredBackground)entry.authoredBackground=structuredClone(prior.authoredBackground);else delete entry.authoredBackground;}
  const records=await Promise.all(foundation.entries.map(async e=>receipt?.oldRecords?.find(r=>r.id===e.id)??await read(path.join(root,e.id+'.json'))));
  const revision=validateControlledRevision(plan,{entries,foundation,records,world,candidate,base,invalidations,authorizationHash:options.authorizationHash,sourceHashes,frozenSources,reopen:reopening,previousEntries:previousPrepared?.entries});
  const background=options.authoredBackground?validateAuthoredBackground(await read(options.authoredBackground),entries,world):null;
- if(background)for(const entry of entries)if(background.events.some(e=>e.actors.includes(entry.id)))entry.authoredBackground=background;
+ if(background){
+  const parentBackground=previousPrepared?.background??foundation.entries.find(e=>e.authoredBackground)?.authoredBackground;
+  const changed=parentBackground?background.events.filter(event=>hashContent(event)!==hashContent(parentBackground.events.find(e=>e.id===event.id))):background.events;
+  if(parentBackground){
+   assert.deepEqual(background.events.map(e=>e.id),parentBackground.events.map(e=>e.id),'继承来源不得增删事件');
+   for(const event of changed){
+    const prior=parentBackground.events.find(e=>e.id===event.id);assert.deepEqual(event.actors,prior.actors,'继承来源不得改变参与者');
+    for(const id of event.actors){const permission=plan.authorized.find(a=>a.id===id),association=event.associations.find(a=>a.id===id);assert.ok(permission&&(permission.paths.includes(association.path)||permission.sourceOnly),'来源修订参与者缺授权 '+id);}
+   }
+  }
+  for(const entry of entries)if(changed.some(e=>e.actors.includes(entry.id)))entry.authoredBackground=background;
+ }
  if(receipt){if(receipt.entryHash!==hashContent(entries)||receipt.backgroundHash!==(background?.sourceHash??null))throw Error('本次新候选/出处已冻结');}
- const contexts=new Map(entries.map(entry=>{let context=previousPrepared?.contexts.get(entry.id)??contextFor(entry,world);if(plan.authorized.some(a=>a.id===entry.id))context={...context,controlledRevision:{planningId:plan.planningId,authorizationHash:options.authorizationHash,changes:revision.changes.filter(c=>c.id===entry.id)}};return[entry.id,context];}));
+ const contexts=new Map(entries.map(entry=>{
+  const parentContext=previousPrepared?.contexts.get(entry.id);let context=parentContext??contextFor(entry,world);
+  if(parentContext){
+   context={...context,revisions:context.revisions.map(r=>({...r,after:structuredClone(entry.patches.find(p=>p.path===r.path).value)}))};
+   if(entry.authoredBackground?.sourceHash!==parentContext.authoredBackground?.sourceHash){const next=authoredReviewContext(context,entry.authoredBackground,entry,world);context={...context,authoredBackground:next.authoredBackground};}
+  }
+  if(plan.authorized.some(a=>a.id===entry.id))context={...context,controlledRevision:{planningId:plan.planningId,authorizationHash:options.authorizationHash,changes:revision.changes.filter(c=>c.id===entry.id)}};return[entry.id,context];
+ }));
  return{config,entries,world,foundation,plan,records,background,contexts,receipt,revision,sourceHashes,worldRoot,reopening,previousProof,...(sourceCheckoutEvidence?{sourceCheckoutEvidence}:{})};
 }

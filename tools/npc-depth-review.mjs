@@ -6,7 +6,7 @@ import {pathToFileURL} from 'node:url';
 import {DeepSeekClient} from './deepseek-client.mjs';
 import {openContentBudget} from './content-budget.mjs';
 import {hashContent,parseModelJSON} from './content-pipeline.mjs';
-import {contextFor,buildReviewRequest,validateDraft,checkIncrementalReview,patchDraft} from './npc-depth-content.mjs';
+import {contextFor,buildReviewRequest,validateDraft,checkIncrementalReview,patchDraft,depthBackgroundSources} from './npc-depth-content.mjs';
 import {depthOptions,prepareDepth,prepareDepthRevision,loadDepthReopen,frozenDepthRecord} from './npc-depth.mjs';
 import {loadEvidence,compactReviewRequest} from './npc-depth-source-evidence.mjs';
 export {compactReviewRequest} from './npc-depth-source-evidence.mjs';
@@ -147,8 +147,9 @@ export async function recordDepthIncrementalL4(options,{prepare=prepareDepth}={}
   assert.equal(note?.draftHash,hashContent(record.draft),'新L4 draft hash不符');assert.equal(note?.reviewHash,hashContent(record.review),'新L4 review hash不符');assert.equal(note?.entryHash,hashContent(entry),'新L4 entry hash不符');
   assert.ok(typeof note.note==='string'&&note.note.trim(),'缺新L4逐叶阅读');assert.deepEqual([...(note.reviewedPaths??[])].sort(),entry.patches.map(p=>p.path).sort(),'新L4漏审修订叶子');rows.push(note);
  }
- const backgrounds=[...new Map(entries.flatMap(e=>e.authoredBackground?.events??[]).map(e=>[e.id,e])).values()],sourceHash=entries.find(e=>e.authoredBackground)?.authoredBackground.sourceHash??null;
- for(const event of backgrounds){const note=notes.backgrounds?.find(n=>n.eventId===event.id);assert.equal(note?.sourceHash,sourceHash,'缺独立出处L4或hash已过期');assert.equal(note?.eventHash,hashContent(event),'出处L4事件hash不符');assert.ok(typeof note.note==='string'&&note.note.trim(),'出处L4缺阅读');assert.deepEqual([...(note.reviewedRiskPaths??[])].sort(),event.risks.map(r=>`${r.id}.${r.field}`).sort(),'出处L4漏审秘密风险');}
- const proof={kind:'incremental-depth-L4',authorizationHash:options.authorizationHash??null,sourceHash,candidates:rows,backgrounds:notes.backgrounds??[]};
- await write(path.join(options.root,'incremental-l4.json'),proof);return{modelCalls:0,candidates:rows.map(r=>r.id),sources:backgrounds.map(e=>e.id)};
+ const backgrounds=depthBackgroundSources(entries),sourceHashes=[...new Set(backgrounds.map(b=>b.sourceHash))].sort(),sourceHash=sourceHashes.length===1?sourceHashes[0]:null;
+ assert.deepEqual((notes.backgrounds??[]).map(n=>JSON.stringify([n.eventId,n.sourceHash])).sort(),backgrounds.map(b=>JSON.stringify([b.event.id,b.sourceHash])).sort(),'出处L4缺审、重复或多余来源');
+ for(const {event,sourceHash} of backgrounds){const note=notes.backgrounds.find(n=>n.eventId===event.id&&n.sourceHash===sourceHash);assert.equal(note?.sourceHash,sourceHash,'缺独立出处L4或hash已过期');assert.equal(note?.eventHash,hashContent(event),'出处L4事件hash不符');assert.ok(typeof note.note==='string'&&note.note.trim(),'出处L4缺阅读');assert.deepEqual([...(note.reviewedRiskPaths??[])].sort(),event.risks.map(r=>`${r.id}.${r.field}`).sort(),'出处L4漏审秘密风险');}
+ const proof={kind:'incremental-depth-L4',authorizationHash:options.authorizationHash??null,sourceHash,...(sourceHashes.length>1?{sourceHashes}:{}),candidates:rows,backgrounds:notes.backgrounds??[]};
+ await write(path.join(options.root,'incremental-l4.json'),proof);return{modelCalls:0,candidates:rows.map(r=>r.id),sources:backgrounds.map(b=>b.event.id)};
 }

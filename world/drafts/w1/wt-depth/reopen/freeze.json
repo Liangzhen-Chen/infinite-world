@@ -1,7 +1,7 @@
 {
   "authorizationId": "user-reopen-20261012-01",
   "planningId": "T07-user-reopen-20261012-01-offline-1",
-  "authorizationHash": "fcf449db393f242532d7fdd8a886b57cb82f412c5b1fe2b8eca16f9bdf0eaedc",
+  "authorizationHash": "d6581c2f613dfa44bcd904b650c1d62fa779a36973b94e1d02cbe39f9604aa07",
   "originalFiles": [
     {
       "file": "author-review.json",
@@ -648,5 +648,8 @@
       "recordHash": "b2e035bac1d4465eff31c24bc6fdaa243bfb6a9e7b5be1637efe3b9c321a0e2d"
     }
   ],
-  "recordedAt": "2026-10-12T12:01:07.715Z"
+  "recordedAt": "2026-10-12T12:01:07.715Z",
+  "proposalAuthorizationHash": "fcf449db393f242532d7fdd8a886b57cb82f412c5b1fe2b8eca16f9bdf0eaedc",
+  "basisRowsHash": "612b5301f11afb2c1ff9d1c69d4db8480e5b85fab6f5ba4e1018cec33d92c1d2",
+  "basis": "18 frozen record drafts and 12 parent-proof replay entries"
 }
