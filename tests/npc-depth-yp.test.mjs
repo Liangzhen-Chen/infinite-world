@@ -8,6 +8,9 @@ import {depthEntries,validatePatchResults,verifyUnchanged,getPath,contextFor} fr
 import {hashContent} from '../tools/content-pipeline.mjs';
 import * as design from '../world/design/w1-yp-depth-rest.mjs';
 const world=await loadWorld(),base=design.patchRows.map(r=>r.before),entries=depthEntries(base,design,world),merged=validatePatchResults(entries,world);
+const draftRoot=new URL('../world/drafts/w1/yp-depth-rest/',import.meta.url),readFile=async f=>JSON.parse(await fs.readFile(new URL(f,draftRoot))),optional=async f=>{try{return await readFile(f);}catch(error){if(error.code==='ENOENT')return null;throw error;}};
+const realProof=await optional('incremental-proof.json'),priorPublication=await optional('reopen/prior-publication-state.json');
+const readHistory=async f=>{if(realProof&&/^npc_yp_.*\.json$/.test(f)){const old=realProof.oldRecords.find(r=>r.id===f.slice(0,-5));if(old)return old;}if(priorPublication?.files[f])return JSON.parse(priorPublication.files[f].raw);return readFile(f);};
 test('榆坡既有30人合并视图逐字段过独立深度门槛，其他村审计不变',()=>{
  assert.equal(entries.length,30);assert.equal(merged.npcs.filter(n=>n.id.startsWith('npc_yp_')).length,30);
  for(const validate of [auditNpcDepth,validateNpcDepth])assert.deepEqual(validate(merged).issues.filter(i=>i.id.startsWith('npc_yp_')),[]);
@@ -32,26 +35,26 @@ test('L2引用上下文覆盖全部新叶子，地方当事人与作者小批有
 
 
 test('授权重绑定可由真实旧失败恢复原批哈希，最终汤桓修订仅一叶',async()=>{
- const root=new URL('../world/drafts/w1/yp-depth-rest/',import.meta.url),read=async f=>JSON.parse(await fs.readFile(new URL(f,root))),evidence=await read('content-revision-1-evidence.json'),rebound=await read('authorized-rebind-evidence.json');
+ const read=readHistory,evidence=await read('content-revision-1-evidence.json'),rebound=await read('authorized-rebind-evidence.json');
  for(const snapshot of rebound.snapshots){const records=await Promise.all(snapshot.batch.ids.map(id=>read(id+'.json')));const prior=records.map(r=>evidence.priorFailedRecords[r.id]??r);assert.equal(hashContent(prior.map(({id,draft,review,status})=>({id,draft,review,status}))),snapshot.batch.fingerprint);}
  const final=await read('final-tanghuan-revision-evidence.json');assert.equal(final.change.path,'knowledge.unknown[0]');assert.equal(final.preserved.length,29);assert.ok(final.sharedMemoryBothSidesUnchanged);assert.equal(final.budgetWrites,0);assert.equal(final.modelCalls,0);
  for(const row of final.preserved){const record=await read(row.id+'.json'),entry=entries.find(e=>e.id===row.id);assert.equal(row.recordHash,hashContent(record));assert.equal(row.entryHash,hashContent(entry));assert.equal(row.contextHash,hashContent(contextFor(entry,world)));}
  for(const file of ['kongfu-final-source-evidence.json','tanghuan-final-source-evidence.json']){const source=await read(file);for(const row of source.sourceRecords){const original=[...world.npcs,...world.residents].find(n=>n.id===row.id);for(const [k,value]of Object.entries(row))assert.deepEqual(value,original[k]);}}
 });
 
-test('真实29人L2和L4哈希保留，汤桓硬错所在批拒绝整卡发布',async()=>{
- const root=new URL('../world/drafts/w1/yp-depth-rest/',import.meta.url),read=async f=>JSON.parse(await fs.readFile(new URL(f,root))),summary=await read('summary.json'),notes=await read('human-notes.json');assert.equal(summary.passed,29);assert.equal(summary.manual,1);assert.equal(summary.pending,0);assert.equal(notes.length,29);
+test('原轮29人L2/L4及汤桓真实hard完整保留，旧候选不能沿新批审批绕过',async()=>{
+ const root=draftRoot,read=readHistory,summary=await read('summary.json'),notes=await read('human-notes.json');assert.equal(summary.passed,29);assert.equal(summary.manual,1);assert.equal(summary.pending,0);assert.equal(notes.length,29);
  for(const n of notes){const record=await read(n.id+'.json');assert.equal(record.status,'passed');assert.deepEqual(record.errors,[]);assert.equal(n.draftHash,hashContent(record.draft));assert.equal(n.reviewHash,hashContent(record.review));}
  assert.ok(summary.batches[0].l4.approved);assert.equal(summary.batches[0].l4.notes.length,25);assert.equal(summary.batches[1].l4.approved,false);assert.equal(summary.batches[1].l4.notes.length,4);
  const failed=await read('npc_yp_tanghuan.json');assert.equal(failed.status,'manual');assert.equal(failed.attempts,3);assert.equal(failed.reviewRecovery.status,'failed');assert.ok(failed.errors.some(e=>e.field==='memorySeeds[2]'));assert.equal(failed.reviewRecovery.response.choices[0].finish_reason,'stop');
- const {readApprovedContent}=await import('../tools/content-pipeline.mjs');await assert.rejects(readApprovedContent(root.pathname.replace(/^\/(\w:)/,'$1'),entries,{contextFor:e=>contextFor(e,world),revision:design.revision}),/尚未完成 L4/);
+ const {readApprovedContent}=await import('../tools/content-pipeline.mjs');await assert.rejects(readApprovedContent(root.pathname.replace(/^\/(\w:)/,'$1'),entries,{contextFor:e=>contextFor(e,world),revision:design.revision}),realProof?/发布骨架或引用事实已改变/:/尚未完成 L4/);
 });
 
 test('新授权离线双人修订冻结原record/原源/旧proof，所有历史文件逐字保留',async()=>{
  const {check}=await import('../world/drafts/w1/yp-depth-rest/reopen/prepare-offline.mjs'),report=await check();
  assert.equal(report.authorizationId,'user-reopen-20261012-01');assert.equal(report.planningId,'T06-user-reopen-20261012-01-offline-1');
  assert.equal(report.preservedIds.length,28);assert.equal(report.modelCalls,0);assert.equal(report.budgetWrites,0);assert.equal(report.formalWrites,0);
- assert.equal(report.realL2,false);assert.equal(report.realL4,false);assert.deepEqual(report.L1Errors,[]);assert.deepEqual(report.targetedAuditIssues,[]);
+ assert.equal(report.realL2,!!realProof);assert.equal(report.realL4,!!realProof);assert.deepEqual(report.L1Errors,[]);assert.deepEqual(report.targetedAuditIssues,[]);
  const recorded=JSON.parse(await fs.readFile(new URL('../world/drafts/w1/yp-depth-rest/reopen/offline-report.json',import.meta.url)));
  assert.equal(recorded.authorizationHash,report.authorizationHash);assert.equal(recorded.guard,'T06继续冻结');assert.deepEqual(recorded.changedPaths,report.changedPaths);
 });
@@ -67,10 +70,23 @@ test('受控新候选只改双方共享事件及裘砚实际关联叶，正确�
  const view=validatePatchResults(next,world);assert.deepEqual(auditNpcDepth(view).issues.filter(i=>i.id.startsWith('npc_yp_')),[]);assert.ok(auditNpcDepth(view).legacyTraits.ok);
 });
 
-test('旧裘砚L2只对应旧事件，新候选未获批准且单侧漏改仍拒绝结构合并',async()=>{
+test('旧裘砚L2只对应旧事件，缺受控上下文及单侧漏改仍拒绝新候选',async()=>{
  const reopened=await import('../world/drafts/w1/yp-depth-rest/reopen/design.mjs'),next=depthEntries(base,reopened,world),root=new URL('../world/drafts/w1/yp-depth-rest/',import.meta.url),read=async f=>JSON.parse(await fs.readFile(new URL(f,root)));
- const old=await read('npc_yp_qiuyan.json'),newEntry=next.find(e=>e.id===old.id);assert.equal(old.status,'passed');assert.notEqual(old.fingerprint,hashContent({entry:newEntry,context:contextFor(newEntry,world),revision:reopened.revision}));
+ const old=await readHistory('npc_yp_qiuyan.json'),newEntry=next.find(e=>e.id===old.id);assert.equal(old.status,'passed');assert.notEqual(old.fingerprint,hashContent({entry:newEntry,context:contextFor(newEntry,world),revision:reopened.revision}));
  const {readApprovedContent}=await import('../tools/content-pipeline.mjs');await assert.rejects(readApprovedContent(root.pathname.replace(/^\/(\w:)/,'$1'),next,{contextFor:e=>contextFor(e,world),revision:reopened.revision}),/发布骨架或引用事实已改变|尚未完成 L4/);
  const oneSided=next.map(e=>e.id==='npc_yp_qiuyan'?entries.find(old=>old.id===e.id):e);assert.throws(()=>validatePatchResults(oneSided,world),/npc_yp_qiuyan\/memorySeeds\[2\]\/memory-shared/);
  const invalidations=await read('reopen/l4-invalidations.json');assert.deepEqual(invalidations.records.map(r=>r.operativeStatus),['invalidated-by-L4','invalidated-by-L4']);assert.equal(invalidations.records.find(r=>r.id===old.id).reviewHash,hashContent(old.review));
+});
+
+test('双人完整真实L2及实际L4绑定新候选，官方整村预演闭合且正式源零写',async()=>{
+ const reopened=await import('../world/drafts/w1/yp-depth-rest/reopen/design.mjs'),next=depthEntries(base,reopened,world),plan=await readFile('reopen/controlled-plan.json'),{parseModelJSON}=await import('../tools/content-pipeline.mjs');
+ assert.ok(realProof);assert.equal(realProof.authorizationHash,hashContent(plan));assert.equal(realProof.reopenAuthorization.id,'user-reopen-20261012-01');
+ let cost=0;for(const id of ['npc_yp_tanghuan','npc_yp_qiuyan']){const record=await readFile(id+'.json'),entry=next.find(e=>e.id===id);assert.equal(record.status,'passed');assert.deepEqual(record.errors,[]);assert.equal(record.reviewRecovery.status,'passed-L1-L2');assert.deepEqual(parseModelJSON(record.reviewRecovery.response),record.review);assert.deepEqual([...record.review.reviewedPaths].sort(),entry.patches.map(p=>p.path).sort());assert.deepEqual(record.review.backgroundReviews,[]);assert.deepEqual(record.draft.patches,entry.patches);assert.deepEqual(record.reviewRecovery.prior,realProof.oldRecords.find(r=>r.id===id));assert.equal(record.reviewRecovery.request.max_tokens,1800);cost+=record.reviewRecovery.response.measurement.costUpperYuan;}
+ assert.ok(Math.abs(cost-.06993360)<1e-10);
+ const reading=await readFile('reopen/batch-1-reading.json'),batch=await readFile('batch-1.json');assert.ok(reading.readingWindowUpperBoundMs<=600000);assert.deepEqual([...new Set([...batch.flagged,...batch.sample])].sort(),[...reading.readIds].sort());assert.ok(reading.scores.mean>=4);assert.ok(reading.scores.min>=3);
+ assert.deepEqual(await fs.readFile(new URL('batch-0.json',draftRoot)),await fs.readFile(new URL('reopen/batch-0-preserved.json',draftRoot)));
+ const extra=await readFile('incremental-l4.json');assert.equal(extra.authorizationHash,hashContent(plan));for(const id of plan.authorized.map(a=>a.id)){const note=extra.candidates.find(n=>n.id===id),entry=next.find(e=>e.id===id),record=await readFile(id+'.json');assert.equal(note.entryHash,hashContent(entry));assert.equal(note.draftHash,hashContent(record.draft));assert.equal(note.reviewHash,hashContent(record.review));assert.deepEqual([...note.reviewedPaths].sort(),entry.patches.map(p=>p.path).sort());}
+ const baseline=new URL('../world/people/baseline.json',import.meta.url),before=await fs.readFile(baseline),{publishNpcDepth}=await import('../tools/publish-npc-depth.mjs'),manifest=new URL('reopen/publication-manifest.json',draftRoot).pathname.replace(/^\/(\w:)/,'$1'),preview=await publishNpcDepth({manifest});
+ assert.equal(preview.published,false);assert.deepEqual(preview.amendedNpcIds.sort(),next.map(e=>e.id).sort());assert.deepEqual(preview.selectedQuality.issues,[]);assert.equal(preview.eventClosure.length,20);assert.ok(preview.eventClosure.every(e=>e.closed));assert.deepEqual(await fs.readFile(baseline),before);
+ const batchManifest=new URL('reopen/publication-batch.json',draftRoot).pathname.replace(/^\/(\w:)/,'$1'),batchPreview=await publishNpcDepth({batchManifest});assert.equal(batchPreview.published,false);assert.deepEqual(batchPreview.amendedNpcIds.sort(),next.map(e=>e.id).sort());assert.deepEqual(batchPreview.selectedQuality.issues,[]);assert.ok(batchPreview.eventClosure.every(e=>e.closed));assert.deepEqual(await fs.readFile(baseline),before);
 });
