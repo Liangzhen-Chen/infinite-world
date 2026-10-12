@@ -17,6 +17,7 @@ function personSchema(npc){
 function request(context,maxTokens){return {max_tokens:maxTokens,thinking:{type:'disabled'},messages:[
  {role:'system',content:'为当前已登记人物规划离屏行动。逐人只使用本人的人物卡、本人近期记忆、已知配方和地点。其他人物卡中的秘密不代表本人知道。遵守价值观与禁区；不借用玩家财物；不能创造资源、承诺成功或写入事实。只建议已实现的 craft、audit_inventory、trade、share，每人 0–2 项；没有现实条件时返回空 actions。craft 只用 knownRecipes；audit_inventory 只可核清本人现有铁料或线料；trade 仅在此刻同一地点向有贸易服务者购买实际库存；share 只传本人 memories 中已有的 memoryId，conversation 必须同地，carry 必须亲自走真实路线。引擎将在开始和完成时另行核验，失败如实拒绝。必须为给定的每个人返回一项。'},
  {role:'user',content:JSON.stringify(context)}],tools:[{type:'function',function:{name:'propose_npc_actions',description:'返回有限的行动建议，由确定性引擎核验后执行',parameters:{type:'object',additionalProperties:false,required:['proposals'],properties:{proposals:{type:'array',minItems:context.people.length,maxItems:context.people.length,items:{oneOf:context.people.map(personSchema)}}}}}}],tool_choice:{type:'function',function:{name:'propose_npc_actions'}}};}
+export {request as npcPlanningRequest};
 export function validateNpcPlanResponse(response,context){
  const calls=response.choices?.[0]?.message?.tool_calls;
  if(!Array.isArray(calls)||calls.length!==1||calls[0].function?.name!=='propose_npc_actions')throw Error('模型没有返回唯一的规划工具参数');
