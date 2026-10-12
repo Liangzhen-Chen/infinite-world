@@ -1,6 +1,6 @@
 T08 当前处于作者预检和离线 prepare 阶段。L2、L4、T11 发布均未运行。
 
-`89546d6` 的原 base、audit、candidate、foundation、manifest 和离线报告继续保留在本目录。原 design 全文另存于 `offline-v1-evidence/design.mjs.txt`，完整字节 SHA-256 与 JSON 内容 hash 记在 `offline-v1-evidence/original-hashes.json`。原 manifest 是旧证据，当前 design 已修订，不能用旧 manifest 发布。
+`89546d6` 的原 base、audit、candidate、foundation、manifest 和离线报告继续保留在本目录。原 design 全文另存于 `offline-v1-evidence/design.mjs.txt`，完整字节 SHA-256 与 JSON 内容 hash 记在 `offline-v1-evidence/original-hashes.json`。字节 hash 固定原始 LF 快照；Git 将检出文件换为 CRLF 时，核验先恢复原 LF 字节，原 hash 不变。原 manifest 是旧证据，当前 design 已修订，不能用旧 manifest 发布。
 
 当前候选使用 `author-v2/`。18 处实际文字变化均在 `author-v2/author-source-checklist.json` 逐 id/path 对照原目标或正式家属 currentConcern；30 人的 384 个叶子分别记录来源类别。家属名册实际为 row[6] traits、row[7] concern，正式来源记录保留当前字段原值。
 

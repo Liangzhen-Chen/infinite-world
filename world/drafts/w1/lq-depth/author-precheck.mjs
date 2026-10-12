@@ -15,8 +15,11 @@ const roster=liquanRoster.trim().split(/\r?\n/).map(row=>row.split('|'));
 assert.ok(roster.every(row=>row.length===9),'砾泉名册列数须逐村核验');
 const archive=JSON.parse(await fs.readFile(path.join(root,'offline-v1-evidence/original-hashes.json'),'utf8'));
 for(const file of archive.files){
- const raw=await fs.readFile(path.join(root,file.path));
- assert.equal(createHash('sha256').update(raw).digest('hex'),file.sha256,'原离线证据不得覆盖：'+file.path);
+ const checkedOut=await fs.readFile(path.join(root,file.path),'utf8');
+ assert.equal(file.originalLineEnding,'LF');
+ const originalBytes=Buffer.from(checkedOut.replace(/\r\n/g,'\n'),'utf8');
+ assert.equal(originalBytes.length,file.bytes);
+ assert.equal(createHash('sha256').update(originalBytes).digest('hex'),file.sha256,'原离线证据不得覆盖：'+file.path);
 }
 const old=JSON.parse(await fs.readFile(path.join(root,'candidate.json'),'utf8'));
 const entries=depthEntries(design.patchRows.map(row=>row.before),design,world);
