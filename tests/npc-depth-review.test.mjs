@@ -14,9 +14,9 @@ const exec=promisify(execFile),read=file=>fs.readFile(file,'utf8').then(JSON.par
 const hard={quote:'旧文字',field:'notes',severity:'hard',reason:'旧事实审查失败'};
 const allocation={cardId:'T06',waveLimitYuan:20,incrementLimitYuan:2,startingSpentYuan:.94801504,startingReservedYuan:0,limitYuan:2.94801504};
 function entryFor(id){const before={id,name:'测试人物',notes:'主持人不要让玩家凭空知道另一人的秘密。',relationships:[],memorySeeds:[{id:'old',event:'旧事',knownBy:[id]}],coins:3},patches=[{path:'notes',value:'她在院内与邻人核对过桌位，仍未商定先后。'}];return{id,contract:'audit-patch-v1',before,baseHash:hashContent(before),issues:[{id,field:'notes',code:'rule-wording'}],patches,facts:{...before,notes:patches[0].value}};}
-async function fixture(t){
+async function fixture(t,{pending=false}={}){
  const dir=await fs.mkdtemp(path.join(os.tmpdir(),'npc-depth-review-'));t.after(()=>fs.rm(dir,{recursive:true,force:true}));const root=path.join(dir,'candidate'),budgetRoot=path.join(dir,'shared');await fs.mkdir(root);await fs.mkdir(budgetRoot);
- const entries=['npc_review_bad','npc_review_other'].map(entryFor),world={npcs:entries.map(e=>e.before),residents:[],locations:[],settlementProfiles:[]},config={revision:'same-review-v1'},foundation=depthFoundation(entries,world,config.revision);
+ const entries=['npc_review_bad','npc_review_other'].map(entryFor);if(pending){Object.assign(entries[0].before,{sex:'女',workplace:{location:'loc_review'},goals:{mid:[{content:'当面请物主核对',progress:0,steps:[{content:'询问何时能一起看',status:'pending'}]}]}});entries[0].facts=applyDepthDraft(entries[0].before,patchDraft(entries[0]));}const world={npcs:entries.map(e=>e.before),residents:[],locations:[],settlementProfiles:[]},config={revision:'same-review-v1'},foundation=depthFoundation(entries,world,config.revision);
  const records=entries.map((entry,i)=>({id:entry.id,fingerprint:hashContent({entry,context:contextFor(entry,world),revision:config.revision}),status:i?'passed':'manual',attempts:3,draft:patchDraft(entry),review:{contradictions:i?[]:[hard]},errors:i?[]:[hard],warnings:[],feedback:i?null:[hard],measurements:[{costUpperYuan:.123}]}));
  const fingerprint=hashContent(records.map(({id,draft,review,status})=>({id,draft,review,status}))),batch={index:0,fingerprint,ids:records.map(r=>r.id),count:2,passed:1,manual:[records[0].id],pending:[],flagged:[],sample:[records[1].id],needsSystemicRepair:true,l4:{approved:false,notes:[{id:records[1].id,note:'原阅读证据'}]}};
  const ledger=migrateDepthBudget({spentYuan:1.10760808,reservedYuan:.083736,limitYuan:2.94801504,origin:'mixed-history'},'T06',allocation);ledger.cards.T07={limitYuan:3,spentYuan:0,reservedYuan:0};ledger.requests.unrelated={card:'T07',status:'settled',costUpperYuan:0};
@@ -92,4 +92,10 @@ test('来源结构、伪造源字段及不可重建冗余均拒绝，附件按UT
  const ledger=structuredClone(p.ledger);ledger.cards.T06.spentYuan=2-.083736-.09774424;ledger.spentYuan=ledger.historicalUnallocatedSpentYuan+ledger.cards.T06.spentYuan;await p.write(path.join(p.budgetRoot,'budget.json'),ledger);
  delete p.client.estimateCostYuan;p.client.rates={miss:2,hit:.04,output:8};const result=await runDepthReview({...p.options,sourceEvidence:file,compactRequest:true},p.dependencies);assert.equal(result.status,'manual');assert.equal(p.calls.length,0);near(result.budgetAfter.cards.T06.spentYuan,ledger.cards.T06.spentYuan);near(result.budgetAfter.reservedYuan,.083736);assert.deepEqual(result.budgetAfter.requests,ledger.requests);
  const record=await read(path.join(p.root,p.options.id+'.json'));assert.match(record.reviewRecovery.error,/费用上限/);assert.equal(record.reviewRecovery.sourceEvidence.contentHash,hashContent(data));
+});
+// No candidate rewrite is required to give a future question its old goal context.
+test('未知询问与pending步骤不升为已经获授权；审核来源附件包含真实目标但不公开秘密',async t=>{
+ const p=await fixture(t,{pending:true});
+ const sourceEvidence=path.join(p.dir,'pending-sources.json'),data={sourceRecords:[{id:p.options.id,name:p.world.npcs[0].name,sex:'女',workplace:p.world.npcs[0].workplace,goals:p.world.npcs[0].goals}],reviewBoundary:'询问何时能看是未定同意，pending步骤尚未发生；不能因此完成原目标或扩大任何秘密knownBy。'};await p.write(sourceEvidence,data);await runDepthReview({...p.options,sourceEvidence},p.dependencies);
+ assert.equal(p.calls.length,1);assert.deepEqual(JSON.parse(p.calls[0].body.messages.at(-1).content),data);assert.equal(data.sourceRecords[0].goals.mid[0].progress,0);assert.equal(data.sourceRecords[0].goals.mid[0].steps[0].status,'pending');
 });
