@@ -18,11 +18,15 @@ async function frozenWorldFixture(t){
  const temporary=await fs.mkdtemp(path.join(os.tmpdir(),'t06-before-world-')),worldRoot=path.join(temporary,'world'),source=fileURLToPath(new URL('../world/',import.meta.url));
  assert.equal(path.dirname(path.resolve(temporary)),path.resolve(os.tmpdir()));assert.ok(path.basename(temporary).startsWith('t06-before-world-'));
  t.after(()=>fs.rm(temporary,{recursive:true,force:true}));
- for(const directory of ['meta','geo','lore','people'])await fs.cp(path.join(source,directory),path.join(worldRoot,directory),{recursive:true});
+ const frozen=await readFile('reopen/publication-source-files.json');
+ for(const [relative,file]of Object.entries(frozen.files)){
+  assert.match(relative,/^(meta|geo|lore|people)\/[^.][^]*\.json$/);assert.ok(!relative.split('/').includes('..'));
+  const destination=path.join(worldRoot,relative);await fs.mkdir(path.dirname(destination),{recursive:true});await fs.writeFile(destination,file.content);
+ }
  await fs.mkdir(path.join(worldRoot,'design'),{recursive:true});
  for(const file of ['w1-yp-depth-rest.mjs','w1-reopen-authorization.json'])await fs.copyFile(path.join(source,'design',file),path.join(worldRoot,'design',file));
  const root=path.join(worldRoot,'drafts/w1/yp-depth-rest');await fs.cp(fileURLToPath(draftRoot),root,{recursive:true});
- const baseline=path.join(worldRoot,'people/baseline.json');await fs.writeFile(baseline,JSON.stringify(world.npcs,null,2)+'\n');
+ const baseline=path.join(worldRoot,'people/baseline.json');
  const plan=await readFile('reopen/publication-batch.json');assert.equal(hashContent(await loadWorld(worldRoot)),plan.sourceHash,'隔离before须与原发布快照一致，不改原sourceHash');
  return{worldRoot,baseline,manifest:path.join(root,'reopen/publication-manifest.json'),batchManifest:path.join(root,'reopen/publication-batch.json')};
 }
