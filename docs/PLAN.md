@@ -61,7 +61,7 @@ review-002-yp=782a49e阶段审核通过，范围限T06正式发布与c64163d修�
 
 ### T06 已完成：榆坡30人真实L1/L2/L4、T04与事件闭合及正式发布已合；28旧通过复用、双人新L2通过，L4五抽样mean4.37/min3，重发零差异，不再派工。
 
-### T07 苇汀失效条目续审【授权受控重开，当前独占模型】
+### T07 苇汀失效条目续审【公共来源继承阻碍，待T54】
 
 拥有world/design/w1-wt-depth.mjs、world/drafts/w1/wt-depth/及tests/npc-depth-wt.test.mjs。沿原controlled候选和sourced/l4-invalidations.json，逐条处理湛鸥7hard及真实L4失效；核对17未复审ID。已有12 passed只在实际失效或叶改动时重审。原源hash及钉死LF/CRLF出处凭证保留，新增修订继承旧proof，不覆盖旧规划。
 
@@ -69,21 +69,29 @@ review-002-yp=782a49e阶段审核通过，范围限T06正式发布与c64163d修�
 
 验收tests/{npc-depth-wt,npc-depth-review,npc-depth-authored-background}.test.mjs及CORE；30人L1/L2完整，失效L4重新实际阅读、逐flag+随机5及规则12评分，事件闭合/T04/预演通过后交T11，不改正式人口或正确叶。
 
-本次prepare窄修：81df67e仅离线提议基准；42叶中20项before不等于old-records真实draft，未正式通过。修reopen/design.mjs及派生检查/视图：从sourced/foundation及incremental-proof重放父链；18待审ID取reopen/old-records.json冻结draft.patches，再套批准42叶after。其余兄弟叶恢复record原值；12未经新授权ID严格等于父proof重放entry。row.before/baseHash仍是原baseline，sourceRefs不变，record不作事实源。
+2c026c6已完成真实record基准窄修，尚未合入；不再重做before/兄弟叶。只读F:/dnd-wt/T07的reopen/official-prepare-report.json及prepare-complete.mjs：官方prepare成功42 changes。T53实际重放父proof逐项比较12未授权entry，仅authoredBackground不同，context相同；恢复父凭证后全部匹配原record完整fingerprint。新背景hash从c8d3de76变为badf6e23，公共prepare把整包新凭证附至全部30人；旧背景则拒五人已授权收窄事实。失败测试为npc-depth-wt第262行，旧48/49不能写成全过。
 
-同步patch-diff/plan的before及hash、candidate-after和必要freeze/report元数据；旧报告注明提议基准。原source/foundation/baseline、旧请求/record/proof不改。保留已补previousPlanFile/previousPlanHash/previousProofHash及换行凭证，不增权限或换nonce；CLI用hashContent现算新plan，禁硬码fcf449。不得删guard或降断言。
-
-原Sol在实际原tree用官方prepareDepthRevision零调用通过，输入root=sourced、design=reopen/design.mjs、controlledRevision=reopen/controlled-plan.json、authoredBackground=reopen/authored-background.json、sourceCheckoutEvidence=controlled/source-checkout-evidence.json；reopenAuthorization=world/design/w1-reopen-authorization.json，cardId=T07，worldRoot=world，authorizationHash现算。除world路径外以上相对wt-depth；不用offline helper替代。当前原聊天已获独占模型槽，沿原账完成真实L2/L4和预演。仍失败按原两修后一次规划停止线卡住，不拆卡再领机会。
+共同缺陷定位tools/npc-depth.mjs:138–140：新entry整体换背景而context整体继承父值；T08的revisions.after因此仍为旧稿。T54只修这条派生链；原T07树只读，先集成2c026c6，再在执行树验证。L4登记器tools/npc-depth-review.mjs:150–153也只取首entry的sourceHash且按eventId去重，故必须同发布读取一起窄修；不扩展预算或审核框架。T07真实L2/L4及预演仍未完成，模型槽已释放。
 
 ### T08 砾泉最小修卡【零模型；整卡卡住】
 
 据59fca09的reopen-complete/{next-gap.txt,background-source-block.json,neighbor-request-guard-block.json,stopped-report.json}。23passed/7manual，五人背景失效，最多21闭合；余额0.28716496。鞠舒两次已尽，第三次须真正决定，增额不重置次数。
 
-拥有world/design/w1-lq-depth.mjs、world/drafts/w1/lq-depth/；T07释放后才接tools/{npc-depth,npc-depth-content}.mjs及tests/{npc-depth-lq,npc-depth-reopen}.test.mjs。沿continuation-plan父proof重放，只刷新当前entry派生revisions.after，保留原源；官方prepare/full/compact一致，先验崔帆/衡庐四叶，不跳guard。
+拥有world/design/w1-lq-depth.mjs、world/drafts/w1/lq-depth/；公共工具及对应测试交T54，本卡等待。实际neighbor-request-guard-block.json显示崔帆两叶仍携“向她解释过”，新after为“需先问她是否愿意谈”；衡庐另两叶同类。用neighbor-repair-plan.json继承continuation-plan父proof及neighbor-repair-proposed-diff.json四叶，在临时副本重放；只刷新派生after，原来源保留。
 
 共享源仅另存memory_lq_depth_readback修订：narrative、designedFacts[2]、sourceRefs[12,13].publicSpeech、associations五份narrative/factsHash及匡叶viewpoint；五人memorySeeds[2]与knowledge.known[2]同步。依据匡叶原occupation/goals及三项risks，删“被本人回绝”，只谈本人确认原则；原秘密/旧记忆/refs哈希和参与者不改。新背景revision继承父源，foundation.revision不换；旧proof读旧背景，新元数据仅验本事件差异。
 
 现grant缺沙萝及五人完整共享叶权限，不能执行该源修订；先交精确差异，依调度串行补授权支持。其余仅七manual的hard叶；未变通过者复用。来源五人重审后才L4/闭合预演；相关及CORE，保留旧80请求与费用，禁止新nonce/重领。
+
+### T54 父来源逐entry继承【零模型；唯一公共续修】
+
+依T07的2c026c6及T08现证据。仅拥有tools/{npc-depth,npc-depth-content,npc-depth-review,publish-npc-depth}.mjs和tests/{npc-depth-wt,npc-depth-lq,npc-depth-reopen,npc-depth-authored-background,npc-depth-review}.test.mjs必要改动。
+
+沿父proof逐entry继承：未受影响者保持旧entry/context；实际授权修订影响的事件参与者才绑定继承父source的新凭证，缺权限即拒。当前patch派生revisions.after，冻结来源不重算。L4登记/发布按eventId+sourceHash重放，旧proof仍读旧源，保留单源兼容；不能拿旧hash标新事实或忽略背景比较。
+
+验收实际T07官方prepare42 changes及12完整fingerprint逐项恒等，L1/T04和原record不变；实际T08父proof加崔帆/衡庐四叶，full/compact当前after一致。实证入口见两卡，夹具只在临时副本派生；新旧L4登记/发布重放及篡改拒绝必须一致，未审仍拒；相关测试+CORE，不交mock替代实证。
+
+原hash/出处/历史审核/预算nonce保留，不改正文、授权JSON或预算；T08新增source仍缺授权，不执行。T09全30直接L2与T52另文件并行，T54不占模型槽。失败标卡住，不拆卡重领；不发布。
 
 ### T09 桑坂逐ID首审【授权增额，T07释放模型后】
 

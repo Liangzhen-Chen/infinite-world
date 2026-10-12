@@ -22,6 +22,7 @@ import {enforceLegalRestriction,advanceLaw,lawView}from'./law.mjs';
 import {localWeather,weatherEdge,cropProduction}from'./weather.mjs';
 import {initializeAgriculture}from'./agriculture-migration.mjs';
 import {advanceAgriculture,agricultureView,settleAgricultureExpiry}from'./agriculture.mjs';
+import {advanceSettlementTrade,nextSettlementTradeMinute,regionalTradePrice}from'./settlement-trade.mjs';
 import {advanceWildlife,wildlifePriceFactor}from'./wildlife.mjs';
 import {advanceBosses}from'./bosses.mjs';
 import {sceneCard}from'./scene-card.mjs';
@@ -189,7 +190,7 @@ export class WorldEngine {
         const quantity=number(args.quantity,1,100000,'数量'), catalog=this.byId.get(item);
         const quoteKey=`${Math.floor(d.get('state','minute')/1440)}_${seller}_${buyer}_${item}`;
         const existing=d.get('state','quotes',quoteKey);
-        const quoteBase=Math.ceil(catalog.basePrice*wildlifePriceFactor(this,d.document,item,playerLocation));
+        const quoteBase=Math.ceil(regionalTradePrice(d,this,item,playerLocation)*wildlifePriceFactor(this,d.document,item,playerLocation));
         const price=existing ?? number(args.unitPrice ?? quoteBase,Math.ceil(quoteBase*0.8),Math.ceil(quoteBase*1.5),'单价');
         const cost=quantity*price;
         if(this.quantity(d,seller,item)<quantity) throw new Error(`对方库存不足：${catalog.name}只剩${this.quantity(d,seller,item)}`);
@@ -202,12 +203,13 @@ export class WorldEngine {
         minutes=number(minutes,0,43200,'耗时');
         if(['trade','learn','practice','profession','craft','repair','research','cast','pet','summon','environment','farm','wildlife'].includes(this.npcObligationAction?.tool))assertNpcObligationAction(d,this,['player'],{minutes});
         const end=d.get('state','minute')+minutes;
-        if(!this.world.npcs.some(n=>n.tier==='full')&&!Object.values(d.get('state','effects')??{}).some(e=>e.kind==='area'))return this.advanceInterval(d,minutes,id);
+        advanceSettlementTrade(d,this,d.get('state','minute'));
+        if(!this.rules.settlementTrade&&!this.world.npcs.some(n=>n.tier==='full')&&!Object.values(d.get('state','effects')??{}).some(e=>e.kind==='area'))return this.advanceInterval(d,minutes,id);
         if(!minutes)return this.advanceInterval(d,0,id);
         const patchStart=d.patches.length,npcsBefore=d.get('state','npcs');
         while(d.get('state','minute')<end){
             const now=d.get('state','minute'),state=d.get('state');
-            const next=Math.min(end,(Math.floor(now/1440)+1)*1440,nextNpcCognitionMinute(state,now),nextNpcAutonomyMinute(state,now),nextNpcObligationMinute(state,now),nextMagicAreaMinute(state,now));
+            const next=Math.min(end,(Math.floor(now/1440)+1)*1440,nextSettlementTradeMinute(state,this,now),nextNpcCognitionMinute(state,now),nextNpcAutonomyMinute(state,now),nextNpcObligationMinute(state,now),nextMagicAreaMinute(state,now));
             this.advanceInterval(d,next-now,id);
         }
         // Intermediate clock boundaries matter to simulation, not to replay.
@@ -238,6 +240,7 @@ export class WorldEngine {
         }
         advancePets(d,this,after);
         settleAgricultureExpiry(d,this);
+        advanceSettlementTrade(d,this,after);
         if(days)for(const [key,project]of Object.entries(d.get('state','projects')))if(project.type==='工程'&&project.status==='施工中'){
             const remainingDays=Math.max(0,project.remainingDays-days);d.set(['state','projects',key],{...project,remainingDays,status:remainingDays?'施工中':'已完成'});
             if(!remainingDays&&project.creator==='player')milestone(d,this,'publicContribution',key,id);
