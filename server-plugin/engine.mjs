@@ -5,7 +5,7 @@ import {activities}from'./activities.mjs';
 import {WorldEngine as Phase1Engine}from'./compat/v2-phase1-engine.mjs';
 import {learn}from'./learning.mjs';
 import {prepareMagic,applyMagic}from'./magic.mjs';
-import {settleMagicAreas,nextMagicAreaMinute,prepareAreaMagic,applyAreaMagic}from'./magic-area.mjs';
+import {settleMagicAreas,nextMagicAreaMinute,prepareAreaMagic,applyAreaMagic,areaTargetFacts}from'./magic-area.mjs';
 import {advanceMagicObjects}from'./magic-object.mjs';
 import{targetFacts,statusContext}from'./magic-context.mjs';
 import {profession,effectiveProficiency}from'./professions.mjs';
@@ -246,8 +246,9 @@ export class WorldEngine {
             advanceNpcCognition(d,this,before,after,id,{beforeState});
             advanceNpcAutonomy(d,this,before,after,id,{beforeState});
         }
-        for(const[npc,actor]of Object.entries(d.get('state','npcs')??{}))if(beforeState.npcs?.[npc]?.location!==actor.location||actor.scheduleTravel||actor.cognitionTravel){
-            const key=`local_actor_position:${npc}`;if(d.get('state','records',key))d.remove(['state','records',key]);
+        for(const[key,row]of Object.entries(d.get('state','records')??{}))if(key.startsWith('local_actor_position:')){
+            const actor=d.get('state',row.subject?.startsWith('npc_')?'npcs':'creatures',row.subject);
+            if(!actor||actor.location!==row.location||actor.scheduleTravel||actor.cognitionTravel||actor.status==='死亡'||row.expires<=after)d.remove(['state','records',key]);
         }
         advanceMagicObjects(d,this,after);
         settleMagicAreas(d,this);
@@ -328,9 +329,13 @@ export class WorldEngine {
         if(d.get('state','player','coins')<route.cost)throw new Error('路费不足');
         d.set(['state','player','coins'],d.get('state','player','coins')-route.cost);
         d.set(['state','location'],destination);
+        if(d.get('state','records','local_player_position'))d.remove(['state','records','local_player_position']);
         const discovered=Boolean(d.get('state','discoveries',destination));
         d.set(['state','discoveries',destination],{minute:d.get('state','minute')+route.minutes,source:'亲历'});
-        for(const npc of d.get('state','player','companions'))d.set(['state','npcs',npc,'location'],destination);
+        for(const npc of d.get('state','player','companions')){
+            d.set(['state','npcs',npc,'location'],destination);
+            if(d.get('state','records',`local_actor_position:${npc}`))d.remove(['state','records',`local_actor_position:${npc}`]);
+        }
         movePets(d,this,old,destination,route.movingMinutes);
         for(const[key,effect]of Object.entries(d.get('state','effects')))if(effect.kind==='summon'&&effect.owner==='player'&&effect.location===old)d.set(['state','effects',key,'location'],destination);
         this.npcObligationAction.arrivalMinute=d.get('state','minute')+route.minutes;
@@ -378,7 +383,9 @@ export class WorldEngine {
         if(d.get('state','player','mount'))d.remove(['state','player','mount']);
     }
     revive(d,args,id) {
-        return revivePlayer.call(this,d,args,id);
+        const result=revivePlayer.call(this,d,args,id);
+        if(d.get('state','records','local_player_position'))d.remove(['state','records','local_player_position']);
+        return result;
     }
     revival(d,args,id){
         return registerRevival.call(this,d,args,id);
@@ -418,6 +425,7 @@ export class WorldEngine {
         return applyAreaMagic.call(this,d,prepareAreaMagic.call(this,d,catalog,args,{source}),id);
     }
     magicTargetFacts(d,target){return targetFacts(d,this,target);}
+    magicAreaTargetFacts(d,target,location,center){return areaTargetFacts(d,this,target,location,center);}
     magicStatusContext(d,target){return statusContext(d,this,target);}
     cast(d,args,id) {
         const spell=this.resolve(args.spell,'spell'),known=d.get('state','spells',spell),catalog=this.byId.get(spell);

@@ -1,5 +1,7 @@
 import {validateEffectSpec,resolveVitalityPrimitive}from'./magic-primitives.mjs';
 import {magicStatuses,magicStatusStats,applyMagicStatus}from'./magic-status.mjs';
+import {validateAreaCatalog}from'./magic-area.mjs';
+const areaCatalog=a=>({id:a.id,effectSpec:a.effectSpec,duration:a.duration,rangeMeters:a.effectSpec.radiusMeters,targeting:{lineOfSight:true}});
 const tactics=new Set(['armed','unarmed','defend','flee','shove','magic_fire','magic_cold','magic_wind','magic_earth','magic_light','magic_shadow','magic_mind','magic_physical','magic_untyped']);
 export function validateBossMechanics(boss){
  const m=boss.mechanics;if(!m)return[];const errors=[];
@@ -12,7 +14,11 @@ export function validateBossMechanics(boss){
  else for(const s of m.abilities){
   if(strict(s,['id','every','belowHpPercent','effectSpec','duration'])||!/^ability_[a-z0-9_]+$/.test(s.id)||!Number.isSafeInteger(s.every)||s.every<1||s.every>10||!Number.isFinite(s.belowHpPercent)||s.belowHpPercent<=0||s.belowHpPercent>100)errors.push('首领能力触发规则无效');
   errors.push(...validateEffectSpec(s.effectSpec));
-  if(!['damage','status'].includes(s.effectSpec?.kind))errors.push('本批首领反击只支持伤害或状态');
+  if(!['damage','status','area'].includes(s.effectSpec?.kind))errors.push('本批首领反击只支持伤害、状态或伤害区域');
+  if(s.effectSpec?.kind==='area'){
+   errors.push(...validateAreaCatalog(areaCatalog(s)));
+   if(s.effectSpec.effect?.kind!=='damage'||s.effectSpec.power>100||s.effectSpec.radiusMeters>10||s.duration>10)errors.push('首领区域只支持有限范围、短时伤害');
+  }
   if(s.effectSpec?.kind==='damage'&&(s.effectSpec.power>100||s.duration!==0))errors.push('首领伤害能力超过本批数值范围');
   if(s.effectSpec?.kind==='status'&&(!['fear','dazzle'].includes(s.effectSpec.status)||s.effectSpec.power>magicStatuses[s.effectSpec.status]?.maximum||!Number.isSafeInteger(s.duration)||s.duration<1||s.duration>5))errors.push('首领控制只支持短时恐惧或眩光');
  }
@@ -43,6 +49,7 @@ export function applyBossCounterAbility(d,engine,target,{eventId,attackIndex,hit
  d.set(['state','records',key],{category:'boss_counter',boss:target,count,ability:ability?.id??null});
  if(!ability)return null;
  const s=ability.effectSpec;
+ if(s.kind==='area')return{ability:ability.id,pendingArea:{catalog:areaCatalog(ability),id:`boss_ability:${eventId}:${attackIndex}`,source:target}};
  if(s.kind==='damage'){
   const p=d.get('state','player'),resistance=magicStatusStats(d,'player')[`${s.damageType}Resistance`]??0,v=resolveVitalityPrimitive({spec:s,hp:p.hp,maxHp:p.maxHp,defense,resistance});
   return{ability:ability.id,damage:v.rawAmount,damageType:s.damageType??'physical'};
