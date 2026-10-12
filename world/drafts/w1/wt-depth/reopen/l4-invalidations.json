@@ -15,7 +15,7 @@
         {
           "path": "knowledge.unknown[0]",
           "quote": "虞菡借出的旧路签究竟何时归还。",
-          "quoteBasis": "controlled/candidate-after.json",
+          "quoteBasis": "reopen/old-records.json",
           "candidateValueHash": "6ce3a172d38bf21b482765228d32a60339b228de46c9d8eb080931e18913fac0",
           "oldRecordValue": "虞菡借出的旧路签究竟何时归还。",
           "oldRecordValueHash": "6ce3a172d38bf21b482765228d32a60339b228de46c9d8eb080931e18913fac0",
@@ -53,7 +53,7 @@
         {
           "path": "knowledge.unknown[1]",
           "quote": "向祯能否与自己核对夜路和退水路的不同条件。",
-          "quoteBasis": "controlled/candidate-after.json",
+          "quoteBasis": "reopen/old-records.json",
           "candidateValueHash": "e1467c47e81c582f58048833bfbb92bbd8324c0ef0e79c66d97f7d07a3be58bd",
           "oldRecordValue": "向祯能否与自己核对夜路和退水路的不同条件。",
           "oldRecordValueHash": "e1467c47e81c582f58048833bfbb92bbd8324c0ef0e79c66d97f7d07a3be58bd",
@@ -88,7 +88,7 @@
         {
           "path": "goals.short[0].steps[0].content",
           "quote": "先向问路人指出积水段，再带他从干处看旧箭头。",
-          "quoteBasis": "controlled/candidate-after.json",
+          "quoteBasis": "reopen/old-records.json",
           "candidateValueHash": "f8e22a18d1352040203c63834ebc96f7bb991dc73c1bf64ef231f591317d2e51",
           "oldRecordValue": "先向问路人指出积水段，再带他从干处看旧箭头。",
           "oldRecordValueHash": "f8e22a18d1352040203c63834ebc96f7bb991dc73c1bf64ef231f591317d2e51",
@@ -141,7 +141,7 @@
         {
           "path": "goals.mid[0].steps[0].content",
           "quote": "白日核对只有退水可走的段落，在旧记号旁说明条件。",
-          "quoteBasis": "controlled/candidate-after.json",
+          "quoteBasis": "reopen/old-records.json",
           "candidateValueHash": "5017d79d38607d4ab731de1739dc36ea23f772de05520bc1693adc6349f2bac6",
           "oldRecordValue": "白日核对只有退水可走的段落，在旧记号旁说明条件。",
           "oldRecordValueHash": "5017d79d38607d4ab731de1739dc36ea23f772de05520bc1693adc6349f2bac6",
@@ -194,7 +194,7 @@
         {
           "path": "goals.long[0].steps[0].content",
           "quote": "请陌生来人复述绕行方向，发现误读再解释水位限制。",
-          "quoteBasis": "controlled/candidate-after.json",
+          "quoteBasis": "reopen/old-records.json",
           "candidateValueHash": "32e276608a551b2f9256ed2ecf7cd26e186e0299870a51ff0a68037ba912551f",
           "oldRecordValue": "请陌生来人复述绕行方向，发现误读再解释水位限制。",
           "oldRecordValueHash": "32e276608a551b2f9256ed2ecf7cd26e186e0299870a51ff0a68037ba912551f",
@@ -247,7 +247,7 @@
         {
           "path": "relationships[0].note",
           "quote": "湛姝是家里的女儿；父亲不解释湿路让问路者犯难，这件事还需要彼此听完再商量。",
-          "quoteBasis": "controlled/candidate-after.json",
+          "quoteBasis": "reopen/old-records.json",
           "candidateValueHash": "0f70198c4b23c7ba9586c5b97f1d183183b81e3777a4128854efdca7b1d520e0",
           "oldRecordValue": "湛姝是家里的女儿；父亲不解释湿路让问路者犯难，这件事还需要彼此听完再商量。",
           "oldRecordValueHash": "0f70198c4b23c7ba9586c5b97f1d183183b81e3777a4128854efdca7b1d520e0",
@@ -298,7 +298,7 @@
         {
           "path": "relationships[1].note",
           "quote": "虞菡是家里的配偶；旧路签被人借了未归还，这件事还需要彼此听完再商量。",
-          "quoteBasis": "controlled/candidate-after.json",
+          "quoteBasis": "reopen/old-records.json",
           "candidateValueHash": "e236262b16b802d69c14dbd27ea24560fa98f398be37a20cc56e9c52a7273899",
           "oldRecordValue": "虞菡是家里的配偶；旧路签被人借了未归还，这件事还需要彼此听完再商量。",
           "oldRecordValueHash": "e236262b16b802d69c14dbd27ea24560fa98f398be37a20cc56e9c52a7273899",
@@ -358,9 +358,9 @@
       "findings": [
         {
           "path": "relationships[0].note",
-          "quote": "支络是家里的儿子；衣服扯坏后怕母亲替自己掩饰，这件事还需要彼此听完再商量。",
-          "quoteBasis": "controlled/candidate-after.json",
-          "candidateValueHash": "25250d4e6f927d1ba5609e7c18af6ff93ff9c4e86cc52c9a80c456352599c522",
+          "quote": "支络是家里的儿子；好动/爱说笑，这件事还需要彼此听完再商量。",
+          "quoteBasis": "reopen/old-records.json",
+          "candidateValueHash": "36d6a101a0a6ebcc070f8cbc171ae5f37ed96c5f3e13a8e052d1b8f6acdca6d3",
           "oldRecordValue": "支络是家里的儿子；好动/爱说笑，这件事还需要彼此听完再商量。",
           "oldRecordValueHash": "36d6a101a0a6ebcc070f8cbc171ae5f37ed96c5f3e13a8e052d1b8f6acdca6d3",
           "reason": "原居民currentConcern包含私下想法或未说出口的顾虑；原本人关系只证明亲属身份，不证明这段内容已转告。",
@@ -409,9 +409,9 @@
         },
         {
           "path": "relationships[1].note",
-          "quote": "姚蓉是家里的母亲；女儿总替孩子辩解使她不满，这件事还需要彼此听完再商量。",
-          "quoteBasis": "controlled/candidate-after.json",
-          "candidateValueHash": "d4b1f391f88d5e78cec63955158ba98d9bcb6f03db1250053a9bbbfca00c0924",
+          "quote": "姚蓉是家里的母亲；诚恳/倔强，这件事还需要彼此听完再商量。",
+          "quoteBasis": "reopen/old-records.json",
+          "candidateValueHash": "604c1fc0daf6f33809b68126bfd8ea5770344d466b184c345a66f9997c8a5457",
           "oldRecordValue": "姚蓉是家里的母亲；诚恳/倔强，这件事还需要彼此听完再商量。",
           "oldRecordValueHash": "604c1fc0daf6f33809b68126bfd8ea5770344d466b184c345a66f9997c8a5457",
           "reason": "原居民currentConcern包含私下想法或未说出口的顾虑；原本人关系只证明亲属身份，不证明这段内容已转告。",
@@ -470,9 +470,9 @@
       "findings": [
         {
           "path": "relationships[1].note",
-          "quote": "谭瑶是家里的儿媳；想清掉旧根又怕婆母伤心，这件事还需要彼此听完再商量。",
-          "quoteBasis": "controlled/candidate-after.json",
-          "candidateValueHash": "64d0c1649650827e11a688111e1298de9547714c58795b26a4d31fe4a77ca41e",
+          "quote": "谭瑶是家里的儿媳；爱干净/怕麻烦，这件事还需要彼此听完再商量。",
+          "quoteBasis": "reopen/old-records.json",
+          "candidateValueHash": "3b5799cc45c6cfaba44e3bcfe541b27b40f56d2aee6b5347a3b43f47d4d8f1d4",
           "oldRecordValue": "谭瑶是家里的儿媳；爱干净/怕麻烦，这件事还需要彼此听完再商量。",
           "oldRecordValueHash": "3b5799cc45c6cfaba44e3bcfe541b27b40f56d2aee6b5347a3b43f47d4d8f1d4",
           "reason": "原居民currentConcern包含私下想法或未说出口的顾虑；原本人关系只证明亲属身份，不证明这段内容已转告。",
@@ -531,9 +531,9 @@
       "findings": [
         {
           "path": "relationships[0].note",
-          "quote": "雷华是家里的儿子；母亲总想多问托话人的私事，这件事还需要彼此听完再商量。",
-          "quoteBasis": "controlled/candidate-after.json",
-          "candidateValueHash": "11366c89612e71c474d06e212031fdf9a8fcabdaade4d88fc1d56d4df3cfc2ec",
+          "quote": "雷华是家里的儿子；耿直/怕生，这件事还需要彼此听完再商量。",
+          "quoteBasis": "reopen/old-records.json",
+          "candidateValueHash": "59bac508727fbc5e6aa18f16465434848825dded34ce236d7b317f23a8df3562",
           "oldRecordValue": "雷华是家里的儿子；耿直/怕生，这件事还需要彼此听完再商量。",
           "oldRecordValueHash": "59bac508727fbc5e6aa18f16465434848825dded34ce236d7b317f23a8df3562",
           "reason": "原居民currentConcern包含私下想法或未说出口的顾虑；原本人关系只证明亲属身份，不证明这段内容已转告。",
@@ -592,9 +592,9 @@
       "findings": [
         {
           "path": "relationships[0].note",
-          "quote": "倪梅是家里的配偶；丈夫留下木屑却说回来再扫，这件事还需要彼此听完再商量。",
-          "quoteBasis": "controlled/candidate-after.json",
-          "candidateValueHash": "34bb7044fe8fd33dfb46aa9d9a748c57a256ee2edad8315145ff0c3ef108b1c4",
+          "quote": "倪梅是家里的配偶；干练/暴脾气，这件事还需要彼此听完再商量。",
+          "quoteBasis": "reopen/old-records.json",
+          "candidateValueHash": "5e3a02e079bcb1b74f6c33fdb8f3a60abf3b4ec317e2cc428f173145d3dd7ab3",
           "oldRecordValue": "倪梅是家里的配偶；干练/暴脾气，这件事还需要彼此听完再商量。",
           "oldRecordValueHash": "5e3a02e079bcb1b74f6c33fdb8f3a60abf3b4ec317e2cc428f173145d3dd7ab3",
           "reason": "原居民currentConcern包含私下想法或未说出口的顾虑；原本人关系只证明亲属身份，不证明这段内容已转告。",
@@ -653,9 +653,9 @@
       "findings": [
         {
           "path": "relationships[0].note",
-          "quote": "屈荷是家里的配偶；丈夫高声责骂让邻家孩子怕他，这件事还需要彼此听完再商量。",
-          "quoteBasis": "controlled/candidate-after.json",
-          "candidateValueHash": "4049161137eafb3fa0feccafb98e6ed7f050b2dcabe65fca422324ea20bf157a",
+          "quote": "屈荷是家里的配偶；温和/谨慎，这件事还需要彼此听完再商量。",
+          "quoteBasis": "reopen/old-records.json",
+          "candidateValueHash": "dbc8bd1ed5269e9f7c0a70fdd64570af10d63a487e933babaff56d4606a1b4d1",
           "oldRecordValue": "屈荷是家里的配偶；温和/谨慎，这件事还需要彼此听完再商量。",
           "oldRecordValueHash": "dbc8bd1ed5269e9f7c0a70fdd64570af10d63a487e933babaff56d4606a1b4d1",
           "reason": "原居民currentConcern包含私下想法或未说出口的顾虑；原本人关系只证明亲属身份，不证明这段内容已转告。",
@@ -704,9 +704,9 @@
         },
         {
           "path": "relationships[1].note",
-          "quote": "屈健是家里的儿子；想换一种篱绳结却怕父亲发火，这件事还需要彼此听完再商量。",
-          "quoteBasis": "controlled/candidate-after.json",
-          "candidateValueHash": "c1c9b6464ab8cab5a8b48bd90f4254b1083a73ad87316f33ef4d22fdbdeb05fd",
+          "quote": "屈健是家里的儿子；爽快/好强，这件事还需要彼此听完再商量。",
+          "quoteBasis": "reopen/old-records.json",
+          "candidateValueHash": "9c2a44ca627682885516787f806ec0ffc9ee2f844f53ce8f3d724e718cad5157",
           "oldRecordValue": "屈健是家里的儿子；爽快/好强，这件事还需要彼此听完再商量。",
           "oldRecordValueHash": "9c2a44ca627682885516787f806ec0ffc9ee2f844f53ce8f3d724e718cad5157",
           "reason": "原居民currentConcern包含私下想法或未说出口的顾虑；原本人关系只证明亲属身份，不证明这段内容已转告。",
@@ -756,7 +756,7 @@
         {
           "path": "knowledge.unknown[0]",
           "quote": "屈健提出的新篱绳结是否容易认出松口。",
-          "quoteBasis": "controlled/candidate-after.json",
+          "quoteBasis": "reopen/old-records.json",
           "candidateValueHash": "6cef97878b2aaeab93dca3d223e1eeeb1484230269c516bf4fce8d607ec16766",
           "oldRecordValue": "屈健提出的新篱绳结是否容易认出松口。",
           "oldRecordValueHash": "6cef97878b2aaeab93dca3d223e1eeeb1484230269c516bf4fce8d607ec16766",
@@ -806,9 +806,9 @@
       "findings": [
         {
           "path": "relationships[0].note",
-          "quote": "龚妍是家里的配偶；丈夫挑轻头的事让她被邻人问起，这件事还需要彼此听完再商量。",
-          "quoteBasis": "controlled/candidate-after.json",
-          "candidateValueHash": "feda3cc5faf5606ca475b2621237bced8fea924af0952e34582754df7e660451",
+          "quote": "龚妍是家里的配偶；公道/刻薄，这件事还需要彼此听完再商量。",
+          "quoteBasis": "reopen/old-records.json",
+          "candidateValueHash": "a6455726193b1bb31bd84dd37677993a4abb69f1c1af89c48f36f020cdce0258",
           "oldRecordValue": "龚妍是家里的配偶；公道/刻薄，这件事还需要彼此听完再商量。",
           "oldRecordValueHash": "a6455726193b1bb31bd84dd37677993a4abb69f1c1af89c48f36f020cdce0258",
           "reason": "原居民currentConcern包含私下想法或未说出口的顾虑；原本人关系只证明亲属身份，不证明这段内容已转告。",
@@ -857,9 +857,9 @@
         },
         {
           "path": "relationships[1].note",
-          "quote": "龚宛是家里的女儿；大人说湿网重却不让她试抬，这件事还需要彼此听完再商量。",
-          "quoteBasis": "controlled/candidate-after.json",
-          "candidateValueHash": "8ed1a8d68fc8ec8dddfcfbf210abf3bb1118cb5e9824fcdf9b2f5031e5f378f7",
+          "quote": "龚宛是家里的女儿；安静/有耐心，这件事还需要彼此听完再商量。",
+          "quoteBasis": "reopen/old-records.json",
+          "candidateValueHash": "e57f7041503adde79817bb144e0c48135e25f71b9bfd8f3306e6302e14966b29",
           "oldRecordValue": "龚宛是家里的女儿；安静/有耐心，这件事还需要彼此听完再商量。",
           "oldRecordValueHash": "e57f7041503adde79817bb144e0c48135e25f71b9bfd8f3306e6302e14966b29",
           "reason": "原居民currentConcern包含私下想法或未说出口的顾虑；原本人关系只证明亲属身份，不证明这段内容已转告。",
@@ -909,7 +909,7 @@
         {
           "path": "knowledge.unknown[0]",
           "quote": "同伴愿不愿在下一趟搬网时按约换肩。",
-          "quoteBasis": "controlled/candidate-after.json",
+          "quoteBasis": "reopen/old-records.json",
           "candidateValueHash": "7e420b81ea095244474b694a256e6f35d199f4218c8a0be982936353011b65ba",
           "oldRecordValue": "同伴愿不愿在下一趟搬网时按约换肩。",
           "oldRecordValueHash": "7e420b81ea095244474b694a256e6f35d199f4218c8a0be982936353011b65ba",
@@ -987,7 +987,7 @@
         {
           "path": "knowledge.unknown[1]",
           "quote": "龚妍愿不愿陪自己向邻人说明下次换肩的安排。",
-          "quoteBasis": "controlled/candidate-after.json",
+          "quoteBasis": "reopen/old-records.json",
           "candidateValueHash": "8cd2ccd691c0f547145d4fc357060bb057ab4e33a539245147a08355f1f71503",
           "oldRecordValue": "龚妍愿不愿陪自己向邻人说明下次换肩的安排。",
           "oldRecordValueHash": "8cd2ccd691c0f547145d4fc357060bb057ab4e33a539245147a08355f1f71503",
@@ -1053,7 +1053,7 @@
         {
           "path": "goals.short[0].steps[0].content",
           "quote": "请同伴先指明湿重的一头，承认自己偏挑轻头的问题。",
-          "quoteBasis": "controlled/candidate-after.json",
+          "quoteBasis": "reopen/old-records.json",
           "candidateValueHash": "599305b9fee0b1ae6c0300b845385801e79d67f3b39c36b638b2b11e9bfee07a",
           "oldRecordValue": "请同伴先指明湿重的一头，承认自己偏挑轻头的问题。",
           "oldRecordValueHash": "599305b9fee0b1ae6c0300b845385801e79d67f3b39c36b638b2b11e9bfee07a",
@@ -1106,7 +1106,7 @@
         {
           "path": "goals.mid[0].steps[0].content",
           "quote": "出工前询问同伴愿意在哪个干处停下换边。",
-          "quoteBasis": "controlled/candidate-after.json",
+          "quoteBasis": "reopen/old-records.json",
           "candidateValueHash": "04e6fcc0694c777eaa009a569df744bd5edb6c687f176c753c527c6958273265",
           "oldRecordValue": "出工前询问同伴愿意在哪个干处停下换边。",
           "oldRecordValueHash": "04e6fcc0694c777eaa009a569df744bd5edb6c687f176c753c527c6958273265",
@@ -1159,7 +1159,7 @@
         {
           "path": "goals.long[0].steps[0].content",
           "quote": "每趟收工请同伴说出实际分担是否一致，别用出过力搪塞轻重。",
-          "quoteBasis": "controlled/candidate-after.json",
+          "quoteBasis": "reopen/old-records.json",
           "candidateValueHash": "eb5f3ee4b78bdfed97864022b4e6f27da919e8e4db62d27b148e151de86989aa",
           "oldRecordValue": "每趟收工请同伴说出实际分担是否一致，别用出过力搪塞轻重。",
           "oldRecordValueHash": "eb5f3ee4b78bdfed97864022b4e6f27da919e8e4db62d27b148e151de86989aa",
@@ -1221,9 +1221,9 @@
       "findings": [
         {
           "path": "relationships[0].note",
-          "quote": "景丰是家里的父亲；女儿画坏便揉纸让他心疼，这件事还需要彼此听完再商量。",
-          "quoteBasis": "controlled/candidate-after.json",
-          "candidateValueHash": "72cc242c81823b4c9e9e0ae18137d5bc6057e996b479cd9b7c018d54babf0090",
+          "quote": "景丰是家里的父亲；务实/怕浪费，这件事还需要彼此听完再商量。",
+          "quoteBasis": "reopen/old-records.json",
+          "candidateValueHash": "788cd81a22a775767bbe680398ac6c4f7a6321d53705fc5ce9cf6bde2444cfef",
           "oldRecordValue": "景丰是家里的父亲；务实/怕浪费，这件事还需要彼此听完再商量。",
           "oldRecordValueHash": "788cd81a22a775767bbe680398ac6c4f7a6321d53705fc5ce9cf6bde2444cfef",
           "reason": "原居民currentConcern包含私下想法或未说出口的顾虑；原本人关系只证明亲属身份，不证明这段内容已转告。",
@@ -1282,9 +1282,9 @@
       "findings": [
         {
           "path": "relationships[0].note",
-          "quote": "范柳是家里的女儿；父亲借收垫子留人说话误了出工，这件事还需要彼此听完再商量。",
-          "quoteBasis": "controlled/candidate-after.json",
-          "candidateValueHash": "949865ea0e26618cb7995d9cbcf3d8e809a20f199e49921cca91804479302fd6",
+          "quote": "范柳是家里的女儿；稳妥/急性子，这件事还需要彼此听完再商量。",
+          "quoteBasis": "reopen/old-records.json",
+          "candidateValueHash": "e45fd927183de0e9a79240796611df409c56875f6e3d6436fda2981b9ecdb0f1",
           "oldRecordValue": "范柳是家里的女儿；稳妥/急性子，这件事还需要彼此听完再商量。",
           "oldRecordValueHash": "e45fd927183de0e9a79240796611df409c56875f6e3d6436fda2981b9ecdb0f1",
           "reason": "原居民currentConcern包含私下想法或未说出口的顾虑；原本人关系只证明亲属身份，不证明这段内容已转告。",
@@ -1333,9 +1333,9 @@
         },
         {
           "path": "relationships[1].note",
-          "quote": "解芷是家里的外孙女；祖父旧事讲太长她不敢打断，这件事还需要彼此听完再商量。",
-          "quoteBasis": "controlled/candidate-after.json",
-          "candidateValueHash": "879497499af0f38b2127189f6644fb237bbad8f3b8ba6b581b3c4e31e8feff93",
+          "quote": "解芷是家里的外孙女；耐心/爱画，这件事还需要彼此听完再商量。",
+          "quoteBasis": "reopen/old-records.json",
+          "candidateValueHash": "67b6bd861063346f9f646b018519effd8bb8b5f1211e3e2e01fcc924b90cddbc",
           "oldRecordValue": "解芷是家里的外孙女；耐心/爱画，这件事还需要彼此听完再商量。",
           "oldRecordValueHash": "67b6bd861063346f9f646b018519effd8bb8b5f1211e3e2e01fcc924b90cddbc",
           "reason": "原居民currentConcern包含私下想法或未说出口的顾虑；原本人关系只证明亲属身份，不证明这段内容已转告。",
@@ -1394,9 +1394,9 @@
       "findings": [
         {
           "path": "relationships[0].note",
-          "quote": "单馨是家里的配偶；丈夫分垛时讲亲疏惹人不快，这件事还需要彼此听完再商量。",
-          "quoteBasis": "controlled/candidate-after.json",
-          "candidateValueHash": "e87b6644d1cf39199244709fdeaa55b93334eb73a82b118a24ad0dc152f40432",
+          "quote": "单馨是家里的配偶；利落/贪闲，这件事还需要彼此听完再商量。",
+          "quoteBasis": "reopen/old-records.json",
+          "candidateValueHash": "eacb009c83514bb518497411a9d35ed4294f6a1125f5de6b9c70e5e53f5db4a8",
           "oldRecordValue": "单馨是家里的配偶；利落/贪闲，这件事还需要彼此听完再商量。",
           "oldRecordValueHash": "eacb009c83514bb518497411a9d35ed4294f6a1125f5de6b9c70e5e53f5db4a8",
           "reason": "原居民currentConcern包含私下想法或未说出口的顾虑；原本人关系只证明亲属身份，不证明这段内容已转告。",
@@ -1455,9 +1455,9 @@
       "findings": [
         {
           "path": "relationships[0].note",
-          "quote": "董露是家里的女儿；母亲说话像报活使她紧张，这件事还需要彼此听完再商量。",
-          "quoteBasis": "controlled/candidate-after.json",
-          "candidateValueHash": "0f57b089cf7ad80507f0f3a30ec5ee56de09997093e6eb7430e5297ed6dea8ed",
+          "quote": "董露是家里的女儿；敏感/认真，这件事还需要彼此听完再商量。",
+          "quoteBasis": "reopen/old-records.json",
+          "candidateValueHash": "69d3bbdbcba3fbdcadffcadf6ba4c1169265a455a12db7f783f3ec6643430c9c",
           "oldRecordValue": "董露是家里的女儿；敏感/认真，这件事还需要彼此听完再商量。",
           "oldRecordValueHash": "69d3bbdbcba3fbdcadffcadf6ba4c1169265a455a12db7f783f3ec6643430c9c",
           "reason": "原居民currentConcern包含私下想法或未说出口的顾虑；原本人关系只证明亲属身份，不证明这段内容已转告。",
@@ -1506,9 +1506,9 @@
         },
         {
           "path": "relationships[1].note",
-          "quote": "扈惠是家里的母亲；看不懂女儿记活的缩字，这件事还需要彼此听完再商量。",
-          "quoteBasis": "controlled/candidate-after.json",
-          "candidateValueHash": "0ff8c0d1ecf3faba945ab5fe71f326ec5ded923ba152c247b0b223cbd940967d",
+          "quote": "扈惠是家里的母亲；温和/爱唠叨，这件事还需要彼此听完再商量。",
+          "quoteBasis": "reopen/old-records.json",
+          "candidateValueHash": "7b9413bc8b539aae454cae4c2376b3ad4d3bf45909c9aefb8fd002406968b0e5",
           "oldRecordValue": "扈惠是家里的母亲；温和/爱唠叨，这件事还需要彼此听完再商量。",
           "oldRecordValueHash": "7b9413bc8b539aae454cae4c2376b3ad4d3bf45909c9aefb8fd002406968b0e5",
           "reason": "原居民currentConcern包含私下想法或未说出口的顾虑；原本人关系只证明亲属身份，不证明这段内容已转告。",
@@ -1568,7 +1568,7 @@
         {
           "path": "memorySeeds[2]",
           "quote": "裴纯、宿蕙、戚鹭、花茵和向祯在岸上菜圃外的干处说过雨后劳动。裴纯讲桩根湿泥挡住裂处，宿蕙指溅到叶上的泥点，戚鹭区分听来的旧水情，花茵翻看阴处叶背，向祯说枯苇遮住更路记号。大家只核对可见处和待问处，还没解决各自的问题。",
-          "quoteBasis": "controlled/candidate-after.json",
+          "quoteBasis": "reopen/old-records.json",
           "candidateValueHash": "d6cf402960666b8205d7bf34c3831be61585be5dcfac2473d89772a18bc2c279",
           "oldRecordValue": {
             "id": "memory_wt_depth_group_6",
@@ -1618,9 +1618,9 @@
       "findings": [
         {
           "path": "relationships[0].note",
-          "quote": "宿弦是家里的母亲；女儿受了气不愿对人讲，这件事还需要彼此听完再商量。",
-          "quoteBasis": "controlled/candidate-after.json",
-          "candidateValueHash": "907949e86ac596d93d8e185724ff0a9bfcded292e53c073b6996165f53558838",
+          "quote": "宿弦是家里的母亲；沉静/强势，这件事还需要彼此听完再商量。",
+          "quoteBasis": "reopen/old-records.json",
+          "candidateValueHash": "cbc8fc901ef339b231cb2df6167629fb89a4bf721da1f2fb55a46493002a28be",
           "oldRecordValue": "宿弦是家里的母亲；沉静/强势，这件事还需要彼此听完再商量。",
           "oldRecordValueHash": "cbc8fc901ef339b231cb2df6167629fb89a4bf721da1f2fb55a46493002a28be",
           "reason": "原居民currentConcern包含私下想法或未说出口的顾虑；原本人关系只证明亲属身份，不证明这段内容已转告。",
@@ -1670,7 +1670,7 @@
         {
           "path": "memorySeeds[2]",
           "quote": "裴纯、宿蕙、戚鹭、花茵和向祯在岸上菜圃外的干处说过雨后劳动。裴纯讲桩根湿泥挡住裂处，宿蕙指溅到叶上的泥点，戚鹭区分听来的旧水情，花茵翻看阴处叶背，向祯说枯苇遮住更路记号。大家只核对可见处和待问处，还没解决各自的问题。",
-          "quoteBasis": "controlled/candidate-after.json",
+          "quoteBasis": "reopen/old-records.json",
           "candidateValueHash": "d6cf402960666b8205d7bf34c3831be61585be5dcfac2473d89772a18bc2c279",
           "oldRecordValue": {
             "id": "memory_wt_depth_group_6",
@@ -1720,9 +1720,9 @@
       "findings": [
         {
           "path": "relationships[1].note",
-          "quote": "戚梅是家里的女儿；怕孩子学祖父把听说讲成亲历，这件事还需要彼此听完再商量。",
-          "quoteBasis": "controlled/candidate-after.json",
-          "candidateValueHash": "73ebb2c58301aea9af6a1e468cc7255e909edae395c5947abb0c2bf2e08a5e7c",
+          "quote": "戚梅是家里的女儿；仔细/慢热，这件事还需要彼此听完再商量。",
+          "quoteBasis": "reopen/old-records.json",
+          "candidateValueHash": "ec553ca81673733b059e3f8df6fc0e115e5055944fdf6672d46a9f8e1070a796",
           "oldRecordValue": "戚梅是家里的女儿；仔细/慢热，这件事还需要彼此听完再商量。",
           "oldRecordValueHash": "ec553ca81673733b059e3f8df6fc0e115e5055944fdf6672d46a9f8e1070a796",
           "reason": "原居民currentConcern包含私下想法或未说出口的顾虑；原本人关系只证明亲属身份，不证明这段内容已转告。",
@@ -1772,7 +1772,7 @@
         {
           "path": "memorySeeds[2]",
           "quote": "裴纯、宿蕙、戚鹭、花茵和向祯在岸上菜圃外的干处说过雨后劳动。裴纯讲桩根湿泥挡住裂处，宿蕙指溅到叶上的泥点，戚鹭区分听来的旧水情，花茵翻看阴处叶背，向祯说枯苇遮住更路记号。大家只核对可见处和待问处，还没解决各自的问题。",
-          "quoteBasis": "controlled/candidate-after.json",
+          "quoteBasis": "reopen/old-records.json",
           "candidateValueHash": "d6cf402960666b8205d7bf34c3831be61585be5dcfac2473d89772a18bc2c279",
           "oldRecordValue": {
             "id": "memory_wt_depth_group_6",
@@ -1822,9 +1822,9 @@
       "findings": [
         {
           "path": "relationships[1].note",
-          "quote": "贾苗是家里的母亲；自己看草叶经验和女儿不同，这件事还需要彼此听完再商量。",
-          "quoteBasis": "controlled/candidate-after.json",
-          "candidateValueHash": "32cf9a6b364ae972b672665ac677cd5eba5747dfef3f8bdc4c00187bc887dbfa",
+          "quote": "贾苗是家里的母亲；宽厚/倔强，这件事还需要彼此听完再商量。",
+          "quoteBasis": "reopen/old-records.json",
+          "candidateValueHash": "d02bd31081c640fd213806073faac2c42af2b98d8ad0bf5fa653aa5d74862772",
           "oldRecordValue": "贾苗是家里的母亲；宽厚/倔强，这件事还需要彼此听完再商量。",
           "oldRecordValueHash": "d02bd31081c640fd213806073faac2c42af2b98d8ad0bf5fa653aa5d74862772",
           "reason": "原居民currentConcern包含私下想法或未说出口的顾虑；原本人关系只证明亲属身份，不证明这段内容已转告。",
@@ -1874,7 +1874,7 @@
         {
           "path": "memorySeeds[2]",
           "quote": "裴纯、宿蕙、戚鹭、花茵和向祯在岸上菜圃外的干处说过雨后劳动。裴纯讲桩根湿泥挡住裂处，宿蕙指溅到叶上的泥点，戚鹭区分听来的旧水情，花茵翻看阴处叶背，向祯说枯苇遮住更路记号。大家只核对可见处和待问处，还没解决各自的问题。",
-          "quoteBasis": "controlled/candidate-after.json",
+          "quoteBasis": "reopen/old-records.json",
           "candidateValueHash": "d6cf402960666b8205d7bf34c3831be61585be5dcfac2473d89772a18bc2c279",
           "oldRecordValue": {
             "id": "memory_wt_depth_group_6",
@@ -1924,9 +1924,9 @@
       "findings": [
         {
           "path": "relationships[0].note",
-          "quote": "向菲是家里的配偶；晚归时看不清丈夫说的新记号，这件事还需要彼此听完再商量。",
-          "quoteBasis": "controlled/candidate-after.json",
-          "candidateValueHash": "d586f1a2da649698f64b8a4fd178d7c98efe30a29ebcc1d05973fa405455c657",
+          "quote": "向菲是家里的配偶；谨慎/利落，这件事还需要彼此听完再商量。",
+          "quoteBasis": "reopen/old-records.json",
+          "candidateValueHash": "f665667922a5fbc51a31943d3fae430cce7aefa25fdaad3121a18f79b93fe999",
           "oldRecordValue": "向菲是家里的配偶；谨慎/利落，这件事还需要彼此听完再商量。",
           "oldRecordValueHash": "f665667922a5fbc51a31943d3fae430cce7aefa25fdaad3121a18f79b93fe999",
           "reason": "原居民currentConcern包含私下想法或未说出口的顾虑；原本人关系只证明亲属身份，不证明这段内容已转告。",
@@ -1975,9 +1975,9 @@
         },
         {
           "path": "relationships[1].note",
-          "quote": "向涛是家里的儿子；父亲夜路记号画得像自己的涂画，这件事还需要彼此听完再商量。",
-          "quoteBasis": "controlled/candidate-after.json",
-          "candidateValueHash": "1a99b58020b24b52050c107a7d0b708712853d91ccfda09a3fb265d493372199",
+          "quote": "向涛是家里的儿子；活泼/恋家，这件事还需要彼此听完再商量。",
+          "quoteBasis": "reopen/old-records.json",
+          "candidateValueHash": "6a1b83d8ee3575e18bfd64c5374351b9f501848b5fbb9993c63c2e39b8887bf8",
           "oldRecordValue": "向涛是家里的儿子；活泼/恋家，这件事还需要彼此听完再商量。",
           "oldRecordValueHash": "6a1b83d8ee3575e18bfd64c5374351b9f501848b5fbb9993c63c2e39b8887bf8",
           "reason": "原居民currentConcern包含私下想法或未说出口的顾虑；原本人关系只证明亲属身份，不证明这段内容已转告。",
@@ -2027,7 +2027,7 @@
         {
           "path": "knowledge.known[1]",
           "quote": "我在向祯户居处居住；家里的向菲是我的配偶。",
-          "quoteBasis": "controlled/candidate-after.json",
+          "quoteBasis": "reopen/old-records.json",
           "candidateValueHash": "11f40703463a183d6d3f7d5162209150c804348ff8d764744f1ed099d1c2e8b8",
           "oldRecordValue": {
             "fact": "我在向祯户居处居住；家里的向菲是我的配偶。",
@@ -2083,7 +2083,7 @@
         {
           "path": "knowledge.unknown[0]",
           "quote": "向菲夜归时究竟在哪一个岔口看不清记号。",
-          "quoteBasis": "controlled/candidate-after.json",
+          "quoteBasis": "reopen/old-records.json",
           "candidateValueHash": "e1f2dc4d7cfde507a1fd271e5384017063142feec4ed6ddabc5ca33b22b14780",
           "oldRecordValue": "向菲夜归时究竟在哪一个岔口看不清记号。",
           "oldRecordValueHash": "e1f2dc4d7cfde507a1fd271e5384017063142feec4ed6ddabc5ca33b22b14780",
@@ -2121,7 +2121,7 @@
         {
           "path": "knowledge.unknown[1]",
           "quote": "郑汐何时能听自己说明白日路与夜路的区别。",
-          "quoteBasis": "controlled/candidate-after.json",
+          "quoteBasis": "reopen/old-records.json",
           "candidateValueHash": "59db2cf106d2703fe08292aa5385c68216e89991323e3f558b0c7d3efdc404e7",
           "oldRecordValue": "郑汐何时能听自己说明白日路与夜路的区别。",
           "oldRecordValueHash": "59db2cf106d2703fe08292aa5385c68216e89991323e3f558b0c7d3efdc404e7",
@@ -2199,7 +2199,7 @@
         {
           "path": "goals.mid[0].steps[0].content",
           "quote": "请向菲从安全路段指出误认处，再核查岔口方向。",
-          "quoteBasis": "controlled/candidate-after.json",
+          "quoteBasis": "reopen/old-records.json",
           "candidateValueHash": "b847771c8dc67f6330ea840efd0b313df08726a3ffe69e0c58451ae1b0072c50",
           "oldRecordValue": "请向菲从安全路段指出误认处，再核查岔口方向。",
           "oldRecordValueHash": "b847771c8dc67f6330ea840efd0b313df08726a3ffe69e0c58451ae1b0072c50",
@@ -2252,7 +2252,7 @@
         {
           "path": "memorySeeds[2]",
           "quote": "裴纯、宿蕙、戚鹭、花茵和向祯在岸上菜圃外的干处说过雨后劳动。裴纯讲桩根湿泥挡住裂处，宿蕙指溅到叶上的泥点，戚鹭区分听来的旧水情，花茵翻看阴处叶背，向祯说枯苇遮住更路记号。大家只核对可见处和待问处，还没解决各自的问题。",
-          "quoteBasis": "controlled/candidate-after.json",
+          "quoteBasis": "reopen/old-records.json",
           "candidateValueHash": "d6cf402960666b8205d7bf34c3831be61585be5dcfac2473d89772a18bc2c279",
           "oldRecordValue": {
             "id": "memory_wt_depth_group_6",
