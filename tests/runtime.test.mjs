@@ -7,6 +7,9 @@ import {once}from'node:events';
 import express from 'express';
 import {chromium}from'playwright-core';
 import {init}from'../server-plugin/index.mjs';
+import {loadWorld}from'../tools/load-world.mjs';
+import {WorldEngine}from'../server-plugin/engine.mjs';
+import {applyPatches}from'../server-plugin/storage.mjs';
 test('E2/E19 浏览器：失败对账阻止出站生成，编辑撤销刷新玩家账本，元数据只留引用',{timeout:60000},async t=>{
     const directory=await fs.mkdtemp(path.join(os.tmpdir(),'infinite-fields-browser-'));
     t.after(()=>fs.rm(directory,{recursive:true,force:true}));
@@ -186,4 +189,35 @@ test('E2/E19 浏览器：失败对账阻止出站生成，编辑撤销刷新玩�
     assert.equal(await page.getByRole('button',{name:'在副本上启用新版'}).count(),1);
     assert.deepEqual(pageErrors,[]);
     await fs.writeFile(`${reportDirectory}/T20-ledger-browser.json`,JSON.stringify({...ledgerReport,generatedAt:new Date().toISOString()},null,2)+'\n');
+});
+
+test('T41 浏览器：现有账本显示实际居民与分村贡献，重绘不叠加且不展示其他人物贡献',{timeout:30000},async t=>{
+    const world=await loadWorld();for(const npc of world.npcs){delete npc.schedule;delete npc.tier;}
+    const engine=new WorldEngine(world),legacy=JSON.parse(await fs.readFile('tests/fixtures/legacy/seed.json'));
+    let doc=engine.createCharacter(legacy,{},'civic-browser');doc.state.player.coins=1000;doc.state.location='bld_hw_qingdeng';doc.state.npcs.npc_hw_linsui.location=doc.state.location;
+    const run=async(tool,args,eventId)=>{const out=await engine.reduce(doc,{tool,args,eventId});doc=applyPatches(doc,out.patches);return out.result;};
+    await run('world_trade',{seller:'npc_hw_linsui',service:'住宿',days:7},'room');
+    doc.state.minute=doc.state.records.contract_room_room.starts+3*1440;doc.state.location='bld_hw_council';
+    for(const id of ['npc_hw_linsui','npc_hw_chenbai']){doc.state.npcs[id].location=doc.state.location;doc.state.npcs[id].activity='商谈';}
+    const args={settlement:'loc_hw',sponsor:'npc_hw_linsui',authority:'npc_hw_chenbai'};
+    await run('world_settlement',{...args,operation:'civic_residence'},'residence');
+    await run('world_settlement',{...args,operation:'civic_sponsor'},'sponsor');
+    await run('world_settlement',{...args,operation:'civic_apply_resident'},'resident');
+    doc.state.inventory.item_oats={quantity:10};
+    const donation=await run('world_farm',{operation:'donate',settlement:'loc_hw',quantity:10},'grain');
+    const other={category:'civic_contribution',subject:'npc_hw_luqing',settlement:'loc_bs_yupo',kind:'teaching',points:99};
+    doc.state.records['civic_source:private-teacher']=other;
+    const browser=await chromium.launch({executablePath:'C:/Program Files/Google/Chrome/Application/chrome.exe',headless:true});t.after(()=>browser.close());
+    const page=await browser.newPage({viewport:{width:390,height:844}});
+    await page.route('http://ledger.fixture/**',async route=>route.fulfill({contentType:route.request().url().endsWith('.mjs')?'text/javascript':'text/html',body:route.request().url().endsWith('.mjs')?await fs.readFile('extension/ledger-view.mjs','utf8'):'<div id="ledger"></div>'}));
+    await page.goto('http://ledger.fixture/');await page.addStyleTag({content:await fs.readFile('extension/style.css','utf8')});
+    const payload={state:doc.state,labels:Object.fromEntries(engine.entities.map(row=>[row.id,row.name])),events:[{notices:donation.notices}]};
+    await page.evaluate(async payload=>{window.civicPayload=payload;window.renderCivic=(await import('/ledger-view.mjs')).renderLedger;window.renderCivic(document.querySelector('#ledger'),payload.state,payload.labels,payload.events);},payload);
+    let text=await page.locator('#ledger').innerText();
+    assert.match(text,/户籍与聚落贡献/);assert.match(text,/河湾村 · 居住起日 1/);assert.match(text,/居民 · 已登记 · 已付 5铜/);assert.match(text,/河湾村 · 贡献 2/);
+    assert.doesNotMatch(text,/贡献 99|private-teacher|公民 · 已登记/);
+    await page.evaluate(()=>window.renderCivic(document.querySelector('#ledger'),window.civicPayload.state,window.civicPayload.labels,window.civicPayload.events));
+    assert.equal(await page.locator('#ledger').innerText(),text);
+    await page.evaluate(()=>window.renderCivic(document.querySelector('#ledger'),{...window.civicPayload.state,records:{}},window.civicPayload.labels,[]));
+    text=await page.locator('#ledger').innerText();assert.match(text,/居住史尚未登记/);assert.doesNotMatch(text,/居民 · 已登记|贡献 2/);
 });

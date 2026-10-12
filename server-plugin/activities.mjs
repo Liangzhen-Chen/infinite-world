@@ -16,12 +16,17 @@ import {localWeather}from'./weather.mjs';
 import {agricultureAction}from'./agriculture.mjs';
 import {wildlifeAction,resolveCreature,recordWildlifeDeath}from'./wildlife.mjs';
 import {lairAction,bossCounter,rememberBossTactic,defeatBoss}from'./bosses.mjs';
+import {civicAction,recordDonationContribution,publicProjectApproval,donationReceipt,saveDonationReceipt}from'./civic.mjs';
 const integer=(value,min=0,max=1e9)=>{if(!Number.isSafeInteger(value)||value<min||value>max)throw new Error(`数值需在${min}到${max}之间`);return value;};
 const requiredText=value=>{if(typeof value!=='string'||!value.trim()||value.length>1200)throw new Error('记录文字无效');return value.trim();};
 export const activities={
     lair(d,args,id){return lairAction.call(this,d,args,id);},
     wildlife(d,args,id){return wildlifeAction.call(this,d,args,id);},
-    farm(d,args,id){return agricultureAction.call(this,d,args,id);},
+    farm(d,args,id){
+        const old=donationReceipt(d,this,args,id);if(old)return old;
+        const result=agricultureAction.call(this,d,args,id),contribution=recordDonationContribution(d,this,result,id),receipt={...result,...(contribution?{contribution}:{})};
+        saveDonationReceipt(d,receipt,id);return receipt;
+    },
     weather(d,args){
         if(args.operation&&args.operation!=='inspect')throw new Error('天气只允许观察，不能由模型直接改天');
         if(args.location&&this.resolve(args.location)!==d.get('state','location'))throw new Error('只能观察本人所在地天气，不远程得知异地情况');
@@ -130,6 +135,7 @@ export const activities={
         return {project:key,stage,...outcome,note:stage==='打磨'?'研究成果需进入受限实体登记，才能获得规则认可':'原型未被系统承认，不能宣称已学会新法术'};
     },
     settlement(d,args,id){
+        if(args.operation?.startsWith('civic_'))return civicAction.call(this,d,args,id);
         const settlement=this.resolve(args.settlement,'loc'),row=d.get('state','settlements',settlement);
         if(!row)throw new Error('没有该聚落公共账目');
         const authorization=d.get('state','records',args.authorization);
@@ -138,7 +144,8 @@ export const activities={
             const wood=integer(args.wood,1,10000),stone=integer(args.stone??0,0,10000),days=integer(args.days,1,365);
             if(row.wood<wood||row.stone<stone)throw new Error('公共工程材料不足');
             d.set(['state','settlements',settlement,'wood'],row.wood-wood);d.set(['state','settlements',settlement,'stone'],row.stone-stone);
-            const project=`project_${id}`;d.set(['state','projects',project],{id:project,type:'工程',creator:'player',name:requiredText(args.name),settlement,remainingDays:days,wood,stone,status:'施工中',beneficiaries:args.beneficiaries??[]});
+            const civicApproval=publicProjectApproval(d,this,settlement,args.authorization,args.beneficiaries);
+            const project=`project_${id}`;d.set(['state','projects',project],{id:project,type:'工程',creator:'player',name:requiredText(args.name),settlement,remainingDays:days,wood,stone,status:'施工中',beneficiaries:args.beneficiaries??[],sourceEvent:id,...(civicApproval?{civicApproval}:{})});
             return {project};
         }
         throw new Error('未知聚落事务');
