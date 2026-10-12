@@ -17,6 +17,7 @@ import {agricultureAction}from'./agriculture.mjs';
 import {wildlifeAction,resolveCreature,recordWildlifeDeath}from'./wildlife.mjs';
 import {lairAction,bossCounter,rememberBossTactic,defeatBoss}from'./bosses.mjs';
 import {civicAction,recordDonationContribution,publicProjectApproval,donationReceipt,saveDonationReceipt}from'./civic.mjs';
+import {governanceAction,assertGovernedProject}from'./governance.mjs';
 const integer=(value,min=0,max=1e9)=>{if(!Number.isSafeInteger(value)||value<min||value>max)throw new Error(`数值需在${min}到${max}之间`);return value;};
 const requiredText=value=>{if(typeof value!=='string'||!value.trim()||value.length>1200)throw new Error('记录文字无效');return value.trim();};
 export const activities={
@@ -136,11 +137,14 @@ export const activities={
     },
     settlement(d,args,id){
         if(args.operation?.startsWith('civic_'))return civicAction.call(this,d,args,id);
+        if(args.operation?.startsWith('governance_'))return governanceAction.call(this,d,args,id);
         const settlement=this.resolve(args.settlement,'loc'),row=d.get('state','settlements',settlement);
         if(!row)throw new Error('没有该聚落公共账目');
         const authorization=d.get('state','records',args.authorization);
         if(!authorization||authorization.category!=='authorization'||authorization.settlement!==settlement)throw new Error('公共物资需要已成立的授权');
         if(args.operation==='start_project'){
+            assertGovernedProject(d,this,settlement,args);
+            if(authorization.revoked||authorization.expires!==undefined&&authorization.expires<=d.get('state','minute'))throw new Error('公共工程授权已撤销或到期');
             const wood=integer(args.wood,1,10000),stone=integer(args.stone??0,0,10000),days=integer(args.days,1,365);
             if(row.wood<wood||row.stone<stone)throw new Error('公共工程材料不足');
             d.set(['state','settlements',settlement,'wood'],row.wood-wood);d.set(['state','settlements',settlement,'stone'],row.stone-stone);
