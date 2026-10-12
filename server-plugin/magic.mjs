@@ -1,3 +1,4 @@
+import {messageKinds,validateMessageCatalog,prepareMessage,applyMessage}from'./magic-message.mjs';
 import {movementKinds,validateMovementCatalog,prepareMovement,applyMovement}from'./magic-movement.mjs';
 import {validateAreaCatalog,prepareAreaMagic,applyAreaMagic}from'./magic-area.mjs';
 import {derivedStats,monsterStats}from'./combat.mjs';
@@ -15,7 +16,7 @@ import {validateObjectCatalog,prepareObjectMagic,applyObjectMagic}from'./magic-o
 export function validateMagicCatalog(catalog,{requireHandler=false}={}){
     const spec=catalog.effectSpec,errors=[];
     if(!spec){if(requireHandler||catalog.mechanism)errors.push('此法术机制尚未接入规则，不能叙述已实现');return errors;}
-    errors.push(...(movementKinds.includes(spec.kind)?validateMovementCatalog(catalog):validateEffectSpec(spec)));
+    errors.push(...(movementKinds.includes(spec.kind)?validateMovementCatalog(catalog):messageKinds.includes(spec.kind)?validateMessageCatalog(catalog):validateEffectSpec(spec)));
     errors.push(...validateTargeting(catalog));
     if(['status','light','protection'].includes(spec.kind)&&(!Number.isSafeInteger(catalog.duration)||catalog.duration<1||catalog.duration>Math.min(catalog.durationLimit??43200,43200)))errors.push('持续效果的时限非法');
     if(spec.kind==='status'&&(!magicStatuses[spec.status]||spec.power>magicStatuses[spec.status].maximum))errors.push('状态效果或强度不在规则表');
@@ -33,6 +34,7 @@ export function validateMagicCatalog(catalog,{requireHandler=false}={}){
 export function prepareMagic(d,catalog,args,context={}){
     const errors=validateMagicCatalog(catalog);if(errors.length)throw new Error(errors.join('；'));
     const spec=catalog.effectSpec;if(!spec)return null;
+    if(messageKinds.includes(spec.kind))return prepareMessage.call(this,d,catalog,args);
     if(movementKinds.includes(spec.kind))return prepareMovement.call(this,d,catalog,args);
     if(spec.kind==='area')return prepareAreaMagic.call(this,d,catalog,args,context);
     if(spec.kind==='environment')return prepareEnvironmentMagic.call(this,d,catalog,args);
@@ -73,6 +75,7 @@ export function prepareMagic(d,catalog,args,context={}){
 export function applyMagic(d,prepared,id){
     if(!prepared)return{};
     let{spec,target,path,catalog}=prepared;
+    if(messageKinds.includes(spec.kind))return applyMessage.call(this,d,prepared,id);
     if(movementKinds.includes(spec.kind))return applyMovement.call(this,d,prepared,id);
     if(spec.kind==='area')return applyAreaMagic.call(this,d,prepared,id);
     if(spec.kind==='environment')return applyEnvironmentMagic.call(this,d,prepared,id);

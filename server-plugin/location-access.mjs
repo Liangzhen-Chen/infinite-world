@@ -1,3 +1,4 @@
+import {magicMessagePermission}from'./magic-message.mjs';
 import {environmentFeatures}from'./environment.mjs';
 // Existing authorization records govern entry; the route alone is not consent.
 export function assertLocationAccess(d,engine,destination,{authorization,companions=[],arrivalMinute=d.get('state','minute')}={}){
@@ -15,6 +16,7 @@ export function assertLocationAccess(d,engine,destination,{authorization,compani
 // Register the host's NPC decision using the existing authorization ledger.
 // A named resident in the roster cannot act or consent without an active NPC.
 export function homePermission(d,engine,args,eventId){
+ const messageResult=magicMessagePermission(d,engine,args,eventId);if(messageResult)return messageResult;
  if(!['grant_access','revoke_access'].includes(args.operation))return null;
  const anchorResult=anchorPermission(d,engine,args,eventId);if(anchorResult)return anchorResult;
  const grantor=engine.resolve(args.promisor,'npc'),base=engine.byId.get(grantor),actor=d.get('state','npcs',grantor),now=d.get('state','minute');

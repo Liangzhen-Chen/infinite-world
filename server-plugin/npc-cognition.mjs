@@ -1,3 +1,4 @@
+import {advanceMagicMessages,nextMagicMessageMinute}from'./magic-message.mjs';
 import {applyPatches,digest} from './storage.mjs';
 import {advanceNpcSchedules} from './npc-schedule.mjs';
 import {relationView} from './npc-relations.mjs';
@@ -93,9 +94,9 @@ export function settleNpcReflection(d,engine,npcId,now){
 }
 
 export function advanceNpcCognition(d,engine,before,after,eventId,{beforeState}={}){
- if(after<=before)return {delivered:0,shared:0};let delivered=0,shared=0;
+ if(after<=before)return {delivered:0,shared:0};let delivered=advanceMagicMessages(d,engine,before,after),shared=0;
  for(const message of Object.values(d.get('state','npcCognition','messages')??{}).sort((a,b)=>a.arrive-b.arrive||a.id.localeCompare(b.id))){
-  if(!['在途','待交付'].includes(message.status)||message.arrive>after)continue;
+  if(message.channel==='magic'||!['在途','待交付'].includes(message.status)||message.arrive>after)continue;
   // Arrival is checked at its real boundary; a missed recipient is sought at
   // fixed quarter-hours, independent of how a player splits wait commands.
   if(message.status==='待交付'&&after%15!==0)continue;
@@ -131,4 +132,4 @@ export function npcCognitionView(engine,document,id){
  const npc=document.state.npcs[id],c=npc?.cognition??{};
  return {memories:(npc?.memoryStream??[]).map(row=>c.blurred?.[row.id]?{...row,content:c.blurred[row.id].content,blurred:true,entities:[]}:clone(row)),reflections:clone(c.reflections??[])};
 }
-export function nextNpcCognitionMinute(state,after){const today=Math.floor(after/DAY)*DAY+600,daily=today>after?today:today+DAY,messages=Object.values(state.npcCognition?.messages??{});return Math.min(daily,...messages.filter(m=>m.status==='在途'&&m.arrive>after).map(m=>m.arrive),messages.some(m=>m.status==='待交付')?(Math.floor(after/15)+1)*15:Infinity);}
+export function nextNpcCognitionMinute(state,after){const today=Math.floor(after/DAY)*DAY+600,daily=today>after?today:today+DAY,messages=Object.values(state.npcCognition?.messages??{});return Math.min(daily,nextMagicMessageMinute(state,after),...messages.filter(m=>m.status==='在途'&&m.arrive>after).map(m=>m.arrive),messages.some(m=>m.status==='待交付')?(Math.floor(after/15)+1)*15:Infinity);}
