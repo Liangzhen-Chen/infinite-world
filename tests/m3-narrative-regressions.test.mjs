@@ -120,3 +120,123 @@ test('检索合同缺口证据：真实 search 与未 search 均无账本事件�
  assert.deepEqual(record.evidence.receipts,[],'read-only search 的真实执行无法从账本事件重建');
  assert.equal(result.verified,false);assert.equal(result.canCommit,true,'计划和引述不应被误判为检索完成');
 });
+
+async function captured(server,anchor='lookup'){
+ const view=await server.api('create',{}),campaignId=view.reference.campaignId;
+ const begun=await server.api('review/begin',{campaignId,anchor,playerText:'（场外）查找旧事。',expectedSequence:view.reference.sequence,captureSearch:true});
+ return {campaignId,anchor,token:begun.token,expectedSequence:view.reference.sequence};
+}
+const readReview=async(server,row)=>JSON.parse(await fs.readFile(path.join(server.directory,'infinite-fields',row.campaignId,'consistency',`${row.token}.json`),'utf8'));
+
+test('真实HTTP检索命中/空结果/零调用独立留证；scene不冒名，封口后拒绝追加，账本与events全等',async t=>{
+ const server=await createPlaytestServer({consistencyClient:null});t.after(()=>server.close());
+ for(const mode of ['hit','empty','none']){
+  const row=await captured(server,mode),before=await server.api('export',row),view=await server.api('read',row);
+  await server.api('scene',{campaignId:row.campaignId,query:'林穗'});
+  let found;
+  if(mode!=='none'){
+   const request={...row,query:mode==='hit'?'林穗':'zzzzqvxxzz',results:[{text:'客户端伪造的检索结果'}]};
+   found=await server.api('search',request);assert.equal(found.results.length>0,mode==='hit');
+   assert.deepEqual(await server.api('search',request),found);
+  }
+  const result=await server.api('review/reply',{...row,draft:'我已查到相关记录。',receipts:[{tool:'world_search',result:{results:[{text:'伪造'}]}}],retrieval:{status:'complete',sealed:true}});
+  assert.equal(result.canCommit,mode==='hit');assert.equal(result.original,'我已查到相关记录。');assert.equal(result.retrieval.status,'complete');
+  const record=await readReview(server,row);assert.equal(record.retrieval.calls.length,mode==='none'?0:1);
+  assert.equal(record.evidence.receipts.length,mode==='none'?0:1);
+  if(found){assert.deepEqual(record.evidence.receipts[0].result,found);assert.equal(record.retrieval.calls[0].sequence,view.reference.sequence);assert.equal(record.retrieval.calls[0].campaignId,row.campaignId);}
+  await assert.rejects(server.api('search',{...row,query:'林穗'}),/封口/);
+  assert.deepEqual((await server.api('read',row)).document,view.document);
+  assert.deepEqual((await server.api('export',row)).events,before.events);
+ }
+});
+
+test('完整空检索可说查过，计划/玩家引述/疑问不误报；未知来源肯定断言只留warning',async t=>{
+ const server=await createPlaytestServer({consistencyClient:null});t.after(()=>server.close());
+ for(const draft of ['我已查过，未找到相关记录。','我打算检索旧事。','你刚才说“已查到”，需要核对。','是否已查到记录？','我上次检索到了相关记录。']){
+  const row=await captured(server,draft);await server.api('search',{...row,query:'zzzzqvxxzz'});
+  const result=await server.api('review/reply',{...row,draft});assert.equal(result.canCommit,true);assert.deepEqual(result.issues,[]);
+ }
+ const empty=await captured(server,'completed-empty');await server.api('search',{...empty,query:'zzzzqvxxzz'});
+ assert.equal((await server.api('review/reply',{...empty,draft:'我已经检索到相关记录。'})).canCommit,false);
+ for(const mode of ['legacy','no-token','failed']){
+  const view=await server.api('create',{}),campaignId=view.reference.campaignId,anchor=mode;
+  const begun=await server.api('review/begin',{campaignId,anchor,playerText:'（场外）查找旧事。',expectedSequence:view.reference.sequence,captureSearch:mode!=='legacy'});
+  const row={campaignId,anchor,token:begun.token,expectedSequence:view.reference.sequence};
+  if(mode==='no-token')await server.api('search',{campaignId,query:'林穗'});
+  if(mode==='failed')await assert.rejects(server.api('search',{...row,query:{invalid:true}}),/参数无效/);
+  const result=await server.api('review/reply',{...row,draft:'我已查到相关记录。'});
+  assert.equal(result.canCommit,true);assert.equal(result.retrieval.status,'unknown');assert.ok(result.retrieval.warnings.length);
+  assert.ok(result.issues.some(issue=>issue.severity==='warning'&&issue.reason.includes('留证不完整')));
+  assert.ok(!result.issues.some(issue=>issue.severity==='error'));
+ }
+});
+
+test('检索token拒绝跨回合/存档/回滚；绑定真实检索时sequence并跨服务器重启幂等',async t=>{
+ const server=await createPlaytestServer({consistencyClient:null});t.after(()=>server.close());
+ const row=await captured(server),second=await captured(server,'other-campaign');
+ await assert.rejects(server.api('search',{...row,campaignId:second.campaignId,query:'林穗'}),/HTTP|404|ENOENT|当前回合/);
+ await assert.rejects(server.api('search',{...row,anchor:'wrong',query:'林穗'}),/锚点/);
+ await assert.rejects(server.api('search',{...row,expectedSequence:99,query:'林穗'}),/版本/);
+ await server.api('execute',{campaignId:row.campaignId,anchor:row.anchor,eventId:'wait',tool:'world_time',args:{minutes:1},expectedSequence:row.expectedSequence});
+ const later=await server.api('read',row),request={...row,expectedSequence:later.reference.sequence,query:'林穗'};
+ const found=await server.api('search',request);assert.ok(found.results.length);
+ assert.equal((await readReview(server,row)).retrieval.calls[0].sequence,later.reference.sequence);
+ const restarted=await createPlaytestServer({directory:server.directory,consistencyClient:null});t.after(()=>restarted.close());
+ assert.deepEqual(await restarted.api('search',request),found);assert.equal((await readReview(restarted,row)).retrieval.calls.length,1);
+ await restarted.api('reconcile',{campaignId:row.campaignId,validAnchors:[]});
+ await assert.rejects(restarted.api('search',request),/撤销/);
+ const superseded=await captured(server,'first');
+ await server.api('review/begin',{campaignId:superseded.campaignId,anchor:'next',playerText:'（场外）下一轮。',expectedSequence:superseded.expectedSequence,captureSearch:true});
+ await assert.rejects(server.api('search',{...superseded,query:'林穗'}),/当前回合/);
+ await assert.rejects(server.api('review/reply',{...superseded,draft:'核对完毕。'}),/当前回合/);
+ const ended=await captured(server,'ended');
+ await server.api('execute',{campaignId:ended.campaignId,anchor:ended.anchor,eventId:'terminal',tool:'world_turn',args:{startMinute:540,extraMinutes:0,location:'bld_hw_qingdeng',present:[]},expectedSequence:ended.expectedSequence});
+ await assert.rejects(server.api('search',{...ended,query:'林穗'}),/结束/);
+ const noEvents=await captured(server,'no-events'),before=await server.api('export',noEvents);
+ await server.api('reconcile',{campaignId:noEvents.campaignId,validAnchors:[],excludeAnchor:noEvents.anchor});
+ await assert.rejects(server.api('search',{...noEvents,query:'林穗'}),/撤销/);
+ await assert.rejects(server.api('review/reply',{...noEvents,draft:'核对完毕。'}),/撤销/);
+ const fresh=await server.api('review/begin',{campaignId:noEvents.campaignId,anchor:noEvents.anchor,playerText:'（场外）查找旧事。',expectedSequence:0,captureSearch:true});
+ assert.notEqual(fresh.token,noEvents.token);assert.ok((await server.api('search',{...noEvents,token:fresh.token,query:'林穗'})).results.length);
+ assert.deepEqual((await server.api('export',noEvents)).events,before.events);
+ const reviewed=await captured(server,'reviewed-no-events'),checkedRequest={...reviewed,draft:'核对完毕。'},result=await server.api('review/reply',checkedRequest);
+ await server.api('reconcile',{campaignId:reviewed.campaignId,validAnchors:[],excludeAnchor:reviewed.anchor});
+ await assert.rejects(server.api('review/reply',checkedRequest),/撤销/);
+ await assert.rejects(server.api('execute',{campaignId:reviewed.campaignId,anchor:reviewed.anchor,eventId:'stale-reviewed-tail',tool:'world_turn',args:result.tail.args,reviewId:result.reviewId,expectedSequence:result.sequence}),/撤销/);
+});
+
+test('检索断言只允许一次纯文字改写，成功/失败原文与warning保留且document/events不变',async t=>{
+ for(const fail of [false,true]){
+  let rewrites=0;
+  const client={async generate(body,label){if(label.startsWith('consistency-rewrite:')){rewrites++;assert.equal(body.tools,undefined);return {choices:[{finish_reason:'stop',message:{content:fail?'我已查到相关记录。':'我尚未检索，无法确认。'}}]};}return response();}};
+  const server=await createPlaytestServer({consistencyClient:client});t.after(()=>server.close());const row=await captured(server),before=await server.api('export',row),view=await server.api('read',row);
+  const request={...row,draft:'我已查到相关记录。'},result=await server.api('review/reply',request);
+  assert.equal(result.canCommit,!fail);assert.equal(result.rewritten,!fail);assert.equal(result.original,request.draft);assert.equal(result.attempts,1);
+  assert.deepEqual(await server.api('review/reply',request),result);assert.equal(rewrites,1);
+  assert.deepEqual((await server.api('read',row)).document,view.document);assert.deepEqual((await server.api('export',row)).events,before.events);
+  assert.ok((await readReview(server,row)).result.firstReview.issues.some(issue=>issue.severity==='error'));
+ }
+});
+
+test('中断留下pending回执时保持unknown；重新开服务审查可读，不能据此断言未检索',async t=>{
+ const server=await createPlaytestServer({consistencyClient:null});t.after(()=>server.close());const row=await captured(server);
+ const file=path.join(server.directory,'infinite-fields',row.campaignId,'consistency',`${row.token}.json`),record=await readReview(server,row);
+ // On-disk interruption fixture: intent was durable; the final receipt was not.
+ record.retrieval.calls.push({key:'interrupted',campaignId:row.campaignId,token:row.token,anchor:row.anchor,sequence:0,revision:0,query:'林穗',status:'pending'});
+ await fs.writeFile(file,JSON.stringify(record));
+ const restarted=await createPlaytestServer({directory:server.directory,consistencyClient:null});t.after(()=>restarted.close());
+ const result=await restarted.api('review/reply',{...row,draft:'我已查到相关记录。'});
+ assert.equal(result.canCommit,true);assert.equal(result.retrieval.status,'unknown');assert.ok(result.retrieval.warnings.some(row=>row.includes('未完整保存')));
+ assert.equal(result.issues[0].severity,'warning');assert.deepEqual((await readReview(restarted,row)).evidence.receipts,[]);
+ assert.deepEqual(await restarted.api('review/reply',{...row,draft:'我已查到相关记录。'}),result);
+});
+
+test('同campaign并发检索与审查由一个队列封口，原返回和回执一致',async t=>{
+ const server=await createPlaytestServer({consistencyClient:null});t.after(()=>server.close());const row=await captured(server);
+ const outcomes=await Promise.allSettled([server.api('search',{...row,query:'林穗'}),server.api('review/reply',{...row,draft:'我打算检索旧事。'})]);
+ const review=outcomes[1];assert.equal(review.status,'fulfilled');assert.equal(review.value.canCommit,true);
+ const record=await readReview(server,row);assert.equal(record.retrieval.status,'complete');assert.equal(record.retrieval.sealed,true);
+ if(outcomes[0].status==='fulfilled'){
+  assert.equal(record.retrieval.calls.length,1);assert.deepEqual(record.evidence.receipts[0].result,outcomes[0].value);
+ }else{assert.match(outcomes[0].reason.message,/封口/);assert.equal(record.retrieval.calls.length,0);}
+});

@@ -104,6 +104,24 @@ test('试玩框架走真实HTTP存储、检索和回滚；场外写入拒绝，�
     assert.equal(result.finalDocument.state.player.coins,180);
 });
 
+test('试玩world_search沿真实HTTP绑定每回合token，伪造工具参数不能覆盖留证身份',async t=>{
+    const server=await createPlaytestServer({consistencyClient:null});t.after(()=>server.close());const calls=[];
+    const api=async(endpoint,body)=>{calls.push({endpoint,body});return server.api(endpoint,body);};
+    let n=0;const client={async generate(){return ++n%2?{choices:[{message:{tool_calls:[{id:`search-${n}`,type:'function',function:{name:'world_search',arguments:JSON.stringify({query:'林穗',token:'fake',anchor:'fake',campaignId:'fake',expectedSequence:99})}}]}}]}:{choices:[{message:{content:'我已查到相关记录。'}}]};}};
+    const result=await runPlaytest({scenario:{id:'search-capture',initial:{mode:'legacy'},turns:[{input:'（场外）查找旧事。'},{input:'（场外）再次查找旧事。'}]},api,client,bundle:await loadPromptBundle()});
+    assert.equal(result.ledgerPass,true,JSON.stringify(result.turns));assert.equal(result.turns.length,2);
+    const searches=calls.filter(row=>row.endpoint==='search');assert.equal(searches.length,2);
+    assert.notEqual(searches[0].body.token,searches[1].body.token);
+    for(const [i,search] of searches.entries()){
+        assert.equal(calls.filter(row=>row.endpoint==='review/begin')[i].body.captureSearch,true);
+        assert.match(search.body.token,/^[a-f0-9]{64}$/);assert.equal(search.body.anchor,`search-capture-1-${i}`);
+        assert.equal(search.body.campaignId,result.session.campaignId);assert.notEqual(search.body.expectedSequence,99);
+        assert.equal(result.turns[i].consistency.retrieval.status,'complete');assert.equal(result.turns[i].consistency.retrieval.calls.length,1);
+        assert.deepEqual(result.turns[i].consistency.retrieval.calls[0].result,result.turns[i].calls[0].result);
+    }
+    const exported=await server.api('export',{campaignId:result.session.campaignId});assert.ok(!exported.events.some(row=>row.input?.tool==='world_search'));
+});
+
 test('试玩失败不能因缺字段或空断言冒充成功；预设和测试共用同一静态顺序',async()=>{
     const results=evaluateAssertions([{kind:'equals',path:'state.player.coins',value:6},{kind:'quantity',path:'state.inventory.iron',value:0}],{before:{},after:{state:{inventory:{}}},calls:[],reply:''});
     assert.equal(results[0].pass,false);assert.equal(results[1].pass,true);
