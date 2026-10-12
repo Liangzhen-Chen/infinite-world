@@ -344,7 +344,7 @@ test('T07真实首ID协议齐全但共享来源hard不升级为通过，旧七ha
  assert.ok(record.review.contradictions.some(c=>c.severity==='hard'&&c.field==='memorySeeds[2].event'));
  assert.equal(record.reviewRecovery.prior.errors.filter(e=>e.severity==='hard').length,7);
  assert.equal(hashContent(record.reviewRecovery.response),record.responseEvidence.at(-1).responseHash);
- for(const row of snapshot.protected){assert.equal(hashContent(await fs.readFile(new URL('sourced/'+row.id+'.json',root),'utf8')),row.rawHash);}
+ for(const row of snapshot.protected){const raw=await fs.readFile(new URL('sourced/'+row.id+'.json',root),'utf8'),lf=raw.replaceAll('\r\n','\n');assert.ok(raw===lf||raw===lf.replaceAll('\n','\r\n'),'record换行混合');assert.equal(hashContent(lf),row.rawHash);assert.equal(JSON.parse(raw).fingerprint,row.fingerprint);}
  assert.equal(snapshot.protected.length,12);assert.equal(proposal.changes.length,4);assert.equal(proposal.newModelCalls,0);assert.equal(proposal.authorSourceNotApproved,true);
  assert.equal(proposal.guard,'正确兄弟叶不得修改');assert.deepEqual(proposal.lateFailures,[]);
 });

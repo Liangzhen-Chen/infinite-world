@@ -7,7 +7,7 @@ import {DeepSeekClient} from './deepseek-client.mjs';
 import {openContentBudget} from './content-budget.mjs';
 import {hashContent,parseModelJSON} from './content-pipeline.mjs';
 import {contextFor,buildReviewRequest,validateDraft,checkIncrementalReview,patchDraft,depthBackgroundSources} from './npc-depth-content.mjs';
-import {depthOptions,prepareDepth,prepareDepthRevision,loadDepthReopen,frozenDepthRecord} from './npc-depth.mjs';
+import {depthOptions,prepareDepth,prepareDepthRevision,loadDepthReopen,frozenDepthRecord,depthRevisionProof} from './npc-depth.mjs';
 import {loadEvidence,compactReviewRequest} from './npc-depth-source-evidence.mjs';
 export {compactReviewRequest} from './npc-depth-source-evidence.mjs';
 
@@ -111,7 +111,7 @@ export async function runDepthReview(options=reviewOptions(),{client,prepare=pre
   const prior=structuredClone(record);
   if(reopening){record.reopenAuthorization={id:reopening.manifest.id,manifestHash:reopening.manifestHash,file:reopening.file,attemptFingerprint:hashContent({draft:nextDraft,sourceEvidence:evidence?.contentHash??null,authoredBackground:context.authoredBackground??null})};if(record.budgetStop){record.budgetStopHistory=[...(record.budgetStopHistory??[]),record.budgetStop];delete record.budgetStop;}if(!record.draft)record.draft=nextDraft;}
   if(options.controlledRevision){
-   const proof=prepared.receipt??{kind:'incremental-depth-proof',authorizationHash:options.authorizationHash,planHash:hashContent(prepared.plan),planFile:path.relative(root,options.controlledRevision).replaceAll('\\','/'),worldRoot:path.relative(root,prepared.worldRoot).replaceAll('\\','/'),backgroundFile:options.authoredBackground?path.relative(root,options.authoredBackground).replaceAll('\\','/'):null,backgroundHash:prepared.background?.sourceHash??null,foundationHash,entryHash:hashContent(entries),oldRecords:prepared.records,changes:prepared.revision.changes,records:{},...(prepared.sourceCheckoutEvidence?{sourceCheckoutEvidence:prepared.sourceCheckoutEvidence}:{}),...(reopening?{reopenAuthorization:record.reopenAuthorization,previousProof:prepared.previousProof??null,previousProofHash:prepared.previousProof?hashContent(prepared.previousProof):null}:{})};
+   const proof=depthRevisionProof(options,prepared,record.reopenAuthorization);
    record.draft=nextDraft;delete record.frozenCandidate;record.fingerprint=fingerprint;record.incremental={authorizationHash:options.authorizationHash,backgroundHash:proof.backgroundHash,originalRecordHash:hashContent(prior),entryHash:hashContent(entry)};proof.records[id]=record.incremental;await write(path.join(root,'incremental-proof.json'),proof);
   }
   record.reviewRecovery={kind:'single-id-L2',revision,foundationHash,sourceEvidence:reopening&&evidence?{...evidence,file:path.relative(root,evidence.file).replaceAll('\\','/'),relativeTo:'root'}:evidence,requestHash:hashContent(request),request:structuredClone(request),compactRequest:!!options.compactRequest,startedAt:new Date().toISOString(),prior,status:'started'};
