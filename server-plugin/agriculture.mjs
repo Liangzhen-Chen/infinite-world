@@ -1,3 +1,4 @@
+import {consumeGrowthDay,validateGrowthRules,validateGrowthWorld}from'./magic-growth.mjs';
 import {weatherAt}from'./weather.mjs';
 import {damageFarmCrops,farmPestProfile}from'./farm-pests.mjs';
 
@@ -10,9 +11,9 @@ function balanced(r,s){
     if(r.batches.reduce((n,b)=>n+b.amount,0)!==s.food||r.field.seedBatches.reduce((n,b)=>n+b.amount,0)!==r.field.seedBank)throw new Error('粮仓批次与聚落库存或种粮不一致，拒绝凭空补齐');
 }
 function storageDays(r,p){return r.granary.condition>=50?p.protectedStorageDays:p.normalStorageDays;}
-function addBatch(r,s,p,amount,{id,day,source,kind='grain',expiresDay}={}){
+function addBatch(r,s,p,amount,{id,day,source,kind='grain',expiresDay,growthSources}={}){
     const space=Math.max(0,r.granary.capacity-s.food-r.field.seedBank),stored=Math.min(amount,space);
-    if(stored){r.batches.push({id,amount:stored,harvestDay:day,expiresDay:expiresDay??day+(kind==='fresh'?1:storageDays(r,p)),source,kind});s.food+=stored;}
+    if(stored){r.batches.push({id,amount:stored,harvestDay:day,expiresDay:expiresDay??day+(kind==='fresh'?1:storageDays(r,p)),source,kind,...(growthSources?.length?{growthSources}: {})});s.food+=stored;}
     r.ledger.overflow+=amount-stored;return stored;
 }
 function takeFood(r,s,amount,kind=null){
@@ -44,10 +45,10 @@ function sow(r,engine,p,day,units){
     while(units>0){
         const seed=Math.ceil((f.sownUnits+units)*c.seedPerHa/c.areaUnitsPerHa)-Math.ceil(f.sownUnits*c.seedPerHa/c.areaUnitsPerHa);
         if(seed<=f.seedBank){
-            let remaining=seed;f.seedBatches.sort((a,b)=>a.expiresDay-b.expiresDay);
-            for(const b of f.seedBatches){const used=Math.min(remaining,b.amount);b.amount-=used;remaining-=used;if(!remaining)break;}
+            let remaining=seed;const seedSources=[];f.seedBatches.sort((a,b)=>a.expiresDay-b.expiresDay);
+            for(const b of f.seedBatches){const used=Math.min(remaining,b.amount);if(used)seedSources.push({...b,amount:used});b.amount-=used;remaining-=used;if(!remaining)break;}
             f.seedBatches=f.seedBatches.filter(b=>b.amount>0);f.seedBank-=seed;r.ledger.seedSpent+=seed;f.sownUnits+=units;
-            f.cohorts.push({id:`${year}:${day}:${f.sownUnits}`,sownDay:day,areaUnits:units,grownDays:0,qualitySum:0,qualityDays:0,ready:false,harvestedUnits:0,harvestedFood:0,
+            f.cohorts.push({id:`${year}:${day}:${f.sownUnits}`,sownDay:day,areaUnits:units,grownDays:0,qualitySum:0,qualityDays:0,ready:false,harvestedUnits:0,harvestedFood:0,seedSpent:seed,seedSources,
                 ...(farmPestProfile(engine,p.settlement)?{pestDamageBps:0,potentialHarvestedFood:0}:{})});
             r.tools.condition=Math.max(0,r.tools.condition-units*p.toolWearPerArea);return{units,seed};
         }
@@ -56,7 +57,7 @@ function sow(r,engine,p,day,units){
     return{units:0,seed:0};
 }
 function harvest(r,s,engine,p,day,units,eventId){
-    const c=engine.rules.agriculture.crop,seedTarget=Math.ceil(r.field.areaUnits*c.seedPerHa/c.areaUnitsPerHa);let grain=0,worked=0,pestLost=0,potential=0;
+    const c=engine.rules.agriculture.crop,seedTarget=Math.ceil(r.field.areaUnits*c.seedPerHa/c.areaUnitsPerHa);let grain=0,worked=0,pestLost=0,potential=0;const growthSources=new Set();
     for(const row of r.field.cohorts.filter(row=>row.ready)){
         const amount=Math.min(units-worked,row.areaUnits-row.harvestedUnits);if(amount<=0)continue;
         const next=row.harvestedUnits+amount,gross=Math.floor(next*c.yieldPerHa/c.areaUnitsPerHa*row.qualitySum/Math.max(1,row.qualityDays));
@@ -66,18 +67,19 @@ function harvest(r,s,engine,p,day,units,eventId){
             if(grossDelta<netDelta||netDelta<0)throw new Error('作物收成账不守恒，拒绝倒扣已经收获的粮食');
             potential+=grossDelta;pestLost+=grossDelta-netDelta;row.potentialHarvestedFood=gross;
         }
+        for(const source of row.growthSources??[])growthSources.add(source);
         grain+=total-row.harvestedFood;worked+=amount;row.harvestedFood=total;row.harvestedUnits=next;
     }
     r.field.cohorts=r.field.cohorts.filter(row=>row.harvestedUnits<row.areaUnits);
     const reserved=Math.min(grain,Math.max(0,seedTarget-r.field.seedBank));r.field.seedBank+=reserved;
-    if(reserved)r.field.seedBatches.push({amount:reserved,harvestDay:day,expiresDay:day+storageDays(r,p)});
+    if(reserved)r.field.seedBatches.push({amount:reserved,harvestDay:day,expiresDay:day+storageDays(r,p),...(growthSources.size?{growthSources:[...growthSources]}:{})});
     // Seed and edible grain share the actual warehouse. Seed gets priority;
     // any displaced edible stock is recorded as overflow, never extra capacity.
     const displaced=Math.max(0,s.food+r.field.seedBank-r.granary.capacity);
     if(displaced)r.ledger.overflow+=takeFood(r,s,displaced);
     r.ledger.harvested+=grain;r.tools.condition=Math.max(0,r.tools.condition-worked*p.toolWearPerArea);
     if(farmPestProfile(engine,p.settlement)){r.ledger.pestLost+=pestLost;r.ledger.potentialHarvested+=potential;}
-    const stored=addBatch(r,s,p,grain-reserved,{id:`harvest:${eventId}`,day,source:'本田实际收获'});
+    const stored=addBatch(r,s,p,grain-reserved,{id:`harvest:${eventId}`,day,source:'本田实际收获',growthSources:[...growthSources]});
     return{units:worked,grain,reserved,stored,...(farmPestProfile(engine,p.settlement)?{pestLost,potential}:{})};
 }
 export function advanceAgriculture(d,engine,id,source,day){
@@ -102,8 +104,9 @@ export function advanceAgriculture(d,engine,id,source,day){
     for(const row of r.field.cohorts){
         if(row.ready)continue;
         if((weather?.temperatureC??10)>=engine.rules.agriculture.crop.minimumTemperatureC){row.grownDays++;row.qualityDays++;row.qualitySum+=weather?.cropMultiplier??1;}
-        if(row.grownDays>=engine.rules.agriculture.crop.growthDays){row.ready=true;row.readyDay=day;}
-    }
+        }
+    consumeGrowthDay(d,engine,r,p,day,weather);
+    for(const row of r.field.cohorts)if(!row.ready&&row.grownDays>=engine.rules.agriculture.crop.growthDays){row.ready=true;row.readyDay=day;}
     const result=weather?.kind!=='storm'&&weather?.kind!=='snow'?harvest(r,s,engine,p,day,capacity,`day_${day}`):{units:0,grain:0,reserved:0,stored:0};
     r.ledger.freshProduced+=fresh;addBatch(r,s,p,fresh,{id:`fresh:${day}`,day,source:'每日农副产',kind:'fresh'});
     const freshEaten=takeFood(r,s,s.population,'fresh');
@@ -133,12 +136,17 @@ export function agricultureView(engine,document){
     return{settlement:p.settlement,mode:r.mode,food:document.state.settlements[p.settlement].food,seed:r.field.seedBank,
         field:{id:r.field.id,location:p.fieldLocation,areaHa:r.field.areaUnits/engine.rules.agriculture.crop.areaUnitsPerHa,
             ...(farmPestProfile(engine,p.settlement)?{damageType:'害兽啃食'}:{}),
+            growth:clone(r.field.growthLeases??[]),
             growing:r.field.cohorts.filter(c=>!c.ready).map(c=>({areaHa:c.areaUnits/100,grownDays:c.grownDays,requiredDays:engine.rules.agriculture.crop.growthDays,...(c.pestDamageBps!==undefined?{pestDamagePercent:c.pestDamageBps/100}:{})})),
             readyHa:r.field.cohorts.filter(c=>c.ready).reduce((n,c)=>n+c.areaUnits-c.harvestedUnits,0)/100},
         granary:r.granary,tools:r.tools,lastReport:r.lastReport,ledger:clone(r.ledger),fiscal:clone(document.state.records[`village-fiscal:${p.settlement}`]??null),contracts:(engine.rules.agriculture.settlements.map(p=>p.tradeContract).filter(c=>c&&[c.seller,c.buyer].includes(p.settlement))).map(c=>({...clone(c),settlement:clone(document.state.records[`village-trade:${c.id}`]??null)}))};
 }
 export function validateAgricultureRules(world){
-    const errors=[],r=world.rules.agriculture;if(!r)return errors;
+    const errors=[...validateGrowthRules(world.rules.magicGrowth),...validateGrowthWorld(world)],r=world.rules.agriculture;if(!r)return errors;
+    for(const spell of world.spells??[])if(spell.effectSpec?.kind==='growth'){
+        const limit=world.rules.magicGrowth?.stageLimits?.[spell.stage];
+        if(!limit||spell.effectSpec.power>limit.power||spell.duration>limit.duration)errors.push(`生长阶段界限不符：${spell.id}`);
+    }
     const ids=new Map([...world.locations,...world.npcs,...world.items,...world.skills].map(row=>[row.id,row])),seen=new Set();
     if(!world.rules.weather)errors.push('农事源规则需要已接入地区天气');
     if(ids.get(r.grainItem)?.weight!==r.foodUnitKg||ids.get(r.grainItem)?.shelfLifeDays!==180)errors.push('粮仓转换必须绑定现有半公斤、180天的谷物目录，不能换成任意食物');

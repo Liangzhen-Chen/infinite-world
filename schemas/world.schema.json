@@ -3218,7 +3218,8 @@
                   "channel",
                   "soil",
                   "silt_heap",
-                  "object"
+                  "object",
+                  "plant"
                 ]
               },
               "owner": {
@@ -4082,7 +4083,8 @@
                 "object",
                 "relief",
                 "summon_contract",
-                "mark"
+                "mark",
+                "growth"
               ]
             },
             "power": {
@@ -4166,7 +4168,8 @@
                 "turbidity_point",
                 "reading",
                 "litre",
-                "gram"
+                "gram",
+                "permille"
               ]
             },
             "damageTypes": {
