@@ -1,6 +1,6 @@
 {
   "index": 0,
-  "fingerprint": "2a9f857f46cf15ffcaf706c3e5be0900f136d1971c649094e69ac5c0ec5f656b",
+  "fingerprint": "acc4ef60387d006d311a207ac2cc875f997fa3133751f5941d3f32c66891a59a",
   "count": 25,
   "passed": 12,
   "ids": [
@@ -58,17 +58,17 @@
     "npc_wt_fanshui"
   ],
   "sample": [
-    "npc_wt_shiqiao",
-    "npc_wt_wangpu",
+    "npc_wt_weilian",
+    "npc_wt_zhengxi",
+    "npc_wt_heqin",
     "npc_wt_huangting",
-    "npc_wt_duke",
-    "npc_wt_keli"
+    "npc_wt_liuyan"
   ],
   "l4": {
     "approved": false,
     "notes": []
   },
-  "costUpperYuan": 8.030807199999995,
+  "costUpperYuan": 14.835478399999992,
   "manualRatio": 0.52,
   "needsSystemicRepair": true,
   "operativeInvalidated": [
@@ -164,6 +164,12 @@
       "notes": [],
       "supersededBy": "npc_wt_zhangou",
       "priorFingerprint": "ccfcc3859a5557349261b3a59c7f90bf15d81294115a8f12f10ca0195398813b"
+    },
+    {
+      "approved": false,
+      "notes": [],
+      "supersededBy": "npc_wt_zhangou",
+      "priorFingerprint": "2a9f857f46cf15ffcaf706c3e5be0900f136d1971c649094e69ac5c0ec5f656b"
     }
   ],
   "foundationHash": "fffc337e121742c3c32d56a90dbaa8445d2e9ad28166c3c548f398bba1755bae"
