@@ -22,7 +22,9 @@
 
 2026-10-12 客户端规划001：默认cwd是C盘f4b4副本，本次命令均指定F:/dnd。开工主线fd94cd4，核查期间主会话已合T45为a64f348并记录bb4c575。以实际主线和各树证据为准；PROGRESS/当前状态中的旧行不作为重做授权。本轮只编辑PLAN，报告交主会话，其他会话的预算与AGENTS改动保留。
 
-人物优先顺序为T08官方0模型附件/请求预检及原卡L2/L4，再T09同类预检及原卡L2/L4。两卡可并行做各自目录内的离线准备，取得主会话独占模型槽后串行审核；沿T11已实现批量入口预演，全部审核和事件闭合后再由主会话整合，不另造发布器。T06与T07均已卡住，本轮不得重开、换卡续审或清恢复次数；以下两卡长段仅为冻结历史。原17traits固定值及合格叶保持，不新增任何人口。
+T08已卡住冻结，原预算不能继续；本轮跳过，待用户决定。T09只做候选/来源0模型预检，公共入口须避让T46；旧卡模型步骤不构成本轮授槽。沿T11已实现批量入口预演，全部审核和事件闭合后再由主会话整合，不另造发布器。T06与T07均已卡住，本轮不得重开、换卡续审或清恢复次数；以下两卡长段仅为冻结历史。原17traits固定值及合格叶保持，不新增任何人口。
+
+本次T08/T34规划结论覆盖下方旧调度的“优先续审T08”“T34就绪”及T28/T34可并行表述：T34接口已合，动作验收由T34-R1承担，等T28-R1释放engine后串行。T46只修公共工具，费用冻结；T09不得同时改正式入口。
 
 M2次序排在人物审核后；T17原树171f0b8已用唯一resume并再次停止，现无模型执行资格，详见卡尾现状。可先交主会话验收保存原证据，不能把旧PLAN的恢复条件重复授予。T11-A/B、T10已在主线，河湾32正式闭合，152full/294名册不变；全世界1517缺口、T11-C与release/final保持未关闭。四村经济、权限、传闻链及T13–T16/T20/T21/T23/T24/T29均已有提交，核验后复用。
 
@@ -90,7 +92,7 @@ T07 六名 manual 补充复核（属于同一次规划处理）：冻结报告�
 
 来源投影与冻结规则：用现有 `--source-evidence` 提供严格匹配冻结原档的 sex、workplace、home、relationships、goals 及已审核名册 concern；该附件是审核资料，不能据此把他人所有字段灌进 NPC 知识。后续真实 L4 已在 `7f8aacb` 的 `sourced/l4-invalidations.json` 对 24 个旧 passed 给出 64 个实错路径及 quote/source/draft-review hash；原 passed 记录保留，但 operativeStatus=invalidated-by-L4，当前可批准数为 0。只按该实际清单与 6 个 manual 的核实失败叶修订，正确兄弟叶、旧请求和原 foundation/sourceDeclaration 保持冻结，不因 T25 或统一换提示从零重起全村审核。必要新背景出处由 T25 显式另存并校验，不覆写原来源。T07 在 T25 通过前可完成离线差异清单和 L4，付费复审等合同与稳定入口；仍按前述单次规划方案、原增量预算和两修停止线执行。
 
-### T08 砾泉人物深度【优先执行，原卡续接】
+### T08 砾泉人物深度【一次规划已处理；卡住冻结，以下原验收保留】
 
 目标：现有30人L1/L2/L4闭合，合并视图T04零缺口。已有候选、六背景/61私密风险及737382d的15附件覆盖16人sex，不重做作者部分。拥有world/design/w1-lq-depth.mjs、world/drafts/w1/lq-depth/与tests/npc-depth-lq.test.mjs；不写baseline或公共工具。
 
@@ -98,7 +100,19 @@ T07 六名 manual 补充复核（属于同一次规划处理）：冻结报告�
 
 验收：node --test tests/npc-depth-lq.test.mjs tests/npc-depth-source-evidence.test.mjs及CORE；真实L2逐叶/背景风险全覆盖、L4与波次抽样按规则12，30人零缺口，发布预演完整事件闭合。0模型预检不算L2。依赖T45已合；原增量3元且波次20/goal100同时约束，不足或两修仍错按规则停。与T09仅离线文件可并行，模型及公共入口修改互斥，不新增人口。
 
-### T09 桑坂人物深度【T08之后占模型槽】
+2026-10-12规划判定：4f4cce8/47b2dfc已合。80请求上界2.87060744元，原3元余额0.12939256，小于最小review预留0.236606；即使省去draft也不能合法续审，不得缩coverage、背景风险或隐私审核腾额度。L2仍17 passed/4 manual/9 pending，L4未批准；17通过不重审，六处来源发现也不转成新付费授权。source/foundation/candidate、15份sex附件及全部usage/hash冻结，普通hard早期provider原文缺失如实保留，不补造。公共修复T46不恢复T08额度或attempts。
+
+定点依据为author-v2/first-review下四个npc_lq_*.json最新错误、foundation原来源与authored-background事件，另对照author-v2/author-source-checklist.json的原字段。霍霁：knowledge.known[2]是work-dust本人在场内容，不能仅以共享事件只挂memorySeeds否定本人知情；knowledge.unknown[1]仍待问、goals.long[0].steps[0].content仍pending，不等于既定工序。relationships[0].note的怕灰、[1]的杨硕被问有家属原concern，新增夫妻商量及relationships[2].note/opinions.neighbors[2].view的明禾比较分堆经历无独立来源，不能靠职业补足。
+
+符审：relationships[0].note中符珍被问有原concern，但她“答不上来”不证明知道私密插次，更不证明夫妻已争论；这是实际知情/互动缺口。relationships[2].note及opinions.neighbors[2].view的皮菁读回交流无来源，readback参与者不含皮菁。檀羽同两路径的封济搬袋核对亦无来源；封济按身体范围做轻活的原目标不能证明檀羽获知肩力，更不能外传其夜间肩疼。
+
+隋莉：knowledge.known[2]的mud-water本人亲历可追溯，地点source不单凭与本人ID不同判错；knowledge.unknown[0]在本人未知项不自动成为公开秘密。knowledge.unknown[1]预设已有记录，以及relationships[2].note/opinions.neighbors[2].view的沙萝核工互动缺来源；相安拖延有出处，已争论仍无出处。隋莉缺最终完整provider，判定仅据最终解析review和原源，不能称provider复核完成。上述误报分析不改任何真实审核状态。
+
+六处额外来源缺口见first-real-review-report.json的sourceFindings：栾佩relationships[0].note把栾瑜闭口写成争论；云绣[1]把闵巧等待写成催促/常商量；鞠舒[0]把鞠理闷着写成催促；青岚[0]把青蔓不敢阻拦写成争论；易可[0]把易君不接话写成争论；聂雅[1]把曾业绕桌找空处写成催收。各原residents.currentConcern已逐值留证，担忧不是已发生对话。若用户以后允许重开，只能沿受控失败叶修订和完整审核；本轮不改来源、不修候选、不重开T06/T07，需决定项由主会话登记后跳过。
+
+公共缺陷证据见closure-gap-report.json的sharedToolFindings：闻琪review预算拒绝后仍发鞠舒/崔帆/青岚三次draft，合计0.108236元已含原80请求，不能另扣或抹账。冻结candidate三次回显也不算三次有效修文；T46须让预算停止脱离内容反馈并保留普通hard逐次原文，不能以工具修复自动取得第四次审核资格。
+
+### T09 桑坂人物深度【本轮仅0模型候选/来源预检】
 
 目标：现有30人审核闭合；36957bf已合15独立背景/172原字段hash/60私密风险及官方prepare，保留原正文ID与已修8叶，不重新起草。拥有world/design/w1-sb-depth.mjs、world/drafts/w1/sb-depth/和tests/npc-depth-sb.test.mjs；不写baseline或公共工具。
 
@@ -226,13 +240,15 @@ T17 现状覆盖旧恢复资格：171f0b8已在原树执行上述唯一resume，
 
 验收：`node tools/m3-soak.mjs --directory docs/测试报告/m3-soak-wave --init`，后以`--run --turns 150 --budget 30`续跑及`--report`；每25轮五题来自50–200轮前真实事件，不足记失败。结构召回≥95%、细节≥80%、矛盾≤1/100轮、语义时间偏差≤10%，报告费用/p50/p95/cache目标≥70%，所有角色均入账。不要做：空探针算通过、用回放时差替语义、再领额度、原档。依赖T32及全部实际输入NPC/共享事件批准闭包；不以T11-C阻断无关机制，全体构建仍独立验收；独占模型。M1 200回合实证和R2部署仍另列，不能据本卡关闭全部M3。
 
-### T34 M4区域效果持续消费者【0模型就绪】
+### T34 M4区域效果持续消费者【28cbe0c接口已合；正常动作验收未闭合，见T34-R1】
 
 目标：补机制图区域多目标/跨界/友军波及missing-consumer。拥有新增server-plugin/magic-area.mjs、tests/magic-area.test.mjs，必要magic.mjs/magic-primitives.mjs及engine.mjs时间移动接点，world/design/w2-mechanism-map.json生成结果；不新增正式法术/首领。
 
 复用effectSpec/state.effects及伤害/防护/目标同意校验，保存来源、范围/地点、expires和触发游标。单位进出与跳步按同时间轴结算，法术/首领共用；仅登记状态不算实际生效，未实现描述仍missing-consumer，不削弱同意。
 
 验收：node --test tests/magic-area.test.mjs tests/magic-primitives.test.mjs tests/magic.test.mjs tests/bosses.test.mjs及CORE；多目标/友军/免疫/出界/到期、大小步一致、回滚重试无双伤。依赖现有M4原语已合，人物阻断时可执行，费用0。可与T28/T30并行；magic*/engine/机制图写者互斥，T17真实取证时暂缓源合入，T19世界正式发布串行。
+
+规划定位：相关34及合后CORE38通过只证明接口。local_actor_position:<id>在magic-area读取、engine迁移删除，无正式写者；magicAreaTargetFacts未绑定provider。activities交锋与bosses接触仅记录地点，environment移动仅写玩家坐标。最小接点是这些现有动作实际抵达已登记环境锚点的服务端回执；先产生可验证位置，再供法术与首领共用。未发生移动的同场角色继续位置未知，不能默认进半径；现有人工注入位置的测试不能关闭该缺口。
 
 ### T35 M4已知锚点与许可位移【待调度】
 
@@ -299,6 +315,24 @@ T17 现状覆盖旧恢复资格：171f0b8已在原树执行上述唯一resume，
 扩波依赖不变：R04法术150与R05首领40含8智能存在，先T18/T19及适用消费者/真实平衡；缺消费者保持待细化，不用研究型标签减少正式目标。R06新人口严格依T11-C全体达标及原第1项、T17验收、T19，当前不可执行；R14再依W1完成。M5/M3机制或局部专项通过不会解禁人口，也不替代全体full构建门槛。需要用户决定的原档、部署和T06停止上限继续跳过，不在本批增开询问。
 
 ### T45 已完成：54e0201 首次附件/完整请求预留/发布重放已由主会话以 a64f348 合入；相关74与CORE38实跑全过，bb4c575已登记。首次draft/L2实际出站及预演重放、篡改拒绝合同保留，勿重派；完整验收见 `git show bb4c575:docs/PLAN.md`，mock不等于T08真实审核。
+
+### T46 公共审核预算中止与响应留证【0模型】
+
+拥有tools/{content-pipeline,content-budget,npc-depth-content}.mjs及对应测试；必要npc-depth-review.mjs接线与T09正式入口串行。沿原账，不建预算框架，不改T08数据或恢复审核。
+
+发draft前在既有锁/队列内预留本轮draft及必要review；按完整出站请求含附件/coverage、背景风险和最高费率计算。候选未定时用可证明上界，不能证明即零调用；review前复核，未知预留不释放。
+
+预算拒绝独立于内容hard，立即停未发队列；不转修订反馈、不自动付费重起或清attempts，已发请求结算留证。每次paid响应在解析/包装前独立原子保存原文、请求/响应hash与usage关联；普通hard、无附件和解析失败均覆盖，后轮不覆盖前轮，缺失旧响应不补造。
+
+验收mock预算够draft不够review时零调用，并发拒绝后不再发、重启不重领，普通hard多轮原文可追溯；完整覆盖/隐私合同不变。跑tests/{content-pipeline,npc-depth-budget,npc-depth-review-output,npc-depth-source-evidence}.test.mjs及CORE。失败仍按两修停止线。
+
+### T34-R1 正常动作区域位置与消费者【0模型，待T28-R1释放】
+
+依赖28cbe0c。拥有server-plugin/{magic-area,magic,engine,activities,environment,bosses,boss-abilities}.mjs、对应测试及生成机制图；与T28-R1必要engine、T35/T36串行，工具定义若需变更先交主会话划权。不新增正式内容。
+
+按T34定位复用环境锚点和现有活动/战斗移动，服务端实际抵达才生成带角色/地点/事件来源的坐标；NPC/怪物均须正常动作产生，禁止同场推距或用户自报坐标。视线从实际可核查遮挡/接触关系取得，未知拒绝；迁移/离场清旧位置。绑定真实provider，法术施放与首领能力走同一范围消费者。
+
+验收隔离目录走正式动作链，不直接注入位置或替换provider：NPC及怪物多目标进出、友军/无同意/遮挡、过期位置、失败零写与重放单次结算；保留原面积/时间断言。运行tests/{magic-area,magic,bosses,environment}.test.mjs及CORE，必要新增magic-area-actions.test.mjs。机制图只关闭已实证消费者；真实内容和整体M4仍待验收。
 
 ## 后续粗卡：全部待细化
 
