@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
+import Ajv from 'ajv';
 import {loadWorld} from '../tools/load-world.mjs';
 import {validateWorld} from '../tools/validate-world.mjs';
 import {WorldEngine} from '../server-plugin/engine.mjs';
@@ -11,6 +12,8 @@ import {validateMagicCatalog} from '../server-plugin/magic.mjs';
 import {validateGrowthRules} from '../server-plugin/magic-growth.mjs';
 
 const source=await loadWorld(),legacy=JSON.parse(await fs.readFile('tests/fixtures/legacy/seed.json','utf8'));
+const worldSchema=JSON.parse(await fs.readFile(new URL('../schemas/world.schema.json',import.meta.url),'utf8'));
+const validateSourceSchema=new Ajv({allErrors:true,strict:true,allowUnionTypes:true}).compile(worldSchema);
 const catalog={...source.spells[0],id:'spell_test_growth',name:'试验生长',skill:'skill_test_growth',stage:3,mp:36,minutes:1,duration:10080,rangeMeters:3,materials:[],difficulty:10,effectSpec:{kind:'growth',power:250,unit:'permille'}};
 const farm=d=>d.state.records['agriculture:loc_bs_yupo'];
 const resource=d=>d.state.records['physical_feature:feature_growth']?.state;
@@ -124,7 +127,7 @@ test('same field cooldown and lifetime cohort quota block repeated stacking, exp
 test('old or unregistered resource worlds get zero automatic crops, resources, effects or retroactive payouts',async()=>{
  const f=await setup(),old=structuredClone(f.sown);farm(old).mode='legacy';const before=structuredClone(old);
  await assert.rejects(f.cast(old,'legacy'),/旧账/);assert.deepEqual(old,before);
- delete f.p.growthFeature;await assert.rejects(f.cast(f.sown,'unbound'),/绑定/);
+ delete f.p.growthFeature;delete f.feature.growth;await assert.rejects(f.cast(f.sown,'unbound'),/绑定/);
  assert.ok(validateGrowthRules({...source.rules.magicGrowth,maximumBonusPermille:201}).length);
  assert.ok(validateMagicCatalog({...catalog,duration:10081}).length);assert.ok(validateMagicCatalog({...catalog,effectSpec:{...catalog.effectSpec,power:251}}).length);
  const low=await setup();low.world.spells.find(s=>s.id===catalog.id).stage=0;
@@ -179,4 +182,41 @@ test('formal world audit preserves the same existing release failures with/witho
  const old=validateWorld(without,{stage:'release'});
  assert.equal(withGrowth.ok,false);assert.deepEqual(withGrowth.errors,old.errors);
  assert.equal(withGrowth.errors.length,1192);
+});
+test('strict AJV accepts a registered plant/growth source; actual source audit rejects bad units, stages, ownership and resource bindings',async()=>{
+ const world=structuredClone(source),p=world.rules.agriculture.settlements.find(p=>p.settlement==='loc_bs_yupo');
+ const soil=world.locations.flatMap(l=>l.features??[]).find(f=>f.kind==='soil');
+ const plant={...structuredClone(soil),id:'feature_source_growth',name:'源登记试验作物',aliases:[],kind:'plant',owner:p.settlement,position:[0,0],growth:{field:p.fieldId,settlement:p.settlement}};
+ delete plant.links;plant.state.waterMl=10000;plant.state.nutrientMg=100000;
+ world.locations.find(l=>l.id===p.fieldLocation).features??=[];world.locations.find(l=>l.id===p.fieldLocation).features.push(plant);
+ const spell={...structuredClone(source.spells[0]),id:'spell_source_growth',name:'源登记试验生长',aliases:[],stage:0,mp:2,minutes:1,duration:1440,rangeMeters:3,effectSpec:{kind:'growth',power:50,unit:'permille'}};
+ world.spells.push(spell);
+ assert.equal(validateSourceSchema(world),true,JSON.stringify(validateSourceSchema.errors));
+ const positive=validateWorld(world,{stage:'engine'});assert.equal(positive.ok,true,positive.errors.join('\n'));
+ assert.deepEqual(validateWorld(world,{stage:'release'}).errors,validateWorld(source,{stage:'release'}).errors);
+ // Exercise a source-audited world without changing its frozen village opening
+ // accounts, crop duration, area or workers. Six days only reaches real sowing.
+ const engine=new WorldEngine(world),initial=engine.createCharacter(legacy,{},'source-growth');initial.state.location=p.fieldLocation;
+ initial.state.spells[spell.id]={source:{type:'fixture'}};initial.state.skills[spell.skill]={proficiency:200,daily:{},breakthroughs:[]};
+ initial.state.records.growth_consent={category:'authorization',action:'growth_magic',subject:p.fieldId,grantor:p.manager,grantee:'player',expires:20*1440};
+ const sowing=await engine.reduce(initial,{tool:'world_time',args:{minutes:6*1440},eventId:'source-sowing'}),sown=applyPatches(initial,sowing.patches);
+ assert.ok(farm(sown).ledger.seedSpent>0);assert.ok(farm(sown).field.cohorts.every(c=>c.seedSources.reduce((n,b)=>n+b.amount,0)===c.seedSpent));
+ let cast;
+ for(let i=0;i<20;i++){const candidate=await engine.reduce(sown,{tool:'world_cast',args:{spell:spell.id,target:p.fieldId,authorization:'growth_consent'},eventId:`source-cast-${i}`});if(candidate.result.success){cast=candidate;break;}}
+ assert.ok(cast);const active=applyPatches(sown,cast.patches),waiting=await engine.reduce(active,{tool:'world_time',args:{minutes:2880},eventId:'source-growth-days'}),grown=applyPatches(active,waiting.patches);
+ assert.ok(farm(grown).field.growthLeases[0].usedTicks>0);assert.ok(farm(grown).field.cohorts.some(c=>c.growthBonusTicks>0));
+ const water=grown.state.records[`physical_feature:${plant.id}`].state;
+ assert.equal(water.waterMl+water.growthConsumedWaterMl,plant.state.waterMl);assert.equal(water.nutrientMg+water.growthConsumedNutrientMg,plant.state.nutrientMg);
+ assert.equal(farm(grown).ledger.harvested,0);
+ for(const edit of [w=>{w.spells.at(-1).effectSpec.unit='percent';},w=>{w.spells.at(-1).effectSpec.kind='growth_diagnosis';},w=>{w.spells.at(-1).effectSpec.power=0;},w=>{w.locations.find(l=>l.id===p.fieldLocation).features.at(-1).kind='unregistered_plant';}]){
+  const bad=structuredClone(world);edit(bad);assert.equal(validateSourceSchema(bad),false);
+ }
+ for(const [edit,pattern] of [
+  [w=>{w.spells.at(-1).effectSpec.power=51;},/阶段/],
+  [w=>{w.spells.at(-1).duration=1441;},/阶段/],
+  [w=>{w.spells.at(-1).effectSpec.cureDisease=true;},/病理/],
+  [w=>{delete w.locations.find(l=>l.id===p.fieldLocation).features.at(-1).state.nutrientMg;},/营养/],
+  [w=>{w.locations.find(l=>l.id===p.fieldLocation).features.at(-1).owner='player';},/田主/],
+  [w=>{w.locations.find(l=>l.id===p.fieldLocation).features.at(-1).growth.field='farm_absent';},/绑定/],
+ ]){const bad=structuredClone(world);edit(bad);const outcome=validateWorld(bad,{stage:'engine'});assert.equal(outcome.ok,false);assert.ok(outcome.errors.some(e=>pattern.test(e)),outcome.errors.join('\n'));}
 });

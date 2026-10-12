@@ -24,7 +24,8 @@ export function validateGrowthRules(r){
 function rules(engine){const r=engine.rules.magicGrowth,errors=validateGrowthRules(r);if(!r||errors.length)throw Error(errors.join('；')||'缺少生长资源规则');return r;}
 function binding(engine,target){
  const features=environmentFeatures(engine),p=engine.rules.agriculture?.settlements.find(p=>p.fieldId===target);
- const f=p?features.find(f=>f.id===p.growthFeature):features.find(f=>f.id===target);
+ const matches=p?features.filter(f=>f.growth?.field===p.fieldId&&f.growth?.settlement===p.settlement):features.filter(f=>f.id===target);
+ const f=p?.growthFeature?matches.find(f=>f.id===p.growthFeature):matches.length===1?matches[0]:null;
  const profile=p??engine.rules.agriculture?.settlements.find(p=>p.settlement===f?.growth?.settlement&&p.fieldId===f?.growth?.field);
  if(!profile||!f||!['soil','plant'].includes(f.kind)||f.growth?.field!==profile.fieldId||f.growth?.settlement!==profile.settlement||f.location!==profile.fieldLocation)throw Error('田块或植物缺少已登记的农事批次和资源绑定');
  const owner=profile.fieldOwner??profile.settlement;
