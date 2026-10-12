@@ -72,6 +72,8 @@ T06 本次卡住复核：现有 28 人 passed-L1-L2，未完成 L4，不能发�
 
 ### T07 苇汀人物深度
 
+主会话授权的合后特定换行窄修：原方案hash9c58016d及sourceHash保持；指定苇汀源原CRLF/钉死Git blob纯LF只差换行，sourceCheckoutEvidence逐文件绑定planHash/file/originalHash/blob/LFhash及原CRLF重建hash。当前必须严格等于钉死LF文本或完整CRLF重建，混合/字符/字段/伪凭证拒绝。仅必要npc-depth/复审/发布收据传递路径+hash，publication重新验证；缺选项旧合同不变，T06/其他源不得套用。本卡世界/测试及这几处公共依赖由原T07执行者0模型收尾，模型槽仍未授。
+
 目标：苇汀现有 30 份 full 档达到 T04。涉及文件：新增 `world/design/w1-wt-depth.mjs`、`world/drafts/w1/wt-depth/`、`tests/npc-depth-wt.test.mjs`。
 
 实现要点：依据 `world/design/w1-villages-weiting.mjs` 和四村档案中苇束、认户等本地问题，每次派生 3–5 当事人的具体认知、未知事项、行动步骤及共同经历；全村剩余字段按 T04 的 id/field/code 清单定点补，包含报错的 opinions/notes 等设定叶子。复用 T05，不删字段或数组成员，不改合格兄弟字段；仅措辞修正不新增共享记忆。候选不改正式 baseline，保留原身份财物和审核正文中未失败部分。
