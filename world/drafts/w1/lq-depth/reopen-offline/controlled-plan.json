@@ -25,7 +25,7 @@
       "hash": "8e286bd06b53bbcff97d1b23454443acde7559e498064e0d768abc0d21736169"
     },
     {
-      "file": "../../../../../people/baseline.json",
+      "file": "../../reopen-complete/pre-T06-publication-baseline.json",
       "hash": "55c269daac7d6844af7267bb2da1399a9c812fa2f8a1f3635c7815f80c4ebd30"
     }
   ],
@@ -269,5 +269,12 @@
         "candidateDraftHash": "5d85e862d5ad5405701a2cb8c25f38e8887d6359fa79a97c7e11cf94a5a6ee80"
       }
     }
-  ]
+  ],
+  "sourceSnapshotWitness": {
+    "gitCommit": "0136d1928161625a52451862fcc104869cda92c8",
+    "originalFile": "world/people/baseline.json",
+    "frozenHash": "55c269daac7d6844af7267bb2da1399a9c812fa2f8a1f3635c7815f80c4ebd30",
+    "currentSourceHash": "20fc04e61f3a9979020451e82c2d26c1ae845e0b7b5aabd617f9be6e09c69a96",
+    "reason": "T06 official publication changed unrelated village; preserve exact historical source bytes/content without reverting current world or changing any T08 source facts."
+  }
 }
