@@ -222,3 +222,29 @@ T07 在原单卡上限内恢复受控计划。
 
 
 just now
+
+
+第四次补充边界确认原文：
+
+Claude responded: 收到，这个修正是对的。12 人都缺 reviewedPaths，但陆青另有一处真实的硬错误：把田间雇工白蕙写成了学者。所以准确的说法是：11 人是纯协议缺口，陆青是协议缺口加一处错叶。另外，我引用的 finish_reason=stop 只来自安槐那一条，不能推到许苓身上。
+Sorting out which cases are genuine contradictions versus protocol errors.
+Sorting out which cases are genuine contradictions versus protocol errors.
+
+收到，这个修正是对的。12 人都缺 reviewedPaths，但陆青另有一处真实的硬错误：把田间雇工白蕙写成了学者。所以准确的说法是：11 人是纯协议缺口，陆青是协议缺口加一处错叶。另外，我引用的 finish_reason=stop 只来自安槐那一条，不能推到许苓身上。
+
+你的安排我同意：
+
+先用单人确认协议修复有效，剩余失败在原卡 3 元以内定点恢复。
+已通过的 19 人不重跑，L4 必须实际做完。
+T06 继续冻结。
+规划只做已启动的这一次。
+release/final 门槛、单模型槽、不新增人口都保持不变。
+
+没有新的偏移，可以继续。
+
+
+
+
+
+
+2 minutes ago

@@ -2,6 +2,8 @@
 
 仅归档已完成卡，验收标准和来源不删；活动调度见PLAN/PROGRESS。以下完整卡原文按编号保存。
 
+<a id="t01"></a>
+
 ### T01 已验证旧分支增量收尾
 
 目标：保住旧成果，合入榆坡 4 人增量和送货付款前置，核对主线已有真实送货链。涉及文件：原两树提交涉及的 `world/design/w1-yupo-depth-next.mjs`、`tools/npc-depth*.mjs`、`tools/publish-w1-villages.mjs`、`tests/npc-depth-next.test.mjs`、`tests/playtests/npc_courier.json` 及对应人物候选；不另写主功能。
@@ -10,6 +12,8 @@
 
 验收：`node --test tests/npc-depth.test.mjs tests/npc-depth-next.test.mjs tests/w1-village-profiles.test.mjs tests/w1-villages-publish.test.mjs tests/npc-obligations.test.mjs` 及 CORE 全过；送货脚本仍为 8–20 轮并通过离线前置核验。模型预算 0。不要做：新增人口、重写已经通过审核的正文、把旧真实失败标为已复测。依赖：无；原树无其他活动。并行：可与 T14/T20 并行，正式合入串行。
 
+<a id="t02"></a>
+
 ### T02 四村产业、税贸账与治理权限
 
 目标：四村档案不再以 null 代替用户要求的经济与权限资料，数字能由引擎读取并核对。涉及文件：`world/design/w1-village-profiles.mjs`、`world/geo/settlements.json`、`world/meta/rules.json`、对应 `world/drafts/w1/village-profiles/` 与 `world/drafts/w1/village-ledgers/`、`tools/w1-village-profiles-content.mjs`、`tools/population-validation.mjs`、`tools/publish-w1-villages.mjs`、`extension/tools.mjs`、`schemas/world.schema.json`，必要时 `server-plugin/agriculture.mjs`、`server-plugin/agriculture-migration.mjs`、`server-plugin/law.mjs`、`server-plugin/engine.mjs`；测试 `tests/w1-village-profiles.test.mjs`、新增 `tests/village-ledgers.test.mjs`。农事初始化适配仅服务开发世界/测试副本，不在本卡新增发布迁移或操作原存档。
@@ -17,6 +21,8 @@
 实现要点：保留 `settlementProfiles[].details` 与已审核 problems/rumors/calendar；把 `economy` 从 `pending-ledger` 迁为有单位、周期、来源、期初期末的生产/库存/税/贸易记录。粮食复用 `rules.agriculture.settlements`、`state.settlements` 和 `advanceAgriculture` 的守恒，跨村贸易必须有两端同量记账，未发生的合同不得计为已收付。实际公共调用是 `world_field` 携带 `operation:'farm_settle_trade'`、`contract`、`phase:'pickup'|'deliver'`、`authority`；内部 `world_farm/settle_trade` 通过既有 `modelToolCall` 映射，不新增第 26 个公共工具。新经济明细由 world 数据提供，旧世界升级不重置耗尽库存或私人财产。治理复用 `rules.law.codes` 与 `law.mjs` 的 `authority` 在场检查，明示官员、执法区域、可执行事项和转交机构；普通协调者不得自动获搜查征税权。现有缺口断言改为验证新账及拒绝无权操作，保持原问题、传闻来源及秘密隔离。本卡只闭合四村登记粮约与税贸，不扩到全世界自动贸易。
 
 验收：新定向测试覆盖每村年粮等式、税贸双方对账、期初/结算分离、无权拒绝、重复升级及重放；`node --test tests/village-ledgers.test.mjs tests/w1-village-profiles.test.mjs tests/w1-villages-publish.test.mjs tests/law.test.mjs`、CORE 通过。仅跑农业相关命名测试，不启动旧三年全批。事实变更走现有 `reviewProfiles`/`--review`，为本卡补显式候选目录/预算参数，4 村增量上限 1.2 元且计入 W1 20 元总账，L1/L2 无硬错、L4 完成后才写正式源。不要做：凭空补用户粮食、扩人口、全世界周贸易系统；后者归 R07。依赖：T01；并行：不能与其他引擎、规则、四村发布器改动并行。
+
+<a id="t03"></a>
 
 ### T03 四村档案的引擎查询与真实检索
 
@@ -28,6 +34,8 @@
 
 验收边界：本卡已能证明公共经济/权限自然检索与 truth 隔离；“把 claim 塞进聊天后能搜到”仅证明已有聊天可检索。真实证据为四村源 NPC 分别 10/9/9/9，共 37 人，knowledge/memorySeeds/authoredFacts 没有完整 claim，npcContext/scene 没有传闻入口；采用此结论，不再重查 37 人。玩家通过源人物实际听到传闻并进入长期检索的缺口归 T21，本卡完成不等于四村收尾完成。
 
+<a id="t04"></a>
+
 ### T04 完整人物质量门槛与字段审计
 
 目标：实现完整人物质量验证器和逐字段审计，为 T11 接入 `npm run build:release`/final 准备可验证门槛。涉及文件：`tools/npc-profile-validation.mjs`、`tools/npc-depth-content.mjs`、新增 `tools/audit-npc-depth.mjs`、新增 `tests/npc-depth-gate.test.mjs`；本卡不改 `tools/validate-world.mjs` 的正式发布入口，接入归 T11。
@@ -35,6 +43,8 @@
 实现要点：在现有 `validateNpcProfiles` 所在模块新增独立的完整度验证入口，设计 T11 调用合同；现有引擎结构校验不变。`knowledge.known` 至少 3 条 `{fact,source,reliability}`，至少一条事实具体涉及另一个人物或地点；unknown 是具体待知事项；goals 各期限中的 content 与 steps[].content 不同；voice.register 不等于 habits[0]；memorySeeds 至少一条由本人和他人共享，knownBy 引用存在，另一完整档有同事件且事实兼容；relationships[].note 写具体来由。以可检验规则抓占位和重复，以审核抓语义，不能只用字符长度冒充具体性。L1 检查知识/人物设定里的主持人、玩家不能、不要让、禁止等规则措辞，并区分世界内真实禁令的事实陈述。审计 stdout 输出 id/field/reason，覆盖全部 full 档和已修 17 人 traits。
 
 验收：新增门槛负例分别拒绝六类缺口、合法事实不误报，`node --test tests/npc-depth-gate.test.mjs tests/world-validation.test.mjs tests/npc-depth.test.mjs` 及 CORE 通过；`node tools/audit-npc-depth.mjs` 如实报出现有缺口。本卡只能记“验证器已实现”，正式构建门槛未接入，T11 才完成用户此项；这样既有发布器仍能处理在途审核补丁，不形成补内容之前禁止发布补内容的循环依赖。模型预算 0。不要做：降低 full 定义、把人降成名册以通过、成批改内容、删除旧测试。依赖：T01；并行：可与 T02/T03，文件边界不重叠。
+
+<a id="t05"></a>
 
 ### T05 可复用的定点人物修订流水线
 
@@ -48,6 +58,8 @@
 
 验收：`node --test tests/npc-depth-pipeline.test.mjs tests/npc-depth.test.mjs tests/npc-depth-next.test.mjs tests/w1-villages-publish.test.mjs` 及 CORE；prepare 不调用模型、过期指纹/篡改审核拒绝、旧两批仍可重发、不同村候选可独立准备。新增回归须证明：opinions-only 与 notes-only 修复不增记忆，未报错叶子和原 17 traits 改动被拒绝，删除/清空字段或数组成员被拒绝，L2 上下文确实含每个新修订项。模型预算 0。不要做：通用框架重构、重审无改动条目、重写已达标六类、写 PROGRESS。依赖：T01/T04；并行：T04 合入后可与 T02/T03 并行，严格不改旧四村发布器/验证器；完成后解锁 T06–T10。
 
+<a id="t12"></a>
+
 ### T12 修复 M2 审核截断和引用失败
 
 目标：现成会话证据能被完整逐 N 项审核，不靠重跑游戏来修评分器。涉及文件：`tools/npc-acceptance.mjs`、`tools/playtest-review.mjs`、新增 `tools/review-playtest-report.mjs`、`tests/npc-acceptance.test.mjs`、`tests/playtest-review.test.mjs`、`tests/playtest-npc-evidence.test.mjs`。
@@ -58,6 +70,8 @@
 
 已知恢复限制：已合入实现以 `logs/playtest-review-budget/<evidenceHash>.json.lock` 的 `wx` 排他创建保护预算，正常退出在 finally 删锁；强制终止可以遗留空锁，现有锁不带可核验的 PID/启动身份。保守判定为可人工恢复的已知限度，本次不新增自动解锁卡，也不宣称强杀后能安全自动恢复。重跑前主会话确认原运行进程及其后续任务确已结束、没有同证据哈希的其他重评；无法确认则不删锁。确认后仅移除该确切 `.lock`，保留同哈希预算 JSON、usage 日志及 spent/reserved，绝不清预算或仅凭文件年龄解锁；恢复客户端会将旧预留计入费用上界。原输出可能为空或不完整，保留并换新的输出文件名，同一份输入证据继续使用同哈希累计预算；不修改输入来换预算。若后续证据显示锁拥有者无法确认或无人值守反复被此阻断，再拆带身份核验和强杀回归的小卡。
 
+<a id="t13"></a>
+
 ### T13 M2 真实前置与行动链修复
 
 目标：修复最新失败里的私宅等候、推搡司法、燕麦购买与三人同场前置，保留 8–20 轮真实自然输入。涉及文件：`tests/playtests/npc_home_visit.json`、`npc_shove.json`、`npc_quest_social.json`、`npc_voices.json`、`npc_offscreen.json`、`tools/playtest-assertions.mjs`；必要的引擎缺陷限 `server-plugin/engine.mjs`、`law.mjs`、`agriculture.mjs`，相关单文件测试。
@@ -65,6 +79,8 @@
 实现要点：依据最新失败回合定位实际服务时间、位置和物品可得路径；等待 60 分钟必须实际 60，乡巡链按真实在场权限走，燕麦只买到指定商品才继续条件委托。N12 三人同时在场可说话，从现有作息路径安排，不能直接移人；N17 使用离开十天窗口内新增结算行动。前置改变不能把“60 分钟”改成当前错误的 13 分钟，不能在玩家句里提示工具名。新增离线前置测试用真实引擎和现有工具路由，测试夹具不强制成功骰点。
 
 验收：`node --test tests/playtest-runner.test.mjs tests/playtest-npc-evidence.test.mjs tests/npc-obligations.test.mjs tests/law.test.mjs`，改动农业时仅其对应命名测试，CORE；新增 `tests/m2-preconditions.test.mjs` 全部链路通，日志有实际位置/分钟/钱物证据。模型预算 0，真实复测统一 T17。不要做：虚构到货和库存、改断言掩盖失败、为每条叙述加新工具。依赖：T01/T03/T21；并行：不与 T02 或任何 engine/law/agriculture 改动并行，可与 T12。
+
+<a id="t14"></a>
 
 ### T14 原送货树的 M3 语义耗时 WIP 收尾
 
@@ -74,6 +90,8 @@
 
 验收：`node --test tests/m3-soak-timing.test.mjs tests/m3-soak-adapter.test.mjs tests/m3-soak.test.mjs`、CORE；60→13/36 和“六小时→六时辰”负例能够暴露，合法等待后明确交谈不误报，恢复后测量不重复。模型预算 0。不要做：启动 300 轮、再做送货机制、丢失原 WIP。依赖：无，原树已停止需重新确认；并行：可与 T01/T20。完成后由主会话合入并改 PROGRESS 状态。
 
+<a id="t15"></a>
+
 ### T15 知情边界与离屏回忆的实际失败修复
 
 目标：无关人物不泄漏私密任务，NPC 回忆与本次实际制作材料、次数、费用和成败吻合。涉及文件：`server-plugin/consistency-evidence.mjs`、`consistency-review.mjs`、`consistency-service.mjs`、`npc-cognition.mjs`、`npc-memory.mjs`，必要时 `extension/prompt.mjs`；`tests/m3-consistency-evidence.test.mjs`、`tests/m3-consistency-integration.test.mjs`、`tests/npc-cognition.test.mjs`。
@@ -81,6 +99,8 @@
 实现要点：沿已有审稿专用 knowledge 和任务/历史许可摘要修最小缺口；实际 sceneBeforeReply 与来源事件成为证据，未知委托不因审稿看见就转发给说话人。阿砚回忆只使用 N17 当前离开窗口里的结算记录，材料和失败成本来自账本。仍最多一次纯文字改写，不再次执行交易；严重未修正仍阻止尾注，warning 仍保持需复核。
 
 验收：上述定向测试、CORE；用保存失败原文形成回归，未知角色对话泄漏被拒绝/修正，允许的亲历或已合法转述不误报，改写不能改变账本。模型预算 0，真实验证在 T17。不要做：全知传播、在提示里禁止正常小动作、把 warning 视为通过。依赖：T01/T13；并行：不与同文件审稿/检索改动并行，可与 T14。
+
+<a id="t16"></a>
 
 ### T16 M2 汇总门槛与选工具实测口径
 
@@ -90,6 +110,8 @@
 
 验收：上述测试、`tests/playtest-npc-evidence.test.mjs`、CORE；mock 验证高账本率但泄漏/未测/N12缺样本仍失败，12 项联合门槛正确，opportunities=0 为未测。模型预算 0。不要做：调整现有门槛、丢弃失败样本、杜撰实测数字。依赖：T12/T13/T15；并行：不可与 T12 相同文件并行。
 
+<a id="t20"></a>
+
 ### T20 原人物树的玩家账本面板 WIP 收尾
 
 目标：完成 `035d792` 已有小块界面，不把它算成完整 M6。涉及文件：原 `F:/dnd-worktrees/npc-depth` 的 `extension/ledger-view.mjs`、`extension/runtime.js`、`extension/style.css`、`tools/deploy-engine.mjs` 打包清单，及 `tests/runtime.test.mjs`、`tests/history-window-integration.test.mjs`、`tests/m3-consistency-browser.test.mjs`。
@@ -97,6 +119,8 @@
 实现要点：只收尾已存在的玩家可读账本投影，读引擎真实状态，正常面板不泄漏 raw JSON、未知 NPC 私密信息或调试字段。打包入口可改文件清单，不执行 activate/deploy。在隔离页面验证渲染、历史剪裁、审核提示与移动视口，沿现有 Playwright 测试设施截图。
 
 验收：上述三个测试和 CORE，隔离页面 390×844 无横溢/控制台错，截图及浏览器验证报告归最新报告；模型预算 0。不要做：借此重做完整界面、动用户酒馆、启动图像或语音付费服务。依赖：无，确认原树已停止；并行：可与 T01/T14，不能与 extension/runtime 的其他卡并行。
+
+<a id="t21"></a>
 
 ### T21 四村传闻从源人物到玩家获知的可达性
 
@@ -111,6 +135,8 @@
 验收：`node --test tests/village-rumor-access.test.mjs tests/npc-memory.test.mjs tests/npc-cognition.test.mjs tests/chronicle.test.mjs tests/m3-retrieval.test.mjs` 及 CORE 全过，模型预算 0。新增测试覆盖全部 40 条源/携带者投影和非持有者隔离，并对各条登记 claim 通过受校验的实际引擎动作产生可追溯获知，不仅检查静态数组；每村至少一条经合法移动/等候接近人物→话题场景→真实工具路由交谈→Store 持久事件→真实 `/search` 的完整链。测试可用隔离世界/存档，不能向聊天、玩家记忆或 heard 记录直接塞 claim 代替交谈，也不能直接改 NPC 位置绕过到场。首次交谈前自然关键词搜不到未获知 claim，交谈后能搜到带讲述者和未核实标记的 claim；未到场、睡眠/失能、冒充 source、改 claim、请求 truth、只看 public catalog 均不得产生获知。覆盖重放/重复、重启、导入导出和撤销后索引清除；静态 NPC 内容前后不变，公共工具仍 25 个。给出链路证据，不宣称本卡通过了真实模型叙述。
 
 不要做：重复核验 37 人缺口、改写 40 条已审核正文或静态 NPC 合格字段、新增人口、公开真假、自动全村传播、借此完成 300 传闻或世界时钟、调用真实模型、降低知识门槛。依赖：T02 已合入；按 T03 已确认的检索合同实施，最终联合验收要求 T03 完成。并行：可与 T03 和 T06–T10 作者块并行，因为文件所有权分开；不与 T13/T15 或任何 engine/npc-memory/scene-card/chronicle/tools 改动并行。新树 `F:/dnd-wt/T21`、分支 `t21`；本卡是用户第 1 项四村完成前置，也是 T11/T13 依赖。
+
+<a id="t22"></a>
 
 ### T22 人物起草顶层合同与共享/单卡预算护栏
 
@@ -128,6 +154,8 @@
 
 不要做：真实模型试探格式、重跑游戏、改人物事实或知识门槛、批量放宽 JSON、伪造 L2/L4、清空预算/预留/失败记录、新建空账、把未知费用当已退款。依赖：T05 与已保存的 T06 失败证据；独立 `F:/dnd-wt/T22`、`t22`。可并行：T07 仅本村最后叶子的离线修订、T08–T10 候选作者、T21 引擎传闻；不可与任何改公共内容流水线的块并行，T06/T07 真实审核冻结到本卡及合后 CORE 通过，由主会话按原增量额度逐卡恢复。
 
+<a id="t23"></a>
+
 ### T23 review-001 四村税贸真实作息联动验证
 
 目标：补齐 P2 验收证据缺口。`tests/village-ledgers.test.mjs:16` 删除全部 NPC schedule/tier，且 `at` 与送达前直接摆放管理员；现有检查证明账本守恒和权限拒绝，尚不能证明保留正式作息时可完整办理。抽样四村管理员的默认柜台时段均为 480–720、780–1020 分钟，未发现柜台永久不可达，故本卡不把缺证据说成已确认功能故障，也不阻塞人物离线修订。
@@ -137,6 +165,8 @@
 验收命令：`node --test tests/village-trade-live.test.mjs tests/village-ledgers.test.mjs` 与 CORE；四份粮约在保留正式作息和实际行走后均完成，源方预收归零、总货价 60 铜分列净额 57/税 3、买方实际支付与库存变化一致，报告保留关键分钟、位置、玩家及买卖双方钱物快照。模型预算 0；不运行真实模型或长年农业模拟。如果真实前置失败，最多按执行规则试两种修法，保存复现证据后交规划定点拆卡，不能在本卡扩大引擎文件所有权。
 
 不要做：删日程、强移 NPC、强制骰点、静默补资源、部署、拿本卡代替模型自然叙述验收、重复 T21 的 40 条传闻验证。依赖：T02/T21 已合入；新树 `F:/dnd-wt/T23`、分支 `t23`。可并行：T22、T06–T10 内容作者和审核；与修改 agriculture/engine/作息运行的卡串行，避免验收版本漂移。本卡完成后作为 T17 前置证据归档；T13 可先执行，T17 开始前须完成本卡或处理其实际失败。
+
+<a id="t24"></a>
 
 ### T24 旧人物发布器保留已发布教学增量
 
@@ -149,6 +179,8 @@
 验收命令：`node --test tests/npc-profile-publication.test.mjs tests/npc-publication-increments.test.mjs tests/npc-traits-publication.test.mjs tests/m4-publication.test.mjs` 与 CORE，模型预算 0。证明真实正式世界的 prepare 不再在许苓 services/skills 拒绝；临时目录首次预演/写入后再次预演 changed=false，许苓服务和技能完全保留、钱物与 17 人 traits 不变。反例涵盖删原服务、伪造新服务/技能、技能同 ID 内容冲突、伪造或缺失来源、未正式发布的合法草稿、错导师、来源审核哈希变化与其他身份冲突；仍保留旧 L2/L4 及候选篡改拒绝测试。不得将后续完整档内容冲突也一并忽略：遇到新的真实不兼容差异，报告具体字段给规划，不在本卡放宽。
 
 不要做：重置 services/skills、重跑模型、改旧审核基线或补丁白名单、静默回滚后来人物修订、部署或修改存档。依赖：已合入 M4 学习来源和 T10 `4f0bfe4` 的阻断证据；独立树 `F:/dnd-wt/T24`、分支 `t24`。可并行：T07 定点作者修订、T22 公共预算入口；不可与写 m2-people-publish 或同测试文件的卡并行。完成后解锁 T10 的该项发布回归与 T11；主会话合后 CORE 并记录真实结果。
+
+<a id="t25"></a>
 
 ### T25 人物定点审核明确新背景事件的作者出处
 

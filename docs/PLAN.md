@@ -212,6 +212,8 @@ T11-C 全体人物质量关闭：只有 T06–T10 全部所需人物和事件完
 
 ### T26 人物 L2 三字段请求合同与精简提示一致性
 
+主会话追加的同文件窄修边界：T09真实独立来源验证将event.id的_1误识别为_10/_11，事件ID只按递归字符串值精确相等判断，原叙述长句越界检查及未参与者不可获知均保留；补前缀正例/精确嵌套引用负例。T10唯一规划授权的陆青真实hard窄改被cardId只允许T07挡住，显式再允许T10，仍拒T06与任意卡，原authorizationHash/失败recordHash/draftHash/reviewHash/audit路径权限/同卡一次恢复和预算不变。原T07凭证不改；陆青唯一学者→学员和许苓冻结notes补件由T10准备，publisher需沿真实受控manifest/design绑定，不另造恢复框架。以上均直接阻塞未完成卡，模型0。
+
 目标：修复 T10 已证实的请求歧义，保留严格逐叶与背景风险覆盖。`buildReviewRequest` 继承 defaultReviewRequest 的“只返回 contradictions”后，再追加模糊的 reviewedPaths/backgroundReviews 要求；模型三次 stop 响应仍缺 reviewedPaths，不能靠提高次数解决。只修输出合同和 compact 后的字段定位，不改 T25 身份、事实、秘密、跨人、授权和发布标准。
 
 涉及文件：`tools/npc-depth-content.mjs` 的 buildReviewRequest、必要的 `tools/npc-depth-review.mjs` compactReviewRequest 提示一致性；新增 `tests/npc-depth-review-output.test.mjs`，补 `tests/npc-depth-authored-background.test.mjs`、`tests/npc-depth-review.test.mjs`。不修改 content-budget、世界正文/来源/候选、T07受控凭证、任何真实 record 状态或原始响应。T10 作者词语修订及来源补件在原T10树独立完成，实际费用仍归T10。
