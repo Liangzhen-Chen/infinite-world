@@ -1,8 +1,9 @@
 {
   "id": "reconcile",
-  "title": "重复、重生成、删除与重新载入",
+  "title": "重生成、修改玩家消息、删除与重新载入",
   "requirements": [
     "L6",
+    "M6",
     "M7",
     "M8"
   ],
@@ -110,6 +111,81 @@
           "kind": "equals",
           "path": "state.player.coins",
           "value": 174
+        },
+        {
+          "kind": "elapsed",
+          "min": 0,
+          "max": 0
+        }
+      ],
+      "operation": "refresh"
+    },
+    {
+      "input": "我向林穗买一个面包。",
+      "assertions": [
+        {
+          "kind": "equals",
+          "path": "state.player.coins",
+          "value": 172
+        },
+        {
+          "kind": "quantity",
+          "path": "state.inventory.item_bread",
+          "value": 1
+        }
+      ],
+      "expectedTools": [
+        "world_trade"
+      ]
+    },
+    {
+      "input": "我向林穗买两个面包，刚才说一个的那条消息改成这一条。",
+      "assertions": [
+        {
+          "kind": "equals",
+          "path": "state.player.coins",
+          "value": 170
+        },
+        {
+          "kind": "quantity",
+          "path": "state.inventory.item_bread",
+          "value": 2
+        }
+      ],
+      "operation": "regenerate",
+      "historyAction": "edit-player-message",
+      "expectedTools": [
+        "world_trade"
+      ]
+    },
+    {
+      "input": "",
+      "assertions": [
+        {
+          "kind": "equals",
+          "path": "state.player.coins",
+          "value": 174
+        },
+        {
+          "kind": "quantity",
+          "path": "state.inventory.item_bread",
+          "value": 0
+        }
+      ],
+      "operation": "deleteLast"
+    },
+    {
+      "input": "（场外）刷新后确认刚才改过的买面包消息已删除，房费仍然只扣了一晚。",
+      "assertions": [
+        {
+          "kind": "equals",
+          "path": "state.player.coins",
+          "value": 174
+        },
+        {
+          "kind": "quantity",
+          "path": "state.inventory.item_bread",
+          "value": 0
         },
         {
           "kind": "elapsed",
