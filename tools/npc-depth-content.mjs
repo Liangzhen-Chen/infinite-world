@@ -11,6 +11,8 @@ export function depthEntries(base,batch='yupo-depth',world){const config=typeof 
 export function contextFor(entry,world){if(entry.contract==='audit-patch-v1'){const context=patchContext(entry,world);return entry.authoredBackground?authoredReviewContext(context,entry.authoredBackground,entry,world):context;}const ids=new Set([...entry.before.relationships.map(r=>r.with),...entry.facts.relationships.map(r=>r.with),...entry.sharedEvent.participants]);return{people:[...world.npcs,...world.residents].filter(p=>ids.has(p.id)).map(p=>({id:p.id,name:p.name,occupation:p.occupation,age:p.age,...(entry.referenceSexIds?.includes(p.id)?{sex:p.sex}:{}),home:p.home,concern:p.currentConcern,socialProfile:p.socialProfile})),places:world.locations.filter(p=>[entry.before.home.location,entry.before.workplace.location,entry.sharedEvent.location].includes(p.id)).map(p=>({id:p.id,name:p.name,purpose:p.purpose,access:p.access})),rules:['本次只补认知、语域、关系来由、目标步骤和一条共享旧事；旧身份、钱物、技能、目标内容与已有记忆不变。','新增过去事件按sharedEvent，参与者双方拥有该记忆；不因此知道对方秘密、财物或私下行为。','知识与秘密均为人物私有字段，不代表公开叙述。未知列举尚未确定的事项，不是对其真相的断言。','目标步骤均未完成；询问同意、核对范围不代表已经授权或交付。']};}
 export function buildDraftRequest(entry,feedback,context){if(entry.contract==='audit-patch-v1')return patchDraftRequest(entry,feedback,context);return{thinking:{type:'disabled'},temperature:.5,max_tokens:500,tools:[{type:'function',function:{name:'write_shared_memory',description:'只润色一条已经确定的共同亲历',parameters:{type:'object',additionalProperties:false,required:['id','memoryNarrative'],properties:{id:{type:'string',enum:[entry.id]},memoryNarrative:{type:'string'}}}}}],tool_choice:{type:'function',function:{name:'write_shared_memory'}},messages:[{role:'system',content:'只把sharedEvent写成该人物的一段私有记忆，约70至110字；保持双方尚未商定的结果，不新增参与者、物品数量或交换。保留真实人名地点以供回忆，不能把对方的私密行为写成亲眼所见。只输出工具参数。'},{role:'user',content:JSON.stringify({person:{id:entry.id,name:entry.before.name,voice:entry.facts.voice},sharedEvent:entry.sharedEvent,context,corrections:feedback})}]};}
 export function extractDraft(response,entry){if(entry.contract==='audit-patch-v1'){let draft=parseModelJSON(response);if(draft&&typeof draft==='object'&&!Array.isArray(draft)&&Object.keys(draft).length===1&&Object.hasOwn(draft,'candidate')){const inner=draft.candidate;if(inner&&typeof inner==='object'&&!Array.isArray(inner)&&Object.keys(inner).sort().join(',')==='contract,id,patches')draft=inner;}try{assert.deepEqual(draft,patchDraft(entry));}catch(error){error.code='AUDIT_PATCH_PROTOCOL';throw error;}return draft;}const prose=parseModelJSON(response);if(prose.id!==entry.id||typeof prose.memoryNarrative!=='string'||!prose.memoryNarrative.trim())throw Error('共享记忆返回结构不符');const draft={id:entry.id,...Object.fromEntries(changedFields.map(k=>[k,structuredClone(entry.facts[k])]))};draft.memorySeeds.at(-1).event=prose.memoryNarrative;return draft;}
+// The extractor enforces this exact candidate. Free prose has no proved L2 bound.
+buildDraftRequest.reviewDraftFor=entry=>entry.contract==='audit-patch-v1'?patchDraft(entry):undefined;
 export function applyDepthDraft(before,draft){if(draft.contract==='audit-patch-v1'){assert.equal(draft.id,before.id);const after=structuredClone(before);for(const patch of draft.patches)setPath(after,patch.path,patch.value);return after;}return{...structuredClone(before),...structuredClone(draft)};}
 export function validateDraft(draft,entry){if(entry.contract==='audit-patch-v1')return validatePatchDraft(draft,entry);const errors=[],warnings=[];try{assert.deepEqual(Object.keys(draft).sort(),['id',...changedFields].sort());assert.equal(draft.id,entry.id);const expected=Object.fromEntries(changedFields.map(k=>[k,structuredClone(entry.facts[k])])),actual=structuredClone(draft);delete actual.id;expected.memorySeeds.at(-1).event=actual.memorySeeds?.at(-1)?.event;assert.deepEqual(actual,expected,'除共享记忆说明外不得改变设计事实');assert.equal(typeof actual.memorySeeds.at(-1).event,'string');assert.ok(actual.memorySeeds.at(-1).event.trim());assert.notEqual(draft.voice.register,draft.voice.habits[0]);assert.ok(draft.knowledge.known.length>=3);for(const goal of Object.values(draft.goals).flat())assert.ok(goal.steps.every(s=>s.content!==goal.content&&s.status==='pending'));assert.deepEqual(draft.memorySeeds.slice(0,-1),entry.before.memorySeeds);assert.deepEqual(draft.memorySeeds.at(-1).knownBy,entry.sharedEvent.participants);if(/npc_|loc_|bld_|JSON|骨架|主持人|系统设定/.test(draft.memorySeeds.at(-1).event))throw Error('新增记忆包含内部术语');}catch(e){errors.push(e.message);}errors.push(...findNpcRuleWording(draft).map(row=>`${row.field}: ${row.reason}`));return{errors,warnings};}
 export function buildReviewRequest(entry,draft,context){
@@ -276,10 +278,7 @@ export function validateControlledRevision(plan,{entries,foundation,records,worl
 // Keep the transport measurement intact when the model omits source/leaf
 // coverage. The ordinary pipeline consumes this as a hard L2 finding.
 export function depthReviewClient(client){
- return new Proxy(client,{get(target,key){
-  if(key!=='generate'){const value=Reflect.get(target,key);return typeof value==='function'?value.bind(target):value;}
-  return async(request,...args)=>{
-   const response=await target.generate(request,...args);let payload;
+ function processResponse(response,request){let payload;
    try{payload=JSON.parse(request.messages?.[1]?.content);}catch{return response;}
    if(!payload.publishedFacts?.authoredBackground&&!payload.publishedFacts?.controlledRevision)return response;
    let review;try{review=parseModelJSON(response);checkIncrementalReview(review,payload.skeleton,payload.publishedFacts);}catch(error){
@@ -289,6 +288,13 @@ export function depthReviewClient(client){
    }
    const sourceHard=(review.backgroundReviews??[]).flatMap(r=>r.contradictions).filter(r=>r.severity==='hard');
    return sourceHard.length?preservedProviderReview(response,{...review,contradictions:[...review.contradictions,...sourceHard]}):response;
+ }
+ return new Proxy(client,{get(target,key){
+  if(key==='generateRaw')return target.generate.bind(target);
+  if(key==='processResponse')return processResponse;
+  if(key!=='generate'){const value=Reflect.get(target,key);return typeof value==='function'?value.bind(target):value;}
+  return async(request,...args)=>{
+   return processResponse(await target.generate(request,...args),request);
   };
  }});
 }

@@ -1,5 +1,9 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import fs from 'node:fs/promises';
+import os from 'node:os';
+import path from 'node:path';
+import {openContentBudget} from '../tools/content-budget.mjs';
 import {hashContent,parseModelJSON} from '../tools/content-pipeline.mjs';
 import {buildReviewRequest,contextFor,patchDraft,applyDepthDraft,checkIncrementalReview,depthReviewClient} from '../tools/npc-depth-content.mjs';
 import {compactReviewRequest} from '../tools/npc-depth-review.mjs';
@@ -66,4 +70,26 @@ test('精简拒绝不能等价重建的draft或来源，同时保留所有背景
  const p=fixture({author:true,controlled:true}),request=buildReviewRequest(p.entry,p.draft,p.context);
  for(const change of [payload=>payload.draft.patches[0].value='不同候选',payload=>payload.skeleton.facts.notes='不可重建',payload=>payload.publishedFacts.revisions[0].originalSource='独立原源']){const bad=structuredClone(request),payload=JSON.parse(bad.messages[1].content);change(payload);bad.messages[1].content=JSON.stringify(payload);assert.throws(()=>compactReviewRequest(bad));}
  const compact=compactReviewRequest(request),payload=JSON.parse(compact.messages[1].content);assert.deepEqual(payload.publishedFacts.authoredBackground,p.context.authoredBackground);assert.deepEqual(payload.skeleton.before.secrets,p.entry.before.secrets);
+});
+
+test('paid provider在覆盖包装及JSON解析前独立落盘，普通hard/坏JSON/无附件均保留原文',async t=>{
+ const root=await fs.mkdtemp(path.join(os.tmpdir(),'review-provider-'));t.after(()=>fs.rm(root,{recursive:true,force:true}));
+ const p=fixture({author:true}),responses=[structuredClone(luoweiResponse),{choices:[{message:{content:'{坏JSON'}}],usage:{completion_tokens:3}},{choices:[{message:{content:JSON.stringify({contradictions:[{quote:'秘密',field:'notes',severity:'hard',reason:'不得公开'}]})}}],usage:{completion_tokens:5}}];
+ responses.forEach(r=>r.measurement={costUpperYuan:.01});
+ let index=0,checked=0;
+ const adapter=depthReviewClient({spent:0,reserved:0,budgetYuan:20,estimateCostYuan:()=>.1,generate:async()=>responses[index++]});
+ const client={spent:0,reserved:0,budgetYuan:20,estimateCostYuan:()=>.1,generateRaw:adapter.generateRaw,async processResponse(response,request){
+  const files=await fs.readdir(path.join(root,'budget-responses'));assert.equal(files.length,index);
+  const saved=await Promise.all(files.map(f=>fs.readFile(path.join(root,'budget-responses',f),'utf8').then(JSON.parse)));
+  const match=saved.find(s=>s.label===`review-${index}`);assert.deepEqual(match.response,response);assert.deepEqual(match.usage,response.usage);assert.equal(match.requestHash,hashContent(request));assert.equal(match.responseHash,hashContent(response));checked++;
+  return adapter.processResponse(response,request);
+ }};
+ const budget=await openContentBudget({file:path.join(root,'budget.json'),client});
+ try{
+  for(let i=0;i<responses.length;i++){
+   const request=buildReviewRequest(p.entry,p.draft,i===2?fixture().context:p.context),result=await budget.request(request,`review-${i+1}`);
+   if(i<2)assert.ok(result.rawProviderReviewResponse);else assert.equal(result,responses[i]);
+  }
+  assert.equal(checked,3);assert.ok(Object.values(budget.ledger.requests).every(r=>r.status==='settled'&&r.responseEvidence));
+ }finally{await budget.close();}
 });

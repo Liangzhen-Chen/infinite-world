@@ -60,6 +60,9 @@ test('首次官方full/compact draft和L2实际出站含对应sex/notes，原指
   const ledger=await read(path.join(p.budgetRoot,'budget.json'));assert.ok(Math.abs(ledger.reservedYuan-.02)<1e-10);assert.deepEqual(ledger.requests.unknown,p.ledger.requests.unknown);
   const encoded={model:'deepseek-flash',max_tokens:1800,stream:false,thinking:{type:'disabled'},...expectedDraft};const reservation=(Buffer.byteLength(JSON.stringify(encoded))*2+expectedDraft.max_tokens*3)/1e6;
   assert.equal(Object.values(ledger.requests).find(r=>r.label?.endsWith('draft0')).reservedYuan,reservation);
+  for(const row of Object.values(ledger.requests).filter(r=>r.status==='settled')){
+   const evidence=await read(path.join(p.budgetRoot,row.responseEvidence.file));assert.equal(evidence.requestHash,hashContent(evidence.request));assert.equal(evidence.responseHash,hashContent(evidence.response));assert.deepEqual(JSON.parse(evidence.request.messages.at(-1).content),p.data);assert.deepEqual(evidence.measurement,{costUpperYuan:.001});
+  }
   await approve(p);const bytes=await fs.readFile(p.baseline,'utf8');await publishNpcDepth({manifest:p.manifest});assert.equal(await fs.readFile(p.baseline,'utf8'),bytes);
   // Preserve the original emitted bytes/hash while accepting checkout formatting.
   await fs.writeFile(p.sourceFile,(await fs.readFile(p.sourceFile,'utf8')).replace(/\n/g,'\r\n'));await fs.writeFile(p.mapFile,(await fs.readFile(p.mapFile,'utf8')).replace(/\n/g,'\r\n'));
@@ -74,6 +77,21 @@ test('增附件后的实际UTF8预留不足零出站，spent和未知预留不�
  const base=buildDraftRequest(p.entries[0],null,contextFor(p.entries[0],p.world));assert.ok((Buffer.byteLength(JSON.stringify({model:'deepseek-flash',max_tokens:1800,stream:false,thinking:{type:'disabled'},...base}))*2+base.max_tokens*3)/1e6<.2);
  const result=await runDepth(p.options,{client:p.client});assert.equal(result.summary.pending,1);assert.equal(p.calls.length,0);const after=await read(path.join(p.budgetRoot,'budget.json'));assert.equal(after.spentYuan,ledger.spentYuan);assert.equal(after.reservedYuan,.02);assert.deepEqual(after.requests,ledger.requests);
  const record=await read(path.join(p.root,ids[0]+'.json'));assert.equal(record.firstSourceEvidence.requests[0].status,'failed');assert.match(record.firstSourceEvidence.requests[0].error,/费用上限/);assert.equal(record.firstSourceEvidence.requests[0].requestHash,hashContent(record.firstSourceEvidence.requests[0].request));
+});
+
+test('完整附件draft和review各自够预算但合计不足时官方入口零请求，full/compact均保留隐私范围',async t=>{
+ for(const compact of [false,true]){
+  const p=await fixture(t,{compact}),context=contextFor(p.entries[0],p.world),draft=patchDraft(p.entries[0]);
+  const requests=[buildDraftRequest(p.entries[0],null,context),compact?compactReviewRequest(buildReviewRequest(p.entries[0],draft,context)):buildReviewRequest(p.entries[0],draft,context)];
+  requests.forEach(request=>request.messages.push({role:'user',content:JSON.stringify(p.data)}));
+  const costs=requests.map(body=>(Buffer.byteLength(JSON.stringify({model:'deepseek-flash',max_tokens:1800,stream:false,thinking:{type:'disabled'},...body}))*p.client.rates.miss+body.max_tokens*p.client.rates.output)/1e6);
+  const available=costs[0]+costs[1]-Math.min(...costs)/2;assert.ok(costs.every(cost=>cost<available));
+  const allocation={cardId:'T45',waveLimitYuan:20,startingSpentYuan:.4,startingReservedYuan:.02,incrementLimitYuan:2};await write(path.join(p.root,'allocation.json'),allocation);
+  const spent=2-available,ledger={...p.ledger,spentYuan:p.ledger.spentYuan+spent,cards:{...p.ledger.cards,T45:{limitYuan:2,spentYuan:spent,reservedYuan:0}}};await write(path.join(p.budgetRoot,'budget.json'),ledger);
+  const originals=await frozen(p),result=await runDepth(p.options,{client:p.client});assert.equal(p.calls.length,0);assert.equal(result.summary.pending,1);assert.equal(result.results[0].attempts,0);assert.deepEqual(await frozen(p),originals);
+  const after=await read(path.join(p.budgetRoot,'budget.json'));assert.deepEqual(after.requests,ledger.requests);assert.equal(after.spentYuan,ledger.spentYuan);assert.equal(after.reservedYuan,.02);
+  assert.deepEqual(result.results[0].firstSourceEvidence.requests[0].request,requests[0]);
+ }
 });
 
 test('首次登记不许替换索引/compact或删选项；部分逐ID附件时其余L2仍按显式compact执行',async t=>{
