@@ -142,23 +142,21 @@ T11-C 全体人物质量关闭：只有 T06–T10 全部所需人物和事件完
 
 证据限docs/测试报告/20261012-T17-new/dependency-gaps.json及zero-model-requests.jsonl：46/48–49为courier榆坡问题行及30人闭包，245/247–248为shove同类；233/237–239为quest_social三村tax，郑汐/栾佩展开王浦/焦岩；283/285–286为voices的problem_lq_3慎书/宁野。host实际位置分别messages[9]/[22]/[5].content；review的sceneBefore/sceneBeforeReply需同源绑定，assertions.actual的ID是拒发错误串，不能豁免，应重跑消除。当前尚无私密正文必需依赖的独立证据；若续跑真实遇到，逐ID/字段/源/场景拒发留证，六场与已发布河湾/榆坡可用范围不能冒充十场或有效N通过。
 
-### T56 T17-A唯一续修【零模型；完成正常十场/paymentReady】
+### T56 来源续修已完成；历史归属仍未知
 
-只改上述目录preflight.mjs、runtime-guard.mjs、guard-check.mjs及证据，复用现guard。按实际已审entry/current source逐行接yupo problem_yp_1、yupo/weiting/liquan tax、liquan problem_lq_3；核验源hash、渲染span与现场authority，覆盖host-user及review场景，禁止按role或NPC名全局放行。
+d983cc6已合；原十场87回合正常HTTP全角色完成，33项guard及旧拒发回放通过，preflightReady=true。现存paymentReady=false仍是真实结果，仅因310笔旧usage中110笔缺run/responseId关联；24笔持久run结算及初版/resume前缀已核齐。归属核查未完成，不能补造ID、退款未知或修改旧run。来源与私密守卫保持，预算门槛最小修订交T17-B；本段替代旧调度中“历史必须逐笔归属核齐才付款”的附加条件。
 
-T11凭证按实际已发布entry及当前source投影继承：榆坡30 ID逐项L1/L2/L4/事件闭包与正式hash验证后接动态guard，保留河湾32/原18；不要求等其他村，不改原凭证、不编源。原地点27反例保留，补同名正文/私密混入/错span或hash/假现场/实际tool目标拒绝。
+T59只读复核payment-history.json的六份原文件hash均一致；该文件SHA256为1ac8412d8ff67046087b7201360c7103a36932360bfe2c8081ae9510c270dec1。旧spent0.28484248+未知6.372890+完整legacy5.77063128+新增8=20.42836376<30，110笔费用1.41941680已包含，未减去任何可能重复项。310笔发生于2026-10-11，早于主goal起点2026-10-12T08:02UTC，仍全额保守计入。
 
-冻结完整world/bundle/host后走原十场正常HTTP全角色链并回放拒发；不得缩世界、换场或降N。若仍有未approved实际依赖，精确列ID/字段/源/场景及已发布范围关系，保持paymentReady=false。十场完整无阻断且原账历史去重、授权/上界核对均过才置true，禁止硬编码；只读旧run及预算，未知6.372890保留。
+主目录world/drafts下m4-object、w1、m2-people、w3、w4、w5、w3/items、w3/recipes、w1/villages各budget.json的spent+reserved合计34.38349580；逐源为14.83547840、0.50579544、0.45309952、5.24950848、3.13954664、1.67909368、0.73012320、1.48249612、6.30835432。加上述20.42836376得已知账保守goal上界54.81185956；共享内容按整个20元波次封顶替换14.83547840后为59.97638116<100，包含潜在重复，不称真实去重账单。共享原账spent14.75174240/unknown0.083736，SHA256 b2aacefb8d420c0e044103537e6205347f5ca9d168dc0a1346de2712cc1e725f；相对goal-usage-snapshots.json期初7.94707120的已知增量6.80467120仅作核对，不再另加或抵扣。主logs与持久run共20份usage日志均无goal起点后的费用；其他本期执行API0据主调度记录。执行前刷新原账/hash并列覆盖范围，有新增未覆盖金额则先计入，禁止拿局部余额充全goal余额。
 
-验收tests/{playtest-runner,playtest-npc-evidence,playtest-budget}.test.mjs及CORE、guard反例和十场零模型证据后交B。B已授权，仍先1元/新增8元；不新建框架、不付费、不部署。唯一续修仍失败即卡住。
+### T17-B 河湾M2新轮【已授权；先零模型预算proof】
 
-### T17-B 河湾M2新轮【已授权；依T56与模型槽】
+拥有新轮报告目录；最小改preflight.mjs预算门槛，必要tools/playtest-budget.mjs及其测试、CLI接线。复用原守卫，不加框架或第四守卫。将T56保守envelope的来源/hash/封顶写证据，分别报告budgetUpperSafe与historyAttributionComplete=false；paymentReady须来源全过、完整上界可证且新增账本严格预留/结算，不能直接置true。保留完整world/bundle/host，重跑guard和十场0模型；验证超额/缺金额拒发、归属未知不冒称核齐，相关playtest-runner、playtest-npc-evidence、playtest-budget及CORE。
 
-拥有新轮报告目录的运行/汇总证据；必要tools/playtest-budget.mjs及tests/playtest-budget.test.mjs只做旧新轮关联和累计限额，确需CLI接线才改tools/playtests.mjs。T56的preflightReady/paymentReady均真且主会话确认无文件锁后派工；M2新轮无需再次授权。旧run十任务executions=2/recoveryRuns=1、spent0.28484248/unknown reserved6.372890不变。
+proof通过后由主授唯一模型槽；新run绑定旧run及user-reopen-20261012-01，旧账不动。原十场ID/repeat=1/parallel=4走正常HTTP、检索、完整提示栈。先≤1元验证，再新增累计≤8元含初探、所有角色及复测；每次发送核envelope，每笔request/responseId、角色、费用完整ledger，未知不退，单轮30/goal100/内容20不变，超限未发停止。不得第三次旧resume。
 
-沿test:playtests正常HTTP/检索/真实提示栈，复用旧preflight十场ID、repeat=1、parallel=4；用新run-id绑定旧run与用户授权，禁止第三次旧resume。先新增≤1元验证来源和账本，再累计新增≤8元，旧新上界≤14.65773248且受单轮30/goal100；每笔预留与全部模型角色费用入账，未知不退，历史去重核不齐则零调用。
-
-验收N1–N17至少12项完整有效、通过率≥90%；N6/N16零泄漏有实测，N17离开十天回来见自主行动，N12真实盲辨；账本/时间/存档100%，工具选择/参数/target分母如实报告。每条真实失败最多复测一次，旧失败保留；相关及CORE，不部署。专项可先过，M2关闭仍待C.4/C.5，T11-C全体门槛不变。
+N1–N17至少12项完整有效且≥90%，N6/N16零泄漏，N12真实盲辨，N17十天自主行动；账本/时间/存档100%，工具选择/参数/target分母如实。真实失败最多复测一次并保留旧失败；不降source/private/tests。相关及CORE；不部署，M2关闭仍待C.4/C.5，T11-C不变。
 
 ### T18 已审核 14 法术的学习来源
 
