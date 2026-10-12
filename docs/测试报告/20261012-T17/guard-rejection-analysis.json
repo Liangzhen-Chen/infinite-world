@@ -1,0 +1,25 @@
+{
+  "requestHash": "861d6a085279054655f16cfae7224b70909c57fae927c99a67376fb69e37453b",
+  "label": "consistency:73d630821fa096c51e07",
+  "metadata": [
+    {
+      "id": "npc_yp_zhaofeng",
+      "name": "赵枫",
+      "aliases": [],
+      "kind": "npc"
+    },
+    {
+      "id": "npc_yp_qiaoduan",
+      "name": "乔端",
+      "aliases": [],
+      "kind": "npc"
+    }
+  ],
+  "publicParagraph": "公开聚落资料，春历元年 雨月 1日 00:00：榆坡村：地方问题：轮水册漏行，地点坡口议事屋；当事人立场：赵枫：先核对原记录再改；乔端：先防自家沟口继续受损。有待当事人协商；查到资料不代表此刻都在现场。",
+  "publicEvidencePath": "request.messages[1].content[JSON].evidence[9].text",
+  "actualUnapprovedNamedRefs": [
+    "npc_yp_zhaofeng",
+    "npc_yp_qiaoduan"
+  ],
+  "correction": "第一次id-only分析遗漏姓名事实。两条registry为名称元数据，但实际同一请求包含榆坡轮水册问题及赵枫/乔端公开立场。是否有真实L2批准需独立追溯T02/T21公开源；不能据此宣告没有实际依赖。原仪器全文profile闭包又超出实际公共事实投影；本轮仍停止，预留不删除。"
+}

@@ -1,0 +1,10 @@
+import fs from 'node:fs/promises';
+import assert from 'node:assert/strict';
+import {actualDependencyIds} from './runtime-guard.mjs';
+const rows=(await fs.readFile(new URL('./runtime-contexts.jsonl',import.meta.url),'utf8')).trim().split('\n').map(JSON.parse),rejected=rows.find(r=>r.unapproved?.length),metadata=[];
+const ids=actualDependencyIds(rejected.request.messages,metadata);assert.deepEqual(ids.filter(id=>id.startsWith('npc_yp_')).sort(),['npc_yp_qiaoduan','npc_yp_zhaofeng']);assert.equal(metadata.filter(n=>n.id.startsWith('npc_yp_')).length,2);
+assert.deepEqual(actualDependencyIds({id:'npc_yp_zhaofeng',name:'赵枫',aliases:[],kind:'npc'}),[]);
+assert.ok(actualDependencyIds({id:'npc_yp_zhaofeng',name:'赵枫',aliases:[],kind:'npc',goals:[]}).includes('npc_yp_zhaofeng'));
+assert.ok(actualDependencyIds('赵枫告诉旅人自己的目标。').includes('npc_yp_zhaofeng'));
+assert.ok(actualDependencyIds({people:[{id:'npc_yp_zhaofeng',goals:{short:[]}}]}).includes('npc_yp_zhaofeng'));
+console.log(JSON.stringify({modelCalls:0,originalRequestHash:rejected.requestHash,actualIds:ids,metadata:metadata.filter(n=>n.id.startsWith('npc_yp_')),passed:true,boundary:'严格四键名称索引与事实正文分别记录；原请求另有榆坡公开问题及赵枫/乔端立场的实际姓名事实，仍须批准来源核查。实际请求不删任何内容。'}));
