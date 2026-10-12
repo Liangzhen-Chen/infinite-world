@@ -258,3 +258,60 @@ test('独立新背景与正式来源相容，原候选记忆及私密知情范�
  assert.ok(qilu.sourceRefs.some(r=>r.id==='npc_wt_qilu'&&r.publicSpeech?.includes('一般原则')&&r.publicSpeech.includes('不说、暗示或推断')));
  assert.ok(qilu.risks.some(r=>r.id==='npc_wt_qilu'&&r.reason.includes('不能把旧秘密')));
 });
+
+test('T07离线重开沿旧proof与钉死出处保存18人队列，不重审12有效passed',async()=>{
+ const {check}=await import('../world/drafts/w1/wt-depth/reopen/prepare-offline.mjs'),report=await check();
+ const root=new URL('../world/drafts/w1/wt-depth/reopen/',import.meta.url),read=async file=>JSON.parse(await fs.readFile(new URL(file,root),'utf8'));
+ const recorded=await read('offline-report.json'),plan=await read('controlled-plan.json');
+ assert.equal(report.authorizationId,'user-reopen-20261012-01');assert.equal(report.authorizationHash,recorded.authorizationHash);
+ assert.equal(report.pendingIds.length,18);assert.equal(report.pendingIds.filter(r=>r.controlledL2Unreviewed).length,17);
+ assert.equal(report.pendingIds.filter(r=>r.state==='failed-latest-L2').length,1);
+ assert.equal(report.pendingIds.filter(r=>r.state==='historical-failed-unreviewed-controlled-L2').length,5);
+ assert.equal(report.pendingIds.filter(r=>r.state==='L4-invalidated-unreviewed-controlled-L2').length,12);
+ assert.equal(report.preservedPassedIds.length,12);
+ assert.ok(report.preservedPassedIds.every(id=>!plan.authorized.some(a=>a.id===id)));
+ assert.deepEqual(report.L1Errors,[]);assert.deepEqual(report.targetedAuditIssues,[]);assert.deepEqual(report.structuralErrors,[]);
+ assert.equal(report.events.length,7);assert.ok(report.events.every(e=>e.closed&&e.authorSourceUnreviewed));
+ assert.equal(report.modelCalls,0);assert.equal(report.newSpendYuan,0);assert.equal(report.budgetWrites,0);assert.equal(report.formalWrites,0);
+ assert.equal(report.realL2,false);assert.equal(report.realL4,false);assert.match(recorded.guard,/换行凭证规划不匹配/);
+ assert.equal(plan.attemptLimit,2);assert.equal(report.budgetHistory.spentYuan,2.76263016);assert.equal(report.budgetHistory.maxRemainingYuan,1.73736984);
+});
+
+test('湛鸥只修七个真实hard，家属不自动转告，未同意的步骤保持pending',async()=>{
+ const reopened=await import('../world/drafts/w1/wt-depth/reopen/design.mjs'),next=depthEntries(design.patchRows.map(r=>r.before),reopened,world);
+ const root=new URL('../world/drafts/w1/wt-depth/',import.meta.url),record=JSON.parse(await fs.readFile(new URL('sourced/npc_wt_zhangou.json',root),'utf8'));
+ const current=next.find(e=>e.id===record.id),previous=entries().find(e=>e.id===record.id);
+ const changed=current.patches.filter(p=>hashContent(p.value)!==hashContent(previous.patches.find(o=>o.path===p.path).value)).map(p=>p.path);
+ assert.deepEqual(changed.sort(),record.errors.map(e=>e.field).sort());assert.equal(changed.length,7);
+ for(const term of ['short','mid','long']){
+  assert.equal(current.facts.goals[term][0].steps[0].status,'pending');
+  assert.equal(current.facts.goals[term][0].progress,previous.facts.goals[term][0].progress);
+  assert.match(current.facts.goals[term][0].steps[0].content,/计划.*尚未/);
+ }
+ assert.doesNotMatch(current.facts.knowledge.unknown.join(' '),/虞菡借出|向祯/);
+ assert.match(current.facts.relationships[0].note,/尚待.*询问/);assert.match(current.facts.relationships[1].note,/均未获知/);
+ assert.deepEqual(current.facts.memorySeeds,previous.facts.memorySeeds);
+ assert.deepEqual(current.facts.secrets,current.before.secrets);
+});
+
+test('未说出口的原关切不能变成已提出，向菲天黑前回村及五人共享边界按原源修订',async()=>{
+ const reopened=await import('../world/drafts/w1/wt-depth/reopen/design.mjs'),next=depthEntries(design.patchRows.map(r=>r.before),reopened,world);
+ const quhuai=next.find(e=>e.id==='npc_wt_quhuai'),xiangzhen=next.find(e=>e.id==='npc_wt_xiangzhen');
+ assert.doesNotMatch(quhuai.facts.knowledge.unknown[0],/提出的/);assert.match(quhuai.facts.relationships[1].note,/尚待询问/);
+ assert.match(xiangzhen.facts.knowledge.unknown[0],/天黑前.*尚待询问/);assert.doesNotMatch(xiangzhen.facts.knowledge.unknown.join(' '),/夜归|郑汐/);
+ assert.doesNotMatch(xiangzhen.facts.goals.mid[0].steps[0].content,/请向菲.*指出误认/);
+ const actors=['npc_wt_peichun','npc_wt_suhui','npc_wt_qilu','npc_wt_huayin','npc_wt_xiangzhen'],memories=actors.map(id=>next.find(e=>e.id===id).facts.memorySeeds.at(-1));
+ for(const memory of memories){assert.deepEqual(memory,memories[0]);assert.match(memory.event,/戚鹭只谈.*一般原则/);assert.doesNotMatch(memory.event,/戚鹭区分听来的旧水情/);}
+ const oneSided=next.map(e=>e.id==='npc_wt_qilu'?entries().find(old=>old.id===e.id):e);
+ const bundle=JSON.parse(await fs.readFile(new URL('../world/drafts/w1/wt-depth/reopen/authored-background.json',import.meta.url),'utf8'));
+ const {validateAuthoredBackground}=await import('../tools/npc-depth-content.mjs');
+ assert.throws(()=>validateAuthoredBackground(bundle,oneSided,world),/双方事件事实不一致或超出处/);
+ const forged=structuredClone(bundle),event=forged.events.at(-1);event.sourceRefs.find(r=>r.id==='npc_wt_qilu'&&r.field==='goals.mid[0].content').hash='fake';
+ assert.throws(()=>validateAuthoredBackground(forged,next,world),/原字段出处hash过期/);
+});
+
+test('T49未合入时继承原T07换行凭证仍拒绝新规划，不移除冻结守卫',async()=>{
+ const root=fileURLToPath(new URL('../world/drafts/w1/wt-depth/',import.meta.url)),here=path.join(root,'reopen');
+ const plan=JSON.parse(await fs.readFile(path.join(here,'controlled-plan.json'),'utf8'));
+ await assert.rejects(()=>prepareDepthRevision({root:path.join(root,'sourced'),worldRoot:path.resolve('world'),cardId:'T07',design:path.join(here,'design.mjs'),controlledRevision:path.join(here,'controlled-plan.json'),authorizationHash:hashContent(plan),authoredBackground:path.join(here,'authored-background.json'),sourceCheckoutEvidence:path.join(root,'controlled/source-checkout-evidence.json')}),/换行凭证规划不匹配/);
+});
