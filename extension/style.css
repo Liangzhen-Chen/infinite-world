@@ -61,16 +61,37 @@ body.fields-reduced-motion.fields-play-active #chat *,body.fields-reduced-motion
 @media(prefers-reduced-motion:reduce){#fields-toolbar *,#fields-dialog *{animation:none;transition:none}}
 @media(max-width:480px){
  #fields-toolbar{position:relative}
- #fields-toolbar .fields-menu-toggle{display:block;position:absolute;right:8px;bottom:5px;min-height:28px}
+ #fields-toolbar .fields-menu-toggle{display:block;position:static;margin-left:auto;min-height:44px}
  #fields-toolbar-actions{display:none;position:absolute;right:0;top:100%;z-index:20;max-width:100%;padding:12px;background:var(--fields-bg);border:1px solid var(--fields-border)}
  #fields-toolbar-actions.fields-menu-open{display:flex}
- #fields-status .fields-topbar-context,#fields-status .fields-topbar-vitals{flex-wrap:nowrap;overflow-x:auto;max-width:100%;white-space:nowrap;min-height:30px;scrollbar-width:thin}
- #fields-status .fields-topbar-context>*,#fields-status .fields-topbar-vitals>*{flex-shrink:0}
- #fields-status .fields-topbar-vitals{max-width:calc(100% - 60px)}
+ #fields-status .fields-topbar-context,#fields-status .fields-topbar-vitals{flex-wrap:wrap;max-width:100%;white-space:normal;min-height:30px}
+ #fields-status .fields-topbar-context>*,#fields-status .fields-topbar-vitals>*{max-width:100%;min-width:0;overflow-wrap:anywhere}
  #fields-dialog.fields-drawer{width:100vw;height:100dvh;border-radius:0;border:0;max-width:100vw}
  #fields-toolbar{padding:6px 8px;gap:4px}#fields-toolbar button{min-height:44px;padding:4px 8px}
  #fields-dialog .fields-settings{padding:8px 16px 24px}
 }
+/* Dialogue and event cards are views of prose and active events, never tools. */
+body.fields-play-active #chat .mes .avatar,body.fields-play-active #chat .mes .ch_name{display:none}
+.fields-dialogue{margin:12px 0;padding:12px 16px;background:var(--fields-surface);border-left:3px solid var(--fields-border);border-radius:8px}
+.fields-dialogue p{margin:8px 0 0!important;white-space:pre-wrap}
+.fields-speaker{display:flex;gap:8px;align-items:center;color:hsl(var(--fields-speaker-hue) 48% 78%)}
+body[data-fields-theme=light] .fields-speaker{color:hsl(var(--fields-speaker-hue) 48% 30%)}
+.fields-speaker-avatar{display:inline-grid;place-items:center;flex-shrink:0;width:32px;height:32px;border:1px solid currentColor;border-radius:50%;font-family:FieldsHeading,serif}
+.fields-event-card{display:inline-block;background:var(--fields-surface);border:1px solid var(--fields-border);padding:6px 10px;border-radius:8px;margin:4px!important}
+.fields-document-card{background:#e9dfc8;color:#2e3027;border:1px solid #777b62;border-radius:8px;padding:14px;margin:12px 0;overflow-wrap:anywhere}
+.fields-document-card h3{font-family:FieldsHeading,serif;font-size:18px;margin:0 0 8px}
+.fields-document-card p{white-space:pre-wrap;margin:6px 0}
+.fields-document-card .fields-note{color:#525647}
+.fields-document-card button,#fields-input-actions button{min-height:44px;padding:6px 10px;background:var(--fields-surface);color:var(--fields-text);border:1px solid var(--fields-border);border-radius:6px;cursor:pointer}
+.fields-mail,.fields-speaker-registry{padding:12px 22px 24px}
+#fields-input-actions{display:none}
+body.fields-play-active #fields-input-actions{display:flex;flex-wrap:wrap;gap:6px;align-items:center;padding:8px 0;max-width:100%;font-family:FieldsSans,sans-serif}
+#fields-input-actions .fields-note{flex-basis:100%}
+#fields-input-actions button[aria-pressed=true]{border:2px solid var(--fields-accent)}
+#fields-input-actions :focus-visible,.fields-document-card :focus-visible{outline:3px solid var(--fields-focus);outline-offset:2px}
+body.fields-play-active.fields-debug #chat .mes_reasoning_details{display:block!important}
+body.fields-high-contrast .fields-speaker{color:var(--fields-text)}
+@media(max-width:480px){.fields-mail,.fields-speaker-registry{padding:12px 16px 24px}.fields-dialogue{padding:10px}.fields-vital progress{flex-shrink:0}}
 body{--fields-quality-木:#a98b65;--fields-quality-石:#969696;--fields-quality-铜:#b87333;--fields-quality-铁:#708090;--fields-quality-银:#c0c0c0;--fields-quality-金:#e5bd32;--fields-quality-白金:#d7e6ed;--fields-quality-宝:#5fafa5;--fields-quality-玉:#4bb47e;--fields-quality-星:#7b8dcd;--fields-quality-月:#afa1dc;--fields-quality-日:#f2b04b;--fields-quality-圣:#f4e6aa;--fields-quality-神:#cf7bdf;--fields-quality-地:#aa7c55;--fields-quality-天:#efcaca;}
 [data-fields-quality="木"]{--fields-quality:var(--fields-quality-木);border-color:var(--fields-quality);text-decoration-color:var(--fields-quality)}
 [data-fields-quality="石"]{--fields-quality:var(--fields-quality-石);border-color:var(--fields-quality);text-decoration-color:var(--fields-quality)}

@@ -13,7 +13,7 @@ export const groups=[
  {key:'passage',participants:['zhenxi','ganqi','yinzhi','fengji','henglu'],location:'bld_lq_kitchen',problemIds:['problem_lq_4'],event:'甄希、甘祺、尹致、封济和衡庐在砾泉共灶屋门前看过刻痕废石与端物通路。甄希指认想留下对照的刻线，甘祺沿端物转身的方向走了一遍。尹致指出堆物挤脚的位置，封济只在旁指了可落脚处，衡庐提醒出入的人还需留通路。几人没有搬走石片，也没有给废石定下新放处。'},
  {key:'work-dust',participants:['zhouwu','huoji','huaniu','nieya','cuifan'],location:'bld_lq_workroom',problemIds:['problem_lq_5'],event:'宙梧、霍霁、华钮、聂雅和崔帆在旧柄缝补屋看过阴棚下的检柄位置与筛料落尘方向。宙梧说拆缠条时要看得清裂处，霍霁指出筛下细料落向哪边，华钮问未拆开的接缝还能证实多少。聂雅与崔帆比较了残字和残线容易被误认的地方。筛料停歇的时段和检柄的新位置仍没有商定。'},
  {key:'wash-identify',participants:['minghe','yunxiu','tanyu','qinglan','wenqi'],location:'bld_lq_workroom',problemIds:[],event:'明禾、云绣、檀羽、青岚和闻琪在旧柄缝补屋门外谈过东西混放后怎么认回。云绣讲附灰会遮住缝线，檀羽讲湿袋叠放会藏住绳结，青岚说交衣先后也得看姓名记号。闻琪说明待洗锅与净锅要分开，明禾拿挑坏荚作比较。那次只交换了各自劳动中的辨认办法，没有收取、归还或替人洗补物件。'},
- {key:'readback',participants:['fushen','shaluo','jushu','yike','kuangye'],location:'bld_lq_hall',problemIds:[],event:'符审、沙萝、鞠舒、易可和匡叶在泉标记事屋谈过记号与口头答应的差别。符审读回一段取水队次，沙萝问姓名应怎样读全，鞠舒说沟边标枝容易被误作走道边。易可提到解开的结未必认得回，匡叶说明代人答应换班曾被本人回绝。几人没有替未到的人确认轮次，也没有定下新的共同约定。'},
+ {key:'readback',participants:['fushen','shaluo','jushu','yike','kuangye'],location:'bld_lq_hall',problemIds:[],event:'符审、沙萝、鞠舒、易可和匡叶在泉标记事屋谈过记号与口头答应的差别。符审读回一段取水队次，沙萝问姓名应怎样读全，鞠舒说沟边标枝容易被误作走道边。易可提到解开的结未必认得回，匡叶说“换班轮次要由当事人本人确认，我不能替他们答应”。几人没有替未到的人确认轮次，也没有定下新的共同约定。'},
 ];
 
 // Each record supplies only missing leaves. Known[0], goal text, voice samples,
@@ -77,3 +77,142 @@ export const patchRows=base.map(before=>{
  // not turn the six newly authored group meetings into established history.
  return{id:before.id,before:structuredClone(before),baseHash:hashContent(before),issues,referenceMemoryIds:[before.id],referenceRelationshipIds:[before.id],patches:Object.entries(values).map(([path,value])=>({path,value}))};
 });
+
+// T08 authorized source and actual hard-leaf repairs; original siblings stay frozen.
+const authorized20261013={
+  "npc_lq_fushen": {
+    "memorySeeds[2]": {
+      "id": "memory_lq_depth_readback",
+      "event": "符审、沙萝、鞠舒、易可和匡叶在泉标记事屋谈过记号与口头答应的差别。符审读回一段取水队次，沙萝问姓名应怎样读全，鞠舒说沟边标枝容易被误作走道边。易可提到解开的结未必认得回，匡叶说“换班轮次要由当事人本人确认，我不能替他们答应”。几人没有替未到的人确认轮次，也没有定下新的共同约定。",
+      "location": "bld_lq_hall",
+      "salience": 4,
+      "knownBy": [
+        "npc_lq_fushen",
+        "npc_lq_shaluo",
+        "npc_lq_jushu",
+        "npc_lq_yike",
+        "npc_lq_kuangye"
+      ],
+      "reliability": "亲历"
+    },
+    "knowledge.known[2]": {
+      "fact": "符审、沙萝、鞠舒、易可和匡叶在泉标记事屋谈过记号与口头答应的差别。符审读回一段取水队次，沙萝问姓名应怎样读全，鞠舒说沟边标枝容易被误作走道边。易可提到解开的结未必认得回，匡叶说“换班轮次要由当事人本人确认，我不能替他们答应”。几人没有替未到的人确认轮次，也没有定下新的共同约定。",
+      "source": "bld_lq_hall",
+      "reliability": "共同亲历"
+    }
+  },
+  "npc_lq_shaluo": {
+    "memorySeeds[2]": {
+      "id": "memory_lq_depth_readback",
+      "event": "符审、沙萝、鞠舒、易可和匡叶在泉标记事屋谈过记号与口头答应的差别。符审读回一段取水队次，沙萝问姓名应怎样读全，鞠舒说沟边标枝容易被误作走道边。易可提到解开的结未必认得回，匡叶说“换班轮次要由当事人本人确认，我不能替他们答应”。几人没有替未到的人确认轮次，也没有定下新的共同约定。",
+      "location": "bld_lq_hall",
+      "salience": 4,
+      "knownBy": [
+        "npc_lq_fushen",
+        "npc_lq_shaluo",
+        "npc_lq_jushu",
+        "npc_lq_yike",
+        "npc_lq_kuangye"
+      ],
+      "reliability": "亲历"
+    },
+    "knowledge.known[2]": {
+      "fact": "符审、沙萝、鞠舒、易可和匡叶在泉标记事屋谈过记号与口头答应的差别。符审读回一段取水队次，沙萝问姓名应怎样读全，鞠舒说沟边标枝容易被误作走道边。易可提到解开的结未必认得回，匡叶说“换班轮次要由当事人本人确认，我不能替他们答应”。几人没有替未到的人确认轮次，也没有定下新的共同约定。",
+      "source": "bld_lq_hall",
+      "reliability": "共同亲历"
+    }
+  },
+  "npc_lq_jushu": {
+    "memorySeeds[2]": {
+      "id": "memory_lq_depth_readback",
+      "event": "符审、沙萝、鞠舒、易可和匡叶在泉标记事屋谈过记号与口头答应的差别。符审读回一段取水队次，沙萝问姓名应怎样读全，鞠舒说沟边标枝容易被误作走道边。易可提到解开的结未必认得回，匡叶说“换班轮次要由当事人本人确认，我不能替他们答应”。几人没有替未到的人确认轮次，也没有定下新的共同约定。",
+      "location": "bld_lq_hall",
+      "salience": 4,
+      "knownBy": [
+        "npc_lq_fushen",
+        "npc_lq_shaluo",
+        "npc_lq_jushu",
+        "npc_lq_yike",
+        "npc_lq_kuangye"
+      ],
+      "reliability": "亲历"
+    },
+    "knowledge.known[2]": {
+      "fact": "符审、沙萝、鞠舒、易可和匡叶在泉标记事屋谈过记号与口头答应的差别。符审读回一段取水队次，沙萝问姓名应怎样读全，鞠舒说沟边标枝容易被误作走道边。易可提到解开的结未必认得回，匡叶说“换班轮次要由当事人本人确认，我不能替他们答应”。几人没有替未到的人确认轮次，也没有定下新的共同约定。",
+      "source": "bld_lq_hall",
+      "reliability": "共同亲历"
+    },
+    "relationships[2].note": "崔帆是同村修路记号学工；鞠舒若想请他看标枝旁的脚路，需先问他是否愿意一起看。",
+    "opinions.neighbors[2].view": "崔帆是同村修路记号学工；鞠舒若想请他看标枝旁的脚路，需先问他是否愿意一起看。",
+    "relationships[0].note": "鞠理为鞠舒的儿子；鞠舒想同他看老沟边的新脚路，是否同行还需问他。 各自保有财物。",
+    "relationships[1].note": "茅真为鞠舒的配偶；鞠舒挂心土床，若想同他看根区受踩的地方，需先问他的打算。 各自保有财物。"
+  },
+  "npc_lq_yike": {
+    "memorySeeds[2]": {
+      "id": "memory_lq_depth_readback",
+      "event": "符审、沙萝、鞠舒、易可和匡叶在泉标记事屋谈过记号与口头答应的差别。符审读回一段取水队次，沙萝问姓名应怎样读全，鞠舒说沟边标枝容易被误作走道边。易可提到解开的结未必认得回，匡叶说“换班轮次要由当事人本人确认，我不能替他们答应”。几人没有替未到的人确认轮次，也没有定下新的共同约定。",
+      "location": "bld_lq_hall",
+      "salience": 4,
+      "knownBy": [
+        "npc_lq_fushen",
+        "npc_lq_shaluo",
+        "npc_lq_jushu",
+        "npc_lq_yike",
+        "npc_lq_kuangye"
+      ],
+      "reliability": "亲历"
+    },
+    "knowledge.known[2]": {
+      "fact": "符审、沙萝、鞠舒、易可和匡叶在泉标记事屋谈过记号与口头答应的差别。符审读回一段取水队次，沙萝问姓名应怎样读全，鞠舒说沟边标枝容易被误作走道边。易可提到解开的结未必认得回，匡叶说“换班轮次要由当事人本人确认，我不能替他们答应”。几人没有替未到的人确认轮次，也没有定下新的共同约定。",
+      "source": "bld_lq_hall",
+      "reliability": "共同亲历"
+    },
+    "relationships[2].note": "满渠是同村清沟帮工；易可若想问沟段记号怎样辨认，需先问他是否愿意谈。",
+    "opinions.neighbors[2].view": "满渠是同村清沟帮工；易可若想问沟段记号怎样辨认，需先问他是否愿意谈。"
+  },
+  "npc_lq_kuangye": {
+    "memorySeeds[2]": {
+      "id": "memory_lq_depth_readback",
+      "event": "符审、沙萝、鞠舒、易可和匡叶在泉标记事屋谈过记号与口头答应的差别。符审读回一段取水队次，沙萝问姓名应怎样读全，鞠舒说沟边标枝容易被误作走道边。易可提到解开的结未必认得回，匡叶说“换班轮次要由当事人本人确认，我不能替他们答应”。几人没有替未到的人确认轮次，也没有定下新的共同约定。",
+      "location": "bld_lq_hall",
+      "salience": 4,
+      "knownBy": [
+        "npc_lq_fushen",
+        "npc_lq_shaluo",
+        "npc_lq_jushu",
+        "npc_lq_yike",
+        "npc_lq_kuangye"
+      ],
+      "reliability": "亲历"
+    },
+    "knowledge.known[2]": {
+      "fact": "符审、沙萝、鞠舒、易可和匡叶在泉标记事屋谈过记号与口头答应的差别。符审读回一段取水队次，沙萝问姓名应怎样读全，鞠舒说沟边标枝容易被误作走道边。易可提到解开的结未必认得回，匡叶说“换班轮次要由当事人本人确认，我不能替他们答应”。几人没有替未到的人确认轮次，也没有定下新的共同约定。",
+      "source": "bld_lq_hall",
+      "reliability": "共同亲历"
+    },
+    "relationships[2].note": "栾佩是同村泉标记事人；匡叶若想问轮次如何读回，需先问她是否愿意说明。",
+    "opinions.neighbors[2].view": "栾佩是同村泉标记事人；匡叶若想问轮次如何读回，需先问她是否愿意说明。"
+  },
+  "npc_lq_cuifan": {
+    "relationships[2].note": "青岚是同村洗晒工；崔帆若想问工衣姓名记号如何辨认，需先问她是否愿意谈。",
+    "opinions.neighbors[2].view": "青岚是同村洗晒工；崔帆若想问工衣姓名记号如何辨认，需先问她是否愿意谈。"
+  },
+  "npc_lq_henglu": {
+    "relationships[2].note": "易可是同村绳记老人；衡庐若想问绳记的用途，需先向她说明哪处记号拿不准。",
+    "opinions.neighbors[2].view": "易可是同村绳记老人；衡庐若想问绳记的用途，需先向她说明哪处记号拿不准。"
+  },
+  "npc_lq_qinglan": {
+    "relationships[2].note": "衡庐是同村泥灰修补工；青岚若想询问门口湿补何时可通行，需先问他是否愿意说明。",
+    "opinions.neighbors[2].view": "衡庐是同村泥灰修补工；青岚若想询问门口湿补何时可通行，需先问他是否愿意说明。",
+    "relationships[0].note": "青蔓为青岚的女儿；青岚若想同她谈自家洗衣的轮次，需先问女儿是否愿意听。 各自保有财物。",
+    "relationships[1].note": "崇泽为青岚的配偶；青岚想同他商量自家衣物的洗晒次序，仍需先听他的答复。 各自保有财物。"
+  },
+  "npc_lq_nieya": {
+    "relationships[2].note": "匡叶是同村泉边轮值帮工；聂雅若想问轮值姓名的名签挂处，需先问他是否愿意谈。",
+    "opinions.neighbors[2].view": "匡叶是同村泉边轮值帮工；聂雅若想问轮值姓名的名签挂处，需先问他是否愿意谈。"
+  }
+};
+for(const entry of patchRows)for(const patch of entry.patches){const value=authorized20261013[entry.id]?.[patch.path];if(value!==undefined)patch.value=structuredClone(value);}
+
+// Actual new L2 finding: retain only personally remembered events, with no added place.
+patchRows.find(e=>e.id==='npc_lq_jushu').patches.find(p=>p.path==='knowledge.known[1]').value={"fact":"鞠舒记得自己拔回过妨路的标枝，也记得和邻人从另一侧试走过一趟过道。","source":"npc_lq_jushu","reliability":"亲历"};

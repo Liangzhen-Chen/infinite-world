@@ -1,6 +1,6 @@
 // Only observable player state becomes UI feedback. Private records and hidden luck stay private.
 export function stateNotices(before,after,resolveName=id=>id){
-    const result=[],push=(type,text)=>result.push({type,text});
+    const result=[],push=(type,text,card)=>result.push({type,text,...(card?{card}:{})});
     const name=id=>resolveName(id)??'未命名对象';
     const delta=(value,unit='')=>`${value>0?'+':''}${value}${unit}`;
     const labels={coins:'钱袋',hp:'生命',mp:'魔力',xp:'经验',level:'等级',freeAttributePoints:'待分配属性点'};
@@ -56,7 +56,7 @@ export function stateNotices(before,after,resolveName=id=>id){
         }
         if(row.category!=='contract'||!row.parties?.includes('player'))continue;
         const old=before.records?.[id];
-        if(!old||old.status!==row.status)push('contract',`${row.name??'契约'}：${row.status}`);
+        if(!old||old.status!==row.status)push('contract',`${row.name??'契约'}：${row.status}`,playerDocuments(after,resolveName).find(card=>card.id===`record:${id}`));
     }
     for(const [id,row] of Object.entries(after.learning??{}))if(!before.learning?.[id]&&row.success===false)push('learning',`${name(row.entity)}尚未学会，本次已花费 ${row.cost??0}铜、${row.end-row.start} 分钟`);
     for(const [id,skill] of Object.entries(after.skills??{})){
@@ -90,5 +90,20 @@ export function stateNotices(before,after,resolveName=id=>id){
     for(const id of oldJobs)if(!newJobs.includes(id))push('profession',`退出职业：${name(id)}`);
     if(before.location!==after.location)push('location',`抵达：${name(after.location)}`);
     if(after.minute!==before.minute)push('time',`经过 ${after.minute-before.minute} 分钟`);
+    const oldDocuments=new Map(playerDocuments(before,resolveName).map(row=>[row.id,row]));
+    for(const card of playerDocuments(after,resolveName))if(card.kind!=='contract'&&!oldDocuments.has(card.id))push(card.kind,`${card.kind==='announcement'?'公告':'收到信件'}：${card.title}`,card);
     return result;
+}
+
+// Whitelist player documents; public visibility alone never proves receipt.
+export function playerDocuments(state,resolveName=id=>id){
+    const cards=[],name=id=>id==='player'?state.player.name:resolveName(id)??'路人';
+    for(const [id,row]of Object.entries(state.records??{})){
+        if(row.category==='contract'&&row.parties?.includes('player'))cards.push({id:`record:${id}`,kind:'contract',title:row.name??'契约',text:row.content??`${row.parties.map(name).join('、')} · ${row.status}`,status:row.status,
+            ...(row.cost!==undefined?{cost:row.cost}:{}),...((row.deadline??row.expires)!==undefined?{deadline:row.deadline??row.expires}:{})});
+        if(row.category==='announcement'&&row.knownBy?.includes('player'))cards.push({id:`record:${id}`,kind:'announcement',title:row.name??'公告',text:row.content??''});
+        if(row.category==='letter'&&row.to==='player'&&row.status==='已交付')cards.push({id:`record:${id}`,kind:'letter',title:row.name??'来信',text:row.content??'',from:name(row.from)});
+    }
+    for(const [id,row]of Object.entries(state.npcCognition?.messages??{}))if(row.to==='player'&&row.status==='已交付'&&row.channel==='magic')cards.push({id:`message:${id}`,kind:'letter',title:'传讯来信',text:row.content??'',from:name(row.from)});
+    return cards;
 }

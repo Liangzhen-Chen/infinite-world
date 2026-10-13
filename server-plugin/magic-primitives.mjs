@@ -1,6 +1,6 @@
 // Shared numerical handlers; callers own targeting, consent, costs and death effects.
 export const damageTypes=Object.freeze(['physical','fire','cold','wind','earth','light','shadow','mind']);
-const fields={damage:['damageType','armorFactor','coldDecay','windBlade','stoneProjectile'],water_earth:['operation'],air:['operation'],heal:[],repair:[],dry:[],status:['status'],relief:['statuses'],mark:['medium','visibility'],light:[],environment:['operation','unit'],summon:['summonType','upkeepMp','upkeepMinutes'],summon_contract:['operation','offering'],protection:['damageTypes','stacking'],object:['operation','limitC','surface'],heat:['operation','limitC','upkeepMp'],area:['radiusMeters','intervalMinutes','trigger','effect']};
+const fields={damage:['damageType','armorFactor','coldDecay','windBlade','stoneProjectile','lightDecay','shadowDecay'],optics:['operation'],water_earth:['operation'],air:['operation'],heal:[],repair:[],dry:[],status:['status'],relief:['statuses'],mark:['medium','visibility'],light:[],environment:['operation','unit'],summon:['summonType','upkeepMp','upkeepMinutes'],summon_contract:['operation','offering'],protection:['damageTypes','stacking'],object:['operation','limitC','surface'],heat:['operation','limitC','upkeepMp'],area:['radiusMeters','intervalMinutes','trigger','effect']};
 export function validateEffectSpec(spec){
  const errors=[];
  if(!spec||typeof spec!=='object'||Array.isArray(spec))return ['法术效果必须是规则对象'];
@@ -13,6 +13,8 @@ export function validateEffectSpec(spec){
  if(spec.coldDecay!==undefined&&(spec.kind!=='damage'||spec.damageType!=='cold'||spec.coldDecay!==true))errors.push('环境衰减只适用于冰针伤害');
  if(spec.windBlade!==undefined&&(spec.kind!=='damage'||spec.damageType!=='wind'||spec.windBlade!==true))errors.push('甲材差异只适用于风刃');
  if(spec.stoneProjectile!==undefined&&(spec.kind!=='damage'||spec.damageType!=='earth'||spec.stoneProjectile!==true))errors.push('实体小石只适用于石弹伤害');
+ if(spec.lightDecay!==undefined&&(spec.kind!=='damage'||spec.damageType!=='light'||spec.lightDecay!==true))errors.push('距离衰减只适用于光束伤害');
+ if(spec.shadowDecay!==undefined&&(spec.kind!=='damage'||spec.damageType!=='shadow'||spec.shadowDecay!==true))errors.push('强光衰减只适用于暗影伤害');
  if(spec.kind==='area'){
   if(!Number.isFinite(spec.radiusMeters)||spec.radiusMeters<=0||spec.radiusMeters>100)errors.push('区域半径须在0至100米之间');
   if(!Number.isSafeInteger(spec.intervalMinutes)||spec.intervalMinutes<1||spec.intervalMinutes>1440)errors.push('区域触发间隔非法');
@@ -33,7 +35,7 @@ export function resolveVitalityPrimitive({spec,hp,maxHp,defense=0,resistance=0,m
  const errors=validateEffectSpec(spec);if(errors.length)throw new Error(errors.join('；'));
  if(!['damage','heal'].includes(spec.kind))throw new Error('此处理器只接受伤害或治疗');
  finite(maxHp,1,Number.MAX_SAFE_INTEGER,'生命上限');finite(hp,0,maxHp,'当前生命');finite(defense,0,Number.MAX_SAFE_INTEGER,'防御');finite(resistance,0,1,'抗性');finite(multiplier,0,1,'适应伤害系数');
- const amount=spec.kind==='heal'?spec.power:spec.coldDecay&&multiplier===0?0:Math.max(1,Math.round((spec.power-defense*(spec.armorFactor??0.25))*(1-resistance)*multiplier));
+ const amount=spec.kind==='heal'?spec.power:(spec.coldDecay||spec.lightDecay||spec.shadowDecay)&&multiplier===0?0:Math.max(1,Math.round((spec.power-defense*(spec.armorFactor??0.25))*(1-resistance)*multiplier));
  const nextHp=Math.max(0,Math.min(maxHp,hp+(spec.kind==='heal'?amount:-amount)));
  return {amount:Math.abs(nextHp-hp),rawAmount:amount,nextHp,delta:nextHp-hp};
 }

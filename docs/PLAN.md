@@ -67,15 +67,14 @@ review-002-yp=782a49e阶段审核通过，范围限T06正式发布与c64163d修�
 
 ### T07 已完成（待T73正式整合）：苇汀30人L1/L2/L4全过，随机10人评分均4.32/最低3，7条共享事件闭合、T04零缺口、发布预演通过；累计4.49559880元。重开授权入口已支持追加授权：T07/T08/T09上限7/6.5/4.5元、每人6次、波次25元（用户2026-10-13同意）。T58已并入完成。
 
-### T08 砾泉来源修订与续审【真实模型；停止线已解除，上限6.5元、每人6次】
+### T08 已完成（待T86正式整合）：砾泉30人L1/L2/L4全过，L4均4.38/最低3，事件闭合、T04与发布预演通过；10次调用，累计4.92485848元。
 
-据59fca09的reopen-complete/{next-gap.txt,background-source-block.json,neighbor-request-guard-block.json,stopped-report.json}。23passed/7manual，五人背景失效，最多21闭合；余额0.28716496。鞠舒两次已尽，第三次须真正决定，增额不重置次数。
+### T86 砾泉30人正式整合并关闭全体完整档门槛（T11-C）【零模型】
 
-拥有world/design/w1-lq-depth.mjs、world/drafts/w1/lq-depth/；T54已完成逐entry背景/context继承，本卡仍受来源授权及次数阻断。原neighbor-request-guard-block.json显示崔帆两叶携“向她解释过”，新after为“需先问她是否愿意谈”；衡庐另两叶同类。T58父basis helper仅在实际T08父proof重放证实同根时复用，不扩本卡正文、不重做已过四叶准备。
-
-共享源仅另存memory_lq_depth_readback修订：narrative、designedFacts[2]、sourceRefs[12,13].publicSpeech、associations五份narrative/factsHash及匡叶viewpoint；五人memorySeeds[2]与knowledge.known[2]同步。依据匡叶原occupation/goals及三项risks，删“被本人回绝”，只谈本人确认原则；原秘密/旧记忆/refs哈希和参与者不改。新背景revision继承父源，foundation.revision不换；旧proof读旧背景，新元数据仅验本事件差异。
-
-现grant缺沙萝及五人完整共享叶权限，不能执行该源修订；先交精确差异，依调度串行补授权支持。其余仅七manual的hard叶；未变通过者复用。来源五人重审后才L4/闭合预演；相关及CORE，保留旧80请求与费用，禁止新nonce/重领。
+结果：砾泉30人带已审核的完整档进入正式世界；五村全部发布后，全体正式full的人物深度校验零缺口，release构建不再被人物深度拒绝。
+可改：world/people/正式人物文件、tests/npc-depth-lq.test.mjs、tests/npc-depth-batch-publication.test.mjs的砾泉用例；若整合后validateNpcDepth/findNpcRuleWording对全体full仍报缺口，逐条修对应人物的正式数据（只改有来源的内容，缺来源的列出来交回）。锁定：tools/公共工具、人口数量（仍152 full/294名册）。
+做法：同T73/T85。整合后跑全体深度校验，把剩余缺口清零或列清单。
+验收：`node --test tests/npc-depth-lq.test.mjs tests/npc-depth-batch-publication.test.mjs tests/village-ledgers.test.mjs`、CORE；village-ledgers的“四村年粮守恒”应转为通过。模型0。
 
 ### T54 已完成：63613dc已合；真实T07的42 changes/12指纹保持，T08父proof四叶及逐event+sourceHash的L4/发布重放通过，相关87/CORE40；0模型，T07真实复审与T08来源授权仍归原卡。原验收见 `git show ee0f4e6:docs/PLAN.md`。
 
@@ -137,7 +136,7 @@ N1–N17至少12项完整有效且≥90%，N6/N16零泄漏，N12真实盲辨，N
 
 ### T63 已完成：审查请求与示例区分可见细节、否认知情和补造经历；合并后静态提示超限，同会话精简到35956字节（上限48000）；专项37/CORE40/prompt全过，0模型，真实效果由T64复验。
 
-### T64 M2真实复验【真实模型；T61–T63已合，待模型槽】
+### T64 M2真实复验【真实模型；执行中】
 
 结果：在修订后的完整提示栈上重跑原十场，按原门槛给出通过或明确未通过。
 可改：仅docs/测试报告/M2-recheck/及新run生成物；复用T60的preflight.mjs，只适配父记录、来源、额度和入口。代码和旧报告锁定。
@@ -157,11 +156,25 @@ N1–N17至少12项完整有效且≥90%，N6/N16零泄漏，N12真实盲辨，N
 
 ### T71 已完成：水土族17个机制（密封、测流缓流、水体束缚、水帘、探土耕平、勘矿、结构支撑、堤岸、裂隙、陷足、石弹）接入真实状态；相关22/CORE40，0模型。
 
-### T72 光族消费者【零模型】
+### T72 已完成：光族机制（光源、聚光反射、辨色、显痕、光标、雾中能见度、遮光私密、视觉干扰、阴影束缚、强光衰减）接入真实状态；相关26/CORE40，0模型。
 
-结果：光系法术有真实效果——手持光源与调暗、聚光反射与影长测量、样品辨色、表面磨损与痕迹显现、路线光标、雾中能见度、遮光与私密、视觉干扰与诱饵、阴影束缚、强光随距离衰减。
-可改：新增server-plugin/magic-light.mjs、tests/magic-light.test.mjs；environment.mjs、magic-targeting.mjs、magic.mjs、magic-primitives.mjs必要接点及机制图两文件。锁定同T71。
-验收：`node --test tests/magic-light.test.mjs tests/magic.test.mjs`、CORE。模型0。规模约700–1000行。
+### T87 医、植、食族消费者【零模型】
+
+结果：这三类法术有真实效果——浅表止血、创面清洁与闭合、病症感知、止痛与濒死稳定、驱寄生物、肌腱恢复；药草识别、幼苗抗霜、根系向水、嫁接；储柜与果实保鲜减损。治疗只处理列出的具体伤病状态，不做万能回血；garden类只复用T37已有的水肥生长。
+可改：新增server-plugin/magic-care.mjs、tests/magic-care.test.mjs；magic.mjs、magic-primitives.mjs、magic-status.mjs、agriculture.mjs、environment.mjs必要接点及机制图两文件。锁定：正式world/meta目录、extension/tools.mjs、prompt/。
+验收：`node --test tests/magic-care.test.mjs tests/magic.test.mjs`、CORE；每个效果有正常与拒绝路径，到期与重载一致。模型0。规模约700–1000行。
+
+### T88 心、契、物与空间族消费者【零模型；待T87合入，同改magic接点】
+
+结果：感受载体、自愿精神观察、睡眠与休养、长期记忆保护、契约痕迹与反制、材料腐蚀；可见测距、袋内整理取物、短时封存、机械锁隙、门框警号、许可通道、锚点校准、锚点货运、空间异常修补，都有真实效果。精神类一律要对方同意。
+可改：新增server-plugin/magic-mind-space.mjs、tests/magic-mind-space.test.mjs；magic.mjs、magic-primitives.mjs、magic-movement.mjs、contracts.mjs、npc-memory.mjs必要接点及机制图两文件。锁定同T87。
+验收：`node --test tests/magic-mind-space.test.mjs tests/magic.test.mjs tests/magic-movement.test.mjs`、CORE。模型0。规模约800–1100行。
+
+### T89 役灵与仪式族消费者【零模型；待T88合入】
+
+结果：真实动物引导、清扫役灵、碎石搬运、纸签运输、役灵改派与协作、可拒绝的邀约；受托祭坛清洁、自愿誓言见证、教派契约、复活祷标、守戒防护、共同护罩、灵体辨识、邪秽干扰、仪式治疗，都有真实效果。仪式资格按现有神祇与教派数据核对。
+可改：新增server-plugin/magic-ritual.mjs、tests/magic-ritual.test.mjs；summons.mjs、revival.mjs、contracts.mjs、magic.mjs、magic-primitives.mjs必要接点及机制图两文件。锁定同T87。
+验收：`node --test tests/magic-ritual.test.mjs tests/magic.test.mjs`、CORE。模型0。规模约800–1100行。
 
 ### T67 已完成：智能首领记住实际接触与交锋，按领地目标改变态度，存档恢复后保留；本卡8项通过/CORE40，0模型。bosses.test里两项主线旧失败（世界归档校验失败）不属本卡，随T43续修处理。
 
@@ -363,9 +376,7 @@ T28-R1修好新回执undefined规范化并保留严格篡改拒绝，相关31/32
 
 ### T75 已完成：双主题、中文顶栏、字号/高对比/减少动画、手机全屏抽屉、本地字体与16品质色；后续卡在E/ui-*.mjs导出registerUI、在S/ui-*.mjs导出registerUIRoutes注册面板和路由。浏览器8/8、CORE40，六张截图在docs/测试报告/最新/M6-01/。遗留：390宽顶栏右侧地点和魔力被截断，交T76顺带处理。
 
-### T76 消息卡与自然语言操作：玩家看到头像名牌、回合事件卡和可收藏信件，能用快捷按钮及说／做切换准备输入。
-可改 E/message-view.mjs、runtime.js、style.css，新建 E/input-view.mjs、mail-view.mjs；S/state-notices.mjs、T/state-notices.test.mjs、T/runtime.test.mjs。补齐未知说话人登记、公告与合同卡；系统提示写消息附加数据且由有效事件重建，回滚同步；快捷按钮仅填输入，少量快捷键可关闭，调试外隐藏回执、JSON和技术信息，中文错误保留未确认状态。
-验收：node --test tests/runtime.test.mjs tests/state-notices.test.mjs；node --test tests/engine.test.mjs tests/storage.test.mjs tests/plugin.test.mjs。截图含未知说话人、错误、邮件及手机输入；模型0，预计3小时，1会话。
+### T76 已完成：头像名牌、未知说话人登记、钱袋与事件卡、告示/来信卡可收藏到邮件、说/做切换与快捷按钮（只填输入框）、390宽顶栏换行；界面测试全过、CORE40，六张截图在docs/测试报告/最新/M6-02/。
 
 ### T77 已完成：角色、技能、法术书、格子行囊四面板与/ui/personal只读投影；界面测试夹具改为通用代理extension/下全部模块，后续卡新增模块不用再改夹具。界面测试14/14、CORE40，16张截图在docs/测试报告/最新/M6-03/。
 
@@ -373,9 +384,7 @@ T28-R1修好新回执undefined规范化并保留严格篡改拒绝，相关31/32
 可改 E/runtime.js，新建 E/people-history.mjs、people-history.css；S/index.mjs、新 S/ui-history.mjs，T/runtime.test.mjs、新 T/m6-04.test.mjs。增 /ui/history，只读复用 chronicle、NPC 玩家关系及实际获知记录，按玩家可见性过滤后分页；所在地取最后获知位置，承诺仅本人相关；笔记和判断存聊天附加数据，不改引擎事实。
 验收：node --test tests/runtime.test.mjs tests/m6-04.test.mjs；node --test tests/engine.test.mjs tests/storage.test.mjs tests/plugin.test.mjs。截图含三面板和搜索，断言未知人物／私密记忆不显示；模型0，预计3小时，1会话。
 
-### T79 任务约定与领地：玩家能按期限查看收发任务与义务，有领地时能查收支、工程和待批事项。
-可改 E/ledger-view.mjs、runtime.js，新建 E/affairs-panels.mjs、affairs-panels.css；S/index.mjs、新 S/ui-affairs.mjs，T/runtime.test.mjs、新 T/m6-05.test.mjs。增 /ui/affairs，从 quests、obligations、records、settlements、buildings、projects 读取玩家任务额度及有权查看的领地人口／库存／收支／工程／待批事项／管事报告；缺业务记录归 R07，界面不补造。
-验收：node --test tests/runtime.test.mjs tests/m6-05.test.mjs；node --test tests/engine.test.mjs tests/storage.test.mjs tests/plugin.test.mjs。截图含无领地、有领地及到期排序；模型0，预计2–3小时，1会话。
+### T79 已完成：任务、约定、领地三面板与/ui/affairs只读投影，按期限排序、收发筛选、公账展示；界面测试25/25、CORE40，截图在docs/测试报告/最新/M6-05/。缺口归R07：玩家发单额度与村级领地签发入口尚未实现，面板对缺记录显示“未登记”。
 
 ### T80 开始游戏与续玩：玩家能继续或创建角色，管理存档与设置，进入后看到对应开场或前情提要。
 可改新 E/start/play-town.html、play-town.js、play-town.css，E/runtime.js、tools/deploy-engine.mjs，T/runtime.test.mjs、新 T/m6-06.test.mjs；现酒馆页面仅作参考，隔离包提供同名新入口。复用 /create、/export、/import 及04的可见历史；前情提要用已发生事实确定性编排，开场复用原有具体细节，加载知识取已发布世界内容，备份含笔记与设置。
