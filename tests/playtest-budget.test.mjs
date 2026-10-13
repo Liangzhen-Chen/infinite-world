@@ -8,7 +8,7 @@ import {once} from 'node:events';
 import {execFile} from 'node:child_process';
 import {promisify} from 'node:util';
 import {fileURLToPath,pathToFileURL} from 'node:url';
-import {openPlaytestBudget,openPlaytestTape,requestCeiling} from '../tools/playtest-budget.mjs';
+import {openPlaytestBudget,openPlaytestTape,requestCeiling,budgetUpperProof} from '../tools/playtest-budget.mjs';
 
 const identity={scenariosHash:'frozen',promptHash:'source'};
 const body={messages:[{role:'user',content:'测试中文请求'}],max_tokens:1800};
@@ -20,6 +20,32 @@ async function setup(t,client,increment=30){
  const options={registryDir:path.join(directory,'registry'),runDir:path.join(directory,'reports'),runId:'T17-wave',cardId:'T17',increment,identity,client};
  const budget=await openPlaytestBudget(options);t.after(()=>budget.close());return {directory,options,budget};
 }
+test('完整保守上界允许历史归属未知；缺金额/hash和超限均拒绝',()=>{
+ const args={oldSpentYuan:.28484248,oldReservedYuan:6.37289,legacyYuan:5.77063128,content:[{shared:true,spentYuan:14.7517424,reservedYuan:.083736,hash:'a'.repeat(64)},{spentYuan:19.5480174,reservedYuan:0,hash:'b'.repeat(64)}]};
+ const proof=budgetUpperProof(args);assert.ok(proof.budgetUpperSafe);assert.ok(Math.abs(proof.roundUpperYuan-20.42836376)<1e-10);assert.ok(proof.goalUpperYuan<100);
+ assert.throws(()=>budgetUpperProof({...args,legacyYuan:undefined}),/金额缺失/);
+ assert.throws(()=>budgetUpperProof({...args,content:[{...args.content[0],hash:''}]}),/hash/);
+ assert.throws(()=>budgetUpperProof({...args,oldReservedYuan:30}),/超限/);
+ assert.throws(()=>budgetUpperProof({...args,extraYuan:100}),/超限/);
+});
+test('发送前预算proof拒绝时零provider调用；严格responseId缺失保留预留',async t=>{
+ let calls=0;const {budget,options}=await setup(t,{async generate(){calls++;const r=response();delete r.id;return r;}});await budget.close();
+ const refused=await openPlaytestBudget({...options,beforeReserve:()=>{throw Error('保守上界缺金额');}});await assert.rejects(refused.generate(body),/缺金额/);assert.equal(calls,0);assert.equal(refused.reserved,0);await refused.close();
+ const reopened=await openPlaytestBudget({...options});await assert.rejects(reopened.generate(body),/冻结/);assert.equal(calls,0);await reopened.close();
+ const strict=await openPlaytestBudget({...options,runId:'strict-fixture',requireResponseId:true,beforeReserve:()=>({budgetUpperSafe:true})});t.after(()=>strict.close());await assert.rejects(strict.generate(body),/responseId/);assert.equal(calls,1);assert.equal(strict.reserved,requestCeiling(body));const row=strict.ledger.requests[Object.keys(strict.ledger.requests)[0]];assert.equal(row.request.messages[0].content,body.messages[0].content);assert.deepEqual(row.attempts[0].response.usage,response().usage);await assert.rejects(strict.generate(body,'host','next'),/冻结/);assert.equal(calls,1);
+});
+test('已确认HTTP规则拒绝可解释后续回合；恢复重放拒绝原文而不重新发出写入',async t=>{
+ const {budget,directory}=await setup(t,{async generate(){return response();}});let rejected=0,writes=0;
+ const options={file:path.join(directory,'rejected-tape.json'),identity:{case:'confirmed-rejection'},client:budget,api:async(endpoint)=>{if(endpoint==='reject'){rejected++;const error=Error('规则拒绝');error.httpStatus=400;throw error;}writes++;return {ok:true};}};
+ let tape=await openPlaytestTape(options);await assert.rejects(tape.api('reject'),/规则拒绝/);assert.deepEqual(await tape.api('execute',{tool:'world_turn'}),{ok:true});
+ tape=await openPlaytestTape(options);await assert.rejects(tape.api('reject'),/规则拒绝/);assert.deepEqual(await tape.api('execute',{tool:'world_turn'}),{ok:true});assert.equal(rejected,1);assert.equal(writes,1);
+});
+test('HTTP 500不能证明写入未发生，当前及恢复均阻止后续写入',async t=>{
+ const {budget,directory}=await setup(t,{async generate(){return response();}});let calls=0;
+ const options={file:path.join(directory,'ambiguous-tape.json'),identity:{case:'server-unknown'},client:budget,api:async()=>{calls++;const error=Error('服务端执行异常');error.httpStatus=500;throw error;}};
+ for(let i=0;i<2;i++){const tape=await openPlaytestTape(options);await assert.rejects(tape.api('execute',{tool:'world_trade'}),/服务端执行异常/);await assert.rejects(tape.api('execute',{tool:'world_turn'}),/禁止继续写入/);assert.equal(tape.tape.http[0].status,'unknown');}
+ assert.equal(calls,1);
+});
 
 test('缓存只有真实 usage 才结算；同请求与重复 provider response 不双计或退款',async t=>{
  let calls=0;const {budget}=await setup(t,{async generate(){calls++;return response();}});
@@ -133,7 +159,7 @@ DeepSeekClient.prototype.generate=async()=>{await fs.writeFile(${JSON.stringify(
  async function run(destination,extra=[]){try{await promisify(execFile)(process.execPath,[...base,'--run-dir',destination,...extra],{timeout:30000});assert.fail('额度不足不能验收通过');}catch(error){assert.equal(error.code,1,error.stderr??error.message);assert.match(error.stdout,/completedSessions/,error.stderr);}}
  await run(runDir);const first=JSON.parse(await fs.readFile(path.join(runDir,'真实试玩.json'),'utf8'));
  assert.equal(first.runId,'cli-wave');assert.equal(first.cardId,'T17');assert.equal(first.costUpperYuan,0);assert.equal(first.results[0].recoveryRuns,0);
- await run(movedDir,['--resume']);const restored=JSON.parse(await fs.readFile(path.join(movedDir,'真实试玩.json'),'utf8'));
+ await run(movedDir,['--resume','--retest-only','out_of_character']);const restored=JSON.parse(await fs.readFile(path.join(movedDir,'真实试玩.json'),'utf8'));
  assert.equal(restored.budgetFile,first.budgetFile);assert.equal(restored.results[0].recoveryRuns,1);assert.equal(restored.results[0].originalFailures.length,1);
  await run(movedDir,['--resume']);const final=JSON.parse(await fs.readFile(path.join(movedDir,'真实试玩.json'),'utf8'));
  assert.equal(final.results[0].recoveryRuns,1);assert.equal(final.results[0].originalFailures.length,1);assert.equal(final.reservedYuan,0);
