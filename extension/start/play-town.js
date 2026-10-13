@@ -86,7 +86,7 @@ export async function mountStart(doc=document){
     });
     const snapshot=async()=>{const current=await bridge('snapshot');if(current?.reference){remember(current);if(doc.body.classList.contains('fields-start-playing'))updateSettings(current.settings);}return current;};
     subscribeSettings(settings=>{if(doc.body.classList.contains('fields-start-playing'))bridge('settings',settings).catch(error=>status.textContent=error.message);});
-    const showHome=()=>{frame.hidden=true;doc.querySelector('#arrival').hidden=true;doc.querySelector('#start-home').hidden=false;doc.body.classList.remove('fields-start-playing');};
+    const showHome=()=>{frame.contentWindow?.infiniteFieldsV2?.stopAudio();frame.hidden=true;doc.querySelector('#arrival').hidden=true;doc.querySelector('#start-home').hidden=false;doc.body.classList.remove('fields-start-playing');};
     const prepare=async(session,opening=false)=>{
         const campaignId=session.reference.campaignId;status.textContent='正在读取已发生的经历。';
         const current=await request('read',{campaignId});
@@ -100,10 +100,15 @@ export async function mountStart(doc=document){
         doc.querySelector('#loading-knowledge').textContent=`${knowledge.name}：${knowledge.description}`;
         doc.querySelector('#start-home').hidden=true;doc.querySelector('#arrival').hidden=false;frame.hidden=true;
         status.textContent='存档已读取。';
-        doc.querySelector('#enter-button').onclick=()=>run(async()=>{
-            await bridge('enter',{session:selected,opening:opening?text.paragraphs.join('\n\n'):null,settings:getSettings()});
-            await snapshot();doc.querySelector('#arrival').hidden=true;frame.hidden=false;doc.body.classList.add('fields-start-playing');status.textContent='行动会自动记入本地存档。';
-        });
+        doc.querySelector('#enter-button').onclick=()=>{
+            // Same-origin direct call preserves the click's browser audio activation.
+            // postMessage followed by an async request can lose it on mobile browsers.
+            void frame.contentWindow?.infiniteFieldsV2?.unlockAudio(true);
+            return run(async()=>{
+                await bridge('enter',{session:selected,opening:opening?text.paragraphs.join('\n\n'):null,settings:getSettings()});
+                await snapshot();doc.querySelector('#arrival').hidden=true;frame.hidden=false;doc.body.classList.add('fields-start-playing');status.textContent='行动会自动记入本地存档。';
+            });
+        };
     };
     const download=async session=>{
         const bundle=await request('export',{campaignId:session.reference.campaignId}),backup=makeBackup(bundle,session,getSettings());
