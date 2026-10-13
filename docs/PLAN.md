@@ -370,6 +370,51 @@ T28-R1修好新回执undefined规范化并保留严格篡改拒绝，相关31/32
 
 范围：已有 410 物品/200 配方不重新扩数量；补完整取得、制作、失败副产品、热源、修理、耐久、保存/腐败、价格成本、职业认证与自创技能/配方、材料施法链路验收。复核 519 条审核/正式源指纹与随机评分，NPC 炉火照管不能靠绕过维护实现。真实生活流程覆盖 11.3 对应项，30 元/轮；相关性质测试保证财物守恒与重复发布保留售空状态。
 
+### M6界面批（2026-10-13主会话审定，来源：Astra草案M6-planner-001；现状一览见该草案A段）
+
+共同边界：锁定extension/tools.mjs、extension/prompt.mjs、prompt/、原存档、SillyTavern/、dist/；界面卡不加模型工具。数据读已有/read、/scene、/feedback、/catalog，缺展示字段时加只读投影；state-read的NPC脱敏不等于玩家知情过滤，不得展示全量NPC。截图写docs/测试报告/最新/M6-编号/（桌面与390×844、深浅两主题）。路径缩写E=extension/，S=server-plugin/，T=tests/。模型0。
+审计改动：草案要求十张卡全部串行（因共改runtime.test.mjs、runtime.js和路由），改为T75先做并提供面板挂载点与路由注册点，其后各卡只在自己的新模块里注册面板和路由、测试写在自己的tests/m6-NN.test.mjs，不改tests/runtime.test.mjs；这样T76–T80可并行，T77与T79同改ledger-view须串行。T81地图先覆盖已发布地点，白石镇发布后补映射。T84语音若本机没有可用的中文多声线服务，记待用户确认并完成其余部分。
+
+### T75 双主题、顶栏与阅读设置：玩家看到完整中文状态栏，并可切换主题、字号、高对比与减少动画；手机顶栏两行，抽屉全屏。
+可改 E/runtime.js、style.css，新建 E/ui-shell.mjs、ui-settings.mjs、topbar.mjs；assets/fonts/、assets/LICENSES.md、tools/deploy-engine.mjs、T/runtime.test.mjs。复用 calendar、玩家和天气状态；S/index.mjs 与新 S/ui-overview.mjs 增 /ui/overview，返回日期、地点路径、效果及同行者可见信息；提供后续面板挂载和设置入口，隔离打包包含后续新增界面模块与素材；接入本地授权字体与16品质色。
+验收：node --test tests/runtime.test.mjs tests/m6-01.test.mjs；node --test tests/engine.test.mjs tests/storage.test.mjs tests/plugin.test.mjs。新增 T/m6-01.test.mjs；截图含双主题、字号和键盘焦点；模型0，预计3小时，1会话。
+
+### T76 消息卡与自然语言操作：玩家看到头像名牌、回合事件卡和可收藏信件，能用快捷按钮及说／做切换准备输入。
+可改 E/message-view.mjs、runtime.js、style.css，新建 E/input-view.mjs、mail-view.mjs；S/state-notices.mjs、T/state-notices.test.mjs、T/runtime.test.mjs。补齐未知说话人登记、公告与合同卡；系统提示写消息附加数据且由有效事件重建，回滚同步；快捷按钮仅填输入，少量快捷键可关闭，调试外隐藏回执、JSON和技术信息，中文错误保留未确认状态。
+验收：node --test tests/runtime.test.mjs tests/state-notices.test.mjs；node --test tests/engine.test.mjs tests/storage.test.mjs tests/plugin.test.mjs。截图含未知说话人、错误、邮件及手机输入；模型0，预计3小时，1会话。
+
+### T77 角色、技能、法术书与行囊：玩家能查看完整个人成长信息、已学法术及带品质与负重的格子背包。
+可改 E/ledger-view.mjs、runtime.js，新建 E/personal-panels.mjs、personal-panels.css；S/index.mjs、新 S/ui-personal.mjs，T/runtime.test.mjs、新 T/m6-03.test.mjs。复用 player、professions、skills、spells、inventory、itemInstances 和 /catalog；增 /ui/personal 只读返回阶段阈值、职业认证、来源和物品做工／制作者／重量，完成经验条与突破提示，不另算成长规则。
+验收：node --test tests/runtime.test.mjs tests/m6-03.test.mjs；node --test tests/engine.test.mjs tests/storage.test.mjs tests/plugin.test.mjs。四面板分别截图，检查旧档空值和回滚刷新；模型0，预计4小时，1会话。
+
+### T78 人物、编年史与传闻：玩家能查看见过的人及共同经历，搜索自己的历史，并保存人物笔记和传闻判断。
+可改 E/runtime.js，新建 E/people-history.mjs、people-history.css；S/index.mjs、新 S/ui-history.mjs，T/runtime.test.mjs、新 T/m6-04.test.mjs。增 /ui/history，只读复用 chronicle、NPC 玩家关系及实际获知记录，按玩家可见性过滤后分页；所在地取最后获知位置，承诺仅本人相关；笔记和判断存聊天附加数据，不改引擎事实。
+验收：node --test tests/runtime.test.mjs tests/m6-04.test.mjs；node --test tests/engine.test.mjs tests/storage.test.mjs tests/plugin.test.mjs。截图含三面板和搜索，断言未知人物／私密记忆不显示；模型0，预计3小时，1会话。
+
+### T79 任务约定与领地：玩家能按期限查看收发任务与义务，有领地时能查收支、工程和待批事项。
+可改 E/ledger-view.mjs、runtime.js，新建 E/affairs-panels.mjs、affairs-panels.css；S/index.mjs、新 S/ui-affairs.mjs，T/runtime.test.mjs、新 T/m6-05.test.mjs。增 /ui/affairs，从 quests、obligations、records、settlements、buildings、projects 读取玩家任务额度及有权查看的领地人口／库存／收支／工程／待批事项／管事报告；缺业务记录归 R07，界面不补造。
+验收：node --test tests/runtime.test.mjs tests/m6-05.test.mjs；node --test tests/engine.test.mjs tests/storage.test.mjs tests/plugin.test.mjs。截图含无领地、有领地及到期排序；模型0，预计2–3小时，1会话。
+
+### T80 开始游戏与续玩：玩家能继续或创建角色，管理存档与设置，进入后看到对应开场或前情提要。
+可改新 E/start/play-town.html、play-town.js、play-town.css，E/runtime.js、tools/deploy-engine.mjs，T/runtime.test.mjs、新 T/m6-06.test.mjs；现酒馆页面仅作参考，隔离包提供同名新入口。复用 /create、/export、/import 及04的可见历史；前情提要用已发生事实确定性编排，开场复用原有具体细节，加载知识取已发布世界内容，备份含笔记与设置。
+验收：node --test tests/runtime.test.mjs tests/m6-06.test.mjs；node --test tests/engine.test.mjs tests/storage.test.mjs tests/plugin.test.mjs。浏览器完成创建→固定回复发送→保存→导入→继续，截图含开始页和前情；禁止连接测试触发付费调用；模型0，预计3小时，1会话。
+
+### T81 四级地图与出行预览：玩家能缩放和标记已知地图，比较路线，选中后仅将出行意图填入输入框。
+可改 E/runtime.js，新建 E/map-view.mjs、map-view.css；S/index.mjs、新 S/ui-map.mjs，必要时 S/engine.mjs 的只读路线计算接点；world/geo/、T/runtime.test.mjs、新 T/m6-07.test.mjs。增 /ui/map 与 /ui/routes，从 geo、discoveries 和可靠获知记录投影四级层次及三类迷雾；复用季节／天气路线计算提供不同可行路线、费用和风险，未知风险明确标未知；补已发布地点的层级映射，不新增远方世界。
+验收：node --test tests/runtime.test.mjs tests/m6-07.test.mjs；node --test tests/engine.test.mjs tests/storage.test.mjs tests/plugin.test.mjs。截图含四级地图和三类迷雾；验证鼠标／双指缩放、季节封路、标记保存及预览不改时间钱袋位置；模型0，预计4小时，1会话。
+
+### T82 游戏纹章、背景与人物素材：玩家看到统一风格的游戏标志、约80张随场景切换的背景及全部已发布LOD0人物的职业纹章头像。
+可改 world/art/ 下风格说明、逐人物可复用提示及素材映射，assets/visual/、assets/LICENSES.md，新 tools/build-m6-art.mjs、E/background-view.mjs；E/runtime.js、tools/build-card.mjs、tools/deploy-engine.mjs，T/runtime.test.mjs、新 T/m6-08.test.mjs。以原创场景SVG交付背景，按10类场景×2时段×4天气实际绘制差异；头像采用指南允许的职业纹章，未成年仅日常形象；核对酒馆背景接口，场景变化淡入淡出，减少动画时直接切换。
+验收：node --test tests/runtime.test.mjs tests/m6-08.test.mjs；node --test tests/engine.test.mjs tests/storage.test.mjs tests/plugin.test.mjs。截图含背景联系表、场景切换与头像，核验素材映射和许可；模型0，预计4小时，1会话。
+
+### T83 环境音与情境音乐：玩家点击进入后听到随场景变化的循环环境音与音乐，可调音量和静音。
+可改新 E/ambient-audio.mjs、E/runtime.js、E/start/play-town.js、E/ui-settings.mjs；world/audio/、assets/audio/、assets/LICENSES.md、tools/deploy-engine.mjs，T/runtime.test.mjs、新 T/m6-09.test.mjs。采用CC0或明确许可音频，覆盖生物群落／时段／天气／室内外和五类音乐情境，交叉淡入淡出；顶栏与设置共用音量状态，切换聊天停止旧声音。
+验收：node --test tests/runtime.test.mjs tests/m6-09.test.mjs；node --test tests/engine.test.mjs tests/storage.test.mjs tests/plugin.test.mjs。截图含手机音量操作；隔离浏览器实际试听并记录素材与播放结果，验证首次点击前静音及切换不叠音；模型0，预计2–3小时，1会话。
+
+### T84 按说话人中文语音：玩家能听到旁白与不同人物的中文声线，并能跳过、重播或关闭。
+可改新 E/speaker-tts.mjs、E/runtime.js、E/ui-settings.mjs；必要的新 S/tts.mjs 与 S/index.mjs 接点，world/audio/voices.json、tools/deploy-engine.mjs，T/runtime.test.mjs、新 T/m6-10.test.mjs。复用02的说话人分段和 npc.tts_voice，缺值按性别年龄映射；先枚举已装系统声线和可用本地服务，支持返回音频的服务按文本＋声音＋参数哈希缓存；系统speechSynthesis不能提供音频字节，不能算缓存完成。
+验收：node --test tests/runtime.test.mjs tests/m6-10.test.mjs；node --test tests/engine.test.mjs tests/storage.test.mjs tests/plugin.test.mjs。截图含手机播放控件；隔离页实际播放旁白及两名NPC中文，验证缓存复用、跳过重播关闭；生成模型0，实际TTS合成需执行，付费调用0；预计3小时，1会话，完整完成以可用多声线及音频缓存为条件。
+
 ### R11 M6 主题、消息、顶栏和全部面板【待细化】
 
 范围：第 12.1–12.4、12.9–12.12；本地授权字体、双主题和 16 品质色、`<q who>` 说话人、系统事件卡、未知说话人登记、隐藏回执/尾注、信件告示、中文日期/天气/地点/钱袋/生命魔力。角色/技能/法术书/行囊/人物/任务约定/领地/编年史/传闻全部面板，玩家知情视图，T20 只是一块。自然语言快捷按钮、说/做切换和可关闭少量快捷键；继续/创建/存档/设置和前情提要，错误正常语言、debug 才见 JSON。390×844 可用、字号/高对比/减少动画、Playwright 截图基线无控制台错误。隔离运行不部署；依赖 T20/R07 各状态接口。
