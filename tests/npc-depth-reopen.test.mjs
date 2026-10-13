@@ -12,6 +12,14 @@ import {auditNpcDepth} from '../tools/audit-npc-depth.mjs';
 import {runDepthReview,reviewOptions,recordDepthIncrementalL4} from '../tools/npc-depth-review.mjs';
 import {prepareNpcDepth} from '../tools/publish-npc-depth.mjs';
 const read=f=>fs.readFile(f,'utf8').then(JSON.parse),write=(f,v)=>fs.writeFile(f,JSON.stringify(v,null,2)+'\n'),near=(a,b)=>assert.ok(Math.abs(a-b)<1e-10);
+test('T09来源追加授权不重写原预算版本、额度、历史请求或次数',async()=>{
+ const manifest=await read('world/design/w1-reopen-authorization.json'),{sourceAuthorizations,...prior}=manifest;
+ assert.equal(sourceAuthorizations.length,1);assert.equal(sourceAuthorizations[0].date,'2026-10-13');
+ assert.deepEqual(reopenAuthorizationVersion(manifest,hashContent(prior)),prior);
+ const ledger=await read('world/drafts/m4-object/budget.json'),allocation=ledger.reopenAuthorizations[manifest.id].cards.T09.allocation;
+ const next=grantDepthBudget(ledger,'T09',allocation,manifest);assert.deepEqual(next,ledger);
+ const forged=structuredClone(manifest);forged.sourceAuthorizations[0].parentManifestHash='wrong';assert.throws(()=>grantDepthBudget(ledger,'T09',allocation,forged),/追加来源授权/);
+});
 async function fixture(t,{card='T08',missing=false,shared=false}={}){
  const dir=await fs.mkdtemp(path.join(os.tmpdir(),'npc-reopen-'));t.after(()=>fs.rm(dir,{recursive:true,force:true}));const worldRoot=path.join(dir,'world');
  for(const folder of ['meta','people','geo','lore'])await fs.cp(path.resolve('world',folder),path.join(worldRoot,folder),{recursive:true});
@@ -33,6 +41,17 @@ async function fixture(t,{card='T08',missing=false,shared=false}={}){
  const plan={kind:'controlled-depth-revision',planningId:'fixed-new-plan',cardId:card,revision:config.revision,foundationHash:grant.foundationHash,baseHash:grant.baseHash,candidateHash:grant.candidateHash,sourceHashes:grant.sourceHashes,previousProofHash:null,authorized:records.map(r=>({id:r.id,recordHash:hashContent(r),draftHash:hashContent(r.draft),reviewHash:hashContent(r.review),paths:r.draft.patches.map(p=>p.path)}))};options.controlledRevision=path.join(root,'plan.json');options.authorizationHash=hashContent(plan);await write(options.controlledRevision,plan);return plan;}
  return{dir,worldRoot,root,design,options,prepared,records,batch,ledger,budgetRoot,client,calls,grant,authorization,revision,config,saveDesign};
 }
+test('T09已过L2的实际T04失效可窄修，合格叶和原failurePaths之外仍拒绝',async t=>{
+ const p=await fixture(t,{card:'T09'}),record=p.records[0];
+ record.status='passed';record.review.contradictions=[];record.errors=[];record.draft.patches[0].value='主持人先跳过这段旧账。';
+ p.grant.allowed[0].paths=[];p.grant.allowed[0].recordHash=hashContent(record);
+ await write(path.join(p.root,record.id+'.json'),record);await write(p.options.reopenAuthorization,p.authorization);
+ await p.revision();const prepared=await prepareDepthRevision(p.options);assert.deepEqual(prepared.revision.changes.map(c=>c.path),['notes']);
+ p.grant.allowed[0].failurePaths=[];await write(p.options.reopenAuthorization,p.authorization);await assert.rejects(prepareDepthRevision(p.options),/未授权重开叶/);
+ p.grant.allowed[0].failurePaths=['notes'];record.draft.patches[0].value='旧账页记下当天的桌位，先后还没有商定。';p.grant.allowed[0].recordHash=hashContent(record);
+ await write(path.join(p.root,record.id+'.json'),record);await write(p.options.reopenAuthorization,p.authorization);await p.revision();await assert.rejects(prepareDepthRevision(p.options),/未授权重开叶/);
+ assert.equal(p.calls.length,0);
+});
 test('显式授权叶可替换旧版本引文；无授权仍拒绝，移除叶权限也拒绝且零调用',async t=>{
  const p=await fixture(t,{card:'T07'}),record=p.records[0];record.review.contradictions[0].quote='另一旧版本的引文';delete record.reviewRecovery;
  await write(path.join(p.root,record.id+'.json'),record);p.grant.allowed[0].recordHash=hashContent(record);await write(p.options.reopenAuthorization,p.authorization);await p.revision();

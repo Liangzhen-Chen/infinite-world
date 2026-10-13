@@ -32,7 +32,11 @@ export const reopenAuthorizationId='user-reopen-20261012-01';
 const reopenLimits={T06:[2,2.5],T07:[3,4.5],T08:[3,4.5],T09:[3,4.5]};
 const amendedCardLimits={T07:7,T08:6.5,T09:4.5};
 export function reopenAuthorizationVersion(manifest,expectedHash){
- const {amendments,...original}=manifest;
+ const {sourceAuthorizations,...budgetManifest}=manifest;
+ const {amendments,...original}=budgetManifest;
+ if(sourceAuthorizations!==undefined){
+  if(!Array.isArray(sourceAuthorizations)||sourceAuthorizations.some(a=>a.cardId!=='T09'||a.date!=='2026-10-13'||a.parentManifestHash!==hash(original)||typeof a.file!=='string'||!a.file.endsWith('.json')||typeof a.hash!=='string'||!/^[a-f0-9]{64}$/.test(a.hash)||typeof a.source!=='string'||!a.source.trim()))throw Error('追加来源授权缺原hash、日期或出处');
+ }
  if(amendments!==undefined){
   if(!Array.isArray(amendments)||amendments.length!==1)throw Error('授权修订须保留唯一2026-10-13凭证');
   const amendment=amendments[0],keys=['id','date','previousManifestHash','waveLimitYuan','maxAttempts','cardLimits','source'];
@@ -40,6 +44,7 @@ export function reopenAuthorizationVersion(manifest,expectedHash){
   if(Object.keys(amendment.cardLimits??{}).sort().join('|')!==Object.keys(amendedCardLimits).sort().join('|')||Object.entries(amendedCardLimits).some(([id,limit])=>!near(amendment.cardLimits[id],limit)))throw Error('授权修订单卡额度不符');
  }
  if(expectedHash===undefined||expectedHash===hash(original))return original;
+ if(expectedHash===hash(budgetManifest))return budgetManifest;
  if(expectedHash===hash(manifest))return manifest;
  throw Error('授权清单已冻结，不得换nonce或修改再领');
 }
@@ -57,6 +62,8 @@ export function reopenBudgetTerms(manifest,cardId){
  return {limitYuan:amendment?.cardLimits[cardId]??grant.newLimitYuan,maxAttempts:amendment?.maxAttempts??grant.maxAttempts,waveLimitYuan:amendment?.waveLimitYuan??manifest.waveLimitYuan};
 }
 export function grantDepthBudget(ledger,cardId,allocation,manifest){
+ reopenAuthorizationVersion(manifest);
+ const {sourceAuthorizations,...budgetManifest}=manifest;manifest=budgetManifest;
  const grant=validateReopenAuthorization(manifest,cardId),original=reopenAuthorizationVersion(manifest),amendment=manifest.amendments?.[0],out=structuredClone(ledger),prior=out.reopenAuthorizations?.[manifest.id];
  if(prior&&prior.manifestHash!==hash(original)||prior?.amendment&&prior.amendment.manifestHash!==hash(manifest))throw Error('授权清单已冻结，不得换nonce或修改再领');
  if(!near(out.waveLimitYuan??out.limitYuan,prior?.amendment?25:20)||out.goalLimitYuan&&out.goalLimitYuan!==100)throw Error('原波次/goal上限不符');
