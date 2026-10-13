@@ -8,7 +8,7 @@ import {createPlaytestServer} from '../tools/playtest-runner.mjs';
 const response=issues=>({choices:[{finish_reason:'tool_calls',message:{tool_calls:[{type:'function',function:{name:'report_consistency_issues',arguments:JSON.stringify({issues})}}]}}]});
 async function campaign(server,body={}){
  let view=await server.api('create',body);const campaignId=view.reference.campaignId;let index=0;
- return {campaignId,async read(){view=await server.api('read',{campaignId});return view;},async act(tool,args){const eventId=`setup-${++index}`;const result=await server.api('execute',{campaignId,anchor:eventId,eventId,tool,args,expectedSequence:view.reference.sequence});view=await server.api('read',{campaignId});return result;},async review(playerText,draft){const begun=await server.api('review/begin',{campaignId,anchor:'review-turn',playerText,expectedSequence:view.reference.sequence});return server.api('review/reply',{campaignId,token:begun.token,draft,expectedSequence:view.reference.sequence});}};
+ return {campaignId,async read(){view=await server.api('read',{campaignId});return view;},async act(tool,args){const eventId=`setup-${++index}`;const result=await server.api('execute',{campaignId,anchor:eventId,eventId,tool,args,expectedSequence:view.reference.sequence});view=await server.api('read',{campaignId});return result;},async review(playerText,draft,anchor='review-turn'){const begun=await server.api('review/begin',{campaignId,anchor,playerText,expectedSequence:view.reference.sequence});return server.api('review/reply',{campaignId,token:begun.token,draft,expectedSequence:view.reference.sequence});}};
 }
 
 test('HTTP 审稿区分玩家的真实委托与不在场吴朔的知情范围',async t=>{
@@ -533,4 +533,40 @@ test('私密任务和债务的全局事实不授予无关人物知识，亲历�
  assert.deepEqual(judge('听林穗说，你要送十份燕麦。'),[]);
  assert.ok(judge('我亲眼看见林穗让你送十份燕麦。').some(i=>i.category==='knowledge'));
  document.state.npcs[id].memoryStream[0].sourceType='目击';assert.deepEqual(judge('我亲眼看见林穗让你送十份燕麦。'),[]);
+});
+
+test('HTTP 同一私密委托中，普通感知与否认不授予知识，确定披露仍阻止提交',async t=>{
+ const world=await loadWorld(),id='npc_hw_wushuo';
+ world.npcs.find(n=>n.id===id).schedule={default:[{start:0,end:1440,location:'loc_hw_northwood',activity:'守林',services:[]}]};
+ let calls=0,rewrites=0,leak=false;
+ const badDraft='<q who="npc_hw_wushuo">林穗让你送十份燕麦。</q><回合 额外="5分" 地点="loc_hw_northwood" 在场="npc_hw_wushuo"/>';
+ const client={async generate(body,label){
+  if(label.startsWith('consistency-rewrite:')){
+   rewrites++;return {choices:[{finish_reason:'stop',message:{content:badDraft}}]};
+  }
+  assert.ok(label.startsWith('consistency:'));calls++;
+  assert.match(body.messages[0].content,/无记录渠道不能靠“听说”外壳获得知识/);
+  const payload=JSON.parse(body.messages[1].content),evidence=payload.evidence.find(e=>e.id===`knowledge:${id}`);
+  const known=JSON.parse(evidence.text),contract=known.contracts.find(c=>c.kind==='quest');
+  assert.equal(known.present,true);assert.equal(contract.awareness,'no-recorded-channel');
+  assert.deepEqual(contract.memories,[]);assert.equal(contract.party,false);
+  return response(leak?[{category:'knowledge',severity:'error',quote:'林穗让你送十份燕麦',
+   reason:'未记录获知渠道的确定委托内容',evidence:[{id:evidence.id,quote:'"awareness":"no-recorded-channel"'}]}]:[]);
+ }};
+ const server=await createPlaytestServer({world,consistencyClient:client});t.after(()=>server.close());
+ const run=await campaign(server);
+ const published=await run.act('world_quest',{operation:'publish',publisher:'npc_hw_linsui',grade:'D',personal:true,reward:20,content:'替酒馆备齐燕麦',objective:{type:'deliver',item:'item_oats',quantity:10}});
+ await run.act('world_quest',{operation:'accept',quest:published.result.quest});
+ await run.act('world_move',{destination:'loc_hw_northwood'});const saved=await run.read();
+ const query='吴朔，你亲眼看见我刚才在酒馆做了什么吗？我还没把事情告诉他。';
+ const good=await run.review(query,'<q who="npc_hw_wushuo">我没看见。我记的是自己两眼看到的东西，别人嘴里的话我一般不往外传。</q>门边的纸片露出一角，具体内容看不清。<回合 额外="5分" 地点="loc_hw_northwood" 在场="npc_hw_wushuo"/>');
+ assert.equal(good.verified,true);assert.equal(good.canCommit,true);assert.equal(good.rewritten,false);assert.deepEqual(good.issues,[]);
+ assert.deepEqual((await run.read()).document,saved.document);
+ // Actual private content remains blocked after the one permitted rewrite.
+ leak=true;
+ const bad=await run.review(query,badDraft,'private-leak-turn');
+ assert.equal(bad.verified,false);assert.equal(bad.canCommit,false);
+ assert.ok(bad.issues.some(issue=>issue.category==='knowledge'&&issue.severity==='error'));
+ assert.equal(bad.rewritten,false);assert.equal(bad.attempts,1);assert.equal(rewrites,1);
+ assert.equal(calls,3);assert.deepEqual((await run.read()).document,saved.document);
 });

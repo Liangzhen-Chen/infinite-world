@@ -1,5 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import fs from 'node:fs/promises';
+import {parseExamples} from '../extension/prompt.mjs';
 import {deterministicConsistencyReview,reviewConsistency,consistencyReviewRequest,validateConsistencyResponse} from '../server-plugin/consistency-review.mjs';
 const entities=[{id:'npc_hw_linsui',name:'林穗',aliases:['老板娘']},{id:'npc_hw_ayan',name:'阿砚'},{id:'loc_hw',name:'河湾村'},{id:'bld_hw_mill',name:'磨坊'},{id:'item_whittling_knife',name:'修木小刀'}];
 const initial={minute:540,location:'bld_hw_mill',player:{name:'旅人',coins:180},inventory:{item_wood:{quantity:4}},npcs:{}};
@@ -84,4 +86,72 @@ test('模型不能把已登记称呼误报为新名字，提示注入只是待�
 test('正文前真实场景和旧事提供给审稿，历史付款不被本轮费用覆盖',()=>{
  const input=sample('上次工坊没有扣费。',{scene:'【在场】林穗正在柜台前。',priorEvidence:[{kind:'event',text:'昨日工坊免收使用费。'}]});assert.deepEqual(deterministicConsistencyReview(input).issues,[]);
  const body=JSON.parse(consistencyReviewRequest(input).messages[1].content);assert.equal(body.evidence.find(e=>e.id==='scene').text,input.scene);assert.equal(body.evidence.find(e=>e.id==='prior:0').text,input.priorEvidence[0].text);
+});
+
+// Replay only the five cited T60 findings. The archived report is not edited.
+const t63Audit=JSON.parse(await fs.readFile(new URL('../docs/测试报告/20261012-T60/audit.json',import.meta.url),'utf8'));
+const t63Finding=fragment=>{
+ const found=t63Audit.m2.privacy.leaks.find(row=>row.quote.includes(fragment));
+ assert.ok(found,fragment);return found;
+};
+function t63Input(finding){
+ const knowledge=Object.fromEntries(finding.evidence.filter(e=>e.id.startsWith('knowledge:')).map(e=>[e.id.slice(10),{scope:'reviewer-only',present:true,known:[],unknown:[],contracts:[]} ]));
+ return sample(finding.quote,{playerText:finding.evidence.find(e=>e.id==='player')?.quote??'我看看眼前的情景。',receipts:[],knowledge,
+  before:initial,after:initial,retrieval:{protocol:1,status:'complete',calls:[],warnings:[],sealed:true},
+  priorEvidence:finding.evidence.map(e=>({kind:'event',text:e.quote}))});
+}
+
+test('T60 三处误报进入审查原文，请求区分感知范围、否认与私密内容，空检索不取消观察',async()=>{
+ const cases=[['旅店敲门声',/否定的是听到敲门声/],['不往外传',/一般处事习惯不构成获知声明/],['纸片还露着一角',/只说明外形和书写状态/]];
+ for(const [fragment,policy] of cases){
+  const finding=t63Finding(fragment),input=t63Input(finding),saved=structuredClone(input);let calls=0;
+  const result=await reviewConsistency(input,{client:{async generate(body){
+   calls++;assert.match(body.messages[0].content,policy);
+   assert.match(body.messages[0].content,/检索为空不否定在场感知/);
+   const payload=JSON.parse(body.messages[1].content);
+   assert.equal(payload.rawDraft,finding.quote);assert.equal(payload.visibleDraft,finding.quote);
+   assert.deepEqual(JSON.parse(payload.evidence.find(e=>e.id==='retrieval').text).calls,[]);
+   assert.ok(payload.evidence.some(e=>e.id==='prior:0'&&e.text===finding.evidence[0].quote));
+   return response([]);
+  }}});
+  assert.equal(calls,1);assert.equal(result.status,'verified');assert.deepEqual(result.issues,[]);
+  assert.equal(result.text,finding.quote);assert.equal(result.rewriteRequest,null);assert.deepEqual(input,saved);
+ }
+});
+
+test('T60 两处补造保留完整断言与原证据，事实 warning 不被观察例外过滤',async()=>{
+ for(const fragment of ['刚卸空','又量了一次']){
+  const finding=t63Finding(fragment),input=t63Input(finding),saved=structuredClone(input);
+  const issue={category:'fact',severity:'warning',quote:finding.quote,reason:finding.reason,
+   evidence:finding.evidence.map((e,index)=>({id:`prior:${index}`,quote:e.quote}))};
+  const result=await reviewConsistency(input,{client:{async generate(body){
+   assert.match(body.messages[0].content,/不能从空车板或核对货单的 activity 推出/);
+   assert.match(body.messages[0].content,/不能从职业、会测量或以前量过水位推出/);
+   assert.match(body.messages[0].content,/这类新增经历应报问题/);
+   const payload=JSON.parse(body.messages[1].content);assert.equal(payload.rawDraft,finding.quote);
+   for(const e of issue.evidence)assert.equal(payload.evidence.find(row=>row.id===e.id).text,e.quote);
+   return response([issue]);
+  }}});
+  assert.equal(result.verified,true);assert.equal(result.status,'issues');assert.deepEqual(result.issues,[{...issue,source:'model'}]);
+  assert.equal(result.text,finding.quote);assert.deepEqual(input,saved);
+ }
+});
+
+test('审查返回的同原句知识警告仍保留，不通过按句删警告伪造零泄漏',async()=>{
+ const finding=t63Finding('不往外传'),input=t63Input(finding);
+ const issue={category:'knowledge',severity:'warning',quote:finding.quote,reason:finding.reason,
+  evidence:[{id:'prior:0',quote:finding.evidence[0].quote}]};
+ const result=await reviewConsistency(input,{client:{generate:async()=>response([issue])}});
+ assert.equal(result.status,'issues');assert.deepEqual(result.issues,[{...issue,source:'model'}]);
+ assert.equal(result.text,finding.quote);assert.equal(result.rewriteRequest,null);
+});
+
+test('六组主持示例保留工具外的可见细节，未把过去行动和私密文字补写成事实',async()=>{
+ const text=await fs.readFile(new URL('../prompt/examples.md',import.meta.url),'utf8'),examples=parseExamples(text);
+ assert.equal(examples.filter(row=>row.role==='assistant').length,6);
+ const assistant=examples.filter(row=>row.role==='assistant').map(row=>row.content).join('\n');
+ assert.match(assistant,/没有敲门声传进来/);assert.match(assistant,/具体内容看不清/);
+ assert.match(assistant,/你在酒馆的事，我没看见/);assert.match(assistant,/一般不往外传/);
+ assert.match(assistant,/铁箍也要量/);assert.doesNotMatch(assistant,/刚卸空|又量了一次，比上次厚/);
+ assert.match(assistant,/没有伸手接钱/);assert.match(assistant,/单子核过/);
 });
