@@ -106,14 +106,24 @@ test('未被察觉的偷窃不会给受害者或其他房间的人补全知识',
 });
 
 test('任务领取和当面交付由发布者记住，不传播给同屋无关人物',async()=>{
-    const {document,run}=await setup();
+    const {engine,document,run}=await setup();
     let c=(await run(document,'world_quest',{operation:'publish',publisher:merchant,grade:'D',personal:true,reward:20,content:'补充干粮',objective:{type:'deliver',item:'item_ration',quantity:1}},'job')).document;
-    assert.deepEqual(stream(c,merchant),[],'公开任务不等于玩家已经参与');
-    c=(await run(c,'world_quest',{operation:'accept',quest:'quest_job'},'accept')).document;
-    c=(await run(c,'world_quest',{operation:'complete',quest:'quest_job'},'deliver')).document;
-    assert.deepEqual(stream(c,merchant).map(row=>row.kind),['quest','quest']);
-    assert.match(stream(c,merchant)[1].content,/已完成/);
+    const published=stream(c,merchant);
+    assert.equal(published.length,1,'发布者记住自己的托管发布');
+    assert.deepEqual(published[0].participants,[merchant]);
+    assert.deepEqual(npcContext(engine,c,merchant,'补充干粮').memories,[],'公开任务不等于玩家已经参与');
     assert.deepEqual(stream(c,witness),[]);
+    c=(await run(c,'world_quest',{operation:'accept',quest:'quest_job'},'accept')).document;
+    assert.deepEqual(stream(c,merchant).map(row=>row.kind),['quest','quest']);
+    assert.deepEqual(stream(c,merchant)[1].participants,['player',merchant]);
+    c=(await run(c,'world_quest',{operation:'complete',quest:'quest_job'},'deliver')).document;
+    assert.deepEqual(stream(c,merchant).map(row=>row.kind),['quest','quest','quest']);
+    assert.deepEqual(stream(c,merchant)[0],published[0]);
+    assert.deepEqual(npcContext(engine,c,merchant,'补充干粮').memories.map(row=>row.kind),['quest','quest']);
+    assert.match(stream(c,merchant)[2].content,/已完成/);
+    assert.deepEqual(stream(c,witness),[]);
+    const inspected=(await run(c,'world_quest',{operation:'inspect',quest:'quest_job'},'inspect')).document;
+    assert.deepEqual(stream(inspected,merchant),stream(c,merchant),'只读查询不增加经历');
 });
 
 test('人物私有流不经全局读取泄漏；场景区分本人往事、台词范例和玩家经历',async()=>{

@@ -41,10 +41,12 @@ async function fixture(t){
 test('M6-07 已发布层级覆盖河湾四村与野外；不新增白石镇和远方映射',()=>{
     const villages=['loc_hw','loc_bs_yupo','loc_bs_weiting','loc_bs_liquan','loc_bs_sangban'];
     for(const id of villages){const row=engine.byId.get(id);assert.equal(row.mapHierarchy.length,4);assert.equal(row.mapHierarchy[3].id,id);assert.equal(row.mapHierarchy[0].name,'已知大陆片区');}
-    for(const row of world.locations.filter(row=>!['loc_bs','loc_yandu','loc_capital','bld_bs_shrine'].includes(row.id))){
+    // R06 now includes the town skeleton without granting its map hierarchy.
+    const unpublished=row=>row.scope==='loc_bs'||['loc_yandu','loc_capital'].includes(row.id);
+    for(const row of world.locations.filter(row=>!unpublished(row))){
         assert.equal(row.mapHierarchy.length,4,row.id);assert.ok(world.locations.some(place=>place.id===row.mapHierarchy[3].id));
     }
-    for(const id of ['loc_bs','loc_yandu','loc_capital','bld_bs_shrine'])assert.equal(engine.byId.get(id).mapHierarchy,undefined);
+    for(const row of world.locations.filter(unpublished))assert.equal(row.mapHierarchy,undefined,row.id);
 });
 
 test('M6-07 亲历、可靠转述、传闻迷雾只读投影；不泄漏其他人物、私密和未来地点',()=>{
