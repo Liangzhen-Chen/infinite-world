@@ -82,7 +82,7 @@ export async function runPlaytest({scenario,api,client,bundle,attempt=1,processM
                 if(response.measurement)report.requests.push(response.measurement);
                 const message=response.choices?.[0]?.message;if(!message)throw new Error('模型没有返回消息');
                 report.finish=response.choices[0].finish_reason??null;
-                if(report.finish==='length')throw new Error('输出达到1800 token上限，回复或调用未完成');
+                if(report.finish==='length')throw new Error(`输出达到${settings.maxOutputTokens} token上限，回复或调用未完成`);
                 const normalized={role:'assistant',content:message.content??null,...(message.tool_calls?.length?{tool_calls:message.tool_calls}:{})};
                 messages.push(normalized);history.push(normalized);
                 if(!message.tool_calls?.length){report.reply=message.content??'';final=Boolean(report.reply);break;}

@@ -95,6 +95,7 @@ test('逐N分开输出并保留失败原文，缺项、length、重复编号与�
     const row=id=>({id,pass:true,reason:'有证据',evidence:[{turn:0,quote:'真实话语'}]});
     let count=0;
     const good=await reviewNpcRequirements({async generate(body){
+        assert.equal(body.max_tokens,8192);assert.equal(body.thinking.type,'enabled');assert.equal(body.reasoning_effort,'low');
         const input=JSON.parse(body.messages[1].content),ids=Object.keys(input.requirements);
         assert.equal(ids.length,1);assert.equal(input.turns[0].sceneBeforeReply,'场景旧事');count++;
         return {choices:[{finish_reason:'stop',message:{content:JSON.stringify({requirements:[row(ids[0])]})}}]};
@@ -108,7 +109,36 @@ test('逐N分开输出并保留失败原文，缺项、length、重复编号与�
     let calls=0;
     const partial=await reviewNpcRequirements({async generate(){return calls++?{choices:[{finish_reason:'length',message:{content:'截断原文'}}]}:{choices:[{finish_reason:'stop',message:{content:JSON.stringify({requirements:[row('N6')]})}}]};}},result,{requirements:['N6','N16']});
     assert.equal(partial.complete,false);assert.equal(partial.requirements.length,1);assert.equal(partial.parts[1].rawReview,'截断原文');assert.match(partial.error,/length/);
+    assert.equal(calls,2,'截断分项不自动重试');
     const forbidden={async generate(){assert.fail('无效输入不应调用模型');}};
     assert.equal((await reviewNpcRequirements(forbidden,result,{requirements:['N6','N6']})).complete,false);
     assert.equal((await reviewNpcRequirements(forbidden,{...result,turns:[{...result.turns[0],index:1}]},{requirements:['N6']})).complete,false);
+});
+
+test('N12/N16/N17使用8192读取全部回合并返回完整长审核，合法JSON若length仍失败',async()=>{
+    const turns=Array.from({length:7},(_,index)=>({index,input:`请求${index}`,visible:`真实回复${index}`,calls:[],assertions:[],
+        sceneBefore:{index},sceneBeforeReply:{index},consistency:{status:'verified'},turnResult:{index}}));
+    const result={id:'long-review',attempt:1,turns},ids=['N12','N16','N17'],labels=[];
+    const reason='依据全部真实回复和执行记录判断。'.repeat(600);
+    const client={async generate(body,label){
+        assert.equal(body.max_tokens,8192);assert.equal(body.thinking.type,'enabled');assert.equal(body.reasoning_effort,'low');
+        assert.deepEqual(body.response_format,{type:'json_object'});
+        const input=JSON.parse(body.messages[1].content),[id]=Object.keys(input.requirements);labels.push(label);
+        assert.equal(Object.keys(input.requirements).length,1);assert.equal(input.turns.length,turns.length);
+        for(const [index,turn]of input.turns.entries()){
+            assert.equal(turn.reply,turns[index].visible);assert.deepEqual(turn.calls,turns[index].calls);
+            assert.deepEqual(turn.assertions,turns[index].assertions);assert.deepEqual(turn.sceneBeforeReply,turns[index].sceneBeforeReply);
+            assert.deepEqual(turn.consistency,turns[index].consistency);assert.deepEqual(turn.turnResult,turns[index].turnResult);
+        }
+        return{choices:[{finish_reason:'stop',message:{content:JSON.stringify({requirements:[{id,pass:true,reason,
+            evidence:[{turn:0,quote:'真实回复0'},{turn:6,quote:'真实回复6'}]}]})}}]};
+    }};
+    const review=await reviewNpcRequirements(client,result,{requirements:ids});
+    assert.equal(review.complete,true);assert.deepEqual(review.requirements.map(r=>r.id),ids);
+    assert.ok(review.requirements.every(r=>r.reason===reason&&r.evidence.length===2));assert.equal(labels.length,3);
+    let calls=0;
+    const truncated=await reviewNpcRequirements({async generate(body,label){calls++;const response=await client.generate(body,label);
+        response.choices[0].finish_reason='length';return response;}},result,{requirements:ids});
+    assert.equal(calls,3);assert.equal(truncated.complete,false);assert.deepEqual(truncated.requirements,[]);
+    assert.ok(truncated.parts.every(p=>p.finishReason==='length'&&p.rawReview.includes(reason)));
 });
