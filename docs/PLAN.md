@@ -166,12 +166,7 @@ N1–N17至少12项完整有效且≥90%，N6/N16零泄漏，N12真实盲辨，N
 
 审计结论：F1、F2、F3同意；F4（工具机会标注）并入T61，不单独成卡；F5同意，里程碑收尾命令归主会话。已知未查清：N9在进入司法流程前中断的原因、quest_social之外其余账本失败的来源、林穗/吴朔两处知情是否有公共来源——不为此派卡，复验后按实际失败再定。
 
-### T61 主持人与审核器输出不被截断，工具机会按实际意图计数【零模型】
-
-结果：多动作回合返回完整正文，N12/N16/N17返回完整审核；截断仍判失败；courier回合2、home_visit回合0、quest_social回合6/7的工具机会按此前实际发生的动作计数。对应失败：audit.m2.rows[N5]的1800截断，N12/N16/N17审核length，toolSelection漏3错3中的四处标注问题。
-可改：extension/generation.mjs、tools/playtest-runner.mjs、tools/npc-acceptance.mjs、tools/playtest-voice-blind.mjs、tools/playtest-metrics.mjs、tests/playtests/{npc_courier,npc_home_visit,npc_quest_social}.json的工具机会标注、tests/{generation,npc-acceptance,playtest-npc-evidence,playtest-runner}.test.mjs。锁定：评分门槛与聚合逻辑、场景玩家输入、原账本断言、extension/tools.mjs、prompt/、server-plugin/。
-做法：主持人默认4096并保留1800兼容档，逐N与盲辨8192；不加自动重试；标注只补移动/等待/按实际买入数量的条件，不删除或条件化终态断言。
-验收：`node --test tests/generation.test.mjs tests/npc-acceptance.test.mjs tests/playtest-npc-evidence.test.mjs tests/playtest-runner.test.mjs`、CORE。模型0。规模约200–350行。
+### T61 已完成：主持人默认4096、逐N与盲辨8192，截断仍判失败，四处工具机会标注修正；相关28/CORE40，0模型，真实效果由T64复验。
 
 ### T62 自然语言委托的发布、承接和粮仓交付【零模型】
 
