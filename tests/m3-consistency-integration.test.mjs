@@ -84,7 +84,7 @@ test('试玩沿正式提示和 HTTP 审查改写，再只提交一次尾注',asy
 });
 
 test('警告保留为 issues，已完成审查与可提交分别报告且重读不触发改写',async t=>{
- const warning={category:'knowledge',severity:'warning',quote:'面包给你。',reason:'这句话的隐含背景仍需叙述复核',evidence:[{id:'player',quote:'我付钱买一个面包'}]};
+ const warning={category:'fact',severity:'warning',quote:'面包给你。',reason:'这句话的隐含背景仍需叙述复核',evidence:[{id:'player',quote:'我付钱买一个面包'}]};
  let calls=0;const client={async generate(body,label){calls++;assert.ok(label.startsWith('consistency:'));return issuesResponse([warning]);}};
  const server=await createPlaytestServer({consistencyClient:client});t.after(()=>server.close());
  const row=await acted(server),request={...row.reviewRequest,draft:corrected};
@@ -99,6 +99,51 @@ test('警告保留为 issues，已完成审查与可提交分别报告且重读�
 });
 
 const recalledFailure='<q who="npc_hw_ayan">这十天我没闲着。两回都成了，工坊那边收了两个铜。</q><回合 额外="5分" 地点="bld_hw_mill" 在场="npc_hw_ayan"/>';
+
+test('T97 回放private失败移动：唯一改写保留失败，伪造成功的正文或地点均阻止尾注',async t=>{
+ const report=JSON.parse(await fs.readFile(new URL('../docs/测试报告/M2-recheck/真实试玩.json',import.meta.url),'utf8'));
+ const original=report.results.find(row=>row.id==='npc_private').turns.find(row=>row.calls?.some(call=>call.tool==='world_move'&&call.result.ok===false));
+ const budget=JSON.parse(await fs.readFile(new URL('../docs/测试报告/M2-recheck/persistent-budget.json',import.meta.url),'utf8'));
+ const saved=Object.values(budget.requests).find(row=>row.response?.measurement?.label==='consistency-rewrite:fbc0e131083569dec553').response.choices[0].message.content;
+ for(const mode of ['valid','false-body','false-location']){
+  let rewrites=0,reviews=0,candidate;
+  const client={async generate(body,label){
+   if(label.startsWith('consistency-rewrite:')){
+    rewrites++;const payload=JSON.parse(body.messages.at(-1).content);
+    assert.match(body.messages.at(-2).content,/ok=false的工具失败必须保留/);
+    assert.match(payload.instruction,/工具失败保持失败/);
+    assert.ok(payload.evidence.some(row=>row.kind==='receipt'&&JSON.parse(row.text).result.ok===false));
+    assert.equal(JSON.parse(payload.evidence.find(row=>row.id==='after').text).location,'bld_hw_qingdeng');
+    assert.ok(!payload.evidence.some(row=>row.id.startsWith('prior:')||row.id.startsWith('knowledge:')));
+    return {choices:[{finish_reason:'stop',message:{content:candidate}}]};
+   }
+   reviews++;
+   if(reviews===1)return issuesResponse([{category:'agency',severity:'error',quote:'脚还没跨出门槛就停住了',reason:'替玩家决定停住',evidence:[{id:'player',quote:original.input}]}]);
+   return issuesResponse([]);
+  }};
+  const server=await createPlaytestServer({consistencyClient:client});t.after(()=>server.close());
+  let view=await server.api('create',{});const campaignId=view.reference.campaignId;
+  async function act(tool,args,id){const result=await server.api('execute',{campaignId,anchor:id,eventId:id,tool,args,expectedSequence:view.reference.sequence});view=await server.api('read',{campaignId});return result;}
+  await act('world_move',{destination:'bld_hw_qingdeng'},'tavern');
+  await act('world_promise',{operation:'create',promisor:'npc_hw_linsui',promisee:'player',type:'会面',content:'欠款六铜只由二人当面核对',location:'bld_hw_qingdeng',deadline:view.document.state.minute+60},'meeting');
+  const anchor='leave',begun=await server.api('review/begin',{campaignId,anchor,playerText:original.input,expectedSequence:view.reference.sequence});
+  await assert.rejects(act('world_move',original.calls[0].args,anchor),/会面时段冲突/);
+  const actual=structuredClone(view.document),tail='<回合 额外="0分" 地点="bld_hw_qingdeng" 在场=""/>';
+  candidate=mode==='valid'?'会面时段与离开请求冲突，约定仍然有效。若要离开，可先取消约定。'+tail:mode==='false-body'?saved.replace(/<回合[^>]*\/>/,tail):saved;
+  const request={campaignId,token:begun.token,draft:original.originalReply,expectedSequence:view.reference.sequence};
+  const reviewed=await server.api('review/reply',request);
+  assert.equal(reviewed.canCommit,mode==='valid');assert.equal(reviewed.rewritten,mode==='valid');assert.equal(reviewed.attempts,1);assert.equal(rewrites,1);
+  assert.deepEqual((await server.api('read',{campaignId})).document,actual);
+  assert.deepEqual(await server.api('review/reply',request),reviewed);assert.equal(rewrites,1);
+  if(mode==='valid'){
+   await server.api('execute',{campaignId,anchor,eventId:'turn_leave',tool:'world_turn',args:reviewed.tail.args,reviewId:reviewed.reviewId,expectedSequence:reviewed.sequence});
+   const after=await server.api('read',{campaignId});assert.equal(after.document.state.location,actual.state.location);assert.equal(after.document.state.minute,actual.state.minute);
+  }else{
+   assert.equal(reviewed.verified,false);assert.equal(reviewed.text,original.originalReply);
+   if(mode==='false-body')assert.ok(reviewed.issues.some(issue=>issue.category==='location'&&issue.severity==='error'));
+  }
+ }
+});
 
 test('N17 服务端实际十天结算只允许一次文字改写，不重做、不重复收费，仍失败阻止尾注',async t=>{
  for(const badRewrite of [false,true]){

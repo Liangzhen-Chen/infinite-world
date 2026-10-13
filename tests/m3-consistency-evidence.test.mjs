@@ -1,11 +1,14 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import fs from 'node:fs/promises';
 import {loadWorld} from '../tools/load-world.mjs';
 import {WorldEngine} from '../server-plugin/engine.mjs';
-import {reviewNpcKnowledge} from '../server-plugin/consistency-evidence.mjs';
+import {reviewNpcKnowledge,reviewHistoricalEvidence} from '../server-plugin/consistency-evidence.mjs';
+import {consistencyReviewRequest,deterministicConsistencyReview,reviewConsistency} from '../server-plugin/consistency-review.mjs';
 import {createPlaytestServer} from '../tools/playtest-runner.mjs';
 
 const response=issues=>({choices:[{finish_reason:'tool_calls',message:{tool_calls:[{type:'function',function:{name:'report_consistency_issues',arguments:JSON.stringify({issues})}}]}}]});
+const m2Report=JSON.parse(await fs.readFile(new URL('../docs/测试报告/M2-recheck/真实试玩.json',import.meta.url),'utf8'));
 async function campaign(server,body={}){
  let view=await server.api('create',body);const campaignId=view.reference.campaignId;let index=0;
  return {campaignId,async read(){view=await server.api('read',{campaignId});return view;},async act(tool,args){const eventId=`setup-${++index}`;const result=await server.api('execute',{campaignId,anchor:eventId,eventId,tool,args,expectedSequence:view.reference.sequence});view=await server.api('read',{campaignId});return result;},async review(playerText,draft,anchor='review-turn'){const begun=await server.api('review/begin',{campaignId,anchor,playerText,expectedSequence:view.reference.sequence});return server.api('review/reply',{campaignId,token:begun.token,draft,expectedSequence:view.reference.sequence});}};
@@ -29,6 +32,67 @@ test('HTTP 审稿区分玩家的真实委托与不在场吴朔的知情范围',a
  // Reviewing does not teach the character the private contract.
  const after=await run.read();assert.deepEqual(after.document,view.document);
  const scene=await server.api('scene',{campaignId:run.campaignId,query:'吴朔 委托'});assert.ok(!scene.scene.includes('reviewer-only'));
+});
+
+test('T97 五条保存原文：库存矛盾归事实，空约定、普通否认及两条历史核对不算泄漏',async()=>{
+ const engine=new WorldEngine(await loadWorld());let checked=0;
+ for(const id of ['npc_courier','npc_delivery','npc_quest_social']){
+  const run=m2Report.results.find(row=>row.id===id),document=run.finalDocument;
+  const events=run.turns.flatMap((turn,index)=>(turn.calls??[]).filter(call=>!['world_read','world_search'].includes(call.tool)).map((call,i)=>({id:`saved-${index}-${i}`,anchor:`saved-${index}`,input:{tool:call.tool,args:call.args},result:call.result})));
+  for(const turn of run.turns){
+   const findings=turn.consistency?.issues?.filter(issue=>issue.category==='knowledge')??[];
+   for(const finding of findings){
+    checked++;
+    const input={playerText:turn.input,draft:turn.reply,before:document,after:document,receipts:turn.calls??[],allowedEntities:engine.entities,
+     knowledge:reviewNpcKnowledge(engine,document,{draft:turn.reply,query:turn.input}),priorEvidence:reviewHistoricalEvidence(engine,events,run.session.chat,{query:turn.input,draft:turn.reply})};
+    const result=await reviewConsistency(input,{client:{async generate(body){
+     const payload=JSON.parse(body.messages[1].content),system=body.messages[0].content;
+     assert.match(system,/场外核账没有人物获得新知识/);assert.match(system,/privateContent/);
+     if(finding.quote.includes('150经验')){
+      assert.ok(payload.evidence.some(row=>row.kind==='historical-receipt'&&JSON.parse(row.text).result.experience===150));
+     }
+     if(finding.quote.includes('回答也是不知道'))assert.ok(payload.evidence.some(row=>row.kind==='chat'&&row.text.includes('npc_hw_wushuo')&&/不知道|没听/.test(row.text)));
+     if(finding.quote.includes('登记未成立'))assert.deepEqual(JSON.parse(payload.evidence.find(row=>row.id==='after').text).obligations,{});
+     return response([]);
+    }}});
+    assert.equal(result.verified,true);assert.ok(!result.issues.some(issue=>issue.category==='knowledge'));
+    if(finding.quote.includes('面包没有现成'))assert.ok(result.issues.some(issue=>issue.category==='fact'&&issue.severity==='error'));
+    else assert.ok(!result.issues.some(issue=>issue.severity==='error'),JSON.stringify(result.issues));
+   }
+  }
+ }
+ assert.equal(checked,5);
+});
+
+test('T97 未承接委托的登记及托管可核账，原始聊天和历史工具回执只进入场外审稿',async t=>{
+ let payload;const server=await createPlaytestServer({consistencyClient:{async generate(body){payload=JSON.parse(body.messages[1].content);return response([]);}}});t.after(()=>server.close());
+ const run=await campaign(server),published=await run.act('world_quest',{operation:'publish',publisher:'npc_hw_linsui',grade:'D',personal:true,reward:20,content:'替酒馆备齐燕麦',objective:{type:'deliver',item:'item_oats',quantity:10}});
+ const answer='<q who="npc_hw_wushuo">不知道，我没听说。</q>';
+ await server.api('sync-index',{campaignId:run.campaignId,start:0,total:1,messages:[{is_user:false,mes:answer}]});
+ await run.review('（场外）核对林穗的委托托管和吴朔原答复。','（场外）林穗已发布委托，吴朔原话说不知道。');
+ const ledger=JSON.parse(payload.evidence.find(row=>row.id==='after').text);
+ assert.equal(ledger.quests[published.result.quest].reward,20);assert.equal(ledger.quests[published.result.quest].escrow,20);assert.equal(ledger.quests[published.result.quest].taker,null);
+ assert.ok(payload.evidence.some(row=>row.kind==='historical-receipt'&&row.text.includes('world_quest')));
+ assert.ok(payload.evidence.some(row=>row.kind==='chat'&&JSON.parse(row.text).text===answer));
+ await run.review('我看看眼前。','眼前没有变化。<回合 额外="0分" 地点="loc_hw_square" 在场=""/>','in-world');
+ assert.ok(!payload.evidence.some(row=>row.id.startsWith('prior:')));
+ const before=await run.read();await server.api('reconcile',{campaignId:run.campaignId,validAnchors:[]});
+ await run.read();await run.review('（场外）核对林穗的委托。','（场外）没有登记委托。','after-rollback');
+ assert.ok(!payload.evidence.some(row=>row.kind==='historical-receipt'&&row.text.includes('world_quest')));
+ assert.notDeepEqual((await run.read()).document,before.document);
+});
+
+test('T97 knowledge响应必须指出原句私密内容和对应无渠道人物，真实泄密仍报error',async()=>{
+ const engine=new WorldEngine(await loadWorld()),id='npc_hw_wushuo',document={state:{minute:600,location:'loc_hw_northwood',npcs:{[id]:{location:'loc_hw_northwood',memoryStream:[]}},quests:{quest_secret:{publisher:'npc_hw_linsui',content:'替酒馆备齐燕麦',objective:{item:'item_oats',quantity:10},reward:20,status:'公开'}}}};
+ const input={playerText:'我没告诉吴朔委托内容。',draft:'<q who="npc_hw_wushuo">林穗让你送十份燕麦。</q>',before:document,after:document,allowedEntities:engine.entities,knowledge:reviewNpcKnowledge(engine,document)};
+ const issue={category:'knowledge',severity:'error',quote:'林穗让你送十份燕麦',reason:'吴朔没有获知这份私人委托的渠道',subject:id,privateContent:'送十份燕麦',evidence:[{id:`knowledge:${id}`,quote:'"awareness":"no-recorded-channel"'}]};
+ const checked=await reviewConsistency(input,{client:{generate:async()=>response([issue])}});
+ assert.equal(checked.verified,true);assert.ok(checked.issues.some(row=>row.category==='knowledge'&&row.severity==='error'&&row.subject===id&&row.privateContent));
+ for(const changed of [{subject:undefined},{privateContent:undefined},{privateContent:'别的秘密'},{subject:'npc_hw_linsui'}]){
+  const invalid=await reviewConsistency(input,{client:{generate:async()=>response([{...issue,...changed}])}});assert.equal(invalid.verified,false);assert.equal(invalid.model.status,'failed');
+ }
+ const ooc=await reviewConsistency({...input,playerText:'（场外）核对吴朔原话。'},{client:{generate:async()=>response([issue])}});assert.equal(ooc.model.status,'failed');
+ assert.ok(consistencyReviewRequest(input).tools[0].function.parameters.properties.issues.items.oneOf.some(row=>row.required.includes('subject')&&row.required.includes('privateContent')));
 });
 
 test('历史私宅许可进入 before/after 摘要，审稿无需本轮重签或重放授权',async t=>{
@@ -551,6 +615,7 @@ test('HTTP 同一私密委托中，普通感知与否认不授予知识，确定
   assert.equal(known.present,true);assert.equal(contract.awareness,'no-recorded-channel');
   assert.deepEqual(contract.memories,[]);assert.equal(contract.party,false);
   return response(leak?[{category:'knowledge',severity:'error',quote:'林穗让你送十份燕麦',
+   subject:id,privateContent:'林穗让你送十份燕麦',
    reason:'未记录获知渠道的确定委托内容',evidence:[{id:evidence.id,quote:'"awareness":"no-recorded-channel"'}]}]:[]);
  }};
  const server=await createPlaytestServer({world,consistencyClient:client});t.after(()=>server.close());
