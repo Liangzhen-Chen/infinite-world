@@ -46,7 +46,7 @@ async function setup(t){
         assert.equal(posted.result.ok,true);
         const quest=posted.result.quest,doc=await read(),row=doc.state.quests[quest];
         assert.equal(row.status,'公开');assert.equal(row.taker,null);assert.equal(row.escrow,20);
-        assert.deepEqual(row.objective,{type:'deliver',item,quantity:10});
+        assert.deepEqual(row.objective,{type:'deliver',item,quantity:10,location:'bld_hw_qingdeng'});
         assert.equal(doc.state.npcs[publisher].coins,opening.state.npcs[publisher].coins-20);
         assert.equal(doc.state.player.coins,opening.state.player.coins);
         await assertBalanced();return quest;

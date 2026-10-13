@@ -5,9 +5,11 @@ import { toolDefinitions } from './tools.mjs';
 import { renderMessages } from './message-view.mjs';
 import { renderLedger } from './ledger-view.mjs';
 import { isOutOfCharacter, injectToolExamples } from './prompt.mjs';
-import {registerPanel,setPanelContext,mountPanelButtons,loadUIModules} from './ui-shell.mjs';
+import {registerPanel,registerSettingsSection,setPanelContext,mountPanelButtons,loadUIModules} from './ui-shell.mjs';
 import {initializeSettings,getSettings,updateSettings,subscribeSettings} from './ui-settings.mjs';
 import {renderTopbar} from './topbar.mjs';
+import {ambientAudio,registerUI as registerAudioUI} from './ambient-audio.mjs';
+import {updateBackground,clearBackground} from './background-view.mjs';
 const KEY='infinite_fields';
 const ctx=()=>getContext();
 const active=()=>ctx().characters[ctx().characterId]?.name==='无限原野·世界主持人';
@@ -18,6 +20,12 @@ let reviewTurn=null;
 const reviewing=new WeakMap(),reviewEdits=new WeakMap();
 let historyModule=null;
 let startTransition=false;
+registerAudioUI({registerSettingsSection});
+ambientAudio.onStatus=()=>updateAudioControls(getSettings());
+ambientAudio.applySettings(getSettings());
+subscribeSettings(settings=>ambientAudio.applySettings(settings));
+const unlockAudio=(clear=false)=>{if(clear)ambientAudio.stop();return ambientAudio.unlock();};
+window.addEventListener('pagehide',()=>{void ambientAudio.close();});
 registerPanel({id:'ledger',title:'世界账本',render:(container,data)=>{
     const book=document.createElement('div');book.id='fields-ledger-content';container.replaceChildren(book);
     if(data.view)renderLedger(book,data.view.document.state,data.labels,data.feedback,data.ledgerTime);
@@ -63,8 +71,9 @@ window.fetch=async function(input,options){
     return originalFetch(input,options);
 };
 async function load(){
-    if(!active()){view=null;loadedChat=null;return;}
+    if(!active()){ambientAudio.stop();view=null;loadedChat=null;return;}
     if(view&&loadedChat===ctx().chatId)return;
+    ambientAudio.stop();
     reviewTurn=null;
     document.querySelector('#fields-dialog')?.remove();
     const chatId=ctx().chatId,reference=ctx().chatMetadata[KEY];
@@ -83,10 +92,12 @@ async function syncHistory(){
     indexedMessages=[...chat];
 }
 async function refresh(){
-    if(!active()){document.querySelector('#fields-dialog')?.remove();document.body.classList.remove('fields-play-active');ctx().setExtensionPrompt(KEY,'',1,0);document.querySelector('#fields-toolbar')?.remove();return;}
+    if(!active()){ambientAudio.stop();clearBackground();document.querySelector('#fields-dialog')?.remove();document.body.classList.remove('fields-play-active');ctx().setExtensionPrompt(KEY,'',1,0);document.querySelector('#fields-toolbar')?.remove();return;}
     await load();
     document.body.classList.toggle('fields-play-active',!!view);
     if(!view){
+        ambientAudio.stop();
+        clearBackground();
         document.querySelector('#fields-dialog')?.remove();
         ctx().setExtensionPrompt(KEY,'',1,0);
         document.querySelector('#fields-toolbar')?.remove();
@@ -101,6 +112,7 @@ async function refresh(){
         }catch(error){status.textContent=error.message;button.disabled=false;}};
         bar.append(button);(document.querySelector('#sheld')??document.querySelector('#chat')?.parentElement)?.prepend(bar);return;
     }
+    const audioChat=ctx().chatId,audioCampaign=view.reference.campaignId;
     await syncHistory();
     const query=document.querySelector('#send_textarea')?.value||[...ctx().chat].reverse().find(message=>message.is_user)?.mes||'';
     const scene=await api('scene',{campaignId:view.reference.campaignId,query});
@@ -108,7 +120,14 @@ async function refresh(){
     ledgerTime=scene.scene.split('\n')[0].replace('【时间】','');
     feedback=(await api('feedback',{campaignId:view.reference.campaignId})).events;
     const overview=await api('ui/overview',{campaignId:view.reference.campaignId});
+    // Read only the current public location, never the NPC catalogue or memories.
+    let audioPlace={};
+    try{audioPlace=await api('catalog',{campaignId:audioCampaign,kind:'location',entity:view.document.state.location});}
+    catch{ambientAudio.status('场景声音暂未更新');}
+    if(ctx().chatId!==audioChat||view?.reference.campaignId!==audioCampaign)return;
+    ambientAudio.setScene(`${audioChat}:${audioCampaign}`,overview,audioPlace);
     await loadUIModules(api);
+    await updateBackground(view,overview,`${ctx().chatId}:${view.reference.campaignId}`);
     ctx().setExtensionPrompt(KEY,scene.scene,1,0,false,0);
     let bar=document.querySelector('#fields-toolbar');
     if(!bar?.querySelector('#fields-pending')){
@@ -124,6 +143,7 @@ async function refresh(){
         reviewToggle.onchange=async()=>{ctx().chatMetadata.fields_consistency_enabled=reviewToggle.checked;await ctx().saveChat();};reviewLabel.append(reviewToggle,document.createTextNode('回复审查'));actions.append(reviewLabel);
         const repair=document.createElement('button');repair.textContent='重新对账';repair.onclick=()=>queue(async()=>{try{view=await api('reconcile',{campaignId:view.reference.campaignId,validAnchors:validAnchors()});blocked=null;await persist();await refresh();}catch(error){fail(error);}});actions.append(repair);
         const mute=document.createElement('button');mute.id='fields-mute';mute.onclick=()=>updateSettings({muted:!getSettings().muted});actions.append(mute);
+        const sound=document.createElement('button');sound.id='fields-sound-enable';sound.textContent='开启声音';sound.onclick=async()=>{await unlockAudio();sound.textContent=ambientAudio.unlocked?'声音已开启':'重试声音';sound.title=ambientAudio.message;};actions.append(sound);
         const volume=document.createElement('input');volume.id='fields-volume';volume.type='range';volume.min=0;volume.max=100;volume.setAttribute('aria-label','音量');volume.oninput=()=>updateSettings({volume:Number(volume.value)});actions.append(volume);
         const error=document.createElement('div');error.id='fields-error';error.setAttribute('role','alert');error.hidden=true;bar.append(error);
         const pending=document.createElement('div');pending.id='fields-pending';pending.setAttribute('role','status');pending.setAttribute('aria-live','polite');pending.hidden=true;bar.append(pending);
@@ -148,6 +168,7 @@ async function execute(tool,args,eventId=crypto.randomUUID(),reviewId=null){
             sent=true;
             const result=await api('execute',{campaignId:view.reference.campaignId,tool,args,eventId,anchor:anchor(),expectedSequence:view.reference.sequence,...(reviewId?{reviewId}:{})});committed=true;
             view=await api('read',{campaignId:view.reference.campaignId});
+            ambientAudio.noteAction(result.result,view.document.state.player,tool);
             await persist();await refresh();return toolResultWithClock(result.result,{startMinute,minute:view.document.state.minute});
         }catch(error){
             const uncertain=committed||(sent&&!error.rejected);
@@ -162,7 +183,7 @@ for(const definition of toolDefinitions()){
   shouldRegister:()=>active()&&!!view&&mode!=='quiet'&&!blocked,
   action:async args=>{
    await load();if(!view)throw new Error('请先在副本上启用新版');
-   if(name==='world_read')return JSON.stringify(readStateSection(view.document.state,args.section));
+   if(name==='world_read')return JSON.stringify(readStateSection(view.document.state,args.section,args.npc));
    if(name==='world_search')return lookupToolResult(()=>api('search',{...args,campaignId:view.reference.campaignId,token:reviewTurn?.token,anchor:anchor(),expectedSequence:view.reference.sequence}));
    if(name==='world_catalog')return lookupToolResult(()=>api('catalog',{campaignId:view.reference.campaignId,...args}));
    return execute(name,args);
@@ -172,6 +193,9 @@ function updateAudioControls(settings){
     const mute=document.querySelector('#fields-mute'),volume=document.querySelector('#fields-volume');
     if(mute){mute.textContent=settings.muted?'取消静音':'静音';mute.setAttribute('aria-pressed',String(settings.muted));}
     if(volume)volume.value=settings.volume;
+    const sound=document.querySelector('#fields-sound-enable');
+    if(sound){sound.textContent=ambientAudio.unlocked?'声音已开启':'开启声音';sound.title=ambientAudio.message??'点击后播放环境音与音乐';}
+    for(const status of document.querySelectorAll('[data-fields-audio-status]'))status.textContent=ambientAudio.message??'点击后播放环境音与音乐';
 }
 subscribeSettings(updateAudioControls);
 async function ensureReviewTurn(){
@@ -211,6 +235,7 @@ async function reconcile(type,_options,dryRun){
         try{
             await load();if(!view)throw new Error('请先在副本上启用新版');if(blocked)throw new Error(blocked);
             if(['regenerate','swipe'].includes(type)){
+                ambientAudio.noteAction(null);
                 view=await api('reconcile',{campaignId:view.reference.campaignId,validAnchors:validAnchors(),excludeAnchor:anchor()});await persist();
                 reviewTurn=null;
             }
@@ -222,7 +247,7 @@ async function reconcile(type,_options,dryRun){
     });
 }
 async function onDeleted(){
-    if(!active())return;return queue(async()=>{try{await load();if(!view)return;view=await api('reconcile',{campaignId:view.reference.campaignId,validAnchors:validAnchors()});await persist();await refresh();}catch(error){fail(error);}});
+    if(!active())return;ambientAudio.noteAction(null);return queue(async()=>{try{await load();if(!view)return;view=await api('reconcile',{campaignId:view.reference.campaignId,validAnchors:validAnchors()});await persist();await refresh();}catch(error){fail(error);}});
 }
 async function onEdited(index){
     const message=ctx().chat[index];if(!active()||!message)return;
@@ -276,8 +301,8 @@ context.eventSource.on(context.eventTypes.CHAT_COMPLETION_PROMPT_READY,({chat})=
     if(active()&&view&&!blocked)injectToolExamples(chat,ctx().characters[ctx().characterId]);
 });
 context.eventSource.on(context.eventTypes.APP_READY,()=>queue(refresh).catch(fail));
-context.eventSource.on(context.eventTypes.CHAT_CHANGED,()=>{if(!startTransition)return queue(refresh).catch(fail);});
-context.eventSource.on(context.eventTypes.CHAT_LOADED,()=>{if(!startTransition)return queue(refresh).catch(fail);});
+context.eventSource.on(context.eventTypes.CHAT_CHANGED,()=>{ambientAudio.stop();if(!startTransition)return queue(refresh).catch(fail);});
+context.eventSource.on(context.eventTypes.CHAT_LOADED,()=>{ambientAudio.stop();if(!startTransition)return queue(refresh).catch(fail);});
 context.eventSource.on(context.eventTypes.GENERATION_STARTED,reconcile);
 context.eventSource.on(context.eventTypes.GENERATION_AFTER_COMMANDS,()=>{if(blocked)ctx().stopGeneration();});
 context.eventSource.on(context.eventTypes.MESSAGE_SENT,()=>{if(active()&&view&&loadedChat===ctx().chatId)return queue(async()=>{await ensureReviewTurn();await refresh();}).catch(fail);});
@@ -343,5 +368,5 @@ window.addEventListener('message',event=>{
     // Do not put that transition inside the queue those callbacks normally use.
     if(action==='enter')handleStart();else queue(handleStart);
 });
-window.infiniteFieldsV2={load,refresh,execute,reconcile,onEdited,onDeleted,historyInterceptor,startSnapshot,enterFromStart,get view(){return view;},get blocked(){return blocked;}};
+window.infiniteFieldsV2={load,refresh,execute,reconcile,onEdited,onDeleted,historyInterceptor,startSnapshot,enterFromStart,unlockAudio,stopAudio:()=>ambientAudio.stop(),get view(){return view;},get blocked(){return blocked;}};
 if(window.parent!==window)window.parent.postMessage({type:'fields-start-ready'},location.origin);

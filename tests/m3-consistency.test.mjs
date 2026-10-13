@@ -137,12 +137,12 @@ test('T60 两处补造保留完整断言与原证据，事实 warning 不被观�
  }
 });
 
-test('审查返回的同原句知识警告仍保留，不通过按句删警告伪造零泄漏',async()=>{
+test('缺少无渠道主体与私密内容的旧知识警告不能验证，原始响应保留供复核',async()=>{
  const finding=t63Finding('不往外传'),input=t63Input(finding);
  const issue={category:'knowledge',severity:'warning',quote:finding.quote,reason:finding.reason,
   evidence:[{id:'prior:0',quote:finding.evidence[0].quote}]};
  const result=await reviewConsistency(input,{client:{generate:async()=>response([issue])}});
- assert.equal(result.status,'issues');assert.deepEqual(result.issues,[{...issue,source:'model'}]);
+ assert.equal(result.status,'unverified');assert.equal(result.verified,false);assert.equal(result.model.status,'failed');assert.ok(result.model.rawResponse.includes(finding.quote));
  assert.equal(result.text,finding.quote);assert.equal(result.rewriteRequest,null);
 });
 

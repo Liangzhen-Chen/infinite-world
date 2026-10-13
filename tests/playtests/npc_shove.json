@@ -134,6 +134,15 @@
           "paths": [
             "state.player.coins"
           ]
+        },
+        {
+          "kind": "calls",
+          "tool": "world_law",
+          "args": {
+            "operation": "confess"
+          },
+          "success": true,
+          "min": 1
         }
       ],
       "expectedTools": [
@@ -164,6 +173,15 @@
             "npc_hw_gucen",
             "npc_hw_chenbai"
           ]
+        },
+        {
+          "kind": "calls",
+          "tool": "world_law",
+          "args": {
+            "operation": "arrest"
+          },
+          "success": true,
+          "min": 1
         }
       ],
       "expectedTools": [
@@ -193,6 +211,15 @@
           "npcs": [
             "npc_hw_chenbai"
           ]
+        },
+        {
+          "kind": "calls",
+          "tool": "world_law",
+          "args": {
+            "operation": "hear"
+          },
+          "success": true,
+          "min": 1
         }
       ],
       "expectedTools": [

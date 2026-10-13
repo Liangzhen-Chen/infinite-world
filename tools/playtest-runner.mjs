@@ -91,7 +91,7 @@ export async function runPlaytest({scenario,api,client,bundle,attempt=1,processM
                     try{
                         args=JSON.parse(call.function.arguments);if(!allowed.has(tool))throw new Error('模型调用未注册工具');
                         if(isOutOfCharacter(step.input)&&!readOnlyTools.has(tool))throw new Error('场外不能写入世界');
-                        if(tool==='world_read')result=readStateSection(view.document.state,args.section);
+                        if(tool==='world_read')result=readStateSection(view.document.state,args.section,args.npc);
                         else if(tool==='world_search')result=await api('search',{...args,campaignId,token:reviewTurn.token,anchor,expectedSequence:view.reference.sequence});
                         else if(tool==='world_catalog')result=await api('catalog',{...args,campaignId});
                         else{

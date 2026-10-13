@@ -106,7 +106,7 @@ for(const scenario of selected.flatMap(scenario=>Array.from({length:repetitions}
             if(!message.tool_calls?.length){reply=message.content??'';break;}
             for(const call of message.tool_calls){
                 const args=JSON.parse(call.function.arguments);let result;
-                if(call.function.name==='world_read')result=readStateSection(document.state,args.section);
+                if(call.function.name==='world_read')result=readStateSection(document.state,args.section,args.npc);
                 else if(call.function.name==='world_search')result={results:[]};
                 else if(call.function.name==='world_catalog')result=await lookupToolResult(()=>catalogDefinition(activeEngine,document,args));
                 else if(scenario.id==='F8')result={ok:false,error:'场外提问不能写入状态'};

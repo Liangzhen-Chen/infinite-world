@@ -33,6 +33,17 @@
             "status": "待偿还"
           },
           "min": 1
+        },
+        {
+          "kind": "calls",
+          "tool": "world_trade",
+          "args": {
+            "payment": "credit",
+            "creditMinutes": 60,
+            "days": 1
+          },
+          "success": true,
+          "min": 1
         }
       ],
       "expectedTools": [
@@ -47,6 +58,12 @@
           "paths": [
             "state.player.coins"
           ]
+        },
+        {
+          "kind": "calls",
+          "tool": "world_promise",
+          "min": 0,
+          "max": 0
         }
       ]
     },
@@ -78,6 +95,15 @@
             "category": "debt",
             "status": "逾期"
           },
+          "min": 1
+        },
+        {
+          "kind": "calls",
+          "tool": "world_time",
+          "args": {
+            "minutes": 120
+          },
+          "success": true,
           "min": 1
         }
       ],

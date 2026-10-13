@@ -55,7 +55,7 @@ export function sceneCard(engine,document,query='',index=null){
         if(context?.reflections?.length)parts.push(`  个人判断，可被推翻：${text(context.reflections[0].content,100)}`);
         if(context&&compactPeople)parts.push(`  本人已知：${text(list(context.known),100)}`);
         else if(context)parts.push(`  可见外貌：${text(list(context.appearance),100)}｜说话习惯：${text(list(context.voice.habits),80)}\n  台词范例，非既往经历：${text(context.voice.samples?.[0],80)}\n  本人已知：${text(list(context.known),180)}\n  本人旧事，不代表玩家参与：${text(list(context.seeds),180)}\n  在意：${text(list(context.values),70)}｜弱点：${text(list(context.flaws),70)}\n  行事：${text(Object.values(context.behavior).join('；'),160)}`);
-        if(available.services!==null)parts.push(`  当前服务：${available.services.map(service=>service==='teach'?'授课':'交易').join('、')||'暂停'}${available.until?`，本时段至${engine.calendar(available.until).text}`:''}`);
+        if(available.services!==null)parts.push(`  当前交易/授课：${available.services.map(service=>service==='teach'?'授课':'交易').join('、')||'暂停'}${available.until?`，本时段至${engine.calendar(available.until).text}`:''}；司法受理按法典、在场清醒及办案回执判断。`);
         if(base.creditPolicy)parts.push(`  赊账条件：未还合计最多${base.creditPolicy.limitCopper}铜，最长${base.creditPolicy.maximumMinutes}分钟，信任至少${base.creditPolicy.minimumTrust}，逾期需先还清。`);
     }
     const learned=Object.keys(s.spells??{}).map(id=>engine.byId.get(id)).filter(Boolean);
