@@ -1,3 +1,4 @@
+import {advanceRituals}from'./magic-ritual.mjs';
 const debtRows=d=>Object.entries(d.get('state','records')??{}).filter(([,row])=>row.category==='debt');
 import {canonical}from'./storage.mjs';
 const signedTerms=row=>Object.fromEntries(['parties','subject','quantity','deadline','cost','kind'].map(k=>[k,row[k]??null]));
@@ -94,6 +95,7 @@ export function repayDebt(d,engine,{buyer,seller,debt:id},eventId){
     return{debt:id,cost:amount,status:'已还清'};
 }
 export function advanceContracts(d,engine,minute){
+    advanceRituals(d,engine,minute);
     for(const[id,row]of Object.entries(d.get('state','records')??{})){
         if(row.category==='contract'&&row.version===1&&row.business&&['有效','待履行'].includes(row.status)){
             if(d.get('state','records',id)?.status!==row.status)continue;
