@@ -1,4 +1,4 @@
-import {npcContext} from './npc-memory.mjs';
+import {npcContext,npcBackground} from './npc-memory.mjs';
 import {npcCognitionView} from './npc-cognition.mjs';
 import {isOutOfCharacter} from '../extension/prompt.mjs';
 import {normalize} from './retrieval.mjs';
@@ -56,6 +56,23 @@ export function reviewHistoricalEvidence(engine,events,chat,{query='',draft=''}=
 // Reviewer-only evidence: global ledger truth is not a character's knowledge.
 // The host scene/public catalog never receives this map. Cognition preserves
 // blurred recollection and the provenance of unverified retellings.
+function routineIntervals(engine,document,id,before,receipts){
+ const previous=before?.state??before,state=document.state,start=previous?.minute,end=state.minute;
+ if(!Number.isSafeInteger(start)||end<=start||!receipts.length||receipts.some(r=>r.tool!=='world_time'||r.result?.ok===false))return [];
+ // Both snapshots plus the uninterrupted wait establish only this interval.
+ if(receipts.reduce((n,r)=>n+(r.result?.elapsed??0),0)!==end-start)return [];
+ const initial=npcBackground(engine,{state:previous},id),final=npcBackground(engine,document,id);
+ const slot=initial?.schedule.slots.find(row=>row.start<=start&&end<row.end);
+ if(!slot||!initial.schedule.current||!final?.schedule.current||initial.schedule.current.location!==final.schedule.current.location)return [];
+ const overlaps=(from,to)=>Number.isFinite(from)&&Number.isFinite(to)&&from<end&&to>start;
+ for(const snapshot of [previous,state]){
+  if(Object.values(snapshot.effects??{}).some(e=>e.target===id&&overlaps(e.started,e.expires)&&
+      (e.kind==='water_earth'&&e.operation==='bind_water'||e.kind==='mind_space'&&e.operation==='sleep'&&e.sleeping)))return [];
+  if(Object.values(snapshot.obligations??{}).some(o=>[o.promisor,o.promisee].includes(id)&&overlaps(o.departures?.[id]??o.start,o.deadline)))return [];
+  if(Object.values(snapshot.npcAutonomy?.tasks??{}).some(t=>t.npc===id&&overlaps(t.start,t.finish)))return [];
+ }
+ return [{start,end,location:slot.location,activity:slot.activity,source:'before/after + world_time receipts',limit:'仅确认该时段活动，不证明完成数量或具体进度'}];
+}
 export function reviewNpcKnowledge(engine,document,{before,receipts=[],events=[],draft='',query=''}={}){
  const state=document.state,ids=new Set();
  for(const snapshot of [before?.state??before,state])for(const [id,npc] of Object.entries(snapshot?.npcs??{}))if(npc.location===snapshot.location&&!npc.scheduleTravel&&!npc.cognitionTravel)ids.add(id);
@@ -65,12 +82,13 @@ export function reviewNpcKnowledge(engine,document,{before,receipts=[],events=[]
  const facts=reviewPlayerFacts(state),contracts=[...Object.entries(facts.quests).map(([id,row])=>({id,kind:'quest',row,parties:[row.publisher,row.taker],sourceEvent:id.replace(/^quest_/,'' )})),...Object.entries(facts.authorizations).map(([id,row])=>({id,kind:'authorization',row,parties:[row.grantor,row.grantee],sourceEvent:row.sourceEvent})),...Object.entries(state.obligations??{}).filter(([,row])=>[row.promisor,row.promisee].includes('player')).map(([id,row])=>({id,kind:'obligation',row,parties:[row.promisor,row.promisee],sourceEvent:id.replace(/^obl_/,'' )})),...Object.entries(state.records??{}).filter(([,row])=>row.category==='debt'&&[row.debtor,row.creditor].includes('player')).map(([id,row])=>({id,kind:'debt',row,parties:[row.debtor,row.creditor],sourceEvent:id.replace(/^debt_/,'' )}))];
  return Object.fromEntries([...ids].sort().flatMap(id=>{
   const context=npcContext(engine,document,id,`${query} ${draft}`);if(!context)return [];
+  context.background.schedule.intervals=routineIntervals(engine,document,id,before,receipts);
   const cognition=npcCognitionView(engine,document,id),memories=cognition.memories.filter(row=>row.minute<=state.minute);
   const contractKnowledge=contracts.map(contract=>{
    const sources=new Set([contract.sourceEvent,...events.filter(event=>event.input?.args?.quest===contract.id||event.result?.quest===contract.id||event.input?.args?.authorization===contract.id).map(event=>event.id)]);
    const related=memories.filter(memory=>sources.has(memory.sourceEvent)||memory.id.endsWith(`:obligation_${contract.id}`));
    return {reference:contract.id,kind:contract.kind,party:contract.parties.includes(id),awareness:related.length?'recorded-memory':'no-recorded-channel',facts:pick(contract.row,['name','content','status','objective','reward','amount','deadline','subject','coins','item','quantity']),parties:contract.parties,memories:related.map(memory=>pick(memory,['id','sourceEvent','sourceType','heardFrom','minute','content','blurred','reliability','participants']))};
   });
-  return [[id,{scope:'reviewer-only',present:state.npcs[id].location===state.location&&!state.npcs[id].scheduleTravel&&!state.npcs[id].cognitionTravel,known:context.known,unknown:context.unknown,memories:memories.map(memory=>pick(memory,['id','sourceEvent','sourceType','heardFrom','minute','content','blurred','reliability','participants'])),contracts:contractKnowledge,recall:recallEvidence(state,id,events)}]];
+  return [[id,{scope:'reviewer-only',present:state.npcs[id].location===state.location&&!state.npcs[id].scheduleTravel&&!state.npcs[id].cognitionTravel,known:context.known,unknown:context.unknown,background:context.background,memories:memories.map(memory=>pick(memory,['id','sourceEvent','sourceType','heardFrom','minute','content','blurred','reliability','participants'])),contracts:contractKnowledge,recall:recallEvidence(state,id,events)}]];
  }));
 }

@@ -31,6 +31,17 @@ async function setup(){
 }
 const stream=(document,id)=>document.state.npcs[id].memoryStream??[];
 
+test('共享背景保留本人村务往来和对方公开职务，不读取对方秘密',async()=>{
+    const {world,engine,document}=await setup(),other=world.npcs.find(n=>n.id==='npc_hw_chenbai');
+    other.secret='对方私密暗号不可传递';other.knowledge.known.push({fact:'私密账目不可传递'});
+    const context=npcContext(engine,document,merchant,'林穗，公仓钥匙该问谁？');
+    const relation=context.background.relations.find(r=>r.with===other.id);
+    assert.equal(relation.note,'按账目核对酒馆的公用支出');assert.equal(relation.publicRole,'临时村务代理');
+    assert.equal(relation.source,`${merchant}.relationships`);assert.doesNotMatch(JSON.stringify(context.background),/私密暗号|私密账目/);
+    const scene=engine.scene(document,'林穗，公仓钥匙该问谁？');
+    assert.match(scene,/村务往来/);assert.match(scene,/临时村务代理/);assert.match(scene,/来源 npc_hw_linsui.relationships/);
+});
+
 test('真实交易只进入参与者和连续在场者记忆；睡眠、场外与中途离开者不知道',async()=>{
     const {world,document,run}=await setup(),home=document.state.location;
     document.state.npcs[teacher].location='bld_hw_school';
