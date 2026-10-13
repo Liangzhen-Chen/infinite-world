@@ -40,7 +40,7 @@ export function sceneCard(engine,document,query='',index=null){
     for(const [id]of present){
         const d={get:(...p)=>p.reduce((v,k)=>v?.[k],document),document};
         try{assertRumorConversation(d,engine,id);}catch{continue;}
-        for(const row of selectNpcRumors(engine,id,query))rumorTopics.push(`  ${name(id)}（${id}）可讲述：${row.claim}｜未核实｜传闻 ${row.id}｜原来源 ${name(row.source)}（${row.source}）`);
+        for(const row of selectNpcRumors(engine,id,query,document))rumorTopics.push(`  ${name(id)}（${id}）可讲述：${row.claim}｜未核实｜传闻 ${row.id}｜原来源 ${name(row.source)}（${row.source}）`);
         if(rumorTopics.length>=4)break;
     }
     if(rumorTopics.length)parts.push('【可问询的未核实传闻，尚未成为玩家经历】',...rumorTopics.slice(0,4));
