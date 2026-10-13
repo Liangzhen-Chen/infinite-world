@@ -39,7 +39,7 @@ test('L4或候选正文被改不能绕过发布审核',async()=>{
  }finally{assert.ok(path.resolve(temp).startsWith(path.resolve(os.tmpdir())+path.sep));await fs.rm(temp,{recursive:true,force:true});}
 });
 test('完整档必填和嵌套类型生效，未标full的旧档兼容',()=>{
- const old={...world,npcs:world.npcs.map(n=>baseline.find(row=>row.id===n.id)??n)};assert.equal(validateWorld(old).ok,true);
+ const old={...world,npcs:world.npcs.map(n=>(()=>{const old=baseline.find(row=>row.id===n.id);return old?{...old,settlement:n.settlement,householdId:n.householdId,household:n.household,home:n.home}:n;})())};assert.equal(validateWorld(old).ok,true);
  for(const change of [n=>delete n.voice,n=>n.voice.samples=['不足三句'],n=>n.goals.short[0].progress=-1,n=>n.birth.month=15,n=>delete n.intelligence]){const w=structuredClone(published.world);change(w.npcs[0]);const result=validateWorld(w);assert.equal(result.ok,false);assert.ok(result.errors.some(x=>x.startsWith('schema')));}
 });
 test('通用引用校验拒绝错类别、重复关系、未知知情者和越界教学',()=>{
@@ -56,7 +56,10 @@ test('人物不能投影本人不知的记忆或秘密，出生日期与元年�
 });
 test('实际写入只在隔离世界执行一次，第二次无写入且不改变字节',async()=>{
  const temp=await fs.mkdtemp(path.join(os.tmpdir(),'m2-publish-'));await fs.cp(path.resolve('world'),temp,{recursive:true,filter:file=>!file.split(path.sep).includes('drafts')});
- try{await fs.writeFile(path.join(temp,'people/baseline.json'),JSON.stringify(world.npcs.map(n=>{const original=baseline.find(x=>x.id===n.id);return original?{...original,inventory:n.inventory,schedule:n.schedule}:n;}),null,2)+'\n');
+ try{const oldLocations=world.locations.filter(l=>l.scope!=='loc_bs'||['loc_bs','bld_bs_shrine'].includes(l.id)),placeIds=new Set(oldLocations.map(l=>l.id));
+ for(const [file,value]of Object.entries({'geo/locations.json':oldLocations,'geo/routes.json':world.routes.filter(r=>placeIds.has(r.from)&&placeIds.has(r.to)),'geo/settlements.json':world.settlementProfiles.filter(p=>p.id!=='loc_bs'),'people/residents.json':world.residents.filter(n=>n.settlement!=='loc_bs'),'people/households.json':world.households.filter(h=>h.settlement!=='loc_bs')}))await fs.writeFile(path.join(temp,file),JSON.stringify(value));
+ const rules=structuredClone(world.rules);for(const region of rules.weather.regions){region.locations=region.locations.filter(id=>placeIds.has(id));region.indoor=region.indoor.filter(id=>placeIds.has(id));}await fs.writeFile(path.join(temp,'meta/rules.json'),JSON.stringify(rules));
+ await fs.writeFile(path.join(temp,'people/baseline.json'),JSON.stringify(world.npcs.map(n=>{const original=baseline.find(x=>x.id===n.id);return original?{...original,inventory:n.inventory,schedule:n.schedule}:n;}),null,2)+'\n');
  const first=await publishNpcProfiles({worldRoot:temp,root,write:true});assert.equal(first.written,true);const before=await fs.readFile(path.join(temp,'people/baseline.json'),'utf8');const second=await publishNpcProfiles({worldRoot:temp,root,write:true});assert.equal(second.written,false);assert.equal(await fs.readFile(path.join(temp,'people/baseline.json'),'utf8'),before);
  }finally{assert.ok(path.resolve(temp).startsWith(path.resolve(os.tmpdir())+path.sep));await fs.rm(temp,{recursive:true,force:true});}
 });
@@ -85,6 +88,7 @@ test('深度来源缺失、manifest漂移或撤销L4不能用旧出版凭证放�
  await fs.symlink(path.resolve('tools'),path.join(temp,'tools'),'junction');
  for(const folder of ['meta','people','geo','lore','design'])await fs.cp(path.resolve('world',folder),path.join(worldRoot,folder),{recursive:true});
  await fs.cp(path.resolve('world/drafts/w1/existing-depth'),path.join(worldRoot,'drafts/w1/existing-depth'),{recursive:true});
+ for(const directory of ['baishi-skeleton'])await fs.cp(path.resolve('world/drafts/w1',directory),path.join(worldRoot,'drafts/w1',directory),{recursive:true});
  const batchFile=path.join(worldRoot,'drafts/w1/depth-publication.json');await fs.copyFile(path.resolve('world/drafts/w1/depth-publication.json'),batchFile);
  const files=[['drafts/w1/depth-publication.json',v=>v.worldRoot='..',/世界根/],['drafts/w1/depth-publication.json',v=>v.expectedIds.pop(),/预期人物集合/],['drafts/w1/existing-depth/first-review/manifest.json',v=>v.foundationHash='bad',/骨架指纹/],['drafts/w1/existing-depth/first-review/batch-0.json',v=>v.l4.approved=false,/L4/]];
  for(const [relative,mutate,pattern]of files){const file=path.join(worldRoot,relative),raw=await fs.readFile(file,'utf8'),value=JSON.parse(raw);mutate(value);await fs.writeFile(file,JSON.stringify(value));await assert.rejects(readPublishedNpcDepth({world,worldRoot}),pattern);await fs.writeFile(file,raw);}
@@ -92,7 +96,7 @@ test('深度来源缺失、manifest漂移或撤销L4不能用旧出版凭证放�
 });
 
 test('32人深度版本沿现有world_upgrade更新隔离文档，状态、现金、售空库存和个人记忆不回退',async()=>{
- const previous={...world,npcs:world.npcs.map(n=>depthBefore.find(row=>row.id===n.id)??n)};
+ const previous={...world,npcs:world.npcs.map(n=>(()=>{const old=depthBefore.find(row=>row.id===n.id);return old?{...old,inventory:structuredClone(n.inventory)}:n;})())};
  const legacy=JSON.parse(await fs.readFile('tests/fixtures/legacy/seed.json','utf8')),document=new WorldEngine(previous).createCharacter(legacy,{},'t11b-upgrade');
  const person=document.state.npcs.npc_hw_linsui;person.coins=27;person.inventory.item_bread=0;person.location='loc_bs';
  person.memoryStream=[{id:'t11b_runtime_memory',event:'雨后核对旧木板',knownBy:['npc_hw_linsui']}];

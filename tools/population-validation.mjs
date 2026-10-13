@@ -17,13 +17,13 @@ export function validatePopulation(world){
   }
  }
  const belongs=(location,settlement)=>{
-  const visited=new Set();let parent=places.get(location)?.parent;
-  while(parent&&places.has(parent)&&!visited.has(parent)){
-   if(parent===settlement)return true;
-   if(settlements.has(parent))return false;
+  const visited=new Set([location]);let parent=places.get(location)?.parent,owner;
+  while(parent){
+   if(!places.has(parent)||visited.has(parent))return false;
+   if(settlements.has(parent)&&owner===undefined)owner=parent;
    visited.add(parent);parent=places.get(parent).parent;
   }
-  return false;
+  return owner===settlement;
  };
  for(const row of world.residents??[]){
   check(row.tier==='roster',`名册档级必须是roster：${row.id}`);

@@ -71,10 +71,10 @@ test('人物定点润色L1使用相同规则检查，保持原审核候选可读
  assert.ok(validateDraft(undefined,entry).errors.length,'坏结构仍按原合同返回errors而非抛出');
  const bad=structuredClone(draft);bad.memorySeeds.at(-1).event='主持人不要让玩家接触这段记忆。';assert.ok(validateDraft(bad,entry).errors.some(error=>error.includes('人物事实或设定')));
 });
-test('当前正式完整档仍有缺口，准确核验提交修复的17人traits',async()=>{
+test('当前正式完整档已补全，准确核验提交修复的17人traits',async()=>{
  const world=await loadWorld(),report=auditNpcDepth(world);
  assert.equal(report.checked,world.npcs.filter(n=>n.tier==='full').length);
- assert.equal(report.ok,false,'现有字段缺口须如实报告');
+ assert.equal(report.ok,true,'五村完整深度已正式发布');assert.deepEqual(report.issues,[]);
  assert.ok(report.issues.every(x=>x.id&&x.field&&x.code&&x.reason));
  assert.equal(report.legacyTraits.source,'1bc8f3b');assert.equal(report.legacyTraits.checked,17);assert.equal(report.legacyTraits.ok,true);
  assert.deepEqual(report.legacyTraits.rows.map(x=>x.id),[...legacyTraitsAuditIds]);

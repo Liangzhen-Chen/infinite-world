@@ -11,11 +11,12 @@ import {compactReviewRequest} from '../tools/npc-depth-source-evidence.mjs';
 import {hashContent} from '../tools/content-pipeline.mjs';
 import {runDepthReview} from '../tools/npc-depth-review.mjs';
 import {prepareNpcDepth} from '../tools/publish-npc-depth.mjs';
+async function proofFor(options){let proof=await read(path.join(options.root,'incremental-proof.json'));while(proof&&proof.authorizationHash!==options.authorizationHash)proof=proof.previousProof;assert.ok(proof,'历史规划须有真实父proof');return proof;}
 const read=file=>fs.readFile(file,'utf8').then(JSON.parse),write=(file,value)=>fs.writeFile(file,JSON.stringify(value,null,2)+'\n');
 
 test('T58真实父record basis补全15人23兄弟，四方子plan持久/prepare/full/compact同值且未变record完整复用',async()=>{
- const parentOptions=await completeOptions(),options=await sourceRepairOptions(),parent=await prepareDepthRevision(parentOptions),prepared=await prepareDepthRevision(options);
- const proof=await read(path.join(options.root,'incremental-proof.json')),receipt=depthRevisionProof(options,prepared,proof.reopenAuthorization);
+ const parentOptions=await completeOptions(),options=await sourceRepairOptions(),parent=await prepareDepthRevision({...parentOptions,proofOverride:await proofFor(parentOptions)}),prepared=await prepareDepthRevision({...options,proofOverride:await proofFor(options)});
+ const proof=await proofFor(parentOptions),receipt=depthRevisionProof(options,prepared,proof.reopenAuthorization);
  const replay=await replayDepthProof(parent.foundation,proof,{readPlan:file=>read(path.resolve(options.root,file))});
  for(const e of parent.entries)assert.deepEqual(replay.find(r=>r.id===e.id).patches,e.patches);
  const legacy=parent.foundation.entries.map(e=>structuredClone(e));function oldReplay(p){if(p.previousProof)oldReplay(p.previousProof);for(const c of p.changes)legacy.find(e=>e.id===c.id).patches.find(p=>p.path===c.path).value=c.after;}oldReplay(proof);
@@ -23,7 +24,7 @@ test('T58真实父record basis补全15人23兄弟，四方子plan持久/prepare/
  assert.equal(differences.length,23);assert.equal(new Set(differences.map(d=>d.id)).size,15);
  const frozen=await prepareDepthRevision({...options,design:path.join(options.root,'design.mjs'),proofOverride:receipt});
  assert.deepEqual(frozen.entries,prepared.entries);assert.deepEqual(frozen.contexts,prepared.contexts);
- assert.deepEqual(await runDepth({...options,prepare:true}),{entries:30,formalWrite:false,modelCalls:0});
+ assert.deepEqual(await runDepth({...options,proofOverride:receipt,prepare:true}),{entries:30,formalWrite:false,modelCalls:0});
  const actors=new Set(['npc_wt_zhangou','npc_wt_zhicai','npc_wt_xueying','npc_wt_leizhi']);
  const report=await read(path.resolve(options.root,'../reopen/complete-003/source-repair-report.json'));
  assert.deepEqual(report.changes.map(c=>c.id).sort(),[...actors].sort());assert.ok(report.changes.every(c=>c.path==='memorySeeds[2]'));
@@ -57,9 +58,12 @@ test('T58真实source凭证缺失/hash/祖先/越权/兄弟/单侧均在prepare�
  await fs.mkdir(path.join(worldRoot,'design'),{recursive:true});
  for(const file of ['w1-wt-depth.mjs','w1-villages-weiting.mjs','w1-reopen-authorization.json'])await fs.copyFile(path.resolve('world/design',file),path.join(worldRoot,'design',file));
  await fs.cp(path.resolve('world/drafts/w1/wt-depth'),path.join(worldRoot,'drafts/w1/wt-depth'),{recursive:true});
- const actual=await sourceRepairOptions(),root=path.join(worldRoot,'drafts/w1/wt-depth/sourced');
+ const actual=await sourceRepairOptions(),sourceProof=await proofFor(actual),root=path.join(worldRoot,'drafts/w1/wt-depth/sourced');
+ // Restore the actual records bound by this historical plan, rather than its
+ // subsequently completed descendants. All original paid evidence stays intact.
+ for(const record of sourceProof.oldRecords)await write(path.join(root,record.id+'.json'),record);
  const remap=file=>path.resolve(worldRoot,path.relative(actual.worldRoot,file));
- const options={...actual,root,worldRoot,design:remap(actual.design),controlledRevision:remap(actual.controlledRevision),authoredBackground:remap(actual.authoredBackground),sourceCheckoutEvidence:remap(actual.sourceCheckoutEvidence),reopenAuthorization:remap(actual.reopenAuthorization)};
+ const options={...actual,proofOverride:sourceProof.previousProof,root,worldRoot,design:remap(actual.design),controlledRevision:remap(actual.controlledRevision),authoredBackground:remap(actual.authoredBackground),sourceCheckoutEvidence:remap(actual.sourceCheckoutEvidence),reopenAuthorization:remap(actual.reopenAuthorization)};
  const parentProof=await read(path.join(root,'incremental-proof.json')),prepared=await prepareDepthRevision(options),proof=depthRevisionProof(options,prepared,parentProof.reopenAuthorization);
  const plan=await read(options.controlledRevision),credentialFile=path.resolve(root,plan.sourceAuthorization.file),credential=await read(credentialFile);
  const assertConsumers=async(next,pattern)=>{
@@ -81,7 +85,9 @@ test('T58真实source凭证缺失/hash/祖先/越权/兄弟/单侧均在prepare�
  singleSided.find(r=>r.id==='npc_wt_leizhi').patches.find(p=>p.path==='memorySeeds[2]').value.event=credential.source.beforeHash;
  await assertConsumers({...options,entriesOverride:singleSided},/共享事件双方叙述不相容/);
  const extraSource=structuredClone(background);extraSource.events.find(e=>e.id==='memory_wt_depth_group_3').sourceRefs[0].publicSpeech='越权扩充';await write(options.authoredBackground,extraSource);await assertConsumers(options,/来源凭证只授权narrative/);await write(options.authoredBackground,background);
- const baseline=await fs.readFile(path.join(worldRoot,'people/baseline.json'),'utf8');
+ const baselineFile=path.join(worldRoot,'people/baseline.json'),rows=await read(baselineFile);
+ for(const entry of prepared.entries)rows[rows.findIndex(n=>n.id===entry.id)]=structuredClone(entry.before);await write(baselineFile,rows);
+ const baseline=await fs.readFile(baselineFile,'utf8');
  await write(path.join(root,'incremental-proof.json'),proof);
  // The publication consumer reconstructs the real child successfully, then
  // stops at its absent real L2. No approval or provider response is invented.

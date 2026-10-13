@@ -46,7 +46,7 @@ const offlineDesign={...frozenDesign,patchRows:frozenEntries.map(e=>({...e,patch
 
 test('砾泉正式30人等于已审批完整档，全体152个full深度及规则措辞零缺口，原17traits保留',()=>{
  assert.equal(approvedEntries.length,30);assert.equal(liveWorld.npcs.filter(n=>n.tier==='full').length,152);
- assert.equal(liveWorld.residents.length,294);assert.deepEqual(liveWorld.npcs.map(n=>n.id),world.npcs.map(n=>n.id));
+ assert.equal(liveWorld.residents.filter(n=>n.settlement!=='loc_bs').length,294);assert.equal(liveWorld.residents.filter(n=>n.settlement==='loc_bs').length,305);assert.deepEqual(liveWorld.npcs.map(n=>n.id),world.npcs.map(n=>n.id));
  for(const entry of approvedEntries){
   const current=liveWorld.npcs.find(n=>n.id===entry.id);
   assert.deepEqual(current,entry.facts);verifyUnchanged(entry.before,current,entry);
@@ -63,7 +63,7 @@ test('砾泉冻结原档首次预演零写入，正式发布闭合6事件30人�
  for(const dir of ['meta','geo','people','lore','design'])await fs.cp(path.resolve('world',dir),path.join(worldRoot,dir),{recursive:true});
  await fs.mkdir(path.join(temp,'tools'));
  for(const file of ['content-pipeline.mjs','content-budget.mjs'])await fs.copyFile(path.resolve('tools',file),path.join(temp,'tools',file));
- await fs.cp(legacyRoot,path.join(worldRoot,'drafts/w1/lq-depth'),{recursive:true});
+ await fs.cp(legacyRoot,path.join(worldRoot,'drafts/w1/lq-depth'),{recursive:true});await fs.cp(path.resolve('world/drafts/w1/baishi-skeleton'),path.join(worldRoot,'drafts/w1/baishi-skeleton'),{recursive:true});
  const baseline=path.join(worldRoot,'people/baseline.json');await fs.writeFile(baseline,JSON.stringify(world.npcs));
  const manifest=path.join(worldRoot,'drafts/w1/lq-depth/author-v2/first-review/manifest.json'),before=await fs.readFile(baseline);
  const preview=await publishNpcDepth({manifest});
@@ -467,7 +467,7 @@ test('离线受控计划逐真实失败锁定26叶，正确兄弟、9pending原�
  assert.equal(plan.foundationHash,hashContent(foundation));
  assert.equal(plan.baseHash,hashContent(JSON.parse(await fs.readFile(path.join(firstReviewRoot,'base.json'),'utf8'))));
  assert.equal(plan.candidateHash,hashContent(JSON.parse(await fs.readFile(path.join(firstReviewRoot,'candidate.json'),'utf8'))));
- for(const ref of plan.sourceHashes){const file=ref.file.endsWith('/people/baseline.json')&&firstProof?path.join(legacyRoot,'reopen-complete/pre-T06-publication-baseline.json'):path.resolve(firstReviewRoot,ref.file);assert.equal(ref.hash,hashContent(JSON.parse(await fs.readFile(file,'utf8'))));}
+ for(const ref of plan.sourceHashes){const file=ref.file.endsWith('/people/baseline.json')&&firstProof?path.join(legacyRoot,'reopen-complete/pre-T06-publication-baseline.json'):path.resolve(firstReviewRoot,ref.file);const data=JSON.parse(await fs.readFile(file,'utf8')),frozen=ref.file.endsWith('/people/residents.json')?data.filter(n=>n.settlement!=='loc_bs'):data;assert.equal(ref.hash,hashContent(frozen));}
  for(const entry of offlineBackgroundEntries){
   const old=foundation.entries.find(e=>e.id===entry.id),authorization=plan.authorized.find(a=>a.id===entry.id);
   const record=await originalRecord(entry.id);
@@ -609,7 +609,7 @@ test('T08实际continuation父proof加四叶提议经官方prepare，full和comp
  const temp=await fs.mkdtemp(path.join(os.tmpdir(),'lq-neighbor-parent-'));t.after(()=>fs.rm(temp,{recursive:true,force:true}));
  const worldRoot=path.join(temp,'world');
  for(const folder of ['meta','people','geo','lore'])await fs.cp(path.resolve('world',folder),path.join(worldRoot,folder),{recursive:true});
- await fs.cp(legacyRoot,path.join(worldRoot,'drafts/w1/lq-depth'),{recursive:true});
+ await fs.cp(legacyRoot,path.join(worldRoot,'drafts/w1/lq-depth'),{recursive:true});await fs.cp(path.resolve('world/drafts/w1/baishi-skeleton'),path.join(worldRoot,'drafts/w1/baishi-skeleton'),{recursive:true});
  await fs.mkdir(path.join(worldRoot,'design'),{recursive:true});
  await fs.copyFile(path.resolve('world/design/w1-reopen-authorization.json'),path.join(worldRoot,'design/w1-reopen-authorization.json'));
  const root=path.join(worldRoot,'drafts/w1/lq-depth/author-v2/first-review'),read=async file=>JSON.parse(await fs.readFile(path.join(root,file),'utf8'));

@@ -47,6 +47,12 @@ export function reopenAuthorizationVersion(manifest,expectedHash){
  if(expectedHash===undefined||expectedHash===hash(original))return original;
  if(expectedHash===hash(budgetManifest))return budgetManifest;
  if(expectedHash===hash(manifest))return manifest;
+ // Source authorizations are appended after paid reviews. Earlier receipts
+ // retain their exact prefix hash; every surviving item was checked above.
+ for(let length=1;length<(sourceAuthorizations?.length??0);length++){
+  const prior={...budgetManifest,sourceAuthorizations:sourceAuthorizations.slice(0,length)};
+  if(expectedHash===hash(prior))return prior;
+ }
  throw Error('授权清单已冻结，不得换nonce或修改再领');
 }
 export function validateReopenAuthorization(manifest,cardId){

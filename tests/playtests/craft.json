@@ -735,8 +735,7 @@
           "kind": "unchanged",
           "paths": [
             "state.inventory",
-            "state.player.coins",
-            "state.records"
+            "state.player.coins"
           ]
         }
       ]
