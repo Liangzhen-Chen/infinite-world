@@ -1,6 +1,6 @@
 // Shared numerical handlers; callers own targeting, consent, costs and death effects.
 export const damageTypes=Object.freeze(['physical','fire','cold','wind','earth','light','shadow','mind']);
-const fields={damage:['damageType','armorFactor'],heal:[],repair:[],dry:[],status:['status'],relief:['statuses'],mark:['medium','visibility'],light:[],environment:['operation','unit'],summon:['summonType','upkeepMp','upkeepMinutes'],summon_contract:['operation','offering'],protection:['damageTypes','stacking'],object:['operation','limitC'],area:['radiusMeters','intervalMinutes','trigger','effect']};
+const fields={damage:['damageType','armorFactor','coldDecay'],heal:[],repair:[],dry:[],status:['status'],relief:['statuses'],mark:['medium','visibility'],light:[],environment:['operation','unit'],summon:['summonType','upkeepMp','upkeepMinutes'],summon_contract:['operation','offering'],protection:['damageTypes','stacking'],object:['operation','limitC','surface'],heat:['operation','limitC','upkeepMp'],area:['radiusMeters','intervalMinutes','trigger','effect']};
 export function validateEffectSpec(spec){
  const errors=[];
  if(!spec||typeof spec!=='object'||Array.isArray(spec))return ['法术效果必须是规则对象'];
@@ -10,6 +10,7 @@ export function validateEffectSpec(spec){
  if(!Number.isSafeInteger(spec.power)||spec.power<1||spec.power>5000)errors.push('法术规则强度非法');
  if(spec.damageType!==undefined&&!damageTypes.includes(spec.damageType))errors.push('伤害门类不在规则表');
  if(spec.armorFactor!==undefined&&(!Number.isFinite(spec.armorFactor)||spec.armorFactor<0||spec.armorFactor>1))errors.push('护甲系数须在0至1之间');
+ if(spec.coldDecay!==undefined&&(spec.kind!=='damage'||spec.damageType!=='cold'||spec.coldDecay!==true))errors.push('环境衰减只适用于冰针伤害');
  if(spec.kind==='area'){
   if(!Number.isFinite(spec.radiusMeters)||spec.radiusMeters<=0||spec.radiusMeters>100)errors.push('区域半径须在0至100米之间');
   if(!Number.isSafeInteger(spec.intervalMinutes)||spec.intervalMinutes<1||spec.intervalMinutes>1440)errors.push('区域触发间隔非法');
@@ -30,7 +31,7 @@ export function resolveVitalityPrimitive({spec,hp,maxHp,defense=0,resistance=0,m
  const errors=validateEffectSpec(spec);if(errors.length)throw new Error(errors.join('；'));
  if(!['damage','heal'].includes(spec.kind))throw new Error('此处理器只接受伤害或治疗');
  finite(maxHp,1,Number.MAX_SAFE_INTEGER,'生命上限');finite(hp,0,maxHp,'当前生命');finite(defense,0,Number.MAX_SAFE_INTEGER,'防御');finite(resistance,0,1,'抗性');finite(multiplier,0,1,'适应伤害系数');
- const amount=spec.kind==='heal'?spec.power:Math.max(1,Math.round((spec.power-defense*(spec.armorFactor??0.25))*(1-resistance)*multiplier));
+ const amount=spec.kind==='heal'?spec.power:spec.coldDecay&&multiplier===0?0:Math.max(1,Math.round((spec.power-defense*(spec.armorFactor??0.25))*(1-resistance)*multiplier));
  const nextHp=Math.max(0,Math.min(maxHp,hp+(spec.kind==='heal'?amount:-amount)));
  return {amount:Math.abs(nextHp-hp),rawAmount:amount,nextHp,delta:nextHp-hp};
 }
