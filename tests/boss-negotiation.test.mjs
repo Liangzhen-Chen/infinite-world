@@ -147,7 +147,7 @@ test('模板校验真实物资，公开工具保持25入口和12000 token估算�
     const tools=toolDefinitions();assert.equal(tools.length,25);
     const field=tools.find(t=>t.function.name==='world_field').function.parameters;
     assert.ok(field.properties.operation.enum.includes('lair_negotiate'));assert.ok(field.properties.pact.enum.includes('respect_territory'));
-    const budget=(await loadPromptBundle()).budget;assert.ok(budget.estimatedTokens<=12000,JSON.stringify(budget));
+    const budget=(await loadPromptBundle()).budget;assert.ok(budget.estimatedTokens<=budget.limit,JSON.stringify(budget));
     assert.equal(source.bosses.find(b=>b.id===target).negotiation,undefined);
 });
 

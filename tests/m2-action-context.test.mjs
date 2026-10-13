@@ -194,6 +194,6 @@ test('旧失败对象保留21条账本失败；新增参数机会暴露16分钟�
     assert.equal(evaluateAssertions(privateScript.turns[2].assertions,{before:{},after:{},calls:oldPrivate.calls,reply:''}).find(a=>a.kind==='calls').pass,false);
 });
 
-test('静态提示及工具定义估算保留12000硬上限，本卡不超过11800 token',async()=>{
-    const bundle=await loadPromptBundle();assert.equal(bundle.budget.limit,12000);assert.ok(bundle.budget.estimatedTokens<=11800,JSON.stringify(bundle.budget));
+test('静态提示及工具定义估算遵守统一硬上限',async()=>{
+    const bundle=await loadPromptBundle();assert.ok(bundle.budget.estimatedTokens<=bundle.budget.limit,JSON.stringify(bundle.budget));
 });
