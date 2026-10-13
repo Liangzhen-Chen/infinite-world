@@ -51,7 +51,7 @@ const set=(s,id,changes)=>{s.doc.state.records[`physical_feature:${id}`]={id,cat
 const reload=s=>{const world=structuredClone(s.world);return{...s,world,rows:world.locations.find(r=>r.id===s.location).features,engine:new WorldEngine(world),doc:JSON.parse(JSON.stringify(s.doc))};};
 async function run(s,tool,args,id=`${tool}-${s.doc.state.minute}`){const out=await s.engine.reduce(s.doc,{tool,args,eventId:id});s.doc=applyPatches(s.doc,out.patches);return out.result;}
 const wait=(s,minutes)=>run(s,'world_time',{minutes},`wait-${s.doc.state.minute}-${minutes}`);
-const spell=(s,op)=>s.world.spells.find(r=>r.mechanism===op);
+const spell=(s,op)=>s.world.spells.find(r=>r.mechanism===op&&s.doc.state.spells[r.id]);
 async function cast(s,op,target,extra={}){
  const original=s.doc;
  for(let i=0;i<100;i++){
@@ -84,11 +84,11 @@ function totals(s){
  return{ml,salt,toxin};
 }
 
-test('十七个水土候选都有消费者，正式目录与其他未实现机制保持原状',()=>{
+test('十七个水土候选都有消费者，正式目录与已接入机制保持一致',()=>{
  const candidates=waterEarthSpellCandidates();assert.equal(candidates.length,17);
  const map=mechanismMap(source);assert.equal(map.formalSpellCount,source.spells.length);
  for(const c of candidates){assert.deepEqual(validateMagicCatalog(c,{requireHandler:true}),[]);const r=map.rows.find(r=>r.id===c.id);assert.equal(r.status,'consumer-ready');assert.deepEqual(r.validation,[]);}
- for(const op of ['preserve','area_water'])assert.equal(map.rows.find(r=>r.mechanism===op).status,'missing-consumer');
+ assert.equal(map.rows.find(r=>r.mechanism==='preserve').status,'consumer-ready');assert.equal(map.rows.find(r=>r.mechanism==='area_water').status,'missing-consumer');
  const c=candidates.find(c=>c.mechanism==='seal');assert.ok(validateMagicCatalog({...c,effectSpec:{...c.effectSpec,power:21}}).length);assert.ok(validateMagicCatalog({...c,duration:11}).length);
 });
 test('容器止漏实际停止泄漏，到期恢复泄漏，污染和水量在重载后守恒',async()=>{

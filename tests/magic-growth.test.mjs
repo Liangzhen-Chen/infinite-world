@@ -25,7 +25,7 @@ function conservation(d){
  const state=resource(d);if(state){assert.equal(state.waterMl+state.growthConsumedWaterMl,1000000);assert.equal(state.nutrientMg+state.growthConsumedNutrientMg,100000);}
 }
 async function setup({plant=false,day=0}={}){
- const world=structuredClone(source);delete world.rules.settlementTrade;
+ const world=structuredClone(source);delete world.rules.settlementTrade;delete world.rules.worldClock;
  for(const n of world.npcs){delete n.tier;delete n.schedule;}
  world.rules.agriculture.crop.growthDays=10;world.rules.agriculture.crop.sowDays=[day,day];
  world.rules.agriculture.crop.minimumTemperatureC=-100;
@@ -177,11 +177,13 @@ test('CampaignStorage restart/export/import/replay preserves consumed resources 
  assert.deepEqual((await store.read('growth')).document,saved);
  assert.deepEqual((await store.reconcile('growth',[])).document,f.sown);
 });
-test('formal world audit preserves the same existing release failures with/without optional growth limits',()=>{
+test('formal world audit passes with published growth limits and rejects missing or invalid growth rules',()=>{
  const withGrowth=validateWorld(source,{stage:'release'}),without=structuredClone(source);delete without.rules.magicGrowth;
  const old=validateWorld(without,{stage:'release'});
- assert.equal(withGrowth.ok,false);assert.deepEqual(withGrowth.errors,old.errors);
- assert.equal(withGrowth.errors.length,1192);
+ assert.equal(withGrowth.ok,true);assert.deepEqual(withGrowth.errors,[]);
+ assert.equal(old.ok,false);assert.deepEqual(old.errors,['生长阶段界限不符：spell_s1_field_growth']);
+ const invalid=structuredClone(source);invalid.rules.magicGrowth.maximumBonusPermille=1001;
+ assert.equal(validateWorld(invalid,{stage:'release'}).ok,false);
 });
 test('strict AJV accepts a registered plant/growth source; actual source audit rejects bad units, stages, ownership and resource bindings',async()=>{
  const world=structuredClone(source),p=world.rules.agriculture.settlements.find(p=>p.settlement==='loc_bs_yupo');
