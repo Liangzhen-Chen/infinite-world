@@ -148,6 +148,19 @@ N1–N17至少12项完整有效且≥90%，N6/N16零泄漏，N12真实盲辨，N
 
 ### T99 已执行，未通过：六场完整（送货5/9、私宅6/9、离屏4/8、推搡4/9中断），账本157/165，有效N 9项过5项（N5/N6/N10/N13/N16），盲辨9/9与N6/N16零泄漏通过，工具漏4错2；305次调用6.94093904元。证据在docs/测试报告/M2-recheck-003/。第三次分析交Astra（M2-fix-planner-003）；第四轮若仍不过，M2标卡住并继续其他里程碑。
 
+### 主线全量回归修复（2026-10-13，全量测试1447项中76项失败；清单与报错在logs/sessions/full-fail-A/B/C.txt）
+
+来由：今天合并五十多张卡，每张只验了自己的测试和CORE，卡与卡之间的影响累积。三张卡按领域分，可并行；都不删测试、不放宽断言——预期因正当变化而过期的更新预期并写明原因，行为被弄坏的修行为。模型0。
+
+### T150 回归修复A：环境、召唤、法术批次与W3【零模型】
+范围：tests/environment（11）、summons（8）、m4-batch2（8）、m4-publication（2）、w3-trades、w3-journey等，清单见full-fail-A.txt。可改：server-plugin/里对应模块与这些测试的过期夹具。验收：`node --test tests/environment.test.mjs tests/summons.test.mjs tests/m4-batch2.test.mjs tests/m4-publication.test.mjs "tests/w3-*.test.mjs" "tests/magic*.test.mjs" "tests/w2-*.test.mjs"`、CORE。
+
+### T151 回归修复B：人物深度流水线、人口发布与世界校验【零模型】
+范围：tests/npc-depth*（约16）、population-publication（3）、w1-villages-publish、w1-village-profiles、npc-profile-publication、world-validation、world-social、npc-acceptance、m1/m2前置等，清单见full-fail-B.txt。多数应是五村深度清零、白石镇入库、法术与首领发布之后的过期预期。可改：这些测试及其夹具，tools/npc-depth*.mjs、tools/publish-*.mjs、tools/validate-world.mjs的必要接点。验收：`node --test "tests/npc-depth*.test.mjs" tests/population-publication.test.mjs "tests/w1-*.test.mjs" tests/npc-profile-publication.test.mjs "tests/world-*.test.mjs" tests/npc-acceptance.test.mjs "tests/m1-*.test.mjs" tests/m2-preconditions.test.mjs tests/r06-bs-skeleton.test.mjs`、CORE。
+
+### T152 回归修复C：其余（作息、户籍、工具分组、委托、M3、界面夹具、历史窗口）【零模型】
+范围：npc-schedule（2）、civic（2）、npc-memory、tool-groups、quest-board、w5-integration、m3-consistency、m3-consistency-browser、m3-soak-adapter、history-window-integration、m6-06等，清单见full-fail-C.txt。浏览器类失败多为测试页面夹具加载不到界面模块，照tests/m6-05.test.mjs的通用代理写法修。可改：对应模块与测试夹具；extension/tools.mjs只许压短说明，提示估算不得超过11900。验收：`node --test "tests/npc-*.test.mjs" tests/civic.test.mjs tests/tool-groups.test.mjs tests/quest-board.test.mjs "tests/w5-*.test.mjs" "tests/m3-*.test.mjs" "tests/history-window*.test.mjs" "tests/m6-*.test.mjs" tests/runtime.test.mjs tests/prompt.test.mjs`、CORE；浏览器用例沙箱里跑不了，主会话补跑。
+
 ### M2修复第三批（2026-10-13主会话审定，来源：Astra草案M2-fix-planner-003，对应T99真实失败；分析全文见该草案A段）
 
 要点：四场中断的共同出口是一致性审查的唯一改写未通过后拒绝提交、runner按stopOnFailure停止。四场原因不同：送货是二审引用被改动的JSON导致校验失败；私宅是审查自相矛盾地把正确时间判错；离屏是二审输出的JSON不合法；推搡是主持原稿和改写都多计了5分钟（真错）。账本8条里4条是这四次执行失败，另4条是粮仓买粮被提前一回合执行。N3、N4、N12是审核拿到的证据不全，N15是NPC确实编了经历，N2是逐N审核输出被截断。
