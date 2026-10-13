@@ -215,7 +215,12 @@ export function consistencyReviewRequest(input,{maxTokens=1800}={}){
   {...structuredClone(item),required:[...item.required,'entityName','entityKind'],properties:{...structuredClone(item.properties),category:{const:'naming'}}},
   {...structuredClone(item),properties:{...structuredClone(item.properties),category:{enum:categories.filter(name=>name!=='naming')}}}
  ]};
- request.messages[0].content+='检索留证 retrieval 仅 status=complete 且 sealed=true 才能证明本回合调用完整；零调用才证明未检索，unknown 或缺回执最多给 warning。scene 中的旧事不是 world_search 调用，空 results 只能证明查过，不能证明找到。';
+ request.messages[0].content+=`\n按完整语句确定断言的对象与范围。现场感知只说明当时当地看到或听到什么；“没有旅店敲门声传出来”否定的是听到敲门声，不能截成“没有旅店”来解释为镇上不存在旅店。检索为空不否定在场感知，远处或遮挡后的事实仍须核对视线和来源。
+ 可见外观不自动披露私密内容。纸片露角、纸上有未写完的一行字，只说明外形和书写状态；若没有写出具体文字、秘密内容或由此确定的隐藏事实，不因 knowledge 缺少纸片记录就报泄漏。若正文读出私密文字，须核对是否可读及是否有获知渠道，不能用“纸片可见”代替读取权限。
+ 否认知情与一般处事习惯不构成获知声明。“我没见过”“别人嘴里的话我一般不往外传”没有确认某件私密事件的内容，不能仅凭可能暗示知情报 warning。若同句实际确认委托内容、债务数额或只有当事人知道的具体细节，仍须引用该断言及对应人物的认知证据；无记录渠道不能靠“听说”外壳获得知识。
+ 当前表象与已经发生的经历分别核验。“空车板靠在台阶边”是外观；“刚卸空的车板”还断言此前发生卸货，不能从空车板或核对货单的 activity 推出。“又量了一次，比上次厚”断言重复测量和比较结果，不能从职业、会测量或以前量过水位推出。叙述离屏经历须对应真实行动记录、回执或有来源的记忆；缺少来源时这类新增经历应报问题，普通姿态不需动作记录。
+ 对未获支持的新经历归 fact；由表象确定秘密或无渠道披露私密内容归 knowledge。与真实记录直接矛盾才用 error，只有缺少经历来源时用 warning；普通感知和没有具体私密内容的否认不因记录缺项报 warning。已记录行动保留时间、成败、材料和费用，不能补一次成功、卸货或测量来解释场景。
+ 检索留证 retrieval 仅 status=complete 且 sealed=true 才能证明本回合调用完整；零调用才证明未检索，unknown 或缺回执最多给 warning。scene 中的旧事不是 world_search 调用，空 results 只能证明查过，不能证明找到。`;
  return request;
 }
 export function validateConsistencyResponse(response,input){
