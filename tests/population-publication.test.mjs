@@ -17,32 +17,39 @@ const formal=await loadWorld(),source=structuredClone(villagesOriginalWorld(form
 const removedLocations=new Set(formal.locations.filter(row=>!source.locations.some(location=>location.id===row.id)).map(row=>row.id));
 source.rules.weather.regions=source.rules.weather.regions.map(row=>({...row,locations:row.locations.filter(id=>!removedLocations.has(id)),indoor:row.indoor.filter(id=>!removedLocations.has(id))})).filter(row=>row.locations.length);
 source.rules.agriculture.settlements=source.rules.agriculture.settlements.filter(row=>!removedLocations.has(row.settlement));
+source.rules.worldClock.clocks=source.rules.worldClock.clocks.filter(row=>!removedLocations.has(row.settlement));
 source.rules.law.codes=source.rules.law.codes.filter(row=>!removedLocations.has(row.court));
+source.locations=source.locations.filter(l=>!(l.scope==='loc_bs'&&!['loc_bs','bld_bs_shrine'].includes(l.id)));
+source.routes=source.routes.filter(r=>source.locations.some(l=>l.id===r.from)&&source.locations.some(l=>l.id===r.to));
+for(const row of source.rules.weather.regions){row.locations=row.locations.filter(id=>source.locations.some(l=>l.id===id));row.indoor=row.indoor.filter(id=>row.locations.includes(id));}
 const addedIds=new Set(candidate.npcs.map(n=>n.id)),original={...source,npcs:preserved,residents:[],households:[],settlementProfiles:[],locations:source.locations.filter(n=>!candidate.locations.some(l=>l.id===n.id)),routes:source.routes.filter(n=>!candidate.routes.some(r=>r.id===n.id))};
 const world=mergeHewan(original,candidate),legacy=JSON.parse(await fs.readFile('tests/fixtures/legacy/seed.json','utf8'));
 
-test('正式源engine校验零错，历史夹具依赖闭合且release人物深度仍阻断',()=>{
+test('正式源engine校验零错，历史夹具依赖闭合且正式release深度已达标',()=>{
  assert.deepEqual(validateWorld(formal).errors,[]);
  assert.ok(validateWorld(villagesOriginalWorld(formal)).errors.length>0,'删村未同步引用的原始投影不能误报无错');
  assert.deepEqual(validateWorld(world).errors,[]);
- const release=validateWorld(formal,{stage:'release'});assert.equal(release.ok,false);
- assert.ok(release.errors.some(error=>error.startsWith('完整人物深度：')));
+ const release=validateWorld(formal,{stage:'release'});assert.equal(release.ok,true,release.errors.join('\n'));
+ assert.ok(validateWorld(world,{stage:'release'}).errors.some(error=>error.startsWith('完整人物深度：')),'早期人口候选仍不能当作深度发布');
 });
 
-test('河湾发布核对逐条审核且只写正式目录，重复发布零写入',async t=>{
+test('河湾历史候选逐条核对审核，完整深度不足拒绝且重复零写入',async t=>{
  const root=await fs.mkdtemp(path.join(os.tmpdir(),'fields-population-publish-'));
  t.after(async()=>{const target=path.resolve(root);assert.ok(target.startsWith(path.resolve(os.tmpdir())+path.sep));await fs.rm(target,{recursive:true,force:true});});
  await fs.cp(path.resolve('world'),root,{recursive:true,filter:file=>!file.split(path.sep).includes('drafts')});
  await fs.mkdir(path.join(root,'drafts/w1'),{recursive:true});await fs.cp(path.resolve('world/drafts/w1/hewan'),path.join(root,'drafts/w1/hewan'),{recursive:true});
  for(const [file,value]of Object.entries({'meta/rules.json':original.rules,'people/baseline.json':original.npcs,'people/residents.json':[],'people/households.json':[],'geo/settlements.json':[],'geo/locations.json':original.locations,'geo/routes.json':original.routes}))await fs.writeFile(path.join(root,file),JSON.stringify(value));
- const preview=await publishHewan({root});assert.equal(preview.published,false);assert.equal((await loadWorld(root)).npcs.length,18);
- const first=await publishHewan({root,publish:true});assert.equal(first.changed.length,6);assert.equal((await loadWorld(root)).npcs.length,32);
- assert.deepEqual((await publishHewan({root,publish:true})).changed,[]);
+ const saved=await fs.readFile(path.join(root,'people/baseline.json'),'utf8');
+ for(const publish of [false,true]){await assert.rejects(publishHewan({root,publish}),/完整人物深度/);assert.equal(await fs.readFile(path.join(root,'people/baseline.json'),'utf8'),saved);assert.equal((await loadWorld(root)).npcs.length,18);}
+ // Reconstruct the once-installed historical catalog; the current release gate
+ // still refuses it until the separate depth publications are present.
+ for(const [file,value]of Object.entries({'people/baseline.json':world.npcs,'people/residents.json':world.residents,'people/households.json':world.households,'geo/settlements.json':world.settlementProfiles,'geo/locations.json':world.locations,'geo/routes.json':world.routes}))await fs.writeFile(path.join(root,file),JSON.stringify(value));
+ await assert.rejects(publishHewan({root,publish:true}),/完整人物深度/);
  // Later books, skills and factual edits are not the old population batch's
  // property. Review fingerprints continue to use its immutable original facts.
  const later=await loadWorld(root),luqing=later.npcs.find(n=>n.id==='npc_hw_luqing');luqing.inventory[later.items[0].id]=3;luqing.notes+='后续目录说明';
  await fs.writeFile(path.join(root,'people/baseline.json'),JSON.stringify(later.npcs));
- assert.deepEqual((await publishHewan({root,publish:true})).changed,[]);assert.deepEqual((await loadWorld(root)).npcs,later.npcs);
+ await assert.rejects(publishHewan({root,publish:true}),/完整人物深度/);assert.deepEqual((await loadWorld(root)).npcs,later.npcs);
  const frozenPath=path.join(root,'drafts/w1/hewan/preserved-npcs.json'),frozenRaw=await fs.readFile(frozenPath,'utf8'),tampered=JSON.parse(frozenRaw);tampered[0].coins++;
  await fs.writeFile(frozenPath,JSON.stringify(tampered));await assert.rejects(publishHewan({root,publish:true}),/冻结原人物审核资料不符/);await fs.writeFile(frozenPath,frozenRaw);
  const changed=structuredClone(candidate);changed.residents[0].currentConcern+='无据新事';await fs.writeFile(path.join(root,'drafts/w1/hewan/candidate.json'),JSON.stringify(changed));

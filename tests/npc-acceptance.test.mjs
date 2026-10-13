@@ -164,7 +164,8 @@ test('N12/N16/N17使用8192读取全部回合并返回完整长审核，合法JS
 });
 
 const t64=()=>JSON.parse(readFileSync(new URL('../docs/测试报告/M2-recheck/真实试玩.json',import.meta.url),'utf8'));
-const t64Scenarios=report=>report.results.map(r=>JSON.parse(readFileSync(new URL(`playtests/${r.id}.json`,import.meta.url),'utf8')));
+// Exact scenario inputs from the T64 report's recorded commit 4570edb3.
+const t64Scenarios=report=>{const frozen=JSON.parse(readFileSync(new URL('fixtures/t64-scenarios.json',import.meta.url),'utf8'));return report.results.map(r=>frozen.find(s=>s.id===r.id));};
 
 test('T64原对象离线去连坐，149/170账本及7/9盲辨仍独立拒绝整体',()=>{
     const raw=t64(),report=summarizeNpcAcceptance(raw.results,t64Scenarios(raw));

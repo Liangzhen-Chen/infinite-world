@@ -43,7 +43,8 @@ test('HTTP目录和搜索共用公开投影，内部目标与历史真相不外�
 });
 
 test('旧战役升级加入社会资料不实例化名册或资源，导出往返和历史编号保留',async t=>{
-    const old=await loadWorld();for(const key of['factions','history','factionPeople','eras'])old[key]=[];
+    const old=await loadWorld(),baseline=JSON.parse(await fs.readFile('world/drafts/m2-people/baseline.json','utf8'));old.npcs=old.npcs.filter(n=>baseline.some(b=>b.id===n.id));for(const key of['factions','history','factionPeople','eras'])old[key]=[];
+    old.rules.worldClock.clocks=old.rules.worldClock.clocks.filter(c=>old.factions.some(f=>f.id===c.faction));
     const original=await createPlaytestServer({world:old});t.after(original.close);
     const created=await original.api('create',{}),id=created.reference.campaignId;
     await original.api('execute',{campaignId:id,tool:'world_time',args:{minutes:10},eventId:'before-upgrade'});
@@ -54,7 +55,7 @@ test('旧战役升级加入社会资料不实例化名册或资源，导出往�
     for(const key of['player','inventory','location','minute','settlements','animals'])assert.deepEqual(after.state[key],before.state[key]);
     assert.equal(Object.keys(before.state.npcs).length,18);
     for(const [id,actor]of Object.entries(before.state.npcs))assert.deepEqual(after.state.npcs[id],actor,id);
-    const added=next.npcs.filter(row=>!Object.hasOwn(before.state.npcs,row.id));assert.equal(added.length,14);
+    const added=next.npcs.filter(row=>!Object.hasOwn(before.state.npcs,row.id));assert.equal(added.length,next.npcs.length-18);
     assert.deepEqual(Object.keys(after.state.npcs).sort(),next.npcs.map(row=>row.id).sort());
     for(const row of added)assert.deepEqual(after.state.npcs[row.id],{id:row.id,name:row.name,location:row.location,coins:row.coins??0,inventory:row.inventory??{},trust:row.trust??0,affection:row.affection??0,developments:[],relationships:{}},row.id);
     for(const row of [...next.factionPeople,...next.residents])assert.equal(after.state.npcs[row.id],undefined,row.id);

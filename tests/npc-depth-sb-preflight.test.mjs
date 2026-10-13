@@ -54,9 +54,9 @@ test('T48正式全/compact逐ID整轮拒发、准确预留退款及原未知预�
   }
   near(sum,result.totalCeilingYuan);
   assert.equal(result.maxSingleRoundYuan,Math.max(...result.roundProbes.map(r=>r.roundCeilingYuan)));
-  // The sum exceeds 3 yuan while each first round fits the snapshot. Neither
+  // The paid ledger now has less available headroom than the original snapshot. Neither
   // condition predicts later serial settlement or authorizes a paid request.
-  assert.ok(sum>3);assert.ok(result.roundProbes.every(r=>r.fitsOriginalCardAtSnapshot));
+  assert.ok(sum>3);assert.equal(result.roundProbes.filter(r=>r.fitsOriginalCardAtSnapshot).length,result.roundProbes.filter(r=>r.roundCeilingYuan<=r.originalCardAvailableYuan).length);
   assert.equal(result.fitsOriginalCard,false);
  }
  assert.equal(report.serialAdmission.maximumRoundYuan,Math.max(...Object.values(report.formats).map(f=>f.maxSingleRoundYuan)));
