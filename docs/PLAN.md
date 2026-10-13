@@ -153,13 +153,9 @@ N1–N17至少12项完整有效且≥90%，N6/N16零泄漏，N12真实盲辨，N
 
 ### T72 已完成：光族机制（光源、聚光反射、辨色、显痕、光标、雾中能见度、遮光私密、视觉干扰、阴影束缚、强光衰减）接入真实状态；相关26/CORE40，0模型。
 
-### T87 医、植、食族消费者【零模型】
+### T87 已完成：医、植、食族15个机制（止血、创面、病症感知、止痛稳定、驱寄生、肌腱、药草识别、抗霜、根系、嫁接、保鲜等）接入真实状态；相关28/CORE40，0模型。
 
-结果：这三类法术有真实效果——浅表止血、创面清洁与闭合、病症感知、止痛与濒死稳定、驱寄生物、肌腱恢复；药草识别、幼苗抗霜、根系向水、嫁接；储柜与果实保鲜减损。治疗只处理列出的具体伤病状态，不做万能回血；garden类只复用T37已有的水肥生长。
-可改：新增server-plugin/magic-care.mjs、tests/magic-care.test.mjs；magic.mjs、magic-primitives.mjs、magic-status.mjs、agriculture.mjs、environment.mjs必要接点及机制图两文件。锁定：正式world/meta目录、extension/tools.mjs、prompt/。
-验收：`node --test tests/magic-care.test.mjs tests/magic.test.mjs`、CORE；每个效果有正常与拒绝路径，到期与重载一致。模型0。规模约700–1000行。
-
-### T88 心、契、物与空间族消费者【零模型；待T87合入，同改magic接点】
+### T88 心、契、物与空间族消费者【零模型】
 
 结果：感受载体、自愿精神观察、睡眠与休养、长期记忆保护、契约痕迹与反制、材料腐蚀；可见测距、袋内整理取物、短时封存、机械锁隙、门框警号、许可通道、锚点校准、锚点货运、空间异常修补，都有真实效果。精神类一律要对方同意。
 可改：新增server-plugin/magic-mind-space.mjs、tests/magic-mind-space.test.mjs；magic.mjs、magic-primitives.mjs、magic-movement.mjs、contracts.mjs、npc-memory.mjs必要接点及机制图两文件。锁定同T87。
@@ -339,6 +335,52 @@ T28-R1修好新回执undefined规范化并保留严格篡改拒绝，相关31/32
 ### R05 W4 首领 40 个与 8 个智能存在【待细化】
 
 范围：现有 4 到 40，至少 8 个智能存在有记忆、目标、领地、谈判和拒绝理由，能力来源共享原语；150 怪物的生态模拟结果仅有旧记录，核验是否仍适用，缺的 20 种子三年模拟在波次末跑一次。保留掉落守恒、驯服/骑乘/召唤边界、觉醒前后生态与身份。内容审核每波 20 元，上线模拟和 world_upgrade。依赖 R03；首领与法术目录编辑隔离。
+
+### 白石镇与LOD0第一批（2026-10-13主会话审定，来源：Astra草案W1-review-planner-001）
+
+方案：白石镇按1000人规模，骨架登记严辙加305名新名册，其余694人为seed；随后三批各33人提升为full（码头货栈、官署市集、手工行会与寺庙学馆）。完成后白石镇100 full/206名册，LOD0常住250 full/500名册；另补10处本地野外地点使LOD0达15处。
+共同做法：起草由执行会话完成，L1后全量真实L2，L4读标记条目加每批随机5条（随机10条六项均分≥4、单项≥3），共享事件闭合后正式整合，都在同一张卡里做完。每人送审到通过为止，只按整卡调用总量和金额封顶；到顶仍未过的条目保留为候选，不计入已交付。各卡锁定docs/、dist/、server-plugin/和用户存档。T90合入后T91→T92→T93串行（同写baseline与名册）；T94可与人物卡并行准备，真实模型阶段错开。
+审计改动：草案把“T06也继承了6次上限”的修正并入骨架卡，删除——T06已完成，这处不影响任何后续卡。阶段审核结论：抽样六人未发现事实矛盾；已知问题是关系备注有重复句式（郑汐/王浦“还需要彼此听完再商量”，张洛/袁卿“同住……在家中见面”），留M3叙述润色。
+
+### T90 白石镇骨架与名册
+
+1. 结果：玩家能沿街区找到建筑和居民，系统能区分 306 名已登记居民与 694 名待生成人口，并据此安排后续完整档。
+2. 文件：可改 world/design/w1-baishi-skeleton.mjs、world/drafts/w1/baishi-skeleton/、world/people/ 三份目录及 world/geo/ 三份目录；工具限新 tools/w1-baishi.mjs、必要的 content-pipeline.mjs/content-budget.mjs 接点，测试限 tests/r06-bs-skeleton.test.mjs、tests/npc-depth-budget.test.mjs。旧人物只允许严辙的入籍及住址接点，保留既有身份；其他旧人物锁定。
+3. 验收：node --test tests/r06-bs-skeleton.test.mjs tests/npc-depth-budget.test.mjs；node --test tests/engine.test.mjs tests/storage.test.mjs tests/plugin.test.mjs。前者覆盖真实目录计数、户籍年龄、建筑进入、聚落经济，以及名册提升后旧档状态保留。
+4. 模型：起草 0 次，L2 总计不超过 450 次，整卡不超过 8 元；短名册与地点也须全部审核后整合。
+5. 规模：305 条短名册、约 90 个已登记户、6 街区及约 18 处公共或行业建筑，住宅按户落地；总户数和待生成户数与 1000 人核平。官署职责、行会联络处和地方问题写入聚落完整档；复用表驱动骨架，单会话完成，不起草 99 人完整档。
+
+### T91 码头与货栈 33 人
+
+1. 结果：玩家能接触有家庭牵挂和具体利益分歧的搬运者、船户及货栈住户，沿现有交易能力办事。
+2. 文件：依赖T90；可改 world/design/w1-baishi-dock-depth.mjs、world/drafts/w1/baishi-dock/、world/people/baseline.json、world/people/residents.json、tests/r06-bs-dock.test.mjs；地理、户籍和共用工具锁定。
+3. 验收：node --test tests/r06-bs-dock.test.mjs；node tools/audit-npc-depth.mjs；node --test tests/engine.test.mjs tests/storage.test.mjs tests/plugin.test.mjs。专项覆盖 33 人正式提升、双方事件与知情边界，以及 roster 不再重复计数。
+4. 模型：起草 0 次，L2 总计不超过 120 次，整卡不超过 7 元；从起草到正式整合同卡完成。
+5. 规模：33 full，镇内累计 34 full、272 roster；事件参与者以本批为主，对既有人物只引用已知事实，单会话。
+
+### T92 官署与市集 33 人
+
+1. 结果：玩家能找到有具体职责的镇务人员与市集经营者，理解摊位、工日及家庭照护之间的争执。
+2. 文件：依赖T91；可改 world/design/w1-baishi-market-depth.mjs、world/drafts/w1/baishi-market/、world/people/baseline.json、world/people/residents.json、tests/r06-bs-market.test.mjs；地理、户籍和共用工具锁定。
+3. 验收：node --test tests/r06-bs-market.test.mjs；node tools/audit-npc-depth.mjs；node --test tests/engine.test.mjs tests/storage.test.mjs tests/plugin.test.mjs。专项覆盖 33 人正式提升、官署职责与既有规则相符、共享事件闭合及名册去重。
+4. 模型：起草 0 次，L2 总计不超过 120 次，整卡不超过 7 元；从起草到正式整合同卡完成。
+5. 规模：33 full，镇内累计 67 full、239 roster；职业之外各有家庭关系和私人目标，单会话。
+
+### T93 手工行会、寺庙与学馆 33 人
+
+1. 结果：玩家能接触师徒、学馆家庭及殿舍日常人员，镇内职业与生活关系形成完整人口层次。
+2. 文件：依赖T92；可改 world/design/w1-baishi-craft-depth.mjs、world/drafts/w1/baishi-craft/、world/people/baseline.json、world/people/residents.json、tests/r06-bs-craft.test.mjs；地理、户籍和共用工具锁定，既有组织成员不得另造同名身份。
+3. 验收：node --test tests/r06-bs-craft.test.mjs；node tools/audit-npc-depth.mjs；node --test tests/engine.test.mjs tests/storage.test.mjs tests/plugin.test.mjs。专项覆盖本批事件、镇内 100/206 和 LOD0 常住 250/500，访客与 seed 不计入达标数量。
+4. 模型：起草 0 次，L2 总计不超过 120 次，整卡不超过 7 元；从起草到正式整合同卡完成。
+5. 规模：33 full，完成三批 99 人提升；手工业约 18 人、殿舍与学馆约 15 人，单会话。
+
+### T94 LOD0 野外地点补足
+
+1. 结果：玩家能沿真实路线抵达至少 15 处本地野外地点，了解各处可见地貌、进入条件和已有资源。
+2. 文件：依赖T90；可改 world/design/w1-baishi-wild.mjs、world/drafts/w1/baishi-wild/、world/geo/locations.json、world/geo/routes.json、新 tools/w1-baishi-wild.mjs、tests/r06-bs-wild.test.mjs；人物目录、共用工具与 meta/ 锁定。
+3. 验收：node --test tests/r06-bs-wild.test.mjs；node --test tests/engine.test.mjs tests/storage.test.mjs tests/plugin.test.mjs。专项覆盖新增 10 处审核与正式整合、LOD0 15 处归属、路线连通及距离耗时、进入条件和资源引用。
+4. 模型：起草 0 次，L2 总计不超过 50 次，整卡不超过 4 元；地点起草、L1/L2/L4 和正式整合同卡完成。
+5. 规模：10 地点及接入路线，优先覆盖镇村之间的旧路、采集地和废弃工事；使用已有资源与生物，不附带扩充怪物目录，单会话。
 
 ### R06 W1 白石镇与 LOD0 人口、建筑、地方生活【待细化】
 
