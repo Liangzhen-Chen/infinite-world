@@ -173,7 +173,7 @@ N1–N17至少12项完整有效且≥90%，N6/N16零泄漏，N12真实盲辨，N
 做法：主持人默认4096并保留1800兼容档，逐N与盲辨8192；不加自动重试；标注只补移动/等待/按实际买入数量的条件，不删除或条件化终态断言。
 验收：`node --test tests/generation.test.mjs tests/npc-acceptance.test.mjs tests/playtest-npc-evidence.test.mjs tests/playtest-runner.test.mjs`、CORE。模型0。规模约200–350行。
 
-### T62 自然语言委托的发布、承接和粮仓交付【零模型；待T39合入后派，同改extension/tools.mjs】
+### T62 自然语言委托的发布、承接和粮仓交付【零模型】
 
 结果：玩家说“燕麦”发布并接受委托后，能买十份带壳燕麦、当面交货并取得托管的二十铜。对应失败：npc_quest_social账本12/26，回合5误选world_trade，N2回合10承接人为空。
 可改：world/meta/items.json的item_oats.aliases、extension/tools.mjs、prompt/constitution.md的动作与参数段、tests/tool-groups.test.mjs、新增tests/m2-task-flow.test.mjs。锁定：引擎结算、其他世界数据、T61/T63的文件。
@@ -274,11 +274,7 @@ T28-R1修好新回执undefined规范化并保留严格篡改拒绝，相关31/32
 
 ### T38 已完成：f55e901已合；正常world_time周贸易与world_trade区域同日锁价通过，专项17/CORE40、合后CORE40；相关34/35的village-ledgers:33旧人物worldrelease1192错误仍保留，整体发布门槛未关。原验收见 `git show ee0f4e6:docs/PLAN.md`。
 
-### T39 M5租赁雇佣采购与开店账【待调度】
-
-目标：补现有chargeTrade/repayDebt之外的合同类型和可核验经营盈亏。涉及：server-plugin/contracts.mjs、新增server-plugin/business.mjs、tests/business-contracts.test.mjs，activities.mjs、extension/tools.mjs既有工具的operation枚举。实现：统一当事人/标的/数量/到期/托管/履约/违约记录，复用原债务去重和quotes；店铺须合法租赁和现有库存，收益来自实际顾客交易，日收入表是报价锚点而非无条件送钱。NPC雇工只做有空档且明确同意的工作，未付报酬/没到货不能完成。
-
-验收：`node --test tests/business-contracts.test.mjs tests/economy-supply.test.mjs tests/npc-obligations.test.mjs`、CORE；租铺/进货/售出/费用/亏损一条真实工具链，重复还款无二次扣费，违约/停业/破产不负库存，期末现金货物有来源。模型0。不要做：新经济账副本、自动借贷同意、无限NPC消费。依赖T38及现有服务窗口；与contracts/activities/工具路由写者串行，可并行独立M3报告卡。
+### T39 已完成：玩家可租铺、进货、雇工盘点、卖给实际顾客并得到可追溯的盈亏账，违约/停业/破产库存不为负；相关20/CORE40，0模型。原卡见 `git show 43f76a8:docs/PLAN.md`。
 
 ### T40 M5玩家发单与NPC离屏接单【待调度】
 
