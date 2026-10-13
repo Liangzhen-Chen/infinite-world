@@ -198,17 +198,42 @@ export function addObjectFuel(d,engine,args,eventId){
 }
 // Called after the normal workstation ownership/fee check, before any payment.
 // No requirement means exact legacy behavior; no implicit free furnace is created.
-export function prepareThermalWorkstation(d,engine,station,minutes){
+export function prepareThermalWorkstation(d,engine,station,minutes,{location=d.get('state','location')}={}){
  const requirement=station?.thermalRequirement;if(!requirement)return null;
  integer(minutes,1,43200,'工序时长');integer(requirement.minimumC,0,1200,'工序最低温度');integer(requirement.maximumC,requirement.minimumC,1200,'工序最高温度');
  if(typeof requirement.burning!=='boolean')throw new Error('工序必须明确是否要求燃烧');
- const row=locate(engine,requirement.feature,d.get('state','location'));if(row.location!==d.get('state','location'))throw new Error('热源不在工坊所在地');
- const start=d.get('state','minute'),initial=read(d,row),document=clone(d.document);
+ const row=locate(engine,requirement.feature,location);if(row.location!==location)throw new Error('热源不在工坊所在地');
+ const start=d.get('state','minute'),document=clone(d.document);
  const forecast={document,get:(...p)=>p.reduce((value,key)=>value?.[key],document),set:(p,value)=>{let parent=document;for(const key of p.slice(0,-1))parent=parent[key]??={};parent[p.at(-1)]=clone(value);}};
+ forecast.set(['state','minute'],start);advanceMagicObjects(forecast,engine,start);
+ const initial=read(forecast,row);
  store(forecast,row,initial);let state=initial.thermal;
  const check=()=>{const temperature=state.energyJ/row.thermalModel.heatCapacityJPerC;if(temperature<requirement.minimumC||temperature>requirement.maximumC||requirement.burning&&!state.burning)throw new Error('真实热源无法在整个工序中满足温度或燃烧条件');};
  check();for(let minute=start+1;minute<=start+minutes;minute++){forecast.set(['state','minute'],minute);advanceMagicObjects(forecast,engine,minute);state=forecast.get('state','records',recordKey(row.id),'state','thermal');check();}
- return{feature:row.id,minutes,projectedFuelMg:state.fuelMg,projectedTemperatureC:state.energyJ/row.thermalModel.heatCapacityJPerC,...(row.thermalModel.kiln?{startStress:initial.thermal.crackStressUnits,crackPermillePerStress:row.thermalModel.kiln.crackPermillePerStress}:{})};
+ return{feature:row.id,minutes,projectedFuelMg:state.fuelMg,projectedTemperatureC:state.energyJ/row.thermalModel.heatCapacityJPerC,...(row.thermalModel.kiln?{startStress:initial.thermal.crackStressUnits,projectedStress:state.crackStressUnits,crackPermillePerStress:row.thermalModel.kiln.crackPermillePerStress}:{})};
+}
+
+// The caller supplies a disposable draft and commits it only when the task starts.
+export function prepareNpcFurnace(d,engine,station,minutes,npc,reserved=new Map()){
+ const location=d.get('state','npcs',npc,'location'),requirement=station?.thermalRequirement;if(!requirement)return null;
+ const row=locate(engine,requirement.feature,location);
+ if(row.location!==location||row.owner!==npc&&row.access!=='public')throw new Error('人物没有同地热源的使用权限');
+ advanceMagicObjects(d,engine,d.get('state','minute'));
+ const state=read(d,row),s=state.thermal,m=row.thermalModel;store(d,row,state);
+ const options={location};
+ try{return {plan:prepareThermalWorkstation(d,engine,station,minutes,options),fuel:[]};}catch(error){
+  // Fuel can sustain a fire; it cannot light a cold furnace or repair a temperature gap.
+  if(!s.burning||s.moistureMg||s.fuelMg>minutes*m.burnMgPerMinute)throw error;
+ }
+ const missing=minutes*m.burnMgPerMinute+1-s.fuelMg;
+ const fuel=m.fuels.map(f=>({...f,quantity:Math.ceil(missing/f.milligramsPerUnit)})).find(f=>f.quantity>=1&&f.quantity<=100&&engine.quantity(d,npc,f.item)-(reserved.get(f.item)??0)>=f.quantity);
+ if(!fuel)throw new Error('人物缺少维持整个工序的实际燃料');
+ const item=engine.byId.get(fuel.item);if(!item||Math.round(item.weight*1000000)!==fuel.milligramsPerUnit)throw new Error('燃料目录单位与实际物品重量不符');
+ const mass=integer(fuel.quantity*fuel.milligramsPerUnit,1,100000000,'添料质量');
+ s.fuelMg+=mass;s.fuelAddedMg+=mass;validateThermalState(s,m);store(d,row,state);
+ const plan=prepareThermalWorkstation(d,engine,station,minutes,options);
+ engine.itemDelta(d,npc,fuel.item,-fuel.quantity);
+ return {plan,fuel:[{item:fuel.item,quantity:fuel.quantity,milligrams:mass}]};
 }
 
 // Thermal scene consumers share the object's existing fuel and energy accounts.
