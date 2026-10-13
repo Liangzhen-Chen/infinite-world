@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import {reviewNpcRequirements,summarizeNpcAcceptance} from '../tools/npc-acceptance.mjs';
 import {playtestAcceptance,playtestExitCode,toolSelectionMetrics} from '../tools/playtest-metrics.mjs';
 import {spawnSync} from 'node:child_process';
+import {readFileSync} from 'node:fs';
 
 function fixture(ids=Array.from({length:17},(_,i)=>'N'+(i+1))){
     const speakers=['npc_a','npc_b','npc_c'];
@@ -25,7 +26,8 @@ test('N类标签、账本正确或空审核都不能单独变成验收通过',()
     assert.equal(summarizeNpcAcceptance([row],scenarios).thresholdReached,true);
     const empty=structuredClone(row);empty.npcAcceptance.requirements.forEach(n=>n.evidence=[]);
     assert.equal(summarizeNpcAcceptance([empty],scenarios).measured,0,'complete标签不代替实际引文');
-    const warning={...row,consistencyPass:false};assert.equal(summarizeNpcAcceptance([warning],scenarios).passed,0);
+    const warning={...row,consistencyPass:false};assert.equal(summarizeNpcAcceptance([warning],scenarios).passed,17);
+    assert.equal(summarizeNpcAcceptance([warning],scenarios).thresholdReached,false,'全场一致性状态独立保留');
     const leak=structuredClone(row);leak.npcAcceptance.requirements.find(r=>r.id==='N6').pass=false;
     const report=summarizeNpcAcceptance([leak],scenarios);assert.ok(report.ratio>.9);assert.equal(report.thresholdReached,false);assert.equal(report.privacy.zeroLeakage,false);
     assert.equal(summarizeNpcAcceptance([row,row],scenarios,2).thresholdReached,false,'重复同次报告不计两次实跑');
@@ -37,7 +39,7 @@ test('匿名盲辨和十天离屏有独立门槛',()=>{
     const report=summarizeNpcAcceptance(results,scenarios);assert.equal(report.rows[0].pass,false);assert.equal(report.offscreenPass,true);assert.equal(report.thresholdReached,false);
 });
 
-test('M2联合门槛保留12个有效N、90%N通过率、90%账本和强制项，报告与进程退出一致',()=>{
+test('M2联合门槛保留12个有效N、90%N通过率、100%账本和强制项，报告与进程退出一致',()=>{
     const ids=['N1','N2','N3','N4','N5','N6','N7','N8','N9','N12','N16','N17'];
     const {scenario,row}=fixture(ids);
     const build=(result=row,extra=[])=>({milestone:'M2',complete:true,m2:summarizeNpcAcceptance([result,...extra],[scenario]),toolSelection:toolSelectionMetrics([result],[scenario])});
@@ -46,13 +48,15 @@ test('M2联合门槛保留12个有效N、90%N通过率、90%账本和强制项�
     assert.equal(build(oneFail).m2.ratio,11/12);assert.equal(playtestAcceptance(build(oneFail)),true);
     oneFail.npcAcceptance.requirements[1].pass=false;assert.equal(playtestAcceptance(build(oneFail)),false);
     const extraLedger={id:'ledger',attempt:1,assertions:90,passed:80,turns:[]};
-    assert.equal(build(row,[extraLedger]).m2.ledger.ratio,.9);assert.equal(playtestAcceptance(build(row,[extraLedger])),true);
-    extraLedger.passed=79;assert.equal(playtestAcceptance(build(row,[extraLedger])),false,'N证据全过也不能掩盖总账本不足90%');
+    assert.equal(build(row,[extraLedger]).m2.ledger.ratio,.9);assert.equal(playtestAcceptance(build(row,[extraLedger])),false);
+    extraLedger.passed=89;assert.equal(playtestAcceptance(build(row,[extraLedger])),false,'N证据全过也不能掩盖任何一条账本失败');
+    extraLedger.passed=90;extraLedger.consistencyPass=true;extraLedger.review={complete:true};assert.equal(playtestAcceptance(build(row,[extraLedger])),true);
     const failures=[];
     for(const mutate of [
         r=>r.npcAcceptance.requirements.find(n=>n.id==='N6').pass=false,
         r=>r.npcAcceptance.requirements.find(n=>n.id==='N16').pass=false,
         r=>r.npcAcceptance.requirements.find(n=>n.id==='N17').pass=false,
+        r=>r.npcAcceptance.requirements.find(n=>n.id==='N12').pass=false,
         r=>r.npcAcceptance.requirements.find(n=>n.id==='N3').evidence=[],
         r=>r.npcAcceptance.requirements.find(n=>n.id==='N3').evidence[0].quote='未发生的事',
         r=>r.review.voiceBlind={complete:true,pass:true},
@@ -65,7 +69,7 @@ test('M2联合门槛保留12个有效N、90%N通过率、90%账本和强制项�
         const expected=playtestAcceptance(report)?0:1;assert.equal(playtestExitCode(report),expected);
         const process=spawnSync(globalThis.process.execPath,['--input-type=module','-e',
             'import {playtestExitCode} from "./tools/playtest-metrics.mjs";process.exitCode=playtestExitCode(JSON.parse(process.argv[1]));',JSON.stringify(report)],{cwd:new URL('..',import.meta.url),encoding:'utf8'});
-        assert.equal(process.status,expected,process.stderr);
+        assert.equal(process.status,expected,process.error?.message??process.stderr);
     }
     const short=fixture(ids.filter(id=>id!=='N1'));assert.equal(summarizeNpcAcceptance([short.row],[short.scenario]).thresholdReached,false);
     const noPrivacy=fixture(ids.filter(id=>id!=='N6'));const untested=summarizeNpcAcceptance([noPrivacy.row],[noPrivacy.scenario]);
@@ -141,4 +145,58 @@ test('N12/N16/N17使用8192读取全部回合并返回完整长审核，合法JS
         response.choices[0].finish_reason='length';return response;}},result,{requirements:ids});
     assert.equal(calls,3);assert.equal(truncated.complete,false);assert.deepEqual(truncated.requirements,[]);
     assert.ok(truncated.parts.every(p=>p.finishReason==='length'&&p.rawReview.includes(reason)));
+});
+
+const t64=()=>JSON.parse(readFileSync(new URL('../docs/测试报告/M2-recheck/真实试玩.json',import.meta.url),'utf8'));
+const t64Scenarios=report=>report.results.map(r=>JSON.parse(readFileSync(new URL(`playtests/${r.id}.json`,import.meta.url),'utf8')));
+
+test('T64原对象离线去连坐，149/170账本及7/9盲辨仍独立拒绝整体',()=>{
+    const raw=t64(),report=summarizeNpcAcceptance(raw.results,t64Scenarios(raw));
+    const row=id=>report.rows.find(r=>r.id===id);
+    assert.equal(report.measured,12);assert.ok(report.passed>0&&report.passed<=9);
+    for(const id of ['N3','N4','N10','N11','N13','N15','N16'])assert.equal(row(id).pass,true,id);
+    assert.equal(row('N6').measured,false,'4/8回合仍未完成');
+    const courier=raw.results.find(r=>r.id==='npc_courier');
+    assert.equal(courier.finalDocument.state.npcs.npc_hw_linsui.inventory.item_bread,6);
+    assert.equal(row('N5').pass,false);assert.ok(row('N5').failures.some(f=>f.condition==='related-assertion'));
+    assert.equal(row('N12').pass,false);assert.ok(row('N12').failures.some(f=>f.condition==='blind-failed'&&f.correct===7&&f.total===9));
+    assert.equal(row('N17').pass,false);assert.ok(row('N17').failures.some(f=>f.condition==='requirement-failed'));
+    assert.deepEqual(report.ledger,{measurement:'measured',assertions:170,passed:149,ratio:149/170,thresholdReached:false});
+    assert.equal(playtestAcceptance({...raw,m2:report}),false);
+    const quest=raw.results.find(r=>r.id==='npc_quest_social');
+    assert.equal(quest.turns[1].assertions.some(a=>!a.pass),true);
+    assert.equal(row('N16').pass,true,'首轮发布断言失败不否决后来的消息认知');
+});
+
+test('本项关联矛盾和前置行动失败保留，同回合无关句子及其他N审核缺失不连坐',()=>{
+    const {scenario,row}=fixture(['N3','N13']);
+    row.npcAcceptance.complete=false;row.npcAcceptance.requirements.pop();
+    row.npcAcceptance.parts=[{id:'N3',complete:true},{id:'N13',complete:false,error:'length'}];
+    row.review={complete:false};row.consistencyPass=false;
+    row.turns[0].consistency={issues:[{category:'fact',severity:'warning',quote:'另一句风景描写',reason:'无来源'}]};
+    let report=summarizeNpcAcceptance([row],[scenario]);
+    assert.equal(report.rows[0].measured,true);assert.equal(report.rows[0].pass,true);assert.equal(report.rows[1].measured,false);
+    row.turns[0].consistency.issues.push({category:'fact',severity:'warning',quote:'真实话语',reason:'与工具回执矛盾'});
+    report=summarizeNpcAcceptance([row],[scenario]);assert.equal(report.rows[0].pass,false);assert.equal(report.rows[0].failures[0].condition,'related-consistency');
+    row.turns[0].consistency.issues=[];row.turns[1].assertions=[{kind:'equals',pass:false,actual:0,value:1}];
+    assert.equal(summarizeNpcAcceptance([row],[scenario]).rows[0].pass,true,'无关联的其他回合断言不否决N3');
+    row.npcAcceptance.requirements[0].prerequisiteTurns=[1];
+    report=summarizeNpcAcceptance([row],[scenario]);assert.equal(report.rows[0].pass,false);assert.ok(report.rows[0].sessions[0].relatedTurns.includes(1));
+    row.npcAcceptance.requirements[0].prerequisiteTurns=[99];assert.equal(summarizeNpcAcceptance([row],[scenario]).rows[0].measured,false);
+});
+
+test('N12交流请求不索要盲辨，续跑不重抽已完成的逐N负评',async()=>{
+    const raw=t64(),result=raw.results.find(r=>r.id==='npc_voices'),scenario=t64Scenarios(raw).find(s=>s.id===result.id);
+    let calls=0;
+    const reviewed=await reviewNpcRequirements({async generate(body){
+        calls++;const input=JSON.parse(body.messages[1].content);
+        assert.equal(input.rubric.blindVoice,undefined);assert.doesNotMatch(input.requirements.N12,/去姓名/);
+        assert.match(input.rubric.continuity,/不在此请求索要/);
+        return{choices:[{finish_reason:'stop',message:{content:JSON.stringify({requirements:[{...result.npcAcceptance.requirements[0],pass:true,reason:'三人实际在场交流'}]})}}]};
+    }},result,scenario,{previousReview:null});
+    assert.equal(calls,1);assert.equal(reviewed.requirements[0].pass,true);
+    const copy=structuredClone(result);copy.npcAcceptance=reviewed;
+    const summary=summarizeNpcAcceptance([copy],[scenario]);assert.equal(summary.rows[0].pass,false,'交流通过仍不能豁免7/9盲辨');
+    const preserved=await reviewNpcRequirements({async generate(){assert.fail('完成的负评不能重抽');}},result,scenario);
+    assert.deepEqual(preserved.requirements,result.npcAcceptance.requirements);
 });
