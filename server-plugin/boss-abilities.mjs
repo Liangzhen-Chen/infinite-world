@@ -1,6 +1,7 @@
 import {validateEffectSpec,resolveVitalityPrimitive}from'./magic-primitives.mjs';
 import {magicStatuses,magicStatusStats,applyMagicStatus}from'./magic-status.mjs';
 import {validateAreaCatalog}from'./magic-area.mjs';
+import {actorPath}from'./npc-state.mjs';
 const areaCatalog=a=>({id:a.id,effectSpec:a.effectSpec,duration:a.duration,rangeMeters:a.effectSpec.radiusMeters,targeting:{lineOfSight:true}});
 const tactics=new Set(['armed','unarmed','defend','flee','shove','magic_fire','magic_cold','magic_wind','magic_earth','magic_light','magic_shadow','magic_mind','magic_physical','magic_untyped']);
 export function validateBossMechanics(boss){
@@ -35,7 +36,7 @@ export function templateBossCounter(d,definition,actor,tactic,context={}){
 }
 // The combat caller consumes the returned damage through its usual protection path.
 export function applyBossCounterAbility(d,engine,target,{eventId,attackIndex,hit,defense=0,remainingHp}){
- const actor=d.get('state','creatures',target),definition=engine.byId.get(actor?.boss);
+ const path=actorPath(engine.world??{},target),actor=d.get(...path),definition=engine.byId.get(actor?.boss);
  if(!definition?.mechanics||!hit||actor.hp<=0)return null;
  const errors=validateBossMechanics(definition);if(errors.length)throw Error(errors.join('；'));
  if(!Number.isSafeInteger(attackIndex)||attackIndex<0||attackIndex>8||typeof eventId!=='string')throw Error('首领反击事件无效');
@@ -45,7 +46,7 @@ export function applyBossCounterAbility(d,engine,target,{eventId,attackIndex,hit
  const hp=remainingHp??actor.hp;if(!Number.isFinite(hp)||hp<0||hp>actor.maxHp)throw Error('首领反击剩余生命无效');if(!hp)return null;
  const count=(actor.abilityCounters??0)+1;
  const ability=definition.mechanics.abilities.find(a=>count%a.every===0&&hp/actor.maxHp*100<=a.belowHpPercent);
- d.set(['state','creatures',target,'abilityCounters'],count);
+ d.set([...path,'abilityCounters'],count);
  d.set(['state','records',key],{category:'boss_counter',boss:target,count,ability:ability?.id??null});
  if(!ability)return null;
  const s=ability.effectSpec;
