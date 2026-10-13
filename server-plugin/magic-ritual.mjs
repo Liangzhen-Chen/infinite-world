@@ -6,6 +6,7 @@ import {applyProtectionPrimitive}from'./magic-primitives.mjs';
 import {magicContractTrace,createBusinessContract}from'./contracts.mjs';
 import {prepareRevivalMark}from'./revival.mjs';
 import {monsterStats}from'./combat.mjs';
+import {assertTrainingRitual}from'./training.mjs';
 
 // These bounds enable authoring; they do not publish or teach spells.
 export const ritualMechanisms=Object.freeze({
@@ -57,9 +58,16 @@ function life(d,engine,c,args,id,until,action='support_magic'){
 }
 function faithOf(d,id,deity){
  const f=d.get(...actorPath(id),'faith');
- if(!f||f.deity!==deity.id||f.church!==deity.church.name||f.taboo!==deity.taboo)throw Error('须核对真实信众、教派与戒律');return f;
+ const matches=deity.category==='tradition'?f?.institution===deity.id:f?.deity===deity.id;
+ if(!f||!matches||f.church!==deity.church.name||f.taboo!==deity.taboo)throw Error('须核对真实信众、教派与戒律');return f;
 }
 function qualification(d,engine,args,until){
+ const candidate=d.get('state','records',args.permit);
+ if(candidate?.sourceType==='training'||String(args.permit).startsWith('ritual_permission:')){
+  const {entry,tradition}=assertTrainingRitual(d,engine,args.permit,until);
+  if(!entry.ritualOperations.includes(args.ritualOperation))throw Error('师承没有登记这一仪式的主持范围');
+  return tradition;
+ }
  const r=d.get('state','records',args.permit),deity=engine.byId.get(r?.deity);
  if(r?.category!=='authorization'||r.action!=='ritual_officiate'||r.subject!=='player'||r.grantee!=='player'||r.revoked||!Number.isSafeInteger(r.expires)||r.expires<=until||deity?.category!=='deity'||r.church!==deity.church?.name||r.profession!==deity.church.profession)throw Error('缺少与正式神祇教派相符的仪式资格');
  const roles=[d.get('state','professions','combat'),...d.get('state','professions','life')??[]];
@@ -161,7 +169,7 @@ export function prepareRitual(d,c,args,{completion=false}={}){
   if(!Number.isSafeInteger(spirit.invitation.visitMinutes))throw Error('邀约停留时限须为整分钟');
   if(p.accepted)p.permission=authorization(d,args,'realm_visit',p.id,p.id,until+spirit.invitation.visitMinutes);return p;
  }
- p.deity=qualification(d,this,args,until);
+ p.deity=qualification(d,this,{...args,ritualOperation:op},until);
  if(['clean_altar','revival_mark'].includes(op)){
   p.row=feature(this,args.target,location);p.state=stateOf(d,p.row);access(d,this,p.row,c,args,until);
   if(p.row.kind!=='altar'||p.state.deity!==p.deity.id||p.state.church!==p.deity.church.name||!(p.state.integrity>0))throw Error('祭坛必须完整且属于本教派');
@@ -213,7 +221,7 @@ export function prepareRitual(d,c,args,{completion=false}={}){
  return p;
 }
 function put(d,p,id,extra={}){
- const now=d.get('state','minute');d.set(['state','effects',id],{kind:'ritual',operation:p.op,target:p.id,owner:'player',spell:p.catalog.id,power:p.spec.power,remaining:p.spec.power,location:p.location,started:now,expires:now+p.catalog.duration,deity:p.deity?.id,...extra});return{effect:id,expires:now+p.catalog.duration};
+ const now=d.get('state','minute');d.set(['state','effects',id],{kind:'ritual',operation:p.op,target:p.id,owner:'player',spell:p.catalog.id,power:p.spec.power,remaining:p.spec.power,location:p.location,started:now,expires:now+p.catalog.duration,deity:p.deity?.category==='tradition'?null:p.deity?.id,...(p.deity?.category==='tradition'?{institution:p.deity.id}:{}),...extra});return{effect:id,expires:now+p.catalog.duration};
 }
 export function recordRitualCare(d,prepared,result,eventId){
  if(!['hemostasis','clean_wound','pain','restore_tendon','ritual_heal'].includes(prepared.spec.operation)||result.effectFailed)return;
@@ -245,7 +253,7 @@ export function applyRitual(d,initial,eventId){
   const removed=Math.min(p.spec.power,p.state.contamination);p.state.contamination-=removed;store(d,p.row,p.state);return{...result,removed};
  }
  if(p.op==='witness_oath'){
-  const row=createBusinessContract(d,{kind:'oath',parties:[p.id],subject:p.args.text.trim(),quantity:1,deadline:null,business:null,cost:0,deity:p.deity.id,church:p.deity.church.name,custodian:'player',witness:'player',voluntary:true},eventId);
+  const row=createBusinessContract(d,{kind:'oath',parties:[p.id],subject:p.args.text.trim(),quantity:1,deadline:null,business:null,cost:0,deity:p.deity.category==='tradition'?null:p.deity.id,...(p.deity.category==='tradition'?{institution:p.deity.id}:{}),church:p.deity.church.name,custodian:'player',witness:'player',voluntary:true},eventId);
   return{...result,contract:row.id,witnessed:true};
  }
  if(p.op==='faith_contract')return{...result,changes:p.contract.changes,parties:p.contract.parties};
@@ -271,7 +279,7 @@ export function applyRitual(d,initial,eventId){
  if(['discipline','faith_shield'].includes(p.op)){
   const participants=p.op==='discipline'?[{id:p.id,permission:p.permission,actor:p.actor}]:p.participants;
   const shield=applyProtectionPrimitive(d,{spec:{kind:'protection',power:p.spec.power,damageTypes:['physical','shadow'],stacking:'strongest'},target:p.id,spell:p.catalog.id,duration:p.catalog.duration},eventId);
-  const binding={operation:p.op,deity:p.deity.id,church:p.deity.church.name,taboo:p.deity.taboo,location:p.location,members:participants.map(a=>({id:a.id,authorization:a.permission,observedSince:a.actor.faith.observedSince,lastBreach:a.actor.faith.lastBreach})),started:d.get('state','minute'),settled:d.get('state','minute')};
+  const binding={operation:p.op,deity:p.deity.category==='tradition'?null:p.deity.id,...(p.deity.category==='tradition'?{institution:p.deity.id}:{}),church:p.deity.church.name,taboo:p.deity.taboo,location:p.location,members:participants.map(a=>({id:a.id,authorization:a.permission,observedSince:a.actor.faith.observedSince,lastBreach:a.actor.faith.lastBreach})),started:d.get('state','minute'),settled:d.get('state','minute')};
   d.set(['state','effects',eventId,'ritualBinding'],binding);
   if(p.op==='faith_shield')for(const a of participants)d.set([...actorPath(a.id),'mental','fatigue'],a.actor.mental.fatigue+10);
   return{...result,...shield,members:participants.map(a=>a.id)};
@@ -282,7 +290,7 @@ export function ritualProtectionValid(d,e,now=d.get('state','minute')){
  const b=e.ritualBinding;if(!b)return true;
  return b.members.every(m=>{
   const a=d.get(...actorPath(m.id)),f=a?.faith,r=m.authorization&&d.get('state','records',m.authorization);
-  if(!awake(a)||f?.deity!==b.deity||f.church!==b.church||f.taboo!==b.taboo||f.lastBreach!==m.lastBreach||m.id!=='player'&&a.location!==b.location||m.id==='player'&&d.get('state','location')!==b.location)return false;
+  if(!awake(a)||!f||(b.institution?f.institution!==b.institution:f.deity!==b.deity)||f.church!==b.church||f.taboo!==b.taboo||f.lastBreach!==m.lastBreach||m.id!=='player'&&a.location!==b.location||m.id==='player'&&d.get('state','location')!==b.location)return false;
   if(m.id!=='player'&&(r?.category!=='authorization'||r.action!=='support_magic'||r.subject!==m.id||r.grantor!==m.id||r.grantee!=='player'||r.revoked||!Number.isSafeInteger(r.expires)||r.expires<=now))return false;
   return b.operation==='discipline'?f.observedSince===m.observedSince&&f.lastBreach<f.observedSince:f&&Number.isFinite(a.mental?.fatigue)&&a.mental.fatigue<90;
  });

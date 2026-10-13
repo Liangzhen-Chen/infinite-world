@@ -9,6 +9,28 @@ import {createPlaytestServer} from '../tools/playtest-runner.mjs';
 
 const response=issues=>({choices:[{finish_reason:'tool_calls',message:{tool_calls:[{type:'function',function:{name:'report_consistency_issues',arguments:JSON.stringify({issues})}}]}}]});
 const m2Report=JSON.parse(await fs.readFile(new URL('../docs/测试报告/M2-recheck/真实试玩.json',import.meta.url),'utf8'));
+test('审查共享往来来源；只为已重建且未被覆盖的等待时段提供作息活动',async()=>{
+ const engine=new WorldEngine(await loadWorld()),before=engine.initialFromLegacy(JSON.parse(await fs.readFile('tests/fixtures/legacy/seed.json','utf8')),'routine-evidence');
+ const id='npc_hw_shijin';before.state.minute=600;before.state.npcs[id]={location:'loc_hw_fields',status:'正常'};before.state.location='loc_hw_fields';
+ const after=structuredClone(before);after.state.minute=630;
+ const receipts=[{tool:'world_time',result:{ok:true,elapsed:30,minute:630}}];
+ const read=(doc=after)=>reviewNpcKnowledge(engine,doc,{before,receipts,query:'施锦 林穗 陈柏',draft:`<q who="${id}">平常筛种粒。</q>`});
+ const knowledge=read(),routine=knowledge[id].background.schedule;
+ assert.equal(routine.slots.find(s=>s.start===540).activity,'翻晒与筛看自家种粒');
+ assert.deepEqual(routine.intervals.map(r=>[r.start,r.end]),[[600,630]]);assert.match(routine.intervals[0].limit,/不证明完成数量/);
+ for(const mutate of [d=>d.state.npcs[id].status='昏迷',d=>d.state.npcs[id].scheduleTravel={arrive:650},
+  d=>d.state.player.companions=[id],d=>d.state.obligations={mid:{promisor:id,promisee:'player',start:610,deadline:620,status:'已完成'}},
+  d=>d.state.npcAutonomy={tasks:{mid:{npc:id,start:610,finish:620,status:'已完成'}}},
+  d=>d.state.effects={mid:{target:id,kind:'mind_space',operation:'sleep',sleeping:true,started:610,expires:620}}]){
+  const blocked=structuredClone(after);mutate(blocked);assert.deepEqual(read(blocked)[id].background.schedule.intervals,[]);
+ }
+ assert.deepEqual(reviewNpcKnowledge(engine,after,{draft:`<q who="${id}">今早翻过了。</q>`})[id].background.schedule.intervals,[]);
+ const relations=reviewNpcKnowledge(engine,before,{draft:'<q who="npc_hw_linsui">该问陈柏。</q>',query:'林穗 陈柏'}).npc_hw_linsui.background.relations;
+ assert.equal(relations.find(r=>r.with==='npc_hw_chenbai').note,'按账目核对酒馆的公用支出');
+ const winter=structuredClone(before);winter.state.minute=270*1440+600;
+ const winterSource=reviewNpcKnowledge(engine,winter,{query:'林穗',draft:'<q who="npc_hw_linsui">冬日备餐。</q>'}).npc_hw_linsui.background.schedule.slots[0].source;
+ assert.match(winterSource,/schedule.seasonal.3.default/);
+});
 async function campaign(server,body={}){
  let view=await server.api('create',body);const campaignId=view.reference.campaignId;let index=0;
  return {campaignId,async read(){view=await server.api('read',{campaignId});return view;},async act(tool,args){const eventId=`setup-${++index}`;const result=await server.api('execute',{campaignId,anchor:eventId,eventId,tool,args,expectedSequence:view.reference.sequence});view=await server.api('read',{campaignId});return result;},async review(playerText,draft,anchor='review-turn'){const begun=await server.api('review/begin',{campaignId,anchor,playerText,expectedSequence:view.reference.sequence});return server.api('review/reply',{campaignId,token:begun.token,draft,expectedSequence:view.reference.sequence});}};

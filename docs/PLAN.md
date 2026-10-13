@@ -250,13 +250,7 @@ N1–N17至少12项完整有效且≥90%，N6/N16零泄漏，N12真实盲辨，N
 
 内容卡同卡完成起草、全量 L1、全量真实 L2、定点修正、L4 及正式发布到 world；L4 为标记项加随机五条，每次人工阅读不超过十分钟，波次十条六项均分至少四、单项至少三。起草由执行会话完成，另调真实模型仅用于所列 L2；金额含修正且复用既有账。涉及 extension/tools.mjs 或 prompt/ 的卡必须通过 prompt/tool-groups 整组，静态提示估算不超过 11900 token，现约 11710；沿用 world_lair、world_wildlife、world_settlement、world_trade 和既有 world_site 的操作，不增公共工具。
 
-### T156（S1）非人居民与聚居地接入。
-
-1. 玩家结果：进入已发布的怪物住区后能见到有作息的成员，与在场商贩交易，并获得公共区域的正常通行。
-2. 可改 server-plugin/{npc-state,engine,combat,bosses,boss-migration,boss-cognition,boss-negotiation,sites,location-access,settlement-profile,world-upgrade}.mjs 的身份与入口接点、tools/{create-schemas,population-validation,validate-world}.mjs、schemas/world.schema.json 及专项；锁定正式内容正文。与 T105/T106、T109 和人物/engine 写者串行，可并行 S2 起草。
-3. 验收 CORE 及 `node --test "tests/npc-*.test.mjs" "tests/population*.test.mjs" "tests/boss*.test.mjs" "tests/world-*.test.mjs" "tests/w4-*.test.mjs" tests/combat.test.mjs tests/sites.test.mjs tests/monster-society.test.mjs`；检查入场、实际交易、住宅许可及升级恢复，首领同一身体的伤势与死亡须同时影响谈话、交易和巢穴。
-4. 真实模型零次，零元。
-5. 预计四至五小时。居民增加必要物种和社会归属字段，沿 NPC 的作息与交易服务；完整档与 boss 战斗定义引用同一权威 actor，集中修正实际查找接点，禁止双份生命和库存。公共场所、议事区及私巢分别授权；社会首领离开或死亡不触发整村野怪补刷，旧野生巢穴规则保留。
+### T156（S1）已完成：非人居民复用NPC的作息与交易；智能首领与其完整档共用同一身体和库存，伤势与死亡同时影响谈话、交易和巢穴；据点按公共区、议事区、私巢分别授权；升级恢复已接通。专项6/6，首领/据点/白石镇/CORE共150/150，发布构建ok，0模型。
 
 ### T157（S2）炭阶地宫与苔灯坞正式落地。
 
@@ -348,17 +342,11 @@ N1–N17至少12项完整有效且≥90%，N6/N16零泄漏，N12真实盲辨，N
 
 ### T146 已完成：等待回合尾注按真实时钟规范化；审查响应格式失效最多修一次且保留原负评；未闭合引语显示登记姓名。相关94/95（余一项为主线旧的浏览器夹具问题，归T152），0模型。
 
-### T147 居民可谈已有往来与工作背景，带路结果和逐N审核读取完整而不重复的事实。目标恢复N3/N4，恢复N2有效覆盖，并支持N12正确区分背景与进度。
-1 完成结果：主持场景与审查共享本人已有关系事实及相关公开职务，明确来源；作息作为有时间边界的背景，只有已重建且未受行程、约定、昏迷等覆盖的时段可支持实际活动，不能推出完成数量。N4直接使用现有移动回执、带路履约和双方位置断言，说明companions的到达后语义，不改引擎同行状态。
-逐N输入保留全部回合的单份正文和行动证据，删除consistency中original/text/tail.visible等重复正文，只留问题及状态；N2上限12288，截断仍为未完成。叙述评分只引用真实visible正文，格式失效使用与F1同一受限修正政策；N6/N16私密证据继续隔离，N12盲辨独立。
-2 可改：server-plugin/npc-memory.mjs、scene-card.mjs、consistency-evidence.mjs；tools/npc-acceptance.mjs、playtest-review.mjs；tests/npc-memory.test.mjs、npc-integration.test.mjs、m3-consistency-evidence.test.mjs、npc-acceptance.test.mjs、playtest-npc-evidence.test.mjs、playtest-review.test.mjs。锁定engine.mjs及F1/F3文件，优先消费既有状态和证据，不新增人物事实。
-3 验收：node --test tests/npc-memory.test.mjs tests/npc-cognition.test.mjs tests/npc-schedule.test.mjs tests/npc-obligations.test.mjs tests/npc-delivery.test.mjs tests/npc-autonomy.test.mjs tests/npc-integration.test.mjs tests/npc-relations.test.mjs；node --test tests/playtest-runner.test.mjs tests/playtest-review.test.mjs tests/playtest-npc-evidence.test.mjs tests/playtest-lifecycle.test.mjs tests/playtest-budget.test.mjs tests/npc-acceptance.test.mjs；F1所列四个m3-consistency测试文件；CORE。离线覆盖关系可用而秘密不可用、作息不冒充完成进度、N4履约解队不等于未同行、N2截断不采纳及真实引文。
-4 真实模型：0次、0元；逐N和评分的实际效果由第四轮测量，已完成负评不重抽。
-5 预计规模：250–450行，一个执行会话；F1合入后处理共享接口，动态场景只加入本轮相关人物资料。
+### T147 已完成：主持场景与审查共享本人已有的关系和公开职务，作息只作有时间边界的背景；N4改用移动回执、带路履约和双方位置判定；逐N输入去掉重复正文，上限12288；评分格式失效允许修一次。0模型，真实效果由T149测量。
 
 ### T148 已完成：申请带路先答复、私宅先给许可、粮仓先到场后付款，courier移动只请求一次；对白区分当前观察、已发生经历和未来安排，不补档案外的经历；冲突现场由在场者实际发言。相关88/CORE40，0模型，真实效果由T149测量。
 
-### T149 M2第四轮真实复验【真实模型；待T146–T148合入】
+### T149 M2第四轮真实复验【真实模型；修复卡已齐，待模型槽】
 
 完成结果：三卡合入后运行原十场87回合，使用F3澄清后的分步输入，保留原断言及真实失败历史。目标13项有效、至少12项通过，即12/13=92.3%；N1/N7/N8/N14仍未测，不把新增场景用于稀释失败。
 预期保留N5/N6/N10/N13/N16，争取恢复N2/N3/N4/N11/N12/N15/N17。N9当前t1–2已明确没有还手或喊救，且无围观议论；恢复司法后半场仍不能自动补齐前半场，因此将N9列为最大不确定项，不能承诺13/13。
@@ -596,7 +584,7 @@ T28-R1修好新回执undefined规范化并保留严格篡改拒绝，相关31/32
 
 所有改extension/tools.mjs或prompt/的卡，静态提示估算须≤11900 token，验收追加node --test tests/prompt.test.mjs；目前11642，硬上限12000。若所需接口无法装入11900，先派下述P0，再派该功能卡。
 
-### T101（P0） 压缩提示，仅在上述空间不足时启用。结果：完整保留工具参数语义和主持边界，腾出后续接口空间。可改prompt/、extension/tools.mjs及对应提示测试，其余锁定；与全部提示写者串行。验收node --test tests/prompt.test.mjs tests/m2-npc-prompt.test.mjs tests/boss-negotiation.test.mjs，CORE；估算≤11000且原行为断言不降。模型0；约1小时。
+### T101（P0）已完成：静态提示加工具定义压到约10700 token（硬上限12000），工具名、操作、参数全部保留；各测试里写死的估算上限统一改读12000。静态世界纲要只留起始地点名，地点描述改由只读目录查询取得。相关104/CORE40，0模型。
 
 ### T102（A1） W2-S2 炉作、通风、水土。结果：新增30条可取得、可学会、能实际影响工序或环境的法术。可改world/design/w2-s2.mjs、world/drafts/w2-s2/、仿w2-s1的内容/发布入口、tests/w2-s2.test.mjs；正式范围world/meta/{spells,skills,items}.json、书籍销售者的people/baseline.json和geo/locations.json接点。与A2/A3及T90–T94同文件发布串行，可并行A4准备。验收node --test "tests/w2-*.test.mjs" "tests/magic*.test.mjs" tests/learning.test.mjs，CORE。真实L2预计40–65次，≤1元；约2小时，复用已实现消费者。
 
@@ -662,7 +650,7 @@ C部分只拆缺口：governance.mjs的任职入口止于“待上级决定”�
 
 ### T132（C10） 迁入迁出与人生消息。结果：NPC有原因地迁居，实际走路线，住户、工作与未履约事项在抵达后更新，玩家回来能听到变化。可改npc-life.mjs、npc-schedule/npc-cognition/civic接点、tests/npc-life-migration.test.mjs；接C9和B10，搬家不复制财产或新增同名人物。验收node --test "tests/npc-*.test.mjs" tests/civic.test.mjs ，CORE。模型0；约2小时，与认知/日程写者串行。
 
-### T133（D1） NPC炉火照管。结果：NPC可从真实燃料库存维护热源并完成需火工序，缺燃料、离岗或失能会停止或失败。可改server-plugin/npc-autonomy.mjs、manufacturing及热源消费者接点、tests/npc-furnace.test.mjs；锁定W3目录正文。验收node --test "tests/npc-*.test.mjs" tests/manufacturing.test.mjs "tests/magic*.test.mjs" "tests/w3-*.test.mjs"，CORE。模型0；约2小时，与C7及魔法消费者写者串行。
+### T133（D1）已完成：NPC从本人库存添燃料维持热源并完成需火工序，缺料拒绝、离岗或失能停止，热账与窑炉裂损保留；新增11项通过/CORE40，0模型。
 
 ### T134（D2） 自创技能与配方落地。结果：完成研究的技能能被实际学习使用，新配方能在原制造链消耗材料产出成品。可改activities/learning/manufacturing及实体解析接点、tools/create-schemas.mjs、extension/tools.mjs、tests/runtime-invention.test.mjs；复用现有多日研究与技能登记，补recipe类型和实际使用接点，禁止直接造物。验收node --test tests/runtime-invention.test.mjs tests/activities.test.mjs tests/learning.test.mjs tests/manufacturing.test.mjs tests/professions.test.mjs "tests/w3-*.test.mjs" tests/prompt.test.mjs，CORE。模型0；约2.5小时，与C工具接点串行，提示≤11900。
 

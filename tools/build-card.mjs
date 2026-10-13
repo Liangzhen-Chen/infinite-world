@@ -16,7 +16,7 @@ function reference(world){
         `装备品质与使用等级：${r.equipment.qualities.map((q,i)=>`${q}器${r.equipment.requiredLevels[i]}级`).join('；')}。`,
         `战斗职业：${world.professions.filter(row=>row.kind==='combat').map(row=>row.name).join('、')}。`,
         `生活职业：${world.professions.filter(row=>row.kind==='life').map(row=>row.name).join('、')}。隐藏职业的取得条件不公开。`,
-        `起始区域：${world.locations.filter(row=>row.id==='loc_hw'||row.scope==='loc_hw').map(row=>`${row.name}${row.description?`：${row.description}`:''}`).join('；')}。`,
+        `起始区域：${world.locations.filter(row=>row.id==='loc_hw'||row.scope==='loc_hw').map(row=>row.name).join('、')}。地点详情用world_catalog按名查询。`,
         `其他已登记地点：${world.locations.filter(row=>row.id!=='loc_hw'&&row.scope!=='loc_hw').map(row=>row.name).join('、')}。详细地理通过目录与检索查阅。`,
         `起始居民：${world.npcs.filter(row=>row.scope==='loc_hw').map(row=>`${row.name}，${row.occupation}`).join('；')}。`,
         `已登记文化：${(world.cultures??[]).map(row=>row.name).join('、')||'暂无'}。`,

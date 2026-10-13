@@ -33,7 +33,7 @@ export function applyTeaching(people,world){
   if(role.kind==='combat')p.combatProfession=t.role;else p.lifeProfessions=[t.role];
   p.skills=[t.core,...t.spell?[next.spells.find(s=>s.id===t.spell).skill]:[],...t.shared.map(id=>next.spells.find(s=>s.id===id).skill)];
   p.proficiencies=Object.fromEntries(p.skills.map(id=>[id,600]));
-  p.services=['trade',t.role,t.core,...t.spell?[t.spell]:[],...t.shared];p.teachingStages={[t.role]:1};
+  p.services=[t.role,t.core,...t.spell?[t.spell]:[],...t.shared];p.teachingStages={[t.role]:1};
   if(t.route==='法'){p.services.push('skill_literacy');p.skills.push('skill_literacy');p.proficiencies.skill_literacy=600;}
   if(t.book)p.inventory[t.book]=2;
   p.workplace={location:t.location,access:'公开前廊白日接授，内室和物件须另问保管人。'};

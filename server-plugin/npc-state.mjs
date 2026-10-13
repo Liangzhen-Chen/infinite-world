@@ -2,6 +2,15 @@
 // prose never become money, inventory or private knowledge in a campaign.
 export function initialNpcState(npc,{newCharacter=false}={}){
     return{id:npc.id,name:npc.name,location:npc.location,coins:npc.coins??0,
+        ...(npc.species?{species:npc.species}:{}),...(npc.society?{society:npc.society}:{}),
         inventory:structuredClone(npc.inventory??{}),trust:newCharacter?0:npc.trust??0,
         affection:newCharacter?0:npc.affection??0,developments:[],relationships:{}};
 }
+
+// A social boss is a combat definition of an existing resident, not another body.
+export function actorId(world,id){return world.bosses?.find(b=>b.id===id)?.actor??id;}
+export function actorPath(world,id){
+    id=actorId(world,id);
+    return id==='player'?['state','player']:['state',id?.startsWith('npc_')?'npcs':'creatures',id];
+}
+export function bossCognitionField(actor){return actor?.id?.startsWith('npc_')?'bossCognition':'cognition';}

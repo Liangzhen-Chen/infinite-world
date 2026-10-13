@@ -149,7 +149,7 @@ export function villageLedgerRules(world){
 export function villageLawCodes(world){
  // T43's settlement, provenance and appeal panel belong to the HW court.
  // Village appointments retain their reviewed local officers and procedure.
- const {settlement,source,appeal,...template}=world.rules.law.codes.find(c=>c.id==='law_hw_property');
+ const {settlement,source,appeal,magicAuthorities,...template}=world.rules.law.codes.find(c=>c.id==='law_hw_property');
  return Object.entries(raw).map(([v,r])=>({...template,id:`law_${v}_property`,name:`${villageFacts[v].name}公共粮约与财物规约`,locations:[villageFacts[v].id,...world.locations.filter(l=>l.parent===villageFacts[v].id).map(l=>l.id)],officers:[pid(v,r.coordinators[2])],judges:[pid(v,r.coordinators[0])],court:lid(v,'hall')}));
 }
 function villageEconomy(world,v,industries){

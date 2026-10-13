@@ -1,6 +1,7 @@
 import {heldUnit} from './items.mjs';
 import {consumeMagicProtection} from './magic-primitives.mjs';
 import {assertLocationAccess} from './location-access.mjs';
+import {actorPath} from './npc-state.mjs';
 
 // A location's optional site contains occupants (actor IDs), manager, owner,
 // entryMechanisms, mechanisms, clues, resources and truths. Local IDs stay stable
@@ -95,11 +96,12 @@ function assertOccupants(d,engine,place,authorization){
         if(occupant)ids.add(occupant);
     }
     for(const id of ids){
-        const actor=d.get('state',id.startsWith('npc_')?'npcs':'creatures',id);
+        const actor=engine.actor(d,id),isNpc=engine.actorPath(id)[1]==='npcs';
         if(!actor)throw Error('登记占据者状态尚未落实，不能视为空置');
         if(actor.location!==place.id||!living(actor))continue;
+        if(isNpc&&place.access?.mode==='public')continue;
         const managed=s.manager&&ownerOf(place)&&allowed(d.document,place,ownerOf(place),authorization);
-        if(!id.startsWith('npc_')||!managed&&!allowed(d.document,place,id,authorization))throw Error('占据者仍在场，需取得许可或实际解决占据关系');
+        if(!isNpc||!managed&&!allowed(d.document,place,id,authorization))throw Error('占据者仍在场，需取得许可或实际解决占据关系');
     }
 }
 
@@ -115,7 +117,7 @@ export function siteView(engine,document){
     const place=engine.byId.get(document.state.location);if(!place?.site)return null;
     const row=document.state.records?.[siteKey(place.id)],entered=document.state.records?.site_presence?.site===place.id;
     const view={site:place.id,name:place.name,owner:ownerOf(place),entered,occupants:(place.site.occupants??[]).filter(id=>{
-        const actor=document.state[id.startsWith('npc_')?'npcs':'creatures']?.[id];return actor?.location===place.id&&living(actor);
+        const path=actorPath(engine.world,id),actor=document.state[path[1]]?.[path[2]];return actor?.location===place.id&&living(actor);
     }),mechanisms:(place.site.mechanisms??[]).filter(m=>entered||(place.site.entryMechanisms??[]).includes(m.id)).map(m=>({id:m.id,name:m.name,description:m.description??'',status:row?.mechanisms[m.id]?.status??'未解除'}))};
     if(entered){
         view.clues=(place.site.clues??[]).map(c=>({id:c.id,name:c.name,description:c.description??'',discovered:discovered(document,place.id,c.id)}));
@@ -133,11 +135,11 @@ export function siteAction(d,args,eventId){
     if(operation==='inspect')return siteView(this,d.document);
     if(!['enter','investigate','disarm','gather'].includes(operation))throw Error('据点操作须为inspect、enter、investigate、disarm或gather');
     const assertAccess=()=>{
-        if(place.access?.mode==='private'&&place.access.requiresConsent){
-            const authorization=authorizations.find(id=>d.get('state','records',id)?.subject===place.id&&['site_use','enter_home'].includes(d.get('state','records',id)?.action));
+        if(['private','council'].includes(place.access?.mode)&&place.access.requiresConsent){
+            const authorization=authorizations.find(id=>d.get('state','records',id)?.subject===place.id&&['site_use','enter_home','enter_council'].includes(d.get('state','records',id)?.action));
             assertLocationAccess(d,this,place.id,{authorization,companions:d.get('state','player','companions')??[]});
         }
-        if(!allowed(d.document,place,ownerOf(place),authorizations,operation==='disarm'?'disarm':'enter'))throw Error('据点物权要求所有者的有效许可');
+        if(!(place.access?.mode==='public'&&['enter','investigate'].includes(operation))&&!allowed(d.document,place,ownerOf(place),authorizations,operation==='disarm'?'disarm':'enter'))throw Error('据点物权要求所有者的有效许可');
         assertOccupants(d,this,place,authorizations);
     };
     const advance=minutes=>{this.advance(d,minutes,eventId);assertAccess();};
@@ -211,6 +213,7 @@ export function sitePermission(d,engine,args,eventId){
     if(!owner||base?.age<18||!actor||onlyOccupant&&actor.location!==place.id||actor.location!==d.get('state','location')||actor.scheduleTravel||actor.cognitionTravel||['死亡','濒死','昏迷','患病'].includes(actor.status)||/睡眠|熟睡|睡觉/.test(actor.activity??''))throw Error('据点许可须由现场清醒成年所有者、管理人或占据者签发');
     if(args.promisee!==undefined&&engine.resolve(args.promisee)!=='player')throw Error('据点许可只登记给玩家');
     if(place.access?.mode==='private'&&place.access.requiresConsent&&!place.access.residents?.includes(grantor))throw Error('私宅据点许可仍须由登记住户签发');
+    if(place.access?.mode==='council'&&place.access.authority!==grantor)throw Error('议事区许可须由登记负责人签发');
     if(args.operation==='revoke_access'){
         if(old?.action!=='site_use'||old.subject!==place.id||old.grantor!==grantor)throw Error('只有原签发者能撤销据点许可');
         const permission={...old,revoked:true,revokedAt:now};d.set(['state','records',args.authorization],permission);return{authorization:args.authorization,permission};

@@ -5,14 +5,36 @@
       "type": "array",
       "items": {
         "type": "object",
-        "required": ["id", "name", "calendar", "venue", "runtime", "resourceNeeds"],
+        "required": [
+          "id",
+          "name",
+          "calendar",
+          "venue",
+          "runtime",
+          "resourceNeeds"
+        ],
         "properties": {
-          "id": {"type": "string"},
-          "name": {"type": "string"},
-          "calendar": {"type": "object"},
-          "venue": {"type": "object"},
-          "runtime": {"type": "object"},
-          "resourceNeeds": {"type": "array", "items": {"type": "object"}}
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "calendar": {
+            "type": "object"
+          },
+          "venue": {
+            "type": "object"
+          },
+          "runtime": {
+            "type": "object"
+          },
+          "resourceNeeds": {
+            "type": "array",
+            "items": {
+              "type": "object"
+            }
+          }
         }
       }
     },
@@ -3133,6 +3155,14 @@
             "full",
             "roster"
           ]
+        },
+        "species": {
+          "type": "string",
+          "pattern": "^monster_[a-zA-Z0-9_-]+$"
+        },
+        "society": {
+          "type": "string",
+          "pattern": "^loc_[a-zA-Z0-9_-]+$"
         }
       },
       "required": [
@@ -3488,32 +3518,69 @@
           }
         },
         "access": {
-          "type": "object",
-          "properties": {
-            "mode": {
-              "enum": [
-                "private"
-              ]
-            },
-            "requiresConsent": {
-              "const": true
-            },
-            "residents": {
-              "type": "array",
-              "items": {
-                "type": "string",
-                "minLength": 1
+          "oneOf": [
+            {
+              "type": "object",
+              "properties": {
+                "mode": {
+                  "const": "public"
+                }
               },
-              "uniqueItems": true,
-              "minItems": 1
+              "required": [
+                "mode"
+              ],
+              "additionalProperties": false
+            },
+            {
+              "type": "object",
+              "properties": {
+                "mode": {
+                  "const": "council"
+                },
+                "requiresConsent": {
+                  "const": true
+                },
+                "authority": {
+                  "type": "string",
+                  "pattern": "^npc_[a-zA-Z0-9_-]+$"
+                }
+              },
+              "required": [
+                "mode",
+                "requiresConsent",
+                "authority"
+              ],
+              "additionalProperties": false
+            },
+            {
+              "type": "object",
+              "properties": {
+                "mode": {
+                  "enum": [
+                    "private"
+                  ]
+                },
+                "requiresConsent": {
+                  "const": true
+                },
+                "residents": {
+                  "type": "array",
+                  "items": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "uniqueItems": true,
+                  "minItems": 1
+                }
+              },
+              "required": [
+                "mode",
+                "requiresConsent",
+                "residents"
+              ],
+              "additionalProperties": false
             }
-          },
-          "required": [
-            "mode",
-            "requiresConsent",
-            "residents"
-          ],
-          "additionalProperties": false
+          ]
         }
       },
       "required": [
@@ -5172,7 +5239,6 @@
                 "type": "string",
                 "pattern": "^monster_[a-zA-Z0-9_-]+$"
               },
-              "minItems": 1,
               "uniqueItems": true
             },
             "vacancyDays": {
@@ -5189,11 +5255,7 @@
           "required": [
             "id",
             "name",
-            "location",
-            "habitat",
-            "replacementSpecies",
-            "vacancyDays",
-            "minionCount"
+            "location"
           ],
           "additionalProperties": true
         },
@@ -5631,6 +5693,10 @@
             "abilities"
           ],
           "additionalProperties": false
+        },
+        "actor": {
+          "type": "string",
+          "pattern": "^npc_[a-zA-Z0-9_-]+$"
         }
       },
       "required": [
@@ -5647,7 +5713,124 @@
         "taming",
         "intelligence"
       ],
-      "additionalProperties": true
+      "additionalProperties": true,
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "actor": {}
+            },
+            "required": [
+              "actor"
+            ]
+          },
+          "then": {
+            "properties": {
+              "residence": {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "string",
+                    "pattern": "^lair_[a-zA-Z0-9_-]+$"
+                  },
+                  "name": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "location": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "habitat": {
+                    "type": "string",
+                    "pattern": "^habitat_[a-zA-Z0-9_-]+$"
+                  },
+                  "replacementSpecies": {
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "pattern": "^monster_[a-zA-Z0-9_-]+$"
+                    },
+                    "uniqueItems": true,
+                    "maxItems": 0
+                  },
+                  "vacancyDays": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 360
+                  },
+                  "minionCount": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 8,
+                    "const": 0
+                  }
+                },
+                "required": [
+                  "id",
+                  "name",
+                  "location"
+                ],
+                "additionalProperties": true
+              }
+            }
+          },
+          "else": {
+            "properties": {
+              "residence": {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "string",
+                    "pattern": "^lair_[a-zA-Z0-9_-]+$"
+                  },
+                  "name": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "location": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "habitat": {
+                    "type": "string",
+                    "pattern": "^habitat_[a-zA-Z0-9_-]+$"
+                  },
+                  "replacementSpecies": {
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "pattern": "^monster_[a-zA-Z0-9_-]+$"
+                    },
+                    "uniqueItems": true,
+                    "minItems": 1
+                  },
+                  "vacancyDays": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 360
+                  },
+                  "minionCount": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 8
+                  }
+                },
+                "required": [
+                  "id",
+                  "name",
+                  "location",
+                  "habitat",
+                  "replacementSpecies",
+                  "vacancyDays",
+                  "minionCount"
+                ],
+                "additionalProperties": true
+              }
+            }
+          }
+        }
+      ]
     },
     "route": {
       "type": "object",
@@ -7467,6 +7650,14 @@
           },
           "required": [],
           "additionalProperties": false
+        },
+        "species": {
+          "type": "string",
+          "pattern": "^monster_[a-zA-Z0-9_-]+$"
+        },
+        "society": {
+          "type": "string",
+          "pattern": "^loc_[a-zA-Z0-9_-]+$"
         }
       },
       "required": [

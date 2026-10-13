@@ -32,7 +32,11 @@ function validRows(rows){
 }
 function validTerms(t){return plain(t)&&pacts.has(t.pact)&&typeof t.alliance==='boolean'&&validRows(t.offer)&&validRows(t.request);}
 export function readBossNegotiation(actor){
-    const n=actor.negotiation===undefined?empty():actor.negotiation;
+    let n=actor.negotiation===undefined?empty():actor.negotiation;
+    if(actor.id?.startsWith('npc_')){
+        if(Object.keys(n.inventory??{}).length)throw Error('居民首领不能有第二份谈判库存');
+        n={...n,inventory:Object.fromEntries(Object.entries(actor.inventory??{}).map(([id,v])=>[id,typeof v==='number'?{quantity:v}:v]).filter(([,v])=>v.quantity!==0))};
+    }
     if(!plain(n)||n.format!==1||!plain(n.inventory)||!Array.isArray(n.history))throw new Error('首领谈判记录格式损坏，拒绝覆盖');
     for(const [id,held]of Object.entries(n.inventory)){
         if(!id||!plain(held)||!Number.isSafeInteger(held.quantity)||held.quantity<=0||held.instances!==undefined&&(!Array.isArray(held.instances)||
@@ -50,10 +54,10 @@ export function readBossNegotiation(actor){
     }
     return n;
 }
-export function breakBossAgreement(d,target,eventId){
-    const actor=d.get('state','creatures',target);if(actor.negotiation===undefined)return;
+export function breakBossAgreement(d,target,eventId,engine){
+    const actor=engine.actor(d,target);if(actor.negotiation===undefined)return;
     const n=structuredClone(readBossNegotiation(actor));if(!n.relation)return;
-    n.relation=null;n.brokenBy=eventId;d.set(['state','creatures',target,'negotiation'],n);
+    n.relation=null;n.brokenBy=eventId;if(actor.id?.startsWith('npc_'))n.inventory={};d.set([...engine.actorPath(target),'negotiation'],n);
 }
 function termsFor(engine,args){
     if(!pacts.has(args.pact))throw new Error('谈判须承诺respect_territory守界或nonaggression互不攻击');
@@ -76,9 +80,10 @@ function publicResult(n,h,boss){
         actionScope:{kind:'instant',instantaneous:true}};
 }
 export function negotiateBoss(d,engine,boss,residence,args,eventId){
-    const target=residence.occupant?.actor,actor=d.get('state','creatures',target);
-    if(residence.occupant?.kind!=='boss'||residence.occupant.definition!==boss.id||!actor||actor.boss!==boss.id||
+    const target=boss.actor??residence.occupant?.actor,actor=engine.actor(d,target);
+    if(!boss.actor&&(residence.occupant?.kind!=='boss'||residence.occupant.definition!==boss.id)||!actor||actor.boss!==boss.id||
         actor.owner||actor.hp<=0||actor.status!=='正常'||actor.location!==boss.residence.location||actor.location!==d.get('state','location'))throw new Error('谈判需要已接触、在巢穴清醒在场的自由首领');
+    if(boss.actor&&(actor.scheduleTravel||actor.cognitionTravel||/睡眠|睡觉|熟睡/.test(actor.activity??'')))throw Error('谈判需要清醒在场的居民首领');
     if(!(boss.intelligence>0))throw new Error('非智能首领不能接受谈判条款');
     if(d.get('state','player','status')!=='正常')throw new Error('你当前不能清醒谈判');
     const errors=validateBossNegotiation(boss,new Set(engine.world.items.map(i=>i.id)));
@@ -99,7 +104,7 @@ export function negotiateBoss(d,engine,boss,residence,args,eventId){
     else if(!['defend_territory','avoid_conflict'].includes(goal))throw new Error('首领认知目标无效');
     const accepts=new Set(boss.negotiation?.accepts??[]);
     const bag=Object.create(engine);
-    bag.bagPath=id=>id==='player'?engine.bagPath(id):['state','creatures',target,'negotiation','inventory'];
+    bag.bagPath=id=>id==='player'?engine.bagPath(id):boss.actor?engine.bagPath(target):[...engine.actorPath(target),'negotiation','inventory'];
     if(!reason&&t.offer.some(r=>!accepts.has(r.item)))reason='所交物资不在首领愿意收取的目录中';
     if(!reason&&t.request.some(r=>(n.inventory[r.item]?.quantity??0)<r.quantity))reason='首领实际库存不足，不能交付所索物资';
     if(!reason&&t.offer.some(r=>engine.quantity(d,'player',r.item)<r.quantity))reason='你没有足够的实际物资履行条件';
@@ -109,11 +114,11 @@ export function negotiateBoss(d,engine,boss,residence,args,eventId){
         reason:reason??(goal==='defend_territory'?'接受守界条件，交换按实际库存履行':'接受避免冲突的条件，交换按实际库存履行')};
     n.history.push(h);
     if(h.accepted){n.relation={pact:t.pact,alliance:t.alliance,event:eventId};delete n.brokenBy;}
-    d.set(['state','creatures',target,'negotiation'],n);
+    d.set([...engine.actorPath(target),'negotiation'],boss.actor?{...n,inventory:{}}:n);
     if(h.accepted){
         for(const r of t.offer)transferItems(d,bag,'player',target,r.item,r.quantity);
         for(const r of t.request)transferItems(d,bag,target,'player',r.item,r.quantity);
     }
     d.say(`${actor.name}：${h.reason}`);
-    return publicResult(readBossNegotiation(d.get('state','creatures',target)),h,boss);
+    return publicResult(readBossNegotiation(engine.actor(d,target)),h,boss);
 }

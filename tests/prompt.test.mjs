@@ -6,6 +6,9 @@ import path from 'node:path';
 import {buildCard,loadPromptBundle,presetFor,encodeCardPNG}from'../tools/build-card.mjs';
 import {assembleMessages,isOutOfCharacter,injectToolExamples,staticMessages}from'../extension/prompt.mjs';
 import {toolDefinitions}from'../extension/tools.mjs';
+import {loadWorld}from'../tools/load-world.mjs';
+import {WorldEngine}from'../server-plugin/engine.mjs';
+import {catalogDefinition}from'../server-plugin/catalog.mjs';
 
 test('新卡与预设来自同一提示源，静态在前、场景在尾，禁用旧世界书与模型回合工具',async()=>{
     const bundle=await loadPromptBundle(),messages=assembleMessages(bundle,[{role:'user',content:'住一晚'}],'现在九点');
@@ -18,8 +21,22 @@ test('新卡与预设来自同一提示源，静态在前、场景在尾，禁�
     const preset=presetFor(bundle);assert.equal(preset.show_thoughts,true);assert.equal(preset.function_calling,true);
     assert.ok(isOutOfCharacter('  （场外）看看余额'));assert.equal(isOutOfCharacter('我问场外有什么'),false);
     assert.equal(bundle.budget.exact,false);
-    // T152 replaces T98's earlier cap after examples and world content grew.
-    assert.ok(bundle.budget.estimatedTokens<=11900,`T152静态提示加工具估算 ${bundle.budget.estimatedTokens} token`);
+    assert.equal(bundle.budget.limit,12000);
+    assert.ok(bundle.budget.estimatedTokens<=bundle.budget.limit,`静态提示加工具估算 ${bundle.budget.estimatedTokens} token`);
+    assert.ok(bundle.budget.estimatedTokens<bundle.budget.limit-1000,`T101须留出1000 token以上空间：${bundle.budget.estimatedTokens}`);
+});
+
+test('静态纲要保留起始地点名，原地点详情仍可从只读目录取得',async()=>{
+    const world=await loadWorld(),bundle=await loadPromptBundle({world}),engine=new WorldEngine(world);
+    const seed=JSON.parse(await fs.readFile(new URL('./fixtures/legacy/seed.json',import.meta.url),'utf8'));
+    const document=engine.initialFromLegacy(seed,'prompt-location-details'),before=structuredClone(document);
+    assert.match(bundle.card.data.description,/地点详情用world_catalog按名查询/);
+    for(const place of world.locations.filter(row=>row.id==='loc_hw'||row.scope==='loc_hw')){
+        assert.ok(bundle.card.data.description.includes(place.name),place.name);
+        const detail=catalogDefinition(engine,document,{entity:place.name,kind:'location'});
+        assert.equal(detail.id,place.id);assert.equal(detail.description,place.description??'');
+    }
+    assert.deepEqual(document,before);
 });
 
 test('酒馆事件注入与试玩共用相同调用示例，重复事件不重复注入，示例不改玩家历史',async()=>{

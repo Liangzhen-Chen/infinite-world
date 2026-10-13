@@ -3,13 +3,13 @@ const object=(properties,required=[])=>({type:'object',properties,...(required.l
 const definitions=[];
 const define=(name,description,properties,required=[])=>definitions.push({type:'function',function:{name,description,parameters:object(properties,required)}});
 define('world_trade','交易/经营合同',{operation:{enum:['trade','lease','procure','hire','fulfill','sell','pay','cancel']},business:str,contract:str,location:str,consent:{...bool,description:'本次在场同意才true'},deposit:int,coins:int,deadline:int,minutes:int,task:{enum:['stocktake']},buyer:str,seller:str,item:str,quantity:int,unitPrice:int,service:{type:'string',enum:['住宿']},days:int,payment:{type:'string',enum:['cash','credit','repay']},creditMinutes:{...int,description:'赊账距今分，勿另约付款'},debt:str,instances:{type:'array',items:str}},['seller']);
-define('world_move','沿路移动及同行路费',{destination:str,mode:{type:'string',enum:['walk','horse','cart','boat']},authorization:{...str,description:'私宅须住户有效许可ID'}},['destination']);
+define('world_move','沿路移动/同行路费',{destination:str,mode:{type:'string',enum:['walk','horse','cart','boat']},authorization:{...str,description:'私宅住户有效许可ID'}},['destination']);
 define('world_time','时长/钟点等待二选一',{minutes:{...int,description:'完整分，勿减已耗时'},until:object({dayOffset:{...int,description:'今天0、明天1'},hour:{...int,minimum:0,maximum:23},minute:{...int,minimum:0,maximum:59}},['dayOffset','hour']),activity:{type:'string',enum:['等待','工作','睡眠','休息']}},[]);
 define('world_weather','查当地天气、温度及日出日落。',{operation:{enum:['inspect']},location:str},[]);
 define('world_farm','农田粮仓；按粮约提送、税贸结算。',{operation:{enum:['inspect','buy','donate','reserve_seed','repair','sow','harvest','guard','adopt','settle_trade']},settlement:str,quantity:int,contract:str,phase:{enum:['pickup','deliver']},authority:str},[]);
 define('world_wildlife','观察、追踪动物或从真实尸体取材。',{operation:{enum:['observe','track','gather']},species:str,target:str},[]);
 define('world_crime','尝试偷在场者一件物品/铜币。',{operation:{enum:['steal']},target:str,item:str,coins:int,instance:str},['operation','target']);
-define('world_law','法典办案；confess自认/arrest押解/hear审理；勿用会面代替。',{operation:{enum:['inspect','report','confess','search','arrest','hear','appeal','publish','notify','pay','labor','prison','compensate','claim']},case:str,authority:str,reporter:str,claimant:str,from:str,to:str,memory:{...str,description:'from持有的本案记忆ID'},channel:{enum:['conversation','carry']}},[]);
+define('world_law','办案/有权机构发放限时施法许可',{operation:{enum:['inspect','report','confess','search','arrest','hear','appeal','publish','notify','pay','labor','prison','compensate','claim','grant_magic_permit']},case:str,authority:str,location:str,subject:str,action:{enum:['mental_magic']},minutes:int,reporter:str,claimant:str,from:str,to:str,memory:{...str,description:'from持有的本案记忆ID'},channel:{enum:['conversation','carry']}},[]);
 define('world_pet','动物照料/驯练/跟随/骑乘。',{operation:{enum:['inspect','feed','contact','tame','groom','treat','train','rest','follow','stay','release','mount','dismount']},target:str,item:str,skill:str,minutes:int,authorization:str},[]);
 define('world_summon','召唤查解/搬水/限额守卫。',{operation:{enum:['inspect','dismiss','carry_water','guard']},summon:str,source:str,destination:str,millilitres:int,authorization:str,authorizations:{type:'array',items:str,maxItems:8}},[]);
 define('world_revival','神殿/祭坛付费设复活点',{location:str},[]);
@@ -18,9 +18,9 @@ define('world_cast','已学法术/许可同意；刻记填字',{spell:str,target
 define('world_environment','刻记/接近/搬泥/炉温添自有燃料/翻谷；连通空气传声、实高差下降、现有空气呼吸。',{operation:{enum:['inspect','inspect_heat','inspect_marks','load_fuel','approach','carry_silt','turn_grain','sound','fall','breathe']},target:str,subject:str,destination:str,path:{type:'array',items:str,minItems:2,maxItems:8},text:{...str,maxLength:80},grams:int,item:str,quantity:{...int,description:'添料1-100份真实物品；其他量按操作规则'},authorization:str,authorizations:{type:'array',items:str,maxItems:8}},[]);
 define('world_learn','在场师授/持书学技能法术配方',{entity:str,source:str,kind:{type:'string',enum:['spell','skill','recipe']}},['entity','source']);
 define('world_practice','练技能/有据突破',{skill:str,target:str,gain:int,breakthroughSource:str},['skill']);
-define('world_profession','职业认证/退职/升职',{profession:str,teacher:str,operation:{type:'string',enum:['certify','abandon','promote']},choice:str},['profession']);
+define('world_profession','认证/入门守戒/仪式资格/退职/升职',{profession:str,teacher:str,institution:str,rule:str,deity:str,minutes:int,operation:{type:'string',enum:['certify','abandon','promote','initiate','ritual_officiate']},choice:str},['profession']);
 define('world_attributes','依玩家选自由点',{attributes:object({'力量':int,'敏捷':int,'体质':int,'智力':int,'精神':int,'魅力':int})},['attributes']);
-define('world_relation','真实事件关系，指定双方',{npc:str,from:str,to:str,eventType:str,sourceEvent:str,romance:bool},['eventType','sourceEvent']);
+define('world_relation','据实改双方关系',{npc:str,from:str,to:str,eventType:str,sourceEvent:str,romance:bool},['eventType','sourceEvent']);
 define('world_promise','承诺/取消；住户准用途签/撤入宅许可',{operation:{enum:['create','cancel','grant_access','revoke_access']},promisor:{...str,description:'承诺者/在场成年住户'},promisee:str,type:{...str,enum:['带路','送货','付款','等候','会面','协助'],description:'新建必填，交物用送货；私宅免填'},content:str,destination:str,location:{...str,description:'等候/会面/送货地点或获准私宅；不追收件人'},start:{...int,description:'起始分默认现在'},deadline:{...int,description:'到期绝对分'},minutes:{...int,description:'占用分；私宅1-1440'},authorization:str,guests:{type:'array',items:str,maxItems:8,description:'同行者须住户另准'},obligation:str,actor:str,item:str,quantity:int,coins:int,skill:str,attribute:str},[]);
 define('world_remember','有源事实/在场未核实传闻',{subject:str,key:str,content:str,source:str,rumor:str,keywords:{type:'array',items:str}},['subject','key','content']);
 const sitePermitType=definitions.find(row=>row.function.name==='world_promise').function.parameters.properties.type;
@@ -37,14 +37,14 @@ define('world_quest','托管/接单/履约/退款；NPC按世界钟履约',{oper
 define('world_create','原创人物/组织登记',{type:str,name:str,project:str,data:object({age:int,occupation:str,notes:str},[])},['type','name','data']);
 define('world_search','查长期事实/原聊天',{query:str,limit:int},['query']);
 define('world_catalog','规则/文化/势力/历史分页查。',{entity:str,kind:{type:'string',enum:['profession','skill','spell','item','recipe','feature','location','culture','deity','faction','history']},offset:int});
-define('world_read','现账；人物加npc查库存，旧事非现库存',{section:{...str,description:'人物/npcs、行囊/inventory、约定/obligations'},npc:{...str,description:'人物ID；先查目录；无私密认知'}});
+define('world_read','查现账/人物库存',{section:{...str,description:'人物/npcs、行囊/inventory、约定/obligations'},npc:{...str,description:'人物ID先查目录；无私密认知'}});
 definitions.find(row=>row.function.name==='world_trade').function.parameters.properties.operation.description='依次交易/租铺/采购/雇盘点/当面履约/同意收购/还债/取消未履约';
 definitions.find(row=>row.function.name==='world_remember').function.parameters.properties.rumor={...str,description:'编号；玩家/rumor键/在场来源/未核实原文；10分'};
 definitions.find(row=>row.function.name==='world_settlement').function.parameters.properties.operation.description='business编号办开店、停业、现金破产、期末盈亏。';
 const festivalParameters=definitions.find(row=>row.function.name==='world_settlement').function.parameters.properties;
 festivalParameters.operation.enum.push('festival_inspect','festival_plan','festival_authorize','festival_join','festival_cancel');
 Object.assign(festivalParameters,{festival:{...str,description:'plan用custom，后续用festival ID'},year:{...int,minimum:1},cost:{...int,minimum:0,description:'同意自费，非公款'},supplier:str});
-festivalParameters.operation.description='business经营；festival_依次查现场/约日期/各speaker准自费及收费/各speaker同意参加/组织者述因取消';
+festivalParameters.operation.description='business经营；festival_依次查现场/约日期/各speaker准自费收费/各speaker同意参加/组织者述因取消';
 const routes=new Map();
 function group(name,description,members){
     const selected=definitions.filter(row=>members.includes(row.function.name)),properties={},operations=[],mapping=new Map();

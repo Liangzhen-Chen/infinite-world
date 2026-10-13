@@ -7,6 +7,19 @@ import {reviewNpcRequirements} from '../tools/npc-acceptance.mjs';
 import {readFileSync} from 'node:fs';
 
 const scores={truth:100,agency:100,language:100,continuity:100};
+test('N4直接核验第三轮真实移动、履约及双方位置，不把到达解队当未同行',async()=>{
+ const report=JSON.parse(readFileSync(new URL('../docs/测试报告/M2-recheck-003/真实试玩.json',import.meta.url),'utf8'));
+ const result=report.results.find(r=>r.id==='guide');
+ const review=await reviewNpcRequirements({async generate(body){
+  const input=JSON.parse(body.messages[1].content);
+  assert.match(input.evidenceRules,/到达履约解队后的名单/);
+  assert.ok(input.turns.flatMap(t=>t.calls).some(c=>c.tool==='world_move'&&c.result.destination==='site_beilin_tower'&&c.result.companions.length===0));
+  const arrival=input.turns[2].assertions;assert.ok(arrival.every(a=>a.pass));
+  assert.ok(arrival.some(a=>a.path==='state.npcs.npc_hw_wushuo.location'&&a.actual==='site_beilin_tower'));
+  return {choices:[{finish_reason:'stop',message:{content:JSON.stringify({requirements:[{id:'N4',pass:true,reason:'移动回执及履约位置断言相符',relatedTurns:[2],prerequisiteTurns:[1],evidence:[{turn:2,quote:'"actual":"site_beilin_tower"'}]}]})}}]};
+ }},result,{requirements:['N4']},{previousReview:null});
+ assert.equal(review.complete,true);
+});
 const respond=value=>({choices:[{finish_reason:'stop',message:{content:JSON.stringify(value)}}]});
 const action={id:'npc_daily_1_ayan',npc:'npc_hw_ayan',kind:'craft',start:150,minute:180,location:'bld_hw_mill',
  action:{kind:'craft',recipe:'recipe_tool_handle'},spent:{minutes:30,fee:2,materials:[{item:'item_wood',amount:1}]},outcome:{success:false,degree:'失败'},produced:[]};

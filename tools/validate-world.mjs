@@ -58,7 +58,8 @@ export function validateWorld(world,{stage='engine'}={}){
             const key=`${row.scope??'global'}:${normalize(name)}`,previous=names.get(key);
             // A spell and the skill bearing it deliberately share a display name.
             const sameSpellSkill=previous&&[row.id,previous].some(id=>id.startsWith('spell_'))&&[row.id,previous].some(id=>id.startsWith('skill_'));
-            if(previous&&previous!==row.id&&!sameSpellSkill)errors.push(`同范围称呼冲突：${name}/${previous}/${row.id}`);names.set(key,row.id);
+            const sameBody=previous&&(row.actor===previous||ids.get(previous)?.actor===row.id);
+            if(previous&&previous!==row.id&&!sameSpellSkill&&!sameBody)errors.push(`同范围称呼冲突：${name}/${previous}/${row.id}`);names.set(key,row.id);
         }
     }
     const reference=(value,label)=>{if(value&&value!=='player'&&!ids.has(value))errors.push(`引用不存在：${label} -> ${value}`);};
@@ -108,9 +109,8 @@ export function validateWorld(world,{stage='engine'}={}){
         reference(npc.location,`${npc.id}.location`);
         if(npc.flags.minor!==(npc.age<18)||npc.age<18&&npc.flags.romanceable)errors.push(`年龄与未成年标记冲突：${npc.id}`);
         for(const item of Object.keys(npc.inventory))reference(item,`${npc.id}.inventory`);
-        for(const value of (Array.isArray(npc.skills)?npc.skills:Object.keys(npc.skills??{})))reference(value,`${npc.id}.service/skill`);
-        // The existing inventory trade service is an operation, not an entity ID.
-        for(const value of npc.services??[])if(value!=='trade')reference(value,`${npc.id}.service/skill`);
+        for(const value of Array.isArray(npc.skills)?npc.skills:Object.keys(npc.skills??{}))reference(value,`${npc.id}.service/skill`);
+        for(const value of npc.services??[])if(!['trade','teach'].includes(value))reference(value,`${npc.id}.service/skill`);
     }
     for(const row of world.locations)reference(row.parent,`${row.id}.parent`);
     const features=new Map();

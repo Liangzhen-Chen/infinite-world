@@ -1,5 +1,6 @@
 import {checkPetCareer}from'./pets.mjs';
 import {assertNpcService}from'./npc-schedule.mjs';
+import {initiation,ritualOfficiate}from'./training.mjs';
 const int=(value,min,max,label)=>{if(!Number.isSafeInteger(value)||value<min||value>max)throw new Error(`${label}不在允许范围`);return value;};
 export function effectiveProficiency(d,engine,skill){
     const value=d.get('state','skills',skill,'proficiency')??0;
@@ -23,6 +24,8 @@ function validMentor(d,engine,teacher,profession){
 export function profession(d,args,id){
     const role=this.resolve(args.profession,'profession'),catalog=this.byId.get(role),current=d.get('state','professions');
     const operation=args.operation??'certify';
+    if(operation==='initiate')return initiation(d,this,args,id);
+    if(operation==='ritual_officiate')return ritualOfficiate(d,this,args,id);
     if(operation==='abandon'){
         if(catalog.kind==='hidden')throw new Error('隐藏身份的代价按其经历规则处理，不能以普通退职清除');
         if(!(current.combat===role||current.life.includes(role)))throw new Error('没有这个正式职业');
