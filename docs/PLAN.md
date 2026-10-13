@@ -150,13 +150,9 @@ N1–N17至少12项完整有效且≥90%，N6/N16零泄漏，N12真实盲辨，N
 
 ### T87 已完成：医、植、食族15个机制（止血、创面、病症感知、止痛稳定、驱寄生、肌腱、药草识别、抗霜、根系、嫁接、保鲜等）接入真实状态；相关28/CORE40，0模型。
 
-### T88 心、契、物与空间族消费者【零模型】
+### T88 已完成：心、契、物与空间族20个机制（感受载体、自愿精神观察、睡眠休养、记忆保护、契约痕迹与反制、腐蚀、测距、取物、封存、锁隙、警号、许可通道、锚点校准与货运、空间修补）接入真实状态，精神类须本人同意；相关38/CORE40，0模型。
 
-结果：感受载体、自愿精神观察、睡眠与休养、长期记忆保护、契约痕迹与反制、材料腐蚀；可见测距、袋内整理取物、短时封存、机械锁隙、门框警号、许可通道、锚点校准、锚点货运、空间异常修补，都有真实效果。精神类一律要对方同意。
-可改：新增server-plugin/magic-mind-space.mjs、tests/magic-mind-space.test.mjs；magic.mjs、magic-primitives.mjs、magic-movement.mjs、contracts.mjs、npc-memory.mjs必要接点及机制图两文件。锁定同T87。
-验收：`node --test tests/magic-mind-space.test.mjs tests/magic.test.mjs tests/magic-movement.test.mjs`、CORE。模型0。规模约800–1100行。
-
-### T89 役灵与仪式族消费者【零模型；待T88合入】
+### T89 役灵与仪式族消费者【零模型】
 
 结果：真实动物引导、清扫役灵、碎石搬运、纸签运输、役灵改派与协作、可拒绝的邀约；受托祭坛清洁、自愿誓言见证、教派契约、复活祷标、守戒防护、共同护罩、灵体辨识、邪秽干扰、仪式治疗，都有真实效果。仪式资格按现有神祇与教派数据核对。
 可改：新增server-plugin/magic-ritual.mjs、tests/magic-ritual.test.mjs；summons.mjs、revival.mjs、contracts.mjs、magic.mjs、magic-primitives.mjs必要接点及机制图两文件。锁定同T87。
