@@ -1,8 +1,8 @@
 {
   "index": 0,
-  "fingerprint": "acc4ef60387d006d311a207ac2cc875f997fa3133751f5941d3f32c66891a59a",
+  "fingerprint": "8d7826cf97aa653b784cc56b8f9e29a1d6a770e06386c806e40dd95c8d62f5cb",
   "count": 25,
-  "passed": 12,
+  "passed": 22,
   "ids": [
     "npc_wt_zhengxi",
     "npc_wt_wangpu",
@@ -32,19 +32,9 @@
   ],
   "rewritten": 10,
   "manual": [
-    "npc_wt_zhangou",
     "npc_wt_zhicai",
     "npc_wt_xueying",
-    "npc_wt_leizhi",
-    "npc_wt_niyun",
-    "npc_wt_quhuai",
-    "npc_wt_dingsu",
-    "npc_wt_ruqin",
-    "npc_wt_gonglu",
-    "npc_wt_jingyao",
-    "npc_wt_fanshui",
-    "npc_wt_shanju",
-    "npc_wt_dongfei"
+    "npc_wt_shanju"
   ],
   "pending": [],
   "flagged": [
@@ -55,36 +45,32 @@
     "npc_wt_dingsu",
     "npc_wt_gonglu",
     "npc_wt_jingyao",
-    "npc_wt_fanshui"
+    "npc_wt_fanshui",
+    "npc_wt_xueying",
+    "npc_wt_leizhi",
+    "npc_wt_quhuai",
+    "npc_wt_ruqin",
+    "npc_wt_shanju",
+    "npc_wt_dongfei"
   ],
   "sample": [
-    "npc_wt_weilian",
-    "npc_wt_zhengxi",
-    "npc_wt_heqin",
-    "npc_wt_huangting",
+    "npc_wt_gonglu",
+    "npc_wt_duke",
+    "npc_wt_jingyao",
+    "npc_wt_fanshui",
     "npc_wt_liuyan"
   ],
   "l4": {
     "approved": false,
     "notes": []
   },
-  "costUpperYuan": 14.835478399999992,
-  "manualRatio": 0.52,
+  "costUpperYuan": 16.255731519999987,
+  "manualRatio": 0.12,
   "needsSystemicRepair": true,
   "operativeInvalidated": [
-    "npc_wt_zhangou",
     "npc_wt_zhicai",
     "npc_wt_xueying",
-    "npc_wt_leizhi",
-    "npc_wt_niyun",
-    "npc_wt_quhuai",
-    "npc_wt_dingsu",
-    "npc_wt_ruqin",
-    "npc_wt_gonglu",
-    "npc_wt_jingyao",
-    "npc_wt_fanshui",
-    "npc_wt_shanju",
-    "npc_wt_dongfei"
+    "npc_wt_shanju"
   ],
   "l4History": [
     {
@@ -170,6 +156,114 @@
       "notes": [],
       "supersededBy": "npc_wt_zhangou",
       "priorFingerprint": "2a9f857f46cf15ffcaf706c3e5be0900f136d1971c649094e69ac5c0ec5f656b"
+    },
+    {
+      "approved": false,
+      "notes": [],
+      "supersededBy": "npc_wt_zhangou",
+      "priorFingerprint": "acc4ef60387d006d311a207ac2cc875f997fa3133751f5941d3f32c66891a59a"
+    },
+    {
+      "approved": false,
+      "notes": [],
+      "supersededBy": "npc_wt_zhicai",
+      "priorFingerprint": "21ca46a498b60ae73043957f4772dc679904346c4405b1c9c5e3c67d6e91c8cf"
+    },
+    {
+      "approved": false,
+      "notes": [],
+      "supersededBy": "npc_wt_xueying",
+      "priorFingerprint": "433476d99c225a3852e45808c072fbba34840be8e42bb7778005b12f3ebfa617"
+    },
+    {
+      "approved": false,
+      "notes": [],
+      "supersededBy": "npc_wt_leizhi",
+      "priorFingerprint": "3f46ff9f8f896834d0afa0028769df9f389b521e740cc599bd5907570b248f4f"
+    },
+    {
+      "approved": false,
+      "notes": [],
+      "supersededBy": "npc_wt_niyun",
+      "priorFingerprint": "7fa57d9f7561202df3a23de148b3560e77614cc9bb8d5f83e997618d466c995b"
+    },
+    {
+      "approved": false,
+      "notes": [],
+      "supersededBy": "npc_wt_quhuai",
+      "priorFingerprint": "3acd63c4b2d100086ebfe993a6505ce014fdc7dec1954fa9f7188bbf48154bd0"
+    },
+    {
+      "approved": false,
+      "notes": [],
+      "supersededBy": "npc_wt_dingsu",
+      "priorFingerprint": "9e02bb5984b8b5df32cb33f2a45025f1c9ee6af4d3aede276b4e75628ffbe5b6"
+    },
+    {
+      "approved": false,
+      "notes": [],
+      "supersededBy": "npc_wt_ruqin",
+      "priorFingerprint": "1c860ba253596c47e0241811c44511e024294473f9acdd1fe5e451d1f3e30f47"
+    },
+    {
+      "approved": false,
+      "notes": [],
+      "supersededBy": "npc_wt_gonglu",
+      "priorFingerprint": "3fc1ef0dacf76b3e00d29b5f2f46dc3647f33ea36ef8b9c35b8feeb5b0a87cd9"
+    },
+    {
+      "approved": false,
+      "notes": [],
+      "supersededBy": "npc_wt_jingyao",
+      "priorFingerprint": "61213548906cc658a3d6f236695ac98ffc93f2b5907facde0e468ec48f9bfb30"
+    },
+    {
+      "approved": false,
+      "notes": [],
+      "supersededBy": "npc_wt_fanshui",
+      "priorFingerprint": "4de5c1df8b982ec181c943f646e10b3d3c2a6d09bc8d5e67d90166b3a221ded9"
+    },
+    {
+      "approved": false,
+      "notes": [],
+      "supersededBy": "npc_wt_shanju",
+      "priorFingerprint": "0eb56178913c2d39e20d422572f857f1ae31724dcfbe54be8fe1624cfdad9094"
+    },
+    {
+      "approved": false,
+      "notes": [],
+      "supersededBy": "npc_wt_dongfei",
+      "priorFingerprint": "9d2aa47af4f7715f8d060521e8894ee14c417160134c4daa7215cc7a211e3f1d"
+    },
+    {
+      "approved": false,
+      "notes": [],
+      "supersededBy": "npc_wt_dingsu",
+      "priorFingerprint": "8e085a05037f2a147b9b5fa59e2ee2d3236ef352a13f1fa3716d7b273424de15"
+    },
+    {
+      "approved": false,
+      "notes": [],
+      "supersededBy": "npc_wt_gonglu",
+      "priorFingerprint": "9810cd4e666d73eee22ddedcf1b36076aa1e6e84fd1f6eb48db78749db645900"
+    },
+    {
+      "approved": false,
+      "notes": [],
+      "supersededBy": "npc_wt_fanshui",
+      "priorFingerprint": "3a39edff7e6c389f5b1c47dd026ef2299522497b0dc252038f640487ad7b415e"
+    },
+    {
+      "approved": false,
+      "notes": [],
+      "supersededBy": "npc_wt_quhuai",
+      "priorFingerprint": "c5f6630d2f2d557bc72b7fb9195697663c1149585df358b24ae9a272e2f773ce"
+    },
+    {
+      "approved": false,
+      "notes": [],
+      "supersededBy": "npc_wt_zhicai",
+      "priorFingerprint": "aa9489ab0e817a92d54be3ab8a97c4392216f8d41c7145133cdd8ec1c0cc7218"
     }
   ],
   "foundationHash": "fffc337e121742c3c32d56a90dbaa8445d2e9ad28166c3c548f398bba1755bae"

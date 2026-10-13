@@ -36,8 +36,8 @@ export async function generateBasis(){
  await write('candidate-after.json',depthEntries(rows.map(r=>r.before),design,world).map(patchDraft));
  return{changes:changes.length,correctedBefore:changes.filter((c,i)=>c.beforeHash!==previous[i].beforeHash).length};
 }
-export async function officialCheck(){
- const options=await completeOptions(),prepared=await prepareDepthRevision(options),plan=await read('reopen/controlled-plan.json');
+export async function officialCheck({proofOverride}={}){
+ const options=await completeOptions(),prepared=await prepareDepthRevision({...options,...(proofOverride?{proofOverride}:{})}),plan=await read('reopen/controlled-plan.json');
  assert.equal(prepared.revision.changes.length,42);
  const priorRecords=await read('reopen/old-records.json'),protectedIds=prepared.entries.filter(e=>!plan.authorized.some(a=>a.id===e.id)).map(e=>e.id);assert.equal(protectedIds.length,12);
  for(const entry of prepared.entries.filter(e=>protectedIds.includes(e.id))){const record=await read('sourced/'+entry.id+'.json'),fingerprint=hashContent({entry,context:prepared.contexts.get(entry.id),revision:prepared.config.revision});assert.equal(record.fingerprint,fingerprint,'有效12人完整审核指纹改变 '+entry.id);}
