@@ -5,6 +5,7 @@ import {assertNpcObligationAction}from'./npc-obligations.mjs';
 import {assertNpcAutonomyAction}from'./npc-autonomy.mjs';
 import {enforceLegalRestriction}from'./law.mjs';
 import {digest}from'./storage.mjs';
+import {assertWaterEarthMovement}from'./magic-water-earth.mjs';
 export const movementKinds=Object.freeze(['anchor_sense','blink','teleport']);
 const validPoint=p=>Array.isArray(p)&&p.length===2&&p.every(Number.isFinite);
 const distance=(a,b)=>Math.hypot(a[0]-b[0],a[1]-b[1]);
@@ -73,6 +74,7 @@ export function prepareMovement(d,catalog,args,{completion=false}={}){
   if(row.location!==location||distance(point,row.position)>catalog.rangeMeters||!localSightClear(d,this,location,point,row.position))throw Error('锚点须在实际射程内且视线无遮挡');
   return{spec:s,catalog,args:{...args},row,location,point};
  }
+ for(const target of ['player',...d.get('state','player','companions')??[]])assertWaterEarthMovement(d,target);
  const companions=[...d.get('state','player','companions')??[]];
  if(new Set(companions).size!==companions.length||companions.length>s.maxCompanions)throw Error('位移同行人数超额');
  if(d.get('state','player','mount')||Object.values(d.get('state','pets')??{}).some(p=>p.following)||Object.values(d.get('state','effects')??{}).some(e=>e.kind==='summon'&&e.owner==='player'))throw Error('位移尚不支持坐骑、宠物或召唤物载荷，须先解除同行');

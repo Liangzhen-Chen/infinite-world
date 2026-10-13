@@ -5,6 +5,7 @@ import{visibilityPenalty}from'./magic-context.mjs';
 import{applyBossCounterAbility}from'./boss-abilities.mjs';
 import {consumeMagicProtection}from'./magic-primitives.mjs';
 import {projectileAirPenalty}from'./magic-air.mjs';
+import {waterEarthMudPenalty,assertWaterEarthMovement}from'./magic-water-earth.mjs';
 import {milestone,monsterReward,awardExperience}from'./progression.mjs';
 import {manufacture}from'./manufacturing.mjs';
 import {repair}from'./repair.mjs';
@@ -20,6 +21,7 @@ import {lairAction,bossCounter,rememberBossTactic,defeatBoss}from'./bosses.mjs';
 import {civicAction,recordDonationContribution,publicProjectApproval,donationReceipt,saveDonationReceipt}from'./civic.mjs';
 import {governanceAction,assertGovernedProject}from'./governance.mjs';
 import {businessAction}from'./business.mjs';
+import {festivalAction}from'./festival.mjs';
 const integer=(value,min=0,max=1e9)=>{if(!Number.isSafeInteger(value)||value<min||value>max)throw new Error(`数值需在${min}到${max}之间`);return value;};
 const requiredText=value=>{if(typeof value!=='string'||!value.trim()||value.length>1200)throw new Error('记录文字无效');return value.trim();};
 export const activities={
@@ -57,6 +59,7 @@ export const activities={
         const opponentBase=isNpc?derivedStats({level,attributes:base.attributes,profession:Boolean(base.combatProfession)},this.rules)
             :monsterStats({level,template:base.template??this.byId.get(base.monster)?.template??2,bossTier:base.tier??0},this.rules);
         const opponentContext=this.magicStatusContext(d,target),opponent=withMagicStats(opponentBase,magicStatusStats(d,target,opponentContext));
+        opponent.evasion=Math.max(0,opponent.evasion-waterEarthMudPenalty(d,this,target)*.05);
         if(opponent.divine&&!d.get('state','divinePermissions',target))throw new Error('神性屏障阻止普通攻击，需要交涉、逃离或取得特殊条件');
         const rawWeaponStats=weapon?this.byId.get(weapon).combat??{}:{},held=weapon?heldUnit(d,this,'player',weapon):null;
         const workmanshipFactor=this.rules.equipment.workmanship?.find(row=>row.name===held?.workmanship)?.multiplier??1;
@@ -65,8 +68,10 @@ export const activities={
         const playerBase=derivedStats({level:p.level,attributes:p.attributes,profession:Boolean(d.get('state','professions','combat')),equipment},this.rules),playerContext=this.magicStatusContext(d,'player');
         playerContext.moving=['flee','shove'].includes(args.intent);
         const stats=withMagicStats(playerBase,magicStatusStats(d,'player',playerContext));
+        stats.evasion=Math.max(0,stats.evasion-waterEarthMudPenalty(d,this)*.05);
         const maxHp=npc.maxHp??opponent.maxHp,hp=npc.hp??maxHp,rng=combatRandom(d.document,id),intent=args.intent??'attack';
         if(!['attack','defend','flee','shove'].includes(intent))throw new Error('交锋意图需为attack、defend、flee或shove');
+        if(intent==='flee')assertWaterEarthMovement(d);
         const tactic=intent==='attack'?(weapon?'armed':'unarmed'):intent,counter=bossCounter(d,this,target,tactic);
         const location=this.byId.get(d.get('state','location')),terrain=location.combatTags??[];
         const weather=localWeather(this,d.document),night=weather&&!weather.indoors&&!weather.daylight&&!terrain.includes('dark')&&!magicIlluminates(d)?this.rules.combat.terrain.dark.hit:0;
@@ -81,6 +86,7 @@ export const activities={
         let escaped=false;if(intent==='flee')escaped=this.check(d,{attribute:'敏捷',difficulty:counter.escapeDifficulty??15},`${id}_escape`).success;
         let received=0,absorbed=0;const bossAbilities=[];for(let i=0;i<(opponent.attacks??1);i++)if(remaining>0&&!escaped&&received<p.hp){
             const currentOpponent=withMagicStats(opponentBase,magicStatusStats(d,target,opponentContext)),currentPlayer=withMagicStats(playerBase,magicStatusStats(d,'player',playerContext));
+            currentPlayer.evasion=Math.max(0,currentPlayer.evasion-waterEarthMudPenalty(d,this)*.05);
             const opponentHit=visibilityPenalty(hitModifier,magicStatusStats(d,target,opponentContext),opponentContext);
             const hit=strike(currentOpponent,currentPlayer,rng,this.rules,{hitModifier:opponentHit+projectileAirPenalty(d,'player',base.projectileMg),damageMultiplier:intent==='defend'?0.5:1});
             if(hit.hit)recordLocalContact(d,this,target,id);
@@ -139,6 +145,7 @@ export const activities={
         return {project:key,stage,...outcome,note:stage==='打磨'?'研究成果需进入受限实体登记，才能获得规则认可':'原型未被系统承认，不能宣称已学会新法术'};
     },
     settlement(d,args,id){
+        if(args.operation?.startsWith('festival_'))return festivalAction.call(this,d,args,id);
         if(args.operation?.startsWith('business_'))return businessAction.call(this,d,args,id);
         if(args.operation?.startsWith('civic_'))return civicAction.call(this,d,args,id);
         if(args.operation?.startsWith('governance_'))return governanceAction.call(this,d,args,id);

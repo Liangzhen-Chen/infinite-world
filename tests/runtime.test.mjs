@@ -27,7 +27,7 @@ test('E2/E19 浏览器：失败对账阻止出站生成，编辑撤销刷新玩�
     await page.route('**/runtime.js',route=>route.fulfill({contentType:'text/javascript',body:runtime}));
     await page.route('**/turn.mjs',async route=>route.fulfill({contentType:'text/javascript',body:await fs.readFile('extension/turn.mjs','utf8')}));
     await page.route('**/state-read.mjs',async route=>route.fulfill({contentType:'text/javascript',body:await fs.readFile('extension/state-read.mjs','utf8')}));
-    for(const name of ['tools.mjs','prompt.mjs','message-view.mjs','ledger-view.mjs','history-window.mjs'])await page.route(`**/${name}`,async route=>route.fulfill({contentType:'text/javascript',body:await fs.readFile(`extension/${name}`,'utf8')}));
+    for(const name of ['tools.mjs','prompt.mjs','message-view.mjs','ledger-view.mjs','history-window.mjs','ui-shell.mjs','ui-settings.mjs','topbar.mjs'])await page.route(`**/${name}`,async route=>route.fulfill({contentType:'text/javascript',body:await fs.readFile(`extension/${name}`,'utf8')}));
     await page.route('**/api/plugins/infinite-fields/**',async route=>{
         const request=route.request(),url=new URL(request.url());
         if(failReconcile&&url.pathname.endsWith('/reconcile'))return route.fulfill({status:400,json:{ok:false,error:'故意损坏的回放夹具'}});
@@ -83,7 +83,7 @@ test('E2/E19 浏览器：失败对账阻止出站生成，编辑撤销刷新玩�
     });
     assert.equal(blocked,true);assert.equal(generationRequests,0);assert.equal(await page.evaluate(()=>window.stopped),true);
     failReconcile=false;
-    await page.locator('#fields-toolbar button').nth(1).click();
+    await page.getByRole('button',{name:'重新对账',exact:true}).click();
     await page.waitForFunction(()=>window.infiniteFieldsV2.blocked===null);
     await page.evaluate(()=>window.fixtureHandlers.get('MESSAGE_EDITED')(0));
     assert.equal(await page.evaluate(()=>window.infiniteFieldsV2.view.document.state.location),'bld_hw_qingdeng');
@@ -158,6 +158,7 @@ test('E2/E19 浏览器：失败对账阻止出站生成，编辑撤销刷新玩�
     assert.doesNotMatch(projection,/秘密会面细节|未知告示内容|未获知的真名|npc_secret/);
     const ledgerReport={pass:true,fixture:'isolated local server and temporary campaign; no user saves',viewport:{width:390,height:844},layout,pageErrors,consoleErrors:consoleErrors.slice(consoleStart),consoleScope:'Ledger screenshots only; deliberate failed API fixtures earlier in this test are outside this scope',checks:['current server receipts and balances','edit rollback removes stale balances and receipts','only player obligations and accepted or player-published quests','unknown created names stay hidden','literal DOM text instead of raw JSON','Escape and close button','390x844 document and drawer have no horizontal overflow'],screenshots:['T20-ledger-desktop.png','T20-ledger-mobile-state.png','T20-ledger-mobile-changes.png'],scope:'Player ledger drawer only; M6 full interface and deployed SillyTavern remain unverified'};
     await page.getByRole('button',{name:'关闭',exact:true}).click();
+    await page.getByRole('button',{name:'面板',exact:true}).click();
     await page.getByRole('button',{name:'世界账本',exact:true}).click();
     assert.match(await page.locator('#fields-dialog').innerText(),/欠款：林穗 · 未还 6铜 · 待偿还/);
     await page.evaluate(()=>window.infiniteFieldsV2.execute('world_time',{minutes:60},'credit-wait-ui'));

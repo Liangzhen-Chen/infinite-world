@@ -1,0 +1,90 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import fs from 'node:fs/promises';
+import {loadWorld} from '../tools/load-world.mjs';
+import {WorldEngine} from '../server-plugin/engine.mjs';
+import {applyPatches} from '../server-plugin/storage.mjs';
+import {assertWorldClockRules,clockRoll,worldClockScene} from '../server-plugin/world-clock.mjs';
+import {worldClockRules} from '../world/design/m5-clock-rules.mjs';
+import {weatherAt} from '../server-plugin/weather.mjs';
+
+const world=await loadWorld(),legacy=JSON.parse(await fs.readFile('tests/fixtures/legacy/seed.json','utf8')),DAY=1440;
+function setup(seed='clock-test'){
+ const w=structuredClone(world);for(const n of w.npcs){delete n.schedule;delete n.tier;}
+ const engine=new WorldEngine(w),doc=engine.createCharacter(legacy,{},seed);
+ const wait=async(c,minutes,id='wait')=>{const out=await engine.reduce(c,{tool:'world_time',args:{minutes},eventId:id});return {doc:applyPatches(c,out.patches),out};};
+ return {w,engine,doc,wait};
+}
+const clocks=doc=>Object.values(doc.state.records).filter(r=>r.category==='world_clock');
+const economic=doc=>({settlements:doc.state.settlements,quotes:doc.state.quotes,records:Object.fromEntries(Object.entries(doc.state.records).filter(([,r])=>['world_clock','regional_quote','settlement_trade','agriculture','village_fiscal','festival'].includes(r.category)))});
+
+test('正式机制引用既存四村和文化势力；未知效果和缺消费者拒绝',()=>{
+ assert.deepEqual(world.rules.worldClock,worldClockRules);
+ const {engine,w}=setup();assert.doesNotThrow(()=>assertWorldClockRules(engine));
+ for(const change of [r=>r.clocks[0].stages[0].effect.kind='awaken',r=>r.clocks[0].settlement='loc_missing',r=>r.clocks[0].probability=2,r=>r.clocks[0].stages[0].condition.kind='secret']){
+  const bad=structuredClone(w);change(bad.rules.worldClock);assert.throws(()=>assertWorldClockRules(new WorldEngine(bad)));
+ }
+ const missing=structuredClone(w);delete missing.rules.settlementTrade;assert.throws(()=>assertWorldClockRules(new WorldEngine(missing)),/消费者/);
+});
+test('真实周贸易到货后推进阶段并消费区域报价，不把常量阶段当演变',async()=>{
+ const {engine,doc,wait}=setup(),before=structuredClone(doc);
+ let c=(await wait(doc,14*DAY-doc.state.minute)).doc;
+ assert.deepEqual(doc,before);
+ for(const clock of clocks(c)){
+  assert.equal(clock.phase,2);assert.equal(clock.history.length,2);
+  assert.ok(clock.history[1].trigger.evidence.some(id=>c.state.records[id]?.deliveredFood>0));
+  for(const event of clock.history){
+   const sid=engine.rules.worldClock.clocks.find(r=>r.id===clock.id).settlement;
+   assert.equal(event.effect.price,c.state.quotes[`region:${event.minute/DAY}:${sid}:item_oats`]);
+  }
+ }
+ assert.equal(worldClockScene(engine,c),'');
+ const counter=engine.rules.agriculture.settlements.find(p=>p.settlement==='loc_bs_yupo').counter;
+ const visible=structuredClone(c);visible.state.location=counter;assert.match(worldClockScene(engine,visible),/每份\d+铜/);
+ assert.ok(Object.values(c.state.records).some(r=>r.category==='settlement_trade'&&r.status==='delivered'));
+ assert.equal(c.state.player.coins,doc.state.player.coins);assert.deepEqual(c.state.created,doc.state.created);
+ const beforeNpcs=Object.keys(doc.state.npcs);assert.deepEqual(Object.keys(c.state.npcs),beforeNpcs);
+ // No harvest has occurred: more elapsed weeks alone cannot reach stage three.
+ c=(await wait(c,14*DAY,'weeks')).doc;assert.ok(clocks(c).every(r=>r.phase===2));
+});
+test('同种子30日分步与大步结果一致，既有天气和钱粮账保持一致',async()=>{
+ const {engine,doc,wait}=setup();
+ const expectedWeather=weatherAt(engine,doc.randomSeed,'loc_bs_yupo',25*DAY);
+ const large=(await wait(doc,30*DAY,'large')).doc;
+ let split=doc;for(let i=0;i<30;i++)split=(await wait(split,DAY,`small-${i}`)).doc;
+ assert.deepEqual(economic(split),economic(large));
+ assert.deepEqual(weatherAt(engine,large.randomSeed,'loc_bs_yupo',25*DAY),expectedWeather);
+ for(const r of clocks(large))assert.equal(new Set(r.history.map(e=>e.sourceEvent)).size,r.history.length);
+});
+test('日/月/年边界只触发一次，旧档从当前日期起步不补造过去',async()=>{
+ const {engine,doc,wait}=setup();let start=doc;
+ while(start.state.minute<359*DAY+540)start=(await wait(start,Math.min(30*DAY,359*DAY+540-start.state.minute),'prepare-year')).doc;
+ for(const [id,r]of Object.entries(start.state.records))if(r.category==='world_clock')delete start.state.records[id];
+ const one=(await wait(start,30*DAY,'year')).doc;
+ let split=start;for(let i=0;i<30;i++)split=(await wait(split,DAY,`day-${i}`)).doc;
+ assert.deepEqual(economic(one),economic(split));
+ const calendar=engine.calendar(360*DAY);assert.deepEqual([calendar.year,calendar.month,calendar.day],[2,1,1]);
+ for(const r of clocks(one)){assert.equal(r.year,2);assert.ok(r.history.every(e=>e.minute>start.state.minute));assert.ok(r.nextAt>one.state.minute);assert.ok(r.phase<3);}
+ const replay=await wait(start,30*DAY,'year');assert.deepEqual(economic(replay.doc),economic(one));
+});
+test('概率取决于种子与绝对日期，阶段未满足时不扣资源',async()=>{
+ const {engine,w,doc,wait}=setup();
+ for(const r of w.rules.worldClock.clocks)r.probability=0;
+ const old=structuredClone(doc.state.inventory),c=(await wait(doc,30*DAY)).doc;
+ assert.ok(clocks(c).every(r=>r.phase===0&&r.history.length===0));assert.deepEqual(c.state.inventory,old);
+ assert.equal(clockRoll('seed','clock',7),clockRoll('seed','clock',7));assert.notEqual(clockRoll('seed','clock',7),clockRoll('other','clock',7));
+ // Weather/ecology predicates read supported consumers and never invent stock.
+ const rule=w.rules.worldClock.clocks[0];rule.probability=1;rule.stages=[{name:'生态核对',condition:{kind:'wildlife_population',habitat:w.rules.wildlife.habitats[0].id,species:'missing',minimum:1},effect:{kind:'regional_quote',item:'item_oats'}}];
+ const ecology=(await wait(doc,7*DAY)).doc;assert.equal(clocks(ecology)[0].phase,0);
+ assert.doesNotThrow(()=>assertWorldClockRules(engine));
+});
+test('非平凡概率按绝对周次推进，调用分段不改掷值',async()=>{
+ const s=setup('probability');for(const r of s.w.rules.worldClock.clocks){r.probability=0.35;r.stages=[r.stages[0]];}
+ const large=(await s.wait(s.doc,30*DAY)).doc;let split=s.doc;
+ for(let i=0;i<30;i++)split=(await s.wait(split,DAY,`split-${i}`)).doc;
+ assert.deepEqual(clocks(large),clocks(split));
+ for(const row of clocks(large)){
+  const ticks=[7,14,21,28],first=ticks.find(day=>clockRoll(s.doc.randomSeed,row.id,day)<0.35);
+  assert.equal(row.history[0]?.minute,first===undefined?undefined:first*DAY);
+ }
+});

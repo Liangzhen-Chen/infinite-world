@@ -3,36 +3,42 @@ import path from 'node:path';
 import {fileURLToPath}from'node:url';
 import YAML from 'yaml';
 import {backup,root}from'./backup.mjs';
-import {digest}from'../server-plugin/storage.mjs';
+import {createHash} from 'node:crypto';
+const digest=bytes=>createHash('sha256').update(bytes).digest('hex');
 
 const extensionPath='public/scripts/extensions/third-party/infinite-fields';
 export async function prepareDeployment(destination=path.join(root,'dist','engine-deployment')){
     destination=path.resolve(destination);
-    const sources=['tools/load-world.mjs','tools/npc-autonomy-planner.mjs','tools/deepseek-client.mjs','tools/narrative-claims.mjs','extension/tools.mjs','extension/message-view.mjs','extension/turn.mjs','extension/prompt.mjs','extension/history-window.mjs','prompt/constitution.md','prompt/style.md'];
+    const sources=['tools/load-world.mjs','tools/npc-autonomy-planner.mjs','tools/deepseek-client.mjs','tools/narrative-claims.mjs','prompt/constitution.md','prompt/style.md'];
     async function copyDirectory(relative){
         for(const name of await fs.readdir(path.join(root,relative))){
             if(relative==='world'&&name==='drafts')continue;
             const file=path.join(relative,name),stat=await fs.lstat(path.join(root,file));
             if(stat.isSymbolicLink())throw new Error('部署拒绝符号链接');
-            if(stat.isDirectory())await copyDirectory(file);else sources.push(file);
+            if(stat.isDirectory())await copyDirectory(file);else sources.push(file.replaceAll('\\','/'));
         }
     }
     await copyDirectory('server-plugin');await copyDirectory('world');
+    await copyDirectory('extension');await copyDirectory('assets');
     // The plugin must resolve its runtime dependency without the development checkout.
     await copyDirectory('node_modules/opencc-js');
     const files=[];
     for(const source of sources){
+        if(source.startsWith('assets/'))continue;
         const bytes=await fs.readFile(path.join(root,source)),target=path.join(destination,'plugin',source);
         await fs.mkdir(path.dirname(target),{recursive:true});await fs.writeFile(target,bytes);
-        files.push({path:path.relative(destination,target).replaceAll('\\','/'),sha256:digest(bytes.toString('utf8'))});
+        files.push({path:path.relative(destination,target).replaceAll('\\','/'),sha256:digest(bytes)});
     }
     const entry="export {info,init} from './server-plugin/index.mjs';\n";
     await fs.writeFile(path.join(destination,'plugin','index.mjs'),entry);
     files.push({path:'plugin/index.mjs',sha256:digest(entry)});
     await fs.mkdir(path.join(destination,'extension'),{recursive:true});
-    for(const name of ['runtime.js','turn.mjs','state-read.mjs','tools.mjs','generation.mjs','prompt.mjs','message-view.mjs','ledger-view.mjs','history-window.mjs','style.css']){
-        const bytes=await fs.readFile(path.join(root,'extension',name));await fs.writeFile(path.join(destination,'extension',name),bytes);
-        files.push({path:`extension/${name}`,sha256:digest(bytes.toString('utf8'))});
+    for(const source of sources.filter(source=>source.startsWith('extension/')||source.startsWith('assets/'))){
+        const relative=source.startsWith('extension/')?source.slice('extension/'.length):source;
+        if(['manifest.json','index.js','core.js','seed.json'].includes(relative))continue;
+        const bytes=await fs.readFile(path.join(root,source)),target=path.join(destination,'extension',relative);
+        await fs.mkdir(path.dirname(target),{recursive:true});await fs.writeFile(target,bytes);
+        files.push({path:`extension/${relative.replaceAll('\\','/')}`,sha256:digest(bytes)});
     }
     const manifest=JSON.parse(await fs.readFile(path.join(root,'extension','manifest.json'),'utf8'));
     manifest.js='runtime.js';manifest.version='2.0.0';
@@ -48,7 +54,7 @@ export async function activateDeployment(destination,{installation=path.join(roo
     // Validate the complete frozen bundle before changing any live file.
     for(const file of report.files){
         if(!/^(plugin|extension)\/[a-zA-Z0-9_./-]+$/.test(file.path)||file.path.split('/').includes('..'))throw new Error('部署路径无效');
-        if(digest(await fs.readFile(path.join(destination,file.path),'utf8'))!==file.sha256)throw new Error(`部署文件校验失败：${file.path}`);
+        if(digest(await fs.readFile(path.join(destination,file.path)))!==file.sha256)throw new Error(`部署文件校验失败：${file.path}`);
     }
     const saved=await makeBackup('before-engine-deployment');
     for(const file of report.files){

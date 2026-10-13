@@ -67,7 +67,7 @@ review-002-yp=782a49e阶段审核通过，范围限T06正式发布与c64163d修�
 
 ### T07 已完成（待T73正式整合）：苇汀30人L1/L2/L4全过，随机10人评分均4.32/最低3，7条共享事件闭合、T04零缺口、发布预演通过；累计4.49559880元。重开授权入口已支持追加授权：T07/T08/T09上限7/6.5/4.5元、每人6次、波次25元（用户2026-10-13同意）。T58已并入完成。
 
-### T08 砾泉最小修卡【零模型；整卡卡住】
+### T08 砾泉来源修订与续审【真实模型；停止线已解除，上限6.5元、每人6次】
 
 据59fca09的reopen-complete/{next-gap.txt,background-source-block.json,neighbor-request-guard-block.json,stopped-report.json}。23passed/7manual，五人背景失效，最多21闭合；余额0.28716496。鞠舒两次已尽，第三次须真正决定，增额不重置次数。
 
@@ -79,15 +79,9 @@ review-002-yp=782a49e阶段审核通过，范围限T06正式发布与c64163d修�
 
 ### T54 已完成：63613dc已合；真实T07的42 changes/12指纹保持，T08父proof四叶及逐event+sourceHash的L4/发布重放通过，相关87/CORE40；0模型，T07真实复审与T08来源授权仍归原卡。原验收见 `git show ee0f4e6:docs/PLAN.md`。
 
-### T09 桑坂两人一次规划【卡住；第三次待人类决定】
+### T09 已完成（待T85正式整合）：桑坂30人L1/L2/L4全过，随机10人均分4.33/最低3，15条事件闭合、T04零缺口、发布预演通过；累计2.77692672元。
 
-0323dc2的first-review/complete-002/stopped-report.json：42次直接L2、2.46694448元，28passed/2manual；13事件26人闭合，shared_11池杉/查悦与shared_12秦婉/龙芙未闭，L4未批准。首审及补证两次attempts已尽；不自动第三call、新nonce或重领。
-
-只准备原world/design/w1-sb-depth.mjs两人失败叶的最小差异。池杉known[2]/memorySeeds[2]改为明确“池杉说…；查悦说…”的原publicSpeech归属；独立first-review/authored-background.json的shared_11已载双方公开说话，hard把有限发言判为私密属证据冲突，不能据此扩大knownBy。若牵动共享正文，列出查悦受影响叶，不覆盖旧通过。
-
-龙芙原memorySeeds[1]支持湿布记忆、独立shared_12支持招呼，不能因before.known未列就判无源；pending步骤不算已做。voice.register恢复“先指叶背再谈土”并仅补原notes的重复旧例；亲属备注收窄为原sourceRecords可见动作，删“使他不耐烦”等推断，unknown保留未知边界。逐hard绑定独立源/原hash，缺源不编造；保留失败，不能手工改passed。
-
-无第三次授权，执行仍卡住。未变28人复用；后续若获真实决定，原账总限4.5、未知预留不退，原L1/L2/L4、30人T04与事件闭合/预演及相关+CORE门槛不变；不新增人口或发布。原范围/验收见 `git show ee0f4e6:docs/PLAN.md`。
+### T85 已完成：桑坂30人完整档正式整合，15事件闭合，重发零写入，仍152 full/294名册；相关29/CORE40，0模型。
 
 ### T10 已完成：32人和五独立源L1/L2/L4闭合已合，候选合后56过；后经T11-B正式整合，不重审；原卡累计2.40776216元。 完整原验收见 `git show bb4c575:docs/PLAN.md` 对应卡。
 
@@ -159,32 +153,19 @@ N1–N17至少12项完整有效且≥90%，N6/N16零泄漏，N12真实盲辨，N
 
 ### T66 已完成：风族14个机制（烟气流动、除尘、风向、传话与静音、排湿、缓降托举、船帆、呼吸、偏转、风刃、风阻）接入真实状态；相关17/CORE40，0模型。
 
-### T73 苇汀30人正式整合发布【零模型】
+### T73 已完成：苇汀30人完整档正式整合进world/people/baseline.json，重发零写入，仍152 full/294名册；相关31/CORE40，0模型。
 
-结果：玩家在苇汀遇到的30人带上已审核的完整档（目标、语气、记忆、关系、知情边界），可在交谈中用到。
-可改：world/people/正式人物文件及发布器写入的正式记忆/事件文件、tests/npc-depth-wt.test.mjs、必要时tests/npc-depth-batch-publication.test.mjs的苇汀用例。锁定：其他村草稿、tools/下公共工具（发现缺陷先报告）、人口数量（仍152 full/294名册，不新增）。
-做法：沿T11-B河湾和T06榆坡的做法，用tools/publish-npc-depth.mjs先预演再正式发布world/drafts/w1/wt-depth的已审批次；重复发布零写入；旧记忆、现金、库存不变。
-验收：`node --test tests/npc-depth-wt.test.mjs tests/npc-depth-batch-publication.test.mjs`、CORE。模型0。规模：数据写入为主，代码改动小于100行。
+### T71 已完成：水土族17个机制（密封、测流缓流、水体束缚、水帘、探土耕平、勘矿、结构支撑、堤岸、裂隙、陷足、石弹）接入真实状态；相关22/CORE40，0模型。
 
-### T71 水土族消费者【零模型】
-
-结果：水土系法术有真实效果——容器与泥缝密封、水道测流与缓流、水体束缚、水帘遮挡视听、探土翻耕平地、岩层与矿脉勘察、结构受力与支撑、堤岸、裂隙、陷足泥地、实体石弹。
-可改：新增server-plugin/magic-water-earth.mjs、tests/magic-water-earth.test.mjs；environment.mjs、agriculture.mjs、magic.mjs、magic-primitives.mjs必要接点及机制图两文件。锁定：正式world/meta目录、extension/tools.mjs、prompt/。
-验收：`node --test tests/magic-water-earth.test.mjs tests/magic.test.mjs`、CORE；每个效果有正常与拒绝路径，到期与重载一致。模型0。规模约700–1000行。
-
-### T72 光族消费者【零模型；待T71合入，同改magic接点】
+### T72 光族消费者【零模型】
 
 结果：光系法术有真实效果——手持光源与调暗、聚光反射与影长测量、样品辨色、表面磨损与痕迹显现、路线光标、雾中能见度、遮光与私密、视觉干扰与诱饵、阴影束缚、强光随距离衰减。
 可改：新增server-plugin/magic-light.mjs、tests/magic-light.test.mjs；environment.mjs、magic-targeting.mjs、magic.mjs、magic-primitives.mjs必要接点及机制图两文件。锁定同T71。
 验收：`node --test tests/magic-light.test.mjs tests/magic.test.mjs`、CORE。模型0。规模约700–1000行。
 
-### T67 首领接触记忆、目标与领地【零模型】
+### T67 已完成：智能首领记住实际接触与交锋，按领地目标改变态度，存档恢复后保留；本卡8项通过/CORE40，0模型。bosses.test里两项主线旧失败（世界归档校验失败）不属本卡，随T43续修处理。
 
-结果：智能首领记住实际交锋和接触，按领地目标改变公开态度，存档恢复后仍认得发生过的事。
-可改：新增server-plugin/boss-cognition.mjs、tests/boss-cognition.test.mjs；bosses.mjs、boss-migration.mjs、tools/validate-world.mjs的模板接点。锁定：magic*、npc-memory.mjs、正式world文件。
-验收：`node --test tests/boss-cognition.test.mjs tests/bosses.test.mjs`、CORE。模型0。规模约250–400行。
-
-### T68 首领谈判、交易与结盟【零模型；待T67】
+### T68 首领谈判、交易与结盟【零模型；T67已合，待T43提示精简合入后派，同改extension/tools.mjs】
 
 结果：玩家在巢穴提出条件，首领按自己的目标接受或给出拒绝理由，成交时交换有限物资并保存关系。
 可改：新增server-plugin/boss-negotiation.mjs、tests/boss-negotiation.test.mjs；bosses.mjs、boss-cognition.mjs、extension/tools.mjs、tools/validate-world.mjs必要接点。工具说明要短，合入后tests/prompt.test.mjs仍须通过。锁定：magic*、正式world文件。
@@ -306,11 +287,7 @@ T28-R1修好新回执undefined规范化并保留严格篡改拒绝，相关31/32
 
 验收：`node --test tests/reputation-law.test.mjs tests/law.test.mjs tests/npc-cognition.test.mjs`、CORE；同事两地不同口碑、传播前未知、伪证/无证拒判、上诉/已服刑不重复罚，司法钱物守恒与旧案件重放。模型0。不要做：新官员/政体人口、全球即时通缉、把所有听说变事实。依赖既有law/T15，正式制度内容另审；与T36及law/cognition写者串行，可并行T29。
 
-### T44 M5历法节日与确定性世界时钟【待调度】
-
-目标：补W5仅候选节日无运行器、势力阶段无消费的机制，先不冒称24节日/300传闻完成。涉及：新增server-plugin/world-clock.mjs、festival.mjs、tests/world-clock.test.mjs、festival.test.mjs，engine.mjs日周接点、scene-card.mjs最小可见事实；world/design/m5-clock-rules.mjs引用已存在文化/势力/聚落。实现：沿360日年/calendar、weather种子和state.records保存clock阶段/触发条件/游标；节庆须实际日期、组织授权、支出、参与与关系事件，玩家不参与也按资源条件推进。四村日历可先适配；24条候选先L1/L2/L4发布才进入正式节日库。时钟不直接生成新人口/秘密/免费库存，具体消费者只接已实现经济/农事/生态状态，未知效果仍拒绝。
-
-验收：`node --test tests/world-clock.test.mjs tests/festival.test.mjs tests/weather.test.mjs tests/village-ledgers.test.mjs`、CORE；跨日/月/年一次触发、分步与大步同种子一致、组织费守恒、取消/无人参与/资金不足有结果、离开30日后仅通过合法场景/消息显现。模型0。不要做：把常量阶段当完整世界演变、发布未审节日、新觉醒NPC、全村传播秘密。依赖T38/T42消费者；核心纯函数可先做，engine/scene接点串行；正式内容波次仍R08/R09。
+### T44 已完成：确定性世界时钟、四村节俗预约、逐人同意与自费结算已接入，新增14项通过/CORE40，0模型；24条候选节日未发布，势力计划与公共节庆支出的消费者留R08。
 
 后续卡沿开头队列和实际文件锁调度；T40依赖T42，T42不依赖T40。T31依T28仍阻断，不借M3接走未实现CLI；T32/T33尚无真实模型资格。
 
@@ -382,6 +359,49 @@ T28-R1修好新回执undefined规范化并保留严格篡改拒绝，相关31/32
 ### R10 W3 生活长流程与目录审核收尾【待细化】
 
 范围：已有 410 物品/200 配方不重新扩数量；补完整取得、制作、失败副产品、热源、修理、耐久、保存/腐败、价格成本、职业认证与自创技能/配方、材料施法链路验收。复核 519 条审核/正式源指纹与随机评分，NPC 炉火照管不能靠绕过维护实现。真实生活流程覆盖 11.3 对应项，30 元/轮；相关性质测试保证财物守恒与重复发布保留售空状态。
+
+### M6界面批（2026-10-13主会话审定，来源：Astra草案M6-planner-001；现状一览见该草案A段）
+
+共同边界：锁定extension/tools.mjs、extension/prompt.mjs、prompt/、原存档、SillyTavern/、dist/；界面卡不加模型工具。数据读已有/read、/scene、/feedback、/catalog，缺展示字段时加只读投影；state-read的NPC脱敏不等于玩家知情过滤，不得展示全量NPC。截图写docs/测试报告/最新/M6-编号/（桌面与390×844、深浅两主题）。路径缩写E=extension/，S=server-plugin/，T=tests/。模型0。
+审计改动：草案要求十张卡全部串行（因共改runtime.test.mjs、runtime.js和路由），改为T75先做并提供面板挂载点与路由注册点，其后各卡只在自己的新模块里注册面板和路由、测试写在自己的tests/m6-NN.test.mjs，不改tests/runtime.test.mjs；这样T76–T80可并行，T77与T79同改ledger-view须串行。T81地图先覆盖已发布地点，白石镇发布后补映射。T84语音若本机没有可用的中文多声线服务，记待用户确认并完成其余部分。
+
+### T75 已完成：双主题、中文顶栏、字号/高对比/减少动画、手机全屏抽屉、本地字体与16品质色；后续卡在E/ui-*.mjs导出registerUI、在S/ui-*.mjs导出registerUIRoutes注册面板和路由。浏览器8/8、CORE40，六张截图在docs/测试报告/最新/M6-01/。遗留：390宽顶栏右侧地点和魔力被截断，交T76顺带处理。
+
+### T76 消息卡与自然语言操作：玩家看到头像名牌、回合事件卡和可收藏信件，能用快捷按钮及说／做切换准备输入。
+可改 E/message-view.mjs、runtime.js、style.css，新建 E/input-view.mjs、mail-view.mjs；S/state-notices.mjs、T/state-notices.test.mjs、T/runtime.test.mjs。补齐未知说话人登记、公告与合同卡；系统提示写消息附加数据且由有效事件重建，回滚同步；快捷按钮仅填输入，少量快捷键可关闭，调试外隐藏回执、JSON和技术信息，中文错误保留未确认状态。
+验收：node --test tests/runtime.test.mjs tests/state-notices.test.mjs；node --test tests/engine.test.mjs tests/storage.test.mjs tests/plugin.test.mjs。截图含未知说话人、错误、邮件及手机输入；模型0，预计3小时，1会话。
+
+### T77 角色、技能、法术书与行囊：玩家能查看完整个人成长信息、已学法术及带品质与负重的格子背包。
+可改 E/ledger-view.mjs、runtime.js，新建 E/personal-panels.mjs、personal-panels.css；S/index.mjs、新 S/ui-personal.mjs，T/runtime.test.mjs、新 T/m6-03.test.mjs。复用 player、professions、skills、spells、inventory、itemInstances 和 /catalog；增 /ui/personal 只读返回阶段阈值、职业认证、来源和物品做工／制作者／重量，完成经验条与突破提示，不另算成长规则。
+验收：node --test tests/runtime.test.mjs tests/m6-03.test.mjs；node --test tests/engine.test.mjs tests/storage.test.mjs tests/plugin.test.mjs。四面板分别截图，检查旧档空值和回滚刷新；模型0，预计4小时，1会话。
+
+### T78 人物、编年史与传闻：玩家能查看见过的人及共同经历，搜索自己的历史，并保存人物笔记和传闻判断。
+可改 E/runtime.js，新建 E/people-history.mjs、people-history.css；S/index.mjs、新 S/ui-history.mjs，T/runtime.test.mjs、新 T/m6-04.test.mjs。增 /ui/history，只读复用 chronicle、NPC 玩家关系及实际获知记录，按玩家可见性过滤后分页；所在地取最后获知位置，承诺仅本人相关；笔记和判断存聊天附加数据，不改引擎事实。
+验收：node --test tests/runtime.test.mjs tests/m6-04.test.mjs；node --test tests/engine.test.mjs tests/storage.test.mjs tests/plugin.test.mjs。截图含三面板和搜索，断言未知人物／私密记忆不显示；模型0，预计3小时，1会话。
+
+### T79 任务约定与领地：玩家能按期限查看收发任务与义务，有领地时能查收支、工程和待批事项。
+可改 E/ledger-view.mjs、runtime.js，新建 E/affairs-panels.mjs、affairs-panels.css；S/index.mjs、新 S/ui-affairs.mjs，T/runtime.test.mjs、新 T/m6-05.test.mjs。增 /ui/affairs，从 quests、obligations、records、settlements、buildings、projects 读取玩家任务额度及有权查看的领地人口／库存／收支／工程／待批事项／管事报告；缺业务记录归 R07，界面不补造。
+验收：node --test tests/runtime.test.mjs tests/m6-05.test.mjs；node --test tests/engine.test.mjs tests/storage.test.mjs tests/plugin.test.mjs。截图含无领地、有领地及到期排序；模型0，预计2–3小时，1会话。
+
+### T80 开始游戏与续玩：玩家能继续或创建角色，管理存档与设置，进入后看到对应开场或前情提要。
+可改新 E/start/play-town.html、play-town.js、play-town.css，E/runtime.js、tools/deploy-engine.mjs，T/runtime.test.mjs、新 T/m6-06.test.mjs；现酒馆页面仅作参考，隔离包提供同名新入口。复用 /create、/export、/import 及04的可见历史；前情提要用已发生事实确定性编排，开场复用原有具体细节，加载知识取已发布世界内容，备份含笔记与设置。
+验收：node --test tests/runtime.test.mjs tests/m6-06.test.mjs；node --test tests/engine.test.mjs tests/storage.test.mjs tests/plugin.test.mjs。浏览器完成创建→固定回复发送→保存→导入→继续，截图含开始页和前情；禁止连接测试触发付费调用；模型0，预计3小时，1会话。
+
+### T81 四级地图与出行预览：玩家能缩放和标记已知地图，比较路线，选中后仅将出行意图填入输入框。
+可改 E/runtime.js，新建 E/map-view.mjs、map-view.css；S/index.mjs、新 S/ui-map.mjs，必要时 S/engine.mjs 的只读路线计算接点；world/geo/、T/runtime.test.mjs、新 T/m6-07.test.mjs。增 /ui/map 与 /ui/routes，从 geo、discoveries 和可靠获知记录投影四级层次及三类迷雾；复用季节／天气路线计算提供不同可行路线、费用和风险，未知风险明确标未知；补已发布地点的层级映射，不新增远方世界。
+验收：node --test tests/runtime.test.mjs tests/m6-07.test.mjs；node --test tests/engine.test.mjs tests/storage.test.mjs tests/plugin.test.mjs。截图含四级地图和三类迷雾；验证鼠标／双指缩放、季节封路、标记保存及预览不改时间钱袋位置；模型0，预计4小时，1会话。
+
+### T82 游戏纹章、背景与人物素材：玩家看到统一风格的游戏标志、约80张随场景切换的背景及全部已发布LOD0人物的职业纹章头像。
+可改 world/art/ 下风格说明、逐人物可复用提示及素材映射，assets/visual/、assets/LICENSES.md，新 tools/build-m6-art.mjs、E/background-view.mjs；E/runtime.js、tools/build-card.mjs、tools/deploy-engine.mjs，T/runtime.test.mjs、新 T/m6-08.test.mjs。以原创场景SVG交付背景，按10类场景×2时段×4天气实际绘制差异；头像采用指南允许的职业纹章，未成年仅日常形象；核对酒馆背景接口，场景变化淡入淡出，减少动画时直接切换。
+验收：node --test tests/runtime.test.mjs tests/m6-08.test.mjs；node --test tests/engine.test.mjs tests/storage.test.mjs tests/plugin.test.mjs。截图含背景联系表、场景切换与头像，核验素材映射和许可；模型0，预计4小时，1会话。
+
+### T83 环境音与情境音乐：玩家点击进入后听到随场景变化的循环环境音与音乐，可调音量和静音。
+可改新 E/ambient-audio.mjs、E/runtime.js、E/start/play-town.js、E/ui-settings.mjs；world/audio/、assets/audio/、assets/LICENSES.md、tools/deploy-engine.mjs，T/runtime.test.mjs、新 T/m6-09.test.mjs。采用CC0或明确许可音频，覆盖生物群落／时段／天气／室内外和五类音乐情境，交叉淡入淡出；顶栏与设置共用音量状态，切换聊天停止旧声音。
+验收：node --test tests/runtime.test.mjs tests/m6-09.test.mjs；node --test tests/engine.test.mjs tests/storage.test.mjs tests/plugin.test.mjs。截图含手机音量操作；隔离浏览器实际试听并记录素材与播放结果，验证首次点击前静音及切换不叠音；模型0，预计2–3小时，1会话。
+
+### T84 【搁置：用户2026-10-13决定先忽略语音，不派】按说话人中文语音：玩家能听到旁白与不同人物的中文声线，并能跳过、重播或关闭。
+可改新 E/speaker-tts.mjs、E/runtime.js、E/ui-settings.mjs；必要的新 S/tts.mjs 与 S/index.mjs 接点，world/audio/voices.json、tools/deploy-engine.mjs，T/runtime.test.mjs、新 T/m6-10.test.mjs。复用02的说话人分段和 npc.tts_voice，缺值按性别年龄映射；先枚举已装系统声线和可用本地服务，支持返回音频的服务按文本＋声音＋参数哈希缓存；系统speechSynthesis不能提供音频字节，不能算缓存完成。
+验收：node --test tests/runtime.test.mjs tests/m6-10.test.mjs；node --test tests/engine.test.mjs tests/storage.test.mjs tests/plugin.test.mjs。截图含手机播放控件；隔离页实际播放旁白及两名NPC中文，验证缓存复用、跳过重播关闭；生成模型0，实际TTS合成需执行，付费调用0；预计3小时，1会话，完整完成以可用多声线及音频缓存为条件。
 
 ### R11 M6 主题、消息、顶栏和全部面板【待细化】
 

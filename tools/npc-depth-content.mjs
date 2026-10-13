@@ -273,7 +273,9 @@ export function validateControlledRevision(plan,{entries,foundation,records,worl
    const lateFailures=record.reopenAuthorization?.id===reopen.manifest.id
     ?(record.review?.contradictions??[]).filter(f=>f.severity==='hard').flatMap(f=>(permission.failurePaths??[]).filter(p=>p===f.field||p.startsWith(f.field+'[')||p.startsWith(f.field+'.')||p==='memorySeeds[2]'&&f.field===p+'.event')):[];
    const sourcePaths=reopen.sourcePermissions?.find(a=>a.id===item.id)?.paths??[];
-   assert.ok((item.paths??[]).every(p=>permission.paths.includes(p)||lateFailures.includes(p)||sourcePaths.includes(p)),'未授权重开叶');
+   const auditPaths=plan.cardId==='T09'&&record.status==='passed'
+    ?auditNpcDepth({...world,npcs:world.npcs.map(n=>{const row=records.find(r=>r.id===n.id),basis=entries.find(e=>e.id===n.id);return row?.draft&&basis?applyDepthDraft(basis.before,row.draft):n;})}).issues.filter(i=>i.id===record.id&&(permission.failurePaths??[]).includes(i.field)).map(i=>i.field):[];
+   assert.ok((item.paths??[]).every(p=>permission.paths.includes(p)||lateFailures.includes(p)||sourcePaths.includes(p)||auditPaths.includes(p)),'未授权重开叶');
   }
   const actual=[];
   if(record.status==='manual')for(const finding of record.review?.contradictions??[])if(finding.severity==='hard')actual.push({path:finding.field,quote:finding.quote,kind:'L2'});

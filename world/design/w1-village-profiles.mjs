@@ -147,7 +147,9 @@ export function villageLedgerRules(world){
  return Object.entries(ledgerSeeds).map(([v,s])=>({ ...base,settlement:villageFacts[v].id,counter:lid(v,'hall'),manager:pid(v,raw[v].coordinators[0]),fieldLocation:lid(v,s.field),fieldId:`farm_${v}_oats`,areaUnits:s.area,farmWorkers:12,freshWorkers:10,processingWorkers:4,toolCapacity:12,freshFoodPerDay:s.fresh,granaryCapacity:50000,initialFood:s.food,initialSeed:Math.ceil(s.area*crop.seedPerHa/crop.areaUnitsPerHa),opening:{name:villageFacts[v].name,population:world.settlementProfiles.find(p=>p.id===villageFacts[v].id).population,treasury:1200,wood:60,iron:12,woodPerDay:s.wood,foodPerDay:0},source:`${ledgerRevision}/公共田与粮仓开局登记`,tradeContract:{id:`trade_${v}_oats_1`,seller:villageFacts[v].id,buyer:villageFacts[Object.keys(ledgerSeeds)[(Object.keys(ledgerSeeds).indexOf(v)+1)%4]].id,item:world.rules.agriculture.grainItem,quantity:20,unitPriceCopper:3,taxBps:500,status:'unfulfilled',source:`${ledgerRevision}/四村试行粮约`,deliveryDays:7}}));
 }
 export function villageLawCodes(world){
- const template=world.rules.law.codes.find(c=>c.id==='law_hw_property');
+ // T43's settlement, provenance and appeal panel belong to the HW court.
+ // Village appointments retain their reviewed local officers and procedure.
+ const {settlement,source,appeal,...template}=world.rules.law.codes.find(c=>c.id==='law_hw_property');
  return Object.entries(raw).map(([v,r])=>({...template,id:`law_${v}_property`,name:`${villageFacts[v].name}公共粮约与财物规约`,locations:[villageFacts[v].id,...world.locations.filter(l=>l.parent===villageFacts[v].id).map(l=>l.id)],officers:[pid(v,r.coordinators[2])],judges:[pid(v,r.coordinators[0])],court:lid(v,'hall')}));
 }
 function villageEconomy(world,v,industries){

@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
+import os from 'node:os';
 import path from 'node:path';
 import {execFile} from 'node:child_process';
 import {promisify} from 'node:util';
@@ -11,16 +12,61 @@ import {hashContent} from '../tools/content-pipeline.mjs';
 import {depthEntries,patchDraft,applyDepthDraft,verifyUnchanged,validateDraft,validatePatchResults,getPath,contextFor,buildDraftRequest,buildReviewRequest,validateAuthoredBackground,checkIncrementalReview} from '../tools/npc-depth-content.mjs';
 import * as config from '../world/design/w1-sb-depth.mjs';
 import {sangbanRoster,sangbanFull} from '../world/design/w1-villages-sangban.mjs';
-import {prepareDepth} from '../tools/npc-depth.mjs';
+import {prepareDepth,prepareDepthRevision,sourceAuthorization} from '../tools/npc-depth.mjs';
 import {compactReviewRequest,validateSourceEvidence} from '../tools/npc-depth-source-evidence.mjs';
 import {requestMeasure,sourceRequirements} from '../world/drafts/w1/sb-depth/request-preflight.mjs';
+import {prepareNpcDepth,publishNpcDepth} from '../tools/publish-npc-depth.mjs';
 
-const exec=promisify(execFile),world=await loadWorld(),root=path.resolve('world/drafts/w1/sb-depth');
+const exec=promisify(execFile),publishedWorld=await loadWorld(),root=path.resolve('world/drafts/w1/sb-depth');
+const base=config.patchRows.map(r=>r.before),ids=new Set(base.map(n=>n.id));
+const world={...publishedWorld,npcs:publishedWorld.npcs.map(n=>base.find(b=>b.id===n.id)??n)};
 const entries=depthEntries(config.patchRows.map(r=>r.before),config,world);
 const merged=validatePatchResults(entries,world);
 const source=JSON.parse(await fs.readFile(path.join(root,'source-evidence.json'),'utf8'));
 const baseline=path.resolve('world/people/baseline.json');
 const read=name=>fs.readFile(path.join(root,name+'.json'),'utf8');
+const publicationManifest=path.join(root,'first-review/manifest.json');
+
+test('桑坂正式30人等于已审批完整档，其他人、旧记忆和钱物身份保持原值',async()=>{
+ const {entries:approved}=await prepareNpcDepth({manifest:publicationManifest});
+ assert.equal(approved.length,30);assert.equal(publishedWorld.npcs.filter(n=>n.tier==='full').length,152);
+ assert.equal(publishedWorld.residents.length,294);
+ assert.deepEqual(publishedWorld.npcs.map(n=>n.id),world.npcs.map(n=>n.id));
+ for(const entry of approved){
+  const current=publishedWorld.npcs.find(n=>n.id===entry.id);
+  assert.deepEqual(current,entry.facts);verifyUnchanged(entry.before,current,entry);
+  for(const field of ['coins','inventory','secrets'])assert.deepEqual(current[field],entry.before[field]);
+  assert.deepEqual(current.memorySeeds.slice(0,entry.before.memorySeeds.length),entry.before.memorySeeds);
+ }
+ assert.deepEqual(auditNpcDepth(publishedWorld).issues.filter(i=>ids.has(i.id)),[]);
+});
+
+test('冻结原档首次预演不写入，正式发布闭合15事件30人且仅更新桑坂',async t=>{
+ const temp=await fs.mkdtemp(path.join(os.tmpdir(),'t85-publication-'));t.after(()=>fs.rm(temp,{recursive:true,force:true}));
+ const worldRoot=path.join(temp,'world');
+ for(const dir of ['meta','geo','people','lore','design'])await fs.cp(path.resolve('world',dir),path.join(worldRoot,dir),{recursive:true});
+ await fs.cp(root,path.join(worldRoot,'drafts/w1/sb-depth'),{recursive:true});
+ const baseline=path.join(worldRoot,'people/baseline.json');await fs.writeFile(baseline,JSON.stringify(world.npcs));
+ const manifest=path.join(worldRoot,'drafts/w1/sb-depth/first-review/manifest.json'),before=await fs.readFile(baseline);
+ const preview=await publishNpcDepth({manifest});
+ assert.equal(preview.published,false);assert.deepEqual(preview.changed,['people/baseline.json']);
+ assert.deepEqual(preview.amendedNpcIds.slice().sort(),[...ids].sort());assert.deepEqual(preview.selectedQuality.issues,[]);
+ assert.equal(preview.eventClosure.length,30);assert.equal(new Set(preview.eventClosure.map(e=>e.eventId)).size,15);
+ assert.ok(preview.eventClosure.every(e=>e.closed));assert.deepEqual(await fs.readFile(baseline),before);
+ assert.deepEqual(await publishNpcDepth({manifest,publish:true}),{...preview,published:true});
+ const after=await loadWorld(worldRoot);assert.deepEqual(after,publishedWorld);
+});
+
+test('桑坂已发布完整卡重发零写入，不重复追加共享记忆',async()=>{
+ const bytes=await fs.readFile(baseline),stat=await fs.stat(baseline);
+ for(const publish of [false,true]){
+  const repeat=await publishNpcDepth({manifest:publicationManifest,publish});
+  assert.equal(repeat.published,publish);assert.deepEqual(repeat.changed,[]);assert.deepEqual(repeat.changes,[]);
+  assert.deepEqual(repeat.eventClosure,[]);assert.equal(repeat.baselineSourceHash,repeat.baselineResultHash);
+  assert.deepEqual(repeat.selectedQuality.issues,[]);assert.equal(repeat.amendedNpcIds.length,30);assert.equal(repeat.modelCalls,0);
+  assert.deepEqual(await fs.readFile(baseline),bytes);assert.equal((await fs.stat(baseline)).mtimeMs,stat.mtimeMs);
+ }
+});
 
 test('桑坂30人定点候选覆盖实际383缺口，合并视图无缺口且无新增人口',()=>{
  const cohort=world.npcs.filter(n=>n.settlement==='loc_bs_sangban'&&n.tier==='full');
@@ -33,6 +79,20 @@ test('桑坂30人定点候选覆盖实际383缺口，合并视图无缺口且无
  assert.equal(merged.npcs.length,world.npcs.length);assert.deepEqual(merged.residents,world.residents);
  for(const n of world.npcs.filter(n=>!n.id.startsWith('npc_sb_')))assert.deepEqual(merged.npcs.find(x=>x.id===n.id),n);
  assert.equal(auditNpcDepth(merged).legacyTraits.ok,true);
+});
+test('T09追加凭证仅允许原双人发言归属，同步四叶且不扩大秘密或其它事件',async()=>{
+ const {currentOptions}=await import('../world/drafts/w1/sb-depth/complete-003b.mjs');
+ const options=await currentOptions(),prepared=await prepareDepthRevision(options);
+ const original=JSON.parse(await fs.readFile(backgroundFile,'utf8'));
+ const parent={entries:prepared.foundation.entries,background:{...original,sourceHash:hashContent(original)},receipt:{backgroundFile:'authored-background.json'}};
+ const readFile=file=>fs.readFile(file,'utf8').then(JSON.parse),safeFile=file=>path.resolve(firstReviewRoot,file);
+ const next=await readFile(options.authoredBackground);
+ const checked=await sourceAuthorization(prepared.plan,prepared.reopening,prepared.records,parent,next,readFile,safeFile);
+ assert.deepEqual(checked.sourcePermissions.map(a=>[a.id,a.paths]),[['npc_sb_chishan',['knowledge.known[2]','memorySeeds[2]']],['npc_sb_chayue',['knowledge.known[2]','memorySeeds[2]']]]);
+ for(const mutate of [b=>b.events[10].actors.push('npc_sb_qinwan'),b=>b.events[10].sourceRefs[0].publicSpeech='我答应让出树根边的位置。',b=>b.events[11].narrative+='已经商定工事。',b=>b.events[10].associations[1].viewpoint+='我知道池杉的秘密。']){
+  const forged=structuredClone(next);mutate(forged);await assert.rejects(sourceAuthorization(prepared.plan,prepared.reopening,prepared.records,parent,forged,readFile,safeFile));
+ }
+ const withoutRegistration={...prepared.reopening,sourceAuthorizations:[]};await assert.rejects(sourceAuthorization(prepared.plan,withoutRegistration,prepared.records,parent,next,readFile,safeFile),/缺清单追加授权/);
 });
 
 function leafDiff(a,b,prefix=''){
@@ -245,13 +305,30 @@ test('T09官方零模型预检保留120份完整请求，最小性别附件逐�
  }
  assert.equal(report.sharedBudget.root,'F:/dnd/world/drafts/m4-object');assert.equal(report.sharedBudget.readOnly,true);assert.equal(report.sharedBudget.unchanged,true);assert.equal(report.sharedBudget.sha256,report.sharedBudget.sha256After);
  assert.ok(report.reservationEnvelopeYuan.lower>3);assert.ok(report.reservationEnvelopeYuan.upper>report.reservationEnvelopeYuan.lower);
- for(const name of ['budget.json','allocation.json','terminal.json','first-source-evidence.json','incremental-l4.json'])await assert.rejects(fs.stat(path.join(firstReviewRoot,name)),/ENOENT/);
+ for(const name of ['budget.json','allocation.json','terminal.json','first-source-evidence.json'])await assert.rejects(fs.stat(path.join(firstReviewRoot,name)),/ENOENT/);
+ // The historical zero-model request report remains unapproved. The later
+ // real L4 receipt must bind to the final authorized correction, not T48.
+ assert.equal(report.approvals.L4,'not-approved');
+ const laterL4=JSON.parse(await fs.readFile(path.join(firstReviewRoot,'incremental-l4.json'),'utf8'));
+ const finalPlan=JSON.parse(await fs.readFile(path.join(firstReviewRoot,'complete-003b/plan.json'),'utf8'));assert.equal(laterL4.authorizationHash,hashContent(finalPlan));
+});
+test('桑坂最终30人真实审核与阅读凭证匹配，随机评分有原句，15事件发布预演闭合',async()=>{
+ const {currentOptions}=await import('../world/drafts/w1/sb-depth/complete-003b.mjs'),options=await currentOptions(),prepared=await prepareDepthRevision(options);
+ const readJSON=file=>fs.readFile(path.join(firstReviewRoot,file),'utf8').then(JSON.parse);
+ const l4=await readJSON('incremental-l4.json'),summary=await readJSON('summary.json'),score=await readJSON('complete-003b/wave-score.json'),selection=await readJSON('complete-003b/l4-selection.json'),preview=await readJSON('complete-003b/publication-preview.json');
+ assert.equal(summary.passed,30);assert.equal(summary.manual,0);assert.ok(summary.batches.every(b=>b.l4.approved));assert.equal(l4.candidates.length,30);assert.equal(l4.backgrounds.length,15);
+ for(const e of prepared.entries){const record=await readJSON(e.id+'.json'),note=l4.candidates.find(n=>n.id===e.id);assert.equal(record.status,'passed');assert.deepEqual(JSON.parse(record.reviewRecovery.response.choices[0].message.content),record.review);assert.ok(!checkIncrementalReview(record.review,e,prepared.contexts.get(e.id)).some(i=>i.severity==='hard'));assert.equal(note.draftHash,hashContent(record.draft));assert.equal(note.reviewHash,hashContent(record.review));assert.deepEqual(note.reviewedPaths,e.patches.map(p=>p.path));}
+ assert.deepEqual(score.samples.map(s=>s.id),selection.waveSample);assert.equal(score.samples.length,10);
+ const values=score.samples.flatMap(s=>Object.values(s.ratings).map(r=>{assert.ok(JSON.stringify(prepared.entries.find(e=>e.id===s.id).facts).includes(r.quote));assert.ok(r.reason.trim());return r.score;}));
+ assert.equal(values.length,60);assert.equal(Math.min(...values),score.minimum);assert.equal(values.reduce((a,b)=>a+b,0)/60,score.mean);assert.ok(score.mean>=4&&score.minimum>=3);
+ assert.equal(preview.published,false);assert.equal(preview.selectedQuality.checked,30);assert.deepEqual(preview.selectedQuality.issues,[]);assert.equal(new Set(preview.eventClosure.map(e=>e.eventId)).size,15);assert.equal(preview.eventClosure.length,30);assert.ok(preview.eventClosure.every(e=>e.closed));
 });
 
-test('T09真实直接L2保留两轮原文和费用，已过候选不重审，hard与两次停止线阻止整村批准',async()=>{
+test('T09历史首审保留42次真实原文、旧费用与当时未闭合的两人，不因续审覆盖历史',async()=>{
  const prepared=await prepareDepth({worldRoot:path.resolve('world'),design:path.resolve('world/design/w1-sb-depth.mjs'),root:firstReviewRoot,authoredBackground:backgroundFile,cardId:'T09'});
  const first=JSON.parse(await fs.readFile(path.join(firstReviewRoot,'complete-002/first-l2-records.json'),'utf8'));
- const rows=await Promise.all(prepared.entries.map(e=>fs.readFile(path.join(firstReviewRoot,e.id+'.json'),'utf8').then(JSON.parse)));
+ const current=await Promise.all(prepared.entries.map(e=>fs.readFile(path.join(firstReviewRoot,e.id+'.json'),'utf8').then(JSON.parse)));
+ const rows=current.map(record=>{while(record.incremental)record=record.reviewRecovery.prior;return record;});
  assert.equal(first.filter(r=>r.status==='passed').length,18);assert.equal(rows.filter(r=>r.status==='passed').length,28);assert.deepEqual(rows.filter(r=>r.status==='manual').map(r=>r.id),['npc_sb_chishan','npc_sb_longfu']);
  let calls=0,cost=0;
  for(const row of rows){
@@ -267,6 +344,6 @@ test('T09真实直接L2保留两轮原文和费用，已过候选不重审，har
  }
  assert.equal(calls,42);assert.ok(Math.abs(cost-2.46694448)<1e-10);
  assert.ok(rows.filter(r=>r.status==='manual').every(r=>r.errors.some(e=>e.severity==='hard')));
- const summary=JSON.parse(await fs.readFile(path.join(firstReviewRoot,'summary.json'),'utf8'));assert.equal(summary.passed,28);assert.equal(summary.manual,2);assert.equal(summary.pending,0);assert.equal(summary.budget.cards.T09.limitYuan,4.5);assert.equal(summary.budget.cards.T09.reservedYuan,0);
- assert.ok(summary.batches.every(b=>b.l4.approved===false));
+ const stopped=JSON.parse(await fs.readFile(path.join(firstReviewRoot,'complete-002/stopped-report.json'),'utf8'));
+ assert.equal(stopped.passed,28);assert.deepEqual(stopped.manual,['npc_sb_chishan','npc_sb_longfu']);assert.equal(stopped.modelCalls,42);assert.equal(stopped.costUpperYuan,2.46694448);assert.match(stopped.L4,/not-approved/);
 });

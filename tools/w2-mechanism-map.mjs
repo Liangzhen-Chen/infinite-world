@@ -2,6 +2,7 @@ import fs from 'node:fs/promises';import path from 'node:path';
 import {loadWorld} from './load-world.mjs';import {spellBlueprints} from '../world/design/spell-blueprints.mjs';
 import {reuseSpellCandidates,reuseMechanismFacts} from '../world/design/w2-reuse-candidates.mjs';
 import {airMechanisms} from '../server-plugin/magic-air.mjs';
+import {waterEarthMechanisms}from'../server-plugin/magic-water-earth.mjs';
 import {objectSpellCandidates} from '../world/design/m4-object-candidates.mjs';import {validateMagicCatalog} from '../server-plugin/magic.mjs';
 const gaps={
  damage_cold:'通用伤害没有炎热环境减伤消费者。',damage_wind:'通用生命目标伤害不能切开非活体软物，亦无甲材差异。',damage_earth:'缺真实小石的取用、飞行和落地归属，不能凭空射石。',damage_shadow:'通用伤害没有沿途强光衰减。',light:'现有照明必须绑定单件持有物，无法在掌心生成、遮挡和熄灭。',healing:'回血未建模浅表出血、血量、感染或教派仪式，不能替代所述医疗语义。',ward:'shadow_ward只有暗影伤害抗性，未有邪秽/邪灵干扰消费者。',
@@ -39,12 +40,19 @@ export function airSpellCandidates(){
    ...(['slow_fall','air_bubble','deflect'].includes(s.mechanism)?{targeting:{lineOfSight:true,consent:'support_magic'}}:{})};
  });
 }
+export function waterEarthSpellCandidates(){
+ return spellBlueprints().filter(s=>waterEarthMechanisms[s.mechanism]||s.mechanism==='damage_earth').map(s=>{
+  if(s.mechanism==='damage_earth')return{...s,effectSpec:{kind:'damage',power:40,damageType:'earth',armorFactor:.25,stoneProjectile:true},duration:0,rangeMeters:10,targeting:{lineOfSight:true}};
+  const [power,duration]=waterEarthMechanisms[s.mechanism];
+  return{...s,effectSpec:{kind:'water_earth',operation:s.mechanism,power},duration,durationLimit:duration,rangeMeters:Math.min(20,s.rangeMeters),...(s.mechanism==='bind_water'?{targeting:{lineOfSight:true}}:{})};
+ });
+}
 export function mechanismMap(world){
- const published=new Map(world.spells.map(s=>[s.id,s])),reuse=new Map(reuseSpellCandidates().map(s=>[s.id,s])),approved=new Map(objectSpellCandidates.map(s=>[s.id,s])),heat=new Map(heatSpellCandidates().map(s=>[s.id,s])),air=new Map(airSpellCandidates().map(s=>[s.id,s]));
- const rows=spellBlueprints().map(s=>{const actual=published.get(s.id)??approved.get(s.id)??air.get(s.id)??reuse.get(s.id)??heat.get(s.id),status=published.has(s.id)?'published':approved.has(s.id)?'reviewed-unpublished':air.has(s.id)||heat.has(s.id)?'consumer-ready':reuse.has(s.id)?'reuse-candidate':'missing-consumer';
+ const published=new Map(world.spells.map(s=>[s.id,s])),reuse=new Map(reuseSpellCandidates().map(s=>[s.id,s])),approved=new Map(objectSpellCandidates.map(s=>[s.id,s])),heat=new Map(heatSpellCandidates().map(s=>[s.id,s])),air=new Map(airSpellCandidates().map(s=>[s.id,s])),waterEarth=new Map(waterEarthSpellCandidates().map(s=>[s.id,s]));
+ const rows=spellBlueprints().map(s=>{const actual=published.get(s.id)??approved.get(s.id)??waterEarth.get(s.id)??air.get(s.id)??reuse.get(s.id)??heat.get(s.id),status=published.has(s.id)?'published':approved.has(s.id)?'reviewed-unpublished':waterEarth.has(s.id)||air.has(s.id)||heat.has(s.id)?'consumer-ready':reuse.has(s.id)?'reuse-candidate':'missing-consumer';
  const gap=gaps[s.mechanism]??groups.find(([keys])=>keys.split(' ').includes(s.mechanism))?.[1];
  if(status==='missing-consumer'&&!gap)throw Error(`未归类的机制 ${s.id}/${s.mechanism}`);
- return{id:s.id,name:s.name,mechanism:s.mechanism,originalEffect:s.effect,status,handler:actual?.effectSpec??s.effectSpec??null,validation:validateMagicCatalog(actual??s,{requireHandler:true}),evidence:status==='consumer-ready'?(air.has(s.id)?'server-plugin/magic-air.mjs、magic.mjs与tests/magic-air.test.mjs；未进行内容审核或正式发布':'server-plugin/magic-object.mjs、magic.mjs与tests/magic-forge.test.mjs；未进行内容审核或正式发布'):status==='reuse-candidate'?reuseMechanismFacts[s.mechanism]:status==='published'?'正式world/meta/spells.json及对应M4发布测试':status==='reviewed-unpublished'?'world/drafts/m4-object/；两条既有审核不重复':gap};});
+ return{id:s.id,name:s.name,mechanism:s.mechanism,originalEffect:s.effect,status,handler:actual?.effectSpec??s.effectSpec??null,validation:validateMagicCatalog(actual??s,{requireHandler:true}),evidence:status==='consumer-ready'?(waterEarth.has(s.id)?'server-plugin/magic-water-earth.mjs、magic.mjs与tests/magic-water-earth.test.mjs；未进行内容审核或正式发布':air.has(s.id)?'server-plugin/magic-air.mjs、magic.mjs与tests/magic-air.test.mjs；未进行内容审核或正式发布':'server-plugin/magic-object.mjs、magic.mjs与tests/magic-forge.test.mjs；未进行内容审核或正式发布'):status==='reuse-candidate'?reuseMechanismFacts[s.mechanism]:status==='published'?'正式world/meta/spells.json及对应M4发布测试':status==='reviewed-unpublished'?'world/drafts/m4-object/；两条既有审核不重复':gap};});
  return{scope:'逐条机制盘点；缺失项保留目标，不按数量压力改成研究型或删除。结构通过不等于原描述已实现。',total:rows.length,formalSpellCount:world.spells.length,counts:Object.fromEntries([...new Set(rows.map(r=>r.status))].map(k=>[k,rows.filter(r=>r.status===k).length])),rows};
 }
 if(process.argv[1]&&path.resolve(process.argv[1])===path.resolve(import.meta.filename)){const r=mechanismMap(await loadWorld());await fs.writeFile('world/design/w2-mechanism-map.json',JSON.stringify(r,null,2)+'\n');console.log(JSON.stringify({total:r.total,formal:r.formalSpellCount,counts:r.counts}));}

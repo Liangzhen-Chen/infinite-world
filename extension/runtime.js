@@ -5,6 +5,9 @@ import { toolDefinitions } from './tools.mjs';
 import { renderMessages } from './message-view.mjs';
 import { renderLedger } from './ledger-view.mjs';
 import { isOutOfCharacter, injectToolExamples } from './prompt.mjs';
+import {registerPanel,setPanelContext,mountPanelButtons,loadUIModules} from './ui-shell.mjs';
+import {initializeSettings,getSettings,updateSettings,subscribeSettings} from './ui-settings.mjs';
+import {renderTopbar} from './topbar.mjs';
 const KEY='infinite_fields';
 const ctx=()=>getContext();
 const active=()=>ctx().characters[ctx().characterId]?.name==='无限原野·世界主持人';
@@ -14,6 +17,11 @@ let labels={},feedback=[],ledgerTime='';
 let reviewTurn=null;
 const reviewing=new WeakMap(),reviewEdits=new WeakMap();
 let historyModule=null;
+registerPanel({id:'ledger',title:'世界账本',render:(container,data)=>{
+    const book=document.createElement('div');book.id='fields-ledger-content';container.replaceChildren(book);
+    if(data.view)renderLedger(book,data.view.document.state,data.labels,data.feedback,data.ledgerTime);
+}});
+initializeSettings();
 const api=async(endpoint,body={})=>{
     const response=await fetch(`/api/plugins/infinite-fields/${endpoint}`,{method:'POST',headers:ctx().getRequestHeaders(),body:JSON.stringify(body)});
     const data=await response.json();if(!response.ok||data.ok===false){const error=new Error(data.error??`本地存档请求失败${response.status}`);error.rejected=response.status>=400&&response.status<500;throw error;}return data;
@@ -35,8 +43,7 @@ function fail(error){
     document.querySelector('#fields-status')?.replaceChildren(document.createTextNode(`存档对账失败，生成已停止：${blocked}`));
 }
 function render(){
-    const book=document.querySelector('#fields-ledger-content');
-    if(book&&view)renderLedger(book,view.document.state,labels,feedback,ledgerTime);
+    setPanelContext({view,labels,feedback,ledgerTime,api:(endpoint,body={})=>api(endpoint,{...body,campaignId:view?.reference.campaignId})});
     const pending=renderMessages(ctx(),labels,feedback);
     const box=document.querySelector('#fields-pending');if(!box)return;
     box.replaceChildren();box.hidden=!pending.length;
@@ -99,23 +106,32 @@ async function refresh(){
     labels=scene.labels??{};
     ledgerTime=scene.scene.split('\n')[0].replace('【时间】','');
     feedback=(await api('feedback',{campaignId:view.reference.campaignId})).events;
+    const overview=await api('ui/overview',{campaignId:view.reference.campaignId});
+    await loadUIModules(api);
     ctx().setExtensionPrompt(KEY,scene.scene,1,0,false,0);
     let bar=document.querySelector('#fields-toolbar');
     if(!bar?.querySelector('#fields-pending')){
         bar?.remove();
         bar=document.createElement('div');bar.id='fields-toolbar';
         const status=document.createElement('span');status.id='fields-status';bar.append(status);
-        const book=document.createElement('button');book.textContent='世界账本';book.onclick=showBook;bar.append(book);
+        const menu=document.createElement('button');menu.className='fields-menu-toggle';menu.textContent='面板';menu.setAttribute('aria-expanded','false');menu.setAttribute('aria-controls','fields-toolbar-actions');
+        const actions=document.createElement('div');actions.id='fields-toolbar-actions';
+        menu.onclick=()=>{const open=menu.getAttribute('aria-expanded')!=='true';menu.setAttribute('aria-expanded',String(open));actions.classList.toggle('fields-menu-open',open);};bar.append(menu,actions);
+        actions.addEventListener('click',event=>{if(event.target.closest('[data-panel]')){menu.setAttribute('aria-expanded','false');actions.classList.remove('fields-menu-open');}});
+        const panels=document.createElement('nav');panels.className='fields-panel-buttons';panels.setAttribute('aria-label','世界面板');mountPanelButtons(panels);actions.append(panels);
         const reviewLabel=document.createElement('label'),reviewToggle=document.createElement('input');reviewToggle.type='checkbox';reviewToggle.id='fields-consistency-toggle';reviewToggle.checked=ctx().chatMetadata.fields_consistency_enabled!==false;
-        reviewToggle.onchange=async()=>{ctx().chatMetadata.fields_consistency_enabled=reviewToggle.checked;await ctx().saveChat();};reviewLabel.append(reviewToggle,document.createTextNode('回复审查'));bar.append(reviewLabel);
-        const repair=document.createElement('button');repair.textContent='重新对账';repair.onclick=()=>queue(async()=>{try{view=await api('reconcile',{campaignId:view.reference.campaignId,validAnchors:validAnchors()});blocked=null;await persist();await refresh();}catch(error){fail(error);}});bar.append(repair);
+        reviewToggle.onchange=async()=>{ctx().chatMetadata.fields_consistency_enabled=reviewToggle.checked;await ctx().saveChat();};reviewLabel.append(reviewToggle,document.createTextNode('回复审查'));actions.append(reviewLabel);
+        const repair=document.createElement('button');repair.textContent='重新对账';repair.onclick=()=>queue(async()=>{try{view=await api('reconcile',{campaignId:view.reference.campaignId,validAnchors:validAnchors()});blocked=null;await persist();await refresh();}catch(error){fail(error);}});actions.append(repair);
+        const mute=document.createElement('button');mute.id='fields-mute';mute.onclick=()=>updateSettings({muted:!getSettings().muted});actions.append(mute);
+        const volume=document.createElement('input');volume.id='fields-volume';volume.type='range';volume.min=0;volume.max=100;volume.setAttribute('aria-label','音量');volume.oninput=()=>updateSettings({volume:Number(volume.value)});actions.append(volume);
         const error=document.createElement('div');error.id='fields-error';error.setAttribute('role','alert');error.hidden=true;bar.append(error);
         const pending=document.createElement('div');pending.id='fields-pending';pending.setAttribute('role','status');pending.setAttribute('aria-live','polite');pending.hidden=true;bar.append(pending);
         (document.querySelector('#sheld')??document.querySelector('#chat')?.parentElement)?.prepend(bar);
     }
-    const p=view.document.state.player;
     document.querySelector('#fields-consistency-toggle').checked=ctx().chatMetadata.fields_consistency_enabled!==false;
-    document.querySelector('#fields-status').textContent=blocked?`生成已停止：${blocked}`:`${scene.scene.split('\n')[0].replace('【时间】','')} · ${p.coins}铜 · 生命${p.hp}/${p.maxHp} · 魔力${p.mp}/${p.maxMp}`;
+    renderTopbar(document.querySelector('#fields-status'),overview,blocked);
+    for(const {name,color}of overview.qualities)document.body.style.setProperty(`--fields-quality-${name}`,color);
+    updateAudioControls(getSettings());
     render();
 }
 async function execute(tool,args,eventId=crypto.randomUUID(),reviewId=null){
@@ -151,19 +167,12 @@ for(const definition of toolDefinitions()){
    return execute(name,args);
   }});
 }
-function showBook(){
-    if(!view||blocked)return;
-    document.querySelector('#fields-dialog')?.remove();
-    const dialog=document.createElement('dialog');dialog.id='fields-dialog';dialog.className='fields-ledger';dialog.setAttribute('aria-labelledby','fields-ledger-title');
-    const header=document.createElement('header');header.className='fields-ledger-header';
-    const title=document.createElement('h2');title.id='fields-ledger-title';title.textContent='世界账本';
-    const close=document.createElement('button');close.textContent='关闭';close.onclick=()=>dialog.close();
-    dialog.addEventListener('close',()=>dialog.remove());
-    header.append(title,close);dialog.append(header);
-    const content=document.createElement('div');content.id='fields-ledger-content';dialog.append(content);
-    renderLedger(content,view.document.state,labels,feedback,ledgerTime);
-    document.body.append(dialog);dialog.showModal();
+function updateAudioControls(settings){
+    const mute=document.querySelector('#fields-mute'),volume=document.querySelector('#fields-volume');
+    if(mute){mute.textContent=settings.muted?'取消静音':'静音';mute.setAttribute('aria-pressed',String(settings.muted));}
+    if(volume)volume.value=settings.volume;
 }
+subscribeSettings(updateAudioControls);
 async function ensureReviewTurn(){
     if(!view||mode==='quiet')return;
     const currentAnchor=anchor(),user=[...ctx().chat].reverse().find(message=>message.is_user);

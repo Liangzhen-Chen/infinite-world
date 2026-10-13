@@ -107,7 +107,9 @@ test('天气和夜间视线参与实际交锋，同一种子战果重放一致',
 
 test('户外凝露实际使用生成湿度，跨年天气重建与存档往返保持同日一致',async()=>{
     const{world,c}=await setup(),spell=spellBlueprints().find(row=>row.mechanism==='condense');
-    world.spells.push(spell);world.skills.push({id:spell.skill,name:spell.name,attribute:'精神',profession:'profession_mage'});
+    // T19 publishes these IDs; replace the spell with this isolated blueprint.
+    world.spells=world.spells.filter(row=>row.id!==spell.id);world.spells.push(spell);
+    if(!world.skills.some(row=>row.id===spell.skill))world.skills.push({id:spell.skill,name:spell.name,attribute:'精神',profession:'profession_mage'});
     const engine=new WorldEngine(world);c.state.location='loc_hw_dock';c.state.player.mp=50;c.state.player.maxMp=50;
     c.state.spells[spell.id]={source:{type:'isolated-fixture'}};c.state.skills[spell.skill]={proficiency:120,daily:{},breakthroughs:[]};
     let result,after;

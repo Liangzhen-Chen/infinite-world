@@ -1,6 +1,6 @@
 // Shared numerical handlers; callers own targeting, consent, costs and death effects.
 export const damageTypes=Object.freeze(['physical','fire','cold','wind','earth','light','shadow','mind']);
-const fields={damage:['damageType','armorFactor','coldDecay','windBlade'],air:['operation'],heal:[],repair:[],dry:[],status:['status'],relief:['statuses'],mark:['medium','visibility'],light:[],environment:['operation','unit'],summon:['summonType','upkeepMp','upkeepMinutes'],summon_contract:['operation','offering'],protection:['damageTypes','stacking'],object:['operation','limitC','surface'],heat:['operation','limitC','upkeepMp'],area:['radiusMeters','intervalMinutes','trigger','effect']};
+const fields={damage:['damageType','armorFactor','coldDecay','windBlade','stoneProjectile'],water_earth:['operation'],air:['operation'],heal:[],repair:[],dry:[],status:['status'],relief:['statuses'],mark:['medium','visibility'],light:[],environment:['operation','unit'],summon:['summonType','upkeepMp','upkeepMinutes'],summon_contract:['operation','offering'],protection:['damageTypes','stacking'],object:['operation','limitC','surface'],heat:['operation','limitC','upkeepMp'],area:['radiusMeters','intervalMinutes','trigger','effect']};
 export function validateEffectSpec(spec){
  const errors=[];
  if(!spec||typeof spec!=='object'||Array.isArray(spec))return ['法术效果必须是规则对象'];
@@ -12,6 +12,7 @@ export function validateEffectSpec(spec){
  if(spec.armorFactor!==undefined&&(!Number.isFinite(spec.armorFactor)||spec.armorFactor<0||spec.armorFactor>1))errors.push('护甲系数须在0至1之间');
  if(spec.coldDecay!==undefined&&(spec.kind!=='damage'||spec.damageType!=='cold'||spec.coldDecay!==true))errors.push('环境衰减只适用于冰针伤害');
  if(spec.windBlade!==undefined&&(spec.kind!=='damage'||spec.damageType!=='wind'||spec.windBlade!==true))errors.push('甲材差异只适用于风刃');
+ if(spec.stoneProjectile!==undefined&&(spec.kind!=='damage'||spec.damageType!=='earth'||spec.stoneProjectile!==true))errors.push('实体小石只适用于石弹伤害');
  if(spec.kind==='area'){
   if(!Number.isFinite(spec.radiusMeters)||spec.radiusMeters<=0||spec.radiusMeters>100)errors.push('区域半径须在0至100米之间');
   if(!Number.isSafeInteger(spec.intervalMinutes)||spec.intervalMinutes<1||spec.intervalMinutes>1440)errors.push('区域触发间隔非法');

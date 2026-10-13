@@ -8,6 +8,7 @@ import {prepareMagic,applyMagic}from'./magic.mjs';
 import {settleMagicAreas,nextMagicAreaMinute,prepareAreaMagic,applyAreaMagic,areaTargetFacts}from'./magic-area.mjs';
 import {advanceMagicObjects,assertFireTravel}from'./magic-object.mjs';
 import {advanceAirEffects,adjustAirTravel}from'./magic-air.mjs';
+import {advanceWaterEarth,assertWaterEarthMovement,waterEarthWalkMinutes}from'./magic-water-earth.mjs';
 import{targetFacts,statusContext}from'./magic-context.mjs';
 import {profession,effectiveProficiency}from'./professions.mjs';
 import {xpRequired,allocateAttributes,milestone}from'./progression.mjs';
@@ -24,6 +25,8 @@ import {localWeather,weatherEdge,cropProduction}from'./weather.mjs';
 import {initializeAgriculture}from'./agriculture-migration.mjs';
 import {advanceAgriculture,agricultureView,settleAgricultureExpiry}from'./agriculture.mjs';
 import {advanceSettlementTrade,nextSettlementTradeMinute,regionalTradePrice}from'./settlement-trade.mjs';
+import {initializeWorldClocks,advanceWorldClocks,nextWorldClockMinute}from'./world-clock.mjs';
+import {advanceFestivals,nextFestivalMinute,localFestivalCalendar}from'./festival.mjs';
 import {advanceWildlife,wildlifePriceFactor}from'./wildlife.mjs';
 import {advanceBosses}from'./bosses.mjs';
 import {sceneCard}from'./scene-card.mjs';
@@ -207,13 +210,14 @@ export class WorldEngine {
         minutes=number(minutes,0,43200,'耗时');
         if(['trade','learn','practice','profession','craft','repair','research','cast','pet','summon','environment','farm','wildlife'].includes(this.npcObligationAction?.tool))assertNpcObligationAction(d,this,['player'],{minutes});
         const end=d.get('state','minute')+minutes;
+        initializeWorldClocks(d,this,d.get('state','minute'),end);
         advanceSettlementTrade(d,this,d.get('state','minute'));
-        if(!this.rules.settlementTrade&&!this.world.npcs.some(n=>n.tier==='full')&&!Object.values(d.get('state','effects')??{}).some(e=>e.kind==='area'))return this.advanceInterval(d,minutes,id);
+        if(!this.rules.settlementTrade&&!this.rules.worldClock&&!localFestivalCalendar(this).length&&!this.world.npcs.some(n=>n.tier==='full')&&!Object.values(d.get('state','effects')??{}).some(e=>e.kind==='area'))return this.advanceInterval(d,minutes,id);
         if(!minutes)return this.advanceInterval(d,0,id);
         const patchStart=d.patches.length,npcsBefore=d.get('state','npcs');
         while(d.get('state','minute')<end){
             const now=d.get('state','minute'),state=d.get('state');
-            const next=Math.min(end,(Math.floor(now/1440)+1)*1440,nextSettlementTradeMinute(state,this,now),nextNpcCognitionMinute(state,now),nextNpcAutonomyMinute(state,now),nextNpcObligationMinute(state,now),nextMagicAreaMinute(state,now));
+            const next=Math.min(end,(Math.floor(now/1440)+1)*1440,nextWorldClockMinute(state,now),nextFestivalMinute(state,this,now),nextSettlementTradeMinute(state,this,now),nextNpcCognitionMinute(state,now),nextNpcAutonomyMinute(state,now),nextNpcObligationMinute(state,now),nextMagicAreaMinute(state,now));
             this.advanceInterval(d,next-now,id);
         }
         // Intermediate clock boundaries matter to simulation, not to replay.
@@ -253,12 +257,15 @@ export class WorldEngine {
             advanceNpcCognition(d,this,before,after,id,{beforeState});
             advanceNpcAutonomy(d,this,before,after,id,{beforeState});
         }
+        advanceWorldClocks(d,this,after);
+        advanceFestivals(d,this,after);
         for(const[key,row]of Object.entries(d.get('state','records')??{}))if(key.startsWith('local_actor_position:')){
             const actor=d.get('state',row.subject?.startsWith('npc_')?'npcs':'creatures',row.subject);
             if(!actor||actor.location!==row.location||actor.scheduleTravel||actor.cognitionTravel||actor.status==='死亡'||row.expires<=after)d.remove(['state','records',key]);
         }
         advanceMagicObjects(d,this,after);
         advanceAirEffects(d,this,before,after);
+        advanceWaterEarth(d,this,before,after);
         settleMagicAreas(d,this);
         for(const [key,effect] of Object.entries(d.get('state','effects'))) if(effect.expires<=after) d.remove(['state','effects',key]);
         const p=d.get('state','player');
@@ -328,9 +335,12 @@ export class WorldEngine {
         return this.airDraft?adjustAirTravel(this.airDraft,this,result,mode,{minute,from,segments,sail:this.npcObligationAction?.tool==='move'}):result;
     }
     move(d,args,id) {
+        for(const target of ['player',...d.get('state','player','companions')??[]])assertWaterEarthMovement(d,target);
         const destination=this.resolve(args.destination),old=d.get('state','location');
         if(old===destination)return {destination,elapsed:0};
         const route=this.route(old,destination,args.mode??'walk',d.get('state','minute'),d.document.randomSeed);
+        const local=d.get('state','records','local_player_position'),mudMinutes=waterEarthWalkMinutes(d,this,local?.location===old?local.point:[0,0],local?.location===old?local.point:[0,0]);
+        route.minutes+=mudMinutes;
         assertFireTravel(d,this,route);
         const entered=new Set(route.edges.flatMap(edgeId=>{const edge=this.world.routes.find(row=>row.id===edgeId);return[edge.from,edge.to];}));entered.delete(old);
         for(const place of entered)assertLocationAccess(d,this,place,{authorization:args.authorization,companions:d.get('state','player','companions')??[],arrivalMinute:d.get('state','minute')+route.minutes});

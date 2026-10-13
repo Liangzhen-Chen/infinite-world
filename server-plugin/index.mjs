@@ -14,6 +14,7 @@ import {publicLoreEntries}from'./lore.mjs';
 import {settleNpcPlanning}from'./npc-planning-service.mjs';
 import {getChronicle,syncChronicleIndex}from'./chronicle.mjs';
 import {groupHistory}from'../extension/history-window.mjs';
+import {registerUIRoutes} from './ui-routes.mjs';
 import {beginConsistencyTurn,captureConsistencySearch,reconcileConsistencyTurn,reviewConsistencyReply,assertConsistencyCommit,sharedModelClient}from'./consistency-service.mjs';
 
 export const info={id:'infinite-fields',name:'无限原野本地战役存储',description:'本项目自有的存档、账本与检索服务器插件'};
@@ -88,6 +89,7 @@ export async function init(router,{ world=null, baseRoot=null, newCampaignSeed=r
         syncChronicleIndex(index,index.chronicle);
         return index;
     };
+    await registerUIRoutes(router,{handle,getStore});
     router.post('/create',handle(async req=>{
         const legacy={state:seed.state,memories:seed.memories},randomSeed=newCampaignSeed();
         const document=req.body.character===undefined?engine.initialFromLegacy(legacy,randomSeed):engine.createCharacter(legacy,req.body.character,randomSeed);

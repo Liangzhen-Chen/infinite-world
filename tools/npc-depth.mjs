@@ -104,7 +104,7 @@ export async function loadDepthReopen(options,prepared){
   if(item.recordHash)assert.ok(recordHasHash(record,item.recordHash),'授权旧完整record hash不符 '+item.id);
   else {assert.equal(item.missingRecord,true,'未审缺档未留证');assert.equal(item.entryHash,hashContent(oldEntry),'未审entry凭证不符');assert.ok(!record||recordHasHash(record,item.createdRecordHash),'缺档被未授权记录替换');}
  }
- return{manifest,grant,budgetAuthorization,file:path.relative(root,file).replaceAll('\\','/'),manifestHash:hashContent(manifest)};
+ return{manifest,grant,budgetAuthorization,sourceAuthorizations:budgetAuthorization.sourceAuthorizations??[],file:path.relative(root,file).replaceAll('\\','/'),manifestHash:hashContent(manifest)};
 }
 async function sourceWitnessPlan(root,plan,read,safeFile){
  if(!plan.previousPlanFile)return plan;
@@ -143,28 +143,35 @@ export function depthRevisionProof(options,prepared,reopenAuthorization){
  const {root}=options;
  return prepared.receipt??{kind:'incremental-depth-proof',authorizationHash:options.authorizationHash,planHash:hashContent(prepared.plan),planFile:path.relative(root,options.controlledRevision).replaceAll('\\','/'),worldRoot:path.relative(root,prepared.worldRoot).replaceAll('\\','/'),backgroundFile:options.authoredBackground?path.relative(root,options.authoredBackground).replaceAll('\\','/'):null,backgroundHash:prepared.background?.sourceHash??null,foundationHash:hashContent(prepared.foundation),entryHash:hashContent(prepared.entries),oldRecords:prepared.records,changes:prepared.revision.changes,records:{},...(prepared.sourceCheckoutEvidence?{sourceCheckoutEvidence:prepared.sourceCheckoutEvidence}:{}),...(prepared.reopening?{reopenAuthorization,previousProof:prepared.previousProof??null,previousProofHash:prepared.previousProof?hashContent(prepared.previousProof):null}:{})};
 }
-async function sourceAuthorization(plan,reopening,records,previousPrepared,background,read,safeFile){
+export async function sourceAuthorization(plan,reopening,records,previousPrepared,background,read,safeFile){
  if(!plan.sourceAuthorization)return reopening;
- assert.ok(reopening&&plan.cardId==='T07','来源凭证仅用于原T07重开');
+ assert.ok(reopening&&['T07','T09'].includes(plan.cardId),'来源凭证仅用于原T07/T09重开');
  const credential=await read(safeFile(plan.sourceAuthorization.file));
  assert.equal(hashContent(credential),plan.sourceAuthorization.hash,'来源凭证hash改变');
  assert.deepEqual(Object.keys(credential).sort(),['kind','cardId','authorizationId','parentManifestHash','parentGrantHash','source','allowed'].sort(),'来源凭证字段越权');
  assert.equal(credential.kind,'depth-source-authorization');assert.equal(credential.cardId,plan.cardId);assert.equal(credential.authorizationId,reopening.manifest.id);
  assert.equal(credential.parentManifestHash,reopening.manifestHash,'来源凭证祖先manifest改变');assert.equal(credential.parentGrantHash,hashContent(reopening.grant),'来源凭证父grant改变');
- const binding=credential.source;assert.equal(binding.eventId,'memory_wt_depth_group_3','来源凭证事件越权');assert.equal(binding.path,'narrative','来源凭证pointer越权');
+ const sangban=plan.cardId==='T09';
+ if(sangban)assert.ok(reopening.sourceAuthorizations.some(a=>a.cardId==='T09'&&a.hash===hashContent(credential)&&path.resolve(safeFile(a.file))===path.resolve(safeFile(plan.sourceAuthorization.file))),'T09来源凭证缺清单追加授权');
+ const binding=credential.source;assert.equal(binding.eventId,sangban?'memory_sb_depth_shared_11':'memory_wt_depth_group_3','来源凭证事件越权');assert.equal(binding.path,'narrative','来源凭证pointer越权');
  assert.deepEqual(Object.keys(binding).sort(),['eventId','path','beforeHash','afterHash'].sort(),'来源pointer字段越权');
  const prior=previousPrepared?.background.events.find(e=>e.id===binding.eventId),next=background?.events.find(e=>e.id===binding.eventId);assert.ok(prior&&next,'来源凭证缺父事件');
  assert.equal(hashContent(prior.narrative),binding.beforeHash,'来源凭证before改变');assert.equal(hashContent(next.narrative),binding.afterHash,'来源凭证after改变');
- assert.deepEqual({...next,narrative:prior.narrative},prior,'来源凭证只授权narrative');
- const {sourceHash,...oldBundle}=previousPrepared.background;
+ if(sangban){
+  const names=new Map(previousPrepared.entries.map(e=>[e.id,e.before.name]));
+  for(const id of prior.actors){const speech=prior.sourceRefs.find(r=>r.id===id&&r.publicSpeech)?.publicSpeech?.replace(/[。！？]$/,'');assert.ok(speech&&next.narrative.includes(`${names.get(id)}说“${speech}”`),'T09叙述须保留原公开说话归属');}
+  assert.deepEqual({...next,narrative:prior.narrative,associations:next.associations.map(a=>{const old=prior.associations.find(p=>p.id===a.id);assert.equal(a.narrative,next.narrative,'T09双方叙述不同');return{...a,narrative:old.narrative};})},prior,'T09只授权发言归属及双方叙述');
+ }else assert.deepEqual({...next,narrative:prior.narrative},prior,'来源凭证只授权narrative');
+ const oldBundle=await read(safeFile(previousPrepared.receipt.backgroundFile));
+ assert.equal(hashContent(oldBundle),previousPrepared.background.sourceHash,'来源凭证父背景hash改变');
  assert.deepEqual({...background,events:background.events.map(e=>e.id===next.id?prior:e)},oldBundle,'来源凭证不得扩其它事件');
  assert.deepEqual(credential.allowed.map(a=>a.id).sort(),[...prior.actors].sort(),'来源凭证四方ID越权或缺失');
  for(const permission of credential.allowed){
   assert.deepEqual(Object.keys(permission).sort(),['id','paths','recordHash'].sort(),'来源权限字段越权');
-  assert.deepEqual(permission.paths,['memorySeeds[2]'],'来源权限叶越权');
-  assert.equal(prior.associations.find(a=>a.id===permission.id)?.path,permission.paths[0],'来源权限不是事件父叶');
+  assert.deepEqual(permission.paths,sangban?['knowledge.known[2]','memorySeeds[2]']:['memorySeeds[2]'],'来源权限叶越权');
+  assert.equal(prior.associations.find(a=>a.id===permission.id)?.path,'memorySeeds[2]','来源权限不是事件父叶');
   const original=reopening.grant.allowed.find(a=>a.id===permission.id),record=records.find(r=>r.id===permission.id);
-  assert.equal(permission.recordHash,original?.recordHash,'来源权限原record绑定改变');assert.ok(recordHasHash(record,permission.recordHash),'来源权限原record链改变');
+  assert.equal(permission.recordHash,original?.recordHash??(sangban?original?.createdRecordHash:undefined),'来源权限原record绑定改变');assert.ok(recordHasHash(record,permission.recordHash),'来源权限原record链改变');
  }
  return{...reopening,sourcePermissions:credential.allowed};
 }
