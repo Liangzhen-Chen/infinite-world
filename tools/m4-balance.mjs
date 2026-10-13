@@ -28,9 +28,9 @@ export function simulateM4Fight(team,boss,opponent,rules,rng,{shield=0}={}){
  }
  return{won:false,rounds:rules.combat.simulationRoundLimit};
 }
-export function m4BalanceReport(world,{trials=10000,seeds=[20261010,20330615,409033]}={}){
- const rules={...world.rules,bossEcology:bossFoundation().rules},results=[];
- for(const seed of seeds)for(const[b,boss]of batch2BossCandidates().entries())for(const mode of['reference_solo','reference_team','actual_solo','actual_team','shield_team']){
+export function m4BalanceReport(world,{trials=10000,seeds=[20261010,20330615,409033],catalog}={}){
+ const rules=catalog?world.rules:{...world.rules,bossEcology:bossFoundation().rules},results=[];
+ for(const seed of seeds)for(const[b,boss]of (catalog??batch2BossCandidates()).entries())for(const mode of['reference_solo','reference_team','actual_solo','actual_team','shield_team']){
   const reference=mode.startsWith('reference')||mode==='shield_team',count=mode.endsWith('solo')?1:5,level=reference?30:boss.level;
   const species=world.monsters.find(m=>m.id===boss.monster),enemy=monsterStats({level,template:reference?3:species.template,bossTier:reference?1:boss.tier},rules),team=Array.from({length:count},()=>derivedStats({level,profession:true},rules));
   const rng=seededRandom(seed+b*1000003+['reference_solo','reference_team','actual_solo','actual_team','shield_team'].indexOf(mode)*991);let wins=0;
@@ -40,4 +40,4 @@ export function m4BalanceReport(world,{trials=10000,seeds=[20261010,20330615,409
  }
  return{scope:'共用首领能力、适应、状态与防护原语；reference沿指南30级一阶标尺，actual为各具名首领同级诊断，shield额外模拟10点有限防护。actual/shield无指南数值验收阈值，不冒充通过。',pass:results.filter(r=>r.pass!==null).every(r=>r.pass),results};
 }
-if(process.argv[1]?.endsWith('m4-balance.mjs')){const result=m4BalanceReport(await loadWorld());await fs.writeFile('world/design/m4-batch2-balance.json',JSON.stringify(result,null,2)+'\n');console.log(JSON.stringify({pass:result.pass,results:result.results}));if(!result.pass)process.exitCode=1;}
+if(process.argv[1]?.endsWith('m4-balance.mjs')){const args=process.argv,ci=args.indexOf('--catalog'),oi=args.indexOf('--out'),catalog=ci<0?undefined:JSON.parse(await fs.readFile(args[ci+1],'utf8')),result=m4BalanceReport(await loadWorld(),{catalog});await fs.writeFile(oi<0?'world/design/m4-batch2-balance.json':args[oi+1],JSON.stringify(result,null,2)+'\n');console.log(JSON.stringify({pass:result.pass,rows:result.results.length,failed:result.results.filter(r=>r.pass===false),referenceSoloRange:[Math.min(...result.results.filter(r=>r.mode==='reference_solo').map(r=>r.winRate)),Math.max(...result.results.filter(r=>r.mode==='reference_solo').map(r=>r.winRate))],referenceTeamRange:[Math.min(...result.results.filter(r=>r.mode==='reference_team').map(r=>r.winRate)),Math.max(...result.results.filter(r=>r.mode==='reference_team').map(r=>r.winRate))]}));if(!result.pass)process.exitCode=1;}
