@@ -165,7 +165,7 @@ N1–N17至少12项完整有效且≥90%，N6/N16零泄漏，N12真实盲辨，N
 
 ### T67 已完成：智能首领记住实际接触与交锋，按领地目标改变态度，存档恢复后保留；本卡8项通过/CORE40，0模型。bosses.test里两项主线旧失败（世界归档校验失败）不属本卡，随T43续修处理。
 
-### T68 首领谈判、交易与结盟【零模型；T67已合，待T43提示精简合入后派，同改extension/tools.mjs】
+### T68 首领谈判、交易与结盟【零模型；工具说明务必短，估算不得超过11500 token】
 
 结果：玩家在巢穴提出条件，首领按自己的目标接受或给出拒绝理由，成交时交换有限物资并保存关系。
 可改：新增server-plugin/boss-negotiation.mjs、tests/boss-negotiation.test.mjs；bosses.mjs、boss-cognition.mjs、extension/tools.mjs、tools/validate-world.mjs必要接点。工具说明要短，合入后tests/prompt.test.mjs仍须通过。锁定：magic*、正式world文件。
@@ -281,11 +281,7 @@ T28-R1修好新回执undefined规范化并保留严格篡改拒绝，相关31/32
 
 验收：`node --test tests/governance.test.mjs tests/civic.test.mjs tests/npc-autonomy.test.mjs tests/law.test.mjs`、CORE；大会否决不落工程、撤权后不代办、重复收费拒绝、日结和手动一致、预算不足停工。模型0。不要做：新官员人口、无视否决、未定爵位自动赋权、扩大四村任命。依赖T41/T02；与T40/T39和自治接点串行，可并行无引擎写入测试报告。
 
-### T43 M5多法典程序与区域声望传播【待调度】
-
-目标：在既有crimeAction/lawAction/advanceLaw上补地区/势力分账及有路程的消息后果。涉及：server-plugin/law.mjs、npc-cognition.mjs必要接口、新增server-plugin/reputation.mjs、tests/reputation-law.test.mjs；world/design/m5-law-rules.mjs只配置现有政体与来源。实现：沿legal_case的evidence/witnesses/处罚时间、records及认知传播sourceEvent，记录聚落口碑、势力信誉、名望/恶名各自增量。不同辖区采用已配置法典，不因跨村自动定罪；公示/信使沿真实路线延迟，友好与敌对评价不一。缺政体规则则明确无执行权限，不套默认刑罚。
-
-验收：`node --test tests/reputation-law.test.mjs tests/law.test.mjs tests/npc-cognition.test.mjs`、CORE；同事两地不同口碑、传播前未知、伪证/无证拒判、上诉/已服刑不重复罚，司法钱物守恒与旧案件重放。模型0。不要做：新官员/政体人口、全球即时通缉、把所有听说变事实。依赖既有law/T15，正式制度内容另审；与T36及law/cognition写者串行，可并行T29。
+### T43 已完成：分区法典、上诉复核、公示与沿真实路线携信的区域声望，听说不作证；随后精简提示（估算10498 token，上限12000）并修复合入引起的主线回归（四村法典误继承河湾字段、天气夹具重复注册）。相关105中104过，唯一失败是已知的人物深度release门槛。
 
 ### T44 已完成：确定性世界时钟、四村节俗预约、逐人同意与自费结算已接入，新增14项通过/CORE40，0模型；24条候选节日未发布，势力计划与公共节庆支出的消费者留R08。
 
