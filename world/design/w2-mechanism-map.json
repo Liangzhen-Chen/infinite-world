@@ -4,9 +4,10 @@
   "formalSpellCount": 17,
   "counts": {
     "reviewed-unpublished": 2,
-    "missing-consumer": 122,
+    "consumer-ready": 7,
     "reuse-candidate": 14,
-    "published": 16
+    "published": 16,
+    "missing-consumer": 115
   },
   "rows": [
     {
@@ -28,12 +29,15 @@
       "name": "暖掌术",
       "mechanism": "warm",
       "originalEffect": "手掌暖到适合揉面，不能烫伤接触者",
-      "status": "missing-consumer",
-      "handler": null,
-      "validation": [
-        "此法术机制尚未接入规则，不能叙述已实现"
-      ],
-      "evidence": "热处理器只处理非活体对象，没有手掌生理温度与接触安全。"
+      "status": "consumer-ready",
+      "handler": {
+        "kind": "heat",
+        "operation": "warm",
+        "power": 1000,
+        "limitC": 38
+      },
+      "validation": [],
+      "evidence": "server-plugin/magic-object.mjs、magic.mjs与tests/magic-forge.test.mjs；未进行内容审核或正式发布"
     },
     {
       "id": "spell_fire_03",
@@ -67,24 +71,29 @@
       "name": "炭纹测温",
       "mechanism": "sense_heat",
       "originalEffect": "以炭线显示器壁温差，需要接触器具",
-      "status": "missing-consumer",
-      "handler": null,
-      "validation": [
-        "此法术机制尚未接入规则，不能叙述已实现"
-      ],
-      "evidence": "已有感知只给单一温度，缺炭线接触和器壁空间温差。"
+      "status": "consumer-ready",
+      "handler": {
+        "kind": "object",
+        "operation": "sense_heat",
+        "power": 1,
+        "surface": true
+      },
+      "validation": [],
+      "evidence": "server-plugin/magic-object.mjs、magic.mjs与tests/magic-forge.test.mjs；未进行内容审核或正式发布"
     },
     {
       "id": "spell_fire_06",
       "name": "火线术",
       "mechanism": "barrier",
       "originalEffect": "地面两米火线阻挡行路，可用水浇灭",
-      "status": "missing-consumer",
-      "handler": null,
-      "validation": [
-        "此法术机制尚未接入规则，不能叙述已实现"
-      ],
-      "evidence": "缺区域内多目标、持续触发及跨边界解除/友军波及消费者。"
+      "status": "consumer-ready",
+      "handler": {
+        "kind": "heat",
+        "operation": "barrier",
+        "power": 5000
+      },
+      "validation": [],
+      "evidence": "server-plugin/magic-object.mjs、magic.mjs与tests/magic-forge.test.mjs；未进行内容审核或正式发布"
     },
     {
       "id": "spell_fire_07",
@@ -120,24 +129,30 @@
       "name": "釉火调律",
       "mechanism": "craft_heat",
       "originalEffect": "协助窑炉均匀升温，减少陶器烧制裂损",
-      "status": "missing-consumer",
-      "handler": null,
-      "validation": [
-        "此法术机制尚未接入规则，不能叙述已实现"
-      ],
-      "evidence": "缺窑炉温区与烧制裂损消费者。"
+      "status": "consumer-ready",
+      "handler": {
+        "kind": "object",
+        "operation": "craft_heat",
+        "power": 5000,
+        "limitC": 1200
+      },
+      "validation": [],
+      "evidence": "server-plugin/magic-object.mjs、magic.mjs与tests/magic-forge.test.mjs；未进行内容审核或正式发布"
     },
     {
       "id": "spell_fire_10",
       "name": "炉膛鼓焰",
       "mechanism": "forge_heat",
       "originalEffect": "提高现有炉火温度，仍要投入正常燃料",
-      "status": "missing-consumer",
-      "handler": null,
-      "validation": [
-        "此法术机制尚未接入规则，不能叙述已实现"
-      ],
-      "evidence": "已有heat允许未燃目标，缺维持真实炉火及持续投料的限定。"
+      "status": "consumer-ready",
+      "handler": {
+        "kind": "object",
+        "operation": "forge_heat",
+        "power": 5000,
+        "limitC": 1200
+      },
+      "validation": [],
+      "evidence": "server-plugin/magic-object.mjs、magic.mjs与tests/magic-forge.test.mjs；未进行内容审核或正式发布"
     },
     {
       "id": "spell_fire_11",
@@ -183,12 +198,15 @@
       "name": "封焰结界",
       "mechanism": "contain_fire",
       "originalEffect": "限制一间屋内火势蔓延，耗魔维持且会隔绝空气流通",
-      "status": "missing-consumer",
-      "handler": null,
-      "validation": [
-        "此法术机制尚未接入规则，不能叙述已实现"
-      ],
-      "evidence": "缺区域内多目标、持续触发及跨边界解除/友军波及消费者。"
+      "status": "consumer-ready",
+      "handler": {
+        "kind": "heat",
+        "operation": "contain_fire",
+        "power": 1,
+        "upkeepMp": 1
+      },
+      "validation": [],
+      "evidence": "server-plugin/magic-object.mjs、magic.mjs与tests/magic-forge.test.mjs；未进行内容审核或正式发布"
     },
     {
       "id": "spell_water_01",
@@ -294,14 +312,16 @@
       "name": "霜针术",
       "mechanism": "damage_cold",
       "originalEffect": "投射短冰针，炎热环境中威力下降",
-      "status": "missing-consumer",
+      "status": "consumer-ready",
       "handler": {
         "kind": "damage",
-        "power": 16,
-        "damageType": "cold"
+        "power": 40,
+        "damageType": "cold",
+        "armorFactor": 0.25,
+        "coldDecay": true
       },
       "validation": [],
-      "evidence": "通用伤害没有炎热环境减伤消费者。"
+      "evidence": "server-plugin/magic-object.mjs、magic.mjs与tests/magic-forge.test.mjs；未进行内容审核或正式发布"
     },
     {
       "id": "spell_water_09",

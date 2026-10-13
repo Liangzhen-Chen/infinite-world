@@ -1,6 +1,6 @@
 import {normalize}from'./retrieval.mjs';
 import {waterMechanisms}from'../world/design/water-foundation.mjs';
-import {addObjectFuel,inspectObjectProcess}from'./magic-object.mjs';
+import {addObjectFuel,inspectObjectProcess,touchWarmObject,douseObjectFire,assertFirePath}from'./magic-object.mjs';
 import{inspectMagicMarks}from'./magic-marks.mjs';
 
 const integer=(value,min,max,label)=>{if(!Number.isSafeInteger(value)||value<min||value>max)throw new Error(`${label}无效`);return value;};
@@ -56,6 +56,8 @@ function permission(d,engine,row,args){
 function visible(row,state){
     const out={id:row.id,name:row.name,kind:row.kind,owner:row.owner,access:row.access,position:[...row.position],links:{...row.links??{}}};
     for(const name of['capacityMl','waterMl','nutrientMg','growthConsumedWaterMl','growthConsumedNutrientMg','turbidity','odor','siltGrams','loosenedSiltGrams','blockagePercent','flowLimitMl','moisturePercent'])if(state[name]!==undefined)out[name]=state[name];
+    if(state.air)out.air=structuredClone(state.air);
+    if(state.charcoalTrace)out.charcoalTrace=structuredClone(state.charcoalTrace);
     if(state.waterMl!==undefined)out.waterSafety='毒素和病原尚未检验；外观清澈不等于可安全饮用';return out;
 }
 export function environmentCatalog(engine,document,{entity}={}){
@@ -154,6 +156,10 @@ export function interactEnvironment(d,args,eventId){
     const location=d.get('state','location'),operation=args.operation??'inspect';
     if(operation==='inspect')return environmentCatalog(this,d.document,{entity:args.target});
     if(operation==='inspect_heat')return{...inspectObjectProcess(d,this,args.target,args),actionScope:{kind:'instant',instantaneous:true}};
+    if(operation==='warm_touch')return{...touchWarmObject(d,this,args),actionScope:{kind:'instant',instantaneous:true}};
+    if(operation==='douse_fire'){
+        const result=douseObjectFire(d,this,args);this.advance(d,1,eventId);return{...result,minutes:1};
+    }
     if(operation==='inspect_marks'){
         const target=args.target?.startsWith('feature_')?args.target:this.resolve(args.target,'item');
         return{marks:inspectMagicMarks(d,this,{...args,target},this.magicStatusContext(d,'player')),actionScope:{kind:'instant',instantaneous:true}};
@@ -165,9 +171,11 @@ export function interactEnvironment(d,args,eventId){
     }
     const row=feature(this,args.target,location);inReach(d,row,Number.POSITIVE_INFINITY);
     if(operation==='approach'){
+        assertFirePath(d,this,point(d),row.position);
         const metres=distance(point(d),row.position),minutes=Math.ceil(metres/this.rules.environment.walkingMetresPerMinute);
         this.advance(d,minutes,eventId);
         if(d.get('state','location')!==location||d.get('state','player','status')!=='正常')return{target:row.id,metres,minutes,arrived:false};
+        assertFirePath(d,this,point(d),row.position);
         d.set(['state','records','local_player_position'],{category:'local_position',subject:'player',location,point:[...row.position],source:eventId,anchor:row.id,minute:d.get('state','minute')});
         return{target:row.id,metres,minutes,position:[...row.position]};
     }

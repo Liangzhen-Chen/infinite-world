@@ -3,6 +3,7 @@ import {toolBonuses}from'./checks.mjs';
 import {produceItems,wearItem,heldUnit}from'./items.mjs';
 import {milestone}from'./progression.mjs';
 import {prepareThermalWorkstation}from'./magic-object.mjs';
+import {createHash}from'node:crypto';
 const integer=(value,min,max,label)=>{if(!Number.isSafeInteger(value)||value<min||value>max)throw new Error(`${label}无效`);return value;};
 export function workstation(d,engine,recipe,args){
     if(!recipe.workstation)return null;
@@ -52,6 +53,20 @@ export function manufacture(d,args,eventId){
         else d.set(['state','workshopFunds',station.id],(d.get('state','workshopFunds',station.id)??0)+station.fee);
     }
     this.advance(d,recipe.minutes,eventId);
+    let thermal=null;
+    if(station?.thermalPlan?.startStress!==undefined){
+        const plan=station.thermalPlan,state=d.get('state','records',`physical_feature:${plan.feature}`,'state','thermal');
+        if(!state||state.crackStressUnits<plan.startStress)throw new Error('烧制裂损状态缺失或回退');
+        const stress=state.crackStressUnits-plan.startStress,riskPermille=Math.min(1000,stress*plan.crackPermillePerStress);
+        let crackedQuantity=0;
+        if(outcome.success)for(let i=0;i<recipe.output.quantity;i++){
+            const roll=createHash('sha256').update(`${d.document.randomSeed}:${eventId}:kiln:${i}`).digest().readUInt32LE(0)%1000;
+            if(roll<riskPermille)crackedQuantity++;
+        }
+        products[0].amount-=crackedQuantity;
+        thermal={feature:plan.feature,stress,riskPermille,crackedQuantity};
+        if(outcome.success&&!products[0].amount){outcome.success=false;outcome.degree='烧制裂损';}
+    }
     const toolWear=[];
     for(const item of recipe.tools??[]){const before=heldUnit(d,this,'player',item).durability??this.byId.get(item).durability;
         toolWear.push({item,name:this.byId.get(item).name,before,after:wearItem(d,this,'player',item,wear)});}
@@ -59,21 +74,21 @@ export function manufacture(d,args,eventId){
     let workmanship=null;
     if(outcome.success){
         workmanship=outcome.degree==='勉强成功'?'粗糙':outcome.degree==='大成功'?(proficiency>=2100?'杰作':proficiency>=1500?'优秀':'精良'):'普通';
-        for(const row of products)ids.push(...produceItems(d,this,row.item,row.amount,{eventId,recipe:recipe.id,workmanship}));
+        for(const row of products)if(row.amount)ids.push(...produceItems(d,this,row.item,row.amount,{eventId,recipe:recipe.id,workmanship}));
         this.practice(d,{skill:recipe.skill,gain:3,target:recipe.id},eventId);
         Object.assign(outcome,milestone(d,this,'craft',recipe.id,eventId));d.say(`制成${this.byId.get(recipe.output.item).name}，做工${workmanship}`);
     }else{
-        for(const[item,amount]of materials){const returned=Math.floor(amount*recover);if(returned){this.itemDelta(d,'player',item,returned);salvage.push({item,amount:returned});}}
+        for(const[item,amount]of materials){const returned=thermal?.crackedQuantity?0:Math.floor(amount*recover);if(returned){this.itemDelta(d,'player',item,returned);salvage.push({item,amount:returned});}}
         if(outcome.degree==='大失败'&&injury)this.health(d,{delta:-injury},eventId);
         d.say(`制造${outcome.degree}，耗时${recipe.minutes}分钟，按配方回收${salvage.reduce((sum,row)=>sum+row.amount,0)}份材料`);
     }
-    const receipt={id:`crafted_${eventId}`,recipe:recipe.id,item:recipe.output.item,quantity:outcome.success?recipe.output.quantity:0,
+    const receipt={id:`crafted_${eventId}`,recipe:recipe.id,item:recipe.output.item,quantity:outcome.success?products[0].amount:0,...(thermal?{thermal}:{}),
         maker:'player',name:d.get('state','player','name'),minute:d.get('state','minute'),station:station?.id??null,fee:station?.fee??0,
         degree:outcome.degree,workmanship,instances:ids,byproducts:outcome.success?recipe.byproducts??[]:[],salvage};
     d.set(['state','crafted',receipt.id],receipt);
-    return{recipe:recipe.id,...outcome,receipt:receipt.id,instances:ids,workmanship,salvage,
+    return{recipe:recipe.id,...outcome,receipt:receipt.id,instances:ids,workmanship,salvage,...(thermal?{thermal}:{}),
         spent:{feePaid:station?.fee??0,minutes:recipe.minutes,materials:[...materials].map(([item,quantity])=>({item,name:this.byId.get(item).name,quantity})),toolWear},
-        healthDelta:d.get('state','player','hp')-hpBefore,produced:outcome.success?products.map(row=>({...row,name:this.byId.get(row.item).name})):[],
-        factSummary:`${outcome.success?`制成${this.byId.get(recipe.output.item).name}${recipe.output.quantity}件`:'未得到任何成品'}；${salvage.length?`实际回收${salvage.map(row=>`${this.byId.get(row.item).name}${row.amount}份`).join('、')}`:'没有回收到任何可用材料'}；工坊费${station?.fee??0}铜已支付，耗时${recipe.minutes}分钟。`,
+        healthDelta:d.get('state','player','hp')-hpBefore,produced:outcome.success?products.filter(row=>row.amount).map(row=>({...row,name:this.byId.get(row.item).name})):[],
+        factSummary:`${outcome.success?`制成${this.byId.get(recipe.output.item).name}${products[0].amount}件`:'未得到任何成品'}；${salvage.length?`实际回收${salvage.map(row=>`${this.byId.get(row.item).name}${row.amount}份`).join('、')}`:'没有回收到任何可用材料'}；工坊费${station?.fee??0}铜已支付，耗时${recipe.minutes}分钟。`,
         note:'spent已实际支付及消耗，salvage是实际回收物，produced是实际成品。失败不退款；没有回收时只能描写弃置的废料，不能写回收到刨花或碎屑。'};
 }

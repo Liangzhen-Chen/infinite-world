@@ -13,7 +13,7 @@ import {validateSummonCatalog,prepareSummon,applySummon}from'./summons.mjs';
 import {resolveCreature,recordWildlifeDeath}from'./wildlife.mjs';
 import {bossCounter,rememberBossTactic,defeatBoss}from'./bosses.mjs';
 import {validateEffectSpec,resolveVitalityPrimitive,applyProtectionPrimitive,consumeMagicProtection}from'./magic-primitives.mjs';
-import {validateObjectCatalog,prepareObjectMagic,applyObjectMagic}from'./magic-object.mjs';
+import {validateObjectCatalog,prepareObjectMagic,applyObjectMagic,validateHeatCatalog,prepareHeatMagic,applyHeatMagic,ambientHeatC,coldHeatMultiplier}from'./magic-object.mjs';
 export function validateMagicCatalog(catalog,{requireHandler=false}={}){
     const spec=catalog.effectSpec,errors=[];
     if(!spec){if(requireHandler||catalog.mechanism)errors.push('此法术机制尚未接入规则，不能叙述已实现');return errors;}
@@ -30,6 +30,8 @@ export function validateMagicCatalog(catalog,{requireHandler=false}={}){
     if(['summon','summon_contract'].includes(spec.kind))errors.push(...validateSummonCatalog(catalog));
     if(spec.kind==='mark')errors.push(...validateMarkCatalog(catalog));
     if(spec.kind==='object')errors.push(...validateObjectCatalog(catalog));
+    if(spec.kind==='heat')errors.push(...validateHeatCatalog(catalog));
+    if(spec.coldDecay&&(!catalog.targeting||catalog.duration!==0))errors.push('冰针须声明真实目标边界且为瞬时伤害');
     return errors;
 }
 export function prepareMagic(d,catalog,args,context={}){
@@ -42,6 +44,7 @@ export function prepareMagic(d,catalog,args,context={}){
     if(['summon','summon_contract'].includes(spec.kind))return prepareSummon.call(this,d,catalog,args);
     if(spec.kind==='mark')return prepareMark.call(this,d,catalog,args);
     if(spec.kind==='object')return prepareObjectMagic.call(this,d,catalog,args);
+    if(spec.kind==='heat')return prepareHeatMagic.call(this,d,catalog,args);
     if(spec.kind==='growth')return prepareGrowthMagic.call(this,d,catalog,args);
     const target=['repair','dry','light'].includes(spec.kind)?this.resolve(args.target??'player'):resolveCreature(this,d,args.target??'player');
     if(['repair','dry','light'].includes(spec.kind)){
@@ -72,7 +75,8 @@ export function prepareMagic(d,catalog,args,context={}){
         const permission=d.get('state','records',args.authorization);
         if(!permission||permission.category!=='authorization'||permission.subject!==target||permission.action!=='support_magic'||permission.expires!==undefined&&permission.expires<=d.get('state','minute'))throw new Error('向他人施加防护需要本人同意');
     }
-    return{target,path:target==='player'?['state','player']:['state',partition,target],actor,derived,spec,catalog,context,completionArgs:{...args,target}};
+    const ambientC=spec.coldDecay?ambientHeatC(d,this,context.location??d.get('state','location')):undefined;
+    return{target,path:target==='player'?['state','player']:['state',partition,target],actor,derived,spec,catalog,context,completionArgs:{...args,target},ambientC};
 }
 export function applyMagic(d,prepared,id){
     if(!prepared)return{};
@@ -84,6 +88,7 @@ export function applyMagic(d,prepared,id){
     if(['summon','summon_contract'].includes(spec.kind))return applySummon.call(this,d,prepared,id);
     if(spec.kind==='mark')return applyMark.call(this,d,prepared,id);
     if(spec.kind==='object')return applyObjectMagic.call(this,d,prepared,id);
+    if(spec.kind==='heat')return applyHeatMagic.call(this,d,prepared,id);
     if(spec.kind==='growth')return applyGrowthMagic.call(this,d,prepared,id);
     if(prepared.completionArgs){
         try{prepared=prepareMagic.call(this,d,catalog,prepared.completionArgs,prepared.context);}
@@ -119,7 +124,8 @@ export function applyMagic(d,prepared,id){
     const current=d.get(...path),maximum=current.maxHp??prepared.derived.maxHp,old=current.hp??maximum;
     const protection=magicStatusStats(d,target),resistance=protection[`${spec.damageType}Resistance`]??0;
     const tactic=`magic_${spec.damageType??'untyped'}`,counter=spec.kind==='damage'?bossCounter(d,this,target,tactic):{damageMultiplier:1};
-    const resolved=resolveVitalityPrimitive({spec,hp:old,maxHp:maximum,defense:prepared.derived.defense+protection.defense,resistance,multiplier:counter.damageMultiplier});
+    const heatMultiplier=spec.coldDecay?coldHeatMultiplier(prepared.ambientC):1;
+    const resolved=resolveVitalityPrimitive({spec,hp:old,maxHp:maximum,defense:prepared.derived.defense+protection.defense,resistance,multiplier:counter.damageMultiplier*heatMultiplier});
     const shield=spec.kind==='damage'?consumeMagicProtection(d,target,resolved.rawAmount,spec.damageType??'physical'):{damage:0,absorbed:0};
     const next=spec.kind==='damage'?Math.max(0,old-shield.damage):resolved.nextHp;
     if(target==='player')this.health(d,{delta:next-old},id);
@@ -137,5 +143,5 @@ export function applyMagic(d,prepared,id){
     const corpse=killed?recordWildlifeDeath(d,this,target,id):null,lair=killed?defeatBoss(d,this,target,id):null;
     if(corpse&&(prepared.context?.source??'player')!=='player')d.set(['state','creatures',target,'corpse','killedBy'],prepared.context.source);
     const experience=killed&&(prepared.context?.source??'player')==='player'?monsterReward(d,this,target,id):{};
-    return{target,[spec.kind==='heal'?'healed':'damage']:Math.abs(next-old),targetHp:next,...experience,...(shield.absorbed?{absorbed:shield.absorbed,protectionEffect:shield.effect}:{}),...(corpse?{corpse}:{}),...(lair?{lair}:{}),...(counter.adapted?{adaptation:{tactic,guarded:true}}:{})};
+    return{target,[spec.kind==='heal'?'healed':'damage']:Math.abs(next-old),targetHp:next,...experience,...(spec.coldDecay?{ambientC:prepared.ambientC,heatMultiplier}:{}),...(shield.absorbed?{absorbed:shield.absorbed,protectionEffect:shield.effect}:{}),...(corpse?{corpse}:{}),...(lair?{lair}:{}),...(counter.adapted?{adaptation:{tactic,guarded:true}}:{})};
 }
