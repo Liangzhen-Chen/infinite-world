@@ -1,11 +1,12 @@
 import {derivedStats,monsterStats,strike,combatRandom}from'./combat.mjs';
 import {careerEquipment,effectiveProficiency}from'./professions.mjs';
-import {magicStatusStats,withMagicStats,magicIlluminates,consumeTransientMagic}from'./magic-status.mjs';
+import {magicStatusStats,withMagicStats,consumeTransientMagic}from'./magic-status.mjs';
 import{visibilityPenalty}from'./magic-context.mjs';
 import{applyBossCounterAbility}from'./boss-abilities.mjs';
 import {consumeMagicProtection}from'./magic-primitives.mjs';
 import {projectileAirPenalty}from'./magic-air.mjs';
 import {waterEarthMudPenalty,assertWaterEarthMovement}from'./magic-water-earth.mjs';
+import {assertLightMovement}from'./magic-light.mjs';
 import {milestone,monsterReward,awardExperience}from'./progression.mjs';
 import {manufacture}from'./manufacturing.mjs';
 import {repair}from'./repair.mjs';
@@ -72,10 +73,11 @@ export const activities={
         const maxHp=npc.maxHp??opponent.maxHp,hp=npc.hp??maxHp,rng=combatRandom(d.document,id),intent=args.intent??'attack';
         if(!['attack','defend','flee','shove'].includes(intent))throw new Error('交锋意图需为attack、defend、flee或shove');
         if(intent==='flee')assertWaterEarthMovement(d);
+        if(intent==='flee')assertLightMovement(d,this);
         const tactic=intent==='attack'?(weapon?'armed':'unarmed'):intent,counter=bossCounter(d,this,target,tactic);
         const location=this.byId.get(d.get('state','location')),terrain=location.combatTags??[];
-        const weather=localWeather(this,d.document),night=weather&&!weather.indoors&&!weather.daylight&&!terrain.includes('dark')&&!magicIlluminates(d)?this.rules.combat.terrain.dark.hit:0;
-        const hitModifier=terrain.reduce((sum,tag)=>sum+(tag==='dark'&&magicIlluminates(d)?0:this.rules.combat.terrain[tag]?.hit??0),0)+(weather?.hitModifier??0)+night;
+        const weather=localWeather(this,d.document),night=weather&&!weather.indoors&&!weather.daylight&&!terrain.includes('dark')&&playerContext.illumination!=='lit'?this.rules.combat.terrain.dark.hit:0;
+        const hitModifier=terrain.reduce((sum,tag)=>sum+(tag==='dark'&&playerContext.illumination==='lit'?0:this.rules.combat.terrain[tag]?.hit??0),0)+(weather?.hitModifier??0)+night;
         const playerHit=visibilityPenalty(hitModifier,magicStatusStats(d,'player',playerContext),playerContext);
         const arrowPenalty=projectileAirPenalty(d,target,intent==='attack'?this.byId.get(weapon)?.projectileMg:undefined);
         const attack=intent==='flee'?{damage:0,hit:false}:strike(stats,opponent,rng,this.rules,{hitModifier:(intent==='shove'?playerHit-(1-counter.damageMultiplier):playerHit)+arrowPenalty,damageMultiplier:(intent==='defend'?0.65:intent==='shove'?0:1)*counter.damageMultiplier});
@@ -87,7 +89,8 @@ export const activities={
         let received=0,absorbed=0;const bossAbilities=[];for(let i=0;i<(opponent.attacks??1);i++)if(remaining>0&&!escaped&&received<p.hp){
             const currentOpponent=withMagicStats(opponentBase,magicStatusStats(d,target,opponentContext)),currentPlayer=withMagicStats(playerBase,magicStatusStats(d,'player',playerContext));
             currentPlayer.evasion=Math.max(0,currentPlayer.evasion-waterEarthMudPenalty(d,this)*.05);
-            const opponentHit=visibilityPenalty(hitModifier,magicStatusStats(d,target,opponentContext),opponentContext);
+            const opponentDark=opponentContext.illumination==='lit'?0:terrain.includes('dark')||night?this.rules.combat.terrain.dark.hit:0;
+            const opponentHit=visibilityPenalty(hitModifier-(playerContext.illumination==='lit'?0:terrain.includes('dark')||night?this.rules.combat.terrain.dark.hit:0)+opponentDark,magicStatusStats(d,target,opponentContext),opponentContext);
             const hit=strike(currentOpponent,currentPlayer,rng,this.rules,{hitModifier:opponentHit+projectileAirPenalty(d,'player',base.projectileMg),damageMultiplier:intent==='defend'?0.5:1});
             if(hit.hit)recordLocalContact(d,this,target,id);
             consumeTransientMagic(d,target,opponentContext);

@@ -4,6 +4,7 @@ import {addObjectFuel,inspectObjectProcess,touchWarmObject,douseObjectFire,asser
 import{inspectMagicMarks}from'./magic-marks.mjs';
 import {airEnvironmentAction}from'./magic-air.mjs';
 import {waterEarthSightClear,waterEarthFlow,waterEarthWalkMinutes,assertWaterEarthMovement,inspectWaterEarth}from'./magic-water-earth.mjs';
+import {opticalSightClear,opticalVisibility,inspectLight,normalLightAction,assertLightMovement}from'./magic-light.mjs';
 
 const integer=(value,min,max,label)=>{if(!Number.isSafeInteger(value)||value<min||value>max)throw new Error(`${label}无效`);return value;};
 const key=id=>`physical_feature:${id}`;
@@ -32,8 +33,10 @@ export function recordLocalContact(d,engine,target,eventId){
     d.set(['state','records',`local_actor_position:${target}`],{category:'local_position',subject:target,location,point:[...position],source,minute,expires,activity:actor.activity??null,...height});
     return true;
 }
-export function localSightClear(d,engine,location,from,to,{waterCurtain=true}={}){
+export function localSightClear(d,engine,location,from,to,{waterCurtain=true,optical=true,fog=true}={}){
     if(waterCurtain&&!waterEarthSightClear(d,location,from,to))return false;
+    if(optical&&!opticalSightClear(d,engine,location,from,to))return false;
+    if(fog&&!opticalVisibility(d,engine,location,from,to))return false;
     for(const row of environmentFeatures(engine).filter(f=>f.location===location)){
         const state=stateOf(d,row);if(state?.blocksSight!==true)continue;
         const radius=state.sightRadiusMeters;
@@ -160,13 +163,14 @@ export function applyEnvironmentMagic(d,prepared,eventId){
 
 export function interactEnvironment(d,args,eventId){
     const location=d.get('state','location'),operation=args.operation??'inspect';
+    const lightAction=normalLightAction.call(this,d,args);if(lightAction)return lightAction;
     if(['turn_grain','sound','fall','breathe'].includes(operation))return airEnvironmentAction.call(this,d,args,eventId);
     if(operation==='inspect'){
         const result=environmentCatalog(this,d.document,{entity:args.target});
         if(!args.target)return result;
         const row=feature(this,args.target,location),check=Object.values(d.get('state','effects')??{}).some(e=>e.kind==='water_earth'&&e.operation==='mud_seal'&&e.target===row.id&&e.expires>d.get('state','minute'));
         if(check){inReach(d,row,3);permission(d,this,row,args);}
-        return{...result,waterEarth:inspectWaterEarth(d,this,row,{check}),actionScope:{kind:'instant',instantaneous:true}};
+        return{...result,waterEarth:inspectWaterEarth(d,this,row,{check}),light:inspectLight(d,this,row),actionScope:{kind:'instant',instantaneous:true}};
     }
     if(operation==='inspect_heat')return{...inspectObjectProcess(d,this,args.target,args),actionScope:{kind:'instant',instantaneous:true}};
     if(operation==='warm_touch')return{...touchWarmObject(d,this,args),actionScope:{kind:'instant',instantaneous:true}};
@@ -185,6 +189,7 @@ export function interactEnvironment(d,args,eventId){
     const row=feature(this,args.target,location);inReach(d,row,Number.POSITIVE_INFINITY);
     if(operation==='approach'){
         assertWaterEarthMovement(d);
+        assertLightMovement(d,this);
         assertFirePath(d,this,point(d),row.position);
         const metres=distance(point(d),row.position),mudMinutes=waterEarthWalkMinutes(d,this,point(d),row.position),minutes=Math.ceil(metres/this.rules.environment.walkingMetresPerMinute)+mudMinutes;
         this.advance(d,minutes,eventId);
