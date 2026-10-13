@@ -23,11 +23,12 @@ test('E2/E19 浏览器：失败对账阻止出站生成，编辑撤销刷新玩�
     page.on('pageerror',error=>pageErrors.push(error.message));
     page.on('console',message=>{if(message.type()==='error')consoleErrors.push(message.text());});
     await page.route('**/favicon.ico',route=>route.fulfill({status:204}));
-    const runtime=(await fs.readFile('extension/runtime.js','utf8')).replace("import { getContext } from '../../../extensions.js';","const getContext=()=>window.fixtureContext;");
-    await page.route('**/runtime.js',route=>route.fulfill({contentType:'text/javascript',body:runtime}));
-    await page.route('**/turn.mjs',async route=>route.fulfill({contentType:'text/javascript',body:await fs.readFile('extension/turn.mjs','utf8')}));
-    await page.route('**/state-read.mjs',async route=>route.fulfill({contentType:'text/javascript',body:await fs.readFile('extension/state-read.mjs','utf8')}));
-    for(const name of ['tools.mjs','prompt.mjs','message-view.mjs','ledger-view.mjs','history-window.mjs','ui-shell.mjs','ui-settings.mjs','topbar.mjs'])await page.route(`**/${name}`,async route=>route.fulfill({contentType:'text/javascript',body:await fs.readFile(`extension/${name}`,'utf8')}));
+    await page.route(/\.(?:mjs|js|css)(?:\?.*)?$/,async route=>{
+        const relative=decodeURIComponent(new URL(route.request().url()).pathname).slice(1);
+        let body=await fs.readFile(path.join('extension',relative),'utf8');
+        if(relative==='runtime.js')body=body.replace("import { getContext } from '../../../extensions.js';","const getContext=()=>window.fixtureContext;");
+        await route.fulfill({contentType:`${relative.endsWith('.css')?'text/css':'text/javascript'}; charset=utf-8`,body});
+    });
     await page.route('**/api/plugins/infinite-fields/**',async route=>{
         const request=route.request(),url=new URL(request.url());
         if(failReconcile&&url.pathname.endsWith('/reconcile'))return route.fulfill({status:400,json:{ok:false,error:'故意损坏的回放夹具'}});
