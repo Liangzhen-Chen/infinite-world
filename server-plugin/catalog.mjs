@@ -1,6 +1,7 @@
 import {environmentCatalog}from'./environment.mjs';
 import {publicLore}from'./lore.mjs';
 import {publicSettlement}from'./settlement-profile.mjs';
+import {siteKnowledge}from'./sites.mjs';
 const publicKinds=new Set(['profession','skill','spell','recipe','item','loc','bld','site','culture','deity','faction','history']);
 export function catalogDefinition(engine,document,{entity,kind,offset=0}={}){
     const selected=engine.scoped(document);
@@ -15,6 +16,10 @@ export function catalogDefinition(engine,document,{entity,kind,offset=0}={}){
     }
     const id=selected.resolve(entity,kind==='location'?undefined:kind),row=selected.byId.get(id),category=id.split('_')[0];
     if(!publicKinds.has(category))throw new Error('这个实体不属于公开规则目录');
+    if(category==='history'){
+        const known=siteKnowledge(selected.world,document).filter(truth=>truth.history===id);
+        if(known.length)return{...publicLore(row),description:known.map(truth=>truth.text).join('\n'),verified:true,source:'遗迹发现',evidence:known.flatMap(truth=>truth.evidence)};
+    }
     if(['culture','deity','faction','history'].includes(category))return publicLore(row);
     if(kind==='location'&&!locationKinds.has(category))throw new Error('需要地点名称或编号');
     if(locationKinds.has(category))return{id,name:row.name,description:row.description??'',parent:row.parent??null,

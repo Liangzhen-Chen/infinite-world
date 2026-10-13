@@ -10,6 +10,7 @@ import {chronicleContext}from'./chronicle.mjs';
 import {settlementScene}from'./settlement-profile.mjs';
 import {festivalScene}from'./festival.mjs';
 import {worldClockScene}from'./world-clock.mjs';
+import {siteView}from'./sites.mjs';
 import {selectNpcRumors,assertRumorConversation}from'./npc-rumors.mjs';
 
 const text=(value,limit=200)=>typeof value==='string'?value.replace(/\s+/g,' ').slice(0,limit):'';
@@ -30,6 +31,7 @@ export function sceneCard(engine,document,query='',index=null){
     const adjacent=new Set([place?.parent,...engine.world.locations.filter(row=>row.parent===s.location).map(row=>row.id),
         ...engine.world.routes.filter(route=>[route.from,route.to].includes(s.location)).map(route=>route.from===s.location?route.to:route.from)]);
     adjacent.delete(undefined);adjacent.delete(null);
+    const site=siteView(engine,document);if(site)parts.push(`【遗迹据点】${JSON.stringify(site)}`);
     const requested=[...mentioned].filter(id=>/^(loc|bld|site)_/.test(id));
     const destinations=[...new Set([...requested,...adjacent])].slice(0,12);
     if(destinations.length)parts.splice(2,0,`【地点索引】${destinations.map(id=>`${name(id)}（${id}）`).join('；')}`);
