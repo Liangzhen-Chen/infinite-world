@@ -69,12 +69,7 @@ review-002-yp=782a49e阶段审核通过，范围限T06正式发布与c64163d修�
 
 ### T08 已完成（待T86正式整合）：砾泉30人L1/L2/L4全过，L4均4.38/最低3，事件闭合、T04与发布预演通过；10次调用，累计4.92485848元。
 
-### T86 砾泉30人正式整合并关闭全体完整档门槛（T11-C）【零模型】
-
-结果：砾泉30人带已审核的完整档进入正式世界；五村全部发布后，全体正式full的人物深度校验零缺口，release构建不再被人物深度拒绝。
-可改：world/people/正式人物文件、tests/npc-depth-lq.test.mjs、tests/npc-depth-batch-publication.test.mjs的砾泉用例；若整合后validateNpcDepth/findNpcRuleWording对全体full仍报缺口，逐条修对应人物的正式数据（只改有来源的内容，缺来源的列出来交回）。锁定：tools/公共工具、人口数量（仍152 full/294名册）。
-做法：同T73/T85。整合后跑全体深度校验，把剩余缺口清零或列清单。
-验收：`node --test tests/npc-depth-lq.test.mjs tests/npc-depth-batch-publication.test.mjs tests/village-ledgers.test.mjs`、CORE；village-ledgers的“四村年粮守恒”应转为通过。模型0。
+### T86 已完成：砾泉30人正式整合，6条事件闭合；全体152 full的人物深度与规则措辞零缺口，“四村年粮守恒”转为通过；相关44/CORE40，0模型。T11-C随之关闭，已打标签review-w1-depth。
 
 ### T54 已完成：63613dc已合；真实T07的42 changes/12指纹保持，T08父proof四叶及逐event+sourceHash的L4/发布重放通过，相关87/CORE40；0模型，T07真实复审与T08来源授权仍归原卡。原验收见 `git show ee0f4e6:docs/PLAN.md`。
 
@@ -92,7 +87,7 @@ T11-A 已完成：同快照原子预演/写入、事件闭合与全体full的rel
 
 T11-B 已完成：da431e4正式整合河湾32人、15事件闭合，幂等/旧记忆与原17traits保留；当时全体1517缺口仍拒release，原88项合后证据见PROGRESS，原验收同上。
 
-T11-C 全体人物质量关闭：只有 T06–T10 全部所需人物和事件完成并整合后才可关闭。全体正式 full 的 validateNpcDepth/findNpcRuleWording 零缺口，原17traits固定值不变，随机10人平均至少4、单项至少3；主会话跑 npm run build:release 并须成功，保留其他类别失败；必要相关测试和CORE通过后打 review-w1-depth 并派审核。依赖全体内容卡及 T11-A/B，当前待T07–T09恢复闭合，不通过拆批假称本卡全部完成。原第1、2项完成前不新增人口的限制一直有效。
+T11-C 已关闭（2026-10-13，T86）。原文：T11-C 全体人物质量关闭：只有 T06–T10 全部所需人物和事件完成并整合后才可关闭。全体正式 full 的 validateNpcDepth/findNpcRuleWording 零缺口，原17traits固定值不变，随机10人平均至少4、单项至少3；主会话跑 npm run build:release 并须成功，保留其他类别失败；必要相关测试和CORE通过后打 review-w1-depth 并派审核。依赖全体内容卡及 T11-A/B，当前待T07–T09恢复闭合，不通过拆批假称本卡全部完成。原第1、2项完成前不新增人口的限制一直有效。
 
 ### T12 已完成：单N完整审核及旧报告CLI已合入；mock/相关/合后CORE通过，真实调用0，旧失败不改。 完整验收见[已完成卡](PLAN_已完成.md#t12)。
 
@@ -178,11 +173,7 @@ N1–N17至少12项完整有效且≥90%，N6/N16零泄漏，N12真实盲辨，N
 
 ### T67 已完成：智能首领记住实际接触与交锋，按领地目标改变态度，存档恢复后保留；本卡8项通过/CORE40，0模型。bosses.test里两项主线旧失败（世界归档校验失败）不属本卡，随T43续修处理。
 
-### T68 首领谈判、交易与结盟【零模型；工具说明务必短，估算不得超过11500 token】
-
-结果：玩家在巢穴提出条件，首领按自己的目标接受或给出拒绝理由，成交时交换有限物资并保存关系。
-可改：新增server-plugin/boss-negotiation.mjs、tests/boss-negotiation.test.mjs；bosses.mjs、boss-cognition.mjs、extension/tools.mjs、tools/validate-world.mjs必要接点。工具说明要短，合入后tests/prompt.test.mjs仍须通过。锁定：magic*、正式world文件。
-验收：`node --test tests/boss-negotiation.test.mjs tests/boss-cognition.test.mjs tests/tool-groups.test.mjs tests/prompt.test.mjs`、CORE。模型0。规模约300–500行。
+### T68 已完成：玩家可在巢穴向智能首领提条件，首领按目标接受或说明拒绝理由，成交交换有限物资并保存关系；相关24/CORE40，提示估算10685 token，0模型。正式首领的交易库存由T70登记。
 
 ### T69 S1：30条法术完整发布，31→61【真实模型；T19已合，待模型槽】
 
@@ -380,9 +371,7 @@ T28-R1修好新回执undefined规范化并保留严格篡改拒绝，相关31/32
 
 ### T77 已完成：角色、技能、法术书、格子行囊四面板与/ui/personal只读投影；界面测试夹具改为通用代理extension/下全部模块，后续卡新增模块不用再改夹具。界面测试14/14、CORE40，16张截图在docs/测试报告/最新/M6-03/。
 
-### T78 人物、编年史与传闻：玩家能查看见过的人及共同经历，搜索自己的历史，并保存人物笔记和传闻判断。
-可改 E/runtime.js，新建 E/people-history.mjs、people-history.css；S/index.mjs、新 S/ui-history.mjs，T/runtime.test.mjs、新 T/m6-04.test.mjs。增 /ui/history，只读复用 chronicle、NPC 玩家关系及实际获知记录，按玩家可见性过滤后分页；所在地取最后获知位置，承诺仅本人相关；笔记和判断存聊天附加数据，不改引擎事实。
-验收：node --test tests/runtime.test.mjs tests/m6-04.test.mjs；node --test tests/engine.test.mjs tests/storage.test.mjs tests/plugin.test.mjs。截图含三面板和搜索，断言未知人物／私密记忆不显示；模型0，预计3小时，1会话。
+### T78 已完成：人物、编年史、传闻三面板与/ui/history，按玩家知情过滤，可搜索自己的历史并保存人物笔记与传闻判断；界面测试全过、CORE40，截图在docs/测试报告/最新/M6-04/。
 
 ### T79 已完成：任务、约定、领地三面板与/ui/affairs只读投影，按期限排序、收发筛选、公账展示；界面测试25/25、CORE40，截图在docs/测试报告/最新/M6-05/。缺口归R07：玩家发单额度与村级领地签发入口尚未实现，面板对缺记录显示“未登记”。
 
