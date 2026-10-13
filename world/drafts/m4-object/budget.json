@@ -1,6 +1,6 @@
 {
-  "spentYuan": 16.860378880000003,
-  "reservedYuan": 0.08373599999999976,
+  "spentYuan": 17.572402320000002,
+  "reservedYuan": 0.08373599999999978,
   "limitYuan": 25,
   "waveLimitYuan": 25,
   "cards": {
@@ -173,7 +173,7 @@
     },
     "T08": {
       "limitYuan": 6.5,
-      "spentYuan": 4.212835039999999,
+      "spentYuan": 4.924858479999999,
       "reservedYuan": 0
     },
     "T09": {
@@ -15029,6 +15029,346 @@
         "latencyMs": 2223.6183,
         "timestamp": "2026-10-13T13:29:44.697Z"
       }
+    },
+    "f4cab495-049a-4050-a849-6cb7a39cc473": {
+      "card": "T08",
+      "label": "content-T08-npc_lq_fushen-manual-review",
+      "requestHash": "483fbb041d8bcaa98455c73fba7a6717d743434ad4c1d6aa2faaa81d47b3f548",
+      "reservedYuan": 0.25042,
+      "status": "settled",
+      "authorizationId": "user-reopen-20261012-01",
+      "reopenId": "npc_lq_fushen",
+      "responseEvidence": {
+        "file": "budget-responses/f4cab495-049a-4050-a849-6cb7a39cc473.json",
+        "requestHash": "483fbb041d8bcaa98455c73fba7a6717d743434ad4c1d6aa2faaa81d47b3f548",
+        "responseHash": "615f1b8cee31b94729d0ad611ae42fc246657eed62b87a9c09d98381a42a2e53"
+      },
+      "costUpperYuan": 0.07581024,
+      "measurement": {
+        "label": "content-T08-npc_lq_fushen-manual-review",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 35380,
+          "completion_tokens": 694,
+          "total_tokens": 36074,
+          "prompt_tokens_details": {
+            "cached_tokens": 256
+          },
+          "prompt_cache_hit_tokens": 256,
+          "prompt_cache_miss_tokens": 35124
+        },
+        "costUpperYuan": 0.07581024,
+        "cumulativeUpperYuan": 16.93618912,
+        "latencyMs": 4476.4842,
+        "timestamp": "2026-10-13T13:50:00.494Z"
+      }
+    },
+    "29676eea-599c-4694-971d-e83a888b807a": {
+      "card": "T08",
+      "label": "content-T08-npc_lq_shaluo-manual-review",
+      "requestHash": "623edfb90ea8618782f22bd21c110a68f6fa9faa1bbd5099c0a66f9d32a6587d",
+      "reservedYuan": 0.24894,
+      "status": "settled",
+      "authorizationId": "user-reopen-20261012-01",
+      "reopenId": "npc_lq_shaluo",
+      "responseEvidence": {
+        "file": "budget-responses/29676eea-599c-4694-971d-e83a888b807a.json",
+        "requestHash": "623edfb90ea8618782f22bd21c110a68f6fa9faa1bbd5099c0a66f9d32a6587d",
+        "responseHash": "7e5e086768af1850144151ee3d0ac4468f286aaf1a29d7d65e8a7ee445ad08a7"
+      },
+      "costUpperYuan": 0.07626672,
+      "measurement": {
+        "label": "content-T08-npc_lq_shaluo-manual-review",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 35286,
+          "completion_tokens": 900,
+          "total_tokens": 36186,
+          "prompt_tokens_details": {
+            "cached_tokens": 768
+          },
+          "prompt_cache_hit_tokens": 768,
+          "prompt_cache_miss_tokens": 34518
+        },
+        "costUpperYuan": 0.07626672,
+        "cumulativeUpperYuan": 17.01245584,
+        "latencyMs": 5605.5309,
+        "timestamp": "2026-10-13T13:51:02.342Z"
+      }
+    },
+    "8f9b4bb1-13f0-42d3-b4d1-8e0492cbf5e7": {
+      "card": "T08",
+      "label": "content-T08-npc_lq_jushu-manual-review",
+      "requestHash": "e3047cccb7a3c3de77ee693717910127cc4cce42d41dca31f0e2849cdeb215b5",
+      "reservedYuan": 0.252678,
+      "status": "settled",
+      "authorizationId": "user-reopen-20261012-01",
+      "reopenId": "npc_lq_jushu",
+      "responseEvidence": {
+        "file": "budget-responses/8f9b4bb1-13f0-42d3-b4d1-8e0492cbf5e7.json",
+        "requestHash": "e3047cccb7a3c3de77ee693717910127cc4cce42d41dca31f0e2849cdeb215b5",
+        "responseHash": "df4c5fa51cc4169ac288bf255e5d06fdbc4b4a6a757da67140d670823e456fe6"
+      },
+      "costUpperYuan": 0.07704272,
+      "measurement": {
+        "label": "content-T08-npc_lq_jushu-manual-review",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 35810,
+          "completion_tokens": 866,
+          "total_tokens": 36676,
+          "prompt_tokens_details": {
+            "cached_tokens": 768
+          },
+          "prompt_cache_hit_tokens": 768,
+          "prompt_cache_miss_tokens": 35042
+        },
+        "costUpperYuan": 0.07704272,
+        "cumulativeUpperYuan": 17.089498560000003,
+        "latencyMs": 5591.231400000001,
+        "timestamp": "2026-10-13T13:51:09.531Z"
+      }
+    },
+    "1c0fdf4c-593e-470d-9dec-0c1192a58739": {
+      "card": "T08",
+      "label": "content-T08-npc_lq_yike-manual-review",
+      "requestHash": "a0683d66e68e95c4bec4cf5f4c1c15a39136097e046b2e7c72784a71869f244a",
+      "reservedYuan": 0.250976,
+      "status": "settled",
+      "authorizationId": "user-reopen-20261012-01",
+      "reopenId": "npc_lq_yike",
+      "responseEvidence": {
+        "file": "budget-responses/1c0fdf4c-593e-470d-9dec-0c1192a58739.json",
+        "requestHash": "a0683d66e68e95c4bec4cf5f4c1c15a39136097e046b2e7c72784a71869f244a",
+        "responseHash": "d0169b2888fb96cc9045cf59ed2eaab2e468d4a8e922e5379f18f10e44376803"
+      },
+      "costUpperYuan": 0.07575672,
+      "measurement": {
+        "label": "content-T08-npc_lq_yike-manual-review",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 35443,
+          "completion_tokens": 797,
+          "total_tokens": 36240,
+          "prompt_tokens_details": {
+            "cached_tokens": 768
+          },
+          "prompt_cache_hit_tokens": 768,
+          "prompt_cache_miss_tokens": 34675
+        },
+        "costUpperYuan": 0.07575672,
+        "cumulativeUpperYuan": 17.165255280000004,
+        "latencyMs": 4748.816599999998,
+        "timestamp": "2026-10-13T13:51:15.847Z"
+      }
+    },
+    "0dc819da-3329-4465-a048-2e5ed7c33076": {
+      "card": "T08",
+      "label": "content-T08-npc_lq_kuangye-manual-review",
+      "requestHash": "4f64bf82164bfbdb9c9bf88e914cfdca29dd760cfe25401f17572d805ff461a7",
+      "reservedYuan": 0.250094,
+      "status": "settled",
+      "authorizationId": "user-reopen-20261012-01",
+      "reopenId": "npc_lq_kuangye",
+      "responseEvidence": {
+        "file": "budget-responses/0dc819da-3329-4465-a048-2e5ed7c33076.json",
+        "requestHash": "4f64bf82164bfbdb9c9bf88e914cfdca29dd760cfe25401f17572d805ff461a7",
+        "responseHash": "46adc14643af766d952c7a60f0ffdc2e1e03cc01e40111ba563a5b278641fab6"
+      },
+      "costUpperYuan": 0.07491072,
+      "measurement": {
+        "label": "content-T08-npc_lq_kuangye-manual-review",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 35400,
+          "completion_tokens": 702,
+          "total_tokens": 36102,
+          "prompt_tokens_details": {
+            "cached_tokens": 768
+          },
+          "prompt_cache_hit_tokens": 768,
+          "prompt_cache_miss_tokens": 34632
+        },
+        "costUpperYuan": 0.07491072,
+        "cumulativeUpperYuan": 17.240166000000002,
+        "latencyMs": 4412.376500000002,
+        "timestamp": "2026-10-13T13:51:21.877Z"
+      }
+    },
+    "29a3fae8-336a-4dff-9b1f-bb66c95b9006": {
+      "card": "T08",
+      "label": "content-T08-npc_lq_cuifan-manual-review",
+      "requestHash": "fda9d866fcf8400f41897e76df84d1a54d06ebbf507396b15ead910b3d3bdee6",
+      "reservedYuan": 0.23953,
+      "status": "settled",
+      "authorizationId": "user-reopen-20261012-01",
+      "reopenId": "npc_lq_cuifan",
+      "responseEvidence": {
+        "file": "budget-responses/29a3fae8-336a-4dff-9b1f-bb66c95b9006.json",
+        "requestHash": "fda9d866fcf8400f41897e76df84d1a54d06ebbf507396b15ead910b3d3bdee6",
+        "responseHash": "9edc2800dadfb8c589ab6a5e4c6a05e357e469184742c3d5f781b6deb714e018"
+      },
+      "costUpperYuan": 0.06813856,
+      "measurement": {
+        "label": "content-T08-npc_lq_cuifan-manual-review",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 34176,
+          "completion_tokens": 1165,
+          "total_tokens": 35341,
+          "prompt_tokens_details": {
+            "cached_tokens": 4864
+          },
+          "prompt_cache_hit_tokens": 4864,
+          "prompt_cache_miss_tokens": 29312
+        },
+        "costUpperYuan": 0.06813856,
+        "cumulativeUpperYuan": 17.308304560000003,
+        "latencyMs": 6911.6249000000025,
+        "timestamp": "2026-10-13T13:51:30.380Z"
+      }
+    },
+    "d8f12129-8357-4b2d-9784-593cc4b4f777": {
+      "card": "T08",
+      "label": "content-T08-npc_lq_henglu-manual-review",
+      "requestHash": "d8c886f252cbe23ee872f4c7a378df25c54de26a4d5efa25fc448642fa47dfa1",
+      "reservedYuan": 0.238924,
+      "status": "settled",
+      "authorizationId": "user-reopen-20261012-01",
+      "reopenId": "npc_lq_henglu",
+      "responseEvidence": {
+        "file": "budget-responses/d8f12129-8357-4b2d-9784-593cc4b4f777.json",
+        "requestHash": "d8c886f252cbe23ee872f4c7a378df25c54de26a4d5efa25fc448642fa47dfa1",
+        "responseHash": "6c6e564de56aaa2ca781b8cddefd30f65bc668a2da005db4303fc71d42331544"
+      },
+      "costUpperYuan": 0.06316656,
+      "measurement": {
+        "label": "content-T08-npc_lq_henglu-manual-review",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 34162,
+          "completion_tokens": 547,
+          "total_tokens": 34709,
+          "prompt_tokens_details": {
+            "cached_tokens": 4864
+          },
+          "prompt_cache_hit_tokens": 4864,
+          "prompt_cache_miss_tokens": 29298
+        },
+        "costUpperYuan": 0.06316656,
+        "cumulativeUpperYuan": 17.371471120000002,
+        "latencyMs": 3597.3966999999975,
+        "timestamp": "2026-10-13T13:51:35.541Z"
+      }
+    },
+    "533890d9-a121-4820-a9fd-594452378e05": {
+      "card": "T08",
+      "label": "content-T08-npc_lq_qinglan-manual-review",
+      "requestHash": "a32cc133bbb3d1b590352d93b09df8a83fe71e764d36290d7c6982b282896fa0",
+      "reservedYuan": 0.242018,
+      "status": "settled",
+      "authorizationId": "user-reopen-20261012-01",
+      "reopenId": "npc_lq_qinglan",
+      "responseEvidence": {
+        "file": "budget-responses/533890d9-a121-4820-a9fd-594452378e05.json",
+        "requestHash": "a32cc133bbb3d1b590352d93b09df8a83fe71e764d36290d7c6982b282896fa0",
+        "responseHash": "383b1a191c169abd901ecea419a0c00efbbb8b35e6c8a3affd174a68e3b39f92"
+      },
+      "costUpperYuan": 0.06893056,
+      "measurement": {
+        "label": "content-T08-npc_lq_qinglan-manual-review",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 34632,
+          "completion_tokens": 1150,
+          "total_tokens": 35782,
+          "prompt_tokens_details": {
+            "cached_tokens": 4864
+          },
+          "prompt_cache_hit_tokens": 4864,
+          "prompt_cache_miss_tokens": 29768
+        },
+        "costUpperYuan": 0.06893056,
+        "cumulativeUpperYuan": 17.44040168,
+        "latencyMs": 6755.804000000004,
+        "timestamp": "2026-10-13T13:51:43.911Z"
+      }
+    },
+    "d587f444-8ec8-44bc-931e-2ebbc896088c": {
+      "card": "T08",
+      "label": "content-T08-npc_lq_nieya-manual-review",
+      "requestHash": "a2ad106c8a0a007bd5d852b754d0a79585c8099a377f0611280e98506bb5c14d",
+      "reservedYuan": 0.239382,
+      "status": "settled",
+      "authorizationId": "user-reopen-20261012-01",
+      "reopenId": "npc_lq_nieya",
+      "responseEvidence": {
+        "file": "budget-responses/d587f444-8ec8-44bc-931e-2ebbc896088c.json",
+        "requestHash": "a2ad106c8a0a007bd5d852b754d0a79585c8099a377f0611280e98506bb5c14d",
+        "responseHash": "f14440767fc14e5c98f1f1a35b76a51ade8e35a285d6ef3c12bcc4dd294a8b1e"
+      },
+      "costUpperYuan": 0.06483568,
+      "measurement": {
+        "label": "content-T08-npc_lq_nieya-manual-review",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 34254,
+          "completion_tokens": 764,
+          "total_tokens": 35018,
+          "prompt_tokens_details": {
+            "cached_tokens": 4992
+          },
+          "prompt_cache_hit_tokens": 4992,
+          "prompt_cache_miss_tokens": 29262
+        },
+        "costUpperYuan": 0.06483568,
+        "cumulativeUpperYuan": 17.505237360000002,
+        "latencyMs": 4945.035799999998,
+        "timestamp": "2026-10-13T13:51:50.406Z"
+      }
+    },
+    "8de02997-9107-4fe9-8402-1afa74ee9367": {
+      "card": "T08",
+      "label": "content-T08-npc_lq_jushu-manual-review",
+      "requestHash": "113f9f317150feb1cdf6b4fac050ed0710d8549102dded38b6af23946fb9a215",
+      "reservedYuan": 0.246188,
+      "status": "settled",
+      "authorizationId": "user-reopen-20261012-01",
+      "reopenId": "npc_lq_jushu",
+      "responseEvidence": {
+        "file": "budget-responses/8de02997-9107-4fe9-8402-1afa74ee9367.json",
+        "requestHash": "113f9f317150feb1cdf6b4fac050ed0710d8549102dded38b6af23946fb9a215",
+        "responseHash": "96ca4635fc4638fe78bddee1aa931e1681284076b75e12d954b4e847a7dbe6fc"
+      },
+      "costUpperYuan": 0.06716496,
+      "measurement": {
+        "label": "content-T08-npc_lq_jushu-manual-review",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 34922,
+          "completion_tokens": 700,
+          "total_tokens": 35622,
+          "prompt_tokens_details": {
+            "cached_tokens": 4224
+          },
+          "prompt_cache_hit_tokens": 4224,
+          "prompt_cache_miss_tokens": 30698
+        },
+        "costUpperYuan": 0.06716496,
+        "cumulativeUpperYuan": 17.572402320000002,
+        "latencyMs": 4530.6348,
+        "timestamp": "2026-10-13T13:52:48.584Z"
+      }
     }
   },
   "historicalUnallocatedSpentYuan": 0.9480150399999997,
@@ -28664,6 +29004,12 @@
                 "claimedAt": "2026-10-12T13:23:05.857Z",
                 "status": "passed-L1-L2",
                 "finishedAt": "2026-10-12T13:23:08.455Z"
+              },
+              {
+                "fingerprint": "df9ce9dfb3eccb34d2bbb53d4e97830e1e9252d81276d9fd8da713ef8aabcf97",
+                "claimedAt": "2026-10-13T13:49:55.862Z",
+                "status": "passed-L1-L2",
+                "finishedAt": "2026-10-13T13:50:00.511Z"
               }
             ],
             "npc_lq_tanyu": [
@@ -28702,6 +29048,18 @@
                 "claimedAt": "2026-10-12T13:25:18.190Z",
                 "status": "failed",
                 "finishedAt": "2026-10-12T13:25:23.126Z"
+              },
+              {
+                "fingerprint": "5aa6d7e15a7d8c817cd98ac3f466a37a3a6af41ab31ea1fc88ea6f60d7e7b2cd",
+                "claimedAt": "2026-10-13T13:51:03.839Z",
+                "status": "failed",
+                "finishedAt": "2026-10-13T13:51:09.545Z"
+              },
+              {
+                "fingerprint": "a15a28a2c7d669df35d55af8c38b735500b25d808f727af129a4ac4364c2eba1",
+                "claimedAt": "2026-10-13T13:52:43.836Z",
+                "status": "passed-L1-L2",
+                "finishedAt": "2026-10-13T13:52:48.596Z"
               }
             ],
             "npc_lq_cuifan": [
@@ -28710,6 +29068,12 @@
                 "claimedAt": "2026-10-12T13:26:20.625Z",
                 "status": "failed",
                 "finishedAt": "2026-10-12T13:26:24.167Z"
+              },
+              {
+                "fingerprint": "ebf55ce578196e4c4c36878249c584d1e7dd028da1e4d02e14d798b55f496330",
+                "claimedAt": "2026-10-13T13:51:23.367Z",
+                "status": "passed-L1-L2",
+                "finishedAt": "2026-10-13T13:51:30.393Z"
               }
             ],
             "npc_lq_qinglan": [
@@ -28718,6 +29082,12 @@
                 "claimedAt": "2026-10-12T13:26:24.991Z",
                 "status": "failed",
                 "finishedAt": "2026-10-12T13:26:29.868Z"
+              },
+              {
+                "fingerprint": "81c5211aef031ec02f46ef5961fafd72cc06c233bc1aa93355e185693f77f924",
+                "claimedAt": "2026-10-13T13:51:37.062Z",
+                "status": "passed-L1-L2",
+                "finishedAt": "2026-10-13T13:51:43.925Z"
               }
             ],
             "npc_lq_henglu": [
@@ -28726,6 +29096,12 @@
                 "claimedAt": "2026-10-12T13:26:30.668Z",
                 "status": "failed",
                 "finishedAt": "2026-10-12T13:26:34.177Z"
+              },
+              {
+                "fingerprint": "bb94fba623934eb5e3fa8025e35bb24c65bc26c4fc0038e44a46976bb0471a2d",
+                "claimedAt": "2026-10-13T13:51:31.852Z",
+                "status": "passed-L1-L2",
+                "finishedAt": "2026-10-13T13:51:35.553Z"
               }
             ],
             "npc_lq_yike": [
@@ -28734,6 +29110,12 @@
                 "claimedAt": "2026-10-12T13:26:34.968Z",
                 "status": "failed",
                 "finishedAt": "2026-10-12T13:26:39.101Z"
+              },
+              {
+                "fingerprint": "9f46cb76a74fc24e0c3a9fa9718795bc978df29b193a04c0c881c6bc759e9ab5",
+                "claimedAt": "2026-10-13T13:51:11.006Z",
+                "status": "passed-L1-L2",
+                "finishedAt": "2026-10-13T13:51:15.861Z"
               }
             ],
             "npc_lq_manqu": [
@@ -28750,6 +29132,12 @@
                 "claimedAt": "2026-10-12T13:26:51.236Z",
                 "status": "failed",
                 "finishedAt": "2026-10-12T13:26:54.567Z"
+              },
+              {
+                "fingerprint": "53886cce30b86862ca2c7c2a1c6c6b30d6086b851103a44470a154ed8ed3f8ad",
+                "claimedAt": "2026-10-13T13:51:45.372Z",
+                "status": "passed-L1-L2",
+                "finishedAt": "2026-10-13T13:51:50.420Z"
               }
             ],
             "npc_lq_kuangye": [
@@ -28758,6 +29146,20 @@
                 "claimedAt": "2026-10-12T13:26:55.376Z",
                 "status": "failed",
                 "finishedAt": "2026-10-12T13:27:01.918Z"
+              },
+              {
+                "fingerprint": "857f71980aad8582a0e175593b7c5b298f7da4751cb1767413904d6a3b2de512",
+                "claimedAt": "2026-10-13T13:51:17.365Z",
+                "status": "passed-L1-L2",
+                "finishedAt": "2026-10-13T13:51:21.889Z"
+              }
+            ],
+            "npc_lq_shaluo": [
+              {
+                "fingerprint": "8fa4cb2796bfdef1a653ef4159444f6d8f9b21dc3e9e6dd43d53d21431f1c605",
+                "claimedAt": "2026-10-13T13:50:56.642Z",
+                "status": "passed-L1-L2",
+                "finishedAt": "2026-10-13T13:51:02.360Z"
               }
             ]
           },
