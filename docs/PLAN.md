@@ -600,7 +600,7 @@ T28-R1修好新回执undefined规范化并保留严格篡改拒绝，相关31/32
 
 ### T108（B2） 24节日审核发布。结果：24个节日有正式举办地点和运行参数，玩家能参加有成本的活动。可改world/design/w5-festivals.mjs、原节日草稿、tools/w5-festivals.mjs及发布入口、world/lore/festivals.json和必要geo地点映射、tests/w5-festival-publication.test.mjs；接B1，地理发布与T94/遗迹卡串行。复用有效审核，仅修缺项；regional_unmapped须落实举办地再启用，不将远方人员瞬移来现场。验收node --test "tests/w5-*.test.mjs" tests/festival.test.mjs tests/festival-runtime.test.mjs tests/world-clock.test.mjs，CORE。L2预计24–50次，≤1.5元；约2小时。
 
-### T109（B3） 势力资产与阶段执行。结果：势力按日或周推进计划，阶段真实消耗资源、改变局势，玩家干预能改变后续结果。可改server-plugin/world-clock.mjs、新faction-clock.mjs、engine及wildlife/认知必要接点、tests/faction-clock.test.mjs；锁定势力正文，由B4/B5供正式参数。支持现有计划所需的交易/关系/争端及觉醒效果，远方只做区域结算，消息仍走渠道。验收node --test "tests/npc-*.test.mjs" tests/world-clock.test.mjs tests/faction-clock.test.mjs "tests/wildlife*.test.mjs" "tests/w5-*.test.mjs"，CORE；资源不足、长短步一致与觉醒前后身份守恒。模型0；约3小时，与B1及B10时间接点串行。
+### T109（B3）已完成：势力按日或周推进计划，阶段真实消耗资源，玩家干预改变后续；关系与争端有结算回执；觉醒调用接口已留（未实现的效果明确报错，个体变化归T160）。新增10项通过、相关95/96（余一项为主线旧的节俗数量断言）、CORE40、发布构建ok，0模型。正式参数待T110/T111。
 
 ### T110（B4） 势力时钟前20个。结果：前20个势力的资产与各阶段条件、代价和干预办法正式可执行。可改world/design/w5-clock-1.mjs、对应草稿/内容发布入口、world/lore/factions.json、本批tests/w5-clock-1.test.mjs；按现有ID排序分批，不重写合格背景，引用文化/神祇/历史的缺项在本批修正。接B3，与B5同文件串行。验收node --test "tests/w5-*.test.mjs" tests/world-clock.test.mjs tests/faction-clock.test.mjs，CORE。L2预计25–45次，≤1.5元；约2小时。
 
