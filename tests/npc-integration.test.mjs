@@ -10,6 +10,14 @@ async function setup(){
     const run=async(c,tool,args,eventId)=>{const out=await engine.reduce(c,{tool,args,eventId});return{document:applyPatches(c,out.patches),result:out.result};};
     return{world,engine,document,run};
 }
+test('晚间谈话仍提供本人上午的作息背景，不能从背景补完成进度',async()=>{
+    const {engine,document}=await setup();document.state.minute=1110;
+    for(const id of ['npc_hw_linsui','npc_hw_hezhou','npc_hw_shijin'])document.state.npcs[id]={...document.state.npcs[id],location:document.state.location,status:'正常'};
+    const scene=engine.scene(document,'林穗、贺舟、施锦各说自己的看法');
+    assert.match(scene,/翻晒与筛看自家种粒/);assert.match(scene,/npc_hw_shijin.schedule/);
+    assert.match(scene,/过去活动须重建实际时段/);assert.match(scene,/不证明完成数量或具体进度/);
+    assert.doesNotMatch(scene,/今早.*挑完/);
+});
 test('约定实际占用服务窗口，拒绝动作不扣款；原地等待履约有可见状态',async()=>{
     const {engine,document,run}=await setup();
     const reserved=(await run(document,'world_promise',{promisor:'林穗',type:'会面',content:'一起核账半小时',start:540,deadline:570},'meeting')).document;
