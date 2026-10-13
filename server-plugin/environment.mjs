@@ -2,6 +2,7 @@ import {normalize}from'./retrieval.mjs';
 import {waterMechanisms}from'../world/design/water-foundation.mjs';
 import {addObjectFuel,inspectObjectProcess,touchWarmObject,douseObjectFire,assertFirePath}from'./magic-object.mjs';
 import{inspectMagicMarks}from'./magic-marks.mjs';
+import {airEnvironmentAction}from'./magic-air.mjs';
 
 const integer=(value,min,max,label)=>{if(!Number.isSafeInteger(value)||value<min||value>max)throw new Error(`${label}无效`);return value;};
 const key=id=>`physical_feature:${id}`;
@@ -23,9 +24,11 @@ export function recordLocalContact(d,engine,target,eventId){
     const location=d.get('state','location'),actor=d.get('state',target.startsWith('npc_')?'npcs':'creatures',target),position=point(d);
     if(!actor||actor.location!==location||actor.scheduleTravel||actor.cognitionTravel||!localSightClear(d,engine,location,position,position))return false;
     const source=`physical_contact:${eventId}:${target}`,minute=d.get('state','minute'),expires=minute+10;
-    const evidence={category:'physical_contact',subject:target,location,point:[...position],visibleFrom:[...position],event:eventId,minute,expires,activity:actor.activity??null};
+    const elevation=d.get('state','records','local_player_position','elevationMeters');
+    const height=Number.isFinite(elevation)?{elevationMeters:elevation}:{};
+    const evidence={category:'physical_contact',subject:target,location,point:[...position],visibleFrom:[...position],event:eventId,minute,expires,activity:actor.activity??null,...height};
     d.set(['state','records',source],evidence);
-    d.set(['state','records',`local_actor_position:${target}`],{category:'local_position',subject:target,location,point:[...position],source,minute,expires,activity:actor.activity??null});
+    d.set(['state','records',`local_actor_position:${target}`],{category:'local_position',subject:target,location,point:[...position],source,minute,expires,activity:actor.activity??null,...height});
     return true;
 }
 export function localSightClear(d,engine,location,from,to){
@@ -57,6 +60,7 @@ function visible(row,state){
     const out={id:row.id,name:row.name,kind:row.kind,owner:row.owner,access:row.access,position:[...row.position],links:{...row.links??{}}};
     for(const name of['capacityMl','waterMl','nutrientMg','growthConsumedWaterMl','growthConsumedNutrientMg','turbidity','odor','siltGrams','loosenedSiltGrams','blockagePercent','flowLimitMl','moisturePercent'])if(state[name]!==undefined)out[name]=state[name];
     if(state.air)out.air=structuredClone(state.air);
+    for(const field of ['looseDustMg','stainMg','moistureMg','evaporatedMg','turned','exposed','heightMeters','displacementMeters','integrity','material','deployed','torn','fallHeightMeters'])if(state[field]!==undefined)out[field]=state[field];
     if(state.charcoalTrace)out.charcoalTrace=structuredClone(state.charcoalTrace);
     if(state.waterMl!==undefined)out.waterSafety='毒素和病原尚未检验；外观清澈不等于可安全饮用';return out;
 }
@@ -154,6 +158,7 @@ export function applyEnvironmentMagic(d,prepared,eventId){
 
 export function interactEnvironment(d,args,eventId){
     const location=d.get('state','location'),operation=args.operation??'inspect';
+    if(['turn_grain','sound','fall','breathe'].includes(operation))return airEnvironmentAction.call(this,d,args,eventId);
     if(operation==='inspect')return environmentCatalog(this,d.document,{entity:args.target});
     if(operation==='inspect_heat')return{...inspectObjectProcess(d,this,args.target,args),actionScope:{kind:'instant',instantaneous:true}};
     if(operation==='warm_touch')return{...touchWarmObject(d,this,args),actionScope:{kind:'instant',instantaneous:true}};
@@ -176,7 +181,8 @@ export function interactEnvironment(d,args,eventId){
         this.advance(d,minutes,eventId);
         if(d.get('state','location')!==location||d.get('state','player','status')!=='正常')return{target:row.id,metres,minutes,arrived:false};
         assertFirePath(d,this,point(d),row.position);
-        d.set(['state','records','local_player_position'],{category:'local_position',subject:'player',location,point:[...row.position],source:eventId,anchor:row.id,minute:d.get('state','minute')});
+        const height=row.kind==='ledge'?{elevationMeters:stateOf(d,row).fallHeightMeters}:{};
+        d.set(['state','records','local_player_position'],{category:'local_position',subject:'player',location,point:[...row.position],source:eventId,anchor:row.id,minute:d.get('state','minute'),...height});
         return{target:row.id,metres,minutes,position:[...row.position]};
     }
     if(operation!=='carry_silt')throw new Error('环境操作需为inspect、inspect_heat、load_fuel、approach或carry_silt');

@@ -7,6 +7,7 @@ import {learn}from'./learning.mjs';
 import {prepareMagic,applyMagic}from'./magic.mjs';
 import {settleMagicAreas,nextMagicAreaMinute,prepareAreaMagic,applyAreaMagic,areaTargetFacts}from'./magic-area.mjs';
 import {advanceMagicObjects,assertFireTravel}from'./magic-object.mjs';
+import {advanceAirEffects,adjustAirTravel}from'./magic-air.mjs';
 import{targetFacts,statusContext}from'./magic-context.mjs';
 import {profession,effectiveProficiency}from'./professions.mjs';
 import {xpRequired,allocateAttributes,milestone}from'./progression.mjs';
@@ -132,7 +133,7 @@ export class WorldEngine {
         if (!['trade','time','move','turn','health','revive','revival','check','practice','cast','learn','profession','attributes','relation','promise','remember',...Object.keys(activities)].includes(tool)) throw new Error('未知工具职责');
         if(d.get('state','player','status')==='死亡'&&!['time','turn','revive'].includes(tool))throw new Error('你已经死亡，需要在登记点醒来后行动');
         if(d.get('state','player','status')==='濒死'&&!['time','turn','health','cast'].includes(tool))throw new Error('你处于濒死状态，只能等待救治或尝试自救');
-        const session=this.scoped(document);session.replaying=Boolean(options.replay);session.replayResult=options.result;session.npcObligationAction={tool,args};
+        const session=this.scoped(document);session.airDraft=d;session.replaying=Boolean(options.replay);session.replayResult=options.result;session.npcObligationAction={tool,args};
         if(tool==='combat'){
             const target=session.resolve(args.target);
             for(const task of Object.values(d.get('state','npcAutonomy','tasks')??{}))if(task.status==='进行中'&&[task.npc,task.action.seller].includes(target))d.set(['state','npcAutonomy','tasks',task.id],{...task,status:'中断',reason:'交锋打断了正在进行的工作',interruptedAt:d.get('state','minute'),sourceEvent:id});
@@ -257,6 +258,7 @@ export class WorldEngine {
             if(!actor||actor.location!==row.location||actor.scheduleTravel||actor.cognitionTravel||actor.status==='死亡'||row.expires<=after)d.remove(['state','records',key]);
         }
         advanceMagicObjects(d,this,after);
+        advanceAirEffects(d,this,before,after);
         settleMagicAreas(d,this);
         for(const [key,effect] of Object.entries(d.get('state','effects'))) if(effect.expires<=after) d.remove(['state','effects',key]);
         const p=d.get('state','player');
@@ -320,9 +322,10 @@ export class WorldEngine {
             }
         }
         if(!distances.has(to))throw new Error('没有当前季节可通行的路线，不能瞬移');
-        const edges=[];let cursor=to;while(cursor!==from){const step=previous.get(cursor);edges.unshift(step.edge.id);cursor=step.node;}
+        const edges=[],segments=[];let cursor=to;while(cursor!==from){const step=previous.get(cursor);edges.unshift(step.edge.id);segments.unshift({id:step.edge.id,minutes:movingTimes.get(cursor)-movingTimes.get(step.node)});cursor=step.node;}
         const moving=movingTimes.get(to),daysRest=this.rules.weather||mode==='boat'?0:Math.floor((moving-1)/this.rules.travel.dailyTravelMinutes)*(1440-this.rules.travel.dailyTravelMinutes);
-        return {minutes:distances.get(to)+daysRest,movingMinutes:moving,cost:costs.get(to),edges};
+        const result={minutes:distances.get(to)+daysRest,movingMinutes:moving,cost:costs.get(to),edges};
+        return this.airDraft?adjustAirTravel(this.airDraft,this,result,mode,{minute,from,segments,sail:this.npcObligationAction?.tool==='move'}):result;
     }
     move(d,args,id) {
         const destination=this.resolve(args.destination),old=d.get('state','location');

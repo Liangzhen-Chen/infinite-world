@@ -14,6 +14,7 @@ import {resolveCreature,recordWildlifeDeath}from'./wildlife.mjs';
 import {bossCounter,rememberBossTactic,defeatBoss}from'./bosses.mjs';
 import {validateEffectSpec,resolveVitalityPrimitive,applyProtectionPrimitive,consumeMagicProtection}from'./magic-primitives.mjs';
 import {validateObjectCatalog,prepareObjectMagic,applyObjectMagic,validateHeatCatalog,prepareHeatMagic,applyHeatMagic,ambientHeatC,coldHeatMultiplier}from'./magic-object.mjs';
+import {validateAirCatalog,prepareAirMagic,applyAirMagic,prepareWindObject,applyWindObject,windArmorMultiplier}from'./magic-air.mjs';
 export function validateMagicCatalog(catalog,{requireHandler=false}={}){
     const spec=catalog.effectSpec,errors=[];
     if(!spec){if(requireHandler||catalog.mechanism)errors.push('此法术机制尚未接入规则，不能叙述已实现');return errors;}
@@ -31,12 +32,16 @@ export function validateMagicCatalog(catalog,{requireHandler=false}={}){
     if(spec.kind==='mark')errors.push(...validateMarkCatalog(catalog));
     if(spec.kind==='object')errors.push(...validateObjectCatalog(catalog));
     if(spec.kind==='heat')errors.push(...validateHeatCatalog(catalog));
+    if(spec.kind==='air')errors.push(...validateAirCatalog(catalog));
+    if(spec.windBlade&&(!catalog.targeting||catalog.duration!==0))errors.push('风刃须声明实际目标边界且为瞬时伤害');
     if(spec.coldDecay&&(!catalog.targeting||catalog.duration!==0))errors.push('冰针须声明真实目标边界且为瞬时伤害');
     return errors;
 }
 export function prepareMagic(d,catalog,args,context={}){
     const errors=validateMagicCatalog(catalog);if(errors.length)throw new Error(errors.join('；'));
     const spec=catalog.effectSpec;if(!spec)return null;
+    if(spec.kind==='air')return prepareAirMagic.call(this,d,catalog,args);
+    if(spec.windBlade&&args.target?.startsWith('feature_'))return prepareWindObject.call(this,d,catalog,args);
     if(messageKinds.includes(spec.kind))return prepareMessage.call(this,d,catalog,args);
     if(movementKinds.includes(spec.kind))return prepareMovement.call(this,d,catalog,args);
     if(spec.kind==='area')return prepareAreaMagic.call(this,d,catalog,args,context);
@@ -81,6 +86,8 @@ export function prepareMagic(d,catalog,args,context={}){
 export function applyMagic(d,prepared,id){
     if(!prepared)return{};
     let{spec,target,path,catalog}=prepared;
+    if(prepared.windObject)return applyWindObject.call(this,d,prepared);
+    if(spec.kind==='air')return applyAirMagic.call(this,d,prepared,id);
     if(messageKinds.includes(spec.kind))return applyMessage.call(this,d,prepared,id);
     if(movementKinds.includes(spec.kind))return applyMovement.call(this,d,prepared,id);
     if(spec.kind==='area')return applyAreaMagic.call(this,d,prepared,id);
@@ -124,7 +131,7 @@ export function applyMagic(d,prepared,id){
     const current=d.get(...path),maximum=current.maxHp??prepared.derived.maxHp,old=current.hp??maximum;
     const protection=magicStatusStats(d,target),resistance=protection[`${spec.damageType}Resistance`]??0;
     const tactic=`magic_${spec.damageType??'untyped'}`,counter=spec.kind==='damage'?bossCounter(d,this,target,tactic):{damageMultiplier:1};
-    const heatMultiplier=spec.coldDecay?coldHeatMultiplier(prepared.ambientC):1;
+    const heatMultiplier=spec.coldDecay?coldHeatMultiplier(prepared.ambientC):spec.windBlade?windArmorMultiplier(current.armorMaterial??this.byId.get(target)?.armorMaterial):1;
     const resolved=resolveVitalityPrimitive({spec,hp:old,maxHp:maximum,defense:prepared.derived.defense+protection.defense,resistance,multiplier:counter.damageMultiplier*heatMultiplier});
     const shield=spec.kind==='damage'?consumeMagicProtection(d,target,resolved.rawAmount,spec.damageType??'physical'):{damage:0,absorbed:0};
     const next=spec.kind==='damage'?Math.max(0,old-shield.damage):resolved.nextHp;

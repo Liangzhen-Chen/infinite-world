@@ -1,13 +1,12 @@
 {
   "scope": "逐条机制盘点；缺失项保留目标，不按数量压力改成研究型或删除。结构通过不等于原描述已实现。",
   "total": 154,
-  "formalSpellCount": 17,
+  "formalSpellCount": 31,
   "counts": {
     "reviewed-unpublished": 2,
-    "consumer-ready": 7,
-    "reuse-candidate": 14,
-    "published": 16,
-    "missing-consumer": 115
+    "consumer-ready": 21,
+    "published": 30,
+    "missing-consumer": 101
   },
   "rows": [
     {
@@ -44,13 +43,13 @@
       "name": "烘衣术",
       "mechanism": "dry",
       "originalEffect": "排出一件衣物中的潮气，保留染料与纤维",
-      "status": "reuse-candidate",
+      "status": "published",
       "handler": {
         "kind": "dry",
         "power": 100
       },
       "validation": [],
-      "evidence": "只对本人持有的一件衣物减少潮湿值，最多减少100，不能负数；不能对整叠衣物、帆布或仓库施法。没有额外热伤、焦痕或染料改变。"
+      "evidence": "正式world/meta/spells.json及对应M4发布测试"
     },
     {
       "id": "spell_fire_04",
@@ -115,14 +114,14 @@
       "name": "焰矢术",
       "mechanism": "damage_fire",
       "originalEffect": "向视野内目标投射一束火焰，可被掩体阻断",
-      "status": "reuse-candidate",
+      "status": "published",
       "handler": {
         "kind": "damage",
         "power": 16,
         "damageType": "fire"
       },
       "validation": [],
-      "evidence": "仅实际生命目标，开始和完成时均核对实际距离及无遮挡视线；无目标事实则拒绝。16基础强度参与防御、火抗和实际防护结算；不在地面留下火源，不点燃周边物品。"
+      "evidence": "正式world/meta/spells.json及对应M4发布测试"
     },
     {
       "id": "spell_fire_09",
@@ -159,27 +158,27 @@
       "name": "隔焰罩",
       "mechanism": "shield_fire",
       "originalEffect": "为一人削减外来火焰伤害，不抵挡刀剑",
-      "status": "reuse-candidate",
+      "status": "published",
       "handler": {
         "kind": "status",
         "status": "fire_shield",
         "power": 40
       },
       "validation": [],
-      "evidence": "一人火焰抗性增加40个百分点，相同状态取最强值不累加；不减物理伤害，不保护衣物，不造成缺氧。"
+      "evidence": "正式world/meta/spells.json及对应M4发布测试"
     },
     {
       "id": "spell_fire_12",
       "name": "熔缝术",
       "mechanism": "repair_metal",
       "originalEffect": "以铁料填补金属裂缝，不能创造缺失部件",
-      "status": "reuse-candidate",
+      "status": "published",
       "handler": {
         "kind": "repair",
         "power": 20
       },
       "validation": [],
-      "evidence": "实际消耗一份铁料和一份树脂，恢复持有的单件金属器具至多20耐久且不超过该件上限；缺件不能凭空成物，不增加上限、品质或附魔。"
+      "evidence": "正式world/meta/spells.json及对应M4发布测试"
     },
     {
       "id": "spell_fire_13",
@@ -213,7 +212,7 @@
       "name": "凝露术",
       "mechanism": "condense",
       "originalEffect": "在杯壁凝出少量水，速度受空气湿度限制",
-      "status": "reuse-candidate",
+      "status": "published",
       "handler": {
         "kind": "environment",
         "operation": "condense",
@@ -221,14 +220,14 @@
         "unit": "millilitre"
       },
       "validation": [],
-      "evidence": "所在地登记的水源或容器必须有剩余容量，空气湿度至少5%；实际毫升数=min(剩余容量,floor(50*湿度/100))，不补盐、毒素或病原；潮气不足就拒绝。私人容器须有效物主许可，公开水源或公用容器不需私有许可。"
+      "evidence": "正式world/meta/spells.json及对应M4发布测试"
     },
     {
       "id": "spell_water_02",
       "name": "净水术",
       "mechanism": "clean_water",
       "originalEffect": "去除一桶水中的悬浮污物，不能消除一切毒素",
-      "status": "reuse-candidate",
+      "status": "published",
       "handler": {
         "kind": "environment",
         "operation": "clean_water",
@@ -236,14 +235,14 @@
         "unit": "turbidity_point"
       },
       "validation": [],
-      "evidence": "所在地真实水体的浊度减少40至最低0；水量、盐分、毒素与病原风险不变，不能保证安全饮用。"
+      "evidence": "正式world/meta/spells.json及对应M4发布测试"
     },
     {
       "id": "spell_water_03",
       "name": "辨泉术",
       "mechanism": "sense_water",
       "originalEffect": "判断近处水源盐分与腐败气味，不能探出暗藏契约",
-      "status": "reuse-candidate",
+      "status": "published",
       "handler": {
         "kind": "environment",
         "operation": "sense_water",
@@ -251,14 +250,14 @@
         "unit": "reading"
       },
       "validation": [],
-      "evidence": "只读实际水体盐分、气味与浊度，不透露未经化验的毒素或病原数值；不识别契约或所有权。"
+      "evidence": "正式world/meta/spells.json及对应M4发布测试"
     },
     {
       "id": "spell_water_04",
       "name": "引水术",
       "mechanism": "irrigate",
       "originalEffect": "沿已存在的沟渠移动水，不能使水无源出现",
-      "status": "reuse-candidate",
+      "status": "published",
       "handler": {
         "kind": "environment",
         "operation": "irrigate",
@@ -266,7 +265,7 @@
         "unit": "litre"
       },
       "validation": [],
-      "evidence": "通过已登记沟渠转移最多20升现有水，受源水量、容量、流量和堵塞约束；溶解盐毒随水转移，不造水、不挖新沟，目标水源与田垄必须真实对应。"
+      "evidence": "正式world/meta/spells.json及对应M4发布测试"
     },
     {
       "id": "spell_water_05",
@@ -285,7 +284,7 @@
       "name": "清渠术",
       "mechanism": "clear_silt",
       "originalEffect": "松开沟内淤泥，须有人将泥运走",
-      "status": "reuse-candidate",
+      "status": "published",
       "handler": {
         "kind": "environment",
         "operation": "clear_silt",
@@ -293,7 +292,7 @@
         "unit": "gram"
       },
       "validation": [],
-      "evidence": "只把沟内至多2000克淤泥变为松动状态，尚未移出，也不因松动就降低堵塞；实际搬走才改善堵塞。"
+      "evidence": "正式world/meta/spells.json及对应M4发布测试"
     },
     {
       "id": "spell_water_07",
@@ -364,7 +363,7 @@
       "name": "回潮术",
       "mechanism": "soil_water",
       "originalEffect": "为干旱田垄补湿，需要引水并由耕作者处理土壤",
-      "status": "reuse-candidate",
+      "status": "published",
       "handler": {
         "kind": "environment",
         "operation": "soil_water",
@@ -372,7 +371,7 @@
         "unit": "litre"
       },
       "validation": [],
-      "evidence": "沿既有沟渠给已处理田垄转移至多10升现有水；未翻整土壤拒绝，污染随源水实际转移，不瞬间发芽或保证产量。"
+      "evidence": "正式world/meta/spells.json及对应M4发布测试"
     },
     {
       "id": "spell_water_13",
@@ -403,170 +402,198 @@
       "name": "招风术",
       "mechanism": "airflow",
       "originalEffect": "让两米内空气流动，可驱走烟但不消灭烟源",
-      "status": "missing-consumer",
-      "handler": null,
-      "validation": [
-        "此法术机制尚未接入规则，不能叙述已实现"
-      ],
-      "evidence": "缺空气流动/通风、实际位移或对应传播、载荷、呼吸消费者。"
+      "status": "consumer-ready",
+      "handler": {
+        "kind": "air",
+        "operation": "airflow",
+        "power": 2000
+      },
+      "validation": [],
+      "evidence": "server-plugin/magic-air.mjs、magic.mjs与tests/magic-air.test.mjs；未进行内容审核或正式发布"
     },
     {
       "id": "spell_wind_02",
       "name": "拂尘术",
       "mechanism": "clean_air",
       "originalEffect": "吹去物品表面松散尘土，不能剥离牢固污渍",
-      "status": "missing-consumer",
-      "handler": null,
-      "validation": [
-        "此法术机制尚未接入规则，不能叙述已实现"
-      ],
-      "evidence": "缺空气流动/通风、实际位移或对应传播、载荷、呼吸消费者。"
+      "status": "consumer-ready",
+      "handler": {
+        "kind": "air",
+        "operation": "clean_air",
+        "power": 1000
+      },
+      "validation": [],
+      "evidence": "server-plugin/magic-air.mjs、magic.mjs与tests/magic-air.test.mjs；未进行内容审核或正式发布"
     },
     {
       "id": "spell_wind_03",
       "name": "传声线",
       "mechanism": "carry_voice",
       "originalEffect": "顺一条短气流传话，沿途有人也能听见",
-      "status": "missing-consumer",
-      "handler": null,
-      "validation": [
-        "此法术机制尚未接入规则，不能叙述已实现"
-      ],
-      "evidence": "缺空气流动/通风、实际位移或对应传播、载荷、呼吸消费者。"
+      "status": "consumer-ready",
+      "handler": {
+        "kind": "air",
+        "operation": "carry_voice",
+        "power": 80
+      },
+      "validation": [],
+      "evidence": "server-plugin/magic-air.mjs、magic.mjs与tests/magic-air.test.mjs；未进行内容审核或正式发布"
     },
     {
       "id": "spell_wind_04",
       "name": "听风术",
       "mechanism": "sense_air",
       "originalEffect": "辨出近处风向与回声，封闭石墙仍会阻断",
-      "status": "missing-consumer",
-      "handler": null,
-      "validation": [
-        "此法术机制尚未接入规则，不能叙述已实现"
-      ],
-      "evidence": "缺空气流动/通风、实际位移或对应传播、载荷、呼吸消费者。"
+      "status": "consumer-ready",
+      "handler": {
+        "kind": "air",
+        "operation": "sense_air",
+        "power": 1
+      },
+      "validation": [],
+      "evidence": "server-plugin/magic-air.mjs、magic.mjs与tests/magic-air.test.mjs；未进行内容审核或正式发布"
     },
     {
       "id": "spell_wind_05",
       "name": "晾谷风",
       "mechanism": "dry_grain",
       "originalEffect": "帮助一堆谷物排湿，翻谷工作仍由人完成",
-      "status": "missing-consumer",
-      "handler": null,
-      "validation": [
-        "此法术机制尚未接入规则，不能叙述已实现"
-      ],
-      "evidence": "缺空气流动/通风、实际位移或对应传播、载荷、呼吸消费者。"
+      "status": "consumer-ready",
+      "handler": {
+        "kind": "air",
+        "operation": "dry_grain",
+        "power": 1000
+      },
+      "validation": [],
+      "evidence": "server-plugin/magic-air.mjs、magic.mjs与tests/magic-air.test.mjs；未进行内容审核或正式发布"
     },
     {
       "id": "spell_wind_06",
       "name": "缓坠术",
       "mechanism": "slow_fall",
       "originalEffect": "减慢一人的下降，不能托住重型货物",
-      "status": "missing-consumer",
-      "handler": null,
-      "validation": [
-        "此法术机制尚未接入规则，不能叙述已实现"
-      ],
-      "evidence": "缺空气流动/通风、实际位移或对应传播、载荷、呼吸消费者。"
+      "status": "consumer-ready",
+      "handler": {
+        "kind": "air",
+        "operation": "slow_fall",
+        "power": 80
+      },
+      "validation": [],
+      "evidence": "server-plugin/magic-air.mjs、magic.mjs与tests/magic-air.test.mjs；未进行内容审核或正式发布"
     },
     {
       "id": "spell_wind_07",
       "name": "风刃术",
       "mechanism": "damage_wind",
       "originalEffect": "切出一道薄气流，软物易切而硬甲会抵挡",
-      "status": "missing-consumer",
+      "status": "consumer-ready",
       "handler": {
         "kind": "damage",
-        "power": 16,
-        "damageType": "wind"
+        "power": 40,
+        "damageType": "wind",
+        "armorFactor": 1,
+        "windBlade": true
       },
       "validation": [],
-      "evidence": "通用生命目标伤害不能切开非活体软物，亦无甲材差异。"
+      "evidence": "server-plugin/magic-air.mjs、magic.mjs与tests/magic-air.test.mjs；未进行内容审核或正式发布"
     },
     {
       "id": "spell_wind_08",
       "name": "静息幕",
       "mechanism": "quiet",
       "originalEffect": "降低一小圈内的风声，同时影响传话和警号",
-      "status": "missing-consumer",
-      "handler": null,
-      "validation": [
-        "此法术机制尚未接入规则，不能叙述已实现"
-      ],
-      "evidence": "缺区域内多目标、持续触发及跨边界解除/友军波及消费者。"
+      "status": "consumer-ready",
+      "handler": {
+        "kind": "air",
+        "operation": "quiet",
+        "power": 80
+      },
+      "validation": [],
+      "evidence": "server-plugin/magic-air.mjs、magic.mjs与tests/magic-air.test.mjs；未进行内容审核或正式发布"
     },
     {
       "id": "spell_wind_09",
       "name": "帆息调节",
       "mechanism": "sail",
       "originalEffect": "为已有船帆修正局部气流，不能改变整片海风",
-      "status": "missing-consumer",
-      "handler": null,
-      "validation": [
-        "此法术机制尚未接入规则，不能叙述已实现"
-      ],
-      "evidence": "缺空气流动/通风、实际位移或对应传播、载荷、呼吸消费者。"
+      "status": "consumer-ready",
+      "handler": {
+        "kind": "air",
+        "operation": "sail",
+        "power": 30
+      },
+      "validation": [],
+      "evidence": "server-plugin/magic-air.mjs、magic.mjs与tests/magic-air.test.mjs；未进行内容审核或正式发布"
     },
     {
       "id": "spell_wind_10",
       "name": "气囊术",
       "mechanism": "air_bubble",
       "originalEffect": "保持短暂可呼吸气泡，氧气耗尽后失效",
-      "status": "missing-consumer",
-      "handler": null,
-      "validation": [
-        "此法术机制尚未接入规则，不能叙述已实现"
-      ],
-      "evidence": "缺空气流动/通风、实际位移或对应传播、载荷、呼吸消费者。"
+      "status": "consumer-ready",
+      "handler": {
+        "kind": "air",
+        "operation": "air_bubble",
+        "power": 600
+      },
+      "validation": [],
+      "evidence": "server-plugin/magic-air.mjs、magic.mjs与tests/magic-air.test.mjs；未进行内容审核或正式发布"
     },
     {
       "id": "spell_wind_11",
       "name": "偏箭风",
       "mechanism": "deflect",
       "originalEffect": "扰乱向一人飞来的轻型投射物，重弩矢受影响较小",
-      "status": "missing-consumer",
-      "handler": null,
-      "validation": [
-        "此法术机制尚未接入规则，不能叙述已实现"
-      ],
-      "evidence": "缺空气流动/通风、实际位移或对应传播、载荷、呼吸消费者。"
+      "status": "consumer-ready",
+      "handler": {
+        "kind": "air",
+        "operation": "deflect",
+        "power": 60
+      },
+      "validation": [],
+      "evidence": "server-plugin/magic-air.mjs、magic.mjs与tests/magic-air.test.mjs；未进行内容审核或正式发布"
     },
     {
       "id": "spell_wind_12",
       "name": "烟雾分流",
       "mechanism": "smoke",
       "originalEffect": "引走小范围烟雾，必须为污染选择实际出口",
-      "status": "missing-consumer",
-      "handler": null,
-      "validation": [
-        "此法术机制尚未接入规则，不能叙述已实现"
-      ],
-      "evidence": "缺空气流动/通风、实际位移或对应传播、载荷、呼吸消费者。"
+      "status": "consumer-ready",
+      "handler": {
+        "kind": "air",
+        "operation": "smoke",
+        "power": 2000
+      },
+      "validation": [],
+      "evidence": "server-plugin/magic-air.mjs、magic.mjs与tests/magic-air.test.mjs；未进行内容审核或正式发布"
     },
     {
       "id": "spell_wind_13",
       "name": "盘旋风柱",
       "mechanism": "lift",
       "originalEffect": "短时托起轻物，旋涡会卷走周边松散物品",
-      "status": "missing-consumer",
-      "handler": null,
-      "validation": [
-        "此法术机制尚未接入规则，不能叙述已实现"
-      ],
-      "evidence": "缺空气流动/通风、实际位移或对应传播、载荷、呼吸消费者。"
+      "status": "consumer-ready",
+      "handler": {
+        "kind": "air",
+        "operation": "lift",
+        "power": 2000
+      },
+      "validation": [],
+      "evidence": "server-plugin/magic-air.mjs、magic.mjs与tests/magic-air.test.mjs；未进行内容审核或正式发布"
     },
     {
       "id": "spell_wind_14",
       "name": "逆风环",
       "mechanism": "area_wind",
       "originalEffect": "使一段道路难以穿行，对友军同样生效",
-      "status": "missing-consumer",
-      "handler": null,
-      "validation": [
-        "此法术机制尚未接入规则，不能叙述已实现"
-      ],
-      "evidence": "缺区域内多目标、持续触发及跨边界解除/友军波及消费者。"
+      "status": "consumer-ready",
+      "handler": {
+        "kind": "air",
+        "operation": "area_wind",
+        "power": 100
+      },
+      "validation": [],
+      "evidence": "server-plugin/magic-air.mjs、magic.mjs与tests/magic-air.test.mjs；未进行内容审核或正式发布"
     },
     {
       "id": "spell_earth_01",
@@ -698,14 +725,14 @@
       "name": "石肤术",
       "mechanism": "stone_skin",
       "originalEffect": "提高一人的抗撞击能力，同时降低灵活性",
-      "status": "reuse-candidate",
+      "status": "published",
       "handler": {
         "kind": "status",
         "status": "stone_skin",
         "power": 4
       },
       "validation": [],
-      "evidence": "一人防御增加4，闪避减少0.08；相同状态取最强值不累加，不使人定身。"
+      "evidence": "正式world/meta/spells.json及对应M4发布测试"
     },
     {
       "id": "spell_earth_12",
@@ -1318,14 +1345,14 @@
       "name": "守心结",
       "mechanism": "mind_guard",
       "originalEffect": "降低外来的轻度精神干扰，施术需本人同意",
-      "status": "reuse-candidate",
+      "status": "published",
       "handler": {
         "kind": "status",
         "status": "mind_guard",
         "power": 35
       },
       "validation": [],
-      "evidence": "对新施加的恐惧、错觉、轻度强迫减少35%强度，四舍五入；不追溯清除旧状态，不保护记忆，不提供测谎或免疫。"
+      "evidence": "正式world/meta/spells.json及对应M4发布测试"
     },
     {
       "id": "spell_mind_06",
@@ -1382,14 +1409,14 @@
       "name": "恐慌刺",
       "mechanism": "fear",
       "originalEffect": "加强短暂恐惧，镇定训练与守心术可反制",
-      "status": "reuse-candidate",
+      "status": "published",
       "handler": {
         "kind": "status",
         "status": "fear",
         "power": 2
       },
       "validation": [],
-      "evidence": "恐惧强度2参与命中惩罚，每点降低0.02；守心结的精神抗性降低新状态强度，旅灯抵消一点恐惧造成的命中损失；不强迫逃跑、吐露秘密或改变信任。对他人施加敌意状态实际损失信任。"
+      "evidence": "正式world/meta/spells.json及对应M4发布测试"
     },
     {
       "id": "spell_mind_11",
@@ -1654,7 +1681,7 @@
       "name": "水盏役灵",
       "mechanism": "servant",
       "originalEffect": "让一只契约役灵搬动一杯水，必须维持魔力",
-      "status": "reuse-candidate",
+      "status": "published",
       "handler": {
         "kind": "summon",
         "summonType": "water_cup",
@@ -1663,7 +1690,7 @@
         "upkeepMinutes": 5
       },
       "validation": [],
-      "evidence": "召唤自己的当地水盏役灵，最多30分钟，每5分钟消耗1魔力；命令实际花5分钟搬运最多250毫升同场景现有水，须源容器有水且目标有容量并获得物主许可。不净水、不战斗，不自动搬运或成为永久宠物。"
+      "evidence": "正式world/meta/spells.json及对应M4发布测试"
     },
     {
       "id": "spell_summon_05",
