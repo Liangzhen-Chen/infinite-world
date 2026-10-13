@@ -23,7 +23,7 @@ export function readStateSection(state,section,npc){
         if(!Object.hasOwn(result,id))return{ok:false,error:'未找到该人物状态，请先通过world_catalog查已登记人物编号。'};
         result={[id]:result[id]};
     }
-    if(key==='records')result=Object.fromEntries(Object.entries(result).filter(([,row])=>!['ecology','lair','wildlifeMigration'].includes(row?.category)).map(([id,row])=>{
+    if(key==='records')result=Object.fromEntries(Object.entries(result).filter(([,row])=>!['ecology','lair','wildlifeMigration','site'].includes(row?.category)).map(([id,row])=>{
         if(row?.category==='legal_case'){
             const{evidence,witnesses,...view}=row;return[id,{...view,note:'证据与见证者认知通过在场报案和审理查证，不由全局记录直接透露'}];
         }

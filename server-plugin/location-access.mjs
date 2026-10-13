@@ -1,12 +1,13 @@
 import {magicMessagePermission}from'./magic-message.mjs';
 import {environmentFeatures}from'./environment.mjs';
+import {sitePermission}from'./sites.mjs';
 // Existing authorization records govern entry; the route alone is not consent.
 export function assertLocationAccess(d,engine,destination,{authorization,companions=[],arrivalMinute=d.get('state','minute')}={}){
  const place=engine.byId.get(destination),access=place?.access;
  if(access?.mode!=='private'||access.requiresConsent!==true)return;
  const permission=authorization?d.get('state','records',authorization):null;
  const residents=new Set(access.residents??[]),grantor=engine.byId.get(permission?.grantor);
- const allowed=permission?.category==='authorization'&&permission.subject===destination&&permission.action==='enter_home'
+ const allowed=permission?.category==='authorization'&&permission.subject===destination&&(permission.action==='enter_home'||place.site&&permission.action==='site_use')
   &&permission.grantee==='player'&&residents.has(permission.grantor)&&(grantor?.age??0)>=18
   &&permission.revoked!==true&&Number.isSafeInteger(permission.expires)&&permission.expires>arrivalMinute
   &&companions.every(id=>residents.has(id)||permission.guests?.includes(id));
@@ -18,6 +19,7 @@ export function assertLocationAccess(d,engine,destination,{authorization,compani
 export function homePermission(d,engine,args,eventId){
  const messageResult=magicMessagePermission(d,engine,args,eventId);if(messageResult)return messageResult;
  if(!['grant_access','revoke_access'].includes(args.operation))return null;
+ const siteResult=sitePermission(d,engine,args,eventId);if(siteResult)return siteResult;
  const anchorResult=anchorPermission(d,engine,args,eventId);if(anchorResult)return anchorResult;
  const environmentResult=environmentPermission(d,engine,args,eventId);if(environmentResult)return environmentResult;
  const grantor=engine.resolve(args.promisor,'npc'),base=engine.byId.get(grantor),actor=d.get('state','npcs',grantor),now=d.get('state','minute');

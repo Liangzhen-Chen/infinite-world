@@ -16,6 +16,7 @@ import {socialCategories,validateSocialWorld}from'./w5-social-validation.mjs';
 import {validateNpcSchedules}from'../server-plugin/npc-schedule.mjs';
 import {validateNpcProfiles,validateNpcDepth,findNpcRuleWording}from'./npc-profile-validation.mjs';
 import {validatePopulation}from'./population-validation.mjs';
+import {validateSites}from'../server-plugin/sites.mjs';
 const schema=JSON.parse(await fs.readFile(new URL('../schemas/world.schema.json',import.meta.url),'utf8'));
 const blocklist=JSON.parse(await fs.readFile(new URL('../world/meta/blocklist.json',import.meta.url),'utf8'));
 const validate=new Ajv({allErrors:true,strict:true,allowUnionTypes:true}).compile(schema);
@@ -35,6 +36,7 @@ export function validateWorld(world,{stage='engine'}={}){
     const negotiationItems=new Set(world.items.map(item=>item.id));
     for(const boss of world.bosses??[])errors.push(...validateBossNegotiation(boss,negotiationItems).map(error=>`${boss.id}:${error}`));
     errors.push(...validateObjectWorld(world));
+    errors.push(...validateSites(world));
     errors.push(...validateNpcSchedules(world));
     errors.push(...validateNpcProfiles(world));
     if(stage==='release'||stage==='final'){
