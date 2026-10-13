@@ -67,15 +67,14 @@ review-002-yp=782a49e阶段审核通过，范围限T06正式发布与c64163d修�
 
 ### T07 已完成（待T73正式整合）：苇汀30人L1/L2/L4全过，随机10人评分均4.32/最低3，7条共享事件闭合、T04零缺口、发布预演通过；累计4.49559880元。重开授权入口已支持追加授权：T07/T08/T09上限7/6.5/4.5元、每人6次、波次25元（用户2026-10-13同意）。T58已并入完成。
 
-### T08 砾泉来源修订与续审【真实模型；停止线已解除，上限6.5元、每人6次】
+### T08 已完成（待T86正式整合）：砾泉30人L1/L2/L4全过，L4均4.38/最低3，事件闭合、T04与发布预演通过；10次调用，累计4.92485848元。
 
-据59fca09的reopen-complete/{next-gap.txt,background-source-block.json,neighbor-request-guard-block.json,stopped-report.json}。23passed/7manual，五人背景失效，最多21闭合；余额0.28716496。鞠舒两次已尽，第三次须真正决定，增额不重置次数。
+### T86 砾泉30人正式整合并关闭全体完整档门槛（T11-C）【零模型】
 
-拥有world/design/w1-lq-depth.mjs、world/drafts/w1/lq-depth/；T54已完成逐entry背景/context继承，本卡仍受来源授权及次数阻断。原neighbor-request-guard-block.json显示崔帆两叶携“向她解释过”，新after为“需先问她是否愿意谈”；衡庐另两叶同类。T58父basis helper仅在实际T08父proof重放证实同根时复用，不扩本卡正文、不重做已过四叶准备。
-
-共享源仅另存memory_lq_depth_readback修订：narrative、designedFacts[2]、sourceRefs[12,13].publicSpeech、associations五份narrative/factsHash及匡叶viewpoint；五人memorySeeds[2]与knowledge.known[2]同步。依据匡叶原occupation/goals及三项risks，删“被本人回绝”，只谈本人确认原则；原秘密/旧记忆/refs哈希和参与者不改。新背景revision继承父源，foundation.revision不换；旧proof读旧背景，新元数据仅验本事件差异。
-
-现grant缺沙萝及五人完整共享叶权限，不能执行该源修订；先交精确差异，依调度串行补授权支持。其余仅七manual的hard叶；未变通过者复用。来源五人重审后才L4/闭合预演；相关及CORE，保留旧80请求与费用，禁止新nonce/重领。
+结果：砾泉30人带已审核的完整档进入正式世界；五村全部发布后，全体正式full的人物深度校验零缺口，release构建不再被人物深度拒绝。
+可改：world/people/正式人物文件、tests/npc-depth-lq.test.mjs、tests/npc-depth-batch-publication.test.mjs的砾泉用例；若整合后validateNpcDepth/findNpcRuleWording对全体full仍报缺口，逐条修对应人物的正式数据（只改有来源的内容，缺来源的列出来交回）。锁定：tools/公共工具、人口数量（仍152 full/294名册）。
+做法：同T73/T85。整合后跑全体深度校验，把剩余缺口清零或列清单。
+验收：`node --test tests/npc-depth-lq.test.mjs tests/npc-depth-batch-publication.test.mjs tests/village-ledgers.test.mjs`、CORE；village-ledgers的“四村年粮守恒”应转为通过。模型0。
 
 ### T54 已完成：63613dc已合；真实T07的42 changes/12指纹保持，T08父proof四叶及逐event+sourceHash的L4/发布重放通过，相关87/CORE40；0模型，T07真实复审与T08来源授权仍归原卡。原验收见 `git show ee0f4e6:docs/PLAN.md`。
 
@@ -137,7 +136,7 @@ N1–N17至少12项完整有效且≥90%，N6/N16零泄漏，N12真实盲辨，N
 
 ### T63 已完成：审查请求与示例区分可见细节、否认知情和补造经历；合并后静态提示超限，同会话精简到35956字节（上限48000）；专项37/CORE40/prompt全过，0模型，真实效果由T64复验。
 
-### T64 M2真实复验【真实模型；T61–T63已合，待模型槽】
+### T64 M2真实复验【真实模型；执行中】
 
 结果：在修订后的完整提示栈上重跑原十场，按原门槛给出通过或明确未通过。
 可改：仅docs/测试报告/M2-recheck/及新run生成物；复用T60的preflight.mjs，只适配父记录、来源、额度和入口。代码和旧报告锁定。
@@ -157,11 +156,25 @@ N1–N17至少12项完整有效且≥90%，N6/N16零泄漏，N12真实盲辨，N
 
 ### T71 已完成：水土族17个机制（密封、测流缓流、水体束缚、水帘、探土耕平、勘矿、结构支撑、堤岸、裂隙、陷足、石弹）接入真实状态；相关22/CORE40，0模型。
 
-### T72 光族消费者【零模型】
+### T72 已完成：光族机制（光源、聚光反射、辨色、显痕、光标、雾中能见度、遮光私密、视觉干扰、阴影束缚、强光衰减）接入真实状态；相关26/CORE40，0模型。
 
-结果：光系法术有真实效果——手持光源与调暗、聚光反射与影长测量、样品辨色、表面磨损与痕迹显现、路线光标、雾中能见度、遮光与私密、视觉干扰与诱饵、阴影束缚、强光随距离衰减。
-可改：新增server-plugin/magic-light.mjs、tests/magic-light.test.mjs；environment.mjs、magic-targeting.mjs、magic.mjs、magic-primitives.mjs必要接点及机制图两文件。锁定同T71。
-验收：`node --test tests/magic-light.test.mjs tests/magic.test.mjs`、CORE。模型0。规模约700–1000行。
+### T87 医、植、食族消费者【零模型】
+
+结果：这三类法术有真实效果——浅表止血、创面清洁与闭合、病症感知、止痛与濒死稳定、驱寄生物、肌腱恢复；药草识别、幼苗抗霜、根系向水、嫁接；储柜与果实保鲜减损。治疗只处理列出的具体伤病状态，不做万能回血；garden类只复用T37已有的水肥生长。
+可改：新增server-plugin/magic-care.mjs、tests/magic-care.test.mjs；magic.mjs、magic-primitives.mjs、magic-status.mjs、agriculture.mjs、environment.mjs必要接点及机制图两文件。锁定：正式world/meta目录、extension/tools.mjs、prompt/。
+验收：`node --test tests/magic-care.test.mjs tests/magic.test.mjs`、CORE；每个效果有正常与拒绝路径，到期与重载一致。模型0。规模约700–1000行。
+
+### T88 心、契、物与空间族消费者【零模型；待T87合入，同改magic接点】
+
+结果：感受载体、自愿精神观察、睡眠与休养、长期记忆保护、契约痕迹与反制、材料腐蚀；可见测距、袋内整理取物、短时封存、机械锁隙、门框警号、许可通道、锚点校准、锚点货运、空间异常修补，都有真实效果。精神类一律要对方同意。
+可改：新增server-plugin/magic-mind-space.mjs、tests/magic-mind-space.test.mjs；magic.mjs、magic-primitives.mjs、magic-movement.mjs、contracts.mjs、npc-memory.mjs必要接点及机制图两文件。锁定同T87。
+验收：`node --test tests/magic-mind-space.test.mjs tests/magic.test.mjs tests/magic-movement.test.mjs`、CORE。模型0。规模约800–1100行。
+
+### T89 役灵与仪式族消费者【零模型；待T88合入】
+
+结果：真实动物引导、清扫役灵、碎石搬运、纸签运输、役灵改派与协作、可拒绝的邀约；受托祭坛清洁、自愿誓言见证、教派契约、复活祷标、守戒防护、共同护罩、灵体辨识、邪秽干扰、仪式治疗，都有真实效果。仪式资格按现有神祇与教派数据核对。
+可改：新增server-plugin/magic-ritual.mjs、tests/magic-ritual.test.mjs；summons.mjs、revival.mjs、contracts.mjs、magic.mjs、magic-primitives.mjs必要接点及机制图两文件。锁定同T87。
+验收：`node --test tests/magic-ritual.test.mjs tests/magic.test.mjs`、CORE。模型0。规模约800–1100行。
 
 ### T67 已完成：智能首领记住实际接触与交锋，按领地目标改变态度，存档恢复后保留；本卡8项通过/CORE40，0模型。bosses.test里两项主线旧失败（世界归档校验失败）不属本卡，随T43续修处理。
 
