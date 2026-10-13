@@ -93,7 +93,7 @@ export function lairAction(d,args,eventId){
     if(!this.rules.bossEcology)throw new Error('当前世界没有启用首领巢穴');
     const here=this.world.bosses.filter(b=>b.residence?.location===d.get('state','location'));
     const boss=args.lair?here.find(b=>[b.residence.id,b.residence.name].includes(args.lair)):here.length===1?here[0]:null;
-    if(!boss)throw new Error(here.length?'需要明确所在地巢穴名称或编号':'这里没有可接触的巢穴');
+    if(!boss)throw new Error(!args.lair&&here.length?'需要明确所在地巢穴名称或编号':'这里没有可接触的巢穴');
     const r=clone(d.get(...key(boss))),operation=args.operation??'observe';
     if(operation==='observe'){
         const actor=r.occupant?.actor?d.get('state','creatures',r.occupant.actor):null;

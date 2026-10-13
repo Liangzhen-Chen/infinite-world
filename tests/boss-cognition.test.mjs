@@ -37,6 +37,8 @@ test('正式智能首领按实际接触认人，观察不制造接触或获知�
     assert.deepEqual(second.document.state.inventory,document.state.inventory);
     const remote=structuredClone(second.document);remote.state.location='loc_hw_dock';
     await assert.rejects(approach(run,remote,'remote'),/没有可接触/);assert.equal(bossPublicAttitude(draft(remote),setup().engine,target),undefined);
+    // Other local lairs do not make the explicitly named remote lair reachable.
+    await assert.rejects(run(remote,'world_lair',{operation:'approach'},'ambiguous'),/需要明确所在地巢穴名称或编号/);
 });
 
 test('实际交锋使守界首领敌对，和平重访不抹除攻击；不同个体记忆独立',async()=>{
