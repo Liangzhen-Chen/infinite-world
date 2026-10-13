@@ -383,6 +383,114 @@ T28-R1修好新回执undefined规范化并保留严格篡改拒绝，相关31/32
 4. 模型：起草 0 次，L2 总计不超过 50 次，整卡不超过 4 元；地点起草、L1/L2/L4 和正式整合同卡完成。
 5. 规模：10 地点及接入路线，优先覆盖镇村之间的旧路、采集地和废弃工事；使用已有资源与生物，不附带扩充怪物目录，单会话。
 
+### 下一批（2026-10-13主会话审定，来源：Astra草案Next-planner-001；括号里是草案内的字母编号，卡文中“接B1”“依赖C1”等引用沿用字母编号）
+
+审计：全部同意，各卡均对应指南尚未完成的要求。旧的T31–T33卡文由T136–T141替换，不再要求T28的CLI前置。真实模型金额上限按各卡所写执行（M3浸泡整次30元、200回合长记忆12元等），由主会话按用户授权放行并如实记账。引擎卡的验收已按“同领域测试整组跑”来写。
+
+共同约定：每卡验收均含 CORE，即 node --test tests/engine.test.mjs tests/storage.test.mjs tests/plugin.test.mjs。内容卡同卡完成起草、L1全量、真实L2全量、L4及正式发布，按本批ID验证取得路径和world_upgrade，保留既有变化；L4含被标记项与随机5条，波次随机10条六项均分≥4、单项≥3，每次人工阅读≤10分钟。调用次数以下给预计范围，金额为含修正的整卡上限；起草默认由执行会话完成，DeepSeek起草0次，真实调用只用单一模型槽。
+
+共同边界：锁定原存档、部署目录、旧报告、dist及其他卡正在修改的文件。内容卡锁定引擎与prompt；引擎卡锁定无关正式内容。本批工具、加载器、schema和必要接点允许随卡修改，由主会话协调同文件串行。PLAN/PROGRESS/CHANGELOG由主会话维护。本批独立草稿可并行，正式发布若同写目录或共享内容账则串行；只读验收不据目录总数写死断言。
+
+所有改extension/tools.mjs或prompt/的卡，静态提示估算须≤11900 token，验收追加node --test tests/prompt.test.mjs；目前11642，硬上限12000。若所需接口无法装入11900，先派下述P0，再派该功能卡。
+
+### T101（P0） 压缩提示，仅在上述空间不足时启用。结果：完整保留工具参数语义和主持边界，腾出后续接口空间。可改prompt/、extension/tools.mjs及对应提示测试，其余锁定；与全部提示写者串行。验收node --test tests/prompt.test.mjs tests/m2-npc-prompt.test.mjs tests/boss-negotiation.test.mjs，CORE；估算≤11000且原行为断言不降。模型0；约1小时。
+
+### T102（A1） W2-S2 炉作、通风、水土。结果：新增30条可取得、可学会、能实际影响工序或环境的法术。可改world/design/w2-s2.mjs、world/drafts/w2-s2/、仿w2-s1的内容/发布入口、tests/w2-s2.test.mjs；正式范围world/meta/{spells,skills,items}.json、书籍销售者的people/baseline.json和geo/locations.json接点。与A2/A3及T90–T94同文件发布串行，可并行A4准备。验收node --test "tests/w2-*.test.mjs" "tests/magic*.test.mjs" tests/learning.test.mjs，CORE。真实L2预计40–65次，≤1元；约2小时，复用已实现消费者。
+
+### T103（A2） W2-S3 光、医、心。结果：新增30条有适用对象、反制和合法性边界的可学法术。文件同A1，批次名换w2-s3，新增tests/w2-s3.test.mjs；锁定及串行关系同A1，接A1发布。验收node --test "tests/w2-*.test.mjs" "tests/magic*.test.mjs" tests/learning.test.mjs，CORE。真实L2预计40–65次，≤1元；约2小时。
+
+### T104（A3） W2-S4 空间、役灵、仪式。结果：新增29条，正式可学法术达到150条，锚点、契约和持续成本均有实际来源。文件同A1，批次名换w2-s4，新增tests/w2-s4.test.mjs；接A2发布，与地理/人物目录写者串行。验收node --test "tests/w2-*.test.mjs" "tests/magic*.test.mjs" tests/learning.test.mjs，CORE；按新增29个ID核对来源与效果。真实L2预计40–65次，≤1元；约2小时。
+
+### T105（A4） W4-B2 首领第二批。结果：新增12个可交锋首领，其中3名智能存在可记忆、交涉和拒绝。可改world/design/w4-b2.mjs、world/drafts/w4-b2/、仿w4-b1的内容/发布入口、world/meta/bosses.json、tests/w4-b2.test.mjs及本批平衡报告；不改法术/人物目录，可与A1–A3零模型准备并行，发布账串行。验收node --test "tests/boss*.test.mjs" "tests/w4-*.test.mjs" tests/combat.test.mjs；node tools/m4-balance.mjs --catalog world/meta/bosses.json --out world/design/w4-b2-balance.json；CORE。L2预计25–40次，≤0.6元；约1.5小时。
+
+### T106（A5） W4-B3 首领第三批。结果：再增12个、含3名智能存在，使首领达到40个、智能存在达到8名。文件与A4对应换w4-b3，另可更新world/drafts/w4/ecology.json；接A4，同一bosses.json串行。验收node --test "tests/boss*.test.mjs" "tests/w4-*.test.mjs" tests/combat.test.mjs；node tools/m4-balance.mjs --catalog world/meta/bosses.json --out world/design/w4-b3-balance.json；node tools/w4-audit-ecology.mjs；CORE。保留单人≤15%、标准五人55%–65%的多种子平衡及20种子三年生态要求。L2预计25–40次，≤0.6元；约2小时，模拟后台运行。
+
+### T107（B1） 正式节日运行接点。结果：正式节日可改变作息和生产窗口，并按场地、参与者同意及实际物资举办集市或仪式。可改server-plugin/{festival,world-clock,npc-schedule,engine}.mjs、节日加载/schema接点、tests/festival-runtime.test.mjs；锁定24条候选正文。与B3、D1及NPC时间接点串行，可并行A内容准备。验收node --test "tests/npc-*.test.mjs" tests/festival.test.mjs tests/festival-runtime.test.mjs tests/world-clock.test.mjs "tests/w5-*.test.mjs"，CORE；跨月、取消、重放及地方节俗同源去重均覆盖。模型0；约2小时。
+
+### T108（B2） 24节日审核发布。结果：24个节日有正式举办地点和运行参数，玩家能参加有成本的活动。可改world/design/w5-festivals.mjs、原节日草稿、tools/w5-festivals.mjs及发布入口、world/lore/festivals.json和必要geo地点映射、tests/w5-festival-publication.test.mjs；接B1，地理发布与T94/遗迹卡串行。复用有效审核，仅修缺项；regional_unmapped须落实举办地再启用，不将远方人员瞬移来现场。验收node --test "tests/w5-*.test.mjs" tests/festival.test.mjs tests/festival-runtime.test.mjs tests/world-clock.test.mjs，CORE。L2预计24–50次，≤1.5元；约2小时。
+
+### T109（B3） 势力资产与阶段执行。结果：势力按日或周推进计划，阶段真实消耗资源、改变局势，玩家干预能改变后续结果。可改server-plugin/world-clock.mjs、新faction-clock.mjs、engine及wildlife/认知必要接点、tests/faction-clock.test.mjs；锁定势力正文，由B4/B5供正式参数。支持现有计划所需的交易/关系/争端及觉醒效果，远方只做区域结算，消息仍走渠道。验收node --test "tests/npc-*.test.mjs" tests/world-clock.test.mjs tests/faction-clock.test.mjs "tests/wildlife*.test.mjs" "tests/w5-*.test.mjs"，CORE；资源不足、长短步一致与觉醒前后身份守恒。模型0；约3小时，与B1及B10时间接点串行。
+
+### T110（B4） 势力时钟前20个。结果：前20个势力的资产与各阶段条件、代价和干预办法正式可执行。可改world/design/w5-clock-1.mjs、对应草稿/内容发布入口、world/lore/factions.json、本批tests/w5-clock-1.test.mjs；按现有ID排序分批，不重写合格背景，引用文化/神祇/历史的缺项在本批修正。接B3，与B5同文件串行。验收node --test "tests/w5-*.test.mjs" tests/world-clock.test.mjs tests/faction-clock.test.mjs，CORE。L2预计25–45次，≤1.5元；约2小时。
+
+### T111（B5） 势力时钟后20个。结果：剩余20个势力也有资源约束和可干预的阶段，不以文字计划冒充生效。文件同B4，批次换w5-clock-2，接B4发布；与其他factions.json写者串行。验收node --test "tests/w5-*.test.mjs" tests/world-clock.test.mjs tests/faction-clock.test.mjs，CORE。L2预计25–45次，≤1.5元；约2小时。
+
+### T112（B6） 遗迹进入、调查与有限资源。结果：玩家能进入据点、处理机关、取得有限资源，并凭实际发现解锁历史真相。可改新server-plugin/sites.mjs、activities/retrieval及地理加载接点、extension/tools.mjs、tests/sites.test.mjs；正式地点正文锁定。保留占据者与物权，离开重访不刷新宝物，隐藏真相只向有发现记录者开放。验收node --test tests/sites.test.mjs tests/activities.test.mjs tests/retrieval.test.mjs "tests/world-*.test.mjs" tests/prompt.test.mjs，CORE。模型0；约2.5小时；与治理/创造工具写者串行，提示≤11900。
+
+### T113（B7） 遗迹据点第一组20处。结果：白石镇所属城市范围至少15处具备完整历史、物权、机关、资源与时间变化。可改world/design/w5-sites-1.mjs、对应草稿/工具、world/geo/{locations,routes}.json、tests/w5-sites-1.test.mjs；接B6和T94，优先补全其已建地点，同一ID只计一次。与B8/B9及其他地理发布串行。验收node --test "tests/w5-*.test.mjs" tests/sites.test.mjs tests/world-validation.test.mjs，CORE。L2预计25–45次，≤2元；约2小时。
+
+### T114（B8） 遗迹据点第二组20处。结果：另20处据点可沿实际道路进入，历史与占据关系形成可调查联系。文件同B7，批次换w5-sites-2；接B7，与地理发布串行。验收node --test "tests/w5-*.test.mjs" tests/sites.test.mjs tests/world-validation.test.mjs，CORE。L2预计25–45次，≤2元；约2小时。
+
+### T115（B9） 遗迹据点第三组20处。结果：再完成20处，使不同ID的合格遗迹据点至少60处。文件同B7，批次换w5-sites-3；接B8，与地理发布串行。验收node --test "tests/w5-*.test.mjs" tests/sites.test.mjs tests/world-validation.test.mjs，CORE；逐本批ID检查，不写目录总数等于60。L2预计25–45次，≤2元；约2小时。
+
+### T116（B10） 传闻沿路线逐手传播。结果：传闻随真实携带者或已登记消息渠道抵达，逐手变化能追到源头，未知真相不会出现在公开检索。可改server-plugin/{npc-rumors,npc-cognition,npc-schedule,retrieval}.mjs及engine小接点、传闻加载器、新tests/rumor-route.test.mjs；锁定内容正文，复用现有现场获知链。验收node --test "tests/npc-*.test.mjs" tests/rumor-route.test.mjs tests/village-rumor-access.test.mjs tests/retrieval.test.mjs，CORE。模型0；约2.5小时，与B3/C6的认知接点串行。
+
+### T117（B11） 传闻第一组45条。结果：新增45条可由实际渠道获知的真、半真或假传闻。可改world/design/w5-rumors-1.mjs、对应草稿/内容发布工具、world/lore/rumors.json、tests/w5-rumors-1.test.mjs；接B10，关联已发布事件、携带者及路线，与B12–B16同目录串行。验收node --test "tests/w5-rumors-*.test.mjs" tests/rumor-route.test.mjs tests/village-rumor-access.test.mjs，CORE。L2预计50–75次，≤1.5元；约1.5小时。
+
+### T118（B12） 传闻第二组45条。结果：新增45条，覆盖第二组已发布势力/地方事件。文件同B11，批次换w5-rumors-2；接B11，同目录串行。验收node --test "tests/w5-rumors-*.test.mjs" tests/rumor-route.test.mjs tests/village-rumor-access.test.mjs，CORE。L2预计50–75次，≤1.5元；约1.5小时。
+
+### T119（B13） 传闻第三组45条。结果：新增45条，覆盖可调查遗迹和沿路见闻。文件同B11，批次换w5-rumors-3；接B12及B7，同目录串行。验收node --test "tests/w5-rumors-*.test.mjs" tests/rumor-route.test.mjs tests/village-rumor-access.test.mjs，CORE。L2预计50–75次，≤1.5元；约1.5小时。
+
+### T120（B14） 传闻第四组45条。结果：新增45条，给节日与势力阶段提供不同立场的消息。文件同B11，批次换w5-rumors-4；接B13及B2/B5，同目录串行。验收node --test "tests/w5-rumors-*.test.mjs" tests/rumor-route.test.mjs tests/village-rumor-access.test.mjs，CORE。L2预计50–75次，≤1.5元；约1.5小时。
+
+### T121（B15） 传闻第五组40条。结果：新增40条，把第二组据点接进调查和消息网络。文件同B11，批次换w5-rumors-5；接B14及B8，同目录串行。验收node --test "tests/w5-rumors-*.test.mjs" tests/rumor-route.test.mjs tests/village-rumor-access.test.mjs，CORE。L2预计45–70次，≤1.5元；约1.5小时。
+
+### T122（B16） 传闻第六组40条。结果：新增40条，与已有40条去重后至少300条，沿路线确实可获知。文件同B11，批次换w5-rumors-6；接B15及B9，同目录串行，不重做旧40条。验收node --test "tests/w5-rumors-*.test.mjs" tests/rumor-route.test.mjs tests/village-rumor-access.test.mjs，CORE。L2预计45–70次，≤1.5元；约1.5小时。
+
+C部分只拆缺口：governance.mjs的任职入口止于“待上级决定”，quest-board.mjs不承认玩家官职来源，公款建房也无审批主体；爵位执行与个人看法聚合尚无消费者。NPC现有关系/战斗死亡继续复用，新增范围是离屏成长与人生事件。
+
+### T123（C1） 治理权责、地块与封爵来源。结果：玩家能向正式登记机构申请任职、工程或封地，审批依据有可查来源。可改world/design/m5-authority.mjs、对应草稿/发布入口、world/geo/settlements.json及本批地块、world/lore/factions.json、world/meta/rules.json、tests/m5-authority-content.test.mjs；依赖T92的官署人物，不另造同职官员。约15–25条来源，包含上级职责、官职/月额度、可建地块/费率、公库来源及九级爵位权利义务。验收node --test "tests/governance*.test.mjs" tests/m5-authority-content.test.mjs tests/quest-board.test.mjs tests/world-validation.test.mjs，CORE。L2预计25–50次，≤2.5元；约2.5小时，正式发布与B4/B5及地理卡串行。
+
+### T124（C2） 任命与官职任务额度。结果：上级依据贡献和意见实际任免玩家，生效身份按月提供任务额度并支持公款托管。可改server-plugin/{governance,civic,quest-board}.mjs、activities/extension/tools.mjs接点、tests/governance-office.test.mjs；接C1，拒绝自报官职，按1B=10C=100D折算，免职停止新增用额但不抹既有合同。验收node --test "tests/governance*.test.mjs" tests/civic.test.mjs tests/quest-board.test.mjs tests/activities.test.mjs tests/law.test.mjs tests/reputation-law.test.mjs tests/prompt.test.mjs，CORE。模型0；约2小时，与C3–C5串行，提示≤11900。
+
+### T125（C3） 公共工程预算与完工。结果：批准后的工程从真实公库付材料和工钱，完工产生可用建筑或设施。可改server-plugin/{governance,civic,activities,engine}.mjs、新public-projects.mjs、extension/tools.mjs、tests/governance-projects.test.mjs；接C2，覆盖中止退款、资金不足、受益人和实际贡献。验收node --test "tests/governance*.test.mjs" tests/civic.test.mjs tests/quest-board.test.mjs tests/activities.test.mjs tests/village-ledgers.test.mjs tests/prompt.test.mjs，CORE。模型0；约2.5小时，与C4/C5及时间推进写者串行，提示≤11900。
+
+### T126（C4） 管事离屏批建房与收费。结果：玩家划定规则后，NPC管事能按地块/资格/费率处理建房申请，日结收费并形成产权。可改server-plugin/{governance,public-projects}.mjs、engine及领地面板投影小接点、tests/governance-housing.test.mjs；接C3，税费进公账，越权申请退回，审批与实际施工分开。验收node --test "tests/governance*.test.mjs" tests/civic.test.mjs tests/quest-board.test.mjs tests/activities.test.mjs tests/village-ledgers.test.mjs，CORE。模型0；约2小时，与C3/C5串行，可并行独立内容准备。
+
+### T127（C5） 爵位、领地收入与义务。结果：实际受封后获得对应辖区收入和权限，同时承担贡赋、兵役等义务，失去封地后结算随之变化。可改新server-plugin/titles.mjs、governance/quest-board/law/engine及领地投影接点、extension/tools.mjs、tests/governance-titles.test.mjs；接C1–C4，复用其来源，不凭贡献自动封爵。验收node --test "tests/governance*.test.mjs" tests/civic.test.mjs tests/quest-board.test.mjs tests/law.test.mjs tests/reputation-law.test.mjs tests/village-ledgers.test.mjs tests/prompt.test.mjs，CORE。模型0；约3小时，与治理和工具写者串行，提示≤11900。
+
+### T128（C6） 群体舆论。结果：同一事件经关系网传播后形成当地支持/反对比例，议事和NPC反应读取各自真实获知的看法。可改新server-plugin/public-opinion.mjs、npc-cognition/npc-relations/governance及场景投影、tests/public-opinion.test.mjs；接B10，复用已有意见记录与声望，不另起通用好感分。验收node --test "tests/governance*.test.mjs" "tests/npc-*.test.mjs" tests/public-opinion.test.mjs tests/reputation-law.test.mjs tests/village-rumor-access.test.mjs，CORE。模型0；约2小时，与B10/C2串行。
+
+### T129（C7） NPC学习与换营生。结果：玩家教学和NPC实际工作能带来有限技能增长，达到条件后可以换营生，作息与服务随之改变。可改新server-plugin/npc-growth.mjs、npc-autonomy/npc-state/npc-schedule、教学工具接点、world/meta/rules.json、tests/npc-growth.test.mjs；保留原有玩家成长与职业认证。验收node --test "tests/npc-*.test.mjs" tests/learning.test.mjs tests/professions.test.mjs tests/prompt.test.mjs，CORE。模型0；约2.5小时，与D1及其他NPC时间写者串行，工具提示≤11900。
+
+### T130（C8） 成年家庭关系与出生。结果：长期关系可在双方条件满足时发展为婚姻，出生进入真实家户与人口状态，并通过当地渠道被知晓。可改新server-plugin/npc-life.mjs、npc-relations/npc-state/engine接点、world/meta/rules.json、docs/决策.md参数段、tests/npc-life-family.test.mjs；锁定旧人物静态经历，禁止未成年恋爱。验收node --test "tests/npc-*.test.mjs" ，CORE。模型0；约2.5小时，接C7，与C9/C10同文件串行。
+
+### T131（C9） 生病、衰老与自然死亡。结果：NPC按年龄、健康和种子概率发生人生变化，服务及义务按真实失能状态处理。可改npc-life.mjs、npc-state/npc-obligations/engine接点、world/meta/rules.json、docs/决策.md参数段、tests/npc-life-health.test.mjs；接C8，复用已有死亡结算，不重置旧伤病。验收node --test "tests/npc-*.test.mjs" tests/activities.test.mjs，CORE；跨年长短步、照护和死亡后履约均覆盖。模型0；约2小时，与C10串行。
+
+### T132（C10） 迁入迁出与人生消息。结果：NPC有原因地迁居，实际走路线，住户、工作与未履约事项在抵达后更新，玩家回来能听到变化。可改npc-life.mjs、npc-schedule/npc-cognition/civic接点、tests/npc-life-migration.test.mjs；接C9和B10，搬家不复制财产或新增同名人物。验收node --test "tests/npc-*.test.mjs" tests/civic.test.mjs ，CORE。模型0；约2小时，与认知/日程写者串行。
+
+### T133（D1） NPC炉火照管。结果：NPC可从真实燃料库存维护热源并完成需火工序，缺燃料、离岗或失能会停止或失败。可改server-plugin/npc-autonomy.mjs、manufacturing及热源消费者接点、tests/npc-furnace.test.mjs；锁定W3目录正文。验收node --test "tests/npc-*.test.mjs" tests/manufacturing.test.mjs "tests/magic*.test.mjs" "tests/w3-*.test.mjs"，CORE。模型0；约2小时，与C7及魔法消费者写者串行。
+
+### T134（D2） 自创技能与配方落地。结果：完成研究的技能能被实际学习使用，新配方能在原制造链消耗材料产出成品。可改activities/learning/manufacturing及实体解析接点、tools/create-schemas.mjs、extension/tools.mjs、tests/runtime-invention.test.mjs；复用现有多日研究与技能登记，补recipe类型和实际使用接点，禁止直接造物。验收node --test tests/runtime-invention.test.mjs tests/activities.test.mjs tests/learning.test.mjs tests/manufacturing.test.mjs tests/professions.test.mjs "tests/w3-*.test.mjs" tests/prompt.test.mjs，CORE。模型0；约2.5小时，与C工具接点串行，提示≤11900。
+
+### T135（D3） W3长生活流程。结果：真实对话串起取得/学艺、制作失败及副产物、维修耐久、保存腐败、成本售卖和自创配方，离开再回来状态连续。可改tests/playtests/w3_long.json、tests/w3-long.test.mjs及docs/测试报告/w3-long/，引擎与合格目录锁定；接D1/D2。验收node tools/w3-wave-score.mjs --check；node --test "tests/w3-*.test.mjs" tests/manufacturing.test.mjs tests/learning.test.mjs tests/professions.test.mjs "tests/magic*.test.mjs"；npm run test:playtests -- --only w3_long --repeat 1 --parallel 1 --run-dir docs/测试报告/w3-long --run-id w3-long --card D3 --increment 5；CORE。519条已有审核和随机评分复用有效结果；账本/时耗/售空升级100%，叙述≥90%。真实约30自然轮、120–180次调用，≤5元；准备1小时加后台运行。
+
+### T136（T31a） M3记忆真实场景准备。结果：M2–M9能通过正常HTTP会话验证，四种账簿/称呼查询命中同一真实事件，裁历史后仍可检索。可改tests/playtests/m3_memory.json、新tests/m3-acceptance.test.mjs、tools/playtest-metrics.mjs及必要检索接点；只修本卡复现的缺口，锁定M2指标语义。验收node --test tests/m3-acceptance.test.mjs "tests/history-window*.test.mjs" tests/retrieval.test.mjs tests/m3-retrieval.test.mjs tests/chronicle.test.mjs "tests/playtest-*.test.mjs"，CORE。模型0；约2小时，可与内容准备并行，与T99报告处理及metrics写者串行；不依赖T28 CLI。
+
+### T137（T31b） M3文风与时间场景。结果：V1–V7及问题文档里的具体时间误述、场外尾注、凭空成品和示例冒充经历均有可评分的真实场景。可改tests/playtests/m3_language.json、新tests/m3-language.test.mjs、prompt/、一致性审查必要接点及docs/问题.md叙述段；只定点修正，不重写已审核人物。验收node --test tests/m3-language.test.mjs "tests/m3-consistency*.test.mjs" tests/m2-npc-prompt.test.mjs tests/prompt.test.mjs "tests/playtest-*.test.mjs"，CORE。模型0；约2小时，接T31a并与所有提示写者串行，静态≤11900；问题仅凭后续真实通过结果关闭。
+
+### T138（T32a） M3短程真实复验。结果：M2–M9和V1–V7取得当前完整提示栈的真实结论。可改docs/测试报告/m3-mv/及运行产物，代码和旧报告锁定；依赖T31a/b及T99结论，若相关缺陷仍存在先由原责任卡修。验收npm run test:playtests -- --only m3_memory,m3_language,reconcile,world_upgrade,out_of_character --repeat 1 --parallel 1 --run-dir docs/测试报告/m3-mv --run-id m3-mv --card T32a --increment 8；CORE。每场8–20自然轮，账本/时间/存档及M6–M9为100%，V≥95%，陈词≤0.5次/千字。真实预计180–350次调用，≤8元；约1小时整理加后台运行，独占模型槽。
+
+### T139（T32b） M1第200回合追问第10回合。结果：200个连续真实回合后能正确找回第10回合约定，覆盖短场和150回合浸泡无法替代的长历史项。可改tests/playtests/m3_long_memory.json、新tests/m3-long-memory.test.mjs及docs/测试报告/m3-long-memory/，锁定引擎与其他报告；接T32a。验收node --test tests/m3-long-memory.test.mjs "tests/history-window*.test.mjs" tests/m3-retrieval.test.mjs；npm run test:playtests -- --only m3_long_memory --repeat 1 --parallel 1 --run-dir docs/测试报告/m3-long-memory --run-id m3-long-memory --card T32b --increment 12；CORE。禁止用合成200轮替代真实历史。预计450–800次调用，≤12元；准备≤1小时，200轮后台持续运行。
+
+### T140（T33a） 两人格浸泡前半段。结果：行商和建设者各完成75个连续真实回合，保留同一run供后半段继续。仅改docs/测试报告/m3-soak-wave/运行产物，源码锁定；接T32a，独占模型槽。验收node tools/m3-soak.mjs --directory docs/测试报告/m3-soak-wave --run --turns 150 --budget 30 --max-tasks 156；node tools/m3-soak.mjs --directory docs/测试报告/m3-soak-wave --report；CORE。直接--run建立30元配置，不先用默认50元的--init；前25/50轮无足龄样本如实记未覆盖，第75轮须有5道50–200轮前的实事题。真实预计600–900次调用，与T33b共享整次30元；后台运行，本卡不宣称浸泡通过。
+
+### T141（T33b） 两人格浸泡后半段。结果：沿同一run完成各150回合并达到结构召回≥95%、细节≥80%、矛盾≤1/100轮、语义时间偏差≤10%。文件同T33a；依赖T33a，与所有真实模型卡串行。验收node tools/m3-soak.mjs --directory docs/测试报告/m3-soak-wave --run --turns 150 --budget 30；node tools/m3-soak.mjs --directory docs/测试报告/m3-soak-wave --report；CORE。每25轮继续五题，符合年龄窗口后样本不足即不通过；报告所有角色费用、p50/p95和缓存目标≥70%。真实预计新增600–900次调用，仍共享30元；后台运行加≤1小时结果整理。
+
+M5真实场景接续路线：C/D机制完成后分“户籍与议事”“任职与工程”“爵位与发单”“成长与离乡”“节庆与自由生活”组织S1–S7/F1–F8，复用已有theft等场景，每组独立run且≤30元；完整M5验收保留全部S/F门槛。本批不重复拆已覆盖机制，真实场景卡待上述接口稳定后按组派。
+
+M7分批路线：LOD2分4批，每批5省/25郡，合计20省/100郡；LOD1按行政与地区关系分30聚落，20聚落各20full、10聚落各10full，合计500full且不计LOD0。后续分别派LOD3稳定种子入库、跨区旅行贸易、跨区消息及真实会话，生成实体重访/重启必须沿原状态；本轮只派下面两张首批卡。
+
+### T142（F1） LOD2第一批5省25郡。结果：第一片远方有明确行政上级、治所、地形产业与对外关系，地图和检索能识别。可改world/design/lod2-1.mjs、对应草稿/内容发布入口、world/geo行政纲要及routes必要连接、加载/schema接点、tests/lod2-1.test.mjs；锁定LOD0人物，地理发布与B地点卡串行。验收node --test tests/lod2-1.test.mjs "tests/world-*.test.mjs" tests/retrieval.test.mjs，CORE；验证5比1层级，未生成住民不计full。L2预计35–60次，≤2元；约2小时。
+
+### T143（F2） LOD1首聚落20full。结果：白石镇上级城市首批关键住民可实际接触，具备完整经历、家户与可用建筑及地方经济。可改world/design/lod1-1.mjs、对应草稿/发布入口、world/people/和world/geo/本聚落条目、tests/lod1-1.test.mjs；依赖T90–T94与F1，正式发布与人物/地理卡串行。验收node --test "tests/npc-*.test.mjs" tests/lod1-1.test.mjs tests/world-validation.test.mjs；node tools/audit-npc-depth.mjs；CORE。L2预计70–110次，≤6元；约3小时，20full连同有限配套内容一批完成，后续聚落按同规模派。
+
+M8分批路线：R16按3–9章随功能卡补现有PLAN的入口/测试/缺口，不另建证明文档；已确认缺口先做F3，其他缺口须沿消费者确认后再派。R17先F4性能，再按11.3领域分组跑真实场景；T3发布验收每场3次，M8全量每场5次，保留指南较高门槛。五人格各300回合按同一浸泡run分段续跑、整次≤30元，并扩展现有M3运行器的人格与300轮判定；最后做隔离副本重启/导入导出及界面验收，原档迁移与部署仍留主会话处理。
+
+### T144（F3） 研究成果登记为可施放法术。结果：多日研究完成后，玩家可提交由现有原语组成的法术，经规则裁定后学会并实际施放。可改server-plugin/activities.mjs、magic/learning及实体解析接点、tools/create-schemas.mjs、extension/tools.mjs、新tests/runtime-spell-research.test.mjs；锁定正式法术目录，接D2，复用现有九族而不增加自由代码效果。验收node --test tests/runtime-spell-research.test.mjs tests/runtime-invention.test.mjs tests/activities.test.mjs tests/learning.test.mjs "tests/magic*.test.mjs" tests/prompt.test.mjs，CORE。模型0；约2.5小时，与创造/法术接点串行，静态≤11900。
+
+### T145（F4） 真实存储与提示组装规模性能。结果：在10000事件、5000消息下维持提交≤10ms、对账≤500ms、提示组装≤150ms，存档每1000回合增长≤30MB。可改tools/benchmark-storage.mjs、新tools/benchmark-context.mjs、新tests/performance.test.mjs及测量定位到的storage/history-window/runtime热点，锁定内容与模型提示语义；同文件有功能卡时串行。验收node tools/benchmark-storage.mjs；node tools/benchmark-context.mjs --messages 5000；node --test tests/performance.test.mjs "tests/history-window*.test.mjs" tests/runtime.test.mjs tests/prompt.test.mjs；CORE。模型0；约2小时，使用隔离合成数据，性能不足在本卡修实际热点。
+
 ### R06 W1 白石镇与 LOD0 人口、建筑、地方生活【待细化】
 
 范围：T11 人物门槛和 T17/T19 完成后解锁。河湾 58 人/22 户且至少 30 full；另四村 40–150 人全员名册、至少 12 full；白石镇 800–1500 人的合理种子人口，至少 80 full、200 以上名册，LOD0 合计至少 250 full、500 名册。名册、full 和未生成 seed 各自计数，不能用 seed 充实际名册。现有约 152/294 只作起点，补齐差额并逐份过 T04。所有聚落按 4.7 完整档，野外地点至少 15；经济账、建筑所有权/进入、年龄亲缘、事实引用和本地问题互相一致。先骨架后 25–50 条小批，20 元/波，world_upgrade 不覆盖旧玩法变化。依赖 T11/T17/T19；不得先建人口再补质量。
