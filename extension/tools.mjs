@@ -28,14 +28,14 @@ define('world_lair','观察当地巢穴或接近巢穴中已有的占据者。',
 define('world_craft','按配方制造，或按维修工序修理行囊中已有的物品。',{operation:{enum:['manufacture','repair']},recipe:str,item:{...str,description:'维修物品名称或类型编号；仅有一件时传此字段即可'},instance:{...str,description:'可省略；仅填写行囊 instances 数组中实际存在的单件编号，不填物品名称或 item_ 类型编号'},repairPlan:str,authorization:str,helpers:{type:'array',items:str}},[]);
 define('world_research','建立研究项目，或投入经费与时间继续已有研究。',{operation:str,name:str,concept:str,skills:{type:'array',items:str},project:str,coins:int,minutes:int},['operation']);
 define('world_settlement','按编号办理经营、户籍贡献或四村议事；意见和公账委托须实际当事人同意。',{operation:{...str,enum:['business_open','business_close','business_bankrupt','business_report','start_project','civic_inspect','civic_residence','civic_sponsor','civic_apply_resident','civic_apply_citizen','civic_contribution','governance_inspect','governance_propose','governance_opinion','governance_close','governance_appointment','governance_grant','governance_revoke','governance_queue','governance_process']},business:str,settlement:str,authorization:str,authority:str,sponsor:str,sourceEvent:str,name:str,wood:int,stone:int,days:int,beneficiaries:{type:'array',items:str},plot:str,issue:str,proposal:str,speaker:str,opinion:{enum:['approve','reject','abstain']},content:str,steward:str,consent:bool,action:{enum:['account_report','housing','public_project']},minutes:int,budget:int,proposedFee:{...int,description:'议案提出的费用；意见记录不代表已批准或实际收费'},taxBps:int,due:int,request:str},['operation']);
-define('world_quest','登记委托用publish，玩家承接用accept，当面交货领托管报酬用complete。',{operation:{...str,enum:['publish','accept','complete'],description:'publish仅发布托管，不登记承接；玩家明确接受后另调accept；备齐交付物且委托人在场时调complete'},publisher:{...str,description:'发布时必填：已同意委托并支付托管报酬的NPC'},personal:{...bool,description:'私人委托填true，只能发布D级'},grade:{...str,enum:['D','C','B','A','S'],description:'发布必填；私人委托为D'},reward:{...int,minimum:20,maximum:1000000,description:'发布时托管的铜币报酬'},content:{...str,description:'发布时必填的委托内容'},quest:{...str,description:'接受或完成必填：publish回执的quest编号；可用world_read查询quests，不凭空拼编号'},objective:object({type:{...str,enum:['deliver','visit','build']},item:{...str,description:'deliver必填：约定物品名称或编号；燕麦即带壳燕麦，不能换成干粮'},quantity:{...int,minimum:1,description:'deliver必填：约定交付份数；十份燕麦填10'},location:str,project:str},['type'])},['operation']);
+define('world_quest','登记委托用publish，玩家承接用accept，当面交货领托管报酬用complete。',{operation:{...str,enum:['publish','accept','complete'],description:'publish仅发布托管；已有明确接受意图则另调accept；当面交齐物品用complete'},publisher:{...str,description:'发布时必填：已同意委托并支付托管报酬的NPC'},personal:{...bool,description:'私人委托填true，只能发布D级'},grade:{...str,enum:['D','C','B','A','S'],description:'发布必填；私人委托为D'},reward:{...int,minimum:20,maximum:1000000,description:'发布时托管的铜币报酬'},content:{...str,description:'发布时必填的委托内容'},quest:{...str,description:'接受/完成必填publish回执quest编号；未知用world_read查quests，勿拼编号'},objective:object({type:{...str,enum:['deliver','visit','build']},item:{...str,description:'deliver必填：约定物品名称或编号；燕麦即带壳燕麦，不能换成干粮'},quantity:{...int,minimum:1,description:'deliver必填：约定交付份数；十份燕麦填10'},location:str,project:str},['type'])},['operation']);
 define('world_create','登记原创人物或组织，提供名称、类型和人物资料。',{type:str,name:str,project:str,data:object({age:int,occupation:str,notes:str},[])},['type','name','data']);
 define('world_search','按关键词检索长期事实和原始聊天，可指定条数。',{query:str,limit:int},['query']);
 define('world_catalog','按名称或编号查公开规则与文化、势力、历史资料，可按类别分页列出。',{entity:str,kind:{type:'string',enum:['profession','skill','spell','item','recipe','feature','location','culture','deity','faction','history']},offset:int});
 define('world_read','查看玩家、行囊、人物或约定等已记录状态。',{section:str});
 definitions.find(row=>row.function.name==='world_trade').function.parameters.properties.operation.description='交易或办理经营合同：lease租铺，procure托管采购，hire雇工盘点，fulfill到场履约，sell向同意的实际顾客出售，pay还合同债，cancel取消未履约合同。';
-definitions.find(row=>row.function.name==='world_remember').function.parameters.properties.rumor.description='记录有来源的长期事实；当面问询登记传闻时填写rumor编号，subject为玩家、key与rumor一致、source为在场讲述者、content原样填写其未核实claim，交谈耗时10分钟。';
-definitions.find(row=>row.function.name==='world_settlement').function.parameters.properties.operation.description='用business编号办理business_open开店、business_close停业、business_bankrupt现金破产、business_report期末盈亏；也办理户籍贡献与四村议事，意见和公账委托须实际当事人同意。';
+definitions.find(row=>row.function.name==='world_remember').function.parameters.properties.rumor={...str,description:'当面询问传闻填编号；subject为玩家、key同rumor、source为在场讲述者、content原样记未核实claim，交谈10分钟。'};
+definitions.find(row=>row.function.name==='world_settlement').function.parameters.properties.operation.description='business编号用于business_open开店、business_close停业、business_bankrupt现金破产、business_report期末盈亏；户籍与议事见操作枚举。';
 const routes=new Map();
 function group(name,description,members){
     const selected=definitions.filter(row=>members.includes(row.function.name)),properties={},operations=[],mapping=new Map();
@@ -52,10 +52,10 @@ function group(name,description,members){
 const fieldTools=['world_weather','world_farm','world_wildlife','world_environment','world_lair'];
 const companionTools=['world_pet','world_summon'];
 const field=group('world_field','公共粮仓买带壳燕麦用farm_buy；也办理农事、采集和天气、动物、环境或巢穴观察。',fieldTools);
-field.function.parameters.properties.operation.description='farm_buy在公共粮仓柜台购买带壳燕麦，填settlement和quantity；向实际商家买商品用world_trade；委托交货领报酬用world_quest complete';
-field.function.parameters.properties.settlement.description='粮仓所属聚落名称或编号，如河湾村；须本人到柜台且管理员在场清醒';
+field.function.parameters.properties.operation.description='farm_buy粮仓柜台买燕麦，填settlement、quantity；商家交易world_trade；委托交付world_quest complete';
+field.function.parameters.properties.settlement={...str,description:'粮仓所属聚落，如河湾村；本人在柜台，管理员在场清醒'};
 field.function.parameters.properties.item={...str,description:'粮仓买粮可填燕麦、带壳燕麦或item_oats；仅办理此谷物，不能换货'};
-field.function.parameters.properties.quantity.description='farm_buy的半公斤粮食份数，十份填10，按目录单价扣铜钱并入公账';
+field.function.parameters.properties.quantity={...int,description:'farm_buy每份半公斤；十份填10，按目录扣铜入公账'};
 const companion=group('world_companion','按操作照料、驯服或骑乘动物，或管理召唤契约及搬水。',companionTools);
 const law=structuredClone(definitions.find(row=>row.function.name==='world_law'));
 law.function.description='偷取目标财物，或指定案件与在场执法者 authority 办理报案、认罪、审理及履行裁决。';
