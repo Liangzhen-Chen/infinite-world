@@ -8,6 +8,7 @@ import { isOutOfCharacter, injectToolExamples } from './prompt.mjs';
 import {registerPanel,setPanelContext,mountPanelButtons,loadUIModules} from './ui-shell.mjs';
 import {initializeSettings,getSettings,updateSettings,subscribeSettings} from './ui-settings.mjs';
 import {renderTopbar} from './topbar.mjs';
+import {updateBackground,clearBackground} from './background-view.mjs';
 const KEY='infinite_fields';
 const ctx=()=>getContext();
 const active=()=>ctx().characters[ctx().characterId]?.name==='无限原野·世界主持人';
@@ -82,10 +83,11 @@ async function syncHistory(){
     indexedMessages=[...chat];
 }
 async function refresh(){
-    if(!active()){document.querySelector('#fields-dialog')?.remove();document.body.classList.remove('fields-play-active');ctx().setExtensionPrompt(KEY,'',1,0);document.querySelector('#fields-toolbar')?.remove();return;}
+    if(!active()){clearBackground();document.querySelector('#fields-dialog')?.remove();document.body.classList.remove('fields-play-active');ctx().setExtensionPrompt(KEY,'',1,0);document.querySelector('#fields-toolbar')?.remove();return;}
     await load();
     document.body.classList.toggle('fields-play-active',!!view);
     if(!view){
+        clearBackground();
         document.querySelector('#fields-dialog')?.remove();
         ctx().setExtensionPrompt(KEY,'',1,0);
         document.querySelector('#fields-toolbar')?.remove();
@@ -108,6 +110,7 @@ async function refresh(){
     feedback=(await api('feedback',{campaignId:view.reference.campaignId})).events;
     const overview=await api('ui/overview',{campaignId:view.reference.campaignId});
     await loadUIModules(api);
+    await updateBackground(view,overview,`${ctx().chatId}:${view.reference.campaignId}`);
     ctx().setExtensionPrompt(KEY,scene.scene,1,0,false,0);
     let bar=document.querySelector('#fields-toolbar');
     if(!bar?.querySelector('#fields-pending')){

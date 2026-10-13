@@ -103,7 +103,8 @@ export function renderMessages(context,labels={},events=[],debug=false){
                     appendProse(raw.slice(offset,match.index));offset=match.index+match[0].length;
                     const name=labelFor(known,match[1])??labelFor(aliases,match[1])??'路人';
                     const quote=document.createElement('blockquote');quote.className='fields-dialogue';
-                    const badge=document.createElement('div');badge.className='fields-speaker';
+                    const badge=document.createElement('div');badge.className='fields-speaker';badge.dataset.speakerId=match[1];
+                    badge.dataset.fieldsKnownSpeaker=String(Boolean(labelFor(known,match[1])));
                     let hue=0;for(const char of match[1])hue=(hue*31+char.charCodeAt(0))%360;
                     badge.style.setProperty('--fields-speaker-hue',String(hue));
                     const avatar=document.createElement('span');avatar.className='fields-speaker-avatar';avatar.textContent=name==='路人'?'？':name.slice(0,1);avatar.setAttribute('aria-hidden','true');
