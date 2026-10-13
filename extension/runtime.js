@@ -344,3 +344,4 @@ window.addEventListener('message',event=>{
     if(action==='enter')handleStart();else queue(handleStart);
 });
 window.infiniteFieldsV2={load,refresh,execute,reconcile,onEdited,onDeleted,historyInterceptor,startSnapshot,enterFromStart,get view(){return view;},get blocked(){return blocked;}};
+if(window.parent!==window)window.parent.postMessage({type:'fields-start-ready'},location.origin);

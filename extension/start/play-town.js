@@ -5,6 +5,13 @@ export const SAVE_KEY='infinite-fields-start-saves';
 const ANNOTATIONS='fields_people_history';
 export const attributes=['力量','敏捷','体质','智力','精神','魅力'];
 
+// File selection can arrive while returning home is still saving a snapshot.
+// Preserve that action and run it after the current operation finishes.
+export function serializeActions(run){
+    let tail=Promise.resolve();
+    return task=>{const next=tail.catch(()=>{}).then(()=>run(task));tail=next;return next;};
+}
+
 export function arrivalText(overview,history,{opening=false}={}){
     const p=overview.player;
     if(opening)return {title:'初到河湾',paragraphs:[overview.date.text,
@@ -37,15 +44,26 @@ export function remapSession(session,reference){
 // The host supplies authenticated local requests. Only the embedded host can
 // answer this bridge; no model transport is called by the start page.
 export function hostBridge(frame){
-    let sequence=0;const pending=new Map();
+    let sequence=0,ready=Boolean(frame.contentWindow?.infiniteFieldsV2);const pending=new Map();
+    const sendPending=()=>{
+        if(!ready)return;
+        for(const [id,job]of pending)if(!job.sent){
+            job.sent=true;frame.contentWindow.postMessage({type:'fields-start-request',id,action:job.action,data:job.data},location.origin);
+        }
+    };
     window.addEventListener('message',event=>{
-        if(event.origin!==location.origin||event.source!==frame.contentWindow||event.data?.type!=='fields-start-result')return;
+        if(event.origin!==location.origin||event.source!==frame.contentWindow)return;
+        if(event.data?.type==='fields-start-ready'){ready=true;sendPending();return;}
+        if(event.data?.type!=='fields-start-result')return;
         const job=pending.get(event.data.id);if(!job)return;pending.delete(event.data.id);clearTimeout(job.timer);
         if(event.data.error)job.reject(Error(event.data.error));else job.resolve(event.data.value);
     });
+    // A host's async module imports can finish after its iframe load event.
+    // Runtime announces readiness after installing the request listener.
+    frame.addEventListener('load',()=>{if(frame.contentWindow?.infiniteFieldsV2){ready=true;sendPending();}});
     return (action,data={})=>new Promise((resolve,reject)=>{
         const id=++sequence,timer=setTimeout(()=>{pending.delete(id);reject(Error('本地游戏未就绪，请刷新页面后再试'));},30000);
-        pending.set(id,{resolve,reject,timer});frame.contentWindow.postMessage({type:'fields-start-request',id,action,data},location.origin);
+        pending.set(id,{resolve,reject,timer,action,data,sent:false});sendPending();
     });
 }
 
@@ -53,7 +71,7 @@ export async function mountStart(doc=document){
     initializeSettings();
     const frame=doc.querySelector('#game-host'),bridge=hostBridge(frame),status=doc.querySelector('#start-status');
     const request=(endpoint,body={})=>bridge('api',{endpoint,body});
-    let saves=[],selected=null,busy=false;
+    let saves=[],selected=null;
     try{saves=JSON.parse(localStorage.getItem(SAVE_KEY))??[];if(!Array.isArray(saves))saves=[];}catch{status.textContent='本机存档列表未能读取。可以导入备份。';}
     const persist=()=>{localStorage.setItem(SAVE_KEY,JSON.stringify(saves));};
     const remember=session=>{
@@ -61,11 +79,11 @@ export async function mountStart(doc=document){
         const next={...session,savedAt:new Date().toISOString()};if(found<0)saves.unshift(next);else saves[found]=next;
         selected=next;persist();renderSaves();doc.querySelector('#backup-button').disabled=false;
     };
-    const run=async task=>{
-        if(busy)return;busy=true;doc.querySelectorAll('button').forEach(b=>b.disabled=true);
+    const run=serializeActions(async task=>{
+        doc.querySelectorAll('button').forEach(b=>b.disabled=true);doc.querySelector('#import-file').disabled=true;
         try{await task();}catch(error){status.textContent=error.message;}
-        finally{busy=false;doc.querySelectorAll('button').forEach(b=>b.disabled=false);doc.querySelector('#backup-button').disabled=!selected;}
-    };
+        finally{doc.querySelectorAll('button').forEach(b=>b.disabled=false);doc.querySelector('#import-file').disabled=false;doc.querySelector('#backup-button').disabled=!selected;}
+    });
     const snapshot=async()=>{const current=await bridge('snapshot');if(current?.reference){remember(current);if(doc.body.classList.contains('fields-start-playing'))updateSettings(current.settings);}return current;};
     subscribeSettings(settings=>{if(doc.body.classList.contains('fields-start-playing'))bridge('settings',settings).catch(error=>status.textContent=error.message);});
     const showHome=()=>{frame.hidden=true;doc.querySelector('#arrival').hidden=true;doc.querySelector('#start-home').hidden=false;doc.body.classList.remove('fields-start-playing');};
@@ -113,16 +131,17 @@ export async function mountStart(doc=document){
         status.textContent='正在创建角色。';const created=await request('create',{character:{name:form.get('name'),gender:form.get('gender'),appearance:form.get('appearance'),attributes:values,birthplace:'loc_hw'}});
         const session={reference:created.reference,chat:[],metadata:{infinite_fields:created.reference},name:created.document.state.player.name};remember(session);await prepare(session,true);
     });};
-    doc.querySelector('#import-file').onchange=event=>run(async()=>{
-        const file=event.target.files[0];if(!file)return;const backup=unpackBackup(JSON.parse(await file.text()));status.textContent='正在校验并导入备份。';
-        const imported=await request('import',{bundle:backup.bundle}),session=remapSession(backup.session,imported.reference);
-        session.name=imported.document.state.player.name;remember(session);if(backup.settings)updateSettings(backup.settings);event.target.value='';await prepare(session);
-    });
+    doc.querySelector('#import-file').onchange=event=>{
+        const input=event.target,file=input.files[0];if(!file)return;
+        return run(async()=>{
+            const backup=unpackBackup(JSON.parse(await file.text()));status.textContent='正在校验并导入备份。';
+            const imported=await request('import',{bundle:backup.bundle}),session=remapSession(backup.session,imported.reference);
+            session.name=imported.document.state.player.name;remember(session);if(backup.settings)updateSettings(backup.settings);input.value='';await prepare(session);
+        });
+    };
     doc.querySelector('#home-button').onclick=()=>run(async()=>{await snapshot();showHome();status.textContent='已保存当前进度。';});
     doc.querySelector('#settings-button').onclick=()=>openPanel('settings');
     doc.querySelector('#backup-button').onclick=()=>run(async()=>{const target=selected,current=await snapshot();await download(current?.reference?.campaignId===target.reference.campaignId?current:target);});
-    const ready=()=>run(async()=>{await bridge('hello');status.textContent='可以继续游戏或创建角色。';});
-    frame.addEventListener('load',ready,{once:true});
-    if(frame.contentWindow?.infiniteFieldsV2)ready();
+    await run(async()=>{await bridge('hello');status.textContent='可以继续游戏或创建角色。';});
 }
 if(typeof document!=='undefined'&&document.querySelector('#start-home'))mountStart();

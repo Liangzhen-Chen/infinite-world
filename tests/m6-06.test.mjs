@@ -11,7 +11,7 @@ import {WorldEngine} from '../server-plugin/engine.mjs';
 import {loadWorld} from '../tools/load-world.mjs';
 import {history as visibleHistory} from '../server-plugin/ui-history.mjs';
 import {prepareDeployment} from '../tools/deploy-engine.mjs';
-import {arrivalText,makeBackup,unpackBackup,remapSession} from '../extension/start/play-town.js';
+import {arrivalText,makeBackup,unpackBackup,remapSession,hostBridge,serializeActions} from '../extension/start/play-town.js';
 
 async function fixture(t){
     const root=await fs.mkdtemp(path.join(os.tmpdir(),'fields-m6-06-'));t.after(()=>fs.rm(root,{recursive:true,force:true}));
@@ -73,10 +73,45 @@ test('M6-06 隔离包带同名开始入口及全部相对依赖，不激活安�
     const html=await fs.readFile(path.join(destination,'public/play-town.html'),'utf8');assert.match(html,/charset="utf-8"/);assert.match(html,/infinite-fields\/start\/play-town.js/);
 });
 
+test('M6-06 启动握手等待异步 runtime 就绪，iframe 先 load 不丢请求；已就绪宿主直接响应',async t=>{
+    const originalWindow=Object.getOwnPropertyDescriptor(globalThis,'window'),originalLocation=Object.getOwnPropertyDescriptor(globalThis,'location');
+    t.after(()=>{for(const [key,descriptor]of [['window',originalWindow],['location',originalLocation]])if(descriptor)Object.defineProperty(globalThis,key,descriptor);else delete globalThis[key];});
+    const origin='http://fixture.local',handlers=[],loads=[],sent=[];
+    Object.defineProperty(globalThis,'location',{configurable:true,value:{origin}});
+    Object.defineProperty(globalThis,'window',{configurable:true,value:{addEventListener:(_type,fn)=>handlers.push(fn)}});
+    const host={postMessage:(data,targetOrigin)=>sent.push({data,targetOrigin})},frame={contentWindow:host,addEventListener:(_type,fn)=>loads.push(fn)};
+    const deliver=data=>handlers.forEach(fn=>fn({origin,source:host,data}));
+    const bridge=hostBridge(frame),hello=bridge('hello');
+    loads.forEach(fn=>fn());assert.deepEqual(sent,[]);
+    // Unrelated windows and origins cannot mark this frame as ready.
+    handlers.forEach(fn=>fn({origin:'http://other.local',source:host,data:{type:'fields-start-ready'}}));
+    handlers.forEach(fn=>fn({origin,source:{},data:{type:'fields-start-ready'}}));assert.deepEqual(sent,[]);
+    host.infiniteFieldsV2={};deliver({type:'fields-start-ready'});
+    assert.equal(sent.length,1);assert.equal(sent[0].data.action,'hello');assert.equal(sent[0].targetOrigin,origin);
+    deliver({type:'fields-start-result',id:sent[0].data.id,value:{ready:true}});assert.deepEqual(await hello,{ready:true});
+    loads.forEach(fn=>fn());deliver({type:'fields-start-ready'});assert.equal(sent.length,1);
+    const lateBridge=hostBridge(frame),lateHello=lateBridge('hello');assert.equal(sent.length,2);
+    deliver({type:'fields-start-result',id:sent[1].data.id,value:{ready:true}});assert.deepEqual(await lateHello,{ready:true});
+});
+
+test('M6-06 返回开始页还在保存时选择备份，导入保留并在快照完成后执行',async()=>{
+    let finishSnapshot,snapshotStarted;
+    const snapshot=new Promise(resolve=>finishSnapshot=resolve),started=new Promise(resolve=>snapshotStarted=resolve),events=[],run=serializeActions(task=>task());
+    const home=run(async()=>{events.push('保存快照');snapshotStarted();await snapshot;events.push('显示开始页');});
+    await started;
+    let imported=false;
+    const importing=run(async()=>{imported=true;events.push('导入备份');return arrivalText({date:{text:'雨月一日'},locationPath:['河湾村'],player:{name:'旅人',coins:180}},{chronicle:{items:[]}});});
+    await Promise.resolve();assert.equal(imported,false);finishSnapshot();await home;
+    const recap=await importing;assert.equal(imported,true);assert.equal(recap.title,'前情提要');assert.match(recap.paragraphs.at(-1),/尚无已登记/);
+    assert.deepEqual(events,['保存快照','显示开始页','导入备份']);
+});
+
 test('M6-06 浏览器：创建→固定回复发送→保存→导入→继续，双主题桌面与390手机开始页及前情截图',{timeout:90000},async t=>{
     const {origin,request}=await fixture(t);
     const browser=await chromium.launch({executablePath:'C:/Program Files/Google/Chrome/Application/chrome.exe',headless:true});t.after(()=>browser.close());
-    const page=await browser.newPage({viewport:{width:1440,height:900},acceptDownloads:true}),errors=[];page.on('pageerror',error=>errors.push(error.message));
+    const page=await browser.newPage({viewport:{width:1440,height:900},acceptDownloads:true}),errors=[],consoleErrors=[];
+    page.on('pageerror',error=>errors.push(error.stack??error.message));
+    page.on('console',message=>{if(message.type()==='error')consoleErrors.push(message.text());});
     let fixedCalls=0,otherModelCalls=0;
     await page.route('**/favicon.ico',route=>route.fulfill({status:204}));
     await page.route('**/api/backends/**',route=>{otherModelCalls++;return route.abort();});
@@ -101,6 +136,7 @@ test('M6-06 浏览器：创建→固定回复发送→保存→导入→继续�
             const result=await window.infiniteFieldsV2.execute('world_remember',{subject:'player',key:'桥头',content:reply.text},crypto.randomUUID());if(result.ok===false)throw Error(result.error);
             ctx.chat.push({name:'世界主持人',is_user:false,mes:reply.text});await ctx.saveChat();const p=document.createElement('p');p.textContent=reply.text;document.querySelector('#chat').append(p);input.value='';};
         </script></body></html>`}));
+    try{
     await page.goto(`${origin}/play-town.html`);await page.getByText('可以继续游戏或创建角色。',{exact:true}).waitFor();
     const report='docs/测试报告/最新/M6-06';await fs.mkdir(report,{recursive:true});
     async function screenshots(kind){
@@ -113,17 +149,23 @@ test('M6-06 浏览器：创建→固定回复发送→保存→导入→继续�
     await screenshots('start');await page.getByRole('button',{name:'设置',exact:true}).click();await page.getByLabel('正文字号').selectOption('22');await page.getByText('减少动画',{exact:true}).locator('input').check();await page.keyboard.press('Escape');
     await page.getByLabel('姓名',{exact:true}).fill('桥头旅人');await page.getByRole('button',{name:'创建并进入'}).click();await page.getByRole('heading',{name:'初到河湾'}).waitFor();await screenshots('opening');
     await page.getByRole('button',{name:'进入游戏',exact:true}).click();await page.locator('body.fields-start-playing').waitFor();
-    const host=page.frameLocator('#game-host');await host.getByLabel('行动').fill('我看看桥头的地图。');await host.getByRole('button',{name:'发送',exact:true}).click();await host.getByText('你在桥头看过商旅的地图。',{exact:true}).waitFor();
+    const host=page.frameLocator('#game-host');await host.getByLabel('行动',{exact:true}).fill('我看看桥头的地图。');await host.getByRole('button',{name:'发送',exact:true}).click();await host.getByText('你在桥头看过商旅的地图。',{exact:true}).waitFor();
     await page.locator('#game-host').evaluate(async frame=>{const ctx=frame.contentWindow.fixtureContext;ctx.chatMetadata.fields_people_history={campaignId:ctx.chatMetadata.infinite_fields.campaignId,notes:{npc_hw_linsui:'记得问房价'},judgments:{rumor_one:'存疑'}};await ctx.saveChat();});
     const [download]=await Promise.all([page.waitForEvent('download'),page.getByRole('button',{name:'保存备份',exact:true}).click()]);
     const bytes=await fs.readFile(await download.path()),backup=JSON.parse(bytes);assert.match(backup.session.chat.at(-1).mes,/桥头看过/);assert.equal(backup.settings.fontSize,22);assert.equal(backup.settings.reducedMotion,true);
     const oldId=backup.session.reference.campaignId,oldBundle=await request('export',{campaignId:oldId});
-    await page.getByRole('button',{name:'开始页',exact:true}).click();await page.getByLabel('导入备份').setInputFiles({name:'backup.json',mimeType:'application/json',buffer:bytes});await page.getByRole('heading',{name:'前情提要'}).waitFor();
+    await page.getByRole('button',{name:'开始页',exact:true}).click();
+    const [importResponse]=await Promise.all([page.waitForResponse(response=>response.url()===`${origin}/api/plugins/infinite-fields/import`),page.getByLabel('导入备份').setInputFiles({name:'backup.json',mimeType:'application/json',buffer:bytes})]);
+    assert.equal(importResponse.status(),200);await page.getByRole('heading',{name:'前情提要'}).waitFor();
     await page.getByText(/你在桥头看过商旅的地图/).waitFor();await screenshots('recap');
     await page.getByRole('button',{name:'进入游戏',exact:true}).click();await page.locator('body.fields-start-playing').waitFor();
     const restored=await page.locator('#game-host').evaluate(frame=>{const ctx=frame.contentWindow.fixtureContext;return {reference:ctx.chatMetadata.infinite_fields,notes:ctx.chatMetadata.fields_people_history,chat:ctx.chat,old:frame.contentWindow.fixtureChats.get('old-chat')};});
     assert.notEqual(restored.reference.campaignId,oldId);assert.equal(restored.notes.campaignId,restored.reference.campaignId);assert.equal(restored.notes.notes.npc_hw_linsui,'记得问房价');assert.equal(restored.notes.judgments.rumor_one,'存疑');assert.deepEqual(restored.chat,backup.session.chat);assert.equal(restored.old.chat[0].mes,'原聊天保留');
     await page.getByRole('button',{name:'开始页',exact:true}).click();await page.locator('.start-save').first().getByRole('button',{name:'继续',exact:true}).click();await page.getByRole('heading',{name:'前情提要'}).waitFor();
     await page.getByRole('button',{name:'进入游戏',exact:true}).click();await page.locator('body.fields-start-playing').waitFor();
-    assert.deepEqual(await request('export',{campaignId:oldId}),oldBundle);assert.equal(fixedCalls,1);assert.equal(otherModelCalls,0);assert.deepEqual(errors,[]);
+    assert.deepEqual(await request('export',{campaignId:oldId}),oldBundle);assert.equal(fixedCalls,1);assert.equal(otherModelCalls,0);assert.deepEqual(errors,[]);assert.deepEqual(consoleErrors,[]);
+    }catch(error){
+        const status=await page.locator('#start-status').textContent({timeout:1000}).catch(()=>null);
+        throw new Error(`${error.message}\n浏览器诊断：${JSON.stringify({status,pageerror:errors,consoleError:consoleErrors})}`,{cause:error});
+    }
 });
