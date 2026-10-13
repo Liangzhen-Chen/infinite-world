@@ -44,6 +44,12 @@ export async function prepareDeployment(destination=path.join(root,'dist','engin
     manifest.js='runtime.js';manifest.version='2.0.0';
     const text=JSON.stringify(manifest,null,2)+'\n';await fs.writeFile(path.join(destination,'extension','manifest.json'),text);
     files.push({path:'extension/manifest.json',sha256:digest(text)});
+    // The isolated package provides the same public entry name. Activation is
+    // still explicit; preparing this package does not touch an installation.
+    const startHTML=await fs.readFile(path.join(root,'extension/start/play-town.html'));
+    await fs.mkdir(path.join(destination,'public'),{recursive:true});
+    await fs.writeFile(path.join(destination,'public/play-town.html'),startHTML);
+    files.push({path:'public/play-town.html',sha256:digest(startHTML)});
     const report={format:1,stage:'prepared',activation:false,files};
     await fs.writeFile(path.join(destination,'deployment.json'),JSON.stringify(report,null,2));
     return {destination,...report};
@@ -53,12 +59,13 @@ export async function activateDeployment(destination,{installation=path.join(roo
     const report=JSON.parse(await fs.readFile(path.join(destination,'deployment.json'),'utf8'));
     // Validate the complete frozen bundle before changing any live file.
     for(const file of report.files){
-        if(!/^(plugin|extension)\/[a-zA-Z0-9_./-]+$/.test(file.path)||file.path.split('/').includes('..'))throw new Error('部署路径无效');
+        if((!/^(plugin|extension)\/[a-zA-Z0-9_./-]+$/.test(file.path)&&file.path!=='public/play-town.html')||file.path.split('/').includes('..'))throw new Error('部署路径无效');
         if(digest(await fs.readFile(path.join(destination,file.path)))!==file.sha256)throw new Error(`部署文件校验失败：${file.path}`);
     }
     const saved=await makeBackup('before-engine-deployment');
     for(const file of report.files){
-        const target=path.join(installation,file.path.startsWith('plugin/')?'plugins/infinite-fields':extensionPath,file.path.replace(/^(plugin|extension)\//,''));
+        const base=file.path.startsWith('plugin/')?'plugins/infinite-fields':file.path.startsWith('public/')?'public':extensionPath;
+        const target=path.join(installation,base,file.path.replace(/^(plugin|extension|public)\//,''));
         await fs.mkdir(path.dirname(target),{recursive:true});await fs.copyFile(path.join(destination,file.path),target);
     }
     const configPath=path.join(installation,'config.yaml'),config=YAML.parse(await fs.readFile(configPath,'utf8'));
