@@ -81,7 +81,7 @@ export async function init(router,{ world=null, baseRoot=null, newCampaignSeed=r
             keywords:row.aliases??[],salience:2,revision:digest(row)});
         for(const [id,memory]of Object.entries(document.memories??{})){
             wanted.add(`memory_${id}`);index.upsert({id:`memory_${id}`,text:memory.content,source:'长期事实',
-                entities:[memory.subject],keywords:memory.keywords??[],salience:memory.pinned?5:3,minute:memory.minute??0,
+                entities:[memory.subject],keywords:memory.keywords??[],salience:memory.pinned?5:3,minute:memory.minute??0,guardUntil:memory.guardUntil??0,
                 revision:digest(memory)});
         }
         for(const id of index.documents.keys())if(id.startsWith('memory_')&&!wanted.has(id))index.remove(id);

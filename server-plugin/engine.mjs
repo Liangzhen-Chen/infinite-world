@@ -10,6 +10,8 @@ import {advanceMagicObjects,assertFireTravel}from'./magic-object.mjs';
 import {advanceAirEffects,adjustAirTravel}from'./magic-air.mjs';
 import {advanceWaterEarth,assertWaterEarthMovement,waterEarthWalkMinutes}from'./magic-water-earth.mjs';
 import {advanceCare,strainCare}from'./magic-care.mjs';
+import {advanceMindSpace,assertMindAwake,assertMindSpacePath}from'./magic-mind-space.mjs';
+import {advanceShadowContracts}from'./contracts.mjs';
 import {assertLightMovement}from'./magic-light.mjs';
 import{targetFacts,statusContext}from'./magic-context.mjs';
 import {profession,effectiveProficiency}from'./professions.mjs';
@@ -139,6 +141,7 @@ export class WorldEngine {
         if(d.get('state','player','status')==='死亡'&&!['time','turn','revive'].includes(tool))throw new Error('你已经死亡，需要在登记点醒来后行动');
         if(d.get('state','player','status')==='濒死'&&!['time','turn','health','cast'].includes(tool))throw new Error('你处于濒死状态，只能等待救治或尝试自救');
         const session=this.scoped(document);session.airDraft=d;session.replaying=Boolean(options.replay);session.replayResult=options.result;session.npcObligationAction={tool,args};
+        if(!['time','turn','revive','health'].includes(tool))assertMindAwake(d);
         if(tool==='combat'){
             const target=session.resolve(args.target);
             for(const task of Object.values(d.get('state','npcAutonomy','tasks')??{}))if(task.status==='进行中'&&[task.npc,task.action.seller].includes(target))d.set(['state','npcAutonomy','tasks',task.id],{...task,status:'中断',reason:'交锋打断了正在进行的工作',interruptedAt:d.get('state','minute'),sourceEvent:id});
@@ -266,6 +269,8 @@ export class WorldEngine {
             if(!actor||actor.location!==row.location||actor.scheduleTravel||actor.cognitionTravel||actor.status==='死亡'||row.expires<=after)d.remove(['state','records',key]);
         }
         advanceCare(d,this,before,after);
+        advanceMindSpace(d,this,before,after);
+        advanceShadowContracts(d,before,after);
         advanceMagicObjects(d,this,after);
         advanceAirEffects(d,this,before,after);
         advanceWaterEarth(d,this,before,after);
@@ -292,7 +297,10 @@ export class WorldEngine {
             const now=d.get('state','minute');duration=(Math.floor(now/1440)+day)*1440+hour*60+minute-now;
             if(duration<=0)throw new Error('目标钟点必须晚于现在，请核对 dayOffset');
         }
-        const minutes=number(duration,1,43200,'耗时');this.advance(d,minutes,id);
+        const minutes=number(duration,1,43200,'耗时');
+        if(['睡眠','休息'].includes(args.activity))d.set(['state','records','mind_rest_activity'],true);
+        this.advance(d,minutes,id);
+        if(d.get('state','records','mind_rest_activity'))d.remove(['state','records','mind_rest_activity']);
         if(args.activity==='睡眠'||args.activity==='休息') {
             const p=d.get('state','player');if(p.status==='正常'){
                 d.set(['state','player','hp'],Math.min(p.maxHp,p.hp+Math.floor(minutes/30)));
@@ -338,11 +346,13 @@ export class WorldEngine {
         return this.airDraft?adjustAirTravel(this.airDraft,this,result,mode,{minute,from,segments,sail:this.npcObligationAction?.tool==='move'}):result;
     }
     move(d,args,id) {
+        for(const target of ['player',...d.get('state','player','companions')??[]])assertMindAwake(d,target);
         for(const target of ['player',...d.get('state','player','companions')??[]])assertWaterEarthMovement(d,target);
         for(const target of ['player',...d.get('state','player','companions')??[]])assertLightMovement(d,this,target);
         const destination=this.resolve(args.destination),old=d.get('state','location');
         if(old===destination)return {destination,elapsed:0};
         const route=this.route(old,destination,args.mode??'walk',d.get('state','minute'),d.document.randomSeed);
+        for(const edgeId of route.edges){const edge=this.world.routes.find(r=>r.id===edgeId);assertMindSpacePath(d,this,edge.from,[0,0],[0,0],{destination:edge.to,eventId:id,signal:true});}
         const local=d.get('state','records','local_player_position'),mudMinutes=waterEarthWalkMinutes(d,this,local?.location===old?local.point:[0,0],local?.location===old?local.point:[0,0]);
         route.minutes+=mudMinutes;
         assertFireTravel(d,this,route);

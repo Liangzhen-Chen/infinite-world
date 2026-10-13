@@ -3,6 +3,7 @@ import {loadWorld} from './load-world.mjs';import {spellBlueprints} from '../wor
 import {reuseSpellCandidates,reuseMechanismFacts} from '../world/design/w2-reuse-candidates.mjs';
 import {airMechanisms} from '../server-plugin/magic-air.mjs';
 import {careMechanisms}from'../server-plugin/magic-care.mjs';
+import {mindSpaceMechanisms}from'../server-plugin/magic-mind-space.mjs';
 import {lightMechanisms}from'../server-plugin/magic-light.mjs';
 import {waterEarthMechanisms}from'../server-plugin/magic-water-earth.mjs';
 import {objectSpellCandidates} from '../world/design/m4-object-candidates.mjs';import {validateMagicCatalog} from '../server-plugin/magic.mjs';
@@ -66,12 +67,22 @@ export function careSpellCandidates(){
   return{...s,effectSpec:{kind:'care',operation,power},duration,durationLimit:duration,rangeMeters:3,...(['hemostasis','close_wound','clean_wound','disease_sense','pain','stabilize','parasite','restore_tendon'].includes(operation)?{targeting:{lineOfSight:true}}:{})};
  });
 }
+export function mindSpaceSpellCandidates(){
+ const mental=new Set(['sense_mind','sleep','memory_guard','rest_bless','comfort']);
+ return spellBlueprints().filter(s=>mindSpaceMechanisms[s.mechanism]||['anchor_sense','blink','teleport'].includes(s.mechanism)).map(s=>{
+  if(['anchor_sense','blink','teleport'].includes(s.mechanism))return{...s,effectSpec:{kind:s.mechanism,power:1,...(s.mechanism==='anchor_sense'?{}:{maxDistanceMeters:s.mechanism==='blink'?40:100000,maxLoadKg:200,maxCompanions:0})},duration:0,durationLimit:0,rangeMeters:3,targeting:{lineOfSight:true}};
+  const [power,duration]=mindSpaceMechanisms[s.mechanism];
+  return{...s,effectSpec:{kind:'mind_space',operation:s.mechanism,power},duration,durationLimit:duration,rangeMeters:['measure','retrieve'].includes(s.mechanism)?10:3,
+   ...(mental.has(s.mechanism)?{targeting:{lineOfSight:true,consent:'mental_magic',...(s.school==='精神'?{permit:'mental_magic'}:{})}}:{})};
+ });
+}
 export function mechanismMap(world){
+ const mindSpace=new Map(mindSpaceSpellCandidates().map(s=>[s.id,s]));
  const care=new Map(careSpellCandidates().map(s=>[s.id,s])),light=new Map(lightSpellCandidates().map(s=>[s.id,s])),published=new Map(world.spells.map(s=>[s.id,s])),reuse=new Map(reuseSpellCandidates().map(s=>[s.id,s])),approved=new Map(objectSpellCandidates.map(s=>[s.id,s])),heat=new Map(heatSpellCandidates().map(s=>[s.id,s])),air=new Map(airSpellCandidates().map(s=>[s.id,s])),waterEarth=new Map(waterEarthSpellCandidates().map(s=>[s.id,s]));
- const rows=spellBlueprints().map(s=>{const actual=published.get(s.id)??approved.get(s.id)??care.get(s.id)??light.get(s.id)??waterEarth.get(s.id)??air.get(s.id)??reuse.get(s.id)??heat.get(s.id),status=published.has(s.id)?'published':approved.has(s.id)?'reviewed-unpublished':care.has(s.id)||light.has(s.id)||waterEarth.has(s.id)||air.has(s.id)||heat.has(s.id)?'consumer-ready':reuse.has(s.id)?'reuse-candidate':'missing-consumer';
+ const rows=spellBlueprints().map(s=>{const actual=published.get(s.id)??approved.get(s.id)??mindSpace.get(s.id)??care.get(s.id)??light.get(s.id)??waterEarth.get(s.id)??air.get(s.id)??reuse.get(s.id)??heat.get(s.id),status=published.has(s.id)?'published':approved.has(s.id)?'reviewed-unpublished':mindSpace.has(s.id)||care.has(s.id)||light.has(s.id)||waterEarth.has(s.id)||air.has(s.id)||heat.has(s.id)?'consumer-ready':reuse.has(s.id)?'reuse-candidate':'missing-consumer';
  const gap=gaps[s.mechanism]??groups.find(([keys])=>keys.split(' ').includes(s.mechanism))?.[1];
  if(status==='missing-consumer'&&!gap)throw Error(`未归类的机制 ${s.id}/${s.mechanism}`);
- return{id:s.id,name:s.name,mechanism:s.mechanism,originalEffect:s.effect,status,handler:actual?.effectSpec??s.effectSpec??null,validation:validateMagicCatalog(actual??s,{requireHandler:true}),evidence:status==='consumer-ready'?(care.has(s.id)?'server-plugin/magic-care.mjs?????/??/??/??????tests/magic-care.test.mjs?garden???????????????????':light.has(s.id)?'server-plugin/magic-light.mjs、正常施法/环境/战斗/移动消费者与tests/magic-light.test.mjs；未进行内容审核或正式发布':waterEarth.has(s.id)?'server-plugin/magic-water-earth.mjs、magic.mjs与tests/magic-water-earth.test.mjs；未进行内容审核或正式发布':air.has(s.id)?'server-plugin/magic-air.mjs、magic.mjs与tests/magic-air.test.mjs；未进行内容审核或正式发布':'server-plugin/magic-object.mjs、magic.mjs与tests/magic-forge.test.mjs；未进行内容审核或正式发布'):status==='reuse-candidate'?reuseMechanismFacts[s.mechanism]:status==='published'?'正式world/meta/spells.json及对应M4发布测试':status==='reviewed-unpublished'?'world/drafts/m4-object/；两条既有审核不重复':gap};});
+ return{id:s.id,name:s.name,mechanism:s.mechanism,originalEffect:s.effect,status,handler:actual?.effectSpec??s.effectSpec??null,validation:validateMagicCatalog(actual??s,{requireHandler:true}),evidence:status==='consumer-ready'?(mindSpace.has(s.id)?'server-plugin/magic-mind-space.mjs; normal cast, clock, memory, contract and movement consumers; tests/magic-mind-space.test.mjs; content not reviewed or published':care.has(s.id)?'server-plugin/magic-care.mjs?????/??/??/??????tests/magic-care.test.mjs?garden???????????????????':light.has(s.id)?'server-plugin/magic-light.mjs、正常施法/环境/战斗/移动消费者与tests/magic-light.test.mjs；未进行内容审核或正式发布':waterEarth.has(s.id)?'server-plugin/magic-water-earth.mjs、magic.mjs与tests/magic-water-earth.test.mjs；未进行内容审核或正式发布':air.has(s.id)?'server-plugin/magic-air.mjs、magic.mjs与tests/magic-air.test.mjs；未进行内容审核或正式发布':'server-plugin/magic-object.mjs、magic.mjs与tests/magic-forge.test.mjs；未进行内容审核或正式发布'):status==='reuse-candidate'?reuseMechanismFacts[s.mechanism]:status==='published'?'正式world/meta/spells.json及对应M4发布测试':status==='reviewed-unpublished'?'world/drafts/m4-object/；两条既有审核不重复':gap};});
  return{scope:'逐条机制盘点；缺失项保留目标，不按数量压力改成研究型或删除。结构通过不等于原描述已实现。',total:rows.length,formalSpellCount:world.spells.length,counts:Object.fromEntries([...new Set(rows.map(r=>r.status))].map(k=>[k,rows.filter(r=>r.status===k).length])),rows};
 }
 if(process.argv[1]&&path.resolve(process.argv[1])===path.resolve(import.meta.filename)){const r=mechanismMap(await loadWorld());await fs.writeFile('world/design/w2-mechanism-map.json',JSON.stringify(r,null,2)+'\n');console.log(JSON.stringify({total:r.total,formal:r.formalSpellCount,counts:r.counts}));}

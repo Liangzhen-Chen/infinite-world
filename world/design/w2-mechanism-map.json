@@ -4,9 +4,9 @@
   "formalSpellCount": 31,
   "counts": {
     "reviewed-unpublished": 2,
-    "consumer-ready": 71,
+    "consumer-ready": 94,
     "published": 30,
-    "missing-consumer": 51
+    "missing-consumer": 28
   },
   "rows": [
     {
@@ -1105,12 +1105,14 @@
       "name": "契痕审读",
       "mechanism": "contract_sense",
       "originalEffect": "显出一份魔法契约被修改的地方，不宣判法律效力",
-      "status": "missing-consumer",
-      "handler": null,
-      "validation": [
-        "此法术机制尚未接入规则，不能叙述已实现"
-      ],
-      "evidence": "缺对应光路/表面证据/材料腐蚀/契约反制消费者；现有刻记不提供检测或遮蔽。"
+      "status": "consumer-ready",
+      "handler": {
+        "kind": "mind_space",
+        "operation": "contract_sense",
+        "power": 1
+      },
+      "validation": [],
+      "evidence": "server-plugin/magic-mind-space.mjs; normal cast, clock, memory, contract and movement consumers; tests/magic-mind-space.test.mjs; content not reviewed or published"
     },
     {
       "id": "spell_shadow_09",
@@ -1145,12 +1147,14 @@
       "name": "腐蚀印",
       "mechanism": "corrode",
       "originalEffect": "缓慢损伤一处无生命材料，会留下可追查印记",
-      "status": "missing-consumer",
-      "handler": null,
-      "validation": [
-        "此法术机制尚未接入规则，不能叙述已实现"
-      ],
-      "evidence": "缺对应光路/表面证据/材料腐蚀/契约反制消费者；现有刻记不提供检测或遮蔽。"
+      "status": "consumer-ready",
+      "handler": {
+        "kind": "mind_space",
+        "operation": "corrode",
+        "power": 1
+      },
+      "validation": [],
+      "evidence": "server-plugin/magic-mind-space.mjs; normal cast, clock, memory, contract and movement consumers; tests/magic-mind-space.test.mjs; content not reviewed or published"
     },
     {
       "id": "spell_shadow_12",
@@ -1183,12 +1187,14 @@
       "name": "逆契索",
       "mechanism": "counter_contract",
       "originalEffect": "反制正在执行的暗影契约，失败可能反噬双方",
-      "status": "missing-consumer",
-      "handler": null,
-      "validation": [
-        "此法术机制尚未接入规则，不能叙述已实现"
-      ],
-      "evidence": "缺对应光路/表面证据/材料腐蚀/契约反制消费者；现有刻记不提供检测或遮蔽。"
+      "status": "consumer-ready",
+      "handler": {
+        "kind": "mind_space",
+        "operation": "counter_contract",
+        "power": 20
+      },
+      "validation": [],
+      "evidence": "server-plugin/magic-mind-space.mjs; normal cast, clock, memory, contract and movement consumers; tests/magic-mind-space.test.mjs; content not reviewed or published"
     },
     {
       "id": "spell_life_01",
@@ -1407,24 +1413,28 @@
       "name": "意念记签",
       "mechanism": "record_feeling",
       "originalEffect": "把自己的简短感受封在载体，不能取走他人记忆",
-      "status": "missing-consumer",
-      "handler": null,
-      "validation": [
-        "此法术机制尚未接入规则，不能叙述已实现"
-      ],
-      "evidence": "缺所述自愿精神状态、限距传讯或长期记忆保护消费者，不能改写人格或直接宣称有效。"
+      "status": "consumer-ready",
+      "handler": {
+        "kind": "mind_space",
+        "operation": "record_feeling",
+        "power": 1
+      },
+      "validation": [],
+      "evidence": "server-plugin/magic-mind-space.mjs; normal cast, clock, memory, contract and movement consumers; tests/magic-mind-space.test.mjs; content not reviewed or published"
     },
     {
       "id": "spell_mind_03",
       "name": "杂念分辨",
       "mechanism": "sense_mind",
       "originalEffect": "察觉自愿者是否受到精神干扰，不透露念头内容",
-      "status": "missing-consumer",
-      "handler": null,
-      "validation": [
-        "此法术机制尚未接入规则，不能叙述已实现"
-      ],
-      "evidence": "缺所述自愿精神状态、限距传讯或长期记忆保护消费者，不能改写人格或直接宣称有效。"
+      "status": "consumer-ready",
+      "handler": {
+        "kind": "mind_space",
+        "operation": "sense_mind",
+        "power": 1
+      },
+      "validation": [],
+      "evidence": "server-plugin/magic-mind-space.mjs; normal cast, clock, memory, contract and movement consumers; tests/magic-mind-space.test.mjs; content not reviewed or published"
     },
     {
       "id": "spell_mind_04",
@@ -1537,12 +1547,14 @@
       "name": "眠纱术",
       "mechanism": "sleep",
       "originalEffect": "使疲惫者更易入睡，对警觉者效果弱",
-      "status": "missing-consumer",
-      "handler": null,
-      "validation": [
-        "此法术机制尚未接入规则，不能叙述已实现"
-      ],
-      "evidence": "缺所述自愿精神状态、限距传讯或长期记忆保护消费者，不能改写人格或直接宣称有效。"
+      "status": "consumer-ready",
+      "handler": {
+        "kind": "mind_space",
+        "operation": "sleep",
+        "power": 20
+      },
+      "validation": [],
+      "evidence": "server-plugin/magic-mind-space.mjs; normal cast, clock, memory, contract and movement consumers; tests/magic-mind-space.test.mjs; content not reviewed or published"
     },
     {
       "id": "spell_mind_13",
@@ -1561,180 +1573,213 @@
       "name": "回忆护印",
       "mechanism": "memory_guard",
       "originalEffect": "保护自愿者对某段往事的记忆，不能证明其记忆真实",
-      "status": "missing-consumer",
-      "handler": null,
-      "validation": [
-        "此法术机制尚未接入规则，不能叙述已实现"
-      ],
-      "evidence": "缺所述自愿精神状态、限距传讯或长期记忆保护消费者，不能改写人格或直接宣称有效。"
+      "status": "consumer-ready",
+      "handler": {
+        "kind": "mind_space",
+        "operation": "memory_guard",
+        "power": 1
+      },
+      "validation": [],
+      "evidence": "server-plugin/magic-mind-space.mjs; normal cast, clock, memory, contract and movement consumers; tests/magic-mind-space.test.mjs; content not reviewed or published"
     },
     {
       "id": "spell_space_01",
       "name": "界尺术",
       "mechanism": "measure",
       "originalEffect": "测定两个可见点的距离，不能穿墙侦知房间",
-      "status": "missing-consumer",
-      "handler": null,
-      "validation": [
-        "此法术机制尚未接入规则，不能叙述已实现"
-      ],
-      "evidence": "缺真实锚点/容器/通道的可用状态和相应检查或物件/人物迁移消费者。"
+      "status": "consumer-ready",
+      "handler": {
+        "kind": "mind_space",
+        "operation": "measure",
+        "power": 1
+      },
+      "validation": [],
+      "evidence": "server-plugin/magic-mind-space.mjs; normal cast, clock, memory, contract and movement consumers; tests/magic-mind-space.test.mjs; content not reviewed or published"
     },
     {
       "id": "spell_space_02",
       "name": "袋序术",
       "mechanism": "organize",
       "originalEffect": "让自有袋内物品易于取出，不增加实际容量",
-      "status": "missing-consumer",
-      "handler": null,
-      "validation": [
-        "此法术机制尚未接入规则，不能叙述已实现"
-      ],
-      "evidence": "缺真实锚点/容器/通道的可用状态和相应检查或物件/人物迁移消费者。"
+      "status": "consumer-ready",
+      "handler": {
+        "kind": "mind_space",
+        "operation": "organize",
+        "power": 1
+      },
+      "validation": [],
+      "evidence": "server-plugin/magic-mind-space.mjs; normal cast, clock, memory, contract and movement consumers; tests/magic-mind-space.test.mjs; content not reviewed or published"
     },
     {
       "id": "spell_space_03",
       "name": "锚纹辨识",
       "mechanism": "anchor_sense",
       "originalEffect": "识别可见传送锚点是否损坏，不授予使用许可",
-      "status": "missing-consumer",
-      "handler": null,
-      "validation": [
-        "此法术机制尚未接入规则，不能叙述已实现"
-      ],
-      "evidence": "缺真实锚点/容器/通道的可用状态和相应检查或物件/人物迁移消费者。"
+      "status": "consumer-ready",
+      "handler": {
+        "kind": "anchor_sense",
+        "power": 1
+      },
+      "validation": [],
+      "evidence": "server-plugin/magic-mind-space.mjs; normal cast, clock, memory, contract and movement consumers; tests/magic-mind-space.test.mjs; content not reviewed or published"
     },
     {
       "id": "spell_space_04",
       "name": "锁隙术",
       "mechanism": "lock_space",
       "originalEffect": "暂固定门锁机械间隙，需要真实钥匙才可正常打开",
-      "status": "missing-consumer",
-      "handler": null,
-      "validation": [
-        "此法术机制尚未接入规则，不能叙述已实现"
-      ],
-      "evidence": "缺真实锚点/容器/通道的可用状态和相应检查或物件/人物迁移消费者。"
+      "status": "consumer-ready",
+      "handler": {
+        "kind": "mind_space",
+        "operation": "lock_space",
+        "power": 1
+      },
+      "validation": [],
+      "evidence": "server-plugin/magic-mind-space.mjs; normal cast, clock, memory, contract and movement consumers; tests/magic-mind-space.test.mjs; content not reviewed or published"
     },
     {
       "id": "spell_space_05",
       "name": "取回线",
       "mechanism": "retrieve",
       "originalEffect": "从视野内取回自有轻物，不能从别人手中强夺",
-      "status": "missing-consumer",
-      "handler": null,
-      "validation": [
-        "此法术机制尚未接入规则，不能叙述已实现"
-      ],
-      "evidence": "缺真实锚点/容器/通道的可用状态和相应检查或物件/人物迁移消费者。"
+      "status": "consumer-ready",
+      "handler": {
+        "kind": "mind_space",
+        "operation": "retrieve",
+        "power": 2
+      },
+      "validation": [],
+      "evidence": "server-plugin/magic-mind-space.mjs; normal cast, clock, memory, contract and movement consumers; tests/magic-mind-space.test.mjs; content not reviewed or published"
     },
     {
       "id": "spell_space_06",
       "name": "隔湿袋",
       "mechanism": "bag_seal",
       "originalEffect": "使密封袋口更难渗水，破洞仍会漏",
-      "status": "missing-consumer",
-      "handler": null,
-      "validation": [
-        "此法术机制尚未接入规则，不能叙述已实现"
-      ],
-      "evidence": "缺真实锚点/容器/通道的可用状态和相应检查或物件/人物迁移消费者。"
+      "status": "consumer-ready",
+      "handler": {
+        "kind": "mind_space",
+        "operation": "bag_seal",
+        "power": 90
+      },
+      "validation": [],
+      "evidence": "server-plugin/magic-mind-space.mjs; normal cast, clock, memory, contract and movement consumers; tests/magic-mind-space.test.mjs; content not reviewed or published"
     },
     {
       "id": "spell_space_07",
       "name": "界面警铃",
       "mechanism": "alarm",
       "originalEffect": "在经许可的门框设通行警号，不能识别所有伪装",
-      "status": "missing-consumer",
-      "handler": null,
-      "validation": [
-        "此法术机制尚未接入规则，不能叙述已实现"
-      ],
-      "evidence": "缺真实锚点/容器/通道的可用状态和相应检查或物件/人物迁移消费者。"
+      "status": "consumer-ready",
+      "handler": {
+        "kind": "mind_space",
+        "operation": "alarm",
+        "power": 1
+      },
+      "validation": [],
+      "evidence": "server-plugin/magic-mind-space.mjs; normal cast, clock, memory, contract and movement consumers; tests/magic-mind-space.test.mjs; content not reviewed or published"
     },
     {
       "id": "spell_space_08",
       "name": "锚点校准",
       "mechanism": "calibrate_anchor",
       "originalEffect": "校正已有锚点的小幅偏移，需要登记许可",
-      "status": "missing-consumer",
-      "handler": null,
-      "validation": [
-        "此法术机制尚未接入规则，不能叙述已实现"
-      ],
-      "evidence": "缺真实锚点/容器/通道的可用状态和相应检查或物件/人物迁移消费者。"
+      "status": "consumer-ready",
+      "handler": {
+        "kind": "mind_space",
+        "operation": "calibrate_anchor",
+        "power": 1
+      },
+      "validation": [],
+      "evidence": "server-plugin/magic-mind-space.mjs; normal cast, clock, memory, contract and movement consumers; tests/magic-mind-space.test.mjs; content not reviewed or published"
     },
     {
       "id": "spell_space_09",
       "name": "短距折步",
       "mechanism": "blink",
       "originalEffect": "在两个可见合法落脚点间短移，墙体与封界会阻断",
-      "status": "missing-consumer",
-      "handler": null,
-      "validation": [
-        "此法术机制尚未接入规则，不能叙述已实现"
-      ],
-      "evidence": "缺真实锚点/容器/通道的可用状态和相应检查或物件/人物迁移消费者。"
+      "status": "consumer-ready",
+      "handler": {
+        "kind": "blink",
+        "power": 1,
+        "maxDistanceMeters": 40,
+        "maxLoadKg": 200,
+        "maxCompanions": 0
+      },
+      "validation": [],
+      "evidence": "server-plugin/magic-mind-space.mjs; normal cast, clock, memory, contract and movement consumers; tests/magic-mind-space.test.mjs; content not reviewed or published"
     },
     {
       "id": "spell_space_10",
       "name": "寄物格",
       "mechanism": "store",
       "originalEffect": "短时封存自有轻物，失效时原地掉出",
-      "status": "missing-consumer",
-      "handler": null,
-      "validation": [
-        "此法术机制尚未接入规则，不能叙述已实现"
-      ],
-      "evidence": "缺真实锚点/容器/通道的可用状态和相应检查或物件/人物迁移消费者。"
+      "status": "consumer-ready",
+      "handler": {
+        "kind": "mind_space",
+        "operation": "store",
+        "power": 2
+      },
+      "validation": [],
+      "evidence": "server-plugin/magic-mind-space.mjs; normal cast, clock, memory, contract and movement consumers; tests/magic-mind-space.test.mjs; content not reviewed or published"
     },
     {
       "id": "spell_space_11",
       "name": "双锚递送",
       "mechanism": "anchor_cargo",
       "originalEffect": "在两个登记过且获准的锚点间送一件小货物",
-      "status": "missing-consumer",
-      "handler": null,
-      "validation": [
-        "此法术机制尚未接入规则，不能叙述已实现"
-      ],
-      "evidence": "缺真实锚点/容器/通道的可用状态和相应检查或物件/人物迁移消费者。"
+      "status": "consumer-ready",
+      "handler": {
+        "kind": "mind_space",
+        "operation": "anchor_cargo",
+        "power": 2
+      },
+      "validation": [],
+      "evidence": "server-plugin/magic-mind-space.mjs; normal cast, clock, memory, contract and movement consumers; tests/magic-mind-space.test.mjs; content not reviewed or published"
     },
     {
       "id": "spell_space_12",
       "name": "路口封界",
       "mechanism": "block_space",
       "originalEffect": "阻碍一处狭小空间通道，需要公开标示和授权",
-      "status": "missing-consumer",
-      "handler": null,
-      "validation": [
-        "此法术机制尚未接入规则，不能叙述已实现"
-      ],
-      "evidence": "缺区域内多目标、持续触发及跨边界解除/友军波及消费者。"
+      "status": "consumer-ready",
+      "handler": {
+        "kind": "mind_space",
+        "operation": "block_space",
+        "power": 1
+      },
+      "validation": [],
+      "evidence": "server-plugin/magic-mind-space.mjs; normal cast, clock, memory, contract and movement consumers; tests/magic-mind-space.test.mjs; content not reviewed or published"
     },
     {
       "id": "spell_space_13",
       "name": "双锚迁行",
       "mechanism": "teleport",
       "originalEffect": "沿获准锚点传送一人，不向未发现地点随机落地",
-      "status": "missing-consumer",
-      "handler": null,
-      "validation": [
-        "此法术机制尚未接入规则，不能叙述已实现"
-      ],
-      "evidence": "缺真实锚点/容器/通道的可用状态和相应检查或物件/人物迁移消费者。"
+      "status": "consumer-ready",
+      "handler": {
+        "kind": "teleport",
+        "power": 1,
+        "maxDistanceMeters": 100000,
+        "maxLoadKg": 200,
+        "maxCompanions": 0
+      },
+      "validation": [],
+      "evidence": "server-plugin/magic-mind-space.mjs; normal cast, clock, memory, contract and movement consumers; tests/magic-mind-space.test.mjs; content not reviewed or published"
     },
     {
       "id": "spell_space_14",
       "name": "界隙缝合",
       "mechanism": "repair_space",
       "originalEffect": "修补小型空间异常，无法封闭神性裂隙",
-      "status": "missing-consumer",
-      "handler": null,
-      "validation": [
-        "此法术机制尚未接入规则，不能叙述已实现"
-      ],
-      "evidence": "缺真实锚点/容器/通道的可用状态和相应检查或物件/人物迁移消费者。"
+      "status": "consumer-ready",
+      "handler": {
+        "kind": "mind_space",
+        "operation": "repair_space",
+        "power": 1
+      },
+      "validation": [],
+      "evidence": "server-plugin/magic-mind-space.mjs; normal cast, clock, memory, contract and movement consumers; tests/magic-mind-space.test.mjs; content not reviewed or published"
     },
     {
       "id": "spell_summon_01",
@@ -1949,12 +1994,14 @@
       "name": "病榻守祷",
       "mechanism": "rest_bless",
       "originalEffect": "帮助病人安静休息，不保证疾病痊愈",
-      "status": "missing-consumer",
-      "handler": null,
-      "validation": [
-        "此法术机制尚未接入规则，不能叙述已实现"
-      ],
-      "evidence": "缺所述生物、病理或食物状态消费者；常规回血和状态提示不能代替。"
+      "status": "consumer-ready",
+      "handler": {
+        "kind": "mind_space",
+        "operation": "rest_bless",
+        "power": 1
+      },
+      "validation": [],
+      "evidence": "server-plugin/magic-mind-space.mjs; normal cast, clock, memory, contract and movement consumers; tests/magic-mind-space.test.mjs; content not reviewed or published"
     },
     {
       "id": "spell_faith_03",
@@ -1998,12 +2045,14 @@
       "name": "渡魂慰语",
       "mechanism": "comfort",
       "originalEffect": "安抚悲恸者并辨出低阶游魂，不能复活死去居民",
-      "status": "missing-consumer",
-      "handler": null,
-      "validation": [
-        "此法术机制尚未接入规则，不能叙述已实现"
-      ],
-      "evidence": "缺所述生物、病理或食物状态消费者；常规回血和状态提示不能代替。"
+      "status": "consumer-ready",
+      "handler": {
+        "kind": "mind_space",
+        "operation": "comfort",
+        "power": 10
+      },
+      "validation": [],
+      "evidence": "server-plugin/magic-mind-space.mjs; normal cast, clock, memory, contract and movement consumers; tests/magic-mind-space.test.mjs; content not reviewed or published"
     },
     {
       "id": "spell_faith_07",

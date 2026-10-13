@@ -1,4 +1,5 @@
 import {advanceMagicMessages,nextMagicMessageMinute}from'./magic-message.mjs';
+import {memoryBlurMinute}from'./npc-memory.mjs';
 import {applyPatches,digest} from './storage.mjs';
 import {advanceNpcSchedules} from './npc-schedule.mjs';
 import {waterEarthHeldUntil}from'./magic-water-earth.mjs';
@@ -83,7 +84,7 @@ export function settleNpcReflection(d,engine,npcId,now){
  const npc=d.get('state','npcs',npcId),old=npc.cognition??{},next=clone(old);next.blurred??={};next.reflections??=[];
  const stream=npc.memoryStream??[];
  for(const memory of stream){
-  const ttl=({1:7,2:30,3:90})[memory.salience];if(!ttl||now<memory.minute+ttl*DAY||next.blurred[memory.id])continue;
+  const ttl=({1:7,2:30,3:90})[memory.salience];if(!ttl||now<memoryBlurMinute(d,npcId,memory,ttl,now)||next.blurred[memory.id])continue;
   next.blurred[memory.id]={minute:memory.minute+ttl*DAY,content:`记得${memory.kind==='trade'?'曾有财物往来':memory.kind==='learn'?'曾有学习经历':'曾发生过一件事'}，细节已经模糊。`};
  }
  const player=stream.filter(row=>row.participants?.includes('player')&&row.minute<=now&&['亲历','目击','约定核对'].includes(row.sourceType));

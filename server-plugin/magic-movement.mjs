@@ -6,6 +6,7 @@ import {assertNpcAutonomyAction}from'./npc-autonomy.mjs';
 import {enforceLegalRestriction}from'./law.mjs';
 import {digest}from'./storage.mjs';
 import {assertWaterEarthMovement}from'./magic-water-earth.mjs';
+import {assertMindSpacePath,assertMindAwake}from'./magic-mind-space.mjs';
 export const movementKinds=Object.freeze(['anchor_sense','blink','teleport']);
 const validPoint=p=>Array.isArray(p)&&p.length===2&&p.every(Number.isFinite);
 const distance=(a,b)=>Math.hypot(a[0]-b[0],a[1]-b[1]);
@@ -27,6 +28,8 @@ const fingerprint=row=>digest({id:row.id,location:row.location,owner:row.owner,p
 function anchor(d,engine,row){
  if(row?.spaceAnchor!==true||typeof row.owner!=='string'||!validPoint(row.position))throw Error('目标不是登记的空间锚点');
  if(stateOf(d,row)?.anchorIntact!==true)throw Error('锚点损坏或状态未知');
+ const offset=stateOf(d,row)?.anchorOffsetMeters;
+ if(offset&&(!validPoint(offset)||distance(offset,[0,0])>.05))throw Error('锚点偏移，须先取得许可校准');
  return row;
 }
 function assertKnown(d,row){
@@ -41,6 +44,7 @@ function permits(d,row,args,companions,arrival){
  return id;
 }
 function clearSpace(d,engine,location,from,to){
+ assertMindSpacePath(d,engine,location,from,to);
  if(engine.byId.get(location)?.access?.spaceBlocked===true)throw Error('所在地存在空间封锁');
  for(const row of environmentFeatures(engine).filter(r=>r.location===location)){
   const s=stateOf(d,row);if(!s?.blocksSpace&&!s?.blocksMovement)continue;
@@ -64,6 +68,7 @@ function loadOf(d,engine,companions){
 }
 export function prepareMovement(d,catalog,args,{completion=false}={}){
  const errors=validateMovementCatalog(catalog);if(errors.length)throw Error(errors.join('；'));
+ assertMindAwake(d);
  enforceLegalRestriction(d,'cast',args);
  if(d.get('state','player','status')!=='正常')throw Error('当前生命状态无法完成空间施法');
  const location=d.get('state','location'),point=localPlayerPoint(d),rows=environmentFeatures(this),row=rows.find(r=>r.id===args.target);
@@ -74,7 +79,7 @@ export function prepareMovement(d,catalog,args,{completion=false}={}){
   if(row.location!==location||distance(point,row.position)>catalog.rangeMeters||!localSightClear(d,this,location,point,row.position))throw Error('锚点须在实际射程内且视线无遮挡');
   return{spec:s,catalog,args:{...args},row,location,point};
  }
- for(const target of ['player',...d.get('state','player','companions')??[]])assertWaterEarthMovement(d,target);
+ for(const target of ['player',...d.get('state','player','companions')??[]]){assertWaterEarthMovement(d,target);assertMindAwake(d,target);}
  const companions=[...d.get('state','player','companions')??[]];
  if(new Set(companions).size!==companions.length||companions.length>s.maxCompanions)throw Error('位移同行人数超额');
  if(d.get('state','player','mount')||Object.values(d.get('state','pets')??{}).some(p=>p.following)||Object.values(d.get('state','effects')??{}).some(e=>e.kind==='summon'&&e.owner==='player'))throw Error('位移尚不支持坐骑、宠物或召唤物载荷，须先解除同行');
@@ -122,6 +127,7 @@ export function applyMovement(d,p,eventId){
   d.set(['state','records',key],record);return{target:p.row.id,anchor:key,intact:true,owner:p.row.owner};
  }
  const destination=p.row.location;
+ assertMindSpacePath(d,this,p.location,initial.point,p.row.position,{destination:p.location===destination?undefined:destination,eventId,signal:true});
  d.set(['state','location'],destination);d.set(['state','discoveries',destination],{minute:now,source:'亲历',sourceEvent:eventId});
  d.set(['state','records','local_player_position'],{category:'local_position',subject:'player',location:destination,point:[...p.row.position],anchor:p.row.id,source:eventId,minute:now});
  for(const id of p.companions){
@@ -134,4 +140,21 @@ export function applyMovement(d,p,eventId){
  const key=`magic_movement:${eventId}`;
  d.set(['state','records',key],{category:'magic_movement',operation:p.spec.kind,from:p.location,destination,point:[...p.row.position],companions:p.companions,loadKg:p.loadKg,metres:p.metres,permissions:p.permitIds,sourceEvent:eventId,minute:now});
  return{target:p.row.id,destination,position:[...p.row.position],companions:p.companions,loadKg:p.loadKg,metres:p.metres,movement:key};
+}
+
+// Cargo reuses the same anchor identity, owner grants and blockade checks.
+export function prepareAnchorCargo(d,catalog,args,{completion=false}={}){
+ const location=d.get('state','location'),origin=localPlayerPoint(d),rows=environmentFeatures(this);
+ const source=rows.find(r=>r.id===args.source),destination=rows.find(r=>r.id===args.destination);
+ const until=d.get('state','minute')+(completion?0:catalog.minutes);
+ for(const row of [source,destination]){anchor(d,this,row);assertKnown(d,row);}
+ if(source.id===destination.id||source.location!==location||distance(origin,source.position)>catalog.rangeMeters||!localSightClear(d,this,location,origin,source.position))throw Error('货运需要两个不同已知锚点及实际近端距离');
+ clearSpace(d,this,location,origin,source.position);clearSpace(d,this,destination.location,destination.position,destination.position);
+ const route=this.route(location,destination.location,'walk',d.get('state','minute'),d.document.randomSeed);
+ const metres=route.edges.reduce((n,id)=>n+this.world.routes.find(e=>e.id===id).lengthKm*1000,0);
+ if(metres>100000)throw Error('货运锚点超过100公里');
+ const permissions=[permits(d,source,args,[],until),permits(d,destination,args,[],until)];
+ // Entry permission remains distinct from an anchor-use grant.
+ assertLocationAccess(d,this,destination.location,{authorization:args.authorization,arrivalMinute:until});
+ return{source,destination,permissions,metres};
 }
