@@ -17,6 +17,13 @@ import {prepareNpcDepth} from '../tools/publish-npc-depth.mjs';
 
 const world=await loadWorld(),ids=new Set(design.patchRows.map(r=>r.id));
 const entries=()=>depthEntries(design.patchRows.map(r=>r.before),design,world);
+async function historicalCompleteProof(){
+ const {completeOptions}=await import('../world/drafts/w1/wt-depth/reopen/prepare-complete.mjs'),options=await completeOptions();
+ let proof=JSON.parse(await fs.readFile(path.join(options.root,'incremental-proof.json'),'utf8'));
+ while(proof&&proof.authorizationHash!==options.authorizationHash)proof=proof.previousProof;
+ assert.ok(proof,'原complete规划收据须保留在真实prior链');
+ return proof;
+}
 
 test('苇汀30份原档逐失败叶子补齐，联合独立审计零缺口',()=>{
  assert.equal(ids.size,30);
@@ -262,7 +269,7 @@ test('独立新背景与正式来源相容，原候选记忆及私密知情范�
 });
 
 test('T07实际record基准经官方prepare后须原样复用12有效passed完整指纹',async()=>{
- const {officialCheck}=await import('../world/drafts/w1/wt-depth/reopen/prepare-complete.mjs'),report=await officialCheck();
+ const {officialCheck}=await import('../world/drafts/w1/wt-depth/reopen/prepare-complete.mjs'),report=await officialCheck({proofOverride:await historicalCompleteProof()});
  const root=new URL('../world/drafts/w1/wt-depth/reopen/',import.meta.url),read=async file=>JSON.parse(await fs.readFile(new URL(file,root),'utf8'));
  const recorded=await read('offline-report.json'),plan=await read('controlled-plan.json');
  assert.equal(report.authorizationId,'user-reopen-20261012-01');assert.equal(plan.authorized.length,18);
@@ -317,7 +324,7 @@ test('未提供显式重开授权时原T07 proof仍拒绝新规划，不移除�
 
 test('18实际draft基准与42授权after逐值匹配，12未授权基准重放父proof',async()=>{
  const {completeOptions}=await import('../world/drafts/w1/wt-depth/reopen/prepare-complete.mjs'),options=await completeOptions();
- const prepared=await prepareDepthRevision(options),root=new URL('../world/drafts/w1/wt-depth/',import.meta.url),read=async file=>JSON.parse(await fs.readFile(new URL(file,root),'utf8'));
+ const prepared=await prepareDepthRevision({...options,proofOverride:await historicalCompleteProof()}),root=new URL('../world/drafts/w1/wt-depth/',import.meta.url),read=async file=>JSON.parse(await fs.readFile(new URL(file,root),'utf8'));
  const [records,diff,basis,foundation,proof]=await Promise.all(['reopen/old-records.json','reopen/patch-diff.json','reopen/basis-rows.json','sourced/foundation.json','sourced/incremental-proof.json'].map(read));
  assert.equal(records.length,18);assert.equal(diff.length,42);assert.equal(prepared.revision.changes.length,42);
  for(const change of diff){const old=records.find(r=>r.id===change.id).draft.patches.find(p=>p.path===change.path).value;assert.deepEqual(change.before,old);assert.equal(hashContent(old),change.beforeHash);assert.deepEqual(prepared.entries.find(e=>e.id===change.id).patches.find(p=>p.path===change.path).value,change.after);}
@@ -337,7 +344,10 @@ test('18实际draft基准与42授权after逐值匹配，12未授权基准重放�
 
 test('T07真实首ID协议齐全但共享来源hard不升级为通过，旧七hard和12有效record均保留',async()=>{
  const root=new URL('../world/drafts/w1/wt-depth/',import.meta.url),read=async f=>JSON.parse(await fs.readFile(new URL(f,root),'utf8'));
- const [record,pilot,snapshot,proposal]=await Promise.all(['sourced/npc_wt_zhangou.json','reopen/complete-003/pilot-results.json','reopen/complete-003/pre-review.json','reopen/complete-003/shared-repair-guard.json'].map(read));
+ const [current,pilot,snapshot,proposal,plan]=await Promise.all(['sourced/npc_wt_zhangou.json','reopen/complete-003/pilot-results.json','reopen/complete-003/pre-review.json','reopen/complete-003/shared-repair-guard.json','reopen/complete-003/source-repair-plan.json'].map(read));
+ let record=current;const pilotHash=plan.authorized.find(a=>a.id===current.id).recordHash;
+ while(record&&hashContent(record)!==pilotHash)record=record.reviewRecovery?.prior;
+ assert.ok(record,'首轮真实失败须保留在record prior链');assert.equal(hashContent(record),pilotHash);
  assert.equal(pilot.length,1);assert.equal(pilot[0].status,'manual');assert.equal(record.status,'manual');assert.equal(record.reviewRecovery.status,'failed');
  assert.deepEqual([...record.review.reviewedPaths].sort(),record.draft.patches.map(p=>p.path).sort());
  assert.equal(record.review.backgroundReviews.length,1);assert.equal(record.review.backgroundReviews[0].reviewedRiskPaths.length,4);
