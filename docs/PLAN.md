@@ -155,13 +155,9 @@ N1–N17至少12项完整有效且≥90%，N6/N16零泄漏，N12真实盲辨，N
 
 ### T73 已完成：苇汀30人完整档正式整合进world/people/baseline.json，重发零写入，仍152 full/294名册；相关31/CORE40，0模型。
 
-### T71 水土族消费者【零模型】
+### T71 已完成：水土族17个机制（密封、测流缓流、水体束缚、水帘、探土耕平、勘矿、结构支撑、堤岸、裂隙、陷足、石弹）接入真实状态；相关22/CORE40，0模型。
 
-结果：水土系法术有真实效果——容器与泥缝密封、水道测流与缓流、水体束缚、水帘遮挡视听、探土翻耕平地、岩层与矿脉勘察、结构受力与支撑、堤岸、裂隙、陷足泥地、实体石弹。
-可改：新增server-plugin/magic-water-earth.mjs、tests/magic-water-earth.test.mjs；environment.mjs、agriculture.mjs、magic.mjs、magic-primitives.mjs必要接点及机制图两文件。锁定：正式world/meta目录、extension/tools.mjs、prompt/。
-验收：`node --test tests/magic-water-earth.test.mjs tests/magic.test.mjs`、CORE；每个效果有正常与拒绝路径，到期与重载一致。模型0。规模约700–1000行。
-
-### T72 光族消费者【零模型；待T71合入，同改magic接点】
+### T72 光族消费者【零模型】
 
 结果：光系法术有真实效果——手持光源与调暗、聚光反射与影长测量、样品辨色、表面磨损与痕迹显现、路线光标、雾中能见度、遮光与私密、视觉干扰与诱饵、阴影束缚、强光随距离衰减。
 可改：新增server-plugin/magic-light.mjs、tests/magic-light.test.mjs；environment.mjs、magic-targeting.mjs、magic.mjs、magic-primitives.mjs必要接点及机制图两文件。锁定同T71。
