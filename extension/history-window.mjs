@@ -40,12 +40,16 @@ export async function groupHistory(messages,{format='host',anchors=[],tokenCount
   group.toolsComplete=completeToolChain(group.messages,format);
   // Exclude volatile UI/review extras while detecting changes to actual text,
   // roles, tools and invalidation markers. Digest survives reload and copying.
+  group.invalidated=group.messages.some(message=>message.extra?.fields_invalidated===true);
+ }
+ // WebCrypto digests are independent. Awaiting each round serially makes
+ // complete-history assembly pay thousands of asynchronous round trips.
+ await Promise.all(groups.map(async group=>{
   group.fingerprint=await fingerprint(group.messages.filter(message=>format==='host'?!message.is_system&&!message.extra?.tool_invocations:message.role!=='tool'&&!message.tool_calls?.length).map(message=>({
    role:format==='host'?(message.is_user?'user':message.is_system?'system':'assistant'):message.role,
    text:format==='host'?message.mes:message.content,invalidated:message.extra?.fields_invalidated===true,
   })));
-  group.invalidated=group.messages.some(message=>message.extra?.fields_invalidated===true);
- }
+ }));
  return groups;
 }
 
@@ -80,7 +84,8 @@ export function planHistoryWindow(groups,{cursor=null,coverage=null,contextToken
    batch={anchors:candidates.map(g=>g.anchor),messages,tokens:candidates.reduce((sum,g)=>sum+g.tokens,0),coverageReference:coverage.reference??null};
   }else if(reason!=='coverage-required')reason='recent-history-protected';
  }
- const retained=groups.filter(group=>group.opening||remaining.includes(group)),afterTokens=reservedTokens+retained.reduce((sum,g)=>sum+g.tokens,0);
+ const remainingSet=new Set(remaining);
+ const retained=groups.filter(group=>group.opening||remainingSet.has(group)),afterTokens=reservedTokens+retained.reduce((sum,g)=>sum+g.tokens,0);
  const nextCursor={version:1,removed:removed.map(g=>({anchor:g.anchor,fingerprint:g.fingerprint})),batches:(reset?0:cursor?.batches??0)+(batch?1:0)};
  return {reason,reset,batch,cursor:nextCursor,removed,retained,messages:retained.flatMap(group=>group.messages),
   beforeTokens,afterTokens,softLimit,withinBudget:afterTokens<=contextTokens,

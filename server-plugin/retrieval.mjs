@@ -23,6 +23,19 @@ export class EntityResolver {
         }
         this.names = [...this.aliases.keys()].sort((a, b) => b.length - a.length);
     }
+    extend(entities) {
+        // Normalize only campaign additions. Copy the maps and merge alias
+        // sets on collision so one campaign never changes the world resolver.
+        const additions = new EntityResolver(entities), resolver = Object.create(this);
+        resolver.entities = new Map(this.entities); resolver.aliases = new Map(this.aliases);
+        for (const [id, entity] of additions.entities) {
+            if (resolver.entities.has(id)) throw new Error(`重复实体编号${id}`);
+            resolver.entities.set(id, entity);
+        }
+        for (const [name, ids] of additions.aliases) resolver.aliases.set(name, new Set([...resolver.aliases.get(name) ?? [], ...ids]));
+        resolver.names = [...resolver.aliases.keys()].sort((a, b) => b.length - a.length);
+        return resolver;
+    }
     resolve(name, scope = null, kind = null) {
         const candidates = [...this.aliases.get(normalize(name)) ?? []].filter(id => !kind || id.startsWith(kind + '_'));
         const scoped = scope ? candidates.filter(id => this.entities.get(id).scope === scope || this.entities.get(id).location === scope) : candidates;
