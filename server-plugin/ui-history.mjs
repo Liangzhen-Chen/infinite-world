@@ -1,6 +1,6 @@
 import {relationView} from './npc-relations.mjs';
 import {normalize} from './retrieval.mjs';
-import {buildChronicle} from './chronicle.mjs';
+import {buildChronicle,getChronicle} from './chronicle.mjs';
 
 // All collections are filtered by the player's recorded knowledge before search
 // or pagination. World NPC locations, seed memories and rumor truth stay private.
@@ -63,7 +63,7 @@ export function history(engine,document,chronicle,options={}){
     return {people:paginate(people),chronicle:paginate(past),rumors:paginate(rumors),level};
 }
 
-export function registerUIRoutes({post,readCampaign,readChronicle}){
+export function registerUIRoutes({post,readCampaign,getStore,readChronicle=req=>getChronicle(getStore(req),req.body.campaignId)}){
     post('/ui/history',async req=>{
         const {engine,document,reference}=await readCampaign(req),chronicle=await readChronicle(req);
         if(reference.sequence!==chronicle.reference.sequence||reference.head!==chronicle.reference.head)throw Error('历史读取期间存档已变化，请重试');
