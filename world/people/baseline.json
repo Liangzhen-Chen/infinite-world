@@ -76781,7 +76781,7 @@
       "说话时先问哪户真缺人手"
     ],
     "voice": {
-      "register": "先问哪户真缺人手",
+      "register": "问工日时简短直接，改轮次时容易先追究是谁没讲清",
       "accent": "河谷日常口音",
       "habits": [
         "先问哪户真缺人手"
@@ -77141,21 +77141,21 @@
         "type": "女儿",
         "trust": 45,
         "affection": 55,
-        "note": "张纭为张洛的女儿；各自保有财物。"
+        "note": "张纭与张洛同住张洛户居处，在家中见面；母亲总说换工排错是别人没讲清。"
       },
       {
         "with": "npc_sb_yanmu",
         "type": "配偶",
         "trust": 45,
         "affection": 55,
-        "note": "严牧为张洛的配偶；各自保有财物。"
+        "note": "严牧与张洛同住张洛户居处，在家中见面；饭时家里仍围着讨论工日的人。"
       },
       {
         "with": "npc_sb_hewan",
         "type": "母亲",
         "trust": 45,
         "affection": 55,
-        "note": "何宛为张洛的母亲；各自保有财物。"
+        "note": "何宛与张洛同住张洛户居处，在家中见面；记得旧换工规矩却没人耐心听。"
       }
     ],
     "memorySeeds": [
@@ -77176,6 +77176,17 @@
           "npc_sb_zhangluo"
         ],
         "reliability": "亲历"
+      },
+      {
+        "id": "memory_sb_depth_shared_1",
+        "event": "张洛与袁卿在桑坡树地谈过修枝工与采叶工安排；张洛坚持已确认的轮次，袁卿希望先理枝，重排尚未商定。",
+        "location": "loc_sb_orchard",
+        "salience": 3,
+        "knownBy": [
+          "npc_sb_zhangluo",
+          "npc_sb_yuanqing"
+        ],
+        "reliability": "亲历"
       }
     ],
     "goals": {
@@ -77194,7 +77205,7 @@
           ],
           "steps": [
             {
-              "content": "摘叶与理枝的换工互相挤占",
+              "content": "先请袁卿指出需理枝的树，再圈出会受影响的采叶轮次。",
               "status": "pending"
             }
           ]
@@ -77215,7 +77226,7 @@
           ],
           "steps": [
             {
-              "content": "把两种工序分别请本人确认",
+              "content": "逐户问摘叶和理枝各能出人的时段，把未应答处留空。",
               "status": "pending"
             }
           ]
@@ -77236,7 +77247,7 @@
           ],
           "steps": [
             {
-              "content": "换工照顾家务也有可查凭据",
+              "content": "下次排轮时请缺人的户先说明照护时段，再请本人复核记录。",
               "status": "pending"
             }
           ]
@@ -77263,11 +77274,21 @@
           "fact": "改过重叠的换工日期",
           "reliability": "亲历",
           "source": "npc_sb_zhangluo"
+        },
+        {
+          "fact": "请缺席户补说过可用时间",
+          "source": "npc_sb_zhangluo",
+          "reliability": "亲历"
+        },
+        {
+          "fact": "张洛与袁卿在桑坡树地谈过修枝工与采叶工安排；张洛坚持已确认的轮次，袁卿希望先理枝，重排尚未商定。",
+          "source": "npc_sb_zhangluo",
+          "reliability": "亲历"
         }
       ],
       "unknown": [
-        "本人未在场且无人实际转告的事",
-        "他人未公开的私有财物和秘密"
+        "袁卿希望先理的具体枝位会影响哪一户已确认的采叶轮次。",
+        "缺席的换工户这次何时能出人，是否需要留人在家照顾。"
       ]
     },
     "opinions": {
@@ -77392,7 +77413,7 @@
     "combat": null,
     "trust": 0,
     "affection": 0,
-    "notes": "桑树修枝农户；桑枝遮住邻家晾布边；觉得邻人不懂树就不许提意见。",
+    "notes": "桑树修枝农户；桑枝遮住邻家晾布边；认定邻人不懂树，常拒听对方的修枝意见。",
     "intelligence": {
       "level": 1,
       "growth": 0
@@ -77406,7 +77427,7 @@
       "说话时从枝条朝向说起"
     ],
     "voice": {
-      "register": "从枝条朝向说起",
+      "register": "谈树势时语气稳，邻人质疑修枝便硬起来",
       "accent": "河谷日常口音",
       "habits": [
         "从枝条朝向说起"
@@ -77426,9 +77447,9 @@
         "兼顾养树与别人日常用地"
       ],
       "flaws": [
-        "觉得邻人不懂树就不许提意见"
+        "认定邻人不懂树，常拒听对方的修枝意见"
       ],
-      "description": "稳重，做事按树势和先后次序来，答应过的事会记在心上；执拗起来也难劝。毛病是觉得邻人不懂树就不许提意见，容易把商量的门关窄。"
+      "description": "稳重，做事按树势和先后次序来，答应过的事会记在心上；执拗起来也难劝。毛病是认定邻人不懂树，常拒听对方的修枝意见，容易把商量的门关窄。"
     },
     "wealth": {
       "cashRange": [
@@ -77766,21 +77787,21 @@
         "type": "儿子",
         "trust": 45,
         "affection": 55,
-        "note": "袁霁为袁卿的儿子；各自保有财物。"
+        "note": "袁霁与袁卿同住袁卿户居处，在家中见面；想画树影给父亲看又怕被说多事。"
       },
       {
         "with": "npc_sb_chuqian",
         "type": "配偶",
         "trust": 45,
         "affection": 55,
-        "note": "楚倩为袁卿的配偶；各自保有财物。"
+        "note": "楚倩与袁卿同住袁卿户居处，在家中见面；丈夫和晾布户吵时两边都来问她。"
       },
       {
         "with": "npc_sb_yougan",
         "type": "岳父",
         "trust": 45,
         "affection": 55,
-        "note": "尤甘为袁卿的岳父；各自保有财物。"
+        "note": "尤甘与袁卿同住袁卿户居处，在家中见面；露树根使自己出门要绕远。"
       }
     ],
     "memorySeeds": [
@@ -77798,6 +77819,17 @@
         "event": "剔过一枝明显枯枝，落刀前反复看了枝位和树势。",
         "salience": 3,
         "knownBy": [
+          "npc_sb_yuanqing"
+        ],
+        "reliability": "亲历"
+      },
+      {
+        "id": "memory_sb_depth_shared_1",
+        "event": "张洛与袁卿在桑坡树地谈过修枝工与采叶工安排；张洛坚持已确认的轮次，袁卿希望先理枝，重排尚未商定。",
+        "location": "loc_sb_orchard",
+        "salience": 3,
+        "knownBy": [
+          "npc_sb_zhangluo",
           "npc_sb_yuanqing"
         ],
         "reliability": "亲历"
@@ -77819,7 +77851,7 @@
           ],
           "steps": [
             {
-              "content": "桑枝遮住邻家晾布边",
+              "content": "陪晾布户到西晒处指出遮影的枝，先问物主接受哪种修法。",
               "status": "pending"
             }
           ]
@@ -77840,7 +77872,7 @@
           ],
           "steps": [
             {
-              "content": "陪邻户在晒处看树影",
+              "content": "在晒处比对不同时辰的树影，问邻户哪一段最妨碍日常晾布。",
               "status": "pending"
             }
           ]
@@ -77861,7 +77893,7 @@
           ],
           "steps": [
             {
-              "content": "兼顾养树与别人日常用地",
+              "content": "改枝前说明对树势的顾虑，请邻人说清要保留的晾布边。",
               "status": "pending"
             }
           ]
@@ -77888,11 +77920,21 @@
           "fact": "和邻人看过西晒树影",
           "reliability": "亲历",
           "source": "npc_sb_yuanqing"
+        },
+        {
+          "fact": "剔过一枝明显枯枝",
+          "source": "npc_sb_yuanqing",
+          "reliability": "亲历"
+        },
+        {
+          "fact": "张洛与袁卿在桑坡树地谈过修枝工与采叶工安排；张洛坚持已确认的轮次，袁卿希望先理枝，重排尚未商定。",
+          "source": "npc_sb_yuanqing",
+          "reliability": "亲历"
         }
       ],
       "unknown": [
-        "本人未在场且无人实际转告的事",
-        "他人未公开的私有财物和秘密"
+        "邻户希望自己何时修哪一处枝，才能让晾布边避开树影。",
+        "张洛记录的采叶轮次中，哪一户愿意重议理枝先后。"
       ]
     },
     "opinions": {
@@ -77947,7 +77989,7 @@
         "从枝条朝向说起"
       ],
       "speech": "从枝条朝向说起",
-      "flaw": "觉得邻人不懂树就不许提意见",
+      "flaw": "认定邻人不懂树，常拒听对方的修枝意见",
       "memories": [
         "和邻人看过西晒树影",
         "剔过一枝明显枯枝"
@@ -78029,7 +78071,7 @@
       "说话时先分干湿再分整碎"
     ],
     "voice": {
-      "register": "先分干湿再分整碎",
+      "register": "交叶料时说得细，别人动过叶堆便追问个不停",
       "accent": "河谷日常口音",
       "habits": [
         "先分干湿再分整碎"
@@ -78389,21 +78431,21 @@
         "type": "女儿",
         "trust": 45,
         "affection": 55,
-        "note": "钟苡为钟岚的女儿；各自保有财物。"
+        "note": "钟苡与钟岚同住钟岚户居处，在家中见面；母亲说湿叶脏却不让她帮翻。"
       },
       {
         "with": "npc_sb_heyang",
         "type": "配偶",
         "trust": 45,
         "affection": 55,
-        "note": "赫扬为钟岚的配偶；各自保有财物。"
+        "note": "赫扬与钟岚同住钟岚户居处，在家中见面；妻子老怀疑别人碰过叶堆。"
       },
       {
         "with": "npc_sb_liangfen",
         "type": "母亲",
         "trust": 45,
         "affection": 55,
-        "note": "梁芬为钟岚的母亲；各自保有财物。"
+        "note": "梁芬与钟岚同住钟岚户居处，在家中见面；女儿分拣后的碎叶放得太久。"
       }
     ],
     "memorySeeds": [
@@ -78424,6 +78466,17 @@
           "npc_sb_zhonglan"
         ],
         "reliability": "亲历"
+      },
+      {
+        "id": "memory_sb_depth_shared_2",
+        "event": "钟岚与田陌在桑坡树地争过采叶后的收工界线；钟岚要分清叶料，田陌希望采完就休息，分拣范围尚未商定。",
+        "location": "loc_sb_orchard",
+        "salience": 3,
+        "knownBy": [
+          "npc_sb_zhonglan",
+          "npc_sb_tianmo"
+        ],
+        "reliability": "亲历"
       }
     ],
     "goals": {
@@ -78442,7 +78495,7 @@
           ],
           "steps": [
             {
-              "content": "叶堆表层干而里层潮",
+              "content": "逐堆翻看里层，把潮叶所在的位置与接料人核对。",
               "status": "pending"
             }
           ]
@@ -78463,7 +78516,7 @@
           ],
           "steps": [
             {
-              "content": "把翻检位置按堆记下",
+              "content": "翻检后把每堆里层仍潮的位置分别记下，再请接料人核对记录指的是哪一堆。",
               "status": "pending"
             }
           ]
@@ -78484,7 +78537,7 @@
           ],
           "steps": [
             {
-              "content": "交出的叶料说明真实状态",
+              "content": "下一次交接先说明仍湿处，再问接料人是否愿意接下。",
               "status": "pending"
             }
           ]
@@ -78511,11 +78564,21 @@
           "fact": "拆看过一堆发潮叶",
           "reliability": "亲历",
           "source": "npc_sb_zhonglan"
+        },
+        {
+          "fact": "向接料人说过里层仍湿",
+          "source": "npc_sb_zhonglan",
+          "reliability": "亲历"
+        },
+        {
+          "fact": "钟岚与田陌在桑坡树地争过采叶后的收工界线；钟岚要分清叶料，田陌希望采完就休息，分拣范围尚未商定。",
+          "source": "npc_sb_zhonglan",
+          "reliability": "亲历"
         }
       ],
       "unknown": [
-        "本人未在场且无人实际转告的事",
-        "他人未公开的私有财物和秘密"
+        "田陌愿不愿把采下的叶料粗分后交接，愿意分到哪一种程度。",
+        "里层仍湿的那堆叶何时能翻散，接料人是否愿意等到翻检后再接。"
       ]
     },
     "opinions": {
@@ -78652,7 +78715,7 @@
       "说话时话快得像在赶下一棵树"
     ],
     "voice": {
-      "register": "话快得像在赶下一棵树",
+      "register": "说话快且爱逞能，被指出带梗时容易抢着辩解",
       "accent": "河谷日常口音",
       "habits": [
         "话快得像在赶下一棵树"
@@ -79012,21 +79075,21 @@
         "type": "妹妹",
         "trust": 45,
         "affection": 55,
-        "note": "田柔为田陌的妹妹；各自保有财物。"
+        "note": "田柔与田陌同住田陌户居处，在家中见面；兄长拿采叶速度打赌让她担心。"
       },
       {
         "with": "npc_sb_zhanyu",
         "type": "母亲",
         "trust": 45,
         "affection": 55,
-        "note": "占玉为田陌的母亲；各自保有财物。"
+        "note": "占玉与田陌同住田陌户居处，在家中见面；儿子赌输后不想再替他解释。"
       },
       {
         "with": "npc_sb_hanyi",
         "type": "外甥",
         "trust": 45,
         "affection": 55,
-        "note": "韩宜为田陌的外甥；各自保有财物。"
+        "note": "韩宜与田陌同住田陌户居处，在家中见面；想跟舅舅采叶却被安排留在干路。"
       }
     ],
     "memorySeeds": [
@@ -79044,6 +79107,17 @@
         "event": "赌约输了以后，他把该做的地面清理补做了一遍。",
         "salience": 3,
         "knownBy": [
+          "npc_sb_tianmo"
+        ],
+        "reliability": "亲历"
+      },
+      {
+        "id": "memory_sb_depth_shared_2",
+        "event": "钟岚与田陌在桑坡树地争过采叶后的收工界线；钟岚要分清叶料，田陌希望采完就休息，分拣范围尚未商定。",
+        "location": "loc_sb_orchard",
+        "salience": 3,
+        "knownBy": [
+          "npc_sb_zhonglan",
           "npc_sb_tianmo"
         ],
         "reliability": "亲历"
@@ -79065,7 +79139,7 @@
           ],
           "steps": [
             {
-              "content": "自己采的叶夹了太多细梗",
+              "content": "放慢落手前的动作，先指给物主看自己要避开的细梗。",
               "status": "pending"
             }
           ]
@@ -79086,7 +79160,7 @@
           ],
           "steps": [
             {
-              "content": "学会先看枝再落手",
+              "content": "请分拣人查看一小束采叶，问夹梗从哪处落手造成。",
               "status": "pending"
             }
           ]
@@ -79107,7 +79181,7 @@
           ],
           "steps": [
             {
-              "content": "凭手稳而不只凭手快接工",
+              "content": "接下一次采叶活前说清能做到的粗分程度，请物主确认。",
               "status": "pending"
             }
           ]
@@ -79134,11 +79208,21 @@
           "fact": "被退回过带梗叶束",
           "reliability": "亲历",
           "source": "npc_sb_tianmo"
+        },
+        {
+          "fact": "补做过赌约的地面清理",
+          "source": "npc_sb_tianmo",
+          "reliability": "亲历"
+        },
+        {
+          "fact": "钟岚与田陌在桑坡树地争过采叶后的收工界线；钟岚要分清叶料，田陌希望采完就休息，分拣范围尚未商定。",
+          "source": "npc_sb_tianmo",
+          "reliability": "亲历"
         }
       ],
       "unknown": [
-        "本人未在场且无人实际转告的事",
-        "他人未公开的私有财物和秘密"
+        "钟岚认为叶料要分拣到哪一种程度才可以交接。",
+        "雇他采叶的人愿不愿把细拣另约，还是要求采后当场分开细梗。"
       ]
     },
     "opinions": {
@@ -79279,7 +79363,7 @@
       "说话时请人把壳放掌心再说"
     ],
     "voice": {
-      "register": "请人把壳放掌心再说",
+      "register": "讲挑壳理由缓慢耐心，听见省事的说法便带责备",
       "accent": "河谷日常口音",
       "habits": [
         "请人把壳放掌心再说"
@@ -79639,21 +79723,21 @@
         "type": "女儿",
         "trust": 45,
         "affection": 55,
-        "note": "甄梨为甄芸的女儿；各自保有财物。"
+        "note": "甄梨与甄芸同住甄芸户居处，在家中见面；母亲挑壳慢了不肯承认眼花。"
       },
       {
         "with": "npc_sb_chenshu",
         "type": "配偶",
         "trust": 45,
         "affection": 55,
-        "note": "陈树为甄芸的配偶；各自保有财物。"
+        "note": "陈树与甄芸同住甄芸户居处，在家中见面；旧壳堆在窗边挡着开窗。"
       },
       {
         "with": "npc_sb_zhenhao",
         "type": "孙子",
         "trust": 45,
         "affection": 55,
-        "note": "甄灏为甄芸的孙子；各自保有财物。"
+        "note": "甄灏与甄芸同住甄芸户居处，在家中见面；想碰祖母的旧壳又怕压碎。"
       }
     ],
     "memorySeeds": [
@@ -79674,6 +79758,17 @@
           "npc_sb_zhenyun"
         ],
         "reliability": "亲历"
+      },
+      {
+        "id": "memory_sb_depth_shared_3",
+        "event": "甄芸与顾露在桑坂换工屋谈过窗边亮处的使用；甄芸要辨壳，顾露要摊晒位原签，先后尚未商定。",
+        "location": "bld_sb_hall",
+        "salience": 3,
+        "knownBy": [
+          "npc_sb_zhenyun",
+          "npc_sb_gulu"
+        ],
+        "reliability": "亲历"
       }
     ],
     "goals": {
@@ -79692,7 +79787,7 @@
           ],
           "steps": [
             {
-              "content": "轻重相近的旧壳被混到一处",
+              "content": "在亮处把易混的旧壳逐个摊开，指出自己能看清的破口。",
               "status": "pending"
             }
           ]
@@ -79713,7 +79808,7 @@
           ],
           "steps": [
             {
-              "content": "教后辈辨缺口而非只掂重量",
+              "content": "请后辈说出两只近重旧壳的缺口差异，认不出的地方再示范。",
               "status": "pending"
             }
           ]
@@ -79734,7 +79829,7 @@
           ],
           "steps": [
             {
-              "content": "把挑看的理由留下给下一手",
+              "content": "把一次挑看的理由口述给接手人，请对方复述哪些破口仍有疑问。",
               "status": "pending"
             }
           ]
@@ -79761,11 +79856,21 @@
           "fact": "在亮处比过壳边破口",
           "reliability": "亲历",
           "source": "npc_sb_zhenyun"
+        },
+        {
+          "fact": "请后辈帮忙重排过旧记号",
+          "source": "npc_sb_zhenyun",
+          "reliability": "亲历"
+        },
+        {
+          "fact": "甄芸与顾露在桑坂换工屋谈过窗边亮处的使用；甄芸要辨壳，顾露要摊晒位原签，先后尚未商定。",
+          "source": "npc_sb_zhenyun",
+          "reliability": "亲历"
         }
       ],
       "unknown": [
-        "本人未在场且无人实际转告的事",
-        "他人未公开的私有财物和秘密"
+        "顾露要在窗边核对哪一张晒位原签，需要多少时间。",
+        "后辈看旧壳缺口时，究竟是记号认不清还是破口本身分不出。"
       ]
     },
     "opinions": {
@@ -79902,7 +80007,7 @@
       "说话时先问晒什么再问哪户"
     ],
     "voice": {
-      "register": "先问晒什么再问哪户",
+      "register": "报晒位时干脆冷淡，核对争签则逐项念原记号",
       "accent": "河谷日常口音",
       "habits": [
         "先问晒什么再问哪户"
@@ -80262,21 +80367,21 @@
         "type": "女儿",
         "trust": 45,
         "affection": 55,
-        "note": "顾柚为顾露的女儿；各自保有财物。"
+        "note": "顾柚与顾露同住顾露户居处，在家中见面；母亲对生面孔过于冷淡。"
       },
       {
         "with": "npc_sb_huaiting",
         "type": "配偶",
         "trust": 45,
         "affection": 55,
-        "note": "怀亭为顾露的配偶；各自保有财物。"
+        "note": "怀亭与顾露同住顾露户居处，在家中见面；熟人借晒架都来家里讲情面。"
       },
       {
         "with": "npc_sb_nianshu",
         "type": "母亲",
         "trust": 45,
         "affection": 55,
-        "note": "年姝为顾露的母亲；各自保有财物。"
+        "note": "年姝与顾露同住顾露户居处，在家中见面；女儿在家仍大声念空架工时。"
       }
     ],
     "memorySeeds": [
@@ -80294,6 +80399,17 @@
         "event": "有一户凭一句口头答应就占了架，她找到那户，把未经确认的话收回，让对方重新按记号排。",
         "salience": 3,
         "knownBy": [
+          "npc_sb_gulu"
+        ],
+        "reliability": "亲历"
+      },
+      {
+        "id": "memory_sb_depth_shared_3",
+        "event": "甄芸与顾露在桑坂换工屋谈过窗边亮处的使用；甄芸要辨壳，顾露要摊晒位原签，先后尚未商定。",
+        "location": "bld_sb_hall",
+        "salience": 3,
+        "knownBy": [
+          "npc_sb_zhenyun",
           "npc_sb_gulu"
         ],
         "reliability": "亲历"
@@ -80315,7 +80431,7 @@
           ],
           "steps": [
             {
-              "content": "同一空架被两户都记成己用",
+              "content": "请占同一空架的双方各带原记号，先读出各自记录的时段。",
               "status": "pending"
             }
           ]
@@ -80336,7 +80452,7 @@
           ],
           "steps": [
             {
-              "content": "请双方带原记号当面核对",
+              "content": "把争签处指给双方看，各问一次是否同意所读时段。",
               "status": "pending"
             }
           ]
@@ -80357,7 +80473,7 @@
           ],
           "steps": [
             {
-              "content": "空位分配不用靠熟脸说情",
+              "content": "下一次有人来问空架，先问晒物与时段，再按待核对的记号回答。",
               "status": "pending"
             }
           ]
@@ -80384,11 +80500,21 @@
           "fact": "把重叠记号并排核对过",
           "reliability": "亲历",
           "source": "npc_sb_gulu"
+        },
+        {
+          "fact": "向一户收回过未经确认的口头答应",
+          "source": "npc_sb_gulu",
+          "reliability": "亲历"
+        },
+        {
+          "fact": "甄芸与顾露在桑坂换工屋谈过窗边亮处的使用；甄芸要辨壳，顾露要摊晒位原签，先后尚未商定。",
+          "source": "npc_sb_gulu",
+          "reliability": "亲历"
         }
       ],
       "unknown": [
-        "本人未在场且无人实际转告的事",
-        "他人未公开的私有财物和秘密"
+        "甄芸辨哪一批壳最需要窗边亮处，何时愿意暂停一会。",
+        "两户原签上的空架记号各指哪一段工时，是否包含收尾。"
       ]
     },
     "opinions": {
@@ -80525,7 +80651,7 @@
       "说话时先把梭翻面再评论"
     ],
     "voice": {
-      "register": "先把梭翻面再评论",
+      "register": "说物件时专注而尖刻，别人催粗活便讥讽物主",
       "accent": "河谷日常口音",
       "habits": [
         "先把梭翻面再评论"
@@ -80885,21 +81011,21 @@
         "type": "女儿",
         "trust": 45,
         "affection": 55,
-        "note": "叶芝为叶荀的女儿；各自保有财物。"
+        "note": "叶芝与叶荀同住叶荀户居处，在家中见面；父亲说别人的木梭笨让她不敢问。"
       },
       {
         "with": "npc_sb_jiangru",
         "type": "配偶",
         "trust": 45,
         "affection": 55,
-        "note": "姜茹为叶荀的配偶；各自保有财物。"
+        "note": "姜茹与叶荀同住叶荀户居处，在家中见面；丈夫刻薄的话总要自己替他圆。"
       },
       {
         "with": "npc_sb_shewen",
         "type": "岳父",
         "trust": 45,
         "affection": 55,
-        "note": "佘文为叶荀的岳父；各自保有财物。"
+        "note": "佘文与叶荀同住叶荀户居处，在家中见面；女婿做错仍嘴硬使他不愿搭话。"
       }
     ],
     "memorySeeds": [
@@ -80920,6 +81046,17 @@
           "npc_sb_yexun"
         ],
         "reliability": "亲历"
+      },
+      {
+        "id": "memory_sb_depth_shared_4",
+        "event": "叶荀与竺钗在梭架修整院争过留样木屑与入灶过道；叶荀想留比对样屑，竺钗怕木屑带进灶口，清理时点尚未商定。",
+        "location": "bld_sb_yard",
+        "salience": 3,
+        "knownBy": [
+          "npc_sb_yexun",
+          "npc_sb_zhuchai"
+        ],
+        "reliability": "亲历"
       }
     ],
     "goals": {
@@ -80938,7 +81075,7 @@
           ],
           "steps": [
             {
-              "content": "送来的梭有不知何时的缺边",
+              "content": "在物主面前翻看木梭，先圈出双方都看见的缺口。",
               "status": "pending"
             }
           ]
@@ -80959,7 +81096,7 @@
           ],
           "steps": [
             {
-              "content": "请物主先确认原先缺口",
+              "content": "把自己的检看记录读给物主，未确认的旧痕单列询问。",
               "status": "pending"
             }
           ]
@@ -80980,7 +81117,7 @@
           ],
           "steps": [
             {
-              "content": "接手的旧物少起来源争议",
+              "content": "下次接旧梭先让物主认原缺口，再说明自己的修整范围。",
               "status": "pending"
             }
           ]
@@ -81007,11 +81144,21 @@
           "fact": "在物主面前标过缺口",
           "reliability": "亲历",
           "source": "npc_sb_yexun"
+        },
+        {
+          "fact": "重新说明过自己留下的浅划痕",
+          "source": "npc_sb_yexun",
+          "reliability": "亲历"
+        },
+        {
+          "fact": "叶荀与竺钗在梭架修整院争过留样木屑与入灶过道；叶荀想留比对样屑，竺钗怕木屑带进灶口，清理时点尚未商定。",
+          "source": "npc_sb_yexun",
+          "reliability": "亲历"
         }
       ],
       "unknown": [
-        "本人未在场且无人实际转告的事",
-        "他人未公开的私有财物和秘密"
+        "竺钗认为灶口哪一段过道还会带进留样木屑。",
+        "物主送来这只木梭时原先缺边在哪里，是否还记得缺边出现的时机。"
       ]
     },
     "opinions": {
@@ -81152,7 +81299,7 @@
       "说话时先说手上要空出什么"
     ],
     "voice": {
-      "register": "先说手上要空出什么",
+      "register": "安排灶边活计说得急，看到慢动作容易抢着动手",
       "accent": "河谷日常口音",
       "habits": [
         "先说手上要空出什么"
@@ -81512,21 +81659,21 @@
         "type": "女儿",
         "trust": 45,
         "affection": 55,
-        "note": "竺梅为竺钗的女儿；各自保有财物。"
+        "note": "竺梅与竺钗同住竺钗户居处，在家中见面；看母亲抢别人的活后怕上前帮忙。"
       },
       {
         "with": "npc_sb_buzhen",
         "type": "母亲",
         "trust": 45,
         "affection": 55,
-        "note": "卜贞为竺钗的母亲；各自保有财物。"
+        "note": "卜贞与竺钗同住竺钗户居处，在家中见面；女儿总替自己做完轻活。"
       },
       {
         "with": "npc_sb_gaoqi",
         "type": "配偶",
         "trust": 45,
         "affection": 55,
-        "note": "郜启为竺钗的配偶；各自保有财物。"
+        "note": "郜启与竺钗同住竺钗户居处，在家中见面；妻子嫌自己摆碗慢老要夺过去。"
       }
     ],
     "memorySeeds": [
@@ -81544,6 +81691,17 @@
         "event": "她向被抢活的帮工说明过缘由，说自己不是嫌人，是怕耽误灶上的时辰。",
         "salience": 3,
         "knownBy": [
+          "npc_sb_zhuchai"
+        ],
+        "reliability": "亲历"
+      },
+      {
+        "id": "memory_sb_depth_shared_4",
+        "event": "叶荀与竺钗在梭架修整院争过留样木屑与入灶过道；叶荀想留比对样屑，竺钗怕木屑带进灶口，清理时点尚未商定。",
+        "location": "bld_sb_yard",
+        "salience": 3,
+        "knownBy": [
+          "npc_sb_yexun",
           "npc_sb_zhuchai"
         ],
         "reliability": "亲历"
@@ -81565,7 +81723,7 @@
           ],
           "steps": [
             {
-              "content": "帮灶人被抢活后不肯再来",
+              "content": "先问帮工手上做到哪一步，让对方把这一段自行做完。",
               "status": "pending"
             }
           ]
@@ -81586,7 +81744,7 @@
           ],
           "steps": [
             {
-              "content": "说明步骤而不直接夺走手中活",
+              "content": "把要空出的灶边位置指明，请帮工选择愿做的一步再开工。",
               "status": "pending"
             }
           ]
@@ -81607,7 +81765,7 @@
           ],
           "steps": [
             {
-              "content": "忙时也有人愿意搭手",
+              "content": "忙前问愿来搭手的人能承担哪些工序，把生熟容器摆放逐一说明。",
               "status": "pending"
             }
           ]
@@ -81634,11 +81792,21 @@
           "fact": "重摆过灶边容器",
           "reliability": "亲历",
           "source": "npc_sb_zhuchai"
+        },
+        {
+          "fact": "向被抢活的帮工说明过缘由",
+          "source": "npc_sb_zhuchai",
+          "reliability": "亲历"
+        },
+        {
+          "fact": "叶荀与竺钗在梭架修整院争过留样木屑与入灶过道；叶荀想留比对样屑，竺钗怕木屑带进灶口，清理时点尚未商定。",
+          "source": "npc_sb_zhuchai",
+          "reliability": "亲历"
         }
       ],
       "unknown": [
-        "本人未在场且无人实际转告的事",
-        "他人未公开的私有财物和秘密"
+        "叶荀哪一份样屑还需比对，何时愿意把其余过道清出来。",
+        "被抢活的帮工愿不愿再搭手，想自己保留哪一道灶边工序。"
       ]
     },
     "opinions": {
@@ -81775,7 +81943,7 @@
       "说话时先问穿着会不会磨"
     ],
     "voice": {
-      "register": "先问穿着会不会磨",
+      "register": "说针线时慢而细，为保体面容易把不能补的地方绕过去",
       "accent": "河谷日常口音",
       "habits": [
         "先问穿着会不会磨"
@@ -82135,21 +82303,21 @@
         "type": "女儿",
         "trust": 45,
         "affection": 55,
-        "note": "潘蕊为潘瑶的女儿；各自保有财物。"
+        "note": "潘蕊与潘瑶同住潘瑶户居处，在家中见面；母亲不会的纹样也不愿明说。"
       },
       {
         "with": "npc_sb_hupi",
         "type": "配偶",
         "trust": 45,
         "affection": 55,
-        "note": "胡丕为潘瑶的配偶；各自保有财物。"
+        "note": "胡丕与潘瑶同住潘瑶户居处，在家中见面；待补的衣物越来越占坐处。"
       },
       {
         "with": "npc_sb_panxin",
         "type": "孙子",
         "trust": 45,
         "affection": 55,
-        "note": "潘昕为潘瑶的孙子；各自保有财物。"
+        "note": "潘昕与潘瑶同住潘瑶户居处，在家中见面；不懂布破了为何还要保住花纹。"
       }
     ],
     "memorySeeds": [
@@ -82170,6 +82338,17 @@
           "npc_sb_panyao"
         ],
         "reliability": "亲历"
+      },
+      {
+        "id": "memory_sb_depth_shared_5",
+        "event": "潘瑶与高枢在晒线缝补屋谈过补绣与摇架的工序；潘瑶要安静数针，高枢需摇架检看异响，避让时段尚未商定。",
+        "location": "bld_sb_workroom",
+        "salience": 3,
+        "knownBy": [
+          "npc_sb_panyao",
+          "npc_sb_gaoshu"
+        ],
+        "reliability": "亲历"
       }
     ],
     "goals": {
@@ -82188,7 +82367,7 @@
           ],
           "steps": [
             {
-              "content": "物主想保留已磨薄的旧纹",
+              "content": "与物主对光看磨薄衣纹，把可能再裂的位置逐处指出。",
               "status": "pending"
             }
           ]
@@ -82209,7 +82388,7 @@
           ],
           "steps": [
             {
-              "content": "把能补和会继续裂的部分说明",
+              "content": "请物主分别确认能补的部分与无法保证不裂的部分。",
               "status": "pending"
             }
           ]
@@ -82230,7 +82409,7 @@
           ],
           "steps": [
             {
-              "content": "靠说明实情而不靠夸口留客",
+              "content": "下次接旧衣时先说明布底状况，再请物主决定是否保留原纹。",
               "status": "pending"
             }
           ]
@@ -82257,11 +82436,21 @@
           "fact": "对光看过磨薄衣纹",
           "reliability": "亲历",
           "source": "npc_sb_panyao"
+        },
+        {
+          "fact": "向物主说明过不能保证不再裂",
+          "source": "npc_sb_panyao",
+          "reliability": "亲历"
+        },
+        {
+          "fact": "潘瑶与高枢在晒线缝补屋谈过补绣与摇架的工序；潘瑶要安静数针，高枢需摇架检看异响，避让时段尚未商定。",
+          "source": "npc_sb_panyao",
+          "reliability": "亲历"
         }
       ],
       "unknown": [
-        "本人未在场且无人实际转告的事",
-        "他人未公开的私有财物和秘密"
+        "高枢检架必须摇动的那一段何时开始，自己哪段数针会受影响。",
+        "物主愿不愿保留已经磨薄的旧纹，还是接受拆开局部重补。"
       ]
     },
     "opinions": {
@@ -82398,7 +82587,7 @@
       "说话时听过声音再问谁在用"
     ],
     "voice": {
-      "register": "听过声音再问谁在用",
+      "register": "检架时说得谨慎，未亲查的结论总要反复追问",
       "accent": "河谷日常口音",
       "habits": [
         "听过声音再问谁在用"
@@ -82758,21 +82947,21 @@
         "type": "女儿",
         "trust": 45,
         "affection": 55,
-        "note": "高槿为高枢的女儿；各自保有财物。"
+        "note": "高槿与高枢同住高枢户居处，在家中见面；自己已检查的地方父亲总要重看。"
       },
       {
         "with": "npc_sb_shiluo",
         "type": "配偶",
         "trust": 45,
         "affection": 55,
-        "note": "施萝为高枢的配偶；各自保有财物。"
+        "note": "施萝与高枢同住高枢户居处，在家中见面；丈夫听到异响就整顿饭想着架子。"
       },
       {
         "with": "npc_sb_dunyu",
         "type": "母亲",
         "trust": 45,
         "affection": 55,
-        "note": "敦瑜为高枢的母亲；各自保有财物。"
+        "note": "敦瑜与高枢同住高枢户居处，在家中见面；屋里的窗常为木件检看敞开。"
       }
     ],
     "memorySeeds": [
@@ -82790,6 +82979,17 @@
         "event": "重新说清过尚未确定的响源，把先前含糊的地方改回未定。",
         "salience": 3,
         "knownBy": [
+          "npc_sb_gaoshu"
+        ],
+        "reliability": "亲历"
+      },
+      {
+        "id": "memory_sb_depth_shared_5",
+        "event": "潘瑶与高枢在晒线缝补屋谈过补绣与摇架的工序；潘瑶要安静数针，高枢需摇架检看异响，避让时段尚未商定。",
+        "location": "bld_sb_workroom",
+        "salience": 3,
+        "knownBy": [
+          "npc_sb_panyao",
           "npc_sb_gaoshu"
         ],
         "reliability": "亲历"
@@ -82811,7 +83011,7 @@
           ],
           "steps": [
             {
-              "content": "织架一处晃动说法各不同",
+              "content": "等空机时逐处摇查接合，把听到异响处与未发现处分别记下。",
               "status": "pending"
             }
           ]
@@ -82832,7 +83032,7 @@
           ],
           "steps": [
             {
-              "content": "空机时逐处看接合",
+              "content": "等织架空下时逐处查看接合，把使用者说过的异响位置和检看处对照。",
               "status": "pending"
             }
           ]
@@ -82853,7 +83053,7 @@
           ],
           "steps": [
             {
-              "content": "把查到和未查到的分清记录",
+              "content": "下一次交还检看记录时把确定的松动和仍未查明的响源分开说明。",
               "status": "pending"
             }
           ]
@@ -82880,11 +83080,21 @@
           "fact": "在空架上摇查过接合",
           "reliability": "亲历",
           "source": "npc_sb_gaoshu"
+        },
+        {
+          "fact": "重新说清过尚未确定的响源",
+          "source": "npc_sb_gaoshu",
+          "reliability": "亲历"
+        },
+        {
+          "fact": "潘瑶与高枢在晒线缝补屋谈过补绣与摇架的工序；潘瑶要安静数针，高枢需摇架检看异响，避让时段尚未商定。",
+          "source": "npc_sb_gaoshu",
+          "reliability": "亲历"
         }
       ],
       "unknown": [
-        "本人未在场且无人实际转告的事",
-        "他人未公开的私有财物和秘密"
+        "潘瑶哪一段细纹正在数针，何时能避开摇架的检看。",
+        "使用者所说的织架异响究竟出在哪一处接合，空架时能否重现。"
       ]
     },
     "opinions": {
@@ -83023,7 +83233,7 @@
       "说话时由门外的风说到谁家出门"
     ],
     "voice": {
-      "register": "由门外的风说到谁家出门",
+      "register": "说家门口的事亲切缓慢，被替自己安排坐处时固执",
       "accent": "河谷日常口音",
       "habits": [
         "由门外的风说到谁家出门"
@@ -83383,21 +83593,21 @@
         "type": "女儿",
         "trust": 45,
         "affection": 55,
-        "note": "周芬为周薇的女儿；各自保有财物。"
+        "note": "周芬与周薇同住周薇户居处，在家中见面；母亲门前坐处和晾物总要争空间。"
       },
       {
         "with": "npc_sb_lile",
         "type": "外孙女",
         "trust": 45,
         "affection": 55,
-        "note": "厉乐为周薇的外孙女；各自保有财物。"
+        "note": "厉乐与周薇同住周薇户居处，在家中见面；听祖母讲旧地名却记不全。"
       },
       {
         "with": "npc_sb_rongping",
         "type": "女婿",
         "trust": 45,
         "affection": 55,
-        "note": "戎平为周薇的女婿；各自保有财物。"
+        "note": "戎平与周薇同住周薇户居处，在家中见面；不想替妻子决定老人坐哪边。"
       }
     ],
     "memorySeeds": [
@@ -83418,6 +83628,17 @@
           "npc_sb_zhouwei"
         ],
         "reliability": "亲历"
+      },
+      {
+        "id": "memory_sb_depth_shared_6",
+        "event": "周薇与丛思在桑坂村谈过门前视线与晾线位置；周薇要看得到路人，丛思想让线束避开穿行处，位置尚未商定。",
+        "location": "loc_bs_sangban",
+        "salience": 3,
+        "knownBy": [
+          "npc_sb_zhouwei",
+          "npc_sb_congsi"
+        ],
+        "reliability": "亲历"
       }
     ],
     "goals": {
@@ -83436,7 +83657,7 @@
           ],
           "steps": [
             {
-              "content": "门前晒物挡住了坐着看路的视线",
+              "content": "坐在惯常位置指给家人看哪件晒物挡住路，再问能挪哪一件。",
               "status": "pending"
             }
           ]
@@ -83457,7 +83678,7 @@
           ],
           "steps": [
             {
-              "content": "和家人商量可留的一条视线",
+              "content": "请家人站在门前比较能看见行人的位置，让自己试坐后再议。",
               "status": "pending"
             }
           ]
@@ -83478,7 +83699,7 @@
           ],
           "steps": [
             {
-              "content": "不因年老失去日常来往",
+              "content": "邀路过的熟邻在门外说一会近况，若要改坐处则先说自己的选择。",
               "status": "pending"
             }
           ]
@@ -83505,11 +83726,21 @@
           "fact": "请邻人替自己移过遮眼空架",
           "reliability": "亲历",
           "source": "npc_sb_zhouwei"
+        },
+        {
+          "fact": "坐在门边听过一次旧地名争论",
+          "source": "npc_sb_zhouwei",
+          "reliability": "亲历"
+        },
+        {
+          "fact": "周薇与丛思在桑坂村谈过门前视线与晾线位置；周薇要看得到路人，丛思想让线束避开穿行处，位置尚未商定。",
+          "source": "npc_sb_zhouwei",
+          "reliability": "亲历"
         }
       ],
       "unknown": [
-        "本人未在场且无人实际转告的事",
-        "他人未公开的私有财物和秘密"
+        "丛思愿意把晾线位置挪到哪一边，才能同时避开穿行和门前视线。",
+        "周芬觉得门前哪件晒物必须留下，何时方便一起调整遮眼处。"
       ]
     },
     "opinions": {
@@ -83646,7 +83877,7 @@
       "说话时先让线停下来再解释"
     ],
     "voice": {
-      "register": "先让线停下来再解释",
+      "register": "解释绕束时说得细，出错时语气紧而爱辩解",
       "accent": "河谷日常口音",
       "habits": [
         "先让线停下来再解释"
@@ -84006,21 +84237,21 @@
         "type": "母亲",
         "trust": 45,
         "affection": 55,
-        "note": "丛雅为丛思的母亲；各自保有财物。"
+        "note": "丛雅与丛思同住丛思户居处，在家中见面；女儿绕线乱了总说别人碰过。"
       },
       {
         "with": "npc_sb_changlu",
         "type": "合住者",
         "trust": 45,
         "affection": 55,
-        "note": "常璐为丛思的合住者；各自保有财物。"
+        "note": "常璐与丛思同住丛思户居处，在家中见面；想安慰同住者又怕说成教训。"
       },
       {
         "with": "npc_sb_congqi",
         "type": "弟弟",
         "trust": 45,
         "affection": 55,
-        "note": "丛祺为丛思的弟弟；各自保有财物。"
+        "note": "丛祺与丛思同住丛思户居处，在家中见面；姐姐不让自己碰练习线束。"
       }
     ],
     "memorySeeds": [
@@ -84038,6 +84269,17 @@
         "event": "她向熟手演示过自己的结尾动作，手势做得很慢，等对方看完才把线放下。",
         "salience": 3,
         "knownBy": [
+          "npc_sb_congsi"
+        ],
+        "reliability": "亲历"
+      },
+      {
+        "id": "memory_sb_depth_shared_6",
+        "event": "周薇与丛思在桑坂村谈过门前视线与晾线位置；周薇要看得到路人，丛思想让线束避开穿行处，位置尚未商定。",
+        "location": "loc_bs_sangban",
+        "salience": 3,
+        "knownBy": [
+          "npc_sb_zhouwei",
           "npc_sb_congsi"
         ],
         "reliability": "亲历"
@@ -84059,7 +84301,7 @@
           ],
           "steps": [
             {
-              "content": "一束线收尾后仍会回松",
+              "content": "拆开自己的回松练习束，先把结尾动作演给熟手看。",
               "status": "pending"
             }
           ]
@@ -84080,7 +84322,7 @@
           ],
           "steps": [
             {
-              "content": "请熟手看结尾时的手势",
+              "content": "请熟手指出收尾手势中紧松变化的位置，再用自己的练习线试做。",
               "status": "pending"
             }
           ]
@@ -84101,7 +84343,7 @@
           ],
           "steps": [
             {
-              "content": "能独立辨认紧松与回弹",
+              "content": "每次收束后先观察回弹，再把仍分不清的紧松处拿给熟手看。",
               "status": "pending"
             }
           ]
@@ -84128,11 +84370,21 @@
           "fact": "拆开过回松的练习束",
           "reliability": "亲历",
           "source": "npc_sb_congsi"
+        },
+        {
+          "fact": "向熟手演示过自己的结尾动作",
+          "source": "npc_sb_congsi",
+          "reliability": "亲历"
+        },
+        {
+          "fact": "周薇与丛思在桑坂村谈过门前视线与晾线位置；周薇要看得到路人，丛思想让线束避开穿行处，位置尚未商定。",
+          "source": "npc_sb_congsi",
+          "reliability": "亲历"
         }
       ],
       "unknown": [
-        "本人未在场且无人实际转告的事",
-        "他人未公开的私有财物和秘密"
+        "周薇坐在门边看路时，哪一段晾线位置最遮眼。",
+        "熟手看自己练习束的收尾手势后，认为回松原因在哪一处。"
       ]
     },
     "opinions": {
@@ -84269,7 +84521,7 @@
       "说话时先说哪段水倒着走"
     ],
     "voice": {
-      "register": "先说哪段水倒着走",
+      "register": "说排水直且急，雨前容易连续催邻户动手",
       "accent": "河谷日常口音",
       "habits": [
         "先说哪段水倒着走"
@@ -84629,21 +84881,21 @@
         "type": "女儿",
         "trust": 45,
         "affection": 55,
-        "note": "茅萱为茅俪的女儿；各自保有财物。"
+        "note": "茅萱与茅俪同住茅俪户居处，在家中见面；母亲催邻人清沟的话太急。"
       },
       {
         "with": "npc_sb_zhaojin",
         "type": "配偶",
         "trust": 45,
         "affection": 55,
-        "note": "赵锦为茅俪的配偶；各自保有财物。"
+        "note": "赵锦与茅俪同住茅俪户居处，在家中见面；妻子雨前催自己也去争沟口。"
       },
       {
         "with": "npc_sb_wenna",
         "type": "母亲",
         "trust": 45,
         "affection": 55,
-        "note": "温娜为茅俪的母亲；各自保有财物。"
+        "note": "温娜与茅俪同住茅俪户居处，在家中见面；想保留沟边旧坐石却挡清沟路。"
       }
     ],
     "memorySeeds": [
@@ -84664,6 +84916,17 @@
           "npc_sb_maoli"
         ],
         "reliability": "亲历"
+      },
+      {
+        "id": "memory_sb_depth_shared_7",
+        "event": "茅俪与解安在桑坡边沟田谈过清沟与空架暂放；茅俪催雨前清沟，解安要平整处检看空架，暂放位置尚未商定。",
+        "location": "loc_sb_fields",
+        "salience": 3,
+        "knownBy": [
+          "npc_sb_maoli",
+          "npc_sb_jiean"
+        ],
+        "reliability": "亲历"
       }
     ],
     "goals": {
@@ -84682,7 +84945,7 @@
           ],
           "steps": [
             {
-              "content": "邻段落叶堵住自家沟口",
+              "content": "沿沟指出堵水的积叶位置，请邻户到场看来源再商量先后。",
               "status": "pending"
             }
           ]
@@ -84703,7 +84966,7 @@
           ],
           "steps": [
             {
-              "content": "请邻户一起看积叶来源",
+              "content": "先说明自家叶泥要清回哪里，再请邻户说可一起清沟的时段。",
               "status": "pending"
             }
           ]
@@ -84724,7 +84987,7 @@
           ],
           "steps": [
             {
-              "content": "雨前清沟不再全靠吵起来",
+              "content": "雨前提前问邻户可用工时，把沟口仍需共看的位置留下再议。",
               "status": "pending"
             }
           ]
@@ -84751,11 +85014,21 @@
           "fact": "下雨后沿沟查过积叶",
           "reliability": "亲历",
           "source": "npc_sb_maoli"
+        },
+        {
+          "fact": "清回过被自己推走的叶泥",
+          "source": "npc_sb_maoli",
+          "reliability": "亲历"
+        },
+        {
+          "fact": "茅俪与解安在桑坡边沟田谈过清沟与空架暂放；茅俪催雨前清沟，解安要平整处检看空架，暂放位置尚未商定。",
+          "source": "npc_sb_maoli",
+          "reliability": "亲历"
         }
       ],
       "unknown": [
-        "本人未在场且无人实际转告的事",
-        "他人未公开的私有财物和秘密"
+        "解安的空架哪一部分占到待清边沟，何时愿意重议暂放处。",
+        "邻段沟口的积叶来自哪一处，邻户愿意先清哪一段。"
       ]
     },
     "opinions": {
@@ -84894,7 +85167,7 @@
       "说话时先问湿盆曾放哪边"
     ],
     "voice": {
-      "register": "先问湿盆曾放哪边",
+      "register": "问用架方式简短少言，被催促时常沉默停住",
       "accent": "河谷日常口音",
       "habits": [
         "先问湿盆曾放哪边"
@@ -85254,21 +85527,21 @@
         "type": "配偶",
         "trust": 45,
         "affection": 55,
-        "note": "解莹为解安的配偶；各自保有财物。"
+        "note": "解莹与解安同住解安户居处，在家中见面；丈夫修架沉默让送活人误会。"
       },
       {
         "with": "npc_sb_jiejun",
         "type": "儿子",
         "trust": 45,
         "affection": 55,
-        "note": "解骏为解安的儿子；各自保有财物。"
+        "note": "解骏与解安同住解安户居处，在家中见面；想看父亲的架脚却怕被叫远离。"
       },
       {
         "with": "npc_sb_yimiao",
         "type": "母亲",
         "trust": 45,
         "affection": 55,
-        "note": "伊苗为解安的母亲；各自保有财物。"
+        "note": "伊苗与解安同住解安户居处，在家中见面；儿子工作不顺也不肯说缘由。"
       }
     ],
     "memorySeeds": [
@@ -85286,6 +85559,17 @@
         "event": "有一回修到一半，他停下手，请物主把湿盆怎么用、靠哪边放重说一遍。",
         "salience": 3,
         "knownBy": [
+          "npc_sb_jiean"
+        ],
+        "reliability": "亲历"
+      },
+      {
+        "id": "memory_sb_depth_shared_7",
+        "event": "茅俪与解安在桑坡边沟田谈过清沟与空架暂放；茅俪催雨前清沟，解安要平整处检看空架，暂放位置尚未商定。",
+        "location": "loc_sb_fields",
+        "salience": 3,
+        "knownBy": [
+          "npc_sb_maoli",
           "npc_sb_jiean"
         ],
         "reliability": "亲历"
@@ -85307,7 +85591,7 @@
           ],
           "steps": [
             {
-              "content": "旧架边脚总向一侧偏",
+              "content": "空架时请使用者指摆盆方向，再对照偏脚磨痕。",
               "status": "pending"
             }
           ]
@@ -85328,7 +85612,7 @@
           ],
           "steps": [
             {
-              "content": "空架时请使用者说明摆盆方向",
+              "content": "待木架空下后请使用者指出湿盆惯常朝哪边摆，再沿对应架脚核对磨痕。",
               "status": "pending"
             }
           ]
@@ -85349,7 +85633,7 @@
           ],
           "steps": [
             {
-              "content": "做的架子便于看见磨损",
+              "content": "下一次接架先问使用方式，再请物主看哪些磨损便于自行察觉。",
               "status": "pending"
             }
           ]
@@ -85376,11 +85660,21 @@
           "fact": "对照过架脚磨痕",
           "reliability": "亲历",
           "source": "npc_sb_jiean"
+        },
+        {
+          "fact": "停下修补请物主重说过用法",
+          "source": "npc_sb_jiean",
+          "reliability": "亲历"
+        },
+        {
+          "fact": "茅俪与解安在桑坡边沟田谈过清沟与空架暂放；茅俪催雨前清沟，解安要平整处检看空架，暂放位置尚未商定。",
+          "source": "npc_sb_jiean",
+          "reliability": "亲历"
         }
       ],
       "unknown": [
-        "本人未在场且无人实际转告的事",
-        "他人未公开的私有财物和秘密"
+        "茅俪清沟要先腾出哪一段，空架是否有能经双方同意的暂放处。",
+        "使用者把湿盆放在架子的哪一边，是否愿意一起查看偏脚磨痕与摆盆方向。"
       ]
     },
     "opinions": {
@@ -85517,7 +85811,7 @@
       "说话时先夸布色再绕到人的近况"
     ],
     "voice": {
-      "register": "先夸布色再绕到人的近况",
+      "register": "闲聊温和绕弯，常从布色引到别人家事",
       "accent": "河谷日常口音",
       "habits": [
         "先夸布色再绕到人的近况"
@@ -85877,21 +86171,21 @@
         "type": "儿子",
         "trust": 45,
         "affection": 55,
-        "note": "白涵为白舒的儿子；各自保有财物。"
+        "note": "白涵与白舒同住白舒户居处，在家中见面；母亲从晒布猜人家事让他难为情。"
       },
       {
         "with": "npc_sb_tengzi",
         "type": "配偶",
         "trust": 45,
         "affection": 55,
-        "note": "滕梓为白舒的配偶；各自保有财物。"
+        "note": "滕梓与白舒同住白舒户居处，在家中见面；妻子说闲话时不愿听自己劝。"
       },
       {
         "with": "npc_sb_bairong",
         "type": "孙女",
         "trust": 45,
         "affection": 55,
-        "note": "白蓉为白舒的孙女；各自保有财物。"
+        "note": "白蓉与白舒同住白舒户居处，在家中见面；祖母的猜话为什么被人当真。"
       }
     ],
     "memorySeeds": [
@@ -85912,6 +86206,17 @@
           "npc_sb_baishu"
         ],
         "reliability": "亲历"
+      },
+      {
+        "id": "memory_sb_depth_shared_8",
+        "event": "白舒与鲁玮在桑坂村谈过晒布与搬架过道；白舒怕布被碰落，鲁玮说转弯要留宽处，过道宽度尚未商定。",
+        "location": "loc_bs_sangban",
+        "salience": 3,
+        "knownBy": [
+          "npc_sb_baishu",
+          "npc_sb_luwei"
+        ],
+        "reliability": "亲历"
       }
     ],
     "goals": {
@@ -85930,7 +86235,7 @@
           ],
           "steps": [
             {
-              "content": "猜来的家事被当成真消息",
+              "content": "向听过猜话的人说明自己只是按布色猜的，再问对方听成什么。",
               "status": "pending"
             }
           ]
@@ -85951,7 +86256,7 @@
           ],
           "steps": [
             {
-              "content": "向听话的人说清只是猜测",
+              "content": "把亲见的晒布样子和自己猜的家事分开说，问听者有无误解。",
               "status": "pending"
             }
           ]
@@ -85972,7 +86277,7 @@
           ],
           "steps": [
             {
-              "content": "说闲话前学会留住不确定处",
+              "content": "再次有人谈那家事时先指出自己没亲见，不再用布色作确证。",
               "status": "pending"
             }
           ]
@@ -85999,11 +86304,21 @@
           "fact": "因猜话被物主找来问过",
           "reliability": "亲历",
           "source": "npc_sb_baishu"
+        },
+        {
+          "fact": "对听过的人解释过没亲见",
+          "source": "npc_sb_baishu",
+          "reliability": "亲历"
+        },
+        {
+          "fact": "白舒与鲁玮在桑坂村谈过晒布与搬架过道；白舒怕布被碰落，鲁玮说转弯要留宽处，过道宽度尚未商定。",
+          "source": "npc_sb_baishu",
+          "reliability": "亲历"
         }
       ],
       "unknown": [
-        "本人未在场且无人实际转告的事",
-        "他人未公开的私有财物和秘密"
+        "鲁玮抬架转弯必须留出哪一段过道，晾布边能否另留位置。",
+        "听过自己猜话的人中，谁仍把未亲见的家事当成了确切消息。"
       ]
     },
     "opinions": {
@@ -86142,7 +86457,7 @@
       "说话时谈活先估要拐几次弯"
     ],
     "voice": {
-      "register": "谈活先估要拐几次弯",
+      "register": "接搬架活时爽快，谈轮肩时会往自己省力处说",
       "accent": "河谷日常口音",
       "habits": [
         "谈活先估要拐几次弯"
@@ -86502,21 +86817,21 @@
         "type": "配偶",
         "trust": 45,
         "affection": 55,
-        "note": "鲁芸为鲁玮的配偶；各自保有财物。"
+        "note": "鲁芸与鲁玮同住鲁玮户居处，在家中见面；丈夫挑轻活使她被邻人问起。"
       },
       {
         "with": "npc_sb_luxin",
         "type": "儿子",
         "trust": 45,
         "affection": 55,
-        "note": "鲁欣为鲁玮的儿子；各自保有财物。"
+        "note": "鲁欣与鲁玮同住鲁玮户居处，在家中见面；父亲抬架出门不让自己跟。"
       },
       {
         "with": "npc_sb_wujia",
         "type": "母亲",
         "trust": 45,
         "affection": 55,
-        "note": "吴佳为鲁玮的母亲；各自保有财物。"
+        "note": "吴佳与鲁玮同住鲁玮户居处，在家中见面；明知儿子挑轻头仍想替他说话。"
       }
     ],
     "memorySeeds": [
@@ -86534,6 +86849,17 @@
         "event": "后来同伴当面指出他总挑轻头，他笑笑岔开，没有接话。",
         "salience": 3,
         "knownBy": [
+          "npc_sb_luwei"
+        ],
+        "reliability": "亲历"
+      },
+      {
+        "id": "memory_sb_depth_shared_8",
+        "event": "白舒与鲁玮在桑坂村谈过晒布与搬架过道；白舒怕布被碰落，鲁玮说转弯要留宽处，过道宽度尚未商定。",
+        "location": "loc_bs_sangban",
+        "salience": 3,
+        "knownBy": [
+          "npc_sb_baishu",
           "npc_sb_luwei"
         ],
         "reliability": "亲历"
@@ -86555,7 +86881,7 @@
           ],
           "steps": [
             {
-              "content": "同伴不愿与自己换肩",
+              "content": "先和搭工者走一次转弯路线，标出路不平和需要换肩的位置。",
               "status": "pending"
             }
           ]
@@ -86576,7 +86902,7 @@
           ],
           "steps": [
             {
-              "content": "约清重轻两头轮替的次序",
+              "content": "开抬前请搭工者确认第一段各站哪头，下一段如何轮替。",
               "status": "pending"
             }
           ]
@@ -86597,7 +86923,7 @@
           ],
           "steps": [
             {
-              "content": "搭伙干活别人能放心分工",
+              "content": "再搭伙时请同伴指出上次分工不平处，重议自己承担的路段。",
               "status": "pending"
             }
           ]
@@ -86624,11 +86950,21 @@
           "fact": "在巷口换过一次抬位",
           "reliability": "亲历",
           "source": "npc_sb_luwei"
+        },
+        {
+          "fact": "被同伴指出过总挑轻头",
+          "source": "npc_sb_luwei",
+          "reliability": "亲历"
+        },
+        {
+          "fact": "白舒与鲁玮在桑坂村谈过晒布与搬架过道；白舒怕布被碰落，鲁玮说转弯要留宽处，过道宽度尚未商定。",
+          "source": "npc_sb_luwei",
+          "reliability": "亲历"
         }
       ],
       "unknown": [
-        "本人未在场且无人实际转告的事",
-        "他人未公开的私有财物和秘密"
+        "白舒的哪一块晾布容易被转弯的架子碰落。",
+        "搭工者愿意按哪一种次序轮换轻重两头，能否把不平路段也算进去。"
       ]
     },
     "opinions": {
@@ -86769,7 +87105,7 @@
       "说话时每写一段便读回来"
     ],
     "voice": {
-      "register": "每写一段便读回来",
+      "register": "读约定平稳逐句，外乡人说得快便多追问几遍",
       "accent": "河谷日常口音",
       "habits": [
         "每写一段便读回来"
@@ -87129,21 +87465,21 @@
         "type": "女儿",
         "trust": 45,
         "affection": 55,
-        "note": "史兰为史葵的女儿；各自保有财物。"
+        "note": "史兰与史葵同住史葵户居处，在家中见面；母亲总怀疑说快话的外乡人。"
       },
       {
         "with": "npc_sb_zengyi",
         "type": "配偶",
         "trust": 45,
         "affection": 55,
-        "note": "曾宜为史葵的配偶；各自保有财物。"
+        "note": "曾宜与史葵同住史葵户居处，在家中见面；家中常来人问约定字句。"
       },
       {
         "with": "npc_sb_fujin",
         "type": "母亲",
         "trust": 45,
         "affection": 55,
-        "note": "傅槿为史葵的母亲；各自保有财物。"
+        "note": "傅槿与史葵同住史葵户居处，在家中见面；旧草契被当废纸使她舍不得。"
       }
     ],
     "memorySeeds": [
@@ -87164,6 +87500,17 @@
           "npc_sb_shikui"
         ],
         "reliability": "亲历"
+      },
+      {
+        "id": "memory_sb_depth_shared_9",
+        "event": "史葵与孔柳在桑坂换工屋谈过公共桌上的原契与描样；史葵要按人分放原契，孔柳需摊平转角纸样，桌面分用尚未商定。",
+        "location": "bld_sb_hall",
+        "salience": 3,
+        "knownBy": [
+          "npc_sb_shikui",
+          "npc_sb_kongliu"
+        ],
+        "reliability": "亲历"
       }
     ],
     "goals": {
@@ -87182,7 +87529,7 @@
           ],
           "steps": [
             {
-              "content": "雇工约定里只写了帮忙",
+              "content": "请双方分别描述帮忙的实际动作，把含糊处圈出再读回。",
               "status": "pending"
             }
           ]
@@ -87203,7 +87550,7 @@
           ],
           "steps": [
             {
-              "content": "让双方说清具体工事",
+              "content": "逐句问当事人原工事与清理工序是否都已说清，未应答处留待补说。",
               "status": "pending"
             }
           ]
@@ -87224,7 +87571,7 @@
           ],
           "steps": [
             {
-              "content": "文书读给不识字的人也能懂",
+              "content": "给不识字的当事人读回约定，请对方用自己的话复述劳动范围。",
               "status": "pending"
             }
           ]
@@ -87251,11 +87598,21 @@
           "fact": "让当事人逐句复述过工约",
           "reliability": "亲历",
           "source": "npc_sb_shikui"
+        },
+        {
+          "fact": "补写过未说明的清理工序",
+          "source": "npc_sb_shikui",
+          "reliability": "亲历"
+        },
+        {
+          "fact": "史葵与孔柳在桑坂换工屋谈过公共桌上的原契与描样；史葵要按人分放原契，孔柳需摊平转角纸样，桌面分用尚未商定。",
+          "source": "npc_sb_shikui",
+          "reliability": "亲历"
         }
       ],
       "unknown": [
-        "本人未在场且无人实际转告的事",
-        "他人未公开的私有财物和秘密"
+        "孔柳摊平转角纸样需要哪一块桌面，是否会碰到分户的原契。",
+        "工约双方说的帮忙究竟包含哪一道清理工序，何时算收尾。"
       ]
     },
     "opinions": {
@@ -87392,7 +87749,7 @@
       "说话时拿旧样比着问哪里偏"
     ],
     "voice": {
-      "register": "拿旧样比着问哪里偏",
+      "register": "问样线时爱比较且好强，描偏后语速会加快",
       "accent": "河谷日常口音",
       "habits": [
         "拿旧样比着问哪里偏"
@@ -87752,21 +88109,21 @@
         "type": "母亲",
         "trust": 45,
         "affection": 55,
-        "note": "孔芝为孔柳的母亲；各自保有财物。"
+        "note": "孔芝与孔柳同住孔柳户居处，在家中见面；女儿描线偏了就要擦掉整张。"
       },
       {
         "with": "npc_sb_chuhui",
         "type": "父亲",
         "trust": 45,
         "affection": 55,
-        "note": "褚惠为孔柳的父亲；各自保有财物。"
+        "note": "褚惠与孔柳同住孔柳户居处，在家中见面；想看懂女儿画的角边为什么不合。"
       },
       {
         "with": "npc_sb_konglin",
         "type": "妹妹",
         "trust": 45,
         "affection": 55,
-        "note": "孔琳为孔柳的妹妹；各自保有财物。"
+        "note": "孔琳与孔柳同住孔柳户居处，在家中见面；姐姐叫自己试描又嫌她太慢。"
       }
     ],
     "memorySeeds": [
@@ -87784,6 +88141,17 @@
         "event": "她拿描样去请缝补者看，对方指出对不上的地方，她当时没吭声，回来照着改了几遍。",
         "salience": 3,
         "knownBy": [
+          "npc_sb_kongliu"
+        ],
+        "reliability": "亲历"
+      },
+      {
+        "id": "memory_sb_depth_shared_9",
+        "event": "史葵与孔柳在桑坂换工屋谈过公共桌上的原契与描样；史葵要按人分放原契，孔柳需摊平转角纸样，桌面分用尚未商定。",
+        "location": "bld_sb_hall",
+        "salience": 3,
+        "knownBy": [
+          "npc_sb_shikui",
           "npc_sb_kongliu"
         ],
         "reliability": "亲历"
@@ -87805,7 +88173,7 @@
           ],
           "steps": [
             {
-              "content": "画的边样到转角对不上",
+              "content": "在废纸上分开试描直边和角边，请缝补者指对不上的一处。",
               "status": "pending"
             }
           ]
@@ -87826,7 +88194,7 @@
           ],
           "steps": [
             {
-              "content": "把直边和角边分开试描",
+              "content": "将两段试样并排比较，逐处问转折需朝哪个方向。",
               "status": "pending"
             }
           ]
@@ -87847,7 +88215,7 @@
           ],
           "steps": [
             {
-              "content": "不只会照搬也能说明转折",
+              "content": "向缝补者解释自己试描的转折理由，再问按它裁缝是否仍接不上。",
               "status": "pending"
             }
           ]
@@ -87874,11 +88242,21 @@
           "fact": "在废纸上试过转角",
           "reliability": "亲历",
           "source": "npc_sb_kongliu"
+        },
+        {
+          "fact": "请缝补者指出过对不上处",
+          "source": "npc_sb_kongliu",
+          "reliability": "亲历"
+        },
+        {
+          "fact": "史葵与孔柳在桑坂换工屋谈过公共桌上的原契与描样；史葵要按人分放原契，孔柳需摊平转角纸样，桌面分用尚未商定。",
+          "source": "npc_sb_kongliu",
+          "reliability": "亲历"
         }
       ],
       "unknown": [
-        "本人未在场且无人实际转告的事",
-        "他人未公开的私有财物和秘密"
+        "史葵要分户放开的原契占哪一处，自己的角边纸样何时能摊平。",
+        "缝补者认为这张边样在哪一个转角接不上直边。"
       ]
     },
     "opinions": {
@@ -88015,7 +88393,7 @@
       "说话时先让梯脚落稳再开口"
     ],
     "voice": {
-      "register": "先让梯脚落稳再开口",
+      "register": "劝停梯时严厉谨慎，谈梯脚落稳才愿继续说",
       "accent": "河谷日常口音",
       "habits": [
         "先让梯脚落稳再开口"
@@ -88375,14 +88753,14 @@
         "type": "女儿",
         "trust": 45,
         "affection": 55,
-        "note": "费玥为费清的女儿；各自保有财物。"
+        "note": "费玥与费清同住费清户居处，在家中见面；父亲总担心别人借走坏梯。"
       },
       {
         "with": "npc_sb_helai",
         "type": "配偶",
         "trust": 45,
         "affection": 55,
-        "note": "贺来为费清的配偶；各自保有财物。"
+        "note": "贺来与费清同住费清户居处，在家中见面；丈夫自己也踩旧梯却只责别人。"
       },
       {
         "with": "npc_sb_feixu",
@@ -88410,6 +88788,17 @@
           "npc_sb_feiqing"
         ],
         "reliability": "亲历"
+      },
+      {
+        "id": "memory_sb_depth_shared_10",
+        "event": "费清与商筠在桑坂村谈过旧梯停用与晾袋；费清坚持有疑问的梯先停用，商筠需要不借坏梯的晾位，替代位置尚未商定。",
+        "location": "loc_bs_sangban",
+        "salience": 3,
+        "knownBy": [
+          "npc_sb_feiqing",
+          "npc_sb_shangyun"
+        ],
+        "reliability": "亲历"
       }
     ],
     "goals": {
@@ -88428,7 +88817,7 @@
           ],
           "steps": [
             {
-              "content": "旧梯横档摇动却没人愿停用",
+              "content": "请物主看松动横档，先说明在复查前停止转借的顾虑。",
               "status": "pending"
             }
           ]
@@ -88449,7 +88838,7 @@
           ],
           "steps": [
             {
-              "content": "物主在场时标出松动横档",
+              "content": "请物主在旁一起看松动横档，问清可用的标记方式，经物主同意后当面标出需停用的位置。",
               "status": "pending"
             }
           ]
@@ -88470,7 +88859,7 @@
           ],
           "steps": [
             {
-              "content": "坏梯有清楚标记不会转借",
+              "content": "与物主约清坏梯停用的标记，让问借的人先看到停用原因，复查前不安排转借。",
               "status": "pending"
             }
           ]
@@ -88497,11 +88886,21 @@
           "fact": "试摇过一根松横档",
           "reliability": "亲历",
           "source": "npc_sb_feiqing"
+        },
+        {
+          "fact": "当面劝人放下梯子改日再用",
+          "source": "npc_sb_feiqing",
+          "reliability": "亲历"
+        },
+        {
+          "fact": "费清与商筠在桑坂村谈过旧梯停用与晾袋；费清坚持有疑问的梯先停用，商筠需要不借坏梯的晾位，替代位置尚未商定。",
+          "source": "npc_sb_feiqing",
+          "reliability": "亲历"
         }
       ],
       "unknown": [
-        "本人未在场且无人实际转告的事",
-        "他人未公开的私有财物和秘密"
+        "商筠的湿袋能否用经物主同意的低处晾位，哪一处不需要旧梯。",
+        "物主是否看见旧梯摇动的横档，何时愿意在场复查。"
       ]
     },
     "opinions": {
@@ -88640,7 +89039,7 @@
       "说话时先看袋口再说归谁"
     ],
     "voice": {
-      "register": "先看袋口再说归谁",
+      "register": "说洗晾利落短促，难认的袋口记号常想留到稍后",
       "accent": "河谷日常口音",
       "habits": [
         "先看袋口再说归谁"
@@ -89000,21 +89399,21 @@
         "type": "女儿",
         "trust": 45,
         "affection": 55,
-        "note": "商雨为商筠的女儿；各自保有财物。"
+        "note": "商雨与商筠同住商筠户居处，在家中见面；母亲袋上的旧字比书里难认。"
       },
       {
         "with": "npc_sb_miaoran",
         "type": "配偶",
         "trust": 45,
         "affection": 55,
-        "note": "苗冉为商筠的配偶；各自保有财物。"
+        "note": "苗冉与商筠同住商筠户居处，在家中见面；妻子把难认的湿袋越堆越多。"
       },
       {
         "with": "npc_sb_quean",
         "type": "母亲",
         "trust": 45,
         "affection": 55,
-        "note": "阙安为商筠的母亲；各自保有财物。"
+        "note": "阙安与商筠同住商筠户居处，在家中见面；袋子晾到门边使进出不便。"
       }
     ],
     "memorySeeds": [
@@ -89032,6 +89431,17 @@
         "event": "她曾向两户说明过认错的可能，把话说在前头，免得接回去又起争执。",
         "salience": 3,
         "knownBy": [
+          "npc_sb_shangyun"
+        ],
+        "reliability": "亲历"
+      },
+      {
+        "id": "memory_sb_depth_shared_10",
+        "event": "费清与商筠在桑坂村谈过旧梯停用与晾袋；费清坚持有疑问的梯先停用，商筠需要不借坏梯的晾位，替代位置尚未商定。",
+        "location": "loc_bs_sangban",
+        "salience": 3,
+        "knownBy": [
+          "npc_sb_feiqing",
           "npc_sb_shangyun"
         ],
         "reliability": "亲历"
@@ -89053,7 +89463,7 @@
           ],
           "steps": [
             {
-              "content": "袋口记号褪色看不清",
+              "content": "把褪记袋分别晾开，逐户请物主认袋口，认不准的先留待核对。",
               "status": "pending"
             }
           ]
@@ -89074,7 +89484,7 @@
           ],
           "steps": [
             {
-              "content": "请物主在接回前重新认记",
+              "content": "交袋前分别读出自己认得的旧记号，请物主复认而不按熟脸分袋。",
               "status": "pending"
             }
           ]
@@ -89095,7 +89505,7 @@
           ],
           "steps": [
             {
-              "content": "洗完能交回而不靠猜主人",
+              "content": "洗下一批袋前先询问记号能否重认，不能确认的部分留给物主处理。",
               "status": "pending"
             }
           ]
@@ -89122,11 +89532,21 @@
           "fact": "分别晾开过褪记的袋",
           "reliability": "亲历",
           "source": "npc_sb_shangyun"
+        },
+        {
+          "fact": "向两户说明过认错可能",
+          "source": "npc_sb_shangyun",
+          "reliability": "亲历"
+        },
+        {
+          "fact": "费清与商筠在桑坂村谈过旧梯停用与晾袋；费清坚持有疑问的梯先停用，商筠需要不借坏梯的晾位，替代位置尚未商定。",
+          "source": "npc_sb_shangyun",
+          "reliability": "亲历"
         }
       ],
       "unknown": [
-        "本人未在场且无人实际转告的事",
-        "他人未公开的私有财物和秘密"
+        "费清认为哪一架旧梯仍有疑问，低处哪些晾袋位置可以另问物主。",
+        "两户认回褪记的袋时，各凭哪一段旧记号才能确认归属。"
       ]
     },
     "opinions": {
@@ -89262,7 +89682,7 @@
       "说话时先讲树去年从哪里抽枝"
     ],
     "voice": {
-      "register": "先讲树去年从哪里抽枝",
+      "register": "讲旧树慢而恋旧，别人要挪篱便带防备",
       "accent": "河谷日常口音",
       "habits": [
         "先讲树去年从哪里抽枝"
@@ -89622,21 +90042,21 @@
         "type": "女儿",
         "trust": 45,
         "affection": 55,
-        "note": "池芬为池杉的女儿；各自保有财物。"
+        "note": "池芬与池杉同住池杉户居处，在家中见面；邻人问树根绕路总要她说服父亲。"
       },
       {
         "with": "npc_sb_yanbo",
         "type": "配偶",
         "trust": 45,
         "affection": 55,
-        "note": "颜博为池杉的配偶；各自保有财物。"
+        "note": "颜博与池杉同住池杉户居处，在家中见面；丈夫嘴上说路好走自己也绕根。"
       },
       {
         "with": "npc_sb_chayue",
         "type": "同村日常往来",
         "trust": 15,
         "affection": 10,
-        "note": "认识同村查悦，不因此知道对方秘密或财产。"
+        "note": "池杉在桑坂村的日常往来中见过查悦，认得这位同村住户。"
       }
     ],
     "memorySeeds": [
@@ -89657,6 +90077,17 @@
           "npc_sb_chishan"
         ],
         "reliability": "亲历"
+      },
+      {
+        "id": "memory_sb_depth_shared_11",
+        "event": "池杉与查悦在桑坂村谈过树下歇脚与候灶；池杉说“树根边不要反复踩实，站哪里还要商量”；查悦说“候灶的人要能听见叫名，位置还没谈妥”。候灶位置尚未商定。",
+        "location": "loc_bs_sangban",
+        "salience": 3,
+        "knownBy": [
+          "npc_sb_chishan",
+          "npc_sb_chayue"
+        ],
+        "reliability": "亲历"
       }
     ],
     "goals": {
@@ -89675,7 +90106,7 @@
           ],
           "steps": [
             {
-              "content": "篱边旧树根顶起人走的地面",
+              "content": "陪过路者看突根，自己先试走根外路再问哪段难行。",
               "status": "pending"
             }
           ]
@@ -89696,7 +90127,7 @@
           ],
           "steps": [
             {
-              "content": "和过路者商量根外通行边",
+              "content": "请过路者指明便利的通行边，把护根顾虑说清后再议。",
               "status": "pending"
             }
           ]
@@ -89717,7 +90148,7 @@
           ],
           "steps": [
             {
-              "content": "留树也留得下便利小路",
+              "content": "下一次有人提砍树省路时先让对方看根外通路，询问能否保留树。",
               "status": "pending"
             }
           ]
@@ -89744,11 +90175,21 @@
           "fact": "陪邻人看过突根",
           "reliability": "亲历",
           "source": "npc_sb_chishan"
+        },
+        {
+          "fact": "在根外试走过绕路",
+          "source": "npc_sb_chishan",
+          "reliability": "亲历"
+        },
+        {
+          "fact": "池杉与查悦在桑坂村谈过树下歇脚与候灶；池杉说“树根边不要反复踩实，站哪里还要商量”；查悦说“候灶的人要能听见叫名，位置还没谈妥”。候灶位置尚未商定。",
+          "source": "npc_sb_chishan",
+          "reliability": "亲历"
         }
       ],
       "unknown": [
-        "本人未在场且无人实际转告的事",
-        "他人未公开的私有财物和秘密"
+        "查悦希望候灶人站在哪一边才能听清叫名，又不反复踏实树根。",
+        "过路者愿意沿根外哪一条边绕行，自己能否保留篱边旧树。"
       ]
     },
     "opinions": {
@@ -89766,7 +90207,7 @@
         },
         {
           "with": "npc_sb_chayue",
-          "view": "认识同村查悦，不因此知道对方秘密或财产。"
+          "view": "池杉在桑坂村的日常往来中见过查悦，认得这位同村住户。"
         }
       ]
     },
@@ -89884,7 +90325,7 @@
       "说话时先说上次约到哪"
     ],
     "voice": {
-      "register": "先说上次约到哪",
+      "register": "记灶次时清楚而尖锐，争时段便翻出对方旧错",
       "accent": "河谷日常口音",
       "habits": [
         "先说上次约到哪"
@@ -90244,21 +90685,21 @@
         "type": "儿子",
         "trust": 45,
         "affection": 55,
-        "note": "查琳为查悦的儿子；各自保有财物。"
+        "note": "查琳与查悦同住查悦户居处，在家中见面；母亲记灶次总翻别人的旧错。"
       },
       {
         "with": "npc_sb_shuqi",
         "type": "配偶",
         "trust": 45,
         "affection": 55,
-        "note": "舒琪为查悦的配偶；各自保有财物。"
+        "note": "舒琪与查悦同住查悦户居处，在家中见面；家里晚饭常因妻子处理灶争延后。"
       },
       {
         "with": "npc_sb_qinwan",
         "type": "同村日常往来",
         "trust": 15,
         "affection": 10,
-        "note": "认识同村秦婉，不因此知道对方秘密或财产。"
+        "note": "查悦在桑坂村的日常往来中见过秦婉，认得这位同村住户。"
       }
     ],
     "memorySeeds": [
@@ -90276,6 +90717,17 @@
         "event": "后来她把清台那段也补进了记录里，免得只算开火的人占先。",
         "salience": 3,
         "knownBy": [
+          "npc_sb_chayue"
+        ],
+        "reliability": "亲历"
+      },
+      {
+        "id": "memory_sb_depth_shared_11",
+        "event": "池杉与查悦在桑坂村谈过树下歇脚与候灶；池杉说“树根边不要反复踩实，站哪里还要商量”；查悦说“候灶的人要能听见叫名，位置还没谈妥”。候灶位置尚未商定。",
+        "location": "loc_bs_sangban",
+        "salience": 3,
+        "knownBy": [
+          "npc_sb_chishan",
           "npc_sb_chayue"
         ],
         "reliability": "亲历"
@@ -90297,7 +90749,7 @@
           ],
           "steps": [
             {
-              "content": "两户都说自己没有用够时段",
+              "content": "请争灶双方分别说开始与清台经过，先核对记录中未写清的部分。",
               "status": "pending"
             }
           ]
@@ -90318,7 +90770,7 @@
           ],
           "steps": [
             {
-              "content": "分别核对开始与清台经过",
+              "content": "读回包含清台的候选时段，请双方说明仍不接受的起止点。",
               "status": "pending"
             }
           ]
@@ -90339,7 +90791,7 @@
           ],
           "steps": [
             {
-              "content": "轮用包括收尾而不只开火",
+              "content": "下一轮登记前先问收尾需要多久，再让本人确认轮次。",
               "status": "pending"
             }
           ]
@@ -90366,11 +90818,21 @@
           "fact": "在两户面前重念过次序",
           "reliability": "亲历",
           "source": "npc_sb_chayue"
+        },
+        {
+          "fact": "把清台也补入过记录",
+          "source": "npc_sb_chayue",
+          "reliability": "亲历"
+        },
+        {
+          "fact": "池杉与查悦在桑坂村谈过树下歇脚与候灶；池杉说“树根边不要反复踩实，站哪里还要商量”；查悦说“候灶的人要能听见叫名，位置还没谈妥”。候灶位置尚未商定。",
+          "source": "npc_sb_chayue",
+          "reliability": "亲历"
         }
       ],
       "unknown": [
-        "本人未在场且无人实际转告的事",
-        "他人未公开的私有财物和秘密"
+        "池杉觉得候灶人在树下哪一段踩踏最伤根。",
+        "争灶的两户各从何时开始计用灶时段，何时完成清台。"
       ]
     },
     "opinions": {
@@ -90388,7 +90850,7 @@
         },
         {
           "with": "npc_sb_qinwan",
-          "view": "认识同村秦婉，不因此知道对方秘密或财产。"
+          "view": "查悦在桑坂村的日常往来中见过秦婉，认得这位同村住户。"
         }
       ]
     },
@@ -90510,7 +90972,7 @@
       "说话时先问哪处抬手受紧"
     ],
     "voice": {
-      "register": "先问哪处抬手受紧",
+      "register": "问衣服受紧处细致，亲属催活时语气容易放软",
       "accent": "河谷日常口音",
       "habits": [
         "先问哪处抬手受紧"
@@ -90870,21 +91332,21 @@
         "type": "母亲",
         "trust": 45,
         "affection": 55,
-        "note": "秦娴为秦婉的母亲；各自保有财物。"
+        "note": "秦娴与秦婉同住秦婉户居处，在家中见面；亲属来催衣总请自己帮说情。"
       },
       {
         "with": "npc_sb_tuben",
         "type": "配偶",
         "trust": 45,
         "affection": 55,
-        "note": "屠本为秦婉的配偶；各自保有财物。"
+        "note": "屠本与秦婉同住秦婉户居处，在家中见面；妻子多答应活又得熬夜收尾。"
       },
       {
         "with": "npc_sb_longfu",
         "type": "同村日常往来",
         "trust": 15,
         "affection": 10,
-        "note": "认识同村龙芙，不因此知道对方秘密或财产。"
+        "note": "秦婉在桑坂村的日常往来中见过龙芙，认得这位同村住户。"
       }
     ],
     "memorySeeds": [
@@ -90905,6 +91367,17 @@
           "npc_sb_qinwan"
         ],
         "reliability": "亲历"
+      },
+      {
+        "id": "memory_sb_depth_shared_12",
+        "event": "秦婉与龙芙在桑坂村的公共路上见过面，认得对方是同村住户；这次见面只相互招呼，没有商定工事。",
+        "location": "loc_bs_sangban",
+        "salience": 3,
+        "knownBy": [
+          "npc_sb_qinwan",
+          "npc_sb_longfu"
+        ],
+        "reliability": "亲历"
       }
     ],
     "goals": {
@@ -90923,7 +91396,7 @@
           ],
           "steps": [
             {
-              "content": "两件赶改衣服同日被催",
+              "content": "把两件衣各自的物主和先答应的顺序核对清楚，再分别说明能做的时段。",
               "status": "pending"
             }
           ]
@@ -90944,7 +91417,7 @@
           ],
           "steps": [
             {
-              "content": "把先答应的顺序说明白",
+              "content": "请亲属确认接受排在已有约定之后，未点头前不插入原顺序。",
               "status": "pending"
             }
           ]
@@ -90965,7 +91438,7 @@
           ],
           "steps": [
             {
-              "content": "不靠熬夜补上多答应的活",
+              "content": "下一次应下裁改前先查手上工序，再告诉物主自己能承诺的时间。",
               "status": "pending"
             }
           ]
@@ -90992,11 +91465,21 @@
           "fact": "按物主手势改过袖口",
           "reliability": "亲历",
           "source": "npc_sb_qinwan"
+        },
+        {
+          "fact": "向亲属解释过不能插到前面",
+          "source": "npc_sb_qinwan",
+          "reliability": "亲历"
+        },
+        {
+          "fact": "秦婉与龙芙在桑坂村的公共路上见过面，认得对方是同村住户；这次见面只相互招呼，没有商定工事。",
+          "source": "npc_sb_qinwan",
+          "reliability": "亲历"
         }
       ],
       "unknown": [
-        "本人未在场且无人实际转告的事",
-        "他人未公开的私有财物和秘密"
+        "催改衣的两位物主各希望何时拿回，哪件已先得到自己的答应。",
+        "来催衣的亲属愿不愿等先答应的衣服做完后再来收自己的衣服。"
       ]
     },
     "opinions": {
@@ -91014,7 +91497,7 @@
         },
         {
           "with": "npc_sb_longfu",
-          "view": "认识同村龙芙，不因此知道对方秘密或财产。"
+          "view": "秦婉在桑坂村的日常往来中见过龙芙，认得这位同村住户。"
         }
       ]
     },
@@ -91127,7 +91610,7 @@
       "说话时先指叶背再谈土"
     ],
     "voice": {
-      "register": "先指叶背再谈土",
+      "register": "先指叶背再谈土，别人不听便反复讲同一例子",
       "accent": "河谷日常口音",
       "habits": [
         "先指叶背再谈土"
@@ -91487,21 +91970,21 @@
         "type": "儿子",
         "trust": 45,
         "affection": 55,
-        "note": "龙瑜为龙芙的儿子；各自保有财物。"
+        "note": "龙瑜与龙芙同住龙芙户居处；她第三遍讲旧例时，他搓掉手上的泥，嗯一声就转去搬苗盘。"
       },
       {
         "with": "npc_sb_leisi",
         "type": "配偶",
         "trust": 45,
         "affection": 55,
-        "note": "雷思为龙芙的配偶；各自保有财物。"
+        "note": "雷思与龙芙同住龙芙户居处；她和用水户谈转身方向时，他蹲在门槛边等两边把话说完。"
       },
       {
         "with": "npc_sb_zhuxian",
         "type": "同村日常往来",
         "trust": 15,
         "affection": 10,
-        "note": "认识同村诸弦，不因此知道对方秘密或财产。"
+        "note": "龙芙在桑坂村的日常往来中见过诸弦，认得这位同村住户。"
       }
     ],
     "memorySeeds": [
@@ -91519,6 +92002,17 @@
         "event": "还有一次，有人故意把湿布挡在道上，她绕过去把布取了回来，没让路一直堵着。",
         "salience": 3,
         "knownBy": [
+          "npc_sb_longfu"
+        ],
+        "reliability": "亲历"
+      },
+      {
+        "id": "memory_sb_depth_shared_12",
+        "event": "秦婉与龙芙在桑坂村的公共路上见过面，认得对方是同村住户；这次见面只相互招呼，没有商定工事。",
+        "location": "loc_bs_sangban",
+        "salience": 3,
+        "knownBy": [
+          "npc_sb_qinwan",
           "npc_sb_longfu"
         ],
         "reliability": "亲历"
@@ -91540,7 +92034,7 @@
           ],
           "steps": [
             {
-              "content": "邻工甩水溅到已分好的苗",
+              "content": "先指出被溅倒的那一排苗，请用水者试站后再议转身方向。",
               "status": "pending"
             }
           ]
@@ -91561,7 +92055,7 @@
           ],
           "steps": [
             {
-              "content": "与用水者商量转身方向",
+              "content": "请用水者复述自己要保留的苗位，双方各提一种避溅的转身动作。",
               "status": "pending"
             }
           ]
@@ -91582,7 +92076,7 @@
           ],
           "steps": [
             {
-              "content": "照料成果不在交手时被弄乱",
+              "content": "下次分苗交手前先检查根系松开处，再向接手人说明不能压回的位置。",
               "status": "pending"
             }
           ]
@@ -91609,11 +92103,21 @@
           "fact": "扶正过被溅倒的苗",
           "reliability": "亲历",
           "source": "npc_sb_longfu"
+        },
+        {
+          "fact": "取回过故意挡人的湿布",
+          "source": "npc_sb_longfu",
+          "reliability": "亲历"
+        },
+        {
+          "fact": "秦婉与龙芙在桑坂村的公共路上见过面，认得对方是同村住户；这次见面只相互招呼，没有商定工事。",
+          "source": "npc_sb_longfu",
+          "reliability": "亲历"
         }
       ],
       "unknown": [
-        "本人未在场且无人实际转告的事",
-        "他人未公开的私有财物和秘密"
+        "用水者愿不愿先看自己已分好的苗，再朝避开苗位的一边转身。",
+        "龙瑜觉得自己讲的旧例究竟在哪一步不适合眼前育苗。"
       ]
     },
     "opinions": {
@@ -91631,7 +92135,7 @@
         },
         {
           "with": "npc_sb_zhuxian",
-          "view": "认识同村诸弦，不因此知道对方秘密或财产。"
+          "view": "龙芙在桑坂村的日常往来中见过诸弦，认得这位同村住户。"
         }
       ]
     },
@@ -91740,7 +92244,7 @@
       "说话时先问修好的朝哪边放"
     ],
     "voice": {
-      "register": "先问修好的朝哪边放",
+      "register": "谈木板直而急躁，发现乱放会抬高声音",
       "accent": "河谷日常口音",
       "habits": [
         "先问修好的朝哪边放"
@@ -92100,21 +92604,21 @@
         "type": "女儿",
         "trust": 45,
         "affection": 55,
-        "note": "诸润为诸弦的女儿；各自保有财物。"
+        "note": "诸润与诸弦同住诸弦户居处，在家中见面；父亲大声斥责时她不敢靠近。"
       },
       {
         "with": "npc_sb_biqi",
         "type": "配偶",
         "trust": 45,
         "affection": 55,
-        "note": "毕祺为诸弦的配偶；各自保有财物。"
+        "note": "毕祺与诸弦同住诸弦户居处，在家中见面；丈夫曾错骂人，毕祺夹在中间，觉得应当有个说法。"
       },
       {
         "with": "npc_sb_fuyu",
         "type": "同村日常往来",
         "trust": 15,
         "affection": 10,
-        "note": "认识同村扶瑜，不因此知道对方秘密或财产。"
+        "note": "诸弦在桑坂村的日常往来中见过扶瑜，认得这位同村住户。"
       }
     ],
     "memorySeeds": [
@@ -92135,6 +92639,17 @@
           "npc_sb_zhuxian"
         ],
         "reliability": "亲历"
+      },
+      {
+        "id": "memory_sb_depth_shared_13",
+        "event": "诸弦与扶瑜在桑坂村的公共路上见过面，认得对方是同村住户；这次见面只相互招呼，没有商定工事。",
+        "location": "loc_bs_sangban",
+        "salience": 3,
+        "knownBy": [
+          "npc_sb_zhuxian",
+          "npc_sb_fuyu"
+        ],
+        "reliability": "亲历"
       }
     ],
     "goals": {
@@ -92153,7 +92668,7 @@
           ],
           "steps": [
             {
-              "content": "修好与待修木板被堆在一起",
+              "content": "先把两堆木板各指给搬动者看，问对方能否分开放待修与修好板。",
               "status": "pending"
             }
           ]
@@ -92174,7 +92689,7 @@
           ],
           "steps": [
             {
-              "content": "划分只供暂放的空位",
+              "content": "请搬板人一起选只供暂放的空处，再把修好与待修木板的暂放边界说明给下一道工序的人。",
               "status": "pending"
             }
           ]
@@ -92195,7 +92710,7 @@
           ],
           "steps": [
             {
-              "content": "每道工序的成果能被下一人辨认",
+              "content": "发现木料混放先问实际搬动者，再说明工序状态，避免指责路过的人。",
               "status": "pending"
             }
           ]
@@ -92222,11 +92737,21 @@
           "fact": "重分过两堆相似木板",
           "reliability": "亲历",
           "source": "npc_sb_zhuxian"
+        },
+        {
+          "fact": "找到实际搬动者后道了歉",
+          "source": "npc_sb_zhuxian",
+          "reliability": "亲历"
+        },
+        {
+          "fact": "诸弦与扶瑜在桑坂村的公共路上见过面，认得对方是同村住户；这次见面只相互招呼，没有商定工事。",
+          "source": "npc_sb_zhuxian",
+          "reliability": "亲历"
         }
       ],
       "unknown": [
-        "本人未在场且无人实际转告的事",
-        "他人未公开的私有财物和秘密"
+        "实际搬板的人为什么把修好和待修木板堆到一起，愿不愿改暂放位置。",
+        "毕祺觉得哪一处家中放料最碍洗晒，何时方便一起分开。"
       ]
     },
     "opinions": {
@@ -92244,7 +92769,7 @@
         },
         {
           "with": "npc_sb_fuyu",
-          "view": "认识同村扶瑜，不因此知道对方秘密或财产。"
+          "view": "诸弦在桑坂村的日常往来中见过扶瑜，认得这位同村住户。"
         }
       ]
     },
@@ -92355,7 +92880,7 @@
       "说话时用一片叶说明好坏"
     ],
     "voice": {
-      "register": "用一片叶说明好坏",
+      "register": "讲旧叶温和平缓，谈清走旧物时仍坚持自己挑",
       "accent": "河谷日常口音",
       "habits": [
         "用一片叶说明好坏"
@@ -92715,21 +93240,21 @@
         "type": "女儿",
         "trust": 45,
         "affection": 55,
-        "note": "扶菁为扶瑜的女儿；各自保有财物。"
+        "note": "扶菁与扶瑜同住扶瑜户居处，在家中见面；母亲反复拣旧叶占着家里桌面。"
       },
       {
         "with": "npc_sb_shuiya",
         "type": "外孙女",
         "trust": 45,
         "affection": 55,
-        "note": "水雅为扶瑜的外孙女；各自保有财物。"
+        "note": "水雅与扶瑜同住扶瑜户居处，在家中见面；外祖母留下的小包旧叶有什么用。"
       },
       {
         "with": "npc_sb_quanli",
         "type": "同村日常往来",
         "trust": 15,
         "affection": 10,
-        "note": "认识同村全立，不因此知道对方秘密或财产。"
+        "note": "扶瑜在桑坂村的日常往来中见过全立，认得这位同村住户。"
       }
     ],
     "memorySeeds": [
@@ -92747,6 +93272,17 @@
         "event": "后来有一包叶子她没舍得处理，跟家人说先留着，算个念想。",
         "salience": 3,
         "knownBy": [
+          "npc_sb_fuyu"
+        ],
+        "reliability": "亲历"
+      },
+      {
+        "id": "memory_sb_depth_shared_13",
+        "event": "诸弦与扶瑜在桑坂村的公共路上见过面，认得对方是同村住户；这次见面只相互招呼，没有商定工事。",
+        "location": "loc_bs_sangban",
+        "salience": 3,
+        "knownBy": [
+          "npc_sb_zhuxian",
           "npc_sb_fuyu"
         ],
         "reliability": "亲历"
@@ -92768,7 +93304,7 @@
           ],
           "steps": [
             {
-              "content": "家人想把留了太久的干叶清掉",
+              "content": "把发霉的旧叶挑开给家人看，说明要留的那一小包只是念想。",
               "status": "pending"
             }
           ]
@@ -92789,7 +93325,7 @@
           ],
           "steps": [
             {
-              "content": "辨清哪些已经变质",
+              "content": "请家人把想清的叶分别指出，自己逐撮查是否已霉变。",
               "status": "pending"
             }
           ]
@@ -92810,7 +93346,7 @@
           ],
           "steps": [
             {
-              "content": "还能自己决定轻活的取舍",
+              "content": "和家人约清轻活的范围，让自己先挑留念的旧叶再议清走其余。",
               "status": "pending"
             }
           ]
@@ -92837,11 +93373,21 @@
           "fact": "分出过发霉的旧叶",
           "reliability": "亲历",
           "source": "npc_sb_fuyu"
+        },
+        {
+          "fact": "请家人暂留下过一包作念想",
+          "source": "npc_sb_fuyu",
+          "reliability": "亲历"
+        },
+        {
+          "fact": "诸弦与扶瑜在桑坂村的公共路上见过面，认得对方是同村住户；这次见面只相互招呼，没有商定工事。",
+          "source": "npc_sb_fuyu",
+          "reliability": "亲历"
         }
       ],
       "unknown": [
-        "本人未在场且无人实际转告的事",
-        "他人未公开的私有财物和秘密"
+        "扶菁想先清掉桌上哪一部分旧叶，愿不愿留下自己指定的一小包。",
+        "家中留下的干叶中哪一撮已变质，是否还值得继续分拣。"
       ]
     },
     "opinions": {
@@ -92859,7 +93405,7 @@
         },
         {
           "with": "npc_sb_quanli",
-          "view": "认识同村全立，不因此知道对方秘密或财产。"
+          "view": "扶瑜在桑坂村的日常往来中见过全立，认得这位同村住户。"
         }
       ]
     },
@@ -92968,7 +93514,7 @@
       "说话时先说从哪棵标树拐"
     ],
     "voice": {
-      "register": "先说从哪棵标树拐",
+      "register": "指路时简短含糊，谈私园入口才会多解释一句",
       "accent": "河谷日常口音",
       "habits": [
         "先说从哪棵标树拐"
@@ -93328,21 +93874,21 @@
         "type": "配偶",
         "trust": 45,
         "affection": 55,
-        "note": "全云为全立的配偶；各自保有财物。"
+        "note": "全云与全立同住全立户居处，在家中见面；丈夫指路太省话被当作可进私园。"
       },
       {
         "with": "npc_sb_quancheng",
         "type": "儿子",
         "trust": 45,
         "affection": 55,
-        "note": "全成为全立的儿子；各自保有财物。"
+        "note": "全成与全立同住全立户居处，在家中见面；路记像图画却被父亲说不能乱添。"
       },
       {
         "with": "npc_sb_yanjue",
         "type": "同村日常往来",
         "trust": 15,
         "affection": 10,
-        "note": "认识同村晏珏，不因此知道对方秘密或财产。"
+        "note": "全立在桑坂村的日常往来中见过晏珏，认得这位同村住户。"
       }
     ],
     "memorySeeds": [
@@ -93363,6 +93909,17 @@
           "npc_sb_quanli"
         ],
         "reliability": "亲历"
+      },
+      {
+        "id": "memory_sb_depth_shared_14",
+        "event": "全立与晏珏在桑坂村的公共路上见过面，认得对方是同村住户；这次见面只相互招呼，没有商定工事。",
+        "location": "loc_bs_sangban",
+        "salience": 3,
+        "knownBy": [
+          "npc_sb_quanli",
+          "npc_sb_yanjue"
+        ],
+        "reliability": "亲历"
       }
     ],
     "goals": {
@@ -93381,7 +93938,7 @@
           ],
           "steps": [
             {
-              "content": "新垂枝遮住原来的路记",
+              "content": "到原路记处查明遮挡的垂枝，先向园主问清可整理的范围，再说明尚可辨认的转弯点。",
               "status": "pending"
             }
           ]
@@ -93402,7 +93959,7 @@
           ],
           "steps": [
             {
-              "content": "在有权者同意后整理可见标记",
+              "content": "向有权者指出被遮的原路记，询问可整理的范围后再动手。",
               "status": "pending"
             }
           ]
@@ -93423,7 +93980,7 @@
           ],
           "steps": [
             {
-              "content": "来人少走进不该进的私园",
+              "content": "下次指路让来人复述转弯点，若误听成采叶许可就当面解释。",
               "status": "pending"
             }
           ]
@@ -93450,11 +94007,21 @@
           "fact": "陪问路者退回过公路",
           "reliability": "亲历",
           "source": "npc_sb_quanli"
+        },
+        {
+          "fact": "重画过园外的转弯记号",
+          "source": "npc_sb_quanli",
+          "reliability": "亲历"
+        },
+        {
+          "fact": "全立与晏珏在桑坂村的公共路上见过面，认得对方是同村住户；这次见面只相互招呼，没有商定工事。",
+          "source": "npc_sb_quanli",
+          "reliability": "亲历"
         }
       ],
       "unknown": [
-        "本人未在场且无人实际转告的事",
-        "他人未公开的私有财物和秘密"
+        "园主愿不愿整理被垂枝遮住的路记，哪些枝位可以动。",
+        "问路者究竟要到哪一处，是否误把自己指公路的话听成能进私园采叶。"
       ]
     },
     "opinions": {
@@ -93472,7 +94039,7 @@
         },
         {
           "with": "npc_sb_yanjue",
-          "view": "认识同村晏珏，不因此知道对方秘密或财产。"
+          "view": "全立在桑坂村的日常往来中见过晏珏，认得这位同村住户。"
         }
       ]
     },
@@ -93581,7 +94148,7 @@
       "说话时先念自己看清的部分"
     ],
     "voice": {
-      "register": "先念自己看清的部分",
+      "register": "念签时认真拘谨，认不全的字常停顿不肯问",
       "accent": "河谷日常口音",
       "habits": [
         "先念自己看清的部分"
@@ -93941,21 +94508,21 @@
         "type": "父亲",
         "trust": 45,
         "affection": 55,
-        "note": "晏君为晏珏的父亲；各自保有财物。"
+        "note": "晏君与晏珏同住晏珏户居处，在家中见面；女儿认不出字还拖着不肯问。"
       },
       {
         "with": "npc_sb_rongru",
         "type": "母亲",
         "trust": 45,
         "affection": 55,
-        "note": "容茹为晏珏的母亲；各自保有财物。"
+        "note": "容茹与晏珏同住晏珏户居处，在家中见面；想跟女儿认清自家签上的名字。"
       },
       {
         "with": "npc_sb_xianghe",
         "type": "同村日常往来",
         "trust": 15,
         "affection": 10,
-        "note": "认识同村向荷，不因此知道对方秘密或财产。"
+        "note": "晏珏在桑坂村的日常往来中见过向荷，认得这位同村住户。"
       }
     ],
     "memorySeeds": [
@@ -93973,6 +94540,17 @@
         "event": "另一次签记时碰到一个怎么也对不上的字，她没有猜，也没有问，只在那一格留了空格，等以后有机会再补。",
         "salience": 3,
         "knownBy": [
+          "npc_sb_yanjue"
+        ],
+        "reliability": "亲历"
+      },
+      {
+        "id": "memory_sb_depth_shared_14",
+        "event": "全立与晏珏在桑坂村的公共路上见过面，认得对方是同村住户；这次见面只相互招呼，没有商定工事。",
+        "location": "loc_bs_sangban",
+        "salience": 3,
+        "knownBy": [
+          "npc_sb_quanli",
           "npc_sb_yanjue"
         ],
         "reliability": "亲历"
@@ -93994,7 +94572,7 @@
           ],
           "steps": [
             {
-              "content": "两张旧签一字之差难辨",
+              "content": "把两张旧签并排给原写者看，逐字念自己已看清的部分。",
               "status": "pending"
             }
           ]
@@ -94015,7 +94593,7 @@
           ],
           "steps": [
             {
-              "content": "找原写者确认而不自行改名",
+              "content": "将不能确认的一字留空，请原写者说清后再核对两张旧签。",
               "status": "pending"
             }
           ]
@@ -94036,7 +94614,7 @@
           ],
           "steps": [
             {
-              "content": "把不确定的地方坦然留白",
+              "content": "下一次记丝束签先复读名字给本人，不认得的字直接问原写者。",
               "status": "pending"
             }
           ]
@@ -94063,11 +94641,21 @@
           "fact": "请原写者重读过旧签",
           "reliability": "亲历",
           "source": "npc_sb_yanjue"
+        },
+        {
+          "fact": "用空格标过未认出的字",
+          "source": "npc_sb_yanjue",
+          "reliability": "亲历"
+        },
+        {
+          "fact": "全立与晏珏在桑坂村的公共路上见过面，认得对方是同村住户；这次见面只相互招呼，没有商定工事。",
+          "source": "npc_sb_yanjue",
+          "reliability": "亲历"
         }
       ],
       "unknown": [
-        "本人未在场且无人实际转告的事",
-        "他人未公开的私有财物和秘密"
+        "原写者能否一起核对两张旧签，指出哪一个字不同以及各自读法。",
+        "原写者何时能来复认旧签，自己留下的空格究竟对应哪个偏旁。"
       ]
     },
     "opinions": {
@@ -94085,7 +94673,7 @@
         },
         {
           "with": "npc_sb_xianghe",
-          "view": "认识同村向荷，不因此知道对方秘密或财产。"
+          "view": "晏珏在桑坂村的日常往来中见过向荷，认得这位同村住户。"
         }
       ]
     },
@@ -94196,7 +94784,7 @@
       "说话时先列眼下谁在家"
     ],
     "voice": {
-      "register": "先列眼下谁在家",
+      "register": "安排家务热心且强势，列谁在家时总想先作决定",
       "accent": "河谷日常口音",
       "habits": [
         "先列眼下谁在家"
@@ -94556,21 +95144,21 @@
         "type": "女儿",
         "trust": 45,
         "affection": 55,
-        "note": "向妍为向荷的女儿；各自保有财物。"
+        "note": "向妍与向荷同住向荷户居处，在家中见面；母亲替自己安排休息日家务。"
       },
       {
         "with": "npc_sb_zhanlu",
         "type": "合住者",
         "trust": 45,
         "affection": 55,
-        "note": "展露为向荷的合住者；各自保有财物。"
+        "note": "展露与向荷同住向荷户居处，在家中见面；不愿让同住者替自己决定值日。"
       },
       {
         "with": "npc_sb_diye",
         "type": "同村日常往来",
         "trust": 15,
         "affection": 10,
-        "note": "认识同村邸叶，不因此知道对方秘密或财产。"
+        "note": "向荷在桑坂村的日常往来中见过邸叶，认得这位同村住户。"
       }
     ],
     "memorySeeds": [
@@ -94591,6 +95179,17 @@
           "npc_sb_xianghe"
         ],
         "reliability": "亲历"
+      },
+      {
+        "id": "memory_sb_depth_shared_15",
+        "event": "向荷与邸叶在桑坂村的公共路上见过面，认得对方是同村住户；这次见面只相互招呼，没有商定工事。",
+        "location": "loc_bs_sangban",
+        "salience": 3,
+        "knownBy": [
+          "npc_sb_xianghe",
+          "npc_sb_diye"
+        ],
+        "reliability": "亲历"
       }
     ],
     "goals": {
@@ -94609,7 +95208,7 @@
           ],
           "steps": [
             {
-              "content": "同住者觉得她总派重活给别人",
+              "content": "请同住者各说今日能承担的一项家务，先留出尚未答应的活。",
               "status": "pending"
             }
           ]
@@ -94630,7 +95229,7 @@
           ],
           "steps": [
             {
-              "content": "请每人自己说能承担什么",
+              "content": "逐人问休息日愿意做哪一段，原来被拒的安排不再当作同意。",
               "status": "pending"
             }
           ]
@@ -94651,7 +95250,7 @@
           ],
           "steps": [
             {
-              "content": "共居不用靠一个人发号施令",
+              "content": "下一轮分家务让每个同住者自己选可承担的部分，再议无人愿做的重活。",
               "status": "pending"
             }
           ]
@@ -94678,11 +95277,21 @@
           "fact": "因派活被同住者拒绝过",
           "reliability": "亲历",
           "source": "npc_sb_xianghe"
+        },
+        {
+          "fact": "重新问过各人的空闲",
+          "source": "npc_sb_xianghe",
+          "reliability": "亲历"
+        },
+        {
+          "fact": "向荷与邸叶在桑坂村的公共路上见过面，认得对方是同村住户；这次见面只相互招呼，没有商定工事。",
+          "source": "npc_sb_xianghe",
+          "reliability": "亲历"
         }
       ],
       "unknown": [
-        "本人未在场且无人实际转告的事",
-        "他人未公开的私有财物和秘密"
+        "展露愿意承担哪一段值日，休息日哪一时段不愿被安排。",
+        "向妍愿意在何时自己说家务分配的顾虑，能否当面重议重活轮次。"
       ]
     },
     "opinions": {
@@ -94700,7 +95309,7 @@
         },
         {
           "with": "npc_sb_diye",
-          "view": "认识同村邸叶，不因此知道对方秘密或财产。"
+          "view": "向荷在桑坂村的日常往来中见过邸叶，认得这位同村住户。"
         }
       ]
     },
@@ -94809,7 +95418,7 @@
       "说话时谈篾先说软硬方向"
     ],
     "voice": {
-      "register": "谈篾先说软硬方向",
+      "register": "谈篾条时专注，收尾被问到便想岔回细活",
       "accent": "河谷日常口音",
       "habits": [
         "谈篾先说软硬方向"
@@ -95169,21 +95778,21 @@
         "type": "配偶",
         "trust": 45,
         "affection": 55,
-        "note": "邸汐为邸叶的配偶；各自保有财物。"
+        "note": "邸汐与邸叶同住邸叶户居处，在家中见面；丈夫只夸自己的细活不提收尾。"
       },
       {
         "with": "npc_sb_diquan",
         "type": "儿子",
         "trust": 45,
         "affection": 55,
-        "note": "邸泉为邸叶的儿子；各自保有财物。"
+        "note": "邸泉与邸叶同住邸叶户居处，在家中见面；想摸父亲的篾片又怕扎手。"
       },
       {
         "with": "npc_sb_zhangluo",
         "type": "同村日常往来",
         "trust": 15,
         "affection": 10,
-        "note": "认识同村张洛，不因此知道对方秘密或财产。"
+        "note": "邸叶在桑坂村的日常往来中见过张洛，认得这位同村住户。"
       }
     ],
     "memorySeeds": [
@@ -95201,6 +95810,17 @@
         "event": "同伴喊他回去把地面清一遍，他放下手里的篾条，回去扫了。",
         "salience": 3,
         "knownBy": [
+          "npc_sb_diye"
+        ],
+        "reliability": "亲历"
+      },
+      {
+        "id": "memory_sb_depth_shared_15",
+        "event": "向荷与邸叶在桑坂村的公共路上见过面，认得对方是同村住户；这次见面只相互招呼，没有商定工事。",
+        "location": "loc_bs_sangban",
+        "salience": 3,
+        "knownBy": [
+          "npc_sb_xianghe",
           "npc_sb_diye"
         ],
         "reliability": "亲历"
@@ -95222,7 +95842,7 @@
           ],
           "steps": [
             {
-              "content": "断篾头在地上扎到旁人鞋底",
+              "content": "先捡当天落地的断头，再请同伴看仍会扎鞋底的过道位置。",
               "status": "pending"
             }
           ]
@@ -95243,7 +95863,7 @@
           ],
           "steps": [
             {
-              "content": "把当天断头先收清",
+              "content": "细活收手后先检查工位和过道，向同伴说明仍未清完的地方。",
               "status": "pending"
             }
           ]
@@ -95264,7 +95884,7 @@
           ],
           "steps": [
             {
-              "content": "手艺和工位收尾一起让人放心",
+              "content": "下一次搭伙整理篾条前约清收尾范围，请同伴指出自己漏掉的归拢工序。",
               "status": "pending"
             }
           ]
@@ -95291,11 +95911,21 @@
           "fact": "帮人从鞋底挑过断篾",
           "reliability": "亲历",
           "source": "npc_sb_diye"
+        },
+        {
+          "fact": "被同伴叫回清过地面",
+          "source": "npc_sb_diye",
+          "reliability": "亲历"
+        },
+        {
+          "fact": "向荷与邸叶在桑坂村的公共路上见过面，认得对方是同村住户；这次见面只相互招呼，没有商定工事。",
+          "source": "npc_sb_diye",
+          "reliability": "亲历"
         }
       ],
       "unknown": [
-        "本人未在场且无人实际转告的事",
-        "他人未公开的私有财物和秘密"
+        "同伴希望先清哪一片断篾头，何时方便一起检查过道。",
+        "邸汐觉得自己收工后还有哪一项归拢没做，明早要用的筐应先收哪里。"
       ]
     },
     "opinions": {
@@ -95313,7 +95943,7 @@
         },
         {
           "with": "npc_sb_zhangluo",
-          "view": "认识同村张洛，不因此知道对方秘密或财产。"
+          "view": "邸叶在桑坂村的日常往来中见过张洛，认得这位同村住户。"
         }
       ]
     },
