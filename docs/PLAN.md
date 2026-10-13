@@ -656,7 +656,7 @@ C部分只拆缺口：governance.mjs的任职入口止于“待上级决定”�
 
 ### T132（C10） 迁入迁出与人生消息。结果：NPC有原因地迁居，实际走路线，住户、工作与未履约事项在抵达后更新，玩家回来能听到变化。可改npc-life.mjs、npc-schedule/npc-cognition/civic接点、tests/npc-life-migration.test.mjs；接C9和B10，搬家不复制财产或新增同名人物。验收node --test "tests/npc-*.test.mjs" tests/civic.test.mjs ，CORE。模型0；约2小时，与认知/日程写者串行。
 
-### T133（D1） NPC炉火照管。结果：NPC可从真实燃料库存维护热源并完成需火工序，缺燃料、离岗或失能会停止或失败。可改server-plugin/npc-autonomy.mjs、manufacturing及热源消费者接点、tests/npc-furnace.test.mjs；锁定W3目录正文。验收node --test "tests/npc-*.test.mjs" tests/manufacturing.test.mjs "tests/magic*.test.mjs" "tests/w3-*.test.mjs"，CORE。模型0；约2小时，与C7及魔法消费者写者串行。
+### T133（D1）已完成：NPC从本人库存添燃料维持热源并完成需火工序，缺料拒绝、离岗或失能停止，热账与窑炉裂损保留；新增11项通过/CORE40，0模型。
 
 ### T134（D2） 自创技能与配方落地。结果：完成研究的技能能被实际学习使用，新配方能在原制造链消耗材料产出成品。可改activities/learning/manufacturing及实体解析接点、tools/create-schemas.mjs、extension/tools.mjs、tests/runtime-invention.test.mjs；复用现有多日研究与技能登记，补recipe类型和实际使用接点，禁止直接造物。验收node --test tests/runtime-invention.test.mjs tests/activities.test.mjs tests/learning.test.mjs tests/manufacturing.test.mjs tests/professions.test.mjs "tests/w3-*.test.mjs" tests/prompt.test.mjs，CORE。模型0；约2.5小时，与C工具接点串行，提示≤11900。
 
