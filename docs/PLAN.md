@@ -568,13 +568,7 @@ T28-R1修好新回执undefined规范化并保留严格篡改拒绝，相关31/32
 
 ### T91 已完成：白石镇码头与货栈33人提升为完整档并正式整合，11件共同往事闭合，同ID从名册移出；全体185个完整档深度零缺口；80次真实L2全过，L4均4.12/最低3，1.10915416元。
 
-### T92 官署与市集 33 人
-
-1. 结果：玩家能找到有具体职责的镇务人员与市集经营者，理解摊位、工日及家庭照护之间的争执。
-2. 文件：依赖T91；可改 world/design/w1-baishi-market-depth.mjs、world/drafts/w1/baishi-market/、world/people/baseline.json、world/people/residents.json、tests/r06-bs-market.test.mjs；地理、户籍和共用工具锁定。
-3. 验收：node --test tests/r06-bs-market.test.mjs；node tools/audit-npc-depth.mjs；node --test tests/engine.test.mjs tests/storage.test.mjs tests/plugin.test.mjs。专项覆盖 33 人正式提升、官署职责与既有规则相符、共享事件闭合及名册去重。
-4. 模型：起草 0 次，L2 总计不超过 120 次，整卡不超过 7 元；从起草到正式整合同卡完成。
-5. 规模：33 full，镇内累计 67 full、239 roster；职业之外各有家庭关系和私人目标，单会话。
+### T92 已完成：白石镇官署与市集33人提升为完整档并正式整合，11件共同往事闭合；全体218个完整档深度零缺口；33次真实L2全过，L4均4.10/最低3，0.44856896元。
 
 ### T93 手工行会、寺庙与学馆 33 人
 
