@@ -48,7 +48,7 @@ export const activities={
     pet(d,args,id){return petAction.call(this,d,args,id);},
     environment(d,args,id){return interactEnvironment.call(this,d,args,id);},
     combat(d,args,id){
-        const target=resolveCreature(this,d,args.target),isNpc=target.startsWith('npc_'),partition=isNpc?'npcs':'creatures',npc=d.get('state',partition,target),base=this.byId.get(target);
+        const target=resolveCreature(this,d,args.target),isNpc=target.startsWith('npc_'),partition=isNpc?'npcs':'creatures',npc=d.get('state',partition,target),base=this.byId.get(npc?.boss??target),isBoss=Boolean(npc?.boss);
         if(!isNpc&&!['monster_','boss_'].some(prefix=>target.startsWith(prefix)))throw new Error('这个实体不是交锋对象');
         if(!npc||npc.location!==d.get('state','location'))throw new Error('对手不在场');
         if(npc.status==='死亡')throw new Error('对手已经死亡');
@@ -60,7 +60,7 @@ export const activities={
             if(d.get('state','player','level')<gate)throw new Error(`这件装备需要${gate}级`);
         }
         const p=d.get('state','player'),level=npc.level??base.level??base.levelRange?.[0]??1;
-        const opponentBase=isNpc?derivedStats({level,attributes:base.attributes,profession:Boolean(base.combatProfession)},this.rules)
+        const opponentBase=isNpc&&!isBoss?derivedStats({level,attributes:base.attributes,profession:Boolean(base.combatProfession)},this.rules)
             :monsterStats({level,template:base.template??this.byId.get(base.monster)?.template??2,bossTier:base.tier??0},this.rules);
         const opponentContext=this.magicStatusContext(d,target),opponent=withMagicStats(opponentBase,magicStatusStats(d,target,opponentContext));
         opponent.evasion=Math.max(0,opponent.evasion-waterEarthMudPenalty(d,this,target)*.05);
@@ -97,7 +97,7 @@ export const activities={
             const hit=strike(currentOpponent,currentPlayer,rng,this.rules,{hitModifier:opponentHit+projectileAirPenalty(d,'player',base.projectileMg),damageMultiplier:intent==='defend'?0.5:1});
             if(hit.hit)recordLocalContact(d,this,target,id);
             consumeTransientMagic(d,target,opponentContext);
-            const ability=isNpc?null:applyBossCounterAbility(d,this,target,{eventId:id,attackIndex:i,hit:hit.hit,defense:currentPlayer.defense,remainingHp:remaining});
+            const ability=isNpc&&!isBoss?null:applyBossCounterAbility(d,this,target,{eventId:id,attackIndex:i,hit:hit.hit,defense:currentPlayer.defense,remainingHp:remaining});
             if(ability)bossAbilities.push(ability);
             const abilityDamage=ability?.damage!==undefined?Math.max(0,Math.round(ability.damage*(intent==='defend'?.5:1))):hit.damage;
             const protectedHit=consumeMagicProtection(d,'player',abilityDamage,ability?.damageType??'physical');received+=protectedHit.damage;absorbed+=protectedHit.absorbed;
@@ -105,7 +105,7 @@ export const activities={
         d.set(['state',partition,target,'hp'],remaining);d.set(['state',partition,target,'maxHp'],maxHp);
         if(!remaining)d.set(['state',partition,target,'status'],'死亡');
         else if(remaining<maxHp*0.25)d.set(['state',partition,target,'activity'],'退让并呼救');
-        if(!isNpc)rememberBossTactic(d,this,target,tactic,id);
+        if(!isNpc||isBoss)rememberBossTactic(d,this,target,tactic,id);
         if(received)this.health(d,{delta:-received},id);
         const seconds=(d.get('state','subMinuteSeconds')??0)+this.rules.combat.exchangeSeconds;
         this.advance(d,Math.floor(seconds/60),id);d.set(['state','subMinuteSeconds'],seconds%60);
@@ -117,7 +117,7 @@ export const activities={
             if(d.get('state','records',`local_actor_position:${target}`))d.remove(['state','records',`local_actor_position:${target}`]);
         }
         const corpse=!isNpc&&!remaining?recordWildlifeDeath(d,this,target,id):null;
-        const lair=!isNpc&&!remaining?defeatBoss(d,this,target,id):null;
+        const lair=!remaining?defeatBoss(d,this,target,id):null;
         const experience=!isNpc&&!remaining?monsterReward(d,this,target,id):{experience:0};
         const incident=isNpc?recordViolence(d,this,{victim:target,damage,killed:!remaining,intent,eventId:id}):null;
         for(let i=0;i<bossAbilities.length;i++)if(bossAbilities[i].pendingArea){

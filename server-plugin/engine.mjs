@@ -1,7 +1,8 @@
 import { applyPatches, canonical } from './storage.mjs';
-import { EntityResolver, validateMemory } from './retrieval.mjs';
+import { EntityResolver, validateMemory, normalize } from './retrieval.mjs';
 import {assertLocationAccess,homePermission}from'./location-access.mjs';
 import {activities}from'./activities.mjs';
+import {actorId,actorPath}from'./npc-state.mjs';
 import {validateSites}from'./sites.mjs';
 import {WorldEngine as Phase1Engine}from'./compat/v2-phase1-engine.mjs';
 import {learn}from'./learning.mjs';
@@ -74,9 +75,15 @@ export class WorldEngine {
         if((this.rules.engineRevision??1)===1)this.compat=new Phase1Engine(world);
     }
     resolve(name, kind, scope) {
+        if(!kind||kind==='npc'){
+            const candidates=[...new Set([...this.resolver.aliases.get(normalize(name))??[]].map(id=>actorId(this.world,id)))].filter(id=>!kind||id.startsWith('npc_'));
+            const scoped=scope?candidates.filter(id=>this.byId.get(id)?.scope===scope||this.byId.get(id)?.location===scope):candidates;
+            if(scoped.length===1)return scoped[0];
+            if(!scoped.length&&candidates.length===1)return candidates[0];
+        }
         const id = name === 'player' ? name : this.resolver.resolve(name, scope, kind);
         if (kind && !id.startsWith(kind + '_')) throw new Error(`需要${kind}类型编号`);
-        return id;
+        return !kind?actorId(this.world,id):id;
     }
     initialFromLegacy(legacy, randomSeed = 'default-campaign', {prepare=true}={}) {
         if(this.compat)return this.compat.initialFromLegacy(legacy,randomSeed);
@@ -169,13 +176,13 @@ export class WorldEngine {
         const player={id:'player',name:document.state.player.name,aliases:['玩家','玩家角色'],scope:document.state.location};
         const session=Object.create(this);session.entities=[...this.entities,...created,player];session.resolver=new EntityResolver(session.entities);session.byId=session.resolver.entities;return session;
     }
-    actor(d,id) { return id==='player' ? d.get('state','player') : d.get('state','npcs',id); }
+    actor(d,id) { return d.get(...this.actorPath(id)); }
     npcObligationAt(state,npcId,minute){return npcObligationAt(state,npcId,minute);}
     assertNpcObligationAction(d,actors,action){return assertNpcObligationAction(d,this,actors,action);}
     npcAutonomyBusy(state,id,minute){return npcAutonomyBusy(state,id,minute);}
     assertNpcAutonomyAction(state,actors,action){return assertNpcAutonomyAction(state,actors,action);}
-    actorPath(id) { return id==='player' ? ['state','player'] : ['state','npcs',id]; }
-    bagPath(id) { return id==='player' ? ['state','inventory'] : ['state','npcs',id,'inventory']; }
+    actorPath(id) { return actorPath(this.world,id); }
+    bagPath(id) { return id==='player' ? ['state','inventory'] : [...this.actorPath(id),'inventory']; }
     quantity(d,id,item) { const value=d.get(...this.bagPath(id),item); return typeof value==='number'?value:value?.quantity ?? 0; }
     itemDelta(d,id,item,delta) {
         return changeItems(d,this,id,item,delta);

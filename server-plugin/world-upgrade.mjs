@@ -39,7 +39,7 @@ export function planWorldUpgrade(document,oldWorld,newWorld,{worldHash,eventId,r
             added.push(npc.id);continue;
         }
         if(!old)continue;
-        for(const field of ['name','location','coins','inventory','trust','affection']){
+        for(const field of ['name','location','coins','inventory','trust','affection','species','society']){
             if(!Object.hasOwn(npc,field))continue;
             if(same(old[field],npc[field]))continue;
             const path=['state','npcs',npc.id,field];
@@ -63,7 +63,7 @@ export function planWorldUpgrade(document,oldWorld,newWorld,{worldHash,eventId,r
     // New habitats and lairs enter the ledger with the edition update, never during an observation.
     const updated=applyPatches(document,patches);
     patches.push(...planWildlifeMigration(updated,newWorld.rules,newWorld.monsters??[]));
-    patches.push(...planBossMigration(updated,newWorld.rules,newWorld.bosses??[]));
+    patches.push(...planBossMigration(updated,newWorld.rules,newWorld.bosses??[],newWorld));
     patches.push({op:'set',path:['worldHash'],value:worldHash},{op:'set',path:['worldVersion'],value:newWorld.version},
         {op:'set',path:['state','records',`world_update_${eventId}`],value:{category:'world_update',name:'世界更新记录',
             from:document.worldVersion,to:newWorld.version,minute:document.state.minute,added,conflicts,retained,...(newWorld.rules.npcStockUpdateVersion===1?{stockAdded}:{})}});
