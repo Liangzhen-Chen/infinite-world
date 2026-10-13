@@ -3,7 +3,7 @@ import path from 'node:path';
 import {atomicJSON,digest,applyPatches} from './storage.mjs';
 import {reviewConsistency,consistencyReviewRequest} from './consistency-review.mjs';
 import {DeepSeekClient} from '../tools/deepseek-client.mjs';
-import {parseTurn} from '../extension/turn.mjs';
+import {parseTurn,normalizeReplyProtocol} from '../extension/turn.mjs';
 import {isOutOfCharacter} from '../extension/prompt.mjs';
 import {reviewNpcKnowledge,reviewHistoricalEvidence} from './consistency-evidence.mjs';
 
@@ -148,7 +148,7 @@ async function rewriteMessages(input,review){
 export function publicConsistencyResult(record){
  const r=record.result;
  return {reviewId:record.token,status:r.status,text:r.text,original:r.original,rewritten:r.rewritten,verified:r.review?.verified===true&&['verified','issues'].includes(r.status)&&!r.rewriteError,
-  canCommit:r.canCommit,feedback:r.feedback,issues:r.review?.issues??[],attempts:r.attempts,tail:r.tail,sequence:r.sequence,retrieval:record.evidence?.retrieval};
+  canCommit:r.canCommit,feedback:r.feedback,issues:r.review?.issues??[],attempts:r.attempts,protocol:r.protocol,tail:r.tail,sequence:r.sequence,retrieval:record.evidence?.retrieval};
 }
 
 // Captures are authoritative snapshots. Client-provided receipts, clocks and
@@ -193,7 +193,9 @@ export async function reviewConsistencyReply(store,campaignId,{token,draft,expec
   const input={playerText:record.playerText,draft,before:record.before,after:state.document,receipts,retrieval,scene,knowledge,priorEvidence,
    allowedEntities:engine.entities,blocklist:[...blocklist.names??[],...blocklist.realPeople??[]],
    clock:{location:s.location,startMinute:record.before.state.minute,minute:s.minute,present}};
-  let first,review,text=draft,rewritten=false,attempts=0,rewriteError=null;
+  const protocol=normalizeReplyProtocol(draft,{...input,outOfCharacter:isOutOfCharacter(input.playerText)});
+  input.draft=protocol.text;
+  let first,review,text=input.draft,rewritten=false,attempts=0,rewriteError=null;
   if(record.enabled){
    first=review=await reviewConsistency(input,{client});
    if(review.rewriteRequest&&client){
@@ -205,11 +207,13 @@ export async function reviewConsistencyReply(store,campaignId,{token,draft,expec
      record.rewriteStarted=true;record.original=draft;await atomicJSON(file,record);
      try{
       const response=await client.generate({messages:await rewriteMessages(input,review),max_tokens:1800,thinking:{type:'disabled'}},`consistency-rewrite:${token.slice(0,20)}`);
-      const choice=response.choices?.[0],candidate=choice?.message?.content;
+      const choice=response.choices?.[0];let candidate=choice?.message?.content;
       if(choice?.finish_reason!=='stop'||choice?.message?.tool_calls?.length||typeof candidate!=='string'||!candidate.trim())throw Error('改写没有返回完整且不含工具调用的正文');
+      const candidateProtocol=normalizeReplyProtocol(candidate,{...input,outOfCharacter:isOutOfCharacter(input.playerText)});
+      const originalCandidate=candidate;candidate=candidateProtocol.text;
       if(!parseTurn(candidate,{...input.clock,outOfCharacter:isOutOfCharacter(input.playerText)}).valid)throw Error('唯一改写没有保留有效的回合尾注');
       const checked=await reviewConsistency({...input,draft:candidate},{client,rewriteAttempt:1});
-      record.rewrite={text:candidate,review:checked,measurement:response.measurement};
+      record.rewrite={original:originalCandidate,text:candidate,protocol:candidateProtocol,review:checked,measurement:response.measurement};
       if(checked.status==='verified'||checked.verified&&!checked.issues.some(i=>i.severity==='error')){text=candidate;rewritten=true;review=checked;}
       else{rewriteError='唯一一次改写仍有严重问题或未完成验证';review=checked;}
      }catch(error){rewriteError=safeError(error);}
@@ -217,12 +221,13 @@ export async function reviewConsistencyReply(store,campaignId,{token,draft,expec
    }
   }
   const serious=review?.issues.some(i=>i.severity==='error')??false;
+  if(rewriteError)text=draft;
   const status=!record.enabled?'disabled':rewriteError?'unverified':review.status;
-  const canCommit=!serious&&!rewriteError;
+  const canCommit=!serious&&!rewriteError&&(!record.enabled||review?.model.status!=='failed');
   const feedback=!canCommit?'回复存在未修正的事实问题，尾注未提交；已完成的行动仍保留。':status==='unverified'?'回复未完成一致性验证；已完成的行动以账本为准。':status==='disabled'?'本回合一致性审查已关闭。':null;
   const tail=parseTurn(text,{...input.clock,outOfCharacter:isOutOfCharacter(input.playerText)});
   record.evidence={receipts,retrieval,scene,knowledge,priorEvidence,clock:input.clock,afterHash:digest(state.document)};
-  record.result={original:draft,text,rewritten,review,firstReview:first,attempts,status,canCommit,feedback,rewriteError,tail,sequence:state.sequence};
+  record.result={original:draft,text,protocol,rewritten,review,firstReview:first,attempts,status,canCommit,feedback,rewriteError,tail,sequence:state.sequence};
   await atomicJSON(file,record);return publicConsistencyResult(record);
  });
 }
