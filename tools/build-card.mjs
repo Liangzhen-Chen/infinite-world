@@ -72,7 +72,7 @@ export function encodeCardPNG(card,png){
 export async function buildCard({destination=path.join(root,'dist/card'),avatarPath=null,...options}={}){
     const bundle=await loadPromptBundle(options);await fs.mkdir(destination,{recursive:true});
     // Image pixels are left untouched; this step only embeds the character metadata.
-    const avatar=avatarPath?await fs.readFile(avatarPath):Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+aBZkAAAAASUVORK5CYII=','base64');
+    const avatar=await fs.readFile(avatarPath??path.join(root,'assets/visual/logo.png'));
     await Promise.all([fs.writeFile(path.join(destination,'host.json'),JSON.stringify(bundle.card,null,2)),
         fs.writeFile(path.join(destination,'host.png'),encodeCardPNG(bundle.card,avatar)),
         fs.writeFile(path.join(destination,'preset.json'),JSON.stringify(presetFor(bundle),null,2)),

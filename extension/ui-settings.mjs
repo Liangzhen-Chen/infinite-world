@@ -3,6 +3,7 @@ const KEY='infinite-fields-reading';
 const defaults={theme:'dark',fontSize:18,highContrast:false,reducedMotion:false,volume:60,muted:false};
 let settings={...defaults};
 const listeners=new Set();
+let stopFormSync=null;
 export function normalizeSettings(value={}){
     return {theme:value.theme==='light'?'light':'dark',fontSize:[16,18,20,22,24].includes(value.fontSize)?value.fontSize:18,
         highContrast:value.highContrast===true,reducedMotion:value.reducedMotion===true,
@@ -28,6 +29,7 @@ export function initializeSettings(){
 }
 function localStorageValue(){try{return localStorage.getItem(KEY);}catch{return null;}}
 export function renderSettings(container){
+    stopFormSync?.();
     const doc=container.ownerDocument;container.replaceChildren();
     const form=doc.createElement('div');form.className='fields-settings';
     function control(text,node){const label=doc.createElement('label');label.append(doc.createTextNode(text),node);form.append(label);}
@@ -36,11 +38,17 @@ export function renderSettings(container){
         for(const [value,text]of options){const option=doc.createElement('option');option.value=value;option.textContent=text;select.append(option);}
         select.value=settings[key];select.onchange=()=>updateSettings({[key]:key==='fontSize'?Number(select.value):select.value});control(title,select);
     }
+    const sharedBoxes=new Map();
     for(const [key,title]of [['highContrast','高对比度'],['reducedMotion','减少动画'],['muted','静音']]){
-        const input=doc.createElement('input');input.type='checkbox';input.checked=settings[key];input.onchange=()=>updateSettings({[key]:input.checked});control(title,input);
+        const input=doc.createElement('input');input.type='checkbox';input.checked=settings[key];input.onchange=()=>updateSettings({[key]:input.checked});control(title,input);sharedBoxes.set(key,input);
     }
     const volume=doc.createElement('input');volume.type='range';volume.min=0;volume.max=100;volume.value=settings.volume;volume.setAttribute('aria-label','音量');volume.oninput=()=>updateSettings({volume:Number(volume.value)});control('音量',volume);
     const sample=doc.createElement('p');sample.className='fields-reading-sample';sample.textContent='雨停之后，檐角仍在滴水。你收好行囊，沿着石路走向村口。';form.append(sample);
     for(const section of settingsSections()){const node=doc.createElement('section'),title=doc.createElement('h3');title.textContent=section.title;node.append(title);section.render(node,{getSettings,updateSettings});form.append(node);}
     container.append(form);
+    stopFormSync=subscribeSettings(value=>{
+        if(!container.isConnected){stopFormSync?.();stopFormSync=null;return;}
+        volume.value=value.volume;
+        for(const [key,input]of sharedBoxes)input.checked=value[key];
+    });
 }

@@ -83,14 +83,15 @@ function summary(){const assertions=results.reduce((n,row)=>n+row.assertions,0),
     report.acceptancePass=playtestAcceptance(report);
     return report;}
 async function save(){writes=writes.then(()=>atomicJSON(path.join(destination,'真实试玩.json'),summary()));await writes;}
-async function score(result,scenario){
+async function score(result,scenario,previous){
+    if(previous&&digest([previous.turns,previous.finalDocument])!==digest([result.turns,result.finalDocument]))previous=undefined;
     const visible=result.turns.map(row=>row.visible??'').join('\n');
     result.languageChecks={simplified:simplify(visible)===visible,
         exposedInternals:/world_[a-z]+|(?:npc|item|loc|bld|spell|skill)_[a-z0-9_]+|【场景卡】/.test(visible),
         blockedNames:[...blocklist.names,...blocklist.realPeople].filter(name=>visible.includes(name))};
     const scoringRequests=new Map(),scoringClient={generate(body,label){const id=digest([runId,cardId,body,label]);scoringRequests.set(label,id);return client.generate(body,label,id);}};
-    result.review=await reviewPlaytest(scoringClient,result,scenario.rubric);
-    result.npcAcceptance=await reviewNpcRequirements(scoringClient,result,scenario);
+    result.review=await reviewPlaytest(scoringClient,result,scenario.rubric,{previousReview:previous?.review});
+    result.npcAcceptance=await reviewNpcRequirements(scoringClient,result,scenario,{previousReview:previous?.npcAcceptance});
     // Only incomplete/invalid reviews become eligible for one explicit resume.
     // Completed unfavorable judgements remain saved; a resume cannot reroll them.
     const failed=[...(result.review.parts??[]).filter(part=>part.error).map(part=>({label:`${result.id}-${result.attempt}-review-${part.start}`,error:part.error})),
@@ -129,7 +130,7 @@ try{
                 }
             }
             catch(error){result={id:scenario.id,attempt,assertions:1,passed:0,ratio:0,pass:false,turns:[],error:error.message};}
-            try{await score(result,scenario);}catch(error){result.review={...result.review,error:error.message,manualVerified:false};}
+            try{await score(result,scenario,task.result);}catch(error){result.review={...result.review,error:error.message,manualVerified:false};}
             result.originalFailures=task.originals;result.recoveryRuns=task.executions-1;
             result.recoveryComplete=result.acceptancePass===true&&result.turns.length===scenario.turns.length&&result.review?.complete===true&&(!scenario.requirements?.some(id=>id.startsWith('N'))||result.npcAcceptance?.complete===true);
             task.result=result;await atomicJSON(taskFile,task);
