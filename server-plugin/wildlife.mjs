@@ -7,6 +7,22 @@ import {reservedMigrationCapacity,advanceSeasonalMigration} from './seasonal-mig
 import {crossPredatorFed,advanceFarmPredation} from './farm-pests.mjs';
 const clone=v=>structuredClone(v),path=h=>['state','records',`ecology:${h}`];
 const alive=a=>a&&a.status!=='死亡'&&a.hp>0;
+// T160 owns identity changes. Clocks pass an existing individual and a stable
+// source event; an absent consumer must never masquerade as an awakening.
+export function assertWildlifeAwakeningEffect(engine,effect){
+    const consumer=engine.wildlifeAwakening;
+    if(typeof consumer?.validate!=='function'||typeof consumer?.apply!=='function')throw Error('野兽觉醒效果未实现：需要 T160 wildlifeAwakening 消费者');
+    if(typeof effect.target!=='string'||!effect.target)throw Error('野兽觉醒需要具体个体编号');
+    consumer.validate(engine,effect);
+}
+export function applyWildlifeAwakeningEffect(d,engine,effect,context){
+    assertWildlifeAwakeningEffect(engine,effect);
+    const actor=d.get('state','creatures',effect.target);
+    if(!alive(actor)||!actor.species||!actor.ecology)throw Error('野兽觉醒目标不是存活的生态个体');
+    const result=engine.wildlifeAwakening.apply(d,engine,effect,context);
+    if(!result||typeof result.applied!=='boolean')throw Error('野兽觉醒消费者缺少 applied 回执');
+    return result;
+}
 const random=(engine,seed,label)=>seededRandom(createHash('sha256').update(`${seed}:${canonical(engine.rules.wildlife)}:${label}`).digest().readUInt32LE(0));
 const activeAt=(hours,minute)=>hours[0]<=hours[1]?minute>=hours[0]&&minute<hours[1]:minute>=hours[0]||minute<hours[1];
 const speciesAt=(engine,habitat)=>speciesInHabitat(engine.rules,engine.world.monsters,habitat.id);

@@ -213,6 +213,13 @@
               "resourceScope": {
                 "type": "string",
                 "minLength": 1
+              },
+              "items": {
+                "type": "object",
+                "additionalProperties": {
+                  "type": "integer",
+                  "minimum": 0
+                }
               }
             },
             "required": [
@@ -411,6 +418,36 @@
               "execution": {
                 "type": "string",
                 "minLength": 1
+              },
+              "settlement": {
+                "type": "string",
+                "minLength": 1
+              },
+              "source": {
+                "type": "string",
+                "minLength": 1
+              },
+              "cycle": {
+                "enum": [
+                  "once",
+                  "year"
+                ]
+              },
+              "stages": {
+                "type": "array",
+                "minItems": 1,
+                "items": {
+                  "type": "object"
+                }
+              },
+              "contact": {
+                "type": "object"
+              },
+              "interventions": {
+                "type": "array",
+                "items": {
+                  "type": "object"
+                }
               }
             },
             "required": [

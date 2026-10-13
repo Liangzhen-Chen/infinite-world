@@ -1,11 +1,33 @@
 import {createHash} from 'node:crypto';
 import {regionalTradePrice} from './settlement-trade.mjs';
 import {weatherAt} from './weather.mjs';
+import {assertWildlifeAwakeningEffect,applyWildlifeAwakeningEffect} from './wildlife.mjs';
+import {applyPatches} from './storage.mjs';
 
 const DAY=1440,path=id=>['state','records',`world-clock:${id}`];
 // Rolls are keyed by campaign, clock and absolute tick. Tool IDs and the number
 // of calls never change the random stream or weather's own seeded sequence.
 export function clockRoll(seed,id,day){return createHash('sha256').update(JSON.stringify([seed,id,day])).digest().readUInt32LE(0)/2**32;}
+export function assertClockEffect(engine,effect){
+ if(effect?.kind==='regional_quote'&&effect.item===engine.rules.settlementTrade?.item)return;
+ if(['awakening','awaken'].includes(effect?.kind))return assertWildlifeAwakeningEffect(engine,effect);
+ throw Error('世界时钟未知效果或缺少贸易消费者，拒绝推进');
+}
+export function applyClockEffect(d,engine,effect,context){
+ assertClockEffect(engine,effect);
+ if(['awakening','awaken'].includes(effect.kind))return applyWildlifeAwakeningEffect(d,engine,effect,context);
+ return {applied:true,...effect,price:regionalTradePrice(d,engine,effect.item,context.settlement,context.minute)};
+}
+// A refused effect cannot leave costs or partial identity changes in the draft.
+export function clockTransaction(d,apply){
+ const tx={document:d.document,patches:[],messages:[],get(...p){return p.reduce((v,k)=>v?.[k],this.document);},
+  set(path,value){const patch={op:'set',path,value};this.document=applyPatches(this.document,[patch]);this.patches.push(patch);},
+  remove(path){const patch={op:'delete',path};this.document=applyPatches(this.document,[patch]);this.patches.push(patch);},say(content){this.messages.push(content);}};
+ const result=apply(tx);if(result?.applied===false)return result;
+ for(const p of tx.patches)if(p.op==='set')d.set(p.path,p.value);else d.remove(p.path);
+ for(const message of tx.messages)d.say(message);
+ return result;
+}
 function condition(d,engine,c,rule,at,clock){
  const state=d.get('state'),farm=state.records?.[`agriculture:${rule.settlement}`],year=Math.floor(at/DAY/360);
  switch(c.kind){
@@ -36,7 +58,7 @@ export function assertWorldClockRules(engine){
   for(const s of r.stages){
    if(!['managed_granary','delivered_trade','harvest','wildlife_population','weather'].includes(s.condition?.kind))throw Error('世界时钟未知条件，拒绝推进');
    if(['delivered_trade','harvest','wildlife_population'].includes(s.condition.kind)&&(!Number.isSafeInteger(s.condition.minimum)||s.condition.minimum<1))throw Error('世界时钟条件阈值无效');
-   if(s.effect?.kind!=='regional_quote'||s.effect.item!==engine.rules.settlementTrade?.item)throw Error('世界时钟未知效果或缺少贸易消费者，拒绝推进');
+   assertClockEffect(engine,s.effect);
   }
  }
 }
@@ -70,8 +92,9 @@ export function advanceWorldClocks(d,engine,at){
   if(stage){
    const trigger=condition(d,engine,stage.condition,r,at,row),roll=clockRoll(d.document.randomSeed,r.id,at/DAY);
    if(trigger.met&&roll<r.probability){
-    const price=regionalTradePrice(d,engine,stage.effect.item,r.settlement,at),sourceEvent=`world-clock:${r.id}:${at}`;
-    row={...row,phase:row.phase+1,history:[...row.history,{minute:at,phase:row.phase+1,name:stage.name,trigger,roll,sourceEvent,effect:{...stage.effect,price}}]};
+    const sourceEvent=`world-clock:${r.id}:${at}`;
+    const effect=clockTransaction(d,tx=>applyClockEffect(tx,engine,stage.effect,{settlement:r.settlement,faction:r.faction,minute:at,sourceEvent}));
+    if(effect.applied)row={...row,phase:row.phase+1,history:[...row.history,{minute:at,phase:row.phase+1,name:stage.name,trigger,roll,sourceEvent,effect:{...stage.effect,...effect}}]};
    }
    row.lastTrigger=trigger;row.lastRoll=roll;
   }

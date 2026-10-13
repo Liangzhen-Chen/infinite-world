@@ -13,6 +13,11 @@ export const factionSchema=obj({...common,kind:text,culture:text,region:text,con
  clock:obj({id:text,name:text,intervalDays:integer(1),probability:{type:'number',exclusiveMinimum:0,maximum:1},initialStage:integer(0,0),trigger:text,stageEffects:{type:'array',minItems:3,items:obj({stage:integer(1),effect:text,requires:text})},counterplay:text,execution:text}),
  prose:prose(['conduct','internalLife','playerEncounter']),publicDescription:text,descriptionVisibility:{const:'gm_private'},
 });
+// Runtime parameters are optional until B4/B5 publish them. Their references,
+// costs and effect consumers are checked by the faction-clock responsibility.
+factionSchema.properties.resources.properties.items={type:'object',additionalProperties:integer(0)};
+Object.assign(factionSchema.properties.clock.properties,{settlement:text,source:text,cycle:{enum:['once','year']},
+ stages:{type:'array',minItems:1,items:{type:'object'}},contact:{type:'object'},interventions:{type:'array',items:{type:'object'}}});
 export const historySchema=obj({...common,year:integer(undefined,-1),dateLabel:text,calendar:text,era:text,region:text,culture:text,contactAnchor:text,locationPrecision:text,
  participants:{type:'array',minItems:1,items:obj({kind:{const:'event_local_collective'},name:text,id:text,lifetime:text})},occurrence:text,
  presentTrace:obj({entity:text,fact:text,type:{const:'institutional_practice'},evidenceAccess:text}),
