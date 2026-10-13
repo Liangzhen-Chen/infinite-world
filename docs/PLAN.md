@@ -162,7 +162,37 @@ proof通过后由主授唯一模型槽；新run绑定旧run及user-reopen-202610
 
 N1–N17至少12项完整有效且≥90%，N6/N16零泄漏，N12真实盲辨，N17十天自主行动；账本/时间/存档100%，工具选择/参数/target分母如实。真实失败最多复测一次并保留旧失败；不降source/private/tests。相关及CORE；不部署，M2关闭仍待C.4/C.5，T11-C不变。
 
-### T18 已审核 14 法术的学习来源
+### M2修复批（2026-10-13主会话审定，来源：Astra草案M2-fix-planner-001，对应T60真实失败）
+
+审计结论：F1、F2、F3同意；F4（工具机会标注）并入T61，不单独成卡；F5同意，里程碑收尾命令归主会话。已知未查清：N9在进入司法流程前中断的原因、quest_social之外其余账本失败的来源、林穗/吴朔两处知情是否有公共来源——不为此派卡，复验后按实际失败再定。
+
+### T61 主持人与审核器输出不被截断，工具机会按实际意图计数【零模型】
+
+结果：多动作回合返回完整正文，N12/N16/N17返回完整审核；截断仍判失败；courier回合2、home_visit回合0、quest_social回合6/7的工具机会按此前实际发生的动作计数。对应失败：audit.m2.rows[N5]的1800截断，N12/N16/N17审核length，toolSelection漏3错3中的四处标注问题。
+可改：extension/generation.mjs、tools/playtest-runner.mjs、tools/npc-acceptance.mjs、tools/playtest-voice-blind.mjs、tools/playtest-metrics.mjs、tests/playtests/{npc_courier,npc_home_visit,npc_quest_social}.json的工具机会标注、tests/{generation,npc-acceptance,playtest-npc-evidence,playtest-runner}.test.mjs。锁定：评分门槛与聚合逻辑、场景玩家输入、原账本断言、extension/tools.mjs、prompt/、server-plugin/。
+做法：主持人默认4096并保留1800兼容档，逐N与盲辨8192；不加自动重试；标注只补移动/等待/按实际买入数量的条件，不删除或条件化终态断言。
+验收：`node --test tests/generation.test.mjs tests/npc-acceptance.test.mjs tests/playtest-npc-evidence.test.mjs tests/playtest-runner.test.mjs`、CORE。模型0。规模约200–350行。
+
+### T62 自然语言委托的发布、承接和粮仓交付【零模型；待T39合入后派，同改extension/tools.mjs】
+
+结果：玩家说“燕麦”发布并接受委托后，能买十份带壳燕麦、当面交货并取得托管的二十铜。对应失败：npc_quest_social账本12/26，回合5误选world_trade，N2回合10承接人为空。
+可改：world/meta/items.json的item_oats.aliases、extension/tools.mjs、prompt/constitution.md的动作与参数段、tests/tool-groups.test.mjs、新增tests/m2-task-flow.test.mjs。锁定：引擎结算、其他世界数据、T61/T63的文件。
+验收：`node --test tests/tool-groups.test.mjs tests/m2-task-flow.test.mjs`、CORE；正常HTTP覆盖发布→接受→买粮→交付，钱粮和托管守恒，未接受/缺粮/委托人不在场不能领报酬。模型0。规模约150–250行。
+
+### T63 一致性审核区分可见细节和未发生的事【零模型】
+
+结果：NPC叙述已有行动时不补造新经历，审核不把普通感知或否认知情误判成泄密。对应失败：audit.m2.privacy.leaks里guide“旅店敲门声”、npc_private“不往外传”、npc_voices“纸片露角”的误报，npc_offscreen“刚卸空”“又量了一次”的补造。
+可改：server-plugin/consistency-review.mjs的审查请求、prompt/examples.md、tests/m3-consistency.test.mjs、tests/m3-consistency-evidence.test.mjs。锁定：canCommit、零泄漏门槛、人物私密来源、T61/T62的文件。不得用按原句删除警告的过滤器代替修复。
+验收：`node --test tests/m3-consistency.test.mjs tests/m3-consistency-evidence.test.mjs tests/prompt.test.mjs`、CORE。模型0。规模约120–220行。
+
+### T64 M2真实复验【真实模型；待T61–T63合入并取得唯一模型槽】
+
+结果：在修订后的完整提示栈上重跑原十场，按原门槛给出通过或明确未通过。
+可改：仅docs/测试报告/M2-recheck/及新run生成物；复用T60的preflight.mjs，只适配父记录、来源、额度和入口。代码和旧报告锁定。
+验收：`node docs/测试报告/M2-recheck/preflight.mjs --zero-model`、CORE；然后`node tools/playtests.mjs --run-dir docs/测试报告/M2-recheck --run-id m2-recheck-001 --card M2-recheck --increment 8 --repeat 1 --parallel 4 --milestone M2 --only guide,npc_courier,npc_delivery,npc_home_visit,npc_offscreen,npc_private,npc_quest_social,npc_shove,npc_social,npc_voices --host-installation F:/dnd/SillyTavern --budget-proof docs/测试报告/M2-recheck/preflight.mjs`。
+模型：全角色合计≤450次、新增≤8元（初探≤1元含在内）；保守单轮20.42836376+8=28.42836376<30。失败场次每场最多复测一次。门槛不变：N1–N17至少12项完整有效且≥90%，N6/N16零泄漏，N12真实盲辨，N17十天自主行动，账本/时间/存档100%。规模约150–250行适配。
+
+### T18 零模型部分已完成：713f0b9已合，14条全部走陆青付费出售的三册书，新测试22/CORE40；来源增量的L2/L4（≤1元）并入T19一起做。原卡如下。
 
 目标：每条已有候选都有玩家实际能获得的学习来源。涉及文件：`world/design/w2-reuse-candidates.mjs`、新增 `world/design/w2-reuse-learning.mjs`、`world/drafts/w2-reuse/` 的来源审核记录，必要的新书/教学数据候选；新增 `tests/w2-reuse-learning.test.mjs`。不提前改正式人口。
 
