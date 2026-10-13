@@ -208,7 +208,7 @@ N1–N17至少12项完整有效且≥90%，N6/N16零泄漏，N12真实盲辨，N
 可改：新增server-plugin/boss-negotiation.mjs、tests/boss-negotiation.test.mjs；bosses.mjs、boss-cognition.mjs、extension/tools.mjs、tools/validate-world.mjs必要接点。工具说明要短，合入后tests/prompt.test.mjs仍须通过。锁定：magic*、正式world文件。
 验收：`node --test tests/boss-negotiation.test.mjs tests/boss-cognition.test.mjs tests/tool-groups.test.mjs tests/prompt.test.mjs`、CORE。模型0。规模约300–500行。
 
-### T69 S1：30条法术完整发布，31→61【真实模型；待T19】
+### T69 S1：30条法术完整发布，31→61【真实模型；T19已合，待模型槽】
 
 结果：玩家可买书并付费学习30条新法术（区域交锋与防护9、位移与自愿传讯8、器物与水务7、生长与役灵6），按真实材料、距离和持续消耗施放，每条有可验证效果。
 可改：新增world/design/w2-s1.mjs、world/drafts/w2-s1/、tools/w2-s1-content.mjs、tools/publish-w2-s1.mjs、tests/w2-s1.test.mjs；world/meta/{spells,skills,items}.json及书商库存只追加本批。锁定：rules、bosses、引擎、共用流水线。
@@ -230,13 +230,7 @@ N1–N17至少12项完整有效且≥90%，N6/N16零泄漏，N12真实盲辨，N
 
 验收：`node --test tests/w2-reuse-learning.test.mjs tests/w2-reuse.test.mjs tests/m4-publication.test.mjs`、CORE；14 条来源引用、取得、学习失败成本和学习后施放路径均可验证。内容 L2 只审来源增量，上限 1 元并计 W2/M4 共用 20 元账，L1/L2 无硬错、L4 完成；候选正文审核指纹没有改动则复用。不要做：新增法术、新增处理器、无成本赠书或免费学会。依赖：0模型来源准备可先做；付费审核及T19正式发布仍待T17达标。并行：可与不触碰魔法目录的 M3 整理，无其他模型块时审核。
 
-### T19 14 法术正式发布与效果复核
-
-目标：把审核完整的 14 条法术并入 world 正式源及可用取得链，预计目录从 17 增至 31。涉及文件：新增 `tools/publish-w2-reuse.mjs`、`world/meta/spells.json`、对应书籍/教学/库存正式源、`tests/w2-reuse.test.mjs`、新增 `tests/w2-reuse-publication.test.mjs`。
-
-实现要点：复用 `readApprovedContent`、`mergeM4Batch2` 的严格冲突/幂等策略及 `world_upgrade`；更新原“候选尚未发布”的测试预期为发布后仍检查内容一致和效果实际改变，不能直接删检查。14 条技能/材料/许可、距离、持续效果消耗保持已有机制语义；学习来源随世界升级进入已建战役，不回补已售空商品和旧现金。
-
-验收：`node tools/publish-w2-reuse.mjs` 预演后 `--publish`，重复零写入；`node --test tests/w2-reuse-publication.test.mjs tests/w2-reuse.test.mjs tests/m4-publication.test.mjs tests/magic-primitives.test.mjs`、CORE。主会话波次 `npm run build:release` 通过、打 `review-w2-reuse`，模型预算 0。不要做：部署、把相近效果算成缺失机制、用目录数代替效果测试。依赖：T18；并行：正式 world 目录写入串行。
+### T19 已完成：14条法术连同三册书和学习来源经L1/真实L2/L4正式发布，目录17→31，重复发布零写入；19次调用0.12064368元，相关8/CORE40。
 
 ### T20 已完成：WIP及305e8f9已集成；玩家账本隐私过滤、390×844截图与相关/合后CORE通过。 完整验收见[已完成卡](PLAN_已完成.md#t20)。
 
