@@ -6,6 +6,7 @@ import {messageKinds,validateMessageCatalog,prepareMessage,applyMessage}from'./m
 import {movementKinds,validateMovementCatalog,prepareMovement,applyMovement}from'./magic-movement.mjs';
 import {validateAreaCatalog,prepareAreaMagic,applyAreaMagic}from'./magic-area.mjs';
 import {derivedStats,monsterStats}from'./combat.mjs';
+import {recordDisciplineBreach}from'./training.mjs';
 import {magicStatuses,magicStatusStats,relieveMagicStatuses,applyMagicStatus}from'./magic-status.mjs';
 import {validateTargeting,assertMagicTargeting}from'./magic-targeting.mjs';
 import {validateMarkCatalog,prepareMark,applyMark}from'./magic-marks.mjs';
@@ -174,6 +175,7 @@ export function applyMagic(d,prepared,id){
         if(!next)d.set([...path,'status'],'死亡');
         else if(spec.kind==='heal'&&current.status==='濒死'){d.set([...path,'status'],'正常');d.set([...path,'dyingSince'],null);}
         if(spec.kind==='damage'&&target.startsWith('npc_')&&(prepared.context?.source??'player')==='player'){
+            if(next<old)recordDisciplineBreach(d,this,'violence',id);
             d.set([...path,'trust'],Math.max(-100,(current.trust??0)-10));
             d.set([...path,'developments'],[...current.developments??[],{type:'法术伤害',source:id,minute:d.get('state','minute'),damage:old-next}]);
         }

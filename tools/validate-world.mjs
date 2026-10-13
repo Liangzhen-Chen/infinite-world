@@ -160,7 +160,7 @@ export function validateWorld(world,{stage='engine'}={}){
         }
     }
     const checkPrerequisites=row=>{for(const requirement of row.prerequisites??[])reference(typeof requirement==='string'?requirement:requirement.skill,`${row.id}.prerequisite`);};
-    for(const row of world.skills){reference(row.profession,`${row.id}.profession`);checkPrerequisites(row);}
+    for(const row of world.skills){reference(row.profession,`${row.id}.profession`);for(const role of row.learningProfessions??[])reference(role,`${row.id}.learningProfessions`);checkPrerequisites(row);}
     for(const item of world.items)if(item.checkBonus){
         for(const skill of item.checkBonus.skills??[])reference(skill,`${item.id}.checkBonus.skill`);
         for(const attribute of item.checkBonus.attributes??[])if(!world.rules.attributes.includes(attribute))errors.push(`工具检定属性非法：${item.id}/${attribute}`);

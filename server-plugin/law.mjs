@@ -1,7 +1,8 @@
 import { trackTransferUnit, transferItems, changeItems } from './items.mjs';
-import {advanceWithNpcParticipants}from'./npc-schedule.mjs';
+import {advanceWithNpcParticipants,assertNpcService}from'./npc-schedule.mjs';
 import {shareNpcMemory}from'./npc-cognition.mjs';
 import {recordLegalNotification,reputationView}from'./reputation.mjs';
+import {recordDisciplineBreach}from'./training.mjs';
 
 const integer=(value,min,max,label)=>{if(!Number.isSafeInteger(value)||value<min||value>max)throw new Error(`${label}不在允许范围`);return value;};
 const path=id=>['state','records',id];
@@ -101,12 +102,14 @@ export function crimeAction(d,args,eventId){
         }
     }
     const incident=registerIncident(d,this,{victim,offense:success?'theft':'theft_attempt',value:success?value:0,stolen,witnesses,eventId});
+    if(success)recordDisciplineBreach(d,this,'theft',eventId);
     return{target:victim,case:incident,...result,checkSuccess:result.success,success,stolen,witnesses,
         actionScope:{kind:'theft',reported:d.get(...path(incident),'reported'),
             note:'仅已列目击者知情，异地执法人员尚不自动知道。失败无财物转移；还未审判、缴罚款或监禁。'}};
 }
 
 export function recordViolence(d,engine,{victim,damage,killed,intent,eventId}){
+    if(damage>0&&['attack','shove'].includes(intent))recordDisciplineBreach(d,engine,'violence',eventId);
     if(!codeFor(engine,d.get('state','location'))||!['attack','shove'].includes(intent))return null;
     const witnesses=Object.entries(d.get('state','npcs')).filter(([,actor])=>awake(actor)&&actor.location===d.get('state','location')).map(([id])=>id);
     return registerIncident(d,engine,{victim,offense:killed?'homicide':damage?'assault':'assault_attempt',witnesses,eventId,relationshipApplied:true});
@@ -121,6 +124,7 @@ export function enforceLegalRestriction(d,tool,args){
 }
 
 export function advanceLaw(d,after,engine){
+    for(const[id,r]of Object.entries(d.get('state','records')??{}))if(r.category==='authorization'&&r.sourceType==='magic_permit'&&!r.revoked&&r.expires<=after)d.set(path(id),{...r,revoked:true,status:'已到期',ended:r.expires});
     for(const[id,lock]of Object.entries(d.get('state','records')??{}))if(lock?.category==='legal_custody'&&lock.status==='生效'&&
         (d.get('state','player','status')==='死亡'||d.get('state','location')!==lock.location)){
         d.set(path(id),{...lock,status:'已中止',ended:after,remaining:Math.max(0,lock.expires-after)});
@@ -165,6 +169,24 @@ function deposit(d,engine,row,{fine=0,compensate=true}={}){
 export function lawAction(d,args,eventId){
     const operation=args.operation??'inspect';
     if(operation==='inspect')return lawView(this,d.document);
+    if(operation==='grant_magic_permit'){
+        unique(d,`magic_permission:${eventId}`);
+        const code=currentCode(d,this),location=this.resolve(args.location),issuer=present(d,this,args.authority);
+        if(location!==d.get('state','location')||!code.locations.includes(location)||args.subject!=='player'||args.action!=='mental_magic')throw Error('施法许可只限当前法域、在场申请人与登记用途');
+        const delegation=code.magicAuthorities?.find(a=>a.npc===issuer&&a.locations.includes(location)&&a.actions.includes(args.action));
+        if(!delegation&&!code.officers.includes(issuer)&&!code.judges.includes(issuer))throw Error('机构或当事人没有颁发此施法许可的权限');
+        const duration=integer(args.minutes,1,delegation?.maximumMinutes??1440,'施法许可期限'),fee=integer(delegation?.fee??2,0,1e9,'施法许可费用');
+        if(delegation)assertNpcService(d,this,issuer,'teach',5);
+        if(d.get('state','player','coins')<fee)throw Error('施法许可费用不足');
+        if(['昏迷','患病'].includes(d.get('state','npcs',issuer,'status')))throw Error('许可颁发者不能清醒办理');
+        advanceWithNpcParticipants(d,this,5,eventId,[issuer]);
+        if(d.get('state','player','coins')<fee)throw Error('办理期间余额不足支付施法许可费用');
+        d.set(['state','player','coins'],d.get('state','player','coins')-fee);
+        d.set(['state','npcs',issuer,'coins'],d.get('state','npcs',issuer,'coins')+fee);
+        const key=`magic_permission:${eventId}`,now=d.get('state','minute'),permission={category:'authorization',action:args.action,subject:'player',grantee:'player',grantor:issuer,location,law:code.id,createdAt:now,expires:now+duration,revoked:false,sourceType:'magic_permit',sourceEvent:eventId};
+        d.set(path(key),permission);d.set(path(`magic_permission_source:${eventId}`),{permission:structuredClone(permission)});
+        return{permit:key,permission,cost:fee,minutes:5};
+    }
     const {row,code}=caseRow(d,this,args.case),now=d.get('state','minute');
     if(operation==='notify'){
         const from=this.resolve(args.from,'npc'),to=this.resolve(args.to,'npc');

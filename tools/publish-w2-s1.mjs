@@ -8,7 +8,15 @@ import {entries,contextFor,revision,validateDraft} from './w2-s1-content.mjs';
 import {spells,books,sources,placements,channelFacts} from '../world/design/w2-s1.mjs';
 const read=async file=>JSON.parse(await fs.readFile(file,'utf8'));
 const same=(a,b)=>hashContent(a)===hashContent(b);
-function mergeRows(old,added){const map=new Map(old.map(r=>[r.id,r]));for(const r of added){if(map.has(r.id)&&!same(map.get(r.id),r))throw Error(`正式条目冲突：${r.id}`);map.set(r.id,structuredClone(r));}return [...map.values()];}
+function mergeRows(old,added,skillRoutes=false){const map=new Map(old.map(r=>[r.id,r]));for(const r of added){
+ const prior=map.get(r.id);
+ if(prior&&skillRoutes&&Array.isArray(prior.learningProfessions)){
+  const {learningProfessions,...reviewed}=prior;
+  if(!same(reviewed,r))throw Error(`正式条目冲突：${r.id}`);
+  continue; // Keep the separately reviewed later teaching routes.
+ }
+ if(prior&&!same(prior,r))throw Error(`正式条目冲突：${r.id}`);map.set(r.id,structuredClone(r));
+ }return [...map.values()];}
 export async function readS1Publication(root=path.resolve('world/drafts/w2-s1')){
  const approved=await readApprovedContent(root,entries,{contextFor,revision});
  if(approved.length!==36)throw Error('30法术、6本书与全部学习来源未完成审核');
@@ -23,7 +31,7 @@ export async function readS1Publication(root=path.resolve('world/drafts/w2-s1'))
 export function mergeS1Publication(world,publication){
  const next=structuredClone(world);
  if(next.rules.npcStockUpdateVersion!==1)throw Error('已有逐键库存升级机制未启用');
- next.spells=mergeRows(next.spells,publication.spells);next.skills=mergeRows(next.skills,publication.sources.mappings.map(m=>m.skill));next.items=mergeRows(next.items,publication.items);
+ next.spells=mergeRows(next.spells,publication.spells);next.skills=mergeRows(next.skills,publication.sources.mappings.map(m=>m.skill),true);next.items=mergeRows(next.items,publication.items);
  for(const {item,stock} of publication.sources.books){const seller=next.npcs.find(n=>n.id===stock.owner);if(!seller)throw Error('书商不存在');seller.inventory??={};if(!Object.hasOwn(seller.inventory,item.id))seller.inventory[item.id]=stock.quantity;}
  for(const [location,rows] of Object.entries(placements)){const place=next.locations.find(l=>l.id===location);if(!place)throw Error(`地点不存在：${location}`);place.features=mergeRows(place.features??[],rows);}
  const channel=next.locations.flatMap(l=>l.features??[]).find(f=>f.id==='feature_hw_channel');if(!channel)throw Error('现有沟渠不存在');

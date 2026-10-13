@@ -14,12 +14,13 @@ import {pathParts} from '../tools/npc-depth-content.mjs';
 function completeDepth(world){
  const full=world.npcs.filter(n=>n.tier==='full');
  for(const [index,n] of full.entries()){
-  const other=full[index%2===0?index+1:index-1]??full[0],location=world.locations.find(l=>l.id===n.location);
+  const tail=full.length%2&&index>=full.length-3,start=tail?full.length-3:Math.floor(index/2)*2;
+  const group=full.slice(start,start+(tail?3:2)),other=group[(group.indexOf(n)+1)%group.length],location=world.locations.find(l=>l.id===n.location);
   n.knowledge={known:[{fact:`曾在${location.name}核对木料账。`,source:location.id,reliability:'亲历'},{fact:`${other.name}曾帮忙搬运木板。`,source:other.id,reliability:'亲历'},{fact:'雨后保留了旧账页，尚未商定补桥次序。',source:n.id,reliability:'亲历'}],unknown:['石桥缺口是否需要先补木板']};
   for(const goals of Object.values(n.goals))for(const goal of goals)goal.steps=[{content:'到石桥核对旧木板数量',status:'pending'}];
   n.voice.register='话语平缓，使用完整句子';n.voice.habits[0]='开口先叫对方姓名';
   for(const relation of n.relationships)relation.note='雨后曾一起核对木料账，对漏记一行仍有分歧。';
-  n.memorySeeds=[{id:`quality_pair_${Math.floor(index/2)}`,event:'雨后在石桥核对木料账，还没商定补桥次序。',knownBy:[n.id,other.id].sort(),location:world.locations[0].id,reliability:'亲历',salience:5},{id:`quality_private_${index}`,event:'雨后在石桥检查过一块木板。',knownBy:[n.id],reliability:'亲历',salience:3}];
+  n.memorySeeds=[{id:`quality_pair_${start}`,event:'雨后在石桥核对木料账，还没商定补桥次序。',knownBy:group.map(n=>n.id).sort(),location:world.locations[0].id,reliability:'亲历',salience:5},{id:`quality_private_${index}`,event:'雨后在石桥检查过一块木板。',knownBy:[n.id],reliability:'亲历',salience:3}];
   n.traits=n.traits.map(t=>/待扩|待补/.test(t)?'守时':t);n.personality.traits=['守时','谨慎'];
  }
  for(const issue of validateNpcDepth(world).issues.filter(i=>i.code==='rule-wording')){
@@ -63,6 +64,7 @@ test('发布构建要求全体人物深度，仍拒绝坏引用、年龄冲突�
     t.after(()=>fs.rm(destination,{recursive:true,force:true}));
     assert.equal(validateWorld(current,{stage:'release'}).ok,true,'五村深度发布后正式世界通过 release');
     const incomplete=structuredClone(current);incomplete.npcs[0].voice.register=incomplete.npcs[0].voice.habits[0];
+    assert.ok(validateWorld(incomplete,{stage:'release'}).errors.some(e=>e.startsWith('完整人物深度：')),'任一完整档缺口必须拒绝');
     await assert.rejects(buildWorld({source:incomplete,stage:'release',destination}),/完整人物深度/);
     assert.equal((await buildWorld({source:world,stage:'release',destination})).ok,true);
     assert.equal(JSON.parse(await fs.readFile(path.join(destination,'manifest.json'),'utf8')).stage,'release');

@@ -1,5 +1,5 @@
 {
-  "spentYuan": 3.0720285600000037,
+  "spentYuan": 5.499973920000001,
   "reservedYuan": 6.938893903907228e-17,
   "limitYuan": 20,
   "waveLimitYuan": 20,
@@ -21,6 +21,12 @@
       "spentYuan": 0.44856896,
       "reservedYuan": 0,
       "maxRequests": 120
+    },
+    "T93": {
+      "limitYuan": 7,
+      "spentYuan": 2.4279453599999985,
+      "reservedYuan": 0,
+      "maxRequests": 160
     }
   },
   "requests": {
@@ -17110,6 +17116,4838 @@
         "cumulativeUpperYuan": 3.0720285600000037,
         "latencyMs": 743.0011000000013,
         "timestamp": "2026-10-13T17:59:39.935Z"
+      }
+    },
+    "4669e985-3b9d-4300-8acb-5eae227a9bb1": {
+      "card": "T93",
+      "label": "content-baishi-craft-npc_bs_061_1-review0",
+      "requestHash": "e85f4e495f1d66c8aa4603667b64c0e521855391a22bc4788d26810ed9036e9f",
+      "reservedYuan": 0.086792,
+      "status": "settled",
+      "responseEvidence": {
+        "file": "budget-responses/4669e985-3b9d-4300-8acb-5eae227a9bb1.json",
+        "requestHash": "e85f4e495f1d66c8aa4603667b64c0e521855391a22bc4788d26810ed9036e9f",
+        "responseHash": "5de96692e1d5ef5a5291c99fd9cd1733be0c9b84d891d80fc84540fc0d55e7f7"
+      },
+      "costUpperYuan": 0.019755119999999998,
+      "measurement": {
+        "label": "content-baishi-craft-npc_bs_061_1-review0",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 9975,
+          "completion_tokens": 7,
+          "total_tokens": 9982,
+          "prompt_tokens_details": {
+            "cached_tokens": 128
+          },
+          "prompt_cache_hit_tokens": 128,
+          "prompt_cache_miss_tokens": 9847
+        },
+        "costUpperYuan": 0.019755119999999998,
+        "cumulativeUpperYuan": 3.091783680000004,
+        "latencyMs": 1098.6003,
+        "timestamp": "2026-10-13T18:15:03.278Z"
+      }
+    },
+    "a7f0c0a4-cd4f-4b61-b15e-7f920d24049e": {
+      "card": "T93",
+      "label": "content-baishi-craft-npc_bs_061_2-review0",
+      "requestHash": "67432fee4776a129eb86168f6b26c320c41df65643555247fcef79a94aeec181",
+      "reservedYuan": 0.088384,
+      "status": "settled",
+      "responseEvidence": {
+        "file": "budget-responses/a7f0c0a4-cd4f-4b61-b15e-7f920d24049e.json",
+        "requestHash": "67432fee4776a129eb86168f6b26c320c41df65643555247fcef79a94aeec181",
+        "responseHash": "af55a05d249ed193688d5330035178ed52eeb3b777b683769b9d884e0b089103"
+      },
+      "costUpperYuan": 0.02001312,
+      "measurement": {
+        "label": "content-baishi-craft-npc_bs_061_2-review0",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 10104,
+          "completion_tokens": 7,
+          "total_tokens": 10111,
+          "prompt_tokens_details": {
+            "cached_tokens": 128
+          },
+          "prompt_cache_hit_tokens": 128,
+          "prompt_cache_miss_tokens": 9976
+        },
+        "costUpperYuan": 0.02001312,
+        "cumulativeUpperYuan": 3.111796800000004,
+        "latencyMs": 1063.0212,
+        "timestamp": "2026-10-13T18:15:04.371Z"
+      }
+    },
+    "d66ef5f8-2b29-42cd-9be0-1ce088f4bce1": {
+      "card": "T93",
+      "label": "content-baishi-craft-npc_bs_062_1-review0",
+      "requestHash": "10c02c63e66c03b7d1088d38e463e9d3b7aeb0764e8b37b96faa31cd632ca96c",
+      "reservedYuan": 0.088058,
+      "status": "settled",
+      "responseEvidence": {
+        "file": "budget-responses/d66ef5f8-2b29-42cd-9be0-1ce088f4bce1.json",
+        "requestHash": "10c02c63e66c03b7d1088d38e463e9d3b7aeb0764e8b37b96faa31cd632ca96c",
+        "responseHash": "3aed909d4fa55c287ee163076e47baadb939de98621fd5972da7a4bf21a81d20"
+      },
+      "costUpperYuan": 0.02002312,
+      "measurement": {
+        "label": "content-baishi-craft-npc_bs_062_1-review0",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 10109,
+          "completion_tokens": 7,
+          "total_tokens": 10116,
+          "prompt_tokens_details": {
+            "cached_tokens": 128
+          },
+          "prompt_cache_hit_tokens": 128,
+          "prompt_cache_miss_tokens": 9981
+        },
+        "costUpperYuan": 0.02002312,
+        "cumulativeUpperYuan": 3.131819920000004,
+        "latencyMs": 1093.8661000000002,
+        "timestamp": "2026-10-13T18:15:05.493Z"
+      }
+    },
+    "7322d8f0-659e-41ae-a888-d68759cfc359": {
+      "card": "T93",
+      "label": "content-baishi-craft-npc_bs_062_2-review0",
+      "requestHash": "dff3cf9edd85c03dcf31c31a15f095d9ccbaa1368111b4ec5ff81308af8d20b5",
+      "reservedYuan": 0.087344,
+      "status": "settled",
+      "responseEvidence": {
+        "file": "budget-responses/7322d8f0-659e-41ae-a888-d68759cfc359.json",
+        "requestHash": "dff3cf9edd85c03dcf31c31a15f095d9ccbaa1368111b4ec5ff81308af8d20b5",
+        "responseHash": "904dccdd35395f5c862024d007d2a0f749c4f7990fa1e5cd00d305a7e13d6279"
+      },
+      "costUpperYuan": 0.01983112,
+      "measurement": {
+        "label": "content-baishi-craft-npc_bs_062_2-review0",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 10013,
+          "completion_tokens": 7,
+          "total_tokens": 10020,
+          "prompt_tokens_details": {
+            "cached_tokens": 128
+          },
+          "prompt_cache_hit_tokens": 128,
+          "prompt_cache_miss_tokens": 9885
+        },
+        "costUpperYuan": 0.01983112,
+        "cumulativeUpperYuan": 3.151651040000004,
+        "latencyMs": 1109.6359999999995,
+        "timestamp": "2026-10-13T18:15:06.627Z"
+      }
+    },
+    "aba28382-5bfd-4ce4-8c7a-b0673cd0856e": {
+      "card": "T93",
+      "label": "content-baishi-craft-npc_bs_063_1-review0",
+      "requestHash": "d5dcecf17d0494636f59aebfc0e3cda42f9bdf8af7f62c0a78f6ae745a00384f",
+      "reservedYuan": 0.087274,
+      "status": "settled",
+      "responseEvidence": {
+        "file": "budget-responses/aba28382-5bfd-4ce4-8c7a-b0673cd0856e.json",
+        "requestHash": "d5dcecf17d0494636f59aebfc0e3cda42f9bdf8af7f62c0a78f6ae745a00384f",
+        "responseHash": "b7355d5df7a424e73a21d897d1e493afa98605ec4f8fb93685109e34a1f0cd1a"
+      },
+      "costUpperYuan": 0.019745119999999998,
+      "measurement": {
+        "label": "content-baishi-craft-npc_bs_063_1-review0",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 9970,
+          "completion_tokens": 7,
+          "total_tokens": 9977,
+          "prompt_tokens_details": {
+            "cached_tokens": 128
+          },
+          "prompt_cache_hit_tokens": 128,
+          "prompt_cache_miss_tokens": 9842
+        },
+        "costUpperYuan": 0.019745119999999998,
+        "cumulativeUpperYuan": 3.171396160000004,
+        "latencyMs": 1043.4767999999995,
+        "timestamp": "2026-10-13T18:15:07.693Z"
+      }
+    },
+    "063399ac-8eb8-4d77-a856-bd4c6982af26": {
+      "card": "T93",
+      "label": "content-baishi-craft-npc_bs_063_2-review0",
+      "requestHash": "1ae895e4ce9fe28ed7423785b8baa52b25fe29ed539d349a7431be3e986a118b",
+      "reservedYuan": 0.088042,
+      "status": "settled",
+      "responseEvidence": {
+        "file": "budget-responses/063399ac-8eb8-4d77-a856-bd4c6982af26.json",
+        "requestHash": "1ae895e4ce9fe28ed7423785b8baa52b25fe29ed539d349a7431be3e986a118b",
+        "responseHash": "0b0811b9d8d1c27528451d9ad4a7a40dc39c0fb2362698592dbaacc4b72b1096"
+      },
+      "costUpperYuan": 0.02014112,
+      "measurement": {
+        "label": "content-baishi-craft-npc_bs_063_2-review0",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 10168,
+          "completion_tokens": 7,
+          "total_tokens": 10175,
+          "prompt_tokens_details": {
+            "cached_tokens": 128
+          },
+          "prompt_cache_hit_tokens": 128,
+          "prompt_cache_miss_tokens": 10040
+        },
+        "costUpperYuan": 0.02014112,
+        "cumulativeUpperYuan": 3.191537280000004,
+        "latencyMs": 840.2792,
+        "timestamp": "2026-10-13T18:15:08.566Z"
+      }
+    },
+    "b22b7a60-4896-4dca-beb3-5c7bd1cb5d57": {
+      "card": "T93",
+      "label": "content-baishi-craft-npc_bs_064_1-review0",
+      "requestHash": "fe978617b6f42f7b675bd9205bed3ca39823723a24910e3d5b9970695463fcf5",
+      "reservedYuan": 0.087934,
+      "status": "settled",
+      "responseEvidence": {
+        "file": "budget-responses/b22b7a60-4896-4dca-beb3-5c7bd1cb5d57.json",
+        "requestHash": "fe978617b6f42f7b675bd9205bed3ca39823723a24910e3d5b9970695463fcf5",
+        "responseHash": "95d50327c3c8848ef2d6d5d328d7fad3652411d9480c927452643d371be7d039"
+      },
+      "costUpperYuan": 0.02002312,
+      "measurement": {
+        "label": "content-baishi-craft-npc_bs_064_1-review0",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 10109,
+          "completion_tokens": 7,
+          "total_tokens": 10116,
+          "prompt_tokens_details": {
+            "cached_tokens": 128
+          },
+          "prompt_cache_hit_tokens": 128,
+          "prompt_cache_miss_tokens": 9981
+        },
+        "costUpperYuan": 0.02002312,
+        "cumulativeUpperYuan": 3.2115604000000038,
+        "latencyMs": 1269.2222999999994,
+        "timestamp": "2026-10-13T18:15:09.863Z"
+      }
+    },
+    "10c036cf-f393-43f5-80f2-8e5bc55d5333": {
+      "card": "T93",
+      "label": "content-baishi-craft-npc_bs_064_2-review0",
+      "requestHash": "170d0b3458ddf6a5befe0a32ee4905af0d759fcea429e76186ca783975e542c5",
+      "reservedYuan": 0.086876,
+      "status": "settled",
+      "responseEvidence": {
+        "file": "budget-responses/10c036cf-f393-43f5-80f2-8e5bc55d5333.json",
+        "requestHash": "170d0b3458ddf6a5befe0a32ee4905af0d759fcea429e76186ca783975e542c5",
+        "responseHash": "2c707a0e38f1fa23256535970f37f02da0f44e3e4024c5cdbc7c35155306f90c"
+      },
+      "costUpperYuan": 0.01959712,
+      "measurement": {
+        "label": "content-baishi-craft-npc_bs_064_2-review0",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 9896,
+          "completion_tokens": 7,
+          "total_tokens": 9903,
+          "prompt_tokens_details": {
+            "cached_tokens": 128
+          },
+          "prompt_cache_hit_tokens": 128,
+          "prompt_cache_miss_tokens": 9768
+        },
+        "costUpperYuan": 0.01959712,
+        "cumulativeUpperYuan": 3.2311575200000036,
+        "latencyMs": 1154.132999999999,
+        "timestamp": "2026-10-13T18:15:11.044Z"
+      }
+    },
+    "1f76028a-f19e-457f-bc1e-0cb810f0334b": {
+      "card": "T93",
+      "label": "content-baishi-craft-npc_bs_065_1-review0",
+      "requestHash": "9b63fd488a4e714b95232067e85bcde1e2a19f02a88a3f0790b7a4168cac6046",
+      "reservedYuan": 0.086654,
+      "status": "settled",
+      "responseEvidence": {
+        "file": "budget-responses/1f76028a-f19e-457f-bc1e-0cb810f0334b.json",
+        "requestHash": "9b63fd488a4e714b95232067e85bcde1e2a19f02a88a3f0790b7a4168cac6046",
+        "responseHash": "c23349f3ed0f43f006cc0699e8cc85e8ffc1d8b13b180e42846d156141f9bbf8"
+      },
+      "costUpperYuan": 0.019575119999999998,
+      "measurement": {
+        "label": "content-baishi-craft-npc_bs_065_1-review0",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 9885,
+          "completion_tokens": 7,
+          "total_tokens": 9892,
+          "prompt_tokens_details": {
+            "cached_tokens": 128
+          },
+          "prompt_cache_hit_tokens": 128,
+          "prompt_cache_miss_tokens": 9757
+        },
+        "costUpperYuan": 0.019575119999999998,
+        "cumulativeUpperYuan": 3.2507326400000034,
+        "latencyMs": 852.8822,
+        "timestamp": "2026-10-13T18:15:11.930Z"
+      }
+    },
+    "6194dc16-5bdf-4a35-b694-573f57bc4534": {
+      "card": "T93",
+      "label": "content-baishi-craft-npc_bs_065_2-review0",
+      "requestHash": "e9b53ec8af11b7f777316e4e022d1d379f0721bc73b9b6101162416387fc3605",
+      "reservedYuan": 0.088684,
+      "status": "settled",
+      "responseEvidence": {
+        "file": "budget-responses/6194dc16-5bdf-4a35-b694-573f57bc4534.json",
+        "requestHash": "e9b53ec8af11b7f777316e4e022d1d379f0721bc73b9b6101162416387fc3605",
+        "responseHash": "8feab72140037eef0151a8e4620e52b4768999ab02a35ba7afbdb26a1852c634"
+      },
+      "costUpperYuan": 0.02006312,
+      "measurement": {
+        "label": "content-baishi-craft-npc_bs_065_2-review0",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 10129,
+          "completion_tokens": 7,
+          "total_tokens": 10136,
+          "prompt_tokens_details": {
+            "cached_tokens": 128
+          },
+          "prompt_cache_hit_tokens": 128,
+          "prompt_cache_miss_tokens": 10001
+        },
+        "costUpperYuan": 0.02006312,
+        "cumulativeUpperYuan": 3.2707957600000035,
+        "latencyMs": 782.7713999999996,
+        "timestamp": "2026-10-13T18:15:12.739Z"
+      }
+    },
+    "dea6195c-5b4c-4d4a-ab8a-cd313bac0c89": {
+      "card": "T93",
+      "label": "content-baishi-craft-npc_bs_066_1-review0",
+      "requestHash": "1a441c5d92f3c1302b9cf0aeed9d2c9d988860eaa3775310509d203811f5cd7c",
+      "reservedYuan": 0.088902,
+      "status": "settled",
+      "responseEvidence": {
+        "file": "budget-responses/dea6195c-5b4c-4d4a-ab8a-cd313bac0c89.json",
+        "requestHash": "1a441c5d92f3c1302b9cf0aeed9d2c9d988860eaa3775310509d203811f5cd7c",
+        "responseHash": "521eed098b06f993d5b4fb6325e4c18c710d33dc840992cbc8a10b04c0131454"
+      },
+      "costUpperYuan": 0.02013912,
+      "measurement": {
+        "label": "content-baishi-craft-npc_bs_066_1-review0",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 10167,
+          "completion_tokens": 7,
+          "total_tokens": 10174,
+          "prompt_tokens_details": {
+            "cached_tokens": 128
+          },
+          "prompt_cache_hit_tokens": 128,
+          "prompt_cache_miss_tokens": 10039
+        },
+        "costUpperYuan": 0.02013912,
+        "cumulativeUpperYuan": 3.2909348800000036,
+        "latencyMs": 1159.830399999999,
+        "timestamp": "2026-10-13T18:15:13.926Z"
+      }
+    },
+    "2ffbe60c-2a50-405c-96bf-aa35030af739": {
+      "card": "T93",
+      "label": "content-baishi-craft-npc_bs_066_2-review0",
+      "requestHash": "87b0459af172db9d68df5425bf4e4d2f0fb2094b8d6bbd0c029a0efad3fd3453",
+      "reservedYuan": 0.087252,
+      "status": "settled",
+      "responseEvidence": {
+        "file": "budget-responses/2ffbe60c-2a50-405c-96bf-aa35030af739.json",
+        "requestHash": "87b0459af172db9d68df5425bf4e4d2f0fb2094b8d6bbd0c029a0efad3fd3453",
+        "responseHash": "9b7becf0fbc6a7e7494df782baec2b4cb1524986ab44fe494d3aa381e07f0850"
+      },
+      "costUpperYuan": 0.01979912,
+      "measurement": {
+        "label": "content-baishi-craft-npc_bs_066_2-review0",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 9997,
+          "completion_tokens": 7,
+          "total_tokens": 10004,
+          "prompt_tokens_details": {
+            "cached_tokens": 128
+          },
+          "prompt_cache_hit_tokens": 128,
+          "prompt_cache_miss_tokens": 9869
+        },
+        "costUpperYuan": 0.01979912,
+        "cumulativeUpperYuan": 3.3107340000000036,
+        "latencyMs": 1299.448199999999,
+        "timestamp": "2026-10-13T18:15:15.251Z"
+      }
+    },
+    "6dc7b585-68b8-42ed-bd45-b748ee44f0af": {
+      "card": "T93",
+      "label": "content-baishi-craft-npc_bs_067_1-review0",
+      "requestHash": "b7b5f75ed313bfa82d6f80f73575bf31d2b6f8c1cd41459526bbfe40d1246b6a",
+      "reservedYuan": 0.08819,
+      "status": "settled",
+      "responseEvidence": {
+        "file": "budget-responses/6dc7b585-68b8-42ed-bd45-b748ee44f0af.json",
+        "requestHash": "b7b5f75ed313bfa82d6f80f73575bf31d2b6f8c1cd41459526bbfe40d1246b6a",
+        "responseHash": "2bdadb1d5266243cede48ce41ab01a2afb516182d5e7700cad30f653b8f78e48"
+      },
+      "costUpperYuan": 0.02004512,
+      "measurement": {
+        "label": "content-baishi-craft-npc_bs_067_1-review0",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 10120,
+          "completion_tokens": 7,
+          "total_tokens": 10127,
+          "prompt_tokens_details": {
+            "cached_tokens": 128
+          },
+          "prompt_cache_hit_tokens": 128,
+          "prompt_cache_miss_tokens": 9992
+        },
+        "costUpperYuan": 0.02004512,
+        "cumulativeUpperYuan": 3.3307791200000034,
+        "latencyMs": 1072.9747000000007,
+        "timestamp": "2026-10-13T18:15:16.352Z"
+      }
+    },
+    "28d76ac3-4223-4157-af89-651dbf5feee6": {
+      "card": "T93",
+      "label": "content-baishi-craft-npc_bs_067_2-review0",
+      "requestHash": "72e25085aaaf17a85383793d1eeda32f322c443231a39b70d3f18c546fff13e6",
+      "reservedYuan": 0.08686,
+      "status": "settled",
+      "responseEvidence": {
+        "file": "budget-responses/28d76ac3-4223-4157-af89-651dbf5feee6.json",
+        "requestHash": "72e25085aaaf17a85383793d1eeda32f322c443231a39b70d3f18c546fff13e6",
+        "responseHash": "6522e7cf124869a9edebe916dc4c1f6c384fffb8eda7474bd2fdf7c1c9f22e49"
+      },
+      "costUpperYuan": 0.01957712,
+      "measurement": {
+        "label": "content-baishi-craft-npc_bs_067_2-review0",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 9886,
+          "completion_tokens": 7,
+          "total_tokens": 9893,
+          "prompt_tokens_details": {
+            "cached_tokens": 128
+          },
+          "prompt_cache_hit_tokens": 128,
+          "prompt_cache_miss_tokens": 9758
+        },
+        "costUpperYuan": 0.01957712,
+        "cumulativeUpperYuan": 3.3503562400000035,
+        "latencyMs": 815.0205000000005,
+        "timestamp": "2026-10-13T18:15:17.193Z"
+      }
+    },
+    "9bb31ca1-fa10-488d-842a-e4853171fc8f": {
+      "card": "T93",
+      "label": "content-baishi-craft-npc_bs_068_1-review0",
+      "requestHash": "39945e3c064106c3e560eff32e3c93292a40962a30ca747f1cd20dd6d3912f27",
+      "reservedYuan": 0.086804,
+      "status": "settled",
+      "responseEvidence": {
+        "file": "budget-responses/9bb31ca1-fa10-488d-842a-e4853171fc8f.json",
+        "requestHash": "39945e3c064106c3e560eff32e3c93292a40962a30ca747f1cd20dd6d3912f27",
+        "responseHash": "9d9b0f45e1ab0aa75a492c31debbed151b3990130eb7741a5197ee26e5b77b52"
+      },
+      "costUpperYuan": 0.01948912,
+      "measurement": {
+        "label": "content-baishi-craft-npc_bs_068_1-review0",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 9842,
+          "completion_tokens": 7,
+          "total_tokens": 9849,
+          "prompt_tokens_details": {
+            "cached_tokens": 128
+          },
+          "prompt_cache_hit_tokens": 128,
+          "prompt_cache_miss_tokens": 9714
+        },
+        "costUpperYuan": 0.01948912,
+        "cumulativeUpperYuan": 3.3698453600000033,
+        "latencyMs": 752.1975999999995,
+        "timestamp": "2026-10-13T18:15:17.973Z"
+      }
+    },
+    "52bd48d6-6cd2-4962-9200-2063a2319662": {
+      "card": "T93",
+      "label": "content-baishi-craft-npc_bs_068_2-review0",
+      "requestHash": "aee3df5d4330d550a5a74b49ba5c2a5278f4bccfb0f8d2c8fad02681800f2b6b",
+      "reservedYuan": 0.087294,
+      "status": "settled",
+      "responseEvidence": {
+        "file": "budget-responses/52bd48d6-6cd2-4962-9200-2063a2319662.json",
+        "requestHash": "aee3df5d4330d550a5a74b49ba5c2a5278f4bccfb0f8d2c8fad02681800f2b6b",
+        "responseHash": "e1afe96a4b212e7f6f2d6f5370e87d803194f8feb192a7e8b769d413a1012b16"
+      },
+      "costUpperYuan": 0.01969912,
+      "measurement": {
+        "label": "content-baishi-craft-npc_bs_068_2-review0",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 9947,
+          "completion_tokens": 7,
+          "total_tokens": 9954,
+          "prompt_tokens_details": {
+            "cached_tokens": 128
+          },
+          "prompt_cache_hit_tokens": 128,
+          "prompt_cache_miss_tokens": 9819
+        },
+        "costUpperYuan": 0.01969912,
+        "cumulativeUpperYuan": 3.389544480000003,
+        "latencyMs": 1047.0179000000007,
+        "timestamp": "2026-10-13T18:15:19.049Z"
+      }
+    },
+    "36449bd6-439b-4cc7-b633-72319f716795": {
+      "card": "T93",
+      "label": "content-baishi-craft-npc_bs_069_1-review0",
+      "requestHash": "6a0f0af1c31c71220bf5ed07b59285dbd12647c697329dd84e5887047a8dd11d",
+      "reservedYuan": 0.087124,
+      "status": "settled",
+      "responseEvidence": {
+        "file": "budget-responses/36449bd6-439b-4cc7-b633-72319f716795.json",
+        "requestHash": "6a0f0af1c31c71220bf5ed07b59285dbd12647c697329dd84e5887047a8dd11d",
+        "responseHash": "6c7806a88af938cc9da821dbb15a6c6bad1d9c2d4be7430da75d719e39cf6414"
+      },
+      "costUpperYuan": 0.01970112,
+      "measurement": {
+        "label": "content-baishi-craft-npc_bs_069_1-review0",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 9948,
+          "completion_tokens": 7,
+          "total_tokens": 9955,
+          "prompt_tokens_details": {
+            "cached_tokens": 128
+          },
+          "prompt_cache_hit_tokens": 128,
+          "prompt_cache_miss_tokens": 9820
+        },
+        "costUpperYuan": 0.01970112,
+        "cumulativeUpperYuan": 3.4092456000000033,
+        "latencyMs": 1303.8973000000005,
+        "timestamp": "2026-10-13T18:15:20.384Z"
+      }
+    },
+    "c3644839-3cac-4bc0-99d8-ddde0a13e269": {
+      "card": "T93",
+      "label": "content-baishi-craft-npc_bs_069_2-review0",
+      "requestHash": "750efbccd9a5da2d69324047171109801f1876eca2d9dc3eb1c0bfe4b68e6ed9",
+      "reservedYuan": 0.088504,
+      "status": "settled",
+      "responseEvidence": {
+        "file": "budget-responses/c3644839-3cac-4bc0-99d8-ddde0a13e269.json",
+        "requestHash": "750efbccd9a5da2d69324047171109801f1876eca2d9dc3eb1c0bfe4b68e6ed9",
+        "responseHash": "dae9b71e649b672ada7cb480eeade3691371a44e8d1d048ee593e06c518126bb"
+      },
+      "costUpperYuan": 0.020099119999999998,
+      "measurement": {
+        "label": "content-baishi-craft-npc_bs_069_2-review0",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 10147,
+          "completion_tokens": 7,
+          "total_tokens": 10154,
+          "prompt_tokens_details": {
+            "cached_tokens": 128
+          },
+          "prompt_cache_hit_tokens": 128,
+          "prompt_cache_miss_tokens": 10019
+        },
+        "costUpperYuan": 0.020099119999999998,
+        "cumulativeUpperYuan": 3.429344720000003,
+        "latencyMs": 1239.7390000000014,
+        "timestamp": "2026-10-13T18:15:21.650Z"
+      }
+    },
+    "fec19898-dc66-4000-b928-5ae712a0f632": {
+      "card": "T93",
+      "label": "content-baishi-craft-npc_bs_076_1-review0",
+      "requestHash": "9d5c8e102b0afdf3937b986b4bcd5e172eea5c4a7b2b53cbc243af87c319a953",
+      "reservedYuan": 0.087476,
+      "status": "settled",
+      "responseEvidence": {
+        "file": "budget-responses/fec19898-dc66-4000-b928-5ae712a0f632.json",
+        "requestHash": "9d5c8e102b0afdf3937b986b4bcd5e172eea5c4a7b2b53cbc243af87c319a953",
+        "responseHash": "3f22741322685a432868a60dac9009af090eeda1160ce7370a412847a2790920"
+      },
+      "costUpperYuan": 0.019863119999999998,
+      "measurement": {
+        "label": "content-baishi-craft-npc_bs_076_1-review0",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 10029,
+          "completion_tokens": 7,
+          "total_tokens": 10036,
+          "prompt_tokens_details": {
+            "cached_tokens": 128
+          },
+          "prompt_cache_hit_tokens": 128,
+          "prompt_cache_miss_tokens": 9901
+        },
+        "costUpperYuan": 0.019863119999999998,
+        "cumulativeUpperYuan": 3.4492078400000032,
+        "latencyMs": 1161.7969999999987,
+        "timestamp": "2026-10-13T18:15:22.841Z"
+      }
+    },
+    "ff16863c-514b-4cf0-b255-b6f70ad6d47d": {
+      "card": "T93",
+      "label": "content-baishi-craft-npc_bs_076_2-review0",
+      "requestHash": "76e2dac25092fd184d35b9f4e6655517a7c4e06cb8aab0dd9a4e623a13e4c92c",
+      "reservedYuan": 0.089134,
+      "status": "settled",
+      "responseEvidence": {
+        "file": "budget-responses/ff16863c-514b-4cf0-b255-b6f70ad6d47d.json",
+        "requestHash": "76e2dac25092fd184d35b9f4e6655517a7c4e06cb8aab0dd9a4e623a13e4c92c",
+        "responseHash": "2ef699f1583bf8d18f8f32a321f96fa2d5a875c318635878ab720f6314bd07ed"
+      },
+      "costUpperYuan": 0.02017712,
+      "measurement": {
+        "label": "content-baishi-craft-npc_bs_076_2-review0",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 10186,
+          "completion_tokens": 7,
+          "total_tokens": 10193,
+          "prompt_tokens_details": {
+            "cached_tokens": 128
+          },
+          "prompt_cache_hit_tokens": 128,
+          "prompt_cache_miss_tokens": 10058
+        },
+        "costUpperYuan": 0.02017712,
+        "cumulativeUpperYuan": 3.4693849600000033,
+        "latencyMs": 620.3188000000009,
+        "timestamp": "2026-10-13T18:15:23.488Z"
+      }
+    },
+    "5ef960b2-de5c-46d7-aaaa-f5a827c96ced": {
+      "card": "T93",
+      "label": "content-baishi-craft-npc_bs_076_3-review0",
+      "requestHash": "2ef91ec5c8b57b7fa1e48e4ae3a0954759d9239f8334ed668f6e05b7988f9293",
+      "reservedYuan": 0.095038,
+      "status": "settled",
+      "responseEvidence": {
+        "file": "budget-responses/5ef960b2-de5c-46d7-aaaa-f5a827c96ced.json",
+        "requestHash": "2ef91ec5c8b57b7fa1e48e4ae3a0954759d9239f8334ed668f6e05b7988f9293",
+        "responseHash": "55b0b126acc83dd88ab5c2d155daa6d17399e60f48279c45f0cf509538da0e3c"
+      },
+      "costUpperYuan": 0.02202912,
+      "measurement": {
+        "label": "content-baishi-craft-npc_bs_076_3-review0",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 11112,
+          "completion_tokens": 7,
+          "total_tokens": 11119,
+          "prompt_tokens_details": {
+            "cached_tokens": 128
+          },
+          "prompt_cache_hit_tokens": 128,
+          "prompt_cache_miss_tokens": 10984
+        },
+        "costUpperYuan": 0.02202912,
+        "cumulativeUpperYuan": 3.4914140800000033,
+        "latencyMs": 805.4632999999994,
+        "timestamp": "2026-10-13T18:15:24.322Z"
+      }
+    },
+    "be38cc20-99bd-492c-bd82-43b740ec4a35": {
+      "card": "T93",
+      "label": "content-baishi-craft-npc_bs_077_1-review0",
+      "requestHash": "f2aac0a5d0eba470a73a901553e38265e04c1edf9667d8d82dd72a2fc8fdbcd8",
+      "reservedYuan": 0.095844,
+      "status": "settled",
+      "responseEvidence": {
+        "file": "budget-responses/be38cc20-99bd-492c-bd82-43b740ec4a35.json",
+        "requestHash": "f2aac0a5d0eba470a73a901553e38265e04c1edf9667d8d82dd72a2fc8fdbcd8",
+        "responseHash": "f1c12c48279d71a27dae54157197263a1a1c2e4d98ad0cbf73a3a74a6bab7889"
+      },
+      "costUpperYuan": 0.02223312,
+      "measurement": {
+        "label": "content-baishi-craft-npc_bs_077_1-review0",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 11214,
+          "completion_tokens": 7,
+          "total_tokens": 11221,
+          "prompt_tokens_details": {
+            "cached_tokens": 128
+          },
+          "prompt_cache_hit_tokens": 128,
+          "prompt_cache_miss_tokens": 11086
+        },
+        "costUpperYuan": 0.02223312,
+        "cumulativeUpperYuan": 3.5136472000000034,
+        "latencyMs": 988.5904999999984,
+        "timestamp": "2026-10-13T18:15:25.340Z"
+      }
+    },
+    "05abccd5-a437-4d58-81f9-25c0235b7324": {
+      "card": "T93",
+      "label": "content-baishi-craft-npc_bs_077_2-review0",
+      "requestHash": "2cd02a9d3f55c1b6cbc3b41b39940fc6d6e492e5983a76762898c06cc9c0ecff",
+      "reservedYuan": 0.095046,
+      "status": "settled",
+      "responseEvidence": {
+        "file": "budget-responses/05abccd5-a437-4d58-81f9-25c0235b7324.json",
+        "requestHash": "2cd02a9d3f55c1b6cbc3b41b39940fc6d6e492e5983a76762898c06cc9c0ecff",
+        "responseHash": "ebd9562277f0ce2cfb6e5f8ecac3d5b499e52da78285069dc6320ccb39b8ac7c"
+      },
+      "costUpperYuan": 0.02173712,
+      "measurement": {
+        "label": "content-baishi-craft-npc_bs_077_2-review0",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 10966,
+          "completion_tokens": 7,
+          "total_tokens": 10973,
+          "prompt_tokens_details": {
+            "cached_tokens": 128
+          },
+          "prompt_cache_hit_tokens": 128,
+          "prompt_cache_miss_tokens": 10838
+        },
+        "costUpperYuan": 0.02173712,
+        "cumulativeUpperYuan": 3.5353843200000035,
+        "latencyMs": 914.1327999999994,
+        "timestamp": "2026-10-13T18:15:26.280Z"
+      }
+    },
+    "b3afa042-0ef6-4786-aa68-e5b949d72135": {
+      "card": "T93",
+      "label": "content-baishi-craft-npc_bs_077_3-review0",
+      "requestHash": "3792955926aba5fdda8a3c60bce2a63b21241c7c6e53fdd7b9dadf1d201c4f29",
+      "reservedYuan": 0.088674,
+      "status": "settled",
+      "responseEvidence": {
+        "file": "budget-responses/b3afa042-0ef6-4786-aa68-e5b949d72135.json",
+        "requestHash": "3792955926aba5fdda8a3c60bce2a63b21241c7c6e53fdd7b9dadf1d201c4f29",
+        "responseHash": "2f99b1e2bc46a22d8163dcfc3e1f7a6a2667da4b122f67d7df9c4db6f55142cd"
+      },
+      "costUpperYuan": 0.02006512,
+      "measurement": {
+        "label": "content-baishi-craft-npc_bs_077_3-review0",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 10130,
+          "completion_tokens": 7,
+          "total_tokens": 10137,
+          "prompt_tokens_details": {
+            "cached_tokens": 128
+          },
+          "prompt_cache_hit_tokens": 128,
+          "prompt_cache_miss_tokens": 10002
+        },
+        "costUpperYuan": 0.02006512,
+        "cumulativeUpperYuan": 3.5554494400000034,
+        "latencyMs": 995.0831999999973,
+        "timestamp": "2026-10-13T18:15:27.300Z"
+      }
+    },
+    "21340a2b-9e82-4f51-ba3a-505f6b158e75": {
+      "card": "T93",
+      "label": "content-baishi-craft-npc_bs_078_1-review0",
+      "requestHash": "c83804bfa35c318ce7a9d099454597215b2e518df3fd23faee530fc4ae3ea09c",
+      "reservedYuan": 0.093516,
+      "status": "settled",
+      "responseEvidence": {
+        "file": "budget-responses/21340a2b-9e82-4f51-ba3a-505f6b158e75.json",
+        "requestHash": "c83804bfa35c318ce7a9d099454597215b2e518df3fd23faee530fc4ae3ea09c",
+        "responseHash": "cf03dd051dfa1b9f936fdd915a3b073af9388e5cb549b6f57de452aa3f6e1214"
+      },
+      "costUpperYuan": 0.02211512,
+      "measurement": {
+        "label": "content-baishi-craft-npc_bs_078_1-review0",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 10831,
+          "completion_tokens": 88,
+          "total_tokens": 10919,
+          "prompt_tokens_details": {
+            "cached_tokens": 128
+          },
+          "prompt_cache_hit_tokens": 128,
+          "prompt_cache_miss_tokens": 10703
+        },
+        "costUpperYuan": 0.02211512,
+        "cumulativeUpperYuan": 3.5775645600000034,
+        "latencyMs": 1525.0315999999984,
+        "timestamp": "2026-10-13T18:15:28.856Z"
+      }
+    },
+    "da38c493-fca1-492a-b3d4-aadfb2c7f3f1": {
+      "card": "T93",
+      "label": "content-baishi-craft-npc_bs_078_2-review0",
+      "requestHash": "9d7f68e8b41fa7a9274c9fb49f8b5be952cf45a25878150b068c32316d068b49",
+      "reservedYuan": 0.092978,
+      "status": "settled",
+      "responseEvidence": {
+        "file": "budget-responses/da38c493-fca1-492a-b3d4-aadfb2c7f3f1.json",
+        "requestHash": "9d7f68e8b41fa7a9274c9fb49f8b5be952cf45a25878150b068c32316d068b49",
+        "responseHash": "032327cbcc2931f680c9000ebe6be3f869f6b3a28ab654d1dad6cb3cad032bd2"
+      },
+      "costUpperYuan": 0.02144312,
+      "measurement": {
+        "label": "content-baishi-craft-npc_bs_078_2-review0",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 10819,
+          "completion_tokens": 7,
+          "total_tokens": 10826,
+          "prompt_tokens_details": {
+            "cached_tokens": 128
+          },
+          "prompt_cache_hit_tokens": 128,
+          "prompt_cache_miss_tokens": 10691
+        },
+        "costUpperYuan": 0.02144312,
+        "cumulativeUpperYuan": 3.5990076800000033,
+        "latencyMs": 1009.1506000000008,
+        "timestamp": "2026-10-13T18:15:29.892Z"
+      }
+    },
+    "65b553ef-fea6-454b-be7e-b1d7a6c5213f": {
+      "card": "T93",
+      "label": "content-baishi-craft-npc_bs_078_3-review0",
+      "requestHash": "ba9fb94e8ae1654609e906c3d196cd2f39764bbc4aae6e1f5bb5d0d32b23cb1d",
+      "reservedYuan": 0.08879,
+      "status": "settled",
+      "responseEvidence": {
+        "file": "budget-responses/65b553ef-fea6-454b-be7e-b1d7a6c5213f.json",
+        "requestHash": "ba9fb94e8ae1654609e906c3d196cd2f39764bbc4aae6e1f5bb5d0d32b23cb1d",
+        "responseHash": "f2d70e9360f58f8410700ece339a74daa2f2a3d6cdf7eb66d446adfd5e17290c"
+      },
+      "costUpperYuan": 0.02012512,
+      "measurement": {
+        "label": "content-baishi-craft-npc_bs_078_3-review0",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 10160,
+          "completion_tokens": 7,
+          "total_tokens": 10167,
+          "prompt_tokens_details": {
+            "cached_tokens": 128
+          },
+          "prompt_cache_hit_tokens": 128,
+          "prompt_cache_miss_tokens": 10032
+        },
+        "costUpperYuan": 0.02012512,
+        "cumulativeUpperYuan": 3.619132800000003,
+        "latencyMs": 804.0898000000016,
+        "timestamp": "2026-10-13T18:15:30.722Z"
+      }
+    },
+    "0060025e-8d4b-40af-8589-673c5ee904a3": {
+      "card": "T93",
+      "label": "content-baishi-craft-npc_bs_079_1-review0",
+      "requestHash": "673d6c78c783a2cf61969a9205738859ea87147982e2bd42ef6dc6fa88a58315",
+      "reservedYuan": 0.092906,
+      "status": "settled",
+      "responseEvidence": {
+        "file": "budget-responses/0060025e-8d4b-40af-8589-673c5ee904a3.json",
+        "requestHash": "673d6c78c783a2cf61969a9205738859ea87147982e2bd42ef6dc6fa88a58315",
+        "responseHash": "9d178ee415583dfcdc6b74dcb2887864a636f798f043a00ffb9d16fb13c8d754"
+      },
+      "costUpperYuan": 0.02133112,
+      "measurement": {
+        "label": "content-baishi-craft-npc_bs_079_1-review0",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 10763,
+          "completion_tokens": 7,
+          "total_tokens": 10770,
+          "prompt_tokens_details": {
+            "cached_tokens": 128
+          },
+          "prompt_cache_hit_tokens": 128,
+          "prompt_cache_miss_tokens": 10635
+        },
+        "costUpperYuan": 0.02133112,
+        "cumulativeUpperYuan": 3.6404639200000033,
+        "latencyMs": 1279.9128999999994,
+        "timestamp": "2026-10-13T18:15:32.025Z"
+      }
+    },
+    "7732861b-1e6d-4c73-8e60-b15c762ebe22": {
+      "card": "T93",
+      "label": "content-baishi-craft-npc_bs_079_2-review0",
+      "requestHash": "1c05ce810ef231bda7de4eb78762e6a3f0932c165a6f7eb4ef9a76fe973a5703",
+      "reservedYuan": 0.088006,
+      "status": "settled",
+      "responseEvidence": {
+        "file": "budget-responses/7732861b-1e6d-4c73-8e60-b15c762ebe22.json",
+        "requestHash": "1c05ce810ef231bda7de4eb78762e6a3f0932c165a6f7eb4ef9a76fe973a5703",
+        "responseHash": "f4beb28362e497e611a7bf5b524968b1c079da7f54dbb10384252ab0b856954a"
+      },
+      "costUpperYuan": 0.01974712,
+      "measurement": {
+        "label": "content-baishi-craft-npc_bs_079_2-review0",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 9971,
+          "completion_tokens": 7,
+          "total_tokens": 9978,
+          "prompt_tokens_details": {
+            "cached_tokens": 128
+          },
+          "prompt_cache_hit_tokens": 128,
+          "prompt_cache_miss_tokens": 9843
+        },
+        "costUpperYuan": 0.01974712,
+        "cumulativeUpperYuan": 3.660211040000003,
+        "latencyMs": 888.7813999999998,
+        "timestamp": "2026-10-13T18:15:32.944Z"
+      }
+    },
+    "eade6321-4130-4740-92c3-e26a115ae52c": {
+      "card": "T93",
+      "label": "content-baishi-craft-npc_bs_079_3-review0",
+      "requestHash": "01cc7629daaa6b472659db3c2988ded36fe40aed7f457fb68c9f7578ff4e94fa",
+      "reservedYuan": 0.087328,
+      "status": "settled",
+      "responseEvidence": {
+        "file": "budget-responses/eade6321-4130-4740-92c3-e26a115ae52c.json",
+        "requestHash": "01cc7629daaa6b472659db3c2988ded36fe40aed7f457fb68c9f7578ff4e94fa",
+        "responseHash": "45168f458f04e8c3cff4884903ecede6fe04e7d060f2f508cceb94463839d4f4"
+      },
+      "costUpperYuan": 0.019755119999999998,
+      "measurement": {
+        "label": "content-baishi-craft-npc_bs_079_3-review0",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 9975,
+          "completion_tokens": 7,
+          "total_tokens": 9982,
+          "prompt_tokens_details": {
+            "cached_tokens": 128
+          },
+          "prompt_cache_hit_tokens": 128,
+          "prompt_cache_miss_tokens": 9847
+        },
+        "costUpperYuan": 0.019755119999999998,
+        "cumulativeUpperYuan": 3.6799661600000033,
+        "latencyMs": 1088.1834999999992,
+        "timestamp": "2026-10-13T18:15:34.063Z"
+      }
+    },
+    "485019e1-531d-4084-bf84-2a951e0bd703": {
+      "card": "T93",
+      "label": "content-baishi-craft-npc_bs_080_1-review0",
+      "requestHash": "0128aaedffb5cdd1f6837b345a05a7dc2f39d548b31a3ebdc0ae030cb72ae9df",
+      "reservedYuan": 0.087368,
+      "status": "settled",
+      "responseEvidence": {
+        "file": "budget-responses/485019e1-531d-4084-bf84-2a951e0bd703.json",
+        "requestHash": "0128aaedffb5cdd1f6837b345a05a7dc2f39d548b31a3ebdc0ae030cb72ae9df",
+        "responseHash": "24f3ce82b02058e918584a711bea10400885674efda864ccd45ca968e0389605"
+      },
+      "costUpperYuan": 0.019703119999999998,
+      "measurement": {
+        "label": "content-baishi-craft-npc_bs_080_1-review0",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 9949,
+          "completion_tokens": 7,
+          "total_tokens": 9956,
+          "prompt_tokens_details": {
+            "cached_tokens": 128
+          },
+          "prompt_cache_hit_tokens": 128,
+          "prompt_cache_miss_tokens": 9821
+        },
+        "costUpperYuan": 0.019703119999999998,
+        "cumulativeUpperYuan": 3.6996692800000033,
+        "latencyMs": 1051.6093999999975,
+        "timestamp": "2026-10-13T18:15:35.141Z"
+      }
+    },
+    "8f21643b-6a2e-45cb-ad21-90efbd691c28": {
+      "card": "T93",
+      "label": "content-baishi-craft-npc_bs_080_2-review0",
+      "requestHash": "0e25240870b710ed7e47dd16513c4c8871dd009595cd9d37c5033f88591a57db",
+      "reservedYuan": 0.087038,
+      "status": "settled",
+      "responseEvidence": {
+        "file": "budget-responses/8f21643b-6a2e-45cb-ad21-90efbd691c28.json",
+        "requestHash": "0e25240870b710ed7e47dd16513c4c8871dd009595cd9d37c5033f88591a57db",
+        "responseHash": "4ab21836245b9574af78909572bc642d00aa866731d6b4f9bf06029f82c05c1d"
+      },
+      "costUpperYuan": 0.01977512,
+      "measurement": {
+        "label": "content-baishi-craft-npc_bs_080_2-review0",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 9985,
+          "completion_tokens": 7,
+          "total_tokens": 9992,
+          "prompt_tokens_details": {
+            "cached_tokens": 128
+          },
+          "prompt_cache_hit_tokens": 128,
+          "prompt_cache_miss_tokens": 9857
+        },
+        "costUpperYuan": 0.01977512,
+        "cumulativeUpperYuan": 3.719444400000003,
+        "latencyMs": 809.1982999999964,
+        "timestamp": "2026-10-13T18:15:35.979Z"
+      }
+    },
+    "3101b19c-d6aa-4ff2-b08e-8efd502079fc": {
+      "card": "T93",
+      "label": "content-baishi-craft-npc_bs_080_3-review0",
+      "requestHash": "0d752e5f8a30ebcedd31256367cc5233a3c7c344dc5d0b1b5b18e8c2685b9afd",
+      "reservedYuan": 0.093688,
+      "status": "settled",
+      "responseEvidence": {
+        "file": "budget-responses/3101b19c-d6aa-4ff2-b08e-8efd502079fc.json",
+        "requestHash": "0d752e5f8a30ebcedd31256367cc5233a3c7c344dc5d0b1b5b18e8c2685b9afd",
+        "responseHash": "24d84ba1f1fecd3c3d25dcddefc3a2424d55d575609183c657c6b55412ef6ebd"
+      },
+      "costUpperYuan": 0.02143712,
+      "measurement": {
+        "label": "content-baishi-craft-npc_bs_080_3-review0",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 10816,
+          "completion_tokens": 7,
+          "total_tokens": 10823,
+          "prompt_tokens_details": {
+            "cached_tokens": 128
+          },
+          "prompt_cache_hit_tokens": 128,
+          "prompt_cache_miss_tokens": 10688
+        },
+        "costUpperYuan": 0.02143712,
+        "cumulativeUpperYuan": 3.740881520000003,
+        "latencyMs": 847.0992000000042,
+        "timestamp": "2026-10-13T18:15:36.855Z"
+      }
+    },
+    "8922ca96-ec0f-4ace-ab4d-23432f5a533a": {
+      "card": "T93",
+      "label": "content-baishi-craft-bld_bs_reed_dao-review0",
+      "requestHash": "0381eea0e91854f59523c7d60ba3128a5d95839c46c0f95514b996524c807ab2",
+      "reservedYuan": 0.04635,
+      "status": "settled",
+      "responseEvidence": {
+        "file": "budget-responses/8922ca96-ec0f-4ace-ab4d-23432f5a533a.json",
+        "requestHash": "0381eea0e91854f59523c7d60ba3128a5d95839c46c0f95514b996524c807ab2",
+        "responseHash": "54a197f46d639211e8af7903127a4712745993ee716b9e08a2ae4a851305e856"
+      },
+      "costUpperYuan": 0.00896512,
+      "measurement": {
+        "label": "content-baishi-craft-bld_bs_reed_dao-review0",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 4580,
+          "completion_tokens": 7,
+          "total_tokens": 4587,
+          "prompt_tokens_details": {
+            "cached_tokens": 128
+          },
+          "prompt_cache_hit_tokens": 128,
+          "prompt_cache_miss_tokens": 4452
+        },
+        "costUpperYuan": 0.00896512,
+        "cumulativeUpperYuan": 3.749846640000003,
+        "latencyMs": 689.122199999998,
+        "timestamp": "2026-10-13T18:15:37.568Z"
+      }
+    },
+    "7126de10-8df6-4c56-950d-7b7807608375": {
+      "card": "T93",
+      "label": "content-baishi-craft-bld_bs_still_temple-review0",
+      "requestHash": "2df275d916ca636aa97f5d22cf8323f6e4b568d132fec6c04b423030b9518a87",
+      "reservedYuan": 0.04638,
+      "status": "settled",
+      "responseEvidence": {
+        "file": "budget-responses/7126de10-8df6-4c56-950d-7b7807608375.json",
+        "requestHash": "2df275d916ca636aa97f5d22cf8323f6e4b568d132fec6c04b423030b9518a87",
+        "responseHash": "bd39b92e6ea8f4612f489649a387c2297d927e48df64174e3cf06ce98ccec6fc"
+      },
+      "costUpperYuan": 0.00896712,
+      "measurement": {
+        "label": "content-baishi-craft-bld_bs_still_temple-review0",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 4581,
+          "completion_tokens": 7,
+          "total_tokens": 4588,
+          "prompt_tokens_details": {
+            "cached_tokens": 128
+          },
+          "prompt_cache_hit_tokens": 128,
+          "prompt_cache_miss_tokens": 4453
+        },
+        "costUpperYuan": 0.00896712,
+        "cumulativeUpperYuan": 3.758813760000003,
+        "latencyMs": 1023.9712,
+        "timestamp": "2026-10-13T18:15:38.617Z"
+      }
+    },
+    "79ce5423-b6c9-449d-8a72-307235d3c229": {
+      "card": "T93",
+      "label": "content-baishi-craft-bld_bs_measured_hall-review0",
+      "requestHash": "e84b50dabe75f1eb0aa05e68984573b00d3d6788b441b3369455436d282b0679",
+      "reservedYuan": 0.046342,
+      "status": "settled",
+      "responseEvidence": {
+        "file": "budget-responses/79ce5423-b6c9-449d-8a72-307235d3c229.json",
+        "requestHash": "e84b50dabe75f1eb0aa05e68984573b00d3d6788b441b3369455436d282b0679",
+        "responseHash": "e8f1d16c987b095b4571a174ea9fc7fbcb9e9037fcc421aee80b2f13c4ea91b7"
+      },
+      "costUpperYuan": 0.008935120000000001,
+      "measurement": {
+        "label": "content-baishi-craft-bld_bs_measured_hall-review0",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 4565,
+          "completion_tokens": 7,
+          "total_tokens": 4572,
+          "prompt_tokens_details": {
+            "cached_tokens": 128
+          },
+          "prompt_cache_hit_tokens": 128,
+          "prompt_cache_miss_tokens": 4437
+        },
+        "costUpperYuan": 0.008935120000000001,
+        "cumulativeUpperYuan": 3.7677488800000027,
+        "latencyMs": 878.7801000000036,
+        "timestamp": "2026-10-13T18:15:39.521Z"
+      }
+    },
+    "7f66ea16-336e-47e7-8143-b0453377ddfa": {
+      "card": "T93",
+      "label": "content-baishi-craft-item_bs_dao_primer-review0",
+      "requestHash": "c2b0b1db309fecb5ed5bb1f3ddd804ce51f56b7887ff9693aac06a75f8cdd990",
+      "reservedYuan": 0.04701,
+      "status": "settled",
+      "responseEvidence": {
+        "file": "budget-responses/7f66ea16-336e-47e7-8143-b0453377ddfa.json",
+        "requestHash": "c2b0b1db309fecb5ed5bb1f3ddd804ce51f56b7887ff9693aac06a75f8cdd990",
+        "responseHash": "8f07032ff8bfa2537e35a4b689b5812e7dfadf126ad56a283d6e90edb2ce3d22"
+      },
+      "costUpperYuan": 0.009133120000000002,
+      "measurement": {
+        "label": "content-baishi-craft-item_bs_dao_primer-review0",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 4664,
+          "completion_tokens": 7,
+          "total_tokens": 4671,
+          "prompt_tokens_details": {
+            "cached_tokens": 128
+          },
+          "prompt_cache_hit_tokens": 128,
+          "prompt_cache_miss_tokens": 4536
+        },
+        "costUpperYuan": 0.009133120000000002,
+        "cumulativeUpperYuan": 3.7768820000000027,
+        "latencyMs": 1019.3934999999983,
+        "timestamp": "2026-10-13T18:15:40.566Z"
+      }
+    },
+    "12ddeac0-cbb3-4854-b81a-0625de147b2e": {
+      "card": "T93",
+      "label": "content-baishi-craft-item_bs_monk_primer-review0",
+      "requestHash": "017d0c10b74c09d97bb4b6cd443daf2dc19b1a858479f5bcd96d26dd50616bb4",
+      "reservedYuan": 0.047108,
+      "status": "settled",
+      "responseEvidence": {
+        "file": "budget-responses/12ddeac0-cbb3-4854-b81a-0625de147b2e.json",
+        "requestHash": "017d0c10b74c09d97bb4b6cd443daf2dc19b1a858479f5bcd96d26dd50616bb4",
+        "responseHash": "a0e64388280c19ba5b50a1cdebf084a137122140435790ae329765e74f517425"
+      },
+      "costUpperYuan": 0.009157120000000001,
+      "measurement": {
+        "label": "content-baishi-craft-item_bs_monk_primer-review0",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 4676,
+          "completion_tokens": 7,
+          "total_tokens": 4683,
+          "prompt_tokens_details": {
+            "cached_tokens": 128
+          },
+          "prompt_cache_hit_tokens": 128,
+          "prompt_cache_miss_tokens": 4548
+        },
+        "costUpperYuan": 0.009157120000000001,
+        "cumulativeUpperYuan": 3.7860391200000025,
+        "latencyMs": 959.2839999999997,
+        "timestamp": "2026-10-13T18:15:41.549Z"
+      }
+    },
+    "ef4c653f-44c6-41e5-9493-89f8c4b8207b": {
+      "card": "T93",
+      "label": "content-baishi-craft-item_bs_mage_primer-review0",
+      "requestHash": "85e43cf092d84a00143f98906b232f577ff6678ef92f04c25b7ffea7c40e80ef",
+      "reservedYuan": 0.046954,
+      "status": "settled",
+      "responseEvidence": {
+        "file": "budget-responses/ef4c653f-44c6-41e5-9493-89f8c4b8207b.json",
+        "requestHash": "85e43cf092d84a00143f98906b232f577ff6678ef92f04c25b7ffea7c40e80ef",
+        "responseHash": "e950810e01d2b66529c28e998871a15d522599dbabd9f310b193d4a1bcd241e7"
+      },
+      "costUpperYuan": 0.00907112,
+      "measurement": {
+        "label": "content-baishi-craft-item_bs_mage_primer-review0",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 4633,
+          "completion_tokens": 7,
+          "total_tokens": 4640,
+          "prompt_tokens_details": {
+            "cached_tokens": 128
+          },
+          "prompt_cache_hit_tokens": 128,
+          "prompt_cache_miss_tokens": 4505
+        },
+        "costUpperYuan": 0.00907112,
+        "cumulativeUpperYuan": 3.7951102400000027,
+        "latencyMs": 884.1434000000008,
+        "timestamp": "2026-10-13T18:15:42.456Z"
+      }
+    },
+    "9903f79a-b19c-4274-8c8b-fe54e3e65c33": {
+      "card": "T93",
+      "label": "content-baishi-craft-item_bs_martial_primer-review0",
+      "requestHash": "45aca40d05bd6eff78de187d81048b0c32ab5e527f9d4ecd105b58fa387e7989",
+      "reservedYuan": 0.046958,
+      "status": "settled",
+      "responseEvidence": {
+        "file": "budget-responses/9903f79a-b19c-4274-8c8b-fe54e3e65c33.json",
+        "requestHash": "45aca40d05bd6eff78de187d81048b0c32ab5e527f9d4ecd105b58fa387e7989",
+        "responseHash": "8a2ce7bdce5a4ad9d93a7e882daa8dda6cc0823d4ce894c63053f2759cf3133d"
+      },
+      "costUpperYuan": 0.009103120000000001,
+      "measurement": {
+        "label": "content-baishi-craft-item_bs_martial_primer-review0",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 4649,
+          "completion_tokens": 7,
+          "total_tokens": 4656,
+          "prompt_tokens_details": {
+            "cached_tokens": 128
+          },
+          "prompt_cache_hit_tokens": 128,
+          "prompt_cache_miss_tokens": 4521
+        },
+        "costUpperYuan": 0.009103120000000001,
+        "cumulativeUpperYuan": 3.8042133600000025,
+        "latencyMs": 764.9368000000031,
+        "timestamp": "2026-10-13T18:15:43.252Z"
+      }
+    },
+    "3b5ea603-e3bb-4a9d-ab1e-60b681ccad1b": {
+      "card": "T93",
+      "label": "content-baishi-craft-skill_mind_01-review0",
+      "requestHash": "47e5873b45561d60d56e2e47577cb5c6661f4cb30fa544c9cba71599034b32e6",
+      "reservedYuan": 0.046312,
+      "status": "settled",
+      "responseEvidence": {
+        "file": "budget-responses/3b5ea603-e3bb-4a9d-ab1e-60b681ccad1b.json",
+        "requestHash": "47e5873b45561d60d56e2e47577cb5c6661f4cb30fa544c9cba71599034b32e6",
+        "responseHash": "91f3a67682a032ca36f95957ead024739ac3b62e61f6413a1a15125cbf32bba1"
+      },
+      "costUpperYuan": 0.008881120000000001,
+      "measurement": {
+        "label": "content-baishi-craft-skill_mind_01-review0",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 4538,
+          "completion_tokens": 7,
+          "total_tokens": 4545,
+          "prompt_tokens_details": {
+            "cached_tokens": 128
+          },
+          "prompt_cache_hit_tokens": 128,
+          "prompt_cache_miss_tokens": 4410
+        },
+        "costUpperYuan": 0.008881120000000001,
+        "cumulativeUpperYuan": 3.8130944800000024,
+        "latencyMs": 793.1209999999992,
+        "timestamp": "2026-10-13T18:15:44.071Z"
+      }
+    },
+    "a52619e3-9fed-47fa-a128-efe52323fac5": {
+      "card": "T93",
+      "label": "content-baishi-craft-skill_mind_05-review0",
+      "requestHash": "f6f0799f62cba852be0a2d8037b80b65ddb1c9751b24897398157bbdcf3d923c",
+      "reservedYuan": 0.04621,
+      "status": "settled",
+      "responseEvidence": {
+        "file": "budget-responses/a52619e3-9fed-47fa-a128-efe52323fac5.json",
+        "requestHash": "f6f0799f62cba852be0a2d8037b80b65ddb1c9751b24897398157bbdcf3d923c",
+        "responseHash": "88f9723f8d639367e774a5cb84e18de40f6b6aeae513a962d94bef31cc679642"
+      },
+      "costUpperYuan": 0.008859120000000002,
+      "measurement": {
+        "label": "content-baishi-craft-skill_mind_05-review0",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 4527,
+          "completion_tokens": 7,
+          "total_tokens": 4534,
+          "prompt_tokens_details": {
+            "cached_tokens": 128
+          },
+          "prompt_cache_hit_tokens": 128,
+          "prompt_cache_miss_tokens": 4399
+        },
+        "costUpperYuan": 0.008859120000000002,
+        "cumulativeUpperYuan": 3.8219536000000023,
+        "latencyMs": 989.9665000000023,
+        "timestamp": "2026-10-13T18:15:45.083Z"
+      }
+    },
+    "7bc0e5e5-cf61-40f3-bbcd-ee4105d153a4": {
+      "card": "T93",
+      "label": "content-baishi-craft-skill_s1_marked_letter-review0",
+      "requestHash": "7b22cca19e0fe4cc6cd5c9d7685288b3d38a08ee789f4e00047f62d9e552385e",
+      "reservedYuan": 0.046266,
+      "status": "settled",
+      "responseEvidence": {
+        "file": "budget-responses/7bc0e5e5-cf61-40f3-bbcd-ee4105d153a4.json",
+        "requestHash": "7b22cca19e0fe4cc6cd5c9d7685288b3d38a08ee789f4e00047f62d9e552385e",
+        "responseHash": "1708706117d6a05ee860c2536199b02d58ef1e42d91e37f166e22f542c5fd4a1"
+      },
+      "costUpperYuan": 0.00887312,
+      "measurement": {
+        "label": "content-baishi-craft-skill_s1_marked_letter-review0",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 4534,
+          "completion_tokens": 7,
+          "total_tokens": 4541,
+          "prompt_tokens_details": {
+            "cached_tokens": 128
+          },
+          "prompt_cache_hit_tokens": 128,
+          "prompt_cache_miss_tokens": 4406
+        },
+        "costUpperYuan": 0.00887312,
+        "cumulativeUpperYuan": 3.8308267200000024,
+        "latencyMs": 983.7309999999998,
+        "timestamp": "2026-10-13T18:15:46.091Z"
+      }
+    },
+    "675e329a-c422-44ba-87ec-9ac250551977": {
+      "card": "T93",
+      "label": "content-baishi-craft-profession_swordsman-review0",
+      "requestHash": "0b429e730c6e00a6c31aba798dc4ad273046d91651b415561566cbdeec65254a",
+      "reservedYuan": 0.058542,
+      "status": "settled",
+      "responseEvidence": {
+        "file": "budget-responses/675e329a-c422-44ba-87ec-9ac250551977.json",
+        "requestHash": "0b429e730c6e00a6c31aba798dc4ad273046d91651b415561566cbdeec65254a",
+        "responseHash": "57a0c76d3df234bbbefc4608e334ff9ca167e8bbd62645c87f6110e16134fc8b"
+      },
+      "costUpperYuan": 0.012373120000000001,
+      "measurement": {
+        "label": "content-baishi-craft-profession_swordsman-review0",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 6284,
+          "completion_tokens": 7,
+          "total_tokens": 6291,
+          "prompt_tokens_details": {
+            "cached_tokens": 128
+          },
+          "prompt_cache_hit_tokens": 128,
+          "prompt_cache_miss_tokens": 6156
+        },
+        "costUpperYuan": 0.012373120000000001,
+        "cumulativeUpperYuan": 3.8431998400000023,
+        "latencyMs": 1031.2165999999997,
+        "timestamp": "2026-10-13T18:15:47.148Z"
+      }
+    },
+    "a7e5a674-b506-4b06-a276-9544729a3cac": {
+      "card": "T93",
+      "label": "content-baishi-craft-profession_mage-review0",
+      "requestHash": "f701b7b1f8cfeb1717b9695d19591976d2c380db29c9a5529de4571da204cee1",
+      "reservedYuan": 0.05776,
+      "status": "settled",
+      "responseEvidence": {
+        "file": "budget-responses/a7e5a674-b506-4b06-a276-9544729a3cac.json",
+        "requestHash": "f701b7b1f8cfeb1717b9695d19591976d2c380db29c9a5529de4571da204cee1",
+        "responseHash": "00f919f386898c74ac30692acd5b73646e150eca015e1193cf3766441315696a"
+      },
+      "costUpperYuan": 0.011967120000000001,
+      "measurement": {
+        "label": "content-baishi-craft-profession_mage-review0",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 6081,
+          "completion_tokens": 7,
+          "total_tokens": 6088,
+          "prompt_tokens_details": {
+            "cached_tokens": 128
+          },
+          "prompt_cache_hit_tokens": 128,
+          "prompt_cache_miss_tokens": 5953
+        },
+        "costUpperYuan": 0.011967120000000001,
+        "cumulativeUpperYuan": 3.8551669600000023,
+        "latencyMs": 1016.4395999999979,
+        "timestamp": "2026-10-13T18:15:48.192Z"
+      }
+    },
+    "bc175f88-2c3e-462d-8b10-5da69e38be3f": {
+      "card": "T93",
+      "label": "content-baishi-craft-profession_priest-review0",
+      "requestHash": "89b610c352abf368a18dbe92a1bfacafc3b7a62e303d80ea62c6a8774d5ef9de",
+      "reservedYuan": 0.058108,
+      "status": "settled",
+      "responseEvidence": {
+        "file": "budget-responses/bc175f88-2c3e-462d-8b10-5da69e38be3f.json",
+        "requestHash": "89b610c352abf368a18dbe92a1bfacafc3b7a62e303d80ea62c6a8774d5ef9de",
+        "responseHash": "6d2f23e2ed56661c6dc17f7609fe067912badb9d3cbd79ec88ee4f6288614139"
+      },
+      "costUpperYuan": 0.012213120000000001,
+      "measurement": {
+        "label": "content-baishi-craft-profession_priest-review0",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 6204,
+          "completion_tokens": 7,
+          "total_tokens": 6211,
+          "prompt_tokens_details": {
+            "cached_tokens": 128
+          },
+          "prompt_cache_hit_tokens": 128,
+          "prompt_cache_miss_tokens": 6076
+        },
+        "costUpperYuan": 0.012213120000000001,
+        "cumulativeUpperYuan": 3.8673800800000024,
+        "latencyMs": 866.9041999999972,
+        "timestamp": "2026-10-13T18:15:49.084Z"
+      }
+    },
+    "10f06b24-4e7d-41f3-8853-0cf077790763": {
+      "card": "T93",
+      "label": "content-baishi-craft-profession_monk-review0",
+      "requestHash": "7ef3da228516af9143dbe3ef2a7aa12d056fb3db9e6c6f6fdc5dc3671d8723b1",
+      "reservedYuan": 0.057742,
+      "status": "settled",
+      "responseEvidence": {
+        "file": "budget-responses/10f06b24-4e7d-41f3-8853-0cf077790763.json",
+        "requestHash": "7ef3da228516af9143dbe3ef2a7aa12d056fb3db9e6c6f6fdc5dc3671d8723b1",
+        "responseHash": "b210dfed3881b98db9bffdce284ec7c45e5df8ce2a0aaf5abeab5ed195fb2888"
+      },
+      "costUpperYuan": 0.012047120000000001,
+      "measurement": {
+        "label": "content-baishi-craft-profession_monk-review0",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 6121,
+          "completion_tokens": 7,
+          "total_tokens": 6128,
+          "prompt_tokens_details": {
+            "cached_tokens": 128
+          },
+          "prompt_cache_hit_tokens": 128,
+          "prompt_cache_miss_tokens": 5993
+        },
+        "costUpperYuan": 0.012047120000000001,
+        "cumulativeUpperYuan": 3.8794272000000025,
+        "latencyMs": 1340.1150999999954,
+        "timestamp": "2026-10-13T18:15:50.449Z"
+      }
+    },
+    "44697fb6-728e-429a-bedc-7bcaeeb091e3": {
+      "card": "T93",
+      "label": "content-baishi-craft-profession_witch-review0",
+      "requestHash": "3ecb501618966c1f1009fc04a2b6671e8621c3535b99fe72b8ccea42316424c6",
+      "reservedYuan": 0.057948,
+      "status": "settled",
+      "responseEvidence": {
+        "file": "budget-responses/44697fb6-728e-429a-bedc-7bcaeeb091e3.json",
+        "requestHash": "3ecb501618966c1f1009fc04a2b6671e8621c3535b99fe72b8ccea42316424c6",
+        "responseHash": "41ed6cc61001a84fa026cbdf94ebe5458916c967ed5c10b78a97501f26838852"
+      },
+      "costUpperYuan": 0.012035120000000002,
+      "measurement": {
+        "label": "content-baishi-craft-profession_witch-review0",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 6115,
+          "completion_tokens": 7,
+          "total_tokens": 6122,
+          "prompt_tokens_details": {
+            "cached_tokens": 128
+          },
+          "prompt_cache_hit_tokens": 128,
+          "prompt_cache_miss_tokens": 5987
+        },
+        "costUpperYuan": 0.012035120000000002,
+        "cumulativeUpperYuan": 3.8914623200000027,
+        "latencyMs": 604.5947999999989,
+        "timestamp": "2026-10-13T18:15:51.083Z"
+      }
+    },
+    "f285bf21-3cba-4b9c-8f9d-57ae0a0de01f": {
+      "card": "T93",
+      "label": "content-baishi-craft-profession_taoist-review0",
+      "requestHash": "f2f0cd92be94ad6999aa898d45c52b5ff33aefcf680a1112f332dddd89e7e0d5",
+      "reservedYuan": 0.058192,
+      "status": "settled",
+      "responseEvidence": {
+        "file": "budget-responses/f285bf21-3cba-4b9c-8f9d-57ae0a0de01f.json",
+        "requestHash": "f2f0cd92be94ad6999aa898d45c52b5ff33aefcf680a1112f332dddd89e7e0d5",
+        "responseHash": "2d763b66aea1a3fef46330b511e16cc71d3651097307c342001626f46d977e15"
+      },
+      "costUpperYuan": 0.01240312,
+      "measurement": {
+        "label": "content-baishi-craft-profession_taoist-review0",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 6299,
+          "completion_tokens": 7,
+          "total_tokens": 6306,
+          "prompt_tokens_details": {
+            "cached_tokens": 128
+          },
+          "prompt_cache_hit_tokens": 128,
+          "prompt_cache_miss_tokens": 6171
+        },
+        "costUpperYuan": 0.01240312,
+        "cumulativeUpperYuan": 3.903865440000003,
+        "latencyMs": 866.8574000000008,
+        "timestamp": "2026-10-13T18:15:51.977Z"
+      }
+    },
+    "54473e9f-afaa-4877-96e2-bf2817e516a4": {
+      "card": "T93",
+      "label": "content-baishi-craft-profession_life_8-review0",
+      "requestHash": "fb2839fa0ea5a3344361090077d9d07f0f35164d50268dcd3dcb28691d832ed3",
+      "reservedYuan": 0.049534,
+      "status": "settled",
+      "responseEvidence": {
+        "file": "budget-responses/54473e9f-afaa-4877-96e2-bf2817e516a4.json",
+        "requestHash": "fb2839fa0ea5a3344361090077d9d07f0f35164d50268dcd3dcb28691d832ed3",
+        "responseHash": "890d480d19e6f918cf5d58d09895923316802a5823991ec6d3573cde54b01c1c"
+      },
+      "costUpperYuan": 0.00978112,
+      "measurement": {
+        "label": "content-baishi-craft-profession_life_8-review0",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 4988,
+          "completion_tokens": 7,
+          "total_tokens": 4995,
+          "prompt_tokens_details": {
+            "cached_tokens": 128
+          },
+          "prompt_cache_hit_tokens": 128,
+          "prompt_cache_miss_tokens": 4860
+        },
+        "costUpperYuan": 0.00978112,
+        "cumulativeUpperYuan": 3.9136465600000028,
+        "latencyMs": 1077.3894,
+        "timestamp": "2026-10-13T18:15:53.077Z"
+      }
+    },
+    "0d2aa09d-a649-4e8a-a7e7-a372b5e82290": {
+      "card": "T93",
+      "label": "content-baishi-craft-npc_bs_078_1-review0",
+      "requestHash": "32d796200047d6414d39ab34904f6e3bb536b9b08d4f2f1e3c616ef11e0b6844",
+      "reservedYuan": 0.09617,
+      "status": "settled",
+      "responseEvidence": {
+        "file": "budget-responses/0d2aa09d-a649-4e8a-a7e7-a372b5e82290.json",
+        "requestHash": "32d796200047d6414d39ab34904f6e3bb536b9b08d4f2f1e3c616ef11e0b6844",
+        "responseHash": "7b941330d77d821352b4c97b051668def0d7d1b0f1b126db750bec1d9c158b99"
+      },
+      "costUpperYuan": 0.02166536,
+      "measurement": {
+        "label": "content-baishi-craft-npc_bs_078_1-review0",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 11181,
+          "completion_tokens": 7,
+          "total_tokens": 11188,
+          "prompt_tokens_details": {
+            "cached_tokens": 384
+          },
+          "prompt_cache_hit_tokens": 384,
+          "prompt_cache_miss_tokens": 10797
+        },
+        "costUpperYuan": 0.02166536,
+        "cumulativeUpperYuan": 3.935311920000003,
+        "latencyMs": 1483.9103,
+        "timestamp": "2026-10-13T18:16:55.919Z"
+      }
+    },
+    "673898b6-7919-4040-84bf-f6cad7cd8961": {
+      "card": "T93",
+      "label": "content-baishi-craft-npc_bs_061_1-review0",
+      "requestHash": "d5c6d3c0cf709e6b35fc20cd5440238bc456c1abdb27365be3768e0e57537a05",
+      "reservedYuan": 0.088904,
+      "status": "settled",
+      "responseEvidence": {
+        "file": "budget-responses/673898b6-7919-4040-84bf-f6cad7cd8961.json",
+        "requestHash": "d5c6d3c0cf709e6b35fc20cd5440238bc456c1abdb27365be3768e0e57537a05",
+        "responseHash": "ebe3e867ad70bc0cbe4566086ced043edb7a0fcb4e50e1d0d0aef27502cc2e3c"
+      },
+      "costUpperYuan": 0.017571439999999997,
+      "measurement": {
+        "label": "content-baishi-craft-npc_bs_061_1-review0",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 10263,
+          "completion_tokens": 7,
+          "total_tokens": 10270,
+          "prompt_tokens_details": {
+            "cached_tokens": 1536
+          },
+          "prompt_cache_hit_tokens": 1536,
+          "prompt_cache_miss_tokens": 8727
+        },
+        "costUpperYuan": 0.017571439999999997,
+        "cumulativeUpperYuan": 3.952883360000003,
+        "latencyMs": 1337.1290999999999,
+        "timestamp": "2026-10-13T18:19:18.646Z"
+      }
+    },
+    "b49cfedc-0582-4e34-be9e-acf2b51ad38f": {
+      "card": "T93",
+      "label": "content-baishi-craft-npc_bs_061_2-review0",
+      "requestHash": "6184e4376d0733024ddaff60f55633915a2c89dd5a867893ab87f3d3562b8371",
+      "reservedYuan": 0.0905,
+      "status": "settled",
+      "responseEvidence": {
+        "file": "budget-responses/b49cfedc-0582-4e34-be9e-acf2b51ad38f.json",
+        "requestHash": "6184e4376d0733024ddaff60f55633915a2c89dd5a867893ab87f3d3562b8371",
+        "responseHash": "64387273a8d568400b7647c6f7e19fcfef51be04bec9d2cad0fe457f0cc712ca"
+      },
+      "costUpperYuan": 0.01781344,
+      "measurement": {
+        "label": "content-baishi-craft-npc_bs_061_2-review0",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 10384,
+          "completion_tokens": 7,
+          "total_tokens": 10391,
+          "prompt_tokens_details": {
+            "cached_tokens": 1536
+          },
+          "prompt_cache_hit_tokens": 1536,
+          "prompt_cache_miss_tokens": 8848
+        },
+        "costUpperYuan": 0.01781344,
+        "cumulativeUpperYuan": 3.970696800000003,
+        "latencyMs": 983.5612999999998,
+        "timestamp": "2026-10-13T18:19:19.659Z"
+      }
+    },
+    "bd1742c0-844f-4e1e-a4f1-14d90b889368": {
+      "card": "T93",
+      "label": "content-baishi-craft-npc_bs_062_1-review0",
+      "requestHash": "7fbe0f3205f66e1430646a44aa87e20894074eadecd35427abb76c57765cdc44",
+      "reservedYuan": 0.090168,
+      "status": "settled",
+      "responseEvidence": {
+        "file": "budget-responses/bd1742c0-844f-4e1e-a4f1-14d90b889368.json",
+        "requestHash": "7fbe0f3205f66e1430646a44aa87e20894074eadecd35427abb76c57765cdc44",
+        "responseHash": "9ebdddfa007214bebefdb7faceabef09597e11ac969007c77ae16f01d8cf713e"
+      },
+      "costUpperYuan": 0.017831439999999997,
+      "measurement": {
+        "label": "content-baishi-craft-npc_bs_062_1-review0",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 10393,
+          "completion_tokens": 7,
+          "total_tokens": 10400,
+          "prompt_tokens_details": {
+            "cached_tokens": 1536
+          },
+          "prompt_cache_hit_tokens": 1536,
+          "prompt_cache_miss_tokens": 8857
+        },
+        "costUpperYuan": 0.017831439999999997,
+        "cumulativeUpperYuan": 3.988528240000003,
+        "latencyMs": 1049.0205999999998,
+        "timestamp": "2026-10-13T18:19:20.736Z"
+      }
+    },
+    "82a4a108-e614-4ffd-950d-bcf1872a9819": {
+      "card": "T93",
+      "label": "content-baishi-craft-npc_bs_062_2-review0",
+      "requestHash": "356e078f8c1cec0c7f69a248b6a5d98cb8f100b4b4ef51674b7bcbdd7c0441ca",
+      "reservedYuan": 0.089486,
+      "status": "settled",
+      "responseEvidence": {
+        "file": "budget-responses/82a4a108-e614-4ffd-950d-bcf1872a9819.json",
+        "requestHash": "356e078f8c1cec0c7f69a248b6a5d98cb8f100b4b4ef51674b7bcbdd7c0441ca",
+        "responseHash": "15513d35c303396de06b799018e5d9e34b29edd8df528e186f785e4c6534f91c"
+      },
+      "costUpperYuan": 0.01765944,
+      "measurement": {
+        "label": "content-baishi-craft-npc_bs_062_2-review0",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 10307,
+          "completion_tokens": 7,
+          "total_tokens": 10314,
+          "prompt_tokens_details": {
+            "cached_tokens": 1536
+          },
+          "prompt_cache_hit_tokens": 1536,
+          "prompt_cache_miss_tokens": 8771
+        },
+        "costUpperYuan": 0.01765944,
+        "cumulativeUpperYuan": 4.006187680000003,
+        "latencyMs": 728.6244999999999,
+        "timestamp": "2026-10-13T18:19:21.492Z"
+      }
+    },
+    "b3aecdfc-f954-49de-8a7a-9e1f195cd8c4": {
+      "card": "T93",
+      "label": "content-baishi-craft-npc_bs_063_1-review0",
+      "requestHash": "50145b78c90466738f003300bba076378b9cacd883687cb60d6d7bd3b5ac8a2e",
+      "reservedYuan": 0.089408,
+      "status": "settled",
+      "responseEvidence": {
+        "file": "budget-responses/b3aecdfc-f954-49de-8a7a-9e1f195cd8c4.json",
+        "requestHash": "50145b78c90466738f003300bba076378b9cacd883687cb60d6d7bd3b5ac8a2e",
+        "responseHash": "6d26e6b7bfef8e717a2f2ec677238b709fb543d783b5a90e257f4b2b566355e7"
+      },
+      "costUpperYuan": 0.01756944,
+      "measurement": {
+        "label": "content-baishi-craft-npc_bs_063_1-review0",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 10262,
+          "completion_tokens": 7,
+          "total_tokens": 10269,
+          "prompt_tokens_details": {
+            "cached_tokens": 1536
+          },
+          "prompt_cache_hit_tokens": 1536,
+          "prompt_cache_miss_tokens": 8726
+        },
+        "costUpperYuan": 0.01756944,
+        "cumulativeUpperYuan": 4.023757120000003,
+        "latencyMs": 1108.3055000000004,
+        "timestamp": "2026-10-13T18:19:22.632Z"
+      }
+    },
+    "f4dd1a60-a209-4f80-bb10-1f959942079c": {
+      "card": "T93",
+      "label": "content-baishi-craft-npc_bs_063_2-review0",
+      "requestHash": "80fe210851f0658b9aaff13036d07eac774d11a8e65bfc7eac92299025e5a19e",
+      "reservedYuan": 0.090152,
+      "status": "settled",
+      "responseEvidence": {
+        "file": "budget-responses/f4dd1a60-a209-4f80-bb10-1f959942079c.json",
+        "requestHash": "80fe210851f0658b9aaff13036d07eac774d11a8e65bfc7eac92299025e5a19e",
+        "responseHash": "6a9551db9d69473db88422c07451f1a09ea6f9e26ab44c90887883efbc47a70f"
+      },
+      "costUpperYuan": 0.01796544,
+      "measurement": {
+        "label": "content-baishi-craft-npc_bs_063_2-review0",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 10460,
+          "completion_tokens": 7,
+          "total_tokens": 10467,
+          "prompt_tokens_details": {
+            "cached_tokens": 1536
+          },
+          "prompt_cache_hit_tokens": 1536,
+          "prompt_cache_miss_tokens": 8924
+        },
+        "costUpperYuan": 0.01796544,
+        "cumulativeUpperYuan": 4.041722560000003,
+        "latencyMs": 666.7039000000004,
+        "timestamp": "2026-10-13T18:19:23.329Z"
+      }
+    },
+    "6dac76c2-ac98-4cb8-b8b8-45e219cfd248": {
+      "card": "T93",
+      "label": "content-baishi-craft-npc_bs_064_1-review0",
+      "requestHash": "d7244e8d2abd5fbf513b29d823cb55577b3af090abf5b855a32363852c7f6693",
+      "reservedYuan": 0.089956,
+      "status": "settled",
+      "responseEvidence": {
+        "file": "budget-responses/6dac76c2-ac98-4cb8-b8b8-45e219cfd248.json",
+        "requestHash": "d7244e8d2abd5fbf513b29d823cb55577b3af090abf5b855a32363852c7f6693",
+        "responseHash": "b3b50ac41e59bbc6620928ca81d6d775c3aceb10d9de8bb09747707b01931d2a"
+      },
+      "costUpperYuan": 0.01780344,
+      "measurement": {
+        "label": "content-baishi-craft-npc_bs_064_1-review0",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 10379,
+          "completion_tokens": 7,
+          "total_tokens": 10386,
+          "prompt_tokens_details": {
+            "cached_tokens": 1536
+          },
+          "prompt_cache_hit_tokens": 1536,
+          "prompt_cache_miss_tokens": 8843
+        },
+        "costUpperYuan": 0.01780344,
+        "cumulativeUpperYuan": 4.059526000000003,
+        "latencyMs": 914.1353999999992,
+        "timestamp": "2026-10-13T18:19:24.271Z"
+      }
+    },
+    "921033dd-487f-43cb-92f8-ec1bde955972": {
+      "card": "T93",
+      "label": "content-baishi-craft-npc_bs_064_2-review0",
+      "requestHash": "a5e24d1c65c631e9888afad1b5c00c479ab1883028ce1cd580b5bfd8e17ba136",
+      "reservedYuan": 0.088932,
+      "status": "settled",
+      "responseEvidence": {
+        "file": "budget-responses/921033dd-487f-43cb-92f8-ec1bde955972.json",
+        "requestHash": "a5e24d1c65c631e9888afad1b5c00c479ab1883028ce1cd580b5bfd8e17ba136",
+        "responseHash": "73277270a95675969901417898c887ac1a5dae491ce1f29c1efbf54424c852fb"
+      },
+      "costUpperYuan": 0.01737344,
+      "measurement": {
+        "label": "content-baishi-craft-npc_bs_064_2-review0",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 10164,
+          "completion_tokens": 7,
+          "total_tokens": 10171,
+          "prompt_tokens_details": {
+            "cached_tokens": 1536
+          },
+          "prompt_cache_hit_tokens": 1536,
+          "prompt_cache_miss_tokens": 8628
+        },
+        "costUpperYuan": 0.01737344,
+        "cumulativeUpperYuan": 4.076899440000003,
+        "latencyMs": 1157.8092000000006,
+        "timestamp": "2026-10-13T18:19:25.462Z"
+      }
+    },
+    "bca8e29a-c6fc-4271-abcd-e38a59e56590": {
+      "card": "T93",
+      "label": "content-baishi-craft-npc_bs_065_1-review0",
+      "requestHash": "65a3dcb8ab4c5c14ea1c3625a1a32361e7246707b0058299a2700270bf225c53",
+      "reservedYuan": 0.08868,
+      "status": "settled",
+      "responseEvidence": {
+        "file": "budget-responses/bca8e29a-c6fc-4271-abcd-e38a59e56590.json",
+        "requestHash": "65a3dcb8ab4c5c14ea1c3625a1a32361e7246707b0058299a2700270bf225c53",
+        "responseHash": "1d50b08b2f54eb27f28a0c4bc61933d6fd3389b849e54ef18c6772e6ac6a661b"
+      },
+      "costUpperYuan": 0.01734544,
+      "measurement": {
+        "label": "content-baishi-craft-npc_bs_065_1-review0",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 10150,
+          "completion_tokens": 7,
+          "total_tokens": 10157,
+          "prompt_tokens_details": {
+            "cached_tokens": 1536
+          },
+          "prompt_cache_hit_tokens": 1536,
+          "prompt_cache_miss_tokens": 8614
+        },
+        "costUpperYuan": 0.01734544,
+        "cumulativeUpperYuan": 4.094244880000002,
+        "latencyMs": 1351.8963999999996,
+        "timestamp": "2026-10-13T18:19:26.843Z"
+      }
+    },
+    "27c92665-6d29-47a3-8b24-bada1b6adeda": {
+      "card": "T93",
+      "label": "content-baishi-craft-npc_bs_065_2-review0",
+      "requestHash": "dcf300af693b515605ddf859acf2ef1da607ff748e88f307dac12c5ddf153131",
+      "reservedYuan": 0.090886,
+      "status": "settled",
+      "responseEvidence": {
+        "file": "budget-responses/27c92665-6d29-47a3-8b24-bada1b6adeda.json",
+        "requestHash": "dcf300af693b515605ddf859acf2ef1da607ff748e88f307dac12c5ddf153131",
+        "responseHash": "fc083fc40485cf0e03ff153ce0e67bd009ff59f3fe892dfe1a314eaf31c37bae"
+      },
+      "costUpperYuan": 0.017877439999999998,
+      "measurement": {
+        "label": "content-baishi-craft-npc_bs_065_2-review0",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 10416,
+          "completion_tokens": 7,
+          "total_tokens": 10423,
+          "prompt_tokens_details": {
+            "cached_tokens": 1536
+          },
+          "prompt_cache_hit_tokens": 1536,
+          "prompt_cache_miss_tokens": 8880
+        },
+        "costUpperYuan": 0.017877439999999998,
+        "cumulativeUpperYuan": 4.112122320000003,
+        "latencyMs": 738.0249000000003,
+        "timestamp": "2026-10-13T18:19:27.608Z"
+      }
+    },
+    "7e7d33da-4e6d-4c99-acf0-5eb1e404eed2": {
+      "card": "T93",
+      "label": "content-baishi-craft-npc_bs_066_1-review0",
+      "requestHash": "517da173ba6a39f751430c0438590b6327e8ffe7ca8430435cedcb79f8f57e93",
+      "reservedYuan": 0.09112,
+      "status": "settled",
+      "responseEvidence": {
+        "file": "budget-responses/7e7d33da-4e6d-4c99-acf0-5eb1e404eed2.json",
+        "requestHash": "517da173ba6a39f751430c0438590b6327e8ffe7ca8430435cedcb79f8f57e93",
+        "responseHash": "5feefb483483a2199f82883ca9ffe15aa45f2164532a66325f8a0c21cc395b53"
+      },
+      "costUpperYuan": 0.01795944,
+      "measurement": {
+        "label": "content-baishi-craft-npc_bs_066_1-review0",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 10457,
+          "completion_tokens": 7,
+          "total_tokens": 10464,
+          "prompt_tokens_details": {
+            "cached_tokens": 1536
+          },
+          "prompt_cache_hit_tokens": 1536,
+          "prompt_cache_miss_tokens": 8921
+        },
+        "costUpperYuan": 0.01795944,
+        "cumulativeUpperYuan": 4.130081760000003,
+        "latencyMs": 1108.9755999999998,
+        "timestamp": "2026-10-13T18:19:28.748Z"
+      }
+    },
+    "17ee9445-c048-4e07-8a82-c764ef2cca18": {
+      "card": "T93",
+      "label": "content-baishi-craft-npc_bs_066_2-review0",
+      "requestHash": "bf70b8908e383b97bff8a36b27e072dd8787b3cd91696b1b47c3297d9b80512a",
+      "reservedYuan": 0.089452,
+      "status": "settled",
+      "responseEvidence": {
+        "file": "budget-responses/17ee9445-c048-4e07-8a82-c764ef2cca18.json",
+        "requestHash": "bf70b8908e383b97bff8a36b27e072dd8787b3cd91696b1b47c3297d9b80512a",
+        "responseHash": "6955be273b48f00c064fa854c0f75a067281a9805f0633223cfc469cfa74f926"
+      },
+      "costUpperYuan": 0.01761944,
+      "measurement": {
+        "label": "content-baishi-craft-npc_bs_066_2-review0",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 10287,
+          "completion_tokens": 7,
+          "total_tokens": 10294,
+          "prompt_tokens_details": {
+            "cached_tokens": 1536
+          },
+          "prompt_cache_hit_tokens": 1536,
+          "prompt_cache_miss_tokens": 8751
+        },
+        "costUpperYuan": 0.01761944,
+        "cumulativeUpperYuan": 4.147701200000003,
+        "latencyMs": 831.4071000000004,
+        "timestamp": "2026-10-13T18:19:29.608Z"
+      }
+    },
+    "f5691c50-5dcb-4342-95a9-f2a398a186b0": {
+      "card": "T93",
+      "label": "content-baishi-craft-npc_bs_067_1-review0",
+      "requestHash": "7efa5a787e809ac9519e0305591d7eb5573baf3dc8b7a20dfe6ca1879ab94302",
+      "reservedYuan": 0.090278,
+      "status": "settled",
+      "responseEvidence": {
+        "file": "budget-responses/f5691c50-5dcb-4342-95a9-f2a398a186b0.json",
+        "requestHash": "7efa5a787e809ac9519e0305591d7eb5573baf3dc8b7a20dfe6ca1879ab94302",
+        "responseHash": "ec295d121e31559075d71e03b2359abb1e18769d71b3aa439b816dbeb46a2006"
+      },
+      "costUpperYuan": 0.017835439999999998,
+      "measurement": {
+        "label": "content-baishi-craft-npc_bs_067_1-review0",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 10395,
+          "completion_tokens": 7,
+          "total_tokens": 10402,
+          "prompt_tokens_details": {
+            "cached_tokens": 1536
+          },
+          "prompt_cache_hit_tokens": 1536,
+          "prompt_cache_miss_tokens": 8859
+        },
+        "costUpperYuan": 0.017835439999999998,
+        "cumulativeUpperYuan": 4.165536640000003,
+        "latencyMs": 817.1152000000002,
+        "timestamp": "2026-10-13T18:19:30.450Z"
+      }
+    },
+    "665cd683-0518-48ac-915c-e54984ca6554": {
+      "card": "T93",
+      "label": "content-baishi-craft-npc_bs_067_2-review0",
+      "requestHash": "fcf4581f0689ea0d32562eb872173005311c8716fb798fafe6f143b000ba3c74",
+      "reservedYuan": 0.088958,
+      "status": "settled",
+      "responseEvidence": {
+        "file": "budget-responses/665cd683-0518-48ac-915c-e54984ca6554.json",
+        "requestHash": "fcf4581f0689ea0d32562eb872173005311c8716fb798fafe6f143b000ba3c74",
+        "responseHash": "d1b12e966219fbed612456e8d20851d24c0e233ec90709738d4b0b27358cd545"
+      },
+      "costUpperYuan": 0.01737144,
+      "measurement": {
+        "label": "content-baishi-craft-npc_bs_067_2-review0",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 10163,
+          "completion_tokens": 7,
+          "total_tokens": 10170,
+          "prompt_tokens_details": {
+            "cached_tokens": 1536
+          },
+          "prompt_cache_hit_tokens": 1536,
+          "prompt_cache_miss_tokens": 8627
+        },
+        "costUpperYuan": 0.01737144,
+        "cumulativeUpperYuan": 4.1829080800000025,
+        "latencyMs": 1028.7335000000003,
+        "timestamp": "2026-10-13T18:19:31.506Z"
+      }
+    },
+    "b391c16a-9c66-4185-be0c-51dca499ab4d": {
+      "card": "T93",
+      "label": "content-baishi-craft-npc_bs_068_1-review0",
+      "requestHash": "58e84260291e579e046b821e175b733d08c378fe2bc25fd7d62be541d8eb372a",
+      "reservedYuan": 0.088902,
+      "status": "settled",
+      "responseEvidence": {
+        "file": "budget-responses/b391c16a-9c66-4185-be0c-51dca499ab4d.json",
+        "requestHash": "58e84260291e579e046b821e175b733d08c378fe2bc25fd7d62be541d8eb372a",
+        "responseHash": "a1e926cc508a509106331b0f6390ee5a0f651503a9a6ca13fa6629f93035ced2"
+      },
+      "costUpperYuan": 0.01727944,
+      "measurement": {
+        "label": "content-baishi-craft-npc_bs_068_1-review0",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 10117,
+          "completion_tokens": 7,
+          "total_tokens": 10124,
+          "prompt_tokens_details": {
+            "cached_tokens": 1536
+          },
+          "prompt_cache_hit_tokens": 1536,
+          "prompt_cache_miss_tokens": 8581
+        },
+        "costUpperYuan": 0.01727944,
+        "cumulativeUpperYuan": 4.200187520000003,
+        "latencyMs": 960.2448000000004,
+        "timestamp": "2026-10-13T18:19:32.493Z"
+      }
+    },
+    "2a04d3bd-acb9-4626-b33b-c297cff76aa4": {
+      "card": "T93",
+      "label": "content-baishi-craft-npc_bs_068_2-review0",
+      "requestHash": "89ffefe82dea1ed24b6ae4ca8492c12de75bcdfc33425cb521e301484e35e872",
+      "reservedYuan": 0.089454,
+      "status": "settled",
+      "responseEvidence": {
+        "file": "budget-responses/2a04d3bd-acb9-4626-b33b-c297cff76aa4.json",
+        "requestHash": "89ffefe82dea1ed24b6ae4ca8492c12de75bcdfc33425cb521e301484e35e872",
+        "responseHash": "c6374cbf01b07fdc4e48f87517dd0adccb437cbfde378752192db54b23577c65"
+      },
+      "costUpperYuan": 0.01751544,
+      "measurement": {
+        "label": "content-baishi-craft-npc_bs_068_2-review0",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 10235,
+          "completion_tokens": 7,
+          "total_tokens": 10242,
+          "prompt_tokens_details": {
+            "cached_tokens": 1536
+          },
+          "prompt_cache_hit_tokens": 1536,
+          "prompt_cache_miss_tokens": 8699
+        },
+        "costUpperYuan": 0.01751544,
+        "cumulativeUpperYuan": 4.217702960000003,
+        "latencyMs": 1398.3284000000003,
+        "timestamp": "2026-10-13T18:19:33.922Z"
+      }
+    },
+    "99f11ce0-9dca-4c08-955a-f50a7144217e": {
+      "card": "T93",
+      "label": "content-baishi-craft-npc_bs_069_1-review0",
+      "requestHash": "6500250b2378d4629724ca17db7a2f6b30dd52c38dda7c424f748f813971d63e",
+      "reservedYuan": 0.089264,
+      "status": "settled",
+      "responseEvidence": {
+        "file": "budget-responses/99f11ce0-9dca-4c08-955a-f50a7144217e.json",
+        "requestHash": "6500250b2378d4629724ca17db7a2f6b30dd52c38dda7c424f748f813971d63e",
+        "responseHash": "ec3031e7586c09f67223cbcd61ebb95c85309ed43d580d2c8e61360a39c03dfd"
+      },
+      "costUpperYuan": 0.01751744,
+      "measurement": {
+        "label": "content-baishi-craft-npc_bs_069_1-review0",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 10236,
+          "completion_tokens": 7,
+          "total_tokens": 10243,
+          "prompt_tokens_details": {
+            "cached_tokens": 1536
+          },
+          "prompt_cache_hit_tokens": 1536,
+          "prompt_cache_miss_tokens": 8700
+        },
+        "costUpperYuan": 0.01751744,
+        "cumulativeUpperYuan": 4.235220400000003,
+        "latencyMs": 1243.0396,
+        "timestamp": "2026-10-13T18:19:35.194Z"
+      }
+    },
+    "a1fa987c-6d42-47d2-b412-2e61b3091b6b": {
+      "card": "T93",
+      "label": "content-baishi-craft-npc_bs_069_2-review0",
+      "requestHash": "59f428bd1c59aa53267244e41bd41af778039a9e8a12e92d4c49bd36482ae478",
+      "reservedYuan": 0.090668,
+      "status": "settled",
+      "responseEvidence": {
+        "file": "budget-responses/a1fa987c-6d42-47d2-b412-2e61b3091b6b.json",
+        "requestHash": "59f428bd1c59aa53267244e41bd41af778039a9e8a12e92d4c49bd36482ae478",
+        "responseHash": "5069e8201e66ce35433dd6d305fa82706386f9c95e0a2ea55987d72f0f97b3d1"
+      },
+      "costUpperYuan": 0.01791744,
+      "measurement": {
+        "label": "content-baishi-craft-npc_bs_069_2-review0",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 10436,
+          "completion_tokens": 7,
+          "total_tokens": 10443,
+          "prompt_tokens_details": {
+            "cached_tokens": 1536
+          },
+          "prompt_cache_hit_tokens": 1536,
+          "prompt_cache_miss_tokens": 8900
+        },
+        "costUpperYuan": 0.01791744,
+        "cumulativeUpperYuan": 4.253137840000003,
+        "latencyMs": 1367.607100000001,
+        "timestamp": "2026-10-13T18:19:36.588Z"
+      }
+    },
+    "0c48c785-5bd4-44a7-9192-d86d4077fa74": {
+      "card": "T93",
+      "label": "content-baishi-craft-npc_bs_076_1-review0",
+      "requestHash": "909a2300ff9ffa4c4946c008e607013c429f1f17dc0676d7068ec180f70b2a01",
+      "reservedYuan": 0.090352,
+      "status": "settled",
+      "responseEvidence": {
+        "file": "budget-responses/0c48c785-5bd4-44a7-9192-d86d4077fa74.json",
+        "requestHash": "909a2300ff9ffa4c4946c008e607013c429f1f17dc0676d7068ec180f70b2a01",
+        "responseHash": "50dec37f747f339e27a3cf6a3a4f5a1afefe1b7044b20d28a97bca983799d2c5"
+      },
+      "costUpperYuan": 0.017863439999999998,
+      "measurement": {
+        "label": "content-baishi-craft-npc_bs_076_1-review0",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 10409,
+          "completion_tokens": 7,
+          "total_tokens": 10416,
+          "prompt_tokens_details": {
+            "cached_tokens": 1536
+          },
+          "prompt_cache_hit_tokens": 1536,
+          "prompt_cache_miss_tokens": 8873
+        },
+        "costUpperYuan": 0.017863439999999998,
+        "cumulativeUpperYuan": 4.271001280000003,
+        "latencyMs": 1284.0782,
+        "timestamp": "2026-10-13T18:19:37.900Z"
+      }
+    },
+    "94eca0ff-3f56-418e-8bdd-5b1b34646d5d": {
+      "card": "T93",
+      "label": "content-baishi-craft-npc_bs_076_2-review0",
+      "requestHash": "c658ee2d8cccf3b34e07a0c779d1b30fcb8603ca384f843db5c04482509fd7a9",
+      "reservedYuan": 0.092016,
+      "status": "settled",
+      "responseEvidence": {
+        "file": "budget-responses/94eca0ff-3f56-418e-8bdd-5b1b34646d5d.json",
+        "requestHash": "c658ee2d8cccf3b34e07a0c779d1b30fcb8603ca384f843db5c04482509fd7a9",
+        "responseHash": "b356477101d8d22841f35d9111d750230bc2e326aacc80a98f5a1c38b83a0934"
+      },
+      "costUpperYuan": 0.018179439999999998,
+      "measurement": {
+        "label": "content-baishi-craft-npc_bs_076_2-review0",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 10567,
+          "completion_tokens": 7,
+          "total_tokens": 10574,
+          "prompt_tokens_details": {
+            "cached_tokens": 1536
+          },
+          "prompt_cache_hit_tokens": 1536,
+          "prompt_cache_miss_tokens": 9031
+        },
+        "costUpperYuan": 0.018179439999999998,
+        "cumulativeUpperYuan": 4.289180720000003,
+        "latencyMs": 1049.3561999999984,
+        "timestamp": "2026-10-13T18:19:38.982Z"
+      }
+    },
+    "125f08dd-c91f-4280-98c3-86c10847971c": {
+      "card": "T93",
+      "label": "content-baishi-craft-npc_bs_076_3-review0",
+      "requestHash": "671341c2d936af637bda1b86eb9f5969082d3d6ad35d1e5700e9c2eec1a8ab54",
+      "reservedYuan": 0.097914,
+      "status": "settled",
+      "responseEvidence": {
+        "file": "budget-responses/125f08dd-c91f-4280-98c3-86c10847971c.json",
+        "requestHash": "671341c2d936af637bda1b86eb9f5969082d3d6ad35d1e5700e9c2eec1a8ab54",
+        "responseHash": "7f64c0c8a717700beb001c3ce93ce284f30315ab813f7bbbf3ec3666e24301c2"
+      },
+      "costUpperYuan": 0.01976456,
+      "measurement": {
+        "label": "content-baishi-craft-npc_bs_076_3-review0",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 11485,
+          "completion_tokens": 7,
+          "total_tokens": 11492,
+          "prompt_tokens_details": {
+            "cached_tokens": 1664
+          },
+          "prompt_cache_hit_tokens": 1664,
+          "prompt_cache_miss_tokens": 9821
+        },
+        "costUpperYuan": 0.01976456,
+        "cumulativeUpperYuan": 4.308945280000002,
+        "latencyMs": 898.0126000000018,
+        "timestamp": "2026-10-13T18:19:39.907Z"
+      }
+    },
+    "01d4a8da-6194-43fb-be5a-a14b39ebfce2": {
+      "card": "T93",
+      "label": "content-baishi-craft-npc_bs_077_1-review0",
+      "requestHash": "640cdd9da67ba55b2d3fb5d568501ec399c3646f5a0ce240e30b8237abd3b997",
+      "reservedYuan": 0.098678,
+      "status": "settled",
+      "responseEvidence": {
+        "file": "budget-responses/01d4a8da-6194-43fb-be5a-a14b39ebfce2.json",
+        "requestHash": "640cdd9da67ba55b2d3fb5d568501ec399c3646f5a0ce240e30b8237abd3b997",
+        "responseHash": "aa48bdba5f3db630471f91eef6c4d3f2a8c059521eca4f646a45d4a5a15bbee7"
+      },
+      "costUpperYuan": 0.01995856,
+      "measurement": {
+        "label": "content-baishi-craft-npc_bs_077_1-review0",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 11582,
+          "completion_tokens": 7,
+          "total_tokens": 11589,
+          "prompt_tokens_details": {
+            "cached_tokens": 1664
+          },
+          "prompt_cache_hit_tokens": 1664,
+          "prompt_cache_miss_tokens": 9918
+        },
+        "costUpperYuan": 0.01995856,
+        "cumulativeUpperYuan": 4.328903840000002,
+        "latencyMs": 1493.8179000000018,
+        "timestamp": "2026-10-13T18:19:41.432Z"
+      }
+    },
+    "532bcd9e-3a22-4fbb-b432-5acef4a45db3": {
+      "card": "T93",
+      "label": "content-baishi-craft-npc_bs_077_2-review0",
+      "requestHash": "ea430af998eb73368c219a2b9ce9a9a6b5a1240bf6edcab1f9444a15a44e0f3f",
+      "reservedYuan": 0.097874,
+      "status": "settled",
+      "responseEvidence": {
+        "file": "budget-responses/532bcd9e-3a22-4fbb-b432-5acef4a45db3.json",
+        "requestHash": "ea430af998eb73368c219a2b9ce9a9a6b5a1240bf6edcab1f9444a15a44e0f3f",
+        "responseHash": "5e466481fed9213bd9005d16c055025f323b7745dc95e9ab441d813ad22a3356"
+      },
+      "costUpperYuan": 0.019454560000000003,
+      "measurement": {
+        "label": "content-baishi-craft-npc_bs_077_2-review0",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 11330,
+          "completion_tokens": 7,
+          "total_tokens": 11337,
+          "prompt_tokens_details": {
+            "cached_tokens": 1664
+          },
+          "prompt_cache_hit_tokens": 1664,
+          "prompt_cache_miss_tokens": 9666
+        },
+        "costUpperYuan": 0.019454560000000003,
+        "cumulativeUpperYuan": 4.348358400000002,
+        "latencyMs": 1353.3754999999983,
+        "timestamp": "2026-10-13T18:19:42.816Z"
+      }
+    },
+    "7c3bdee2-ecc9-47cc-b21a-0908d8fe22cb": {
+      "card": "T93",
+      "label": "content-baishi-craft-npc_bs_077_3-review0",
+      "requestHash": "21f272aa9f7708aeac5cd188589d93d278d70b52d9d556a10f68940f7a50b70c",
+      "reservedYuan": 0.09152,
+      "status": "settled",
+      "responseEvidence": {
+        "file": "budget-responses/7c3bdee2-ecc9-47cc-b21a-0908d8fe22cb.json",
+        "requestHash": "21f272aa9f7708aeac5cd188589d93d278d70b52d9d556a10f68940f7a50b70c",
+        "responseHash": "9205a92f91212a86c702c789995ab0374c2383430ef44a1743c74569af43a03b"
+      },
+      "costUpperYuan": 0.01803744,
+      "measurement": {
+        "label": "content-baishi-craft-npc_bs_077_3-review0",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 10496,
+          "completion_tokens": 7,
+          "total_tokens": 10503,
+          "prompt_tokens_details": {
+            "cached_tokens": 1536
+          },
+          "prompt_cache_hit_tokens": 1536,
+          "prompt_cache_miss_tokens": 8960
+        },
+        "costUpperYuan": 0.01803744,
+        "cumulativeUpperYuan": 4.366395840000002,
+        "latencyMs": 886.1070999999974,
+        "timestamp": "2026-10-13T18:19:43.727Z"
+      }
+    },
+    "8b3d005e-5004-447a-ae1f-0583482ee3d9": {
+      "card": "T93",
+      "label": "content-baishi-craft-npc_bs_078_1-review0",
+      "requestHash": "b5050b2f273ea930b7338437d426c65f346a27ac3fb98355de07e42f4c4d2626",
+      "reservedYuan": 0.099004,
+      "status": "settled",
+      "responseEvidence": {
+        "file": "budget-responses/8b3d005e-5004-447a-ae1f-0583482ee3d9.json",
+        "requestHash": "b5050b2f273ea930b7338437d426c65f346a27ac3fb98355de07e42f4c4d2626",
+        "responseHash": "f09a213331b26abcf4f43b0b2303d35e83a2f6346d59869ec2dc3c6c6de63d3e"
+      },
+      "costUpperYuan": 0.020238799999999998,
+      "measurement": {
+        "label": "content-baishi-craft-npc_bs_078_1-review0",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 11561,
+          "completion_tokens": 110,
+          "total_tokens": 11671,
+          "prompt_tokens_details": {
+            "cached_tokens": 1920
+          },
+          "prompt_cache_hit_tokens": 1920,
+          "prompt_cache_miss_tokens": 9641
+        },
+        "costUpperYuan": 0.020238799999999998,
+        "cumulativeUpperYuan": 4.386634640000001,
+        "latencyMs": 1861.0598999999966,
+        "timestamp": "2026-10-13T18:19:45.618Z"
+      }
+    },
+    "a0592ed8-102f-4e3a-aecf-731df9caf5e8": {
+      "card": "T93",
+      "label": "content-baishi-craft-npc_bs_078_2-review0",
+      "requestHash": "367fcc7f0702827fc8d96bfe826ebedffb8ff5973f567c510d7522d2e1b11130",
+      "reservedYuan": 0.095794,
+      "status": "settled",
+      "responseEvidence": {
+        "file": "budget-responses/a0592ed8-102f-4e3a-aecf-731df9caf5e8.json",
+        "requestHash": "367fcc7f0702827fc8d96bfe826ebedffb8ff5973f567c510d7522d2e1b11130",
+        "responseHash": "6693fb9ccd0b23f1aae74eb346959365cc5b11014c13159e08b44dcef54912e9"
+      },
+      "costUpperYuan": 0.01917856,
+      "measurement": {
+        "label": "content-baishi-craft-npc_bs_078_2-review0",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 11192,
+          "completion_tokens": 7,
+          "total_tokens": 11199,
+          "prompt_tokens_details": {
+            "cached_tokens": 1664
+          },
+          "prompt_cache_hit_tokens": 1664,
+          "prompt_cache_miss_tokens": 9528
+        },
+        "costUpperYuan": 0.01917856,
+        "cumulativeUpperYuan": 4.405813200000002,
+        "latencyMs": 769.145199999999,
+        "timestamp": "2026-10-13T18:19:46.419Z"
+      }
+    },
+    "c2f0d3c8-64ff-4b70-91a7-7cb939b968b6": {
+      "card": "T93",
+      "label": "content-baishi-craft-npc_bs_078_3-review0",
+      "requestHash": "be5e9c058c431f5da8a6696f6f4a3347f84a71b243d4a224086df9d74c4f46b3",
+      "reservedYuan": 0.091588,
+      "status": "settled",
+      "responseEvidence": {
+        "file": "budget-responses/c2f0d3c8-64ff-4b70-91a7-7cb939b968b6.json",
+        "requestHash": "be5e9c058c431f5da8a6696f6f4a3347f84a71b243d4a224086df9d74c4f46b3",
+        "responseHash": "6db83bacb523ea5882b5a190a747ab2c0e87e50fc6616e033cda0be7ab6d9cfe"
+      },
+      "costUpperYuan": 0.01811744,
+      "measurement": {
+        "label": "content-baishi-craft-npc_bs_078_3-review0",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 10536,
+          "completion_tokens": 7,
+          "total_tokens": 10543,
+          "prompt_tokens_details": {
+            "cached_tokens": 1536
+          },
+          "prompt_cache_hit_tokens": 1536,
+          "prompt_cache_miss_tokens": 9000
+        },
+        "costUpperYuan": 0.01811744,
+        "cumulativeUpperYuan": 4.423930640000002,
+        "latencyMs": 1372.5996999999988,
+        "timestamp": "2026-10-13T18:19:47.820Z"
+      }
+    },
+    "e6ea6458-216d-4ef7-bcb9-41f6e6a354aa": {
+      "card": "T93",
+      "label": "content-baishi-craft-npc_bs_079_1-review0",
+      "requestHash": "fe9d82046748f979bfa24c317f7ecbfd940c2a0786968cd1a263eaca66e1b3cd",
+      "reservedYuan": 0.095848,
+      "status": "settled",
+      "responseEvidence": {
+        "file": "budget-responses/e6ea6458-216d-4ef7-bcb9-41f6e6a354aa.json",
+        "requestHash": "fe9d82046748f979bfa24c317f7ecbfd940c2a0786968cd1a263eaca66e1b3cd",
+        "responseHash": "60e75f84815955058762dad972165f8f85c36fe69cef5c40b4cc4e0a2164174e"
+      },
+      "costUpperYuan": 0.01908456,
+      "measurement": {
+        "label": "content-baishi-craft-npc_bs_079_1-review0",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 11145,
+          "completion_tokens": 7,
+          "total_tokens": 11152,
+          "prompt_tokens_details": {
+            "cached_tokens": 1664
+          },
+          "prompt_cache_hit_tokens": 1664,
+          "prompt_cache_miss_tokens": 9481
+        },
+        "costUpperYuan": 0.01908456,
+        "cumulativeUpperYuan": 4.443015200000001,
+        "latencyMs": 1105.4564000000028,
+        "timestamp": "2026-10-13T18:19:48.957Z"
+      }
+    },
+    "43394358-97bf-4e8c-8366-9011c316338b": {
+      "card": "T93",
+      "label": "content-baishi-craft-npc_bs_079_2-review0",
+      "requestHash": "0f145905e92ecadae5aae93224244082eb3dcfcce8ba1136730d2c7b8e07fd48",
+      "reservedYuan": 0.090912,
+      "status": "settled",
+      "responseEvidence": {
+        "file": "budget-responses/43394358-97bf-4e8c-8366-9011c316338b.json",
+        "requestHash": "0f145905e92ecadae5aae93224244082eb3dcfcce8ba1136730d2c7b8e07fd48",
+        "responseHash": "6b57771d32ac5a30b07052943bdc1949188bdd642ec684ff2eaa966184523e5a"
+      },
+      "costUpperYuan": 0.017735439999999998,
+      "measurement": {
+        "label": "content-baishi-craft-npc_bs_079_2-review0",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 10345,
+          "completion_tokens": 7,
+          "total_tokens": 10352,
+          "prompt_tokens_details": {
+            "cached_tokens": 1536
+          },
+          "prompt_cache_hit_tokens": 1536,
+          "prompt_cache_miss_tokens": 8809
+        },
+        "costUpperYuan": 0.017735439999999998,
+        "cumulativeUpperYuan": 4.460750640000001,
+        "latencyMs": 630.760000000002,
+        "timestamp": "2026-10-13T18:19:49.616Z"
+      }
+    },
+    "7a66414b-9e83-48dc-b6bf-6093600d8b23": {
+      "card": "T93",
+      "label": "content-baishi-craft-npc_bs_079_3-review0",
+      "requestHash": "bfa72db37812212321f7b0f5e24c5947eaa2eeaa43ff26f5cf9737b148ee21a2",
+      "reservedYuan": 0.090174,
+      "status": "settled",
+      "responseEvidence": {
+        "file": "budget-responses/7a66414b-9e83-48dc-b6bf-6093600d8b23.json",
+        "requestHash": "bfa72db37812212321f7b0f5e24c5947eaa2eeaa43ff26f5cf9737b148ee21a2",
+        "responseHash": "3a109e51d7916fd4ff5a25ee4e90d1770b56f1336a7c3852119d2a12feb2077f"
+      },
+      "costUpperYuan": 0.017745439999999998,
+      "measurement": {
+        "label": "content-baishi-craft-npc_bs_079_3-review0",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 10350,
+          "completion_tokens": 7,
+          "total_tokens": 10357,
+          "prompt_tokens_details": {
+            "cached_tokens": 1536
+          },
+          "prompt_cache_hit_tokens": 1536,
+          "prompt_cache_miss_tokens": 8814
+        },
+        "costUpperYuan": 0.017745439999999998,
+        "cumulativeUpperYuan": 4.478496080000001,
+        "latencyMs": 770.0231999999996,
+        "timestamp": "2026-10-13T18:19:50.415Z"
+      }
+    },
+    "37694a51-951b-4ea7-a45f-dca8bc0be761": {
+      "card": "T93",
+      "label": "content-baishi-craft-npc_bs_080_1-review0",
+      "requestHash": "8769a2a32fbe7198da08b97c4970d540ab8ae1ff6e840be7d91d241e5a18486b",
+      "reservedYuan": 0.090148,
+      "status": "settled",
+      "responseEvidence": {
+        "file": "budget-responses/37694a51-951b-4ea7-a45f-dca8bc0be761.json",
+        "requestHash": "8769a2a32fbe7198da08b97c4970d540ab8ae1ff6e840be7d91d241e5a18486b",
+        "responseHash": "438c349bd6d66eda83ef963e28e97dc91ce1a2f0d552c933d7902e86b89f6d77"
+      },
+      "costUpperYuan": 0.01768544,
+      "measurement": {
+        "label": "content-baishi-craft-npc_bs_080_1-review0",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 10320,
+          "completion_tokens": 7,
+          "total_tokens": 10327,
+          "prompt_tokens_details": {
+            "cached_tokens": 1536
+          },
+          "prompt_cache_hit_tokens": 1536,
+          "prompt_cache_miss_tokens": 8784
+        },
+        "costUpperYuan": 0.01768544,
+        "cumulativeUpperYuan": 4.496181520000001,
+        "latencyMs": 713.9551999999967,
+        "timestamp": "2026-10-13T18:19:51.158Z"
+      }
+    },
+    "2f20a877-12fa-4f01-9336-f669e6c097c5": {
+      "card": "T93",
+      "label": "content-baishi-craft-npc_bs_080_2-review0",
+      "requestHash": "0a4e32e43f743cef51e05412c8b7bc6d63fd9992f4e869f146c207c173a46467",
+      "reservedYuan": 0.089776,
+      "status": "settled",
+      "responseEvidence": {
+        "file": "budget-responses/2f20a877-12fa-4f01-9336-f669e6c097c5.json",
+        "requestHash": "0a4e32e43f743cef51e05412c8b7bc6d63fd9992f4e869f146c207c173a46467",
+        "responseHash": "327ec1d3080562f0413655aab9cdbf023db2151d66ca990f16c0da486c2d1c8a"
+      },
+      "costUpperYuan": 0.01775744,
+      "measurement": {
+        "label": "content-baishi-craft-npc_bs_080_2-review0",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 10356,
+          "completion_tokens": 7,
+          "total_tokens": 10363,
+          "prompt_tokens_details": {
+            "cached_tokens": 1536
+          },
+          "prompt_cache_hit_tokens": 1536,
+          "prompt_cache_miss_tokens": 8820
+        },
+        "costUpperYuan": 0.01775744,
+        "cumulativeUpperYuan": 4.513938960000001,
+        "latencyMs": 1368.5422000000035,
+        "timestamp": "2026-10-13T18:19:52.556Z"
+      }
+    },
+    "0e4c90d8-0e9c-4280-822e-a6e97ada86b2": {
+      "card": "T93",
+      "label": "content-baishi-craft-npc_bs_080_3-review0",
+      "requestHash": "f6c91155ae84ac5800b1ec0e5d36b3407c9f4e567ee5fa6a28d97d6c0de3d9a3",
+      "reservedYuan": 0.096498,
+      "status": "settled",
+      "responseEvidence": {
+        "file": "budget-responses/0e4c90d8-0e9c-4280-822e-a6e97ada86b2.json",
+        "requestHash": "f6c91155ae84ac5800b1ec0e5d36b3407c9f4e567ee5fa6a28d97d6c0de3d9a3",
+        "responseHash": "e7b4f9198103fbc299aef5f3b1d5c9eaa1bbf2b141e7b8ce740e41ef5086b447"
+      },
+      "costUpperYuan": 0.01916056,
+      "measurement": {
+        "label": "content-baishi-craft-npc_bs_080_3-review0",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 11183,
+          "completion_tokens": 7,
+          "total_tokens": 11190,
+          "prompt_tokens_details": {
+            "cached_tokens": 1664
+          },
+          "prompt_cache_hit_tokens": 1664,
+          "prompt_cache_miss_tokens": 9519
+        },
+        "costUpperYuan": 0.01916056,
+        "cumulativeUpperYuan": 4.533099520000001,
+        "latencyMs": 963.9156000000003,
+        "timestamp": "2026-10-13T18:19:53.545Z"
+      }
+    },
+    "d71d582f-015c-4723-b81d-da7e0abac46f": {
+      "card": "T93",
+      "label": "content-baishi-craft-bld_bs_reed_dao-review0",
+      "requestHash": "cb42504ab9c102f34ebcc180c3824771cec56ab9bc016577f1095596d5b998aa",
+      "reservedYuan": 0.04638,
+      "status": "settled",
+      "responseEvidence": {
+        "file": "budget-responses/d71d582f-015c-4723-b81d-da7e0abac46f.json",
+        "requestHash": "cb42504ab9c102f34ebcc180c3824771cec56ab9bc016577f1095596d5b998aa",
+        "responseHash": "b291195dfe1d0e8dcef77ea0535a7008ee917a5b8cae08918e5af0ef88e9b540"
+      },
+      "costUpperYuan": 0.0066892,
+      "measurement": {
+        "label": "content-baishi-craft-bld_bs_reed_dao-review0",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 4571,
+          "completion_tokens": 7,
+          "total_tokens": 4578,
+          "prompt_tokens_details": {
+            "cached_tokens": 1280
+          },
+          "prompt_cache_hit_tokens": 1280,
+          "prompt_cache_miss_tokens": 3291
+        },
+        "costUpperYuan": 0.0066892,
+        "cumulativeUpperYuan": 4.5397887200000016,
+        "latencyMs": 700.5374999999985,
+        "timestamp": "2026-10-13T18:19:54.273Z"
+      }
+    },
+    "a4f18971-cc12-48fa-b6e0-14e321120a49": {
+      "card": "T93",
+      "label": "content-baishi-craft-bld_bs_still_temple-review0",
+      "requestHash": "26564fd970596dc22358a84777571c845d3c36dd12ca36f745bd500fdce5bd72",
+      "reservedYuan": 0.04641,
+      "status": "settled",
+      "responseEvidence": {
+        "file": "budget-responses/a4f18971-cc12-48fa-b6e0-14e321120a49.json",
+        "requestHash": "26564fd970596dc22358a84777571c845d3c36dd12ca36f745bd500fdce5bd72",
+        "responseHash": "e37dfac7929f84ab6ad923fff823f21e7ce9c304980e359ceeab08b898cd83cb"
+      },
+      "costUpperYuan": 0.0066912,
+      "measurement": {
+        "label": "content-baishi-craft-bld_bs_still_temple-review0",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 4572,
+          "completion_tokens": 7,
+          "total_tokens": 4579,
+          "prompt_tokens_details": {
+            "cached_tokens": 1280
+          },
+          "prompt_cache_hit_tokens": 1280,
+          "prompt_cache_miss_tokens": 3292
+        },
+        "costUpperYuan": 0.0066912,
+        "cumulativeUpperYuan": 4.546479920000001,
+        "latencyMs": 696.5671000000002,
+        "timestamp": "2026-10-13T18:19:54.995Z"
+      }
+    },
+    "7aab5d34-f2df-4b91-8860-11a6a0eb0f14": {
+      "card": "T93",
+      "label": "content-baishi-craft-bld_bs_measured_hall-review0",
+      "requestHash": "09549e8ce1a087799d67f07077d97621ef330f4928d7ce918548e52f11d8f6d5",
+      "reservedYuan": 0.046372,
+      "status": "settled",
+      "responseEvidence": {
+        "file": "budget-responses/7aab5d34-f2df-4b91-8860-11a6a0eb0f14.json",
+        "requestHash": "09549e8ce1a087799d67f07077d97621ef330f4928d7ce918548e52f11d8f6d5",
+        "responseHash": "bf0c3c4eefde232a7fdf6cb870468cd9ad55efd388bf91e2994326c45923ec15"
+      },
+      "costUpperYuan": 0.0066592,
+      "measurement": {
+        "label": "content-baishi-craft-bld_bs_measured_hall-review0",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 4556,
+          "completion_tokens": 7,
+          "total_tokens": 4563,
+          "prompt_tokens_details": {
+            "cached_tokens": 1280
+          },
+          "prompt_cache_hit_tokens": 1280,
+          "prompt_cache_miss_tokens": 3276
+        },
+        "costUpperYuan": 0.0066592,
+        "cumulativeUpperYuan": 4.553139120000001,
+        "latencyMs": 961.1396999999997,
+        "timestamp": "2026-10-13T18:19:55.981Z"
+      }
+    },
+    "ee4ed5d2-23d5-4760-b58e-5ba1be812cda": {
+      "card": "T93",
+      "label": "content-baishi-craft-item_bs_dao_primer-review0",
+      "requestHash": "2f32a0d043e067a8e444e08aa3c5ec0acb577370775bc55460310cb2a5a242d2",
+      "reservedYuan": 0.047044,
+      "status": "settled",
+      "responseEvidence": {
+        "file": "budget-responses/ee4ed5d2-23d5-4760-b58e-5ba1be812cda.json",
+        "requestHash": "2f32a0d043e067a8e444e08aa3c5ec0acb577370775bc55460310cb2a5a242d2",
+        "responseHash": "1bbe9ea09008f4cc76e2aaaf38dd6580c45552f031b3b9aba1ec20e577d79eb2"
+      },
+      "costUpperYuan": 0.0068492,
+      "measurement": {
+        "label": "content-baishi-craft-item_bs_dao_primer-review0",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 4651,
+          "completion_tokens": 7,
+          "total_tokens": 4658,
+          "prompt_tokens_details": {
+            "cached_tokens": 1280
+          },
+          "prompt_cache_hit_tokens": 1280,
+          "prompt_cache_miss_tokens": 3371
+        },
+        "costUpperYuan": 0.0068492,
+        "cumulativeUpperYuan": 4.55998832,
+        "latencyMs": 1225.0536999999968,
+        "timestamp": "2026-10-13T18:19:57.231Z"
+      }
+    },
+    "933f9320-3454-445a-9f64-5d4e9394ded0": {
+      "card": "T93",
+      "label": "content-baishi-craft-item_bs_monk_primer-review0",
+      "requestHash": "196f396f6a076e50a445e46d14e917b24419e78f5a690d439dcf33c98f035d6b",
+      "reservedYuan": 0.047146,
+      "status": "settled",
+      "responseEvidence": {
+        "file": "budget-responses/933f9320-3454-445a-9f64-5d4e9394ded0.json",
+        "requestHash": "196f396f6a076e50a445e46d14e917b24419e78f5a690d439dcf33c98f035d6b",
+        "responseHash": "e7b5d2e8639b99893661fbaf0c6c363d7aba58ac2e684f0b581b53ce21f6b2d8"
+      },
+      "costUpperYuan": 0.0068772,
+      "measurement": {
+        "label": "content-baishi-craft-item_bs_monk_primer-review0",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 4665,
+          "completion_tokens": 7,
+          "total_tokens": 4672,
+          "prompt_tokens_details": {
+            "cached_tokens": 1280
+          },
+          "prompt_cache_hit_tokens": 1280,
+          "prompt_cache_miss_tokens": 3385
+        },
+        "costUpperYuan": 0.0068772,
+        "cumulativeUpperYuan": 4.56686552,
+        "latencyMs": 1300.2541999999958,
+        "timestamp": "2026-10-13T18:19:58.559Z"
+      }
+    },
+    "e5e52fc3-90fc-4fa4-866d-e284346bcd6a": {
+      "card": "T93",
+      "label": "content-baishi-craft-item_bs_mage_primer-review0",
+      "requestHash": "ef974ad82b4fc4ba4a55a6c4b1be9d623ce02a71fab9db39a8b84ef308a14030",
+      "reservedYuan": 0.047004,
+      "status": "settled",
+      "responseEvidence": {
+        "file": "budget-responses/e5e52fc3-90fc-4fa4-866d-e284346bcd6a.json",
+        "requestHash": "ef974ad82b4fc4ba4a55a6c4b1be9d623ce02a71fab9db39a8b84ef308a14030",
+        "responseHash": "34159a45f30c8434a1347fab3620bfc35e33a86bca480aa732cae4f29cb48987"
+      },
+      "costUpperYuan": 0.0067972,
+      "measurement": {
+        "label": "content-baishi-craft-item_bs_mage_primer-review0",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 4625,
+          "completion_tokens": 7,
+          "total_tokens": 4632,
+          "prompt_tokens_details": {
+            "cached_tokens": 1280
+          },
+          "prompt_cache_hit_tokens": 1280,
+          "prompt_cache_miss_tokens": 3345
+        },
+        "costUpperYuan": 0.0067972,
+        "cumulativeUpperYuan": 4.573662720000001,
+        "latencyMs": 909.9323999999979,
+        "timestamp": "2026-10-13T18:19:59.493Z"
+      }
+    },
+    "3af40c84-322d-4bc3-8172-74981031fb3d": {
+      "card": "T93",
+      "label": "content-baishi-craft-item_bs_martial_primer-review0",
+      "requestHash": "dbdce6ee356f40adb683f006a6c900bb97b48de15ce73bba0ed10e5418932e47",
+      "reservedYuan": 0.046986,
+      "status": "settled",
+      "responseEvidence": {
+        "file": "budget-responses/3af40c84-322d-4bc3-8172-74981031fb3d.json",
+        "requestHash": "dbdce6ee356f40adb683f006a6c900bb97b48de15ce73bba0ed10e5418932e47",
+        "responseHash": "eb2130c848dd09ab2ce8b7045d75dd1dc1b51c8939b17aefa8634be693b753cb"
+      },
+      "costUpperYuan": 0.0068192,
+      "measurement": {
+        "label": "content-baishi-craft-item_bs_martial_primer-review0",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 4636,
+          "completion_tokens": 7,
+          "total_tokens": 4643,
+          "prompt_tokens_details": {
+            "cached_tokens": 1280
+          },
+          "prompt_cache_hit_tokens": 1280,
+          "prompt_cache_miss_tokens": 3356
+        },
+        "costUpperYuan": 0.0068192,
+        "cumulativeUpperYuan": 4.58048192,
+        "latencyMs": 781.1098999999958,
+        "timestamp": "2026-10-13T18:20:00.301Z"
+      }
+    },
+    "ebe29a5d-1fd7-4d73-a03f-9454f1410add": {
+      "card": "T93",
+      "label": "content-baishi-craft-skill_mind_01-review0",
+      "requestHash": "044e8c96232fcd0ed9213122c6a358c917699f47990428c590336a94d732f6a2",
+      "reservedYuan": 0.046342,
+      "status": "settled",
+      "responseEvidence": {
+        "file": "budget-responses/ebe29a5d-1fd7-4d73-a03f-9454f1410add.json",
+        "requestHash": "044e8c96232fcd0ed9213122c6a358c917699f47990428c590336a94d732f6a2",
+        "responseHash": "8208cef3131925dad673f2e66203b2bef9a2b1e8e53c675928f9b15c52c4f5ab"
+      },
+      "costUpperYuan": 0.0066051999999999994,
+      "measurement": {
+        "label": "content-baishi-craft-skill_mind_01-review0",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 4529,
+          "completion_tokens": 7,
+          "total_tokens": 4536,
+          "prompt_tokens_details": {
+            "cached_tokens": 1280
+          },
+          "prompt_cache_hit_tokens": 1280,
+          "prompt_cache_miss_tokens": 3249
+        },
+        "costUpperYuan": 0.0066051999999999994,
+        "cumulativeUpperYuan": 4.5870871200000005,
+        "latencyMs": 1050.2511000000013,
+        "timestamp": "2026-10-13T18:20:01.380Z"
+      }
+    },
+    "0320ae4b-d026-4870-b08b-46b78e26df7f": {
+      "card": "T93",
+      "label": "content-baishi-craft-skill_mind_05-review0",
+      "requestHash": "72d66c3c1a166dc32ac9d190b0052be15bb0cbe0504863a3c064fa2250cfed54",
+      "reservedYuan": 0.04624,
+      "status": "settled",
+      "responseEvidence": {
+        "file": "budget-responses/0320ae4b-d026-4870-b08b-46b78e26df7f.json",
+        "requestHash": "72d66c3c1a166dc32ac9d190b0052be15bb0cbe0504863a3c064fa2250cfed54",
+        "responseHash": "00f2b1510388de8c85c7165ce87d1b324134f4c0be19c7d871b901097e3aadde"
+      },
+      "costUpperYuan": 0.0065832,
+      "measurement": {
+        "label": "content-baishi-craft-skill_mind_05-review0",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 4518,
+          "completion_tokens": 7,
+          "total_tokens": 4525,
+          "prompt_tokens_details": {
+            "cached_tokens": 1280
+          },
+          "prompt_cache_hit_tokens": 1280,
+          "prompt_cache_miss_tokens": 3238
+        },
+        "costUpperYuan": 0.0065832,
+        "cumulativeUpperYuan": 4.59367032,
+        "latencyMs": 1075.5915000000023,
+        "timestamp": "2026-10-13T18:20:02.479Z"
+      }
+    },
+    "53759fd1-e5dc-4942-ba0e-ba072991f94c": {
+      "card": "T93",
+      "label": "content-baishi-craft-skill_s1_marked_letter-review0",
+      "requestHash": "66ccf2d441d8aff57affa8bc104f426479792ec79279b87c54c4c4ff98e269ef",
+      "reservedYuan": 0.046296,
+      "status": "settled",
+      "responseEvidence": {
+        "file": "budget-responses/53759fd1-e5dc-4942-ba0e-ba072991f94c.json",
+        "requestHash": "66ccf2d441d8aff57affa8bc104f426479792ec79279b87c54c4c4ff98e269ef",
+        "responseHash": "14008473c42d68ac02a13da83ce56a751b2febdd6e6f0280efe3e3d2860354cb"
+      },
+      "costUpperYuan": 0.0065972,
+      "measurement": {
+        "label": "content-baishi-craft-skill_s1_marked_letter-review0",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 4525,
+          "completion_tokens": 7,
+          "total_tokens": 4532,
+          "prompt_tokens_details": {
+            "cached_tokens": 1280
+          },
+          "prompt_cache_hit_tokens": 1280,
+          "prompt_cache_miss_tokens": 3245
+        },
+        "costUpperYuan": 0.0065972,
+        "cumulativeUpperYuan": 4.60026752,
+        "latencyMs": 1003.4795000000013,
+        "timestamp": "2026-10-13T18:20:03.506Z"
+      }
+    },
+    "31ecd60c-48f5-4484-95e3-3f00225dc74d": {
+      "card": "T93",
+      "label": "content-baishi-craft-profession_swordsman-review0",
+      "requestHash": "41b9a382e4f8697a1fca217cc338bd4bc95804c2cc9f717015834f89157225c0",
+      "reservedYuan": 0.058572,
+      "status": "settled",
+      "responseEvidence": {
+        "file": "budget-responses/31ecd60c-48f5-4484-95e3-3f00225dc74d.json",
+        "requestHash": "41b9a382e4f8697a1fca217cc338bd4bc95804c2cc9f717015834f89157225c0",
+        "responseHash": "938262106b7213579076dcfe4cfb7c314732032eff1f6e1e34b4513dcda2a1e1"
+      },
+      "costUpperYuan": 0.0100972,
+      "measurement": {
+        "label": "content-baishi-craft-profession_swordsman-review0",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 6275,
+          "completion_tokens": 7,
+          "total_tokens": 6282,
+          "prompt_tokens_details": {
+            "cached_tokens": 1280
+          },
+          "prompt_cache_hit_tokens": 1280,
+          "prompt_cache_miss_tokens": 4995
+        },
+        "costUpperYuan": 0.0100972,
+        "cumulativeUpperYuan": 4.61036472,
+        "latencyMs": 674.7163,
+        "timestamp": "2026-10-13T18:20:04.209Z"
+      }
+    },
+    "480b315a-a398-419f-a3e8-66fa0ed3324a": {
+      "card": "T93",
+      "label": "content-baishi-craft-profession_mage-review0",
+      "requestHash": "41763fb7550c95b1204d23ddd5a94d4a8db3fad9244c9814fbd653506e984414",
+      "reservedYuan": 0.05779,
+      "status": "settled",
+      "responseEvidence": {
+        "file": "budget-responses/480b315a-a398-419f-a3e8-66fa0ed3324a.json",
+        "requestHash": "41763fb7550c95b1204d23ddd5a94d4a8db3fad9244c9814fbd653506e984414",
+        "responseHash": "e36d2c9e70fce43fd6fc14a8e33b8908bc4e1de6abe037680ef3a1768105d7f4"
+      },
+      "costUpperYuan": 0.0096912,
+      "measurement": {
+        "label": "content-baishi-craft-profession_mage-review0",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 6072,
+          "completion_tokens": 7,
+          "total_tokens": 6079,
+          "prompt_tokens_details": {
+            "cached_tokens": 1280
+          },
+          "prompt_cache_hit_tokens": 1280,
+          "prompt_cache_miss_tokens": 4792
+        },
+        "costUpperYuan": 0.0096912,
+        "cumulativeUpperYuan": 4.6200559199999995,
+        "latencyMs": 995.1576000000059,
+        "timestamp": "2026-10-13T18:20:05.231Z"
+      }
+    },
+    "b9805151-a07c-4a11-aa63-d51d26ac7928": {
+      "card": "T93",
+      "label": "content-baishi-craft-profession_priest-review0",
+      "requestHash": "f9dc0cc414e5b28d75dbd6858a9c1a1cc2b490e47346192663f1c711e5258f72",
+      "reservedYuan": 0.058138,
+      "status": "settled",
+      "responseEvidence": {
+        "file": "budget-responses/b9805151-a07c-4a11-aa63-d51d26ac7928.json",
+        "requestHash": "f9dc0cc414e5b28d75dbd6858a9c1a1cc2b490e47346192663f1c711e5258f72",
+        "responseHash": "490cf1b617a5174d7caf03a14d229f02b4f5b19f0a194173788b5235d34bde98"
+      },
+      "costUpperYuan": 0.0099372,
+      "measurement": {
+        "label": "content-baishi-craft-profession_priest-review0",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 6195,
+          "completion_tokens": 7,
+          "total_tokens": 6202,
+          "prompt_tokens_details": {
+            "cached_tokens": 1280
+          },
+          "prompt_cache_hit_tokens": 1280,
+          "prompt_cache_miss_tokens": 4915
+        },
+        "costUpperYuan": 0.0099372,
+        "cumulativeUpperYuan": 4.62999312,
+        "latencyMs": 902.3661000000066,
+        "timestamp": "2026-10-13T18:20:06.160Z"
+      }
+    },
+    "6692310e-fd81-4af8-9d71-456c1b8031ba": {
+      "card": "T93",
+      "label": "content-baishi-craft-profession_monk-review0",
+      "requestHash": "8ad45d999d93025b5ea0d93cdfd22e5794cf9702d46257390f7975fd7eda6313",
+      "reservedYuan": 0.057772,
+      "status": "settled",
+      "responseEvidence": {
+        "file": "budget-responses/6692310e-fd81-4af8-9d71-456c1b8031ba.json",
+        "requestHash": "8ad45d999d93025b5ea0d93cdfd22e5794cf9702d46257390f7975fd7eda6313",
+        "responseHash": "3eadfe5150fda5f35f4b9863cfbc0886769435347c5adae4221ccd3ce445451f"
+      },
+      "costUpperYuan": 0.0097712,
+      "measurement": {
+        "label": "content-baishi-craft-profession_monk-review0",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 6112,
+          "completion_tokens": 7,
+          "total_tokens": 6119,
+          "prompt_tokens_details": {
+            "cached_tokens": 1280
+          },
+          "prompt_cache_hit_tokens": 1280,
+          "prompt_cache_miss_tokens": 4832
+        },
+        "costUpperYuan": 0.0097712,
+        "cumulativeUpperYuan": 4.63976432,
+        "latencyMs": 1001.5406000000003,
+        "timestamp": "2026-10-13T18:20:07.189Z"
+      }
+    },
+    "e359e3a5-608e-4cf2-92cb-84fe44f0f06b": {
+      "card": "T93",
+      "label": "content-baishi-craft-profession_witch-review0",
+      "requestHash": "9be75c73f66739c0f52b11a05214c8720d5987867c6152e06ee461d16761af6f",
+      "reservedYuan": 0.057978,
+      "status": "settled",
+      "responseEvidence": {
+        "file": "budget-responses/e359e3a5-608e-4cf2-92cb-84fe44f0f06b.json",
+        "requestHash": "9be75c73f66739c0f52b11a05214c8720d5987867c6152e06ee461d16761af6f",
+        "responseHash": "a1cacd492e88e9be6d9de3f9550fd6b67594f3e3af46ba51a844e95c36a7acdd"
+      },
+      "costUpperYuan": 0.0097592,
+      "measurement": {
+        "label": "content-baishi-craft-profession_witch-review0",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 6106,
+          "completion_tokens": 7,
+          "total_tokens": 6113,
+          "prompt_tokens_details": {
+            "cached_tokens": 1280
+          },
+          "prompt_cache_hit_tokens": 1280,
+          "prompt_cache_miss_tokens": 4826
+        },
+        "costUpperYuan": 0.0097592,
+        "cumulativeUpperYuan": 4.649523520000001,
+        "latencyMs": 1002.7516999999934,
+        "timestamp": "2026-10-13T18:20:08.219Z"
+      }
+    },
+    "4ffcb25b-00f3-4a99-ba94-630a7a909223": {
+      "card": "T93",
+      "label": "content-baishi-craft-profession_taoist-review0",
+      "requestHash": "a3382ef8200af519537d515e1dcbb92825b620a072725667fd53d05266158793",
+      "reservedYuan": 0.058222,
+      "status": "settled",
+      "responseEvidence": {
+        "file": "budget-responses/4ffcb25b-00f3-4a99-ba94-630a7a909223.json",
+        "requestHash": "a3382ef8200af519537d515e1dcbb92825b620a072725667fd53d05266158793",
+        "responseHash": "c3ed6e88989dc8b8b87cc727371361dce40951a2ccf3277ab9c441c14123d186"
+      },
+      "costUpperYuan": 0.010127200000000001,
+      "measurement": {
+        "label": "content-baishi-craft-profession_taoist-review0",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 6290,
+          "completion_tokens": 7,
+          "total_tokens": 6297,
+          "prompt_tokens_details": {
+            "cached_tokens": 1280
+          },
+          "prompt_cache_hit_tokens": 1280,
+          "prompt_cache_miss_tokens": 5010
+        },
+        "costUpperYuan": 0.010127200000000001,
+        "cumulativeUpperYuan": 4.659650720000001,
+        "latencyMs": 627.8326000000015,
+        "timestamp": "2026-10-13T18:20:08.877Z"
+      }
+    },
+    "9c71648b-6c73-4962-8cae-6f12b9dc269b": {
+      "card": "T93",
+      "label": "content-baishi-craft-profession_life_8-review0",
+      "requestHash": "df8731c3c4992f3308fb3ee3869abe07c06705f21ab4f65c2ea0d724d21213c3",
+      "reservedYuan": 0.049564,
+      "status": "settled",
+      "responseEvidence": {
+        "file": "budget-responses/9c71648b-6c73-4962-8cae-6f12b9dc269b.json",
+        "requestHash": "df8731c3c4992f3308fb3ee3869abe07c06705f21ab4f65c2ea0d724d21213c3",
+        "responseHash": "a031457d6fcb03bffc6bde94d2148ef9026ed65465ca8f12ce2c586ab126f265"
+      },
+      "costUpperYuan": 0.0075052,
+      "measurement": {
+        "label": "content-baishi-craft-profession_life_8-review0",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 4979,
+          "completion_tokens": 7,
+          "total_tokens": 4986,
+          "prompt_tokens_details": {
+            "cached_tokens": 1280
+          },
+          "prompt_cache_hit_tokens": 1280,
+          "prompt_cache_miss_tokens": 3699
+        },
+        "costUpperYuan": 0.0075052,
+        "cumulativeUpperYuan": 4.667155920000001,
+        "latencyMs": 777.2093999999997,
+        "timestamp": "2026-10-13T18:20:09.682Z"
+      }
+    },
+    "b9158206-933d-4e97-85c9-8c4dcfcdf2d8": {
+      "card": "T93",
+      "label": "content-baishi-craft-npc_bs_061_1-review0",
+      "requestHash": "4f512ba71ca644c57d37dd15519dfbf3bfb905ecd2ce74156b4731edc040c992",
+      "reservedYuan": 0.089456,
+      "status": "settled",
+      "responseEvidence": {
+        "file": "budget-responses/b9158206-933d-4e97-85c9-8c4dcfcdf2d8.json",
+        "requestHash": "4f512ba71ca644c57d37dd15519dfbf3bfb905ecd2ce74156b4731edc040c992",
+        "responseHash": "745482e51732cd2771694f88fed0bd32ddeffbb14539c08fefddb302f8003e94"
+      },
+      "costUpperYuan": 0.01972248,
+      "measurement": {
+        "label": "content-baishi-craft-npc_bs_061_1-review0",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 10335,
+          "completion_tokens": 7,
+          "total_tokens": 10342,
+          "prompt_tokens_details": {
+            "cached_tokens": 512
+          },
+          "prompt_cache_hit_tokens": 512,
+          "prompt_cache_miss_tokens": 9823
+        },
+        "costUpperYuan": 0.01972248,
+        "cumulativeUpperYuan": 4.686878400000001,
+        "latencyMs": 1017.8900000000001,
+        "timestamp": "2026-10-13T18:21:06.418Z"
+      }
+    },
+    "ed94cd0b-b86f-489f-b4ee-a988367a15f1": {
+      "card": "T93",
+      "label": "content-baishi-craft-npc_bs_061_2-review0",
+      "requestHash": "6ff4e9f8de2bce381ba6a5ab26b0841945c48d6be31506ae0c4b8342928b21de",
+      "reservedYuan": 0.091052,
+      "status": "settled",
+      "responseEvidence": {
+        "file": "budget-responses/ed94cd0b-b86f-489f-b4ee-a988367a15f1.json",
+        "requestHash": "6ff4e9f8de2bce381ba6a5ab26b0841945c48d6be31506ae0c4b8342928b21de",
+        "responseHash": "4bde31b99a8fbdc71113d39cc8765b5be2077164122bf6faf5bb5e150ce3e27c"
+      },
+      "costUpperYuan": 0.01996448,
+      "measurement": {
+        "label": "content-baishi-craft-npc_bs_061_2-review0",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 10456,
+          "completion_tokens": 7,
+          "total_tokens": 10463,
+          "prompt_tokens_details": {
+            "cached_tokens": 512
+          },
+          "prompt_cache_hit_tokens": 512,
+          "prompt_cache_miss_tokens": 9944
+        },
+        "costUpperYuan": 0.01996448,
+        "cumulativeUpperYuan": 4.706842880000001,
+        "latencyMs": 1509.4572,
+        "timestamp": "2026-10-13T18:21:07.963Z"
+      }
+    },
+    "7f372fc1-7f9b-494c-ab4a-1487f102e2f0": {
+      "card": "T93",
+      "label": "content-baishi-craft-npc_bs_062_1-review0",
+      "requestHash": "1263c0d518e6b4b4251d644120d1d2e29b7decb488af2a9dc20a481d96126315",
+      "reservedYuan": 0.09072,
+      "status": "settled",
+      "responseEvidence": {
+        "file": "budget-responses/7f372fc1-7f9b-494c-ab4a-1487f102e2f0.json",
+        "requestHash": "1263c0d518e6b4b4251d644120d1d2e29b7decb488af2a9dc20a481d96126315",
+        "responseHash": "f3e7ccf36e7a0d4ade310785e1c8bc58ce0783f8775f2994789c118b48c9fda9"
+      },
+      "costUpperYuan": 0.01998248,
+      "measurement": {
+        "label": "content-baishi-craft-npc_bs_062_1-review0",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 10465,
+          "completion_tokens": 7,
+          "total_tokens": 10472,
+          "prompt_tokens_details": {
+            "cached_tokens": 512
+          },
+          "prompt_cache_hit_tokens": 512,
+          "prompt_cache_miss_tokens": 9953
+        },
+        "costUpperYuan": 0.01998248,
+        "cumulativeUpperYuan": 4.726825360000001,
+        "latencyMs": 688.7116000000001,
+        "timestamp": "2026-10-13T18:21:08.683Z"
+      }
+    },
+    "bd6df4c9-33ca-433c-b21f-74d13944cda7": {
+      "card": "T93",
+      "label": "content-baishi-craft-npc_bs_062_2-review0",
+      "requestHash": "885171fa7f8e47d948ef6ae847c4fe68e59942c54797e25fc9b4ba143c98db52",
+      "reservedYuan": 0.090038,
+      "status": "settled",
+      "responseEvidence": {
+        "file": "budget-responses/bd6df4c9-33ca-433c-b21f-74d13944cda7.json",
+        "requestHash": "885171fa7f8e47d948ef6ae847c4fe68e59942c54797e25fc9b4ba143c98db52",
+        "responseHash": "3b7bc2674545110d524e58b93ab0ba6cf4ca8728e46bbfbe4cb1ff690ed1b769"
+      },
+      "costUpperYuan": 0.01981048,
+      "measurement": {
+        "label": "content-baishi-craft-npc_bs_062_2-review0",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 10379,
+          "completion_tokens": 7,
+          "total_tokens": 10386,
+          "prompt_tokens_details": {
+            "cached_tokens": 512
+          },
+          "prompt_cache_hit_tokens": 512,
+          "prompt_cache_miss_tokens": 9867
+        },
+        "costUpperYuan": 0.01981048,
+        "cumulativeUpperYuan": 4.7466358400000015,
+        "latencyMs": 901.9395999999997,
+        "timestamp": "2026-10-13T18:21:09.625Z"
+      }
+    },
+    "b2719194-c937-4c81-a57e-7e2a0059075e": {
+      "card": "T93",
+      "label": "content-baishi-craft-npc_bs_063_1-review0",
+      "requestHash": "7755cb825e683bfe55ecc230e88823837c85f84dc93725e1ba827a0c9e0faf8d",
+      "reservedYuan": 0.08996,
+      "status": "settled",
+      "responseEvidence": {
+        "file": "budget-responses/b2719194-c937-4c81-a57e-7e2a0059075e.json",
+        "requestHash": "7755cb825e683bfe55ecc230e88823837c85f84dc93725e1ba827a0c9e0faf8d",
+        "responseHash": "12284869f5e8e06b918e5dcc9a0799f7f00626fb9c358ef60d60eff8eeaac099"
+      },
+      "costUpperYuan": 0.01972048,
+      "measurement": {
+        "label": "content-baishi-craft-npc_bs_063_1-review0",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 10334,
+          "completion_tokens": 7,
+          "total_tokens": 10341,
+          "prompt_tokens_details": {
+            "cached_tokens": 512
+          },
+          "prompt_cache_hit_tokens": 512,
+          "prompt_cache_miss_tokens": 9822
+        },
+        "costUpperYuan": 0.01972048,
+        "cumulativeUpperYuan": 4.766356320000002,
+        "latencyMs": 916.2932000000001,
+        "timestamp": "2026-10-13T18:21:10.577Z"
+      }
+    },
+    "3103260a-be73-4c9f-acca-759682de464a": {
+      "card": "T93",
+      "label": "content-baishi-craft-npc_bs_063_2-review0",
+      "requestHash": "eb7bd89f7302d292a2f5c832bf4e6794ed4a2cda1ee2fb203cbc38ed26f54119",
+      "reservedYuan": 0.090704,
+      "status": "settled",
+      "responseEvidence": {
+        "file": "budget-responses/3103260a-be73-4c9f-acca-759682de464a.json",
+        "requestHash": "eb7bd89f7302d292a2f5c832bf4e6794ed4a2cda1ee2fb203cbc38ed26f54119",
+        "responseHash": "d24b2954269fcf017f05144698152a9dd0e2593b859ea994f97e97a88ebc75e1"
+      },
+      "costUpperYuan": 0.02011648,
+      "measurement": {
+        "label": "content-baishi-craft-npc_bs_063_2-review0",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 10532,
+          "completion_tokens": 7,
+          "total_tokens": 10539,
+          "prompt_tokens_details": {
+            "cached_tokens": 512
+          },
+          "prompt_cache_hit_tokens": 512,
+          "prompt_cache_miss_tokens": 10020
+        },
+        "costUpperYuan": 0.02011648,
+        "cumulativeUpperYuan": 4.786472800000002,
+        "latencyMs": 860.0691999999999,
+        "timestamp": "2026-10-13T18:21:11.470Z"
+      }
+    },
+    "a8596c88-8904-4230-bb81-02a4f9cc47c3": {
+      "card": "T93",
+      "label": "content-baishi-craft-npc_bs_064_1-review0",
+      "requestHash": "837487785d01c93d860851d5a435b930c799b0f53246f55c357afcc07b62c624",
+      "reservedYuan": 0.090508,
+      "status": "settled",
+      "responseEvidence": {
+        "file": "budget-responses/a8596c88-8904-4230-bb81-02a4f9cc47c3.json",
+        "requestHash": "837487785d01c93d860851d5a435b930c799b0f53246f55c357afcc07b62c624",
+        "responseHash": "d73eec0d2d96bcba366954c29ee489b662243c60c492ba271f3c0fd401e38bc3"
+      },
+      "costUpperYuan": 0.01995448,
+      "measurement": {
+        "label": "content-baishi-craft-npc_bs_064_1-review0",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 10451,
+          "completion_tokens": 7,
+          "total_tokens": 10458,
+          "prompt_tokens_details": {
+            "cached_tokens": 512
+          },
+          "prompt_cache_hit_tokens": 512,
+          "prompt_cache_miss_tokens": 9939
+        },
+        "costUpperYuan": 0.01995448,
+        "cumulativeUpperYuan": 4.806427280000002,
+        "latencyMs": 897.9546999999993,
+        "timestamp": "2026-10-13T18:21:12.407Z"
+      }
+    },
+    "c9a7e46f-ff75-4ece-989e-b9c59193d40a": {
+      "card": "T93",
+      "label": "content-baishi-craft-npc_bs_064_2-review0",
+      "requestHash": "680487f0304bbcf0ec77c56264e57f1e5f359b742159e99938126f1fcd1c6934",
+      "reservedYuan": 0.089484,
+      "status": "settled",
+      "responseEvidence": {
+        "file": "budget-responses/c9a7e46f-ff75-4ece-989e-b9c59193d40a.json",
+        "requestHash": "680487f0304bbcf0ec77c56264e57f1e5f359b742159e99938126f1fcd1c6934",
+        "responseHash": "ec1044d8f8f90f41637f23e1fb69253001a7bbe905884cdfba11259ec19d97e2"
+      },
+      "costUpperYuan": 0.01952448,
+      "measurement": {
+        "label": "content-baishi-craft-npc_bs_064_2-review0",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 10236,
+          "completion_tokens": 7,
+          "total_tokens": 10243,
+          "prompt_tokens_details": {
+            "cached_tokens": 512
+          },
+          "prompt_cache_hit_tokens": 512,
+          "prompt_cache_miss_tokens": 9724
+        },
+        "costUpperYuan": 0.01952448,
+        "cumulativeUpperYuan": 4.825951760000002,
+        "latencyMs": 989.0741999999991,
+        "timestamp": "2026-10-13T18:21:13.432Z"
+      }
+    },
+    "542077e5-6c9d-4244-b4f3-a31883f50901": {
+      "card": "T93",
+      "label": "content-baishi-craft-npc_bs_065_1-review0",
+      "requestHash": "a70eaba346fccc3036447b550551236f7516db7c9688d40f50db433fc79f9847",
+      "reservedYuan": 0.089232,
+      "status": "settled",
+      "responseEvidence": {
+        "file": "budget-responses/542077e5-6c9d-4244-b4f3-a31883f50901.json",
+        "requestHash": "a70eaba346fccc3036447b550551236f7516db7c9688d40f50db433fc79f9847",
+        "responseHash": "13d3d7b77f368102e5b24a415ba65374ecb58641787a60be4cd9d3c7d6ae50aa"
+      },
+      "costUpperYuan": 0.01949648,
+      "measurement": {
+        "label": "content-baishi-craft-npc_bs_065_1-review0",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 10222,
+          "completion_tokens": 7,
+          "total_tokens": 10229,
+          "prompt_tokens_details": {
+            "cached_tokens": 512
+          },
+          "prompt_cache_hit_tokens": 512,
+          "prompt_cache_miss_tokens": 9710
+        },
+        "costUpperYuan": 0.01949648,
+        "cumulativeUpperYuan": 4.845448240000002,
+        "latencyMs": 797.2891,
+        "timestamp": "2026-10-13T18:21:14.267Z"
+      }
+    },
+    "ff68f645-d19a-42eb-af8f-635d7f5b5699": {
+      "card": "T93",
+      "label": "content-baishi-craft-npc_bs_065_2-review0",
+      "requestHash": "1122ee8807e085d05a2b6fe18930e7b4fc652411e74a2bd999445ce7ff090960",
+      "reservedYuan": 0.091438,
+      "status": "settled",
+      "responseEvidence": {
+        "file": "budget-responses/ff68f645-d19a-42eb-af8f-635d7f5b5699.json",
+        "requestHash": "1122ee8807e085d05a2b6fe18930e7b4fc652411e74a2bd999445ce7ff090960",
+        "responseHash": "acd1413f4dcd7e757456d26fb36de107cde84537a3ba70f676e29dc9c754a41c"
+      },
+      "costUpperYuan": 0.02002848,
+      "measurement": {
+        "label": "content-baishi-craft-npc_bs_065_2-review0",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 10488,
+          "completion_tokens": 7,
+          "total_tokens": 10495,
+          "prompt_tokens_details": {
+            "cached_tokens": 512
+          },
+          "prompt_cache_hit_tokens": 512,
+          "prompt_cache_miss_tokens": 9976
+        },
+        "costUpperYuan": 0.02002848,
+        "cumulativeUpperYuan": 4.865476720000002,
+        "latencyMs": 1210.371000000001,
+        "timestamp": "2026-10-13T18:21:15.514Z"
+      }
+    },
+    "ef2ba9f4-49c7-4660-ac89-cefb47ea722f": {
+      "card": "T93",
+      "label": "content-baishi-craft-npc_bs_066_1-review0",
+      "requestHash": "cb3eced1d22473ef91ef0b767019784e2fea26b371cf8e0c3d8872d2e84da584",
+      "reservedYuan": 0.091672,
+      "status": "settled",
+      "responseEvidence": {
+        "file": "budget-responses/ef2ba9f4-49c7-4660-ac89-cefb47ea722f.json",
+        "requestHash": "cb3eced1d22473ef91ef0b767019784e2fea26b371cf8e0c3d8872d2e84da584",
+        "responseHash": "356db9a9d37db62afc9e7072b2656fd431e7d6cd2befe93401b91342b520f8ee"
+      },
+      "costUpperYuan": 0.02011048,
+      "measurement": {
+        "label": "content-baishi-craft-npc_bs_066_1-review0",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 10529,
+          "completion_tokens": 7,
+          "total_tokens": 10536,
+          "prompt_tokens_details": {
+            "cached_tokens": 512
+          },
+          "prompt_cache_hit_tokens": 512,
+          "prompt_cache_miss_tokens": 10017
+        },
+        "costUpperYuan": 0.02011048,
+        "cumulativeUpperYuan": 4.885587200000002,
+        "latencyMs": 1233.1805000000004,
+        "timestamp": "2026-10-13T18:21:16.784Z"
+      }
+    },
+    "282824ed-7a7b-413d-927f-a864253fd114": {
+      "card": "T93",
+      "label": "content-baishi-craft-npc_bs_066_2-review0",
+      "requestHash": "6b7fcf6147e16ac8f30a83e92ca0f6f26c90ad6607a4349e9c68cff4660bd6d8",
+      "reservedYuan": 0.090004,
+      "status": "settled",
+      "responseEvidence": {
+        "file": "budget-responses/282824ed-7a7b-413d-927f-a864253fd114.json",
+        "requestHash": "6b7fcf6147e16ac8f30a83e92ca0f6f26c90ad6607a4349e9c68cff4660bd6d8",
+        "responseHash": "caa38ff821d13755e55e41a0216f9fa254c0e1587b2ba93e98eca592fb46601d"
+      },
+      "costUpperYuan": 0.019519599999999998,
+      "measurement": {
+        "label": "content-baishi-craft-npc_bs_066_2-review0",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 10359,
+          "completion_tokens": 7,
+          "total_tokens": 10366,
+          "prompt_tokens_details": {
+            "cached_tokens": 640
+          },
+          "prompt_cache_hit_tokens": 640,
+          "prompt_cache_miss_tokens": 9719
+        },
+        "costUpperYuan": 0.019519599999999998,
+        "cumulativeUpperYuan": 4.905106800000001,
+        "latencyMs": 794.0154999999995,
+        "timestamp": "2026-10-13T18:21:17.616Z"
+      }
+    },
+    "45019c95-3c10-4610-9e79-441b27f6e8be": {
+      "card": "T93",
+      "label": "content-baishi-craft-npc_bs_067_1-review0",
+      "requestHash": "39387f772646dfc14af2f1f69f5d34a0460916c6926da393acf037451ddd8acb",
+      "reservedYuan": 0.09083,
+      "status": "settled",
+      "responseEvidence": {
+        "file": "budget-responses/45019c95-3c10-4610-9e79-441b27f6e8be.json",
+        "requestHash": "39387f772646dfc14af2f1f69f5d34a0460916c6926da393acf037451ddd8acb",
+        "responseHash": "e00f9e70432096c354df9d28842c4755abfce22e07a6b3eaa121ea9dc4e0e46c"
+      },
+      "costUpperYuan": 0.0197356,
+      "measurement": {
+        "label": "content-baishi-craft-npc_bs_067_1-review0",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 10467,
+          "completion_tokens": 7,
+          "total_tokens": 10474,
+          "prompt_tokens_details": {
+            "cached_tokens": 640
+          },
+          "prompt_cache_hit_tokens": 640,
+          "prompt_cache_miss_tokens": 9827
+        },
+        "costUpperYuan": 0.0197356,
+        "cumulativeUpperYuan": 4.924842400000001,
+        "latencyMs": 755.8613000000005,
+        "timestamp": "2026-10-13T18:21:18.414Z"
+      }
+    },
+    "0b7147e8-80a0-465c-9b66-4fd9c3792a6b": {
+      "card": "T93",
+      "label": "content-baishi-craft-npc_bs_067_2-review0",
+      "requestHash": "07cb9a5db9ee4464d489be84f1ad2da1f1f949d4b36c00efdcce7d67face50cf",
+      "reservedYuan": 0.08951,
+      "status": "settled",
+      "responseEvidence": {
+        "file": "budget-responses/0b7147e8-80a0-465c-9b66-4fd9c3792a6b.json",
+        "requestHash": "07cb9a5db9ee4464d489be84f1ad2da1f1f949d4b36c00efdcce7d67face50cf",
+        "responseHash": "d5d87fa095f4fe8f260d16023db139c95aa83134bdea469a845a99aa4026b8d3"
+      },
+      "costUpperYuan": 0.01952248,
+      "measurement": {
+        "label": "content-baishi-craft-npc_bs_067_2-review0",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 10235,
+          "completion_tokens": 7,
+          "total_tokens": 10242,
+          "prompt_tokens_details": {
+            "cached_tokens": 512
+          },
+          "prompt_cache_hit_tokens": 512,
+          "prompt_cache_miss_tokens": 9723
+        },
+        "costUpperYuan": 0.01952248,
+        "cumulativeUpperYuan": 4.944364880000001,
+        "latencyMs": 1462.065199999999,
+        "timestamp": "2026-10-13T18:21:19.914Z"
+      }
+    },
+    "aaf2ef6f-aea6-4b2b-80e7-935c3b261086": {
+      "card": "T93",
+      "label": "content-baishi-craft-npc_bs_068_1-review0",
+      "requestHash": "4af3fd76c3d059e7cc90ad62a5a35779ccefde424fc8a0d15601c101063001df",
+      "reservedYuan": 0.089454,
+      "status": "settled",
+      "responseEvidence": {
+        "file": "budget-responses/aaf2ef6f-aea6-4b2b-80e7-935c3b261086.json",
+        "requestHash": "4af3fd76c3d059e7cc90ad62a5a35779ccefde424fc8a0d15601c101063001df",
+        "responseHash": "c3a7bf201bd3aa891e94626d9cda9ffc6ee28d99f28e01a1595d9af7d9dd8dd5"
+      },
+      "costUpperYuan": 0.01943048,
+      "measurement": {
+        "label": "content-baishi-craft-npc_bs_068_1-review0",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 10189,
+          "completion_tokens": 7,
+          "total_tokens": 10196,
+          "prompt_tokens_details": {
+            "cached_tokens": 512
+          },
+          "prompt_cache_hit_tokens": 512,
+          "prompt_cache_miss_tokens": 9677
+        },
+        "costUpperYuan": 0.01943048,
+        "cumulativeUpperYuan": 4.963795360000001,
+        "latencyMs": 1328.715900000001,
+        "timestamp": "2026-10-13T18:21:21.296Z"
+      }
+    },
+    "86e18ca6-1cda-47a1-a76a-31155ebd2440": {
+      "card": "T93",
+      "label": "content-baishi-craft-npc_bs_068_2-review0",
+      "requestHash": "94efe497bb4fecc7437ae17ad44125751ee06650e7fbbd747a49296d27a1e052",
+      "reservedYuan": 0.090006,
+      "status": "settled",
+      "responseEvidence": {
+        "file": "budget-responses/86e18ca6-1cda-47a1-a76a-31155ebd2440.json",
+        "requestHash": "94efe497bb4fecc7437ae17ad44125751ee06650e7fbbd747a49296d27a1e052",
+        "responseHash": "99667b89a76017c76283a02fc175ae966656a45e4600ced5c0000dc0a47c2f0a"
+      },
+      "costUpperYuan": 0.01966648,
+      "measurement": {
+        "label": "content-baishi-craft-npc_bs_068_2-review0",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 10307,
+          "completion_tokens": 7,
+          "total_tokens": 10314,
+          "prompt_tokens_details": {
+            "cached_tokens": 512
+          },
+          "prompt_cache_hit_tokens": 512,
+          "prompt_cache_miss_tokens": 9795
+        },
+        "costUpperYuan": 0.01966648,
+        "cumulativeUpperYuan": 4.98346184,
+        "latencyMs": 1052.1577000000016,
+        "timestamp": "2026-10-13T18:21:22.385Z"
+      }
+    },
+    "acfa854d-fc65-4792-910a-7e9e80a55b32": {
+      "card": "T93",
+      "label": "content-baishi-craft-npc_bs_069_1-review0",
+      "requestHash": "fa15ce8501862e2650cf9dd3490cdf9acec56149fb675b810af6e239eb782583",
+      "reservedYuan": 0.089816,
+      "status": "settled",
+      "responseEvidence": {
+        "file": "budget-responses/acfa854d-fc65-4792-910a-7e9e80a55b32.json",
+        "requestHash": "fa15ce8501862e2650cf9dd3490cdf9acec56149fb675b810af6e239eb782583",
+        "responseHash": "ab454c5f43a82e8eec2b7f6e75eb3702f802f5f6294e65ca68030634ce72519d"
+      },
+      "costUpperYuan": 0.01966848,
+      "measurement": {
+        "label": "content-baishi-craft-npc_bs_069_1-review0",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 10308,
+          "completion_tokens": 7,
+          "total_tokens": 10315,
+          "prompt_tokens_details": {
+            "cached_tokens": 512
+          },
+          "prompt_cache_hit_tokens": 512,
+          "prompt_cache_miss_tokens": 9796
+        },
+        "costUpperYuan": 0.01966848,
+        "cumulativeUpperYuan": 5.00313032,
+        "latencyMs": 862.4499000000033,
+        "timestamp": "2026-10-13T18:21:23.283Z"
+      }
+    },
+    "2f861aa0-b9d8-429b-8f28-3687812dc1cd": {
+      "card": "T93",
+      "label": "content-baishi-craft-npc_bs_069_2-review0",
+      "requestHash": "7dd190c91fa31213a0e34cf7c1dfc15d163b8147e31a95c74aa243cafc692680",
+      "reservedYuan": 0.09122,
+      "status": "settled",
+      "responseEvidence": {
+        "file": "budget-responses/2f861aa0-b9d8-429b-8f28-3687812dc1cd.json",
+        "requestHash": "7dd190c91fa31213a0e34cf7c1dfc15d163b8147e31a95c74aa243cafc692680",
+        "responseHash": "ed139653d84b6f0d86e854815f01b8386f3a45d167234aa07c2dcd9e2b71cbce"
+      },
+      "costUpperYuan": 0.02006848,
+      "measurement": {
+        "label": "content-baishi-craft-npc_bs_069_2-review0",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 10508,
+          "completion_tokens": 7,
+          "total_tokens": 10515,
+          "prompt_tokens_details": {
+            "cached_tokens": 512
+          },
+          "prompt_cache_hit_tokens": 512,
+          "prompt_cache_miss_tokens": 9996
+        },
+        "costUpperYuan": 0.02006848,
+        "cumulativeUpperYuan": 5.0231988,
+        "latencyMs": 1396.463399999997,
+        "timestamp": "2026-10-13T18:21:24.722Z"
+      }
+    },
+    "263c4c18-b243-43ba-8bf0-acc9cb891ac5": {
+      "card": "T93",
+      "label": "content-baishi-craft-npc_bs_076_1-review0",
+      "requestHash": "5fb0403306a6636c61ad107c1d913dab0d5e38b08c4aa376783239e8b50bc6a6",
+      "reservedYuan": 0.090904,
+      "status": "settled",
+      "responseEvidence": {
+        "file": "budget-responses/263c4c18-b243-43ba-8bf0-acc9cb891ac5.json",
+        "requestHash": "5fb0403306a6636c61ad107c1d913dab0d5e38b08c4aa376783239e8b50bc6a6",
+        "responseHash": "f8c0f917fdcdcdc0278481e9b1ffc98141740e5ccd42a2146583cd165b33cb65"
+      },
+      "costUpperYuan": 0.02001448,
+      "measurement": {
+        "label": "content-baishi-craft-npc_bs_076_1-review0",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 10481,
+          "completion_tokens": 7,
+          "total_tokens": 10488,
+          "prompt_tokens_details": {
+            "cached_tokens": 512
+          },
+          "prompt_cache_hit_tokens": 512,
+          "prompt_cache_miss_tokens": 9969
+        },
+        "costUpperYuan": 0.02001448,
+        "cumulativeUpperYuan": 5.043213280000001,
+        "latencyMs": 878.4288000000015,
+        "timestamp": "2026-10-13T18:21:25.639Z"
+      }
+    },
+    "e545945a-d3b4-4a4b-8acb-a9a154303c3d": {
+      "card": "T93",
+      "label": "content-baishi-craft-npc_bs_076_2-review0",
+      "requestHash": "bf920e10cee072b57df1d44bb770fd9e217355ef4e7e6d8581557279bb4d22d4",
+      "reservedYuan": 0.092568,
+      "status": "settled",
+      "responseEvidence": {
+        "file": "budget-responses/e545945a-d3b4-4a4b-8acb-a9a154303c3d.json",
+        "requestHash": "bf920e10cee072b57df1d44bb770fd9e217355ef4e7e6d8581557279bb4d22d4",
+        "responseHash": "579423ef6a5742c7338089593481dd6c757ba7fbe0d6c761effa57b12f46d1f0"
+      },
+      "costUpperYuan": 0.020330479999999998,
+      "measurement": {
+        "label": "content-baishi-craft-npc_bs_076_2-review0",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 10639,
+          "completion_tokens": 7,
+          "total_tokens": 10646,
+          "prompt_tokens_details": {
+            "cached_tokens": 512
+          },
+          "prompt_cache_hit_tokens": 512,
+          "prompt_cache_miss_tokens": 10127
+        },
+        "costUpperYuan": 0.020330479999999998,
+        "cumulativeUpperYuan": 5.063543760000001,
+        "latencyMs": 1348.0457000000024,
+        "timestamp": "2026-10-13T18:21:27.025Z"
+      }
+    },
+    "536744aa-ff08-4fcb-9dad-1c64287996da": {
+      "card": "T93",
+      "label": "content-baishi-craft-npc_bs_076_3-review0",
+      "requestHash": "9115852d54e07016774e5c26eec5a85c31074edaa0c315316c51609dfbd1a96b",
+      "reservedYuan": 0.098466,
+      "status": "settled",
+      "responseEvidence": {
+        "file": "budget-responses/536744aa-ff08-4fcb-9dad-1c64287996da.json",
+        "requestHash": "9115852d54e07016774e5c26eec5a85c31074edaa0c315316c51609dfbd1a96b",
+        "responseHash": "1a0bdedc6c190b8fe59895ea681a5cf8339e5ca997098e408ce8b70db44a280e"
+      },
+      "costUpperYuan": 0.021664720000000002,
+      "measurement": {
+        "label": "content-baishi-craft-npc_bs_076_3-review0",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 11557,
+          "completion_tokens": 7,
+          "total_tokens": 11564,
+          "prompt_tokens_details": {
+            "cached_tokens": 768
+          },
+          "prompt_cache_hit_tokens": 768,
+          "prompt_cache_miss_tokens": 10789
+        },
+        "costUpperYuan": 0.021664720000000002,
+        "cumulativeUpperYuan": 5.085208480000001,
+        "latencyMs": 1175.6173000000017,
+        "timestamp": "2026-10-13T18:21:28.239Z"
+      }
+    },
+    "a5a28aeb-c8ad-42d5-8c46-4ab08e56c110": {
+      "card": "T93",
+      "label": "content-baishi-craft-npc_bs_077_1-review0",
+      "requestHash": "1ea6c4b8d79afcd9d2da22dbbaeb690553c4d1a8c517f844af3495b986c17d01",
+      "reservedYuan": 0.09923,
+      "status": "settled",
+      "responseEvidence": {
+        "file": "budget-responses/a5a28aeb-c8ad-42d5-8c46-4ab08e56c110.json",
+        "requestHash": "1ea6c4b8d79afcd9d2da22dbbaeb690553c4d1a8c517f844af3495b986c17d01",
+        "responseHash": "98a22d5dc70d84063f7d0a48f567e30e507223accdd6c53e2e4c1e35c8b3edd2"
+      },
+      "costUpperYuan": 0.02185872,
+      "measurement": {
+        "label": "content-baishi-craft-npc_bs_077_1-review0",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 11654,
+          "completion_tokens": 7,
+          "total_tokens": 11661,
+          "prompt_tokens_details": {
+            "cached_tokens": 768
+          },
+          "prompt_cache_hit_tokens": 768,
+          "prompt_cache_miss_tokens": 10886
+        },
+        "costUpperYuan": 0.02185872,
+        "cumulativeUpperYuan": 5.107067200000001,
+        "latencyMs": 1313.566600000002,
+        "timestamp": "2026-10-13T18:21:29.590Z"
+      }
+    },
+    "22974bb8-8036-4e56-99b6-52358686acf4": {
+      "card": "T93",
+      "label": "content-baishi-craft-npc_bs_077_2-review0",
+      "requestHash": "0b584b47b9dd349d3b2b51704b967cbbaf4054c42a63a8c39e680863779aac0b",
+      "reservedYuan": 0.099218,
+      "status": "settled",
+      "responseEvidence": {
+        "file": "budget-responses/22974bb8-8036-4e56-99b6-52358686acf4.json",
+        "requestHash": "0b584b47b9dd349d3b2b51704b967cbbaf4054c42a63a8c39e680863779aac0b",
+        "responseHash": "ecb1361b66f701299330972e13ef8a4756f3dbb373c29a7f29ba6a9ca30c553b"
+      },
+      "costUpperYuan": 0.02155872,
+      "measurement": {
+        "label": "content-baishi-craft-npc_bs_077_2-review0",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 11504,
+          "completion_tokens": 7,
+          "total_tokens": 11511,
+          "prompt_tokens_details": {
+            "cached_tokens": 768
+          },
+          "prompt_cache_hit_tokens": 768,
+          "prompt_cache_miss_tokens": 10736
+        },
+        "costUpperYuan": 0.02155872,
+        "cumulativeUpperYuan": 5.128625920000001,
+        "latencyMs": 1283.076100000002,
+        "timestamp": "2026-10-13T18:21:30.905Z"
+      }
+    },
+    "b0a4bf40-9972-4c40-9f86-f55cc43893ea": {
+      "card": "T93",
+      "label": "content-baishi-craft-npc_bs_077_3-review0",
+      "requestHash": "b05b67c827970ca1c473440a742d95bb5d58e3b18eaba4abaf54155d6df44227",
+      "reservedYuan": 0.092072,
+      "status": "settled",
+      "responseEvidence": {
+        "file": "budget-responses/b0a4bf40-9972-4c40-9f86-f55cc43893ea.json",
+        "requestHash": "b05b67c827970ca1c473440a742d95bb5d58e3b18eaba4abaf54155d6df44227",
+        "responseHash": "5d9c0540e37c6080644f109754848b85b66409adf8a69b8d4bdc6c36427ab91b"
+      },
+      "costUpperYuan": 0.020188479999999998,
+      "measurement": {
+        "label": "content-baishi-craft-npc_bs_077_3-review0",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 10568,
+          "completion_tokens": 7,
+          "total_tokens": 10575,
+          "prompt_tokens_details": {
+            "cached_tokens": 512
+          },
+          "prompt_cache_hit_tokens": 512,
+          "prompt_cache_miss_tokens": 10056
+        },
+        "costUpperYuan": 0.020188479999999998,
+        "cumulativeUpperYuan": 5.148814400000001,
+        "latencyMs": 1188.9488999999994,
+        "timestamp": "2026-10-13T18:21:32.133Z"
+      }
+    },
+    "49a35c56-9089-4192-b33e-2f856bf92f9c": {
+      "card": "T93",
+      "label": "content-baishi-craft-npc_bs_078_1-review0",
+      "requestHash": "c02bffe7285961022a9422bd1672d7fb4ab7e63fadb1bb1782cef8b24aa3fccf",
+      "reservedYuan": 0.099556,
+      "status": "settled",
+      "responseEvidence": {
+        "file": "budget-responses/49a35c56-9089-4192-b33e-2f856bf92f9c.json",
+        "requestHash": "c02bffe7285961022a9422bd1672d7fb4ab7e63fadb1bb1782cef8b24aa3fccf",
+        "responseHash": "a5cba10296753a8e8689ded91b2937f6275bdfd5145e6c868d6fefcb0e876dbb"
+      },
+      "costUpperYuan": 0.02131496,
+      "measurement": {
+        "label": "content-baishi-craft-npc_bs_078_1-review0",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 11633,
+          "completion_tokens": 7,
+          "total_tokens": 11640,
+          "prompt_tokens_details": {
+            "cached_tokens": 1024
+          },
+          "prompt_cache_hit_tokens": 1024,
+          "prompt_cache_miss_tokens": 10609
+        },
+        "costUpperYuan": 0.02131496,
+        "cumulativeUpperYuan": 5.170129360000001,
+        "latencyMs": 1149.4284000000007,
+        "timestamp": "2026-10-13T18:21:33.318Z"
+      }
+    },
+    "e79ecae0-de6d-41d2-9dbe-5243092130a2": {
+      "card": "T93",
+      "label": "content-baishi-craft-npc_bs_078_2-review0",
+      "requestHash": "f769645cf9bcf4db964e42ee2d4aafa9eea1865622b31e3d1709865f148719da",
+      "reservedYuan": 0.096346,
+      "status": "settled",
+      "responseEvidence": {
+        "file": "budget-responses/e79ecae0-de6d-41d2-9dbe-5243092130a2.json",
+        "requestHash": "f769645cf9bcf4db964e42ee2d4aafa9eea1865622b31e3d1709865f148719da",
+        "responseHash": "94a4a7e8710da7cec5318f494dab777dc8c0db24f759e9ca69b2e8339c7979e3"
+      },
+      "costUpperYuan": 0.021329599999999997,
+      "measurement": {
+        "label": "content-baishi-craft-npc_bs_078_2-review0",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 11264,
+          "completion_tokens": 7,
+          "total_tokens": 11271,
+          "prompt_tokens_details": {
+            "cached_tokens": 640
+          },
+          "prompt_cache_hit_tokens": 640,
+          "prompt_cache_miss_tokens": 10624
+        },
+        "costUpperYuan": 0.021329599999999997,
+        "cumulativeUpperYuan": 5.19145896,
+        "latencyMs": 993.535899999999,
+        "timestamp": "2026-10-13T18:21:34.346Z"
+      }
+    },
+    "f9fd79e5-8eff-4246-9979-6241e1ceb361": {
+      "card": "T93",
+      "label": "content-baishi-craft-npc_bs_078_3-review0",
+      "requestHash": "bc3e39160e85ff75cac39d045b1cacd54c8eba5f55827ece4bf99aaf50715520",
+      "reservedYuan": 0.09214,
+      "status": "settled",
+      "responseEvidence": {
+        "file": "budget-responses/f9fd79e5-8eff-4246-9979-6241e1ceb361.json",
+        "requestHash": "bc3e39160e85ff75cac39d045b1cacd54c8eba5f55827ece4bf99aaf50715520",
+        "responseHash": "2665c9b5f9ddd99d8ae6721881fc9ba9cf018e058da4a625b6be2fa9c16a1e24"
+      },
+      "costUpperYuan": 0.02026848,
+      "measurement": {
+        "label": "content-baishi-craft-npc_bs_078_3-review0",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 10608,
+          "completion_tokens": 7,
+          "total_tokens": 10615,
+          "prompt_tokens_details": {
+            "cached_tokens": 512
+          },
+          "prompt_cache_hit_tokens": 512,
+          "prompt_cache_miss_tokens": 10096
+        },
+        "costUpperYuan": 0.02026848,
+        "cumulativeUpperYuan": 5.211727440000001,
+        "latencyMs": 1089.7203000000009,
+        "timestamp": "2026-10-13T18:21:35.476Z"
+      }
+    },
+    "d71d00b2-db5e-4d0e-8ecb-42d18b2a0482": {
+      "card": "T93",
+      "label": "content-baishi-craft-npc_bs_079_1-review0",
+      "requestHash": "8bf8e5e2ae284bae5ef961f735d5f69e8597eb23acf06ed032eed22c5bbd7543",
+      "reservedYuan": 0.0964,
+      "status": "settled",
+      "responseEvidence": {
+        "file": "budget-responses/d71d00b2-db5e-4d0e-8ecb-42d18b2a0482.json",
+        "requestHash": "8bf8e5e2ae284bae5ef961f735d5f69e8597eb23acf06ed032eed22c5bbd7543",
+        "responseHash": "a2e8d53157b5dec48ed5fa6538bb26fd3f393f9f08b954ea76e09e703458bc98"
+      },
+      "costUpperYuan": 0.021235599999999997,
+      "measurement": {
+        "label": "content-baishi-craft-npc_bs_079_1-review0",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 11217,
+          "completion_tokens": 7,
+          "total_tokens": 11224,
+          "prompt_tokens_details": {
+            "cached_tokens": 640
+          },
+          "prompt_cache_hit_tokens": 640,
+          "prompt_cache_miss_tokens": 10577
+        },
+        "costUpperYuan": 0.021235599999999997,
+        "cumulativeUpperYuan": 5.2329630400000005,
+        "latencyMs": 1168.8012999999992,
+        "timestamp": "2026-10-13T18:21:36.682Z"
+      }
+    },
+    "8be888a3-7e47-40bd-b560-9d5a5139de4b": {
+      "card": "T93",
+      "label": "content-baishi-craft-npc_bs_079_2-review0",
+      "requestHash": "3aac16179c0b49f3d5534b63a9c1f9bfbca35b7b97ec64b3646b9e828ae8bc3a",
+      "reservedYuan": 0.091464,
+      "status": "settled",
+      "responseEvidence": {
+        "file": "budget-responses/8be888a3-7e47-40bd-b560-9d5a5139de4b.json",
+        "requestHash": "3aac16179c0b49f3d5534b63a9c1f9bfbca35b7b97ec64b3646b9e828ae8bc3a",
+        "responseHash": "1cbb415e6e92d8b82eda74968212854b3175a4412a2c4be24ae2d6715c55f9d6"
+      },
+      "costUpperYuan": 0.019886479999999998,
+      "measurement": {
+        "label": "content-baishi-craft-npc_bs_079_2-review0",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 10417,
+          "completion_tokens": 7,
+          "total_tokens": 10424,
+          "prompt_tokens_details": {
+            "cached_tokens": 512
+          },
+          "prompt_cache_hit_tokens": 512,
+          "prompt_cache_miss_tokens": 9905
+        },
+        "costUpperYuan": 0.019886479999999998,
+        "cumulativeUpperYuan": 5.252849520000001,
+        "latencyMs": 778.7042000000001,
+        "timestamp": "2026-10-13T18:21:37.501Z"
+      }
+    },
+    "1c32ce63-8394-4d0f-8971-03f16e3faf4b": {
+      "card": "T93",
+      "label": "content-baishi-craft-npc_bs_079_3-review0",
+      "requestHash": "41f06e8d2e00b087a5ef5955af8bba8af0f140daf055a277938087e6eff07431",
+      "reservedYuan": 0.090726,
+      "status": "settled",
+      "responseEvidence": {
+        "file": "budget-responses/1c32ce63-8394-4d0f-8971-03f16e3faf4b.json",
+        "requestHash": "41f06e8d2e00b087a5ef5955af8bba8af0f140daf055a277938087e6eff07431",
+        "responseHash": "0b2c422a64e2f3928d73bce885d83d0186207711260f253e61d4c5464e87cb0f"
+      },
+      "costUpperYuan": 0.0196456,
+      "measurement": {
+        "label": "content-baishi-craft-npc_bs_079_3-review0",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 10422,
+          "completion_tokens": 7,
+          "total_tokens": 10429,
+          "prompt_tokens_details": {
+            "cached_tokens": 640
+          },
+          "prompt_cache_hit_tokens": 640,
+          "prompt_cache_miss_tokens": 9782
+        },
+        "costUpperYuan": 0.0196456,
+        "cumulativeUpperYuan": 5.27249512,
+        "latencyMs": 819.3413999999975,
+        "timestamp": "2026-10-13T18:21:38.357Z"
+      }
+    },
+    "aa31a0d3-7de9-482b-ad04-edd783c1a8b5": {
+      "card": "T93",
+      "label": "content-baishi-craft-npc_bs_080_1-review0",
+      "requestHash": "fe94e2ecff2553db57f249688464767db31a3cef5d1c0123b6f8b3b6ed97acc5",
+      "reservedYuan": 0.0907,
+      "status": "settled",
+      "responseEvidence": {
+        "file": "budget-responses/aa31a0d3-7de9-482b-ad04-edd783c1a8b5.json",
+        "requestHash": "fe94e2ecff2553db57f249688464767db31a3cef5d1c0123b6f8b3b6ed97acc5",
+        "responseHash": "547b273a5ea6e6cf803d8297791dae0c7f2a225d518fc51590dd5e876f0ffb64"
+      },
+      "costUpperYuan": 0.01983648,
+      "measurement": {
+        "label": "content-baishi-craft-npc_bs_080_1-review0",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 10392,
+          "completion_tokens": 7,
+          "total_tokens": 10399,
+          "prompt_tokens_details": {
+            "cached_tokens": 512
+          },
+          "prompt_cache_hit_tokens": 512,
+          "prompt_cache_miss_tokens": 9880
+        },
+        "costUpperYuan": 0.01983648,
+        "cumulativeUpperYuan": 5.292331600000001,
+        "latencyMs": 869.4464999999982,
+        "timestamp": "2026-10-13T18:21:39.261Z"
+      }
+    },
+    "e9be9928-331d-441d-9607-99826cd668a6": {
+      "card": "T93",
+      "label": "content-baishi-craft-npc_bs_080_2-review0",
+      "requestHash": "2f4809d71143d240799307176c7b28fa332346ac80a78d90f68fc3289f49657a",
+      "reservedYuan": 0.090328,
+      "status": "settled",
+      "responseEvidence": {
+        "file": "budget-responses/e9be9928-331d-441d-9607-99826cd668a6.json",
+        "requestHash": "2f4809d71143d240799307176c7b28fa332346ac80a78d90f68fc3289f49657a",
+        "responseHash": "de580319789076df9e92387ebb830230d81909587bcbcfc8642ccd7f78408ddb"
+      },
+      "costUpperYuan": 0.019657599999999997,
+      "measurement": {
+        "label": "content-baishi-craft-npc_bs_080_2-review0",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 10428,
+          "completion_tokens": 7,
+          "total_tokens": 10435,
+          "prompt_tokens_details": {
+            "cached_tokens": 640
+          },
+          "prompt_cache_hit_tokens": 640,
+          "prompt_cache_miss_tokens": 9788
+        },
+        "costUpperYuan": 0.019657599999999997,
+        "cumulativeUpperYuan": 5.311989200000001,
+        "latencyMs": 1295.5915000000023,
+        "timestamp": "2026-10-13T18:21:40.596Z"
+      }
+    },
+    "dc5b8715-a8f2-4bff-a4ae-a370378653d5": {
+      "card": "T93",
+      "label": "content-baishi-craft-npc_bs_080_3-review0",
+      "requestHash": "55f74550cc347a0fd7d84cd269ba68f3ea719e92c8e439c98f21c8574468b90e",
+      "reservedYuan": 0.09705,
+      "status": "settled",
+      "responseEvidence": {
+        "file": "budget-responses/dc5b8715-a8f2-4bff-a4ae-a370378653d5.json",
+        "requestHash": "55f74550cc347a0fd7d84cd269ba68f3ea719e92c8e439c98f21c8574468b90e",
+        "responseHash": "a27f3c9eaceaa8c3a3bf4bd5f29b8da5f30cd2b84d05f9f4d94b5f551eee0e69"
+      },
+      "costUpperYuan": 0.0213116,
+      "measurement": {
+        "label": "content-baishi-craft-npc_bs_080_3-review0",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 11255,
+          "completion_tokens": 7,
+          "total_tokens": 11262,
+          "prompt_tokens_details": {
+            "cached_tokens": 640
+          },
+          "prompt_cache_hit_tokens": 640,
+          "prompt_cache_miss_tokens": 10615
+        },
+        "costUpperYuan": 0.0213116,
+        "cumulativeUpperYuan": 5.333300800000001,
+        "latencyMs": 1701.8467000000019,
+        "timestamp": "2026-10-13T18:21:42.333Z"
+      }
+    },
+    "da09654b-dba1-4aff-9b85-692bbc01250a": {
+      "card": "T93",
+      "label": "content-baishi-craft-bld_bs_reed_dao-review0",
+      "requestHash": "387482338b39ded6848c08d984e14cf346925a9a58a7edad28defa39efd255b6",
+      "reservedYuan": 0.047154,
+      "status": "settled",
+      "responseEvidence": {
+        "file": "budget-responses/da09654b-dba1-4aff-9b85-692bbc01250a.json",
+        "requestHash": "387482338b39ded6848c08d984e14cf346925a9a58a7edad28defa39efd255b6",
+        "responseHash": "40994ff0f3d50461535a77db2f300243bbe67c5d747e75c30f3a4dc623f68893"
+      },
+      "costUpperYuan": 0.00864736,
+      "measurement": {
+        "label": "content-baishi-craft-bld_bs_reed_dao-review0",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 4672,
+          "completion_tokens": 7,
+          "total_tokens": 4679,
+          "prompt_tokens_details": {
+            "cached_tokens": 384
+          },
+          "prompt_cache_hit_tokens": 384,
+          "prompt_cache_miss_tokens": 4288
+        },
+        "costUpperYuan": 0.00864736,
+        "cumulativeUpperYuan": 5.341948160000001,
+        "latencyMs": 1106.0466000000015,
+        "timestamp": "2026-10-13T18:21:43.471Z"
+      }
+    },
+    "58706e40-c6bc-4eb1-a497-eb0ead172d7c": {
+      "card": "T93",
+      "label": "content-baishi-craft-bld_bs_still_temple-review0",
+      "requestHash": "636ab17a6e4b95b972e36e1b57aabe4515f6bf819d3160e04c11a81116e7b05d",
+      "reservedYuan": 0.047184,
+      "status": "settled",
+      "responseEvidence": {
+        "file": "budget-responses/58706e40-c6bc-4eb1-a497-eb0ead172d7c.json",
+        "requestHash": "636ab17a6e4b95b972e36e1b57aabe4515f6bf819d3160e04c11a81116e7b05d",
+        "responseHash": "b6ec02e6bb754c667253f98202e6606d47b5687abe05611756c5260f93000fc9"
+      },
+      "costUpperYuan": 0.00864936,
+      "measurement": {
+        "label": "content-baishi-craft-bld_bs_still_temple-review0",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 4673,
+          "completion_tokens": 7,
+          "total_tokens": 4680,
+          "prompt_tokens_details": {
+            "cached_tokens": 384
+          },
+          "prompt_cache_hit_tokens": 384,
+          "prompt_cache_miss_tokens": 4289
+        },
+        "costUpperYuan": 0.00864936,
+        "cumulativeUpperYuan": 5.350597520000001,
+        "latencyMs": 949.3186999999962,
+        "timestamp": "2026-10-13T18:21:44.454Z"
+      }
+    },
+    "ccc0a965-048e-4122-b08e-da13d1e15920": {
+      "card": "T93",
+      "label": "content-baishi-craft-bld_bs_measured_hall-review0",
+      "requestHash": "29635e530c1389d651ccfd5e94302f3de44374392071e2c269542fc4bb7bc2b2",
+      "reservedYuan": 0.047146,
+      "status": "settled",
+      "responseEvidence": {
+        "file": "budget-responses/ccc0a965-048e-4122-b08e-da13d1e15920.json",
+        "requestHash": "29635e530c1389d651ccfd5e94302f3de44374392071e2c269542fc4bb7bc2b2",
+        "responseHash": "7dd384814cfd76e3c518969c8624ee1a08780d8bef5cfa51a878841b1e32d5d9"
+      },
+      "costUpperYuan": 0.008617360000000001,
+      "measurement": {
+        "label": "content-baishi-craft-bld_bs_measured_hall-review0",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 4657,
+          "completion_tokens": 7,
+          "total_tokens": 4664,
+          "prompt_tokens_details": {
+            "cached_tokens": 384
+          },
+          "prompt_cache_hit_tokens": 384,
+          "prompt_cache_miss_tokens": 4273
+        },
+        "costUpperYuan": 0.008617360000000001,
+        "cumulativeUpperYuan": 5.359214880000001,
+        "latencyMs": 927.9415999999983,
+        "timestamp": "2026-10-13T18:21:45.413Z"
+      }
+    },
+    "c9451d11-96bb-49cf-bb00-987dd25bf985": {
+      "card": "T93",
+      "label": "content-baishi-craft-item_bs_dao_primer-review0",
+      "requestHash": "096e40e02cfa20ae1fa9d702057c8e6373fa58349e29a46c2f5ec258dd13d1c7",
+      "reservedYuan": 0.047634,
+      "status": "settled",
+      "responseEvidence": {
+        "file": "budget-responses/c9451d11-96bb-49cf-bb00-987dd25bf985.json",
+        "requestHash": "096e40e02cfa20ae1fa9d702057c8e6373fa58349e29a46c2f5ec258dd13d1c7",
+        "responseHash": "9164c27c11ef19c38155ddc15eb450a158862349c583840d2df238308163ac51"
+      },
+      "costUpperYuan": 0.00875936,
+      "measurement": {
+        "label": "content-baishi-craft-item_bs_dao_primer-review0",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 4728,
+          "completion_tokens": 7,
+          "total_tokens": 4735,
+          "prompt_tokens_details": {
+            "cached_tokens": 384
+          },
+          "prompt_cache_hit_tokens": 384,
+          "prompt_cache_miss_tokens": 4344
+        },
+        "costUpperYuan": 0.00875936,
+        "cumulativeUpperYuan": 5.367974240000001,
+        "latencyMs": 842.3906999999963,
+        "timestamp": "2026-10-13T18:21:46.292Z"
+      }
+    },
+    "282d1ea2-6158-48d1-9e1c-2f5ecae356ed": {
+      "card": "T93",
+      "label": "content-baishi-craft-item_bs_monk_primer-review0",
+      "requestHash": "807a674b4143793a6f59939b42bcd0b63f273e26f902505d6f75cdec5b077325",
+      "reservedYuan": 0.047736,
+      "status": "settled",
+      "responseEvidence": {
+        "file": "budget-responses/282d1ea2-6158-48d1-9e1c-2f5ecae356ed.json",
+        "requestHash": "807a674b4143793a6f59939b42bcd0b63f273e26f902505d6f75cdec5b077325",
+        "responseHash": "aa889df099a469e2fcf83dba003f699e96922ecf3df6ba33893796005bb37b2b"
+      },
+      "costUpperYuan": 0.008787360000000001,
+      "measurement": {
+        "label": "content-baishi-craft-item_bs_monk_primer-review0",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 4742,
+          "completion_tokens": 7,
+          "total_tokens": 4749,
+          "prompt_tokens_details": {
+            "cached_tokens": 384
+          },
+          "prompt_cache_hit_tokens": 384,
+          "prompt_cache_miss_tokens": 4358
+        },
+        "costUpperYuan": 0.008787360000000001,
+        "cumulativeUpperYuan": 5.376761600000001,
+        "latencyMs": 999.1099000000031,
+        "timestamp": "2026-10-13T18:21:47.327Z"
+      }
+    },
+    "4212bf8e-73f9-4e0f-b346-15049dcf5f4e": {
+      "card": "T93",
+      "label": "content-baishi-craft-item_bs_mage_primer-review0",
+      "requestHash": "830f9bcf0672c6039936cdc8fcf37bc55345427d9216f73d0add36bcc08571ec",
+      "reservedYuan": 0.047594,
+      "status": "settled",
+      "responseEvidence": {
+        "file": "budget-responses/4212bf8e-73f9-4e0f-b346-15049dcf5f4e.json",
+        "requestHash": "830f9bcf0672c6039936cdc8fcf37bc55345427d9216f73d0add36bcc08571ec",
+        "responseHash": "a2827eedb02f4e40c292161cf6ff27ae4004bf7ec0008c68593c2eecab7416be"
+      },
+      "costUpperYuan": 0.00870736,
+      "measurement": {
+        "label": "content-baishi-craft-item_bs_mage_primer-review0",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 4702,
+          "completion_tokens": 7,
+          "total_tokens": 4709,
+          "prompt_tokens_details": {
+            "cached_tokens": 384
+          },
+          "prompt_cache_hit_tokens": 384,
+          "prompt_cache_miss_tokens": 4318
+        },
+        "costUpperYuan": 0.00870736,
+        "cumulativeUpperYuan": 5.385468960000001,
+        "latencyMs": 991.4525000000067,
+        "timestamp": "2026-10-13T18:21:48.356Z"
+      }
+    },
+    "ceed9dbc-b9e3-4749-bda3-f3b2f97ef4bc": {
+      "card": "T93",
+      "label": "content-baishi-craft-item_bs_martial_primer-review0",
+      "requestHash": "557770143dbadcdd8cfd0078cfd99033838fe6f0d51efc1c832cad4fa22d4634",
+      "reservedYuan": 0.047576,
+      "status": "settled",
+      "responseEvidence": {
+        "file": "budget-responses/ceed9dbc-b9e3-4749-bda3-f3b2f97ef4bc.json",
+        "requestHash": "557770143dbadcdd8cfd0078cfd99033838fe6f0d51efc1c832cad4fa22d4634",
+        "responseHash": "fd77b7e701ef905ead33c4c79f82472e617384222ca21d28fa0dfbdd9b2806bc"
+      },
+      "costUpperYuan": 0.00872936,
+      "measurement": {
+        "label": "content-baishi-craft-item_bs_martial_primer-review0",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 4713,
+          "completion_tokens": 7,
+          "total_tokens": 4720,
+          "prompt_tokens_details": {
+            "cached_tokens": 384
+          },
+          "prompt_cache_hit_tokens": 384,
+          "prompt_cache_miss_tokens": 4329
+        },
+        "costUpperYuan": 0.00872936,
+        "cumulativeUpperYuan": 5.394198320000001,
+        "latencyMs": 835.7079000000012,
+        "timestamp": "2026-10-13T18:21:49.229Z"
+      }
+    },
+    "ace5bcd2-b4a2-42ac-b4ae-66e14a065c53": {
+      "card": "T93",
+      "label": "content-baishi-craft-skill_mind_01-review0",
+      "requestHash": "6bb5a3d8f7e0670d88190d7905a61bc16dcdc297fe9d140f9fc2a7dc45a1f890",
+      "reservedYuan": 0.046932,
+      "status": "settled",
+      "responseEvidence": {
+        "file": "budget-responses/ace5bcd2-b4a2-42ac-b4ae-66e14a065c53.json",
+        "requestHash": "6bb5a3d8f7e0670d88190d7905a61bc16dcdc297fe9d140f9fc2a7dc45a1f890",
+        "responseHash": "81fb8b72d66c723f154d691b97b5f74a72e2ddcc807fb426782fc676d49b089a"
+      },
+      "costUpperYuan": 0.008515360000000001,
+      "measurement": {
+        "label": "content-baishi-craft-skill_mind_01-review0",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 4606,
+          "completion_tokens": 7,
+          "total_tokens": 4613,
+          "prompt_tokens_details": {
+            "cached_tokens": 384
+          },
+          "prompt_cache_hit_tokens": 384,
+          "prompt_cache_miss_tokens": 4222
+        },
+        "costUpperYuan": 0.008515360000000001,
+        "cumulativeUpperYuan": 5.402713680000001,
+        "latencyMs": 914.1049999999959,
+        "timestamp": "2026-10-13T18:21:50.176Z"
+      }
+    },
+    "fceadf54-cade-43e8-8d5d-fe351598aa8a": {
+      "card": "T93",
+      "label": "content-baishi-craft-skill_mind_05-review0",
+      "requestHash": "7bf1b9bdd3da80410bcf057ff485da02670cd62bb53c1772b947929f33a37e56",
+      "reservedYuan": 0.04683,
+      "status": "settled",
+      "responseEvidence": {
+        "file": "budget-responses/fceadf54-cade-43e8-8d5d-fe351598aa8a.json",
+        "requestHash": "7bf1b9bdd3da80410bcf057ff485da02670cd62bb53c1772b947929f33a37e56",
+        "responseHash": "99555bf1c02deb27c907596c280dd5749ba6368be02e4f798271f1049a26829b"
+      },
+      "costUpperYuan": 0.00849336,
+      "measurement": {
+        "label": "content-baishi-craft-skill_mind_05-review0",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 4595,
+          "completion_tokens": 7,
+          "total_tokens": 4602,
+          "prompt_tokens_details": {
+            "cached_tokens": 384
+          },
+          "prompt_cache_hit_tokens": 384,
+          "prompt_cache_miss_tokens": 4211
+        },
+        "costUpperYuan": 0.00849336,
+        "cumulativeUpperYuan": 5.411207040000001,
+        "latencyMs": 946.3694000000032,
+        "timestamp": "2026-10-13T18:21:51.157Z"
+      }
+    },
+    "802017cc-c9d3-41d5-a34e-21ba0be05067": {
+      "card": "T93",
+      "label": "content-baishi-craft-skill_s1_marked_letter-review0",
+      "requestHash": "352914c2b0fd504b803ce76d926afa3474ea02435f09d04db885a587d8d852e3",
+      "reservedYuan": 0.046886,
+      "status": "settled",
+      "responseEvidence": {
+        "file": "budget-responses/802017cc-c9d3-41d5-a34e-21ba0be05067.json",
+        "requestHash": "352914c2b0fd504b803ce76d926afa3474ea02435f09d04db885a587d8d852e3",
+        "responseHash": "62075daa6fa88588cd817252bfe2ac5c7abc52c4f988d4bf38faa705b454a42b"
+      },
+      "costUpperYuan": 0.00850736,
+      "measurement": {
+        "label": "content-baishi-craft-skill_s1_marked_letter-review0",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 4602,
+          "completion_tokens": 7,
+          "total_tokens": 4609,
+          "prompt_tokens_details": {
+            "cached_tokens": 384
+          },
+          "prompt_cache_hit_tokens": 384,
+          "prompt_cache_miss_tokens": 4218
+        },
+        "costUpperYuan": 0.00850736,
+        "cumulativeUpperYuan": 5.419714400000001,
+        "latencyMs": 609.1534000000029,
+        "timestamp": "2026-10-13T18:21:51.795Z"
+      }
+    },
+    "0efdb992-999b-4091-9a32-32fc9be7c331": {
+      "card": "T93",
+      "label": "content-baishi-craft-profession_swordsman-review0",
+      "requestHash": "f6077aabe67c397177f6a79123bc150588bf0bfb246bd0d9d921babae6384762",
+      "reservedYuan": 0.059162,
+      "status": "settled",
+      "responseEvidence": {
+        "file": "budget-responses/0efdb992-999b-4091-9a32-32fc9be7c331.json",
+        "requestHash": "f6077aabe67c397177f6a79123bc150588bf0bfb246bd0d9d921babae6384762",
+        "responseHash": "55c5aa2cd40efbe1b9eceddd1e0a7fafb4e141fa93ca5df3a773f8a1d2cbe560"
+      },
+      "costUpperYuan": 0.01200736,
+      "measurement": {
+        "label": "content-baishi-craft-profession_swordsman-review0",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 6352,
+          "completion_tokens": 7,
+          "total_tokens": 6359,
+          "prompt_tokens_details": {
+            "cached_tokens": 384
+          },
+          "prompt_cache_hit_tokens": 384,
+          "prompt_cache_miss_tokens": 5968
+        },
+        "costUpperYuan": 0.01200736,
+        "cumulativeUpperYuan": 5.431721760000001,
+        "latencyMs": 1081.306399999994,
+        "timestamp": "2026-10-13T18:21:52.916Z"
+      }
+    },
+    "e196ae5f-93c4-4694-9a3f-aa2c6ef58170": {
+      "card": "T93",
+      "label": "content-baishi-craft-profession_mage-review0",
+      "requestHash": "be4fa49b3074cbf50fb1991b0ad2ac7aff10efc81d2c74aa7fec03d254946953",
+      "reservedYuan": 0.05838,
+      "status": "settled",
+      "responseEvidence": {
+        "file": "budget-responses/e196ae5f-93c4-4694-9a3f-aa2c6ef58170.json",
+        "requestHash": "be4fa49b3074cbf50fb1991b0ad2ac7aff10efc81d2c74aa7fec03d254946953",
+        "responseHash": "530d5368486f330bd847a0a321f88416c46bdccd6177505f34ee69848d97453e"
+      },
+      "costUpperYuan": 0.01160136,
+      "measurement": {
+        "label": "content-baishi-craft-profession_mage-review0",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 6149,
+          "completion_tokens": 7,
+          "total_tokens": 6156,
+          "prompt_tokens_details": {
+            "cached_tokens": 384
+          },
+          "prompt_cache_hit_tokens": 384,
+          "prompt_cache_miss_tokens": 5765
+        },
+        "costUpperYuan": 0.01160136,
+        "cumulativeUpperYuan": 5.443323120000001,
+        "latencyMs": 855.7765999999974,
+        "timestamp": "2026-10-13T18:21:53.808Z"
+      }
+    },
+    "ea48cf5d-46af-4d83-b107-aa4dddbd1c06": {
+      "card": "T93",
+      "label": "content-baishi-craft-profession_priest-review0",
+      "requestHash": "9844b2f30db6ef869bd2aa1b427771247cb923a8e5bcb893b2705a6372aacb97",
+      "reservedYuan": 0.058728,
+      "status": "settled",
+      "responseEvidence": {
+        "file": "budget-responses/ea48cf5d-46af-4d83-b107-aa4dddbd1c06.json",
+        "requestHash": "9844b2f30db6ef869bd2aa1b427771247cb923a8e5bcb893b2705a6372aacb97",
+        "responseHash": "d00298549c42c6baf52b271452d814e536a2d21fc13c15c4d46931342affb656"
+      },
+      "costUpperYuan": 0.011847360000000001,
+      "measurement": {
+        "label": "content-baishi-craft-profession_priest-review0",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 6272,
+          "completion_tokens": 7,
+          "total_tokens": 6279,
+          "prompt_tokens_details": {
+            "cached_tokens": 384
+          },
+          "prompt_cache_hit_tokens": 384,
+          "prompt_cache_miss_tokens": 5888
+        },
+        "costUpperYuan": 0.011847360000000001,
+        "cumulativeUpperYuan": 5.455170480000001,
+        "latencyMs": 882.1153000000049,
+        "timestamp": "2026-10-13T18:21:54.724Z"
+      }
+    },
+    "9694ea94-b3bb-4900-aecc-a8645e1d64e5": {
+      "card": "T93",
+      "label": "content-baishi-craft-profession_monk-review0",
+      "requestHash": "ea64ccbaee55a8e23c25a3437756f1b1856c61d8dda0b7e6dbe95b86498f3b7f",
+      "reservedYuan": 0.058362,
+      "status": "settled",
+      "responseEvidence": {
+        "file": "budget-responses/9694ea94-b3bb-4900-aecc-a8645e1d64e5.json",
+        "requestHash": "ea64ccbaee55a8e23c25a3437756f1b1856c61d8dda0b7e6dbe95b86498f3b7f",
+        "responseHash": "480372061b2ed2052b36c88559564c862577ca3010af044f88d23e5f18aebdda"
+      },
+      "costUpperYuan": 0.01168136,
+      "measurement": {
+        "label": "content-baishi-craft-profession_monk-review0",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 6189,
+          "completion_tokens": 7,
+          "total_tokens": 6196,
+          "prompt_tokens_details": {
+            "cached_tokens": 384
+          },
+          "prompt_cache_hit_tokens": 384,
+          "prompt_cache_miss_tokens": 5805
+        },
+        "costUpperYuan": 0.01168136,
+        "cumulativeUpperYuan": 5.466851840000001,
+        "latencyMs": 1106.1202000000048,
+        "timestamp": "2026-10-13T18:21:55.865Z"
+      }
+    },
+    "4c457966-660d-4ace-9bcb-82262313257c": {
+      "card": "T93",
+      "label": "content-baishi-craft-profession_witch-review0",
+      "requestHash": "2731ca925a709443b8db3bfa704abadc0050a295297263dde3e2ba298afe47d5",
+      "reservedYuan": 0.058568,
+      "status": "settled",
+      "responseEvidence": {
+        "file": "budget-responses/4c457966-660d-4ace-9bcb-82262313257c.json",
+        "requestHash": "2731ca925a709443b8db3bfa704abadc0050a295297263dde3e2ba298afe47d5",
+        "responseHash": "7b6de531e4a50707c56c107ded87cea0dfb4b98590b11fe1da3606fe83d8c471"
+      },
+      "costUpperYuan": 0.01166936,
+      "measurement": {
+        "label": "content-baishi-craft-profession_witch-review0",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 6183,
+          "completion_tokens": 7,
+          "total_tokens": 6190,
+          "prompt_tokens_details": {
+            "cached_tokens": 384
+          },
+          "prompt_cache_hit_tokens": 384,
+          "prompt_cache_miss_tokens": 5799
+        },
+        "costUpperYuan": 0.01166936,
+        "cumulativeUpperYuan": 5.478521200000001,
+        "latencyMs": 882.0810999999958,
+        "timestamp": "2026-10-13T18:21:56.779Z"
+      }
+    },
+    "787d875b-334c-4ae5-ba1f-c75fdf40790c": {
+      "card": "T93",
+      "label": "content-baishi-craft-profession_taoist-review0",
+      "requestHash": "1462df3cff70cc60194dde84e22e86c08e284a3807ff2d005ff37800e875f580",
+      "reservedYuan": 0.058812,
+      "status": "settled",
+      "responseEvidence": {
+        "file": "budget-responses/787d875b-334c-4ae5-ba1f-c75fdf40790c.json",
+        "requestHash": "1462df3cff70cc60194dde84e22e86c08e284a3807ff2d005ff37800e875f580",
+        "responseHash": "2d87586ea9e3c992c69f583bd4f88d0c54cf0cab005ef9d52fa27c91cb5d5dc7"
+      },
+      "costUpperYuan": 0.01203736,
+      "measurement": {
+        "label": "content-baishi-craft-profession_taoist-review0",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 6367,
+          "completion_tokens": 7,
+          "total_tokens": 6374,
+          "prompt_tokens_details": {
+            "cached_tokens": 384
+          },
+          "prompt_cache_hit_tokens": 384,
+          "prompt_cache_miss_tokens": 5983
+        },
+        "costUpperYuan": 0.01203736,
+        "cumulativeUpperYuan": 5.490558560000001,
+        "latencyMs": 1031.5777000000016,
+        "timestamp": "2026-10-13T18:21:57.846Z"
+      }
+    },
+    "0929cec7-a29e-4aef-9f08-eedaac248973": {
+      "card": "T93",
+      "label": "content-baishi-craft-profession_life_8-review0",
+      "requestHash": "0dd2d9c6f23331eb291556ee5fad2cdb6b13f79294513cc1f9a13aa64ee8e93e",
+      "reservedYuan": 0.050154,
+      "status": "settled",
+      "responseEvidence": {
+        "file": "budget-responses/0929cec7-a29e-4aef-9f08-eedaac248973.json",
+        "requestHash": "0dd2d9c6f23331eb291556ee5fad2cdb6b13f79294513cc1f9a13aa64ee8e93e",
+        "responseHash": "9319879c309212b8cfe92bcce0f1157736e38daf90228039da4cff03b23b93aa"
+      },
+      "costUpperYuan": 0.009415360000000001,
+      "measurement": {
+        "label": "content-baishi-craft-profession_life_8-review0",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 5056,
+          "completion_tokens": 7,
+          "total_tokens": 5063,
+          "prompt_tokens_details": {
+            "cached_tokens": 384
+          },
+          "prompt_cache_hit_tokens": 384,
+          "prompt_cache_miss_tokens": 4672
+        },
+        "costUpperYuan": 0.009415360000000001,
+        "cumulativeUpperYuan": 5.499973920000001,
+        "latencyMs": 723.497500000005,
+        "timestamp": "2026-10-13T18:21:58.603Z"
       }
     }
   },
