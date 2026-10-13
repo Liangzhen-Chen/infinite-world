@@ -159,12 +159,7 @@ N1–N17至少12项完整有效且≥90%，N6/N16零泄漏，N12真实盲辨，N
 
 ### T66 已完成：风族14个机制（烟气流动、除尘、风向、传话与静音、排湿、缓降托举、船帆、呼吸、偏转、风刃、风阻）接入真实状态；相关17/CORE40，0模型。
 
-### T73 苇汀30人正式整合发布【零模型】
-
-结果：玩家在苇汀遇到的30人带上已审核的完整档（目标、语气、记忆、关系、知情边界），可在交谈中用到。
-可改：world/people/正式人物文件及发布器写入的正式记忆/事件文件、tests/npc-depth-wt.test.mjs、必要时tests/npc-depth-batch-publication.test.mjs的苇汀用例。锁定：其他村草稿、tools/下公共工具（发现缺陷先报告）、人口数量（仍152 full/294名册，不新增）。
-做法：沿T11-B河湾和T06榆坡的做法，用tools/publish-npc-depth.mjs先预演再正式发布world/drafts/w1/wt-depth的已审批次；重复发布零写入；旧记忆、现金、库存不变。
-验收：`node --test tests/npc-depth-wt.test.mjs tests/npc-depth-batch-publication.test.mjs`、CORE。模型0。规模：数据写入为主，代码改动小于100行。
+### T73 已完成：苇汀30人完整档正式整合进world/people/baseline.json，重发零写入，仍152 full/294名册；相关31/CORE40，0模型。
 
 ### T71 水土族消费者【零模型】
 
@@ -178,13 +173,9 @@ N1–N17至少12项完整有效且≥90%，N6/N16零泄漏，N12真实盲辨，N
 可改：新增server-plugin/magic-light.mjs、tests/magic-light.test.mjs；environment.mjs、magic-targeting.mjs、magic.mjs、magic-primitives.mjs必要接点及机制图两文件。锁定同T71。
 验收：`node --test tests/magic-light.test.mjs tests/magic.test.mjs`、CORE。模型0。规模约700–1000行。
 
-### T67 首领接触记忆、目标与领地【零模型】
+### T67 已完成：智能首领记住实际接触与交锋，按领地目标改变态度，存档恢复后保留；本卡8项通过/CORE40，0模型。bosses.test里两项主线旧失败（世界归档校验失败）不属本卡，随T43续修处理。
 
-结果：智能首领记住实际交锋和接触，按领地目标改变公开态度，存档恢复后仍认得发生过的事。
-可改：新增server-plugin/boss-cognition.mjs、tests/boss-cognition.test.mjs；bosses.mjs、boss-migration.mjs、tools/validate-world.mjs的模板接点。锁定：magic*、npc-memory.mjs、正式world文件。
-验收：`node --test tests/boss-cognition.test.mjs tests/bosses.test.mjs`、CORE。模型0。规模约250–400行。
-
-### T68 首领谈判、交易与结盟【零模型；待T67】
+### T68 首领谈判、交易与结盟【零模型；T67已合，待T43提示精简合入后派，同改extension/tools.mjs】
 
 结果：玩家在巢穴提出条件，首领按自己的目标接受或给出拒绝理由，成交时交换有限物资并保存关系。
 可改：新增server-plugin/boss-negotiation.mjs、tests/boss-negotiation.test.mjs；bosses.mjs、boss-cognition.mjs、extension/tools.mjs、tools/validate-world.mjs必要接点。工具说明要短，合入后tests/prompt.test.mjs仍须通过。锁定：magic*、正式world文件。
