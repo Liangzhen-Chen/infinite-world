@@ -14,7 +14,9 @@ import { validateWorld } from '../tools/validate-world.mjs';
 const seed = JSON.parse(await fs.readFile('tests/fixtures/legacy/seed.json', 'utf8'));
 async function setup() {
     const world = withPetRules(await loadWorld()), spell = spellBlueprints().find(row => row.mechanism === 'servant');
-    world.spells.push(spell); world.skills.push({ id: spell.skill, name: spell.name, attribute: '精神', profession: 'profession_summoner' });
+    // The servant is already published; add the isolated definition only if absent.
+    if (!world.spells.some(row => row.id === spell.id)) world.spells.push(spell);
+    if (!world.skills.some(row => row.id === spell.skill)) world.skills.push({ id: spell.skill, name: spell.name, attribute: '精神', profession: 'profession_summoner' });
     const engine = new WorldEngine(world), document = engine.initialFromLegacy(seed, 'summon-rule-test');
     document.state.location = 'loc_hw_dock'; document.state.player.mp = 50; document.state.player.maxMp = 50;
     document.state.spells[spell.id] = { source: { type: 'isolated-fixture' } };

@@ -58,7 +58,7 @@ test('开放时段完成课程并守恒转账，场景给出实际服务边界',
     const result=await run(document,'world_learn',{entity:'skill_literacy',source:teacher});
     assert.equal(result.document.state.minute,600);
     assert.equal(result.document.state.player.coins+result.document.state.npcs[teacher].coins,document.state.player.coins+document.state.npcs[teacher].coins);
-    assert.match(engine.scene(document,'陆青'),/当前服务：授课、交易/);
+    assert.match(engine.scene(document,'陆青'),/当前交易\/授课：授课、交易/);
     assert.match(engine.scene(document,'陆青'),/17:00/);
 });
 
@@ -138,7 +138,7 @@ test('患病人员停工，远处人物移动不暴露给玩家',async()=>{
     const result=await run(document,'world_time',{minutes:1});assert.ok(!result.result.notices.some(row=>row.type==='presence'));
     document.state.npcs[teacher].status='患病';document.state.location=school;
     const sick=await run(document,'world_time',{minutes:30});assert.equal(sick.document.state.npcs[teacher].location,school);
-    assert.match(engine.scene(sick.document,'陆青'),/此刻：患病/);assert.match(engine.scene(sick.document,'陆青'),/当前服务：暂停/);
+    assert.match(engine.scene(sick.document,'陆青'),/此刻：患病/);assert.match(engine.scene(sick.document,'陆青'),/当前交易\/授课：暂停/);
 });
 
 test('在途存档重启、导出和撤销均保持位置与提示一致',async t=>{

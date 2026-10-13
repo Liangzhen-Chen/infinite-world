@@ -17,6 +17,7 @@ async function fixture(t){
     const root=await fs.mkdtemp(path.join(os.tmpdir(),'fields-m6-06-'));t.after(()=>fs.rm(root,{recursive:true,force:true}));
     const app=express();app.use(express.json({limit:'100mb'}));const router=express.Router();
     await init(router,{baseRoot:root,npcPlanningEnabled:false,consistencyEnabled:false});app.use('/api/plugins/infinite-fields',router);
+    app.use('/scripts/extensions/third-party/infinite-fields/assets',express.static(path.resolve('assets')));
     app.use('/scripts/extensions/third-party/infinite-fields',express.static(path.resolve('extension')));
     app.get('/play-town.html',(_req,res)=>res.sendFile(path.resolve('extension/start/play-town.html')));
     const server=app.listen(0,'127.0.0.1');await once(server,'listening');t.after(()=>server.close());

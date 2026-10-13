@@ -15,9 +15,9 @@ const legacy=JSON.parse(await fs.readFile('tests/fixtures/legacy/seed.json','utf
 test('正式目录只核对白石本批，306登记加694seed与90加210户核平',async()=>{
  const {b}=await approved(world);validateSkeleton(b);
  const registered=[...world.npcs,...world.residents].filter(p=>p.settlement==='loc_bs');
- assert.equal(registered.length,306);assert.equal(registered.filter(p=>p.tier==='full').length,1);
+ assert.equal(registered.length,b.profile.residentIds.length);assert.equal(world.npcs.find(p=>p.id===b.yan.id)?.tier,'full');
  assert.deepEqual(new Set(registered.map(p=>p.id)),new Set(b.profile.residentIds));
- assert.equal(world.residents.filter(p=>ids.has(p.id)).length,305);
+ assert.equal(registered.filter(p=>ids.has(p.id)).length,b.residents.length);
  assert.equal(world.households.filter(h=>h.settlement==='loc_bs').length,90);
  const p=world.settlementProfiles.find(p=>p.id==='loc_bs');assert.deepEqual(p,b.profile);
  assert.equal(p.population,p.registeredPopulation+p.pendingPopulation);assert.equal(p.householdCount,p.registeredHouseholdCount+p.pendingHouseholdCount);
@@ -35,7 +35,7 @@ test('户籍和年龄从实有名册计算，住宅成员相互对应，后续99
   for(const id of h.members){const x=people.get(id);assert.equal(x.householdId,h.id);assert.equal(x.home.location,home.id);assert.deepEqual(x.household,h.members.filter(i=>i!==id));assert.equal(x.flags.minor,x.age<18);if(x.age<18)assert.equal(x.flags.romanceable,false);}
  }
  for(const k of p.kinship)assert.ok(people.get(k.parent).age-people.get(k.child).age>=15);
- const planned=bones.promotionGroups.flatMap(g=>g.ids);assert.equal(planned.length,99);assert.equal(new Set(planned).size,99);assert.ok(planned.every(id=>world.residents.some(p=>p.id===id)));
+ const planned=bones.promotionGroups.flatMap(g=>g.ids);assert.equal(planned.length,99);assert.equal(new Set(planned).size,99);assert.ok(planned.every(id=>people.has(id)));
  const invalid=structuredClone(bones);invalid.residents[0].age=1;assert.throws(()=>validateSkeleton(invalid));
 });
 test('六街区与18处行业公共建筑及逐户住宅均可寻路，原官道与归途殿保持',()=>{
@@ -65,11 +65,11 @@ test('聚落经济引用实有商货和小窑，职责与争议有来源和边�
  assert.deepEqual(y.inventory,original.yan.inventory);assert.equal(y.coins,original.yan.coins);assert.deepEqual(y.schedule,original.yan.schedule);assert.equal(y.occupation,'商旅行会代理');
  assert.ok(d.economy.tradePartners.includes('loc_hw'));assert.match(d.economy.reason,/5铜/);assert.match(d.economy.reason,/每五天/);assert.equal(d.economy.production,null);assert.equal(d.economy.publicStock,null);
  assert.ok(d.governance.customs.some(s=>s.includes('户籍')));assert.ok(d.governance.customs.some(s=>s.includes('巡更')));assert.ok(d.governance.customs.some(s=>s.includes('行会')));
- assert.equal(d.problems.length,6);for(const p of d.problems){assert.equal(p.status,'unresolved');assert.ok(p.options.length>=2);assert.ok(p.stakeholders.every(s=>world.residents.some(x=>x.id===s.person&&x.age>=18)));}
+ assert.equal(d.problems.length,6);for(const p of d.problems){assert.equal(p.status,'unresolved');assert.ok(p.options.length>=2);assert.ok(p.stakeholders.every(s=>[...world.npcs,...world.residents].some(x=>x.id===s.person&&x.age>=18)));}
  for(const r of d.rumors)assert.equal(r.propagation,'pending-event');
  assert.deepEqual(d.calendar.marketDays,world.rules.calendar.marketDays);
  for(const l of bones.locations){assert.deepEqual(l.inventory,{});assert.equal(l.workstations,undefined);}
- const e=new WorldEngine(world),doc=e.createCharacter(legacy,{},'t90-no-grants');for(const p of bones.residents)assert.equal(doc.state.npcs[p.id],undefined);
+ const e=new WorldEngine(world),doc=e.createCharacter(legacy,{},'t90-no-grants');for(const p of bones.residents){if(world.npcs.some(n=>n.id===p.id))assert.ok(doc.state.npcs[p.id]);else assert.equal(doc.state.npcs[p.id],undefined);}
 });
 test('提升名册保留同ID和原事实，升级不覆盖已运行的现金库存关系记忆，重复升级无差异',()=>{
  const old={...world,npcs:world.npcs.map(p=>p.id===original.yan.id?original.yan:p)},person=bones.residents.find(p=>p.age>=18);

@@ -56,10 +56,17 @@ test('白金刺剑低于40级不能交锋，高阶器械不附未实现参数',a
 test('world_upgrade引入末批装备和配方且保留已变化的钱物关系',async t=>{
  const root=await fs.mkdtemp(path.join(os.tmpdir(),'w3-journey-upgrade-'));t.after(()=>fs.rm(root,{recursive:true,force:true}));
  const registry=new WorldRegistry(path.join(root,'worlds')),store=new CampaignStorage(path.join(root,'saves'),{reducer:archivedReducer(registry)}),oldEngine=new WorldEngine(oldWorld),doc=oldEngine.initialFromLegacy(seed,'journey-upgrade');
- doc.worldHash=await registry.put(oldWorld);doc.state.player.coins=321;doc.state.npcs.npc_hw_yanzhe.coins=799;doc.state.npcs.npc_hw_yanzhe.trust=17;delete doc.state.npcs.npc_hw_yanzhe.inventory.item_clay;
+ doc.worldHash=await registry.put(oldWorld);doc.state.player.coins=321;doc.state.npcs.npc_hw_yanzhe.coins=799;doc.state.npcs.npc_hw_yanzhe.trust=17;delete doc.state.npcs.npc_hw_yanzhe.inventory.item_clay;doc.state.npcs.npc_hw_yanzhe.inventory.item_alum_grain=0;
  const before=structuredClone(doc.state),next=structuredClone(candidate);next.version='journey-check';next.rules.version=next.version;const hash=await registry.put(next);
  await store.create({id:'old',worldVersion:oldWorld.version,document:doc});await store.transact('old',{id:'upgrade',input:{type:'world_upgrade',worldHash:hash,eventId:'upgrade'}},store.reducer);
- const after=(await store.read('old')).document,e=await registry.get(after.worldHash);assert.deepEqual(after.state.player,before.player);assert.deepEqual(after.state.inventory,before.inventory);assert.deepEqual(after.state.npcs.npc_hw_yanzhe,before.npcs.npc_hw_yanzhe);
+ const after=(await store.read('old')).document,e=await registry.get(after.worldHash);assert.deepEqual(after.state.player,before.player);assert.deepEqual(after.state.inventory,before.inventory);
+ // Stock update v1 preserves spent supplies and adds this batch's absent IDs once.
+ const expectedStock=[];
+ for(const[id,npc]of Object.entries(before.npcs)){const inventory=structuredClone(npc.inventory),oldNpc=oldWorld.npcs.find(row=>row.id===id),newNpc=next.npcs.find(row=>row.id===id);for(const[item,quantity]of Object.entries(newNpc.inventory)){if(Object.hasOwn(oldNpc.inventory,item)||Object.hasOwn(inventory,item))continue;inventory[item]=quantity;expectedStock.push({npc:id,item,quantity});}assert.deepEqual(after.state.npcs[id],{...npc,inventory});}
+ assert.ok(expectedStock.length>0);assert.deepEqual(after.state.records.world_update_upgrade.stockAdded,expectedStock);
+ assert.equal(after.state.npcs.npc_hw_yanzhe.inventory.item_clay,undefined);assert.equal(after.state.npcs.npc_hw_yanzhe.inventory.item_alum_grain,0);
  assert.equal(e.byId.get('item_estoc').quality,'白金');assert.equal(e.byId.get('recipe_w3c_broad_steel_chisel').minutes,300);assert.equal(e.byId.get('item_book_journey_metal').book.teaches.length,12);
  assert.ok(after.state.records.world_update_upgrade.conflicts.some(x=>x.path.join('.')==='state.npcs.npc_hw_yanzhe.inventory'));
+ await store.transact('old',{id:'repeat',input:{type:'world_upgrade',worldHash:hash,eventId:'repeat'}},store.reducer);
+ const repeat=(await store.read('old')).document;assert.deepEqual(repeat.state.npcs,after.state.npcs);assert.deepEqual(repeat.state.records.world_update_repeat.stockAdded,[]);
 });

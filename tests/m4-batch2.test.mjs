@@ -9,7 +9,7 @@ import{bossFoundation}from'../world/design/boss-foundation.mjs';import{planRuleS
 const seed=JSON.parse(await fs.readFile('tests/fixtures/legacy/seed.json','utf8')),source=await loadWorld();
 function draft(document){return{document,get(...p){return p.reduce((v,k)=>v?.[k],document);},set(p,v){let o=document;for(const k of p.slice(0,-1))o=o[k]??={};o[p.at(-1)]=structuredClone(v);},remove(p){let o=document;for(const k of p.slice(0,-1))o=o[k];delete o[p.at(-1)];},say(){}};}
 function setup({bosses=false}={}){
- const world=withPetRules(structuredClone(source));for(const spell of batch2SpellCandidates()){world.spells.push(spell);if(!world.skills.some(s=>s.id===spell.skill))world.skills.push({id:spell.skill,name:spell.name,attribute:'精神',profession:null});}
+ const world=withPetRules(structuredClone(source));for(const spell of batch2SpellCandidates()){if(!world.spells.some(s=>s.id===spell.id))world.spells.push(spell);if(!world.skills.some(s=>s.id===spell.skill))world.skills.push({id:spell.skill,name:spell.name,attribute:'精神',profession:null});}
  if(bosses){world.bosses=batch2BossCandidates();world.rules.bossEcology=bossFoundation().rules;}
  const engine=new WorldEngine(world);let document=engine.initialFromLegacy(seed,'m4-batch2');if(bosses)document=applyPatches(document,planRuleStateMigration(document,world.rules));document.state.player.mp=1000;document.state.player.maxMp=1000;document.state.location='loc_hw_dock';
  for(const s of world.spells){document.state.spells[s.id]={source:{type:'fixture'}};document.state.skills[s.skill]={proficiency:299,daily:{},breakthroughs:[]};}

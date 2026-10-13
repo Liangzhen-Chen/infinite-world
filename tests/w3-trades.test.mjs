@@ -55,16 +55,22 @@ test('候选 world_upgrade 保留已交易库存和人物变化，新的书及�
     document.worldHash=await registry.put(old);document.state.player.coins=319;
  document.state.npcs.npc_hw_duanyan.coins=731;document.state.npcs.npc_hw_duanyan.trust=19;
  delete document.state.npcs.npc_hw_duanyan.inventory.item_iron;
+ document.state.npcs.npc_hw_duanyan.inventory.item_mining_pick=0;
     const before=structuredClone(document.state),next=assembleTradesCandidate(old,bones,lore);next.version='w3-trades-candidate';next.rules.version=next.version;
  await store.create({id:'old',worldVersion:world.version,document});const nextHash=await registry.put(next);
  await store.transact('old',{id:'update',input:{type:'world_upgrade',worldHash:nextHash,eventId:'update'}},store.reducer);
  const after=(await store.read('old')).document,engine=await registry.get(after.worldHash);
- assert.deepEqual(after.state.player,before.player);assert.deepEqual(after.state.inventory,before.inventory);assert.deepEqual(after.state.npcs.npc_hw_duanyan,before.npcs.npc_hw_duanyan);
- for(const[id,npc]of Object.entries(before.npcs)){const {inventory,...fields}=npc;const {inventory:updatedInventory,...updatedFields}=after.state.npcs[id];assert.deepEqual(updatedFields,fields);for(const[item,stock]of Object.entries(inventory))assert.deepEqual(updatedInventory[item],stock);}
+ assert.deepEqual(after.state.player,before.player);assert.deepEqual(after.state.inventory,before.inventory);
+ // Stock update v1 adds only IDs absent from both the old edition and the save.
+ const expectedStock=[];
+ for(const[id,npc]of Object.entries(before.npcs)){const inventory=structuredClone(npc.inventory),oldNpc=old.npcs.find(row=>row.id===id),newNpc=next.npcs.find(row=>row.id===id);for(const[item,quantity]of Object.entries(newNpc.inventory)){if(Object.hasOwn(oldNpc.inventory,item)||Object.hasOwn(inventory,item))continue;inventory[item]=quantity;expectedStock.push({npc:id,item,quantity});}assert.deepEqual(after.state.npcs[id],{...npc,inventory});}
+ assert.ok(expectedStock.length>0);assert.deepEqual(after.state.records.world_update_update.stockAdded,expectedStock);
  assert.equal(engine.byId.get('item_mining_pick').name,'普通矿镐');assert.ok(engine.byId.get('item_book_trades_iron').book.teaches.includes('recipe_w3b_drawer_pull'));
  const inventoryConflict=after.state.records.world_update_update.conflicts.find(row=>row.path.join('.')==='state.npcs.npc_hw_duanyan.inventory');
  assert.ok(inventoryConflict,'既有库存不被新开局供货计划覆盖，必须记录冲突');
- assert.equal(inventoryConflict.proposed.item_mining_pick,2);assert.equal(after.state.npcs.npc_hw_duanyan.inventory.item_mining_pick,undefined);
+ assert.equal(inventoryConflict.proposed.item_mining_pick,2);assert.equal(after.state.npcs.npc_hw_duanyan.inventory.item_mining_pick,0);assert.equal(after.state.npcs.npc_hw_duanyan.inventory.item_iron,undefined);
+ await store.transact('old',{id:'repeat',input:{type:'world_upgrade',worldHash:nextHash,eventId:'repeat'}},store.reducer);
+ const repeat=(await store.read('old')).document;assert.deepEqual(repeat.state.npcs,after.state.npcs);assert.deepEqual(repeat.state.records.world_update_repeat.stockAdded,[]);
 });
 
 
