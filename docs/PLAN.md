@@ -363,9 +363,7 @@ T28-R1修好新回执undefined规范化并保留严格篡改拒绝，相关31/32
 
 ### T75 已完成：双主题、中文顶栏、字号/高对比/减少动画、手机全屏抽屉、本地字体与16品质色；后续卡在E/ui-*.mjs导出registerUI、在S/ui-*.mjs导出registerUIRoutes注册面板和路由。浏览器8/8、CORE40，六张截图在docs/测试报告/最新/M6-01/。遗留：390宽顶栏右侧地点和魔力被截断，交T76顺带处理。
 
-### T76 消息卡与自然语言操作：玩家看到头像名牌、回合事件卡和可收藏信件，能用快捷按钮及说／做切换准备输入。
-可改 E/message-view.mjs、runtime.js、style.css，新建 E/input-view.mjs、mail-view.mjs；S/state-notices.mjs、T/state-notices.test.mjs、T/runtime.test.mjs。补齐未知说话人登记、公告与合同卡；系统提示写消息附加数据且由有效事件重建，回滚同步；快捷按钮仅填输入，少量快捷键可关闭，调试外隐藏回执、JSON和技术信息，中文错误保留未确认状态。
-验收：node --test tests/runtime.test.mjs tests/state-notices.test.mjs；node --test tests/engine.test.mjs tests/storage.test.mjs tests/plugin.test.mjs。截图含未知说话人、错误、邮件及手机输入；模型0，预计3小时，1会话。
+### T76 已完成：头像名牌、未知说话人登记、钱袋与事件卡、告示/来信卡可收藏到邮件、说/做切换与快捷按钮（只填输入框）、390宽顶栏换行；界面测试全过、CORE40，六张截图在docs/测试报告/最新/M6-02/。
 
 ### T77 已完成：角色、技能、法术书、格子行囊四面板与/ui/personal只读投影；界面测试夹具改为通用代理extension/下全部模块，后续卡新增模块不用再改夹具。界面测试14/14、CORE40，16张截图在docs/测试报告/最新/M6-03/。
 
