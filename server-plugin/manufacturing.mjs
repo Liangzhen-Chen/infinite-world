@@ -5,6 +5,37 @@ import {milestone}from'./progression.mjs';
 import {prepareThermalWorkstation}from'./magic-object.mjs';
 import {createHash}from'node:crypto';
 const integer=(value,min,max,label)=>{if(!Number.isSafeInteger(value)||value<min||value>max)throw new Error(`${label}无效`);return value;};
+export function registerRecipe(d,engine,data,project,maximumStage){
+    if(!data||typeof data!=='object')throw new Error('配方数据无效');
+    const skill=engine.resolve(data.skill,'skill');
+    if(!project.skills.includes(skill)||!d.get('state','skills',skill))throw new Error('配方技能必须来自已掌握的研究知识');
+    const minimumProficiency=integer(data.minimumProficiency??0,0,2699,'配方熟练度'),stage=Math.floor(minimumProficiency/300);
+    if(stage>maximumStage)throw new Error('配方阶段不能超过相关技能最高阶段减一');
+    const materials=(rows,label)=>{
+        if(!Array.isArray(rows))throw new Error(`${label}列表无效`);
+        return rows.map(row=>({item:engine.resolve(row?.item,'item'),amount:integer(row?.amount,1,100000,`${label}数量`)}));
+    };
+    const ingredients=materials(data.materials,'材料');
+    if(!ingredients.length)throw new Error('配方必须消耗真实材料');
+    if(!Array.isArray(data.tools??[])||(data.tools??[]).length>8)throw new Error('配方工具列表无效');
+    const tools=(data.tools??[]).map(item=>engine.resolve(item,'item'));
+    if(new Set(tools).size!==tools.length||tools.some(item=>ingredients.some(row=>row.item===item)))throw new Error('配方工具重复或与耗材重叠');
+    const output={item:engine.resolve(data.output?.item,'item'),quantity:integer(data.output?.quantity,1,200,'成品数量')};
+    const byproducts=materials(data.byproducts??[],'副产品');
+    for(const row of byproducts)integer(row.amount,1,200,'副产品数量');
+    if(new Set([output.item,...byproducts.map(row=>row.item)]).size!==1+byproducts.length)throw new Error('主产物与副产品不能重复登记');
+    const minutes=integer(data.minutes,1,43200,'制造时间'),difficulty=data.difficulty;
+    if(!Object.values(engine.rules.check.difficulties).includes(difficulty))throw new Error('难度不在规则档位');
+    const toolWear=integer(data.toolWear??1,0,10,'工具损耗'),recoverFraction=data.failure?.recoverFraction??0;
+    if(typeof recoverFraction!=='number'||!Number.isFinite(recoverFraction)||recoverFraction<0||recoverFraction>1)throw new Error('失败回收率无效');
+    const failure={recoverFraction,injury:integer(data.failure?.injury??0,0,50,'失败伤害')};
+    const location=data.location?engine.resolve(data.location):null;
+    if(location&&!engine.world.locations.some(row=>row.id===location))throw new Error('配方工坊地点未登记');
+    if(data.workstation!==undefined&&(!data.workstation||typeof data.workstation!=='string'
+        ||!engine.world.locations.some(row=>(!location||row.id===location)&&row.workstations?.some(station=>station.kind===data.workstation))))throw new Error('配方缺少可用工作台');
+    return{skill,stage,minimumProficiency,materials:ingredients,output,tools,minutes,difficulty,toolWear,failure,byproducts,learningRequired:true,
+        ...(location?{location}:{}),...(data.workstation?{workstation:data.workstation}:{})};
+}
 export function kilnWorkResult(d,plan,outcome,quantity,eventId,{endStress}={}){
     if(plan?.startStress===undefined)return null;
     const state=d.get('state','records',`physical_feature:${plan.feature}`,'state','thermal');
@@ -38,8 +69,7 @@ export function workstation(d,engine,recipe,args){
     return{...station,fee,...(thermalPlan?{thermalPlan}:{})};
 }
 export function manufacture(d,args,eventId){
-    const recipe=this.world.recipes.find(row=>row.id===args.recipe||row.name===args.recipe||row.aliases?.includes(args.recipe));
-    if(!recipe)throw new Error('未登记这个配方');
+    const recipe=this.byId.get(this.resolve(args.recipe,'recipe'));
     if(recipe.learningRequired&&!d.get('state','recipes',recipe.id))throw new Error('尚未学会这个配方');
     if(!d.get('state','skills',recipe.skill))throw new Error('尚未掌握该配方所需技能');
     if(recipe.location&&recipe.location!==d.get('state','location'))throw new Error('不在所需工坊');
