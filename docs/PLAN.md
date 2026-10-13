@@ -250,13 +250,7 @@ N1–N17至少12项完整有效且≥90%，N6/N16零泄漏，N12真实盲辨，N
 
 内容卡同卡完成起草、全量 L1、全量真实 L2、定点修正、L4 及正式发布到 world；L4 为标记项加随机五条，每次人工阅读不超过十分钟，波次十条六项均分至少四、单项至少三。起草由执行会话完成，另调真实模型仅用于所列 L2；金额含修正且复用既有账。涉及 extension/tools.mjs 或 prompt/ 的卡必须通过 prompt/tool-groups 整组，静态提示估算不超过 11900 token，现约 11710；沿用 world_lair、world_wildlife、world_settlement、world_trade 和既有 world_site 的操作，不增公共工具。
 
-### T156（S1）非人居民与聚居地接入。
-
-1. 玩家结果：进入已发布的怪物住区后能见到有作息的成员，与在场商贩交易，并获得公共区域的正常通行。
-2. 可改 server-plugin/{npc-state,engine,combat,bosses,boss-migration,boss-cognition,boss-negotiation,sites,location-access,settlement-profile,world-upgrade}.mjs 的身份与入口接点、tools/{create-schemas,population-validation,validate-world}.mjs、schemas/world.schema.json 及专项；锁定正式内容正文。与 T105/T106、T109 和人物/engine 写者串行，可并行 S2 起草。
-3. 验收 CORE 及 `node --test "tests/npc-*.test.mjs" "tests/population*.test.mjs" "tests/boss*.test.mjs" "tests/world-*.test.mjs" "tests/w4-*.test.mjs" tests/combat.test.mjs tests/sites.test.mjs tests/monster-society.test.mjs`；检查入场、实际交易、住宅许可及升级恢复，首领同一身体的伤势与死亡须同时影响谈话、交易和巢穴。
-4. 真实模型零次，零元。
-5. 预计四至五小时。居民增加必要物种和社会归属字段，沿 NPC 的作息与交易服务；完整档与 boss 战斗定义引用同一权威 actor，集中修正实际查找接点，禁止双份生命和库存。公共场所、议事区及私巢分别授权；社会首领离开或死亡不触发整村野怪补刷，旧野生巢穴规则保留。
+### T156（S1）已完成：非人居民复用NPC的作息与交易；智能首领与其完整档共用同一身体和库存，伤势与死亡同时影响谈话、交易和巢穴；据点按公共区、议事区、私巢分别授权；升级恢复已接通。专项6/6，首领/据点/白石镇/CORE共150/150，发布构建ok，0模型。
 
 ### T157（S2）炭阶地宫与苔灯坞正式落地。
 
@@ -656,7 +650,7 @@ C部分只拆缺口：governance.mjs的任职入口止于“待上级决定”�
 
 ### T132（C10） 迁入迁出与人生消息。结果：NPC有原因地迁居，实际走路线，住户、工作与未履约事项在抵达后更新，玩家回来能听到变化。可改npc-life.mjs、npc-schedule/npc-cognition/civic接点、tests/npc-life-migration.test.mjs；接C9和B10，搬家不复制财产或新增同名人物。验收node --test "tests/npc-*.test.mjs" tests/civic.test.mjs ，CORE。模型0；约2小时，与认知/日程写者串行。
 
-### T133（D1） NPC炉火照管。结果：NPC可从真实燃料库存维护热源并完成需火工序，缺燃料、离岗或失能会停止或失败。可改server-plugin/npc-autonomy.mjs、manufacturing及热源消费者接点、tests/npc-furnace.test.mjs；锁定W3目录正文。验收node --test "tests/npc-*.test.mjs" tests/manufacturing.test.mjs "tests/magic*.test.mjs" "tests/w3-*.test.mjs"，CORE。模型0；约2小时，与C7及魔法消费者写者串行。
+### T133（D1）已完成：NPC从本人库存添燃料维持热源并完成需火工序，缺料拒绝、离岗或失能停止，热账与窑炉裂损保留；新增11项通过/CORE40，0模型。
 
 ### T134（D2） 自创技能与配方落地。结果：完成研究的技能能被实际学习使用，新配方能在原制造链消耗材料产出成品。可改activities/learning/manufacturing及实体解析接点、tools/create-schemas.mjs、extension/tools.mjs、tests/runtime-invention.test.mjs；复用现有多日研究与技能登记，补recipe类型和实际使用接点，禁止直接造物。验收node --test tests/runtime-invention.test.mjs tests/activities.test.mjs tests/learning.test.mjs tests/manufacturing.test.mjs tests/professions.test.mjs "tests/w3-*.test.mjs" tests/prompt.test.mjs，CORE。模型0；约2.5小时，与C工具接点串行，提示≤11900。
 
