@@ -2,6 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
 import {loadWorld} from '../tools/load-world.mjs';
+import {validateWorld} from '../tools/validate-world.mjs';
 import {authorDock,approved,integrate,reviewContext,root} from '../world/design/w1-baishi-dock-depth.mjs';
 import {hashContent} from '../tools/content-pipeline.mjs';
 import {validateNpcDepth,validateNpcProfiles} from '../tools/npc-profile-validation.mjs';
@@ -34,11 +35,12 @@ test('逐人真实L2证据、串行共享账和L4阅读与最终作者稿相符'
  assert.ok(requests.length>=ids.size&&requests.length<=120);assert.ok(ledger.cards.T91.spentYuan<=7);assert.ok(ledger.cards.T91.reservedYuan<1e-10);assert.ok(requests.every(r=>r.status==='settled'));
  for(const entry of bundle.entries){
   const record=JSON.parse(await fs.readFile(`${root}/${entry.id}.json`,'utf8'));assert.equal(record.status,'passed');assert.equal(record.draftResponse,undefined);
-  assert.equal(record.fingerprint,hashContent({entry,context:reviewContext(entry,bundle,world),revision:'t91-dock-1'}));
+  assert.equal(record.fingerprint,hashContent({entry:{...entry,draft:record.draft},context:reviewContext({...entry,draft:record.draft},bundle,world),revision:'t91-dock-1'}));
   assert.ok(record.responseEvidence.every(e=>e.phase==='review'));assert.ok(record.review.contradictions.every(r=>r.severity!=='hard'));
   const last=record.responseEvidence.at(-1),evidence=JSON.parse(await fs.readFile(`world/drafts/w1/${last.file}`,'utf8'));
   assert.equal(evidence.response.model.startsWith('deepseek'),true);assert.ok(evidence.usage.prompt_tokens>0);assert.equal(evidence.responseHash,last.responseHash);
-  assert.deepEqual(JSON.parse(evidence.request.messages[1].content).draft,entry.draft);
+  assert.deepEqual(JSON.parse(evidence.request.messages[1].content).draft,record.draft);
+  assert.deepEqual({...record.draft,services:[]},entry.draft,'引用修正不改变已审核的人物事实');
  }
  const batch=JSON.parse(await fs.readFile(`${root}/batch-0.json`,'utf8'));assert.equal(batch.l4.approved,true);
  for(const id of new Set([...batch.sample,...batch.flagged]))assert.ok(batch.l4.notes.some(r=>r.id===id&&r.note));
@@ -97,4 +99,9 @@ test('提升升级不覆盖旧档状态，重放不补充已用完的私人库�
  const id=bundle.people[0].id;Object.assign(after.state.npcs[id],{coins:1,trust:19,inventory:{},memoryStream:[{id:'t91-after',content:'买卖后形成的记忆'}]});
  const replay=planWorldUpgrade(after,next,next,{worldHash:'t91-promoted',eventId:'t91-replay'});assert.deepEqual(applyPatches(after,replay.patches).state.npcs,after.state.npcs);
  assert.deepEqual(integrate(integrate(before,bundle),bundle),integrate(before,bundle));for(const person of before.npcs)assert.deepEqual(next.npcs.find(p=>p.id===person.id),person);
+});
+
+test('正式世界发布校验没有涉及本批人物ID的错误',()=>{
+ const result=validateWorld(world,{stage:'release'});
+ assert.deepEqual(result.errors.filter(error=>[...ids].some(id=>error.includes(id))),[]);
 });
