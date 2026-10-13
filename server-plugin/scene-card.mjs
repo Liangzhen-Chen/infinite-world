@@ -61,8 +61,8 @@ export function sceneCard(engine,document,query='',index=null){
     const learned=Object.keys(s.spells??{}).map(id=>engine.byId.get(id)).filter(Boolean);
     if(weather&&/天气|雨|雪|雾|日出|日落|天亮|天黑|湿度|启程|赶路/.test(query))parts.push(`【天气与昼长】${weather.name}，${weather.indoors?'室内':'户外'}；日出${weather.sunrise}，日落${weather.sunset}；湿度${weather.humidityPercent}%${weather.boatClosed?'；船路暂停通行':''}`);
     parts.push(`【已学法术】共${learned.length}：${learned.slice(0,8).map(row=>`${row.name}（${row.id}，魔力${row.mp}）`).join('；')||'无'}`);
-    const obligations=Object.values(s.obligations??{}).filter(o=>!['已完成','取消'].includes(o.status));
-    const quests=Object.values(s.quests??{}).filter(q=>!['已完成','取消'].includes(q.status));
+    const obligations=Object.values(s.obligations??{}).filter(o=>[o.promisor,o.promisee].includes('player')&&!['已完成','取消'].includes(o.status));
+    const quests=Object.values(s.quests??{}).filter(q=>[q.publisher,q.taker].includes('player')&&!['已完成','取消','失败','超期'].includes(q.status)||q.status==='公开'&&q.location===s.location);
     if(obligations.length||quests.length)parts.push('【进行中】',...[...obligations,...quests].slice(0,8).map(o=>`${text(o.content??o.name,180)}｜${o.status??''}${o.deadline?`｜期限${engine.calendar(o.deadline).text}`:''}`));
     const contracts=Object.entries(s.records??{}).filter(([,row])=>row.category==='debt'&&row.debtor==='player'&&row.status!=='已还清'||row.category==='contract'&&row.room&&row.parties?.includes('player'));
     if(contracts.length)parts.push('【住宿与欠款】',...contracts.slice(-6).map(([id,row])=>row.category==='debt'?`${id}｜欠${name(row.creditor)} ${row.amount-row.paid}铜｜${row.status}｜到期${engine.calendar(row.deadline).text}`:`${row.name}｜${row.status}｜期限${engine.calendar(row.expires).text}`));
