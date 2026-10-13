@@ -3,13 +3,14 @@ import {planWildlifeMigration}from'./wildlife-migration.mjs';
 import {planBossMigration}from'./boss-migration.mjs';
 import {initialNpcState}from'./npc-state.mjs';
 
-const catalogs=['npcs','residents','locations','items','professions','skills','spells','recipes','monsters','bosses','cultures','deities','factions','history','factionPeople','eras','households','settlementProfiles'];
+const catalogs=['npcs','residents','locations','items','professions','skills','spells','recipes','monsters','bosses','cultures','deities','factions','history','factionPeople','eras','households','settlementProfiles','festivals'];
 const same=(a,b)=>digest(a??null)===digest(b??null);
 
 // A new edition can add entities, but must keep every ID referenced by history.
 export function compatibleWorld(oldWorld,newWorld){
     const world=structuredClone(newWorld),retained=[];
     for(const category of catalogs){
+        if(category==='festivals'&&!oldWorld.festivals&&!world.festivals)continue;
         const incoming=new Map((world[category]??[]).map(row=>[row.id,row]));
         for(const old of oldWorld[category]??[]){
             // A person can be expanded from roster to full without keeping a

@@ -31,7 +31,7 @@ import {initializeAgriculture}from'./agriculture-migration.mjs';
 import {advanceAgriculture,agricultureView,settleAgricultureExpiry}from'./agriculture.mjs';
 import {advanceSettlementTrade,nextSettlementTradeMinute,regionalTradePrice}from'./settlement-trade.mjs';
 import {initializeWorldClocks,advanceWorldClocks,nextWorldClockMinute}from'./world-clock.mjs';
-import {advanceFestivals,nextFestivalMinute,localFestivalCalendar}from'./festival.mjs';
+import {advanceFestivals,nextFestivalMinute,festivalCalendar,validateFestivalRuntime}from'./festival.mjs';
 import {advanceWildlife,wildlifePriceFactor}from'./wildlife.mjs';
 import {advanceBosses}from'./bosses.mjs';
 import {sceneCard}from'./scene-card.mjs';
@@ -70,6 +70,7 @@ export class WorldEngine {
         this.entities = [...world.npcs,...world.residents??[],...world.locations,...world.items,...world.professions,...world.skills,...world.spells,...world.recipes??[],...world.monsters??[],...world.bosses??[],...world.cultures??[],...world.deities??[],...world.factions??[],...world.history??[],...world.factionPeople??[],...world.eras??[]];
         this.resolver = new EntityResolver(this.entities);
         this.byId = this.resolver.entities;
+        const festivalErrors=validateFestivalRuntime(world);if(festivalErrors.length)throw Error(festivalErrors.join('；'));
         if((this.rules.engineRevision??1)===1)this.compat=new Phase1Engine(world);
     }
     resolve(name, kind, scope) {
@@ -220,7 +221,7 @@ export class WorldEngine {
         const end=d.get('state','minute')+minutes;
         initializeWorldClocks(d,this,d.get('state','minute'),end);
         advanceSettlementTrade(d,this,d.get('state','minute'));
-        if(!this.rules.settlementTrade&&!this.rules.worldClock&&!localFestivalCalendar(this).length&&!this.world.npcs.some(n=>n.tier==='full')&&!Object.values(d.get('state','effects')??{}).some(e=>e.kind==='area'))return this.advanceInterval(d,minutes,id);
+        if(!this.rules.settlementTrade&&!this.rules.worldClock&&!festivalCalendar(this).length&&!this.world.npcs.some(n=>n.tier==='full')&&!Object.values(d.get('state','effects')??{}).some(e=>e.kind==='area'))return this.advanceInterval(d,minutes,id);
         if(!minutes)return this.advanceInterval(d,0,id);
         const patchStart=d.patches.length,npcsBefore=d.get('state','npcs');
         while(d.get('state','minute')<end){

@@ -1,28 +1,29 @@
 // Routine movement is recorded in the same event as elapsed world time.
 import {waterEarthHeldUntil}from'./magic-water-earth.mjs';
 import {mindSleepUntil}from'./magic-mind-space.mjs';
+import {festivalScheduleAt}from'./festival.mjs';
 // A travelling NPC occupies neither endpoint until the route has finished.
-export function scheduleAt(engine,npcId,minute){
-    const schedule=engine.byId.get(npcId)?.schedule;if(!schedule)return null;
+export function scheduleAt(engine,npcId,minute,state){
+    const schedule=engine.byId.get(npcId)?.schedule;if(!schedule)return festivalScheduleAt(engine,state,npcId,minute,null);
     const calendar=engine.calendar(minute),variant=calendar.market?'market':schedule.restDays?.includes(calendar.day)?'rest':'default';
     const seasonal=schedule.seasonal?.[String(calendar.season)];
     const slots=seasonal?.[variant]??schedule[variant]??seasonal?.default??schedule.default;
     const offset=minute%1440,slot=slots?.find(row=>row.start<=offset&&offset<row.end);
     if(!slot)throw new Error(`${npcId}的作息没有覆盖当前钟点`);
-    return {...slot,until:minute-offset+slot.end,variant};
+    return festivalScheduleAt(engine,state,npcId,minute,{...slot,until:minute-offset+slot.end,variant});
 }
 
 const incapacitated=npc=>['死亡','濒死','昏迷','患病'].includes(npc.status);
-export function nextNpcService(engine,npcId,minute,service){
+export function nextNpcService(engine,npcId,minute,service,state){
     for(let cursor=minute;cursor<minute+31*1440;){
-        const slot=scheduleAt(engine,npcId,cursor);if(!slot)return null;
+        const slot=scheduleAt(engine,npcId,cursor,state);if(!slot)return null;
         if(slot.services.includes(service))return {minute:cursor,location:slot.location};
         cursor=slot.until;
     }
     return null;
 }
 export function npcAvailability(engine,state,npcId){
-    const npc=state.npcs[npcId],slot=scheduleAt(engine,npcId,state.minute);
+    const npc=state.npcs[npcId],slot=scheduleAt(engine,npcId,state.minute,state);
     if(!npc)return {activity:'不在战役中',services:[]};
     if(incapacitated(npc))return {activity:npc.status,services:[]};
     if(npc.scheduleTravel||npc.cognitionTravel)return {activity:npc.cognitionTravel?'携信赶路':'赶路',services:[]};
@@ -41,16 +42,16 @@ export function assertNpcService(d,engine,npcId,service,minutes){
     if(!npc||npc.location!==state.location)throw new Error('服务者不在场');
     engine.assertNpcObligationAction?.(d,['player',npcId],{minutes,location:state.location,kind:service});
     engine.assertNpcAutonomyAction?.(state,['player',npcId],{minutes});
-    if(!engine.byId.get(npcId)?.schedule)return; // Archived worlds retain their original service semantics.
+    if(!engine.byId.get(npcId)?.schedule&&!scheduleAt(engine,npcId,state.minute,state))return; // Archived worlds retain their original service semantics.
     const available=npcAvailability(engine,state,npcId);
     if(available.services!==null&&!available.services.includes(service)){
-        const next=nextNpcService(engine,npcId,state.minute,service);
+        const next=nextNpcService(engine,npcId,state.minute,service,state);
         const plan=next?`；按作息计划在${engine.calendar(next.minute).text}于${engine.byId.get(next.location)?.name??next.location}接待，届时仍需确认在场且清醒`:'';
         throw new Error(`${engine.byId.get(npcId).name}此刻不提供${service==='teach'?'授课':'交易'}服务：${available.activity}${plan}`);
     }
     // Validate the whole action before any money, time or inventory changes.
     for(let cursor=state.minute;cursor<state.minute+minutes;){
-        const slot=scheduleAt(engine,npcId,cursor);if(!slot)break;
+        const slot=scheduleAt(engine,npcId,cursor,state);if(!slot)break;
         if(slot.location!==npc.location||!slot.services.includes(service))throw new Error('剩余服务时间不足，无法在休息或离开前完成');
         cursor=slot.until;
     }
@@ -76,7 +77,7 @@ export function advanceNpcSchedules(d,engine,before,after){
                 npc.location=trip.to;delete npc.scheduleTravel;
                 continue;
             }
-            const slot=scheduleAt(engine,npcId,cursor);
+            const slot=scheduleAt(engine,npcId,cursor,d.get('state'));
             if(npc.location!==slot.location){
                 let route;
                 try{route=engine.route(npc.location,slot.location,'walk',cursor,d.document.randomSeed,weatherCache,graphCache);}
