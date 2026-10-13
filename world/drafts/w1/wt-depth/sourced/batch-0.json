@@ -1,8 +1,8 @@
 {
   "index": 0,
-  "fingerprint": "8d7826cf97aa653b784cc56b8f9e29a1d6a770e06386c806e40dd95c8d62f5cb",
+  "fingerprint": "fd287957385a3a26defa82c3e5e1be6f96ed214173aeddd0af04b350781e84c5",
   "count": 25,
-  "passed": 22,
+  "passed": 23,
   "ids": [
     "npc_wt_zhengxi",
     "npc_wt_wangpu",
@@ -33,7 +33,6 @@
   "rewritten": 10,
   "manual": [
     "npc_wt_zhicai",
-    "npc_wt_xueying",
     "npc_wt_shanju"
   ],
   "pending": [],
@@ -54,22 +53,21 @@
     "npc_wt_dongfei"
   ],
   "sample": [
-    "npc_wt_gonglu",
-    "npc_wt_duke",
     "npc_wt_jingyao",
-    "npc_wt_fanshui",
-    "npc_wt_liuyan"
+    "npc_wt_wupeng",
+    "npc_wt_weilian",
+    "npc_wt_huangting",
+    "npc_wt_dongfei"
   ],
   "l4": {
     "approved": false,
     "notes": []
   },
-  "costUpperYuan": 16.255731519999987,
-  "manualRatio": 0.12,
-  "needsSystemicRepair": true,
+  "costUpperYuan": 16.304860079999987,
+  "manualRatio": 0.08,
+  "needsSystemicRepair": false,
   "operativeInvalidated": [
     "npc_wt_zhicai",
-    "npc_wt_xueying",
     "npc_wt_shanju"
   ],
   "l4History": [
@@ -264,6 +262,12 @@
       "notes": [],
       "supersededBy": "npc_wt_zhicai",
       "priorFingerprint": "aa9489ab0e817a92d54be3ab8a97c4392216f8d41c7145133cdd8ec1c0cc7218"
+    },
+    {
+      "approved": false,
+      "notes": [],
+      "supersededBy": "npc_wt_xueying",
+      "priorFingerprint": "8d7826cf97aa653b784cc56b8f9e29a1d6a770e06386c806e40dd95c8d62f5cb"
     }
   ],
   "foundationHash": "fffc337e121742c3c32d56a90dbaa8445d2e9ad28166c3c548f398bba1755bae"

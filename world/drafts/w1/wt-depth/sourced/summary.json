@@ -1,12 +1,12 @@
 {
   "total": 30,
-  "passed": 27,
-  "manual": 3,
+  "passed": 28,
+  "manual": 2,
   "pending": 0,
-  "costUpperYuan": 16.255731519999987,
+  "costUpperYuan": 16.304860079999987,
   "budget": {
-    "spentYuan": 16.17199551999999,
-    "reservedYuan": 0.08373599999999976,
+    "spentYuan": 16.22112407999999,
+    "reservedYuan": 0.08373599999999978,
     "limitYuan": 20,
     "waveLimitYuan": 20,
     "cards": {
@@ -61,7 +61,7 @@
       },
       "T07": {
         "limitYuan": 4.5,
-        "spentYuan": 4.237841360000001,
+        "spentYuan": 4.286969920000001,
         "reservedYuan": 0,
         "reviewRecoveries": {
           "npc_wt_heqin": {
@@ -14115,6 +14115,40 @@
           "cumulativeUpperYuan": 16.17199551999999,
           "latencyMs": 2761.0455999999995,
           "timestamp": "2026-10-13T11:56:04.738Z"
+        }
+      },
+      "d73360de-3e89-49ef-a657-b04f1addf4bc": {
+        "card": "T07",
+        "label": "content-T07-npc_wt_xueying-manual-review",
+        "requestHash": "1eabab1ca739ff938703f4edcfe707669a3a8fca3dc5c9065e1757e332f5f440",
+        "reservedYuan": 0.20829,
+        "status": "settled",
+        "authorizationId": "user-reopen-20261012-01",
+        "reopenId": "npc_wt_xueying",
+        "responseEvidence": {
+          "file": "budget-responses/d73360de-3e89-49ef-a657-b04f1addf4bc.json",
+          "requestHash": "1eabab1ca739ff938703f4edcfe707669a3a8fca3dc5c9065e1757e332f5f440",
+          "responseHash": "db352c1322db019734a11e02146fccaf85c136828df229ac460de22d2c9be5c5"
+        },
+        "costUpperYuan": 0.049128559999999995,
+        "measurement": {
+          "label": "content-T07-npc_wt_xueying-manual-review",
+          "model": "deepseek-flash",
+          "thinking": "disabled",
+          "usage": {
+            "prompt_tokens": 28379,
+            "completion_tokens": 238,
+            "total_tokens": 28617,
+            "prompt_tokens_details": {
+              "cached_tokens": 4864
+            },
+            "prompt_cache_hit_tokens": 4864,
+            "prompt_cache_miss_tokens": 23515
+          },
+          "costUpperYuan": 0.049128559999999995,
+          "cumulativeUpperYuan": 16.22112407999999,
+          "latencyMs": 2142.254999999999,
+          "timestamp": "2026-10-13T12:10:54.418Z"
         }
       }
     },
@@ -28295,6 +28329,12 @@
                   "claimedAt": "2026-10-13T11:46:17.251Z",
                   "status": "passed-L1-L2",
                   "finishedAt": "2026-10-13T11:46:21.458Z"
+                },
+                {
+                  "fingerprint": "177ccc7ef21a2a696c9f0439a37ce34974ee2cee2989d45bc31185bb1776fca9",
+                  "claimedAt": "2026-10-13T12:10:52.135Z",
+                  "status": "passed-L1-L2",
+                  "finishedAt": "2026-10-13T12:10:54.444Z"
                 }
               ],
               "npc_wt_leizhi": [
@@ -28458,9 +28498,9 @@
   "batches": [
     {
       "index": 0,
-      "fingerprint": "8d7826cf97aa653b784cc56b8f9e29a1d6a770e06386c806e40dd95c8d62f5cb",
+      "fingerprint": "fd287957385a3a26defa82c3e5e1be6f96ed214173aeddd0af04b350781e84c5",
       "count": 25,
-      "passed": 22,
+      "passed": 23,
       "ids": [
         "npc_wt_zhengxi",
         "npc_wt_wangpu",
@@ -28491,7 +28531,6 @@
       "rewritten": 10,
       "manual": [
         "npc_wt_zhicai",
-        "npc_wt_xueying",
         "npc_wt_shanju"
       ],
       "pending": [],
@@ -28512,22 +28551,21 @@
         "npc_wt_dongfei"
       ],
       "sample": [
-        "npc_wt_gonglu",
-        "npc_wt_duke",
         "npc_wt_jingyao",
-        "npc_wt_fanshui",
-        "npc_wt_liuyan"
+        "npc_wt_wupeng",
+        "npc_wt_weilian",
+        "npc_wt_huangting",
+        "npc_wt_dongfei"
       ],
       "l4": {
         "approved": false,
         "notes": []
       },
-      "costUpperYuan": 16.255731519999987,
-      "manualRatio": 0.12,
-      "needsSystemicRepair": true,
+      "costUpperYuan": 16.304860079999987,
+      "manualRatio": 0.08,
+      "needsSystemicRepair": false,
       "operativeInvalidated": [
         "npc_wt_zhicai",
-        "npc_wt_xueying",
         "npc_wt_shanju"
       ],
       "l4History": [
@@ -28722,6 +28760,12 @@
           "notes": [],
           "supersededBy": "npc_wt_zhicai",
           "priorFingerprint": "aa9489ab0e817a92d54be3ab8a97c4392216f8d41c7145133cdd8ec1c0cc7218"
+        },
+        {
+          "approved": false,
+          "notes": [],
+          "supersededBy": "npc_wt_xueying",
+          "priorFingerprint": "8d7826cf97aa653b784cc56b8f9e29a1d6a770e06386c806e40dd95c8d62f5cb"
         }
       ],
       "foundationHash": "fffc337e121742c3c32d56a90dbaa8445d2e9ad28166c3c548f398bba1755bae"
