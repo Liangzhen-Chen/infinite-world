@@ -142,13 +142,13 @@ export class WorldEngine {
         settleMagicAreas(d,session);
         advancePets(d,session,d.get('state','minute'));
         advanceSummons(d,d.get('state','minute'));
-        advanceLaw(d,d.get('state','minute'));
+        advanceLaw(d,d.get('state','minute'),session);
         recordNpcRelationEvidence(d,session,document.state,tool,args,detail,id);
         recordNpcMemories(d,session,document.state,tool,args,detail,id);
         recordBusinessReceipt(d,document.state,{tool:resolved.tool,args,eventId:id,detail});
         if(tool==='check')detail.actionScope={kind:'judgement',healthChanged:false,inventoryChanged:false,feePaid:0,
             note:'仅结算判断或对抗，并履行已引用的协助；未伤人、毁物或制造。不得从骰点虚构这些变化。'};
-        return { patches:d.patches,result:{ok:true,...detail,minute:d.get('state','minute'),messages:d.messages,
+        return { patches:d.patches,result:{ok:true,...detail,legalProcedureVersion:1,minute:d.get('state','minute'),messages:d.messages,
             notices:stateNotices(document.state,d.document.state,id=>session.byId.get(id)?.name)} };
     }
     scoped(document){
@@ -226,7 +226,7 @@ export class WorldEngine {
         advanceNpcObligations(d,this,before,after,id);
         advanceContracts(d,this,after);
         advanceSummons(d,after);
-        advanceLaw(d,after);
+        advanceLaw(d,after,this);
         const days=Math.floor(after/1440)-Math.floor(before/1440);
         for(let day=Math.floor(before/1440);day<Math.floor(after/1440);day++){
           for(const [sid,source] of Object.entries(d.get('state','settlements'))) {
