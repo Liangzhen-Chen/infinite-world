@@ -410,9 +410,7 @@ T28-R1修好新回执undefined规范化并保留严格篡改拒绝，相关31/32
 
 ### T80 已完成：开始页可继续或创建角色（姓名、性别、外貌背景、六项属性），保存与导入含笔记和设置的备份，进入后显示开场或前情提要；界面测试14/14、CORE40，截图在docs/测试报告/最新/M6-06/。
 
-### T81 四级地图与出行预览：玩家能缩放和标记已知地图，比较路线，选中后仅将出行意图填入输入框。
-可改 E/runtime.js，新建 E/map-view.mjs、map-view.css；S/index.mjs、新 S/ui-map.mjs，必要时 S/engine.mjs 的只读路线计算接点；world/geo/、T/runtime.test.mjs、新 T/m6-07.test.mjs。增 /ui/map 与 /ui/routes，从 geo、discoveries 和可靠获知记录投影四级层次及三类迷雾；复用季节／天气路线计算提供不同可行路线、费用和风险，未知风险明确标未知；补已发布地点的层级映射，不新增远方世界。
-验收：node --test tests/runtime.test.mjs tests/m6-07.test.mjs；node --test tests/engine.test.mjs tests/storage.test.mjs tests/plugin.test.mjs。截图含四级地图和三类迷雾；验证鼠标／双指缩放、季节封路、标记保存及预览不改时间钱袋位置；模型0，预计4小时，1会话。
+### T81 已完成：四级已知地图、亲历/可靠转述/传闻三类迷雾、缩放平移、持久标记、路线比较，选中后只填输入框；标签保持14px并互相避让。界面测试16/16、CORE40，截图在docs/测试报告/最新/M6-07/。白石镇发布后补地点映射。
 
 ### T82 游戏纹章、背景与人物素材：玩家看到统一风格的游戏标志、约80张随场景切换的背景及全部已发布LOD0人物的职业纹章头像。
 可改 world/art/ 下风格说明、逐人物可复用提示及素材映射，assets/visual/、assets/LICENSES.md，新 tools/build-m6-art.mjs、E/background-view.mjs；E/runtime.js、tools/build-card.mjs、tools/deploy-engine.mjs，T/runtime.test.mjs、新 T/m6-08.test.mjs。以原创场景SVG交付背景，按10类场景×2时段×4天气实际绘制差异；头像采用指南允许的职业纹章，未成年仅日常形象；核对酒馆背景接口，场景变化淡入淡出，减少动画时直接切换。
