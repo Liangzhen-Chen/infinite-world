@@ -21,7 +21,7 @@
       ]
     },
     {
-      "input": "我问吴朔愿不愿意带我去北林废观测塔，先等他答复。",
+      "input": "我问吴朔愿不愿意带我去北林废观测塔。本轮只等他答复，不登记同行、不出发。",
       "assertions": [
         {
           "kind": "delta",
@@ -53,6 +53,7 @@
         }
       ],
       "expectedTools": [
+        "world_promise",
         "world_move"
       ]
     },

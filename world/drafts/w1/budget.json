@@ -1,5 +1,5 @@
 {
-  "spentYuan": 1.514305440000006,
+  "spentYuan": 3.0720285600000037,
   "reservedYuan": 6.938893903907228e-17,
   "limitYuan": 20,
   "waveLimitYuan": 20,
@@ -9,6 +9,18 @@
       "spentYuan": 1.0085099999999985,
       "reservedYuan": 6.938893903907228e-17,
       "maxRequests": 450
+    },
+    "T91": {
+      "limitYuan": 7,
+      "spentYuan": 1.1091541600000006,
+      "reservedYuan": 0,
+      "maxRequests": 120
+    },
+    "T92": {
+      "limitYuan": 7,
+      "spentYuan": 0.44856896,
+      "reservedYuan": 0,
+      "maxRequests": 120
     }
   },
   "requests": {
@@ -13482,6 +13494,3622 @@
         "cumulativeUpperYuan": 1.514305440000006,
         "latencyMs": 1489.9523000000045,
         "timestamp": "2026-10-13T16:32:10.014Z"
+      }
+    },
+    "35358446-3680-4ba4-a5d3-646c5506b83c": {
+      "card": "T91",
+      "label": "content-baishi-dock-npc_bs_001_2-review0",
+      "requestHash": "d88e5d03cbdd8ef62725b8492b165f047c72d63ca9b0f15e3f2a2546beb79a22",
+      "reservedYuan": 0.049374,
+      "status": "settled",
+      "responseEvidence": {
+        "file": "budget-responses/35358446-3680-4ba4-a5d3-646c5506b83c.json",
+        "requestHash": "d88e5d03cbdd8ef62725b8492b165f047c72d63ca9b0f15e3f2a2546beb79a22",
+        "responseHash": "b6b92e785b1647cb2015d4a7cec8fa5be16d78e1f0f2f3fed4b711860c039b0b"
+      },
+      "costUpperYuan": 0.016062,
+      "measurement": {
+        "label": "content-baishi-dock-npc_bs_001_2-review0",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 4771,
+          "completion_tokens": 815,
+          "total_tokens": 5586,
+          "prompt_tokens_details": {
+            "cached_tokens": 0
+          },
+          "prompt_cache_hit_tokens": 0,
+          "prompt_cache_miss_tokens": 4771
+        },
+        "costUpperYuan": 0.016062,
+        "cumulativeUpperYuan": 1.530367440000006,
+        "latencyMs": 5100.0665,
+        "timestamp": "2026-10-13T17:40:43.474Z"
+      }
+    },
+    "d19df93f-355b-4acf-864b-2f6a6d63e812": {
+      "card": "T91",
+      "label": "content-baishi-dock-npc_bs_016_1-review0",
+      "requestHash": "a44c822100c86058e20645116de7261dd3530fe165a618f68a4cc77e8fa5241e",
+      "reservedYuan": 0.049216,
+      "status": "settled",
+      "responseEvidence": {
+        "file": "budget-responses/d19df93f-355b-4acf-864b-2f6a6d63e812.json",
+        "requestHash": "a44c822100c86058e20645116de7261dd3530fe165a618f68a4cc77e8fa5241e",
+        "responseHash": "b945ffc8c8c38b9053825dd4d1e7852a4e677c8ff3ede15f2aeb20dfd1bc1a46"
+      },
+      "costUpperYuan": 0.013194,
+      "measurement": {
+        "label": "content-baishi-dock-npc_bs_016_1-review0",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 4825,
+          "completion_tokens": 443,
+          "total_tokens": 5268,
+          "prompt_tokens_details": {
+            "cached_tokens": 0
+          },
+          "prompt_cache_hit_tokens": 0,
+          "prompt_cache_miss_tokens": 4825
+        },
+        "costUpperYuan": 0.013194,
+        "cumulativeUpperYuan": 1.543561440000006,
+        "latencyMs": 3399.8153,
+        "timestamp": "2026-10-13T17:40:46.897Z"
+      }
+    },
+    "520b74de-6744-4d08-843e-1a9605bd14aa": {
+      "card": "T91",
+      "label": "content-baishi-dock-npc_bs_001_3-review0",
+      "requestHash": "f5da9c90aad2bb72f75201def590415d07ef8425a2915bfe3f4b16ffbae9501a",
+      "reservedYuan": 0.048122,
+      "status": "settled",
+      "responseEvidence": {
+        "file": "budget-responses/520b74de-6744-4d08-843e-1a9605bd14aa.json",
+        "requestHash": "f5da9c90aad2bb72f75201def590415d07ef8425a2915bfe3f4b16ffbae9501a",
+        "responseHash": "f622e068f7920d3944119051df26db79be4f32e15ad83f1eddec457fc778e499"
+      },
+      "costUpperYuan": 0.010914,
+      "measurement": {
+        "label": "content-baishi-dock-npc_bs_001_3-review0",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 4665,
+          "completion_tokens": 198,
+          "total_tokens": 4863,
+          "prompt_tokens_details": {
+            "cached_tokens": 0
+          },
+          "prompt_cache_hit_tokens": 0,
+          "prompt_cache_miss_tokens": 4665
+        },
+        "costUpperYuan": 0.010914,
+        "cumulativeUpperYuan": 1.554475440000006,
+        "latencyMs": 2010.6607000000004,
+        "timestamp": "2026-10-13T17:40:48.939Z"
+      }
+    },
+    "b3c62ead-5a28-4fc0-9b66-7eb90a64699e": {
+      "card": "T91",
+      "label": "content-baishi-dock-npc_bs_016_2-review0",
+      "requestHash": "8ed9d9a46a0e7144154d7df93cfd9c19e54a2f188ae24e32c0cf0bf0be2db0c4",
+      "reservedYuan": 0.048158,
+      "status": "settled",
+      "responseEvidence": {
+        "file": "budget-responses/b3c62ead-5a28-4fc0-9b66-7eb90a64699e.json",
+        "requestHash": "8ed9d9a46a0e7144154d7df93cfd9c19e54a2f188ae24e32c0cf0bf0be2db0c4",
+        "responseHash": "910691ef33a0fe7c98903103a21eb0af83c8a13e5da55dbd1d495874707c5be4"
+      },
+      "costUpperYuan": 0.01225,
+      "measurement": {
+        "label": "content-baishi-dock-npc_bs_016_2-review0",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 4645,
+          "completion_tokens": 370,
+          "total_tokens": 5015,
+          "prompt_tokens_details": {
+            "cached_tokens": 0
+          },
+          "prompt_cache_hit_tokens": 0,
+          "prompt_cache_miss_tokens": 4645
+        },
+        "costUpperYuan": 0.01225,
+        "cumulativeUpperYuan": 1.5667254400000061,
+        "latencyMs": 2462.0546000000013,
+        "timestamp": "2026-10-13T17:40:51.425Z"
+      }
+    },
+    "31d7590b-fa0d-4838-ad7d-505e12b3122f": {
+      "card": "T91",
+      "label": "content-baishi-dock-npc_bs_001_4-review0",
+      "requestHash": "212c87c88346c64ac7fc8dcaefecf7792dcb2daa2e9963ad97eb4d1c27c57e14",
+      "reservedYuan": 0.049262,
+      "status": "settled",
+      "responseEvidence": {
+        "file": "budget-responses/31d7590b-fa0d-4838-ad7d-505e12b3122f.json",
+        "requestHash": "212c87c88346c64ac7fc8dcaefecf7792dcb2daa2e9963ad97eb4d1c27c57e14",
+        "responseHash": "4ce98a33577576e72b52099817d3ed70127cc31b065ad8c26346605c3bc67abf"
+      },
+      "costUpperYuan": 0.011502,
+      "measurement": {
+        "label": "content-baishi-dock-npc_bs_001_4-review0",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 4815,
+          "completion_tokens": 234,
+          "total_tokens": 5049,
+          "prompt_tokens_details": {
+            "cached_tokens": 0
+          },
+          "prompt_cache_hit_tokens": 0,
+          "prompt_cache_miss_tokens": 4815
+        },
+        "costUpperYuan": 0.011502,
+        "cumulativeUpperYuan": 1.578227440000006,
+        "latencyMs": 2162.1842000000015,
+        "timestamp": "2026-10-13T17:40:53.608Z"
+      }
+    },
+    "96a53fcf-9a28-4308-8986-3c011f2aa4b6": {
+      "card": "T91",
+      "label": "content-baishi-dock-npc_bs_017_1-review0",
+      "requestHash": "e52da056bd7d2a9e4ed5fc04d2e08c7717385f5dec625623a6faaa49024c067d",
+      "reservedYuan": 0.048188,
+      "status": "settled",
+      "responseEvidence": {
+        "file": "budget-responses/96a53fcf-9a28-4308-8986-3c011f2aa4b6.json",
+        "requestHash": "e52da056bd7d2a9e4ed5fc04d2e08c7717385f5dec625623a6faaa49024c067d",
+        "responseHash": "c5725ef4850c1d8fefcf51680f332b81d2649bf0af04a0f98f16243ec358232b"
+      },
+      "costUpperYuan": 0.012274,
+      "measurement": {
+        "label": "content-baishi-dock-npc_bs_017_1-review0",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 4653,
+          "completion_tokens": 371,
+          "total_tokens": 5024,
+          "prompt_tokens_details": {
+            "cached_tokens": 0
+          },
+          "prompt_cache_hit_tokens": 0,
+          "prompt_cache_miss_tokens": 4653
+        },
+        "costUpperYuan": 0.012274,
+        "cumulativeUpperYuan": 1.590501440000006,
+        "latencyMs": 3379.598600000001,
+        "timestamp": "2026-10-13T17:40:57.007Z"
+      }
+    },
+    "2260df13-bb8c-41af-accb-a090454f242d": {
+      "card": "T91",
+      "label": "content-baishi-dock-npc_bs_002_1-review0",
+      "requestHash": "51b8794f199228a9ea03452675421d4633d71b20647f860f124b3eaafac9b631",
+      "reservedYuan": 0.04894,
+      "status": "settled",
+      "responseEvidence": {
+        "file": "budget-responses/2260df13-bb8c-41af-accb-a090454f242d.json",
+        "requestHash": "51b8794f199228a9ea03452675421d4633d71b20647f860f124b3eaafac9b631",
+        "responseHash": "2a476e0bbf5153944b7d77f4d0c32097aa3587865618ec0f7e126c1b179d7234"
+      },
+      "costUpperYuan": 0.011246,
+      "measurement": {
+        "label": "content-baishi-dock-npc_bs_002_1-review0",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 4827,
+          "completion_tokens": 199,
+          "total_tokens": 5026,
+          "prompt_tokens_details": {
+            "cached_tokens": 0
+          },
+          "prompt_cache_hit_tokens": 0,
+          "prompt_cache_miss_tokens": 4827
+        },
+        "costUpperYuan": 0.011246,
+        "cumulativeUpperYuan": 1.601747440000006,
+        "latencyMs": 2278.8171,
+        "timestamp": "2026-10-13T17:40:59.307Z"
+      }
+    },
+    "314412d7-f4f8-4093-8a84-bad3a4c63c0a": {
+      "card": "T91",
+      "label": "content-baishi-dock-npc_bs_017_2-review0",
+      "requestHash": "4948d2de300a2edbe4b1f3e7ca1d57f2d7f4981f163222f4e8a8e0e6e1f10467",
+      "reservedYuan": 0.049372,
+      "status": "settled",
+      "responseEvidence": {
+        "file": "budget-responses/314412d7-f4f8-4093-8a84-bad3a4c63c0a.json",
+        "requestHash": "4948d2de300a2edbe4b1f3e7ca1d57f2d7f4981f163222f4e8a8e0e6e1f10467",
+        "responseHash": "7fa9c9fe6bf884f9c62e20f85878ed484339ac42b4774cb4063e7a59c06da101"
+      },
+      "costUpperYuan": 0.022106,
+      "measurement": {
+        "label": "content-baishi-dock-npc_bs_017_2-review0",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 4857,
+          "completion_tokens": 1549,
+          "total_tokens": 6406,
+          "prompt_tokens_details": {
+            "cached_tokens": 0
+          },
+          "prompt_cache_hit_tokens": 0,
+          "prompt_cache_miss_tokens": 4857
+        },
+        "costUpperYuan": 0.022106,
+        "cumulativeUpperYuan": 1.623853440000006,
+        "latencyMs": 7482.096400000002,
+        "timestamp": "2026-10-13T17:41:06.813Z"
+      }
+    },
+    "7e637181-9f87-43bd-97cd-ab8f4dbfff1b": {
+      "card": "T91",
+      "label": "content-baishi-dock-npc_bs_002_2-review0",
+      "requestHash": "03e4086471d3ec1a2da7401b10ccbcb4cfb3612a077530948c9227612d6b51bf",
+      "reservedYuan": 0.049344,
+      "status": "settled",
+      "responseEvidence": {
+        "file": "budget-responses/7e637181-9f87-43bd-97cd-ab8f4dbfff1b.json",
+        "requestHash": "03e4086471d3ec1a2da7401b10ccbcb4cfb3612a077530948c9227612d6b51bf",
+        "responseHash": "9c776b97b766b32e6bd7b244c69af282c58f208570dd8e5155d338958504c90a"
+      },
+      "costUpperYuan": 0.012844,
+      "measurement": {
+        "label": "content-baishi-dock-npc_bs_002_2-review0",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 4846,
+          "completion_tokens": 394,
+          "total_tokens": 5240,
+          "prompt_tokens_details": {
+            "cached_tokens": 0
+          },
+          "prompt_cache_hit_tokens": 0,
+          "prompt_cache_miss_tokens": 4846
+        },
+        "costUpperYuan": 0.012844,
+        "cumulativeUpperYuan": 1.636697440000006,
+        "latencyMs": 2784.3627000000015,
+        "timestamp": "2026-10-13T17:41:09.621Z"
+      }
+    },
+    "33394dc6-0f64-4dd1-9182-39351db45321": {
+      "card": "T91",
+      "label": "content-baishi-dock-npc_bs_018_1-review0",
+      "requestHash": "35a1c8a9f2106c45bfc1c880647100614f382bfa8f99bc4655a9d4b3c73536b9",
+      "reservedYuan": 0.048976,
+      "status": "settled",
+      "responseEvidence": {
+        "file": "budget-responses/33394dc6-0f64-4dd1-9182-39351db45321.json",
+        "requestHash": "35a1c8a9f2106c45bfc1c880647100614f382bfa8f99bc4655a9d4b3c73536b9",
+        "responseHash": "b4b243b1a033ac7dee54b3675d4c926857611c021a88f67a4fcb819087228ccd"
+      },
+      "costUpperYuan": 0.020314,
+      "measurement": {
+        "label": "content-baishi-dock-npc_bs_018_1-review0",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 4765,
+          "completion_tokens": 1348,
+          "total_tokens": 6113,
+          "prompt_tokens_details": {
+            "cached_tokens": 0
+          },
+          "prompt_cache_hit_tokens": 0,
+          "prompt_cache_miss_tokens": 4765
+        },
+        "costUpperYuan": 0.020314,
+        "cumulativeUpperYuan": 1.657011440000006,
+        "latencyMs": 6535.974400000003,
+        "timestamp": "2026-10-13T17:41:16.179Z"
+      }
+    },
+    "1d3abeb9-1400-439d-9970-aecff6dcab97": {
+      "card": "T91",
+      "label": "content-baishi-dock-npc_bs_002_3-review0",
+      "requestHash": "2aa5a68d95bcb940ea2ac157ccca2f0d07ec4ae48e088ddf7a948f38cef024cb",
+      "reservedYuan": 0.049214,
+      "status": "settled",
+      "responseEvidence": {
+        "file": "budget-responses/1d3abeb9-1400-439d-9970-aecff6dcab97.json",
+        "requestHash": "2aa5a68d95bcb940ea2ac157ccca2f0d07ec4ae48e088ddf7a948f38cef024cb",
+        "responseHash": "f881eac11a43064d18e97d583526908bf6cbcb82df0d02b6aa8bb25a71f2535a"
+      },
+      "costUpperYuan": 0.011574,
+      "measurement": {
+        "label": "content-baishi-dock-npc_bs_002_3-review0",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 4823,
+          "completion_tokens": 241,
+          "total_tokens": 5064,
+          "prompt_tokens_details": {
+            "cached_tokens": 0
+          },
+          "prompt_cache_hit_tokens": 0,
+          "prompt_cache_miss_tokens": 4823
+        },
+        "costUpperYuan": 0.011574,
+        "cumulativeUpperYuan": 1.668585440000006,
+        "latencyMs": 2967.1425000000017,
+        "timestamp": "2026-10-13T17:41:19.168Z"
+      }
+    },
+    "404f4c66-5874-41b1-aa49-1c314eea671d": {
+      "card": "T91",
+      "label": "content-baishi-dock-npc_bs_018_2-review0",
+      "requestHash": "3211473e2465848c71367b2e1bc0436511aaa284991ff51b194021af76732604",
+      "reservedYuan": 0.04786,
+      "status": "settled",
+      "responseEvidence": {
+        "file": "budget-responses/404f4c66-5874-41b1-aa49-1c314eea671d.json",
+        "requestHash": "3211473e2465848c71367b2e1bc0436511aaa284991ff51b194021af76732604",
+        "responseHash": "47cb4b29f3dbab6a1767fa579f3f6703eb3ff1f96352e7db519eeeaea41243b0"
+      },
+      "costUpperYuan": 0.01352,
+      "measurement": {
+        "label": "content-baishi-dock-npc_bs_018_2-review0",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 4640,
+          "completion_tokens": 530,
+          "total_tokens": 5170,
+          "prompt_tokens_details": {
+            "cached_tokens": 0
+          },
+          "prompt_cache_hit_tokens": 0,
+          "prompt_cache_miss_tokens": 4640
+        },
+        "costUpperYuan": 0.01352,
+        "cumulativeUpperYuan": 1.682105440000006,
+        "latencyMs": 3600.0273000000016,
+        "timestamp": "2026-10-13T17:41:22.788Z"
+      }
+    },
+    "28362541-9ac7-4110-a6c8-98ec3f3c099f": {
+      "card": "T91",
+      "label": "content-baishi-dock-npc_bs_003_1-review0",
+      "requestHash": "94023e4333ce8c5404085b622f0c69abecabc52f3ce97491ed1d9904b0834888",
+      "reservedYuan": 0.049392,
+      "status": "settled",
+      "responseEvidence": {
+        "file": "budget-responses/28362541-9ac7-4110-a6c8-98ec3f3c099f.json",
+        "requestHash": "94023e4333ce8c5404085b622f0c69abecabc52f3ce97491ed1d9904b0834888",
+        "responseHash": "80ff85769905631117cbdad6763c1273766717f8e53ea37cba319d609e2eb6b9"
+      },
+      "costUpperYuan": 0.014288,
+      "measurement": {
+        "label": "content-baishi-dock-npc_bs_003_1-review0",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 4852,
+          "completion_tokens": 573,
+          "total_tokens": 5425,
+          "prompt_tokens_details": {
+            "cached_tokens": 0
+          },
+          "prompt_cache_hit_tokens": 0,
+          "prompt_cache_miss_tokens": 4852
+        },
+        "costUpperYuan": 0.014288,
+        "cumulativeUpperYuan": 1.696393440000006,
+        "latencyMs": 3784.7562000000034,
+        "timestamp": "2026-10-13T17:41:26.597Z"
+      }
+    },
+    "ce5f0736-912f-4407-ba6e-271872620143": {
+      "card": "T91",
+      "label": "content-baishi-dock-npc_bs_019_1-review0",
+      "requestHash": "9b56c90f1982914a31aed2c77fc0b832790a600c263d5493153991f388debc34",
+      "reservedYuan": 0.049116,
+      "status": "settled",
+      "responseEvidence": {
+        "file": "budget-responses/ce5f0736-912f-4407-ba6e-271872620143.json",
+        "requestHash": "9b56c90f1982914a31aed2c77fc0b832790a600c263d5493153991f388debc34",
+        "responseHash": "50b69a33d7f15aeb1989ef7563ce00deabe19ae4233327068472bdf7a1250dbf"
+      },
+      "costUpperYuan": 0.012542,
+      "measurement": {
+        "label": "content-baishi-dock-npc_bs_019_1-review0",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 4803,
+          "completion_tokens": 367,
+          "total_tokens": 5170,
+          "prompt_tokens_details": {
+            "cached_tokens": 0
+          },
+          "prompt_cache_hit_tokens": 0,
+          "prompt_cache_miss_tokens": 4803
+        },
+        "costUpperYuan": 0.012542,
+        "cumulativeUpperYuan": 1.708935440000006,
+        "latencyMs": 2831.470100000006,
+        "timestamp": "2026-10-13T17:41:29.453Z"
+      }
+    },
+    "b5c14162-221f-493e-bb1d-0f25934895d7": {
+      "card": "T91",
+      "label": "content-baishi-dock-npc_bs_003_2-review0",
+      "requestHash": "5f76b7709f8aaaea1afb8feecd51f0d1ee5b92a1a7bc0dc34d6d438cab5fcbfd",
+      "reservedYuan": 0.049298,
+      "status": "settled",
+      "responseEvidence": {
+        "file": "budget-responses/b5c14162-221f-493e-bb1d-0f25934895d7.json",
+        "requestHash": "5f76b7709f8aaaea1afb8feecd51f0d1ee5b92a1a7bc0dc34d6d438cab5fcbfd",
+        "responseHash": "4d99aef2d13deec9ba6785a7ee9d9fefaaa9f384109d611ef9649a0d3b26d98a"
+      },
+      "costUpperYuan": 0.013414,
+      "measurement": {
+        "label": "content-baishi-dock-npc_bs_003_2-review0",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 4843,
+          "completion_tokens": 466,
+          "total_tokens": 5309,
+          "prompt_tokens_details": {
+            "cached_tokens": 0
+          },
+          "prompt_cache_hit_tokens": 0,
+          "prompt_cache_miss_tokens": 4843
+        },
+        "costUpperYuan": 0.013414,
+        "cumulativeUpperYuan": 1.7223494400000061,
+        "latencyMs": 2879.8125,
+        "timestamp": "2026-10-13T17:41:32.355Z"
+      }
+    },
+    "8a1a5590-9b10-46d3-8cee-b8cf7b89560b": {
+      "card": "T91",
+      "label": "content-baishi-dock-npc_bs_019_2-review0",
+      "requestHash": "ca1799790d3cf38a1346fd2589d5dde3bd2445fea45f29ec9488f65d6d7fef8f",
+      "reservedYuan": 0.048808,
+      "status": "settled",
+      "responseEvidence": {
+        "file": "budget-responses/8a1a5590-9b10-46d3-8cee-b8cf7b89560b.json",
+        "requestHash": "ca1799790d3cf38a1346fd2589d5dde3bd2445fea45f29ec9488f65d6d7fef8f",
+        "responseHash": "ed85beaee79a86cd19f4b1ab4363d3e5bf33d3677c5a7831e77a569d5525941c"
+      },
+      "costUpperYuan": 0.022308,
+      "measurement": {
+        "label": "content-baishi-dock-npc_bs_019_2-review0",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 4754,
+          "completion_tokens": 1600,
+          "total_tokens": 6354,
+          "prompt_tokens_details": {
+            "cached_tokens": 0
+          },
+          "prompt_cache_hit_tokens": 0,
+          "prompt_cache_miss_tokens": 4754
+        },
+        "costUpperYuan": 0.022308,
+        "cumulativeUpperYuan": 1.744657440000006,
+        "latencyMs": 7891.669099999999,
+        "timestamp": "2026-10-13T17:41:40.268Z"
+      }
+    },
+    "3f984ea5-429d-464e-bc46-4897c1ff0bd2": {
+      "card": "T91",
+      "label": "content-baishi-dock-npc_bs_019_2-review1",
+      "requestHash": "ca1799790d3cf38a1346fd2589d5dde3bd2445fea45f29ec9488f65d6d7fef8f",
+      "reservedYuan": 0.048808,
+      "status": "settled",
+      "responseEvidence": {
+        "file": "budget-responses/3f984ea5-429d-464e-bc46-4897c1ff0bd2.json",
+        "requestHash": "ca1799790d3cf38a1346fd2589d5dde3bd2445fea45f29ec9488f65d6d7fef8f",
+        "responseHash": "e04bd9dfd034c8be236be44b11117f5bda71f722d21d9bbe18c62729e99394d8"
+      },
+      "costUpperYuan": 0.01246032,
+      "measurement": {
+        "label": "content-baishi-dock-npc_bs_019_2-review1",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 4754,
+          "completion_tokens": 1498,
+          "total_tokens": 6252,
+          "prompt_tokens_details": {
+            "cached_tokens": 4608
+          },
+          "prompt_cache_hit_tokens": 4608,
+          "prompt_cache_miss_tokens": 146
+        },
+        "costUpperYuan": 0.01246032,
+        "cumulativeUpperYuan": 1.757117760000006,
+        "latencyMs": 7987.000599999999,
+        "timestamp": "2026-10-13T17:41:48.279Z"
+      }
+    },
+    "649ad369-c8b0-48c7-b5e2-c1983346e6cb": {
+      "card": "T91",
+      "label": "content-baishi-dock-npc_bs_019_2-review2",
+      "requestHash": "ca1799790d3cf38a1346fd2589d5dde3bd2445fea45f29ec9488f65d6d7fef8f",
+      "reservedYuan": 0.048808,
+      "status": "settled",
+      "responseEvidence": {
+        "file": "budget-responses/649ad369-c8b0-48c7-b5e2-c1983346e6cb.json",
+        "requestHash": "ca1799790d3cf38a1346fd2589d5dde3bd2445fea45f29ec9488f65d6d7fef8f",
+        "responseHash": "bd91adebb2e35771ac96de3e2684c486c717388e1c3f7dd36d70094e774ca17e"
+      },
+      "costUpperYuan": 0.00378832,
+      "measurement": {
+        "label": "content-baishi-dock-npc_bs_019_2-review2",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 4754,
+          "completion_tokens": 414,
+          "total_tokens": 5168,
+          "prompt_tokens_details": {
+            "cached_tokens": 4608
+          },
+          "prompt_cache_hit_tokens": 4608,
+          "prompt_cache_miss_tokens": 146
+        },
+        "costUpperYuan": 0.00378832,
+        "cumulativeUpperYuan": 1.760906080000006,
+        "latencyMs": 3317.3803999999946,
+        "timestamp": "2026-10-13T17:41:51.622Z"
+      }
+    },
+    "8df48e9d-07ad-4092-afb5-b1a70456bdae": {
+      "card": "T91",
+      "label": "content-baishi-dock-npc_bs_003_3-review0",
+      "requestHash": "c6ad3d91c42642a4b608126afd2f9f6e0f6087f3d829add1d725e78e5c09d902",
+      "reservedYuan": 0.048876,
+      "status": "settled",
+      "responseEvidence": {
+        "file": "budget-responses/8df48e9d-07ad-4092-afb5-b1a70456bdae.json",
+        "requestHash": "c6ad3d91c42642a4b608126afd2f9f6e0f6087f3d829add1d725e78e5c09d902",
+        "responseHash": "678575166e718063832fcd274c4085ab42a5503aa799096294fd19c3ffc6c544"
+      },
+      "costUpperYuan": 0.022314,
+      "measurement": {
+        "label": "content-baishi-dock-npc_bs_003_3-review0",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 4757,
+          "completion_tokens": 1600,
+          "total_tokens": 6357,
+          "prompt_tokens_details": {
+            "cached_tokens": 0
+          },
+          "prompt_cache_hit_tokens": 0,
+          "prompt_cache_miss_tokens": 4757
+        },
+        "costUpperYuan": 0.022314,
+        "cumulativeUpperYuan": 1.783220080000006,
+        "latencyMs": 7751.115600000005,
+        "timestamp": "2026-10-13T17:41:59.394Z"
+      }
+    },
+    "3140bb16-565f-4a74-baf3-2ce1d4affe59": {
+      "card": "T91",
+      "label": "content-baishi-dock-npc_bs_003_3-review1",
+      "requestHash": "c6ad3d91c42642a4b608126afd2f9f6e0f6087f3d829add1d725e78e5c09d902",
+      "reservedYuan": 0.048876,
+      "status": "settled",
+      "responseEvidence": {
+        "file": "budget-responses/3140bb16-565f-4a74-baf3-2ce1d4affe59.json",
+        "requestHash": "c6ad3d91c42642a4b608126afd2f9f6e0f6087f3d829add1d725e78e5c09d902",
+        "responseHash": "1d00deac58b747a63e0d79260223119ee8eb569fd41782f7dc82a83765440902"
+      },
+      "costUpperYuan": 0.01328232,
+      "measurement": {
+        "label": "content-baishi-dock-npc_bs_003_3-review1",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 4757,
+          "completion_tokens": 1600,
+          "total_tokens": 6357,
+          "prompt_tokens_details": {
+            "cached_tokens": 4608
+          },
+          "prompt_cache_hit_tokens": 4608,
+          "prompt_cache_miss_tokens": 149
+        },
+        "costUpperYuan": 0.01328232,
+        "cumulativeUpperYuan": 1.796502400000006,
+        "latencyMs": 8220.90340000001,
+        "timestamp": "2026-10-13T17:42:07.638Z"
+      }
+    },
+    "d9707c13-7950-4d80-a376-218b004f950b": {
+      "card": "T91",
+      "label": "content-baishi-dock-npc_bs_003_3-review2",
+      "requestHash": "c6ad3d91c42642a4b608126afd2f9f6e0f6087f3d829add1d725e78e5c09d902",
+      "reservedYuan": 0.048876,
+      "status": "settled",
+      "responseEvidence": {
+        "file": "budget-responses/d9707c13-7950-4d80-a376-218b004f950b.json",
+        "requestHash": "c6ad3d91c42642a4b608126afd2f9f6e0f6087f3d829add1d725e78e5c09d902",
+        "responseHash": "2077a46c626ba117fe97c5ea8aaa198af8a741f4aa168d5258b1c3e8cf3e1ec9"
+      },
+      "costUpperYuan": 0.01328232,
+      "measurement": {
+        "label": "content-baishi-dock-npc_bs_003_3-review2",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 4757,
+          "completion_tokens": 1600,
+          "total_tokens": 6357,
+          "prompt_tokens_details": {
+            "cached_tokens": 4608
+          },
+          "prompt_cache_hit_tokens": 4608,
+          "prompt_cache_miss_tokens": 149
+        },
+        "costUpperYuan": 0.01328232,
+        "cumulativeUpperYuan": 1.8097847200000061,
+        "latencyMs": 7262.975900000005,
+        "timestamp": "2026-10-13T17:42:14.921Z"
+      }
+    },
+    "a221437c-2af6-4093-afa7-9e6498b4c4e4": {
+      "card": "T91",
+      "label": "content-baishi-dock-npc_bs_020_1-review0",
+      "requestHash": "fdefd0aea99173a3ef80fc289b45a154a45b0739fa7211b759a7783b357351d0",
+      "reservedYuan": 0.048864,
+      "status": "settled",
+      "responseEvidence": {
+        "file": "budget-responses/a221437c-2af6-4093-afa7-9e6498b4c4e4.json",
+        "requestHash": "fdefd0aea99173a3ef80fc289b45a154a45b0739fa7211b759a7783b357351d0",
+        "responseHash": "118ffa22cec116dc5d515ccc34bee00a89fcb2c321e83908cc3006d0711c63ea"
+      },
+      "costUpperYuan": 0.02109,
+      "measurement": {
+        "label": "content-baishi-dock-npc_bs_020_1-review0",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 4777,
+          "completion_tokens": 1442,
+          "total_tokens": 6219,
+          "prompt_tokens_details": {
+            "cached_tokens": 0
+          },
+          "prompt_cache_hit_tokens": 0,
+          "prompt_cache_miss_tokens": 4777
+        },
+        "costUpperYuan": 0.02109,
+        "cumulativeUpperYuan": 1.8308747200000062,
+        "latencyMs": 8164.81319999999,
+        "timestamp": "2026-10-13T17:42:23.110Z"
+      }
+    },
+    "1079dc82-37e9-472b-ae6f-a8f0d96c3f8c": {
+      "card": "T91",
+      "label": "content-baishi-dock-npc_bs_004_1-review0",
+      "requestHash": "092ceb938c5743c2f3ba7b47503b65fcd19b8f35fd80f94d37cc05ea79965bc7",
+      "reservedYuan": 0.049462,
+      "status": "settled",
+      "responseEvidence": {
+        "file": "budget-responses/1079dc82-37e9-472b-ae6f-a8f0d96c3f8c.json",
+        "requestHash": "092ceb938c5743c2f3ba7b47503b65fcd19b8f35fd80f94d37cc05ea79965bc7",
+        "responseHash": "006d1eab71af51cd2f5c8f80532ae9758f31a5b345d02e47f85e45bb0c9b2fc1"
+      },
+      "costUpperYuan": 0.02256,
+      "measurement": {
+        "label": "content-baishi-dock-npc_bs_004_1-review0",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 4880,
+          "completion_tokens": 1600,
+          "total_tokens": 6480,
+          "prompt_tokens_details": {
+            "cached_tokens": 0
+          },
+          "prompt_cache_hit_tokens": 0,
+          "prompt_cache_miss_tokens": 4880
+        },
+        "costUpperYuan": 0.02256,
+        "cumulativeUpperYuan": 1.853434720000006,
+        "latencyMs": 7361.059200000003,
+        "timestamp": "2026-10-13T17:42:30.498Z"
+      }
+    },
+    "263f7935-b481-4d24-9d52-52d88d4f300e": {
+      "card": "T91",
+      "label": "content-baishi-dock-npc_bs_004_1-review1",
+      "requestHash": "092ceb938c5743c2f3ba7b47503b65fcd19b8f35fd80f94d37cc05ea79965bc7",
+      "reservedYuan": 0.049462,
+      "status": "settled",
+      "responseEvidence": {
+        "file": "budget-responses/263f7935-b481-4d24-9d52-52d88d4f300e.json",
+        "requestHash": "092ceb938c5743c2f3ba7b47503b65fcd19b8f35fd80f94d37cc05ea79965bc7",
+        "responseHash": "6936a839b601164b36c8648f4f0369953907541f47329b1dacd260480ed7b428"
+      },
+      "costUpperYuan": 0.01238144,
+      "measurement": {
+        "label": "content-baishi-dock-npc_bs_004_1-review1",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 4880,
+          "completion_tokens": 1488,
+          "total_tokens": 6368,
+          "prompt_tokens_details": {
+            "cached_tokens": 4736
+          },
+          "prompt_cache_hit_tokens": 4736,
+          "prompt_cache_miss_tokens": 144
+        },
+        "costUpperYuan": 0.01238144,
+        "cumulativeUpperYuan": 1.865816160000006,
+        "latencyMs": 6834.684500000003,
+        "timestamp": "2026-10-13T17:42:37.356Z"
+      }
+    },
+    "e362c10a-ca8d-433b-bf46-c8e347114c49": {
+      "card": "T91",
+      "label": "content-baishi-dock-npc_bs_020_2-review0",
+      "requestHash": "2d9314b3ca608a587c97a3520df0c5f760e42aa77c66d72ed4f04ad47e071648",
+      "reservedYuan": 0.048082,
+      "status": "settled",
+      "responseEvidence": {
+        "file": "budget-responses/e362c10a-ca8d-433b-bf46-c8e347114c49.json",
+        "requestHash": "2d9314b3ca608a587c97a3520df0c5f760e42aa77c66d72ed4f04ad47e071648",
+        "responseHash": "bd3ea268fa8b2e71d94cf70002c4eda73a61ac9b95fdd537ffc17ff9dc6ab3e9"
+      },
+      "costUpperYuan": 0.013364,
+      "measurement": {
+        "label": "content-baishi-dock-npc_bs_020_2-review0",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 4686,
+          "completion_tokens": 499,
+          "total_tokens": 5185,
+          "prompt_tokens_details": {
+            "cached_tokens": 0
+          },
+          "prompt_cache_hit_tokens": 0,
+          "prompt_cache_miss_tokens": 4686
+        },
+        "costUpperYuan": 0.013364,
+        "cumulativeUpperYuan": 1.879180160000006,
+        "latencyMs": 3111.809699999998,
+        "timestamp": "2026-10-13T17:42:40.491Z"
+      }
+    },
+    "fd19cda8-2f5f-4b57-b98b-e29a077c3159": {
+      "card": "T91",
+      "label": "content-baishi-dock-npc_bs_004_2-review0",
+      "requestHash": "3ae05332fa7a24bb6dd07bc8b1b774ef96f65d74f156455cb68d48335356047e",
+      "reservedYuan": 0.049078,
+      "status": "settled",
+      "responseEvidence": {
+        "file": "budget-responses/fd19cda8-2f5f-4b57-b98b-e29a077c3159.json",
+        "requestHash": "3ae05332fa7a24bb6dd07bc8b1b774ef96f65d74f156455cb68d48335356047e",
+        "responseHash": "db7dddb7276238a9ef107314243b160da3f44d84b21c95f774ba91225ba6d241"
+      },
+      "costUpperYuan": 0.013618,
+      "measurement": {
+        "label": "content-baishi-dock-npc_bs_004_2-review0",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 4821,
+          "completion_tokens": 497,
+          "total_tokens": 5318,
+          "prompt_tokens_details": {
+            "cached_tokens": 0
+          },
+          "prompt_cache_hit_tokens": 0,
+          "prompt_cache_miss_tokens": 4821
+        },
+        "costUpperYuan": 0.013618,
+        "cumulativeUpperYuan": 1.892798160000006,
+        "latencyMs": 3117.949900000007,
+        "timestamp": "2026-10-13T17:42:43.628Z"
+      }
+    },
+    "04ce235e-bc8d-40fc-869a-85c7ca495baf": {
+      "card": "T91",
+      "label": "content-baishi-dock-npc_bs_021_1-review0",
+      "requestHash": "aac7dbc6f5eb40bae3260d2ba5b951a1afda4b292bb0db0496433691f8114745",
+      "reservedYuan": 0.048874,
+      "status": "settled",
+      "responseEvidence": {
+        "file": "budget-responses/04ce235e-bc8d-40fc-869a-85c7ca495baf.json",
+        "requestHash": "aac7dbc6f5eb40bae3260d2ba5b951a1afda4b292bb0db0496433691f8114745",
+        "responseHash": "d45c8abea7eb9cebb2f58d5c40c5a1469ff06df6ae04d2f91a910c53a84d1a33"
+      },
+      "costUpperYuan": 0.020628,
+      "measurement": {
+        "label": "content-baishi-dock-npc_bs_021_1-review0",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 4790,
+          "completion_tokens": 1381,
+          "total_tokens": 6171,
+          "prompt_tokens_details": {
+            "cached_tokens": 0
+          },
+          "prompt_cache_hit_tokens": 0,
+          "prompt_cache_miss_tokens": 4790
+        },
+        "costUpperYuan": 0.020628,
+        "cumulativeUpperYuan": 1.913426160000006,
+        "latencyMs": 6595.499499999991,
+        "timestamp": "2026-10-13T17:42:50.245Z"
+      }
+    },
+    "8cb9fbb7-8680-45f5-8e10-326ab3c33715": {
+      "card": "T91",
+      "label": "content-baishi-dock-npc_bs_004_3-review0",
+      "requestHash": "ec78a0b356db543013a8451a0fe42a052ad16893a484454b21294c15cc0e4cc4",
+      "reservedYuan": 0.048008,
+      "status": "settled",
+      "responseEvidence": {
+        "file": "budget-responses/8cb9fbb7-8680-45f5-8e10-326ab3c33715.json",
+        "requestHash": "ec78a0b356db543013a8451a0fe42a052ad16893a484454b21294c15cc0e4cc4",
+        "responseHash": "d8b0fa9d708a7554c9e0f9d116a79389bd6461d792db0f44c867bea9fe0924ba"
+      },
+      "costUpperYuan": 0.010698,
+      "measurement": {
+        "label": "content-baishi-dock-npc_bs_004_3-review0",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 4613,
+          "completion_tokens": 184,
+          "total_tokens": 4797,
+          "prompt_tokens_details": {
+            "cached_tokens": 0
+          },
+          "prompt_cache_hit_tokens": 0,
+          "prompt_cache_miss_tokens": 4613
+        },
+        "costUpperYuan": 0.010698,
+        "cumulativeUpperYuan": 1.924124160000006,
+        "latencyMs": 1988.4330999999947,
+        "timestamp": "2026-10-13T17:42:52.254Z"
+      }
+    },
+    "aa379a74-f68d-4b26-bc80-7b099e503558": {
+      "card": "T91",
+      "label": "content-baishi-dock-npc_bs_021_2-review0",
+      "requestHash": "2fabeb9f117b669a42dbdc2b65f56ceddc7460b81663253b2edf48e53ff50a30",
+      "reservedYuan": 0.049268,
+      "status": "settled",
+      "responseEvidence": {
+        "file": "budget-responses/aa379a74-f68d-4b26-bc80-7b099e503558.json",
+        "requestHash": "2fabeb9f117b669a42dbdc2b65f56ceddc7460b81663253b2edf48e53ff50a30",
+        "responseHash": "1dff95f76d4a3100eab3c1ca3f1d743a4c81189b6ca13e66894d9564ec573a94"
+      },
+      "costUpperYuan": 0.012894,
+      "measurement": {
+        "label": "content-baishi-dock-npc_bs_021_2-review0",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 4783,
+          "completion_tokens": 416,
+          "total_tokens": 5199,
+          "prompt_tokens_details": {
+            "cached_tokens": 0
+          },
+          "prompt_cache_hit_tokens": 0,
+          "prompt_cache_miss_tokens": 4783
+        },
+        "costUpperYuan": 0.012894,
+        "cumulativeUpperYuan": 1.937018160000006,
+        "latencyMs": 3026.6357000000135,
+        "timestamp": "2026-10-13T17:42:55.304Z"
+      }
+    },
+    "18b0965d-1d42-42e9-b71b-8b6fcf9b6643": {
+      "card": "T91",
+      "label": "content-baishi-dock-npc_bs_005_1-review0",
+      "requestHash": "8aadc07ca3cd703f75dca61a145b008be441aa92eed5572fef7f95ac74424b6c",
+      "reservedYuan": 0.049584,
+      "status": "settled",
+      "responseEvidence": {
+        "file": "budget-responses/18b0965d-1d42-42e9-b71b-8b6fcf9b6643.json",
+        "requestHash": "8aadc07ca3cd703f75dca61a145b008be441aa92eed5572fef7f95ac74424b6c",
+        "responseHash": "04de474b14f40a9d5ff339bb8d98bd74766b4027d1b067826eeb7d4d72aff1b6"
+      },
+      "costUpperYuan": 0.022412,
+      "measurement": {
+        "label": "content-baishi-dock-npc_bs_005_1-review0",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 4822,
+          "completion_tokens": 1596,
+          "total_tokens": 6418,
+          "prompt_tokens_details": {
+            "cached_tokens": 0
+          },
+          "prompt_cache_hit_tokens": 0,
+          "prompt_cache_miss_tokens": 4822
+        },
+        "costUpperYuan": 0.022412,
+        "cumulativeUpperYuan": 1.9594301600000061,
+        "latencyMs": 7448.738700000016,
+        "timestamp": "2026-10-13T17:43:02.775Z"
+      }
+    },
+    "988bd884-1eec-4a3d-b550-aa56f6c91ee4": {
+      "card": "T91",
+      "label": "content-baishi-dock-npc_bs_022_1-review0",
+      "requestHash": "5a43f1ac54586e4520a6a76db2abcb861551ee7fb1700ff122350482beed1e19",
+      "reservedYuan": 0.049076,
+      "status": "settled",
+      "responseEvidence": {
+        "file": "budget-responses/988bd884-1eec-4a3d-b550-aa56f6c91ee4.json",
+        "requestHash": "5a43f1ac54586e4520a6a76db2abcb861551ee7fb1700ff122350482beed1e19",
+        "responseHash": "b16927decd6300ae8356d54bc39a8721f0004eb98521451b8640d9a70e776a3f"
+      },
+      "costUpperYuan": 0.022436,
+      "measurement": {
+        "label": "content-baishi-dock-npc_bs_022_1-review0",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 4818,
+          "completion_tokens": 1600,
+          "total_tokens": 6418,
+          "prompt_tokens_details": {
+            "cached_tokens": 0
+          },
+          "prompt_cache_hit_tokens": 0,
+          "prompt_cache_miss_tokens": 4818
+        },
+        "costUpperYuan": 0.022436,
+        "cumulativeUpperYuan": 1.981866160000006,
+        "latencyMs": 7171.388500000001,
+        "timestamp": "2026-10-13T17:43:09.968Z"
+      }
+    },
+    "d9642fed-04ed-4429-bfd5-ac3052e3050a": {
+      "card": "T91",
+      "label": "content-baishi-dock-npc_bs_022_1-review1",
+      "requestHash": "5a43f1ac54586e4520a6a76db2abcb861551ee7fb1700ff122350482beed1e19",
+      "reservedYuan": 0.049076,
+      "status": "settled",
+      "responseEvidence": {
+        "file": "budget-responses/d9642fed-04ed-4429-bfd5-ac3052e3050a.json",
+        "requestHash": "5a43f1ac54586e4520a6a76db2abcb861551ee7fb1700ff122350482beed1e19",
+        "responseHash": "7b0d790ecf297d6c7a29cbb01a4aa15da46d4bef2b9ab1e3aea9615add9b15f5"
+      },
+      "costUpperYuan": 0.00540432,
+      "measurement": {
+        "label": "content-baishi-dock-npc_bs_022_1-review1",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 4818,
+          "completion_tokens": 600,
+          "total_tokens": 5418,
+          "prompt_tokens_details": {
+            "cached_tokens": 4608
+          },
+          "prompt_cache_hit_tokens": 4608,
+          "prompt_cache_miss_tokens": 210
+        },
+        "costUpperYuan": 0.00540432,
+        "cumulativeUpperYuan": 1.987270480000006,
+        "latencyMs": 3915.6869000000006,
+        "timestamp": "2026-10-13T17:43:13.906Z"
+      }
+    },
+    "de45e933-646c-4260-b606-2760e951eed1": {
+      "card": "T91",
+      "label": "content-baishi-dock-npc_bs_005_2-review0",
+      "requestHash": "e6aef15c412ba2578276fbf86bc7dea742f58c190e9f4c636cd9e57bb7bc890c",
+      "reservedYuan": 0.049492,
+      "status": "settled",
+      "responseEvidence": {
+        "file": "budget-responses/de45e933-646c-4260-b606-2760e951eed1.json",
+        "requestHash": "e6aef15c412ba2578276fbf86bc7dea742f58c190e9f4c636cd9e57bb7bc890c",
+        "responseHash": "ed31ba0266aa67a0c63e0fa52784505a88eb2220ce012eed67501fc8ea397751"
+      },
+      "costUpperYuan": 0.014858,
+      "measurement": {
+        "label": "content-baishi-dock-npc_bs_005_2-review0",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 4817,
+          "completion_tokens": 653,
+          "total_tokens": 5470,
+          "prompt_tokens_details": {
+            "cached_tokens": 0
+          },
+          "prompt_cache_hit_tokens": 0,
+          "prompt_cache_miss_tokens": 4817
+        },
+        "costUpperYuan": 0.014858,
+        "cumulativeUpperYuan": 2.002128480000006,
+        "latencyMs": 4577.729499999987,
+        "timestamp": "2026-10-13T17:43:18.508Z"
+      }
+    },
+    "3806675f-8568-4c7e-8633-c8079e647e19": {
+      "card": "T91",
+      "label": "content-baishi-dock-npc_bs_022_2-review0",
+      "requestHash": "a43758948859c41edfa6dac637a5a9e9098d152713a2c85e43a6e55c8dbb8cb3",
+      "reservedYuan": 0.0488,
+      "status": "settled",
+      "responseEvidence": {
+        "file": "budget-responses/3806675f-8568-4c7e-8633-c8079e647e19.json",
+        "requestHash": "a43758948859c41edfa6dac637a5a9e9098d152713a2c85e43a6e55c8dbb8cb3",
+        "responseHash": "c7589c03ce62bcd77a685d941de03324129e273d6cae9e158f715fb0b3894b49"
+      },
+      "costUpperYuan": 0.013554,
+      "measurement": {
+        "label": "content-baishi-dock-npc_bs_022_2-review0",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 4801,
+          "completion_tokens": 494,
+          "total_tokens": 5295,
+          "prompt_tokens_details": {
+            "cached_tokens": 0
+          },
+          "prompt_cache_hit_tokens": 0,
+          "prompt_cache_miss_tokens": 4801
+        },
+        "costUpperYuan": 0.013554,
+        "cumulativeUpperYuan": 2.015682480000006,
+        "latencyMs": 3837.8591000000015,
+        "timestamp": "2026-10-13T17:43:22.371Z"
+      }
+    },
+    "a488fad0-13eb-4e40-a190-1885b24b3083": {
+      "card": "T91",
+      "label": "content-baishi-dock-npc_bs_005_3-review0",
+      "requestHash": "adcae721525aeb06d8b919f7d239e6e05710289f0aab659944bc2780473b2832",
+      "reservedYuan": 0.048952,
+      "status": "settled",
+      "responseEvidence": {
+        "file": "budget-responses/a488fad0-13eb-4e40-a190-1885b24b3083.json",
+        "requestHash": "adcae721525aeb06d8b919f7d239e6e05710289f0aab659944bc2780473b2832",
+        "responseHash": "910ce73e9595bc90540bb2d88ebe622876ab9abfd98439d4aa154adb2b055259"
+      },
+      "costUpperYuan": 0.012988,
+      "measurement": {
+        "label": "content-baishi-dock-npc_bs_005_3-review0",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 4802,
+          "completion_tokens": 423,
+          "total_tokens": 5225,
+          "prompt_tokens_details": {
+            "cached_tokens": 0
+          },
+          "prompt_cache_hit_tokens": 0,
+          "prompt_cache_miss_tokens": 4802
+        },
+        "costUpperYuan": 0.012988,
+        "cumulativeUpperYuan": 2.028670480000006,
+        "latencyMs": 3154.921000000002,
+        "timestamp": "2026-10-13T17:43:25.550Z"
+      }
+    },
+    "2de33598-2edd-4bb4-b7ef-1ac9f0b0b6a9": {
+      "card": "T91",
+      "label": "content-baishi-dock-npc_bs_023_1-review0",
+      "requestHash": "deac46362e540e7b0e0a18d8a619f726c9dbd54fecde043d2d7bf4b4a71b928a",
+      "reservedYuan": 0.049088,
+      "status": "settled",
+      "responseEvidence": {
+        "file": "budget-responses/2de33598-2edd-4bb4-b7ef-1ac9f0b0b6a9.json",
+        "requestHash": "deac46362e540e7b0e0a18d8a619f726c9dbd54fecde043d2d7bf4b4a71b928a",
+        "responseHash": "d3c393c69420c8d1097ba31bf8b69575c6de7475a517f883d23a629ce0fe9425"
+      },
+      "costUpperYuan": 0.015694,
+      "measurement": {
+        "label": "content-baishi-dock-npc_bs_023_1-review0",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 4815,
+          "completion_tokens": 758,
+          "total_tokens": 5573,
+          "prompt_tokens_details": {
+            "cached_tokens": 0
+          },
+          "prompt_cache_hit_tokens": 0,
+          "prompt_cache_miss_tokens": 4815
+        },
+        "costUpperYuan": 0.015694,
+        "cumulativeUpperYuan": 2.044364480000006,
+        "latencyMs": 5181.0717,
+        "timestamp": "2026-10-13T17:43:30.752Z"
+      }
+    },
+    "378a9f22-494c-4e8e-8493-0bf90d3bd360": {
+      "card": "T91",
+      "label": "content-baishi-dock-npc_bs_023_1-review1",
+      "requestHash": "deac46362e540e7b0e0a18d8a619f726c9dbd54fecde043d2d7bf4b4a71b928a",
+      "reservedYuan": 0.049088,
+      "status": "settled",
+      "responseEvidence": {
+        "file": "budget-responses/378a9f22-494c-4e8e-8493-0bf90d3bd360.json",
+        "requestHash": "deac46362e540e7b0e0a18d8a619f726c9dbd54fecde043d2d7bf4b4a71b928a",
+        "responseHash": "c663259dc4110521b480e0ecc911b63608ffbef751067023f49328950936ac08"
+      },
+      "costUpperYuan": 0.012894319999999999,
+      "measurement": {
+        "label": "content-baishi-dock-npc_bs_023_1-review1",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 4815,
+          "completion_tokens": 1537,
+          "total_tokens": 6352,
+          "prompt_tokens_details": {
+            "cached_tokens": 4608
+          },
+          "prompt_cache_hit_tokens": 4608,
+          "prompt_cache_miss_tokens": 207
+        },
+        "costUpperYuan": 0.012894319999999999,
+        "cumulativeUpperYuan": 2.057258800000006,
+        "latencyMs": 8310.924800000008,
+        "timestamp": "2026-10-13T17:43:39.091Z"
+      }
+    },
+    "8720afd3-38e7-4b03-990f-14f2b2a2b4fd": {
+      "card": "T91",
+      "label": "content-baishi-dock-npc_bs_006_1-review0",
+      "requestHash": "64550068c333e3d4f86f7be5dcfe44dddfb354bf526dd49ace05f92df81d4e16",
+      "reservedYuan": 0.049782,
+      "status": "settled",
+      "responseEvidence": {
+        "file": "budget-responses/8720afd3-38e7-4b03-990f-14f2b2a2b4fd.json",
+        "requestHash": "64550068c333e3d4f86f7be5dcfe44dddfb354bf526dd49ace05f92df81d4e16",
+        "responseHash": "b7866ca447d600b56dc743f8fb329831abbee8d4d684b68368ada17e1a730ddc"
+      },
+      "costUpperYuan": 0.022518,
+      "measurement": {
+        "label": "content-baishi-dock-npc_bs_006_1-review0",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 4859,
+          "completion_tokens": 1600,
+          "total_tokens": 6459,
+          "prompt_tokens_details": {
+            "cached_tokens": 0
+          },
+          "prompt_cache_hit_tokens": 0,
+          "prompt_cache_miss_tokens": 4859
+        },
+        "costUpperYuan": 0.022518,
+        "cumulativeUpperYuan": 2.0797768000000056,
+        "latencyMs": 8106.814400000003,
+        "timestamp": "2026-10-13T17:43:47.220Z"
+      }
+    },
+    "e5440611-8bba-4b9c-a448-f9470cb74c8a": {
+      "card": "T91",
+      "label": "content-baishi-dock-npc_bs_006_1-review1",
+      "requestHash": "64550068c333e3d4f86f7be5dcfe44dddfb354bf526dd49ace05f92df81d4e16",
+      "reservedYuan": 0.049782,
+      "status": "settled",
+      "responseEvidence": {
+        "file": "budget-responses/e5440611-8bba-4b9c-a448-f9470cb74c8a.json",
+        "requestHash": "64550068c333e3d4f86f7be5dcfe44dddfb354bf526dd49ace05f92df81d4e16",
+        "responseHash": "ad010332396d8eb82c0b722bdca676253d4b292e115f10e3676c445b4c10b014"
+      },
+      "costUpperYuan": 0.01348632,
+      "measurement": {
+        "label": "content-baishi-dock-npc_bs_006_1-review1",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 4859,
+          "completion_tokens": 1600,
+          "total_tokens": 6459,
+          "prompt_tokens_details": {
+            "cached_tokens": 4608
+          },
+          "prompt_cache_hit_tokens": 4608,
+          "prompt_cache_miss_tokens": 251
+        },
+        "costUpperYuan": 0.01348632,
+        "cumulativeUpperYuan": 2.093263120000006,
+        "latencyMs": 7378.640400000004,
+        "timestamp": "2026-10-13T17:43:54.621Z"
+      }
+    },
+    "f4c5500d-eb75-4966-b702-925bf42116dd": {
+      "card": "T91",
+      "label": "content-baishi-dock-npc_bs_006_1-review2",
+      "requestHash": "64550068c333e3d4f86f7be5dcfe44dddfb354bf526dd49ace05f92df81d4e16",
+      "reservedYuan": 0.049782,
+      "status": "settled",
+      "responseEvidence": {
+        "file": "budget-responses/f4c5500d-eb75-4966-b702-925bf42116dd.json",
+        "requestHash": "64550068c333e3d4f86f7be5dcfe44dddfb354bf526dd49ace05f92df81d4e16",
+        "responseHash": "4e0708eca1460bfd9c7dc6c7ee00e400627e4e99b7f9db0bccb570e9ccbe1b47"
+      },
+      "costUpperYuan": 0.01348632,
+      "measurement": {
+        "label": "content-baishi-dock-npc_bs_006_1-review2",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 4859,
+          "completion_tokens": 1600,
+          "total_tokens": 6459,
+          "prompt_tokens_details": {
+            "cached_tokens": 4608
+          },
+          "prompt_cache_hit_tokens": 4608,
+          "prompt_cache_miss_tokens": 251
+        },
+        "costUpperYuan": 0.01348632,
+        "cumulativeUpperYuan": 2.106749440000006,
+        "latencyMs": 7041.403499999986,
+        "timestamp": "2026-10-13T17:44:01.688Z"
+      }
+    },
+    "21cd9d87-c831-42d1-9be4-54c921c641ba": {
+      "card": "T91",
+      "label": "content-baishi-dock-npc_bs_023_2-review0",
+      "requestHash": "8d837b315d10c732e76eeafc1f9c9334db3254d44d43a2a0a133d0f6b636675e",
+      "reservedYuan": 0.049556,
+      "status": "settled",
+      "responseEvidence": {
+        "file": "budget-responses/21cd9d87-c831-42d1-9be4-54c921c641ba.json",
+        "requestHash": "8d837b315d10c732e76eeafc1f9c9334db3254d44d43a2a0a133d0f6b636675e",
+        "responseHash": "6f3239c13b8df28158ad99f22ee46fc60cd9c747095dccca7f36b3364c84cd20"
+      },
+      "costUpperYuan": 0.02242,
+      "measurement": {
+        "label": "content-baishi-dock-npc_bs_023_2-review0",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 4810,
+          "completion_tokens": 1600,
+          "total_tokens": 6410,
+          "prompt_tokens_details": {
+            "cached_tokens": 0
+          },
+          "prompt_cache_hit_tokens": 0,
+          "prompt_cache_miss_tokens": 4810
+        },
+        "costUpperYuan": 0.02242,
+        "cumulativeUpperYuan": 2.129169440000006,
+        "latencyMs": 7423.5552000000025,
+        "timestamp": "2026-10-13T17:44:09.137Z"
+      }
+    },
+    "c93d06f7-d66c-4de3-baea-4bd7ac4d033d": {
+      "card": "T91",
+      "label": "content-baishi-dock-npc_bs_023_2-review1",
+      "requestHash": "8d837b315d10c732e76eeafc1f9c9334db3254d44d43a2a0a133d0f6b636675e",
+      "reservedYuan": 0.049556,
+      "status": "settled",
+      "responseEvidence": {
+        "file": "budget-responses/c93d06f7-d66c-4de3-baea-4bd7ac4d033d.json",
+        "requestHash": "8d837b315d10c732e76eeafc1f9c9334db3254d44d43a2a0a133d0f6b636675e",
+        "responseHash": "2eae620504aa975d6f42c1f979edaadca18fddc0265ae0d34c7757d720d371c1"
+      },
+      "costUpperYuan": 0.0039003199999999997,
+      "measurement": {
+        "label": "content-baishi-dock-npc_bs_023_2-review1",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 4810,
+          "completion_tokens": 414,
+          "total_tokens": 5224,
+          "prompt_tokens_details": {
+            "cached_tokens": 4608
+          },
+          "prompt_cache_hit_tokens": 4608,
+          "prompt_cache_miss_tokens": 202
+        },
+        "costUpperYuan": 0.0039003199999999997,
+        "cumulativeUpperYuan": 2.133069760000006,
+        "latencyMs": 3194.442299999995,
+        "timestamp": "2026-10-13T17:44:12.355Z"
+      }
+    },
+    "c0f6eb71-545a-45c7-bf14-9921a3bd216f": {
+      "card": "T91",
+      "label": "content-baishi-dock-npc_bs_006_2-review0",
+      "requestHash": "49fd5f9e7600ae15d1281140cbfff4d886fd685b90b437123a041d6accb05693",
+      "reservedYuan": 0.048908,
+      "status": "settled",
+      "responseEvidence": {
+        "file": "budget-responses/c0f6eb71-545a-45c7-bf14-9921a3bd216f.json",
+        "requestHash": "49fd5f9e7600ae15d1281140cbfff4d886fd685b90b437123a041d6accb05693",
+        "responseHash": "0237d612025590accee04b21f4a2e31769ac72f88f52f706235c30a08c404ed8"
+      },
+      "costUpperYuan": 0.02221,
+      "measurement": {
+        "label": "content-baishi-dock-npc_bs_006_2-review0",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 4705,
+          "completion_tokens": 1600,
+          "total_tokens": 6305,
+          "prompt_tokens_details": {
+            "cached_tokens": 0
+          },
+          "prompt_cache_hit_tokens": 0,
+          "prompt_cache_miss_tokens": 4705
+        },
+        "costUpperYuan": 0.02221,
+        "cumulativeUpperYuan": 2.1552797600000058,
+        "latencyMs": 7065.979300000006,
+        "timestamp": "2026-10-13T17:44:19.448Z"
+      }
+    },
+    "2dae920a-769f-422f-a389-8aa228f96c88": {
+      "card": "T91",
+      "label": "content-baishi-dock-npc_bs_006_2-review1",
+      "requestHash": "49fd5f9e7600ae15d1281140cbfff4d886fd685b90b437123a041d6accb05693",
+      "reservedYuan": 0.048908,
+      "status": "settled",
+      "responseEvidence": {
+        "file": "budget-responses/2dae920a-769f-422f-a389-8aa228f96c88.json",
+        "requestHash": "49fd5f9e7600ae15d1281140cbfff4d886fd685b90b437123a041d6accb05693",
+        "responseHash": "b792fdab2684230f995fce96c05b831b1d9592e74efa42afe5c8211c50c5fcb3"
+      },
+      "costUpperYuan": 0.0027572,
+      "measurement": {
+        "label": "content-baishi-dock-npc_bs_006_2-review1",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 4705,
+          "completion_tokens": 266,
+          "total_tokens": 4971,
+          "prompt_tokens_details": {
+            "cached_tokens": 4480
+          },
+          "prompt_cache_hit_tokens": 4480,
+          "prompt_cache_miss_tokens": 225
+        },
+        "costUpperYuan": 0.0027572,
+        "cumulativeUpperYuan": 2.1580369600000058,
+        "latencyMs": 2159.9213000000163,
+        "timestamp": "2026-10-13T17:44:21.631Z"
+      }
+    },
+    "e4a0f5fa-1aa7-4693-9e3a-4baa48b617a9": {
+      "card": "T91",
+      "label": "content-baishi-dock-npc_bs_001_2-review0",
+      "requestHash": "19f8b2970e74df5a8b90c934799c6e8ed50a4d841cdaab5acae0fcab393b4ecc",
+      "reservedYuan": 0.063726,
+      "status": "settled",
+      "responseEvidence": {
+        "file": "budget-responses/e4a0f5fa-1aa7-4693-9e3a-4baa48b617a9.json",
+        "requestHash": "19f8b2970e74df5a8b90c934799c6e8ed50a4d841cdaab5acae0fcab393b4ecc",
+        "responseHash": "a3b37b6f1a58a42508745afbca30578361b98bd6ee48e4fe958f05fc1417d4ac"
+      },
+      "costUpperYuan": 0.01324,
+      "measurement": {
+        "label": "content-baishi-dock-npc_bs_001_2-review0",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 6592,
+          "completion_tokens": 7,
+          "total_tokens": 6599,
+          "prompt_tokens_details": {
+            "cached_tokens": 0
+          },
+          "prompt_cache_hit_tokens": 0,
+          "prompt_cache_miss_tokens": 6592
+        },
+        "costUpperYuan": 0.01324,
+        "cumulativeUpperYuan": 2.171276960000006,
+        "latencyMs": 810.8164999999999,
+        "timestamp": "2026-10-13T17:44:46.174Z"
+      }
+    },
+    "a4d798f6-135b-4c16-a85d-228b3f4e8b2d": {
+      "card": "T91",
+      "label": "content-baishi-dock-npc_bs_016_1-review0",
+      "requestHash": "1a760d9497dfec428d5e8701305a8fd4893de1036cbcf498c6d2da126d47d0ec",
+      "reservedYuan": 0.06366,
+      "status": "settled",
+      "responseEvidence": {
+        "file": "budget-responses/a4d798f6-135b-4c16-a85d-228b3f4e8b2d.json",
+        "requestHash": "1a760d9497dfec428d5e8701305a8fd4893de1036cbcf498c6d2da126d47d0ec",
+        "responseHash": "b5e1a862538e335dfb32cb67c174f1e335202cf2558abfc69c8e6b9d59678a42"
+      },
+      "costUpperYuan": 0.01312112,
+      "measurement": {
+        "label": "content-baishi-dock-npc_bs_016_1-review0",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 6658,
+          "completion_tokens": 7,
+          "total_tokens": 6665,
+          "prompt_tokens_details": {
+            "cached_tokens": 128
+          },
+          "prompt_cache_hit_tokens": 128,
+          "prompt_cache_miss_tokens": 6530
+        },
+        "costUpperYuan": 0.01312112,
+        "cumulativeUpperYuan": 2.184398080000006,
+        "latencyMs": 742.9606999999999,
+        "timestamp": "2026-10-13T17:44:46.940Z"
+      }
+    },
+    "c57eea4c-d584-4788-a4ed-3326d2e3d0f6": {
+      "card": "T91",
+      "label": "content-baishi-dock-npc_bs_001_3-review0",
+      "requestHash": "d966d4309ac79be28df827b6cf840c00294d156d2fc7571fe58c570942555e5f",
+      "reservedYuan": 0.062566,
+      "status": "settled",
+      "responseEvidence": {
+        "file": "budget-responses/c57eea4c-d584-4788-a4ed-3326d2e3d0f6.json",
+        "requestHash": "d966d4309ac79be28df827b6cf840c00294d156d2fc7571fe58c570942555e5f",
+        "responseHash": "73e594f82373cc8734ca81a254e0fd6fb7e0c7e682bd8e625c1824bec5ea4120"
+      },
+      "costUpperYuan": 0.012805120000000001,
+      "measurement": {
+        "label": "content-baishi-dock-npc_bs_001_3-review0",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 6500,
+          "completion_tokens": 7,
+          "total_tokens": 6507,
+          "prompt_tokens_details": {
+            "cached_tokens": 128
+          },
+          "prompt_cache_hit_tokens": 128,
+          "prompt_cache_miss_tokens": 6372
+        },
+        "costUpperYuan": 0.012805120000000001,
+        "cumulativeUpperYuan": 2.197203200000006,
+        "latencyMs": 1091.2899,
+        "timestamp": "2026-10-13T17:44:48.054Z"
+      }
+    },
+    "962031bb-d3b7-45be-8a29-ef4c471ff383": {
+      "card": "T91",
+      "label": "content-baishi-dock-npc_bs_016_2-review0",
+      "requestHash": "0f8382a8ec8927141113a74c4b64537b5342f185be342105a79b2c81e659c109",
+      "reservedYuan": 0.062412,
+      "status": "settled",
+      "responseEvidence": {
+        "file": "budget-responses/962031bb-d3b7-45be-8a29-ef4c471ff383.json",
+        "requestHash": "0f8382a8ec8927141113a74c4b64537b5342f185be342105a79b2c81e659c109",
+        "responseHash": "d71eba726982b0408dabae73b4a19c55ccda21a6ae868bfb9fab0d277a5c5df6"
+      },
+      "costUpperYuan": 0.012725120000000001,
+      "measurement": {
+        "label": "content-baishi-dock-npc_bs_016_2-review0",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 6460,
+          "completion_tokens": 7,
+          "total_tokens": 6467,
+          "prompt_tokens_details": {
+            "cached_tokens": 128
+          },
+          "prompt_cache_hit_tokens": 128,
+          "prompt_cache_miss_tokens": 6332
+        },
+        "costUpperYuan": 0.012725120000000001,
+        "cumulativeUpperYuan": 2.2099283200000057,
+        "latencyMs": 1031.9207999999999,
+        "timestamp": "2026-10-13T17:44:49.109Z"
+      }
+    },
+    "0b51a0fc-c0c5-4be8-b46b-988fbca64950": {
+      "card": "T91",
+      "label": "content-baishi-dock-npc_bs_001_4-review0",
+      "requestHash": "18bfecc27c6b73392cfdc5aa6317090861140f611cc3ea631505bb6284417551",
+      "reservedYuan": 0.06352,
+      "status": "settled",
+      "responseEvidence": {
+        "file": "budget-responses/0b51a0fc-c0c5-4be8-b46b-988fbca64950.json",
+        "requestHash": "18bfecc27c6b73392cfdc5aa6317090861140f611cc3ea631505bb6284417551",
+        "responseHash": "ac346d952fb1cb59cfb4d5f9a4d30c5a0358a85b0e8747852c70823fa15fb652"
+      },
+      "costUpperYuan": 0.01307112,
+      "measurement": {
+        "label": "content-baishi-dock-npc_bs_001_4-review0",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 6633,
+          "completion_tokens": 7,
+          "total_tokens": 6640,
+          "prompt_tokens_details": {
+            "cached_tokens": 128
+          },
+          "prompt_cache_hit_tokens": 128,
+          "prompt_cache_miss_tokens": 6505
+        },
+        "costUpperYuan": 0.01307112,
+        "cumulativeUpperYuan": 2.222999440000006,
+        "latencyMs": 843.0587999999998,
+        "timestamp": "2026-10-13T17:44:49.974Z"
+      }
+    },
+    "63bea5c4-f8d9-41af-868c-75dc72f6b06e": {
+      "card": "T91",
+      "label": "content-baishi-dock-npc_bs_017_1-review0",
+      "requestHash": "3ffbdf9a63241b28b7f5a55de63b90910901981e96343d94f348fd24e98dae87",
+      "reservedYuan": 0.062508,
+      "status": "settled",
+      "responseEvidence": {
+        "file": "budget-responses/63bea5c4-f8d9-41af-868c-75dc72f6b06e.json",
+        "requestHash": "3ffbdf9a63241b28b7f5a55de63b90910901981e96343d94f348fd24e98dae87",
+        "responseHash": "95602a3e0c899a0e75d7496481bef156234a7794c2d017a6f86ff106a577fb3c"
+      },
+      "costUpperYuan": 0.01275912,
+      "measurement": {
+        "label": "content-baishi-dock-npc_bs_017_1-review0",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 6477,
+          "completion_tokens": 7,
+          "total_tokens": 6484,
+          "prompt_tokens_details": {
+            "cached_tokens": 128
+          },
+          "prompt_cache_hit_tokens": 128,
+          "prompt_cache_miss_tokens": 6349
+        },
+        "costUpperYuan": 0.01275912,
+        "cumulativeUpperYuan": 2.235758560000006,
+        "latencyMs": 1244.0706,
+        "timestamp": "2026-10-13T17:44:51.240Z"
+      }
+    },
+    "93eaa3b3-d837-4df9-a00a-7b864aa937fe": {
+      "card": "T91",
+      "label": "content-baishi-dock-npc_bs_002_1-review0",
+      "requestHash": "8ca70bbc68e2a5f3c8779ab40abb53dfb899ffccf54c1ce66b661c3961d93348",
+      "reservedYuan": 0.06317,
+      "status": "settled",
+      "responseEvidence": {
+        "file": "budget-responses/93eaa3b3-d837-4df9-a00a-7b864aa937fe.json",
+        "requestHash": "8ca70bbc68e2a5f3c8779ab40abb53dfb899ffccf54c1ce66b661c3961d93348",
+        "responseHash": "d33b1ea015baee9c10545b69e3c8360ad3239a30a75d07c481e9fb089c03ec69"
+      },
+      "costUpperYuan": 0.013091120000000001,
+      "measurement": {
+        "label": "content-baishi-dock-npc_bs_002_1-review0",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 6643,
+          "completion_tokens": 7,
+          "total_tokens": 6650,
+          "prompt_tokens_details": {
+            "cached_tokens": 128
+          },
+          "prompt_cache_hit_tokens": 128,
+          "prompt_cache_miss_tokens": 6515
+        },
+        "costUpperYuan": 0.013091120000000001,
+        "cumulativeUpperYuan": 2.248849680000006,
+        "latencyMs": 1255.6407,
+        "timestamp": "2026-10-13T17:44:52.524Z"
+      }
+    },
+    "c65dfd0b-061b-4a76-a60c-a9e55c3bd927": {
+      "card": "T91",
+      "label": "content-baishi-dock-npc_bs_017_2-review0",
+      "requestHash": "5de2c6194b3acfa5208e55a83f51477f9a11bf449054907637ebd689fb5fff07",
+      "reservedYuan": 0.063686,
+      "status": "settled",
+      "responseEvidence": {
+        "file": "budget-responses/c65dfd0b-061b-4a76-a60c-a9e55c3bd927.json",
+        "requestHash": "5de2c6194b3acfa5208e55a83f51477f9a11bf449054907637ebd689fb5fff07",
+        "responseHash": "319f3a7ca716f3d2eeb65c1ad70a7ebbd29e35b13b3551fdc31db38c6a742ebd"
+      },
+      "costUpperYuan": 0.01316512,
+      "measurement": {
+        "label": "content-baishi-dock-npc_bs_017_2-review0",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 6680,
+          "completion_tokens": 7,
+          "total_tokens": 6687,
+          "prompt_tokens_details": {
+            "cached_tokens": 128
+          },
+          "prompt_cache_hit_tokens": 128,
+          "prompt_cache_miss_tokens": 6552
+        },
+        "costUpperYuan": 0.01316512,
+        "cumulativeUpperYuan": 2.262014800000006,
+        "latencyMs": 583.7066999999997,
+        "timestamp": "2026-10-13T17:44:53.132Z"
+      }
+    },
+    "3b39dc87-6a7c-4d13-8860-c23e79b6101a": {
+      "card": "T91",
+      "label": "content-baishi-dock-npc_bs_002_2-review0",
+      "requestHash": "f696e756e4574e5f87d2fe9d3de8d342294225b8ef41747842d61f79ac3f0db8",
+      "reservedYuan": 0.063702,
+      "status": "settled",
+      "responseEvidence": {
+        "file": "budget-responses/3b39dc87-6a7c-4d13-8860-c23e79b6101a.json",
+        "requestHash": "f696e756e4574e5f87d2fe9d3de8d342294225b8ef41747842d61f79ac3f0db8",
+        "responseHash": "75364d703f7df3aa790c8186b9b0bfa946fe492b2111893aa91e96ef43a7b033"
+      },
+      "costUpperYuan": 0.013159120000000002,
+      "measurement": {
+        "label": "content-baishi-dock-npc_bs_002_2-review0",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 6677,
+          "completion_tokens": 7,
+          "total_tokens": 6684,
+          "prompt_tokens_details": {
+            "cached_tokens": 128
+          },
+          "prompt_cache_hit_tokens": 128,
+          "prompt_cache_miss_tokens": 6549
+        },
+        "costUpperYuan": 0.013159120000000002,
+        "cumulativeUpperYuan": 2.275173920000006,
+        "latencyMs": 1264.2672000000002,
+        "timestamp": "2026-10-13T17:44:54.419Z"
+      }
+    },
+    "7540e3a9-445c-4b62-8d60-8dd3f7696bb1": {
+      "card": "T91",
+      "label": "content-baishi-dock-npc_bs_018_1-review0",
+      "requestHash": "b6df13be6a8cf3be48181a82c817302fccb8e33b12426007111f41db5dc9a3ed",
+      "reservedYuan": 0.063236,
+      "status": "settled",
+      "responseEvidence": {
+        "file": "budget-responses/7540e3a9-445c-4b62-8d60-8dd3f7696bb1.json",
+        "requestHash": "b6df13be6a8cf3be48181a82c817302fccb8e33b12426007111f41db5dc9a3ed",
+        "responseHash": "742d5b2856057f4a4864ade58f3a71c09a266e1dbc333f1a6471867dc4a5bc23"
+      },
+      "costUpperYuan": 0.01293912,
+      "measurement": {
+        "label": "content-baishi-dock-npc_bs_018_1-review0",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 6567,
+          "completion_tokens": 7,
+          "total_tokens": 6574,
+          "prompt_tokens_details": {
+            "cached_tokens": 128
+          },
+          "prompt_cache_hit_tokens": 128,
+          "prompt_cache_miss_tokens": 6439
+        },
+        "costUpperYuan": 0.01293912,
+        "cumulativeUpperYuan": 2.288113040000006,
+        "latencyMs": 701.0553999999993,
+        "timestamp": "2026-10-13T17:44:55.144Z"
+      }
+    },
+    "83139333-3330-45cb-8c85-dd062d301e30": {
+      "card": "T91",
+      "label": "content-baishi-dock-npc_bs_002_3-review0",
+      "requestHash": "e41d5b3466ab3ec26a51c7a6156d0983d7965a6b49bd3a4a9d396c031f63b352",
+      "reservedYuan": 0.063566,
+      "status": "settled",
+      "responseEvidence": {
+        "file": "budget-responses/83139333-3330-45cb-8c85-dd062d301e30.json",
+        "requestHash": "e41d5b3466ab3ec26a51c7a6156d0983d7965a6b49bd3a4a9d396c031f63b352",
+        "responseHash": "cba54029640d5dfa6f205935ff8a600d48716391721ae7040e81f96c19853ee9"
+      },
+      "costUpperYuan": 0.013081120000000002,
+      "measurement": {
+        "label": "content-baishi-dock-npc_bs_002_3-review0",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 6638,
+          "completion_tokens": 7,
+          "total_tokens": 6645,
+          "prompt_tokens_details": {
+            "cached_tokens": 128
+          },
+          "prompt_cache_hit_tokens": 128,
+          "prompt_cache_miss_tokens": 6510
+        },
+        "costUpperYuan": 0.013081120000000002,
+        "cumulativeUpperYuan": 2.301194160000006,
+        "latencyMs": 1141.3909999999996,
+        "timestamp": "2026-10-13T17:44:56.310Z"
+      }
+    },
+    "d7ca3484-ee91-4365-b68d-e55ba97ae946": {
+      "card": "T91",
+      "label": "content-baishi-dock-npc_bs_018_2-review0",
+      "requestHash": "717f533b8f2311fb86c1d72220af760c08e1c54a969c5f0b6c3c53529ccfb353",
+      "reservedYuan": 0.062262,
+      "status": "settled",
+      "responseEvidence": {
+        "file": "budget-responses/d7ca3484-ee91-4365-b68d-e55ba97ae946.json",
+        "requestHash": "717f533b8f2311fb86c1d72220af760c08e1c54a969c5f0b6c3c53529ccfb353",
+        "responseHash": "98cc9efa3164946373ff9690865206cad7e6239ba1af31308e632b97afc7e8e1"
+      },
+      "costUpperYuan": 0.01273112,
+      "measurement": {
+        "label": "content-baishi-dock-npc_bs_018_2-review0",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 6463,
+          "completion_tokens": 7,
+          "total_tokens": 6470,
+          "prompt_tokens_details": {
+            "cached_tokens": 128
+          },
+          "prompt_cache_hit_tokens": 128,
+          "prompt_cache_miss_tokens": 6335
+        },
+        "costUpperYuan": 0.01273112,
+        "cumulativeUpperYuan": 2.313925280000006,
+        "latencyMs": 1347.5321000000004,
+        "timestamp": "2026-10-13T17:44:57.679Z"
+      }
+    },
+    "fe22638f-934e-4569-9685-bd363ac9757d": {
+      "card": "T91",
+      "label": "content-baishi-dock-npc_bs_003_1-review0",
+      "requestHash": "8549c05739558c080742dfc3dec2689539f216d7b7f3babe497022ce4b10c1e6",
+      "reservedYuan": 0.06372,
+      "status": "settled",
+      "responseEvidence": {
+        "file": "budget-responses/fe22638f-934e-4569-9685-bd363ac9757d.json",
+        "requestHash": "8549c05739558c080742dfc3dec2689539f216d7b7f3babe497022ce4b10c1e6",
+        "responseHash": "2ce017f85ccab433e1491ab1dc9001a6f14f990a090a702ccff3709b0e3a1737"
+      },
+      "costUpperYuan": 0.01316512,
+      "measurement": {
+        "label": "content-baishi-dock-npc_bs_003_1-review0",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 6680,
+          "completion_tokens": 7,
+          "total_tokens": 6687,
+          "prompt_tokens_details": {
+            "cached_tokens": 128
+          },
+          "prompt_cache_hit_tokens": 128,
+          "prompt_cache_miss_tokens": 6552
+        },
+        "costUpperYuan": 0.01316512,
+        "cumulativeUpperYuan": 2.327090400000006,
+        "latencyMs": 958.8310000000001,
+        "timestamp": "2026-10-13T17:44:58.662Z"
+      }
+    },
+    "9ae105cd-380f-4fe8-a1a1-98239aede1e6": {
+      "card": "T91",
+      "label": "content-baishi-dock-npc_bs_019_1-review0",
+      "requestHash": "2dc31799f785713307d7fc9a4d2431a2dd64f7d053c35a8e345c96742c69a0eb",
+      "reservedYuan": 0.063404,
+      "status": "settled",
+      "responseEvidence": {
+        "file": "budget-responses/9ae105cd-380f-4fe8-a1a1-98239aede1e6.json",
+        "requestHash": "2dc31799f785713307d7fc9a4d2431a2dd64f7d053c35a8e345c96742c69a0eb",
+        "responseHash": "ecf271f0ae81682c85c5e97f1546c4a4460ba1c14c2dc73b38b36713dedb1149"
+      },
+      "costUpperYuan": 0.013025120000000001,
+      "measurement": {
+        "label": "content-baishi-dock-npc_bs_019_1-review0",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 6610,
+          "completion_tokens": 7,
+          "total_tokens": 6617,
+          "prompt_tokens_details": {
+            "cached_tokens": 128
+          },
+          "prompt_cache_hit_tokens": 128,
+          "prompt_cache_miss_tokens": 6482
+        },
+        "costUpperYuan": 0.013025120000000001,
+        "cumulativeUpperYuan": 2.340115520000006,
+        "latencyMs": 852.2026999999998,
+        "timestamp": "2026-10-13T17:44:59.537Z"
+      }
+    },
+    "c7b2f40c-d48a-4dcc-8a10-7fae4bb1da82": {
+      "card": "T91",
+      "label": "content-baishi-dock-npc_bs_003_2-review0",
+      "requestHash": "8c336bbf9c498da967ee4a099ec7a9edaecdd4b857078bc2b34f9caa46db5834",
+      "reservedYuan": 0.063584,
+      "status": "settled",
+      "responseEvidence": {
+        "file": "budget-responses/c7b2f40c-d48a-4dcc-8a10-7fae4bb1da82.json",
+        "requestHash": "8c336bbf9c498da967ee4a099ec7a9edaecdd4b857078bc2b34f9caa46db5834",
+        "responseHash": "e734eb3946722f863223b617fc1ad20ec8157e9c9f750d2727dd505890af7113"
+      },
+      "costUpperYuan": 0.01312312,
+      "measurement": {
+        "label": "content-baishi-dock-npc_bs_003_2-review0",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 6659,
+          "completion_tokens": 7,
+          "total_tokens": 6666,
+          "prompt_tokens_details": {
+            "cached_tokens": 128
+          },
+          "prompt_cache_hit_tokens": 128,
+          "prompt_cache_miss_tokens": 6531
+        },
+        "costUpperYuan": 0.01312312,
+        "cumulativeUpperYuan": 2.353238640000006,
+        "latencyMs": 1299.296400000001,
+        "timestamp": "2026-10-13T17:45:00.861Z"
+      }
+    },
+    "4f2e3e2e-871b-4be8-8c22-14fce48b5965": {
+      "card": "T91",
+      "label": "content-baishi-dock-npc_bs_019_2-review0",
+      "requestHash": "7666a060e80706bf7e8a1d3d049f7b86c32bb84c30365c45a5ef98694976f288",
+      "reservedYuan": 0.063134,
+      "status": "settled",
+      "responseEvidence": {
+        "file": "budget-responses/4f2e3e2e-871b-4be8-8c22-14fce48b5965.json",
+        "requestHash": "7666a060e80706bf7e8a1d3d049f7b86c32bb84c30365c45a5ef98694976f288",
+        "responseHash": "8f3b0ebe1daa78352503acd8f0389a1775a265cf61f8938723b135f2065105c0"
+      },
+      "costUpperYuan": 0.01295712,
+      "measurement": {
+        "label": "content-baishi-dock-npc_bs_019_2-review0",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 6576,
+          "completion_tokens": 7,
+          "total_tokens": 6583,
+          "prompt_tokens_details": {
+            "cached_tokens": 128
+          },
+          "prompt_cache_hit_tokens": 128,
+          "prompt_cache_miss_tokens": 6448
+        },
+        "costUpperYuan": 0.01295712,
+        "cumulativeUpperYuan": 2.366195760000006,
+        "latencyMs": 927.8439000000017,
+        "timestamp": "2026-10-13T17:45:01.815Z"
+      }
+    },
+    "8a097fe6-e60c-4970-8ee9-180a22236046": {
+      "card": "T91",
+      "label": "content-baishi-dock-npc_bs_003_3-review0",
+      "requestHash": "719bcf69d9ec679447fd422db7f3415ec604d9bf3d47fcac1613a1a96c6b0f6f",
+      "reservedYuan": 0.06316,
+      "status": "settled",
+      "responseEvidence": {
+        "file": "budget-responses/8a097fe6-e60c-4970-8ee9-180a22236046.json",
+        "requestHash": "719bcf69d9ec679447fd422db7f3415ec604d9bf3d47fcac1613a1a96c6b0f6f",
+        "responseHash": "27a5262f85f3fee83a3a8f903b468dd31e331ab36f36c048674d1009573b1c07"
+      },
+      "costUpperYuan": 0.01295112,
+      "measurement": {
+        "label": "content-baishi-dock-npc_bs_003_3-review0",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 6573,
+          "completion_tokens": 7,
+          "total_tokens": 6580,
+          "prompt_tokens_details": {
+            "cached_tokens": 128
+          },
+          "prompt_cache_hit_tokens": 128,
+          "prompt_cache_miss_tokens": 6445
+        },
+        "costUpperYuan": 0.01295112,
+        "cumulativeUpperYuan": 2.3791468800000057,
+        "latencyMs": 1002.6908000000003,
+        "timestamp": "2026-10-13T17:45:02.842Z"
+      }
+    },
+    "80423f6e-cbe7-40be-8966-15c840342647": {
+      "card": "T91",
+      "label": "content-baishi-dock-npc_bs_020_1-review0",
+      "requestHash": "1f92d66956414525a9ec0e417618d9295755ab5bf5b2e54698f9ee65a046936e",
+      "reservedYuan": 0.063166,
+      "status": "settled",
+      "responseEvidence": {
+        "file": "budget-responses/80423f6e-cbe7-40be-8966-15c840342647.json",
+        "requestHash": "1f92d66956414525a9ec0e417618d9295755ab5bf5b2e54698f9ee65a046936e",
+        "responseHash": "49a25d24644f86baf37be77d600aa55f7040aecf4163a211845a43e64d23bd96"
+      },
+      "costUpperYuan": 0.01300912,
+      "measurement": {
+        "label": "content-baishi-dock-npc_bs_020_1-review0",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 6602,
+          "completion_tokens": 7,
+          "total_tokens": 6609,
+          "prompt_tokens_details": {
+            "cached_tokens": 128
+          },
+          "prompt_cache_hit_tokens": 128,
+          "prompt_cache_miss_tokens": 6474
+        },
+        "costUpperYuan": 0.01300912,
+        "cumulativeUpperYuan": 2.3921560000000057,
+        "latencyMs": 1039.3027999999977,
+        "timestamp": "2026-10-13T17:45:03.908Z"
+      }
+    },
+    "8e084bd3-65c7-4918-a87c-bbcef68429c0": {
+      "card": "T91",
+      "label": "content-baishi-dock-npc_bs_004_1-review0",
+      "requestHash": "a7c55eb05939b179fea4be707c9c9f0b55cedcc8abc6e4112baeccbedd410e60",
+      "reservedYuan": 0.063886,
+      "status": "settled",
+      "responseEvidence": {
+        "file": "budget-responses/8e084bd3-65c7-4918-a87c-bbcef68429c0.json",
+        "requestHash": "a7c55eb05939b179fea4be707c9c9f0b55cedcc8abc6e4112baeccbedd410e60",
+        "responseHash": "a7294b1d5c7922f81b38c111392dbf960c6f0e2432cbfbe3db5c42864299bb85"
+      },
+      "costUpperYuan": 0.013249120000000001,
+      "measurement": {
+        "label": "content-baishi-dock-npc_bs_004_1-review0",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 6722,
+          "completion_tokens": 7,
+          "total_tokens": 6729,
+          "prompt_tokens_details": {
+            "cached_tokens": 128
+          },
+          "prompt_cache_hit_tokens": 128,
+          "prompt_cache_miss_tokens": 6594
+        },
+        "costUpperYuan": 0.013249120000000001,
+        "cumulativeUpperYuan": 2.4054051200000055,
+        "latencyMs": 983.4126999999971,
+        "timestamp": "2026-10-13T17:45:04.922Z"
+      }
+    },
+    "5eba17de-0123-430a-92e1-8b60e452bce7": {
+      "card": "T91",
+      "label": "content-baishi-dock-npc_bs_020_2-review0",
+      "requestHash": "b2b30ae84ec291a6b2579257bf7213cd263a5b0bb3520ee1b0372288e5d9d694",
+      "reservedYuan": 0.062468,
+      "status": "settled",
+      "responseEvidence": {
+        "file": "budget-responses/5eba17de-0123-430a-92e1-8b60e452bce7.json",
+        "requestHash": "b2b30ae84ec291a6b2579257bf7213cd263a5b0bb3520ee1b0372288e5d9d694",
+        "responseHash": "09dc76d0d33fd5f9b58af13661efa8315c99b88aab378f1d1d60cd8ffa08e102"
+      },
+      "costUpperYuan": 0.01284712,
+      "measurement": {
+        "label": "content-baishi-dock-npc_bs_020_2-review0",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 6521,
+          "completion_tokens": 7,
+          "total_tokens": 6528,
+          "prompt_tokens_details": {
+            "cached_tokens": 128
+          },
+          "prompt_cache_hit_tokens": 128,
+          "prompt_cache_miss_tokens": 6393
+        },
+        "costUpperYuan": 0.01284712,
+        "cumulativeUpperYuan": 2.4182522400000055,
+        "latencyMs": 861.9959999999992,
+        "timestamp": "2026-10-13T17:45:05.810Z"
+      }
+    },
+    "f48f63f3-f11d-480c-9c1f-26d34afdc980": {
+      "card": "T91",
+      "label": "content-baishi-dock-npc_bs_004_2-review0",
+      "requestHash": "8166aa85f3c9af6cae60d09e9841018a50346022a3d79682e7d7c0424a255693",
+      "reservedYuan": 0.063458,
+      "status": "settled",
+      "responseEvidence": {
+        "file": "budget-responses/f48f63f3-f11d-480c-9c1f-26d34afdc980.json",
+        "requestHash": "8166aa85f3c9af6cae60d09e9841018a50346022a3d79682e7d7c0424a255693",
+        "responseHash": "1ab4e81ddabc5a9ab97847da54b039fa797979ceed4300b55d6053c577ea5e17"
+      },
+      "costUpperYuan": 0.013103120000000001,
+      "measurement": {
+        "label": "content-baishi-dock-npc_bs_004_2-review0",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 6649,
+          "completion_tokens": 7,
+          "total_tokens": 6656,
+          "prompt_tokens_details": {
+            "cached_tokens": 128
+          },
+          "prompt_cache_hit_tokens": 128,
+          "prompt_cache_miss_tokens": 6521
+        },
+        "costUpperYuan": 0.013103120000000001,
+        "cumulativeUpperYuan": 2.4313553600000053,
+        "latencyMs": 1135.0466000000015,
+        "timestamp": "2026-10-13T17:45:06.970Z"
+      }
+    },
+    "d43f938f-4a82-4dce-8657-7d01957f174f": {
+      "card": "T91",
+      "label": "content-baishi-dock-npc_bs_021_1-review0",
+      "requestHash": "6f88028ad0ed0e774220fcf06d48e81575e99a35255e44bac2f43f927c1a20ab",
+      "reservedYuan": 0.063122,
+      "status": "settled",
+      "responseEvidence": {
+        "file": "budget-responses/d43f938f-4a82-4dce-8657-7d01957f174f.json",
+        "requestHash": "6f88028ad0ed0e774220fcf06d48e81575e99a35255e44bac2f43f927c1a20ab",
+        "responseHash": "be80450c81895bb2f2cc156aadcc130c5eaa954ec91433a35a013ad8a51a55e7"
+      },
+      "costUpperYuan": 0.01301912,
+      "measurement": {
+        "label": "content-baishi-dock-npc_bs_021_1-review0",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 6607,
+          "completion_tokens": 7,
+          "total_tokens": 6614,
+          "prompt_tokens_details": {
+            "cached_tokens": 128
+          },
+          "prompt_cache_hit_tokens": 128,
+          "prompt_cache_miss_tokens": 6479
+        },
+        "costUpperYuan": 0.01301912,
+        "cumulativeUpperYuan": 2.4443744800000053,
+        "latencyMs": 1327.8192999999992,
+        "timestamp": "2026-10-13T17:45:08.322Z"
+      }
+    },
+    "df7d821d-368d-400e-8fd6-189ebcedf9bd": {
+      "card": "T91",
+      "label": "content-baishi-dock-npc_bs_004_3-review0",
+      "requestHash": "9daff5ed59b8776afcde88cbd465478629c982f35ef3593654580b6d1bcbaf8a",
+      "reservedYuan": 0.062372,
+      "status": "settled",
+      "responseEvidence": {
+        "file": "budget-responses/df7d821d-368d-400e-8fd6-189ebcedf9bd.json",
+        "requestHash": "9daff5ed59b8776afcde88cbd465478629c982f35ef3593654580b6d1bcbaf8a",
+        "responseHash": "9e1b4d816316bb7397eeefd7e81901d1ffef08f86939ab0fea261baf40dcdad6"
+      },
+      "costUpperYuan": 0.012685120000000001,
+      "measurement": {
+        "label": "content-baishi-dock-npc_bs_004_3-review0",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 6440,
+          "completion_tokens": 7,
+          "total_tokens": 6447,
+          "prompt_tokens_details": {
+            "cached_tokens": 128
+          },
+          "prompt_cache_hit_tokens": 128,
+          "prompt_cache_miss_tokens": 6312
+        },
+        "costUpperYuan": 0.012685120000000001,
+        "cumulativeUpperYuan": 2.4570596000000053,
+        "latencyMs": 929.4470999999976,
+        "timestamp": "2026-10-13T17:45:09.283Z"
+      }
+    },
+    "83ab7e49-8d9c-421f-9f3c-7e180e3400c7": {
+      "card": "T91",
+      "label": "content-baishi-dock-npc_bs_021_2-review0",
+      "requestHash": "53ac939077424bfe24a71e99bb3370ec0cc041e66c61897aff2c99a2f0c525d8",
+      "reservedYuan": 0.063646,
+      "status": "settled",
+      "responseEvidence": {
+        "file": "budget-responses/83ab7e49-8d9c-421f-9f3c-7e180e3400c7.json",
+        "requestHash": "53ac939077424bfe24a71e99bb3370ec0cc041e66c61897aff2c99a2f0c525d8",
+        "responseHash": "ddc1f45d1246bae807f99b44b82e21ebf116a9a55b6dead12fa7bce568e989ac"
+      },
+      "costUpperYuan": 0.01300912,
+      "measurement": {
+        "label": "content-baishi-dock-npc_bs_021_2-review0",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 6602,
+          "completion_tokens": 7,
+          "total_tokens": 6609,
+          "prompt_tokens_details": {
+            "cached_tokens": 128
+          },
+          "prompt_cache_hit_tokens": 128,
+          "prompt_cache_miss_tokens": 6474
+        },
+        "costUpperYuan": 0.01300912,
+        "cumulativeUpperYuan": 2.4700687200000053,
+        "latencyMs": 1112.4169000000002,
+        "timestamp": "2026-10-13T17:45:10.421Z"
+      }
+    },
+    "34dc19b9-9bf4-4639-9602-47bb71ada471": {
+      "card": "T91",
+      "label": "content-baishi-dock-npc_bs_005_1-review0",
+      "requestHash": "46b1cdefe39ad30aa450150f6dd9efbaeea6a72f52cfca3509e076e11d7a44ea",
+      "reservedYuan": 0.06391,
+      "status": "settled",
+      "responseEvidence": {
+        "file": "budget-responses/34dc19b9-9bf4-4639-9602-47bb71ada471.json",
+        "requestHash": "46b1cdefe39ad30aa450150f6dd9efbaeea6a72f52cfca3509e076e11d7a44ea",
+        "responseHash": "7516450f41560120e3ff579180aea925cae266181e58a45189e5460dacb9038b"
+      },
+      "costUpperYuan": 0.01308712,
+      "measurement": {
+        "label": "content-baishi-dock-npc_bs_005_1-review0",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 6641,
+          "completion_tokens": 7,
+          "total_tokens": 6648,
+          "prompt_tokens_details": {
+            "cached_tokens": 128
+          },
+          "prompt_cache_hit_tokens": 128,
+          "prompt_cache_miss_tokens": 6513
+        },
+        "costUpperYuan": 0.01308712,
+        "cumulativeUpperYuan": 2.483155840000005,
+        "latencyMs": 1362.8309999999983,
+        "timestamp": "2026-10-13T17:45:11.808Z"
+      }
+    },
+    "18c4fa8d-1c93-4688-83b1-83619268c088": {
+      "card": "T91",
+      "label": "content-baishi-dock-npc_bs_022_1-review0",
+      "requestHash": "156a39a23fbee2336188e5d651960bfbf7897a67de4e5ea1cef92de6479a4125",
+      "reservedYuan": 0.06331,
+      "status": "settled",
+      "responseEvidence": {
+        "file": "budget-responses/18c4fa8d-1c93-4688-83b1-83619268c088.json",
+        "requestHash": "156a39a23fbee2336188e5d651960bfbf7897a67de4e5ea1cef92de6479a4125",
+        "responseHash": "d9c6129a79dee85a99eff9143604069d5a832b5ebddcc6e90f57b3be70b74374"
+      },
+      "costUpperYuan": 0.01307312,
+      "measurement": {
+        "label": "content-baishi-dock-npc_bs_022_1-review0",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 6634,
+          "completion_tokens": 7,
+          "total_tokens": 6641,
+          "prompt_tokens_details": {
+            "cached_tokens": 128
+          },
+          "prompt_cache_hit_tokens": 128,
+          "prompt_cache_miss_tokens": 6506
+        },
+        "costUpperYuan": 0.01307312,
+        "cumulativeUpperYuan": 2.496228960000005,
+        "latencyMs": 1041.1301999999996,
+        "timestamp": "2026-10-13T17:45:12.875Z"
+      }
+    },
+    "f10589e6-5ce5-4fac-971f-4d5ac840932e": {
+      "card": "T91",
+      "label": "content-baishi-dock-npc_bs_005_2-review0",
+      "requestHash": "c05b63a4aa04634af77ed4d0ea00ea3b3ca54617ffdab916ae01a8be7d82dd0e",
+      "reservedYuan": 0.063838,
+      "status": "settled",
+      "responseEvidence": {
+        "file": "budget-responses/f10589e6-5ce5-4fac-971f-4d5ac840932e.json",
+        "requestHash": "c05b63a4aa04634af77ed4d0ea00ea3b3ca54617ffdab916ae01a8be7d82dd0e",
+        "responseHash": "5148d926ce6099c9c4dbeb30358a0a438cafd6b8836d08524f86a4a004e439c5"
+      },
+      "costUpperYuan": 0.013093120000000001,
+      "measurement": {
+        "label": "content-baishi-dock-npc_bs_005_2-review0",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 6644,
+          "completion_tokens": 7,
+          "total_tokens": 6651,
+          "prompt_tokens_details": {
+            "cached_tokens": 128
+          },
+          "prompt_cache_hit_tokens": 128,
+          "prompt_cache_miss_tokens": 6516
+        },
+        "costUpperYuan": 0.013093120000000001,
+        "cumulativeUpperYuan": 2.5093220800000053,
+        "latencyMs": 813.0047000000013,
+        "timestamp": "2026-10-13T17:45:13.713Z"
+      }
+    },
+    "5fc30553-1a2a-429e-8ca1-8f4c4c4aacfa": {
+      "card": "T91",
+      "label": "content-baishi-dock-npc_bs_022_2-review0",
+      "requestHash": "e97790c6dab9c1578203c4fbcc9b68061f0642fd7dc118bd79ad5f19c230b681",
+      "reservedYuan": 0.063024,
+      "status": "settled",
+      "responseEvidence": {
+        "file": "budget-responses/5fc30553-1a2a-429e-8ca1-8f4c4c4aacfa.json",
+        "requestHash": "e97790c6dab9c1578203c4fbcc9b68061f0642fd7dc118bd79ad5f19c230b681",
+        "responseHash": "ed6d1a55aa3d7d529751854e8a77f15bd148ec3a05899dd1d304ff53c619abea"
+      },
+      "costUpperYuan": 0.013041120000000002,
+      "measurement": {
+        "label": "content-baishi-dock-npc_bs_022_2-review0",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 6618,
+          "completion_tokens": 7,
+          "total_tokens": 6625,
+          "prompt_tokens_details": {
+            "cached_tokens": 128
+          },
+          "prompt_cache_hit_tokens": 128,
+          "prompt_cache_miss_tokens": 6490
+        },
+        "costUpperYuan": 0.013041120000000002,
+        "cumulativeUpperYuan": 2.5223632000000054,
+        "latencyMs": 1040.745799999997,
+        "timestamp": "2026-10-13T17:45:14.777Z"
+      }
+    },
+    "1bd75b89-bc2d-41c6-a1a2-5283ac107639": {
+      "card": "T91",
+      "label": "content-baishi-dock-npc_bs_005_3-review0",
+      "requestHash": "11e160046a8da9ba8be4e591bde4cf3451602c8ffc34a67bb26d2d6b79ae4fa0",
+      "reservedYuan": 0.063202,
+      "status": "settled",
+      "responseEvidence": {
+        "file": "budget-responses/1bd75b89-bc2d-41c6-a1a2-5283ac107639.json",
+        "requestHash": "11e160046a8da9ba8be4e591bde4cf3451602c8ffc34a67bb26d2d6b79ae4fa0",
+        "responseHash": "01c6e002f46b83c06d2c4953b69531304f96742d64e423096f01b215b5c47dab"
+      },
+      "costUpperYuan": 0.01304312,
+      "measurement": {
+        "label": "content-baishi-dock-npc_bs_005_3-review0",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 6619,
+          "completion_tokens": 7,
+          "total_tokens": 6626,
+          "prompt_tokens_details": {
+            "cached_tokens": 128
+          },
+          "prompt_cache_hit_tokens": 128,
+          "prompt_cache_miss_tokens": 6491
+        },
+        "costUpperYuan": 0.01304312,
+        "cumulativeUpperYuan": 2.535406320000005,
+        "latencyMs": 958.6186999999991,
+        "timestamp": "2026-10-13T17:45:15.762Z"
+      }
+    },
+    "5664ebbf-6208-4efd-b722-80ebfd584233": {
+      "card": "T91",
+      "label": "content-baishi-dock-npc_bs_023_1-review0",
+      "requestHash": "6353157945d2df6ab1b050453c109a4f39fab5dca309571236c9feae6cb6edf1",
+      "reservedYuan": 0.063348,
+      "status": "settled",
+      "responseEvidence": {
+        "file": "budget-responses/5664ebbf-6208-4efd-b722-80ebfd584233.json",
+        "requestHash": "6353157945d2df6ab1b050453c109a4f39fab5dca309571236c9feae6cb6edf1",
+        "responseHash": "f43f897d45a2b73ff0676d4d45c178ea89473775580b95090aeb684ba87f5599"
+      },
+      "costUpperYuan": 0.01307512,
+      "measurement": {
+        "label": "content-baishi-dock-npc_bs_023_1-review0",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 6635,
+          "completion_tokens": 7,
+          "total_tokens": 6642,
+          "prompt_tokens_details": {
+            "cached_tokens": 128
+          },
+          "prompt_cache_hit_tokens": 128,
+          "prompt_cache_miss_tokens": 6507
+        },
+        "costUpperYuan": 0.01307512,
+        "cumulativeUpperYuan": 2.548481440000005,
+        "latencyMs": 899.8826000000008,
+        "timestamp": "2026-10-13T17:45:16.686Z"
+      }
+    },
+    "b55bac02-63d2-48a9-aeea-dfadcd228320": {
+      "card": "T91",
+      "label": "content-baishi-dock-npc_bs_006_1-review0",
+      "requestHash": "8aa84f94e9a64f35c18b662132c1e151196d5d3c09448b1f9fd57ed4a71dcb99",
+      "reservedYuan": 0.0642,
+      "status": "settled",
+      "responseEvidence": {
+        "file": "budget-responses/b55bac02-63d2-48a9-aeea-dfadcd228320.json",
+        "requestHash": "8aa84f94e9a64f35c18b662132c1e151196d5d3c09448b1f9fd57ed4a71dcb99",
+        "responseHash": "59e4e94434a690fbf0c09005e576b19ef6720aeca501b8b5a658944e6ac4bfc4"
+      },
+      "costUpperYuan": 0.01318912,
+      "measurement": {
+        "label": "content-baishi-dock-npc_bs_006_1-review0",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 6692,
+          "completion_tokens": 7,
+          "total_tokens": 6699,
+          "prompt_tokens_details": {
+            "cached_tokens": 128
+          },
+          "prompt_cache_hit_tokens": 128,
+          "prompt_cache_miss_tokens": 6564
+        },
+        "costUpperYuan": 0.01318912,
+        "cumulativeUpperYuan": 2.561670560000005,
+        "latencyMs": 914.7937999999995,
+        "timestamp": "2026-10-13T17:45:17.626Z"
+      }
+    },
+    "af2e3016-9e74-4d86-852c-7279c63952da": {
+      "card": "T91",
+      "label": "content-baishi-dock-npc_bs_023_2-review0",
+      "requestHash": "3bdc0e5fd2d413f39c43cb1b94beb265f05642a6996850da5a3be8e85a140cf3",
+      "reservedYuan": 0.06393,
+      "status": "settled",
+      "responseEvidence": {
+        "file": "budget-responses/af2e3016-9e74-4d86-852c-7279c63952da.json",
+        "requestHash": "3bdc0e5fd2d413f39c43cb1b94beb265f05642a6996850da5a3be8e85a140cf3",
+        "responseHash": "e54f845b8470c071fdcca95035e24c31b6ede976d3408736dd010296de4ac94d"
+      },
+      "costUpperYuan": 0.01304912,
+      "measurement": {
+        "label": "content-baishi-dock-npc_bs_023_2-review0",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 6622,
+          "completion_tokens": 7,
+          "total_tokens": 6629,
+          "prompt_tokens_details": {
+            "cached_tokens": 128
+          },
+          "prompt_cache_hit_tokens": 128,
+          "prompt_cache_miss_tokens": 6494
+        },
+        "costUpperYuan": 0.01304912,
+        "cumulativeUpperYuan": 2.5747196800000047,
+        "latencyMs": 972.8765999999996,
+        "timestamp": "2026-10-13T17:45:18.623Z"
+      }
+    },
+    "f95d29f7-57a6-4e11-a98b-955a97fe70f6": {
+      "card": "T91",
+      "label": "content-baishi-dock-npc_bs_006_2-review0",
+      "requestHash": "34f8b71fd9a6dde2edf17be7ffe60b2c5cf524aa06a8486dd4b65caca5a0c935",
+      "reservedYuan": 0.063398,
+      "status": "settled",
+      "responseEvidence": {
+        "file": "budget-responses/f95d29f7-57a6-4e11-a98b-955a97fe70f6.json",
+        "requestHash": "34f8b71fd9a6dde2edf17be7ffe60b2c5cf524aa06a8486dd4b65caca5a0c935",
+        "responseHash": "4270092a71bba77b1591d83a0bcf3924c2a97bf2c7bab372a035daeaa329ef63"
+      },
+      "costUpperYuan": 0.012885120000000002,
+      "measurement": {
+        "label": "content-baishi-dock-npc_bs_006_2-review0",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 6540,
+          "completion_tokens": 7,
+          "total_tokens": 6547,
+          "prompt_tokens_details": {
+            "cached_tokens": 128
+          },
+          "prompt_cache_hit_tokens": 128,
+          "prompt_cache_miss_tokens": 6412
+        },
+        "costUpperYuan": 0.012885120000000002,
+        "cumulativeUpperYuan": 2.5876048000000047,
+        "latencyMs": 908.5606999999945,
+        "timestamp": "2026-10-13T17:45:19.555Z"
+      }
+    },
+    "20c96310-ba11-4174-9b2e-cbfd1352e415": {
+      "card": "T91",
+      "label": "content-baishi-dock-npc_bs_001_2-review0",
+      "requestHash": "d9fbe278ff1d360ec1ae5f1c04e3acd6305b44e4439a71e7d2a1a43e44043fb3",
+      "reservedYuan": 0.063722,
+      "status": "settled",
+      "responseEvidence": {
+        "file": "budget-responses/20c96310-ba11-4174-9b2e-cbfd1352e415.json",
+        "requestHash": "d9fbe278ff1d360ec1ae5f1c04e3acd6305b44e4439a71e7d2a1a43e44043fb3",
+        "responseHash": "bf57f93915306789991552a42648230b42142b9dfd3cc4c574c564cc5880e201"
+      },
+      "costUpperYuan": 0.0119856,
+      "measurement": {
+        "label": "content-baishi-dock-npc_bs_001_2-review0",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 6592,
+          "completion_tokens": 7,
+          "total_tokens": 6599,
+          "prompt_tokens_details": {
+            "cached_tokens": 640
+          },
+          "prompt_cache_hit_tokens": 640,
+          "prompt_cache_miss_tokens": 5952
+        },
+        "costUpperYuan": 0.0119856,
+        "cumulativeUpperYuan": 2.5995904000000047,
+        "latencyMs": 1111.6001999999999,
+        "timestamp": "2026-10-13T17:46:47.618Z"
+      }
+    },
+    "b124f4ee-d4dd-4ce8-87dc-44688d0360fd": {
+      "card": "T91",
+      "label": "content-baishi-dock-npc_bs_001_3-review0",
+      "requestHash": "7887e0dd7e1155e21332df680485a0e6d3bacac02a2a9d89c510419bcf482717",
+      "reservedYuan": 0.062562,
+      "status": "settled",
+      "responseEvidence": {
+        "file": "budget-responses/b124f4ee-d4dd-4ce8-87dc-44688d0360fd.json",
+        "requestHash": "7887e0dd7e1155e21332df680485a0e6d3bacac02a2a9d89c510419bcf482717",
+        "responseHash": "dfa3f441c75e616765a45c10d6a0b6198212a2d2f107e96d6f6c4f9de88f1d64"
+      },
+      "costUpperYuan": 0.0118016,
+      "measurement": {
+        "label": "content-baishi-dock-npc_bs_001_3-review0",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 6500,
+          "completion_tokens": 7,
+          "total_tokens": 6507,
+          "prompt_tokens_details": {
+            "cached_tokens": 640
+          },
+          "prompt_cache_hit_tokens": 640,
+          "prompt_cache_miss_tokens": 5860
+        },
+        "costUpperYuan": 0.0118016,
+        "cumulativeUpperYuan": 2.611392000000005,
+        "latencyMs": 787.9572999999998,
+        "timestamp": "2026-10-13T17:46:48.431Z"
+      }
+    },
+    "b66fb970-632b-42de-a428-fbaf889da21e": {
+      "card": "T91",
+      "label": "content-baishi-dock-npc_bs_001_4-review0",
+      "requestHash": "0b874f66b9a41dd16f9ca643985b34b84822bd3af5dfdb952c2ff163b3ef9f6b",
+      "reservedYuan": 0.063516,
+      "status": "settled",
+      "responseEvidence": {
+        "file": "budget-responses/b66fb970-632b-42de-a428-fbaf889da21e.json",
+        "requestHash": "0b874f66b9a41dd16f9ca643985b34b84822bd3af5dfdb952c2ff163b3ef9f6b",
+        "responseHash": "39e8e09baafde1810d43b866a577b23f30574c8c12f5883b09fdc33a8999e3f8"
+      },
+      "costUpperYuan": 0.0120676,
+      "measurement": {
+        "label": "content-baishi-dock-npc_bs_001_4-review0",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 6633,
+          "completion_tokens": 7,
+          "total_tokens": 6640,
+          "prompt_tokens_details": {
+            "cached_tokens": 640
+          },
+          "prompt_cache_hit_tokens": 640,
+          "prompt_cache_miss_tokens": 5993
+        },
+        "costUpperYuan": 0.0120676,
+        "cumulativeUpperYuan": 2.6234596000000048,
+        "latencyMs": 1128.8263000000002,
+        "timestamp": "2026-10-13T17:46:49.588Z"
+      }
+    },
+    "c721b619-c6e9-4845-a92d-2a6e7549ae3d": {
+      "card": "T92",
+      "label": "content-baishi-market-npc_bs_031_1-review0",
+      "requestHash": "dd9c279b7b989b84b514759c23f55aadfc1b6685dcf8213c017998d93e3c815c",
+      "reservedYuan": 0.065112,
+      "status": "settled",
+      "responseEvidence": {
+        "file": "budget-responses/c721b619-c6e9-4845-a92d-2a6e7549ae3d.json",
+        "requestHash": "dd9c279b7b989b84b514759c23f55aadfc1b6685dcf8213c017998d93e3c815c",
+        "responseHash": "49d4cd51ec3d7d7736681a8da86e7c024ba5613655e94c803669c4886d906aff"
+      },
+      "costUpperYuan": 0.01351712,
+      "measurement": {
+        "label": "content-baishi-market-npc_bs_031_1-review0",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 6856,
+          "completion_tokens": 7,
+          "total_tokens": 6863,
+          "prompt_tokens_details": {
+            "cached_tokens": 128
+          },
+          "prompt_cache_hit_tokens": 128,
+          "prompt_cache_miss_tokens": 6728
+        },
+        "costUpperYuan": 0.01351712,
+        "cumulativeUpperYuan": 2.6369767200000047,
+        "latencyMs": 1257.7616,
+        "timestamp": "2026-10-13T17:59:08.688Z"
+      }
+    },
+    "6e0dc04a-6b29-4770-ae11-c5e08824cae1": {
+      "card": "T92",
+      "label": "content-baishi-market-npc_bs_046_1-review0",
+      "requestHash": "07062bedda22a15f83065248258c17e4d68cb7468618ebdd2c1c676647f0b086",
+      "reservedYuan": 0.06585,
+      "status": "settled",
+      "responseEvidence": {
+        "file": "budget-responses/6e0dc04a-6b29-4770-ae11-c5e08824cae1.json",
+        "requestHash": "07062bedda22a15f83065248258c17e4d68cb7468618ebdd2c1c676647f0b086",
+        "responseHash": "8df9544cb057cc2c87a49c615f791f8e768026bfe89d3bd851fc67b0428ec553"
+      },
+      "costUpperYuan": 0.01368912,
+      "measurement": {
+        "label": "content-baishi-market-npc_bs_046_1-review0",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 6942,
+          "completion_tokens": 7,
+          "total_tokens": 6949,
+          "prompt_tokens_details": {
+            "cached_tokens": 128
+          },
+          "prompt_cache_hit_tokens": 128,
+          "prompt_cache_miss_tokens": 6814
+        },
+        "costUpperYuan": 0.01368912,
+        "cumulativeUpperYuan": 2.6506658400000047,
+        "latencyMs": 971.5652999999998,
+        "timestamp": "2026-10-13T17:59:09.685Z"
+      }
+    },
+    "f3136274-e45c-4e61-9006-5f2073e3dbd8": {
+      "card": "T92",
+      "label": "content-baishi-market-npc_bs_031_2-review0",
+      "requestHash": "0c6de1224ef2602f098eb9f649141b2e783507876d36e24f669ee604569d3a28",
+      "reservedYuan": 0.066114,
+      "status": "settled",
+      "responseEvidence": {
+        "file": "budget-responses/f3136274-e45c-4e61-9006-5f2073e3dbd8.json",
+        "requestHash": "0c6de1224ef2602f098eb9f649141b2e783507876d36e24f669ee604569d3a28",
+        "responseHash": "91dfc84bebc51c62ed1ace47639b8abdb134dc0e33fe9371205a1ffedd514452"
+      },
+      "costUpperYuan": 0.01379112,
+      "measurement": {
+        "label": "content-baishi-market-npc_bs_031_2-review0",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 6993,
+          "completion_tokens": 7,
+          "total_tokens": 7000,
+          "prompt_tokens_details": {
+            "cached_tokens": 128
+          },
+          "prompt_cache_hit_tokens": 128,
+          "prompt_cache_miss_tokens": 6865
+        },
+        "costUpperYuan": 0.01379112,
+        "cumulativeUpperYuan": 2.6644569600000048,
+        "latencyMs": 1043.2066999999997,
+        "timestamp": "2026-10-13T17:59:10.760Z"
+      }
+    },
+    "7a0b13c7-311c-4503-a668-12b319b8d2e4": {
+      "card": "T92",
+      "label": "content-baishi-market-npc_bs_046_2-review0",
+      "requestHash": "fdd4f418bb445e8ed746ec4ae51a8c8e540bf49c427acada504f8084a1b3df55",
+      "reservedYuan": 0.065612,
+      "status": "settled",
+      "responseEvidence": {
+        "file": "budget-responses/7a0b13c7-311c-4503-a668-12b319b8d2e4.json",
+        "requestHash": "fdd4f418bb445e8ed746ec4ae51a8c8e540bf49c427acada504f8084a1b3df55",
+        "responseHash": "797eef8b9789525ee211e2a0824194f4f1aebd51662b0aa9ecf8ddf054aa8d4d"
+      },
+      "costUpperYuan": 0.01371112,
+      "measurement": {
+        "label": "content-baishi-market-npc_bs_046_2-review0",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 6953,
+          "completion_tokens": 7,
+          "total_tokens": 6960,
+          "prompt_tokens_details": {
+            "cached_tokens": 128
+          },
+          "prompt_cache_hit_tokens": 128,
+          "prompt_cache_miss_tokens": 6825
+        },
+        "costUpperYuan": 0.01371112,
+        "cumulativeUpperYuan": 2.6781680800000047,
+        "latencyMs": 704.0315999999998,
+        "timestamp": "2026-10-13T17:59:11.493Z"
+      }
+    },
+    "ae6e95e4-e416-4538-80b6-ea7e9022974b": {
+      "card": "T92",
+      "label": "content-baishi-market-npc_bs_032_1-review0",
+      "requestHash": "ce6013a92661456857f4a20c9cc9ddb6a38cdfcb8820e08a4735d17b6e5fd051",
+      "reservedYuan": 0.064676,
+      "status": "settled",
+      "responseEvidence": {
+        "file": "budget-responses/ae6e95e4-e416-4538-80b6-ea7e9022974b.json",
+        "requestHash": "ce6013a92661456857f4a20c9cc9ddb6a38cdfcb8820e08a4735d17b6e5fd051",
+        "responseHash": "53c7bb95600b53af3f55b00c3232c78f3627bcb7ad0c1fecf5bf48474f0035c6"
+      },
+      "costUpperYuan": 0.01342512,
+      "measurement": {
+        "label": "content-baishi-market-npc_bs_032_1-review0",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 6810,
+          "completion_tokens": 7,
+          "total_tokens": 6817,
+          "prompt_tokens_details": {
+            "cached_tokens": 128
+          },
+          "prompt_cache_hit_tokens": 128,
+          "prompt_cache_miss_tokens": 6682
+        },
+        "costUpperYuan": 0.01342512,
+        "cumulativeUpperYuan": 2.6915932000000047,
+        "latencyMs": 1048.8980000000001,
+        "timestamp": "2026-10-13T17:59:12.564Z"
+      }
+    },
+    "8e9a2c6e-fb87-4afa-9255-a4227c65318b": {
+      "card": "T92",
+      "label": "content-baishi-market-npc_bs_047_1-review0",
+      "requestHash": "6b00565f2f3699019e88ecaa707b698e0b1b3ab9fc8041232d468c2d6083555d",
+      "reservedYuan": 0.065948,
+      "status": "settled",
+      "responseEvidence": {
+        "file": "budget-responses/8e9a2c6e-fb87-4afa-9255-a4227c65318b.json",
+        "requestHash": "6b00565f2f3699019e88ecaa707b698e0b1b3ab9fc8041232d468c2d6083555d",
+        "responseHash": "61f22a909ff285cf25aff402dbba0a5444c7ccdd9500c898a3913b86c8117c42"
+      },
+      "costUpperYuan": 0.01369912,
+      "measurement": {
+        "label": "content-baishi-market-npc_bs_047_1-review0",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 6947,
+          "completion_tokens": 7,
+          "total_tokens": 6954,
+          "prompt_tokens_details": {
+            "cached_tokens": 128
+          },
+          "prompt_cache_hit_tokens": 128,
+          "prompt_cache_miss_tokens": 6819
+        },
+        "costUpperYuan": 0.01369912,
+        "cumulativeUpperYuan": 2.7052923200000047,
+        "latencyMs": 871.2012999999997,
+        "timestamp": "2026-10-13T17:59:13.465Z"
+      }
+    },
+    "dd4f9fb2-13a8-48ff-8398-a2c23f2bed54": {
+      "card": "T92",
+      "label": "content-baishi-market-npc_bs_032_2-review0",
+      "requestHash": "fc64ced1ff1f7d4fb7ca82120a21e817e339a274162227fd9839c93a4f84b371",
+      "reservedYuan": 0.064684,
+      "status": "settled",
+      "responseEvidence": {
+        "file": "budget-responses/dd4f9fb2-13a8-48ff-8398-a2c23f2bed54.json",
+        "requestHash": "fc64ced1ff1f7d4fb7ca82120a21e817e339a274162227fd9839c93a4f84b371",
+        "responseHash": "dae335c6651dcb5eb3a282bac577a18ebec6e53df048aa5e324e418b03633dd7"
+      },
+      "costUpperYuan": 0.01338312,
+      "measurement": {
+        "label": "content-baishi-market-npc_bs_032_2-review0",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 6789,
+          "completion_tokens": 7,
+          "total_tokens": 6796,
+          "prompt_tokens_details": {
+            "cached_tokens": 128
+          },
+          "prompt_cache_hit_tokens": 128,
+          "prompt_cache_miss_tokens": 6661
+        },
+        "costUpperYuan": 0.01338312,
+        "cumulativeUpperYuan": 2.7186754400000046,
+        "latencyMs": 1112.0553,
+        "timestamp": "2026-10-13T17:59:14.603Z"
+      }
+    },
+    "3b3654d8-83f2-44e0-8569-73a8c9e56031": {
+      "card": "T92",
+      "label": "content-baishi-market-npc_bs_047_2-review0",
+      "requestHash": "eaf37024b8664f7e7479e91a068bd89270515489ed9b4da7f7e0b2ddf4bece16",
+      "reservedYuan": 0.065842,
+      "status": "settled",
+      "responseEvidence": {
+        "file": "budget-responses/3b3654d8-83f2-44e0-8569-73a8c9e56031.json",
+        "requestHash": "eaf37024b8664f7e7479e91a068bd89270515489ed9b4da7f7e0b2ddf4bece16",
+        "responseHash": "add5d2fc615de36552540d705d6ea02a086e0a4cc18c74e35df6f0c53fd64735"
+      },
+      "costUpperYuan": 0.013821120000000001,
+      "measurement": {
+        "label": "content-baishi-market-npc_bs_047_2-review0",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 7008,
+          "completion_tokens": 7,
+          "total_tokens": 7015,
+          "prompt_tokens_details": {
+            "cached_tokens": 128
+          },
+          "prompt_cache_hit_tokens": 128,
+          "prompt_cache_miss_tokens": 6880
+        },
+        "costUpperYuan": 0.013821120000000001,
+        "cumulativeUpperYuan": 2.7324965600000044,
+        "latencyMs": 1238.7169000000013,
+        "timestamp": "2026-10-13T17:59:15.866Z"
+      }
+    },
+    "a0c6af8b-2c1c-4bd3-9e9c-4676170bc643": {
+      "card": "T92",
+      "label": "content-baishi-market-npc_bs_033_1-review0",
+      "requestHash": "1b6820233d8e0fd8be414915a1aa3a61a2d3270cfa72ef56410df5f4c3faccc4",
+      "reservedYuan": 0.065084,
+      "status": "settled",
+      "responseEvidence": {
+        "file": "budget-responses/a0c6af8b-2c1c-4bd3-9e9c-4676170bc643.json",
+        "requestHash": "1b6820233d8e0fd8be414915a1aa3a61a2d3270cfa72ef56410df5f4c3faccc4",
+        "responseHash": "ade94ce561717a0f39473976e40b7f7a5e95d6e1d51f2b82d0ec7ee3ea4903e8"
+      },
+      "costUpperYuan": 0.01348912,
+      "measurement": {
+        "label": "content-baishi-market-npc_bs_033_1-review0",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 6842,
+          "completion_tokens": 7,
+          "total_tokens": 6849,
+          "prompt_tokens_details": {
+            "cached_tokens": 128
+          },
+          "prompt_cache_hit_tokens": 128,
+          "prompt_cache_miss_tokens": 6714
+        },
+        "costUpperYuan": 0.01348912,
+        "cumulativeUpperYuan": 2.7459856800000044,
+        "latencyMs": 913.9966000000004,
+        "timestamp": "2026-10-13T17:59:16.809Z"
+      }
+    },
+    "16fb1678-4488-497c-9a75-ac4bd20d7bb1": {
+      "card": "T92",
+      "label": "content-baishi-market-npc_bs_048_1-review0",
+      "requestHash": "b698f5c7c2bbb7112e129a06908fbf83bc344e8c4e0432419fe666e50d7a3112",
+      "reservedYuan": 0.06568,
+      "status": "settled",
+      "responseEvidence": {
+        "file": "budget-responses/16fb1678-4488-497c-9a75-ac4bd20d7bb1.json",
+        "requestHash": "b698f5c7c2bbb7112e129a06908fbf83bc344e8c4e0432419fe666e50d7a3112",
+        "responseHash": "5e5a1ae2a0ce32bf44e34223148a2a82ad395b2233356714b8d1f7fa391b92cd"
+      },
+      "costUpperYuan": 0.01364912,
+      "measurement": {
+        "label": "content-baishi-market-npc_bs_048_1-review0",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 6922,
+          "completion_tokens": 7,
+          "total_tokens": 6929,
+          "prompt_tokens_details": {
+            "cached_tokens": 128
+          },
+          "prompt_cache_hit_tokens": 128,
+          "prompt_cache_miss_tokens": 6794
+        },
+        "costUpperYuan": 0.01364912,
+        "cumulativeUpperYuan": 2.7596348000000046,
+        "latencyMs": 1045.0028000000002,
+        "timestamp": "2026-10-13T17:59:17.880Z"
+      }
+    },
+    "01c27c5d-e492-42b1-af53-56cc92d60666": {
+      "card": "T92",
+      "label": "content-baishi-market-npc_bs_033_2-review0",
+      "requestHash": "5b82ad57a3b4c0eb4522b8471ab80946e6fb50c025d24a84e636bac83d9961b6",
+      "reservedYuan": 0.065938,
+      "status": "settled",
+      "responseEvidence": {
+        "file": "budget-responses/01c27c5d-e492-42b1-af53-56cc92d60666.json",
+        "requestHash": "5b82ad57a3b4c0eb4522b8471ab80946e6fb50c025d24a84e636bac83d9961b6",
+        "responseHash": "bb6bf0832ae2ba1eb7b768899c9446c41a2a2fb021c78bbcdeee8e61c0c4dcde"
+      },
+      "costUpperYuan": 0.013721120000000002,
+      "measurement": {
+        "label": "content-baishi-market-npc_bs_033_2-review0",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 6958,
+          "completion_tokens": 7,
+          "total_tokens": 6965,
+          "prompt_tokens_details": {
+            "cached_tokens": 128
+          },
+          "prompt_cache_hit_tokens": 128,
+          "prompt_cache_miss_tokens": 6830
+        },
+        "costUpperYuan": 0.013721120000000002,
+        "cumulativeUpperYuan": 2.7733559200000046,
+        "latencyMs": 997.2714999999989,
+        "timestamp": "2026-10-13T17:59:18.901Z"
+      }
+    },
+    "7593a98f-d338-499a-be3a-73f7160066ca": {
+      "card": "T92",
+      "label": "content-baishi-market-npc_bs_048_2-review0",
+      "requestHash": "088a8c7d481fa5c9a4a642b431050dade698df3f604a3503bc6954c03ce69cfd",
+      "reservedYuan": 0.064482,
+      "status": "settled",
+      "responseEvidence": {
+        "file": "budget-responses/7593a98f-d338-499a-be3a-73f7160066ca.json",
+        "requestHash": "088a8c7d481fa5c9a4a642b431050dade698df3f604a3503bc6954c03ce69cfd",
+        "responseHash": "aa24f65a1544e8eeca2f81ba9bec95f5dd9b76cc06bda9c2eaf89c3b7d054e29"
+      },
+      "costUpperYuan": 0.013363120000000001,
+      "measurement": {
+        "label": "content-baishi-market-npc_bs_048_2-review0",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 6779,
+          "completion_tokens": 7,
+          "total_tokens": 6786,
+          "prompt_tokens_details": {
+            "cached_tokens": 128
+          },
+          "prompt_cache_hit_tokens": 128,
+          "prompt_cache_miss_tokens": 6651
+        },
+        "costUpperYuan": 0.013363120000000001,
+        "cumulativeUpperYuan": 2.786719040000005,
+        "latencyMs": 1003.8580000000002,
+        "timestamp": "2026-10-13T17:59:19.933Z"
+      }
+    },
+    "494702a8-758f-4954-8dd1-5bc41a19cacb": {
+      "card": "T92",
+      "label": "content-baishi-market-npc_bs_034_1-review0",
+      "requestHash": "f5100c73321d114f94288ad9372b5dc04c5b1f8d54654970a522466a77384701",
+      "reservedYuan": 0.066196,
+      "status": "settled",
+      "responseEvidence": {
+        "file": "budget-responses/494702a8-758f-4954-8dd1-5bc41a19cacb.json",
+        "requestHash": "f5100c73321d114f94288ad9372b5dc04c5b1f8d54654970a522466a77384701",
+        "responseHash": "2406e8bdea748719c1307cd68e494746633eac01d70fb8ea027794df4e9e9c98"
+      },
+      "costUpperYuan": 0.01376512,
+      "measurement": {
+        "label": "content-baishi-market-npc_bs_034_1-review0",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 6980,
+          "completion_tokens": 7,
+          "total_tokens": 6987,
+          "prompt_tokens_details": {
+            "cached_tokens": 128
+          },
+          "prompt_cache_hit_tokens": 128,
+          "prompt_cache_miss_tokens": 6852
+        },
+        "costUpperYuan": 0.01376512,
+        "cumulativeUpperYuan": 2.8004841600000048,
+        "latencyMs": 920.2553000000007,
+        "timestamp": "2026-10-13T17:59:20.887Z"
+      }
+    },
+    "45caeea1-b4c4-4572-a35d-99a07d8f5701": {
+      "card": "T92",
+      "label": "content-baishi-market-npc_bs_049_1-review0",
+      "requestHash": "fd59d4b8cd4004be48c3f0590b1949b2182c93b1c6854b5b5f0ad7a6e148bf0d",
+      "reservedYuan": 0.065652,
+      "status": "settled",
+      "responseEvidence": {
+        "file": "budget-responses/45caeea1-b4c4-4572-a35d-99a07d8f5701.json",
+        "requestHash": "fd59d4b8cd4004be48c3f0590b1949b2182c93b1c6854b5b5f0ad7a6e148bf0d",
+        "responseHash": "807a80a5458d62c93498d3ca0d35ada38327ac6fc7af62ee13f889c8fbc0c138"
+      },
+      "costUpperYuan": 0.01359512,
+      "measurement": {
+        "label": "content-baishi-market-npc_bs_049_1-review0",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 6895,
+          "completion_tokens": 7,
+          "total_tokens": 6902,
+          "prompt_tokens_details": {
+            "cached_tokens": 128
+          },
+          "prompt_cache_hit_tokens": 128,
+          "prompt_cache_miss_tokens": 6767
+        },
+        "costUpperYuan": 0.01359512,
+        "cumulativeUpperYuan": 2.814079280000005,
+        "latencyMs": 1007.4674999999988,
+        "timestamp": "2026-10-13T17:59:21.927Z"
+      }
+    },
+    "0c6a3e9d-250e-48a4-924f-041b50d95940": {
+      "card": "T92",
+      "label": "content-baishi-market-npc_bs_034_2-review0",
+      "requestHash": "2a83d25cf76c01255eae3cd3fcd23fe5dfb5b34b9d0af55c2686eb5ff20306e7",
+      "reservedYuan": 0.065424,
+      "status": "settled",
+      "responseEvidence": {
+        "file": "budget-responses/0c6a3e9d-250e-48a4-924f-041b50d95940.json",
+        "requestHash": "2a83d25cf76c01255eae3cd3fcd23fe5dfb5b34b9d0af55c2686eb5ff20306e7",
+        "responseHash": "cc42cabe63c68eafc54ee655705fe9981e65c40cfa10696003437bc835a4e5e1"
+      },
+      "costUpperYuan": 0.013653120000000001,
+      "measurement": {
+        "label": "content-baishi-market-npc_bs_034_2-review0",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 6924,
+          "completion_tokens": 7,
+          "total_tokens": 6931,
+          "prompt_tokens_details": {
+            "cached_tokens": 128
+          },
+          "prompt_cache_hit_tokens": 128,
+          "prompt_cache_miss_tokens": 6796
+        },
+        "costUpperYuan": 0.013653120000000001,
+        "cumulativeUpperYuan": 2.827732400000005,
+        "latencyMs": 1077.2603999999992,
+        "timestamp": "2026-10-13T17:59:23.039Z"
+      }
+    },
+    "7b648b63-34f8-4d8e-aed6-e4656b3ee924": {
+      "card": "T92",
+      "label": "content-baishi-market-npc_bs_049_2-review0",
+      "requestHash": "415b7ecb42d2f0631e13a7d22e552b5d6b23c16cbad5df7cf0f5aba016de59fd",
+      "reservedYuan": 0.06516,
+      "status": "settled",
+      "responseEvidence": {
+        "file": "budget-responses/7b648b63-34f8-4d8e-aed6-e4656b3ee924.json",
+        "requestHash": "415b7ecb42d2f0631e13a7d22e552b5d6b23c16cbad5df7cf0f5aba016de59fd",
+        "responseHash": "81ae1b1e115c969f3b4251749fffde0d0ae90a18b4fe62101dffbd44be752f3c"
+      },
+      "costUpperYuan": 0.01354512,
+      "measurement": {
+        "label": "content-baishi-market-npc_bs_049_2-review0",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 6870,
+          "completion_tokens": 7,
+          "total_tokens": 6877,
+          "prompt_tokens_details": {
+            "cached_tokens": 128
+          },
+          "prompt_cache_hit_tokens": 128,
+          "prompt_cache_miss_tokens": 6742
+        },
+        "costUpperYuan": 0.01354512,
+        "cumulativeUpperYuan": 2.8412775200000047,
+        "latencyMs": 930.7328000000016,
+        "timestamp": "2026-10-13T17:59:24.001Z"
+      }
+    },
+    "64f0999e-9cc8-4e67-b78e-c57f96c3c87a": {
+      "card": "T92",
+      "label": "content-baishi-market-npc_bs_035_1-review0",
+      "requestHash": "6ee5456c01434b7d4c25c1f67aca622fb4364e64ddd71c9e16e75ff3ad748ead",
+      "reservedYuan": 0.065596,
+      "status": "settled",
+      "responseEvidence": {
+        "file": "budget-responses/64f0999e-9cc8-4e67-b78e-c57f96c3c87a.json",
+        "requestHash": "6ee5456c01434b7d4c25c1f67aca622fb4364e64ddd71c9e16e75ff3ad748ead",
+        "responseHash": "2e61bd3f8f9052dab40669b6272a9c6c642a2decbd3b064d855b98f0c7dc5086"
+      },
+      "costUpperYuan": 0.01365912,
+      "measurement": {
+        "label": "content-baishi-market-npc_bs_035_1-review0",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 6927,
+          "completion_tokens": 7,
+          "total_tokens": 6934,
+          "prompt_tokens_details": {
+            "cached_tokens": 128
+          },
+          "prompt_cache_hit_tokens": 128,
+          "prompt_cache_miss_tokens": 6799
+        },
+        "costUpperYuan": 0.01365912,
+        "cumulativeUpperYuan": 2.8549366400000045,
+        "latencyMs": 1028.9658999999992,
+        "timestamp": "2026-10-13T17:59:25.059Z"
+      }
+    },
+    "be6770db-3cf6-4988-b617-b2aa62f4e5fc": {
+      "card": "T92",
+      "label": "content-baishi-market-npc_bs_050_1-review0",
+      "requestHash": "77efc2ee5958029c05d0ff2426102520e9c82f356af45f1d747ef4c7cd1c1216",
+      "reservedYuan": 0.065264,
+      "status": "settled",
+      "responseEvidence": {
+        "file": "budget-responses/be6770db-3cf6-4988-b617-b2aa62f4e5fc.json",
+        "requestHash": "77efc2ee5958029c05d0ff2426102520e9c82f356af45f1d747ef4c7cd1c1216",
+        "responseHash": "f32465f55b34633cd42963581b0c2f08fda8dea6d55ca232a6f05c4c70b9adb9"
+      },
+      "costUpperYuan": 0.013575120000000001,
+      "measurement": {
+        "label": "content-baishi-market-npc_bs_050_1-review0",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 6885,
+          "completion_tokens": 7,
+          "total_tokens": 6892,
+          "prompt_tokens_details": {
+            "cached_tokens": 128
+          },
+          "prompt_cache_hit_tokens": 128,
+          "prompt_cache_miss_tokens": 6757
+        },
+        "costUpperYuan": 0.013575120000000001,
+        "cumulativeUpperYuan": 2.8685117600000045,
+        "latencyMs": 1011.1297000000013,
+        "timestamp": "2026-10-13T17:59:26.100Z"
+      }
+    },
+    "aff96eea-54c0-44f4-8e3e-36a1c41f251b": {
+      "card": "T92",
+      "label": "content-baishi-market-npc_bs_035_2-review0",
+      "requestHash": "786bc3383e87ea79f67547ba4a0ddd825c2bbbeb13901ece4d25691094e74dd5",
+      "reservedYuan": 0.065996,
+      "status": "settled",
+      "responseEvidence": {
+        "file": "budget-responses/aff96eea-54c0-44f4-8e3e-36a1c41f251b.json",
+        "requestHash": "786bc3383e87ea79f67547ba4a0ddd825c2bbbeb13901ece4d25691094e74dd5",
+        "responseHash": "a756e42969643404e368e5f739c8991e7b01ae8d267b6ee84a131480c3b6516b"
+      },
+      "costUpperYuan": 0.01373712,
+      "measurement": {
+        "label": "content-baishi-market-npc_bs_035_2-review0",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 6966,
+          "completion_tokens": 7,
+          "total_tokens": 6973,
+          "prompt_tokens_details": {
+            "cached_tokens": 128
+          },
+          "prompt_cache_hit_tokens": 128,
+          "prompt_cache_miss_tokens": 6838
+        },
+        "costUpperYuan": 0.01373712,
+        "cumulativeUpperYuan": 2.8822488800000046,
+        "latencyMs": 833.627999999997,
+        "timestamp": "2026-10-13T17:59:26.965Z"
+      }
+    },
+    "b6bfaff5-21a2-45c8-a162-24b44194e23f": {
+      "card": "T92",
+      "label": "content-baishi-market-npc_bs_050_2-review0",
+      "requestHash": "a7b9d9ba6b9277122ff1ea5cb4788e2ff2b2d080e23db7ae6fadd78ea43fe0a0",
+      "reservedYuan": 0.065678,
+      "status": "settled",
+      "responseEvidence": {
+        "file": "budget-responses/b6bfaff5-21a2-45c8-a162-24b44194e23f.json",
+        "requestHash": "a7b9d9ba6b9277122ff1ea5cb4788e2ff2b2d080e23db7ae6fadd78ea43fe0a0",
+        "responseHash": "562ccc0cd8d730209531ba034b158321865247952829b5165bb766dd2789554a"
+      },
+      "costUpperYuan": 0.013707120000000001,
+      "measurement": {
+        "label": "content-baishi-market-npc_bs_050_2-review0",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 6951,
+          "completion_tokens": 7,
+          "total_tokens": 6958,
+          "prompt_tokens_details": {
+            "cached_tokens": 128
+          },
+          "prompt_cache_hit_tokens": 128,
+          "prompt_cache_miss_tokens": 6823
+        },
+        "costUpperYuan": 0.013707120000000001,
+        "cumulativeUpperYuan": 2.8959560000000044,
+        "latencyMs": 768.8057000000008,
+        "timestamp": "2026-10-13T17:59:27.760Z"
+      }
+    },
+    "18f384ae-d238-4e75-aed7-db7808e785f4": {
+      "card": "T92",
+      "label": "content-baishi-market-npc_bs_036_1-review0",
+      "requestHash": "152ea5693e171f708b78ad1b72715f341e02e6f082f9bcd67291fd0488128f43",
+      "reservedYuan": 0.0665,
+      "status": "settled",
+      "responseEvidence": {
+        "file": "budget-responses/18f384ae-d238-4e75-aed7-db7808e785f4.json",
+        "requestHash": "152ea5693e171f708b78ad1b72715f341e02e6f082f9bcd67291fd0488128f43",
+        "responseHash": "7cb72574564cdb8333ec959fd926a4aa2a6beb7a3af72df679457f32493c24b3"
+      },
+      "costUpperYuan": 0.01384512,
+      "measurement": {
+        "label": "content-baishi-market-npc_bs_036_1-review0",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 7020,
+          "completion_tokens": 7,
+          "total_tokens": 7027,
+          "prompt_tokens_details": {
+            "cached_tokens": 128
+          },
+          "prompt_cache_hit_tokens": 128,
+          "prompt_cache_miss_tokens": 6892
+        },
+        "costUpperYuan": 0.01384512,
+        "cumulativeUpperYuan": 2.9098011200000045,
+        "latencyMs": 795.5234000000019,
+        "timestamp": "2026-10-13T17:59:28.586Z"
+      }
+    },
+    "3984efe0-b1ee-4a06-9836-63b5f07bc1e4": {
+      "card": "T92",
+      "label": "content-baishi-market-npc_bs_051_1-review0",
+      "requestHash": "db1b1e1589b20c22d28c9027aa1b89d4bba9354e0db1359c242a7076397fe46f",
+      "reservedYuan": 0.065742,
+      "status": "settled",
+      "responseEvidence": {
+        "file": "budget-responses/3984efe0-b1ee-4a06-9836-63b5f07bc1e4.json",
+        "requestHash": "db1b1e1589b20c22d28c9027aa1b89d4bba9354e0db1359c242a7076397fe46f",
+        "responseHash": "33eced1c83975f50e509374dbfa04ed6054419f5b7122ae2ffbde11384495946"
+      },
+      "costUpperYuan": 0.01371112,
+      "measurement": {
+        "label": "content-baishi-market-npc_bs_051_1-review0",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 6953,
+          "completion_tokens": 7,
+          "total_tokens": 6960,
+          "prompt_tokens_details": {
+            "cached_tokens": 128
+          },
+          "prompt_cache_hit_tokens": 128,
+          "prompt_cache_miss_tokens": 6825
+        },
+        "costUpperYuan": 0.01371112,
+        "cumulativeUpperYuan": 2.9235122400000044,
+        "latencyMs": 1021.4587000000029,
+        "timestamp": "2026-10-13T17:59:29.639Z"
+      }
+    },
+    "1f3d42bd-6291-4160-a289-5b4b548587d4": {
+      "card": "T92",
+      "label": "content-baishi-market-npc_bs_036_2-review0",
+      "requestHash": "40d0ae4316de2a9e03164a6aeabb691fbd6cbc5bb73a646ec191d9ce3a8eafad",
+      "reservedYuan": 0.065078,
+      "status": "settled",
+      "responseEvidence": {
+        "file": "budget-responses/1f3d42bd-6291-4160-a289-5b4b548587d4.json",
+        "requestHash": "40d0ae4316de2a9e03164a6aeabb691fbd6cbc5bb73a646ec191d9ce3a8eafad",
+        "responseHash": "8aeac97b0d2844c34ee79ba9e65d7db7f27a61a5d804aaeb16dce21f117bc95c"
+      },
+      "costUpperYuan": 0.013393120000000001,
+      "measurement": {
+        "label": "content-baishi-market-npc_bs_036_2-review0",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 6794,
+          "completion_tokens": 7,
+          "total_tokens": 6801,
+          "prompt_tokens_details": {
+            "cached_tokens": 128
+          },
+          "prompt_cache_hit_tokens": 128,
+          "prompt_cache_miss_tokens": 6666
+        },
+        "costUpperYuan": 0.013393120000000001,
+        "cumulativeUpperYuan": 2.9369053600000044,
+        "latencyMs": 841.7780000000021,
+        "timestamp": "2026-10-13T17:59:30.508Z"
+      }
+    },
+    "f01d9447-c507-4253-a17b-5c1a72b43bcb": {
+      "card": "T92",
+      "label": "content-baishi-market-npc_bs_051_2-review0",
+      "requestHash": "d9db7f24cec7c047f4bd8754a3f59c0084a2b1fbffdb3cbaa95b32afa4ef54f4",
+      "reservedYuan": 0.066244,
+      "status": "settled",
+      "responseEvidence": {
+        "file": "budget-responses/f01d9447-c507-4253-a17b-5c1a72b43bcb.json",
+        "requestHash": "d9db7f24cec7c047f4bd8754a3f59c0084a2b1fbffdb3cbaa95b32afa4ef54f4",
+        "responseHash": "8a77347ee89b22c974d983bce95f557a37cdd58dc0880613cc6366e0bd702561"
+      },
+      "costUpperYuan": 0.01357112,
+      "measurement": {
+        "label": "content-baishi-market-npc_bs_051_2-review0",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 6883,
+          "completion_tokens": 7,
+          "total_tokens": 6890,
+          "prompt_tokens_details": {
+            "cached_tokens": 128
+          },
+          "prompt_cache_hit_tokens": 128,
+          "prompt_cache_miss_tokens": 6755
+        },
+        "costUpperYuan": 0.01357112,
+        "cumulativeUpperYuan": 2.9504764800000043,
+        "latencyMs": 936.678899999999,
+        "timestamp": "2026-10-13T17:59:31.471Z"
+      }
+    },
+    "03fd7300-d736-4099-ae54-78b4e8394d4e": {
+      "card": "T92",
+      "label": "content-baishi-market-npc_bs_037_1-review0",
+      "requestHash": "64967849e304e46bcbb2896e15cdbe92983277b85a970e5a4df49dfe81c33b21",
+      "reservedYuan": 0.066068,
+      "status": "settled",
+      "responseEvidence": {
+        "file": "budget-responses/03fd7300-d736-4099-ae54-78b4e8394d4e.json",
+        "requestHash": "64967849e304e46bcbb2896e15cdbe92983277b85a970e5a4df49dfe81c33b21",
+        "responseHash": "c7dba7be2ffcafbc81dc53a060153203176d49299a525ac8575b37276adea41c"
+      },
+      "costUpperYuan": 0.01376512,
+      "measurement": {
+        "label": "content-baishi-market-npc_bs_037_1-review0",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 6980,
+          "completion_tokens": 7,
+          "total_tokens": 6987,
+          "prompt_tokens_details": {
+            "cached_tokens": 128
+          },
+          "prompt_cache_hit_tokens": 128,
+          "prompt_cache_miss_tokens": 6852
+        },
+        "costUpperYuan": 0.01376512,
+        "cumulativeUpperYuan": 2.9642416000000043,
+        "latencyMs": 849.5926,
+        "timestamp": "2026-10-13T17:59:32.346Z"
+      }
+    },
+    "7317d52f-66fb-47dd-a66d-44d2dd5422bd": {
+      "card": "T92",
+      "label": "content-baishi-market-npc_bs_052_1-review0",
+      "requestHash": "2d536712868c7415e6b4645a033229261d4e877a69fa782a4aaab9d89bd6b96a",
+      "reservedYuan": 0.066104,
+      "status": "settled",
+      "responseEvidence": {
+        "file": "budget-responses/7317d52f-66fb-47dd-a66d-44d2dd5422bd.json",
+        "requestHash": "2d536712868c7415e6b4645a033229261d4e877a69fa782a4aaab9d89bd6b96a",
+        "responseHash": "369d6e7e0bfdca458cc53d178e5985a47d72f5efb9d5847fb96214b6035d9b19"
+      },
+      "costUpperYuan": 0.01376112,
+      "measurement": {
+        "label": "content-baishi-market-npc_bs_052_1-review0",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 6978,
+          "completion_tokens": 7,
+          "total_tokens": 6985,
+          "prompt_tokens_details": {
+            "cached_tokens": 128
+          },
+          "prompt_cache_hit_tokens": 128,
+          "prompt_cache_miss_tokens": 6850
+        },
+        "costUpperYuan": 0.01376112,
+        "cumulativeUpperYuan": 2.978002720000004,
+        "latencyMs": 865.6363999999994,
+        "timestamp": "2026-10-13T17:59:33.239Z"
+      }
+    },
+    "7cb165da-d7cc-4939-8cc7-1511f2bd0bed": {
+      "card": "T92",
+      "label": "content-baishi-market-npc_bs_037_2-review0",
+      "requestHash": "41a35e7f1ba9cd1004b2e5d9a7305da553aa1b262a197365e3d044a9120dc176",
+      "reservedYuan": 0.064226,
+      "status": "settled",
+      "responseEvidence": {
+        "file": "budget-responses/7cb165da-d7cc-4939-8cc7-1511f2bd0bed.json",
+        "requestHash": "41a35e7f1ba9cd1004b2e5d9a7305da553aa1b262a197365e3d044a9120dc176",
+        "responseHash": "27f0281e534f92ff07451134ec03bac49db04186b1289b4c7fa2f8850c41cc9b"
+      },
+      "costUpperYuan": 0.01332312,
+      "measurement": {
+        "label": "content-baishi-market-npc_bs_037_2-review0",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 6759,
+          "completion_tokens": 7,
+          "total_tokens": 6766,
+          "prompt_tokens_details": {
+            "cached_tokens": 128
+          },
+          "prompt_cache_hit_tokens": 128,
+          "prompt_cache_miss_tokens": 6631
+        },
+        "costUpperYuan": 0.01332312,
+        "cumulativeUpperYuan": 2.991325840000004,
+        "latencyMs": 895.6945999999989,
+        "timestamp": "2026-10-13T17:59:34.158Z"
+      }
+    },
+    "6da4551f-547b-4f19-9245-99df777464b2": {
+      "card": "T92",
+      "label": "content-baishi-market-npc_bs_052_2-review0",
+      "requestHash": "199188cedb1edddba9ef139bf263edaf913322a2b4de043c66f4ef4ebb484808",
+      "reservedYuan": 0.065622,
+      "status": "settled",
+      "responseEvidence": {
+        "file": "budget-responses/6da4551f-547b-4f19-9245-99df777464b2.json",
+        "requestHash": "199188cedb1edddba9ef139bf263edaf913322a2b4de043c66f4ef4ebb484808",
+        "responseHash": "977277d5bf6012849bf0bb5965b5bb708e1e0f389a4157e7cb52b82ab3dc844e"
+      },
+      "costUpperYuan": 0.013533120000000001,
+      "measurement": {
+        "label": "content-baishi-market-npc_bs_052_2-review0",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 6864,
+          "completion_tokens": 7,
+          "total_tokens": 6871,
+          "prompt_tokens_details": {
+            "cached_tokens": 128
+          },
+          "prompt_cache_hit_tokens": 128,
+          "prompt_cache_miss_tokens": 6736
+        },
+        "costUpperYuan": 0.013533120000000001,
+        "cumulativeUpperYuan": 3.004858960000004,
+        "latencyMs": 779.1222000000016,
+        "timestamp": "2026-10-13T17:59:34.962Z"
+      }
+    },
+    "bcc671f3-3d6d-4d04-9a3a-45ee3c0d43da": {
+      "card": "T92",
+      "label": "content-baishi-market-npc_bs_038_1-review0",
+      "requestHash": "1b45c34bd597b72d934735eb3f96a946208f060c106c76bfaede4db7e9839224",
+      "reservedYuan": 0.065326,
+      "status": "settled",
+      "responseEvidence": {
+        "file": "budget-responses/bcc671f3-3d6d-4d04-9a3a-45ee3c0d43da.json",
+        "requestHash": "1b45c34bd597b72d934735eb3f96a946208f060c106c76bfaede4db7e9839224",
+        "responseHash": "3d2cabb0e00a59d3740091c036d2547ff659ddad7416e3a61415b0d266fb9802"
+      },
+      "costUpperYuan": 0.01342512,
+      "measurement": {
+        "label": "content-baishi-market-npc_bs_038_1-review0",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 6810,
+          "completion_tokens": 7,
+          "total_tokens": 6817,
+          "prompt_tokens_details": {
+            "cached_tokens": 128
+          },
+          "prompt_cache_hit_tokens": 128,
+          "prompt_cache_miss_tokens": 6682
+        },
+        "costUpperYuan": 0.01342512,
+        "cumulativeUpperYuan": 3.018284080000004,
+        "latencyMs": 862.3184000000001,
+        "timestamp": "2026-10-13T17:59:35.849Z"
+      }
+    },
+    "9c14d7ae-eeee-4820-9d39-15e7d7f1bdcf": {
+      "card": "T92",
+      "label": "content-baishi-market-npc_bs_053_1-review0",
+      "requestHash": "a5d480309ca35da591795e045ba764178125c1a24e1b21567acb07329a6d6014",
+      "reservedYuan": 0.065322,
+      "status": "settled",
+      "responseEvidence": {
+        "file": "budget-responses/9c14d7ae-eeee-4820-9d39-15e7d7f1bdcf.json",
+        "requestHash": "a5d480309ca35da591795e045ba764178125c1a24e1b21567acb07329a6d6014",
+        "responseHash": "a930d9a08278c5244c0bcf988c4daf9bf34862a7f1946703265e95b570b56ca8"
+      },
+      "costUpperYuan": 0.01355512,
+      "measurement": {
+        "label": "content-baishi-market-npc_bs_053_1-review0",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 6875,
+          "completion_tokens": 7,
+          "total_tokens": 6882,
+          "prompt_tokens_details": {
+            "cached_tokens": 128
+          },
+          "prompt_cache_hit_tokens": 128,
+          "prompt_cache_miss_tokens": 6747
+        },
+        "costUpperYuan": 0.01355512,
+        "cumulativeUpperYuan": 3.031839200000004,
+        "latencyMs": 1455.956900000001,
+        "timestamp": "2026-10-13T17:59:37.329Z"
+      }
+    },
+    "dba12a16-1e96-45ef-9b1c-cc21e5c63fab": {
+      "card": "T92",
+      "label": "content-baishi-market-npc_bs_038_2-review0",
+      "requestHash": "4609a0e3fb10598c89ea87cb3cbb45d4af06a08c36e3f81bf98429fdefd47401",
+      "reservedYuan": 0.064312,
+      "status": "settled",
+      "responseEvidence": {
+        "file": "budget-responses/dba12a16-1e96-45ef-9b1c-cc21e5c63fab.json",
+        "requestHash": "4609a0e3fb10598c89ea87cb3cbb45d4af06a08c36e3f81bf98429fdefd47401",
+        "responseHash": "0730755a7c184651a0d98b0bccbf88b23654d0b73142127258561271309fe7d3"
+      },
+      "costUpperYuan": 0.01330912,
+      "measurement": {
+        "label": "content-baishi-market-npc_bs_038_2-review0",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 6752,
+          "completion_tokens": 7,
+          "total_tokens": 6759,
+          "prompt_tokens_details": {
+            "cached_tokens": 128
+          },
+          "prompt_cache_hit_tokens": 128,
+          "prompt_cache_miss_tokens": 6624
+        },
+        "costUpperYuan": 0.01330912,
+        "cumulativeUpperYuan": 3.045148320000004,
+        "latencyMs": 1193.4593999999997,
+        "timestamp": "2026-10-13T17:59:38.552Z"
+      }
+    },
+    "68985e6c-b922-470f-8e33-cbe2c2d4b209": {
+      "card": "T92",
+      "label": "content-baishi-market-npc_bs_053_2-review0",
+      "requestHash": "f667f6c84e55157c77e16d99751637c7cae986a25689447414f502808eda4f0e",
+      "reservedYuan": 0.065298,
+      "status": "settled",
+      "responseEvidence": {
+        "file": "budget-responses/68985e6c-b922-470f-8e33-cbe2c2d4b209.json",
+        "requestHash": "f667f6c84e55157c77e16d99751637c7cae986a25689447414f502808eda4f0e",
+        "responseHash": "ef602a3875d2c7899c7796a9e73349fa460d449327884ee04af5e9f36a8dc9bb"
+      },
+      "costUpperYuan": 0.013589120000000001,
+      "measurement": {
+        "label": "content-baishi-market-npc_bs_053_2-review0",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 6892,
+          "completion_tokens": 7,
+          "total_tokens": 6899,
+          "prompt_tokens_details": {
+            "cached_tokens": 128
+          },
+          "prompt_cache_hit_tokens": 128,
+          "prompt_cache_miss_tokens": 6764
+        },
+        "costUpperYuan": 0.013589120000000001,
+        "cumulativeUpperYuan": 3.058737440000004,
+        "latencyMs": 587.3453000000009,
+        "timestamp": "2026-10-13T17:59:39.167Z"
+      }
+    },
+    "2a208538-18fb-4707-a5c8-9db2846cb304": {
+      "card": "T92",
+      "label": "content-baishi-market-npc_bs_039_1-review0",
+      "requestHash": "82abd0fd2fa6671dc75fd47bf7473202e8f7ed3ca8df8d2fa3de4c1b0eb58f1b",
+      "reservedYuan": 0.064396,
+      "status": "settled",
+      "responseEvidence": {
+        "file": "budget-responses/2a208538-18fb-4707-a5c8-9db2846cb304.json",
+        "requestHash": "82abd0fd2fa6671dc75fd47bf7473202e8f7ed3ca8df8d2fa3de4c1b0eb58f1b",
+        "responseHash": "21254e8342dd5a99431c3e12101d76da5efbee533a417c0473c21cd90d629ebb"
+      },
+      "costUpperYuan": 0.01329112,
+      "measurement": {
+        "label": "content-baishi-market-npc_bs_039_1-review0",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 6743,
+          "completion_tokens": 7,
+          "total_tokens": 6750,
+          "prompt_tokens_details": {
+            "cached_tokens": 128
+          },
+          "prompt_cache_hit_tokens": 128,
+          "prompt_cache_miss_tokens": 6615
+        },
+        "costUpperYuan": 0.01329112,
+        "cumulativeUpperYuan": 3.0720285600000037,
+        "latencyMs": 743.0011000000013,
+        "timestamp": "2026-10-13T17:59:39.935Z"
       }
     }
   },

@@ -1,8 +1,9 @@
 import {npcCognitionView}from'./npc-cognition.mjs';
-import {scheduleAt}from'./npc-schedule.mjs';
+import {scheduleAt,npcAvailability}from'./npc-schedule.mjs';
 import {MemoryIndex}from'./retrieval.mjs';
 import {npcRumors}from'./npc-rumors.mjs';
-import {memoryGuardUntil}from'./magic-mind-space.mjs';
+import {memoryGuardUntil,mindSleepUntil}from'./magic-mind-space.mjs';
+import {waterEarthHeldUntil}from'./magic-water-earth.mjs';
 
 export function memoryBlurMinute(d,npcId,memory,ttl,now){
  return Math.max(memory.minute+ttl*1440,memoryGuardUntil(d,npcId,memory.id,now));
@@ -59,7 +60,11 @@ export function recordNpcMemories(d,engine,before,tool,args,detail,eventId){
         add('permission',`${name(permit.grantor)}${permit.revoked?'收回':'给予'}${name('player')}进入${name(permit.subject)}的拜访许可`,['player',permit.grantor],{salience:3,observers:[],private:true});
     }else if(tool==='quest'&&detail.quest){
         const quest=after.quests[detail.quest];
-        if(quest?.taker==='player')add('quest',`${name('player')}参与的委托“${quest.content??quest.name}”现为${quest.status}`,['player',quest.publisher],{salience:3,observers:[],private:true});
+        // Board completion/cancellation already records party memory. Player
+        // acceptance and legacy quests still need this witnessed-action fallback.
+        const receiptKey=quest&&`${quest.id}:${quest.status}`;
+        const recorded=after.records?.[receiptKey]?.category==='quest_receipt'&&!before.records?.[receiptKey];
+        if(quest?.taker==='player'&&args.operation!=='inspect'&&!recorded)add('quest',`${name('player')}参与的委托“${quest.content??quest.name}”现为${quest.status}`,['player',quest.publisher],{salience:3,observers:[],private:true});
     }
     for(const [id,obligation]of Object.entries(after.obligations??{})){
         const old=before.obligations?.[id];if(old?.status===obligation.status)continue;
@@ -118,5 +123,32 @@ export function npcContext(engine,document,id,query=''){
         concern:goals[0]?.content??'',known:base.knowledge.known.map(row=>row.fact),unknown:base.knowledge.unknown,rumors:npcRumors(engine,id,document),
         recentActivities:Object.values(document.state.npcAutonomy?.actions??{}).filter(row=>row.npc===id&&row.minute<=document.state.minute).slice(-2).map(row=>({minute:row.minute,content:row.summary})),
         memories:shared,reflections:cognition.reflections.filter(row=>row.about==='player').slice(-1),seeds:selectNpcSeedMemories(engine,document,id,query),behavior:base.behaviorRules,
-        relations:base.relationships.map(row=>({with:row.with,type:row.type,note:row.note}))};
+        relations:base.relationships.map(row=>({with:row.with,type:row.type,note:row.note})),
+        background:npcBackground(engine,document,id,query)};
+}
+
+// A relationship is the owner's channel, never the other person's private profile.
+export function npcBackground(engine,document,id,query=''){
+    const base=engine.byId.get(id),state=document.state;if(!base||!state.npcs[id])return null;
+    const mentioned=engine.resolver.mentions(query,state.location);
+    const relations=(base.relationships??[]).filter(row=>mentioned.has(id)||mentioned.has(row.with)||state.npcs[row.with]?.location===state.location)
+        .map(row=>({source:`${id}.relationships`,with:row.with,name:engine.byId.get(row.with)?.name??row.with,type:row.type,note:row.note,
+            publicRole:engine.byId.get(row.with)?.occupation??''}));
+    const dayStart=state.minute-state.minute%1440,slots=[];
+    if(base.schedule)for(let minute=dayStart;minute<dayStart+1440;){
+        const slot=scheduleAt(engine,id,minute,state);if(!slot)break;
+        const seasonal=base.schedule.seasonal?.[String(engine.calendar(minute).season)];
+        const leaf=seasonal?.[slot.variant]?`seasonal.${engine.calendar(minute).season}.${slot.variant}`:
+            base.schedule[slot.variant]?slot.variant:seasonal?.default?`seasonal.${engine.calendar(minute).season}.default`:'default';
+        slots.push({source:slot.festival?`state.records.${slot.festival}`:`${id}.schedule.${leaf}`,start:minute,end:Math.min(slot.until,dayStart+1440),location:slot.location,activity:slot.activity});
+        minute=slot.until;
+    }
+    const slot=slots.find(row=>row.start<=state.minute&&state.minute<row.end),available=npcAvailability(engine,{...state,player:state.player??{}},id),npc=state.npcs[id];
+    const draft={get:(...path)=>path.reduce((value,key)=>value?.[key],document)};
+    const current=slot&&npc.location===slot.location&&available.activity===slot.activity&&!npc.scheduleTravel&&!npc.cognitionTravel&&
+        mindSleepUntil(draft,id,state.minute)<=state.minute&&waterEarthHeldUntil(state,id,state.minute)<=state.minute&&
+        !state.player?.companions?.includes(id)&&!engine.npcObligationAt?.(state,id)&&!engine.npcAutonomyBusy?.(state,id)?
+        {minute:state.minute,location:npc.location,activity:slot.activity}:null;
+    return {relations,schedule:{scope:'routine-background',slots,current,
+        limit:'作息是有时间边界的工作背景；current仅确认当前状态。过去活动须重建实际时段并排除行程、约定及失能覆盖；不证明完成数量或具体进度。'}};
 }
