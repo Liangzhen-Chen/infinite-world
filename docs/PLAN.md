@@ -371,9 +371,7 @@ T28-R1修好新回执undefined规范化并保留严格篡改拒绝，相关31/32
 可改 E/message-view.mjs、runtime.js、style.css，新建 E/input-view.mjs、mail-view.mjs；S/state-notices.mjs、T/state-notices.test.mjs、T/runtime.test.mjs。补齐未知说话人登记、公告与合同卡；系统提示写消息附加数据且由有效事件重建，回滚同步；快捷按钮仅填输入，少量快捷键可关闭，调试外隐藏回执、JSON和技术信息，中文错误保留未确认状态。
 验收：node --test tests/runtime.test.mjs tests/state-notices.test.mjs；node --test tests/engine.test.mjs tests/storage.test.mjs tests/plugin.test.mjs。截图含未知说话人、错误、邮件及手机输入；模型0，预计3小时，1会话。
 
-### T77 角色、技能、法术书与行囊：玩家能查看完整个人成长信息、已学法术及带品质与负重的格子背包。
-可改 E/ledger-view.mjs、runtime.js，新建 E/personal-panels.mjs、personal-panels.css；S/index.mjs、新 S/ui-personal.mjs，T/runtime.test.mjs、新 T/m6-03.test.mjs。复用 player、professions、skills、spells、inventory、itemInstances 和 /catalog；增 /ui/personal 只读返回阶段阈值、职业认证、来源和物品做工／制作者／重量，完成经验条与突破提示，不另算成长规则。
-验收：node --test tests/runtime.test.mjs tests/m6-03.test.mjs；node --test tests/engine.test.mjs tests/storage.test.mjs tests/plugin.test.mjs。四面板分别截图，检查旧档空值和回滚刷新；模型0，预计4小时，1会话。
+### T77 已完成：角色、技能、法术书、格子行囊四面板与/ui/personal只读投影；界面测试夹具改为通用代理extension/下全部模块，后续卡新增模块不用再改夹具。界面测试14/14、CORE40，16张截图在docs/测试报告/最新/M6-03/。
 
 ### T78 人物、编年史与传闻：玩家能查看见过的人及共同经历，搜索自己的历史，并保存人物笔记和传闻判断。
 可改 E/runtime.js，新建 E/people-history.mjs、people-history.css；S/index.mjs、新 S/ui-history.mjs，T/runtime.test.mjs、新 T/m6-04.test.mjs。增 /ui/history，只读复用 chronicle、NPC 玩家关系及实际获知记录，按玩家可见性过滤后分页；所在地取最后获知位置，承诺仅本人相关；笔记和判断存聊天附加数据，不改引擎事实。
