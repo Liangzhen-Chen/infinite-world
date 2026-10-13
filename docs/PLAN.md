@@ -168,11 +168,7 @@ N1–N17至少12项完整有效且≥90%，N6/N16零泄漏，N12真实盲辨，N
 
 ### T61 已完成：主持人默认4096、逐N与盲辨8192，截断仍判失败，四处工具机会标注修正；相关28/CORE40，0模型，真实效果由T64复验。
 
-### T62 自然语言委托的发布、承接和粮仓交付【零模型】
-
-结果：玩家说“燕麦”发布并接受委托后，能买十份带壳燕麦、当面交货并取得托管的二十铜。对应失败：npc_quest_social账本12/26，回合5误选world_trade，N2回合10承接人为空。
-可改：world/meta/items.json的item_oats.aliases、extension/tools.mjs、prompt/constitution.md的动作与参数段、tests/tool-groups.test.mjs、新增tests/m2-task-flow.test.mjs。锁定：引擎结算、其他世界数据、T61/T63的文件。
-验收：`node --test tests/tool-groups.test.mjs tests/m2-task-flow.test.mjs`、CORE；正常HTTP覆盖发布→接受→买粮→交付，钱粮和托管守恒，未接受/缺粮/委托人不在场不能领报酬。模型0。规模约150–250行。
+### T62 已完成：“燕麦”可解析为带壳燕麦，粮仓买卖与商家交易的工具边界写清，发布→承接→买粮→交付整链守恒；相关8/CORE40，0模型，真实效果由T64复验。
 
 ### T63 一致性审核区分可见细节和未发生的事【零模型】
 
