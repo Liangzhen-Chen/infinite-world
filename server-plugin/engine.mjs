@@ -8,6 +8,7 @@ import {prepareMagic,applyMagic}from'./magic.mjs';
 import {settleMagicAreas,nextMagicAreaMinute,prepareAreaMagic,applyAreaMagic,areaTargetFacts}from'./magic-area.mjs';
 import {advanceMagicObjects,assertFireTravel}from'./magic-object.mjs';
 import {advanceAirEffects,adjustAirTravel}from'./magic-air.mjs';
+import {advanceWaterEarth,assertWaterEarthMovement,waterEarthWalkMinutes}from'./magic-water-earth.mjs';
 import{targetFacts,statusContext}from'./magic-context.mjs';
 import {profession,effectiveProficiency}from'./professions.mjs';
 import {xpRequired,allocateAttributes,milestone}from'./progression.mjs';
@@ -259,6 +260,7 @@ export class WorldEngine {
         }
         advanceMagicObjects(d,this,after);
         advanceAirEffects(d,this,before,after);
+        advanceWaterEarth(d,this,before,after);
         settleMagicAreas(d,this);
         for(const [key,effect] of Object.entries(d.get('state','effects'))) if(effect.expires<=after) d.remove(['state','effects',key]);
         const p=d.get('state','player');
@@ -328,9 +330,12 @@ export class WorldEngine {
         return this.airDraft?adjustAirTravel(this.airDraft,this,result,mode,{minute,from,segments,sail:this.npcObligationAction?.tool==='move'}):result;
     }
     move(d,args,id) {
+        for(const target of ['player',...d.get('state','player','companions')??[]])assertWaterEarthMovement(d,target);
         const destination=this.resolve(args.destination),old=d.get('state','location');
         if(old===destination)return {destination,elapsed:0};
         const route=this.route(old,destination,args.mode??'walk',d.get('state','minute'),d.document.randomSeed);
+        const local=d.get('state','records','local_player_position'),mudMinutes=waterEarthWalkMinutes(d,this,local?.location===old?local.point:[0,0],local?.location===old?local.point:[0,0]);
+        route.minutes+=mudMinutes;
         assertFireTravel(d,this,route);
         const entered=new Set(route.edges.flatMap(edgeId=>{const edge=this.world.routes.find(row=>row.id===edgeId);return[edge.from,edge.to];}));entered.delete(old);
         for(const place of entered)assertLocationAccess(d,this,place,{authorization:args.authorization,companions:d.get('state','player','companions')??[],arrivalMinute:d.get('state','minute')+route.minutes});

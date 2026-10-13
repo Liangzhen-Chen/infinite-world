@@ -2,6 +2,7 @@ import {environmentFeatures,localPlayerPoint,localSightClear} from './environmen
 import {assertMagicTargeting} from './magic-targeting.mjs';
 import {areaTargetFacts} from './magic-area.mjs';
 import {derivedStats,monsterStats}from'./combat.mjs';
+import {waterEarthSoundLoss,assertWaterEarthMovement,cutWaterMedium}from'./magic-water-earth.mjs';
 
 // All quantities below are stored in the save, including transferred pollution.
 export const airMechanisms=Object.freeze({airflow:[2000,5],smoke:[2000,5],clean_air:[1000,0],sense_air:[1,0],carry_voice:[80,0],quiet:[80,5],dry_grain:[1000,10],slow_fall:[80,2],lift:[2000,2],sail:[30,5],air_bubble:[600,1],deflect:[60,2],area_wind:[100,5]});
@@ -23,8 +24,8 @@ function locate(engine,d,id){
  const rows=environmentFeatures(engine).filter(r=>r.location===d.get('state','location')&&(r.id===id||r.name===id));
  if(rows.length!==1)throw Error('缺少同地登记的真实空气对象');return rows[0];
 }
-function access(d,engine,row,args,range,readOnly=false){
- if(dist(localPlayerPoint(d),row.position)>range||!localSightClear(d,engine,row.location,localPlayerPoint(d),row.position))throw Error('空气对象超过实际距离或被遮挡');
+function access(d,engine,row,args,range,readOnly=false,acoustic=false){
+ if(dist(localPlayerPoint(d),row.position)>range||!localSightClear(d,engine,row.location,localPlayerPoint(d),row.position,{waterCurtain:!acoustic}))throw Error('空气对象超过实际距离或被遮挡');
  if(readOnly||row.owner==='player'||row.access==='public')return;
  const ids=[args.authorization,...args.authorizations??[]];
  const allowed=ids.some(id=>{const r=d.get('state','records',id);return r?.category==='authorization'&&r.subject===row.id&&r.action==='environment_use'&&r.grantor===row.owner&&!r.revoked&&r.expires>d.get('state','minute')&&(!row.owner?.startsWith('npc_')||!['死亡','濒死'].includes(d.get('state','npcs',row.owner,'status')));});
@@ -48,12 +49,12 @@ function roomState(d,row,minute){
  if(a.oxygenMg>m.capacityMg||a.oxygenMg!==m.capacityMg+a.oxygenAddedMg-a.oxygenUsedMg||a.smokeMg+a.ventedSmokeMg!==a.smokeInputMg)throw Error('空气账不守恒');
  return s;
 }
-function linkedPath(d,engine,args,origin,range,readOnly=false){
+function linkedPath(d,engine,args,origin,range,readOnly=false,acoustic=false){
  const ids=args.path??[origin.id,args.destination];
  if(!Array.isArray(ids)||ids.length<2||ids.length>8||ids.some(id=>typeof id!=='string'||!id)||ids[0]!==origin.id||new Set(ids).size!==ids.length)throw Error('需要明确的连通出口路径');
  const rows=ids.map(id=>locate(engine,d,id));
  for(let i=0;i<rows.length;i++){
-  const row=rows[i];access(d,engine,row,args,range,readOnly);roomState(d,row,d.get('state','minute'));
+  const row=rows[i];access(d,engine,row,args,range,readOnly,acoustic);roomState(d,row,d.get('state','minute'));
   if(i&&(!rows[i-1].links?.exits?.includes(row.id)||state(d,rows[i-1]).closedExits?.includes(row.id)))throw Error('石墙或关闭出口阻断气流与回声');
  }
  return rows;
@@ -79,7 +80,7 @@ export function prepareAirMagic(d,c,args){
  const row=locate(this,d,args.target),s=state(d,row),readOnly=op==='sense_air';
  access(d,this,row,args,c.rangeMeters,readOnly);
  let rows;
- if(['airflow','smoke','sense_air','carry_voice'].includes(op))rows=linkedPath(d,this,args,row,c.rangeMeters,readOnly||op==='carry_voice');
+ if(['airflow','smoke','sense_air','carry_voice'].includes(op))rows=linkedPath(d,this,args,row,c.rangeMeters,readOnly||op==='carry_voice',['sense_air','carry_voice'].includes(op));
  if(['airflow','smoke'].includes(op)&&rows.at(-1).id===row.id)throw Error('封闭空间不能凭空净化');
  if(op==='sense_air'){
   const wind=row.airModel.windVector; if(!Array.isArray(wind)||wind.length!==2||!wind.every(Number.isFinite))throw Error('缺少真实风向数据');
@@ -95,6 +96,7 @@ export function prepareAirMagic(d,c,args){
   integer(air.airModel.vaporCapacityMg,1,100000000,'空气水汽容量');
  }
  if(op==='lift'){
+  assertWaterEarthMovement(d,row.id);
   integer(s.massMg,1,2000000,'轻物质量');if(s.fixed||s.massMg>c.effectSpec.power*1000)throw Error('风柱不能托起固定物或超重物');
   if(Object.values(d.get('state','effects')??{}).some(e=>e.kind==='air'&&e.operation==='lift'&&e.target===row.id&&e.expires>now))throw Error('轻物已有风柱承托，不能叠加载荷');
   for(const r of environmentFeatures(this).filter(r=>r.location===row.location&&r.id!==row.id&&dist(r.position,row.position)<=2)){
@@ -119,7 +121,8 @@ function transfer(d,from,to,field,amount){
 }
 function sendSound(d,engine,rows,text,volume,id){
  const now=d.get('state','minute'),heard=[];
- for(const row of rows){
+ for(const [index,row]of rows.entries()){
+  if(index)volume=Math.max(0,volume-waterEarthSoundLoss(d,row.location,rows[index-1].position,row.position));
   const silence=Object.values(d.get('state','effects')??{}).filter(e=>e.kind==='air'&&e.operation==='quiet'&&e.target===row.id&&e.started<=now&&e.expires>now).reduce((m,e)=>Math.max(m,e.power),0);
   volume=Math.max(0,volume-silence);if(!volume)break;
   const actors=[['player',d.get('state','player')],...Object.entries(d.get('state','npcs')??{}),...Object.entries(d.get('state','creatures')??{})];
@@ -127,7 +130,8 @@ function sendSound(d,engine,rows,text,volume,id){
    if(heard.includes(target)||actor.status==='死亡')continue;
    const f=areaTargetFacts(d,engine,target,row.location);
    if(!f||dist(f.point,row.position)>(row.airModel.hearingRadiusMeters??2))continue;
-   heard.push(target);d.set(['state','records',`air_heard:${id}:${target}`],{category:'heard_sound',subject:target,text,volume,room:row.id,minute:now,source:id});
+   const audible=Math.max(0,volume-waterEarthSoundLoss(d,row.location,row.position,f.point));if(!audible)continue;
+   heard.push(target);d.set(['state','records',`air_heard:${id}:${target}`],{category:'heard_sound',subject:target,text,volume:audible,room:row.id,minute:now,source:id});
   }
  }
  return{heard,remainingVolume:volume};
@@ -252,7 +256,7 @@ export function airEnvironmentAction(d,args,id){
   if(row.kind!=='grain'||s.sealed)throw Error('需要可翻动的实际散装谷物');s.turned=true;s.exposed=true;store(d,row,s);this.advance(d,1,id);return{target:row.id,turned:true,minutes:1};
  }
  if(op==='sound'){
-  const rows=linkedPath(d,this,args,row,40,true);if(typeof args.text!=='string'||!args.text.trim()||Array.from(args.text).length>80)throw Error('声音需要实际文字');
+  const rows=linkedPath(d,this,args,row,40,true,true);if(typeof args.text!=='string'||!args.text.trim()||Array.from(args.text).length>80)throw Error('声音需要实际文字');
   return{...sendSound(d,this,rows,args.text,80,id),actionScope:{kind:'instant',instantaneous:true}};
  }
  if(op==='fall'){
@@ -281,11 +285,13 @@ export function airEnvironmentAction(d,args,id){
 }
 export function prepareWindObject(d,c,args){
  const row=locate(this,d,args.target);access(d,this,row,args,c.rangeMeters);const s=state(d,row);
+ if(Object.values(d.get('state','effects')??{}).some(e=>e.kind==='water_earth'&&e.medium===row.id&&e.expires>d.get('state','minute')))return{target:row.id,row,catalog:c,args:{...args},windObject:true,waterMedium:true};
  if(!['cloth','leather','wood','iron','steel','stone','metal'].includes(s.material)||!Number.isSafeInteger(s.integrity)||s.integrity<=0)throw Error('风刃需要有真实材质和完整度的软物或甲材');
  return{target:row.id,row,catalog:c,args:{...args},windObject:true};
 }
 export function applyWindObject(d,p){
  try{p=prepareWindObject.call(this,d,p.catalog,p.args);}catch(e){return{target:p.target,effectFailed:e.message};}
+ if(p.waterMedium)return cutWaterMedium(d,this,p.target);
  const s=state(d,p.row),damage=Math.min(s.integrity,Math.floor(p.catalog.effectSpec.power*windArmorMultiplier(s.material)));
  s.integrity-=damage;s.cutDamage=(s.cutDamage??0)+damage;store(d,p.row,s);return{target:p.target,damage,integrity:s.integrity,material:s.material};
 }

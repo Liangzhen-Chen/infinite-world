@@ -4,9 +4,9 @@
   "formalSpellCount": 31,
   "counts": {
     "reviewed-unpublished": 2,
-    "consumer-ready": 21,
+    "consumer-ready": 38,
     "published": 30,
-    "missing-consumer": 101
+    "missing-consumer": 84
   },
   "rows": [
     {
@@ -272,12 +272,14 @@
       "name": "止漏膜",
       "mechanism": "seal",
       "originalEffect": "暂封一个容器的漏口，超过压力上限会破裂",
-      "status": "missing-consumer",
-      "handler": null,
-      "validation": [
-        "此法术机制尚未接入规则，不能叙述已实现"
-      ],
-      "evidence": "缺对应有限地形/容器状态、施工或传感消费者，不能只登记效果。"
+      "status": "consumer-ready",
+      "handler": {
+        "kind": "water_earth",
+        "operation": "seal",
+        "power": 20
+      },
+      "validation": [],
+      "evidence": "server-plugin/magic-water-earth.mjs、magic.mjs与tests/magic-water-earth.test.mjs；未进行内容审核或正式发布"
     },
     {
       "id": "spell_water_06",
@@ -299,12 +301,14 @@
       "name": "水绳术",
       "mechanism": "bind_water",
       "originalEffect": "以水流缠住一肢或同等粗细轻物，载荷不超过两公斤，可被切断媒介",
-      "status": "missing-consumer",
-      "handler": null,
-      "validation": [
-        "此法术机制尚未接入规则，不能叙述已实现"
-      ],
-      "evidence": "缺对应有限地形/容器状态、施工或传感消费者，不能只登记效果。"
+      "status": "consumer-ready",
+      "handler": {
+        "kind": "water_earth",
+        "operation": "bind_water",
+        "power": 2000
+      },
+      "validation": [],
+      "evidence": "server-plugin/magic-water-earth.mjs、magic.mjs与tests/magic-water-earth.test.mjs；未进行内容审核或正式发布"
     },
     {
       "id": "spell_water_08",
@@ -327,24 +331,28 @@
       "name": "河床听辨",
       "mechanism": "survey_water",
       "originalEffect": "测出小段水道浅滩和流速，不能预测整条河",
-      "status": "missing-consumer",
-      "handler": null,
-      "validation": [
-        "此法术机制尚未接入规则，不能叙述已实现"
-      ],
-      "evidence": "缺对应有限地形/容器状态、施工或传感消费者，不能只登记效果。"
+      "status": "consumer-ready",
+      "handler": {
+        "kind": "water_earth",
+        "operation": "survey_water",
+        "power": 5
+      },
+      "validation": [],
+      "evidence": "server-plugin/magic-water-earth.mjs、magic.mjs与tests/magic-water-earth.test.mjs；未进行内容审核或正式发布"
     },
     {
       "id": "spell_water_10",
       "name": "缓流壁",
       "mechanism": "slow_flow",
       "originalEffect": "削弱小股急流，不能阻断洪峰",
-      "status": "missing-consumer",
-      "handler": null,
-      "validation": [
-        "此法术机制尚未接入规则，不能叙述已实现"
-      ],
-      "evidence": "缺对应有限地形/容器状态、施工或传感消费者，不能只登记效果。"
+      "status": "consumer-ready",
+      "handler": {
+        "kind": "water_earth",
+        "operation": "slow_flow",
+        "power": 50
+      },
+      "validation": [],
+      "evidence": "server-plugin/magic-water-earth.mjs、magic.mjs与tests/magic-water-earth.test.mjs；未进行内容审核或正式发布"
     },
     {
       "id": "spell_water_11",
@@ -378,12 +386,14 @@
       "name": "流幕术",
       "mechanism": "veil_water",
       "originalEffect": "水帘掩住一处通道，水声会暴露施法位置",
-      "status": "missing-consumer",
-      "handler": null,
-      "validation": [
-        "此法术机制尚未接入规则，不能叙述已实现"
-      ],
-      "evidence": "缺区域内多目标、持续触发及跨边界解除/友军波及消费者。"
+      "status": "consumer-ready",
+      "handler": {
+        "kind": "water_earth",
+        "operation": "veil_water",
+        "power": 1000
+      },
+      "validation": [],
+      "evidence": "server-plugin/magic-water-earth.mjs、magic.mjs与tests/magic-water-earth.test.mjs；未进行内容审核或正式发布"
     },
     {
       "id": "spell_water_14",
@@ -600,24 +610,28 @@
       "name": "辨壤术",
       "mechanism": "sense_soil",
       "originalEffect": "识别一把土的质地，不能直接知道地契归属",
-      "status": "missing-consumer",
-      "handler": null,
-      "validation": [
-        "此法术机制尚未接入规则，不能叙述已实现"
-      ],
-      "evidence": "缺对应有限地形/容器状态、施工或传感消费者，不能只登记效果。"
+      "status": "consumer-ready",
+      "handler": {
+        "kind": "water_earth",
+        "operation": "sense_soil",
+        "power": 1
+      },
+      "validation": [],
+      "evidence": "server-plugin/magic-water-earth.mjs、magic.mjs与tests/magic-water-earth.test.mjs；未进行内容审核或正式发布"
     },
     {
       "id": "spell_earth_02",
       "name": "松土术",
       "mechanism": "till",
       "originalEffect": "松开一小片耕土，不能代替排石与播种",
-      "status": "missing-consumer",
-      "handler": null,
-      "validation": [
-        "此法术机制尚未接入规则，不能叙述已实现"
-      ],
-      "evidence": "缺对应有限地形/容器状态、施工或传感消费者，不能只登记效果。"
+      "status": "consumer-ready",
+      "handler": {
+        "kind": "water_earth",
+        "operation": "till",
+        "power": 4
+      },
+      "validation": [],
+      "evidence": "server-plugin/magic-water-earth.mjs、magic.mjs与tests/magic-water-earth.test.mjs；未进行内容审核或正式发布"
     },
     {
       "id": "spell_earth_03",
@@ -639,86 +653,100 @@
       "name": "砾声探路",
       "mechanism": "survey_earth",
       "originalEffect": "根据石子的回声探查近处空隙，误差随岩层变化",
-      "status": "missing-consumer",
-      "handler": null,
-      "validation": [
-        "此法术机制尚未接入规则，不能叙述已实现"
-      ],
-      "evidence": "缺对应有限地形/容器状态、施工或传感消费者，不能只登记效果。"
+      "status": "consumer-ready",
+      "handler": {
+        "kind": "water_earth",
+        "operation": "survey_earth",
+        "power": 3
+      },
+      "validation": [],
+      "evidence": "server-plugin/magic-water-earth.mjs、magic.mjs与tests/magic-water-earth.test.mjs；未进行内容审核或正式发布"
     },
     {
       "id": "spell_earth_05",
       "name": "泥封术",
       "mechanism": "mud_seal",
       "originalEffect": "以现有黏土封住低压缝口，需要定期检查",
-      "status": "missing-consumer",
-      "handler": null,
-      "validation": [
-        "此法术机制尚未接入规则，不能叙述已实现"
-      ],
-      "evidence": "缺对应有限地形/容器状态、施工或传感消费者，不能只登记效果。"
+      "status": "consumer-ready",
+      "handler": {
+        "kind": "water_earth",
+        "operation": "mud_seal",
+        "power": 5
+      },
+      "validation": [],
+      "evidence": "server-plugin/magic-water-earth.mjs、magic.mjs与tests/magic-water-earth.test.mjs；未进行内容审核或正式发布"
     },
     {
       "id": "spell_earth_06",
       "name": "固堤术",
       "mechanism": "levee",
       "originalEffect": "临时提高一段土堤抗冲刷性，失效后须修缮",
-      "status": "missing-consumer",
-      "handler": null,
-      "validation": [
-        "此法术机制尚未接入规则，不能叙述已实现"
-      ],
-      "evidence": "缺对应有限地形/容器状态、施工或传感消费者，不能只登记效果。"
+      "status": "consumer-ready",
+      "handler": {
+        "kind": "water_earth",
+        "operation": "levee",
+        "power": 50
+      },
+      "validation": [],
+      "evidence": "server-plugin/magic-water-earth.mjs、magic.mjs与tests/magic-water-earth.test.mjs；未进行内容审核或正式发布"
     },
     {
       "id": "spell_earth_07",
       "name": "石弹术",
       "mechanism": "damage_earth",
       "originalEffect": "加速一块已有小石，目标由瞄准决定",
-      "status": "missing-consumer",
+      "status": "consumer-ready",
       "handler": {
         "kind": "damage",
-        "power": 16,
-        "damageType": "earth"
+        "power": 40,
+        "damageType": "earth",
+        "armorFactor": 0.25,
+        "stoneProjectile": true
       },
       "validation": [],
-      "evidence": "缺真实小石的取用、飞行和落地归属，不能凭空射石。"
+      "evidence": "server-plugin/magic-water-earth.mjs、magic.mjs与tests/magic-water-earth.test.mjs；未进行内容审核或正式发布"
     },
     {
       "id": "spell_earth_08",
       "name": "整地术",
       "mechanism": "level_ground",
       "originalEffect": "平整有限表土，不会消除地下根系和管道",
-      "status": "missing-consumer",
-      "handler": null,
-      "validation": [
-        "此法术机制尚未接入规则，不能叙述已实现"
-      ],
-      "evidence": "缺对应有限地形/容器状态、施工或传感消费者，不能只登记效果。"
+      "status": "consumer-ready",
+      "handler": {
+        "kind": "water_earth",
+        "operation": "level_ground",
+        "power": 4
+      },
+      "validation": [],
+      "evidence": "server-plugin/magic-water-earth.mjs、magic.mjs与tests/magic-water-earth.test.mjs；未进行内容审核或正式发布"
     },
     {
       "id": "spell_earth_09",
       "name": "矿纹显露",
       "mechanism": "ore",
       "originalEffect": "显出近处矿物条带，产量仍须开采与冶炼",
-      "status": "missing-consumer",
-      "handler": null,
-      "validation": [
-        "此法术机制尚未接入规则，不能叙述已实现"
-      ],
-      "evidence": "缺对应有限地形/容器状态、施工或传感消费者，不能只登记效果。"
+      "status": "consumer-ready",
+      "handler": {
+        "kind": "water_earth",
+        "operation": "ore",
+        "power": 1
+      },
+      "validation": [],
+      "evidence": "server-plugin/magic-water-earth.mjs、magic.mjs与tests/magic-water-earth.test.mjs；未进行内容审核或正式发布"
     },
     {
       "id": "spell_earth_10",
       "name": "承重纹",
       "mechanism": "structural_sense",
       "originalEffect": "提示一面墙受力异常，不能无材料修复整栋建筑",
-      "status": "missing-consumer",
-      "handler": null,
-      "validation": [
-        "此法术机制尚未接入规则，不能叙述已实现"
-      ],
-      "evidence": "缺对应有限地形/容器状态、施工或传感消费者，不能只登记效果。"
+      "status": "consumer-ready",
+      "handler": {
+        "kind": "water_earth",
+        "operation": "structural_sense",
+        "power": 1
+      },
+      "validation": [],
+      "evidence": "server-plugin/magic-water-earth.mjs、magic.mjs与tests/magic-water-earth.test.mjs；未进行内容审核或正式发布"
     },
     {
       "id": "spell_earth_11",
@@ -739,36 +767,42 @@
       "name": "陷足地",
       "mechanism": "mud_trap",
       "originalEffect": "使一片湿土更易陷足，铺板和脱离湿土可破解",
-      "status": "missing-consumer",
-      "handler": null,
-      "validation": [
-        "此法术机制尚未接入规则，不能叙述已实现"
-      ],
-      "evidence": "缺区域内多目标、持续触发及跨边界解除/友军波及消费者。"
+      "status": "consumer-ready",
+      "handler": {
+        "kind": "water_earth",
+        "operation": "mud_trap",
+        "power": 4
+      },
+      "validation": [],
+      "evidence": "server-plugin/magic-water-earth.mjs、magic.mjs与tests/magic-water-earth.test.mjs；未进行内容审核或正式发布"
     },
     {
       "id": "spell_earth_13",
       "name": "穹撑术",
       "mechanism": "support",
       "originalEffect": "短时支撑正在下沉的顶板，不能替代永久梁柱",
-      "status": "missing-consumer",
-      "handler": null,
-      "validation": [
-        "此法术机制尚未接入规则，不能叙述已实现"
-      ],
-      "evidence": "缺对应有限地形/容器状态、施工或传感消费者，不能只登记效果。"
+      "status": "consumer-ready",
+      "handler": {
+        "kind": "water_earth",
+        "operation": "support",
+        "power": 500
+      },
+      "validation": [],
+      "evidence": "server-plugin/magic-water-earth.mjs、magic.mjs与tests/magic-water-earth.test.mjs；未进行内容审核或正式发布"
     },
     {
       "id": "spell_earth_14",
       "name": "裂岩楔",
       "mechanism": "fracture",
       "originalEffect": "扩开岩石已有裂隙，震动可能伤及邻近结构",
-      "status": "missing-consumer",
-      "handler": null,
-      "validation": [
-        "此法术机制尚未接入规则，不能叙述已实现"
-      ],
-      "evidence": "缺对应有限地形/容器状态、施工或传感消费者，不能只登记效果。"
+      "status": "consumer-ready",
+      "handler": {
+        "kind": "water_earth",
+        "operation": "fracture",
+        "power": 5
+      },
+      "validation": [],
+      "evidence": "server-plugin/magic-water-earth.mjs、magic.mjs与tests/magic-water-earth.test.mjs；未进行内容审核或正式发布"
     },
     {
       "id": "spell_light_01",

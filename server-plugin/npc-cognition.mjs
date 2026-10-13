@@ -1,6 +1,7 @@
 import {advanceMagicMessages,nextMagicMessageMinute}from'./magic-message.mjs';
 import {applyPatches,digest} from './storage.mjs';
 import {advanceNpcSchedules} from './npc-schedule.mjs';
+import {waterEarthHeldUntil}from'./magic-water-earth.mjs';
 import {relationView} from './npc-relations.mjs';
 import {assertNpcObligationAction} from './npc-obligations.mjs';
 import {observeLegalReputation} from './reputation.mjs';
@@ -64,6 +65,7 @@ export function shareNpcMemory(d,engine,{from,to,memoryId,channel='conversation'
   appendHeard(d,engine,from,to,memory,at,'conversation',messageId);return {messageId,delivered:true,minute:at};
  }
  if(channel!=='carry')throw Error('未登记的消息渠道');
+ if(waterEarthHeldUntil(state,from,at)>at)throw Error('水绳束缚期间不能携信离开');
  if(occupied(state,from,at,at+1))throw Error('携信者正受同行或义务占用');
  if(!b.location)throw Error('收件人正在途中，没有可确认的投递地址');
  const messages=state.npcCognition?.messages??{};if(messages[messageId])return {duplicate:true,messageId};

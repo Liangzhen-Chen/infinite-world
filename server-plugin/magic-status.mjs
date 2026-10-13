@@ -1,4 +1,5 @@
 // Status identifiers and their numerical consequences are authored rules.
+import {waterEarthHeldUntil}from'./magic-water-earth.mjs';
 export const magicStatuses={
     stone_skin:{maximum:15,beneficial:true},
     fire_shield:{maximum:80,beneficial:true},
@@ -26,7 +27,8 @@ export function magicStatusStats(d,target,context={}){
         if(effect.status==='camouflage'&&(context.raining||context.moving))power=Math.floor(power/2);
         powers[effect.status]=Math.max(powers[effect.status]??0,power);
     }
-    return{defense:powers.stone_skin??0,evasion:-(powers.stone_skin??0)*0.02+(powers.camouflage??0)*0.01,
+    const bound=waterEarthHeldUntil(d.get('state'),target,d.get('state','minute'))>d.get('state','minute')?.1:0;
+    return{defense:powers.stone_skin??0,evasion:-(powers.stone_skin??0)*0.02+(powers.camouflage??0)*0.01-bound,
         hit:-(Math.max(0,(powers.fear??0)-(powers.travel_calm??0))+(powers.dazzle??0)+(powers.illusion??0)+(powers.compulsion??0))*0.02||0,
         nightVision:(powers.nightvision??0)*0.02,
         fireResistance:(powers.fire_shield??0)/100,
