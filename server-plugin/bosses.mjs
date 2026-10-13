@@ -1,6 +1,7 @@
 import {createHash} from 'node:crypto';
 import {monsterStats,tacticDefense} from './combat.mjs';
 import {validateBossMechanics,templateBossCounter}from'./boss-abilities.mjs';
+import {emptyBossCognition,rememberBossEncounter,bossPublicAttitude}from'./boss-cognition.mjs';
 const clone=v=>structuredClone(v),key=b=>['state','records',`lair:${b.residence.id}`];
 const living=a=>a&&a.status!=='死亡'&&a.hp>0;
 export function validateBossEcology(world){
@@ -33,10 +34,13 @@ export function bossCounter(d,engine,target,tactic){
 }
 export function rememberBossTactic(d,engine,target,tactic,eventId){
     const actor=d.get('state','creatures',target);if(!engine.rules.bossEcology||!actor?.boss)return;
+    rememberBossEncounter(d,engine,target,{kind:'clash',tactic,eventId});
     const memory=clone(actor.battleMemory??{tactics:{},lastEvent:null});if(memory.lastEvent===eventId)return;
     if(!memory.tactics||typeof memory.tactics!=='object'||Array.isArray(memory.tactics))throw new Error('首领战术记忆格式不支持，拒绝覆盖原记录');
     memory.tactics[tactic]=(memory.tactics[tactic]??0)+1;memory.lastEvent=eventId;memory.lastMinute=d.get('state','minute');
     d.set(['state','creatures',target,'battleMemory'],memory);
+    const publicAttitude=bossPublicAttitude(d,engine,target);
+    if(publicAttitude)d.say(`${actor.name}：${publicAttitude.attitude}。${publicAttitude.reason}`);
 }
 export function defeatBoss(d,engine,target,eventId){
     const actor=d.get('state','creatures',target),boss=engine.byId.get(actor?.boss);if(!boss?.residence||living(actor))return null;
@@ -50,7 +54,7 @@ function instantiate(d,engine,{id,species,location,lair,boss=null,eventId}){
     const stats=monsterStats({level,template:s.template,bossTier:boss?definition.tier:0},engine.rules),name=boss?definition.name:`${s.name}·${id.slice(-4)}`;
     if(!boss)d.set(['state','created',id],{id,name,aliases:[],monster:species,template:s.template,scope:location});
     d.set(['state','creatures',id],{name,species,ecology:s.wildlife.habitat,lair,location,level,hp:stats.maxHp,maxHp:stats.maxHp,status:'正常',owner:null,
-        ...(boss?{boss,battleMemory:{tactics:{},lastEvent:null}}:{}),source:eventId});
+        ...(boss?{boss,battleMemory:{tactics:{},lastEvent:null},...(definition.intelligence>0?{cognition:emptyBossCognition()}:{})}:{}),source:eventId});
     return{id,name,level,hp:stats.maxHp};
 }
 function drawSpecies(d,engine,species,lair,eventId){
@@ -92,7 +96,8 @@ export function lairAction(d,args,eventId){
     const r=clone(d.get(...key(boss))),operation=args.operation??'observe';
     if(operation==='observe'){
         const actor=r.occupant?.actor?d.get('state','creatures',r.occupant.actor):null;
-        return{lair:boss.residence.name,occupant:actor&&actor.location===d.get('state','location')?{id:r.occupant.actor,name:actor.name,status:actor.status,hp:actor.hp}:null,
+        return{lair:boss.residence.name,occupant:actor&&actor.location===d.get('state','location')?{id:r.occupant.actor,name:actor.name,status:actor.status,hp:actor.hp,
+            ...publicContact(d,this,r.occupant.actor)}:null,
             note:actor?'仅观察已接触个体':'尚未接触活体，入口观察不能知道未见占据者或其战斗记忆',actionScope:{kind:'instant',instantaneous:true}};
     }
     if(operation!=='approach')throw new Error('巢穴操作需为observe或approach');
@@ -101,13 +106,17 @@ export function lairAction(d,args,eventId){
     const latest=clone(d.get(...key(boss)));if(!latest.occupant)return{contact:null,note:'巢穴实际空置，进入不会触发原首领重生'};
     if(latest.occupant.actor){const actor=d.get('state','creatures',latest.occupant.actor);
         if(!living(actor)||actor.owner||actor.location!==boss.residence.location)return{contact:null,note:'原占据者已不在此处活动，不能隔空接触或重造同一首领'};
-        return{contact:{id:latest.occupant.actor,name:actor.name,status:actor.status,hp:actor.hp},alreadyPresent:true};}
+        rememberBossEncounter(d,this,latest.occupant.actor,{kind:'approach',eventId});
+        return{contact:{id:latest.occupant.actor,name:actor.name,status:actor.status,hp:actor.hp,...publicContact(d,this,latest.occupant.actor)},alreadyPresent:true};}
     if(latest.occupant.kind!=='boss'||latest.occupant.definition!==boss.id)throw new Error('巢穴占据者记录无效');
     const contact=instantiate(d,this,{id:boss.id,species:boss.monster,boss:boss.id,location:boss.residence.location,lair:boss.residence.id,eventId});
     latest.occupant.actor=boss.id;d.set(key(boss),latest);
+    rememberBossEncounter(d,this,boss.id,{kind:'approach',eventId});
+    Object.assign(contact,publicContact(d,this,boss.id));
     const minions=[];for(let i=0;i<boss.residence.minionCount;i++){
         const species=boss.minions[i%boss.minions.length];if(!species)break;
         const drawn=drawSpecies(d,this,species,boss.residence.id,`${eventId}_minion_${i}`);if(drawn)minions.push(drawn);
     }
     return{contact,minions,note:'接触巢穴既有首领与实际部下，没有自动攻击、驯服或获得材料'};
 }
+function publicContact(d,engine,target){const cognition=bossPublicAttitude(d,engine,target);return cognition?{cognition}:{};}
