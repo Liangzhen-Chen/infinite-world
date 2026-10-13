@@ -68,7 +68,7 @@ function acceptNpc(d,engine,q,id,now,state=d.get('state')){
  if(route.minutes+work>240)throw Error('委托超过单日自主工作窗口');
  const spent=d.get('state','npcs',id,'autonomy','minutesByDay',String(Math.floor(now/DAY)))??0;
  if(spent+route.minutes+work>240)throw Error('每日自主工作时间已用尽');
- for(let t=now;t<finish;){const slot=scheduleAt(engine,id,t);if(!slot||/(睡眠|睡觉|熟睡|前往|返回|赶路)/.test(slot.activity))throw Error('实际作息没有清醒履约窗口');t=slot.until;}
+ for(let t=now;t<finish;){const slot=scheduleAt(engine,id,t,state);if(!slot||slot.production===false||/(睡眠|睡觉|熟睡|前往|返回|赶路)/.test(slot.activity))throw Error('实际作息没有清醒履约窗口');t=slot.until;}
  assertNpcObligationAction(d,engine,[id],{start:now,minutes:finish-now,kind:'quest'});
  engine.assertNpcAutonomyAction?.(d.get('state'),[id],{start:now,minutes:finish-now});
  if(Object.values(d.get('state','obligations')??{}).some(o=>o.type==='带路'&&['待履行','进行中'].includes(o.status)&&[o.promisor,o.promisee].includes(id)))throw Error('承接者已有带路义务');

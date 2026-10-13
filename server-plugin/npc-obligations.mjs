@@ -127,7 +127,7 @@ function simulateNpc(d,engine,id,before,after,bookings){
   const pending=bookings.filter(o=>!(o.type==='等候'&&o.promisee===id&&visited(o)));
   const active=pending.find(o=>(o.departures[id]??o.start)<=t&&(t<o.deadline||o.deliveryVersion===1&&t===o.deadline));
   const upcoming=pending.map(o=>o.departures[id]??o.start).filter(n=>n>t);
-  const slot=active?{location:active.location,activity:active.type,until:active.deadline}:scheduleAt(engine,id,t);
+  const slot=active?{location:active.location,activity:active.type,until:active.deadline}:scheduleAt(engine,id,t,d.get('state'));
   if(!slot){add(after);break;}
   const visitEnd=active?.type==='等候'&&active.promisee===id?Math.max(t,active.start)+1:Infinity;
   const end=Math.min(after,slot.until,visitEnd,...upcoming);
