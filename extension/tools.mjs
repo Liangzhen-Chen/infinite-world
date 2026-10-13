@@ -35,7 +35,10 @@ define('world_catalog','按名称或编号查公开规则与文化、势力、�
 define('world_read','查看玩家、行囊、人物或约定等已记录状态。',{section:str});
 definitions.find(row=>row.function.name==='world_trade').function.parameters.properties.operation.description='交易或办理经营合同：lease租铺，procure托管采购，hire雇工盘点，fulfill到场履约，sell向同意的实际顾客出售，pay还合同债，cancel取消未履约合同。';
 definitions.find(row=>row.function.name==='world_remember').function.parameters.properties.rumor={...str,description:'当面询问传闻填编号；subject为玩家、key同rumor、source为在场讲述者、content原样记未核实claim，交谈10分钟。'};
-definitions.find(row=>row.function.name==='world_settlement').function.parameters.properties.operation.description='business编号用于business_open开店、business_close停业、business_bankrupt现金破产、business_report期末盈亏；户籍与议事见操作枚举。';
+const festivalParameters=definitions.find(row=>row.function.name==='world_settlement').function.parameters.properties;
+festivalParameters.operation.enum.push('festival_inspect','festival_plan','festival_authorize','festival_join','festival_cancel');
+Object.assign(festivalParameters,{festival:{...str,description:'inspect返回custom编号供plan；后续操作使用plan返回的festival预约编号'},year:{...int,minimum:1},cost:{...int,minimum:0,description:'组织者明确同意的私人服务费；公共支出未获授权'},supplier:str});
+festivalParameters.operation.description='business编号用于经营操作；festival_inspect现场查节俗，festival_plan预约实际日期，festival_authorize由speaker分别确认组织者自费和服务者收费，festival_join由每位speaker明确同意，festival_cancel由组织者说明原因。户籍与议事见操作枚举。';
 const routes=new Map();
 function group(name,description,members){
     const selected=definitions.filter(row=>members.includes(row.function.name)),properties={},operations=[],mapping=new Map();
