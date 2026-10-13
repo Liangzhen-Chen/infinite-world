@@ -1,3 +1,4 @@
+import {validateCareCatalog,prepareCare,applyCare}from'./magic-care.mjs';
 import {validateGrowthCatalog,prepareGrowthMagic,applyGrowthMagic}from'./magic-growth.mjs';
 import {messageKinds,validateMessageCatalog,prepareMessage,applyMessage}from'./magic-message.mjs';
 import {movementKinds,validateMovementCatalog,prepareMovement,applyMovement}from'./magic-movement.mjs';
@@ -36,6 +37,7 @@ export function validateMagicCatalog(catalog,{requireHandler=false}={}){
     if(spec.kind==='object')errors.push(...validateObjectCatalog(catalog));
     if(spec.kind==='heat')errors.push(...validateHeatCatalog(catalog));
     if(spec.kind==='air')errors.push(...validateAirCatalog(catalog));
+    if(spec.kind==='care')errors.push(...validateCareCatalog(catalog));
     if(spec.kind==='water_earth')errors.push(...validateWaterEarthCatalog(catalog));
     if(['optics','light'].includes(spec.kind))errors.push(...validateLightCatalog(catalog));
     if((spec.lightDecay||spec.shadowDecay)&&(!catalog.targeting||catalog.duration!==0||!Number.isFinite(catalog.rangeMeters)||catalog.rangeMeters>40))errors.push('光束须声明实际目标边界、有限射程且为瞬时伤害');
@@ -47,6 +49,7 @@ export function validateMagicCatalog(catalog,{requireHandler=false}={}){
 export function prepareMagic(d,catalog,args,context={}){
     const errors=validateMagicCatalog(catalog);if(errors.length)throw new Error(errors.join('；'));
     const spec=catalog.effectSpec;if(!spec)return null;
+    if(spec.kind==='care')return prepareCare.call(this,d,catalog,args);
     if(spec.kind==='light')return prepareLight.call(this,d,catalog,args);
     if(spec.kind==='optics')return prepareOptics.call(this,d,catalog,args);
     if(spec.kind==='water_earth')return prepareWaterEarthMagic.call(this,d,catalog,args);
@@ -98,6 +101,7 @@ export function prepareMagic(d,catalog,args,context={}){
 export function applyMagic(d,prepared,id){
     if(!prepared)return{};
     let{spec,target,path,catalog}=prepared;
+    if(spec.kind==='care')return applyCare.call(this,d,prepared,id);
     if(spec.kind==='light')return applyLight.call(this,d,prepared,id);
     if(spec.kind==='optics')return applyOptics.call(this,d,prepared,id);
     if(prepared.windObject)return applyWindObject.call(this,d,prepared);

@@ -2,6 +2,7 @@ import fs from 'node:fs/promises';import path from 'node:path';
 import {loadWorld} from './load-world.mjs';import {spellBlueprints} from '../world/design/spell-blueprints.mjs';
 import {reuseSpellCandidates,reuseMechanismFacts} from '../world/design/w2-reuse-candidates.mjs';
 import {airMechanisms} from '../server-plugin/magic-air.mjs';
+import {careMechanisms}from'../server-plugin/magic-care.mjs';
 import {lightMechanisms}from'../server-plugin/magic-light.mjs';
 import {waterEarthMechanisms}from'../server-plugin/magic-water-earth.mjs';
 import {objectSpellCandidates} from '../world/design/m4-object-candidates.mjs';import {validateMagicCatalog} from '../server-plugin/magic.mjs';
@@ -57,12 +58,20 @@ export function lightSpellCandidates(){
   return{...s,effectSpec:{kind:'optics',operation:s.mechanism,power},duration,durationLimit:duration,rangeMeters:Math.min(40,s.rangeMeters),...(['bind_shadow','decoy','reveal'].includes(s.mechanism)?{targeting:{lineOfSight:true,...(s.mechanism==='decoy'?{consent:'support_magic'}:{})}}:{})};
  });
 }
+export function careSpellCandidates(){
+ return spellBlueprints().filter(s=>s.id.startsWith('spell_life_')||s.mechanism==='preserve').map(s=>{
+  if(s.mechanism==='garden')return{...s,effectSpec:{kind:'growth',power:250,unit:'permille'},duration:10080,durationLimit:10080,rangeMeters:3};
+  const operation=s.mechanism==='healing'?(s.id==='spell_life_01'?'hemostasis':'close_wound'):s.mechanism;
+  const [power,duration]=careMechanisms[operation];
+  return{...s,effectSpec:{kind:'care',operation,power},duration,durationLimit:duration,rangeMeters:3,...(['hemostasis','close_wound','clean_wound','disease_sense','pain','stabilize','parasite','restore_tendon'].includes(operation)?{targeting:{lineOfSight:true}}:{})};
+ });
+}
 export function mechanismMap(world){
- const light=new Map(lightSpellCandidates().map(s=>[s.id,s])),published=new Map(world.spells.map(s=>[s.id,s])),reuse=new Map(reuseSpellCandidates().map(s=>[s.id,s])),approved=new Map(objectSpellCandidates.map(s=>[s.id,s])),heat=new Map(heatSpellCandidates().map(s=>[s.id,s])),air=new Map(airSpellCandidates().map(s=>[s.id,s])),waterEarth=new Map(waterEarthSpellCandidates().map(s=>[s.id,s]));
- const rows=spellBlueprints().map(s=>{const actual=published.get(s.id)??approved.get(s.id)??light.get(s.id)??waterEarth.get(s.id)??air.get(s.id)??reuse.get(s.id)??heat.get(s.id),status=published.has(s.id)?'published':approved.has(s.id)?'reviewed-unpublished':light.has(s.id)||waterEarth.has(s.id)||air.has(s.id)||heat.has(s.id)?'consumer-ready':reuse.has(s.id)?'reuse-candidate':'missing-consumer';
+ const care=new Map(careSpellCandidates().map(s=>[s.id,s])),light=new Map(lightSpellCandidates().map(s=>[s.id,s])),published=new Map(world.spells.map(s=>[s.id,s])),reuse=new Map(reuseSpellCandidates().map(s=>[s.id,s])),approved=new Map(objectSpellCandidates.map(s=>[s.id,s])),heat=new Map(heatSpellCandidates().map(s=>[s.id,s])),air=new Map(airSpellCandidates().map(s=>[s.id,s])),waterEarth=new Map(waterEarthSpellCandidates().map(s=>[s.id,s]));
+ const rows=spellBlueprints().map(s=>{const actual=published.get(s.id)??approved.get(s.id)??care.get(s.id)??light.get(s.id)??waterEarth.get(s.id)??air.get(s.id)??reuse.get(s.id)??heat.get(s.id),status=published.has(s.id)?'published':approved.has(s.id)?'reviewed-unpublished':care.has(s.id)||light.has(s.id)||waterEarth.has(s.id)||air.has(s.id)||heat.has(s.id)?'consumer-ready':reuse.has(s.id)?'reuse-candidate':'missing-consumer';
  const gap=gaps[s.mechanism]??groups.find(([keys])=>keys.split(' ').includes(s.mechanism))?.[1];
  if(status==='missing-consumer'&&!gap)throw Error(`未归类的机制 ${s.id}/${s.mechanism}`);
- return{id:s.id,name:s.name,mechanism:s.mechanism,originalEffect:s.effect,status,handler:actual?.effectSpec??s.effectSpec??null,validation:validateMagicCatalog(actual??s,{requireHandler:true}),evidence:status==='consumer-ready'?(light.has(s.id)?'server-plugin/magic-light.mjs、正常施法/环境/战斗/移动消费者与tests/magic-light.test.mjs；未进行内容审核或正式发布':waterEarth.has(s.id)?'server-plugin/magic-water-earth.mjs、magic.mjs与tests/magic-water-earth.test.mjs；未进行内容审核或正式发布':air.has(s.id)?'server-plugin/magic-air.mjs、magic.mjs与tests/magic-air.test.mjs；未进行内容审核或正式发布':'server-plugin/magic-object.mjs、magic.mjs与tests/magic-forge.test.mjs；未进行内容审核或正式发布'):status==='reuse-candidate'?reuseMechanismFacts[s.mechanism]:status==='published'?'正式world/meta/spells.json及对应M4发布测试':status==='reviewed-unpublished'?'world/drafts/m4-object/；两条既有审核不重复':gap};});
+ return{id:s.id,name:s.name,mechanism:s.mechanism,originalEffect:s.effect,status,handler:actual?.effectSpec??s.effectSpec??null,validation:validateMagicCatalog(actual??s,{requireHandler:true}),evidence:status==='consumer-ready'?(care.has(s.id)?'server-plugin/magic-care.mjs?????/??/??/??????tests/magic-care.test.mjs?garden???????????????????':light.has(s.id)?'server-plugin/magic-light.mjs、正常施法/环境/战斗/移动消费者与tests/magic-light.test.mjs；未进行内容审核或正式发布':waterEarth.has(s.id)?'server-plugin/magic-water-earth.mjs、magic.mjs与tests/magic-water-earth.test.mjs；未进行内容审核或正式发布':air.has(s.id)?'server-plugin/magic-air.mjs、magic.mjs与tests/magic-air.test.mjs；未进行内容审核或正式发布':'server-plugin/magic-object.mjs、magic.mjs与tests/magic-forge.test.mjs；未进行内容审核或正式发布'):status==='reuse-candidate'?reuseMechanismFacts[s.mechanism]:status==='published'?'正式world/meta/spells.json及对应M4发布测试':status==='reviewed-unpublished'?'world/drafts/m4-object/；两条既有审核不重复':gap};});
  return{scope:'逐条机制盘点；缺失项保留目标，不按数量压力改成研究型或删除。结构通过不等于原描述已实现。',total:rows.length,formalSpellCount:world.spells.length,counts:Object.fromEntries([...new Set(rows.map(r=>r.status))].map(k=>[k,rows.filter(r=>r.status===k).length])),rows};
 }
 if(process.argv[1]&&path.resolve(process.argv[1])===path.resolve(import.meta.filename)){const r=mechanismMap(await loadWorld());await fs.writeFile('world/design/w2-mechanism-map.json',JSON.stringify(r,null,2)+'\n');console.log(JSON.stringify({total:r.total,formal:r.formalSpellCount,counts:r.counts}));}
