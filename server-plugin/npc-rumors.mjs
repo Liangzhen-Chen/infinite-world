@@ -51,7 +51,7 @@ export function assertRumorConversation(d,engine,speaker,minutes=10){
     engine.assertNpcObligationAction(d,['player',speaker],{minutes,location:state.location,kind:'conversation'});
     engine.assertNpcAutonomyAction(state,['player',speaker],{minutes});
     if(!state.player.companions?.includes(speaker))for(let cursor=state.minute;cursor<state.minute+minutes;){
-        const slot=scheduleAt(engine,speaker,cursor);if(!slot)break;
+        const slot=scheduleAt(engine,speaker,cursor,state);if(!slot)break;
         if(slot.location!==state.location||/睡眠|睡觉|熟睡|赶路|前往|返回/.test(slot.activity))throw Error('作息不允许在离场或睡眠前完成交谈');
         cursor=slot.until;
     }

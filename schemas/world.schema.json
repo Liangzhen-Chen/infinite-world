@@ -1,6 +1,21 @@
 {
   "type": "object",
   "properties": {
+    "festivals": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "name", "calendar", "venue", "runtime", "resourceNeeds"],
+        "properties": {
+          "id": {"type": "string"},
+          "name": {"type": "string"},
+          "calendar": {"type": "object"},
+          "venue": {"type": "object"},
+          "runtime": {"type": "object"},
+          "resourceNeeds": {"type": "array", "items": {"type": "object"}}
+        }
+      }
+    },
     "version": {
       "type": "string",
       "minLength": 1
