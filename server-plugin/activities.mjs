@@ -8,7 +8,7 @@ import {projectileAirPenalty}from'./magic-air.mjs';
 import {waterEarthMudPenalty,assertWaterEarthMovement}from'./magic-water-earth.mjs';
 import {assertLightMovement}from'./magic-light.mjs';
 import {milestone,monsterReward}from'./progression.mjs';
-import {manufacture}from'./manufacturing.mjs';
+import {manufacture,registerRecipe}from'./manufacturing.mjs';
 import {repair}from'./repair.mjs';
 import {interactEnvironment,recordLocalContact}from'./environment.mjs';
 import {petAction}from'./pets.mjs';
@@ -174,14 +174,22 @@ export const activities={
     quest(d,args,id){return questBoardAction(d,this,args,id);},
     create(d,args,id){
         const type=args.type,name=requiredText(args.name);
-        if(!['npc','bld','org','item','skill','spell'].includes(type))throw new Error('实体类型无效');
+        if(!['npc','bld','org','item','skill','spell','recipe'].includes(type))throw new Error('实体类型无效');
         try{this.resolve(name);throw new Error('名称已存在，请沿用现有编号');}catch(error){if(!error.message.includes('未登记'))throw error;}
-        const entity={id:`${type}_created_${id.replace(/[^a-zA-Z0-9_-]/g,'_')}`,name,aliases:[],scope:d.get('state','location'),...args.data};
+        let entity={id:`${type}_created_${id.replace(/[^a-zA-Z0-9_-]/g,'_')}`,name,aliases:[],scope:d.get('state','location'),...args.data};
         if(entity.id!==`${type}_created_${id.replace(/[^a-zA-Z0-9_-]/g,'_')}`||entity.name!==name)throw new Error('不能覆盖系统分配的编号或名称');
-        if(['skill','spell'].includes(type)){
-            const project=d.get('state','projects',args.project);if(!project||project.stage!=='打磨')throw new Error('新技能或法术需要完成多日研究');
+        if(['skill','spell','recipe'].includes(type)){
+            const project=d.get('state','projects',args.project);if(!project||project.type!=='研究'||project.stage!=='打磨')throw new Error('新技能、法术或配方需要完成多日研究');
             if(type==='spell')throw new Error('自创法术效果还需按规则目录审查，当前不能直接登记');
-            entity.attribute='智力';entity.profession=null;entity.source=args.project;
+            if(project.result)throw new Error('这个研究项目已经登记成果');
+            const maximum=Math.max(...project.skills.map(skill=>effectiveProficiency(d,this,skill))),stage=Math.floor(maximum/300)-1;
+            if(stage<0)throw new Error('研究相关技能不足以承认成果');
+            entity={id:entity.id,name,aliases:[],scope:d.get('state','location')};
+            if(type==='skill'){
+                Object.assign(entity,{attribute:'智力',profession:null,stage,prerequisites:project.skills,notes:project.concept});
+            }else Object.assign(entity,registerRecipe(d,this,args.data,project,stage));
+            entity.source=args.project;
+            d.set(['state','projects',args.project,'result'],entity.id);
         }
         if(type==='npc'){
             integer(entity.age,0,150);requiredText(entity.occupation);requiredText(entity.notes);

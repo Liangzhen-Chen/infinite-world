@@ -160,7 +160,7 @@ N1–N17至少12项完整有效且≥90%，N6/N16零泄漏，N12真实盲辨，N
 
 共同锁定原存档、用户酒馆、dist、旧报告及其他会话在写的文件；不更改屏蔽表来放行名称，不复制原小说专名或情节。PLAN/PROGRESS/CHANGELOG仍归主会话；发布共享目录和内容账串行，草稿可并行。T150–T152当前占用的接点等原卡释放后再接；改工具的卡加跑tests/prompt.test.mjs及tests/tool-groups.test.mjs，静态提示≤11900。
 
-### T153（C1）赶路与停留时接触实际生物。
+### T153（C1）已完成：穿过已有栖地或在野外停留时，按路线、时段和现存种群出现踪迹或在场生物，可避开、追踪或接触；重放不重生，种群耗尽不再出现，遭遇不默认开战。专项与相关76/76、CORE40，0模型。长时间生态模拟留全量测试核对。
 
 1. 玩家结果：穿过已有栖地或在野外停留时会看到有来源的踪迹或在场生物，可以避开、追踪或接触。
 2. 可改server-plugin/{engine,wildlife,wildlife-range}.mjs及必要场景投影、tests/wildlife-encounters.test.mjs；锁定目录正文。复用追踪的种群扣除和实例生成，按经过路线、时段与战役种子判定；途中遭遇落在实际路段节点，停下或绕行正确结算已走时耗。与T109和所有engine时间写者串行，可并行C2起草。
@@ -652,7 +652,7 @@ C部分只拆缺口：governance.mjs的任职入口止于“待上级决定”�
 
 ### T133（D1）已完成：NPC从本人库存添燃料维持热源并完成需火工序，缺料拒绝、离岗或失能停止，热账与窑炉裂损保留；新增11项通过/CORE40，0模型。
 
-### T134（D2） 自创技能与配方落地。结果：完成研究的技能能被实际学习使用，新配方能在原制造链消耗材料产出成品。可改activities/learning/manufacturing及实体解析接点、tools/create-schemas.mjs、extension/tools.mjs、tests/runtime-invention.test.mjs；复用现有多日研究与技能登记，补recipe类型和实际使用接点，禁止直接造物。验收node --test tests/runtime-invention.test.mjs tests/activities.test.mjs tests/learning.test.mjs tests/manufacturing.test.mjs tests/professions.test.mjs "tests/w3-*.test.mjs" tests/prompt.test.mjs，CORE。模型0；约2.5小时，与C工具接点串行，提示≤11900。
+### T134（D2）已完成：研究出的技能可学习、练习并用于检定；自创配方走原制造链，实际扣料并产出署名成品。相关58/58、CORE40，提示估算约11000，0模型。
 
 ### T135（D3） W3长生活流程。结果：真实对话串起取得/学艺、制作失败及副产物、维修耐久、保存腐败、成本售卖和自创配方，离开再回来状态连续。可改tests/playtests/w3_long.json、tests/w3-long.test.mjs及docs/测试报告/w3-long/，引擎与合格目录锁定；接D1/D2。验收node tools/w3-wave-score.mjs --check；node --test "tests/w3-*.test.mjs" tests/manufacturing.test.mjs tests/learning.test.mjs tests/professions.test.mjs "tests/magic*.test.mjs"；npm run test:playtests -- --only w3_long --repeat 1 --parallel 1 --run-dir docs/测试报告/w3-long --run-id w3-long --card D3 --increment 5；CORE。519条已有审核和随机评分复用有效结果；账本/时耗/售空升级100%，叙述≥90%。真实约30自然轮、120–180次调用，≤5元；准备1小时加后台运行。
 

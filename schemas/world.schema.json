@@ -3979,6 +3979,15 @@
               }
             ]
           }
+        },
+        "stage": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 8
+        },
+        "source": {
+          "type": "string",
+          "minLength": 1
         }
       },
       "required": [
@@ -4668,6 +4677,22 @@
           },
           "required": [],
           "additionalProperties": true
+        },
+        "location": {
+          "type": "string",
+          "minLength": 1
+        },
+        "learningRequired": {
+          "type": "boolean"
+        },
+        "stage": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 8
+        },
+        "source": {
+          "type": "string",
+          "minLength": 1
         }
       },
       "required": [

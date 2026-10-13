@@ -30,7 +30,7 @@ const publicationManifest=path.join(root,'first-review/manifest.json');
 test('桑坂正式30人等于已审批完整档，其他人、旧记忆和钱物身份保持原值',async()=>{
  const {entries:approved}=await prepareNpcDepth({manifest:publicationManifest});
  assert.equal(approved.length,30);assert.equal(publishedWorld.npcs.filter(n=>n.tier==='full').length,152);
- assert.equal(publishedWorld.residents.length,294);
+ assert.equal(publishedWorld.residents.filter(n=>n.settlement!=='loc_bs').length,294);assert.equal(publishedWorld.residents.filter(n=>n.settlement==='loc_bs').length,305);
  assert.deepEqual(publishedWorld.npcs.map(n=>n.id),world.npcs.map(n=>n.id));
  for(const entry of approved){
   const current=publishedWorld.npcs.find(n=>n.id===entry.id);

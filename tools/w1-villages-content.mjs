@@ -13,7 +13,7 @@ export function projectLocation(entry){const out=structuredClone(entry);if(out.a
 export function validateFoundation(b,world){
  const incoming=[...b.npcs,...b.residents],existing=[...world.npcs,...(world.residents??[])],people=[...existing,...incoming],byId=new Map(people.map(n=>[n.id,n]));
  assert.equal(incoming.length,386);assert.equal(b.npcs.length,120);assert.equal(b.residents.length,266);assert.equal(b.households.length,120);assert.equal(b.settlements.length,4);
- assert.equal(byId.size,people.length,'人物ID重复');assert.equal(new Set(people.map(n=>n.name)).size,people.length,'人物重名');
+ assert.equal(byId.size,people.length,'人物ID重复');assert.equal(new Set(people.map(n=>JSON.stringify([n.settlement??n.scope,n.name]))).size,people.length,'同聚落人物重名');
  const locs=new Map([...world.locations,...b.locations].map(l=>[l.id,l]));assert.equal(locs.size,world.locations.length+b.locations.length,'地点ID重复');
  const reports=[];
  for(const s of b.settlements){const f=Object.values(villageFacts).find(f=>f.id===s.id),p=incoming.filter(n=>n.settlement===s.id),names={},h=b.households.filter(h=>h.settlement===s.id);assert.equal(s.population,f.population);assert.equal(p.length,f.population);assert.equal(p.filter(p=>p.tier==='full').length,30);assert.equal(h.length,s.householdCount);
