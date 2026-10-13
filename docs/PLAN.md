@@ -263,11 +263,7 @@ T28-R1修好新回执undefined规范化并保留严格篡改拒绝，相关31/32
 
 ### T39 已完成：玩家可租铺、进货、雇工盘点、卖给实际顾客并得到可追溯的盈亏账，违约/停业/破产库存不为负；相关20/CORE40，0模型。原卡见 `git show 43f76a8:docs/PLAN.md`。
 
-### T40 M5玩家发单与NPC离屏接单【待调度】
-
-目标：修quest当前仅NPC发布、player接单的明确缺口。涉及：activities.mjs的quest委托薄适配、新增server-plugin/quest-board.mjs、tests/quest-board.test.mjs，npc-autonomy.mjs、extension/tools.mjs必要接点及现有world_quest参数。实现：复用state.quests/questQuota、D–S quotaUnits、托管和deliver/visit/build可验证目标；玩家从已有授权身份额度发布，默认无官职只能合法私人规则。接单者限现有full且有实际能力/作息/路线/材料，离屏任务沿advanceNpcAutonomy，失败/取消/超期有原因及退款规则，进度只给有渠道知情者。
-
-验收：`node --test tests/quest-board.test.mjs tests/npc-autonomy.test.mjs tests/playtest-npc-evidence.test.mjs tests/npc-obligations.test.mjs`、CORE；额度不足/无资金拒绝，NPC到场履约或失败、托管守恒、并发抢单只一人、十日离开后事件可追查、无关NPC不知。模型0。不要做：新冒险者人口、随机宣布完成、放宽T15私密。依赖T42身份授权接口后接正式玩家官职，私人/测试身份可先机制；与T39/T42的activities路由串行。
+### T40 已完成：玩家以私人身份发布D级委托并托管报酬，完整档NPC按能力、作息和路线离屏接单履约，失败或超期退款，进度只给有渠道知情的人；相关48/CORE40，提示估算10843 token，0模型。正式官职的发单额度待任命来源（R07）。
 
 ### T41 M5户籍公民与分聚落贡献【执行中，原范围不变】
 
