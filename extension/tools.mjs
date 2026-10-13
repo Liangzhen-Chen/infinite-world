@@ -23,8 +23,13 @@ define('world_attributes','依玩家选择分配自由点。',{attributes:object
 define('world_relation','查真实事件关系；npc或from/to双方。',{npc:str,from:str,to:str,eventType:str,sourceEvent:str,romance:bool},['eventType','sourceEvent']);
 define('world_promise','承诺登记/obligation取消；住户同意用途后签入宅许可/authorization撤销。',{operation:{enum:['create','cancel','grant_access','revoke_access']},promisor:{...str,description:'承诺者/同意入宅的在场成年住户'},promisee:str,type:{...str,enum:['带路','送货','付款','等候','会面','协助'],description:'新建必填，交物用送货；私宅免填'},content:str,destination:str,location:{...str,description:'等候/会面/送货地点或获准私宅；不追收件人'},start:{...int,description:'起始/送货出发分，默认现在'},deadline:{...int,description:'绝对到期分=现在+约定时长'},minutes:{...int,description:'占用分；私宅距今1-1440'},authorization:str,guests:{type:'array',items:str,maxItems:8,description:'住户另准同行者，非默认全员'},obligation:str,actor:str,item:str,quantity:int,coins:int,skill:str,attribute:str},[]);
 define('world_remember','记有源事实/在场者未核实传闻。',{subject:str,key:str,content:str,source:str,rumor:str,keywords:{type:'array',items:str}},['subject','key','content']);
+const sitePermitType=definitions.find(row=>row.function.name==='world_promise').function.parameters.properties.type;
+sitePermitType.enum.push('site_visit','site_disarm','site_gather');
+sitePermitType.description='承诺新建必填；据点许可：参观/机关/采集；私宅免填';
+definitions.find(row=>row.function.name==='world_promise').function.parameters.properties.location.description='约定或获准私宅/据点地点；不追收件人';
 define('world_combat','目标交锋：攻/防/脱离/推搡。',{target:str,weapon:str,intent:{type:'string',enum:['attack','defend','flee','shove']}},['target']);
 define('world_lair','巢穴接近/谈判；offer交物、request索物。',{operation:{enum:['observe','approach','negotiate']},lair:str,pact:{enum:['respect_territory','nonaggression'],description:'守界/互不攻击'},alliance:bool,offer:{type:'array',maxItems:20,items:object({item:str,quantity:int},['item','quantity'])},request:{type:'array',maxItems:20,items:object({item:str,quantity:int},['item','quantity'])}},[]);
+define('world_site','所在地据点进入、调查、解除机关及有限采集。',{operation:{enum:['inspect','enter','investigate','disarm','gather']},target:str,quantity:int,authorization:str,authorizations:{type:'array',items:str,maxItems:8}},[]);
 define('world_craft','按配方造/按工序修行囊物。',{operation:{enum:['manufacture','repair']},recipe:str,item:{...str,description:'维修名/类型ID；单件足够'},instance:{...str,description:'可选：instances单件ID，非名称/item_类型'},repairPlan:str,authorization:str,helpers:{type:'array',items:str}},[]);
 define('world_research','研究立项或投钱耗时续研。',{operation:str,name:str,concept:str,skills:{type:'array',items:str},project:str,coins:int,minutes:int},['operation']);
 define('world_settlement','经营/户籍贡献/四村议事；意见、公账委托须当事人同意。',{operation:{...str,enum:['business_open','business_close','business_bankrupt','business_report','start_project','civic_inspect','civic_residence','civic_sponsor','civic_apply_resident','civic_apply_citizen','civic_contribution','governance_inspect','governance_propose','governance_opinion','governance_close','governance_appointment','governance_grant','governance_revoke','governance_queue','governance_process']},business:str,settlement:str,authorization:str,authority:str,sponsor:str,sourceEvent:str,name:str,wood:int,stone:int,days:int,beneficiaries:{type:'array',items:str},plot:str,issue:str,proposal:str,speaker:str,opinion:{enum:['approve','reject','abstain']},content:str,steward:str,consent:bool,action:{enum:['account_report','housing','public_project']},minutes:int,budget:int,proposedFee:{...int,description:'提议费用，意见非批准或实收'},taxBps:int,due:int,request:str},['operation']);
@@ -53,13 +58,13 @@ function group(name,description,members){
     properties.operation={type:'string',enum:operations};routes.set(name,mapping);
     return {type:'function',function:{name,description,parameters:object(properties,['operation'])}};
 }
-const fieldTools=['world_weather','world_farm','world_wildlife','world_environment','world_lair'];
+const fieldTools=['world_weather','world_farm','world_wildlife','world_environment','world_lair','world_site'];
 const companionTools=['world_pet','world_summon'];
 const field=group('world_field','粮仓farm_buy买燕麦；农事采集及环境操作，天气动物巢穴观察。',fieldTools);
-field.function.parameters.properties.operation.description='farm_buy填settlement、quantity；商家world_trade，委托交付world_quest complete';
+field.function.parameters.properties.operation.description='farm_buy买粮；site_操作：inspect查目标、enter进入、investigate调查、disarm解除、gather取有限物；先world_move抵达，许可用world_promise';
 field.function.parameters.properties.settlement={...str,description:'粮仓聚落名/ID；本人柜台，管理员清醒在场'};
 field.function.parameters.properties.item={...str,description:'仅买燕麦/带壳燕麦/item_oats，不换货'};
-field.function.parameters.properties.quantity={...int,description:'买粮0.5公斤/份；目录扣铜入公账'};
+field.function.parameters.properties.quantity={...int,description:'买粮0.5公斤/份；采集份数'};
 const companion=group('world_companion','动物照料驯骑；召唤契约、搬水、限额守卫。',companionTools);
 const law=structuredClone(definitions.find(row=>row.function.name==='world_law'));
 law.function.description='法典声望查阅/在场财物偷窃尝试；在场authority办案、公示携信。';
