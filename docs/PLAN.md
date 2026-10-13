@@ -146,14 +146,7 @@ N1–N17至少12项完整有效且≥90%，N6/N16零泄漏，N12真实盲辨，N
 
 ### T98 已完成：回忆保留真实期限与已记录的失败费用，同题对白沿各人风格，冲突现场由已登记见证者发言；提示估算11642 token（硬上限12000）。相关8/CORE40，0模型，真实效果由T99测量。
 
-### T99 M2第三轮真实复验【真实模型；执行中】
-
-结果：沿用十场和完整提示栈，逐项报告N结论与总体门槛；预期优先恢复N2、N3、N4、N10、N11、N13、N15、N16，修复后争取再过N5、N6、N9、N17，形成12/13。N12仍须真实匿名盲辨全对，不能用其余十二项豁免；N1/N7/N8/N14继续明确未测。
-可改仅新目录docs/测试报告/M2-recheck-003/及该run生成物；复用T64入口并适配已合入来源、父账和本轮参数，旧报告及代码锁定。预计十场87回合及一次结果整理，正常HTTP、repeat=1、parallel=4，不部署。
-建议新增上限10元、最多450次调用，含≤1元初探和全部审稿；不自动重跑完成的负评。T64约6.61元结算另有0.31352元未知预留；按旧报告28.42836376元保守整轮上界再加10元为38.42836376元，超旧30元限制，主会话审定时须处理这笔增额，不能沿用旧额度或换run清零；执行前刷新总goal100元余量。
-验收先运行 node docs/测试报告/M2-recheck-003/preflight.mjs --zero-model，再运行CORE；正式命令如下，沿T64只替换新目录、run/card和新增金额。
-node --import ./docs/测试报告/M2-recheck-003/git-entry.mjs tools/playtests.mjs --run-dir docs/测试报告/M2-recheck-003 --run-id m2-recheck-003 --card M2-recheck-003 --increment 10 --repeat 1 --parallel 4 --milestone M2 --only guide,npc_courier,npc_delivery,npc_home_visit,npc_offscreen,npc_private,npc_quest_social,npc_shove,npc_social,npc_voices --host-installation F:/dnd/SillyTavern --budget-proof docs/测试报告/M2-recheck-003/preflight.mjs
-最终保留原失败和新结果；要求十场完整、至少十二项有效且通过率≥90%，账本/时间/存档100%，N6/N16零泄漏，N12盲辨及N17十天自主行动均过。未完成评分独立列明，工具参数与目标只按实际测量范围报告。
+### T99 已执行，未通过：六场完整（送货5/9、私宅6/9、离屏4/8、推搡4/9中断），账本157/165，有效N 9项过5项（N5/N6/N10/N13/N16），盲辨9/9与N6/N16零泄漏通过，工具漏4错2；305次调用6.94093904元。证据在docs/测试报告/M2-recheck-003/。第三次分析交Astra（M2-fix-planner-003）；第四轮若仍不过，M2标卡住并继续其他里程碑。
 
 ### 法术150/首领40第一批（2026-10-13主会话审定，来源：Astra草案W2W4-planner-001）
 
