@@ -183,6 +183,49 @@ N1–N17至少12项完整有效且≥90%，N6/N16零泄漏，N12真实盲辨，N
 验收：`node docs/测试报告/M2-recheck/preflight.mjs --zero-model`、CORE；然后`node tools/playtests.mjs --run-dir docs/测试报告/M2-recheck --run-id m2-recheck-001 --card M2-recheck --increment 8 --repeat 1 --parallel 4 --milestone M2 --only guide,npc_courier,npc_delivery,npc_home_visit,npc_offscreen,npc_private,npc_quest_social,npc_shove,npc_social,npc_voices --host-installation F:/dnd/SillyTavern --budget-proof docs/测试报告/M2-recheck/preflight.mjs`。
 模型：全角色合计≤450次、新增≤8元（初探≤1元含在内）；保守单轮20.42836376+8=28.42836376<30。失败场次每场最多复测一次。门槛不变：N1–N17至少12项完整有效且≥90%，N6/N16零泄漏，N12真实盲辨，N17十天自主行动，账本/时间/存档100%。规模约150–250行适配。
 
+### 法术150/首领40第一批（2026-10-13主会话审定，来源：Astra草案W2W4-planner-001）
+
+路线：法术31→61→91→121→150（S1–S4，S1只用已有处理器；S2炉作通风水土、S3光医心、S4空间役灵仪式各依赖对应引擎卡）；首领4→16→28→40（B1–B3，8个智能存在按2/3/3分布）。
+审计改动：草案把缺的消费者拆成约80张单效果引擎卡，改为按机制族一族一张（热、风、水土、光、医植食、心契、空间、役灵、仪式），每张在一个会话内把该族列出的效果都接到真实状态。草案里“release通过前内容卡不派”的前置删除：内容卡只依赖T19合入，release只在里程碑结束时看。各族效果清单见 logs/sessions/W2W4-planner-001.final.txt 的A段。
+
+### T65 热族消费者【零模型】
+
+结果：玩家的热系法术作用在真实对象上——给燃烧的炉火升温并持续耗燃料（forge_heat）、接触测温（sense_heat）、窑温与裂损（craft_heat）、活体保暖（warm）、室内控火与通风（contain_fire）、火线阻路（barrier）、冰针随环境衰减（damage_cold）。
+可改：server-plugin/magic-object.mjs、environment.mjs、magic.mjs、magic-primitives.mjs的必要接点，tools/w2-mechanism-map.mjs、world/design/w2-mechanism-map.json，新增tests/magic-forge.test.mjs。锁定：world/meta正式目录、首领文件、extension/tools.mjs。
+验收：`node --test tests/magic-forge.test.mjs tests/magic-object.test.mjs`、CORE；每个效果至少一条正常路径和一条拒绝路径，覆盖燃尽、未燃对象、重载。模型0。规模约600–900行。
+
+### T66 风族消费者【零模型；T65合入后派，同改environment/magic接点】
+
+结果：风系法术有真实效果——烟气沿连通出口流动而烟源继续产烟（airflow/smoke）、除尘、风向回声、沿途可听传话与静音、谷物排湿、缓降与轻物托举、船帆、有限呼吸、投射偏转、风刃对软物与甲材、道路风阻。
+可改：新增server-plugin/magic-air.mjs、tests/magic-air.test.mjs；environment.mjs、magic.mjs、magic-primitives.mjs、world/meta/rules.json及机制图两文件。锁定：法术/人物/首领正式目录。
+验收：`node --test tests/magic-air.test.mjs tests/magic.test.mjs`、CORE；封闭空间不能凭空净化，每个效果有正常与拒绝路径，到期与重载一致。模型0。规模约700–1000行。
+
+### T67 首领接触记忆、目标与领地【零模型】
+
+结果：智能首领记住实际交锋和接触，按领地目标改变公开态度，存档恢复后仍认得发生过的事。
+可改：新增server-plugin/boss-cognition.mjs、tests/boss-cognition.test.mjs；bosses.mjs、boss-migration.mjs、tools/validate-world.mjs的模板接点。锁定：magic*、npc-memory.mjs、正式world文件。
+验收：`node --test tests/boss-cognition.test.mjs tests/bosses.test.mjs`、CORE。模型0。规模约250–400行。
+
+### T68 首领谈判、交易与结盟【零模型；待T67】
+
+结果：玩家在巢穴提出条件，首领按自己的目标接受或给出拒绝理由，成交时交换有限物资并保存关系。
+可改：新增server-plugin/boss-negotiation.mjs、tests/boss-negotiation.test.mjs；bosses.mjs、boss-cognition.mjs、extension/tools.mjs、tools/validate-world.mjs必要接点。工具说明要短，合入后tests/prompt.test.mjs仍须通过。锁定：magic*、正式world文件。
+验收：`node --test tests/boss-negotiation.test.mjs tests/boss-cognition.test.mjs tests/tool-groups.test.mjs tests/prompt.test.mjs`、CORE。模型0。规模约300–500行。
+
+### T69 S1：30条法术完整发布，31→61【真实模型；待T19】
+
+结果：玩家可买书并付费学习30条新法术（区域交锋与防护9、位移与自愿传讯8、器物与水务7、生长与役灵6），按真实材料、距离和持续消耗施放，每条有可验证效果。
+可改：新增world/design/w2-s1.mjs、world/drafts/w2-s1/、tools/w2-s1-content.mjs、tools/publish-w2-s1.mjs、tests/w2-s1.test.mjs；world/meta/{spells,skills,items}.json及书商库存只追加本批。锁定：rules、bosses、引擎、共用流水线。
+验收：起草→L1→L2→L4（标记项加随机5条，随机10条平均≥4、单项≥3）→`node tools/publish-w2-s1.mjs --publish`；`node --test tests/w2-s1.test.mjs`、CORE；覆盖30条取得→学习→施法、旧战役升级、重复发布零写入。
+模型：起草≤108次、L2≤108次，合计≤12元。规模：30条法术加至多6本书，一个内容会话。
+
+### T70 B1：12个首领完整发布，4→16，智能存在0→2【真实模型；待T68】
+
+结果：玩家能遇到12个各有生态与战术的首领，其中2个能记住交涉、说明拒绝理由并实际交易或结盟。
+可改：新增world/design/w4-b1.mjs、world/drafts/w4-b1/、tools/w4-b1-content.mjs、tools/publish-w4-b1.mjs、tests/w4-b1.test.mjs；world/meta/bosses.json、tools/m4-balance.mjs、新增world/design/w4-b1-balance.json。锁定：spells/skills/items/rules、人物、引擎。
+验收：起草→L1→L2→L4→`node tools/publish-w4-b1.mjs --publish`；`node --test tests/w4-b1.test.mjs`；`node tools/m4-balance.mjs --catalog world/meta/bosses.json --out world/design/w4-b1-balance.json`（单人≤15%、标准五人55%–65%）；CORE。
+模型：起草≤36次、L2≤36次，合计≤6元。规模：12条模板与正文，一个内容会话。
+
 ### T18 零模型部分已完成：713f0b9已合，14条全部走陆青付费出售的三册书，新测试22/CORE40；来源增量的L2/L4（≤1元）并入T19一起做。原卡如下。
 
 目标：每条已有候选都有玩家实际能获得的学习来源。涉及文件：`world/design/w2-reuse-candidates.mjs`、新增 `world/design/w2-reuse-learning.mjs`、`world/drafts/w2-reuse/` 的来源审核记录，必要的新书/教学数据候选；新增 `tests/w2-reuse-learning.test.mjs`。不提前改正式人口。
