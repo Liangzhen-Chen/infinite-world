@@ -168,9 +168,9 @@
         },
         {
           "kind": "calls",
-          "tool": "world_field",
+          "tool": "world_farm",
           "args": {
-            "operation": "farm_buy",
+            "operation": "buy",
             "quantity": 10,
             "settlement": "loc_hw"
           },
