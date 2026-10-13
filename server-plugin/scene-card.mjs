@@ -12,6 +12,7 @@ import {festivalScene}from'./festival.mjs';
 import {worldClockScene}from'./world-clock.mjs';
 import {siteView}from'./sites.mjs';
 import {selectNpcRumors,assertRumorConversation}from'./npc-rumors.mjs';
+import {wildlifeEncounterView}from'./wildlife.mjs';
 
 const text=(value,limit=200)=>typeof value==='string'?value.replace(/\s+/g,' ').slice(0,limit):'';
 const list=value=>Array.isArray(value)?value.map(row=>typeof row==='string'?row:row.content??row.description??'').filter(Boolean).join('；'):text(value);
@@ -72,6 +73,8 @@ export function sceneCard(engine,document,query='',index=null){
     if(features.length)parts.push(`【可见环境】${features.slice(0,3).map(row=>`${row.name??name(row.id)}（${row.id}）${row.waterMl!==undefined?`，现有水${row.waterMl}毫升`:''}`).join('；')}`);
     const animals=petView(engine,document).presentAnimals;
     if(animals.length)parts.push(`【在场动物】${animals.slice(0,3).map(row=>`${row.name??row.id}（${row.id}）`).join('；')}`);
+    const encounters=wildlifeEncounterView(document);
+    if(encounters.length)parts.push(`【野外接触】${encounters.map(row=>`${row.name}（${row.target??row.species}）｜${text(row.description,120)}｜${engine.calendar(row.minute).text}，来源${row.source}`).join('；')}。可沿路离开避开；踪迹可用world_wildlife追踪，在场个体可用实际编号接触。`);
     const summons=summonView(engine,document);
     if(summons.length)parts.push(`【有效召唤契约】${summons.slice(0,3).map(row=>`${row.name}（${row.id}），期限${engine.calendar(row.expires).text}，每${row.terms.upkeepMinutes}分维持消耗${row.terms.upkeepMp}魔力`).join('；')}`);
     if(/农|田|粮|仓|作物|收成|种子|害兽/.test(query)){
