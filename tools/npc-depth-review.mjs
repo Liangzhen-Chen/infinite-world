@@ -4,7 +4,7 @@ import assert from 'node:assert/strict';
 import {randomInt} from 'node:crypto';
 import {pathToFileURL} from 'node:url';
 import {DeepSeekClient} from './deepseek-client.mjs';
-import {openContentBudget} from './content-budget.mjs';
+import {openContentBudget,reopenBudgetTerms} from './content-budget.mjs';
 import {hashContent,parseModelJSON} from './content-pipeline.mjs';
 import {contextFor,buildReviewRequest,validateDraft,checkIncrementalReview,patchDraft,depthBackgroundSources} from './npc-depth-content.mjs';
 import {depthOptions,prepareDepth,prepareDepthRevision,loadDepthReopen,frozenDepthRecord,depthRevisionProof} from './npc-depth.mjs';
@@ -102,14 +102,15 @@ export async function runDepthReview(options=reviewOptions(),{client,prepare=pre
  const state=await reviewBatch(root,id,prepared,reopening);if(options.controlledRevision){state.invalidatedIds=prepared.plan.authorized.map(a=>a.id);state.authorizationHash=options.authorizationHash;}state.reopening=!!reopening;const allocation=await read(path.join(root,'allocation.json')).catch(e=>{if(e.code==='ENOENT'&&reopening&&cardId==='T09')return structuredClone(reopening.grant.allocation);throw e;}),before=await read(path.join(budgetRoot,'budget.json'));
  if(!before.cards?.[cardId]&&!(reopening&&cardId==='T09'))throw Error('复审只使用已登记单卡额度，不得新领额度');
  if(allocation.cardId&&allocation.cardId!==cardId)throw Error('allocation card 不匹配');
- client??=new DeepSeekClient({budgetYuan:20,logFile:`logs/w1-${options.batch}-usage.jsonl`});
- const budget=await openContentBudget({file:path.join(budgetRoot,'budget.json'),client,cardId,allocation,...(reopening?{reopenAuthorization:reopening.manifest,reopenId:id,continueReopen:options.continueReopen}:{})});
+ client??=new DeepSeekClient({budgetYuan:25,logFile:`logs/w1-${options.batch}-usage.jsonl`});
+ const budgetAuthorization=reopening?.budgetAuthorization??reopening?.manifest;
+ const budget=await openContentBudget({file:path.join(budgetRoot,'budget.json'),client,cardId,allocation,...(reopening?{reopenAuthorization:budgetAuthorization,reopenId:id,continueReopen:options.continueReopen}:{})});
  let reservations=[];
  try{
-  if(reopening){const previous=budget.ledger.reopenAuthorizations[reopening.manifest.id].cards[cardId].attempts[id]??[];const attemptFingerprint=hashContent({draft:nextDraft,sourceEvidence:evidence?.contentHash??null,authoredBackground:context.authoredBackground??null});if(previous.some(a=>a.fingerprint===attemptFingerprint)||previous.length>=reopening.grant.maxAttempts)return{id,status:record.status,skipped:true,reason:'本授权同文已审或有界尝试已用尽'};reservations=await budget.reserveRound([{body:request,label:`content-${cardId}-${id}-manual-review`}]);if(!await budget.claimReopenReview(id,attemptFingerprint))throw Error('重开尝试已领取');}
+  if(reopening){const previous=budget.ledger.reopenAuthorizations[reopening.manifest.id].cards[cardId].attempts[id]??[];const attemptFingerprint=hashContent({draft:nextDraft,sourceEvidence:evidence?.contentHash??null,authoredBackground:context.authoredBackground??null});if(previous.some(a=>a.fingerprint===attemptFingerprint)||previous.length>=reopenBudgetTerms(budgetAuthorization,cardId).maxAttempts)return{id,status:record.status,skipped:true,reason:'本授权同文已审或有界尝试已用尽'};reservations=await budget.reserveRound([{body:request,label:`content-${cardId}-${id}-manual-review`}]);if(!await budget.claimReopenReview(id,attemptFingerprint))throw Error('重开尝试已领取');}
   else if(!await budget.claimReviewRecovery(id,fingerprint))return{id,status:record.status,skipped:true,reason:'稳定单卡复审机会已使用'};
   const prior=structuredClone(record);
-  if(reopening){record.reopenAuthorization={id:reopening.manifest.id,manifestHash:reopening.manifestHash,file:reopening.file,attemptFingerprint:hashContent({draft:nextDraft,sourceEvidence:evidence?.contentHash??null,authoredBackground:context.authoredBackground??null})};if(record.budgetStop){record.budgetStopHistory=[...(record.budgetStopHistory??[]),record.budgetStop];delete record.budgetStop;}if(!record.draft)record.draft=nextDraft;}
+  if(reopening){record.reopenAuthorization={id:budgetAuthorization.id,manifestHash:hashContent(budgetAuthorization),file:reopening.file,attemptFingerprint:hashContent({draft:nextDraft,sourceEvidence:evidence?.contentHash??null,authoredBackground:context.authoredBackground??null})};if(record.budgetStop){record.budgetStopHistory=[...(record.budgetStopHistory??[]),record.budgetStop];delete record.budgetStop;}if(!record.draft)record.draft=nextDraft;}
   if(options.controlledRevision){
    const proof=depthRevisionProof(options,prepared,record.reopenAuthorization);
    record.draft=nextDraft;delete record.frozenCandidate;record.fingerprint=fingerprint;record.incremental={authorizationHash:options.authorizationHash,backgroundHash:proof.backgroundHash,originalRecordHash:hashContent(prior),entryHash:hashContent(entry)};proof.records[id]=record.incremental;await write(path.join(root,'incremental-proof.json'),proof);

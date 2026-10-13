@@ -5,7 +5,7 @@ import os from 'node:os';
 import path from 'node:path';
 import {loadWorld} from '../tools/load-world.mjs';
 import {hashContent,runContentPipeline} from '../tools/content-pipeline.mjs';
-import {openContentBudget,grantDepthBudget,reopenAuthorizationId} from '../tools/content-budget.mjs';
+import {openContentBudget,grantDepthBudget,reopenAuthorizationId,reopenBudgetTerms,reopenAuthorizationVersion} from '../tools/content-budget.mjs';
 import {prepareDepth,prepareDepthRevision,frozenDepthRecord,loadDepthReopen} from '../tools/npc-depth.mjs';
 import {contextFor,patchDraft,buildDraftRequest,buildReviewRequest,extractDraft,validateDraft} from '../tools/npc-depth-content.mjs';
 import {auditNpcDepth} from '../tools/audit-npc-depth.mjs';
@@ -80,7 +80,24 @@ test('合法冻结候选pipeline可跳过起草并完整保留L2原文和附件�
 });
 test('CLI保留原card，显式固定授权及首ID后续标志；真实授权清单遵守原账快照',async()=>{
  const options=reviewOptions(['--id','npc_lq_luanpei','--root','world/drafts/w1/lq-depth/author-v2/first-review','--budget-root','world/drafts/m4-object','--card','T08','--reopen-authorization','world/design/w1-reopen-authorization.json','--reopen-continue']);assert.equal(options.continueReopen,true);assert.ok(options.reopenAuthorization.endsWith('w1-reopen-authorization.json'));
- const manifest=await read('world/design/w1-reopen-authorization.json'),ledger={...manifest.budgetSnapshot,waveLimitYuan:20,limitYuan:20,cards:Object.fromEntries(Object.entries(manifest.cards).map(([id,g])=>[id,{limitYuan:g.oldLimitYuan,spentYuan:g.spentYuan,reservedYuan:g.reservedYuan}])),requests:{}};for(const [card,grant] of Object.entries(manifest.cards)){const result=grantDepthBudget(ledger,card,grant.allocation,manifest);near(result.cards[card].limitYuan,grant.newLimitYuan);near(result.spentYuan,10.81767864);near(result.reservedYuan,.083736);}assert.equal(manifest.cards.T06.allowed.length,2);assert.equal(manifest.cards.T09.allowed.length,30);
+ const manifest=await read('world/design/w1-reopen-authorization.json'),ledger={...manifest.budgetSnapshot,waveLimitYuan:20,limitYuan:20,cards:Object.fromEntries(Object.entries(manifest.cards).map(([id,g])=>[id,{limitYuan:g.oldLimitYuan,spentYuan:g.spentYuan,reservedYuan:g.reservedYuan}])),requests:{}};for(const [card,grant] of Object.entries(manifest.cards)){const result=grantDepthBudget(ledger,card,grant.allocation,manifest);near(result.cards[card].limitYuan,reopenBudgetTerms(manifest,card).limitYuan);near(result.waveLimitYuan,25);near(result.spentYuan,10.81767864);near(result.reservedYuan,.083736);}assert.equal(manifest.cards.T06.allowed.length,2);assert.equal(manifest.cards.T09.allowed.length,30);
+ assert.deepEqual(manifest.amendments[0].cardLimits,{T07:7,T08:6.5,T09:4.5});assert.equal(manifest.amendments[0].maxAttempts,6);
+});
+
+test('追加授权沿父hash保留原账、请求和失败次数，第三至六次可领取，第七次和同文仍拒绝',async t=>{
+ const p=await fixture(t),first=grantDepthBudget(p.ledger,'T08',p.grant.allocation,p.authorization),round=first.reopenAuthorizations[p.authorization.id].cards.T08,id=p.options.id;
+ round.attempts[id]=[{fingerprint:'old-a',status:'failed'},{fingerprint:'old-b',status:'failed'}];round.pilotId=id;round.pilotPassed=true;
+ const prior=structuredClone(first),manifest=structuredClone(p.authorization);
+ manifest.amendments=[{id:'user-reopen-20261013-01',date:'2026-10-13',previousManifestHash:hashContent(p.authorization),waveLimitYuan:25,maxAttempts:6,cardLimits:{T07:7,T08:6.5,T09:4.5},source:'2026-10-13用户授权fixture'}];
+ assert.deepEqual(reopenAuthorizationVersion(manifest,hashContent(p.authorization)),p.authorization);
+ assert.deepEqual(reopenAuthorizationVersion(manifest,hashContent(manifest)),manifest);
+ const amended=grantDepthBudget(first,'T08',p.grant.allocation,manifest);near(amended.cards.T08.limitYuan,6.5);near(amended.waveLimitYuan,25);near(amended.spentYuan,prior.spentYuan);near(amended.reservedYuan,.083736);
+ assert.deepEqual(amended.requests,prior.requests);assert.deepEqual(amended.reopenAuthorizations[p.authorization.id].cards,prior.reopenAuthorizations[p.authorization.id].cards);assert.deepEqual(amended.reopenAuthorizations[p.authorization.id].manifest,p.authorization);
+ assert.deepEqual(grantDepthBudget(amended,'T08',p.grant.allocation,manifest),amended);
+ for(const mutate of [m=>m.amendments[0].previousManifestHash='wrong',m=>m.cards.T08.allowed[0].paths=['age'],m=>m.amendments[0].maxAttempts=7,m=>m.amendments[0].cardLimits.T08=7,m=>m.amendments[0].source+='changed']){const forged=structuredClone(manifest);mutate(forged);assert.throws(()=>grantDepthBudget(amended,'T08',p.grant.allocation,forged));}
+ await write(path.join(p.budgetRoot,'budget.json'),first);
+ const budget=await openContentBudget({file:path.join(p.budgetRoot,'budget.json'),client:p.client,cardId:'T08',allocation:p.grant.allocation,reopenAuthorization:manifest,reopenId:id,continueReopen:true});
+ try{await budget.registerReopenAuthorization();assert.equal(p.calls.length,0);assert.equal(await budget.claimReopenReview(id,'old-a'),false);for(let n=3;n<=6;n++)assert.equal(await budget.claimReopenReview(id,'fix-'+n),true);assert.equal(await budget.claimReopenReview(id,'fix-7'),false);assert.deepEqual(budget.ledger.reopenAuthorizations[p.authorization.id].cards.T08.attempts[id].slice(0,2),round.attempts[id]);near(budget.ledger.reservedYuan,.083736);}finally{await budget.close();}
 });
 test('实质第二修继承原proof且可重放；修后补齐实际逐叶L4才能预演',async t=>{
  const p=await fixture(t);await p.revision();const generate=p.client.generate;p.client.generate=async(request,label)=>{const response=await generate(request,label),review=JSON.parse(response.choices[0].message.content);review.contradictions=[{severity:'hard',field:'notes',quote:'空桌',reason:'原source未支持此处记载。'}];response.choices[0].message.content=JSON.stringify(review);return response;};await runDepthReview(p.options,{client:p.client});
@@ -90,6 +107,9 @@ test('实质第二修继承原proof且可重放；修后补齐实际逐叶L4才�
  const prepared=await prepareDepthRevision(p.options),record=await read(path.join(p.root,p.options.id+'.json')),notes={candidates:[{id:record.id,note:'mock逐叶重新核对原来源和待定状态。',draftHash:hashContent(record.draft),reviewHash:hashContent(record.review),entryHash:hashContent(prepared.entries[0]),reviewedPaths:['notes']}],backgrounds:[]},noteFile=path.join(p.dir,'notes.json');await write(noteFile,notes);await recordDepthIncrementalL4({...p.options,l4Notes:noteFile});
  const batch=await read(path.join(p.root,'batch-0.json'));batch.l4={approved:true,notes:notes.candidates};await write(path.join(p.root,'batch-0.json'),batch);const summary=await read(path.join(p.root,'summary.json'));summary.batches=[batch];await write(path.join(p.root,'summary.json'),summary);
  await prepareNpcDepth({manifest:path.join(p.root,'manifest.json')});const original=await fs.readFile(path.join(p.root,'incremental-proof.json'),'utf8'),corrupt=structuredClone(proof);corrupt.previousProof.oldRecords[0].attempts++;await write(path.join(p.root,'incremental-proof.json'),corrupt);await assert.rejects(prepareNpcDepth({manifest:path.join(p.root,'manifest.json')}));await fs.writeFile(path.join(p.root,'incremental-proof.json'),original);
+ const amended={...structuredClone(p.authorization),amendments:[{id:'user-reopen-20261013-01',date:'2026-10-13',previousManifestHash:hashContent(p.authorization),waveLimitYuan:25,maxAttempts:6,cardLimits:{T07:7,T08:6.5,T09:4.5},source:'2026-10-13用户授权fixture'}]},recordBytes=await fs.readFile(path.join(p.root,record.id+'.json'),'utf8');
+ await write(p.options.reopenAuthorization,amended);await prepareNpcDepth({manifest:path.join(p.root,'manifest.json')});assert.equal(await fs.readFile(path.join(p.root,record.id+'.json'),'utf8'),recordBytes,'追加预算授权不得重写旧L2记录');
+ amended.cards.T08.allowed[0].paths.push('age');const {amendments,...forgedBase}=amended;amendments[0].previousManifestHash=hashContent(forgedBase);await write(p.options.reopenAuthorization,amended);await assert.rejects(prepareNpcDepth({manifest:path.join(p.root,'manifest.json')}),'重新计算父hash也不得扩大旧审核的叶权限');
 });
 test('费用停止留下无draft的pending沿冻结候选续审，缺逐叶覆盖保留失败原文',async t=>{
  for(const mode of ['complete','missing-coverage']){const p=await fixture(t),record=p.records[0];record.status='pending';record.draft=null;record.review=null;record.errors=[];delete record.reviewRecovery;await write(path.join(p.root,record.id+'.json'),record);const batch={...p.batch,manual:[],pending:[record.id],fingerprint:hashContent([{id:record.id,draft:null,review:null,status:'pending'}])};await write(path.join(p.root,'batch-0.json'),batch);await write(path.join(p.root,'summary.json'),{batches:[batch]});p.grant.allowed[0].recordHash=hashContent(record);await write(p.options.reopenAuthorization,p.authorization);

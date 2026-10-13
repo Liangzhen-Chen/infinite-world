@@ -27080,6 +27080,30 @@
       "backgroundHash": "57c3bf87554ba8b8933672d617df04d2fd5adaa187d85d24705a29d7dd6aa482",
       "originalRecordHash": "e45b69df0f2f23ab883a1e38393eb89275a4de5e790d079bab0c65109e28ae86",
       "entryHash": "39a51bb43b999333772eaf100034f8f402d3b4429a929ca793220438d308d0d7"
+    },
+    "npc_wt_zhicai": {
+      "authorizationHash": "d10dcf944f3bd5287d855d9fbfd9396596b5614e804f176abad8569191bd19dd",
+      "backgroundHash": "57c3bf87554ba8b8933672d617df04d2fd5adaa187d85d24705a29d7dd6aa482",
+      "originalRecordHash": "9a968b63a957d94286638cb3fe90055a4d5910091132f076ef69eee165891720",
+      "entryHash": "a1cfbf660df8ee734868f46e9f45e17ab1f229022a9d7f9898d67aa0773388f8"
+    },
+    "npc_wt_shanju": {
+      "authorizationHash": "d10dcf944f3bd5287d855d9fbfd9396596b5614e804f176abad8569191bd19dd",
+      "backgroundHash": "57c3bf87554ba8b8933672d617df04d2fd5adaa187d85d24705a29d7dd6aa482",
+      "originalRecordHash": "5da50cb2ba770e1f48bf7ad19a863bd8eb5b6cb235e7db6c4123b6abba2f28e9",
+      "entryHash": "b58c90d5965e0ab1fabc8ca702bd4d9285c7fbd7259f0a9959412b11fe9b425e"
+    },
+    "npc_wt_peichun": {
+      "authorizationHash": "d10dcf944f3bd5287d855d9fbfd9396596b5614e804f176abad8569191bd19dd",
+      "backgroundHash": "57c3bf87554ba8b8933672d617df04d2fd5adaa187d85d24705a29d7dd6aa482",
+      "originalRecordHash": "ed86ce088dba69106e701d8518218de0b9bd47ef148d64bf3fc1bf03c8b83b28",
+      "entryHash": "a9b1234470126c7eeb8b533f7e1ebad9c6a69b80e09414cb6a535fbe83a66418"
+    },
+    "npc_wt_xiangzhen": {
+      "authorizationHash": "d10dcf944f3bd5287d855d9fbfd9396596b5614e804f176abad8569191bd19dd",
+      "backgroundHash": "57c3bf87554ba8b8933672d617df04d2fd5adaa187d85d24705a29d7dd6aa482",
+      "originalRecordHash": "81eb8fbc42f1ec44350cdd54914b0f34dadf04b0590991d67bd9b332450327df",
+      "entryHash": "ccc966e28d4477188402d4ccb01f363031ccfb701dfb1715b8e6747071339bd8"
     }
   },
   "sourceCheckoutEvidence": {

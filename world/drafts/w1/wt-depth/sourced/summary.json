@@ -1,14 +1,14 @@
 {
   "total": 30,
-  "passed": 28,
-  "manual": 2,
+  "passed": 30,
+  "manual": 0,
   "pending": 0,
-  "costUpperYuan": 16.304860079999987,
+  "costUpperYuan": 16.63413264,
   "budget": {
-    "spentYuan": 16.22112407999999,
-    "reservedYuan": 0.08373599999999978,
-    "limitYuan": 20,
-    "waveLimitYuan": 20,
+    "spentYuan": 16.550396640000002,
+    "reservedYuan": 0.08373599999999976,
+    "limitYuan": 25,
+    "waveLimitYuan": 25,
     "cards": {
       "T06": {
         "limitYuan": 2.5,
@@ -60,8 +60,8 @@
         }
       },
       "T07": {
-        "limitYuan": 4.5,
-        "spentYuan": 4.286969920000001,
+        "limitYuan": 7,
+        "spentYuan": 4.4955988,
         "reservedYuan": 0,
         "reviewRecoveries": {
           "npc_wt_heqin": {
@@ -178,13 +178,18 @@
         }
       },
       "T08": {
-        "limitYuan": 4.5,
+        "limitYuan": 6.5,
         "spentYuan": 4.212835039999999,
         "reservedYuan": 0
       },
       "T09": {
         "limitYuan": 4.5,
         "spentYuan": 2.46694448,
+        "reservedYuan": 0
+      },
+      "T19": {
+        "limitYuan": 1,
+        "spentYuan": 0.12064368,
         "reservedYuan": 0
       }
     },
@@ -14149,6 +14154,750 @@
           "cumulativeUpperYuan": 16.22112407999999,
           "latencyMs": 2142.254999999999,
           "timestamp": "2026-10-13T12:10:54.418Z"
+        }
+      },
+      "df55d253-0072-49bf-b6d9-949979ae16c4": {
+        "card": "T19",
+        "label": "content-learning-item_book_w2_reuse_basic-review0",
+        "requestHash": "aead8387fa15a3105a150651a6c5193fdc5fb0c681992045ef65feaf379fe958",
+        "reservedYuan": 0.040322,
+        "status": "settled",
+        "responseEvidence": {
+          "file": "budget-responses/df55d253-0072-49bf-b6d9-949979ae16c4.json",
+          "requestHash": "aead8387fa15a3105a150651a6c5193fdc5fb0c681992045ef65feaf379fe958",
+          "responseHash": "61e65ba8d9a11711fe8eb9a39062b1b90e00bdf118ee0152f322df0d2c0a1e19"
+        },
+        "costUpperYuan": 0.006602,
+        "measurement": {
+          "label": "content-learning-item_book_w2_reuse_basic-review0",
+          "model": "deepseek-flash",
+          "thinking": "disabled",
+          "usage": {
+            "prompt_tokens": 3273,
+            "completion_tokens": 7,
+            "total_tokens": 3280,
+            "prompt_tokens_details": {
+              "cached_tokens": 0
+            },
+            "prompt_cache_hit_tokens": 0,
+            "prompt_cache_miss_tokens": 3273
+          },
+          "costUpperYuan": 0.006602,
+          "cumulativeUpperYuan": 16.17859751999999,
+          "latencyMs": 592.5564,
+          "timestamp": "2026-10-13T12:23:21.356Z"
+        }
+      },
+      "9c16c1b2-f3fa-4a12-92ac-5ab70afc7d6e": {
+        "card": "T19",
+        "label": "content-learning-item_book_w2_reuse_middle-review0",
+        "requestHash": "d7d012090968323b4f67b386255143f84132c2d77d21be378b103ff073373918",
+        "reservedYuan": 0.036004,
+        "status": "settled",
+        "responseEvidence": {
+          "file": "budget-responses/9c16c1b2-f3fa-4a12-92ac-5ab70afc7d6e.json",
+          "requestHash": "d7d012090968323b4f67b386255143f84132c2d77d21be378b103ff073373918",
+          "responseHash": "f5c9f41fa184256d7b5d0540cc2837282f30647e0f04191a639bca3e8d1a7661"
+        },
+        "costUpperYuan": 0.006018,
+        "measurement": {
+          "label": "content-learning-item_book_w2_reuse_middle-review0",
+          "model": "deepseek-flash",
+          "thinking": "disabled",
+          "usage": {
+            "prompt_tokens": 2721,
+            "completion_tokens": 72,
+            "total_tokens": 2793,
+            "prompt_tokens_details": {
+              "cached_tokens": 0
+            },
+            "prompt_cache_hit_tokens": 0,
+            "prompt_cache_miss_tokens": 2721
+          },
+          "costUpperYuan": 0.006018,
+          "cumulativeUpperYuan": 16.18461551999999,
+          "latencyMs": 1150.0239000000001,
+          "timestamp": "2026-10-13T12:23:22.548Z"
+        }
+      },
+      "3f4391f8-71b7-4e8d-9afb-c468667188b7": {
+        "card": "T19",
+        "label": "content-learning-item_book_w2_reuse_advanced-review0",
+        "requestHash": "cc3f724878bd6c967643c66ca9d88b3d5e14f70fe017944a2cef132d180d1f6f",
+        "reservedYuan": 0.039036,
+        "status": "settled",
+        "responseEvidence": {
+          "file": "budget-responses/3f4391f8-71b7-4e8d-9afb-c468667188b7.json",
+          "requestHash": "cc3f724878bd6c967643c66ca9d88b3d5e14f70fe017944a2cef132d180d1f6f",
+          "responseHash": "9d64881d6d565d094c05b6a4d35c64bb6b4353505903585e1b96f5b17e6c25c8"
+        },
+        "costUpperYuan": 0.006242,
+        "measurement": {
+          "label": "content-learning-item_book_w2_reuse_advanced-review0",
+          "model": "deepseek-flash",
+          "thinking": "disabled",
+          "usage": {
+            "prompt_tokens": 3093,
+            "completion_tokens": 7,
+            "total_tokens": 3100,
+            "prompt_tokens_details": {
+              "cached_tokens": 0
+            },
+            "prompt_cache_hit_tokens": 0,
+            "prompt_cache_miss_tokens": 3093
+          },
+          "costUpperYuan": 0.006242,
+          "cumulativeUpperYuan": 16.19085751999999,
+          "latencyMs": 643.6786000000002,
+          "timestamp": "2026-10-13T12:23:23.239Z"
+        }
+      },
+      "ad4d423e-59a3-45ab-89fc-66e10fc6bade": {
+        "card": "T19",
+        "label": "content-learning-source_spell_fire_03-review0",
+        "requestHash": "ad9e6e54bb9635e7639a06f782d1cf74badbe8a6f22b832c0ef27c974effc824",
+        "reservedYuan": 0.04186,
+        "status": "settled",
+        "responseEvidence": {
+          "file": "budget-responses/ad4d423e-59a3-45ab-89fc-66e10fc6bade.json",
+          "requestHash": "ad9e6e54bb9635e7639a06f782d1cf74badbe8a6f22b832c0ef27c974effc824",
+          "responseHash": "872ac4bf4e5b972bc7daab35badfd6d0347e7841e3637d0b35f301da2bf40cb6"
+        },
+        "costUpperYuan": 0.007082,
+        "measurement": {
+          "label": "content-learning-source_spell_fire_03-review0",
+          "model": "deepseek-flash",
+          "thinking": "disabled",
+          "usage": {
+            "prompt_tokens": 3513,
+            "completion_tokens": 7,
+            "total_tokens": 3520,
+            "prompt_tokens_details": {
+              "cached_tokens": 0
+            },
+            "prompt_cache_hit_tokens": 0,
+            "prompt_cache_miss_tokens": 3513
+          },
+          "costUpperYuan": 0.007082,
+          "cumulativeUpperYuan": 16.19793951999999,
+          "latencyMs": 742.9993,
+          "timestamp": "2026-10-13T12:23:24.020Z"
+        }
+      },
+      "32aa1149-836b-4db7-8657-ebcd7aff752a": {
+        "card": "T19",
+        "label": "content-learning-source_spell_fire_08-review0",
+        "requestHash": "62d5246ed5c9a8980d411597ce47dbda21c6dea94de7b80bd3159fe1e85d749a",
+        "reservedYuan": 0.041982,
+        "status": "settled",
+        "responseEvidence": {
+          "file": "budget-responses/32aa1149-836b-4db7-8657-ebcd7aff752a.json",
+          "requestHash": "62d5246ed5c9a8980d411597ce47dbda21c6dea94de7b80bd3159fe1e85d749a",
+          "responseHash": "d43d17261e1063d8a4339e43fef4caf4bb37c5a0b34ac74007a6dfbbf989d28c"
+        },
+        "costUpperYuan": 0.007104,
+        "measurement": {
+          "label": "content-learning-source_spell_fire_08-review0",
+          "model": "deepseek-flash",
+          "thinking": "disabled",
+          "usage": {
+            "prompt_tokens": 3524,
+            "completion_tokens": 7,
+            "total_tokens": 3531,
+            "prompt_tokens_details": {
+              "cached_tokens": 0
+            },
+            "prompt_cache_hit_tokens": 0,
+            "prompt_cache_miss_tokens": 3524
+          },
+          "costUpperYuan": 0.007104,
+          "cumulativeUpperYuan": 16.205043519999993,
+          "latencyMs": 775.627,
+          "timestamp": "2026-10-13T12:23:24.841Z"
+        }
+      },
+      "707e8e28-6e5a-4810-91d8-0364dc58df2f": {
+        "card": "T19",
+        "label": "content-learning-source_spell_fire_11-review0",
+        "requestHash": "a48a60b1b82c1569b824a7f35563d74e87cfdfd3bbcff50c98b5da3297d2e4fd",
+        "reservedYuan": 0.04222,
+        "status": "settled",
+        "responseEvidence": {
+          "file": "budget-responses/707e8e28-6e5a-4810-91d8-0364dc58df2f.json",
+          "requestHash": "a48a60b1b82c1569b824a7f35563d74e87cfdfd3bbcff50c98b5da3297d2e4fd",
+          "responseHash": "6503024a69898f9681c94ef3afa7eb36e956ae7c8ca1b3781c5faaee7cc50d07"
+        },
+        "costUpperYuan": 0.007156,
+        "measurement": {
+          "label": "content-learning-source_spell_fire_11-review0",
+          "model": "deepseek-flash",
+          "thinking": "disabled",
+          "usage": {
+            "prompt_tokens": 3550,
+            "completion_tokens": 7,
+            "total_tokens": 3557,
+            "prompt_tokens_details": {
+              "cached_tokens": 0
+            },
+            "prompt_cache_hit_tokens": 0,
+            "prompt_cache_miss_tokens": 3550
+          },
+          "costUpperYuan": 0.007156,
+          "cumulativeUpperYuan": 16.21219951999999,
+          "latencyMs": 593.9755000000005,
+          "timestamp": "2026-10-13T12:23:25.476Z"
+        }
+      },
+      "3a13b8fc-b9a5-49a0-b2f8-21ca08336887": {
+        "card": "T19",
+        "label": "content-learning-source_spell_fire_12-review0",
+        "requestHash": "80ed6a2e8fd3e36754e42781e44c9f097c0fb8729c6c0e3c53f7608736856a0d",
+        "reservedYuan": 0.042118,
+        "status": "settled",
+        "responseEvidence": {
+          "file": "budget-responses/3a13b8fc-b9a5-49a0-b2f8-21ca08336887.json",
+          "requestHash": "80ed6a2e8fd3e36754e42781e44c9f097c0fb8729c6c0e3c53f7608736856a0d",
+          "responseHash": "0007ef86262cc2a51e526f459490ecee6ad4732d8080be6faaf70b3ecae9e5ec"
+        },
+        "costUpperYuan": 0.007136,
+        "measurement": {
+          "label": "content-learning-source_spell_fire_12-review0",
+          "model": "deepseek-flash",
+          "thinking": "disabled",
+          "usage": {
+            "prompt_tokens": 3540,
+            "completion_tokens": 7,
+            "total_tokens": 3547,
+            "prompt_tokens_details": {
+              "cached_tokens": 0
+            },
+            "prompt_cache_hit_tokens": 0,
+            "prompt_cache_miss_tokens": 3540
+          },
+          "costUpperYuan": 0.007136,
+          "cumulativeUpperYuan": 16.21933551999999,
+          "latencyMs": 898.2757999999994,
+          "timestamp": "2026-10-13T12:23:26.414Z"
+        }
+      },
+      "c76131a0-20da-4b37-9219-ae4d4c801d82": {
+        "card": "T19",
+        "label": "content-learning-source_spell_water_01-review0",
+        "requestHash": "3f290da5ccf29fbd7d5ec50bc4e8fc7843b60be0ca16ddf294c8215fbd2daa28",
+        "reservedYuan": 0.04202,
+        "status": "settled",
+        "responseEvidence": {
+          "file": "budget-responses/c76131a0-20da-4b37-9219-ae4d4c801d82.json",
+          "requestHash": "3f290da5ccf29fbd7d5ec50bc4e8fc7843b60be0ca16ddf294c8215fbd2daa28",
+          "responseHash": "19d09d34672c0a0543468662b9650627f8d7f4687c11b2f3b6a6bd80db67ef4e"
+        },
+        "costUpperYuan": 0.007116,
+        "measurement": {
+          "label": "content-learning-source_spell_water_01-review0",
+          "model": "deepseek-flash",
+          "thinking": "disabled",
+          "usage": {
+            "prompt_tokens": 3530,
+            "completion_tokens": 7,
+            "total_tokens": 3537,
+            "prompt_tokens_details": {
+              "cached_tokens": 0
+            },
+            "prompt_cache_hit_tokens": 0,
+            "prompt_cache_miss_tokens": 3530
+          },
+          "costUpperYuan": 0.007116,
+          "cumulativeUpperYuan": 16.22645151999999,
+          "latencyMs": 620.7807000000003,
+          "timestamp": "2026-10-13T12:23:27.075Z"
+        }
+      },
+      "232f084e-4e1b-40b3-a1b2-9abd9d58751a": {
+        "card": "T19",
+        "label": "content-learning-source_spell_water_02-review0",
+        "requestHash": "7e7374b9a181b2f715f056ae28567bef9ba1b04b50b6b6ccccdb7cc8fbfc3647",
+        "reservedYuan": 0.042054,
+        "status": "settled",
+        "responseEvidence": {
+          "file": "budget-responses/232f084e-4e1b-40b3-a1b2-9abd9d58751a.json",
+          "requestHash": "7e7374b9a181b2f715f056ae28567bef9ba1b04b50b6b6ccccdb7cc8fbfc3647",
+          "responseHash": "56270de7a027d8464649d3a45b0392dc268225232cd4c109d22abcc6b1a94fe5"
+        },
+        "costUpperYuan": 0.007122,
+        "measurement": {
+          "label": "content-learning-source_spell_water_02-review0",
+          "model": "deepseek-flash",
+          "thinking": "disabled",
+          "usage": {
+            "prompt_tokens": 3533,
+            "completion_tokens": 7,
+            "total_tokens": 3540,
+            "prompt_tokens_details": {
+              "cached_tokens": 0
+            },
+            "prompt_cache_hit_tokens": 0,
+            "prompt_cache_miss_tokens": 3533
+          },
+          "costUpperYuan": 0.007122,
+          "cumulativeUpperYuan": 16.23357351999999,
+          "latencyMs": 958.7431999999999,
+          "timestamp": "2026-10-13T12:23:28.075Z"
+        }
+      },
+      "c7ffd603-0c56-4ff6-8250-8fd70d9237b6": {
+        "card": "T19",
+        "label": "content-learning-source_spell_water_03-review0",
+        "requestHash": "91be2c60fc285b72259f9b9f37bce8f963a373827bb2ec29e93ea6a1407f4a4e",
+        "reservedYuan": 0.042048,
+        "status": "settled",
+        "responseEvidence": {
+          "file": "budget-responses/c7ffd603-0c56-4ff6-8250-8fd70d9237b6.json",
+          "requestHash": "91be2c60fc285b72259f9b9f37bce8f963a373827bb2ec29e93ea6a1407f4a4e",
+          "responseHash": "e6c46a220d4f8f34d2cd5c9571d80b2fce7b7e3dd8de90d8e9868b85ff453f04"
+        },
+        "costUpperYuan": 0.007122,
+        "measurement": {
+          "label": "content-learning-source_spell_water_03-review0",
+          "model": "deepseek-flash",
+          "thinking": "disabled",
+          "usage": {
+            "prompt_tokens": 3533,
+            "completion_tokens": 7,
+            "total_tokens": 3540,
+            "prompt_tokens_details": {
+              "cached_tokens": 0
+            },
+            "prompt_cache_hit_tokens": 0,
+            "prompt_cache_miss_tokens": 3533
+          },
+          "costUpperYuan": 0.007122,
+          "cumulativeUpperYuan": 16.24069551999999,
+          "latencyMs": 1025.5194999999994,
+          "timestamp": "2026-10-13T12:23:29.145Z"
+        }
+      },
+      "424f81e2-fe1e-4416-bfba-90b09fa37c4d": {
+        "card": "T19",
+        "label": "content-learning-source_spell_water_04-review0",
+        "requestHash": "031e7de23f1dbd10c4f0809200d95b7660dd6e45741425bfaad9e13b19355024",
+        "reservedYuan": 0.04196,
+        "status": "settled",
+        "responseEvidence": {
+          "file": "budget-responses/424f81e2-fe1e-4416-bfba-90b09fa37c4d.json",
+          "requestHash": "031e7de23f1dbd10c4f0809200d95b7660dd6e45741425bfaad9e13b19355024",
+          "responseHash": "c8ae8a595421274f3408130d9130da77e2ba4e69042887df79bcc0b079e438b6"
+        },
+        "costUpperYuan": 0.007114,
+        "measurement": {
+          "label": "content-learning-source_spell_water_04-review0",
+          "model": "deepseek-flash",
+          "thinking": "disabled",
+          "usage": {
+            "prompt_tokens": 3529,
+            "completion_tokens": 7,
+            "total_tokens": 3536,
+            "prompt_tokens_details": {
+              "cached_tokens": 0
+            },
+            "prompt_cache_hit_tokens": 0,
+            "prompt_cache_miss_tokens": 3529
+          },
+          "costUpperYuan": 0.007114,
+          "cumulativeUpperYuan": 16.24780951999999,
+          "latencyMs": 1063.3232000000007,
+          "timestamp": "2026-10-13T12:23:30.252Z"
+        }
+      },
+      "7e0ae1e1-b215-4d73-aed4-2e618c3a326c": {
+        "card": "T19",
+        "label": "content-learning-source_spell_water_06-review0",
+        "requestHash": "0dac25a668e59dc03874f069ba2fbee2ceab93451a698d992ac7d86c2e4fcef7",
+        "reservedYuan": 0.04195,
+        "status": "settled",
+        "responseEvidence": {
+          "file": "budget-responses/7e0ae1e1-b215-4d73-aed4-2e618c3a326c.json",
+          "requestHash": "0dac25a668e59dc03874f069ba2fbee2ceab93451a698d992ac7d86c2e4fcef7",
+          "responseHash": "699190e1cb7704b6ed1de04d5ed8d80cfbd2e1a76d800a866cd9a2899dd695fb"
+        },
+        "costUpperYuan": 0.007084,
+        "measurement": {
+          "label": "content-learning-source_spell_water_06-review0",
+          "model": "deepseek-flash",
+          "thinking": "disabled",
+          "usage": {
+            "prompt_tokens": 3514,
+            "completion_tokens": 7,
+            "total_tokens": 3521,
+            "prompt_tokens_details": {
+              "cached_tokens": 0
+            },
+            "prompt_cache_hit_tokens": 0,
+            "prompt_cache_miss_tokens": 3514
+          },
+          "costUpperYuan": 0.007084,
+          "cumulativeUpperYuan": 16.25489351999999,
+          "latencyMs": 985.2929999999997,
+          "timestamp": "2026-10-13T12:23:31.278Z"
+        }
+      },
+      "7fa6d0bc-0fc6-445e-a3f5-fa5348e317a9": {
+        "card": "T19",
+        "label": "content-learning-source_spell_water_12-review0",
+        "requestHash": "d761d0593720d35f51d59dc2e6d4e5aea91b9bb09f983fbef7b632b73d294d58",
+        "reservedYuan": 0.042172,
+        "status": "settled",
+        "responseEvidence": {
+          "file": "budget-responses/7fa6d0bc-0fc6-445e-a3f5-fa5348e317a9.json",
+          "requestHash": "d761d0593720d35f51d59dc2e6d4e5aea91b9bb09f983fbef7b632b73d294d58",
+          "responseHash": "32cd52b9b3f9c0d6336abdd0eb0fb352fa82ab055169d51c180ea45cbae57ec2"
+        },
+        "costUpperYuan": 0.007138,
+        "measurement": {
+          "label": "content-learning-source_spell_water_12-review0",
+          "model": "deepseek-flash",
+          "thinking": "disabled",
+          "usage": {
+            "prompt_tokens": 3541,
+            "completion_tokens": 7,
+            "total_tokens": 3548,
+            "prompt_tokens_details": {
+              "cached_tokens": 0
+            },
+            "prompt_cache_hit_tokens": 0,
+            "prompt_cache_miss_tokens": 3541
+          },
+          "costUpperYuan": 0.007138,
+          "cumulativeUpperYuan": 16.26203151999999,
+          "latencyMs": 993.3366000000005,
+          "timestamp": "2026-10-13T12:23:32.311Z"
+        }
+      },
+      "b95073eb-d025-41f3-8837-f77d311f0229": {
+        "card": "T19",
+        "label": "content-learning-source_spell_earth_11-review0",
+        "requestHash": "262d51807490e9e7cdb90e6fe5301e29bf5e85da0f1986999114b31a1cf02619",
+        "reservedYuan": 0.042236,
+        "status": "settled",
+        "responseEvidence": {
+          "file": "budget-responses/b95073eb-d025-41f3-8837-f77d311f0229.json",
+          "requestHash": "262d51807490e9e7cdb90e6fe5301e29bf5e85da0f1986999114b31a1cf02619",
+          "responseHash": "45a1eb290b439adc531d795b5a99a0b105ad776d7545ecaecdc77fdef86f4098"
+        },
+        "costUpperYuan": 0.007154,
+        "measurement": {
+          "label": "content-learning-source_spell_earth_11-review0",
+          "model": "deepseek-flash",
+          "thinking": "disabled",
+          "usage": {
+            "prompt_tokens": 3549,
+            "completion_tokens": 7,
+            "total_tokens": 3556,
+            "prompt_tokens_details": {
+              "cached_tokens": 0
+            },
+            "prompt_cache_hit_tokens": 0,
+            "prompt_cache_miss_tokens": 3549
+          },
+          "costUpperYuan": 0.007154,
+          "cumulativeUpperYuan": 16.26918551999999,
+          "latencyMs": 884.5688000000009,
+          "timestamp": "2026-10-13T12:23:33.238Z"
+        }
+      },
+      "151bbc00-2413-47fc-a443-89d640a042b4": {
+        "card": "T19",
+        "label": "content-learning-source_spell_mind_05-review0",
+        "requestHash": "40ab874eb0ef9d6070dd0ce2e7fcd87e33663589134ce4d5ff273207ef94be52",
+        "reservedYuan": 0.042216,
+        "status": "settled",
+        "responseEvidence": {
+          "file": "budget-responses/151bbc00-2413-47fc-a443-89d640a042b4.json",
+          "requestHash": "40ab874eb0ef9d6070dd0ce2e7fcd87e33663589134ce4d5ff273207ef94be52",
+          "responseHash": "8c2880cb96b36c6a7319e6994c56b7b873b54f569847f4236fdfbac445288cca"
+        },
+        "costUpperYuan": 0.00715,
+        "measurement": {
+          "label": "content-learning-source_spell_mind_05-review0",
+          "model": "deepseek-flash",
+          "thinking": "disabled",
+          "usage": {
+            "prompt_tokens": 3547,
+            "completion_tokens": 7,
+            "total_tokens": 3554,
+            "prompt_tokens_details": {
+              "cached_tokens": 0
+            },
+            "prompt_cache_hit_tokens": 0,
+            "prompt_cache_miss_tokens": 3547
+          },
+          "costUpperYuan": 0.00715,
+          "cumulativeUpperYuan": 16.27633551999999,
+          "latencyMs": 1343.4858999999997,
+          "timestamp": "2026-10-13T12:23:34.622Z"
+        }
+      },
+      "67bb98f8-7dc9-4c66-944a-094f13fa613a": {
+        "card": "T19",
+        "label": "content-learning-source_spell_mind_10-review0",
+        "requestHash": "06d356371f13d1ecbabc169242153971b4e94c2d205e5600d23c06b36f74c01c",
+        "reservedYuan": 0.042282,
+        "status": "settled",
+        "responseEvidence": {
+          "file": "budget-responses/67bb98f8-7dc9-4c66-944a-094f13fa613a.json",
+          "requestHash": "06d356371f13d1ecbabc169242153971b4e94c2d205e5600d23c06b36f74c01c",
+          "responseHash": "f93100bb86860b1322713f4a241650fcc7a9bc3d454ab64c7117850c1eaac3dc"
+        },
+        "costUpperYuan": 0.007162,
+        "measurement": {
+          "label": "content-learning-source_spell_mind_10-review0",
+          "model": "deepseek-flash",
+          "thinking": "disabled",
+          "usage": {
+            "prompt_tokens": 3553,
+            "completion_tokens": 7,
+            "total_tokens": 3560,
+            "prompt_tokens_details": {
+              "cached_tokens": 0
+            },
+            "prompt_cache_hit_tokens": 0,
+            "prompt_cache_miss_tokens": 3553
+          },
+          "costUpperYuan": 0.007162,
+          "cumulativeUpperYuan": 16.28349751999999,
+          "latencyMs": 782.2751000000007,
+          "timestamp": "2026-10-13T12:23:35.447Z"
+        }
+      },
+      "f79fa2c9-d22f-46e9-af9f-e85e0de78cbd": {
+        "card": "T19",
+        "label": "content-learning-source_spell_summon_04-review0",
+        "requestHash": "600840c94dd8b2f2f359bfe176839483ac70866e60339de6f805a9cf02609ac7",
+        "reservedYuan": 0.04211,
+        "status": "settled",
+        "responseEvidence": {
+          "file": "budget-responses/f79fa2c9-d22f-46e9-af9f-e85e0de78cbd.json",
+          "requestHash": "600840c94dd8b2f2f359bfe176839483ac70866e60339de6f805a9cf02609ac7",
+          "responseHash": "cac14e87b9d58ddfad7240686d68004cbd278cee14190d41eed0c3759c555072"
+        },
+        "costUpperYuan": 0.00715,
+        "measurement": {
+          "label": "content-learning-source_spell_summon_04-review0",
+          "model": "deepseek-flash",
+          "thinking": "disabled",
+          "usage": {
+            "prompt_tokens": 3547,
+            "completion_tokens": 7,
+            "total_tokens": 3554,
+            "prompt_tokens_details": {
+              "cached_tokens": 0
+            },
+            "prompt_cache_hit_tokens": 0,
+            "prompt_cache_miss_tokens": 3547
+          },
+          "costUpperYuan": 0.00715,
+          "cumulativeUpperYuan": 16.29064751999999,
+          "latencyMs": 1019.3674999999985,
+          "timestamp": "2026-10-13T12:23:36.509Z"
+        }
+      },
+      "a807f777-d698-49da-9fe3-67127fe830fe": {
+        "card": "T19",
+        "label": "content-learning-item_book_w2_reuse_middle-review0",
+        "requestHash": "13350be92228b9a793b8cb6b6cbe2c99fa3980d0f71ec3a83c070dc96e8d723b",
+        "reservedYuan": 0.036628,
+        "status": "settled",
+        "responseEvidence": {
+          "file": "budget-responses/a807f777-d698-49da-9fe3-67127fe830fe.json",
+          "requestHash": "13350be92228b9a793b8cb6b6cbe2c99fa3980d0f71ec3a83c070dc96e8d723b",
+          "responseHash": "5bb3f1e373ee2e97a8869d4657439cffb3603c8872b73da77ffa67c22ed7d364"
+        },
+        "costUpperYuan": 0.0011344,
+        "measurement": {
+          "label": "content-learning-item_book_w2_reuse_middle-review0",
+          "model": "deepseek-flash",
+          "thinking": "disabled",
+          "usage": {
+            "prompt_tokens": 2784,
+            "completion_tokens": 73,
+            "total_tokens": 2857,
+            "prompt_tokens_details": {
+              "cached_tokens": 2560
+            },
+            "prompt_cache_hit_tokens": 2560,
+            "prompt_cache_miss_tokens": 224
+          },
+          "costUpperYuan": 0.0011344,
+          "cumulativeUpperYuan": 16.29178191999999,
+          "latencyMs": 1210.2915,
+          "timestamp": "2026-10-13T12:25:19.286Z"
+        }
+      },
+      "d8ff3f6f-debd-42f1-b5c1-f7217886c0fb": {
+        "card": "T19",
+        "label": "content-learning-item_book_w2_reuse_middle-review0",
+        "requestHash": "6d1bd674d524ed1db707d8d36c49b0212d84a898fffcb1883819788752bfcab6",
+        "reservedYuan": 0.036616,
+        "status": "settled",
+        "responseEvidence": {
+          "file": "budget-responses/d8ff3f6f-debd-42f1-b5c1-f7217886c0fb.json",
+          "requestHash": "6d1bd674d524ed1db707d8d36c49b0212d84a898fffcb1883819788752bfcab6",
+          "responseHash": "9724a5f18d359539c3568190e7237dd69dfb516748a1463251dd4ac36fa0b205"
+        },
+        "costUpperYuan": 0.00085728,
+        "measurement": {
+          "label": "content-learning-item_book_w2_reuse_middle-review0",
+          "model": "deepseek-flash",
+          "thinking": "disabled",
+          "usage": {
+            "prompt_tokens": 2784,
+            "completion_tokens": 7,
+            "total_tokens": 2791,
+            "prompt_tokens_details": {
+              "cached_tokens": 2432
+            },
+            "prompt_cache_hit_tokens": 2432,
+            "prompt_cache_miss_tokens": 352
+          },
+          "costUpperYuan": 0.00085728,
+          "cumulativeUpperYuan": 16.292639199999993,
+          "latencyMs": 785.4308,
+          "timestamp": "2026-10-13T12:25:59.468Z"
+        }
+      },
+      "de33b1e1-84c3-42bc-96cf-ca4e613f850a": {
+        "card": "T07",
+        "label": "content-T07-npc_wt_zhicai-manual-review",
+        "requestHash": "f66db85208c57b9317ebbe6a64712c7774ca4ec342e381baafad2b3e9eb678ea",
+        "reservedYuan": 0.207984,
+        "status": "settled",
+        "authorizationId": "user-reopen-20261012-01",
+        "reopenId": "npc_wt_zhicai",
+        "responseEvidence": {
+          "file": "budget-responses/de33b1e1-84c3-42bc-96cf-ca4e613f850a.json",
+          "requestHash": "f66db85208c57b9317ebbe6a64712c7774ca4ec342e381baafad2b3e9eb678ea",
+          "responseHash": "3c24c82ad10a277c1fc506d6df1bbedd917eaa1e8516fa68a2a7935995d8aace"
+        },
+        "costUpperYuan": 0.049345440000000004,
+        "measurement": {
+          "label": "content-T07-npc_wt_zhicai-manual-review",
+          "model": "deepseek-flash",
+          "thinking": "disabled",
+          "usage": {
+            "prompt_tokens": 28362,
+            "completion_tokens": 238,
+            "total_tokens": 28600,
+            "prompt_tokens_details": {
+              "cached_tokens": 4736
+            },
+            "prompt_cache_hit_tokens": 4736,
+            "prompt_cache_miss_tokens": 23626
+          },
+          "costUpperYuan": 0.049345440000000004,
+          "cumulativeUpperYuan": 16.3911132,
+          "latencyMs": 2168.8824,
+          "timestamp": "2026-10-13T12:47:14.022Z"
+        }
+      },
+      "e9432b21-ae50-4a02-9680-9c85a7fcb2ee": {
+        "card": "T07",
+        "label": "content-T07-npc_wt_shanju-manual-review",
+        "requestHash": "3607947e7183e74ac7ee46c8dadd691237cc16b2b9474ca484df363be56ebe7c",
+        "reservedYuan": 0.21373,
+        "status": "settled",
+        "authorizationId": "user-reopen-20261012-01",
+        "reopenId": "npc_wt_shanju",
+        "responseEvidence": {
+          "file": "budget-responses/e9432b21-ae50-4a02-9680-9c85a7fcb2ee.json",
+          "requestHash": "3607947e7183e74ac7ee46c8dadd691237cc16b2b9474ca484df363be56ebe7c",
+          "responseHash": "521f7a7f3b0714c191063105eb0ac514f92df47eaaf2aa63b899c60230a88a35"
+        },
+        "costUpperYuan": 0.05300456,
+        "measurement": {
+          "label": "content-T07-npc_wt_shanju-manual-review",
+          "model": "deepseek-flash",
+          "thinking": "disabled",
+          "usage": {
+            "prompt_tokens": 29301,
+            "completion_tokens": 492,
+            "total_tokens": 29793,
+            "prompt_tokens_details": {
+              "cached_tokens": 4864
+            },
+            "prompt_cache_hit_tokens": 4864,
+            "prompt_cache_miss_tokens": 24437
+          },
+          "costUpperYuan": 0.05300456,
+          "cumulativeUpperYuan": 16.44411776,
+          "latencyMs": 3444.765300000001,
+          "timestamp": "2026-10-13T12:47:19.299Z"
+        }
+      },
+      "d2a0b1e7-7b45-4fa0-bb80-e9dda72b695d": {
+        "card": "T07",
+        "label": "content-T07-npc_wt_peichun-manual-review",
+        "requestHash": "82d801691eb84624ab3096fc3764a0133e3a8ea3466c76f494fdcbaa6fb735c2",
+        "reservedYuan": 0.214276,
+        "status": "settled",
+        "authorizationId": "user-reopen-20261012-01",
+        "reopenId": "npc_wt_peichun",
+        "responseEvidence": {
+          "file": "budget-responses/d2a0b1e7-7b45-4fa0-bb80-e9dda72b695d.json",
+          "requestHash": "82d801691eb84624ab3096fc3764a0133e3a8ea3466c76f494fdcbaa6fb735c2",
+          "responseHash": "3488db61d523eebc2da5f4bf312289f10d7c8171f3d368577900759f41ca50af"
+        },
+        "costUpperYuan": 0.054543440000000006,
+        "measurement": {
+          "label": "content-T07-npc_wt_peichun-manual-review",
+          "model": "deepseek-flash",
+          "thinking": "disabled",
+          "usage": {
+            "prompt_tokens": 29377,
+            "completion_tokens": 634,
+            "total_tokens": 30011,
+            "prompt_tokens_details": {
+              "cached_tokens": 4736
+            },
+            "prompt_cache_hit_tokens": 4736,
+            "prompt_cache_miss_tokens": 24641
+          },
+          "costUpperYuan": 0.054543440000000006,
+          "cumulativeUpperYuan": 16.4986612,
+          "latencyMs": 4428.208999999999,
+          "timestamp": "2026-10-13T12:47:25.562Z"
+        }
+      },
+      "0e16e911-f66b-42a3-9429-1b35e7bbb912": {
+        "card": "T07",
+        "label": "content-T07-npc_wt_xiangzhen-manual-review",
+        "requestHash": "52bab4978cf6e7d19c8b6b26df9aadba5da6f23ec3c9b75326f11ccc16d4d010",
+        "reservedYuan": 0.215308,
+        "status": "settled",
+        "authorizationId": "user-reopen-20261012-01",
+        "reopenId": "npc_wt_xiangzhen",
+        "responseEvidence": {
+          "file": "budget-responses/0e16e911-f66b-42a3-9429-1b35e7bbb912.json",
+          "requestHash": "52bab4978cf6e7d19c8b6b26df9aadba5da6f23ec3c9b75326f11ccc16d4d010",
+          "responseHash": "0fec73087b3446f229391d709c6fbb17f43b981003dce8823874285360a4a027"
+        },
+        "costUpperYuan": 0.05173544,
+        "measurement": {
+          "label": "content-T07-npc_wt_xiangzhen-manual-review",
+          "model": "deepseek-flash",
+          "thinking": "disabled",
+          "usage": {
+            "prompt_tokens": 29489,
+            "completion_tokens": 255,
+            "total_tokens": 29744,
+            "prompt_tokens_details": {
+              "cached_tokens": 4736
+            },
+            "prompt_cache_hit_tokens": 4736,
+            "prompt_cache_miss_tokens": 24753
+          },
+          "costUpperYuan": 0.05173544,
+          "cumulativeUpperYuan": 16.550396640000002,
+          "latencyMs": 2303.3799,
+          "timestamp": "2026-10-13T12:47:29.718Z"
         }
       }
     },
@@ -28321,6 +29070,12 @@
                   "claimedAt": "2026-10-13T11:56:01.861Z",
                   "status": "failed",
                   "finishedAt": "2026-10-13T11:56:04.752Z"
+                },
+                {
+                  "fingerprint": "7a9a477f36581cfd8a9e8c722bd44594a6a50b1a9715d252ce0fcb70ae971eb9",
+                  "claimedAt": "2026-10-13T12:47:11.761Z",
+                  "status": "passed-L1-L2",
+                  "finishedAt": "2026-10-13T12:47:14.044Z"
                 }
               ],
               "npc_wt_xueying": [
@@ -28431,6 +29186,12 @@
                   "claimedAt": "2026-10-13T11:48:13.649Z",
                   "status": "passed-L1-L2",
                   "finishedAt": "2026-10-13T11:48:16.946Z"
+                },
+                {
+                  "fingerprint": "6d8d47b4b3bc4b12f5eaeb6989a2be5fa60bab1708ddd18cfeb71840807d1ce5",
+                  "claimedAt": "2026-10-13T12:47:15.758Z",
+                  "status": "passed-L1-L2",
+                  "finishedAt": "2026-10-13T12:47:19.311Z"
                 }
               ],
               "npc_wt_dongfei": [
@@ -28447,6 +29208,12 @@
                   "claimedAt": "2026-10-13T11:48:22.290Z",
                   "status": "passed-L1-L2",
                   "finishedAt": "2026-10-13T11:48:26.027Z"
+                },
+                {
+                  "fingerprint": "28f1e9bfb816a40efa8aa542249d554745464a03203ad7494dd89cb755323a48",
+                  "claimedAt": "2026-10-13T12:47:21.045Z",
+                  "status": "passed-L1-L2",
+                  "finishedAt": "2026-10-13T12:47:25.576Z"
                 }
               ],
               "npc_wt_suhui": [
@@ -28485,12 +29252,40 @@
                   "claimedAt": "2026-10-13T11:48:42.012Z",
                   "status": "passed-L1-L2",
                   "finishedAt": "2026-10-13T11:48:45.826Z"
+                },
+                {
+                  "fingerprint": "a5042df40aa4869086aa2f5fb87fde5d4e4bcce1a6ce70b046b5c2665fefd114",
+                  "claimedAt": "2026-10-13T12:47:27.328Z",
+                  "status": "passed-L1-L2",
+                  "finishedAt": "2026-10-13T12:47:29.739Z"
                 }
               ]
             },
             "pilotId": "npc_wt_zhangou",
             "pilotPassed": true
           }
+        },
+        "amendment": {
+          "id": "user-reopen-20261013-01",
+          "date": "2026-10-13",
+          "previousManifestHash": "f23eb0e7c49f472e75e47fce1946469e6c906a6314e9bf341aa6b77a2bfd3195",
+          "waveLimitYuan": 25,
+          "maxAttempts": 6,
+          "cardLimits": {
+            "T07": 7,
+            "T08": 6.5,
+            "T09": 4.5
+          },
+          "source": "2026-10-13 用户“可以改可以改”；docs/待用户确认.md末尾与本次T07执行指令。",
+          "manifestHash": "5322c4f3554f91f7e892f43de8c97fd977060bbd097cc2168e426fcbde3561d5",
+          "beforeWaveLimitYuan": 20,
+          "beforeCardLimits": {
+            "T06": 2.5,
+            "T08": 4.5,
+            "T09": 4.5,
+            "T07": 4.5
+          },
+          "appliedAt": "2026-10-13T12:46:29.590Z"
         }
       }
     }
@@ -28498,9 +29293,9 @@
   "batches": [
     {
       "index": 0,
-      "fingerprint": "fd287957385a3a26defa82c3e5e1be6f96ed214173aeddd0af04b350781e84c5",
+      "fingerprint": "18e94f04549dcfb84759fc017231154527b030f3366e6f2a2361683d8e7ddf34",
       "count": 25,
-      "passed": 23,
+      "passed": 25,
       "ids": [
         "npc_wt_zhengxi",
         "npc_wt_wangpu",
@@ -28529,10 +29324,7 @@
         "npc_wt_dongfei"
       ],
       "rewritten": 10,
-      "manual": [
-        "npc_wt_zhicai",
-        "npc_wt_shanju"
-      ],
+      "manual": [],
       "pending": [],
       "flagged": [
         "npc_wt_liuyan",
@@ -28551,23 +29343,172 @@
         "npc_wt_dongfei"
       ],
       "sample": [
-        "npc_wt_jingyao",
-        "npc_wt_wupeng",
-        "npc_wt_weilian",
-        "npc_wt_huangting",
-        "npc_wt_dongfei"
+        "npc_wt_heqin",
+        "npc_wt_fanshui",
+        "npc_wt_zhengxi",
+        "npc_wt_liuyan",
+        "npc_wt_lvmo"
       ],
       "l4": {
-        "approved": false,
-        "notes": []
+        "approved": true,
+        "reviewedAt": "2026-10-13T12:52:15.676Z",
+        "notes": [
+          {
+            "id": "npc_wt_zhengxi",
+            "note": "旧桩口述与旁注仍待核对；门外四人只复述需要的空位，未定界线或让渡门前位置。漏听一句仍仅本人知情。",
+            "draftHash": "d962c85792aa6206067215b2bcf8b0c0a06a94f9321e3b5b3340a8556eb0ee05",
+            "reviewHash": "79022ea69b75bc7e9b6ed6c124a094b95ff41ac04fe4c3745e5ad01253e0a098"
+          },
+          {
+            "id": "npc_wt_wangpu",
+            "note": "翻篓需明亮空位与郑汐指界站位相冲突；旧篓反编、磨痕来自原经历，查料须物主同意，未产生可售篓料。",
+            "draftHash": "4d4fefe22d61c318b57f165f3fd2ad96fc497070ca782942c1a7d495e3357e37",
+            "reviewHash": "79022ea69b75bc7e9b6ed6c124a094b95ff41ac04fe4c3745e5ad01253e0a098"
+          },
+          {
+            "id": "npc_wt_zhouzhu",
+            "note": "退脚位置、雨后湿岸与苇束卸放相连；改约仍pending，没有替伍蓬答应挪束，曾挪邻苇未进入共同记忆。",
+            "draftHash": "661df3ee45bf17e2ee6d9f2364eb1379df6fb2ba8d770c7f8d3b219575d0a9dc",
+            "reviewHash": "79022ea69b75bc7e9b6ed6c124a094b95ff41ac04fe4c3745e5ad01253e0a098"
+          },
+          {
+            "id": "npc_wt_wupeng",
+            "note": "短茎重捆及分趟搬束能接周渚的退脚需求；重捆旧经历不等于目前所有苇束已齐，赌约反口不向四人传播。",
+            "draftHash": "3878e4d7dd54dd37ede380aa473fa6945c03527831e3e30c7f8186996937b139",
+            "reviewHash": "79022ea69b75bc7e9b6ed6c124a094b95ff41ac04fe4c3745e5ad01253e0a098"
+          },
+          {
+            "id": "npc_wt_weilian",
+            "note": "迎光辨网与空响石检看占位明确；让孙女读回结记是计划，未假定会新结法，借更亮光的秘密仍仅本人。",
+            "draftHash": "59fb5251761a684a5e6add10f9c6316d90e10bbe51eb7cf4c9fdcdb80b1ccc09",
+            "reviewHash": "15c207e2e214a579f5cc526cbd85668118202c94e4dee9d9ba4fcf2a7c41e308"
+          },
+          {
+            "id": "npc_wt_huangting",
+            "note": "敲比石音与绕干路均有原经历；检看空间与魏涟相连，栗萝同行仍待执行，未将空响判断写成安全保证。",
+            "draftHash": "45816271e92b84df2314ea2cb765aaab4e39366b1a96090224304cdd69331549",
+            "reviewHash": "15c207e2e214a579f5cc526cbd85668118202c94e4dee9d9ba4fcf2a7c41e308"
+          },
+          {
+            "id": "npc_wt_heqin",
+            "note": "两户认旧补处与交还水盆的时段均待问；逐户辨席没有替物主认领，湿处理没有变成吕沫已同意延期。",
+            "draftHash": "317855d49234e254bd86106b08bb3dc53d7d19876ab674c323c8dae7560499a5",
+            "reviewHash": "15c207e2e214a579f5cc526cbd85668118202c94e4dee9d9ba4fcf2a7c41e308"
+          },
+          {
+            "id": "npc_wt_lvmo",
+            "note": "分生熟盆与新帮厨读回收放位置能进入对话；与贺芩交盆没有定时，忘刷盆补洗不在新共同记忆中传播。",
+            "draftHash": "fcdab7bd2871f57290a1590d645001c62eb0e1eda58802062ec67145e45463c3",
+            "reviewHash": "4218ded0c0115fdeed37593aacc140fe98f72ba67ca51d17dfae51adf7e2fbd1"
+          },
+          {
+            "id": "npc_wt_shiqiao",
+            "note": "从干稳落脚点看水及与家人约时均为计划；旧险滑没有在四人公开劳动谈话中披露，家人是否陪同仍未知。",
+            "draftHash": "8264c8d9feb0a789707da2643c0868aed7843f3958be22d950fa117df2ffb72b",
+            "reviewHash": "006ebecebc5ae00840ef5a72577e1e59abe2307fb52e99dc6c8be462f0c04e27"
+          },
+          {
+            "id": "npc_wt_keli",
+            "note": "割苇与捆苇分栏、读回活名可用；没有先填工数、代记付款或让亲人的空行成为已结工时。",
+            "draftHash": "e16b580ec4aaa8e176f6c40e01e21f79ac1798e1f893dd51a3e46e32e2eb9bef",
+            "reviewHash": "006ebecebc5ae00840ef5a72577e1e59abe2307fb52e99dc6c8be462f0c04e27"
+          },
+          {
+            "id": "npc_wt_duke",
+            "note": "木台背面检看及菜床外试转弯衔接刘燕的路线分歧；空手试转弯仍pending，未获搬木通行或材料库存。",
+            "draftHash": "849d069544b00c9974d5a0f51013f2f17355cdf1548fea679b0460ec686f3a96",
+            "reviewHash": "da516a6b9440e2fbee9c9c8dcf1ab6d3270a253295d4b3bfc1f92a7db7cb182f"
+          },
+          {
+            "id": "npc_wt_liuyan",
+            "note": "苗边、脚印与搬木路线有具体冲突；读回绕行范围仍待问，公开谈话没有承诺床边通行或转移土床产权。",
+            "draftHash": "6c6a11eb67c70a8f86286463d7ecb0396c400eb820cf0bc1131377d6cd23eb39",
+            "reviewHash": "150488386e9c181aab8e62d1907161fa4f3f3cfa9f0d3d96ec5176a614193884"
+          },
+          {
+            "id": "npc_wt_zhangou",
+            "note": "原七hard与首轮source hard保留；新group_3没有两户催先拿或客户身份，带路与补记号均明确尚未发生。",
+            "draftHash": "aec17f8be2e63ad9d37d78e34c2a1c74cdc94a721b45fbaf2ea113b9c68eed67",
+            "reviewHash": "791dd707ba58b7d4a514eae19d6edecc26a0f13067e3575e6a5143c24fe412b9"
+          },
+          {
+            "id": "npc_wt_zhicai",
+            "note": "复读全部13叶：观点只写薛萤在记事屋前说门边旧根需整理，未写她家人私话、客户身份或通行安排。补衣交还次序仍逐户待问，群体记忆没有排顺序；第三次真实L2全叶及四项秘密风险通过。",
+            "draftHash": "1ef042cf53a223750469640f4565a9b51319cb8368f1c32685a50a604e97b692",
+            "reviewHash": "791dd707ba58b7d4a514eae19d6edecc26a0f13067e3575e6a5143c24fe412b9"
+          },
+          {
+            "id": "npc_wt_xueying",
+            "note": "重新实际通读13叶和group_3：观点改用雷芷当场公开的含混称呼待问事项，没有写客户身份、口信内容或泛化通行安排。家人清根仍待询问，门边挪放仍pending；本次真实L2无矛盾，私有旧扎绳不向其他参与者公开。",
+            "draftHash": "28aa28f30c4c4da7f1ef304185b7d551a0efb4cf249aba1f2eb6dde9c0e32e53",
+            "reviewHash": "791dd707ba58b7d4a514eae19d6edecc26a0f13067e3575e6a5143c24fe412b9"
+          },
+          {
+            "id": "npc_wt_leizhi",
+            "note": "抄原话与转意分开，口信户别未知；group_3没有口信内容或多问家信的旧秘密。可菁性格标签为软问题，便条整理是待问能力。",
+            "draftHash": "3e239f575cb320d129ed8a2f65f9cdc6480558b70fe42ceae815972cebd88235",
+            "reviewHash": "1e0cd2ffed09719fa40b83ff2b2d2a37298e7fb24ee4da152fc813f680d94c82"
+          },
+          {
+            "id": "npc_wt_niyun",
+            "note": "试转身及还工位未完成；木屑、架脚只讲劳动处，倪梅压着未说的话不能当作已商量，邻人无通行授权。",
+            "draftHash": "f4faaebf23fe12a04f5a16d4aad8c5dca4cb0adad5e7d46048653f5bf5e673ed",
+            "reviewHash": "e6d35f0ac60b8e4ae645182ee1200d57b73560ee3d09247f031a95967553fc6b"
+          },
+          {
+            "id": "npc_wt_quhuai",
+            "note": "女性邻人丁素代词已定点复审通过；未知换结意愿与示范步骤存在知情表述张力，记录为软问题，不认定示范已同意或已发生。",
+            "draftHash": "fa76db119fc07325d5039af821e39b4de3b1d9f18a02be9872cc9eaff0da30e6",
+            "reviewHash": "0f1805129678126b5313ae24ae10c22f06cfe1f5083d61881612af3016d6dbe7"
+          },
+          {
+            "id": "npc_wt_dingsu",
+            "note": "女性邻人茹芹代词修正并真实复审通过；两户改约要分别读回，家务安排仍待问，逞强语域与原好胜缺点相连。亲属标签生硬为软问题。",
+            "draftHash": "5cbb2043937367a47b06d96b86b0d9a54be56a6e654116ffd37976d1b222e9f6",
+            "reviewHash": "1709f2fc9363ed78d98a29be9c80a699cece6bfe8bb74f312e90a73c57fff1b1"
+          },
+          {
+            "id": "npc_wt_ruqin",
+            "note": "试弯材料须物主允许，颜色与柔硬不能互代；group_4没有承诺工序。亲属标签在原名册traits列可查，但关系来由仍写得泛。",
+            "draftHash": "08bfff02701c678b54502168f3141156ed11834623be83086077811c5d348b90",
+            "reviewHash": "19fe85afb97fd1c75638df7f7ecd1026fdc05e71da867c3f5348a58829c1c4c0"
+          },
+          {
+            "id": "npc_wt_gonglu",
+            "note": "景遥女性代词已真实复审通过；独立group_5只谈湿网轻重、岸湾、松刺、扎口及简记，不含藏稿、偏分或写错，未恢复搭工。",
+            "draftHash": "de765d8a594ebd4cd39d4098fda704ba0b19eca1d39ee7d8fde9960281df2714",
+            "reviewHash": "508c449ad1cd45f477eb453c9f80047ae0487a9059d98b899c888ec44482952c"
+          },
+          {
+            "id": "npc_wt_jingyao",
+            "note": "留稿核岸与母亲读图均pending，藏稿不进group_5；“未说出口的心疼”否认已获知但重复私有心理词，列为软问题。",
+            "draftHash": "9135a3cf3e316250e5873813b2e075f34a3eee79c262089f07023a0287174923",
+            "reviewHash": "be43b5f333b1d2999092ec21381a75db51350be12bbccebb9340332b0bf97f75"
+          },
+          {
+            "id": "npc_wt_fanshui",
+            "note": "两条关系叶改为先问出工和温书时刻并真实复审；时间未定，group_5不写故意放慢留人。未知画边角并不说明外孙女已经愿意画。",
+            "draftHash": "cea5bb8b6e9e80073f1104f60b178192e405cdaa754b5ccde83ff92ad7418a14",
+            "reviewHash": "90a73da88e9cebfc463ac4e7ef5643d8c55700811fb7571198d1a5b31b1a405d"
+          },
+          {
+            "id": "npc_wt_shanju",
+            "note": "复读全部13叶及两条soft：董霏在收边屋外读简记是过去会面地点，与她在共灶屋工作的地点相容，未换劳动地点。拆垛仍须原主同意，没有传播偏给熟人的秘密；单苇关系模板含糊作为文风软问题保留。",
+            "draftHash": "4f1891f8d85837d2ef1e06e74c055ecf5bd8fd01d1e75fec85be0ab4f9811e3b",
+            "reviewHash": "baf89aaed9862f8329e092a7d9827210adee1f0a828cef277916443305b30a5f"
+          },
+          {
+            "id": "npc_wt_dongfei",
+            "note": "简记缩字读回与新手先问困难能玩；未将写错简记向五人公开，翻作业本没有被写成女儿已说明心思。",
+            "draftHash": "920736ceeac6b12ce380bee0c577c881282f5e71dac32bde4fadf1eb079f2a42",
+            "reviewHash": "11db097a1cd2fd9f754ede41c568bcd3fd9fb6068c0efc3e8b12455b81920d2c"
+          }
+        ]
       },
-      "costUpperYuan": 16.304860079999987,
-      "manualRatio": 0.08,
+      "costUpperYuan": 16.52785376,
+      "manualRatio": 0,
       "needsSystemicRepair": false,
-      "operativeInvalidated": [
-        "npc_wt_zhicai",
-        "npc_wt_shanju"
-      ],
+      "operativeInvalidated": [],
       "l4History": [
         {
           "approved": false,
@@ -28766,13 +29707,25 @@
           "notes": [],
           "supersededBy": "npc_wt_xueying",
           "priorFingerprint": "8d7826cf97aa653b784cc56b8f9e29a1d6a770e06386c806e40dd95c8d62f5cb"
+        },
+        {
+          "approved": false,
+          "notes": [],
+          "supersededBy": "npc_wt_zhicai",
+          "priorFingerprint": "fd287957385a3a26defa82c3e5e1be6f96ed214173aeddd0af04b350781e84c5"
+        },
+        {
+          "approved": false,
+          "notes": [],
+          "supersededBy": "npc_wt_shanju",
+          "priorFingerprint": "caee09f064bce5fe0971d580b76e542dfd73515c8dfe7932edc4be35c432d7ea"
         }
       ],
       "foundationHash": "fffc337e121742c3c32d56a90dbaa8445d2e9ad28166c3c548f398bba1755bae"
     },
     {
       "index": 1,
-      "fingerprint": "01a9c36e35d85f39c749292b90584a36a3107095a09f064a1a64a9995900963f",
+      "fingerprint": "7a0bb51909bdf9f21c3213b70194bde0931d6e22d9e3862970c02c6ca6381bee",
       "count": 5,
       "passed": 5,
       "ids": [
@@ -28793,17 +29746,49 @@
         "npc_wt_huayin"
       ],
       "sample": [
-        "npc_wt_huayin",
+        "npc_wt_xiangzhen",
+        "npc_wt_qilu",
         "npc_wt_peichun",
         "npc_wt_suhui",
-        "npc_wt_qilu",
-        "npc_wt_xiangzhen"
+        "npc_wt_huayin"
       ],
       "l4": {
-        "approved": false,
-        "notes": []
+        "approved": true,
+        "reviewedAt": "2026-10-13T12:52:15.681Z",
+        "notes": [
+          {
+            "id": "npc_wt_peichun",
+            "note": "复读全部13叶及soft：菜圃外指泥点来自group_6共同在场，搬运安排待商量与宿蕙的未来约定目标一致，没有写已同意路线、用料或参与。裴溪陪物主仍是未知意愿，亲属标签生硬保留为软问题；桩根检看没有成为承重保证。",
+            "draftHash": "c1b27c001d39f887e36abf91c67355419f5e32ae214f49fa0282172e647657a5",
+            "reviewHash": "90e4f4ee07e04f7a45e9633e9452c3b44da1722bfcba9726a06a00e2dce569dd"
+          },
+          {
+            "id": "npc_wt_suhui",
+            "note": "溅泥重洗及试说劳动边界能进入日常；group_6不写气恼堆脏叶到邻路，陪同讲边界未获廖莞同意。",
+            "draftHash": "15ab19e5b9dd5f9b51578a54d93fea65160715bf9b43d8b0900abe3c14f5b157",
+            "reviewHash": "188cea3682fc0d72e440c2b3dc6346707f943a727a3d4e56f35cb101531be2d4"
+          },
+          {
+            "id": "npc_wt_qilu",
+            "note": "花茵女性代词定点复审通过，group_6仅谈亲见/转述的一般原则，不透露把他人险遇充作本人经历。旧台词叙事化及未核清水势步骤为软问题。",
+            "draftHash": "4a59bbe620c315463e089ced8ef84fa7ec6516179774574cc6a342c2e4cdb199",
+            "reviewHash": "9add8ed07e80c315cd7204a184467be98e8d432db683025b4a93950ca2e798a9"
+          },
+          {
+            "id": "npc_wt_huayin",
+            "note": "阴阳叶背对照与旧经验核验均待执行；丢掉养坏草不进入共同事件，未增加药效、库存或新取用权限。",
+            "draftHash": "dcbabcc6fe3a5c4cfc09e08e4987523ac1fbe8328fe47c9692af87d07df8938d",
+            "reviewHash": "ca7de10489733f3430eda839da5c65507f84988b59ffc73be338afdd651724e8"
+          },
+          {
+            "id": "npc_wt_xiangzhen",
+            "note": "复读全部13叶：观点回到郑汐的原记录职业及同村知情边界；更路核验在白日，向菲尚待询问、向涛未参加夜路核查。group_6仅讲枯苇遮路记，不涉及家人夜归路线或少说岔口的秘密。",
+            "draftHash": "d19a8450e8cfe591e845e61f27a60ffdeef433da31f6a97919f6f13c0842cc6f",
+            "reviewHash": "db876026f80c03d677a882106cf82f5d3e60f33718d3a5b793ba633d05d161e0"
+          }
+        ]
       },
-      "costUpperYuan": 16.205642079999986,
+      "costUpperYuan": 16.63413264,
       "manualRatio": 0,
       "needsSystemicRepair": false,
       "operativeInvalidated": [],
@@ -28843,6 +29828,18 @@
           "notes": [],
           "supersededBy": "npc_wt_qilu",
           "priorFingerprint": "06a9a03298f1e544dd1f77fa237c325ac433057394059df8b023609069eb25a0"
+        },
+        {
+          "approved": false,
+          "notes": [],
+          "supersededBy": "npc_wt_peichun",
+          "priorFingerprint": "01a9c36e35d85f39c749292b90584a36a3107095a09f064a1a64a9995900963f"
+        },
+        {
+          "approved": false,
+          "notes": [],
+          "supersededBy": "npc_wt_xiangzhen",
+          "priorFingerprint": "5b8377f6e8f48db232c34f47f840978b3ef0cb2b3919126339dd2646fa0e217a"
         }
       ],
       "foundationHash": "fffc337e121742c3c32d56a90dbaa8445d2e9ad28166c3c548f398bba1755bae"

@@ -8,7 +8,7 @@ const hash=value=>createHash('sha256').update(JSON.stringify(value)).digest('hex
 async function save(file,value){const temp=`${file}.${process.pid}.tmp`;await fs.writeFile(temp,JSON.stringify(value,null,2)+'\n');await fs.rename(temp,file);}
 export function migrateDepthBudget(ledger,card,allocation){
  const out=structuredClone(ledger);
- if(!/^[A-Z][A-Z0-9_-]+$/.test(card)||!amount(allocation.incrementLimitYuan)||allocation.incrementLimitYuan===0||allocation.waveLimitYuan!==20)throw Error('缺少稳定 card 或合法 allocation');
+ if(!/^[A-Z][A-Z0-9_-]+$/.test(card)||!amount(allocation.incrementLimitYuan)||allocation.incrementLimitYuan===0||![20,25].includes(allocation.waveLimitYuan))throw Error('缺少稳定 card 或合法 allocation');
  if(allocation.cardId&&allocation.cardId!==card)throw Error('allocation card 不匹配');
  if(out.cards?.[card]){if(!near(out.cards[card].limitYuan,allocation.incrementLimitYuan))throw Error('单卡授权额度已改变');return out;}
  // This is the only verified legacy ownership. Mixed historical spending is
@@ -22,7 +22,7 @@ export function migrateDepthBudget(ledger,card,allocation){
   out.migration={kind:'verified-T06',before:structuredClone(ledger),allocation:structuredClone(allocation)};
  }else{
   if(!out.cards&&((out.reservedYuan??0)>0||allocation.startingReservedYuan>0||!near(out.spentYuan,allocation.startingSpentYuan)))throw Error('未登记单卡历史费用或预留，拒绝重新领取额度');
-  out.waveLimitYuan??=Math.min(out.limitYuan??20,20);
+  out.waveLimitYuan??=Math.min(out.limitYuan??25,allocation.waveLimitYuan);
   out.cards??={};out.requests??={};out.historicalUnallocatedSpentYuan??=out.spentYuan;
   out.cards[card]={limitYuan:allocation.incrementLimitYuan,spentYuan:0,reservedYuan:0};
  }
@@ -30,27 +30,54 @@ export function migrateDepthBudget(ledger,card,allocation){
 }
 export const reopenAuthorizationId='user-reopen-20261012-01';
 const reopenLimits={T06:[2,2.5],T07:[3,4.5],T08:[3,4.5],T09:[3,4.5]};
+const amendedCardLimits={T07:7,T08:6.5,T09:4.5};
+export function reopenAuthorizationVersion(manifest,expectedHash){
+ const {amendments,...original}=manifest;
+ if(amendments!==undefined){
+  if(!Array.isArray(amendments)||amendments.length!==1)throw Error('授权修订须保留唯一2026-10-13凭证');
+  const amendment=amendments[0],keys=['id','date','previousManifestHash','waveLimitYuan','maxAttempts','cardLimits','source'];
+  if(Object.keys(amendment).sort().join('|')!==keys.sort().join('|')||amendment.id!=='user-reopen-20261013-01'||amendment.date!=='2026-10-13'||amendment.previousManifestHash!==hash(original)||amendment.waveLimitYuan!==25||amendment.maxAttempts!==6||typeof amendment.source!=='string'||!amendment.source.trim())throw Error('授权修订父hash、额度或次数不符');
+  if(Object.keys(amendment.cardLimits??{}).sort().join('|')!==Object.keys(amendedCardLimits).sort().join('|')||Object.entries(amendedCardLimits).some(([id,limit])=>!near(amendment.cardLimits[id],limit)))throw Error('授权修订单卡额度不符');
+ }
+ if(expectedHash===undefined||expectedHash===hash(original))return original;
+ if(expectedHash===hash(manifest))return manifest;
+ throw Error('授权清单已冻结，不得换nonce或修改再领');
+}
 export function validateReopenAuthorization(manifest,cardId){
- if(manifest?.kind!=='w1-reopen-authorization'||manifest.id!==reopenAuthorizationId||manifest.waveLimitYuan!==20||manifest.goalLimitYuan!==100)throw Error('重开授权标识或总上限不符');
- const grant=manifest.cards?.[cardId],limits=reopenLimits[cardId];
+ if(!manifest||typeof manifest!=='object')throw Error('重开授权标识或总上限不符');
+ const original=reopenAuthorizationVersion(manifest);
+ if(original.kind!=='w1-reopen-authorization'||original.id!==reopenAuthorizationId||original.waveLimitYuan!==20||original.goalLimitYuan!==100)throw Error('重开授权标识或总上限不符');
+ const grant=original.cards?.[cardId],limits=reopenLimits[cardId];
  if(!grant||!limits||!near(grant.oldLimitYuan,limits[0])||!near(grant.newLimitYuan,limits[1])||!near(grant.incrementYuan,limits[1]-limits[0])||!amount(grant.spentYuan)||!amount(grant.reservedYuan)||grant.pilotLimitYuan!==.5||grant.maxAttempts!==2||!grant.allowed?.length)throw Error('重开授权单卡增额或边界不符');
  if(new Set(grant.allowed.map(r=>r.id)).size!==grant.allowed.length||grant.allowed.some(r=>!/^npc_[a-z0-9_]+$/i.test(r.id)||!Array.isArray(r.paths)))throw Error('重开授权ID/叶路径无效');
  return grant;
 }
+export function reopenBudgetTerms(manifest,cardId){
+ const grant=validateReopenAuthorization(manifest,cardId),amendment=manifest.amendments?.[0];
+ return {limitYuan:amendment?.cardLimits[cardId]??grant.newLimitYuan,maxAttempts:amendment?.maxAttempts??grant.maxAttempts,waveLimitYuan:amendment?.waveLimitYuan??manifest.waveLimitYuan};
+}
 export function grantDepthBudget(ledger,cardId,allocation,manifest){
- const grant=validateReopenAuthorization(manifest,cardId),out=structuredClone(ledger),prior=out.reopenAuthorizations?.[manifest.id];
- if(prior&&prior.manifestHash!==hash(manifest))throw Error('授权清单已冻结，不得换nonce或修改再领');
- if(!near(out.waveLimitYuan??out.limitYuan,20)||out.goalLimitYuan&&out.goalLimitYuan!==100)throw Error('原波次/goal上限不符');
+ const grant=validateReopenAuthorization(manifest,cardId),original=reopenAuthorizationVersion(manifest),amendment=manifest.amendments?.[0],out=structuredClone(ledger),prior=out.reopenAuthorizations?.[manifest.id];
+ if(prior&&prior.manifestHash!==hash(original)||prior?.amendment&&prior.amendment.manifestHash!==hash(manifest))throw Error('授权清单已冻结，不得换nonce或修改再领');
+ if(!near(out.waveLimitYuan??out.limitYuan,prior?.amendment?25:20)||out.goalLimitYuan&&out.goalLimitYuan!==100)throw Error('原波次/goal上限不符');
  if(!near(allocation.incrementLimitYuan,grant.oldLimitYuan)||allocation.cardId&&allocation.cardId!==cardId||allocation.waveLimitYuan!==20)throw Error('原allocation已改变');
  const applied=prior?.cards?.[cardId];
- if(applied){if(!near(out.cards?.[cardId]?.limitYuan,grant.newLimitYuan)||applied.allocationHash!==hash(allocation))throw Error('增额收据或原allocation已改变');return out;}
+ if(applied){if(!near(out.cards?.[cardId]?.limitYuan,prior.amendment?.cardLimits[cardId]??grant.newLimitYuan)||applied.allocationHash!==hash(allocation))throw Error('增额收据或原allocation已改变');}
+ if(!applied){
  const card=out.cards?.[cardId];
  if(card){if(!near(card.limitYuan,grant.oldLimitYuan)||!near(card.spentYuan,grant.spentYuan)||!near(card.reservedYuan,grant.reservedYuan))throw Error('原单卡费用/额度快照不符');}
  else {if(cardId!=='T09'||grant.spentYuan!==0||grant.reservedYuan!==0||!out.cards)throw Error('缺少原单卡历史，拒绝重领');out.cards[cardId]={limitYuan:grant.oldLimitYuan,spentYuan:0,reservedYuan:0};}
  if(!prior&&(!near(out.spentYuan,manifest.budgetSnapshot.spentYuan)||!near(out.reservedYuan,manifest.budgetSnapshot.reservedYuan)))throw Error('共享历史费用/未知预留快照不符');
- out.reopenAuthorizations??={};out.reopenAuthorizations[manifest.id]??={manifestHash:hash(manifest),manifest:structuredClone(manifest),before:structuredClone(ledger),cards:{}};
+ out.reopenAuthorizations??={};out.reopenAuthorizations[manifest.id]??={manifestHash:hash(original),manifest:structuredClone(original),before:structuredClone(ledger),cards:{}};
  out.reopenAuthorizations[manifest.id].cards[cardId]={oldLimitYuan:grant.oldLimitYuan,newLimitYuan:grant.newLimitYuan,incrementYuan:grant.incrementYuan,allocation:structuredClone(allocation),allocationHash:hash(allocation),before:structuredClone(out.cards[cardId]),grantedAt:new Date().toISOString(),attempts:{}};
  out.cards[cardId].limitYuan=grant.newLimitYuan;
+ }
+ const round=out.reopenAuthorizations[manifest.id];
+ if(amendment&&!round.amendment){
+  round.amendment={...structuredClone(amendment),manifestHash:hash(manifest),beforeWaveLimitYuan:out.waveLimitYuan??out.limitYuan,beforeCardLimits:Object.fromEntries(Object.entries(round.cards).map(([id])=>[id,out.cards[id].limitYuan])),appliedAt:new Date().toISOString()};
+  out.waveLimitYuan=25;out.limitYuan=25;
+  for(const [id,limit] of Object.entries(amendment.cardLimits))if(round.cards[id])out.cards[id].limitYuan=limit;
+ }else if(amendment)out.cards[cardId].limitYuan=amendment.cardLimits[cardId]??grant.newLimitYuan;
  return out;
 }
 export async function openContentBudget({file,client,cardId,allocation,reopenAuthorization,reopenId,continueReopen=false}){
@@ -65,7 +92,7 @@ export async function openContentBudget({file,client,cardId,allocation,reopenAut
   ledger.reservedYuan??=0;
   if(cardId)ledger=reopenAuthorization?grantDepthBudget(ledger,cardId,allocation,reopenAuthorization):migrateDepthBudget(ledger,cardId,allocation);
   else if(ledger.cards)throw Error('分卡预算须提供 cardId，不可从旧接口绕过');
-  if(cardId&&(!amount(ledger.waveLimitYuan)||ledger.waveLimitYuan>20))throw Error('共享波次额度无效或超过20元');
+  if(cardId&&(!amount(ledger.waveLimitYuan)||ledger.waveLimitYuan>25))throw Error('共享波次额度无效或超过25元');
   const cards=Object.values(ledger.cards??{});
   if(cards.some(c=>!amount(c.spentYuan)||!amount(c.reservedYuan)||!amount(c.limitYuan))||cards.reduce((n,c)=>n+c.spentYuan,0)>ledger.spentYuan+1e-10||cards.reduce((n,c)=>n+c.reservedYuan,0)>ledger.reservedYuan+1e-10)throw Error('分卡与共享账金额不一致，拒绝调用');
   ledger.requests??={};
@@ -141,9 +168,9 @@ export async function openContentBudget({file,client,cardId,allocation,reopenAut
   const grant=validateReopenAuthorization(reopenAuthorization,cardId),round=ledger.reopenAuthorizations[reopenAuthorization.id].cards[cardId];
   if(id!==reopenId||!grant.allowed.some(r=>r.id===id))throw Error('重开ID未授权');
   const attempts=round.attempts[id]??=[];
-  if(attempts.some(a=>a.fingerprint===fingerprint)||attempts.length>=grant.maxAttempts)return false;
+  if(attempts.some(a=>a.fingerprint===fingerprint)||attempts.length>=reopenBudgetTerms(reopenAuthorization,cardId).maxAttempts)return false;
   round.pilotId??=id;attempts.push({fingerprint,claimedAt:new Date().toISOString(),status:'started'});await save(file,ledger);return true;
  });}
  function finishReopenReview(id,fingerprint,status){return enqueue(async()=>{const round=ledger.reopenAuthorizations[reopenAuthorization.id].cards[cardId],attempt=round.attempts[id]?.find(a=>a.fingerprint===fingerprint);if(!attempt)throw Error('缺重开尝试凭证');attempt.status=status;attempt.finishedAt=new Date().toISOString();if(id===round.pilotId&&status==='passed-L1-L2')round.pilotPassed=true;await save(file,ledger);});}
- return{request,reserveRound,releaseRound,claimReopenReview,finishReopenReview,stop,get stopped(){return stopped;},get ledger(){return structuredClone(ledger);},claimProtocolRecovery:(id,fingerprint)=>claimOnce('protocolRecoveries',id,fingerprint),claimReviewRecovery:(id,fingerprint)=>claimOnce('reviewRecoveries',id,fingerprint),close:async()=>{await queue;await fs.unlink(lock);}};
+ return{request,reserveRound,releaseRound,claimReopenReview,finishReopenReview,registerReopenAuthorization:()=>enqueue(async()=>{if(!reopenAuthorization)throw Error('缺重开授权');await save(file,ledger);}),stop,get stopped(){return stopped;},get ledger(){return structuredClone(ledger);},claimProtocolRecovery:(id,fingerprint)=>claimOnce('protocolRecoveries',id,fingerprint),claimReviewRecovery:(id,fingerprint)=>claimOnce('reviewRecoveries',id,fingerprint),close:async()=>{await queue;await fs.unlink(lock);}};
 }
