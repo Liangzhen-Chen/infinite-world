@@ -166,13 +166,7 @@ N1–N17至少12项完整有效且≥90%，N6/N16零泄漏，N12真实盲辨，N
 要点：四场中断的共同出口是一致性审查的唯一改写未通过后拒绝提交、runner按stopOnFailure停止。四场原因不同：送货是二审引用被改动的JSON导致校验失败；私宅是审查自相矛盾地把正确时间判错；离屏是二审输出的JSON不合法；推搡是主持原稿和改写都多计了5分钟（真错）。账本8条里4条是这四次执行失败，另4条是粮仓买粮被提前一回合执行。N3、N4、N12是审核拿到的证据不全，N15是NPC确实编了经历，N2是逐N审核输出被截断。
 审计：三张修复卡和第四轮复验都同意。卡文里的F1/F2/F3即T146/T147/T148；T147在T146合入后派，T148可与T146并行。第四轮上限12元。第四轮仍未通过则M2标卡住，转其他里程碑。
 
-### T146 等待回合能正确结束，修复审查误拒与正文协议输出。优先恢复四场完整执行，释放N9/N11/N17后续回合。
-1 完成结果：120、60、14400、10分钟等待均可提交正确尾注，时间只推进一次；原始错误和修正文分别留存。纯协议错误按已有真实clock、在场名单及parseTurn既定回退语义规范化，明确等待已足量且无后续交谈时额外为0；真实事实矛盾仍走唯一文字改写，不能把工具失败改成成功。
-对审查使用明确的当前时刻与实际差值，时间正确不得因模型自行换算矛盾而进入改写；缺来源与直接矛盾保持区分。缩短并结构化审稿输出，引用采用短的连续原文；格式或引用无效最多一次仅修正审查响应的调用，保留原响应，不重抽完整负评，不把unverified当通过。补齐未闭合q标签的显示处理，已登记人物显示姓名且原文可追溯。
-2 可改：server-plugin/consistency-service.mjs、consistency-review.mjs；extension/turn.mjs、message-view.mjs；tests/m3-consistency.test.mjs、m3-consistency-integration.test.mjs、m3-consistency-browser.test.mjs及新增tests/m2-reply-protocol.test.mjs。锁定F2的consistency-evidence与F3全部提示文件，正常调用接点由主会话协调。
-3 验收：node --test tests/m3-consistency.test.mjs tests/m3-consistency-evidence.test.mjs tests/m3-consistency-integration.test.mjs tests/m3-consistency-browser.test.mjs tests/m2-reply-protocol.test.mjs；CORE。四场原响应作离线夹具，覆盖额外5→0、正确11:35、坏JSON、删字段引文及未闭合q；仍拒绝真实重复计时、失败移动变成功、私密外泄。浏览器与runner共用的提交路径都覆盖。
-4 真实模型：实施0次、0元；上线后的审查格式修正每个失效响应最多1次，计入第四轮总额，文字改写仍最多1次。
-5 预计规模：300–500行，一个执行会话；不改runner停止策略或降低总体一致性门槛。
+### T146 已完成：等待回合尾注按真实时钟规范化；审查响应格式失效最多修一次且保留原负评；未闭合引语显示登记姓名。相关94/95（余一项为主线旧的浏览器夹具问题，归T152），0模型。
 
 ### T147 居民可谈已有往来与工作背景，带路结果和逐N审核读取完整而不重复的事实。目标恢复N3/N4，恢复N2有效覆盖，并支持N12正确区分背景与进度。
 1 完成结果：主持场景与审查共享本人已有关系事实及相关公开职务，明确来源；作息作为有时间边界的背景，只有已重建且未受行程、约定、昏迷等覆盖的时段可支持实际活动，不能推出完成数量。N4直接使用现有移动回执、带路履约和双方位置断言，说明companions的到达后语义，不改引擎同行状态。
@@ -389,7 +383,7 @@ T28-R1修好新回执undefined规范化并保留严格篡改拒绝，相关31/32
 共同做法：起草由执行会话完成，L1后全量真实L2，L4读标记条目加每批随机5条（随机10条六项均分≥4、单项≥3），共享事件闭合后正式整合，都在同一张卡里做完。每人送审到通过为止，只按整卡调用总量和金额封顶；到顶仍未过的条目保留为候选，不计入已交付。各卡锁定docs/、dist/、server-plugin/和用户存档。T90合入后T91→T92→T93串行（同写baseline与名册）；T94可与人物卡并行准备，真实模型阶段错开。
 审计改动：草案把“T06也继承了6次上限”的修正并入骨架卡，删除——T06已完成，这处不影响任何后续卡。阶段审核结论：抽样六人未发现事实矛盾；已知问题是关系备注有重复句式（郑汐/王浦“还需要彼此听完再商量”，张洛/袁卿“同住……在家中见面”），留M3叙述润色。
 
-### T90 白石镇骨架与名册
+### T90 已完成：白石镇骨架整合——6街区、18处公共与行业建筑、90处住宅、90户、306名登记居民（含严辙），另694人与210户为待生成；421次真实L2全过，L4均4.05/最低3，1.00851元。镇公库、税章与官职执行待治理卡接入。
 
 1. 结果：玩家能沿街区找到建筑和居民，系统能区分 306 名已登记居民与 694 名待生成人口，并据此安排后续完整档。
 2. 文件：可改 world/design/w1-baishi-skeleton.mjs、world/drafts/w1/baishi-skeleton/、world/people/ 三份目录及 world/geo/ 三份目录；工具限新 tools/w1-baishi.mjs、必要的 content-pipeline.mjs/content-budget.mjs 接点，测试限 tests/r06-bs-skeleton.test.mjs、tests/npc-depth-budget.test.mjs。旧人物只允许严辙的入籍及住址接点，保留既有身份；其他旧人物锁定。
@@ -451,7 +445,7 @@ T28-R1修好新回执undefined规范化并保留严格篡改拒绝，相关31/32
 
 ### T106（A5） W4-B3 首领第三批。结果：再增12个、含3名智能存在，使首领达到40个、智能存在达到8名。文件与A4对应换w4-b3，另可更新world/drafts/w4/ecology.json；接A4，同一bosses.json串行。验收node --test "tests/boss*.test.mjs" "tests/w4-*.test.mjs" tests/combat.test.mjs；node tools/m4-balance.mjs --catalog world/meta/bosses.json --out world/design/w4-b3-balance.json；node tools/w4-audit-ecology.mjs；CORE。保留单人≤15%、标准五人55%–65%的多种子平衡及20种子三年生态要求。L2预计25–40次，≤0.6元；约2小时，模拟后台运行。
 
-### T107（B1） 正式节日运行接点。结果：正式节日可改变作息和生产窗口，并按场地、参与者同意及实际物资举办集市或仪式。可改server-plugin/{festival,world-clock,npc-schedule,engine}.mjs、节日加载/schema接点、tests/festival-runtime.test.mjs；锁定24条候选正文。与B3、D1及NPC时间接点串行，可并行A内容准备。验收node --test "tests/npc-*.test.mjs" tests/festival.test.mjs tests/festival-runtime.test.mjs tests/world-clock.test.mjs "tests/w5-*.test.mjs"，CORE；跨月、取消、重放及地方节俗同源去重均覆盖。模型0；约2小时。
+### T107（B1）已完成：正式节日改变作息与生产窗口，举办须有场地、参与者同意和实际物资并真实扣耗；新增10项通过/CORE40，0模型。24条候选的发布归T108。
 
 ### T108（B2） 24节日审核发布。结果：24个节日有正式举办地点和运行参数，玩家能参加有成本的活动。可改world/design/w5-festivals.mjs、原节日草稿、tools/w5-festivals.mjs及发布入口、world/lore/festivals.json和必要geo地点映射、tests/w5-festival-publication.test.mjs；接B1，地理发布与T94/遗迹卡串行。复用有效审核，仅修缺项；regional_unmapped须落实举办地再启用，不将远方人员瞬移来现场。验收node --test "tests/w5-*.test.mjs" tests/festival.test.mjs tests/festival-runtime.test.mjs tests/world-clock.test.mjs，CORE。L2预计24–50次，≤1.5元；约2小时。
 
@@ -461,7 +455,7 @@ T28-R1修好新回执undefined规范化并保留严格篡改拒绝，相关31/32
 
 ### T111（B5） 势力时钟后20个。结果：剩余20个势力也有资源约束和可干预的阶段，不以文字计划冒充生效。文件同B4，批次换w5-clock-2，接B4发布；与其他factions.json写者串行。验收node --test "tests/w5-*.test.mjs" tests/world-clock.test.mjs tests/faction-clock.test.mjs，CORE。L2预计25–45次，≤1.5元；约2小时。
 
-### T112（B6） 遗迹进入、调查与有限资源。结果：玩家能进入据点、处理机关、取得有限资源，并凭实际发现解锁历史真相。可改新server-plugin/sites.mjs、activities/retrieval及地理加载接点、extension/tools.mjs、tests/sites.test.mjs；正式地点正文锁定。保留占据者与物权，离开重访不刷新宝物，隐藏真相只向有发现记录者开放。验收node --test tests/sites.test.mjs tests/activities.test.mjs tests/retrieval.test.mjs "tests/world-*.test.mjs" tests/prompt.test.mjs，CORE。模型0；约2.5小时；与治理/创造工具写者串行，提示≤11900。
+### T112（B6）已完成：据点进入、机关处理、有限库存（重访不刷新），凭实际发现解锁隐藏历史；提示估算11710 token；相关与CORE通过，0模型。
 
 ### T113（B7） 遗迹据点第一组20处。结果：白石镇所属城市范围至少15处具备完整历史、物权、机关、资源与时间变化。可改world/design/w5-sites-1.mjs、对应草稿/工具、world/geo/{locations,routes}.json、tests/w5-sites-1.test.mjs；接B6和T94，优先补全其已建地点，同一ID只计一次。与B8/B9及其他地理发布串行。验收node --test "tests/w5-*.test.mjs" tests/sites.test.mjs tests/world-validation.test.mjs，CORE。L2预计25–45次，≤2元；约2小时。
 
@@ -469,7 +463,7 @@ T28-R1修好新回执undefined规范化并保留严格篡改拒绝，相关31/32
 
 ### T115（B9） 遗迹据点第三组20处。结果：再完成20处，使不同ID的合格遗迹据点至少60处。文件同B7，批次换w5-sites-3；接B8，与地理发布串行。验收node --test "tests/w5-*.test.mjs" tests/sites.test.mjs tests/world-validation.test.mjs，CORE；逐本批ID检查，不写目录总数等于60。L2预计25–45次，≤2元；约2小时。
 
-### T116（B10） 传闻沿路线逐手传播。结果：传闻随真实携带者或已登记消息渠道抵达，逐手变化能追到源头，未知真相不会出现在公开检索。可改server-plugin/{npc-rumors,npc-cognition,npc-schedule,retrieval}.mjs及engine小接点、传闻加载器、新tests/rumor-route.test.mjs；锁定内容正文，复用现有现场获知链。验收node --test "tests/npc-*.test.mjs" tests/rumor-route.test.mjs tests/village-rumor-access.test.mjs tests/retrieval.test.mjs，CORE。模型0；约2.5小时，与B3/C6的认知接点串行。
+### T116（B10）已完成：传闻随真实携带者和登记渠道沿路线抵达，逐手版本可追溯源头，按实际获知问询；相关与CORE通过，0模型。
 
 ### T117（B11） 传闻第一组45条。结果：新增45条可由实际渠道获知的真、半真或假传闻。可改world/design/w5-rumors-1.mjs、对应草稿/内容发布工具、world/lore/rumors.json、tests/w5-rumors-1.test.mjs；接B10，关联已发布事件、携带者及路线，与B12–B16同目录串行。验收node --test "tests/w5-rumors-*.test.mjs" tests/rumor-route.test.mjs tests/village-rumor-access.test.mjs，CORE。L2预计50–75次，≤1.5元；约1.5小时。
 
@@ -511,7 +505,7 @@ C部分只拆缺口：governance.mjs的任职入口止于“待上级决定”�
 
 ### T135（D3） W3长生活流程。结果：真实对话串起取得/学艺、制作失败及副产物、维修耐久、保存腐败、成本售卖和自创配方，离开再回来状态连续。可改tests/playtests/w3_long.json、tests/w3-long.test.mjs及docs/测试报告/w3-long/，引擎与合格目录锁定；接D1/D2。验收node tools/w3-wave-score.mjs --check；node --test "tests/w3-*.test.mjs" tests/manufacturing.test.mjs tests/learning.test.mjs tests/professions.test.mjs "tests/magic*.test.mjs"；npm run test:playtests -- --only w3_long --repeat 1 --parallel 1 --run-dir docs/测试报告/w3-long --run-id w3-long --card D3 --increment 5；CORE。519条已有审核和随机评分复用有效结果；账本/时耗/售空升级100%，叙述≥90%。真实约30自然轮、120–180次调用，≤5元；准备1小时加后台运行。
 
-### T136（T31a） M3记忆真实场景准备。结果：M2–M9能通过正常HTTP会话验证，四种账簿/称呼查询命中同一真实事件，裁历史后仍可检索。可改tests/playtests/m3_memory.json、新tests/m3-acceptance.test.mjs、tools/playtest-metrics.mjs及必要检索接点；只修本卡复现的缺口，锁定M2指标语义。验收node --test tests/m3-acceptance.test.mjs "tests/history-window*.test.mjs" tests/retrieval.test.mjs tests/m3-retrieval.test.mjs tests/chronicle.test.mjs "tests/playtest-*.test.mjs"，CORE。模型0；约2小时，可与内容准备并行，与T99报告处理及metrics写者串行；不依赖T28 CLI。
+### T136（T31a）已完成：17轮记忆场景与M2–M9的HTTP准备及评分，四种查询在裁历史前后命中同一事实；0模型。
 
 ### T137（T31b） M3文风与时间场景。结果：V1–V7及问题文档里的具体时间误述、场外尾注、凭空成品和示例冒充经历均有可评分的真实场景。可改tests/playtests/m3_language.json、新tests/m3-language.test.mjs、prompt/、一致性审查必要接点及docs/问题.md叙述段；只定点修正，不重写已审核人物。验收node --test tests/m3-language.test.mjs "tests/m3-consistency*.test.mjs" tests/m2-npc-prompt.test.mjs tests/prompt.test.mjs "tests/playtest-*.test.mjs"，CORE。模型0；约2小时，接T31a并与所有提示写者串行，静态≤11900；问题仅凭后续真实通过结果关闭。
 
