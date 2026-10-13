@@ -18,7 +18,8 @@ test('新卡与预设来自同一提示源，静态在前、场景在尾，禁�
     const preset=presetFor(bundle);assert.equal(preset.show_thoughts,true);assert.equal(preset.function_calling,true);
     assert.ok(isOutOfCharacter('  （场外）看看余额'));assert.equal(isOutOfCharacter('我问场外有什么'),false);
     assert.equal(bundle.budget.exact,false);
-    assert.ok(bundle.budget.estimatedTokens<=11800,`T98静态提示加工具估算 ${bundle.budget.estimatedTokens} token`);
+    // T152 replaces T98's earlier cap after examples and world content grew.
+    assert.ok(bundle.budget.estimatedTokens<=11900,`T152静态提示加工具估算 ${bundle.budget.estimatedTokens} token`);
 });
 
 test('酒馆事件注入与试玩共用相同调用示例，重复事件不重复注入，示例不改玩家历史',async()=>{

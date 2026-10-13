@@ -52,7 +52,7 @@ export function toolSelectionMetrics(results,scenarios){
             const expected=[...new Set([...(step.expectedTools??[]),...expectations.map(rule=>rule.tool)])];
             if(!expected.length){if(complete)excluded.push({...context,reason:'no-required-call',conditions});continue;}
             const selected=(turn.calls??[]).map(call=>{
-                try{return{...call,...resolveToolCall(call.tool,call.args),rawTool:call.tool};}
+                try{return{...call,...resolveToolCall(call.tool,call.args),rawTool:call.tool,rawArgs:call.args};}
                 catch{return{...call,rawTool:call.tool,invalidArguments:true};}
             });
             const categoryMatches=selected.filter(call=>expected.includes(call.tool)||expected.includes(call.rawTool));
@@ -61,13 +61,14 @@ export function toolSelectionMetrics(results,scenarios){
             const parameterErrors=[],targetErrors=[];
             for(const call of categoryMatches){
                 const rules=expectations.filter(rule=>call.tool===rule.tool||call.rawTool===rule.tool);
-                if(call.invalidArguments||!rules.length||rules.some(rule=>matches(call.args,rule.args)))continue;
+                const argsFor=rule=>call.rawTool===rule.tool?call.rawArgs:call.args;
+                if(call.invalidArguments||!rules.length||rules.some(rule=>matches(argsFor(rule),rule.args)))continue;
                 const split=target=>rules.map(rule=>Object.fromEntries(Object.entries(rule.args??{}).filter(([key])=>targetKeys.has(key.split('.')[0])===target)));
                 const targets=split(true),parameters=split(false);
                 const error={tool:call.tool,expectedArgs:rules.map(rule=>rule.args??{}),actualArgs:call.args,conditions:rules.map(rule=>rule.conditions)};
-                const targetMismatch=targets.every(args=>Object.keys(args).length&&!matches(call.args,args));
+                const targetMismatch=targets.every((args,index)=>Object.keys(args).length&&!matches(argsFor(rules[index]),args));
                 if(targetMismatch)targetErrors.push(error);
-                if(parameters.some(args=>Object.keys(args).length)&&(parameters.every(args=>!matches(call.args,args))||!targetMismatch))parameterErrors.push(error);
+                if(parameters.some(args=>Object.keys(args).length)&&(parameters.every((args,index)=>!matches(argsFor(rules[index]),args))||!targetMismatch))parameterErrors.push(error);
             }
             const unroutableCalls=categoryMatches.filter(call=>call.invalidArguments).length;
             const missing=!categoryMatches.length||missingTools.length>0;

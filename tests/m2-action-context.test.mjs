@@ -11,6 +11,7 @@ import {toolSelectionMetrics}from'../tools/playtest-metrics.mjs';
 
 const world=await loadWorld(),seed=JSON.parse(await fs.readFile(new URL('./fixtures/legacy/seed.json',import.meta.url),'utf8'));
 const original=JSON.parse(await fs.readFile(new URL('../docs/测试报告/M2-recheck/真实试玩.json',import.meta.url),'utf8'));
+const recheck=JSON.parse(await fs.readFile(new URL('../docs/测试报告/M2-recheck-003/真实试玩.json',import.meta.url),'utf8'));
 const scenario=async id=>JSON.parse(await fs.readFile(new URL(`./playtests/${id}.json`,import.meta.url),'utf8'));
 const qty=value=>typeof value==='number'?value:value?.quantity??0;
 async function replay(id){
@@ -41,11 +42,17 @@ test('原courier顺序查询库存→两份立约→移动等候→当面交付�
     await r.step(2,[
         ['world_promise',{type:'送货',promisor:'npc_hw_linsui',item:'item_bread',quantity:1,location:'bld_hw_council',deadline:660,content:'十一点在村务屋交一份面包'}],
         ['world_promise',{type:'付款',promisor:'player',promisee:'npc_hw_linsui',coins:2,deadline:660,content:'十一点当面付两铜'}],
-        ['world_move',{destination:'bld_hw_council'}],
     ]);
+    assert.equal(r.doc.state.location,'bld_hw_qingdeng');
+    assert.deepEqual(r.script.turns[2].expectedTools,['world_promise']);
     await r.step(3,[['world_time',{minutes:1}]]);
     await r.step(4,[['world_move',{destination:'bld_hw_council'}]]);
+    const before=structuredClone(r.doc.state),total=state=>state.player.coins+state.npcs.npc_hw_linsui.coins;
     await r.step(5,[['world_time',{until:{dayOffset:0,hour:11,minute:0}}]]);
+    assert.equal(total(r.doc.state),total(before));
+    assert.equal(qty(r.doc.state.inventory.item_bread)+qty(r.doc.state.npcs.npc_hw_linsui.inventory.item_bread),
+        qty(before.inventory.item_bread)+qty(before.npcs.npc_hw_linsui.inventory.item_bread));
+    assert.equal(r.turns.filter(t=>t.calls.some(c=>c.tool==='world_move'&&c.args.destination==='bld_hw_council')).length,1);
     await r.step(6);await r.step(7,[['world_time',{minutes:5}]]);
     assert.equal(qty(r.doc.state.npcs.npc_hw_linsui.inventory.item_bread),5);
     const measured=toolSelectionMetrics([{id:r.script.id,turns:r.turns}],[r.script]);
@@ -56,6 +63,8 @@ test('原home_visit顺序入宅→完整60分钟等待至许可过期→离宅�
     const r=await replay('npc_home_visit');
     await r.step(0,[['world_move',{destination:'loc_hw_fields'}],['world_time',{minutes:30}]]);await r.step(1);
     const issued=await r.step(2,[['world_promise',{operation:'grant_access',promisor:'npc_hw_miaozhen',location:'bld_hw_home_15',minutes:60,content:'独自进屋看旧筛架，只看不取物'}]]);
+    assert.equal(r.doc.state.location,'loc_hw_fields');
+    assert.match(r.script.turns[2].input,/本轮只取得许可.*下一轮再进屋/);
     const authorization=issued[0].result.authorization;
     await r.step(3,[['world_move',{destination:'bld_hw_home_15',authorization}]]);await r.step(4);
     const start=r.doc.state.minute;
@@ -108,6 +117,64 @@ test('委托输入明确分两轮，发布托管后才另行承接，原公开�
     const quest=published[0].result.quest;
     assert.equal(r.doc.state.quests[quest].status,'公开');assert.equal(r.doc.state.quests[quest].escrow,20);
     await r.step(2,[['world_quest',{operation:'accept',quest}]]);assert.equal(r.doc.state.quests[quest].status,'进行中');
+    await r.step(3,[['world_move',{destination:'loc_hw_northwood'}]]);
+    const beforeArrival=structuredClone(r.doc.state);
+    await r.step(4,[['world_move',{destination:'bld_hw_council'}]]);
+    assert.match(r.script.turns[4].input,/本轮不购买、不付款.*下一轮再买粮/);
+    assert.equal(r.doc.state.player.coins,beforeArrival.player.coins);
+    assert.deepEqual(r.doc.state.inventory,beforeArrival.inventory);
+    assert.equal(r.doc.state.settlements.loc_hw.food,beforeArrival.settlements.loc_hw.food);
+    assert.equal(r.doc.state.settlements.loc_hw.treasury,beforeArrival.settlements.loc_hw.treasury);
+    const beforeBuy=structuredClone(r.doc.state),coins=state=>state.player.coins+state.settlements.loc_hw.treasury;
+    const grain=state=>qty(state.inventory.item_oats)+state.settlements.loc_hw.food;
+    await r.step(5,[['world_field',{operation:'farm_buy',settlement:'loc_hw',quantity:10}]]);
+    assert.equal(coins(r.doc.state),coins(beforeBuy));assert.equal(grain(r.doc.state),grain(beforeBuy));
+    assert.deepEqual(r.script.turns[5].expectedTools,['world_field']);
+    await r.step(6,[['world_move',{destination:'bld_hw_qingdeng'}]]);
+    await r.step(7,[['world_quest',{operation:'complete',quest}]]);
+    await r.step(8);await r.step(9);await r.step(10);
+    const measured=toolSelectionMetrics([{id:r.script.id,turns:r.turns}],[r.script]);
+    assert.equal(measured.zeroSelectionErrors,true);
+});
+
+test('带路先答复留在原地，出发轮才登记同行并移动；到达后履约解队',async()=>{
+    const r=await replay('guide');await r.step(0,[['world_move',{destination:'loc_hw_northwood'}]]);
+    const before=structuredClone(r.doc.state);await r.step(1);
+    assert.match(r.script.turns[1].input,/本轮只等.*不登记同行、不出发/);
+    assert.deepEqual(r.doc.state,before);
+    await r.step(2,[
+        ['world_promise',{type:'带路',promisor:'npc_hw_wushuo',destination:'site_beilin_tower',content:'带路到废观测塔'}],
+        ['world_move',{destination:'site_beilin_tower'}],
+    ]);
+    assert.deepEqual(r.doc.state.player.companions,[]);
+    await r.step(3);await r.step(4);
+    await r.step(5,[['world_move',{destination:'loc_hw'}]]);
+    await r.step(6,[['world_move',{destination:'loc_bs'}]]);await r.step(7);
+    assert.equal(toolSelectionMetrics([{id:r.script.id,turns:r.turns}],[r.script]).zeroSelectionErrors,true);
+});
+
+test('第三轮买粮提前执行的四条失败仍保留，输入修正不冒充真实复验',()=>{
+    const turns=recheck.results.find(row=>row.id==='npc_quest_social').turns;
+    assert.ok(turns[4].calls.some(call=>call.tool==='world_field'&&call.args.operation==='farm_buy'));
+    const failed=turns[5].assertions.filter(row=>!row.pass);
+    assert.equal(failed.length,4);assert.ok(failed.every(row=>row.actual===0));
+    assert.deepEqual(failed.map(({kind,path,tool})=>path??tool),[
+        'state.player.coins','state.settlements.loc_hw.treasury','state.settlements.loc_hw.food','world_field']);
+});
+
+test('粮仓公开调用断言核对原操作及参数，拒绝失败、错数量和未知操作',async()=>{
+    const s=await scenario('npc_quest_social'),rule=s.turns[5].assertions.find(row=>row.kind==='calls');
+    const call={tool:'world_field',args:{operation:'farm_buy',settlement:'loc_hw',quantity:10},result:{ok:true}};
+    const pass=value=>evaluateAssertions([rule],{before:{},after:{},calls:[value],reply:''})[0].pass;
+    assert.equal(pass(call),true);
+    assert.equal(pass({...call,result:{ok:false}}),false);
+    assert.equal(pass({...call,args:{...call.args,quantity:9}}),false);
+    assert.equal(pass({...call,args:{...call.args,operation:'farm_donate'}}),false);
+    assert.equal(pass({...call,args:{...call.args,operation:'unknown'}}),false);
+    const measure=value=>toolSelectionMetrics([{id:s.id,turns:[{index:5,input:s.turns[5].input,calls:[value],assertions:[]}]}],[s]);
+    assert.equal(measure(call).zeroSelectionErrors,true);
+    assert.equal(measure({...call,args:{...call.args,quantity:9}}).parameterWrong,1);
+    assert.equal(measure({...call,args:{...call.args,operation:'unknown'}}).unroutable,1);
 });
 
 test('旧失败对象保留21条账本失败；新增参数机会暴露16分钟及错司法操作',async()=>{

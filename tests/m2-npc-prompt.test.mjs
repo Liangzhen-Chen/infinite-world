@@ -85,7 +85,31 @@ test('冲突示例只让真实在场目击者表达观察，不用将来呼救�
     const witness=example('目击'),lines=quotes(witness.reply);
     const observed=result('npc_shove').turns[2].sceneBefore;
     assert.match(observed,/贺舟（npc_hw_hezhou）/);assert.match(observed,/目击：试玩者与林穗交锋/);
-    assert.deepEqual(lines.map(row=>row.speaker),['npc_hw_hezhou']);
-    assert.match(lines[0].text,/我看见你先推她，接着倒下了/);
-    assert.doesNotMatch(witness.reply,/围观者|叫人|报案|乡巡已/);
+    assert.deepEqual(lines.map(row=>row.speaker),['npc_hw_linsui','npc_hw_hezhou']);
+    assert.match(witness.input,/林穗退让呼救/);assert.match(lines[0].text,/有人动手，帮忙/);
+    assert.match(lines[1].text,/我看见你先推她，接着倒下了/);
+    assert.doesNotMatch(witness.reply,/围观者|乡巡已|将会.*呼救/);
+    for(const id of ['npc_hw_linsui','npc_hw_hezhou'])
+        assert.match(world.npcs.find(row=>row.id===id).behaviorRules.threatResponse,/先保护自己与近旁的人/);
+});
+
+test('组装提示约束当前步骤、经历来源和现场发言，保留司法工具边界',()=>{
+    const messages=assembleMessages(bundle,[{role:'user',content:'先等答复'}],'场景');
+    const system=messages[0].content,style=messages.find(row=>row.content===bundle.style).content;
+    assert.match(system,/只问带路先答复，不登记\/出发/);
+    assert.match(system,/只申请私宅给许可，不进屋.*只到粮仓.*不买粮/);
+    assert.match(system,/已到勿重复移动/);
+    assert.match(style,/当前观察、已发生经历和未来安排/);
+    assert.match(style,/旧事凭本人记录，作息仅工作背景，不补今早进度\/完成数量/);
+    assert.match(style,/施锦谈翻晒\/打算.*段禾谈已画的桥与植物，不补“三条岔道”练习/);
+    assert.match(style,/在场状态\/既有threatResponse及回执/);
+    assert.match(style,/呼救或报告须说出口，后台记录不代发言/);
+    assert.match(style,/司法用world_law/);
+    const guide=example('只等答复');
+    assert.match(guide.reply,/等你说出发.*留在林缘/);
+    assert.doesNotMatch(guide.reply,/site_beilin_tower|已经.*到|登记/);
+    // Static examples assert their sources and intent; no N rating is derived here.
+    const known=world.npcs.find(row=>row.id==='npc_hw_duanhe').knowledge.known;
+    assert.ok(known.some(row=>/画过村边的桥和植物/.test(row.fact)));
+    assert.ok(!known.some(row=>/三条岔道/.test(row.fact)));
 });
