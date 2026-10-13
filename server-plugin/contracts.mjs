@@ -1,5 +1,37 @@
 const debtRows=d=>Object.entries(d.get('state','records')??{}).filter(([,row])=>row.category==='debt');
+const contractPath=id=>['state','records',id];
+export function createBusinessContract(d,{kind,parties,subject,quantity,deadline,business,cost,escrow=0,...terms},eventId){
+    const id=`contract_${kind}_${eventId}`;
+    if(d.get(...contractPath(id)))throw new Error('合同编号已存在');
+    const row={...terms,id,category:'contract',version:1,kind,parties,subject,quantity,deadline,business,cost,
+        escrow,paid:0,fulfilled:0,status:'待履行',createdAt:d.get('state','minute'),source:eventId,performance:[],breaches:[]};
+    d.set(contractPath(id),row);return row;
+}
+export function finishBusinessContract(d,row,{status,fulfilled=row.fulfilled,paid=row.paid,reason,by,source}){
+    const minute=d.get('state','minute'),next={...row,status,fulfilled,paid,resolvedAt:minute,
+        performance:[...row.performance,{status,quantity:fulfilled,paid,minute,source}],
+        breaches:reason?[...row.breaches,{reason,by,minute,source}]:row.breaches};
+    d.set(contractPath(row.id),next);return next;
+}
+export function refundContractEscrow(d,row){
+    if(row.escrow){d.set(['state','player','coins'],d.get('state','player','coins')+row.escrow);row={...row,escrow:0};d.set(contractPath(row.id),row);}
+    return row;
+}
+export function releaseBusinessLease(d,engine,row,{status='已终止',reason,source}={}){
+    // A deposit pays only an existing rent debt. Remaining deposit goes back to its owner.
+    const debt=row.debt&&d.get(...contractPath(row.debt));let used=0;
+    if(debt&&debt.status!=='已还清'){
+        used=Math.min(row.escrow,debt.amount-debt.paid);
+        if(used){const paid=debt.paid+used;
+            d.set([...engine.actorPath(debt.creditor),'coins'],engine.actor(d,debt.creditor).coins+used);
+            d.set(contractPath(row.debt),{...debt,paid,status:paid===debt.amount?'已还清':debt.status,...(paid===debt.amount?{paidAt:d.get('state','minute')}:{})});
+        }
+    }
+    row=refundContractEscrow(d,{...row,escrow:row.escrow-used,paid:row.paid+used});
+    return finishBusinessContract(d,row,{status,reason,by:reason?'player':undefined,source});
+}
 export function chargeTrade(d,engine,{buyer,seller,cost,payment='cash',creditMinutes,description},eventId){
+    if(buyer===seller||!Number.isSafeInteger(cost)||cost<0)throw new Error('交易当事人或金额无效');
     if(payment==='cash'){
         const source=engine.actor(d,buyer),target=engine.actor(d,seller);
         if(source.coins<cost)throw new Error('买方余额不足');
@@ -38,6 +70,23 @@ export function repayDebt(d,engine,{buyer,seller,debt:id},eventId){
 }
 export function advanceContracts(d,engine,minute){
     for(const[id,row]of Object.entries(d.get('state','records')??{})){
+        if(row.category==='contract'&&row.version===1&&row.business&&['有效','待履行'].includes(row.status)){
+            if(d.get('state','records',id)?.status!==row.status)continue;
+            const overdue=row.debt&&d.get('state','records',row.debt)?.deadline<=minute&&d.get('state','records',row.debt)?.status!=='已还清';
+            if(row.deadline<=minute||overdue){
+                const reason=overdue?'租金未按期偿还':row.kind==='lease'?undefined:'到期未履行';
+                const ended=row.kind==='lease'?releaseBusinessLease(d,engine,row,{status:reason?'违约':'已到期',reason,source:id})
+                    :finishBusinessContract(d,refundContractEscrow(d,row),{status:'违约',reason,by:row.parties[1],source:id});
+                if(row.kind==='lease'){
+                    const shop=d.get('state','records',row.business);
+                    if(shop&&['筹备','营业'].includes(shop.status))d.set(contractPath(shop.id),{...shop,status:'停业',reason:reason??'租赁到期',endedAt:minute});
+                    for(const pending of Object.values(d.get('state','records')??{}))if(pending.category==='contract'&&pending.version===1&&pending.business===row.business&&pending.status==='待履行'){
+                        finishBusinessContract(d,refundContractEscrow(d,pending),{status:'已取消',reason:'铺面租赁结束',by:'player',source:id});
+                    }
+                }
+                d.say(`${row.kind}合同${ended.status}${reason?`：${reason}`:''}`);
+            }
+        }
         if(row.category==='contract'&&row.room&&row.status==='有效'&&row.expires<=minute){
             d.set(['state','records',id],{...row,status:'已到期'});d.say(`${row.name}已到期，需要退房或另行续住`);
         }
