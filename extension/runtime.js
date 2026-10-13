@@ -43,7 +43,7 @@ function fail(error){
     document.querySelector('#fields-status')?.replaceChildren(document.createTextNode(`存档对账失败，生成已停止：${blocked}`));
 }
 function render(){
-    setPanelContext({view,labels,feedback,ledgerTime,api:(endpoint,body={})=>api(endpoint,{...body,campaignId:view?.reference.campaignId})});
+    setPanelContext({view,labels,feedback,ledgerTime,getChatContext:ctx,api:(endpoint,body={})=>api(endpoint,{...body,campaignId:view?.reference.campaignId})});
     const pending=renderMessages(ctx(),labels,feedback);
     const box=document.querySelector('#fields-pending');if(!box)return;
     box.replaceChildren();box.hidden=!pending.length;
