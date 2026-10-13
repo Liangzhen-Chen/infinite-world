@@ -28,5 +28,9 @@
     "T20-ledger-mobile-changes.png"
   ],
   "scope": "Player ledger drawer only; M6 full interface and deployed SillyTavern remain unverified",
+<<<<<<< HEAD
   "generatedAt": "2026-10-13T14:51:38.313Z"
+=======
+  "generatedAt": "2026-10-13T14:52:57.271Z"
+>>>>>>> t81
 }
