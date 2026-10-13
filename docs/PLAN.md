@@ -140,19 +140,9 @@ N1–N17至少12项完整有效且≥90%，N6/N16零泄漏，N12真实盲辨，N
 
 ### T95 已完成：逐N按关联证据判定，不再被同场无关的账本失败或警告连坐；账本/时间/存档100%总门槛保留（原90%改回100%）；分段评分改为单回合、上限12288，截断或缺响应仍算未完成。用T64原始结果离线重判可恢复7项N通过，整体仍因账本149/170等拒绝。相关34/CORE40，0模型。
 
-### T96 查询库存与行动调用正确落账，解决21条失败的来源。
-结果：目标恢复courier九条、home_visit三条、private两条、quest_social一条、shove六条，并补全N6，恢复N5及N9的行动条件。
-做法：world_read增加单人物定位，浏览器及试玩调用共用，保留私密字段过滤和体积限制；写清保密不建会面、明确等待不缩时、未登记目标先查目录。把“服务暂停”限定为交易/授课，司法按现有法典和回执判断；委托输入明确本轮只发布，私宅输入明确返回河湾村。保留原账本断言，补标实际参数机会。
-可改：extension/tools.mjs、extension/state-read.mjs、extension/runtime.js、tools/playtest-runner.mjs、tools/scenarios.mjs、server-plugin/scene-card.mjs、prompt/constitution.md；tests/playtests/npc_quest_social.json、tests/playtests/npc_home_visit.json、tests/deepseek-transport.test.mjs、tests/playtest-runner.test.mjs及新增tests/m2-action-context.test.mjs。其余卡文件锁定。
-验收：node --test tests/deepseek-transport.test.mjs tests/playtest-runner.test.mjs tests/m2-action-context.test.mjs tests/npc-delivery.test.mjs tests/npc-obligations.test.mjs tests/law.test.mjs tests/quest-board.test.mjs tests/prompt.test.mjs；CORE。按原失败顺序回放查询→立约→送达、许可到期→离宅、保密→移动及自认→逮捕→审理。
-模型：0次、0元。预计350–550行；静态提示含工具定义合计不得超过11800 token，使用loadPromptBundle().budget核对，保留12000硬上限。
+### T96 已完成：world_read可按单个人物定位读取；保密不建会面、明确等待不缩时、未登记地点先查目录写入规则；“服务暂停”限定为交易与授课；四条原失败行动链离线回放通过；提示估算11103 token。相关与CORE通过，0模型，真实效果由T99验证。
 
-### T97 事实审查和唯一改写正确使用回执，使玩家能继续行动。
-结果：消除五条错误泄漏计数的来源，修复private失败回执被改写成成功移动的路径；库存矛盾及真实无渠道泄密仍须报错。
-做法：场外历史核对供给相关原始工具回执和对话；未被承接的委托托管事实也供审稿核账，不能因reviewPlayerFacts只选玩家参与项而丢失。knowledge必须指出无渠道主体和具体私密内容；普通否认不等于泄漏。改写明确保留工具失败和实际时地，沿已有一次改写处理，不增加重试次数。
-可改：server-plugin/consistency-evidence.mjs、server-plugin/consistency-review.mjs、server-plugin/consistency-service.mjs、tests/m3-consistency-evidence.test.mjs、tests/m3-consistency.test.mjs、tests/m3-consistency-integration.test.mjs；其余卡文件锁定，审稿私密证据仍不得传给主持人或无关NPC。
-验收：node --test tests/m3-consistency-evidence.test.mjs tests/m3-consistency.test.mjs tests/m3-consistency-integration.test.mjs；CORE。用五条原文及真实泄密反例，验证150经验、吴朔原答复与空约定可核对，失败移动不得由改写变为成功。
-模型：0次、0元。预计200–350行；本卡不改静态主持提示。
+### T97 已完成：审查取用历史工具回执、原始答复和未承接委托的托管事实；knowledge类警告须指出无渠道主体和具体私密内容；唯一改写保留工具失败和实际时地。相关37/CORE40，0模型。
 
 ### T98 NPC对白服从本人经历，并保留可盲辨的表达方式。
 结果：目标恢复N17、N12，并让N9在场见证者的反应有实际发言。
@@ -189,22 +179,19 @@ node --import ./docs/测试报告/M2-recheck-003/git-entry.mjs tools/playtests.m
 
 ### T88 已完成：心、契、物与空间族20个机制（感受载体、自愿精神观察、睡眠休养、记忆保护、契约痕迹与反制、腐蚀、测距、取物、封存、锁隙、警号、许可通道、锚点校准与货运、空间修补）接入真实状态，精神类须本人同意；相关38/CORE40，0模型。
 
-### T89 役灵与仪式族消费者【零模型】
+### T89 已完成：役灵与仪式族19个机制接入真实状态；相关33/CORE40，0模型。九个机制族全部完成。
 
-结果：真实动物引导、清扫役灵、碎石搬运、纸签运输、役灵改派与协作、可拒绝的邀约；受托祭坛清洁、自愿誓言见证、教派契约、复活祷标、守戒防护、共同护罩、灵体辨识、邪秽干扰、仪式治疗，都有真实效果。仪式资格按现有神祇与教派数据核对。
-可改：新增server-plugin/magic-ritual.mjs、tests/magic-ritual.test.mjs；summons.mjs、revival.mjs、contracts.mjs、magic.mjs、magic-primitives.mjs必要接点及机制图两文件。锁定同T87。
-验收：`node --test tests/magic-ritual.test.mjs tests/magic.test.mjs`、CORE。模型0。规模约800–1100行。
+### T100 法术族之间的回归修复【零模型】
+
+结果：tests/magic-*.test.mjs全部通过。现状（主线e0830b8之后）：magic-growth 11项、magic-water-earth 9项、magic-air 4项、magic-light 1项、magic-mind-space 1项失败，典型报错“Cannot read properties of undefined (reading 'state')”；在T69合入之前就已存在，是各族卡先后改engine/magic/environment接点互相影响、而每张卡只跑了自己的测试。
+可改：server-plugin/magic*.mjs、environment.mjs、engine.mjs、agriculture.mjs的相关接点，tests/magic-*.test.mjs里因接口正当变化而过期的夹具。锁定：world/meta正式目录、extension/tools.mjs、prompt/。不删测试、不放宽断言；夹具过期就更新夹具，行为被破坏就修行为。
+验收：`node --test tests/magic.test.mjs tests/magic-growth.test.mjs tests/magic-object.test.mjs tests/magic-forge.test.mjs tests/magic-air.test.mjs tests/magic-water-earth.test.mjs tests/magic-light.test.mjs tests/magic-care.test.mjs tests/magic-mind-space.test.mjs tests/magic-ritual.test.mjs tests/magic-movement.test.mjs tests/w2-s1.test.mjs`、CORE。模型0。
 
 ### T67 已完成：智能首领记住实际接触与交锋，按领地目标改变态度，存档恢复后保留；本卡8项通过/CORE40，0模型。bosses.test里两项主线旧失败（世界归档校验失败）不属本卡，随T43续修处理。
 
 ### T68 已完成：玩家可在巢穴向智能首领提条件，首领按目标接受或说明拒绝理由，成交交换有限物资并保存关系；相关24/CORE40，提示估算10685 token，0模型。正式首领的交易库存由T70登记。
 
-### T69 S1：30条法术完整发布，31→61【真实模型；T19已合，待模型槽】
-
-结果：玩家可买书并付费学习30条新法术（区域交锋与防护9、位移与自愿传讯8、器物与水务7、生长与役灵6），按真实材料、距离和持续消耗施放，每条有可验证效果。
-可改：新增world/design/w2-s1.mjs、world/drafts/w2-s1/、tools/w2-s1-content.mjs、tools/publish-w2-s1.mjs、tests/w2-s1.test.mjs；world/meta/{spells,skills,items}.json及书商库存只追加本批。锁定：rules、bosses、引擎、共用流水线。
-验收：起草→L1→L2→L4（标记项加随机5条，随机10条平均≥4、单项≥3）→`node tools/publish-w2-s1.mjs --publish`；`node --test tests/w2-s1.test.mjs`、CORE；覆盖30条取得→学习→施法、旧战役升级、重复发布零写入。
-模型：起草≤108次、L2≤108次，合计≤12元。规模：30条法术加至多6本书，一个内容会话。
+### T69 已完成：30条新法术与6本有限库存的书经L1/真实L2/L4正式发布，目录31→61；随机10条均分4.07/最低3；48次调用费用上界0.37099264元。world/geo/locations.json与T81冲突由主会话按字段合并。
 
 ### T70 B1：12个首领完整发布，4→16，智能存在0→2【真实模型；待T68】
 
