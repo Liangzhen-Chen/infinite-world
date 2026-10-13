@@ -29,3 +29,23 @@ export function toolResultWithClock(result,{startMinute,minute}={}){
     if(!Number.isSafeInteger(startMinute)||!Number.isSafeInteger(minute)||minute<startMinute)return result;
     return{...result,turnClock:{startMinute,minute,elapsedMinutes:minute-startMinute}};
 }
+
+// Speech generated after a wait does not itself authorize more elapsed time.
+export function fullyTimedWait({playerText='',receipts=[],clock}={}){
+    if(!clock||!Number.isSafeInteger(clock.minute)||!Number.isSafeInteger(clock.startMinute))return false;
+    if(!/等(?:待)?|停留|待满|休息|睡|跳过/.test(playerText)||/(?<!不|别|勿|不要)(?:然后|之后|以后|过后|后|再)(?:(?!不|别|勿|不要)[^。！？；]){0,24}(?:问|交谈|聊天|聊聊|寒暄|说说)/.test(playerText))return false;
+    return receipts.some(receipt=>{
+        const result=receipt.result?.result??receipt.result??{},duration=result.elapsed??receipt.args?.minutes;
+        return String(receipt.tool).replace(/^world_/,'')==='time'&&result.ok!==false&&Number.isSafeInteger(duration)&&duration>0&&clock.minute-clock.startMinute===duration;
+    });
+}
+
+export function normalizeReplyProtocol(reply,{clock,playerText,receipts,outOfCharacter=false}={}){
+    const parsed=parseTurn(reply,{...clock,outOfCharacter});
+    if(outOfCharacter||!clock)return {text:reply,changed:false,originalTail:parsed};
+    const args={...parsed.args};
+    if(fullyTimedWait({clock,playerText,receipts}))args.extraMinutes=0;
+    if(parsed.valid&&args.extraMinutes===parsed.args.extraMinutes)return {text:reply,changed:false,originalTail:parsed};
+    const tail=`<回合 额外="${args.extraMinutes}分" 地点="${args.location}" 在场="${args.present.join(',')}"/>`;
+    return {text:`${stripTurn(reply)}\n${tail}`,changed:true,originalTail:parsed,args};
+}

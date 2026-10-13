@@ -1,5 +1,5 @@
 import {visibleReply} from '../extension/message-view.mjs';
-import {parseTurn,stripTurn} from '../extension/turn.mjs';
+import {parseTurn,stripTurn,fullyTimedWait} from '../extension/turn.mjs';
 import {isOutOfCharacter} from '../extension/prompt.mjs';
 import {normalize} from './retrieval.mjs';
 import {digest} from './storage.mjs';
@@ -43,7 +43,10 @@ function prepare(input){
   {id:'registry',kind:'registry',text:JSON.stringify(registry)},...receipts.map((r,i)=>({id:`receipt:${i}`,kind:'receipt',text:JSON.stringify(r)})),
   ...Object.entries(input.knowledge??{}).map(([id,k])=>({id:`knowledge:${id}`,kind:'knowledge',text:JSON.stringify(k)})),
   {id:'blocklist',kind:'registry',text:JSON.stringify(input.blocklist??[])}];
- if(input.clock)evidence.push({id:'clock',kind:'clock',text:JSON.stringify(input.clock)});
+ if(input.clock){
+  const {minute,startMinute}=input.clock,dayMinute=((minute%1440)+1440)%1440;
+  evidence.push({id:'clock',kind:'clock',text:JSON.stringify({...input.clock,currentTime:`${String(Math.floor(dayMinute/60)).padStart(2,'0')}:${String(dayMinute%60).padStart(2,'0')}`,elapsedMinutes:minute-startMinute})});
+ }
  if(typeof input.scene==='string')evidence.push({id:'scene',kind:'scene',text:input.scene});
  if(input.retrieval)evidence.push({id:'retrieval',kind:'retrieval',text:JSON.stringify(input.retrieval)});
  for(const [index,row] of (input.priorEvidence??[]).entries()){
@@ -200,14 +203,7 @@ function fixedIssues(input,context){
  }
  if(input.clock){const parsed=parseTurn(context.raw,{...input.clock,outOfCharacter:context.outOfCharacter});
   if(!parsed.valid&&!context.outOfCharacter){const quote=context.raw.match(/<回合[^>]*\/>/)?.[0]??context.visible.slice(0,100);add('time',quote,parsed.warning,[cite('clock')],{severity:'warning'});}
-  const waitDuration=r=>r.result.elapsed??r.args?.minutes;
-  const timedWait=context.receipts.findIndex(r=>r.result.ok!==false&&String(r.tool).replace(/^world_/,'')==='time'&&Number.isSafeInteger(waitDuration(r))&&waitDuration(r)>0);
-  // Generated NPC speech alone cannot authorize time beyond the player's wait.
-  const requestedConversation=/(?<!不|别|勿|不要)(?:然后|之后|以后|过后|后|再)(?:(?!不|别|勿|不要)[^。！？；]){0,24}(?:问|交谈|聊天|聊聊|寒暄|说说)/.test(context.playerText);
-  if(parsed.valid&&!context.outOfCharacter&&parsed.args.extraMinutes>0&&timedWait>=0&&!requestedConversation&&/等(?:待)?|停留|待满|休息|睡|跳过/.test(context.playerText)){
-   const elapsed=input.clock.minute-input.clock.startMinute,requested=waitDuration(context.receipts[timedWait]);
-   if(elapsed===requested)add('time',context.raw.match(/<回合[^>]*\/>/)[0],'请求的等待已由真实回执完整计时，玩家没有另行要求等待后的交谈，尾注再次追加了时间',[cite(`receipt:${timedWait}`),cite('clock'),cite('player')]);
-  }
+  if(parsed.valid&&!context.outOfCharacter&&parsed.args.extraMinutes>0&&fullyTimedWait(input))add('time',context.raw.match(/<回合[^>]*\/>/)[0],'请求的等待已由真实回执完整计时，玩家没有另行要求等待后的交谈，尾注再次追加了时间',[cite('clock'),cite('player')]);
  }
  return issues;
 }
@@ -234,7 +230,19 @@ export function consistencyReviewRequest(input,{maxTokens=1800}={}){
  场外核账没有人物获得新知识。经验、报酬、库存、约定状态及历史答复的矛盾归 fact，不归 knowledge。historical-receipt 是有效历史事件的原始工具回执，经验与结算字段不能被摘要中遗漏的数值否定；chat 可直接证明原答复说了什么，不能证明其中账本主张真实。未承接委托仍可能托管报酬，不能因 taker 未填就否认登记或托管。空 obligations 可以支持没有登记约定的结论。
  knowledge 必须填写 subject 为无渠道人物编号、privateContent 为原句实际披露的具体私密内容，并引用 knowledge:subject 的渠道证据。普通否认、没提上午问话、含糊的“你上午的事”没有说出秘密内容，不能计为泄漏；若确实说出委托货物、期限或债额，仍须报错。库存数量以 before/after 的 npcInventory 核对，不把缺少人物知识条目当作库存事实冲突。
  工具 ok=false 不能写成成功，保留失败原因和实际地点、分钟；移动意图不是移动结果。检索留证 retrieval 仅 status=complete 且 sealed=true 才能证明本回合调用完整；零调用才证明未检索，unknown 或缺回执最多给 warning。scene 中的旧事不是 world_search 调用，空 results 只能证明查过，不能证明找到。`;
+ request.messages[0].content+='\nclock.currentTime是服务端换算好的当前时刻，elapsedMinutes是实际差值，不另算历法。正文当前时刻一致且额外为0时，不因许可早已到期或等待起点不同报time；reason若承认时间无误，就不列该项。缺经历来源用warning，直接矛盾须引用相反记录才用error。每条reason最多200字；草稿quote最多120字，证据quote最多160字，只摘短的连续原文。JSON引文不得删除aliases/kind等中间字段再拼接，不自行补闭合标签。';
+ for(const branch of request.tools[0].function.parameters.properties.issues.items.oneOf){
+  branch.properties.quote={...shortString,maxLength:120};branch.properties.reason={...shortString,maxLength:200};
+  branch.properties.evidence.items.properties.quote={...shortString,maxLength:160};
+ }
  return request;
+}
+
+function acknowledgedCorrectTime(issue,input){
+ if(issue.category!=='time'||!input.clock||!/不应报(?:错|问题)?[。；\s]*$/.test(issue.reason))return false;
+ const match=/(?:现在|当前|此刻)(?:是|为)?\s*([\d零一二两三四五六七八九十]+)(?:点|:|：)([\d零一二两三四五六七八九十]+)(?:分)?/.exec(issue.quote);
+ if(!match)return false;
+ return chineseNumber(match[1])*60+chineseNumber(match[2])===input.clock.minute%1440;
 }
 export function validateConsistencyResponse(response,input){
  const context=prepare(input),choice=response.choices?.[0],calls=choice?.message?.tool_calls;
@@ -244,6 +252,9 @@ export function validateConsistencyResponse(response,input){
  for(const issue of parsed.issues){
   if(!issue||Object.keys(issue).some(k=>!['category','severity','quote','reason','evidence','entityName','entityKind','subject','privateContent'].includes(k))||!categories.includes(issue.category)||!['error','warning'].includes(issue.severity)||typeof issue.quote!=='string'||!issue.quote||issue.quote.length>600||typeof issue.reason!=='string'||!issue.reason||issue.reason.length>600)throw Error('审查问题字段不合法');
   if(!context.raw.includes(issue.quote)&&!context.visible.includes(issue.quote))throw Error('审查引用不在待审草稿原文中');
+  // The cited failure explicitly says its 11:35 claim is correct. It cannot
+  // authorize a rewrite just because the same response also labels it error.
+  if(acknowledgedCorrectTime(issue,input))continue;
   if(!Array.isArray(issue.evidence)||issue.evidence.length<1||issue.evidence.length>3)throw Error('审查问题没有真实证据引用');
   for(const reference of issue.evidence)if(!reference||Object.keys(reference).some(k=>!['id','quote'].includes(k))||typeof reference.quote!=='string'||!reference.quote||reference.quote.length>600||!sources.get(reference.id)?.includes(reference.quote))throw Error('审查引用不在提供的真实证据中');
   if(issue.category==='knowledge'){
@@ -254,7 +265,36 @@ export function validateConsistencyResponse(response,input){
    if(context.entities.some(e=>[e.id,e.name,...e.aliases??[]].some(n=>normalize(n)===normalize(issue.entityName))))throw Error('审查误报了已登记实体');
   }
  }
- return parsed.issues.map(issue=>({...clone(issue),source:'model'}));
+ return parsed.issues.filter(issue=>!acknowledgedCorrectTime(issue,input)).map(issue=>({...clone(issue),source:'model'}));
+}
+
+// Only repair the invalid response, never solicit another full review.
+export function reviewResponseCorrectionRequest(request,response,error){
+ return {...clone(request),messages:[...clone(request.messages),
+  {role:'user',content:JSON.stringify({instruction:'只修正以下审查响应的JSON、字段或原文引文格式，不重新审稿。保留原问题的顺序、类别、严重级别和理由，不新增或删除负评；引用改为证据中短的连续原文。不得改写正文。',validationError:String(error.message),invalidResponse:response.choices??[]})}]};
+}
+function assertCorrectionPreservesIssues(original,corrected,input){
+ const raw=original.choices?.[0]?.message?.tool_calls?.[0]?.function?.arguments??'';
+ let originalIssues;try{originalIssues=JSON.parse(raw)?.issues;}catch{
+  // M2's malformed response has intact issue fields but a misplaced evidence
+  // closing bracket. Keep those negative claims without repairing JSON locally.
+  originalIssues=[];let issue;
+  for(const match of raw.matchAll(/"(category|severity|quote|reason|subject|privateContent|entityName|entityKind)"\s*:\s*("(?:\\.|[^"\\])*")/g)){
+   const key=match[1],value=JSON.parse(match[2]);
+   if(key==='category'){issue={category:value};originalIssues.push(issue);}
+   else if(issue&&!Object.hasOwn(issue,key))issue[key]=value;
+  }
+  if(originalIssues.some(row=>!row.severity||!row.quote||!row.reason))throw Error('原审查问题截断，格式修正不能恢复完整负评');
+ }
+ if(!Array.isArray(originalIssues))return;
+ const old=originalIssues.filter(issue=>!acknowledgedCorrectTime(issue,input));
+ if(old.length!==corrected.length)throw Error('格式修正不得删除或新增原审查问题');
+ const context=prepare(input);
+ for(const [index,issue] of old.entries()){
+  const fixed=corrected[index];
+  for(const key of ['category','severity','reason','entityName','entityKind','subject','privateContent'])if(issue[key]!==undefined&&issue[key]!==fixed[key])throw Error('格式修正不得改变原负评');
+  if(typeof issue.quote==='string'&&(context.raw.includes(issue.quote)||context.visible.includes(issue.quote))&&issue.quote!==fixed.quote)throw Error('格式修正不得替换有效的正文引文');
+ }
 }
 
 // Review is side-effect free. Callers keep all committed receipts, and may ask
@@ -262,10 +302,22 @@ export function validateConsistencyResponse(response,input){
 export async function reviewConsistency(input,{client=null,rewriteAttempt=0,maxTokens=1800}={}){
  if(!Number.isSafeInteger(rewriteAttempt)||rewriteAttempt<0||!Number.isSafeInteger(maxTokens)||maxTokens<100||maxTokens>4000)throw Error('一致性审查次数或输出上限无效');
  const context=prepare(input),issues=fixedIssues(input,context);let model={status:'not-requested'},measurement;
- if(client){let response;try{
-  response=await client.generate(consistencyReviewRequest(input,{maxTokens}),`consistency:${digest([context.fingerprint,input.draft]).slice(0,20)}`);measurement=response.measurement;
-  const found=validateConsistencyResponse(response,input);for(const issue of found)if(!issues.some(old=>old.category===issue.category&&old.quote===issue.quote))issues.push(issue);model={status:'reviewed'};
- }catch(error){const key=process.env.DEEPSEEK_API_KEY;model={status:'failed',reason:String(error.message).replaceAll(key??'__no_key__','[凭据已屏蔽]').slice(0,1200),...(response?{rawResponse:JSON.stringify(response.choices??[]).replaceAll(key??'__no_key__','[凭据已屏蔽]').slice(0,16000)}:{})};}}
+ if(client){let response,correctionResponse,validationError;const request=consistencyReviewRequest(input,{maxTokens}),label=`consistency:${digest([context.fingerprint,input.draft]).slice(0,20)}`;
+  const safe=value=>String(value).replaceAll(process.env.DEEPSEEK_API_KEY??'__no_key__','[凭据已屏蔽]');
+  try{
+   response=await client.generate(request,label);measurement=response.measurement;
+   let found;
+   try{found=validateConsistencyResponse(response,input);}catch(error){
+    validationError=error;
+    correctionResponse=await client.generate(reviewResponseCorrectionRequest(request,response,error),`${label}:format`);
+    found=validateConsistencyResponse(correctionResponse,input);assertCorrectionPreservesIssues(response,found,input);
+   }
+   for(const issue of found)if(!issues.some(old=>old.category===issue.category&&old.quote===issue.quote))issues.push(issue);
+   model={status:'reviewed'};
+  }catch(error){model={status:'failed',reason:safe(error.message).slice(0,1200)};}
+  if(validationError)model.correction={attempts:1,reason:safe(validationError.message),...(correctionResponse?{rawResponse:safe(JSON.stringify(correctionResponse.choices??[])),measurement:correctionResponse.measurement}:{})};
+  if(response&&(validationError||model.status==='failed'))model.rawResponse=safe(JSON.stringify(response.choices??[]));
+ }
  const serious=issues.filter(i=>i.severity==='error'),verified=model.status==='reviewed';
  const rewriteRequest=serious.length&&rewriteAttempt===0?{attempt:1,allowTools:false,issues:clone(serious),instruction:'仅修正下列有依据的问题，保留已提交回执与玩家选择。工具失败保持失败，不得把移动请求写成成功离开或抵达；实际地点和分钟以after与clock为准，不能补成功行动。不得重新调用交易、制造、移动或登记工具，不得改账、退款或补发。未登记专名改成既有人物或无专名描写；'+(context.outOfCharacter?'场外回复删除所有回合尾注，不推进游戏时间。':'保留符合当前地点和时间的尾注。')+'最多这一次改写。'}:null;
  return {status:model.status==='failed'?'unverified':issues.length?'issues':verified?'verified':'unverified',verified,original:input.draft,text:input.draft,visible:context.visible,draftFingerprint:digest(input.draft),factFingerprint:context.fingerprint,issues,model,...(measurement?{measurement}:{}),rewriteRequest,rewriteExhausted:serious.length>0&&rewriteAttempt>=1};

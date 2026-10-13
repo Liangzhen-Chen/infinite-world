@@ -8,9 +8,10 @@ const hash=value=>createHash('sha256').update(JSON.stringify(value)).digest('hex
 async function save(file,value){const temp=`${file}.${process.pid}.tmp`;await fs.writeFile(temp,JSON.stringify(value,null,2)+'\n');await fs.rename(temp,file);}
 export function migrateDepthBudget(ledger,card,allocation){
  const out=structuredClone(ledger);
+ if(allocation.maxRequests!==undefined&&(!Number.isSafeInteger(allocation.maxRequests)||allocation.maxRequests<1))throw Error('调用额度须为正整数');
  if(!/^[A-Z][A-Z0-9_-]+$/.test(card)||!amount(allocation.incrementLimitYuan)||allocation.incrementLimitYuan===0||![20,25].includes(allocation.waveLimitYuan))throw Error('缺少稳定 card 或合法 allocation');
  if(allocation.cardId&&allocation.cardId!==card)throw Error('allocation card 不匹配');
- if(out.cards?.[card]){if(!near(out.cards[card].limitYuan,allocation.incrementLimitYuan))throw Error('单卡授权额度已改变');return out;}
+ if(out.cards?.[card]){if(!near(out.cards[card].limitYuan,allocation.incrementLimitYuan)||out.cards[card].maxRequests!==allocation.maxRequests)throw Error('单卡授权额度已改变');return out;}
  // This is the only verified legacy ownership. Mixed historical spending is
  // retained separately; it never becomes a fresh card allowance.
  const legacy=!out.cards&&near(out.limitYuan,2.94801504);
@@ -24,7 +25,7 @@ export function migrateDepthBudget(ledger,card,allocation){
   if(!out.cards&&((out.reservedYuan??0)>0||allocation.startingReservedYuan>0||!near(out.spentYuan,allocation.startingSpentYuan)))throw Error('未登记单卡历史费用或预留，拒绝重新领取额度');
   out.waveLimitYuan??=Math.min(out.limitYuan??25,allocation.waveLimitYuan);
   out.cards??={};out.requests??={};out.historicalUnallocatedSpentYuan??=out.spentYuan;
-  out.cards[card]={limitYuan:allocation.incrementLimitYuan,spentYuan:0,reservedYuan:0};
+  out.cards[card]={limitYuan:allocation.incrementLimitYuan,spentYuan:0,reservedYuan:0,...(allocation.maxRequests===undefined?{}:{maxRequests:allocation.maxRequests})};
  }
  return out;
 }
@@ -134,6 +135,7 @@ export async function openContentBudget({file,client,cardId,allocation,reopenAut
   const rows=requests.map(({body,label})=>({card:cardId??null,label,requestHash:hash(body),reservedYuan:estimate(body),status:'reserved',...(reopenAuthorization?{authorizationId:reopenAuthorization.id,reopenId}:{})}));
   const ceiling=rows.reduce((n,r)=>n+r.reservedYuan,0);
   const card=cardId&&ledger.cards[cardId],limit=ledger.waveLimitYuan??ledger.limitYuan??client.budgetYuan;
+  if(card?.maxRequests!==undefined&&Object.values(ledger.requests).filter(r=>r.card===cardId&&r.status!=='cancelled-unissued').length+rows.length>card.maxRequests)throw stop('单卡调用次数上限，已停止');
   if(ledger.spentYuan+ledger.reservedYuan+ceiling>limit+1e-12||card&&card.spentYuan+card.reservedYuan+ceiling>card.limitYuan+1e-12)throw stop('共享或单卡费用上限，已停止');
   if(reopenAuthorization&&!continueReopen){const grant=reopenAuthorization.cards[cardId];if(card.spentYuan-grant.spentYuan+card.reservedYuan-grant.reservedYuan+ceiling>.5+1e-12)throw stop('首ID累计新调用及预留超过0.50元，已停止');}
   const ids=rows.map(row=>{const id=randomUUID();ledger.requests[id]=row;ownedReservations.add(id);return id;});

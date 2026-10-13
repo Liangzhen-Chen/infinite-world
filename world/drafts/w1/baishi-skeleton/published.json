@@ -1,0 +1,17 @@
+{
+  "changed": [
+    "people/baseline.json",
+    "people/residents.json",
+    "people/households.json",
+    "geo/locations.json",
+    "geo/routes.json",
+    "geo/settlements.json"
+  ],
+  "registered": 306,
+  "seed": 694,
+  "households": 90,
+  "pendingHouseholds": 210,
+  "reviewCalls": 421,
+  "spentYuan": 1.0085099999999985,
+  "reservedYuan": 6.938893903907228e-17
+}

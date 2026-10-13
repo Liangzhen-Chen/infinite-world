@@ -3,6 +3,7 @@ import {renderDocumentCard} from './mail-view.mjs';
 
 const listeners=new Set(),presentations=new WeakMap();
 const labelFor=(labels,id)=>Object.hasOwn(labels,id)&&typeof labels[id]==='string'?labels[id]:undefined;
+const dialoguePattern=()=>/<q\s+who="([^"]+)"\s*>([\s\S]*?)(?:<\/q>|(?=<q\s+who=")|$)/g;
 export function subscribeMessages(listener){listeners.add(listener);return()=>listeners.delete(listener);}
 export function setMessagePresentation(context,value){presentations.set(context,value);}
 export function unknownSpeakers(context){
@@ -31,7 +32,7 @@ export function playerError(text){
 }
 
 export function visibleReply(raw,labels={}){
-    return stripTurn(raw).replace(/<q\s+who="([^"]+)"\s*>([\s\S]*?)<\/q>/g,(_all,id,quote)=>`${labelFor(labels,id)??'路人'}：${quote}`);
+    return stripTurn(raw).replace(dialoguePattern(),(_all,id,quote)=>`${labelFor(labels,id)??'路人'}：${quote}`);
 }
 
 // Derive feedback on every refresh from active ledger events; chat extras are not authoritative.
@@ -99,7 +100,7 @@ export function renderMessages(context,labels={},events=[],debug=false){
             if(debug)appendProse(message.mes);
             else{
                 const raw=stripTurn(message.mes);let offset=0;
-                for(const match of raw.matchAll(/<q\s+who="([^"]+)"\s*>([\s\S]*?)<\/q>/g)){
+                for(const match of raw.matchAll(dialoguePattern())){
                     appendProse(raw.slice(offset,match.index));offset=match.index+match[0].length;
                     const name=labelFor(known,match[1])??labelFor(aliases,match[1])??'路人';
                     const quote=document.createElement('blockquote');quote.className='fields-dialogue';

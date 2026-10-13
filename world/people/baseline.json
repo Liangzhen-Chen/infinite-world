@@ -8691,7 +8691,11 @@
       "day": 9
     },
     "culture": "culture_river",
-    "household": [],
+    "household": [
+      "npc_bs_001_2",
+      "npc_bs_001_3",
+      "npc_bs_001_4"
+    ],
     "familyNotes": "驻白石镇，每五天到河湾收购木料和亚麻。利益是稳定交货与信用，不一定是反派。需要具体合同、运输与当地权限，愿给予有担保的试订单；无法用一段魅力演说无限白送资金。",
     "appearance": [
       "外衣里衬补过一块异色布",
@@ -8742,7 +8746,7 @@
       "debts": []
     },
     "home": {
-      "location": "loc_bs",
+      "location": "bld_bs_home_001",
       "access": "私人物品与休息位置须经本人同意，访客先在公共处招呼",
       "ownership": "unspecified"
     },
@@ -8979,7 +8983,9 @@
     "authoredBasis": {
       "existingNotes": "驻白石镇，每五天到河湾收购木料和亚麻。利益是稳定交货与信用，不一定是反派。需要具体合同、运输与当地权限，愿给予有担保的试订单；无法用一段魅力演说无限白送资金。",
       "newFacts": "住处锚点、日程、具体外貌与关系细节为M2手工设计；不生成产权、债务或额外库存。"
-    }
+    },
+    "settlement": "loc_bs",
+    "householdId": "house_bs_001"
   },
   {
     "id": "npc_hw_luqing",
