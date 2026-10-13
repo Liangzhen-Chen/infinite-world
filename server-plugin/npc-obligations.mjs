@@ -101,7 +101,7 @@ function assertCourierAccess(engine,id,location){
  const access=engine.byId.get(location)?.access;
  if(access?.mode==='private'&&access.requiresConsent&&!access.residents?.includes(id))throw Error('送货者不能擅入他人私宅，请约在公共地点交付');
 }
-function assertCourierRouteAccess(engine,id,from,to,route){
+export function assertCourierRouteAccess(engine,id,from,to,route){
  assertCourierAccess(engine,id,to);
  for(const edgeId of route.edges){const edge=engine.world.routes?.find(row=>row.id===edgeId);if(edge)for(const place of [edge.from,edge.to])if(place!==from)assertCourierAccess(engine,id,place);}
 }
@@ -164,7 +164,10 @@ export function advanceNpcObligations(d,engine,before,after,eventId){
  for(const old of bookings){
   const o=structuredClone(old),people=parties(o);if(after<o.start)continue;
   o.status='进行中';
-  if(o.deliveryVersion===1){d.set(['state','obligations',o.id],o);continue;}
+  if(o.deliveryVersion===1){
+   if(o.quest)o.workMinutes=(o.workMinutes??0)+(occupied.get(o.promisor)??[]).reduce((n,s)=>n+span(s,o),0);
+   d.set(['state','obligations',o.id],o);continue;
+  }
   for(const actor of people)o.attendance[actor]+=(occupied.get(actor)??[]).reduce((n,s)=>n+span(s,o),0);
   for(const a of occupied.get(o.promisor)??[])for(const b of occupied.get(o.promisee)??[]){
    if(a.available&&b.available&&a.location===o.location&&b.location===o.location)o.togetherMinutes+=Math.max(0,Math.min(a.end,b.end,o.deadline)-Math.max(a.start,b.start,o.start));

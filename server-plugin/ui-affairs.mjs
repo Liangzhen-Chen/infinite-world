@@ -1,4 +1,5 @@
-const closed=new Set(['已完成','取消','已取消','已还清','已终止','已到期','已否决','违约']);
+import {questPublishingRights} from './quest-board.mjs';
+const closed=new Set(['已完成','取消','已取消','已还清','已终止','已到期','已否决','违约','失败','超期']);
 const finite=value=>Number.isFinite(value)?value:null;
 const pick=(row,keys)=>Object.fromEntries(keys.map(key=>[key,row?.[key]??null]));
 const fiscal=row=>row?pick(row,['salesGrossCopper','salesNetCopper','taxReceiptsCopper','advanceCopper','purchasesCopper','exportedFood','importedFood']):null;
@@ -28,7 +29,7 @@ export function affairs(engine,document){
     }
     obligations.sort(byDeadline);
     const month=Math.floor(now/(1440*30)),limit=finite(engine.byId.get('player')?.monthlyQuotaD),used=finite(s.questQuota?.[`${month}_player`]);
-    const quota={month:month+1,limitD:limit,usedD:used,remainingD:limit===null||used===null?null:Math.max(0,limit-used),units:{...engine.rules.quests?.quotaUnits}};
+    const quota={month:month+1,limitD:limit,usedD:used,remainingD:limit===null||used===null?null:Math.max(0,limit-used),personal:questPublishingRights(engine,s).personal,units:{...engine.rules.quests?.quotaUnits}};
     const local=new Set();let location=s.location;
     while(location&&!local.has(location)){local.add(location);location=engine.byId.get(location)?.parent;}
     const holdings=Object.entries(s.buildings??{}).filter(([,r])=>r?.owner==='player')

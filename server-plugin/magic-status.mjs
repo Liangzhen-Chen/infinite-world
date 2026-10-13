@@ -1,4 +1,5 @@
 // Status identifiers and their numerical consequences are authored rules.
+import {carePain}from'./magic-care.mjs';
 import {waterEarthHeldUntil}from'./magic-water-earth.mjs';
 import {decoyPenalty,consumeDecoy}from'./magic-light.mjs';
 export const magicStatuses={
@@ -30,7 +31,7 @@ export function magicStatusStats(d,target,context={}){
     }
     const bound=waterEarthHeldUntil(d.get('state'),target,d.get('state','minute'))>d.get('state','minute')?.1:0;
     return{defense:powers.stone_skin??0,evasion:-(powers.stone_skin??0)*0.02+(powers.camouflage??0)*0.01-bound-(context.shadowBound?.1:0),
-        hit:-(Math.max(0,(powers.fear??0)-(powers.travel_calm??0))+(powers.dazzle??0)+(powers.illusion??0)+(powers.compulsion??0))*0.02-decoyPenalty(d,target,context)||0,
+        hit:-(Math.max(0,(powers.fear??0)-(powers.travel_calm??0))+(powers.dazzle??0)+(powers.illusion??0)+(powers.compulsion??0)+carePain(d,target))*0.02-decoyPenalty(d,target,context)||0,
         nightVision:(powers.nightvision??0)*0.02,
         fireResistance:(powers.fire_shield??0)/100,
         mindResistance:(powers.mind_guard??0)/100,
