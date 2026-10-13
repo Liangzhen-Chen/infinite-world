@@ -467,13 +467,7 @@ T28-R1修好新回执undefined规范化并保留严格篡改拒绝，相关31/32
 4. 模型：起草 0 次，L2 总计不超过 450 次，整卡不超过 8 元；短名册与地点也须全部审核后整合。
 5. 规模：305 条短名册、约 90 个已登记户、6 街区及约 18 处公共或行业建筑，住宅按户落地；总户数和待生成户数与 1000 人核平。官署职责、行会联络处和地方问题写入聚落完整档；复用表驱动骨架，单会话完成，不起草 99 人完整档。
 
-### T91 码头与货栈 33 人
-
-1. 结果：玩家能接触有家庭牵挂和具体利益分歧的搬运者、船户及货栈住户，沿现有交易能力办事。
-2. 文件：依赖T90；可改 world/design/w1-baishi-dock-depth.mjs、world/drafts/w1/baishi-dock/、world/people/baseline.json、world/people/residents.json、tests/r06-bs-dock.test.mjs；地理、户籍和共用工具锁定。
-3. 验收：node --test tests/r06-bs-dock.test.mjs；node tools/audit-npc-depth.mjs；node --test tests/engine.test.mjs tests/storage.test.mjs tests/plugin.test.mjs。专项覆盖 33 人正式提升、双方事件与知情边界，以及 roster 不再重复计数。
-4. 模型：起草 0 次，L2 总计不超过 120 次，整卡不超过 7 元；从起草到正式整合同卡完成。
-5. 规模：33 full，镇内累计 34 full、272 roster；事件参与者以本批为主，对既有人物只引用已知事实，单会话。
+### T91 已完成：白石镇码头与货栈33人提升为完整档并正式整合，11件共同往事闭合，同ID从名册移出；全体185个完整档深度零缺口；80次真实L2全过，L4均4.12/最低3，1.10915416元。
 
 ### T92 官署与市集 33 人
 
