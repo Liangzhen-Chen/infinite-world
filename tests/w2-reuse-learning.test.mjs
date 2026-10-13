@@ -8,7 +8,9 @@ import {hashContent,readApprovedContent,defaultReviewRequest} from '../tools/con
 import {entries as auditedEntries,contextFor as spellContext,revision as spellRevision} from '../tools/w2-reuse-content.mjs';
 import {validateDraft as validateBookDraft} from '../tools/m4-books-content.mjs';
 import {reuseSpellCandidates,reuseLearningReferences} from '../world/design/w2-reuse-candidates.mjs';
-import {sources,entries,contextFor,reviewDraftFor,revision,withReuseLearningCandidates} from '../world/design/w2-reuse-learning.mjs';
+import {sources,entries,contextFor,revision,withReuseLearningCandidates} from '../world/design/w2-reuse-learning.mjs';
+import {entries as learningEntries,contextFor as learningContext} from '../tools/w2-reuse-learning-content.mjs';
+import {materialize} from '../world/design/w2-reuse-learning.mjs';
 
 const source=await loadWorld(),world=withReuseLearningCandidates(source),spells=reuseSpellCandidates();
 const seed=JSON.parse(await fs.readFile('tests/fixtures/legacy/seed.json','utf8'));
@@ -54,12 +56,12 @@ async function buy(run,document,entry,prefix) {
  return acquired;
 }
 
-test('14来源引用闭合，原14法术正文审核指纹复用，新来源仍待L2/L4',async()=>{
+test('14来源引用闭合，原法术审核指纹复用，17条来源增量L2/L4均已通过并发布',async()=>{
  const approved=await readApprovedContent('world/drafts/w2-reuse',auditedEntries,{
   contextFor:spellContext,revision:spellRevision,
  });
  assert.equal(approved.length,14);
- assert.equal(source.spells.length,17);
+ assert.equal(source.spells.length,31);
  assert.equal(world.spells.length,31);
  assert.equal(new Set(world.spells.map(row=>row.id)).size,31);
  assert.equal(sources.mappings.length,14);
@@ -69,21 +71,25 @@ test('14来源引用闭合，原14法术正文审核指纹复用，新来源仍�
  for(const mapping of sources.mappings) {
   const spell=spells.find(row=>row.id===mapping.spell),book=entries.find(row=>row.id===mapping.book);
   assert.ok(book.book.teaches.includes(spell.id));
-  assert.deepEqual(world.spells.find(row=>row.id===spell.id),spell);
+  for(const [key,value]of Object.entries(spell))assert.deepEqual(world.spells.find(row=>row.id===spell.id)[key],value);
   assert.equal(mapping.skill.id,spell.skill);
   assert.equal(mapping.skill.stage,spell.stage);
   assert.equal(mapping.readingMinutes,world.rules.books.readingMinutes[spell.stage]);
   assert.equal(mapping.requiresCertification,spell.stage?'profession_mage':null);
   assert.deepEqual(mapping.teachers,[]);
  }
+ const learning=await readApprovedContent('world/drafts/w2-reuse/learning',learningEntries,{contextFor:entry=>learningContext(entry,source),revision});
+ assert.equal(learning.length,17);
+ for(const mapping of sources.mappings)assert.deepEqual(learning.find(row=>row.id===`source_${mapping.spell}`).source,mapping);
  for(const entry of entries) {
   const record=JSON.parse(await fs.readFile(`world/drafts/w2-reuse/learning/${entry.id}.json`,'utf8'));
   const context=contextFor(entry,source);
-  assert.equal(record.status,'pending');
-  assert.equal(record.attempts,0);
-  assert.equal(record.review,null);
+  assert.equal(record.status,'passed');
+  assert.ok(record.responseEvidence.length>0);
+  assert.deepEqual(record.errors,[]);
+  assert.equal(record.review.contradictions.some(row=>row.severity==='hard'),false);
   assert.equal(record.fingerprint,hashContent({entry,context,revision}));
-  assert.deepEqual(record.draft,reviewDraftFor(entry));
+  assert.deepEqual(world.items.find(row=>row.id===entry.id),materialize(entry,record.draft));
   assert.deepEqual(validateBookDraft(record.draft,entry).errors,[]);
   const request=defaultReviewRequest(entry,record.draft,context);
   assert.ok(request.messages.some(row=>row.content.includes(entry.stock.owner)));
@@ -91,11 +97,7 @@ test('14来源引用闭合，原14法术正文审核指纹复用，新来源仍�
   assert.ok(context.seller.schedule.default.some(slot=>slot.location===entry.origin&&slot.services.includes('trade')));
  }
  assert.deepEqual(withReuseLearningCandidates(world),world);
- for(const npc of source.npcs) {
-  const next=world.npcs.find(row=>row.id===npc.id),inventory={...next.inventory};
-  for(const entry of entries)if(entry.stock.owner===npc.id)delete inventory[entry.id];
-  assert.deepEqual({...next,inventory},npc);
- }
+ assert.deepEqual(world,source);
 });
 
 test('真实行走到教师付费认证后可到学堂买一阶书并研读',async()=>{

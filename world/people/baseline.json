@@ -9038,7 +9038,10 @@
       "item_book_m4_surface": 2,
       "item_book_m4_light": 1,
       "item_book_m4_contract": 2,
-      "item_book_m4_travel": 2
+      "item_book_m4_travel": 2,
+      "item_book_w2_reuse_basic": 2,
+      "item_book_w2_reuse_middle": 2,
+      "item_book_w2_reuse_advanced": 2
     },
     "skills": [],
     "services": [
