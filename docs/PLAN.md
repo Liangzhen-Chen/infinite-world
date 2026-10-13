@@ -384,9 +384,7 @@ T28-R1修好新回执undefined规范化并保留严格篡改拒绝，相关31/32
 可改 E/runtime.js，新建 E/people-history.mjs、people-history.css；S/index.mjs、新 S/ui-history.mjs，T/runtime.test.mjs、新 T/m6-04.test.mjs。增 /ui/history，只读复用 chronicle、NPC 玩家关系及实际获知记录，按玩家可见性过滤后分页；所在地取最后获知位置，承诺仅本人相关；笔记和判断存聊天附加数据，不改引擎事实。
 验收：node --test tests/runtime.test.mjs tests/m6-04.test.mjs；node --test tests/engine.test.mjs tests/storage.test.mjs tests/plugin.test.mjs。截图含三面板和搜索，断言未知人物／私密记忆不显示；模型0，预计3小时，1会话。
 
-### T79 任务约定与领地：玩家能按期限查看收发任务与义务，有领地时能查收支、工程和待批事项。
-可改 E/ledger-view.mjs、runtime.js，新建 E/affairs-panels.mjs、affairs-panels.css；S/index.mjs、新 S/ui-affairs.mjs，T/runtime.test.mjs、新 T/m6-05.test.mjs。增 /ui/affairs，从 quests、obligations、records、settlements、buildings、projects 读取玩家任务额度及有权查看的领地人口／库存／收支／工程／待批事项／管事报告；缺业务记录归 R07，界面不补造。
-验收：node --test tests/runtime.test.mjs tests/m6-05.test.mjs；node --test tests/engine.test.mjs tests/storage.test.mjs tests/plugin.test.mjs。截图含无领地、有领地及到期排序；模型0，预计2–3小时，1会话。
+### T79 已完成：任务、约定、领地三面板与/ui/affairs只读投影，按期限排序、收发筛选、公账展示；界面测试25/25、CORE40，截图在docs/测试报告/最新/M6-05/。缺口归R07：玩家发单额度与村级领地签发入口尚未实现，面板对缺记录显示“未登记”。
 
 ### T80 开始游戏与续玩：玩家能继续或创建角色，管理存档与设置，进入后看到对应开场或前情提要。
 可改新 E/start/play-town.html、play-town.js、play-town.css，E/runtime.js、tools/deploy-engine.mjs，T/runtime.test.mjs、新 T/m6-06.test.mjs；现酒馆页面仅作参考，隔离包提供同名新入口。复用 /create、/export、/import 及04的可见历史；前情提要用已发生事实确定性编排，开场复用原有具体细节，加载知识取已发布世界内容，备份含笔记与设置。
