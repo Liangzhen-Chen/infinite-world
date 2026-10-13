@@ -450,9 +450,7 @@ T28-R1修好新回执undefined规范化并保留严格篡改拒绝，相关31/32
 
 ### T81 已完成：四级已知地图、亲历/可靠转述/传闻三类迷雾、缩放平移、持久标记、路线比较，选中后只填输入框；标签保持14px并互相避让。界面测试16/16、CORE40，截图在docs/测试报告/最新/M6-07/。白石镇发布后补地点映射。
 
-### T82 游戏纹章、背景与人物素材：玩家看到统一风格的游戏标志、约80张随场景切换的背景及全部已发布LOD0人物的职业纹章头像。
-可改 world/art/ 下风格说明、逐人物可复用提示及素材映射，assets/visual/、assets/LICENSES.md，新 tools/build-m6-art.mjs、E/background-view.mjs；E/runtime.js、tools/build-card.mjs、tools/deploy-engine.mjs，T/runtime.test.mjs、新 T/m6-08.test.mjs。以原创场景SVG交付背景，按10类场景×2时段×4天气实际绘制差异；头像采用指南允许的职业纹章，未成年仅日常形象；核对酒馆背景接口，场景变化淡入淡出，减少动画时直接切换。
-验收：node --test tests/runtime.test.mjs tests/m6-08.test.mjs；node --test tests/engine.test.mjs tests/storage.test.mjs tests/plugin.test.mjs。截图含背景联系表、场景切换与头像，核验素材映射和许可；模型0，预计4小时，1会话。
+### T82 已完成：原创游戏纹章、80张SVG场景背景（10类场景×2时段×4天气）随场景淡入切换、200个地点的背景映射、446人职业纹章头像与逐人提示，新增“场景画册”面板；界面测试8/8、CORE40，截图在docs/测试报告/最新/M6-08/。白石镇发布后需重跑tools/build-m6-art.mjs补人物映射。
 
 ### T83 环境音与情境音乐：玩家点击进入后听到随场景变化的循环环境音与音乐，可调音量和静音。
 可改新 E/ambient-audio.mjs、E/runtime.js、E/start/play-town.js、E/ui-settings.mjs；world/audio/、assets/audio/、assets/LICENSES.md、tools/deploy-engine.mjs，T/runtime.test.mjs、新 T/m6-09.test.mjs。采用CC0或明确许可音频，覆盖生物群落／时段／天气／室内外和五类音乐情境，交叉淡入淡出；顶栏与设置共用音量状态，切换聊天停止旧声音。
