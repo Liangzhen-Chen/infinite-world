@@ -13,10 +13,54 @@ import * as design from '../world/drafts/w1/wt-depth/sourced/design.mjs';
 import {weitingRoster} from '../world/design/w1-villages-weiting.mjs';
 import {frozenT07SourceText,prepareDepthRevision,depthOptions} from '../tools/npc-depth.mjs';
 import {runDepthReview,reviewOptions} from '../tools/npc-depth-review.mjs';
-import {prepareNpcDepth} from '../tools/publish-npc-depth.mjs';
+import {prepareNpcDepth,publishNpcDepth} from '../tools/publish-npc-depth.mjs';
 
-const world=await loadWorld(),ids=new Set(design.patchRows.map(r=>r.id));
+const publishedWorld=await loadWorld(),base=design.patchRows.map(r=>r.before),ids=new Set(base.map(r=>r.id));
+const world={...publishedWorld,npcs:publishedWorld.npcs.map(n=>base.find(b=>b.id===n.id)??n)};
 const entries=()=>depthEntries(design.patchRows.map(r=>r.before),design,world);
+const publicationManifest=path.resolve('world/drafts/w1/wt-depth/sourced/manifest.json');
+
+test('苇汀正式30人等于已审批完整档，其他人、旧记忆和钱物身份保持原值',async()=>{
+ const {entries:approved}=await prepareNpcDepth({manifest:publicationManifest});
+ assert.equal(approved.length,30);assert.equal(publishedWorld.npcs.filter(n=>n.tier==='full').length,152);
+ assert.equal(publishedWorld.residents.length,294);
+ assert.deepEqual(publishedWorld.npcs.map(n=>n.id),world.npcs.map(n=>n.id));
+ for(const entry of approved){
+  const current=publishedWorld.npcs.find(n=>n.id===entry.id);
+  assert.deepEqual(current,entry.facts);verifyUnchanged(entry.before,current,entry);
+  for(const field of ['coins','inventory','secrets'])assert.deepEqual(current[field],entry.before[field]);
+  assert.deepEqual(current.memorySeeds.slice(0,entry.before.memorySeeds.length),entry.before.memorySeeds);
+ }
+ assert.deepEqual(auditNpcDepth(publishedWorld).issues.filter(i=>ids.has(i.id)),[]);
+});
+
+test('冻结原档首次预演不写入，正式发布闭合7事件30人且仅更新苇汀',async t=>{
+ const temp=await fs.mkdtemp(path.join(os.tmpdir(),'t73-publication-'));t.after(()=>fs.rm(temp,{recursive:true,force:true}));
+ const worldRoot=path.join(temp,'world');
+ for(const dir of ['meta','geo','people','lore','design'])await fs.cp(path.resolve('world',dir),path.join(worldRoot,dir),{recursive:true});
+ await fs.cp(path.resolve('world/drafts/w1/wt-depth'),path.join(worldRoot,'drafts/w1/wt-depth'),{recursive:true});
+ const baseline=path.join(worldRoot,'people/baseline.json');await fs.writeFile(baseline,JSON.stringify(world.npcs));
+ const manifest=path.join(worldRoot,'drafts/w1/wt-depth/sourced/manifest.json'),before=await fs.readFile(baseline);
+ const preview=await publishNpcDepth({manifest});
+ assert.equal(preview.published,false);assert.deepEqual(preview.changed,['people/baseline.json']);
+ assert.deepEqual(preview.amendedNpcIds.slice().sort(),[...ids].sort());assert.deepEqual(preview.selectedQuality.issues,[]);
+ assert.equal(preview.eventClosure.length,30);assert.equal(new Set(preview.eventClosure.map(e=>e.eventId)).size,7);
+ assert.ok(preview.eventClosure.every(e=>e.closed));assert.deepEqual(await fs.readFile(baseline),before);
+ assert.deepEqual(await publishNpcDepth({manifest,publish:true}),{...preview,published:true});
+ const after=await loadWorld(worldRoot);assert.deepEqual(after,publishedWorld);
+});
+
+test('苇汀已发布完整卡重发零写入，不重复追加共享记忆',async()=>{
+ const baseline=path.resolve('world/people/baseline.json'),bytes=await fs.readFile(baseline),stat=await fs.stat(baseline);
+ for(const publish of [false,true]){
+  const repeat=await publishNpcDepth({manifest:publicationManifest,publish});
+  assert.equal(repeat.published,publish);assert.deepEqual(repeat.changed,[]);assert.deepEqual(repeat.changes,[]);
+  assert.deepEqual(repeat.eventClosure,[]);assert.equal(repeat.baselineSourceHash,repeat.baselineResultHash);
+  assert.deepEqual(repeat.selectedQuality.issues,[]);assert.equal(repeat.amendedNpcIds.length,30);assert.equal(repeat.modelCalls,0);
+  assert.deepEqual(await fs.readFile(baseline),bytes);assert.equal((await fs.stat(baseline)).mtimeMs,stat.mtimeMs);
+ }
+});
+
 async function historicalCompleteProof(){
  const {completeOptions}=await import('../world/drafts/w1/wt-depth/reopen/prepare-complete.mjs'),options=await completeOptions();
  let proof=JSON.parse(await fs.readFile(path.join(options.root,'incremental-proof.json'),'utf8'));
@@ -220,6 +264,7 @@ test('换行凭证贯穿官方准备、mock复审收据及发布重放，不授�
  const temp=await fs.mkdtemp(path.join(os.tmpdir(),'wt-checkout-'));t.after(()=>fs.rm(temp,{recursive:true,force:true}));
  const worldRoot=path.join(temp,'world');
  for(const dir of ['meta','geo','people','lore'])await fs.cp(path.resolve('world',dir),path.join(worldRoot,dir),{recursive:true});
+ await fs.writeFile(path.join(worldRoot,'people/baseline.json'),JSON.stringify(world.npcs));
  await fs.mkdir(path.join(worldRoot,'design'),{recursive:true});
  for(const file of ['w1-wt-depth.mjs','w1-villages-weiting.mjs'])await fs.copyFile(path.resolve('world/design',file),path.join(worldRoot,'design',file));
  await fs.cp(path.resolve('world/drafts/w1/wt-depth'),path.join(worldRoot,'drafts/w1/wt-depth'),{recursive:true});
