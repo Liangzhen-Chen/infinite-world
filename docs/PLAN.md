@@ -170,13 +170,9 @@ N1–N17至少12项完整有效且≥90%，N6/N16零泄漏，N12真实盲辨，N
 
 ### T62 已完成：“燕麦”可解析为带壳燕麦，粮仓买卖与商家交易的工具边界写清，发布→承接→买粮→交付整链守恒；相关8/CORE40，0模型，真实效果由T64复验。
 
-### T63 一致性审核区分可见细节和未发生的事【零模型】
+### T63 已完成：审查请求与示例区分可见细节、否认知情和补造经历；合并后静态提示超限，同会话精简到35956字节（上限48000）；专项37/CORE40/prompt全过，0模型，真实效果由T64复验。
 
-结果：NPC叙述已有行动时不补造新经历，审核不把普通感知或否认知情误判成泄密。对应失败：audit.m2.privacy.leaks里guide“旅店敲门声”、npc_private“不往外传”、npc_voices“纸片露角”的误报，npc_offscreen“刚卸空”“又量了一次”的补造。
-可改：server-plugin/consistency-review.mjs的审查请求、prompt/examples.md、tests/m3-consistency.test.mjs、tests/m3-consistency-evidence.test.mjs。锁定：canCommit、零泄漏门槛、人物私密来源、T61/T62的文件。不得用按原句删除警告的过滤器代替修复。
-验收：`node --test tests/m3-consistency.test.mjs tests/m3-consistency-evidence.test.mjs tests/prompt.test.mjs`、CORE。模型0。规模约120–220行。
-
-### T64 M2真实复验【真实模型；待T61–T63合入并取得唯一模型槽】
+### T64 M2真实复验【真实模型；T61–T63已合，待模型槽】
 
 结果：在修订后的完整提示栈上重跑原十场，按原门槛给出通过或明确未通过。
 可改：仅docs/测试报告/M2-recheck/及新run生成物；复用T60的preflight.mjs，只适配父记录、来源、额度和入口。代码和旧报告锁定。
