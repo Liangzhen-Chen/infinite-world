@@ -72,9 +72,9 @@ test('选工具只计实际触发的嵌套分支及前置，未取得条件证�
     const unknown=toolSelectionMetrics([measured],[scenario]);assert.equal(unknown.complete,false);assert.ok(unknown.excluded.some(r=>r.reason==='conditional-not-measured'));
 });
 
-test('送货移动与私宅等待属于已请求动作，额外world_trade仍报错且无参数断言仍未测',async()=>{
+test('送货移动与私宅等待属于已请求动作，参数已标注且额外world_trade仍报错',async()=>{
     for(const [id,index,calls,expected]of [
-        ['npc_courier',2,[{tool:'world_promise',args:{}},{tool:'world_promise',args:{}},{tool:'world_move',args:{destination:'bld_hw_council'}}],['world_promise','world_move']],
+        ['npc_courier',2,[{tool:'world_promise',args:{type:'送货',item:'item_bread',quantity:1,deadline:660}},{tool:'world_promise',args:{type:'付款',coins:2,deadline:660}},{tool:'world_move',args:{destination:'bld_hw_council'}}],['world_promise','world_move']],
         ['npc_home_visit',0,[{tool:'world_move',args:{destination:'loc_hw_fields'}},{tool:'world_time',args:{minutes:30,activity:'等待'}}],['world_move','world_time']],
     ]){
         const scenario=JSON.parse(await fs.readFile(new URL(`./playtests/${id}.json`,import.meta.url),'utf8'));
@@ -82,8 +82,8 @@ test('送货移动与私宅等待属于已请求动作，额外world_trade仍报
         const report=toolSelectionMetrics([{id,turns:[turn]}],[scenario]);
         assert.equal(report.opportunities,1);assert.deepEqual(report.rows[0].expected,expected);
         assert.equal(report.missed,0);assert.equal(report.wrong,0);
-        assert.equal(report.parameterOpportunities,0);assert.equal(report.targetOpportunities,0);
-        assert.equal(report.rows[0].parameterMeasurement,'not-measured');assert.equal(report.rows[0].targetMeasurement,'not-measured');
+        assert.ok(report.parameterOpportunities>0);assert.equal(report.parameterWrong,0);assert.equal(report.targetOpportunities,0);
+        assert.equal(report.rows[0].targetMeasurement,'not-measured');
         turn.calls.push({tool:'world_trade',args:{seller:'npc_hw_linsui',item:'item_bread',quantity:1}});
         const wrong=toolSelectionMetrics([{id,turns:[turn]}],[scenario]);
         assert.equal(wrong.wrong,1);assert.equal(wrong.rows[0].wrongCalls[0].tool,'world_trade');
@@ -113,9 +113,9 @@ test('任务回合6/7只按各自前一回合已存数量判断机会，原采�
     assert.deepEqual(missed.rows.map(r=>r.turn),[5,6,7]);assert.equal(missed.missed,3);
     assert.deepEqual(missed.rows[1].conditions,[{kind:'quantity',turn:5,path:'state.inventory.item_oats',value:10,actual:10}]);
     assert.deepEqual(missed.rows[2].conditions,[{kind:'quantity',turn:6,path:'state.inventory.item_oats',value:10,actual:10}]);
-    const correct=metrics(10,10,[{tool:'world_move',args:{destination:'青灯酒馆'}}],[{tool:'world_quest',args:{}}]);
+    const correct=metrics(10,10,[{tool:'world_move',args:{destination:'青灯酒馆'}}],[{tool:'world_quest',args:{operation:'complete'}}]);
     assert.equal(correct.rows[1].missing,false);assert.equal(correct.rows[2].missing,false);
-    assert.equal(correct.parameterOpportunities,0);assert.equal(correct.targetOpportunities,0);
+    assert.equal(correct.parameterOpportunities,1);assert.equal(correct.parameterWrong,0);assert.equal(correct.targetOpportunities,0);
     assert.deepEqual(metrics(10,0).rows.map(r=>r.turn),[5,6],'第7回合读取已带到的数量，不能只看第5回合');
     assert.deepEqual(metrics(0,10).rows.map(r=>r.turn),[5,7],'第6回合失败不能抹去后续实际持有的粮食');
     const boughtWrong=saved(5,0,[{tool:'world_trade',args:{seller:'陈柏',item:'item_oats',quantity:10}}]);
@@ -139,6 +139,28 @@ test('quantity前置缺测或非数值不推断，机会读取actual而非采购
     assert.equal(toolSelectionMetrics([result],[scenario]).excluded[0].reason,'prerequisite-not-measured');
     prerequisite.actual=9;result.turns[0].assertions=[prerequisite];
     assert.equal(toolSelectionMetrics([result],[scenario]).excluded[0].reason,'prerequisite-not-met');
+});
+
+test('试玩world_read单人物定位读取真实库存，场外查询不转物扣钱或泄露认知',async t=>{
+    const server=await createPlaytestServer({consistencyClient:null});t.after(()=>server.close());
+    const bundle=await loadPromptBundle();let requests=0;
+    const client={async generate({messages}){
+        const index=messages.findLastIndex(m=>m.role==='user'),receipts=messages.slice(index).filter(m=>m.role==='tool');
+        if(!receipts.length)return{choices:[{message:{tool_calls:[{id:`read-${requests++}`,type:'function',function:{name:'world_read',arguments:JSON.stringify({section:'人物',npc:messages[index].content.includes('未知')?'npc_missing':'npc_hw_linsui'})}}]}}]};
+        const result=JSON.parse(receipts[0].content);
+        if(messages[index].content.includes('未知'))assert.equal(result.ok,false);
+        else{
+            assert.deepEqual(Object.keys(result),['npc_hw_linsui']);
+            const row=result.npc_hw_linsui;assert.equal(row.inventory.item_bread,6);
+            for(const key of ['cognition','memoryStream','legalKnowledge','goals','relationships','autonomy','developments'])assert.equal(Object.hasOwn(row,key),false);
+        }
+        return{choices:[{message:{content:'已核对查询回执。'}}]};
+    }};
+    const assertions=[{kind:'elapsed',min:0,max:0},{kind:'unchanged',paths:['state.inventory','state.player.coins','state.npcs']}];
+    const scenario={id:'read-npc-http',turns:[{input:'（场外）只查询林穗库存',assertions},{input:'（场外）查询未知人物',assertions}]};
+    const result=await runPlaytest({scenario,api:server.api,client,bundle});
+    assert.equal(result.pass,true,JSON.stringify(result.turns.filter(t=>t.errors.length)));assert.equal(requests,2);
+    assert.equal(result.turns[0].calls[0].args.npc,'npc_hw_linsui');
 });
 
 test('试玩框架走真实HTTP存储、检索和回滚；场外写入拒绝，重复扣款幂等',async t=>{

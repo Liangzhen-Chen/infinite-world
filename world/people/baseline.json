@@ -9041,7 +9041,13 @@
       "item_book_m4_travel": 2,
       "item_book_w2_reuse_basic": 2,
       "item_book_w2_reuse_middle": 2,
-      "item_book_w2_reuse_advanced": 2
+      "item_book_w2_reuse_advanced": 2,
+      "item_book_s1_cover": 2,
+      "item_book_s1_area": 2,
+      "item_book_s1_movement": 2,
+      "item_book_s1_message": 2,
+      "item_book_s1_utility": 2,
+      "item_book_s1_growth": 2
     },
     "skills": [],
     "services": [

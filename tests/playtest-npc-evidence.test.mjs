@@ -4,6 +4,7 @@ import {evaluateAssertions} from '../tools/playtest-assertions.mjs';
 import {reviewPlaytest,playtestAutonomyEvidence} from '../tools/playtest-review.mjs';
 import {prepareVoiceBlind,reviewVoiceBlind} from '../tools/playtest-voice-blind.mjs';
 import {reviewNpcRequirements} from '../tools/npc-acceptance.mjs';
+import {readFileSync} from 'node:fs';
 
 const scores={truth:100,agency:100,language:100,continuity:100};
 const respond=value=>({choices:[{finish_reason:'stop',message:{content:JSON.stringify(value)}}]});
@@ -29,11 +30,11 @@ test('N17跨段评分附实际spent/outcome且不给早先回合未来证据',as
  assert.deepEqual(playtestAutonomyEvidence({turns})[0].records,[action]);
  let count=0;
  const report=await reviewPlaytest({async generate(body){const input=JSON.parse(body.messages[1].content);
-  if(count++===0)assert.deepEqual(input.autonomyEvidence,[]);
+  if(count++<2)assert.deepEqual(input.autonomyEvidence,[]);
   else{assert.equal(input.autonomyEvidence[0].records[0].spent.fee,2);assert.equal(input.autonomyEvidence[0].records[0].spent.materials[0].amount,1);assert.equal(input.autonomyEvidence[0].records[0].outcome.success,false);}
   return respond({scores,findings:[]});
  }},{id:'npc_offscreen',requirements:['N17'],turns},{});
- assert.equal(report.complete,true);assert.equal(count,3);
+ assert.equal(report.complete,true);assert.equal(count,5);
 });
 
 test('逐N17审核读取旧报告新增行动原记录，并用实际assertions连续原文作证',async()=>{
@@ -47,6 +48,25 @@ test('逐N17审核读取旧报告新增行动原记录，并用实际assertions�
   return respond({requirements:[{id:'N17',pass:true,reason:'有实际失败记录及回访台词',evidence:[{turn:0,quote:'"fee":2'},{turn:0,quote:'木柄做坏了一回。'}]}]});
  }},{id:'offscreen',attempt:1,turns},{requirements:['N17']});
  assert.equal(reviewed.complete,true);assert.equal(reviewed.requirements[0].pass,true);
+});
+
+test('T64的N17补齐等待结束至返回前行动，逐事件核账且早先评分不读未来记录',async()=>{
+ const raw=JSON.parse(readFileSync(new URL('../docs/测试报告/M2-recheck/真实试玩.json',import.meta.url),'utf8'));
+ const result=raw.results.find(r=>r.id==='npc_offscreen'),evidence=playtestAutonomyEvidence(result);
+ const winder=evidence.find(e=>e.records.some(a=>a.id==='npc_plan_95bd24e757e50aeb8561de08'));
+ assert.equal(winder.turn,4);assert.equal(winder.records[0].minute,15390);assert.equal(winder.records[0].spent.fee,2);assert.equal(winder.records[0].outcome.success,false);
+ assert.equal(result.turns[3].minute,15355);assert.equal(evidence.filter(e=>e.turn<=3).some(e=>e.records.some(a=>a.id===winder.records[0].id)),false);
+ const original=result.finalDocument.state.npcAutonomy.actions;
+ original.old={...action,id:'old',start:100,minute:15390};original.future={...action,id:'future',start:16330,minute:16360};
+ assert.equal(playtestAutonomyEvidence(result).some(e=>e.records.some(a=>['old','future'].includes(a.id))),false);
+ const reviewed=await reviewNpcRequirements({async generate(body){
+  const input=JSON.parse(body.messages[1].content);
+  assert.ok(input.autonomyEvidence.some(e=>e.records.some(a=>a.id===winder.records[0].id)));
+  assert.match(input.evidenceScope,/所指事件/);assert.match(body.messages[0].content,/最近两件失败/);
+  return respond({requirements:[{id:'N17',pass:false,reason:'树种及免费来源无记录，绕线板失败和2铜有记录',relatedTurns:[6,7],prerequisiteTurns:[3,4],
+   evidence:[{turn:4,quote:'"recipe":"recipe_w3_line_winder"'},{turn:7,quote:result.turns[7].visible.slice(0,80)}]}]});
+ }},result,{requirements:['N17']},{previousReview:null});
+ assert.equal(reviewed.complete,true);assert.equal(reviewed.requirements[0].pass,false);
 });
 
 const world={npcs:[

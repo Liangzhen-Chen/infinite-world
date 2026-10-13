@@ -44,6 +44,14 @@
             "state.player.coins",
             "state.npcs.npc_hw_linsui.inventory"
           ]
+        },
+        {
+          "kind": "calls",
+          "tool": "world_read",
+          "args": {
+            "npc": "npc_hw_linsui"
+          },
+          "min": 1
         }
       ]
     },
@@ -94,11 +102,34 @@
           },
           "min": 1,
           "max": 1
+        },
+        {
+          "kind": "calls",
+          "tool": "world_promise",
+          "args": {
+            "type": "送货",
+            "item": "item_bread",
+            "quantity": 1,
+            "deadline": 660
+          },
+          "success": true,
+          "min": 1
+        },
+        {
+          "kind": "calls",
+          "tool": "world_promise",
+          "args": {
+            "type": "付款",
+            "coins": 2,
+            "deadline": 660
+          },
+          "success": true,
+          "min": 1
         }
       ]
     },
     {
-      "input": "我仍留在酒馆原地等一分钟，让林穗自行开始送货，不与她同行，也不提前收面包。",
+      "input": "我留在当前地点原地等一分钟，让林穗自行开始送货，不与她同行，也不提前收面包。",
       "expectedTools": [
         "world_time"
       ],
@@ -124,6 +155,15 @@
           },
           "min": 1,
           "max": 1
+        },
+        {
+          "kind": "calls",
+          "tool": "world_time",
+          "args": {
+            "minutes": 1
+          },
+          "success": true,
+          "min": 1
         }
       ]
     },
@@ -239,6 +279,15 @@
           "kind": "quantity",
           "path": "state.inventory.item_bread",
           "value": 1
+        },
+        {
+          "kind": "calls",
+          "tool": "world_time",
+          "args": {
+            "minutes": 5
+          },
+          "success": true,
+          "min": 1
         }
       ]
     }
