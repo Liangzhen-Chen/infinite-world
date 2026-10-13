@@ -39,9 +39,15 @@ export function learn(d,args,id){
         const foundation=this.byId.get(route)?.entry?.skill;
         if(!foundation||effectiveProficiency(d,this,foundation)<stage*300)throw new Error('共享术式所需路线基础熟练度不足');
     }
-    const source=this.resolve(args.source),sourceDefinition=this.byId.get(source);
+    const project=d.get('state','projects',args.source);
+    const source=project?args.source:this.resolve(args.source),sourceDefinition=this.byId.get(source);
     let sourceRecord,fee=0,minutes;
-    if(source.startsWith('npc_')){
+    if(project){
+        if(project.type!=='研究'||project.stage!=='打磨'||catalog.source!==source||!d.get('state','created',entity)
+            ||project.result&&project.result!==entity||kind==='spell')throw new Error('研究项目不是这项已登记成果的完成来源');
+        minutes=integer(catalog.learnMinutes??120,'研习时间',43200);
+        sourceRecord={type:'research',id:source};
+    }else if(source.startsWith('npc_')){
         if(kind==='spell'&&stage>=4)throw new Error('专家级以上法术只能通过研究或稀有典籍获得');
         const npc=d.get('state','npcs',source);
         if(!npc||npc.location!==d.get('state','location'))throw new Error('导师不在场');
@@ -69,7 +75,7 @@ export function learn(d,args,id){
         }
         minutes=integer(Math.max(book.readingMinutes??0,this.rules.books.readingMinutes[bookStage]),'阅读时间',43200);
         sourceRecord={type:'book',id:source,author:book.author,edition:book.edition};
-    }else throw new Error('学习需要合格导师或实际持有的技能书；研究成果须先通过成果登记');
+    }else throw new Error('学习需要合格导师、实际持有的技能书或对应的已登记研究成果');
     if(d.get('state',partition,entity))throw new Error(`已经学会${catalog.name}`);
     if(minutes<1)throw new Error('学习必须花费实际时间');
     const start=d.get('state','minute');

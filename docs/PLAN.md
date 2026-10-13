@@ -160,7 +160,7 @@ N1–N17至少12项完整有效且≥90%，N6/N16零泄漏，N12真实盲辨，N
 
 共同锁定原存档、用户酒馆、dist、旧报告及其他会话在写的文件；不更改屏蔽表来放行名称，不复制原小说专名或情节。PLAN/PROGRESS/CHANGELOG仍归主会话；发布共享目录和内容账串行，草稿可并行。T150–T152当前占用的接点等原卡释放后再接；改工具的卡加跑tests/prompt.test.mjs及tests/tool-groups.test.mjs，静态提示≤11900。
 
-### T153（C1）赶路与停留时接触实际生物。
+### T153（C1）已完成：穿过已有栖地或在野外停留时，按路线、时段和现存种群出现踪迹或在场生物，可避开、追踪或接触；重放不重生，种群耗尽不再出现，遭遇不默认开战。专项与相关76/76、CORE40，0模型。长时间生态模拟留全量测试核对。
 
 1. 玩家结果：穿过已有栖地或在野外停留时会看到有来源的踪迹或在场生物，可以避开、追踪或接触。
 2. 可改server-plugin/{engine,wildlife,wildlife-range}.mjs及必要场景投影、tests/wildlife-encounters.test.mjs；锁定目录正文。复用追踪的种群扣除和实例生成，按经过路线、时段与战役种子判定；途中遭遇落在实际路段节点，停下或绕行正确结算已走时耗。与T109和所有engine时间写者串行，可并行C2起草。
@@ -600,7 +600,7 @@ T28-R1修好新回执undefined规范化并保留严格篡改拒绝，相关31/32
 
 ### T108（B2） 24节日审核发布。结果：24个节日有正式举办地点和运行参数，玩家能参加有成本的活动。可改world/design/w5-festivals.mjs、原节日草稿、tools/w5-festivals.mjs及发布入口、world/lore/festivals.json和必要geo地点映射、tests/w5-festival-publication.test.mjs；接B1，地理发布与T94/遗迹卡串行。复用有效审核，仅修缺项；regional_unmapped须落实举办地再启用，不将远方人员瞬移来现场。验收node --test "tests/w5-*.test.mjs" tests/festival.test.mjs tests/festival-runtime.test.mjs tests/world-clock.test.mjs，CORE。L2预计24–50次，≤1.5元；约2小时。
 
-### T109（B3） 势力资产与阶段执行。结果：势力按日或周推进计划，阶段真实消耗资源、改变局势，玩家干预能改变后续结果。可改server-plugin/world-clock.mjs、新faction-clock.mjs、engine及wildlife/认知必要接点、tests/faction-clock.test.mjs；锁定势力正文，由B4/B5供正式参数。支持现有计划所需的交易/关系/争端及觉醒效果，远方只做区域结算，消息仍走渠道。验收node --test "tests/npc-*.test.mjs" tests/world-clock.test.mjs tests/faction-clock.test.mjs "tests/wildlife*.test.mjs" "tests/w5-*.test.mjs"，CORE；资源不足、长短步一致与觉醒前后身份守恒。模型0；约3小时，与B1及B10时间接点串行。
+### T109（B3）已完成：势力按日或周推进计划，阶段真实消耗资源，玩家干预改变后续；关系与争端有结算回执；觉醒调用接口已留（未实现的效果明确报错，个体变化归T160）。新增10项通过、相关95/96（余一项为主线旧的节俗数量断言）、CORE40、发布构建ok，0模型。正式参数待T110/T111。
 
 ### T110（B4） 势力时钟前20个。结果：前20个势力的资产与各阶段条件、代价和干预办法正式可执行。可改world/design/w5-clock-1.mjs、对应草稿/内容发布入口、world/lore/factions.json、本批tests/w5-clock-1.test.mjs；按现有ID排序分批，不重写合格背景，引用文化/神祇/历史的缺项在本批修正。接B3，与B5同文件串行。验收node --test "tests/w5-*.test.mjs" tests/world-clock.test.mjs tests/faction-clock.test.mjs，CORE。L2预计25–45次，≤1.5元；约2小时。
 
@@ -652,13 +652,13 @@ C部分只拆缺口：governance.mjs的任职入口止于“待上级决定”�
 
 ### T133（D1）已完成：NPC从本人库存添燃料维持热源并完成需火工序，缺料拒绝、离岗或失能停止，热账与窑炉裂损保留；新增11项通过/CORE40，0模型。
 
-### T134（D2） 自创技能与配方落地。结果：完成研究的技能能被实际学习使用，新配方能在原制造链消耗材料产出成品。可改activities/learning/manufacturing及实体解析接点、tools/create-schemas.mjs、extension/tools.mjs、tests/runtime-invention.test.mjs；复用现有多日研究与技能登记，补recipe类型和实际使用接点，禁止直接造物。验收node --test tests/runtime-invention.test.mjs tests/activities.test.mjs tests/learning.test.mjs tests/manufacturing.test.mjs tests/professions.test.mjs "tests/w3-*.test.mjs" tests/prompt.test.mjs，CORE。模型0；约2.5小时，与C工具接点串行，提示≤11900。
+### T134（D2）已完成：研究出的技能可学习、练习并用于检定；自创配方走原制造链，实际扣料并产出署名成品。相关58/58、CORE40，提示估算约11000，0模型。
 
 ### T135（D3） W3长生活流程。结果：真实对话串起取得/学艺、制作失败及副产物、维修耐久、保存腐败、成本售卖和自创配方，离开再回来状态连续。可改tests/playtests/w3_long.json、tests/w3-long.test.mjs及docs/测试报告/w3-long/，引擎与合格目录锁定；接D1/D2。验收node tools/w3-wave-score.mjs --check；node --test "tests/w3-*.test.mjs" tests/manufacturing.test.mjs tests/learning.test.mjs tests/professions.test.mjs "tests/magic*.test.mjs"；npm run test:playtests -- --only w3_long --repeat 1 --parallel 1 --run-dir docs/测试报告/w3-long --run-id w3-long --card D3 --increment 5；CORE。519条已有审核和随机评分复用有效结果；账本/时耗/售空升级100%，叙述≥90%。真实约30自然轮、120–180次调用，≤5元；准备1小时加后台运行。
 
 ### T136（T31a）已完成：17轮记忆场景与M2–M9的HTTP准备及评分，四种查询在裁历史前后命中同一事实；0模型。
 
-### T137（T31b） M3文风与时间场景。结果：V1–V7及问题文档里的具体时间误述、场外尾注、凭空成品和示例冒充经历均有可评分的真实场景。可改tests/playtests/m3_language.json、新tests/m3-language.test.mjs、prompt/、一致性审查必要接点及docs/问题.md叙述段；只定点修正，不重写已审核人物。验收node --test tests/m3-language.test.mjs "tests/m3-consistency*.test.mjs" tests/m2-npc-prompt.test.mjs tests/prompt.test.mjs "tests/playtest-*.test.mjs"，CORE。模型0；约2小时，接T31a并与所有提示写者串行，静态≤11900；问题仅凭后续真实通过结果关闭。
+### T137（T31b）已完成：18轮文风与时间场景及V1–V7分项评分接入真实报告；0模型。提示估算约11100（硬上限12000）。问题文档里的叙述问题须T138真实复验后才关闭。
 
 ### T138（T32a） M3短程真实复验。结果：M2–M9和V1–V7取得当前完整提示栈的真实结论。可改docs/测试报告/m3-mv/及运行产物，代码和旧报告锁定；依赖T31a/b及T99结论，若相关缺陷仍存在先由原责任卡修。验收npm run test:playtests -- --only m3_memory,m3_language,reconcile,world_upgrade,out_of_character --repeat 1 --parallel 1 --run-dir docs/测试报告/m3-mv --run-id m3-mv --card T32a --increment 8；CORE。每场8–20自然轮，账本/时间/存档及M6–M9为100%，V≥95%，陈词≤0.5次/千字。真实预计180–350次调用，≤8元；约1小时整理加后台运行，独占模型槽。
 
@@ -680,7 +680,7 @@ M8分批路线：R16按3–9章随功能卡补现有PLAN的入口/测试/缺口�
 
 ### T144（F3） 研究成果登记为可施放法术。结果：多日研究完成后，玩家可提交由现有原语组成的法术，经规则裁定后学会并实际施放。可改server-plugin/activities.mjs、magic/learning及实体解析接点、tools/create-schemas.mjs、extension/tools.mjs、新tests/runtime-spell-research.test.mjs；锁定正式法术目录，接D2，复用现有九族而不增加自由代码效果。验收node --test tests/runtime-spell-research.test.mjs tests/runtime-invention.test.mjs tests/activities.test.mjs tests/learning.test.mjs "tests/magic*.test.mjs" tests/prompt.test.mjs，CORE。模型0；约2.5小时，与创造/法术接点串行，静态≤11900。
 
-### T145（F4） 真实存储与提示组装规模性能。结果：在10000事件、5000消息下维持提交≤10ms、对账≤500ms、提示组装≤150ms，存档每1000回合增长≤30MB。可改tools/benchmark-storage.mjs、新tools/benchmark-context.mjs、新tests/performance.test.mjs及测量定位到的storage/history-window/runtime热点，锁定内容与模型提示语义；同文件有功能卡时串行。验收node tools/benchmark-storage.mjs；node tools/benchmark-context.mjs --messages 5000；node --test tests/performance.test.mjs "tests/history-window*.test.mjs" tests/runtime.test.mjs tests/prompt.test.mjs；CORE。模型0；约2小时，使用隔离合成数据，性能不足在本卡修实际热点。
+### T145（F4）部分完成：存储达标（一万事件下提交1.21ms、对账36ms、每千回合增长2.17MB）；提示组装单独运行最慢101ms达标（门槛150ms），但与其他测试同跑、机器有负载时首次189ms超时，两种修法后按规则停止。基准脚本与热点修正已合入。性能测试对机器负载敏感，里程碑收尾时在空闲机器上单独复核。
 
 ### R06 W1 白石镇与 LOD0 人口、建筑、地方生活【待细化】
 

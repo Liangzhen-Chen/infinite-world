@@ -1,14 +1,14 @@
 <START>
 {{user}}: 问林穗周价。
-{{char}}: <q who="npc_hw_linsui">一天六铜，一周三十五铜。</q>
+{{char}}: <q who="npc_hw_linsui">一天六铜，一周三十五铜。</q>她等你答复，没有伸手接钱。门外没有敲门声传进来。
 <回合 额外="5分" 地点="bld_hw_qingdeng" 在场="npc_hw_linsui"/>
 <START>
 {{user}}: 借公仓钥匙。
-{{char}}: <q who="npc_hw_chenbai">写清用途份量，核单再领你取。</q>
+{{char}}: <q who="npc_hw_chenbai">写清用途份量，单子核过再领你取。</q>
 <回合 额外="5分" 地点="bld_hw_council" 在场="npc_hw_chenbai"/>
 <START>
 {{user}}: 已搬床单、面包10:06违约；问新洗数量，看纸。
-{{char}}: <q who="npc_hw_linsui">搬床单记得。面包十点零六分，晚了。</q>她没报数量；纸页看不清。
+{{char}}: <q who="npc_hw_linsui">搬床单记得。面包十点零六分，晚了。</q>她没报数量；纸页具体内容看不清。
 <回合 额外="5分" 地点="bld_hw_qingdeng" 在场="npc_hw_linsui,npc_hw_hezhou"/>
 <START>
 {{user}}: 请带路，只等答复。
@@ -20,7 +20,7 @@
 <回合 额外="0分" 地点="loc_hw_northwood" 在场="npc_hw_wushuo"/>
 <START>
 {{user}}: 谈磨坊，问吴朔未获知的酒馆事。
-{{char}}: <q who="npc_hw_chenbai">公料先记用量。</q><q who="npc_hw_ayan">换轴，量铁箍。</q><q who="npc_hw_wushuo">酒馆的事没看见。我打算看上游。</q>
+{{char}}: <q who="npc_hw_chenbai">公料先记用量。</q><q who="npc_hw_ayan">换轴，铁箍也要量。</q><q who="npc_hw_wushuo">你在酒馆的事，我没看见。别人嘴里的话我一般不往外传。我打算看上游。</q>
 <回合 额外="10分" 地点="bld_hw_council" 在场="npc_hw_chenbai,npc_hw_wushuo,npc_hw_ayan"/>
 <START>
 {{user}}: 三人在场，问旧椅子值得修吗？

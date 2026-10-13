@@ -62,6 +62,7 @@ test('世界校验拒绝未接入法术与越界防护，不能用文字和数�
 test('发布构建要求全体人物深度，仍拒绝坏引用、年龄冲突、屏蔽名称和未实现法术',async t=>{
     const current=await loadWorld(),world=completeDepth(structuredClone(current)),destination=await fs.mkdtemp(path.join(os.tmpdir(),'infinite-fields-build-'));
     t.after(()=>fs.rm(destination,{recursive:true,force:true}));
+    assert.equal(validateWorld(current,{stage:'release'}).ok,true,'五村深度发布后正式世界通过 release');
     const incomplete=structuredClone(current);incomplete.npcs[0].voice.register=incomplete.npcs[0].voice.habits[0];
     assert.ok(validateWorld(incomplete,{stage:'release'}).errors.some(e=>e.startsWith('完整人物深度：')),'任一完整档缺口必须拒绝');
     await assert.rejects(buildWorld({source:incomplete,stage:'release',destination}),/完整人物深度/);

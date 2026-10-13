@@ -59,14 +59,14 @@ export async function review({client,outputRoot=root,ledgerRoot=budgetRoot}={}){
  return runContentPipeline({entries:bones.entries,root:outputRoot,budgetRoot:ledgerRoot,client,cardId:'T90',allocation,revision,concurrency:8,batchSize:40,reuseFrozenDrafts:true,reviewDraftFor:e=>e.draft,buildDraftRequest:()=>{throw Error('T90禁止模型起草');},contextFor:e=>reviewContext(e,world),validateDraft:(d,e)=>({errors:hashContent(d)===hashContent(e.draft)?[]:['固定作者稿不符'],warnings:[]}),buildReviewRequest:(e,d,c)=>{const r=defaultReviewRequest(e,d,c);r.max_tokens=e.kind==='profile'?2400:700;r.messages[0].content+=' 新稿为本卡作者设计；不要将可相容的新建筑与居民误报为历史事实冲突。只核对明确矛盾和越权钱物、能力、官职。亲子关系按kinship核对，household只是同户索引，不等同血亲。';return r;}});
 }
 
-export async function approved(world){
+export async function approved(world,{sourceRoot=root}={}){
  world??=await loadWorld();
  const currentWorld=world;
- const original=await read(path.join(root,'original-contacts.json'));world=restoreContacts(world,original);const b=baishiSkeleton(world);
- const rows=await readApprovedContent(root,b.entries,{revision,contextFor:e=>reviewContext(e,world)});
+ const original=await read(path.join(sourceRoot,'original-contacts.json'));world=restoreContacts(world,original);const b=baishiSkeleton(world);
+ const rows=await readApprovedContent(sourceRoot,b.entries,{revision,contextFor:e=>reviewContext(e,world)});
  if(rows.length!==b.entries.length)throw Error('仍有未通过条目，完整骨架未发布');
  assert.deepEqual(rows,b.entries.map(e=>e.draft));validateSkeleton(b);
- const l4=await read(path.join(root,'l4.json'));
+ const l4=await read(path.join(sourceRoot,'l4.json'));
  if(l4.randomTen.length!==10||new Set(l4.randomTen.map(r=>r.id)).size!==10||l4.randomTen.some(r=>!b.entries.some(e=>e.id===r.id)||r.scores.length!==6||r.scores.some(s=>s<3||s>5))||l4.randomTen.flatMap(r=>r.scores).reduce((a,b)=>a+b,0)/60<4)throw Error('波次十抽六项评分未达标');
  return{world:currentWorld,b};
 }

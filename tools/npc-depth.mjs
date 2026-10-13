@@ -1,3 +1,4 @@
+import {approved as approvedBaishi} from './w1-baishi.mjs';
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import assert from 'node:assert/strict';
@@ -82,6 +83,12 @@ export function recordHasHash(record,expected){
  if(hashContent(record)===expected)return true;
  return !!record?.reviewRecovery?.prior&&recordHasHash(record.reviewRecovery.prior,expected);
 }
+async function frozenResidentSource(source,file,value,worldRoot,world){
+ if(path.resolve(file)!==path.resolve(worldRoot,'people/residents.json')||hashContent(value)===source.hash)return value;
+ const prior=value.filter(n=>n.settlement!=='loc_bs');if(hashContent(prior)!==source.hash)return value;
+ const {b}=await approvedBaishi(world,{sourceRoot:path.join(worldRoot,'drafts/w1/baishi-skeleton')});
+ assert.deepEqual(value.filter(n=>n.settlement==='loc_bs'),b.residents,'白石镇名册与审核来源不符');return prior;
+}
 export async function loadDepthReopen(options,prepared){
  if(!options.reopenAuthorization)return null;
  const worldRoot=path.resolve(options.worldRoot??prepared.worldRoot??'world'),file=path.resolve(options.reopenAuthorization),relative=path.relative(worldRoot,file);
@@ -96,7 +103,7 @@ export async function loadDepthReopen(options,prepared){
  const safeSource=relative=>{const target=path.resolve(root,relative),rel=path.relative(worldRoot,target);assert.ok(!rel.startsWith('..')&&!path.isAbsolute(rel)&&!/secrets\.json$/i.test(target),'授权来源路径非法');return target;};
  for(const source of grant.sourceHashes){const target=safeSource(source.file),raw=await fs.readFile(target,'utf8');let value=/\.mjs$/i.test(target)?raw:JSON.parse(raw);
   if(options.cardId==='T07'&&/\.mjs$/i.test(target)&&originalProof?.sourceCheckoutEvidence){const checkout=JSON.parse(await fs.readFile(safeSource(originalProof.sourceCheckoutEvidence.file),'utf8')),oldPlan=JSON.parse(await fs.readFile(safeSource(originalProof.planFile),'utf8'));assert.equal(hashContent(checkout),originalProof.sourceCheckoutEvidence.hash,'原换行凭证hash改变');value=frozenT07SourceText(source,raw,checkout,oldPlan);}
-  assert.equal(hashContent(value),source.hash,'授权原来源hash不符');
+  value=await frozenResidentSource(source,target,value,worldRoot,prepared.world);assert.equal(hashContent(value),source.hash,'授权原来源hash不符');
  }
  const records=options.bindingRecords??await Promise.all(prepared.foundation.entries.map(async entry=>{try{return await read(entry.id+'.json');}catch(e){if(e.code==='ENOENT')return null;throw e;}}));
  for(const item of grant.allowed){for(const finding of item.sourceFindings??[]){const source=prepared.world?.[finding.source.collection]?.find(s=>s.id===finding.source.id);assert.ok(source,'失效原来源不存在');const value=finding.source.field.split('.').reduce((o,k)=>o?.[k],source);assert.equal(hashContent(value),finding.source.valueHash,'失效原来源字段hash不符');}
@@ -211,7 +218,7 @@ export async function prepareDepthRevision({worldRoot=path.resolve('world'),...o
  const safeFile=relative=>{const file=path.resolve(root,relative),rel=path.relative(path.resolve(worldRoot),file);if(path.isAbsolute(rel)||rel.startsWith('..')||!/\.(json|mjs)$/i.test(file)||/secrets\.json$/i.test(file))throw Error('凭证路径须位于world且非私人文件');return file;};
  let checkout=null,sourceCheckoutEvidence=null;
  if(options.sourceCheckoutEvidence){const file=safeFile(path.relative(root,options.sourceCheckoutEvidence));assert.ok(file.endsWith('.json'),'换行凭证须为world内JSON');checkout=await read(file);sourceCheckoutEvidence={file:path.relative(root,file).replaceAll('\\','/'),hash:hashContent(checkout)};const source=plan.sourceHashes?.find(s=>s.file===checkout.sourceFile);assert.ok(source,'换行凭证不是本规划原来源');frozenT07SourceText(source,checkout.gitBlob?.text,checkout,await sourceWitnessPlan(root,plan,read,safeFile));}
- const sourceHashes=[],frozenSources={};for(const source of plan.sourceHashes??[]){const file=safeFile(source.file);let data;if(/\.mjs$/i.test(file)){if(path.relative(path.resolve(worldRoot),file).replaceAll('\\','/')!=='design/w1-villages-weiting.mjs')throw Error('本次名册出处须为原苇汀设计，候选不得当源');let raw=await fs.readFile(file,'utf8');if(checkout)raw=frozenT07SourceText(source,raw,checkout,await sourceWitnessPlan(root,plan,read,safeFile));sourceHashes.push({...source,hash:hashContent(raw)});const roster=raw.match(/export const weitingRoster\s*=\s*`([\s\S]*?)`/);if(roster)frozenSources[source.file]=roster[1].trim().split(/\r?\n/).map(line=>line.split('|')).map(row=>{const people=[...(world.npcs??[]),...(world.residents??[])].filter(p=>p.id.endsWith('_'+row[1])&&p.name===row[2]);return{id:people.length===1?people[0].id:null,name:row[2],concern:row[7]};});}else{data=await read(file);sourceHashes.push({...source,hash:hashContent(data)});}}
+ const sourceHashes=[],frozenSources={};for(const source of plan.sourceHashes??[]){const file=safeFile(source.file);let data;if(/\.mjs$/i.test(file)){if(path.relative(path.resolve(worldRoot),file).replaceAll('\\','/')!=='design/w1-villages-weiting.mjs')throw Error('本次名册出处须为原苇汀设计，候选不得当源');let raw=await fs.readFile(file,'utf8');if(checkout)raw=frozenT07SourceText(source,raw,checkout,await sourceWitnessPlan(root,plan,read,safeFile));sourceHashes.push({...source,hash:hashContent(raw)});const roster=raw.match(/export const weitingRoster\s*=\s*`([\s\S]*?)`/);if(roster)frozenSources[source.file]=roster[1].trim().split(/\r?\n/).map(line=>line.split('|')).map(row=>{const people=[...(world.npcs??[]),...(world.residents??[])].filter(p=>p.id.endsWith('_'+row[1])&&p.name===row[2]);return{id:people.length===1?people[0].id:null,name:row[2],concern:row[7]};});}else{data=await frozenResidentSource(source,file,await read(file),worldRoot,world);sourceHashes.push({...source,hash:hashContent(data)});}}
  const invalidations=plan.invalidationFile?await read(safeFile(plan.invalidationFile)):null;
  let receipt=options.proofOverride??null;if(options.proofOverride===undefined)try{receipt=await read(path.join(root,'incremental-proof.json'));}catch(e){if(e.code!=='ENOENT')throw e;}
  let reopening=options.reopenAuthorization?await loadDepthReopen({...options,worldRoot},{foundation,worldRoot,world}):null;

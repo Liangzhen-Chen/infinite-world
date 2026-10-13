@@ -32,8 +32,9 @@ import {initializeAgriculture}from'./agriculture-migration.mjs';
 import {advanceAgriculture,agricultureView,settleAgricultureExpiry}from'./agriculture.mjs';
 import {advanceSettlementTrade,nextSettlementTradeMinute,regionalTradePrice}from'./settlement-trade.mjs';
 import {initializeWorldClocks,advanceWorldClocks,nextWorldClockMinute}from'./world-clock.mjs';
+import {initializeFactionClocks,advanceFactionClocks,nextFactionClockMinute,factionClockRules}from'./faction-clock.mjs';
 import {advanceFestivals,nextFestivalMinute,festivalCalendar,validateFestivalRuntime}from'./festival.mjs';
-import {advanceWildlife,wildlifePriceFactor}from'./wildlife.mjs';
+import {advanceWildlife,wildlifePriceFactor,nextWildlifeEncounterMinute,wildlifeEncounterAt,settleWildlifeEncounter,wildlifeEncounterView}from'./wildlife.mjs';
 import {advanceBosses}from'./bosses.mjs';
 import {sceneCard}from'./scene-card.mjs';
 import {stateNotices}from'./state-notices.mjs';
@@ -168,13 +169,13 @@ export class WorldEngine {
         recordBusinessReceipt(d,document.state,{tool:resolved.tool,args,eventId:id,detail});
         if(tool==='check')detail.actionScope={kind:'judgement',healthChanged:false,inventoryChanged:false,feePaid:0,
             note:'仅结算判断或对抗，并履行已引用的协助；未伤人、毁物或制造。不得从骰点虚构这些变化。'};
-        return { patches:d.patches,result:{ok:true,...detail,legalProcedureVersion:1,minute:d.get('state','minute'),messages:d.messages,
+        return { patches:d.patches,result:{ok:true,...detail,legalProcedureVersion:1,...(factionClockRules(session).length?{factionClockVersion:1}:{}),minute:d.get('state','minute'),messages:d.messages,
             notices:stateNotices(document.state,d.document.state,id=>session.byId.get(id)?.name)} };
     }
     scoped(document){
         const created=Object.values(document.state.created??{});
         const player={id:'player',name:document.state.player.name,aliases:['玩家','玩家角色'],scope:document.state.location};
-        const session=Object.create(this);session.entities=[...this.entities,...created,player];session.resolver=new EntityResolver(session.entities);session.byId=session.resolver.entities;return session;
+        const session=Object.create(this);session.entities=[...this.entities,...created,player];session.resolver=this.resolver.extend([...created,player]);session.byId=session.resolver.entities;return session;
     }
     actor(d,id) { return d.get(...this.actorPath(id)); }
     npcObligationAt(state,npcId,minute){return npcObligationAt(state,npcId,minute);}
@@ -227,13 +228,14 @@ export class WorldEngine {
         if(['trade','learn','practice','profession','craft','repair','research','cast','pet','summon','environment','farm','wildlife','site'].includes(this.npcObligationAction?.tool))assertNpcObligationAction(d,this,['player'],{minutes});
         const end=d.get('state','minute')+minutes;
         initializeWorldClocks(d,this,d.get('state','minute'),end);
+        initializeFactionClocks(d,this,d.get('state','minute'),end);
         advanceSettlementTrade(d,this,d.get('state','minute'));
-        if(!this.rules.settlementTrade&&!this.rules.worldClock&&!festivalCalendar(this).length&&!this.world.npcs.some(n=>n.tier==='full')&&!Object.values(d.get('state','effects')??{}).some(e=>e.kind==='area'))return this.advanceInterval(d,minutes,id);
+        if(nextWildlifeEncounterMinute(d,this,d.get('state','minute'))===Infinity&&!this.rules.settlementTrade&&!this.rules.worldClock&&!factionClockRules(this).length&&!festivalCalendar(this).length&&!this.world.npcs.some(n=>n.tier==='full')&&!Object.values(d.get('state','effects')??{}).some(e=>e.kind==='area'))return this.advanceInterval(d,minutes,id);
         if(!minutes)return this.advanceInterval(d,0,id);
         const patchStart=d.patches.length,npcsBefore=d.get('state','npcs');
         while(d.get('state','minute')<end){
             const now=d.get('state','minute'),state=d.get('state');
-            const next=Math.min(end,(Math.floor(now/1440)+1)*1440,nextWorldClockMinute(state,now),nextFestivalMinute(state,this,now),nextSettlementTradeMinute(state,this,now),nextNpcCognitionMinute(state,now),nextNpcAutonomyMinute(state,now),nextNpcObligationMinute(state,now),nextMagicAreaMinute(state,now));
+            const next=Math.min(end,(Math.floor(now/1440)+1)*1440,nextWorldClockMinute(state,now),nextFactionClockMinute(state,now),nextFestivalMinute(state,this,now),nextSettlementTradeMinute(state,this,now),nextNpcCognitionMinute(state,now),nextNpcAutonomyMinute(state,now),nextNpcObligationMinute(state,now),nextMagicAreaMinute(state,now),nextWildlifeEncounterMinute(d,this,now));
             this.advanceInterval(d,next-now,id);
         }
         // Intermediate clock boundaries matter to simulation, not to replay.
@@ -276,6 +278,7 @@ export class WorldEngine {
             advanceNpcAutonomy(d,this,before,after,id,{beforeState});
         }
         advanceWorldClocks(d,this,after);
+        advanceFactionClocks(d,this,after);
         advanceFestivals(d,this,after);
         for(const[key,row]of Object.entries(d.get('state','records')??{}))if(key.startsWith('local_actor_position:')){
             const actor=d.get('state',row.subject?.startsWith('npc_')?'npcs':'creatures',row.subject);
@@ -299,6 +302,7 @@ export class WorldEngine {
                 }
             }
         }
+        if(after===nextWildlifeEncounterMinute(d,this,before))settleWildlifeEncounter(d,this,wildlifeEncounterAt(d,this,d.get('state','location'),after),id);
     }
     time(d,args,id) {
         if(d.get('state','player','status')==='死亡')this.revive(d,{},id);
@@ -320,7 +324,7 @@ export class WorldEngine {
                 d.set(['state','player','mp'],Math.min(p.maxMp,p.mp+Math.floor(minutes/30)));
             }
         }
-        return {elapsed:minutes,date:this.calendar(d.get('state','minute')).text};
+        return {elapsed:minutes,date:this.calendar(d.get('state','minute')).text,...(!this.replaying||this.replayResult?.wildlifeEncounterVersion===1?{wildlifeEncounterVersion:1,encounters:wildlifeEncounterView(d.document)}:{})};
     }
     route(from,to,mode,minute,seed='default-campaign',weatherCache=null,graphCache=null) {
         const distances=new Map([[from,0]]), movingTimes=new Map([[from,0]]), previous=new Map(),costs=new Map([[from,0]]);
@@ -353,21 +357,33 @@ export class WorldEngine {
             }
         }
         if(!distances.has(to))throw new Error('没有当前季节可通行的路线，不能瞬移');
-        const edges=[],segments=[];let cursor=to;while(cursor!==from){const step=previous.get(cursor);edges.unshift(step.edge.id);segments.unshift({id:step.edge.id,minutes:movingTimes.get(cursor)-movingTimes.get(step.node)});cursor=step.node;}
+        const edges=[],segments=[];let cursor=to;while(cursor!==from){const step=previous.get(cursor);edges.unshift(step.edge.id);segments.unshift({id:step.edge.id,from:step.node,to:cursor,minutes:movingTimes.get(cursor)-movingTimes.get(step.node),elapsed:distances.get(cursor),moving:movingTimes.get(cursor),cost:costs.get(cursor)});cursor=step.node;}
         const moving=movingTimes.get(to),daysRest=this.rules.weather||mode==='boat'?0:Math.floor((moving-1)/this.rules.travel.dailyTravelMinutes)*(1440-this.rules.travel.dailyTravelMinutes);
         const result={minutes:distances.get(to)+daysRest,movingMinutes:moving,cost:costs.get(to),edges};
-        return this.airDraft?adjustAirTravel(this.airDraft,this,result,mode,{minute,from,segments,sail:this.npcObligationAction?.tool==='move'}):result;
+        const adjusted=this.airDraft?adjustAirTravel(this.airDraft,this,result,mode,{minute,from,segments,sail:this.npcObligationAction?.tool==='move'}):result;
+        if(this.npcObligationAction?.tool==='move')Object.defineProperty(adjusted,'checkpoints',{value:segments.map((segment,index)=>{
+            const rest=this.rules.weather||mode==='boat'?0:Math.floor((segment.moving-1)/this.rules.travel.dailyTravelMinutes)*(1440-this.rules.travel.dailyTravelMinutes);
+            const prefix={minutes:segment.elapsed+rest,movingMinutes:segment.moving,cost:segment.cost,edges:edges.slice(0,index+1)};
+            return{location:segment.to,route:this.airDraft?adjustAirTravel(this.airDraft,this,prefix,mode,{minute,from,segments:segments.slice(0,index+1),sail:this.npcObligationAction?.tool==='move'}):prefix};
+        })});
+        return adjusted;
     }
     move(d,args,id) {
         for(const target of ['player',...d.get('state','player','companions')??[]])assertMindAwake(d,target);
         for(const target of ['player',...d.get('state','player','companions')??[]])assertWaterEarthMovement(d,target);
         for(const target of ['player',...d.get('state','player','companions')??[]])assertLightMovement(d,this,target);
-        const destination=this.resolve(args.destination),old=d.get('state','location');
+        let destination=this.resolve(args.destination);const requestedDestination=destination,old=d.get('state','location');
         if(old===destination)return {destination,elapsed:0};
-        const route=this.route(old,destination,args.mode??'walk',d.get('state','minute'),d.document.randomSeed);
-        for(const edgeId of route.edges){const edge=this.world.routes.find(r=>r.id===edgeId);assertMindSpacePath(d,this,edge.from,[0,0],[0,0],{destination:edge.to,eventId:id,signal:true});}
+        let route=this.route(old,destination,args.mode??'walk',d.get('state','minute'),d.document.randomSeed);
         const local=d.get('state','records','local_player_position'),mudMinutes=waterEarthWalkMinutes(d,this,local?.location===old?local.point:[0,0],local?.location===old?local.point:[0,0]);
+        const attempts=[];let encounterAttempt=null;
+        for(const checkpoint of route.checkpoints){
+            const attempt=wildlifeEncounterAt(d,this,checkpoint.location,d.get('state','minute')+checkpoint.route.minutes+mudMinutes);
+            if(attempt)attempts.push(attempt);
+            if(attempt?.kind){encounterAttempt=attempt;destination=checkpoint.location;route=checkpoint.route;break;}
+        }
         route.minutes+=mudMinutes;
+        for(const edgeId of route.edges){const edge=this.world.routes.find(r=>r.id===edgeId);assertMindSpacePath(d,this,edge.from,[0,0],[0,0],{destination:edge.to,eventId:id,signal:true});}
         assertFireTravel(d,this,route);
         const entered=new Set(route.edges.flatMap(edgeId=>{const edge=this.world.routes.find(row=>row.id===edgeId);return[edge.from,edge.to];}));entered.delete(old);
         for(const place of entered)assertLocationAccess(d,this,place,{authorization:args.authorization,companions:d.get('state','player','companions')??[],arrivalMinute:d.get('state','minute')+route.minutes});
@@ -390,6 +406,8 @@ export class WorldEngine {
         if(areaTravel)d.set(['state','records','magic_area_transit'],{category:'magic_area_transit',subjects:['player',...d.get('state','player','companions')],start:d.get('state','minute'),arrival:this.npcObligationAction.arrivalMinute,source:id});
         strainCare(d,this,'player',route.movingMinutes);
         this.advance(d,route.minutes,id);
+        let encounter=null;
+        for(const attempt of attempts){const seen=settleWildlifeEncounter(d,this,attempt,id);if(seen)encounter=seen;}
         if(areaTravel)d.remove(['state','records','magic_area_transit']);
         const experience=discovered?{experience:0}:milestone(d,this,'discovery',destination,id);
         for(const [key,obligation]of Object.entries(d.get('state','obligations')))if(obligation.type==='带路'&&obligation.destination===destination&&obligation.status==='进行中'){
@@ -397,7 +415,14 @@ export class WorldEngine {
             const stillGuiding=Object.values(d.get('state','obligations')).some(row=>row.type==='带路'&&row.promisor===obligation.promisor&&row.status==='进行中');
             if(!stillGuiding&&this.byId.get(obligation.promisor)?.schedule)d.set(['state','player','companions'],d.get('state','player','companions').filter(npc=>npc!==obligation.promisor));
         }
-        return {destination,...route,...experience,companions:d.get('state','player','companions')};
+        // Daily ecology or migration can remove a predicted animal while travelling.
+        // A vanished lead must not strand the player at an otherwise unrequested stop.
+        if(encounterAttempt&&!encounter&&destination!==requestedDestination&&d.get('state','location')===destination&&d.get('state','player','status')==='正常'){
+            const rest=this.move(d,{...args,destination:requestedDestination},id);
+            return{...rest,minutes:route.minutes+rest.minutes,movingMinutes:route.movingMinutes+rest.movingMinutes,cost:route.cost+rest.cost,
+                edges:[...route.edges,...rest.edges],experience:experience.experience+(rest.experience??0),...(route.airMinutes||rest.airMinutes?{airMinutes:(route.airMinutes??0)+(rest.airMinutes??0)}:{})};
+        }
+        return {destination,...route,...experience,companions:d.get('state','player','companions'),...(!this.replaying||this.replayResult?.wildlifeEncounterVersion===1?{wildlifeEncounterVersion:1,requestedDestination,interrupted:Boolean(encounterAttempt)&&destination!==requestedDestination,encounter}: {})};
     }
     turn(d,args,id) {
         if(args.outOfCharacter)return {outOfCharacter:true};

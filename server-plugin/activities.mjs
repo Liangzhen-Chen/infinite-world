@@ -8,7 +8,7 @@ import {projectileAirPenalty}from'./magic-air.mjs';
 import {waterEarthMudPenalty,assertWaterEarthMovement}from'./magic-water-earth.mjs';
 import {assertLightMovement}from'./magic-light.mjs';
 import {milestone,monsterReward}from'./progression.mjs';
-import {manufacture}from'./manufacturing.mjs';
+import {manufacture,registerRecipe}from'./manufacturing.mjs';
 import {repair}from'./repair.mjs';
 import {interactEnvironment,recordLocalContact}from'./environment.mjs';
 import {petAction}from'./pets.mjs';
@@ -24,6 +24,7 @@ import {governanceAction,assertGovernedProject}from'./governance.mjs';
 import {questBoardAction}from'./quest-board.mjs';
 import {businessAction}from'./business.mjs';
 import {festivalAction}from'./festival.mjs';
+import {factionClockAction}from'./faction-clock.mjs';
 import {siteAction}from'./sites.mjs';
 const integer=(value,min=0,max=1e9)=>{if(!Number.isSafeInteger(value)||value<min||value>max)throw new Error(`数值需在${min}到${max}之间`);return value;};
 const requiredText=value=>{if(typeof value!=='string'||!value.trim()||value.length>1200)throw new Error('记录文字无效');return value.trim();};
@@ -151,6 +152,7 @@ export const activities={
         return {project:key,stage,...outcome,note:stage==='打磨'?'研究成果需进入受限实体登记，才能获得规则认可':'原型未被系统承认，不能宣称已学会新法术'};
     },
     settlement(d,args,id){
+        if(args.operation?.startsWith('faction_'))return factionClockAction.call(this,d,args,id);
         if(args.operation?.startsWith('festival_'))return festivalAction.call(this,d,args,id);
         if(args.operation?.startsWith('business_'))return businessAction.call(this,d,args,id);
         if(args.operation?.startsWith('civic_'))return civicAction.call(this,d,args,id);
@@ -174,14 +176,22 @@ export const activities={
     quest(d,args,id){return questBoardAction(d,this,args,id);},
     create(d,args,id){
         const type=args.type,name=requiredText(args.name);
-        if(!['npc','bld','org','item','skill','spell'].includes(type))throw new Error('实体类型无效');
+        if(!['npc','bld','org','item','skill','spell','recipe'].includes(type))throw new Error('实体类型无效');
         try{this.resolve(name);throw new Error('名称已存在，请沿用现有编号');}catch(error){if(!error.message.includes('未登记'))throw error;}
-        const entity={id:`${type}_created_${id.replace(/[^a-zA-Z0-9_-]/g,'_')}`,name,aliases:[],scope:d.get('state','location'),...args.data};
+        let entity={id:`${type}_created_${id.replace(/[^a-zA-Z0-9_-]/g,'_')}`,name,aliases:[],scope:d.get('state','location'),...args.data};
         if(entity.id!==`${type}_created_${id.replace(/[^a-zA-Z0-9_-]/g,'_')}`||entity.name!==name)throw new Error('不能覆盖系统分配的编号或名称');
-        if(['skill','spell'].includes(type)){
-            const project=d.get('state','projects',args.project);if(!project||project.stage!=='打磨')throw new Error('新技能或法术需要完成多日研究');
+        if(['skill','spell','recipe'].includes(type)){
+            const project=d.get('state','projects',args.project);if(!project||project.type!=='研究'||project.stage!=='打磨')throw new Error('新技能、法术或配方需要完成多日研究');
             if(type==='spell')throw new Error('自创法术效果还需按规则目录审查，当前不能直接登记');
-            entity.attribute='智力';entity.profession=null;entity.source=args.project;
+            if(project.result)throw new Error('这个研究项目已经登记成果');
+            const maximum=Math.max(...project.skills.map(skill=>effectiveProficiency(d,this,skill))),stage=Math.floor(maximum/300)-1;
+            if(stage<0)throw new Error('研究相关技能不足以承认成果');
+            entity={id:entity.id,name,aliases:[],scope:d.get('state','location')};
+            if(type==='skill'){
+                Object.assign(entity,{attribute:'智力',profession:null,stage,prerequisites:project.skills,notes:project.concept});
+            }else Object.assign(entity,registerRecipe(d,this,args.data,project,stage));
+            entity.source=args.project;
+            d.set(['state','projects',args.project,'result'],entity.id);
         }
         if(type==='npc'){
             integer(entity.age,0,150);requiredText(entity.occupation);requiredText(entity.notes);

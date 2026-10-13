@@ -112,7 +112,7 @@ test('燕麦从在场粮仓柜台购买，准确入袋及两端钱粮对账后�
     const exactBefore=structuredClone(s.document);
     await assert.rejects(s.call('world_farm',{operation:'buy',settlement:'河湾村',quantity:10,item:'面包'}),/不能替换指定物品/);
     assert.deepEqual(s.document,exactBefore);
-    const bought=await s.turn(5,async()=>[await s.call('world_farm',{operation:'buy',settlement:'河湾村',quantity:10,item:'带壳燕麦'})]);
+    const bought=await s.turn(5,async()=>[await s.call('world_farm',{operation:'buy',settlement:'loc_hw',quantity:10,item:'带壳燕麦'})]);
     assert.equal(bought.after.state.player.coins,150);
     await s.turn(6,async()=>[await s.call('world_move',{destination:'青灯酒馆'})],5);
     const beforeDelivery=s.document;

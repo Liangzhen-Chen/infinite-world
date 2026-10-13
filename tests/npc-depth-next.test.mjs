@@ -1,8 +1,9 @@
+import {yupoFirstEdition,copyWorldFixture} from './fixtures/w1-depth-editions.mjs';
 import test from 'node:test';import assert from 'node:assert/strict';import fs from 'node:fs/promises';import os from 'node:os';import path from 'node:path';
 import {loadWorld} from '../tools/load-world.mjs';import {depthEntries,applyDepthDraft,verifyUnchanged,validateDraft,contextFor,revision} from '../tools/npc-depth-content.mjs';
 import {hashContent,readApprovedContent} from '../tools/content-pipeline.mjs';import {revision as nextRevision} from '../world/design/w1-yupo-depth-next.mjs';
 import {publishVillages} from '../tools/publish-w1-villages.mjs';import {WorldEngine} from '../server-plugin/engine.mjs';import {npcContext,selectNpcSeedMemories} from '../server-plugin/npc-memory.mjs';
-const world=await loadWorld(),root='world/drafts/w1/yupo-depth-next',read=async name=>JSON.parse(await fs.readFile(`${root}/${name}.json`,'utf8'));
+const world=await yupoFirstEdition(),root='world/drafts/w1/yupo-depth-next',read=async name=>JSON.parse(await fs.readFile(`${root}/${name}.json`,'utf8'));
 const base=await read('base'),entries=depthEntries(base,'yupo-depth-next'),drafts=await readApprovedContent(root,entries,{contextFor:e=>contextFor(e,world),revision:nextRevision});
 test('四人补充只改深度字段，既有关系数值、目标与旧私有记忆不变',()=>{
  assert.equal(entries.length,4);assert.equal(drafts.length,4);
@@ -31,7 +32,7 @@ test('批次扩展不改变旧六人审核指纹，累计费用仍受原总账�
  assert.throws(()=>depthEntries(base,'unregistered'),/未登记/);
 });
 test('原入口逐批验证，重复不重写，篡改新一批不能覆写人物钱物',async t=>{
- const dir=await fs.mkdtemp(path.join(os.tmpdir(),'fields-depth-next-'));t.after(async()=>{assert.ok(path.resolve(dir).startsWith(path.resolve(os.tmpdir())+path.sep));await fs.rm(dir,{recursive:true,force:true});});await fs.cp('world',dir,{recursive:true});
+ const parent=await fs.mkdtemp(path.join(os.tmpdir(),'fields-depth-next-')),dir=await copyWorldFixture(parent);t.after(async()=>{assert.ok(path.resolve(dir).startsWith(path.resolve(os.tmpdir())+path.sep));await fs.rm(parent,{recursive:true,force:true});});await fs.writeFile(path.join(dir,'people/baseline.json'),JSON.stringify(world.npcs));await fs.unlink(path.join(dir,'drafts/w1/depth-publication.json'));for(const directory of ['yp-depth-rest','wt-depth','lq-depth','sb-depth'])await fs.rm(path.join(dir,'drafts/w1',directory),{recursive:true,force:true});
  const first=await publishVillages({root:dir,publish:true});assert.equal(first.amendedNpcIds.length,10);assert.deepEqual(first.changed,[]);
  const file=path.join(dir,'people/baseline.json'),rows=JSON.parse(await fs.readFile(file,'utf8')),p=rows.find(n=>n.id===entries[0].id);p.coins=9;p.inventory={item_bread:0};await fs.writeFile(file,JSON.stringify(rows));assert.deepEqual((await publishVillages({root:dir,publish:true})).changed,[]);
  const saved=await fs.readFile(file,'utf8'),recordFile=path.join(dir,root.replace('world/',''),entries[0].id+'.json'),record=JSON.parse(await fs.readFile(recordFile,'utf8'));record.draft.knowledge.known.push({fact:'所有人的秘密都知道',source:p.id,reliability:'亲历'});await fs.writeFile(recordFile,JSON.stringify(record));await assert.rejects(publishVillages({root:dir,publish:true}),/审查后内容已改变/);assert.equal(await fs.readFile(file,'utf8'),saved);
