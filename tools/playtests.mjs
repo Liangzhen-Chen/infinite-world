@@ -8,6 +8,7 @@ import {digest}from'../server-plugin/storage.mjs';
 import {loadHostPromptProcessor}from'./host-prompt.mjs';
 import {toolSelectionMetrics,playtestAcceptance,playtestExitCode,summarizeMemoryAcceptance}from'./playtest-metrics.mjs';
 import {reviewPlaytest}from'./playtest-review.mjs';
+import {summarizeLanguageAcceptance}from'./playtest-language.mjs';
 import {reviewNpcRequirements,summarizeNpcAcceptance}from'./npc-acceptance.mjs';
 import * as OpenCC from'opencc-js';
 import {execFile}from'node:child_process';
@@ -77,6 +78,7 @@ function summary(){const assertions=results.reduce((n,row)=>n+row.assertions,0),
     toolSelection:toolSelectionMetrics(results,scenarios),
     m2:summarizeNpcAcceptance(results,scenarios,repetitions),
     m3:summarizeMemoryAcceptance(results,scenarios,repetitions),
+    m3Language:summarizeLanguageAcceptance(results,scenarios,repetitions),
     requests:{total:modelCalls.length,settled:requests.length,unknown:modelCalls.filter(row=>row.status==='unknown').length,medianMs:latencies[Math.floor(latencies.length/2)]??null,p95Ms:latencies[Math.min(latencies.length-1,Math.floor(latencies.length*.95))]??null},
     runId,cardId,incrementLimitYuan:increment,budgetFile:client.file,
     modelRoles:Object.fromEntries([...new Set(modelCalls.map(row=>row.role))].map(role=>[role,{calls:modelCalls.filter(row=>row.role===role).length,costUpperYuan:modelCalls.filter(row=>row.role===role).reduce((n,row)=>n+(row.costUpperYuan??row.reservedYuan),0)}])),
