@@ -2277,5 +2277,15 @@
       },
       "source": "2026-10-13 用户“可以改可以改”；docs/待用户确认.md末尾与本次T07执行指令。"
     }
+  ],
+  "sourceAuthorizations": [
+    {
+      "cardId": "T09",
+      "date": "2026-10-13",
+      "parentManifestHash": "f23eb0e7c49f472e75e47fce1946469e6c906a6314e9bf341aa6b77a2bfd3195",
+      "file": "complete-003/speech-source-authorization.json",
+      "hash": "0dab46ec125f72978e183df271a91f61c2a1e98389d0a8ed33fb613b2450b988",
+      "source": "2026-10-13 主会话放行 T09 shared_11 池杉/查悦的发言归属及同步四叶，保留旧记录；费用和次数沿原授权。"
+    }
   ]
 }
