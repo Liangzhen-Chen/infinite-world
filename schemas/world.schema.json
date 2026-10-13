@@ -4084,7 +4084,17 @@
                 "relief",
                 "summon_contract",
                 "mark",
-                "growth"
+                "growth",
+                "area",
+                "anchor_sense",
+                "blink",
+                "teleport",
+                "message",
+                "mind_message",
+                "consent_link",
+                "team_link",
+                "water_earth",
+                "care"
               ]
             },
             "power": {
@@ -4159,7 +4169,15 @@
                 "fuel",
                 "inspect",
                 "dismiss",
-                "extend"
+                "extend",
+                "seal",
+                "survey_water",
+                "slow_flow",
+                "herb_sense",
+                "seedling",
+                "roots",
+                "graft",
+                "preserve_food"
               ]
             },
             "unit": {

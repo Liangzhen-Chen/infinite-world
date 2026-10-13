@@ -120,7 +120,10 @@ test('E14 检定按属性技能计算，给出成功程度，固定事件重复�
 test('E15 施法增长熟练度，持续效果到期移除，不生成永久世界记录',async()=>{
     const c=fresh(),cast=await run(c,'world_cast',{spell:'照明术',target:'木杖'});
     assert.equal(cast.document.state.player.mp,9);assert.ok(cast.document.state.skills.skill_light.proficiency>10);
-    assert.deepEqual(cast.document.state.records,c.state.records);
+    // Living plants and leaking vessels advance with world time. Compare the
+    // same elapsed minute so lighting still cannot add a permanent record.
+    const elapsed=await run(c,'world_time',{minutes:engine.world.spells.find(s=>s.id==='spell_light').minutes},'elapsed');
+    assert.deepEqual(cast.document.state.records,elapsed.document.state.records);
     const later=await run(cast.document,'world_time',{minutes:120},'later');assert.deepEqual(later.document.state.effects,{});
 });
 test('E17 交易物品别名同一编号，双方钱与库存守恒，余额不足原子拒绝',async()=>{
