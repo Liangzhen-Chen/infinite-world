@@ -1,4 +1,5 @@
 import fs from 'node:fs/promises';
+import {getChronicle} from './chronicle.mjs';
 
 // New ui-*.mjs modules export registerUIRoutes({post, readCampaign}).
 // UI requests read the selected campaign world without upgrading or settling it.
@@ -15,6 +16,6 @@ export async function registerUIRoutes(router,{handle,getStore}){
     const names=(await fs.readdir(new URL('./',import.meta.url))).filter(name=>/^ui-.*\.mjs$/.test(name)&&name!=='ui-routes.mjs').sort();
     for(const name of names){
         const module=await import(new URL(name,import.meta.url));
-        if(module.registerUIRoutes)await module.registerUIRoutes({post,readCampaign});
+        if(module.registerUIRoutes)await module.registerUIRoutes({post,readCampaign,readChronicle:req=>getChronicle(getStore(req),req.body.campaignId)});
     }
 }
