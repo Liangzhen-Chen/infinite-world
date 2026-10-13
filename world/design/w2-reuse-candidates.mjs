@@ -2,6 +2,24 @@ import {spellBlueprints} from './spell-blueprints.mjs';
 // These entries use existing consumers only. Targeting adds the existing trusted
 // distance/visibility boundary; it does not infer facts from the model's words.
 export const reuseSpellIds=['spell_fire_03','spell_fire_08','spell_fire_11','spell_fire_12','spell_water_01','spell_water_02','spell_water_03','spell_water_04','spell_water_06','spell_water_12','spell_earth_11','spell_mind_05','spell_mind_10','spell_summon_04'];
+// Source references remain separate from the audited spell entry: adding a
+// book must not invalidate the existing prose/context review fingerprint.
+export const reuseLearningReferences = [
+ {spell:'spell_fire_03',book:'item_book_w2_reuse_basic'},
+ {spell:'spell_fire_08',book:'item_book_w2_reuse_middle'},
+ {spell:'spell_fire_11',book:'item_book_w2_reuse_advanced'},
+ {spell:'spell_fire_12',book:'item_book_w2_reuse_advanced'},
+ {spell:'spell_water_01',book:'item_book_w2_reuse_basic'},
+ {spell:'spell_water_02',book:'item_book_w2_reuse_basic'},
+ {spell:'spell_water_03',book:'item_book_w2_reuse_basic'},
+ {spell:'spell_water_04',book:'item_book_w2_reuse_basic'},
+ {spell:'spell_water_06',book:'item_book_w2_reuse_middle'},
+ {spell:'spell_water_12',book:'item_book_w2_reuse_advanced'},
+ {spell:'spell_earth_11',book:'item_book_w2_reuse_advanced'},
+ {spell:'spell_mind_05',book:'item_book_w2_reuse_middle'},
+ {spell:'spell_mind_10',book:'item_book_w2_reuse_advanced'},
+ {spell:'spell_summon_04',book:'item_book_w2_reuse_basic'},
+];
 export function reuseSpellCandidates(){return spellBlueprints().filter(s=>reuseSpellIds.includes(s.id)).map(s=>{
  const targeting=s.effectSpec.kind==='damage'?{lineOfSight:true}:s.effectSpec.kind==='status'?{lineOfSight:true,...(s.mechanism!=='fear'?{consent:'support_magic'}:{}),...(s.school==='精神'?{permit:'mental_magic'}:{})}:null;
  return {...s,...(targeting?{targeting}:{}),...(s.mechanism==='mind_guard'?{effect:'降低已登记的恐惧、错觉与强迫干扰的实际强度；需要本人同意和当地精神施法许可'}:{}),...(s.mechanism==='fear'?{effect:'施加短暂恐惧造成命中损失，守心结可削弱强度；不强迫逃跑或改变决定'}:{})};
