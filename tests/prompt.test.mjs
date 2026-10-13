@@ -10,7 +10,7 @@ import {toolDefinitions}from'../extension/tools.mjs';
 test('新卡与预设来自同一提示源，静态在前、场景在尾，禁用旧世界书与模型回合工具',async()=>{
     const bundle=await loadPromptBundle(),messages=assembleMessages(bundle,[{role:'user',content:'住一晚'}],'现在九点');
     assert.equal(messages[0].content,bundle.constitution);assert.equal(messages.at(-1).content,'现在九点');
-    assert.equal(messages.filter(row=>row.name==='example_assistant').length,6);
+    assert.equal(messages.filter(row=>row.name==='example_assistant').length,9);
     assert.equal(messages.filter(row=>row.role==='tool').length,1);
     assert.doesNotMatch(messages.map(row=>row.content).join('\n'),/undefined|world_commit|world_roll|再生者/);
     assert.equal(bundle.card.data.extensions.world,'');assert.equal(bundle.card.data.character_book,undefined);
@@ -18,6 +18,7 @@ test('新卡与预设来自同一提示源，静态在前、场景在尾，禁�
     const preset=presetFor(bundle);assert.equal(preset.show_thoughts,true);assert.equal(preset.function_calling,true);
     assert.ok(isOutOfCharacter('  （场外）看看余额'));assert.equal(isOutOfCharacter('我问场外有什么'),false);
     assert.equal(bundle.budget.exact,false);
+    assert.ok(bundle.budget.estimatedTokens<=11800,`T98静态提示加工具估算 ${bundle.budget.estimatedTokens} token`);
 });
 
 test('酒馆事件注入与试玩共用相同调用示例，重复事件不重复注入，示例不改玩家历史',async()=>{
