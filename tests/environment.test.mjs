@@ -16,21 +16,22 @@ const seed=JSON.parse(await fs.readFile('tests/fixtures/legacy/seed.json','utf8'
 const operations=['condense','clean_water','sense_water','irrigate','clear_silt','soil_water'];
 async function setup(){
     const world=withWaterEnvironment(await loadWorld()),bones=spellBlueprints().filter(row=>operations.includes(row.mechanism));
-    for(const bone of bones){world.spells.push(bone);world.skills.push({id:bone.skill,name:bone.name,attribute:'精神',profession:'profession_mage'});}
+    // Publication now supplies these IDs; keep the published entries when present.
+    for(const bone of bones){if(!world.spells.some(row=>row.id===bone.id))world.spells.push(bone);if(!world.skills.some(row=>row.id===bone.skill))world.skills.push({id:bone.skill,name:bone.name,attribute:'精神',profession:'profession_mage'});}
     const engine=new WorldEngine(world),document=engine.initialFromLegacy(seed,'environment-test');
     // This suite isolates the existing water mechanics at registered 70% humidity;
     // generated outdoor humidity is exercised separately by weather.test.mjs.
     document.state.weather.loc_hw_dock={humidityPercent:70};
     document.state.location='loc_hw_dock';document.state.player.level=60;document.state.player.mp=500;document.state.player.maxMp=500;
     document.state.inventory.item_resin={quantity:4,quality:'木',durability:100,weight:0.1};
-    // Isolated rule fixtures. These do not claim the unpublished spells can already be acquired in play.
+    // Isolate casting from the separate acquisition and learning tests.
     for(const bone of bones){document.state.spells[bone.id]={source:{type:'fixture'}};document.state.skills[bone.skill]={proficiency:120,daily:{},breakthroughs:[]};}
     const run=async(c,tool,args,id)=>{const out=await engine.reduce(c,{tool,args,eventId:id});return{document:applyPatches(c,out.patches),result:out.result};};
     const spell=operation=>bones.find(row=>row.mechanism===operation).id;
     return{world,engine,document,run,spell};
 }
 function state(c,world,id){return c.state.records[`physical_feature:${id}`]?.state??world.locations.flatMap(p=>p.features??[]).find(f=>f.id===id).state;}
-function change(c,world,id,values){c.state.records[`physical_feature:${id}`]={category:'physical_feature',id,state:{...state(c,world,id),...values}};}
+function change(c,world,id,values){const location=world.locations.find(row=>row.features?.some(feature=>feature.id===id)).id;c.state.records[`physical_feature:${id}`]={category:'physical_feature',id,location,state:{...state(c,world,id),...values}};}
 async function cast(run,c,spell,target,success=true,args={}){
     for(let i=0;i<100;i++){
         const id=`water_fixture_${i}`,out=await run(c,'world_cast',{spell,target,...args},id);
@@ -113,7 +114,8 @@ test('法术失败仍耗魔时间与练习但不修改水，许可施法中到�
     const{world,document,run,spell}=await setup(),failed=await cast(run,document,spell('condense'),'公用水盏',false);
     assert.equal(failed.document.state.player.mp,499);assert.equal(failed.document.state.minute,document.state.minute+1);
     assert.equal(state(failed.document,world,'feature_hw_cup').waterMl,0);
-    assert.equal(Object.values(failed.document.state.records).filter(row=>row.category==='physical_feature').length,0);
+    // Other registered processes may initialize their own records as time advances.
+    assert.equal(failed.document.state.records['physical_feature:feature_hw_cup'],undefined);
     const far=structuredClone(document);far.state.records.local_player_position={category:'local_position',location:'loc_hw_dock',point:[10,0]};
     await assert.rejects(cast(run,far,spell('condense'),'公用水盏'),/距离/);
     const approached=await run(far,'world_environment',{operation:'approach',target:'公用水盏'},'walk_to_cup');
@@ -160,13 +162,17 @@ test('环境动态状态经重启、导出导入与删消息回滚一致，改�
 
 test('环境骨架可重复构建且保留其他对象，坏引用、超容量、重复名字与越界法术拒绝',async()=>{
     const{world}=await setup();assert.equal(validateWorld(world).ok,true);assert.deepEqual(withWaterEnvironment(withWaterEnvironment(world)),withWaterEnvironment(world));
-    const changes=[w=>w.locations.find(x=>x.id==='loc_hw_dock').features[0].state.waterMl=60001,
-        w=>w.locations.find(x=>x.id==='loc_hw_dock').features[2].links.source='feature_missing',
-        w=>w.locations.find(x=>x.id==='loc_hw_dock').features[2].links.source='feature_hw_silt_heap',
-        w=>w.locations.find(x=>x.id==='loc_hw_dock').features[2].state.loosenedSiltGrams=9000,
-        w=>w.locations.find(x=>x.id==='loc_hw_dock').features[1].name='渡口取水凹池',
+    // Later batches insert other features before these water fixtures.
+    const feature=(w,id)=>w.locations.find(x=>x.id==='loc_hw_dock').features.find(x=>x.id===id);
+    const changes=[w=>feature(w,'feature_hw_pool').state.waterMl=60001,
+        w=>feature(w,'feature_hw_channel').links.source='feature_missing',
+        w=>feature(w,'feature_hw_channel').links.source='feature_hw_silt_heap',
+        w=>feature(w,'feature_hw_channel').state.loosenedSiltGrams=9000,
+        w=>feature(w,'feature_hw_cup').name='渡口取水凹池',
         w=>w.spells.find(x=>x.mechanism==='irrigate').effectSpec.power=21,
-        w=>w.spells.find(x=>x.mechanism==='condense').effectSpec.unit='litre'];
+        w=>w.spells.find(x=>x.mechanism==='condense').effectSpec.unit='litre',
+        w=>w.locations.find(x=>x.id==='bld_bs_dock').parent='loc_bs_yupo',
+        w=>w.locations.find(x=>x.id==='loc_bs_hebu').parent='loc_bs_hebu'];
     for(const alter of changes){const bad=structuredClone(world);alter(bad);assert.equal(validateWorld(bad).ok,false);}
 });
 
