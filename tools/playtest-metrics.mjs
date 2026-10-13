@@ -102,3 +102,40 @@ export function playtestAcceptance(report,milestone=report.milestone){
         report.toolSelection?.complete===true&&report.toolSelection.hasSelectedAction===true:report.releaseLedgerPass===true;
 }
 export const playtestExitCode=report=>playtestAcceptance(report)?0:1;
+
+// M1 needs 200 real turns and is deliberately outside this short preparation.
+export function summarizeMemoryAcceptance(results,scenarios,repetitions=1){
+    const ids=Array.from({length:8},(_,i)=>`M${i+2}`);
+    const rows=ids.map(id=>{
+        const selected=scenarios.filter(s=>s.requirements?.includes(id));
+        const sessions=[];
+        for(const scenario of selected)for(let attempt=1;attempt<=repetitions;attempt++){
+            const matches=results.filter(r=>r.id===scenario.id&&r.attempt===attempt),result=matches.length===1?matches[0]:null;
+            const planned=scenario.turns.map((step,index)=>({step,index})).filter(({step})=>!step.requirements||step.requirements.includes(id));
+            const turns=planned.map(({step,index})=>{
+                const found=result?.turns?.filter(turn=>turn.index===index),turn=found?.length===1?found[0]:null;
+                const evaluated=step.assertions.map(rule=>turn?.assertions?.find(row=>isDeepStrictEqual(definition(row),rule)));
+                const measured=turn?.input===step.input&&evaluated.length>0&&evaluated.every(Boolean);
+                return {index,measured,pass:measured&&!turn.errors?.length&&evaluated.every(row=>row.pass===true)};
+            });
+            const complete=Boolean(result&&result.turns?.length===scenario.turns.length&&
+                result.turns.every((turn,index)=>turn.index===index&&turn.input===scenario.turns[index].input));
+            const measured=complete&&turns.length>0&&turns.every(turn=>turn.measured);
+            sessions.push({id:scenario.id,attempt,measured,pass:measured&&turns.every(turn=>turn.pass),turns});
+        }
+        const measured=sessions.length>0&&sessions.every(s=>s.measured);
+        return {id,measured,pass:measured&&sessions.every(s=>s.pass),sessions};
+    });
+    const selected=scenarios.filter(s=>s.requirements?.some(id=>ids.includes(id)));
+    const relevant=results.filter(r=>selected.some(s=>s.id===r.id));
+    const realModelMeasured=relevant.length>0&&relevant.every(r=>r.turns?.every(turn=>
+        turn.operation==='deleteLast'||turn.requests?.length>0&&turn.requests.every(request=>
+            typeof request.model==='string'&&typeof request.timestamp==='string'&&Number.isFinite(request.latencyMs)&&
+            Number.isFinite(request.usage?.prompt_tokens)&&Number.isFinite(request.usage?.completion_tokens))));
+    const complete=rows.every(row=>row.measured),passed=rows.filter(row=>row.pass).length;
+    const reviewsComplete=relevant.length>0&&relevant.every(r=>r.review?.complete===true&&r.consistencyPass===true);
+    return {scope:'M2–M9 短程HTTP证据；离线准备不计真实模型验收，M1长程另验',complete,measured:rows.filter(r=>r.measured).length,
+        passed,unmeasured:rows.filter(r=>!r.measured).map(r=>r.id),realModelMeasured,reviewsComplete,
+        thresholdReached:complete&&passed===ids.length&&realModelMeasured&&reviewsComplete,
+        longMemory:{id:'M1',measured:false,pass:false,reason:'须200个连续真实回合后追问第10回合，短程与合成历史不替代'},rows};
+}
