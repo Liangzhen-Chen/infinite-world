@@ -131,12 +131,7 @@ N1–N17至少12项完整有效且≥90%，N6/N16零泄漏，N12真实盲辨，N
 
 ### T63 已完成：审查请求与示例区分可见细节、否认知情和补造经历；合并后静态提示超限，同会话精简到35956字节（上限48000）；专项37/CORE40/prompt全过，0模型，真实效果由T64复验。
 
-### T64 M2真实复验【真实模型；执行中】
-
-结果：在修订后的完整提示栈上重跑原十场，按原门槛给出通过或明确未通过。
-可改：仅docs/测试报告/M2-recheck/及新run生成物；复用T60的preflight.mjs，只适配父记录、来源、额度和入口。代码和旧报告锁定。
-验收：`node docs/测试报告/M2-recheck/preflight.mjs --zero-model`、CORE；然后`node tools/playtests.mjs --run-dir docs/测试报告/M2-recheck --run-id m2-recheck-001 --card M2-recheck --increment 8 --repeat 1 --parallel 4 --milestone M2 --only guide,npc_courier,npc_delivery,npc_home_visit,npc_offscreen,npc_private,npc_quest_social,npc_shove,npc_social,npc_voices --host-installation F:/dnd/SillyTavern --budget-proof docs/测试报告/M2-recheck/preflight.mjs`。
-模型：全角色合计≤450次、新增≤8元（初探≤1元含在内）；保守单轮20.42836376+8=28.42836376<30。失败场次每场最多复测一次。门槛不变：N1–N17至少12项完整有效且≥90%，N6/N16零泄漏，N12真实盲辨，N17十天自主行动，账本/时间/存档100%。规模约150–250行适配。
+### T64 已执行，未通过：九场完整（npc_private 4/8），账本149/170，有效N 12项但整合判定0/12，工具漏5错3，审查标记泄漏5，N12盲辨7/9；324次调用6.60625216元。证据在docs/测试报告/M2-recheck/。第二次分析交Astra（M2-fix-planner-002），修复后再做第三轮。
 
 ### 法术150/首领40第一批（2026-10-13主会话审定，来源：Astra草案W2W4-planner-001）
 
