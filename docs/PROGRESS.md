@@ -193,3 +193,4 @@ M2修复批审定写入PLAN（T61–T64）：Astra草案F4工具机会标注并�
 2026-10-13 T95合入，主线CORE与相关共74/74过：M2逐N判定去连坐，T64原始结果离线重判恢复7项，整体验收仍拒绝（账本149/170、盲辨7/9、N5/N17）。worktree里playtest-runner五项失败是worktree缺SillyTavern依赖，主线通过。
 2026-10-13 合入T96（含燕麦委托预期修正，location字段来自T40属有意行为）、T97、T89、T69，主线CORE40过。正式法术61条。九个机制族全部完成。
 2026-10-13 主线已知失败：tests/magic-*.test.mjs共约26项（growth 11、water-earth 9、air 4、light 1、mind-space 1），T69之前即存在，属各族卡之间的累积回归，派T100修；w2-reuse-publication两项因目录数写死，T69原会话在修。教训：每合三张卡要把同一领域的测试文件整组跑一次，不能只跑CORE。
+2026-10-13 T69旧发布测试修正合入；w2-reuse-learning里三处写死31由主会话改为与正式目录一致。法术发布相关测试全过。
