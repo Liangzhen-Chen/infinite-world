@@ -96,3 +96,11 @@ export function applyNpcRelation(d,engine,args,eventId){
  if(dimensions.some(key=>args[`${key}Delta`]!==undefined)||args.favor!==undefined)throw new Error('关系幅度由实际事件确定，不能手填加分或欠情');
  return {npc:from,from,to,changes:candidates.map(e=>applyEvidence(d,engine,e)),relationship:relationView(engine,d.get('state'),from,to)};
 }
+export function recordFestivalRelations(d,engine,event){
+ if(event.status!=='held'||d.get('state','records',event.id)?.resultEvent!==event.resultEvent)return;
+ for(const from of event.participants)for(const to of event.participants){
+  if(from===to)continue;
+  register(d,engine,{key:`${event.resultEvent}:${from}:${to}`,sourceEvent:event.resultEvent,eventType:'共同参加节俗',
+   from,to,minute:event.resolvedAt,delta:{trust:1,respect:1}});
+ }
+}

@@ -8,6 +8,8 @@ import {npcContext}from'./npc-memory.mjs';
 import {relationView}from'./npc-relations.mjs';
 import {chronicleContext}from'./chronicle.mjs';
 import {settlementScene}from'./settlement-profile.mjs';
+import {festivalScene}from'./festival.mjs';
+import {worldClockScene}from'./world-clock.mjs';
 import {selectNpcRumors,assertRumorConversation}from'./npc-rumors.mjs';
 
 const text=(value,limit=200)=>typeof value==='string'?value.replace(/\s+/g,' ').slice(0,limit):'';
@@ -32,6 +34,8 @@ export function sceneCard(engine,document,query='',index=null){
     const destinations=[...new Set([...requested,...adjacent])].slice(0,12);
     if(destinations.length)parts.splice(2,0,`【地点索引】${destinations.map(id=>`${name(id)}（${id}）`).join('；')}`);
     const localProfile=settlementScene(engine,document);if(localProfile)parts.push(localProfile);
+    const festivals=festivalScene(engine,document);if(festivals)parts.push(`【本地节俗结果】${festivals}`);
+    const clock=worldClockScene(engine,document);if(clock)parts.push(`【本地粮价】${clock}`);
     const rumorTopics=[];
     for(const [id]of present){
         const d={get:(...p)=>p.reduce((v,k)=>v?.[k],document),document};
