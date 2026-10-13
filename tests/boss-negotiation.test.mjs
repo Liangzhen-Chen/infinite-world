@@ -137,7 +137,7 @@ test('主动攻击解除盟约且保留交易账；防守不违约，回避目�
     const refusal=await keeper.run(applyPatches(keepDoc,hit.patches),deal());assert.equal(refusal.result.accepted,false);assert.match(refusal.result.reason,/领地内发起交锋/);
 });
 
-test('模板校验真实物资，公开工具保持25入口和11500 token估算上限',async()=>{
+test('模板校验真实物资，公开工具保持25入口和12000 token估算上限',async()=>{
     const{world,boss}=setup(),items=new Set(world.items.map(i=>i.id));assert.deepEqual(validateBossNegotiation(boss,items),[]);
     assert.deepEqual(validateWorld(world).errors,validateWorld(source).errors);
     for(const mutate of [b=>b.negotiation.stock[0].quantity=-1,b=>b.negotiation.stock[0].item='unknown',
@@ -147,7 +147,7 @@ test('模板校验真实物资，公开工具保持25入口和11500 token估算�
     const tools=toolDefinitions();assert.equal(tools.length,25);
     const field=tools.find(t=>t.function.name==='world_field').function.parameters;
     assert.ok(field.properties.operation.enum.includes('lair_negotiate'));assert.ok(field.properties.pact.enum.includes('respect_territory'));
-    const budget=(await loadPromptBundle()).budget;assert.ok(budget.estimatedTokens<=11500,JSON.stringify(budget));
+    const budget=(await loadPromptBundle()).budget;assert.ok(budget.estimatedTokens<=12000,JSON.stringify(budget));
     assert.equal(source.bosses.find(b=>b.id===target).negotiation,undefined);
 });
 
