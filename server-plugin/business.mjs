@@ -20,7 +20,7 @@ function party(d,engine,name,{consent=false,minutes=0,service=false}={}){
     engine.assertNpcObligationAction(d,['player',id],{minutes});engine.assertNpcAutonomyAction(d.get('state'),['player',id],{minutes});
     if(service)assertNpcService(d,engine,id,'trade',minutes);
     else for(let at=d.get('state','minute');at<d.get('state','minute')+Math.max(1,minutes);){
-        const slot=scheduleAt(engine,id,at);if(!slot)break;
+        const slot=scheduleAt(engine,id,at,d.get('state'));if(!slot)break;
         if(slot.location!==row.location||/睡眠|睡觉|熟睡/.test(slot.activity))throw Error('对方作息没有清醒且在场的履约窗口');at=slot.until;
     }
     return id;
@@ -35,8 +35,8 @@ function quote(d,engine,seller,buyer,item,unitPrice){
 function workWindow(d,engine,worker,minutes){
     if(engine.byId.get(worker)?.tier!=='full'||engine.byId.get(worker)?.flags?.minor||engine.byId.get(worker)?.age<18)throw Error('雇工须为现有成年完整人物');
     for(let at=d.get('state','minute');at<d.get('state','minute')+minutes;){
-        const slot=scheduleAt(engine,worker,at);
-        if(!slot||slot.location!==d.get('state','location')||slot.services.length||!/休息|歇|闲|散步|聊天/.test(slot.activity)||/睡眠|睡觉|熟睡/.test(slot.activity))throw Error('雇工没有完整空档，不得占用原工作或休息睡眠');
+        const slot=scheduleAt(engine,worker,at,d.get('state'));
+        if(!slot||slot.production===false||slot.location!==d.get('state','location')||slot.services.length||!/休息|歇|闲|散步|聊天/.test(slot.activity)||/睡眠|睡觉|熟睡/.test(slot.activity))throw Error('雇工没有完整空档，不得占用原工作或休息睡眠');
         at=slot.until;
     }
 }
