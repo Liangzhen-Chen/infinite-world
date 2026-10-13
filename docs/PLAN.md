@@ -322,6 +322,17 @@ N1–N17至少12项完整有效且≥90%，N6/N16零泄漏，N12真实盲辨，N
 
 并入 T142，改它的联系选题：榆根里与远方木精联邑互通育苗和林界知识，裂炉营及灰棚集连接兽人诸部的矿货路线，苔灯坞与回汐埠通过猎道交换接触砾耳所属社会。远方仍只作九省纲要，近郊六处各自独立，不把联络地变成远方首都，也不移动砾耳四十八人与沉星七人来充人口。
 
+### T163 二次回归修复【零模型；待Codex额度恢复】
+
+来由：2026-10-13晚主线全量测试1524项中22项失败；T93合入后重跑相关15个文件，141项中19项失败。人口已稳定在251完整档/500名册，可以一次清掉。
+结果：`npm test`全部通过。
+清单与初判（逐条先跑一次确认，过期预期更新预期并写明原因，行为被弄坏的修行为，不删测试）：
+- 写死旧数量：npc-depth-existing:35、npc-depth-sb:30、npc-depth-wt:23与:214（251!==152）；village-rumor-access:45（传闻52!==40）；festival:32（节俗5!==4）；w1-hewan:14（河湾口径深比较）；w1-villages-publish两项、w1-village-profiles一项（冻结名册不匹配）。
+- 疑似真实问题：magic-message:146（未登记spell_message_mark）；npc-profile-publication:57（npc_bs_001_2.default作息地点不存在）；npc-publication-increments:41（聚落责任人不符：loc_bs/npc_hw_yanzhe）；retrieval:67（四村公开资料检索命中“白石镇公共燕麦田年粮产量”）；catalog:60（四村公共目录某字段undefined!==0）；w5-integration一项；npc-depth-sb:60（“另一个人物发布正在提交”，可能是并发锁或测试间互相影响）；npc-depth-lq整文件报错。
+- 负载敏感：performance两项（提示组装门槛150ms，单跑101ms）；m3-consistency-browser一项（浏览器夹具）。
+可改：上述测试及其夹具；server-plugin/、tools/里对应的实现。锁定：正式人物正文、extension/tools.mjs的工具集合（只许压短说明）。
+验收：`node --test tests/*.test.mjs`（在主线目录跑，跑完`git checkout -- docs/测试报告/最新/`）、`node tools/build-world.mjs --release`。浏览器与子进程用例由主会话在沙箱外补跑。模型0。
+
 ### 主线全量回归修复（2026-10-13，全量测试1447项中76项失败；清单与报错在logs/sessions/full-fail-A/B/C.txt）
 
 来由：今天合并五十多张卡，每张只验了自己的测试和CORE，卡与卡之间的影响累积。三张卡按领域分，可并行；都不删测试、不放宽断言——预期因正当变化而过期的更新预期并写明原因，行为被弄坏的修行为。模型0。
