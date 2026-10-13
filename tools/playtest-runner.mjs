@@ -14,6 +14,7 @@ import {generationSettings,generationRequest}from'../extension/generation.mjs';
 import {planNpcAutonomy}from'./npc-autonomy-planner.mjs';
 import {groupHistory,planHistoryWindow}from'../extension/history-window.mjs';
 import {loadHistoryTokenizer}from'./m3-history-tokenizer.mjs';
+import {loadWorld}from'./load-world.mjs';
 
 export async function createPlaytestServer({world,seed,plannerClient,consistencyClient=plannerClient??null,consistencyEnabled=true,directory:persistentDirectory=null}={}){
     const directory=persistentDirectory?path.resolve(persistentDirectory):await fs.mkdtemp(path.join(os.tmpdir(),'fields-playtests-'));await fs.mkdir(directory,{recursive:true});
@@ -30,6 +31,8 @@ export async function createPlaytestServer({world,seed,plannerClient,consistency
 }
 
 export async function runPlaytest({scenario,api,client,bundle,attempt=1,processMessages=messages=>messages,countTokens=null,historyWindow={},session=null,stopOnFailure=false}={}){
+    if(scenario.initial?.requiresSession&&!session)throw new Error(`${scenario.id} 必须先准备隔离 HTTP 会话，不能用新角色代替`);
+    historyWindow={...scenario.historyWindow,...historyWindow};
     const settings=generationSettings(bundle.generation);
     countTokens??=await loadHistoryTokenizer();let historyCursor=structuredClone(session?.historyCursor??null);
     const tools=toolDefinitions(),allowed=new Set(tools.map(row=>row.function.name));
@@ -133,7 +136,7 @@ export async function runPlaytest({scenario,api,client,bundle,attempt=1,processM
             // declared assertion and the actual saved state in the report.
             if(assertionBefore){
                 await fresh();
-                report.assertions.push(...evaluateAssertions(step.assertions??[],{before:assertionBefore,after:view.document,calls:report.calls,reply:report.visible??''}));
+                report.assertions.push(...evaluateAssertions(step.assertions??[],{before:assertionBefore,after:view.document,calls:report.calls,reply:report.visible??'',scene:report.sceneBefore,historyWindow:report.historyWindow}));
                 report.player=view.document.state.player;report.minute=view.document.state.minute;report.location=view.document.state.location;
             }
         }
@@ -149,4 +152,42 @@ export async function runPlaytest({scenario,api,client,bundle,attempt=1,processM
         ledgerPass,consistencyVerified,consistencyPass,consistencyIssues,reviewRequired:!consistencyPass,acceptancePass:ledgerPass&&consistencyPass,
         assertions:assertions.length,passed,ratio:passed/Math.max(1,assertions.length),pass:assertions.length>0&&passed===assertions.length,turns:reports,
         session:{campaignId,chat,history,historyCursor},finalDocument:view.document};
+}
+
+// Deterministic HTTP preparation only; these actions are not model turns or M1 evidence.
+export async function preparePlaytestSession({scenario,api,world,directory}={}){
+    if(!scenario.initial?.requiresSession)return null;
+    if(!['m3_memory','world_upgrade'].includes(scenario.id))throw new Error(`未提供 ${scenario.id} 的会话准备路径`);
+    if(scenario.id==='m3_memory'&&!directory)throw new Error('记忆夹具需要当前隔离HTTP服务器的目录');
+    let source;
+    try{
+        const selected=world??await loadWorld();
+        if(scenario.id==='world_upgrade'){
+            const old=structuredClone(selected);
+            old.version=`${old.version}-m3-old`;old.rules.version=old.version;
+            old.skills[0].description+='；隔离旧版目录。';
+            source=await createPlaytestServer({world:old,consistencyEnabled:false});
+        }else source=await createPlaytestServer({world:selected,directory,consistencyEnabled:false});
+        const sourceApi=source.api;
+        let view=await sourceApi('create',scenario.id==='m3_memory'?{}:{character:{name:'试玩者'}});
+        const campaignId=view.reference.campaignId;let sequence=0;
+        const act=async(tool,args)=>{
+            const anchor=`${scenario.id}-fixture-${sequence++}`;
+            await sourceApi('execute',{campaignId,tool,args,anchor,eventId:anchor,expectedSequence:view.reference.sequence});
+            view=await sourceApi('read',{campaignId});
+        };
+        await act('world_move',{destination:'青灯酒馆'});
+        if(scenario.id==='m3_memory'){
+            await act('world_time',{minutes:2880,activity:'休息'});
+            await act('world_remember',{subject:'林穗',key:'账簿厨房',content:scenario.memoryFact,source:'受控亲历夹具'});
+            await act('world_remember',{subject:'玩家',key:'摘要遗漏',content:'我把旅行笔记取名为雨檐蓝页',source:'亲历'});
+        }else{
+            await act('world_trade',{seller:'林穗',service:'住宿',days:1});
+            await act('world_trade',{seller:'林穗',item:'面包',quantity:1});
+            await act('world_remember',{subject:'玩家',key:'旧版住宿',content:'我在青灯酒馆向林穗付六铜住宿，又花两铜买了一个面包',source:'亲历'});
+        }
+        if(scenario.id==='world_upgrade')view=await api('import',{bundle:await sourceApi('export',{campaignId})});
+        view=await api('read',{campaignId:view.reference.campaignId});
+        return {campaignId:view.reference.campaignId};
+    }finally{await source?.close();}
 }
