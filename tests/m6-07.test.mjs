@@ -10,7 +10,7 @@ import {init} from '../server-plugin/index.mjs';
 import {WorldEngine} from '../server-plugin/engine.mjs';
 import {loadWorld} from '../tools/load-world.mjs';
 import {mapView,routeView,registerUIRoutes} from '../server-plugin/ui-map.mjs';
-import {renderMapPanel,registerMapPanel,zoomBounds,bindMapGestures} from '../extension/map-view.mjs';
+import {renderMapPanel,registerMapPanel,zoomBounds,bindMapGestures,layoutMapLabels} from '../extension/map-view.mjs';
 
 const world=await loadWorld(),engine=new WorldEngine(world);
 const legacy=JSON.parse(await fs.readFile('server-plugin/legacy/seed.json','utf8'));
@@ -117,7 +117,7 @@ test('M6-07 HTTP自动注册与战役隔离，实际获知后出行预览和地�
 });
 
 class Element{
-    constructor(tag,doc){this.tag=tag;this.ownerDocument=doc;this.children=[];this.dataset={};this.attrs={};this.classes=new Set();this.style={};this.classList={add:(...names)=>names.forEach(x=>this.classes.add(x)),contains:name=>this.classes.has(name)};this.isConnected=true;this.listeners=new Map();this.text='';this._value=undefined;}
+    constructor(tag,doc){this.tag=tag;this.ownerDocument=doc;this.children=[];this.dataset={};this.attrs={};this.classes=new Set();this.style={};this.classList={add:(...names)=>names.forEach(x=>this.classes.add(x)),contains:name=>this.classes.has(name),toggle:(name,enabled)=>enabled?this.classes.add(name):this.classes.delete(name)};this.isConnected=true;this.listeners=new Map();this.text='';this._value=undefined;}
     append(...nodes){this.children.push(...nodes);}replaceChildren(...nodes){this.children=nodes;this.text='';}
     set textContent(text){this.text=String(text);this.children=[];}get textContent(){return this.text+this.children.map(child=>child.textContent).join(' ');}
     set className(value){this.classes=new Set(value.split(' '));}get className(){return [...this.classes].join(' ');}
@@ -136,6 +136,24 @@ const choose=async(container,id)=>{const select=find(container,'地图目的地'
 const chat=()=>({chatId:'fixture',chatMetadata:{infinite_fields:reference},saveChat:async()=>{}});
 const data=()=>({reference,...mapView(engine,knowledge())});
 const api=async(_url,body)=>({reference,...routeView(engine,knowledge(),body.destination)});
+
+test('M6-07 屏幕标签避让同坐标、共线及边缘地点，稀疏视图按可见地点适配',()=>{
+    const overlap=(a,b)=>a.x<b.x+b.width&&a.x+a.width>b.x&&a.y<b.y+b.height&&a.y+a.height>b.y;
+    for(const width of [348,474]){
+        const rows=[{id:'river',x:56,y:110,width:100,height:18},{id:'inn',x:56,y:110,width:56,height:18},
+            {id:'mill',x:70,y:110,width:42,height:18},{id:'tower',x:width-56,y:110,width:98,height:18}];
+        const result=layoutMapLabels(rows,{width,height:220});assert.ok(result.every(row=>row.label));
+        for(const [i,row]of result.entries()){
+            assert.ok(row.label.x>=12&&row.label.y>=12&&row.label.x+row.label.width<=width-12&&row.label.y+row.label.height<=208);
+            for(const next of result.slice(i+1)){assert.equal(overlap(row.label,next.label),false);assert.ok(Math.hypot(row.marker.x-next.marker.x,row.marker.y-next.marker.y)>=18);}
+        }
+    }
+    const container=dom(),view=data();view.locations=view.locations.filter(row=>row.id!=='site_beilin_tower');view.routes=view.routes.filter(row=>row.to!=='site_beilin_tower');
+    renderMapPanel(container,view,{api,chatContext:chat()});const svg=find(container,'已知地点地图');assert.ok(svg.classList.contains('map-sparse'));
+    assert.ok(Number(svg.attrs.viewBox.split(' ')[2])<.5);
+    const labels=descendants(container).filter(row=>row.tag==='text');assert.ok(labels.every(row=>row.style.display!=='none'));
+    const before=labels[0].attrs.transform;click(container,'缩小');assert.notEqual(labels[0].attrs.transform,before);
+});
 
 test('M6-07 地图四级切换、SVG迷雾、风险未知、只填输入框及标记保存恢复清除',async()=>{
     const container=dom(),context=chat();let saved;context.saveChat=async()=>{saved=structuredClone(context.chatMetadata);};
@@ -211,6 +229,23 @@ test('M6-07 浏览器：四级地图三类迷雾、鼠标双指缩放、保存�
     await page.route('**/api/plugins/infinite-fields/ui/map',route=>route.fulfill({json:view}));
     await page.route('**/api/plugins/infinite-fields/ui/routes',route=>route.fulfill({json:{reference:ref,...routeView(engine,d,route.request().postDataJSON().destination)}}));
     const report='docs/测试报告/最新/M6-07';await fs.mkdir(report,{recursive:true});
+    const assertLabels=async expected=>{
+        const result=await page.locator('.fields-map-viewport').evaluate(svg=>{
+            const rect=svg.getBoundingClientRect();
+            const labels=[...svg.querySelectorAll('text')].filter(label=>getComputedStyle(label).display!=='none').map(label=>{
+                const box=label.getBoundingClientRect(),matrix=label.getScreenCTM();
+                return {text:label.textContent,left:box.left,top:box.top,right:box.right,bottom:box.bottom,
+                    fontSize:parseFloat(getComputedStyle(label).fontSize)*Math.hypot(matrix.c,matrix.d)};
+            });
+            return {canvas:{left:rect.left,top:rect.top,right:rect.right,bottom:rect.bottom},labels};
+        });
+        if(expected!==undefined)assert.equal(result.labels.length,expected,'所有已知地点的标签应可读');
+        for(const [i,label]of result.labels.entries()){
+            assert.ok(label.fontSize>=12,`${label.text} 屏幕字号 ${label.fontSize}px`);
+            assert.ok(label.left>=result.canvas.left&&label.right<=result.canvas.right&&label.top>=result.canvas.top&&label.bottom<=result.canvas.bottom,`${label.text} 不应超出画布`);
+            for(const other of result.labels.slice(i+1))assert.equal(label.left<other.right&&label.right>other.left&&label.top<other.bottom&&label.bottom>other.top,false,`${label.text} 与 ${other.text} 标签重叠`);
+        }
+    };
     for(const theme of ['dark','light'])for(const [size,viewport]of [['desktop',{width:1440,height:1000}],['mobile',{width:390,height:844}]]){
         await page.setViewportSize(viewport);await page.evaluate(async theme=>{const {updateSettings}=await import('/ui-settings.mjs');updateSettings({theme});const {openPanel}=await import('/ui-shell.mjs');openPanel('map');},theme);
         await page.getByLabel('地图层级',{exact:true}).waitFor();
@@ -219,6 +254,7 @@ test('M6-07 浏览器：四级地图三类迷雾、鼠标双指缩放、保存�
             assert.equal(await page.locator('svg .map-reliable').count(),1);assert.equal(await page.locator('svg .map-rumor').count(),1);
             assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth),false);
             assert.equal(await page.locator('#fields-dialog').evaluate(e=>e.scrollWidth>e.clientWidth),false);
+            await assertLabels(4);
             await page.screenshot({path:`${report}/${theme}-${size}-level-${value}.png`});
         }
         await page.getByRole('button',{name:'关闭',exact:true}).click();
@@ -226,6 +262,7 @@ test('M6-07 浏览器：四级地图三类迷雾、鼠标双指缩放、保存�
     await page.evaluate(async()=>{const {openPanel}=await import('/ui-shell.mjs');openPanel('map');});
     await page.getByLabel('地图层级',{exact:true}).waitFor();const svg=page.locator('.fields-map-viewport'),before=await svg.getAttribute('viewBox'),rect=await svg.boundingBox();
     await page.mouse.move(rect.x+rect.width/2,rect.y+rect.height/2);await page.mouse.wheel(0,-200);await page.waitForFunction(previous=>document.querySelector('.fields-map-viewport').getAttribute('viewBox')!==previous,before);
+    await assertLabels();
     const beforePinch=await svg.getAttribute('viewBox');
     // Native Chrome touch events are translated to the pointer handler used by mobile.
     const session=await page.context().newCDPSession(page);const x=rect.x+rect.width/2,y=rect.y+rect.height/2;
@@ -233,6 +270,8 @@ test('M6-07 浏览器：四级地图三类迷雾、鼠标双指缩放、保存�
     await session.send('Input.dispatchTouchEvent',{type:'touchStart',touchPoints:[{x:x-30,y,id:1},{x:x+30,y,id:2}]});
     await session.send('Input.dispatchTouchEvent',{type:'touchMove',touchPoints:[{x:x-70,y,id:1},{x:x+70,y,id:2}]});
     await session.send('Input.dispatchTouchEvent',{type:'touchEnd',touchPoints:[]});assert.notEqual(await svg.getAttribute('viewBox'),beforePinch);
+    await assertLabels();
+    await page.getByRole('button',{name:'复位',exact:true}).click();await assertLabels(4);
     await page.getByLabel('地图目的地',{exact:true}).selectOption('bld_hw_mill');await page.getByText('风险：未知，尚无这条路的可靠风险记录。',{exact:true}).first().waitFor();
     await page.getByLabel('地点标记',{exact:true}).fill('留待修理');await page.getByRole('button',{name:'保存标记',exact:true}).click();await page.getByText('标记已保存',{exact:true}).waitFor();
     await page.screenshot({path:`${report}/mobile-preview.png`});

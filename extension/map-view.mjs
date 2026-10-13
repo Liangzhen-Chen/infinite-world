@@ -8,6 +8,38 @@ export function zoomBounds(box,factor,anchor={x:box.x+box.width/2,y:box.y+box.he
     return {x:anchor.x-(anchor.x-box.x)*ratio,y:anchor.y-(anchor.y-box.y)*ratio,width,height};
 }
 
+// Layout uses screen pixels. Geography remains unchanged; leaders show the
+// original positions when coincident markers or their labels need separating.
+export function layoutMapLabels(rows,{width,height}){
+    const margin=12,gap=4,radius=7,markers=[];
+    const clamp=(value,low,high)=>Math.max(low,Math.min(high,value));
+    const intersects=(a,b)=>a.x<b.x+b.width+gap&&a.x+a.width+gap>b.x&&a.y<b.y+b.height+gap&&a.y+a.height+gap>b.y;
+    const onScreen=row=>row.x>=0&&row.x<=width&&row.y>=0&&row.y<=height;
+    const placed=rows.map(row=>{
+        if(!onScreen(row))return {...row,label:null};
+        const origin={x:clamp(row.x,margin,width-margin),y:clamp(row.y,margin,height-margin)};
+        let marker=origin;
+        for(let ring=0;ring<=8;ring++){
+            const distance=ring*20,candidates=ring?[[0,distance],[0,-distance],[distance,0],[-distance,0],[distance,distance],[-distance,-distance]]:[[0,0]];
+            const free=candidates.map(([dx,dy])=>({x:clamp(origin.x+dx,margin,width-margin),y:clamp(origin.y+dy,margin,height-margin)}))
+                .find(point=>markers.every(other=>Math.hypot(point.x-other.x,point.y-other.y)>=radius*2+gap));
+            if(free){marker=free;break;}
+        }
+        markers.push(marker);return {...row,marker};
+    });
+    const occupied=markers.map(point=>({x:point.x-radius,y:point.y-radius,width:radius*2,height:radius*2}));
+    for(const row of placed){
+        if(!row.marker)continue;
+        const w=row.width,h=row.height,point=row.marker,candidates=[];
+        const xs=[point.x+12,point.x-w-12,point.x-w/2];
+        for(let step=0;step<Math.ceil(height/(h+gap));step++)for(const y of [point.y-h-12-step*(h+gap),point.y+12+step*(h+gap)])
+            for(const x of xs)candidates.push({x:clamp(x,margin,width-margin-w),y:clamp(y,margin,height-margin-h),width:w,height:h});
+        row.label=candidates.find(rect=>rect.x>=margin&&rect.y>=margin&&rect.x+w<=width-margin&&rect.y+h<=height-margin&&!occupied.some(other=>intersects(rect,other)))??null;
+        if(row.label)occupied.push(row.label);
+    }
+    return placed;
+}
+
 // Pointer events cover mouse dragging and two-finger pinch on the same viewport.
 export function bindMapGestures(svg,getBox,setBox){
     const pointers=new Map();let previous=null,suppressClick=false;
@@ -59,23 +91,42 @@ export function renderMapPanel(container,data,{api,chatContext=null,isCurrent=()
     const legend=node('div');legend.className='fields-map-legend';for(const [kind,text]of Object.entries(knowledgeText)){const e=node('span',text);e.className=`map-${kind}`;legend.append(e);}fragment.append(legend);
     fragment.append(node('p','滚轮或双指缩放，拖动平移；封路以红色虚线表示。未获知地点不显示。'));
     const details=node('section');details.className='fields-map-details';fragment.append(details);
-    let box={x:0,y:0,width:10,height:6},selected=null,requestNumber=0,shown=[],roadPoints=[];
+    let box={x:0,y:0,width:10,height:6},selected=null,requestNumber=0,shown=[],roadPoints=[],symbols=[];
     const byId=new Map([...data.locations,...data.transit??[]].map(row=>[row.id,row]));
+    const viewport=()=>{const rect=svg.getBoundingClientRect();return {width:svg.clientWidth||rect.width||800,height:svg.clientHeight||rect.height||450};};
     const setBox=next=>{
         box=next;svg.setAttribute('viewBox',`${box.x} ${box.y} ${box.width} ${box.height}`);
-        for(const circle of svg.querySelectorAll('circle'))circle.setAttribute('r',box.width*(circle.classList.contains('map-selected') ? .012 : .008));
-        for(const text of svg.querySelectorAll('text')){text.style.fontSize=`${box.width*.017}px`;text.setAttribute('dx',box.width*.014);text.setAttribute('dy',-box.width*.01);text.style.strokeWidth=`${box.width*.004}px`;}
+        const size=viewport(),sx=box.width/size.width,sy=box.height/size.height;
+        const rows=symbols.map(({row,label})=>{
+            const bounds=label.getBBox?.(),measured=bounds?.width?bounds:{x:0,y:-12,width:[...label.textContent].length*14,height:16};
+            return {id:row.id,x:(row.coordinates[0]-box.x)/sx,y:(-row.coordinates[1]-box.y)/sy,width:measured.width,height:measured.height,measured};
+        });
+        for(const [index,placement]of layoutMapLabels(rows,size).entries()){
+            const {row,label,circle,ring,leader}=symbols[index],point=placement.marker??placement;
+            const x=box.x+point.x*sx,y=box.y+point.y*sy;
+            circle.setAttribute('cx',x);circle.setAttribute('cy',y);circle.setAttribute('r',5*sx);
+            if(ring){ring.setAttribute('cx',x);ring.setAttribute('cy',y);ring.setAttribute('r',8*sx);}
+            label.style.display=placement.label?'':'none';
+            if(placement.label){
+                const rect=placement.label,bounds=placement.measured;
+                label.setAttribute('transform',`matrix(${sx} 0 0 ${sy} ${box.x+(rect.x-bounds.x)*sx} ${box.y+(rect.y-bounds.y)*sy})`);
+                const endX=box.x+Math.max(rect.x,Math.min(point.x,rect.x+rect.width))*sx,endY=box.y+Math.max(rect.y,Math.min(point.y,rect.y+rect.height))*sy;
+                leader.setAttribute('d',`M ${row.coordinates[0]} ${-row.coordinates[1]} L ${x} ${y} L ${endX} ${endY}`);
+            }else leader.setAttribute('d','');
+        }
     };
     const fit=()=>{
         const xs=roadPoints.map(row=>row.coordinates[0]),ys=roadPoints.map(row=>-row.coordinates[1]);
         if(!xs.length){setBox({x:-1,y:-1,width:2,height:1.2});return;}
-        const width=Math.max(.5,Math.max(...xs)-Math.min(...xs)),height=Math.max(.3,Math.max(...ys)-Math.min(...ys)),pad=[1.7,1.4,1.15,1.15][Number(level.value)];
-        const rect=svg.getBoundingClientRect(),aspect=rect.width/rect.height||1.8,w=Math.max(width,height*aspect)*pad,h=w/aspect;
+        const width=Math.max(.02,Math.max(...xs)-Math.min(...xs)),height=Math.max(.02,Math.max(...ys)-Math.min(...ys)),pad=[1.4,1.25,1.1,1][Number(level.value)];
+        const size=viewport(),aspect=size.width/size.height,w=Math.max(width*size.width/Math.max(1,size.width-112),height*size.width/Math.max(1,size.height-96))*pad,h=w/aspect;
         setBox({x:(Math.min(...xs)+Math.max(...xs)-w)/2,y:(Math.min(...ys)+Math.max(...ys)-h)/2,width:w,height:h});
     };
     const draw=()=>{
         const index=Number(level.value);shown=data.locations.filter(row=>row.hierarchy[index].id===area.value);
-        roadPoints=[...shown,...(index<3?data.transit??[]:[])];const roadIds=new Set(roadPoints.map(row=>row.id)),ids=new Set(shown.map(row=>row.id));svg.replaceChildren();destination.replaceChildren();
+        const ids=new Set(shown.map(row=>row.id));
+        roadPoints=[...shown,...(index<3?(data.transit??[]).filter(stop=>data.routes.some(edge=>edge.from===stop.id&&ids.has(edge.to)||edge.to===stop.id&&ids.has(edge.from))):[])];
+        const roadIds=new Set(roadPoints.map(row=>row.id));svg.classList.toggle('map-sparse',shown.length<=5);svg.replaceChildren();destination.replaceChildren();symbols=[];
         const placeholder=node('option','选择已知地点');placeholder.value='';destination.append(placeholder);
         for(const row of shown){const option=node('option',`${row.name} · ${knowledgeText[row.knowledge]}`);option.value=row.id;destination.append(option);}destination.value=selected&&ids.has(selected.id)?selected.id:'';
         for(const edge of data.routes.filter(row=>roadIds.has(row.from)&&roadIds.has(row.to))){
@@ -86,9 +137,10 @@ export function renderMapPanel(container,data,{api,chatContext=null,isCurrent=()
         for(const row of shown){
             const g=svgNode('g',{'data-place':row.id,role:'button',tabindex:'0','aria-label':`${row.name} · ${knowledgeText[row.knowledge]}`});
             const circle=svgNode('circle',{cx:row.coordinates[0],cy:-row.coordinates[1],class:`map-${row.knowledge}`,'vector-effect':'non-scaling-stroke'});
-            const label=svgNode('text',{x:row.coordinates[0],y:-row.coordinates[1]},`${marks[row.id]?'⚑ ':''}${row.name}${row.current?' · 当前':''}`);
-            g.append(circle,label);g.onclick=()=>select(row);g.onkeydown=event=>{if(['Enter',' '].includes(event.key)){event.preventDefault();select(row);}};svg.append(g);
-            if(selected?.id===row.id)g.append(svgNode('circle',{cx:row.coordinates[0],cy:-row.coordinates[1],class:'map-selected','vector-effect':'non-scaling-stroke'}));
+            const label=svgNode('text',{x:0,y:0},`${marks[row.id]?'⚑ ':''}${row.name}${row.current?' · 当前':''}`),leader=svgNode('path',{class:'map-label-leader','vector-effect':'non-scaling-stroke'});
+            g.append(leader,circle,label);g.onclick=()=>select(row);g.onkeydown=event=>{if(['Enter',' '].includes(event.key)){event.preventDefault();select(row);}};svg.append(g);
+            const ring=selected?.id===row.id?svgNode('circle',{class:'map-selected','vector-effect':'non-scaling-stroke'}):null;if(ring)g.append(ring);
+            symbols.push({row,label,circle,ring,leader});
         }
         setBox(box);
     };
@@ -135,6 +187,8 @@ export function renderMapPanel(container,data,{api,chatContext=null,isCurrent=()
         }catch(error){if(request===requestNumber&&container.isConnected)preview.textContent=`路线读取失败：${error.message}`;}
     };
     container.classList.add('fields-map');container.replaceChildren(fragment);changeArea();
+    const Observer=doc.defaultView?.ResizeObserver;
+    if(Observer){const observer=new Observer(()=>{if(svg.isConnected)fit();else observer.disconnect();});observer.observe(svg);}
     if(!data.locations.length)details.textContent='尚无可显示的已发布地点。';
 }
 
