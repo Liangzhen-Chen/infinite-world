@@ -228,7 +228,9 @@ export class WorldEngine {
         // Intermediate clock boundaries matter to simulation, not to replay.
         // Keep one final NPC patch per changed person in this elapsed-time event.
         const changed=new Set(d.patches.slice(patchStart).filter(p=>p.path[0]==='state'&&p.path[1]==='npcs').map(p=>p.path[2]));
-        d.patches.splice(patchStart,d.patches.length-patchStart,...d.patches.slice(patchStart).filter(p=>!(p.path[0]==='state'&&p.path[1]==='npcs')));
+        const retained=d.patches.slice(patchStart).filter(p=>!(p.path[0]==='state'&&p.path[1]==='npcs'));
+        d.patches.length=patchStart;
+        for(const patch of retained)d.patches.push(patch);
         for(const npc of changed)if(canonical(npcsBefore[npc])!==canonical(d.get('state','npcs',npc)))d.patches.push({op:'set',path:['state','npcs',npc],value:d.get('state','npcs',npc)});
     }
     advanceInterval(d,minutes,id){

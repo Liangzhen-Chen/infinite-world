@@ -72,10 +72,10 @@ function contact(s,target,point=[0,0]){
 }
 const npc='npc_hw_linsui';
 
-test('光族候选有完整处理器，正式内容和合同腐蚀等范围外缺项保留',()=>{
+test('光族候选有完整处理器，正式内容与已接入的腐蚀和契约反制消费者保持一致',()=>{
  const s=fixture(),map=mechanismMap(original);assert.equal(s.candidates.length,20);
  for(const c of s.candidates){assert.deepEqual(validateMagicCatalog(c,{requireHandler:true}),[],c.id);const r=map.rows.find(r=>r.id===c.id);assert.equal(r.status,original.spells.some(s=>s.id===c.id)?'published':'consumer-ready',c.id);assert.deepEqual(r.validation,[]);}
- assert.ok(map.formalSpellCount>=31);assert.equal(map.rows.find(r=>r.mechanism==='corrode').status,'missing-consumer');assert.equal(map.rows.find(r=>r.mechanism==='counter_contract').status,'missing-consumer');
+ assert.ok(map.formalSpellCount>=31);assert.equal(map.rows.find(r=>r.mechanism==='corrode').status,'consumer-ready');assert.equal(map.rows.find(r=>r.mechanism==='counter_contract').status,'consumer-ready');
  const c=spell(s,'focus_light');assert.ok(validateMagicCatalog({...c,effectSpec:{...c.effectSpec,power:81}}).length);assert.ok(validateMagicCatalog({...c,duration:31}).length);
  const beam=spell(s,'beam');assert.ok(validateMagicCatalog({...beam,duration:1}).length);assert.ok(validateMagicCatalog({...beam,effectSpec:{...beam.effectSpec,lightDecay:false}}).length);
 });
@@ -162,6 +162,17 @@ test('薄雾光改善有限可见距离，浓雾仍限距且不清除雾',async(
  await cast(s,'fog_light','feature_fog');assert.equal(localSightClear(reader(s),s.engine,s.location,[0,0],[18,0]),true);
  s.engine.byId.get(s.location).lighting.fogDensity=4;assert.equal(localSightClear(reader(s),s.engine,s.location,[0,0],[8,0]),false);assert.equal(s.engine.byId.get(s.location).lighting.fogDensity,4);
  await wait(s,31);assert.equal(localSightClear(reader(s),s.engine,s.location,[0,0],[8,0]),false);
+});
+test('只读环境接点仍使用实际天气雾限距，与完整Draft一致',()=>{
+ const s=fixture();s.world.rules.weather=structuredClone(original.rules.weather);
+ const weather=s.world.rules.weather,region=weather.regions.find(r=>r.locations.includes(s.location));assert.ok(region);
+ region.indoor=region.indoor.filter(id=>id!==s.location);
+ weather.seasonalWeights=weather.seasonalWeights.map(()=>[0,0,0,0,0,1]);weather.persistence=0;
+ delete s.engine.byId.get(s.location).lighting;
+ const view={get:(...p)=>p.reduce((v,k)=>v?.[k],s.doc)};
+ assert.equal(localSightClear(view,s.engine,s.location,[0,0],[8,0]),true);
+ assert.equal(localSightClear(view,s.engine,s.location,[0,0],[18,0]),false);
+ assert.equal(localSightClear(draft(s),s.engine,s.location,[0,0],[18,0]),false);
 });
 test('单侧光幕遮蔽视线，另一侧仍可看，声音和空气状态不受改变',async()=>{
  const s=fixture();await cast(s,'light_screen','feature_passage');

@@ -2,7 +2,7 @@ import {environmentFeatures,localPlayerPoint,localSightClear}from'./environment.
 import {areaTargetFacts}from'./magic-area.mjs';
 import {assertMagicTargeting}from'./magic-targeting.mjs';
 import {heldUnit,trackSingleItem}from'./items.mjs';
-import {localWeather}from'./weather.mjs';
+import {weatherAt}from'./weather.mjs';
 import {modelToolCall}from'../extension/tools.mjs';
 
 // Fixed bounds for authoring candidates; this module publishes no world content.
@@ -51,7 +51,7 @@ export function opticalSightClear(d,engine,location,from,to){
  return true;
 }
 function lighting(d,engine,location){
- const place=engine.byId.get(location),weather=localWeather(engine,d.document,location);
+ const place=engine.byId.get(location),weather=weatherAt(engine,d.get('randomSeed'),location,d.get('state','minute'));
  const explicit=place?.lighting;
  const ambient=explicit?.ambientLux??(place?.combatTags?.includes('dark')?0:weather&&!weather.indoors?(weather.daylight?100:weather.kind==='clear'?.2:0):undefined);
  const fog=explicit?.fogDensity??(weather&&!weather.indoors&&weather.kind==='fog'?1:0);

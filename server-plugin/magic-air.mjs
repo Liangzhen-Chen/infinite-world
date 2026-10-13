@@ -285,9 +285,9 @@ export function airEnvironmentAction(d,args,id){
 }
 export function prepareWindObject(d,c,args){
  const row=locate(this,d,args.target);access(d,this,row,args,c.rangeMeters);const s=state(d,row);
- if(Object.values(d.get('state','effects')??{}).some(e=>e.kind==='water_earth'&&e.medium===row.id&&e.expires>d.get('state','minute')))return{target:row.id,row,catalog:c,args:{...args},windObject:true,waterMedium:true};
+ if(Object.values(d.get('state','effects')??{}).some(e=>e.kind==='water_earth'&&e.medium===row.id&&e.expires>d.get('state','minute')))return{target:row.id,row,spec:c.effectSpec,catalog:c,args:{...args},windObject:true,waterMedium:true};
  if(!['cloth','leather','wood','iron','steel','stone','metal'].includes(s.material)||!Number.isSafeInteger(s.integrity)||s.integrity<=0)throw Error('风刃需要有真实材质和完整度的软物或甲材');
- return{target:row.id,row,catalog:c,args:{...args},windObject:true};
+ return{target:row.id,row,spec:c.effectSpec,catalog:c,args:{...args},windObject:true};
 }
 export function applyWindObject(d,p){
  try{p=prepareWindObject.call(this,d,p.catalog,p.args);}catch(e){return{target:p.target,effectFailed:e.message};}
