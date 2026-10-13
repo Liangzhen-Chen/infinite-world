@@ -4101,5 +4101,47 @@
     "closedSeasons": [],
     "toll": 0,
     "risk": 0
+  },
+  {
+    "id": "route_bld_bs_reed_dao",
+    "from": "loc_bs_dongxue",
+    "to": "bld_bs_reed_dao",
+    "lengthKm": 0.12,
+    "terrainMultiplier": 1,
+    "modes": [
+      "walk"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 0,
+    "description": "从东学街沿公开门廊抵达，夜里按门前开放钟点另约。"
+  },
+  {
+    "id": "route_bld_bs_still_temple",
+    "from": "loc_bs_dongxue",
+    "to": "bld_bs_still_temple",
+    "lengthKm": 0.12,
+    "terrainMultiplier": 1,
+    "modes": [
+      "walk"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 0,
+    "description": "从东学街沿公开门廊抵达，夜里按门前开放钟点另约。"
+  },
+  {
+    "id": "route_bld_bs_measured_hall",
+    "from": "loc_bs_dongxue",
+    "to": "bld_bs_measured_hall",
+    "lengthKm": 0.12,
+    "terrainMultiplier": 1,
+    "modes": [
+      "walk"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 0,
+    "description": "从东学街沿公开门廊抵达，夜里按门前开放钟点另约。"
   }
 ]

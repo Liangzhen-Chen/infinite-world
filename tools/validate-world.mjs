@@ -108,7 +108,9 @@ export function validateWorld(world,{stage='engine'}={}){
         reference(npc.location,`${npc.id}.location`);
         if(npc.flags.minor!==(npc.age<18)||npc.age<18&&npc.flags.romanceable)errors.push(`年龄与未成年标记冲突：${npc.id}`);
         for(const item of Object.keys(npc.inventory))reference(item,`${npc.id}.inventory`);
-        for(const value of [...(Array.isArray(npc.skills)?npc.skills:Object.keys(npc.skills??{})),...npc.services??[]])reference(value,`${npc.id}.service/skill`);
+        for(const value of (Array.isArray(npc.skills)?npc.skills:Object.keys(npc.skills??{})))reference(value,`${npc.id}.service/skill`);
+        // The existing inventory trade service is an operation, not an entity ID.
+        for(const value of npc.services??[])if(value!=='trade')reference(value,`${npc.id}.service/skill`);
     }
     for(const row of world.locations)reference(row.parent,`${row.id}.parent`);
     const features=new Map();
@@ -158,7 +160,7 @@ export function validateWorld(world,{stage='engine'}={}){
         }
     }
     const checkPrerequisites=row=>{for(const requirement of row.prerequisites??[])reference(typeof requirement==='string'?requirement:requirement.skill,`${row.id}.prerequisite`);};
-    for(const row of world.skills){reference(row.profession,`${row.id}.profession`);checkPrerequisites(row);}
+    for(const row of world.skills){reference(row.profession,`${row.id}.profession`);for(const role of row.learningProfessions??[])reference(role,`${row.id}.learningProfessions`);checkPrerequisites(row);}
     for(const item of world.items)if(item.checkBonus){
         for(const skill of item.checkBonus.skills??[])reference(skill,`${item.id}.checkBonus.skill`);
         for(const attribute of item.checkBonus.attributes??[])if(!world.rules.attributes.includes(attribute))errors.push(`工具检定属性非法：${item.id}/${attribute}`);

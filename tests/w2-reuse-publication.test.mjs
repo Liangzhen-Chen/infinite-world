@@ -11,7 +11,7 @@ import {compatibleWorld,planWorldUpgrade} from '../server-plugin/world-upgrade.m
 
 const formal=await loadWorld(),publication=await readReusePublication(),before=structuredClone(formal);
 for(const [category,rows]of Object.entries({spells:publication.spells,skills:publication.sources.mappings.map(row=>row.skill),items:publication.items})){
- const ids=new Set(rows.map(row=>row.id));before[category]=before[category].filter(row=>!ids.has(row.id));
+ const ids=new Set(rows.map(row=>row.id));before[category]=before[category].filter(row=>!ids.has(row.id)||category==='skills'&&row.learningProfessions);
 }
 for(const book of publication.sources.books)delete before.npcs.find(row=>row.id===book.stock.owner).inventory[book.item.id];
 before.items.find(row=>row.id==='item_clothes').tags=before.items.find(row=>row.id==='item_clothes').tags.filter(tag=>tag!=='clothing');
@@ -76,7 +76,7 @@ test('旧战役world_upgrade保留钱物和历史，三册书逐键进入一次�
  // row by ID and retain every unrelated row in its original order.
  for(const [category,rows]of Object.entries({spells:publication.spells,skills:publication.sources.mappings.map(row=>row.skill),items:publication.items})){
   const ids=new Set(rows.map(row=>row.id));
-  for(const row of rows){assert.deepEqual(formal[category].find(actual=>actual.id===row.id),row);assert.deepEqual(next[category].find(actual=>actual.id===row.id),row);}
+  for(const row of rows){const actual=formal[category].find(actual=>actual.id===row.id),{learningProfessions,...reviewed}=actual;assert.deepEqual(category==='skills'?reviewed:actual,row);assert.deepEqual(next[category].find(actual=>actual.id===row.id),actual);}
   assert.deepEqual(next[category].filter(row=>!ids.has(row.id)),formal[category].filter(row=>!ids.has(row.id)));
  }
 });

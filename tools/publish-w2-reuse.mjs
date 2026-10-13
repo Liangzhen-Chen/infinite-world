@@ -12,9 +12,15 @@ import {atomicJSON} from '../server-plugin/storage.mjs';
 
 const read=async file=>JSON.parse(await fs.readFile(file,'utf8'));
 const same=(a,b)=>hashContent(a)===hashContent(b);
-function mergeRows(old,added){
+function mergeRows(old,added,skillRoutes=false){
  const rows=new Map(old.map(row=>[row.id,row]));
  for(const row of added){
+  const prior=rows.get(row.id);
+  if(prior&&skillRoutes&&Array.isArray(prior.learningProfessions)){
+   const {learningProfessions,...reviewed}=prior;
+   if(!same(reviewed,row))throw Error(`正式条目冲突：${row.id}`);
+   continue;
+  }
   if(rows.has(row.id)&&!same(rows.get(row.id),row))throw Error(`正式条目冲突：${row.id}`);
   rows.set(row.id,structuredClone(row));
  }
@@ -45,7 +51,7 @@ export function mergeReusePublication(world,publication){
   if(!mapping||mapping.skill.id!==spell.skill||mapping.skill.stage!==spell.stage||mapping.skill.profession!=='profession_mage'||!book?.book.teaches.includes(spell.id))throw Error(`法术学习路径不完整：${spell.id}`);
  }
  next.spells=mergeRows(next.spells,publication.spells);
- next.skills=mergeRows(next.skills,sources.mappings.map(row=>row.skill));
+ next.skills=mergeRows(next.skills,sources.mappings.map(row=>row.skill),true);
  next.items=mergeRows(next.items,publication.items);
  // Drying already consumes the clothing tag; the candidate helper supplied it.
  const clothes=next.items.find(row=>row.id==='item_clothes');

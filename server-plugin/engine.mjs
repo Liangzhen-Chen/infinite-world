@@ -15,7 +15,7 @@ import {advanceMindSpace,assertMindAwake,assertMindSpacePath}from'./magic-mind-s
 import {advanceShadowContracts}from'./contracts.mjs';
 import {assertLightMovement}from'./magic-light.mjs';
 import{targetFacts,statusContext}from'./magic-context.mjs';
-import {profession,effectiveProficiency}from'./professions.mjs';
+import {profession,effectiveProficiency,certifiedForSkill}from'./professions.mjs';
 import {xpRequired,allocateAttributes,milestone}from'./progression.mjs';
 import {createCharacter}from'./character.mjs';
 import {planRuleStateMigration,runtimeRuleVersion}from'./rule-state-migration.mjs';
@@ -443,7 +443,7 @@ export class WorldEngine {
             if(!((base.services??[]).includes(role)||(base.services??[]).includes(skill)||(base.skills??[]).includes(skill))||d.get('state','npcs',teacher,'location')!==d.get('state','location'))throw new Error('突破导师不具备资格或不在场');
             assertNpcService(d,this,teacher,'teach',120);
             if(old.proficiency%300!==299)throw new Error('尚未达到当前阶段上限');
-            if(role&&![d.get('state','professions','combat'),...d.get('state','professions','life'),...d.get('state','professions','hidden')].includes(role))throw new Error('未认证职业不能跨越初级阶段');
+            if(!certifiedForSkill(d,this,skill))throw new Error('未认证职业不能跨越初级阶段');
             const outcome=this.check(d,{attribute:this.byId.get(skill).attribute,difficulty:20},id);
             this.advance(d,120,id);
             if(outcome.success)d.set(['state','skills',skill,'breakthroughs'],[...new Set([...old.breakthroughs??[],stage+1])]);
@@ -453,7 +453,7 @@ export class WorldEngine {
         const requested=number(args.gain??3,0,100,'练习收益');
         const gain=Math.max(0,Math.min(Math.floor(requested*0.5**repeats),this.rules.practice.dailyCaps[stage]-row.gain));
         const role=this.byId.get(skill).profession;
-        const certified=!role||[d.get('state','professions','combat'),...d.get('state','professions','life'),...d.get('state','professions','hidden')].includes(role);
+        const certified=certifiedForSkill(d,this,skill);
         if(!certified&&old.proficiency>299)return {skill,gain:0,proficiency:old.proficiency,effectiveProficiency:299,retained:true};
         const limit=Math.min(certified?2699:299,(old.breakthroughs??[]).includes(stage+1)?(stage+2)*300-1:(stage+1)*300-1);
         const proficiency=Math.min(limit,old.proficiency+gain),actual=proficiency-old.proficiency;

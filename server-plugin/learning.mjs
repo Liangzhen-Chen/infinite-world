@@ -1,4 +1,4 @@
-import {effectiveProficiency}from'./professions.mjs';
+import {effectiveProficiency,certifiedForSkill}from'./professions.mjs';
 import {assertNpcService}from'./npc-schedule.mjs';
 const integer=(value,label,maximum=1e9)=>{if(!Number.isSafeInteger(value)||value<0||value>maximum)throw new Error(`${label}不在允许范围`);return value;};
 const grades=['初级','中级','高级','特级','专家级','大师级','宗师级','圣级','神级'];
@@ -31,7 +31,14 @@ export function learn(d,args,id){
         if(!band||catalog.mp<band[0]||catalog.mp>band[1])throw new Error('法术消耗不符合阶段目录');
     }
     const roles=d.get('state','professions'),certified=[roles.combat,...roles.life,...roles.hidden];
-    if(stage>0&&skill.profession&&!certified.includes(skill.profession))throw new Error('高阶职业内容需要相关职业认证');
+    if(stage>0&&!certifiedForSkill(d,this,skill.id))throw new Error('高阶职业内容需要相关职业认证');
+    // Shared traditions retain the existing mage path. Alternative routes must
+    // demonstrate their own foundation before studying an advanced formula.
+    if(stage>0&&skill.learningProfessions&&!certified.includes(skill.profession)){
+        const route=skill.learningProfessions.find(role=>certified.includes(role));
+        const foundation=this.byId.get(route)?.entry?.skill;
+        if(!foundation||effectiveProficiency(d,this,foundation)<stage*300)throw new Error('共享术式所需路线基础熟练度不足');
+    }
     const source=this.resolve(args.source),sourceDefinition=this.byId.get(source);
     let sourceRecord,fee=0,minutes;
     if(source.startsWith('npc_')){

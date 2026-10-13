@@ -13,10 +13,13 @@ const world=await loadWorld(),spells=reuseSpellCandidates();
 export function contextFor(entry,sourceWorld=world){
  if(!entry.mapping)return bookContext(entry,sourceWorld);
  const book=books.find(row=>row.id===entry.mapping.book),context=bookContext(book,sourceWorld);
+ // Later institutions do not change this audited mage entry exam or fee.
+ // Those additions carry their own T93 review rather than rewriting T19 facts.
+ const {trainingInstitutions,trainingRule,...certification}=sourceWorld.professions.find(row=>row.id==='profession_mage');
  // The mapping under review is not its own factual authority.
  return {...context,teaches:undefined,spell:spells.find(row=>row.id===entry.mapping.spell),book,
   literacy:sourceWorld.skills.find(row=>row.id==='skill_literacy'),
-  certification:sourceWorld.professions.find(row=>row.id==='profession_mage')};
+  certification};
 }
 export const reviewDraftFor=entry=>entry.mapping?{id:entry.id,source:structuredClone(entry.mapping)}:bookDraft(entry);
 export function validateDraft(draft,entry){
