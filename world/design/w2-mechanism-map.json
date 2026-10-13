@@ -4,9 +4,9 @@
   "formalSpellCount": 31,
   "counts": {
     "reviewed-unpublished": 2,
-    "consumer-ready": 56,
+    "consumer-ready": 71,
     "published": 30,
-    "missing-consumer": 66
+    "missing-consumer": 51
   },
   "rows": [
     {
@@ -359,12 +359,14 @@
       "name": "冰藏术",
       "mechanism": "preserve",
       "originalEffect": "为封闭储柜降温保鲜，木柜隔热差时耗魔增加",
-      "status": "missing-consumer",
-      "handler": null,
-      "validation": [
-        "此法术机制尚未接入规则，不能叙述已实现"
-      ],
-      "evidence": "缺对应有限地形/容器状态、施工或传感消费者，不能只登记效果。"
+      "status": "consumer-ready",
+      "handler": {
+        "kind": "care",
+        "operation": "preserve",
+        "power": 50
+      },
+      "validation": [],
+      "evidence": "server-plugin/magic-care.mjs?????/??/??/??????tests/magic-care.test.mjs?garden???????????????????"
     },
     {
       "id": "spell_water_12",
@@ -1193,170 +1195,196 @@
       "name": "止血术",
       "mechanism": "healing",
       "originalEffect": "压住浅表出血，不能补回失去的血液",
-      "status": "missing-consumer",
+      "status": "consumer-ready",
       "handler": {
-        "kind": "heal",
+        "kind": "care",
+        "operation": "hemostasis",
         "power": 5
       },
       "validation": [],
-      "evidence": "回血未建模浅表出血、血量、感染或教派仪式，不能替代所述医疗语义。"
+      "evidence": "server-plugin/magic-care.mjs?????/??/??/??????tests/magic-care.test.mjs?garden???????????????????"
     },
     {
       "id": "spell_life_02",
       "name": "辨草术",
       "mechanism": "herb_sense",
       "originalEffect": "辨认一株药草的常见药性，未知种仍需研究",
-      "status": "missing-consumer",
-      "handler": null,
-      "validation": [
-        "此法术机制尚未接入规则，不能叙述已实现"
-      ],
-      "evidence": "缺所述生物、病理或食物状态消费者；常规回血和状态提示不能代替。"
+      "status": "consumer-ready",
+      "handler": {
+        "kind": "care",
+        "operation": "herb_sense",
+        "power": 1
+      },
+      "validation": [],
+      "evidence": "server-plugin/magic-care.mjs?????/??/??/??????tests/magic-care.test.mjs?garden???????????????????"
     },
     {
       "id": "spell_life_03",
       "name": "护芽术",
       "mechanism": "seedling",
       "originalEffect": "帮助新芽渡过轻霜，缺水与害虫仍会伤苗",
-      "status": "missing-consumer",
-      "handler": null,
-      "validation": [
-        "此法术机制尚未接入规则，不能叙述已实现"
-      ],
-      "evidence": "缺所述生物、病理或食物状态消费者；常规回血和状态提示不能代替。"
+      "status": "consumer-ready",
+      "handler": {
+        "kind": "care",
+        "operation": "seedling",
+        "power": 3
+      },
+      "validation": [],
+      "evidence": "server-plugin/magic-care.mjs?????/??/??/??????tests/magic-care.test.mjs?garden???????????????????"
     },
     {
       "id": "spell_life_04",
       "name": "缓痛术",
       "mechanism": "pain",
       "originalEffect": "缓解小范围疼痛，不修复伤口也不能替代诊断",
-      "status": "missing-consumer",
-      "handler": null,
-      "validation": [
-        "此法术机制尚未接入规则，不能叙述已实现"
-      ],
-      "evidence": "缺所述生物、病理或食物状态消费者；常规回血和状态提示不能代替。"
+      "status": "consumer-ready",
+      "handler": {
+        "kind": "care",
+        "operation": "pain",
+        "power": 3
+      },
+      "validation": [],
+      "evidence": "server-plugin/magic-care.mjs?????/??/??/??????tests/magic-care.test.mjs?garden???????????????????"
     },
     {
       "id": "spell_life_05",
       "name": "合创术",
       "mechanism": "healing",
       "originalEffect": "促使简单伤口闭合，污物未清会加重感染",
-      "status": "missing-consumer",
+      "status": "consumer-ready",
       "handler": {
-        "kind": "heal",
+        "kind": "care",
+        "operation": "close_wound",
         "power": 10
       },
       "validation": [],
-      "evidence": "回血未建模浅表出血、血量、感染或教派仪式，不能替代所述医疗语义。"
+      "evidence": "server-plugin/magic-care.mjs?????/??/??/??????tests/magic-care.test.mjs?garden???????????????????"
     },
     {
       "id": "spell_life_06",
       "name": "果藏术",
       "mechanism": "preserve_food",
       "originalEffect": "降低一箱果实腐败速度，容器须完整且先剔除坏果",
-      "status": "missing-consumer",
-      "handler": null,
-      "validation": [
-        "此法术机制尚未接入规则，不能叙述已实现"
-      ],
-      "evidence": "缺所述生物、病理或食物状态消费者；常规回血和状态提示不能代替。"
+      "status": "consumer-ready",
+      "handler": {
+        "kind": "care",
+        "operation": "preserve_food",
+        "power": 50
+      },
+      "validation": [],
+      "evidence": "server-plugin/magic-care.mjs?????/??/??/??????tests/magic-care.test.mjs?garden???????????????????"
     },
     {
       "id": "spell_life_07",
       "name": "根脉引导",
       "mechanism": "roots",
       "originalEffect": "引导幼根朝现有水源生长，生长仍需多日",
-      "status": "missing-consumer",
-      "handler": null,
-      "validation": [
-        "此法术机制尚未接入规则，不能叙述已实现"
-      ],
-      "evidence": "缺所述生物、病理或食物状态消费者；常规回血和状态提示不能代替。"
+      "status": "consumer-ready",
+      "handler": {
+        "kind": "care",
+        "operation": "roots",
+        "power": 10
+      },
+      "validation": [],
+      "evidence": "server-plugin/magic-care.mjs?????/??/??/??????tests/magic-care.test.mjs?garden???????????????????"
     },
     {
       "id": "spell_life_08",
       "name": "疫痕辨识",
       "mechanism": "disease_sense",
       "originalEffect": "指出常见感染征象，不能保证确定病原",
-      "status": "missing-consumer",
-      "handler": null,
-      "validation": [
-        "此法术机制尚未接入规则，不能叙述已实现"
-      ],
-      "evidence": "缺所述生物、病理或食物状态消费者；常规回血和状态提示不能代替。"
+      "status": "consumer-ready",
+      "handler": {
+        "kind": "care",
+        "operation": "disease_sense",
+        "power": 1
+      },
+      "validation": [],
+      "evidence": "server-plugin/magic-care.mjs?????/??/??/??????tests/magic-care.test.mjs?garden???????????????????"
     },
     {
       "id": "spell_life_09",
       "name": "续息术",
       "mechanism": "stabilize",
       "originalEffect": "暂稳一名濒死者，需要后续真实救治",
-      "status": "missing-consumer",
-      "handler": null,
-      "validation": [
-        "此法术机制尚未接入规则，不能叙述已实现"
-      ],
-      "evidence": "缺所述生物、病理或食物状态消费者；常规回血和状态提示不能代替。"
+      "status": "consumer-ready",
+      "handler": {
+        "kind": "care",
+        "operation": "stabilize",
+        "power": 1
+      },
+      "validation": [],
+      "evidence": "server-plugin/magic-care.mjs?????/??/??/??????tests/magic-care.test.mjs?garden???????????????????"
     },
     {
       "id": "spell_life_10",
       "name": "净创术",
       "mechanism": "clean_wound",
       "originalEffect": "清除创面常见污染，毒素与异物需另行处理",
-      "status": "missing-consumer",
-      "handler": null,
-      "validation": [
-        "此法术机制尚未接入规则，不能叙述已实现"
-      ],
-      "evidence": "缺所述生物、病理或食物状态消费者；常规回血和状态提示不能代替。"
+      "status": "consumer-ready",
+      "handler": {
+        "kind": "care",
+        "operation": "clean_wound",
+        "power": 90
+      },
+      "validation": [],
+      "evidence": "server-plugin/magic-care.mjs?????/??/??/??????tests/magic-care.test.mjs?garden???????????????????"
     },
     {
       "id": "spell_life_11",
       "name": "嫁枝契",
       "mechanism": "graft",
       "originalEffect": "降低嫁接排异，需要兼容植株与园艺手艺",
-      "status": "missing-consumer",
-      "handler": null,
-      "validation": [
-        "此法术机制尚未接入规则，不能叙述已实现"
-      ],
-      "evidence": "缺所述生物、病理或食物状态消费者；常规回血和状态提示不能代替。"
+      "status": "consumer-ready",
+      "handler": {
+        "kind": "care",
+        "operation": "graft",
+        "power": 50
+      },
+      "validation": [],
+      "evidence": "server-plugin/magic-care.mjs?????/??/??/??????tests/magic-care.test.mjs?garden???????????????????"
     },
     {
       "id": "spell_life_12",
       "name": "驱蛊纹",
       "mechanism": "parasite",
       "originalEffect": "排出可识别的小型寄生物，可能伤及宿主",
-      "status": "missing-consumer",
-      "handler": null,
-      "validation": [
-        "此法术机制尚未接入规则，不能叙述已实现"
-      ],
-      "evidence": "缺所述生物、病理或食物状态消费者；常规回血和状态提示不能代替。"
+      "status": "consumer-ready",
+      "handler": {
+        "kind": "care",
+        "operation": "parasite",
+        "power": 1
+      },
+      "validation": [],
+      "evidence": "server-plugin/magic-care.mjs?????/??/??/??????tests/magic-care.test.mjs?garden???????????????????"
     },
     {
       "id": "spell_life_13",
       "name": "肌腱修复",
       "mechanism": "restore_tendon",
       "originalEffect": "协助断裂肌腱愈合，施法后长期负重会破坏成果",
-      "status": "missing-consumer",
-      "handler": null,
-      "validation": [
-        "此法术机制尚未接入规则，不能叙述已实现"
-      ],
-      "evidence": "缺所述生物、病理或食物状态消费者；常规回血和状态提示不能代替。"
+      "status": "consumer-ready",
+      "handler": {
+        "kind": "care",
+        "operation": "restore_tendon",
+        "power": 50
+      },
+      "validation": [],
+      "evidence": "server-plugin/magic-care.mjs?????/??/??/??????tests/magic-care.test.mjs?garden???????????????????"
     },
     {
       "id": "spell_life_14",
       "name": "林圃生息",
       "mechanism": "garden",
       "originalEffect": "提高有限园圃的生长活力，必须消耗肥料与水",
-      "status": "missing-consumer",
-      "handler": null,
-      "validation": [
-        "此法术机制尚未接入规则，不能叙述已实现"
-      ],
-      "evidence": "缺所述生物、病理或食物状态消费者；常规回血和状态提示不能代替。"
+      "status": "consumer-ready",
+      "handler": {
+        "kind": "growth",
+        "power": 250,
+        "unit": "permille"
+      },
+      "validation": [],
+      "evidence": "server-plugin/magic-care.mjs?????/??/??/??????tests/magic-care.test.mjs?garden???????????????????"
     },
     {
       "id": "spell_mind_01",

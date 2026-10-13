@@ -9,6 +9,7 @@ import {settleMagicAreas,nextMagicAreaMinute,prepareAreaMagic,applyAreaMagic,are
 import {advanceMagicObjects,assertFireTravel}from'./magic-object.mjs';
 import {advanceAirEffects,adjustAirTravel}from'./magic-air.mjs';
 import {advanceWaterEarth,assertWaterEarthMovement,waterEarthWalkMinutes}from'./magic-water-earth.mjs';
+import {advanceCare,strainCare}from'./magic-care.mjs';
 import {assertLightMovement}from'./magic-light.mjs';
 import{targetFacts,statusContext}from'./magic-context.mjs';
 import {profession,effectiveProficiency}from'./professions.mjs';
@@ -264,6 +265,7 @@ export class WorldEngine {
             const actor=d.get('state',row.subject?.startsWith('npc_')?'npcs':'creatures',row.subject);
             if(!actor||actor.location!==row.location||actor.scheduleTravel||actor.cognitionTravel||actor.status==='死亡'||row.expires<=after)d.remove(['state','records',key]);
         }
+        advanceCare(d,this,before,after);
         advanceMagicObjects(d,this,after);
         advanceAirEffects(d,this,before,after);
         advanceWaterEarth(d,this,before,after);
@@ -363,6 +365,7 @@ export class WorldEngine {
         this.npcObligationAction.arrivalMinute=d.get('state','minute')+route.minutes;
         const areaTravel=Object.values(d.get('state','effects')??{}).some(e=>e.kind==='area');
         if(areaTravel)d.set(['state','records','magic_area_transit'],{category:'magic_area_transit',subjects:['player',...d.get('state','player','companions')],start:d.get('state','minute'),arrival:this.npcObligationAction.arrivalMinute,source:id});
+        strainCare(d,this,'player',route.movingMinutes);
         this.advance(d,route.minutes,id);
         if(areaTravel)d.remove(['state','records','magic_area_transit']);
         const experience=discovered?{experience:0}:milestone(d,this,'discovery',destination,id);
@@ -455,7 +458,7 @@ export class WorldEngine {
         const band=this.rules.magic.stageMpRanges[catalog.stage];
         if(!band||catalog.mp<band[0]||catalog.mp>band[1])throw new Error('法术消耗不符合阶段规则');
         const prepared=prepareMagic.call(this,d,catalog,args);
-        if(d.get('state','player','status')==='濒死'&&(catalog.effectSpec?.kind!=='heal'||prepared?.target!=='player'))throw new Error('濒死时只能尝试对自己施放救治法术');
+        if(d.get('state','player','status')==='濒死'&&(!(catalog.effectSpec?.kind==='heal'||catalog.effectSpec?.kind==='care'&&['stabilize','hemostasis','clean_wound'].includes(catalog.effectSpec.operation))||prepared?.target!=='player'))throw new Error('濒死时只能尝试对自己施放救治法术');
         if(d.get('state','player','mp')<catalog.mp)throw new Error('魔力不足');
         for(const material of catalog.materials)if(this.quantity(d,'player',material.item)<material.amount)throw new Error(`缺少材料${this.byId.get(material.item).name}`);
         d.set(['state','player','mp'],d.get('state','player','mp')-catalog.mp);

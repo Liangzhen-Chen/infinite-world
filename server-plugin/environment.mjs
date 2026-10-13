@@ -1,3 +1,4 @@
+import {inspectCare}from'./magic-care.mjs';
 import {normalize}from'./retrieval.mjs';
 import {waterMechanisms}from'../world/design/water-foundation.mjs';
 import {addObjectFuel,inspectObjectProcess,touchWarmObject,douseObjectFire,assertFirePath}from'./magic-object.mjs';
@@ -166,6 +167,7 @@ export function interactEnvironment(d,args,eventId){
     const lightAction=normalLightAction.call(this,d,args);if(lightAction)return lightAction;
     if(['turn_grain','sound','fall','breathe'].includes(operation))return airEnvironmentAction.call(this,d,args,eventId);
     if(operation==='inspect'){
+        if(args.target){const care=inspectCare(d,this,args);if(care)return{care,actionScope:{kind:'instant',instantaneous:true}};}
         const result=environmentCatalog(this,d.document,{entity:args.target});
         if(!args.target)return result;
         const row=feature(this,args.target,location),check=Object.values(d.get('state','effects')??{}).some(e=>e.kind==='water_earth'&&e.operation==='mud_seal'&&e.target===row.id&&e.expires>d.get('state','minute'));
