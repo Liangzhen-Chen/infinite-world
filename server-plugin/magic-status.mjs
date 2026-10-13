@@ -1,5 +1,6 @@
 // Status identifiers and their numerical consequences are authored rules.
 import {waterEarthHeldUntil}from'./magic-water-earth.mjs';
+import {decoyPenalty,consumeDecoy}from'./magic-light.mjs';
 export const magicStatuses={
     stone_skin:{maximum:15,beneficial:true},
     fire_shield:{maximum:80,beneficial:true},
@@ -28,8 +29,8 @@ export function magicStatusStats(d,target,context={}){
         powers[effect.status]=Math.max(powers[effect.status]??0,power);
     }
     const bound=waterEarthHeldUntil(d.get('state'),target,d.get('state','minute'))>d.get('state','minute')?.1:0;
-    return{defense:powers.stone_skin??0,evasion:-(powers.stone_skin??0)*0.02+(powers.camouflage??0)*0.01-bound,
-        hit:-(Math.max(0,(powers.fear??0)-(powers.travel_calm??0))+(powers.dazzle??0)+(powers.illusion??0)+(powers.compulsion??0))*0.02||0,
+    return{defense:powers.stone_skin??0,evasion:-(powers.stone_skin??0)*0.02+(powers.camouflage??0)*0.01-bound-(context.shadowBound?.1:0),
+        hit:-(Math.max(0,(powers.fear??0)-(powers.travel_calm??0))+(powers.dazzle??0)+(powers.illusion??0)+(powers.compulsion??0))*0.02-decoyPenalty(d,target,context)||0,
         nightVision:(powers.nightvision??0)*0.02,
         fireResistance:(powers.fire_shield??0)/100,
         mindResistance:(powers.mind_guard??0)/100,
@@ -37,7 +38,7 @@ export function magicStatusStats(d,target,context={}){
 }
 export function magicIlluminates(d){
     return Object.values(d.get('state','effects')??{}).some(effect=>effect.kind==='summon'&&effect.summonType==='fire_projection'&&effect.owner==='player'&&effect.location===d.get('state','location')&&effect.expires>d.get('state','minute')||effect.kind==='light'&&effect.expires>d.get('state','minute')
-        &&effect.owner==='player'&&(d.get('state','inventory',effect.target,'quantity')??0)>0
+        &&!effect.covered&&effect.owner==='player'&&(effect.target==='player'||(d.get('state','inventory',effect.target,'quantity')??0)>0)
         &&(!effect.targetInstance||d.get('state','itemInstances',effect.targetInstance,'owner')==='player'&&d.get('state','itemInstances',effect.targetInstance,'status')==='持有'));
 }
 export function relieveMagicStatuses(d,target,statuses,power){
@@ -58,7 +59,7 @@ export function applyMagicStatus(d,{target,status,power,duration,source,spell},i
  return{target,effect:id,status,expires,power};
 }
 export function consumeTransientMagic(d,target,context={}){
- const consumed=[];
+ const consumed=consumeDecoy(d,target,context);
  for(const[id,e]of Object.entries(d.get('state','effects')??{})){
   if(e.kind!=='status'||e.target!==target||e.expires<=d.get('state','minute')||!['dazzle','illusion'].includes(e.status))continue;
   if(e.status==='dazzle'&&context.eyesClosed!==false)continue;

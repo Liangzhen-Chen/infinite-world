@@ -9,6 +9,7 @@ import {settleMagicAreas,nextMagicAreaMinute,prepareAreaMagic,applyAreaMagic,are
 import {advanceMagicObjects,assertFireTravel}from'./magic-object.mjs';
 import {advanceAirEffects,adjustAirTravel}from'./magic-air.mjs';
 import {advanceWaterEarth,assertWaterEarthMovement,waterEarthWalkMinutes}from'./magic-water-earth.mjs';
+import {assertLightMovement}from'./magic-light.mjs';
 import{targetFacts,statusContext}from'./magic-context.mjs';
 import {profession,effectiveProficiency}from'./professions.mjs';
 import {xpRequired,allocateAttributes,milestone}from'./progression.mjs';
@@ -336,6 +337,7 @@ export class WorldEngine {
     }
     move(d,args,id) {
         for(const target of ['player',...d.get('state','player','companions')??[]])assertWaterEarthMovement(d,target);
+        for(const target of ['player',...d.get('state','player','companions')??[]])assertLightMovement(d,this,target);
         const destination=this.resolve(args.destination),old=d.get('state','location');
         if(old===destination)return {destination,elapsed:0};
         const route=this.route(old,destination,args.mode??'walk',d.get('state','minute'),d.document.randomSeed);
