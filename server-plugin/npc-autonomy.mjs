@@ -7,6 +7,8 @@ import {derivedStats} from './combat.mjs';
 import {wildlifePriceFactor} from './wildlife.mjs';
 import {advanceGovernance} from './governance.mjs';
 import {advanceQuestBoard,nextQuestBoardMinute} from './quest-board.mjs';
+import {prepareNpcFurnace,prepareThermalWorkstation} from './magic-object.mjs';
+import {kilnWorkResult} from './manufacturing.mjs';
 
 const DAY=1440,clone=x=>structuredClone(x),safe=n=>Number.isSafeInteger(n)&&n>=0;
 const awake=n=>n?.location&&!n.scheduleTravel&&!n.cognitionTravel&&!['死亡','濒死','昏迷','患病'].includes(n.status)&&!/睡眠|睡觉|熟睡/.test(n.activity??'');
@@ -22,7 +24,7 @@ export function assertNpcAutonomyAction(state,actors,{start=state.minute,minutes
  for(const t of Object.values(state.npcAutonomy?.tasks??{}))if(t.status==='进行中'&&actors.some(id=>[t.npc,t.action.seller].includes(id))&&start<t.finish&&start+Math.max(1,minutes)>t.start)throw Error('人物正在完成已经开始的自主工作');
 }
 function validateAction(d,engine,id,action,{at=d.get('state','minute'),presence=d.get('state'),ignoreTask=false}={}){
- const state=d.get('state'),actor=presence.npcs[id],base=engine.byId.get(id),minutes=duration(engine,action);
+ const state=d.get('state'),actor=presence.npcs[id],base=engine.byId.get(id),minutes=duration(engine,action);let furnace,work;
  if(!full(engine,id)||!awake(actor)||state.player.companions?.includes(id))throw Error('人物不具备独立行动条件');
  if(['死亡','濒死','昏迷','患病'].includes(state.npcs[id]?.status))throw Error('人物当前无法完成工作');
  if(ignoreTask)for(const who of [id,action.seller].filter(Boolean))if(!awake(state.npcs[who])||state.npcs[who].location!==presence.npcs[who]?.location)throw Error('工作完成时人物已离开或不能继续行动');
@@ -45,10 +47,16 @@ function validateAction(d,engine,id,action,{at=d.get('state','minute'),presence=
   for(const item of recipe.tools??[]){if(recipe.materials.some(m=>m.item===item))throw Error('工具不能同时消耗');if(engine.quantity(d,id,item)<1||(heldUnit(d,engine,id,item)?.durability??engine.byId.get(item)?.durability??0)<=0)throw Error('没有完好的实际工具');}
   const station=engine.byId.get(actor.location)?.workstations?.find(s=>s.kind===recipe.workstation);
   if(recipe.workstation&&!station||station&&station.access!=='public'&&station.owner!==id||state.buildings?.[actor.location]?.condition===0)throw Error('没有可用且获准的工作台');
-  if(station?.thermalRequirement)throw Error('人物尚不能自主维护需要持续热源的工序');
   const fee=station?.owner===id?0:station?.fee??0;if(!safe(fee)||state.npcs[id].coins<fee)throw Error('工坊费用不足');
   if(station?.owner?.startsWith('npc_')&&(!state.npcs[station.owner]||['死亡','濒死'].includes(state.npcs[station.owner].status)))throw Error('工坊收费人无法履约');
   npcToolBonus(d,engine,id,recipe);
+  if(station?.thermalRequirement&&!ignoreTask){
+   work=draft(d.document,at);work.set(['state','npcs',id,'location'],actor.location);
+   const reserved=new Map(totals);for(const item of recipe.tools??[])reserved.set(item,1);
+   furnace=prepareNpcFurnace(work,engine,station,minutes,id,reserved);
+   // Presence is a forecast for daily actions; never commit it over the real actor.
+   work.patches=work.patches.filter(p=>p.path.join('.')!==`state.npcs.${id}.location`);
+  }
  }else if(action.kind==='trade'){
   const seller=presence.npcs[action.seller],sellerBase=engine.byId.get(action.seller),item=engine.byId.get(action.item);
   if(action.seller===id||!awake(seller)||seller.location!==actor.location||!sellerBase?.serviceCatalog?.some(s=>s.kind==='trade'&&s.price.mode==='engineQuote'))throw Error('没有同地且愿意出售现有库存的卖家');
@@ -56,7 +64,25 @@ function validateAction(d,engine,id,action,{at=d.get('state','minute'),presence=
   if(engine.quantity(d,action.seller,action.item)<action.quantity||state.npcs[id].coins<tradeQuote(d,engine,id,action,actor.location).cost)throw Error('真实钱款或库存不足');
   for(let cursor=at;cursor<at+minutes;){const s=scheduleAt(engine,action.seller,cursor,state);if(!s||s.location!==actor.location||!s.services.includes('trade'))throw Error('交易没有完整接待窗口');cursor=s.until;}
  }else throw Error('自主行动类型未实现');
- return {minutes,location:actor.location};
+ return {minutes,location:actor.location,furnace,work};
+}
+function startTask(d,task,checked){
+ if(checked.furnace){commit(d,checked.work);task.furnace={...checked.furnace,checkedUntil:task.start};}
+ d.set(['state','npcAutonomy','tasks',task.id],task);
+}
+function advanceFurnace(d,engine,task,until){
+ const actor=d.get('state','npcs',task.npc),location=task.presence.npcs[task.npc].location;
+ if(!awake(actor)||actor.location!==location||d.get('state','player','companions')?.includes(task.npc))throw Error('照管炉火的人物已离岗或失能');
+ const recipe=engine.byId.get(task.action.recipe),station=engine.byId.get(location)?.workstations?.find(s=>s.kind===recipe.workstation);
+ if(!station||station.access!=='public'&&station.owner!==task.npc||d.get('state','buildings',location,'condition')===0)throw Error('炉火工坊已不可用');
+ const work=draft(d.document,task.furnace.checkedUntil);
+ const row=engine.byId.get(location)?.features?.find(f=>f.id===task.furnace.plan.feature);
+ if(!row||row.owner!==task.npc&&row.access!=='public')throw Error('人物没有热源的使用权限');
+ if(until>task.furnace.checkedUntil){
+  const projection=prepareThermalWorkstation(work,engine,station,until-task.furnace.checkedUntil,{location});
+  if(projection.projectedStress!==undefined)d.set(['state','npcAutonomy','tasks',task.id,'furnace','endStress'],projection.projectedStress);
+  d.set(['state','npcAutonomy','tasks',task.id,'furnace','checkedUntil'],until);
+ }
 }
 function npcToolBonus(d,engine,id,recipe){
  const attribute=recipe.attribute??engine.byId.get(recipe.skill)?.attribute??'智力';let sum=0;
@@ -73,7 +99,7 @@ function produce(d,engine,id,item,quantity,actionId,recipe,at,workmanship){
  }
  changeItems(d,engine,id,item,quantity);d.set(['state','npcs',id,'inventory',item,'instances'],[...d.get('state','npcs',id,'inventory',item,'instances')??[],...instances]);return instances;
 }
-function executeAction(target,engine,id,action,{at,presence,actionId,start,ignoreTask=false}){
+function executeAction(target,engine,id,action,{at,presence,actionId,start,ignoreTask=false,furnace}){
  const d=draft(target.document,at),checked=validateAction(d,engine,id,action,{at:start,presence,ignoreTask}),base=engine.byId.get(id),minutes=checked.minutes;
  let outcome={success:true},summary,spent={minutes},produced=[];
  if(action.kind==='audit_inventory'){
@@ -91,16 +117,17 @@ function executeAction(target,engine,id,action,{at,presence,actionId,start,ignor
   const modifier=Math.floor((score-10)/2)+Math.floor(skill/(engine.rules.check.skillDivisor??150))+npcToolBonus(d,engine,id,r),total=die+modifier;
   const degree=die===1||total<=r.difficulty-10?'大失败':die===20||total>=r.difficulty+10?'大成功':total<r.difficulty?'失败':total<r.difficulty+5?'勉强成功':'成功';
   outcome={die,modifier,total,degree,difficulty:r.difficulty,success:['勉强成功','成功','大成功'].includes(degree)};
+  const thermal=kilnWorkResult(d,furnace?.plan,outcome,r.output.quantity,actionId,{endStress:furnace?.endStress});if(thermal)outcome.thermal=thermal;
   const station=engine.byId.get(checked.location)?.workstations?.find(s=>s.kind===r.workstation),fee=station?.owner===id?0:station?.fee??0;
   if(fee){d.set(['state','npcs',id,'coins'],d.get('state','npcs',id,'coins')-fee);if(station.owner?.startsWith('npc_'))d.set(['state','npcs',station.owner,'coins'],d.get('state','npcs',station.owner,'coins')+fee);else d.set(['state','workshopFunds',station.id],(d.get('state','workshopFunds',station.id)??0)+fee);}
-  spent.fee=fee;spent.materials=clone(r.materials);
+  spent.fee=fee;spent.materials=clone(r.materials);if(furnace)spent.fuel=clone(furnace.fuel);
   for(const m of r.materials)changeItems(d,engine,id,m.item,-m.amount);
   for(const item of r.tools??[]){changeItems(d,engine,id,item,0);wearItem(d,engine,id,item,r.toolWear??1);}
-  if(outcome.success){outcome.workmanship=degree==='勉强成功'?'粗糙':degree==='大成功'?(skill>=2100?'杰作':skill>=1500?'优秀':'精良'):'普通';produced=[{item:r.output.item,amount:r.output.quantity},...r.byproducts??[]];for(const p of produced)produce(d,engine,id,p.item,p.amount,actionId,r.id,at,outcome.workmanship);}
-  else{for(const m of r.materials){const recovered=Math.floor(m.amount*(r.failure?.recoverFraction??0));if(recovered)changeItems(d,engine,id,m.item,recovered);}
+  if(outcome.success){outcome.workmanship=degree==='勉强成功'?'粗糙':degree==='大成功'?(skill>=2100?'杰作':skill>=1500?'优秀':'精良'):'普通';produced=[{item:r.output.item,amount:r.output.quantity-(thermal?.crackedQuantity??0)},...r.byproducts??[]];for(const p of produced)produce(d,engine,id,p.item,p.amount,actionId,r.id,at,outcome.workmanship);}
+  else{for(const m of r.materials){const recovered=thermal?.crackedQuantity?0:Math.floor(m.amount*(r.failure?.recoverFraction??0));if(recovered)changeItems(d,engine,id,m.item,recovered);}
    if((die===1||die+modifier<=r.difficulty-10)&&r.failure?.injury){const max=d.get('state','npcs',id,'maxHp')??derivedStats({level:base.level??1,attributes:base.attributes,profession:Boolean(base.combatProfession)},engine.rules).maxHp;const hp=Math.max(0,(d.get('state','npcs',id,'hp')??max)-r.failure.injury);d.set(['state','npcs',id,'maxHp'],max);d.set(['state','npcs',id,'hp'],hp);if(!hp)d.set(['state','npcs',id,'status'],'濒死');}
   }
-  summary=`尝试${r.name}，耗时${minutes}分钟，${outcome.success?`制成${engine.byId.get(r.output.item).name}${r.output.quantity}份`:'没有得到成品'}，工坊费${fee}铜。`;
+  summary=`尝试${r.name}，耗时${minutes}分钟，${outcome.success?`制成${engine.byId.get(r.output.item).name}${produced[0].amount}份`:'没有得到成品'}，工坊费${fee}铜。`;
  }
  const day=String(Math.floor(start/DAY)),autonomy=d.get('state','npcs',id,'autonomy')??{};
  d.set(['state','npcs',id,'autonomy','minutesByDay',day],(autonomy.minutesByDay?.[day]??0)+minutes);
@@ -114,8 +141,9 @@ function executeAction(target,engine,id,action,{at,presence,actionId,start,ignor
 export function advanceNpcAutonomy(d,engine,before,after,eventId,{beforeState}={}){
  const results=[...advanceGovernance(d,engine,before,after,{beforeState}),...advanceQuestBoard(d,engine,before,after,{beforeState})];
  const settle=()=>{for(const task of Object.values(d.get('state','npcAutonomy','tasks')??{}).sort((a,b)=>a.finish-b.finish||a.id.localeCompare(b.id))){
-  if(task.status!=='进行中'||task.finish>after)continue;
-  try{const row=executeAction(d,engine,task.npc,task.action,{at:task.finish,start:task.start,presence:task.presence,actionId:task.id,ignoreTask:true});d.set(['state','npcAutonomy','tasks',task.id,'status'],row.outcome.success?'已完成':'失败');results.push(row);}
+  if(task.status!=='进行中')continue;
+  try{if(task.furnace)advanceFurnace(d,engine,task,Math.min(after,task.finish));if(task.finish>after)continue;
+   const row=executeAction(d,engine,task.npc,task.action,{at:task.finish,start:task.start,presence:task.presence,actionId:task.id,ignoreTask:true,furnace:d.get('state','npcAutonomy','tasks',task.id,'furnace')});d.set(['state','npcAutonomy','tasks',task.id,'status'],row.outcome.success?'已完成':'失败');results.push(row);}
   catch(error){d.set(['state','npcAutonomy','tasks',task.id,'status'],'失败');d.set(['state','npcAutonomy','tasks',task.id,'reason'],error.message);}
  }};settle();
  if(!beforeState)return results;
@@ -124,7 +152,7 @@ export function advanceNpcAutonomy(d,engine,before,after,eventId,{beforeState}={
   const presence=start===after?d.get('state'):npcPresenceAt(engine,beforeState,before,start,d.document.randomSeed);
   for(const id of Object.keys(presence.npcs).sort()){
    const actor=presence.npcs[id],base=engine.byId.get(id),actionId=`npc_daily_${day}_${id}`;
-   if(!full(engine,id)||!awake(actor)||actor.location===beforeState.location||beforeState.player.companions?.includes(id)||npcObligationAt(beforeState,id,start))continue;
+   if(!full(engine,id)||!awake(actor)||actor.location===beforeState.location||beforeState.player.companions?.includes(id)||npcObligationAt(beforeState,id,start)||npcAutonomyBusy(beforeState,id,start))continue;
    if(d.get('state','npcAutonomy','tasks',actionId))continue;
    const goal=Object.values(d.get('state','npcs',id,'goals')??base.goals??{}).flat().find(g=>auditGoal(g)&&g.progress<100);
    const recipes=engine.world.recipes.filter(r=>r.teachers?.includes(id)&&r.minutes<=30).sort((a,b)=>a.id.localeCompare(b.id));
@@ -132,7 +160,7 @@ export function advanceNpcAutonomy(d,engine,before,after,eventId,{beforeState}={
    for(const action of choices){try{
     const checked=validateAction(d,engine,id,action,{at:start,presence});
     const actorPresence={npcs:{[id]:{location:actor.location,activity:actor.activity,status:actor.status??'正常'}}};
-    d.set(['state','npcAutonomy','tasks',actionId],{id:actionId,npc:id,action:clone(action),start,finish:start+checked.minutes,presence:actorPresence,status:'进行中',rule:true});break;
+    startTask(d,{id:actionId,npc:id,action:clone(action),start,finish:start+checked.minutes,presence:actorPresence,status:'进行中',rule:true},checked);break;
    }catch{/* Missing resources or occupied time is a skipped action, never success. */}}
   }
   settle();
@@ -160,7 +188,7 @@ export function applyNpcPlan(d,engine,input,eventId){
    if(action.kind==='share'){const detail=shareNpcMemory(d,engine,{from:proposal.npc,to:action.to,memoryId:action.memoryId,channel:action.channel,eventId:id});results.push({id,status:detail.delivered?'已完成':'进行中',detail});continue;}
    const checked=validateAction(d,engine,proposal.npc,action),start=d.get('state','minute');
    const task={id,npc:proposal.npc,action:clone(action),start,finish:start+checked.minutes,presence:{npcs:Object.fromEntries([proposal.npc,action.seller].filter(Boolean).map(who=>{const n=d.get('state','npcs',who);return [who,{location:n.location,activity:n.activity,status:n.status??'正常'}];}))},status:'进行中',planEvent:eventId};
-   d.set(['state','npcAutonomy','tasks',id],task);results.push({id,status:'进行中',finish:task.finish});
+   startTask(d,task,checked);results.push({id,status:'进行中',finish:task.finish});
   }catch(error){results.push({id,status:'拒绝',reason:error.message});}
  }
  return {proposed:results.length,results};

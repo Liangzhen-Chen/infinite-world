@@ -2,6 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
 import {loadWorld} from '../tools/load-world.mjs';
+import {validateWorld} from '../tools/validate-world.mjs';
 import {authorMarket,approved,integrate,reviewContext,root,responsibilities} from '../world/design/w1-baishi-market-depth.mjs';
 import {hashContent} from '../tools/content-pipeline.mjs';
 import {validateNpcDepth,validateNpcProfiles} from '../tools/npc-profile-validation.mjs';
@@ -34,11 +35,12 @@ test('逐人真实L2证据、串行共享账和L4阅读与最终作者稿相符'
  assert.ok(requests.length>=ids.size&&requests.length<=120);assert.ok(ledger.cards.T92.spentYuan<=7);assert.ok(ledger.cards.T92.reservedYuan<1e-10);assert.ok(requests.every(r=>r.status==='settled'));
  for(const entry of bundle.entries){
   const record=JSON.parse(await fs.readFile(`${root}/${entry.id}.json`,'utf8'));assert.equal(record.status,'passed');assert.equal(record.draftResponse,undefined);
-  assert.equal(record.fingerprint,hashContent({entry,context:reviewContext(entry,bundle,world),revision:'t92-market-1'}));
+  assert.equal(record.fingerprint,hashContent({entry:{...entry,draft:record.draft},context:reviewContext({...entry,draft:record.draft},bundle,world),revision:'t92-market-1'}));
   assert.ok(record.responseEvidence.every(e=>e.phase==='review'));assert.ok(record.review.contradictions.every(r=>r.severity!=='hard'));
   const last=record.responseEvidence.at(-1),evidence=JSON.parse(await fs.readFile(`world/drafts/w1/${last.file}`,'utf8'));
   assert.equal(evidence.response.model.startsWith('deepseek'),true);assert.ok(evidence.usage.prompt_tokens>0);assert.equal(evidence.responseHash,last.responseHash);
-  assert.deepEqual(JSON.parse(evidence.request.messages[1].content).draft,entry.draft);
+  assert.deepEqual(JSON.parse(evidence.request.messages[1].content).draft,record.draft);
+  assert.deepEqual({...record.draft,services:[]},entry.draft,'引用修正不改变已审核的人物事实');
  }
  const batch=JSON.parse(await fs.readFile(`${root}/batch-0.json`,'utf8'));assert.equal(batch.l4.approved,true);
  for(const id of new Set([...batch.sample,...batch.flagged]))assert.ok(batch.l4.notes.some(r=>r.id===id&&r.note));
@@ -112,7 +114,7 @@ test('既有协调人升档，官署分工可查且与户籍、治安和公库�
   assert.equal(context.authoredResponsibility.role,role);
   assert.equal(context.authoredResponsibility.duty,duty);
   assert.deepEqual(context.governance,governance);
-  assert.deepEqual(person.services,['trade']);
+  assert.deepEqual(person.services,[]);
   assert.ok(person.serviceCatalog.every(s=>s.kind==='trade'));
   assert.deepEqual(person.wealth.debts,[]);assert.deepEqual(person.wealth.property,[]);
   const place=world.locations.find(l=>l.id===location);
@@ -130,4 +132,9 @@ test('既有协调人升档，官署分工可查且与户籍、治安和公库�
  }
  const ends=bundle.people.map(p=>p.relationships[0].note.split('。').at(-2));
  assert.equal(new Set(ends).size,ids.size,'关系备注各自记录不同立场');
+});
+
+test('正式世界发布校验没有涉及本批人物ID的错误',()=>{
+ const result=validateWorld(world,{stage:'release'});
+ assert.deepEqual(result.errors.filter(error=>[...ids].some(id=>error.includes(id))),[]);
 });
