@@ -147,4 +147,4 @@ test('真实存储并发争单仅一个承接者成功',async t=>{
  const outputs=await Promise.allSettled([npc,other].map((taker,i)=>store.transact('quest-race',{id:`claim-${i}`,anchor:`claim-${i}`,input:{tool:'world_quest',args:{operation:'accept',quest:'quest_offer',taker,consent:true},eventId:`claim-${i}`}},reducer)));
  assert.equal(outputs.filter(o=>o.status==='fulfilled').length,1);assert.equal(outputs.filter(o=>o.status==='rejected').length,1);
 });
-test('静态提示预算保留11600上限',async()=>{assert.ok((await loadPromptBundle()).budget.estimatedTokens<=11600);});
+test('静态提示预算遵守统一硬上限',async()=>{const {budget}=await loadPromptBundle();assert.ok(budget.estimatedTokens<=budget.limit);});

@@ -11,7 +11,9 @@ import {runSoak} from '../tools/m3-soak-runner.mjs';
 import {openSoakRun,nextSoakTask,summarizeSoak} from '../tools/m3-soak.mjs';
 async function temporary(t){const dir=await fs.mkdtemp(path.join(os.tmpdir(),'fields-soak-adapter-'));t.after(()=>fs.rm(dir,{recursive:true,force:true}));return dir;}
 function fake({warning=false,waitMinutes,tailMinutes=0}={}){return {async generate(body,label){let message,finish_reason='stop';
- if(label.startsWith('consistency:')){finish_reason='tool_calls';message={tool_calls:[{id:'review',type:'function',function:{name:'report_consistency_issues',arguments:JSON.stringify({issues:warning?[{category:'knowledge',severity:'warning',quote:'你买到了一个面包。',reason:'警告需保留供叙述复核',evidence:[{id:'player',quote:'我向林穗买一个面包。'}]}]:[]})}}]};}
+ // This warning tests persistence, not a private-knowledge claim. Knowledge
+ // findings require an identified subject and its actual cognition evidence.
+ if(label.startsWith('consistency:')){finish_reason='tool_calls';message={tool_calls:[{id:'review',type:'function',function:{name:'report_consistency_issues',arguments:JSON.stringify({issues:warning?[{category:'fact',severity:'warning',quote:'你买到了一个面包。',reason:'警告需保留供叙述复核',evidence:[{id:'player',quote:'我向林穗买一个面包。'}]}]:[]})}}]};}
  else if(label.startsWith('npc'))throw Error('测试禁止模型规划');
  else if(label.endsWith('-0')){finish_reason='tool_calls';message={content:null,tool_calls:[{id:'action',type:'function',function:{name:waitMinutes===undefined?'world_trade':'world_time',arguments:JSON.stringify(waitMinutes===undefined?{seller:'林穗',item:'面包',quantity:1}:{minutes:waitMinutes})}}]};}
  else message={content:`${waitMinutes===undefined?'你买到了一个面包。':'你等了一会儿。'}${tailMinutes?'你问林穗最近好吗。':''}<回合 额外="${tailMinutes}分" 地点="bld_hw_qingdeng" 在场="npc_hw_linsui"/>`};

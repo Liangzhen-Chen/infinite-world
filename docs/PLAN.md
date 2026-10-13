@@ -148,6 +148,186 @@ N1–N17至少12项完整有效且≥90%，N6/N16零泄漏，N12真实盲辨，N
 
 ### T99 已执行，未通过：六场完整（送货5/9、私宅6/9、离屏4/8、推搡4/9中断），账本157/165，有效N 9项过5项（N5/N6/N10/N13/N16），盲辨9/9与N6/N16零泄漏通过，工具漏4错2；305次调用6.94093904元。证据在docs/测试报告/M2-recheck-003/。第三次分析交Astra（M2-fix-planner-003）；第四轮若仍不过，M2标卡住并继续其他里程碑。
 
+### 生物与修行流派补足（2026-10-13用户新要求；主会话审定，来源：Astra核查与草案Creatures-planner-001，核查全文见该文件）
+
+用户原话：世界是中西结合的仙武世界，生物要丰富，有道士和尚法师，不能没有怪物；世界不能全由人类掌控。
+核查结论：150种生物里中式6种、西式5种，其余139种（92.7%）是动物植物变体，没有哥布林、兽人、巨魔、鬼魂、僵尸；16个首领15个中性。非人类主导的文化1种、势力2个，都很小，没有成规模的非人政体。职业里有道士、僧侣、法师，但61条法术全部归法师，道、僧、巫、祭司专属法术为0，只有法师有认证导师；地点里没有可进入的寺院、道观或学院。怪物只能靠主动追踪或探巢遇到，赶路不会遇见，四个村没有自己的栖地；委托目标只有送货、到访、建造，不能结算除妖。
+审计：八项全部同意。三张新卡（T153赶路遭遇、T154中西生物18种、T155除妖委托）；其余五项是改已有卡的选题和接点，不新增数量：T93、T102–T104、T105–T106、T142（重写为9省纲要含三个非人社会）、T94/T113–T115/T117–T122。派这些已有卡时，开场消息须带上下面对应的C条。所有内容原创，不用原小说专名与情节。
+
+共同验收CORE为：node --test tests/engine.test.mjs tests/storage.test.mjs tests/plugin.test.mjs。各卡另跑下列同领域整组；新增专项按本批ID检查，不将正式目录总数写死，已有明确验收保留。
+
+所有内容卡均同卡完成执行会话起草、全量L1、全量真实L2、定点修正、L4和正式发布到world。L4读标记项加随机5条，波次随机10条六项均分≥4、单项≥3，每次人工阅读≤10分钟；验证取得路径和world_upgrade保留旧变化。下列真实调用均指DeepSeek L2，起草0次，金额包含修正；同一失败最多重跑一次。
+
+共同锁定原存档、用户酒馆、dist、旧报告及其他会话在写的文件；不更改屏蔽表来放行名称，不复制原小说专名或情节。PLAN/PROGRESS/CHANGELOG仍归主会话；发布共享目录和内容账串行，草稿可并行。T150–T152当前占用的接点等原卡释放后再接；改工具的卡加跑tests/prompt.test.mjs及tests/tool-groups.test.mjs，静态提示≤11900。
+
+### T153（C1）赶路与停留时接触实际生物。
+
+1. 玩家结果：穿过已有栖地或在野外停留时会看到有来源的踪迹或在场生物，可以避开、追踪或接触。
+2. 可改server-plugin/{engine,wildlife,wildlife-range}.mjs及必要场景投影、tests/wildlife-encounters.test.mjs；锁定目录正文。复用追踪的种群扣除和实例生成，按经过路线、时段与战役种子判定；途中遭遇落在实际路段节点，停下或绕行正确结算已走时耗。与T109和所有engine时间写者串行，可并行C2起草。
+3. 验收CORE及node --test "tests/wildlife*.test.mjs" "tests/w4-*.test.mjs" tests/seasonal-migration.test.mjs tests/farm-pests.test.mjs tests/combat.test.mjs tests/pets.test.mjs tests/prompt.test.mjs。覆盖正常移动与等待、重放不重生、观察不刷怪、种群耗尽、绕行及存档恢复；遭遇不默认开战。
+4. 模型0次、0元。
+5. 预计3–4小时，先让已有物种进入日常旅行；不以每次移动必出怪或全图刷新实现。
+
+### T154（C2）补中西生物缺口并落在六个聚落周边。
+
+1. 玩家结果：五村与白石镇各有可达的怪物活动区，能辨认妖怪、亡灵和西式生物的不同习性与应对办法。
+2. 可改world/design/creatures-mixed.mjs、对应drafts与发布入口、meta/{monsters,rules,items,recipes}.json及栖地地理接点；允许wildlife/bosses实例化、magic-ritual/combat和schema的本批必要接点，锁定旧生物正文及人物。复用C1，地点优先取T94本批ID；T94的meta锁由主会话交给本卡串行发布，既有T90骨架不重做。
+3. 验收CORE及node --test "tests/wildlife*.test.mjs" "tests/w4-*.test.mjs" "tests/boss*.test.mjs" "tests/magic*.test.mjs" "tests/w3-*.test.mjs" tests/combat.test.mjs tests/pets.test.mjs tests/seasonal-migration.test.mjs tests/farm-pests.test.mjs tests/world-validation.test.mjs；node tools/w4-audit-ecology.mjs。将现有生态工具改为读取正式目录及本批ID，保留20种子三年，避免只查旧100种骨架；新增本批正常遭遇、弱点、取材与world_upgrade用例。
+4. 真实L2预计30–50次，上限1.5元；含生物、材料和栖地新事实。
+5. 预计18种，约4–5小时加后台生态模拟：中式9种覆盖狐妖、木精、游魂、僵尸与灵兽；西式9种覆盖哥布林、兽人、巨魔、骷髅、元素体及魔兽。每种明确生态位、食性或能量来源、作息、弱点、人兽关系和可得材料；至少12种处于一至二阶，每个聚落至少2种可接触。新增材料最多6项，优先复用已有物品；文明族群以交换产物表达资源，不把居民统一设成可猎取材料。灵体定义须在追踪及首领生成时进入实际状态，非生殖性亡灵按既定生成条件恢复，不能套普通动物繁殖文案。
+
+### C3 并入T93：改寺庙学馆选题并补修行入口。
+
+1. 玩家结果：在白石镇能实际拜入道、佛、法、武四条路线，学到入门本领并承担相应学费、材料或戒律。
+2. 在T93原33人内选既有名册作导师，保留18手工和15殿舍学馆的大体分工；可改原craft草稿/发布文件、people目录与meta/professions、skills、items，必要时解开T93地理锁补寺观学馆入口。learning、professions、magic-ritual与工具的必要接点同卡完成；锁定无关人物和61术效果，与T92、C4及所有人物/工具写者串行。
+3. 验收CORE及node --test "tests/r06-bs-*.test.mjs" "tests/npc-*.test.mjs" tests/learning.test.mjs tests/professions.test.mjs "tests/magic*.test.mjs" "tests/w2-*.test.mjs" tests/spell-lore.test.mjs tests/world-validation.test.mjs tests/prompt.test.mjs tests/tool-groups.test.mjs；node tools/audit-npc-depth.mjs。覆盖正常拜师、认证、购书、学习、施用和仪式资格取得；共享术式须同时检查高阶学习与熟练度，不剥夺旧法师已学能力。
+4. T93整卡真实L2上限由120次调为160次，金额仍≤7元，包含新增机构和教学事实；不是另加7元。
+5. 预计在T93原工作上增加2–3小时。道门沿验汀传统授符箓、护界与驱邪；佛门补原创寺院师承，授静息、体术和度亡仪轨，不把现有四神教派全部改称佛门；法师沿许苓及学馆授元素与研究，武者沿侠客/战士授步法兵器。另用既有巫师、祭司承接巫祝，用炼金师/医师承接炼丹；代表法术先复用定息、守心、符持远笺等。入门和守戒状态由实际行为产生，保留有代价的仪式资格要求。
+
+### C4 并入T102–T104：改法术选题。
+
+1. 玩家结果：修行路线有可买到或学到、实际生效的代表术式，后续仍按原30、30、29条发布。
+2. 可改三卡原w2-s2/s3/s4设计、草稿和发布范围，复用C3导师与机构；补书籍库存和必要材料配方，锁定已合格61术的效果。接C3，三批正式发布串行；不另立法术数量任务。
+3. 各卡验收CORE及node --test "tests/w2-*.test.mjs" "tests/magic*.test.mjs" tests/learning.test.mjs tests/professions.test.mjs tests/spell-lore.test.mjs tests/manufacturing.test.mjs "tests/w3-*.test.mjs" tests/world-validation.test.mjs。逐本批ID检查实际来源、职业资格与效果，仪式需用正常获得的资格及C2实际灵体，不能只注入夹具状态。
+4. 每卡真实L2预计40–65次、各≤1元，沿原额度；起草、L1/L2/L4和发布均留在各原卡。
+5. 每批约2–3小时。T102在炉作水土内安排至少6项道门制符、炼丹控火和武者器用选题，炼丹须有真实药材与成品配方；T103至少10项用于禅定、医护与巫祝安抚，沿光、医、心机制；T104至少12项用于符阵、驱邪、守戒及度亡，沿役灵、仪式和空间。超度落实为特定低阶游魂的可终结状态与去向，不冒充复活；必要的小接点归T104。
+
+### T155（C5）村镇除妖委托与生物往来。
+
+1. 玩家结果：能接下有实际报酬的除妖、驱邪委托，也能通过避让、供奉或交易处理村镇与怪物的冲突。
+2. 可改server-plugin/quest-board.mjs及combat、magic-ritual、boss-negotiation回执接点，extension/tools.mjs、world/geo/settlements.json、本批委托来源和发布工具、tests/quest-wildlife.test.mjs；锁定无关法术与人口。依赖C2及C4相关仪式，发布者复用五村与T92/T93人物；与T124及T152的委托所有权串行。
+3. 验收CORE及node --test "tests/quest-*.test.mjs" "tests/wildlife*.test.mjs" "tests/w4-*.test.mjs" "tests/boss*.test.mjs" "tests/magic*.test.mjs" tests/activities.test.mjs tests/learning.test.mjs tests/village-ledgers.test.mjs tests/prompt.test.mjs tests/tool-groups.test.mjs。核对指定目标的死亡、驱离或度亡结果，不能用visit冒充；已完成事件不得重复领奖，旧deliver/build行为保留，NPC只接其已有执行能力支持的目标。
+4. 真实L2预计12–24次，上限0.8元，审核委托及地方新事实；机制实现不调用模型。
+5. 预计8条地方事件或委托，约3–4小时；五村与镇均有入口，至少4条可结算的除妖/驱邪任务，其余覆盖袭扰、材料交易与禁忌供奉。付款、供物来自实际库存；敌意取决于具体行为，不按非人种族一概敌对。
+
+### T142重写（C6）：9省纲要，补三个非人社会；不执行旧T143预写人口。
+
+1. 玩家结果：能从地图与消息知道哪些地区由非人统治，以及当地通行、贸易或敌对关系。
+2. 可改world/geo省郡纲要、world/lore/{cultures,factions,factionPeople,history}.json、本批设计/草稿/发布工具、加载与检索接点、tests/lod2-1.test.mjs；锁定LOD0 full和T143按需生成实现。与T110/T111势力、T113–T115地理发布串行，可与C1准备并行；T143后续生成消费这些统治和文化事实，不在本卡提前造聚落与full。
+3. 验收CORE及node --test tests/lod2-1.test.mjs "tests/world-*.test.mjs" "tests/w5-*.test.mjs" tests/retrieval.test.mjs tests/world-clock.test.mjs。按本批省郡ID检查归属、邻接与统治方；区域统治不能被默认的人类官府覆写，联络地点不能被当作首都，world_upgrade保留既有地区变化。
+4. 真实L2预计70–110次，上限3元，替代T142旧2元上限；包含纲要及新增文化、势力的完整审核发布。
+5. 预计9省、32郡，分布草案为2/3/4/5/3/2/6/4/3郡；每省郡仅纲要及3–5名短名册人物，约4–5小时。保留砾耳交证群48人为地方组织，将其所属兽裔社会明确为多聚落区域；另增原创木精联邑与兽人诸部两种文化及两个势力，区域人口用估计规模，不当作已生成人物。分别落实猎林共治及对人贸易、山林自治及季节互不进入、矿谷部盟及边境敌对/议和；至少三个有边界的非人统治或占据区分布在九省内，省名表示地理分区，不强设为帝国官署辖区。沉星七人群保留小群体定位。
+
+### C7 并入T105–T106：改首领后两批选题。
+
+1. 玩家结果：能遇见有不同战法与诉求的妖怪首领和西式首领，其中可交涉者与非人社会有具体关系。
+2. 可改两卡原w4-b2/b3设计、草稿、bosses及平衡产物，基础物种取C2或已有目录；锁定普通物种与人物，依赖C2，引用远方统治关系须等C6。与bosses和共享发布账写者串行。
+3. 各卡验收CORE及node --test "tests/boss*.test.mjs" "tests/w4-*.test.mjs" "tests/wildlife*.test.mjs" tests/combat.test.mjs；node tools/m4-balance.mjs --catalog world/meta/bosses.json --out world/design/w4-b2-balance.json，T106改用w4-b3-balance.json并保留node tools/w4-audit-ecology.mjs。按各12个ID检查巢穴、弱点、实际材料、交涉与死亡后占据变化，原多种子平衡门槛保留。
+4. 各卡真实L2预计25–40次、各≤0.6元，沿原额度。
+5. 各12个、各3名智能存在不变，每批至少4个中式和4个西式，其余按生态缺口选；约各2小时加后台平衡。智能个体有族群关系、交易物与可拒绝事项，不能以首领12只替代一整个文明。
+
+### C8 并入T94、T113–T115、T117–T122：改地点与消息选题。
+
+1. 玩家结果：可从村镇传闻追到怪物巢区、废寺或异族旧据点，并从实际调查得知真相和当地生存办法。
+2. 使用各原卡设计/草稿/发布范围；T94在原10地点中安排至少6处供C2六个聚落周边活动区使用，C2负责meta栖地与物种绑定。T112补实际占据者接触和调查接点，T113–T115选废寺、旧法术工场、异族边市等；T116负责沿路传播，T117–T122负责内容。锁定无关人物与生物；按原依赖及C2/C5/C6发布先后串行，不另建同地点或同传闻。
+3. 各卡保留原命令与CORE，相关域整组为node --test "tests/r06-bs-*.test.mjs" "tests/w5-*.test.mjs" "tests/wildlife*.test.mjs" "tests/w4-*.test.mjs" "tests/boss*.test.mjs" tests/sites.test.mjs tests/activities.test.mjs "tests/world-*.test.mjs" tests/rumor-route.test.mjs tests/village-rumor-access.test.mjs tests/retrieval.test.mjs；T116另保留"tests/npc-*.test.mjs"。各专项随所属原卡交付，核对本批ID的路线、消息来源、占据者及发现后真相，未发布ID不提前引用。
+4. T112/T116为0模型；T94沿≤50次/4元；T113–T115各预计25–45次/2元；T117–T120各50–75次/1.5元，T121–T122各45–70次/1.5元，均为原卡整卡额度。
+5. 原地点和传闻数量不增；60据点中至少12处体现非人生活或道佛法传承，后六批260条传闻中至少48条围绕怪物、修行与跨族关系。题材含袭扰缘由、交易习惯、供奉禁忌及误传，真伪差异可调查；各原卡预计只增加0.5–1小时接点工作。
+
+### 怪物聚居地、内部文化与成精路线（2026-10-13用户进一步要求；主会话审定，来源：Astra草案MonsterSociety-planner-001）
+
+用户原话：怪可以有自己的部落，可以几种怪生活在一起，也可以某种怪大规模聚居，比如哥布林地宫；怪有自己内部的文化；中式有野兽成精；这里可以做得丰富很多。
+现状（Astra核查）：聚落、名册、骨架的数据结构可直接复用；遗迹进入、首领谈判已有，但据点里仍在场的非NPC占据者会直接拒绝进入，首领议和不会转成通行；智能首领存在creatures里，engine.actor只认玩家和NPC；野兽“觉醒”尚无实现；按需人口生成器还没有。
+审计：全部同意。七张新卡T156–T162，S5并入T143（按需人口生成，先供核心区聚居地用）。首批六处：炭阶地宫（白石镇近郊，哥布林单族240）、苔灯坞（河湾北林，狐族48）、榆根里（榆坡，木精与觉醒穴鼬林獾混居64）、裂炉营（砾泉，兽人哥布林巨魔主从104）、回汐埠（苇汀，獭龟蛙精怪之乡56）、灰棚集（桑坂，哥布林兽人元素体跨族集市64）。每处12名具名成员（4名完整档、8名名册），其余按需生成。成精阶段用原创名“听息、立意、借形”，与战力九阶分开。卡文里的S1–S8即T156、T157、T158、T159、（S5并入T143）、T160、T161、T162。新增真实模型上限合计约5.6元。依赖：T154（中西生物）与T109（势力时钟）先行；改工具的卡等T101压缩提示合入后再派。
+
+六处以下均为拟建，距离是选址目标，发布时按真实路线计算。每处共十二名具名成员，其中四名由同 ID 名册升为完整档，另八名保留名册；六处共二十四 full、四十八 roster，其余从固定人口配额按需生成。四名完整档分别承担首领、祭司或长老、生产负责人及有不同主张的成员；名册补足战士、日常劳动者和幼体，幼体不进入恋爱或亲密情节。
+
+炭阶地宫，拟 ID loc_ms_tanjie：白石镇近郊废窑下，距镇约四公里，二百四十名哥布林单族聚居。洞室按共灶窟分组，设菌床、通风井及铸补间，以菌粮和修补收入购粮；与镇戒备交易，抢粮派挑战窟主。用敲管传讯，忌封公共风井，换季熄炉送亡者，幼体由共灶轮养；玩家可接通风修复雇工、潜入失窃仓窟或谈粮约。
+
+苔灯坞，拟 ID loc_ms_taideng：河湾北林支路约三公里，四十八名有灵智的狐族成员，普通幼兽另记生态来源。设根洞家巢、药圃与共食庭，采药和果粮换盐，与河湾猎户争捕夹边界；长老容许结缘，年轻成员要求追偿旧伤。气味绳兼作记号，忌夺亡者尾结，葬礼熄灯归土，护幼者先分食；玩家可结缘报恩、返还遗物或处理寻仇。
+
+榆根里，拟 ID loc_ms_yugen：榆坡村外约五公里，六十四名木精与已觉醒穴鼬、林獾混居。树穴住区与地窟相连，设育苗地和修具棚；木精护林供果，穴居者排水运土，围绕谁能分配林产发生争执。节疤记号配土染图，忌伤育苗根，死者归根葬，新生共同照护；与村民中立互助，玩家可调停伐界、承接排水或帮助非木精成员争取议事权。
+
+裂炉营，拟 ID loc_ms_lielu：砾泉村矿道支路约六公里，兽人七十二、哥布林二十四、巨魔八，共一百零四名成员。兽人掌武力与营地分配，哥布林修矿具，巨魔搬运，以矿石及劳务换粮；棚营有共炉和分种居处，主从关系正被工匠挑战。炉灰画契，忌私占共炉首火，亡者工具归所属共营，幼体不服劳役；与村里暂行纳贡换通行，玩家可受雇护运、议和或支持改贡为贸易。
+
+回汐埠，拟 ID loc_ms_huixi：苇汀村水道约四公里，五十六名獭、龟、蛙类觉醒成员组成精怪之乡。浅洞和高台屋共用晒鱼台、避水幼居，以渔获和水路向导维生；与村里因堰闸转为敌对，内部争论迁居或破堰。水纹板标路，忌堵育幼汊，退水时送亡者归葬，年长龟族照护幼体；玩家可调水、寻找失散者、请寺观点化或阻止双方报复。
+
+灰棚集，拟 ID loc_ms_huipeng：桑坂村外商路约五公里，哥布林四十、兽人二十、具灵智元素体四，共六十四名成员。分散棚屋围着轮值炉场与交换地，补具和道路劳务换粮，元素体靠约定燃料维持；各族互相利用，争论炉场收益与燃料优先权。货架结绳通语，忌替别人许诺，亡者遗物交指定继承者，幼体由结伴户抚养；与村里中立贸易，可调停欠薪或接受寻料委托。同为哥布林，这里认可迁户自立，与炭阶共窟继承不同。
+
+共同执行边界：原存档、用户酒馆、dist、屏蔽表和历史审核记录锁定；PLAN/PROGRESS/CHANGELOG 归主会话。可改文件清单包含必要加载、schema 源及生成产物接点，实际跨卡写入先由主会话协调；共享正式目录及费用账串行，独立草稿可并行。
+
+每卡验收均含 CORE：`node --test tests/engine.test.mjs tests/storage.test.mjs tests/plugin.test.mjs`，另执行各卡所列同领域整组。下列新专项随所属卡新增；按本批 ID 检查人物、地点及引用，不写死全目录总数。保留原卡验收和基线二十三项预期失败，本草案不要求每卡全量或 release 构建。
+
+内容卡同卡完成起草、全量 L1、全量真实 L2、定点修正、L4 及正式发布到 world；L4 为标记项加随机五条，每次人工阅读不超过十分钟，波次十条六项均分至少四、单项至少三。起草由执行会话完成，另调真实模型仅用于所列 L2；金额含修正且复用既有账。涉及 extension/tools.mjs 或 prompt/ 的卡必须通过 prompt/tool-groups 整组，静态提示估算不超过 11900 token，现约 11710；沿用 world_lair、world_wildlife、world_settlement、world_trade 和既有 world_site 的操作，不增公共工具。
+
+### T156（S1）非人居民与聚居地接入。
+
+1. 玩家结果：进入已发布的怪物住区后能见到有作息的成员，与在场商贩交易，并获得公共区域的正常通行。
+2. 可改 server-plugin/{npc-state,engine,combat,bosses,boss-migration,boss-cognition,boss-negotiation,sites,location-access,settlement-profile,world-upgrade}.mjs 的身份与入口接点、tools/{create-schemas,population-validation,validate-world}.mjs、schemas/world.schema.json 及专项；锁定正式内容正文。与 T105/T106、T109 和人物/engine 写者串行，可并行 S2 起草。
+3. 验收 CORE 及 `node --test "tests/npc-*.test.mjs" "tests/population*.test.mjs" "tests/boss*.test.mjs" "tests/world-*.test.mjs" "tests/w4-*.test.mjs" tests/combat.test.mjs tests/sites.test.mjs tests/monster-society.test.mjs`；检查入场、实际交易、住宅许可及升级恢复，首领同一身体的伤势与死亡须同时影响谈话、交易和巢穴。
+4. 真实模型零次，零元。
+5. 预计四至五小时。居民增加必要物种和社会归属字段，沿 NPC 的作息与交易服务；完整档与 boss 战斗定义引用同一权威 actor，集中修正实际查找接点，禁止双份生命和库存。公共场所、议事区及私巢分别授权；社会首领离开或死亡不触发整村野怪补刷，旧野生巢穴规则保留。
+
+### T157（S2）炭阶地宫与苔灯坞正式落地。
+
+1. 玩家结果：在白石镇和河湾附近分别进入单族地宫与狐族住区，接触居民并进行有限库存交易。
+2. 可改 world/design/monster-society-1.mjs、对应 drafts、world/geo/{locations,routes,settlements}.json、people/{baseline,residents,households}.json、lore/{cultures,factions}.json、本批发布入口及必要物品库存配置；锁定无关居民和已审生物。依赖 S1、T154，本批地点与 T94 共用 ID；正式发布与 T90–T94、T110/T111、T142 串行。
+3. 验收 CORE 及 `node --test tests/monster-society-content.test.mjs "tests/population*.test.mjs" "tests/npc-*.test.mjs" "tests/w1-*.test.mjs" "tests/w5-*.test.mjs" "tests/world-*.test.mjs" tests/sites.test.mjs tests/settlement-trade.test.mjs tests/retrieval.test.mjs`；`node tools/audit-npc-depth.mjs`。按两处 ID 检查路线、四名 full 深度、户巢和库存；待生成人口须与具名成员分开。
+4. 真实 L2 预计八十至一百三十次，上限一点五元；含人物、建筑、社会与文化新事实。
+5. 预计三至四小时加后台 L2。两处共二十四名具名成员，其中八 full；每处二至三个住区、四至六项公共设施、至少两组内部立场。生活空间和初始交易本卡可玩，动态争端接 S3/T109，委托接 T155；不把尚未接入的内容标成已生效。
+
+### T158（S3）社会关系、交涉与潜入。
+
+1. 玩家结果：能与聚居地达成交易或通行约定，也能潜入受限区域，行为会改变成员及邻村的后续反应。
+2. 可改 server-plugin/{sites,boss-negotiation,boss-cognition,npc-cognition,npc-relations,settlement-profile,governance,quest-board}.mjs、T109 faction-clock 的事件消费接点、engine 必要分派和 extension/tools.mjs；可加紧邻模块的社会关系实现。锁定正文和 T109 的资产推进实现；依赖 S1/T109，与 T155、T124 及工具写者串行，可并行 S4 草稿。
+3. 验收 CORE 及 `node --test tests/monster-society.test.mjs tests/sites.test.mjs "tests/boss*.test.mjs" "tests/npc-*.test.mjs" "tests/quest-*.test.mjs" "tests/w5-*.test.mjs" tests/faction-clock.test.mjs tests/world-clock.test.mjs tests/settlement-trade.test.mjs tests/prompt.test.mjs tests/tool-groups.test.mjs`。覆盖守约与背约、未被发现的潜入、被发现后的驱逐或交锋，以及第三方村镇行为经消息传播后改变关系。
+4. 真实模型零次，零元。
+5. 预计三至四小时。态度按对象保存敌对、戒备或中立，交易与朝贡另记协议，避免一个枚举互相覆盖；首领只能承诺其辖区和库存。潜入消耗时间并做实际检定，只用于登记的可潜入据点，不放开原私宅同意规则；内部议事沿既有提议/意见动作，实际后果交 T109，结算回执供 T155 使用。静态提示不超过 11900 token。
+
+### T159（S4）榆根里与裂炉营正式落地。
+
+1. 玩家结果：在榆坡与砾泉附近接触共生聚落和主从营地，并能改变其中一项具体争端。
+2. 可改 S2 对应的 monster-society-2 设计、drafts、发布入口及这两处正式 geo/people/lore 条目和本批 tests；锁定 S2 内容及无关目录。依赖 S1/S3/T154/T109；可与 S6 零模型开发并行，共享目录和真实 L2 串行。
+3. 验收 CORE 及 `node --test tests/monster-society-content.test.mjs tests/monster-society.test.mjs "tests/population*.test.mjs" "tests/npc-*.test.mjs" "tests/w5-*.test.mjs" "tests/world-*.test.mjs" tests/sites.test.mjs tests/faction-clock.test.mjs tests/settlement-trade.test.mjs tests/retrieval.test.mjs`；`node tools/audit-npc-depth.mjs`。核对混居物种配额、资源来源及两地内部方案的不同后果。
+4. 真实 L2 预计八十至一百三十次，上限一点五元。
+5. 预计三至四小时加后台 L2，二十四名具名成员含八 full，结构规模同 S2。榆根里发布林产分配争议，裂炉营发布贡粮与劳动争议，消耗和结局接 T109；议事、交易和已授权生产实际生效，公开风俗与派系私下目标分开检索。
+
+### S5 并入T143：改人口子项的选题：先供核心区社会使用。
+
+1. 玩家结果：走入未展开的巢窟会遇到稳定成员，首次交谈后人物完整档保存，重访和重启仍是同一个人。
+2. 可改 T143 的按需人口生成与持久化模块、server-plugin/{npc-state,world-upgrade}.mjs、实际场景/交谈调用点、tools/population-validation.mjs 和 tests/population-on-demand.test.mjs；锁定六处已审具名人物及远方省郡正文。依赖 S1/S2，与人物、生成和升级写者串行；本子项先行，T143 远方地理模板另按原范围分项，不在本会话一起实现。
+3. 验收 CORE 及 `node --test "tests/population*.test.mjs" "tests/npc-*.test.mjs" "tests/world-*.test.mjs" tests/retrieval.test.mjs tests/prompt.test.mjs tests/tool-groups.test.mjs`；增加正常到访、首次交谈、生成失败再访及升级恢复场景，按六处 seed 验证人数、物种、年龄与户巢配额。
+4. 开发零模型；真实入口验证六名成人，每名起草和一次自查，预计十二次，含最多一次失败重试合计不超过十八次、零点八元。属于战役按需生成，沿 M7 已审定的代码硬约束加一次自查流程；静态核心人物仍走完整 L1/L2/L4 发布。
+5. 预计三至四小时。代码先按稳定种子生成名册与住所，只扣剩余配额；第一次交谈才生成 full，失败保留已分配身份，不补钱物或重掷人生。运行中资料写战役持久层，不能反写共享 world；生成器同供远方 T143 使用，不另建怪物人口生成器。若改提示，静态估算不超过 11900 token。
+
+### T160（S6）野兽开启灵智。
+
+1. 玩家结果：能观察普通野兽的灵智变化，用实际灵物或具资格的点化帮助它成为可交流的个体。
+2. 可改 server-plugin/wildlife.mjs、world-clock/T109 的觉醒效果调用点、npc-state、pets、world-upgrade、magic-ritual 必要接点及 extension/tools.mjs、规则 schema 和 tests/wildlife-awakening.test.mjs；锁定正式物种及术式正文。依赖 S1/S5/T109，与 T153/T154、T93/T104 和生态时间写者串行，可并行 S8 起草。
+3. 验收 CORE 及 `node --test "tests/wildlife*.test.mjs" "tests/w4-*.test.mjs" "tests/boss*.test.mjs" "tests/magic*.test.mjs" "tests/population*.test.mjs" tests/pets.test.mjs tests/faction-clock.test.mjs tests/world-clock.test.mjs tests/seasonal-migration.test.mjs tests/farm-pests.test.mjs tests/prompt.test.mjs tests/tool-groups.test.mjs`；覆盖自然累积、吞食、点化、资源不足、重放及长短步一致。
+4. 真实模型零次，零元；本批正式条件参数和解释由 S8 同批审核发布。
+5. 预计三小时。灵智采用原创阶段“听息、立意、借形”，与九阶战力分开；本卡做到立意。来源分别记录物种年岁阈值与经历累积、灵地停留、真实灵物消耗或导师点化；观察不能刷进度。未见种群只扣一次，已实例化个体不再扣；保留原身体、伤势与遭遇来源，进入社会后退出野生捕食/自动恢复统计。觉醒后的收伏转为有边界的同意关系，旧宠物身份不自动变成居民财产。静态提示不超过 11900 token。
+
+### T161（S7）成精后的修习与结社。
+
+1. 玩家结果：能教导已立意的精怪、帮助其取得借形能力，并参与它们定居或加入现存精怪之乡。
+2. 可改 S6 觉醒模块、server-plugin/{learning,manufacturing,npc-planning-service,npc-autonomy,magic-ritual}.mjs 的非人消费者接点、T109 faction-clock 结社效果、settlement-profile、world-upgrade、extension/tools.mjs 和 tests/wildlife-society.test.mjs；锁定 S6 身份转移规则及目录正文。依赖 S6/T109，与相关学习、生产和 engine 写者串行。
+3. 验收 CORE 及 `node --test "tests/wildlife*.test.mjs" "tests/npc-*.test.mjs" "tests/population*.test.mjs" "tests/magic*.test.mjs" tests/learning.test.mjs tests/manufacturing.test.mjs tests/professions.test.mjs tests/faction-clock.test.mjs tests/world-clock.test.mjs tests/prompt.test.mjs tests/tool-groups.test.mjs`；验证真实教学和制作、变形前后同一身体、加入/退出群落及季度推进无重复人口与库存。
+4. 真实模型零次，零元；新能力和结社参数由 S8 发布，新增术式正文并入 T104。
+5. 预计三至四小时。立意后可依实际资格学习并制造工具，借形需修习经历及真实施术代价，不默认化人或提升战力。T109 按季度或年检查自愿成员、可居住地点和口粮来源，满足后形成新组织或并入现存聚落；不足则保留游居状态。寺观关系与猎户冲突沿事件记忆，点化、结缘、报恩和寻仇均绑定具体当事人。静态提示不超过 11900 token。
+
+### T162（S8）回汐埠、灰棚集与成精路线正式落地。
+
+1. 玩家结果：在苇汀和桑坂附近进入精怪之乡及跨族集市，并从普通野兽走通觉醒、修习和定居的一条实际路径。
+2. 可改 monster-society-3 的设计、drafts、发布工具、两处 geo/people/lore 条目、world/meta/rules.json 的成精参数及必要配方/库存来源；锁定旧物种生态正文和前两批已审人物。依赖 S3/S5–S7、T154、T93 的导师及 T104 相关术式；规则发布与 T109/T154 串行，人物/内容账同样串行。
+3. 验收 CORE 及 `node --test tests/monster-society-content.test.mjs "tests/wildlife*.test.mjs" "tests/population*.test.mjs" "tests/npc-*.test.mjs" "tests/w5-*.test.mjs" "tests/world-*.test.mjs" "tests/magic*.test.mjs" tests/faction-clock.test.mjs tests/learning.test.mjs tests/manufacturing.test.mjs tests/retrieval.test.mjs`；`node tools/audit-npc-depth.mjs`。使用本批正式地点、灵物及导师资格走通全部取得路径，并检查六处均可到达且各自可交往。
+4. 真实 L2 预计一百至一百五十次，上限一点八元，覆盖两地内容和成精规则；不另跑真实聊天模型。
+5. 预计四小时加后台 L2，二十四名具名成员含八 full。发布四类成精条件和三个阶段的适用边界，野兽来源优先用已有赤耳林狐、石须穴鼬、灰颈河獭及叠甲丘龟；回汐埠先有居民，玩家新增结缘者从原生态转入，不能凭一次施法生成整乡。灰棚集完整体现与炭阶不同的哥布林风俗。
+
+与已审定卡衔接：并入 T154，改它的选题。仍为十八种、中西各九；西式明确保留哥布林、兽人、巨魔的席位，中式保留狐妖和木精，其余维持亡灵、元素体与灵兽等缺口。既有鼬、獭、龟的觉醒属于个体阶段，不拿它们重计新增物种；至少十二种低阶及六处周边可接触要求不变，文明居民不进入猎物掉落表，物种生态与居民数分别记。
+
+并入 T105–T106，改它们的选题：各三名智能首领分别对应六处聚居地头领，沿用本批完整档身份；每批十二首领和原平衡门槛不变。人物经历由对应社会内容卡审核，首领卡审核战斗与交涉增量；同一人不再生成第二档。头领死亡后由社会争端决定继任，原有野生首领仍按原生态迁占。
+
+并入 T155，改它的八项委托选题：保留至少四项可核实的除妖/驱邪，目标选实际危害个体；其余四项覆盖聚居地雇工、供物或内部调停，可由具完整档的怪物成员发布。增加身份与社会事件结算接点归 T155，使用 S3/T109 的真实回执，报酬由发布者库存支付；不把受雇杀同族设成唯一方案。原起草至发布流程及零点八元上限保留。
+
+并入 T94，改它的近郊地点选题并与六处入口共用 ID；并入 T113–T115，改它们的遗迹选题，将三批各两处安排为聚居地内废区、旧神龛或采掘遗址，共六个 site 附件，仍计在原六十处之内。住区、道路和居民由本次内容卡发布，遗迹卡只补机关及可调查旧事；已完成 T112 的必要通行修正归 S1/S3，不重开一张据点实现卡。
+
+并入 T117–T122，改它们的传闻选题：原至少四十八条相关传闻中，给每处四条，共二十四条，覆盖一个可调查误传及真实交往办法；其余仍供修行和生物题材。传播沿 T116，只引用已发布人物和地点；各原卡模型额度与审核发布要求不变。
+
+并入 T109 的既有责任：为本批提供有资源代价的关系/争端阶段和觉醒调用，S3/S6/S7 各负责自己的效果消费者；并入 T110–T111，改相关邻近势力的选题，使人类村镇行为能推动关系变化。六个新增地方组织及阶段参数由三张社会内容卡审核，不挤占或重复审核原四十势力。
+
+并入 T142，改它的联系选题：榆根里与远方木精联邑互通育苗和林界知识，裂炉营及灰棚集连接兽人诸部的矿货路线，苔灯坞与回汐埠通过猎道交换接触砾耳所属社会。远方仍只作九省纲要，近郊六处各自独立，不把联络地变成远方首都，也不移动砾耳四十八人与沉星七人来充人口。
+
 ### 主线全量回归修复（2026-10-13，全量测试1447项中76项失败；清单与报错在logs/sessions/full-fail-A/B/C.txt）
 
 来由：今天合并五十多张卡，每张只验了自己的测试和CORE，卡与卡之间的影响累积。三张卡按领域分，可并行；都不删测试、不放宽断言——预期因正当变化而过期的更新预期并写明原因，行为被弄坏的修行为。模型0。
@@ -166,30 +346,13 @@ N1–N17至少12项完整有效且≥90%，N6/N16零泄漏，N12真实盲辨，N
 要点：四场中断的共同出口是一致性审查的唯一改写未通过后拒绝提交、runner按stopOnFailure停止。四场原因不同：送货是二审引用被改动的JSON导致校验失败；私宅是审查自相矛盾地把正确时间判错；离屏是二审输出的JSON不合法；推搡是主持原稿和改写都多计了5分钟（真错）。账本8条里4条是这四次执行失败，另4条是粮仓买粮被提前一回合执行。N3、N4、N12是审核拿到的证据不全，N15是NPC确实编了经历，N2是逐N审核输出被截断。
 审计：三张修复卡和第四轮复验都同意。卡文里的F1/F2/F3即T146/T147/T148；T147在T146合入后派，T148可与T146并行。第四轮上限12元。第四轮仍未通过则M2标卡住，转其他里程碑。
 
-### T146 等待回合能正确结束，修复审查误拒与正文协议输出。优先恢复四场完整执行，释放N9/N11/N17后续回合。
-1 完成结果：120、60、14400、10分钟等待均可提交正确尾注，时间只推进一次；原始错误和修正文分别留存。纯协议错误按已有真实clock、在场名单及parseTurn既定回退语义规范化，明确等待已足量且无后续交谈时额外为0；真实事实矛盾仍走唯一文字改写，不能把工具失败改成成功。
-对审查使用明确的当前时刻与实际差值，时间正确不得因模型自行换算矛盾而进入改写；缺来源与直接矛盾保持区分。缩短并结构化审稿输出，引用采用短的连续原文；格式或引用无效最多一次仅修正审查响应的调用，保留原响应，不重抽完整负评，不把unverified当通过。补齐未闭合q标签的显示处理，已登记人物显示姓名且原文可追溯。
-2 可改：server-plugin/consistency-service.mjs、consistency-review.mjs；extension/turn.mjs、message-view.mjs；tests/m3-consistency.test.mjs、m3-consistency-integration.test.mjs、m3-consistency-browser.test.mjs及新增tests/m2-reply-protocol.test.mjs。锁定F2的consistency-evidence与F3全部提示文件，正常调用接点由主会话协调。
-3 验收：node --test tests/m3-consistency.test.mjs tests/m3-consistency-evidence.test.mjs tests/m3-consistency-integration.test.mjs tests/m3-consistency-browser.test.mjs tests/m2-reply-protocol.test.mjs；CORE。四场原响应作离线夹具，覆盖额外5→0、正确11:35、坏JSON、删字段引文及未闭合q；仍拒绝真实重复计时、失败移动变成功、私密外泄。浏览器与runner共用的提交路径都覆盖。
-4 真实模型：实施0次、0元；上线后的审查格式修正每个失效响应最多1次，计入第四轮总额，文字改写仍最多1次。
-5 预计规模：300–500行，一个执行会话；不改runner停止策略或降低总体一致性门槛。
+### T146 已完成：等待回合尾注按真实时钟规范化；审查响应格式失效最多修一次且保留原负评；未闭合引语显示登记姓名。相关94/95（余一项为主线旧的浏览器夹具问题，归T152），0模型。
 
-### T147 居民可谈已有往来与工作背景，带路结果和逐N审核读取完整而不重复的事实。目标恢复N3/N4，恢复N2有效覆盖，并支持N12正确区分背景与进度。
-1 完成结果：主持场景与审查共享本人已有关系事实及相关公开职务，明确来源；作息作为有时间边界的背景，只有已重建且未受行程、约定、昏迷等覆盖的时段可支持实际活动，不能推出完成数量。N4直接使用现有移动回执、带路履约和双方位置断言，说明companions的到达后语义，不改引擎同行状态。
-逐N输入保留全部回合的单份正文和行动证据，删除consistency中original/text/tail.visible等重复正文，只留问题及状态；N2上限12288，截断仍为未完成。叙述评分只引用真实visible正文，格式失效使用与F1同一受限修正政策；N6/N16私密证据继续隔离，N12盲辨独立。
-2 可改：server-plugin/npc-memory.mjs、scene-card.mjs、consistency-evidence.mjs；tools/npc-acceptance.mjs、playtest-review.mjs；tests/npc-memory.test.mjs、npc-integration.test.mjs、m3-consistency-evidence.test.mjs、npc-acceptance.test.mjs、playtest-npc-evidence.test.mjs、playtest-review.test.mjs。锁定engine.mjs及F1/F3文件，优先消费既有状态和证据，不新增人物事实。
-3 验收：node --test tests/npc-memory.test.mjs tests/npc-cognition.test.mjs tests/npc-schedule.test.mjs tests/npc-obligations.test.mjs tests/npc-delivery.test.mjs tests/npc-autonomy.test.mjs tests/npc-integration.test.mjs tests/npc-relations.test.mjs；node --test tests/playtest-runner.test.mjs tests/playtest-review.test.mjs tests/playtest-npc-evidence.test.mjs tests/playtest-lifecycle.test.mjs tests/playtest-budget.test.mjs tests/npc-acceptance.test.mjs；F1所列四个m3-consistency测试文件；CORE。离线覆盖关系可用而秘密不可用、作息不冒充完成进度、N4履约解队不等于未同行、N2截断不采纳及真实引文。
-4 真实模型：0次、0元；逐N和评分的实际效果由第四轮测量，已完成负评不重抽。
-5 预计规模：250–450行，一个执行会话；F1合入后处理共享接口，动态场景只加入本轮相关人物资料。
+### T147 已完成：主持场景与审查共享本人已有的关系和公开职务，作息只作有时间边界的背景；N4改用移动回执、带路履约和双方位置判定；逐N输入去掉重复正文，上限12288；评分格式失效允许修一次。0模型，真实效果由T149测量。
 
-### T148 当前步骤正确执行，NPC对白不新增过去经历。目标消除四条交易断言失败，争取恢复N12/N15，并补足N9真实现场反应。
-1 完成结果：申请带路先答复，申请私宅先给许可，粮仓先到场后付款；courier移动只请求一次。主持明确区分当前观察、已发生经历和未来安排：施锦可以谈翻晒工作及接下来的打算，段禾可以谈档案中的桥与植物，不补今早进度或“三条岔道”的失败练习。冲突反应依据在场者与既有threatResponse，若呼救或报告须实际发言、后续司法仍调用world_law，不能以后台记录替代。
-2 可改：prompt/constitution.md、style.md、examples.md；tests/playtests/guide.json、npc_home_visit.json、npc_courier.json、npc_quest_social.json中的分步输入与机会标注；tests/prompt.test.mjs、m2-action-context.test.mjs、m2-npc-prompt.test.mjs。锁定原有账本断言和通过标准、正式人物档及F1/F2文件；不把已知失败重写成新报告通过。
-3 验收：node --test tests/prompt.test.mjs tests/m2-action-context.test.mjs tests/m2-npc-prompt.test.mjs tests/deepseek-transport.test.mjs tests/playtest-runner.test.mjs tests/playtest-npc-evidence.test.mjs tests/npc-acceptance.test.mjs；node --test tests/npc-obligations.test.mjs tests/npc-delivery.test.mjs tests/quest-board.test.mjs tests/law.test.mjs；CORE。离线回放四条行动链并核对两轮交易总守恒；loadPromptBundle().budget记录最终估算，静态测试不计作N能力通过。
-4 真实模型：0次、0元；真实对白、盲辨和工具选择统一留给第四轮。
-5 预计规模：120–220行，一个执行会话；静态提示预算仅余258 token至11900，先改写压缩既有规则，保持现有11800测试。
+### T148 已完成：申请带路先答复、私宅先给许可、粮仓先到场后付款，courier移动只请求一次；对白区分当前观察、已发生经历和未来安排，不补档案外的经历；冲突现场由在场者实际发言。相关88/CORE40，0模型，真实效果由T149测量。
 
-### T149 M2第四轮真实复验【真实模型；待T146–T148合入】
+### T149 M2第四轮真实复验【真实模型；修复卡已齐，待模型槽】
 
 完成结果：三卡合入后运行原十场87回合，使用F3澄清后的分步输入，保留原断言及真实失败历史。目标13项有效、至少12项通过，即12/13=92.3%；N1/N7/N8/N14仍未测，不把新增场景用于稀释失败。
 预期保留N5/N6/N10/N13/N16，争取恢复N2/N3/N4/N11/N12/N15/N17。N9当前t1–2已明确没有还手或喊救，且无围观议论；恢复司法后半场仍不能自动补齐前半场，因此将N9列为最大不确定项，不能承诺13/13。
@@ -389,7 +552,7 @@ T28-R1修好新回执undefined规范化并保留严格篡改拒绝，相关31/32
 共同做法：起草由执行会话完成，L1后全量真实L2，L4读标记条目加每批随机5条（随机10条六项均分≥4、单项≥3），共享事件闭合后正式整合，都在同一张卡里做完。每人送审到通过为止，只按整卡调用总量和金额封顶；到顶仍未过的条目保留为候选，不计入已交付。各卡锁定docs/、dist/、server-plugin/和用户存档。T90合入后T91→T92→T93串行（同写baseline与名册）；T94可与人物卡并行准备，真实模型阶段错开。
 审计改动：草案把“T06也继承了6次上限”的修正并入骨架卡，删除——T06已完成，这处不影响任何后续卡。阶段审核结论：抽样六人未发现事实矛盾；已知问题是关系备注有重复句式（郑汐/王浦“还需要彼此听完再商量”，张洛/袁卿“同住……在家中见面”），留M3叙述润色。
 
-### T90 白石镇骨架与名册
+### T90 已完成：白石镇骨架整合——6街区、18处公共与行业建筑、90处住宅、90户、306名登记居民（含严辙），另694人与210户为待生成；421次真实L2全过，L4均4.05/最低3，1.00851元。镇公库、税章与官职执行待治理卡接入。
 
 1. 结果：玩家能沿街区找到建筑和居民，系统能区分 306 名已登记居民与 694 名待生成人口，并据此安排后续完整档。
 2. 文件：可改 world/design/w1-baishi-skeleton.mjs、world/drafts/w1/baishi-skeleton/、world/people/ 三份目录及 world/geo/ 三份目录；工具限新 tools/w1-baishi.mjs、必要的 content-pipeline.mjs/content-budget.mjs 接点，测试限 tests/r06-bs-skeleton.test.mjs、tests/npc-depth-budget.test.mjs。旧人物只允许严辙的入籍及住址接点，保留既有身份；其他旧人物锁定。
@@ -397,21 +560,9 @@ T28-R1修好新回执undefined规范化并保留严格篡改拒绝，相关31/32
 4. 模型：起草 0 次，L2 总计不超过 450 次，整卡不超过 8 元；短名册与地点也须全部审核后整合。
 5. 规模：305 条短名册、约 90 个已登记户、6 街区及约 18 处公共或行业建筑，住宅按户落地；总户数和待生成户数与 1000 人核平。官署职责、行会联络处和地方问题写入聚落完整档；复用表驱动骨架，单会话完成，不起草 99 人完整档。
 
-### T91 码头与货栈 33 人
+### T91 已完成：白石镇码头与货栈33人提升为完整档并正式整合，11件共同往事闭合，同ID从名册移出；全体185个完整档深度零缺口；80次真实L2全过，L4均4.12/最低3，1.10915416元。
 
-1. 结果：玩家能接触有家庭牵挂和具体利益分歧的搬运者、船户及货栈住户，沿现有交易能力办事。
-2. 文件：依赖T90；可改 world/design/w1-baishi-dock-depth.mjs、world/drafts/w1/baishi-dock/、world/people/baseline.json、world/people/residents.json、tests/r06-bs-dock.test.mjs；地理、户籍和共用工具锁定。
-3. 验收：node --test tests/r06-bs-dock.test.mjs；node tools/audit-npc-depth.mjs；node --test tests/engine.test.mjs tests/storage.test.mjs tests/plugin.test.mjs。专项覆盖 33 人正式提升、双方事件与知情边界，以及 roster 不再重复计数。
-4. 模型：起草 0 次，L2 总计不超过 120 次，整卡不超过 7 元；从起草到正式整合同卡完成。
-5. 规模：33 full，镇内累计 34 full、272 roster；事件参与者以本批为主，对既有人物只引用已知事实，单会话。
-
-### T92 官署与市集 33 人
-
-1. 结果：玩家能找到有具体职责的镇务人员与市集经营者，理解摊位、工日及家庭照护之间的争执。
-2. 文件：依赖T91；可改 world/design/w1-baishi-market-depth.mjs、world/drafts/w1/baishi-market/、world/people/baseline.json、world/people/residents.json、tests/r06-bs-market.test.mjs；地理、户籍和共用工具锁定。
-3. 验收：node --test tests/r06-bs-market.test.mjs；node tools/audit-npc-depth.mjs；node --test tests/engine.test.mjs tests/storage.test.mjs tests/plugin.test.mjs。专项覆盖 33 人正式提升、官署职责与既有规则相符、共享事件闭合及名册去重。
-4. 模型：起草 0 次，L2 总计不超过 120 次，整卡不超过 7 元；从起草到正式整合同卡完成。
-5. 规模：33 full，镇内累计 67 full、239 roster；职业之外各有家庭关系和私人目标，单会话。
+### T92 已完成：白石镇官署与市集33人提升为完整档并正式整合，11件共同往事闭合；全体218个完整档深度零缺口；33次真实L2全过，L4均4.10/最低3，0.44856896元。
 
 ### T93 手工行会、寺庙与学馆 33 人
 
@@ -439,7 +590,7 @@ T28-R1修好新回执undefined规范化并保留严格篡改拒绝，相关31/32
 
 所有改extension/tools.mjs或prompt/的卡，静态提示估算须≤11900 token，验收追加node --test tests/prompt.test.mjs；目前11642，硬上限12000。若所需接口无法装入11900，先派下述P0，再派该功能卡。
 
-### T101（P0） 压缩提示，仅在上述空间不足时启用。结果：完整保留工具参数语义和主持边界，腾出后续接口空间。可改prompt/、extension/tools.mjs及对应提示测试，其余锁定；与全部提示写者串行。验收node --test tests/prompt.test.mjs tests/m2-npc-prompt.test.mjs tests/boss-negotiation.test.mjs，CORE；估算≤11000且原行为断言不降。模型0；约1小时。
+### T101（P0）已完成：静态提示加工具定义压到约10700 token（硬上限12000），工具名、操作、参数全部保留；各测试里写死的估算上限统一改读12000。静态世界纲要只留起始地点名，地点描述改由只读目录查询取得。相关104/CORE40，0模型。
 
 ### T102（A1） W2-S2 炉作、通风、水土。结果：新增30条可取得、可学会、能实际影响工序或环境的法术。可改world/design/w2-s2.mjs、world/drafts/w2-s2/、仿w2-s1的内容/发布入口、tests/w2-s2.test.mjs；正式范围world/meta/{spells,skills,items}.json、书籍销售者的people/baseline.json和geo/locations.json接点。与A2/A3及T90–T94同文件发布串行，可并行A4准备。验收node --test "tests/w2-*.test.mjs" "tests/magic*.test.mjs" tests/learning.test.mjs，CORE。真实L2预计40–65次，≤1元；约2小时，复用已实现消费者。
 
@@ -451,7 +602,7 @@ T28-R1修好新回执undefined规范化并保留严格篡改拒绝，相关31/32
 
 ### T106（A5） W4-B3 首领第三批。结果：再增12个、含3名智能存在，使首领达到40个、智能存在达到8名。文件与A4对应换w4-b3，另可更新world/drafts/w4/ecology.json；接A4，同一bosses.json串行。验收node --test "tests/boss*.test.mjs" "tests/w4-*.test.mjs" tests/combat.test.mjs；node tools/m4-balance.mjs --catalog world/meta/bosses.json --out world/design/w4-b3-balance.json；node tools/w4-audit-ecology.mjs；CORE。保留单人≤15%、标准五人55%–65%的多种子平衡及20种子三年生态要求。L2预计25–40次，≤0.6元；约2小时，模拟后台运行。
 
-### T107（B1） 正式节日运行接点。结果：正式节日可改变作息和生产窗口，并按场地、参与者同意及实际物资举办集市或仪式。可改server-plugin/{festival,world-clock,npc-schedule,engine}.mjs、节日加载/schema接点、tests/festival-runtime.test.mjs；锁定24条候选正文。与B3、D1及NPC时间接点串行，可并行A内容准备。验收node --test "tests/npc-*.test.mjs" tests/festival.test.mjs tests/festival-runtime.test.mjs tests/world-clock.test.mjs "tests/w5-*.test.mjs"，CORE；跨月、取消、重放及地方节俗同源去重均覆盖。模型0；约2小时。
+### T107（B1）已完成：正式节日改变作息与生产窗口，举办须有场地、参与者同意和实际物资并真实扣耗；新增10项通过/CORE40，0模型。24条候选的发布归T108。
 
 ### T108（B2） 24节日审核发布。结果：24个节日有正式举办地点和运行参数，玩家能参加有成本的活动。可改world/design/w5-festivals.mjs、原节日草稿、tools/w5-festivals.mjs及发布入口、world/lore/festivals.json和必要geo地点映射、tests/w5-festival-publication.test.mjs；接B1，地理发布与T94/遗迹卡串行。复用有效审核，仅修缺项；regional_unmapped须落实举办地再启用，不将远方人员瞬移来现场。验收node --test "tests/w5-*.test.mjs" tests/festival.test.mjs tests/festival-runtime.test.mjs tests/world-clock.test.mjs，CORE。L2预计24–50次，≤1.5元；约2小时。
 
@@ -461,7 +612,7 @@ T28-R1修好新回执undefined规范化并保留严格篡改拒绝，相关31/32
 
 ### T111（B5） 势力时钟后20个。结果：剩余20个势力也有资源约束和可干预的阶段，不以文字计划冒充生效。文件同B4，批次换w5-clock-2，接B4发布；与其他factions.json写者串行。验收node --test "tests/w5-*.test.mjs" tests/world-clock.test.mjs tests/faction-clock.test.mjs，CORE。L2预计25–45次，≤1.5元；约2小时。
 
-### T112（B6） 遗迹进入、调查与有限资源。结果：玩家能进入据点、处理机关、取得有限资源，并凭实际发现解锁历史真相。可改新server-plugin/sites.mjs、activities/retrieval及地理加载接点、extension/tools.mjs、tests/sites.test.mjs；正式地点正文锁定。保留占据者与物权，离开重访不刷新宝物，隐藏真相只向有发现记录者开放。验收node --test tests/sites.test.mjs tests/activities.test.mjs tests/retrieval.test.mjs "tests/world-*.test.mjs" tests/prompt.test.mjs，CORE。模型0；约2.5小时；与治理/创造工具写者串行，提示≤11900。
+### T112（B6）已完成：据点进入、机关处理、有限库存（重访不刷新），凭实际发现解锁隐藏历史；提示估算11710 token；相关与CORE通过，0模型。
 
 ### T113（B7） 遗迹据点第一组20处。结果：白石镇所属城市范围至少15处具备完整历史、物权、机关、资源与时间变化。可改world/design/w5-sites-1.mjs、对应草稿/工具、world/geo/{locations,routes}.json、tests/w5-sites-1.test.mjs；接B6和T94，优先补全其已建地点，同一ID只计一次。与B8/B9及其他地理发布串行。验收node --test "tests/w5-*.test.mjs" tests/sites.test.mjs tests/world-validation.test.mjs，CORE。L2预计25–45次，≤2元；约2小时。
 
@@ -469,7 +620,7 @@ T28-R1修好新回执undefined规范化并保留严格篡改拒绝，相关31/32
 
 ### T115（B9） 遗迹据点第三组20处。结果：再完成20处，使不同ID的合格遗迹据点至少60处。文件同B7，批次换w5-sites-3；接B8，与地理发布串行。验收node --test "tests/w5-*.test.mjs" tests/sites.test.mjs tests/world-validation.test.mjs，CORE；逐本批ID检查，不写目录总数等于60。L2预计25–45次，≤2元；约2小时。
 
-### T116（B10） 传闻沿路线逐手传播。结果：传闻随真实携带者或已登记消息渠道抵达，逐手变化能追到源头，未知真相不会出现在公开检索。可改server-plugin/{npc-rumors,npc-cognition,npc-schedule,retrieval}.mjs及engine小接点、传闻加载器、新tests/rumor-route.test.mjs；锁定内容正文，复用现有现场获知链。验收node --test "tests/npc-*.test.mjs" tests/rumor-route.test.mjs tests/village-rumor-access.test.mjs tests/retrieval.test.mjs，CORE。模型0；约2.5小时，与B3/C6的认知接点串行。
+### T116（B10）已完成：传闻随真实携带者和登记渠道沿路线抵达，逐手版本可追溯源头，按实际获知问询；相关与CORE通过，0模型。
 
 ### T117（B11） 传闻第一组45条。结果：新增45条可由实际渠道获知的真、半真或假传闻。可改world/design/w5-rumors-1.mjs、对应草稿/内容发布工具、world/lore/rumors.json、tests/w5-rumors-1.test.mjs；接B10，关联已发布事件、携带者及路线，与B12–B16同目录串行。验收node --test "tests/w5-rumors-*.test.mjs" tests/rumor-route.test.mjs tests/village-rumor-access.test.mjs，CORE。L2预计50–75次，≤1.5元；约1.5小时。
 
@@ -511,7 +662,7 @@ C部分只拆缺口：governance.mjs的任职入口止于“待上级决定”�
 
 ### T135（D3） W3长生活流程。结果：真实对话串起取得/学艺、制作失败及副产物、维修耐久、保存腐败、成本售卖和自创配方，离开再回来状态连续。可改tests/playtests/w3_long.json、tests/w3-long.test.mjs及docs/测试报告/w3-long/，引擎与合格目录锁定；接D1/D2。验收node tools/w3-wave-score.mjs --check；node --test "tests/w3-*.test.mjs" tests/manufacturing.test.mjs tests/learning.test.mjs tests/professions.test.mjs "tests/magic*.test.mjs"；npm run test:playtests -- --only w3_long --repeat 1 --parallel 1 --run-dir docs/测试报告/w3-long --run-id w3-long --card D3 --increment 5；CORE。519条已有审核和随机评分复用有效结果；账本/时耗/售空升级100%，叙述≥90%。真实约30自然轮、120–180次调用，≤5元；准备1小时加后台运行。
 
-### T136（T31a） M3记忆真实场景准备。结果：M2–M9能通过正常HTTP会话验证，四种账簿/称呼查询命中同一真实事件，裁历史后仍可检索。可改tests/playtests/m3_memory.json、新tests/m3-acceptance.test.mjs、tools/playtest-metrics.mjs及必要检索接点；只修本卡复现的缺口，锁定M2指标语义。验收node --test tests/m3-acceptance.test.mjs "tests/history-window*.test.mjs" tests/retrieval.test.mjs tests/m3-retrieval.test.mjs tests/chronicle.test.mjs "tests/playtest-*.test.mjs"，CORE。模型0；约2小时，可与内容准备并行，与T99报告处理及metrics写者串行；不依赖T28 CLI。
+### T136（T31a）已完成：17轮记忆场景与M2–M9的HTTP准备及评分，四种查询在裁历史前后命中同一事实；0模型。
 
 ### T137（T31b） M3文风与时间场景。结果：V1–V7及问题文档里的具体时间误述、场外尾注、凭空成品和示例冒充经历均有可评分的真实场景。可改tests/playtests/m3_language.json、新tests/m3-language.test.mjs、prompt/、一致性审查必要接点及docs/问题.md叙述段；只定点修正，不重写已审核人物。验收node --test tests/m3-language.test.mjs "tests/m3-consistency*.test.mjs" tests/m2-npc-prompt.test.mjs tests/prompt.test.mjs "tests/playtest-*.test.mjs"，CORE。模型0；约2小时，接T31a并与所有提示写者串行，静态≤11900；问题仅凭后续真实通过结果关闭。
 

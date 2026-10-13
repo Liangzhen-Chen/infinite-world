@@ -4,6 +4,38 @@ import {reviewPlaytest}from'../tools/playtest-review.mjs';
 import {readFileSync}from'node:fs';
 const turns=Array.from({length:3},(_,index)=>({index,input:'付款',reply:'已经付清。',calls:[],assertions:[]}));
 const scores={truth:50,agency:80,language:90,continuity:70};
+test('第三轮真实坏引文只修一次，保留60分负评并只引真实visible正文',async()=>{
+    const raw=JSON.parse(readFileSync(new URL('../docs/测试报告/M2-recheck-003/真实试玩.json',import.meta.url),'utf8'));
+    const result=raw.results.find(r=>r.id==='npc_private'),original=result.review.parts.find(p=>p.start===5);
+    const corrected=structuredClone(original.invalidReview);corrected.findings[0].quote=corrected.findings[0].quote.replace('</q>','');
+    for(const change of [false,true]){
+        let count=0;
+        const review=await reviewPlaytest({async generate(body,label){
+            const input=JSON.parse(body.messages[1].content),turn=input.turns[0].turn;
+            if(turn!==5)return {choices:[{finish_reason:'stop',message:{content:JSON.stringify({scores,findings:[]})}}]};
+            count++;
+            if(!label.endsWith(':format'))return {choices:[{finish_reason:'stop',message:{content:original.rawReview}}]};
+            const correction=JSON.parse(body.messages.at(-1).content);assert.match(correction.instruction,/不重新评分/);
+            const value=structuredClone(corrected);if(change)value.scores.language=100;
+            return {choices:[{finish_reason:'stop',message:{content:JSON.stringify(value)}}]};
+        }},result,{}, {previousReview:null});
+        assert.equal(count,2);const part=review.parts.find(p=>p.start===5);
+        assert.equal(part.rawReview,original.rawReview);assert.equal(part.correction.attempts,1);
+        if(change){assert.equal(review.complete,false);assert.match(part.error,/不得改变原分数/);}
+        else{assert.equal(review.complete,true);assert.equal(part.scores.language,60);assert.equal(part.findings[0].reason,corrected.findings[0].reason);assert.ok(result.turns[5].visible.includes(part.findings[0].quote));}
+    }
+});
+
+test('评分坏JSON可按原问题修正；无法引用同一问题时保持未完成且不重抽',async()=>{
+    const finding={turn:0,criterion:'truth',quote:'已经付清',reason:'未见交易记录'};
+    const broken=JSON.stringify({scores,findings:[finding]}).slice(0,-1);
+    let count=0;
+    const repaired=await reviewPlaytest({async generate(body,label){count++;return {choices:[{finish_reason:'stop',message:{content:label.endsWith(':format')?JSON.stringify({scores,findings:[finding]}):broken}}]};}}, {turns:turns.slice(0,1)},{});
+    assert.equal(count,2);assert.equal(repaired.complete,true);assert.deepEqual(repaired.parts[0].scores,scores);
+    count=0;
+    const missing=await reviewPlaytest({async generate(body,label){count++;return {choices:[{finish_reason:'stop',message:{content:JSON.stringify({scores,findings:label.endsWith(':format')?[]:[{...finding,quote:'正文没有的话'}]})}}]};}}, {turns:turns.slice(0,1)},{});
+    assert.equal(count,2);assert.equal(missing.complete,false);assert.match(missing.parts[0].error,/增删问题/);
+});
 test('分段评分核对引用，任何截断不生成整场分数；不会用零分替代未知',async()=>{
     let calls=0;
     const client={async generate(body){

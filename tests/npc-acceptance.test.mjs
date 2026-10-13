@@ -86,6 +86,22 @@ test('未测与未通过分开，匿名盲辨误辨为有效失败而非缺证',
     assert.equal(summarizeNpcAcceptance([],[]).ratio,null);
 });
 
+test('N2保留全部单份正文和行动证据，去除审查重复正文；12288的length仍未完成',async()=>{
+    const turns=Array.from({length:8},(_,index)=>({index,input:'继续聊',visible:`真实正文${index}`,reply:`旧原稿${index}`,calls:[{tool:'world_quest',result:{ok:true,index}}],assertions:[],
+        consistency:{status:'verified',verified:true,original:`旧原稿${index}`,text:`真实正文${index}`,visible:`真实正文${index}`,tail:{visible:`真实正文${index}`},model:{rawResponse:'重复审查正文'},issues:[]}}));
+    let count=0;
+    const review=await reviewNpcRequirements({async generate(body){
+        count++;assert.equal(body.max_tokens,12288);const input=JSON.parse(body.messages[1].content);assert.equal(input.turns.length,8);
+        for(const [index,t] of input.turns.entries()){
+            assert.equal(t.reply,`真实正文${index}`);assert.equal(t.calls[0].result.index,index);
+            assert.deepEqual(t.consistency,{status:'verified',verified:true,issues:[]});
+        }
+        assert.doesNotMatch(body.messages[1].content,/旧原稿|重复审查正文/);
+        return {choices:[{finish_reason:'length',message:{content:JSON.stringify({requirements:[{id:'N2',pass:true,reason:'仍可聊',evidence:[{turn:7,quote:'真实正文7'}]}]})}}]};
+    }},{id:'chat',attempt:1,turns},{requirements:['N2']});
+    assert.equal(count,1);assert.equal(review.complete,false);assert.deepEqual(review.requirements,[]);
+});
+
 test('逐N审查必须引用真实回复或执行证据，玩家请求不算已实现',async()=>{
     const result={id:'private',attempt:1,turns:[{index:0,input:'你应当不知道',visible:'我不知道这件事。',calls:[],assertions:[]}]},scenario={requirements:['N6'],rubric:{continuity:'无关人物不能知道私密行为'}};
     const client=quote=>({generate:async()=>({choices:[{finish_reason:'stop',message:{content:JSON.stringify({requirements:[{id:'N6',pass:true,reason:'明确不知道',evidence:[{turn:0,quote}]}]})}}]})});

@@ -31,6 +31,17 @@ async function setup(){
 }
 const stream=(document,id)=>document.state.npcs[id].memoryStream??[];
 
+test('共享背景保留本人村务往来和对方公开职务，不读取对方秘密',async()=>{
+    const {world,engine,document}=await setup(),other=world.npcs.find(n=>n.id==='npc_hw_chenbai');
+    other.secret='对方私密暗号不可传递';other.knowledge.known.push({fact:'私密账目不可传递'});
+    const context=npcContext(engine,document,merchant,'林穗，公仓钥匙该问谁？');
+    const relation=context.background.relations.find(r=>r.with===other.id);
+    assert.equal(relation.note,'按账目核对酒馆的公用支出');assert.equal(relation.publicRole,'临时村务代理');
+    assert.equal(relation.source,`${merchant}.relationships`);assert.doesNotMatch(JSON.stringify(context.background),/私密暗号|私密账目/);
+    const scene=engine.scene(document,'林穗，公仓钥匙该问谁？');
+    assert.match(scene,/村务往来/);assert.match(scene,/临时村务代理/);assert.match(scene,/来源 npc_hw_linsui.relationships/);
+});
+
 test('真实交易只进入参与者和连续在场者记忆；睡眠、场外与中途离开者不知道',async()=>{
     const {world,document,run}=await setup(),home=document.state.location;
     document.state.npcs[teacher].location='bld_hw_school';
@@ -106,14 +117,24 @@ test('未被察觉的偷窃不会给受害者或其他房间的人补全知识',
 });
 
 test('任务领取和当面交付由发布者记住，不传播给同屋无关人物',async()=>{
-    const {document,run}=await setup();
+    const {engine,document,run}=await setup();
     let c=(await run(document,'world_quest',{operation:'publish',publisher:merchant,grade:'D',personal:true,reward:20,content:'补充干粮',objective:{type:'deliver',item:'item_ration',quantity:1}},'job')).document;
-    assert.deepEqual(stream(c,merchant),[],'公开任务不等于玩家已经参与');
-    c=(await run(c,'world_quest',{operation:'accept',quest:'quest_job'},'accept')).document;
-    c=(await run(c,'world_quest',{operation:'complete',quest:'quest_job'},'deliver')).document;
-    assert.deepEqual(stream(c,merchant).map(row=>row.kind),['quest','quest']);
-    assert.match(stream(c,merchant)[1].content,/已完成/);
+    const published=stream(c,merchant);
+    assert.equal(published.length,1,'发布者记住自己的托管发布');
+    assert.deepEqual(published[0].participants,[merchant]);
+    assert.deepEqual(npcContext(engine,c,merchant,'补充干粮').memories,[],'公开任务不等于玩家已经参与');
     assert.deepEqual(stream(c,witness),[]);
+    c=(await run(c,'world_quest',{operation:'accept',quest:'quest_job'},'accept')).document;
+    assert.deepEqual(stream(c,merchant).map(row=>row.kind),['quest','quest']);
+    assert.deepEqual(stream(c,merchant)[1].participants,['player',merchant]);
+    c=(await run(c,'world_quest',{operation:'complete',quest:'quest_job'},'deliver')).document;
+    assert.deepEqual(stream(c,merchant).map(row=>row.kind),['quest','quest','quest']);
+    assert.deepEqual(stream(c,merchant)[0],published[0]);
+    assert.deepEqual(npcContext(engine,c,merchant,'补充干粮').memories.map(row=>row.kind),['quest','quest']);
+    assert.match(stream(c,merchant)[2].content,/已完成/);
+    assert.deepEqual(stream(c,witness),[]);
+    const inspected=(await run(c,'world_quest',{operation:'inspect',quest:'quest_job'},'inspect')).document;
+    assert.deepEqual(stream(inspected,merchant),stream(c,merchant),'只读查询不增加经历');
 });
 
 test('人物私有流不经全局读取泄漏；场景区分本人往事、台词范例和玩家经历',async()=>{

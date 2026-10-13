@@ -72,9 +72,9 @@ test('选工具只计实际触发的嵌套分支及前置，未取得条件证�
     const unknown=toolSelectionMetrics([measured],[scenario]);assert.equal(unknown.complete,false);assert.ok(unknown.excluded.some(r=>r.reason==='conditional-not-measured'));
 });
 
-test('送货移动与私宅等待属于已请求动作，参数已标注且额外world_trade仍报错',async()=>{
+test('送货立约与私宅等待只执行当前步骤，提前移动和额外world_trade仍报错',async()=>{
     for(const [id,index,calls,expected]of [
-        ['npc_courier',2,[{tool:'world_promise',args:{type:'送货',item:'item_bread',quantity:1,deadline:660}},{tool:'world_promise',args:{type:'付款',coins:2,deadline:660}},{tool:'world_move',args:{destination:'bld_hw_council'}}],['world_promise','world_move']],
+        ['npc_courier',2,[{tool:'world_promise',args:{type:'送货',item:'item_bread',quantity:1,deadline:660}},{tool:'world_promise',args:{type:'付款',coins:2,deadline:660}}],['world_promise']],
         ['npc_home_visit',0,[{tool:'world_move',args:{destination:'loc_hw_fields'}},{tool:'world_time',args:{minutes:30,activity:'等待'}}],['world_move','world_time']],
     ]){
         const scenario=JSON.parse(await fs.readFile(new URL(`./playtests/${id}.json`,import.meta.url),'utf8'));
@@ -84,6 +84,10 @@ test('送货移动与私宅等待属于已请求动作，参数已标注且额�
         assert.equal(report.missed,0);assert.equal(report.wrong,0);
         assert.ok(report.parameterOpportunities>0);assert.equal(report.parameterWrong,0);assert.equal(report.targetOpportunities,0);
         assert.equal(report.rows[0].targetMeasurement,'not-measured');
+        if(id==='npc_courier'){
+            const early={...turn,calls:[...turn.calls,{tool:'world_move',args:{destination:'bld_hw_council'}}]};
+            assert.equal(toolSelectionMetrics([{id,turns:[early]}],[scenario]).wrong,1);
+        }
         turn.calls.push({tool:'world_trade',args:{seller:'npc_hw_linsui',item:'item_bread',quantity:1}});
         const wrong=toolSelectionMetrics([{id,turns:[turn]}],[scenario]);
         assert.equal(wrong.wrong,1);assert.equal(wrong.rows[0].wrongCalls[0].tool,'world_trade');

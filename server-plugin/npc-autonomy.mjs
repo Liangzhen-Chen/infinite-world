@@ -31,7 +31,7 @@ function validateAction(d,engine,id,action,{at=d.get('state','minute'),presence=
  assertNpcObligationAction(d,engine,[id,action.seller].filter(Boolean),{start:at,minutes,location:actor.location,kind:'autonomy'});
  const day=String(Math.floor(at/DAY)),spent=state.npcs[id].autonomy?.minutesByDay?.[day]??0;
  if(spent+minutes>240)throw Error('每日自主工作时间已用尽');
- for(let cursor=at;cursor<at+minutes;){const slot=scheduleAt(engine,id,cursor);if(!slot||slot.location!==actor.location||/睡眠|睡觉|熟睡|赶路|前往|返回/.test(slot.activity))throw Error('实际作息没有完整工作窗口');cursor=slot.until;}
+ for(let cursor=at;cursor<at+minutes;){const slot=scheduleAt(engine,id,cursor,state);if(!slot||slot.production===false||slot.location!==actor.location||/睡眠|睡觉|熟睡|赶路|前往|返回/.test(slot.activity))throw Error('实际作息没有完整工作窗口');cursor=slot.until;}
  if(action.kind==='audit_inventory'){
   const goals=state.npcs[id].goals??base.goals,goal=Object.values(goals).flat().find(g=>g.id===action.goal);
   if(!goal||!auditGoal(goal)||goal.progress>=100)throw Error('这项目标不能通过盘点本人库存直接完成');
@@ -54,7 +54,7 @@ function validateAction(d,engine,id,action,{at=d.get('state','minute'),presence=
   if(action.seller===id||!awake(seller)||seller.location!==actor.location||!sellerBase?.serviceCatalog?.some(s=>s.kind==='trade'&&s.price.mode==='engineQuote'))throw Error('没有同地且愿意出售现有库存的卖家');
   if(!safe(action.quantity)||action.quantity<1||action.quantity>20||!item?.id.startsWith('item_'))throw Error('交易品种或数量未登记');
   if(engine.quantity(d,action.seller,action.item)<action.quantity||state.npcs[id].coins<tradeQuote(d,engine,id,action,actor.location).cost)throw Error('真实钱款或库存不足');
-  for(let cursor=at;cursor<at+minutes;){const s=scheduleAt(engine,action.seller,cursor);if(!s||s.location!==actor.location||!s.services.includes('trade'))throw Error('交易没有完整接待窗口');cursor=s.until;}
+  for(let cursor=at;cursor<at+minutes;){const s=scheduleAt(engine,action.seller,cursor,state);if(!s||s.location!==actor.location||!s.services.includes('trade'))throw Error('交易没有完整接待窗口');cursor=s.until;}
  }else throw Error('自主行动类型未实现');
  return {minutes,location:actor.location};
 }
