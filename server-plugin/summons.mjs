@@ -1,8 +1,12 @@
+import {prepareSummonWork,applySummonWork}from'./magic-ritual.mjs';
 import { servantCarryWater,environmentFeatures } from './environment.mjs';
 import {applyProtectionPrimitive}from'./magic-primitives.mjs';
 import{effectiveProficiency}from'./professions.mjs';
 
 export const summonTemplates=Object.freeze({
+ dust_servant:{tasks:['clean'],maximumPower:100,maximumDuration:30,upkeepMp:1,upkeepMinutes:5,work:true},
+ rubble_servant:{tasks:['carry_rubble'],maximumPower:2000,maximumDuration:60,upkeepMp:1,upkeepMinutes:5,work:true},
+ paper_bird:{tasks:['carry_paper'],maximumPower:60,maximumDuration:60,upkeepMp:1,upkeepMinutes:5,work:true},
  water_cup:{tasks:['carry_water'],maximumPower:250,maximumDuration:30,upkeepMp:1,upkeepMinutes:5},
  fire_projection:{tasks:['illuminate'],maximumPower:1,maximumDuration:60,upkeepMp:1,upkeepMinutes:5},
  water_guard:{tasks:['guard'],maximumPower:20,maximumDuration:60,upkeepMp:2,upkeepMinutes:5,waterOnly:true},
@@ -20,6 +24,7 @@ export function validateSummonCatalog(catalog) {
     }
     const template=summonTemplates[spec?.summonType];
     if(!template)return['召唤类型尚未接入，不能凭名称赋予能力'];
+    if(template.work&&(!Number.isFinite(catalog.rangeMeters)||catalog.rangeMeters<0||catalog.rangeMeters>10))errors.push('役灵工序需要有限真实射程');
     if(!Number.isSafeInteger(catalog.duration)||catalog.duration<1||catalog.duration>template.maximumDuration||spec.power>template.maximumPower||spec.upkeepMp!==template.upkeepMp||spec.upkeepMinutes!==template.upkeepMinutes)errors.push('召唤超过载量、时限或维持契约边界');
     return errors;
 }
@@ -36,7 +41,7 @@ function waterSite(d,engine,target,authorization){
  return{waterFeature:row.id,initialWaterMl:state.waterMl,waterPoint:[...row.position]};
 }
 
-export function prepareSummon(d, catalog, args) {
+export function prepareSummon(d, catalog, args, {completion=false}={}) {
     if (!this.rules.petCare) throw new Error('世界尚未登记召唤契约规则');
     if(catalog.effectSpec.kind==='summon_contract'){
       const summon=resolveSummon(this,d,args.target??args.summon),effect=d.get('state','effects',summon);
@@ -51,15 +56,15 @@ export function prepareSummon(d, catalog, args) {
     const template=summonTemplates[catalog.effectSpec.summonType];
     const proficiency=d.get('state','skills',catalog.skill,'proficiency')??0;
     if(!Number.isSafeInteger(proficiency)||proficiency<0||proficiency>2699)throw Error('召唤熟练度记录无效');
-    const medium=template.waterOnly?waterSite(d,this,args.target,args.authorization):{};
-    if (!template.waterOnly&&!['player', d.get('state', 'location')].includes(args.target ?? 'player')) throw new Error('只能在施术者当前位置召唤');
+    const medium=template.waterOnly?waterSite(d,this,args.target,args.authorization):template.work?prepareSummonWork.call(this,d,catalog,args,{completion}):{};
+    if (!template.work&&!template.waterOnly&&!['player', d.get('state', 'location')].includes(args.target ?? 'player')) throw new Error('只能在施术者当前位置召唤');
     const count = Object.values(d.get('state', 'effects')).filter(effect => effect.kind === 'summon' && effect.owner === 'player').length;
     if (count >= this.rules.petCare.maximumSummons) throw new Error('同时维持召唤的名额已满');
     return { catalog, spec: catalog.effectSpec, target: 'player',args:{...args},medium };
 }
 
 export function applySummon(d, prepared, eventId) {
-    try { prepared=prepareSummon.call(this, d, prepared.catalog, prepared.args??{ target: 'player' }); }
+    try { prepared=prepareSummon.call(this, d, prepared.catalog, prepared.args??{ target: 'player' },{completion:true}); }
     catch (error) { return { effectFailed: error.message }; }
     const { catalog, spec } = prepared, now = d.get('state', 'minute'), key = `summon_contract:${eventId}`;
     if(spec.kind==='summon_contract'){
@@ -79,12 +84,13 @@ export function applySummon(d, prepared, eventId) {
         upkeepMp: spec.upkeepMp, upkeepMinutes: spec.upkeepMinutes, durationMinutes: catalog.duration,
         boundary: spec.summonType==='water_cup'?'只搬运同一场景登记容器中的现有水；不净化，不战斗，不形成永久宠物，不自动续期':'仅执行模板能力；防护额度一次有限，续约不回补；不形成永久宠物或物品' };
     d.set(['state', 'effects', eventId], { kind: 'summon', owner: 'player', spell: catalog.id,
-        summonType: spec.summonType, location: d.get('state', 'location'), expires: now + catalog.duration,
+        summonType: spec.summonType, power:spec.power, rangeMeters:catalog.rangeMeters, location: d.get('state', 'location'), expires: now + catalog.duration,
         nextUpkeep: now + spec.upkeepMinutes, contract: key, terms,...prepared.medium,
         ...(template.tasks.includes('guard')?{guardReserve:reserve}:{}) });
     d.set(['state', 'records', key], { category: 'summon_contract', owner: 'player', effect: eventId,
         spell: catalog.id, started: now, expires: now + catalog.duration, status: '履行中', paidUpkeep: 0, terms });
-    return { summon: eventId, contract: key, expires: now + catalog.duration, terms };
+    const work=template.work?applySummonWork.call(this,d,d.get('state','effects',eventId),eventId):{};
+    return { summon: eventId, contract: key, expires: now + catalog.duration, terms,...work };
 }
 
 function end(d, id, effect, status, minute) {

@@ -1,3 +1,4 @@
+import {validateRitualCatalog,prepareRitual,applyRitual,recordRitualCare}from'./magic-ritual.mjs';
 import {validateCareCatalog,prepareCare,applyCare}from'./magic-care.mjs';
 import {validateMindSpaceCatalog,prepareMindSpace,applyMindSpace}from'./magic-mind-space.mjs';
 import {validateGrowthCatalog,prepareGrowthMagic,applyGrowthMagic}from'./magic-growth.mjs';
@@ -38,6 +39,7 @@ export function validateMagicCatalog(catalog,{requireHandler=false}={}){
     if(spec.kind==='object')errors.push(...validateObjectCatalog(catalog));
     if(spec.kind==='heat')errors.push(...validateHeatCatalog(catalog));
     if(spec.kind==='air')errors.push(...validateAirCatalog(catalog));
+    if(spec.kind==='ritual')errors.push(...validateRitualCatalog(catalog));
     if(spec.kind==='care')errors.push(...validateCareCatalog(catalog));
     if(spec.kind==='mind_space')errors.push(...validateMindSpaceCatalog(catalog));
     if(spec.kind==='water_earth')errors.push(...validateWaterEarthCatalog(catalog));
@@ -51,6 +53,7 @@ export function validateMagicCatalog(catalog,{requireHandler=false}={}){
 export function prepareMagic(d,catalog,args,context={}){
     const errors=validateMagicCatalog(catalog);if(errors.length)throw new Error(errors.join('；'));
     const spec=catalog.effectSpec;if(!spec)return null;
+    if(spec.kind==='ritual')return prepareRitual.call(this,d,catalog,args);
     if(spec.kind==='mind_space')return prepareMindSpace.call(this,d,catalog,args);
     if(spec.kind==='care')return prepareCare.call(this,d,catalog,args);
     if(spec.kind==='light')return prepareLight.call(this,d,catalog,args);
@@ -104,8 +107,9 @@ export function prepareMagic(d,catalog,args,context={}){
 export function applyMagic(d,prepared,id){
     if(!prepared)return{};
     let{spec,target,path,catalog}=prepared;
+    if(spec.kind==='ritual')return applyRitual.call(this,d,prepared,id);
     if(spec.kind==='mind_space')return applyMindSpace.call(this,d,prepared,id);
-    if(spec.kind==='care')return applyCare.call(this,d,prepared,id);
+    if(spec.kind==='care'){const result=applyCare.call(this,d,prepared,id);recordRitualCare(d,prepared,result,id);return result;}
     if(spec.kind==='light')return applyLight.call(this,d,prepared,id);
     if(spec.kind==='optics')return applyOptics.call(this,d,prepared,id);
     if(prepared.windObject)return applyWindObject.call(this,d,prepared);

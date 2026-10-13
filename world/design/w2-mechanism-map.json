@@ -4,9 +4,9 @@
   "formalSpellCount": 31,
   "counts": {
     "reviewed-unpublished": 2,
-    "consumer-ready": 94,
+    "consumer-ready": 112,
     "published": 30,
-    "missing-consumer": 28
+    "missing-consumer": 10
   },
   "rows": [
     {
@@ -1786,24 +1786,30 @@
       "name": "灯蛾唤引",
       "mechanism": "lure",
       "originalEffect": "吸引近处真实灯蛾，不把它们当作永久宠物",
-      "status": "missing-consumer",
-      "handler": null,
-      "validation": [
-        "此法术机制尚未接入规则，不能叙述已实现"
-      ],
-      "evidence": "现有役灵模板无此任务；缺真实动物引导、清扫、负载传讯、协作或邀约消费者。"
+      "status": "consumer-ready",
+      "handler": {
+        "kind": "ritual",
+        "operation": "lure",
+        "power": 1
+      },
+      "validation": [],
+      "evidence": "server-plugin/magic-ritual.mjs, summons.mjs, revival.mjs, contracts.mjs and magic-primitives.mjs; normal cast, work, clock and protection consumers; tests/magic-ritual.test.mjs; content not reviewed or published"
     },
     {
       "id": "spell_summon_02",
       "name": "灰尘役灵",
       "mechanism": "clean_servant",
       "originalEffect": "召来短暂清扫役灵，不能处理厚重垃圾",
-      "status": "missing-consumer",
-      "handler": null,
-      "validation": [
-        "此法术机制尚未接入规则，不能叙述已实现"
-      ],
-      "evidence": "现有役灵模板无此任务；缺真实动物引导、清扫、负载传讯、协作或邀约消费者。"
+      "status": "consumer-ready",
+      "handler": {
+        "kind": "summon",
+        "summonType": "dust_servant",
+        "power": 100,
+        "upkeepMp": 1,
+        "upkeepMinutes": 5
+      },
+      "validation": [],
+      "evidence": "server-plugin/magic-ritual.mjs, summons.mjs, revival.mjs, contracts.mjs and magic-primitives.mjs; normal cast, work, clock and protection consumers; tests/magic-ritual.test.mjs; content not reviewed or published"
     },
     {
       "id": "spell_summon_03",
@@ -1856,24 +1862,32 @@
       "name": "石屑役灵",
       "mechanism": "summon_earth",
       "originalEffect": "召出搬运碎石的低阶役灵，载重有限",
-      "status": "missing-consumer",
-      "handler": null,
-      "validation": [
-        "此法术机制尚未接入规则，不能叙述已实现"
-      ],
-      "evidence": "现有役灵模板无此任务；缺真实动物引导、清扫、负载传讯、协作或邀约消费者。"
+      "status": "consumer-ready",
+      "handler": {
+        "kind": "summon",
+        "summonType": "rubble_servant",
+        "power": 2000,
+        "upkeepMp": 1,
+        "upkeepMinutes": 5
+      },
+      "validation": [],
+      "evidence": "server-plugin/magic-ritual.mjs, summons.mjs, revival.mjs, contracts.mjs and magic-primitives.mjs; normal cast, work, clock and protection consumers; tests/magic-ritual.test.mjs; content not reviewed or published"
     },
     {
       "id": "spell_summon_07",
       "name": "风雀传签",
       "mechanism": "summon_air",
       "originalEffect": "由契约风雀投影沿已知短路线携带纸签",
-      "status": "missing-consumer",
-      "handler": null,
-      "validation": [
-        "此法术机制尚未接入规则，不能叙述已实现"
-      ],
-      "evidence": "现有役灵模板无此任务；缺真实动物引导、清扫、负载传讯、协作或邀约消费者。"
+      "status": "consumer-ready",
+      "handler": {
+        "kind": "summon",
+        "summonType": "paper_bird",
+        "power": 60,
+        "upkeepMp": 1,
+        "upkeepMinutes": 5
+      },
+      "validation": [],
+      "evidence": "server-plugin/magic-ritual.mjs, summons.mjs, revival.mjs, contracts.mjs and magic-primitives.mjs; normal cast, work, clock and protection consumers; tests/magic-ritual.test.mjs; content not reviewed or published"
     },
     {
       "id": "spell_summon_08",
@@ -1914,24 +1928,28 @@
       "name": "役灵换位",
       "mechanism": "reassign",
       "originalEffect": "调换两只自有役灵的职责，不能改写其根本契约",
-      "status": "missing-consumer",
-      "handler": null,
-      "validation": [
-        "此法术机制尚未接入规则，不能叙述已实现"
-      ],
-      "evidence": "现有役灵模板无此任务；缺真实动物引导、清扫、负载传讯、协作或邀约消费者。"
+      "status": "consumer-ready",
+      "handler": {
+        "kind": "ritual",
+        "operation": "reassign",
+        "power": 1
+      },
+      "validation": [],
+      "evidence": "server-plugin/magic-ritual.mjs, summons.mjs, revival.mjs, contracts.mjs and magic-primitives.mjs; normal cast, work, clock and protection consumers; tests/magic-ritual.test.mjs; content not reviewed or published"
     },
     {
       "id": "spell_summon_11",
       "name": "四元协作",
       "mechanism": "coordinate",
       "originalEffect": "组织已有低阶役灵共同完成简单工序",
-      "status": "missing-consumer",
-      "handler": null,
-      "validation": [
-        "此法术机制尚未接入规则，不能叙述已实现"
-      ],
-      "evidence": "现有役灵模板无此任务；缺真实动物引导、清扫、负载传讯、协作或邀约消费者。"
+      "status": "consumer-ready",
+      "handler": {
+        "kind": "ritual",
+        "operation": "coordinate",
+        "power": 2
+      },
+      "validation": [],
+      "evidence": "server-plugin/magic-ritual.mjs, summons.mjs, revival.mjs, contracts.mjs and magic-primitives.mjs; normal cast, work, clock and protection consumers; tests/magic-ritual.test.mjs; content not reviewed or published"
     },
     {
       "id": "spell_summon_12",
@@ -1968,12 +1986,14 @@
       "name": "界门邀约",
       "mechanism": "invite",
       "originalEffect": "发出跨界来访邀约，对方可拒绝且须谈妥条款",
-      "status": "missing-consumer",
-      "handler": null,
-      "validation": [
-        "此法术机制尚未接入规则，不能叙述已实现"
-      ],
-      "evidence": "现有役灵模板无此任务；缺真实动物引导、清扫、负载传讯、协作或邀约消费者。"
+      "status": "consumer-ready",
+      "handler": {
+        "kind": "ritual",
+        "operation": "invite",
+        "power": 1
+      },
+      "validation": [],
+      "evidence": "server-plugin/magic-ritual.mjs, summons.mjs, revival.mjs, contracts.mjs and magic-primitives.mjs; normal cast, work, clock and protection consumers; tests/magic-ritual.test.mjs; content not reviewed or published"
     },
     {
       "id": "spell_faith_01",
@@ -2008,37 +2028,42 @@
       "name": "净坛术",
       "mechanism": "clean_altar",
       "originalEffect": "清理受托祭坛上的普通污染，不裁定宗教争议",
-      "status": "missing-consumer",
-      "handler": null,
-      "validation": [
-        "此法术机制尚未接入规则，不能叙述已实现"
-      ],
-      "evidence": "缺教派仪式授权、对应受术者/祭坛/守戒/誓言或参与者消耗消费者。"
+      "status": "consumer-ready",
+      "handler": {
+        "kind": "ritual",
+        "operation": "clean_altar",
+        "power": 100
+      },
+      "validation": [],
+      "evidence": "server-plugin/magic-ritual.mjs, summons.mjs, revival.mjs, contracts.mjs and magic-primitives.mjs; normal cast, work, clock and protection consumers; tests/magic-ritual.test.mjs; content not reviewed or published"
     },
     {
       "id": "spell_faith_04",
       "name": "誓约见证",
       "mechanism": "witness_oath",
       "originalEffect": "记录自愿者立誓的事实，不强迫守誓",
-      "status": "missing-consumer",
-      "handler": null,
-      "validation": [
-        "此法术机制尚未接入规则，不能叙述已实现"
-      ],
-      "evidence": "缺教派仪式授权、对应受术者/祭坛/守戒/誓言或参与者消耗消费者。"
+      "status": "consumer-ready",
+      "handler": {
+        "kind": "ritual",
+        "operation": "witness_oath",
+        "power": 1
+      },
+      "validation": [],
+      "evidence": "server-plugin/magic-ritual.mjs, summons.mjs, revival.mjs, contracts.mjs and magic-primitives.mjs; normal cast, work, clock and protection consumers; tests/magic-ritual.test.mjs; content not reviewed or published"
     },
     {
       "id": "spell_faith_05",
       "name": "慈息术",
       "mechanism": "healing",
       "originalEffect": "在信众同意下缓解浅伤，需要教会规定的仪式",
-      "status": "missing-consumer",
+      "status": "consumer-ready",
       "handler": {
-        "kind": "heal",
+        "kind": "ritual",
+        "operation": "ritual_heal",
         "power": 10
       },
       "validation": [],
-      "evidence": "回血未建模浅表出血、血量、感染或教派仪式，不能替代所述医疗语义。"
+      "evidence": "server-plugin/magic-ritual.mjs, summons.mjs, revival.mjs, contracts.mjs and magic-primitives.mjs; normal cast, work, clock and protection consumers; tests/magic-ritual.test.mjs; content not reviewed or published"
     },
     {
       "id": "spell_faith_06",
@@ -2047,110 +2072,124 @@
       "originalEffect": "安抚悲恸者并辨出低阶游魂，不能复活死去居民",
       "status": "consumer-ready",
       "handler": {
-        "kind": "mind_space",
-        "operation": "comfort",
-        "power": 10
+        "kind": "ritual",
+        "operation": "spirit_sense",
+        "power": 1
       },
       "validation": [],
-      "evidence": "server-plugin/magic-mind-space.mjs; normal cast, clock, memory, contract and movement consumers; tests/magic-mind-space.test.mjs; content not reviewed or published"
+      "evidence": "server-plugin/magic-ritual.mjs, summons.mjs, revival.mjs, contracts.mjs and magic-primitives.mjs; normal cast, work, clock and protection consumers; tests/magic-ritual.test.mjs; content not reviewed or published"
     },
     {
       "id": "spell_faith_07",
       "name": "护灯纹",
       "mechanism": "ward",
       "originalEffect": "削弱一人遭遇的低阶邪秽干扰",
-      "status": "missing-consumer",
+      "status": "consumer-ready",
       "handler": {
-        "kind": "status",
-        "status": "shadow_ward",
-        "power": 25
+        "kind": "ritual",
+        "operation": "ward",
+        "power": 3
       },
       "validation": [],
-      "evidence": "shadow_ward只有暗影伤害抗性，未有邪秽/邪灵干扰消费者。"
+      "evidence": "server-plugin/magic-ritual.mjs, summons.mjs, revival.mjs, contracts.mjs and magic-primitives.mjs; normal cast, work, clock and protection consumers; tests/magic-ritual.test.mjs; content not reviewed or published"
     },
     {
       "id": "spell_faith_08",
       "name": "驱秽音",
       "mechanism": "exorcise",
       "originalEffect": "以仪式驱离低阶邪灵，误认目标会伤及无辜",
-      "status": "missing-consumer",
-      "handler": null,
-      "validation": [
-        "此法术机制尚未接入规则，不能叙述已实现"
-      ],
-      "evidence": "缺教派仪式授权、对应受术者/祭坛/守戒/誓言或参与者消耗消费者。"
+      "status": "consumer-ready",
+      "handler": {
+        "kind": "ritual",
+        "operation": "exorcise",
+        "power": 1
+      },
+      "validation": [],
+      "evidence": "server-plugin/magic-ritual.mjs, summons.mjs, revival.mjs, contracts.mjs and magic-primitives.mjs; normal cast, work, clock and protection consumers; tests/magic-ritual.test.mjs; content not reviewed or published"
     },
     {
       "id": "spell_faith_09",
       "name": "戒行护体",
       "mechanism": "discipline",
       "originalEffect": "持续守戒者获得短时防护，破戒会使其失效",
-      "status": "missing-consumer",
-      "handler": null,
-      "validation": [
-        "此法术机制尚未接入规则，不能叙述已实现"
-      ],
-      "evidence": "缺教派仪式授权、对应受术者/祭坛/守戒/誓言或参与者消耗消费者。"
+      "status": "consumer-ready",
+      "handler": {
+        "kind": "ritual",
+        "operation": "discipline",
+        "power": 10
+      },
+      "validation": [],
+      "evidence": "server-plugin/magic-ritual.mjs, summons.mjs, revival.mjs, contracts.mjs and magic-primitives.mjs; normal cast, work, clock and protection consumers; tests/magic-ritual.test.mjs; content not reviewed or published"
     },
     {
       "id": "spell_faith_10",
       "name": "圣契审读",
       "mechanism": "faith_contract",
       "originalEffect": "查验本教派的仪式契约，需要相应授权",
-      "status": "missing-consumer",
-      "handler": null,
-      "validation": [
-        "此法术机制尚未接入规则，不能叙述已实现"
-      ],
-      "evidence": "缺教派仪式授权、对应受术者/祭坛/守戒/誓言或参与者消耗消费者。"
+      "status": "consumer-ready",
+      "handler": {
+        "kind": "ritual",
+        "operation": "faith_contract",
+        "power": 1
+      },
+      "validation": [],
+      "evidence": "server-plugin/magic-ritual.mjs, summons.mjs, revival.mjs, contracts.mjs and magic-primitives.mjs; normal cast, work, clock and protection consumers; tests/magic-ritual.test.mjs; content not reviewed or published"
     },
     {
       "id": "spell_faith_11",
       "name": "归途祷标",
       "mechanism": "revival_mark",
       "originalEffect": "为已登记祭坛提供可辨认祷标，不授予异地复活权",
-      "status": "missing-consumer",
-      "handler": null,
-      "validation": [
-        "此法术机制尚未接入规则，不能叙述已实现"
-      ],
-      "evidence": "缺教派仪式授权、对应受术者/祭坛/守戒/誓言或参与者消耗消费者。"
+      "status": "consumer-ready",
+      "handler": {
+        "kind": "ritual",
+        "operation": "revival_mark",
+        "power": 1
+      },
+      "validation": [],
+      "evidence": "server-plugin/magic-ritual.mjs, summons.mjs, revival.mjs, contracts.mjs and magic-primitives.mjs; normal cast, work, clock and protection consumers; tests/magic-ritual.test.mjs; content not reviewed or published"
     },
     {
       "id": "spell_faith_12",
       "name": "赎伤礼",
       "mechanism": "restore",
       "originalEffect": "以材料和长期照护换取伤势缓解，不能抹去犯罪",
-      "status": "missing-consumer",
-      "handler": null,
-      "validation": [
-        "此法术机制尚未接入规则，不能叙述已实现"
-      ],
-      "evidence": "缺教派仪式授权、对应受术者/祭坛/守戒/誓言或参与者消耗消费者。"
+      "status": "consumer-ready",
+      "handler": {
+        "kind": "ritual",
+        "operation": "restore",
+        "power": 20
+      },
+      "validation": [],
+      "evidence": "server-plugin/magic-ritual.mjs, summons.mjs, revival.mjs, contracts.mjs and magic-primitives.mjs; normal cast, work, clock and protection consumers; tests/magic-ritual.test.mjs; content not reviewed or published"
     },
     {
       "id": "spell_faith_13",
       "name": "群祷庇护",
       "mechanism": "faith_shield",
       "originalEffect": "由真诚信众共同支撑短时护罩，参与者疲劳会累积",
-      "status": "missing-consumer",
-      "handler": null,
-      "validation": [
-        "此法术机制尚未接入规则，不能叙述已实现"
-      ],
-      "evidence": "缺教派仪式授权、对应受术者/祭坛/守戒/誓言或参与者消耗消费者。"
+      "status": "consumer-ready",
+      "handler": {
+        "kind": "ritual",
+        "operation": "faith_shield",
+        "power": 20
+      },
+      "validation": [],
+      "evidence": "server-plugin/magic-ritual.mjs, summons.mjs, revival.mjs, contracts.mjs and magic-primitives.mjs; normal cast, work, clock and protection consumers; tests/magic-ritual.test.mjs; content not reviewed or published"
     },
     {
       "id": "spell_faith_14",
       "name": "祓界仪轨",
       "mechanism": "purify_area",
       "originalEffect": "清理有限区域的低阶邪秽，神性存在需另有条件",
-      "status": "missing-consumer",
-      "handler": null,
-      "validation": [
-        "此法术机制尚未接入规则，不能叙述已实现"
-      ],
-      "evidence": "缺区域内多目标、持续触发及跨边界解除/友军波及消费者。"
+      "status": "consumer-ready",
+      "handler": {
+        "kind": "ritual",
+        "operation": "purify_area",
+        "power": 3
+      },
+      "validation": [],
+      "evidence": "server-plugin/magic-ritual.mjs, summons.mjs, revival.mjs, contracts.mjs and magic-primitives.mjs; normal cast, work, clock and protection consumers; tests/magic-ritual.test.mjs; content not reviewed or published"
     }
   ]
 }

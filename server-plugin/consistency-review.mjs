@@ -23,9 +23,10 @@ function contractMention(text,contract,labels,entities=[]){
  if(directed&&contract.kind==='debt'&&!/我(?:曾|还)?欠/.test(text)&&/欠|赊|还钱|房钱/.test(text)&&[...text.matchAll(/([\d零一二两三四五六七八九十]+)(?:个)?铜/g)].some(m=>chineseNumber(m[1])===facts.amount))return true;
  return false;
 }
-function compactState(value){
+function compactState(value,stockIds=[]){
  const s=stateOf(value);return {...reviewPlayerFacts(s),minute:s.minute,location:s.location,player:s.player?Object.fromEntries(['name','coins','hp','maxHp','mp','maxMp','level','status'].filter(k=>s.player[k]!==undefined).map(k=>[k,s.player[k]])):undefined,
   inventory:Object.fromEntries(Object.entries(s.inventory??{}).map(([id,row])=>[id,{quantity:quantity(row),...(typeof row==='object'?{durability:row.durability,maker:row.maker}:{})}])),
+  npcInventory:Object.fromEntries(stockIds.filter(id=>s.npcs?.[id]?.inventory).map(id=>[id,s.npcs[id].inventory])),
   present:Object.entries(s.npcs??{}).filter(([,n])=>n.location===s.location&&!n.scheduleTravel&&!n.cognitionTravel).map(([id,n])=>({id,status:n.status,activity:n.activity})),
   obligations:Object.fromEntries(Object.entries(s.obligations??{}).filter(([,o])=>[o.promisor,o.promisee].includes('player')).map(([id,o])=>[id,{type:o.type,status:o.status,location:o.location,content:o.content}]))};
 }
@@ -33,11 +34,12 @@ function prepare(input){
  if(typeof input?.draft!=='string'||!input.draft.trim()||input.draft.length>40000)throw Error('待审回复为空或过长');
  if(typeof input.playerText!=='string'||!Array.isArray(input.allowedEntities??[]))throw Error('缺少玩家输入或允许实体名单');
  const entities=input.allowedEntities??[],labels=Object.fromEntries(entities.map(e=>[e.id,e.name])),visible=visibleReply(input.draft,labels),receipts=(input.receipts??[]).map(normalizedReceipt);
+ const stockIds=entities.filter(e=>e.id?.startsWith('npc_')&&[e.id,e.name,...e.aliases??[]].some(name=>(input.draft+' '+input.playerText).includes(name))).map(e=>e.id);
  const mentioned=normalize([input.draft,input.playerText,input.scene??'',JSON.stringify(receipts),JSON.stringify(compactState(input.before)),JSON.stringify(compactState(input.after)),...(input.priorEvidence??[]).map(row=>row.text)].join(' '));
  // All entities are still checked locally. The reviewer only needs entities
  // actually mentioned in this reply/evidence, not the complete world catalog.
  const registry=entities.filter(e=>[e.id,e.name,...e.aliases??[]].some(value=>typeof value==='string'&&value.length>=2&&mentioned.includes(normalize(value)))).map(e=>({id:e.id,name:e.name,aliases:e.aliases??[],kind:e.kind??e.id?.split('_')[0]}));
- const evidence=[{id:'player',kind:'intent',text:input.playerText},{id:'before',kind:'ledger',text:JSON.stringify(compactState(input.before))},{id:'after',kind:'ledger',text:JSON.stringify(compactState(input.after))},
+ const evidence=[{id:'player',kind:'intent',text:input.playerText},{id:'before',kind:'ledger',text:JSON.stringify(compactState(input.before,stockIds))},{id:'after',kind:'ledger',text:JSON.stringify(compactState(input.after,stockIds))},
   {id:'registry',kind:'registry',text:JSON.stringify(registry)},...receipts.map((r,i)=>({id:`receipt:${i}`,kind:'receipt',text:JSON.stringify(r)})),
   ...Object.entries(input.knowledge??{}).map(([id,k])=>({id:`knowledge:${id}`,kind:'knowledge',text:JSON.stringify(k)})),
   {id:'blocklist',kind:'registry',text:JSON.stringify(input.blocklist??[])}];
@@ -53,10 +55,10 @@ function prepare(input){
 function fixedIssues(input,context){
  const issues=[],allowed=new Set(context.entities.map(e=>e.id)),names=new Set(context.entities.flatMap(e=>[e.name,...e.aliases??[]]).map(normalize));
  const cite=(id,quote)=>({id,quote:(quote??context.evidence.find(e=>e.id===id)?.text??'').slice(0,600)});
- const add=(category,quote,reason,evidence,{severity='error',entityName,entityKind}={})=>{
+ const add=(category,quote,reason,evidence,{severity='error',entityName,entityKind,subject,privateContent}={})=>{
   if(!quote||(!context.raw.includes(quote)&&!context.visible.includes(quote)))throw Error('固定审查器产生了无原文依据的问题');
   if(issues.some(i=>i.category===category&&i.quote===quote&&i.reason===reason))return;
-  issues.push({category,severity,quote,reason,evidence,source:'deterministic',...(entityName?{entityName,entityKind}:{})});
+  issues.push({category,severity,quote,reason,evidence,source:'deterministic',...(entityName?{entityName,entityKind}:{}),...(subject?{subject,privateContent}:{})});
  };
  const clauses=context.visible.split(/[。！？；\n]/).map(s=>s.trim()).filter(Boolean);
  // Quoted player claims and questions do not assert that the debt history
@@ -99,17 +101,21 @@ function fixedIssues(input,context){
   }
   if(id==='player'&&!context.playerText.includes(text.trim()))add('agency',text,'回复替玩家说出了玩家没有提供的话',[cite('player')]);
   if(!context.outOfCharacter&&/好感度|信任值|生命值|经验值|技能熟练度|(?:[0-9]+)级/.test(text))add('meta',text,'人物台词出现游戏指标；普通报价和实际数量不属于这项错误',[cite('after')],{severity:'warning'});
-  for(const unknown of input.knowledge?.[id]?.unknown??[]){const fact=typeof unknown==='string'?unknown:unknown.fact;
-   if(fact&&text.includes(fact)&&!/[？?]|不知|不清楚|没听说|如果|假如/.test(text))add('knowledge',text,'人物把明确未知的信息当作自己已经知道的事',[cite(`knowledge:${id}`)]);
+  for(const unknown of context.outOfCharacter?[]:input.knowledge?.[id]?.unknown??[]){const fact=typeof unknown==='string'?unknown:unknown.fact;
+   if(fact&&text.includes(fact)&&!/[？?]|不知|不清楚|没听说|如果|假如/.test(text))add('knowledge',text,'人物把明确未知的信息当作自己已经知道的事',[cite(`knowledge:${id}`)],{subject:id,privateContent:fact});
+  }
+  for(const clause of context.outOfCharacter?[]:text.match(/[^。！？；\n]+[。！？；]?/g)??[])for(const [item,stock] of Object.entries(stateOf(input.after).npcs?.[id]?.inventory??{})){
+   const name=context.labels[item],at=name?clause.indexOf(name):-1;
+   if(quantity(stock)>0&&at>=0&&!uncertain(clause)&&!future.test(clause)&&(/^(?:没有现成|没有能卖|没(?:有)?(?:货|库存)|没有|没剩|售罄|卖光)/.test(clause.slice(at+name.length).replace(/^\s*/,''))||/(?:没有|没剩|售罄|卖光)(?:现成的|可卖的)?$/.test(clause.slice(0,at))))add('fact',clause,'人物否认现有货物，但该人物真实库存仍有此物',[cite('after')]);
   }
   const knowledge=input.knowledge?.[id];
   for(const clause of text.match(/[^。！？；\n]+[。！？；]?/g)??[]){
-   for(const contract of knowledge?.contracts??[]){
+   for(const contract of context.outOfCharacter?[]:knowledge?.contracts??[]){
     if(!contractMention(clause,contract,context.labels,context.entities)||uncertain(clause))continue;
     const addressed=context.entities.filter(entity=>entity.id?.startsWith('npc_')&&[entity.name,...entity.aliases??[]].some(name=>['告诉','告知','对','向','跟'].some(verb=>context.playerText.includes(verb+name))));
     const told=knowledge.present&&(!addressed.length||addressed.some(entity=>entity.id===id))&&contractMention(context.playerText,contract,context.labels,context.entities)&&!/[？?]|不.{0,5}(?:告知|告诉|透露)|有没有|知道.{0,8}吗/.test(context.playerText);
-    if(contract.awareness==='no-recorded-channel'&&!told)add('knowledge',clause,'该人物没有这件契约的亲历或合法转述来源，却断言其私密内容',[cite(`knowledge:${id}`)]);
-    if(contract.awareness==='recorded-memory'&&contract.memories.length&&contract.memories.every(memory=>memory.sourceType==='听说')&&/亲眼|亲自|我看见|我在场/.test(clause))add('knowledge',clause,'该人物仅有转述记录，却将其说成亲历',[cite(`knowledge:${id}`)]);
+    if(contract.awareness==='no-recorded-channel'&&!told)add('knowledge',clause,'该人物没有这件契约的亲历或合法转述来源，却断言其私密内容',[cite(`knowledge:${id}`)],{subject:id,privateContent:clause.trim()});
+    if(contract.awareness==='recorded-memory'&&contract.memories.length&&contract.memories.every(memory=>memory.sourceType==='听说')&&/亲眼|亲自|我看见|我在场/.test(clause))add('knowledge',clause,'该人物仅有转述记录，却将其说成亲历',[cite(`knowledge:${id}`)],{subject:id,privateContent:clause.trim()});
    }
   }
   const recall=knowledge?.recall;
@@ -129,6 +135,10 @@ function fixedIssues(input,context){
     }
    }
   }
+ }
+ const lastMove=context.receipts.findLastIndex(row=>String(row.tool).replace(/^world_/,'')==='move');
+ if(lastMove>=0&&context.receipts[lastMove].result.ok===false)for(const clause of assertions){
+  if(!future.test(clause)&&!/(?:没|未|无法|不能|尚未|如果|若|想|打算)/.test(clause)&&/(?:你|玩家|旅人).{0,12}(?:离开了|走出了|已(?:经)?离开|抵达|到达|来到|走进|走出)/.test(clause))add('location',clause,'最后一次移动回执失败，正文不得把请求写成成功离开或抵达',[cite(`receipt:${lastMove}`),cite('after')]);
  }
  // When the player names the speakers individually, another present NPC may
  // not silently occupy the omitted person's turn.
@@ -213,14 +223,17 @@ export function consistencyReviewRequest(input,{maxTokens=1800}={}){
  const item=request.tools[0].function.parameters.properties.issues.items;
  request.tools[0].function.parameters.properties.issues.items={oneOf:[
   {...structuredClone(item),required:[...item.required,'entityName','entityKind'],properties:{...structuredClone(item.properties),category:{const:'naming'}}},
-  {...structuredClone(item),properties:{...structuredClone(item.properties),category:{enum:categories.filter(name=>name!=='naming')}}}
+  {...structuredClone(item),required:[...item.required,'subject','privateContent'],properties:{...structuredClone(item.properties),category:{const:'knowledge'},subject:shortString,privateContent:shortString}},
+  {...structuredClone(item),properties:{...structuredClone(item.properties),category:{enum:categories.filter(name=>!['naming','knowledge'].includes(name))}}}
  ]};
  request.messages[0].content+=`\n按完整语句确定断言的对象与范围。现场感知只说明当时当地看到或听到什么；“没有旅店敲门声传出来”否定的是听到敲门声，不能截成“没有旅店”来解释为镇上不存在旅店。检索为空不否定在场感知，远处或遮挡后的事实仍须核对视线和来源。
  可见外观不自动披露私密内容。纸片露角、纸上有未写完的一行字，只说明外形和书写状态；若没有写出具体文字、秘密内容或由此确定的隐藏事实，不因 knowledge 缺少纸片记录就报泄漏。若正文读出私密文字，须核对是否可读及是否有获知渠道，不能用“纸片可见”代替读取权限。
  否认知情与一般处事习惯不构成获知声明。“我没见过”“别人嘴里的话我一般不往外传”没有确认某件私密事件的内容，不能仅凭可能暗示知情报 warning。若同句实际确认委托内容、债务数额或只有当事人知道的具体细节，仍须引用该断言及对应人物的认知证据；无记录渠道不能靠“听说”外壳获得知识。
  当前表象与已经发生的经历分别核验。“空车板靠在台阶边”是外观；“刚卸空的车板”还断言此前发生卸货，不能从空车板或核对货单的 activity 推出。“又量了一次，比上次厚”断言重复测量和比较结果，不能从职业、会测量或以前量过水位推出。叙述离屏经历须对应真实行动记录、回执或有来源的记忆；缺少来源时这类新增经历应报问题，普通姿态不需动作记录。
  对未获支持的新经历归 fact；由表象确定秘密或无渠道披露私密内容归 knowledge。与真实记录直接矛盾才用 error，只有缺少经历来源时用 warning；普通感知和没有具体私密内容的否认不因记录缺项报 warning。已记录行动保留时间、成败、材料和费用，不能补一次成功、卸货或测量来解释场景。
- 检索留证 retrieval 仅 status=complete 且 sealed=true 才能证明本回合调用完整；零调用才证明未检索，unknown 或缺回执最多给 warning。scene 中的旧事不是 world_search 调用，空 results 只能证明查过，不能证明找到。`;
+ 场外核账没有人物获得新知识。经验、报酬、库存、约定状态及历史答复的矛盾归 fact，不归 knowledge。historical-receipt 是有效历史事件的原始工具回执，经验与结算字段不能被摘要中遗漏的数值否定；chat 可直接证明原答复说了什么，不能证明其中账本主张真实。未承接委托仍可能托管报酬，不能因 taker 未填就否认登记或托管。空 obligations 可以支持没有登记约定的结论。
+ knowledge 必须填写 subject 为无渠道人物编号、privateContent 为原句实际披露的具体私密内容，并引用 knowledge:subject 的渠道证据。普通否认、没提上午问话、含糊的“你上午的事”没有说出秘密内容，不能计为泄漏；若确实说出委托货物、期限或债额，仍须报错。库存数量以 before/after 的 npcInventory 核对，不把缺少人物知识条目当作库存事实冲突。
+ 工具 ok=false 不能写成成功，保留失败原因和实际地点、分钟；移动意图不是移动结果。检索留证 retrieval 仅 status=complete 且 sealed=true 才能证明本回合调用完整；零调用才证明未检索，unknown 或缺回执最多给 warning。scene 中的旧事不是 world_search 调用，空 results 只能证明查过，不能证明找到。`;
  return request;
 }
 export function validateConsistencyResponse(response,input){
@@ -229,10 +242,13 @@ export function validateConsistencyResponse(response,input){
  const parsed=JSON.parse(calls[0].function.arguments);if(!parsed||Object.keys(parsed).some(k=>k!=='issues')||!Array.isArray(parsed.issues)||parsed.issues.length>8)throw Error('审查问题清单格式不合法');
  const sources=new Map(context.evidence.map(e=>[e.id,e.text]));
  for(const issue of parsed.issues){
-  if(!issue||Object.keys(issue).some(k=>!['category','severity','quote','reason','evidence','entityName','entityKind'].includes(k))||!categories.includes(issue.category)||!['error','warning'].includes(issue.severity)||typeof issue.quote!=='string'||!issue.quote||issue.quote.length>600||typeof issue.reason!=='string'||!issue.reason||issue.reason.length>600)throw Error('审查问题字段不合法');
+  if(!issue||Object.keys(issue).some(k=>!['category','severity','quote','reason','evidence','entityName','entityKind','subject','privateContent'].includes(k))||!categories.includes(issue.category)||!['error','warning'].includes(issue.severity)||typeof issue.quote!=='string'||!issue.quote||issue.quote.length>600||typeof issue.reason!=='string'||!issue.reason||issue.reason.length>600)throw Error('审查问题字段不合法');
   if(!context.raw.includes(issue.quote)&&!context.visible.includes(issue.quote))throw Error('审查引用不在待审草稿原文中');
   if(!Array.isArray(issue.evidence)||issue.evidence.length<1||issue.evidence.length>3)throw Error('审查问题没有真实证据引用');
   for(const reference of issue.evidence)if(!reference||Object.keys(reference).some(k=>!['id','quote'].includes(k))||typeof reference.quote!=='string'||!reference.quote||reference.quote.length>600||!sources.get(reference.id)?.includes(reference.quote))throw Error('审查引用不在提供的真实证据中');
+  if(issue.category==='knowledge'){
+   if(context.outOfCharacter||!input.knowledge?.[issue.subject]||typeof issue.privateContent!=='string'||!issue.privateContent.trim()||issue.privateContent.length>600||!issue.quote.includes(issue.privateContent)||!issue.evidence.some(row=>row.id===`knowledge:${issue.subject}`))throw Error('知情泄漏须指出无渠道主体、原句内具体私密内容及对应认知证据；场外核账归事实');
+  }else if(issue.subject!==undefined||issue.privateContent!==undefined)throw Error('非知情问题不得附泄漏主体或内容');
   if(issue.category==='naming'){
    if(typeof issue.entityName!=='string'||!issue.entityName||issue.entityName.length>600||!issue.quote.includes(issue.entityName)||!['person','item','location','organization'].includes(issue.entityKind))throw Error('新专名问题没有原文内的实体名和类别');
    if(context.entities.some(e=>[e.id,e.name,...e.aliases??[]].some(n=>normalize(n)===normalize(issue.entityName))))throw Error('审查误报了已登记实体');
@@ -251,7 +267,7 @@ export async function reviewConsistency(input,{client=null,rewriteAttempt=0,maxT
   const found=validateConsistencyResponse(response,input);for(const issue of found)if(!issues.some(old=>old.category===issue.category&&old.quote===issue.quote))issues.push(issue);model={status:'reviewed'};
  }catch(error){const key=process.env.DEEPSEEK_API_KEY;model={status:'failed',reason:String(error.message).replaceAll(key??'__no_key__','[凭据已屏蔽]').slice(0,1200),...(response?{rawResponse:JSON.stringify(response.choices??[]).replaceAll(key??'__no_key__','[凭据已屏蔽]').slice(0,16000)}:{})};}}
  const serious=issues.filter(i=>i.severity==='error'),verified=model.status==='reviewed';
- const rewriteRequest=serious.length&&rewriteAttempt===0?{attempt:1,allowTools:false,issues:clone(serious),instruction:'仅修正下列有依据的问题，保留已提交回执与玩家选择。不得重新调用交易、制造、移动或登记工具，不得改账、退款或补发。未登记专名改成既有人物或无专名描写；'+(context.outOfCharacter?'场外回复删除所有回合尾注，不推进游戏时间。':'保留符合当前地点和时间的尾注。')+'最多这一次改写。'}:null;
+ const rewriteRequest=serious.length&&rewriteAttempt===0?{attempt:1,allowTools:false,issues:clone(serious),instruction:'仅修正下列有依据的问题，保留已提交回执与玩家选择。工具失败保持失败，不得把移动请求写成成功离开或抵达；实际地点和分钟以after与clock为准，不能补成功行动。不得重新调用交易、制造、移动或登记工具，不得改账、退款或补发。未登记专名改成既有人物或无专名描写；'+(context.outOfCharacter?'场外回复删除所有回合尾注，不推进游戏时间。':'保留符合当前地点和时间的尾注。')+'最多这一次改写。'}:null;
  return {status:model.status==='failed'?'unverified':issues.length?'issues':verified?'verified':'unverified',verified,original:input.draft,text:input.draft,visible:context.visible,draftFingerprint:digest(input.draft),factFingerprint:context.fingerprint,issues,model,...(measurement?{measurement}:{}),rewriteRequest,rewriteExhausted:serious.length>0&&rewriteAttempt>=1};
 }
 

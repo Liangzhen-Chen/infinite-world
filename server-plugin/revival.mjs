@@ -1,5 +1,17 @@
 import {revivalPoint}from'./rule-state-migration.mjs';
 const validInteger=(value,min,max,label)=>{if(!Number.isSafeInteger(value)||value<min||value>max)throw new Error(`${label}无效`);return value;};
+export function prepareRevivalMark(d,location){
+    const point=this.rules.death.points?.find(p=>p.location===location);
+    if(!point||location!==d.get('state','location')||!d.get('state','revivalPoints',location)||d.get('state','buildings',location,'condition')===0)throw Error('祷标只能用于本人在场且已登记的完整复活祭坛');
+    return{location};
+}
+export function revivalPrayerMark(d,engine,location){
+    const mark=Object.values(d.get('state','effects')??{}).find(e=>e.kind==='ritual'&&e.operation==='revival_mark'&&e.owner==='player'&&e.revivalLocation===location&&e.expires>d.get('state','minute'));
+    if(!mark||!d.get('state','revivalPoints',location)||d.get('state','buildings',location,'condition')===0)return null;
+    const row=engine.world.locations.find(l=>l.id===location)?.features?.find(f=>f.id===mark.altar);
+    const s=d.get('state','records',`physical_feature:${mark.altar}`)?.state??row?.state;
+    return row&&s?.integrity>0&&s.deity===mark.deity?{altar:mark.altar,deity:mark.deity,church:mark.church}:null;
+}
 export function registerRevival(d,args,id){
     if(d.get('state','player','status')!=='正常')throw new Error('需要清醒且存活才能登记复活点');
     const location=this.resolve(args.location??d.get('state','location'));
@@ -8,7 +20,7 @@ export function registerRevival(d,args,id){
     if(d.get('state','location')!==location)throw new Error('必须亲自到该神殿或祭坛登记');
     if(d.get('state','buildings',location,'condition')===0)throw new Error('祭坛已损毁，不能登记');
     const player=d.get('state','player'),existing=d.get('state','revivalPoints',location);
-    if(existing){d.set(['state','player','revivalAnchor'],location);return{location,fee:0,alreadyRegistered:true};}
+    if(existing){d.set(['state','player','revivalAnchor'],location);return{location,fee:0,alreadyRegistered:true,prayerMark:revivalPrayerMark(d,this,location)};}
     if(player.level<point.minimumLevel)throw new Error(`登记要求达到${point.minimumLevel}级`);
     const fee=validInteger(point.fee,0,100000,'登记费'),minutes=validInteger(point.minutes,1,120,'登记耗时');
     if(player.coins<fee)throw new Error('复活点登记费用不足');
@@ -37,5 +49,5 @@ export function revivePlayer(d,args,id){
     d.set(['state','player','mp'],Math.ceil(player.maxMp*this.rules.death.reviveFraction));
     d.set(['state','player','status'],'正常');d.set(['state','player','dyingSince'],null);
     d.say(`在${this.byId.get(location)?.name??location}醒来`);
-    return{location};
+    return{location,prayerMark:revivalPrayerMark(d,this,location)};
 }

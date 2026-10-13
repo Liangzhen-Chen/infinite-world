@@ -1,5 +1,7 @@
 import {npcContext} from './npc-memory.mjs';
 import {npcCognitionView} from './npc-cognition.mjs';
+import {isOutOfCharacter} from '../extension/prompt.mjs';
+import {normalize} from './retrieval.mjs';
 
 const pick=(row,keys)=>Object.fromEntries(keys.filter(key=>row[key]!==undefined).map(key=>[key,structuredClone(row[key])]));
 const resultOf=event=>event.result?.result??event.result??{};
@@ -31,9 +33,24 @@ function recallEvidence(state,id,events){
 export function reviewPlayerFacts(state){
  return {
   debts:Object.fromEntries(Object.entries(state.records??{}).filter(([,r])=>r.category==='debt'&&[r.debtor,r.creditor].includes('player')).map(([id,r])=>[id,pick(r,['name','debtor','creditor','amount','paid','status','createdAt','deadline','overdueAt','paidAt'])])),
-  quests:Object.fromEntries(Object.entries(state.quests??{}).filter(([,q])=>q.taker==='player'||q.publisher==='player').map(([id,q])=>[id,pick(q,['publisher','taker','name','content','status','grade','reward','objective','deadline'])])),
+  quests:Object.fromEntries(Object.entries(state.quests??{}).filter(([,q])=>q.taker==='player'||q.publisher==='player'||!q.taker).map(([id,q])=>[id,pick(q,['publisher','taker','name','content','status','grade','reward','objective','deadline','escrow'])])),
   authorizations:Object.fromEntries(Object.entries(state.records??{}).filter(([,r])=>r.category==='authorization'&&(r.grantee==='player'||r.grantor==='player')).map(([id,r])=>[id,pick(r,['action','subject','grantor','grantee','guests','content','createdAt','expires','revoked','revokedAt','sourceEvent'])]))
  };
+}
+
+// Raw receipts establish settlement; chat establishes what was actually said.
+// Neither source gives an unrelated character a new knowledge channel.
+export function reviewHistoricalEvidence(engine,events,chat,{query='',draft=''}={}){
+ if(!isOutOfCharacter(query))return [];
+ const text=normalize(query+' '+draft),mentioned=engine.entities.filter(row=>[row.id,row.name,...row.aliases??[]].some(name=>name?.length>=2&&text.includes(normalize(name))));
+ const related=value=>mentioned.some(row=>[row.id,row.name,...row.aliases??[]].some(name=>name?.length>=2&&normalize(value).includes(normalize(name))));
+ const tools=[];
+ if(/委托|报酬|经验/.test(text))tools.push('world_quest');
+ if(/约定|送货|登记/.test(text))tools.push('world_promise');
+ if(/购买|交易|付款|钱袋/.test(text))tools.push('world_trade');
+ const rows=events.filter(event=>event.input?.tool&&event.input.tool!=='world_turn'&&(related(JSON.stringify(event))||tools.includes(event.input.tool))).map(event=>({kind:'historical-receipt',text:JSON.stringify({eventId:event.id,anchor:event.anchor,tool:event.input.tool,args:event.input.args,result:event.result})}));
+ for(const message of chat??[])if(!message.is_system&&!message.extra?.tool_invocations&&!message.extra?.fields_invalidated&&typeof message.mes==='string'&&related(message.mes))rows.push({kind:'chat',text:JSON.stringify({speaker:message.name,isUser:message.is_user===true,text:message.mes})});
+ return rows;
 }
 
 // Reviewer-only evidence: global ledger truth is not a character's knowledge.

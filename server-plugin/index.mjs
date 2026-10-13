@@ -15,7 +15,7 @@ import {settleNpcPlanning}from'./npc-planning-service.mjs';
 import {getChronicle,syncChronicleIndex}from'./chronicle.mjs';
 import {groupHistory}from'../extension/history-window.mjs';
 import {registerUIRoutes} from './ui-routes.mjs';
-import {beginConsistencyTurn,captureConsistencySearch,reconcileConsistencyTurn,reviewConsistencyReply,assertConsistencyCommit,sharedModelClient}from'./consistency-service.mjs';
+import {beginConsistencyTurn,captureConsistencySearch,captureConsistencyFailure,reconcileConsistencyTurn,reviewConsistencyReply,assertConsistencyCommit,sharedModelClient}from'./consistency-service.mjs';
 
 export const info={id:'infinite-fields',name:'无限原野本地战役存储',description:'本项目自有的存档、账本与检索服务器插件'};
 export async function init(router,{ world=null, baseRoot=null, newCampaignSeed=randomUUID, npcPlanner, npcPlanningEnabled=Boolean(process.env.DEEPSEEK_API_KEY), npcPlanningOptions={}, consistencyEnabled=true, consistencyClient, consistencyBudgetYuan=20 }={}){
@@ -125,7 +125,7 @@ export async function init(router,{ world=null, baseRoot=null, newCampaignSeed=r
         const view=await store.read(campaignId),index=await getIndex(store,campaignId,view.document);
         const selected=(await store.worldRegistry.get(view.document.worldHash)).scoped(view.document);
         const scene=selected.scene(view.document,String(req.body.query??'').slice(0,20000),index);
-        return reviewConsistencyReply(store,campaignId,{token,draft,expectedSequence,scene,sceneSequence:view.reference.sequence,client:getModelClient(store)});
+        return reviewConsistencyReply(store,campaignId,{token,draft,expectedSequence,scene,chat:index.chatMessages,sceneSequence:view.reference.sequence,client:getModelClient(store)});
     }));
     router.post('/execute',handle(async req=>{
         const {campaignId,tool,args,eventId,anchor,expectedSequence}=req.body;
@@ -134,7 +134,9 @@ export async function init(router,{ world=null, baseRoot=null, newCampaignSeed=r
         const store=getStore(req),view=await store.read(campaignId);
         if(view.document.schemaVersion!==2)throw new Error('存档尚未升级到新引擎');
         if(tool==='world_turn'&&req.body.reviewId)await assertConsistencyCommit(store,campaignId,{reviewId:req.body.reviewId,anchor,args,expectedSequence});
-        const saved=await store.transact(campaignId,{id:eventId,input:{tool,args,eventId},anchor,expectedSequence},store.reducer);
+        let saved;
+        try{saved=await store.transact(campaignId,{id:eventId,input:{tool,args,eventId},anchor,expectedSequence},store.reducer);}
+        catch(error){await captureConsistencyFailure(store,campaignId,{anchor,expectedSequence,tool,args,eventId},error);throw error;}
         const after=saved.document??(await store.read(campaignId)).document;
         const crossedDay=Math.floor(after.state.minute/1440)>Math.floor(view.document.state.minute/1440);
         if(!saved.duplicate&&npcPlanningEnabled&&(crossedDay||after.state.location!==view.document.state.location)){

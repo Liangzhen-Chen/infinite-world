@@ -1,6 +1,7 @@
+import {ritualProtectionValid}from'./magic-ritual.mjs';
 // Shared numerical handlers; callers own targeting, consent, costs and death effects.
 export const damageTypes=Object.freeze(['physical','fire','cold','wind','earth','light','shadow','mind']);
-const fields={mind_space:['operation'],care:['operation'],damage:['damageType','armorFactor','coldDecay','windBlade','stoneProjectile','lightDecay','shadowDecay'],optics:['operation'],water_earth:['operation'],air:['operation'],heal:[],repair:[],dry:[],status:['status'],relief:['statuses'],mark:['medium','visibility'],light:[],environment:['operation','unit'],summon:['summonType','upkeepMp','upkeepMinutes'],summon_contract:['operation','offering'],protection:['damageTypes','stacking'],object:['operation','limitC','surface'],heat:['operation','limitC','upkeepMp'],area:['radiusMeters','intervalMinutes','trigger','effect']};
+const fields={ritual:['operation'],mind_space:['operation'],care:['operation'],damage:['damageType','armorFactor','coldDecay','windBlade','stoneProjectile','lightDecay','shadowDecay'],optics:['operation'],water_earth:['operation'],air:['operation'],heal:[],repair:[],dry:[],status:['status'],relief:['statuses'],mark:['medium','visibility'],light:[],environment:['operation','unit'],summon:['summonType','upkeepMp','upkeepMinutes'],summon_contract:['operation','offering'],protection:['damageTypes','stacking'],object:['operation','limitC','surface'],heat:['operation','limitC','upkeepMp'],area:['radiusMeters','intervalMinutes','trigger','effect']};
 export function validateEffectSpec(spec){
  const errors=[];
  if(!spec||typeof spec!=='object'||Array.isArray(spec))return ['法术效果必须是规则对象'];
@@ -54,7 +55,7 @@ export function consumeMagicProtection(d,target,amount,damageType='physical'){
  if(!damageTypes.includes(damageType))throw new Error('待吸收伤害门类未知');
  const now=d.get('state','minute'),available=[];
  for(const [id,e] of Object.entries(d.get('state','effects')??{})){
-  if(e.kind!=='protection'||e.target!==target||e.expires<=now)continue;
+  if(e.kind!=='protection'||(e.target!==target&&!e.ritualBinding?.members.some(m=>m.id===target))||e.expires<=now||!ritualProtectionValid(d,e))continue;
   if(e.summonSource){
    const s=d.get('state','effects',e.summonSource);
    if(!s||s.kind!=='summon'||s.owner!=='player'||s.location!==d.get('state','location')||s.expires<=now)continue;
