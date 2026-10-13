@@ -79,10 +79,11 @@ function contact(s,point=[0,0]){
  s.doc.state.records.healing={category:'authorization',subject:npc,action:'healing',grantor:npc,grantee:'player',expires:s.doc.state.minute+10000};
 }
 
-test('三族全部候选接入处理器，正式内容不变，仪式医疗仍缺消费者',()=>{
+test('三族全部候选接入处理器，正式内容不变，T89补齐仪式医疗消费者',()=>{
  const s=fixture(),map=mechanismMap(original);assert.equal(s.candidates.length,15);
  for(const c of s.candidates){assert.deepEqual(validateMagicCatalog(c,{requireHandler:true}),[],c.id);const r=map.rows.find(r=>r.id===c.id);assert.equal(r.status,original.spells.some(s=>s.id===c.id)?'published':'consumer-ready');}
- assert.equal(map.formalSpellCount,31);assert.equal(map.rows.find(r=>r.mechanism==='restore').status,'missing-consumer');
+ assert.equal(map.formalSpellCount,31);const restore=map.rows.find(r=>r.mechanism==='restore');
+ assert.equal(restore.status,'consumer-ready');assert.equal(restore.handler.kind,'ritual');assert.equal(restore.handler.operation,'restore');assert.deepEqual(restore.validation,[]);
  const c=spell(s,'pain');assert.ok(validateMagicCatalog({...c,duration:31}).length);assert.ok(validateMagicCatalog({...c,rangeMeters:4}).length);
  assert.ok(validateMagicCatalog({...c,effectSpec:{...c.effectSpec,power:4}}).length);
  assert.ok(validateMagicCatalog({...c,effectSpec:{...c.effectSpec,universalHeal:true}}).length);
