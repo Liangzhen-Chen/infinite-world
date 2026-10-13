@@ -124,7 +124,7 @@ export class MemoryIndex {
                 relevance += Math.log(1 + (n - df + 0.5) / (df + 0.5)) * tf * 2.2 / (tf + 1.2 * (0.25 + 0.75 * doc.length / Math.max(1, average)));
             }
             if (doc.entities?.some(id => entities.has(id))) relevance += 2;
-            const decay = 0.5 + 0.5 * Math.exp(-Math.max(0, now - doc.minute) / (1440 * 30));
+            const decay = doc.guardUntil>now?1:0.5 + 0.5 * Math.exp(-Math.max(0, now - doc.minute) / (1440 * 30));
             const score = relevance * (0.5 + doc.salience / 5) * decay;
             if (score > 0) rows.push({ id, source: doc.source, eventId: doc.eventId, minute: doc.minute, text: doc.text, score });
         }

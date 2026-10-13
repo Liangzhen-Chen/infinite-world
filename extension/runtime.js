@@ -18,6 +18,7 @@ let labels={},feedback=[],ledgerTime='';
 let reviewTurn=null;
 const reviewing=new WeakMap(),reviewEdits=new WeakMap();
 let historyModule=null;
+let startTransition=false;
 registerPanel({id:'ledger',title:'世界账本',render:(container,data)=>{
     const book=document.createElement('div');book.id='fields-ledger-content';container.replaceChildren(book);
     if(data.view)renderLedger(book,data.view.document.state,data.labels,data.feedback,data.ledgerTime);
@@ -278,8 +279,8 @@ context.eventSource.on(context.eventTypes.CHAT_COMPLETION_PROMPT_READY,({chat})=
     if(active()&&view&&!blocked)injectToolExamples(chat,ctx().characters[ctx().characterId]);
 });
 context.eventSource.on(context.eventTypes.APP_READY,()=>queue(refresh).catch(fail));
-context.eventSource.on(context.eventTypes.CHAT_CHANGED,()=>queue(refresh).catch(fail));
-context.eventSource.on(context.eventTypes.CHAT_LOADED,()=>queue(refresh).catch(fail));
+context.eventSource.on(context.eventTypes.CHAT_CHANGED,()=>{if(!startTransition)return queue(refresh).catch(fail);});
+context.eventSource.on(context.eventTypes.CHAT_LOADED,()=>{if(!startTransition)return queue(refresh).catch(fail);});
 context.eventSource.on(context.eventTypes.GENERATION_STARTED,reconcile);
 context.eventSource.on(context.eventTypes.GENERATION_AFTER_COMMANDS,()=>{if(blocked)ctx().stopGeneration();});
 context.eventSource.on(context.eventTypes.MESSAGE_SENT,()=>{if(active()&&view&&loadedChat===ctx().chatId)return queue(async()=>{await ensureReviewTurn();await refresh();}).catch(fail);});
@@ -288,4 +289,62 @@ context.eventSource.on(context.eventTypes.MESSAGE_EDITED,onEdited);
 context.eventSource.on(context.eventTypes.MESSAGE_RECEIVED,afterReply);
 for(const event of [context.eventTypes.CHARACTER_MESSAGE_RENDERED,context.eventTypes.MESSAGE_UPDATED])if(event)context.eventSource.on(event,()=>{if(active()&&view)render();});
 context.eventSource.on(context.eventTypes.GENERATION_ENDED,()=>{mode='normal';});
-window.infiniteFieldsV2={load,refresh,execute,reconcile,onEdited,onDeleted,historyInterceptor,get view(){return view;},get blocked(){return blocked;}};
+async function startSnapshot(){
+    await load();if(!view)return null;
+    view=await api('read',{campaignId:view.reference.campaignId});await persist();
+    return {reference:view.reference,name:view.document.state.player.name,chatId:ctx().chatId,
+        chat:structuredClone(ctx().chat),metadata:structuredClone(ctx().chatMetadata),settings:getSettings()};
+}
+async function enterFromStart({session,opening,settings}){
+    if(startTransition)throw Error('正在打开存档，请稍候');
+    await chain;startTransition=true;
+    try{return await openStartSession({session,opening,settings});}finally{startTransition=false;}
+}
+async function openStartSession({session,opening,settings}){
+    const reference=session?.reference;if(reference?.format!==2)throw Error('存档引用无效');
+    const gm=ctx().characters.findIndex(character=>character.name==='无限原野·世界主持人');
+    if(gm<0)throw Error('尚未安装无限原野世界主持人角色卡');
+    // Validate the selected campaign before opening a chat. A new/imported
+    // campaign always gets a fresh chat, leaving existing saves untouched.
+    const saved=await api('read',{campaignId:reference.campaignId});
+    if(saved.document.releaseVersion!==1)throw Error('这个存档尚未启用新版，请先在副本上启用');
+    ctx().stopGeneration();
+    if(ctx().characterId!==gm)await ctx().selectCharacterById(gm);
+    const fresh=!session.chatId;
+    const chatId=session.chatId??`无限原野-${reference.campaignId}-${crypto.randomUUID()}`;
+    if(fresh||ctx().chatId!==chatId)await ctx().openCharacterChat(chatId);
+    if(!fresh&&ctx().chatMetadata[KEY]?.campaignId!==reference.campaignId)throw Error('所选聊天与存档不一致，请导入备份建立独立聊天');
+    if(fresh){
+        ctx().chat.splice(0,ctx().chat.length,...structuredClone(session.chat??[]));
+        for(const key of Object.keys(ctx().chatMetadata))delete ctx().chatMetadata[key];
+        Object.assign(ctx().chatMetadata,structuredClone(session.metadata??{}),{[KEY]:saved.reference});
+        if(opening&&!ctx().chat.length)ctx().chat.push({name:'无限原野·世界主持人',is_user:false,is_system:false,mes:opening,send_date:new Date().toISOString(),extra:{fields_opening:true}});
+        await ctx().saveChat();
+        // Reload from the new file so the host's message DOM and metadata agree.
+        await ctx().openCharacterChat(chatId);
+    }
+    if(settings)updateSettings(settings);
+    view=null;loadedChat=null;await refresh();return startSnapshot();
+}
+const startEndpoints=new Set(['create','read','export','import','ui/history','ui/overview','catalog']);
+window.addEventListener('message',event=>{
+    if(window.parent===window||event.source!==window.parent||event.origin!==location.origin||event.data?.type!=='fields-start-request')return;
+    const {id,action,data={}}=event.data;
+    const handleStart=async()=>{
+        try{
+            let value;
+            if(action==='hello')value={ready:true};
+            else if(action==='settings'){updateSettings(data);value=getSettings();}
+            else if(action==='snapshot')value=await startSnapshot();
+            else if(action==='enter')value=await enterFromStart(data);
+            else if(action==='api'&&startEndpoints.has(data.endpoint))value=await api(data.endpoint,data.body);
+            else throw Error('开始页请求无效');
+            event.source.postMessage({type:'fields-start-result',id,value},event.origin);
+        }catch(error){event.source.postMessage({type:'fields-start-result',id,error:error.message},event.origin);}
+    };
+    // Opening a host chat emits awaited CHAT_CHANGED/CHAT_LOADED callbacks.
+    // Do not put that transition inside the queue those callbacks normally use.
+    if(action==='enter')handleStart();else queue(handleStart);
+});
+window.infiniteFieldsV2={load,refresh,execute,reconcile,onEdited,onDeleted,historyInterceptor,startSnapshot,enterFromStart,get view(){return view;},get blocked(){return blocked;}};
+if(window.parent!==window)window.parent.postMessage({type:'fields-start-ready'},location.origin);

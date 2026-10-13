@@ -58,7 +58,7 @@ test('双锚传送消费有效许可和真实材料，同行坐标一致且保�
  const s=await fixture(),p=await s.prepared(),r=await s.cast(p.doc,'teleport',destination,{authorizations:p.permits});
  assert.equal(r.doc.state.location,to);assert.equal(r.doc.state.npcs[owner].location,to);
  assert.deepEqual(r.doc.state.records.local_player_position.point,[4,0]);assert.deepEqual(r.doc.state.records[`local_actor_position:${owner}`].point,[4,0]);
- const facts=s.engine.magicAreaTargetFacts({get:(...keys)=>keys.reduce((o,k)=>o?.[k],r.doc)},owner,to,[4,0]);assert.equal(facts.lineOfSight,true);
+ const facts=s.engine.magicAreaTargetFacts({document:r.doc,get:(...keys)=>keys.reduce((o,k)=>o?.[k],r.doc)},owner,to,[4,0]);assert.equal(facts.lineOfSight,true);
  assert.equal(r.doc.state.player.mp,p.doc.state.player.mp-2);assert.equal(r.doc.state.inventory.item_charcoal.quantity,p.doc.state.inventory.item_charcoal.quantity-1);
  assert.equal(r.doc.state.player.coins,p.doc.state.player.coins);assert.equal(r.doc.state.minute,p.doc.state.minute+1);
  assert.deepEqual(r.doc.state.player.companions,[owner]);assert.deepEqual(r.doc.state.npcs[owner].inventory,p.doc.state.npcs[owner].inventory);

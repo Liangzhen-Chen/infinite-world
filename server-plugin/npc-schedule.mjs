@@ -1,5 +1,6 @@
 // Routine movement is recorded in the same event as elapsed world time.
 import {waterEarthHeldUntil}from'./magic-water-earth.mjs';
+import {mindSleepUntil}from'./magic-mind-space.mjs';
 // A travelling NPC occupies neither endpoint until the route has finished.
 export function scheduleAt(engine,npcId,minute){
     const schedule=engine.byId.get(npcId)?.schedule;if(!schedule)return null;
@@ -64,7 +65,7 @@ export function advanceNpcSchedules(d,engine,before,after){
         if(d.get('state','npcs',npcId,'cognitionTravel')||engine.npcAutonomyBusy?.(d.get('state'),npcId,before))continue;
         const original=d.get('state','npcs',npcId),npc={...original},path=['state','npcs',npcId];
         const activity=value=>{npc.activity=value;};
-        let cursor=waterEarthHeldUntil(d.get('state'),npcId,before);
+        let cursor=Math.max(waterEarthHeldUntil(d.get('state'),npcId,before),mindSleepUntil(d,npcId,before));
         while(cursor<=after){
             if(incapacitated(npc)){activity(npc.status);break;}
             if(d.get('state','player','companions')?.includes(npcId)){activity('同行');break;}

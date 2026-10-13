@@ -1,4 +1,5 @@
 import {inspectCare}from'./magic-care.mjs';
+import {inspectMindSpace,inspectMindCarrier,assertMindSpacePath,unlockMindSpaceDoor,assertMindAwake}from'./magic-mind-space.mjs';
 import {normalize}from'./retrieval.mjs';
 import {waterMechanisms}from'../world/design/water-foundation.mjs';
 import {addObjectFuel,inspectObjectProcess,touchWarmObject,douseObjectFire,assertFirePath}from'./magic-object.mjs';
@@ -167,12 +168,13 @@ export function interactEnvironment(d,args,eventId){
     const lightAction=normalLightAction.call(this,d,args);if(lightAction)return lightAction;
     if(['turn_grain','sound','fall','breathe'].includes(operation))return airEnvironmentAction.call(this,d,args,eventId);
     if(operation==='inspect'){
+        const carrier=inspectMindCarrier(d,this,args);if(carrier)return carrier;
         if(args.target){const care=inspectCare(d,this,args);if(care)return{care,actionScope:{kind:'instant',instantaneous:true}};}
         const result=environmentCatalog(this,d.document,{entity:args.target});
         if(!args.target)return result;
         const row=feature(this,args.target,location),check=Object.values(d.get('state','effects')??{}).some(e=>e.kind==='water_earth'&&e.operation==='mud_seal'&&e.target===row.id&&e.expires>d.get('state','minute'));
         if(check){inReach(d,row,3);permission(d,this,row,args);}
-        return{...result,waterEarth:inspectWaterEarth(d,this,row,{check}),light:inspectLight(d,this,row),actionScope:{kind:'instant',instantaneous:true}};
+        return{...result,waterEarth:inspectWaterEarth(d,this,row,{check}),light:inspectLight(d,this,row),mindSpace:inspectMindSpace(d,this,row),actionScope:{kind:'instant',instantaneous:true}};
     }
     if(operation==='inspect_heat')return{...inspectObjectProcess(d,this,args.target,args),actionScope:{kind:'instant',instantaneous:true}};
     if(operation==='warm_touch')return{...touchWarmObject(d,this,args),actionScope:{kind:'instant',instantaneous:true}};
@@ -190,6 +192,9 @@ export function interactEnvironment(d,args,eventId){
     }
     const row=feature(this,args.target,location);inReach(d,row,Number.POSITIVE_INFINITY);
     if(operation==='approach'){
+        assertMindAwake(d);
+        unlockMindSpaceDoor(d,this,args);
+        assertMindSpacePath(d,this,location,point(d),row.position);
         assertWaterEarthMovement(d);
         assertLightMovement(d,this);
         assertFirePath(d,this,point(d),row.position);
@@ -198,6 +203,7 @@ export function interactEnvironment(d,args,eventId){
         if(d.get('state','location')!==location||d.get('state','player','status')!=='正常')return{target:row.id,metres,minutes,arrived:false};
         assertFirePath(d,this,point(d),row.position);
         const height=row.kind==='ledge'?{elevationMeters:stateOf(d,row).fallHeightMeters}:{};
+        assertMindSpacePath(d,this,location,point(d),row.position,{eventId,signal:true});
         d.set(['state','records','local_player_position'],{category:'local_position',subject:'player',location,point:[...row.position],source:eventId,anchor:row.id,minute:d.get('state','minute'),...height});
         return{target:row.id,metres,minutes,mudMinutes,position:[...row.position]};
     }

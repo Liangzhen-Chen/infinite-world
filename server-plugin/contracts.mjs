@@ -1,10 +1,35 @@
 const debtRows=d=>Object.entries(d.get('state','records')??{}).filter(([,row])=>row.category==='debt');
+import {canonical}from'./storage.mjs';
+const signedTerms=row=>Object.fromEntries(['parties','subject','quantity','deadline','cost','kind'].map(k=>[k,row[k]??null]));
 const contractPath=id=>['state','records',id];
+export function magicContractTrace(d,id){
+ const row=d.get(...contractPath(id));
+ if(row?.category!=='contract'||!row.signedTerms)throw Error('需要本人持有且有原签条款的真实契约');
+ const current=signedTerms(row),changes=[];
+ for(const [field,value]of Object.entries(row.signedTerms))if(canonical(current[field])!==canonical(value))changes.push({field,before:structuredClone(value),after:structuredClone(current[field])});
+ return{parties:row.parties,changes,enforcement:row.enforcement};
+}
+export function advanceShadowContracts(d,before,after){
+ for(const [id,row]of Object.entries(d.get('state','records')??{})){
+  const e=row.category==='contract'&&row.enforcement;
+  if(!e?.active||e.channel!=='shadow')continue;
+  if(!row.parties?.includes(e.target)||!Number.isFinite(e.power)||e.power<=0||!Number.isFinite(e.stressPerMinute)||e.stressPerMinute<=0||!Number.isFinite(e.remaining)||e.remaining<0||!Number.isSafeInteger(e.started)||!Number.isSafeInteger(e.expires))throw Error('暗影契约执行状态损坏');
+  const permission=d.get('state','records',e.authorization);
+  if(e.target!=='player'&&(permission?.category!=='authorization'||permission.action!=='mental_magic'||permission.subject!==e.target||permission.grantor!==e.target||permission.grantee!=='player'||permission.revoked||permission.expires<=before)){d.set([...contractPath(id),'enforcement','active'],false);continue;}
+  const until=Math.min(after,e.expires,e.target==='player'?Infinity:permission.expires),minutes=Math.max(0,until-Math.max(before,e.started));
+  const path=e.target==='player'?['state','player']:['state','npcs',e.target],actor=d.get(...path);
+  if(!actor?.mental||actor.status==='死亡'){d.set([...contractPath(id),'enforcement','active'],false);continue;}
+  const amount=Math.min(e.remaining,minutes*e.stressPerMinute);
+  d.set([...path,'mental','stress'],Math.min(100,actor.mental.stress+amount));
+  d.set([...contractPath(id),'enforcement'],{...e,remaining:e.remaining-amount,active:e.remaining>amount&&until===after&&after<e.expires});
+ }
+}
 export function createBusinessContract(d,{kind,parties,subject,quantity,deadline,business,cost,escrow=0,...terms},eventId){
     const id=`contract_${kind}_${eventId}`;
     if(d.get(...contractPath(id)))throw new Error('合同编号已存在');
     const row={...terms,id,category:'contract',version:1,kind,parties,subject,quantity,deadline,business,cost,
         escrow,paid:0,fulfilled:0,status:'待履行',createdAt:d.get('state','minute'),source:eventId,performance:[],breaches:[]};
+    row.signedTerms=structuredClone(signedTerms(row));
     d.set(contractPath(id),row);return row;
 }
 export function finishBusinessContract(d,row,{status,fulfilled=row.fulfilled,paid=row.paid,reason,by,source}){

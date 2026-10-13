@@ -133,6 +133,48 @@ N1–N17至少12项完整有效且≥90%，N6/N16零泄漏，N12真实盲辨，N
 
 ### T64 已执行，未通过：九场完整（npc_private 4/8），账本149/170，有效N 12项但整合判定0/12，工具漏5错3，审查标记泄漏5，N12盲辨7/9；324次调用6.60625216元。证据在docs/测试报告/M2-recheck/。第二次分析交Astra（M2-fix-planner-002），修复后再做第三轮。
 
+### M2修复第二批（2026-10-13主会话审定，来源：Astra草案M2-fix-planner-002，对应T64真实失败；分析全文见该草案A段）
+
+要点：T64的0/12含测量错误——tools/npc-acceptance.mjs把同场任何账本失败或残留警告连坐到该场所有N，指南只要求逐N按行为判定、另设账本/时间/存档100%的总体门槛。21条账本失败是漏调9、错工具6、参数语义错5、脚本分步歧义1，没有引擎缺陷。npc_private停在第4回合是保密意图被映射成“会面”占用时段、随后改写把失败移动写成成功。5条泄漏标记都不是私密外泄。N1/N7/N8/N14本就没有对应场景，属未测。
+审计：四张修复卡和第三轮复验都同意。T98与T96都增加静态提示，T98在T96合入后派。第三轮上限10元，单轮保守上界因此到约38.4元，超过旧的30元；按用户授权由主会话放行并记账。
+
+### T95 逐N按关联证据判定，并完成分段评分。
+结果：最多解除九项逐N已通过结果的整场连坐，仍独立保留全部账本失败；N5的假库存理由继续失败，N12及N17不能自动翻为通过。
+做法：关联各N实际回合和前置行动，输出具体失败条件；保留全场账本/时间/存档100%及至少12项/90%门槛。N12交流审核与盲辨分开；N17提供至返回前的完整行动证据，按谈话所指事件核对。分段评分改为单回合、保留此前核账证据，思考输出上限12288；length/缺响应仍算未完成，完成的负评不重抽。
+可改：tools/npc-acceptance.mjs、tools/playtest-review.mjs、tools/playtest-metrics.mjs、tools/playtests.mjs及tests/npc-acceptance.test.mjs、tests/playtest-npc-evidence.test.mjs、tests/playtest-review.test.mjs；其余卡文件锁定。
+验收：node --test tests/npc-acceptance.test.mjs tests/playtest-npc-evidence.test.mjs tests/playtest-review.test.mjs；CORE。用T64原始对象作离线夹具，覆盖不相干警告不连坐、关联矛盾仍失败、账本149/170仍拒绝整体验收、盲辨7/9仍失败及评分截断。
+模型：0次、0元。预计250–400行，一个执行会话。
+
+### T96 查询库存与行动调用正确落账，解决21条失败的来源。
+结果：目标恢复courier九条、home_visit三条、private两条、quest_social一条、shove六条，并补全N6，恢复N5及N9的行动条件。
+做法：world_read增加单人物定位，浏览器及试玩调用共用，保留私密字段过滤和体积限制；写清保密不建会面、明确等待不缩时、未登记目标先查目录。把“服务暂停”限定为交易/授课，司法按现有法典和回执判断；委托输入明确本轮只发布，私宅输入明确返回河湾村。保留原账本断言，补标实际参数机会。
+可改：extension/tools.mjs、extension/state-read.mjs、extension/runtime.js、tools/playtest-runner.mjs、tools/scenarios.mjs、server-plugin/scene-card.mjs、prompt/constitution.md；tests/playtests/npc_quest_social.json、tests/playtests/npc_home_visit.json、tests/deepseek-transport.test.mjs、tests/playtest-runner.test.mjs及新增tests/m2-action-context.test.mjs。其余卡文件锁定。
+验收：node --test tests/deepseek-transport.test.mjs tests/playtest-runner.test.mjs tests/m2-action-context.test.mjs tests/npc-delivery.test.mjs tests/npc-obligations.test.mjs tests/law.test.mjs tests/quest-board.test.mjs tests/prompt.test.mjs；CORE。按原失败顺序回放查询→立约→送达、许可到期→离宅、保密→移动及自认→逮捕→审理。
+模型：0次、0元。预计350–550行；静态提示含工具定义合计不得超过11800 token，使用loadPromptBundle().budget核对，保留12000硬上限。
+
+### T97 事实审查和唯一改写正确使用回执，使玩家能继续行动。
+结果：消除五条错误泄漏计数的来源，修复private失败回执被改写成成功移动的路径；库存矛盾及真实无渠道泄密仍须报错。
+做法：场外历史核对供给相关原始工具回执和对话；未被承接的委托托管事实也供审稿核账，不能因reviewPlayerFacts只选玩家参与项而丢失。knowledge必须指出无渠道主体和具体私密内容；普通否认不等于泄漏。改写明确保留工具失败和实际时地，沿已有一次改写处理，不增加重试次数。
+可改：server-plugin/consistency-evidence.mjs、server-plugin/consistency-review.mjs、server-plugin/consistency-service.mjs、tests/m3-consistency-evidence.test.mjs、tests/m3-consistency.test.mjs、tests/m3-consistency-integration.test.mjs；其余卡文件锁定，审稿私密证据仍不得传给主持人或无关NPC。
+验收：node --test tests/m3-consistency-evidence.test.mjs tests/m3-consistency.test.mjs tests/m3-consistency-integration.test.mjs；CORE。用五条原文及真实泄密反例，验证150经验、吴朔原答复与空约定可核对，失败移动不得由改写变为成功。
+模型：0次、0元。预计200–350行；本卡不改静态主持提示。
+
+### T98 NPC对白服从本人经历，并保留可盲辨的表达方式。
+结果：目标恢复N17、N12，并让N9在场见证者的反应有实际发言。
+做法：回忆保留约定的真实期限及已记录制作费用，不把10:06改成10:15，不从item_wood推出树种、免费来源或残件；区分最近两次失败与十天全部结果。施锦按农户的用语和关切回应椅子等同题，不借贺舟“先问用途”的表达；冲突现场用已登记见证者表达观察，不能补造新围观者。
+可改：prompt/style.md、prompt/examples.md、tests/prompt.test.mjs及新增tests/m2-npc-prompt.test.mjs；人物正式档案与其余卡文件锁定，沿现有三人风格资料修正提示，不为盲辨添加名字暗号。
+验收：node --test tests/prompt.test.mjs tests/m2-npc-prompt.test.mjs；CORE。离线核对提示来源及匿名抽样规则，真实N12/N17效果由下一卡测量，不把静态测试记为能力通过。
+模型：0次、0元。预计80–160行；在F2合入后完成，静态提示加工具合计≤11800 token，不删除原调用示例或降低盲辨标准。
+
+### T99 M2第三轮真实复验【真实模型；待T95–T98合入】
+
+结果：沿用十场和完整提示栈，逐项报告N结论与总体门槛；预期优先恢复N2、N3、N4、N10、N11、N13、N15、N16，修复后争取再过N5、N6、N9、N17，形成12/13。N12仍须真实匿名盲辨全对，不能用其余十二项豁免；N1/N7/N8/N14继续明确未测。
+可改仅新目录docs/测试报告/M2-recheck-003/及该run生成物；复用T64入口并适配已合入来源、父账和本轮参数，旧报告及代码锁定。预计十场87回合及一次结果整理，正常HTTP、repeat=1、parallel=4，不部署。
+建议新增上限10元、最多450次调用，含≤1元初探和全部审稿；不自动重跑完成的负评。T64约6.61元结算另有0.31352元未知预留；按旧报告28.42836376元保守整轮上界再加10元为38.42836376元，超旧30元限制，主会话审定时须处理这笔增额，不能沿用旧额度或换run清零；执行前刷新总goal100元余量。
+验收先运行 node docs/测试报告/M2-recheck-003/preflight.mjs --zero-model，再运行CORE；正式命令如下，沿T64只替换新目录、run/card和新增金额。
+node --import ./docs/测试报告/M2-recheck-003/git-entry.mjs tools/playtests.mjs --run-dir docs/测试报告/M2-recheck-003 --run-id m2-recheck-003 --card M2-recheck-003 --increment 10 --repeat 1 --parallel 4 --milestone M2 --only guide,npc_courier,npc_delivery,npc_home_visit,npc_offscreen,npc_private,npc_quest_social,npc_shove,npc_social,npc_voices --host-installation F:/dnd/SillyTavern --budget-proof docs/测试报告/M2-recheck-003/preflight.mjs
+最终保留原失败和新结果；要求十场完整、至少十二项有效且通过率≥90%，账本/时间/存档100%，N6/N16零泄漏，N12盲辨及N17十天自主行动均过。未完成评分独立列明，工具参数与目标只按实际测量范围报告。
+
 ### 法术150/首领40第一批（2026-10-13主会话审定，来源：Astra草案W2W4-planner-001）
 
 路线：法术31→61→91→121→150（S1–S4，S1只用已有处理器；S2炉作通风水土、S3光医心、S4空间役灵仪式各依赖对应引擎卡）；首领4→16→28→40（B1–B3，8个智能存在按2/3/3分布）。
@@ -150,13 +192,9 @@ N1–N17至少12项完整有效且≥90%，N6/N16零泄漏，N12真实盲辨，N
 
 ### T87 已完成：医、植、食族15个机制（止血、创面、病症感知、止痛稳定、驱寄生、肌腱、药草识别、抗霜、根系、嫁接、保鲜等）接入真实状态；相关28/CORE40，0模型。
 
-### T88 心、契、物与空间族消费者【零模型】
+### T88 已完成：心、契、物与空间族20个机制（感受载体、自愿精神观察、睡眠休养、记忆保护、契约痕迹与反制、腐蚀、测距、取物、封存、锁隙、警号、许可通道、锚点校准与货运、空间修补）接入真实状态，精神类须本人同意；相关38/CORE40，0模型。
 
-结果：感受载体、自愿精神观察、睡眠与休养、长期记忆保护、契约痕迹与反制、材料腐蚀；可见测距、袋内整理取物、短时封存、机械锁隙、门框警号、许可通道、锚点校准、锚点货运、空间异常修补，都有真实效果。精神类一律要对方同意。
-可改：新增server-plugin/magic-mind-space.mjs、tests/magic-mind-space.test.mjs；magic.mjs、magic-primitives.mjs、magic-movement.mjs、contracts.mjs、npc-memory.mjs必要接点及机制图两文件。锁定同T87。
-验收：`node --test tests/magic-mind-space.test.mjs tests/magic.test.mjs tests/magic-movement.test.mjs`、CORE。模型0。规模约800–1100行。
-
-### T89 役灵与仪式族消费者【零模型；待T88合入】
+### T89 役灵与仪式族消费者【零模型】
 
 结果：真实动物引导、清扫役灵、碎石搬运、纸签运输、役灵改派与协作、可拒绝的邀约；受托祭坛清洁、自愿誓言见证、教派契约、复活祷标、守戒防护、共同护罩、灵体辨识、邪秽干扰、仪式治疗，都有真实效果。仪式资格按现有神祇与教派数据核对。
 可改：新增server-plugin/magic-ritual.mjs、tests/magic-ritual.test.mjs；summons.mjs、revival.mjs、contracts.mjs、magic.mjs、magic-primitives.mjs必要接点及机制图两文件。锁定同T87。
@@ -408,13 +446,9 @@ T28-R1修好新回执undefined规范化并保留严格篡改拒绝，相关31/32
 
 ### T79 已完成：任务、约定、领地三面板与/ui/affairs只读投影，按期限排序、收发筛选、公账展示；界面测试25/25、CORE40，截图在docs/测试报告/最新/M6-05/。缺口归R07：玩家发单额度与村级领地签发入口尚未实现，面板对缺记录显示“未登记”。
 
-### T80 开始游戏与续玩：玩家能继续或创建角色，管理存档与设置，进入后看到对应开场或前情提要。
-可改新 E/start/play-town.html、play-town.js、play-town.css，E/runtime.js、tools/deploy-engine.mjs，T/runtime.test.mjs、新 T/m6-06.test.mjs；现酒馆页面仅作参考，隔离包提供同名新入口。复用 /create、/export、/import 及04的可见历史；前情提要用已发生事实确定性编排，开场复用原有具体细节，加载知识取已发布世界内容，备份含笔记与设置。
-验收：node --test tests/runtime.test.mjs tests/m6-06.test.mjs；node --test tests/engine.test.mjs tests/storage.test.mjs tests/plugin.test.mjs。浏览器完成创建→固定回复发送→保存→导入→继续，截图含开始页和前情；禁止连接测试触发付费调用；模型0，预计3小时，1会话。
+### T80 已完成：开始页可继续或创建角色（姓名、性别、外貌背景、六项属性），保存与导入含笔记和设置的备份，进入后显示开场或前情提要；界面测试14/14、CORE40，截图在docs/测试报告/最新/M6-06/。
 
-### T81 四级地图与出行预览：玩家能缩放和标记已知地图，比较路线，选中后仅将出行意图填入输入框。
-可改 E/runtime.js，新建 E/map-view.mjs、map-view.css；S/index.mjs、新 S/ui-map.mjs，必要时 S/engine.mjs 的只读路线计算接点；world/geo/、T/runtime.test.mjs、新 T/m6-07.test.mjs。增 /ui/map 与 /ui/routes，从 geo、discoveries 和可靠获知记录投影四级层次及三类迷雾；复用季节／天气路线计算提供不同可行路线、费用和风险，未知风险明确标未知；补已发布地点的层级映射，不新增远方世界。
-验收：node --test tests/runtime.test.mjs tests/m6-07.test.mjs；node --test tests/engine.test.mjs tests/storage.test.mjs tests/plugin.test.mjs。截图含四级地图和三类迷雾；验证鼠标／双指缩放、季节封路、标记保存及预览不改时间钱袋位置；模型0，预计4小时，1会话。
+### T81 已完成：四级已知地图、亲历/可靠转述/传闻三类迷雾、缩放平移、持久标记、路线比较，选中后只填输入框；标签保持14px并互相避让。界面测试16/16、CORE40，截图在docs/测试报告/最新/M6-07/。白石镇发布后补地点映射。
 
 ### T82 游戏纹章、背景与人物素材：玩家看到统一风格的游戏标志、约80张随场景切换的背景及全部已发布LOD0人物的职业纹章头像。
 可改 world/art/ 下风格说明、逐人物可复用提示及素材映射，assets/visual/、assets/LICENSES.md，新 tools/build-m6-art.mjs、E/background-view.mjs；E/runtime.js、tools/build-card.mjs、tools/deploy-engine.mjs，T/runtime.test.mjs、新 T/m6-08.test.mjs。以原创场景SVG交付背景，按10类场景×2时段×4天气实际绘制差异；头像采用指南允许的职业纹章，未成年仅日常形象；核对酒馆背景接口，场景变化淡入淡出，减少动画时直接切换。
