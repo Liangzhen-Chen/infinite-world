@@ -153,13 +153,9 @@ N1–N17至少12项完整有效且≥90%，N6/N16零泄漏，N12真实盲辨，N
 
 ### T72 已完成：光族机制（光源、聚光反射、辨色、显痕、光标、雾中能见度、遮光私密、视觉干扰、阴影束缚、强光衰减）接入真实状态；相关26/CORE40，0模型。
 
-### T87 医、植、食族消费者【零模型】
+### T87 已完成：医、植、食族15个机制（止血、创面、病症感知、止痛稳定、驱寄生、肌腱、药草识别、抗霜、根系、嫁接、保鲜等）接入真实状态；相关28/CORE40，0模型。
 
-结果：这三类法术有真实效果——浅表止血、创面清洁与闭合、病症感知、止痛与濒死稳定、驱寄生物、肌腱恢复；药草识别、幼苗抗霜、根系向水、嫁接；储柜与果实保鲜减损。治疗只处理列出的具体伤病状态，不做万能回血；garden类只复用T37已有的水肥生长。
-可改：新增server-plugin/magic-care.mjs、tests/magic-care.test.mjs；magic.mjs、magic-primitives.mjs、magic-status.mjs、agriculture.mjs、environment.mjs必要接点及机制图两文件。锁定：正式world/meta目录、extension/tools.mjs、prompt/。
-验收：`node --test tests/magic-care.test.mjs tests/magic.test.mjs`、CORE；每个效果有正常与拒绝路径，到期与重载一致。模型0。规模约700–1000行。
-
-### T88 心、契、物与空间族消费者【零模型；待T87合入，同改magic接点】
+### T88 心、契、物与空间族消费者【零模型】
 
 结果：感受载体、自愿精神观察、睡眠与休养、长期记忆保护、契约痕迹与反制、材料腐蚀；可见测距、袋内整理取物、短时封存、机械锁隙、门框警号、许可通道、锚点校准、锚点货运、空间异常修补，都有真实效果。精神类一律要对方同意。
 可改：新增server-plugin/magic-mind-space.mjs、tests/magic-mind-space.test.mjs；magic.mjs、magic-primitives.mjs、magic-movement.mjs、contracts.mjs、npc-memory.mjs必要接点及机制图两文件。锁定同T87。
