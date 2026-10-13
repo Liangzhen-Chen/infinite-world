@@ -1,1 +1,4105 @@
-[{"id":"route_bld_hw_qingdeng","from":"loc_hw","to":"bld_hw_qingdeng","lengthKm":0,"terrainMultiplier":1,"modes":["walk","horse"],"closedSeasons":[],"toll":0,"risk":0},{"id":"route_bld_hw_mill","from":"loc_hw","to":"bld_hw_mill","lengthKm":0.2,"terrainMultiplier":1,"modes":["walk","horse"],"closedSeasons":[],"toll":0,"risk":0},{"id":"route_bld_hw_council","from":"loc_hw","to":"bld_hw_council","lengthKm":0.14142135623730953,"terrainMultiplier":1,"modes":["walk","horse"],"closedSeasons":[],"toll":0,"risk":0},{"id":"route_bld_hw_riverhome","from":"loc_hw","to":"bld_hw_riverhome","lengthKm":0.14142135623730953,"terrainMultiplier":1,"modes":["walk","horse"],"closedSeasons":[],"toll":0,"risk":0},{"id":"route_bld_hw_forge","from":"loc_hw","to":"bld_hw_forge","lengthKm":0.3,"terrainMultiplier":1,"modes":["walk","horse"],"closedSeasons":[],"toll":0,"risk":0},{"id":"route_loc_hw_northwood","from":"loc_hw","to":"loc_hw_northwood","lengthKm":2,"terrainMultiplier":1,"modes":["walk","horse"],"closedSeasons":[],"toll":0,"risk":0},{"id":"route_bld_hw_herbs","from":"loc_hw","to":"bld_hw_herbs","lengthKm":0.28284271247461906,"terrainMultiplier":1,"modes":["walk","horse"],"closedSeasons":[],"toll":0,"risk":0},{"id":"route_loc_hw_dock","from":"loc_hw","to":"loc_hw_dock","lengthKm":0.2,"terrainMultiplier":1,"modes":["walk","horse"],"closedSeasons":[],"toll":0,"risk":0},{"id":"route_loc_hw_fields","from":"loc_hw","to":"loc_hw_fields","lengthKm":1,"terrainMultiplier":1,"modes":["walk","horse"],"closedSeasons":[],"toll":0,"risk":0},{"id":"route_bld_hw_weaving","from":"loc_hw","to":"bld_hw_weaving","lengthKm":0.4,"terrainMultiplier":1,"modes":["walk","horse"],"closedSeasons":[],"toll":0,"risk":0},{"id":"route_loc_hw_gate","from":"loc_hw","to":"loc_hw_gate","lengthKm":0.5,"terrainMultiplier":1,"modes":["walk","horse"],"closedSeasons":[],"toll":0,"risk":0},{"id":"route_loc_hw_orchard","from":"loc_hw","to":"loc_hw_orchard","lengthKm":0.5656854249492381,"terrainMultiplier":1,"modes":["walk","horse"],"closedSeasons":[],"toll":0,"risk":0},{"id":"route_bld_hw_school","from":"loc_hw","to":"bld_hw_school","lengthKm":0.41231056256176607,"terrainMultiplier":1,"modes":["walk","horse"],"closedSeasons":[],"toll":0,"risk":0},{"id":"route_loc_hw_apiary","from":"loc_hw","to":"loc_hw_apiary","lengthKm":2,"terrainMultiplier":1,"modes":["walk","horse"],"closedSeasons":[],"toll":0,"risk":0},{"id":"route_bld_hw_post","from":"loc_hw","to":"bld_hw_post","lengthKm":0.6,"terrainMultiplier":1,"modes":["walk","horse"],"closedSeasons":[],"toll":0,"risk":0},{"id":"route_site_beilin_tower","from":"loc_hw","to":"site_beilin_tower","lengthKm":6,"terrainMultiplier":1,"modes":["walk","horse"],"closedSeasons":[],"toll":0,"risk":0},{"id":"route_hw_bs","from":"loc_hw","to":"loc_bs","lengthKm":24,"terrainMultiplier":1,"modes":["walk","horse","cart"],"closedSeasons":[],"toll":0,"risk":1},{"id":"route_hw_yandu","from":"loc_hw","to":"loc_yandu","lengthKm":32,"speedKmh":8,"modes":["boat"],"closedSeasons":[],"toll":10,"risk":1},{"id":"route_bs_capital","from":"loc_bs","to":"loc_capital","lengthKm":416,"terrainMultiplier":1,"modes":["walk","horse","cart"],"closedSeasons":[],"toll":0,"risk":2},{"id":"route_bld_hw_altar","from":"loc_hw","to":"bld_hw_altar","lengthKm":0.2,"terrainMultiplier":1,"modes":["walk","horse"],"closedSeasons":[],"toll":0,"risk":0},{"id":"route_bld_bs_shrine","from":"loc_bs","to":"bld_bs_shrine","lengthKm":0.2,"terrainMultiplier":1,"modes":["walk","horse"],"closedSeasons":[],"toll":0,"risk":0},{"id":"route_copper_ridge","from":"loc_bs","to":"site_copper_ridge","closedSeasons":[],"lengthKm":30.56,"terrainMultiplier":1.5,"modes":["walk"],"toll":0,"risk":0},{"id":"route_root_hollow","from":"site_copper_ridge","to":"site_root_hollow","closedSeasons":[],"lengthKm":11,"terrainMultiplier":1.5,"modes":["walk"],"toll":0,"risk":0},{"id":"route_basalt_steps","from":"loc_bs","to":"site_basalt_steps","closedSeasons":[],"lengthKm":59.24,"terrainMultiplier":1.5,"modes":["walk"],"toll":0,"risk":0},{"id":"route_salt_reeds","from":"site_basalt_steps","to":"site_salt_reeds","closedSeasons":[],"lengthKm":20.75,"terrainMultiplier":1.5,"modes":["walk"],"toll":0,"risk":0},{"id":"route_glass_dunes","from":"loc_yandu","to":"site_glass_dunes","closedSeasons":[],"lengthKm":64.25,"terrainMultiplier":1.5,"modes":["walk"],"toll":0,"risk":0},{"id":"route_silt_canyon","from":"site_glass_dunes","to":"site_silt_canyon","closedSeasons":[],"lengthKm":26.24,"terrainMultiplier":1.5,"modes":["walk"],"toll":0,"risk":0},{"id":"route_rainstone_basin","from":"loc_yandu","to":"site_rainstone_basin","closedSeasons":[],"lengthKm":92.11,"terrainMultiplier":1.5,"modes":["walk"],"toll":0,"risk":0},{"id":"route_peat_islets","from":"site_rainstone_basin","to":"site_peat_islets","closedSeasons":[],"lengthKm":32.13,"terrainMultiplier":1.5,"modes":["walk"],"toll":0,"risk":0},{"id":"route_white_canopy","from":"loc_capital","to":"site_white_canopy","closedSeasons":[],"lengthKm":78.03,"terrainMultiplier":1.5,"modes":["walk"],"toll":0,"risk":0},{"id":"route_ice_echo","from":"site_white_canopy","to":"site_ice_echo","closedSeasons":[3],"lengthKm":42.03,"terrainMultiplier":1.5,"modes":["walk"],"toll":0,"risk":0},{"id":"route_red_fold","from":"loc_capital","to":"site_red_fold","closedSeasons":[],"lengthKm":119.08,"terrainMultiplier":1.5,"modes":["walk"],"toll":0,"risk":0},{"id":"route_moon_cliffs","from":"site_red_fold","to":"site_moon_cliffs","closedSeasons":[3],"lengthKm":36.62,"terrainMultiplier":1.5,"modes":["walk"],"toll":0,"risk":0},{"id":"route_crown_firn","from":"site_ice_echo","to":"site_crown_firn","closedSeasons":[3],"lengthKm":96.5,"terrainMultiplier":1.5,"modes":["walk"],"toll":0,"risk":0},{"id":"route_deep_star_bowl","from":"site_crown_firn","to":"site_deep_star_bowl","closedSeasons":[3],"lengthKm":35.91,"terrainMultiplier":1.5,"modes":["walk"],"toll":0,"risk":0},{"id":"route_bld_hw_home_15","from":"loc_hw","to":"bld_hw_home_15","lengthKm":0.31622776601683794,"terrainMultiplier":1,"modes":["walk"],"closedSeasons":[],"toll":0,"risk":0},{"id":"route_bld_hw_home_16","from":"loc_hw","to":"bld_hw_home_16","lengthKm":0.447213595499958,"terrainMultiplier":1,"modes":["walk"],"closedSeasons":[],"toll":0,"risk":0},{"id":"route_bld_hw_home_17","from":"loc_hw","to":"bld_hw_home_17","lengthKm":0.4242640687119285,"terrainMultiplier":1,"modes":["walk"],"closedSeasons":[],"toll":0,"risk":0},{"id":"route_bld_hw_home_18","from":"loc_hw","to":"bld_hw_home_18","lengthKm":0.31622776601683794,"terrainMultiplier":1,"modes":["walk"],"closedSeasons":[],"toll":0,"risk":0},{"id":"route_bld_hw_home_19","from":"loc_hw","to":"bld_hw_home_19","lengthKm":0.5385164807134505,"terrainMultiplier":1,"modes":["walk"],"closedSeasons":[],"toll":0,"risk":0},{"id":"route_bld_hw_home_20","from":"loc_hw","to":"bld_hw_home_20","lengthKm":0.3605551275463989,"terrainMultiplier":1,"modes":["walk"],"closedSeasons":[],"toll":0,"risk":0},{"id":"route_bld_hw_home_21","from":"loc_hw","to":"bld_hw_home_21","lengthKm":0.5,"terrainMultiplier":1,"modes":["walk"],"closedSeasons":[],"toll":0,"risk":0},{"id":"route_bld_hw_home_22","from":"loc_hw","to":"bld_hw_home_22","lengthKm":0.447213595499958,"terrainMultiplier":1,"modes":["walk"],"closedSeasons":[],"toll":0,"risk":0},{"id":"route_bs_yp","from":"loc_bs","to":"loc_bs_yupo","lengthKm":10,"terrainMultiplier":1.2,"modes":["walk","horse"],"closedSeasons":[],"toll":0,"risk":1},{"id":"route_bld_yp_hall","from":"loc_bs_yupo","to":"bld_yp_hall","lengthKm":0.22803508501982772,"terrainMultiplier":1,"modes":["walk"],"closedSeasons":[],"toll":0,"risk":0},{"id":"route_loc_yp_fields","from":"loc_bs_yupo","to":"loc_yp_fields","lengthKm":0.14000000000000057,"terrainMultiplier":1,"modes":["walk"],"closedSeasons":[],"toll":0,"risk":0},{"id":"route_bld_yp_yard","from":"loc_bs_yupo","to":"bld_yp_yard","lengthKm":0.22803508501982772,"terrainMultiplier":1,"modes":["walk"],"closedSeasons":[],"toll":0,"risk":0},{"id":"route_bld_yp_kitchen","from":"loc_bs_yupo","to":"bld_yp_kitchen","lengthKm":0.3328663395418641,"terrainMultiplier":1,"modes":["walk"],"closedSeasons":[],"toll":0,"risk":0},{"id":"route_bld_yp_workroom","from":"loc_bs_yupo","to":"bld_yp_workroom","lengthKm":0.27999999999999936,"terrainMultiplier":1,"modes":["walk"],"closedSeasons":[],"toll":0,"risk":0},{"id":"route_loc_yp_orchard","from":"loc_bs_yupo","to":"loc_yp_orchard","lengthKm":0.3328663395418641,"terrainMultiplier":1,"modes":["walk"],"closedSeasons":[],"toll":0,"risk":0},{"id":"route_loc_yp_garden","from":"loc_bs_yupo","to":"loc_yp_garden","lengthKm":0.4569463863518343,"terrainMultiplier":1,"modes":["walk"],"closedSeasons":[],"toll":0,"risk":0},{"id":"route_loc_yp_path","from":"loc_bs_yupo","to":"loc_yp_path","lengthKm":0.41999999999999993,"terrainMultiplier":1,"modes":["walk"],"closedSeasons":[],"toll":0,"risk":0},{"id":"route_bld_yp_home_01","from":"loc_bs_yupo","to":"bld_yp_home_01","lengthKm":0.23879907872519246,"terrainMultiplier":1,"modes":["walk"],"closedSeasons":[],"toll":0,"risk":0},{"id":"route_bld_yp_home_02","from":"loc_bs_yupo","to":"bld_yp_home_02","lengthKm":0.15692354826475355,"terrainMultiplier":1,"modes":["walk"],"closedSeasons":[],"toll":0,"risk":0},{"id":"route_bld_yp_home_03","from":"loc_bs_yupo","to":"bld_yp_home_03","lengthKm":0.09178779875343,"terrainMultiplier":1,"modes":["walk"],"closedSeasons":[],"toll":0,"risk":0},{"id":"route_bld_yp_home_04","from":"loc_bs_yupo","to":"bld_yp_home_04","lengthKm":0.09178779875343,"terrainMultiplier":1,"modes":["walk"],"closedSeasons":[],"toll":0,"risk":0},{"id":"route_bld_yp_home_05","from":"loc_bs_yupo","to":"bld_yp_home_05","lengthKm":0.15692354826475355,"terrainMultiplier":1,"modes":["walk"],"closedSeasons":[],"toll":0,"risk":0},{"id":"route_bld_yp_home_06","from":"loc_bs_yupo","to":"bld_yp_home_06","lengthKm":0.23879907872519246,"terrainMultiplier":1,"modes":["walk"],"closedSeasons":[],"toll":0,"risk":0},{"id":"route_bld_yp_home_07","from":"loc_bs_yupo","to":"bld_yp_home_07","lengthKm":0.27608875384557174,"terrainMultiplier":1,"modes":["walk"],"closedSeasons":[],"toll":0,"risk":0},{"id":"route_bld_yp_home_08","from":"loc_bs_yupo","to":"bld_yp_home_08","lengthKm":0.20934421415458432,"terrainMultiplier":1,"modes":["walk"],"closedSeasons":[],"toll":0,"risk":0},{"id":"route_bld_yp_home_09","from":"loc_bs_yupo","to":"bld_yp_home_09","lengthKm":0.16620770138594723,"terrainMultiplier":1,"modes":["walk"],"closedSeasons":[],"toll":0,"risk":0},{"id":"route_bld_yp_home_10","from":"loc_bs_yupo","to":"bld_yp_home_10","lengthKm":0.16620770138594723,"terrainMultiplier":1,"modes":["walk"],"closedSeasons":[],"toll":0,"risk":0},{"id":"route_bld_yp_home_11","from":"loc_bs_yupo","to":"bld_yp_home_11","lengthKm":0.20934421415458432,"terrainMultiplier":1,"modes":["walk"],"closedSeasons":[],"toll":0,"risk":0},{"id":"route_bld_yp_home_12","from":"loc_bs_yupo","to":"bld_yp_home_12","lengthKm":0.27608875384557174,"terrainMultiplier":1,"modes":["walk"],"closedSeasons":[],"toll":0,"risk":0},{"id":"route_bld_yp_home_13","from":"loc_bs_yupo","to":"bld_yp_home_13","lengthKm":0.32897568299192076,"terrainMultiplier":1,"modes":["walk"],"closedSeasons":[],"toll":0,"risk":0},{"id":"route_bld_yp_home_14","from":"loc_bs_yupo","to":"bld_yp_home_14","lengthKm":0.2753633962602882,"terrainMultiplier":1,"modes":["walk"],"closedSeasons":[],"toll":0,"risk":0},{"id":"route_bld_yp_home_15","from":"loc_bs_yupo","to":"bld_yp_home_15","lengthKm":0.24418230894149612,"terrainMultiplier":1,"modes":["walk"],"closedSeasons":[],"toll":0,"risk":0},{"id":"route_bld_yp_home_16","from":"loc_bs_yupo","to":"bld_yp_home_16","lengthKm":0.24418230894149612,"terrainMultiplier":1,"modes":["walk"],"closedSeasons":[],"toll":0,"risk":0},{"id":"route_bld_yp_home_17","from":"loc_bs_yupo","to":"bld_yp_home_17","lengthKm":0.2753633962602882,"terrainMultiplier":1,"modes":["walk"],"closedSeasons":[],"toll":0,"risk":0},{"id":"route_bld_yp_home_18","from":"loc_bs_yupo","to":"bld_yp_home_18","lengthKm":0.32897568299192076,"terrainMultiplier":1,"modes":["walk"],"closedSeasons":[],"toll":0,"risk":0},{"id":"route_bld_yp_home_19","from":"loc_bs_yupo","to":"bld_yp_home_19","lengthKm":0.391184099881374,"terrainMultiplier":1,"modes":["walk"],"closedSeasons":[],"toll":0,"risk":0},{"id":"route_bld_yp_home_20","from":"loc_bs_yupo","to":"bld_yp_home_20","lengthKm":0.347311099736246,"terrainMultiplier":1,"modes":["walk"],"closedSeasons":[],"toll":0,"risk":0},{"id":"route_bld_yp_home_21","from":"loc_bs_yupo","to":"bld_yp_home_21","lengthKm":0.323148572641131,"terrainMultiplier":1,"modes":["walk"],"closedSeasons":[],"toll":0,"risk":0},{"id":"route_bld_yp_home_22","from":"loc_bs_yupo","to":"bld_yp_home_22","lengthKm":0.323148572641131,"terrainMultiplier":1,"modes":["walk"],"closedSeasons":[],"toll":0,"risk":0},{"id":"route_bld_yp_home_23","from":"loc_bs_yupo","to":"bld_yp_home_23","lengthKm":0.347311099736246,"terrainMultiplier":1,"modes":["walk"],"closedSeasons":[],"toll":0,"risk":0},{"id":"route_bld_yp_home_24","from":"loc_bs_yupo","to":"bld_yp_home_24","lengthKm":0.391184099881374,"terrainMultiplier":1,"modes":["walk"],"closedSeasons":[],"toll":0,"risk":0},{"id":"route_bld_yp_home_25","from":"loc_bs_yupo","to":"bld_yp_home_25","lengthKm":0.4589389937671464,"terrainMultiplier":1,"modes":["walk"],"closedSeasons":[],"toll":0,"risk":0},{"id":"route_bld_yp_home_26","from":"loc_bs_yupo","to":"bld_yp_home_26","lengthKm":0.4221670285562348,"terrainMultiplier":1,"modes":["walk"],"closedSeasons":[],"toll":0,"risk":0},{"id":"route_bld_yp_home_27","from":"loc_bs_yupo","to":"bld_yp_home_27","lengthKm":0.40252329125157515,"terrainMultiplier":1,"modes":["walk"],"closedSeasons":[],"toll":0,"risk":0},{"id":"route_bld_yp_home_28","from":"loc_bs_yupo","to":"bld_yp_home_28","lengthKm":0.40252329125157515,"terrainMultiplier":1,"modes":["walk"],"closedSeasons":[],"toll":0,"risk":0},{"id":"route_bld_yp_home_29","from":"loc_bs_yupo","to":"bld_yp_home_29","lengthKm":0.4221670285562348,"terrainMultiplier":1,"modes":["walk"],"closedSeasons":[],"toll":0,"risk":0},{"id":"route_bld_yp_home_30","from":"loc_bs_yupo","to":"bld_yp_home_30","lengthKm":0.4589389937671464,"terrainMultiplier":1,"modes":["walk"],"closedSeasons":[],"toll":0,"risk":0},{"id":"route_bs_wt","from":"loc_bs","to":"loc_bs_weiting","lengthKm":11.40175425099138,"terrainMultiplier":1,"modes":["walk","horse"],"closedSeasons":[],"toll":0,"risk":1},{"id":"route_bld_wt_hall","from":"loc_bs_weiting","to":"bld_wt_hall","lengthKm":0.22803508501982717,"terrainMultiplier":1,"modes":["walk"],"closedSeasons":[],"toll":0,"risk":0},{"id":"route_loc_wt_bank","from":"loc_bs_weiting","to":"loc_wt_bank","lengthKm":0.13999999999999968,"terrainMultiplier":1,"modes":["walk"],"closedSeasons":[],"toll":0,"risk":0},{"id":"route_loc_wt_reeds","from":"loc_bs_weiting","to":"loc_wt_reeds","lengthKm":0.22803508501982717,"terrainMultiplier":1,"modes":["walk"],"closedSeasons":[],"toll":0,"risk":0},{"id":"route_bld_wt_yard","from":"loc_bs_weiting","to":"bld_wt_yard","lengthKm":0.33286633954186484,"terrainMultiplier":1,"modes":["walk"],"closedSeasons":[],"toll":0,"risk":0},{"id":"route_bld_wt_kitchen","from":"loc_bs_weiting","to":"bld_wt_kitchen","lengthKm":0.28000000000000025,"terrainMultiplier":1,"modes":["walk"],"closedSeasons":[],"toll":0,"risk":0},{"id":"route_bld_wt_workroom","from":"loc_bs_weiting","to":"bld_wt_workroom","lengthKm":0.33286633954186484,"terrainMultiplier":1,"modes":["walk"],"closedSeasons":[],"toll":0,"risk":0},{"id":"route_loc_wt_garden","from":"loc_bs_weiting","to":"loc_wt_garden","lengthKm":0.4569463863518343,"terrainMultiplier":1,"modes":["walk"],"closedSeasons":[],"toll":0,"risk":0},{"id":"route_loc_wt_path","from":"loc_bs_weiting","to":"loc_wt_path","lengthKm":0.41999999999999993,"terrainMultiplier":1,"modes":["walk"],"closedSeasons":[],"toll":0,"risk":0},{"id":"route_bld_wt_home_01","from":"loc_bs_weiting","to":"bld_wt_home_01","lengthKm":0.23879907872519246,"terrainMultiplier":1,"modes":["walk"],"closedSeasons":[],"toll":0,"risk":0},{"id":"route_bld_wt_home_02","from":"loc_bs_weiting","to":"bld_wt_home_02","lengthKm":0.1569235482647505,"terrainMultiplier":1,"modes":["walk"],"closedSeasons":[],"toll":0,"risk":0},{"id":"route_bld_wt_home_03","from":"loc_bs_weiting","to":"bld_wt_home_03","lengthKm":0.09178779875343,"terrainMultiplier":1,"modes":["walk"],"closedSeasons":[],"toll":0,"risk":0},{"id":"route_bld_wt_home_04","from":"loc_bs_weiting","to":"bld_wt_home_04","lengthKm":0.09178779875343,"terrainMultiplier":1,"modes":["walk"],"closedSeasons":[],"toll":0,"risk":0},{"id":"route_bld_wt_home_05","from":"loc_bs_weiting","to":"bld_wt_home_05","lengthKm":0.1569235482647505,"terrainMultiplier":1,"modes":["walk"],"closedSeasons":[],"toll":0,"risk":0},{"id":"route_bld_wt_home_06","from":"loc_bs_weiting","to":"bld_wt_home_06","lengthKm":0.23879907872519246,"terrainMultiplier":1,"modes":["walk"],"closedSeasons":[],"toll":0,"risk":0},{"id":"route_bld_wt_home_07","from":"loc_bs_weiting","to":"bld_wt_home_07","lengthKm":0.27608875384557174,"terrainMultiplier":1,"modes":["walk"],"closedSeasons":[],"toll":0,"risk":0},{"id":"route_bld_wt_home_08","from":"loc_bs_weiting","to":"bld_wt_home_08","lengthKm":0.20934421415458204,"terrainMultiplier":1,"modes":["walk"],"closedSeasons":[],"toll":0,"risk":0},{"id":"route_bld_wt_home_09","from":"loc_bs_weiting","to":"bld_wt_home_09","lengthKm":0.16620770138594723,"terrainMultiplier":1,"modes":["walk"],"closedSeasons":[],"toll":0,"risk":0},{"id":"route_bld_wt_home_10","from":"loc_bs_weiting","to":"bld_wt_home_10","lengthKm":0.16620770138594723,"terrainMultiplier":1,"modes":["walk"],"closedSeasons":[],"toll":0,"risk":0},{"id":"route_bld_wt_home_11","from":"loc_bs_weiting","to":"bld_wt_home_11","lengthKm":0.20934421415458204,"terrainMultiplier":1,"modes":["walk"],"closedSeasons":[],"toll":0,"risk":0},{"id":"route_bld_wt_home_12","from":"loc_bs_weiting","to":"bld_wt_home_12","lengthKm":0.27608875384557174,"terrainMultiplier":1,"modes":["walk"],"closedSeasons":[],"toll":0,"risk":0},{"id":"route_bld_wt_home_13","from":"loc_bs_weiting","to":"bld_wt_home_13","lengthKm":0.32897568299192076,"terrainMultiplier":1,"modes":["walk"],"closedSeasons":[],"toll":0,"risk":0},{"id":"route_bld_wt_home_14","from":"loc_bs_weiting","to":"bld_wt_home_14","lengthKm":0.2753633962602865,"terrainMultiplier":1,"modes":["walk"],"closedSeasons":[],"toll":0,"risk":0},{"id":"route_bld_wt_home_15","from":"loc_bs_weiting","to":"bld_wt_home_15","lengthKm":0.24418230894149612,"terrainMultiplier":1,"modes":["walk"],"closedSeasons":[],"toll":0,"risk":0},{"id":"route_bld_wt_home_16","from":"loc_bs_weiting","to":"bld_wt_home_16","lengthKm":0.24418230894149612,"terrainMultiplier":1,"modes":["walk"],"closedSeasons":[],"toll":0,"risk":0},{"id":"route_bld_wt_home_17","from":"loc_bs_weiting","to":"bld_wt_home_17","lengthKm":0.2753633962602865,"terrainMultiplier":1,"modes":["walk"],"closedSeasons":[],"toll":0,"risk":0},{"id":"route_bld_wt_home_18","from":"loc_bs_weiting","to":"bld_wt_home_18","lengthKm":0.32897568299192076,"terrainMultiplier":1,"modes":["walk"],"closedSeasons":[],"toll":0,"risk":0},{"id":"route_bld_wt_home_19","from":"loc_bs_weiting","to":"bld_wt_home_19","lengthKm":0.391184099881374,"terrainMultiplier":1,"modes":["walk"],"closedSeasons":[],"toll":0,"risk":0},{"id":"route_bld_wt_home_20","from":"loc_bs_weiting","to":"bld_wt_home_20","lengthKm":0.3473110997362446,"terrainMultiplier":1,"modes":["walk"],"closedSeasons":[],"toll":0,"risk":0},{"id":"route_bld_wt_home_21","from":"loc_bs_weiting","to":"bld_wt_home_21","lengthKm":0.323148572641131,"terrainMultiplier":1,"modes":["walk"],"closedSeasons":[],"toll":0,"risk":0},{"id":"route_bld_wt_home_22","from":"loc_bs_weiting","to":"bld_wt_home_22","lengthKm":0.323148572641131,"terrainMultiplier":1,"modes":["walk"],"closedSeasons":[],"toll":0,"risk":0},{"id":"route_bld_wt_home_23","from":"loc_bs_weiting","to":"bld_wt_home_23","lengthKm":0.3473110997362446,"terrainMultiplier":1,"modes":["walk"],"closedSeasons":[],"toll":0,"risk":0},{"id":"route_bld_wt_home_24","from":"loc_bs_weiting","to":"bld_wt_home_24","lengthKm":0.391184099881374,"terrainMultiplier":1,"modes":["walk"],"closedSeasons":[],"toll":0,"risk":0},{"id":"route_bld_wt_home_25","from":"loc_bs_weiting","to":"bld_wt_home_25","lengthKm":0.4589389937671464,"terrainMultiplier":1,"modes":["walk"],"closedSeasons":[],"toll":0,"risk":0},{"id":"route_bld_wt_home_26","from":"loc_bs_weiting","to":"bld_wt_home_26","lengthKm":0.4221670285562336,"terrainMultiplier":1,"modes":["walk"],"closedSeasons":[],"toll":0,"risk":0},{"id":"route_bld_wt_home_27","from":"loc_bs_weiting","to":"bld_wt_home_27","lengthKm":0.40252329125157515,"terrainMultiplier":1,"modes":["walk"],"closedSeasons":[],"toll":0,"risk":0},{"id":"route_bld_wt_home_28","from":"loc_bs_weiting","to":"bld_wt_home_28","lengthKm":0.40252329125157515,"terrainMultiplier":1,"modes":["walk"],"closedSeasons":[],"toll":0,"risk":0},{"id":"route_bld_wt_home_29","from":"loc_bs_weiting","to":"bld_wt_home_29","lengthKm":0.4221670285562336,"terrainMultiplier":1,"modes":["walk"],"closedSeasons":[],"toll":0,"risk":0},{"id":"route_bld_wt_home_30","from":"loc_bs_weiting","to":"bld_wt_home_30","lengthKm":0.4589389937671464,"terrainMultiplier":1,"modes":["walk"],"closedSeasons":[],"toll":0,"risk":0},{"id":"route_bs_lq","from":"loc_bs","to":"loc_bs_liquan","lengthKm":14.142135623730951,"terrainMultiplier":1.2,"modes":["walk","horse"],"closedSeasons":[],"toll":0,"risk":1},{"id":"route_bld_lq_hall","from":"loc_bs_liquan","to":"bld_lq_hall","lengthKm":0.22803508501982772,"terrainMultiplier":1,"modes":["walk"],"closedSeasons":[],"toll":0,"risk":0},{"id":"route_loc_lq_spring","from":"loc_bs_liquan","to":"loc_lq_spring","lengthKm":0.14000000000000057,"terrainMultiplier":1,"modes":["walk"],"closedSeasons":[],"toll":0,"risk":0},{"id":"route_bld_lq_yard","from":"loc_bs_liquan","to":"bld_lq_yard","lengthKm":0.22803508501982772,"terrainMultiplier":1,"modes":["walk"],"closedSeasons":[],"toll":0,"risk":0},{"id":"route_bld_lq_kitchen","from":"loc_bs_liquan","to":"bld_lq_kitchen","lengthKm":0.3328663395418641,"terrainMultiplier":1,"modes":["walk"],"closedSeasons":[],"toll":0,"risk":0},{"id":"route_bld_lq_workroom","from":"loc_bs_liquan","to":"bld_lq_workroom","lengthKm":0.27999999999999936,"terrainMultiplier":1,"modes":["walk"],"closedSeasons":[],"toll":0,"risk":0},{"id":"route_loc_lq_garden","from":"loc_bs_liquan","to":"loc_lq_garden","lengthKm":0.3328663395418641,"terrainMultiplier":1,"modes":["walk"],"closedSeasons":[],"toll":0,"risk":0},{"id":"route_loc_lq_fields","from":"loc_bs_liquan","to":"loc_lq_fields","lengthKm":0.4569463863518343,"terrainMultiplier":1,"modes":["walk"],"closedSeasons":[],"toll":0,"risk":0},{"id":"route_loc_lq_path","from":"loc_bs_liquan","to":"loc_lq_path","lengthKm":0.41999999999999993,"terrainMultiplier":1,"modes":["walk"],"closedSeasons":[],"toll":0,"risk":0},{"id":"route_bld_lq_home_01","from":"loc_bs_liquan","to":"bld_lq_home_01","lengthKm":0.23879907872519246,"terrainMultiplier":1,"modes":["walk"],"closedSeasons":[],"toll":0,"risk":0},{"id":"route_bld_lq_home_02","from":"loc_bs_liquan","to":"bld_lq_home_02","lengthKm":0.1569235482647505,"terrainMultiplier":1,"modes":["walk"],"closedSeasons":[],"toll":0,"risk":0},{"id":"route_bld_lq_home_03","from":"loc_bs_liquan","to":"bld_lq_home_03","lengthKm":0.09178779875343,"terrainMultiplier":1,"modes":["walk"],"closedSeasons":[],"toll":0,"risk":0},{"id":"route_bld_lq_home_04","from":"loc_bs_liquan","to":"bld_lq_home_04","lengthKm":0.09178779875343,"terrainMultiplier":1,"modes":["walk"],"closedSeasons":[],"toll":0,"risk":0},{"id":"route_bld_lq_home_05","from":"loc_bs_liquan","to":"bld_lq_home_05","lengthKm":0.1569235482647505,"terrainMultiplier":1,"modes":["walk"],"closedSeasons":[],"toll":0,"risk":0},{"id":"route_bld_lq_home_06","from":"loc_bs_liquan","to":"bld_lq_home_06","lengthKm":0.23879907872519246,"terrainMultiplier":1,"modes":["walk"],"closedSeasons":[],"toll":0,"risk":0},{"id":"route_bld_lq_home_07","from":"loc_bs_liquan","to":"bld_lq_home_07","lengthKm":0.27608875384557174,"terrainMultiplier":1,"modes":["walk"],"closedSeasons":[],"toll":0,"risk":0},{"id":"route_bld_lq_home_08","from":"loc_bs_liquan","to":"bld_lq_home_08","lengthKm":0.20934421415458204,"terrainMultiplier":1,"modes":["walk"],"closedSeasons":[],"toll":0,"risk":0},{"id":"route_bld_lq_home_09","from":"loc_bs_liquan","to":"bld_lq_home_09","lengthKm":0.16620770138594723,"terrainMultiplier":1,"modes":["walk"],"closedSeasons":[],"toll":0,"risk":0},{"id":"route_bld_lq_home_10","from":"loc_bs_liquan","to":"bld_lq_home_10","lengthKm":0.16620770138594723,"terrainMultiplier":1,"modes":["walk"],"closedSeasons":[],"toll":0,"risk":0},{"id":"route_bld_lq_home_11","from":"loc_bs_liquan","to":"bld_lq_home_11","lengthKm":0.20934421415458204,"terrainMultiplier":1,"modes":["walk"],"closedSeasons":[],"toll":0,"risk":0},{"id":"route_bld_lq_home_12","from":"loc_bs_liquan","to":"bld_lq_home_12","lengthKm":0.27608875384557174,"terrainMultiplier":1,"modes":["walk"],"closedSeasons":[],"toll":0,"risk":0},{"id":"route_bld_lq_home_13","from":"loc_bs_liquan","to":"bld_lq_home_13","lengthKm":0.32897568299192076,"terrainMultiplier":1,"modes":["walk"],"closedSeasons":[],"toll":0,"risk":0},{"id":"route_bld_lq_home_14","from":"loc_bs_liquan","to":"bld_lq_home_14","lengthKm":0.2753633962602865,"terrainMultiplier":1,"modes":["walk"],"closedSeasons":[],"toll":0,"risk":0},{"id":"route_bld_lq_home_15","from":"loc_bs_liquan","to":"bld_lq_home_15","lengthKm":0.24418230894149612,"terrainMultiplier":1,"modes":["walk"],"closedSeasons":[],"toll":0,"risk":0},{"id":"route_bld_lq_home_16","from":"loc_bs_liquan","to":"bld_lq_home_16","lengthKm":0.24418230894149612,"terrainMultiplier":1,"modes":["walk"],"closedSeasons":[],"toll":0,"risk":0},{"id":"route_bld_lq_home_17","from":"loc_bs_liquan","to":"bld_lq_home_17","lengthKm":0.2753633962602865,"terrainMultiplier":1,"modes":["walk"],"closedSeasons":[],"toll":0,"risk":0},{"id":"route_bld_lq_home_18","from":"loc_bs_liquan","to":"bld_lq_home_18","lengthKm":0.32897568299192076,"terrainMultiplier":1,"modes":["walk"],"closedSeasons":[],"toll":0,"risk":0},{"id":"route_bld_lq_home_19","from":"loc_bs_liquan","to":"bld_lq_home_19","lengthKm":0.391184099881374,"terrainMultiplier":1,"modes":["walk"],"closedSeasons":[],"toll":0,"risk":0},{"id":"route_bld_lq_home_20","from":"loc_bs_liquan","to":"bld_lq_home_20","lengthKm":0.3473110997362446,"terrainMultiplier":1,"modes":["walk"],"closedSeasons":[],"toll":0,"risk":0},{"id":"route_bld_lq_home_21","from":"loc_bs_liquan","to":"bld_lq_home_21","lengthKm":0.323148572641131,"terrainMultiplier":1,"modes":["walk"],"closedSeasons":[],"toll":0,"risk":0},{"id":"route_bld_lq_home_22","from":"loc_bs_liquan","to":"bld_lq_home_22","lengthKm":0.323148572641131,"terrainMultiplier":1,"modes":["walk"],"closedSeasons":[],"toll":0,"risk":0},{"id":"route_bld_lq_home_23","from":"loc_bs_liquan","to":"bld_lq_home_23","lengthKm":0.3473110997362446,"terrainMultiplier":1,"modes":["walk"],"closedSeasons":[],"toll":0,"risk":0},{"id":"route_bld_lq_home_24","from":"loc_bs_liquan","to":"bld_lq_home_24","lengthKm":0.391184099881374,"terrainMultiplier":1,"modes":["walk"],"closedSeasons":[],"toll":0,"risk":0},{"id":"route_bld_lq_home_25","from":"loc_bs_liquan","to":"bld_lq_home_25","lengthKm":0.4589389937671464,"terrainMultiplier":1,"modes":["walk"],"closedSeasons":[],"toll":0,"risk":0},{"id":"route_bld_lq_home_26","from":"loc_bs_liquan","to":"bld_lq_home_26","lengthKm":0.4221670285562336,"terrainMultiplier":1,"modes":["walk"],"closedSeasons":[],"toll":0,"risk":0},{"id":"route_bld_lq_home_27","from":"loc_bs_liquan","to":"bld_lq_home_27","lengthKm":0.40252329125157515,"terrainMultiplier":1,"modes":["walk"],"closedSeasons":[],"toll":0,"risk":0},{"id":"route_bld_lq_home_28","from":"loc_bs_liquan","to":"bld_lq_home_28","lengthKm":0.40252329125157515,"terrainMultiplier":1,"modes":["walk"],"closedSeasons":[],"toll":0,"risk":0},{"id":"route_bld_lq_home_29","from":"loc_bs_liquan","to":"bld_lq_home_29","lengthKm":0.4221670285562336,"terrainMultiplier":1,"modes":["walk"],"closedSeasons":[],"toll":0,"risk":0},{"id":"route_bld_lq_home_30","from":"loc_bs_liquan","to":"bld_lq_home_30","lengthKm":0.4589389937671464,"terrainMultiplier":1,"modes":["walk"],"closedSeasons":[],"toll":0,"risk":0},{"id":"route_bs_sb","from":"loc_bs","to":"loc_bs_sangban","lengthKm":14.142135623730951,"terrainMultiplier":1.2,"modes":["walk","horse"],"closedSeasons":[],"toll":0,"risk":1},{"id":"route_bld_sb_hall","from":"loc_bs_sangban","to":"bld_sb_hall","lengthKm":0.22803508501982772,"terrainMultiplier":1,"modes":["walk"],"closedSeasons":[],"toll":0,"risk":0},{"id":"route_loc_sb_orchard","from":"loc_bs_sangban","to":"loc_sb_orchard","lengthKm":0.14000000000000057,"terrainMultiplier":1,"modes":["walk"],"closedSeasons":[],"toll":0,"risk":0},{"id":"route_loc_sb_fields","from":"loc_bs_sangban","to":"loc_sb_fields","lengthKm":0.22803508501982772,"terrainMultiplier":1,"modes":["walk"],"closedSeasons":[],"toll":0,"risk":0},{"id":"route_bld_sb_yard","from":"loc_bs_sangban","to":"bld_sb_yard","lengthKm":0.3328663395418641,"terrainMultiplier":1,"modes":["walk"],"closedSeasons":[],"toll":0,"risk":0},{"id":"route_bld_sb_kitchen","from":"loc_bs_sangban","to":"bld_sb_kitchen","lengthKm":0.27999999999999936,"terrainMultiplier":1,"modes":["walk"],"closedSeasons":[],"toll":0,"risk":0},{"id":"route_bld_sb_workroom","from":"loc_bs_sangban","to":"bld_sb_workroom","lengthKm":0.3328663395418641,"terrainMultiplier":1,"modes":["walk"],"closedSeasons":[],"toll":0,"risk":0},{"id":"route_loc_sb_garden","from":"loc_bs_sangban","to":"loc_sb_garden","lengthKm":0.4569463863518343,"terrainMultiplier":1,"modes":["walk"],"closedSeasons":[],"toll":0,"risk":0},{"id":"route_loc_sb_path","from":"loc_bs_sangban","to":"loc_sb_path","lengthKm":0.41999999999999993,"terrainMultiplier":1,"modes":["walk"],"closedSeasons":[],"toll":0,"risk":0},{"id":"route_bld_sb_home_01","from":"loc_bs_sangban","to":"bld_sb_home_01","lengthKm":0.23879907872519077,"terrainMultiplier":1,"modes":["walk"],"closedSeasons":[],"toll":0,"risk":0},{"id":"route_bld_sb_home_02","from":"loc_bs_sangban","to":"bld_sb_home_02","lengthKm":0.15692354826475202,"terrainMultiplier":1,"modes":["walk"],"closedSeasons":[],"toll":0,"risk":0},{"id":"route_bld_sb_home_03","from":"loc_bs_sangban","to":"bld_sb_home_03","lengthKm":0.09178779875342913,"terrainMultiplier":1,"modes":["walk"],"closedSeasons":[],"toll":0,"risk":0},{"id":"route_bld_sb_home_04","from":"loc_bs_sangban","to":"bld_sb_home_04","lengthKm":0.09178779875342913,"terrainMultiplier":1,"modes":["walk"],"closedSeasons":[],"toll":0,"risk":0},{"id":"route_bld_sb_home_05","from":"loc_bs_sangban","to":"bld_sb_home_05","lengthKm":0.15692354826475202,"terrainMultiplier":1,"modes":["walk"],"closedSeasons":[],"toll":0,"risk":0},{"id":"route_bld_sb_home_06","from":"loc_bs_sangban","to":"bld_sb_home_06","lengthKm":0.23879907872519077,"terrainMultiplier":1,"modes":["walk"],"closedSeasons":[],"toll":0,"risk":0},{"id":"route_bld_sb_home_07","from":"loc_bs_sangban","to":"bld_sb_home_07","lengthKm":0.2760887538455703,"terrainMultiplier":1,"modes":["walk"],"closedSeasons":[],"toll":0,"risk":0},{"id":"route_bld_sb_home_08","from":"loc_bs_sangban","to":"bld_sb_home_08","lengthKm":0.20934421415458318,"terrainMultiplier":1,"modes":["walk"],"closedSeasons":[],"toll":0,"risk":0},{"id":"route_bld_sb_home_09","from":"loc_bs_sangban","to":"bld_sb_home_09","lengthKm":0.16620770138594673,"terrainMultiplier":1,"modes":["walk"],"closedSeasons":[],"toll":0,"risk":0},{"id":"route_bld_sb_home_10","from":"loc_bs_sangban","to":"bld_sb_home_10","lengthKm":0.16620770138594673,"terrainMultiplier":1,"modes":["walk"],"closedSeasons":[],"toll":0,"risk":0},{"id":"route_bld_sb_home_11","from":"loc_bs_sangban","to":"bld_sb_home_11","lengthKm":0.20934421415458318,"terrainMultiplier":1,"modes":["walk"],"closedSeasons":[],"toll":0,"risk":0},{"id":"route_bld_sb_home_12","from":"loc_bs_sangban","to":"bld_sb_home_12","lengthKm":0.2760887538455703,"terrainMultiplier":1,"modes":["walk"],"closedSeasons":[],"toll":0,"risk":0},{"id":"route_bld_sb_home_13","from":"loc_bs_sangban","to":"bld_sb_home_13","lengthKm":0.32897568299191954,"terrainMultiplier":1,"modes":["walk"],"closedSeasons":[],"toll":0,"risk":0},{"id":"route_bld_sb_home_14","from":"loc_bs_sangban","to":"bld_sb_home_14","lengthKm":0.2753633962602874,"terrainMultiplier":1,"modes":["walk"],"closedSeasons":[],"toll":0,"risk":0},{"id":"route_bld_sb_home_15","from":"loc_bs_sangban","to":"bld_sb_home_15","lengthKm":0.2441823089414958,"terrainMultiplier":1,"modes":["walk"],"closedSeasons":[],"toll":0,"risk":0},{"id":"route_bld_sb_home_16","from":"loc_bs_sangban","to":"bld_sb_home_16","lengthKm":0.2441823089414958,"terrainMultiplier":1,"modes":["walk"],"closedSeasons":[],"toll":0,"risk":0},{"id":"route_bld_sb_home_17","from":"loc_bs_sangban","to":"bld_sb_home_17","lengthKm":0.2753633962602874,"terrainMultiplier":1,"modes":["walk"],"closedSeasons":[],"toll":0,"risk":0},{"id":"route_bld_sb_home_18","from":"loc_bs_sangban","to":"bld_sb_home_18","lengthKm":0.32897568299191954,"terrainMultiplier":1,"modes":["walk"],"closedSeasons":[],"toll":0,"risk":0},{"id":"route_bld_sb_home_19","from":"loc_bs_sangban","to":"bld_sb_home_19","lengthKm":0.391184099881373,"terrainMultiplier":1,"modes":["walk"],"closedSeasons":[],"toll":0,"risk":0},{"id":"route_bld_sb_home_20","from":"loc_bs_sangban","to":"bld_sb_home_20","lengthKm":0.3473110997362453,"terrainMultiplier":1,"modes":["walk"],"closedSeasons":[],"toll":0,"risk":0},{"id":"route_bld_sb_home_21","from":"loc_bs_sangban","to":"bld_sb_home_21","lengthKm":0.3231485726411308,"terrainMultiplier":1,"modes":["walk"],"closedSeasons":[],"toll":0,"risk":0},{"id":"route_bld_sb_home_22","from":"loc_bs_sangban","to":"bld_sb_home_22","lengthKm":0.3231485726411308,"terrainMultiplier":1,"modes":["walk"],"closedSeasons":[],"toll":0,"risk":0},{"id":"route_bld_sb_home_23","from":"loc_bs_sangban","to":"bld_sb_home_23","lengthKm":0.3473110997362453,"terrainMultiplier":1,"modes":["walk"],"closedSeasons":[],"toll":0,"risk":0},{"id":"route_bld_sb_home_24","from":"loc_bs_sangban","to":"bld_sb_home_24","lengthKm":0.391184099881373,"terrainMultiplier":1,"modes":["walk"],"closedSeasons":[],"toll":0,"risk":0},{"id":"route_bld_sb_home_25","from":"loc_bs_sangban","to":"bld_sb_home_25","lengthKm":0.45893899376714564,"terrainMultiplier":1,"modes":["walk"],"closedSeasons":[],"toll":0,"risk":0},{"id":"route_bld_sb_home_26","from":"loc_bs_sangban","to":"bld_sb_home_26","lengthKm":0.42216702855623417,"terrainMultiplier":1,"modes":["walk"],"closedSeasons":[],"toll":0,"risk":0},{"id":"route_bld_sb_home_27","from":"loc_bs_sangban","to":"bld_sb_home_27","lengthKm":0.402523291251575,"terrainMultiplier":1,"modes":["walk"],"closedSeasons":[],"toll":0,"risk":0},{"id":"route_bld_sb_home_28","from":"loc_bs_sangban","to":"bld_sb_home_28","lengthKm":0.402523291251575,"terrainMultiplier":1,"modes":["walk"],"closedSeasons":[],"toll":0,"risk":0},{"id":"route_bld_sb_home_29","from":"loc_bs_sangban","to":"bld_sb_home_29","lengthKm":0.42216702855623417,"terrainMultiplier":1,"modes":["walk"],"closedSeasons":[],"toll":0,"risk":0},{"id":"route_bld_sb_home_30","from":"loc_bs_sangban","to":"bld_sb_home_30","lengthKm":0.45893899376714564,"terrainMultiplier":1,"modes":["walk"],"closedSeasons":[],"toll":0,"risk":0}]
+[
+  {
+    "id": "route_bld_hw_qingdeng",
+    "from": "loc_hw",
+    "to": "bld_hw_qingdeng",
+    "lengthKm": 0,
+    "terrainMultiplier": 1,
+    "modes": [
+      "walk",
+      "horse"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 0
+  },
+  {
+    "id": "route_bld_hw_mill",
+    "from": "loc_hw",
+    "to": "bld_hw_mill",
+    "lengthKm": 0.2,
+    "terrainMultiplier": 1,
+    "modes": [
+      "walk",
+      "horse"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 0
+  },
+  {
+    "id": "route_bld_hw_council",
+    "from": "loc_hw",
+    "to": "bld_hw_council",
+    "lengthKm": 0.14142135623730953,
+    "terrainMultiplier": 1,
+    "modes": [
+      "walk",
+      "horse"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 0
+  },
+  {
+    "id": "route_bld_hw_riverhome",
+    "from": "loc_hw",
+    "to": "bld_hw_riverhome",
+    "lengthKm": 0.14142135623730953,
+    "terrainMultiplier": 1,
+    "modes": [
+      "walk",
+      "horse"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 0
+  },
+  {
+    "id": "route_bld_hw_forge",
+    "from": "loc_hw",
+    "to": "bld_hw_forge",
+    "lengthKm": 0.3,
+    "terrainMultiplier": 1,
+    "modes": [
+      "walk",
+      "horse"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 0
+  },
+  {
+    "id": "route_loc_hw_northwood",
+    "from": "loc_hw",
+    "to": "loc_hw_northwood",
+    "lengthKm": 2,
+    "terrainMultiplier": 1,
+    "modes": [
+      "walk",
+      "horse"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 0
+  },
+  {
+    "id": "route_bld_hw_herbs",
+    "from": "loc_hw",
+    "to": "bld_hw_herbs",
+    "lengthKm": 0.28284271247461906,
+    "terrainMultiplier": 1,
+    "modes": [
+      "walk",
+      "horse"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 0
+  },
+  {
+    "id": "route_loc_hw_dock",
+    "from": "loc_hw",
+    "to": "loc_hw_dock",
+    "lengthKm": 0.2,
+    "terrainMultiplier": 1,
+    "modes": [
+      "walk",
+      "horse"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 0
+  },
+  {
+    "id": "route_loc_hw_fields",
+    "from": "loc_hw",
+    "to": "loc_hw_fields",
+    "lengthKm": 1,
+    "terrainMultiplier": 1,
+    "modes": [
+      "walk",
+      "horse"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 0
+  },
+  {
+    "id": "route_bld_hw_weaving",
+    "from": "loc_hw",
+    "to": "bld_hw_weaving",
+    "lengthKm": 0.4,
+    "terrainMultiplier": 1,
+    "modes": [
+      "walk",
+      "horse"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 0
+  },
+  {
+    "id": "route_loc_hw_gate",
+    "from": "loc_hw",
+    "to": "loc_hw_gate",
+    "lengthKm": 0.5,
+    "terrainMultiplier": 1,
+    "modes": [
+      "walk",
+      "horse"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 0
+  },
+  {
+    "id": "route_loc_hw_orchard",
+    "from": "loc_hw",
+    "to": "loc_hw_orchard",
+    "lengthKm": 0.5656854249492381,
+    "terrainMultiplier": 1,
+    "modes": [
+      "walk",
+      "horse"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 0
+  },
+  {
+    "id": "route_bld_hw_school",
+    "from": "loc_hw",
+    "to": "bld_hw_school",
+    "lengthKm": 0.41231056256176607,
+    "terrainMultiplier": 1,
+    "modes": [
+      "walk",
+      "horse"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 0
+  },
+  {
+    "id": "route_loc_hw_apiary",
+    "from": "loc_hw",
+    "to": "loc_hw_apiary",
+    "lengthKm": 2,
+    "terrainMultiplier": 1,
+    "modes": [
+      "walk",
+      "horse"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 0
+  },
+  {
+    "id": "route_bld_hw_post",
+    "from": "loc_hw",
+    "to": "bld_hw_post",
+    "lengthKm": 0.6,
+    "terrainMultiplier": 1,
+    "modes": [
+      "walk",
+      "horse"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 0
+  },
+  {
+    "id": "route_site_beilin_tower",
+    "from": "loc_hw",
+    "to": "site_beilin_tower",
+    "lengthKm": 6,
+    "terrainMultiplier": 1,
+    "modes": [
+      "walk",
+      "horse"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 0
+  },
+  {
+    "id": "route_hw_bs",
+    "from": "loc_hw",
+    "to": "loc_bs",
+    "lengthKm": 24,
+    "terrainMultiplier": 1,
+    "modes": [
+      "walk",
+      "horse",
+      "cart"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 1
+  },
+  {
+    "id": "route_hw_yandu",
+    "from": "loc_hw",
+    "to": "loc_yandu",
+    "lengthKm": 32,
+    "speedKmh": 8,
+    "modes": [
+      "boat"
+    ],
+    "closedSeasons": [],
+    "toll": 10,
+    "risk": 1
+  },
+  {
+    "id": "route_bs_capital",
+    "from": "loc_bs",
+    "to": "loc_capital",
+    "lengthKm": 416,
+    "terrainMultiplier": 1,
+    "modes": [
+      "walk",
+      "horse",
+      "cart"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 2
+  },
+  {
+    "id": "route_bld_hw_altar",
+    "from": "loc_hw",
+    "to": "bld_hw_altar",
+    "lengthKm": 0.2,
+    "terrainMultiplier": 1,
+    "modes": [
+      "walk",
+      "horse"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 0
+  },
+  {
+    "id": "route_bld_bs_shrine",
+    "from": "loc_bs",
+    "to": "bld_bs_shrine",
+    "lengthKm": 0.2,
+    "terrainMultiplier": 1,
+    "modes": [
+      "walk",
+      "horse"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 0
+  },
+  {
+    "id": "route_copper_ridge",
+    "from": "loc_bs",
+    "to": "site_copper_ridge",
+    "closedSeasons": [],
+    "lengthKm": 30.56,
+    "terrainMultiplier": 1.5,
+    "modes": [
+      "walk"
+    ],
+    "toll": 0,
+    "risk": 0
+  },
+  {
+    "id": "route_root_hollow",
+    "from": "site_copper_ridge",
+    "to": "site_root_hollow",
+    "closedSeasons": [],
+    "lengthKm": 11,
+    "terrainMultiplier": 1.5,
+    "modes": [
+      "walk"
+    ],
+    "toll": 0,
+    "risk": 0
+  },
+  {
+    "id": "route_basalt_steps",
+    "from": "loc_bs",
+    "to": "site_basalt_steps",
+    "closedSeasons": [],
+    "lengthKm": 59.24,
+    "terrainMultiplier": 1.5,
+    "modes": [
+      "walk"
+    ],
+    "toll": 0,
+    "risk": 0
+  },
+  {
+    "id": "route_salt_reeds",
+    "from": "site_basalt_steps",
+    "to": "site_salt_reeds",
+    "closedSeasons": [],
+    "lengthKm": 20.75,
+    "terrainMultiplier": 1.5,
+    "modes": [
+      "walk"
+    ],
+    "toll": 0,
+    "risk": 0
+  },
+  {
+    "id": "route_glass_dunes",
+    "from": "loc_yandu",
+    "to": "site_glass_dunes",
+    "closedSeasons": [],
+    "lengthKm": 64.25,
+    "terrainMultiplier": 1.5,
+    "modes": [
+      "walk"
+    ],
+    "toll": 0,
+    "risk": 0
+  },
+  {
+    "id": "route_silt_canyon",
+    "from": "site_glass_dunes",
+    "to": "site_silt_canyon",
+    "closedSeasons": [],
+    "lengthKm": 26.24,
+    "terrainMultiplier": 1.5,
+    "modes": [
+      "walk"
+    ],
+    "toll": 0,
+    "risk": 0
+  },
+  {
+    "id": "route_rainstone_basin",
+    "from": "loc_yandu",
+    "to": "site_rainstone_basin",
+    "closedSeasons": [],
+    "lengthKm": 92.11,
+    "terrainMultiplier": 1.5,
+    "modes": [
+      "walk"
+    ],
+    "toll": 0,
+    "risk": 0
+  },
+  {
+    "id": "route_peat_islets",
+    "from": "site_rainstone_basin",
+    "to": "site_peat_islets",
+    "closedSeasons": [],
+    "lengthKm": 32.13,
+    "terrainMultiplier": 1.5,
+    "modes": [
+      "walk"
+    ],
+    "toll": 0,
+    "risk": 0
+  },
+  {
+    "id": "route_white_canopy",
+    "from": "loc_capital",
+    "to": "site_white_canopy",
+    "closedSeasons": [],
+    "lengthKm": 78.03,
+    "terrainMultiplier": 1.5,
+    "modes": [
+      "walk"
+    ],
+    "toll": 0,
+    "risk": 0
+  },
+  {
+    "id": "route_ice_echo",
+    "from": "site_white_canopy",
+    "to": "site_ice_echo",
+    "closedSeasons": [
+      3
+    ],
+    "lengthKm": 42.03,
+    "terrainMultiplier": 1.5,
+    "modes": [
+      "walk"
+    ],
+    "toll": 0,
+    "risk": 0
+  },
+  {
+    "id": "route_red_fold",
+    "from": "loc_capital",
+    "to": "site_red_fold",
+    "closedSeasons": [],
+    "lengthKm": 119.08,
+    "terrainMultiplier": 1.5,
+    "modes": [
+      "walk"
+    ],
+    "toll": 0,
+    "risk": 0
+  },
+  {
+    "id": "route_moon_cliffs",
+    "from": "site_red_fold",
+    "to": "site_moon_cliffs",
+    "closedSeasons": [
+      3
+    ],
+    "lengthKm": 36.62,
+    "terrainMultiplier": 1.5,
+    "modes": [
+      "walk"
+    ],
+    "toll": 0,
+    "risk": 0
+  },
+  {
+    "id": "route_crown_firn",
+    "from": "site_ice_echo",
+    "to": "site_crown_firn",
+    "closedSeasons": [
+      3
+    ],
+    "lengthKm": 96.5,
+    "terrainMultiplier": 1.5,
+    "modes": [
+      "walk"
+    ],
+    "toll": 0,
+    "risk": 0
+  },
+  {
+    "id": "route_deep_star_bowl",
+    "from": "site_crown_firn",
+    "to": "site_deep_star_bowl",
+    "closedSeasons": [
+      3
+    ],
+    "lengthKm": 35.91,
+    "terrainMultiplier": 1.5,
+    "modes": [
+      "walk"
+    ],
+    "toll": 0,
+    "risk": 0
+  },
+  {
+    "id": "route_bld_hw_home_15",
+    "from": "loc_hw",
+    "to": "bld_hw_home_15",
+    "lengthKm": 0.31622776601683794,
+    "terrainMultiplier": 1,
+    "modes": [
+      "walk"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 0
+  },
+  {
+    "id": "route_bld_hw_home_16",
+    "from": "loc_hw",
+    "to": "bld_hw_home_16",
+    "lengthKm": 0.447213595499958,
+    "terrainMultiplier": 1,
+    "modes": [
+      "walk"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 0
+  },
+  {
+    "id": "route_bld_hw_home_17",
+    "from": "loc_hw",
+    "to": "bld_hw_home_17",
+    "lengthKm": 0.4242640687119285,
+    "terrainMultiplier": 1,
+    "modes": [
+      "walk"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 0
+  },
+  {
+    "id": "route_bld_hw_home_18",
+    "from": "loc_hw",
+    "to": "bld_hw_home_18",
+    "lengthKm": 0.31622776601683794,
+    "terrainMultiplier": 1,
+    "modes": [
+      "walk"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 0
+  },
+  {
+    "id": "route_bld_hw_home_19",
+    "from": "loc_hw",
+    "to": "bld_hw_home_19",
+    "lengthKm": 0.5385164807134505,
+    "terrainMultiplier": 1,
+    "modes": [
+      "walk"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 0
+  },
+  {
+    "id": "route_bld_hw_home_20",
+    "from": "loc_hw",
+    "to": "bld_hw_home_20",
+    "lengthKm": 0.3605551275463989,
+    "terrainMultiplier": 1,
+    "modes": [
+      "walk"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 0
+  },
+  {
+    "id": "route_bld_hw_home_21",
+    "from": "loc_hw",
+    "to": "bld_hw_home_21",
+    "lengthKm": 0.5,
+    "terrainMultiplier": 1,
+    "modes": [
+      "walk"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 0
+  },
+  {
+    "id": "route_bld_hw_home_22",
+    "from": "loc_hw",
+    "to": "bld_hw_home_22",
+    "lengthKm": 0.447213595499958,
+    "terrainMultiplier": 1,
+    "modes": [
+      "walk"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 0
+  },
+  {
+    "id": "route_bs_yp",
+    "from": "loc_bs",
+    "to": "loc_bs_yupo",
+    "lengthKm": 10,
+    "terrainMultiplier": 1.2,
+    "modes": [
+      "walk",
+      "horse"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 1
+  },
+  {
+    "id": "route_bld_yp_hall",
+    "from": "loc_bs_yupo",
+    "to": "bld_yp_hall",
+    "lengthKm": 0.22803508501982772,
+    "terrainMultiplier": 1,
+    "modes": [
+      "walk"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 0
+  },
+  {
+    "id": "route_loc_yp_fields",
+    "from": "loc_bs_yupo",
+    "to": "loc_yp_fields",
+    "lengthKm": 0.14000000000000057,
+    "terrainMultiplier": 1,
+    "modes": [
+      "walk"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 0
+  },
+  {
+    "id": "route_bld_yp_yard",
+    "from": "loc_bs_yupo",
+    "to": "bld_yp_yard",
+    "lengthKm": 0.22803508501982772,
+    "terrainMultiplier": 1,
+    "modes": [
+      "walk"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 0
+  },
+  {
+    "id": "route_bld_yp_kitchen",
+    "from": "loc_bs_yupo",
+    "to": "bld_yp_kitchen",
+    "lengthKm": 0.3328663395418641,
+    "terrainMultiplier": 1,
+    "modes": [
+      "walk"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 0
+  },
+  {
+    "id": "route_bld_yp_workroom",
+    "from": "loc_bs_yupo",
+    "to": "bld_yp_workroom",
+    "lengthKm": 0.27999999999999936,
+    "terrainMultiplier": 1,
+    "modes": [
+      "walk"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 0
+  },
+  {
+    "id": "route_loc_yp_orchard",
+    "from": "loc_bs_yupo",
+    "to": "loc_yp_orchard",
+    "lengthKm": 0.3328663395418641,
+    "terrainMultiplier": 1,
+    "modes": [
+      "walk"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 0
+  },
+  {
+    "id": "route_loc_yp_garden",
+    "from": "loc_bs_yupo",
+    "to": "loc_yp_garden",
+    "lengthKm": 0.4569463863518343,
+    "terrainMultiplier": 1,
+    "modes": [
+      "walk"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 0
+  },
+  {
+    "id": "route_loc_yp_path",
+    "from": "loc_bs_yupo",
+    "to": "loc_yp_path",
+    "lengthKm": 0.41999999999999993,
+    "terrainMultiplier": 1,
+    "modes": [
+      "walk"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 0
+  },
+  {
+    "id": "route_bld_yp_home_01",
+    "from": "loc_bs_yupo",
+    "to": "bld_yp_home_01",
+    "lengthKm": 0.23879907872519246,
+    "terrainMultiplier": 1,
+    "modes": [
+      "walk"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 0
+  },
+  {
+    "id": "route_bld_yp_home_02",
+    "from": "loc_bs_yupo",
+    "to": "bld_yp_home_02",
+    "lengthKm": 0.15692354826475355,
+    "terrainMultiplier": 1,
+    "modes": [
+      "walk"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 0
+  },
+  {
+    "id": "route_bld_yp_home_03",
+    "from": "loc_bs_yupo",
+    "to": "bld_yp_home_03",
+    "lengthKm": 0.09178779875343,
+    "terrainMultiplier": 1,
+    "modes": [
+      "walk"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 0
+  },
+  {
+    "id": "route_bld_yp_home_04",
+    "from": "loc_bs_yupo",
+    "to": "bld_yp_home_04",
+    "lengthKm": 0.09178779875343,
+    "terrainMultiplier": 1,
+    "modes": [
+      "walk"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 0
+  },
+  {
+    "id": "route_bld_yp_home_05",
+    "from": "loc_bs_yupo",
+    "to": "bld_yp_home_05",
+    "lengthKm": 0.15692354826475355,
+    "terrainMultiplier": 1,
+    "modes": [
+      "walk"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 0
+  },
+  {
+    "id": "route_bld_yp_home_06",
+    "from": "loc_bs_yupo",
+    "to": "bld_yp_home_06",
+    "lengthKm": 0.23879907872519246,
+    "terrainMultiplier": 1,
+    "modes": [
+      "walk"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 0
+  },
+  {
+    "id": "route_bld_yp_home_07",
+    "from": "loc_bs_yupo",
+    "to": "bld_yp_home_07",
+    "lengthKm": 0.27608875384557174,
+    "terrainMultiplier": 1,
+    "modes": [
+      "walk"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 0
+  },
+  {
+    "id": "route_bld_yp_home_08",
+    "from": "loc_bs_yupo",
+    "to": "bld_yp_home_08",
+    "lengthKm": 0.20934421415458432,
+    "terrainMultiplier": 1,
+    "modes": [
+      "walk"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 0
+  },
+  {
+    "id": "route_bld_yp_home_09",
+    "from": "loc_bs_yupo",
+    "to": "bld_yp_home_09",
+    "lengthKm": 0.16620770138594723,
+    "terrainMultiplier": 1,
+    "modes": [
+      "walk"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 0
+  },
+  {
+    "id": "route_bld_yp_home_10",
+    "from": "loc_bs_yupo",
+    "to": "bld_yp_home_10",
+    "lengthKm": 0.16620770138594723,
+    "terrainMultiplier": 1,
+    "modes": [
+      "walk"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 0
+  },
+  {
+    "id": "route_bld_yp_home_11",
+    "from": "loc_bs_yupo",
+    "to": "bld_yp_home_11",
+    "lengthKm": 0.20934421415458432,
+    "terrainMultiplier": 1,
+    "modes": [
+      "walk"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 0
+  },
+  {
+    "id": "route_bld_yp_home_12",
+    "from": "loc_bs_yupo",
+    "to": "bld_yp_home_12",
+    "lengthKm": 0.27608875384557174,
+    "terrainMultiplier": 1,
+    "modes": [
+      "walk"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 0
+  },
+  {
+    "id": "route_bld_yp_home_13",
+    "from": "loc_bs_yupo",
+    "to": "bld_yp_home_13",
+    "lengthKm": 0.32897568299192076,
+    "terrainMultiplier": 1,
+    "modes": [
+      "walk"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 0
+  },
+  {
+    "id": "route_bld_yp_home_14",
+    "from": "loc_bs_yupo",
+    "to": "bld_yp_home_14",
+    "lengthKm": 0.2753633962602882,
+    "terrainMultiplier": 1,
+    "modes": [
+      "walk"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 0
+  },
+  {
+    "id": "route_bld_yp_home_15",
+    "from": "loc_bs_yupo",
+    "to": "bld_yp_home_15",
+    "lengthKm": 0.24418230894149612,
+    "terrainMultiplier": 1,
+    "modes": [
+      "walk"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 0
+  },
+  {
+    "id": "route_bld_yp_home_16",
+    "from": "loc_bs_yupo",
+    "to": "bld_yp_home_16",
+    "lengthKm": 0.24418230894149612,
+    "terrainMultiplier": 1,
+    "modes": [
+      "walk"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 0
+  },
+  {
+    "id": "route_bld_yp_home_17",
+    "from": "loc_bs_yupo",
+    "to": "bld_yp_home_17",
+    "lengthKm": 0.2753633962602882,
+    "terrainMultiplier": 1,
+    "modes": [
+      "walk"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 0
+  },
+  {
+    "id": "route_bld_yp_home_18",
+    "from": "loc_bs_yupo",
+    "to": "bld_yp_home_18",
+    "lengthKm": 0.32897568299192076,
+    "terrainMultiplier": 1,
+    "modes": [
+      "walk"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 0
+  },
+  {
+    "id": "route_bld_yp_home_19",
+    "from": "loc_bs_yupo",
+    "to": "bld_yp_home_19",
+    "lengthKm": 0.391184099881374,
+    "terrainMultiplier": 1,
+    "modes": [
+      "walk"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 0
+  },
+  {
+    "id": "route_bld_yp_home_20",
+    "from": "loc_bs_yupo",
+    "to": "bld_yp_home_20",
+    "lengthKm": 0.347311099736246,
+    "terrainMultiplier": 1,
+    "modes": [
+      "walk"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 0
+  },
+  {
+    "id": "route_bld_yp_home_21",
+    "from": "loc_bs_yupo",
+    "to": "bld_yp_home_21",
+    "lengthKm": 0.323148572641131,
+    "terrainMultiplier": 1,
+    "modes": [
+      "walk"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 0
+  },
+  {
+    "id": "route_bld_yp_home_22",
+    "from": "loc_bs_yupo",
+    "to": "bld_yp_home_22",
+    "lengthKm": 0.323148572641131,
+    "terrainMultiplier": 1,
+    "modes": [
+      "walk"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 0
+  },
+  {
+    "id": "route_bld_yp_home_23",
+    "from": "loc_bs_yupo",
+    "to": "bld_yp_home_23",
+    "lengthKm": 0.347311099736246,
+    "terrainMultiplier": 1,
+    "modes": [
+      "walk"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 0
+  },
+  {
+    "id": "route_bld_yp_home_24",
+    "from": "loc_bs_yupo",
+    "to": "bld_yp_home_24",
+    "lengthKm": 0.391184099881374,
+    "terrainMultiplier": 1,
+    "modes": [
+      "walk"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 0
+  },
+  {
+    "id": "route_bld_yp_home_25",
+    "from": "loc_bs_yupo",
+    "to": "bld_yp_home_25",
+    "lengthKm": 0.4589389937671464,
+    "terrainMultiplier": 1,
+    "modes": [
+      "walk"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 0
+  },
+  {
+    "id": "route_bld_yp_home_26",
+    "from": "loc_bs_yupo",
+    "to": "bld_yp_home_26",
+    "lengthKm": 0.4221670285562348,
+    "terrainMultiplier": 1,
+    "modes": [
+      "walk"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 0
+  },
+  {
+    "id": "route_bld_yp_home_27",
+    "from": "loc_bs_yupo",
+    "to": "bld_yp_home_27",
+    "lengthKm": 0.40252329125157515,
+    "terrainMultiplier": 1,
+    "modes": [
+      "walk"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 0
+  },
+  {
+    "id": "route_bld_yp_home_28",
+    "from": "loc_bs_yupo",
+    "to": "bld_yp_home_28",
+    "lengthKm": 0.40252329125157515,
+    "terrainMultiplier": 1,
+    "modes": [
+      "walk"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 0
+  },
+  {
+    "id": "route_bld_yp_home_29",
+    "from": "loc_bs_yupo",
+    "to": "bld_yp_home_29",
+    "lengthKm": 0.4221670285562348,
+    "terrainMultiplier": 1,
+    "modes": [
+      "walk"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 0
+  },
+  {
+    "id": "route_bld_yp_home_30",
+    "from": "loc_bs_yupo",
+    "to": "bld_yp_home_30",
+    "lengthKm": 0.4589389937671464,
+    "terrainMultiplier": 1,
+    "modes": [
+      "walk"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 0
+  },
+  {
+    "id": "route_bs_wt",
+    "from": "loc_bs",
+    "to": "loc_bs_weiting",
+    "lengthKm": 11.40175425099138,
+    "terrainMultiplier": 1,
+    "modes": [
+      "walk",
+      "horse"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 1
+  },
+  {
+    "id": "route_bld_wt_hall",
+    "from": "loc_bs_weiting",
+    "to": "bld_wt_hall",
+    "lengthKm": 0.22803508501982717,
+    "terrainMultiplier": 1,
+    "modes": [
+      "walk"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 0
+  },
+  {
+    "id": "route_loc_wt_bank",
+    "from": "loc_bs_weiting",
+    "to": "loc_wt_bank",
+    "lengthKm": 0.13999999999999968,
+    "terrainMultiplier": 1,
+    "modes": [
+      "walk"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 0
+  },
+  {
+    "id": "route_loc_wt_reeds",
+    "from": "loc_bs_weiting",
+    "to": "loc_wt_reeds",
+    "lengthKm": 0.22803508501982717,
+    "terrainMultiplier": 1,
+    "modes": [
+      "walk"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 0
+  },
+  {
+    "id": "route_bld_wt_yard",
+    "from": "loc_bs_weiting",
+    "to": "bld_wt_yard",
+    "lengthKm": 0.33286633954186484,
+    "terrainMultiplier": 1,
+    "modes": [
+      "walk"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 0
+  },
+  {
+    "id": "route_bld_wt_kitchen",
+    "from": "loc_bs_weiting",
+    "to": "bld_wt_kitchen",
+    "lengthKm": 0.28000000000000025,
+    "terrainMultiplier": 1,
+    "modes": [
+      "walk"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 0
+  },
+  {
+    "id": "route_bld_wt_workroom",
+    "from": "loc_bs_weiting",
+    "to": "bld_wt_workroom",
+    "lengthKm": 0.33286633954186484,
+    "terrainMultiplier": 1,
+    "modes": [
+      "walk"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 0
+  },
+  {
+    "id": "route_loc_wt_garden",
+    "from": "loc_bs_weiting",
+    "to": "loc_wt_garden",
+    "lengthKm": 0.4569463863518343,
+    "terrainMultiplier": 1,
+    "modes": [
+      "walk"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 0
+  },
+  {
+    "id": "route_loc_wt_path",
+    "from": "loc_bs_weiting",
+    "to": "loc_wt_path",
+    "lengthKm": 0.41999999999999993,
+    "terrainMultiplier": 1,
+    "modes": [
+      "walk"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 0
+  },
+  {
+    "id": "route_bld_wt_home_01",
+    "from": "loc_bs_weiting",
+    "to": "bld_wt_home_01",
+    "lengthKm": 0.23879907872519246,
+    "terrainMultiplier": 1,
+    "modes": [
+      "walk"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 0
+  },
+  {
+    "id": "route_bld_wt_home_02",
+    "from": "loc_bs_weiting",
+    "to": "bld_wt_home_02",
+    "lengthKm": 0.1569235482647505,
+    "terrainMultiplier": 1,
+    "modes": [
+      "walk"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 0
+  },
+  {
+    "id": "route_bld_wt_home_03",
+    "from": "loc_bs_weiting",
+    "to": "bld_wt_home_03",
+    "lengthKm": 0.09178779875343,
+    "terrainMultiplier": 1,
+    "modes": [
+      "walk"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 0
+  },
+  {
+    "id": "route_bld_wt_home_04",
+    "from": "loc_bs_weiting",
+    "to": "bld_wt_home_04",
+    "lengthKm": 0.09178779875343,
+    "terrainMultiplier": 1,
+    "modes": [
+      "walk"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 0
+  },
+  {
+    "id": "route_bld_wt_home_05",
+    "from": "loc_bs_weiting",
+    "to": "bld_wt_home_05",
+    "lengthKm": 0.1569235482647505,
+    "terrainMultiplier": 1,
+    "modes": [
+      "walk"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 0
+  },
+  {
+    "id": "route_bld_wt_home_06",
+    "from": "loc_bs_weiting",
+    "to": "bld_wt_home_06",
+    "lengthKm": 0.23879907872519246,
+    "terrainMultiplier": 1,
+    "modes": [
+      "walk"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 0
+  },
+  {
+    "id": "route_bld_wt_home_07",
+    "from": "loc_bs_weiting",
+    "to": "bld_wt_home_07",
+    "lengthKm": 0.27608875384557174,
+    "terrainMultiplier": 1,
+    "modes": [
+      "walk"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 0
+  },
+  {
+    "id": "route_bld_wt_home_08",
+    "from": "loc_bs_weiting",
+    "to": "bld_wt_home_08",
+    "lengthKm": 0.20934421415458204,
+    "terrainMultiplier": 1,
+    "modes": [
+      "walk"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 0
+  },
+  {
+    "id": "route_bld_wt_home_09",
+    "from": "loc_bs_weiting",
+    "to": "bld_wt_home_09",
+    "lengthKm": 0.16620770138594723,
+    "terrainMultiplier": 1,
+    "modes": [
+      "walk"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 0
+  },
+  {
+    "id": "route_bld_wt_home_10",
+    "from": "loc_bs_weiting",
+    "to": "bld_wt_home_10",
+    "lengthKm": 0.16620770138594723,
+    "terrainMultiplier": 1,
+    "modes": [
+      "walk"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 0
+  },
+  {
+    "id": "route_bld_wt_home_11",
+    "from": "loc_bs_weiting",
+    "to": "bld_wt_home_11",
+    "lengthKm": 0.20934421415458204,
+    "terrainMultiplier": 1,
+    "modes": [
+      "walk"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 0
+  },
+  {
+    "id": "route_bld_wt_home_12",
+    "from": "loc_bs_weiting",
+    "to": "bld_wt_home_12",
+    "lengthKm": 0.27608875384557174,
+    "terrainMultiplier": 1,
+    "modes": [
+      "walk"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 0
+  },
+  {
+    "id": "route_bld_wt_home_13",
+    "from": "loc_bs_weiting",
+    "to": "bld_wt_home_13",
+    "lengthKm": 0.32897568299192076,
+    "terrainMultiplier": 1,
+    "modes": [
+      "walk"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 0
+  },
+  {
+    "id": "route_bld_wt_home_14",
+    "from": "loc_bs_weiting",
+    "to": "bld_wt_home_14",
+    "lengthKm": 0.2753633962602865,
+    "terrainMultiplier": 1,
+    "modes": [
+      "walk"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 0
+  },
+  {
+    "id": "route_bld_wt_home_15",
+    "from": "loc_bs_weiting",
+    "to": "bld_wt_home_15",
+    "lengthKm": 0.24418230894149612,
+    "terrainMultiplier": 1,
+    "modes": [
+      "walk"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 0
+  },
+  {
+    "id": "route_bld_wt_home_16",
+    "from": "loc_bs_weiting",
+    "to": "bld_wt_home_16",
+    "lengthKm": 0.24418230894149612,
+    "terrainMultiplier": 1,
+    "modes": [
+      "walk"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 0
+  },
+  {
+    "id": "route_bld_wt_home_17",
+    "from": "loc_bs_weiting",
+    "to": "bld_wt_home_17",
+    "lengthKm": 0.2753633962602865,
+    "terrainMultiplier": 1,
+    "modes": [
+      "walk"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 0
+  },
+  {
+    "id": "route_bld_wt_home_18",
+    "from": "loc_bs_weiting",
+    "to": "bld_wt_home_18",
+    "lengthKm": 0.32897568299192076,
+    "terrainMultiplier": 1,
+    "modes": [
+      "walk"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 0
+  },
+  {
+    "id": "route_bld_wt_home_19",
+    "from": "loc_bs_weiting",
+    "to": "bld_wt_home_19",
+    "lengthKm": 0.391184099881374,
+    "terrainMultiplier": 1,
+    "modes": [
+      "walk"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 0
+  },
+  {
+    "id": "route_bld_wt_home_20",
+    "from": "loc_bs_weiting",
+    "to": "bld_wt_home_20",
+    "lengthKm": 0.3473110997362446,
+    "terrainMultiplier": 1,
+    "modes": [
+      "walk"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 0
+  },
+  {
+    "id": "route_bld_wt_home_21",
+    "from": "loc_bs_weiting",
+    "to": "bld_wt_home_21",
+    "lengthKm": 0.323148572641131,
+    "terrainMultiplier": 1,
+    "modes": [
+      "walk"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 0
+  },
+  {
+    "id": "route_bld_wt_home_22",
+    "from": "loc_bs_weiting",
+    "to": "bld_wt_home_22",
+    "lengthKm": 0.323148572641131,
+    "terrainMultiplier": 1,
+    "modes": [
+      "walk"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 0
+  },
+  {
+    "id": "route_bld_wt_home_23",
+    "from": "loc_bs_weiting",
+    "to": "bld_wt_home_23",
+    "lengthKm": 0.3473110997362446,
+    "terrainMultiplier": 1,
+    "modes": [
+      "walk"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 0
+  },
+  {
+    "id": "route_bld_wt_home_24",
+    "from": "loc_bs_weiting",
+    "to": "bld_wt_home_24",
+    "lengthKm": 0.391184099881374,
+    "terrainMultiplier": 1,
+    "modes": [
+      "walk"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 0
+  },
+  {
+    "id": "route_bld_wt_home_25",
+    "from": "loc_bs_weiting",
+    "to": "bld_wt_home_25",
+    "lengthKm": 0.4589389937671464,
+    "terrainMultiplier": 1,
+    "modes": [
+      "walk"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 0
+  },
+  {
+    "id": "route_bld_wt_home_26",
+    "from": "loc_bs_weiting",
+    "to": "bld_wt_home_26",
+    "lengthKm": 0.4221670285562336,
+    "terrainMultiplier": 1,
+    "modes": [
+      "walk"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 0
+  },
+  {
+    "id": "route_bld_wt_home_27",
+    "from": "loc_bs_weiting",
+    "to": "bld_wt_home_27",
+    "lengthKm": 0.40252329125157515,
+    "terrainMultiplier": 1,
+    "modes": [
+      "walk"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 0
+  },
+  {
+    "id": "route_bld_wt_home_28",
+    "from": "loc_bs_weiting",
+    "to": "bld_wt_home_28",
+    "lengthKm": 0.40252329125157515,
+    "terrainMultiplier": 1,
+    "modes": [
+      "walk"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 0
+  },
+  {
+    "id": "route_bld_wt_home_29",
+    "from": "loc_bs_weiting",
+    "to": "bld_wt_home_29",
+    "lengthKm": 0.4221670285562336,
+    "terrainMultiplier": 1,
+    "modes": [
+      "walk"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 0
+  },
+  {
+    "id": "route_bld_wt_home_30",
+    "from": "loc_bs_weiting",
+    "to": "bld_wt_home_30",
+    "lengthKm": 0.4589389937671464,
+    "terrainMultiplier": 1,
+    "modes": [
+      "walk"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 0
+  },
+  {
+    "id": "route_bs_lq",
+    "from": "loc_bs",
+    "to": "loc_bs_liquan",
+    "lengthKm": 14.142135623730951,
+    "terrainMultiplier": 1.2,
+    "modes": [
+      "walk",
+      "horse"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 1
+  },
+  {
+    "id": "route_bld_lq_hall",
+    "from": "loc_bs_liquan",
+    "to": "bld_lq_hall",
+    "lengthKm": 0.22803508501982772,
+    "terrainMultiplier": 1,
+    "modes": [
+      "walk"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 0
+  },
+  {
+    "id": "route_loc_lq_spring",
+    "from": "loc_bs_liquan",
+    "to": "loc_lq_spring",
+    "lengthKm": 0.14000000000000057,
+    "terrainMultiplier": 1,
+    "modes": [
+      "walk"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 0
+  },
+  {
+    "id": "route_bld_lq_yard",
+    "from": "loc_bs_liquan",
+    "to": "bld_lq_yard",
+    "lengthKm": 0.22803508501982772,
+    "terrainMultiplier": 1,
+    "modes": [
+      "walk"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 0
+  },
+  {
+    "id": "route_bld_lq_kitchen",
+    "from": "loc_bs_liquan",
+    "to": "bld_lq_kitchen",
+    "lengthKm": 0.3328663395418641,
+    "terrainMultiplier": 1,
+    "modes": [
+      "walk"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 0
+  },
+  {
+    "id": "route_bld_lq_workroom",
+    "from": "loc_bs_liquan",
+    "to": "bld_lq_workroom",
+    "lengthKm": 0.27999999999999936,
+    "terrainMultiplier": 1,
+    "modes": [
+      "walk"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 0
+  },
+  {
+    "id": "route_loc_lq_garden",
+    "from": "loc_bs_liquan",
+    "to": "loc_lq_garden",
+    "lengthKm": 0.3328663395418641,
+    "terrainMultiplier": 1,
+    "modes": [
+      "walk"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 0
+  },
+  {
+    "id": "route_loc_lq_fields",
+    "from": "loc_bs_liquan",
+    "to": "loc_lq_fields",
+    "lengthKm": 0.4569463863518343,
+    "terrainMultiplier": 1,
+    "modes": [
+      "walk"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 0
+  },
+  {
+    "id": "route_loc_lq_path",
+    "from": "loc_bs_liquan",
+    "to": "loc_lq_path",
+    "lengthKm": 0.41999999999999993,
+    "terrainMultiplier": 1,
+    "modes": [
+      "walk"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 0
+  },
+  {
+    "id": "route_bld_lq_home_01",
+    "from": "loc_bs_liquan",
+    "to": "bld_lq_home_01",
+    "lengthKm": 0.23879907872519246,
+    "terrainMultiplier": 1,
+    "modes": [
+      "walk"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 0
+  },
+  {
+    "id": "route_bld_lq_home_02",
+    "from": "loc_bs_liquan",
+    "to": "bld_lq_home_02",
+    "lengthKm": 0.1569235482647505,
+    "terrainMultiplier": 1,
+    "modes": [
+      "walk"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 0
+  },
+  {
+    "id": "route_bld_lq_home_03",
+    "from": "loc_bs_liquan",
+    "to": "bld_lq_home_03",
+    "lengthKm": 0.09178779875343,
+    "terrainMultiplier": 1,
+    "modes": [
+      "walk"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 0
+  },
+  {
+    "id": "route_bld_lq_home_04",
+    "from": "loc_bs_liquan",
+    "to": "bld_lq_home_04",
+    "lengthKm": 0.09178779875343,
+    "terrainMultiplier": 1,
+    "modes": [
+      "walk"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 0
+  },
+  {
+    "id": "route_bld_lq_home_05",
+    "from": "loc_bs_liquan",
+    "to": "bld_lq_home_05",
+    "lengthKm": 0.1569235482647505,
+    "terrainMultiplier": 1,
+    "modes": [
+      "walk"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 0
+  },
+  {
+    "id": "route_bld_lq_home_06",
+    "from": "loc_bs_liquan",
+    "to": "bld_lq_home_06",
+    "lengthKm": 0.23879907872519246,
+    "terrainMultiplier": 1,
+    "modes": [
+      "walk"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 0
+  },
+  {
+    "id": "route_bld_lq_home_07",
+    "from": "loc_bs_liquan",
+    "to": "bld_lq_home_07",
+    "lengthKm": 0.27608875384557174,
+    "terrainMultiplier": 1,
+    "modes": [
+      "walk"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 0
+  },
+  {
+    "id": "route_bld_lq_home_08",
+    "from": "loc_bs_liquan",
+    "to": "bld_lq_home_08",
+    "lengthKm": 0.20934421415458204,
+    "terrainMultiplier": 1,
+    "modes": [
+      "walk"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 0
+  },
+  {
+    "id": "route_bld_lq_home_09",
+    "from": "loc_bs_liquan",
+    "to": "bld_lq_home_09",
+    "lengthKm": 0.16620770138594723,
+    "terrainMultiplier": 1,
+    "modes": [
+      "walk"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 0
+  },
+  {
+    "id": "route_bld_lq_home_10",
+    "from": "loc_bs_liquan",
+    "to": "bld_lq_home_10",
+    "lengthKm": 0.16620770138594723,
+    "terrainMultiplier": 1,
+    "modes": [
+      "walk"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 0
+  },
+  {
+    "id": "route_bld_lq_home_11",
+    "from": "loc_bs_liquan",
+    "to": "bld_lq_home_11",
+    "lengthKm": 0.20934421415458204,
+    "terrainMultiplier": 1,
+    "modes": [
+      "walk"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 0
+  },
+  {
+    "id": "route_bld_lq_home_12",
+    "from": "loc_bs_liquan",
+    "to": "bld_lq_home_12",
+    "lengthKm": 0.27608875384557174,
+    "terrainMultiplier": 1,
+    "modes": [
+      "walk"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 0
+  },
+  {
+    "id": "route_bld_lq_home_13",
+    "from": "loc_bs_liquan",
+    "to": "bld_lq_home_13",
+    "lengthKm": 0.32897568299192076,
+    "terrainMultiplier": 1,
+    "modes": [
+      "walk"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 0
+  },
+  {
+    "id": "route_bld_lq_home_14",
+    "from": "loc_bs_liquan",
+    "to": "bld_lq_home_14",
+    "lengthKm": 0.2753633962602865,
+    "terrainMultiplier": 1,
+    "modes": [
+      "walk"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 0
+  },
+  {
+    "id": "route_bld_lq_home_15",
+    "from": "loc_bs_liquan",
+    "to": "bld_lq_home_15",
+    "lengthKm": 0.24418230894149612,
+    "terrainMultiplier": 1,
+    "modes": [
+      "walk"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 0
+  },
+  {
+    "id": "route_bld_lq_home_16",
+    "from": "loc_bs_liquan",
+    "to": "bld_lq_home_16",
+    "lengthKm": 0.24418230894149612,
+    "terrainMultiplier": 1,
+    "modes": [
+      "walk"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 0
+  },
+  {
+    "id": "route_bld_lq_home_17",
+    "from": "loc_bs_liquan",
+    "to": "bld_lq_home_17",
+    "lengthKm": 0.2753633962602865,
+    "terrainMultiplier": 1,
+    "modes": [
+      "walk"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 0
+  },
+  {
+    "id": "route_bld_lq_home_18",
+    "from": "loc_bs_liquan",
+    "to": "bld_lq_home_18",
+    "lengthKm": 0.32897568299192076,
+    "terrainMultiplier": 1,
+    "modes": [
+      "walk"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 0
+  },
+  {
+    "id": "route_bld_lq_home_19",
+    "from": "loc_bs_liquan",
+    "to": "bld_lq_home_19",
+    "lengthKm": 0.391184099881374,
+    "terrainMultiplier": 1,
+    "modes": [
+      "walk"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 0
+  },
+  {
+    "id": "route_bld_lq_home_20",
+    "from": "loc_bs_liquan",
+    "to": "bld_lq_home_20",
+    "lengthKm": 0.3473110997362446,
+    "terrainMultiplier": 1,
+    "modes": [
+      "walk"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 0
+  },
+  {
+    "id": "route_bld_lq_home_21",
+    "from": "loc_bs_liquan",
+    "to": "bld_lq_home_21",
+    "lengthKm": 0.323148572641131,
+    "terrainMultiplier": 1,
+    "modes": [
+      "walk"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 0
+  },
+  {
+    "id": "route_bld_lq_home_22",
+    "from": "loc_bs_liquan",
+    "to": "bld_lq_home_22",
+    "lengthKm": 0.323148572641131,
+    "terrainMultiplier": 1,
+    "modes": [
+      "walk"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 0
+  },
+  {
+    "id": "route_bld_lq_home_23",
+    "from": "loc_bs_liquan",
+    "to": "bld_lq_home_23",
+    "lengthKm": 0.3473110997362446,
+    "terrainMultiplier": 1,
+    "modes": [
+      "walk"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 0
+  },
+  {
+    "id": "route_bld_lq_home_24",
+    "from": "loc_bs_liquan",
+    "to": "bld_lq_home_24",
+    "lengthKm": 0.391184099881374,
+    "terrainMultiplier": 1,
+    "modes": [
+      "walk"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 0
+  },
+  {
+    "id": "route_bld_lq_home_25",
+    "from": "loc_bs_liquan",
+    "to": "bld_lq_home_25",
+    "lengthKm": 0.4589389937671464,
+    "terrainMultiplier": 1,
+    "modes": [
+      "walk"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 0
+  },
+  {
+    "id": "route_bld_lq_home_26",
+    "from": "loc_bs_liquan",
+    "to": "bld_lq_home_26",
+    "lengthKm": 0.4221670285562336,
+    "terrainMultiplier": 1,
+    "modes": [
+      "walk"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 0
+  },
+  {
+    "id": "route_bld_lq_home_27",
+    "from": "loc_bs_liquan",
+    "to": "bld_lq_home_27",
+    "lengthKm": 0.40252329125157515,
+    "terrainMultiplier": 1,
+    "modes": [
+      "walk"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 0
+  },
+  {
+    "id": "route_bld_lq_home_28",
+    "from": "loc_bs_liquan",
+    "to": "bld_lq_home_28",
+    "lengthKm": 0.40252329125157515,
+    "terrainMultiplier": 1,
+    "modes": [
+      "walk"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 0
+  },
+  {
+    "id": "route_bld_lq_home_29",
+    "from": "loc_bs_liquan",
+    "to": "bld_lq_home_29",
+    "lengthKm": 0.4221670285562336,
+    "terrainMultiplier": 1,
+    "modes": [
+      "walk"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 0
+  },
+  {
+    "id": "route_bld_lq_home_30",
+    "from": "loc_bs_liquan",
+    "to": "bld_lq_home_30",
+    "lengthKm": 0.4589389937671464,
+    "terrainMultiplier": 1,
+    "modes": [
+      "walk"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 0
+  },
+  {
+    "id": "route_bs_sb",
+    "from": "loc_bs",
+    "to": "loc_bs_sangban",
+    "lengthKm": 14.142135623730951,
+    "terrainMultiplier": 1.2,
+    "modes": [
+      "walk",
+      "horse"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 1
+  },
+  {
+    "id": "route_bld_sb_hall",
+    "from": "loc_bs_sangban",
+    "to": "bld_sb_hall",
+    "lengthKm": 0.22803508501982772,
+    "terrainMultiplier": 1,
+    "modes": [
+      "walk"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 0
+  },
+  {
+    "id": "route_loc_sb_orchard",
+    "from": "loc_bs_sangban",
+    "to": "loc_sb_orchard",
+    "lengthKm": 0.14000000000000057,
+    "terrainMultiplier": 1,
+    "modes": [
+      "walk"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 0
+  },
+  {
+    "id": "route_loc_sb_fields",
+    "from": "loc_bs_sangban",
+    "to": "loc_sb_fields",
+    "lengthKm": 0.22803508501982772,
+    "terrainMultiplier": 1,
+    "modes": [
+      "walk"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 0
+  },
+  {
+    "id": "route_bld_sb_yard",
+    "from": "loc_bs_sangban",
+    "to": "bld_sb_yard",
+    "lengthKm": 0.3328663395418641,
+    "terrainMultiplier": 1,
+    "modes": [
+      "walk"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 0
+  },
+  {
+    "id": "route_bld_sb_kitchen",
+    "from": "loc_bs_sangban",
+    "to": "bld_sb_kitchen",
+    "lengthKm": 0.27999999999999936,
+    "terrainMultiplier": 1,
+    "modes": [
+      "walk"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 0
+  },
+  {
+    "id": "route_bld_sb_workroom",
+    "from": "loc_bs_sangban",
+    "to": "bld_sb_workroom",
+    "lengthKm": 0.3328663395418641,
+    "terrainMultiplier": 1,
+    "modes": [
+      "walk"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 0
+  },
+  {
+    "id": "route_loc_sb_garden",
+    "from": "loc_bs_sangban",
+    "to": "loc_sb_garden",
+    "lengthKm": 0.4569463863518343,
+    "terrainMultiplier": 1,
+    "modes": [
+      "walk"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 0
+  },
+  {
+    "id": "route_loc_sb_path",
+    "from": "loc_bs_sangban",
+    "to": "loc_sb_path",
+    "lengthKm": 0.41999999999999993,
+    "terrainMultiplier": 1,
+    "modes": [
+      "walk"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 0
+  },
+  {
+    "id": "route_bld_sb_home_01",
+    "from": "loc_bs_sangban",
+    "to": "bld_sb_home_01",
+    "lengthKm": 0.23879907872519077,
+    "terrainMultiplier": 1,
+    "modes": [
+      "walk"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 0
+  },
+  {
+    "id": "route_bld_sb_home_02",
+    "from": "loc_bs_sangban",
+    "to": "bld_sb_home_02",
+    "lengthKm": 0.15692354826475202,
+    "terrainMultiplier": 1,
+    "modes": [
+      "walk"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 0
+  },
+  {
+    "id": "route_bld_sb_home_03",
+    "from": "loc_bs_sangban",
+    "to": "bld_sb_home_03",
+    "lengthKm": 0.09178779875342913,
+    "terrainMultiplier": 1,
+    "modes": [
+      "walk"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 0
+  },
+  {
+    "id": "route_bld_sb_home_04",
+    "from": "loc_bs_sangban",
+    "to": "bld_sb_home_04",
+    "lengthKm": 0.09178779875342913,
+    "terrainMultiplier": 1,
+    "modes": [
+      "walk"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 0
+  },
+  {
+    "id": "route_bld_sb_home_05",
+    "from": "loc_bs_sangban",
+    "to": "bld_sb_home_05",
+    "lengthKm": 0.15692354826475202,
+    "terrainMultiplier": 1,
+    "modes": [
+      "walk"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 0
+  },
+  {
+    "id": "route_bld_sb_home_06",
+    "from": "loc_bs_sangban",
+    "to": "bld_sb_home_06",
+    "lengthKm": 0.23879907872519077,
+    "terrainMultiplier": 1,
+    "modes": [
+      "walk"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 0
+  },
+  {
+    "id": "route_bld_sb_home_07",
+    "from": "loc_bs_sangban",
+    "to": "bld_sb_home_07",
+    "lengthKm": 0.2760887538455703,
+    "terrainMultiplier": 1,
+    "modes": [
+      "walk"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 0
+  },
+  {
+    "id": "route_bld_sb_home_08",
+    "from": "loc_bs_sangban",
+    "to": "bld_sb_home_08",
+    "lengthKm": 0.20934421415458318,
+    "terrainMultiplier": 1,
+    "modes": [
+      "walk"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 0
+  },
+  {
+    "id": "route_bld_sb_home_09",
+    "from": "loc_bs_sangban",
+    "to": "bld_sb_home_09",
+    "lengthKm": 0.16620770138594673,
+    "terrainMultiplier": 1,
+    "modes": [
+      "walk"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 0
+  },
+  {
+    "id": "route_bld_sb_home_10",
+    "from": "loc_bs_sangban",
+    "to": "bld_sb_home_10",
+    "lengthKm": 0.16620770138594673,
+    "terrainMultiplier": 1,
+    "modes": [
+      "walk"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 0
+  },
+  {
+    "id": "route_bld_sb_home_11",
+    "from": "loc_bs_sangban",
+    "to": "bld_sb_home_11",
+    "lengthKm": 0.20934421415458318,
+    "terrainMultiplier": 1,
+    "modes": [
+      "walk"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 0
+  },
+  {
+    "id": "route_bld_sb_home_12",
+    "from": "loc_bs_sangban",
+    "to": "bld_sb_home_12",
+    "lengthKm": 0.2760887538455703,
+    "terrainMultiplier": 1,
+    "modes": [
+      "walk"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 0
+  },
+  {
+    "id": "route_bld_sb_home_13",
+    "from": "loc_bs_sangban",
+    "to": "bld_sb_home_13",
+    "lengthKm": 0.32897568299191954,
+    "terrainMultiplier": 1,
+    "modes": [
+      "walk"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 0
+  },
+  {
+    "id": "route_bld_sb_home_14",
+    "from": "loc_bs_sangban",
+    "to": "bld_sb_home_14",
+    "lengthKm": 0.2753633962602874,
+    "terrainMultiplier": 1,
+    "modes": [
+      "walk"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 0
+  },
+  {
+    "id": "route_bld_sb_home_15",
+    "from": "loc_bs_sangban",
+    "to": "bld_sb_home_15",
+    "lengthKm": 0.2441823089414958,
+    "terrainMultiplier": 1,
+    "modes": [
+      "walk"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 0
+  },
+  {
+    "id": "route_bld_sb_home_16",
+    "from": "loc_bs_sangban",
+    "to": "bld_sb_home_16",
+    "lengthKm": 0.2441823089414958,
+    "terrainMultiplier": 1,
+    "modes": [
+      "walk"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 0
+  },
+  {
+    "id": "route_bld_sb_home_17",
+    "from": "loc_bs_sangban",
+    "to": "bld_sb_home_17",
+    "lengthKm": 0.2753633962602874,
+    "terrainMultiplier": 1,
+    "modes": [
+      "walk"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 0
+  },
+  {
+    "id": "route_bld_sb_home_18",
+    "from": "loc_bs_sangban",
+    "to": "bld_sb_home_18",
+    "lengthKm": 0.32897568299191954,
+    "terrainMultiplier": 1,
+    "modes": [
+      "walk"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 0
+  },
+  {
+    "id": "route_bld_sb_home_19",
+    "from": "loc_bs_sangban",
+    "to": "bld_sb_home_19",
+    "lengthKm": 0.391184099881373,
+    "terrainMultiplier": 1,
+    "modes": [
+      "walk"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 0
+  },
+  {
+    "id": "route_bld_sb_home_20",
+    "from": "loc_bs_sangban",
+    "to": "bld_sb_home_20",
+    "lengthKm": 0.3473110997362453,
+    "terrainMultiplier": 1,
+    "modes": [
+      "walk"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 0
+  },
+  {
+    "id": "route_bld_sb_home_21",
+    "from": "loc_bs_sangban",
+    "to": "bld_sb_home_21",
+    "lengthKm": 0.3231485726411308,
+    "terrainMultiplier": 1,
+    "modes": [
+      "walk"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 0
+  },
+  {
+    "id": "route_bld_sb_home_22",
+    "from": "loc_bs_sangban",
+    "to": "bld_sb_home_22",
+    "lengthKm": 0.3231485726411308,
+    "terrainMultiplier": 1,
+    "modes": [
+      "walk"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 0
+  },
+  {
+    "id": "route_bld_sb_home_23",
+    "from": "loc_bs_sangban",
+    "to": "bld_sb_home_23",
+    "lengthKm": 0.3473110997362453,
+    "terrainMultiplier": 1,
+    "modes": [
+      "walk"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 0
+  },
+  {
+    "id": "route_bld_sb_home_24",
+    "from": "loc_bs_sangban",
+    "to": "bld_sb_home_24",
+    "lengthKm": 0.391184099881373,
+    "terrainMultiplier": 1,
+    "modes": [
+      "walk"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 0
+  },
+  {
+    "id": "route_bld_sb_home_25",
+    "from": "loc_bs_sangban",
+    "to": "bld_sb_home_25",
+    "lengthKm": 0.45893899376714564,
+    "terrainMultiplier": 1,
+    "modes": [
+      "walk"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 0
+  },
+  {
+    "id": "route_bld_sb_home_26",
+    "from": "loc_bs_sangban",
+    "to": "bld_sb_home_26",
+    "lengthKm": 0.42216702855623417,
+    "terrainMultiplier": 1,
+    "modes": [
+      "walk"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 0
+  },
+  {
+    "id": "route_bld_sb_home_27",
+    "from": "loc_bs_sangban",
+    "to": "bld_sb_home_27",
+    "lengthKm": 0.402523291251575,
+    "terrainMultiplier": 1,
+    "modes": [
+      "walk"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 0
+  },
+  {
+    "id": "route_bld_sb_home_28",
+    "from": "loc_bs_sangban",
+    "to": "bld_sb_home_28",
+    "lengthKm": 0.402523291251575,
+    "terrainMultiplier": 1,
+    "modes": [
+      "walk"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 0
+  },
+  {
+    "id": "route_bld_sb_home_29",
+    "from": "loc_bs_sangban",
+    "to": "bld_sb_home_29",
+    "lengthKm": 0.42216702855623417,
+    "terrainMultiplier": 1,
+    "modes": [
+      "walk"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 0
+  },
+  {
+    "id": "route_bld_sb_home_30",
+    "from": "loc_bs_sangban",
+    "to": "bld_sb_home_30",
+    "lengthKm": 0.45893899376714564,
+    "terrainMultiplier": 1,
+    "modes": [
+      "walk"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 0
+  },
+  {
+    "id": "route_t90_loc_bs_hebu_loc_bs",
+    "from": "loc_bs",
+    "to": "loc_bs_hebu",
+    "lengthKm": 0.424264068711929,
+    "terrainMultiplier": 1,
+    "modes": [
+      "walk"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 0
+  },
+  {
+    "id": "route_t90_loc_bs_zhanxi_loc_bs",
+    "from": "loc_bs",
+    "to": "loc_bs_zhanxi",
+    "lengthKm": 0.31622776601683855,
+    "terrainMultiplier": 1,
+    "modes": [
+      "walk"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 0
+  },
+  {
+    "id": "route_t90_loc_bs_guanqian_loc_bs",
+    "from": "loc_bs",
+    "to": "loc_bs_guanqian",
+    "lengthKm": 0.25,
+    "terrainMultiplier": 1,
+    "modes": [
+      "walk"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 0
+  },
+  {
+    "id": "route_t90_loc_bs_nanshi_loc_bs",
+    "from": "loc_bs",
+    "to": "loc_bs_nanshi",
+    "lengthKm": 0.25,
+    "terrainMultiplier": 1,
+    "modes": [
+      "walk"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 0
+  },
+  {
+    "id": "route_t90_loc_bs_luxiang_loc_bs",
+    "from": "loc_bs",
+    "to": "loc_bs_luxiang",
+    "lengthKm": 0.39051248379533327,
+    "terrainMultiplier": 1,
+    "modes": [
+      "walk"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 0
+  },
+  {
+    "id": "route_t90_loc_bs_dongxue_loc_bs",
+    "from": "loc_bs",
+    "to": "loc_bs_dongxue",
+    "lengthKm": 0.39051248379533327,
+    "terrainMultiplier": 1,
+    "modes": [
+      "walk"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 0
+  },
+  {
+    "id": "route_t90_bld_bs_dock_loc_bs_hebu",
+    "from": "loc_bs_hebu",
+    "to": "bld_bs_dock",
+    "lengthKm": 0.03535533905932639,
+    "terrainMultiplier": 1,
+    "modes": [
+      "walk"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 0
+  },
+  {
+    "id": "route_t90_bld_bs_boat_loc_bs_hebu",
+    "from": "loc_bs_hebu",
+    "to": "bld_bs_boat",
+    "lengthKm": 0.0559016994374941,
+    "terrainMultiplier": 1,
+    "modes": [
+      "walk"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 0
+  },
+  {
+    "id": "route_t90_bld_bs_weigh_loc_bs_hebu",
+    "from": "loc_bs_hebu",
+    "to": "bld_bs_weigh",
+    "lengthKm": 0.07905694150420906,
+    "terrainMultiplier": 1,
+    "modes": [
+      "walk"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 0
+  },
+  {
+    "id": "route_t90_bld_bs_store_loc_bs_zhanxi",
+    "from": "loc_bs_zhanxi",
+    "to": "bld_bs_store",
+    "lengthKm": 0.03535533905932636,
+    "terrainMultiplier": 1,
+    "modes": [
+      "walk"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 0
+  },
+  {
+    "id": "route_t90_bld_bs_carter_loc_bs_zhanxi",
+    "from": "loc_bs_zhanxi",
+    "to": "bld_bs_carter",
+    "lengthKm": 0.055901699437494116,
+    "terrainMultiplier": 1,
+    "modes": [
+      "walk"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 0
+  },
+  {
+    "id": "route_t90_bld_bs_guild_loc_bs_zhanxi",
+    "from": "loc_bs_zhanxi",
+    "to": "bld_bs_guild",
+    "lengthKm": 0.07905694150420906,
+    "terrainMultiplier": 1,
+    "modes": [
+      "walk"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 0
+  },
+  {
+    "id": "route_t90_bld_bs_office_loc_bs_guanqian",
+    "from": "loc_bs_guanqian",
+    "to": "bld_bs_office",
+    "lengthKm": 0.03535533905932639,
+    "terrainMultiplier": 1,
+    "modes": [
+      "walk"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 0
+  },
+  {
+    "id": "route_t90_bld_bs_watch_loc_bs_guanqian",
+    "from": "loc_bs_guanqian",
+    "to": "bld_bs_watch",
+    "lengthKm": 0.0559016994374941,
+    "terrainMultiplier": 1,
+    "modes": [
+      "walk"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 0
+  },
+  {
+    "id": "route_t90_bld_bs_hall_loc_bs_guanqian",
+    "from": "loc_bs_guanqian",
+    "to": "bld_bs_hall",
+    "lengthKm": 0.07905694150420906,
+    "terrainMultiplier": 1,
+    "modes": [
+      "walk"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 0
+  },
+  {
+    "id": "route_t90_bld_bs_market_loc_bs_nanshi",
+    "from": "loc_bs_nanshi",
+    "to": "bld_bs_market",
+    "lengthKm": 0.03535533905932636,
+    "terrainMultiplier": 1,
+    "modes": [
+      "walk"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 0
+  },
+  {
+    "id": "route_t90_bld_bs_oven_loc_bs_nanshi",
+    "from": "loc_bs_nanshi",
+    "to": "bld_bs_oven",
+    "lengthKm": 0.0559016994374941,
+    "terrainMultiplier": 1,
+    "modes": [
+      "walk"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 0
+  },
+  {
+    "id": "route_t90_bld_bs_inn_loc_bs_nanshi",
+    "from": "loc_bs_nanshi",
+    "to": "bld_bs_inn",
+    "lengthKm": 0.07905694150420906,
+    "terrainMultiplier": 1,
+    "modes": [
+      "walk"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 0
+  },
+  {
+    "id": "route_t90_bld_bs_smith_loc_bs_luxiang",
+    "from": "loc_bs_luxiang",
+    "to": "bld_bs_smith",
+    "lengthKm": 0.03535533905932636,
+    "terrainMultiplier": 1,
+    "modes": [
+      "walk"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 0
+  },
+  {
+    "id": "route_t90_bld_bs_potter_loc_bs_luxiang",
+    "from": "loc_bs_luxiang",
+    "to": "bld_bs_potter",
+    "lengthKm": 0.0559016994374941,
+    "terrainMultiplier": 1,
+    "modes": [
+      "walk"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 0
+  },
+  {
+    "id": "route_t90_bld_bs_cloth_loc_bs_luxiang",
+    "from": "loc_bs_luxiang",
+    "to": "bld_bs_cloth",
+    "lengthKm": 0.07905694150420906,
+    "terrainMultiplier": 1,
+    "modes": [
+      "walk"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 0
+  },
+  {
+    "id": "route_t90_bld_bs_school_loc_bs_dongxue",
+    "from": "loc_bs_dongxue",
+    "to": "bld_bs_school",
+    "lengthKm": 0.03535533905932639,
+    "terrainMultiplier": 1,
+    "modes": [
+      "walk"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 0
+  },
+  {
+    "id": "route_t90_bld_bs_temple_loc_bs_dongxue",
+    "from": "loc_bs_dongxue",
+    "to": "bld_bs_temple",
+    "lengthKm": 0.0559016994374941,
+    "terrainMultiplier": 1,
+    "modes": [
+      "walk"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 0
+  },
+  {
+    "id": "route_t90_bld_bs_home_001_loc_bs_hebu",
+    "from": "loc_bs_hebu",
+    "to": "bld_bs_home_001",
+    "lengthKm": 0.056568542494923185,
+    "terrainMultiplier": 1,
+    "modes": [
+      "walk"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 0
+  },
+  {
+    "id": "route_t90_bld_bs_home_002_loc_bs_hebu",
+    "from": "loc_bs_hebu",
+    "to": "bld_bs_home_002",
+    "lengthKm": 0.070455659815234,
+    "terrainMultiplier": 1,
+    "modes": [
+      "walk"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 0
+  },
+  {
+    "id": "route_t90_bld_bs_home_003_loc_bs_hebu",
+    "from": "loc_bs_hebu",
+    "to": "bld_bs_home_003",
+    "lengthKm": 0.085883642214336,
+    "terrainMultiplier": 1,
+    "modes": [
+      "walk"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 0
+  },
+  {
+    "id": "route_t90_bld_bs_home_004_loc_bs_hebu",
+    "from": "loc_bs_hebu",
+    "to": "bld_bs_home_004",
+    "lengthKm": 0.10215674231297489,
+    "terrainMultiplier": 1,
+    "modes": [
+      "walk"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 0
+  },
+  {
+    "id": "route_t90_bld_bs_home_005_loc_bs_hebu",
+    "from": "loc_bs_hebu",
+    "to": "bld_bs_home_005",
+    "lengthKm": 0.11892854997854646,
+    "terrainMultiplier": 1,
+    "modes": [
+      "walk"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 0
+  },
+  {
+    "id": "route_t90_bld_bs_home_006_loc_bs_hebu",
+    "from": "loc_bs_hebu",
+    "to": "bld_bs_home_006",
+    "lengthKm": 0.07045565981523366,
+    "terrainMultiplier": 1,
+    "modes": [
+      "walk"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 0
+  },
+  {
+    "id": "route_t90_bld_bs_home_007_loc_bs_hebu",
+    "from": "loc_bs_hebu",
+    "to": "bld_bs_home_007",
+    "lengthKm": 0.08202438661763939,
+    "terrainMultiplier": 1,
+    "modes": [
+      "walk"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 0
+  },
+  {
+    "id": "route_t90_bld_bs_home_008_loc_bs_hebu",
+    "from": "loc_bs_hebu",
+    "to": "bld_bs_home_008",
+    "lengthKm": 0.09560334722173736,
+    "terrainMultiplier": 1,
+    "modes": [
+      "walk"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 0
+  },
+  {
+    "id": "route_t90_bld_bs_home_009_loc_bs_hebu",
+    "from": "loc_bs_hebu",
+    "to": "bld_bs_home_009",
+    "lengthKm": 0.11045361017187058,
+    "terrainMultiplier": 1,
+    "modes": [
+      "walk"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 0
+  },
+  {
+    "id": "route_t90_bld_bs_home_010_loc_bs_hebu",
+    "from": "loc_bs_hebu",
+    "to": "bld_bs_home_010",
+    "lengthKm": 0.12612692020341898,
+    "terrainMultiplier": 1,
+    "modes": [
+      "walk"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 0
+  },
+  {
+    "id": "route_t90_bld_bs_home_011_loc_bs_hebu",
+    "from": "loc_bs_hebu",
+    "to": "bld_bs_home_011",
+    "lengthKm": 0.08588364221433512,
+    "terrainMultiplier": 1,
+    "modes": [
+      "walk"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 0
+  },
+  {
+    "id": "route_t90_bld_bs_home_012_loc_bs_hebu",
+    "from": "loc_bs_hebu",
+    "to": "bld_bs_home_012",
+    "lengthKm": 0.09560334722173683,
+    "terrainMultiplier": 1,
+    "modes": [
+      "walk"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 0
+  },
+  {
+    "id": "route_t90_bld_bs_home_013_loc_bs_hebu",
+    "from": "loc_bs_hebu",
+    "to": "bld_bs_home_013",
+    "lengthKm": 0.10748023074035555,
+    "terrainMultiplier": 1,
+    "modes": [
+      "walk"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 0
+  },
+  {
+    "id": "route_t90_bld_bs_home_014_loc_bs_hebu",
+    "from": "loc_bs_hebu",
+    "to": "bld_bs_home_014",
+    "lengthKm": 0.12088010589009075,
+    "terrainMultiplier": 1,
+    "modes": [
+      "walk"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 0
+  },
+  {
+    "id": "route_t90_bld_bs_home_015_loc_bs_hebu",
+    "from": "loc_bs_hebu",
+    "to": "bld_bs_home_015",
+    "lengthKm": 0.13535139452550765,
+    "terrainMultiplier": 1,
+    "modes": [
+      "walk"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 0
+  },
+  {
+    "id": "route_t90_bld_bs_home_016_loc_bs_zhanxi",
+    "from": "loc_bs_zhanxi",
+    "to": "bld_bs_home_016",
+    "lengthKm": 0.056568542494923206,
+    "terrainMultiplier": 1,
+    "modes": [
+      "walk"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 0
+  },
+  {
+    "id": "route_t90_bld_bs_home_017_loc_bs_zhanxi",
+    "from": "loc_bs_zhanxi",
+    "to": "bld_bs_home_017",
+    "lengthKm": 0.07045565981523401,
+    "terrainMultiplier": 1,
+    "modes": [
+      "walk"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 0
+  },
+  {
+    "id": "route_t90_bld_bs_home_018_loc_bs_zhanxi",
+    "from": "loc_bs_zhanxi",
+    "to": "bld_bs_home_018",
+    "lengthKm": 0.085883642214336,
+    "terrainMultiplier": 1,
+    "modes": [
+      "walk"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 0
+  },
+  {
+    "id": "route_t90_bld_bs_home_019_loc_bs_zhanxi",
+    "from": "loc_bs_zhanxi",
+    "to": "bld_bs_home_019",
+    "lengthKm": 0.10215674231297489,
+    "terrainMultiplier": 1,
+    "modes": [
+      "walk"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 0
+  },
+  {
+    "id": "route_t90_bld_bs_home_020_loc_bs_zhanxi",
+    "from": "loc_bs_zhanxi",
+    "to": "bld_bs_home_020",
+    "lengthKm": 0.11892854997854646,
+    "terrainMultiplier": 1,
+    "modes": [
+      "walk"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 0
+  },
+  {
+    "id": "route_t90_bld_bs_home_021_loc_bs_zhanxi",
+    "from": "loc_bs_zhanxi",
+    "to": "bld_bs_home_021",
+    "lengthKm": 0.07045565981523366,
+    "terrainMultiplier": 1,
+    "modes": [
+      "walk"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 0
+  },
+  {
+    "id": "route_t90_bld_bs_home_022_loc_bs_zhanxi",
+    "from": "loc_bs_zhanxi",
+    "to": "bld_bs_home_022",
+    "lengthKm": 0.08202438661763939,
+    "terrainMultiplier": 1,
+    "modes": [
+      "walk"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 0
+  },
+  {
+    "id": "route_t90_bld_bs_home_023_loc_bs_zhanxi",
+    "from": "loc_bs_zhanxi",
+    "to": "bld_bs_home_023",
+    "lengthKm": 0.09560334722173736,
+    "terrainMultiplier": 1,
+    "modes": [
+      "walk"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 0
+  },
+  {
+    "id": "route_t90_bld_bs_home_024_loc_bs_zhanxi",
+    "from": "loc_bs_zhanxi",
+    "to": "bld_bs_home_024",
+    "lengthKm": 0.11045361017187058,
+    "terrainMultiplier": 1,
+    "modes": [
+      "walk"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 0
+  },
+  {
+    "id": "route_t90_bld_bs_home_025_loc_bs_zhanxi",
+    "from": "loc_bs_zhanxi",
+    "to": "bld_bs_home_025",
+    "lengthKm": 0.12612692020341898,
+    "terrainMultiplier": 1,
+    "modes": [
+      "walk"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 0
+  },
+  {
+    "id": "route_t90_bld_bs_home_026_loc_bs_zhanxi",
+    "from": "loc_bs_zhanxi",
+    "to": "bld_bs_home_026",
+    "lengthKm": 0.08588364221433514,
+    "terrainMultiplier": 1,
+    "modes": [
+      "walk"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 0
+  },
+  {
+    "id": "route_t90_bld_bs_home_027_loc_bs_zhanxi",
+    "from": "loc_bs_zhanxi",
+    "to": "bld_bs_home_027",
+    "lengthKm": 0.09560334722173687,
+    "terrainMultiplier": 1,
+    "modes": [
+      "walk"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 0
+  },
+  {
+    "id": "route_t90_bld_bs_home_028_loc_bs_zhanxi",
+    "from": "loc_bs_zhanxi",
+    "to": "bld_bs_home_028",
+    "lengthKm": 0.10748023074035558,
+    "terrainMultiplier": 1,
+    "modes": [
+      "walk"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 0
+  },
+  {
+    "id": "route_t90_bld_bs_home_029_loc_bs_zhanxi",
+    "from": "loc_bs_zhanxi",
+    "to": "bld_bs_home_029",
+    "lengthKm": 0.12088010589009075,
+    "terrainMultiplier": 1,
+    "modes": [
+      "walk"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 0
+  },
+  {
+    "id": "route_t90_bld_bs_home_030_loc_bs_zhanxi",
+    "from": "loc_bs_zhanxi",
+    "to": "bld_bs_home_030",
+    "lengthKm": 0.13535139452550768,
+    "terrainMultiplier": 1,
+    "modes": [
+      "walk"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 0
+  },
+  {
+    "id": "route_t90_bld_bs_home_031_loc_bs_guanqian",
+    "from": "loc_bs_guanqian",
+    "to": "bld_bs_home_031",
+    "lengthKm": 0.056568542494923206,
+    "terrainMultiplier": 1,
+    "modes": [
+      "walk"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 0
+  },
+  {
+    "id": "route_t90_bld_bs_home_032_loc_bs_guanqian",
+    "from": "loc_bs_guanqian",
+    "to": "bld_bs_home_032",
+    "lengthKm": 0.07045565981523401,
+    "terrainMultiplier": 1,
+    "modes": [
+      "walk"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 0
+  },
+  {
+    "id": "route_t90_bld_bs_home_033_loc_bs_guanqian",
+    "from": "loc_bs_guanqian",
+    "to": "bld_bs_home_033",
+    "lengthKm": 0.08588364221433602,
+    "terrainMultiplier": 1,
+    "modes": [
+      "walk"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 0
+  },
+  {
+    "id": "route_t90_bld_bs_home_034_loc_bs_guanqian",
+    "from": "loc_bs_guanqian",
+    "to": "bld_bs_home_034",
+    "lengthKm": 0.1021567423129749,
+    "terrainMultiplier": 1,
+    "modes": [
+      "walk"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 0
+  },
+  {
+    "id": "route_t90_bld_bs_home_035_loc_bs_guanqian",
+    "from": "loc_bs_guanqian",
+    "to": "bld_bs_home_035",
+    "lengthKm": 0.11892854997854646,
+    "terrainMultiplier": 1,
+    "modes": [
+      "walk"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 0
+  },
+  {
+    "id": "route_t90_bld_bs_home_036_loc_bs_guanqian",
+    "from": "loc_bs_guanqian",
+    "to": "bld_bs_home_036",
+    "lengthKm": 0.07045565981523366,
+    "terrainMultiplier": 1,
+    "modes": [
+      "walk"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 0
+  },
+  {
+    "id": "route_t90_bld_bs_home_037_loc_bs_guanqian",
+    "from": "loc_bs_guanqian",
+    "to": "bld_bs_home_037",
+    "lengthKm": 0.08202438661763939,
+    "terrainMultiplier": 1,
+    "modes": [
+      "walk"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 0
+  },
+  {
+    "id": "route_t90_bld_bs_home_038_loc_bs_guanqian",
+    "from": "loc_bs_guanqian",
+    "to": "bld_bs_home_038",
+    "lengthKm": 0.09560334722173736,
+    "terrainMultiplier": 1,
+    "modes": [
+      "walk"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 0
+  },
+  {
+    "id": "route_t90_bld_bs_home_039_loc_bs_guanqian",
+    "from": "loc_bs_guanqian",
+    "to": "bld_bs_home_039",
+    "lengthKm": 0.11045361017187058,
+    "terrainMultiplier": 1,
+    "modes": [
+      "walk"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 0
+  },
+  {
+    "id": "route_t90_bld_bs_home_040_loc_bs_guanqian",
+    "from": "loc_bs_guanqian",
+    "to": "bld_bs_home_040",
+    "lengthKm": 0.12612692020341898,
+    "terrainMultiplier": 1,
+    "modes": [
+      "walk"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 0
+  },
+  {
+    "id": "route_t90_bld_bs_home_041_loc_bs_guanqian",
+    "from": "loc_bs_guanqian",
+    "to": "bld_bs_home_041",
+    "lengthKm": 0.08588364221433517,
+    "terrainMultiplier": 1,
+    "modes": [
+      "walk"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 0
+  },
+  {
+    "id": "route_t90_bld_bs_home_042_loc_bs_guanqian",
+    "from": "loc_bs_guanqian",
+    "to": "bld_bs_home_042",
+    "lengthKm": 0.09560334722173687,
+    "terrainMultiplier": 1,
+    "modes": [
+      "walk"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 0
+  },
+  {
+    "id": "route_t90_bld_bs_home_043_loc_bs_guanqian",
+    "from": "loc_bs_guanqian",
+    "to": "bld_bs_home_043",
+    "lengthKm": 0.1074802307403556,
+    "terrainMultiplier": 1,
+    "modes": [
+      "walk"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 0
+  },
+  {
+    "id": "route_t90_bld_bs_home_044_loc_bs_guanqian",
+    "from": "loc_bs_guanqian",
+    "to": "bld_bs_home_044",
+    "lengthKm": 0.12088010589009078,
+    "terrainMultiplier": 1,
+    "modes": [
+      "walk"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 0
+  },
+  {
+    "id": "route_t90_bld_bs_home_045_loc_bs_guanqian",
+    "from": "loc_bs_guanqian",
+    "to": "bld_bs_home_045",
+    "lengthKm": 0.13535139452550768,
+    "terrainMultiplier": 1,
+    "modes": [
+      "walk"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 0
+  },
+  {
+    "id": "route_t90_bld_bs_home_046_loc_bs_nanshi",
+    "from": "loc_bs_nanshi",
+    "to": "bld_bs_home_046",
+    "lengthKm": 0.056568542494923185,
+    "terrainMultiplier": 1,
+    "modes": [
+      "walk"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 0
+  },
+  {
+    "id": "route_t90_bld_bs_home_047_loc_bs_nanshi",
+    "from": "loc_bs_nanshi",
+    "to": "bld_bs_home_047",
+    "lengthKm": 0.070455659815234,
+    "terrainMultiplier": 1,
+    "modes": [
+      "walk"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 0
+  },
+  {
+    "id": "route_t90_bld_bs_home_048_loc_bs_nanshi",
+    "from": "loc_bs_nanshi",
+    "to": "bld_bs_home_048",
+    "lengthKm": 0.085883642214336,
+    "terrainMultiplier": 1,
+    "modes": [
+      "walk"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 0
+  },
+  {
+    "id": "route_t90_bld_bs_home_049_loc_bs_nanshi",
+    "from": "loc_bs_nanshi",
+    "to": "bld_bs_home_049",
+    "lengthKm": 0.10215674231297489,
+    "terrainMultiplier": 1,
+    "modes": [
+      "walk"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 0
+  },
+  {
+    "id": "route_t90_bld_bs_home_050_loc_bs_nanshi",
+    "from": "loc_bs_nanshi",
+    "to": "bld_bs_home_050",
+    "lengthKm": 0.11892854997854646,
+    "terrainMultiplier": 1,
+    "modes": [
+      "walk"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 0
+  },
+  {
+    "id": "route_t90_bld_bs_home_051_loc_bs_nanshi",
+    "from": "loc_bs_nanshi",
+    "to": "bld_bs_home_051",
+    "lengthKm": 0.07045565981523366,
+    "terrainMultiplier": 1,
+    "modes": [
+      "walk"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 0
+  },
+  {
+    "id": "route_t90_bld_bs_home_052_loc_bs_nanshi",
+    "from": "loc_bs_nanshi",
+    "to": "bld_bs_home_052",
+    "lengthKm": 0.08202438661763939,
+    "terrainMultiplier": 1,
+    "modes": [
+      "walk"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 0
+  },
+  {
+    "id": "route_t90_bld_bs_home_053_loc_bs_nanshi",
+    "from": "loc_bs_nanshi",
+    "to": "bld_bs_home_053",
+    "lengthKm": 0.09560334722173736,
+    "terrainMultiplier": 1,
+    "modes": [
+      "walk"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 0
+  },
+  {
+    "id": "route_t90_bld_bs_home_054_loc_bs_nanshi",
+    "from": "loc_bs_nanshi",
+    "to": "bld_bs_home_054",
+    "lengthKm": 0.11045361017187058,
+    "terrainMultiplier": 1,
+    "modes": [
+      "walk"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 0
+  },
+  {
+    "id": "route_t90_bld_bs_home_055_loc_bs_nanshi",
+    "from": "loc_bs_nanshi",
+    "to": "bld_bs_home_055",
+    "lengthKm": 0.12612692020341898,
+    "terrainMultiplier": 1,
+    "modes": [
+      "walk"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 0
+  },
+  {
+    "id": "route_t90_bld_bs_home_056_loc_bs_nanshi",
+    "from": "loc_bs_nanshi",
+    "to": "bld_bs_home_056",
+    "lengthKm": 0.08588364221433512,
+    "terrainMultiplier": 1,
+    "modes": [
+      "walk"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 0
+  },
+  {
+    "id": "route_t90_bld_bs_home_057_loc_bs_nanshi",
+    "from": "loc_bs_nanshi",
+    "to": "bld_bs_home_057",
+    "lengthKm": 0.09560334722173683,
+    "terrainMultiplier": 1,
+    "modes": [
+      "walk"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 0
+  },
+  {
+    "id": "route_t90_bld_bs_home_058_loc_bs_nanshi",
+    "from": "loc_bs_nanshi",
+    "to": "bld_bs_home_058",
+    "lengthKm": 0.10748023074035555,
+    "terrainMultiplier": 1,
+    "modes": [
+      "walk"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 0
+  },
+  {
+    "id": "route_t90_bld_bs_home_059_loc_bs_nanshi",
+    "from": "loc_bs_nanshi",
+    "to": "bld_bs_home_059",
+    "lengthKm": 0.12088010589009075,
+    "terrainMultiplier": 1,
+    "modes": [
+      "walk"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 0
+  },
+  {
+    "id": "route_t90_bld_bs_home_060_loc_bs_nanshi",
+    "from": "loc_bs_nanshi",
+    "to": "bld_bs_home_060",
+    "lengthKm": 0.13535139452550765,
+    "terrainMultiplier": 1,
+    "modes": [
+      "walk"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 0
+  },
+  {
+    "id": "route_t90_bld_bs_home_061_loc_bs_luxiang",
+    "from": "loc_bs_luxiang",
+    "to": "bld_bs_home_061",
+    "lengthKm": 0.056568542494923185,
+    "terrainMultiplier": 1,
+    "modes": [
+      "walk"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 0
+  },
+  {
+    "id": "route_t90_bld_bs_home_062_loc_bs_luxiang",
+    "from": "loc_bs_luxiang",
+    "to": "bld_bs_home_062",
+    "lengthKm": 0.070455659815234,
+    "terrainMultiplier": 1,
+    "modes": [
+      "walk"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 0
+  },
+  {
+    "id": "route_t90_bld_bs_home_063_loc_bs_luxiang",
+    "from": "loc_bs_luxiang",
+    "to": "bld_bs_home_063",
+    "lengthKm": 0.085883642214336,
+    "terrainMultiplier": 1,
+    "modes": [
+      "walk"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 0
+  },
+  {
+    "id": "route_t90_bld_bs_home_064_loc_bs_luxiang",
+    "from": "loc_bs_luxiang",
+    "to": "bld_bs_home_064",
+    "lengthKm": 0.10215674231297489,
+    "terrainMultiplier": 1,
+    "modes": [
+      "walk"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 0
+  },
+  {
+    "id": "route_t90_bld_bs_home_065_loc_bs_luxiang",
+    "from": "loc_bs_luxiang",
+    "to": "bld_bs_home_065",
+    "lengthKm": 0.11892854997854646,
+    "terrainMultiplier": 1,
+    "modes": [
+      "walk"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 0
+  },
+  {
+    "id": "route_t90_bld_bs_home_066_loc_bs_luxiang",
+    "from": "loc_bs_luxiang",
+    "to": "bld_bs_home_066",
+    "lengthKm": 0.07045565981523366,
+    "terrainMultiplier": 1,
+    "modes": [
+      "walk"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 0
+  },
+  {
+    "id": "route_t90_bld_bs_home_067_loc_bs_luxiang",
+    "from": "loc_bs_luxiang",
+    "to": "bld_bs_home_067",
+    "lengthKm": 0.08202438661763939,
+    "terrainMultiplier": 1,
+    "modes": [
+      "walk"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 0
+  },
+  {
+    "id": "route_t90_bld_bs_home_068_loc_bs_luxiang",
+    "from": "loc_bs_luxiang",
+    "to": "bld_bs_home_068",
+    "lengthKm": 0.09560334722173736,
+    "terrainMultiplier": 1,
+    "modes": [
+      "walk"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 0
+  },
+  {
+    "id": "route_t90_bld_bs_home_069_loc_bs_luxiang",
+    "from": "loc_bs_luxiang",
+    "to": "bld_bs_home_069",
+    "lengthKm": 0.11045361017187058,
+    "terrainMultiplier": 1,
+    "modes": [
+      "walk"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 0
+  },
+  {
+    "id": "route_t90_bld_bs_home_070_loc_bs_luxiang",
+    "from": "loc_bs_luxiang",
+    "to": "bld_bs_home_070",
+    "lengthKm": 0.12612692020341898,
+    "terrainMultiplier": 1,
+    "modes": [
+      "walk"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 0
+  },
+  {
+    "id": "route_t90_bld_bs_home_071_loc_bs_luxiang",
+    "from": "loc_bs_luxiang",
+    "to": "bld_bs_home_071",
+    "lengthKm": 0.08588364221433512,
+    "terrainMultiplier": 1,
+    "modes": [
+      "walk"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 0
+  },
+  {
+    "id": "route_t90_bld_bs_home_072_loc_bs_luxiang",
+    "from": "loc_bs_luxiang",
+    "to": "bld_bs_home_072",
+    "lengthKm": 0.09560334722173683,
+    "terrainMultiplier": 1,
+    "modes": [
+      "walk"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 0
+  },
+  {
+    "id": "route_t90_bld_bs_home_073_loc_bs_luxiang",
+    "from": "loc_bs_luxiang",
+    "to": "bld_bs_home_073",
+    "lengthKm": 0.10748023074035555,
+    "terrainMultiplier": 1,
+    "modes": [
+      "walk"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 0
+  },
+  {
+    "id": "route_t90_bld_bs_home_074_loc_bs_luxiang",
+    "from": "loc_bs_luxiang",
+    "to": "bld_bs_home_074",
+    "lengthKm": 0.12088010589009075,
+    "terrainMultiplier": 1,
+    "modes": [
+      "walk"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 0
+  },
+  {
+    "id": "route_t90_bld_bs_home_075_loc_bs_luxiang",
+    "from": "loc_bs_luxiang",
+    "to": "bld_bs_home_075",
+    "lengthKm": 0.13535139452550765,
+    "terrainMultiplier": 1,
+    "modes": [
+      "walk"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 0
+  },
+  {
+    "id": "route_t90_bld_bs_home_076_loc_bs_dongxue",
+    "from": "loc_bs_dongxue",
+    "to": "bld_bs_home_076",
+    "lengthKm": 0.056568542494923206,
+    "terrainMultiplier": 1,
+    "modes": [
+      "walk"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 0
+  },
+  {
+    "id": "route_t90_bld_bs_home_077_loc_bs_dongxue",
+    "from": "loc_bs_dongxue",
+    "to": "bld_bs_home_077",
+    "lengthKm": 0.07045565981523401,
+    "terrainMultiplier": 1,
+    "modes": [
+      "walk"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 0
+  },
+  {
+    "id": "route_t90_bld_bs_home_078_loc_bs_dongxue",
+    "from": "loc_bs_dongxue",
+    "to": "bld_bs_home_078",
+    "lengthKm": 0.08588364221433602,
+    "terrainMultiplier": 1,
+    "modes": [
+      "walk"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 0
+  },
+  {
+    "id": "route_t90_bld_bs_home_079_loc_bs_dongxue",
+    "from": "loc_bs_dongxue",
+    "to": "bld_bs_home_079",
+    "lengthKm": 0.1021567423129749,
+    "terrainMultiplier": 1,
+    "modes": [
+      "walk"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 0
+  },
+  {
+    "id": "route_t90_bld_bs_home_080_loc_bs_dongxue",
+    "from": "loc_bs_dongxue",
+    "to": "bld_bs_home_080",
+    "lengthKm": 0.11892854997854646,
+    "terrainMultiplier": 1,
+    "modes": [
+      "walk"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 0
+  },
+  {
+    "id": "route_t90_bld_bs_home_081_loc_bs_dongxue",
+    "from": "loc_bs_dongxue",
+    "to": "bld_bs_home_081",
+    "lengthKm": 0.07045565981523366,
+    "terrainMultiplier": 1,
+    "modes": [
+      "walk"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 0
+  },
+  {
+    "id": "route_t90_bld_bs_home_082_loc_bs_dongxue",
+    "from": "loc_bs_dongxue",
+    "to": "bld_bs_home_082",
+    "lengthKm": 0.08202438661763939,
+    "terrainMultiplier": 1,
+    "modes": [
+      "walk"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 0
+  },
+  {
+    "id": "route_t90_bld_bs_home_083_loc_bs_dongxue",
+    "from": "loc_bs_dongxue",
+    "to": "bld_bs_home_083",
+    "lengthKm": 0.09560334722173736,
+    "terrainMultiplier": 1,
+    "modes": [
+      "walk"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 0
+  },
+  {
+    "id": "route_t90_bld_bs_home_084_loc_bs_dongxue",
+    "from": "loc_bs_dongxue",
+    "to": "bld_bs_home_084",
+    "lengthKm": 0.11045361017187058,
+    "terrainMultiplier": 1,
+    "modes": [
+      "walk"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 0
+  },
+  {
+    "id": "route_t90_bld_bs_home_085_loc_bs_dongxue",
+    "from": "loc_bs_dongxue",
+    "to": "bld_bs_home_085",
+    "lengthKm": 0.12612692020341898,
+    "terrainMultiplier": 1,
+    "modes": [
+      "walk"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 0
+  },
+  {
+    "id": "route_t90_bld_bs_home_086_loc_bs_dongxue",
+    "from": "loc_bs_dongxue",
+    "to": "bld_bs_home_086",
+    "lengthKm": 0.08588364221433517,
+    "terrainMultiplier": 1,
+    "modes": [
+      "walk"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 0
+  },
+  {
+    "id": "route_t90_bld_bs_home_087_loc_bs_dongxue",
+    "from": "loc_bs_dongxue",
+    "to": "bld_bs_home_087",
+    "lengthKm": 0.09560334722173687,
+    "terrainMultiplier": 1,
+    "modes": [
+      "walk"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 0
+  },
+  {
+    "id": "route_t90_bld_bs_home_088_loc_bs_dongxue",
+    "from": "loc_bs_dongxue",
+    "to": "bld_bs_home_088",
+    "lengthKm": 0.1074802307403556,
+    "terrainMultiplier": 1,
+    "modes": [
+      "walk"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 0
+  },
+  {
+    "id": "route_t90_bld_bs_home_089_loc_bs_dongxue",
+    "from": "loc_bs_dongxue",
+    "to": "bld_bs_home_089",
+    "lengthKm": 0.12088010589009078,
+    "terrainMultiplier": 1,
+    "modes": [
+      "walk"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 0
+  },
+  {
+    "id": "route_t90_bld_bs_home_090_loc_bs_dongxue",
+    "from": "loc_bs_dongxue",
+    "to": "bld_bs_home_090",
+    "lengthKm": 0.13535139452550768,
+    "terrainMultiplier": 1,
+    "modes": [
+      "walk"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 0
+  },
+  {
+    "id": "route_t90_bld_bs_shrine_loc_bs_dongxue",
+    "from": "loc_bs_dongxue",
+    "to": "bld_bs_shrine",
+    "lengthKm": 0.24999999999999942,
+    "terrainMultiplier": 1,
+    "modes": [
+      "walk"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 0
+  }
+]

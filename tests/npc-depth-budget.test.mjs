@@ -10,6 +10,16 @@ const legacy={spentYuan:1.10760808,reservedYuan:.083736,limitYuan:2.94801504,sou
 const allocation={waveLimitYuan:20,incrementLimitYuan:2,startingSpentYuan:.9480150399999996,startingReservedYuan:0,limitYuan:2.9480150399999996};
 const next={waveLimitYuan:20,incrementLimitYuan:3,startingSpentYuan:1.10760808,startingReservedYuan:.083736};
 const near=(a,b)=>assert.ok(Math.abs(a-b)<1e-10,`${a} != ${b}`);
+test('T90次数与金额在同一历史账守恒，未发预留退款，换revision不重领',async t=>{
+ const {file}=await temporary(t,{spentYuan:.50579544,reservedYuan:0,limitYuan:20});
+ const a={cardId:'T90',waveLimitYuan:20,incrementLimitYuan:8,maxRequests:2,startingSpentYuan:.50579544,startingReservedYuan:0};
+ let client=mock(.1),budget=await openContentBudget({file,client,cardId:'T90',allocation:a});
+ const cancelled=await budget.reserveRound([{body:{},label:'unsent'}]);await budget.releaseRound(cancelled);
+ await budget.request({},'review1');await budget.request({},'review2');await assert.rejects(budget.request({},'review3'),/次数上限/);
+ assert.equal(client.calls,2);near(budget.ledger.spentYuan,.70579544);near(budget.ledger.cards.T90.spentYuan,.2);await budget.close();
+ client=mock(.001);budget=await openContentBudget({file,client,cardId:'T90',allocation:a});await assert.rejects(budget.request({},'new-revision'),/次数上限/);assert.equal(client.calls,0);await budget.close();
+ await assert.rejects(openContentBudget({file,client,cardId:'T90',allocation:{...a,maxRequests:3}}),/额度已改变/);
+});
 async function temporary(t,ledger=legacy){const dir=await fs.mkdtemp(path.join(os.tmpdir(),'depth-budget-')),file=path.join(dir,'budget.json');t.after(()=>fs.rm(dir,{recursive:true,force:true}));await fs.writeFile(file,JSON.stringify(ledger));return{dir,file};}
 function mock(ceiling,cost=ceiling){return{calls:0,estimateCostYuan:()=>ceiling,spent:0,reserved:0,budgetYuan:20,async generate(){this.calls++;this.spent+=cost;return{measurement:{costUpperYuan:cost}};}};}
 test('25元波次仍按完整上界拒发，保留未知预留及原单卡费用',async t=>{
