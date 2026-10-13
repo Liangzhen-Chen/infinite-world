@@ -408,9 +408,7 @@ T28-R1修好新回执undefined规范化并保留严格篡改拒绝，相关31/32
 
 ### T79 已完成：任务、约定、领地三面板与/ui/affairs只读投影，按期限排序、收发筛选、公账展示；界面测试25/25、CORE40，截图在docs/测试报告/最新/M6-05/。缺口归R07：玩家发单额度与村级领地签发入口尚未实现，面板对缺记录显示“未登记”。
 
-### T80 开始游戏与续玩：玩家能继续或创建角色，管理存档与设置，进入后看到对应开场或前情提要。
-可改新 E/start/play-town.html、play-town.js、play-town.css，E/runtime.js、tools/deploy-engine.mjs，T/runtime.test.mjs、新 T/m6-06.test.mjs；现酒馆页面仅作参考，隔离包提供同名新入口。复用 /create、/export、/import 及04的可见历史；前情提要用已发生事实确定性编排，开场复用原有具体细节，加载知识取已发布世界内容，备份含笔记与设置。
-验收：node --test tests/runtime.test.mjs tests/m6-06.test.mjs；node --test tests/engine.test.mjs tests/storage.test.mjs tests/plugin.test.mjs。浏览器完成创建→固定回复发送→保存→导入→继续，截图含开始页和前情；禁止连接测试触发付费调用；模型0，预计3小时，1会话。
+### T80 已完成：开始页可继续或创建角色（姓名、性别、外貌背景、六项属性），保存与导入含笔记和设置的备份，进入后显示开场或前情提要；界面测试14/14、CORE40，截图在docs/测试报告/最新/M6-06/。
 
 ### T81 四级地图与出行预览：玩家能缩放和标记已知地图，比较路线，选中后仅将出行意图填入输入框。
 可改 E/runtime.js，新建 E/map-view.mjs、map-view.css；S/index.mjs、新 S/ui-map.mjs，必要时 S/engine.mjs 的只读路线计算接点；world/geo/、T/runtime.test.mjs、新 T/m6-07.test.mjs。增 /ui/map 与 /ui/routes，从 geo、discoveries 和可靠获知记录投影四级层次及三类迷雾；复用季节／天气路线计算提供不同可行路线、费用和风险，未知风险明确标未知；补已发布地点的层级映射，不新增远方世界。
