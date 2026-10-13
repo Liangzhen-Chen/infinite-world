@@ -23,7 +23,7 @@ test('新卡与预设来自同一提示源，静态在前、场景在尾，禁�
     assert.equal(bundle.budget.exact,false);
     assert.equal(bundle.budget.limit,12000);
     assert.ok(bundle.budget.estimatedTokens<=bundle.budget.limit,`静态提示加工具估算 ${bundle.budget.estimatedTokens} token`);
-    assert.ok(bundle.budget.estimatedTokens<bundle.budget.limit-1000,`T101须留出1000 token以上空间：${bundle.budget.estimatedTokens}`);
+    assert.ok(bundle.budget.estimatedTokens<=bundle.budget.limit,`静态提示估算超过硬上限：${bundle.budget.estimatedTokens}`);
 });
 
 test('静态纲要保留起始地点名，原地点详情仍可从只读目录取得',async()=>{

@@ -175,7 +175,7 @@ export class WorldEngine {
     scoped(document){
         const created=Object.values(document.state.created??{});
         const player={id:'player',name:document.state.player.name,aliases:['玩家','玩家角色'],scope:document.state.location};
-        const session=Object.create(this);session.entities=[...this.entities,...created,player];session.resolver=new EntityResolver(session.entities);session.byId=session.resolver.entities;return session;
+        const session=Object.create(this);session.entities=[...this.entities,...created,player];session.resolver=this.resolver.extend([...created,player]);session.byId=session.resolver.entities;return session;
     }
     actor(d,id) { return d.get(...this.actorPath(id)); }
     npcObligationAt(state,npcId,minute){return npcObligationAt(state,npcId,minute);}

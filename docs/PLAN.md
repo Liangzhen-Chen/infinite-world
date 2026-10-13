@@ -658,7 +658,7 @@ C部分只拆缺口：governance.mjs的任职入口止于“待上级决定”�
 
 ### T136（T31a）已完成：17轮记忆场景与M2–M9的HTTP准备及评分，四种查询在裁历史前后命中同一事实；0模型。
 
-### T137（T31b） M3文风与时间场景。结果：V1–V7及问题文档里的具体时间误述、场外尾注、凭空成品和示例冒充经历均有可评分的真实场景。可改tests/playtests/m3_language.json、新tests/m3-language.test.mjs、prompt/、一致性审查必要接点及docs/问题.md叙述段；只定点修正，不重写已审核人物。验收node --test tests/m3-language.test.mjs "tests/m3-consistency*.test.mjs" tests/m2-npc-prompt.test.mjs tests/prompt.test.mjs "tests/playtest-*.test.mjs"，CORE。模型0；约2小时，接T31a并与所有提示写者串行，静态≤11900；问题仅凭后续真实通过结果关闭。
+### T137（T31b）已完成：18轮文风与时间场景及V1–V7分项评分接入真实报告；0模型。提示估算约11100（硬上限12000）。问题文档里的叙述问题须T138真实复验后才关闭。
 
 ### T138（T32a） M3短程真实复验。结果：M2–M9和V1–V7取得当前完整提示栈的真实结论。可改docs/测试报告/m3-mv/及运行产物，代码和旧报告锁定；依赖T31a/b及T99结论，若相关缺陷仍存在先由原责任卡修。验收npm run test:playtests -- --only m3_memory,m3_language,reconcile,world_upgrade,out_of_character --repeat 1 --parallel 1 --run-dir docs/测试报告/m3-mv --run-id m3-mv --card T32a --increment 8；CORE。每场8–20自然轮，账本/时间/存档及M6–M9为100%，V≥95%，陈词≤0.5次/千字。真实预计180–350次调用，≤8元；约1小时整理加后台运行，独占模型槽。
 
@@ -680,7 +680,7 @@ M8分批路线：R16按3–9章随功能卡补现有PLAN的入口/测试/缺口�
 
 ### T144（F3） 研究成果登记为可施放法术。结果：多日研究完成后，玩家可提交由现有原语组成的法术，经规则裁定后学会并实际施放。可改server-plugin/activities.mjs、magic/learning及实体解析接点、tools/create-schemas.mjs、extension/tools.mjs、新tests/runtime-spell-research.test.mjs；锁定正式法术目录，接D2，复用现有九族而不增加自由代码效果。验收node --test tests/runtime-spell-research.test.mjs tests/runtime-invention.test.mjs tests/activities.test.mjs tests/learning.test.mjs "tests/magic*.test.mjs" tests/prompt.test.mjs，CORE。模型0；约2.5小时，与创造/法术接点串行，静态≤11900。
 
-### T145（F4） 真实存储与提示组装规模性能。结果：在10000事件、5000消息下维持提交≤10ms、对账≤500ms、提示组装≤150ms，存档每1000回合增长≤30MB。可改tools/benchmark-storage.mjs、新tools/benchmark-context.mjs、新tests/performance.test.mjs及测量定位到的storage/history-window/runtime热点，锁定内容与模型提示语义；同文件有功能卡时串行。验收node tools/benchmark-storage.mjs；node tools/benchmark-context.mjs --messages 5000；node --test tests/performance.test.mjs "tests/history-window*.test.mjs" tests/runtime.test.mjs tests/prompt.test.mjs；CORE。模型0；约2小时，使用隔离合成数据，性能不足在本卡修实际热点。
+### T145（F4）部分完成：存储达标（一万事件下提交1.21ms、对账36ms、每千回合增长2.17MB）；提示组装单独运行最慢101ms达标（门槛150ms），但与其他测试同跑、机器有负载时首次189ms超时，两种修法后按规则停止。基准脚本与热点修正已合入。性能测试对机器负载敏感，里程碑收尾时在空闲机器上单独复核。
 
 ### R06 W1 白石镇与 LOD0 人口、建筑、地方生活【待细化】
 

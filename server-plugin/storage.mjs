@@ -3,9 +3,13 @@ import path from 'node:path';
 import { createHash, randomUUID } from 'node:crypto';
 
 export function canonical(value) {
+    return canonicalValue(value);
+}
+function canonicalValue(value, serialized = null) {
     if (value === null || typeof value !== 'object') return JSON.stringify(value);
-    if (Array.isArray(value)) return `[${value.map(canonical).join(',')}]`;
-    return `{${Object.keys(value).sort().map(key => `${JSON.stringify(key)}:${canonical(value[key])}`).join(',')}}`;
+    if (serialized?.has(value)) return serialized.get(value);
+    if (Array.isArray(value)) return `[${value.map(item => canonicalValue(item, serialized)).join(',')}]`;
+    return `{${Object.keys(value).sort().map(key => `${JSON.stringify(key)}:${canonicalValue(value[key], serialized)}`).join(',')}}`;
 }
 export const digest = value => createHash('sha256').update(typeof value === 'string' ? value : canonical(value)).digest('hex');
 const unsafe = new Set(['__proto__', 'prototype', 'constructor']);
@@ -134,8 +138,11 @@ export class CampaignStorage {
         });
     }
     async snapshot(id, state) {
-        const data = { sequence: state.sequence, revision: state.revision, document: state.document, checksum: digest(state.document), head: state.head, activeSequences: [...state.active] };
-        data.envelopeHash = digest(data);
+        // Reuse serialization only within this snapshot. Both hashes retain
+        // their existing canonical format, with no cache across mutations.
+        const documentText = canonical(state.document);
+        const data = { sequence: state.sequence, revision: state.revision, document: state.document, checksum: digest(documentText), head: state.head, activeSequences: [...state.active] };
+        data.envelopeHash = digest(canonicalValue(data, new Map([[state.document, documentText]])));
         await atomicJSON(path.join(this.directory(id), 'snapshots', `${String(state.sequence).padStart(10, '0')}-${state.revision}.json`), data);
     }
     async replay(id, state, before) {
