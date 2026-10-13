@@ -2,11 +2,11 @@ import fs from'node:fs/promises';
 import path from'node:path';
 import {DeepSeekClient}from'./deepseek-client.mjs';
 import {loadPromptBundle}from'./build-card.mjs';
-import {createPlaytestServer,runPlaytest}from'./playtest-runner.mjs';
+import {createPlaytestServer,runPlaytest,preparePlaytestSession}from'./playtest-runner.mjs';
 import {atomicJSON}from'../server-plugin/storage.mjs';
 import {digest}from'../server-plugin/storage.mjs';
 import {loadHostPromptProcessor}from'./host-prompt.mjs';
-import {toolSelectionMetrics,playtestAcceptance,playtestExitCode}from'./playtest-metrics.mjs';
+import {toolSelectionMetrics,playtestAcceptance,playtestExitCode,summarizeMemoryAcceptance}from'./playtest-metrics.mjs';
 import {reviewPlaytest}from'./playtest-review.mjs';
 import {reviewNpcRequirements,summarizeNpcAcceptance}from'./npc-acceptance.mjs';
 import * as OpenCC from'opencc-js';
@@ -76,6 +76,7 @@ function summary(){const assertions=results.reduce((n,row)=>n+row.assertions,0),
     calls:{total:calls.length,rejected:calls.filter(call=>call.result?.ok===false).length},
     toolSelection:toolSelectionMetrics(results,scenarios),
     m2:summarizeNpcAcceptance(results,scenarios,repetitions),
+    m3:summarizeMemoryAcceptance(results,scenarios,repetitions),
     requests:{total:modelCalls.length,settled:requests.length,unknown:modelCalls.filter(row=>row.status==='unknown').length,medianMs:latencies[Math.floor(latencies.length/2)]??null,p95Ms:latencies[Math.min(latencies.length-1,Math.floor(latencies.length*.95))]??null},
     runId,cardId,incrementLimitYuan:increment,budgetFile:client.file,
     modelRoles:Object.fromEntries([...new Set(modelCalls.map(row=>row.role))].map(role=>[role,{calls:modelCalls.filter(row=>row.role===role).length,costUpperYuan:modelCalls.filter(row=>row.role===role).reduce((n,row)=>n+(row.costUpperYuan??row.reservedYuan),0)}])),
@@ -124,8 +125,12 @@ try{
             try{
                 if(!retestOnly.length&&task.gameResult&&!task.gameResult.turns.some(row=>row.errors.length))result=structuredClone(task.gameResult);
                 else{
+                    if(scenario.initial?.requiresSession&&(!task.initialSession||retestOnly.length)){
+                        task.initialSession=await preparePlaytestSession({scenario,api:server.api,directory:server.directory});
+                        await atomicJSON(taskFile,task);
+                    }
                     const tape=await openPlaytestTape({file:taskFile+(retestOnly.length?'.retest.tape.json':'.tape.json'),identity:{runId,cardId,scenario,attempt,promptHash:identity.promptHash,...(retestOnly.length?{retest:1}:{})},api:server.api,client});
-                    result=await runPlaytest({scenario,attempt,api:tape.api,client:tape.client,bundle,processMessages:host.process,countTokens,stopOnFailure:true});
+                    result=await runPlaytest({scenario,attempt,api:tape.api,client:tape.client,bundle,processMessages:host.process,countTokens,session:task.initialSession,stopOnFailure:true});
                     task.gameResult=structuredClone(result);await atomicJSON(taskFile,task);
                 }
             }

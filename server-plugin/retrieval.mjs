@@ -1,6 +1,7 @@
 import * as OpenCC from 'opencc-js';
 import {RETRIEVAL_DICTIONARY,expandRetrievalText,prepareRetrievalRecord,isSystemMemoryText} from './retrieval-lexicon.mjs';
 import {publicSettlementEntries} from './settlement-profile.mjs';
+import {siteKnowledge} from './sites.mjs';
 const convert = OpenCC.Converter({ from: 'tw', to: 'cn' });
 export const normalize = text => convert(String(text)).toLowerCase().replaceAll('帐', '账').normalize('NFKC');
 export function validateMemory(content) {
@@ -84,6 +85,19 @@ export class MemoryIndex {
             wanted.add(row.id);this.upsert({...row,revision:JSON.stringify(row)});
         }
         for(const id of this.documents.keys())if(id.startsWith('settlement_')&&!wanted.has(id))this.remove(id);
+    }
+    syncSites(world,document){
+        const wanted=new Set();
+        for(const place of world.locations.filter(place=>place.site))for(const clue of place.site.clues??[]){
+            const evidence=document?.state.records?.[`site_discovery:${place.id}:${clue.id}`];
+            if(evidence?.category!=='site_discovery'||evidence.actor!=='player'||evidence.site!==place.id||evidence.clue!==clue.id||!evidence.sourceEvent)continue;
+            const id=`site_fact:${place.id}:${clue.id}`;wanted.add(id);
+            this.upsert({id,text:evidence.text,source:'遗迹发现',entities:[place.id],eventId:evidence.sourceEvent,minute:evidence.minute,verified:true,revision:JSON.stringify(evidence)});
+        }
+        for(const truth of siteKnowledge(world,document)){
+            wanted.add(truth.id);this.upsert({...truth,text:`${truth.name}：${truth.text}`,source:'遗迹发现',entities:[truth.site,...truth.history?[truth.history]:[]],revision:JSON.stringify(truth)});
+        }
+        for(const id of this.documents.keys())if((id.startsWith('site_truth:')||id.startsWith('site_fact:'))&&!wanted.has(id))this.remove(id);
     }
     syncChat(chat) {
         // Edits invalidate their message through editChat; ordinary refreshes

@@ -2,17 +2,42 @@ import {MemoryIndex} from './retrieval.mjs';
 import {scheduleAt,advanceWithNpcParticipants} from './npc-schedule.mjs';
 
 const awake=n=>n&&!n.scheduleTravel&&!n.cognitionTravel&&!['死亡','濒死','昏迷','患病'].includes(n.status)&&!/睡眠|睡觉|熟睡/.test(n.activity??'');
-const registered=engine=>engine.world.settlementProfiles?.flatMap(p=>p.details?.rumors??[])??[];
+const registered=engine=>[...engine.world.settlementProfiles?.flatMap(p=>p.details?.rumors??[])??[],...engine.world.rumors??[]];
 
 // Authored seeds belong only to their registered speaker/carriers. No static
 // profile or automatically propagated memory is changed by this projection.
-export function npcRumors(engine,id){
-    return registered(engine).filter(r=>r.source===id||r.carriers?.includes(id))
-        .map(r=>({id:r.id,claim:r.claim,source:r.source,reliability:'未核实'}));
+export function npcRumors(engine,id,document=null){
+    const seeds=registered(engine),registeredIds=new Set(seeds.map(r=>r.id));
+    const rows=new Map(seeds.filter(r=>r.source===id||r.carriers?.includes(id))
+        .map(r=>[r.id,{id:r.id,claim:r.claim,source:r.source,reliability:'未核实'}]));
+    const npc=document?.state.npcs[id];
+    for(const memory of npc?.memoryStream??[]){
+        if(memory.kind!=='rumor'||!memory.rumor||memory.minute>document.state.minute||memory.private||['private','secret'].includes(memory.visibility))continue;
+        if(!registeredIds.has(memory.rumor)||rows.has(memory.rumor))continue;
+        rows.set(memory.rumor,{id:memory.rumor,claim:npc.cognition?.blurred?.[memory.id]?.content??memory.content,
+            source:memory.rumorSource,reliability:'未核实',memoryId:memory.id,rootMemoryId:memory.rootMemoryId,
+            transmissionChain:rumorChainView(memory.transmissionChain)});
+    }
+    return [...rows.values()];
 }
 
-export function selectNpcRumors(engine,id,query=''){
-    const rows=npcRumors(engine,id),index=new MemoryIndex({entities:engine.entities});
+// A holder knows their received version and its provenance, not every earlier
+// wording retained in the objective transmission record.
+export function rumorChainView(chain=[]){
+    return chain.map(hop=>({from:hop.from,to:hop.to,minute:hop.minute,channel:hop.channel,...(hop.messageId?{messageId:hop.messageId}:{})}));
+}
+
+// Registration establishes opening knowledge, not an encounter. Only claim is
+// exposed to the existing NPC planning/communication path; author truth stays out.
+export function npcRumorSeeds(engine,id){
+    return npcRumors(engine,id).map(r=>({id:`rumor_seed:${r.id}:${id}`,rootMemoryId:`rumor_seed:${r.id}:${r.source}`,
+        rumor:r.id,rumorSource:r.source,sourceEvent:`rumor_registration:${r.id}`,kind:'rumor',minute:0,occurredAt:0,
+        content:r.claim,sourceType:'听说',salience:2,participants:[],reliability:'未核实',
+        transmissionChain:id===r.source?[]:[{from:r.source,to:id,minute:0,channel:'registered',content:r.claim,distortion:'开局已登记的携带者版本'}]}));
+}
+
+export function selectNpcRumors(engine,id,query='',document=null){
+    const rows=npcRumors(engine,id,document),index=new MemoryIndex({entities:engine.entities});
     for(const row of rows)index.upsert({id:row.id,text:row.claim,keywords:[row.id,'传闻'],entities:[id]});
     const selected=new Set(index.search(query,{present:[id],limit:2}).map(r=>r.id));
     return rows.filter(r=>selected.has(r.id));
@@ -36,19 +61,23 @@ export function hearNpcRumor(d,engine,args,eventId){
     const subject=engine.resolve(args.subject),speaker=engine.resolve(args.source,'npc');
     if(subject!=='player')throw Error('传闻获知主体须为玩家');
     if(args.key!==args.rumor)throw Error('传闻编号与记忆key须一致');
-    const rumor=npcRumors(engine,speaker).find(r=>r.id===args.rumor);
+    const rumor=npcRumors(engine,speaker,d.document).find(r=>r.id===args.rumor);
     if(!rumor)throw Error('讲述者没有这条登记传闻');
     if(args.content!==rumor.claim)throw Error('传闻内容须与登记claim一致，不能请求真相或改写');
     const memoryId=`player::${rumor.id}::${speaker}`,old=d.get('memories',memoryId);
     if(old?.rumor===rumor.id&&old.source===speaker)return{memoryId,duplicate:true,rumor:old.rumor,source:speaker,content:old.content,reliability:'未核实'};
     assertRumorConversation(d,engine,speaker);
     const location=d.get('state','location'),start=d.get('state','minute');
+    const origin=npcRumorSeeds(engine,speaker).find(r=>r.rumor===rumor.id);
+    const rootMemoryId=rumor.rootMemoryId??origin.rootMemoryId;
+    const transmissionChain=[...rumor.transmissionChain??origin.transmissionChain,{from:speaker,to:'player',minute:start,channel:'conversation',content:rumor.claim,distortion:'保留讲述者版本'}];
     // Ten minutes is the existing ordinary turn duration. Reserve the speaker
     // after validating the entire interval, as with other joint activities.
     advanceWithNpcParticipants(d,engine,10,eventId,[speaker]);
     const content=`${d.get('state','player','name')}在${engine.byId.get(location)?.name??location}于${engine.calendar(start).text}听到${engine.byId.get(speaker).name}说：“${rumor.claim}”；尚未核实。`;
     const memory={subject,key:rumor.id,rumor:rumor.id,content,source:speaker,sourceEvent:eventId,sourceType:'听说',reliability:'未核实',
-        minute:d.get('state','minute'),location,participants:['player',speaker],keywords:[],pinned:false};
+        minute:d.get('state','minute'),location,participants:['player',speaker],keywords:[],pinned:false,
+        rumorSource:rumor.source,rootMemoryId,transmissionChain};
     d.set(['memories',memoryId],memory);
-    return{memoryId,rumor:rumor.id,source:speaker,content,reliability:'未核实',minutes:10};
+    return{memoryId,rumor:rumor.id,source:speaker,content,reliability:'未核实',minutes:10,rootMemoryId,transmissionChain};
 }

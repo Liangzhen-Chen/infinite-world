@@ -2,6 +2,7 @@ import { applyPatches, canonical } from './storage.mjs';
 import { EntityResolver, validateMemory } from './retrieval.mjs';
 import {assertLocationAccess,homePermission}from'./location-access.mjs';
 import {activities}from'./activities.mjs';
+import {validateSites}from'./sites.mjs';
 import {WorldEngine as Phase1Engine}from'./compat/v2-phase1-engine.mjs';
 import {learn}from'./learning.mjs';
 import {prepareMagic,applyMagic}from'./magic.mjs';
@@ -64,6 +65,7 @@ class Draft {
 export class WorldEngine {
     constructor(world) {
         this.world = world; this.rules = world.rules;
+        const siteErrors=validateSites(world);if(siteErrors.length)throw Error(siteErrors.join('；'));
         if(![1,2].includes(this.rules.engineRevision??1))throw new Error('此世界使用尚不支持的引擎版本，停止加载');
         this.entities = [...world.npcs,...world.residents??[],...world.locations,...world.items,...world.professions,...world.skills,...world.spells,...world.recipes??[],...world.monsters??[],...world.bosses??[],...world.cultures??[],...world.deities??[],...world.factions??[],...world.history??[],...world.factionPeople??[],...world.eras??[]];
         this.resolver = new EntityResolver(this.entities);
@@ -125,7 +127,7 @@ export class WorldEngine {
         const resolved=resolveToolCall(input.tool,input.args??{});
         const d = new Draft(document), args=resolved.args, id=text(input.eventId,120);
         const tool=resolved.tool.replace(/^world_/, '');
-        const readOperations={weather:'inspect',environment:'inspect',pet:'inspect',summon:'inspect',farm:'inspect',wildlife:'observe',lair:'observe'};
+        const readOperations={weather:'inspect',environment:'inspect',pet:'inspect',summon:'inspect',farm:'inspect',wildlife:'observe',lair:'observe',site:'inspect'};
         const noTimeTurn=tool==='turn'&&(args.outOfCharacter||args.extraMinutes===0);
         if(noTimeTurn||(readOperations[tool]&&(args.operation??readOperations[tool])===readOperations[tool])){
             const detail=await this.scoped(document)[tool](d,args,id);
@@ -148,6 +150,7 @@ export class WorldEngine {
         }
         settleMagicAreas(d,session);
         const detail = await session[tool](d,args,id);
+        if(document.state.location!==d.get('state','location')&&d.get('state','records','site_presence'))d.remove(['state','records','site_presence']);
         settleMagicAreas(d,session);
         advancePets(d,session,d.get('state','minute'));
         advanceSummons(d,d.get('state','minute'));
@@ -213,7 +216,7 @@ export class WorldEngine {
     }
     advance(d,minutes,id) {
         minutes=number(minutes,0,43200,'耗时');
-        if(['trade','learn','practice','profession','craft','repair','research','cast','pet','summon','environment','farm','wildlife'].includes(this.npcObligationAction?.tool))assertNpcObligationAction(d,this,['player'],{minutes});
+        if(['trade','learn','practice','profession','craft','repair','research','cast','pet','summon','environment','farm','wildlife','site'].includes(this.npcObligationAction?.tool))assertNpcObligationAction(d,this,['player'],{minutes});
         const end=d.get('state','minute')+minutes;
         initializeWorldClocks(d,this,d.get('state','minute'),end);
         advanceSettlementTrade(d,this,d.get('state','minute'));

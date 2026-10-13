@@ -76,6 +76,7 @@ export async function init(router,{ world=null, baseRoot=null, newCampaignSeed=r
         }
         const index=indexes.get(key),wanted=new Set();
         index.syncSettlements(selectedEngine.world,document);
+        index.syncSites(selectedEngine.world,document);
         for(const row of publicLoreEntries(selectedEngine.world))index.upsert({
             id:`lore_${row.id}`,text:`${row.name}：${row.description}`,source:'公开世界设定',entities:[row.id,...row.references??[]],
             keywords:row.aliases??[],salience:2,revision:digest(row)});
