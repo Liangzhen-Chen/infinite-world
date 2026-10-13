@@ -4,9 +4,9 @@
   "formalSpellCount": 31,
   "counts": {
     "reviewed-unpublished": 2,
-    "consumer-ready": 38,
+    "consumer-ready": 56,
     "published": 30,
-    "missing-consumer": 84
+    "missing-consumer": 66
   },
   "rows": [
     {
@@ -809,49 +809,55 @@
       "name": "聚光术",
       "mechanism": "focus_light",
       "originalEffect": "把已有光束集中到一处，不提供额外热能",
-      "status": "missing-consumer",
-      "handler": null,
-      "validation": [
-        "此法术机制尚未接入规则，不能叙述已实现"
-      ],
-      "evidence": "缺对应光路/表面证据/材料腐蚀/契约反制消费者；现有刻记不提供检测或遮蔽。"
+      "status": "consumer-ready",
+      "handler": {
+        "kind": "optics",
+        "operation": "focus_light",
+        "power": 80
+      },
+      "validation": [],
+      "evidence": "server-plugin/magic-light.mjs、正常施法/环境/战斗/移动消费者与tests/magic-light.test.mjs；未进行内容审核或正式发布"
     },
     {
       "id": "spell_light_02",
       "name": "读痕术",
       "mechanism": "reveal_wear",
       "originalEffect": "使材料表面磨损更易看清，不读取人的内心",
-      "status": "missing-consumer",
-      "handler": null,
-      "validation": [
-        "此法术机制尚未接入规则，不能叙述已实现"
-      ],
-      "evidence": "缺对应光路/表面证据/材料腐蚀/契约反制消费者；现有刻记不提供检测或遮蔽。"
+      "status": "consumer-ready",
+      "handler": {
+        "kind": "optics",
+        "operation": "reveal_wear",
+        "power": 1
+      },
+      "validation": [],
+      "evidence": "server-plugin/magic-light.mjs、正常施法/环境/战斗/移动消费者与tests/magic-light.test.mjs；未进行内容审核或正式发布"
     },
     {
       "id": "spell_light_03",
       "name": "暮灯术",
       "mechanism": "light",
       "originalEffect": "在掌心生成柔光，可被遮挡和熄灭",
-      "status": "missing-consumer",
+      "status": "consumer-ready",
       "handler": {
         "kind": "light",
         "power": 2
       },
       "validation": [],
-      "evidence": "现有照明必须绑定单件持有物，无法在掌心生成、遮挡和熄灭。"
+      "evidence": "server-plugin/magic-light.mjs、正常施法/环境/战斗/移动消费者与tests/magic-light.test.mjs；未进行内容审核或正式发布"
     },
     {
       "id": "spell_light_04",
       "name": "反照印",
       "mechanism": "reflect",
       "originalEffect": "使一块标记从特定方向反光",
-      "status": "missing-consumer",
-      "handler": null,
-      "validation": [
-        "此法术机制尚未接入规则，不能叙述已实现"
-      ],
-      "evidence": "缺对应光路/表面证据/材料腐蚀/契约反制消费者；现有刻记不提供检测或遮蔽。"
+      "status": "consumer-ready",
+      "handler": {
+        "kind": "optics",
+        "operation": "reflect",
+        "power": 50
+      },
+      "validation": [],
+      "evidence": "server-plugin/magic-light.mjs、正常施法/环境/战斗/移动消费者与tests/magic-light.test.mjs；未进行内容审核或正式发布"
     },
     {
       "id": "spell_light_05",
@@ -872,60 +878,70 @@
       "name": "辨色谱",
       "mechanism": "color",
       "originalEffect": "拆分矿物与染料的色泽，需提供样品",
-      "status": "missing-consumer",
-      "handler": null,
-      "validation": [
-        "此法术机制尚未接入规则，不能叙述已实现"
-      ],
-      "evidence": "缺对应光路/表面证据/材料腐蚀/契约反制消费者；现有刻记不提供检测或遮蔽。"
+      "status": "consumer-ready",
+      "handler": {
+        "kind": "optics",
+        "operation": "color",
+        "power": 1
+      },
+      "validation": [],
+      "evidence": "server-plugin/magic-light.mjs、正常施法/环境/战斗/移动消费者与tests/magic-light.test.mjs；未进行内容审核或正式发布"
     },
     {
       "id": "spell_light_07",
       "name": "清影线",
       "mechanism": "shadow_measure",
       "originalEffect": "在墙面显示投影边缘，有助于制图和测量",
-      "status": "missing-consumer",
-      "handler": null,
-      "validation": [
-        "此法术机制尚未接入规则，不能叙述已实现"
-      ],
-      "evidence": "缺对应光路/表面证据/材料腐蚀/契约反制消费者；现有刻记不提供检测或遮蔽。"
+      "status": "consumer-ready",
+      "handler": {
+        "kind": "optics",
+        "operation": "shadow_measure",
+        "power": 1
+      },
+      "validation": [],
+      "evidence": "server-plugin/magic-light.mjs、正常施法/环境/战斗/移动消费者与tests/magic-light.test.mjs；未进行内容审核或正式发布"
     },
     {
       "id": "spell_light_08",
       "name": "光幕术",
       "mechanism": "light_screen",
       "originalEffect": "遮蔽一侧视线，幕另一边仍能听到声音",
-      "status": "missing-consumer",
-      "handler": null,
-      "validation": [
-        "此法术机制尚未接入规则，不能叙述已实现"
-      ],
-      "evidence": "缺区域内多目标、持续触发及跨边界解除/友军波及消费者。"
+      "status": "consumer-ready",
+      "handler": {
+        "kind": "optics",
+        "operation": "light_screen",
+        "power": 1
+      },
+      "validation": [],
+      "evidence": "server-plugin/magic-light.mjs、正常施法/环境/战斗/移动消费者与tests/magic-light.test.mjs；未进行内容审核或正式发布"
     },
     {
       "id": "spell_light_09",
       "name": "镜面步标",
       "mechanism": "waymark",
       "originalEffect": "为已知路线留下短期可追踪光点，不能指向未知终点",
-      "status": "missing-consumer",
-      "handler": null,
-      "validation": [
-        "此法术机制尚未接入规则，不能叙述已实现"
-      ],
-      "evidence": "缺对应光路/表面证据/材料腐蚀/契约反制消费者；现有刻记不提供检测或遮蔽。"
+      "status": "consumer-ready",
+      "handler": {
+        "kind": "optics",
+        "operation": "waymark",
+        "power": 1
+      },
+      "validation": [],
+      "evidence": "server-plugin/magic-light.mjs、正常施法/环境/战斗/移动消费者与tests/magic-light.test.mjs；未进行内容审核或正式发布"
     },
     {
       "id": "spell_light_10",
       "name": "斑痕追照",
       "mechanism": "trace",
       "originalEffect": "照出近日留下的浅表污痕，不给出行为者身份",
-      "status": "missing-consumer",
-      "handler": null,
-      "validation": [
-        "此法术机制尚未接入规则，不能叙述已实现"
-      ],
-      "evidence": "缺对应光路/表面证据/材料腐蚀/契约反制消费者；现有刻记不提供检测或遮蔽。"
+      "status": "consumer-ready",
+      "handler": {
+        "kind": "optics",
+        "operation": "trace",
+        "power": 1440
+      },
+      "validation": [],
+      "evidence": "server-plugin/magic-light.mjs、正常施法/环境/战斗/移动消费者与tests/magic-light.test.mjs；未进行内容审核或正式发布"
     },
     {
       "id": "spell_light_11",
@@ -946,48 +962,58 @@
       "name": "破雾光",
       "mechanism": "fog_light",
       "originalEffect": "提高薄雾内可见度，浓雾仍限制距离",
-      "status": "missing-consumer",
-      "handler": null,
-      "validation": [
-        "此法术机制尚未接入规则，不能叙述已实现"
-      ],
-      "evidence": "缺对应光路/表面证据/材料腐蚀/契约反制消费者；现有刻记不提供检测或遮蔽。"
+      "status": "consumer-ready",
+      "handler": {
+        "kind": "optics",
+        "operation": "fog_light",
+        "power": 2
+      },
+      "validation": [],
+      "evidence": "server-plugin/magic-light.mjs、正常施法/环境/战斗/移动消费者与tests/magic-light.test.mjs；未进行内容审核或正式发布"
     },
     {
       "id": "spell_light_13",
       "name": "昼辉束",
       "mechanism": "beam",
       "originalEffect": "凝成灼目的光束，对有视觉的目标更有效",
-      "status": "missing-consumer",
-      "handler": null,
-      "validation": [
-        "此法术机制尚未接入规则，不能叙述已实现"
-      ],
-      "evidence": "缺对应光路/表面证据/材料腐蚀/契约反制消费者；现有刻记不提供检测或遮蔽。"
+      "status": "consumer-ready",
+      "handler": {
+        "kind": "damage",
+        "power": 40,
+        "damageType": "light",
+        "armorFactor": 0.25,
+        "lightDecay": true
+      },
+      "validation": [],
+      "evidence": "server-plugin/magic-light.mjs、正常施法/环境/战斗/移动消费者与tests/magic-light.test.mjs；未进行内容审核或正式发布"
     },
     {
       "id": "spell_light_14",
       "name": "显形环",
       "mechanism": "reveal",
       "originalEffect": "照出靠光学伪装隐藏的轮廓，不能破除所有精神幻象",
-      "status": "missing-consumer",
-      "handler": null,
-      "validation": [
-        "此法术机制尚未接入规则，不能叙述已实现"
-      ],
-      "evidence": "缺对应光路/表面证据/材料腐蚀/契约反制消费者；现有刻记不提供检测或遮蔽。"
+      "status": "consumer-ready",
+      "handler": {
+        "kind": "optics",
+        "operation": "reveal",
+        "power": 1
+      },
+      "validation": [],
+      "evidence": "server-plugin/magic-light.mjs、正常施法/环境/战斗/移动消费者与tests/magic-light.test.mjs；未进行内容审核或正式发布"
     },
     {
       "id": "spell_shadow_01",
       "name": "遮灯术",
       "mechanism": "dim",
       "originalEffect": "压暗一盏光源，不改变其燃烧耗氧",
-      "status": "missing-consumer",
-      "handler": null,
-      "validation": [
-        "此法术机制尚未接入规则，不能叙述已实现"
-      ],
-      "evidence": "缺对应光路/表面证据/材料腐蚀/契约反制消费者；现有刻记不提供检测或遮蔽。"
+      "status": "consumer-ready",
+      "handler": {
+        "kind": "optics",
+        "operation": "dim",
+        "power": 90
+      },
+      "validation": [],
+      "evidence": "server-plugin/magic-light.mjs、正常施法/环境/战斗/移动消费者与tests/magic-light.test.mjs；未进行内容审核或正式发布"
     },
     {
       "id": "spell_shadow_02",
@@ -1033,38 +1059,44 @@
       "name": "遮窥帘",
       "mechanism": "privacy",
       "originalEffect": "阻碍通过小缝隙窥视，公开开门即可看清",
-      "status": "missing-consumer",
-      "handler": null,
-      "validation": [
-        "此法术机制尚未接入规则，不能叙述已实现"
-      ],
-      "evidence": "缺区域内多目标、持续触发及跨边界解除/友军波及消费者。"
+      "status": "consumer-ready",
+      "handler": {
+        "kind": "optics",
+        "operation": "privacy",
+        "power": 1
+      },
+      "validation": [],
+      "evidence": "server-plugin/magic-light.mjs、正常施法/环境/战斗/移动消费者与tests/magic-light.test.mjs；未进行内容审核或正式发布"
     },
     {
       "id": "spell_shadow_06",
       "name": "影足绊",
       "mechanism": "bind_shadow",
       "originalEffect": "在阴影内扰乱脚步，强光和离开阴影可解除",
-      "status": "missing-consumer",
-      "handler": null,
-      "validation": [
-        "此法术机制尚未接入规则，不能叙述已实现"
-      ],
-      "evidence": "缺区域内多目标、持续触发及跨边界解除/友军波及消费者。"
+      "status": "consumer-ready",
+      "handler": {
+        "kind": "optics",
+        "operation": "bind_shadow",
+        "power": 1
+      },
+      "validation": [],
+      "evidence": "server-plugin/magic-light.mjs、正常施法/环境/战斗/移动消费者与tests/magic-light.test.mjs；未进行内容审核或正式发布"
     },
     {
       "id": "spell_shadow_07",
       "name": "暗刺术",
       "mechanism": "damage_shadow",
       "originalEffect": "射出凝结暗影，穿过强光时迅速衰减",
-      "status": "missing-consumer",
+      "status": "consumer-ready",
       "handler": {
         "kind": "damage",
-        "power": 16,
-        "damageType": "shadow"
+        "power": 40,
+        "damageType": "shadow",
+        "armorFactor": 0.25,
+        "shadowDecay": true
       },
       "validation": [],
-      "evidence": "通用伤害没有沿途强光衰减。"
+      "evidence": "server-plugin/magic-light.mjs、正常施法/环境/战斗/移动消费者与tests/magic-light.test.mjs；未进行内容审核或正式发布"
     },
     {
       "id": "spell_shadow_08",
@@ -1097,12 +1129,14 @@
       "name": "影分术",
       "mechanism": "decoy",
       "originalEffect": "制造外观分影，影子不能拿物或替人受全部伤害",
-      "status": "missing-consumer",
-      "handler": null,
-      "validation": [
-        "此法术机制尚未接入规则，不能叙述已实现"
-      ],
-      "evidence": "缺对应光路/表面证据/材料腐蚀/契约反制消费者；现有刻记不提供检测或遮蔽。"
+      "status": "consumer-ready",
+      "handler": {
+        "kind": "optics",
+        "operation": "decoy",
+        "power": 3
+      },
+      "validation": [],
+      "evidence": "server-plugin/magic-light.mjs、正常施法/环境/战斗/移动消费者与tests/magic-light.test.mjs；未进行内容审核或正式发布"
     },
     {
       "id": "spell_shadow_11",
@@ -1133,12 +1167,14 @@
       "name": "黑幕阵",
       "mechanism": "dark_area",
       "originalEffect": "遮暗有限空间，施法者也需另有感知办法",
-      "status": "missing-consumer",
-      "handler": null,
-      "validation": [
-        "此法术机制尚未接入规则，不能叙述已实现"
-      ],
-      "evidence": "缺区域内多目标、持续触发及跨边界解除/友军波及消费者。"
+      "status": "consumer-ready",
+      "handler": {
+        "kind": "optics",
+        "operation": "dark_area",
+        "power": 90
+      },
+      "validation": [],
+      "evidence": "server-plugin/magic-light.mjs、正常施法/环境/战斗/移动消费者与tests/magic-light.test.mjs；未进行内容审核或正式发布"
     },
     {
       "id": "spell_shadow_14",

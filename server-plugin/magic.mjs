@@ -17,6 +17,7 @@ import {validateObjectCatalog,prepareObjectMagic,applyObjectMagic,validateHeatCa
 import {validateAirCatalog,prepareAirMagic,applyAirMagic,prepareWindObject,applyWindObject,windArmorMultiplier}from'./magic-air.mjs';
 import {validateWaterEarthCatalog,prepareWaterEarthMagic,applyWaterEarthMagic,prepareStone,launchStone,waterEarthState}from'./magic-water-earth.mjs';
 import {projectileAirPenalty}from'./magic-air.mjs';
+import {validateLightCatalog,prepareLight,applyLight,prepareOptics,applyOptics,lightDamageMultiplier}from'./magic-light.mjs';
 export function validateMagicCatalog(catalog,{requireHandler=false}={}){
     const spec=catalog.effectSpec,errors=[];
     if(!spec){if(requireHandler||catalog.mechanism)errors.push('此法术机制尚未接入规则，不能叙述已实现');return errors;}
@@ -36,6 +37,8 @@ export function validateMagicCatalog(catalog,{requireHandler=false}={}){
     if(spec.kind==='heat')errors.push(...validateHeatCatalog(catalog));
     if(spec.kind==='air')errors.push(...validateAirCatalog(catalog));
     if(spec.kind==='water_earth')errors.push(...validateWaterEarthCatalog(catalog));
+    if(['optics','light'].includes(spec.kind))errors.push(...validateLightCatalog(catalog));
+    if((spec.lightDecay||spec.shadowDecay)&&(!catalog.targeting||catalog.duration!==0||!Number.isFinite(catalog.rangeMeters)||catalog.rangeMeters>40))errors.push('光束须声明实际目标边界、有限射程且为瞬时伤害');
     if(spec.stoneProjectile&&(!catalog.targeting||catalog.duration!==0||catalog.rangeMeters>20))errors.push('石弹须声明实际目标边界、有限射程且为瞬时伤害');
     if(spec.windBlade&&(!catalog.targeting||catalog.duration!==0))errors.push('风刃须声明实际目标边界且为瞬时伤害');
     if(spec.coldDecay&&(!catalog.targeting||catalog.duration!==0))errors.push('冰针须声明真实目标边界且为瞬时伤害');
@@ -44,6 +47,8 @@ export function validateMagicCatalog(catalog,{requireHandler=false}={}){
 export function prepareMagic(d,catalog,args,context={}){
     const errors=validateMagicCatalog(catalog);if(errors.length)throw new Error(errors.join('；'));
     const spec=catalog.effectSpec;if(!spec)return null;
+    if(spec.kind==='light')return prepareLight.call(this,d,catalog,args);
+    if(spec.kind==='optics')return prepareOptics.call(this,d,catalog,args);
     if(spec.kind==='water_earth')return prepareWaterEarthMagic.call(this,d,catalog,args);
     if(spec.stoneProjectile&&args.target?.startsWith('feature_'))return{stone:prepareStone.call(this,d,catalog,args),target:args.target,spec,catalog,stoneObject:true};
     if(spec.kind==='air')return prepareAirMagic.call(this,d,catalog,args);
@@ -93,6 +98,8 @@ export function prepareMagic(d,catalog,args,context={}){
 export function applyMagic(d,prepared,id){
     if(!prepared)return{};
     let{spec,target,path,catalog}=prepared;
+    if(spec.kind==='light')return applyLight.call(this,d,prepared,id);
+    if(spec.kind==='optics')return applyOptics.call(this,d,prepared,id);
     if(prepared.windObject)return applyWindObject.call(this,d,prepared);
     if(spec.kind==='water_earth')return applyWaterEarthMagic.call(this,d,prepared,id);
     if(prepared.stoneObject){
@@ -145,7 +152,7 @@ export function applyMagic(d,prepared,id){
     const projectile=prepared.stone?launchStone(d,prepared.stone,id):{};
     const protection=magicStatusStats(d,target),resistance=protection[`${spec.damageType}Resistance`]??0;
     const tactic=`magic_${spec.damageType??'untyped'}`,counter=spec.kind==='damage'?bossCounter(d,this,target,tactic):{damageMultiplier:1};
-    const heatMultiplier=spec.coldDecay?coldHeatMultiplier(prepared.ambientC):spec.windBlade?windArmorMultiplier(current.armorMaterial??this.byId.get(target)?.armorMaterial):prepared.stone?1+projectileAirPenalty(d,target,prepared.stone.massGrams*1000):1;
+    const heatMultiplier=spec.lightDecay||spec.shadowDecay?lightDamageMultiplier(d,this,target,spec):spec.coldDecay?coldHeatMultiplier(prepared.ambientC):spec.windBlade?windArmorMultiplier(current.armorMaterial??this.byId.get(target)?.armorMaterial):prepared.stone?1+projectileAirPenalty(d,target,prepared.stone.massGrams*1000):1;
     const resolved=resolveVitalityPrimitive({spec,hp:old,maxHp:maximum,defense:prepared.derived.defense+protection.defense,resistance,multiplier:counter.damageMultiplier*heatMultiplier});
     const shield=spec.kind==='damage'?consumeMagicProtection(d,target,resolved.rawAmount,spec.damageType??'physical'):{damage:0,absorbed:0};
     const next=spec.kind==='damage'?Math.max(0,old-shield.damage):resolved.nextHp;
@@ -164,5 +171,5 @@ export function applyMagic(d,prepared,id){
     const corpse=killed?recordWildlifeDeath(d,this,target,id):null,lair=killed?defeatBoss(d,this,target,id):null;
     if(corpse&&(prepared.context?.source??'player')!=='player')d.set(['state','creatures',target,'corpse','killedBy'],prepared.context.source);
     const experience=killed&&(prepared.context?.source??'player')==='player'?monsterReward(d,this,target,id):{};
-    return{target,[spec.kind==='heal'?'healed':'damage']:Math.abs(next-old),targetHp:next,...experience,...projectile,...(spec.coldDecay?{ambientC:prepared.ambientC,heatMultiplier}:{}),...(shield.absorbed?{absorbed:shield.absorbed,protectionEffect:shield.effect}:{}),...(corpse?{corpse}:{}),...(lair?{lair}:{}),...(counter.adapted?{adaptation:{tactic,guarded:true}}:{})};
+    return{target,[spec.kind==='heal'?'healed':'damage']:Math.abs(next-old),targetHp:next,...experience,...projectile,...(spec.coldDecay?{ambientC:prepared.ambientC,heatMultiplier}:{}),...(spec.lightDecay||spec.shadowDecay?{lightMultiplier:heatMultiplier}:{}),...(shield.absorbed?{absorbed:shield.absorbed,protectionEffect:shield.effect}:{}),...(corpse?{corpse}:{}),...(lair?{lair}:{}),...(counter.adapted?{adaptation:{tactic,guarded:true}}:{})};
 }

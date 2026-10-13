@@ -14,7 +14,7 @@ import {prepareNpcDepth} from '../tools/publish-npc-depth.mjs';
 const read=f=>fs.readFile(f,'utf8').then(JSON.parse),write=(f,v)=>fs.writeFile(f,JSON.stringify(v,null,2)+'\n'),near=(a,b)=>assert.ok(Math.abs(a-b)<1e-10);
 test('T09来源追加授权不重写原预算版本、额度、历史请求或次数',async()=>{
  const manifest=await read('world/design/w1-reopen-authorization.json'),{sourceAuthorizations,...prior}=manifest;
- assert.equal(sourceAuthorizations.length,1);assert.equal(sourceAuthorizations[0].date,'2026-10-13');
+ assert.equal(sourceAuthorizations.filter(a=>a.cardId==='T09').length,1);assert.ok(sourceAuthorizations.every(a=>a.date==='2026-10-13'));
  assert.deepEqual(reopenAuthorizationVersion(manifest,hashContent(prior)),prior);
  const ledger=await read('world/drafts/m4-object/budget.json'),allocation=ledger.reopenAuthorizations[manifest.id].cards.T09.allocation;
  const next=grantDepthBudget(ledger,'T09',allocation,manifest);assert.deepEqual(next,ledger);

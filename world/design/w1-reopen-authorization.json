@@ -2286,6 +2286,14 @@
       "file": "complete-003/speech-source-authorization.json",
       "hash": "0dab46ec125f72978e183df271a91f61c2a1e98389d0a8ed33fb613b2450b988",
       "source": "2026-10-13 主会话放行 T09 shared_11 池杉/查悦的发言归属及同步四叶，保留旧记录；费用和次数沿原授权。"
+    },
+    {
+      "cardId": "T08",
+      "date": "2026-10-13",
+      "parentManifestHash": "f23eb0e7c49f472e75e47fce1946469e6c906a6314e9bf341aa6b77a2bfd3195",
+      "file": "../../complete-003/source-authorization.json",
+      "hash": "2945b32d31337bdfd1c16115544019817d7923305741666c0a7d01e990547441",
+      "source": "2026-10-13用户解除停止线，主会话直接授予沙萝及五人readback共享叶权限；仅公开本人确认原则，不传播旧秘密，原账和六次上限保留。"
     }
   ]
 }
