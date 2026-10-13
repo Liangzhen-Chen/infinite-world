@@ -23,7 +23,7 @@
       ]
     },
     {
-      "input": "我提出替林穗买十份燕麦并送来，约定总报酬二十铜，买粮多出的费用由我承担。请她明确是否同意这份私人委托，同意的话就登记并托管报酬，现在不交货。",
+      "input": "我提出替林穗买十份燕麦并送来，约定总报酬二十铜，买粮多出的费用由我承担。请她明确是否同意这份私人委托，同意的话本轮只发布并托管报酬，我下一轮再承接，现在不接单、不交货。",
       "assertions": [
         {
           "kind": "records",
@@ -38,6 +38,27 @@
             "objective.quantity": 10
           },
           "min": 1
+        },
+        {
+          "kind": "calls",
+          "tool": "world_quest",
+          "args": {
+            "operation": "publish",
+            "reward": 20,
+            "objective.type": "deliver",
+            "objective.quantity": 10
+          },
+          "success": true,
+          "min": 1
+        },
+        {
+          "kind": "calls",
+          "tool": "world_quest",
+          "args": {
+            "operation": "accept"
+          },
+          "min": 0,
+          "max": 0
         }
       ]
     },
@@ -60,6 +81,15 @@
           "where": {
             "kind": "quest"
           },
+          "min": 1
+        },
+        {
+          "kind": "calls",
+          "tool": "world_quest",
+          "args": {
+            "operation": "accept"
+          },
+          "success": true,
           "min": 1
         }
       ],
@@ -135,6 +165,17 @@
           "kind": "delta",
           "path": "state.settlements.loc_hw.food",
           "value": -10
+        },
+        {
+          "kind": "calls",
+          "tool": "world_field",
+          "args": {
+            "operation": "farm_buy",
+            "quantity": 10,
+            "settlement": "loc_hw"
+          },
+          "success": true,
+          "min": 1
         }
       ],
       "expectedTools": [
@@ -199,6 +240,15 @@
             "status": "已完成",
             "escrow": 0
           },
+          "min": 1
+        },
+        {
+          "kind": "calls",
+          "tool": "world_quest",
+          "args": {
+            "operation": "complete"
+          },
+          "success": true,
           "min": 1
         }
       ],

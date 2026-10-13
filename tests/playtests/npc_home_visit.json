@@ -24,6 +24,15 @@
           "npcs": [
             "npc_hw_miaozhen"
           ]
+        },
+        {
+          "kind": "calls",
+          "tool": "world_time",
+          "args": {
+            "minutes": 30
+          },
+          "success": true,
+          "min": 1
         }
       ],
       "expectedTools": [
@@ -57,6 +66,16 @@
             "grantee": "player",
             "revoked": false
           },
+          "min": 1
+        },
+        {
+          "kind": "calls",
+          "tool": "world_promise",
+          "args": {
+            "operation": "grant_access",
+            "minutes": 60
+          },
+          "success": true,
           "min": 1
         }
       ]
@@ -106,6 +125,15 @@
             "state.inventory",
             "state.player.coins"
           ]
+        },
+        {
+          "kind": "calls",
+          "tool": "world_time",
+          "args": {
+            "minutes": 60
+          },
+          "success": true,
+          "min": 1
         }
       ],
       "expectedTools": [
@@ -113,7 +141,7 @@
       ]
     },
     {
-      "input": "我走出筛种院，回到河湾村中央广场。",
+      "input": "我走出筛种院，返回河湾村。",
       "assertions": [
         {
           "kind": "equals",

@@ -9,7 +9,7 @@ define('world_weather','查当地天气、温度及日出日落。',{operation:{
 define('world_farm','查办农田粮仓；按登记粮约分地提送粮，结算税贸。',{operation:{enum:['inspect','buy','donate','reserve_seed','repair','sow','harvest','guard','adopt','settle_trade']},settlement:str,quantity:int,contract:str,phase:{enum:['pickup','deliver']},authority:str},[]);
 define('world_wildlife','观察、追踪动物或从真实尸体取材。',{operation:{enum:['observe','track','gather']},species:str,target:str},[]);
 define('world_crime','尝试偷取在场目标的一件物品或铜币。',{operation:{enum:['steal']},target:str,item:str,coins:int,instance:str},['operation','target']);
-define('world_law','查法典声望，办理案件、上诉、公示携信、赔付服役。',{operation:{enum:['inspect','report','confess','search','arrest','hear','appeal','publish','notify','pay','labor','prison','compensate','claim']},case:str,authority:str,reporter:str,claimant:str,from:str,to:str,memory:{...str,description:'from持有的本案记忆ID'},channel:{enum:['conversation','carry']}},[]);
+define('world_law','查法典办案；自认confess、押解arrest、审理hear，不用会面约定代替。',{operation:{enum:['inspect','report','confess','search','arrest','hear','appeal','publish','notify','pay','labor','prison','compensate','claim']},case:str,authority:str,reporter:str,claimant:str,from:str,to:str,memory:{...str,description:'from持有的本案记忆ID'},channel:{enum:['conversation','carry']}},[]);
 define('world_pet','照料、驯练、跟随或骑乘指定动物。',{operation:{enum:['inspect','feed','contact','tame','groom','treat','train','rest','follow','stay','release','mount','dismount']},target:str,item:str,skill:str,minutes:int,authorization:str},[]);
 define('world_summon','查解召唤契约、役灵搬水或消耗有限守卫额度。',{operation:{enum:['inspect','dismiss','carry_water','guard']},summon:str,source:str,destination:str,millilitres:int,authorization:str,authorizations:{type:'array',items:str,maxItems:8}},[]);
 define('world_revival','当前神殿/祭坛付费登记复活点。',{location:str},[]);
@@ -32,7 +32,7 @@ define('world_quest','委托托管/接单/履约/退款；NPC按世界时间履�
 define('world_create','原创人物/组织登记。',{type:str,name:str,project:str,data:object({age:int,occupation:str,notes:str},[])},['type','name','data']);
 define('world_search','查长期事实/原聊天，可限条数',{query:str,limit:int},['query']);
 define('world_catalog','公开规则/文化/势力/历史分类分页查。',{entity:str,kind:{type:'string',enum:['profession','skill','spell','item','recipe','feature','location','culture','deity','faction','history']},offset:int});
-define('world_read','读已记状态',{section:str});
+define('world_read','读当前账本，查库存用人物栏目加npc；检索旧事不能证明当前库存。',{section:{...str,description:'栏目名，如人物/npcs、行囊/inventory、约定/obligations'},npc:{...str,description:'人物栏目可填单个已登记人物编号；未知先查目录，私密认知不返回'}});
 definitions.find(row=>row.function.name==='world_trade').function.parameters.properties.operation.description='枚举依次：交易/租铺/采购托管/盘点雇工/到场履约/售予同意顾客/还合同债/取消未履约合同。';
 definitions.find(row=>row.function.name==='world_remember').function.parameters.properties.rumor={...str,description:'rumor填编号；subject=玩家，key=rumor，source=在场讲述者，content=未核实claim原文；10分钟。'};
 definitions.find(row=>row.function.name==='world_settlement').function.parameters.properties.operation.description='business编号办开店、停业、现金破产、期末盈亏。';

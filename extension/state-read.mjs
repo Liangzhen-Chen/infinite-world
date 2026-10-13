@@ -9,13 +9,20 @@ const sections={
     itemInstances:['单件物品'],crafted:['制造记录'],
 };
 const aliases=new Map(Object.entries(sections).flatMap(([key,names])=>[key,...names].map(name=>[name,key])));
-export function readStateSection(state,section){
+export function readStateSection(state,section,npc){
+    if(npc!==undefined&&(typeof npc!=='string'||!npc.trim()))return{ok:false,error:'npc须为已登记人物编号，请先查目录。'};
+    if(npc!==undefined&&aliases.get(section?.trim?.())!=='npcs')return{ok:false,error:'npc定位仅用于人物栏目。'};
     if(section===undefined||section==='')return{player:{...state.player,id:'player'},location:state.location};
     const key=typeof section==='string'?aliases.get(section.trim()):undefined;
     if(!key)return{ok:false,error:'未知状态栏目。可读取：玩家、行囊、人物、技能、法术书、职业、约定、任务、聚落、工程、配方。'};
     // Optional partitions may not exist in older campaigns; an empty object is
     // a valid result, never an undefined tool message.
     let result=key==='player'?{...state.player,id:'player'}:state[key]??{};
+    if(npc!==undefined){
+        const id=npc.trim();
+        if(!Object.hasOwn(result,id))return{ok:false,error:'未找到该人物状态，请先通过world_catalog查已登记人物编号。'};
+        result={[id]:result[id]};
+    }
     if(key==='records')result=Object.fromEntries(Object.entries(result).filter(([,row])=>!['ecology','lair','wildlifeMigration'].includes(row?.category)).map(([id,row])=>{
         if(row?.category==='legal_case'){
             const{evidence,witnesses,...view}=row;return[id,{...view,note:'证据与见证者认知通过在场报案和审理查证，不由全局记录直接透露'}];
@@ -27,6 +34,6 @@ export function readStateSection(state,section){
     if(key==='npcs')result=Object.fromEntries(Object.entries(result).map(([id,row])=>{
         const{legalKnowledge,memoryStream,cognition,autonomy,goals,relationships,developments,...view}=row;return[id,view];
     }));
-    if(JSON.stringify(result).length>8000)return{ok:false,error:'该栏目超过单次读取上限，请通过检索查看具体人物或记录。'};
+    if(JSON.stringify(result).length>8000)return{ok:false,error:'该栏目超过单次读取上限；人物可用npc编号定位，其他记录通过检索查看。'};
     return result;
 }
