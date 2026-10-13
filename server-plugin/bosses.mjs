@@ -2,6 +2,7 @@ import {createHash} from 'node:crypto';
 import {monsterStats,tacticDefense} from './combat.mjs';
 import {validateBossMechanics,templateBossCounter}from'./boss-abilities.mjs';
 import {emptyBossCognition,rememberBossEncounter,bossPublicAttitude}from'./boss-cognition.mjs';
+import {initialBossNegotiation,negotiateBoss}from'./boss-negotiation.mjs';
 const clone=v=>structuredClone(v),key=b=>['state','records',`lair:${b.residence.id}`];
 const living=a=>a&&a.status!=='死亡'&&a.hp>0;
 export function validateBossEcology(world){
@@ -54,7 +55,7 @@ function instantiate(d,engine,{id,species,location,lair,boss=null,eventId}){
     const stats=monsterStats({level,template:s.template,bossTier:boss?definition.tier:0},engine.rules),name=boss?definition.name:`${s.name}·${id.slice(-4)}`;
     if(!boss)d.set(['state','created',id],{id,name,aliases:[],monster:species,template:s.template,scope:location});
     d.set(['state','creatures',id],{name,species,ecology:s.wildlife.habitat,lair,location,level,hp:stats.maxHp,maxHp:stats.maxHp,status:'正常',owner:null,
-        ...(boss?{boss,battleMemory:{tactics:{},lastEvent:null},...(definition.intelligence>0?{cognition:emptyBossCognition()}:{})}:{}),source:eventId});
+        ...(boss?{boss,battleMemory:{tactics:{},lastEvent:null},...(definition.intelligence>0?{cognition:emptyBossCognition(),negotiation:initialBossNegotiation(definition,engine)}:{})}:{}),source:eventId});
     return{id,name,level,hp:stats.maxHp};
 }
 function drawSpecies(d,engine,species,lair,eventId){
@@ -100,7 +101,8 @@ export function lairAction(d,args,eventId){
             ...publicContact(d,this,r.occupant.actor)}:null,
             note:actor?'仅观察已接触个体':'尚未接触活体，入口观察不能知道未见占据者或其战斗记忆',actionScope:{kind:'instant',instantaneous:true}};
     }
-    if(operation!=='approach')throw new Error('巢穴操作需为observe或approach');
+    if(operation==='negotiate')return negotiateBoss(d,this,boss,r,args,eventId);
+    if(operation!=='approach')throw new Error('巢穴操作需为observe、approach或negotiate');
     this.advance(d,this.rules.bossEcology.approachMinutes,eventId);
     if(d.get('state','location')!==boss.residence.location||d.get('state','player','status')!=='正常')return{contact:null,note:'进入前失去行动能力或离开此地'};
     const latest=clone(d.get(...key(boss)));if(!latest.occupant)return{contact:null,note:'巢穴实际空置，进入不会触发原首领重生'};
