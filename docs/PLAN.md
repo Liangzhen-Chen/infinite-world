@@ -67,7 +67,7 @@ review-002-yp=782a49e阶段审核通过，范围限T06正式发布与c64163d修�
 
 ### T07 已完成（待T73正式整合）：苇汀30人L1/L2/L4全过，随机10人评分均4.32/最低3，7条共享事件闭合、T04零缺口、发布预演通过；累计4.49559880元。重开授权入口已支持追加授权：T07/T08/T09上限7/6.5/4.5元、每人6次、波次25元（用户2026-10-13同意）。T58已并入完成。
 
-### T08 砾泉最小修卡【零模型；整卡卡住】
+### T08 砾泉来源修订与续审【真实模型；停止线已解除，上限6.5元、每人6次】
 
 据59fca09的reopen-complete/{next-gap.txt,background-source-block.json,neighbor-request-guard-block.json,stopped-report.json}。23passed/7manual，五人背景失效，最多21闭合；余额0.28716496。鞠舒两次已尽，第三次须真正决定，增额不重置次数。
 
@@ -79,15 +79,12 @@ review-002-yp=782a49e阶段审核通过，范围限T06正式发布与c64163d修�
 
 ### T54 已完成：63613dc已合；真实T07的42 changes/12指纹保持，T08父proof四叶及逐event+sourceHash的L4/发布重放通过，相关87/CORE40；0模型，T07真实复审与T08来源授权仍归原卡。原验收见 `git show ee0f4e6:docs/PLAN.md`。
 
-### T09 桑坂两人一次规划【卡住；第三次待人类决定】
+### T09 已完成（待T85正式整合）：桑坂30人L1/L2/L4全过，随机10人均分4.33/最低3，15条事件闭合、T04零缺口、发布预演通过；累计2.77692672元。
 
-0323dc2的first-review/complete-002/stopped-report.json：42次直接L2、2.46694448元，28passed/2manual；13事件26人闭合，shared_11池杉/查悦与shared_12秦婉/龙芙未闭，L4未批准。首审及补证两次attempts已尽；不自动第三call、新nonce或重领。
+### T85 桑坂30人正式整合发布【零模型】
 
-只准备原world/design/w1-sb-depth.mjs两人失败叶的最小差异。池杉known[2]/memorySeeds[2]改为明确“池杉说…；查悦说…”的原publicSpeech归属；独立first-review/authored-background.json的shared_11已载双方公开说话，hard把有限发言判为私密属证据冲突，不能据此扩大knownBy。若牵动共享正文，列出查悦受影响叶，不覆盖旧通过。
-
-龙芙原memorySeeds[1]支持湿布记忆、独立shared_12支持招呼，不能因before.known未列就判无源；pending步骤不算已做。voice.register恢复“先指叶背再谈土”并仅补原notes的重复旧例；亲属备注收窄为原sourceRecords可见动作，删“使他不耐烦”等推断，unknown保留未知边界。逐hard绑定独立源/原hash，缺源不编造；保留失败，不能手工改passed。
-
-无第三次授权，执行仍卡住。未变28人复用；后续若获真实决定，原账总限4.5、未知预留不退，原L1/L2/L4、30人T04与事件闭合/预演及相关+CORE门槛不变；不新增人口或发布。原范围/验收见 `git show ee0f4e6:docs/PLAN.md`。
+结果：玩家在桑坂遇到的30人带上已审核的完整档。做法、可改文件和锁定同T73（苇汀），批次在world/drafts/w1/sb-depth/，测试用tests/npc-depth-sb.test.mjs。
+验收：`node --test tests/npc-depth-sb.test.mjs tests/npc-depth-batch-publication.test.mjs`、CORE；重复发布零写入，仍152 full/294名册。模型0。规模：数据写入为主。
 
 ### T10 已完成：32人和五独立源L1/L2/L4闭合已合，候选合后56过；后经T11-B正式整合，不重审；原卡累计2.40776216元。 完整原验收见 `git show bb4c575:docs/PLAN.md` 对应卡。
 
