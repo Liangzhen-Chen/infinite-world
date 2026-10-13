@@ -1,0 +1,19 @@
+{
+  "id": "item_book_w2_reuse_basic",
+  "fingerprint": "542e201a13fd1d5b892d05c24b121408b44ae10ae26721f09bcf10fae8d3f1fa",
+  "status": "pending",
+  "attempts": 0,
+  "draft": {
+    "id": "item_book_w2_reuse_basic",
+    "prose": {
+      "description": "未署名的初级抄本收录烘衣术、凝露术、净水术、辨泉术、引水术、水盏役灵。识字达到100，无须法师认证，且持有完好的书，才可每次用120分钟研读其中一种；智力检定未通过仍花去时间，书不会因此消失。",
+      "inspection": "逐节核对标题和末页，查看页码是否连续，有无缺页或大片洇墨。校读旁注与正文分栏书写，纸色和装订样式都不能证明未署名作者的身份。",
+      "storage": "翻阅前擦净手上的水渍与泥土，把纸页平放在干燥桌面。读后合入书匣，远离炉火，用干净纸条标记读到的位置，避免反复折角遮住末行文字。"
+    }
+  },
+  "review": null,
+  "errors": [],
+  "warnings": [],
+  "feedback": null,
+  "manualEditPending": false
+}
