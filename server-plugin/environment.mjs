@@ -3,6 +3,7 @@ import {waterMechanisms}from'../world/design/water-foundation.mjs';
 import {addObjectFuel,inspectObjectProcess,touchWarmObject,douseObjectFire,assertFirePath}from'./magic-object.mjs';
 import{inspectMagicMarks}from'./magic-marks.mjs';
 import {airEnvironmentAction}from'./magic-air.mjs';
+import {waterEarthSightClear,waterEarthFlow,waterEarthWalkMinutes,assertWaterEarthMovement,inspectWaterEarth}from'./magic-water-earth.mjs';
 
 const integer=(value,min,max,label)=>{if(!Number.isSafeInteger(value)||value<min||value>max)throw new Error(`${label}无效`);return value;};
 const key=id=>`physical_feature:${id}`;
@@ -31,7 +32,8 @@ export function recordLocalContact(d,engine,target,eventId){
     d.set(['state','records',`local_actor_position:${target}`],{category:'local_position',subject:target,location,point:[...position],source,minute,expires,activity:actor.activity??null,...height});
     return true;
 }
-export function localSightClear(d,engine,location,from,to){
+export function localSightClear(d,engine,location,from,to,{waterCurtain=true}={}){
+    if(waterCurtain&&!waterEarthSightClear(d,location,from,to))return false;
     for(const row of environmentFeatures(engine).filter(f=>f.location===location)){
         const state=stateOf(d,row);if(state?.blocksSight!==true)continue;
         const radius=state.sightRadiusMeters;
@@ -76,7 +78,7 @@ export function servantCarryWater(d,args,maximumMl,inspectOnly=false){
     for(const row of[source,destination]){inReach(d,row,3);permission(d,this,row,args);}
     const src=structuredClone(stateOf(d,source)),dst=structuredClone(stateOf(d,destination));
     const amount=integer(args.millilitres,1,maximumMl,'搬水量');
-    if(src.waterMl<amount||dst.capacityMl-dst.waterMl<amount)throw new Error('水源不足或目标容器容量不足');
+    if(src.waterMl<amount||dst.capacityMl-dst.waterMl-(dst.reservedWaterMl??0)<amount)throw new Error('水源不足或目标容器容量不足');
     if(inspectOnly)return{source:source.id,destination:destination.id,amountMl:amount};
     for(const field of['saltMg','toxinUg']){const moved=src[field]*amount/src.waterMl;src[field]-=moved;dst[field]+=moved;}
     dst.turbidity=(dst.turbidity*dst.waterMl+src.turbidity*amount)/(dst.waterMl+amount);
@@ -103,7 +105,7 @@ function watering(d,engine,row,operation,args,range,power){
     for(const target of[channel,source,destination]){inReach(d,target,range);permission(d,engine,target,args);}
     const ch=stateOf(d,channel),src=stateOf(d,source),dst=stateOf(d,destination);
     if(operation==='soil_water'&&!dst.worked)throw new Error('回潮前需要耕作者实际处理土壤');
-    const amountMl=Math.floor(Math.min(power*1000,src.waterMl,dst.capacityMl-dst.waterMl,ch.flowLimitMl*(1-ch.blockagePercent/100)));
+    const amountMl=Math.floor(Math.min(power*1000,src.waterMl,dst.capacityMl-dst.waterMl-(dst.reservedWaterMl??0),waterEarthFlow(d,channel,ch)*(1-ch.blockagePercent/100)));
     if(amountMl<=0)throw new Error('水源不足、田垄已满或沟渠被堵住');
     return{channel,source,destination,amountMl};
 }
@@ -117,7 +119,7 @@ export function prepareEnvironmentMagic(d,catalog,args){
         if(row.kind!=='container')throw new Error('凝露需要有杯壁的真实容器');
         const humidity=humidityAt(this,d.document,row.location);
         if(!Number.isFinite(humidity)||humidity<this.rules.environment.minimumCondensationHumidity||humidity>100)throw new Error('空气湿度不足或没有可靠湿度数据');
-        if(current.waterMl>=current.capacityMl)throw new Error('容器已满');
+        if(current.waterMl+(current.reservedWaterMl??0)>=current.capacityMl)throw new Error('容器已满');
     }
     if(['clean_water','sense_water'].includes(operation)&&current.waterMl<=0)throw new Error('对象中没有实际水');
     if(operation==='clear_silt'&&(row.kind!=='channel'||current.loosenedSiltGrams>=current.siltGrams))throw new Error('沟渠没有可继续松动的淤泥');
@@ -132,7 +134,7 @@ export function applyEnvironmentMagic(d,prepared,eventId){
     const before=visible(row,current);let result;
     if(operation==='condense'){
         const humidity=humidityAt(this,d.document,row.location);
-        const amountMl=Math.min(current.capacityMl-current.waterMl,Math.floor(power*humidity/100));
+        const amountMl=Math.min(current.capacityMl-current.waterMl-(current.reservedWaterMl??0),Math.floor(power*humidity/100));
         current.turbidity=current.waterMl?current.turbidity*current.waterMl/(current.waterMl+amountMl):0;current.waterMl+=amountMl;
         current.atmosphericInputsMl=(current.atmosphericInputsMl??0)+amountMl;result={condensedMl:amountMl};
     }else if(operation==='clean_water'){
@@ -159,7 +161,13 @@ export function applyEnvironmentMagic(d,prepared,eventId){
 export function interactEnvironment(d,args,eventId){
     const location=d.get('state','location'),operation=args.operation??'inspect';
     if(['turn_grain','sound','fall','breathe'].includes(operation))return airEnvironmentAction.call(this,d,args,eventId);
-    if(operation==='inspect')return environmentCatalog(this,d.document,{entity:args.target});
+    if(operation==='inspect'){
+        const result=environmentCatalog(this,d.document,{entity:args.target});
+        if(!args.target)return result;
+        const row=feature(this,args.target,location),check=Object.values(d.get('state','effects')??{}).some(e=>e.kind==='water_earth'&&e.operation==='mud_seal'&&e.target===row.id&&e.expires>d.get('state','minute'));
+        if(check){inReach(d,row,3);permission(d,this,row,args);}
+        return{...result,waterEarth:inspectWaterEarth(d,this,row,{check}),actionScope:{kind:'instant',instantaneous:true}};
+    }
     if(operation==='inspect_heat')return{...inspectObjectProcess(d,this,args.target,args),actionScope:{kind:'instant',instantaneous:true}};
     if(operation==='warm_touch')return{...touchWarmObject(d,this,args),actionScope:{kind:'instant',instantaneous:true}};
     if(operation==='douse_fire'){
@@ -176,14 +184,15 @@ export function interactEnvironment(d,args,eventId){
     }
     const row=feature(this,args.target,location);inReach(d,row,Number.POSITIVE_INFINITY);
     if(operation==='approach'){
+        assertWaterEarthMovement(d);
         assertFirePath(d,this,point(d),row.position);
-        const metres=distance(point(d),row.position),minutes=Math.ceil(metres/this.rules.environment.walkingMetresPerMinute);
+        const metres=distance(point(d),row.position),mudMinutes=waterEarthWalkMinutes(d,this,point(d),row.position),minutes=Math.ceil(metres/this.rules.environment.walkingMetresPerMinute)+mudMinutes;
         this.advance(d,minutes,eventId);
         if(d.get('state','location')!==location||d.get('state','player','status')!=='正常')return{target:row.id,metres,minutes,arrived:false};
         assertFirePath(d,this,point(d),row.position);
         const height=row.kind==='ledge'?{elevationMeters:stateOf(d,row).fallHeightMeters}:{};
         d.set(['state','records','local_player_position'],{category:'local_position',subject:'player',location,point:[...row.position],source:eventId,anchor:row.id,minute:d.get('state','minute'),...height});
-        return{target:row.id,metres,minutes,position:[...row.position]};
+        return{target:row.id,metres,minutes,mudMinutes,position:[...row.position]};
     }
     if(operation!=='carry_silt')throw new Error('环境操作需为inspect、inspect_heat、load_fuel、approach或carry_silt');
     const destination=feature(this,args.destination,location),range=3;

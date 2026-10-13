@@ -15,6 +15,8 @@ import {bossCounter,rememberBossTactic,defeatBoss}from'./bosses.mjs';
 import {validateEffectSpec,resolveVitalityPrimitive,applyProtectionPrimitive,consumeMagicProtection}from'./magic-primitives.mjs';
 import {validateObjectCatalog,prepareObjectMagic,applyObjectMagic,validateHeatCatalog,prepareHeatMagic,applyHeatMagic,ambientHeatC,coldHeatMultiplier}from'./magic-object.mjs';
 import {validateAirCatalog,prepareAirMagic,applyAirMagic,prepareWindObject,applyWindObject,windArmorMultiplier}from'./magic-air.mjs';
+import {validateWaterEarthCatalog,prepareWaterEarthMagic,applyWaterEarthMagic,prepareStone,launchStone,waterEarthState}from'./magic-water-earth.mjs';
+import {projectileAirPenalty}from'./magic-air.mjs';
 export function validateMagicCatalog(catalog,{requireHandler=false}={}){
     const spec=catalog.effectSpec,errors=[];
     if(!spec){if(requireHandler||catalog.mechanism)errors.push('此法术机制尚未接入规则，不能叙述已实现');return errors;}
@@ -33,6 +35,8 @@ export function validateMagicCatalog(catalog,{requireHandler=false}={}){
     if(spec.kind==='object')errors.push(...validateObjectCatalog(catalog));
     if(spec.kind==='heat')errors.push(...validateHeatCatalog(catalog));
     if(spec.kind==='air')errors.push(...validateAirCatalog(catalog));
+    if(spec.kind==='water_earth')errors.push(...validateWaterEarthCatalog(catalog));
+    if(spec.stoneProjectile&&(!catalog.targeting||catalog.duration!==0||catalog.rangeMeters>20))errors.push('石弹须声明实际目标边界、有限射程且为瞬时伤害');
     if(spec.windBlade&&(!catalog.targeting||catalog.duration!==0))errors.push('风刃须声明实际目标边界且为瞬时伤害');
     if(spec.coldDecay&&(!catalog.targeting||catalog.duration!==0))errors.push('冰针须声明真实目标边界且为瞬时伤害');
     return errors;
@@ -40,6 +44,8 @@ export function validateMagicCatalog(catalog,{requireHandler=false}={}){
 export function prepareMagic(d,catalog,args,context={}){
     const errors=validateMagicCatalog(catalog);if(errors.length)throw new Error(errors.join('；'));
     const spec=catalog.effectSpec;if(!spec)return null;
+    if(spec.kind==='water_earth')return prepareWaterEarthMagic.call(this,d,catalog,args);
+    if(spec.stoneProjectile&&args.target?.startsWith('feature_'))return{stone:prepareStone.call(this,d,catalog,args),target:args.target,spec,catalog,stoneObject:true};
     if(spec.kind==='air')return prepareAirMagic.call(this,d,catalog,args);
     if(spec.windBlade&&args.target?.startsWith('feature_'))return prepareWindObject.call(this,d,catalog,args);
     if(messageKinds.includes(spec.kind))return prepareMessage.call(this,d,catalog,args);
@@ -81,12 +87,19 @@ export function prepareMagic(d,catalog,args,context={}){
         if(!permission||permission.category!=='authorization'||permission.subject!==target||permission.action!=='support_magic'||permission.expires!==undefined&&permission.expires<=d.get('state','minute'))throw new Error('向他人施加防护需要本人同意');
     }
     const ambientC=spec.coldDecay?ambientHeatC(d,this,context.location??d.get('state','location')):undefined;
-    return{target,path:target==='player'?['state','player']:['state',partition,target],actor,derived,spec,catalog,context,completionArgs:{...args,target},ambientC};
+    const stone=spec.stoneProjectile?prepareStone.call(this,d,catalog,{...args,target}):undefined;
+    return{target,path:target==='player'?['state','player']:['state',partition,target],actor,derived,spec,catalog,context,completionArgs:{...args,target},ambientC,stone};
 }
 export function applyMagic(d,prepared,id){
     if(!prepared)return{};
     let{spec,target,path,catalog}=prepared;
     if(prepared.windObject)return applyWindObject.call(this,d,prepared);
+    if(spec.kind==='water_earth')return applyWaterEarthMagic.call(this,d,prepared,id);
+    if(prepared.stoneObject){
+        let stone;try{stone=prepareStone.call(this,d,catalog,prepared.stone.args);}catch(e){return{target,effectFailed:e.message};}
+        const projectile=launchStone(d,stone,id),s=waterEarthState(d,stone.row),damage=Math.min(s.integrity,spec.power);
+        s.integrity-=damage;d.set(['state','records',`physical_feature:${target}`],{id:target,category:'physical_feature',location:stone.row.location,state:s});return{target,damage,integrity:s.integrity,...projectile};
+    }
     if(spec.kind==='air')return applyAirMagic.call(this,d,prepared,id);
     if(messageKinds.includes(spec.kind))return applyMessage.call(this,d,prepared,id);
     if(movementKinds.includes(spec.kind))return applyMovement.call(this,d,prepared,id);
@@ -129,9 +142,10 @@ export function applyMagic(d,prepared,id){
         d.set([...path,'moisture'],Math.max(0,(current.moisture??0)-dried));return{target,dried};
     }
     const current=d.get(...path),maximum=current.maxHp??prepared.derived.maxHp,old=current.hp??maximum;
+    const projectile=prepared.stone?launchStone(d,prepared.stone,id):{};
     const protection=magicStatusStats(d,target),resistance=protection[`${spec.damageType}Resistance`]??0;
     const tactic=`magic_${spec.damageType??'untyped'}`,counter=spec.kind==='damage'?bossCounter(d,this,target,tactic):{damageMultiplier:1};
-    const heatMultiplier=spec.coldDecay?coldHeatMultiplier(prepared.ambientC):spec.windBlade?windArmorMultiplier(current.armorMaterial??this.byId.get(target)?.armorMaterial):1;
+    const heatMultiplier=spec.coldDecay?coldHeatMultiplier(prepared.ambientC):spec.windBlade?windArmorMultiplier(current.armorMaterial??this.byId.get(target)?.armorMaterial):prepared.stone?1+projectileAirPenalty(d,target,prepared.stone.massGrams*1000):1;
     const resolved=resolveVitalityPrimitive({spec,hp:old,maxHp:maximum,defense:prepared.derived.defense+protection.defense,resistance,multiplier:counter.damageMultiplier*heatMultiplier});
     const shield=spec.kind==='damage'?consumeMagicProtection(d,target,resolved.rawAmount,spec.damageType??'physical'):{damage:0,absorbed:0};
     const next=spec.kind==='damage'?Math.max(0,old-shield.damage):resolved.nextHp;
@@ -150,5 +164,5 @@ export function applyMagic(d,prepared,id){
     const corpse=killed?recordWildlifeDeath(d,this,target,id):null,lair=killed?defeatBoss(d,this,target,id):null;
     if(corpse&&(prepared.context?.source??'player')!=='player')d.set(['state','creatures',target,'corpse','killedBy'],prepared.context.source);
     const experience=killed&&(prepared.context?.source??'player')==='player'?monsterReward(d,this,target,id):{};
-    return{target,[spec.kind==='heal'?'healed':'damage']:Math.abs(next-old),targetHp:next,...experience,...(spec.coldDecay?{ambientC:prepared.ambientC,heatMultiplier}:{}),...(shield.absorbed?{absorbed:shield.absorbed,protectionEffect:shield.effect}:{}),...(corpse?{corpse}:{}),...(lair?{lair}:{}),...(counter.adapted?{adaptation:{tactic,guarded:true}}:{})};
+    return{target,[spec.kind==='heal'?'healed':'damage']:Math.abs(next-old),targetHp:next,...experience,...projectile,...(spec.coldDecay?{ambientC:prepared.ambientC,heatMultiplier}:{}),...(shield.absorbed?{absorbed:shield.absorbed,protectionEffect:shield.effect}:{}),...(corpse?{corpse}:{}),...(lair?{lair}:{}),...(counter.adapted?{adaptation:{tactic,guarded:true}}:{})};
 }

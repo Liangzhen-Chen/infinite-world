@@ -1,4 +1,5 @@
 import {scheduleAt,advanceNpcSchedules} from './npc-schedule.mjs';
+import {waterEarthHeldUntil}from'./magic-water-earth.mjs';
 
 const live=o=>o?.reservationVersion===1&&['待履行','进行中'].includes(o.status);
 const full=(engine,id)=>engine.byId.get(id)?.tier==='full';
@@ -115,6 +116,8 @@ function simulateNpc(d,engine,id,before,after,bookings){
  const add=(end,available=true)=>{if(end>t)segments.push({start:t,end,location:npc.location,available});t=end;};
  const visited=o=>(o.attendance[id]??0)+segments.filter(s=>s.available&&s.location===o.location).reduce((n,s)=>n+Math.max(0,Math.min(s.end,o.deadline)-Math.max(s.start,o.start)),0)>0;
  while(t<=after){
+  const heldUntil=waterEarthHeldUntil(d.get('state'),id,t);
+  if(heldUntil>t){add(Math.min(after,heldUntil),capable(npc));if(t>=after)break;continue;}
   if(!capable(npc)){npc.activity=npc.status;add(after,false);break;}
   if(d.get('state','player','companions')?.includes(id)){npc.activity='同行';add(after,false);break;}
   if(npc.scheduleTravel){const trip=npc.scheduleTravel;
