@@ -1,1 +1,2608 @@
-[{"id":"house_hw_01","settlement":"loc_hw","homeLocation":"bld_hw_qingdeng","members":["npc_hw_linsui","npc_hw_ayan"],"tenure":"沿用已发布住处锚点；户籍索引不改原人物产权或现金"},{"id":"house_hw_02","settlement":"loc_hw","homeLocation":"bld_hw_council","members":["npc_hw_chenbai","npc_hw_fangqin"],"tenure":"沿用已发布住处锚点；户籍索引不改原人物产权或现金"},{"id":"house_hw_03","settlement":"loc_hw","homeLocation":"bld_hw_riverhome","members":["npc_hw_xuling"],"tenure":"沿用已发布住处锚点；户籍索引不改原人物产权或现金"},{"id":"house_hw_04","settlement":"loc_hw","homeLocation":"bld_hw_forge","members":["npc_hw_duanyan","npc_hw_duanhe"],"tenure":"沿用已发布住处锚点；户籍索引不改原人物产权或现金"},{"id":"house_hw_05","settlement":"loc_hw","homeLocation":"bld_hw_qingdeng","members":["npc_hw_wushuo"],"tenure":"沿用已发布住处锚点；户籍索引不改原人物产权或现金"},{"id":"house_hw_06","settlement":"loc_hw","homeLocation":"bld_hw_herbs","members":["npc_hw_taozhi","npc_hw_fanrong"],"tenure":"沿用已发布住处锚点；户籍索引不改原人物产权或现金"},{"id":"house_hw_07","settlement":"loc_hw","homeLocation":"loc_hw_dock","members":["npc_hw_zhengshuisheng","npc_hw_hedi"],"tenure":"沿用已发布住处锚点；户籍索引不改原人物产权或现金"},{"id":"house_hw_08","settlement":"loc_hw","homeLocation":"bld_hw_qingdeng","members":["npc_hw_luowei","npc_hw_shijin","npc_hw_luoxing"],"tenure":"沿用已发布住处锚点；户籍索引不改原人物产权或现金"},{"id":"house_hw_09","settlement":"loc_hw","homeLocation":"bld_hw_weaving","members":["npc_hw_sulan","npc_hw_ruanzheng"],"tenure":"沿用已发布住处锚点；户籍索引不改原人物产权或现金"},{"id":"house_hw_10","settlement":"loc_hw","homeLocation":"bld_hw_post","members":["npc_hw_gucen","npc_hw_yuxing"],"tenure":"沿用已发布住处锚点；户籍索引不改原人物产权或现金"},{"id":"house_hw_11","settlement":"loc_hw","homeLocation":"bld_hw_qingdeng","members":["npc_hw_meiling","npc_hw_meiyue","npc_hw_sangwu"],"tenure":"沿用已发布住处锚点；户籍索引不改原人物产权或现金"},{"id":"house_hw_12","settlement":"loc_hw","homeLocation":"bld_hw_school","members":["npc_hw_luqing","npc_hw_luxun"],"tenure":"沿用已发布住处锚点；户籍索引不改原人物产权或现金"},{"id":"house_hw_13","settlement":"loc_hw","homeLocation":"loc_hw_apiary","members":["npc_hw_anhuai"],"tenure":"沿用已发布住处锚点；户籍索引不改原人物产权或现金"},{"id":"house_hw_14","settlement":"loc_hw","homeLocation":"bld_hw_post","members":["npc_hw_shendu","npc_hw_shenhe"],"tenure":"沿用已发布住处锚点；户籍索引不改原人物产权或现金"},{"id":"house_hw_15","settlement":"loc_hw","homeLocation":"bld_hw_home_15","members":["npc_hw_miaozhen","npc_hw_shaohe","npc_hw_shaoyun","npc_hw_shaoyu"],"tenure":"私宅居住登记，产权未登记，不授予访客进入权"},{"id":"house_hw_16","settlement":"loc_hw","homeLocation":"bld_hw_home_16","members":["npc_hw_xinglu","npc_hw_xingshu","npc_hw_huaci"],"tenure":"私宅居住登记，产权未登记，不授予访客进入权"},{"id":"house_hw_17","settlement":"loc_hw","homeLocation":"bld_hw_home_17","members":["npc_hw_ranmo","npc_hw_randai","npc_hw_dengjia","npc_hw_dengtai"],"tenure":"私宅居住登记，产权未登记，不授予访客进入权"},{"id":"house_hw_18","settlement":"loc_hw","homeLocation":"bld_hw_home_18","members":["npc_hw_puduo","npc_hw_wengqiao","npc_hw_puxin","npc_hw_wengqin"],"tenure":"私宅居住登记，产权未登记，不授予访客进入权"},{"id":"house_hw_19","settlement":"loc_hw","homeLocation":"bld_hw_home_19","members":["npc_hw_feikai","npc_hw_hangli","npc_hw_feiyin","npc_hw_feizhuo"],"tenure":"私宅居住登记，产权未登记，不授予访客进入权"},{"id":"house_hw_20","settlement":"loc_hw","homeLocation":"bld_hw_home_20","members":["npc_hw_baihui","npc_hw_jiaoyou","npc_hw_zhongxiu","npc_hw_zhongya"],"tenure":"私宅居住登记，产权未登记，不授予访客进入权"},{"id":"house_hw_21","settlement":"loc_hw","homeLocation":"bld_hw_home_21","members":["npc_hw_xiejin","npc_hw_xierui","npc_hw_liyan","npc_hw_xieyi"],"tenure":"私宅居住登记，产权未登记，不授予访客进入权"},{"id":"house_hw_22","settlement":"loc_hw","homeLocation":"bld_hw_home_22","members":["npc_hw_yinge","npc_hw_jinping","npc_hw_yinqiu","npc_hw_yinzhi"],"tenure":"私宅居住登记，产权未登记，不授予访客进入权"},{"id":"house_yp_01","settlement":"loc_bs_yupo","homeLocation":"bld_yp_home_01","members":["npc_yp_zhaofeng","npc_yp_zhaoman","npc_yp_shile"],"tenure":"常住登记；居住权不等于共有个人财物。产权未登记，访客需经允许"},{"id":"house_yp_02","settlement":"loc_bs_yupo","homeLocation":"bld_yp_home_02","members":["npc_yp_qiaoduan","npc_yp_qiaobei","npc_yp_zhongqi"],"tenure":"常住登记；居住权不等于共有个人财物。产权未登记，访客需经允许"},{"id":"house_yp_03","settlement":"loc_bs_yupo","homeLocation":"bld_yp_home_03","members":["npc_yp_wenxu","npc_yp_wenyan","npc_yp_yanbei"],"tenure":"常住登记；居住权不等于共有个人财物。产权未登记，访客需经允许"},{"id":"house_yp_04","settlement":"loc_bs_yupo","homeLocation":"bld_yp_home_04","members":["npc_yp_jiangmi","npc_yp_jiangna","npc_yp_biwen"],"tenure":"常住登记；居住权不等于共有个人财物。产权未登记，访客需经允许"},{"id":"house_yp_05","settlement":"loc_bs_yupo","homeLocation":"bld_yp_home_05","members":["npc_yp_hanpei","npc_yp_hanzhuo","npc_yp_changqin"],"tenure":"常住登记；居住权不等于共有个人财物。产权未登记，访客需经允许"},{"id":"house_yp_06","settlement":"loc_bs_yupo","homeLocation":"bld_yp_home_06","members":["npc_yp_zhusheng","npc_yp_zhumo","npc_yp_tianjie"],"tenure":"常住登记；居住权不等于共有个人财物。产权未登记，访客需经允许"},{"id":"house_yp_07","settlement":"loc_bs_yupo","homeLocation":"bld_yp_home_07","members":["npc_yp_qinli","npc_yp_qinwei","npc_yp_luocheng"],"tenure":"常住登记；居住权不等于共有个人财物。产权未登记，访客需经允许"},{"id":"house_yp_08","settlement":"loc_bs_yupo","homeLocation":"bld_yp_home_08","members":["npc_yp_gaoxin","npc_yp_gaotan","npc_yp_baijia"],"tenure":"常住登记；居住权不等于共有个人财物。产权未登记，访客需经允许"},{"id":"house_yp_09","settlement":"loc_bs_yupo","homeLocation":"bld_yp_home_09","members":["npc_yp_taozi","npc_yp_taoxun","npc_yp_chengyi"],"tenure":"常住登记；居住权不等于共有个人财物。产权未登记，访客需经允许"},{"id":"house_yp_10","settlement":"loc_bs_yupo","homeLocation":"bld_yp_home_10","members":["npc_yp_luxia","npc_yp_luyou","npc_yp_dengci"],"tenure":"常住登记；居住权不等于共有个人财物。产权未登记，访客需经允许"},{"id":"house_yp_11","settlement":"loc_bs_yupo","homeLocation":"bld_yp_home_11","members":["npc_yp_panju","npc_yp_panning","npc_yp_fanchun"],"tenure":"常住登记；居住权不等于共有个人财物。产权未登记，访客需经允许"},{"id":"house_yp_12","settlement":"loc_bs_yupo","homeLocation":"bld_yp_home_12","members":["npc_yp_renbo","npc_yp_renyu","npc_yp_qufen"],"tenure":"常住登记；居住权不等于共有个人财物。产权未登记，访客需经允许"},{"id":"house_yp_13","settlement":"loc_bs_yupo","homeLocation":"bld_yp_home_13","members":["npc_yp_caoyun","npc_yp_caozhen","npc_yp_lequan"],"tenure":"常住登记；居住权不等于共有个人财物。产权未登记，访客需经允许"},{"id":"house_yp_14","settlement":"loc_bs_yupo","homeLocation":"bld_yp_home_14","members":["npc_yp_xunhe","npc_yp_xunjia","npc_yp_mohe"],"tenure":"常住登记；居住权不等于共有个人财物。产权未登记，访客需经允许"},{"id":"house_yp_15","settlement":"loc_bs_yupo","homeLocation":"bld_yp_home_15","members":["npc_yp_yinrong","npc_yp_yinsui","npc_yp_hujun"],"tenure":"常住登记；居住权不等于共有个人财物。产权未登记，访客需经允许"},{"id":"house_yp_16","settlement":"loc_bs_yupo","homeLocation":"bld_yp_home_16","members":["npc_yp_weichi","npc_yp_weiran","npc_yp_yingzhu"],"tenure":"常住登记；居住权不等于共有个人财物。产权未登记，访客需经允许"},{"id":"house_yp_17","settlement":"loc_bs_yupo","homeLocation":"bld_yp_home_17","members":["npc_yp_genglu","npc_yp_gengfei","npc_yp_songdi"],"tenure":"常住登记；居住权不等于共有个人财物。产权未登记，访客需经允许"},{"id":"house_yp_18","settlement":"loc_bs_yupo","homeLocation":"bld_yp_home_18","members":["npc_yp_xicun","npc_yp_xichu","npc_yp_youlin"],"tenure":"常住登记；居住权不等于共有个人财物。产权未登记，访客需经允许"},{"id":"house_yp_19","settlement":"loc_bs_yupo","homeLocation":"bld_yp_home_19","members":["npc_yp_miaopu","npc_yp_miaoying","npc_yp_zhuying"],"tenure":"常住登记；居住权不等于共有个人财物。产权未登记，访客需经允许"},{"id":"house_yp_20","settlement":"loc_bs_yupo","homeLocation":"bld_yp_home_20","members":["npc_yp_baoyin","npc_yp_baoyi","npc_yp_niyu"],"tenure":"常住登记；居住权不等于共有个人财物。产权未登记，访客需经允许"},{"id":"house_yp_21","settlement":"loc_bs_yupo","homeLocation":"bld_yp_home_21","members":["npc_yp_fengya","npc_yp_fengjia"],"tenure":"常住登记；居住权不等于共有个人财物。产权未登记，访客需经允许"},{"id":"house_yp_22","settlement":"loc_bs_yupo","homeLocation":"bld_yp_home_22","members":["npc_yp_shiling","npc_yp_shichang"],"tenure":"常住登记；居住权不等于共有个人财物。产权未登记，访客需经允许"},{"id":"house_yp_23","settlement":"loc_bs_yupo","homeLocation":"bld_yp_home_23","members":["npc_yp_shaoruo","npc_yp_shaowan"],"tenure":"常住登记；居住权不等于共有个人财物。产权未登记，访客需经允许"},{"id":"house_yp_24","settlement":"loc_bs_yupo","homeLocation":"bld_yp_home_24","members":["npc_yp_lingwan","npc_yp_lingzi"],"tenure":"常住登记；居住权不等于共有个人财物。产权未登记，访客需经允许"},{"id":"house_yp_25","settlement":"loc_bs_yupo","homeLocation":"bld_yp_home_25","members":["npc_yp_kongfu","npc_yp_kongheng"],"tenure":"常住登记；居住权不等于共有个人财物。产权未登记，访客需经允许"},{"id":"house_yp_26","settlement":"loc_bs_yupo","homeLocation":"bld_yp_home_26","members":["npc_yp_yucheng","npc_yp_yuning"],"tenure":"常住登记；居住权不等于共有个人财物。产权未登记，访客需经允许"},{"id":"house_yp_27","settlement":"loc_bs_yupo","homeLocation":"bld_yp_home_27","members":["npc_yp_qiuyan","npc_yp_qiulu"],"tenure":"常住登记；居住权不等于共有个人财物。产权未登记，访客需经允许"},{"id":"house_yp_28","settlement":"loc_bs_yupo","homeLocation":"bld_yp_home_28","members":["npc_yp_tanghuan","npc_yp_tangru"],"tenure":"常住登记；居住权不等于共有个人财物。产权未登记，访客需经允许"},{"id":"house_yp_29","settlement":"loc_bs_yupo","homeLocation":"bld_yp_home_29","members":["npc_yp_zhangyi","npc_yp_zhangcai"],"tenure":"常住登记；居住权不等于共有个人财物。产权未登记，访客需经允许"},{"id":"house_yp_30","settlement":"loc_bs_yupo","homeLocation":"bld_yp_home_30","members":["npc_yp_lisha","npc_yp_lifan"],"tenure":"常住登记；居住权不等于共有个人财物。产权未登记，访客需经允许"},{"id":"house_wt_01","settlement":"loc_bs_weiting","homeLocation":"bld_wt_home_01","members":["npc_wt_zhengxi","npc_wt_zhengbei","npc_wt_hanchuan","npc_wt_mingle"],"tenure":"常住登记；居住权不等于共有个人财物。产权未登记，访客需经允许"},{"id":"house_wt_02","settlement":"loc_bs_weiting","homeLocation":"bld_wt_home_02","members":["npc_wt_wangpu","npc_wt_wangyun","npc_wt_zangfu","npc_wt_wangqin"],"tenure":"常住登记；居住权不等于共有个人财物。产权未登记，访客需经允许"},{"id":"house_wt_03","settlement":"loc_bs_weiting","homeLocation":"bld_wt_home_03","members":["npc_wt_zhouzhu","npc_wt_zhouya","npc_wt_qiangen","npc_wt_lusi"],"tenure":"常住登记；居住权不等于共有个人财物。产权未登记，访客需经允许"},{"id":"house_wt_04","settlement":"loc_bs_weiting","homeLocation":"bld_wt_home_04","members":["npc_wt_wupeng","npc_wt_wumo","npc_wt_hehuan","npc_wt_fujiang"],"tenure":"常住登记；居住权不等于共有个人财物。产权未登记，访客需经允许"},{"id":"house_wt_05","settlement":"loc_bs_weiting","homeLocation":"bld_wt_home_05","members":["npc_wt_weilian","npc_wt_weihan","npc_wt_youmin","npc_wt_weishu"],"tenure":"常住登记；居住权不等于共有个人财物。产权未登记，访客需经允许"},{"id":"house_wt_06","settlement":"loc_bs_weiting","homeLocation":"bld_wt_home_06","members":["npc_wt_huangting","npc_wt_huangrui","npc_wt_guanyu","npc_wt_liluo"],"tenure":"常住登记；居住权不等于共有个人财物。产权未登记，访客需经允许"},{"id":"house_wt_07","settlement":"loc_bs_weiting","homeLocation":"bld_wt_home_07","members":["npc_wt_heqin","npc_wt_hecen","npc_wt_suma","npc_wt_haoyu"],"tenure":"常住登记；居住权不等于共有个人财物。产权未登记，访客需经允许"},{"id":"house_wt_08","settlement":"loc_bs_weiting","homeLocation":"bld_wt_home_08","members":["npc_wt_lvmo","npc_wt_lvxin","npc_wt_dingchun","npc_wt_lvlan"],"tenure":"常住登记；居住权不等于共有个人财物。产权未登记，访客需经允许"},{"id":"house_wt_09","settlement":"loc_bs_weiting","homeLocation":"bld_wt_home_09","members":["npc_wt_shiqiao","npc_wt_shijue","npc_wt_binran","npc_wt_rongxiao"],"tenure":"常住登记；居住权不等于共有个人财物。产权未登记，访客需经允许"},{"id":"house_wt_10","settlement":"loc_bs_weiting","homeLocation":"bld_wt_home_10","members":["npc_wt_keli","npc_wt_kefang","npc_wt_pengao","npc_wt_ketong"],"tenure":"常住登记；居住权不等于共有个人财物。产权未登记，访客需经允许"},{"id":"house_wt_11","settlement":"loc_bs_weiting","homeLocation":"bld_wt_home_11","members":["npc_wt_duke","npc_wt_duqing","npc_wt_dusong"],"tenure":"常住登记；居住权不等于共有个人财物。产权未登记，访客需经允许"},{"id":"house_wt_12","settlement":"loc_bs_weiting","homeLocation":"bld_wt_home_12","members":["npc_wt_liuyan","npc_wt_liuchan","npc_wt_xuyuan"],"tenure":"常住登记；居住权不等于共有个人财物。产权未登记，访客需经允许"},{"id":"house_wt_13","settlement":"loc_bs_weiting","homeLocation":"bld_wt_home_13","members":["npc_wt_zhangou","npc_wt_zhanshu","npc_wt_yuhan"],"tenure":"常住登记；居住权不等于共有个人财物。产权未登记，访客需经允许"},{"id":"house_wt_14","settlement":"loc_bs_weiting","homeLocation":"bld_wt_home_14","members":["npc_wt_zhicai","npc_wt_zhiluo","npc_wt_yaorong"],"tenure":"常住登记；居住权不等于共有个人财物。产权未登记，访客需经允许"},{"id":"house_wt_15","settlement":"loc_bs_weiting","homeLocation":"bld_wt_home_15","members":["npc_wt_xueying","npc_wt_xueshi","npc_wt_tanyao"],"tenure":"常住登记；居住权不等于共有个人财物。产权未登记，访客需经允许"},{"id":"house_wt_16","settlement":"loc_bs_weiting","homeLocation":"bld_wt_home_16","members":["npc_wt_leizhi","npc_wt_leihua","npc_wt_kejing"],"tenure":"常住登记；居住权不等于共有个人财物。产权未登记，访客需经允许"},{"id":"house_wt_17","settlement":"loc_bs_weiting","homeLocation":"bld_wt_home_17","members":["npc_wt_niyun","npc_wt_nimei","npc_wt_niru"],"tenure":"常住登记；居住权不等于共有个人财物。产权未登记，访客需经允许"},{"id":"house_wt_18","settlement":"loc_bs_weiting","homeLocation":"bld_wt_home_18","members":["npc_wt_quhuai","npc_wt_quhe","npc_wt_qujian"],"tenure":"常住登记；居住权不等于共有个人财物。产权未登记，访客需经允许"},{"id":"house_wt_19","settlement":"loc_bs_weiting","homeLocation":"bld_wt_home_19","members":["npc_wt_dingsu","npc_wt_dinggu","npc_wt_chengfen"],"tenure":"常住登记；居住权不等于共有个人财物。产权未登记，访客需经允许"},{"id":"house_wt_20","settlement":"loc_bs_weiting","homeLocation":"bld_wt_home_20","members":["npc_wt_ruqin","npc_wt_rushu","npc_wt_xingbo"],"tenure":"常住登记；居住权不等于共有个人财物。产权未登记，访客需经允许"},{"id":"house_wt_21","settlement":"loc_bs_weiting","homeLocation":"bld_wt_home_21","members":["npc_wt_gonglu","npc_wt_gongyan","npc_wt_gongwan"],"tenure":"常住登记；居住权不等于共有个人财物。产权未登记，访客需经允许"},{"id":"house_wt_22","settlement":"loc_bs_weiting","homeLocation":"bld_wt_home_22","members":["npc_wt_jingyao","npc_wt_jingfeng","npc_wt_binlan"],"tenure":"常住登记；居住权不等于共有个人财物。产权未登记，访客需经允许"},{"id":"house_wt_23","settlement":"loc_bs_weiting","homeLocation":"bld_wt_home_23","members":["npc_wt_fanshui","npc_wt_fanliu","npc_wt_xiezhi"],"tenure":"常住登记；居住权不等于共有个人财物。产权未登记，访客需经允许"},{"id":"house_wt_24","settlement":"loc_bs_weiting","homeLocation":"bld_wt_home_24","members":["npc_wt_shanju","npc_wt_shanxin","npc_wt_shanwei"],"tenure":"常住登记；居住权不等于共有个人财物。产权未登记，访客需经允许"},{"id":"house_wt_25","settlement":"loc_bs_weiting","homeLocation":"bld_wt_home_25","members":["npc_wt_dongfei","npc_wt_donglu","npc_wt_huhui"],"tenure":"常住登记；居住权不等于共有个人财物。产权未登记，访客需经允许"},{"id":"house_wt_26","settlement":"loc_bs_weiting","homeLocation":"bld_wt_home_26","members":["npc_wt_peichun","npc_wt_peixi","npc_wt_guoluo"],"tenure":"常住登记；居住权不等于共有个人财物。产权未登记，访客需经允许"},{"id":"house_wt_27","settlement":"loc_bs_weiting","homeLocation":"bld_wt_home_27","members":["npc_wt_suhui","npc_wt_suxian","npc_wt_liaowan"],"tenure":"常住登记；居住权不等于共有个人财物。产权未登记，访客需经允许"},{"id":"house_wt_28","settlement":"loc_bs_weiting","homeLocation":"bld_wt_home_28","members":["npc_wt_qilu","npc_wt_qizhi","npc_wt_qimei"],"tenure":"常住登记；居住权不等于共有个人财物。产权未登记，访客需经允许"},{"id":"house_wt_29","settlement":"loc_bs_weiting","homeLocation":"bld_wt_home_29","members":["npc_wt_huayin","npc_wt_huacheng","npc_wt_jiamiao"],"tenure":"常住登记；居住权不等于共有个人财物。产权未登记，访客需经允许"},{"id":"house_wt_30","settlement":"loc_bs_weiting","homeLocation":"bld_wt_home_30","members":["npc_wt_xiangzhen","npc_wt_xiangfei","npc_wt_xiangtao"],"tenure":"常住登记；居住权不等于共有个人财物。产权未登记，访客需经允许"},{"id":"house_lq_01","settlement":"loc_bs_liquan","homeLocation":"bld_lq_home_01","members":["npc_lq_luanpei","npc_lq_luanyu","npc_lq_qianmu","npc_lq_fenling"],"tenure":"常住登记；居住权不等于共有个人财物。产权未登记，访客需经允许"},{"id":"house_lq_02","settlement":"loc_bs_liquan","homeLocation":"bld_lq_home_02","members":["npc_lq_jiaoyan","npc_lq_jiaozhi","npc_lq_xuqiao","npc_lq_lujue"],"tenure":"常住登记；居住权不等于共有个人财物。产权未登记，访客需经允许"},{"id":"house_lq_03","settlement":"loc_bs_liquan","homeLocation":"bld_lq_home_03","members":["npc_lq_chuyin","npc_lq_chubai","npc_lq_housi","npc_lq_xinru"],"tenure":"常住登记；居住权不等于共有个人财物。产权未登记，访客需经允许"},{"id":"house_lq_04","settlement":"loc_bs_liquan","homeLocation":"bld_lq_home_04","members":["npc_lq_xulong","npc_lq_xulu","npc_lq_guli","npc_lq_tengyou"],"tenure":"常住登记；居住权不等于共有个人财物。产权未登记，访客需经允许"},{"id":"house_lq_05","settlement":"loc_bs_liquan","homeLocation":"bld_lq_home_05","members":["npc_lq_shenshu","npc_lq_shensi","npc_lq_qiemin","npc_lq_shenyi"],"tenure":"常住登记；居住权不等于共有个人财物。产权未登记，访客需经允许"},{"id":"house_lq_06","settlement":"loc_bs_liquan","homeLocation":"bld_lq_home_06","members":["npc_lq_ningye","npc_lq_ningbi","npc_lq_liru","npc_lq_yaoshan"],"tenure":"常住登记；居住权不等于共有个人财物。产权未登记，访客需经允许"},{"id":"house_lq_07","settlement":"loc_bs_liquan","homeLocation":"bld_lq_home_07","members":["npc_lq_zhenxi","npc_lq_zhenxuan","npc_lq_zanrong"],"tenure":"常住登记；居住权不等于共有个人财物。产权未登记，访客需经允许"},{"id":"house_lq_08","settlement":"loc_bs_liquan","homeLocation":"bld_lq_home_08","members":["npc_lq_ganqi","npc_lq_ganli","npc_lq_jianyue"],"tenure":"常住登记；居住权不等于共有个人财物。产权未登记，访客需经允许"},{"id":"house_lq_09","settlement":"loc_bs_liquan","homeLocation":"bld_lq_home_09","members":["npc_lq_zhouwu","npc_lq_zhourui","npc_lq_hongji"],"tenure":"常住登记；居住权不等于共有个人财物。产权未登记，访客需经允许"},{"id":"house_lq_10","settlement":"loc_bs_liquan","homeLocation":"bld_lq_home_10","members":["npc_lq_huoji","npc_lq_huoyou","npc_lq_yangshuo"],"tenure":"常住登记；居住权不等于共有个人财物。产权未登记，访客需经允许"},{"id":"house_lq_11","settlement":"loc_bs_liquan","homeLocation":"bld_lq_home_11","members":["npc_lq_minghe","npc_lq_mingqi","npc_lq_duanyou"],"tenure":"常住登记；居住权不等于共有个人财物。产权未登记，访客需经允许"},{"id":"house_lq_12","settlement":"loc_bs_liquan","homeLocation":"bld_lq_home_12","members":["npc_lq_yunxiu","npc_lq_yunlan","npc_lq_minqiao"],"tenure":"常住登记；居住权不等于共有个人财物。产权未登记，访客需经允许"},{"id":"house_lq_13","settlement":"loc_bs_liquan","homeLocation":"bld_lq_home_13","members":["npc_lq_fushen","npc_lq_fuzhen","npc_lq_fuyu"],"tenure":"常住登记；居住权不等于共有个人财物。产权未登记，访客需经允许"},{"id":"house_lq_14","settlement":"loc_bs_liquan","homeLocation":"bld_lq_home_14","members":["npc_lq_pijing","npc_lq_piqin","npc_lq_weigu"],"tenure":"常住登记；居住权不等于共有个人财物。产权未登记，访客需经允许"},{"id":"house_lq_15","settlement":"loc_bs_liquan","homeLocation":"bld_lq_home_15","members":["npc_lq_yinzhi","npc_lq_yinji","npc_lq_yinxia"],"tenure":"常住登记；居住权不等于共有个人财物。产权未登记，访客需经允许"},{"id":"house_lq_16","settlement":"loc_bs_liquan","homeLocation":"bld_lq_home_16","members":["npc_lq_tanyu","npc_lq_tanxiao","npc_lq_guanli"],"tenure":"常住登记；居住权不等于共有个人财物。产权未登记，访客需经允许"},{"id":"house_lq_17","settlement":"loc_bs_liquan","homeLocation":"bld_lq_home_17","members":["npc_lq_fengji","npc_lq_fengqing","npc_lq_mangui"],"tenure":"常住登记；居住权不等于共有个人财物。产权未登记，访客需经允许"},{"id":"house_lq_18","settlement":"loc_bs_liquan","homeLocation":"bld_lq_home_18","members":["npc_lq_suili","npc_lq_suiying","npc_lq_xiangan"],"tenure":"常住登记；居住权不等于共有个人财物。产权未登记，访客需经允许"},{"id":"house_lq_19","settlement":"loc_bs_liquan","homeLocation":"bld_lq_home_19","members":["npc_lq_shaluo","npc_lq_shalin","npc_lq_diyun"],"tenure":"常住登记；居住权不等于共有个人财物。产权未登记，访客需经允许"},{"id":"house_lq_20","settlement":"loc_bs_liquan","homeLocation":"bld_lq_home_20","members":["npc_lq_mogu","npc_lq_mozhen","npc_lq_nanhui"],"tenure":"常住登记；居住权不等于共有个人财物。产权未登记，访客需经允许"},{"id":"house_lq_21","settlement":"loc_bs_liquan","homeLocation":"bld_lq_home_21","members":["npc_lq_huaniu","npc_lq_huami","npc_lq_panguo"],"tenure":"常住登记；居住权不等于共有个人财物。产权未登记，访客需经允许"},{"id":"house_lq_22","settlement":"loc_bs_liquan","homeLocation":"bld_lq_home_22","members":["npc_lq_wenqi","npc_lq_wenchao","npc_lq_caiyu"],"tenure":"常住登记；居住权不等于共有个人财物。产权未登记，访客需经允许"},{"id":"house_lq_23","settlement":"loc_bs_liquan","homeLocation":"bld_lq_home_23","members":["npc_lq_jushu","npc_lq_juli","npc_lq_maozhen"],"tenure":"常住登记；居住权不等于共有个人财物。产权未登记，访客需经允许"},{"id":"house_lq_24","settlement":"loc_bs_liquan","homeLocation":"bld_lq_home_24","members":["npc_lq_cuifan","npc_lq_cuiya","npc_lq_cuiling"],"tenure":"常住登记；居住权不等于共有个人财物。产权未登记，访客需经允许"},{"id":"house_lq_25","settlement":"loc_bs_liquan","homeLocation":"bld_lq_home_25","members":["npc_lq_qinglan","npc_lq_qingman","npc_lq_chongze"],"tenure":"常住登记；居住权不等于共有个人财物。产权未登记，访客需经允许"},{"id":"house_lq_26","settlement":"loc_bs_liquan","homeLocation":"bld_lq_home_26","members":["npc_lq_henglu","npc_lq_hengyin","npc_lq_dulan"],"tenure":"常住登记；居住权不等于共有个人财物。产权未登记，访客需经允许"},{"id":"house_lq_27","settlement":"loc_bs_liquan","homeLocation":"bld_lq_home_27","members":["npc_lq_yike","npc_lq_yijun","npc_lq_qinyu"],"tenure":"常住登记；居住权不等于共有个人财物。产权未登记，访客需经允许"},{"id":"house_lq_28","settlement":"loc_bs_liquan","homeLocation":"bld_lq_home_28","members":["npc_lq_manqu","npc_lq_manhui","npc_lq_manyun"],"tenure":"常住登记；居住权不等于共有个人财物。产权未登记，访客需经允许"},{"id":"house_lq_29","settlement":"loc_bs_liquan","homeLocation":"bld_lq_home_29","members":["npc_lq_nieya","npc_lq_nielei","npc_lq_cengye"],"tenure":"常住登记；居住权不等于共有个人财物。产权未登记，访客需经允许"},{"id":"house_lq_30","settlement":"loc_bs_liquan","homeLocation":"bld_lq_home_30","members":["npc_lq_kuangye","npc_lq_kuangrong","npc_lq_ronghua"],"tenure":"常住登记；居住权不等于共有个人财物。产权未登记，访客需经允许"},{"id":"house_sb_01","settlement":"loc_bs_sangban","homeLocation":"bld_sb_home_01","members":["npc_sb_zhangluo","npc_sb_zhangyun","npc_sb_yanmu","npc_sb_hewan"],"tenure":"常住登记；居住权不等于共有个人财物。产权未登记，访客需经允许"},{"id":"house_sb_02","settlement":"loc_bs_sangban","homeLocation":"bld_sb_home_02","members":["npc_sb_yuanqing","npc_sb_yuanji","npc_sb_chuqian","npc_sb_yougan"],"tenure":"常住登记；居住权不等于共有个人财物。产权未登记，访客需经允许"},{"id":"house_sb_03","settlement":"loc_bs_sangban","homeLocation":"bld_sb_home_03","members":["npc_sb_zhonglan","npc_sb_zhongyi","npc_sb_heyang","npc_sb_liangfen"],"tenure":"常住登记；居住权不等于共有个人财物。产权未登记，访客需经允许"},{"id":"house_sb_04","settlement":"loc_bs_sangban","homeLocation":"bld_sb_home_04","members":["npc_sb_tianmo","npc_sb_tianrou","npc_sb_zhanyu","npc_sb_hanyi"],"tenure":"常住登记；居住权不等于共有个人财物。产权未登记，访客需经允许"},{"id":"house_sb_05","settlement":"loc_bs_sangban","homeLocation":"bld_sb_home_05","members":["npc_sb_zhenyun","npc_sb_zhenli","npc_sb_chenshu","npc_sb_zhenhao"],"tenure":"常住登记；居住权不等于共有个人财物。产权未登记，访客需经允许"},{"id":"house_sb_06","settlement":"loc_bs_sangban","homeLocation":"bld_sb_home_06","members":["npc_sb_gulu","npc_sb_guyou","npc_sb_huaiting","npc_sb_nianshu"],"tenure":"常住登记；居住权不等于共有个人财物。产权未登记，访客需经允许"},{"id":"house_sb_07","settlement":"loc_bs_sangban","homeLocation":"bld_sb_home_07","members":["npc_sb_yexun","npc_sb_yezhi","npc_sb_jiangru","npc_sb_shewen"],"tenure":"常住登记；居住权不等于共有个人财物。产权未登记，访客需经允许"},{"id":"house_sb_08","settlement":"loc_bs_sangban","homeLocation":"bld_sb_home_08","members":["npc_sb_zhuchai","npc_sb_zhumei","npc_sb_buzhen","npc_sb_gaoqi"],"tenure":"常住登记；居住权不等于共有个人财物。产权未登记，访客需经允许"},{"id":"house_sb_09","settlement":"loc_bs_sangban","homeLocation":"bld_sb_home_09","members":["npc_sb_panyao","npc_sb_panrui","npc_sb_hupi","npc_sb_panxin"],"tenure":"常住登记；居住权不等于共有个人财物。产权未登记，访客需经允许"},{"id":"house_sb_10","settlement":"loc_bs_sangban","homeLocation":"bld_sb_home_10","members":["npc_sb_gaoshu","npc_sb_gaojin","npc_sb_shiluo","npc_sb_dunyu"],"tenure":"常住登记；居住权不等于共有个人财物。产权未登记，访客需经允许"},{"id":"house_sb_11","settlement":"loc_bs_sangban","homeLocation":"bld_sb_home_11","members":["npc_sb_zhouwei","npc_sb_zhoufen","npc_sb_lile","npc_sb_rongping"],"tenure":"常住登记；居住权不等于共有个人财物。产权未登记，访客需经允许"},{"id":"house_sb_12","settlement":"loc_bs_sangban","homeLocation":"bld_sb_home_12","members":["npc_sb_congsi","npc_sb_congya","npc_sb_changlu","npc_sb_congqi"],"tenure":"常住登记；居住权不等于共有个人财物。产权未登记，访客需经允许"},{"id":"house_sb_13","settlement":"loc_bs_sangban","homeLocation":"bld_sb_home_13","members":["npc_sb_maoli","npc_sb_maoxuan","npc_sb_zhaojin","npc_sb_wenna"],"tenure":"常住登记；居住权不等于共有个人财物。产权未登记，访客需经允许"},{"id":"house_sb_14","settlement":"loc_bs_sangban","homeLocation":"bld_sb_home_14","members":["npc_sb_jiean","npc_sb_jieying","npc_sb_jiejun","npc_sb_yimiao"],"tenure":"常住登记；居住权不等于共有个人财物。产权未登记，访客需经允许"},{"id":"house_sb_15","settlement":"loc_bs_sangban","homeLocation":"bld_sb_home_15","members":["npc_sb_baishu","npc_sb_baihan","npc_sb_tengzi","npc_sb_bairong"],"tenure":"常住登记；居住权不等于共有个人财物。产权未登记，访客需经允许"},{"id":"house_sb_16","settlement":"loc_bs_sangban","homeLocation":"bld_sb_home_16","members":["npc_sb_luwei","npc_sb_luyun","npc_sb_luxin","npc_sb_wujia"],"tenure":"常住登记；居住权不等于共有个人财物。产权未登记，访客需经允许"},{"id":"house_sb_17","settlement":"loc_bs_sangban","homeLocation":"bld_sb_home_17","members":["npc_sb_shikui","npc_sb_shilan","npc_sb_zengyi","npc_sb_fujin"],"tenure":"常住登记；居住权不等于共有个人财物。产权未登记，访客需经允许"},{"id":"house_sb_18","settlement":"loc_bs_sangban","homeLocation":"bld_sb_home_18","members":["npc_sb_kongliu","npc_sb_kongzhi","npc_sb_chuhui","npc_sb_konglin"],"tenure":"常住登记；居住权不等于共有个人财物。产权未登记，访客需经允许"},{"id":"house_sb_19","settlement":"loc_bs_sangban","homeLocation":"bld_sb_home_19","members":["npc_sb_feiqing","npc_sb_feiyue","npc_sb_helai","npc_sb_feixu"],"tenure":"常住登记；居住权不等于共有个人财物。产权未登记，访客需经允许"},{"id":"house_sb_20","settlement":"loc_bs_sangban","homeLocation":"bld_sb_home_20","members":["npc_sb_shangyun","npc_sb_shangyu","npc_sb_miaoran","npc_sb_quean"],"tenure":"常住登记；居住权不等于共有个人财物。产权未登记，访客需经允许"},{"id":"house_sb_21","settlement":"loc_bs_sangban","homeLocation":"bld_sb_home_21","members":["npc_sb_chishan","npc_sb_chifen","npc_sb_yanbo"],"tenure":"常住登记；居住权不等于共有个人财物。产权未登记，访客需经允许"},{"id":"house_sb_22","settlement":"loc_bs_sangban","homeLocation":"bld_sb_home_22","members":["npc_sb_chayue","npc_sb_chalin","npc_sb_shuqi"],"tenure":"常住登记；居住权不等于共有个人财物。产权未登记，访客需经允许"},{"id":"house_sb_23","settlement":"loc_bs_sangban","homeLocation":"bld_sb_home_23","members":["npc_sb_qinwan","npc_sb_qinxian","npc_sb_tuben"],"tenure":"常住登记；居住权不等于共有个人财物。产权未登记，访客需经允许"},{"id":"house_sb_24","settlement":"loc_bs_sangban","homeLocation":"bld_sb_home_24","members":["npc_sb_longfu","npc_sb_longyu","npc_sb_leisi"],"tenure":"常住登记；居住权不等于共有个人财物。产权未登记，访客需经允许"},{"id":"house_sb_25","settlement":"loc_bs_sangban","homeLocation":"bld_sb_home_25","members":["npc_sb_zhuxian","npc_sb_zhurun","npc_sb_biqi"],"tenure":"常住登记；居住权不等于共有个人财物。产权未登记，访客需经允许"},{"id":"house_sb_26","settlement":"loc_bs_sangban","homeLocation":"bld_sb_home_26","members":["npc_sb_fuyu","npc_sb_fujing","npc_sb_shuiya"],"tenure":"常住登记；居住权不等于共有个人财物。产权未登记，访客需经允许"},{"id":"house_sb_27","settlement":"loc_bs_sangban","homeLocation":"bld_sb_home_27","members":["npc_sb_quanli","npc_sb_quanyun","npc_sb_quancheng"],"tenure":"常住登记；居住权不等于共有个人财物。产权未登记，访客需经允许"},{"id":"house_sb_28","settlement":"loc_bs_sangban","homeLocation":"bld_sb_home_28","members":["npc_sb_yanjue","npc_sb_yanjun","npc_sb_rongru"],"tenure":"常住登记；居住权不等于共有个人财物。产权未登记，访客需经允许"},{"id":"house_sb_29","settlement":"loc_bs_sangban","homeLocation":"bld_sb_home_29","members":["npc_sb_xianghe","npc_sb_xiangyan","npc_sb_zhanlu"],"tenure":"常住登记；居住权不等于共有个人财物。产权未登记，访客需经允许"},{"id":"house_sb_30","settlement":"loc_bs_sangban","homeLocation":"bld_sb_home_30","members":["npc_sb_diye","npc_sb_dixi","npc_sb_diquan"],"tenure":"常住登记；居住权不等于共有个人财物。产权未登记，访客需经允许"}]
+[
+  {
+    "id": "house_hw_01",
+    "settlement": "loc_hw",
+    "homeLocation": "bld_hw_qingdeng",
+    "members": [
+      "npc_hw_linsui",
+      "npc_hw_ayan"
+    ],
+    "tenure": "沿用已发布住处锚点；户籍索引不改原人物产权或现金"
+  },
+  {
+    "id": "house_hw_02",
+    "settlement": "loc_hw",
+    "homeLocation": "bld_hw_council",
+    "members": [
+      "npc_hw_chenbai",
+      "npc_hw_fangqin"
+    ],
+    "tenure": "沿用已发布住处锚点；户籍索引不改原人物产权或现金"
+  },
+  {
+    "id": "house_hw_03",
+    "settlement": "loc_hw",
+    "homeLocation": "bld_hw_riverhome",
+    "members": [
+      "npc_hw_xuling"
+    ],
+    "tenure": "沿用已发布住处锚点；户籍索引不改原人物产权或现金"
+  },
+  {
+    "id": "house_hw_04",
+    "settlement": "loc_hw",
+    "homeLocation": "bld_hw_forge",
+    "members": [
+      "npc_hw_duanyan",
+      "npc_hw_duanhe"
+    ],
+    "tenure": "沿用已发布住处锚点；户籍索引不改原人物产权或现金"
+  },
+  {
+    "id": "house_hw_05",
+    "settlement": "loc_hw",
+    "homeLocation": "bld_hw_qingdeng",
+    "members": [
+      "npc_hw_wushuo"
+    ],
+    "tenure": "沿用已发布住处锚点；户籍索引不改原人物产权或现金"
+  },
+  {
+    "id": "house_hw_06",
+    "settlement": "loc_hw",
+    "homeLocation": "bld_hw_herbs",
+    "members": [
+      "npc_hw_taozhi",
+      "npc_hw_fanrong"
+    ],
+    "tenure": "沿用已发布住处锚点；户籍索引不改原人物产权或现金"
+  },
+  {
+    "id": "house_hw_07",
+    "settlement": "loc_hw",
+    "homeLocation": "loc_hw_dock",
+    "members": [
+      "npc_hw_zhengshuisheng",
+      "npc_hw_hedi"
+    ],
+    "tenure": "沿用已发布住处锚点；户籍索引不改原人物产权或现金"
+  },
+  {
+    "id": "house_hw_08",
+    "settlement": "loc_hw",
+    "homeLocation": "bld_hw_qingdeng",
+    "members": [
+      "npc_hw_luowei",
+      "npc_hw_shijin",
+      "npc_hw_luoxing"
+    ],
+    "tenure": "沿用已发布住处锚点；户籍索引不改原人物产权或现金"
+  },
+  {
+    "id": "house_hw_09",
+    "settlement": "loc_hw",
+    "homeLocation": "bld_hw_weaving",
+    "members": [
+      "npc_hw_sulan",
+      "npc_hw_ruanzheng"
+    ],
+    "tenure": "沿用已发布住处锚点；户籍索引不改原人物产权或现金"
+  },
+  {
+    "id": "house_hw_10",
+    "settlement": "loc_hw",
+    "homeLocation": "bld_hw_post",
+    "members": [
+      "npc_hw_gucen",
+      "npc_hw_yuxing"
+    ],
+    "tenure": "沿用已发布住处锚点；户籍索引不改原人物产权或现金"
+  },
+  {
+    "id": "house_hw_11",
+    "settlement": "loc_hw",
+    "homeLocation": "bld_hw_qingdeng",
+    "members": [
+      "npc_hw_meiling",
+      "npc_hw_meiyue",
+      "npc_hw_sangwu"
+    ],
+    "tenure": "沿用已发布住处锚点；户籍索引不改原人物产权或现金"
+  },
+  {
+    "id": "house_hw_12",
+    "settlement": "loc_hw",
+    "homeLocation": "bld_hw_school",
+    "members": [
+      "npc_hw_luqing",
+      "npc_hw_luxun"
+    ],
+    "tenure": "沿用已发布住处锚点；户籍索引不改原人物产权或现金"
+  },
+  {
+    "id": "house_hw_13",
+    "settlement": "loc_hw",
+    "homeLocation": "loc_hw_apiary",
+    "members": [
+      "npc_hw_anhuai"
+    ],
+    "tenure": "沿用已发布住处锚点；户籍索引不改原人物产权或现金"
+  },
+  {
+    "id": "house_hw_14",
+    "settlement": "loc_hw",
+    "homeLocation": "bld_hw_post",
+    "members": [
+      "npc_hw_shendu",
+      "npc_hw_shenhe"
+    ],
+    "tenure": "沿用已发布住处锚点；户籍索引不改原人物产权或现金"
+  },
+  {
+    "id": "house_hw_15",
+    "settlement": "loc_hw",
+    "homeLocation": "bld_hw_home_15",
+    "members": [
+      "npc_hw_miaozhen",
+      "npc_hw_shaohe",
+      "npc_hw_shaoyun",
+      "npc_hw_shaoyu"
+    ],
+    "tenure": "私宅居住登记，产权未登记，不授予访客进入权"
+  },
+  {
+    "id": "house_hw_16",
+    "settlement": "loc_hw",
+    "homeLocation": "bld_hw_home_16",
+    "members": [
+      "npc_hw_xinglu",
+      "npc_hw_xingshu",
+      "npc_hw_huaci"
+    ],
+    "tenure": "私宅居住登记，产权未登记，不授予访客进入权"
+  },
+  {
+    "id": "house_hw_17",
+    "settlement": "loc_hw",
+    "homeLocation": "bld_hw_home_17",
+    "members": [
+      "npc_hw_ranmo",
+      "npc_hw_randai",
+      "npc_hw_dengjia",
+      "npc_hw_dengtai"
+    ],
+    "tenure": "私宅居住登记，产权未登记，不授予访客进入权"
+  },
+  {
+    "id": "house_hw_18",
+    "settlement": "loc_hw",
+    "homeLocation": "bld_hw_home_18",
+    "members": [
+      "npc_hw_puduo",
+      "npc_hw_wengqiao",
+      "npc_hw_puxin",
+      "npc_hw_wengqin"
+    ],
+    "tenure": "私宅居住登记，产权未登记，不授予访客进入权"
+  },
+  {
+    "id": "house_hw_19",
+    "settlement": "loc_hw",
+    "homeLocation": "bld_hw_home_19",
+    "members": [
+      "npc_hw_feikai",
+      "npc_hw_hangli",
+      "npc_hw_feiyin",
+      "npc_hw_feizhuo"
+    ],
+    "tenure": "私宅居住登记，产权未登记，不授予访客进入权"
+  },
+  {
+    "id": "house_hw_20",
+    "settlement": "loc_hw",
+    "homeLocation": "bld_hw_home_20",
+    "members": [
+      "npc_hw_baihui",
+      "npc_hw_jiaoyou",
+      "npc_hw_zhongxiu",
+      "npc_hw_zhongya"
+    ],
+    "tenure": "私宅居住登记，产权未登记，不授予访客进入权"
+  },
+  {
+    "id": "house_hw_21",
+    "settlement": "loc_hw",
+    "homeLocation": "bld_hw_home_21",
+    "members": [
+      "npc_hw_xiejin",
+      "npc_hw_xierui",
+      "npc_hw_liyan",
+      "npc_hw_xieyi"
+    ],
+    "tenure": "私宅居住登记，产权未登记，不授予访客进入权"
+  },
+  {
+    "id": "house_hw_22",
+    "settlement": "loc_hw",
+    "homeLocation": "bld_hw_home_22",
+    "members": [
+      "npc_hw_yinge",
+      "npc_hw_jinping",
+      "npc_hw_yinqiu",
+      "npc_hw_yinzhi"
+    ],
+    "tenure": "私宅居住登记，产权未登记，不授予访客进入权"
+  },
+  {
+    "id": "house_yp_01",
+    "settlement": "loc_bs_yupo",
+    "homeLocation": "bld_yp_home_01",
+    "members": [
+      "npc_yp_zhaofeng",
+      "npc_yp_zhaoman",
+      "npc_yp_shile"
+    ],
+    "tenure": "常住登记；居住权不等于共有个人财物。产权未登记，访客需经允许"
+  },
+  {
+    "id": "house_yp_02",
+    "settlement": "loc_bs_yupo",
+    "homeLocation": "bld_yp_home_02",
+    "members": [
+      "npc_yp_qiaoduan",
+      "npc_yp_qiaobei",
+      "npc_yp_zhongqi"
+    ],
+    "tenure": "常住登记；居住权不等于共有个人财物。产权未登记，访客需经允许"
+  },
+  {
+    "id": "house_yp_03",
+    "settlement": "loc_bs_yupo",
+    "homeLocation": "bld_yp_home_03",
+    "members": [
+      "npc_yp_wenxu",
+      "npc_yp_wenyan",
+      "npc_yp_yanbei"
+    ],
+    "tenure": "常住登记；居住权不等于共有个人财物。产权未登记，访客需经允许"
+  },
+  {
+    "id": "house_yp_04",
+    "settlement": "loc_bs_yupo",
+    "homeLocation": "bld_yp_home_04",
+    "members": [
+      "npc_yp_jiangmi",
+      "npc_yp_jiangna",
+      "npc_yp_biwen"
+    ],
+    "tenure": "常住登记；居住权不等于共有个人财物。产权未登记，访客需经允许"
+  },
+  {
+    "id": "house_yp_05",
+    "settlement": "loc_bs_yupo",
+    "homeLocation": "bld_yp_home_05",
+    "members": [
+      "npc_yp_hanpei",
+      "npc_yp_hanzhuo",
+      "npc_yp_changqin"
+    ],
+    "tenure": "常住登记；居住权不等于共有个人财物。产权未登记，访客需经允许"
+  },
+  {
+    "id": "house_yp_06",
+    "settlement": "loc_bs_yupo",
+    "homeLocation": "bld_yp_home_06",
+    "members": [
+      "npc_yp_zhusheng",
+      "npc_yp_zhumo",
+      "npc_yp_tianjie"
+    ],
+    "tenure": "常住登记；居住权不等于共有个人财物。产权未登记，访客需经允许"
+  },
+  {
+    "id": "house_yp_07",
+    "settlement": "loc_bs_yupo",
+    "homeLocation": "bld_yp_home_07",
+    "members": [
+      "npc_yp_qinli",
+      "npc_yp_qinwei",
+      "npc_yp_luocheng"
+    ],
+    "tenure": "常住登记；居住权不等于共有个人财物。产权未登记，访客需经允许"
+  },
+  {
+    "id": "house_yp_08",
+    "settlement": "loc_bs_yupo",
+    "homeLocation": "bld_yp_home_08",
+    "members": [
+      "npc_yp_gaoxin",
+      "npc_yp_gaotan",
+      "npc_yp_baijia"
+    ],
+    "tenure": "常住登记；居住权不等于共有个人财物。产权未登记，访客需经允许"
+  },
+  {
+    "id": "house_yp_09",
+    "settlement": "loc_bs_yupo",
+    "homeLocation": "bld_yp_home_09",
+    "members": [
+      "npc_yp_taozi",
+      "npc_yp_taoxun",
+      "npc_yp_chengyi"
+    ],
+    "tenure": "常住登记；居住权不等于共有个人财物。产权未登记，访客需经允许"
+  },
+  {
+    "id": "house_yp_10",
+    "settlement": "loc_bs_yupo",
+    "homeLocation": "bld_yp_home_10",
+    "members": [
+      "npc_yp_luxia",
+      "npc_yp_luyou",
+      "npc_yp_dengci"
+    ],
+    "tenure": "常住登记；居住权不等于共有个人财物。产权未登记，访客需经允许"
+  },
+  {
+    "id": "house_yp_11",
+    "settlement": "loc_bs_yupo",
+    "homeLocation": "bld_yp_home_11",
+    "members": [
+      "npc_yp_panju",
+      "npc_yp_panning",
+      "npc_yp_fanchun"
+    ],
+    "tenure": "常住登记；居住权不等于共有个人财物。产权未登记，访客需经允许"
+  },
+  {
+    "id": "house_yp_12",
+    "settlement": "loc_bs_yupo",
+    "homeLocation": "bld_yp_home_12",
+    "members": [
+      "npc_yp_renbo",
+      "npc_yp_renyu",
+      "npc_yp_qufen"
+    ],
+    "tenure": "常住登记；居住权不等于共有个人财物。产权未登记，访客需经允许"
+  },
+  {
+    "id": "house_yp_13",
+    "settlement": "loc_bs_yupo",
+    "homeLocation": "bld_yp_home_13",
+    "members": [
+      "npc_yp_caoyun",
+      "npc_yp_caozhen",
+      "npc_yp_lequan"
+    ],
+    "tenure": "常住登记；居住权不等于共有个人财物。产权未登记，访客需经允许"
+  },
+  {
+    "id": "house_yp_14",
+    "settlement": "loc_bs_yupo",
+    "homeLocation": "bld_yp_home_14",
+    "members": [
+      "npc_yp_xunhe",
+      "npc_yp_xunjia",
+      "npc_yp_mohe"
+    ],
+    "tenure": "常住登记；居住权不等于共有个人财物。产权未登记，访客需经允许"
+  },
+  {
+    "id": "house_yp_15",
+    "settlement": "loc_bs_yupo",
+    "homeLocation": "bld_yp_home_15",
+    "members": [
+      "npc_yp_yinrong",
+      "npc_yp_yinsui",
+      "npc_yp_hujun"
+    ],
+    "tenure": "常住登记；居住权不等于共有个人财物。产权未登记，访客需经允许"
+  },
+  {
+    "id": "house_yp_16",
+    "settlement": "loc_bs_yupo",
+    "homeLocation": "bld_yp_home_16",
+    "members": [
+      "npc_yp_weichi",
+      "npc_yp_weiran",
+      "npc_yp_yingzhu"
+    ],
+    "tenure": "常住登记；居住权不等于共有个人财物。产权未登记，访客需经允许"
+  },
+  {
+    "id": "house_yp_17",
+    "settlement": "loc_bs_yupo",
+    "homeLocation": "bld_yp_home_17",
+    "members": [
+      "npc_yp_genglu",
+      "npc_yp_gengfei",
+      "npc_yp_songdi"
+    ],
+    "tenure": "常住登记；居住权不等于共有个人财物。产权未登记，访客需经允许"
+  },
+  {
+    "id": "house_yp_18",
+    "settlement": "loc_bs_yupo",
+    "homeLocation": "bld_yp_home_18",
+    "members": [
+      "npc_yp_xicun",
+      "npc_yp_xichu",
+      "npc_yp_youlin"
+    ],
+    "tenure": "常住登记；居住权不等于共有个人财物。产权未登记，访客需经允许"
+  },
+  {
+    "id": "house_yp_19",
+    "settlement": "loc_bs_yupo",
+    "homeLocation": "bld_yp_home_19",
+    "members": [
+      "npc_yp_miaopu",
+      "npc_yp_miaoying",
+      "npc_yp_zhuying"
+    ],
+    "tenure": "常住登记；居住权不等于共有个人财物。产权未登记，访客需经允许"
+  },
+  {
+    "id": "house_yp_20",
+    "settlement": "loc_bs_yupo",
+    "homeLocation": "bld_yp_home_20",
+    "members": [
+      "npc_yp_baoyin",
+      "npc_yp_baoyi",
+      "npc_yp_niyu"
+    ],
+    "tenure": "常住登记；居住权不等于共有个人财物。产权未登记，访客需经允许"
+  },
+  {
+    "id": "house_yp_21",
+    "settlement": "loc_bs_yupo",
+    "homeLocation": "bld_yp_home_21",
+    "members": [
+      "npc_yp_fengya",
+      "npc_yp_fengjia"
+    ],
+    "tenure": "常住登记；居住权不等于共有个人财物。产权未登记，访客需经允许"
+  },
+  {
+    "id": "house_yp_22",
+    "settlement": "loc_bs_yupo",
+    "homeLocation": "bld_yp_home_22",
+    "members": [
+      "npc_yp_shiling",
+      "npc_yp_shichang"
+    ],
+    "tenure": "常住登记；居住权不等于共有个人财物。产权未登记，访客需经允许"
+  },
+  {
+    "id": "house_yp_23",
+    "settlement": "loc_bs_yupo",
+    "homeLocation": "bld_yp_home_23",
+    "members": [
+      "npc_yp_shaoruo",
+      "npc_yp_shaowan"
+    ],
+    "tenure": "常住登记；居住权不等于共有个人财物。产权未登记，访客需经允许"
+  },
+  {
+    "id": "house_yp_24",
+    "settlement": "loc_bs_yupo",
+    "homeLocation": "bld_yp_home_24",
+    "members": [
+      "npc_yp_lingwan",
+      "npc_yp_lingzi"
+    ],
+    "tenure": "常住登记；居住权不等于共有个人财物。产权未登记，访客需经允许"
+  },
+  {
+    "id": "house_yp_25",
+    "settlement": "loc_bs_yupo",
+    "homeLocation": "bld_yp_home_25",
+    "members": [
+      "npc_yp_kongfu",
+      "npc_yp_kongheng"
+    ],
+    "tenure": "常住登记；居住权不等于共有个人财物。产权未登记，访客需经允许"
+  },
+  {
+    "id": "house_yp_26",
+    "settlement": "loc_bs_yupo",
+    "homeLocation": "bld_yp_home_26",
+    "members": [
+      "npc_yp_yucheng",
+      "npc_yp_yuning"
+    ],
+    "tenure": "常住登记；居住权不等于共有个人财物。产权未登记，访客需经允许"
+  },
+  {
+    "id": "house_yp_27",
+    "settlement": "loc_bs_yupo",
+    "homeLocation": "bld_yp_home_27",
+    "members": [
+      "npc_yp_qiuyan",
+      "npc_yp_qiulu"
+    ],
+    "tenure": "常住登记；居住权不等于共有个人财物。产权未登记，访客需经允许"
+  },
+  {
+    "id": "house_yp_28",
+    "settlement": "loc_bs_yupo",
+    "homeLocation": "bld_yp_home_28",
+    "members": [
+      "npc_yp_tanghuan",
+      "npc_yp_tangru"
+    ],
+    "tenure": "常住登记；居住权不等于共有个人财物。产权未登记，访客需经允许"
+  },
+  {
+    "id": "house_yp_29",
+    "settlement": "loc_bs_yupo",
+    "homeLocation": "bld_yp_home_29",
+    "members": [
+      "npc_yp_zhangyi",
+      "npc_yp_zhangcai"
+    ],
+    "tenure": "常住登记；居住权不等于共有个人财物。产权未登记，访客需经允许"
+  },
+  {
+    "id": "house_yp_30",
+    "settlement": "loc_bs_yupo",
+    "homeLocation": "bld_yp_home_30",
+    "members": [
+      "npc_yp_lisha",
+      "npc_yp_lifan"
+    ],
+    "tenure": "常住登记；居住权不等于共有个人财物。产权未登记，访客需经允许"
+  },
+  {
+    "id": "house_wt_01",
+    "settlement": "loc_bs_weiting",
+    "homeLocation": "bld_wt_home_01",
+    "members": [
+      "npc_wt_zhengxi",
+      "npc_wt_zhengbei",
+      "npc_wt_hanchuan",
+      "npc_wt_mingle"
+    ],
+    "tenure": "常住登记；居住权不等于共有个人财物。产权未登记，访客需经允许"
+  },
+  {
+    "id": "house_wt_02",
+    "settlement": "loc_bs_weiting",
+    "homeLocation": "bld_wt_home_02",
+    "members": [
+      "npc_wt_wangpu",
+      "npc_wt_wangyun",
+      "npc_wt_zangfu",
+      "npc_wt_wangqin"
+    ],
+    "tenure": "常住登记；居住权不等于共有个人财物。产权未登记，访客需经允许"
+  },
+  {
+    "id": "house_wt_03",
+    "settlement": "loc_bs_weiting",
+    "homeLocation": "bld_wt_home_03",
+    "members": [
+      "npc_wt_zhouzhu",
+      "npc_wt_zhouya",
+      "npc_wt_qiangen",
+      "npc_wt_lusi"
+    ],
+    "tenure": "常住登记；居住权不等于共有个人财物。产权未登记，访客需经允许"
+  },
+  {
+    "id": "house_wt_04",
+    "settlement": "loc_bs_weiting",
+    "homeLocation": "bld_wt_home_04",
+    "members": [
+      "npc_wt_wupeng",
+      "npc_wt_wumo",
+      "npc_wt_hehuan",
+      "npc_wt_fujiang"
+    ],
+    "tenure": "常住登记；居住权不等于共有个人财物。产权未登记，访客需经允许"
+  },
+  {
+    "id": "house_wt_05",
+    "settlement": "loc_bs_weiting",
+    "homeLocation": "bld_wt_home_05",
+    "members": [
+      "npc_wt_weilian",
+      "npc_wt_weihan",
+      "npc_wt_youmin",
+      "npc_wt_weishu"
+    ],
+    "tenure": "常住登记；居住权不等于共有个人财物。产权未登记，访客需经允许"
+  },
+  {
+    "id": "house_wt_06",
+    "settlement": "loc_bs_weiting",
+    "homeLocation": "bld_wt_home_06",
+    "members": [
+      "npc_wt_huangting",
+      "npc_wt_huangrui",
+      "npc_wt_guanyu",
+      "npc_wt_liluo"
+    ],
+    "tenure": "常住登记；居住权不等于共有个人财物。产权未登记，访客需经允许"
+  },
+  {
+    "id": "house_wt_07",
+    "settlement": "loc_bs_weiting",
+    "homeLocation": "bld_wt_home_07",
+    "members": [
+      "npc_wt_heqin",
+      "npc_wt_hecen",
+      "npc_wt_suma",
+      "npc_wt_haoyu"
+    ],
+    "tenure": "常住登记；居住权不等于共有个人财物。产权未登记，访客需经允许"
+  },
+  {
+    "id": "house_wt_08",
+    "settlement": "loc_bs_weiting",
+    "homeLocation": "bld_wt_home_08",
+    "members": [
+      "npc_wt_lvmo",
+      "npc_wt_lvxin",
+      "npc_wt_dingchun",
+      "npc_wt_lvlan"
+    ],
+    "tenure": "常住登记；居住权不等于共有个人财物。产权未登记，访客需经允许"
+  },
+  {
+    "id": "house_wt_09",
+    "settlement": "loc_bs_weiting",
+    "homeLocation": "bld_wt_home_09",
+    "members": [
+      "npc_wt_shiqiao",
+      "npc_wt_shijue",
+      "npc_wt_binran",
+      "npc_wt_rongxiao"
+    ],
+    "tenure": "常住登记；居住权不等于共有个人财物。产权未登记，访客需经允许"
+  },
+  {
+    "id": "house_wt_10",
+    "settlement": "loc_bs_weiting",
+    "homeLocation": "bld_wt_home_10",
+    "members": [
+      "npc_wt_keli",
+      "npc_wt_kefang",
+      "npc_wt_pengao",
+      "npc_wt_ketong"
+    ],
+    "tenure": "常住登记；居住权不等于共有个人财物。产权未登记，访客需经允许"
+  },
+  {
+    "id": "house_wt_11",
+    "settlement": "loc_bs_weiting",
+    "homeLocation": "bld_wt_home_11",
+    "members": [
+      "npc_wt_duke",
+      "npc_wt_duqing",
+      "npc_wt_dusong"
+    ],
+    "tenure": "常住登记；居住权不等于共有个人财物。产权未登记，访客需经允许"
+  },
+  {
+    "id": "house_wt_12",
+    "settlement": "loc_bs_weiting",
+    "homeLocation": "bld_wt_home_12",
+    "members": [
+      "npc_wt_liuyan",
+      "npc_wt_liuchan",
+      "npc_wt_xuyuan"
+    ],
+    "tenure": "常住登记；居住权不等于共有个人财物。产权未登记，访客需经允许"
+  },
+  {
+    "id": "house_wt_13",
+    "settlement": "loc_bs_weiting",
+    "homeLocation": "bld_wt_home_13",
+    "members": [
+      "npc_wt_zhangou",
+      "npc_wt_zhanshu",
+      "npc_wt_yuhan"
+    ],
+    "tenure": "常住登记；居住权不等于共有个人财物。产权未登记，访客需经允许"
+  },
+  {
+    "id": "house_wt_14",
+    "settlement": "loc_bs_weiting",
+    "homeLocation": "bld_wt_home_14",
+    "members": [
+      "npc_wt_zhicai",
+      "npc_wt_zhiluo",
+      "npc_wt_yaorong"
+    ],
+    "tenure": "常住登记；居住权不等于共有个人财物。产权未登记，访客需经允许"
+  },
+  {
+    "id": "house_wt_15",
+    "settlement": "loc_bs_weiting",
+    "homeLocation": "bld_wt_home_15",
+    "members": [
+      "npc_wt_xueying",
+      "npc_wt_xueshi",
+      "npc_wt_tanyao"
+    ],
+    "tenure": "常住登记；居住权不等于共有个人财物。产权未登记，访客需经允许"
+  },
+  {
+    "id": "house_wt_16",
+    "settlement": "loc_bs_weiting",
+    "homeLocation": "bld_wt_home_16",
+    "members": [
+      "npc_wt_leizhi",
+      "npc_wt_leihua",
+      "npc_wt_kejing"
+    ],
+    "tenure": "常住登记；居住权不等于共有个人财物。产权未登记，访客需经允许"
+  },
+  {
+    "id": "house_wt_17",
+    "settlement": "loc_bs_weiting",
+    "homeLocation": "bld_wt_home_17",
+    "members": [
+      "npc_wt_niyun",
+      "npc_wt_nimei",
+      "npc_wt_niru"
+    ],
+    "tenure": "常住登记；居住权不等于共有个人财物。产权未登记，访客需经允许"
+  },
+  {
+    "id": "house_wt_18",
+    "settlement": "loc_bs_weiting",
+    "homeLocation": "bld_wt_home_18",
+    "members": [
+      "npc_wt_quhuai",
+      "npc_wt_quhe",
+      "npc_wt_qujian"
+    ],
+    "tenure": "常住登记；居住权不等于共有个人财物。产权未登记，访客需经允许"
+  },
+  {
+    "id": "house_wt_19",
+    "settlement": "loc_bs_weiting",
+    "homeLocation": "bld_wt_home_19",
+    "members": [
+      "npc_wt_dingsu",
+      "npc_wt_dinggu",
+      "npc_wt_chengfen"
+    ],
+    "tenure": "常住登记；居住权不等于共有个人财物。产权未登记，访客需经允许"
+  },
+  {
+    "id": "house_wt_20",
+    "settlement": "loc_bs_weiting",
+    "homeLocation": "bld_wt_home_20",
+    "members": [
+      "npc_wt_ruqin",
+      "npc_wt_rushu",
+      "npc_wt_xingbo"
+    ],
+    "tenure": "常住登记；居住权不等于共有个人财物。产权未登记，访客需经允许"
+  },
+  {
+    "id": "house_wt_21",
+    "settlement": "loc_bs_weiting",
+    "homeLocation": "bld_wt_home_21",
+    "members": [
+      "npc_wt_gonglu",
+      "npc_wt_gongyan",
+      "npc_wt_gongwan"
+    ],
+    "tenure": "常住登记；居住权不等于共有个人财物。产权未登记，访客需经允许"
+  },
+  {
+    "id": "house_wt_22",
+    "settlement": "loc_bs_weiting",
+    "homeLocation": "bld_wt_home_22",
+    "members": [
+      "npc_wt_jingyao",
+      "npc_wt_jingfeng",
+      "npc_wt_binlan"
+    ],
+    "tenure": "常住登记；居住权不等于共有个人财物。产权未登记，访客需经允许"
+  },
+  {
+    "id": "house_wt_23",
+    "settlement": "loc_bs_weiting",
+    "homeLocation": "bld_wt_home_23",
+    "members": [
+      "npc_wt_fanshui",
+      "npc_wt_fanliu",
+      "npc_wt_xiezhi"
+    ],
+    "tenure": "常住登记；居住权不等于共有个人财物。产权未登记，访客需经允许"
+  },
+  {
+    "id": "house_wt_24",
+    "settlement": "loc_bs_weiting",
+    "homeLocation": "bld_wt_home_24",
+    "members": [
+      "npc_wt_shanju",
+      "npc_wt_shanxin",
+      "npc_wt_shanwei"
+    ],
+    "tenure": "常住登记；居住权不等于共有个人财物。产权未登记，访客需经允许"
+  },
+  {
+    "id": "house_wt_25",
+    "settlement": "loc_bs_weiting",
+    "homeLocation": "bld_wt_home_25",
+    "members": [
+      "npc_wt_dongfei",
+      "npc_wt_donglu",
+      "npc_wt_huhui"
+    ],
+    "tenure": "常住登记；居住权不等于共有个人财物。产权未登记，访客需经允许"
+  },
+  {
+    "id": "house_wt_26",
+    "settlement": "loc_bs_weiting",
+    "homeLocation": "bld_wt_home_26",
+    "members": [
+      "npc_wt_peichun",
+      "npc_wt_peixi",
+      "npc_wt_guoluo"
+    ],
+    "tenure": "常住登记；居住权不等于共有个人财物。产权未登记，访客需经允许"
+  },
+  {
+    "id": "house_wt_27",
+    "settlement": "loc_bs_weiting",
+    "homeLocation": "bld_wt_home_27",
+    "members": [
+      "npc_wt_suhui",
+      "npc_wt_suxian",
+      "npc_wt_liaowan"
+    ],
+    "tenure": "常住登记；居住权不等于共有个人财物。产权未登记，访客需经允许"
+  },
+  {
+    "id": "house_wt_28",
+    "settlement": "loc_bs_weiting",
+    "homeLocation": "bld_wt_home_28",
+    "members": [
+      "npc_wt_qilu",
+      "npc_wt_qizhi",
+      "npc_wt_qimei"
+    ],
+    "tenure": "常住登记；居住权不等于共有个人财物。产权未登记，访客需经允许"
+  },
+  {
+    "id": "house_wt_29",
+    "settlement": "loc_bs_weiting",
+    "homeLocation": "bld_wt_home_29",
+    "members": [
+      "npc_wt_huayin",
+      "npc_wt_huacheng",
+      "npc_wt_jiamiao"
+    ],
+    "tenure": "常住登记；居住权不等于共有个人财物。产权未登记，访客需经允许"
+  },
+  {
+    "id": "house_wt_30",
+    "settlement": "loc_bs_weiting",
+    "homeLocation": "bld_wt_home_30",
+    "members": [
+      "npc_wt_xiangzhen",
+      "npc_wt_xiangfei",
+      "npc_wt_xiangtao"
+    ],
+    "tenure": "常住登记；居住权不等于共有个人财物。产权未登记，访客需经允许"
+  },
+  {
+    "id": "house_lq_01",
+    "settlement": "loc_bs_liquan",
+    "homeLocation": "bld_lq_home_01",
+    "members": [
+      "npc_lq_luanpei",
+      "npc_lq_luanyu",
+      "npc_lq_qianmu",
+      "npc_lq_fenling"
+    ],
+    "tenure": "常住登记；居住权不等于共有个人财物。产权未登记，访客需经允许"
+  },
+  {
+    "id": "house_lq_02",
+    "settlement": "loc_bs_liquan",
+    "homeLocation": "bld_lq_home_02",
+    "members": [
+      "npc_lq_jiaoyan",
+      "npc_lq_jiaozhi",
+      "npc_lq_xuqiao",
+      "npc_lq_lujue"
+    ],
+    "tenure": "常住登记；居住权不等于共有个人财物。产权未登记，访客需经允许"
+  },
+  {
+    "id": "house_lq_03",
+    "settlement": "loc_bs_liquan",
+    "homeLocation": "bld_lq_home_03",
+    "members": [
+      "npc_lq_chuyin",
+      "npc_lq_chubai",
+      "npc_lq_housi",
+      "npc_lq_xinru"
+    ],
+    "tenure": "常住登记；居住权不等于共有个人财物。产权未登记，访客需经允许"
+  },
+  {
+    "id": "house_lq_04",
+    "settlement": "loc_bs_liquan",
+    "homeLocation": "bld_lq_home_04",
+    "members": [
+      "npc_lq_xulong",
+      "npc_lq_xulu",
+      "npc_lq_guli",
+      "npc_lq_tengyou"
+    ],
+    "tenure": "常住登记；居住权不等于共有个人财物。产权未登记，访客需经允许"
+  },
+  {
+    "id": "house_lq_05",
+    "settlement": "loc_bs_liquan",
+    "homeLocation": "bld_lq_home_05",
+    "members": [
+      "npc_lq_shenshu",
+      "npc_lq_shensi",
+      "npc_lq_qiemin",
+      "npc_lq_shenyi"
+    ],
+    "tenure": "常住登记；居住权不等于共有个人财物。产权未登记，访客需经允许"
+  },
+  {
+    "id": "house_lq_06",
+    "settlement": "loc_bs_liquan",
+    "homeLocation": "bld_lq_home_06",
+    "members": [
+      "npc_lq_ningye",
+      "npc_lq_ningbi",
+      "npc_lq_liru",
+      "npc_lq_yaoshan"
+    ],
+    "tenure": "常住登记；居住权不等于共有个人财物。产权未登记，访客需经允许"
+  },
+  {
+    "id": "house_lq_07",
+    "settlement": "loc_bs_liquan",
+    "homeLocation": "bld_lq_home_07",
+    "members": [
+      "npc_lq_zhenxi",
+      "npc_lq_zhenxuan",
+      "npc_lq_zanrong"
+    ],
+    "tenure": "常住登记；居住权不等于共有个人财物。产权未登记，访客需经允许"
+  },
+  {
+    "id": "house_lq_08",
+    "settlement": "loc_bs_liquan",
+    "homeLocation": "bld_lq_home_08",
+    "members": [
+      "npc_lq_ganqi",
+      "npc_lq_ganli",
+      "npc_lq_jianyue"
+    ],
+    "tenure": "常住登记；居住权不等于共有个人财物。产权未登记，访客需经允许"
+  },
+  {
+    "id": "house_lq_09",
+    "settlement": "loc_bs_liquan",
+    "homeLocation": "bld_lq_home_09",
+    "members": [
+      "npc_lq_zhouwu",
+      "npc_lq_zhourui",
+      "npc_lq_hongji"
+    ],
+    "tenure": "常住登记；居住权不等于共有个人财物。产权未登记，访客需经允许"
+  },
+  {
+    "id": "house_lq_10",
+    "settlement": "loc_bs_liquan",
+    "homeLocation": "bld_lq_home_10",
+    "members": [
+      "npc_lq_huoji",
+      "npc_lq_huoyou",
+      "npc_lq_yangshuo"
+    ],
+    "tenure": "常住登记；居住权不等于共有个人财物。产权未登记，访客需经允许"
+  },
+  {
+    "id": "house_lq_11",
+    "settlement": "loc_bs_liquan",
+    "homeLocation": "bld_lq_home_11",
+    "members": [
+      "npc_lq_minghe",
+      "npc_lq_mingqi",
+      "npc_lq_duanyou"
+    ],
+    "tenure": "常住登记；居住权不等于共有个人财物。产权未登记，访客需经允许"
+  },
+  {
+    "id": "house_lq_12",
+    "settlement": "loc_bs_liquan",
+    "homeLocation": "bld_lq_home_12",
+    "members": [
+      "npc_lq_yunxiu",
+      "npc_lq_yunlan",
+      "npc_lq_minqiao"
+    ],
+    "tenure": "常住登记；居住权不等于共有个人财物。产权未登记，访客需经允许"
+  },
+  {
+    "id": "house_lq_13",
+    "settlement": "loc_bs_liquan",
+    "homeLocation": "bld_lq_home_13",
+    "members": [
+      "npc_lq_fushen",
+      "npc_lq_fuzhen",
+      "npc_lq_fuyu"
+    ],
+    "tenure": "常住登记；居住权不等于共有个人财物。产权未登记，访客需经允许"
+  },
+  {
+    "id": "house_lq_14",
+    "settlement": "loc_bs_liquan",
+    "homeLocation": "bld_lq_home_14",
+    "members": [
+      "npc_lq_pijing",
+      "npc_lq_piqin",
+      "npc_lq_weigu"
+    ],
+    "tenure": "常住登记；居住权不等于共有个人财物。产权未登记，访客需经允许"
+  },
+  {
+    "id": "house_lq_15",
+    "settlement": "loc_bs_liquan",
+    "homeLocation": "bld_lq_home_15",
+    "members": [
+      "npc_lq_yinzhi",
+      "npc_lq_yinji",
+      "npc_lq_yinxia"
+    ],
+    "tenure": "常住登记；居住权不等于共有个人财物。产权未登记，访客需经允许"
+  },
+  {
+    "id": "house_lq_16",
+    "settlement": "loc_bs_liquan",
+    "homeLocation": "bld_lq_home_16",
+    "members": [
+      "npc_lq_tanyu",
+      "npc_lq_tanxiao",
+      "npc_lq_guanli"
+    ],
+    "tenure": "常住登记；居住权不等于共有个人财物。产权未登记，访客需经允许"
+  },
+  {
+    "id": "house_lq_17",
+    "settlement": "loc_bs_liquan",
+    "homeLocation": "bld_lq_home_17",
+    "members": [
+      "npc_lq_fengji",
+      "npc_lq_fengqing",
+      "npc_lq_mangui"
+    ],
+    "tenure": "常住登记；居住权不等于共有个人财物。产权未登记，访客需经允许"
+  },
+  {
+    "id": "house_lq_18",
+    "settlement": "loc_bs_liquan",
+    "homeLocation": "bld_lq_home_18",
+    "members": [
+      "npc_lq_suili",
+      "npc_lq_suiying",
+      "npc_lq_xiangan"
+    ],
+    "tenure": "常住登记；居住权不等于共有个人财物。产权未登记，访客需经允许"
+  },
+  {
+    "id": "house_lq_19",
+    "settlement": "loc_bs_liquan",
+    "homeLocation": "bld_lq_home_19",
+    "members": [
+      "npc_lq_shaluo",
+      "npc_lq_shalin",
+      "npc_lq_diyun"
+    ],
+    "tenure": "常住登记；居住权不等于共有个人财物。产权未登记，访客需经允许"
+  },
+  {
+    "id": "house_lq_20",
+    "settlement": "loc_bs_liquan",
+    "homeLocation": "bld_lq_home_20",
+    "members": [
+      "npc_lq_mogu",
+      "npc_lq_mozhen",
+      "npc_lq_nanhui"
+    ],
+    "tenure": "常住登记；居住权不等于共有个人财物。产权未登记，访客需经允许"
+  },
+  {
+    "id": "house_lq_21",
+    "settlement": "loc_bs_liquan",
+    "homeLocation": "bld_lq_home_21",
+    "members": [
+      "npc_lq_huaniu",
+      "npc_lq_huami",
+      "npc_lq_panguo"
+    ],
+    "tenure": "常住登记；居住权不等于共有个人财物。产权未登记，访客需经允许"
+  },
+  {
+    "id": "house_lq_22",
+    "settlement": "loc_bs_liquan",
+    "homeLocation": "bld_lq_home_22",
+    "members": [
+      "npc_lq_wenqi",
+      "npc_lq_wenchao",
+      "npc_lq_caiyu"
+    ],
+    "tenure": "常住登记；居住权不等于共有个人财物。产权未登记，访客需经允许"
+  },
+  {
+    "id": "house_lq_23",
+    "settlement": "loc_bs_liquan",
+    "homeLocation": "bld_lq_home_23",
+    "members": [
+      "npc_lq_jushu",
+      "npc_lq_juli",
+      "npc_lq_maozhen"
+    ],
+    "tenure": "常住登记；居住权不等于共有个人财物。产权未登记，访客需经允许"
+  },
+  {
+    "id": "house_lq_24",
+    "settlement": "loc_bs_liquan",
+    "homeLocation": "bld_lq_home_24",
+    "members": [
+      "npc_lq_cuifan",
+      "npc_lq_cuiya",
+      "npc_lq_cuiling"
+    ],
+    "tenure": "常住登记；居住权不等于共有个人财物。产权未登记，访客需经允许"
+  },
+  {
+    "id": "house_lq_25",
+    "settlement": "loc_bs_liquan",
+    "homeLocation": "bld_lq_home_25",
+    "members": [
+      "npc_lq_qinglan",
+      "npc_lq_qingman",
+      "npc_lq_chongze"
+    ],
+    "tenure": "常住登记；居住权不等于共有个人财物。产权未登记，访客需经允许"
+  },
+  {
+    "id": "house_lq_26",
+    "settlement": "loc_bs_liquan",
+    "homeLocation": "bld_lq_home_26",
+    "members": [
+      "npc_lq_henglu",
+      "npc_lq_hengyin",
+      "npc_lq_dulan"
+    ],
+    "tenure": "常住登记；居住权不等于共有个人财物。产权未登记，访客需经允许"
+  },
+  {
+    "id": "house_lq_27",
+    "settlement": "loc_bs_liquan",
+    "homeLocation": "bld_lq_home_27",
+    "members": [
+      "npc_lq_yike",
+      "npc_lq_yijun",
+      "npc_lq_qinyu"
+    ],
+    "tenure": "常住登记；居住权不等于共有个人财物。产权未登记，访客需经允许"
+  },
+  {
+    "id": "house_lq_28",
+    "settlement": "loc_bs_liquan",
+    "homeLocation": "bld_lq_home_28",
+    "members": [
+      "npc_lq_manqu",
+      "npc_lq_manhui",
+      "npc_lq_manyun"
+    ],
+    "tenure": "常住登记；居住权不等于共有个人财物。产权未登记，访客需经允许"
+  },
+  {
+    "id": "house_lq_29",
+    "settlement": "loc_bs_liquan",
+    "homeLocation": "bld_lq_home_29",
+    "members": [
+      "npc_lq_nieya",
+      "npc_lq_nielei",
+      "npc_lq_cengye"
+    ],
+    "tenure": "常住登记；居住权不等于共有个人财物。产权未登记，访客需经允许"
+  },
+  {
+    "id": "house_lq_30",
+    "settlement": "loc_bs_liquan",
+    "homeLocation": "bld_lq_home_30",
+    "members": [
+      "npc_lq_kuangye",
+      "npc_lq_kuangrong",
+      "npc_lq_ronghua"
+    ],
+    "tenure": "常住登记；居住权不等于共有个人财物。产权未登记，访客需经允许"
+  },
+  {
+    "id": "house_sb_01",
+    "settlement": "loc_bs_sangban",
+    "homeLocation": "bld_sb_home_01",
+    "members": [
+      "npc_sb_zhangluo",
+      "npc_sb_zhangyun",
+      "npc_sb_yanmu",
+      "npc_sb_hewan"
+    ],
+    "tenure": "常住登记；居住权不等于共有个人财物。产权未登记，访客需经允许"
+  },
+  {
+    "id": "house_sb_02",
+    "settlement": "loc_bs_sangban",
+    "homeLocation": "bld_sb_home_02",
+    "members": [
+      "npc_sb_yuanqing",
+      "npc_sb_yuanji",
+      "npc_sb_chuqian",
+      "npc_sb_yougan"
+    ],
+    "tenure": "常住登记；居住权不等于共有个人财物。产权未登记，访客需经允许"
+  },
+  {
+    "id": "house_sb_03",
+    "settlement": "loc_bs_sangban",
+    "homeLocation": "bld_sb_home_03",
+    "members": [
+      "npc_sb_zhonglan",
+      "npc_sb_zhongyi",
+      "npc_sb_heyang",
+      "npc_sb_liangfen"
+    ],
+    "tenure": "常住登记；居住权不等于共有个人财物。产权未登记，访客需经允许"
+  },
+  {
+    "id": "house_sb_04",
+    "settlement": "loc_bs_sangban",
+    "homeLocation": "bld_sb_home_04",
+    "members": [
+      "npc_sb_tianmo",
+      "npc_sb_tianrou",
+      "npc_sb_zhanyu",
+      "npc_sb_hanyi"
+    ],
+    "tenure": "常住登记；居住权不等于共有个人财物。产权未登记，访客需经允许"
+  },
+  {
+    "id": "house_sb_05",
+    "settlement": "loc_bs_sangban",
+    "homeLocation": "bld_sb_home_05",
+    "members": [
+      "npc_sb_zhenyun",
+      "npc_sb_zhenli",
+      "npc_sb_chenshu",
+      "npc_sb_zhenhao"
+    ],
+    "tenure": "常住登记；居住权不等于共有个人财物。产权未登记，访客需经允许"
+  },
+  {
+    "id": "house_sb_06",
+    "settlement": "loc_bs_sangban",
+    "homeLocation": "bld_sb_home_06",
+    "members": [
+      "npc_sb_gulu",
+      "npc_sb_guyou",
+      "npc_sb_huaiting",
+      "npc_sb_nianshu"
+    ],
+    "tenure": "常住登记；居住权不等于共有个人财物。产权未登记，访客需经允许"
+  },
+  {
+    "id": "house_sb_07",
+    "settlement": "loc_bs_sangban",
+    "homeLocation": "bld_sb_home_07",
+    "members": [
+      "npc_sb_yexun",
+      "npc_sb_yezhi",
+      "npc_sb_jiangru",
+      "npc_sb_shewen"
+    ],
+    "tenure": "常住登记；居住权不等于共有个人财物。产权未登记，访客需经允许"
+  },
+  {
+    "id": "house_sb_08",
+    "settlement": "loc_bs_sangban",
+    "homeLocation": "bld_sb_home_08",
+    "members": [
+      "npc_sb_zhuchai",
+      "npc_sb_zhumei",
+      "npc_sb_buzhen",
+      "npc_sb_gaoqi"
+    ],
+    "tenure": "常住登记；居住权不等于共有个人财物。产权未登记，访客需经允许"
+  },
+  {
+    "id": "house_sb_09",
+    "settlement": "loc_bs_sangban",
+    "homeLocation": "bld_sb_home_09",
+    "members": [
+      "npc_sb_panyao",
+      "npc_sb_panrui",
+      "npc_sb_hupi",
+      "npc_sb_panxin"
+    ],
+    "tenure": "常住登记；居住权不等于共有个人财物。产权未登记，访客需经允许"
+  },
+  {
+    "id": "house_sb_10",
+    "settlement": "loc_bs_sangban",
+    "homeLocation": "bld_sb_home_10",
+    "members": [
+      "npc_sb_gaoshu",
+      "npc_sb_gaojin",
+      "npc_sb_shiluo",
+      "npc_sb_dunyu"
+    ],
+    "tenure": "常住登记；居住权不等于共有个人财物。产权未登记，访客需经允许"
+  },
+  {
+    "id": "house_sb_11",
+    "settlement": "loc_bs_sangban",
+    "homeLocation": "bld_sb_home_11",
+    "members": [
+      "npc_sb_zhouwei",
+      "npc_sb_zhoufen",
+      "npc_sb_lile",
+      "npc_sb_rongping"
+    ],
+    "tenure": "常住登记；居住权不等于共有个人财物。产权未登记，访客需经允许"
+  },
+  {
+    "id": "house_sb_12",
+    "settlement": "loc_bs_sangban",
+    "homeLocation": "bld_sb_home_12",
+    "members": [
+      "npc_sb_congsi",
+      "npc_sb_congya",
+      "npc_sb_changlu",
+      "npc_sb_congqi"
+    ],
+    "tenure": "常住登记；居住权不等于共有个人财物。产权未登记，访客需经允许"
+  },
+  {
+    "id": "house_sb_13",
+    "settlement": "loc_bs_sangban",
+    "homeLocation": "bld_sb_home_13",
+    "members": [
+      "npc_sb_maoli",
+      "npc_sb_maoxuan",
+      "npc_sb_zhaojin",
+      "npc_sb_wenna"
+    ],
+    "tenure": "常住登记；居住权不等于共有个人财物。产权未登记，访客需经允许"
+  },
+  {
+    "id": "house_sb_14",
+    "settlement": "loc_bs_sangban",
+    "homeLocation": "bld_sb_home_14",
+    "members": [
+      "npc_sb_jiean",
+      "npc_sb_jieying",
+      "npc_sb_jiejun",
+      "npc_sb_yimiao"
+    ],
+    "tenure": "常住登记；居住权不等于共有个人财物。产权未登记，访客需经允许"
+  },
+  {
+    "id": "house_sb_15",
+    "settlement": "loc_bs_sangban",
+    "homeLocation": "bld_sb_home_15",
+    "members": [
+      "npc_sb_baishu",
+      "npc_sb_baihan",
+      "npc_sb_tengzi",
+      "npc_sb_bairong"
+    ],
+    "tenure": "常住登记；居住权不等于共有个人财物。产权未登记，访客需经允许"
+  },
+  {
+    "id": "house_sb_16",
+    "settlement": "loc_bs_sangban",
+    "homeLocation": "bld_sb_home_16",
+    "members": [
+      "npc_sb_luwei",
+      "npc_sb_luyun",
+      "npc_sb_luxin",
+      "npc_sb_wujia"
+    ],
+    "tenure": "常住登记；居住权不等于共有个人财物。产权未登记，访客需经允许"
+  },
+  {
+    "id": "house_sb_17",
+    "settlement": "loc_bs_sangban",
+    "homeLocation": "bld_sb_home_17",
+    "members": [
+      "npc_sb_shikui",
+      "npc_sb_shilan",
+      "npc_sb_zengyi",
+      "npc_sb_fujin"
+    ],
+    "tenure": "常住登记；居住权不等于共有个人财物。产权未登记，访客需经允许"
+  },
+  {
+    "id": "house_sb_18",
+    "settlement": "loc_bs_sangban",
+    "homeLocation": "bld_sb_home_18",
+    "members": [
+      "npc_sb_kongliu",
+      "npc_sb_kongzhi",
+      "npc_sb_chuhui",
+      "npc_sb_konglin"
+    ],
+    "tenure": "常住登记；居住权不等于共有个人财物。产权未登记，访客需经允许"
+  },
+  {
+    "id": "house_sb_19",
+    "settlement": "loc_bs_sangban",
+    "homeLocation": "bld_sb_home_19",
+    "members": [
+      "npc_sb_feiqing",
+      "npc_sb_feiyue",
+      "npc_sb_helai",
+      "npc_sb_feixu"
+    ],
+    "tenure": "常住登记；居住权不等于共有个人财物。产权未登记，访客需经允许"
+  },
+  {
+    "id": "house_sb_20",
+    "settlement": "loc_bs_sangban",
+    "homeLocation": "bld_sb_home_20",
+    "members": [
+      "npc_sb_shangyun",
+      "npc_sb_shangyu",
+      "npc_sb_miaoran",
+      "npc_sb_quean"
+    ],
+    "tenure": "常住登记；居住权不等于共有个人财物。产权未登记，访客需经允许"
+  },
+  {
+    "id": "house_sb_21",
+    "settlement": "loc_bs_sangban",
+    "homeLocation": "bld_sb_home_21",
+    "members": [
+      "npc_sb_chishan",
+      "npc_sb_chifen",
+      "npc_sb_yanbo"
+    ],
+    "tenure": "常住登记；居住权不等于共有个人财物。产权未登记，访客需经允许"
+  },
+  {
+    "id": "house_sb_22",
+    "settlement": "loc_bs_sangban",
+    "homeLocation": "bld_sb_home_22",
+    "members": [
+      "npc_sb_chayue",
+      "npc_sb_chalin",
+      "npc_sb_shuqi"
+    ],
+    "tenure": "常住登记；居住权不等于共有个人财物。产权未登记，访客需经允许"
+  },
+  {
+    "id": "house_sb_23",
+    "settlement": "loc_bs_sangban",
+    "homeLocation": "bld_sb_home_23",
+    "members": [
+      "npc_sb_qinwan",
+      "npc_sb_qinxian",
+      "npc_sb_tuben"
+    ],
+    "tenure": "常住登记；居住权不等于共有个人财物。产权未登记，访客需经允许"
+  },
+  {
+    "id": "house_sb_24",
+    "settlement": "loc_bs_sangban",
+    "homeLocation": "bld_sb_home_24",
+    "members": [
+      "npc_sb_longfu",
+      "npc_sb_longyu",
+      "npc_sb_leisi"
+    ],
+    "tenure": "常住登记；居住权不等于共有个人财物。产权未登记，访客需经允许"
+  },
+  {
+    "id": "house_sb_25",
+    "settlement": "loc_bs_sangban",
+    "homeLocation": "bld_sb_home_25",
+    "members": [
+      "npc_sb_zhuxian",
+      "npc_sb_zhurun",
+      "npc_sb_biqi"
+    ],
+    "tenure": "常住登记；居住权不等于共有个人财物。产权未登记，访客需经允许"
+  },
+  {
+    "id": "house_sb_26",
+    "settlement": "loc_bs_sangban",
+    "homeLocation": "bld_sb_home_26",
+    "members": [
+      "npc_sb_fuyu",
+      "npc_sb_fujing",
+      "npc_sb_shuiya"
+    ],
+    "tenure": "常住登记；居住权不等于共有个人财物。产权未登记，访客需经允许"
+  },
+  {
+    "id": "house_sb_27",
+    "settlement": "loc_bs_sangban",
+    "homeLocation": "bld_sb_home_27",
+    "members": [
+      "npc_sb_quanli",
+      "npc_sb_quanyun",
+      "npc_sb_quancheng"
+    ],
+    "tenure": "常住登记；居住权不等于共有个人财物。产权未登记，访客需经允许"
+  },
+  {
+    "id": "house_sb_28",
+    "settlement": "loc_bs_sangban",
+    "homeLocation": "bld_sb_home_28",
+    "members": [
+      "npc_sb_yanjue",
+      "npc_sb_yanjun",
+      "npc_sb_rongru"
+    ],
+    "tenure": "常住登记；居住权不等于共有个人财物。产权未登记，访客需经允许"
+  },
+  {
+    "id": "house_sb_29",
+    "settlement": "loc_bs_sangban",
+    "homeLocation": "bld_sb_home_29",
+    "members": [
+      "npc_sb_xianghe",
+      "npc_sb_xiangyan",
+      "npc_sb_zhanlu"
+    ],
+    "tenure": "常住登记；居住权不等于共有个人财物。产权未登记，访客需经允许"
+  },
+  {
+    "id": "house_sb_30",
+    "settlement": "loc_bs_sangban",
+    "homeLocation": "bld_sb_home_30",
+    "members": [
+      "npc_sb_diye",
+      "npc_sb_dixi",
+      "npc_sb_diquan"
+    ],
+    "tenure": "常住登记；居住权不等于共有个人财物。产权未登记，访客需经允许"
+  },
+  {
+    "id": "house_bs_001",
+    "settlement": "loc_bs",
+    "homeLocation": "bld_bs_home_001",
+    "members": [
+      "npc_hw_yanzhe",
+      "npc_bs_001_2",
+      "npc_bs_001_3",
+      "npc_bs_001_4"
+    ],
+    "tenure": "严辙与三名成年住客分间居住；登记不认定房屋产权。"
+  },
+  {
+    "id": "house_bs_002",
+    "settlement": "loc_bs",
+    "homeLocation": "bld_bs_home_002",
+    "members": [
+      "npc_bs_002_1",
+      "npc_bs_002_2",
+      "npc_bs_002_3",
+      "npc_bs_002_4"
+    ],
+    "tenure": "本户共居私宅；户籍不合并成员钱物，不补写买卖或租金债务。"
+  },
+  {
+    "id": "house_bs_003",
+    "settlement": "loc_bs",
+    "homeLocation": "bld_bs_home_003",
+    "members": [
+      "npc_bs_003_1",
+      "npc_bs_003_2",
+      "npc_bs_003_3",
+      "npc_bs_003_4"
+    ],
+    "tenure": "本户共居私宅；户籍不合并成员钱物，不补写买卖或租金债务。"
+  },
+  {
+    "id": "house_bs_004",
+    "settlement": "loc_bs",
+    "homeLocation": "bld_bs_home_004",
+    "members": [
+      "npc_bs_004_1",
+      "npc_bs_004_2",
+      "npc_bs_004_3",
+      "npc_bs_004_4"
+    ],
+    "tenure": "本户共居私宅；户籍不合并成员钱物，不补写买卖或租金债务。"
+  },
+  {
+    "id": "house_bs_005",
+    "settlement": "loc_bs",
+    "homeLocation": "bld_bs_home_005",
+    "members": [
+      "npc_bs_005_1",
+      "npc_bs_005_2",
+      "npc_bs_005_3",
+      "npc_bs_005_4"
+    ],
+    "tenure": "本户共居私宅；户籍不合并成员钱物，不补写买卖或租金债务。"
+  },
+  {
+    "id": "house_bs_006",
+    "settlement": "loc_bs",
+    "homeLocation": "bld_bs_home_006",
+    "members": [
+      "npc_bs_006_1",
+      "npc_bs_006_2",
+      "npc_bs_006_3",
+      "npc_bs_006_4"
+    ],
+    "tenure": "本户共居私宅；户籍不合并成员钱物，不补写买卖或租金债务。"
+  },
+  {
+    "id": "house_bs_007",
+    "settlement": "loc_bs",
+    "homeLocation": "bld_bs_home_007",
+    "members": [
+      "npc_bs_007_1",
+      "npc_bs_007_2",
+      "npc_bs_007_3",
+      "npc_bs_007_4"
+    ],
+    "tenure": "本户共居私宅；户籍不合并成员钱物，不补写买卖或租金债务。"
+  },
+  {
+    "id": "house_bs_008",
+    "settlement": "loc_bs",
+    "homeLocation": "bld_bs_home_008",
+    "members": [
+      "npc_bs_008_1",
+      "npc_bs_008_2",
+      "npc_bs_008_3",
+      "npc_bs_008_4"
+    ],
+    "tenure": "本户共居私宅；户籍不合并成员钱物，不补写买卖或租金债务。"
+  },
+  {
+    "id": "house_bs_009",
+    "settlement": "loc_bs",
+    "homeLocation": "bld_bs_home_009",
+    "members": [
+      "npc_bs_009_1",
+      "npc_bs_009_2",
+      "npc_bs_009_3",
+      "npc_bs_009_4"
+    ],
+    "tenure": "本户共居私宅；户籍不合并成员钱物，不补写买卖或租金债务。"
+  },
+  {
+    "id": "house_bs_010",
+    "settlement": "loc_bs",
+    "homeLocation": "bld_bs_home_010",
+    "members": [
+      "npc_bs_010_1",
+      "npc_bs_010_2",
+      "npc_bs_010_3",
+      "npc_bs_010_4"
+    ],
+    "tenure": "本户共居私宅；户籍不合并成员钱物，不补写买卖或租金债务。"
+  },
+  {
+    "id": "house_bs_011",
+    "settlement": "loc_bs",
+    "homeLocation": "bld_bs_home_011",
+    "members": [
+      "npc_bs_011_1",
+      "npc_bs_011_2",
+      "npc_bs_011_3",
+      "npc_bs_011_4"
+    ],
+    "tenure": "本户共居私宅；户籍不合并成员钱物，不补写买卖或租金债务。"
+  },
+  {
+    "id": "house_bs_012",
+    "settlement": "loc_bs",
+    "homeLocation": "bld_bs_home_012",
+    "members": [
+      "npc_bs_012_1",
+      "npc_bs_012_2",
+      "npc_bs_012_3",
+      "npc_bs_012_4"
+    ],
+    "tenure": "本户共居私宅；户籍不合并成员钱物，不补写买卖或租金债务。"
+  },
+  {
+    "id": "house_bs_013",
+    "settlement": "loc_bs",
+    "homeLocation": "bld_bs_home_013",
+    "members": [
+      "npc_bs_013_1",
+      "npc_bs_013_2",
+      "npc_bs_013_3",
+      "npc_bs_013_4"
+    ],
+    "tenure": "本户共居私宅；户籍不合并成员钱物，不补写买卖或租金债务。"
+  },
+  {
+    "id": "house_bs_014",
+    "settlement": "loc_bs",
+    "homeLocation": "bld_bs_home_014",
+    "members": [
+      "npc_bs_014_1",
+      "npc_bs_014_2",
+      "npc_bs_014_3",
+      "npc_bs_014_4"
+    ],
+    "tenure": "本户共居私宅；户籍不合并成员钱物，不补写买卖或租金债务。"
+  },
+  {
+    "id": "house_bs_015",
+    "settlement": "loc_bs",
+    "homeLocation": "bld_bs_home_015",
+    "members": [
+      "npc_bs_015_1",
+      "npc_bs_015_2",
+      "npc_bs_015_3",
+      "npc_bs_015_4"
+    ],
+    "tenure": "本户共居私宅；户籍不合并成员钱物，不补写买卖或租金债务。"
+  },
+  {
+    "id": "house_bs_016",
+    "settlement": "loc_bs",
+    "homeLocation": "bld_bs_home_016",
+    "members": [
+      "npc_bs_016_1",
+      "npc_bs_016_2",
+      "npc_bs_016_3",
+      "npc_bs_016_4"
+    ],
+    "tenure": "本户共居私宅；户籍不合并成员钱物，不补写买卖或租金债务。"
+  },
+  {
+    "id": "house_bs_017",
+    "settlement": "loc_bs",
+    "homeLocation": "bld_bs_home_017",
+    "members": [
+      "npc_bs_017_1",
+      "npc_bs_017_2",
+      "npc_bs_017_3",
+      "npc_bs_017_4"
+    ],
+    "tenure": "本户共居私宅；户籍不合并成员钱物，不补写买卖或租金债务。"
+  },
+  {
+    "id": "house_bs_018",
+    "settlement": "loc_bs",
+    "homeLocation": "bld_bs_home_018",
+    "members": [
+      "npc_bs_018_1",
+      "npc_bs_018_2",
+      "npc_bs_018_3",
+      "npc_bs_018_4"
+    ],
+    "tenure": "本户共居私宅；户籍不合并成员钱物，不补写买卖或租金债务。"
+  },
+  {
+    "id": "house_bs_019",
+    "settlement": "loc_bs",
+    "homeLocation": "bld_bs_home_019",
+    "members": [
+      "npc_bs_019_1",
+      "npc_bs_019_2",
+      "npc_bs_019_3",
+      "npc_bs_019_4"
+    ],
+    "tenure": "本户共居私宅；户籍不合并成员钱物，不补写买卖或租金债务。"
+  },
+  {
+    "id": "house_bs_020",
+    "settlement": "loc_bs",
+    "homeLocation": "bld_bs_home_020",
+    "members": [
+      "npc_bs_020_1",
+      "npc_bs_020_2",
+      "npc_bs_020_3",
+      "npc_bs_020_4"
+    ],
+    "tenure": "本户共居私宅；户籍不合并成员钱物，不补写买卖或租金债务。"
+  },
+  {
+    "id": "house_bs_021",
+    "settlement": "loc_bs",
+    "homeLocation": "bld_bs_home_021",
+    "members": [
+      "npc_bs_021_1",
+      "npc_bs_021_2",
+      "npc_bs_021_3",
+      "npc_bs_021_4"
+    ],
+    "tenure": "本户共居私宅；户籍不合并成员钱物，不补写买卖或租金债务。"
+  },
+  {
+    "id": "house_bs_022",
+    "settlement": "loc_bs",
+    "homeLocation": "bld_bs_home_022",
+    "members": [
+      "npc_bs_022_1",
+      "npc_bs_022_2",
+      "npc_bs_022_3",
+      "npc_bs_022_4"
+    ],
+    "tenure": "本户共居私宅；户籍不合并成员钱物，不补写买卖或租金债务。"
+  },
+  {
+    "id": "house_bs_023",
+    "settlement": "loc_bs",
+    "homeLocation": "bld_bs_home_023",
+    "members": [
+      "npc_bs_023_1",
+      "npc_bs_023_2",
+      "npc_bs_023_3",
+      "npc_bs_023_4"
+    ],
+    "tenure": "本户共居私宅；户籍不合并成员钱物，不补写买卖或租金债务。"
+  },
+  {
+    "id": "house_bs_024",
+    "settlement": "loc_bs",
+    "homeLocation": "bld_bs_home_024",
+    "members": [
+      "npc_bs_024_1",
+      "npc_bs_024_2",
+      "npc_bs_024_3",
+      "npc_bs_024_4"
+    ],
+    "tenure": "本户共居私宅；户籍不合并成员钱物，不补写买卖或租金债务。"
+  },
+  {
+    "id": "house_bs_025",
+    "settlement": "loc_bs",
+    "homeLocation": "bld_bs_home_025",
+    "members": [
+      "npc_bs_025_1",
+      "npc_bs_025_2",
+      "npc_bs_025_3",
+      "npc_bs_025_4"
+    ],
+    "tenure": "本户共居私宅；户籍不合并成员钱物，不补写买卖或租金债务。"
+  },
+  {
+    "id": "house_bs_026",
+    "settlement": "loc_bs",
+    "homeLocation": "bld_bs_home_026",
+    "members": [
+      "npc_bs_026_1",
+      "npc_bs_026_2",
+      "npc_bs_026_3",
+      "npc_bs_026_4"
+    ],
+    "tenure": "本户共居私宅；户籍不合并成员钱物，不补写买卖或租金债务。"
+  },
+  {
+    "id": "house_bs_027",
+    "settlement": "loc_bs",
+    "homeLocation": "bld_bs_home_027",
+    "members": [
+      "npc_bs_027_1",
+      "npc_bs_027_2",
+      "npc_bs_027_3",
+      "npc_bs_027_4"
+    ],
+    "tenure": "本户共居私宅；户籍不合并成员钱物，不补写买卖或租金债务。"
+  },
+  {
+    "id": "house_bs_028",
+    "settlement": "loc_bs",
+    "homeLocation": "bld_bs_home_028",
+    "members": [
+      "npc_bs_028_1",
+      "npc_bs_028_2",
+      "npc_bs_028_3",
+      "npc_bs_028_4"
+    ],
+    "tenure": "本户共居私宅；户籍不合并成员钱物，不补写买卖或租金债务。"
+  },
+  {
+    "id": "house_bs_029",
+    "settlement": "loc_bs",
+    "homeLocation": "bld_bs_home_029",
+    "members": [
+      "npc_bs_029_1",
+      "npc_bs_029_2",
+      "npc_bs_029_3",
+      "npc_bs_029_4"
+    ],
+    "tenure": "本户共居私宅；户籍不合并成员钱物，不补写买卖或租金债务。"
+  },
+  {
+    "id": "house_bs_030",
+    "settlement": "loc_bs",
+    "homeLocation": "bld_bs_home_030",
+    "members": [
+      "npc_bs_030_1",
+      "npc_bs_030_2",
+      "npc_bs_030_3",
+      "npc_bs_030_4"
+    ],
+    "tenure": "本户共居私宅；户籍不合并成员钱物，不补写买卖或租金债务。"
+  },
+  {
+    "id": "house_bs_031",
+    "settlement": "loc_bs",
+    "homeLocation": "bld_bs_home_031",
+    "members": [
+      "npc_bs_031_1",
+      "npc_bs_031_2",
+      "npc_bs_031_3",
+      "npc_bs_031_4"
+    ],
+    "tenure": "本户共居私宅；户籍不合并成员钱物，不补写买卖或租金债务。"
+  },
+  {
+    "id": "house_bs_032",
+    "settlement": "loc_bs",
+    "homeLocation": "bld_bs_home_032",
+    "members": [
+      "npc_bs_032_1",
+      "npc_bs_032_2",
+      "npc_bs_032_3",
+      "npc_bs_032_4"
+    ],
+    "tenure": "本户共居私宅；户籍不合并成员钱物，不补写买卖或租金债务。"
+  },
+  {
+    "id": "house_bs_033",
+    "settlement": "loc_bs",
+    "homeLocation": "bld_bs_home_033",
+    "members": [
+      "npc_bs_033_1",
+      "npc_bs_033_2",
+      "npc_bs_033_3",
+      "npc_bs_033_4"
+    ],
+    "tenure": "本户共居私宅；户籍不合并成员钱物，不补写买卖或租金债务。"
+  },
+  {
+    "id": "house_bs_034",
+    "settlement": "loc_bs",
+    "homeLocation": "bld_bs_home_034",
+    "members": [
+      "npc_bs_034_1",
+      "npc_bs_034_2",
+      "npc_bs_034_3",
+      "npc_bs_034_4"
+    ],
+    "tenure": "本户共居私宅；户籍不合并成员钱物，不补写买卖或租金债务。"
+  },
+  {
+    "id": "house_bs_035",
+    "settlement": "loc_bs",
+    "homeLocation": "bld_bs_home_035",
+    "members": [
+      "npc_bs_035_1",
+      "npc_bs_035_2",
+      "npc_bs_035_3",
+      "npc_bs_035_4"
+    ],
+    "tenure": "本户共居私宅；户籍不合并成员钱物，不补写买卖或租金债务。"
+  },
+  {
+    "id": "house_bs_036",
+    "settlement": "loc_bs",
+    "homeLocation": "bld_bs_home_036",
+    "members": [
+      "npc_bs_036_1",
+      "npc_bs_036_2",
+      "npc_bs_036_3",
+      "npc_bs_036_4"
+    ],
+    "tenure": "本户共居私宅；户籍不合并成员钱物，不补写买卖或租金债务。"
+  },
+  {
+    "id": "house_bs_037",
+    "settlement": "loc_bs",
+    "homeLocation": "bld_bs_home_037",
+    "members": [
+      "npc_bs_037_1",
+      "npc_bs_037_2",
+      "npc_bs_037_3"
+    ],
+    "tenure": "本户共居私宅；户籍不合并成员钱物，不补写买卖或租金债务。"
+  },
+  {
+    "id": "house_bs_038",
+    "settlement": "loc_bs",
+    "homeLocation": "bld_bs_home_038",
+    "members": [
+      "npc_bs_038_1",
+      "npc_bs_038_2",
+      "npc_bs_038_3"
+    ],
+    "tenure": "本户共居私宅；户籍不合并成员钱物，不补写买卖或租金债务。"
+  },
+  {
+    "id": "house_bs_039",
+    "settlement": "loc_bs",
+    "homeLocation": "bld_bs_home_039",
+    "members": [
+      "npc_bs_039_1",
+      "npc_bs_039_2",
+      "npc_bs_039_3"
+    ],
+    "tenure": "本户共居私宅；户籍不合并成员钱物，不补写买卖或租金债务。"
+  },
+  {
+    "id": "house_bs_040",
+    "settlement": "loc_bs",
+    "homeLocation": "bld_bs_home_040",
+    "members": [
+      "npc_bs_040_1",
+      "npc_bs_040_2",
+      "npc_bs_040_3"
+    ],
+    "tenure": "本户共居私宅；户籍不合并成员钱物，不补写买卖或租金债务。"
+  },
+  {
+    "id": "house_bs_041",
+    "settlement": "loc_bs",
+    "homeLocation": "bld_bs_home_041",
+    "members": [
+      "npc_bs_041_1",
+      "npc_bs_041_2",
+      "npc_bs_041_3"
+    ],
+    "tenure": "本户共居私宅；户籍不合并成员钱物，不补写买卖或租金债务。"
+  },
+  {
+    "id": "house_bs_042",
+    "settlement": "loc_bs",
+    "homeLocation": "bld_bs_home_042",
+    "members": [
+      "npc_bs_042_1",
+      "npc_bs_042_2",
+      "npc_bs_042_3"
+    ],
+    "tenure": "本户共居私宅；户籍不合并成员钱物，不补写买卖或租金债务。"
+  },
+  {
+    "id": "house_bs_043",
+    "settlement": "loc_bs",
+    "homeLocation": "bld_bs_home_043",
+    "members": [
+      "npc_bs_043_1",
+      "npc_bs_043_2",
+      "npc_bs_043_3"
+    ],
+    "tenure": "本户共居私宅；户籍不合并成员钱物，不补写买卖或租金债务。"
+  },
+  {
+    "id": "house_bs_044",
+    "settlement": "loc_bs",
+    "homeLocation": "bld_bs_home_044",
+    "members": [
+      "npc_bs_044_1",
+      "npc_bs_044_2",
+      "npc_bs_044_3"
+    ],
+    "tenure": "本户共居私宅；户籍不合并成员钱物，不补写买卖或租金债务。"
+  },
+  {
+    "id": "house_bs_045",
+    "settlement": "loc_bs",
+    "homeLocation": "bld_bs_home_045",
+    "members": [
+      "npc_bs_045_1",
+      "npc_bs_045_2",
+      "npc_bs_045_3"
+    ],
+    "tenure": "本户共居私宅；户籍不合并成员钱物，不补写买卖或租金债务。"
+  },
+  {
+    "id": "house_bs_046",
+    "settlement": "loc_bs",
+    "homeLocation": "bld_bs_home_046",
+    "members": [
+      "npc_bs_046_1",
+      "npc_bs_046_2",
+      "npc_bs_046_3"
+    ],
+    "tenure": "本户共居私宅；户籍不合并成员钱物，不补写买卖或租金债务。"
+  },
+  {
+    "id": "house_bs_047",
+    "settlement": "loc_bs",
+    "homeLocation": "bld_bs_home_047",
+    "members": [
+      "npc_bs_047_1",
+      "npc_bs_047_2",
+      "npc_bs_047_3"
+    ],
+    "tenure": "本户共居私宅；户籍不合并成员钱物，不补写买卖或租金债务。"
+  },
+  {
+    "id": "house_bs_048",
+    "settlement": "loc_bs",
+    "homeLocation": "bld_bs_home_048",
+    "members": [
+      "npc_bs_048_1",
+      "npc_bs_048_2",
+      "npc_bs_048_3"
+    ],
+    "tenure": "本户共居私宅；户籍不合并成员钱物，不补写买卖或租金债务。"
+  },
+  {
+    "id": "house_bs_049",
+    "settlement": "loc_bs",
+    "homeLocation": "bld_bs_home_049",
+    "members": [
+      "npc_bs_049_1",
+      "npc_bs_049_2",
+      "npc_bs_049_3"
+    ],
+    "tenure": "本户共居私宅；户籍不合并成员钱物，不补写买卖或租金债务。"
+  },
+  {
+    "id": "house_bs_050",
+    "settlement": "loc_bs",
+    "homeLocation": "bld_bs_home_050",
+    "members": [
+      "npc_bs_050_1",
+      "npc_bs_050_2",
+      "npc_bs_050_3"
+    ],
+    "tenure": "本户共居私宅；户籍不合并成员钱物，不补写买卖或租金债务。"
+  },
+  {
+    "id": "house_bs_051",
+    "settlement": "loc_bs",
+    "homeLocation": "bld_bs_home_051",
+    "members": [
+      "npc_bs_051_1",
+      "npc_bs_051_2",
+      "npc_bs_051_3"
+    ],
+    "tenure": "本户共居私宅；户籍不合并成员钱物，不补写买卖或租金债务。"
+  },
+  {
+    "id": "house_bs_052",
+    "settlement": "loc_bs",
+    "homeLocation": "bld_bs_home_052",
+    "members": [
+      "npc_bs_052_1",
+      "npc_bs_052_2",
+      "npc_bs_052_3"
+    ],
+    "tenure": "本户共居私宅；户籍不合并成员钱物，不补写买卖或租金债务。"
+  },
+  {
+    "id": "house_bs_053",
+    "settlement": "loc_bs",
+    "homeLocation": "bld_bs_home_053",
+    "members": [
+      "npc_bs_053_1",
+      "npc_bs_053_2",
+      "npc_bs_053_3"
+    ],
+    "tenure": "本户共居私宅；户籍不合并成员钱物，不补写买卖或租金债务。"
+  },
+  {
+    "id": "house_bs_054",
+    "settlement": "loc_bs",
+    "homeLocation": "bld_bs_home_054",
+    "members": [
+      "npc_bs_054_1",
+      "npc_bs_054_2",
+      "npc_bs_054_3"
+    ],
+    "tenure": "本户共居私宅；户籍不合并成员钱物，不补写买卖或租金债务。"
+  },
+  {
+    "id": "house_bs_055",
+    "settlement": "loc_bs",
+    "homeLocation": "bld_bs_home_055",
+    "members": [
+      "npc_bs_055_1",
+      "npc_bs_055_2",
+      "npc_bs_055_3"
+    ],
+    "tenure": "本户共居私宅；户籍不合并成员钱物，不补写买卖或租金债务。"
+  },
+  {
+    "id": "house_bs_056",
+    "settlement": "loc_bs",
+    "homeLocation": "bld_bs_home_056",
+    "members": [
+      "npc_bs_056_1",
+      "npc_bs_056_2",
+      "npc_bs_056_3"
+    ],
+    "tenure": "本户共居私宅；户籍不合并成员钱物，不补写买卖或租金债务。"
+  },
+  {
+    "id": "house_bs_057",
+    "settlement": "loc_bs",
+    "homeLocation": "bld_bs_home_057",
+    "members": [
+      "npc_bs_057_1",
+      "npc_bs_057_2",
+      "npc_bs_057_3"
+    ],
+    "tenure": "本户共居私宅；户籍不合并成员钱物，不补写买卖或租金债务。"
+  },
+  {
+    "id": "house_bs_058",
+    "settlement": "loc_bs",
+    "homeLocation": "bld_bs_home_058",
+    "members": [
+      "npc_bs_058_1",
+      "npc_bs_058_2",
+      "npc_bs_058_3"
+    ],
+    "tenure": "本户共居私宅；户籍不合并成员钱物，不补写买卖或租金债务。"
+  },
+  {
+    "id": "house_bs_059",
+    "settlement": "loc_bs",
+    "homeLocation": "bld_bs_home_059",
+    "members": [
+      "npc_bs_059_1",
+      "npc_bs_059_2",
+      "npc_bs_059_3"
+    ],
+    "tenure": "本户共居私宅；户籍不合并成员钱物，不补写买卖或租金债务。"
+  },
+  {
+    "id": "house_bs_060",
+    "settlement": "loc_bs",
+    "homeLocation": "bld_bs_home_060",
+    "members": [
+      "npc_bs_060_1",
+      "npc_bs_060_2",
+      "npc_bs_060_3"
+    ],
+    "tenure": "本户共居私宅；户籍不合并成员钱物，不补写买卖或租金债务。"
+  },
+  {
+    "id": "house_bs_061",
+    "settlement": "loc_bs",
+    "homeLocation": "bld_bs_home_061",
+    "members": [
+      "npc_bs_061_1",
+      "npc_bs_061_2",
+      "npc_bs_061_3"
+    ],
+    "tenure": "本户共居私宅；户籍不合并成员钱物，不补写买卖或租金债务。"
+  },
+  {
+    "id": "house_bs_062",
+    "settlement": "loc_bs",
+    "homeLocation": "bld_bs_home_062",
+    "members": [
+      "npc_bs_062_1",
+      "npc_bs_062_2",
+      "npc_bs_062_3"
+    ],
+    "tenure": "本户共居私宅；户籍不合并成员钱物，不补写买卖或租金债务。"
+  },
+  {
+    "id": "house_bs_063",
+    "settlement": "loc_bs",
+    "homeLocation": "bld_bs_home_063",
+    "members": [
+      "npc_bs_063_1",
+      "npc_bs_063_2",
+      "npc_bs_063_3"
+    ],
+    "tenure": "本户共居私宅；户籍不合并成员钱物，不补写买卖或租金债务。"
+  },
+  {
+    "id": "house_bs_064",
+    "settlement": "loc_bs",
+    "homeLocation": "bld_bs_home_064",
+    "members": [
+      "npc_bs_064_1",
+      "npc_bs_064_2",
+      "npc_bs_064_3"
+    ],
+    "tenure": "本户共居私宅；户籍不合并成员钱物，不补写买卖或租金债务。"
+  },
+  {
+    "id": "house_bs_065",
+    "settlement": "loc_bs",
+    "homeLocation": "bld_bs_home_065",
+    "members": [
+      "npc_bs_065_1",
+      "npc_bs_065_2",
+      "npc_bs_065_3"
+    ],
+    "tenure": "本户共居私宅；户籍不合并成员钱物，不补写买卖或租金债务。"
+  },
+  {
+    "id": "house_bs_066",
+    "settlement": "loc_bs",
+    "homeLocation": "bld_bs_home_066",
+    "members": [
+      "npc_bs_066_1",
+      "npc_bs_066_2",
+      "npc_bs_066_3"
+    ],
+    "tenure": "本户共居私宅；户籍不合并成员钱物，不补写买卖或租金债务。"
+  },
+  {
+    "id": "house_bs_067",
+    "settlement": "loc_bs",
+    "homeLocation": "bld_bs_home_067",
+    "members": [
+      "npc_bs_067_1",
+      "npc_bs_067_2",
+      "npc_bs_067_3"
+    ],
+    "tenure": "本户共居私宅；户籍不合并成员钱物，不补写买卖或租金债务。"
+  },
+  {
+    "id": "house_bs_068",
+    "settlement": "loc_bs",
+    "homeLocation": "bld_bs_home_068",
+    "members": [
+      "npc_bs_068_1",
+      "npc_bs_068_2",
+      "npc_bs_068_3"
+    ],
+    "tenure": "本户共居私宅；户籍不合并成员钱物，不补写买卖或租金债务。"
+  },
+  {
+    "id": "house_bs_069",
+    "settlement": "loc_bs",
+    "homeLocation": "bld_bs_home_069",
+    "members": [
+      "npc_bs_069_1",
+      "npc_bs_069_2",
+      "npc_bs_069_3"
+    ],
+    "tenure": "本户共居私宅；户籍不合并成员钱物，不补写买卖或租金债务。"
+  },
+  {
+    "id": "house_bs_070",
+    "settlement": "loc_bs",
+    "homeLocation": "bld_bs_home_070",
+    "members": [
+      "npc_bs_070_1",
+      "npc_bs_070_2",
+      "npc_bs_070_3"
+    ],
+    "tenure": "本户共居私宅；户籍不合并成员钱物，不补写买卖或租金债务。"
+  },
+  {
+    "id": "house_bs_071",
+    "settlement": "loc_bs",
+    "homeLocation": "bld_bs_home_071",
+    "members": [
+      "npc_bs_071_1",
+      "npc_bs_071_2",
+      "npc_bs_071_3"
+    ],
+    "tenure": "本户共居私宅；户籍不合并成员钱物，不补写买卖或租金债务。"
+  },
+  {
+    "id": "house_bs_072",
+    "settlement": "loc_bs",
+    "homeLocation": "bld_bs_home_072",
+    "members": [
+      "npc_bs_072_1",
+      "npc_bs_072_2",
+      "npc_bs_072_3"
+    ],
+    "tenure": "本户共居私宅；户籍不合并成员钱物，不补写买卖或租金债务。"
+  },
+  {
+    "id": "house_bs_073",
+    "settlement": "loc_bs",
+    "homeLocation": "bld_bs_home_073",
+    "members": [
+      "npc_bs_073_1",
+      "npc_bs_073_2",
+      "npc_bs_073_3"
+    ],
+    "tenure": "本户共居私宅；户籍不合并成员钱物，不补写买卖或租金债务。"
+  },
+  {
+    "id": "house_bs_074",
+    "settlement": "loc_bs",
+    "homeLocation": "bld_bs_home_074",
+    "members": [
+      "npc_bs_074_1",
+      "npc_bs_074_2",
+      "npc_bs_074_3"
+    ],
+    "tenure": "本户共居私宅；户籍不合并成员钱物，不补写买卖或租金债务。"
+  },
+  {
+    "id": "house_bs_075",
+    "settlement": "loc_bs",
+    "homeLocation": "bld_bs_home_075",
+    "members": [
+      "npc_bs_075_1",
+      "npc_bs_075_2",
+      "npc_bs_075_3"
+    ],
+    "tenure": "本户共居私宅；户籍不合并成员钱物，不补写买卖或租金债务。"
+  },
+  {
+    "id": "house_bs_076",
+    "settlement": "loc_bs",
+    "homeLocation": "bld_bs_home_076",
+    "members": [
+      "npc_bs_076_1",
+      "npc_bs_076_2",
+      "npc_bs_076_3"
+    ],
+    "tenure": "本户共居私宅；户籍不合并成员钱物，不补写买卖或租金债务。"
+  },
+  {
+    "id": "house_bs_077",
+    "settlement": "loc_bs",
+    "homeLocation": "bld_bs_home_077",
+    "members": [
+      "npc_bs_077_1",
+      "npc_bs_077_2",
+      "npc_bs_077_3"
+    ],
+    "tenure": "本户共居私宅；户籍不合并成员钱物，不补写买卖或租金债务。"
+  },
+  {
+    "id": "house_bs_078",
+    "settlement": "loc_bs",
+    "homeLocation": "bld_bs_home_078",
+    "members": [
+      "npc_bs_078_1",
+      "npc_bs_078_2",
+      "npc_bs_078_3"
+    ],
+    "tenure": "本户共居私宅；户籍不合并成员钱物，不补写买卖或租金债务。"
+  },
+  {
+    "id": "house_bs_079",
+    "settlement": "loc_bs",
+    "homeLocation": "bld_bs_home_079",
+    "members": [
+      "npc_bs_079_1",
+      "npc_bs_079_2",
+      "npc_bs_079_3"
+    ],
+    "tenure": "本户共居私宅；户籍不合并成员钱物，不补写买卖或租金债务。"
+  },
+  {
+    "id": "house_bs_080",
+    "settlement": "loc_bs",
+    "homeLocation": "bld_bs_home_080",
+    "members": [
+      "npc_bs_080_1",
+      "npc_bs_080_2",
+      "npc_bs_080_3"
+    ],
+    "tenure": "本户共居私宅；户籍不合并成员钱物，不补写买卖或租金债务。"
+  },
+  {
+    "id": "house_bs_081",
+    "settlement": "loc_bs",
+    "homeLocation": "bld_bs_home_081",
+    "members": [
+      "npc_bs_081_1",
+      "npc_bs_081_2",
+      "npc_bs_081_3"
+    ],
+    "tenure": "本户共居私宅；户籍不合并成员钱物，不补写买卖或租金债务。"
+  },
+  {
+    "id": "house_bs_082",
+    "settlement": "loc_bs",
+    "homeLocation": "bld_bs_home_082",
+    "members": [
+      "npc_bs_082_1",
+      "npc_bs_082_2",
+      "npc_bs_082_3"
+    ],
+    "tenure": "本户共居私宅；户籍不合并成员钱物，不补写买卖或租金债务。"
+  },
+  {
+    "id": "house_bs_083",
+    "settlement": "loc_bs",
+    "homeLocation": "bld_bs_home_083",
+    "members": [
+      "npc_bs_083_1",
+      "npc_bs_083_2",
+      "npc_bs_083_3"
+    ],
+    "tenure": "本户共居私宅；户籍不合并成员钱物，不补写买卖或租金债务。"
+  },
+  {
+    "id": "house_bs_084",
+    "settlement": "loc_bs",
+    "homeLocation": "bld_bs_home_084",
+    "members": [
+      "npc_bs_084_1",
+      "npc_bs_084_2",
+      "npc_bs_084_3"
+    ],
+    "tenure": "本户共居私宅；户籍不合并成员钱物，不补写买卖或租金债务。"
+  },
+  {
+    "id": "house_bs_085",
+    "settlement": "loc_bs",
+    "homeLocation": "bld_bs_home_085",
+    "members": [
+      "npc_bs_085_1",
+      "npc_bs_085_2",
+      "npc_bs_085_3"
+    ],
+    "tenure": "本户共居私宅；户籍不合并成员钱物，不补写买卖或租金债务。"
+  },
+  {
+    "id": "house_bs_086",
+    "settlement": "loc_bs",
+    "homeLocation": "bld_bs_home_086",
+    "members": [
+      "npc_bs_086_1",
+      "npc_bs_086_2",
+      "npc_bs_086_3"
+    ],
+    "tenure": "本户共居私宅；户籍不合并成员钱物，不补写买卖或租金债务。"
+  },
+  {
+    "id": "house_bs_087",
+    "settlement": "loc_bs",
+    "homeLocation": "bld_bs_home_087",
+    "members": [
+      "npc_bs_087_1",
+      "npc_bs_087_2",
+      "npc_bs_087_3"
+    ],
+    "tenure": "本户共居私宅；户籍不合并成员钱物，不补写买卖或租金债务。"
+  },
+  {
+    "id": "house_bs_088",
+    "settlement": "loc_bs",
+    "homeLocation": "bld_bs_home_088",
+    "members": [
+      "npc_bs_088_1",
+      "npc_bs_088_2",
+      "npc_bs_088_3"
+    ],
+    "tenure": "本户共居私宅；户籍不合并成员钱物，不补写买卖或租金债务。"
+  },
+  {
+    "id": "house_bs_089",
+    "settlement": "loc_bs",
+    "homeLocation": "bld_bs_home_089",
+    "members": [
+      "npc_bs_089_1",
+      "npc_bs_089_2",
+      "npc_bs_089_3"
+    ],
+    "tenure": "本户共居私宅；户籍不合并成员钱物，不补写买卖或租金债务。"
+  },
+  {
+    "id": "house_bs_090",
+    "settlement": "loc_bs",
+    "homeLocation": "bld_bs_home_090",
+    "members": [
+      "npc_bs_090_1",
+      "npc_bs_090_2",
+      "npc_bs_090_3"
+    ],
+    "tenure": "本户共居私宅；户籍不合并成员钱物，不补写买卖或租金债务。"
+  }
+]
