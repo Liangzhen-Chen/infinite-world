@@ -15,7 +15,7 @@ function witnessedThroughout(engine,before,after,id){
     if(after.npcs[id]?.location!==before.location||!awake(after.npcs[id]))return false;
     if(before.player.companions?.includes(id)&&after.location===before.location)return true;
     for(let cursor=before.minute;cursor<after.minute;){
-        const slot=scheduleAt(engine,id,cursor);if(!slot)return true;
+        const slot=scheduleAt(engine,id,cursor,after);if(!slot)return true;
         if(slot.location!==before.location||!awake({activity:slot.activity}))return false;
         cursor=slot.until;
     }
