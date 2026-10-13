@@ -348,17 +348,11 @@ N1–N17至少12项完整有效且≥90%，N6/N16零泄漏，N12真实盲辨，N
 
 ### T146 已完成：等待回合尾注按真实时钟规范化；审查响应格式失效最多修一次且保留原负评；未闭合引语显示登记姓名。相关94/95（余一项为主线旧的浏览器夹具问题，归T152），0模型。
 
-### T147 居民可谈已有往来与工作背景，带路结果和逐N审核读取完整而不重复的事实。目标恢复N3/N4，恢复N2有效覆盖，并支持N12正确区分背景与进度。
-1 完成结果：主持场景与审查共享本人已有关系事实及相关公开职务，明确来源；作息作为有时间边界的背景，只有已重建且未受行程、约定、昏迷等覆盖的时段可支持实际活动，不能推出完成数量。N4直接使用现有移动回执、带路履约和双方位置断言，说明companions的到达后语义，不改引擎同行状态。
-逐N输入保留全部回合的单份正文和行动证据，删除consistency中original/text/tail.visible等重复正文，只留问题及状态；N2上限12288，截断仍为未完成。叙述评分只引用真实visible正文，格式失效使用与F1同一受限修正政策；N6/N16私密证据继续隔离，N12盲辨独立。
-2 可改：server-plugin/npc-memory.mjs、scene-card.mjs、consistency-evidence.mjs；tools/npc-acceptance.mjs、playtest-review.mjs；tests/npc-memory.test.mjs、npc-integration.test.mjs、m3-consistency-evidence.test.mjs、npc-acceptance.test.mjs、playtest-npc-evidence.test.mjs、playtest-review.test.mjs。锁定engine.mjs及F1/F3文件，优先消费既有状态和证据，不新增人物事实。
-3 验收：node --test tests/npc-memory.test.mjs tests/npc-cognition.test.mjs tests/npc-schedule.test.mjs tests/npc-obligations.test.mjs tests/npc-delivery.test.mjs tests/npc-autonomy.test.mjs tests/npc-integration.test.mjs tests/npc-relations.test.mjs；node --test tests/playtest-runner.test.mjs tests/playtest-review.test.mjs tests/playtest-npc-evidence.test.mjs tests/playtest-lifecycle.test.mjs tests/playtest-budget.test.mjs tests/npc-acceptance.test.mjs；F1所列四个m3-consistency测试文件；CORE。离线覆盖关系可用而秘密不可用、作息不冒充完成进度、N4履约解队不等于未同行、N2截断不采纳及真实引文。
-4 真实模型：0次、0元；逐N和评分的实际效果由第四轮测量，已完成负评不重抽。
-5 预计规模：250–450行，一个执行会话；F1合入后处理共享接口，动态场景只加入本轮相关人物资料。
+### T147 已完成：主持场景与审查共享本人已有的关系和公开职务，作息只作有时间边界的背景；N4改用移动回执、带路履约和双方位置判定；逐N输入去掉重复正文，上限12288；评分格式失效允许修一次。0模型，真实效果由T149测量。
 
 ### T148 已完成：申请带路先答复、私宅先给许可、粮仓先到场后付款，courier移动只请求一次；对白区分当前观察、已发生经历和未来安排，不补档案外的经历；冲突现场由在场者实际发言。相关88/CORE40，0模型，真实效果由T149测量。
 
-### T149 M2第四轮真实复验【真实模型；待T146–T148合入】
+### T149 M2第四轮真实复验【真实模型；修复卡已齐，待模型槽】
 
 完成结果：三卡合入后运行原十场87回合，使用F3澄清后的分步输入，保留原断言及真实失败历史。目标13项有效、至少12项通过，即12/13=92.3%；N1/N7/N8/N14仍未测，不把新增场景用于稀释失败。
 预期保留N5/N6/N10/N13/N16，争取恢复N2/N3/N4/N11/N12/N15/N17。N9当前t1–2已明确没有还手或喊救，且无围观议论；恢复司法后半场仍不能自动补齐前半场，因此将N9列为最大不确定项，不能承诺13/13。
