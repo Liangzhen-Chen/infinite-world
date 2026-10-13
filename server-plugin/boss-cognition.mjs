@@ -1,3 +1,4 @@
+import {readBossNegotiation,breakBossAgreement}from'./boss-negotiation.mjs';
 const goals=new Set(['defend_territory','avoid_conflict']);
 const intelligent=boss=>Number.isInteger(boss?.intelligence)&&boss.intelligence>0;
 const plain=value=>value&&typeof value==='object'&&!Array.isArray(value);
@@ -46,6 +47,7 @@ export function rememberBossEncounter(d,engine,target,{kind,tactic,eventId}){
     }
     c.encounters.push({event:eventId,actor:'player',kind,minute:d.get('state','minute'),location:actor.location,...(kind==='clash'?{tactic}:{})});
     d.set(['state','creatures',target,'cognition'],c);
+    if(kind==='clash'&&!['flee','defend'].includes(tactic))breakBossAgreement(d,target,eventId);
 }
 
 // A public reaction is derived from witnessed encounters, current territory and
@@ -67,7 +69,9 @@ export function bossPublicAttitude(d,engine,target){
     }else if(t.goal==='avoid_conflict'&&c.encounters.length){
         attitude='谨慎容忍';reason='接触中未见来者发起进攻，以避免冲突为目标';
     }
+    const relation=readBossNegotiation(actor).relation;
+    if(relation){attitude=relation.alliance?'盟约有效':'和平约定';reason=relation.pact==='respect_territory'?'记得你已承诺尊重领地边界':'记得双方已议定互不攻击';}
     if(actor.hp<actor.maxHp*.25){attitude='退守';reason='当前重伤，先保全自身';}
     return{attitude,reason,recognized:c.encounters.length>0,contacts:c.encounters.filter(e=>e.kind==='approach').length,
-        clashes:clashes.length,territory:boss.territory,inTerritory,lastEncounter:structuredClone(c.encounters.at(-1)??null)};
+        clashes:clashes.length,territory:boss.territory,inTerritory,lastEncounter:structuredClone(c.encounters.at(-1)??null),...(relation?{relation:structuredClone(relation)}:{})};
 }
