@@ -162,7 +162,67 @@ proof通过后由主授唯一模型槽；新run绑定旧run及user-reopen-202610
 
 N1–N17至少12项完整有效且≥90%，N6/N16零泄漏，N12真实盲辨，N17十天自主行动；账本/时间/存档100%，工具选择/参数/target分母如实。真实失败最多复测一次并保留旧失败；不降source/private/tests。相关及CORE；不部署，M2关闭仍待C.4/C.5，T11-C不变。
 
-### T18 已审核 14 法术的学习来源
+### M2修复批（2026-10-13主会话审定，来源：Astra草案M2-fix-planner-001，对应T60真实失败）
+
+审计结论：F1、F2、F3同意；F4（工具机会标注）并入T61，不单独成卡；F5同意，里程碑收尾命令归主会话。已知未查清：N9在进入司法流程前中断的原因、quest_social之外其余账本失败的来源、林穗/吴朔两处知情是否有公共来源——不为此派卡，复验后按实际失败再定。
+
+### T61 已完成：主持人默认4096、逐N与盲辨8192，截断仍判失败，四处工具机会标注修正；相关28/CORE40，0模型，真实效果由T64复验。
+
+### T62 已完成：“燕麦”可解析为带壳燕麦，粮仓买卖与商家交易的工具边界写清，发布→承接→买粮→交付整链守恒；相关8/CORE40，0模型，真实效果由T64复验。
+
+### T63 已完成：审查请求与示例区分可见细节、否认知情和补造经历；合并后静态提示超限，同会话精简到35956字节（上限48000）；专项37/CORE40/prompt全过，0模型，真实效果由T64复验。
+
+### T64 M2真实复验【真实模型；T61–T63已合，待模型槽】
+
+结果：在修订后的完整提示栈上重跑原十场，按原门槛给出通过或明确未通过。
+可改：仅docs/测试报告/M2-recheck/及新run生成物；复用T60的preflight.mjs，只适配父记录、来源、额度和入口。代码和旧报告锁定。
+验收：`node docs/测试报告/M2-recheck/preflight.mjs --zero-model`、CORE；然后`node tools/playtests.mjs --run-dir docs/测试报告/M2-recheck --run-id m2-recheck-001 --card M2-recheck --increment 8 --repeat 1 --parallel 4 --milestone M2 --only guide,npc_courier,npc_delivery,npc_home_visit,npc_offscreen,npc_private,npc_quest_social,npc_shove,npc_social,npc_voices --host-installation F:/dnd/SillyTavern --budget-proof docs/测试报告/M2-recheck/preflight.mjs`。
+模型：全角色合计≤450次、新增≤8元（初探≤1元含在内）；保守单轮20.42836376+8=28.42836376<30。失败场次每场最多复测一次。门槛不变：N1–N17至少12项完整有效且≥90%，N6/N16零泄漏，N12真实盲辨，N17十天自主行动，账本/时间/存档100%。规模约150–250行适配。
+
+### 法术150/首领40第一批（2026-10-13主会话审定，来源：Astra草案W2W4-planner-001）
+
+路线：法术31→61→91→121→150（S1–S4，S1只用已有处理器；S2炉作通风水土、S3光医心、S4空间役灵仪式各依赖对应引擎卡）；首领4→16→28→40（B1–B3，8个智能存在按2/3/3分布）。
+审计改动：草案把缺的消费者拆成约80张单效果引擎卡，改为按机制族一族一张（热、风、水土、光、医植食、心契、空间、役灵、仪式），每张在一个会话内把该族列出的效果都接到真实状态。草案里“release通过前内容卡不派”的前置删除：内容卡只依赖T19合入，release只在里程碑结束时看。各族效果清单见 logs/sessions/W2W4-planner-001.final.txt 的A段。
+
+### T65 热族消费者【零模型】
+
+结果：玩家的热系法术作用在真实对象上——给燃烧的炉火升温并持续耗燃料（forge_heat）、接触测温（sense_heat）、窑温与裂损（craft_heat）、活体保暖（warm）、室内控火与通风（contain_fire）、火线阻路（barrier）、冰针随环境衰减（damage_cold）。
+可改：server-plugin/magic-object.mjs、environment.mjs、magic.mjs、magic-primitives.mjs的必要接点，tools/w2-mechanism-map.mjs、world/design/w2-mechanism-map.json，新增tests/magic-forge.test.mjs。锁定：world/meta正式目录、首领文件、extension/tools.mjs。
+验收：`node --test tests/magic-forge.test.mjs tests/magic-object.test.mjs`、CORE；每个效果至少一条正常路径和一条拒绝路径，覆盖燃尽、未燃对象、重载。模型0。规模约600–900行。
+
+### T66 风族消费者【零模型；T65合入后派，同改environment/magic接点】
+
+结果：风系法术有真实效果——烟气沿连通出口流动而烟源继续产烟（airflow/smoke）、除尘、风向回声、沿途可听传话与静音、谷物排湿、缓降与轻物托举、船帆、有限呼吸、投射偏转、风刃对软物与甲材、道路风阻。
+可改：新增server-plugin/magic-air.mjs、tests/magic-air.test.mjs；environment.mjs、magic.mjs、magic-primitives.mjs、world/meta/rules.json及机制图两文件。锁定：法术/人物/首领正式目录。
+验收：`node --test tests/magic-air.test.mjs tests/magic.test.mjs`、CORE；封闭空间不能凭空净化，每个效果有正常与拒绝路径，到期与重载一致。模型0。规模约700–1000行。
+
+### T67 首领接触记忆、目标与领地【零模型】
+
+结果：智能首领记住实际交锋和接触，按领地目标改变公开态度，存档恢复后仍认得发生过的事。
+可改：新增server-plugin/boss-cognition.mjs、tests/boss-cognition.test.mjs；bosses.mjs、boss-migration.mjs、tools/validate-world.mjs的模板接点。锁定：magic*、npc-memory.mjs、正式world文件。
+验收：`node --test tests/boss-cognition.test.mjs tests/bosses.test.mjs`、CORE。模型0。规模约250–400行。
+
+### T68 首领谈判、交易与结盟【零模型；待T67】
+
+结果：玩家在巢穴提出条件，首领按自己的目标接受或给出拒绝理由，成交时交换有限物资并保存关系。
+可改：新增server-plugin/boss-negotiation.mjs、tests/boss-negotiation.test.mjs；bosses.mjs、boss-cognition.mjs、extension/tools.mjs、tools/validate-world.mjs必要接点。工具说明要短，合入后tests/prompt.test.mjs仍须通过。锁定：magic*、正式world文件。
+验收：`node --test tests/boss-negotiation.test.mjs tests/boss-cognition.test.mjs tests/tool-groups.test.mjs tests/prompt.test.mjs`、CORE。模型0。规模约300–500行。
+
+### T69 S1：30条法术完整发布，31→61【真实模型；T19已合，待模型槽】
+
+结果：玩家可买书并付费学习30条新法术（区域交锋与防护9、位移与自愿传讯8、器物与水务7、生长与役灵6），按真实材料、距离和持续消耗施放，每条有可验证效果。
+可改：新增world/design/w2-s1.mjs、world/drafts/w2-s1/、tools/w2-s1-content.mjs、tools/publish-w2-s1.mjs、tests/w2-s1.test.mjs；world/meta/{spells,skills,items}.json及书商库存只追加本批。锁定：rules、bosses、引擎、共用流水线。
+验收：起草→L1→L2→L4（标记项加随机5条，随机10条平均≥4、单项≥3）→`node tools/publish-w2-s1.mjs --publish`；`node --test tests/w2-s1.test.mjs`、CORE；覆盖30条取得→学习→施法、旧战役升级、重复发布零写入。
+模型：起草≤108次、L2≤108次，合计≤12元。规模：30条法术加至多6本书，一个内容会话。
+
+### T70 B1：12个首领完整发布，4→16，智能存在0→2【真实模型；待T68】
+
+结果：玩家能遇到12个各有生态与战术的首领，其中2个能记住交涉、说明拒绝理由并实际交易或结盟。
+可改：新增world/design/w4-b1.mjs、world/drafts/w4-b1/、tools/w4-b1-content.mjs、tools/publish-w4-b1.mjs、tests/w4-b1.test.mjs；world/meta/bosses.json、tools/m4-balance.mjs、新增world/design/w4-b1-balance.json。锁定：spells/skills/items/rules、人物、引擎。
+验收：起草→L1→L2→L4→`node tools/publish-w4-b1.mjs --publish`；`node --test tests/w4-b1.test.mjs`；`node tools/m4-balance.mjs --catalog world/meta/bosses.json --out world/design/w4-b1-balance.json`（单人≤15%、标准五人55%–65%）；CORE。
+模型：起草≤36次、L2≤36次，合计≤6元。规模：12条模板与正文，一个内容会话。
+
+### T18 零模型部分已完成：713f0b9已合，14条全部走陆青付费出售的三册书，新测试22/CORE40；来源增量的L2/L4（≤1元）并入T19一起做。原卡如下。
 
 目标：每条已有候选都有玩家实际能获得的学习来源。涉及文件：`world/design/w2-reuse-candidates.mjs`、新增 `world/design/w2-reuse-learning.mjs`、`world/drafts/w2-reuse/` 的来源审核记录，必要的新书/教学数据候选；新增 `tests/w2-reuse-learning.test.mjs`。不提前改正式人口。
 
@@ -170,13 +230,7 @@ N1–N17至少12项完整有效且≥90%，N6/N16零泄漏，N12真实盲辨，N
 
 验收：`node --test tests/w2-reuse-learning.test.mjs tests/w2-reuse.test.mjs tests/m4-publication.test.mjs`、CORE；14 条来源引用、取得、学习失败成本和学习后施放路径均可验证。内容 L2 只审来源增量，上限 1 元并计 W2/M4 共用 20 元账，L1/L2 无硬错、L4 完成；候选正文审核指纹没有改动则复用。不要做：新增法术、新增处理器、无成本赠书或免费学会。依赖：0模型来源准备可先做；付费审核及T19正式发布仍待T17达标。并行：可与不触碰魔法目录的 M3 整理，无其他模型块时审核。
 
-### T19 14 法术正式发布与效果复核
-
-目标：把审核完整的 14 条法术并入 world 正式源及可用取得链，预计目录从 17 增至 31。涉及文件：新增 `tools/publish-w2-reuse.mjs`、`world/meta/spells.json`、对应书籍/教学/库存正式源、`tests/w2-reuse.test.mjs`、新增 `tests/w2-reuse-publication.test.mjs`。
-
-实现要点：复用 `readApprovedContent`、`mergeM4Batch2` 的严格冲突/幂等策略及 `world_upgrade`；更新原“候选尚未发布”的测试预期为发布后仍检查内容一致和效果实际改变，不能直接删检查。14 条技能/材料/许可、距离、持续效果消耗保持已有机制语义；学习来源随世界升级进入已建战役，不回补已售空商品和旧现金。
-
-验收：`node tools/publish-w2-reuse.mjs` 预演后 `--publish`，重复零写入；`node --test tests/w2-reuse-publication.test.mjs tests/w2-reuse.test.mjs tests/m4-publication.test.mjs tests/magic-primitives.test.mjs`、CORE。主会话波次 `npm run build:release` 通过、打 `review-w2-reuse`，模型预算 0。不要做：部署、把相近效果算成缺失机制、用目录数代替效果测试。依赖：T18；并行：正式 world 目录写入串行。
+### T19 已完成：14条法术连同三册书和学习来源经L1/真实L2/L4正式发布，目录17→31，重复发布零写入；19次调用0.12064368元，相关8/CORE40。
 
 ### T20 已完成：WIP及305e8f9已集成；玩家账本隐私过滤、390×844截图与相关/合后CORE通过。 完整验收见[已完成卡](PLAN_已完成.md#t20)。
 
@@ -244,11 +298,7 @@ T28-R1修好新回执undefined规范化并保留严格篡改拒绝，相关31/32
 
 ### T38 已完成：f55e901已合；正常world_time周贸易与world_trade区域同日锁价通过，专项17/CORE40、合后CORE40；相关34/35的village-ledgers:33旧人物worldrelease1192错误仍保留，整体发布门槛未关。原验收见 `git show ee0f4e6:docs/PLAN.md`。
 
-### T39 M5租赁雇佣采购与开店账【待调度】
-
-目标：补现有chargeTrade/repayDebt之外的合同类型和可核验经营盈亏。涉及：server-plugin/contracts.mjs、新增server-plugin/business.mjs、tests/business-contracts.test.mjs，activities.mjs、extension/tools.mjs既有工具的operation枚举。实现：统一当事人/标的/数量/到期/托管/履约/违约记录，复用原债务去重和quotes；店铺须合法租赁和现有库存，收益来自实际顾客交易，日收入表是报价锚点而非无条件送钱。NPC雇工只做有空档且明确同意的工作，未付报酬/没到货不能完成。
-
-验收：`node --test tests/business-contracts.test.mjs tests/economy-supply.test.mjs tests/npc-obligations.test.mjs`、CORE；租铺/进货/售出/费用/亏损一条真实工具链，重复还款无二次扣费，违约/停业/破产不负库存，期末现金货物有来源。模型0。不要做：新经济账副本、自动借贷同意、无限NPC消费。依赖T38及现有服务窗口；与contracts/activities/工具路由写者串行，可并行独立M3报告卡。
+### T39 已完成：玩家可租铺、进货、雇工盘点、卖给实际顾客并得到可追溯的盈亏账，违约/停业/破产库存不为负；相关20/CORE40，0模型。原卡见 `git show 43f76a8:docs/PLAN.md`。
 
 ### T40 M5玩家发单与NPC离屏接单【待调度】
 

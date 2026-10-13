@@ -72,6 +72,75 @@ test('选工具只计实际触发的嵌套分支及前置，未取得条件证�
     const unknown=toolSelectionMetrics([measured],[scenario]);assert.equal(unknown.complete,false);assert.ok(unknown.excluded.some(r=>r.reason==='conditional-not-measured'));
 });
 
+test('送货移动与私宅等待属于已请求动作，额外world_trade仍报错且无参数断言仍未测',async()=>{
+    for(const [id,index,calls,expected]of [
+        ['npc_courier',2,[{tool:'world_promise',args:{}},{tool:'world_promise',args:{}},{tool:'world_move',args:{destination:'bld_hw_council'}}],['world_promise','world_move']],
+        ['npc_home_visit',0,[{tool:'world_move',args:{destination:'loc_hw_fields'}},{tool:'world_time',args:{minutes:30,activity:'等待'}}],['world_move','world_time']],
+    ]){
+        const scenario=JSON.parse(await fs.readFile(new URL(`./playtests/${id}.json`,import.meta.url),'utf8'));
+        const turn={index,input:scenario.turns[index].input,calls,assertions:[]};
+        const report=toolSelectionMetrics([{id,turns:[turn]}],[scenario]);
+        assert.equal(report.opportunities,1);assert.deepEqual(report.rows[0].expected,expected);
+        assert.equal(report.missed,0);assert.equal(report.wrong,0);
+        assert.equal(report.parameterOpportunities,0);assert.equal(report.targetOpportunities,0);
+        assert.equal(report.rows[0].parameterMeasurement,'not-measured');assert.equal(report.rows[0].targetMeasurement,'not-measured');
+        turn.calls.push({tool:'world_trade',args:{seller:'npc_hw_linsui',item:'item_bread',quantity:1}});
+        const wrong=toolSelectionMetrics([{id,turns:[turn]}],[scenario]);
+        assert.equal(wrong.wrong,1);assert.equal(wrong.rows[0].wrongCalls[0].tool,'world_trade');
+        turn.calls=[];
+        assert.equal(toolSelectionMetrics([{id,turns:[turn]}],[scenario]).missed,1);
+    }
+});
+
+test('任务回合6/7只按各自前一回合已存数量判断机会，原采购和终态断言继续失败',async()=>{
+    const scenario=JSON.parse(await fs.readFile(new URL('./playtests/npc_quest_social.json',import.meta.url),'utf8'));
+    const saved=(index,quantity,calls=[])=>{
+        const document={state:{inventory:{item_oats:{quantity}},player:{coins:150},minute:0}};
+        return{index,input:scenario.turns[index].input,calls,
+            assertions:evaluateAssertions(scenario.turns[index].assertions,{before:document,after:document,calls,reply:''})};
+    };
+    const metrics=(bought,carried,move=[],deliver=[])=>toolSelectionMetrics([{id:scenario.id,turns:[saved(5,bought),saved(6,carried,move),saved(7,0,deliver)]}],[scenario]);
+    for(const quantity of [0,9]){
+        const report=metrics(quantity,quantity);
+        assert.deepEqual(report.rows.map(r=>r.turn),[5]);assert.equal(report.missed,1,'采购漏选继续报错');
+        assert.deepEqual(report.excluded.map(r=>[r.turn,r.reason]),[[6,'prerequisite-not-met'],[7,'prerequisite-not-met']]);
+        assert.equal(report.complete,true,'真实零数量属于已测条件');
+        assert.ok(saved(5,quantity).assertions.some(r=>r.kind==='quantity'&&!r.pass));
+        assert.ok(saved(6,quantity).assertions.some(r=>r.kind==='equals'&&!r.pass));
+        assert.ok(saved(7,0).assertions.some(r=>r.kind==='records'&&!r.pass),'终态未完成仍失败');
+    }
+    const missed=metrics(10,10);
+    assert.deepEqual(missed.rows.map(r=>r.turn),[5,6,7]);assert.equal(missed.missed,3);
+    assert.deepEqual(missed.rows[1].conditions,[{kind:'quantity',turn:5,path:'state.inventory.item_oats',value:10,actual:10}]);
+    assert.deepEqual(missed.rows[2].conditions,[{kind:'quantity',turn:6,path:'state.inventory.item_oats',value:10,actual:10}]);
+    const correct=metrics(10,10,[{tool:'world_move',args:{destination:'青灯酒馆'}}],[{tool:'world_quest',args:{}}]);
+    assert.equal(correct.rows[1].missing,false);assert.equal(correct.rows[2].missing,false);
+    assert.equal(correct.parameterOpportunities,0);assert.equal(correct.targetOpportunities,0);
+    assert.deepEqual(metrics(10,0).rows.map(r=>r.turn),[5,6],'第7回合读取已带到的数量，不能只看第5回合');
+    assert.deepEqual(metrics(0,10).rows.map(r=>r.turn),[5,7],'第6回合失败不能抹去后续实际持有的粮食');
+    const boughtWrong=saved(5,0,[{tool:'world_trade',args:{seller:'陈柏',item:'item_oats',quantity:10}}]);
+    const wrong=toolSelectionMetrics([{id:scenario.id,turns:[boughtWrong,saved(6,0),saved(7,0)]}],[scenario]);
+    assert.equal(wrong.wrong,1);assert.equal(wrong.rows[0].wrongCalls[0].tool,'world_trade');
+    assert.equal(wrong.rows[0].missing,true);assert.equal(wrong.parameterWrongRatio,null);assert.equal(wrong.targetWrongRatio,null);
+});
+
+test('quantity前置缺测或非数值不推断，机会读取actual而非采购断言的pass',()=>{
+    const gate={kind:'quantity',turn:0,path:'state.inventory.item_oats',value:10};
+    const scenario={id:'quantity-gate',turns:[{input:'采购',assertions:[]},{input:'备齐再走',expectedTools:['world_move'],toolExpectationAfter:gate,assertions:[]}]};
+    const prerequisite={kind:'quantity',path:gate.path,value:10,actual:10,pass:false};
+    const result={id:scenario.id,turns:[{index:0,input:'采购',assertions:[prerequisite]},{index:1,input:'备齐再走',calls:[]}]};
+    const measured=toolSelectionMetrics([result],[scenario]);assert.equal(measured.opportunities,1);assert.equal(measured.missed,1);
+    for(const actual of [undefined,'10',NaN]){
+        prerequisite.actual=actual;prerequisite.pass=true;
+        const unknown=toolSelectionMetrics([result],[scenario]);assert.equal(unknown.opportunities,0);assert.equal(unknown.complete,false);
+        assert.equal(unknown.excluded[0].reason,'prerequisite-not-measured');
+    }
+    result.turns[0].assertions=[];
+    assert.equal(toolSelectionMetrics([result],[scenario]).excluded[0].reason,'prerequisite-not-measured');
+    prerequisite.actual=9;result.turns[0].assertions=[prerequisite];
+    assert.equal(toolSelectionMetrics([result],[scenario]).excluded[0].reason,'prerequisite-not-met');
+});
+
 test('试玩框架走真实HTTP存储、检索和回滚；场外写入拒绝，重复扣款幂等',async t=>{
     const server=await createPlaytestServer();t.after(()=>server.close());const bundle=await loadPromptBundle();let callId=0,sawSearch=false;
     const client={async generate({messages,tools}){

@@ -27,7 +27,8 @@
         }
       ],
       "expectedTools": [
-        "world_move"
+        "world_move",
+        "world_time"
       ]
     },
     {

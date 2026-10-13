@@ -25,12 +25,15 @@ export function toolSelectionMetrics(results,scenarios){
             const context={session:session.id,attempt:session.attempt,turn:turn.index,input:step.input};
             const conditions=[],expectations=[];let complete=true;
             if(step.toolExpectationAfter){
-                const gate=step.toolExpectationAfter;
-                const prerequisite=session.turns.find(row=>row.index===gate.turn)?.assertions?.find(rule=>rule.kind==='exists'&&rule.path===gate.path);
-                if(!prerequisite||typeof prerequisite.actual!=='boolean'||prerequisite.value===false){
+                const gate=step.toolExpectationAfter,kind=gate.kind??'exists';
+                const prerequisite=session.turns.find(row=>row.index===gate.turn)?.assertions?.find(rule=>rule.kind===kind&&rule.path===gate.path);
+                const measured=kind==='quantity'?Number.isFinite(prerequisite?.actual)&&Number.isFinite(gate.value):
+                    kind==='exists'&&typeof prerequisite?.actual==='boolean'&&prerequisite.value!==false;
+                if(!measured){
                     excluded.push({...context,reason:'prerequisite-not-measured',prerequisite:gate});continue;
                 }
-                if(!prerequisite.actual){excluded.push({...context,reason:'prerequisite-not-met',prerequisite:gate});continue;}
+                const met=kind==='quantity'?prerequisite.actual===gate.value:prerequisite.actual;
+                if(!met){excluded.push({...context,reason:'prerequisite-not-met',prerequisite:gate});continue;}
                 conditions.push({kind:'prerequisite',...gate,actual:prerequisite.actual});
             }
             const collect=(planned,evaluated,branchConditions=[])=>{

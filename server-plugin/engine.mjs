@@ -36,6 +36,7 @@ import {createNpcObligation,advanceNpcObligations,assertNpcObligationAction,npcO
 import {recordNpcRelationEvidence,applyNpcRelation}from'./npc-relations.mjs';
 import {resolveToolCall}from'../extension/tools.mjs';
 import {chargeTrade,repayDebt,advanceContracts}from'./contracts.mjs';
+import {businessTrade,recordBusinessReceipt}from'./business.mjs';
 import {initializeR1,planR1,planPreR1Partitions}from'./migrations/r1.mjs';
 const clone = value => structuredClone(value);
 const number = (value, min = 0, max = 1e9, label = '数值') => {
@@ -141,12 +142,13 @@ export class WorldEngine {
         settleMagicAreas(d,session);
         advancePets(d,session,d.get('state','minute'));
         advanceSummons(d,d.get('state','minute'));
-        advanceLaw(d,d.get('state','minute'));
+        advanceLaw(d,d.get('state','minute'),session);
         recordNpcRelationEvidence(d,session,document.state,tool,args,detail,id);
         recordNpcMemories(d,session,document.state,tool,args,detail,id);
+        recordBusinessReceipt(d,document.state,{tool:resolved.tool,args,eventId:id,detail});
         if(tool==='check')detail.actionScope={kind:'judgement',healthChanged:false,inventoryChanged:false,feePaid:0,
             note:'仅结算判断或对抗，并履行已引用的协助；未伤人、毁物或制造。不得从骰点虚构这些变化。'};
-        return { patches:d.patches,result:{ok:true,...detail,minute:d.get('state','minute'),messages:d.messages,
+        return { patches:d.patches,result:{ok:true,...detail,legalProcedureVersion:1,minute:d.get('state','minute'),messages:d.messages,
             notices:stateNotices(document.state,d.document.state,id=>session.byId.get(id)?.name)} };
     }
     scoped(document){
@@ -166,6 +168,7 @@ export class WorldEngine {
         return changeItems(d,this,id,item,delta);
     }
     async trade(d,args,id) {
+        if(args.operation&&args.operation!=='trade')return businessTrade.call(this,d,args,id);
         if(args.service!==undefined&&args.service!=='住宿')throw new Error('未登记该服务；住宿请传 service="住宿" 与 days，购买物品请传 item 与 quantity');
         const buyer=this.resolve(args.buyer ?? 'player'),seller=this.resolve(args.seller);
         if(buyer===seller) throw new Error('交易双方不能相同');
@@ -223,7 +226,7 @@ export class WorldEngine {
         advanceNpcObligations(d,this,before,after,id);
         advanceContracts(d,this,after);
         advanceSummons(d,after);
-        advanceLaw(d,after);
+        advanceLaw(d,after,this);
         const days=Math.floor(after/1440)-Math.floor(before/1440);
         for(let day=Math.floor(before/1440);day<Math.floor(after/1440);day++){
           for(const [sid,source] of Object.entries(d.get('state','settlements'))) {

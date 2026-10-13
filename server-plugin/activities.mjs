@@ -18,6 +18,7 @@ import {wildlifeAction,resolveCreature,recordWildlifeDeath}from'./wildlife.mjs';
 import {lairAction,bossCounter,rememberBossTactic,defeatBoss}from'./bosses.mjs';
 import {civicAction,recordDonationContribution,publicProjectApproval,donationReceipt,saveDonationReceipt}from'./civic.mjs';
 import {governanceAction,assertGovernedProject}from'./governance.mjs';
+import {businessAction}from'./business.mjs';
 const integer=(value,min=0,max=1e9)=>{if(!Number.isSafeInteger(value)||value<min||value>max)throw new Error(`数值需在${min}到${max}之间`);return value;};
 const requiredText=value=>{if(typeof value!=='string'||!value.trim()||value.length>1200)throw new Error('记录文字无效');return value.trim();};
 export const activities={
@@ -136,6 +137,7 @@ export const activities={
         return {project:key,stage,...outcome,note:stage==='打磨'?'研究成果需进入受限实体登记，才能获得规则认可':'原型未被系统承认，不能宣称已学会新法术'};
     },
     settlement(d,args,id){
+        if(args.operation?.startsWith('business_'))return businessAction.call(this,d,args,id);
         if(args.operation?.startsWith('civic_'))return civicAction.call(this,d,args,id);
         if(args.operation?.startsWith('governance_'))return governanceAction.call(this,d,args,id);
         const settlement=this.resolve(args.settlement,'loc'),row=d.get('state','settlements',settlement);
