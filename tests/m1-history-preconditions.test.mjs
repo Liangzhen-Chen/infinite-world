@@ -158,7 +158,9 @@ test('M6–M8复用运行器真实reconcile/sync-index：修改输入撤销旧�
     const bundle=await api('export',{campaignId:result.session.campaignId}),imported=await api('import',{bundle});
     assert.deepEqual(imported.document,result.finalDocument);
     assert.deepEqual((await api('read',{campaignId:imported.reference.campaignId})).document,result.finalDocument);
-    const bread=await api('search',{campaignId:result.session.campaignId,query:'买过的面包'});
+    const view=await api('read',{campaignId:result.session.campaignId}),anchor='after-reconcile-search',query='买过的面包';
+    const review=await api('review/begin',{campaignId:result.session.campaignId,anchor,playerText:query,expectedSequence:view.reference.sequence,captureSearch:true});
+    const bread=await api('search',{campaignId:result.session.campaignId,query,token:review.token,anchor,expectedSequence:view.reference.sequence});
     assert.ok(bread.results.every(row=>!['reconcile-1-8-0','reconcile-1-9-0'].includes(row.eventId)),'修改与删除的旧交易不得保留为亲历事件');
     t.diagnostic('脚本仅驱动工具选择；全部存储、回滚与检索走隔离HTTP，未进行真实模型验收。');
 });

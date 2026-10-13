@@ -143,7 +143,12 @@ test('制造真实磨损小刀；实际交锋磨损正式木杖后经公共repai
     await s.turn(16);await s.roundTrip();
     // The public promise is the supplied lawful agreement for this engine precondition.
     // This does not claim autonomous NPC consent in a real model conversation.
-    await s.turn(17,async()=>[await s.call('world_time',{minutes:2010-s.document.state.minute,activity:'休息'})]);
+    const waited=await s.turn(17,async()=>[await s.call('world_time',{minutes:2010-s.document.state.minute,activity:'休息'})]);
+    const nonPerishable=records=>Object.fromEntries(Object.entries(records).filter(([id])=>id!=='physical_feature:feature_s1_fruit'));
+    assert.deepEqual(nonPerishable(waited.after.state.records),nonPerishable(waited.before.state.records));
+    const oldFruit=waited.before.state.records['physical_feature:feature_s1_fruit'].state.foodLots[0],newFruit=waited.after.state.records['physical_feature:feature_s1_fruit'].state.foodLots[0];
+    assert.ok(Math.abs(oldFruit.amountGrams+oldFruit.spoiledGrams-newFruit.amountGrams-newFruit.spoiledGrams)<1e-8);
+    assert.ok(newFruit.spoiledGrams>oldFruit.spoiledGrams);
     const teacher=s.document.state.npcs.npc_hw_ayan;
     assert.equal(teacher.location,s.document.state.location);
     assert.ok(!teacher.scheduleTravel&&!teacher.cognitionTravel);

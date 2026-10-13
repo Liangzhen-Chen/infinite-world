@@ -1,3 +1,5 @@
+import {yupoFirstEdition} from './fixtures/w1-depth-editions.mjs';
+import {depthBatches} from '../tools/npc-depth-content.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
@@ -59,8 +61,10 @@ test('四村合并仅精确已审before/after可保留深度修订，fake凭证�
 
 test('四村原已审补充重发保留后续记忆和运行财物，原记忆篡改仍拒绝',async()=>{
  const formal=await loadWorld(),person=formal.npcs.find(n=>n.id==='npc_yp_qinli'),amendment=structuredClone(person);
+ const before=JSON.parse(await fs.readFile('world/drafts/w1/yupo-depth-next/base.json','utf8')).find(n=>n.id===person.id),record=JSON.parse(await fs.readFile('world/drafts/w1/yupo-depth-next/'+person.id+'.json','utf8'));Object.assign(amendment,before,record.draft);
  person.coins=9;person.inventory.item_wood=0;person.memorySeeds.push({id:'later_t11b_yupo',event:'雨后又检查议事屋桌边木板。',knownBy:[person.id],salience:3,reliability:'亲历'});
- const result=mergeVillages(formal,candidate,{npcAmendments:[amendment,...candidate.npcs.filter(n=>n.id!==person.id&&hashContent(n)!==hashContent(formal.npcs.find(p=>p.id===n.id))).map(n=>formal.npcs.find(p=>p.id===n.id))],profileAmendments:formal.settlementProfiles.map(p=>p.details).filter(Boolean)});
+ const depthReceipt=await readPublishedNpcDepth({world:formal,includeVillages:true}),edition=await yupoFirstEdition(),otherAmendments=Object.values(depthBatches).flatMap(b=>b.depthRows).filter(r=>r.id!==person.id).map(r=>edition.npcs.find(n=>n.id===r.id));
+ const result=mergeVillages(formal,candidate,{depthReceipt,npcAmendments:[amendment,...otherAmendments],profileAmendments:formal.settlementProfiles.filter(p=>candidate.settlements.some(c=>c.id===p.id)).map(p=>p.details).filter(Boolean)});
  assert.deepEqual(result.npcs.find(n=>n.id===person.id),person);
  const drift=structuredClone(formal);drift.npcs.find(n=>n.id===person.id).memorySeeds[0].event+='未经审核';
  assert.throws(()=>mergeVillages(drift,candidate,{npcAmendments:[amendment]}),/人物补充冲突/);
