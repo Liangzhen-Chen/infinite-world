@@ -184,13 +184,9 @@ N1–N17至少12项完整有效且≥90%，N6/N16零泄漏，N12真实盲辨，N
 路线：法术31→61→91→121→150（S1–S4，S1只用已有处理器；S2炉作通风水土、S3光医心、S4空间役灵仪式各依赖对应引擎卡）；首领4→16→28→40（B1–B3，8个智能存在按2/3/3分布）。
 审计改动：草案把缺的消费者拆成约80张单效果引擎卡，改为按机制族一族一张（热、风、水土、光、医植食、心契、空间、役灵、仪式），每张在一个会话内把该族列出的效果都接到真实状态。草案里“release通过前内容卡不派”的前置删除：内容卡只依赖T19合入，release只在里程碑结束时看。各族效果清单见 logs/sessions/W2W4-planner-001.final.txt 的A段。
 
-### T65 热族消费者【零模型】
+### T65 已完成：热族七个效果（炉火升温耗燃料、测温、窑温裂损、保暖、控火通风、火线阻路、冰针衰减）接入真实状态；相关21/CORE40，0模型。
 
-结果：玩家的热系法术作用在真实对象上——给燃烧的炉火升温并持续耗燃料（forge_heat）、接触测温（sense_heat）、窑温与裂损（craft_heat）、活体保暖（warm）、室内控火与通风（contain_fire）、火线阻路（barrier）、冰针随环境衰减（damage_cold）。
-可改：server-plugin/magic-object.mjs、environment.mjs、magic.mjs、magic-primitives.mjs的必要接点，tools/w2-mechanism-map.mjs、world/design/w2-mechanism-map.json，新增tests/magic-forge.test.mjs。锁定：world/meta正式目录、首领文件、extension/tools.mjs。
-验收：`node --test tests/magic-forge.test.mjs tests/magic-object.test.mjs`、CORE；每个效果至少一条正常路径和一条拒绝路径，覆盖燃尽、未燃对象、重载。模型0。规模约600–900行。
-
-### T66 风族消费者【零模型；T65合入后派，同改environment/magic接点】
+### T66 风族消费者【零模型】
 
 结果：风系法术有真实效果——烟气沿连通出口流动而烟源继续产烟（airflow/smoke）、除尘、风向回声、沿途可听传话与静音、谷物排湿、缓降与轻物托举、船帆、有限呼吸、投射偏转、风刃对软物与甲材、道路风阻。
 可改：新增server-plugin/magic-air.mjs、tests/magic-air.test.mjs；environment.mjs、magic.mjs、magic-primitives.mjs、world/meta/rules.json及机制图两文件。锁定：法术/人物/首领正式目录。
