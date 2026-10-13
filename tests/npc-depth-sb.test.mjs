@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
+import os from 'node:os';
 import path from 'node:path';
 import {execFile} from 'node:child_process';
 import {promisify} from 'node:util';
@@ -14,13 +15,58 @@ import {sangbanRoster,sangbanFull} from '../world/design/w1-villages-sangban.mjs
 import {prepareDepth,prepareDepthRevision,sourceAuthorization} from '../tools/npc-depth.mjs';
 import {compactReviewRequest,validateSourceEvidence} from '../tools/npc-depth-source-evidence.mjs';
 import {requestMeasure,sourceRequirements} from '../world/drafts/w1/sb-depth/request-preflight.mjs';
+import {prepareNpcDepth,publishNpcDepth} from '../tools/publish-npc-depth.mjs';
 
-const exec=promisify(execFile),world=await loadWorld(),root=path.resolve('world/drafts/w1/sb-depth');
+const exec=promisify(execFile),publishedWorld=await loadWorld(),root=path.resolve('world/drafts/w1/sb-depth');
+const base=config.patchRows.map(r=>r.before),ids=new Set(base.map(n=>n.id));
+const world={...publishedWorld,npcs:publishedWorld.npcs.map(n=>base.find(b=>b.id===n.id)??n)};
 const entries=depthEntries(config.patchRows.map(r=>r.before),config,world);
 const merged=validatePatchResults(entries,world);
 const source=JSON.parse(await fs.readFile(path.join(root,'source-evidence.json'),'utf8'));
 const baseline=path.resolve('world/people/baseline.json');
 const read=name=>fs.readFile(path.join(root,name+'.json'),'utf8');
+const publicationManifest=path.join(root,'first-review/manifest.json');
+
+test('桑坂正式30人等于已审批完整档，其他人、旧记忆和钱物身份保持原值',async()=>{
+ const {entries:approved}=await prepareNpcDepth({manifest:publicationManifest});
+ assert.equal(approved.length,30);assert.equal(publishedWorld.npcs.filter(n=>n.tier==='full').length,152);
+ assert.equal(publishedWorld.residents.length,294);
+ assert.deepEqual(publishedWorld.npcs.map(n=>n.id),world.npcs.map(n=>n.id));
+ for(const entry of approved){
+  const current=publishedWorld.npcs.find(n=>n.id===entry.id);
+  assert.deepEqual(current,entry.facts);verifyUnchanged(entry.before,current,entry);
+  for(const field of ['coins','inventory','secrets'])assert.deepEqual(current[field],entry.before[field]);
+  assert.deepEqual(current.memorySeeds.slice(0,entry.before.memorySeeds.length),entry.before.memorySeeds);
+ }
+ assert.deepEqual(auditNpcDepth(publishedWorld).issues.filter(i=>ids.has(i.id)),[]);
+});
+
+test('冻结原档首次预演不写入，正式发布闭合15事件30人且仅更新桑坂',async t=>{
+ const temp=await fs.mkdtemp(path.join(os.tmpdir(),'t85-publication-'));t.after(()=>fs.rm(temp,{recursive:true,force:true}));
+ const worldRoot=path.join(temp,'world');
+ for(const dir of ['meta','geo','people','lore','design'])await fs.cp(path.resolve('world',dir),path.join(worldRoot,dir),{recursive:true});
+ await fs.cp(root,path.join(worldRoot,'drafts/w1/sb-depth'),{recursive:true});
+ const baseline=path.join(worldRoot,'people/baseline.json');await fs.writeFile(baseline,JSON.stringify(world.npcs));
+ const manifest=path.join(worldRoot,'drafts/w1/sb-depth/first-review/manifest.json'),before=await fs.readFile(baseline);
+ const preview=await publishNpcDepth({manifest});
+ assert.equal(preview.published,false);assert.deepEqual(preview.changed,['people/baseline.json']);
+ assert.deepEqual(preview.amendedNpcIds.slice().sort(),[...ids].sort());assert.deepEqual(preview.selectedQuality.issues,[]);
+ assert.equal(preview.eventClosure.length,30);assert.equal(new Set(preview.eventClosure.map(e=>e.eventId)).size,15);
+ assert.ok(preview.eventClosure.every(e=>e.closed));assert.deepEqual(await fs.readFile(baseline),before);
+ assert.deepEqual(await publishNpcDepth({manifest,publish:true}),{...preview,published:true});
+ const after=await loadWorld(worldRoot);assert.deepEqual(after,publishedWorld);
+});
+
+test('桑坂已发布完整卡重发零写入，不重复追加共享记忆',async()=>{
+ const bytes=await fs.readFile(baseline),stat=await fs.stat(baseline);
+ for(const publish of [false,true]){
+  const repeat=await publishNpcDepth({manifest:publicationManifest,publish});
+  assert.equal(repeat.published,publish);assert.deepEqual(repeat.changed,[]);assert.deepEqual(repeat.changes,[]);
+  assert.deepEqual(repeat.eventClosure,[]);assert.equal(repeat.baselineSourceHash,repeat.baselineResultHash);
+  assert.deepEqual(repeat.selectedQuality.issues,[]);assert.equal(repeat.amendedNpcIds.length,30);assert.equal(repeat.modelCalls,0);
+  assert.deepEqual(await fs.readFile(baseline),bytes);assert.equal((await fs.stat(baseline)).mtimeMs,stat.mtimeMs);
+ }
+});
 
 test('桑坂30人定点候选覆盖实际383缺口，合并视图无缺口且无新增人口',()=>{
  const cohort=world.npcs.filter(n=>n.settlement==='loc_bs_sangban'&&n.tier==='full');
