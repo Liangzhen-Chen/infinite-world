@@ -48,6 +48,7 @@ export function evaluateAssertions(assertions,{before,after,calls,reply,scene,hi
             }).length;pass=actual>=(rule.min??1)&&actual<=(rule.max??Infinity);break;
             case'conservation':actual=rule.paths.reduce((sum,path)=>sum+(at(after,path)??0)-(at(before,path)??0),0);pass=actual===0;break;
             case'replyContains':actual=rule.text;pass=reply.includes(rule.text)===(rule.value??true);break;
+            case'replyMatches':actual=reply;pass=new RegExp(rule.pattern,'u').test(reply)===(rule.value??true);break;
             case'searchHit':{
                 const searches=calls.filter(call=>call.tool==='world_search'&&call.args.query===rule.query);
                 actual=searches.map(call=>({ok:call.result?.ok!==false,results:call.result?.results}));

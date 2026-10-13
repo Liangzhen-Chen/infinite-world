@@ -3,6 +3,7 @@ const criteria=['truth','agency','language','continuity'];
 export const compactPlaytestTurn=turn=>({turn:turn.index,input:turn.input,reply:turn.visible??turn.reply,
     calls:(turn.calls??[]).map(call=>({tool:call.tool,args:call.args,result:call.result})),assertions:turn.assertions,
     player:turn.player,minute:turn.minute,location:turn.location,sceneBefore:turn.sceneBefore,sceneBeforeReply:turn.sceneBeforeReply,turnResult:turn.turnResult,
+    feedback:turn.feedback,
     ...(turn.consistency?{consistency:Object.fromEntries(['status','verified','canCommit','rewritten','rewriteExhausted','issues'].filter(key=>turn.consistency[key]!==undefined).map(key=>[key,turn.consistency[key]]))}:{})});
 export function playtestAutonomyEvidence(result){
     const evidence=result.turns.flatMap(turn=>(turn.assertions??[]).filter(a=>a.kind==='newRecordsDuringTurn'&&a.path==='state.npcAutonomy.actions'&&a.pass===true)
@@ -19,7 +20,7 @@ export function playtestAutonomyEvidence(result){
     }
     return evidence;
 }
-function validateScores(response,turns){
+function validateScores(response,turns,criteria){
     const choice=response?.choices?.[0];
     if(choice?.finish_reason!=='stop')throw new Error(`叙述评分未完成：${choice?.finish_reason}`);
     const value=JSON.parse(choice.message.content);
@@ -30,7 +31,7 @@ function validateScores(response,turns){
     }
     return value;
 }
-function preserveScores(raw,corrected,turns){
+function preserveScores(raw,corrected,turns,criteria){
     let original;try{original=JSON.parse(raw);}catch{
         // Salvage intact fields only; a truncated review is never repaired.
         const scores={};for(const key of criteria){const match=raw.match(new RegExp(`"${key}"\\s*:\\s*(\\d+(?:\\.\\d+)?)`));if(match)scores[key]=Number(match[1]);}
@@ -50,14 +51,16 @@ function preserveScores(raw,corrected,turns){
     }
 }
 export async function reviewPlaytest(client,result,rubric,{world,previousReview=result.review}={}){
+    const languageCriteria=['V2','V3','V4','V5','V7'].filter(id=>Object.hasOwn(rubric?.languageRequirements??{},id));
+    const scoredCriteria=[...criteria,...languageCriteria];
     if(!Array.isArray(result.turns)||!result.turns.length||result.turns.some((turn,index)=>turn.index!==index)||new Set(result.turns.map(turn=>turn.index)).size!==result.turns.length)
         return {complete:false,manualVerified:false,parts:[],error:'待审回合缺失或重复'};
     const parts=[];
     const autonomyEvidence=playtestAutonomyEvidence(result);
     for(let start=0;start<result.turns.length;start++){
         const saved=previousReview?.parts?.find(part=>part.start===start&&!part.error&&Number.isInteger(part.count)&&part.count>0&&start+part.count<=result.turns.length&&
-            criteria.every(key=>Number.isFinite(part.scores?.[key])&&part.scores[key]>=0&&part.scores[key]<=100)&&Array.isArray(part.findings)&&part.findings.every(f=>
-                f.turn>=start&&f.turn<start+part.count&&criteria.includes(f.criterion)&&typeof f.reason==='string'&&f.reason&&typeof f.quote==='string'&&f.quote&&String(result.turns[f.turn]?.visible??result.turns[f.turn]?.reply??'').includes(f.quote)));
+            scoredCriteria.every(key=>Number.isFinite(part.scores?.[key])&&part.scores[key]>=0&&part.scores[key]<=100)&&Array.isArray(part.findings)&&part.findings.every(f=>
+                f.turn>=start&&f.turn<start+part.count&&scoredCriteria.includes(f.criterion)&&typeof f.reason==='string'&&f.reason&&typeof f.quote==='string'&&f.quote&&String(result.turns[f.turn]?.visible??result.turns[f.turn]?.reply??'').includes(f.quote)));
         if(saved){parts.push(structuredClone(saved));start+=saved.count-1;continue;}
         const turns=result.turns.slice(start,start+1).map(compactPlaytestTurn),previous=result.turns.slice(0,start).map(compactPlaytestTurn);
         let response,candidate,correctionResponse,validationError;
@@ -68,16 +71,17 @@ export async function reviewPlaytest(client,result,rubric,{world,previousReview=
                     evidenceScope:'autonomyEvidence含推进断言及最终存档中按实际起止时间补齐的行动，仅提供本回合之前已结算的记录。spent是实际材料和费用，outcome是实际成败。按谈话所指的具体事件核对；最近两次失败不代表十天全部失败，item_wood不能推出树种或免费来源。这些仅供审稿核账，不等于玩家或其他NPC已经知情。',
                     quoteInstructions:'finding.quote只复制本段turns[].reply的连续原文，不改标点、称呼，不用省略号，不引用previous或scene。没有可逐字引用的问题就不添加该finding。'})},
             ]};
+            if(languageCriteria.length)request.messages[0].content+=`\n另按rubric.languageRequirements逐项给${languageCriteria.join('、')}的0到100分，放在同一scores中；finding.criterion可用对应V编号。场外可解释规则与假设，不能把场外内容当角色行动；NPC报价、实际数量和钟点不属于游戏指标。V5核对模型正文与真实引擎反馈来源，模型模仿系统提示也算违规。`;
             const label=`${result.id}-${result.attempt}-review-${start}`;
             response=await client.generate(request,label);
             let value;
-            try{value=validateScores(response,turns);}catch(error){
+            try{value=validateScores(response,turns,scoredCriteria);}catch(error){
                 if(response?.choices?.[0]?.finish_reason!=='stop')throw error;
                 validationError=error;
                 correctionResponse=await client.generate({...request,messages:[...request.messages,{role:'user',content:JSON.stringify({
                     instruction:'仅修正原评分JSON格式及无效引文，最多这一次。原scores及每条问题的turn、criterion、reason保持逐字不变，不增删问题，不重新评分。有效引文保持不变；无效引文仅改为待审turns[].reply中表达同一问题的连续原文，不能补标签或改写正文。无法恢复则保留未完成。',
                     validationError:error.message,invalidResponse:response.choices})}]},`${label}:format`);
-                value=validateScores(correctionResponse,turns);preserveScores(response.choices[0].message.content,value,turns);
+                value=validateScores(correctionResponse,turns,scoredCriteria);preserveScores(response.choices[0].message.content,value,turns,scoredCriteria);
             }
             parts.push({start,count:turns.length,...value,measurement:response.measurement});
         }catch(error){try{candidate=JSON.parse(response?.choices?.[0]?.message?.content);}catch{}
@@ -95,5 +99,5 @@ export async function reviewPlaytest(client,result,rubric,{world,previousReview=
     const complete=parts.length>0&&parts.every(part=>!part.error)&&(!voiceBlind||voiceBlind.complete),total=parts.reduce((n,part)=>n+part.count,0);
     return {complete,method:'每次评分一个回合，附全部此前核账证据；保留已完成评分，各项按回合数加权，任何分段失败不生成整场分数',manualVerified:false,parts,
         ...(voiceBlind?{voiceBlind}:{}),
-        ...(complete?{scores:Object.fromEntries(criteria.map(key=>[key,parts.reduce((n,part)=>n+part.scores[key]*part.count,0)/total])),findings:parts.flatMap(part=>part.findings)}:{error:voiceBlind&&!voiceBlind.complete?voiceBlind.error:'分段评分不完整'})};
+        ...(complete?{scores:Object.fromEntries(scoredCriteria.map(key=>[key,parts.reduce((n,part)=>n+part.scores[key]*part.count,0)/total])),findings:parts.flatMap(part=>part.findings)}:{error:voiceBlind&&!voiceBlind.complete?voiceBlind.error:'分段评分不完整'})};
 }
