@@ -19,6 +19,8 @@ async function fixture(t,{shared=false,oneSided=false,firstSource=false}={}){
  t.after(async()=>{assert.ok(path.resolve(temp).startsWith(path.resolve(os.tmpdir())+path.sep));await fs.rm(temp,{recursive:true,force:true});});
  for(const folder of ['meta','people','geo','lore'])await fs.cp(path.resolve('world',folder),path.join(worldRoot,folder),{recursive:true});
  const world=structuredClone(source);
+ // Keep an explicit unselected gap now that every formal full profile is complete.
+ world.npcs.find(n=>n.tier==='full'&&!ids.includes(n.id)).notes='主持人不要让玩家查看旧账页。';
  for(const id of ids){const n=world.npcs.find(n=>n.id===id);n.notes='主持人不要让玩家查看旧账页。';if(shared)n.memorySeeds=n.memorySeeds.filter(m=>m.knownBy.length===1);}
  const baseline=path.join(worldRoot,'people/baseline.json');await write(baseline,world.npcs);
  const cards=[];

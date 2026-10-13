@@ -10,7 +10,8 @@ import {loadWorld} from '../tools/load-world.mjs';
 import {auditNpcDepth} from '../tools/audit-npc-depth.mjs';
 import {validateNpcProfiles,findNpcRuleWording} from '../tools/npc-profile-validation.mjs';
 import {hashContent} from '../tools/content-pipeline.mjs';
-import {depthEntries,patchDraft,applyDepthDraft,validateDraft,validatePatchResults,contextFor,buildReviewRequest,getPath,validateAuthoredBackground,checkIncrementalReview} from '../tools/npc-depth-content.mjs';
+import {depthEntries,patchDraft,applyDepthDraft,validateDraft,validatePatchResults,contextFor,buildReviewRequest,getPath,validateAuthoredBackground,checkIncrementalReview,verifyUnchanged} from '../tools/npc-depth-content.mjs';
+import {prepareNpcDepth,publishNpcDepth} from '../tools/publish-npc-depth.mjs';
 import * as design from '../world/design/w1-lq-depth.mjs';
 import {liquanRoster} from '../world/design/w1-villages-liquan.mjs';
 import {compactReviewRequest} from '../tools/npc-depth-review.mjs';
@@ -24,6 +25,8 @@ const ids=new Set(originals.map(n=>n.id));
 const legacyRoot=path.resolve('world/drafts/w1/lq-depth');
 const root=path.join(legacyRoot,'author-v2');
 const exec=promisify(execFile);
+const publicationManifest=path.join(root,'first-review/manifest.json');
+const {entries:approvedEntries}=await prepareNpcDepth({manifest:publicationManifest});
 // Historical assertions continue to use the frozen author-v2 candidate.
 const frozenFoundation=JSON.parse(await fs.readFile(path.join(root,'foundation.json'),'utf8'));
 const frozenEntries=frozenFoundation.entries.map(({context,...entry})=>entry);
@@ -40,6 +43,49 @@ while(firstProof?.previousProof)firstProof=firstProof.previousProof;
 const originalRecord=async id=>structuredClone(firstProof?.oldRecords?.find(r=>r.id===id)??JSON.parse(await fs.readFile(path.join(root,'first-review',id+'.json'),'utf8')));
 const offlineCandidate=JSON.parse(await fs.readFile(path.join(legacyRoot,'reopen-offline/candidate-after.json'),'utf8'));
 const offlineDesign={...frozenDesign,patchRows:frozenEntries.map(e=>({...e,patches:offlineCandidate.find(d=>d.id===e.id).patches}))};
+
+test('砾泉正式30人等于已审批完整档，全体152个full深度及规则措辞零缺口，原17traits保留',()=>{
+ assert.equal(approvedEntries.length,30);assert.equal(liveWorld.npcs.filter(n=>n.tier==='full').length,152);
+ assert.equal(liveWorld.residents.length,294);assert.deepEqual(liveWorld.npcs.map(n=>n.id),world.npcs.map(n=>n.id));
+ for(const entry of approvedEntries){
+  const current=liveWorld.npcs.find(n=>n.id===entry.id);
+  assert.deepEqual(current,entry.facts);verifyUnchanged(entry.before,current,entry);
+  for(const field of ['coins','inventory','secrets'])assert.deepEqual(current[field],entry.before[field]);
+  assert.deepEqual(current.memorySeeds.slice(0,entry.before.memorySeeds.length),entry.before.memorySeeds);
+ }
+ const audit=auditNpcDepth(liveWorld);assert.equal(audit.checked,152);assert.deepEqual(audit.issues,[]);assert.equal(audit.legacyTraits.ok,true);
+ assert.deepEqual(liveWorld.npcs.filter(n=>n.tier==='full').flatMap(findNpcRuleWording),[]);
+});
+
+test('砾泉冻结原档首次预演零写入，正式发布闭合6事件30人且仅更新砾泉',async t=>{
+ const temp=await fs.mkdtemp(path.join(os.tmpdir(),'t86-publication-'));t.after(()=>fs.rm(temp,{recursive:true,force:true}));
+ const worldRoot=path.join(temp,'world');
+ for(const dir of ['meta','geo','people','lore','design'])await fs.cp(path.resolve('world',dir),path.join(worldRoot,dir),{recursive:true});
+ await fs.mkdir(path.join(temp,'tools'));
+ for(const file of ['content-pipeline.mjs','content-budget.mjs'])await fs.copyFile(path.resolve('tools',file),path.join(temp,'tools',file));
+ await fs.cp(legacyRoot,path.join(worldRoot,'drafts/w1/lq-depth'),{recursive:true});
+ const baseline=path.join(worldRoot,'people/baseline.json');await fs.writeFile(baseline,JSON.stringify(world.npcs));
+ const manifest=path.join(worldRoot,'drafts/w1/lq-depth/author-v2/first-review/manifest.json'),before=await fs.readFile(baseline);
+ const preview=await publishNpcDepth({manifest});
+ assert.equal(preview.published,false);assert.deepEqual(preview.changed,['people/baseline.json']);
+ assert.deepEqual(preview.amendedNpcIds.slice().sort(),[...ids].sort());assert.deepEqual(preview.selectedQuality.issues,[]);
+ assert.equal(preview.eventClosure.length,30);assert.equal(new Set(preview.eventClosure.map(e=>e.eventId)).size,6);
+ assert.ok(preview.eventClosure.every(e=>e.closed));assert.deepEqual(await fs.readFile(baseline),before);
+ assert.deepEqual(await publishNpcDepth({manifest,publish:true}),{...preview,published:true});
+ assert.deepEqual(await loadWorld(worldRoot),liveWorld);
+});
+
+test('砾泉已发布完整卡重发零写入，不重复追加共享记忆',async()=>{
+ const baseline=path.resolve('world/people/baseline.json'),bytes=await fs.readFile(baseline),stat=await fs.stat(baseline);
+ for(const publish of [false,true]){
+  const repeat=await publishNpcDepth({manifest:publicationManifest,publish});
+  assert.equal(repeat.published,publish);assert.deepEqual(repeat.changed,[]);assert.deepEqual(repeat.changes,[]);
+  assert.deepEqual(repeat.eventClosure,[]);assert.equal(repeat.baselineSourceHash,repeat.baselineResultHash);
+  assert.deepEqual(repeat.selectedQuality.issues,[]);assert.deepEqual(repeat.globalQuality.issues,[]);
+  assert.equal(repeat.amendedNpcIds.length,30);assert.equal(repeat.modelCalls,0);
+  assert.deepEqual(await fs.readFile(baseline),bytes);assert.equal((await fs.stat(baseline)).mtimeMs,stat.mtimeMs);
+ }
+});
 
 test('砾泉全30人按冻结408项实际审计补缺，合并后没有字段或规则措辞缺口',()=>{
  assert.equal(originals.length,30);
@@ -535,7 +581,7 @@ test('原55c来源快照与当前发布世界逐引用相容，冻结before及�
  }
  for(const entry of entries){
   const live=liveWorld.npcs.find(n=>n.id===entry.id);
-  const oldPhase=hashContent(live)===hashContent(entry.before),publishedPhase=hashContent(live)===hashContent(entry.facts);
+  const oldPhase=hashContent(live)===hashContent(entry.before),publishedPhase=hashContent(live)===hashContent(approvedEntries.find(e=>e.id===entry.id).facts);
   assert.ok(oldPhase||publishedPhase,'正式源既不等于冻结before也不等于完整after '+entry.id);
  }
  const currentPlan=await reopened('controlled-plan');
