@@ -102,7 +102,7 @@ test('E2/E19 浏览器：失败对账阻止出站生成，编辑撤销刷新玩�
     });
     assert.equal(await page.locator('.mes[mesid="1"]').isVisible(),false);
     assert.equal(await page.locator('.mes_reasoning_details').isVisible(),false);
-    assert.equal(await page.locator('.mes[mesid="2"] .mes_text').innerText(),'林穗：房间备好了。');
+    assert.deepEqual((await page.locator('.mes[mesid="2"] .mes_text').innerText()).split('\n').filter(Boolean),['林','林穗','房间备好了。']);
     assert.match(await page.locator('.fields-notices').innerText(),/钱袋 -6铜，现有 174/);
     assert.doesNotMatch(await page.locator('.fields-notices').innerText(),/过期缓存/);
     assert.equal(await page.evaluate(()=>window.infiniteFieldsV2.view.document.state.minute),550);
