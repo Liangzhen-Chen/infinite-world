@@ -41,7 +41,11 @@ export function evaluateAssertions(assertions,{before,after,calls,reply,scene,hi
                 actual={from,to,count:records.length,records};
                 pass=Number.isSafeInteger(from)&&Number.isSafeInteger(to)&&to>from&&records.length>=(rule.min??1)&&records.length<=(rule.max??Infinity);break;
             }
-            case'calls':actual=calls.filter(call=>{let routed;try{routed=resolveToolCall(call.tool,call.args);}catch{return false;}return routed.tool===rule.tool&&matches(routed.args,rule.args)&&(!rule.success||call.result?.ok===true);}).length;pass=actual>=(rule.min??1)&&actual<=(rule.max??Infinity);break;
+            case'calls':actual=calls.filter(call=>{
+                let routed;try{routed=resolveToolCall(call.tool,call.args);}catch{return false;}
+                const matched=call.tool===rule.tool?matches(call.args,rule.args):routed.tool===rule.tool&&matches(routed.args,rule.args);
+                return matched&&(!rule.success||call.result?.ok===true);
+            }).length;pass=actual>=(rule.min??1)&&actual<=(rule.max??Infinity);break;
             case'conservation':actual=rule.paths.reduce((sum,path)=>sum+(at(after,path)??0)-(at(before,path)??0),0);pass=actual===0;break;
             case'replyContains':actual=rule.text;pass=reply.includes(rule.text)===(rule.value??true);break;
             case'searchHit':{
