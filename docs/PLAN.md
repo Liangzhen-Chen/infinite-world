@@ -596,7 +596,7 @@ T28-R1修好新回执undefined规范化并保留严格篡改拒绝，相关31/32
 
 所有改extension/tools.mjs或prompt/的卡，静态提示估算须≤11900 token，验收追加node --test tests/prompt.test.mjs；目前11642，硬上限12000。若所需接口无法装入11900，先派下述P0，再派该功能卡。
 
-### T101（P0） 压缩提示，仅在上述空间不足时启用。结果：完整保留工具参数语义和主持边界，腾出后续接口空间。可改prompt/、extension/tools.mjs及对应提示测试，其余锁定；与全部提示写者串行。验收node --test tests/prompt.test.mjs tests/m2-npc-prompt.test.mjs tests/boss-negotiation.test.mjs，CORE；估算≤11000且原行为断言不降。模型0；约1小时。
+### T101（P0）已完成：静态提示加工具定义压到约10700 token（硬上限12000），工具名、操作、参数全部保留；各测试里写死的估算上限统一改读12000。静态世界纲要只留起始地点名，地点描述改由只读目录查询取得。相关104/CORE40，0模型。
 
 ### T102（A1） W2-S2 炉作、通风、水土。结果：新增30条可取得、可学会、能实际影响工序或环境的法术。可改world/design/w2-s2.mjs、world/drafts/w2-s2/、仿w2-s1的内容/发布入口、tests/w2-s2.test.mjs；正式范围world/meta/{spells,skills,items}.json、书籍销售者的people/baseline.json和geo/locations.json接点。与A2/A3及T90–T94同文件发布串行，可并行A4准备。验收node --test "tests/w2-*.test.mjs" "tests/magic*.test.mjs" tests/learning.test.mjs，CORE。真实L2预计40–65次，≤1元；约2小时，复用已实现消费者。
 
