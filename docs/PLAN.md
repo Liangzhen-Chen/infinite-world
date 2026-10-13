@@ -558,13 +558,7 @@ T28-R1修好新回执undefined规范化并保留严格篡改拒绝，相关31/32
 
 ### T92 已完成：白石镇官署与市集33人提升为完整档并正式整合，11件共同往事闭合；全体218个完整档深度零缺口；33次真实L2全过，L4均4.10/最低3，0.44856896元。
 
-### T93 手工行会、寺庙与学馆 33 人
-
-1. 结果：玩家能接触师徒、学馆家庭及殿舍日常人员，镇内职业与生活关系形成完整人口层次。
-2. 文件：依赖T92；可改 world/design/w1-baishi-craft-depth.mjs、world/drafts/w1/baishi-craft/、world/people/baseline.json、world/people/residents.json、tests/r06-bs-craft.test.mjs；地理、户籍和共用工具锁定，既有组织成员不得另造同名身份。
-3. 验收：node --test tests/r06-bs-craft.test.mjs；node tools/audit-npc-depth.mjs；node --test tests/engine.test.mjs tests/storage.test.mjs tests/plugin.test.mjs。专项覆盖本批事件、镇内 100/206 和 LOD0 常住 250/500，访客与 seed 不计入达标数量。
-4. 模型：起草 0 次，L2 总计不超过 120 次，整卡不超过 7 元；从起草到正式整合同卡完成。
-5. 规模：33 full，完成三批 99 人提升；手工业约 18 人、殿舍与学馆约 15 人，单会话。
+### T93 已完成：白石镇手工行会、寺院、道观、学馆、武馆33人提升为完整档并正式整合，道、佛、法、武四条路线的师授、认证与购书学习可用；拜入师门（initiate）、仪式资格（ritual_officiate）、施法许可（grant_magic_permit）三个操作已接入并各有测试。151次真实L2，L4均4.2/最低3，2.42794536元。正式完整档251个、名册500个，LOD0人口数量达标。收尾部分在Codex用量上限时中断，由主会话合并主线、解决两处小冲突并验证（相关182/182、CORE、发布构建通过）后合入；“四条路线各走通一次、违戒后果、到期收回许可”的用例覆盖是否齐全，待Codex恢复后由执行会话复核。
 
 ### T94 LOD0 野外地点补足
 
