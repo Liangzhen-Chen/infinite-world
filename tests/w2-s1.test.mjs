@@ -12,8 +12,12 @@ import {compatibleWorld,planWorldUpgrade} from '../server-plugin/world-upgrade.m
 import {initialThermalState} from '../server-plugin/magic-object.mjs';
 import {consumeMagicProtection} from '../server-plugin/magic-primitives.mjs';
 const formal=await loadWorld(),publication=await readS1Publication();
+// A later batch must survive this batch's removal/republication. Deliberately
+// append one valid spell so the regression covers both counts and row order.
+formal.spells.push({...structuredClone(formal.spells.find(s=>s.id==='spell_light')),id:'spell_after_s1_fixture',name:'后续批次照明夹具',aliases:[]});
 const before=structuredClone(formal);
-for(const category of ['spells','skills','items'])before[category]=before[category].filter(r=>!r.id.includes('_s1_'));
+const batchRows={spells:publication.spells,skills:publication.sources.mappings.map(m=>m.skill),items:publication.items};
+for(const [category,rows]of Object.entries(batchRows)){const ids=new Set(rows.map(r=>r.id));before[category]=before[category].filter(r=>!ids.has(r.id));}
 for(const book of books)delete before.npcs.find(n=>n.id==='npc_hw_luqing').inventory[book.id];
 for(const [id,rows]of Object.entries(placements)){const place=before.locations.find(l=>l.id===id);place.features=(place.features??[]).filter(f=>!rows.some(r=>r.id===f.id));if(!place.features.length)delete place.features;}
 const channel=before.locations.flatMap(l=>l.features??[]).find(f=>f.id==='feature_hw_channel');for(const k of Object.keys(channelFacts))delete channel.state[k];
@@ -157,13 +161,19 @@ test('旧战役逐键升级六本书，零库存/残本/钱物/记忆保留，�
  const repeat=planWorldUpgrade(learn.doc,incoming,incoming,{worldHash:'s1-edition',eventId:'repeat'});assert.deepEqual(repeat.result.stockAdded,[]);assert.deepEqual(applyPatches(learn.doc,repeat.patches).state.npcs,learn.doc.state.npcs);
 });
 
-test('隔离发布31→61与重复零写，正文/来源/L4/评分篡改拒绝，正式冲突拒绝且不补库存',async t=>{
- assert.equal(before.spells.length,31);assert.equal(world.spells.length,61);assert.deepEqual(formal,world);assert.deepEqual(mergeS1Publication(world,publication),world);
+test('隔离发布只追加S1的30条法术并保留后续批次，重复零写及篡改/冲突拒绝且不补库存',async t=>{
+ assert.equal(publication.spells.length,30);assert.equal(world.spells.length,before.spells.length+30);
+ for(const [category,rows]of Object.entries(batchRows)){
+  const ids=new Set(rows.map(r=>r.id));
+  for(const row of rows){assert.deepEqual(formal[category].find(actual=>actual.id===row.id),row);assert.deepEqual(world[category].find(actual=>actual.id===row.id),row);}
+  assert.deepEqual(world[category].filter(row=>!ids.has(row.id)),before[category]);
+ }
+ assert.deepEqual({...world,spells:[],skills:[],items:[]},{...formal,spells:[],skills:[],items:[]});assert.deepEqual(mergeS1Publication(world,publication),world);
  const zero=structuredClone(world);zero.npcs.find(n=>n.id==='npc_hw_luqing').inventory[books[0].id]=0;assert.deepEqual(mergeS1Publication(zero,publication).npcs,zero.npcs);
  const conflict=structuredClone(world);conflict.spells.find(s=>s.id===spells[0].id).name+='异文';assert.throws(()=>mergeS1Publication(conflict,publication),/冲突/);
  const root=await fs.mkdtemp(path.join(os.tmpdir(),'dnd-s1-'));t.after(()=>fs.rm(root,{recursive:true,force:true}));for(const folder of ['meta','people','geo','lore'])await fs.cp(path.resolve('world',folder),path.join(root,folder),{recursive:true});await fs.mkdir(path.join(root,'drafts'));await fs.cp(path.resolve('world/drafts/w2-s1'),path.join(root,'drafts/w2-s1'),{recursive:true});
  for(const [f,v]of Object.entries({'meta/spells.json':before.spells,'meta/skills.json':before.skills,'meta/items.json':before.items,'people/baseline.json':before.npcs,'geo/locations.json':before.locations}))await fs.writeFile(path.join(root,f),JSON.stringify(v));
- const original=await fs.readFile(path.join(root,'meta/spells.json'),'utf8'),preview=await publishS1({root});assert.equal(preview.published,false);assert.equal(preview.formalSpellCount,61);assert.equal(preview.changed.length,5);assert.equal(await fs.readFile(path.join(root,'meta/spells.json'),'utf8'),original);
+ const original=await fs.readFile(path.join(root,'meta/spells.json'),'utf8'),preview=await publishS1({root});assert.equal(preview.published,false);assert.equal(preview.formalSpellCount,before.spells.length+30);assert.equal(preview.changed.length,5);assert.equal(await fs.readFile(path.join(root,'meta/spells.json'),'utf8'),original);
  const first=await publishS1({root,publish:true});assert.equal(first.changed.length,5);assert.deepEqual(await loadWorld(root),world);const times=await Promise.all(first.changed.map(f=>fs.stat(path.join(root,f)).then(s=>s.mtimeMs)));assert.deepEqual((await publishS1({root,publish:true})).changed,[]);
  for(const [file,mutate,pattern]of [['candidate.json',r=>{r.spells[0].failure+='免费';},/候选/],['spell_s1_ember_circle.json',r=>{r.draft.source.readingMinutes=1;},/内容已改变/],['batch-0.json',r=>{r.l4.approved=false;},/L4/],['batch-0.json',r=>{r.l4.wave[0].scores[0]=2;},/评分/]]){const f=path.join(root,'drafts/w2-s1',file),bytes=await fs.readFile(f,'utf8'),r=JSON.parse(bytes);mutate(r);await fs.writeFile(f,JSON.stringify(r));await assert.rejects(publishS1({root,publish:true}),pattern);await fs.writeFile(f,bytes);}
  assert.deepEqual(await Promise.all(first.changed.map(f=>fs.stat(path.join(root,f)).then(s=>s.mtimeMs))),times);

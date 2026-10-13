@@ -17,7 +17,7 @@ for(const book of publication.sources.books)delete before.npcs.find(row=>row.id=
 before.items.find(row=>row.id==='item_clothes').tags=before.items.find(row=>row.id==='item_clothes').tags.filter(tag=>tag!=='clothing');
 const next=mergeReusePublication(before,publication),seed=JSON.parse(await fs.readFile('tests/fixtures/legacy/seed.json','utf8'));
 
-test('隔离预演不写入，发布17→31后重复零写入；正文/来源/L4篡改在写入前拒绝',async t=>{
+test('隔离预演不写入，只追加T19的14条法术且重复零写入；正文/来源/L4篡改在写入前拒绝',async t=>{
  const root=await fs.mkdtemp(path.join(os.tmpdir(),'fields-w2-reuse-'));
  t.after(async()=>{assert.ok(path.resolve(root).startsWith(path.resolve(os.tmpdir())+path.sep));await fs.rm(root,{recursive:true,force:true});});
  for(const folder of ['meta','people','geo','lore'])await fs.cp(path.resolve('world',folder),path.join(root,folder),{recursive:true});
@@ -25,7 +25,7 @@ test('隔离预演不写入，发布17→31后重复零写入；正文/来源/L4
  await fs.mkdir(path.join(root,'drafts'),{recursive:true});
  await fs.cp(path.resolve('world/drafts/w2-reuse'),path.join(root,'drafts/w2-reuse'),{recursive:true});
  const bytes=await fs.readFile(path.join(root,'meta/spells.json'),'utf8');
- const preview=await publishReuse({root});assert.equal(preview.published,false);assert.equal(preview.formalSpellCount,31);assert.equal(preview.changed.length,4);assert.equal(await fs.readFile(path.join(root,'meta/spells.json'),'utf8'),bytes);
+ const preview=await publishReuse({root});assert.equal(preview.published,false);assert.equal(publication.spells.length,14);assert.equal(preview.formalSpellCount,before.spells.length+14);assert.equal(preview.changed.length,4);assert.equal(await fs.readFile(path.join(root,'meta/spells.json'),'utf8'),bytes);
  const first=await publishReuse({root,publish:true});assert.equal(first.changed.length,4);assert.deepEqual(await loadWorld(root),next);
  const times=await Promise.all(first.changed.map(file=>fs.stat(path.join(root,file)).then(row=>row.mtimeMs)));
  assert.deepEqual((await publishReuse({root,publish:true})).changed,[]);
@@ -72,5 +72,11 @@ test('旧战役world_upgrade保留钱物和历史，三册书逐键进入一次�
  const spent=structuredClone(learned.document);for(const row of publication.items)spent.state.npcs.npc_hw_luqing.inventory[row.id]=0;
  const repeat=planWorldUpgrade(spent,incoming,incoming,{worldHash:'w2-reuse-edition',eventId:'w2-reuse-repeat'});
  assert.deepEqual(repeat.result.stockAdded,[]);assert.deepEqual(applyPatches(spent,repeat.patches).state.npcs,spent.state.npcs);
- assert.deepEqual(formal.spells,next.spells);assert.deepEqual(formal.items,next.items);
+ // Re-appending T19 can move its rows past later batches. Check each published
+ // row by ID and retain every unrelated row in its original order.
+ for(const [category,rows]of Object.entries({spells:publication.spells,skills:publication.sources.mappings.map(row=>row.skill),items:publication.items})){
+  const ids=new Set(rows.map(row=>row.id));
+  for(const row of rows){assert.deepEqual(formal[category].find(actual=>actual.id===row.id),row);assert.deepEqual(next[category].find(actual=>actual.id===row.id),row);}
+  assert.deepEqual(next[category].filter(row=>!ids.has(row.id)),formal[category].filter(row=>!ids.has(row.id)));
+ }
 });
