@@ -65,36 +65,7 @@ review-002-yp=782a49e阶段审核通过，范围限T06正式发布与c64163d修�
 
 ### T06 已完成：榆坡30人真实L1/L2/L4、T04与事件闭合及正式发布已合；28旧通过复用、双人新L2通过，L4五抽样mean4.37/min3，重发零差异，不再派工。
 
-### T07 苇汀失效条目续审【真实共享源hard；待T58】
-
-拥有world/design/w1-wt-depth.mjs、world/drafts/w1/wt-depth/及tests/npc-depth-wt.test.mjs。沿原controlled候选和sourced/l4-invalidations.json，逐条处理湛鸥7hard及真实L4失效；核对17未复审ID。已有12 passed只在实际失效或叶改动时重审。原源hash及钉死LF/CRLF出处凭证保留，新增修订继承旧proof，不覆盖旧规划。
-
-29eeeca已合及主CORE40。reopen/complete-003/final-report.json记录湛鸥首轮13叶/1事件/4risk合同完整，memorySeeds[2].event为source hard；支采“两户都催先拿”超过原publicSpeech，不作模型故障重送同文。新增0.05495808元、累计2.81758824/4.5、余1.68241176；首ID已领1/2，第二未领，17后续未发，12记录未变。真实L4与发布预演未完成。
-
-验收tests/{npc-depth-wt,npc-depth-review,npc-depth-authored-background}.test.mjs及CORE；30人L1/L2完整，失效L4重新实际阅读、逐flag+随机5及规则12评分，事件闭合/T04/预演通过后交T11，不改正式人口或正确叶。
-
-T50真实before/兄弟叶与T54逐entry背景继承已修好，不重做42 changes/12指纹准备。新阻碍见同目录parent-replay-diff.json：tools/npc-depth.mjs父proof仅重放changes，缺真实old-record draft basis，15人23兄弟叶漂移。shared-repair-diff列四方各memorySeeds[2]；background仅group_3.narrative改变，candidate四方同步，其余原sourceRefs/risks/participants不改。shared-repair-plan仍是被拒提议，不能直接视为授权或已通过准备。
-
-权限精确范围为npc_wt_zhangou、npc_wt_zhicai、npc_wt_xueying、npc_wt_leizhi各memorySeeds[2]，source仅memory_wt_depth_group_3.narrative。湛鸥provider子字段映射原failurePaths父叶；另三人须新增source权限侧凭证。冻结world/design/w1-reopen-authorization.json祖先hash为f23eb0e7c49f472e75e47fce1946469e6c906a6314e9bf341aa6b77a2bfd3195；原record绑定如下，shared-repair-plan.authorized逐人的inheritedAuthorizationHash继续保留。
-
-| ID | 原grant绑定record hash |
-|---|---|
-| npc_wt_zhangou | eb019f7032173a2fd23085cd778f9dadc856cd797a789d3a88d6724b2160d637 |
-| npc_wt_zhicai | 3f150064b3ae9b26936e94398ef271e9637ac66916db8f5f91b36902811aafc3 |
-| npc_wt_xueying | ec4c2bb7b1b26f72a3c119d76c426220abe86489c1a3fb3a8fb73accd085fa3b |
-| npc_wt_leizhi | 57f901ab78d02a41c7bf1699bc33ca0356ecfa7332b549a3b019c80760716926 |
-
-湛鸥首轮后record为5f18f3b4b4c3ad25f6ebcfad0bd020208ea4d16d513a31bd325d19946d5739c6，须沿prior链核到表内原hash，不能替换祖先。全goal已授权现NPC source编修，主会话可串行维护精确来源凭证，不把普通补证一律转交用户；预算及次数不变。余17/原12只是本次未变快照，T58若使通过者实际context改变，按证据失效重L2。
-
-### T58 T07父basis与四方源唯一续修【零模型】
-
-拥有tools/npc-depth{,-content}.mjs最少helper及review/publish调用点、T07 source/candidate与对应tests。父proof绑定冻结原record hash还原draft basis，再叠changes；record只重建候选，不作事实源。持久/预检/full/compact/发布共用重放，拒篡改越权。
-
-group_3仅narrative及四方memorySeeds[2]同步收窄；沿原publicSpeech，不假定同意，不改sourceRefs/risks/participants。湛鸥finding memorySeeds[2].event映射已准父叶；支采/薛萤/雷芷补共享叶权限。主串行提供source侧凭证，列ID/pointer、原record及grant祖先hash；继承冻结manifest、budget ID/hash/attempt/限额，禁改冻JSON或换nonce空账。
-
-先真实子plan零模型prepare通过；实际已准备父entry与四方修订均须真实测试，禁mock替代，覆盖各消费者及hash/兄弟叶负例。context改变者失效重L2，未变者全指纹/record保持，不硬保12。相关+CORE；不重做42/12或预算框架。T08仅实证同根才复用helper，不扩正文。
-
-权限/quota核过由主复用T07原chat领第二次，本卡0模型。余1.68241176/限4.5/波次20，保留失败和未知预留。仍fail即卡住，不拆卡重领；后续验收沿T07。
+### T07 已完成（待T73正式整合）：苇汀30人L1/L2/L4全过，随机10人评分均4.32/最低3，7条共享事件闭合、T04零缺口、发布预演通过；累计4.49559880元。重开授权入口已支持追加授权：T07/T08/T09上限7/6.5/4.5元、每人6次、波次25元（用户2026-10-13同意）。T58已并入完成。
 
 ### T08 砾泉最小修卡【零模型；整卡卡住】
 
@@ -186,11 +157,26 @@ N1–N17至少12项完整有效且≥90%，N6/N16零泄漏，N12真实盲辨，N
 
 ### T65 已完成：热族七个效果（炉火升温耗燃料、测温、窑温裂损、保暖、控火通风、火线阻路、冰针衰减）接入真实状态；相关21/CORE40，0模型。
 
-### T66 风族消费者【零模型】
+### T66 已完成：风族14个机制（烟气流动、除尘、风向、传话与静音、排湿、缓降托举、船帆、呼吸、偏转、风刃、风阻）接入真实状态；相关17/CORE40，0模型。
 
-结果：风系法术有真实效果——烟气沿连通出口流动而烟源继续产烟（airflow/smoke）、除尘、风向回声、沿途可听传话与静音、谷物排湿、缓降与轻物托举、船帆、有限呼吸、投射偏转、风刃对软物与甲材、道路风阻。
-可改：新增server-plugin/magic-air.mjs、tests/magic-air.test.mjs；environment.mjs、magic.mjs、magic-primitives.mjs、world/meta/rules.json及机制图两文件。锁定：法术/人物/首领正式目录。
-验收：`node --test tests/magic-air.test.mjs tests/magic.test.mjs`、CORE；封闭空间不能凭空净化，每个效果有正常与拒绝路径，到期与重载一致。模型0。规模约700–1000行。
+### T73 苇汀30人正式整合发布【零模型】
+
+结果：玩家在苇汀遇到的30人带上已审核的完整档（目标、语气、记忆、关系、知情边界），可在交谈中用到。
+可改：world/people/正式人物文件及发布器写入的正式记忆/事件文件、tests/npc-depth-wt.test.mjs、必要时tests/npc-depth-batch-publication.test.mjs的苇汀用例。锁定：其他村草稿、tools/下公共工具（发现缺陷先报告）、人口数量（仍152 full/294名册，不新增）。
+做法：沿T11-B河湾和T06榆坡的做法，用tools/publish-npc-depth.mjs先预演再正式发布world/drafts/w1/wt-depth的已审批次；重复发布零写入；旧记忆、现金、库存不变。
+验收：`node --test tests/npc-depth-wt.test.mjs tests/npc-depth-batch-publication.test.mjs`、CORE。模型0。规模：数据写入为主，代码改动小于100行。
+
+### T71 水土族消费者【零模型】
+
+结果：水土系法术有真实效果——容器与泥缝密封、水道测流与缓流、水体束缚、水帘遮挡视听、探土翻耕平地、岩层与矿脉勘察、结构受力与支撑、堤岸、裂隙、陷足泥地、实体石弹。
+可改：新增server-plugin/magic-water-earth.mjs、tests/magic-water-earth.test.mjs；environment.mjs、agriculture.mjs、magic.mjs、magic-primitives.mjs必要接点及机制图两文件。锁定：正式world/meta目录、extension/tools.mjs、prompt/。
+验收：`node --test tests/magic-water-earth.test.mjs tests/magic.test.mjs`、CORE；每个效果有正常与拒绝路径，到期与重载一致。模型0。规模约700–1000行。
+
+### T72 光族消费者【零模型；待T71合入，同改magic接点】
+
+结果：光系法术有真实效果——手持光源与调暗、聚光反射与影长测量、样品辨色、表面磨损与痕迹显现、路线光标、雾中能见度、遮光与私密、视觉干扰与诱饵、阴影束缚、强光随距离衰减。
+可改：新增server-plugin/magic-light.mjs、tests/magic-light.test.mjs；environment.mjs、magic-targeting.mjs、magic.mjs、magic-primitives.mjs必要接点及机制图两文件。锁定同T71。
+验收：`node --test tests/magic-light.test.mjs tests/magic.test.mjs`、CORE。模型0。规模约700–1000行。
 
 ### T67 首领接触记忆、目标与领地【零模型】
 
