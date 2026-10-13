@@ -408,7 +408,7 @@ T28-R1修好新回执undefined规范化并保留严格篡改拒绝，相关31/32
 可改新 E/ambient-audio.mjs、E/runtime.js、E/start/play-town.js、E/ui-settings.mjs；world/audio/、assets/audio/、assets/LICENSES.md、tools/deploy-engine.mjs，T/runtime.test.mjs、新 T/m6-09.test.mjs。采用CC0或明确许可音频，覆盖生物群落／时段／天气／室内外和五类音乐情境，交叉淡入淡出；顶栏与设置共用音量状态，切换聊天停止旧声音。
 验收：node --test tests/runtime.test.mjs tests/m6-09.test.mjs；node --test tests/engine.test.mjs tests/storage.test.mjs tests/plugin.test.mjs。截图含手机音量操作；隔离浏览器实际试听并记录素材与播放结果，验证首次点击前静音及切换不叠音；模型0，预计2–3小时，1会话。
 
-### T84 按说话人中文语音：玩家能听到旁白与不同人物的中文声线，并能跳过、重播或关闭。
+### T84 【搁置：用户2026-10-13决定先忽略语音，不派】按说话人中文语音：玩家能听到旁白与不同人物的中文声线，并能跳过、重播或关闭。
 可改新 E/speaker-tts.mjs、E/runtime.js、E/ui-settings.mjs；必要的新 S/tts.mjs 与 S/index.mjs 接点，world/audio/voices.json、tools/deploy-engine.mjs，T/runtime.test.mjs、新 T/m6-10.test.mjs。复用02的说话人分段和 npc.tts_voice，缺值按性别年龄映射；先枚举已装系统声线和可用本地服务，支持返回音频的服务按文本＋声音＋参数哈希缓存；系统speechSynthesis不能提供音频字节，不能算缓存完成。
 验收：node --test tests/runtime.test.mjs tests/m6-10.test.mjs；node --test tests/engine.test.mjs tests/storage.test.mjs tests/plugin.test.mjs。截图含手机播放控件；隔离页实际播放旁白及两名NPC中文，验证缓存复用、跳过重播关闭；生成模型0，实际TTS合成需执行，付费调用0；预计3小时，1会话，完整完成以可用多声线及音频缓存为条件。
 
