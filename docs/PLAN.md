@@ -658,7 +658,7 @@ C部分只拆缺口：governance.mjs的任职入口止于“待上级决定”�
 
 ### T136（T31a）已完成：17轮记忆场景与M2–M9的HTTP准备及评分，四种查询在裁历史前后命中同一事实；0模型。
 
-### T137（T31b） M3文风与时间场景。结果：V1–V7及问题文档里的具体时间误述、场外尾注、凭空成品和示例冒充经历均有可评分的真实场景。可改tests/playtests/m3_language.json、新tests/m3-language.test.mjs、prompt/、一致性审查必要接点及docs/问题.md叙述段；只定点修正，不重写已审核人物。验收node --test tests/m3-language.test.mjs "tests/m3-consistency*.test.mjs" tests/m2-npc-prompt.test.mjs tests/prompt.test.mjs "tests/playtest-*.test.mjs"，CORE。模型0；约2小时，接T31a并与所有提示写者串行，静态≤11900；问题仅凭后续真实通过结果关闭。
+### T137（T31b）已完成：18轮文风与时间场景及V1–V7分项评分接入真实报告；0模型。提示估算约11100（硬上限12000）。问题文档里的叙述问题须T138真实复验后才关闭。
 
 ### T138（T32a） M3短程真实复验。结果：M2–M9和V1–V7取得当前完整提示栈的真实结论。可改docs/测试报告/m3-mv/及运行产物，代码和旧报告锁定；依赖T31a/b及T99结论，若相关缺陷仍存在先由原责任卡修。验收npm run test:playtests -- --only m3_memory,m3_language,reconcile,world_upgrade,out_of_character --repeat 1 --parallel 1 --run-dir docs/测试报告/m3-mv --run-id m3-mv --card T32a --increment 8；CORE。每场8–20自然轮，账本/时间/存档及M6–M9为100%，V≥95%，陈词≤0.5次/千字。真实预计180–350次调用，≤8元；约1小时整理加后台运行，独占模型槽。
 
