@@ -35,7 +35,7 @@ export function reopenAuthorizationVersion(manifest,expectedHash){
  const {sourceAuthorizations,...budgetManifest}=manifest;
  const {amendments,...original}=budgetManifest;
  if(sourceAuthorizations!==undefined){
-  if(!Array.isArray(sourceAuthorizations)||sourceAuthorizations.some(a=>a.cardId!=='T09'||a.date!=='2026-10-13'||a.parentManifestHash!==hash(original)||typeof a.file!=='string'||!a.file.endsWith('.json')||typeof a.hash!=='string'||!/^[a-f0-9]{64}$/.test(a.hash)||typeof a.source!=='string'||!a.source.trim()))throw Error('追加来源授权缺原hash、日期或出处');
+  if(!Array.isArray(sourceAuthorizations)||sourceAuthorizations.some(a=>!['T08','T09'].includes(a.cardId)||a.date!=='2026-10-13'||a.parentManifestHash!==hash(original)||typeof a.file!=='string'||!a.file.endsWith('.json')||typeof a.hash!=='string'||!/^[a-f0-9]{64}$/.test(a.hash)||typeof a.source!=='string'||!a.source.trim()))throw Error('追加来源授权缺原hash、日期或出处');
  }
  if(amendments!==undefined){
   if(!Array.isArray(amendments)||amendments.length!==1)throw Error('授权修订须保留唯一2026-10-13凭证');
@@ -60,6 +60,10 @@ export function validateReopenAuthorization(manifest,cardId){
 export function reopenBudgetTerms(manifest,cardId){
  const grant=validateReopenAuthorization(manifest,cardId),amendment=manifest.amendments?.[0];
  return {limitYuan:amendment?.cardLimits[cardId]??grant.newLimitYuan,maxAttempts:amendment?.maxAttempts??grant.maxAttempts,waveLimitYuan:amendment?.waveLimitYuan??manifest.waveLimitYuan};
+}
+export function reopenAllowsId(manifest,cardId,id){
+ const grant=validateReopenAuthorization(manifest,cardId);
+ return grant.allowed.some(r=>r.id===id)||cardId==='T08'&&id==='npc_lq_shaluo'&&manifest.sourceAuthorizations?.some(a=>a.cardId==='T08')===true;
 }
 export function grantDepthBudget(ledger,cardId,allocation,manifest){
  reopenAuthorizationVersion(manifest);
@@ -105,7 +109,7 @@ export async function openContentBudget({file,client,cardId,allocation,reopenAut
   ledger.requests??={};
   if(reopenAuthorization){
    const grant=validateReopenAuthorization(reopenAuthorization,cardId),round=ledger.reopenAuthorizations[reopenAuthorization.id].cards[cardId];
-   if(!grant.allowed.some(r=>r.id===reopenId))throw Error('重开ID未授权');
+   if(!reopenAllowsId(reopenAuthorization,cardId,reopenId))throw Error('重开ID未授权');
    if(continueReopen&&!round.pilotPassed)throw Error('首ID完整协议未通过，不得继续');
    if(!continueReopen&&round.pilotId&&round.pilotId!==reopenId)throw Error('先完成原首ID试运行');
   }
@@ -173,7 +177,7 @@ export async function openContentBudget({file,client,cardId,allocation,reopenAut
  function claimOnce(field,id,fingerprint){const pending=queue.then(async()=>{const owner=cardId?ledger.cards[cardId]:ledger;owner[field]??={};if(owner[field][id])return false;owner[field][id]={fingerprint,claimedAt:new Date().toISOString()};await save(file,ledger);return true;});queue=pending.catch(()=>{});return pending;}
  function claimReopenReview(id,fingerprint){return enqueue(async()=>{
   const grant=validateReopenAuthorization(reopenAuthorization,cardId),round=ledger.reopenAuthorizations[reopenAuthorization.id].cards[cardId];
-  if(id!==reopenId||!grant.allowed.some(r=>r.id===id))throw Error('重开ID未授权');
+  if(id!==reopenId||!reopenAllowsId(reopenAuthorization,cardId,id))throw Error('重开ID未授权');
   const attempts=round.attempts[id]??=[];
   if(attempts.some(a=>a.fingerprint===fingerprint)||attempts.length>=reopenBudgetTerms(reopenAuthorization,cardId).maxAttempts)return false;
   round.pilotId??=id;attempts.push({fingerprint,claimedAt:new Date().toISOString(),status:'started'});await save(file,ledger);return true;

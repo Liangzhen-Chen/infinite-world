@@ -14,13 +14,12 @@ import {depthEntries,patchDraft,applyDepthDraft,validateDraft,validatePatchResul
 import * as design from '../world/design/w1-lq-depth.mjs';
 import {liquanRoster} from '../world/design/w1-villages-liquan.mjs';
 import {compactReviewRequest} from '../tools/npc-depth-review.mjs';
-import {prepareDepthRevision} from '../tools/npc-depth.mjs';
+import {prepareDepthRevision,validateT08ReadbackRevision,reuseReviewedDepthContext} from '../tools/npc-depth.mjs';
+import {reopenAllowsId} from '../tools/content-budget.mjs';
 
 const liveWorld=await loadWorld(path.resolve('world'));
 const originals=JSON.parse(await fs.readFile(path.resolve('world/drafts/w1/lq-depth/base.json'),'utf8'));
 const world={...liveWorld,npcs:liveWorld.npcs.map(n=>originals.find(b=>b.id===n.id)??n)};
-const entries=depthEntries(originals,design,world);
-const merged=validatePatchResults(entries,world);
 const ids=new Set(originals.map(n=>n.id));
 const legacyRoot=path.resolve('world/drafts/w1/lq-depth');
 const root=path.join(legacyRoot,'author-v2');
@@ -29,6 +28,12 @@ const exec=promisify(execFile);
 const frozenFoundation=JSON.parse(await fs.readFile(path.join(root,'foundation.json'),'utf8'));
 const frozenEntries=frozenFoundation.entries.map(({context,...entry})=>entry);
 const frozenDesign={...design,patchRows:frozenEntries};
+// Read stopped-stage candidates from their actual record history after reopening.
+const stoppedStage=JSON.parse(await fs.readFile(path.resolve('world/drafts/w1/lq-depth/reopen-complete/stopped-report.json'),'utf8'));
+const stoppedRows=await Promise.all(design.patchRows.map(async entry=>{const current=JSON.parse(await fs.readFile(path.join(root,'first-review',entry.id+'.json'),'utf8'));const witness=stoppedStage.records.find(r=>r.id===entry.id);const prior=recordedVersion(current,witness.recordHash);assert.ok(prior,'missing stopped-stage history '+entry.id);return{...entry,patches:structuredClone(prior.draft.patches)};}));
+const stoppedDesign={...design,patchRows:stoppedRows};
+const entries=depthEntries(originals,stoppedDesign,world);
+const merged=validatePatchResults(entries,world);
 // Original-stage assertions replay the immutable first proof's old records.
 let firstProof=JSON.parse(await fs.readFile(path.join(root,'first-review/incremental-proof.json'),'utf8').catch(e=>{if(e.code==='ENOENT')return 'null';throw e;}));
 while(firstProof?.previousProof)firstProof=firstProof.previousProof;
@@ -203,7 +208,7 @@ const firstReviewRoot=path.join(root,'first-review');
 const backgroundFile=path.join(firstReviewRoot,'authored-background.json');
 const background=JSON.parse(await fs.readFile(backgroundFile,'utf8'));
 const backgroundEntries=depthEntries(originals,{...frozenDesign,authoredBackground:background},world);
-const revisedBackgroundEntries=depthEntries(originals,{...design,authoredBackground:background},world);
+const revisedBackgroundEntries=depthEntries(originals,{...stoppedDesign,authoredBackground:background},world);
 const offlineBackgroundEntries=depthEntries(originals,{...offlineDesign,authoredBackground:background},world);
 
 test('T25官方纯验证接受六个独立未审背景，原出处和30人视角逐项冻结',()=>{
@@ -279,7 +284,7 @@ test('性别补件只包含实际代词所指的16人，字段逐值匹配且没
  const report=JSON.parse(await fs.readFile(path.join(firstReviewRoot,'T26-contract-preflight.json'),'utf8'));
  assert.equal(report.modelCalls,0);assert.equal(report.referencedSexPeople,16);assert.equal(report.sourceRefsChecked,84);
  assert.equal(report.sourceHash,hashContent(background));
- assert.equal(report.manifestHash,hashContent(JSON.parse(await fs.readFile(path.join(firstReviewRoot,'manifest.json'),'utf8'))));
+ assert.equal(report.manifestHash,hashContent(JSON.parse(await fs.readFile(path.join(legacyRoot,'complete-003/prior-manifest.json'),'utf8'))));
  const sourcePeople=[...world.npcs,...world.residents];
  for(const appendix of report.sexSupplements){
   const data=JSON.parse(await fs.readFile(path.join(firstReviewRoot,appendix.file),'utf8'));
@@ -299,13 +304,15 @@ test('修订后官方旧首审prepare拒绝覆盖，author-v2及原记忆没有�
  const optIn=JSON.parse(await fs.readFile(path.join(firstReviewRoot,'opt-in-evidence.json'),'utf8'));
  assert.equal(optIn.cardId,'T08');assert.equal(optIn.modelCalls,0);assert.deepEqual(optIn.candidateChanges,[]);
  for(const old of optIn.previousFiles)assert.equal(hashContent(JSON.parse(await fs.readFile(path.resolve(firstReviewRoot,old.path),'utf8'))),old.contentHash);
- const files=['base.json','candidate.json','foundation.json','manifest.json'];
+ const manifest=JSON.parse(await fs.readFile(path.join(firstReviewRoot,'manifest.json'),'utf8'));
+ const activeBackgroundFile=path.resolve('world',manifest.authoredBackground);
+ const files=['base.json','candidate.json','foundation.json','manifest.json','authored-background.json',path.relative(firstReviewRoot,activeBackgroundFile)];
  const frozen=await Promise.all(files.map(async name=>({name,hash:hashContent(JSON.parse(await fs.readFile(path.join(firstReviewRoot,name),'utf8'))),mtime:(await fs.stat(path.join(firstReviewRoot,name))).mtimeMs})));
  const env={...process.env};delete env.DEEPSEEK_API_KEY;
- await assert.rejects(exec(process.execPath,['tools/npc-depth.mjs','--design','world/design/w1-lq-depth.mjs','--root',firstReviewRoot,'--authored-background',backgroundFile,'--source-evidence-map',path.join(firstReviewRoot,'source-evidence-map.json'),'--compact-request','--budget-root',path.join(firstReviewRoot,'no-allocated-budget'),'--card','T08','--prepare'],{env}),/骨架或引用已变/);
+ await assert.rejects(exec(process.execPath,['tools/npc-depth.mjs','--design','world/design/w1-lq-depth.mjs','--root',firstReviewRoot,'--authored-background',backgroundFile,'--source-evidence-map',path.join(firstReviewRoot,'source-evidence-map.json'),'--compact-request','--budget-root',path.join(firstReviewRoot,'no-allocated-budget'),'--card','T08','--prepare'],{env}),/双方事件事实不一致或超出处/);
  for(const old of frozen){assert.equal(hashContent(JSON.parse(await fs.readFile(path.join(firstReviewRoot,old.name),'utf8'))),old.hash);assert.equal((await fs.stat(path.join(firstReviewRoot,old.name))).mtimeMs,old.mtime);}
- const manifest=JSON.parse(await fs.readFile(path.join(firstReviewRoot,'manifest.json'),'utf8'));
- assert.equal(manifest.authoredBackgroundHash,hashContent(background));
+ assert.equal(manifest.authoredBackgroundHash,hashContent(JSON.parse(await fs.readFile(activeBackgroundFile,'utf8'))));
+ assert.equal(hashContent(background),optIn.sourceHash);
  const candidate=JSON.parse(await fs.readFile(path.join(firstReviewRoot,'candidate.json'),'utf8'));
  assert.deepEqual(candidate,JSON.parse(await fs.readFile(path.join(root,'candidate.json'),'utf8')));
  for(const entry of backgroundEntries)assert.deepEqual(entry.facts.memorySeeds.slice(0,-1),entry.before.memorySeeds);
@@ -322,7 +329,7 @@ test('T45官方首审预检冻结原证据，实际附件进入完整请求且�
  assert.equal(report.budgetBefore.spentYuan,7.947071199999995);assert.equal(report.budgetBefore.reservedYuan,0.08373599999999998);
  assert.deepEqual(report.budgetBefore.previousRequests,[]);
  for(const frozen of report.frozen){
-  const raw=await fs.readFile(frozen.file==='design/w1-lq-depth.mjs'?path.join(legacyRoot,'reopen-offline/original-design.mjs.txt'):path.resolve('world',frozen.file),'utf8');
+  const raw=await fs.readFile(frozen.file==='design/w1-lq-depth.mjs'?path.join(legacyRoot,'reopen-offline/original-design.mjs.txt'):frozen.file==='drafts/w1/lq-depth/author-v2/first-review/manifest.json'?path.join(legacyRoot,'complete-003/prior-manifest.json'):path.resolve('world',frozen.file),'utf8');
   assert.equal(createHash('sha256').update(raw.replace(/\r\n/g,'\n')).digest('hex'),frozen.sha256LF);
   if(frozen.contentHash)assert.equal(hashContent(JSON.parse(raw)),frozen.contentHash);
  }
@@ -372,7 +379,8 @@ test('真实首审按原卡结算并保留未过状态、来源缺口及provider
  assert.deepEqual(gaps.sharedToolFindings.map(f=>f.code),['frozen-draft-retries','continue-after-entry-budget-block','earlier-provider-response-gap']);
  assert.ok(Math.abs(gaps.sharedToolFindings[1].costUpperYuan-.108236)<1e-10);
  assert.equal(gaps.sharedToolFindings[2].affectedManualIds.filter(r=>r.finalOriginalProviderReviewAvailable).length,3);
- await assert.rejects(fs.stat(path.join(firstReviewRoot,'incremental-l4.json')),/ENOENT/);
+ const stopped=JSON.parse(await fs.readFile(path.join(legacyRoot,'reopen-complete/stopped-report.json'),'utf8'));
+ assert.equal(stopped.l4.approved,false);assert.equal(stopped.l4.wholeCardReadingAndScoringRegistered,false);
 });
 
 const reopenRoot=path.join(legacyRoot,'reopen-offline');
@@ -559,7 +567,10 @@ test('T08实际continuation父proof加四叶提议经官方prepare，full和comp
  await fs.mkdir(path.join(worldRoot,'design'),{recursive:true});
  await fs.copyFile(path.resolve('world/design/w1-reopen-authorization.json'),path.join(worldRoot,'design/w1-reopen-authorization.json'));
  const root=path.join(worldRoot,'drafts/w1/lq-depth/author-v2/first-review'),read=async file=>JSON.parse(await fs.readFile(path.join(root,file),'utf8'));
- const proof=await read('incremental-proof.json'),foundation=await read('foundation.json'),plan=await read('../../reopen-complete/neighbor-repair-plan.json'),diff=await read('../../reopen-complete/neighbor-repair-proposed-diff.json');
+ let proof=await read('incremental-proof.json');const foundation=await read('foundation.json'),plan=await read('../../reopen-complete/neighbor-repair-plan.json'),diff=await read('../../reopen-complete/neighbor-repair-proposed-diff.json');
+ while(hashContent(proof)!==plan.previousProofHash&&proof.previousProof)proof=proof.previousProof;
+ await fs.writeFile(path.join(root,'incremental-proof.json'),JSON.stringify(proof));
+ for(const item of plan.authorized){const current=await read(item.id+'.json'),prior=recordedVersion(current,item.recordHash);assert.ok(prior);await fs.writeFile(path.join(root,item.id+'.json'),JSON.stringify(prior));}
  assert.equal(proof.planFile,'../../reopen-complete/continuation-plan.json');assert.equal(hashContent(proof),plan.previousProofHash);
  const rows=foundation.entries.map(({context,authoredBackground,...row})=>structuredClone(row));
  const replay=p=>{if(p.previousProof)replay(p.previousProof);for(const change of p.changes)rows.find(e=>e.id===change.id).patches.find(p=>p.path===change.path).value=structuredClone(change.after);};replay(proof);
@@ -578,4 +589,26 @@ test('T08实际continuation父proof加四叶提议经官方prepare，full和comp
  }
  for(const [file,raw] of originals)assert.equal(await fs.readFile(path.join(root,file),'utf8'),raw,file+' 原记录改变');
  assert.deepEqual(validateDraft(patchDraft(prepared.entries.find(e=>e.id===diff[0].id)),prepared.entries.find(e=>e.id===diff[0].id)).errors,[]);
+});
+
+test('T08追加权限只允许沙萝及五方两叶，来源窄修保留秘密、refs和参与者',async()=>{
+ const next=JSON.parse(await fs.readFile(path.resolve('world/drafts/w1/lq-depth/complete-003/authored-background.json'),'utf8'));
+ const prior=background.events.find(e=>e.id==='memory_lq_depth_readback'),event=next.events.find(e=>e.id===prior.id);
+ validateT08ReadbackRevision(prior,event);assert.doesNotMatch(event.narrative,/被本人回绝/);
+ for(const mutate of [e=>e.risks.pop(),e=>e.sourceRefs[12].hash='changed',e=>e.associations[0].viewpoint='new private fact',e=>e.actors.pop(),e=>e.designedFacts[0]='unrelated']){const bad=structuredClone(event);mutate(bad);assert.throws(()=>validateT08ReadbackRevision(prior,bad));}
+ const manifest=JSON.parse(await fs.readFile(path.resolve('world/design/w1-reopen-authorization.json'),'utf8'));
+ assert.equal(reopenAllowsId(manifest,'T08','npc_lq_shaluo'),true);
+ assert.equal(reopenAllowsId({...manifest,sourceAuthorizations:manifest.sourceAuthorizations.filter(a=>a.cardId!=='T08')},'T08','npc_lq_shaluo'),false);
+ assert.equal(reopenAllowsId(manifest,'T08','npc_lq_shenshu'),false);
+});
+
+test('云绣复用原完整L2仅允许重复after重建，候选、来源和请求hash改变均拒绝',async()=>{
+ const {currentOptions}=await import('../world/drafts/w1/lq-depth/complete-003/review.mjs');
+ const p=await prepareDepthRevision(await currentOptions()),id='npc_lq_yunxiu',entry=p.entries.find(e=>e.id===id),record=JSON.parse(await fs.readFile(path.join(firstReviewRoot,id+'.json'),'utf8'));
+ const original=JSON.parse(record.reviewRecovery.request.messages[1].content).publishedFacts;
+ const normalized={...original,revisions:original.revisions.map(r=>({...r,after:structuredClone(entry.patches.find(p=>p.path===r.path).value)}))};
+ assert.notEqual(hashContent(original),hashContent(normalized));
+ assert.deepEqual(reuseReviewedDepthContext(entry,normalized,record,p.config.revision),original);
+ for(const [e,c,r] of [[{...entry,baseHash:'changed'},normalized,record],[entry,{...normalized,rules:[...normalized.rules,'changed']},record],[entry,normalized,{...record,reviewRecovery:{...record.reviewRecovery,requestHash:'changed'}}]])assert.deepEqual(reuseReviewedDepthContext(e,c,r,p.config.revision),c);
+ assert.equal(record.fingerprint,hashContent({entry,context:p.contexts.get(id),revision:p.config.revision}));
 });

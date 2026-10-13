@@ -143,21 +143,44 @@ export function depthRevisionProof(options,prepared,reopenAuthorization){
  const {root}=options;
  return prepared.receipt??{kind:'incremental-depth-proof',authorizationHash:options.authorizationHash,planHash:hashContent(prepared.plan),planFile:path.relative(root,options.controlledRevision).replaceAll('\\','/'),worldRoot:path.relative(root,prepared.worldRoot).replaceAll('\\','/'),backgroundFile:options.authoredBackground?path.relative(root,options.authoredBackground).replaceAll('\\','/'):null,backgroundHash:prepared.background?.sourceHash??null,foundationHash:hashContent(prepared.foundation),entryHash:hashContent(prepared.entries),oldRecords:prepared.records,changes:prepared.revision.changes,records:{},...(prepared.sourceCheckoutEvidence?{sourceCheckoutEvidence:prepared.sourceCheckoutEvidence}:{}),...(prepared.reopening?{reopenAuthorization,previousProof:prepared.previousProof??null,previousProofHash:prepared.previousProof?hashContent(prepared.previousProof):null}:{})};
 }
+export function validateT08ReadbackRevision(prior,next){
+ assert.equal(next.id,'memory_lq_depth_readback','T08来源事件越权');
+ const restored=structuredClone(next);restored.narrative=prior.narrative;
+ restored.designedFacts[2]=prior.designedFacts[2];
+ for(const index of [12,13]){assert.equal(next.sourceRefs[index].publicSpeech,next.associations.find(a=>a.id==='npc_lq_kuangye').viewpoint,'匡叶公开原则不同步');restored.sourceRefs[index].publicSpeech=prior.sourceRefs[index].publicSpeech;}
+ for(const association of restored.associations){const old=prior.associations.find(a=>a.id===association.id);assert.ok(old,'T08来源参与者改变');assert.equal(association.narrative,next.narrative,'T08五方叙述不同');assert.equal(association.factsHash,hashContent(next.designedFacts),'T08设计事实hash不同');association.narrative=old.narrative;association.factsHash=old.factsHash;if(association.id==='npc_lq_kuangye')association.viewpoint=old.viewpoint;}
+ assert.deepEqual(restored,prior,'T08只授权公开原则及五方同步叶');
+}
+// Reuse an unchanged full L2 request's measured context. Older requests can
+// contain redundant revisions.after values; their complete skeleton and draft
+// remain authoritative. Never use this for a changed source or candidate.
+export function reuseReviewedDepthContext(entry,context,record,revision){
+ if(record?.status!=='passed'||!record.reviewRecovery?.request)return context;
+ const request=record.reviewRecovery.request;
+ if(hashContent(request)!==record.reviewRecovery.requestHash)return context;
+ let payload;try{payload=JSON.parse(request.messages[1].content);}catch{return context;}
+ if(hashContent(payload.skeleton)!==hashContent(entry)||hashContent(payload.draft)!==hashContent(record.draft))return context;
+ const prior=payload.publishedFacts;if(!Array.isArray(prior?.revisions))return context;
+ const reconstructed={...prior,revisions:prior.revisions.map(r=>({...r,after:structuredClone(entry.patches.find(p=>p.path===r.path)?.value)}))};
+ if(hashContent(reconstructed)!==hashContent(context)||record.fingerprint!==hashContent({entry,context:prior,revision}))return context;
+ return structuredClone(prior);
+}
 export async function sourceAuthorization(plan,reopening,records,previousPrepared,background,read,safeFile){
  if(!plan.sourceAuthorization)return reopening;
- assert.ok(reopening&&['T07','T09'].includes(plan.cardId),'来源凭证仅用于原T07/T09重开');
+ assert.ok(reopening&&['T07','T08','T09'].includes(plan.cardId),'来源凭证仅用于原T07/T08/T09重开');
  const credential=await read(safeFile(plan.sourceAuthorization.file));
  assert.equal(hashContent(credential),plan.sourceAuthorization.hash,'来源凭证hash改变');
  assert.deepEqual(Object.keys(credential).sort(),['kind','cardId','authorizationId','parentManifestHash','parentGrantHash','source','allowed'].sort(),'来源凭证字段越权');
  assert.equal(credential.kind,'depth-source-authorization');assert.equal(credential.cardId,plan.cardId);assert.equal(credential.authorizationId,reopening.manifest.id);
  assert.equal(credential.parentManifestHash,reopening.manifestHash,'来源凭证祖先manifest改变');assert.equal(credential.parentGrantHash,hashContent(reopening.grant),'来源凭证父grant改变');
- const sangban=plan.cardId==='T09';
- if(sangban)assert.ok(reopening.sourceAuthorizations.some(a=>a.cardId==='T09'&&a.hash===hashContent(credential)&&path.resolve(safeFile(a.file))===path.resolve(safeFile(plan.sourceAuthorization.file))),'T09来源凭证缺清单追加授权');
- const binding=credential.source;assert.equal(binding.eventId,sangban?'memory_sb_depth_shared_11':'memory_wt_depth_group_3','来源凭证事件越权');assert.equal(binding.path,'narrative','来源凭证pointer越权');
+ const sangban=plan.cardId==='T09',liquan=plan.cardId==='T08';
+ if(sangban||liquan)assert.ok(reopening.sourceAuthorizations.some(a=>a.cardId===plan.cardId&&a.hash===hashContent(credential)&&path.resolve(safeFile(a.file))===path.resolve(safeFile(plan.sourceAuthorization.file))),'来源凭证缺清单追加授权');
+ const binding=credential.source;assert.equal(binding.eventId,liquan?'memory_lq_depth_readback':sangban?'memory_sb_depth_shared_11':'memory_wt_depth_group_3','来源凭证事件越权');assert.equal(binding.path,'narrative','来源凭证pointer越权');
  assert.deepEqual(Object.keys(binding).sort(),['eventId','path','beforeHash','afterHash'].sort(),'来源pointer字段越权');
  const prior=previousPrepared?.background.events.find(e=>e.id===binding.eventId),next=background?.events.find(e=>e.id===binding.eventId);assert.ok(prior&&next,'来源凭证缺父事件');
  assert.equal(hashContent(prior.narrative),binding.beforeHash,'来源凭证before改变');assert.equal(hashContent(next.narrative),binding.afterHash,'来源凭证after改变');
- if(sangban){
+ if(liquan)validateT08ReadbackRevision(prior,next);
+ else if(sangban){
   const names=new Map(previousPrepared.entries.map(e=>[e.id,e.before.name]));
   for(const id of prior.actors){const speech=prior.sourceRefs.find(r=>r.id===id&&r.publicSpeech)?.publicSpeech?.replace(/[。！？]$/,'');assert.ok(speech&&next.narrative.includes(`${names.get(id)}说“${speech}”`),'T09叙述须保留原公开说话归属');}
   assert.deepEqual({...next,narrative:prior.narrative,associations:next.associations.map(a=>{const old=prior.associations.find(p=>p.id===a.id);assert.equal(a.narrative,next.narrative,'T09双方叙述不同');return{...a,narrative:old.narrative};})},prior,'T09只授权发言归属及双方叙述');
@@ -168,12 +191,15 @@ export async function sourceAuthorization(plan,reopening,records,previousPrepare
  assert.deepEqual(credential.allowed.map(a=>a.id).sort(),[...prior.actors].sort(),'来源凭证四方ID越权或缺失');
  for(const permission of credential.allowed){
   assert.deepEqual(Object.keys(permission).sort(),['id','paths','recordHash'].sort(),'来源权限字段越权');
-  assert.deepEqual(permission.paths,sangban?['knowledge.known[2]','memorySeeds[2]']:['memorySeeds[2]'],'来源权限叶越权');
+  assert.deepEqual(permission.paths,sangban||liquan?['knowledge.known[2]','memorySeeds[2]']:['memorySeeds[2]'],'来源权限叶越权');
   assert.equal(prior.associations.find(a=>a.id===permission.id)?.path,'memorySeeds[2]','来源权限不是事件父叶');
   const original=reopening.grant.allowed.find(a=>a.id===permission.id),record=records.find(r=>r.id===permission.id);
-  assert.equal(permission.recordHash,original?.recordHash??(sangban?original?.createdRecordHash:undefined),'来源权限原record绑定改变');assert.ok(recordHasHash(record,permission.recordHash),'来源权限原record链改变');
+  if(original)assert.equal(permission.recordHash,original.recordHash??(sangban?original.createdRecordHash:undefined),'来源权限原record绑定改变');
+  else assert.ok(liquan&&permission.id==='npc_lq_shaluo','来源权限新增ID越权');
+  assert.ok(recordHasHash(record,permission.recordHash),'来源权限原record链改变');
  }
- return{...reopening,sourcePermissions:credential.allowed};
+ const grant=liquan?{...reopening.grant,allowed:[...reopening.grant.allowed,...credential.allowed.filter(a=>!reopening.grant.allowed.some(p=>p.id===a.id)).map(a=>({...a,reason:'2026-10-13主会话授予沙萝共享来源同步及真实复审。'}))]}:reopening.grant;
+ return{...reopening,grant,sourcePermissions:credential.allowed};
 }
 export async function prepareDepthRevision({worldRoot=path.resolve('world'),...options}){
  const read=async file=>JSON.parse(await fs.readFile(file,'utf8')),root=options.root;
@@ -225,7 +251,9 @@ export async function prepareDepthRevision({worldRoot=path.resolve('world'),...o
    context={...context,revisions:context.revisions.map(r=>({...r,after:structuredClone(entry.patches.find(p=>p.path===r.path).value)}))};
    if(entry.authoredBackground?.sourceHash!==parentContext.authoredBackground?.sourceHash){const next=authoredReviewContext(context,entry.authoredBackground,entry,world);context={...context,authoredBackground:next.authoredBackground};}
   }
-  if(plan.authorized.some(a=>a.id===entry.id))context={...context,controlledRevision:{planningId:plan.planningId,authorizationHash:options.authorizationHash,changes:revision.changes.filter(c=>c.id===entry.id)}};return[entry.id,context];
+  if(plan.authorized.some(a=>a.id===entry.id))context={...context,controlledRevision:{planningId:plan.planningId,authorizationHash:options.authorizationHash,changes:revision.changes.filter(c=>c.id===entry.id)}};
+  else context=reuseReviewedDepthContext(entry,context,records.find(r=>r.id===entry.id),config.revision);
+  return[entry.id,context];
  }));
  return{config,entries,world,foundation,plan,records,background,contexts,receipt,revision,sourceHashes,worldRoot,reopening,previousProof,...(sourceCheckoutEvidence?{sourceCheckoutEvidence}:{})};
 }
