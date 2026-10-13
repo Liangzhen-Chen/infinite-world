@@ -8,6 +8,7 @@ import {validateAgricultureRules}from'../server-plugin/agriculture.mjs';
 import {validateWildlife}from'../server-plugin/wildlife.mjs';
 import {validateFarmPests}from'../server-plugin/farm-pests.mjs';
 import {validateBossEcology}from'../server-plugin/bosses.mjs';
+import {validateBossCognition}from'../server-plugin/boss-cognition.mjs';
 import {catalogMinimum,professionMinimum,populationMinimum}from'./catalog-progress.mjs';
 import {worldLoreCategories,validateWorldLore}from'./w5-validation.mjs';
 import {socialCategories,validateSocialWorld}from'./w5-social-validation.mjs';
@@ -28,6 +29,8 @@ export function validateWorld(world,{stage='engine'}={}){
     errors.push(...validateWildlife(world));
     errors.push(...validateFarmPests(world));
     errors.push(...validateBossEcology(world));
+    const cognitionLocations=new Set(world.locations.map(location=>location.id));
+    for(const boss of world.bosses??[])errors.push(...validateBossCognition(boss,cognitionLocations).map(error=>`${boss.id}:${error}`));
     errors.push(...validateObjectWorld(world));
     errors.push(...validateNpcSchedules(world));
     errors.push(...validateNpcProfiles(world));

@@ -1,10 +1,16 @@
+import {emptyBossCognition,readBossCognition}from'./boss-cognition.mjs';
 export function planBossMigration(document,rules,catalog){
     if(!rules.bossEcology)return[];if(document.schemaVersion!==2)throw new Error('巢穴迁移只支持格式2存档');
     const day=Math.floor(document.state.minute/1440),patches=[];
     for(const boss of catalog.filter(b=>b.residence)){
         const key=`lair:${boss.residence.id}`,old=document.state.records[key];
+        const actor=document.state.creatures?.[boss.id];
+        if(actor&&boss.intelligence>0){
+            readBossCognition(actor);
+            if(actor.cognition===undefined)patches.push({op:'set',path:['state','creatures',boss.id,'cognition'],value:emptyBossCognition()});
+        }
         if(old){if(old.category!=='lair'||old.format!==1||old.boss!==boss.id)throw new Error('巢穴记录冲突或不支持版本');continue;}
-        const actor=document.state.creatures?.[boss.id],dead=actor&&(actor.status==='死亡'||actor.hp===0);
+        const dead=actor&&(actor.status==='死亡'||actor.hp===0);
         if(actor){
             const metadata={boss:boss.id,species:boss.monster,ecology:boss.residence.habitat,lair:boss.residence.id};
             for(const [field,value]of Object.entries(metadata)){
