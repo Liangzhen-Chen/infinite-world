@@ -6,6 +6,16 @@ export function validatePopulation(world){
  const places=new Map((world.locations??[]).map(row=>[row.id,row])),cultures=new Set((world.cultures??[]).map(row=>row.id));
  const households=new Map(),membership=new Map(),profiles=new Map();
  const check=(condition,message)=>{if(!condition)errors.push(message);};
+ const settlements=new Set((world.settlementProfiles??[]).map(row=>row.id));
+ const belongs=(location,settlement)=>{
+  const visited=new Set();let parent=places.get(location)?.parent;
+  while(parent&&places.has(parent)&&!visited.has(parent)){
+   if(parent===settlement)return true;
+   if(settlements.has(parent))return false;
+   visited.add(parent);parent=places.get(parent).parent;
+  }
+  return false;
+ };
  for(const row of world.residents??[]){
   check(row.tier==='roster',`名册档级必须是roster：${row.id}`);
   check(row.flags?.minor===(row.age<18)&&!(row.age<18&&row.flags?.romanceable),`名册年龄与标记冲突：${row.id}`);
@@ -55,16 +65,16 @@ export function validatePopulation(world){
    check(keys.reduce((sum,key)=>sum+(row.pendingAgeStructure?.[key]??NaN),0)===row.pendingPopulation,`待生成年龄人数不符：${row.id}`);
   }
   if(row.ageStructure)check(Object.values(row.ageStructure).reduce((sum,value)=>sum+value,0)===row.population,`人口年龄结构合计不符：${row.id}`);
-  for(const id of row.buildingIds??[])check(places.has(id)&&places.get(id).parent===row.id,`聚落建筑归属不符：${row.id}/${id}`);
+  for(const id of row.buildingIds??[])check(belongs(id,row.id),`聚落建筑归属不符：${row.id}/${id}`);
   if(row.details){const d=row.details;
    if(d.economy?.status==='registered-opening')errors.push(...validateVillageLedger(d,world).map(e=>`${row.id}：${e}`));
    for(const key of ['id','population','householdCount'])check(d[key]===row[key],`聚落档案登记不符：${row.id}/${key}`);
    check(JSON.stringify(d.buildingIds)===JSON.stringify(row.buildingIds)&&JSON.stringify(d.ageStructure)===JSON.stringify(row.ageStructure),`聚落档案建筑或年龄结构不符：${row.id}`);
    const ids=new Set();for(const entry of [...d.problems,...d.rumors,...d.hiddenPlaces]){check(!ids.has(entry.id),`聚落详情编号重复：${entry.id}`);ids.add(entry.id);}
-   for(const p of d.problems){check(places.get(p.location)?.parent===row.id,`地方问题地点不符：${p.id}`);for(const s of p.stakeholders)check(people.get(s.person)?.settlement===row.id,`地方问题当事人不符：${p.id}/${s.person}`);}
+   for(const p of d.problems){check(belongs(p.location,row.id),`地方问题地点不符：${p.id}`);for(const s of p.stakeholders)check(people.get(s.person)?.settlement===row.id,`地方问题当事人不符：${p.id}/${s.person}`);}
    for(const r of d.rumors){check(d.problems.some(p=>p.id===r.sourceProblem),`传闻缺来源问题：${r.id}`);for(const id of [r.source,...r.carriers,...r.witnesses])check(people.get(id)?.settlement===row.id,`传闻来源人物不符：${r.id}/${id}`);}
    for(const id of [...d.governance.coordinators,...d.calendar.festivals.map(f=>f.host),...d.hiddenPlaces.flatMap(h=>h.knownBy)])check(people.get(id)?.settlement===row.id&&people.get(id)?.age>=18,`聚落责任人不符：${row.id}/${id}`);
-   for(const id of [d.governance.meetingPlace,...d.calendar.festivals.map(f=>f.location),...d.hiddenPlaces.map(h=>h.location)])check(places.get(id)?.parent===row.id,`聚落详情地点不符：${row.id}/${id}`);
+   for(const id of [d.governance.meetingPlace,...d.calendar.festivals.map(f=>f.location),...d.hiddenPlaces.map(h=>h.location)])check(belongs(id,row.id),`聚落详情地点不符：${row.id}/${id}`);
   }
   const locals=new Set(row.residentIds),homes=[...households.values()].filter(h=>h.settlement===row.id);
   check(homes.length===(seeded?row.registeredHouseholdCount:row.householdCount),`人口册户数不符：${row.id}`);
