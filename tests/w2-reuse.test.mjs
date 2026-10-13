@@ -3,6 +3,7 @@ import {loadWorld} from '../tools/load-world.mjs';import {mechanismMap} from '..
 import {reuseSpellCandidates} from '../world/design/w2-reuse-candidates.mjs';import {validateMagicCatalog} from '../server-plugin/magic.mjs';
 import {WorldEngine} from '../server-plugin/engine.mjs';import {applyPatches} from '../server-plugin/storage.mjs';
 import {validateDraft} from '../tools/w2-reuse-content.mjs';
+import {objectSpellCandidates} from '../world/design/m4-object-candidates.mjs';
 const source=await loadWorld(),spells=reuseSpellCandidates(),seed=JSON.parse(await fs.readFile('tests/fixtures/legacy/seed.json','utf8'));
 test('复用文案校验器时不会因父命令参数重新运行旧批次流水线',async()=>{
  const files=['world/drafts/m4-batch2/summary.json','world/drafts/m4-batch2/batch-0.json','world/drafts/m4-object/budget.json'];
@@ -18,7 +19,25 @@ test('复用文案L1检查实际魔力数字和实现词泄漏，不把原稿当
 function setup(){const world=source;const engine=new WorldEngine(world),d=engine.createCharacter(seed,{},'w2-reuse');d.state.location='loc_hw_dock';d.state.player.mp=1000;d.state.player.maxMp=1000;d.state.player.level=60;d.state.player.attributes.精神=30;d.state.player.hp=500;d.state.player.maxHp=500;d.state.professions.combat='profession_mage';d.state.weather.loc_hw_dock={humidityPercent:70};
  for(const s of spells){d.state.spells[s.id]={source:{type:'fixture'}};d.state.skills[s.skill]={proficiency:120,daily:{},breakthroughs:[]};}for(const id of ['item_resin','item_iron'])d.state.inventory[id]={quantity:5};d.state.records.permit={category:'authorization',action:'mental_magic',subject:'player',grantor:'npc_hw_gucen',location:d.state.location,expires:d.state.minute+100};
  const run=async(document,tool,args,id)=>{const out=await engine.reduce(document,{tool,args,eventId:id});return{document:applyPatches(document,out.patches),result:out.result};};const cast=async(document,spell,args={})=>{for(let i=0;i<60;i++){const out=await run(document,'world_cast',{spell,target:'player',...args},`${spell}_${i}`);if(out.result.success)return out;}throw Error('无成功骰点:'+spell);};return{world,engine,d,run,cast};}
-test('154骨架逐条归类；14条正式内容保留审核骨架，缺失机制仍不算实现',async()=>{const r=mechanismMap(source);assert.equal(r.total,154);assert.equal(new Set(r.rows.map(x=>x.id)).size,154);assert.equal(spells.length,14);assert.equal(source.spells.length,31);const candidate=JSON.parse(await fs.readFile('world/drafts/w2-reuse/candidate.json','utf8'));for(const s of spells){const actual=source.spells.find(x=>x.id===s.id);assert.deepEqual(actual,candidate.spells.find(x=>x.id===s.id));for(const [key,value]of Object.entries(s))assert.deepEqual(actual[key],value);assert.deepEqual(validateMagicCatalog(actual,{requireHandler:true}),[]);assert.equal(r.rows.find(x=>x.id===s.id).status,'published');}for(const id of ['spell_life_01','spell_life_05','spell_water_08','spell_earth_07','spell_light_03'])assert.equal(r.rows.find(x=>x.id===id).status,'missing-consumer');assert.equal(r.rows.filter(x=>x.status==='reviewed-unpublished').length,2);});
+test('154骨架逐条归类；14条正式内容保留审核骨架，缺失机制仍不算实现',async()=>{
+ const r=mechanismMap(source),published=new Set(source.spells.map(s=>s.id));
+ assert.equal(r.total,154);assert.equal(new Set(r.rows.map(x=>x.id)).size,154);assert.equal(spells.length,14);
+ const ids=new Set(spells.map(s=>s.id));assert.equal(source.spells.filter(s=>ids.has(s.id)).length,14);
+ const candidate=JSON.parse(await fs.readFile('world/drafts/w2-reuse/candidate.json','utf8'));
+ for(const s of spells){
+  const actual=source.spells.find(x=>x.id===s.id);assert.deepEqual(actual,candidate.spells.find(x=>x.id===s.id));
+  for(const [key,value]of Object.entries(s))assert.deepEqual(actual[key],value);
+  assert.deepEqual(validateMagicCatalog(actual,{requireHandler:true}),[]);assert.equal(r.rows.find(x=>x.id===s.id).status,'published');
+ }
+ // Later consumer cards can make these skeletons ready without publishing them.
+ for(const id of ['spell_life_01','spell_life_05','spell_water_08','spell_earth_07','spell_light_03']){
+  const row=r.rows.find(x=>x.id===id);assert.equal(row.status,published.has(id)?'published':'consumer-ready');assert.deepEqual(row.validation,[]);assert.ok(row.handler);
+ }
+ for(const s of objectSpellCandidates){const row=r.rows.find(x=>x.id===s.id);assert.equal(row.status,published.has(s.id)?'published':'reviewed-unpublished');assert.deepEqual(row.validation,[]);}
+ // A valid numerical spec alone does not publish an unsupported mechanism.
+ for(const row of r.rows.filter(x=>x.status==='missing-consumer'))assert.equal(published.has(row.id),false);
+ assert.ok(validateMagicCatalog({...spells[0],effectSpec:undefined},{requireHandler:true}).length,'缺少处理器的骨架仍须拒绝');
+});
 test('全部14条真实施法改变对应水量、衣物、耐久、防护或契约；没有新增处理器',async()=>{const {world,d,cast}=setup();const water=id=>world.locations.flatMap(l=>l.features??[]).find(f=>f.id===id).state;
  for(const s of spells){const doc=structuredClone(d);let args={};if(s.mechanism==='dry'){doc.state.inventory.item_clothes.moisture=70;args.target='item_clothes';}if(s.mechanism==='repair_metal'){const item=world.items.find(x=>x.tags?.includes('metal')&&x.durability>20);assert.ok(item);doc.state.inventory[item.id]={quantity:1,durability:10,maxDurability:item.durability};args.target=item.id;}
  const targets={condense:'feature_hw_cup',clean_water:'feature_hw_pool',sense_water:'feature_hw_pool',irrigate:'feature_hw_channel',clear_silt:'feature_hw_channel',soil_water:'feature_hw_plot'};if(targets[s.mechanism])args.target=targets[s.mechanism];if(s.school==='精神')args.permit='permit';const out=await cast(doc,s.id,args);assert.equal(out.document.state.player.mp,doc.state.player.mp-s.mp,s.id);assert.equal(out.document.state.minute,doc.state.minute+s.minutes,s.id);

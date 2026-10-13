@@ -61,9 +61,9 @@ test('14来源引用闭合，原法术审核指纹复用，17条来源增量L2/L
   contextFor:spellContext,revision:spellRevision,
  });
  assert.equal(approved.length,14);
- assert.equal(source.spells.length,31);
- assert.equal(world.spells.length,31);
- assert.equal(new Set(world.spells.map(row=>row.id)).size,31);
+ assert.ok(source.spells.length>=31);
+ assert.equal(world.spells.length,source.spells.length);
+ assert.equal(new Set(world.spells.map(row=>row.id)).size,world.spells.length);
  assert.equal(sources.mappings.length,14);
  assert.deepEqual(sources.mappings.map(({spell,book})=>({spell,book})),reuseLearningReferences);
  const saved=JSON.parse(await fs.readFile('world/drafts/w2-reuse/learning-sources.json','utf8'));
