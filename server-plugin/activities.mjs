@@ -7,7 +7,7 @@ import {consumeMagicProtection}from'./magic-primitives.mjs';
 import {projectileAirPenalty}from'./magic-air.mjs';
 import {waterEarthMudPenalty,assertWaterEarthMovement}from'./magic-water-earth.mjs';
 import {assertLightMovement}from'./magic-light.mjs';
-import {milestone,monsterReward,awardExperience}from'./progression.mjs';
+import {milestone,monsterReward}from'./progression.mjs';
 import {manufacture}from'./manufacturing.mjs';
 import {repair}from'./repair.mjs';
 import {interactEnvironment,recordLocalContact}from'./environment.mjs';
@@ -21,6 +21,7 @@ import {wildlifeAction,resolveCreature,recordWildlifeDeath}from'./wildlife.mjs';
 import {lairAction,bossCounter,rememberBossTactic,defeatBoss}from'./bosses.mjs';
 import {civicAction,recordDonationContribution,publicProjectApproval,donationReceipt,saveDonationReceipt}from'./civic.mjs';
 import {governanceAction,assertGovernedProject}from'./governance.mjs';
+import {questBoardAction}from'./quest-board.mjs';
 import {businessAction}from'./business.mjs';
 import {festivalAction}from'./festival.mjs';
 const integer=(value,min=0,max=1e9)=>{if(!Number.isSafeInteger(value)||value<min||value>max)throw new Error(`数值需在${min}到${max}之间`);return value;};
@@ -168,45 +169,7 @@ export const activities={
         }
         throw new Error('未知聚落事务');
     },
-    quest(d,args,id){
-        if(!['publish','accept','complete'].includes(args.operation))throw new Error('未知任务操作；发布用publish，接受用accept，完成用complete');
-        if(args.operation==='publish'){
-            const publisher=this.resolve(args.publisher,'npc'),npc=d.get('state','npcs',publisher),grade=args.grade;
-            if(!npc||['死亡','濒死'].includes(npc.status))throw new Error('任务发布者无法清醒履约');
-            if(!(grade in this.rules.quests.quotaUnits))throw new Error('任务等级无效');
-            const unit=this.rules.quests.quotaUnits[grade],month=Math.floor(d.get('state','minute')/(1440*30));
-            const personal=args.personal===true,quota=this.byId.get(publisher).monthlyQuotaD??0,used=d.get('state','questQuota',`${month}_${publisher}`)??0;
-            if(!personal&&used+unit>quota)throw new Error('身份或本月任务发布额度不足');
-            if(personal&&grade!=='D')throw new Error('未登记官职的私人任务只能发布D级');
-            const reward=integer(args.reward,20,1e6);if(npc.coins<reward)throw new Error('发布者无法托管报酬');
-            const objective=args.objective;if(!objective||!['deliver','visit','build'].includes(objective.type))throw new Error('任务完成条件必须可验证');
-            const verifiedObjective=objective.type==='deliver'?{type:'deliver',item:this.resolve(objective.item,'item'),quantity:integer(objective.quantity,1,100000)}
-                :objective.type==='visit'?{type:'visit',location:this.resolve(objective.location,'loc')}:{type:'build',project:requiredText(objective.project)};
-            if(verifiedObjective.type==='build'&&!d.get('state','projects',verifiedObjective.project))throw new Error('任务工程未登记');
-            const quest=`quest_${id}`;d.set(['state','npcs',publisher,'coins'],npc.coins-reward);
-            d.set(['state','quests',quest],{id:quest,publisher,grade,reward,escrow:reward,objective:verifiedObjective,content:requiredText(args.content),status:'公开',taker:null});
-            if(!personal)d.set(['state','questQuota',`${month}_${publisher}`],used+unit);return {quest};
-        }
-        const quest=d.get('state','quests',args.quest);if(!quest)throw new Error('不存在这个任务');
-        if(args.operation==='accept'){
-            if(quest.status!=='公开')throw new Error('任务当前不能接受');d.set(['state','quests',quest.id],{...quest,status:'进行中',taker:'player'});return {quest:quest.id,status:'进行中'};
-        }
-        if(args.operation!=='complete'||quest.status!=='进行中'||quest.taker!=='player')throw new Error('任务不在可结算状态');
-        const objective=quest.objective;let done=false;
-        if(objective.type==='visit')done=Boolean(d.get('state','discoveries',this.resolve(objective.location)));
-        if(objective.type==='build')done=d.get('state','projects',objective.project,'status')==='已完成';
-        if(objective.type==='deliver'){
-            const item=this.resolve(objective.item,'item'),amount=integer(objective.quantity,1,100000);
-            if(['死亡','濒死'].includes(d.get('state','npcs',quest.publisher,'status')))throw new Error('委托人无法接收交付，需先处理委托变更');
-            if(d.get('state','location')!==d.get('state','npcs',quest.publisher,'location'))throw new Error('委托人不在场，不能交付');
-            if(this.quantity(d,'player',item)<amount)throw new Error('任务交付物品不足');transferItems(d,this,'player',quest.publisher,item,amount);done=true;
-        }
-        if(!done)throw new Error('没有可验证的完成证据');
-        d.set(['state','player','coins'],d.get('state','player','coins')+quest.escrow);d.set(['state','quests',quest.id],{...quest,status:'已完成',escrow:0});d.say(`任务完成，获得${quest.reward}铜`);
-        const subject=`${quest.publisher}:${objective.type}:${objective.item??objective.location??objective.project}`;
-        const experience=awardExperience(d,this,{kind:'quest',subject,source:`quest:${quest.id}`,base:this.rules.quests.experienceRanges[quest.grade][0],repeat:true},id);
-        return {quest:quest.id,reward:quest.reward,...experience};
-    },
+    quest(d,args,id){return questBoardAction(d,this,args,id);},
     create(d,args,id){
         const type=args.type,name=requiredText(args.name);
         if(!['npc','bld','org','item','skill','spell'].includes(type))throw new Error('实体类型无效');

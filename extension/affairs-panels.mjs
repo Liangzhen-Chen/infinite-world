@@ -15,6 +15,7 @@ export function renderAffairsPanel(container,data,kind){
             const quota=section(`第${data.quota.month}月发布额度`);
             stats(quota,[['额度',data.quota.limitD===null?'未登记':`${data.quota.limitD}个D级单位`],['已用',data.quota.usedD===null?'未登记':`${data.quota.usedD}个D级单位`],['剩余',data.quota.remainingD===null?'未登记':`${data.quota.remainingD}个D级单位`]]);
             if(data.quota.limitD===null)note(quota,'尚无玩家发布额度记录。');
+            if(data.quota.personal)note(quota,'私人身份可自费发布D级委托；上方额度用于官职任务。');
             note(quota,`任务等级折算：${Object.entries(data.quota.units).map(([grade,units])=>`${grade}级 ${units}个D级单位`).join('，')}`);
         }
         const current=filters.get(container)??{direction:'all',status:'active'},controls=node('div',undefined,'fields-affairs-filters');

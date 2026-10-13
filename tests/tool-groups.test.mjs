@@ -10,7 +10,7 @@ import {evaluateAssertions}from'../tools/playtest-assertions.mjs';
 test('委托三步操作与公共粮仓购买参数可直接用于公开工具',async()=>{
     const definitions=toolDefinitions().map(row=>row.function);
     const quest=definitions.find(row=>row.name==='world_quest'),field=definitions.find(row=>row.name==='world_field');
-    assert.deepEqual(quest.parameters.properties.operation.enum,['publish','accept','complete']);
+    assert.deepEqual(quest.parameters.properties.operation.enum,['publish','accept','complete','cancel','inspect']);
     assert.match(quest.parameters.properties.operation.description,/publish仅发布托管.*另调accept.*complete/);
     assert.match(quest.parameters.properties.quest.description,/回执.*world_read/);
     assert.match(field.description,/粮仓.*farm_buy/);
