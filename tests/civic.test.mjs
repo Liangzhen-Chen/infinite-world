@@ -33,6 +33,9 @@ async function ready(run,doc,days=3){
     // A controlled clock isolates admission conditions from survival simulation.
     // The residence dates themselves come from real paid engine contracts.
     doc.state.minute=doc.state.records.contract_room_rent_0.starts+days*1440;
+    // No simulation ran during the controlled jump; initialize weekly trade
+    // at the new clock rather than carrying an unprocessed dispatch across it.
+    delete doc.state.records['settlement-trade:clock'];
     atCounter(doc);
     doc=(await run(doc,args('civic_residence'),'residence')).document;
     doc=(await run(doc,args('civic_sponsor'),'sponsor')).document;
@@ -174,10 +177,15 @@ test('贡献达标只开放公民申请，长住、居民身份、当地贡献�
     assert.equal(Object.values(applied.document.state.records).some(r=>r.category==='authorization'&&r.grantee==='player'),false);
 });
 
-test('户籍工具沿既有聚落路由，正文不能填费用、日期、贡献分或官职',()=>{
+test('户籍工具沿既有聚落路由，正文不能填费用、日期、贡献分或官职',async()=>{
     const tool=toolDefinitions().find(t=>t.function.name==='world_settlement').function;
     assert.ok(tool.parameters.properties.operation.enum.includes('civic_apply_citizen'));
-    assert.deepEqual(tool.parameters.required,['operation','settlement']);
+    // Business operations use their business ID; civic still requires a place
+    // in its domain handler rather than in the shared tool schema.
+    assert.deepEqual(tool.parameters.required,['operation']);
+    assert.equal(tool.parameters.properties.settlement.type,'string');
+    const {doc,run}=setup();
+    await assert.rejects(run(doc,{operation:'civic_inspect'},'missing-settlement'));
     for(const field of ['fee','since','points','office'])assert.equal(tool.parameters.properties[field],undefined);
 });
 
