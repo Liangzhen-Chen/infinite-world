@@ -365,9 +365,7 @@ T28-R1修好新回执undefined规范化并保留严格篡改拒绝，相关31/32
 共同边界：锁定extension/tools.mjs、extension/prompt.mjs、prompt/、原存档、SillyTavern/、dist/；界面卡不加模型工具。数据读已有/read、/scene、/feedback、/catalog，缺展示字段时加只读投影；state-read的NPC脱敏不等于玩家知情过滤，不得展示全量NPC。截图写docs/测试报告/最新/M6-编号/（桌面与390×844、深浅两主题）。路径缩写E=extension/，S=server-plugin/，T=tests/。模型0。
 审计改动：草案要求十张卡全部串行（因共改runtime.test.mjs、runtime.js和路由），改为T75先做并提供面板挂载点与路由注册点，其后各卡只在自己的新模块里注册面板和路由、测试写在自己的tests/m6-NN.test.mjs，不改tests/runtime.test.mjs；这样T76–T80可并行，T77与T79同改ledger-view须串行。T81地图先覆盖已发布地点，白石镇发布后补映射。T84语音若本机没有可用的中文多声线服务，记待用户确认并完成其余部分。
 
-### T75 双主题、顶栏与阅读设置：玩家看到完整中文状态栏，并可切换主题、字号、高对比与减少动画；手机顶栏两行，抽屉全屏。
-可改 E/runtime.js、style.css，新建 E/ui-shell.mjs、ui-settings.mjs、topbar.mjs；assets/fonts/、assets/LICENSES.md、tools/deploy-engine.mjs、T/runtime.test.mjs。复用 calendar、玩家和天气状态；S/index.mjs 与新 S/ui-overview.mjs 增 /ui/overview，返回日期、地点路径、效果及同行者可见信息；提供后续面板挂载和设置入口，隔离打包包含后续新增界面模块与素材；接入本地授权字体与16品质色。
-验收：node --test tests/runtime.test.mjs tests/m6-01.test.mjs；node --test tests/engine.test.mjs tests/storage.test.mjs tests/plugin.test.mjs。新增 T/m6-01.test.mjs；截图含双主题、字号和键盘焦点；模型0，预计3小时，1会话。
+### T75 已完成：双主题、中文顶栏、字号/高对比/减少动画、手机全屏抽屉、本地字体与16品质色；后续卡在E/ui-*.mjs导出registerUI、在S/ui-*.mjs导出registerUIRoutes注册面板和路由。浏览器8/8、CORE40，六张截图在docs/测试报告/最新/M6-01/。遗留：390宽顶栏右侧地点和魔力被截断，交T76顺带处理。
 
 ### T76 消息卡与自然语言操作：玩家看到头像名牌、回合事件卡和可收藏信件，能用快捷按钮及说／做切换准备输入。
 可改 E/message-view.mjs、runtime.js、style.css，新建 E/input-view.mjs、mail-view.mjs；S/state-notices.mjs、T/state-notices.test.mjs、T/runtime.test.mjs。补齐未知说话人登记、公告与合同卡；系统提示写消息附加数据且由有效事件重建，回滚同步；快捷按钮仅填输入，少量快捷键可关闭，调试外隐藏回执、JSON和技术信息，中文错误保留未确认状态。
