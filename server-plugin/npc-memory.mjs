@@ -2,6 +2,11 @@ import {npcCognitionView}from'./npc-cognition.mjs';
 import {scheduleAt}from'./npc-schedule.mjs';
 import {MemoryIndex}from'./retrieval.mjs';
 import {npcRumors}from'./npc-rumors.mjs';
+import {memoryGuardUntil}from'./magic-mind-space.mjs';
+
+export function memoryBlurMinute(d,npcId,memory,ttl,now){
+ return Math.max(memory.minute+ttl*1440,memoryGuardUntil(d,npcId,memory.id,now));
+}
 
 const full=(engine,id)=>engine.byId.get(id)?.tier==='full';
 const awake=npc=>npc&&!['死亡','濒死','昏迷','患病'].includes(npc.status)&&!/(睡眠|熟睡|睡觉)/.test(npc.activity??'');
