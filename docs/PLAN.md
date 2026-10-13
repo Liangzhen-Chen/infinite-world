@@ -252,12 +252,7 @@ N1–N17至少12项完整有效且≥90%，N6/N16零泄漏，N12真实盲辨，N
 4 真实模型：0次、0元；逐N和评分的实际效果由第四轮测量，已完成负评不重抽。
 5 预计规模：250–450行，一个执行会话；F1合入后处理共享接口，动态场景只加入本轮相关人物资料。
 
-### T148 当前步骤正确执行，NPC对白不新增过去经历。目标消除四条交易断言失败，争取恢复N12/N15，并补足N9真实现场反应。
-1 完成结果：申请带路先答复，申请私宅先给许可，粮仓先到场后付款；courier移动只请求一次。主持明确区分当前观察、已发生经历和未来安排：施锦可以谈翻晒工作及接下来的打算，段禾可以谈档案中的桥与植物，不补今早进度或“三条岔道”的失败练习。冲突反应依据在场者与既有threatResponse，若呼救或报告须实际发言、后续司法仍调用world_law，不能以后台记录替代。
-2 可改：prompt/constitution.md、style.md、examples.md；tests/playtests/guide.json、npc_home_visit.json、npc_courier.json、npc_quest_social.json中的分步输入与机会标注；tests/prompt.test.mjs、m2-action-context.test.mjs、m2-npc-prompt.test.mjs。锁定原有账本断言和通过标准、正式人物档及F1/F2文件；不把已知失败重写成新报告通过。
-3 验收：node --test tests/prompt.test.mjs tests/m2-action-context.test.mjs tests/m2-npc-prompt.test.mjs tests/deepseek-transport.test.mjs tests/playtest-runner.test.mjs tests/playtest-npc-evidence.test.mjs tests/npc-acceptance.test.mjs；node --test tests/npc-obligations.test.mjs tests/npc-delivery.test.mjs tests/quest-board.test.mjs tests/law.test.mjs；CORE。离线回放四条行动链并核对两轮交易总守恒；loadPromptBundle().budget记录最终估算，静态测试不计作N能力通过。
-4 真实模型：0次、0元；真实对白、盲辨和工具选择统一留给第四轮。
-5 预计规模：120–220行，一个执行会话；静态提示预算仅余258 token至11900，先改写压缩既有规则，保持现有11800测试。
+### T148 已完成：申请带路先答复、私宅先给许可、粮仓先到场后付款，courier移动只请求一次；对白区分当前观察、已发生经历和未来安排，不补档案外的经历；冲突现场由在场者实际发言。相关88/CORE40，0模型，真实效果由T149测量。
 
 ### T149 M2第四轮真实复验【真实模型；待T146–T148合入】
 
