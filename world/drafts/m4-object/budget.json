@@ -1,5 +1,5 @@
 {
-  "spentYuan": 16.550396640000002,
+  "spentYuan": 16.621852720000003,
   "reservedYuan": 0.08373599999999976,
   "limitYuan": 25,
   "waveLimitYuan": 25,
@@ -178,7 +178,7 @@
     },
     "T09": {
       "limitYuan": 4.5,
-      "spentYuan": 2.46694448,
+      "spentYuan": 2.53840056,
       "reservedYuan": 0
     },
     "T19": {
@@ -14893,6 +14893,40 @@
         "latencyMs": 2303.3799,
         "timestamp": "2026-10-13T12:47:29.718Z"
       }
+    },
+    "21a43d8e-194c-4028-8191-e5997150620b": {
+      "card": "T09",
+      "label": "content-T09-npc_sb_longfu-manual-review",
+      "requestHash": "276f235b01ea3d2010cf7aab0af79d02ad6efddfe9d34993491ca755eaf093ce",
+      "reservedYuan": 0.271418,
+      "status": "settled",
+      "authorizationId": "user-reopen-20261012-01",
+      "reopenId": "npc_sb_longfu",
+      "responseEvidence": {
+        "file": "budget-responses/21a43d8e-194c-4028-8191-e5997150620b.json",
+        "requestHash": "276f235b01ea3d2010cf7aab0af79d02ad6efddfe9d34993491ca755eaf093ce",
+        "responseHash": "4b1b26b0a4e773f2cc6ef1767dec0cda94a1a9f725bc5322a58edb7739209c30"
+      },
+      "costUpperYuan": 0.07145608,
+      "measurement": {
+        "label": "content-T09-npc_sb_longfu-manual-review",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 39041,
+          "completion_tokens": 238,
+          "total_tokens": 39279,
+          "prompt_tokens_details": {
+            "cached_tokens": 4352
+          },
+          "prompt_cache_hit_tokens": 4352,
+          "prompt_cache_miss_tokens": 34689
+        },
+        "costUpperYuan": 0.07145608,
+        "cumulativeUpperYuan": 16.621852720000003,
+        "latencyMs": 2217.1539000000002,
+        "timestamp": "2026-10-13T13:13:57.391Z"
+      }
     }
   },
   "historicalUnallocatedSpentYuan": 0.9480150399999997,
@@ -28904,6 +28938,12 @@
                 "claimedAt": "2026-10-12T14:24:23.036Z",
                 "status": "failed",
                 "finishedAt": "2026-10-12T14:24:31.043Z"
+              },
+              {
+                "fingerprint": "f2f4aad0eac1042f93d8fb8d2a6eecb9297ae1ff97bf155b9667b0b385b0369c",
+                "claimedAt": "2026-10-13T13:13:55.105Z",
+                "status": "passed-L1-L2",
+                "finishedAt": "2026-10-13T13:13:57.409Z"
               }
             ],
             "npc_sb_zhuxian": [

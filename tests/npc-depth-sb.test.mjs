@@ -248,10 +248,11 @@ test('T09官方零模型预检保留120份完整请求，最小性别附件逐�
  for(const name of ['budget.json','allocation.json','terminal.json','first-source-evidence.json','incremental-l4.json'])await assert.rejects(fs.stat(path.join(firstReviewRoot,name)),/ENOENT/);
 });
 
-test('T09真实直接L2保留两轮原文和费用，已过候选不重审，hard与两次停止线阻止整村批准',async()=>{
+test('T09历史首审保留42次真实原文、旧费用与当时未闭合的两人，不因续审覆盖历史',async()=>{
  const prepared=await prepareDepth({worldRoot:path.resolve('world'),design:path.resolve('world/design/w1-sb-depth.mjs'),root:firstReviewRoot,authoredBackground:backgroundFile,cardId:'T09'});
  const first=JSON.parse(await fs.readFile(path.join(firstReviewRoot,'complete-002/first-l2-records.json'),'utf8'));
- const rows=await Promise.all(prepared.entries.map(e=>fs.readFile(path.join(firstReviewRoot,e.id+'.json'),'utf8').then(JSON.parse)));
+ const current=await Promise.all(prepared.entries.map(e=>fs.readFile(path.join(firstReviewRoot,e.id+'.json'),'utf8').then(JSON.parse)));
+ const rows=current.map(record=>{while(record.incremental)record=record.reviewRecovery.prior;return record;});
  assert.equal(first.filter(r=>r.status==='passed').length,18);assert.equal(rows.filter(r=>r.status==='passed').length,28);assert.deepEqual(rows.filter(r=>r.status==='manual').map(r=>r.id),['npc_sb_chishan','npc_sb_longfu']);
  let calls=0,cost=0;
  for(const row of rows){
@@ -267,6 +268,6 @@ test('T09真实直接L2保留两轮原文和费用，已过候选不重审，har
  }
  assert.equal(calls,42);assert.ok(Math.abs(cost-2.46694448)<1e-10);
  assert.ok(rows.filter(r=>r.status==='manual').every(r=>r.errors.some(e=>e.severity==='hard')));
- const summary=JSON.parse(await fs.readFile(path.join(firstReviewRoot,'summary.json'),'utf8'));assert.equal(summary.passed,28);assert.equal(summary.manual,2);assert.equal(summary.pending,0);assert.equal(summary.budget.cards.T09.limitYuan,4.5);assert.equal(summary.budget.cards.T09.reservedYuan,0);
- assert.ok(summary.batches.every(b=>b.l4.approved===false));
+ const stopped=JSON.parse(await fs.readFile(path.join(firstReviewRoot,'complete-002/stopped-report.json'),'utf8'));
+ assert.equal(stopped.passed,28);assert.deepEqual(stopped.manual,['npc_sb_chishan','npc_sb_longfu']);assert.equal(stopped.modelCalls,42);assert.equal(stopped.costUpperYuan,2.46694448);assert.match(stopped.L4,/not-approved/);
 });

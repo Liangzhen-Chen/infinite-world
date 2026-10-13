@@ -27,12 +27,11 @@
     "npc_sb_longfu",
     "npc_sb_zhuxian"
   ],
-  "fingerprint": "0c7697a016e2797407f319db67f6d0ef9a2319f43de0fa02d759c7050000b651",
+  "fingerprint": "17fbe115a928e680a63bf8cf75606bcb88a4977fe930d18a4337154ae0ed1481",
   "count": 25,
-  "passed": 23,
+  "passed": 24,
   "manual": [
-    "npc_sb_chishan",
-    "npc_sb_longfu"
+    "npc_sb_chishan"
   ],
   "pending": [],
   "flagged": [
@@ -63,18 +62,18 @@
     "npc_sb_zhuxian"
   ],
   "sample": [
-    "npc_sb_feiqing",
-    "npc_sb_zhangluo",
-    "npc_sb_congsi",
-    "npc_sb_panyao",
-    "npc_sb_yexun"
+    "npc_sb_gulu",
+    "npc_sb_yexun",
+    "npc_sb_zhuxian",
+    "npc_sb_zhonglan",
+    "npc_sb_panyao"
   ],
   "l4": {
     "approved": false,
     "notes": []
   },
   "operativeInvalidated": [],
-  "manualRatio": 0.08,
+  "manualRatio": 0.04,
   "needsSystemicRepair": false,
   "l4History": [
     {
@@ -292,8 +291,14 @@
       "notes": [],
       "supersededBy": "npc_sb_longfu",
       "priorFingerprint": "82fc36d37a80899d7a52b47a0cae3675ecf1b127bc051e8c2390aee0ea943838"
+    },
+    {
+      "approved": false,
+      "notes": [],
+      "supersededBy": "npc_sb_longfu",
+      "priorFingerprint": "0c7697a016e2797407f319db67f6d0ef9a2319f43de0fa02d759c7050000b651"
     }
   ],
   "foundationHash": "1a826cc94aa8230a81108ba6c7e0df9070d44d09e75e9aadbc3676f769172cba",
-  "costUpperYuan": 14.776151519999992
+  "costUpperYuan": 16.70558872
 }
