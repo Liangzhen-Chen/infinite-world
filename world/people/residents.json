@@ -12906,72 +12906,6 @@
     "visibleFeature": "帽檐折出一条浅白线。"
   },
   {
-    "id": "npc_bs_031_1",
-    "name": "姜澄",
-    "aliases": [],
-    "tier": "roster",
-    "age": 47,
-    "sex": "男",
-    "culture": "culture_river",
-    "settlement": "loc_bs",
-    "scope": "loc_bs",
-    "householdId": "house_bs_031",
-    "household": [
-      "npc_bs_031_2",
-      "npc_bs_031_3",
-      "npc_bs_031_4"
-    ],
-    "occupation": "公署递件",
-    "traits": [
-      "急性子",
-      "念旧"
-    ],
-    "home": {
-      "location": "bld_bs_home_031",
-      "access": "同户共居；进入私宅须先取得成年住户的有效许可。"
-    },
-    "location": "bld_bs_home_031",
-    "flags": {
-      "minor": false,
-      "romanceable": true
-    },
-    "currentConcern": "怕递件的人误认屋门，准备给家门添一条布记号。",
-    "visibleFeature": "帽檐折出一条浅白线。"
-  },
-  {
-    "id": "npc_bs_031_2",
-    "name": "姜绵",
-    "aliases": [],
-    "tier": "roster",
-    "age": 44,
-    "sex": "女",
-    "culture": "culture_river",
-    "settlement": "loc_bs",
-    "scope": "loc_bs",
-    "householdId": "house_bs_031",
-    "household": [
-      "npc_bs_031_1",
-      "npc_bs_031_3",
-      "npc_bs_031_4"
-    ],
-    "occupation": "巡更交接",
-    "traits": [
-      "好面子",
-      "守时"
-    ],
-    "home": {
-      "location": "bld_bs_home_031",
-      "access": "同户共居；进入私宅须先取得成年住户的有效许可。"
-    },
-    "location": "bld_bs_home_031",
-    "flags": {
-      "minor": false,
-      "romanceable": true
-    },
-    "currentConcern": "挂心夜更回来太响，想同家人商量开门的办法。",
-    "visibleFeature": "鞋带两端打着不同大小的结。"
-  },
-  {
     "id": "npc_bs_031_3",
     "name": "姜笙",
     "aliases": [],
@@ -13036,72 +12970,6 @@
     },
     "currentConcern": "想在家人忙完公署递件以后，请他们看看自己没认准的字。",
     "visibleFeature": "拎篮时总把提手转向左边。"
-  },
-  {
-    "id": "npc_bs_032_1",
-    "name": "潘澄",
-    "aliases": [],
-    "tier": "roster",
-    "age": 48,
-    "sex": "男",
-    "culture": "culture_river",
-    "settlement": "loc_bs",
-    "scope": "loc_bs",
-    "householdId": "house_bs_032",
-    "household": [
-      "npc_bs_032_2",
-      "npc_bs_032_3",
-      "npc_bs_032_4"
-    ],
-    "occupation": "巡更交接",
-    "traits": [
-      "好面子",
-      "守时"
-    ],
-    "home": {
-      "location": "bld_bs_home_032",
-      "access": "同户共居；进入私宅须先取得成年住户的有效许可。"
-    },
-    "location": "bld_bs_home_032",
-    "flags": {
-      "minor": false,
-      "romanceable": true
-    },
-    "currentConcern": "挂心夜更回来太响，想同家人商量开门的办法。",
-    "visibleFeature": "拎篮时总把提手转向左边。"
-  },
-  {
-    "id": "npc_bs_032_2",
-    "name": "潘绵",
-    "aliases": [],
-    "tier": "roster",
-    "age": 45,
-    "sex": "女",
-    "culture": "culture_river",
-    "settlement": "loc_bs",
-    "scope": "loc_bs",
-    "householdId": "house_bs_032",
-    "household": [
-      "npc_bs_032_1",
-      "npc_bs_032_3",
-      "npc_bs_032_4"
-    ],
-    "occupation": "户籍抄录",
-    "traits": [
-      "健谈",
-      "怕欠情"
-    ],
-    "home": {
-      "location": "bld_bs_home_032",
-      "access": "同户共居；进入私宅须先取得成年住户的有效许可。"
-    },
-    "location": "bld_bs_home_032",
-    "flags": {
-      "minor": false,
-      "romanceable": true
-    },
-    "currentConcern": "想腾出晚饭前的时间，把自家散开的旧纸重新夹好。",
-    "visibleFeature": "眉尾有一小块浅色旧疤。"
   },
   {
     "id": "npc_bs_032_3",
@@ -13170,72 +13038,6 @@
     "visibleFeature": "说话时会把垂下的袖角卷起来。"
   },
   {
-    "id": "npc_bs_033_1",
-    "name": "余澄",
-    "aliases": [],
-    "tier": "roster",
-    "age": 49,
-    "sex": "男",
-    "culture": "culture_river",
-    "settlement": "loc_bs",
-    "scope": "loc_bs",
-    "householdId": "house_bs_033",
-    "household": [
-      "npc_bs_033_2",
-      "npc_bs_033_3",
-      "npc_bs_033_4"
-    ],
-    "occupation": "户籍抄录",
-    "traits": [
-      "健谈",
-      "怕欠情"
-    ],
-    "home": {
-      "location": "bld_bs_home_033",
-      "access": "同户共居；进入私宅须先取得成年住户的有效许可。"
-    },
-    "location": "bld_bs_home_033",
-    "flags": {
-      "minor": false,
-      "romanceable": true
-    },
-    "currentConcern": "想腾出晚饭前的时间，把自家散开的旧纸重新夹好。",
-    "visibleFeature": "说话时会把垂下的袖角卷起来。"
-  },
-  {
-    "id": "npc_bs_033_2",
-    "name": "余绵",
-    "aliases": [],
-    "tier": "roster",
-    "age": 46,
-    "sex": "女",
-    "culture": "culture_river",
-    "settlement": "loc_bs",
-    "scope": "loc_bs",
-    "householdId": "house_bs_033",
-    "household": [
-      "npc_bs_033_1",
-      "npc_bs_033_3",
-      "npc_bs_033_4"
-    ],
-    "occupation": "公署递件",
-    "traits": [
-      "节俭",
-      "固执"
-    ],
-    "home": {
-      "location": "bld_bs_home_033",
-      "access": "同户共居；进入私宅须先取得成年住户的有效许可。"
-    },
-    "location": "bld_bs_home_033",
-    "flags": {
-      "minor": false,
-      "romanceable": true
-    },
-    "currentConcern": "怕递件的人误认屋门，准备给家门添一条布记号。",
-    "visibleFeature": "袖口用深色线补了一道。"
-  },
-  {
     "id": "npc_bs_033_3",
     "name": "余笙",
     "aliases": [],
@@ -13300,72 +13102,6 @@
     },
     "currentConcern": "想在家人忙完户籍抄录以后，请他们看看自己没认准的字。",
     "visibleFeature": "腰带上系着一小片刻姓木牌。"
-  },
-  {
-    "id": "npc_bs_034_1",
-    "name": "杜澄",
-    "aliases": [],
-    "tier": "roster",
-    "age": 50,
-    "sex": "男",
-    "culture": "culture_river",
-    "settlement": "loc_bs",
-    "scope": "loc_bs",
-    "householdId": "house_bs_034",
-    "household": [
-      "npc_bs_034_2",
-      "npc_bs_034_3",
-      "npc_bs_034_4"
-    ],
-    "occupation": "公署递件",
-    "traits": [
-      "节俭",
-      "固执"
-    ],
-    "home": {
-      "location": "bld_bs_home_034",
-      "access": "同户共居；进入私宅须先取得成年住户的有效许可。"
-    },
-    "location": "bld_bs_home_034",
-    "flags": {
-      "minor": false,
-      "romanceable": true
-    },
-    "currentConcern": "怕递件的人误认屋门，准备给家门添一条布记号。",
-    "visibleFeature": "腰带上系着一小片刻姓木牌。"
-  },
-  {
-    "id": "npc_bs_034_2",
-    "name": "杜绵",
-    "aliases": [],
-    "tier": "roster",
-    "age": 47,
-    "sex": "女",
-    "culture": "culture_river",
-    "settlement": "loc_bs",
-    "scope": "loc_bs",
-    "householdId": "house_bs_034",
-    "household": [
-      "npc_bs_034_1",
-      "npc_bs_034_3",
-      "npc_bs_034_4"
-    ],
-    "occupation": "巡更交接",
-    "traits": [
-      "谨慎",
-      "爱插话"
-    ],
-    "home": {
-      "location": "bld_bs_home_034",
-      "access": "同户共居；进入私宅须先取得成年住户的有效许可。"
-    },
-    "location": "bld_bs_home_034",
-    "flags": {
-      "minor": false,
-      "romanceable": true
-    },
-    "currentConcern": "挂心夜更回来太响，想同家人商量开门的办法。",
-    "visibleFeature": "帽檐折出一条浅白线。"
   },
   {
     "id": "npc_bs_034_3",
@@ -13434,72 +13170,6 @@
     "visibleFeature": "衣襟夹着折成窄条的旧纸。"
   },
   {
-    "id": "npc_bs_035_1",
-    "name": "钱澄",
-    "aliases": [],
-    "tier": "roster",
-    "age": 44,
-    "sex": "男",
-    "culture": "culture_river",
-    "settlement": "loc_bs",
-    "scope": "loc_bs",
-    "householdId": "house_bs_035",
-    "household": [
-      "npc_bs_035_2",
-      "npc_bs_035_3",
-      "npc_bs_035_4"
-    ],
-    "occupation": "巡更交接",
-    "traits": [
-      "谨慎",
-      "爱插话"
-    ],
-    "home": {
-      "location": "bld_bs_home_035",
-      "access": "同户共居；进入私宅须先取得成年住户的有效许可。"
-    },
-    "location": "bld_bs_home_035",
-    "flags": {
-      "minor": false,
-      "romanceable": true
-    },
-    "currentConcern": "挂心夜更回来太响，想同家人商量开门的办法。",
-    "visibleFeature": "衣襟夹着折成窄条的旧纸。"
-  },
-  {
-    "id": "npc_bs_035_2",
-    "name": "钱绵",
-    "aliases": [],
-    "tier": "roster",
-    "age": 41,
-    "sex": "女",
-    "culture": "culture_river",
-    "settlement": "loc_bs",
-    "scope": "loc_bs",
-    "householdId": "house_bs_035",
-    "household": [
-      "npc_bs_035_1",
-      "npc_bs_035_3",
-      "npc_bs_035_4"
-    ],
-    "occupation": "户籍抄录",
-    "traits": [
-      "仔细",
-      "怕吵"
-    ],
-    "home": {
-      "location": "bld_bs_home_035",
-      "access": "同户共居；进入私宅须先取得成年住户的有效许可。"
-    },
-    "location": "bld_bs_home_035",
-    "flags": {
-      "minor": false,
-      "romanceable": true
-    },
-    "currentConcern": "想腾出晚饭前的时间，把自家散开的旧纸重新夹好。",
-    "visibleFeature": "拎篮时总把提手转向左边。"
-  },
-  {
     "id": "npc_bs_035_3",
     "name": "钱笙",
     "aliases": [],
@@ -13564,72 +13234,6 @@
     },
     "currentConcern": "想在家人忙完巡更交接以后，请他们看看自己没认准的字。",
     "visibleFeature": "外衣扣子有一枚比别的颜色深。"
-  },
-  {
-    "id": "npc_bs_036_1",
-    "name": "蒋澄",
-    "aliases": [],
-    "tier": "roster",
-    "age": 45,
-    "sex": "男",
-    "culture": "culture_river",
-    "settlement": "loc_bs",
-    "scope": "loc_bs",
-    "householdId": "house_bs_036",
-    "household": [
-      "npc_bs_036_2",
-      "npc_bs_036_3",
-      "npc_bs_036_4"
-    ],
-    "occupation": "户籍抄录",
-    "traits": [
-      "仔细",
-      "怕吵"
-    ],
-    "home": {
-      "location": "bld_bs_home_036",
-      "access": "同户共居；进入私宅须先取得成年住户的有效许可。"
-    },
-    "location": "bld_bs_home_036",
-    "flags": {
-      "minor": false,
-      "romanceable": true
-    },
-    "currentConcern": "想腾出晚饭前的时间，把自家散开的旧纸重新夹好。",
-    "visibleFeature": "外衣扣子有一枚比别的颜色深。"
-  },
-  {
-    "id": "npc_bs_036_2",
-    "name": "蒋绵",
-    "aliases": [],
-    "tier": "roster",
-    "age": 42,
-    "sex": "女",
-    "culture": "culture_river",
-    "settlement": "loc_bs",
-    "scope": "loc_bs",
-    "householdId": "house_bs_036",
-    "household": [
-      "npc_bs_036_1",
-      "npc_bs_036_3",
-      "npc_bs_036_4"
-    ],
-    "occupation": "公署递件",
-    "traits": [
-      "急性子",
-      "念旧"
-    ],
-    "home": {
-      "location": "bld_bs_home_036",
-      "access": "同户共居；进入私宅须先取得成年住户的有效许可。"
-    },
-    "location": "bld_bs_home_036",
-    "flags": {
-      "minor": false,
-      "romanceable": true
-    },
-    "currentConcern": "怕递件的人误认屋门，准备给家门添一条布记号。",
-    "visibleFeature": "说话时会把垂下的袖角卷起来。"
   },
   {
     "id": "npc_bs_036_3",
@@ -13698,70 +13302,6 @@
     "visibleFeature": "讲话前会把指尖擦在围裙边。"
   },
   {
-    "id": "npc_bs_037_1",
-    "name": "丁澄",
-    "aliases": [],
-    "tier": "roster",
-    "age": 46,
-    "sex": "男",
-    "culture": "culture_river",
-    "settlement": "loc_bs",
-    "scope": "loc_bs",
-    "householdId": "house_bs_037",
-    "household": [
-      "npc_bs_037_2",
-      "npc_bs_037_3"
-    ],
-    "occupation": "公署递件",
-    "traits": [
-      "急性子",
-      "念旧"
-    ],
-    "home": {
-      "location": "bld_bs_home_037",
-      "access": "同户共居；进入私宅须先取得成年住户的有效许可。"
-    },
-    "location": "bld_bs_home_037",
-    "flags": {
-      "minor": false,
-      "romanceable": true
-    },
-    "currentConcern": "怕递件的人误认屋门，准备给家门添一条布记号。",
-    "visibleFeature": "讲话前会把指尖擦在围裙边。"
-  },
-  {
-    "id": "npc_bs_037_2",
-    "name": "丁绵",
-    "aliases": [],
-    "tier": "roster",
-    "age": 43,
-    "sex": "女",
-    "culture": "culture_river",
-    "settlement": "loc_bs",
-    "scope": "loc_bs",
-    "householdId": "house_bs_037",
-    "household": [
-      "npc_bs_037_1",
-      "npc_bs_037_3"
-    ],
-    "occupation": "巡更交接",
-    "traits": [
-      "好面子",
-      "守时"
-    ],
-    "home": {
-      "location": "bld_bs_home_037",
-      "access": "同户共居；进入私宅须先取得成年住户的有效许可。"
-    },
-    "location": "bld_bs_home_037",
-    "flags": {
-      "minor": false,
-      "romanceable": true
-    },
-    "currentConcern": "挂心夜更回来太响，想同家人商量开门的办法。",
-    "visibleFeature": "腰带上系着一小片刻姓木牌。"
-  },
-  {
     "id": "npc_bs_037_3",
     "name": "丁笙",
     "aliases": [],
@@ -13794,70 +13334,6 @@
     "visibleFeature": "帽檐折出一条浅白线。"
   },
   {
-    "id": "npc_bs_038_1",
-    "name": "沈澄",
-    "aliases": [],
-    "tier": "roster",
-    "age": 47,
-    "sex": "男",
-    "culture": "culture_river",
-    "settlement": "loc_bs",
-    "scope": "loc_bs",
-    "householdId": "house_bs_038",
-    "household": [
-      "npc_bs_038_2",
-      "npc_bs_038_3"
-    ],
-    "occupation": "巡更交接",
-    "traits": [
-      "好面子",
-      "守时"
-    ],
-    "home": {
-      "location": "bld_bs_home_038",
-      "access": "同户共居；进入私宅须先取得成年住户的有效许可。"
-    },
-    "location": "bld_bs_home_038",
-    "flags": {
-      "minor": false,
-      "romanceable": true
-    },
-    "currentConcern": "挂心夜更回来太响，想同家人商量开门的办法。",
-    "visibleFeature": "鞋带两端打着不同大小的结。"
-  },
-  {
-    "id": "npc_bs_038_2",
-    "name": "沈绵",
-    "aliases": [],
-    "tier": "roster",
-    "age": 44,
-    "sex": "女",
-    "culture": "culture_river",
-    "settlement": "loc_bs",
-    "scope": "loc_bs",
-    "householdId": "house_bs_038",
-    "household": [
-      "npc_bs_038_1",
-      "npc_bs_038_3"
-    ],
-    "occupation": "户籍抄录",
-    "traits": [
-      "健谈",
-      "怕欠情"
-    ],
-    "home": {
-      "location": "bld_bs_home_038",
-      "access": "同户共居；进入私宅须先取得成年住户的有效许可。"
-    },
-    "location": "bld_bs_home_038",
-    "flags": {
-      "minor": false,
-      "romanceable": true
-    },
-    "currentConcern": "想腾出晚饭前的时间，把自家散开的旧纸重新夹好。",
-    "visibleFeature": "衣襟夹着折成窄条的旧纸。"
-  },
-  {
     "id": "npc_bs_038_3",
     "name": "沈笙",
     "aliases": [],
@@ -13888,38 +13364,6 @@
     },
     "currentConcern": "想在家人忙完巡更交接以后，请他们看看自己没认准的字。",
     "visibleFeature": "拎篮时总把提手转向左边。"
-  },
-  {
-    "id": "npc_bs_039_1",
-    "name": "孟澄",
-    "aliases": [],
-    "tier": "roster",
-    "age": 48,
-    "sex": "男",
-    "culture": "culture_river",
-    "settlement": "loc_bs",
-    "scope": "loc_bs",
-    "householdId": "house_bs_039",
-    "household": [
-      "npc_bs_039_2",
-      "npc_bs_039_3"
-    ],
-    "occupation": "户籍抄录",
-    "traits": [
-      "健谈",
-      "怕欠情"
-    ],
-    "home": {
-      "location": "bld_bs_home_039",
-      "access": "同户共居；进入私宅须先取得成年住户的有效许可。"
-    },
-    "location": "bld_bs_home_039",
-    "flags": {
-      "minor": false,
-      "romanceable": true
-    },
-    "currentConcern": "想腾出晚饭前的时间，把自家散开的旧纸重新夹好。",
-    "visibleFeature": "眉尾有一小块浅色旧疤。"
   },
   {
     "id": "npc_bs_039_2",
@@ -14562,70 +14006,6 @@
     "visibleFeature": "眉尾有一小块浅色旧疤。"
   },
   {
-    "id": "npc_bs_046_1",
-    "name": "白澄",
-    "aliases": [],
-    "tier": "roster",
-    "age": 48,
-    "sex": "男",
-    "culture": "culture_river",
-    "settlement": "loc_bs",
-    "scope": "loc_bs",
-    "householdId": "house_bs_046",
-    "household": [
-      "npc_bs_046_2",
-      "npc_bs_046_3"
-    ],
-    "occupation": "摊位整理",
-    "traits": [
-      "节俭",
-      "固执"
-    ],
-    "home": {
-      "location": "bld_bs_home_046",
-      "access": "同户共居；进入私宅须先取得成年住户的有效许可。"
-    },
-    "location": "bld_bs_home_046",
-    "flags": {
-      "minor": false,
-      "romanceable": true
-    },
-    "currentConcern": "担心洗晒的衣物混进别家的包，打算缝上姓氏记号。",
-    "visibleFeature": "外衣扣子有一枚比别的颜色深。"
-  },
-  {
-    "id": "npc_bs_046_2",
-    "name": "白绵",
-    "aliases": [],
-    "tier": "roster",
-    "age": 45,
-    "sex": "女",
-    "culture": "culture_river",
-    "settlement": "loc_bs",
-    "scope": "loc_bs",
-    "householdId": "house_bs_046",
-    "household": [
-      "npc_bs_046_1",
-      "npc_bs_046_3"
-    ],
-    "occupation": "客舍洗晒",
-    "traits": [
-      "谨慎",
-      "爱插话"
-    ],
-    "home": {
-      "location": "bld_bs_home_046",
-      "access": "同户共居；进入私宅须先取得成年住户的有效许可。"
-    },
-    "location": "bld_bs_home_046",
-    "flags": {
-      "minor": false,
-      "romanceable": true
-    },
-    "currentConcern": "怕晚饭前买不到惯用的菜，想把买菜时辰提前。",
-    "visibleFeature": "说话时会把垂下的袖角卷起来。"
-  },
-  {
     "id": "npc_bs_046_3",
     "name": "白笙",
     "aliases": [],
@@ -14656,70 +14036,6 @@
     },
     "currentConcern": "想在家人忙完摊位整理以后，请他们看看自己没认准的字。",
     "visibleFeature": "袖口用深色线补了一道。"
-  },
-  {
-    "id": "npc_bs_047_1",
-    "name": "马澄",
-    "aliases": [],
-    "tier": "roster",
-    "age": 49,
-    "sex": "男",
-    "culture": "culture_river",
-    "settlement": "loc_bs",
-    "scope": "loc_bs",
-    "householdId": "house_bs_047",
-    "household": [
-      "npc_bs_047_2",
-      "npc_bs_047_3"
-    ],
-    "occupation": "客舍洗晒",
-    "traits": [
-      "谨慎",
-      "爱插话"
-    ],
-    "home": {
-      "location": "bld_bs_home_047",
-      "access": "同户共居；进入私宅须先取得成年住户的有效许可。"
-    },
-    "location": "bld_bs_home_047",
-    "flags": {
-      "minor": false,
-      "romanceable": true
-    },
-    "currentConcern": "怕晚饭前买不到惯用的菜，想把买菜时辰提前。",
-    "visibleFeature": "讲话前会把指尖擦在围裙边。"
-  },
-  {
-    "id": "npc_bs_047_2",
-    "name": "马绵",
-    "aliases": [],
-    "tier": "roster",
-    "age": 46,
-    "sex": "女",
-    "culture": "culture_river",
-    "settlement": "loc_bs",
-    "scope": "loc_bs",
-    "householdId": "house_bs_047",
-    "household": [
-      "npc_bs_047_1",
-      "npc_bs_047_3"
-    ],
-    "occupation": "麦饼烘制",
-    "traits": [
-      "仔细",
-      "怕吵"
-    ],
-    "home": {
-      "location": "bld_bs_home_047",
-      "access": "同户共居；进入私宅须先取得成年住户的有效许可。"
-    },
-    "location": "bld_bs_home_047",
-    "flags": {
-      "minor": false,
-      "romanceable": true
-    },
-    "currentConcern": "惦记自家晾布与邻户的雨棚挨得太近，想商量移位。",
-    "visibleFeature": "腰带上系着一小片刻姓木牌。"
   },
   {
     "id": "npc_bs_047_3",
@@ -14754,70 +14070,6 @@
     "visibleFeature": "帽檐折出一条浅白线。"
   },
   {
-    "id": "npc_bs_048_1",
-    "name": "龚澄",
-    "aliases": [],
-    "tier": "roster",
-    "age": 50,
-    "sex": "男",
-    "culture": "culture_river",
-    "settlement": "loc_bs",
-    "scope": "loc_bs",
-    "householdId": "house_bs_048",
-    "household": [
-      "npc_bs_048_2",
-      "npc_bs_048_3"
-    ],
-    "occupation": "麦饼烘制",
-    "traits": [
-      "仔细",
-      "怕吵"
-    ],
-    "home": {
-      "location": "bld_bs_home_048",
-      "access": "同户共居；进入私宅须先取得成年住户的有效许可。"
-    },
-    "location": "bld_bs_home_048",
-    "flags": {
-      "minor": false,
-      "romanceable": true
-    },
-    "currentConcern": "惦记自家晾布与邻户的雨棚挨得太近，想商量移位。",
-    "visibleFeature": "鞋带两端打着不同大小的结。"
-  },
-  {
-    "id": "npc_bs_048_2",
-    "name": "龚绵",
-    "aliases": [],
-    "tier": "roster",
-    "age": 47,
-    "sex": "女",
-    "culture": "culture_river",
-    "settlement": "loc_bs",
-    "scope": "loc_bs",
-    "householdId": "house_bs_048",
-    "household": [
-      "npc_bs_048_1",
-      "npc_bs_048_3"
-    ],
-    "occupation": "摊位整理",
-    "traits": [
-      "急性子",
-      "念旧"
-    ],
-    "home": {
-      "location": "bld_bs_home_048",
-      "access": "同户共居；进入私宅须先取得成年住户的有效许可。"
-    },
-    "location": "bld_bs_home_048",
-    "flags": {
-      "minor": false,
-      "romanceable": true
-    },
-    "currentConcern": "担心洗晒的衣物混进别家的包，打算缝上姓氏记号。",
-    "visibleFeature": "衣襟夹着折成窄条的旧纸。"
-  },
-  {
     "id": "npc_bs_048_3",
     "name": "龚笙",
     "aliases": [],
@@ -14848,70 +14100,6 @@
     },
     "currentConcern": "想在家人忙完麦饼烘制以后，请他们看看自己没认准的字。",
     "visibleFeature": "拎篮时总把提手转向左边。"
-  },
-  {
-    "id": "npc_bs_049_1",
-    "name": "汤澄",
-    "aliases": [],
-    "tier": "roster",
-    "age": 44,
-    "sex": "男",
-    "culture": "culture_river",
-    "settlement": "loc_bs",
-    "scope": "loc_bs",
-    "householdId": "house_bs_049",
-    "household": [
-      "npc_bs_049_2",
-      "npc_bs_049_3"
-    ],
-    "occupation": "摊位整理",
-    "traits": [
-      "急性子",
-      "念旧"
-    ],
-    "home": {
-      "location": "bld_bs_home_049",
-      "access": "同户共居；进入私宅须先取得成年住户的有效许可。"
-    },
-    "location": "bld_bs_home_049",
-    "flags": {
-      "minor": false,
-      "romanceable": true
-    },
-    "currentConcern": "担心洗晒的衣物混进别家的包，打算缝上姓氏记号。",
-    "visibleFeature": "眉尾有一小块浅色旧疤。"
-  },
-  {
-    "id": "npc_bs_049_2",
-    "name": "汤绵",
-    "aliases": [],
-    "tier": "roster",
-    "age": 41,
-    "sex": "女",
-    "culture": "culture_river",
-    "settlement": "loc_bs",
-    "scope": "loc_bs",
-    "householdId": "house_bs_049",
-    "household": [
-      "npc_bs_049_1",
-      "npc_bs_049_3"
-    ],
-    "occupation": "客舍洗晒",
-    "traits": [
-      "好面子",
-      "守时"
-    ],
-    "home": {
-      "location": "bld_bs_home_049",
-      "access": "同户共居；进入私宅须先取得成年住户的有效许可。"
-    },
-    "location": "bld_bs_home_049",
-    "flags": {
-      "minor": false,
-      "romanceable": true
-    },
-    "currentConcern": "怕晚饭前买不到惯用的菜，想把买菜时辰提前。",
-    "visibleFeature": "外衣扣子有一枚比别的颜色深。"
   },
   {
     "id": "npc_bs_049_3",
@@ -14946,70 +14134,6 @@
     "visibleFeature": "说话时会把垂下的袖角卷起来。"
   },
   {
-    "id": "npc_bs_050_1",
-    "name": "于澄",
-    "aliases": [],
-    "tier": "roster",
-    "age": 45,
-    "sex": "男",
-    "culture": "culture_river",
-    "settlement": "loc_bs",
-    "scope": "loc_bs",
-    "householdId": "house_bs_050",
-    "household": [
-      "npc_bs_050_2",
-      "npc_bs_050_3"
-    ],
-    "occupation": "客舍洗晒",
-    "traits": [
-      "好面子",
-      "守时"
-    ],
-    "home": {
-      "location": "bld_bs_home_050",
-      "access": "同户共居；进入私宅须先取得成年住户的有效许可。"
-    },
-    "location": "bld_bs_home_050",
-    "flags": {
-      "minor": false,
-      "romanceable": true
-    },
-    "currentConcern": "怕晚饭前买不到惯用的菜，想把买菜时辰提前。",
-    "visibleFeature": "袖口用深色线补了一道。"
-  },
-  {
-    "id": "npc_bs_050_2",
-    "name": "于绵",
-    "aliases": [],
-    "tier": "roster",
-    "age": 42,
-    "sex": "女",
-    "culture": "culture_river",
-    "settlement": "loc_bs",
-    "scope": "loc_bs",
-    "householdId": "house_bs_050",
-    "household": [
-      "npc_bs_050_1",
-      "npc_bs_050_3"
-    ],
-    "occupation": "麦饼烘制",
-    "traits": [
-      "健谈",
-      "怕欠情"
-    ],
-    "home": {
-      "location": "bld_bs_home_050",
-      "access": "同户共居；进入私宅须先取得成年住户的有效许可。"
-    },
-    "location": "bld_bs_home_050",
-    "flags": {
-      "minor": false,
-      "romanceable": true
-    },
-    "currentConcern": "惦记自家晾布与邻户的雨棚挨得太近，想商量移位。",
-    "visibleFeature": "讲话前会把指尖擦在围裙边。"
-  },
-  {
     "id": "npc_bs_050_3",
     "name": "于笙",
     "aliases": [],
@@ -15040,70 +14164,6 @@
     },
     "currentConcern": "想在家人忙完客舍洗晒以后，请他们看看自己没认准的字。",
     "visibleFeature": "腰带上系着一小片刻姓木牌。"
-  },
-  {
-    "id": "npc_bs_051_1",
-    "name": "段澄",
-    "aliases": [],
-    "tier": "roster",
-    "age": 46,
-    "sex": "男",
-    "culture": "culture_river",
-    "settlement": "loc_bs",
-    "scope": "loc_bs",
-    "householdId": "house_bs_051",
-    "household": [
-      "npc_bs_051_2",
-      "npc_bs_051_3"
-    ],
-    "occupation": "麦饼烘制",
-    "traits": [
-      "健谈",
-      "怕欠情"
-    ],
-    "home": {
-      "location": "bld_bs_home_051",
-      "access": "同户共居；进入私宅须先取得成年住户的有效许可。"
-    },
-    "location": "bld_bs_home_051",
-    "flags": {
-      "minor": false,
-      "romanceable": true
-    },
-    "currentConcern": "惦记自家晾布与邻户的雨棚挨得太近，想商量移位。",
-    "visibleFeature": "帽檐折出一条浅白线。"
-  },
-  {
-    "id": "npc_bs_051_2",
-    "name": "段绵",
-    "aliases": [],
-    "tier": "roster",
-    "age": 43,
-    "sex": "女",
-    "culture": "culture_river",
-    "settlement": "loc_bs",
-    "scope": "loc_bs",
-    "householdId": "house_bs_051",
-    "household": [
-      "npc_bs_051_1",
-      "npc_bs_051_3"
-    ],
-    "occupation": "摊位整理",
-    "traits": [
-      "节俭",
-      "固执"
-    ],
-    "home": {
-      "location": "bld_bs_home_051",
-      "access": "同户共居；进入私宅须先取得成年住户的有效许可。"
-    },
-    "location": "bld_bs_home_051",
-    "flags": {
-      "minor": false,
-      "romanceable": true
-    },
-    "currentConcern": "担心洗晒的衣物混进别家的包，打算缝上姓氏记号。",
-    "visibleFeature": "鞋带两端打着不同大小的结。"
   },
   {
     "id": "npc_bs_051_3",
@@ -15138,70 +14198,6 @@
     "visibleFeature": "衣襟夹着折成窄条的旧纸。"
   },
   {
-    "id": "npc_bs_052_1",
-    "name": "朱澄",
-    "aliases": [],
-    "tier": "roster",
-    "age": 47,
-    "sex": "男",
-    "culture": "culture_river",
-    "settlement": "loc_bs",
-    "scope": "loc_bs",
-    "householdId": "house_bs_052",
-    "household": [
-      "npc_bs_052_2",
-      "npc_bs_052_3"
-    ],
-    "occupation": "摊位整理",
-    "traits": [
-      "节俭",
-      "固执"
-    ],
-    "home": {
-      "location": "bld_bs_home_052",
-      "access": "同户共居；进入私宅须先取得成年住户的有效许可。"
-    },
-    "location": "bld_bs_home_052",
-    "flags": {
-      "minor": false,
-      "romanceable": true
-    },
-    "currentConcern": "担心洗晒的衣物混进别家的包，打算缝上姓氏记号。",
-    "visibleFeature": "拎篮时总把提手转向左边。"
-  },
-  {
-    "id": "npc_bs_052_2",
-    "name": "朱绵",
-    "aliases": [],
-    "tier": "roster",
-    "age": 44,
-    "sex": "女",
-    "culture": "culture_river",
-    "settlement": "loc_bs",
-    "scope": "loc_bs",
-    "householdId": "house_bs_052",
-    "household": [
-      "npc_bs_052_1",
-      "npc_bs_052_3"
-    ],
-    "occupation": "客舍洗晒",
-    "traits": [
-      "谨慎",
-      "爱插话"
-    ],
-    "home": {
-      "location": "bld_bs_home_052",
-      "access": "同户共居；进入私宅须先取得成年住户的有效许可。"
-    },
-    "location": "bld_bs_home_052",
-    "flags": {
-      "minor": false,
-      "romanceable": true
-    },
-    "currentConcern": "怕晚饭前买不到惯用的菜，想把买菜时辰提前。",
-    "visibleFeature": "眉尾有一小块浅色旧疤。"
-  },
-  {
     "id": "npc_bs_052_3",
     "name": "朱笙",
     "aliases": [],
@@ -15232,70 +14228,6 @@
     },
     "currentConcern": "想在家人忙完摊位整理以后，请他们看看自己没认准的字。",
     "visibleFeature": "外衣扣子有一枚比别的颜色深。"
-  },
-  {
-    "id": "npc_bs_053_1",
-    "name": "金澄",
-    "aliases": [],
-    "tier": "roster",
-    "age": 48,
-    "sex": "男",
-    "culture": "culture_river",
-    "settlement": "loc_bs",
-    "scope": "loc_bs",
-    "householdId": "house_bs_053",
-    "household": [
-      "npc_bs_053_2",
-      "npc_bs_053_3"
-    ],
-    "occupation": "客舍洗晒",
-    "traits": [
-      "谨慎",
-      "爱插话"
-    ],
-    "home": {
-      "location": "bld_bs_home_053",
-      "access": "同户共居；进入私宅须先取得成年住户的有效许可。"
-    },
-    "location": "bld_bs_home_053",
-    "flags": {
-      "minor": false,
-      "romanceable": true
-    },
-    "currentConcern": "怕晚饭前买不到惯用的菜，想把买菜时辰提前。",
-    "visibleFeature": "说话时会把垂下的袖角卷起来。"
-  },
-  {
-    "id": "npc_bs_053_2",
-    "name": "金绵",
-    "aliases": [],
-    "tier": "roster",
-    "age": 45,
-    "sex": "女",
-    "culture": "culture_river",
-    "settlement": "loc_bs",
-    "scope": "loc_bs",
-    "householdId": "house_bs_053",
-    "household": [
-      "npc_bs_053_1",
-      "npc_bs_053_3"
-    ],
-    "occupation": "麦饼烘制",
-    "traits": [
-      "仔细",
-      "怕吵"
-    ],
-    "home": {
-      "location": "bld_bs_home_053",
-      "access": "同户共居；进入私宅须先取得成年住户的有效许可。"
-    },
-    "location": "bld_bs_home_053",
-    "flags": {
-      "minor": false,
-      "romanceable": true
-    },
-    "currentConcern": "惦记自家晾布与邻户的雨棚挨得太近，想商量移位。",
-    "visibleFeature": "袖口用深色线补了一道。"
   },
   {
     "id": "npc_bs_053_3",
