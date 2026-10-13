@@ -2,6 +2,7 @@ import {environmentFeatures,localPlayerPoint,localSightClear} from './environmen
 import {localWeather} from './weather.mjs';
 import {areaTargetFacts} from './magic-area.mjs';
 import {normalize} from './retrieval.mjs';
+import {advanceAirMinute}from'./magic-air.mjs';
 
 const ops=new Set(['ignite','extinguish','heat','cool','dry','sense_heat','fuel','forge_heat','craft_heat']);
 const integer=(n,min,max,label)=>{if(!Number.isSafeInteger(n)||n<min||n>max)throw new Error(`${label}无效`);return n;};
@@ -235,6 +236,7 @@ function roomOf(engine,name,location){
  const row=rows[0],m=row.airModel;
  if(!m)throw new Error('房间没有真实通风与空气容量');
  integer(m.capacityMg,1,100000000,'室内氧气容量');integer(m.ventilationMgPerMinute,0,m.capacityMg,'通风量');
+ row.fireLinks??=[];
  if(!Array.isArray(row.fireLinks)||row.fireLinks.some(pair=>!Array.isArray(pair)||pair.length!==2||pair[0]===pair[1]))throw new Error('房间火势连接无效');
  for(const pair of row.fireLinks)for(const id of pair){const f=environmentFeatures(engine).find(x=>x.id===id);if(!f?.thermalModel||f.location!==row.location)throw new Error('火势连接缺少同地真实燃料对象');}
  return row;
@@ -312,7 +314,8 @@ function advanceHeatScenes(d,engine,after){
   row=roomOf(engine,row.id,row.location);
   const linked=features.filter(f=>row.fireLinks.flat().includes(f.id));
   const cursors=linked.map(f=>d.get('state','records',recordKey(f.id),'state','thermal','lastMinute')).filter(Number.isSafeInteger);
-  const start=d.get('state','records',recordKey(row.id),'state','air','lastMinute')??(cursors.length?Math.min(...cursors):after);
+  const airCursors=effects.map(([,e])=>e).filter(e=>e.kind==='air'&&e.location===row.location).map(e=>e.lastMinute);
+  const start=d.get('state','records',recordKey(row.id),'state','air','lastMinute')??(cursors.length?Math.min(...cursors):airCursors.length?Math.min(...airCursors):after);
   return{row,state:roomState(d,row,start),objects:linked.map(f=>({row:f,state:rawFeatureState(d,f,start)}))};
  });
  const hands=[{path:['state','player'],target:'player',actor:d.get('state','player')},...Object.entries(d.get('state','npcs')??{}).map(([target,actor])=>({target,actor,path:['state','npcs',target]}))]
@@ -345,6 +348,7 @@ function advanceHeatScenes(d,engine,after){
    }
    a.lastMinute=minute+1;
   }
+  advanceAirMinute(d,engine,rooms,minute);
   for(const x of hands){
    const h=x.hand;if(h.lastMinute>minute)continue;
    const active=effects.map(([,e])=>e).filter(e=>e.kind==='heat'&&e.operation==='warm'&&e.target===x.target&&e.started<=minute&&e.expires>minute&&x.actor.status!=='死亡').sort((a,b)=>b.power-a.power)[0];
