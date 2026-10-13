@@ -183,7 +183,7 @@ for(const definition of toolDefinitions()){
   shouldRegister:()=>active()&&!!view&&mode!=='quiet'&&!blocked,
   action:async args=>{
    await load();if(!view)throw new Error('请先在副本上启用新版');
-   if(name==='world_read')return JSON.stringify(readStateSection(view.document.state,args.section));
+   if(name==='world_read')return JSON.stringify(readStateSection(view.document.state,args.section,args.npc));
    if(name==='world_search')return lookupToolResult(()=>api('search',{...args,campaignId:view.reference.campaignId,token:reviewTurn?.token,anchor:anchor(),expectedSequence:view.reference.sequence}));
    if(name==='world_catalog')return lookupToolResult(()=>api('catalog',{campaignId:view.reference.campaignId,...args}));
    return execute(name,args);
