@@ -97,5 +97,21 @@ test('浏览器 MESSAGE_RECEIVED 等待纯文字改写后再提交唯一尾注�
  assert.equal(endpoints.filter(r=>r.body.tool==='world_turn').length,turnsBeforeEdit);
  await page.evaluate(async()=>{const m=window.fixtureContext.chat[4];m.mes='待撤销的旧回复';m.extra.fields_consistency={status:'unverified',verified:false,text:m.mes};window.fixtureHandlers.get('MESSAGE_UPDATED')();await window.fixtureHandlers.get('MESSAGE_EDITED')(1);});
  assert.equal(await page.locator('.fields-consistency-notice').count(),0);
+ // The browser uses the same server normalization as the offline runner.
+ const turnsBeforeWait=endpoints.filter(row=>row.body.tool==='world_turn').length;
+ const startMinute=await page.evaluate(()=>window.infiniteFieldsV2.view.document.state.minute);
+ await page.evaluate(async()=>{
+  window.fixtureContext.chat.push({is_user:true,mes:'我原地休息十分钟，不再聊天。',extra:{fields_anchor:'browser-wait'}});
+  await window.fixtureHandlers.get('MESSAGE_SENT')(8);
+  await window.infiniteFieldsV2.execute('world_time',{minutes:10},'browser-wait-time');
+  window.fixtureContext.chat.push({mes:'<q who="npc_hw_linsui">歇好了。<回合 额外="5分" 地点="bld_hw_qingdeng" 在场="npc_hw_linsui"/>',name:'主持人'});
+  const element=document.createElement('div');element.className='mes';element.setAttribute('mesid','9');element.innerHTML='<div class="mes_block"><div class="mes_text"></div></div>';document.body.append(element);
+  await Promise.all([window.fixtureHandlers.get('MESSAGE_RECEIVED')(9),window.fixtureHandlers.get('MESSAGE_RECEIVED')(9)]);
+ });
+ const waited=await page.evaluate(()=>window.fixtureContext.chat[9]);
+ assert.equal(waited.extra.fields_consistency.protocol.changed,true);assert.match(waited.extra.fields_consistency.original,/额外="5分"/);assert.match(waited.mes,/额外="0分"/);
+ assert.equal(await page.evaluate(()=>window.infiniteFieldsV2.view.document.state.minute)-startMinute,10);
+ assert.equal(endpoints.filter(row=>row.body.tool==='world_turn').length-turnsBeforeWait,1);
+ assert.match(await page.locator('.mes[mesid="9"] .mes_text').innerText(),/林穗/);assert.doesNotMatch(await page.locator('.mes[mesid="9"] .mes_text').innerText(),/npc_|who=|<q/);
  await page.locator('#fields-consistency-toggle').uncheck();assert.equal(await page.evaluate(()=>window.fixtureContext.chatMetadata.fields_consistency_enabled),false);
 });
