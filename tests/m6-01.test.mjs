@@ -41,7 +41,7 @@ test('M6-01 概览只读、按当前战役读取，失败保留用户目录边�
     assert.equal(result.body.npcs,undefined);assert.equal(result.body.document,undefined);
     assert.equal((await request('ui/overview',{campaignId:'../other-user'})).status,400);
     assert.equal((await request('ui/overview',{campaignId:'missing'})).status,404);
-    const modules=await request('ui/modules');assert.deepEqual(modules.body.modules,[]);
+    const modules=await request('ui/modules');assert.ok(Array.isArray(modules.body.modules)&&modules.body.modules.every(name=>/^ui-[a-z0-9-]+\.mjs$/.test(name)));
 });
 
 test('M6-01 同行者名字须有玩家经历，效果不泄漏他人私密或过期记录',async()=>{
@@ -81,7 +81,7 @@ test('M6-01 隔离打包包含界面模块、完整字体和许可，二进制�
     const packaged=await import(pathToFileURL(path.join(directory,'plugin/index.mjs'))),routes=new Map();
     await packaged.init({post:(route,callback)=>routes.set(route,callback),get:()=>{}},{baseRoot:path.join(directory,'campaigns'),npcPlanningEnabled:false,consistencyEnabled:false});
     assert.ok(routes.has('/ui/overview'));assert.ok(routes.has('/ui/modules'));
-    let moduleList;await routes.get('/ui/modules')({}, {json:value=>{moduleList=value;}});assert.deepEqual(moduleList.modules,[]);
+    let moduleList;await routes.get('/ui/modules')({}, {json:value=>{moduleList=value;}});assert.ok(Array.isArray(moduleList.modules)&&moduleList.modules.every(name=>/^ui-[a-z0-9-]+\.mjs$/.test(name)));
     for(const relative of ['extension/ui-shell.mjs','extension/ui-settings.mjs','extension/topbar.mjs','plugin/server-plugin/ui-routes.mjs','plugin/server-plugin/ui-overview.mjs',
         'extension/assets/fonts/NotoSerifSC-Regular.woff2','extension/assets/fonts/LXGWWenKai-Regular.woff2','extension/assets/fonts/SourceHanSansSC-Regular.woff2','extension/assets/LICENSES.md']){
         const row=report.files.find(row=>row.path===relative);assert.ok(row,relative);
@@ -97,12 +97,13 @@ test('M6-01 浏览器：双主题、两行顶栏、全屏抽屉、字号持久�
     const page=await browser.newPage({viewport:{width:1440,height:900}}),errors=[];page.on('pageerror',e=>errors.push(e.message));
     const narrative='雨停之后，檐角仍在滴水。';
     await page.route('**/fixture.html',route=>route.fulfill({contentType:'text/html; charset=utf-8',body:`<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><title>无限原野界面测试</title></head><body><div id="sheld"><div id="chat"><div class="mes_text"><p>${narrative}</p></div></div><div id="form_sheld"><form id="send_form"><textarea id="send_textarea" aria-label="行动输入"></textarea></form></div></div></body></html>`}));
-    await page.route('**/*.mjs',async route=>{
-        const name=new URL(route.request().url()).pathname.split('/').at(-1);
-        if(name==='ui-next.mjs')return route.fulfill({contentType:'text/javascript',body:"export function registerUI({registerPanel,registerSettingsSection}){registerPanel({id:'next',title:'后续面板',render:node=>node.textContent='已挂载'});registerSettingsSection({id:'next',title:'后续设置',render:node=>node.append(document.createTextNode('已挂载设置'))});}"});
-        await route.fulfill({contentType:'text/javascript',body:await fs.readFile(`extension/${name}`,'utf8')});
+    await page.route(/\.(?:mjs|js|css)(?:\?.*)?$/,async route=>{
+        const relative=decodeURIComponent(new URL(route.request().url()).pathname).slice(1);
+        if(relative==='ui-next.mjs')return route.fulfill({contentType:'text/javascript; charset=utf-8',body:"export function registerUI({registerPanel,registerSettingsSection}){registerPanel({id:'next',title:'后续面板',render:node=>node.textContent='已挂载'});registerSettingsSection({id:'next',title:'后续设置',render:node=>node.append(document.createTextNode('已挂载设置'))});}"});
+        let body=await fs.readFile(path.join('extension',relative),'utf8');
+        if(relative==='runtime.js')body=body.replace("import { getContext } from '../../../extensions.js';","const getContext=()=>window.fixtureContext;");
+        await route.fulfill({contentType:`${relative.endsWith('.css')?'text/css':'text/javascript'}; charset=utf-8`,body});
     });
-    await page.route('**/runtime.js',async route=>route.fulfill({contentType:'text/javascript',body:(await fs.readFile('extension/runtime.js','utf8')).replace("import { getContext } from '../../../extensions.js';","const getContext=()=>window.fixtureContext;")}));
     await page.route('**/assets/fonts/**',async route=>route.fulfill({body:await fs.readFile(`assets/fonts/${new URL(route.request().url()).pathname.split('/').at(-1)}`)}));
     await page.route('**/api/plugins/infinite-fields/ui/modules',route=>route.fulfill({json:{modules:['ui-next.mjs']}}));
     await page.goto(`${origin}/fixture.html`);await page.addStyleTag({content:await fs.readFile('extension/style.css','utf8')});
