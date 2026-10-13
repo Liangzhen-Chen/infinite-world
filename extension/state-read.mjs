@@ -18,7 +18,7 @@ export function readStateSection(state,section){
     let result=key==='player'?{...state.player,id:'player'}:state[key]??{};
     if(key==='records')result=Object.fromEntries(Object.entries(result).filter(([,row])=>!['ecology','lair','wildlifeMigration'].includes(row?.category)).map(([id,row])=>{
         if(row?.category==='legal_case'){
-            const{evidence,...view}=row;return[id,{...view,note:'证据与见证者认知通过在场报案和审理查证，不由全局记录直接透露'}];
+            const{evidence,witnesses,...view}=row;return[id,{...view,note:'证据与见证者认知通过在场报案和审理查证，不由全局记录直接透露'}];
         }
         if(row?.category!=='physical_feature')return[id,row];
         const publicState=Object.fromEntries(Object.entries(row.state??{}).filter(([name])=>!['toxinUg','saltMg','pathogenRisk'].includes(name)));

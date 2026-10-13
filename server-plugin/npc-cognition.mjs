@@ -3,6 +3,7 @@ import {applyPatches,digest} from './storage.mjs';
 import {advanceNpcSchedules} from './npc-schedule.mjs';
 import {relationView} from './npc-relations.mjs';
 import {assertNpcObligationAction} from './npc-obligations.mjs';
+import {observeLegalReputation} from './reputation.mjs';
 
 const DAY=1440,clone=value=>structuredClone(value);
 const awake=n=>n&&n.location&&!n.scheduleTravel&&!n.cognitionTravel&&!['死亡','濒死','昏迷','患病'].includes(n.status)&&!/睡眠|睡觉|熟睡/.test(n.activity??'');
@@ -32,8 +33,10 @@ function appendHeard(d,engine,from,to,memory,minute,channel,messageId,location=d
   kind:memory.kind,minute,occurredAt:memory.occurredAt??memory.minute,location,participants:clone(memory.participants??[]),
   content:told.content,sourceType:'听说',heardFrom:from,channel,messageId,salience:Math.max(1,(memory.salience??2)-1),emotion:'待核实',
   transmissionChain:[...memory.transmissionChain??[],{from,to,minute,channel}],distortion:told.distortion,reliability:'未经亲历核实',
+  ...(memory.legalCase?{legalCase:memory.legalCase,legalStage:memory.legalStage}:{}),
   ...(memory.entities?{entities:clone(memory.entities)}:{}),...(memory.visibility?{visibility:memory.visibility}:{}),...(memory.private?{private:true}:{}),...(memory.permittedRecipients?{permittedRecipients:clone(memory.permittedRecipients)}:{})};
- d.set(['state','npcs',to,'memoryStream'],[...d.get('state','npcs',to,'memoryStream')??[],row]);return true;
+ d.set(['state','npcs',to,'memoryStream'],[...d.get('state','npcs',to,'memoryStream')??[],row]);
+ observeLegalReputation(d,engine,to,row,location);return true;
 }
 // Used only on an immutable interval-start snapshot. Obligations are checked by
 // callers; actors carrying messages or following the player are not simulated.

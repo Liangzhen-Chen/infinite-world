@@ -9,7 +9,7 @@ define('world_weather','查看当前位置的天气、温度和日出日落时�
 define('world_farm','查看农田粮仓，或按操作买粮、捐粮、留种、修仓、播种、收获、巡田，或持登记粮约分两地提粮送达并结算税贸账。',{operation:{enum:['inspect','buy','donate','reserve_seed','repair','sow','harvest','guard','adopt','settle_trade']},settlement:str,quantity:int,contract:str,phase:{enum:['pickup','deliver']},authority:str},[]);
 define('world_wildlife','观察当地动物、追踪指定物种，或从指定真实尸体取材。',{operation:{enum:['observe','track','gather']},species:str,target:str},[]);
 define('world_crime','尝试偷取在场目标的一件物品或指定铜币。',{operation:{enum:['steal']},target:str,item:str,coins:int,instance:str},['operation','target']);
-define('world_law','查询法典案件，或按案件编号办理报案、审理、赔付与服役。',{operation:{enum:['inspect','report','confess','search','arrest','hear','pay','labor','prison','compensate','claim']},case:str,authority:str,reporter:str,claimant:str},[]);
+define('world_law','查询法典及分区声望账，或办理报案、审理、上诉、公示、携信、赔付与服役。',{operation:{enum:['inspect','report','confess','search','arrest','hear','appeal','publish','notify','pay','labor','prison','compensate','claim']},case:str,authority:str,reporter:str,claimant:str,from:str,to:str,memory:{...str,description:'传话者已持有的本案法律记忆编号'},channel:{enum:['conversation','carry']}},[]);
 define('world_pet','对指定动物执行喂养、接触、驯服、照料、训练、跟随或骑乘操作。',{operation:{enum:['inspect','feed','contact','tame','groom','treat','train','rest','follow','stay','release','mount','dismount']},target:str,item:str,skill:str,minutes:int,authorization:str},[]);
 define('world_summon','查看或解除召唤契约，令役灵搬水，或消耗契约守卫的有限防护额度。',{operation:{enum:['inspect','dismiss','carry_water','guard']},summon:str,source:str,destination:str,millilitres:int,authorization:str,authorizations:{type:'array',items:str,maxItems:8}},[]);
 define('world_revival','在当前神殿或祭坛登记复活点并支付费用。',{location:str},[]);
