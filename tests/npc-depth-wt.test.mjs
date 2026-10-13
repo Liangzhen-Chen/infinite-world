@@ -124,13 +124,15 @@ test('来源扩展保持原候选、revision与冻结原档，只投影本人关
  }
 });
 
-test('真实首批存在失败且未完成L4，发布读取必须拒绝',async()=>{
+test('真实首批存在失败且未完成L4，发布读取必须拒绝',async t=>{
  const root=fileURLToPath(new URL('../world/drafts/w1/wt-depth/sourced/',import.meta.url));
- const summary=JSON.parse(await fs.readFile(root+'/summary.json','utf8'));
+ const {summary}=JSON.parse(await fs.readFile(root+'/terminal.json','utf8'));
  assert.equal(summary.total,30);
  assert.ok(summary.manual>0);
  assert.ok(summary.batches.every(batch=>!batch.l4.approved));
- await assert.rejects(()=>readApprovedContent(root,entries(),{revision:design.revision,contextFor:entry=>contextFor(entry,world)}),/尚未完成 L4|人工队列/);
+ const frozen=await fs.mkdtemp(path.join(os.tmpdir(),'wt-first-summary-'));t.after(()=>fs.rm(frozen,{recursive:true,force:true}));
+ await fs.writeFile(path.join(frozen,'summary.json'),JSON.stringify(summary));for(const batch of summary.batches)await fs.writeFile(path.join(frozen,`batch-${batch.index}.json`),JSON.stringify(batch));
+ await assert.rejects(()=>readApprovedContent(frozen,entries(),{revision:design.revision,contextFor:entry=>contextFor(entry,world)}),/尚未完成 L4|人工队列/);
 });
 
 test('家庭事项读取名册第7列，性格不能代替具体关系来由',()=>{

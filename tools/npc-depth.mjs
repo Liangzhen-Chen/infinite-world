@@ -6,7 +6,7 @@ import {pathToFileURL} from 'node:url';
 import {loadWorld} from './load-world.mjs';
 import {DeepSeekClient} from './deepseek-client.mjs';
 import {runContentPipeline,hashContent} from './content-pipeline.mjs';
-import {migrateDepthBudget,validateReopenAuthorization} from './content-budget.mjs';
+import {migrateDepthBudget,validateReopenAuthorization,reopenAuthorizationVersion} from './content-budget.mjs';
 import {prepareFirstSourceEvidence,compactReviewRequest} from './npc-depth-source-evidence.mjs';
 import {depthBatches,depthEntries,contextFor,buildDraftRequest,buildReviewRequest,extractDraft,validateDraft,patchDraft,validatePatchResults,validateAuthoredBackground,validateControlledRevision,depthReviewClient,applyDepthDraft,authoredReviewContext} from './npc-depth-content.mjs';
 export const depthHelp='npc-depth --batch <旧批次> | --design <设计.mjs> --root <world候选目录> --prepare | --budget-root <共用预算目录> --card <T编号> [--source-evidence-map <world内逐ID索引JSON>] [--compact-request] [--recover-protocol <id,id>] [--authored-background <world内json>]\nsource-evidence-map 为 {人物id:相对索引文件的附件路径}，只追加逐字段匹配冻结原档的资料；compact-request 精简L2可重建的重复事实。card 是稳定授权编号，换目录或 revision 仍使用原编号。recover-protocol 只为指定的合同失败提供一次恢复，保留 attempts 与原错误，仍须 L1/L2/L4。新设计导出 revision, patchRows:[{id,before,baseHash,issues:[{id,field,code}],patches:[{path,value}]}]。prepare 不调用模型；正式文件由 publish-npc-depth --manifest <manifest.json> [--publish] 写入。\n --reuse-frozen-drafts 显式复用合法定稿直接完整L2，无模型draft响应；--reopen-authorization <world内JSON> --id <单id> 沿原账授权轮，后续经首ID通过使用--reopen-continue；--prepare仍零模型。\n --source-checkout-evidence <world内JSON> 仅用于原T07规划的固定LF/CRLF出处凭证；缺省保持原逐字校验，复审收据和发布重放冻结凭证路径及hash。';
@@ -86,7 +86,7 @@ export async function loadDepthReopen(options,prepared){
  if(!options.reopenAuthorization)return null;
  const worldRoot=path.resolve(options.worldRoot??prepared.worldRoot??'world'),file=path.resolve(options.reopenAuthorization),relative=path.relative(worldRoot,file);
  if(relative.startsWith('..')||path.isAbsolute(relative)||!/\.json$/i.test(file)||/secrets\.json$/i.test(file))throw Error('重开授权须在world且非私人JSON');
- const manifest=JSON.parse(await fs.readFile(file,'utf8')),grant=validateReopenAuthorization(manifest,options.cardId),root=options.root;
+ const budgetAuthorization=JSON.parse(await fs.readFile(file,'utf8')),grant=validateReopenAuthorization(budgetAuthorization,options.cardId),manifest=reopenAuthorizationVersion(budgetAuthorization),root=options.root;
  const read=async name=>JSON.parse(await fs.readFile(path.join(root,name),'utf8'));
  assert.equal(hashContent(prepared.foundation),grant.foundationHash,'授权原foundation不符');
  assert.equal(hashContent(await read('base.json')),grant.baseHash,'授权原base不符');assert.equal(hashContent(await read('candidate.json')),grant.candidateHash,'授权冻结候选不符');
@@ -104,7 +104,7 @@ export async function loadDepthReopen(options,prepared){
   if(item.recordHash)assert.ok(recordHasHash(record,item.recordHash),'授权旧完整record hash不符 '+item.id);
   else {assert.equal(item.missingRecord,true,'未审缺档未留证');assert.equal(item.entryHash,hashContent(oldEntry),'未审entry凭证不符');assert.ok(!record||recordHasHash(record,item.createdRecordHash),'缺档被未授权记录替换');}
  }
- return{manifest,grant,file:path.relative(root,file).replaceAll('\\','/'),manifestHash:hashContent(manifest)};
+ return{manifest,grant,budgetAuthorization,file:path.relative(root,file).replaceAll('\\','/'),manifestHash:hashContent(manifest)};
 }
 async function sourceWitnessPlan(root,plan,read,safeFile){
  if(!plan.previousPlanFile)return plan;

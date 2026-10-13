@@ -2262,5 +2262,20 @@
         }
       ]
     }
-  }
+  },
+  "amendments": [
+    {
+      "id": "user-reopen-20261013-01",
+      "date": "2026-10-13",
+      "previousManifestHash": "f23eb0e7c49f472e75e47fce1946469e6c906a6314e9bf341aa6b77a2bfd3195",
+      "waveLimitYuan": 25,
+      "maxAttempts": 6,
+      "cardLimits": {
+        "T07": 7,
+        "T08": 6.5,
+        "T09": 4.5
+      },
+      "source": "2026-10-13 用户“可以改可以改”；docs/待用户确认.md末尾与本次T07执行指令。"
+    }
+  ]
 }

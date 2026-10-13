@@ -12,6 +12,12 @@ const next={waveLimitYuan:20,incrementLimitYuan:3,startingSpentYuan:1.10760808,s
 const near=(a,b)=>assert.ok(Math.abs(a-b)<1e-10,`${a} != ${b}`);
 async function temporary(t,ledger=legacy){const dir=await fs.mkdtemp(path.join(os.tmpdir(),'depth-budget-')),file=path.join(dir,'budget.json');t.after(()=>fs.rm(dir,{recursive:true,force:true}));await fs.writeFile(file,JSON.stringify(ledger));return{dir,file};}
 function mock(ceiling,cost=ceiling){return{calls:0,estimateCostYuan:()=>ceiling,spent:0,reserved:0,budgetYuan:20,async generate(){this.calls++;this.spent+=cost;return{measurement:{costUpperYuan:cost}};}};}
+test('25元波次仍按完整上界拒发，保留未知预留及原单卡费用',async t=>{
+ const ledger={spentYuan:24.8,reservedYuan:.083736,waveLimitYuan:25,limitYuan:25,cards:{T07:{spentYuan:4.2,reservedYuan:0,limitYuan:7}},requests:{unknown:{status:'unknown',reservedYuan:.083736}}},allocation25={cardId:'T07',waveLimitYuan:25,incrementLimitYuan:7,startingSpentYuan:ledger.spentYuan,startingReservedYuan:ledger.reservedYuan};
+ const {file}=await temporary(t,ledger),client=mock(.12),budget=await openContentBudget({file,client,cardId:'T07',allocation:allocation25});
+ try{await assert.rejects(budget.request({},'full-wave'),/费用上限/);assert.equal(client.calls,0);near(budget.ledger.spentYuan,24.8);near(budget.ledger.reservedYuan,.083736);near(budget.ledger.cards.T07.spentYuan,4.2);}finally{await budget.close();}
+ for(const limit of [26,100])await assert.rejects(openContentBudget({file,client:mock(0),cardId:'T07',allocation:{...allocation25,waveLimitYuan:limit}}));
+});
 test('精确旧账迁移保留共享和T06未知占用，不虚构历史费用归属',()=>{
  const out=migrateDepthBudget(legacy,'T06',allocation);near(out.cards.T06.spentYuan,.15959304);near(out.cards.T06.reservedYuan,.083736);near(2-out.cards.T06.spentYuan-out.cards.T06.reservedYuan,1.75667096);near(20-out.spentYuan-out.reservedYuan,18.80865592);near(out.historicalUnallocatedSpentYuan,.94801504);assert.equal(out.source,legacy.source);assert.deepEqual(migrateDepthBudget(out,'T06',allocation),out);
  for(const [ledger,a,card] of [[{...legacy,limitYuan:1,reservedYuan:0},allocation,'T06'],[legacy,{...allocation,incrementLimitYuan:3},'T06'],[legacy,allocation,'T07'],[{...legacy,spentYuan:1.2},allocation,'T06']]){if(ledger.limitYuan===1){const frozen=migrateDepthBudget(ledger,card,{...a,startingSpentYuan:ledger.spentYuan,startingReservedYuan:0});assert.equal(frozen.waveLimitYuan,1);}else assert.throws(()=>migrateDepthBudget(ledger,card,a));}

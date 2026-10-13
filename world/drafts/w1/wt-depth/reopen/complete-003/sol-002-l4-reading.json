@@ -435,9 +435,9 @@
     },
     {
       "id": "npc_wt_xueying",
-      "note": "旧根过道与家务挑留均尚待商量，group_3仅公开门边整理；通读发现雷芷为女性而观点用“他”，新修订尚未真实L2。",
-      "draftHash": "4fe40cdc4f8cd144dd9b043156fec20c1c4c4b1a066ddfec81f3f1369e538f3e",
-      "reviewHash": "ffacb237c711012f96c83058d2b255ac4285a240369ffa5d840e74eb2167628f",
+      "note": "重新实际通读13叶和group_3：观点改用雷芷当场公开的含混称呼待问事项，没有写客户身份、口信内容或泛化通行安排。家人清根仍待询问，门边挪放仍pending；本次真实L2无矛盾，私有旧扎绳不向其他参与者公开。",
+      "draftHash": "28aa28f30c4c4da7f1ef304185b7d551a0efb4cf249aba1f2eb6dde9c0e32e53",
+      "reviewHash": "791dd707ba58b7d4a514eae19d6edecc26a0f13067e3575e6a5143c24fe412b9",
       "reviewedPaths": [
         "knowledge.known[1]",
         "knowledge.known[2]",
@@ -453,28 +453,10 @@
         "memorySeeds[2]",
         "opinions.neighbors[2].view"
       ],
-      "result": "unresolved",
+      "result": "read-no-hard-finding",
       "approved": false,
-      "warnings": [
-        {
-          "quote": "薛实是家里的儿子；肯干/急性子，这件事还需要彼此听完再商量。",
-          "field": "relationships[0].note",
-          "severity": "soft",
-          "reason": "骨架与已发布事实只登记薛实为儿子、各自保有财物，并有其出工绕行旧根堆的关切；‘肯干/急性子’是新增的性格定性，无既有来源支持，属于对人物性格的无依据新增。"
-        },
-        {
-          "quote": "与雷芷有同村往来；对方在汀口记事屋做渡岸往来口信抄录人，见面时还需问清当日劳作与通行安排。",
-          "field": "relationships[2].note",
-          "severity": "soft",
-          "reason": "骨架关系注记为‘认识同村雷芷，不因此知道对方秘密或财产’，未记载雷芷的具体职业与劳动地点；虽职业为公开信息，但该注记新增了骨架未登记的具体职业与劳动地点，超出原关系注记范围。"
-        },
-        {
-          "quote": "雷芷在汀口记事屋做渡岸往来口信抄录人；与他谈通行和劳作时，我会先问清当日安排。",
-          "field": "opinions.neighbors[2].view",
-          "severity": "soft",
-          "reason": "骨架观点仅记‘认识同村雷芷，不因此知道对方秘密或财产’，未记载雷芷的具体职业与劳动地点；该观点新增了骨架未登记的具体职业与劳动地点。"
-        }
-      ]
+      "warnings": [],
+      "entryHash": "39a51bb43b999333772eaf100034f8f402d3b4429a929ca793220438d308d0d7"
     },
     {
       "id": "npc_wt_leizhi",
@@ -1135,8 +1117,8 @@
     }
   ],
   "formalL4Approved": false,
-  "readNoHardCount": 25,
-  "unresolvedCount": 5,
+  "readNoHardCount": 26,
+  "unresolvedCount": 4,
   "scoring": {
     "dimensions": [
       "具体性",
@@ -1272,5 +1254,6 @@
     "min": 3,
     "qualityThresholdPassed": true
   },
-  "finishedAt": "2026-10-13T12:03:43.760Z"
+  "finishedAt": "2026-10-13T12:03:43.760Z",
+  "continuationReadAt": "2026-10-13T12:14:32.813Z"
 }
