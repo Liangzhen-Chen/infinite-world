@@ -148,6 +148,46 @@ N1–N17至少12项完整有效且≥90%，N6/N16零泄漏，N12真实盲辨，N
 
 ### T99 已执行，未通过：六场完整（送货5/9、私宅6/9、离屏4/8、推搡4/9中断），账本157/165，有效N 9项过5项（N5/N6/N10/N13/N16），盲辨9/9与N6/N16零泄漏通过，工具漏4错2；305次调用6.94093904元。证据在docs/测试报告/M2-recheck-003/。第三次分析交Astra（M2-fix-planner-003）；第四轮若仍不过，M2标卡住并继续其他里程碑。
 
+### M2修复第三批（2026-10-13主会话审定，来源：Astra草案M2-fix-planner-003，对应T99真实失败；分析全文见该草案A段）
+
+要点：四场中断的共同出口是一致性审查的唯一改写未通过后拒绝提交、runner按stopOnFailure停止。四场原因不同：送货是二审引用被改动的JSON导致校验失败；私宅是审查自相矛盾地把正确时间判错；离屏是二审输出的JSON不合法；推搡是主持原稿和改写都多计了5分钟（真错）。账本8条里4条是这四次执行失败，另4条是粮仓买粮被提前一回合执行。N3、N4、N12是审核拿到的证据不全，N15是NPC确实编了经历，N2是逐N审核输出被截断。
+审计：三张修复卡和第四轮复验都同意。卡文里的F1/F2/F3即T146/T147/T148；T147在T146合入后派，T148可与T146并行。第四轮上限12元。第四轮仍未通过则M2标卡住，转其他里程碑。
+
+### T146 等待回合能正确结束，修复审查误拒与正文协议输出。优先恢复四场完整执行，释放N9/N11/N17后续回合。
+1 完成结果：120、60、14400、10分钟等待均可提交正确尾注，时间只推进一次；原始错误和修正文分别留存。纯协议错误按已有真实clock、在场名单及parseTurn既定回退语义规范化，明确等待已足量且无后续交谈时额外为0；真实事实矛盾仍走唯一文字改写，不能把工具失败改成成功。
+对审查使用明确的当前时刻与实际差值，时间正确不得因模型自行换算矛盾而进入改写；缺来源与直接矛盾保持区分。缩短并结构化审稿输出，引用采用短的连续原文；格式或引用无效最多一次仅修正审查响应的调用，保留原响应，不重抽完整负评，不把unverified当通过。补齐未闭合q标签的显示处理，已登记人物显示姓名且原文可追溯。
+2 可改：server-plugin/consistency-service.mjs、consistency-review.mjs；extension/turn.mjs、message-view.mjs；tests/m3-consistency.test.mjs、m3-consistency-integration.test.mjs、m3-consistency-browser.test.mjs及新增tests/m2-reply-protocol.test.mjs。锁定F2的consistency-evidence与F3全部提示文件，正常调用接点由主会话协调。
+3 验收：node --test tests/m3-consistency.test.mjs tests/m3-consistency-evidence.test.mjs tests/m3-consistency-integration.test.mjs tests/m3-consistency-browser.test.mjs tests/m2-reply-protocol.test.mjs；CORE。四场原响应作离线夹具，覆盖额外5→0、正确11:35、坏JSON、删字段引文及未闭合q；仍拒绝真实重复计时、失败移动变成功、私密外泄。浏览器与runner共用的提交路径都覆盖。
+4 真实模型：实施0次、0元；上线后的审查格式修正每个失效响应最多1次，计入第四轮总额，文字改写仍最多1次。
+5 预计规模：300–500行，一个执行会话；不改runner停止策略或降低总体一致性门槛。
+
+### T147 居民可谈已有往来与工作背景，带路结果和逐N审核读取完整而不重复的事实。目标恢复N3/N4，恢复N2有效覆盖，并支持N12正确区分背景与进度。
+1 完成结果：主持场景与审查共享本人已有关系事实及相关公开职务，明确来源；作息作为有时间边界的背景，只有已重建且未受行程、约定、昏迷等覆盖的时段可支持实际活动，不能推出完成数量。N4直接使用现有移动回执、带路履约和双方位置断言，说明companions的到达后语义，不改引擎同行状态。
+逐N输入保留全部回合的单份正文和行动证据，删除consistency中original/text/tail.visible等重复正文，只留问题及状态；N2上限12288，截断仍为未完成。叙述评分只引用真实visible正文，格式失效使用与F1同一受限修正政策；N6/N16私密证据继续隔离，N12盲辨独立。
+2 可改：server-plugin/npc-memory.mjs、scene-card.mjs、consistency-evidence.mjs；tools/npc-acceptance.mjs、playtest-review.mjs；tests/npc-memory.test.mjs、npc-integration.test.mjs、m3-consistency-evidence.test.mjs、npc-acceptance.test.mjs、playtest-npc-evidence.test.mjs、playtest-review.test.mjs。锁定engine.mjs及F1/F3文件，优先消费既有状态和证据，不新增人物事实。
+3 验收：node --test tests/npc-memory.test.mjs tests/npc-cognition.test.mjs tests/npc-schedule.test.mjs tests/npc-obligations.test.mjs tests/npc-delivery.test.mjs tests/npc-autonomy.test.mjs tests/npc-integration.test.mjs tests/npc-relations.test.mjs；node --test tests/playtest-runner.test.mjs tests/playtest-review.test.mjs tests/playtest-npc-evidence.test.mjs tests/playtest-lifecycle.test.mjs tests/playtest-budget.test.mjs tests/npc-acceptance.test.mjs；F1所列四个m3-consistency测试文件；CORE。离线覆盖关系可用而秘密不可用、作息不冒充完成进度、N4履约解队不等于未同行、N2截断不采纳及真实引文。
+4 真实模型：0次、0元；逐N和评分的实际效果由第四轮测量，已完成负评不重抽。
+5 预计规模：250–450行，一个执行会话；F1合入后处理共享接口，动态场景只加入本轮相关人物资料。
+
+### T148 当前步骤正确执行，NPC对白不新增过去经历。目标消除四条交易断言失败，争取恢复N12/N15，并补足N9真实现场反应。
+1 完成结果：申请带路先答复，申请私宅先给许可，粮仓先到场后付款；courier移动只请求一次。主持明确区分当前观察、已发生经历和未来安排：施锦可以谈翻晒工作及接下来的打算，段禾可以谈档案中的桥与植物，不补今早进度或“三条岔道”的失败练习。冲突反应依据在场者与既有threatResponse，若呼救或报告须实际发言、后续司法仍调用world_law，不能以后台记录替代。
+2 可改：prompt/constitution.md、style.md、examples.md；tests/playtests/guide.json、npc_home_visit.json、npc_courier.json、npc_quest_social.json中的分步输入与机会标注；tests/prompt.test.mjs、m2-action-context.test.mjs、m2-npc-prompt.test.mjs。锁定原有账本断言和通过标准、正式人物档及F1/F2文件；不把已知失败重写成新报告通过。
+3 验收：node --test tests/prompt.test.mjs tests/m2-action-context.test.mjs tests/m2-npc-prompt.test.mjs tests/deepseek-transport.test.mjs tests/playtest-runner.test.mjs tests/playtest-npc-evidence.test.mjs tests/npc-acceptance.test.mjs；node --test tests/npc-obligations.test.mjs tests/npc-delivery.test.mjs tests/quest-board.test.mjs tests/law.test.mjs；CORE。离线回放四条行动链并核对两轮交易总守恒；loadPromptBundle().budget记录最终估算，静态测试不计作N能力通过。
+4 真实模型：0次、0元；真实对白、盲辨和工具选择统一留给第四轮。
+5 预计规模：120–220行，一个执行会话；静态提示预算仅余258 token至11900，先改写压缩既有规则，保持现有11800测试。
+
+### T149 M2第四轮真实复验【真实模型；待T146–T148合入】
+
+完成结果：三卡合入后运行原十场87回合，使用F3澄清后的分步输入，保留原断言及真实失败历史。目标13项有效、至少12项通过，即12/13=92.3%；N1/N7/N8/N14仍未测，不把新增场景用于稀释失败。
+预期保留N5/N6/N10/N13/N16，争取恢复N2/N3/N4/N11/N12/N15/N17。N9当前t1–2已明确没有还手或喊救，且无围观议论；恢复司法后半场仍不能自动补齐前半场，因此将N9列为最大不确定项，不能承诺13/13。
+原十场在数学上足够，无须增场。若N12/N15等仍有两项失败，11/13=84.6%；即补齐余下四项且全部通过也只有15/17=88.2%，仍不到90%，必须修复失败本身。若未来扩测，缺的是N1帮修屋顶三天回访、N7次日走样传闻、N8凭线索揭穿欺骗、N14 NPC谎言入日志与揭穿，另立内容工作，不能混入本轮宣称可比。
+N门槛通过不代表M2关闭：本轮仍有30条time/warning及其他事实、agency、meta问题，consistency和reviewsComplete也必须过；F1处理协议和误拒，F2/F3处理已知证据及正文来源。剩余真实负评如实保留，不能把warning统一忽略。
+可改仅docs/测试报告/M2-recheck-004/及本run生成物；代码、world、旧报告和原存档锁定。沿T99正常HTTP、完整提示栈、repeat=1、parallel=4和同一模型槽，不部署；预计一次十场执行及一次结果整理。
+建议新增上限12元、最多450次调用，含≤1元初探和全部审稿、受限格式修正。T99为71回合6.94093904元，按87回合线性估算约8.51元，12元覆盖较长逐N输出及少量协议修正；这是预算估算。保留全部旧费用及未知预留，刷新父账；按PLAN规则13不恢复旧100/20/30元历史硬限。
+验收先运行 node docs/测试报告/M2-recheck-004/preflight.mjs --zero-model，再运行CORE；正式命令沿T99仅替换run目录、编号及增额：
+node --import ./docs/测试报告/M2-recheck-004/git-entry.mjs tools/playtests.mjs --run-dir docs/测试报告/M2-recheck-004 --run-id m2-recheck-004 --card M2-recheck-004 --increment 12 --repeat 1 --parallel 4 --milestone M2 --only guide,npc_courier,npc_delivery,npc_home_visit,npc_offscreen,npc_private,npc_quest_social,npc_shove,npc_social,npc_voices --host-installation F:/dnd/SillyTavern --budget-proof docs/测试报告/M2-recheck-004/preflight.mjs
+随后 node docs/测试报告/M2-recheck-004/summarize.mjs；逐项列完整回合、有效N及失败条件，账本/时间/存档断言须100%，N6/N16零泄漏、N12盲辨全对且整合通过、N17十天自主行动及回来谈话均过。本十场不含reload/rollback/duplicate真实专项，存档证据范围继续明示。第四轮仍未通过则按T99约定将M2标卡住，保留结果并转其他里程碑。
+
 ### 法术150/首领40第一批（2026-10-13主会话审定，来源：Astra草案W2W4-planner-001）
 
 路线：法术31→61→91→121→150（S1–S4，S1只用已有处理器；S2炉作通风水土、S3光医心、S4空间役灵仪式各依赖对应引擎卡）；首领4→16→28→40（B1–B3，8个智能存在按2/3/3分布）。
