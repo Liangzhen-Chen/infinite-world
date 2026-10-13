@@ -16,7 +16,7 @@ export function planPreR1Partitions(document,world){
     apply(planRuleStateMigration(next,world.rules));
     apply(planAgricultureMigration(next,world.rules));
     apply(planWildlifeMigration(next,world.rules,world.monsters));
-    apply(planBossMigration(next,world.rules,world.bosses));
+    apply(planBossMigration(next,world.rules,world.bosses,world));
     apply(planFarmPestsMigration(next,world.rules));
     return patches;
 }

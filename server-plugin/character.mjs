@@ -1,6 +1,8 @@
 import {createHash}from'node:crypto';
 import {derivedStats}from'./combat.mjs';
 import {initialNpcState}from'./npc-state.mjs';
+import {planBossMigration}from'./boss-migration.mjs';
+import {applyPatches}from'./storage.mjs';
 const text=(value,fallback,max)=>{const result=value??fallback;if(typeof result!=='string'||!result.trim()||result.length>max)throw new Error('角色文本为空或过长');return result.trim();};
 export function createCharacter(legacy,options={},seed){
     if(!options||typeof options!=='object'||Array.isArray(options))throw new Error('角色创建参数必须是对象');
@@ -25,5 +27,5 @@ export function createCharacter(legacy,options={},seed){
     for(const npc of Object.values(state.npcs)){npc.trust=0;npc.affection=0;npc.developments=[];npc.relationships={};}
     document.memories={};document.manualPins={};
     document.privateState={luck:createHash('sha256').update(`${document.randomSeed}:hidden-luck`).digest().readUInt32LE(0)%100+1};
-    return document;
+    return applyPatches(document,planBossMigration(document,this.rules,this.world.bosses??[],this.world));
 }

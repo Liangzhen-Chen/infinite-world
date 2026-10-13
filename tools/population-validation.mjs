@@ -7,6 +7,15 @@ export function validatePopulation(world){
  const households=new Map(),membership=new Map(),profiles=new Map();
  const check=(condition,message)=>{if(!condition)errors.push(message);};
  const settlements=new Set((world.settlementProfiles??[]).map(row=>row.id));
+ const species=new Set((world.monsters??[]).map(row=>row.id));
+ for(const row of people.values()){
+  if(row.species!==undefined)check(species.has(row.species),`居民物种不存在：${row.id}/${row.species}`);
+  if(row.society!==undefined){
+   const profile=world.settlementProfiles?.find(p=>p.id===row.society);
+   check(row.settlement===row.society&&profile?.residentIds?.includes(row.id),`居民社会归属与人口册不符：${row.id}`);
+   check(species.has(row.species),`社会居民须登记物种：${row.id}`);
+  }
+ }
  const belongs=(location,settlement)=>{
   const visited=new Set([location]);let parent=places.get(location)?.parent,owner;
   while(parent){
@@ -97,6 +106,10 @@ export function validatePopulation(world){
  for(const place of world.locations??[])if(place.access?.mode==='private'){
   check(place.access.requiresConsent===true&&place.access.residents?.length>0,`私宅缺少进入许可或住户：${place.id}`);
   for(const id of place.access.residents??[])check(people.has(id)&&people.get(id)?.home?.location===place.id,`私宅住户与住处不符：${place.id}/${id}`);
+ }
+ for(const place of world.locations??[])if(place.access?.mode==='council'){
+  const authority=people.get(place.access.authority);
+  check(place.access.requiresConsent===true&&authority?.tier==='full'&&authority.age>=18,`议事区缺少成年完整档负责人：${place.id}`);
  }
  return errors;
 }

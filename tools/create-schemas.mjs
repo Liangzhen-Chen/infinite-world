@@ -5,6 +5,12 @@ const list=items=>({type:'array',items});
 const object=(properties,required)=>({type:'object',properties,required,additionalProperties:true});
 const entity=(prefix,properties,required)=>object({id:id(prefix),name:str,aliases:list(str),scope:{type:['string','null']},...properties},['id','name',...required]);
 const material=object({item:id('item'),amount:{type:'integer',minimum:1}},['item','amount']);
+const residentIdentity={species:id('monster'),society:id('loc')};
+const locationAccess={oneOf:[
+    {type:'object',properties:{mode:{const:'public'}},required:['mode'],additionalProperties:false},
+    {type:'object',properties:{mode:{const:'council'},requiresConsent:{const:true},authority:id('npc')},required:['mode','requiresConsent','authority'],additionalProperties:false},
+    {type:'object',properties:{mode:{const:'private'},requiresConsent:{const:true},residents:{...list(id('npc')),minItems:1,uniqueItems:true}},required:['mode','requiresConsent','residents'],additionalProperties:false}
+]};
 const prerequisite={oneOf:[id('skill'),object({skill:id('skill'),minimum:{type:'integer',minimum:0,maximum:2699}},['skill','minimum'])]};
 const legalStatus={enum:['public','consent','permit','crime']};
 const featureState=object({capacityMl:int,waterMl:int,turbidity:{type:'number',minimum:0,maximum:100},saltMg:num,toxinUg:num,pathogenRisk:{type:'number',minimum:0,maximum:100},odor:str,
@@ -73,10 +79,10 @@ const schemas={
             materials:list(material),tools:{...list(id('item')),uniqueItems:true,maxItems:8},workstation:str,minutes:{type:'integer',minimum:1,maximum:43200},
             difficulty:{enum:[10,15,20,25,30]},toolWear:{type:'integer',minimum:0,maximum:10},restore:{type:'integer',minimum:1,maximum:10000},maxLoss:{type:'integer',minimum:0,maximum:100}},
             ['id','name','item','skill','minimumProficiency','materials','tools','workstation','minutes','difficulty','toolWear','restore','maxLoss']))},['version','attributes','levels','practice','check','equipment','pets','currency']),
-    npc:entity('npc',{age:{type:'integer',minimum:0,maximum:300},location:str,coins:int,inventory:{type:'object'},
+    npc:entity('npc',{...residentIdentity,age:{type:'integer',minimum:0,maximum:300},location:str,coins:int,inventory:{type:'object'},
         skills:{anyOf:[list(id('skill')),{type:'object',additionalProperties:{type:'integer',minimum:0,maximum:2699}}]},
         flags:object({minor:{type:'boolean'},romanceable:{type:'boolean'}},['minor','romanceable']),notes:str},['age','location','coins','inventory','flags','notes']),
-    location:entity('(?:loc|bld|site)',{coordinates:{type:'array',items:{type:'number'},minItems:2,maxItems:2},parent:{type:['string','null']},terrain:str,
+    location:entity('(?:loc|bld|site)',{access:locationAccess,coordinates:{type:'array',items:{type:'number'},minItems:2,maxItems:2},parent:{type:['string','null']},terrain:str,
         features:list(feature),microclimate:object({humidityPercent:{type:'number',minimum:0,maximum:100}},['humidityPercent']),
         workstations:list(object({id:{type:'string',pattern:'^station_'},kind:str,owner:str,access:{enum:['public','consent']},fee:{type:'integer',minimum:0,maximum:100000}},['id','kind','owner','access','fee']))},['coordinates','parent','terrain']),
     item:entity('item',{quality:str,weight:num,durability:int,basePrice:int,checkBonus:object({bonus:{type:'integer',minimum:0,maximum:5},attributes:list(str),skills:list(id('skill'))},['bonus']),
@@ -99,10 +105,10 @@ const schemas={
     monster:entity('monster',{template:{type:'integer',minimum:0,maximum:11},levelRange:{type:'array',items:{type:'integer',minimum:0},minItems:2,maxItems:2},wildlife:wildlifeProfile,
         habitatTags:list(str),grouping:str,diet:str,drops:list(material),taming:object({possible:{type:'boolean'},conditions:list(str)},['possible','conditions']),tamingRule,intelligence:{type:'integer',minimum:0,maximum:5}},
         ['template','levelRange','habitatTags','grouping','diet','drops','taming','intelligence']),
-    boss:entity('boss',{monster:id('monster'),tier:{type:'integer',minimum:1,maximum:11},level:int,lair:str,territory:str,
+    boss:entity('boss',{actor:id('npc'),monster:id('monster'),tier:{type:'integer',minimum:1,maximum:11},level:int,lair:str,territory:str,
         tactics:list(str),weakness:str,drops:list(material),taming:str,tamingRule,intelligence:{type:'integer',minimum:0,maximum:5},minions:{...list(id('monster')),uniqueItems:true},
-        residence:object({id:id('lair'),name:str,location:str,habitat:id('habitat'),replacementSpecies:{...list(id('monster')),minItems:1,uniqueItems:true},vacancyDays:{type:'integer',minimum:1,maximum:360},minionCount:{type:'integer',minimum:0,maximum:8}},
-            ['id','name','location','habitat','replacementSpecies','vacancyDays','minionCount'])},
+        residence:object({id:id('lair'),name:str,location:str,habitat:id('habitat'),replacementSpecies:{...list(id('monster')),uniqueItems:true},vacancyDays:{type:'integer',minimum:1,maximum:360},minionCount:{type:'integer',minimum:0,maximum:8}},
+            ['id','name','location'])},
         ['monster','tier','level','lair','territory','tactics','weakness','drops','taming','intelligence']),
     route:object({id:id('route'),from:str,to:str,lengthKm:num,terrainMultiplier:{type:'number',exclusiveMinimum:0},
         modes:{type:'array',items:{enum:['walk','horse','cart','boat']},minItems:1},closedSeasons:{type:'array',items:{type:'integer',minimum:0,maximum:3}},toll:int,risk:int},
@@ -111,4 +117,8 @@ const schemas={
 const world=object({version:str,rules:{$ref:'#/$defs/rules'},...Object.fromEntries(Object.entries({npcs:'npc',locations:'location',routes:'route',items:'item',professions:'profession',skills:'skill',spells:'spell',recipes:'recipe',monsters:'monster',bosses:'boss'}).map(([key,value])=>[key,list({$ref:`#/$defs/${value}`})]))},
     ['version','rules','npcs','locations','routes','items','professions','skills','spells','recipes']);
 world.$schema='http://json-schema.org/draft-07/schema#';world.$defs=schemas;
+const socialResidence=structuredClone(schemas.boss.properties.residence),wildResidence=structuredClone(socialResidence);
+socialResidence.properties.replacementSpecies.maxItems=0;socialResidence.properties.minionCount.const=0;
+wildResidence.required.push('habitat','replacementSpecies','vacancyDays','minionCount');wildResidence.properties.replacementSpecies.minItems=1;
+schemas.boss.allOf=[{if:{properties:{actor:{}},required:['actor']},then:{properties:{residence:socialResidence}},else:{properties:{residence:wildResidence}}}];
 await fs.mkdir('schemas',{recursive:true});await fs.writeFile('schemas/world.schema.json',JSON.stringify(world,null,2)+'\n');

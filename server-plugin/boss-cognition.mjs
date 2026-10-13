@@ -1,3 +1,4 @@
+import {bossCognitionField}from'./npc-state.mjs';
 import {readBossNegotiation,breakBossAgreement}from'./boss-negotiation.mjs';
 const goals=new Set(['defend_territory','avoid_conflict']);
 const intelligent=boss=>Number.isInteger(boss?.intelligence)&&boss.intelligence>0;
@@ -20,7 +21,7 @@ function template(boss){
 }
 export function emptyBossCognition(){return{format:1,encounters:[]};}
 export function readBossCognition(actor){
-    const c=actor.cognition===undefined?emptyBossCognition():actor.cognition,ids=new Set();
+    const c=actor[bossCognitionField(actor)]===undefined?emptyBossCognition():actor[bossCognitionField(actor)],ids=new Set();
     if(!plain(c)||c.format!==1||!Array.isArray(c.encounters))throw new Error('首领接触记忆格式不支持，拒绝覆盖');
     for(const e of c.encounters){
         if(!plain(e)||typeof e.event!=='string'||!e.event||ids.has(e.event)||e.actor!=='player'||
@@ -33,7 +34,7 @@ export function readBossCognition(actor){
     return c;
 }
 export function rememberBossEncounter(d,engine,target,{kind,tactic,eventId}){
-    const actor=d.get('state','creatures',target),boss=engine.byId.get(actor?.boss);
+    const actor=engine.actor(d,target),boss=engine.byId.get(actor?.boss);
     if(!intelligent(boss))return;
     template(boss);
     if(!actor||actor.location!==d.get('state','location')||
@@ -46,14 +47,14 @@ export function rememberBossEncounter(d,engine,target,{kind,tactic,eventId}){
         return;
     }
     c.encounters.push({event:eventId,actor:'player',kind,minute:d.get('state','minute'),location:actor.location,...(kind==='clash'?{tactic}:{})});
-    d.set(['state','creatures',target,'cognition'],c);
-    if(kind==='clash'&&!['flee','defend'].includes(tactic))breakBossAgreement(d,target,eventId);
+    d.set([...engine.actorPath(target),bossCognitionField(actor)],c);
+    if(kind==='clash'&&!['flee','defend'].includes(tactic))breakBossAgreement(d,target,eventId,engine);
 }
 
 // A public reaction is derived from witnessed encounters, current territory and
 // the resident's goal. Peaceful visits never erase a previous attack.
 export function bossPublicAttitude(d,engine,target){
-    const actor=d.get('state','creatures',target),boss=engine.byId.get(actor?.boss);
+    const actor=engine.actor(d,target),boss=engine.byId.get(actor?.boss);
     if(!intelligent(boss)||!living(actor)||actor.location!==d.get('state','location'))return undefined;
     const c=readBossCognition(actor),t=template(boss),inTerritory=t.territory.includes(actor.location);
     const clashes=c.encounters.filter(e=>e.kind==='clash'),threats=clashes.filter(e=>!['flee','defend'].includes(e.tactic));

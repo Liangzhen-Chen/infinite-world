@@ -14,9 +14,20 @@ export function validateBossEcology(world){
         if(!boss.residence){errors.push(`首领缺巢穴规则：${boss.id}`);continue;}
         const r=boss.residence,s=monsters.get(boss.monster);
         if(lairs.has(r.id))errors.push(`巢穴编号重复：${r.id}`);lairs.add(r.id);
-        if(!locations.has(r.location)||r.location!==boss.lair)errors.push(`巢穴位置不符：${boss.id}`);
         const band=world.rules.monsters.levelRanges[s?.template];
         if(!s||!band||boss.level<band[0]||boss.level>band[1])errors.push(`首领等级与原物种模板不符：${boss.id}`);
+        if(boss.actor){
+            const npc=world.npcs.find(n=>n.id===boss.actor);
+            if(!npc||npc.tier!=='full'||npc.species!==boss.monster||!npc.society||!(boss.intelligence>0))errors.push(`社会首领须引用同物种的完整居民：${boss.id}`);
+            if(world.bosses.some(b=>b.id!==boss.id&&b.actor===boss.actor))errors.push(`同一居民重复登记首领身体：${boss.actor}`);
+            if(!locations.has(r.location)||r.location!==boss.lair)errors.push(`巢穴位置不符：${boss.id}`);
+            let location=world.locations.find(l=>l.id===r.location),seen=new Set();
+            while(location&&location.id!==npc?.society&&!seen.has(location.id)){seen.add(location.id);location=world.locations.find(l=>l.id===location.parent);}
+            if(!location||location.id!==npc?.society)errors.push(`社会首领巢穴不在所属聚居地：${boss.id}`);
+            if((r.replacementSpecies?.length??0)||(r.minionCount??0)||(boss.minions?.length??0))errors.push(`社会首领不能补刷野生部下或迁入者：${boss.id}`);
+            continue;
+        }
+        if(!locations.has(r.location)||r.location!==boss.lair)errors.push(`巢穴位置不符：${boss.id}`);
         const habitat=world.rules.wildlife?.habitats.find(h=>h.id===r.habitat);
         if(!habitat||habitat.location!==r.location)errors.push(`巢穴栖地不符：${boss.id}`);
         if(s?.wildlife?.habitat!==r.habitat)errors.push(`原首领物种与巢穴栖地不符：${boss.id}`);
@@ -26,7 +37,7 @@ export function validateBossEcology(world){
     }return errors;
 }
 export function bossCounter(d,engine,target,tactic){
-    const actor=d.get('state','creatures',target),r=engine.rules.bossEcology;
+    const actor=engine.actor(d,target),r=engine.rules.bossEcology;
     if(!r||!actor?.boss||!living(actor))return{tactic,seen:0,damageMultiplier:1,adapted:false};
     const seen=actor.battleMemory?.tactics?.[tactic]??0;
     if(!Number.isSafeInteger(seen)||seen<0)throw new Error('首领战术记忆数据损坏，拒绝伪造防备或覆盖原记录');
@@ -34,20 +45,21 @@ export function bossCounter(d,engine,target,tactic){
         ...(tactic==='flee'&&seen>=r.learningThreshold?{escapeDifficulty:r.escapeDifficulty}:{})};
 }
 export function rememberBossTactic(d,engine,target,tactic,eventId){
-    const actor=d.get('state','creatures',target);if(!engine.rules.bossEcology||!actor?.boss)return;
+    const actor=engine.actor(d,target);if(!engine.rules.bossEcology||!actor?.boss)return;
     rememberBossEncounter(d,engine,target,{kind:'clash',tactic,eventId});
     const memory=clone(actor.battleMemory??{tactics:{},lastEvent:null});if(memory.lastEvent===eventId)return;
     if(!memory.tactics||typeof memory.tactics!=='object'||Array.isArray(memory.tactics))throw new Error('首领战术记忆格式不支持，拒绝覆盖原记录');
     memory.tactics[tactic]=(memory.tactics[tactic]??0)+1;memory.lastEvent=eventId;memory.lastMinute=d.get('state','minute');
-    d.set(['state','creatures',target,'battleMemory'],memory);
+    d.set([...engine.actorPath(target),'battleMemory'],memory);
     const publicAttitude=bossPublicAttitude(d,engine,target);
     if(publicAttitude)d.say(`${actor.name}：${publicAttitude.attitude}。${publicAttitude.reason}`);
 }
 export function defeatBoss(d,engine,target,eventId){
-    const actor=d.get('state','creatures',target),boss=engine.byId.get(actor?.boss);if(!boss?.residence||living(actor))return null;
+    const actor=engine.actor(d,target),boss=engine.byId.get(actor?.boss);if(!boss?.residence||living(actor))return null;
     const r=clone(d.get(...key(boss)));if(r.occupant?.actor!==target)return null;
     const day=Math.floor(d.get('state','minute')/1440);r.history.push({event:eventId,day,occupant:target,definition:boss.id,type:'败亡'});
-    r.status='空置';r.occupant=null;r.vacantSince=day;r.reoccupyAfter=day+boss.residence.vacancyDays;d.set(key(boss),r);
+    r.status='空置';r.occupant=null;r.vacantSince=day;r.reoccupyAfter=boss.actor?null:day+boss.residence.vacancyDays;d.set(key(boss),r);
+    if(boss.actor)return{lair:boss.residence.name,vacant:true,note:'社会首领已死，居民与聚居地保留；不会从野生种群补刷'};
     return{lair:boss.residence.name,vacant:true,note:'原首领已死，巢穴空置；不会复活原个体，未来迁入者须来自实际种群'};
 }
 function instantiate(d,engine,{id,species,location,lair,boss=null,eventId}){
@@ -70,8 +82,14 @@ export function advanceBosses(d,engine,day){
     if(!engine.rules.bossEcology)return;
     for(const boss of engine.world.bosses.filter(b=>b.residence)){
         const r=clone(d.get(...key(boss)));if(r.lastDay!==day-1)throw new Error('巢穴日结不连续');
+        if(boss.actor){
+            const actor=engine.actor(d,boss.actor),present=living(actor)&&actor.location===boss.residence.location;
+            r.occupant=present?{kind:'boss',definition:boss.id,actor:boss.actor}:null;
+            r.status=present?'驻守':'空置';r.reoccupyAfter=null;
+            r.lastDay=day;d.set(key(boss),r);continue;
+        }
         if(r.occupant?.actor){
-            const actor=d.get('state','creatures',r.occupant.actor);
+            const actor=engine.actor(d,r.occupant.actor);
             if(actor&&(actor.owner||actor.location!==boss.residence.location)){
                 r.history.push({type:'占据者离开或归属改变',day:day+1,occupant:r.occupant.actor});r.occupant=null;r.status='空置';r.vacantSince=day+1;r.reoccupyAfter=day+1+boss.residence.vacancyDays;
             }
@@ -83,7 +101,7 @@ export function advanceBosses(d,engine,day){
                 r.history.push({type:'迁入',day:day+1,occupant:actor.id,definition:species});break;
             }
         }
-        if(r.occupant?.kind==='monster'&&!living(d.get('state','creatures',r.occupant.actor))){
+        if(r.occupant?.kind==='monster'&&!living(engine.actor(d,r.occupant.actor))){
             r.history.push({type:'迁入者离去或死亡',day,occupant:r.occupant.actor});r.occupant=null;r.status='空置';r.vacantSince=day;r.reoccupyAfter=day+boss.residence.vacancyDays;
         }
         r.lastDay=day;d.set(key(boss),r);
@@ -96,17 +114,23 @@ export function lairAction(d,args,eventId){
     if(!boss)throw new Error(!args.lair&&here.length?'需要明确所在地巢穴名称或编号':'这里没有可接触的巢穴');
     const r=clone(d.get(...key(boss))),operation=args.operation??'observe';
     if(operation==='observe'){
-        const actor=r.occupant?.actor?d.get('state','creatures',r.occupant.actor):null;
-        return{lair:boss.residence.name,occupant:actor&&actor.location===d.get('state','location')?{id:r.occupant.actor,name:actor.name,status:actor.status,hp:actor.hp,
-            ...publicContact(d,this,r.occupant.actor)}:null,
+        const target=boss.actor??r.occupant?.actor,actor=target?this.actor(d,target):null;
+        return{lair:boss.residence.name,occupant:actor&&actor.location===d.get('state','location')?{id:target,name:actor.name,status:actor.status,hp:actor.hp,
+            ...publicContact(d,this,target)}:null,
             note:actor?'仅观察已接触个体':'尚未接触活体，入口观察不能知道未见占据者或其战斗记忆',actionScope:{kind:'instant',instantaneous:true}};
     }
     if(operation==='negotiate')return negotiateBoss(d,this,boss,r,args,eventId);
     if(operation!=='approach')throw new Error('巢穴操作需为observe、approach或negotiate');
     this.advance(d,this.rules.bossEcology.approachMinutes,eventId);
     if(d.get('state','location')!==boss.residence.location||d.get('state','player','status')!=='正常')return{contact:null,note:'进入前失去行动能力或离开此地'};
-    const latest=clone(d.get(...key(boss)));if(!latest.occupant)return{contact:null,note:'巢穴实际空置，进入不会触发原首领重生'};
-    if(latest.occupant.actor){const actor=d.get('state','creatures',latest.occupant.actor);
+    const latest=clone(d.get(...key(boss)));
+    if(boss.actor){
+        const actor=this.actor(d,boss.actor);
+        latest.occupant=living(actor)&&actor.location===boss.residence.location?{kind:'boss',definition:boss.id,actor:boss.actor}:null;
+        latest.status=latest.occupant?'驻守':'空置';d.set(key(boss),latest);
+    }
+    if(!latest.occupant)return{contact:null,note:'巢穴实际空置，进入不会触发原首领重生'};
+    if(latest.occupant.actor){const actor=this.actor(d,latest.occupant.actor);
         if(!living(actor)||actor.owner||actor.location!==boss.residence.location)return{contact:null,note:'原占据者已不在此处活动，不能隔空接触或重造同一首领'};
         rememberBossEncounter(d,this,latest.occupant.actor,{kind:'approach',eventId});
         return{contact:{id:latest.occupant.actor,name:actor.name,status:actor.status,hp:actor.hp,...publicContact(d,this,latest.occupant.actor)},alreadyPresent:true};}

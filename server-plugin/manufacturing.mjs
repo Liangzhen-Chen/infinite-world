@@ -5,6 +5,20 @@ import {milestone}from'./progression.mjs';
 import {prepareThermalWorkstation}from'./magic-object.mjs';
 import {createHash}from'node:crypto';
 const integer=(value,min,max,label)=>{if(!Number.isSafeInteger(value)||value<min||value>max)throw new Error(`${label}无效`);return value;};
+export function kilnWorkResult(d,plan,outcome,quantity,eventId,{endStress}={}){
+    if(plan?.startStress===undefined)return null;
+    const state=d.get('state','records',`physical_feature:${plan.feature}`,'state','thermal');
+    const finalStress=endStress??state?.crackStressUnits;
+    if(!Number.isSafeInteger(finalStress)||finalStress<plan.startStress)throw new Error('烧制裂损状态缺失或回退');
+    const stress=finalStress-plan.startStress,riskPermille=Math.min(1000,stress*plan.crackPermillePerStress);
+    let crackedQuantity=0;
+    if(outcome.success)for(let i=0;i<quantity;i++){
+        const roll=createHash('sha256').update(`${d.document.randomSeed}:${eventId}:kiln:${i}`).digest().readUInt32LE(0)%1000;
+        if(roll<riskPermille)crackedQuantity++;
+    }
+    if(outcome.success&&crackedQuantity===quantity){outcome.success=false;outcome.degree='烧制裂损';}
+    return{feature:plan.feature,stress,riskPermille,crackedQuantity};
+}
 export function workstation(d,engine,recipe,args){
     if(!recipe.workstation)return null;
     const location=d.get('state','location'),definition=engine.byId.get(location);
@@ -53,20 +67,8 @@ export function manufacture(d,args,eventId){
         else d.set(['state','workshopFunds',station.id],(d.get('state','workshopFunds',station.id)??0)+station.fee);
     }
     this.advance(d,recipe.minutes,eventId);
-    let thermal=null;
-    if(station?.thermalPlan?.startStress!==undefined){
-        const plan=station.thermalPlan,state=d.get('state','records',`physical_feature:${plan.feature}`,'state','thermal');
-        if(!state||state.crackStressUnits<plan.startStress)throw new Error('烧制裂损状态缺失或回退');
-        const stress=state.crackStressUnits-plan.startStress,riskPermille=Math.min(1000,stress*plan.crackPermillePerStress);
-        let crackedQuantity=0;
-        if(outcome.success)for(let i=0;i<recipe.output.quantity;i++){
-            const roll=createHash('sha256').update(`${d.document.randomSeed}:${eventId}:kiln:${i}`).digest().readUInt32LE(0)%1000;
-            if(roll<riskPermille)crackedQuantity++;
-        }
-        products[0].amount-=crackedQuantity;
-        thermal={feature:plan.feature,stress,riskPermille,crackedQuantity};
-        if(outcome.success&&!products[0].amount){outcome.success=false;outcome.degree='烧制裂损';}
-    }
+    const thermal=kilnWorkResult(d,station?.thermalPlan,outcome,recipe.output.quantity,eventId);
+    if(thermal)products[0].amount-=thermal.crackedQuantity;
     const toolWear=[];
     for(const item of recipe.tools??[]){const before=heldUnit(d,this,'player',item).durability??this.byId.get(item).durability;
         toolWear.push({item,name:this.byId.get(item).name,before,after:wearItem(d,this,'player',item,wear)});}
