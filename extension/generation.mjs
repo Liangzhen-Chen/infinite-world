@@ -1,10 +1,10 @@
 export const defaultGeneration=Object.freeze({model:'deepseek-flash',temperature:0.8,thinking:true,reasoningEffort:'low',
-    maxOutputTokens:1800,maxContextTokens:65536,toolRecursionLimit:8});
+    maxOutputTokens:4096,maxContextTokens:65536,toolRecursionLimit:8});
 export function generationSettings(overrides={}){
     if(Object.keys(overrides).some(key=>!Object.hasOwn(defaultGeneration,key)))throw new Error('未知生成设置');
     const value={...defaultGeneration,...overrides};
     if(value.model!=='deepseek-flash'||![0.6,0.8,1].includes(value.temperature)||typeof value.thinking!=='boolean'||value.reasoningEffort!=='low'
-        ||value.maxOutputTokens!==1800||value.maxContextTokens!==65536||!Number.isInteger(value.toolRecursionLimit)||value.toolRecursionLimit<1||value.toolRecursionLimit>8)throw new Error('生成设置超出本轮对照范围');
+        ||![1800,4096].includes(value.maxOutputTokens)||value.maxContextTokens!==65536||!Number.isInteger(value.toolRecursionLimit)||value.toolRecursionLimit<1||value.toolRecursionLimit>8)throw new Error('生成设置超出本轮对照范围');
     return value;
 }
 export function generationRequest(settings){

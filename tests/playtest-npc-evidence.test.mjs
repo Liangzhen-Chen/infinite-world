@@ -40,6 +40,7 @@ test('逐N17审核读取旧报告新增行动原记录，并用实际assertions�
  const checked=evaluateAssertions([rule],{before:state(100,{}),after:state(200,{fresh:action}),calls:[],reply:''});
  const turns=[{index:0,input:'离开十天',reply:'木柄做坏了一回。',calls:[],assertions:checked,sceneBeforeReply:'近期经历：失败的木柄'}];
  const reviewed=await reviewNpcRequirements({async generate(body){
+  assert.equal(body.max_tokens,8192);assert.equal(body.thinking.type,'enabled');
   const input=JSON.parse(body.messages[1].content);
   assert.deepEqual(input.turns[0].assertions[0].actual.records,[action]);
   assert.equal(input.turns[0].sceneBeforeReply,'近期经历：失败的木柄');
@@ -63,16 +64,32 @@ test('N12只发送打乱纯台词和公开风格，本地保留答案；真实�
  const result=voiceResult(),prepared=prepareVoiceBlind(result,world,config,{shuffleSeed:'fixed-test'});
  assert.ok(prepared.samples.some((s,i)=>s.speaker!==config.speakers[i%3]),'样本不沿原人物顺序排队');
  const safeClient={async generate(body){const text=JSON.stringify(body),input=JSON.parse(body.messages[1].content);
+  assert.equal(body.max_tokens,8192);assert.equal(body.thinking.type,'enabled');assert.equal(body.reasoning_effort,'low');
   for(const excluded of ['npc_a','npc_b','npc_c','expected','answer','sceneBefore','不能进入审稿候选的暗号','私人账本','私密目标','旁白','按顺序说'])assert.ok(!text.includes(excluded),excluded);
   assert.deepEqual(Object.keys(input).sort(),['candidates','samples']);assert.ok(input.samples.every(s=>Object.keys(s).sort().join(',')==='id,text'));
   assert.ok(input.candidates.every(c=>Object.keys(c).sort().join(',')==='id,name,style'));
   return respond({predictions:predictions(input)});
  }};
  const good=await reviewVoiceBlind(safeClient,result,world,config);assert.equal(good.pass,true);assert.equal(good.correct,6);
+ const second=await reviewVoiceBlind(safeClient,result,world,config);assert.notEqual(second.shuffleSeed,good.shuffleSeed);
  for(const candidateId of ['candidate_2','unknown']){
   const bad=await reviewVoiceBlind({async generate(body){const rows=predictions(JSON.parse(body.messages[1].content));const target=rows.find(r=>r.candidateId==='candidate_1');target.candidateId=candidateId;return respond({predictions:rows});}},result,world,config);
   assert.equal(bad.complete,true);assert.equal(bad.pass,false);assert.equal(bad.correct,5);
  }
+});
+
+test('N12长盲辨结果完整保留，每段仍独立判断，length不会靠完整JSON通过或重试',async()=>{
+ const result=voiceResult(),reason='根据公开风格逐段独立辨认。'.repeat(450);let calls=0;
+ const generate=async body=>{
+  calls++;assert.equal(body.max_tokens,8192);assert.equal(body.thinking.type,'enabled');
+  const rows=predictions(JSON.parse(body.messages[1].content)).map(row=>({...row,reason}));
+  return respond({predictions:rows});
+ };
+ const good=await reviewVoiceBlind({generate},result,world,config);
+ assert.equal(calls,1);assert.equal(good.complete,true);assert.equal(good.pass,true);
+ assert.equal(good.samples.length,6);assert.ok(good.samples.every(s=>s.reason===reason));
+ const truncated=await reviewVoiceBlind({async generate(body){const response=await generate(body);response.choices[0].finish_reason='length';return response;}},result,world,config);
+ assert.equal(calls,2);assert.equal(truncated.complete,false);assert.equal(truncated.pass,false);assert.match(truncated.error,/length/);
 });
 
 test('N12缺人、只有具名正文、嵌套标签、截断及重复答案保留未通过，不用猜测补提取',async()=>{

@@ -171,7 +171,13 @@
       ],
       "expectedTools": [
         "world_move"
-      ]
+      ],
+      "toolExpectationAfter": {
+        "turn": 5,
+        "kind": "quantity",
+        "path": "state.inventory.item_oats",
+        "value": 10
+      }
     },
     {
       "input": "只有确实买到并带来那十份带壳燕麦，我才当面交给林穗，请她验收并结清委托；若粮没备齐就说明尚未交货，不能领取报酬。",
@@ -198,7 +204,13 @@
       ],
       "expectedTools": [
         "world_quest"
-      ]
+      ],
+      "toolExpectationAfter": {
+        "turn": 6,
+        "kind": "quantity",
+        "path": "state.inventory.item_oats",
+        "value": 10
+      }
     },
     {
       "input": "事办完了，我还想留下聊一会儿。林穗，你今天最挂心的是什么？不买东西，不另接任务。",
