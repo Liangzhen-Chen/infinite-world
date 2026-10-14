@@ -44,6 +44,7 @@ import {assertNpcService}from'./npc-schedule.mjs';
 import {npcAutonomyBusy,assertNpcAutonomyAction,applyNpcPlan}from'./npc-autonomy.mjs';
 import {recordNpcMemories}from'./npc-memory.mjs';
 import {hearNpcRumor}from'./npc-rumors.mjs';
+import {recordLie,exposeLieCall}from'./lies.mjs';
 import {createNpcObligation,assertNpcObligationAction,npcObligationAt}from'./npc-obligations.mjs';
 import {recordNpcRelationEvidence,applyNpcRelation}from'./npc-relations.mjs';
 import {recordSocietyActs,assertSocietyTrade,societyNewsConsumer,societyIssueConsumer}from'./monster-society.mjs';
@@ -584,6 +585,9 @@ export class WorldEngine {
     }
     remember(d,args,id) {
         if(args.rumor!==undefined)return hearNpcRumor(d,this,args,id);
+        if(args.truth!==undefined)return recordLie(d,this,args,id);
+        if(args.motive!==undefined||args.knowers!==undefined)throw new Error('motive/knowers只用于带truth的谎言登记');
+        const exposed=exposeLieCall(d,this,args,id);if(exposed)return exposed;
         const subject=this.resolve(args.subject),content=validateMemory(args.content),key=text(args.key,100),memoryId=`${subject}::${key}`;
         if(d.get('memories',memoryId,'rumor'))throw new Error('登记传闻的获知记录只能由受校验的交谈生成');
         d.set(['memories',memoryId],{subject,key,content,keywords:args.keywords??[],pinned:d.get('memories',memoryId,'pinned')??false,minute:d.get('state','minute'),source:args.source??'亲历'});
