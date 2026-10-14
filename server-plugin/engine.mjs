@@ -192,7 +192,9 @@ export class WorldEngine {
         advanceSummons(d,d.get('state','minute'));
         advanceLaw(d,d.get('state','minute'),session);
         const worldEvent={tool,args,detail,eventId:id,before:document.state,legacy:Boolean(options.replay)&&options.result!==undefined&&options.result?.worldEventVersion!==WORLD_EVENT_VERSION};
-        publishWorldEvents(d,session,deriveWorldEvents(session,document.state,d.get('state'),worldEvent),worldEvent);
+        // A read-only instant look (inspect, view) changes nothing and is no world event.
+        const readOnly=detail?.actionScope?.kind==='instant'&&!d.patches.length;
+        if(!readOnly)publishWorldEvents(d,session,deriveWorldEvents(session,document.state,d.get('state'),worldEvent),worldEvent);
         recordBusinessReceipt(d,document.state,{tool:resolved.tool,args,eventId:id,detail});
         if(tool==='check')detail.actionScope={kind:'judgement',healthChanged:false,inventoryChanged:false,feePaid:0,
             note:'仅结算判断或对抗，并履行已引用的协助；未伤人、毁物或制造。不得从骰点虚构这些变化。'};
@@ -309,6 +311,12 @@ export class WorldEngine {
         return {elapsed:minutes,date:this.calendar(d.get('state','minute')).text,...(!this.replaying||this.replayResult?.wildlifeEncounterVersion===1?{wildlifeEncounterVersion:1,encounters:wildlifeEncounterView(d.document)}:{})};
     }
     route(from,to,mode,minute,seed='default-campaign',weatherCache=null,graphCache=null) {
+        // A facility completed by a public project stands inside its site: reach the site, then step in.
+        const built=id=>this.world.locations.some(l=>l.id===id)?null:this.byId?.get(id)?.builtProject?this.byId.get(id).parent:null;
+        if(built(to)||built(from)){
+            const r=this.route(built(from)??from,built(to)??to,mode,minute,seed,weatherCache,graphCache),step=(built(to)?2:0)+(built(from)?2:0);
+            r.minutes+=step;r.movingMinutes+=step;return r;
+        }
         const distances=new Map([[from,0]]), movingTimes=new Map([[from,0]]), previous=new Map(),costs=new Map([[from,0]]);
         const season=this.calendar(minute).season,key=`${mode}:${season}`;
         // Callers may reuse topology only within one synchronous schedule

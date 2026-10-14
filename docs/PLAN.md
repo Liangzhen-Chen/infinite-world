@@ -88,7 +88,7 @@ review-002-yp=782a49e阶段审核通过，范围限T06正式发布与c64163d修�
 - U10 生活魔法的经济反馈（依赖K2、K4、K6，S-M）：保鲜降损耗与价格、引水改产量，受益方与竞争方立场变化，官府收费或管制。
 - U14 已完成。原文：（依赖K3、K5，S）：回到某地时汇总离开期间当地的变化。
 - U17 任务自动来源（依赖K3、K4、U1，S-M）：NPC按自身需求与短缺自动出任务；势力委托；世界事件任务。quest-board.mjs、npc-life.mjs、faction-clock.mjs。
-- U13 名士与聚落升格（依赖U1、U6、T124，S-M）。
+- U13 已完成。原文：（依赖U1、U6、T124，S-M）。
 - U11 族群觉醒动态（依赖K4、K6、U1、U3，L）：怪物族群按季度与年觉醒、提出诉求、内部分化、生成新势力；玩家可教导、贸易、调停、镇压。
 - U12 军队、兵役、战争与外交（依赖U1、U2、U3、K4、K6、T127、T142，L，开工前再拆）。
 - U15 余下动词（依赖K8、U1、U5，S-M）：钓鱼、开矿、决斗、走私、竞选。
@@ -635,7 +635,7 @@ T28-R1修好新回执undefined规范化并保留严格篡改拒绝，相关31/32
 
 C部分只拆缺口：governance.mjs的任职入口止于“待上级决定”，quest-board.mjs不承认玩家官职来源，公款建房也无审批主体；爵位执行与个人看法聚合尚无消费者。NPC现有关系/战斗死亡继续复用，新增范围是离屏成长与人生事件。
 
-### T123（C1） 治理权责、地块与封爵来源。结果：玩家能向正式登记机构申请任职、工程或封地，审批依据有可查来源。可改world/design/m5-authority.mjs、对应草稿/发布入口、world/geo/settlements.json及本批地块、world/lore/factions.json、world/meta/rules.json、tests/m5-authority-content.test.mjs；依赖T92的官署人物，不另造同职官员。约15–25条来源，包含上级职责、官职/月额度、可建地块/费率、公库来源及九级爵位权利义务。验收node --test "tests/governance*.test.mjs" tests/m5-authority-content.test.mjs tests/quest-board.test.mjs tests/world-validation.test.mjs，CORE。L2预计25–50次，≤2.5元；约2.5小时，正式发布与B4/B5及地理卡串行。
+### T123–T127 已完成（见PROGRESS）。原 T123（C1） 治理权责、地块与封爵来源。结果：玩家能向正式登记机构申请任职、工程或封地，审批依据有可查来源。可改world/design/m5-authority.mjs、对应草稿/发布入口、world/geo/settlements.json及本批地块、world/lore/factions.json、world/meta/rules.json、tests/m5-authority-content.test.mjs；依赖T92的官署人物，不另造同职官员。约15–25条来源，包含上级职责、官职/月额度、可建地块/费率、公库来源及九级爵位权利义务。验收node --test "tests/governance*.test.mjs" tests/m5-authority-content.test.mjs tests/quest-board.test.mjs tests/world-validation.test.mjs，CORE。L2预计25–50次，≤2.5元；约2.5小时，正式发布与B4/B5及地理卡串行。
 
 ### T124（C2） 任命与官职任务额度。结果：上级依据贡献和意见实际任免玩家，生效身份按月提供任务额度并支持公款托管。可改server-plugin/{governance,civic,quest-board}.mjs、activities/extension/tools.mjs接点、tests/governance-office.test.mjs；接C1，拒绝自报官职，按1B=10C=100D折算，免职停止新增用额但不抹既有合同。验收node --test "tests/governance*.test.mjs" tests/civic.test.mjs tests/quest-board.test.mjs tests/activities.test.mjs tests/law.test.mjs tests/reputation-law.test.mjs tests/prompt.test.mjs，CORE。模型0；约2小时，与C3–C5串行，提示≤11900。
 

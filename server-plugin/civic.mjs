@@ -57,9 +57,10 @@ function reviewCrime(d){
         if(row.status==='已结案')throw Error('旧结案档缺少犯罪审核依据，不能视为无犯罪记录');
     }
 }
-function total(d,settlement,subject='player'){
-    return Object.values(d.get('state','records')??{}).filter(r=>r.category==='civic_contribution'&&r.settlement===settlement&&r.subject===subject).reduce((n,r)=>n+r.points,0);
+export function contributionTotal(state,settlement,subject='player'){
+    return Object.values(state.records??{}).filter(r=>r.category==='civic_contribution'&&r.settlement===settlement&&r.subject===subject).reduce((n,r)=>n+r.points,0);
 }
+const total=(d,settlement,subject='player')=>contributionTotal(d.get('state'),settlement,subject);
 function credit(d,{sourceEvent,settlement,subject='player',kind,points,minute}){
     const id=`civic_source:${sourceEvent}`,old=d.get(...recordPath(id));
     if(old){

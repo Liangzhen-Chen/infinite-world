@@ -2,6 +2,7 @@ import {reputationFactions}from'./reputation-registry.mjs';
 import {standing,adjustStanding} from './standing.mjs';
 import {householdMembers,npcAgeAt} from './npc-life.mjs';
 import {opinionAmong} from './public-opinion.mjs';
+import {assertAcademyAdmission} from './notables.mjs';
 
 // Organizations as running entities: members and positions, a treasury whose
 // every movement is a ledger line, a charter (entry, fee, dues, rules) and a
@@ -258,6 +259,7 @@ export function organizationAction(d,args,eventId){
         if(org.source==='faction'){
             if(!within(engine,state.location,org.seat))throw Error('须到该组织登记联络处申请');
             if(standing(engine,state,org.id,who)<=-20)throw Error('该组织不接受与其交恶者入会');
+            assertAcademyAdmission(engine,state,org,who);
         }
         if(who==='player'&&org.source==='created'&&!within(engine,state.location,org.seat))throw Error('须到组织所在地申请');
         const fee=org.charter.fee??0;
