@@ -78,3 +78,16 @@ export function bossPublicAttitude(d,engine,target){
         clashes:clashes.length,territory:boss.territory,inTerritory,lastEncounter:structuredClone(c.encounters.at(-1)??null),...(relation?{relation:structuredClone(relation)}:{}),
         ...(boss.actor&&societyView(d.get('state'),engine,boss)?{society:societyView(d.get('state'),engine,boss)}:{})};
 }
+
+// World-event subscriber: blows and spells are already remembered as clashes
+// with their tactic. A theft from the resident counts as a hostile clash and a
+// gift as a peaceful approach, when the resident is present and intelligent.
+export function recordBossEvents(d,engine,events){
+    for(const e of events){
+        if(e.legacy||e.actor!=='player'||!e.target||!['steal','gift'].includes(e.verb))continue;
+        const actor=engine.actor(d,e.target);
+        if(!actor?.boss||!intelligent(engine.byId.get(actor.boss))||!living(actor)||actor.location!==d.get('state','location')||actor.owner)continue;
+        if(readBossCognition(actor).encounters.some(x=>x.event===e.id))continue;
+        rememberBossEncounter(d,engine,e.target,e.verb==='steal'?{kind:'clash',tactic:'theft',eventId:e.id}:{kind:'approach',eventId:e.id});
+    }
+}

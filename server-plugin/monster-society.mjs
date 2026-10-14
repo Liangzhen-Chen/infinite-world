@@ -163,12 +163,34 @@ export function societyHarmed(d,engine,society,{eventId,reason,toHostile=false})
     return{before,after,breached:live.map(([key])=>key)};
 }
 
-// Post-action hook: real attacks on registered members change the settlement.
-export function recordSocietyActs(d,engine,tool,args,detail,eventId){
-    if(tool!=='combat'||!detail?.target||['defend','flee'].includes(args.intent))return;
-    const society=societyOfActor(engine,detail.target);if(!society)return;
-    const result=societyHarmed(d,engine,society,{eventId,reason:'对成员发起交锋',toHostile:true});
-    receipt(d,{society,kind:'clash',eventId,target:detail.target,stance:{before:result.before,after:result.after},breached:result.breached});
+// A gift to a member eases the settlement one step, at most once per period.
+export function societyHelped(d,engine,society,{eventId,reason}){
+    const before=stanceOf(d.get('state'),engine,society,'player'),minute=d.get('state','minute');
+    const recent=societyReceipts(d.document,society).some(r=>r.kind==='gift'&&r.stance&&r.stance.before!==r.stance.after&&minute-r.minute<PERIOD);
+    const after=recent?before:shift(before,1);
+    setStance(d,engine,society,'player',after,{minute,sourceEvent:eventId,reason});
+    if(after!==before)broadcast(d,engine,society,'aid',eventId);
+    return{before,after};
+}
+
+// World-event subscriber: hostile harm (blade or spell) to a member, a theft
+// from a member that someone saw, and a gift to a member reach the settlement.
+export function recordSocietyActs(d,engine,events){
+    for(const e of events){
+        if(e.actor!=='player'||!e.target)continue;
+        const society=societyOfActor(engine,e.target);if(!society)continue;
+        if(e.verb==='harm'&&e.tags.includes('hostile')){
+            const result=societyHarmed(d,engine,society,{eventId:e.id,reason:e.tags.includes('magic')?'以法术伤及成员':'对成员发起交锋',toHostile:true});
+            receipt(d,{society,kind:'clash',eventId:e.id,target:e.target,stance:{before:result.before,after:result.after},breached:result.breached});
+        }else if(e.legacy){continue;
+        }else if(e.verb==='steal'&&e.witnesses.length){
+            const result=societyHarmed(d,engine,society,{eventId:e.id,reason:'偷窃成员财物被目击'});
+            receipt(d,{society,kind:'theft',eventId:e.id,target:e.target,stance:{before:result.before,after:result.after},breached:result.breached});
+        }else if(e.verb==='gift'&&e.value>0){
+            const result=societyHelped(d,engine,society,{eventId:e.id,reason:'向成员赠礼'});
+            receipt(d,{society,kind:'gift',eventId:e.id,target:e.target,stance:{before:result.before,after:result.after}});
+        }
+    }
 }
 
 export function assertSocietyTrade(d,engine,buyer,seller){

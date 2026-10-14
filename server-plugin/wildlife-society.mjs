@@ -229,6 +229,11 @@ export function recordSpiritGrudge(d,target,party,eventId,damage){
     if(a.companion?.with===party){d.remove(['state','creatures',target,'companion']);logEvent(d,target,{kind:'断缘',party,event:eventId,minute:d.get('state','minute')});}
 }
 
+// World-event subscriber: any wound the player dealt to a creature, by blade or spell.
+export function recordSpiritGrudges(d,engine,events){
+    for(const e of events)if(['harm','clash'].includes(e.verb)&&e.actor==='player'&&e.target&&!e.target.startsWith('npc_'))recordSpiritGrudge(d,e.target,'player',e.id,e.harm);
+}
+
 export function moveSpiritCompanions(d,origin,destination){
     for(const[id,a]of Object.entries(d.get('state','creatures')??{}))
         if(sapient(a)&&alive(a)&&partner(a)&&a.companion.following&&a.location===origin)d.set(['state','creatures',id,'location'],destination);

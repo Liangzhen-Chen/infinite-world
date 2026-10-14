@@ -1,3 +1,4 @@
+import {deriveWorldEvents}from'./world-events.mjs';
 const clamp=(n,min=-100,max=100)=>Math.max(min,Math.min(max,n));
 const actor=(state,id)=>id==='player'?state.player:state.npcs[id];
 const path=id=>id==='player'?['state','player']:['state','npcs',id];
@@ -33,9 +34,16 @@ function register(d,engine,evidence){
  d.set(['state','relationEvidence',evidence.key],evidence);return applyEvidence(d,engine,evidence);
 }
 
+// Standing transmission (standing.mjs) writes a person's share through the same ledger.
+export function recordStandingEvidence(d,engine,evidence){return register(d,engine,evidence);}
+
 // Only the reducer calls this after a successful action. No narrator-supplied
 // story or arbitrary source string creates a ledger entry here.
-export function recordNpcRelationEvidence(d,engine,before,tool,args,detail,eventId){
+// Subscribes to world events by verb: harm/clash, steal, trade, learn, gift.
+export function recordNpcRelationEvidence(d,engine,before,events,...rest){
+ // Direct callers may still pass (tool,args,detail,eventId); it becomes the same event.
+ if(typeof events==='string')rest=[{args:rest[0]??{},detail:rest[1]??{},eventId:rest[2]}],events=deriveWorldEvents(engine,before,d.get('state'),{tool:events,...rest[0]});
+ const {args={},detail={},eventId}=rest[0];
  if(!engine.world.npcs.some(n=>n.tier==='full'))return [];
  const after=d.get('state'),pending=[];
  const add=(key,sourceEvent,eventType,from,to,minute,delta,extra={})=>pending.push({key,sourceEvent,eventType,from,to,minute,delta,...extra});
@@ -50,9 +58,6 @@ export function recordNpcRelationEvidence(d,engine,before,tool,args,detail,event
   if(kind&&o.status==='已完成')for(const who of kept){
    const observer=people.find(x=>x!==who);
    if(kind.help&&['带路','协助'].includes(o.type))add(`obligation:${id}:help:${who}`,id,'帮忙',observer,who,minute,{...kind.help});
-   const paid=Object.values(after.obligations).some(x=>x.type==='付款'&&x.promisor===o.promisee&&x.promisee===o.promisor&&Math.abs((x.createdAt??0)-(o.createdAt??0))<=1440)
-    ||Object.values(after.records??{}).some(r=>r.category==='debt'&&r.debtor===o.promisee&&r.creditor===o.promisor);
-   if(kind.gift&&o.type==='送货'&&who===o.promisor&&!paid)add(`obligation:${id}:gift`,id,'送礼',observer,who,minute,{...kind.gift});
   }
   for(const who of breached){const observer=people.find(x=>x!==who);add(`obligation:${id}:breached:${who}`,id,'违约',observer,who,minute,{trust:-5,affection:-1,respect:-1},{reason:o.reason??'未履行约定'});}
  }
@@ -67,24 +72,29 @@ export function recordNpcRelationEvidence(d,engine,before,tool,args,detail,event
    }
   }
  }
- if(tool==='trade'&&args.payment!=='repay'&&detail.cost>0&&!detail.debt){
-  const resolve=x=>{try{return engine.resolve(x);}catch{return null;}};
-  const buyer=detail.buyer??resolve(args.buyer??'player'),seller=detail.seller??resolve(args.seller);
-  if(buyer&&seller&&actor(before,buyer)?.coins-actor(after,buyer)?.coins>=detail.cost&&actor(after,seller)?.coins-actor(before,seller)?.coins>=detail.cost){
-   add(`trade:day:${Math.floor(after.minute/1440)}:${seller}:${buyer}`,eventId,'交易',seller,buyer,after.minute,{trust:1});
+ const kind=engine.rules?.npcLife?.kindness;
+ for(const e of events){
+  if(e.verb==='gift'&&e.source?.obligation&&kind?.gift)add(e.key,e.source.obligation,'送礼',e.target,e.actor,e.minute,{...kind.gift});
+  if(e.verb==='trade'&&args.payment!=='repay'&&detail.cost>0&&!detail.debt){
+   const buyer=e.actor,seller=e.target;
+   if(buyer&&seller&&actor(before,buyer)?.coins-actor(after,buyer)?.coins>=detail.cost&&actor(after,seller)?.coins-actor(before,seller)?.coins>=detail.cost){
+    add(`trade:day:${Math.floor(after.minute/1440)}:${seller}:${buyer}`,eventId,'交易',seller,buyer,after.minute,{trust:1});
+   }
   }
- }
- if(['combat','conflict'].includes(tool)&&detail.target){
-  const target=detail.target,old=actor(before,target),now=actor(after,target);
-  const harm=(old?.hp??now?.maxHp)-now?.hp;
-  if(old&&now&&harm>=0&&now.hp===detail.targetHp)add(`conflict:${eventId}:${target}`,eventId,'冲突',target,'player',after.minute,{trust:-5,affection:-3,fear:harm>0?Math.min(5,Math.max(1,Math.ceil(harm/5))):0});
- }
- const incident=after.records?.[detail.case];
- if(tool==='crime'&&detail.target&&incident?.category==='legal_case'&&!before.records?.[detail.case]&&incident.offender==='player'&&incident.victim===detail.target&&Array.isArray(detail.witnesses))for(const who of new Set(detail.witnesses)){
-  if(before.npcs[who]?.location===before.location&&incident.evidence?.some(e=>e.kind==='eyewitness'&&e.witness===who&&e.identified))add(`crime:${eventId}:${who}`,eventId,'欺骗',who,'player',after.minute,{trust:-5,affection:-2,fear:1});
- }
- if(tool==='learn'&&detail.success&&detail.teacher&&before.npcs[detail.teacher]?.location===before.location){
-  add(`learn:${eventId}:${detail.teacher}`,eventId,'帮助','player',detail.teacher,after.minute,{respect:2});
+  // Any wound the player dealt, by blade or spell, is a conflict for the person hurt;
+  // a spell keeps its former -10 trust weight, now in the ledger.
+  if(['harm','clash'].includes(e.verb)&&e.actor==='player'&&e.target&&e.id===eventId){
+   const target=e.target,old=actor(before,target),now=actor(after,target);
+   const harm=(old?.hp??now?.maxHp)-now?.hp;
+   if(old&&now&&harm>=0&&now.hp===detail.targetHp)add(`conflict:${eventId}:${target}`,eventId,'冲突',target,'player',after.minute,{trust:e.tags.includes('magic')?-10:-5,affection:-3,fear:harm>0?Math.min(5,Math.max(1,Math.ceil(harm/5))):0});
+  }
+  const incident=after.records?.[e.case];
+  if(e.verb==='steal'&&e.target&&incident?.category==='legal_case'&&!before.records?.[e.case]&&incident.offender==='player'&&incident.victim===e.target)for(const who of e.witnesses){
+   if(before.npcs[who]?.location===before.location&&incident.evidence?.some(x=>x.kind==='eyewitness'&&x.witness===who&&x.identified))add(`crime:${eventId}:${who}`,eventId,'欺骗',who,'player',after.minute,{trust:-5,affection:-2,fear:1});
+  }
+  if(e.verb==='learn'&&detail.success&&e.target&&before.npcs[e.target]?.location===before.location){
+   add(`learn:${eventId}:${e.target}`,eventId,'帮助','player',e.target,after.minute,{respect:2});
+  }
  }
  return pending.sort((a,b)=>a.minute-b.minute||a.key.localeCompare(b.key)).map(e=>register(d,engine,e)).filter(Boolean);
 }

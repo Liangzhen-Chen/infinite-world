@@ -18,7 +18,6 @@ import {transferItems,heldUnit,wearItem}from'./items.mjs';
 import {localWeather}from'./weather.mjs';
 import {agricultureAction}from'./agriculture.mjs';
 import {wildlifeAction,resolveCreature,recordWildlifeDeath}from'./wildlife.mjs';
-import {recordSpiritGrudge}from'./wildlife-society.mjs';
 import {lairAction,bossCounter,rememberBossTactic,defeatBoss}from'./bosses.mjs';
 import {civicAction,recordDonationContribution,publicProjectApproval,donationReceipt,saveDonationReceipt}from'./civic.mjs';
 import {governanceAction,assertGovernedProject}from'./governance.mjs';
@@ -118,7 +117,6 @@ export const activities={
             d.set(['state','combatDisengaged',target],{minute:d.get('state','minute'),source:id});
             if(d.get('state','records',`local_actor_position:${target}`))d.remove(['state','records',`local_actor_position:${target}`]);
         }
-        if(!isNpc)recordSpiritGrudge(d,target,'player',id,damage);
         const corpse=!isNpc&&!remaining?recordWildlifeDeath(d,this,target,id):null;
         const lair=!remaining?defeatBoss(d,this,target,id):null;
         const experience=!isNpc&&!remaining?monsterReward(d,this,target,id):{experience:0};
