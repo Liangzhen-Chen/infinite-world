@@ -1,6 +1,7 @@
 import test from'node:test';
 import assert from'node:assert/strict';
 import {createPlaytestServer}from'../tools/playtest-runner.mjs';
+import {recordedLifeChange} from './fixtures/life-population.mjs';
 
 async function campaign(t,mode,seed){
     const server=await createPlaytestServer({seed});t.after(()=>server.close());
@@ -49,11 +50,8 @@ test('冬季会话前置可达：九个月真实日结后抵达高林，封闭�
     await c.act('world_move',{destination:'白冠高林'});
     const before=await c.read();assert.equal(before.state.location,'site_white_canopy');
     assert.ok(before.state.minute>=270*1440&&before.state.minute<360*1440);
-    // T131/T132起NPC会自然死亡、出生和迁居，各自记账人口前后值；九个月后应等于58加这些登记变化，不能有饥荒等未记账减员。
-    const family=before.state.family??{},net=row=>row?.population?row.population.after-row.population.before:0;
-    const lifeChange=[...Object.values(family.births??{}),...Object.values(family.deaths??{})].filter(row=>row.settlement==='loc_hw').reduce((a,row)=>a+net(row),0)
-        +Object.values(family.migrations??{}).reduce((a,m)=>a+(m.population?.from&&m.from?.settlement==='loc_hw'?m.population.from.after-m.population.from.before:0)+(m.population?.to&&m.to?.settlement==='loc_hw'?m.population.to.after-m.population.to.before:0),0);
-    assert.equal(before.state.settlements.loc_hw.population,58+lifeChange,JSON.stringify({lifeChange}));
+    // T131/T132起NPC会自然死亡、出生和迁居并记账人口前后值；应等于58加这些登记变化，不能有饥荒等未记账减员。
+    assert.equal(before.state.settlements.loc_hw.population,58+recordedLifeChange(before.state,'loc_hw'));
     await assert.rejects(c.act('world_move',{destination:'冰回裂谷'}),/没有.*可通行/);
     assert.deepEqual((await c.read()).state,before.state);
 });
