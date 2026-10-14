@@ -32,6 +32,8 @@ import {advanceNpcObligations,nextNpcObligationMinute}from'./npc-obligations.mjs
 import {advanceSocietyNews}from'./monster-society.mjs';
 import {advanceSeasonEffects}from'./effects.mjs';
 import {advanceOrganizations}from'./organizations.mjs';
+import {advanceHazardClocks}from'./seasonal-hazards.mjs';
+import {hazardClocks,hazardYieldFactor}from'./hazard-calendar.mjs';
 
 const clone=value=>structuredClone(value);
 const fullNpcs=engine=>engine.world.npcs.some(n=>n.tier==='full');
@@ -64,7 +66,7 @@ const systems=[
     for(let day=Math.floor(before/1440);day<Math.floor(after/1440);day++){
       for(const [sid,source] of Object.entries(d.get('state','settlements'))) {
         const farming=advanceAgriculture(d,e,sid,source,day),s=farming?.settlement??clone(source);
-        const production=farming?0:cropProduction(e,d.document.randomSeed,sid,day*1440,s.foodPerDay),available=s.food+production;
+        const production=farming?0:Math.floor(cropProduction(e,d.document.randomSeed,sid,day*1440,s.foodPerDay)*hazardYieldFactor(d.get('state'),sid,day*1440+720)),available=s.food+production;
         const missing=farming?.missingMeals??Math.max(0,s.population-available);
         if(!farming)s.food=Math.max(0,available-s.population);s.unmetMeals=(s.unmetMeals??0)+missing;
         s.starvation=missing ? (s.starvation??0)+1 : Math.max(0,(s.starvation??0)-1);
@@ -95,6 +97,8 @@ const systems=[
  {id:'world_clock',order:1300,active:e=>!!e.rules.worldClock,nextMinute:(e,d,now)=>nextWorldClockMinute(d.get('state'),now),
   advance:(e,d,{after})=>advanceWorldClocks(d,e,after)},
  {id:'season_effects',order:1350,advance:(e,d,{before,after})=>advanceSeasonEffects(d,e,before,after)},
+ // U3 floods, famine, epidemics and price swings (rules.hazardClock).
+ {id:'hazard_clock',order:1360,active:e=>hazardClocks(e).length>0,advance:(e,d,ctx)=>advanceHazardClocks(d,e,ctx)},
  {id:'faction_clock',order:1400,active:e=>factionClockRules(e).length>0,nextMinute:(e,d,now)=>nextFactionClockMinute(d.get('state'),now),
   advance:(e,d,{after})=>advanceFactionClocks(d,e,after)},
  {id:'organizations',order:1450,advance:(e,d,ctx)=>advanceOrganizations(d,e,ctx)},

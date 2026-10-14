@@ -1,6 +1,7 @@
 import { createHash } from 'node:crypto';
 import { seededRandom } from './combat.mjs';
 import { canonical } from './storage.mjs';
+import { hazardRouteClosed } from './hazard-calendar.mjs';
 
 const cache = new Map();
 const kinds = ['clear','cloudy','rain','storm','snow','fog'];
@@ -79,6 +80,8 @@ export function weatherTravel(engine, seed, edge, mode, minute,cache=null) {
     cache?.set(key,result);return result;
 }
 export function weatherEdge(engine, seed, edge, mode, departure, elapsedBefore, movingBefore, speed,weatherCache=null) {
+    // U3: a seeded flood stage closes the route for its stated span.
+    if (hazardRouteClosed(engine,seed,edge.id,departure+elapsedBefore)) return null;
     if (!edge.lengthKm) {
         const budget=engine.rules.travel.dailyTravelMinutes,rest=mode!=='boat'&&movingBefore>0&&movingBefore%budget===0?1440-budget:0;
         return { elapsed: elapsedBefore+rest+1, moving: movingBefore+1 };
@@ -90,7 +93,7 @@ export function weatherEdge(engine, seed, edge, mode, departure, elapsedBefore, 
         if(mode!=='boat'&&moving>0&&moving%budget===0)elapsed+=1440-budget;
         const now=departure+elapsed,conditions=weatherTravel(engine,seed,edge,mode,now,weatherCache);
         if(edge.closedSeasons.includes(engine.calendar(now).season))return null;
-        if(conditions.closed)return null;
+        if(conditions.closed||hazardRouteClosed(engine,seed,edge.id,now))return null;
         const rate=speed/conditions.multiplier/60;
         const remainingBudget=mode==='boat'?1440:budget-moving%budget;
         const toMidnight=1440-now%1440;

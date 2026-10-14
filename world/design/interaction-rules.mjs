@@ -31,6 +31,8 @@ export const interactionRules=Object.freeze({version:1,rules:[
  {id:'fire-thaw',agent:'fire',when:{all:['frozen']},effect:{remove:['frozen']}},
  {id:'water-douse',agent:'water',when:{all:['burning']},effect:{remove:['burning'],add:['wet']}},
  {id:'rain-douse',agent:'rain',when:{all:['burning'],none:['indoor']},effect:{remove:['burning'],add:['wet'],moistureMg:1000}},
+ // U3 flood water (hazard clock) soaks outdoor features and puts out fires.
+ {id:'flood-soak',agent:'flood',when:{none:['creature','indoor','frozen']},effect:{remove:['burning'],add:['wet'],moistureMg:5000}},
  {id:'cold-freeze-water',agent:'cold',when:{all:['water'],none:['creature','frozen','burning']},effect:{add:['frozen'],minutes:120}},
  {id:'cold-quench',agent:'cold',when:{all:['burning']},effect:{remove:['burning']}},
  {id:'ink-stain-paper',agent:'ink',when:{all:['paper'],none:['wet']},effect:{mark:'stain'}},

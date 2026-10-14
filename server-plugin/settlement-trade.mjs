@@ -1,5 +1,6 @@
 import {weatherTravel} from './weather.mjs';
 import {itemTraits,hasTrait} from './traits.mjs';
+import {hazardPriceFactor,hazardRouteClosed} from './hazard-calendar.mjs';
 
 const DAY=1440, CLOCK='settlement-trade:clock';
 const clone=value=>structuredClone(value);
@@ -65,7 +66,10 @@ function region(engine,location){
 }
 export function regionalTradePrice(d,engine,item,location,minute=d.get('state','minute')){
     const base=engine.byId.get(item).basePrice,r=engine.rules.settlementTrade,sid=region(engine,location);
-    if(!r||item!==r.item||!sid||!managed(d.get('state'),sid))return base;
+    // U3 price swings (hazard clocks) scale the seasonal coefficient here, so
+    // shop quotes, business and village lanes all read one figure.
+    const hazard=hazardPriceFactor(engine,d.get('state'),item,location,minute);
+    if(!r||item!==r.item||!sid||!managed(d.get('state'),sid))return hazard===1?base:base*hazard;
     assertRules(engine);
     const day=Math.floor(minute/DAY),key=`region:${day}:${sid}:${item}`,existing=d.get('state','quotes',key);
     if(existing!==undefined){if(!integer(existing,1))throw Error('区域报价账无效');return existing;}
@@ -75,10 +79,10 @@ export function regionalTradePrice(d,engine,item,location,minute=d.get('state','
     let route=null,closed=false;
     if(lane)try{route=engine.route(profile(engine,lane.seller).counter,profile(engine,sid).counter,lane.mode,minute,d.document.randomSeed);}catch(error){if(!error.message.startsWith('没有当前季节'))throw error;closed=true;}
     const travelRisk=closed?3:Math.max(1,(route?.movingMinutes??0)/Math.max(1,distanceKm/engine.rules.travel.walkKmh*60));
-    const transport=clamp((1+distanceKm*r.distanceFactorPerKm)*travelRisk,...engine.rules.economy.priceFactorLimits.transport),season=r.seasonFactors[engine.calendar(minute).season];
+    const transport=clamp((1+distanceKm*r.distanceFactorPerKm)*travelRisk,...engine.rules.economy.priceFactorLimits.transport),season=r.seasonFactors[engine.calendar(minute).season]*hazard;
     const price=Math.max(1,Math.ceil(base*demand*transport*season));
     d.set(['state','quotes',key],price);
-    d.set(['state','records',`quote:${key}`],{category:'regional_quote',day,settlement:sid,item,price,basePrice:base,grain:actual,targetFood:target,regionFactor:demand,transportFactor:transport,seasonFactor:season,distanceKm,routeMinutes:route?.minutes??null,closed,source:r.source});
+    d.set(['state','records',`quote:${key}`],{category:'regional_quote',day,settlement:sid,item,price,basePrice:base,grain:actual,targetFood:target,regionFactor:demand,transportFactor:transport,seasonFactor:season,...(hazard!==1?{hazardFactor:hazard}:{}),distanceKm,routeMinutes:route?.minutes??null,closed,source:r.source});
     return price;
 }
 function spareWorkers(state,engine,sid){
@@ -106,7 +110,7 @@ function schedule(d,engine,o,minute){
         t.segment={kind:'rest',minutes:DAY-budget};t.nextAt=minute+DAY-budget;return;
     }
     const oriented=edge?{...edge,from:t.location}:null,conditions=edge?weatherTravel(engine,d.document.randomSeed,oriented,o.mode,minute):null;
-    if(!edge||!edge.modes.includes(o.mode)||edge.closedSeasons.includes(engine.calendar(minute).season)||conditions?.closed){
+    if(!edge||!edge.modes.includes(o.mode)||edge.closedSeasons.includes(engine.calendar(minute).season)||conditions?.closed||hazardRouteClosed(engine,d.document.randomSeed,edge.id,minute)){
         t.segment={kind:'wait',minutes:DAY-minute%DAY};t.nextAt=minute+t.segment.minutes;t.waitReason='道路或天气不通';
         entry(o,'blocked',minute,{location:t.location,edge:t.edges[t.edgeIndex]});return;
     }

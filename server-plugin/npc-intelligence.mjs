@@ -3,6 +3,7 @@
 // 的手法。成长只来自教导、共同经历和重大世界事件（K3），很慢，有世界内迹象，
 // 不向玩家显示数字。精怪的听息、立意两阶就是这张表的第1、2级。
 import {sapient,awakeningTotal,awakeningEligible}from'./wildlife-awakening.mjs';
+import {famineAt}from'./hazard-calendar.mjs';
 
 const DAY=1440,clone=v=>structuredClone(v);
 export const INTELLIGENCE_VERSION=1;
@@ -128,12 +129,23 @@ const STEPS={
  money:['先缩减不必要的开销','多接几份活计或卖掉余货','向熟人打听来钱的门路','盘算一笔能长久进账的营生'],
  safety:['出门结伴，天黑前回家','把值钱东西收好，门户加固','向乡里或巡守说明遭遇','学些防身本事或另找安稳去处'],
  status:['把手头的事做得叫人挑不出错','在熟人面前讲清自己的理','请有威望的人作证或撑腰','在议事时提出自己的主张'],
+ // U3 冬荒：缺粮先省、再借，再起迁居和偷粮的念头（迁居本身由 npc-life 谋生迁居落实）。
+ food:['一天少吃一顿，省着口粮','向亲友借粮或拿东西换粮','盘算去外乡投亲谋生','实在撑不住，动了偷别家粮囤的念头'],
 };
-const NEED_DAYS={money:90,safety:30,status:180};
+const NEED_DAYS={money:90,safety:30,status:180,food:30};
+const FOOD_MOTIVES=['migrate','steal'];
+// 本人现住户所在聚落（含迁居后的户籍）。
+function homeSettlement(engine,state,id){
+ const moved=Object.entries(state.family?.households??{}).find(([,h])=>h.members?.includes(id))?.[0];
+ const house=engine.world.households?.find(h=>h.id===moved||!moved&&h.members.includes(id)&&!(state.family?.households?.[h.id]?.left??[]).includes(id));
+ return house?.settlement??null;
+}
 const hostileTo=(e,id)=>e.target===id&&(e.verb==='harm'&&e.tags?.includes('hostile')||e.verb==='steal');
 function detectNeeds(engine,state,id,level,minute,events,debts){
  const npc=state.npcs[id],base=engine.byId.get(id),needs=[];
  const cash=base?.wealth?.cashRange?.[0]??base?.coins??0,coins=npc.coins??base?.coins??0;
+ const home=homeSettlement(engine,state,id),famine=home?famineAt(state,home,minute):null;
+ if(famine)needs.push({kind:'food',content:'冬荒缺粮，设法弄到过冬的口粮',motives:FOOD_MOTIVES,cause:famine.sourceEvent});
  const overdue=debts.some(r=>r.debtor===id&&r.deadline<minute);
  if(overdue)needs.push({kind:'money',content:'还清逾期的欠款'});
  else if(cash>0&&coins===0)needs.push({kind:'money',content:'先凑够眼下过日子的钱'});
@@ -162,7 +174,7 @@ export function advanceNpcNeeds(d,engine,minute){
   const need=needs.find(n=>!open.has(n.kind));
   if(need){
    const days=Math.min(horizonDays,NEED_DAYS[need.kind]),bucket=bucketOf(days),steps=STEPS[need.kind].slice(0,Math.max(1,Math.min(4,maxActions+(level>=3?1:0))));
-   goals[bucket]=[...(goals[bucket]??[]),{id:`goal_need_${need.kind}_${id}_${day}`,content:need.content,need:need.kind,source:'need',...(need.ambition?{ambition:true}:{}),
+   goals[bucket]=[...(goals[bucket]??[]),{id:`goal_need_${need.kind}_${id}_${day}`,content:need.content,need:need.kind,source:'need',...(need.ambition?{ambition:true}:{}),...(need.motives?{motives:need.motives,cause:need.cause}:{}),
     progress:0,status:'进行中',createdDay:day,deadlineDay:day+days,steps:steps.map(content=>({content,status:'pending'}))}];
    changed=true;
   }
