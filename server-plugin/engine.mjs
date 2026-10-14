@@ -189,7 +189,9 @@ export class WorldEngine {
         advanceSummons(d,d.get('state','minute'));
         advanceLaw(d,d.get('state','minute'),session);
         const worldEvent={tool,args,detail,eventId:id,before:document.state,legacy:Boolean(options.replay)&&options.result!==undefined&&options.result?.worldEventVersion!==WORLD_EVENT_VERSION};
-        publishWorldEvents(d,session,deriveWorldEvents(session,document.state,d.get('state'),worldEvent),worldEvent);
+        // A read-only instant look (inspect, view) changes nothing and is no world event.
+        const readOnly=detail?.actionScope?.kind==='instant'&&!d.patches.length;
+        if(!readOnly)publishWorldEvents(d,session,deriveWorldEvents(session,document.state,d.get('state'),worldEvent),worldEvent);
         recordBusinessReceipt(d,document.state,{tool:resolved.tool,args,eventId:id,detail});
         if(tool==='check')detail.actionScope={kind:'judgement',healthChanged:false,inventoryChanged:false,feePaid:0,
             note:'仅结算判断或对抗，并履行已引用的协助；未伤人、毁物或制造。不得从骰点虚构这些变化。'};

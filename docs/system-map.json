@@ -19,7 +19,7 @@
   "layers": 6,
   "systems": 37,
   "modules": 153,
-  "advance": 33,
+  "advance": 34,
   "tools": 25,
   "verbs": 13,
   "subscribers": 8,
@@ -335,7 +335,7 @@
     "server-plugin/campaign-reducer.mjs",
     "server-plugin/archived-reducer.mjs"
    ],
-   "lines": 840,
+   "lines": 842,
    "stateWrites": [
     "combatDisengaged",
     "created",
@@ -720,7 +720,7 @@
    "modules": [
     "server-plugin/advance-registry.mjs"
    ],
-   "lines": 142,
+   "lines": 144,
    "stateWrites": [
     "effects",
     "obligations",
@@ -1526,7 +1526,7 @@
     "server-plugin/governance.mjs",
     "server-plugin/quest-board.mjs"
    ],
-   "lines": 1603,
+   "lines": 1739,
    "stateWrites": [
     "npcs",
     "obligations",
@@ -1548,12 +1548,14 @@
     "world_event"
    ],
    "recordReads": [
+    "civic_citizen",
     "organization",
     "society_motion",
     "stance"
    ],
    "rules": [
     "agriculture",
+    "governance",
     "law",
     "quests",
     "reputation"
@@ -1570,6 +1572,7 @@
     "settlementProfiles"
    ],
    "advance": [
+    "governance_offices",
     "organizations",
     "society_news"
    ],
@@ -2170,6 +2173,7 @@
    "to": "sim_society",
    "kind": "advance",
    "labels": [
+    "governance_offices",
     "organizations",
     "society_news"
    ]
@@ -2291,6 +2295,7 @@
    "to": "sim_society",
    "kind": "call",
    "labels": [
+    "governance.mjs",
     "monster-society.mjs",
     "organizations.mjs"
    ]
@@ -5097,6 +5102,17 @@
    "partitions": []
   },
   {
+   "id": "governance_offices",
+   "order": 1130,
+   "stepped": false,
+   "nextMinute": true,
+   "modules": [
+    "server-plugin/governance.mjs"
+   ],
+   "inline": false,
+   "partitions": []
+  },
+  {
    "id": "bounty",
    "order": 1150,
    "stepped": true,
@@ -6301,6 +6317,7 @@
    "server-plugin/credit.mjs",
    "server-plugin/effects.mjs",
    "server-plugin/faction-clock.mjs",
+   "server-plugin/governance.mjs",
    "server-plugin/lies.mjs",
    "server-plugin/monster-society.mjs",
    "server-plugin/organizations.mjs",
@@ -6906,6 +6923,7 @@
     "governance_revoke",
     "governance_queue",
     "governance_process",
+    "governance_apply",
     "festival_inspect",
     "festival_plan",
     "festival_authorize",
@@ -6945,6 +6963,7 @@
       "governance_revoke",
       "governance_queue",
       "governance_process",
+      "governance_apply",
       "festival_inspect",
       "festival_plan",
       "festival_authorize",
@@ -8118,7 +8137,9 @@
    "server-plugin/bosses.mjs",
    "server-plugin/wildlife.mjs"
   ],
-  "governance": [],
+  "governance": [
+   "server-plugin/governance.mjs"
+  ],
   "economy": [
    "server-plugin/bounty.mjs",
    "server-plugin/business.mjs",
@@ -9696,6 +9717,7 @@
       "server-plugin/npc-life.mjs",
       "server-plugin/population-service.mjs",
       "server-plugin/population.mjs",
+      "server-plugin/quest-board.mjs",
       "server-plugin/reputation.mjs",
       "server-plugin/return-summary.mjs",
       "server-plugin/rule-state-migration.mjs",
@@ -10957,6 +10979,7 @@
     "server-plugin/effects.mjs",
     "server-plugin/faction-clock.mjs",
     "server-plugin/festival.mjs",
+    "server-plugin/governance.mjs",
     "server-plugin/law.mjs",
     "server-plugin/magic-air.mjs",
     "server-plugin/magic-area.mjs",
@@ -11003,7 +11026,7 @@
     "npcs"
    ],
    "worldDirs": [],
-   "lines": 142
+   "lines": 144
   },
   "server-plugin/agriculture-migration.mjs": {
    "system": "kernel_storage",
@@ -11452,7 +11475,7 @@
    "worldDirs": [
     "design"
    ],
-   "lines": 174
+   "lines": 175
   },
   "server-plugin/combat.mjs": {
    "system": "sim_combat",
@@ -11775,7 +11798,7 @@
     "spells"
    ],
    "worldDirs": [],
-   "lines": 590
+   "lines": 592
   },
   "server-plugin/environment.mjs": {
    "system": "sim_environment",
@@ -11934,27 +11957,32 @@
   "server-plugin/governance.mjs": {
    "system": "sim_society",
    "imports": [
+    "server-plugin/civic.mjs",
     "server-plugin/monster-society.mjs",
     "server-plugin/npc-cognition.mjs",
     "server-plugin/npc-life.mjs",
     "server-plugin/npc-obligations.mjs",
     "server-plugin/public-opinion.mjs",
+    "server-plugin/standing.mjs",
     "server-plugin/storage.mjs"
    ],
    "stateWrites": [
-    "npcs"
+    "npcs",
+    "settlements"
    ],
    "stateReads": [
     "location",
     "minute",
     "npcAutonomy",
-    "records",
-    "settlements"
+    "records"
    ],
    "recordWrites": [],
-   "recordReads": [],
+   "recordReads": [
+    "civic_citizen"
+   ],
    "rules": [
     "agriculture",
+    "governance",
     "law"
    ],
    "world": [
@@ -11965,7 +11993,7 @@
     "settlementProfiles"
    ],
    "worldDirs": [],
-   "lines": 256
+   "lines": 385
   },
   "server-plugin/index.mjs": {
    "system": "ui_server",
@@ -13341,6 +13369,7 @@
    "system": "sim_society",
    "imports": [
     "server-plugin/bounty.mjs",
+    "server-plugin/governance.mjs",
     "server-plugin/items.mjs",
     "server-plugin/npc-obligations.mjs",
     "server-plugin/npc-schedule.mjs",
@@ -13370,7 +13399,7 @@
     "locations"
    ],
    "worldDirs": [],
-   "lines": 193
+   "lines": 199
   },
   "server-plugin/repair.mjs": {
    "system": "sim_economy",

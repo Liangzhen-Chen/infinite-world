@@ -28,7 +28,7 @@ export function affairs(engine,document){
             {content:r.content??r.name??(r.subject?name(r.subject):'内容未记录'),kindName:r.kind??null,cost:r.cost??null,paid:r.paid??null,fulfilled:r.fulfilled??null,quantity:r.quantity??null}));
     }
     obligations.sort(byDeadline);
-    const month=Math.floor(now/(1440*30)),limit=finite(engine.byId.get('player')?.monthlyQuotaD),used=finite(s.questQuota?.[`${month}_player`]);
+    const month=Math.floor(now/(1440*30)),limit=finite(engine.byId.get('player')?.monthlyQuotaD)??(questPublishingRights(engine,s).limitD||null),used=finite(s.questQuota?.[`${month}_player`]);
     const quota={month:month+1,limitD:limit,usedD:used,remainingD:limit===null||used===null?null:Math.max(0,limit-used),personal:questPublishingRights(engine,s).personal,units:{...engine.rules.quests?.quotaUnits}};
     const local=new Set();let location=s.location;
     while(location&&!local.has(location)){local.add(location);location=engine.byId.get(location)?.parent;}
