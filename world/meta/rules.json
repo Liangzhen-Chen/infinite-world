@@ -3753,6 +3753,58 @@
         "灯",
         "雁"
       ]
+    },
+    "health": {
+      "bands": [
+        {
+          "fromAge": 0,
+          "illnessPerYear": 1.2,
+          "graveShare": 0.04,
+          "suddenDeathPerYear": 0.001
+        },
+        {
+          "fromAge": 18,
+          "illnessPerYear": 1,
+          "graveShare": 0.05,
+          "suddenDeathPerYear": 0.002
+        },
+        {
+          "fromAge": 40,
+          "illnessPerYear": 1.2,
+          "graveShare": 0.1,
+          "suddenDeathPerYear": 0.005
+        },
+        {
+          "fromAge": 60,
+          "illnessPerYear": 1.5,
+          "graveShare": 0.2,
+          "suddenDeathPerYear": 0.015
+        },
+        {
+          "fromAge": 70,
+          "illnessPerYear": 2,
+          "graveShare": 0.3,
+          "suddenDeathPerYear": 0.04
+        }
+      ],
+      "mildDays": [
+        3,
+        10
+      ],
+      "graveDays": [
+        14,
+        40
+      ],
+      "graveFatality": {
+        "cared": 0.2,
+        "alone": 0.35
+      },
+      "weakenedGraveMultiplier": 2,
+      "bloodMl": 4500,
+      "feverC": [
+        38.2,
+        39.5
+      ]
     }
   }
 }

@@ -9,6 +9,7 @@
 import {digest} from './storage.mjs';
 import {clockRoll} from './world-clock.mjs';
 import {relationView,recordLifeRelation} from './npc-relations.mjs';
+import {transferItems} from './items.mjs';
 
 const DAY=1440,YEAR=360*DAY,unable=['死亡','濒死'];
 const rules=engine=>engine.rules.npcLife;
@@ -201,11 +202,147 @@ function familyDay(d,engine,minute){
  }
 }
 
+// ---- Illness, ageing and natural death -------------------------------------
+// Each midnight a living, settled person may fall ill or die of old age with
+// the rates of their current age band; a grave illness may end in death on a
+// later night, less often when a household member is caring for them. The
+// illness only adds its own fever to the medical record and restores only its
+// own status, so older wounds and conditions are kept as they were.
+const incapable=['死亡','濒死','昏迷','患病'];
+const healthRules=engine=>rules(engine)?.health;
+const perDay=perYear=>1-(1-Math.min(1,perYear))**(1/360);
+function ageBand(h,age){let band=null;for(const row of h.bands)if(age>=row.fromAge)band=row;return band;}
+// People away with the player are on screen; off-screen life events wait.
+const settled=(state,id)=>{const n=state.npcs[id];return Boolean(n?.location)&&!n.scheduleTravel&&!n.cognitionTravel&&!state.player?.companions?.includes(id);};
+// Present wounds or low health make a new illness more likely to be grave.
+function weakened(npc){
+ const m=npc.medical;
+ return Boolean(m?.wounds?.some(w=>!w.closed||w.infected)||m?.tendon?.ruptured||Number.isFinite(npc.hp)&&Number.isFinite(npc.maxHp)&&npc.maxHp>0&&npc.hp<npc.maxHp/2);
+}
+export function npcIllness(state,id){return Object.values(state.family?.illnesses??{}).find(r=>r.patient===id&&r.status==='患病中')??null;}
+
+function addFever(d,engine,id,illness){
+ const h=healthRules(engine),old=d.get('state','npcs',id,'medical');
+ const m=old?structuredClone(old):{bloodMl:h.bloodMl,pain:0,wounds:[],symptoms:[]};
+ m.symptoms=[...(m.symptoms??[]),{kind:'fever',observable:true,temperatureC:illness.severity==='重'?h.feverC[1]:h.feverC[0],illness:illness.id}];
+ d.set(['state','npcs',id,'medical'],m);return !old;
+}
+function removeFever(d,id,illness){
+ const m=d.get('state','npcs',id,'medical');if(!m)return;
+ const symptoms=(m.symptoms??[]).filter(s=>s.illness!==illness.id);
+ if(illness.medicalCreated&&!m.wounds?.length&&!symptoms.length&&!m.tendon&&!m.parasites?.length&&!m.lostBloodMl){d.remove(['state','npcs',id,'medical']);return;}
+ d.set(['state','npcs',id,'medical'],{...m,symptoms});
+}
+function release(d,illness){
+ for(const id of Object.keys(d.get('state','npcs')).sort())if(d.get('state','npcs',id,'caring')?.illness===illness.id)d.remove(['state','npcs',id,'caring']);
+}
+// A household adult who is able and not away with the player stays home to
+// care for a gravely ill person; the spouse comes first, then by id.
+function caregiverFor(engine,state,illness,minute){
+ const house=npcHousehold(engine,state,illness.patient);if(!house)return null;
+ const spouse=marriagesOf(engine,state,illness.patient).flatMap(m=>m.partners);
+ const able=id=>id!==illness.patient&&Boolean(state.npcs[id])&&engine.byId.get(id)?.tier==='full'&&!incapable.includes(state.npcs[id].status)&&!npcIsMinor(engine,state,id,minute)
+  &&!state.npcs[id].cognitionTravel&&!state.player?.companions?.includes(id)&&(!state.npcs[id].caring||state.npcs[id].caring.illness===illness.id);
+ const current=Object.keys(state.npcs).find(id=>state.npcs[id].caring?.illness===illness.id);
+ if(current&&able(current)&&house.members.includes(current))return current;
+ return house.members.filter(able).sort((a,b)=>(spouse.includes(b)-spouse.includes(a))||a.localeCompare(b))[0]??null;
+}
+function assignCare(d,engine,illness,minute){
+ const state=d.get('state'),who=caregiverFor(engine,state,illness,minute),house=npcHousehold(engine,state,illness.patient);
+ for(const id of Object.keys(state.npcs).sort())if(state.npcs[id].caring?.illness===illness.id&&id!==who)d.remove(['state','npcs',id,'caring']);
+ if(who&&!state.npcs[who].caring)d.set(['state','npcs',who,'caring'],{patient:illness.patient,illness:illness.id,location:house.homeLocation,since:minute});
+ const row=d.get('state','family','illnesses',illness.id);
+ if(who&&!row.caregivers.includes(who))d.set(['state','family','illnesses',illness.id,'caregivers'],[...row.caregivers,who]);
+ return who;
+}
+
+function fallIll(d,engine,id,minute,band){
+ const h=healthRules(engine),seed=d.document.randomSeed,day=minute/DAY,state=d.get('state'),npc=state.npcs[id];
+ const graveChance=Math.min(1,band.graveShare*(weakened(npc)?h.weakenedGraveMultiplier:1));
+ const severity=clockRoll(seed,`illness-severity:${id}`,day)<graveChance?'重':'轻',[low,high]=severity==='重'?h.graveDays:h.mildDays;
+ const days=low+Math.floor(clockRoll(seed,`illness-days:${id}`,day)*(high-low+1)),illId=`illness_${key(id,minute)}`;
+ const illness={id:illId,patient:id,severity,since:minute,endsAt:minute+days*DAY,status:'患病中',previousStatus:npc.status??null,household:npcHousehold(engine,state,id)?.id??null,caregivers:[]};
+ illness.medicalCreated=addFever(d,engine,id,illness);
+ d.set(['state','family','illnesses',illId],illness);
+ d.set(['state','npcs',id,'status'],'患病');d.set(['state','npcs',id,'activity'],'患病');
+ d.set(['state','npcs',id,'developments'],[...d.get('state','npcs',id,'developments')??[],{type:'患病',source:illId,minute,severity}]);
+ if(severity==='重')assignCare(d,engine,illness,minute);
+ const content=`${nameOf(engine,state,id)}在${engine.calendar(minute).text.slice(0,-6)}${severity==='重'?'病重卧床':'染病在家歇着'}。`;
+ witness(d,engine,illId,[id],illness.household?[illness.household]:[],{minute,kind:'health',content,salience:severity==='重'?3:1});
+}
+function recover(d,engine,illness,minute){
+ const id=illness.patient;
+ if(d.get('state','npcs',id,'status')==='患病'){if(illness.previousStatus===null)d.remove(['state','npcs',id,'status']);else d.set(['state','npcs',id,'status'],illness.previousStatus);}
+ removeFever(d,id,illness);release(d,illness);
+ d.set(['state','family','illnesses',illness.id],{...d.get('state','family','illnesses',illness.id),status:'痊愈',endedAt:minute});
+}
+
+// Natural death uses the status every module already settles: services,
+// schedules, contracts, quests and marriages read '死亡'. In addition the
+// person's open appointments end without blame, the household ledger loses a
+// mouth, and coins and goods pass whole to the closest living adult heir.
+function heirOf(engine,state,id,minute){
+ const ok=x=>x!==id&&Boolean(state.npcs[x])&&!['死亡','濒死'].includes(state.npcs[x].status)&&!npcIsMinor(engine,state,x,minute);
+ const spouse=marriagesOf(engine,state,id).flatMap(m=>m.partners).filter(ok).sort();
+ if(spouse.length)return spouse[0];
+ const childTypes=new Set(['子女','女儿','儿子']);
+ const children=[...(engine.byId.get(id)?.relationships??[]).filter(r=>childTypes.has(r.type)).map(r=>r.with),...Object.values(state.family?.people??{}).filter(p=>Object.values(p.parents??{}).includes(id)).map(p=>p.id)].filter(ok).sort();
+ if(children.length)return children[0];
+ return npcHousehold(engine,state,id)?.members.filter(ok).sort()[0]??null;
+}
+function dieNaturally(d,engine,id,minute,cause,illness=null){
+ const state=d.get('state'),house=npcHousehold(engine,state,id),deathId=`death_${key(id,minute)}`,name=nameOf(engine,state,id);
+ d.set(['state','npcs',id,'status'],'死亡');d.set(['state','npcs',id,'activity'],'已故');d.set(['state','npcs',id,'diedAt'],minute);
+ if(state.npcs[id].caring)d.remove(['state','npcs',id,'caring']);
+ for(const row of Object.values(state.family?.illnesses??{}).filter(r=>r.patient===id&&r.status==='患病中')){
+  release(d,row);d.set(['state','family','illnesses',row.id],{...d.get('state','family','illnesses',row.id),status:'病故',endedAt:minute});
+ }
+ const obligations=[];
+ for(const o of Object.values(state.obligations??{}).sort((a,b)=>a.id.localeCompare(b.id)))if(['待履行','进行中'].includes(o.status)&&[o.promisor,o.promisee].includes(id)){
+  d.set(['state','obligations',o.id],{...o,status:'取消',reason:`${name}已${cause}，约定终止`,resolvedAt:minute,endedByDeath:deathId});obligations.push(o.id);
+ }
+ const heir=heirOf(engine,state,id,minute);
+ const estate={heir,coins:state.npcs[id].coins??0,items:{},debts:Object.entries(state.records??{}).filter(([,r])=>r.category==='debt'&&[r.debtor,r.creditor].includes(id)&&r.amount>(r.paid??0)).map(([k])=>k).sort()};
+ if(heir){
+  for(const item of Object.keys(state.npcs[id].inventory??{}).sort()){const n=engine.quantity(d,id,item);if(n>0){transferItems(d,engine,id,heir,item,n);estate.items[item]=n;}}
+  if(estate.coins){d.set(['state','npcs',heir,'coins'],(d.get('state','npcs',heir,'coins')??0)+estate.coins);d.set(['state','npcs',id,'coins'],0);}
+  d.set(['state','npcs',heir,'developments'],[...d.get('state','npcs',heir,'developments')??[],{type:'继承',source:deathId,minute,from:id}]);
+ }
+ const ledger=house?state.settlements?.[house.settlement]:null,population=Number.isSafeInteger(ledger?.population)?{before:ledger.population,after:Math.max(0,ledger.population-1)}:null;
+ if(population)d.set(['state','settlements',house.settlement,'population'],population.after);
+ const content=`${name}在${engine.calendar(minute).text.slice(0,-6)}${cause}。`;
+ const witnesses=witness(d,engine,deathId,[id],house?[house.id]:[],{minute,kind:'health',content,salience:4});
+ d.set(['state','family','deaths',deathId],{id:deathId,person:id,minute,cause,illness:illness?.id??null,household:house?.id??null,settlement:house?.settlement??null,population,estate,obligations,witnesses});
+}
+
+function healthDay(d,engine,minute){
+ const h=healthRules(engine);if(!h)return;
+ const seed=d.document.randomSeed,day=minute/DAY,ended=new Set();
+ for(const illness of Object.values(d.get('state','family','illnesses')??{}).filter(r=>r.status==='患病中').sort((a,b)=>a.id.localeCompare(b.id))){
+  const npc=d.get('state','npcs',illness.patient);
+  if(!npc||npc.status==='死亡'){release(d,illness);d.set(['state','family','illnesses',illness.id],{...d.get('state','family','illnesses',illness.id),status:'中止',endedAt:minute});continue;}
+  if(minute>=illness.endsAt){recover(d,engine,illness,minute);ended.add(illness.patient);continue;}
+  if(illness.severity!=='重'||npc.status!=='患病')continue;
+  const carer=assignCare(d,engine,illness,minute);
+  if(minute<=illness.since)continue;
+  const fatality=carer?h.graveFatality.cared:h.graveFatality.alone,daily=1-(1-fatality)**(DAY/(illness.endsAt-illness.since));
+  if(clockRoll(seed,`illness-death:${illness.id}`,day)<daily)dieNaturally(d,engine,illness.patient,minute,'病故',illness);
+ }
+ for(const id of Object.keys(d.get('state','npcs')).sort()){
+  const state=d.get('state'),npc=state.npcs[id];
+  if(engine.byId.get(id)?.tier!=='full'||incapable.includes(npc.status)||!settled(state,id)||ended.has(id))continue;
+  const age=npcAgeAt(engine,state,id,minute),band=age===null?null:ageBand(h,age);if(!band)continue;
+  if(clockRoll(seed,`natural-death:${id}`,day)<perDay(band.suddenDeathPerYear)){dieNaturally(d,engine,id,minute,'寿终');continue;}
+  if(clockRoll(seed,`illness:${id}`,day)<Math.min(1,band.illnessPerYear/360))fallIll(d,engine,id,minute,band);
+ }
+}
+
 // Every midnight in (before, after] is processed once with the state of that
 // boundary; the engine already stops at each midnight while time passes.
+// Health comes first so a death that night already ends the marriage.
 export function advanceNpcLife(d,engine,before,after){
  if(!rules(engine))return;
- for(let day=Math.floor(before/DAY)+1;day*DAY<=after;day++)familyDay(d,engine,day*DAY);
+ for(let day=Math.floor(before/DAY)+1;day*DAY<=after;day++){healthDay(d,engine,day*DAY);familyDay(d,engine,day*DAY);}
 }
 
 export function validateNpcLifeRules(world){
@@ -219,5 +356,12 @@ export function validateNpcLifeRules(world){
  if(!level(b?.minimumTrust)||!level(b?.minimumAffection)||!chance(b?.conceptionChancePerDay)||!whole(b?.gestationDays)||!whole(b?.spacingDays))errors.push('npcLife.birth参数无效');
  if(!Array.isArray(b?.motherAge)||!(b.motherAge[0]>=r.adultAge&&b.motherAge[0]<b.motherAge[1]))errors.push('npcLife.birth.motherAge须为成年后的年龄区间');
  if(!b?.givenNames?.length||b.givenNames.some(n=>typeof n!=='string'||!n))errors.push('npcLife.birth.givenNames须为非空名字列表');
+ const h=r.health,rate=v=>Number.isFinite(v)&&v>=0,share=v=>Number.isFinite(v)&&v>=0&&v<=1,span=v=>Array.isArray(v)&&whole(v[0])&&Number.isSafeInteger(v[1])&&v[0]<=v[1];
+ if(h){
+  if(!Array.isArray(h.bands)||!h.bands.length||h.bands[0].fromAge!==0||h.bands.some((x,i)=>!Number.isSafeInteger(x.fromAge)||i&&x.fromAge<=h.bands[i-1].fromAge||!rate(x.illnessPerYear)||x.illnessPerYear>360||!share(x.graveShare)||!share(x.suddenDeathPerYear)))errors.push('npcLife.health.bands须从0岁起按年龄递增，发病率、重病比例与猝亡率有效');
+  if(!span(h.mildDays)||!span(h.graveDays))errors.push('npcLife.health病程天数区间无效');
+  if(!share(h.graveFatality?.cared)||!share(h.graveFatality?.alone)||h.graveFatality.cared>h.graveFatality.alone)errors.push('npcLife.health.graveFatality须有照护时不高于无人照护');
+  if(!(h.weakenedGraveMultiplier>=1)||!whole(h.bloodMl)||!Array.isArray(h.feverC)||h.feverC.length!==2||h.feverC.some(t=>!(t>37&&t<43)))errors.push('npcLife.health体弱倍数、血量或发热温度无效');
+ }
  return errors;
 }
