@@ -3805,6 +3805,30 @@
         38.2,
         39.5
       ]
+    },
+    "migration": {
+      "departMinute": 300,
+      "noticeDays": 1,
+      "marriageMoveDays": 3,
+      "maxPostponeDays": 10,
+      "newsDays": 90,
+      "joinKin": {
+        "afterDeathDays": 7,
+        "elderAge": 60,
+        "minimumTrust": 0
+      },
+      "livelihood": {
+        "starvationDays": 3,
+        "chancePerDay": 0.15
+      },
+      "refuge": {
+        "withinDays": 30,
+        "chancePerDay": 0.1
+      },
+      "host": {
+        "minimumTrust": 40,
+        "minimumAffection": 30
+      }
     }
   }
 }
