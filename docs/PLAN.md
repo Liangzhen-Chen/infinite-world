@@ -274,13 +274,7 @@ N1–N17至少12项完整有效且≥90%，N6/N16零泄漏，N12真实盲辨，N
 
 ### T160（S6）已完成：野兽灵智按“听息→立意”累积，来源分别记录（年岁与随人经历、灵地停留、喂灵物、点化），只观察不涨进度；world_wildlife加nurture（喂灵物）、enlighten（点化，复用T93仪式资格且师门须登记spirit_sense）、pact（结缘，有边界的同意关系）；势力时钟可真正触发觉醒。参数在rules.json的wildlifeAwakening，暂以药草为灵物、芦衡观与止波寺为灵地，正式内容待T162。新增4项、领域387/390（余为旧失败）、CORE40、发布构建ok，提示约11377，0模型。遗留：结缘后个体还不会跟随玩家、没有专门对话入口（归T161）。
 
-### T161（S7）成精后的修习与结社。
-
-1. 玩家结果：能教导已立意的精怪、帮助其取得借形能力，并参与它们定居或加入现存精怪之乡。
-2. 可改 S6 觉醒模块、server-plugin/{learning,manufacturing,npc-planning-service,npc-autonomy,magic-ritual}.mjs 的非人消费者接点、T109 faction-clock 结社效果、settlement-profile、world-upgrade、extension/tools.mjs 和 tests/wildlife-society.test.mjs；锁定 S6 身份转移规则及目录正文。依赖 S6/T109，与相关学习、生产和 engine 写者串行。
-3. 验收 CORE 及 `node --test "tests/wildlife*.test.mjs" "tests/npc-*.test.mjs" "tests/population*.test.mjs" "tests/magic*.test.mjs" tests/learning.test.mjs tests/manufacturing.test.mjs tests/professions.test.mjs tests/faction-clock.test.mjs tests/world-clock.test.mjs tests/prompt.test.mjs tests/tool-groups.test.mjs`；验证真实教学和制作、变形前后同一身体、加入/退出群落及季度推进无重复人口与库存。
-4. 真实模型零次，零元；新能力和结社参数由 S8 发布，新增术式正文并入 T104。
-5. 预计三至四小时。立意后可依实际资格学习并制造工具，借形需修习经历及真实施术代价，不默认化人或提升战力。T109 按季度或年检查自愿成员、可居住地点和口粮来源，满足后形成新组织或并入现存聚落；不足则保留游居状态。寺观关系与猎户冲突沿事件记忆，点化、结缘、报恩和寻仇均绑定具体当事人。静态提示不超过 11900 token。
+### T161（S7）已完成：world_learn带student可每天教已立意的精怪技能和配方；结缘后它能跟随、留守、交谈（wildlife_talk），能用学会的配方替玩家做东西（world_craft带maker，材料与工坊费由玩家出）；借形须修习满3次、有仪式资格并耗灵物，每次指定形貌，同一身体、战力不变、到时散形；每90天检查自愿成员、栖地和口粮，够则结群或并入精怪之乡，不够继续游居。新增5项、CORE40、发布构建ok，提示约11435，0模型。遗留：没有NPC狩猎机制，猎户冲突只记玩家攻击；精怪之乡名单与借形可选形貌等正式参数待T162。
 
 ### T162（S8）回汐埠、灰棚集与成精路线正式落地。
 
