@@ -21,7 +21,7 @@ export function validateBossMechanics(boss){
    if(s.effectSpec.effect?.kind!=='damage'||s.effectSpec.power>100||s.effectSpec.radiusMeters>10||s.duration>10)errors.push('首领区域只支持有限范围、短时伤害');
   }
   if(s.effectSpec?.kind==='damage'&&(s.effectSpec.power>100||s.duration!==0))errors.push('首领伤害能力超过本批数值范围');
-  if(s.effectSpec?.kind==='status'&&(!['fear','dazzle'].includes(s.effectSpec.status)||s.effectSpec.power>magicStatuses[s.effectSpec.status]?.maximum||!Number.isSafeInteger(s.duration)||s.duration<1||s.duration>5))errors.push('首领控制只支持短时恐惧或眩光');
+  if(s.effectSpec?.kind==='status'&&(!['fear','dazzle'].includes(s.effectSpec.status)||s.effectSpec.power>magicStatuses[s.effectSpec.status]?.maximum||!Number.isSafeInteger(s.duration)||s.duration<1||s.duration>5||s.effectSpec.status==='dazzle'&&s.duration!==1))errors.push('首领控制只支持短时恐惧或眩光');
  }
  if(new Set(m.abilities?.map(x=>x.id)).size!==m.abilities?.length)errors.push('首领能力编号重复');
  return errors;

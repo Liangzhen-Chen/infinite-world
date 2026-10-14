@@ -106,7 +106,7 @@ const schemas={
         habitatTags:list(str),grouping:str,diet:str,drops:list(material),taming:object({possible:{type:'boolean'},conditions:list(str)},['possible','conditions']),tamingRule,intelligence:{type:'integer',minimum:0,maximum:5}},
         ['template','levelRange','habitatTags','grouping','diet','drops','taming','intelligence']),
     boss:entity('boss',{actor:id('npc'),monster:id('monster'),tier:{type:'integer',minimum:1,maximum:11},level:int,lair:str,territory:str,
-        tactics:list(str),weakness:str,drops:list(material),taming:str,tamingRule,intelligence:{type:'integer',minimum:0,maximum:5},minions:{...list(id('monster')),uniqueItems:true},
+        tactics:list(str),weakness:str,drops:list(material),taming:str,tamingRule,intelligence:{type:'integer',minimum:0,maximum:5},minions:{...list(id('monster')),uniqueItems:true},tags:{...list(str),minItems:1,uniqueItems:true},
         residence:object({id:id('lair'),name:str,location:str,habitat:id('habitat'),replacementSpecies:{...list(id('monster')),uniqueItems:true},vacancyDays:{type:'integer',minimum:1,maximum:360},minionCount:{type:'integer',minimum:0,maximum:8}},
             ['id','name','location'])},
         ['monster','tier','level','lair','territory','tactics','weakness','drops','taming','intelligence']),
