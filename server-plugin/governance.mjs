@@ -2,6 +2,7 @@ import {digest} from './storage.mjs';
 import {npcPresenceAt} from './npc-cognition.mjs';
 import {npcObligationAt} from './npc-obligations.mjs';
 import {societyGovernance} from './monster-society.mjs';
+import {opinionAmong} from './public-opinion.mjs';
 
 const DAY=1440;
 const path=id=>['state','records',id];
@@ -50,6 +51,12 @@ function record(d,id,category,settlement){
     const r=d.get(...path(id));
     if(r?.category!==category||r.settlement!==settlement)throw Error('事务编号不存在或属于其他村');
     return r;
+}
+// Deliberation reads only what the people actually in the hall have learned.
+function hallOpinion(d,engine,settlement){
+    const {g}=profile(engine,settlement),state=d.get('state'),all=eligible(engine,settlement);
+    const present=Object.entries(state.npcs).filter(([id,n])=>all.includes(id)&&awake(n)&&n.location===g.meetingPlace).map(([id])=>id);
+    return {place:g.meetingPlace,present:present.sort(),topics:opinionAmong(engine,d.document,present),note:'只计在场且实际获知的人；未获知者不计入比例。'};
 }
 function unique(d,id){if(d.get(...path(id)))throw Error('事务编号已占用');}
 function proposal(d,engine,args,eventId,settlement){
@@ -114,11 +121,17 @@ function runRequest(d,engine,requestId,authorization,at,presence=d.get('state'))
 
 function action(d,args,eventId){
     const society=this.world.locations.find(l=>l.id===this.resolve(args.settlement,'loc')&&l.monsterSociety);
-    if(society)return societyGovernance(d,this,args,eventId,society.id);
+    if(society){
+        const out=societyGovernance(d,this,args,eventId,society.id);
+        if(args.operation!=='governance_inspect')return out;
+        const c=society.monsterSociety,meeting=c.meetingPlace??this.world.bosses.find(b=>b.id===c.leader)?.residence?.location,state=d.get('state');
+        const present=this.world.npcs.filter(n=>n.society===society.id&&awake(state.npcs[n.id])&&state.npcs[n.id].location===meeting).map(n=>n.id).sort();
+        return {...out,publicOpinion:{place:meeting,present,topics:opinionAmong(this,d.document,present),note:'只计在场且实际获知的成员；未获知者不计入比例。'}};
+    }
     const settlement=this.resolve(args.settlement,'loc'),{g,p}=profile(this,settlement),now=d.get('state','minute');
     switch(args.operation){
     case 'governance_inspect':return {settlement,appointment:structuredClone(g.appointment),permissions:structuredClone(g.permissions),
-        eligible:eligible(this,settlement),referral:structuredClone(g.referral),note:unavailable,
+        eligible:eligible(this,settlement),referral:structuredClone(g.referral),note:unavailable,publicOpinion:hallOpinion(d,this,settlement),
         records:Object.entries(d.get('state','records')??{}).filter(([,r])=>r.settlement===settlement&&
             (r.category?.startsWith('governance_')||r.category==='authorization'&&r.action==='account_report')).map(([id,row])=>({id,...row})),actionScope:{kind:'instant'}};
     case 'governance_propose':return proposal(d,this,args,eventId,settlement);
@@ -142,7 +155,7 @@ function action(d,args,eventId){
         if(row.status!=='议事中')return {proposal:row.id,meeting:row,duplicate:true};
         const rejected=row.opinions.filter(o=>o.opinion==='reject'),missing=row.affected.filter(id=>!row.opinions.some(o=>o.speaker===id&&o.opinion==='approve'));
         if(!rejected.length&&missing.length)return {proposal:row.id,status:'议事中',missing,note:'受影响住户未逐人同意；不代投、不按先到者人数推算多数。'};
-        const closed={...row,status:rejected.length?'已否决':'意见已确认',closedAt:now,authority,appointmentSource:source(this,settlement,now),closeEvent:eventId};
+        const closed={...row,status:rejected.length?'已否决':'意见已确认',closedAt:now,authority,appointmentSource:source(this,settlement,now),closeEvent:eventId,publicOpinion:hallOpinion(d,this,settlement)};
         d.set(path(row.id),closed);return {proposal:row.id,meeting:closed,note:rejected.length?'否决后不得开工、收费或扣公共材料。':unavailable};
     }
     case 'governance_appointment':{
