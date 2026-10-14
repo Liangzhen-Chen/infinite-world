@@ -61,7 +61,7 @@ review-002-yp=782a49e阶段审核通过，范围限T06正式发布与c64163d修�
 - K4 统一立场：新 standing.mjs，`standing(holder,target)` 归一到 -100..100，加“成员→势力/族群/聚居地”传导；7个旧存储保留，统一读写入口；public-opinion、reputation、faction-clock、scene-card、quest-board 改读它。依赖K3。验收：CORE + public-opinion/reputation-law/faction-clock/npc-relations/prompt。规模M。
 - K5 事件生成传闻：有目击且分量够的世界事件自动成为可传播传闻（不再只传作者预登记的ID）；private/secret 记忆与未成年保护不得成为传闻。依赖K3、K4。验收：CORE + rumor-route/village-rumor-access/npc-memory/public-opinion/monster-society。规模M。
 - K6 统一效果表：新 effects.mjs，合并 world-clock 封闭效果集与 faction-clock 效果消费者；势力时钟可触发野物躁动、传闻、立场变化，季节可冻河。依赖K2、K4。验收：CORE + world-clock/faction-clock/wildlife-awakening/festival/wildlife-society。规模S-M。
-- K7 推进注册表：engine.mjs:254、:265-310 手工列的约25个 advance* 改为注册表，新系统自动参与休息和赶路结算。验收：CORE + world-clock/faction-clock/performance。规模S。
+- K7 已完成（推进注册表28系统，逐字节一致）。原文：engine.mjs:254、:265-310 手工列的约25个 advance* 改为注册表，新系统自动参与休息和赶路结算。验收：CORE + world-clock/faction-clock/performance。规模S。
 - K8 按地形产生栖地（最后做，需存档迁移）：新地点按地形标签自动出现生物。验收：CORE + wildlife/w4-wildlife/wildlife-encounters。规模L。
 
 - K9 系统地图（用户 2026-10-14 要求）：底座 K1–K7 合入后，产出可视化的游戏系统图：一共几层、每层有哪些系统、系统之间如何串联（读写哪些共享状态、订阅哪些世界事件、受哪些交互规则和效果驱动），并附“新增一种内容要接哪些系统”的查表。按代码实际生成（脚本从注册表、规则表、订阅关系导出数据），发布为 Artifact 给用户，并在 docs/ 留一份。
