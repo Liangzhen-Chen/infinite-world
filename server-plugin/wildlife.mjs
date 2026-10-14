@@ -3,6 +3,7 @@ import {monsterStats,seededRandom} from './combat.mjs';
 import {heldUnit,wearItem} from './items.mjs';
 import {canonical} from './storage.mjs';
 import {speciesInHabitat} from './wildlife-range.mjs';
+import {rangeSpec,initialIn,wildlifeHabitats,validateHabitatDerivation} from './wildlife-habitats.mjs';
 import {reservedMigrationCapacity,advanceSeasonalMigration} from './seasonal-migration.mjs';
 import {crossPredatorFed,advanceFarmPredation} from './farm-pests.mjs';
 import {spiritStateFor,manifestArisals} from './creature-nature.mjs';
@@ -105,7 +106,7 @@ export function wildlifeEncounterView(document){
 export function validateWildlife(world){
     const errors=[],rules=world.rules.wildlife;if(!rules)return errors;
     const habitats=new Map(),species=new Map(world.monsters.map(s=>[s.id,s])),items=new Set(world.items.map(i=>i.id));
-    for(const h of rules.habitats){if(habitats.has(h.id))errors.push('栖地编号重复');habitats.set(h.id,h);
+    for(const h of wildlifeHabitats(world)){if(habitats.has(h.id))errors.push('栖地编号重复');habitats.set(h.id,h);
         if(!world.locations.some(l=>l.id===h.location))errors.push(`栖地位置不存在：${h.id}`);}
     for(const s of world.monsters){if(!s.wildlife)continue;const p=s.wildlife,band=world.rules.monsters.levelRanges[s.template];
         if(!habitats.has(p.habitat))errors.push(`物种栖地不存在：${s.id}`);
@@ -128,7 +129,7 @@ export function validateWildlife(world){
         }
         if(cursor!==to.location)errors.push(`迁徙道路未到达目标栖地：${r.id}`);
     }
-    return [...errors,...validateWildlifeAwakening(world)];
+    return [...errors,...validateHabitatDerivation(world),...validateWildlifeAwakening(world)];
 }
 export function advanceWildlife(d,engine,day){
     if(!engine.rules.wildlife)return;
@@ -139,9 +140,9 @@ export function advanceWildlife(d,engine,day){
         if(day%7===6){
             const rng=random(engine,d.document.randomSeed,`${habitat.id}:${day}`),season=engine.calendar(day*1440).season;
             for(const s of species){
-                const p=r.populations[s.id],spec=s.wildlife,present=wildPresent(d,s.id,habitat.location),total=p.count+present;
+                const p=r.populations[s.id],spec=rangeSpec(habitat,s),present=wildPresent(d,s.id,habitat.location),total=p.count+present;
                 // T154: undead/elementals arise by their registered condition, not by pairing or prey.
-                if(spec.manifest){const arisen=manifestArisals(s,total,reservedMigrationCapacity(d,habitat.id,s.id),season);if(arisen&&consecrated(d,habitat.id,s,day)){p.suppressed=(p.suppressed??0)+arisen;continue;}if(arisen){p.count+=arisen;p.arisen=(p.arisen??0)+arisen;}continue;}
+                if(spec.manifest){const arisen=manifestArisals(spec===s.wildlife?s:{...s,wildlife:spec},total,reservedMigrationCapacity(d,habitat.id,s.id),season);if(arisen&&consecrated(d,habitat.id,s,day)){p.suppressed=(p.suppressed??0)+arisen;continue;}if(arisen){p.count+=arisen;p.arisen=(p.arisen??0)+arisen;}continue;}
                 const fed=spec.predatorOf.length===0||spec.predatorOf.some(id=>r.populations[id]?.count>0)||crossPredatorFed(d,engine,habitat.id,s.id,season);
                 if(!fed){const lost=Math.min(p.count,Math.max(1,Math.floor(total/4)));p.count-=lost;p.starved+=lost;continue;}
                 const expected=spec.recoveryPerWeek*engine.rules.wildlife.seasonRecovery[season];
@@ -183,8 +184,8 @@ export function wildlifePriceFactor(engine,document,item,location){
     const ranges=habitats.flatMap(h=>speciesAt(engine,h).filter(s=>s.drops.some(drop=>drop.item===item)).map(s=>({s,h})));
     if(!ranges.length)return 1;
     const actors=Object.values(document.state.creatures??{});
-    const initial=ranges.reduce((n,{s,h})=>n+(s.wildlife.habitat===h.id?s.wildlife.population:0),0),current=ranges.reduce((n,{s,h})=>{
-        const unseen=document.state.records[`ecology:${h.id}`]?.populations[s.id]?.count??(s.wildlife.habitat===h.id?s.wildlife.population:0);
+    const initial=ranges.reduce((n,{s,h})=>n+initialIn(h,s),0),current=ranges.reduce((n,{s,h})=>{
+        const unseen=document.state.records[`ecology:${h.id}`]?.populations[s.id]?.count??initialIn(h,s);
         const present=actors.filter(a=>a.species===s.id&&a.ecology===h.id&&a.location===h.location&&!a.owner&&!sapient(a)&&alive(a)).length;
         return n+unseen+present;
     },0);

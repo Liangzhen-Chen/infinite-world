@@ -2,7 +2,7 @@
  "title": "无限原野系统地图",
  "card": "K9",
  "generatedFrom": {
-  "commit": null,
+  "commit": "refs/heads/k8",
   "method": "运行时导出（注册表、规则表、工具定义、效果表、立场传导表）+ 静态正则扫描（import 图、函数体标识符、state 分区与 records 前缀、rules/world 读取）。静态扫描是近似：经 engine.byId、helper 间接或动态拼接路径的访问不计入。"
  },
  "scanMethods": {
@@ -18,7 +18,7 @@
  "counts": {
   "layers": 6,
   "systems": 37,
-  "modules": 153,
+  "modules": 154,
   "advance": 33,
   "tools": 25,
   "verbs": 13,
@@ -335,7 +335,7 @@
     "server-plugin/campaign-reducer.mjs",
     "server-plugin/archived-reducer.mjs"
    ],
-   "lines": 840,
+   "lines": 843,
    "stateWrites": [
     "combatDisengaged",
     "created",
@@ -1093,13 +1093,14 @@
     "server-plugin/wildlife.mjs",
     "server-plugin/wildlife-awakening.mjs",
     "server-plugin/wildlife-range.mjs",
+    "server-plugin/wildlife-habitats.mjs",
     "server-plugin/wildlife-society.mjs",
     "server-plugin/wildlife-migration.mjs",
     "server-plugin/creature-nature.mjs",
     "server-plugin/seasonal-migration.mjs",
     "server-plugin/farm-pests.mjs"
    ],
-   "lines": 915,
+   "lines": 1012,
    "stateWrites": [
     "crafted",
     "created",
@@ -1126,6 +1127,7 @@
    "rules": [
     "agriculture",
     "check",
+    "habitatDerivation",
     "monsters",
     "npcGrowth",
     "wildlife",
@@ -1136,7 +1138,8 @@
     "locations",
     "monsters",
     "routes",
-    "rules"
+    "rules",
+    "settlementProfiles"
    ],
    "advance": [
     "daily",
@@ -2642,6 +2645,7 @@
    "kind": "call",
    "labels": [
     "wildlife-awakening.mjs",
+    "wildlife-habitats.mjs",
     "wildlife-society.mjs",
     "wildlife.mjs"
    ]
@@ -6043,7 +6047,8 @@
    "server-plugin/magic-object.mjs",
    "server-plugin/magic-primitives.mjs",
    "server-plugin/magic.mjs",
-   "server-plugin/settlement-trade.mjs"
+   "server-plugin/settlement-trade.mjs",
+   "server-plugin/wildlife-habitats.mjs"
   ]
  },
  "effects": {
@@ -7721,6 +7726,7 @@
     "server-plugin/ui-map.mjs",
     "server-plugin/weather.mjs",
     "server-plugin/wildlife-awakening.mjs",
+    "server-plugin/wildlife-habitats.mjs",
     "server-plugin/wildlife-society.mjs",
     "server-plugin/wildlife.mjs",
     "server-plugin/works.mjs",
@@ -7866,6 +7872,7 @@
     "server-plugin/ui-personal.mjs",
     "server-plugin/weather.mjs",
     "server-plugin/wildlife-awakening.mjs",
+    "server-plugin/wildlife-habitats.mjs",
     "server-plugin/wildlife-migration.mjs",
     "server-plugin/wildlife-range.mjs",
     "server-plugin/wildlife-society.mjs",
@@ -7940,13 +7947,6 @@
    ]
   },
   {
-   "dir": "world/orgs",
-   "files": 0,
-   "keys": [],
-   "readers": [],
-   "tools": []
-  },
-  {
    "dir": "world/people",
    "files": 3,
    "keys": [
@@ -8007,13 +8007,6 @@
     "tools/w3-trades-publish.mjs",
     "tools/w5-content.mjs"
    ]
-  },
-  {
-   "dir": "world/sites",
-   "files": 0,
-   "keys": [],
-   "readers": [],
-   "tools": []
   }
  ],
  "prompt": {
@@ -8178,6 +8171,9 @@
    "server-plugin/settlement-trade.mjs",
    "server-plugin/world-clock.mjs"
   ],
+  "habitatDerivation": [
+   "server-plugin/wildlife-habitats.mjs"
+  ],
   "wildlife": [
    "server-plugin/bosses.mjs",
    "server-plugin/effects.mjs",
@@ -8185,6 +8181,7 @@
    "server-plugin/farm-pests.mjs",
    "server-plugin/magic-ritual.mjs",
    "server-plugin/seasonal-migration.mjs",
+   "server-plugin/wildlife-habitats.mjs",
    "server-plugin/wildlife-migration.mjs",
    "server-plugin/wildlife-range.mjs",
    "server-plugin/wildlife-society.mjs",
@@ -8824,6 +8821,17 @@
      ]
     },
     {
+     "field": "habitatTags",
+     "means": "栖息地标签决定物种自动分布到哪些派生栖地（K8，按稀有度定规模）",
+     "pattern": "speciesHabitatTypes",
+     "modules": [
+      "server-plugin/wildlife-habitats.mjs"
+     ],
+     "systems": [
+      "sim_wildlife"
+     ]
+    },
+    {
      "field": "tamingRule / taming",
      "means": "驯服与宠物照料",
      "pattern": "tamingRule|\\.taming\\b",
@@ -8889,11 +8897,10 @@
     "sim_npc",
     "sim_wildlife"
    ],
-   "manual": [
-    "新栖地要在 meta/rules.json 的 wildlife.habitats 登记，并在 wildlife.habitat 指向它；地点有野物同样靠这张栖地表（按地形自动产生栖地是 K8，尚未完成）"
-   ],
+   "manual": [],
    "refs": [
-    "季节迁徙路线写在 rules.wildlife.migration.routes"
+    "季节迁徙路线写在 rules.wildlife.migration.routes",
+    "rules.wildlife.habitats 手工登记的栖地是覆盖项：该地点不再派生，物种以 wildlife.habitat 为原生栖地"
    ],
    "extend": [
     "新的身体标签词要加进 traits.CREATURE_TAGS，并在 interaction-rules.mjs 写规则才会影响倍率（沿用已有标签的新物种不需要）"
@@ -9061,6 +9068,17 @@
    ],
    "hooks": [
     {
+     "field": "terrain / biome / areaKm2",
+     "means": "野地按地形、群落标签与性状派生栖地并自动长出生物（K8 wildlife-habitats.mjs）",
+     "pattern": "locationHabitatTypes|areaKm2",
+     "modules": [
+      "server-plugin/wildlife-habitats.mjs"
+     ],
+     "systems": [
+      "sim_wildlife"
+     ]
+    },
+    {
      "field": "terrain",
      "means": "地形标签进入性状（林/湿/石…）",
      "pattern": "\\.terrain\\b",
@@ -9068,13 +9086,15 @@
       "server-plugin/activities.mjs",
       "server-plugin/career-metrics.mjs",
       "server-plugin/settlement-profile.mjs",
-      "server-plugin/traits.mjs"
+      "server-plugin/traits.mjs",
+      "server-plugin/wildlife-habitats.mjs"
      ],
      "systems": [
       "base_traits",
       "kernel_engine",
       "sim_character",
-      "sim_npc"
+      "sim_npc",
+      "sim_wildlife"
      ]
     },
     {
@@ -9151,12 +9171,14 @@
      "modules": [
       "server-plugin/magic-object.mjs",
       "server-plugin/manufacturing.mjs",
-      "server-plugin/npc-autonomy.mjs"
+      "server-plugin/npc-autonomy.mjs",
+      "server-plugin/wildlife-habitats.mjs"
      ],
      "systems": [
       "sim_economy",
       "sim_magic",
-      "sim_npc"
+      "sim_npc",
+      "sim_wildlife"
      ]
     },
     {
@@ -9165,11 +9187,13 @@
      "pattern": "lodging",
      "modules": [
       "server-plugin/credit.mjs",
-      "server-plugin/engine.mjs"
+      "server-plugin/engine.mjs",
+      "server-plugin/wildlife-habitats.mjs"
      ],
      "systems": [
       "kernel_engine",
-      "sim_economy"
+      "sim_economy",
+      "sim_wildlife"
      ]
     },
     {
@@ -9182,11 +9206,13 @@
       "server-plugin/public-opinion.mjs",
       "server-plugin/reputation-registry.mjs",
       "server-plugin/return-summary.mjs",
-      "server-plugin/standing.mjs"
+      "server-plugin/standing.mjs",
+      "server-plugin/wildlife-habitats.mjs"
      ],
      "systems": [
       "base_standing",
       "sim_society",
+      "sim_wildlife",
       "ui_scene"
      ]
     },
@@ -9229,7 +9255,8 @@
       "server-plugin/npc-obligations.mjs",
       "server-plugin/quest-board.mjs",
       "server-plugin/sites.mjs",
-      "server-plugin/summons.mjs"
+      "server-plugin/summons.mjs",
+      "server-plugin/wildlife-habitats.mjs"
      ],
      "systems": [
       "sim_clock",
@@ -9238,7 +9265,8 @@
       "sim_environment",
       "sim_magic",
       "sim_npc",
-      "sim_society"
+      "sim_society",
+      "sim_wildlife"
      ]
     },
     {
@@ -10703,10 +10731,6 @@
  "findings": {
   "manualWiring": [
    {
-    "content": "怪物 / 野物种类",
-    "item": "新栖地要在 meta/rules.json 的 wildlife.habitats 登记，并在 wildlife.habitat 指向它；地点有野物同样靠这张栖地表（按地形自动产生栖地是 K8，尚未完成）"
-   },
-   {
     "content": "工具",
     "item": "新工具要同时改 extension/tools.mjs 定义、engine.mjs 的职责白名单与 activities.mjs 处理器"
    }
@@ -10784,7 +10808,6 @@
      "bodyMassKg",
      "folklore",
      "grouping",
-     "habitatTags",
      "niche",
      "territoriality",
      "threat"
@@ -11724,6 +11747,7 @@
     "server-plugin/summons.mjs",
     "server-plugin/weather.mjs",
     "server-plugin/wildlife-awakening.mjs",
+    "server-plugin/wildlife-habitats.mjs",
     "server-plugin/wildlife-society.mjs",
     "server-plugin/wildlife.mjs",
     "server-plugin/world-clock.mjs",
@@ -11786,7 +11810,7 @@
     "spells"
    ],
    "worldDirs": [],
-   "lines": 590
+   "lines": 593
   },
   "server-plugin/environment.mjs": {
    "system": "sim_environment",
@@ -13627,6 +13651,7 @@
    "system": "sim_wildlife",
    "imports": [
     "server-plugin/wildlife-awakening.mjs",
+    "server-plugin/wildlife-habitats.mjs",
     "server-plugin/wildlife-range.mjs"
    ],
    "stateWrites": [
@@ -13644,7 +13669,7 @@
     "routes"
    ],
    "worldDirs": [],
-   "lines": 57
+   "lines": 58
   },
   "server-plugin/settlement-profile.mjs": {
    "system": "sim_npc",
@@ -14117,9 +14142,32 @@
    "worldDirs": [],
    "lines": 150
   },
+  "server-plugin/wildlife-habitats.mjs": {
+   "system": "sim_wildlife",
+   "imports": [
+    "server-plugin/traits.mjs"
+   ],
+   "stateWrites": [],
+   "stateReads": [],
+   "recordWrites": [],
+   "recordReads": [],
+   "rules": [
+    "habitatDerivation",
+    "wildlife"
+   ],
+   "world": [
+    "locations",
+    "monsters",
+    "rules",
+    "settlementProfiles"
+   ],
+   "worldDirs": [],
+   "lines": 90
+  },
   "server-plugin/wildlife-migration.mjs": {
    "system": "sim_wildlife",
    "imports": [
+    "server-plugin/wildlife-habitats.mjs",
     "server-plugin/wildlife-range.mjs"
    ],
    "stateWrites": [],
@@ -14137,7 +14185,7 @@
    ],
    "world": [],
    "worldDirs": [],
-   "lines": 30
+   "lines": 32
   },
   "server-plugin/wildlife-range.mjs": {
    "system": "sim_wildlife",
@@ -14153,7 +14201,7 @@
    ],
    "world": [],
    "worldDirs": [],
-   "lines": 7
+   "lines": 9
   },
   "server-plugin/wildlife-society.mjs": {
    "system": "sim_wildlife",
@@ -14161,6 +14209,7 @@
     "server-plugin/items.mjs",
     "server-plugin/professions.mjs",
     "server-plugin/training.mjs",
+    "server-plugin/wildlife-habitats.mjs",
     "server-plugin/wildlife-range.mjs",
     "server-plugin/world-events.mjs"
    ],
@@ -14196,7 +14245,7 @@
     "rules"
    ],
    "worldDirs": [],
-   "lines": 307
+   "lines": 308
   },
   "server-plugin/wildlife.mjs": {
    "system": "sim_wildlife",
@@ -14209,6 +14258,7 @@
     "server-plugin/seasonal-migration.mjs",
     "server-plugin/storage.mjs",
     "server-plugin/wildlife-awakening.mjs",
+    "server-plugin/wildlife-habitats.mjs",
     "server-plugin/wildlife-range.mjs"
    ],
    "stateWrites": [
@@ -14241,7 +14291,7 @@
     "rules"
    ],
    "worldDirs": [],
-   "lines": 234
+   "lines": 235
   },
   "server-plugin/works.mjs": {
    "system": "sim_works",
@@ -14595,7 +14645,7 @@
   "extension/index.js": {
    "system": "ui_host",
    "imports": [
-    "../extensions.js",
+    "../../extensions.js",
     "extension/core.js"
    ],
    "stateWrites": [],
@@ -14709,7 +14759,7 @@
   "extension/runtime.js": {
    "system": "ui_host",
    "imports": [
-    "../extensions.js",
+    "../../extensions.js",
     "extension/ambient-audio.mjs",
     "extension/background-view.mjs",
     "extension/history-window.mjs",

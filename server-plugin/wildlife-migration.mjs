@@ -1,4 +1,5 @@
 import {speciesInHabitat,migrationPath} from './wildlife-range.mjs';
+import {initialIn} from './wildlife-habitats.mjs';
 export function planWildlifeMigration(document,rules,catalog){
     if(!rules.wildlife)return[];if(document.schemaVersion!==2)throw new Error('生态迁移只支持格式2存档');
     const patches=[],day=Math.floor(document.state.minute/1440);
@@ -15,7 +16,8 @@ export function planWildlifeMigration(document,rules,catalog){
                 continue;
             }
             const existing=Object.values(document.state.creatures??{}).filter(a=>a.species===species.id&&a.location===habitat.location&&!a.owner&&a.status!=='死亡').length;
-            const count=species.wildlife.habitat===habitat.id?Math.max(0,species.wildlife.population-existing):0;
+            // Home and K8 derived ranges start stocked; migration-only ranges start empty.
+            const count=Math.max(0,initialIn(habitat,species)-existing);
             populations[species.id]={count,initial:count,born:0,predated:0,starved:0,withdrawn:0,...(rules.wildlife.migration?{immigrated:0,emigrated:0}:{})};changed=true;
         }
         if(changed)patches.push({op:'set',path:['state','records',key],value:old?{...old,populations}:{category:'ecology',format:1,habitat:habitat.id,initializedDay:day,lastDay:day-1,populations}});

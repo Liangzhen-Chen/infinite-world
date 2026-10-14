@@ -3001,6 +3001,68 @@
           "enum": [
             1
           ]
+        },
+        "habitatDerivation": {
+          "type": "object",
+          "properties": {
+            "version": {
+              "const": 1
+            },
+            "referenceAreaKm2": {
+              "type": "number",
+              "exclusiveMinimum": 0
+            },
+            "maximumScale": {
+              "type": "number",
+              "exclusiveMinimum": 0
+            },
+            "defaultScale": {
+              "type": "object",
+              "properties": {
+                "site": {
+                  "type": "number",
+                  "exclusiveMinimum": 0
+                },
+                "area": {
+                  "type": "number",
+                  "exclusiveMinimum": 0
+                }
+              },
+              "required": [
+                "site",
+                "area"
+              ]
+            },
+            "rarity": {
+              "type": "array",
+              "minItems": 1,
+              "items": {
+                "type": "object",
+                "properties": {
+                  "minimumPopulation": {
+                    "type": "integer",
+                    "minimum": 0
+                  },
+                  "factor": {
+                    "type": "number",
+                    "minimum": 0,
+                    "maximum": 1
+                  }
+                },
+                "required": [
+                  "minimumPopulation",
+                  "factor"
+                ]
+              }
+            }
+          },
+          "required": [
+            "version",
+            "referenceAreaKm2",
+            "maximumScale",
+            "defaultScale",
+            "rarity"
+          ]
         }
       },
       "required": [
@@ -3634,6 +3696,19 @@
               "additionalProperties": false
             }
           ]
+        },
+        "biome": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "description": "K8 群落标签：与地形一起派生野外栖地类型"
+        },
+        "areaKm2": {
+          "type": "number",
+          "exclusiveMinimum": 0,
+          "description": "K8 野地面积，决定派生栖地的种群规模"
         }
       },
       "required": [

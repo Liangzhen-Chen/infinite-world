@@ -44,9 +44,11 @@ test('导出覆盖全部世界事件动词与订阅者',()=>{
  for(const s of data.worldEvents.subscribers)assert.ok(s.module,`订阅者 ${s.fn} 没有来源模块`);
 });
 
-test('K10：仍需手动接线只剩新工具与 K8 栖地；engine 不再持订阅者数组',()=>{
- assert.deepEqual(data.findings.manualWiring.map(m=>m.content),['怪物 / 野物种类','工具']);
- assert.match(data.findings.manualWiring[0].item,/K8/);
+test('K8：仍需手动接线只剩新工具；栖地按地形派生；engine 不再持订阅者数组',()=>{
+ assert.deepEqual(data.findings.manualWiring.map(m=>m.content),['工具']);
+ const monster=data.contentTypes.find(c=>c.id==='monster'),location=data.contentTypes.find(c=>c.id==='location');
+ assert.ok(monster.hooks.find(h=>h.field==='habitatTags')?.modules.includes('server-plugin/wildlife-habitats.mjs'));
+ assert.ok(location.hooks.find(h=>h.field.startsWith('terrain / biome'))?.modules.includes('server-plugin/wildlife-habitats.mjs'));
  assert.doesNotMatch(fs.readFileSync('server-plugin/engine.mjs','utf8'),/worldEventSubscribers/);
 });
 
