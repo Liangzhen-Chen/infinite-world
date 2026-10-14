@@ -66,6 +66,31 @@ review-002-yp=782a49e阶段审核通过，范围限T06正式发布与c64163d修�
 
 派工：K1→K2 一个子代理连续做；K3→K4→K5 一个子代理连续做（等T159合入后开）；K7 随时；K6 在K2、K4之后。
 
+## 缺失系统补齐（2026-10-14 主会话审定，来源：规格覆盖审计；用户：“世界公告…不需要，其他需要你继续设计”）
+
+排在底座 K1–K7 之后，按被依赖程度排序。每张卡：不加新工具（复用现有入口），静态提示增量≤100 token（硬上限12000），验收 CORE + 同领域测试整组 + build-world --release；改结算数值逐条列旧→新与理由。世界公告、首杀广播、其他玩家层不做。
+
+- U1 组织实体（依赖K4，S-M）：创立或加入行会、帮派、商号；组织有成员、公库、章程、议事方式（会长定、投票、长老定）。新 organizations.mjs；activities.mjs 的 create(org)、governance.mjs、public-opinion.mjs。补 5.11 家户、行会、教会、帮派的群体决策。
+- U2 契约与信用（依赖K3、K4、K7，M）：借贷计息、钱庄存取与兑换（铸币成色、手续费）、通用租房住宿（不再只认一家）、玩家受雇打工、合伙；违约进入法律流程。contracts.mjs、engine.mjs 交易段、business.mjs:87、law.mjs、rules.economy。
+- U3 季节与灾害世界时钟（依赖K2、K6、K7，M）：汛期、冬荒、疫病流行（户间传染）、物价波动，分阶段可干预。rules.worldClock、world-clock.mjs、npc-life.mjs、settlement-trade.mjs。
+- U4 职业深化（依赖K1、K3，M）：新 career-metrics.mjs 订阅世界事件统计长期行为，隐藏职业“契机”真正触发并可取得；地域、元素变异升职；终极技能；杰作、研究、实战三种突破；入职任务。professions.mjs、engine.mjs:491-508、world/design 职业数据。
+- U6 作品系统（依赖K1、K3，M）：写作出版、技能书抄写（需原本与抄写员）、表演、测绘出图，形成有署名作品，带来收入、贡献、名望；技能融合实验。新 works.mjs；learning.mjs、manufacturing.mjs、civic.mjs。
+- U7 灵智等级生效与成长（依赖K3，S-M）：等级决定计划长度与打破惯例程度；教导和共同经历使NPC成长并有可见迹象。npc-planning-service、npc-autonomy、npc-growth、scene-card。
+- U9 商店补货与价格系数（依赖K4、K7，S）：按周期与产地补货，高品质只在相应渠道；关系、声望、店家加成进报价。engine.mjs 交易段、settlement-trade.mjs、rules.economy。
+- U5 通缉与赏金（依赖K4、K5、U1、U2，M）：通缉范围、逃犯、NPC赏金猎人追捕、玩家接赏金、法典里的贿赂空间。law.mjs、quest-board.mjs、npc-autonomy.mjs。
+- U8 谎言账（依赖K3、K5，S）：撒谎时真相与谎言成对记录，可被揭穿。npc-memory.mjs、world_remember 参数、consistency-review.mjs。
+- U10 生活魔法的经济反馈（依赖K2、K4、K6，S-M）：保鲜降损耗与价格、引水改产量，受益方与竞争方立场变化，官府收费或管制。
+- U14 返场变化汇总（依赖K3、K5，S）：回到某地时汇总离开期间当地的变化。
+- U17 任务自动来源（依赖K3、K4、U1，S-M）：NPC按自身需求与短缺自动出任务；势力委托；世界事件任务。quest-board.mjs、npc-life.mjs、faction-clock.mjs。
+- U13 名士与聚落升格（依赖U1、U6、T124，S-M）。
+- U11 族群觉醒动态（依赖K4、K6、U1、U3，L）：怪物族群按季度与年觉醒、提出诉求、内部分化、生成新势力；玩家可教导、贸易、调停、镇压。
+- U12 军队、兵役、战争与外交（依赖U1、U2、U3、K4、K6、T127、T142，L，开工前再拆）。
+- U15 余下动词（依赖K8、U1、U5，S-M）：钓鱼、开矿、决斗、走私、竞选。
+- U16 建国（依赖U12、T127，L，最后做）。
+- 小修：5.2 人物分布检查并入 build-world 发布构建（S，零依赖，可随任一卡带上）。
+
+执行顺序：K1–K7 → U1/U2/U3/U4/U6/U7/U9（可并行，注意锁 engine.mjs 交易段的 U2、U9 串行）→ U5/U8/U10/U14/U17 → U13/U11 → T142/T143 九省 → U12/U15 → U16。内容卡（首领、聚居地、节日、遗迹、传闻）在 K1–K4 合入后穿插进行。
+
 ## 近期完整任务卡
 
 ### T01 已完成：榆坡4人、带路回执及送货付款前置已集成；相关、合后核心及8轮隔离HTTP前置通过，未跑模型。 完整验收见[已完成卡](PLAN_已完成.md#t01)。
