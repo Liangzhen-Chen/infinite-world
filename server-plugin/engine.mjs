@@ -45,6 +45,7 @@ import {recordNpcMemories}from'./npc-memory.mjs';
 import {hearNpcRumor}from'./npc-rumors.mjs';
 import {createNpcObligation,advanceNpcObligations,assertNpcObligationAction,npcObligationAt,nextNpcObligationMinute}from'./npc-obligations.mjs';
 import {recordNpcRelationEvidence,applyNpcRelation}from'./npc-relations.mjs';
+import {recordSocietyActs,advanceSocietyNews,assertSocietyTrade,societyNewsConsumer}from'./monster-society.mjs';
 import {resolveToolCall}from'../extension/tools.mjs';
 import {chargeTrade,repayDebt,advanceContracts}from'./contracts.mjs';
 import {businessTrade,recordBusinessReceipt}from'./business.mjs';
@@ -74,6 +75,7 @@ export class WorldEngine {
         this.byId = this.resolver.entities;
         const festivalErrors=validateFestivalRuntime(world);if(festivalErrors.length)throw Error(festivalErrors.join('；'));
         if((this.rules.engineRevision??1)===1)this.compat=new Phase1Engine(world);
+        this.factionEffectConsumers={society_news:societyNewsConsumer};
     }
     resolve(name, kind, scope) {
         if(!kind||kind==='npc'){
@@ -164,6 +166,7 @@ export class WorldEngine {
         advancePets(d,session,d.get('state','minute'));
         advanceSummons(d,d.get('state','minute'));
         advanceLaw(d,d.get('state','minute'),session);
+        recordSocietyActs(d,session,tool,args,detail,id);
         recordNpcRelationEvidence(d,session,document.state,tool,args,detail,id);
         recordNpcMemories(d,session,document.state,tool,args,detail,id);
         recordBusinessReceipt(d,document.state,{tool:resolved.tool,args,eventId:id,detail});
@@ -197,6 +200,7 @@ export class WorldEngine {
         for(const actor of[buyer,seller])if(['死亡','濒死'].includes(this.actor(d,actor).status))throw new Error('交易一方无法清醒履约');
         const playerLocation=d.get('state','location');
         for(const actor of [buyer,seller]) if(actor!=='player' && this.actor(d,actor).location!==playerLocation) throw new Error('交易对方不在场');
+        assertSocietyTrade(d,this,buyer,seller);
         if(args.payment==='repay')return repayDebt(d,this,{buyer,seller,debt:args.debt},id);
         for(const actor of [buyer,seller])if(actor!=='player')assertNpcService(d,this,actor,'trade',args.service==='住宿'?10:5);
         if(args.service==='住宿'){
@@ -279,6 +283,7 @@ export class WorldEngine {
         }
         advanceWorldClocks(d,this,after);
         advanceFactionClocks(d,this,after);
+        advanceSocietyNews(d,this,after);
         advanceFestivals(d,this,after);
         for(const[key,row]of Object.entries(d.get('state','records')??{}))if(key.startsWith('local_actor_position:')){
             const actor=d.get('state',row.subject?.startsWith('npc_')?'npcs':'creatures',row.subject);

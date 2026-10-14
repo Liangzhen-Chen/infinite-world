@@ -1,5 +1,6 @@
 import {transferItems}from'./items.mjs';
 import {readBossCognition}from'./boss-cognition.mjs';
+import {societyAgreement}from'./monster-society.mjs';
 const plain=v=>v&&typeof v==='object'&&!Array.isArray(v);
 const amount=v=>Number.isSafeInteger(v)&&v>0&&v<=100000;
 const pacts=new Set(['respect_territory','nonaggression']);
@@ -80,6 +81,7 @@ function publicResult(n,h,boss){
         actionScope:{kind:'instant',instantaneous:true}};
 }
 export function negotiateBoss(d,engine,boss,residence,args,eventId){
+    if(args.term!==undefined||args.contract!==undefined)return societyAgreement(d,engine,boss,args,eventId,()=>negotiateBoss(d,engine,boss,residence,{...args,term:undefined},eventId));
     const target=boss.actor??residence.occupant?.actor,actor=engine.actor(d,target);
     if(!boss.actor&&(residence.occupant?.kind!=='boss'||residence.occupant.definition!==boss.id)||!actor||actor.boss!==boss.id||
         actor.owner||actor.hp<=0||actor.status!=='正常'||actor.location!==boss.residence.location||actor.location!==d.get('state','location'))throw new Error('谈判需要已接触、在巢穴清醒在场的自由首领');

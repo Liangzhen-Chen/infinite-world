@@ -1,5 +1,6 @@
 import {bossCognitionField}from'./npc-state.mjs';
 import {readBossNegotiation,breakBossAgreement}from'./boss-negotiation.mjs';
+import {societyView}from'./monster-society.mjs';
 const goals=new Set(['defend_territory','avoid_conflict']);
 const intelligent=boss=>Number.isInteger(boss?.intelligence)&&boss.intelligence>0;
 const plain=value=>value&&typeof value==='object'&&!Array.isArray(value);
@@ -74,5 +75,6 @@ export function bossPublicAttitude(d,engine,target){
     if(relation){attitude=relation.alliance?'盟约有效':'和平约定';reason=relation.pact==='respect_territory'?'记得你已承诺尊重领地边界':'记得双方已议定互不攻击';}
     if(actor.hp<actor.maxHp*.25){attitude='退守';reason='当前重伤，先保全自身';}
     return{attitude,reason,recognized:c.encounters.length>0,contacts:c.encounters.filter(e=>e.kind==='approach').length,
-        clashes:clashes.length,territory:boss.territory,inTerritory,lastEncounter:structuredClone(c.encounters.at(-1)??null),...(relation?{relation:structuredClone(relation)}:{})};
+        clashes:clashes.length,territory:boss.territory,inTerritory,lastEncounter:structuredClone(c.encounters.at(-1)??null),...(relation?{relation:structuredClone(relation)}:{}),
+        ...(boss.actor&&societyView(d.get('state'),engine,boss)?{society:societyView(d.get('state'),engine,boss)}:{})};
 }
