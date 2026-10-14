@@ -7,7 +7,7 @@
 import {eventWeight} from './standing.mjs';
 import {recordCareerMetrics} from './career-metrics.mjs';
 export const WORLD_EVENT_VERSION=1;
-export const SOCIAL_VERBS=new Set(['harm','clash','steal','gift','help','trade','learn','organize','breach']);
+export const SOCIAL_VERBS=new Set(['harm','clash','steal','gift','help','trade','learn','organize','breach','author']);
 const awake=n=>n&&!['死亡','濒死','昏迷'].includes(n.status)&&!n.scheduleTravel&&!n.cognitionTravel&&!/(睡眠|熟睡|睡觉)/.test(n.activity??'');
 const resolve=(engine,value)=>{if(!value)return null;try{return engine.resolve(value);}catch{return null;}};
 
@@ -70,6 +70,8 @@ export function deriveWorldEvents(engine,before,after,{tool,args={},detail={},ev
     }else if(tool==='law'&&detail.worldEvent){
         // An exposed bribe: the taker breached the office; the briber's own case is filed separately.
         e={...detail.worldEvent,tags:[...detail.worldEvent.tags]};
+    }else if(detail.workEvent){
+        e={actor:'player',...detail.workEvent};
     }else if(detail.organizationEvent){
         e={actor:'player',...detail.organizationEvent};
     }else if(tool==='learn'){

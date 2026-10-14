@@ -4351,5 +4351,76 @@
         "cap": 60
       }
     }
+  },
+  "effectTable": {
+    "version": 1,
+    "source": "K6 统一效果表：时钟、节日与季节的数据驱动效果",
+    "hooks": [
+      {
+        "source": "faction",
+        "owner": "clock_ms_tanjie",
+        "stage": "settle",
+        "note": "过冬粮路落实后：西郊废窑野物被往来驮队惊扰，白石镇传开粮路消息并对炭阶地宫转暖",
+        "effects": [
+          {
+            "kind": "wildlife_stir",
+            "habitat": "habitat_bs_west_kiln",
+            "minutes": 10080,
+            "factor": 2
+          },
+          {
+            "kind": "rumor",
+            "id": "tanjie_grain_road",
+            "claim": "炭阶地宫与白石镇的按旬粮路已经走通，驮队每旬经西郊废窑往返。",
+            "carriers": [
+              "npc_ms_tj_yantai",
+              "npc_ms_tj_dingying"
+            ],
+            "salience": 3
+          },
+          {
+            "kind": "standing",
+            "holder": "loc_bs",
+            "target": "faction_ms_tanjie",
+            "delta": 5,
+            "reason": "过冬粮路按旬落实"
+          }
+        ]
+      }
+    ],
+    "seasons": [
+      {
+        "id": "winter-ice:loc_hw",
+        "name": "寒潮冻水",
+        "season": 3,
+        "settlement": "loc_hw",
+        "effects": [
+          {
+            "kind": "environment",
+            "state": "frozen",
+            "locations": [
+              "loc_hw_dock"
+            ],
+            "minutes": 43200
+          }
+        ]
+      },
+      {
+        "id": "dry-season:loc_bs",
+        "name": "旱季干料",
+        "season": 1,
+        "settlement": "loc_bs",
+        "effects": [
+          {
+            "kind": "environment",
+            "state": "dry",
+            "locations": [
+              "bld_bs_reed_dao",
+              "bld_bs_temple"
+            ]
+          }
+        ]
+      }
+    ]
   }
 }

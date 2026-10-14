@@ -71,6 +71,9 @@ export function recordCareerMetrics(d,engine,events,context){
         if(recipe&&engine.byId.get(recipe.output?.item)?.book)inc(c,'booksCopied');
         if(recipe?.skill&&detail.degree==='大成功')addEvidence(m,`masterpiece:${id}`,'masterpiece',[recipe.skill],after,minute);
     }
+    // U6 works: a masterpiece work is evidence for the skill it used; copies count as books copied.
+    if(detail.workEvent?.masterpiece)addEvidence(m,`masterpiece:${id}`,'masterpiece',[detail.workEvent.skill],after,minute);
+    if(detail.workEvent?.tags?.includes('copy'))inc(c,'booksCopied');
     if(tool==='repair'&&detail.success)inc(c,'craftSuccesses');
     if(tool==='farm'&&args.operation==='repair')inc(c,'publicProjects');
     if(tool==='learn'&&detail.student&&detail.gained>0)m.students[detail.student]=true;

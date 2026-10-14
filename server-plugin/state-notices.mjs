@@ -89,6 +89,9 @@ export function stateNotices(before,after,resolveName=id=>id){
     for(const id of newJobs)if(!oldJobs.includes(id))push('profession',`获得职业：${name(id)}`);
     for(const id of oldJobs)if(!newJobs.includes(id))push('profession',`退出职业：${name(id)}`);
     if(before.location!==after.location)push('location',`抵达：${name(after.location)}`);
+    // 久别回到某地：汇总已在引擎里按认知边界过滤，这里只转述。
+    const back=after.visits?.lastReturn;
+    if(back&&back.sourceEvent!==before.visits?.lastReturn?.sourceEvent)push('return',`回到${name(back.place)}，离开期间：${back.lines.join('；')}`);
     if(after.minute!==before.minute)push('time',`经过 ${after.minute-before.minute} 分钟`);
     const oldDocuments=new Map(playerDocuments(before,resolveName).map(row=>[row.id,row]));
     for(const card of playerDocuments(after,resolveName))if(card.kind!=='contract'&&!oldDocuments.has(card.id))push(card.kind,`${card.kind==='announcement'?'公告':'收到信件'}：${card.title}`,card);
