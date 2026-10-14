@@ -174,6 +174,14 @@ export function validateWorld(world,{stage='engine'}={}){
             }
         }
     }
+    // U4 career data: variant routes, entry tasks and ultimates per profession.
+    for(const [role,career]of Object.entries(world.careers??{})){
+        reference(role,'careers');if(career.ultimate)reference(career.ultimate.skill,`${role}.ultimate`);
+        for(const step of career.variants??[])for(const choice of step){
+            reference(choice.requiredSkill,`${role}.variant`);
+            if(promotionIds.has(choice.id))errors.push(`升职方向编号重复：${choice.id}`);promotionIds.add(choice.id);
+        }
+    }
     const checkPrerequisites=row=>{for(const requirement of row.prerequisites??[])reference(typeof requirement==='string'?requirement:requirement.skill,`${row.id}.prerequisite`);};
     for(const row of world.skills){reference(row.profession,`${row.id}.profession`);for(const role of row.learningProfessions??[])reference(role,`${row.id}.learningProfessions`);checkPrerequisites(row);}
     for(const item of world.items)if(item.checkBonus){

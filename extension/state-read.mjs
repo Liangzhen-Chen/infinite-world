@@ -32,7 +32,8 @@ export function readStateSection(state,section,npc){
         return[id,{...row,state:publicState,waterSafety:'毒素和病原尚未检验'}];
     }));
     if(key==='npcs')result=Object.fromEntries(Object.entries(result).map(([id,row])=>{
-        const{legalKnowledge,memoryStream,cognition,autonomy,goals,relationships,developments,...view}=row;return[id,view];
+        // 灵智成长值与防备计数不向玩家显示数字，只在场景里给世界内迹象。
+        const{legalKnowledge,memoryStream,cognition,autonomy,goals,relationships,developments,intelligence,adaptation,...view}=row;return[id,view];
     }));
     if(JSON.stringify(result).length>8000)return{ok:false,error:'该栏目超过单次读取上限；人物可用npc编号定位，其他记录通过检索查看。'};
     return result;

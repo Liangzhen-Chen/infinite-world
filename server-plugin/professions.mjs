@@ -2,6 +2,7 @@ import {checkPetCareer}from'./pets.mjs';
 import {assertNpcService}from'./npc-schedule.mjs';
 import {initiation,ritualOfficiate}from'./training.mjs';
 import {npcServices}from'./npc-state.mjs';
+import {acquireHiddenProfession,variantProgress,professionUltimate,completeProfessionUltimate,careerOf}from'./career-metrics.mjs';
 const int=(value,min,max,label)=>{if(!Number.isSafeInteger(value)||value<min||value>max)throw new Error(`${label}不在允许范围`);return value;};
 export function effectiveProficiency(d,engine,skill){
     const value=d.get('state','skills',skill,'proficiency')??0;
@@ -27,6 +28,7 @@ export function profession(d,args,id){
     const operation=args.operation??'certify';
     if(operation==='initiate')return initiation(d,this,args,id);
     if(operation==='ritual_officiate')return ritualOfficiate(d,this,args,id);
+    if(operation==='certify'&&catalog.kind==='hidden')return acquireHiddenProfession(d,this,role,id);
     if(operation==='abandon'){
         if(catalog.kind==='hidden')throw new Error('隐藏身份的代价按其经历规则处理，不能以普通退职清除');
         if(!(current.combat===role||current.life.includes(role)))throw new Error('没有这个正式职业');
@@ -47,9 +49,24 @@ export function profession(d,args,id){
     if(catalog.kind!=='combat'&&catalog.kind!=='life')throw new Error('隐藏职业必须满足独立触发条件');
     if(operation==='promote'){
         if(catalog.kind!=='combat'||current.combat!==role)throw new Error('需要当前正式战斗职业才能升职');
+        const career=careerOf(this,role);
+        if(career.ultimate&&[career.ultimate.skill,career.ultimate.name,'ultimate','终极技能'].includes(args.choice)){
+            const{rule}=professionUltimate(d,this,role,teacher,mentor,id);
+            assertNpcService(d,this,teacher,'teach',rule.minutes);
+            const outcome=this.check(d,{attribute:catalog.attribute,skill:rule.requiredSkill,difficulty:rule.difficulty},id);this.advance(d,rule.minutes,id);
+            const ultimate=completeProfessionUltimate(d,this,role,teacher,rule,outcome,id);
+            return{profession:role,task:rule.task.name,ultimate:ultimate??null,...outcome};
+        }
         const history=d.get('state','careers',role,'promotions')??[],step=catalog.promotions?.[history.length];
         if(!step||player.level<step.level)throw new Error('尚未达到下一次30级升职机会');
-        const choice=step.choices.find(row=>row.id===args.choice);if(!choice)throw new Error('升职方向不在当前机会目录');
+        let choice=step.choices.find(row=>row.id===args.choice);
+        const variant=choice?null:career.variants?.[history.length]?.find(row=>row.id===args.choice);
+        if(variant){
+            const progress=variantProgress(this,d.get('state'),variant.variant);
+            if(progress<variant.variant.minimum)throw new Error(`变异路线条件未满足：${variant.variant.description}（当前${progress}/${variant.variant.minimum}）`);
+            choice=variant;
+        }
+        if(!choice)throw new Error('升职方向不在当前机会目录');
         if((mentor.promotionRanks?.[role]??0)<history.length+1)throw new Error('导师不具备这一阶升职考核资格');
         if(effectiveProficiency(d,this,choice.requiredSkill)<choice.minimumProficiency)throw new Error('升职所需技能不足');
         if(player.coins<choice.fee)throw new Error('升职费用不足');
@@ -67,7 +84,7 @@ export function profession(d,args,id){
     if(catalog.kind==='combat'&&current.combat)throw new Error('已有正式战斗职业，需先按规则放弃');
     if(catalog.kind==='life'&&current.life.length>=2)throw new Error('生活职业名额已满');
     if(player.coins<catalog.fee)throw new Error('认证费用不足');
-    const entry=catalog.entry;
+    const entry=catalog.entry,task=careerOf(this,role).entryTask;
     if(entry){
         if(catalog.attribute&&player.attributes[catalog.attribute]<(entry.minimumAttribute??0))throw new Error('入职主属性不足');
         if(effectiveProficiency(d,this,entry.skill)<entry.minimumProficiency)throw new Error('尚未达到入职手艺或基础技能要求');
@@ -77,8 +94,8 @@ export function profession(d,args,id){
     if(outcome.success){
         d.set(['state','player','coins'],player.coins-catalog.fee);d.set(['state','npcs',teacher,'coins'],d.get('state','npcs',teacher,'coins')+catalog.fee);
         d.set(['state','professions',catalog.kind],catalog.kind==='combat'?role:[...current.life,role]);
-        d.set(['state','careers',role,'certification'],{teacher,minute:d.get('state','minute'),source:id});
+        d.set(['state','careers',role,'certification'],{teacher,minute:d.get('state','minute'),source:id,...(task?{task:task.name}:{})});
         d.say(`通过${catalog.name}职业认证`);
     }
-    return{profession:role,certified:outcome.success,...outcome};
+    return{profession:role,certified:outcome.success,...(task?{entryTask:task.name}:{}),...outcome};
 }
