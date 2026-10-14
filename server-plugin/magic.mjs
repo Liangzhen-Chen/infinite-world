@@ -177,7 +177,7 @@ export function applyMagic(d,prepared,id){
         if(spec.kind==='damage'&&target.startsWith('npc_')&&(prepared.context?.source??'player')==='player'){
             if(next<old)recordDisciplineBreach(d,this,'violence',id);
             // Full NPCs judge a wound through the relation ledger (world event 'harm').
-            if(this.byId.get(target)?.tier!=='full'||this.replaying&&this.replayResult?.worldEventVersion!==1)d.set([...path,'trust'],Math.max(-100,(current.trust??0)-10));
+            if(this.byId.get(target)?.tier!=='full'||this.replaying&&this.replayResult!==undefined&&this.replayResult?.worldEventVersion!==1)d.set([...path,'trust'],Math.max(-100,(current.trust??0)-10));
             d.set([...path,'developments'],[...current.developments??[],{type:'法术伤害',source:id,minute:d.get('state','minute'),damage:old-next}]);
         }
     }
