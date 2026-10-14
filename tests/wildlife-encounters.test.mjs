@@ -28,7 +28,7 @@ function setup(kind='present'){
 const population=(c,species)=>c.state.records[`ecology:${habitat}`].populations[species];
 function conservation(c){
     for(const r of Object.values(c.state.records).filter(r=>r.category==='ecology'))for(const p of Object.values(r.populations)){
-        assert.equal(p.initial+p.born+(p.immigrated??0)-p.predated-p.starved-p.withdrawn-(p.emigrated??0),p.count);assert.ok(p.count>=0);
+        assert.equal(p.initial+p.born+(p.arisen??0)+(p.immigrated??0)-p.predated-p.starved-p.withdrawn-(p.emigrated??0),p.count);assert.ok(p.count>=0);
     }
 }
 
