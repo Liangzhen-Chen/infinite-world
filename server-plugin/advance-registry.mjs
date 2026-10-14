@@ -10,6 +10,7 @@ import {advanceWaterEarth}from'./magic-water-earth.mjs';
 import {advanceCare}from'./magic-care.mjs';
 import {advanceMindSpace}from'./magic-mind-space.mjs';
 import {advanceShadowContracts,advanceContracts}from'./contracts.mjs';
+import {advanceCredit}from'./credit.mjs';
 import {settleMagicAreas,nextMagicAreaMinute}from'./magic-area.mjs';
 import {milestone}from'./progression.mjs';
 import {advancePets}from'./pets.mjs';
@@ -54,6 +55,7 @@ const systems=[
  {id:'npc_obligations',order:100,active:e=>fullNpcs(e),nextMinute:(e,d,now)=>nextNpcObligationMinute(d.get('state'),now),
   advance:(e,d,{before,after,id})=>advanceNpcObligations(d,e,before,after,id)},
  {id:'contracts',order:200,advance:(e,d,{after})=>advanceContracts(d,e,after)},
+ {id:'credit',order:250,advance:(e,d,{after})=>advanceCredit(d,e,after)},
  {id:'summons',order:300,advance:(e,d,{after})=>advanceSummons(d,after)},
  {id:'law',order:400,advance:(e,d,{after})=>advanceLaw(d,after,e)},
  {id:'daily',order:500,advance(e,d,{before,after}){

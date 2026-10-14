@@ -1,6 +1,7 @@
 import {createHash}from'node:crypto';
 import {effectiveProficiency}from'./professions.mjs';
 import {heldUnit}from'./items.mjs';
+import {trickKey,adaptationBonus,noteTrick,intelligenceFresh}from'./npc-intelligence.mjs';
 const integer=(value,min,max,label)=>{if(!Number.isSafeInteger(value)||value<min||value>max)throw new Error(`${label}不在允许范围`);return value;};
 const die=(document,eventId,label)=>createHash('sha256').update(`${document.randomSeed}:${eventId}:${label}`).digest().readUInt32LE(0)%20+1;
 const attributeOf=(engine,value)=>{if(!engine.rules.attributes.includes(value))throw new Error('属性不在规则表');return value;};
@@ -40,14 +41,16 @@ export function check(d,args,eventId){
     const attribute=attributeOf(this,args.attribute??'精神'),skill=args.skill?this.resolve(args.skill,'skill'):null;
     const context=integer(args.context??0,-this.rules.check.contextLimit,this.rules.check.contextLimit,'情境修正');
     if(context&&(typeof args.contextReason!=='string'||!args.contextReason.trim()))throw new Error('情境修正缺少理由');
-    let difficulty,opponent;
+    let difficulty,opponent,trick;
     if(args.opponent){
         if(args.difficulty!==undefined)throw new Error('对抗使用对手检定，不同时指定固定难度');
         const npc=presentNpc(d,this,args.opponent.npc),otherAttribute=attributeOf(this,args.opponent.attribute??attribute);
         if(Object.keys(args.opponent).some(key=>!['npc','attribute','skill'].includes(key)))throw new Error('不能指定对手的修正或骰点');
         const otherSkill=args.opponent.skill?this.resolve(args.opponent.skill,'skill'):null;
-        const roll=die(d.document,eventId,'opponent:d20'),modifier=modifierForNpc(d,this,npc,otherAttribute,otherSkill);
-        opponent={npc,attribute:otherAttribute,skill:otherSkill,die:roll,modifier,total:roll+modifier};difficulty=opponent.total;
+        // 灵智：玩家同一手法屡次得手后，对手起防备（只看玩家所用属性与技能）。
+        trick=trickKey(attribute,skill);const wary=intelligenceFresh(this)?adaptationBonus(this,d.get('state'),npc,trick):0;
+        const roll=die(d.document,eventId,'opponent:d20'),modifier=modifierForNpc(d,this,npc,otherAttribute,otherSkill)+wary;
+        opponent={npc,attribute:otherAttribute,skill:otherSkill,die:roll,modifier,total:roll+modifier,...(wary?{wary}:{})};difficulty=opponent.total;
     }else{
         difficulty=typeof args.difficulty==='string'?this.rules.check.difficulties[args.difficulty]:args.difficulty;
         if(!Object.values(this.rules.check.difficulties).includes(difficulty))throw new Error('难度不在规则档位');
@@ -83,6 +86,7 @@ export function check(d,args,eventId){
     const result={die:roll,rolls,modifier,total,difficulty,degree,success,
         ...(opponent?{opponent}:{}),...(helpers.length?{helpers}:{}),...(tools.details.length?{tools:tools.details,toolBonus:tools.bonus}:{})};
     d.set(['state','checks',eventId],result);
+    if(opponent&&success)noteTrick(d,this,opponent.npc,trick,eventId);
     for(const row of helpers){
         d.set(['state','obligations',row.obligation,'status'],'已完成');d.set(['state','obligations',row.obligation,'completion'],{source:eventId,success:row.success,minute:d.get('state','minute')});
         d.set(['state','npcs',row.npc,'developments'],[...d.get('state','npcs',row.npc,'developments')??[],{type:'协助行动',source:eventId,skill,attribute,success:row.success,minute:d.get('state','minute')}]);

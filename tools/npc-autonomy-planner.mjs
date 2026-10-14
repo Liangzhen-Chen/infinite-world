@@ -12,10 +12,10 @@ const actionSchema={oneOf:Object.entries(actionFields).map(([kind,keys])=>({type
 function personSchema(npc){
  const actions=structuredClone(actionSchema).oneOf.filter(s=>s.properties.kind.const==='craft'?npc.knownRecipes.length:s.properties.kind.const==='share'?npc.memories.length:s.properties.kind.const==='audit_inventory'?Object.values(npc.goals).flat().some(g=>/核清现有(?:铁料|线料)/.test(g.content)&&g.progress<100):true);
  for(const s of actions){const p=s.properties;if(p.recipe)p.recipe={enum:npc.knownRecipes.map(r=>r.id)};if(p.goal)p.goal={enum:Object.values(npc.goals).flat().filter(g=>/核清现有(?:铁料|线料)/.test(g.content)&&g.progress<100).map(g=>g.id)};if(p.memoryId)p.memoryId={enum:npc.memories.map(m=>m.id)};}
- return {type:'object',additionalProperties:false,required:['npc','actions'],properties:{npc:{const:npc.id},actions:{type:'array',maxItems:2,items:{oneOf:actions}}}};
+ return {type:'object',additionalProperties:false,required:['npc','actions'],properties:{npc:{const:npc.id},actions:{type:'array',maxItems:npc.intelligence?.maxActions??2,items:{oneOf:actions}}}};
 }
 function request(context,maxTokens){return {max_tokens:maxTokens,thinking:{type:'disabled'},messages:[
- {role:'system',content:'为当前已登记人物规划离屏行动。逐人只使用本人的人物卡、本人近期记忆、已知配方和地点。其他人物卡中的秘密不代表本人知道。遵守价值观与禁区；不借用玩家财物；不能创造资源、承诺成功或写入事实。只建议已实现的 craft、audit_inventory、trade、share，每人 0–2 项；没有现实条件时返回空 actions。craft 只用 knownRecipes；audit_inventory 只可核清本人现有铁料或线料；trade 仅在此刻同一地点向有贸易服务者购买实际库存；share 只传本人 memories 中已有的 memoryId，conversation 必须同地，carry 必须亲自走真实路线。引擎将在开始和完成时另行核验，失败如实拒绝。必须为给定的每个人返回一项。'},
+ {role:'system',content:'为当前已登记人物规划离屏行动。逐人只使用本人的人物卡、本人近期记忆、已知配方和地点。其他人物卡中的秘密不代表本人知道。遵守价值观与禁区；不借用玩家财物；不能创造资源、承诺成功或写入事实。只建议已实现的 craft、audit_inventory、trade、share，每人不超过本人 intelligence.maxActions 项，只顾及其 goals 视野内的事；没有现实条件时返回空 actions。craft 只用 knownRecipes；audit_inventory 只可核清本人现有铁料或线料；trade 仅在此刻同一地点向有贸易服务者购买实际库存；share 只传本人 memories 中已有的 memoryId，conversation 必须同地，carry 必须亲自走真实路线。引擎将在开始和完成时另行核验，失败如实拒绝。必须为给定的每个人返回一项。'},
  {role:'user',content:JSON.stringify(context)}],tools:[{type:'function',function:{name:'propose_npc_actions',description:'返回有限的行动建议，由确定性引擎核验后执行',parameters:{type:'object',additionalProperties:false,required:['proposals'],properties:{proposals:{type:'array',minItems:context.people.length,maxItems:context.people.length,items:{oneOf:context.people.map(personSchema)}}}}}}],tool_choice:{type:'function',function:{name:'propose_npc_actions'}}};}
 export {request as npcPlanningRequest};
 export function validateNpcPlanResponse(response,context){
@@ -25,7 +25,7 @@ export function validateNpcPlanResponse(response,context){
  if(!parsed||Object.keys(parsed).some(k=>k!=='proposals')||!Array.isArray(parsed.proposals)||parsed.proposals.length!==people.size)throw Error('模型规划人物名单不完整');
  const seen=new Set();
  for(const row of parsed.proposals){
-  if(!row||Object.keys(row).some(k=>!['npc','actions'].includes(k))||!people.has(row.npc)||seen.has(row.npc)||!Array.isArray(row.actions)||row.actions.length>2)throw Error('模型规划人物重复、未知或行动超限');seen.add(row.npc);
+  if(!row||Object.keys(row).some(k=>!['npc','actions'].includes(k))||!people.has(row.npc)||seen.has(row.npc)||!Array.isArray(row.actions)||row.actions.length>(people.get(row.npc).intelligence?.maxActions??2))throw Error('模型规划人物重复、未知或行动超限');seen.add(row.npc);
   for(const action of row.actions){const keys=actionFields[action?.kind];if(!keys||Object.keys(action).some(k=>!keys.includes(k))||keys.some(k=>!(k in action)))throw Error('模型规划含未知行动或改账字段');
    for(const k of keys.filter(k=>!['quantity'].includes(k)))if(typeof action[k]!=='string'||!action[k]||action[k].length>180)throw Error('模型行动字段无效');
    const npc=people.get(row.npc);
