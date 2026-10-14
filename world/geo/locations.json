@@ -16659,5 +16659,1185 @@
       "noMechanics": "无新增工作站、可领取库存、产量或收费服务"
     },
     "description": "白石镇西郊废窑在镇子西边的平地上，出镇沿旧运砖的车道走到头便是。几座砖瓦窑停烧多年，有的塌了半边，窑顶漏下天光，窑膛里积着厚厚的灰。碎瓦和废砖堆成小丘，风穿过时发出呜呜的声音。夏秋干风吹过，窑灰扑起一层细尘。镇上偶尔有人来拣还能用的整砖，不在这里久留。"
+  },
+  {
+    "id": "loc_ms_tanjie",
+    "name": "炭阶地宫",
+    "aliases": [],
+    "parent": "loc_bs",
+    "scope": "loc_bs",
+    "coordinates": [
+      20.25,
+      1.2
+    ],
+    "terrain": "平地",
+    "openHours": [
+      0,
+      1440
+    ],
+    "owner": null,
+    "purpose": "灰窟哥布林聚居的地下洞群",
+    "rooms": [],
+    "inventory": {},
+    "mapHierarchy": [
+      {
+        "id": "known-continent",
+        "name": "已知大陆片区"
+      },
+      {
+        "id": "known-region",
+        "name": "已知地区片区"
+      },
+      {
+        "id": "known-county",
+        "name": "已知郡级片区"
+      },
+      {
+        "id": "loc_bs",
+        "name": "白石镇"
+      }
+    ],
+    "monsterSociety": {
+      "leader": "boss_ms_tanjie",
+      "neighbors": {
+        "loc_bs": "戒备"
+      },
+      "stances": {
+        "player": "戒备"
+      },
+      "meetingPlace": "site_ms_tj_council",
+      "motions": [
+        {
+          "id": "grain_pact",
+          "name": "是否与白石镇立按旬交付的粮约"
+        },
+        {
+          "id": "grain_raid",
+          "name": "是否出窟抢粮过冬"
+        }
+      ],
+      "positions": [
+        {
+          "id": "keep_trade",
+          "name": "守窟换粮",
+          "members": [
+            "npc_ms_tj_yanzhen",
+            "npc_ms_tj_dingying",
+            "npc_ms_tj_yantai",
+            "npc_ms_tj_dingkou"
+          ],
+          "claim": "守住共灶，用菌粮和修补活计向白石镇换粮，入冬前谈下粮约。"
+        },
+        {
+          "id": "raid_challenge",
+          "name": "抢粮挑战",
+          "members": [
+            "npc_ms_tj_liya",
+            "npc_ms_tj_lishuan"
+          ],
+          "claim": "嫌换粮台换得太贱，主张出窟抢粮过冬，并在换季那夜挑战窟主之位。"
+        }
+      ]
+    },
+    "authoredFacts": {
+      "climate": "地下常年阴凉潮湿，靠通风井的洞室有风，深处闷热",
+      "senses": [
+        "敲铁管的长短节拍从各个窑道传来",
+        "窑灰味里混着菌床的湿木气",
+        "小油灯只照得见脚下两三步"
+      ],
+      "entryRule": "炭阶口和公共洞室可以通行，各铺私宅和议事窟须当面许可；窟里不点强光",
+      "noMechanics": "公共洞室与林地只登记通行、作息与有限库存；不新增工作站、产量或收费服务"
+    },
+    "description": "炭阶地宫在白石镇西郊废窑底下。从废窑塌了半边的窑膛背后，一道碎砖垒的台阶被炭灰染得乌黑，一级级通进地里，灰窟哥布林叫它炭阶。阶下是旧窑道改出来的一串洞室，按共灶窟分成三处住区，中间是共灶厅，旁边有菌床洞、通风井和铸补间。洞里只点小油灯，说话声和敲管声在窑道里来回传。"
+  },
+  {
+    "id": "site_ms_tj_stair",
+    "name": "炭阶口",
+    "aliases": [],
+    "parent": "loc_ms_tanjie",
+    "scope": "loc_ms_tanjie",
+    "coordinates": [
+      20.28,
+      1.2
+    ],
+    "terrain": "平地",
+    "openHours": [
+      0,
+      1440
+    ],
+    "owner": null,
+    "purpose": "公共设施",
+    "rooms": [],
+    "inventory": {},
+    "authoredFacts": {
+      "climate": "靠近地面，夜里有冷风从台阶灌下来",
+      "senses": [
+        "木板台面被手肘磨得发亮",
+        "刻痕木片挂成一排，风一吹就互相磕碰",
+        "台阶上方能看见废窑漏下的一点天光"
+      ],
+      "entryRule": "公共入口，换粮在黄昏后的台面上进行，越过木板要先打招呼",
+      "noMechanics": "只登记通行与作息；不新增工作站、产量或收费服务"
+    },
+    "description": "炭阶口是炭阶地宫的入口洞室，台阶下到底就是。洞口横着一块厚木板当换粮台，木板这边站着哥布林，那边站着来换东西的人。黄昏以后，烟苔在台上摆出干菌片和小铁钉，换镇上带来的燕麦和盐。台边钉着一排刻痕木片，记着每一回换了什么。",
+    "access": {
+      "mode": "public"
+    }
+  },
+  {
+    "id": "site_ms_tj_hearth",
+    "name": "共灶厅",
+    "aliases": [],
+    "parent": "loc_ms_tanjie",
+    "scope": "loc_ms_tanjie",
+    "coordinates": [
+      20.276,
+      1.216
+    ],
+    "terrain": "平地",
+    "openHours": [
+      0,
+      1440
+    ],
+    "owner": null,
+    "purpose": "公共设施",
+    "rooms": [],
+    "inventory": {},
+    "authoredFacts": {
+      "climate": "灶火终夜不熄，厅里比别处暖和干燥",
+      "senses": [
+        "大灶里的炭火噼啪作响",
+        "分食时敲管报数，一声接一声",
+        "平石上堆着待补的破锅和一篓小铁钉"
+      ],
+      "entryRule": "公共洞室，分食时按敲管次序上前；厅后通往旧窑膛的窄道只在送亡者时打开",
+      "noMechanics": "只登记通行与作息；不新增工作站、产量或收费服务"
+    },
+    "description": "共灶厅是炭阶地宫最大的洞室，正中一口大灶，灶火由炉祭钉缨看守，各共灶窟的成员轮流来这里分食。灶的一侧有一块被炭灰磨黑的平石，是窟主座，窟主烟砧夜里在这里见来人、谈交换。厅后有一条窄道通往旧窑膛，换季那夜亡者就送进那里。",
+    "access": {
+      "mode": "public"
+    }
+  },
+  {
+    "id": "site_ms_tj_fungus",
+    "name": "菌床洞",
+    "aliases": [],
+    "parent": "loc_ms_tanjie",
+    "scope": "loc_ms_tanjie",
+    "coordinates": [
+      20.264,
+      1.227
+    ],
+    "terrain": "平地",
+    "openHours": [
+      0,
+      1440
+    ],
+    "owner": null,
+    "purpose": "公共设施",
+    "rooms": [],
+    "inventory": {},
+    "authoredFacts": {
+      "climate": "潮湿闷热，地面总是湿的",
+      "senses": [
+        "湿草和烂木的气味很重",
+        "菌床上的菌伞碰一下就落细粉",
+        "洒水的陶罐摆在过道两头"
+      ],
+      "entryRule": "公共洞室，可以沿过道走，菌床上的东西归共灶，不经烟苔点头不能摘",
+      "noMechanics": "只登记通行与作息；不新增工作站、产量或收费服务"
+    },
+    "description": "菌床洞是一条又长又低的旧窑道，两侧用碎砖垫起一排排菌床，铺着烂木和湿草，长着灰白的菌子。烟苔管着这里，烟芽每晚跟她翻草洒水。收下的菌子晾成干菌片，一部分进共灶，一部分拿到炭阶口换粮。",
+    "access": {
+      "mode": "public"
+    }
+  },
+  {
+    "id": "site_ms_tj_shaft",
+    "name": "通风井",
+    "aliases": [],
+    "parent": "loc_ms_tanjie",
+    "scope": "loc_ms_tanjie",
+    "coordinates": [
+      20.248,
+      1.23
+    ],
+    "terrain": "平地",
+    "openHours": [
+      0,
+      1440
+    ],
+    "owner": null,
+    "purpose": "公共设施",
+    "rooms": [],
+    "inventory": {},
+    "authoredFacts": {
+      "climate": "风大，冬天井口灌下冷风",
+      "senses": [
+        "风穿过井筒发出低低的呜声",
+        "铁管一敲，整口井都在嗡响",
+        "井壁裂缝旁抹着一道新的炭灰记号"
+      ],
+      "entryRule": "公共洞室，可以靠近井口，动井壁和铁管要先问通风工砾片",
+      "noMechanics": "只登记通行与作息；不新增工作站、产量或收费服务"
+    },
+    "description": "通风井原是废窑的一根旧烟道，竖着通到地面，炭阶地宫各处洞室的风都从这里进出。井壁上钉着几根铁管，哥布林敲管传讯，节拍顺着铁管传遍各窟。井壁内侧有一道裂缝，砾片每晚来量，说入冬前得补。在炭阶，封堵公共风井是最重的忌讳。",
+    "access": {
+      "mode": "public"
+    }
+  },
+  {
+    "id": "site_ms_tj_forge",
+    "name": "铸补间",
+    "aliases": [],
+    "parent": "loc_ms_tanjie",
+    "scope": "loc_ms_tanjie",
+    "coordinates": [
+      20.232,
+      1.224
+    ],
+    "terrain": "平地",
+    "openHours": [
+      0,
+      1440
+    ],
+    "owner": null,
+    "purpose": "公共设施",
+    "rooms": [],
+    "inventory": {},
+    "authoredFacts": {
+      "climate": "炉边烤得发烫，离炉几步又阴冷下来",
+      "senses": [
+        "小锤敲铁的叮当声不断",
+        "炉灰和铁锈的味道",
+        "墙边摞着补了一半的锅"
+      ],
+      "entryRule": "公共作坊，可以在门边看，炉火和工具归铸补间，动手前要问钉扣",
+      "noMechanics": "只登记通行与作息；不新增工作站、产量或收费服务"
+    },
+    "description": "铸补间挨着钉灶窟，是一间用旧窑膛改的小作坊，炉里烧的是废窑里扒出来的木炭。钉扣和钉锉在这里补镇边人家送来的破锅、敲直弯钉，补好的活计和小铁钉拿去换粮。窟主烟砧原本就是这里的铸补匠，夜里还常回来补锅。",
+    "access": {
+      "mode": "public"
+    }
+  },
+  {
+    "id": "site_ms_tj_yan",
+    "name": "烟灶窟",
+    "aliases": [],
+    "parent": "loc_ms_tanjie",
+    "scope": "loc_ms_tanjie",
+    "coordinates": [
+      20.222,
+      1.211
+    ],
+    "terrain": "平地",
+    "openHours": [
+      0,
+      1440
+    ],
+    "owner": null,
+    "purpose": "住区",
+    "rooms": [],
+    "inventory": {},
+    "authoredFacts": {
+      "climate": "有风，烟味散得快，比别的窟干一些",
+      "senses": [
+        "洞顶黑得发亮",
+        "铺门口的麻片被风吹得一鼓一鼓",
+        "走道里摆着各铺的小陶灯"
+      ],
+      "entryRule": "住区窑道可以通行，各铺私宅须住户当面许可",
+      "noMechanics": "只登记通行与作息；不新增工作站、产量或收费服务"
+    },
+    "description": "烟灶窟是离通风井最近的一处共灶窟，洞顶被烟熏得发黑，所以叫烟灶。几条窄窑道两边挖着一个个睡铺，各铺门口挂着麻片。窟主烟砧、菌床管事烟苔都住在这里的烟灶铺，这一季烟灶铺轮养幼崽烟豆。",
+    "access": {
+      "mode": "public"
+    }
+  },
+  {
+    "id": "site_ms_tj_ding",
+    "name": "钉灶窟",
+    "aliases": [],
+    "parent": "loc_ms_tanjie",
+    "scope": "loc_ms_tanjie",
+    "coordinates": [
+      20.22,
+      1.195
+    ],
+    "terrain": "平地",
+    "openHours": [
+      0,
+      1440
+    ],
+    "owner": null,
+    "purpose": "住区",
+    "rooms": [],
+    "inventory": {},
+    "authoredFacts": {
+      "climate": "挨着铸补间的一侧暖，另一侧潮",
+      "senses": [
+        "墙上的钉子挂满锤和钳",
+        "隔墙传来叮当的敲打",
+        "地上落着细碎的铁屑"
+      ],
+      "entryRule": "住区窑道可以通行，各铺私宅须住户当面许可",
+      "noMechanics": "只登记通行与作息；不新增工作站、产量或收费服务"
+    },
+    "description": "钉灶窟挨着铸补间，窑道墙上钉满了各铺挂工具的铁钉，所以叫钉灶。炉祭钉缨和铸补匠钉扣、钉锉住在钉灶铺，这一季钉灶铺轮养幼崽钉粒。夜里铸补间的敲打声隔着墙也听得见。",
+    "access": {
+      "mode": "public"
+    }
+  },
+  {
+    "id": "site_ms_tj_li",
+    "name": "砾灶窟",
+    "aliases": [],
+    "parent": "loc_ms_tanjie",
+    "scope": "loc_ms_tanjie",
+    "coordinates": [
+      20.227,
+      1.18
+    ],
+    "terrain": "平地",
+    "openHours": [
+      0,
+      1440
+    ],
+    "owner": null,
+    "purpose": "住区",
+    "rooms": [],
+    "inventory": {},
+    "authoredFacts": {
+      "climate": "最低最闷，雨季地面渗水",
+      "senses": [
+        "脚下碎砾硌脚，走一步响一声",
+        "旧岔道口的碎砖堆得歪歪斜斜",
+        "窑道比别的窟窄，要侧身才能错开"
+      ],
+      "entryRule": "住区窑道可以通行，各铺私宅须住户当面许可",
+      "noMechanics": "只登记通行与作息；不新增工作站、产量或收费服务"
+    },
+    "description": "砾灶窟在炭阶地宫最低的一层，是后来才挖开的，地上还铺着没清干净的碎砾。分锅时砾灶窟常排在最后，年轻成员多，巡洞守卫砾牙和砾栓都住在这里的砾灶铺。窟的一侧有一条旧岔道，岔道口用碎砖虚掩着。",
+    "access": {
+      "mode": "public"
+    }
+  },
+  {
+    "id": "bld_ms_tj_home_01",
+    "name": "烟灶铺",
+    "aliases": [],
+    "parent": "site_ms_tj_yan",
+    "scope": "loc_ms_tanjie",
+    "coordinates": [
+      20.241,
+      1.171
+    ],
+    "terrain": "平地",
+    "openHours": [
+      0,
+      1440
+    ],
+    "owner": null,
+    "purpose": "私宅",
+    "rooms": [],
+    "inventory": {},
+    "authoredFacts": {
+      "climate": "干燥，有风从烟灶窟的窑道吹进来",
+      "senses": [
+        "干草铺得整整齐齐",
+        "墙上挂着一串刻痕木片",
+        "烟豆的小草铺在最里面"
+      ],
+      "entryRule": "私宅，须成年住户当面许可",
+      "noMechanics": "只登记通行与作息；不新增工作站、产量或收费服务"
+    },
+    "description": "烟灶铺是烟灶窟里的一处睡铺，住着烟砧、烟苔、烟芽，这一季还轮养着幼崽烟豆。铺里铺着几层干草，墙上挂着刻痕木片和补锅用的小工具。门前可以招呼，进铺须成年住户许可。",
+    "access": {
+      "mode": "private",
+      "requiresConsent": true,
+      "residents": [
+        "npc_ms_tj_yanzhen",
+        "npc_ms_tj_yantai",
+        "npc_ms_tj_yanya",
+        "npc_ms_tj_yandou"
+      ]
+    }
+  },
+  {
+    "id": "bld_ms_tj_home_02",
+    "name": "钉灶铺",
+    "aliases": [],
+    "parent": "site_ms_tj_ding",
+    "scope": "loc_ms_tanjie",
+    "coordinates": [
+      20.257,
+      1.171
+    ],
+    "terrain": "平地",
+    "openHours": [
+      0,
+      1440
+    ],
+    "owner": null,
+    "purpose": "私宅",
+    "rooms": [],
+    "inventory": {},
+    "authoredFacts": {
+      "climate": "挨着铸补间，铺里偏暖",
+      "senses": [
+        "门边一小堆引火炭码得整齐",
+        "墙上挂着一根短铜管",
+        "草铺上落着铁屑"
+      ],
+      "entryRule": "私宅，须成年住户当面许可",
+      "noMechanics": "只登记通行与作息；不新增工作站、产量或收费服务"
+    },
+    "description": "钉灶铺是钉灶窟里的一处睡铺，住着钉缨、钉扣、钉锉，这一季轮养幼崽钉粒。铺门边堆着一小堆引火炭，钉缨每天起身后在门边清点一遍，这一季轮养的钉粒也跟着学数。门前可以招呼，进铺须成年住户许可。",
+    "access": {
+      "mode": "private",
+      "requiresConsent": true,
+      "residents": [
+        "npc_ms_tj_dingying",
+        "npc_ms_tj_dingkou",
+        "npc_ms_tj_dingcuo",
+        "npc_ms_tj_dingli"
+      ]
+    }
+  },
+  {
+    "id": "bld_ms_tj_home_03",
+    "name": "砾灶铺",
+    "aliases": [],
+    "parent": "site_ms_tj_li",
+    "scope": "loc_ms_tanjie",
+    "coordinates": [
+      20.271,
+      1.179
+    ],
+    "terrain": "平地",
+    "openHours": [
+      0,
+      1440
+    ],
+    "owner": null,
+    "purpose": "私宅",
+    "rooms": [],
+    "inventory": {},
+    "authoredFacts": {
+      "climate": "低洼闷热，墙根有些潮",
+      "senses": [
+        "墙角立着磨尖的铁条",
+        "干草下面的碎砾一踩就响",
+        "砾跳的小铁片挂在门帘上"
+      ],
+      "entryRule": "私宅，须成年住户当面许可",
+      "noMechanics": "只登记通行与作息；不新增工作站、产量或收费服务"
+    },
+    "description": "砾灶铺是砾灶窟里的一处睡铺，住着砾牙、砾栓、砾片，这一季轮养幼崽砾跳。铺里地面垫了一层干草，压住底下的碎砾，墙角立着巡洞用的铁条。门前可以招呼，进铺须成年住户许可。",
+    "access": {
+      "mode": "private",
+      "requiresConsent": true,
+      "residents": [
+        "npc_ms_tj_liya",
+        "npc_ms_tj_lishuan",
+        "npc_ms_tj_lipian",
+        "npc_ms_tj_litiao"
+      ]
+    }
+  },
+  {
+    "id": "site_ms_tj_council",
+    "name": "议事窟",
+    "aliases": [],
+    "parent": "loc_ms_tanjie",
+    "scope": "loc_ms_tanjie",
+    "coordinates": [
+      20.279,
+      1.193
+    ],
+    "terrain": "平地",
+    "openHours": [
+      0,
+      1440
+    ],
+    "owner": null,
+    "purpose": "议事区",
+    "rooms": [],
+    "inventory": {},
+    "authoredFacts": {
+      "climate": "封闭安静，比共灶厅凉",
+      "senses": [
+        "一圈平石磨得光滑",
+        "墙上刻着历年议过的事的记号",
+        "窄道里能听见共灶厅的灶火声"
+      ],
+      "entryRule": "议事区，须窟主烟砧当面许可",
+      "noMechanics": "只登记通行与作息；不新增工作站、产量或收费服务"
+    },
+    "description": "议事窟在共灶厅后面窄道的一侧，是一间不大的圆洞，中间摆着一圈平石。每夜子时过后，窟主烟砧、炉祭钉缨和巡洞守卫砾牙在这里夜议，议立粮约，也议出窟抢粮。外人要进，须窟主当面许可。",
+    "access": {
+      "mode": "council",
+      "requiresConsent": true,
+      "authority": "npc_ms_tj_yanzhen"
+    }
+  },
+  {
+    "id": "site_ms_tj_store",
+    "name": "仓窟",
+    "aliases": [],
+    "parent": "loc_ms_tanjie",
+    "scope": "loc_ms_tanjie",
+    "coordinates": [
+      20.279,
+      1.209
+    ],
+    "terrain": "平地",
+    "openHours": [
+      0,
+      1440
+    ],
+    "owner": "npc_ms_tj_yanzhen",
+    "purpose": "存放洞室",
+    "rooms": [],
+    "inventory": {},
+    "authoredFacts": {
+      "climate": "干燥阴凉，洞口麻帘挡住了湿气",
+      "senses": [
+        "麻袋垒成矮墙",
+        "墙上的刻痕密密麻麻",
+        "地上落着一些燕麦壳"
+      ],
+      "entryRule": "仓粮归窟主，进入须窟主或管事许可；仓窟登记为可潜入之处",
+      "noMechanics": "只登记通行与作息；不新增工作站、产量或收费服务"
+    },
+    "description": "仓窟是炭阶地宫存粮的洞室，靠砾灶窟一侧，洞口挂着厚麻帘。里面堆着用麻袋装的燕麦，墙上刻着刻痕账。上回换季熄炉后，刻痕账上少了三袋燕麦，去向至今没有查清。烟苔每夜后半段来清点。",
+    "site": {
+      "owner": "npc_ms_tj_yanzhen",
+      "manager": "npc_ms_tj_yantai",
+      "occupants": [
+        "npc_ms_tj_yantai"
+      ],
+      "entryMechanisms": [],
+      "mechanisms": [],
+      "resources": [
+        {
+          "id": "tj_store_oats",
+          "name": "窟粮燕麦",
+          "item": "item_oats",
+          "quantity": 37,
+          "minutes": 5
+        }
+      ],
+      "clues": [
+        {
+          "id": "tj_store_tally",
+          "name": "刻痕账",
+          "text": "墙上的刻痕账按袋记数，每次取粮都划去一道；从上回换季熄炉前到现在没有新划的痕，刻痕上仍是四十袋，可地上实有的麻袋只有三十七袋，少的三袋没留下取粮的划痕。",
+          "minutes": 10
+        },
+        {
+          "id": "tj_store_drag",
+          "name": "墙根拖痕",
+          "text": "靠里的墙根地上有几道浅浅的拖痕，像是麻袋被拖着走过，拖痕出了仓窟的后缝，朝砾灶窟一侧的旧岔道方向去了。",
+          "minutes": 15
+        }
+      ],
+      "truths": [],
+      "infiltration": {
+        "minutes": 30,
+        "check": {
+          "attribute": "敏捷",
+          "difficulty": 15
+        },
+        "damage": 5
+      }
+    }
+  },
+  {
+    "id": "loc_ms_taideng",
+    "name": "苔灯坞",
+    "aliases": [],
+    "parent": "loc_hw",
+    "scope": "loc_hw",
+    "coordinates": [
+      2.6,
+      0.9
+    ],
+    "terrain": "平地",
+    "openHours": [
+      0,
+      1440
+    ],
+    "owner": null,
+    "purpose": "苔灯狐族聚居的林下坞子",
+    "rooms": [],
+    "inventory": {},
+    "mapHierarchy": [
+      {
+        "id": "known-continent",
+        "name": "已知大陆片区"
+      },
+      {
+        "id": "known-region",
+        "name": "已知地区片区"
+      },
+      {
+        "id": "known-county",
+        "name": "已知郡级片区"
+      },
+      {
+        "id": "loc_hw",
+        "name": "河湾村"
+      }
+    ],
+    "monsterSociety": {
+      "leader": "boss_ms_taideng",
+      "neighbors": {
+        "loc_hw": "戒备"
+      },
+      "stances": {
+        "player": "中立"
+      },
+      "meetingPlace": "site_ms_td_council",
+      "motions": [
+        {
+          "id": "allow_bonds",
+          "name": "是否容许成员与外人结缘并一律打绳记"
+        },
+        {
+          "id": "trap_redress",
+          "name": "是否向河湾猎户追偿被捕夹夹伤的旧伤"
+        }
+      ],
+      "positions": [
+        {
+          "id": "bonds",
+          "name": "结缘派",
+          "members": [
+            "npc_ms_td_taimian",
+            "npc_ms_td_qingzhi",
+            "npc_ms_td_taixu",
+            "npc_ms_td_tailing"
+          ],
+          "claim": "受恩要还，容许成员与外人结下互助之缘，边界的事先结缘再谈。"
+        },
+        {
+          "id": "redress",
+          "name": "追偿派",
+          "members": [
+            "npc_ms_td_lizhen",
+            "npc_ms_td_lizhi"
+          ],
+          "claim": "被捕夹夹伤的旧伤要河湾猎户认账赔偿，收来的夹子等对方来认。"
+        }
+      ]
+    },
+    "authoredFacts": {
+      "climate": "林下阴湿，夜里露重，白天透进碎光",
+      "senses": [
+        "尾尖的苔光在树根间一闪一闪",
+        "草绳上抹着各巢不同的气味",
+        "脚边满是落叶和果核"
+      ],
+      "entryRule": "共食庭、药圃边、绳记坡、换盐石和归土灯坪可以通行，家巢和长老树洞须当面许可；带明火要先在林缘熄掉",
+      "noMechanics": "公共洞室与林地只登记通行、作息与有限库存；不新增工作站、产量或收费服务"
+    },
+    "description": "苔灯坞在河湾村北林边往里的一条支路尽头，是有灵智的苔灯狐聚居的林下坞子。几棵老树的根下挖着根洞家巢，分成三处，中间一片压平的空地是共食庭。夜里狐族尾尖的苔绿冷光在林下移来移去，路边树枝上系着打结的气味绳，既是路标，也是传话的记号。"
+  },
+  {
+    "id": "site_ms_td_commons",
+    "name": "共食庭",
+    "aliases": [],
+    "parent": "loc_ms_taideng",
+    "scope": "loc_ms_taideng",
+    "coordinates": [
+      2.63,
+      0.9
+    ],
+    "terrain": "平地",
+    "openHours": [
+      0,
+      1440
+    ],
+    "owner": null,
+    "purpose": "公共设施",
+    "rooms": [],
+    "inventory": {},
+    "authoredFacts": {
+      "climate": "林下空地，露水重，夜里偏凉",
+      "senses": [
+        "倒木被坐得光滑",
+        "分食的浆果和块根摆成一圈",
+        "幼崽们抢食时尾尖的光乱晃"
+      ],
+      "entryRule": "公共空地，分食时护幼者先上前，来客等在倒木边",
+      "noMechanics": "只登记通行与作息；不新增工作站、产量或收费服务"
+    },
+    "description": "共食庭是苔灯坞中间一片压平的林下空地，四周是老树根。每夜分食都在这里，护幼者苔絮带着幼崽先吃，长老苔眠总是最后动口。坞主栗衡夜里在庭边一截倒木上见来客，谈换盐和边界的事。",
+    "access": {
+      "mode": "public"
+    }
+  },
+  {
+    "id": "site_ms_td_garden",
+    "name": "药圃",
+    "aliases": [],
+    "parent": "loc_ms_taideng",
+    "scope": "loc_ms_taideng",
+    "coordinates": [
+      2.626,
+      0.916
+    ],
+    "terrain": "平地",
+    "openHours": [
+      0,
+      1440
+    ],
+    "owner": null,
+    "purpose": "公共设施",
+    "rooms": [],
+    "inventory": {},
+    "authoredFacts": {
+      "climate": "树冠稀一些，土松而潮",
+      "senses": [
+        "药草的苦香很冲",
+        "新苗边插着一圈细枝",
+        "畦沟里留着爪子刨过的印子"
+      ],
+      "entryRule": "可以沿畦边走，新苗踩不得，药草归坞里，不经青芷点头不能采",
+      "noMechanics": "只登记通行与作息；不新增工作站、产量或收费服务"
+    },
+    "description": "药圃在共食庭东边，是几畦松过土的林下地，种着狐族采回来移栽的药草和块根，新苗用细枝围着。青芷管着这里，青蓬每晚跟她挑药草。收下的药草扎成一把一把，拿到换盐石去换盐。",
+    "access": {
+      "mode": "public"
+    }
+  },
+  {
+    "id": "site_ms_td_ropes",
+    "name": "绳记坡",
+    "aliases": [],
+    "parent": "loc_ms_taideng",
+    "scope": "loc_ms_taideng",
+    "coordinates": [
+      2.614,
+      0.927
+    ],
+    "terrain": "平地",
+    "openHours": [
+      0,
+      1440
+    ],
+    "owner": null,
+    "purpose": "公共设施",
+    "rooms": [],
+    "inventory": {},
+    "authoredFacts": {
+      "climate": "坡上通风，草绳常被露水打湿",
+      "senses": [
+        "一枝枝草绳垂下来，长短不一",
+        "凑近能闻到各巢不同的气味",
+        "有几根旧绳已经泡得发黑"
+      ],
+      "entryRule": "公共坡地，可以看绳，解绳或挂新绳要问结绳的苔铃",
+      "noMechanics": "只登记通行与作息；不新增工作站、产量或收费服务"
+    },
+    "description": "绳记坡是共食庭北边一道缓坡，坡上的矮树枝挂满了打结的草绳。每根绳抹着某个家巢的气味，结的数目和间距记着事：谁欠谁、哪里下了夹子、哪天有谁来换盐。苔铃管着这些绳，旧绳被雨泡烂了就重新打一遍。",
+    "access": {
+      "mode": "public"
+    }
+  },
+  {
+    "id": "site_ms_td_saltstone",
+    "name": "换盐石",
+    "aliases": [],
+    "parent": "loc_ms_taideng",
+    "scope": "loc_ms_taideng",
+    "coordinates": [
+      2.598,
+      0.93
+    ],
+    "terrain": "平地",
+    "openHours": [
+      0,
+      1440
+    ],
+    "owner": null,
+    "purpose": "公共设施",
+    "rooms": [],
+    "inventory": {},
+    "authoredFacts": {
+      "climate": "林缘风大，比坞里干",
+      "senses": [
+        "石面被摆东西的爪子和手磨得发白",
+        "石边的草地踩出一圈秃印",
+        "能看见林外河湾方向的一点灯火"
+      ],
+      "entryRule": "公共石台，换东西时隔着石头各摆各的，越过石头要先招呼",
+      "noMechanics": "只登记通行与作息；不新增工作站、产量或收费服务"
+    },
+    "description": "换盐石在苔灯坞往北林边方向的林缘，是一块平顶的大青石。天黑以后，青芷把药草和干果摆在石上，来换东西的人把盐放下，双方各退一步看过再拿。来换的多是河湾猎户和过路的货郎，最近猎户来得少了。",
+    "access": {
+      "mode": "public"
+    }
+  },
+  {
+    "id": "site_ms_td_lampground",
+    "name": "归土灯坪",
+    "aliases": [],
+    "parent": "loc_ms_taideng",
+    "scope": "loc_ms_taideng",
+    "coordinates": [
+      2.582,
+      0.924
+    ],
+    "terrain": "平地",
+    "openHours": [
+      0,
+      1440
+    ],
+    "owner": null,
+    "purpose": "公共设施",
+    "rooms": [],
+    "inventory": {},
+    "authoredFacts": {
+      "climate": "向阳缓坡，白天晒得暖，夜里很静",
+      "senses": [
+        "松土上插着一圈圈细枝",
+        "坪边长着狐族移栽的药草",
+        "夜里这里没有一点苔光"
+      ],
+      "entryRule": "公共坡地，可以在坪边静立，翻土或拿走坪上的东西是重忌",
+      "noMechanics": "只登记通行与作息；不新增工作站、产量或收费服务"
+    },
+    "description": "归土灯坪在苔灯坞西边一片向阳的缓坡上，是狐族埋葬亡者的地方。亡者断气后，守夜者陪到它尾尖的苔光熄灭，再把它埋进坪上的松土，尾结取下来交给家巢收进长老树洞的龛里。坪上没有碑，只有一圈圈细枝标着各巢的位置。",
+    "access": {
+      "mode": "public"
+    }
+  },
+  {
+    "id": "site_ms_td_tai",
+    "name": "老根洞",
+    "aliases": [],
+    "parent": "loc_ms_taideng",
+    "scope": "loc_ms_taideng",
+    "coordinates": [
+      2.572,
+      0.911
+    ],
+    "terrain": "平地",
+    "openHours": [
+      0,
+      1440
+    ],
+    "owner": null,
+    "purpose": "住区",
+    "rooms": [],
+    "inventory": {},
+    "authoredFacts": {
+      "climate": "树根挡风，洞口一带干燥",
+      "senses": [
+        "老栎树根粗得像矮墙",
+        "洞口的旧草绳褪成灰色",
+        "洞里传出幼崽的哼声"
+      ],
+      "entryRule": "家巢群之间的林地可以通行，各巢根洞须住户当面许可",
+      "noMechanics": "只登记通行与作息；不新增工作站、产量或收费服务"
+    },
+    "description": "老根洞是苔灯坞最老的一处家巢群，在一棵半枯的老栎树根下，几个根洞的洞口挂着灰色的旧草绳。长老苔眠、护幼者苔絮和结绳的苔铃都住在这里的苔家巢。",
+    "access": {
+      "mode": "public"
+    }
+  },
+  {
+    "id": "site_ms_td_qing",
+    "name": "榛坡洞",
+    "aliases": [],
+    "parent": "loc_ms_taideng",
+    "scope": "loc_ms_taideng",
+    "coordinates": [
+      2.57,
+      0.895
+    ],
+    "terrain": "平地",
+    "openHours": [
+      0,
+      1440
+    ],
+    "owner": null,
+    "purpose": "住区",
+    "rooms": [],
+    "inventory": {},
+    "authoredFacts": {
+      "climate": "坡上透风，药草晾得快",
+      "senses": [
+        "榛树枝低低地压在洞口",
+        "成把的药草挂在根须上晾",
+        "坡上落满了榛子壳"
+      ],
+      "entryRule": "家巢群之间的林地可以通行，各巢根洞须住户当面许可",
+      "noMechanics": "只登记通行与作息；不新增工作站、产量或收费服务"
+    },
+    "description": "榛坡洞在一片榛树丛下的缓坡上，离药圃最近，洞口挂着青色的草绳。管药圃的青芷、采药的青蓬和采果的青穗都住在这里的青家巢，洞口常晾着成把的药草。",
+    "access": {
+      "mode": "public"
+    }
+  },
+  {
+    "id": "site_ms_td_li",
+    "name": "溪畔洞",
+    "aliases": [],
+    "parent": "loc_ms_taideng",
+    "scope": "loc_ms_taideng",
+    "coordinates": [
+      2.577,
+      0.88
+    ],
+    "terrain": "平地",
+    "openHours": [
+      0,
+      1440
+    ],
+    "owner": null,
+    "purpose": "住区",
+    "rooms": [],
+    "inventory": {},
+    "authoredFacts": {
+      "climate": "挨着溪水，夜里湿气重",
+      "senses": [
+        "溪水声从洞口下面传上来",
+        "栗树下落满带刺的壳斗",
+        "洞口的泥地上脚印排成一条条单线"
+      ],
+      "entryRule": "家巢群之间的林地可以通行，各巢根洞须住户当面许可",
+      "noMechanics": "只登记通行与作息；不新增工作站、产量或收费服务"
+    },
+    "description": "溪畔洞在一条小溪边的几棵栗树下，洞口挂着栗色的草绳。坞主栗衡、守林哨栗针和栗枝都住在这里的栗家巢，离北林边最近，巡林出入方便。",
+    "access": {
+      "mode": "public"
+    }
+  },
+  {
+    "id": "bld_ms_td_home_01",
+    "name": "苔家巢",
+    "aliases": [],
+    "parent": "site_ms_td_tai",
+    "scope": "loc_ms_taideng",
+    "coordinates": [
+      2.591,
+      0.871
+    ],
+    "terrain": "平地",
+    "openHours": [
+      0,
+      1440
+    ],
+    "owner": null,
+    "purpose": "私宅",
+    "rooms": [],
+    "inventory": {},
+    "authoredFacts": {
+      "climate": "干燥温暖，铺着厚厚的干苔",
+      "senses": [
+        "根须上挂满旧绳",
+        "干苔踩上去软软的",
+        "洞里有一股草药味"
+      ],
+      "entryRule": "私宅，须成年住户当面许可",
+      "noMechanics": "只登记通行与作息；不新增工作站、产量或收费服务"
+    },
+    "description": "苔家巢是老根洞里最大的一个根洞，住着苔眠、苔絮、苔铃和幼崽苔尖。洞里铺着干苔和落叶，洞壁的根须上挂着苔眠多年攒下的旧绳记。门前可以招呼，进巢须成年住户许可。",
+    "access": {
+      "mode": "private",
+      "requiresConsent": true,
+      "residents": [
+        "npc_ms_td_taimian",
+        "npc_ms_td_taixu",
+        "npc_ms_td_tailing",
+        "npc_ms_td_taijian"
+      ]
+    }
+  },
+  {
+    "id": "bld_ms_td_home_02",
+    "name": "青家巢",
+    "aliases": [],
+    "parent": "site_ms_td_qing",
+    "scope": "loc_ms_taideng",
+    "coordinates": [
+      2.607,
+      0.871
+    ],
+    "terrain": "平地",
+    "openHours": [
+      0,
+      1440
+    ],
+    "owner": null,
+    "purpose": "私宅",
+    "rooms": [],
+    "inventory": {},
+    "authoredFacts": {
+      "climate": "透风，药草和干果都晾得住",
+      "senses": [
+        "洞口垂着成把的药草",
+        "角落里堆着干果",
+        "空盐袋叠成一摞"
+      ],
+      "entryRule": "私宅，须成年住户当面许可",
+      "noMechanics": "只登记通行与作息；不新增工作站、产量或收费服务"
+    },
+    "description": "青家巢是榛坡洞里的一个根洞，住着青芷、青蓬、青穗和幼崽青圆。洞口晾着药草，洞里角落堆着干果和攒下的空盐袋。门前可以招呼，进巢须成年住户许可。",
+    "access": {
+      "mode": "private",
+      "requiresConsent": true,
+      "residents": [
+        "npc_ms_td_qingzhi",
+        "npc_ms_td_qingpeng",
+        "npc_ms_td_qingsui",
+        "npc_ms_td_qingyuan"
+      ]
+    }
+  },
+  {
+    "id": "bld_ms_td_home_03",
+    "name": "栗家巢",
+    "aliases": [],
+    "parent": "site_ms_td_li",
+    "scope": "loc_ms_taideng",
+    "coordinates": [
+      2.621,
+      0.879
+    ],
+    "terrain": "平地",
+    "openHours": [
+      0,
+      1440
+    ],
+    "owner": null,
+    "purpose": "私宅",
+    "rooms": [],
+    "inventory": {},
+    "authoredFacts": {
+      "climate": "挨着溪，洞里有些潮",
+      "senses": [
+        "洞口系着两道栗色草绳",
+        "洞底铺着一层干栗叶",
+        "能听见溪水声"
+      ],
+      "entryRule": "私宅，须成年住户当面许可",
+      "noMechanics": "只登记通行与作息；不新增工作站、产量或收费服务"
+    },
+    "description": "栗家巢是溪畔洞里的一个根洞，住着栗衡、栗针、栗枝和幼崽栗毛。洞口的草绳系了两道，栗衡出巢巡林前总要再系一遍。门前可以招呼，进巢须成年住户许可。",
+    "access": {
+      "mode": "private",
+      "requiresConsent": true,
+      "residents": [
+        "npc_ms_td_liheng",
+        "npc_ms_td_lizhen",
+        "npc_ms_td_lizhi",
+        "npc_ms_td_limao"
+      ]
+    }
+  },
+  {
+    "id": "site_ms_td_council",
+    "name": "长老树洞",
+    "aliases": [],
+    "parent": "loc_ms_taideng",
+    "scope": "loc_ms_taideng",
+    "coordinates": [
+      2.629,
+      0.893
+    ],
+    "terrain": "平地",
+    "openHours": [
+      0,
+      1440
+    ],
+    "owner": null,
+    "purpose": "议事区",
+    "rooms": [],
+    "inventory": {},
+    "authoredFacts": {
+      "climate": "树洞里安静，比外面暖一点",
+      "senses": [
+        "洞壁的小龛里一枚枚尾结排着",
+        "老栎的木屑味",
+        "夜议时只听见低低的说话声"
+      ],
+      "entryRule": "议事区，须长老苔眠当面许可；龛里的尾结任何人不能取走",
+      "noMechanics": "只登记通行与作息；不新增工作站、产量或收费服务"
+    },
+    "description": "长老树洞在一棵空心老栎的树干里，洞壁上凿着一排小龛，收着各家巢亡者的尾结。每夜子时过后，长老苔眠、坞主栗衡和守林哨栗针在这里夜议，读新挂的气味绳，议结缘也议追偿。外人要进，须长老苔眠当面许可。",
+    "access": {
+      "mode": "council",
+      "requiresConsent": true,
+      "authority": "npc_ms_td_taimian"
+    }
+  },
+  {
+    "id": "site_ms_td_trapcache",
+    "name": "收夹洞",
+    "aliases": [],
+    "parent": "loc_ms_taideng",
+    "scope": "loc_ms_taideng",
+    "coordinates": [
+      2.629,
+      0.909
+    ],
+    "terrain": "平地",
+    "openHours": [
+      0,
+      1440
+    ],
+    "owner": "npc_ms_td_lizhen",
+    "purpose": "存放洞室",
+    "rooms": [],
+    "inventory": {},
+    "authoredFacts": {
+      "climate": "阴湿，洞底积着落叶",
+      "senses": [
+        "铁夹上的锈味很冲",
+        "每只夹链上都系着一个草结",
+        "洞壁挂着一根打了几个结的伤绳"
+      ],
+      "entryRule": "栗针看管的存放洞，进入须他许可；收夹洞登记为可潜入之处",
+      "noMechanics": "只登记通行与作息；不新增工作站、产量或收费服务"
+    },
+    "description": "收夹洞是溪畔洞后面一个废弃的旧根洞，栗针和栗枝把从北林边收来的捕夹存在这里。夹子一只只摆在洞底，每只的链子上系着一个记结，洞壁上挂着一根伤绳。栗衡没有让夹子摆进共食庭，这洞归栗针看管。",
+    "site": {
+      "owner": "npc_ms_td_lizhen",
+      "manager": "npc_ms_td_lizhen",
+      "occupants": [
+        "npc_ms_td_lizhen"
+      ],
+      "entryMechanisms": [],
+      "mechanisms": [],
+      "resources": [],
+      "clues": [
+        {
+          "id": "td_trap_ropes",
+          "name": "夹绳记",
+          "text": "每只捕夹的链子上系着一个记结，结上抹着收夹那夜的气味，结的样式标着收夹的地点；数下来共有六只，其中一只的记结打法和别的不同，标的是边界石外侧。",
+          "minutes": 10
+        },
+        {
+          "id": "td_hurt_rope",
+          "name": "伤绳",
+          "text": "洞壁那根伤绳上打着四个结，每个结抹着一只狐的气味，记的是四只被捕夹夹伤的狐；其中一个结的气味和栗针身上的一样。",
+          "minutes": 10
+        }
+      ],
+      "truths": [],
+      "infiltration": {
+        "minutes": 20,
+        "check": {
+          "attribute": "敏捷",
+          "difficulty": 20
+        },
+        "damage": 3
+      }
+    }
   }
 ]

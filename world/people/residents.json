@@ -16756,5 +16756,565 @@
     },
     "currentConcern": "希望傍晚能留一小块安静桌面，重描没认准的字。",
     "visibleFeature": "腰带上系着一小片刻姓木牌。"
+  },
+  {
+    "id": "npc_ms_tj_lishuan",
+    "name": "砾栓",
+    "aliases": [],
+    "tier": "roster",
+    "age": 23,
+    "sex": "男",
+    "species": "monster_ash_cave_goblin",
+    "society": "loc_ms_tanjie",
+    "culture": "culture_ms_tanjie",
+    "settlement": "loc_ms_tanjie",
+    "scope": "loc_ms_tanjie",
+    "householdId": "house_ms_tj_03",
+    "household": [
+      "npc_ms_tj_liya",
+      "npc_ms_tj_lipian",
+      "npc_ms_tj_litiao"
+    ],
+    "occupation": "巡洞守卫",
+    "traits": [
+      "听话",
+      "手快"
+    ],
+    "home": {
+      "location": "bld_ms_tj_home_03",
+      "access": "同巢共居；进入私宅须先取得成年住户的有效许可。"
+    },
+    "location": "bld_ms_tj_home_03",
+    "flags": {
+      "minor": false,
+      "romanceable": false
+    },
+    "currentConcern": "砾牙让他在熄炉那几夜搬走的三袋燕麦一直压在他心上，他怕窟主查到砾灶窟来。",
+    "visibleFeature": "背上总斜挎一根磨尖的铁条，走路一步一顿。"
+  },
+  {
+    "id": "npc_ms_tj_dingkou",
+    "name": "钉扣",
+    "aliases": [],
+    "tier": "roster",
+    "age": 47,
+    "sex": "男",
+    "species": "monster_ash_cave_goblin",
+    "society": "loc_ms_tanjie",
+    "culture": "culture_ms_tanjie",
+    "settlement": "loc_ms_tanjie",
+    "scope": "loc_ms_tanjie",
+    "householdId": "house_ms_tj_02",
+    "household": [
+      "npc_ms_tj_dingying",
+      "npc_ms_tj_dingcuo",
+      "npc_ms_tj_dingli"
+    ],
+    "occupation": "铸补匠",
+    "traits": [
+      "手稳",
+      "话少"
+    ],
+    "home": {
+      "location": "bld_ms_tj_home_02",
+      "access": "同巢共居；进入私宅须先取得成年住户的有效许可。"
+    },
+    "location": "bld_ms_tj_home_02",
+    "flags": {
+      "minor": false,
+      "romanceable": false
+    },
+    "currentConcern": "铸补间接了镇边人家送来的两口破锅，他想赶在换季前补完，好拿去换粮。",
+    "visibleFeature": "眉毛被炉火燎得只剩一半。"
+  },
+  {
+    "id": "npc_ms_tj_dingcuo",
+    "name": "钉锉",
+    "aliases": [],
+    "tier": "roster",
+    "age": 31,
+    "sex": "女",
+    "species": "monster_ash_cave_goblin",
+    "society": "loc_ms_tanjie",
+    "culture": "culture_ms_tanjie",
+    "settlement": "loc_ms_tanjie",
+    "scope": "loc_ms_tanjie",
+    "householdId": "house_ms_tj_02",
+    "household": [
+      "npc_ms_tj_dingying",
+      "npc_ms_tj_dingkou",
+      "npc_ms_tj_dingli"
+    ],
+    "occupation": "铸补匠",
+    "traits": [
+      "利落",
+      "爱逞强"
+    ],
+    "home": {
+      "location": "bld_ms_tj_home_02",
+      "access": "同巢共居；进入私宅须先取得成年住户的有效许可。"
+    },
+    "location": "bld_ms_tj_home_02",
+    "flags": {
+      "minor": false,
+      "romanceable": false
+    },
+    "currentConcern": "她想打几道铁箍把通风井的裂缝箍住，可铸补间的铁料不够。",
+    "visibleFeature": "手腕上套着三只自己打的铁环。"
+  },
+  {
+    "id": "npc_ms_tj_yanya",
+    "name": "烟芽",
+    "aliases": [],
+    "tier": "roster",
+    "age": 27,
+    "sex": "女",
+    "species": "monster_ash_cave_goblin",
+    "society": "loc_ms_tanjie",
+    "culture": "culture_ms_tanjie",
+    "settlement": "loc_ms_tanjie",
+    "scope": "loc_ms_tanjie",
+    "householdId": "house_ms_tj_01",
+    "household": [
+      "npc_ms_tj_yanzhen",
+      "npc_ms_tj_yantai",
+      "npc_ms_tj_yandou"
+    ],
+    "occupation": "菌床工",
+    "traits": [
+      "细心",
+      "胆小"
+    ],
+    "home": {
+      "location": "bld_ms_tj_home_01",
+      "access": "同巢共居；进入私宅须先取得成年住户的有效许可。"
+    },
+    "location": "bld_ms_tj_home_01",
+    "flags": {
+      "minor": false,
+      "romanceable": false
+    },
+    "currentConcern": "菌床洞靠里那几排冒了白霉，她怕是自己翻草时漏了一处。",
+    "visibleFeature": "总眯着眼，连菌床洞的微光都嫌刺眼。"
+  },
+  {
+    "id": "npc_ms_tj_lipian",
+    "name": "砾片",
+    "aliases": [],
+    "tier": "roster",
+    "age": 54,
+    "sex": "女",
+    "species": "monster_ash_cave_goblin",
+    "society": "loc_ms_tanjie",
+    "culture": "culture_ms_tanjie",
+    "settlement": "loc_ms_tanjie",
+    "scope": "loc_ms_tanjie",
+    "householdId": "house_ms_tj_03",
+    "household": [
+      "npc_ms_tj_liya",
+      "npc_ms_tj_lishuan",
+      "npc_ms_tj_litiao"
+    ],
+    "occupation": "通风工",
+    "traits": [
+      "唠叨",
+      "守本分"
+    ],
+    "home": {
+      "location": "bld_ms_tj_home_03",
+      "access": "同巢共居；进入私宅须先取得成年住户的有效许可。"
+    },
+    "location": "bld_ms_tj_home_03",
+    "flags": {
+      "minor": false,
+      "romanceable": false
+    },
+    "currentConcern": "通风井内壁那道裂缝一夜比一夜宽，她每晚都去量一回。",
+    "visibleFeature": "贴墙听风声时会把一只耳朵折下来。"
+  },
+  {
+    "id": "npc_ms_tj_yandou",
+    "name": "烟豆",
+    "aliases": [],
+    "tier": "roster",
+    "age": 9,
+    "sex": "女",
+    "species": "monster_ash_cave_goblin",
+    "society": "loc_ms_tanjie",
+    "culture": "culture_ms_tanjie",
+    "settlement": "loc_ms_tanjie",
+    "scope": "loc_ms_tanjie",
+    "householdId": "house_ms_tj_01",
+    "household": [
+      "npc_ms_tj_yanzhen",
+      "npc_ms_tj_yantai",
+      "npc_ms_tj_yanya"
+    ],
+    "occupation": "随轮养铺做轻活",
+    "traits": [
+      "好奇",
+      "爱学舌"
+    ],
+    "home": {
+      "location": "bld_ms_tj_home_01",
+      "access": "同巢共居；进入私宅须先取得成年住户的有效许可。"
+    },
+    "location": "bld_ms_tj_home_01",
+    "flags": {
+      "minor": true,
+      "romanceable": false
+    },
+    "currentConcern": "想学会敲管的起头拍，好在分食时替烟灶铺报数。",
+    "visibleFeature": "耳朵上总沾着菌床的湿草屑。"
+  },
+  {
+    "id": "npc_ms_tj_dingli",
+    "name": "钉粒",
+    "aliases": [],
+    "tier": "roster",
+    "age": 12,
+    "sex": "男",
+    "species": "monster_ash_cave_goblin",
+    "society": "loc_ms_tanjie",
+    "culture": "culture_ms_tanjie",
+    "settlement": "loc_ms_tanjie",
+    "scope": "loc_ms_tanjie",
+    "householdId": "house_ms_tj_02",
+    "household": [
+      "npc_ms_tj_dingying",
+      "npc_ms_tj_dingkou",
+      "npc_ms_tj_dingcuo"
+    ],
+    "occupation": "随轮养铺做轻活",
+    "traits": [
+      "认真",
+      "爱数东西"
+    ],
+    "home": {
+      "location": "bld_ms_tj_home_02",
+      "access": "同巢共居；进入私宅须先取得成年住户的有效许可。"
+    },
+    "location": "bld_ms_tj_home_02",
+    "flags": {
+      "minor": true,
+      "romanceable": false
+    },
+    "currentConcern": "钉缨让他每晚数引火炭，他总怕数错一根。",
+    "visibleFeature": "腰上挂着一根短短的练习铜管。"
+  },
+  {
+    "id": "npc_ms_tj_litiao",
+    "name": "砾跳",
+    "aliases": [],
+    "tier": "roster",
+    "age": 6,
+    "sex": "女",
+    "species": "monster_ash_cave_goblin",
+    "society": "loc_ms_tanjie",
+    "culture": "culture_ms_tanjie",
+    "settlement": "loc_ms_tanjie",
+    "scope": "loc_ms_tanjie",
+    "householdId": "house_ms_tj_03",
+    "household": [
+      "npc_ms_tj_liya",
+      "npc_ms_tj_lishuan",
+      "npc_ms_tj_lipian"
+    ],
+    "occupation": "随轮养铺做轻活",
+    "traits": [
+      "好动",
+      "胆大"
+    ],
+    "home": {
+      "location": "bld_ms_tj_home_03",
+      "access": "同巢共居；进入私宅须先取得成年住户的有效许可。"
+    },
+    "location": "bld_ms_tj_home_03",
+    "flags": {
+      "minor": true,
+      "romanceable": false
+    },
+    "currentConcern": "想跟砾牙去巡洞口看老鼠，可砾片总把她叫回铺里。",
+    "visibleFeature": "跑起来脚上的小铁片叮当乱响。"
+  },
+  {
+    "id": "npc_ms_td_lizhi",
+    "name": "栗枝",
+    "aliases": [],
+    "tier": "roster",
+    "age": 25,
+    "sex": "女",
+    "species": "monster_moss_lamp_fox",
+    "society": "loc_ms_taideng",
+    "culture": "culture_ms_taideng",
+    "settlement": "loc_ms_taideng",
+    "scope": "loc_ms_taideng",
+    "householdId": "house_ms_td_03",
+    "household": [
+      "npc_ms_td_liheng",
+      "npc_ms_td_lizhen",
+      "npc_ms_td_limao"
+    ],
+    "occupation": "守林哨",
+    "traits": [
+      "机警",
+      "话少"
+    ],
+    "home": {
+      "location": "bld_ms_td_home_03",
+      "access": "同巢共居；进入私宅须先取得成年住户的有效许可。"
+    },
+    "location": "bld_ms_td_home_03",
+    "flags": {
+      "minor": false,
+      "romanceable": false
+    },
+    "currentConcern": "她知道收夹洞里有一只夹子是在边界石外侧收的，心里一直不踏实。",
+    "visibleFeature": "耳朵一直竖着，听见铁响就转过去。"
+  },
+  {
+    "id": "npc_ms_td_qingpeng",
+    "name": "青蓬",
+    "aliases": [],
+    "tier": "roster",
+    "age": 30,
+    "sex": "男",
+    "species": "monster_moss_lamp_fox",
+    "society": "loc_ms_taideng",
+    "culture": "culture_ms_taideng",
+    "settlement": "loc_ms_taideng",
+    "scope": "loc_ms_taideng",
+    "householdId": "house_ms_td_02",
+    "household": [
+      "npc_ms_td_qingzhi",
+      "npc_ms_td_qingsui",
+      "npc_ms_td_qingyuan"
+    ],
+    "occupation": "采药",
+    "traits": [
+      "勤快",
+      "好说话"
+    ],
+    "home": {
+      "location": "bld_ms_td_home_02",
+      "access": "同巢共居；进入私宅须先取得成年住户的有效许可。"
+    },
+    "location": "bld_ms_td_home_02",
+    "flags": {
+      "minor": false,
+      "romanceable": false
+    },
+    "currentConcern": "药圃靠溪那一畦要翻土，他想找个不下雨的夜里干完。",
+    "visibleFeature": "背上的毛沾满了草籽。"
+  },
+  {
+    "id": "npc_ms_td_qingsui",
+    "name": "青穗",
+    "aliases": [],
+    "tier": "roster",
+    "age": 41,
+    "sex": "女",
+    "species": "monster_moss_lamp_fox",
+    "society": "loc_ms_taideng",
+    "culture": "culture_ms_taideng",
+    "settlement": "loc_ms_taideng",
+    "scope": "loc_ms_taideng",
+    "householdId": "house_ms_td_02",
+    "household": [
+      "npc_ms_td_qingzhi",
+      "npc_ms_td_qingpeng",
+      "npc_ms_td_qingyuan"
+    ],
+    "occupation": "采果",
+    "traits": [
+      "稳当",
+      "爱操心"
+    ],
+    "home": {
+      "location": "bld_ms_td_home_02",
+      "access": "同巢共居；进入私宅须先取得成年住户的有效许可。"
+    },
+    "location": "bld_ms_td_home_02",
+    "flags": {
+      "minor": false,
+      "romanceable": false
+    },
+    "currentConcern": "林下的浆果今年结得晚，她怕干果攒不够拿去换盐。",
+    "visibleFeature": "嘴角总沾着一点紫色的果汁。"
+  },
+  {
+    "id": "npc_ms_td_taixu",
+    "name": "苔絮",
+    "aliases": [],
+    "tier": "roster",
+    "age": 44,
+    "sex": "女",
+    "species": "monster_moss_lamp_fox",
+    "society": "loc_ms_taideng",
+    "culture": "culture_ms_taideng",
+    "settlement": "loc_ms_taideng",
+    "scope": "loc_ms_taideng",
+    "householdId": "house_ms_td_01",
+    "household": [
+      "npc_ms_td_taimian",
+      "npc_ms_td_tailing",
+      "npc_ms_td_taijian"
+    ],
+    "occupation": "护幼",
+    "traits": [
+      "温和",
+      "有耐心"
+    ],
+    "home": {
+      "location": "bld_ms_td_home_01",
+      "access": "同巢共居；进入私宅须先取得成年住户的有效许可。"
+    },
+    "location": "bld_ms_td_home_01",
+    "flags": {
+      "minor": false,
+      "romanceable": false
+    },
+    "currentConcern": "分食时幼崽越来越多，她想让共食庭多分一份给护幼的。",
+    "visibleFeature": "身上总带着一股奶腥和草药混在一起的味道。"
+  },
+  {
+    "id": "npc_ms_td_tailing",
+    "name": "苔铃",
+    "aliases": [],
+    "tier": "roster",
+    "age": 58,
+    "sex": "男",
+    "species": "monster_moss_lamp_fox",
+    "society": "loc_ms_taideng",
+    "culture": "culture_ms_taideng",
+    "settlement": "loc_ms_taideng",
+    "scope": "loc_ms_taideng",
+    "householdId": "house_ms_td_01",
+    "household": [
+      "npc_ms_td_taimian",
+      "npc_ms_td_taixu",
+      "npc_ms_td_taijian"
+    ],
+    "occupation": "结绳记事",
+    "traits": [
+      "仔细",
+      "慢性子"
+    ],
+    "home": {
+      "location": "bld_ms_td_home_01",
+      "access": "同巢共居；进入私宅须先取得成年住户的有效许可。"
+    },
+    "location": "bld_ms_td_home_01",
+    "flags": {
+      "minor": false,
+      "romanceable": false
+    },
+    "currentConcern": "绳记坡的旧绳被雨泡烂了几根，他想赶在下一场雨前重新打一遍。",
+    "visibleFeature": "尾结上挂着一个小小的骨铃。"
+  },
+  {
+    "id": "npc_ms_td_taijian",
+    "name": "苔尖",
+    "aliases": [],
+    "tier": "roster",
+    "age": 14,
+    "sex": "男",
+    "species": "monster_moss_lamp_fox",
+    "society": "loc_ms_taideng",
+    "culture": "culture_ms_taideng",
+    "settlement": "loc_ms_taideng",
+    "scope": "loc_ms_taideng",
+    "householdId": "house_ms_td_01",
+    "household": [
+      "npc_ms_td_taimian",
+      "npc_ms_td_taixu",
+      "npc_ms_td_tailing"
+    ],
+    "occupation": "随护幼者学采拾",
+    "traits": [
+      "好奇",
+      "爱逞能"
+    ],
+    "home": {
+      "location": "bld_ms_td_home_01",
+      "access": "同巢共居；进入私宅须先取得成年住户的有效许可。"
+    },
+    "location": "bld_ms_td_home_01",
+    "flags": {
+      "minor": true,
+      "romanceable": false
+    },
+    "currentConcern": "想早点系上第一枚尾结，好能独自巡林。",
+    "visibleFeature": "尾尖的苔光还很淡，夜里一闪一闪。"
+  },
+  {
+    "id": "npc_ms_td_qingyuan",
+    "name": "青圆",
+    "aliases": [],
+    "tier": "roster",
+    "age": 11,
+    "sex": "女",
+    "species": "monster_moss_lamp_fox",
+    "society": "loc_ms_taideng",
+    "culture": "culture_ms_taideng",
+    "settlement": "loc_ms_taideng",
+    "scope": "loc_ms_taideng",
+    "householdId": "house_ms_td_02",
+    "household": [
+      "npc_ms_td_qingzhi",
+      "npc_ms_td_qingpeng",
+      "npc_ms_td_qingsui"
+    ],
+    "occupation": "随护幼者学采拾",
+    "traits": [
+      "害羞",
+      "爱看"
+    ],
+    "home": {
+      "location": "bld_ms_td_home_02",
+      "access": "同巢共居；进入私宅须先取得成年住户的有效许可。"
+    },
+    "location": "bld_ms_td_home_02",
+    "flags": {
+      "minor": true,
+      "romanceable": false
+    },
+    "currentConcern": "想去换盐石看看来换盐的人长什么样。",
+    "visibleFeature": "一紧张就把尾巴抱在怀里。"
+  },
+  {
+    "id": "npc_ms_td_limao",
+    "name": "栗毛",
+    "aliases": [],
+    "tier": "roster",
+    "age": 7,
+    "sex": "男",
+    "species": "monster_moss_lamp_fox",
+    "society": "loc_ms_taideng",
+    "culture": "culture_ms_taideng",
+    "settlement": "loc_ms_taideng",
+    "scope": "loc_ms_taideng",
+    "householdId": "house_ms_td_03",
+    "household": [
+      "npc_ms_td_liheng",
+      "npc_ms_td_lizhen",
+      "npc_ms_td_lizhi"
+    ],
+    "occupation": "随护幼者学采拾",
+    "traits": [
+      "贪玩",
+      "黏人"
+    ],
+    "home": {
+      "location": "bld_ms_td_home_03",
+      "access": "同巢共居；进入私宅须先取得成年住户的有效许可。"
+    },
+    "location": "bld_ms_td_home_03",
+    "flags": {
+      "minor": true,
+      "romanceable": false
+    },
+    "currentConcern": "想学栗针闻出捕夹上的铁锈味。",
+    "visibleFeature": "毛还是一团绒，走路跌跌撞撞。"
   }
 ]

@@ -5,6 +5,7 @@ import {loadWorld}from'../tools/load-world.mjs';
 import {validateWorld}from'../tools/validate-world.mjs';
 import {createPlaytestServer}from'../tools/playtest-runner.mjs';
 import {compatibleWorld}from'../server-plugin/world-upgrade.mjs';
+import {withoutMonsterSociety}from'../tools/publish-monster-society.mjs';
 
 const candidate=JSON.parse(await fs.readFile('world/drafts/w5/social-candidate.json','utf8'));
 const socialWorld=async()=>({...await loadWorld(),...structuredClone(candidate)});
@@ -43,13 +44,13 @@ test('HTTP目录和搜索共用公开投影，内部目标与历史真相不外�
 });
 
 test('旧战役升级加入社会资料不实例化名册或资源，导出往返和历史编号保留',async t=>{
-    const old=await loadWorld(),baseline=JSON.parse(await fs.readFile('world/drafts/m2-people/baseline.json','utf8'));old.npcs=old.npcs.filter(n=>baseline.some(b=>b.id===n.id));for(const key of['factions','history','factionPeople','eras'])old[key]=[];
+    const old=withoutMonsterSociety(await loadWorld()),baseline=JSON.parse(await fs.readFile('world/drafts/m2-people/baseline.json','utf8'));old.npcs=old.npcs.filter(n=>baseline.some(b=>b.id===n.id));for(const key of['factions','history','factionPeople','eras'])old[key]=[];
     old.rules.worldClock.clocks=old.rules.worldClock.clocks.filter(c=>old.factions.some(f=>f.id===c.faction));
     const original=await createPlaytestServer({world:old});t.after(original.close);
     const created=await original.api('create',{}),id=created.reference.campaignId;
     await original.api('execute',{campaignId:id,tool:'world_time',args:{minutes:10},eventId:'before-upgrade'});
     const before=(await original.api('read',{campaignId:id})).document,bundle=await original.api('export',{campaignId:id});
-    const next=await socialWorld(),server=await createPlaytestServer({world:next});t.after(server.close);
+    const next=withoutMonsterSociety(await socialWorld()),server=await createPlaytestServer({world:next});t.after(server.close);
     const imported=await server.api('import',{bundle}),campaignId=imported.reference.campaignId;
     const after=(await server.api('read',{campaignId})).document;
     for(const key of['player','inventory','location','minute','settlements','animals'])assert.deepEqual(after.state[key],before.state[key]);
