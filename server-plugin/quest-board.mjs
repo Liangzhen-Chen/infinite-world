@@ -1,3 +1,4 @@
+import {standing,HOSTILE} from './standing.mjs';
 import {transferItems,heldUnit,wearItem,changeItems} from './items.mjs';
 import {awardExperience} from './progression.mjs';
 import {scheduleAt} from './npc-schedule.mjs';
@@ -118,6 +119,7 @@ export function questBoardAction(d,engine,args,eventId){
    if(args.consent!==true||place(d.get('state'),taker)!==d.get('state','location'))throw Error('NPC接单须实际在场并同意');
    const row=acceptNpc(d,engine,q,taker,now);return {quest:q.id,status:row.status,taker};
   }
+  if(q.publisher!=='player'&&standing(engine,d.get('state'),q.publisher)<=HOSTILE)throw Error('委托人对你怀有敌意，不肯把委托交给你');
   d.set(['state','quests',q.id],{...q,status:'进行中',taker:'player'});return {quest:q.id,status:'进行中'};
  }
  if(q.status!=='进行中'||q.taker!=='player')throw Error('任务不在可结算状态；NPC履约由世界时间验证');

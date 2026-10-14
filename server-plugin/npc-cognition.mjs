@@ -36,7 +36,7 @@ function appendHeard(d,engine,from,to,memory,minute,channel,messageId,location=d
   kind:memory.kind,minute,occurredAt:memory.occurredAt??memory.minute,location,participants:clone(memory.participants??[]),
   content:told.content,sourceType:'听说',heardFrom:from,channel,messageId,salience:memory.kind==='rumor'?2:Math.max(1,(memory.salience??2)-1),emotion:'待核实',
   transmissionChain:[...memory.transmissionChain??[],{from,to,minute,channel,messageId,input:told.input,content:told.content,distortion:told.distortion}],distortion:told.distortion,reliability:'未经亲历核实',
-  ...(memory.rumor?{rumor:memory.rumor,rumorSource:memory.rumorSource}:{}),
+  ...(memory.rumor?{rumor:memory.rumor,rumorSource:memory.rumorSource,...(memory.eventRumor?{eventRumor:true}:{})}:{}),
   ...(memory.legalCase?{legalCase:memory.legalCase,legalStage:memory.legalStage}:{}),
   ...(memory.entities?{entities:clone(memory.entities)}:{}),...(memory.visibility?{visibility:memory.visibility}:{}),...(memory.private?{private:true}:{}),...(memory.permittedRecipients?{permittedRecipients:clone(memory.permittedRecipients)}:{}),...(memory.knownBy?{knownBy:clone(memory.knownBy)}:{})};
  d.set(['state','npcs',to,'memoryStream'],[...d.get('state','npcs',to,'memoryStream')??[],row]);

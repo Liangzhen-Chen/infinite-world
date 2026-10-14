@@ -1,3 +1,4 @@
+import {deriveWorldEvents,eventRumorId}from'./world-events.mjs';
 import {npcCognitionView}from'./npc-cognition.mjs';
 import {scheduleAt,npcAvailability}from'./npc-schedule.mjs';
 import {MemoryIndex}from'./retrieval.mjs';
@@ -27,40 +28,46 @@ function witnessedThroughout(engine,before,after,id){
 
 // These facts are derived from completed engine actions. Free-form summaries
 // supplied by the narrator never become an NPC's witnessed event.
-export function recordNpcMemories(d,engine,before,tool,args,detail,eventId){
+// Subscribes to the primary world event of the call by verb.
+export function recordNpcMemories(d,engine,before,events,...rest){
+    // Direct callers may still pass (tool,args,detail,eventId); it becomes the same event.
+    if(typeof events==='string')rest=[{args:rest[0]??{},detail:rest[1]??{},eventId:rest[2]}],events=deriveWorldEvents(engine,before,d.get('state'),{tool:events,...rest[0]});
+    const {args={},detail={},eventId}=rest[0];
     if(!engine.world.npcs.some(npc=>npc.tier==='full'))return;
-    if(tool==='craft'&&args.operation==='repair')tool='repair';
+    const event=events[0],verb=event.verb;
     const after=d.get('state'),name=id=>id==='player'?after.player.name:engine.byId.get(id)?.name??id;
     const resolve=value=>{if(!value)return null;try{return engine.resolve(value);}catch{return null;}};
     const facts=[],add=(key,content,participants,options={})=>facts.push({key,content,participants:[...new Set(participants.filter(Boolean))],location:before.location,minute:after.minute,salience:2,emotion:'平静',...options});
-    if(tool==='remember'&&detail.rumor&&!detail.duplicate){
+    if(verb==='remember'&&detail.rumor&&!detail.duplicate){
         add(`rumor_${detail.rumor}`,detail.content,['player',detail.source],{observers:[],private:true,reliability:'未核实',rumor:detail.rumor});
-    }else if(tool==='trade'){
+    }else if(verb==='trade'){
         const buyer=detail.buyer??resolve(args.buyer??'player'),seller=detail.seller??resolve(args.seller);
         const what=detail.item?`${name(detail.item)}${detail.quantity}份`:detail.debt&&args.payment==='repay'?'欠款':args.service==='住宿'?`${detail.days}天住宿`:'交易';
         add('trade',`${name(buyer)}向${name(seller)}${args.payment==='repay'?'偿还':detail.payment==='credit'?'赊欠':'支付'}${detail.cost}铜${args.payment==='repay'?'欠款':`，办理${what}`}`, [buyer,seller],{salience:detail.debt?3:2,entities:detail.item?[detail.item]:[]});
-    }else if(tool==='learn'){
+    }else if(verb==='learn'){
         const teacher=detail.teacher??(detail.source?.type==='teacher'?detail.source.id:null);
         add('learn',`${name('player')}${teacher?`向${name(teacher)}学习`:'研读'}${name(detail.entity)}，花费${detail.minutes}分钟、${detail.cost}铜，${detail.success?'学会了':'尚未学会'}`,['player',teacher],{salience:3});
-    }else if(tool==='craft'){
+    }else if(verb==='craft'){
         const recipe=engine.byId.get(detail.recipe);
         if(recipe)add('craft',`${name('player')}尝试${recipe.name}，${detail.success?`制成${name(recipe.output.item)}${recipe.output.quantity}件`:'没有得到成品'}，花费${detail.spent.minutes}分钟`,['player'],{salience:3});
-    }else if(tool==='repair'){
+    }else if(verb==='repair'){
         add('repair',`${name('player')}修整${name(detail.item)}，${detail.success?'完成':'未成功'}，耐久从${detail.before.durability}变为${detail.after.durability}`,['player'],{salience:3});
-    }else if(tool==='cast'){
+    }else if(verb==='cast'||verb==='help'&&event.tags.includes('magic')){
         const spell=engine.byId.get(detail.spell??resolve(args.spell));
         if(spell)add('cast',`${name('player')}施放${spell.name}，${detail.success?'施法成功':'施法失败'}`,['player',resolve(args.target)],{salience:3});
-    }else if(tool==='combat'||tool==='conflict'){
+    }else if((verb==='harm'||verb==='clash')&&event.tags.includes('magic')){
+        add('conflict',`${name('player')}施放${name(event.spell)}伤及${name(event.target)}，对方受伤${event.harm}`,['player',event.target],{salience:4,emotion:'警惕'});
+    }else if(verb==='harm'||verb==='clash'){
         add('conflict',`${name('player')}与${name(detail.target)}交锋，对方受伤${detail.damage}，自己受伤${detail.received}`,['player',detail.target],{salience:4,emotion:'警惕'});
-    }else if(tool==='crime'){
+    }else if(verb==='steal'){
         const witnesses=detail.witnesses??[];
         add('crime',`${name('player')}试图偷取${name(detail.target)}的财物`,['player',detail.target],{observers:witnesses,onlyObservers:true,salience:4,emotion:'警惕'});
-    }else if(tool==='move'&&before.location!==after.location){
+    }else if(verb==='move'&&before.location!==after.location){
         for(const companion of before.player.companions??[])if(after.npcs[companion]?.location===after.location)add(`travel_${companion}`,`${name(companion)}与${name('player')}一同从${name(before.location)}抵达${name(after.location)}`,['player',companion],{location:after.location,observers:[],salience:3});
-    }else if(tool==='promise'&&detail.permission&&!detail.duplicate){
+    }else if(verb==='promise'&&detail.permission&&!detail.duplicate){
         const permit=detail.permission;
         add('permission',`${name(permit.grantor)}${permit.revoked?'收回':'给予'}${name('player')}进入${name(permit.subject)}的拜访许可`,['player',permit.grantor],{salience:3,observers:[],private:true});
-    }else if(tool==='quest'&&detail.quest){
+    }else if(verb==='quest'&&detail.quest){
         const quest=after.quests[detail.quest];
         // Board completion/cancellation already records party memory. Player
         // acceptance and legacy quests still need this witnessed-action fallback.
@@ -78,6 +85,9 @@ export function recordNpcMemories(d,engine,before,tool,args,detail,eventId){
     for(const [id,debt]of Object.entries(after.records??{}))if(debt.category==='debt'&&before.records?.[id]&&before.records[id].status!==debt.status){
         add(`debt_${id}`,`${name(debt.debtor)}对${name(debt.creditor)}的欠款${debt.amount}铜现为${debt.status}`,[debt.debtor,debt.creditor],{observers:[],partyNotice:true,location:null,minute:debt.status==='逾期'?debt.overdueAt:debt.paidAt??after.minute,salience:4,emotion:debt.status==='逾期'?'失望':'平静'});
     }
+    // The primary social fact of a witnessed, weighty event carries its rumor id.
+    const rumorId=eventRumorId(engine,after,event);
+    if(rumorId)for(const fact of facts)if(['conflict','crime','cast'].includes(fact.key)&&!fact.private)fact.eventRumor=rumorId;
     const streams=new Map();
     for(const fact of facts){
         const observers=fact.observers??present(before).filter(id=>witnessedThroughout(engine,before,after,id));
@@ -92,7 +102,7 @@ export function recordNpcMemories(d,engine,before,tool,args,detail,eventId){
             const existing=streams.get(npcId)??[...after.npcs[npcId].memoryStream??[]];
             const id=`${eventId}:${fact.key}`;if(existing.some(row=>row.id===id))continue;
             existing.push({id,sourceEvent:eventId,kind:fact.key.split('_')[0],minute:fact.minute,location:fact.location,participants:fact.participants,
-                content:fact.content,...(fact.private?{private:true}:{}),...(fact.rumor?{rumor:fact.rumor,reliability:fact.reliability,permittedRecipients:['player']}:{}),...(fact.entities?.length?{entities:fact.entities}:{}),sourceType:fact.partyNotice?'约定核对':fact.participants.includes(npcId)&&!fact.onlyObservers?'亲历':'目击',salience:fact.salience,emotion:fact.emotion});
+                content:fact.content,...(fact.private?{private:true}:{}),...(fact.rumor?{rumor:fact.rumor,reliability:fact.reliability,permittedRecipients:['player']}:{}),...(fact.entities?.length?{entities:fact.entities}:{}),...(fact.eventRumor?{rumor:fact.eventRumor,rumorSource:npcId,eventRumor:true}:{}),sourceType:fact.partyNotice?'约定核对':fact.participants.includes(npcId)&&!fact.onlyObservers?'亲历':'目击',salience:fact.salience,emotion:fact.emotion});
             streams.set(npcId,existing);
         }
     }

@@ -1,6 +1,7 @@
 import {transferItems} from './items.mjs';
 import {breakBossAgreement} from './boss-negotiation.mjs';
 import {spendFactionAssets} from './faction-clock.mjs';
+import {standing,HOSTILE} from './standing.mjs';
 
 // Social standing of a monster settlement. A location with `monsterSociety`
 // registers the settlement seat: {leader, neighbors:{loc:stance}, stances:{player},
@@ -163,25 +164,47 @@ export function societyHarmed(d,engine,society,{eventId,reason,toHostile=false})
     return{before,after,breached:live.map(([key])=>key)};
 }
 
-// Post-action hook: real attacks on registered members change the settlement.
-export function recordSocietyActs(d,engine,tool,args,detail,eventId){
-    if(tool!=='combat'||!detail?.target||['defend','flee'].includes(args.intent))return;
-    const society=societyOfActor(engine,detail.target);if(!society)return;
-    const result=societyHarmed(d,engine,society,{eventId,reason:'对成员发起交锋',toHostile:true});
-    receipt(d,{society,kind:'clash',eventId,target:detail.target,stance:{before:result.before,after:result.after},breached:result.breached});
+// A gift to a member eases the settlement one step, at most once per period.
+export function societyHelped(d,engine,society,{eventId,reason}){
+    const before=stanceOf(d.get('state'),engine,society,'player'),minute=d.get('state','minute');
+    const recent=societyReceipts(d.document,society).some(r=>r.kind==='gift'&&r.stance&&r.stance.before!==r.stance.after&&minute-r.minute<PERIOD);
+    const after=recent?before:shift(before,1);
+    setStance(d,engine,society,'player',after,{minute,sourceEvent:eventId,reason});
+    if(after!==before)broadcast(d,engine,society,'aid',eventId);
+    return{before,after};
+}
+
+// World-event subscriber: hostile harm (blade or spell) to a member, a theft
+// from a member that someone saw, and a gift to a member reach the settlement.
+export function recordSocietyActs(d,engine,events){
+    for(const e of events){
+        if(e.actor!=='player'||!e.target)continue;
+        const society=societyOfActor(engine,e.target);if(!society)continue;
+        if(e.verb==='harm'&&e.tags.includes('hostile')){
+            const result=societyHarmed(d,engine,society,{eventId:e.id,reason:e.tags.includes('magic')?'以法术伤及成员':'对成员发起交锋',toHostile:true});
+            receipt(d,{society,kind:'clash',eventId:e.id,target:e.target,stance:{before:result.before,after:result.after},breached:result.breached});
+        }else if(e.legacy){continue;
+        }else if(e.verb==='steal'&&e.witnesses.length){
+            const result=societyHarmed(d,engine,society,{eventId:e.id,reason:'偷窃成员财物被目击'});
+            receipt(d,{society,kind:'theft',eventId:e.id,target:e.target,stance:{before:result.before,after:result.after},breached:result.breached});
+        }else if(e.verb==='gift'&&e.value>0){
+            const result=societyHelped(d,engine,society,{eventId:e.id,reason:'向成员赠礼'});
+            receipt(d,{society,kind:'gift',eventId:e.id,target:e.target,stance:{before:result.before,after:result.after}});
+        }
+    }
 }
 
 export function assertSocietyTrade(d,engine,buyer,seller){
     for(const [npc,other]of [[buyer,seller],[seller,buyer]]){
         if(other!=='player'||npc==='player')continue;
         const society=societyOfActor(engine,npc),village=engine.world.npcs.find(n=>n.id===npc)?.settlement,state=d.get('state');
-        if(society&&stanceOf(state,engine,society,'player')==='敌对')throw Error('聚居地对你敌对，成员拒绝交易');
+        if(society&&standing(engine,state,society,'player')<=HOSTILE)throw Error('聚居地对你敌对，成员拒绝交易');
         if(!society&&village&&state.records?.[`stance:${village}:player`]?.stance==='敌对')throw Error('本村已对你敌对，拒绝交易');
     }
 }
 export function assertSocietyEntry(d,engine,place){
     const society=societyAt(engine,place.id);
-    if(society&&stanceOf(d.get('state'),engine,society.id,'player')==='敌对')throw Error('聚居地对你敌对，拒绝你进入');
+    if(society&&standing(engine,d.get('state'),society.id,'player')<=HOSTILE)throw Error('聚居地对你敌对，拒绝你进入');
 }
 // Passage and tribute agreements open only the leader's committed sites.
 export function passageAllows(document,place,owner,operation){
@@ -205,7 +228,7 @@ export function societyAgreement(d,engine,boss,args,eventId,negotiate){
     if(prior)return{...negotiate(),agreement:key,terms:prior,duplicate:true};
     if(!KINDS.has(args.term))throw Error('约定须为trade贸易、tribute朝贡或passage通行');
     if(!Number.isSafeInteger(args.days)||args.days<1||args.days>90)throw Error('约定期限须为1至90天');
-    if(stanceOf(d.get('state'),engine,society,'player')==='敌对')throw Error('聚居地对你敌对，首领不肯立约');
+    if(standing(engine,d.get('state'),society,'player')<=HOSTILE)throw Error('聚居地对你敌对，首领不肯立约');
     if(args.term==='trade'&&(!args.offer?.length||!args.request?.length))throw Error('贸易约定须同时有交物与索物');
     if(args.term==='tribute'&&(!args.offer?.length||args.request?.length))throw Error('朝贡约定只由你按期交物');
     const stances=termPositions(d.get('state'),engine,society,args.term);
@@ -292,7 +315,7 @@ export function societyGovernance(d,engine,args,eventId,society){
     if(args.operation==='governance_propose'){
         const m=motion(args.issue),old=d.get(...rec(key(m.id)));
         if(old?.status==='议事中')throw Error('该议题正在议事');
-        if(stanceOf(d.get('state'),engine,society,'player')==='敌对')throw Error('聚居地对你敌对，不接受你提议');
+        if(standing(engine,d.get('state'),society,'player')<=HOSTILE)throw Error('聚居地对你敌对，不接受你提议');
         const row={category:'society_motion',society,motion:m.id,name:m.name,proposer:'player',status:'议事中',opinions:[],minute:now,sourceEvent:eventId,rounds:[...old?.rounds??[],...old?[{status:old.status,closedAt:old.closedAt}]:[]]};
         d.set(rec(key(m.id)),row);return{proposal:key(m.id),meeting:row};
     }

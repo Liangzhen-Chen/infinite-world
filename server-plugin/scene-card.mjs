@@ -17,6 +17,9 @@ import {localOpinion,opinionPlace,STANCE_LABEL}from'./public-opinion.mjs';
 import {wildlifeEncounterView}from'./wildlife.mjs';
 import {spiritScene}from'./wildlife-society.mjs';
 import {npcLifeLines,npcAgeAt}from'./npc-life.mjs';
+import {standing,standingWords}from'./standing.mjs';
+import {societyAt}from'./monster-society.mjs';
+import {settlementAt}from'./reputation.mjs';
 
 const text=(value,limit=200)=>typeof value==='string'?value.replace(/\s+/g,' ').slice(0,limit):'';
 const list=value=>Array.isArray(value)?value.map(row=>typeof row==='string'?row:row.content??row.description??'').filter(Boolean).join('；'):text(value);
@@ -54,6 +57,8 @@ export function sceneCard(engine,document,query='',index=null){
     const opinionAt=opinionPlace(engine,s.location),opinion=opinionAt?localOpinion(engine,document,opinionAt).topics.slice(0,3):[];
     if(opinion.length)parts.push(`【本地舆论，只计实际获知者】${opinion.map(t=>`${text(t.label,60)}：知情${t.known}人，支持${t.support}、反对${t.oppose}、中立${t.neutral}，${t.unaware}人未获知`).join('；')}`);
     if(rumorTopics.length)parts.push('【可问询的未核实传闻，尚未成为玩家经历】',...rumorTopics.slice(0,4));
+    const views=sceneStandings(engine,s,present.slice(0,engine.rules.prompt.npcLimit).map(([id])=>id));
+    if(views.length)parts.push(`【在场各方对你的看法】${views.map(v=>`${s.creatures?.[v.holder]?.name??name(v.holder)}${v.collective?'一方':''}${v.words}`).join('；')}`);
     for(const [id,npc] of present.slice(0,engine.rules.prompt.npcLimit)){
         const base=engine.byId.get(id)??npc;
         const available=npcAvailability(engine,s,id);
@@ -108,4 +113,16 @@ export function sceneCard(engine,document,query='',index=null){
         if(old.length)parts.push('【相关旧事，检索线索不代表在场人物知情】',...old.map(m=>`${m.source??'记忆'}${m.minute!==undefined?`，${engine.calendar(m.minute).text}`:''}：${text(m.text,260)}`));
     }
     return parts.join('\n').slice(0,Math.min(6000,engine.rules.prompt.dynamicMaximumCharacters));
+}
+
+// Who here regards you how, in words: present people, the monster settlement
+// and the reputation settlement around you, present animals and spirits.
+// Ordinary regard is left out so the card only carries what differs.
+export function sceneStandings(engine,s,people){
+    const holders=[...people.map(id=>[id,false])];
+    const seat=societyAt(engine,s.location)?.id,local=settlementAt(engine,s.location);
+    for(const id of [seat,local])if(id)holders.push([id,true]);
+    for(const [id,a]of Object.entries(s.creatures??{}))if(a.location===s.location&&a.status!=='死亡'&&(a.care||a.mind?.awakened||a.boss))holders.push([id,false]);
+    return holders.map(([holder,collective])=>{const value=standing(engine,s,holder,'player');return{holder,collective,words:standingWords(value),value};})
+        .filter(v=>v.words!==standingWords(0)).slice(0,6).map(({holder,collective,words})=>({holder,collective,words}));
 }
