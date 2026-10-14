@@ -15,10 +15,11 @@ import {settleNpcPlanning}from'./npc-planning-service.mjs';
 import {getChronicle,syncChronicleIndex}from'./chronicle.mjs';
 import {groupHistory}from'../extension/history-window.mjs';
 import {registerUIRoutes} from './ui-routes.mjs';
+import {ensurePopulationProfiles,modelProfileGenerator}from'./population-service.mjs';
 import {beginConsistencyTurn,captureConsistencySearch,captureConsistencyFailure,reconcileConsistencyTurn,reviewConsistencyReply,assertConsistencyCommit,sharedModelClient}from'./consistency-service.mjs';
 
 export const info={id:'infinite-fields',name:'无限原野本地战役存储',description:'本项目自有的存档、账本与检索服务器插件'};
-export async function init(router,{ world=null, baseRoot=null, newCampaignSeed=randomUUID, npcPlanner, npcPlanningEnabled=Boolean(process.env.DEEPSEEK_API_KEY), npcPlanningOptions={}, consistencyEnabled=true, consistencyClient, consistencyBudgetYuan=20 }={}){
+export async function init(router,{ world=null, baseRoot=null, newCampaignSeed=randomUUID, npcPlanner, npcPlanningEnabled=Boolean(process.env.DEEPSEEK_API_KEY), npcPlanningOptions={}, consistencyEnabled=true, consistencyClient, consistencyBudgetYuan=20, populationGenerator, populationProfilesEnabled=Boolean(process.env.DEEPSEEK_API_KEY)||Boolean(populationGenerator) }={}){
     world ??= await loadWorld();
     const engine=new WorldEngine(world),stores=new Map(),indexes=new Map(),registries=new Map(),modelClients=new Map();
     const getModelClient=store=>{
@@ -155,11 +156,18 @@ export async function init(router,{ world=null, baseRoot=null, newCampaignSeed=r
     }));
     router.post('/feedback',handle(req=>getStore(req).feedback(req.body.campaignId)));
     router.post('/scene',handle(async req=>{
+        // Naming a seeded resident in conversation drafts their full profile once.
+        let populationProfiles=[];
+        if(populationProfilesEnabled&&typeof req.body.query==='string'&&req.body.query){
+            const store=getStore(req),client=populationGenerator?null:getModelClient(store),generator=populationGenerator??(client?modelProfileGenerator(client):null);
+            try{populationProfiles=await ensurePopulationProfiles(store,req.body.campaignId,{engineFor:document=>store.worldRegistry.get(document.worldHash),query:req.body.query,generator});}
+            catch(error){populationProfiles=[{status:'skipped',reason:String(error.message).slice(0,200)}];}
+        }
         const store=getStore(req),view=await store.read(req.body.campaignId),selectedEngine=await registries.get(baseRoot??req.user.directories.root).get(view.document.worldHash),index=await getIndex(store,req.body.campaignId,view.document);
         if(Array.isArray(req.body.chat))index.syncChat(req.body.chat);
         const scoped=selectedEngine.scoped(view.document);
         return {scene:scoped.scene(view.document,req.body.query??'',index),reference:view.reference,
-            labels:Object.fromEntries(scoped.entities.map(row=>[row.id,row.name]))};
+            labels:Object.fromEntries(scoped.entities.map(row=>[row.id,row.name])),...(populationProfiles.length?{populationProfiles}:{})};
     }));
     router.post('/search',handle(async req=>{
         const store=getStore(req),{campaignId,token,anchor,expectedSequence,limit}=req.body,query=req.body.query??'';
