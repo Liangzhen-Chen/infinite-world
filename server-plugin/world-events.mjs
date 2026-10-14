@@ -4,6 +4,7 @@
 // own. Social systems subscribe by verb and tag, never by tool name, so a spell
 // that wounds, a theft and a gift reach the same reactions as a sword blow.
 // Social events are kept in records as `world_event:<eventId>[:n]`.
+import {eventWeight} from './standing.mjs';
 export const WORLD_EVENT_VERSION=1;
 export const SOCIAL_VERBS=new Set(['harm','clash','steal','gift','help','trade','learn']);
 const awake=n=>n&&!['死亡','濒死','昏迷'].includes(n.status)&&!n.scheduleTravel&&!n.cognitionTravel&&!/(睡眠|熟睡|睡觉)/.test(n.activity??'');
@@ -72,4 +73,18 @@ export function publishWorldEvents(d,engine,events,context,subscribers){
 
 export function worldEvents(state,filter=()=>true){
     return Object.values(state.records??{}).filter(r=>r.category==='world_event'&&filter(r)).sort((a,b)=>a.minute-b.minute||a.id.localeCompare(b.id));
+}
+
+// A witnessed event of enough weight becomes a rumor that people can retell
+// along the existing conversation and courier routes. Minors are never the
+// subject of an event rumor; private facts are excluded where memories are made.
+export const RUMOR_WEIGHT=10;
+const minor=(engine,state,id)=>{const base=engine.byId.get(id),now=state.npcs?.[id];return Boolean(base?.flags?.minor||base?.minor||base?.age<18||now?.age<18);};
+export function eventRumorId(engine,state,e){
+    if(!e||e.legacy||!e.witnesses?.length||!['harm','steal','help','gift'].includes(e.verb))return null;
+    if(Math.abs(eventWeight(e))<RUMOR_WEIGHT||[e.actor,e.target].some(id=>minor(engine,state,id)))return null;
+    return `rumor_event:${e.id}`;
+}
+export function eventRumorRecorded(state,rumor){
+    return typeof rumor==='string'&&rumor.startsWith('rumor_event:')&&state.records?.[`world_event:${rumor.slice(12)}`]?.category==='world_event';
 }

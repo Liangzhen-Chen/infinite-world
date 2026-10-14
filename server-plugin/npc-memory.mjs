@@ -1,4 +1,4 @@
-import {deriveWorldEvents}from'./world-events.mjs';
+import {deriveWorldEvents,eventRumorId}from'./world-events.mjs';
 import {npcCognitionView}from'./npc-cognition.mjs';
 import {scheduleAt,npcAvailability}from'./npc-schedule.mjs';
 import {MemoryIndex}from'./retrieval.mjs';
@@ -85,6 +85,9 @@ export function recordNpcMemories(d,engine,before,events,...rest){
     for(const [id,debt]of Object.entries(after.records??{}))if(debt.category==='debt'&&before.records?.[id]&&before.records[id].status!==debt.status){
         add(`debt_${id}`,`${name(debt.debtor)}对${name(debt.creditor)}的欠款${debt.amount}铜现为${debt.status}`,[debt.debtor,debt.creditor],{observers:[],partyNotice:true,location:null,minute:debt.status==='逾期'?debt.overdueAt:debt.paidAt??after.minute,salience:4,emotion:debt.status==='逾期'?'失望':'平静'});
     }
+    // The primary social fact of a witnessed, weighty event carries its rumor id.
+    const rumorId=eventRumorId(engine,after,event);
+    if(rumorId)for(const fact of facts)if(['conflict','crime','cast'].includes(fact.key)&&!fact.private)fact.eventRumor=rumorId;
     const streams=new Map();
     for(const fact of facts){
         const observers=fact.observers??present(before).filter(id=>witnessedThroughout(engine,before,after,id));
@@ -99,7 +102,7 @@ export function recordNpcMemories(d,engine,before,events,...rest){
             const existing=streams.get(npcId)??[...after.npcs[npcId].memoryStream??[]];
             const id=`${eventId}:${fact.key}`;if(existing.some(row=>row.id===id))continue;
             existing.push({id,sourceEvent:eventId,kind:fact.key.split('_')[0],minute:fact.minute,location:fact.location,participants:fact.participants,
-                content:fact.content,...(fact.private?{private:true}:{}),...(fact.rumor?{rumor:fact.rumor,reliability:fact.reliability,permittedRecipients:['player']}:{}),...(fact.entities?.length?{entities:fact.entities}:{}),sourceType:fact.partyNotice?'约定核对':fact.participants.includes(npcId)&&!fact.onlyObservers?'亲历':'目击',salience:fact.salience,emotion:fact.emotion});
+                content:fact.content,...(fact.private?{private:true}:{}),...(fact.rumor?{rumor:fact.rumor,reliability:fact.reliability,permittedRecipients:['player']}:{}),...(fact.entities?.length?{entities:fact.entities}:{}),...(fact.eventRumor?{rumor:fact.eventRumor,rumorSource:npcId,eventRumor:true}:{}),sourceType:fact.partyNotice?'约定核对':fact.participants.includes(npcId)&&!fact.onlyObservers?'亲历':'目击',salience:fact.salience,emotion:fact.emotion});
             streams.set(npcId,existing);
         }
     }

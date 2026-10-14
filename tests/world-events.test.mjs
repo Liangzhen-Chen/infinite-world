@@ -102,3 +102,44 @@ test('法术伤及立意精怪同样留下寻仇记忆',()=>{
  recordSpiritGrudges(d,f.engine,[{id:'spell1',verb:'harm',actor:'player',target:id,harm:3,tags:['magic','hostile']},{id:'none',verb:'harm',actor:'player',target:id,harm:0,tags:['magic']}]);
  assert.deepEqual(d.document.state.creatures[id].mind.events.map(e=>[e.kind,e.event,e.damage]),[['寻仇','spell1',3]]);
 });
+
+// K5: witnessed weighty events become rumors carried by the existing routes.
+import {npcRumors}from'../server-plugin/npc-rumors.mjs';
+import {shareNpcMemory}from'../server-plugin/npc-cognition.mjs';
+const witness='npc_hw_hezhou',third='npc_hw_ayan';
+function rumorFixture(edit=()=>{}){
+ const f=fixture();
+ for(const id of [witness,third]){const n=f.world.npcs.find(x=>x.id===id),slots=[{start:0,end:1440,location:id===witness?market:'loc_hw',activity:'闲坐',services:[]}];n.schedule={default:slots,market:slots,rest:slots,restDays:[],seasonal:{}};n.personality.flaws=[];
+  n.relationships=[...(n.relationships??[]).filter(r=>![witness,third].includes(r.with)),{with:id===witness?third:witness,type:'朋友',trust:30}];}
+ edit(f.world);
+ const engine=new WorldEngine(f.world),doc=structuredClone(f.document);
+ for(const id of [witness,third])Object.assign(doc.state.npcs[id],{location:id===witness?market:'loc_hw',activity:'闲坐',memoryStream:[]});
+ const run=async(d,tool,args,eventId,options)=>{const out=await engine.reduce(d,{tool,args,eventId},options);return{document:applyPatches(d,out.patches),result:out.result};};
+ return{...f,engine,document:doc,run};
+}
+test('有目击的法术伤人自动成为可传播传闻：目击者可讲、玩家可听、转述走失真',async()=>{
+ const f=rumorFixture(),out=await burn(f,f.document,'fire'),doc=out.document;
+ const told=npcRumors(f.engine,witness,doc).find(r=>r.id.startsWith('rumor_event:'));
+ assert.ok(told,'目击者持有事件传闻');assert.match(told.claim,/事件火束/);assert.equal(told.source,witness);
+ const heard=await f.run(doc,'world_remember',{subject:'player',key:told.id,rumor:told.id,source:witness,content:told.claim},'hear');
+ assert.equal(heard.result.rumor,told.id);assert.equal(heard.result.reliability,'未核实');
+ const d=draft(structuredClone(doc));d.document.state.npcs[third].location=market;
+ const memory=d.document.state.npcs[witness].memoryStream.find(m=>m.rumor===told.id);
+ shareNpcMemory(d,f.engine,{from:witness,to:third,memoryId:memory.id,channel:'conversation',eventId:'tell'});
+ const retold=npcRumors(f.engine,third,d.document).find(r=>r.id===told.id);
+ assert.ok(retold,'转述后第三人也能讲');assert.notEqual(retold.claim,told.claim,'转述经过失真');assert.deepEqual(retold.transmissionChain.map(h=>[h.from,h.to]),[[witness,third]]);
+});
+test('负例：无人目击、私密或秘密记忆、未成年当事人都不成为传闻',async()=>{
+ const alone=fixture(),quiet=await burn(alone,alone.document,'fire');
+ assert.ok(Object.values(quiet.document.state.npcs).every(n=>!(n.memoryStream??[]).some(m=>m.eventRumor)),'无目击者');
+ const minor=rumorFixture(w=>{const n=w.npcs.find(x=>x.id===person);n.flags={...n.flags,minor:true};}),young=await burn(minor,minor.document,'fire');
+ assert.equal(npcRumors(minor.engine,witness,young.document).filter(r=>r.id.startsWith('rumor_event:')).length,0,'未成年当事人');
+ const f=rumorFixture(),doc=(await burn(f,f.document,'fire')).document;
+ const row=doc.state.npcs[witness].memoryStream.find(m=>m.eventRumor);
+ for(const hide of [{private:true},{visibility:'private'},{visibility:'secret'}]){
+  const copy=structuredClone(doc);Object.assign(copy.state.npcs[witness].memoryStream.find(m=>m.id===row.id),hide);
+  assert.equal(npcRumors(f.engine,witness,copy).some(r=>r.id===row.rumor),false,JSON.stringify(hide));
+ }
+ const forged=structuredClone(doc);forged.state.npcs[witness].memoryStream.push({...row,id:'forged',rumor:'rumor_event:never'});
+ assert.equal(npcRumors(f.engine,witness,forged).some(r=>r.id==='rumor_event:never'),false,'没有世界事件记录的不算');
+});

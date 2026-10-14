@@ -1,5 +1,6 @@
 import {MemoryIndex} from './retrieval.mjs';
 import {scheduleAt,advanceWithNpcParticipants} from './npc-schedule.mjs';
+import {eventRumorRecorded} from './world-events.mjs';
 
 const awake=n=>n&&!n.scheduleTravel&&!n.cognitionTravel&&!['死亡','濒死','昏迷','患病'].includes(n.status)&&!/睡眠|睡觉|熟睡/.test(n.activity??'');
 const registered=engine=>[...engine.world.settlementProfiles?.flatMap(p=>p.details?.rumors??[])??[],...engine.world.rumors??[]];
@@ -12,8 +13,10 @@ export function npcRumors(engine,id,document=null){
         .map(r=>[r.id,{id:r.id,claim:r.claim,source:r.source,reliability:'未核实'}]));
     const npc=document?.state.npcs[id];
     for(const memory of npc?.memoryStream??[]){
-        if(memory.kind!=='rumor'||!memory.rumor||memory.minute>document.state.minute||memory.private||['private','secret'].includes(memory.visibility))continue;
-        if(!registeredIds.has(memory.rumor)||rows.has(memory.rumor))continue;
+        if(!memory.rumor||memory.kind!=='rumor'&&!memory.eventRumor||memory.minute>document.state.minute||memory.private||['private','secret'].includes(memory.visibility))continue;
+        // Authored seeds, or rumors born of a recorded, witnessed world event.
+        if(!registeredIds.has(memory.rumor)&&!(memory.eventRumor&&eventRumorRecorded(document.state,memory.rumor))||rows.has(memory.rumor))continue;
+        if(memory.eventRumor&&npc.cognition?.blurred?.[memory.id])continue;
         rows.set(memory.rumor,{id:memory.rumor,claim:npc.cognition?.blurred?.[memory.id]?.content??memory.content,
             source:memory.rumorSource,reliability:'未核实',memoryId:memory.id,rootMemoryId:memory.rootMemoryId,
             transmissionChain:rumorChainView(memory.transmissionChain)});
@@ -69,8 +72,8 @@ export function hearNpcRumor(d,engine,args,eventId){
     assertRumorConversation(d,engine,speaker);
     const location=d.get('state','location'),start=d.get('state','minute');
     const origin=npcRumorSeeds(engine,speaker).find(r=>r.rumor===rumor.id);
-    const rootMemoryId=rumor.rootMemoryId??origin.rootMemoryId;
-    const transmissionChain=[...rumor.transmissionChain??origin.transmissionChain,{from:speaker,to:'player',minute:start,channel:'conversation',content:rumor.claim,distortion:'保留讲述者版本'}];
+    const rootMemoryId=rumor.rootMemoryId??origin?.rootMemoryId??rumor.memoryId;
+    const transmissionChain=[...rumor.transmissionChain??origin?.transmissionChain??[],{from:speaker,to:'player',minute:start,channel:'conversation',content:rumor.claim,distortion:'保留讲述者版本'}];
     // Ten minutes is the existing ordinary turn duration. Reserve the speaker
     // after validating the entire interval, as with other joint activities.
     advanceWithNpcParticipants(d,engine,10,eventId,[speaker]);
