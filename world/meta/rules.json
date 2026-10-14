@@ -3585,7 +3585,9 @@
         "ritualOperations": [
           "discipline",
           "witness_oath",
-          "spirit_sense"
+          "spirit_sense",
+          "ferry",
+          "consecrate"
         ]
       },
       {
@@ -3639,7 +3641,8 @@
         "ritualMinutes": 120,
         "ritualFee": 12,
         "ritualOperations": [
-          "spirit_sense"
+          "spirit_sense",
+          "spirit_census"
         ]
       },
       {
@@ -3685,7 +3688,8 @@
           "revival_mark",
           "restore",
           "faith_shield",
-          "purify_area"
+          "purify_area",
+          "consecrate"
         ]
       }
     ]

@@ -3315,7 +3315,9 @@
                   "lamp",
                   "aperture",
                   "surface",
-                  "sample"
+                  "sample",
+                  "door",
+                  "altar"
                 ]
               },
               "owner": {
@@ -4240,7 +4242,8 @@
                 "heat",
                 "air",
                 "optics",
-                "mind_space"
+                "mind_space",
+                "ritual"
               ]
             },
             "power": {
@@ -4253,7 +4256,9 @@
                 "water_cup",
                 "fire_projection",
                 "water_guard",
-                "elemental_guard"
+                "elemental_guard",
+                "dust_servant",
+                "rubble_servant"
               ]
             },
             "upkeepMp": {
@@ -4370,7 +4375,30 @@
                 "reveal",
                 "bind_shadow",
                 "decoy",
-                "reveal_wear"
+                "reveal_wear",
+                "exorcise",
+                "ward",
+                "purify_area",
+                "discipline",
+                "ferry",
+                "witness_oath",
+                "consecrate",
+                "clean_altar",
+                "spirit_sense",
+                "spirit_census",
+                "reassign",
+                "coordinate",
+                "lock_space",
+                "alarm",
+                "block_space",
+                "repair_space",
+                "calibrate_anchor",
+                "store",
+                "retrieve",
+                "corrode",
+                "anchor_cargo",
+                "measure",
+                "contract_sense"
               ]
             },
             "unit": {

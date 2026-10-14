@@ -6,6 +6,7 @@ import {speciesInHabitat} from './wildlife-range.mjs';
 import {reservedMigrationCapacity,advanceSeasonalMigration} from './seasonal-migration.mjs';
 import {crossPredatorFed,advanceFarmPredation} from './farm-pests.mjs';
 import {spiritStateFor,manifestArisals} from './creature-nature.mjs';
+import {recordLocalContact} from './environment.mjs';
 import {sapient,advanceWildlifeAwakening,awakeningAction,awakeningOperations,awakeningView,validateWildlifeAwakening} from './wildlife-awakening.mjs';
 const clone=v=>structuredClone(v),path=h=>['state','records',`ecology:${h}`];
 const alive=a=>a&&a.status!=='死亡'&&a.hp>0;
@@ -28,6 +29,11 @@ export function applyWildlifeAwakeningEffect(d,engine,effect,context){
 const random=(engine,seed,label)=>seededRandom(createHash('sha256').update(`${seed}:${canonical(engine.rules.wildlife)}:${label}`).digest().readUInt32LE(0));
 const activeAt=(hours,minute)=>hours[0]<=hours[1]?minute>=hours[0]&&minute<hours[1]:minute>=hours[0]||minute<hours[1];
 const speciesAt=(engine,habitat)=>speciesInHabitat(engine.rules,engine.world.monsters,habitat.id);
+// T104 ritual consumers: a ward keeps new spirits from approaching the warded
+// player here; a consecration rite stops one group's weekly manifestation.
+const ritualEffects=(d,op)=>Object.values(d.get('state','effects')??{}).filter(e=>e.kind==='ritual'&&e.operation===op);
+const warded=(d,location,minute)=>ritualEffects(d,'ward').some(e=>e.target==='player'&&e.location===location&&e.started<=minute&&e.expires>minute);
+const consecrated=(d,habitat,s,day)=>ritualEffects(d,'consecrate').some(e=>e.habitat===habitat&&e.group===s.nature?.group&&e.started<(day+1)*1440&&e.expires>day*1440);
 const wildPresent=(d,species,location)=>Object.values(d.get('state','creatures')??{}).filter(a=>a.species===species&&a.location===location&&!a.owner&&!sapient(a)&&alive(a)).length;
 const encounterPath=h=>['state','records',`wildlife:encounter:${h}`];
 const WINDOW=360;
@@ -50,7 +56,7 @@ export function wildlifeEncounterAt(d,engine,location,minute){
     const rng=random(engine,d.document.randomSeed,`encounter:${habitat.id}:${window}`),chance=rng();
     const here=Object.entries(d.get('state','creatures')??{}).filter(([,a])=>a.location===location&&!a.owner&&!sapient(a)&&alive(a));
     const populations=d.get(...path(habitat.id),'populations');
-    const eligible=speciesAt(engine,habitat).filter(s=>populations?.[s.id]?.count>0&&activeAt(s.wildlife.activeHours,minute%1440));
+    const ward=warded(d,location,minute),eligible=speciesAt(engine,habitat).filter(s=>populations?.[s.id]?.count>0&&activeAt(s.wildlife.activeHours,minute%1440)&&!(ward&&s.nature?.spirit));
     const base={habitat,window,minute};
     if(chance>=0.25)return {...base,kind:null};
     const known=here.filter(([,actor])=>engine.byId.get(actor.species)?.wildlife);
@@ -133,7 +139,7 @@ export function advanceWildlife(d,engine,day){
             for(const s of species){
                 const p=r.populations[s.id],spec=s.wildlife,present=wildPresent(d,s.id,habitat.location),total=p.count+present;
                 // T154: undead/elementals arise by their registered condition, not by pairing or prey.
-                if(spec.manifest){const arisen=manifestArisals(s,total,reservedMigrationCapacity(d,habitat.id,s.id),season);if(arisen){p.count+=arisen;p.arisen=(p.arisen??0)+arisen;}continue;}
+                if(spec.manifest){const arisen=manifestArisals(s,total,reservedMigrationCapacity(d,habitat.id,s.id),season);if(arisen&&consecrated(d,habitat.id,s,day)){p.suppressed=(p.suppressed??0)+arisen;continue;}if(arisen){p.count+=arisen;p.arisen=(p.arisen??0)+arisen;}continue;}
                 const fed=spec.predatorOf.length===0||spec.predatorOf.some(id=>r.populations[id]?.count>0)||crossPredatorFed(d,engine,habitat.id,s.id,season);
                 if(!fed){const lost=Math.min(p.count,Math.max(1,Math.floor(total/4)));p.count-=lost;p.starved+=lost;continue;}
                 const expected=spec.recoveryPerWeek*engine.rules.wildlife.seasonRecovery[season];
@@ -203,6 +209,8 @@ export function wildlifeAction(d,args,eventId){
         const latest=clone(d.get(...path(habitat.id))),rng=random(this,d.document.randomSeed,eventId),s=eligible[Math.floor(rng()*eligible.length)],p=latest.populations[s.id];
         if(!p.count||!activeAt(s.wildlife.activeHours,d.get('state','minute')%1440))return{success:false,found:null,note:'线索在追踪期间消失或活动时段已结束'};
         const found=createWildlifeInstance(d,this,habitat,s,eventId,rng);
+        // Tracking ends at arm's length: the found individual is in sight for the next few minutes.
+        if(found)recordLocalContact(d,this,found.id,eventId);
         return{success:true,found,note:'接触一个实际个体，已从未见种群扣除；未打架、驯服或获得材料'};
     }
     if(operation!=='gather')throw new Error('未知野外操作');

@@ -139,7 +139,8 @@ export function prepareMindSpace(d,c,args,{completion=false}={}){
   number(p.unit.weight,0,c.effectSpec.power,'取回载荷');return p;
  }
  const row=locate(this,args.target,location),s=mindSpaceState(d,row);p.row=row;p.state=s;
- p.permission=access(d,this,row,c,args,until,['measure'].includes(op));
+ // Anchor calibration is authorised by the owner's anchor grant below, not an environment grant.
+ p.permission=access(d,this,row,c,args,until,['measure','calibrate_anchor'].includes(op));
  if(op==='measure'){
   p.other=locate(this,args.destination,location);access(d,this,p.other,c,args,until,true);
   if(!localSightClear(d,this,location,row.position,p.other.position))throw Error('两个可见点之间不能隔墙测距');

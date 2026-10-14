@@ -5,6 +5,7 @@ import os from 'node:os';
 import path from 'node:path';
 import {loadWorld} from '../tools/load-world.mjs';
 import {readS3Publication,mergeS3Publication,publishS3,withoutS3,files as publishedFiles} from '../tools/publish-w2-s3.mjs';
+import {withoutS4} from '../tools/publish-w2-s4.mjs';
 import {spells,books,items,placements,mentors,routes,routeOf} from '../world/design/w2-s3.mjs';
 import {WorldEngine} from '../server-plugin/engine.mjs';
 import {applyPatches} from '../server-plugin/storage.mjs';
@@ -14,7 +15,8 @@ import {magicStatusStats} from '../server-plugin/magic-status.mjs';
 import {consumeMagicProtection} from '../server-plugin/magic-primitives.mjs';
 import {recordLocalContact} from '../server-plugin/environment.mjs';
 
-const formal=await loadWorld(),publication=await readS3Publication();
+// Later batches (T104 onward) are removed first so this batch is compared on its own edition.
+const formal=withoutS4(await loadWorld()),publication=await readS3Publication();
 const ids={spells:new Set(spells.map(s=>s.id)),skills:new Set(spells.map(s=>s.skill)),items:new Set([...books,...items].map(i=>i.id))};
 // The edition before this batch is rebuilt from the formal world, so the test
 // works before and after publication and never pins catalogue totals.
