@@ -26,6 +26,7 @@ import {businessAction}from'./business.mjs';
 import {festivalAction}from'./festival.mjs';
 import {factionClockAction}from'./faction-clock.mjs';
 import {siteAction}from'./sites.mjs';
+import {organizationAction,foundOrganization}from'./organizations.mjs';
 const integer=(value,min=0,max=1e9)=>{if(!Number.isSafeInteger(value)||value<min||value>max)throw new Error(`数值需在${min}到${max}之间`);return value;};
 const requiredText=value=>{if(typeof value!=='string'||!value.trim()||value.length>1200)throw new Error('记录文字无效');return value.trim();};
 export const activities={
@@ -157,6 +158,7 @@ export const activities={
         if(args.operation?.startsWith('business_'))return businessAction.call(this,d,args,id);
         if(args.operation?.startsWith('civic_'))return civicAction.call(this,d,args,id);
         if(args.operation?.startsWith('governance_'))return governanceAction.call(this,d,args,id);
+        if(args.operation?.startsWith('org_'))return organizationAction.call(this,d,args,id);
         const settlement=this.resolve(args.settlement,'loc'),row=d.get('state','settlements',settlement);
         if(!row)throw new Error('没有该聚落公共账目');
         const authorization=d.get('state','records',args.authorization);
@@ -200,7 +202,8 @@ export const activities={
         }
         if(type==='item')throw new Error('物品只允许由受限配方制造，不能凭空创建');
         if(type==='bld')throw new Error('建筑需要工程完工证明，不能凭空创建');
-        if(type==='org'){entity.founder='player';entity.notes=requiredText(entity.notes);}
-        d.set(['state','created',entity.id],entity);return {entity:entity.id};
+        let founded=null;
+        if(type==='org'){entity.founder='player';entity.notes=requiredText(entity.notes);founded=foundOrganization(d,this,entity,id);}
+        d.set(['state','created',entity.id],entity);return {entity:entity.id,...founded};
     },
 };
