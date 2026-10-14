@@ -1,4 +1,6 @@
 import {validateVillageLedger} from '../world/design/w1-village-profiles.mjs';
+import {populationTemplate,populationPlan,populationBasis,checkGeneratedProfile} from '../server-plugin/population.mjs';
+export {checkGeneratedProfile};
 // Read-only population and household catalogs. Roster entries identify people;
 // they never create purse, inventory, service or presence state.
 export function validatePopulation(world){
@@ -72,6 +74,13 @@ export function validatePopulation(world){
     check(row.ageStructure?.[key]===row.registeredAgeStructure?.[key]+row.pendingAgeStructure?.[key],`种子年龄结构合计不符：${row.id}/${key}`);
    }
    check(keys.reduce((sum,key)=>sum+(row.pendingAgeStructure?.[key]??NaN),0)===row.pendingPopulation,`待生成年龄人数不符：${row.id}`);
+   // The on-demand generator must be able to settle every pending person.
+   if(row.pendingPopulation>0&&row.populationSeed&&errors.length===0){
+    try{const template=populationTemplate(world,row.id);if(!template)throw Error('缺少可用住区、职业或姓名骨架');
+     const plan=populationPlan(template,populationBasis(world,row.id));
+     check(plan.households.length===row.pendingHouseholdCount&&plan.households.reduce((n,h)=>n+h.members.length,0)===row.pendingPopulation,`按需人口生成配额不符：${row.id}`);}
+    catch(error){errors.push(`按需人口无法生成：${row.id}：${error.message}`);}
+   }
   }
   if(row.ageStructure)check(Object.values(row.ageStructure).reduce((sum,value)=>sum+value,0)===row.population,`人口年龄结构合计不符：${row.id}`);
   for(const id of row.buildingIds??[])check(belongs(id,row.id),`聚落建筑归属不符：${row.id}/${id}`);

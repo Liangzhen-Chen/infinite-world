@@ -50,6 +50,7 @@ import {resolveToolCall}from'../extension/tools.mjs';
 import {chargeTrade,repayDebt,advanceContracts}from'./contracts.mjs';
 import {businessTrade,recordBusinessReceipt}from'./business.mjs';
 import {initializeR1,planR1,planPreR1Partitions}from'./migrations/r1.mjs';
+import {unfoldPopulationAt,acceptPopulationProfile}from'./population.mjs';
 const clone = value => structuredClone(value);
 const number = (value, min = 0, max = 1e9, label = '数值') => {
     if (!Number.isSafeInteger(value) || value < min || value > max) throw new Error(`${label}必须在${min}到${max}之间`);
@@ -128,6 +129,11 @@ export class WorldEngine {
         if (input.type==='schema_migration') return {patches:input.patches,result:{migration:true}};
         if(input.type==='release_migration'&&input.release==='R1'){const migration=planR1(document,this.world);return{patches:migration.patches,result:migration.report};}
         if(input.type==='rules_state_migration')return{patches:planRuleStateMigration(document,this.rules),result:{migration:true,runtimeRuleVersion}};
+        if(input.type==='population_profile'){
+            if(document.releaseVersion!==1)throw new Error('按需人物需要完成战役初始化');
+            const d=new Draft(document),detail=acceptPopulationProfile(d,this.scoped(document),input);
+            return{patches:d.patches,result:{ok:true,...detail,minute:d.get('state','minute'),notices:[]}};
+        }
         if(input.type==='npc_plan'){
             if(document.releaseVersion!==1)throw new Error('人物计划需要完成战役初始化');
             const d=new Draft(document),session=this.scoped(document),id=text(input.eventId,120);
@@ -162,6 +168,9 @@ export class WorldEngine {
         settleMagicAreas(d,session);
         const detail = await session[tool](d,args,id);
         if(document.state.location!==d.get('state','location')&&d.get('state','records','site_presence'))d.remove(['state','records','site_presence']);
+        // Entering an unexpanded district or lair settles its seeded roster once.
+        // Older ledger events replay without it, exactly as they were recorded.
+        const population=document.state.location!==d.get('state','location')&&(!options.replay||options.result?.population)?unfoldPopulationAt(d,session,d.get('state','location')):null;
         settleMagicAreas(d,session);
         advancePets(d,session,d.get('state','minute'));
         advanceSummons(d,d.get('state','minute'));
@@ -172,7 +181,7 @@ export class WorldEngine {
         recordBusinessReceipt(d,document.state,{tool:resolved.tool,args,eventId:id,detail});
         if(tool==='check')detail.actionScope={kind:'judgement',healthChanged:false,inventoryChanged:false,feePaid:0,
             note:'仅结算判断或对抗，并履行已引用的协助；未伤人、毁物或制造。不得从骰点虚构这些变化。'};
-        return { patches:d.patches,result:{ok:true,...detail,legalProcedureVersion:1,...(factionClockRules(session).length?{factionClockVersion:1}:{}),minute:d.get('state','minute'),messages:d.messages,
+        return { patches:d.patches,result:{ok:true,...detail,...(population?{population}:{}),legalProcedureVersion:1,...(factionClockRules(session).length?{factionClockVersion:1}:{}),minute:d.get('state','minute'),messages:d.messages,
             notices:stateNotices(document.state,d.document.state,id=>session.byId.get(id)?.name)} };
     }
     scoped(document){
