@@ -2,9 +2,10 @@
 import {waterEarthHeldUntil}from'./magic-water-earth.mjs';
 import {mindSleepUntil}from'./magic-mind-space.mjs';
 import {festivalScheduleAt}from'./festival.mjs';
+import {npcSchedule}from'./npc-state.mjs';
 // A travelling NPC occupies neither endpoint until the route has finished.
 export function scheduleAt(engine,npcId,minute,state){
-    const schedule=engine.byId.get(npcId)?.schedule;if(!schedule)return festivalScheduleAt(engine,state,npcId,minute,null);
+    const schedule=npcSchedule(engine,state,npcId);if(!schedule)return festivalScheduleAt(engine,state,npcId,minute,null);
     const calendar=engine.calendar(minute),variant=calendar.market?'market':schedule.restDays?.includes(calendar.day)?'rest':'default';
     const seasonal=schedule.seasonal?.[String(calendar.season)];
     const slots=seasonal?.[variant]??schedule[variant]??seasonal?.default??schedule.default;

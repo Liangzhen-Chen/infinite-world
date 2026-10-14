@@ -35,20 +35,24 @@ import {initializeWorldClocks,advanceWorldClocks,nextWorldClockMinute}from'./wor
 import {initializeFactionClocks,advanceFactionClocks,nextFactionClockMinute,factionClockRules}from'./faction-clock.mjs';
 import {advanceFestivals,nextFestivalMinute,festivalCalendar,validateFestivalRuntime}from'./festival.mjs';
 import {advanceWildlife,wildlifePriceFactor,nextWildlifeEncounterMinute,wildlifeEncounterAt,settleWildlifeEncounter,wildlifeEncounterView}from'./wildlife.mjs';
+import {wildlifeAwakeningConsumer}from'./wildlife-awakening.mjs';
 import {advanceBosses}from'./bosses.mjs';
 import {sceneCard}from'./scene-card.mjs';
 import {stateNotices}from'./state-notices.mjs';
 import {assertNpcService}from'./npc-schedule.mjs';
 import {advanceNpcCognition,nextNpcCognitionMinute}from'./npc-cognition.mjs';
 import {advanceNpcAutonomy,nextNpcAutonomyMinute,npcAutonomyBusy,assertNpcAutonomyAction,applyNpcPlan}from'./npc-autonomy.mjs';
+import {advanceNpcLife,nextNpcLifeMinute}from'./npc-life.mjs';
 import {recordNpcMemories}from'./npc-memory.mjs';
 import {hearNpcRumor}from'./npc-rumors.mjs';
 import {createNpcObligation,advanceNpcObligations,assertNpcObligationAction,npcObligationAt,nextNpcObligationMinute}from'./npc-obligations.mjs';
 import {recordNpcRelationEvidence,applyNpcRelation}from'./npc-relations.mjs';
+import {recordSocietyActs,advanceSocietyNews,assertSocietyTrade,societyNewsConsumer}from'./monster-society.mjs';
 import {resolveToolCall}from'../extension/tools.mjs';
 import {chargeTrade,repayDebt,advanceContracts}from'./contracts.mjs';
 import {businessTrade,recordBusinessReceipt}from'./business.mjs';
 import {initializeR1,planR1,planPreR1Partitions}from'./migrations/r1.mjs';
+import {unfoldPopulationAt,acceptPopulationProfile}from'./population.mjs';
 const clone = value => structuredClone(value);
 const number = (value, min = 0, max = 1e9, label = '数值') => {
     if (!Number.isSafeInteger(value) || value < min || value > max) throw new Error(`${label}必须在${min}到${max}之间`);
@@ -74,6 +78,7 @@ export class WorldEngine {
         this.byId = this.resolver.entities;
         const festivalErrors=validateFestivalRuntime(world);if(festivalErrors.length)throw Error(festivalErrors.join('；'));
         if((this.rules.engineRevision??1)===1)this.compat=new Phase1Engine(world);
+        this.factionEffectConsumers={society_news:societyNewsConsumer};this.wildlifeAwakening=wildlifeAwakeningConsumer;
     }
     resolve(name, kind, scope) {
         if(!kind||kind==='npc'){
@@ -126,6 +131,11 @@ export class WorldEngine {
         if (input.type==='schema_migration') return {patches:input.patches,result:{migration:true}};
         if(input.type==='release_migration'&&input.release==='R1'){const migration=planR1(document,this.world);return{patches:migration.patches,result:migration.report};}
         if(input.type==='rules_state_migration')return{patches:planRuleStateMigration(document,this.rules),result:{migration:true,runtimeRuleVersion}};
+        if(input.type==='population_profile'){
+            if(document.releaseVersion!==1)throw new Error('按需人物需要完成战役初始化');
+            const d=new Draft(document),detail=acceptPopulationProfile(d,this.scoped(document),input);
+            return{patches:d.patches,result:{ok:true,...detail,minute:d.get('state','minute'),notices:[]}};
+        }
         if(input.type==='npc_plan'){
             if(document.releaseVersion!==1)throw new Error('人物计划需要完成战役初始化');
             const d=new Draft(document),session=this.scoped(document),id=text(input.eventId,120);
@@ -160,16 +170,20 @@ export class WorldEngine {
         settleMagicAreas(d,session);
         const detail = await session[tool](d,args,id);
         if(document.state.location!==d.get('state','location')&&d.get('state','records','site_presence'))d.remove(['state','records','site_presence']);
+        // Entering an unexpanded district or lair settles its seeded roster once.
+        // Older ledger events replay without it, exactly as they were recorded.
+        const population=document.state.location!==d.get('state','location')&&(!options.replay||options.result?.population)?unfoldPopulationAt(d,session,d.get('state','location')):null;
         settleMagicAreas(d,session);
         advancePets(d,session,d.get('state','minute'));
         advanceSummons(d,d.get('state','minute'));
         advanceLaw(d,d.get('state','minute'),session);
+        recordSocietyActs(d,session,tool,args,detail,id);
         recordNpcRelationEvidence(d,session,document.state,tool,args,detail,id);
         recordNpcMemories(d,session,document.state,tool,args,detail,id);
         recordBusinessReceipt(d,document.state,{tool:resolved.tool,args,eventId:id,detail});
         if(tool==='check')detail.actionScope={kind:'judgement',healthChanged:false,inventoryChanged:false,feePaid:0,
             note:'仅结算判断或对抗，并履行已引用的协助；未伤人、毁物或制造。不得从骰点虚构这些变化。'};
-        return { patches:d.patches,result:{ok:true,...detail,legalProcedureVersion:1,...(factionClockRules(session).length?{factionClockVersion:1}:{}),minute:d.get('state','minute'),messages:d.messages,
+        return { patches:d.patches,result:{ok:true,...detail,...(population?{population}:{}),legalProcedureVersion:1,...(factionClockRules(session).length?{factionClockVersion:1}:{}),minute:d.get('state','minute'),messages:d.messages,
             notices:stateNotices(document.state,d.document.state,id=>session.byId.get(id)?.name)} };
     }
     scoped(document){
@@ -197,6 +211,7 @@ export class WorldEngine {
         for(const actor of[buyer,seller])if(['死亡','濒死'].includes(this.actor(d,actor).status))throw new Error('交易一方无法清醒履约');
         const playerLocation=d.get('state','location');
         for(const actor of [buyer,seller]) if(actor!=='player' && this.actor(d,actor).location!==playerLocation) throw new Error('交易对方不在场');
+        assertSocietyTrade(d,this,buyer,seller);
         if(args.payment==='repay')return repayDebt(d,this,{buyer,seller,debt:args.debt},id);
         for(const actor of [buyer,seller])if(actor!=='player')assertNpcService(d,this,actor,'trade',args.service==='住宿'?10:5);
         if(args.service==='住宿'){
@@ -235,7 +250,7 @@ export class WorldEngine {
         const patchStart=d.patches.length,npcsBefore=d.get('state','npcs');
         while(d.get('state','minute')<end){
             const now=d.get('state','minute'),state=d.get('state');
-            const next=Math.min(end,(Math.floor(now/1440)+1)*1440,nextWorldClockMinute(state,now),nextFactionClockMinute(state,now),nextFestivalMinute(state,this,now),nextSettlementTradeMinute(state,this,now),nextNpcCognitionMinute(state,now),nextNpcAutonomyMinute(state,now),nextNpcObligationMinute(state,now),nextMagicAreaMinute(state,now),nextWildlifeEncounterMinute(d,this,now));
+            const next=Math.min(end,(Math.floor(now/1440)+1)*1440,nextWorldClockMinute(state,now),nextFactionClockMinute(state,now),nextFestivalMinute(state,this,now),nextSettlementTradeMinute(state,this,now),nextNpcCognitionMinute(state,now),nextNpcAutonomyMinute(state,now),nextNpcObligationMinute(state,now),nextNpcLifeMinute(state,now),nextMagicAreaMinute(state,now),nextWildlifeEncounterMinute(d,this,now));
             this.advanceInterval(d,next-now,id);
         }
         // Intermediate clock boundaries matter to simulation, not to replay.
@@ -276,9 +291,11 @@ export class WorldEngine {
         if(this.world.npcs.some(n=>n.tier==='full')){
             advanceNpcCognition(d,this,before,after,id,{beforeState});
             advanceNpcAutonomy(d,this,before,after,id,{beforeState});
+            advanceNpcLife(d,this,before,after);
         }
         advanceWorldClocks(d,this,after);
         advanceFactionClocks(d,this,after);
+        advanceSocietyNews(d,this,after);
         advanceFestivals(d,this,after);
         for(const[key,row]of Object.entries(d.get('state','records')??{}))if(key.startsWith('local_actor_position:')){
             const actor=d.get('state',row.subject?.startsWith('npc_')?'npcs':'creatures',row.subject);

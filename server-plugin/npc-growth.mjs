@@ -1,0 +1,134 @@
+// NPC skill growth comes only from a real lesson by the player or from a
+// finished autonomous work action. Both are bounded per day and per skill, and
+// a changed livelihood is stored in campaign state (never in world/ people).
+import {scheduleAt,advanceWithNpcParticipants,validateNpcSchedules}from'./npc-schedule.mjs';
+import {effectiveProficiency}from'./professions.mjs';
+import {npcSchedule}from'./npc-state.mjs';
+
+const DAY=1440,unable=['死亡','濒死','昏迷','患病'],sleeping=/睡眠|睡觉|熟睡/;
+const rules=engine=>{const r=engine.rules.npcGrowth;if(!r)throw Error('世界规则没有登记人物成长');return r;};
+const full=(engine,id)=>engine.byId.get(id)?.tier==='full';
+
+export function npcProficiency(engine,state,id,skill){
+ const v=state.npcs[id]?.skills?.[skill]??engine.byId.get(id)?.skills?.[skill]??engine.byId.get(id)?.proficiencies?.[skill]??0;
+ return typeof v==='object'?v.proficiency??0:v;
+}
+// Remaining growth for one skill: total gain and absolute proficiency caps.
+function room(engine,state,id,skill){
+ const r=rules(engine),row=state.npcs[id]?.growth?.skills?.[skill],current=npcProficiency(engine,state,id,skill);
+ return Math.max(0,Math.min(r.maximumGain-((row?.teach??0)+(row?.work??0)),r.maximumProficiency-current));
+}
+const today=(state,id,minute)=>{const day=Math.floor(minute/DAY),row=state.npcs[id]?.growth?.today;return row?.day===day?row:{day,teach:0,work:0};};
+function grow(d,engine,id,skill,amount,source){
+ const state=d.get('state'),gain=Math.min(amount,room(engine,state,id,skill));if(gain<=0)return 0;
+ const current=npcProficiency(engine,state,id,skill),row=state.npcs[id].growth?.skills?.[skill]??{base:current,teach:0,work:0,sessions:0};
+ d.set(['state','npcs',id,'skills'],{...(state.npcs[id].skills&&!Array.isArray(state.npcs[id].skills)?state.npcs[id].skills:{}),[skill]:current+gain});
+ d.set(['state','npcs',id,'growth','skills',skill],{...row,[source]:row[source]+gain,sessions:row.sessions+1});
+ return gain;
+}
+function remember(d,engine,id,eventId,content,participants){
+ const minute=d.get('state','minute'),location=d.get('state','npcs',id,'location');
+ d.set(['state','npcs',id,'memoryStream'],[...d.get('state','npcs',id,'memoryStream')??[],{id:eventId,sourceEvent:eventId,kind:'learn',minute,location,participants,content,sourceType:'亲历',salience:3,emotion:'踏实'}]);
+ d.set(['state','npcs',id,'developments'],[...d.get('state','npcs',id,'developments')??[],{type:'成长',source:eventId,minute,content}]);
+}
+const knowsRecipe=(state,id,recipe)=>recipe.teachers?.includes(id)||Boolean(state.npcs[id]?.recipes?.[recipe.id]);
+
+// world_learn with student: the player teaches a present NPC a skill or recipe.
+export function teachNpc(d,engine,args,eventId){
+ const r=rules(engine).teach,state=d.get('state'),student=engine.resolve(args.student,'npc'),npc=state.npcs[student];
+ if(args.source!==undefined&&!['player','玩家'].includes(args.source))throw Error('传授人物时source须为player');
+ const entity=engine.resolve(args.entity,args.kind),kind=entity.split('_')[0],catalog=engine.byId.get(entity);
+ if(!['skill','recipe'].includes(kind))throw Error('只能向人物传授技能或配方');
+ if(!full(engine,student)||!npc)throw Error('这位人物没有独立成长记录');
+ if(npc.location!==state.location)throw Error('学生不在场');
+ if(unable.includes(npc.status))throw Error(`学生此刻${npc.status}，不能受教`);
+ const minutes=kind==='recipe'?catalog.learnMinutes??r.minutes:r.minutes,companion=state.player.companions?.includes(student);
+ engine.assertNpcObligationAction?.(d,['player',student],{minutes,location:state.location,kind:'teach'});
+ engine.assertNpcAutonomyAction?.(state,[student],{minutes});
+ if(!companion)for(let cursor=state.minute;cursor<state.minute+minutes;){
+  const slot=scheduleAt(engine,student,cursor,state);if(!slot)break;
+  if(slot.location!==npc.location||sleeping.test(slot.activity))throw Error('学生作息没有完整的清醒空闲时段');
+  cursor=slot.until;
+ }
+ if(today(state,student,state.minute).teach>=r.dailySessions)throw Error('今天已经教过这位人物，需隔日再教');
+ let gain=0,skill;
+ if(kind==='skill'){
+  skill=entity;
+  if(!state.skills?.[skill])throw Error('你没有掌握这项技能');
+  const teacher=effectiveProficiency(d,engine,skill),current=npcProficiency(engine,state,student,skill);
+  gain=Math.min(r.gain,teacher-r.teacherMargin-current,room(engine,state,student,skill));
+  if(gain<=0)throw Error('学生已接近你的水平或达到成长上限，再教也不会进步');
+ }else{
+  if(!state.recipes?.[entity])throw Error('你没有学会这个配方');
+  if(knowsRecipe(state,student,catalog))throw Error('学生已经会这个配方');
+  if(npcProficiency(engine,state,student,catalog.skill)<(catalog.minimumProficiency??0))throw Error('学生的相关技能不足以学这个配方');
+ }
+ advanceWithNpcParticipants(d,engine,minutes,eventId,[student]);
+ if(unable.includes(d.get('state','npcs',student,'status')))throw Error('教学中途学生失去行动能力');
+ const at=d.get('state','minute'),mark=today(d.get('state'),student,state.minute);
+ if(kind==='skill')gain=grow(d,engine,student,skill,gain,'teach');
+ else d.set(['state','npcs',student,'recipes',entity],{source:{type:'player'},learnedAt:at,sourceEvent:eventId});
+ d.set(['state','npcs',student,'growth','today'],{...mark,teach:mark.teach+1});
+ const name=engine.byId.get(student).name,summary=kind==='skill'?`跟玩家学了${minutes}分钟${catalog.name}，熟练度提高${gain}`:`跟玩家学会配方${catalog.name}`;
+ remember(d,engine,student,eventId,`${name}${summary}。`,['player',student]);
+ d.say(`${name}${summary}`);
+ return{student,entity,kind,minutes,gained:gain,...(skill?{proficiency:npcProficiency(engine,d.get('state'),student,skill)}:{})};
+}
+
+// Called once when an autonomous craft action settles; the action id is the
+// only source, so replay and long or short waits give the same growth.
+export function npcWorkGrowth(d,engine,id,skill,success,minute){
+ const r=engine.rules.npcGrowth?.work;if(!r||!skill)return 0;
+ const mark=today(d.get('state'),id,minute),gain=grow(d,engine,id,skill,Math.min(success?r.successGain:r.failureGain,r.dailyGain-mark.work),'work');
+ if(gain)d.set(['state','npcs',id,'growth','today'],{...mark,work:mark.work+gain});
+ return gain;
+}
+
+function vocationBlocker(engine,state,id,vocation){
+ const r=rules(engine),npc=state.npcs[id],row=npc?.growth?.skills?.[vocation.skill],minute=state.minute;
+ if(!full(engine,id)||!npc)return '人物没有独立成长记录';
+ if(unable.includes(npc.status))return `人物此刻${npc.status}`;
+ if(npc.vocation?.id===vocation.id)return '已经以这门营生为业';
+ if((r.institutionTeachersStay??true)&&engine.rules.training?.institutions?.some(e=>e.teacher===id))return '登记机构导师不能自行离职';
+ if(npc.vocation&&minute-npc.vocation.since<r.switchCooldownDays*DAY)return '刚换过营生，尚未做满规定天数';
+ if(npcProficiency(engine,state,id,vocation.skill)<vocation.minimumProficiency)return `${engine.byId.get(vocation.skill)?.name??vocation.skill}熟练度不足${vocation.minimumProficiency}`;
+ if((row?.sessions??0)<r.minimumPractice)return `受教或实作次数不足${r.minimumPractice}次`;
+ return null;
+}
+export function npcVocationOptions(engine,state,id){
+ return (engine.rules.npcGrowth?.vocations??[]).filter(v=>!vocationBlocker(engine,state,id,v)).map(v=>({id:v.id,name:v.name}));
+}
+// Build the whole new schedule from the vocation template once, at the switch.
+function vocationSchedule(engine,state,id,vocation){
+ const old=npcSchedule(engine,state,id)?.default,home=old?.find(s=>s.start===0)?.location??state.npcs[id].location;
+ const day=[{start:0,end:vocation.hours[0],location:home,activity:'睡眠',services:[]},
+  {start:vocation.hours[0],end:vocation.hours[1],location:vocation.location,activity:vocation.activity,services:[...vocation.slotServices]},
+  {start:vocation.hours[1],end:1440,location:home,activity:'收工歇息、睡眠',services:[]}];
+ const schedule={default:day,...(vocation.restDays?.length?{restDays:[...vocation.restDays],rest:[{start:0,end:1440,location:home,activity:'歇业休息',services:[]}]}:{})};
+ const errors=validateNpcSchedules({locations:engine.world.locations,npcs:[{id,schedule}]});if(errors.length)throw Error(errors[0]);
+ return{home,schedule};
+}
+export function switchVocation(d,engine,id,vocationId,eventId){
+ const vocation=engine.rules.npcGrowth?.vocations?.find(v=>v.id===vocationId);if(!vocation)throw Error('营生未登记');
+ const state=d.get('state'),blocker=vocationBlocker(engine,state,id,vocation);if(blocker)throw Error(`不能改行：${blocker}`);
+ const npc=state.npcs[id],{home,schedule}=vocationSchedule(engine,state,id,vocation),minute=state.minute;
+ d.set(['state','npcs',id,'vocation'],{id:vocation.id,name:vocation.name,skill:vocation.skill,since:minute,sourceEvent:eventId,home,schedule,services:[...vocation.teaches],
+  previous:{id:npc.vocation?.id??null,occupation:npc.occupation??engine.byId.get(id).occupation??''}});
+ d.set(['state','npcs',id,'occupation'],vocation.name);
+ remember(d,engine,id,eventId,`${engine.byId.get(id).name}改行做${vocation.name}，此后按新作息在${engine.byId.get(vocation.location)?.name??vocation.location}做事。`,[id]);
+ return{npc:id,vocation:vocation.id,name:vocation.name,since:minute};
+}
+
+export function validateNpcGrowthRules(world){
+ const r=world.rules.npcGrowth,errors=[];if(!r)return errors;
+ const positive=v=>Number.isSafeInteger(v)&&v>0,ids=new Set([...world.locations,...world.skills,...world.recipes].map(x=>x.id));
+ for(const key of ['maximumGain','maximumProficiency','minimumPractice','switchCooldownDays'])if(!positive(r[key]))errors.push(`npcGrowth.${key}须为正整数`);
+ for(const key of ['minutes','gain','teacherMargin','dailySessions'])if(!positive(r.teach?.[key]))errors.push(`npcGrowth.teach.${key}须为正整数`);
+ for(const key of ['successGain','failureGain','dailyGain'])if(!positive(r.work?.[key]))errors.push(`npcGrowth.work.${key}须为正整数`);
+ for(const v of r.vocations??[]){
+  if(!/^vocation_/.test(v.id)||!v.name||!v.activity||!ids.has(v.skill)||!ids.has(v.location)||!positive(v.minimumProficiency))errors.push(`${v.id}:营生字段不完整`);
+  if(!Array.isArray(v.hours)||!(v.hours[0]>0&&v.hours[0]<v.hours[1]&&v.hours[1]<1440))errors.push(`${v.id}:工时须在一天之内`);
+  if(!v.slotServices?.every(s=>['trade','teach'].includes(s))||!v.teaches?.every(s=>ids.has(s)))errors.push(`${v.id}:服务未登记`);
+ }
+ return errors;
+}

@@ -1,6 +1,7 @@
 import { effectiveProficiency } from './professions.mjs';
 import { xpRequired } from './progression.mjs';
 import {resolveCreature}from'./wildlife.mjs';
+import {sapient,awakeningView}from'./wildlife-awakening.mjs';
 
 const clamp = value => Math.max(0, Math.min(100, value));
 const activeStatuses = new Set(['活跃', '留守']);
@@ -29,6 +30,7 @@ function animal(d, engine, name, { owned = false } = {}) {
     if (actor.location !== d.get('state', 'location')) throw new Error('动物不在场');
     if (actor.status === '死亡' || actor.hp <= 0) throw new Error('动物已经死亡，照料不能复活');
     if (actor.owner && actor.owner !== 'player') throw new Error('动物已有其他所有者，不能擅自操作');
+    if (sapient(actor)) throw new Error('它已立意，不再是可驯养或使唤的动物；须以world_wildlife结缘取得同意');
     const pet = d.get('state', 'pets', id);
     if (owned && (actor.owner !== 'player' || pet?.petFormat !== 1 || !active(pet))) throw new Error('这不是仍归你所有的宠物');
     return { id, actor, definition, rule, pet, ownedRequired:owned };
@@ -55,7 +57,7 @@ export function advancePets(d, engine, after) {
     const rules = engine.rules.petCare;
     if (!rules) return;
     for (const [id, actor] of Object.entries(d.get('state', 'creatures') ?? {})) {
-        if (actor.care?.version !== 1) continue;
+        if (actor.care?.version !== 1 || sapient(actor)) continue;
         if (actor.status === '死亡' || actor.hp <= 0) {
             if(d.get('state','pets',id)?.petFormat===1&&active(d.get('state','pets',id)))detach(d,id,'死亡',after);
             continue;
@@ -235,16 +237,17 @@ export function petAction(d, args, eventId) {
     throw new Error('未登记的宠物操作');
 }
 
+const mindOf = (engine, document, id, actor) => { const mind = actor && awakeningView(engine, document.randomSeed, id, actor, document.state.minute); return mind ? { mind } : {}; };
 export function petView(engine, document) {
     const { state } = document;
     return { pets: Object.entries(state.pets ?? {}).map(([id, pet]) => {
         if (pet.petFormat !== 1) return { id, ...structuredClone(pet), note: '旧宠物记录保留；尚无可验证的动物实例，不自动补造' };
         const actor = state.creatures?.[id];
-        return { id, name: actor?.name ?? engine.byId.get(id)?.name, ...structuredClone(pet), location: actor?.location, hp: actor?.hp, maxHp: actor?.maxHp, level: actor?.level, care: structuredClone(actor?.care) };
+        return { id, name: actor?.name ?? engine.byId.get(id)?.name, ...structuredClone(pet), location: actor?.location, hp: actor?.hp, maxHp: actor?.maxHp, level: actor?.level, care: structuredClone(actor?.care), ...mindOf(engine, document, id, actor) };
     }), presentAnimals: Object.entries(state.creatures ?? {}).filter(([, actor]) => actor.location === state.location && actor.status !== '死亡').map(([id, actor]) => {
         const definition=engine.byId.get(id),species=definition?.monster?engine.byId.get(definition.monster):definition;
         const rule=definition?.tamingRule??species?.tamingRule;
-        return { id, name: actor.name ?? definition?.name, owner: actor.owner ?? null, hp: actor.hp, level: actor.level, care: structuredClone(actor.care),tamingRule:rule?structuredClone(rule):null };
+        return { id, name: actor.name ?? definition?.name, owner: actor.owner ?? null, hp: actor.hp, level: actor.level, care: structuredClone(actor.care),tamingRule:rule?structuredClone(rule):null, ...mindOf(engine, document, id, actor) };
     }) };
 }
 

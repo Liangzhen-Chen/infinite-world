@@ -4,7 +4,7 @@ const path=id=>['state','records',id];
 const key=(...parts)=>digest(parts).slice(0,24);
 const awake=n=>n&&n.location&&!n.scheduleTravel&&!n.cognitionTravel&&!['死亡','濒死','昏迷','患病'].includes(n.status)&&!/睡眠|睡觉|熟睡/.test(n.activity??'');
 
-function settlementAt(engine,location) {
+export function settlementAt(engine,location) {
     const allowed=new Set(engine.rules.reputation?.settlements??[]),seen=new Set();
     while(location&&!seen.has(location)) {
         if(allowed.has(location))return location;
@@ -38,7 +38,7 @@ export function observeLegalReputation(d,engine,npc,memory,location=memory.locat
         const base=(scope.scope==='settlement'?(rules.settlementDeltas?.[scope.id]?.[memory.legalStage]??(scope.id!==row.settlement?rules.remoteDeltas?.[memory.legalStage]:null)):null)??rules.deltas?.[memory.legalStage];
         if(!base&&memory.legalStage!=='overturned')continue;
         const delta=memory.legalStage==='overturned'
-            ?{reputation:-(convicted?.reputation??0),fame:-(convicted?.fame??0),notoriety:-(convicted?.notoriety??0)}
+            ?{reputation:0-(convicted?.reputation??0),fame:0-(convicted?.fame??0),notoriety:0-(convicted?.notoriety??0)}
             :memory.legalStage==='conviction'&&corrected?{reputation:0,fame:0,notoriety:0}
             :{reputation:base.reputation*scope.sign,fame:scope.sign<0?base.notoriety:base.fame,notoriety:scope.sign<0?base.fame:base.notoriety};
         d.set(path(id),{...account,reputation:account.reputation+delta.reputation,fame:account.fame+delta.fame,notoriety:account.notoriety+delta.notoriety,

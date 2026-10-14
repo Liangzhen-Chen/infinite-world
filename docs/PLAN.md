@@ -260,13 +260,7 @@ N1–N17至少12项完整有效且≥90%，N6/N16零泄漏，N12真实盲辨，N
 4. 真实 L2 预计八十至一百三十次，上限一点五元；含人物、建筑、社会与文化新事实。
 5. 预计三至四小时加后台 L2。两处共二十四名具名成员，其中八 full；每处二至三个住区、四至六项公共设施、至少两组内部立场。生活空间和初始交易本卡可玩，动态争端接 S3/T109，委托接 T155；不把尚未接入的内容标成已生效。
 
-### T158（S3）社会关系、交涉与潜入。
-
-1. 玩家结果：能与聚居地达成交易或通行约定，也能潜入受限区域，行为会改变成员及邻村的后续反应。
-2. 可改 server-plugin/{sites,boss-negotiation,boss-cognition,npc-cognition,npc-relations,settlement-profile,governance,quest-board}.mjs、T109 faction-clock 的事件消费接点、engine 必要分派和 extension/tools.mjs；可加紧邻模块的社会关系实现。锁定正文和 T109 的资产推进实现；依赖 S1/T109，与 T155、T124 及工具写者串行，可并行 S4 草稿。
-3. 验收 CORE 及 `node --test tests/monster-society.test.mjs tests/sites.test.mjs "tests/boss*.test.mjs" "tests/npc-*.test.mjs" "tests/quest-*.test.mjs" "tests/w5-*.test.mjs" tests/faction-clock.test.mjs tests/world-clock.test.mjs tests/settlement-trade.test.mjs tests/prompt.test.mjs tests/tool-groups.test.mjs`。覆盖守约与背约、未被发现的潜入、被发现后的驱逐或交锋，以及第三方村镇行为经消息传播后改变关系。
-4. 真实模型零次，零元。
-5. 预计三至四小时。态度按对象保存敌对、戒备或中立，交易与朝贡另记协议，避免一个枚举互相覆盖；首领只能承诺其辖区和库存。潜入消耗时间并做实际检定，只用于登记的可潜入据点，不放开原私宅同意规则；内部议事沿既有提议/意见动作，实际后果交 T109，结算回执供 T155 使用。静态提示不超过 11900 token。
+### T158（S3）已完成：玩家可与聚居地首领立约（贸易、朝贡、通行，按10天一期履约），可潜入登记过的据点（私宅和议事区不可登记潜入）；守约、背约、交锋、潜入被发现都会改变成员态度，消息沿步行路线传到邻村后改变邻村态度（目前邻村反应只有“敌对后拒绝交易”一种）；议事可推动势力时钟。聚居地用location.monsterSociety、潜入用site.infiltration登记，正式数据由T157等内容卡发布。新增5项、CORE40、发布构建ok，提示约11330，0模型。
 
 ### T159（S4）榆根里与裂炉营正式落地。
 
@@ -276,21 +270,9 @@ N1–N17至少12项完整有效且≥90%，N6/N16零泄漏，N12真实盲辨，N
 4. 真实 L2 预计八十至一百三十次，上限一点五元。
 5. 预计三至四小时加后台 L2，二十四名具名成员含八 full，结构规模同 S2。榆根里发布林产分配争议，裂炉营发布贡粮与劳动争议，消耗和结局接 T109；议事、交易和已授权生产实际生效，公开风俗与派系私下目标分开检索。
 
-### S5 并入T143：改人口子项的选题：先供核心区社会使用。
+### S5 并入T143：已完成（T143的人口子项）。玩家第一次进入未展开的住区或巢窟时按种子生成名册，写进战役状态，只扣剩余配额，不写回world/；白石镇6区全部展开正好694人、210户。点名交谈时才生成完整档（起草一次、自查一次、代码检查硬约束后入库，0钱物），失败只记次数、身份不变。新测试6/6，相关98/98，发布构建ok。真实入口验证尚未运行：模型槽空闲时执行 node tools/population-live-check.mjs --live --count 6（上限18次、0.8元）。
 
-1. 玩家结果：走入未展开的巢窟会遇到稳定成员，首次交谈后人物完整档保存，重访和重启仍是同一个人。
-2. 可改 T143 的按需人口生成与持久化模块、server-plugin/{npc-state,world-upgrade}.mjs、实际场景/交谈调用点、tools/population-validation.mjs 和 tests/population-on-demand.test.mjs；锁定六处已审具名人物及远方省郡正文。依赖 S1/S2，与人物、生成和升级写者串行；本子项先行，T143 远方地理模板另按原范围分项，不在本会话一起实现。
-3. 验收 CORE 及 `node --test "tests/population*.test.mjs" "tests/npc-*.test.mjs" "tests/world-*.test.mjs" tests/retrieval.test.mjs tests/prompt.test.mjs tests/tool-groups.test.mjs`；增加正常到访、首次交谈、生成失败再访及升级恢复场景，按六处 seed 验证人数、物种、年龄与户巢配额。
-4. 开发零模型；真实入口验证六名成人，每名起草和一次自查，预计十二次，含最多一次失败重试合计不超过十八次、零点八元。属于战役按需生成，沿 M7 已审定的代码硬约束加一次自查流程；静态核心人物仍走完整 L1/L2/L4 发布。
-5. 预计三至四小时。代码先按稳定种子生成名册与住所，只扣剩余配额；第一次交谈才生成 full，失败保留已分配身份，不补钱物或重掷人生。运行中资料写战役持久层，不能反写共享 world；生成器同供远方 T143 使用，不另建怪物人口生成器。若改提示，静态估算不超过 11900 token。
-
-### T160（S6）野兽开启灵智。
-
-1. 玩家结果：能观察普通野兽的灵智变化，用实际灵物或具资格的点化帮助它成为可交流的个体。
-2. 可改 server-plugin/wildlife.mjs、world-clock/T109 的觉醒效果调用点、npc-state、pets、world-upgrade、magic-ritual 必要接点及 extension/tools.mjs、规则 schema 和 tests/wildlife-awakening.test.mjs；锁定正式物种及术式正文。依赖 S1/S5/T109，与 T153/T154、T93/T104 和生态时间写者串行，可并行 S8 起草。
-3. 验收 CORE 及 `node --test "tests/wildlife*.test.mjs" "tests/w4-*.test.mjs" "tests/boss*.test.mjs" "tests/magic*.test.mjs" "tests/population*.test.mjs" tests/pets.test.mjs tests/faction-clock.test.mjs tests/world-clock.test.mjs tests/seasonal-migration.test.mjs tests/farm-pests.test.mjs tests/prompt.test.mjs tests/tool-groups.test.mjs`；覆盖自然累积、吞食、点化、资源不足、重放及长短步一致。
-4. 真实模型零次，零元；本批正式条件参数和解释由 S8 同批审核发布。
-5. 预计三小时。灵智采用原创阶段“听息、立意、借形”，与九阶战力分开；本卡做到立意。来源分别记录物种年岁阈值与经历累积、灵地停留、真实灵物消耗或导师点化；观察不能刷进度。未见种群只扣一次，已实例化个体不再扣；保留原身体、伤势与遭遇来源，进入社会后退出野生捕食/自动恢复统计。觉醒后的收伏转为有边界的同意关系，旧宠物身份不自动变成居民财产。静态提示不超过 11900 token。
+### T160（S6）已完成：野兽灵智按“听息→立意”累积，来源分别记录（年岁与随人经历、灵地停留、喂灵物、点化），只观察不涨进度；world_wildlife加nurture（喂灵物）、enlighten（点化，复用T93仪式资格且师门须登记spirit_sense）、pact（结缘，有边界的同意关系）；势力时钟可真正触发觉醒。参数在rules.json的wildlifeAwakening，暂以药草为灵物、芦衡观与止波寺为灵地，正式内容待T162。新增4项、领域387/390（余为旧失败）、CORE40、发布构建ok，提示约11377，0模型。遗留：结缘后个体还不会跟随玩家、没有专门对话入口（归T161）。
 
 ### T161（S7）成精后的修习与结社。
 
@@ -357,17 +339,11 @@ N1–N17至少12项完整有效且≥90%，N6/N16零泄漏，N12真实盲辨，N
 
 ### T148 已完成：申请带路先答复、私宅先给许可、粮仓先到场后付款，courier移动只请求一次；对白区分当前观察、已发生经历和未来安排，不补档案外的经历；冲突现场由在场者实际发言。相关88/CORE40，0模型，真实效果由T149测量。
 
-### T149 M2第四轮真实复验【真实模型；修复卡已齐，待模型槽】
+### T149 M2第四轮真实复验：未通过，M2标“卡住”（2026-10-14）
 
-完成结果：三卡合入后运行原十场87回合，使用F3澄清后的分步输入，保留原断言及真实失败历史。目标13项有效、至少12项通过，即12/13=92.3%；N1/N7/N8/N14仍未测，不把新增场景用于稀释失败。
-预期保留N5/N6/N10/N13/N16，争取恢复N2/N3/N4/N11/N12/N15/N17。N9当前t1–2已明确没有还手或喊救，且无围观议论；恢复司法后半场仍不能自动补齐前半场，因此将N9列为最大不确定项，不能承诺13/13。
-原十场在数学上足够，无须增场。若N12/N15等仍有两项失败，11/13=84.6%；即补齐余下四项且全部通过也只有15/17=88.2%，仍不到90%，必须修复失败本身。若未来扩测，缺的是N1帮修屋顶三天回访、N7次日走样传闻、N8凭线索揭穿欺骗、N14 NPC谎言入日志与揭穿，另立内容工作，不能混入本轮宣称可比。
-N门槛通过不代表M2关闭：本轮仍有30条time/warning及其他事实、agency、meta问题，consistency和reviewsComplete也必须过；F1处理协议和误拒，F2/F3处理已知证据及正文来源。剩余真实负评如实保留，不能把warning统一忽略。
-可改仅docs/测试报告/M2-recheck-004/及本run生成物；代码、world、旧报告和原存档锁定。沿T99正常HTTP、完整提示栈、repeat=1、parallel=4和同一模型槽，不部署；预计一次十场执行及一次结果整理。
-建议新增上限12元、最多450次调用，含≤1元初探和全部审稿、受限格式修正。T99为71回合6.94093904元，按87回合线性估算约8.51元，12元覆盖较长逐N输出及少量协议修正；这是预算估算。保留全部旧费用及未知预留，刷新父账；按PLAN规则13不恢复旧100/20/30元历史硬限。
-验收先运行 node docs/测试报告/M2-recheck-004/preflight.mjs --zero-model，再运行CORE；正式命令沿T99仅替换run目录、编号及增额：
-node --import ./docs/测试报告/M2-recheck-004/git-entry.mjs tools/playtests.mjs --run-dir docs/测试报告/M2-recheck-004 --run-id m2-recheck-004 --card M2-recheck-004 --increment 12 --repeat 1 --parallel 4 --milestone M2 --only guide,npc_courier,npc_delivery,npc_home_visit,npc_offscreen,npc_private,npc_quest_social,npc_shove,npc_social,npc_voices --host-installation F:/dnd/SillyTavern --budget-proof docs/测试报告/M2-recheck-004/preflight.mjs
-随后 node docs/测试报告/M2-recheck-004/summarize.mjs；逐项列完整回合、有效N及失败条件，账本/时间/存档断言须100%，N6/N16零泄漏、N12盲辨全对且整合通过、N17十天自主行动及回来谈话均过。本十场不含reload/rollback/duplicate真实专项，存档证据范围继续明示。第四轮仍未通过则按T99约定将M2标卡住，保留结果并转其他里程碑。
+第一次运行十场只有2场完整（5场网络中断、3场审查拒绝）。补跑（并行2，八场）：npc_home_visit 9/9完整且通过；npc_courier 8/8完整但未过；guide 1/8、npc_delivery 7/9、npc_offscreen 7/8、npc_private 2/8 四场都因一致性审查拒绝提交而中断；npc_quest_social、npc_shove 补到一半时执行者用量用尽、进程被终止，未续跑（续跑需要改写运行目录里的任务执行次数，主会话不做）。fetch failed的原因：4笔集中在同一2.5秒内，含5.7KB的小请求，判断为一次打断全部并发连接的网络事件，不是请求过大。费用：本卡已结算7.53697768元、预留1.08021200元，上界8.62/12元。
+结论：去掉网络因素后，主要阻碍仍是一致性审查拒绝提交导致整场中断（第三轮修过误拒，这一轮仍有四场），按既定规则M2标“卡住”，不再投入，转其他里程碑。要继续推进M2，需要另行决定是否改变“审查拒绝即停止整场”的策略（例如拒绝后保留原文并继续下一回合、只记失败），这会改变验收口径，应由用户决定。
+注意：分支t149上的WIP提交40207c0把.retry-source/（4962个文件）和142MB的.retry-source.zip提交进了git，该分支不得合入主线；主线上没有这些文件。
 
 ### 法术150/首领40第一批（2026-10-13主会话审定，来源：Astra草案W2W4-planner-001）
 
@@ -645,15 +621,20 @@ C部分只拆缺口：governance.mjs的任职入口止于“待上级决定”�
 
 ### T127（C5） 爵位、领地收入与义务。结果：实际受封后获得对应辖区收入和权限，同时承担贡赋、兵役等义务，失去封地后结算随之变化。可改新server-plugin/titles.mjs、governance/quest-board/law/engine及领地投影接点、extension/tools.mjs、tests/governance-titles.test.mjs；接C1–C4，复用其来源，不凭贡献自动封爵。验收node --test "tests/governance*.test.mjs" tests/civic.test.mjs tests/quest-board.test.mjs tests/law.test.mjs tests/reputation-law.test.mjs tests/village-ledgers.test.mjs tests/prompt.test.mjs，CORE。模型0；约3小时，与治理和工具写者串行，提示≤11900。
 
-### T128（C6） 群体舆论。结果：同一事件经关系网传播后形成当地支持/反对比例，议事和NPC反应读取各自真实获知的看法。可改新server-plugin/public-opinion.mjs、npc-cognition/npc-relations/governance及场景投影、tests/public-opinion.test.mjs；接B10，复用已有意见记录与声望，不另起通用好感分。验收node --test "tests/governance*.test.mjs" "tests/npc-*.test.mjs" tests/public-opinion.test.mjs tests/reputation-law.test.mjs tests/village-rumor-access.test.mjs，CORE。模型0；约2小时，与B10/C2串行。
+### T128（C6）已完成：看法每次从现有关系、聚居地态度和声望推出，不另存好感分；只有记忆仍清晰的知情者计入当地支持/反对比例，未获知者单列；议事查看与闭合读取在场者的实际看法，场景与NPC上下文带上本地舆论。目前交锋、偷窃、法律案件和聚居地消息能形成看法，交易与节俗尚不产生舆论。新增4项、CORE40、发布构建ok，0模型。
 
-### T129（C7） NPC学习与换营生。结果：玩家教学和NPC实际工作能带来有限技能增长，达到条件后可以换营生，作息与服务随之改变。可改新server-plugin/npc-growth.mjs、npc-autonomy/npc-state/npc-schedule、教学工具接点、world/meta/rules.json、tests/npc-growth.test.mjs；保留原有玩家成长与职业认证。验收node --test "tests/npc-*.test.mjs" tests/learning.test.mjs tests/professions.test.mjs tests/prompt.test.mjs，CORE。模型0；约2.5小时，与D1及其他NPC时间写者串行，工具提示≤11900。
+### T129（C7）已完成：玩家教学（world_learn加student）和NPC日常工作带来有上限、有时间成本的技能增长；人物计划层可发起换营生，作息与服务随之改变，登记机构的导师不自行改行；先登记4个营生模板（磨坊木作、青灯帮厨、学馆助教、武馆陪练）。npc-growth 8/8、CORE40、发布构建ok，提示约11300，0模型。遗留：换营生后场景显示的公开职务仍读原目录。
 
-### T130（C8） 成年家庭关系与出生。结果：长期关系可在双方条件满足时发展为婚姻，出生进入真实家户与人口状态，并通过当地渠道被知晓。可改新server-plugin/npc-life.mjs、npc-relations/npc-state/engine接点、world/meta/rules.json、docs/决策.md参数段、tests/npc-life-family.test.mjs；锁定旧人物静态经历，禁止未成年恋爱。验收node --test "tests/npc-*.test.mjs" ，CORE。模型0；约2.5小时，接C7，与C9/C10同文件串行。
+### T130（C8）已完成：两个成年NPC的长期关系在双方条件满足时可成婚（未成年人一律不进入），出生的孩子与新增家户成员记入state.family，消息按正常渠道传播；参数在world/meta/rules.json的npcLife，依据在docs/决策.md。新增7项、CORE40、发布构建ok，0模型。遗留（写入T164）：84对正式夫妻里81对的配偶是名册人物，暂不能生育；交往要求信任与好感都≥50，而现有关系最高好感45、提高好感的事件很少，正常游玩中成婚会很少见；场景与人物提示里看不到婚姻与子女；孩子不进入state.npcs。
 
-### T131（C9） 生病、衰老与自然死亡。结果：NPC按年龄、健康和种子概率发生人生变化，服务及义务按真实失能状态处理。可改npc-life.mjs、npc-state/npc-obligations/engine接点、world/meta/rules.json、docs/决策.md参数段、tests/npc-life-health.test.mjs；接C8，复用已有死亡结算，不重置旧伤病。验收node --test "tests/npc-*.test.mjs" tests/activities.test.mjs，CORE；跨年长短步、照护和死亡后履约均覆盖。模型0；约2小时，与C10串行。
+### T164 让人生变化在游戏里看得见、发生得了【零模型；可派】
 
-### T132（C10） 迁入迁出与人生消息。结果：NPC有原因地迁居，实际走路线，住户、工作与未履约事项在抵达后更新，玩家回来能听到变化。可改npc-life.mjs、npc-schedule/npc-cognition/civic接点、tests/npc-life-migration.test.mjs；接C9和B10，搬家不复制财产或新增同名人物。验收node --test "tests/npc-*.test.mjs" tests/civic.test.mjs ，CORE。模型0；约2小时，与认知/日程写者串行。
+结果：玩家在场景和人物面板里能看到NPC的婚姻、子女、病痛、搬迁；日常的善意往来（帮忙、送礼、共同干活、节日同席）能实际提高好感，使成婚在正常游玩中可能发生；名册人物配偶在需要时经按需人口生成补足为有状态的人物；孩子进入人口与作息（不进入恋爱与亲密情节）。
+可改：server-plugin/{npc-life,npc-relations,scene-card,npc-memory,population,npc-state}.mjs及extension/people-history.mjs的展示接点、对应测试。验收：`node --test "tests/npc-*.test.mjs" "tests/population*.test.mjs" tests/public-opinion.test.mjs tests/m6-04.test.mjs`、CORE、发布构建。模型0。
+
+### T131（C9）已完成：NPC按年龄每晚判定生病与猝亡，重病由同户成年人照护（照护者整天在家、不提供服务），病故或寿终后结算约定（记为取消，不判违约）、遗产（依次给配偶、子女、同户成年人；债务只列入遗产记录）和人口账，消息只经目击和日常交谈传播；参数在npcLife.health。新增7项、CORE40、发布构建ok，0模型。遗留（并入T164）：名册人物和战役出生的孩子无独立状态，不会生病或死亡；跟在玩家身边的人物不在离屏结算里生病或死亡。
+
+### T132（C10）已完成：NPC因成婚、投亲、谋生或避祸迁居（须有愿意接纳的人家），沿实际路线耗时前往；抵达后户籍、两地人口、作息和工作更新，赶不上的约定取消；财产随人走、不复制、不新增人物；消息经本人、同户目击者和日常交谈传开，玩家回来时场景里的旧邻会带出“乡里人事”。新增6项、CORE40、发布构建ok，0模型。遗留（并入T164）：议事资格仍按静态户籍；名册人物和战役出生的孩子不会迁居；现有人物之间几乎没有跨聚落亲友，正常两个月内实际无人迁居。
 
 ### T133（D1）已完成：NPC从本人库存添燃料维持热源并完成需火工序，缺料拒绝、离岗或失能停止，热账与窑炉裂损保留；新增11项通过/CORE40，0模型。
 

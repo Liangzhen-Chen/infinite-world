@@ -8,10 +8,12 @@ import {npcContext}from'./npc-memory.mjs';
 import {relationView}from'./npc-relations.mjs';
 import {chronicleContext}from'./chronicle.mjs';
 import {settlementScene}from'./settlement-profile.mjs';
+import {populationScene}from'./population.mjs';
 import {festivalScene}from'./festival.mjs';
 import {worldClockScene}from'./world-clock.mjs';
 import {siteView}from'./sites.mjs';
 import {selectNpcRumors,assertRumorConversation}from'./npc-rumors.mjs';
+import {localOpinion,opinionPlace,STANCE_LABEL}from'./public-opinion.mjs';
 import {wildlifeEncounterView}from'./wildlife.mjs';
 
 const text=(value,limit=200)=>typeof value==='string'?value.replace(/\s+/g,' ').slice(0,limit):'';
@@ -37,6 +39,7 @@ export function sceneCard(engine,document,query='',index=null){
     const destinations=[...new Set([...requested,...adjacent])].slice(0,12);
     if(destinations.length)parts.splice(2,0,`【地点索引】${destinations.map(id=>`${name(id)}（${id}）`).join('；')}`);
     const localProfile=settlementScene(engine,document);if(localProfile)parts.push(localProfile);
+    const seeded=populationScene(document);if(seeded)parts.push(seeded);
     const festivals=festivalScene(engine,document);if(festivals)parts.push(`【本地节俗结果】${festivals}`);
     const clock=worldClockScene(engine,document);if(clock)parts.push(`【本地粮价】${clock}`);
     const rumorTopics=[];
@@ -46,6 +49,8 @@ export function sceneCard(engine,document,query='',index=null){
         for(const row of selectNpcRumors(engine,id,query,document))rumorTopics.push(`  ${name(id)}（${id}）可讲述：${row.claim}｜未核实｜传闻 ${row.id}｜原来源 ${name(row.source)}（${row.source}）`);
         if(rumorTopics.length>=4)break;
     }
+    const opinionAt=opinionPlace(engine,s.location),opinion=opinionAt?localOpinion(engine,document,opinionAt).topics.slice(0,3):[];
+    if(opinion.length)parts.push(`【本地舆论，只计实际获知者】${opinion.map(t=>`${text(t.label,60)}：知情${t.known}人，支持${t.support}、反对${t.oppose}、中立${t.neutral}，${t.unaware}人未获知`).join('；')}`);
     if(rumorTopics.length)parts.push('【可问询的未核实传闻，尚未成为玩家经历】',...rumorTopics.slice(0,4));
     for(const [id,npc] of present.slice(0,engine.rules.prompt.npcLimit)){
         const base=engine.byId.get(id)??npc;
@@ -53,10 +58,12 @@ export function sceneCard(engine,document,query='',index=null){
         const context=npcContext(engine,document,id,query);
         const relationship=relationView(engine,s,id,'player');
         const shared=(context?.memories??Object.values(document.memories??{}).filter(m=>m.subject===id).slice(-2)).map(m=>`${engine.calendar(m.minute??0).text} ${m.sourceType??''}：${text(m.content,140)}`);
-        parts.push(`${base.name}（${id}）｜${base.occupation??''}，${base.age??''}岁｜此刻：${text(available.activity)}\n  对你：信任${relationship.trust} 亲近${relationship.affection} 敬重${relationship.respect} 畏惧${relationship.fear}${relationship.favors.some(row=>row.status==='未还')?'，记得欠你的人情':''}｜涉及你的经历：${text(shared.join('；'),compactPeople?180:500)||'尚无已核实记录'}\n  说话：${text(base.speakingStyle??base.voice?.register??base.voice)}｜挂心：${text(context?.concern??list(npc.goals??base.goals),130)}\n  TA不知道：${text(list(context?.unknown??npc.unknownFacts??base.knowledge?.unknown??base.unknownFacts),160)}${!context&&base.notes?`\n  人物资料：${text(base.notes,180)}`:''}`);
+        parts.push(`${base.name}（${id}）｜${s.npcs[id]?.occupation??base.occupation??''}，${base.age??''}岁｜此刻：${text(available.activity)}\n  对你：信任${relationship.trust} 亲近${relationship.affection} 敬重${relationship.respect} 畏惧${relationship.fear}${relationship.favors.some(row=>row.status==='未还')?'，记得欠你的人情':''}｜涉及你的经历：${text(shared.join('；'),compactPeople?180:500)||'尚无已核实记录'}\n  说话：${text(base.speakingStyle??base.voice?.register??base.voice)}｜挂心：${text(context?.concern??list(npc.goals??base.goals),130)}\n  TA不知道：${text(list(context?.unknown??npc.unknownFacts??base.knowledge?.unknown??base.unknownFacts),160)}${!context&&base.notes?`\n  人物资料：${text(base.notes,180)}`:''}`);
         if(context?.recentActivities?.length)parts.push(`  本人近期经历，玩家未必知情：${text(context.recentActivities.map(row=>`${engine.calendar(row.minute).text} ${row.content}`).join('；'),compactPeople?100:220)}`);
+        if(context?.lifeNews?.length)parts.push(`  本人知道的乡里人事，玩家未必知情：${text(context.lifeNews.map(row=>`${engine.calendar(row.minute).text} ${row.sourceType}${row.heardFrom?`（听${name(row.heardFrom)}说）`:''}：${row.content}`).join('；'),compactPeople?120:260)}`);
         if(context?.background?.relations.length)parts.push(`  本人已有往来及对方公开职务：${context.background.relations.map(row=>`${row.name}（${row.with}） ${row.publicRole}｜${row.type}：${row.note}｜来源 ${row.source}`).join('；')}`);
         if(context?.background&&mentioned.has(id))parts.push(`  本人今日作息背景：${context.background.schedule.slots.map(row=>`${engine.calendar(row.start).text}至${engine.calendar(row.end).text} ${name(row.location)}：${row.activity}｜来源 ${row.source}`).join('；')}。当前确认：${JSON.stringify(context.background.schedule.current)}。${context.background.schedule.limit}`);
+        if(context?.opinions?.length)parts.push(`  本人已获知事件的看法：${context.opinions.slice(0,2).map(row=>`${text(row.label,60)}｜${STANCE_LABEL[row.stance]}（${row.basis}，${row.sourceType}）`).join('；')}`);
         if(context?.reflections?.length)parts.push(`  个人判断，可被推翻：${text(context.reflections[0].content,100)}`);
         if(context&&compactPeople)parts.push(`  本人已知：${text(list(context.known),100)}`);
         else if(context)parts.push(`  可见外貌：${text(list(context.appearance),100)}｜说话习惯：${text(list(context.voice.habits),80)}\n  台词范例，非既往经历：${text(context.voice.samples?.[0],80)}\n  本人已知：${text(list(context.known),180)}\n  本人旧事，不代表玩家参与：${text(list(context.seeds),180)}\n  在意：${text(list(context.values),70)}｜弱点：${text(list(context.flaws),70)}\n  行事：${text(Object.values(context.behavior).join('；'),160)}`);

@@ -9,6 +9,7 @@ import {advanceGovernance} from './governance.mjs';
 import {advanceQuestBoard,nextQuestBoardMinute} from './quest-board.mjs';
 import {prepareNpcFurnace,prepareThermalWorkstation} from './magic-object.mjs';
 import {kilnWorkResult} from './manufacturing.mjs';
+import {npcProficiency,npcWorkGrowth,switchVocation,npcVocationOptions} from './npc-growth.mjs';
 
 const DAY=1440,clone=x=>structuredClone(x),safe=n=>Number.isSafeInteger(n)&&n>=0;
 const awake=n=>n?.location&&!n.scheduleTravel&&!n.cognitionTravel&&!['死亡','濒死','昏迷','患病'].includes(n.status)&&!/睡眠|睡觉|熟睡/.test(n.activity??'');
@@ -16,7 +17,7 @@ const full=(engine,id)=>engine.byId.get(id)?.tier==='full';
 const auditGoal=g=>/核清现有(?:铁料|线料)/.test(g.content);
 function draft(document,at){const d={document,patches:[],get(...p){if(at!==undefined&&p.join('.')==='state.minute')return at;return p.reduce((x,k)=>x?.[k],this.document);},set(path,value){const p={op:'set',path,value};this.document=applyPatches(this.document,[p]);this.patches.push(p);},remove(path){const p={op:'delete',path};this.document=applyPatches(this.document,[p]);this.patches.push(p);}};return d;}
 const commit=(target,work)=>{for(const p of work.patches)p.op==='set'?target.set(p.path,p.value):target.remove(p.path);};
-const proficiency=(engine,state,id,skill)=>{const v=state.npcs[id]?.skills?.[skill]??engine.byId.get(id)?.skills?.[skill]??engine.byId.get(id)?.proficiencies?.[skill]??0;return typeof v==='object'?v.proficiency:v;};
+const proficiency=npcProficiency;
 function duration(engine,action){if(action.kind==='craft')return engine.byId.get(action.recipe)?.minutes;if(action.kind==='audit_inventory')return 30;if(action.kind==='trade')return 5;return 0;}
 function tradeQuote(d,engine,buyer,action,location){const key=`${Math.floor(d.get('state','minute')/DAY)}_${action.seller}_${buyer}_${action.item}`,price=d.get('state','quotes',key)??Math.ceil(engine.byId.get(action.item).basePrice*wildlifePriceFactor(engine,d.document,action.item,location));return {key,price,cost:price*action.quantity};}
 export function npcAutonomyBusy(state,id,minute=state.minute){return Object.values(state.npcAutonomy?.tasks??{}).find(t=>t.status==='进行中'&&[t.npc,t.action.seller].includes(id)&&t.start<=minute&&minute<t.finish)??null;}
@@ -127,7 +128,8 @@ function executeAction(target,engine,id,action,{at,presence,actionId,start,ignor
   else{for(const m of r.materials){const recovered=thermal?.crackedQuantity?0:Math.floor(m.amount*(r.failure?.recoverFraction??0));if(recovered)changeItems(d,engine,id,m.item,recovered);}
    if((die===1||die+modifier<=r.difficulty-10)&&r.failure?.injury){const max=d.get('state','npcs',id,'maxHp')??derivedStats({level:base.level??1,attributes:base.attributes,profession:Boolean(base.combatProfession)},engine.rules).maxHp;const hp=Math.max(0,(d.get('state','npcs',id,'hp')??max)-r.failure.injury);d.set(['state','npcs',id,'maxHp'],max);d.set(['state','npcs',id,'hp'],hp);if(!hp)d.set(['state','npcs',id,'status'],'濒死');}
   }
-  summary=`尝试${r.name}，耗时${minutes}分钟，${outcome.success?`制成${engine.byId.get(r.output.item).name}${produced[0].amount}份`:'没有得到成品'}，工坊费${fee}铜。`;
+  const gained=npcWorkGrowth(d,engine,id,r.skill,outcome.success,start);if(gained)outcome.growth={skill:r.skill,gained};
+  summary=`尝试${r.name}，耗时${minutes}分钟，${outcome.success?`制成${engine.byId.get(r.output.item).name}${produced[0].amount}份`:'没有得到成品'}，工坊费${fee}铜${gained?`，手艺熟练度提高${gained}`:''}。`;
  }
  const day=String(Math.floor(start/DAY)),autonomy=d.get('state','npcs',id,'autonomy')??{};
  d.set(['state','npcs',id,'autonomy','minutesByDay',day],(autonomy.minutesByDay?.[day]??0)+minutes);
@@ -155,7 +157,7 @@ export function advanceNpcAutonomy(d,engine,before,after,eventId,{beforeState}={
    if(!full(engine,id)||!awake(actor)||actor.location===beforeState.location||beforeState.player.companions?.includes(id)||npcObligationAt(beforeState,id,start)||npcAutonomyBusy(beforeState,id,start))continue;
    if(d.get('state','npcAutonomy','tasks',actionId))continue;
    const goal=Object.values(d.get('state','npcs',id,'goals')??base.goals??{}).flat().find(g=>auditGoal(g)&&g.progress<100);
-   const recipes=engine.world.recipes.filter(r=>r.teachers?.includes(id)&&r.minutes<=30).sort((a,b)=>a.id.localeCompare(b.id));
+   const recipes=engine.world.recipes.filter(r=>(r.teachers?.includes(id)||d.get('state','npcs',id,'recipes',r.id))&&r.minutes<=30).sort((a,b)=>a.id.localeCompare(b.id));
    const choices=goal?[{kind:'audit_inventory',goal:goal.id}]:recipes.map(r=>({kind:'craft',recipe:r.id}));
    for(const action of choices){try{
     const checked=validateAction(d,engine,id,action,{at:start,presence});
@@ -173,7 +175,7 @@ export function npcPlanningContext(engine,document,{limit=12}={}){
  const ranked=engine.world.npcs.filter(n=>n.tier==='full'&&document.state.npcs[n.id]).sort((a,b)=>{
   const score=n=>{const s=document.state.npcs[n.id];return Math.abs(s.trust??0)+Math.abs(s.affection??0)+(s.memoryStream??[]).filter(m=>m.participants?.includes('player')).length*5;};return score(b)-score(a)||a.id.localeCompare(b.id);
  }).slice(0,limit);
- return {minute:document.state.minute,day:Math.floor(document.state.minute/DAY),stateFingerprint:npcPlanFingerprint(document),people:ranked.map(n=>({id:n.id,name:n.name,location:document.state.npcs[n.id].location,coins:document.state.npcs[n.id].coins,inventory:clone(document.state.npcs[n.id].inventory),values:n.personality.values,redLines:n.redLines,goals:clone(document.state.npcs[n.id].goals??n.goals),memories:npcCognitionView(engine,document,n.id).memories.slice(-5),knownRecipes:engine.world.recipes.filter(r=>r.teachers?.includes(n.id)||document.state.npcs[n.id].recipes?.[r.id]).map(r=>({id:r.id,minutes:r.minutes,materials:r.materials})),relations:n.relationships.map(r=>({with:r.with,type:r.type,trust:r.trust}))}))};
+ return {minute:document.state.minute,day:Math.floor(document.state.minute/DAY),stateFingerprint:npcPlanFingerprint(document),people:ranked.map(n=>({id:n.id,name:n.name,location:document.state.npcs[n.id].location,coins:document.state.npcs[n.id].coins,inventory:clone(document.state.npcs[n.id].inventory),values:n.personality.values,redLines:n.redLines,goals:clone(document.state.npcs[n.id].goals??n.goals),memories:npcCognitionView(engine,document,n.id).memories.slice(-5),knownRecipes:engine.world.recipes.filter(r=>r.teachers?.includes(n.id)||document.state.npcs[n.id].recipes?.[r.id]).map(r=>({id:r.id,minutes:r.minutes,materials:r.materials})),relations:n.relationships.map(r=>({with:r.with,type:r.type,trust:r.trust})),vocations:npcVocationOptions(engine,document.state,n.id)}))};
 }
 export function applyNpcPlan(d,engine,input,eventId){
  if(input.kind!=='npc-plan'||input.version!==1||input.minute!==d.get('state','minute')||input.stateFingerprint!==npcPlanFingerprint(d.document))throw Error('智能层计划不是当前状态的冻结输入');
@@ -183,8 +185,9 @@ export function applyNpcPlan(d,engine,input,eventId){
  for(const proposal of input.proposals)for(const [index,action]of proposal.actions.entries()){
   const id=`npc_plan_${digest([input.stateFingerprint,proposal.npc,index,action]).slice(0,24)}`;
   try{
-   const allowed={craft:['kind','recipe'],audit_inventory:['kind','goal'],trade:['kind','seller','item','quantity'],share:['kind','to','memoryId','channel']}[action.kind];
+   const allowed={craft:['kind','recipe'],audit_inventory:['kind','goal'],trade:['kind','seller','item','quantity'],share:['kind','to','memoryId','channel'],switch_vocation:['kind','vocation']}[action.kind];
    if(!allowed||Object.keys(action).some(k=>!allowed.includes(k)))throw Error('计划包含未实现字段或直接改账请求');
+   if(action.kind==='switch_vocation'){results.push({id,status:'已完成',detail:switchVocation(d,engine,proposal.npc,action.vocation,id)});continue;}
    if(action.kind==='share'){const detail=shareNpcMemory(d,engine,{from:proposal.npc,to:action.to,memoryId:action.memoryId,channel:action.channel,eventId:id});results.push({id,status:detail.delivered?'已完成':'进行中',detail});continue;}
    const checked=validateAction(d,engine,proposal.npc,action),start=d.get('state','minute');
    const task={id,npc:proposal.npc,action:clone(action),start,finish:start+checked.minutes,presence:{npcs:Object.fromEntries([proposal.npc,action.seller].filter(Boolean).map(who=>{const n=d.get('state','npcs',who);return [who,{location:n.location,activity:n.activity,status:n.status??'正常'}];}))},status:'进行中',planEvent:eventId};
