@@ -50,6 +50,7 @@ import {deriveWorldEvents,publishWorldEvents,WORLD_EVENT_VERSION}from'./world-ev
 import {recordSpiritGrudges}from'./wildlife-society.mjs';
 import {recordBossEvents}from'./boss-cognition.mjs';
 import {transmitStanding}from'./standing.mjs';
+import {recordIntelligenceEvents,INTELLIGENCE_VERSION}from'./npc-intelligence.mjs';
 // Social subscribers, in settlement order; each reads the event verb and tags.
 const worldEventSubscribers=[
     (d,e,events)=>recordSocietyActs(d,e,events),
@@ -58,9 +59,11 @@ const worldEventSubscribers=[
     (d,e,events)=>recordSpiritGrudges(d,e,events),
     (d,e,events)=>recordBossEvents(d,e,events),
     (d,e,events)=>transmitStanding(d,e,events),
+    (d,e,events,c)=>recordIntelligenceEvents(d,e,events,c),
 ];
 import {chargeTrade,repayDebt}from'./contracts.mjs';
 import {businessTrade,recordBusinessReceipt}from'./business.mjs';
+import {CREDIT_OPERATIONS,creditTrade,isCreditDebt,repayCredit,lodgingOf,assertLodgingHost,grantLodgingAccess}from'./credit.mjs';
 import {initializeR1,planR1,planPreR1Partitions}from'./migrations/r1.mjs';
 import {unfoldPopulationAt,acceptPopulationProfile}from'./population.mjs';
 import {advanceNeedsSteps,nextAdvanceMinute,runAdvance}from'./advance-registry.mjs';
@@ -150,9 +153,10 @@ export class WorldEngine {
         if(input.type==='npc_plan'){
             if(document.releaseVersion!==1)throw new Error('人物计划需要完成战役初始化');
             const d=new Draft(document),session=this.scoped(document),id=text(input.eventId,120);
+            session.replaying=Boolean(options.replay);session.replayResult=options.result;
             const detail=applyNpcPlan(d,session,input.plan,id);
             d.set(['state','npcPlanning'],{day:Math.floor(document.state.minute/1440),minute:document.state.minute,location:document.state.location,sourceEvent:id});
-            return{patches:d.patches,result:{ok:true,...detail,minute:d.get('state','minute'),notices:stateNotices(document.state,d.get('state'),key=>session.byId.get(key)?.name)}};
+            return{patches:d.patches,result:{ok:true,...detail,npcIntelligenceVersion:INTELLIGENCE_VERSION,minute:d.get('state','minute'),notices:stateNotices(document.state,d.get('state'),key=>session.byId.get(key)?.name)}};
         }
         const resolved=resolveToolCall(input.tool,input.args??{});
         const d = new Draft(document), args=resolved.args, id=text(input.eventId,120);
@@ -193,7 +197,7 @@ export class WorldEngine {
         recordBusinessReceipt(d,document.state,{tool:resolved.tool,args,eventId:id,detail});
         if(tool==='check')detail.actionScope={kind:'judgement',healthChanged:false,inventoryChanged:false,feePaid:0,
             note:'仅结算判断或对抗，并履行已引用的协助；未伤人、毁物或制造。不得从骰点虚构这些变化。'};
-        return { patches:d.patches,result:{ok:true,...detail,...(population?{population}:{}),legalProcedureVersion:1,worldEventVersion:WORLD_EVENT_VERSION,...(factionClockRules(session).length?{factionClockVersion:1}:{}),minute:d.get('state','minute'),messages:d.messages,
+        return { patches:d.patches,result:{ok:true,...detail,...(population?{population}:{}),legalProcedureVersion:1,worldEventVersion:WORLD_EVENT_VERSION,npcIntelligenceVersion:INTELLIGENCE_VERSION,...(factionClockRules(session).length?{factionClockVersion:1}:{}),minute:d.get('state','minute'),messages:d.messages,
             notices:stateNotices(document.state,d.document.state,id=>session.byId.get(id)?.name)} };
     }
     scoped(document){
@@ -213,6 +217,7 @@ export class WorldEngine {
         return changeItems(d,this,id,item,delta);
     }
     async trade(d,args,id) {
+        if(CREDIT_OPERATIONS.has(args.operation))return creditTrade.call(this,d,args,id);
         if(args.operation&&args.operation!=='trade')return businessTrade.call(this,d,args,id);
         if(args.service!==undefined&&args.service!=='住宿')throw new Error('未登记该服务；住宿请传 service="住宿" 与 days，购买物品请传 item 与 quantity');
         const buyer=this.resolve(args.buyer ?? 'player'),seller=this.resolve(args.seller);
@@ -222,16 +227,21 @@ export class WorldEngine {
         const playerLocation=d.get('state','location');
         for(const actor of [buyer,seller]) if(actor!=='player' && this.actor(d,actor).location!==playerLocation) throw new Error('交易对方不在场');
         assertSocietyTrade(d,this,buyer,seller);
-        if(args.payment==='repay')return repayDebt(d,this,{buyer,seller,debt:args.debt},id);
-        for(const actor of [buyer,seller])if(actor!=='player')assertNpcService(d,this,actor,'trade',args.service==='住宿'?10:5);
-        if(args.service==='住宿'){
-            if(buyer!=='player'||seller!=='npc_hw_linsui')throw new Error('这个人没有登记住宿服务');
-            const days=number(args.days??1,1,7,'住宿天数'),cost=days===7?35:days*6;
+        if(args.payment==='repay')return isCreditDebt(d.get('state','records',args.debt))?repayCredit(d,this,{seller,debt:args.debt},id):repayDebt(d,this,{buyer,seller,debt:args.debt},id);
+        // Any location registering lodging:{host,kind,rooms} rents rooms at the economy anchors.
+        const place=args.service==='住宿'&&buyer==='player'?lodgingOf(this,seller,playerLocation):null;
+        if(args.service==='住宿'&&!place)throw new Error('这个人没有登记住宿服务');
+        for(const actor of [buyer,seller])if(actor!=='player'&&!place)assertNpcService(d,this,actor,'trade',5);
+        if(place){
+            assertLodgingHost(d,this,seller,place,args.consent);
+            const economy=this.rules.economy,host=this.byId.get(seller).name;
+            const days=number(args.days??1,1,7,'住宿天数'),cost=days===7?place.lodging.weeklyCopper??economy.rentalCopperPerWeek:days*(place.lodging.nightlyCopper??economy.rentalCopperPerNight);
             if((args.payment??'cash')==='cash'&&this.actor(d,buyer).coins<cost)throw new Error('房钱不足');
-            const payment=chargeTrade(d,this,{buyer,seller,cost,payment:args.payment,creditMinutes:args.creditMinutes,description:'青灯酒馆房钱'},id);
-            const starts=Math.max(d.get('state','minute'),...Object.values(d.get('state','records')).filter(row=>row.category==='contract'&&row.room==='bld_hw_qingdeng'&&row.parties?.includes('player')&&row.status==='有效').map(row=>row.expires));
-            const contract=`contract_room_${id}`;d.set(['state','records',contract],{category:'contract',name:'青灯酒馆住宿',parties:['player',seller],room:'bld_hw_qingdeng',
-                starts,expires:starts+days*1440,paid:payment.debt?0:cost,...(payment.debt?{debt:payment.debt}:{}),status:'有效',content:payment.debt?`林穗同意赊账${cost}铜，允许旅人住${days}天。`:`林穗收到${cost}铜，允许旅人住${days}天。`});
+            const payment=chargeTrade(d,this,{buyer,seller,cost,payment:args.payment,creditMinutes:args.creditMinutes,description:`${place.name}房钱`},id);
+            const starts=Math.max(d.get('state','minute'),...Object.values(d.get('state','records')).filter(row=>row.category==='contract'&&row.room===place.id&&row.parties?.includes('player')&&row.status==='有效').map(row=>row.expires));
+            const contract=`contract_room_${id}`,access=grantLodgingAccess(d,this,place,seller,{starts,expires:starts+days*1440,eventId:id});
+            d.set(['state','records',contract],{category:'contract',name:`${place.name}住宿`,parties:['player',seller],room:place.id,
+                starts,expires:starts+days*1440,paid:payment.debt?0:cost,...(payment.debt?{debt:payment.debt}:{}),...(access?{authorization:access}:{}),status:'有效',content:payment.debt?`${host}同意赊账${cost}铜，允许旅人住${days}天。`:`${host}收到${cost}铜，允许旅人住${days}天。`});
             this.advance(d,10,id);d.say(`住宿${days}天，${payment.debt?'赊账':'支付'}${cost}铜`);return {contract,cost,days,...payment};
         }
         if(!args.item)throw new Error('缺少交易项目；住宿请传 service="住宿" 与 days，购买物品请传 item 与 quantity');

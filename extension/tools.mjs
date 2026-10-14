@@ -2,7 +2,7 @@ const str={type:'string'},int={type:'integer'},bool={type:'boolean'};
 const object=(properties,required=[])=>({type:'object',properties,...(required.length?{required}:{}),additionalProperties:false});
 const definitions=[];
 const define=(name,description,properties,required=[])=>definitions.push({type:'function',function:{name,description,parameters:object(properties,required)}});
-define('world_trade','交易/经营合同',{operation:{enum:['trade','lease','procure','hire','fulfill','sell','pay','cancel']},business:str,contract:str,location:str,consent:{...bool,description:'本次在场同意才true'},deposit:int,coins:int,deadline:int,minutes:int,task:{enum:['stocktake']},buyer:str,seller:str,item:str,quantity:int,unitPrice:int,service:{type:'string',enum:['住宿']},days:int,payment:{type:'string',enum:['cash','credit','repay']},creditMinutes:{...int,description:'赊账距今分，勿另约付款'},debt:str,instances:{type:'array',items:str}},['seller']);
+define('world_trade','交易/经营合同',{operation:{enum:['trade','lease','procure','hire','fulfill','sell','pay','cancel','borrow','deposit','withdraw','exchange','work','partner']},business:str,contract:str,location:str,consent:{...bool,description:'本次在场同意才true'},deposit:int,coins:int,deadline:int,minutes:int,task:{enum:['stocktake']},buyer:str,seller:str,item:str,quantity:int,unitPrice:int,service:{type:'string',enum:['住宿']},days:int,payment:{type:'string',enum:['cash','credit','repay']},creditMinutes:{...int,description:'赊账距今分，勿另约付款'},debt:str,instances:{type:'array',items:str}},['seller']);
 define('world_move','沿路移动/同行路费',{destination:str,mode:{type:'string',enum:['walk','horse','cart','boat']},authorization:{...str,description:'私宅住户有效许可ID'}},['destination']);
 define('world_time','时长/钟点等待二选一',{minutes:{...int,description:'完整分，勿减已耗时'},until:object({dayOffset:{...int,description:'今天0、明天1'},hour:{...int,minimum:0,maximum:23},minute:{...int,minimum:0,maximum:59}},['dayOffset','hour']),activity:{type:'string',enum:['等待','工作','睡眠','休息']}},[]);
 define('world_weather','查当地天气、温度及日出日落。',{operation:{enum:['inspect']},location:str},[]);
@@ -39,7 +39,7 @@ define('world_create','人物/组织登记；技能配方须完成研究，产�
 define('world_search','查长期事实/原聊天',{query:str,limit:int},['query']);
 define('world_catalog','规则/文化/势力/历史分页查。',{entity:str,kind:{type:'string',enum:['profession','skill','spell','item','recipe','feature','location','culture','deity','faction','history']},offset:int});
 define('world_read','查现账/人物库存',{section:{...str,description:'人物/npcs、行囊/inventory、约定/obligations'},npc:{...str,description:'人物ID先查目录；无私密认知'}});
-definitions.find(row=>row.function.name==='world_trade').function.parameters.properties.operation.description='依次交易/租铺/采购/雇盘点/当面履约/同意收购/还债/取消未履约';
+definitions.find(row=>row.function.name==='world_trade').function.parameters.properties.operation.description='依次交易/租铺/采购/雇盘点/当面履约/同意收购/还债/取消未履约/借款(coins,days,item押)/钱庄存取兑币(buyer=player买)/受雇/合伙(quantity分成%)';
 definitions.find(row=>row.function.name==='world_remember').function.parameters.properties.rumor={...str,description:'编号；玩家/rumor键/在场来源/未核实原文；10分'};
 definitions.find(row=>row.function.name==='world_settlement').function.parameters.properties.operation.description='business编号办开店、停业、现金破产、期末盈亏。';
 const festivalParameters=definitions.find(row=>row.function.name==='world_settlement').function.parameters.properties;
@@ -47,6 +47,9 @@ festivalParameters.operation.enum.push('festival_inspect','festival_plan','festi
 Object.assign(festivalParameters,{festival:{...str,description:'plan用custom，后续用festival ID'},year:{...int,minimum:1},cost:{...int,minimum:0,description:'同意自费，非公款'},supplier:str});
 festivalParameters.operation.description='business经营；festival_依次查现场/约日期/各speaker准自费收费/各speaker同意参加/组织者述因取消';
 festivalParameters.operation.enum.push('faction_inspect','faction_contribute','faction_intervene');
+festivalParameters.operation.enum.push('org_inspect','org_join','org_leave','org_deposit','org_propose','org_vote');
+festivalParameters.action.enum.push('expel','appoint','withdraw','charter');
+Object.assign(festivalParameters,{org:{...str,description:'组织名/ID；world_create org创立，occupation填行会/帮派/商号/教会'},member:str});
 Object.assign(festivalParameters,{clock:{...str,description:'时钟ID；choice为干预ID'},choice:str,item:str,quantity:int,coins:int});
 const routes=new Map();
 function group(name,description,members){

@@ -105,7 +105,12 @@
         "id": "loc_hw",
         "name": "河湾村"
       }
-    ]
+    ],
+    "lodging": {
+      "host": "npc_hw_linsui",
+      "kind": "客房",
+      "rooms": 3
+    }
   },
   {
     "id": "bld_hw_mill",
@@ -216,7 +221,12 @@
         "id": "loc_hw",
         "name": "河湾村"
       }
-    ]
+    ],
+    "lodging": {
+      "host": "npc_hw_xuling",
+      "kind": "空屋",
+      "rooms": 1
+    }
   },
   {
     "id": "bld_hw_forge",
@@ -1120,7 +1130,12 @@
         "id": "loc_hw",
         "name": "河湾村"
       }
-    ]
+    ],
+    "lodging": {
+      "host": "npc_hw_shendu",
+      "kind": "客房",
+      "rooms": 1
+    }
   },
   {
     "id": "site_beilin_tower",

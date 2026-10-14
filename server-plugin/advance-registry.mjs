@@ -10,6 +10,7 @@ import {advanceWaterEarth}from'./magic-water-earth.mjs';
 import {advanceCare}from'./magic-care.mjs';
 import {advanceMindSpace}from'./magic-mind-space.mjs';
 import {advanceShadowContracts,advanceContracts}from'./contracts.mjs';
+import {advanceCredit}from'./credit.mjs';
 import {settleMagicAreas,nextMagicAreaMinute}from'./magic-area.mjs';
 import {milestone}from'./progression.mjs';
 import {advancePets}from'./pets.mjs';
@@ -29,6 +30,7 @@ import {advanceNpcLife,nextNpcLifeMinute}from'./npc-life.mjs';
 import {advanceNpcObligations,nextNpcObligationMinute}from'./npc-obligations.mjs';
 import {advanceSocietyNews}from'./monster-society.mjs';
 import {advanceSeasonEffects}from'./effects.mjs';
+import {advanceOrganizations}from'./organizations.mjs';
 
 const clone=value=>structuredClone(value);
 const fullNpcs=engine=>engine.world.npcs.some(n=>n.tier==='full');
@@ -54,6 +56,7 @@ const systems=[
  {id:'npc_obligations',order:100,active:e=>fullNpcs(e),nextMinute:(e,d,now)=>nextNpcObligationMinute(d.get('state'),now),
   advance:(e,d,{before,after,id})=>advanceNpcObligations(d,e,before,after,id)},
  {id:'contracts',order:200,advance:(e,d,{after})=>advanceContracts(d,e,after)},
+ {id:'credit',order:250,advance:(e,d,{after})=>advanceCredit(d,e,after)},
  {id:'summons',order:300,advance:(e,d,{after})=>advanceSummons(d,after)},
  {id:'law',order:400,advance:(e,d,{after})=>advanceLaw(d,after,e)},
  {id:'daily',order:500,advance(e,d,{before,after}){
@@ -92,6 +95,7 @@ const systems=[
  {id:'season_effects',order:1350,advance:(e,d,{before,after})=>advanceSeasonEffects(d,e,before,after)},
  {id:'faction_clock',order:1400,active:e=>factionClockRules(e).length>0,nextMinute:(e,d,now)=>nextFactionClockMinute(d.get('state'),now),
   advance:(e,d,{after})=>advanceFactionClocks(d,e,after)},
+ {id:'organizations',order:1450,advance:(e,d,ctx)=>advanceOrganizations(d,e,ctx)},
  {id:'society_news',order:1500,advance:(e,d,{after})=>advanceSocietyNews(d,e,after)},
  {id:'festival',order:1600,active:e=>festivalCalendar(e).length>0,nextMinute:(e,d,now)=>nextFestivalMinute(d.get('state'),e,now),
   advance:(e,d,{after})=>advanceFestivals(d,e,after)},

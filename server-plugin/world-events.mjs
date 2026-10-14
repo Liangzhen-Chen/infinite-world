@@ -6,7 +6,7 @@
 // Social events are kept in records as `world_event:<eventId>[:n]`.
 import {eventWeight} from './standing.mjs';
 export const WORLD_EVENT_VERSION=1;
-export const SOCIAL_VERBS=new Set(['harm','clash','steal','gift','help','trade','learn']);
+export const SOCIAL_VERBS=new Set(['harm','clash','steal','gift','help','trade','learn','organize','breach']);
 const awake=n=>n&&!['死亡','濒死','昏迷'].includes(n.status)&&!n.scheduleTravel&&!n.cognitionTravel&&!/(睡眠|熟睡|睡觉)/.test(n.activity??'');
 const resolve=(engine,value)=>{if(!value)return null;try{return engine.resolve(value);}catch{return null;}};
 
@@ -28,6 +28,18 @@ function obligationGifts(engine,before,after){
         const minute=o.resolvedAt??o.completion?.minute??o.deadline??after.minute;
         rows.push({verb:'gift',actor:o.promisor,target:o.promisee,gift:{item:o.item,quantity:o.quantity},value:valueOf(engine,o.item,o.quantity??1),
             location:o.location??after.location,minute,tags:['gift','obligation'],source:{obligation:id},key:`obligation:${id}:gift`});
+    }
+    return rows;
+}
+
+// Credit contracts (loan, partnership) that went into default during this call:
+// the debtor breached against the creditor (the bank's keeper for a bank).
+function creditBreaches(before,after){
+    const rows=[];
+    for(const [id,r]of Object.entries(after.records??{})){
+        if(r.category!=='debt'||!r.defaulted||before.records?.[id]?.defaulted)continue;
+        rows.push({verb:'breach',actor:r.debtor,target:r.keeper??r.creditor,value:r.defaulted.remaining,location:r.location??after.location,minute:r.defaulted.minute,
+            witnesses:[],tags:['contract','breach','debt',r.kind],source:{debt:id},...(r.defaulted.case?{case:r.defaulted.case}:{}),key:`debt:${id}:breach`});
     }
     return rows;
 }
@@ -54,12 +66,16 @@ export function deriveWorldEvents(engine,before,after,{tool,args={},detail={},ev
     }else if(tool==='trade'){
         const buyer=detail.buyer??resolve(engine,args.buyer??'player'),seller=detail.seller??resolve(engine,args.seller);
         e={verb:'trade',actor:buyer,target:seller,value:detail.cost??0,tags:['trade',args.payment==='repay'?'repay':detail.debt?'credit':'cash']};
+    }else if(detail.organizationEvent){
+        e={actor:'player',...detail.organizationEvent};
     }else if(tool==='learn'){
         e={verb:'learn',actor:'player',target:detail.teacher??null,tags:['learn',detail.success?'success':'attempt']};
     }
     const primary={id:eventId,minute,location,witnesses:e.witnesses??presentWitnesses(before,location,[e.target]),tool,...e};
     if(legacy)primary.legacy=true;
-    return [primary,...obligationGifts(engine,before,after).map((g,i)=>({id:`${eventId}:${i+1}`,sourceEvent:eventId,witnesses:presentWitnesses(after,g.location,[g.actor,g.target]),tool,...g,...(legacy?{legacy:true}:{})}))];
+    const gifts=obligationGifts(engine,before,after).map((g,i)=>({id:`${eventId}:${i+1}`,sourceEvent:eventId,witnesses:presentWitnesses(after,g.location,[g.actor,g.target]),tool,...g,...(legacy?{legacy:true}:{})}));
+    const breaches=legacy?[]:creditBreaches(before,after).map((b,i)=>({id:`${eventId}:${gifts.length+i+1}`,sourceEvent:eventId,tool,...b}));
+    return [primary,...gifts,...breaches];
 }
 
 // Subscribers: {verbs?:Set, on(d,engine,event,context)}; registered in engine order.

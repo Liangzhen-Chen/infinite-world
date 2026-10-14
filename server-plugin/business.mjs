@@ -1,4 +1,5 @@
 import {chargeTrade,repayDebt,createBusinessContract,finishBusinessContract,refundContractEscrow,releaseBusinessLease} from './contracts.mjs';
+import {openLoan} from './credit.mjs';
 import {transferItems} from './items.mjs';
 import {assertNpcService,scheduleAt,advanceWithNpcParticipants} from './npc-schedule.mjs';
 import {regionalTradePrice} from './settlement-trade.mjs';
@@ -84,7 +85,8 @@ export async function businessTrade(d,args,eventId){
     if(operation==='procure'||operation==='hire'){
         const minutes=operation==='hire'?int(args.minutes??30,1,240,'工作时长'):5;
         const seller=party(d,this,args.seller,{consent:args.consent,minutes,service:operation==='procure'});
-        if(args.payment&&args.payment!=='cash')throw Error('采购与雇工按真实现金托管，不代替 NPC 同意借贷');
+        // Credit is a loan from the counterparty under its own terms (credit.mjs), never an unagreed deferral.
+        if(args.payment&&!['cash','credit'].includes(args.payment))throw Error('采购与雇工按现金托管，或经对方同意改为向其借款（payment=credit）');
         const deadline=int(args.deadline??d.get('state','minute')+1440,d.get('state','minute')+minutes+1,d.get('state','minute')+30*1440,'合同到期时间');
         const item=this.resolve(args.item,'item'),quantity=int(args.quantity,1,100000,'标的数量');
         let cost,terms;
@@ -99,9 +101,11 @@ export async function businessTrade(d,args,eventId){
             cost=int(args.coins??Math.max(1,Math.ceil(low*minutes/240)),Math.max(1,Math.ceil(low*minutes/240)),Math.max(1,Math.ceil(high*minutes/240)),'报酬');
             terms={minutes,task:'stocktake'};
         }
-        hold(d,cost);
-        const row=createBusinessContract(d,{kind:operation==='hire'?'hire':'procurement',parties:['player',seller],subject:item,quantity,deadline,business:shop.id,cost,escrow:cost,location:d.get('state','location'),consentEvent:eventId,...terms},eventId);
-        return {business:shop.id,contract:row.id,cost,escrow:cost,status:row.status};
+        const loan=args.payment==='credit'?openLoan(d,this,{lender:seller,principal:cost,days:Math.max(1,Math.ceil((args.creditMinutes??7*1440)/1440)),eventId,
+            purpose:`${operation==='hire'?'雇工报酬':'货款'}向${this.byId.get(seller)?.name}借款`,toPlayer:false}):null;
+        if(!loan)hold(d,cost);
+        const row=createBusinessContract(d,{kind:operation==='hire'?'hire':'procurement',parties:['player',seller],subject:item,quantity,deadline,business:shop.id,cost,escrow:cost,location:d.get('state','location'),consentEvent:eventId,...terms,...(loan?{loan:loan.debt}:{})},eventId);
+        return {business:shop.id,contract:row.id,cost,escrow:cost,status:row.status,...(loan?{debt:loan.debt,loanAmount:loan.amount,loanDeadline:loan.deadline}:{})};
     }
     if(operation==='sell'){
         if(shop.status!=='营业')throw Error('店铺未营业');
@@ -212,7 +216,7 @@ export function businessReport(d,engine,shop){
     }
     const revenue=contracts.filter(r=>r.kind==='sale'&&r.status==='已完成').reduce((sum,r)=>sum+r.paid,0);
     const rent=contracts.filter(r=>r.kind==='lease').reduce((sum,r)=>sum+r.cost,0),wages=contracts.filter(r=>r.kind==='hire'&&r.status==='已完成').reduce((sum,r)=>sum+r.paid,0);
-    const debts=Object.entries(d.get('state','records')??{}).filter(([id,r])=>r.category==='debt'&&contracts.some(c=>c.debt===id)).map(([id,r])=>({id,amount:r.amount-r.paid,status:r.status}));
+    const debts=Object.entries(d.get('state','records')??{}).filter(([id,r])=>r.category==='debt'&&contracts.some(c=>c.debt===id||c.loan===id)).map(([id,r])=>({id,amount:r.amount-r.paid,status:r.status}));
     return {business:shop.id,status:shop.status,period:{from:shop.createdAt,to:shop.endedAt??d.get('state','minute')},
         cash:{opening:shop.opening.coins,closing:closing.coins,net:closing.coins-shop.opening.coins,sources:cashSources,reconciled:cashSources.reduce((sum,r)=>sum+r.amount,0)===closing.coins},goods,
         profit:{revenue,stockCostOfSales,rent,wages,net:revenue-stockCostOfSales-rent-wages,method:'已成交收入减先进先出销货成本、整期租金和已付工钱；未售库存为资产，期初旧货按目录基价估值'},
@@ -236,7 +240,7 @@ export function businessAction(d,args,eventId){
     const bankrupt=args.operation==='business_bankrupt';
     if(bankrupt){
         const contracts=Object.values(d.get('state','records')??{}).filter(r=>r.category==='contract'&&r.business===shop.id);
-        const debt=contracts.reduce((sum,c)=>{const row=c.debt&&d.get(...path(c.debt));return sum+(row?row.amount-row.paid:0);},0);
+        const debt=contracts.reduce((sum,c)=>sum+[c.debt,c.loan].reduce((n,key)=>{const row=key&&d.get(...path(key));return n+(row?row.amount-row.paid:0);},0),0);
         const refundable=contracts.reduce((sum,c)=>sum+c.escrow,0);
         if(debt<=d.get('state','player','coins')+refundable)throw Error('现有现金和托管款足以偿债，不符合现金破产条件');
     }

@@ -663,7 +663,78 @@
     ],
     "rentalCopperPerNight": 6,
     "rentalCopperPerWeek": 35,
-    "tradeCycleDays": 7
+    "tradeCycleDays": 7,
+    "credit": {
+      "source": "U2 契约与信用：借贷月息沿用 loanMonthlyInterest，工钱沿用 wageCopperPerHalfDay，房钱沿用 rentalCopperPerNight/Week",
+      "loan": {
+        "maximumDays": 90,
+        "lenderCashShare": 0.5,
+        "refuseBelow": -30,
+        "collateralBelow": 0,
+        "defaultGraceMinutes": 1440,
+        "defaultPenalty": {
+          "baseFine": 5,
+          "valueMultiplier": 0.2,
+          "note": "法典未单列欠债违约时，按此罚则审理"
+        }
+      },
+      "partnership": {
+        "minimumShare": 1,
+        "maximumShare": 90,
+        "maximumDays": 90,
+        "payoutDays": 3
+      },
+      "coinages": [
+        {
+          "id": "coinage_river",
+          "name": "西陲铜钱",
+          "polity": "西陲河谷",
+          "item": null,
+          "faceCopper": 1,
+          "fineness": 1,
+          "note": "本地记账铜钱，即角色钱袋里的铜"
+        },
+        {
+          "id": "coinage_civic",
+          "name": "阶庭方孔钱",
+          "polity": "中陆诸邦",
+          "item": "item_coin_civic",
+          "faceCopper": 10,
+          "fineness": 0.9,
+          "note": "面值十铜，含铜不足，钱庄按九成收兑"
+        },
+        {
+          "id": "coinage_coast",
+          "name": "泊绳银片",
+          "polity": "琥珀海岸",
+          "item": "item_coin_coast",
+          "faceCopper": 100,
+          "fineness": 0.85,
+          "note": "面值一银，掺锡，钱庄按八成五收兑"
+        }
+      ],
+      "banks": [
+        {
+          "id": "bank_hw_post",
+          "name": "小驿站汇兑柜",
+          "location": "bld_hw_post",
+          "keepers": [
+            "npc_hw_shendu"
+          ],
+          "reserveCopper": 1500,
+          "reserveCoins": {
+            "item_coin_civic": 40,
+            "item_coin_coast": 6
+          },
+          "exchangeFeeRate": 0.03,
+          "depositFeeCopper": 1,
+          "loanMonthlyInterest": 0.03,
+          "loanMaximumCopper": 300,
+          "loanMaximumDays": 60,
+          "collateralRatio": 0.5
+        }
+      ]
+    }
   },
   "repairs": [
     {

@@ -10,6 +10,7 @@ import {advanceQuestBoard,nextQuestBoardMinute} from './quest-board.mjs';
 import {prepareNpcFurnace,prepareThermalWorkstation} from './magic-object.mjs';
 import {kilnWorkResult} from './manufacturing.mjs';
 import {npcProficiency,npcWorkGrowth,switchVocation,npcVocationOptions} from './npc-growth.mjs';
+import {intelligenceOf,intelligenceFresh,goalsWithinHorizon,INTELLIGENCE_LEVELS} from './npc-intelligence.mjs';
 
 const DAY=1440,clone=x=>structuredClone(x),safe=n=>Number.isSafeInteger(n)&&n>=0;
 const awake=n=>n?.location&&!n.scheduleTravel&&!n.cognitionTravel&&!['死亡','濒死','昏迷','患病'].includes(n.status)&&!/睡眠|睡觉|熟睡/.test(n.activity??'');
@@ -32,9 +33,10 @@ function validateAction(d,engine,id,action,{at=d.get('state','minute'),presence=
  if(!safe(minutes)||minutes>480)throw Error('行动耗时未登记或超过单日上限');
  if(!ignoreTask)assertNpcAutonomyAction(state,[id,action.seller].filter(Boolean),{start:at,minutes});
  assertNpcObligationAction(d,engine,[id,action.seller].filter(Boolean),{start:at,minutes,location:actor.location,kind:'autonomy'});
- const day=String(Math.floor(at/DAY)),spent=state.npcs[id].autonomy?.minutesByDay?.[day]??0;
- if(spent+minutes>240)throw Error('每日自主工作时间已用尽');
- for(let cursor=at;cursor<at+minutes;){const slot=scheduleAt(engine,id,cursor,state);if(!slot||slot.production===false||slot.location!==actor.location||/睡眠|睡觉|熟睡|赶路|前往|返回/.test(slot.activity))throw Error('实际作息没有完整工作窗口');cursor=slot.until;}
+ const day=String(Math.floor(at/DAY)),spent=state.npcs[id].autonomy?.minutesByDay?.[day]??0,mind=intelligenceOf(engine,state,id);
+ if(spent+minutes>Math.max(240,mind.dailyMinutes))throw Error('每日自主工作时间已用尽');
+ // 觉悟以上的人会在不安排生产的清醒时段另起炉灶；睡眠与赶路仍不可占用。
+ for(let cursor=at;cursor<at+minutes;){const slot=scheduleAt(engine,id,cursor,state);if(!slot||slot.production===false&&!mind.offSchedule||slot.location!==actor.location||/睡眠|睡觉|熟睡|赶路|前往|返回/.test(slot.activity))throw Error('实际作息没有完整工作窗口');cursor=slot.until;}
  if(action.kind==='audit_inventory'){
   const goals=state.npcs[id].goals??base.goals,goal=Object.values(goals).flat().find(g=>g.id===action.goal);
   if(!goal||!auditGoal(goal)||goal.progress>=100)throw Error('这项目标不能通过盘点本人库存直接完成');
@@ -157,7 +159,8 @@ export function advanceNpcAutonomy(d,engine,before,after,eventId,{beforeState}={
    if(!full(engine,id)||!awake(actor)||actor.location===beforeState.location||beforeState.player.companions?.includes(id)||npcObligationAt(beforeState,id,start)||npcAutonomyBusy(beforeState,id,start))continue;
    if(d.get('state','npcAutonomy','tasks',actionId))continue;
    const goal=Object.values(d.get('state','npcs',id,'goals')??base.goals??{}).flat().find(g=>auditGoal(g)&&g.progress<100);
-   const recipes=engine.world.recipes.filter(r=>(r.teachers?.includes(id)||d.get('state','npcs',id,'recipes',r.id))&&r.minutes<=30).sort((a,b)=>a.id.localeCompare(b.id));
+   const reach=Math.max(30,intelligenceOf(engine,d.get('state'),id).recipeMinutes);
+   const recipes=engine.world.recipes.filter(r=>(r.teachers?.includes(id)||d.get('state','npcs',id,'recipes',r.id))&&r.minutes<=reach).sort((a,b)=>a.id.localeCompare(b.id));
    const choices=goal?[{kind:'audit_inventory',goal:goal.id}]:recipes.map(r=>({kind:'craft',recipe:r.id}));
    for(const action of choices){try{
     const checked=validateAction(d,engine,id,action,{at:start,presence});
@@ -175,16 +178,21 @@ export function npcPlanningContext(engine,document,{limit=12}={}){
  const ranked=engine.world.npcs.filter(n=>n.tier==='full'&&document.state.npcs[n.id]).sort((a,b)=>{
   const score=n=>{const s=document.state.npcs[n.id];return Math.abs(s.trust??0)+Math.abs(s.affection??0)+(s.memoryStream??[]).filter(m=>m.participants?.includes('player')).length*5;};return score(b)-score(a)||a.id.localeCompare(b.id);
  }).slice(0,limit);
- return {minute:document.state.minute,day:Math.floor(document.state.minute/DAY),stateFingerprint:npcPlanFingerprint(document),people:ranked.map(n=>({id:n.id,name:n.name,location:document.state.npcs[n.id].location,coins:document.state.npcs[n.id].coins,inventory:clone(document.state.npcs[n.id].inventory),values:n.personality.values,redLines:n.redLines,goals:clone(document.state.npcs[n.id].goals??n.goals),memories:npcCognitionView(engine,document,n.id).memories.slice(-5),knownRecipes:engine.world.recipes.filter(r=>r.teachers?.includes(n.id)||document.state.npcs[n.id].recipes?.[r.id]).map(r=>({id:r.id,minutes:r.minutes,materials:r.materials})),relations:n.relationships.map(r=>({with:r.with,type:r.type,trust:r.trust})),vocations:npcVocationOptions(engine,document.state,n.id)}))};
+ const day=Math.floor(document.state.minute/DAY);
+ return {minute:document.state.minute,day,stateFingerprint:npcPlanFingerprint(document),people:ranked.map(n=>{const mind=intelligenceOf(engine,document.state,n.id);return {id:n.id,name:n.name,location:document.state.npcs[n.id].location,coins:document.state.npcs[n.id].coins,inventory:clone(document.state.npcs[n.id].inventory),values:n.personality.values,redLines:n.redLines,
+  intelligence:{maxActions:mind.maxActions,horizonDays:mind.horizonDays,breaksRoutine:mind.offSchedule},goals:clone(goalsWithinHorizon(document.state.npcs[n.id].goals??n.goals,mind.horizonDays,day)),memories:npcCognitionView(engine,document,n.id).memories.slice(-5),knownRecipes:engine.world.recipes.filter(r=>r.teachers?.includes(n.id)||document.state.npcs[n.id].recipes?.[r.id]).map(r=>({id:r.id,minutes:r.minutes,materials:r.materials})),relations:n.relationships.map(r=>({with:r.with,type:r.type,trust:r.trust})),vocations:npcVocationOptions(engine,document.state,n.id)};})};
 }
 export function applyNpcPlan(d,engine,input,eventId){
  if(input.kind!=='npc-plan'||input.version!==1||input.minute!==d.get('state','minute')||input.stateFingerprint!==npcPlanFingerprint(d.document))throw Error('智能层计划不是当前状态的冻结输入');
  if(!Array.isArray(input.proposals)||input.proposals.length>20)throw Error('计划人数超限');
  const ids=new Set(),results=[];
- for(const proposal of input.proposals){if(ids.has(proposal.npc)||!full(engine,proposal.npc)||!Array.isArray(proposal.actions)||proposal.actions.length>2)throw Error('计划人物重复或单人行动超限');ids.add(proposal.npc);}
- for(const proposal of input.proposals)for(const [index,action]of proposal.actions.entries()){
+ // 计划长度由灵智决定：超出本人谋算的后续步骤逐条拒绝；旧事件重放仍按每人两步。
+ const fresh=intelligenceFresh(engine),most=fresh?INTELLIGENCE_LEVELS[5].maxActions:2;
+ for(const proposal of input.proposals){if(ids.has(proposal.npc)||!full(engine,proposal.npc)||!Array.isArray(proposal.actions)||proposal.actions.length>most)throw Error('计划人物重复或单人行动超限');ids.add(proposal.npc);}
+ for(const proposal of input.proposals){const reach=fresh?intelligenceOf(engine,d.get('state'),proposal.npc).maxActions:2;for(const [index,action]of proposal.actions.entries()){
   const id=`npc_plan_${digest([input.stateFingerprint,proposal.npc,index,action]).slice(0,24)}`;
   try{
+   if(index>=reach)throw Error('计划步数超出本人灵智所及');
    const allowed={craft:['kind','recipe'],audit_inventory:['kind','goal'],trade:['kind','seller','item','quantity'],share:['kind','to','memoryId','channel'],switch_vocation:['kind','vocation']}[action.kind];
    if(!allowed||Object.keys(action).some(k=>!allowed.includes(k)))throw Error('计划包含未实现字段或直接改账请求');
    if(action.kind==='switch_vocation'){results.push({id,status:'已完成',detail:switchVocation(d,engine,proposal.npc,action.vocation,id)});continue;}
@@ -193,7 +201,7 @@ export function applyNpcPlan(d,engine,input,eventId){
    const task={id,npc:proposal.npc,action:clone(action),start,finish:start+checked.minutes,presence:{npcs:Object.fromEntries([proposal.npc,action.seller].filter(Boolean).map(who=>{const n=d.get('state','npcs',who);return [who,{location:n.location,activity:n.activity,status:n.status??'正常'}];}))},status:'进行中',planEvent:eventId};
    startTask(d,task,checked);results.push({id,status:'进行中',finish:task.finish});
   }catch(error){results.push({id,status:'拒绝',reason:error.message});}
- }
+ }}
  return {proposed:results.length,results};
 }
 export function nextNpcAutonomyMinute(state,after){const today=Math.floor(after/DAY)*DAY+600,daily=today>after?today:today+DAY;return Math.min(daily,nextQuestBoardMinute(state,after),...Object.values(state.npcAutonomy?.tasks??{}).filter(t=>t.status==='进行中'&&t.finish>after).map(t=>t.finish));}
