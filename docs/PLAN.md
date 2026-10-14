@@ -639,7 +639,7 @@ C部分只拆缺口：governance.mjs的任职入口止于“待上级决定”�
 
 ### T127（C5） 爵位、领地收入与义务。结果：实际受封后获得对应辖区收入和权限，同时承担贡赋、兵役等义务，失去封地后结算随之变化。可改新server-plugin/titles.mjs、governance/quest-board/law/engine及领地投影接点、extension/tools.mjs、tests/governance-titles.test.mjs；接C1–C4，复用其来源，不凭贡献自动封爵。验收node --test "tests/governance*.test.mjs" tests/civic.test.mjs tests/quest-board.test.mjs tests/law.test.mjs tests/reputation-law.test.mjs tests/village-ledgers.test.mjs tests/prompt.test.mjs，CORE。模型0；约3小时，与治理和工具写者串行，提示≤11900。
 
-### T128（C6） 群体舆论。结果：同一事件经关系网传播后形成当地支持/反对比例，议事和NPC反应读取各自真实获知的看法。可改新server-plugin/public-opinion.mjs、npc-cognition/npc-relations/governance及场景投影、tests/public-opinion.test.mjs；接B10，复用已有意见记录与声望，不另起通用好感分。验收node --test "tests/governance*.test.mjs" "tests/npc-*.test.mjs" tests/public-opinion.test.mjs tests/reputation-law.test.mjs tests/village-rumor-access.test.mjs，CORE。模型0；约2小时，与B10/C2串行。
+### T128（C6）已完成：看法每次从现有关系、聚居地态度和声望推出，不另存好感分；只有记忆仍清晰的知情者计入当地支持/反对比例，未获知者单列；议事查看与闭合读取在场者的实际看法，场景与NPC上下文带上本地舆论。目前交锋、偷窃、法律案件和聚居地消息能形成看法，交易与节俗尚不产生舆论。新增4项、CORE40、发布构建ok，0模型。
 
 ### T129（C7）已完成：玩家教学（world_learn加student）和NPC日常工作带来有上限、有时间成本的技能增长；人物计划层可发起换营生，作息与服务随之改变，登记机构的导师不自行改行；先登记4个营生模板（磨坊木作、青灯帮厨、学馆助教、武馆陪练）。npc-growth 8/8、CORE40、发布构建ok，提示约11300，0模型。遗留：换营生后场景显示的公开职务仍读原目录。
 
