@@ -2676,5 +2676,77 @@
       "npc_ms_td_limao"
     ],
     "tenure": "栗家巢由栗家共居，三名成年成员与幼崽栗毛同巢；登记不认定个人产权。"
+  },
+  {
+    "id": "house_ms_yg_01",
+    "settlement": "loc_ms_yugen",
+    "homeLocation": "bld_ms_yg_home_01",
+    "members": [
+      "npc_ms_yg_jiecang",
+      "npc_ms_yg_jieyin",
+      "npc_ms_yg_jiecha",
+      "npc_ms_yg_jieqing",
+      "npc_ms_yg_jieya"
+    ],
+    "tenure": "节家树穴由节家木精共居，四名成年木精与小木精节芽同穴；登记不认定个人产权。"
+  },
+  {
+    "id": "house_ms_yg_02",
+    "settlement": "loc_ms_yugen",
+    "homeLocation": "bld_ms_yg_home_02",
+    "members": [
+      "npc_ms_yg_xuxiao",
+      "npc_ms_yg_xushi",
+      "npc_ms_yg_xuhe",
+      "npc_ms_yg_xumo"
+    ],
+    "tenure": "须家石窝由须家穴鼬共居，三名成年成员与小穴鼬须末同窝；登记不认定个人产权。"
+  },
+  {
+    "id": "house_ms_yg_03",
+    "settlement": "loc_ms_yugen",
+    "homeLocation": "bld_ms_yg_home_03",
+    "members": [
+      "npc_ms_yg_gonghou",
+      "npc_ms_yg_gongni",
+      "npc_ms_yg_gongtuan"
+    ],
+    "tenure": "拱家土窝由拱家林獾共居，两名成年成员与小林獾拱团同窝；登记不认定个人产权。"
+  },
+  {
+    "id": "house_ms_ll_01",
+    "settlement": "loc_ms_lielu",
+    "homeLocation": "bld_ms_ll_home_01",
+    "members": [
+      "npc_ms_ll_yayue",
+      "npc_ms_ll_yajin",
+      "npc_ms_ll_yashi",
+      "npc_ms_ll_yahang",
+      "npc_ms_ll_yasun"
+    ],
+    "tenure": "牙家皮棚归兽人棚区共营，四名成年兽人与小兽人牙笋同棚；登记不认定个人产权。"
+  },
+  {
+    "id": "house_ms_ll_02",
+    "settlement": "loc_ms_lielu",
+    "homeLocation": "bld_ms_ll_home_02",
+    "members": [
+      "npc_ms_ll_cuozhen",
+      "npc_ms_ll_cuomang",
+      "npc_ms_ll_cuoqian",
+      "npc_ms_ll_cuohui",
+      "npc_ms_ll_cuosu"
+    ],
+    "tenure": "锉家矮棚归工棚区共营，四名成年哥布林与小哥布林锉粟同棚；登记不认定个人产权。"
+  },
+  {
+    "id": "house_ms_ll_03",
+    "settlement": "loc_ms_lielu",
+    "homeLocation": "bld_ms_ll_home_03",
+    "members": [
+      "npc_ms_ll_panfu",
+      "npc_ms_ll_panlei"
+    ],
+    "tenure": "磐家石窝归石窝共营，两名成年巨魔同窝；登记不认定个人产权。"
   }
 ]
