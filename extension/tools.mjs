@@ -47,6 +47,9 @@ festivalParameters.operation.enum.push('festival_inspect','festival_plan','festi
 Object.assign(festivalParameters,{festival:{...str,description:'plan用custom，后续用festival ID'},year:{...int,minimum:1},cost:{...int,minimum:0,description:'同意自费，非公款'},supplier:str});
 festivalParameters.operation.description='business经营；festival_依次查现场/约日期/各speaker准自费收费/各speaker同意参加/组织者述因取消';
 festivalParameters.operation.enum.push('faction_inspect','faction_contribute','faction_intervene');
+festivalParameters.operation.enum.push('org_inspect','org_join','org_leave','org_deposit','org_propose','org_vote');
+festivalParameters.action.enum.push('expel','appoint','withdraw','charter');
+Object.assign(festivalParameters,{org:{...str,description:'组织名/ID；world_create org创立，occupation填行会/帮派/商号/教会'},member:str});
 Object.assign(festivalParameters,{clock:{...str,description:'时钟ID；choice为干预ID'},choice:str,item:str,quantity:int,coins:int});
 const routes=new Map();
 function group(name,description,members){

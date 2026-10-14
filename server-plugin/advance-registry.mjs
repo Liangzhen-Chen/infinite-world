@@ -29,6 +29,7 @@ import {advanceNpcAutonomy,nextNpcAutonomyMinute}from'./npc-autonomy.mjs';
 import {advanceNpcLife,nextNpcLifeMinute}from'./npc-life.mjs';
 import {advanceNpcObligations,nextNpcObligationMinute}from'./npc-obligations.mjs';
 import {advanceSocietyNews}from'./monster-society.mjs';
+import {advanceOrganizations}from'./organizations.mjs';
 
 const clone=value=>structuredClone(value);
 const fullNpcs=engine=>engine.world.npcs.some(n=>n.tier==='full');
@@ -92,6 +93,7 @@ const systems=[
   advance:(e,d,{after})=>advanceWorldClocks(d,e,after)},
  {id:'faction_clock',order:1400,active:e=>factionClockRules(e).length>0,nextMinute:(e,d,now)=>nextFactionClockMinute(d.get('state'),now),
   advance:(e,d,{after})=>advanceFactionClocks(d,e,after)},
+ {id:'organizations',order:1450,advance:(e,d,ctx)=>advanceOrganizations(d,e,ctx)},
  {id:'society_news',order:1500,advance:(e,d,{after})=>advanceSocietyNews(d,e,after)},
  {id:'festival',order:1600,active:e=>festivalCalendar(e).length>0,nextMinute:(e,d,now)=>nextFestivalMinute(d.get('state'),e,now),
   advance:(e,d,{after})=>advanceFestivals(d,e,after)},

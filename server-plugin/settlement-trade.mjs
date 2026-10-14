@@ -1,4 +1,5 @@
 import {weatherTravel} from './weather.mjs';
+import {itemTraits,hasTrait} from './traits.mjs';
 
 const DAY=1440, CLOCK='settlement-trade:clock';
 const clone=value=>structuredClone(value);
@@ -13,7 +14,7 @@ export function validateSettlementTradeRules(world){
     const errors=[],ps=world.rules.agriculture?.settlements??[],ids=new Set();
     if(r.version!==1||!r.source||!integer(r.cycleDays,1)||!integer(r.firstDay,1)||!integer(r.dispatchMinute)||r.dispatchMinute>=DAY||!integer(r.targetDays,1)||!integer(r.workersMaximum,1)||!(r.unitKg>0)||!(r.carryKgPerWorker>0)||!(r.distanceFactorPerKm>=0)||r.seasonFactors?.length!==4||r.seasonFactors.some(n=>n<0.6||n>2)||!Array.isArray(r.lanes))errors.push('周贸易周期、运力或价格规则无效');
     const item=world.items.find(i=>i.id===r.item);
-    if(!item?.tags?.includes('grain')||item.weight!==r.unitKg)errors.push('周贸易标的与实际谷物重量不符');
+    if(!hasTrait(itemTraits(item),'grain')||item.weight!==r.unitKg)errors.push('周贸易标的与实际谷物重量不符');
     for(const l of r.lanes??[]){
         const seller=ps.find(p=>p.settlement===l.seller),buyer=ps.find(p=>p.settlement===l.buyer);
         if(!l.id||ids.has(l.id)||l.id===seller?.tradeContract?.id||!seller?.opening||!buyer?.opening||l.seller===l.buyer||r.targetDays<=seller.reserveDays||!integer(l.maximumQuantity,1)||!integer(l.taxBps)||l.taxBps!==seller?.tradeContract?.taxBps||l.mode!=='walk'||!l.routes?.length||l.routes.some(id=>!world.routes.some(e=>e.id===id)))errors.push(`周贸易来源、两端或税章无效：${l.id}`);

@@ -2,7 +2,10 @@
 // combat. Spirits enter the same `spirit` actor state that magic-ritual reads;
 // non-breeding species (undead, elementals, object spirits) recover only by
 // their registered manifestation rule, never by pairing.
-export const affinityTactics=Object.freeze(['armed','unarmed','magic_fire','magic_cold','magic_wind','magic_earth','magic_light','magic_shadow','magic_mind','magic_physical']);
+import {TACTICS,creatureTraits}from'./traits.mjs';
+import {creatureCounter}from'./interactions.mjs';
+// Single vocabulary lives in traits.mjs; this name stays for older importers.
+export const affinityTactics=TACTICS;
 export const affinityMultipliers=Object.freeze({weak:1.5,resist:0.5});
 const groups=['妖怪','灵兽','亡灵','异族','元素体','魔物'];
 
@@ -10,11 +13,11 @@ export function spiritStateFor(species){
     const s=species?.nature?.spirit;
     return s?{spirit:{divine:false,rank:s.rank,nature:s.nature,realm:'local'}}:{};
 }
+// Compatibility view: the decision now lives in the interaction table.
 export function natureCounter(species,tactic){
-    const a=species?.nature?.affinity;if(!a)return null;
-    if(a.weak.includes(tactic))return{damageMultiplier:affinityMultipliers.weak,nature:{tactic,effect:'weak'}};
-    if(a.resist.includes(tactic))return{damageMultiplier:affinityMultipliers.resist,nature:{tactic,effect:'resist'}};
-    return null;
+    if(!species)return null;
+    const n=creatureCounter(creatureTraits(species),tactic);
+    return n?.nature?{damageMultiplier:n.damageMultiplier,nature:n.nature}:n?{damageMultiplier:n.damageMultiplier,interaction:n.interaction}:null;
 }
 // Weekly manifestation: no pair needed, bounded by season and capacity.
 export function manifestArisals(species,total,reserved,season){

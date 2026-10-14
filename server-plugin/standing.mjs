@@ -4,6 +4,7 @@ import {stanceOf} from './monster-society.mjs';
 import {readBossCognition} from './boss-cognition.mjs';
 import {readBossNegotiation} from './boss-negotiation.mjs';
 import {npcHousehold} from './npc-life.mjs';
+import {organizationsOf} from './organizations.mjs';
 
 // One read model for "how does X regard Y", normalized to -100..100. It wraps
 // the seven existing stores without changing them:
@@ -29,6 +30,7 @@ export function standingKind(engine,state,id){
     if((engine.rules.reputation?.settlements??[]).includes(id))return 'settlement';
     if(String(id).startsWith('faction_'))return 'faction';
     if(state.creatures?.[id])return 'creature';
+    if(state.records?.[`organization:${id}`])return 'organization';
     return null;
 }
 // A resident boss's regard comes from what it remembers of real encounters.
@@ -87,7 +89,7 @@ export function adjustStanding(d,engine,holder,target,delta,{sourceEvent,reason,
 // Transmission: what is done to a member reaches the collectives it belongs to,
 // and through a faction its allies. Monster settlements react through their
 // own stance steps (monster-society), so they are not repeated here.
-export const TRANSMISSION=Object.freeze({household:0.5,settlement:0.3,faction:0.5,ally:0.25,spiritSociety:0.5,allyMinimum:30});
+export const TRANSMISSION=Object.freeze({household:0.5,settlement:0.3,faction:0.5,ally:0.25,spiritSociety:0.5,organization:0.5,allyMinimum:30});
 export function eventWeight(e){
     if(e.verb==='harm'&&e.tags.includes('hostile'))return -(10+Math.min(20,e.harm??0));
     if(e.verb==='steal'&&e.witnesses?.length)return -10;
@@ -110,6 +112,10 @@ export function collectivesOf(engine,state,member){
             for(const other of engine.rules.reputation.factions)if(other.id!==f.id&&standing(engine,state,other.id,f.id)>=TRANSMISSION.allyMinimum)
                 rows.push({holder:other.id,ratio:TRANSMISSION.faction*TRANSMISSION.ally,via:`ally:${f.id}`});
         }
+        // Organizations joined in this campaign (player-founded guilds, gangs,
+        // shops, churches; new members of catalog factions).
+        for(const org of organizationsOf(state,member))if(!rows.some(r=>r.holder===org))
+            rows.push({holder:org,ratio:TRANSMISSION.organization,via:`organization:${org}`});
     }else if(state.creatures?.[member]?.society?.id)rows.push({holder:state.creatures[member].society.id,ratio:TRANSMISSION.spiritSociety,via:`spirit_society:${member}`});
     return rows;
 }

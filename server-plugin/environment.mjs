@@ -4,6 +4,7 @@ import {normalize}from'./retrieval.mjs';
 import {waterMechanisms}from'../world/design/water-foundation.mjs';
 import {addObjectFuel,inspectObjectProcess,touchWarmObject,douseObjectFire,assertFirePath}from'./magic-object.mjs';
 import{inspectMagicMarks}from'./magic-marks.mjs';
+import {assertLiquidWater}from'./interactions.mjs';
 import {airEnvironmentAction}from'./magic-air.mjs';
 import {waterEarthSightClear,waterEarthFlow,waterEarthWalkMinutes,assertWaterEarthMovement,inspectWaterEarth}from'./magic-water-earth.mjs';
 import {opticalSightClear,opticalVisibility,inspectLight,normalLightAction,assertLightMovement}from'./magic-light.mjs';
@@ -81,6 +82,7 @@ export function servantCarryWater(d,args,maximumMl,inspectOnly=false){
     if(source.id===destination.id)throw new Error('源与目标容器不能相同');
     if(!['water','container'].includes(source.kind)||destination.kind!=='container')throw new Error('役灵只能从水源或容器搬水到真实容器');
     for(const row of[source,destination]){inReach(d,row,3);permission(d,this,row,args);}
+    assertLiquidWater(this,d,source);
     const src=structuredClone(stateOf(d,source)),dst=structuredClone(stateOf(d,destination));
     const amount=integer(args.millilitres,1,maximumMl,'搬水量');
     if(src.waterMl<amount||dst.capacityMl-dst.waterMl-(dst.reservedWaterMl??0)<amount)throw new Error('水源不足或目标容器容量不足');
@@ -108,6 +110,7 @@ function watering(d,engine,row,operation,args,range,power){
         destination=feature(engine,channel.links?.destination,d.get('state','location'));
     if(source.kind!=='water'||destination.kind!=='soil'||operation==='soil_water'&&destination.id!==row.id)throw new Error('沟渠源头或目标田垄不匹配');
     for(const target of[channel,source,destination]){inReach(d,target,range);permission(d,engine,target,args);}
+    assertLiquidWater(engine,d,source);
     const ch=stateOf(d,channel),src=stateOf(d,source),dst=stateOf(d,destination);
     if(operation==='soil_water'&&!dst.worked)throw new Error('回潮前需要耕作者实际处理土壤');
     const amountMl=Math.floor(Math.min(power*1000,src.waterMl,dst.capacityMl-dst.waterMl-(dst.reservedWaterMl??0),waterEarthFlow(d,channel,ch)*(1-ch.blockagePercent/100)));
