@@ -7,6 +7,7 @@ import {npcHousehold,householdMembers,npcAgeAt} from './npc-life.mjs';
 import {standing} from './standing.mjs';
 import {contributionTotal} from './civic.mjs';
 import {grantHousingSteward,revokeHousingSteward,fileHousingApplication} from './public-projects.mjs';
+import {rankedOffice} from './promotion.mjs';
 
 const DAY=1440;
 const path=id=>['state','records',id];
@@ -38,7 +39,7 @@ function local(engine,location,settlement){
 // Adult members of the settlement's households as they stand in this
 // campaign: someone who moved away no longer counts, a newcomer who moved in
 // does, the dead do not, and campaign-born children count once grown.
-function eligible(engine,settlement,state){
+export function eligible(engine,settlement,state){
     const {p}=profile(engine,settlement);
     const houses=(engine.world.households??[]).filter(h=>h.settlement===settlement);
     const people=new Set([...p.residentIds,...houses.flatMap(h=>householdMembers(engine,state,h.id))]);
@@ -330,7 +331,7 @@ function apply(d,engine,args,eventId,settlement){
     return {application:id,pending:row,note:`公署按章程于登记满${charter.decisionAfterDays}日后审定；递件人只登记，不当场许诺。`};
 }
 function decide(d,engine,row,at){
-    const office=authorityOf(engine).offices[row.office],state=d.get('state'),{reasons,points,head,views}=appraise(engine,state,row.settlement,office);
+    const state=d.get('state'),office=rankedOffice(engine,state,row.settlement,authorityOf(engine).offices[row.office]),{reasons,points,head,views}=appraise(engine,state,row.settlement,office);
     const basis={contribution:points,headStanding:head,residents:views};
     if(reasons.length){d.set(path(row.id),{...row,status:'未获任命',decidedAt:at,reasons,basis});return;}
     const key=officeKey(row.settlement,office.id);

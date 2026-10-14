@@ -151,7 +151,7 @@ const SYSTEMS=[
  {id:'sim_magic',layer:'sim',name:'法术',modules:SERVER.map(f=>f.slice(14)).filter(f=>/^magic(-[\w-]+)?\.mjs$/.test(f))},
  {id:'sim_economy',layer:'sim',name:'经济',modules:['items.mjs','shop.mjs','business.mjs','contracts.mjs','credit.mjs','settlement-trade.mjs','manufacturing.mjs','repair.mjs']},
  {id:'sim_agriculture',layer:'sim',name:'农业',modules:['agriculture.mjs']},
- {id:'sim_society',layer:'sim',name:'社会',modules:['monster-society.mjs','reputation.mjs','reputation-registry.mjs','public-opinion.mjs','organizations.mjs','civic.mjs','governance.mjs','public-projects.mjs','titles.mjs','quest-board.mjs']},
+ {id:'sim_society',layer:'sim',name:'社会',modules:['monster-society.mjs','reputation.mjs','reputation-registry.mjs','public-opinion.mjs','organizations.mjs','civic.mjs','governance.mjs','public-projects.mjs','titles.mjs','notables.mjs','promotion.mjs','quest-board.mjs']},
  {id:'sim_clock',layer:'sim',name:'时钟与节令',modules:['world-clock.mjs','faction-clock.mjs','festival.mjs']},
  {id:'sim_law',layer:'sim',name:'法律与通缉',modules:['law.mjs','bounty.mjs']},
  {id:'sim_works',layer:'sim',name:'著作',modules:['works.mjs']},

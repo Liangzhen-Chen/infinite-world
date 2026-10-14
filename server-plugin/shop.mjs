@@ -1,5 +1,6 @@
 import {isReputationSettlement,reputationSettlements}from'./reputation-registry.mjs';
 import {standing} from './standing.mjs';
+import {marketFactor}from'./promotion.mjs';
 
 // Shops (guide 3.7, 3.13): each registered shop restocks on its own cycle from
 // local production, the settlement's own stock, or trade-route arrivals, never
@@ -123,7 +124,8 @@ function managed(d,sid){return d.get('state','records',`agriculture:${sid}`)?.mo
 // One restock row at one boundary. Returns the ledger entry, or null when the
 // shelf was already full (nothing to record).
 function restockRow(d,engine,shop,row,minute){
-    const want=Math.min(row.amount,row.maximum-shelf(engine,d,shop.keeper,row.item));
+    // U13: a promoted settlement holds a market; restock amount and ceiling scale with it.
+    const market=marketFactor(engine,d.get('state'),shop.settlement),want=Math.min(row.amount*market,row.maximum*market-shelf(engine,d,shop.keeper,row.item));
     if(want<=0)return null;
     const base=engine.byId.get(row.item).basePrice,entry={day:Math.floor(minute/DAY),minute,item:row.item,source:row.source,wanted:want,added:0,paidCopper:0};
     const keeper=d.get('state','npcs',shop.keeper),afford=n=>Math.min(n,Math.floor(keeper.coins/base));
