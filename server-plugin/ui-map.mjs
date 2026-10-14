@@ -1,4 +1,5 @@
 import {localWeather,weatherTravel} from './weather.mjs';
+import {heldMapLocations} from './works.mjs';
 
 const rank={rumor:1,reliable:2,experienced:3};
 const levels=['大陆','地区','郡','镇'];
@@ -19,6 +20,8 @@ export function mapView(engine,document){
         add(id,sourceKind(row));edgeKnowledge.set(id,sourceKind(row));
     }
     add(state.location,'experienced');
+    // U6: places drawn on a map the player holds.
+    for(const id of heldMapLocations(state))add(id,'reliable');
     for(const row of Object.values(document.memories??{})){
         if(!visible(row,now))continue;
         // Legacy world_remember stores location facts under their subject. Heard

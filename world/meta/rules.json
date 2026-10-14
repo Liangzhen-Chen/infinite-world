@@ -734,6 +734,195 @@
           "collateralRatio": 0.5
         }
       ]
+    },
+    "shops": {
+      "version": 1,
+      "source": "U9 商店补货与价格系数；指南3.7商店、3.13价格公式",
+      "relation": {
+        "keeper": 0.7,
+        "settlement": 0.3,
+        "span": 0.15
+      },
+      "stockItems": {
+        "wood": "item_wood",
+        "stone": "item_stone",
+        "iron": "item_iron",
+        "food": "item_oats"
+      },
+      "quality": {
+        "open": "铁",
+        "scales": [
+          {
+            "scale": "village",
+            "minPopulation": 0
+          },
+          {
+            "scale": "town",
+            "minPopulation": 500
+          },
+          {
+            "scale": "city",
+            "minPopulation": 5000
+          }
+        ],
+        "capitals": [
+          "loc_capital"
+        ],
+        "tiers": [
+          {
+            "quality": "银",
+            "scales": [
+              "town",
+              "city",
+              "capital"
+            ],
+            "channels": [
+              "smithy",
+              "armory"
+            ]
+          },
+          {
+            "quality": "金",
+            "scales": [
+              "city",
+              "capital"
+            ],
+            "channels": [
+              "armory",
+              "guild"
+            ]
+          },
+          {
+            "quality": "白金",
+            "scales": [
+              "capital"
+            ],
+            "channels": [
+              "royal"
+            ]
+          }
+        ]
+      },
+      "stores": [
+        {
+          "id": "shop_hw_qingdeng",
+          "name": "青灯酒馆",
+          "keeper": "npc_hw_linsui",
+          "settlement": "loc_hw",
+          "channels": [
+            "tavern"
+          ],
+          "markup": 1,
+          "cycleDays": 1,
+          "firstDay": 1,
+          "restock": [
+            {
+              "item": "item_bread",
+              "source": "local",
+              "amount": 6,
+              "maximum": 6
+            },
+            {
+              "item": "item_oat_flatbread",
+              "source": "local",
+              "amount": 4,
+              "maximum": 4
+            },
+            {
+              "item": "item_ration",
+              "source": "route",
+              "from": "loc_bs",
+              "amount": 2,
+              "maximum": 4
+            }
+          ]
+        },
+        {
+          "id": "shop_hw_forge",
+          "name": "河湾铁匠铺",
+          "keeper": "npc_hw_duanyan",
+          "settlement": "loc_hw",
+          "channels": [
+            "smithy"
+          ],
+          "markup": 1,
+          "cycleDays": 7,
+          "firstDay": 1,
+          "restock": [
+            {
+              "item": "item_iron_nail",
+              "source": "local",
+              "amount": 20,
+              "maximum": 40
+            },
+            {
+              "item": "item_kitchen_knife",
+              "source": "local",
+              "amount": 1,
+              "maximum": 2
+            },
+            {
+              "item": "item_steel_arming_sword",
+              "source": "local",
+              "amount": 1,
+              "maximum": 2
+            },
+            {
+              "item": "item_charcoal",
+              "source": "local",
+              "amount": 4,
+              "maximum": 8
+            },
+            {
+              "item": "item_iron",
+              "source": "settlement",
+              "stock": "iron",
+              "reserve": 2,
+              "amount": 4,
+              "maximum": 8
+            }
+          ]
+        },
+        {
+          "id": "shop_bs_yanzhe",
+          "name": "白石镇杂货行",
+          "keeper": "npc_hw_yanzhe",
+          "settlement": "loc_bs",
+          "channels": [
+            "merchant"
+          ],
+          "markup": 1.2,
+          "cycleDays": 7,
+          "firstDay": 1,
+          "restock": [
+            {
+              "item": "item_clay_cup",
+              "source": "local",
+              "amount": 3,
+              "maximum": 6
+            },
+            {
+              "item": "item_hard_cheese",
+              "source": "local",
+              "amount": 2,
+              "maximum": 4
+            },
+            {
+              "item": "item_drawknife",
+              "source": "local",
+              "amount": 1,
+              "maximum": 2
+            },
+            {
+              "item": "item_clay",
+              "source": "route",
+              "from": "loc_hw",
+              "amount": 2,
+              "maximum": 4
+            }
+          ]
+        }
+      ]
     }
   },
   "repairs": [

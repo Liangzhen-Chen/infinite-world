@@ -21,6 +21,7 @@ import {standing,standingWords}from'./standing.mjs';
 import {societyAt}from'./monster-society.mjs';
 import {settlementAt}from'./reputation.mjs';
 import {intelligenceSign,adaptedTricks}from'./npc-intelligence.mjs';
+import {returnScene}from'./return-summary.mjs';
 
 const text=(value,limit=200)=>typeof value==='string'?value.replace(/\s+/g,' ').slice(0,limit):'';
 const list=value=>Array.isArray(value)?value.map(row=>typeof row==='string'?row:row.content??row.description??'').filter(Boolean).join('；'):text(value);
@@ -48,6 +49,7 @@ export function sceneCard(engine,document,query='',index=null){
     const seeded=populationScene(document);if(seeded)parts.push(seeded);
     const festivals=festivalScene(engine,document);if(festivals)parts.push(`【本地节俗结果】${festivals}`);
     const clock=worldClockScene(engine,document);if(clock)parts.push(`【本地粮价】${clock}`);
+    const back=returnScene(engine,s);if(back)parts.push(back);
     const rumorTopics=[];
     for(const [id]of present){
         const d={get:(...p)=>p.reduce((v,k)=>v?.[k],document),document};
