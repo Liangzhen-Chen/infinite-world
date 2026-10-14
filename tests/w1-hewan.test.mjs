@@ -10,8 +10,9 @@ import {WorldEngine} from '../server-plugin/engine.mjs';
 import {villagesOriginalWorld} from '../tools/publish-w1-villages.mjs';
 const loaded=villagesOriginalWorld(await loadWorld()),preserved=JSON.parse(await fs.readFile('world/drafts/w1/hewan/preserved-npcs.json','utf8'));loaded.npcs=loaded.npcs.map(n=>preserved.find(p=>p.id===n.id)??n);const bones=w1HewanFoundation(loaded);
 // Keep the original foundation fixture after this batch is formally published.
-// 河湾骨架早于白石镇升档；夹具清空名册，后来由名册升档的npc_bs_*完整档（其同户成员仍在名册）也不属于这个旧世界。
-const world={...loaded,npcs:loaded.npcs.filter(n=>!bones.npcs.some(row=>row.id===n.id)&&!n.id.startsWith('npc_bs_')),residents:[],households:[],settlementProfiles:[],locations:loaded.locations.filter(n=>!bones.locations.some(row=>row.id===n.id)),routes:loaded.routes.filter(n=>!bones.routes.some(row=>row.id===n.id))};
+// 只移出河湾本批的人、户与档案；白石镇升档人物、T157怪物聚居地等后续批次连同其名册和户一并保留，免得引用断开。
+const own=rows=>row=>!rows.some(item=>item.id===row.id);
+const world={...loaded,npcs:loaded.npcs.filter(own(bones.npcs)),residents:loaded.residents.filter(own(bones.residents)),households:loaded.households.filter(own(bones.households)),settlementProfiles:loaded.settlementProfiles.filter(p=>p.id!=='loc_hw'),locations:loaded.locations.filter(n=>!bones.locations.some(row=>row.id===n.id)),routes:loaded.routes.filter(n=>!bones.routes.some(row=>row.id===n.id))};
 test('河湾58常住22户及30full口径不含暂住和通勤，原18档保持原文',()=>{
  const before=structuredClone(world.npcs),result=validateFoundation(bones,world);assert.equal(result.residentCount,58);assert.equal(result.residentFull,30);assert.equal(result.age60Plus,13);assert.deepEqual(world.npcs,before);
  const household=key=>bones.households.find(h=>h.members.includes(`npc_hw_${key}`));

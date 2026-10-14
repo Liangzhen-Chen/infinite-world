@@ -2259,6 +2259,78 @@
     "prompt": "原创河谷日常职业纹章；苗笙，43岁，灯祠照看。以household工具图形置于圆角盾牌，松绿底与麦金轮廓，无文字，无肖像，无亲密或恋爱元素。仅采用已登记日常职业，不绘制人物私事。"
   },
   {
+    "id": "npc_ms_tj_yanzhen",
+    "name": "烟砧",
+    "occupation": "铸补匠",
+    "age": 44,
+    "minor": false,
+    "crest": "crests/household.svg",
+    "prompt": "原创河谷日常职业纹章；烟砧，44岁，铸补匠。以household工具图形置于圆角盾牌，松绿底与麦金轮廓，无文字，无肖像，无亲密或恋爱元素。仅采用已登记日常职业，不绘制人物私事。"
+  },
+  {
+    "id": "npc_ms_tj_dingying",
+    "name": "钉缨",
+    "occupation": "炉火看守",
+    "age": 66,
+    "minor": false,
+    "crest": "crests/household.svg",
+    "prompt": "原创河谷日常职业纹章；钉缨，66岁，炉火看守。以household工具图形置于圆角盾牌，松绿底与麦金轮廓，无文字，无肖像，无亲密或恋爱元素。仅采用已登记日常职业，不绘制人物私事。"
+  },
+  {
+    "id": "npc_ms_tj_yantai",
+    "name": "烟苔",
+    "occupation": "菌床工",
+    "age": 38,
+    "minor": false,
+    "crest": "crests/household.svg",
+    "prompt": "原创河谷日常职业纹章；烟苔，38岁，菌床工。以household工具图形置于圆角盾牌，松绿底与麦金轮廓，无文字，无肖像，无亲密或恋爱元素。仅采用已登记日常职业，不绘制人物私事。"
+  },
+  {
+    "id": "npc_ms_tj_liya",
+    "name": "砾牙",
+    "occupation": "巡洞守卫",
+    "age": 26,
+    "minor": false,
+    "crest": "crests/warden.svg",
+    "prompt": "原创河谷日常职业纹章；砾牙，26岁，巡洞守卫。以warden工具图形置于圆角盾牌，松绿底与麦金轮廓，无文字，无肖像，无亲密或恋爱元素。仅采用已登记日常职业，不绘制人物私事。"
+  },
+  {
+    "id": "npc_ms_td_liheng",
+    "name": "栗衡",
+    "occupation": "守林哨",
+    "age": 48,
+    "minor": false,
+    "crest": "crests/household.svg",
+    "prompt": "原创河谷日常职业纹章；栗衡，48岁，守林哨。以household工具图形置于圆角盾牌，松绿底与麦金轮廓，无文字，无肖像，无亲密或恋爱元素。仅采用已登记日常职业，不绘制人物私事。"
+  },
+  {
+    "id": "npc_ms_td_taimian",
+    "name": "苔眠",
+    "occupation": "结绳记事",
+    "age": 71,
+    "minor": false,
+    "crest": "crests/scribe.svg",
+    "prompt": "原创河谷日常职业纹章；苔眠，71岁，结绳记事。以scribe工具图形置于圆角盾牌，松绿底与麦金轮廓，无文字，无肖像，无亲密或恋爱元素。仅采用已登记日常职业，不绘制人物私事。"
+  },
+  {
+    "id": "npc_ms_td_qingzhi",
+    "name": "青芷",
+    "occupation": "采药",
+    "age": 35,
+    "minor": false,
+    "crest": "crests/healer.svg",
+    "prompt": "原创河谷日常职业纹章；青芷，35岁，采药。以healer工具图形置于圆角盾牌，松绿底与麦金轮廓，无文字，无肖像，无亲密或恋爱元素。仅采用已登记日常职业，不绘制人物私事。"
+  },
+  {
+    "id": "npc_ms_td_lizhen",
+    "name": "栗针",
+    "occupation": "守林哨",
+    "age": 22,
+    "minor": false,
+    "crest": "crests/household.svg",
+    "prompt": "原创河谷日常职业纹章；栗针，22岁，守林哨。以household工具图形置于圆角盾牌，松绿底与麦金轮廓，无文字，无肖像，无亲密或恋爱元素。仅采用已登记日常职业，不绘制人物私事。"
+  },
+  {
     "id": "npc_hw_fangqin",
     "name": "方芩",
     "occupation": "家务与旧账抄录",
@@ -6757,5 +6829,149 @@
     "minor": false,
     "crest": "crests/scribe.svg",
     "prompt": "原创河谷日常职业纹章；艾笙，43岁，字样板描写。以scribe工具图形置于圆角盾牌，松绿底与麦金轮廓，无文字，无肖像，无亲密或恋爱元素。仅采用已登记日常职业，不绘制人物私事。"
+  },
+  {
+    "id": "npc_ms_tj_lishuan",
+    "name": "砾栓",
+    "occupation": "巡洞守卫",
+    "age": 23,
+    "minor": false,
+    "crest": "crests/warden.svg",
+    "prompt": "原创河谷日常职业纹章；砾栓，23岁，巡洞守卫。以warden工具图形置于圆角盾牌，松绿底与麦金轮廓，无文字，无肖像，无亲密或恋爱元素。仅采用已登记日常职业，不绘制人物私事。"
+  },
+  {
+    "id": "npc_ms_tj_dingkou",
+    "name": "钉扣",
+    "occupation": "铸补匠",
+    "age": 47,
+    "minor": false,
+    "crest": "crests/household.svg",
+    "prompt": "原创河谷日常职业纹章；钉扣，47岁，铸补匠。以household工具图形置于圆角盾牌，松绿底与麦金轮廓，无文字，无肖像，无亲密或恋爱元素。仅采用已登记日常职业，不绘制人物私事。"
+  },
+  {
+    "id": "npc_ms_tj_dingcuo",
+    "name": "钉锉",
+    "occupation": "铸补匠",
+    "age": 31,
+    "minor": false,
+    "crest": "crests/household.svg",
+    "prompt": "原创河谷日常职业纹章；钉锉，31岁，铸补匠。以household工具图形置于圆角盾牌，松绿底与麦金轮廓，无文字，无肖像，无亲密或恋爱元素。仅采用已登记日常职业，不绘制人物私事。"
+  },
+  {
+    "id": "npc_ms_tj_yanya",
+    "name": "烟芽",
+    "occupation": "菌床工",
+    "age": 27,
+    "minor": false,
+    "crest": "crests/household.svg",
+    "prompt": "原创河谷日常职业纹章；烟芽，27岁，菌床工。以household工具图形置于圆角盾牌，松绿底与麦金轮廓，无文字，无肖像，无亲密或恋爱元素。仅采用已登记日常职业，不绘制人物私事。"
+  },
+  {
+    "id": "npc_ms_tj_lipian",
+    "name": "砾片",
+    "occupation": "通风工",
+    "age": 54,
+    "minor": false,
+    "crest": "crests/household.svg",
+    "prompt": "原创河谷日常职业纹章；砾片，54岁，通风工。以household工具图形置于圆角盾牌，松绿底与麦金轮廓，无文字，无肖像，无亲密或恋爱元素。仅采用已登记日常职业，不绘制人物私事。"
+  },
+  {
+    "id": "npc_ms_tj_yandou",
+    "name": "烟豆",
+    "occupation": "随轮养铺做轻活",
+    "age": 9,
+    "minor": true,
+    "crest": "crests/student.svg",
+    "prompt": "原创河谷日常职业纹章；烟豆，9岁，随轮养铺做轻活。以student工具图形置于圆角盾牌，松绿底与麦金轮廓，无文字，无肖像，无亲密或恋爱元素。仅采用已登记日常职业，不绘制人物私事。"
+  },
+  {
+    "id": "npc_ms_tj_dingli",
+    "name": "钉粒",
+    "occupation": "随轮养铺做轻活",
+    "age": 12,
+    "minor": true,
+    "crest": "crests/student.svg",
+    "prompt": "原创河谷日常职业纹章；钉粒，12岁，随轮养铺做轻活。以student工具图形置于圆角盾牌，松绿底与麦金轮廓，无文字，无肖像，无亲密或恋爱元素。仅采用已登记日常职业，不绘制人物私事。"
+  },
+  {
+    "id": "npc_ms_tj_litiao",
+    "name": "砾跳",
+    "occupation": "随轮养铺做轻活",
+    "age": 6,
+    "minor": true,
+    "crest": "crests/student.svg",
+    "prompt": "原创河谷日常职业纹章；砾跳，6岁，随轮养铺做轻活。以student工具图形置于圆角盾牌，松绿底与麦金轮廓，无文字，无肖像，无亲密或恋爱元素。仅采用已登记日常职业，不绘制人物私事。"
+  },
+  {
+    "id": "npc_ms_td_lizhi",
+    "name": "栗枝",
+    "occupation": "守林哨",
+    "age": 25,
+    "minor": false,
+    "crest": "crests/household.svg",
+    "prompt": "原创河谷日常职业纹章；栗枝，25岁，守林哨。以household工具图形置于圆角盾牌，松绿底与麦金轮廓，无文字，无肖像，无亲密或恋爱元素。仅采用已登记日常职业，不绘制人物私事。"
+  },
+  {
+    "id": "npc_ms_td_qingpeng",
+    "name": "青蓬",
+    "occupation": "采药",
+    "age": 30,
+    "minor": false,
+    "crest": "crests/healer.svg",
+    "prompt": "原创河谷日常职业纹章；青蓬，30岁，采药。以healer工具图形置于圆角盾牌，松绿底与麦金轮廓，无文字，无肖像，无亲密或恋爱元素。仅采用已登记日常职业，不绘制人物私事。"
+  },
+  {
+    "id": "npc_ms_td_qingsui",
+    "name": "青穗",
+    "occupation": "采果",
+    "age": 41,
+    "minor": false,
+    "crest": "crests/household.svg",
+    "prompt": "原创河谷日常职业纹章；青穗，41岁，采果。以household工具图形置于圆角盾牌，松绿底与麦金轮廓，无文字，无肖像，无亲密或恋爱元素。仅采用已登记日常职业，不绘制人物私事。"
+  },
+  {
+    "id": "npc_ms_td_taixu",
+    "name": "苔絮",
+    "occupation": "护幼",
+    "age": 44,
+    "minor": false,
+    "crest": "crests/household.svg",
+    "prompt": "原创河谷日常职业纹章；苔絮，44岁，护幼。以household工具图形置于圆角盾牌，松绿底与麦金轮廓，无文字，无肖像，无亲密或恋爱元素。仅采用已登记日常职业，不绘制人物私事。"
+  },
+  {
+    "id": "npc_ms_td_tailing",
+    "name": "苔铃",
+    "occupation": "结绳记事",
+    "age": 58,
+    "minor": false,
+    "crest": "crests/scribe.svg",
+    "prompt": "原创河谷日常职业纹章；苔铃，58岁，结绳记事。以scribe工具图形置于圆角盾牌，松绿底与麦金轮廓，无文字，无肖像，无亲密或恋爱元素。仅采用已登记日常职业，不绘制人物私事。"
+  },
+  {
+    "id": "npc_ms_td_taijian",
+    "name": "苔尖",
+    "occupation": "随护幼者学采拾",
+    "age": 14,
+    "minor": true,
+    "crest": "crests/student.svg",
+    "prompt": "原创河谷日常职业纹章；苔尖，14岁，随护幼者学采拾。以student工具图形置于圆角盾牌，松绿底与麦金轮廓，无文字，无肖像，无亲密或恋爱元素。仅采用已登记日常职业，不绘制人物私事。"
+  },
+  {
+    "id": "npc_ms_td_qingyuan",
+    "name": "青圆",
+    "occupation": "随护幼者学采拾",
+    "age": 11,
+    "minor": true,
+    "crest": "crests/student.svg",
+    "prompt": "原创河谷日常职业纹章；青圆，11岁，随护幼者学采拾。以student工具图形置于圆角盾牌，松绿底与麦金轮廓，无文字，无肖像，无亲密或恋爱元素。仅采用已登记日常职业，不绘制人物私事。"
+  },
+  {
+    "id": "npc_ms_td_limao",
+    "name": "栗毛",
+    "occupation": "随护幼者学采拾",
+    "age": 7,
+    "minor": true,
+    "crest": "crests/student.svg",
+    "prompt": "原创河谷日常职业纹章；栗毛，7岁，随护幼者学采拾。以student工具图形置于圆角盾牌，松绿底与麦金轮廓，无文字，无肖像，无亲密或恋爱元素。仅采用已登记日常职业，不绘制人物私事。"
   }
 ]

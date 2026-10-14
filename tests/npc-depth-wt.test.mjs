@@ -15,6 +15,7 @@ import {frozenT07SourceText,prepareDepthRevision,depthOptions} from '../tools/np
 import {runDepthReview,reviewOptions} from '../tools/npc-depth-review.mjs';
 import {prepareNpcDepth,publishNpcDepth} from '../tools/publish-npc-depth.mjs';
 import {publishNpcDepthSerial} from './fixtures/depth-publish-retry.mjs';
+import {villageFull,villageResident} from './fixtures/village-cohort.mjs';
 
 const publishedWorld=await loadWorld(),base=design.patchRows.map(r=>r.before),ids=new Set(base.map(r=>r.id));
 const world={...publishedWorld,npcs:publishedWorld.npcs.map(n=>base.find(b=>b.id===n.id)??n)};
@@ -23,9 +24,9 @@ const publicationManifest=path.resolve('world/drafts/w1/wt-depth/sourced/manifes
 
 test('苇汀正式30人等于已审批完整档，其他人、旧记忆和钱物身份保持原值',async()=>{
  const {entries:approved}=await prepareNpcDepth({manifest:publicationManifest});
- // 白石镇后续批次把99名名册人升为npc_bs_*完整档，正式目录现为251 full；此处只核对村落与河湾原152人未变，白石镇名册加升档仍为305。
- assert.equal(approved.length,30);assert.equal(publishedWorld.npcs.filter(n=>n.tier==='full'&&!n.id.startsWith('npc_bs_')).length,152);
- assert.equal(publishedWorld.residents.filter(n=>n.settlement!=='loc_bs').length,294);assert.equal(publishedWorld.residents.filter(n=>n.settlement==='loc_bs').length+publishedWorld.npcs.filter(n=>n.id.startsWith('npc_bs_')).length,305);
+ // 白石镇后续批次把99名名册人升为npc_bs_*完整档，正式目录现为251 full；此处只核对村落与河湾原152人未变（T157怪物聚居地另有npc_ms_*），白石镇名册加升档仍为305。
+ assert.equal(approved.length,30);assert.equal(publishedWorld.npcs.filter(villageFull).length,152);
+ assert.equal(publishedWorld.residents.filter(villageResident).length,294);assert.equal(publishedWorld.residents.filter(n=>n.settlement==='loc_bs').length+publishedWorld.npcs.filter(n=>n.id.startsWith('npc_bs_')).length,305);
  assert.deepEqual(publishedWorld.npcs.map(n=>n.id),world.npcs.map(n=>n.id));
  for(const entry of approved){
   const current=publishedWorld.npcs.find(n=>n.id===entry.id);
@@ -245,7 +246,7 @@ test('受控修订只改变真实L2/L4错叶，旧记录与原来源hash保持�
   else assert.equal(source.hash,hashContent(JSON.parse(raw)));
  }
  // 白石镇npc_bs_*升档后正式目录为251 full；原口径只计村落与河湾。
- assert.equal(world.npcs.filter(n=>n.tier==='full'&&!n.id.startsWith('npc_bs_')).length,152);
+ assert.equal(world.npcs.filter(villageFull).length,152);
  assert.equal(world.npcs.filter(n=>n.id.startsWith('npc_hw_')&&n.tier==='full').length,32);
 });
 

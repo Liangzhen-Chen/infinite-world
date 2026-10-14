@@ -18,6 +18,7 @@ import {liquanRoster} from '../world/design/w1-villages-liquan.mjs';
 import {compactReviewRequest} from '../tools/npc-depth-review.mjs';
 import {prepareDepthRevision,validateT08ReadbackRevision,reuseReviewedDepthContext} from '../tools/npc-depth.mjs';
 import {reopenAllowsId} from '../tools/content-budget.mjs';
+import {villageFull,villageResident} from './fixtures/village-cohort.mjs';
 
 const liveWorld=await loadWorld(path.resolve('world'));
 const originals=JSON.parse(await fs.readFile(path.resolve('world/drafts/w1/lq-depth/base.json'),'utf8'));
@@ -46,9 +47,9 @@ const offlineCandidate=JSON.parse(await fs.readFile(path.join(legacyRoot,'reopen
 const offlineDesign={...frozenDesign,patchRows:frozenEntries.map(e=>({...e,patches:offlineCandidate.find(d=>d.id===e.id).patches}))};
 
 test('砾泉正式30人等于已审批完整档，全体152个full深度及规则措辞零缺口，原17traits保留',()=>{
- // 白石镇后续批次把99名名册人升为npc_bs_*完整档，正式目录现为251 full；此处只核对村落与河湾原152人未变，白石镇名册加升档仍为305。
- assert.equal(approvedEntries.length,30);assert.equal(liveWorld.npcs.filter(n=>n.tier==='full'&&!n.id.startsWith('npc_bs_')).length,152);
- assert.equal(liveWorld.residents.filter(n=>n.settlement!=='loc_bs').length,294);assert.equal(liveWorld.residents.filter(n=>n.settlement==='loc_bs').length+liveWorld.npcs.filter(n=>n.id.startsWith('npc_bs_')).length,305);assert.deepEqual(liveWorld.npcs.map(n=>n.id),world.npcs.map(n=>n.id));
+ // 白石镇后续批次把99名名册人升为npc_bs_*完整档，正式目录现为251 full；此处只核对村落与河湾原152人未变（T157怪物聚居地另有npc_ms_*），白石镇名册加升档仍为305。
+ assert.equal(approvedEntries.length,30);assert.equal(liveWorld.npcs.filter(villageFull).length,152);
+ assert.equal(liveWorld.residents.filter(villageResident).length,294);assert.equal(liveWorld.residents.filter(n=>n.settlement==='loc_bs').length+liveWorld.npcs.filter(n=>n.id.startsWith('npc_bs_')).length,305);assert.deepEqual(liveWorld.npcs.map(n=>n.id),world.npcs.map(n=>n.id));
  for(const entry of approvedEntries){
   const current=liveWorld.npcs.find(n=>n.id===entry.id);
   assert.deepEqual(current,entry.facts);verifyUnchanged(entry.before,current,entry);
@@ -470,7 +471,7 @@ test('离线受控计划逐真实失败锁定26叶，正确兄弟、9pending原�
  assert.equal(plan.foundationHash,hashContent(foundation));
  assert.equal(plan.baseHash,hashContent(JSON.parse(await fs.readFile(path.join(firstReviewRoot,'base.json'),'utf8'))));
  assert.equal(plan.candidateHash,hashContent(JSON.parse(await fs.readFile(path.join(firstReviewRoot,'candidate.json'),'utf8'))));
- for(const ref of plan.sourceHashes){const file=ref.file.endsWith('/people/baseline.json')&&firstProof?path.join(legacyRoot,'reopen-complete/pre-T06-publication-baseline.json'):path.resolve(firstReviewRoot,ref.file);const data=JSON.parse(await fs.readFile(file,'utf8')),frozen=ref.file.endsWith('/people/residents.json')?data.filter(n=>n.settlement!=='loc_bs'):data;assert.equal(ref.hash,hashContent(frozen));}
+ for(const ref of plan.sourceHashes){const file=ref.file.endsWith('/people/baseline.json')&&firstProof?path.join(legacyRoot,'reopen-complete/pre-T06-publication-baseline.json'):path.resolve(firstReviewRoot,ref.file);const data=JSON.parse(await fs.readFile(file,'utf8')),frozen=ref.file.endsWith('/people/residents.json')?data.filter(n=>n.settlement!=='loc_bs'&&!/^loc_ms_/.test(n.settlement??'')):data;assert.equal(ref.hash,hashContent(frozen));}// 白石镇与T157怪物聚居地名册排在冻结村落名册之后，均不属原来源。
  for(const entry of offlineBackgroundEntries){
   const old=foundation.entries.find(e=>e.id===entry.id),authorization=plan.authorized.find(a=>a.id===entry.id);
   const record=await originalRecord(entry.id);

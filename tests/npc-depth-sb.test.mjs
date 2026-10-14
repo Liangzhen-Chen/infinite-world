@@ -17,6 +17,7 @@ import {compactReviewRequest,validateSourceEvidence} from '../tools/npc-depth-so
 import {requestMeasure,sourceRequirements} from '../world/drafts/w1/sb-depth/request-preflight.mjs';
 import {prepareNpcDepth,publishNpcDepth} from '../tools/publish-npc-depth.mjs';
 import {publishNpcDepthSerial} from './fixtures/depth-publish-retry.mjs';
+import {villageFull,villageResident} from './fixtures/village-cohort.mjs';
 
 const exec=promisify(execFile),publishedWorld=await loadWorld(),root=path.resolve('world/drafts/w1/sb-depth');
 const base=config.patchRows.map(r=>r.before),ids=new Set(base.map(n=>n.id));
@@ -30,9 +31,9 @@ const publicationManifest=path.join(root,'first-review/manifest.json');
 
 test('桑坂正式30人等于已审批完整档，其他人、旧记忆和钱物身份保持原值',async()=>{
  const {entries:approved}=await prepareNpcDepth({manifest:publicationManifest});
- // 白石镇后续批次把99名名册人升为npc_bs_*完整档，正式目录现为251 full；此处只核对村落与河湾原152人未变，白石镇名册加升档仍为305。
- assert.equal(approved.length,30);assert.equal(publishedWorld.npcs.filter(n=>n.tier==='full'&&!n.id.startsWith('npc_bs_')).length,152);
- assert.equal(publishedWorld.residents.filter(n=>n.settlement!=='loc_bs').length,294);assert.equal(publishedWorld.residents.filter(n=>n.settlement==='loc_bs').length+publishedWorld.npcs.filter(n=>n.id.startsWith('npc_bs_')).length,305);
+ // 白石镇后续批次把99名名册人升为npc_bs_*完整档，正式目录现为251 full；此处只核对村落与河湾原152人未变（T157怪物聚居地另有npc_ms_*），白石镇名册加升档仍为305。
+ assert.equal(approved.length,30);assert.equal(publishedWorld.npcs.filter(villageFull).length,152);
+ assert.equal(publishedWorld.residents.filter(villageResident).length,294);assert.equal(publishedWorld.residents.filter(n=>n.settlement==='loc_bs').length+publishedWorld.npcs.filter(n=>n.id.startsWith('npc_bs_')).length,305);
  assert.deepEqual(publishedWorld.npcs.map(n=>n.id),world.npcs.map(n=>n.id));
  for(const entry of approved){
   const current=publishedWorld.npcs.find(n=>n.id===entry.id);
