@@ -55,8 +55,8 @@ review-002-yp=782a49e阶段审核通过，范围限T06正式发布与c64163d修�
 
 来源：主会话派只读分析（系统互读矩阵）。结论：存档已共享在 state.records，但三处是加法——旁路系统按工具名分支；“态度”存了7份（npc关系、聚落立场、声望、势力关系、宠物忠诚、首领态度、精怪怨恨）；物品有材质标签但代码只有4处硬编码用到，元素有两套词表。方案：派生性状视图 + 交互规则表 + 规范化世界事件 + 统一立场读模型，另把时钟效果和时间推进改为注册表。不改存档结构、不加工具，每卡静态提示增量≤100 token（硬上限12000）。改动结算数值的卡须逐条核对旧期望，不许为过测试而放松。内容卡（T105起）在K1–K4合入后按新底座写数据。
 
-- K1 性状底座：新 server-plugin/traits.mjs，`traitsOf` 从物品tags、生物nature、地形、地点feature、法术medium/damageType 派生统一标签与元素亲和，两套元素词表合一；替换 magic.mjs:80、magic-marks.mjs:29、creature-nature.mjs:5、magic-primitives.mjs:3 的硬编码。验收：CORE + magic/magic-primitives/wildlife-creatures-mixed 测试 + 新 tests/traits.test.mjs。规模S-M。
-- K2 交互规则表：新 interactions.mjs，规则数据放 world/design/；火对木纸布点燃炭化、水与雨灭火、168种生物按标签得伤害加成或抗性，物品与地点特征也响应元素。依赖K1。验收：CORE + magic/magic-object/bosses/environment/weather/prompt。规模M-L。
+- K1 已完成。原文：新 server-plugin/traits.mjs，`traitsOf` 从物品tags、生物nature、地形、地点feature、法术medium/damageType 派生统一标签与元素亲和，两套元素词表合一；替换 magic.mjs:80、magic-marks.mjs:29、creature-nature.mjs:5、magic-primitives.mjs:3 的硬编码。验收：CORE + magic/magic-primitives/wildlife-creatures-mixed 测试 + 新 tests/traits.test.mjs。规模S-M。
+- K2 已完成。原文：新 interactions.mjs，规则数据放 world/design/；火对木纸布点燃炭化、水与雨灭火、168种生物按标签得伤害加成或抗性，物品与地点特征也响应元素。依赖K1。验收：CORE + magic/magic-object/bosses/environment/weather/prompt。规模M-L。
 - K3 已完成。原文：新 world-events.mjs，engine.mjs:178 处每次工具结算生成一次 `{verb,actor,target,harm/gift,witnesses,location,tags}`；npc-memory、npc-relations、monster-society、wildlife-society、boss-cognition 改为按 verb/标签订阅，不再按工具名。验收：CORE + 上述五系统测试。规模M-L。
 - K4 已完成。原文：新 standing.mjs，`standing(holder,target)` 归一到 -100..100，加“成员→势力/族群/聚居地”传导；7个旧存储保留，统一读写入口；public-opinion、reputation、faction-clock、scene-card、quest-board 改读它。依赖K3。验收：CORE + public-opinion/reputation-law/faction-clock/npc-relations/prompt。规模M。
 - K5 已完成。原文：有目击且分量够的世界事件自动成为可传播传闻（不再只传作者预登记的ID）；private/secret 记忆与未成年保护不得成为传闻。依赖K3、K4。验收：CORE + rumor-route/village-rumor-access/npc-memory/public-opinion/monster-society。规模M。
