@@ -5,6 +5,7 @@ import {canonical} from './storage.mjs';
 import {speciesInHabitat} from './wildlife-range.mjs';
 import {reservedMigrationCapacity,advanceSeasonalMigration} from './seasonal-migration.mjs';
 import {crossPredatorFed,advanceFarmPredation} from './farm-pests.mjs';
+import {spiritStateFor,manifestArisals} from './creature-nature.mjs';
 import {sapient,advanceWildlifeAwakening,awakeningAction,awakeningOperations,awakeningView,validateWildlifeAwakening} from './wildlife-awakening.mjs';
 const clone=v=>structuredClone(v),path=h=>['state','records',`ecology:${h}`];
 const alive=a=>a&&a.status!=='死亡'&&a.hp>0;
@@ -66,7 +67,7 @@ function createWildlifeInstance(d,engine,habitat,s,eventId,rng){
     const level=s.levelRange[0]+Math.floor(rng()*(s.levelRange[1]-s.levelRange[0]+1)),stats=monsterStats({level,template:s.template},engine.rules),name=`${s.name}·${hash.slice(0,4)}`;
     p.count--;p.withdrawn++;d.set(path(habitat.id),latest);
     d.set(['state','created',id],{id,name,aliases:[],monster:s.id,template:s.template,scope:habitat.location});
-    d.set(['state','creatures',id],{name,species:s.id,ecology:habitat.id,location:habitat.location,level,hp:stats.maxHp,maxHp:stats.maxHp,status:'正常',owner:null,...(engine.rules.wildlifeAwakening?{since:d.get('state','minute')}:{})});
+    d.set(['state','creatures',id],{name,species:s.id,ecology:habitat.id,location:habitat.location,level,hp:stats.maxHp,maxHp:stats.maxHp,status:'正常',owner:null,...spiritStateFor(s),...(engine.rules.wildlifeAwakening?{since:d.get('state','minute')}:{})});
     return{id,name,species:s.name,level,hp:stats.maxHp};
 }
 export function settleWildlifeEncounter(d,engine,attempt,eventId){
@@ -131,6 +132,8 @@ export function advanceWildlife(d,engine,day){
             const rng=random(engine,d.document.randomSeed,`${habitat.id}:${day}`),season=engine.calendar(day*1440).season;
             for(const s of species){
                 const p=r.populations[s.id],spec=s.wildlife,present=wildPresent(d,s.id,habitat.location),total=p.count+present;
+                // T154: undead/elementals arise by their registered condition, not by pairing or prey.
+                if(spec.manifest){const arisen=manifestArisals(s,total,reservedMigrationCapacity(d,habitat.id,s.id),season);if(arisen){p.count+=arisen;p.arisen=(p.arisen??0)+arisen;}continue;}
                 const fed=spec.predatorOf.length===0||spec.predatorOf.some(id=>r.populations[id]?.count>0)||crossPredatorFed(d,engine,habitat.id,s.id,season);
                 if(!fed){const lost=Math.min(p.count,Math.max(1,Math.floor(total/4)));p.count-=lost;p.starved+=lost;continue;}
                 const expected=spec.recoveryPerWeek*engine.rules.wildlife.seasonRecovery[season];

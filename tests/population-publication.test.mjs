@@ -20,6 +20,10 @@ source.rules.agriculture.settlements=source.rules.agriculture.settlements.filter
 source.rules.worldClock.clocks=source.rules.worldClock.clocks.filter(row=>!removedLocations.has(row.settlement));
 source.rules.law.codes=source.rules.law.codes.filter(row=>!removedLocations.has(row.court));
 source.locations=source.locations.filter(l=>!(l.scope==='loc_bs'&&!['loc_bs','bld_bs_shrine'].includes(l.id)));
+// T154 wild areas are scoped to the omitted villages/town; their habitats and species leave with them.
+source.locations=source.locations.filter(l=>!removedLocations.has(l.scope));
+source.rules.wildlife.habitats=source.rules.wildlife.habitats.filter(h=>source.locations.some(l=>l.id===h.location));
+source.monsters=source.monsters.filter(m=>!m.wildlife||source.rules.wildlife.habitats.some(h=>h.id===m.wildlife.habitat));
 source.routes=source.routes.filter(r=>source.locations.some(l=>l.id===r.from)&&source.locations.some(l=>l.id===r.to));
 for(const row of source.rules.weather.regions){row.locations=row.locations.filter(id=>source.locations.some(l=>l.id===id));row.indoor=row.indoor.filter(id=>row.locations.includes(id));}
 const addedIds=new Set(candidate.npcs.map(n=>n.id)),original={...source,npcs:preserved,residents:[],households:[],settlementProfiles:[],locations:source.locations.filter(n=>!candidate.locations.some(l=>l.id===n.id)),routes:source.routes.filter(n=>!candidate.routes.some(r=>r.id===n.id))};

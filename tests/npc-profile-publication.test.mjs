@@ -56,7 +56,7 @@ test('人物不能投影本人不知的记忆或秘密，出生日期与元年�
 });
 test('实际写入只在隔离世界执行一次，第二次无写入且不改变字节',async()=>{
  const temp=await fs.mkdtemp(path.join(os.tmpdir(),'m2-publish-'));await fs.cp(path.resolve('world'),temp,{recursive:true,filter:file=>!file.split(path.sep).includes('drafts')});
- try{const oldLocations=world.locations.filter(l=>l.scope!=='loc_bs'||['loc_bs','bld_bs_shrine'].includes(l.id)),placeIds=new Set(oldLocations.map(l=>l.id));
+ try{const oldLocations=world.locations.filter(l=>l.scope!=='loc_bs'||['loc_bs','bld_bs_shrine'].includes(l.id)||l.id==='loc_wild_bs_kiln'),placeIds=new Set(oldLocations.map(l=>l.id));
  for(const [file,value]of Object.entries({'geo/locations.json':oldLocations,'geo/routes.json':world.routes.filter(r=>placeIds.has(r.from)&&placeIds.has(r.to)),'geo/settlements.json':world.settlementProfiles.filter(p=>p.id!=='loc_bs'),'people/residents.json':world.residents.filter(n=>n.settlement!=='loc_bs'),'people/households.json':world.households.filter(h=>h.settlement!=='loc_bs')}))await fs.writeFile(path.join(temp,file),JSON.stringify(value));
  const rules=structuredClone(world.rules);for(const region of rules.weather.regions){region.locations=region.locations.filter(id=>placeIds.has(id));region.indoor=region.indoor.filter(id=>placeIds.has(id));}await fs.writeFile(path.join(temp,'meta/rules.json'),JSON.stringify(rules));
  await fs.writeFile(path.join(temp,'people/baseline.json'),JSON.stringify(world.npcs.map(n=>{const original=baseline.find(x=>x.id===n.id);return original?{...original,inventory:n.inventory,schedule:n.schedule}:n;}),null,2)+'\n');

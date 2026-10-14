@@ -27,7 +27,7 @@ function setup(world=withSeasonalMigration(source),day=269){
 }
 function conservation(c){
     for(const r of Object.values(c.state.records).filter(r=>r.category==='ecology'))for(const p of Object.values(r.populations)){
-        assert.equal(p.initial+p.born+p.immigrated-p.predated-p.starved-p.withdrawn-p.emigrated,p.count);assert.ok(p.count>=0);
+        assert.equal(p.initial+p.born+(p.arisen??0)+p.immigrated-p.predated-p.starved-p.withdrawn-p.emigrated,p.count);assert.ok(p.count>=0);
     }
     const m=ledger(c);assert.equal(m.departed,m.arrived+m.lost+m.transit.reduce((n,t)=>n+t.count+t.actors.length,0));
 }

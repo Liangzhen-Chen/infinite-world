@@ -3,6 +3,7 @@ import {monsterStats,tacticDefense} from './combat.mjs';
 import {validateBossMechanics,templateBossCounter}from'./boss-abilities.mjs';
 import {emptyBossCognition,rememberBossEncounter,bossPublicAttitude}from'./boss-cognition.mjs';
 import {initialBossNegotiation,negotiateBoss}from'./boss-negotiation.mjs';
+import {spiritStateFor,natureCounter}from'./creature-nature.mjs';
 const clone=v=>structuredClone(v),key=b=>['state','records',`lair:${b.residence.id}`];
 const living=a=>a&&a.status!=='死亡'&&a.hp>0;
 export function validateBossEcology(world){
@@ -38,7 +39,7 @@ export function validateBossEcology(world){
 }
 export function bossCounter(d,engine,target,tactic){
     const actor=engine.actor(d,target),r=engine.rules.bossEcology;
-    if(!r||!actor?.boss||!living(actor))return{tactic,seen:0,damageMultiplier:1,adapted:false};
+    if(!r||!actor?.boss||!living(actor)){const n=living(actor)&&!actor.boss?natureCounter(engine.byId.get(actor.species),tactic):null;return{tactic,seen:0,damageMultiplier:n?.damageMultiplier??1,adapted:false,...(n?{nature:n.nature}:{})};}
     const seen=actor.battleMemory?.tactics?.[tactic]??0;
     if(!Number.isSafeInteger(seen)||seen<0)throw new Error('首领战术记忆数据损坏，拒绝伪造防备或覆盖原记录');
     return templateBossCounter(d,engine.byId.get(actor.boss),actor,tactic,engine.magicStatusContext?.(d,target))??{tactic,seen,...tacticDefense(seen,engine.rules),
@@ -66,7 +67,7 @@ function instantiate(d,engine,{id,species,location,lair,boss=null,eventId}){
     const definition=engine.byId.get(boss??species),s=engine.byId.get(species),level=boss?definition.level:s.levelRange[0];
     const stats=monsterStats({level,template:s.template,bossTier:boss?definition.tier:0},engine.rules),name=boss?definition.name:`${s.name}·${id.slice(-4)}`;
     if(!boss)d.set(['state','created',id],{id,name,aliases:[],monster:species,template:s.template,scope:location});
-    d.set(['state','creatures',id],{name,species,ecology:s.wildlife.habitat,lair,location,level,hp:stats.maxHp,maxHp:stats.maxHp,status:'正常',owner:null,
+    d.set(['state','creatures',id],{name,species,ecology:s.wildlife.habitat,lair,location,level,hp:stats.maxHp,maxHp:stats.maxHp,status:'正常',owner:null,...spiritStateFor(s),
         ...(boss?{boss,battleMemory:{tactics:{},lastEvent:null},...(definition.intelligence>0?{cognition:emptyBossCognition(),negotiation:initialBossNegotiation(definition,engine)}:{})}:{}),source:eventId});
     return{id,name,level,hp:stats.maxHp};
 }

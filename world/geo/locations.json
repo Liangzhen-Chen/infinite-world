@@ -16414,5 +16414,250 @@
     ],
     "inventory": {},
     "description": "曲澄白日在公开练步廊授探步量距，练习者须留出行人通道。兵器实练仍需学习目录中相应技能。前廊每日8时至18时开放；每旬10、20、30日导师在家休息。基础师授每课12铜、120分钟，本处战斗职业认证须10级及基础100熟练度，成功付30铜；学馆的炼金师是生活职业，另按原目录一级、20铜办理。"
+  },
+  {
+    "id": "loc_wild_yp_north",
+    "name": "榆坡北岗老林",
+    "parent": "loc_bs",
+    "scope": "loc_bs_yupo",
+    "aliases": [],
+    "coordinates": [
+      18.6,
+      10.4
+    ],
+    "terrain": "丘陵",
+    "openHours": [
+      0,
+      1440
+    ],
+    "owner": null,
+    "purpose": "坡后无人看管的老榆杂木林",
+    "rooms": [],
+    "inventory": {},
+    "mapHierarchy": [
+      {
+        "id": "known-continent",
+        "name": "已知大陆片区"
+      },
+      {
+        "id": "known-region",
+        "name": "已知地区片区"
+      },
+      {
+        "id": "known-county",
+        "name": "已知郡级片区"
+      },
+      {
+        "id": "loc_bs_yupo",
+        "name": "榆坡村"
+      }
+    ],
+    "authoredFacts": {
+      "climate": "河谷温带，岗上风大，林下背阴处晨露重",
+      "senses": [
+        "老榆树皮剥落时的脆响",
+        "林下腐叶踩下去软而发潮",
+        "岗顶风过时枝梢一齐摇晃"
+      ],
+      "entryRule": "公共野地，无人看守，入林自担风险",
+      "noMechanics": "无新增工作站、可领取库存、产量或收费服务"
+    },
+    "description": "榆坡北岗老林在村后坡顶，沿一条踩出来的土径上岗即到。老榆和杂木长得疏密不一，倒木横在林下，背阴处的腐叶终年发潮。岗上风大，枝梢一齐摇晃时，剥落的树皮会脆脆地落下来。林子没有主人，也无人看守，砍柴的村民一般只在林缘拾枯枝，很少往深处去。"
+  },
+  {
+    "id": "loc_wild_wt_mist",
+    "name": "苇汀下游雾滩",
+    "parent": "loc_bs",
+    "scope": "loc_bs_weiting",
+    "aliases": [],
+    "coordinates": [
+      34.4,
+      -8.2
+    ],
+    "terrain": "平地",
+    "openHours": [
+      0,
+      1440
+    ],
+    "owner": null,
+    "purpose": "河水转弯处的苇根泥滩",
+    "rooms": [],
+    "inventory": {},
+    "mapHierarchy": [
+      {
+        "id": "known-continent",
+        "name": "已知大陆片区"
+      },
+      {
+        "id": "known-region",
+        "name": "已知地区片区"
+      },
+      {
+        "id": "known-county",
+        "name": "已知郡级片区"
+      },
+      {
+        "id": "loc_bs_weiting",
+        "name": "苇汀村"
+      }
+    ],
+    "authoredFacts": {
+      "climate": "河谷温带湿地，入夜起雾，涨水时滩面大半没入水中",
+      "senses": [
+        "夜雾贴着水面慢慢挪动",
+        "腐苇根下冒出细小气泡",
+        "泥滩踩下去会吸住鞋底"
+      ],
+      "entryRule": "公共滩地，涨水时不宜下滩",
+      "noMechanics": "无新增工作站、可领取库存、产量或收费服务"
+    },
+    "description": "苇汀下游雾滩在村子下游河水转弯的地方，沿岸边便道走一段便到。滩上是成片倒伏的老苇和黑泥，腐苇根下不时冒出细小气泡，泥面踩下去会吸住鞋底。入夜后雾贴着水面慢慢挪动，涨水时滩面大半没进水里。渔家很少在这里下网，只在白天沿滩边捡被冲上来的苇料。"
+  },
+  {
+    "id": "loc_wild_lq_adit",
+    "name": "砾泉旧矿道口",
+    "parent": "loc_bs",
+    "scope": "loc_bs_liquan",
+    "aliases": [],
+    "coordinates": [
+      35.6,
+      11.8
+    ],
+    "terrain": "丘陵",
+    "openHours": [
+      0,
+      1440
+    ],
+    "owner": null,
+    "purpose": "早年采石挖矿后废弃的坑道口与泉沟",
+    "rooms": [],
+    "inventory": {},
+    "mapHierarchy": [
+      {
+        "id": "known-continent",
+        "name": "已知大陆片区"
+      },
+      {
+        "id": "known-region",
+        "name": "已知地区片区"
+      },
+      {
+        "id": "known-county",
+        "name": "已知郡级片区"
+      },
+      {
+        "id": "loc_bs_liquan",
+        "name": "砾泉村"
+      }
+    ],
+    "authoredFacts": {
+      "climate": "丘陵温带，坑道口终年阴凉，泉沟边石面常湿",
+      "senses": [
+        "坑道深处有滴水声",
+        "碎石坡踩上去会往下滑",
+        "泉沟水流过卵石时细细作响"
+      ],
+      "entryRule": "公共野地，坑道内未加支护，深入自担风险",
+      "noMechanics": "无新增工作站、可领取库存、产量或收费服务"
+    },
+    "description": "砾泉旧矿道口在村子东北的碎石坡上，顺着泉沟往上走便能看见几处黑洞洞的坑道口。坑道是早年挖石取矿留下的，木撑多已朽断，深处有断续的滴水声。泉沟从坑道旁流下，卵石被冲得圆滑，石面常年湿着。碎石坡踩上去会往下滑，村里人取水只到沟口，不进坑道。"
+  },
+  {
+    "id": "loc_wild_sb_barrow",
+    "name": "桑坂西坡荒冢",
+    "parent": "loc_bs",
+    "scope": "loc_bs_sangban",
+    "aliases": [],
+    "coordinates": [
+      12.4,
+      -11.1
+    ],
+    "terrain": "丘陵",
+    "openHours": [
+      0,
+      1440
+    ],
+    "owner": null,
+    "purpose": "无人祭扫的旧坟坡",
+    "rooms": [],
+    "inventory": {},
+    "mapHierarchy": [
+      {
+        "id": "known-continent",
+        "name": "已知大陆片区"
+      },
+      {
+        "id": "known-region",
+        "name": "已知地区片区"
+      },
+      {
+        "id": "known-county",
+        "name": "已知郡级片区"
+      },
+      {
+        "id": "loc_bs_sangban",
+        "name": "桑坂村"
+      }
+    ],
+    "authoredFacts": {
+      "climate": "丘陵温带，西坡背阳，秋冬土冷霜重",
+      "senses": [
+        "坟头茅草被风压得伏倒",
+        "冷土里翻出碎陶片",
+        "乌鸦落在歪斜的石碑上"
+      ],
+      "entryRule": "公共荒地，村里习俗不在夜里上坡",
+      "noMechanics": "无新增工作站、可领取库存、产量或收费服务"
+    },
+    "description": "桑坂西坡荒冢在村子西边背阳的坡上，桑园外的小路绕过沟坎就到。坡上散着许多无人祭扫的旧坟，有的只剩一个土包，有的立着歪斜的石碑，茅草被风压得伏倒。西坡晒不到午后的太阳，秋冬土冷霜重，翻开的冷土里常有碎陶片。村里习俗不在夜里上坡，白天也少有人来。"
+  },
+  {
+    "id": "loc_wild_bs_kiln",
+    "name": "白石镇西郊废窑",
+    "parent": "loc_bs",
+    "scope": "loc_bs",
+    "aliases": [],
+    "coordinates": [
+      20.4,
+      0.9
+    ],
+    "terrain": "平地",
+    "openHours": [
+      0,
+      1440
+    ],
+    "owner": null,
+    "purpose": "停烧多年的砖瓦窑场",
+    "rooms": [],
+    "inventory": {},
+    "mapHierarchy": [
+      {
+        "id": "known-continent",
+        "name": "已知大陆片区"
+      },
+      {
+        "id": "known-region",
+        "name": "已知地区片区"
+      },
+      {
+        "id": "known-county",
+        "name": "已知郡级片区"
+      },
+      {
+        "id": "loc_bs",
+        "name": "白石镇"
+      }
+    ],
+    "authoredFacts": {
+      "climate": "河谷温带，窑场空旷，夏秋干风吹过时扬起窑灰",
+      "senses": [
+        "塌了半边的窑顶漏下天光",
+        "窑灰踩上去扑起一层细尘",
+        "碎瓦堆里有风穿过的呜声"
+      ],
+      "entryRule": "公共废地，窑洞内结构松动，进入自担风险",
+      "noMechanics": "无新增工作站、可领取库存、产量或收费服务"
+    },
+    "description": "白石镇西郊废窑在镇子西边的平地上，出镇沿旧运砖的车道走到头便是。几座砖瓦窑停烧多年，有的塌了半边，窑顶漏下天光，窑膛里积着厚厚的灰。碎瓦和废砖堆成小丘，风穿过时发出呜呜的声音。夏秋干风吹过，窑灰扑起一层细尘。镇上偶尔有人来拣还能用的整砖，不在这里久留。"
   }
 ]

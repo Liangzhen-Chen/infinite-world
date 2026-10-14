@@ -24,7 +24,7 @@ function conservation(c){
     const r=farm(c),s=c.state.settlements.loc_hw,l=r.ledger;
     assert.equal(l.openingFood+l.openingSeed+l.freshProduced+l.harvested+l.donated,s.food+r.field.seedBank+l.eaten+l.spoiled+l.overflow+l.seedSpent+l.sold);
     assert.equal(l.potentialHarvested,l.harvested+l.pestLost);assert.equal(r.batches.reduce((n,b)=>n+b.amount,0),s.food);
-    for(const r of Object.values(c.state.records).filter(r=>r.category==='ecology'))for(const p of Object.values(r.populations))assert.equal(p.initial+p.born+(p.immigrated??0)-p.predated-p.starved-p.withdrawn-(p.emigrated??0),p.count);
+    for(const r of Object.values(c.state.records).filter(r=>r.category==='ecology'))for(const p of Object.values(r.populations))assert.equal(p.initial+p.born+(p.arisen??0)+(p.immigrated??0)-p.predated-p.starved-p.withdrawn-(p.emigrated??0),p.count);
 }
 async function year(run,c,label){for(let i=0;i<12;i++)c=await wait(run,c,30*1440,`${label}${i}`);return c;}
 function rodentsAtCapacity(c){const p=pool(c,mouse,field);p.born+=24-p.count;p.count=24;}

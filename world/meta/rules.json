@@ -2385,6 +2385,31 @@
         "id": "habitat_deep_star_bowl",
         "name": "沉星山坳野地",
         "location": "site_deep_star_bowl"
+      },
+      {
+        "id": "habitat_yp_north_grove",
+        "name": "北岗老林下",
+        "location": "loc_wild_yp_north"
+      },
+      {
+        "id": "habitat_wt_mist_flat",
+        "name": "下游雾滩",
+        "location": "loc_wild_wt_mist"
+      },
+      {
+        "id": "habitat_lq_old_adit",
+        "name": "旧矿道口",
+        "location": "loc_wild_lq_adit"
+      },
+      {
+        "id": "habitat_sb_barrow_slope",
+        "name": "西坡荒冢",
+        "location": "loc_wild_sb_barrow"
+      },
+      {
+        "id": "habitat_bs_west_kiln",
+        "name": "西郊废窑",
+        "location": "loc_wild_bs_kiln"
       }
     ],
     "migration": {

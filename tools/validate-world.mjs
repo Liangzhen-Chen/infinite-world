@@ -6,6 +6,7 @@ import {validateObjectWorld}from'../server-plugin/magic-object.mjs';
 import {validateWeatherRules}from'../server-plugin/weather.mjs';
 import {validateAgricultureRules}from'../server-plugin/agriculture.mjs';
 import {validateWildlife}from'../server-plugin/wildlife.mjs';
+import {validateCreatureNature}from'../server-plugin/creature-nature.mjs';
 import {validateFarmPests}from'../server-plugin/farm-pests.mjs';
 import {validateBossEcology}from'../server-plugin/bosses.mjs';
 import {validateBossCognition}from'../server-plugin/boss-cognition.mjs';
@@ -32,6 +33,7 @@ export function validateWorld(world,{stage='engine'}={}){
     errors.push(...validateWeatherRules(world));
     errors.push(...validateAgricultureRules(world));
     errors.push(...validateWildlife(world));
+    errors.push(...validateCreatureNature(world));
     errors.push(...validateFarmPests(world));
     errors.push(...validateBossEcology(world));
     const cognitionLocations=new Set(world.locations.map(location=>location.id));
