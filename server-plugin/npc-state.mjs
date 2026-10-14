@@ -21,6 +21,10 @@ export function bossCognitionField(actor){return actor?.id?.startsWith('npc_')?'
 export function npcSchedule(engine,state,id){
     const care=state?.npcs?.[id]?.caring;
     if(care&&engine.byId.get(id)?.schedule)return {default:[{start:0,end:1440,location:care.location,activity:'照护病人',services:[]}]};
-    return state?.npcs?.[id]?.vocation?.schedule??engine.byId.get(id)?.schedule;
+    // A move (npc-life) remaps home and work; a later change of livelihood is
+    // built from that new home and then takes precedence.
+    const own=state?.npcs?.[id],residence=own?.residence;
+    if(residence&&engine.byId.get(id)?.schedule&&!(own.vocation&&own.vocation.since>residence.since))return residence.schedule;
+    return own?.vocation?.schedule??engine.byId.get(id)?.schedule;
 }
 export function npcServices(engine,state,id){return state?.npcs?.[id]?.vocation?.services??engine.byId.get(id)?.services??[];}

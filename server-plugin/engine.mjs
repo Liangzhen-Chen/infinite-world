@@ -41,7 +41,7 @@ import {stateNotices}from'./state-notices.mjs';
 import {assertNpcService}from'./npc-schedule.mjs';
 import {advanceNpcCognition,nextNpcCognitionMinute}from'./npc-cognition.mjs';
 import {advanceNpcAutonomy,nextNpcAutonomyMinute,npcAutonomyBusy,assertNpcAutonomyAction,applyNpcPlan}from'./npc-autonomy.mjs';
-import {advanceNpcLife}from'./npc-life.mjs';
+import {advanceNpcLife,nextNpcLifeMinute}from'./npc-life.mjs';
 import {recordNpcMemories}from'./npc-memory.mjs';
 import {hearNpcRumor}from'./npc-rumors.mjs';
 import {createNpcObligation,advanceNpcObligations,assertNpcObligationAction,npcObligationAt,nextNpcObligationMinute}from'./npc-obligations.mjs';
@@ -249,7 +249,7 @@ export class WorldEngine {
         const patchStart=d.patches.length,npcsBefore=d.get('state','npcs');
         while(d.get('state','minute')<end){
             const now=d.get('state','minute'),state=d.get('state');
-            const next=Math.min(end,(Math.floor(now/1440)+1)*1440,nextWorldClockMinute(state,now),nextFactionClockMinute(state,now),nextFestivalMinute(state,this,now),nextSettlementTradeMinute(state,this,now),nextNpcCognitionMinute(state,now),nextNpcAutonomyMinute(state,now),nextNpcObligationMinute(state,now),nextMagicAreaMinute(state,now),nextWildlifeEncounterMinute(d,this,now));
+            const next=Math.min(end,(Math.floor(now/1440)+1)*1440,nextWorldClockMinute(state,now),nextFactionClockMinute(state,now),nextFestivalMinute(state,this,now),nextSettlementTradeMinute(state,this,now),nextNpcCognitionMinute(state,now),nextNpcAutonomyMinute(state,now),nextNpcObligationMinute(state,now),nextNpcLifeMinute(state,now),nextMagicAreaMinute(state,now),nextWildlifeEncounterMinute(d,this,now));
             this.advanceInterval(d,next-now,id);
         }
         // Intermediate clock boundaries matter to simulation, not to replay.

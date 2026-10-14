@@ -10,6 +10,8 @@ import {digest} from './storage.mjs';
 import {clockRoll} from './world-clock.mjs';
 import {relationView,recordLifeRelation} from './npc-relations.mjs';
 import {transferItems} from './items.mjs';
+import {npcSchedule} from './npc-state.mjs';
+import {validateNpcSchedules} from './npc-schedule.mjs';
 
 const DAY=1440,YEAR=360*DAY,unable=['死亡','濒死'];
 const rules=engine=>engine.rules.npcLife;
@@ -35,14 +37,22 @@ export function npcIsMinor(engine,state,id,minute=state.minute){
 }
 const alive=(state,id)=>Boolean(state.npcs[id])&&!unable.includes(state.npcs[id].status);
 
-// Registered households plus campaign births. The catalog list is not edited.
+// Registered households plus campaign births and moves. The catalog list is
+// not edited: a registered member who moved away is listed under `left`.
+const leftOf=(state,houseId)=>state.family?.households?.[houseId]?.left??[];
 export function npcHousehold(engine,state,id){
- const house=engine.world.households?.find(h=>h.members.includes(id)||state.family?.households?.[h.id]?.members?.includes(id));
- return house?{id:house.id,settlement:house.settlement,homeLocation:house.homeLocation,members:[...house.members,...state.family?.households?.[house.id]?.members??[]]}:null;
+ const house=engine.world.households?.find(h=>h.members.includes(id)&&!leftOf(state,h.id).includes(id)||state.family?.households?.[h.id]?.members?.includes(id));
+ return house?{id:house.id,settlement:house.settlement,homeLocation:house.homeLocation,members:householdMembers(engine,state,house.id)}:null;
 }
 export function householdMembers(engine,state,houseId){
- const house=engine.world.households?.find(h=>h.id===houseId);
- return house?[...house.members,...state.family?.households?.[houseId]?.members??[]]:[];
+ const house=engine.world.households?.find(h=>h.id===houseId),left=leftOf(state,houseId);
+ return house?[...house.members.filter(m=>!left.includes(m)),...state.family?.households?.[houseId]?.members??[]]:[];
+}
+function setMembership(d,engine,houseId,id,inside){
+ const house=engine.world.households.find(h=>h.id===houseId),row=d.get('state','family','households',houseId)??{};
+ const members=(row.members??[]).filter(m=>m!==id),left=(row.left??[]).filter(m=>m!==id);
+ if(house.members.includes(id)){if(!inside)left.push(id);}else if(inside)members.push(id);
+ d.set(['state','family','households',houseId],{...row,members,...(left.length||row.left?{left}:{})});
 }
 
 const staticTie=(engine,a,b)=>[...(engine.byId.get(a)?.relationships??[]).filter(r=>r.with===b),...(engine.byId.get(b)?.relationships??[]).filter(r=>r.with===a)];
@@ -111,10 +121,10 @@ function addMemory(d,who,row){
 // Those involved remember it first-hand; household members who are actually
 // with one of them at that moment witness it. Everyone else hears later, if
 // at all, through the daily conversations and carried messages.
-function witness(d,engine,eventId,principals,houses,{minute,kind,content,salience=3}){
- const state=d.get('state'),at=new Set(principals.map(p=>state.npcs[p]?.location).filter(Boolean));
+function witness(d,engine,eventId,principals,houses,{minute,kind,content,salience=3,at:places=null}){
+ const state=d.get('state'),at=new Set(places??principals.map(p=>state.npcs[p]?.location).filter(Boolean));
  const memory={rootMemoryId:eventId,sourceEvent:eventId,kind,minute,occurredAt:minute,participants:[...principals],content,emotion:'郑重'};
- for(const p of principals)if(alive(state,p))addMemory(d,p,{...memory,location:state.npcs[p].location,sourceType:'亲历',salience});
+ for(const p of principals)if(alive(state,p))addMemory(d,p,{...memory,location:state.npcs[p].location??places?.[0]??null,sourceType:'亲历',salience});
  const seen=[...new Set(houses.flatMap(h=>householdMembers(engine,state,h)))].filter(id=>!principals.includes(id)&&alive(state,id)&&at.has(state.npcs[id].location)&&!state.npcs[id].scheduleTravel&&!state.npcs[id].cognitionTravel).sort();
  for(const id of seen)addMemory(d,id,{...memory,location:state.npcs[id].location,sourceType:'目击',salience:Math.max(2,salience-1)});
  return seen;
@@ -337,12 +347,189 @@ function healthDay(d,engine,minute){
  }
 }
 
+// ---- Moving house -----------------------------------------------------------
+// A person moves only for a reason found in campaign state: to live with a new
+// spouse, to join kin after the household was left empty by a death, to make a
+// living elsewhere while the settlement goes hungry, or to get away from
+// someone who harmed them and still lives there. A willing host household is
+// required. The decision is taken at midnight and told first-hand; the walk
+// starts at a fixed hour after the notice days and follows the real route; household, population, schedule and remaining
+// appointments change on arrival. Coins and goods travel with the person, and
+// no new person is created: the same campaign record simply lives elsewhere.
+const migrationRules=engine=>rules(engine)?.migration;
+const REASON_TEXT={成婚:'成婚后搬去与配偶同住',投亲:'家中已无人照应，去投靠亲属',谋生:'本地缺粮，去外乡亲友处谋生',避祸:'为避开加害自己的人，离乡暂避'};
+function within(engine,location,place){
+ const seen=new Set();
+ while(location&&!seen.has(location)){if(location===place)return true;seen.add(location);location=engine.byId.get(location)?.parent;}
+ return false;
+}
+export function npcMigration(state,id){return Object.values(state.family?.migrations??{}).find(m=>m.person===id&&['待出发','在途'].includes(m.status))??null;}
+const placeName=(engine,id)=>engine.byId.get(id)?.name??id;
+const hungry=(engine,state,settlement)=>(state.settlements?.[settlement]?.starvation??0)>=migrationRules(engine).livelihood.starvationDays;
+const present=(engine,state,x)=>state.npcs[x]?alive(state,x):Boolean(engine.byId.get(x));
+function mobile(engine,state,id){
+ const n=state.npcs[id];
+ return engine.byId.get(id)?.tier==='full'&&Boolean(engine.byId.get(id).schedule)&&settled(state,id)&&!incapable.includes(n.status)&&!n.caring&&!npcMigration(state,id);
+}
+// Relatives first, then friends who want the person; the host decides.
+function hostFor(engine,state,id,{elsewhere,kinOnly=false},minute){
+ const r=migrationRules(engine),from=npcHousehold(engine,state,id);
+ const people=new Set([...(engine.byId.get(id)?.relationships??[]).map(x=>x.with),...Object.keys(state.npcs[id].relationships??{}),
+  ...Object.keys(state.npcs).filter(x=>(engine.byId.get(x)?.relationships??[]).some(y=>y.with===id)),...Object.values(state.family?.people?.[id]?.parents??{})]);
+ const rows=[];
+ for(const host of [...people].sort()){
+  if(host===id||!alive(state,host)||engine.byId.get(host)?.tier!=='full'||npcIsMinor(engine,state,host,minute)||npcMigration(state,host))continue;
+  const house=npcHousehold(engine,state,host);
+  if(!house||house.id===from?.id||elsewhere&&(house.settlement===from?.settlement||hungry(engine,state,house.settlement)))continue;
+  const related=kin(engine,state,id,host);
+  if(kinOnly&&!related)continue;
+  if(related?relationView(engine,state,host,id).trust<r.joinKin.minimumTrust:!(npcWilling(engine,state,host,id,r.host)&&npcWilling(engine,state,id,host,r.host)))continue;
+  rows.push({host,house,related});
+ }
+ return rows.sort((a,b)=>b.related-a.related||a.host.localeCompare(b.host))[0]??null;
+}
+function migrationReason(engine,state,id,minute,seed){
+ const r=migrationRules(engine),day=minute/DAY,house=npcHousehold(engine,state,id);if(!house)return null;
+ for(const m of Object.values(state.family?.marriages??{}).filter(m=>m.status==='在婚'&&!m.static&&m.partners.includes(id)).sort((a,b)=>a.id.localeCompare(b.id))){
+  if(minute-m.since<r.marriageMoveDays*DAY)continue;
+  const spouse=m.partners.find(p=>p!==id),other=npcHousehold(engine,state,spouse);
+  if(!other||other.id===house.id||!alive(state,spouse)||npcMigration(state,spouse))continue;
+  // The partner whose household keeps more people is the one who moves.
+  const keep=h=>h.members.filter(x=>![id,spouse].includes(x)&&present(engine,state,x)).length;
+  const mover=keep(house)!==keep(other)?(keep(house)>keep(other)?id:spouse):[...m.partners].sort()[1];
+  if(mover===id)return {reason:'成婚',host:spouse,house:other,cause:m.id};
+ }
+ const others=house.members.filter(x=>x!==id&&present(engine,state,x)),age=npcAgeAt(engine,state,id,minute);
+ if(!others.length&&(npcIsMinor(engine,state,id,minute)||age!==null&&age>=r.joinKin.elderAge)){
+  const death=Object.values(state.family?.deaths??{}).filter(x=>x.household===house.id&&x.person!==id).sort((a,b)=>b.minute-a.minute)[0];
+  if(death&&minute-death.minute>=r.joinKin.afterDeathDays*DAY){const h=hostFor(engine,state,id,{elsewhere:false,kinOnly:true},minute);if(h)return {reason:'投亲',host:h.host,house:h.house,cause:death.id};}
+ }
+ if(npcIsMinor(engine,state,id,minute))return null;
+ if(hungry(engine,state,house.settlement)&&clockRoll(seed,`migration:livelihood:${id}`,day)<r.livelihood.chancePerDay){
+  const h=hostFor(engine,state,id,{elsewhere:true},minute);if(h)return {reason:'谋生',host:h.host,house:h.house,cause:`starvation:${house.settlement}`};
+ }
+ const harm=(state.npcs[id].memoryStream??[]).filter(m=>['conflict','crime'].includes(m.kind)&&m.sourceType==='亲历'&&m.participants?.[1]===id&&m.participants[0]!==id&&m.minute<=minute&&minute-m.minute<=r.refuge.withinDays*DAY).sort((a,b)=>b.minute-a.minute);
+ for(const m of harm){
+  const actor=m.participants[0],place=actor==='player'?(state.player?.status!=='死亡'?state.location:null):alive(state,actor)?state.npcs[actor].location??npcHousehold(engine,state,actor)?.homeLocation:null;
+  if(!place||!within(engine,place,house.settlement))continue;
+  if(clockRoll(seed,`migration:refuge:${id}`,day)>=r.refuge.chancePerDay)break;
+  const h=hostFor(engine,state,id,{elsewhere:true},minute);if(h)return {reason:'避祸',host:h.host,house:h.house,cause:m.sourceEvent??m.id,fleeing:actor};
+  break;
+ }
+ return null;
+}
+function migrationDay(d,engine,minute){
+ const r=migrationRules(engine);if(!r)return;
+ for(const id of Object.keys(d.get('state','npcs')).sort()){
+  const state=d.get('state');if(!mobile(engine,state,id))continue;
+  const why=migrationReason(engine,state,id,minute,d.document.randomSeed);if(!why)continue;
+  const from=npcHousehold(engine,state,id),mid=`migration_${key(id,minute)}`;
+  d.set(['state','family','migrations',mid],{id:mid,person:id,reason:why.reason,cause:why.cause,...(why.fleeing?{fleeing:why.fleeing}:{}),host:why.host,
+   from:{household:from.id,settlement:from.settlement,home:from.homeLocation},to:{household:why.house.id,settlement:why.house.settlement,home:why.house.homeLocation},
+   decidedAt:minute,departAt:minute+r.noticeDays*DAY+r.departMinute,postponed:0,status:'待出发'});
+  // The plan is the person's own knowledge first; neighbours learn it the
+  // ordinary way, from them or their household, before the day they leave.
+  const content=`${nameOf(engine,state,id)}${REASON_TEXT[why.reason]}，打算${engine.calendar(minute+r.noticeDays*DAY+r.departMinute).text.slice(0,-6)}动身，迁往${placeName(engine,why.house.settlement)}${nameOf(engine,state,why.host)}家。`;
+  witness(d,engine,`${mid}:plan`,[id],[from.id],{minute,kind:'migration',content});
+ }
+}
+// Home slots go to the new home; work outside the new settlement is replaced
+// by the host's work at that hour there (helping, no services of one's own),
+// or by staying home.
+function residenceSchedule(engine,state,m){
+ const own=npcSchedule(engine,state,m.person),hostDay=npcSchedule(engine,state,m.host)?.default??[],host=nameOf(engine,state,m.host);
+ let changed=false;
+ const slot=s=>{
+  if(s.location===m.from.home)return {...s,location:m.to.home};
+  if(within(engine,s.location,m.to.settlement))return {...s};
+  changed=true;const h=hostDay.find(x=>x.start<=s.start&&s.start<x.end);
+  return h&&within(engine,h.location,m.to.settlement)&&h.location!==m.to.home?{...s,location:h.location,activity:`帮${host}：${h.activity}`,services:[]}:{...s,location:m.to.home,activity:'在新家帮衬家务',services:[]};
+ };
+ const variants=v=>Object.fromEntries(Object.entries(v).map(([k,x])=>[k,Array.isArray(x)&&k!=='restDays'?x.map(slot):structuredClone(x)]));
+ const schedule={...variants(own),...(own.seasonal?{seasonal:Object.fromEntries(Object.entries(own.seasonal).map(([k,v])=>[k,variants(v)]))}:{})};
+ const errors=validateNpcSchedules({locations:engine.world.locations,npcs:[{id:m.person,schedule}]});if(errors.length)throw Error(errors[0]);
+ return {schedule,changed};
+}
+function endObligations(d,engine,id,test,reason,mid,minute){
+ const ended=[];
+ for(const o of Object.values(d.get('state','obligations')??{}).sort((a,b)=>a.id.localeCompare(b.id)))if(['待履行','进行中'].includes(o.status)&&[o.promisor,o.promisee].includes(id)&&test(o)){
+  d.set(['state','obligations',o.id],{...o,status:'取消',reason,resolvedAt:minute,endedByMigration:mid});ended.push(o.id);
+ }
+ return ended;
+}
+function postpone(d,engine,m,why){
+ const next=m.postponed+1;
+ d.set(['state','family','migrations',m.id],next>migrationRules(engine).maxPostponeDays?{...m,status:'中止',reason:why,endedAt:m.departAt}:{...m,departAt:m.departAt+DAY,postponed:next,lastDelay:why});
+}
+function depart(d,engine,m,at){
+ const state=d.get('state'),npc=state.npcs[m.person],name=nameOf(engine,state,m.person);
+ if(!npc||unable.includes(npc.status)){d.set(['state','family','migrations',m.id],{...m,status:'中止',reason:'本人已不在',endedAt:at});return;}
+ if(!alive(state,m.host)||npcHousehold(engine,state,m.host)?.id!==m.to.household){d.set(['state','family','migrations',m.id],{...m,status:'中止',reason:'投奔的人家已不在原处',endedAt:at});return;}
+ if(!settled(state,m.person)||incapable.includes(npc.status)||npc.caring||engine.npcAutonomyBusy?.(state,m.person,at)){postpone(d,engine,m,'动身时不得空');return;}
+ let route;try{route=engine.route(npc.location,m.to.home,'walk',at,d.document.randomSeed);}catch{postpone(d,engine,m,'路线暂不可通行');return;}
+ if((npc.coins??0)<route.cost){postpone(d,engine,m,'路费不足');return;}
+ const arriveAt=at+route.minutes,{schedule,changed}=residenceSchedule(engine,state,m);
+ const early=endObligations(d,engine,m.person,o=>(o.start??o.due??0)<arriveAt,`${name}迁居途中，无法赴约`,m.id,at);
+ d.set(['state','npcs',m.person,'residence'],{household:m.to.household,settlement:m.to.settlement,home:m.to.home,since:at,migration:m.id,schedule,workChanged:changed});
+ d.set(['state','npcs',m.person,'coins'],(npc.coins??0)-route.cost);
+ d.set(['state','npcs',m.person,'scheduleTravel'],{from:npc.location,to:m.to.home,depart:at,arrive:arriveAt,edges:route.edges,migration:m.id});
+ d.set(['state','npcs',m.person,'location'],null);d.set(['state','npcs',m.person,'activity'],'迁居赶路');
+ const content=`${name}${REASON_TEXT[m.reason]}，${engine.calendar(at).text.slice(0,-6)}从${placeName(engine,npc.location)}动身，迁往${placeName(engine,m.to.settlement)}${nameOf(engine,state,m.host)}家。`;
+ const witnesses=witness(d,engine,`${m.id}:depart`,[m.person],[m.from.household],{minute:at,kind:'migration',content,at:[npc.location]});
+ d.set(['state','family','migrations',m.id],{...m,status:'在途',departedAt:at,arriveAt,routeMinutes:route.minutes,routeCost:route.cost,routeEdges:route.edges,origin:npc.location,obligations:early,witnesses:{depart:witnesses}});
+}
+function arrive(d,engine,m,at){
+ const state=d.get('state'),npc=state.npcs[m.person];
+ if(npc?.scheduleTravel?.migration===m.id){d.set(['state','npcs',m.person,'location'],m.to.home);d.remove(['state','npcs',m.person,'scheduleTravel']);}
+ if(!npc||unable.includes(npc.status)){d.set(['state','family','migrations',m.id],{...m,status:'中止',reason:'途中出事，未能抵达',endedAt:at});return;}
+ const name=nameOf(engine,state,m.person);
+ setMembership(d,engine,m.from.household,m.person,false);setMembership(d,engine,m.to.household,m.person,true);
+ let population=null;
+ const a=state.settlements?.[m.from.settlement]?.population,b=state.settlements?.[m.to.settlement]?.population;
+ if(m.from.settlement!==m.to.settlement){
+  population={};
+  if(Number.isSafeInteger(a)){population.from={before:a,after:Math.max(0,a-1)};d.set(['state','settlements',m.from.settlement,'population'],population.from.after);}
+  if(Number.isSafeInteger(b)){population.to={before:b,after:b+1};d.set(['state','settlements',m.to.settlement,'population'],population.to.after);}
+ }
+ const late=endObligations(d,engine,m.person,o=>!within(engine,o.location,m.to.settlement),`${name}已迁居${placeName(engine,m.to.settlement)}，原约定作罢`,m.id,at);
+ d.set(['state','npcs',m.person,'residence','arrivedAt'],at);
+ if(npc.residence?.workChanged)d.set(['state','npcs',m.person,'occupation'],`迁居后帮衬${nameOf(engine,state,m.host)}家（原${npc.occupation??engine.byId.get(m.person).occupation??''}）`);
+ d.set(['state','npcs',m.person,'developments'],[...d.get('state','npcs',m.person,'developments')??[],{type:'迁居',source:m.id,minute:at,reason:m.reason,from:m.from.household,to:m.to.household}]);
+ const content=`${name}${engine.calendar(at).text.slice(0,-6)}迁到${placeName(engine,m.to.home)}，与${nameOf(engine,state,m.host)}家同住。`;
+ const witnesses=witness(d,engine,`${m.id}:arrive`,[m.person],[m.to.household],{minute:at,kind:'migration',content,at:[m.to.home]});
+ d.set(['state','family','migrations',m.id],{...d.get('state','family','migrations',m.id),status:'已抵达',arrivedAt:at,population,obligations:[...m.obligations??[],...late],witnesses:{...m.witnesses,arrive:witnesses}});
+}
+function migrationsDue(d,engine,before,after){
+ for(;;){
+  const rows=Object.values(d.get('state','family','migrations')??{}).map(m=>({m,at:m.status==='待出发'?m.departAt:m.status==='在途'?m.arriveAt:Infinity})).filter(x=>x.at>before&&x.at<=after).sort((x,y)=>x.at-y.at||x.m.id.localeCompare(y.m.id));
+  if(!rows.length)return;
+  const {m,at}=rows[0];if(m.status==='待出发')depart(d,engine,m,at);else arrive(d,engine,m,at);
+ }
+}
+export function nextNpcLifeMinute(state,after){
+ return Math.min(Infinity,...Object.values(state.family?.migrations??{}).map(m=>m.status==='待出发'?m.departAt:m.status==='在途'?m.arriveAt:Infinity).filter(t=>t>after));
+}
+// What a person can tell others about local life, newest first: only the
+// family, health and moving news actually in their own memory.
+export function npcLifeNews(engine,document,id){
+ const state=document.state,npc=state.npcs[id],days=migrationRules(engine)?.newsDays??90;
+ if(!npc||npc.status==='死亡')return [];
+ return (npc.memoryStream??[]).filter(m=>['family','health','migration'].includes(m.kind)&&m.minute<=state.minute&&state.minute-m.minute<=days*DAY&&!m.private&&!['private','secret'].includes(m.visibility)&&!npc.cognition?.blurred?.[m.id])
+  .sort((a,b)=>b.minute-a.minute||a.id.localeCompare(b.id)).slice(0,3)
+  .map(m=>({id:m.id,rootMemoryId:m.rootMemoryId??m.id,minute:m.occurredAt??m.minute,content:m.content,sourceType:m.sourceType,heardFrom:m.heardFrom??null}));
+}
+
 // Every midnight in (before, after] is processed once with the state of that
 // boundary; the engine already stops at each midnight while time passes.
-// Health comes first so a death that night already ends the marriage.
+// Health comes first so a death that night already ends the marriage; moves
+// due on the way are settled at their own minute, then new moves are decided.
 export function advanceNpcLife(d,engine,before,after){
  if(!rules(engine))return;
- for(let day=Math.floor(before/DAY)+1;day*DAY<=after;day++){healthDay(d,engine,day*DAY);familyDay(d,engine,day*DAY);}
+ for(let day=Math.floor(before/DAY)+1;day*DAY<=after;day++){
+  migrationsDue(d,engine,before,day*DAY);before=day*DAY;
+  healthDay(d,engine,day*DAY);familyDay(d,engine,day*DAY);migrationDay(d,engine,day*DAY);
+ }
+ migrationsDue(d,engine,before,after);
 }
 
 export function validateNpcLifeRules(world){
@@ -362,6 +549,14 @@ export function validateNpcLifeRules(world){
   if(!span(h.mildDays)||!span(h.graveDays))errors.push('npcLife.health病程天数区间无效');
   if(!share(h.graveFatality?.cared)||!share(h.graveFatality?.alone)||h.graveFatality.cared>h.graveFatality.alone)errors.push('npcLife.health.graveFatality须有照护时不高于无人照护');
   if(!(h.weakenedGraveMultiplier>=1)||!whole(h.bloodMl)||!Array.isArray(h.feverC)||h.feverC.length!==2||h.feverC.some(t=>!(t>37&&t<43)))errors.push('npcLife.health体弱倍数、血量或发热温度无效');
+ }
+ const g=r.migration;
+ if(g){
+  const days=v=>Number.isSafeInteger(v)&&v>=0;
+  if(!(Number.isSafeInteger(g.departMinute)&&g.departMinute>0&&g.departMinute<DAY)||!days(g.noticeDays)||!days(g.marriageMoveDays)||!whole(g.maxPostponeDays)||!whole(g.newsDays))errors.push('npcLife.migration动身钟点、预告天数、婚后搬迁天数、推迟上限或消息天数无效');
+  if(!days(g.joinKin?.afterDeathDays)||!(whole(g.joinKin?.elderAge)&&g.joinKin.elderAge>r.adultAge)||!level(g.joinKin?.minimumTrust))errors.push('npcLife.migration.joinKin参数无效');
+  if(!whole(g.livelihood?.starvationDays)||!share(g.livelihood?.chancePerDay)||!whole(g.refuge?.withinDays)||!share(g.refuge?.chancePerDay))errors.push('npcLife.migration谋生或避祸参数无效');
+  if(!level(g.host?.minimumTrust)||!level(g.host?.minimumAffection))errors.push('npcLife.migration.host参数无效');
  }
  return errors;
 }
