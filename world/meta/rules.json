@@ -3580,5 +3580,108 @@
         ]
       }
     ]
+  },
+  "npcGrowth": {
+    "maximumGain": 600,
+    "maximumProficiency": 1200,
+    "minimumPractice": 3,
+    "switchCooldownDays": 30,
+    "institutionTeachersStay": true,
+    "teach": {
+      "minutes": 120,
+      "gain": 40,
+      "teacherMargin": 100,
+      "dailySessions": 1
+    },
+    "work": {
+      "successGain": 6,
+      "failureGain": 2,
+      "dailyGain": 12
+    },
+    "vocations": [
+      {
+        "id": "vocation_hw_mill_woodworker",
+        "name": "旧磨坊木作帮工",
+        "skill": "skill_life_6_core",
+        "minimumProficiency": 300,
+        "location": "bld_hw_mill",
+        "hours": [
+          480,
+          1020
+        ],
+        "activity": "在旧磨坊做木作",
+        "slotServices": [
+          "teach"
+        ],
+        "teaches": [
+          "skill_life_6_core",
+          "recipe_wooden_pegs"
+        ]
+      },
+      {
+        "id": "vocation_hw_qingdeng_cook",
+        "name": "青灯酒馆帮厨",
+        "skill": "skill_life_3_core",
+        "minimumProficiency": 300,
+        "location": "bld_hw_qingdeng",
+        "hours": [
+          420,
+          1260
+        ],
+        "activity": "在青灯酒馆后厨帮厨",
+        "slotServices": [
+          "trade"
+        ],
+        "teaches": [
+          "skill_life_3_core"
+        ]
+      },
+      {
+        "id": "vocation_bs_school_tutor",
+        "name": "东街学馆蒙学助教",
+        "skill": "skill_literacy",
+        "minimumProficiency": 300,
+        "location": "bld_bs_school",
+        "hours": [
+          480,
+          1020
+        ],
+        "activity": "在学馆教孩童识字",
+        "slotServices": [
+          "teach"
+        ],
+        "teaches": [
+          "skill_literacy"
+        ],
+        "restDays": [
+          10,
+          20,
+          30
+        ]
+      },
+      {
+        "id": "vocation_bs_hall_sparring",
+        "name": "量廊武馆陪练",
+        "skill": "skill_swordsman_combat_01",
+        "minimumProficiency": 300,
+        "location": "bld_bs_measured_hall",
+        "hours": [
+          540,
+          1020
+        ],
+        "activity": "在武馆陪人练量距步法",
+        "slotServices": [
+          "teach"
+        ],
+        "teaches": [
+          "skill_swordsman_combat_01"
+        ],
+        "restDays": [
+          10,
+          20,
+          30
+        ]
+      }
+    ]
   }
 }

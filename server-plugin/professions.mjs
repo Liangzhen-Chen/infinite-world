@@ -1,6 +1,7 @@
 import {checkPetCareer}from'./pets.mjs';
 import {assertNpcService}from'./npc-schedule.mjs';
 import {initiation,ritualOfficiate}from'./training.mjs';
+import {npcServices}from'./npc-state.mjs';
 const int=(value,min,max,label)=>{if(!Number.isSafeInteger(value)||value<min||value>max)throw new Error(`${label}不在允许范围`);return value;};
 export function effectiveProficiency(d,engine,skill){
     const value=d.get('state','skills',skill,'proficiency')??0;
@@ -18,7 +19,7 @@ export function careerEquipment(state){
 }
 function validMentor(d,engine,teacher,profession){
     const actor=d.get('state','npcs',teacher),definition=engine.byId.get(teacher);
-    if(!actor||actor.status==='死亡'||actor.location!==d.get('state','location')||!(definition.services??[]).includes(profession))throw new Error('认证导师不在场或无资格');
+    if(!actor||actor.status==='死亡'||actor.location!==d.get('state','location')||!npcServices(engine,d.get('state'),teacher).includes(profession))throw new Error('认证导师不在场或无资格');
     return definition;
 }
 export function profession(d,args,id){

@@ -14,3 +14,7 @@ export function actorPath(world,id){
     return id==='player'?['state','player']:['state',id?.startsWith('npc_')?'npcs':'creatures',id];
 }
 export function bossCognitionField(actor){return actor?.id?.startsWith('npc_')?'bossCognition':'cognition';}
+// A changed livelihood replaces the catalog schedule and teaching services in
+// campaign state; the authored catalog stays untouched for other campaigns.
+export function npcSchedule(engine,state,id){return state?.npcs?.[id]?.vocation?.schedule??engine.byId.get(id)?.schedule;}
+export function npcServices(engine,state,id){return state?.npcs?.[id]?.vocation?.services??engine.byId.get(id)?.services??[];}
