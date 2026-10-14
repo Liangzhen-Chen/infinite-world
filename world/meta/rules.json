@@ -3683,5 +3683,76 @@
         ]
       }
     ]
+  },
+  "npcLife": {
+    "adultAge": 18,
+    "kinTypes": [
+      "配偶",
+      "子女",
+      "女儿",
+      "儿子",
+      "母亲",
+      "父亲",
+      "姐弟",
+      "父女",
+      "姐姐",
+      "妹妹",
+      "兄长",
+      "弟弟",
+      "孙女",
+      "孙子",
+      "孙辈",
+      "外孙",
+      "外孙女",
+      "外甥",
+      "外甥女",
+      "外祖父",
+      "儿媳",
+      "女婿",
+      "岳父",
+      "同户小辈",
+      "同户长者",
+      "同户晚辈"
+    ],
+    "courtship": {
+      "minimumTrust": 50,
+      "minimumAffection": 50,
+      "days": 90,
+      "marriageChancePerDay": 0.02
+    },
+    "marriageRelation": {
+      "trust": 3,
+      "affection": 5,
+      "romance": 30
+    },
+    "birth": {
+      "minimumTrust": 30,
+      "minimumAffection": 40,
+      "motherAge": [
+        18,
+        40
+      ],
+      "conceptionChancePerDay": 0.0006,
+      "gestationDays": 270,
+      "spacingDays": 540,
+      "givenNames": [
+        "禾",
+        "苗",
+        "安",
+        "宁",
+        "青",
+        "川",
+        "岚",
+        "松",
+        "桐",
+        "溪",
+        "穗",
+        "晴",
+        "石",
+        "芽",
+        "灯",
+        "雁"
+      ]
+    }
   }
 }
