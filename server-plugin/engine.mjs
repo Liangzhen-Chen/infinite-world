@@ -36,6 +36,7 @@ import {initializeFactionClocks,advanceFactionClocks,nextFactionClockMinute,fact
 import {advanceFestivals,nextFestivalMinute,festivalCalendar,validateFestivalRuntime}from'./festival.mjs';
 import {advanceWildlife,wildlifePriceFactor,nextWildlifeEncounterMinute,wildlifeEncounterAt,settleWildlifeEncounter,wildlifeEncounterView}from'./wildlife.mjs';
 import {wildlifeAwakeningConsumer}from'./wildlife-awakening.mjs';
+import {spiritSocietyConsumer,moveSpiritCompanions}from'./wildlife-society.mjs';
 import {advanceBosses}from'./bosses.mjs';
 import {sceneCard}from'./scene-card.mjs';
 import {stateNotices}from'./state-notices.mjs';
@@ -78,7 +79,7 @@ export class WorldEngine {
         this.byId = this.resolver.entities;
         const festivalErrors=validateFestivalRuntime(world);if(festivalErrors.length)throw Error(festivalErrors.join('；'));
         if((this.rules.engineRevision??1)===1)this.compat=new Phase1Engine(world);
-        this.factionEffectConsumers={society_news:societyNewsConsumer};this.wildlifeAwakening=wildlifeAwakeningConsumer;
+        this.factionEffectConsumers={society_news:societyNewsConsumer,spirit_society:spiritSocietyConsumer};this.wildlifeAwakening=wildlifeAwakeningConsumer;
     }
     resolve(name, kind, scope) {
         if(!kind||kind==='npc'){
@@ -416,7 +417,7 @@ export class WorldEngine {
             d.set(['state','npcs',npc,'location'],destination);
             if(d.get('state','records',`local_actor_position:${npc}`))d.remove(['state','records',`local_actor_position:${npc}`]);
         }
-        movePets(d,this,old,destination,route.movingMinutes);
+        movePets(d,this,old,destination,route.movingMinutes);moveSpiritCompanions(d,old,destination);
         for(const[key,effect]of Object.entries(d.get('state','effects')))if(effect.kind==='summon'&&effect.owner==='player'&&effect.location===old)d.set(['state','effects',key,'location'],destination);
         this.npcObligationAction.arrivalMinute=d.get('state','minute')+route.minutes;
         const areaTravel=Object.values(d.get('state','effects')??{}).some(e=>e.kind==='area');

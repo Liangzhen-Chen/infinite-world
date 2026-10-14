@@ -2534,7 +2534,35 @@
       "可交谈、互助",
       "不受命令驱使",
       "不可买卖、骑乘或作为任何人的财物"
-    ]
+    ],
+    "talkMinutes": 10,
+    "borrowForm": {
+      "sessions": 3,
+      "acquireMinutes": 120,
+      "acquireItems": [
+        {
+          "item": "item_herb",
+          "amount": 3
+        }
+      ],
+      "useMinutes": 30,
+      "useItems": [
+        {
+          "item": "item_herb",
+          "amount": 1
+        }
+      ],
+      "durationMinutes": 360,
+      "forms": [
+        "人形"
+      ]
+    },
+    "society": {
+      "periodDays": 90,
+      "minimumMembers": 2,
+      "foragePerMember": 5,
+      "homes": []
+    }
   },
   "bossEcology": {
     "version": 1,

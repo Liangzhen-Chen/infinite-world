@@ -4,6 +4,7 @@ import {produceItems,wearItem,heldUnit}from'./items.mjs';
 import {milestone}from'./progression.mjs';
 import {prepareThermalWorkstation}from'./magic-object.mjs';
 import {createHash}from'node:crypto';
+import {spiritManufacture}from'./wildlife-society.mjs';
 const integer=(value,min,max,label)=>{if(!Number.isSafeInteger(value)||value<min||value>max)throw new Error(`${label}无效`);return value;};
 export function registerRecipe(d,engine,data,project,maximumStage){
     if(!data||typeof data!=='object')throw new Error('配方数据无效');
@@ -69,6 +70,7 @@ export function workstation(d,engine,recipe,args){
     return{...station,fee,...(thermalPlan?{thermalPlan}:{})};
 }
 export function manufacture(d,args,eventId){
+    if(args.maker!==undefined)return spiritManufacture.call(this,d,args,eventId,{workstation,kilnWorkResult});
     const recipe=this.byId.get(this.resolve(args.recipe,'recipe'));
     if(recipe.learningRequired&&!d.get('state','recipes',recipe.id))throw new Error('尚未学会这个配方');
     if(!d.get('state','skills',recipe.skill))throw new Error('尚未掌握该配方所需技能');

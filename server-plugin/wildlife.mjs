@@ -5,7 +5,7 @@ import {canonical} from './storage.mjs';
 import {speciesInHabitat} from './wildlife-range.mjs';
 import {reservedMigrationCapacity,advanceSeasonalMigration} from './seasonal-migration.mjs';
 import {crossPredatorFed,advanceFarmPredation} from './farm-pests.mjs';
-import {sapient,advanceWildlifeAwakening,awakeningAction,awakeningView,validateWildlifeAwakening} from './wildlife-awakening.mjs';
+import {sapient,advanceWildlifeAwakening,awakeningAction,awakeningOperations,awakeningView,validateWildlifeAwakening} from './wildlife-awakening.mjs';
 const clone=v=>structuredClone(v),path=h=>['state','records',`ecology:${h}`];
 const alive=a=>a&&a.status!=='死亡'&&a.hp>0;
 // T160 owns identity changes. Clocks pass an existing individual and a stable
@@ -183,7 +183,7 @@ const mindOf=(engine,d,id,a)=>{const mind=awakeningView(engine,d.document.random
 export function wildlifeAction(d,args,eventId){
     if(!this.rules.wildlife)throw new Error('当前世界没有启用野外生态');
     const operation=args.operation??'observe';
-    if(['nurture','enlighten','pact'].includes(operation))return awakeningAction.call(this,d,args,eventId,resolveCreature(this,d,args.target));
+    if(awakeningOperations.includes(operation))return awakeningAction.call(this,d,args,eventId,resolveCreature(this,d,args.target));
     const habitat=this.rules.wildlife.habitats.find(h=>h.location===d.get('state','location'));
     if(!habitat)throw new Error('这里没有登记可接触的野外栖地');
     if(operation==='observe')return{habitat:habitat.name,animals:Object.entries(d.get('state','creatures')??{}).filter(([,a])=>a.location===habitat.location).map(([id,a])=>({id,name:a.name,status:a.status,hp:a.hp,owner:a.owner??null,...mindOf(this,d,id,a),
