@@ -1,7 +1,7 @@
 import {deriveWorldEvents,eventRumorId}from'./world-events.mjs';
 import {npcCognitionView}from'./npc-cognition.mjs';
 import {scheduleAt,npcAvailability}from'./npc-schedule.mjs';
-import {MemoryIndex}from'./retrieval.mjs';
+import {MemoryIndex,engineIndexOptions}from'./retrieval.mjs';
 import {npcRumors}from'./npc-rumors.mjs';
 import {npcOpinions}from'./public-opinion.mjs';
 import {npcLifeNews}from'./npc-life.mjs';
@@ -111,7 +111,7 @@ export function recordNpcMemories(d,engine,before,events,...rest){
 
 export function selectNpcSeedMemories(engine,document,id,query=''){
     const base=engine.byId.get(id);if(base?.tier!=='full')return [];
-    const seeds=base.memorySeeds.filter(row=>row.knownBy?.includes(id)),index=new MemoryIndex({entities:engine.entities});
+    const seeds=base.memorySeeds.filter(row=>row.knownBy?.includes(id)),index=new MemoryIndex(engineIndexOptions(engine));
     for(const row of seeds)index.upsert({id:row.id,text:row.event,entities:row.knownBy.filter(other=>other!==id),salience:row.salience,minute:0});
     const near=present(document.state).filter(other=>other!==id);
     const relevant=index.search(query,{present:near,limit:2}).map(row=>row.id);
@@ -122,7 +122,7 @@ export function npcContext(engine,document,id,query=''){
     const base=engine.byId.get(id),npc=document.state.npcs[id];if(base?.tier!=='full'||!npc)return null;
     const cognition=npcCognitionView(engine,document,id);
     const memories=cognition.memories.filter(row=>row.participants?.includes('player'));
-    const index=new MemoryIndex({entities:engine.entities});
+    const index=new MemoryIndex(engineIndexOptions(engine));
     for(const memory of memories){
         const items=(memory.entities??[]).map(value=>engine.byId.get(value)).filter(row=>row?.id.startsWith('item_'));
         const keywords=items.length?['购买 买过 买的 货物 交易',...items.flatMap(row=>[row.name,...row.aliases??[],row.use??''])]:[];

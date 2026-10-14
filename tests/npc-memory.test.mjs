@@ -144,8 +144,10 @@ test('人物私有流不经全局读取泄漏；场景区分本人往事、台�
     base.secrets.push({content:secret,knownBy:[merchant]});
     c.state.npcs[teacher].memoryStream=[{id:'remote',participants:['player',teacher],content:secret,salience:5,minute:540}];
     c.state.npcs[teacher].location='bld_hw_school';
-    const view=readStateSection(c.state,'人物');
-    assert.equal(view[merchant].memoryStream,undefined);assert.doesNotMatch(JSON.stringify(view),new RegExp(secret));
+    // 人物增多后整栏超过单次读取上限会改为提示按npc定位；整栏与定位读取都不得泄漏私有流。
+    const all=readStateSection(c.state,'人物'),view=readStateSection(c.state,'人物',merchant),remote=readStateSection(c.state,'人物',teacher);
+    assert.equal(view[merchant].memoryStream,undefined);assert.equal(remote[teacher].memoryStream,undefined);
+    for(const row of [all,view,remote])assert.doesNotMatch(JSON.stringify(row),new RegExp(secret));
     const card=engine.scene(c,'林穗');
     assert.match(card,/涉及你的经历：.*面包1份/);assert.match(card,/台词范例，非既往经历/);
     assert.match(card,/本人旧事，不代表玩家参与/);assert.doesNotMatch(card,new RegExp(secret));

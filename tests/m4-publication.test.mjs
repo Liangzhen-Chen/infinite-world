@@ -60,6 +60,10 @@ test('旧档升级逐键保留钱物，只加从未登记的新书，耗尽零�
  const spent=structuredClone(after);spent.state.npcs.npc_hw_yanzhe.inventory.item_book_m4_guard=0;const repeat=planWorldUpgrade(spent,incoming,incoming,{worldHash:'m4-edition',eventId:'m4-repeat'});assert.equal(repeat.patches.some(p=>p.path[0]==='state'&&p.path[1]==='npcs'),false);assert.deepEqual(applyPatches(spent,repeat.patches).state.npcs,spent.state.npcs);
  assert.equal(plan.result.stockAdded.length,8);assert.deepEqual(repeat.result.stockAdded,[]);
  // Later boss batches remain installed while this batch adds its own four lairs.
- assert.deepEqual(Object.values(after.state.records).filter(r=>r.category==='lair'&&r.occupant?.kind==='boss').map(r=>r.occupant.definition).sort(),world.bosses.map(b=>b.id).sort());
+ // 以居民身体出现的社会首领（T157/T159）只在本人位于座位时算驻守，开局可能外出而空置；巢穴记录仍须齐全。
+ const lairs=Object.values(after.state.records).filter(r=>r.category==='lair');
+ assert.deepEqual(lairs.map(r=>r.boss).sort(),world.bosses.map(b=>b.id).sort());
+ assert.deepEqual(lairs.filter(r=>r.occupant?.kind==='boss').map(r=>r.occupant.definition).sort(),world.bosses.filter(b=>!b.actor||lairs.find(r=>r.boss===b.id).occupant).map(b=>b.id).sort());
+ assert.ok(world.bosses.filter(b=>!b.actor).every(b=>lairs.find(r=>r.boss===b.id).occupant?.definition===b.id));
  assert.deepEqual(after.state.creatures,saved.state.creatures);
 });

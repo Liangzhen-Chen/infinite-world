@@ -19,7 +19,8 @@ async function api(t,root,world){
 }
 test('W5正式内容经world_upgrade进入旧战役检索，保持钱袋与NPC个人记忆',async t=>{
  const root=await fs.mkdtemp(path.join(os.tmpdir(),'w5-upgrade-'));t.after(()=>fs.rm(root,{recursive:true,force:true}));
- const published=await loadWorld();assert.equal(published.cultures.length,10);assert.equal(published.deities.length,12);
+ // T157两座怪物聚居地另登记culture_ms_*，W5本批仍为10种文化。
+ const published=await loadWorld();assert.equal(published.cultures.filter(c=>!c.id.startsWith('culture_ms_')).length,10);assert.equal(published.deities.length,12);
  const original=structuredClone(published);delete original.cultures;delete original.deities;
  const beforeApi=await api(t,root,original),created=await beforeApi('/create',{}),campaignId=created.reference.campaignId;
  const before=await beforeApi('/read',{campaignId});
@@ -29,10 +30,12 @@ test('W5正式内容经world_upgrade进入旧战役检索，保持钱袋与NPC�
  assert.deepEqual(after.document.memories,before.document.memories);
  const oldActors=before.document.state.npcs;assert.equal(Object.keys(oldActors).length,18);
  for(const [id,actor]of Object.entries(oldActors))assert.deepEqual(after.document.state.npcs[id],actor,id);
- // All five village batches are now published: 152 full actors, 18 legacy.
- const added=published.npcs.filter(row=>!Object.hasOwn(oldActors,row.id));assert.equal(added.length,134);
+ // 五村批次与白石镇升档后正式目录为251个full，旧战役18人；新增数按正式目录核对而不写死。
+ const added=published.npcs.filter(row=>!Object.hasOwn(oldActors,row.id));assert.equal(added.length,published.npcs.length-18);assert.ok(added.length>0);
  assert.deepEqual(Object.keys(after.document.state.npcs).sort(),published.npcs.map(row=>row.id).sort());
- for(const row of added)assert.deepEqual(after.document.state.npcs[row.id],{id:row.id,name:row.name,location:row.location,coins:row.coins??0,inventory:row.inventory??{},trust:row.trust??0,affection:row.affection??0,developments:[],relationships:{}},row.id);
+ // T157怪物聚居地居民（含以居民身体出现的智能首领）升级时另带种族、聚居地与首领运行字段；基础字段仍须与登记一致。
+ const bossActors=new Set((published.bosses??[]).map(b=>b.actor).filter(Boolean)),base=(id,actor)=>bossActors.has(id)||published.npcs.find(n=>n.id===id)?.society?Object.fromEntries(['id','name','location','coins','inventory','trust','affection','developments','relationships'].map(k=>[k,actor[k]])):actor;
+ for(const row of added)assert.deepEqual(base(row.id,after.document.state.npcs[row.id]),{id:row.id,name:row.name,location:row.location,coins:row.coins??0,inventory:row.inventory??{},trust:row.trust??0,affection:row.affection??0,developments:[],relationships:{}},row.id);
  for(const row of [...published.residents,...published.factionPeople])assert.equal(after.document.state.npcs[row.id],undefined,row.id);
  const faith=await afterApi('/search',{campaignId,query:'葭界 阵界'});
  assert.ok(faith.results.some(row=>row.id==='lore_deity_bank'&&row.text.includes('不能凭符纸创造河水')));
@@ -42,6 +45,6 @@ test('W5正式内容经world_upgrade进入旧战役检索，保持钱袋与NPC�
  const bundle=await afterApi('/export',{campaignId});
  assert.ok(Object.values(bundle.worlds).some(world=>world.deities?.some(row=>row.id==='deity_bank')));
  const retained=compatibleWorld(published,original);
- assert.equal(retained.world.cultures.length,10);assert.equal(retained.world.deities.length,12);
+ assert.equal(retained.world.cultures.filter(c=>!c.id.startsWith('culture_ms_')).length,10);assert.equal(retained.world.deities.length,12);
  assert.ok(retained.retained.some(row=>row.id==='deity_bank'));
 });

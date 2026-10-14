@@ -57,7 +57,8 @@ test('25个工具入口；合并操作保留真实执行、幂等与回滚，原
 });
 
 test('旧目录未启用首领时，新旧观察入口均拒绝且不改变存档',async t=>{
-    const world=await loadWorld();world.bosses=[];delete world.rules.bossEcology;
+    // 旧目录没有首领，也就没有T157以智能首领为首的怪物聚居地。
+    const world=await loadWorld();world.bosses=[];delete world.rules.bossEcology;for(const place of world.locations)delete place.monsterSociety;
     const engine=new WorldEngine(world),server=await createPlaytestServer();t.after(()=>server.close());
     const {document}=await server.api('create',{character:{name:'旧目录测试者'}});document.state.location='loc_hw_northwood';
     const before=structuredClone(document);

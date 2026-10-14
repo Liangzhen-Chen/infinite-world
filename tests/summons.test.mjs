@@ -101,7 +101,8 @@ test('多个召唤共享魔力按时间和编号稳定结算，分段等待与�
 test('召唤名额、假目标和法术契约越界保持存档不变，失去维持能力即时结束', async () => {
     const { world, document, spell, run } = await setup();
     await assert.rejects(run(document, 'world_cast', { spell: spell.id, target: 'npc_hw_linsui' }, 'remote_spawn'), /当前位置/);
-    const bad = structuredClone(world); bad.spells.at(-1).effectSpec.power = 251; assert.equal(validateWorld(bad).ok, false);
+    // 按ID核对：法术目录每批追加后末项会变，召唤法术已在正式目录时不会被追加到末尾。
+    const bad = structuredClone(world); bad.spells.find(row => row.id === spell.id).effectSpec.power = 251; assert.equal(validateWorld(bad).ok, false);
     const first = await sample(run, document, spell, true);
     const capped = structuredClone(first.document);
     for (let i = 0; i < 2; i++) capped.state.effects[`test_${i}`] = { ...capped.state.effects[first.eventId] };
