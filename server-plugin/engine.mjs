@@ -38,6 +38,7 @@ import {wildlifeAwakeningConsumer}from'./wildlife-awakening.mjs';
 import {spiritSocietyConsumer,moveSpiritCompanions}from'./wildlife-society.mjs';
 import {sceneCard}from'./scene-card.mjs';
 import {stateNotices}from'./state-notices.mjs';
+import {recordReturnVisit}from'./return-summary.mjs';
 import {assertNpcService}from'./npc-schedule.mjs';
 import {npcAutonomyBusy,assertNpcAutonomyAction,applyNpcPlan}from'./npc-autonomy.mjs';
 import {recordNpcMemories}from'./npc-memory.mjs';
@@ -185,6 +186,8 @@ export class WorldEngine {
         settleMagicAreas(d,session);
         const detail = await session[tool](d,args,id);
         if(document.state.location!==d.get('state','location')&&d.get('state','records','site_presence'))d.remove(['state','records','site_presence']);
+        // 返场：记下离开各地的时间，久别回来时汇总当地变化。
+        if(document.state.location!==d.get('state','location'))recordReturnVisit(d,session,document.state,id);
         // Entering an unexpanded district or lair settles its seeded roster once.
         // Older ledger events replay without it, exactly as they were recorded.
         const population=document.state.location!==d.get('state','location')&&(!options.replay||options.result?.population)?unfoldPopulationAt(d,session,d.get('state','location')):null;
