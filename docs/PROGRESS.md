@@ -271,3 +271,5 @@ M2修复批审定写入PLAN（T61–T64）：Astra草案F4工具机会标注并�
 - 2026-10-14 K6 已合入：effects.mjs 统一效果表，world-clock、faction-clock、festival、季节共用；效果类型：报价、开灵、野物躁动、野物迁移、传闻（K5）、立场（K4）、环境（K2冻水、干料）及势力专有的关系、争端、贸易。数据：炭阶地宫时钟定居阶段引西郊废窑野物躁动、粮道传闻、白石镇立场+5；冬季河湾渡口静水冻30日，旱季白石道观与祠干料。旧时钟结果逐字节不变，提示增量0。合后CORE等54项过、发布构建通过。底座K1–K7全部合入。
 
 - 2026-10-14 U5 已合入：bounty.mjs——逾期未到案、脱逃、逃债、受贿事发生成通缉（发布村加四协查村，文书沿路线延迟，后成公开记忆）；守卫扣押、平民报官、受贿者装不认得；猎人与赏金行会离屏追捕；玩家接赏、arrest缉拿押送、complete交付、confess自首；world_law加bribe（按廉洁度与立场定价，被看破另成罪名并悬赏受贿者）。五村法典正文未动，参数在 rules.law。提示11825（+2）。合后CORE等59项过。未解决：在押NPC日程不受限；NPC间犯罪无来源。
+
+- 2026-10-14 K9 已合入：tools/system-map.mjs 从代码导出系统地图（6层37系统、32推进项、25工具、12事件动词、8订阅者、24交互规则、11效果、320连线、16类内容查表），docs/system-map.html 已发布给用户（https://claude.ai/artifact/JgMkFvD9EDyiVdwB8u39Zj）。合并后补收 bounty.mjs 并重生成。仍需手动接线：新栖地登记 rules.wildlife.habitats（待K8）、聚落与势力成员登记声望表、新法术 effectSpec.kind 需改 magic.mjs、世界事件订阅者无注册入口、新工具需改三处。注：K9 子代理预览后用 taskkill /IM python.exe 结束了本机全部 python 进程。
