@@ -60,7 +60,7 @@ review-002-yp=782a49e阶段审核通过，范围限T06正式发布与c64163d修�
 - K3 已完成。原文：新 world-events.mjs，engine.mjs:178 处每次工具结算生成一次 `{verb,actor,target,harm/gift,witnesses,location,tags}`；npc-memory、npc-relations、monster-society、wildlife-society、boss-cognition 改为按 verb/标签订阅，不再按工具名。验收：CORE + 上述五系统测试。规模M-L。
 - K4 已完成。原文：新 standing.mjs，`standing(holder,target)` 归一到 -100..100，加“成员→势力/族群/聚居地”传导；7个旧存储保留，统一读写入口；public-opinion、reputation、faction-clock、scene-card、quest-board 改读它。依赖K3。验收：CORE + public-opinion/reputation-law/faction-clock/npc-relations/prompt。规模M。
 - K5 已完成。原文：有目击且分量够的世界事件自动成为可传播传闻（不再只传作者预登记的ID）；private/secret 记忆与未成年保护不得成为传闻。依赖K3、K4。验收：CORE + rumor-route/village-rumor-access/npc-memory/public-opinion/monster-society。规模M。
-- K6 统一效果表：新 effects.mjs，合并 world-clock 封闭效果集与 faction-clock 效果消费者；势力时钟可触发野物躁动、传闻、立场变化，季节可冻河。依赖K2、K4。验收：CORE + world-clock/faction-clock/wildlife-awakening/festival/wildlife-society。规模S-M。
+- K6 已完成。原文：新 effects.mjs，合并 world-clock 封闭效果集与 faction-clock 效果消费者；势力时钟可触发野物躁动、传闻、立场变化，季节可冻河。依赖K2、K4。验收：CORE + world-clock/faction-clock/wildlife-awakening/festival/wildlife-society。规模S-M。
 - K7 已完成（推进注册表28系统，逐字节一致）。原文：engine.mjs:254、:265-310 手工列的约25个 advance* 改为注册表，新系统自动参与休息和赶路结算。验收：CORE + world-clock/faction-clock/performance。规模S。
 - K8 按地形产生栖地（最后做，需存档迁移）：新地点按地形标签自动出现生物。验收：CORE + wildlife/w4-wildlife/wildlife-encounters。规模L。
 
