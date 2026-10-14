@@ -638,7 +638,7 @@ C部分只拆缺口：governance.mjs的任职入口止于“待上级决定”�
 结果：玩家在场景和人物面板里能看到NPC的婚姻、子女、病痛、搬迁；日常的善意往来（帮忙、送礼、共同干活、节日同席）能实际提高好感，使成婚在正常游玩中可能发生；名册人物配偶在需要时经按需人口生成补足为有状态的人物；孩子进入人口与作息（不进入恋爱与亲密情节）。
 可改：server-plugin/{npc-life,npc-relations,scene-card,npc-memory,population,npc-state}.mjs及extension/people-history.mjs的展示接点、对应测试。验收：`node --test "tests/npc-*.test.mjs" "tests/population*.test.mjs" tests/public-opinion.test.mjs tests/m6-04.test.mjs`、CORE、发布构建。模型0。
 
-### T131（C9） 生病、衰老与自然死亡。结果：NPC按年龄、健康和种子概率发生人生变化，服务及义务按真实失能状态处理。可改npc-life.mjs、npc-state/npc-obligations/engine接点、world/meta/rules.json、docs/决策.md参数段、tests/npc-life-health.test.mjs；接C8，复用已有死亡结算，不重置旧伤病。验收node --test "tests/npc-*.test.mjs" tests/activities.test.mjs，CORE；跨年长短步、照护和死亡后履约均覆盖。模型0；约2小时，与C10串行。
+### T131（C9）已完成：NPC按年龄每晚判定生病与猝亡，重病由同户成年人照护（照护者整天在家、不提供服务），病故或寿终后结算约定（记为取消，不判违约）、遗产（依次给配偶、子女、同户成年人；债务只列入遗产记录）和人口账，消息只经目击和日常交谈传播；参数在npcLife.health。新增7项、CORE40、发布构建ok，0模型。遗留（并入T164）：名册人物和战役出生的孩子无独立状态，不会生病或死亡；跟在玩家身边的人物不在离屏结算里生病或死亡。
 
 ### T132（C10） 迁入迁出与人生消息。结果：NPC有原因地迁居，实际走路线，住户、工作与未履约事项在抵达后更新，玩家回来能听到变化。可改npc-life.mjs、npc-schedule/npc-cognition/civic接点、tests/npc-life-migration.test.mjs；接C9和B10，搬家不复制财产或新增同名人物。验收node --test "tests/npc-*.test.mjs" tests/civic.test.mjs ，CORE。模型0；约2小时，与认知/日程写者串行。
 
