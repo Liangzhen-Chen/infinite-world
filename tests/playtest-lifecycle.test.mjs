@@ -23,7 +23,8 @@ test('魔力边界会话前置可达：十次真实施法、超额拒绝、休�
 });
 
 test('零级实战与死亡会话前置可达：实际追踪、濒死、死亡、出生点复活和撤销',async t=>{
-    const c=await campaign(t,'new','lifecycle-r1');
+    // 交锋骰随战役状态而定；T102扩充目录后原种子lifecycle-r1让零级玩家先打死野猪，换用仍会走到濒死—死亡的种子。
+    const c=await campaign(t,'new','lifecycle-r3');
     await c.act('world_move',{destination:'北林边'},'prepare');
     await c.act('world_time',{until:{dayOffset:0,hour:20},activity:'等待'},'prepare');
     let found;
