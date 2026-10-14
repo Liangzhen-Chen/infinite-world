@@ -3,6 +3,9 @@ import {localWeather} from './weather.mjs';
 import {areaTargetFacts} from './magic-area.mjs';
 import {normalize} from './retrieval.mjs';
 import {advanceAirMinute}from'./magic-air.mjs';
+import {precipitationAt} from './weather.mjs';
+import {featureTraits} from './traits.mjs';
+import {resolveInteraction,applyInteraction,assertLiquidWater} from './interactions.mjs';
 
 const ops=new Set(['ignite','extinguish','heat','cool','dry','sense_heat','fuel','forge_heat','craft_heat']);
 const integer=(n,min,max,label)=>{if(!Number.isSafeInteger(n)||n<min||n>max)throw new Error(`${label}无效`);return n;};
@@ -129,6 +132,10 @@ function read(d,row){
  state.thermal=advanceThermalState(thermal,row.thermalModel,d.get('state','minute'),{effects:Object.values(d.get('state','effects')??{}),target:row.id});return state;
 }
 function store(d,row,state){d.set(['state','records',recordKey(row.id)],{id:row.id,category:'physical_feature',location:row.location,state});}
+// Thermal read/write for the interaction executor (interactions.mjs).
+export const readObjectState=read;
+export function storeObjectState(d,row,state){validateThermalState(state.thermal,row.thermalModel);store(d,row,state);}
+const ignites=(d,row,state)=>resolveInteraction('fire',featureTraits(row,state,d.get('state','minute'))).add.includes('burning');
 function access(d,row,args,range){
  if(row.location!==d.get('state','location'))throw new Error('物件不在所在地');
  const position=d.get('state','records','local_player_position'),point=position?.location===row.location?position.point:[0,0];
@@ -146,7 +153,7 @@ export function prepareObjectMagic(d,catalog,args){
  if(['forge_heat','craft_heat'].includes(spec.operation)&&!localSightClear(d,this,row.location,localPlayerPoint(d),row.position))throw new Error('炉火调温缺少无遮挡视线');
  const state=read(d,row),s=state.thermal,m=row.thermalModel;
  if(spec.limitC>m.maximumC&&!['forge_heat','craft_heat'].includes(spec.operation))throw new Error('法术温度上限超过目标材料耐热边界');
- if(spec.operation==='ignite'&&(!m.ignitable||s.moistureMg>0||s.fuelMg<1||s.fuelMg>Math.min(spec.power,m.ignitionMaximumMg)||s.burning))throw new Error('只能点燃未燃、干燥且有限量的真实火绒');
+ if(spec.operation==='ignite'&&(!ignites(d,row,state)||s.fuelMg<1||s.fuelMg>Math.min(spec.power,m.ignitionMaximumMg)))throw new Error('只能点燃未燃、干燥且有限量的真实火绒');
  if(spec.operation==='extinguish'&&!s.burning)throw new Error('目标没有实际燃烧');
  if(spec.operation==='fuel'&&!s.burning)throw new Error('节燃必须作用于现有燃烧');
  if(['forge_heat','craft_heat'].includes(spec.operation)&&(!s.burning||!s.fuelMg))throw new Error('炉火调温必须作用于仍有燃料的实际燃烧');
@@ -154,6 +161,25 @@ export function prepareObjectMagic(d,catalog,args){
  if(spec.surface&&!s.zoneOffsetsC)throw new Error('目标未登记器壁空间温差');
  if(spec.operation==='dry'&&(!m.dryable||!s.moistureMg||s.energyJ<=spec.limitC*m.heatCapacityJPerC))throw new Error('目标不适合干燥或缺少水分、蒸发所需热量');
  return{target:row.id,catalog,spec,objectArgs:{...args,target:row.id}};
+}
+// Damage spells aimed at a place feature act through the interaction table:
+// fire ignites dry tinder or thaws ice, cold freezes standing water.
+export function prepareElementObject(d,catalog,args){
+ const spec=catalog.effectSpec,location=d.get('state','location');
+ const row=environmentFeatures(this).find(f=>f.id===args.target&&f.location===location);if(!row)throw new Error('元素法术目标必须是所在地登记物件');
+ access(d,row,args,catalog.rangeMeters??3);
+ if(catalog.targeting?.lineOfSight&&!localSightClear(d,this,row.location,localPlayerPoint(d),row.position))throw new Error('元素法术缺少无遮挡视线');
+ const state=row.thermalModel?read(d,row):clone(d.get('state','records',recordKey(row.id))?.state??row.state);
+ const outcome=resolveInteraction(spec.damageType,featureTraits(row,state,d.get('state','minute')));
+ const s=state.thermal,ignite=outcome.add.includes('burning')&&s&&s.fuelMg>=1&&s.fuelMg<=row.thermalModel.ignitionMaximumMg;
+ const lasting=outcome.add.some(t=>t!=='burning')&&!row.thermalModel||outcome.remove.length;
+ if(!ignite&&!lasting)throw new Error('此元素对该物件没有可成立的作用');
+ return{target:row.id,spec,catalog,elementObject:true,elementArgs:{...args}};
+}
+export function applyElementObject(d,prepared){
+ let p;try{p=prepareElementObject.call(this,d,prepared.catalog,prepared.elementArgs);}catch(error){return{target:prepared.target,effectFailed:error.message};}
+ const r=applyInteraction(d,this,{agent:p.spec.damageType,target:p.target});
+ return{target:p.target,element:r.agent,added:r.added,removed:r.removed,rules:r.rules};
 }
 export function applyObjectMagic(d,prepared,eventId){
  let valid;try{valid=prepareObjectMagic.call(this,d,prepared.catalog,prepared.objectArgs);}catch(error){return{target:prepared.target,effectFailed:error.message};}
@@ -166,9 +192,13 @@ export function applyObjectMagic(d,prepared,eventId){
   return{target:row.id,temperatureC,temperaturesC,gradientC:Math.max(...temperaturesC)-Math.min(...temperaturesC),charcoalTrace:true};
  }
  let result={};
- if(operation==='ignite'){s.burning=true;result={ignited:true,fuelMg:s.fuelMg};}
- else if(operation==='extinguish'){s.burning=false;s.burnRemainder=0;result={extinguished:true,stillHot:s.energyJ>m.ambientC*m.heatCapacityJPerC};}
- else if(operation==='heat'){const input=Math.min(power,Math.max(0,limitC*m.heatCapacityJPerC-s.energyJ));s.energyJ+=input;s.spellInputJ+=input;result={heatInputJ:input,source:'本次已支付魔力'};}
+ if(operation==='ignite'||operation==='extinguish'){
+  // Element change goes through the interaction table: fire ignites, water douses.
+  applyInteraction(d,this,{agent:operation==='ignite'?'fire':'water',target:row.id});
+  const t=read(d,row).thermal;
+  return{target:row.id,...(operation==='ignite'?{ignited:t.burning,fuelMg:t.fuelMg}:{extinguished:!t.burning,stillHot:t.energyJ>m.ambientC*m.heatCapacityJPerC}),temperatureC:t.energyJ/m.heatCapacityJPerC};
+ }
+ if(operation==='heat'){const input=Math.min(power,Math.max(0,limitC*m.heatCapacityJPerC-s.energyJ));s.energyJ+=input;s.spellInputJ+=input;result={heatInputJ:input,source:'本次已支付魔力'};}
  else if(operation==='cool'){const removed=Math.min(power,Math.max(0,s.energyJ-limitC*m.heatCapacityJPerC));s.energyJ-=removed;s.dissipatedJ+=removed;result={heatRemovedJ:removed,sink:'周边环境'};}
  else if(operation==='dry'){const removed=Math.min(power,s.moistureMg,Math.floor((s.energyJ-limitC*m.heatCapacityJPerC)/3));s.moistureMg-=removed;s.evaporatedMg+=removed;s.energyJ-=removed*3;s.evaporationJ+=removed*3;result={evaporatedMg:removed,heatUsedJ:removed*3};}
  else if(['fuel','forge_heat','craft_heat'].includes(operation)){
@@ -185,6 +215,8 @@ export function advanceMagicObjects(d,engine,afterMinute){
   const record=d.get('state','records',recordKey(row.id));if(!record?.state?.thermal)continue;
   if(record.category!=='physical_feature'||record.id!==row.id||record.location!==row.location)throw new Error('物件状态记录键冲突');
   const state=clone(record.state);state.thermal=advanceThermalState(state.thermal,row.thermalModel,afterMinute,{effects:Object.values(d.get('state','effects')??{}),target:row.id});store(d,row,state);
+  // Outdoor rain douses and wets a fire that is still burning at settlement.
+  if(state.thermal.burning&&precipitationAt(engine,d.get('randomSeed'),row.location,afterMinute)==='rain')applyInteraction(d,engine,{agent:'rain',target:row.id});
  }
 }
 export function addObjectFuel(d,engine,args,eventId){
@@ -300,9 +332,9 @@ export function prepareHeatMagic(d,catalog,args){
   roomState(d,row,d.get('state','minute'));
   if(d.get('state','player','mp')<spec.upkeepMp)throw new Error('缺少维持封焰的魔力');
  }else{
-  const end=row.fireLine?.end,s=read(d,row).thermal;
+  const end=row.fireLine?.end,state=read(d,row),s=state.thermal;
   if(!Array.isArray(end)||end.length!==2||end.some(x=>!Number.isFinite(x))||Math.abs(Math.hypot(end[0]-row.position[0],end[1]-row.position[1])-2)>1e-6)throw new Error('火线需要登记的两米地面路径');
-  if(!row.thermalModel.ignitable||s.moistureMg||s.burning||s.fuelMg<1||s.fuelMg>Math.min(spec.power,row.thermalModel.ignitionMaximumMg))throw new Error('火线需要有限、干燥且未燃的真实地面燃料');
+  if(!ignites(d,row,{...state,thermal:s})||s.fuelMg<1||s.fuelMg>Math.min(spec.power,row.thermalModel.ignitionMaximumMg))throw new Error('火线需要有限、干燥且未燃的真实地面燃料');
  }
  return{target:row.id,catalog,spec,heatArgs:{...args,target:row.id}};
 }
@@ -404,14 +436,15 @@ export function douseObjectFire(d,engine,args){
  const row=locate(engine,args.target,d.get('state','location'));access(d,row,args,3);
  const source=environmentFeatures(engine).find(x=>x.id===args.source);
  if(!source||!['water','container'].includes(source.kind))throw new Error('浇火需要真实水源');
- access(d,source,args,3);const water=rawFeatureState(d,source,d.get('state','minute')),ml=integer(args.millilitres,1,2000,'浇火水量');
+ access(d,source,args,3);assertLiquidWater(engine,d,source);const water=rawFeatureState(d,source,d.get('state','minute')),ml=integer(args.millilitres,1,2000,'浇火水量');
  if(!Number.isSafeInteger(water.waterMl)||water.waterMl<ml)throw new Error('浇火水量不足');
  const state=read(d,row),s=state.thermal;if(!s.burning)throw new Error('目标没有实际燃烧');
  // One millilitre wets at most one gram of the remaining registered fuel.
  if(ml*1000<s.fuelMg)throw new Error('水量不足以浇灭全部实际燃料');
- water.waterMl-=ml;s.moistureMg+=ml*1000;s.moistureAddedMg=(s.moistureAddedMg??0)+ml*1000;s.burning=false;s.burnRemainder=0;
- validateThermalState(s,row.thermalModel);store(d,row,state);store(d,source,water);
- return{target:row.id,extinguished:true,waterUsedMl:ml,stillHot:s.energyJ>row.thermalModel.ambientC*row.thermalModel.heatCapacityJPerC};
+ water.waterMl-=ml;store(d,source,water);
+ applyInteraction(d,engine,{agent:'water',target:row.id,moistureMg:ml*1000});
+ const t=read(d,row).thermal;
+ return{target:row.id,extinguished:!t.burning,waterUsedMl:ml,stillHot:t.energyJ>row.thermalModel.ambientC*row.thermalModel.heatCapacityJPerC};
 }
 function intersects(a,b,c,e){
  const cross=(p,q,r)=>(q[0]-p[0])*(r[1]-p[1])-(q[1]-p[1])*(r[0]-p[0]);

@@ -1,6 +1,7 @@
 import {societyOfActor} from './monster-society.mjs';
 import {standing,HOSTILE} from './standing.mjs';
 import {settlementAt} from './reputation.mjs';
+import {organizationsOf} from './organizations.mjs';
 
 // Public opinion is a projection, never a stored score. A person counts only
 // for the events present in their own memory stream (or, for a monster
@@ -85,6 +86,10 @@ export function opinionOf(engine,state,who,topic){
         if(!(faction.members??[]).includes(who))continue;
         const value=reputationOf(engine,state,topic.actor,faction.id);
         if(value)return pick(value,`所属${engine.byId.get(faction.id)?.name??faction.id}对行事者的声望`);
+    }
+    for(const org of organizationsOf(state,who)){
+        const value=standing(engine,state,org,topic.actor);
+        if(value)return pick(value,`所属${state.records[`organization:${org}`]?.name??engine.byId.get(org)?.name??org}对行事者的立场`);
     }
     const local=settlementAt(engine,state.npcs[who]?.location);
     const value=local?reputationOf(engine,state,topic.actor,local):0;

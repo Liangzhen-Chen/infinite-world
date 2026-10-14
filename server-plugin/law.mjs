@@ -28,7 +28,7 @@ function safeFund(d,id,category,extra={}){
 }
 function evidenceScore(d,row){
     const witnesses=new Set();let score=0;
-    let confessed=false,possessed=false;
+    let confessed=false,possessed=false,contracted=false;
     for(const evidence of row.evidence??[]){
         if(evidence.disproven||evidence.falseStatement||evidence.invalidatedAt!==undefined)continue;
         if(evidence.kind==='eyewitness'){
@@ -38,6 +38,8 @@ function evidenceScore(d,row){
             witnesses.add(evidence.witness);score++;
         }else if(evidence.kind==='confession'&&evidence.subject===row.offender&&!confessed){score+=2;confessed=true;}
         else if(evidence.kind==='possession'&&evidence.unit===row.stolen?.unit&&!possessed&&d.get('state','itemInstances',evidence.unit,'legalClaims')?.some(claim=>claim.case===row.id)){score++;possessed=true;}
+        // A signed loan the debtor left unpaid is documentary proof while the debt stands.
+        else if(evidence.kind==='contract'&&!contracted){const debt=d.get(...path(evidence.debt));if(debt?.category==='debt'&&debt.defaulted&&debt.status!=='已还清'){score+=2;contracted=true;}}
     }
     return score;
 }
@@ -64,6 +66,27 @@ function registerIncident(d,engine,{victim,offense,value=0,stolen=null,witnesses
         }
     }
     return id;
+}
+
+// A credit default (credit.mjs) is filed by the creditor under the code where the
+// contract was signed; the contract is the evidence. No code there, no case.
+export function registerCreditDefault(d,engine,{debt,row,value,minute}){
+    const code=codeFor(engine,row.location);if(!code)return null;
+    const id=`legal_case:default:${debt}`;if(d.get(...path(id)))return id;
+    const receiver=code.officers[0];
+    d.set(path(id),{category:'legal_case',id,law:code.id,procedureVersion:1,settlement:code.settlement??null,faction:code.faction??null,sourceEvent:row.source,witnesses:[],
+        offender:'player',victim:row.keeper??row.creditor,...(row.bank?{bank:row.bank}:{}),debt,offense:'debt_default',value,stolen:null,location:row.location,minute,
+        status:'已报案',reported:true,receiver,reportedAt:minute,evidence:[{kind:'contract',debt,minute}]});
+    if(d.get('state','npcs',receiver))knowledge(d,receiver,id,minute);
+    return id;
+}
+// Paying the debt itself settles the creditor's claim; a fine already judged stays.
+export function settleCreditCase(d,engine,id,eventId){
+    const row=d.get(...path(id));if(row?.category!=='legal_case'||!row.debt)return null;
+    const now=d.get('state','minute');
+    const next=['已报案','证据不足','待赔偿'].includes(row.status)?{...row,status:'已结案',compensationPaid:true,fineDischarged:row.status==='待赔偿'?row.fineDischarged:true,finePaid:row.finePaid??0,closed:now,settledBy:eventId}
+        :{...row,compensationPaid:true,compensationSettledBy:eventId};
+    d.set(path(id),next);return next;
 }
 
 export function crimeAction(d,args,eventId){
@@ -260,7 +283,7 @@ export function lawAction(d,args,eventId){
         const score=evidenceScore(d,row);this.advance(d,code.hearingMinutes,eventId);
         if(!awake(d.get('state','npcs',judge)))return{success:false,effectFailed:'审理完成前审判者无法履约'};
         if(score<code.evidenceRequired){d.set(path(row.id),{...row,status:'证据不足'});return{case:row.id,convicted:false,evidenceScore:score};}
-        const penalty=code.penalties[row.offense];if(!penalty)throw new Error('本案罪名没有判罚规则');
+        const penalty=code.penalties[row.offense]??(row.offense==='debt_default'?this.rules.economy?.credit?.loan?.defaultPenalty:undefined);if(!penalty)throw new Error('本案罪名没有判罚规则');
         const fine=penalty.baseFine+Math.ceil(row.value*penalty.valueMultiplier);
         const judgment={judge,minute:d.get('state','minute'),fine,compensation:row.value,evidenceScore:score,
             communityMinutes:Math.min(code.maximumSentenceMinutes,fine*code.communityMinutesPerCopper),prisonMinutes:Math.min(code.maximumSentenceMinutes,fine*code.prisonMinutesPerCopper)};
@@ -275,7 +298,9 @@ export function lawAction(d,args,eventId){
     if(operation==='pay'||operation==='compensate'){
         authority(d,this,code,args.authority,'officer');if(d.get('state','location')!==code.court)throw new Error('判罚资金与返还物须在登记法院交存');
         if(operation==='pay'&&row.status!=='已裁定'||operation==='compensate'&&row.status!=='待赔偿')throw new Error('当前案件状态不能重复缴纳或改变判罚');
-        const payment=deposit(d,this,row,{fine:operation==='pay'?row.judgment.fine:0});
+        const payment=deposit(d,this,row,{fine:operation==='pay'?row.judgment.fine:0,compensate:!(row.debt&&row.compensationPaid)});
+        const owed=row.debt&&payment.compensation?d.get(...path(row.debt)):null;
+        if(owed?.category==='debt'&&owed.status!=='已还清')d.set(path(row.debt),{...owed,paid:owed.amount,status:'已还清',paidAt:d.get('state','minute'),settledBy:row.id});
         this.advance(d,10,eventId);d.set(path(row.id),{...row,status:'已结案',finePaid:operation==='pay'?row.judgment.fine:row.finePaid??0,fineDischarged:true,compensationPaid:true,closed:d.get('state','minute')});
         recordLegalNotification(d,this,d.get(...path(row.id)),'fulfilled',eventId,localObservers(d));
         return{case:row.id,...payment,closed:true,note:'罚款已入公库，赔偿或原物已在法院托管；受害人尚未领取，不自动改变其钱袋或异地知情'};
@@ -287,7 +312,7 @@ export function lawAction(d,args,eventId){
         if(prior&&!(prior.category==='legal_custody'&&prior.case===row.id&&prior.status==='已中止'))throw new Error('服役记录已占用，不能重置或覆盖');
         const minutes=row.remainingSentence?.type===operation?row.remainingSentence.minutes:operation==='labor'?row.judgment.communityMinutes:row.judgment.prisonMinutes;
         d.set(path(key),{category:'legal_custody',case:row.id,reason:operation==='labor'?'劳役':'监禁',location:code.court,status:'生效',started:now,expires:now+minutes});
-        d.set(path(row.id),{...row,status:'服役中',sentence:{type:operation,minutes},compensationPaid:row.value===0});
+        d.set(path(row.id),{...row,status:'服役中',sentence:{type:operation,minutes},compensationPaid:row.value===0||Boolean(row.debt&&row.compensationPaid)});
         return{case:row.id,sentenceMinutes:minutes,compensationDebt:row.value,note:'刑期由真实世界时间推进，罚款折役；赔偿债务仍保留，不自动造钱或已经完成服役'};
     }
     if(operation==='claim'){
@@ -300,7 +325,9 @@ export function lawAction(d,args,eventId){
             this.itemDelta(d,recipient,record.item,1);const bag=[...this.bagPath(recipient),record.item,'instances'];
             d.set(bag,[...d.get(...bag)??[],unit]);d.set(['state','itemInstances',unit],{...record,owner:recipient,status:'持有',legalClaims:(record.legalClaims??[]).filter(claim=>claim.case!==row.id)});
         }
-        d.set(['state','npcs',recipient,'coins'],d.get('state','npcs',recipient,'coins')+escrow.coins);
+        const bank=row.bank&&d.get(...path(row.bank));
+        if(bank?.category==='bank')d.set(path(row.bank),{...bank,coins:bank.coins+escrow.coins});
+        else d.set(['state','npcs',recipient,'coins'],d.get('state','npcs',recipient,'coins')+escrow.coins);
         d.set(path(key),{...escrow,coins:0,units:[],claimed:true,claimedAt:now});knowledge(d,recipient,row.id,now);
         this.advance(d,10,eventId);return{case:row.id,recipient,coins:escrow.coins,units:escrow.units,claimed:true};
     }

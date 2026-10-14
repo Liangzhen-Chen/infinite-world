@@ -55,8 +55,8 @@ review-002-yp=782a49e阶段审核通过，范围限T06正式发布与c64163d修�
 
 来源：主会话派只读分析（系统互读矩阵）。结论：存档已共享在 state.records，但三处是加法——旁路系统按工具名分支；“态度”存了7份（npc关系、聚落立场、声望、势力关系、宠物忠诚、首领态度、精怪怨恨）；物品有材质标签但代码只有4处硬编码用到，元素有两套词表。方案：派生性状视图 + 交互规则表 + 规范化世界事件 + 统一立场读模型，另把时钟效果和时间推进改为注册表。不改存档结构、不加工具，每卡静态提示增量≤100 token（硬上限12000）。改动结算数值的卡须逐条核对旧期望，不许为过测试而放松。内容卡（T105起）在K1–K4合入后按新底座写数据。
 
-- K1 性状底座：新 server-plugin/traits.mjs，`traitsOf` 从物品tags、生物nature、地形、地点feature、法术medium/damageType 派生统一标签与元素亲和，两套元素词表合一；替换 magic.mjs:80、magic-marks.mjs:29、creature-nature.mjs:5、magic-primitives.mjs:3 的硬编码。验收：CORE + magic/magic-primitives/wildlife-creatures-mixed 测试 + 新 tests/traits.test.mjs。规模S-M。
-- K2 交互规则表：新 interactions.mjs，规则数据放 world/design/；火对木纸布点燃炭化、水与雨灭火、168种生物按标签得伤害加成或抗性，物品与地点特征也响应元素。依赖K1。验收：CORE + magic/magic-object/bosses/environment/weather/prompt。规模M-L。
+- K1 已完成。原文：新 server-plugin/traits.mjs，`traitsOf` 从物品tags、生物nature、地形、地点feature、法术medium/damageType 派生统一标签与元素亲和，两套元素词表合一；替换 magic.mjs:80、magic-marks.mjs:29、creature-nature.mjs:5、magic-primitives.mjs:3 的硬编码。验收：CORE + magic/magic-primitives/wildlife-creatures-mixed 测试 + 新 tests/traits.test.mjs。规模S-M。
+- K2 已完成。原文：新 interactions.mjs，规则数据放 world/design/；火对木纸布点燃炭化、水与雨灭火、168种生物按标签得伤害加成或抗性，物品与地点特征也响应元素。依赖K1。验收：CORE + magic/magic-object/bosses/environment/weather/prompt。规模M-L。
 - K3 已完成。原文：新 world-events.mjs，engine.mjs:178 处每次工具结算生成一次 `{verb,actor,target,harm/gift,witnesses,location,tags}`；npc-memory、npc-relations、monster-society、wildlife-society、boss-cognition 改为按 verb/标签订阅，不再按工具名。验收：CORE + 上述五系统测试。规模M-L。
 - K4 已完成。原文：新 standing.mjs，`standing(holder,target)` 归一到 -100..100，加“成员→势力/族群/聚居地”传导；7个旧存储保留，统一读写入口；public-opinion、reputation、faction-clock、scene-card、quest-board 改读它。依赖K3。验收：CORE + public-opinion/reputation-law/faction-clock/npc-relations/prompt。规模M。
 - K5 已完成。原文：有目击且分量够的世界事件自动成为可传播传闻（不再只传作者预登记的ID）；private/secret 记忆与未成年保护不得成为传闻。依赖K3、K4。验收：CORE + rumor-route/village-rumor-access/npc-memory/public-opinion/monster-society。规模M。
@@ -72,8 +72,8 @@ review-002-yp=782a49e阶段审核通过，范围限T06正式发布与c64163d修�
 
 排在底座 K1–K7 之后，按被依赖程度排序。每张卡：不加新工具（复用现有入口），静态提示增量≤100 token（硬上限12000），验收 CORE + 同领域测试整组 + build-world --release；改结算数值逐条列旧→新与理由。世界公告、首杀广播、其他玩家层不做。
 
-- U1 组织实体（依赖K4，S-M）：创立或加入行会、帮派、商号；组织有成员、公库、章程、议事方式（会长定、投票、长老定）。新 organizations.mjs；activities.mjs 的 create(org)、governance.mjs、public-opinion.mjs。补 5.11 家户、行会、教会、帮派的群体决策。
-- U2 契约与信用（依赖K3、K4、K7，M）：借贷计息、钱庄存取与兑换（铸币成色、手续费）、通用租房住宿（不再只认一家）、玩家受雇打工、合伙；违约进入法律流程。contracts.mjs、engine.mjs 交易段、business.mjs:87、law.mjs、rules.economy。
+- U1 已完成。原文：（依赖K4，S-M）：创立或加入行会、帮派、商号；组织有成员、公库、章程、议事方式（会长定、投票、长老定）。新 organizations.mjs；activities.mjs 的 create(org)、governance.mjs、public-opinion.mjs。补 5.11 家户、行会、教会、帮派的群体决策。
+- U2 已完成。原文：（依赖K3、K4、K7，M）：借贷计息、钱庄存取与兑换（铸币成色、手续费）、通用租房住宿（不再只认一家）、玩家受雇打工、合伙；违约进入法律流程。contracts.mjs、engine.mjs 交易段、business.mjs:87、law.mjs、rules.economy。
 - U3 季节与灾害世界时钟（依赖K2、K6、K7，M）：汛期、冬荒、疫病流行（户间传染）、物价波动，分阶段可干预。rules.worldClock、world-clock.mjs、npc-life.mjs、settlement-trade.mjs。
 - U4 职业深化（依赖K1、K3，M）：新 career-metrics.mjs 订阅世界事件统计长期行为，隐藏职业“契机”真正触发并可取得；地域、元素变异升职；终极技能；杰作、研究、实战三种突破；入职任务。professions.mjs、engine.mjs:491-508、world/design 职业数据。
 - U6 作品系统（依赖K1、K3，M）：写作出版、技能书抄写（需原本与抄写员）、表演、测绘出图，形成有署名作品，带来收入、贡献、名望；技能融合实验。新 works.mjs；learning.mjs、manufacturing.mjs、civic.mjs。
