@@ -5,7 +5,8 @@ import path from 'node:path';
 // their primer books and law-code places so that frozen pre-Baishi people stay consistent.
 export const preBaishiNpc=n=>!n.id.startsWith('npc_bs_');
 export async function writePreBaishiWorld(dir,world){
- const oldLocations=world.locations.filter(l=>l.scope!=='loc_bs'||['loc_bs','bld_bs_shrine','loc_wild_bs_kiln'].includes(l.id)),placeIds=new Set(oldLocations.map(l=>l.id));
+ // Only the town skeleton (districts and bld_bs_* buildings) is removed; later wild/monster areas scoped to the town stay.
+ const oldLocations=world.locations.filter(l=>l.scope!=='loc_bs'||l.id==='bld_bs_shrine'||!/^(bld_bs_|loc_bs_)/.test(l.id)),placeIds=new Set(oldLocations.map(l=>l.id));
  const rules=structuredClone(world.rules);
  for(const region of rules.weather.regions){region.locations=region.locations.filter(id=>placeIds.has(id));region.indoor=region.indoor.filter(id=>placeIds.has(id));}
  for(const code of rules.law?.codes??[])if(Array.isArray(code.locations))code.locations=code.locations.filter(id=>placeIds.has(id));
