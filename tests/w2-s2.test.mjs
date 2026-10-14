@@ -5,13 +5,15 @@ import os from 'node:os';
 import path from 'node:path';
 import {loadWorld} from '../tools/load-world.mjs';
 import {readS2Publication,mergeS2Publication,publishS2,withoutS2,files as publishedFiles} from '../tools/publish-w2-s2.mjs';
+import {withoutS3} from '../tools/publish-w2-s3.mjs';
 import {spells,books,items,recipes,placements,stations,mentors,routes,routeOf} from '../world/design/w2-s2.mjs';
 import {WorldEngine} from '../server-plugin/engine.mjs';
 import {applyPatches} from '../server-plugin/storage.mjs';
 import {compatibleWorld,planWorldUpgrade} from '../server-plugin/world-upgrade.mjs';
 import {projectileAirPenalty} from '../server-plugin/magic-air.mjs';
 
-const formal=await loadWorld(),publication=await readS2Publication();
+// Later batches (T103 onward) are removed first so this batch is compared on its own edition.
+const formal=withoutS3(await loadWorld()),publication=await readS2Publication();
 const ids={spells:new Set(spells.map(s=>s.id)),skills:new Set(spells.map(s=>s.skill)),items:new Set([...books,...items].map(i=>i.id)),recipes:new Set(recipes.map(r=>r.id))};
 // The edition before this batch is rebuilt from the formal world, so the test
 // works before and after publication and never pins catalogue totals.

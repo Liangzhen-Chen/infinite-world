@@ -9056,7 +9056,9 @@
       "item_book_s1_growth": 2,
       "item_book_s2_air": 2,
       "item_book_s2_stone": 2,
-      "item_book_s2_farm": 2
+      "item_book_s2_farm": 2,
+      "item_book_s3_optics": 2,
+      "item_book_s3_care": 2
     },
     "skills": [],
     "services": [
@@ -135849,18 +135851,39 @@
     "coins": 20,
     "inventory": {
       "item_flax_cord": 1,
-      "item_bs_monk_primer": 2
+      "item_bs_monk_primer": 2,
+      "item_s3_incense": 12
     },
     "skills": [
       "skill_monk_combat_01",
       "skill_mind_01",
-      "skill_mind_05"
+      "skill_mind_05",
+      "skill_s3_still_mind",
+      "skill_s3_bead_guard",
+      "skill_s3_feeling_bead",
+      "skill_s3_post_guard",
+      "skill_s3_mend_palm",
+      "skill_s3_rest_field",
+      "skill_s3_herb_cool",
+      "skill_s3_lamp_dim",
+      "skill_s3_door_shade",
+      "skill_s3_cool_cloth"
     ],
     "services": [
       "profession_monk",
       "skill_monk_combat_01",
       "spell_mind_01",
-      "spell_mind_05"
+      "spell_mind_05",
+      "spell_s3_still_mind",
+      "spell_s3_bead_guard",
+      "spell_s3_feeling_bead",
+      "spell_s3_post_guard",
+      "spell_s3_mend_palm",
+      "spell_s3_rest_field",
+      "spell_s3_herb_cool",
+      "spell_s3_lamp_dim",
+      "spell_s3_door_shade",
+      "spell_s3_cool_cloth"
     ],
     "intelligence": {
       "level": 2,
@@ -135905,7 +135928,17 @@
     "proficiencies": {
       "skill_monk_combat_01": 600,
       "skill_mind_01": 600,
-      "skill_mind_05": 600
+      "skill_mind_05": 600,
+      "skill_s3_still_mind": 600,
+      "skill_s3_bead_guard": 600,
+      "skill_s3_feeling_bead": 600,
+      "skill_s3_post_guard": 600,
+      "skill_s3_mend_palm": 600,
+      "skill_s3_rest_field": 600,
+      "skill_s3_herb_cool": 600,
+      "skill_s3_lamp_dim": 600,
+      "skill_s3_door_shade": 600,
+      "skill_s3_cool_cloth": 600
     },
     "professions": [
       "profession_monk"
@@ -136314,6 +136347,96 @@
         "price": {
           "mode": "catalog",
           "source": "spell_mind_05"
+        },
+        "unlocksService": false
+      },
+      {
+        "kind": "teach",
+        "what": "spell_s3_still_mind",
+        "price": {
+          "mode": "catalog",
+          "source": "spell_s3_still_mind"
+        },
+        "unlocksService": false
+      },
+      {
+        "kind": "teach",
+        "what": "spell_s3_bead_guard",
+        "price": {
+          "mode": "catalog",
+          "source": "spell_s3_bead_guard"
+        },
+        "unlocksService": false
+      },
+      {
+        "kind": "teach",
+        "what": "spell_s3_feeling_bead",
+        "price": {
+          "mode": "catalog",
+          "source": "spell_s3_feeling_bead"
+        },
+        "unlocksService": false
+      },
+      {
+        "kind": "teach",
+        "what": "spell_s3_post_guard",
+        "price": {
+          "mode": "catalog",
+          "source": "spell_s3_post_guard"
+        },
+        "unlocksService": false
+      },
+      {
+        "kind": "teach",
+        "what": "spell_s3_mend_palm",
+        "price": {
+          "mode": "catalog",
+          "source": "spell_s3_mend_palm"
+        },
+        "unlocksService": false
+      },
+      {
+        "kind": "teach",
+        "what": "spell_s3_rest_field",
+        "price": {
+          "mode": "catalog",
+          "source": "spell_s3_rest_field"
+        },
+        "unlocksService": false
+      },
+      {
+        "kind": "teach",
+        "what": "spell_s3_herb_cool",
+        "price": {
+          "mode": "catalog",
+          "source": "spell_s3_herb_cool"
+        },
+        "unlocksService": false
+      },
+      {
+        "kind": "teach",
+        "what": "spell_s3_lamp_dim",
+        "price": {
+          "mode": "catalog",
+          "source": "spell_s3_lamp_dim"
+        },
+        "unlocksService": false
+      },
+      {
+        "kind": "teach",
+        "what": "spell_s3_door_shade",
+        "price": {
+          "mode": "catalog",
+          "source": "spell_s3_door_shade"
+        },
+        "unlocksService": false
+      },
+      {
+        "kind": "teach",
+        "what": "spell_s3_cool_cloth",
+        "price": {
+          "mode": "catalog",
+          "source": "spell_s3_cool_cloth"
         },
         "unlocksService": false
       }
@@ -138589,16 +138712,29 @@
     "affection": 0,
     "coins": 25,
     "inventory": {
-      "item_wood": 1
+      "item_wood": 1,
+      "item_s3_rice": 10
     },
     "skills": [
       "skill_witch_combat_01",
-      "skill_mind_01"
+      "skill_mind_01",
+      "skill_s3_startle_ease",
+      "skill_s3_calm_guard",
+      "skill_s3_shade_ward",
+      "skill_s3_fog_lamp",
+      "skill_s3_way_lamp",
+      "skill_s3_wind_cold_guard"
     ],
     "services": [
       "profession_witch",
       "skill_witch_combat_01",
-      "spell_mind_01"
+      "spell_mind_01",
+      "spell_s3_startle_ease",
+      "spell_s3_calm_guard",
+      "spell_s3_shade_ward",
+      "spell_s3_fog_lamp",
+      "spell_s3_way_lamp",
+      "spell_s3_wind_cold_guard"
     ],
     "intelligence": {
       "level": 2,
@@ -138642,7 +138778,13 @@
     },
     "proficiencies": {
       "skill_witch_combat_01": 600,
-      "skill_mind_01": 600
+      "skill_mind_01": 600,
+      "skill_s3_startle_ease": 600,
+      "skill_s3_calm_guard": 600,
+      "skill_s3_shade_ward": 600,
+      "skill_s3_fog_lamp": 600,
+      "skill_s3_way_lamp": 600,
+      "skill_s3_wind_cold_guard": 600
     },
     "professions": [
       "profession_witch"
@@ -139042,6 +139184,60 @@
         "price": {
           "mode": "catalog",
           "source": "spell_mind_01"
+        },
+        "unlocksService": false
+      },
+      {
+        "kind": "teach",
+        "what": "spell_s3_startle_ease",
+        "price": {
+          "mode": "catalog",
+          "source": "spell_s3_startle_ease"
+        },
+        "unlocksService": false
+      },
+      {
+        "kind": "teach",
+        "what": "spell_s3_calm_guard",
+        "price": {
+          "mode": "catalog",
+          "source": "spell_s3_calm_guard"
+        },
+        "unlocksService": false
+      },
+      {
+        "kind": "teach",
+        "what": "spell_s3_shade_ward",
+        "price": {
+          "mode": "catalog",
+          "source": "spell_s3_shade_ward"
+        },
+        "unlocksService": false
+      },
+      {
+        "kind": "teach",
+        "what": "spell_s3_fog_lamp",
+        "price": {
+          "mode": "catalog",
+          "source": "spell_s3_fog_lamp"
+        },
+        "unlocksService": false
+      },
+      {
+        "kind": "teach",
+        "what": "spell_s3_way_lamp",
+        "price": {
+          "mode": "catalog",
+          "source": "spell_s3_way_lamp"
+        },
+        "unlocksService": false
+      },
+      {
+        "kind": "teach",
+        "what": "spell_s3_wind_cold_guard",
+        "price": {
+          "mode": "catalog",
+          "source": "spell_s3_wind_cold_guard"
         },
         "unlocksService": false
       }
@@ -141957,14 +142153,23 @@
     "affection": 0,
     "coins": 23,
     "inventory": {
-      "item_flax_cord": 1
+      "item_flax_cord": 1,
+      "item_s3_lamp_oil": 8
     },
     "skills": [
-      "skill_priest_combat_01"
+      "skill_priest_combat_01",
+      "skill_s3_lamp_focus",
+      "skill_s3_mirror_turn",
+      "skill_s3_veil_dark",
+      "skill_s3_lamp_screen"
     ],
     "services": [
       "profession_priest",
-      "skill_priest_combat_01"
+      "skill_priest_combat_01",
+      "spell_s3_lamp_focus",
+      "spell_s3_mirror_turn",
+      "spell_s3_veil_dark",
+      "spell_s3_lamp_screen"
     ],
     "intelligence": {
       "level": 2,
@@ -142007,7 +142212,11 @@
       ]
     },
     "proficiencies": {
-      "skill_priest_combat_01": 600
+      "skill_priest_combat_01": 600,
+      "skill_s3_lamp_focus": 600,
+      "skill_s3_mirror_turn": 600,
+      "skill_s3_veil_dark": 600,
+      "skill_s3_lamp_screen": 600
     },
     "professions": [
       "profession_priest"
@@ -142398,6 +142607,42 @@
         "price": {
           "mode": "catalog",
           "source": "skill_priest_combat_01"
+        },
+        "unlocksService": false
+      },
+      {
+        "kind": "teach",
+        "what": "spell_s3_lamp_focus",
+        "price": {
+          "mode": "catalog",
+          "source": "spell_s3_lamp_focus"
+        },
+        "unlocksService": false
+      },
+      {
+        "kind": "teach",
+        "what": "spell_s3_mirror_turn",
+        "price": {
+          "mode": "catalog",
+          "source": "spell_s3_mirror_turn"
+        },
+        "unlocksService": false
+      },
+      {
+        "kind": "teach",
+        "what": "spell_s3_veil_dark",
+        "price": {
+          "mode": "catalog",
+          "source": "spell_s3_veil_dark"
+        },
+        "unlocksService": false
+      },
+      {
+        "kind": "teach",
+        "what": "spell_s3_lamp_screen",
+        "price": {
+          "mode": "catalog",
+          "source": "spell_s3_lamp_screen"
         },
         "unlocksService": false
       }
