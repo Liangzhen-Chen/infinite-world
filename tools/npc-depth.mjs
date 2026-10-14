@@ -86,8 +86,10 @@ export function recordHasHash(record,expected){
 async function frozenResidentSource(source,file,value,worldRoot,world){
  if(path.resolve(file)!==path.resolve(worldRoot,'people/residents.json')||hashContent(value)===source.hash)return value;
  const prior=value.filter(n=>n.settlement!=='loc_bs');if(hashContent(prior)!==source.hash)return value;
- const {b}=await approvedBaishi(world,{sourceRoot:path.join(worldRoot,'drafts/w1/baishi-skeleton')});
- assert.deepEqual(value.filter(n=>n.settlement==='loc_bs'),b.residents,'白石镇名册与审核来源不符');return prior;
+ const {world:current,b}=await approvedBaishi(world,{sourceRoot:path.join(worldRoot,'drafts/w1/baishi-skeleton')});
+ // Later Baishi batches promote roster rows to full profiles; integrate() drops those ids from the roster.
+ const fullIds=new Set(current.npcs.map(n=>n.id));
+ assert.deepEqual(value.filter(n=>n.settlement==='loc_bs'),b.residents.filter(n=>!fullIds.has(n.id)),'白石镇名册与审核来源不符');return prior;
 }
 export async function loadDepthReopen(options,prepared){
  if(!options.reopenAuthorization)return null;

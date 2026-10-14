@@ -22,6 +22,9 @@ source.rules.law.codes=source.rules.law.codes.filter(row=>!removedLocations.has(
 source.locations=source.locations.filter(l=>!(l.scope==='loc_bs'&&!['loc_bs','bld_bs_shrine'].includes(l.id)));
 source.routes=source.routes.filter(r=>source.locations.some(l=>l.id===r.from)&&source.locations.some(l=>l.id===r.to));
 for(const row of source.rules.weather.regions){row.locations=row.locations.filter(id=>source.locations.some(l=>l.id===id));row.indoor=row.indoor.filter(id=>row.locations.includes(id));}
+// T92/T93后白石镇另有入门书（作者为npc_bs_*、出处为镇内场所）和产权法规场所，随白石镇一并投影掉。
+for(const code of source.rules.law.codes)if(Array.isArray(code.locations))code.locations=code.locations.filter(id=>source.locations.some(l=>l.id===id));
+source.items=source.items.filter(item=>!item.id.startsWith('item_bs_'));
 const addedIds=new Set(candidate.npcs.map(n=>n.id)),original={...source,npcs:preserved,residents:[],households:[],settlementProfiles:[],locations:source.locations.filter(n=>!candidate.locations.some(l=>l.id===n.id)),routes:source.routes.filter(n=>!candidate.routes.some(r=>r.id===n.id))};
 const world=mergeHewan(original,candidate),legacy=JSON.parse(await fs.readFile('tests/fixtures/legacy/seed.json','utf8'));
 

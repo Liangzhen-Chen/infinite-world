@@ -1368,6 +1368,897 @@
     "prompt": "原创河谷日常职业纹章；邸叶，38岁，晒场竹篾整理工。以woodworker工具图形置于圆角盾牌，松绿底与麦金轮廓，无文字，无肖像，无亲密或恋爱元素。仅采用已登记日常职业，不绘制人物私事。"
   },
   {
+    "id": "npc_bs_001_2",
+    "name": "贺绵",
+    "occupation": "码头计数",
+    "age": 32,
+    "minor": false,
+    "crest": "crests/household.svg",
+    "prompt": "原创河谷日常职业纹章；贺绵，32岁，码头计数。以household工具图形置于圆角盾牌，松绿底与麦金轮廓，无文字，无肖像，无亲密或恋爱元素。仅采用已登记日常职业，不绘制人物私事。"
+  },
+  {
+    "id": "npc_bs_016_1",
+    "name": "汪澄",
+    "occupation": "车运安排",
+    "age": 46,
+    "minor": false,
+    "crest": "crests/household.svg",
+    "prompt": "原创河谷日常职业纹章；汪澄，46岁，车运安排。以household工具图形置于圆角盾牌，松绿底与麦金轮廓，无文字，无肖像，无亲密或恋爱元素。仅采用已登记日常职业，不绘制人物私事。"
+  },
+  {
+    "id": "npc_bs_001_3",
+    "name": "贺笙",
+    "occupation": "系缆与装卸",
+    "age": 29,
+    "minor": false,
+    "crest": "crests/household.svg",
+    "prompt": "原创河谷日常职业纹章；贺笙，29岁，系缆与装卸。以household工具图形置于圆角盾牌，松绿底与麦金轮廓，无文字，无肖像，无亲密或恋爱元素。仅采用已登记日常职业，不绘制人物私事。"
+  },
+  {
+    "id": "npc_bs_016_2",
+    "name": "汪绵",
+    "occupation": "货单抄写",
+    "age": 43,
+    "minor": false,
+    "crest": "crests/scribe.svg",
+    "prompt": "原创河谷日常职业纹章；汪绵，43岁，货单抄写。以scribe工具图形置于圆角盾牌，松绿底与麦金轮廓，无文字，无肖像，无亲密或恋爱元素。仅采用已登记日常职业，不绘制人物私事。"
+  },
+  {
+    "id": "npc_bs_001_4",
+    "name": "贺砺",
+    "occupation": "船具修补",
+    "age": 26,
+    "minor": false,
+    "crest": "crests/boatman.svg",
+    "prompt": "原创河谷日常职业纹章；贺砺，26岁，船具修补。以boatman工具图形置于圆角盾牌，松绿底与麦金轮廓，无文字，无肖像，无亲密或恋爱元素。仅采用已登记日常职业，不绘制人物私事。"
+  },
+  {
+    "id": "npc_bs_017_1",
+    "name": "邢澄",
+    "occupation": "货单抄写",
+    "age": 47,
+    "minor": false,
+    "crest": "crests/scribe.svg",
+    "prompt": "原创河谷日常职业纹章；邢澄，47岁，货单抄写。以scribe工具图形置于圆角盾牌，松绿底与麦金轮廓，无文字，无肖像，无亲密或恋爱元素。仅采用已登记日常职业，不绘制人物私事。"
+  },
+  {
+    "id": "npc_bs_002_1",
+    "name": "顾澄",
+    "occupation": "码头计数",
+    "age": 46,
+    "minor": false,
+    "crest": "crests/household.svg",
+    "prompt": "原创河谷日常职业纹章；顾澄，46岁，码头计数。以household工具图形置于圆角盾牌，松绿底与麦金轮廓，无文字，无肖像，无亲密或恋爱元素。仅采用已登记日常职业，不绘制人物私事。"
+  },
+  {
+    "id": "npc_bs_017_2",
+    "name": "邢绵",
+    "occupation": "货栈交接",
+    "age": 44,
+    "minor": false,
+    "crest": "crests/merchant.svg",
+    "prompt": "原创河谷日常职业纹章；邢绵，44岁，货栈交接。以merchant工具图形置于圆角盾牌，松绿底与麦金轮廓，无文字，无肖像，无亲密或恋爱元素。仅采用已登记日常职业，不绘制人物私事。"
+  },
+  {
+    "id": "npc_bs_002_2",
+    "name": "顾绵",
+    "occupation": "系缆与装卸",
+    "age": 43,
+    "minor": false,
+    "crest": "crests/household.svg",
+    "prompt": "原创河谷日常职业纹章；顾绵，43岁，系缆与装卸。以household工具图形置于圆角盾牌，松绿底与麦金轮廓，无文字，无肖像，无亲密或恋爱元素。仅采用已登记日常职业，不绘制人物私事。"
+  },
+  {
+    "id": "npc_bs_018_1",
+    "name": "钟澄",
+    "occupation": "货栈交接",
+    "age": 48,
+    "minor": false,
+    "crest": "crests/merchant.svg",
+    "prompt": "原创河谷日常职业纹章；钟澄，48岁，货栈交接。以merchant工具图形置于圆角盾牌，松绿底与麦金轮廓，无文字，无肖像，无亲密或恋爱元素。仅采用已登记日常职业，不绘制人物私事。"
+  },
+  {
+    "id": "npc_bs_002_3",
+    "name": "顾笙",
+    "occupation": "船具修补",
+    "age": 22,
+    "minor": false,
+    "crest": "crests/boatman.svg",
+    "prompt": "原创河谷日常职业纹章；顾笙，22岁，船具修补。以boatman工具图形置于圆角盾牌，松绿底与麦金轮廓，无文字，无肖像，无亲密或恋爱元素。仅采用已登记日常职业，不绘制人物私事。"
+  },
+  {
+    "id": "npc_bs_018_2",
+    "name": "钟绵",
+    "occupation": "车运安排",
+    "age": 45,
+    "minor": false,
+    "crest": "crests/household.svg",
+    "prompt": "原创河谷日常职业纹章；钟绵，45岁，车运安排。以household工具图形置于圆角盾牌，松绿底与麦金轮廓，无文字，无肖像，无亲密或恋爱元素。仅采用已登记日常职业，不绘制人物私事。"
+  },
+  {
+    "id": "npc_bs_003_1",
+    "name": "邵澄",
+    "occupation": "系缆与装卸",
+    "age": 47,
+    "minor": false,
+    "crest": "crests/household.svg",
+    "prompt": "原创河谷日常职业纹章；邵澄，47岁，系缆与装卸。以household工具图形置于圆角盾牌，松绿底与麦金轮廓，无文字，无肖像，无亲密或恋爱元素。仅采用已登记日常职业，不绘制人物私事。"
+  },
+  {
+    "id": "npc_bs_019_1",
+    "name": "侯澄",
+    "occupation": "车运安排",
+    "age": 49,
+    "minor": false,
+    "crest": "crests/household.svg",
+    "prompt": "原创河谷日常职业纹章；侯澄，49岁，车运安排。以household工具图形置于圆角盾牌，松绿底与麦金轮廓，无文字，无肖像，无亲密或恋爱元素。仅采用已登记日常职业，不绘制人物私事。"
+  },
+  {
+    "id": "npc_bs_003_2",
+    "name": "邵绵",
+    "occupation": "船具修补",
+    "age": 44,
+    "minor": false,
+    "crest": "crests/boatman.svg",
+    "prompt": "原创河谷日常职业纹章；邵绵，44岁，船具修补。以boatman工具图形置于圆角盾牌，松绿底与麦金轮廓，无文字，无肖像，无亲密或恋爱元素。仅采用已登记日常职业，不绘制人物私事。"
+  },
+  {
+    "id": "npc_bs_019_2",
+    "name": "侯绵",
+    "occupation": "货单抄写",
+    "age": 46,
+    "minor": false,
+    "crest": "crests/scribe.svg",
+    "prompt": "原创河谷日常职业纹章；侯绵，46岁，货单抄写。以scribe工具图形置于圆角盾牌，松绿底与麦金轮廓，无文字，无肖像，无亲密或恋爱元素。仅采用已登记日常职业，不绘制人物私事。"
+  },
+  {
+    "id": "npc_bs_003_3",
+    "name": "邵笙",
+    "occupation": "码头计数",
+    "age": 22,
+    "minor": false,
+    "crest": "crests/household.svg",
+    "prompt": "原创河谷日常职业纹章；邵笙，22岁，码头计数。以household工具图形置于圆角盾牌，松绿底与麦金轮廓，无文字，无肖像，无亲密或恋爱元素。仅采用已登记日常职业，不绘制人物私事。"
+  },
+  {
+    "id": "npc_bs_020_1",
+    "name": "薛澄",
+    "occupation": "货单抄写",
+    "age": 50,
+    "minor": false,
+    "crest": "crests/scribe.svg",
+    "prompt": "原创河谷日常职业纹章；薛澄，50岁，货单抄写。以scribe工具图形置于圆角盾牌，松绿底与麦金轮廓，无文字，无肖像，无亲密或恋爱元素。仅采用已登记日常职业，不绘制人物私事。"
+  },
+  {
+    "id": "npc_bs_004_1",
+    "name": "傅澄",
+    "occupation": "船具修补",
+    "age": 48,
+    "minor": false,
+    "crest": "crests/boatman.svg",
+    "prompt": "原创河谷日常职业纹章；傅澄，48岁，船具修补。以boatman工具图形置于圆角盾牌，松绿底与麦金轮廓，无文字，无肖像，无亲密或恋爱元素。仅采用已登记日常职业，不绘制人物私事。"
+  },
+  {
+    "id": "npc_bs_020_2",
+    "name": "薛绵",
+    "occupation": "货栈交接",
+    "age": 47,
+    "minor": false,
+    "crest": "crests/merchant.svg",
+    "prompt": "原创河谷日常职业纹章；薛绵，47岁，货栈交接。以merchant工具图形置于圆角盾牌，松绿底与麦金轮廓，无文字，无肖像，无亲密或恋爱元素。仅采用已登记日常职业，不绘制人物私事。"
+  },
+  {
+    "id": "npc_bs_004_2",
+    "name": "傅绵",
+    "occupation": "码头计数",
+    "age": 45,
+    "minor": false,
+    "crest": "crests/household.svg",
+    "prompt": "原创河谷日常职业纹章；傅绵，45岁，码头计数。以household工具图形置于圆角盾牌，松绿底与麦金轮廓，无文字，无肖像，无亲密或恋爱元素。仅采用已登记日常职业，不绘制人物私事。"
+  },
+  {
+    "id": "npc_bs_021_1",
+    "name": "石澄",
+    "occupation": "货栈交接",
+    "age": 44,
+    "minor": false,
+    "crest": "crests/merchant.svg",
+    "prompt": "原创河谷日常职业纹章；石澄，44岁，货栈交接。以merchant工具图形置于圆角盾牌，松绿底与麦金轮廓，无文字，无肖像，无亲密或恋爱元素。仅采用已登记日常职业，不绘制人物私事。"
+  },
+  {
+    "id": "npc_bs_004_3",
+    "name": "傅笙",
+    "occupation": "系缆与装卸",
+    "age": 22,
+    "minor": false,
+    "crest": "crests/household.svg",
+    "prompt": "原创河谷日常职业纹章；傅笙，22岁，系缆与装卸。以household工具图形置于圆角盾牌，松绿底与麦金轮廓，无文字，无肖像，无亲密或恋爱元素。仅采用已登记日常职业，不绘制人物私事。"
+  },
+  {
+    "id": "npc_bs_021_2",
+    "name": "石绵",
+    "occupation": "车运安排",
+    "age": 41,
+    "minor": false,
+    "crest": "crests/household.svg",
+    "prompt": "原创河谷日常职业纹章；石绵，41岁，车运安排。以household工具图形置于圆角盾牌，松绿底与麦金轮廓，无文字，无肖像，无亲密或恋爱元素。仅采用已登记日常职业，不绘制人物私事。"
+  },
+  {
+    "id": "npc_bs_005_1",
+    "name": "罗澄",
+    "occupation": "码头计数",
+    "age": 49,
+    "minor": false,
+    "crest": "crests/household.svg",
+    "prompt": "原创河谷日常职业纹章；罗澄，49岁，码头计数。以household工具图形置于圆角盾牌，松绿底与麦金轮廓，无文字，无肖像，无亲密或恋爱元素。仅采用已登记日常职业，不绘制人物私事。"
+  },
+  {
+    "id": "npc_bs_022_1",
+    "name": "熊澄",
+    "occupation": "车运安排",
+    "age": 45,
+    "minor": false,
+    "crest": "crests/household.svg",
+    "prompt": "原创河谷日常职业纹章；熊澄，45岁，车运安排。以household工具图形置于圆角盾牌，松绿底与麦金轮廓，无文字，无肖像，无亲密或恋爱元素。仅采用已登记日常职业，不绘制人物私事。"
+  },
+  {
+    "id": "npc_bs_005_2",
+    "name": "罗绵",
+    "occupation": "系缆与装卸",
+    "age": 46,
+    "minor": false,
+    "crest": "crests/household.svg",
+    "prompt": "原创河谷日常职业纹章；罗绵，46岁，系缆与装卸。以household工具图形置于圆角盾牌，松绿底与麦金轮廓，无文字，无肖像，无亲密或恋爱元素。仅采用已登记日常职业，不绘制人物私事。"
+  },
+  {
+    "id": "npc_bs_022_2",
+    "name": "熊绵",
+    "occupation": "货单抄写",
+    "age": 42,
+    "minor": false,
+    "crest": "crests/scribe.svg",
+    "prompt": "原创河谷日常职业纹章；熊绵，42岁，货单抄写。以scribe工具图形置于圆角盾牌，松绿底与麦金轮廓，无文字，无肖像，无亲密或恋爱元素。仅采用已登记日常职业，不绘制人物私事。"
+  },
+  {
+    "id": "npc_bs_005_3",
+    "name": "罗笙",
+    "occupation": "船具修补",
+    "age": 22,
+    "minor": false,
+    "crest": "crests/boatman.svg",
+    "prompt": "原创河谷日常职业纹章；罗笙，22岁，船具修补。以boatman工具图形置于圆角盾牌，松绿底与麦金轮廓，无文字，无肖像，无亲密或恋爱元素。仅采用已登记日常职业，不绘制人物私事。"
+  },
+  {
+    "id": "npc_bs_023_1",
+    "name": "乔澄",
+    "occupation": "货单抄写",
+    "age": 46,
+    "minor": false,
+    "crest": "crests/scribe.svg",
+    "prompt": "原创河谷日常职业纹章；乔澄，46岁，货单抄写。以scribe工具图形置于圆角盾牌，松绿底与麦金轮廓，无文字，无肖像，无亲密或恋爱元素。仅采用已登记日常职业，不绘制人物私事。"
+  },
+  {
+    "id": "npc_bs_006_1",
+    "name": "夏澄",
+    "occupation": "系缆与装卸",
+    "age": 50,
+    "minor": false,
+    "crest": "crests/household.svg",
+    "prompt": "原创河谷日常职业纹章；夏澄，50岁，系缆与装卸。以household工具图形置于圆角盾牌，松绿底与麦金轮廓，无文字，无肖像，无亲密或恋爱元素。仅采用已登记日常职业，不绘制人物私事。"
+  },
+  {
+    "id": "npc_bs_023_2",
+    "name": "乔绵",
+    "occupation": "货栈交接",
+    "age": 43,
+    "minor": false,
+    "crest": "crests/merchant.svg",
+    "prompt": "原创河谷日常职业纹章；乔绵，43岁，货栈交接。以merchant工具图形置于圆角盾牌，松绿底与麦金轮廓，无文字，无肖像，无亲密或恋爱元素。仅采用已登记日常职业，不绘制人物私事。"
+  },
+  {
+    "id": "npc_bs_006_2",
+    "name": "夏绵",
+    "occupation": "船具修补",
+    "age": 47,
+    "minor": false,
+    "crest": "crests/boatman.svg",
+    "prompt": "原创河谷日常职业纹章；夏绵，47岁，船具修补。以boatman工具图形置于圆角盾牌，松绿底与麦金轮廓，无文字，无肖像，无亲密或恋爱元素。仅采用已登记日常职业，不绘制人物私事。"
+  },
+  {
+    "id": "npc_bs_031_1",
+    "name": "姜澄",
+    "occupation": "公署递件",
+    "age": 47,
+    "minor": false,
+    "crest": "crests/household.svg",
+    "prompt": "原创河谷日常职业纹章；姜澄，47岁，公署递件。以household工具图形置于圆角盾牌，松绿底与麦金轮廓，无文字，无肖像，无亲密或恋爱元素。仅采用已登记日常职业，不绘制人物私事。"
+  },
+  {
+    "id": "npc_bs_046_1",
+    "name": "白澄",
+    "occupation": "摊位整理",
+    "age": 48,
+    "minor": false,
+    "crest": "crests/household.svg",
+    "prompt": "原创河谷日常职业纹章；白澄，48岁，摊位整理。以household工具图形置于圆角盾牌，松绿底与麦金轮廓，无文字，无肖像，无亲密或恋爱元素。仅采用已登记日常职业，不绘制人物私事。"
+  },
+  {
+    "id": "npc_bs_031_2",
+    "name": "姜绵",
+    "occupation": "巡更交接",
+    "age": 44,
+    "minor": false,
+    "crest": "crests/warden.svg",
+    "prompt": "原创河谷日常职业纹章；姜绵，44岁，巡更交接。以warden工具图形置于圆角盾牌，松绿底与麦金轮廓，无文字，无肖像，无亲密或恋爱元素。仅采用已登记日常职业，不绘制人物私事。"
+  },
+  {
+    "id": "npc_bs_046_2",
+    "name": "白绵",
+    "occupation": "客舍洗晒",
+    "age": 45,
+    "minor": false,
+    "crest": "crests/household.svg",
+    "prompt": "原创河谷日常职业纹章；白绵，45岁，客舍洗晒。以household工具图形置于圆角盾牌，松绿底与麦金轮廓，无文字，无肖像，无亲密或恋爱元素。仅采用已登记日常职业，不绘制人物私事。"
+  },
+  {
+    "id": "npc_bs_032_1",
+    "name": "潘澄",
+    "occupation": "巡更交接",
+    "age": 48,
+    "minor": false,
+    "crest": "crests/warden.svg",
+    "prompt": "原创河谷日常职业纹章；潘澄，48岁，巡更交接。以warden工具图形置于圆角盾牌，松绿底与麦金轮廓，无文字，无肖像，无亲密或恋爱元素。仅采用已登记日常职业，不绘制人物私事。"
+  },
+  {
+    "id": "npc_bs_047_1",
+    "name": "马澄",
+    "occupation": "客舍洗晒",
+    "age": 49,
+    "minor": false,
+    "crest": "crests/household.svg",
+    "prompt": "原创河谷日常职业纹章；马澄，49岁，客舍洗晒。以household工具图形置于圆角盾牌，松绿底与麦金轮廓，无文字，无肖像，无亲密或恋爱元素。仅采用已登记日常职业，不绘制人物私事。"
+  },
+  {
+    "id": "npc_bs_032_2",
+    "name": "潘绵",
+    "occupation": "户籍抄录",
+    "age": 45,
+    "minor": false,
+    "crest": "crests/scribe.svg",
+    "prompt": "原创河谷日常职业纹章；潘绵，45岁，户籍抄录。以scribe工具图形置于圆角盾牌，松绿底与麦金轮廓，无文字，无肖像，无亲密或恋爱元素。仅采用已登记日常职业，不绘制人物私事。"
+  },
+  {
+    "id": "npc_bs_047_2",
+    "name": "马绵",
+    "occupation": "麦饼烘制",
+    "age": 46,
+    "minor": false,
+    "crest": "crests/household.svg",
+    "prompt": "原创河谷日常职业纹章；马绵，46岁，麦饼烘制。以household工具图形置于圆角盾牌，松绿底与麦金轮廓，无文字，无肖像，无亲密或恋爱元素。仅采用已登记日常职业，不绘制人物私事。"
+  },
+  {
+    "id": "npc_bs_033_1",
+    "name": "余澄",
+    "occupation": "户籍抄录",
+    "age": 49,
+    "minor": false,
+    "crest": "crests/scribe.svg",
+    "prompt": "原创河谷日常职业纹章；余澄，49岁，户籍抄录。以scribe工具图形置于圆角盾牌，松绿底与麦金轮廓，无文字，无肖像，无亲密或恋爱元素。仅采用已登记日常职业，不绘制人物私事。"
+  },
+  {
+    "id": "npc_bs_048_1",
+    "name": "龚澄",
+    "occupation": "麦饼烘制",
+    "age": 50,
+    "minor": false,
+    "crest": "crests/household.svg",
+    "prompt": "原创河谷日常职业纹章；龚澄，50岁，麦饼烘制。以household工具图形置于圆角盾牌，松绿底与麦金轮廓，无文字，无肖像，无亲密或恋爱元素。仅采用已登记日常职业，不绘制人物私事。"
+  },
+  {
+    "id": "npc_bs_033_2",
+    "name": "余绵",
+    "occupation": "公署递件",
+    "age": 46,
+    "minor": false,
+    "crest": "crests/household.svg",
+    "prompt": "原创河谷日常职业纹章；余绵，46岁，公署递件。以household工具图形置于圆角盾牌，松绿底与麦金轮廓，无文字，无肖像，无亲密或恋爱元素。仅采用已登记日常职业，不绘制人物私事。"
+  },
+  {
+    "id": "npc_bs_048_2",
+    "name": "龚绵",
+    "occupation": "摊位整理",
+    "age": 47,
+    "minor": false,
+    "crest": "crests/household.svg",
+    "prompt": "原创河谷日常职业纹章；龚绵，47岁，摊位整理。以household工具图形置于圆角盾牌，松绿底与麦金轮廓，无文字，无肖像，无亲密或恋爱元素。仅采用已登记日常职业，不绘制人物私事。"
+  },
+  {
+    "id": "npc_bs_034_1",
+    "name": "杜澄",
+    "occupation": "公署递件",
+    "age": 50,
+    "minor": false,
+    "crest": "crests/household.svg",
+    "prompt": "原创河谷日常职业纹章；杜澄，50岁，公署递件。以household工具图形置于圆角盾牌，松绿底与麦金轮廓，无文字，无肖像，无亲密或恋爱元素。仅采用已登记日常职业，不绘制人物私事。"
+  },
+  {
+    "id": "npc_bs_049_1",
+    "name": "汤澄",
+    "occupation": "摊位整理",
+    "age": 44,
+    "minor": false,
+    "crest": "crests/household.svg",
+    "prompt": "原创河谷日常职业纹章；汤澄，44岁，摊位整理。以household工具图形置于圆角盾牌，松绿底与麦金轮廓，无文字，无肖像，无亲密或恋爱元素。仅采用已登记日常职业，不绘制人物私事。"
+  },
+  {
+    "id": "npc_bs_034_2",
+    "name": "杜绵",
+    "occupation": "巡更交接",
+    "age": 47,
+    "minor": false,
+    "crest": "crests/warden.svg",
+    "prompt": "原创河谷日常职业纹章；杜绵，47岁，巡更交接。以warden工具图形置于圆角盾牌，松绿底与麦金轮廓，无文字，无肖像，无亲密或恋爱元素。仅采用已登记日常职业，不绘制人物私事。"
+  },
+  {
+    "id": "npc_bs_049_2",
+    "name": "汤绵",
+    "occupation": "客舍洗晒",
+    "age": 41,
+    "minor": false,
+    "crest": "crests/household.svg",
+    "prompt": "原创河谷日常职业纹章；汤绵，41岁，客舍洗晒。以household工具图形置于圆角盾牌，松绿底与麦金轮廓，无文字，无肖像，无亲密或恋爱元素。仅采用已登记日常职业，不绘制人物私事。"
+  },
+  {
+    "id": "npc_bs_035_1",
+    "name": "钱澄",
+    "occupation": "巡更交接",
+    "age": 44,
+    "minor": false,
+    "crest": "crests/warden.svg",
+    "prompt": "原创河谷日常职业纹章；钱澄，44岁，巡更交接。以warden工具图形置于圆角盾牌，松绿底与麦金轮廓，无文字，无肖像，无亲密或恋爱元素。仅采用已登记日常职业，不绘制人物私事。"
+  },
+  {
+    "id": "npc_bs_050_1",
+    "name": "于澄",
+    "occupation": "客舍洗晒",
+    "age": 45,
+    "minor": false,
+    "crest": "crests/household.svg",
+    "prompt": "原创河谷日常职业纹章；于澄，45岁，客舍洗晒。以household工具图形置于圆角盾牌，松绿底与麦金轮廓，无文字，无肖像，无亲密或恋爱元素。仅采用已登记日常职业，不绘制人物私事。"
+  },
+  {
+    "id": "npc_bs_035_2",
+    "name": "钱绵",
+    "occupation": "户籍抄录",
+    "age": 41,
+    "minor": false,
+    "crest": "crests/scribe.svg",
+    "prompt": "原创河谷日常职业纹章；钱绵，41岁，户籍抄录。以scribe工具图形置于圆角盾牌，松绿底与麦金轮廓，无文字，无肖像，无亲密或恋爱元素。仅采用已登记日常职业，不绘制人物私事。"
+  },
+  {
+    "id": "npc_bs_050_2",
+    "name": "于绵",
+    "occupation": "麦饼烘制",
+    "age": 42,
+    "minor": false,
+    "crest": "crests/household.svg",
+    "prompt": "原创河谷日常职业纹章；于绵，42岁，麦饼烘制。以household工具图形置于圆角盾牌，松绿底与麦金轮廓，无文字，无肖像，无亲密或恋爱元素。仅采用已登记日常职业，不绘制人物私事。"
+  },
+  {
+    "id": "npc_bs_036_1",
+    "name": "蒋澄",
+    "occupation": "户籍抄录",
+    "age": 45,
+    "minor": false,
+    "crest": "crests/scribe.svg",
+    "prompt": "原创河谷日常职业纹章；蒋澄，45岁，户籍抄录。以scribe工具图形置于圆角盾牌，松绿底与麦金轮廓，无文字，无肖像，无亲密或恋爱元素。仅采用已登记日常职业，不绘制人物私事。"
+  },
+  {
+    "id": "npc_bs_051_1",
+    "name": "段澄",
+    "occupation": "麦饼烘制",
+    "age": 46,
+    "minor": false,
+    "crest": "crests/household.svg",
+    "prompt": "原创河谷日常职业纹章；段澄，46岁，麦饼烘制。以household工具图形置于圆角盾牌，松绿底与麦金轮廓，无文字，无肖像，无亲密或恋爱元素。仅采用已登记日常职业，不绘制人物私事。"
+  },
+  {
+    "id": "npc_bs_036_2",
+    "name": "蒋绵",
+    "occupation": "公署递件",
+    "age": 42,
+    "minor": false,
+    "crest": "crests/household.svg",
+    "prompt": "原创河谷日常职业纹章；蒋绵，42岁，公署递件。以household工具图形置于圆角盾牌，松绿底与麦金轮廓，无文字，无肖像，无亲密或恋爱元素。仅采用已登记日常职业，不绘制人物私事。"
+  },
+  {
+    "id": "npc_bs_051_2",
+    "name": "段绵",
+    "occupation": "摊位整理",
+    "age": 43,
+    "minor": false,
+    "crest": "crests/household.svg",
+    "prompt": "原创河谷日常职业纹章；段绵，43岁，摊位整理。以household工具图形置于圆角盾牌，松绿底与麦金轮廓，无文字，无肖像，无亲密或恋爱元素。仅采用已登记日常职业，不绘制人物私事。"
+  },
+  {
+    "id": "npc_bs_037_1",
+    "name": "丁澄",
+    "occupation": "公署递件",
+    "age": 46,
+    "minor": false,
+    "crest": "crests/household.svg",
+    "prompt": "原创河谷日常职业纹章；丁澄，46岁，公署递件。以household工具图形置于圆角盾牌，松绿底与麦金轮廓，无文字，无肖像，无亲密或恋爱元素。仅采用已登记日常职业，不绘制人物私事。"
+  },
+  {
+    "id": "npc_bs_052_1",
+    "name": "朱澄",
+    "occupation": "摊位整理",
+    "age": 47,
+    "minor": false,
+    "crest": "crests/household.svg",
+    "prompt": "原创河谷日常职业纹章；朱澄，47岁，摊位整理。以household工具图形置于圆角盾牌，松绿底与麦金轮廓，无文字，无肖像，无亲密或恋爱元素。仅采用已登记日常职业，不绘制人物私事。"
+  },
+  {
+    "id": "npc_bs_037_2",
+    "name": "丁绵",
+    "occupation": "巡更交接",
+    "age": 43,
+    "minor": false,
+    "crest": "crests/warden.svg",
+    "prompt": "原创河谷日常职业纹章；丁绵，43岁，巡更交接。以warden工具图形置于圆角盾牌，松绿底与麦金轮廓，无文字，无肖像，无亲密或恋爱元素。仅采用已登记日常职业，不绘制人物私事。"
+  },
+  {
+    "id": "npc_bs_052_2",
+    "name": "朱绵",
+    "occupation": "客舍洗晒",
+    "age": 44,
+    "minor": false,
+    "crest": "crests/household.svg",
+    "prompt": "原创河谷日常职业纹章；朱绵，44岁，客舍洗晒。以household工具图形置于圆角盾牌，松绿底与麦金轮廓，无文字，无肖像，无亲密或恋爱元素。仅采用已登记日常职业，不绘制人物私事。"
+  },
+  {
+    "id": "npc_bs_038_1",
+    "name": "沈澄",
+    "occupation": "巡更交接",
+    "age": 47,
+    "minor": false,
+    "crest": "crests/warden.svg",
+    "prompt": "原创河谷日常职业纹章；沈澄，47岁，巡更交接。以warden工具图形置于圆角盾牌，松绿底与麦金轮廓，无文字，无肖像，无亲密或恋爱元素。仅采用已登记日常职业，不绘制人物私事。"
+  },
+  {
+    "id": "npc_bs_053_1",
+    "name": "金澄",
+    "occupation": "客舍洗晒",
+    "age": 48,
+    "minor": false,
+    "crest": "crests/household.svg",
+    "prompt": "原创河谷日常职业纹章；金澄，48岁，客舍洗晒。以household工具图形置于圆角盾牌，松绿底与麦金轮廓，无文字，无肖像，无亲密或恋爱元素。仅采用已登记日常职业，不绘制人物私事。"
+  },
+  {
+    "id": "npc_bs_038_2",
+    "name": "沈绵",
+    "occupation": "户籍抄录",
+    "age": 44,
+    "minor": false,
+    "crest": "crests/scribe.svg",
+    "prompt": "原创河谷日常职业纹章；沈绵，44岁，户籍抄录。以scribe工具图形置于圆角盾牌，松绿底与麦金轮廓，无文字，无肖像，无亲密或恋爱元素。仅采用已登记日常职业，不绘制人物私事。"
+  },
+  {
+    "id": "npc_bs_053_2",
+    "name": "金绵",
+    "occupation": "麦饼烘制",
+    "age": 45,
+    "minor": false,
+    "crest": "crests/household.svg",
+    "prompt": "原创河谷日常职业纹章；金绵，45岁，麦饼烘制。以household工具图形置于圆角盾牌，松绿底与麦金轮廓，无文字，无肖像，无亲密或恋爱元素。仅采用已登记日常职业，不绘制人物私事。"
+  },
+  {
+    "id": "npc_bs_039_1",
+    "name": "孟澄",
+    "occupation": "户籍抄录",
+    "age": 48,
+    "minor": false,
+    "crest": "crests/scribe.svg",
+    "prompt": "原创河谷日常职业纹章；孟澄，48岁，户籍抄录。以scribe工具图形置于圆角盾牌，松绿底与麦金轮廓，无文字，无肖像，无亲密或恋爱元素。仅采用已登记日常职业，不绘制人物私事。"
+  },
+  {
+    "id": "npc_bs_061_1",
+    "name": "阎澄",
+    "occupation": "陶坯制作",
+    "age": 49,
+    "minor": false,
+    "crest": "crests/household.svg",
+    "prompt": "原创河谷日常职业纹章；阎澄，49岁，陶坯制作。以household工具图形置于圆角盾牌，松绿底与麦金轮廓，无文字，无肖像，无亲密或恋爱元素。仅采用已登记日常职业，不绘制人物私事。"
+  },
+  {
+    "id": "npc_bs_061_2",
+    "name": "阎绵",
+    "occupation": "衣物缝补",
+    "age": 46,
+    "minor": false,
+    "crest": "crests/weaver.svg",
+    "prompt": "原创河谷日常职业纹章；阎绵，46岁，衣物缝补。以weaver工具图形置于圆角盾牌，松绿底与麦金轮廓，无文字，无肖像，无亲密或恋爱元素。仅采用已登记日常职业，不绘制人物私事。"
+  },
+  {
+    "id": "npc_bs_062_1",
+    "name": "陶澄",
+    "occupation": "衣物缝补",
+    "age": 50,
+    "minor": false,
+    "crest": "crests/weaver.svg",
+    "prompt": "原创河谷日常职业纹章；陶澄，50岁，衣物缝补。以weaver工具图形置于圆角盾牌，松绿底与麦金轮廓，无文字，无肖像，无亲密或恋爱元素。仅采用已登记日常职业，不绘制人物私事。"
+  },
+  {
+    "id": "npc_bs_062_2",
+    "name": "陶绵",
+    "occupation": "铁件修补",
+    "age": 47,
+    "minor": false,
+    "crest": "crests/smith.svg",
+    "prompt": "原创河谷日常职业纹章；陶绵，47岁，铁件修补。以smith工具图形置于圆角盾牌，松绿底与麦金轮廓，无文字，无肖像，无亲密或恋爱元素。仅采用已登记日常职业，不绘制人物私事。"
+  },
+  {
+    "id": "npc_bs_063_1",
+    "name": "邝澄",
+    "occupation": "铁件修补",
+    "age": 44,
+    "minor": false,
+    "crest": "crests/smith.svg",
+    "prompt": "原创河谷日常职业纹章；邝澄，44岁，铁件修补。以smith工具图形置于圆角盾牌，松绿底与麦金轮廓，无文字，无肖像，无亲密或恋爱元素。仅采用已登记日常职业，不绘制人物私事。"
+  },
+  {
+    "id": "npc_bs_063_2",
+    "name": "邝绵",
+    "occupation": "陶坯制作",
+    "age": 41,
+    "minor": false,
+    "crest": "crests/household.svg",
+    "prompt": "原创河谷日常职业纹章；邝绵，41岁，陶坯制作。以household工具图形置于圆角盾牌，松绿底与麦金轮廓，无文字，无肖像，无亲密或恋爱元素。仅采用已登记日常职业，不绘制人物私事。"
+  },
+  {
+    "id": "npc_bs_064_1",
+    "name": "崔澄",
+    "occupation": "陶坯制作",
+    "age": 45,
+    "minor": false,
+    "crest": "crests/household.svg",
+    "prompt": "原创河谷日常职业纹章；崔澄，45岁，陶坯制作。以household工具图形置于圆角盾牌，松绿底与麦金轮廓，无文字，无肖像，无亲密或恋爱元素。仅采用已登记日常职业，不绘制人物私事。"
+  },
+  {
+    "id": "npc_bs_064_2",
+    "name": "崔绵",
+    "occupation": "衣物缝补",
+    "age": 42,
+    "minor": false,
+    "crest": "crests/weaver.svg",
+    "prompt": "原创河谷日常职业纹章；崔绵，42岁，衣物缝补。以weaver工具图形置于圆角盾牌，松绿底与麦金轮廓，无文字，无肖像，无亲密或恋爱元素。仅采用已登记日常职业，不绘制人物私事。"
+  },
+  {
+    "id": "npc_bs_065_1",
+    "name": "武澄",
+    "occupation": "衣物缝补",
+    "age": 46,
+    "minor": false,
+    "crest": "crests/weaver.svg",
+    "prompt": "原创河谷日常职业纹章；武澄，46岁，衣物缝补。以weaver工具图形置于圆角盾牌，松绿底与麦金轮廓，无文字，无肖像，无亲密或恋爱元素。仅采用已登记日常职业，不绘制人物私事。"
+  },
+  {
+    "id": "npc_bs_065_2",
+    "name": "武绵",
+    "occupation": "铁件修补",
+    "age": 43,
+    "minor": false,
+    "crest": "crests/smith.svg",
+    "prompt": "原创河谷日常职业纹章；武绵，43岁，铁件修补。以smith工具图形置于圆角盾牌，松绿底与麦金轮廓，无文字，无肖像，无亲密或恋爱元素。仅采用已登记日常职业，不绘制人物私事。"
+  },
+  {
+    "id": "npc_bs_066_1",
+    "name": "费澄",
+    "occupation": "铁件修补",
+    "age": 47,
+    "minor": false,
+    "crest": "crests/smith.svg",
+    "prompt": "原创河谷日常职业纹章；费澄，47岁，铁件修补。以smith工具图形置于圆角盾牌，松绿底与麦金轮廓，无文字，无肖像，无亲密或恋爱元素。仅采用已登记日常职业，不绘制人物私事。"
+  },
+  {
+    "id": "npc_bs_066_2",
+    "name": "费绵",
+    "occupation": "陶坯制作",
+    "age": 44,
+    "minor": false,
+    "crest": "crests/household.svg",
+    "prompt": "原创河谷日常职业纹章；费绵，44岁，陶坯制作。以household工具图形置于圆角盾牌，松绿底与麦金轮廓，无文字，无肖像，无亲密或恋爱元素。仅采用已登记日常职业，不绘制人物私事。"
+  },
+  {
+    "id": "npc_bs_067_1",
+    "name": "高澄",
+    "occupation": "陶坯制作",
+    "age": 48,
+    "minor": false,
+    "crest": "crests/household.svg",
+    "prompt": "原创河谷日常职业纹章；高澄，48岁，陶坯制作。以household工具图形置于圆角盾牌，松绿底与麦金轮廓，无文字，无肖像，无亲密或恋爱元素。仅采用已登记日常职业，不绘制人物私事。"
+  },
+  {
+    "id": "npc_bs_067_2",
+    "name": "高绵",
+    "occupation": "衣物缝补",
+    "age": 45,
+    "minor": false,
+    "crest": "crests/weaver.svg",
+    "prompt": "原创河谷日常职业纹章；高绵，45岁，衣物缝补。以weaver工具图形置于圆角盾牌，松绿底与麦金轮廓，无文字，无肖像，无亲密或恋爱元素。仅采用已登记日常职业，不绘制人物私事。"
+  },
+  {
+    "id": "npc_bs_068_1",
+    "name": "郭澄",
+    "occupation": "衣物缝补",
+    "age": 49,
+    "minor": false,
+    "crest": "crests/weaver.svg",
+    "prompt": "原创河谷日常职业纹章；郭澄，49岁，衣物缝补。以weaver工具图形置于圆角盾牌，松绿底与麦金轮廓，无文字，无肖像，无亲密或恋爱元素。仅采用已登记日常职业，不绘制人物私事。"
+  },
+  {
+    "id": "npc_bs_068_2",
+    "name": "郭绵",
+    "occupation": "铁件修补",
+    "age": 46,
+    "minor": false,
+    "crest": "crests/smith.svg",
+    "prompt": "原创河谷日常职业纹章；郭绵，46岁，铁件修补。以smith工具图形置于圆角盾牌，松绿底与麦金轮廓，无文字，无肖像，无亲密或恋爱元素。仅采用已登记日常职业，不绘制人物私事。"
+  },
+  {
+    "id": "npc_bs_069_1",
+    "name": "翁澄",
+    "occupation": "铁件修补",
+    "age": 50,
+    "minor": false,
+    "crest": "crests/smith.svg",
+    "prompt": "原创河谷日常职业纹章；翁澄，50岁，铁件修补。以smith工具图形置于圆角盾牌，松绿底与麦金轮廓，无文字，无肖像，无亲密或恋爱元素。仅采用已登记日常职业，不绘制人物私事。"
+  },
+  {
+    "id": "npc_bs_069_2",
+    "name": "翁绵",
+    "occupation": "陶坯制作",
+    "age": 47,
+    "minor": false,
+    "crest": "crests/household.svg",
+    "prompt": "原创河谷日常职业纹章；翁绵，47岁，陶坯制作。以household工具图形置于圆角盾牌，松绿底与麦金轮廓，无文字，无肖像，无亲密或恋爱元素。仅采用已登记日常职业，不绘制人物私事。"
+  },
+  {
+    "id": "npc_bs_076_1",
+    "name": "季澄",
+    "occupation": "灯祠照看",
+    "age": 73,
+    "minor": false,
+    "crest": "crests/household.svg",
+    "prompt": "原创河谷日常职业纹章；季澄，73岁，灯祠照看。以household工具图形置于圆角盾牌，松绿底与麦金轮廓，无文字，无肖像，无亲密或恋爱元素。仅采用已登记日常职业，不绘制人物私事。"
+  },
+  {
+    "id": "npc_bs_076_2",
+    "name": "季绵",
+    "occupation": "字样板描写",
+    "age": 47,
+    "minor": false,
+    "crest": "crests/scribe.svg",
+    "prompt": "原创河谷日常职业纹章；季绵，47岁，字样板描写。以scribe工具图形置于圆角盾牌，松绿底与麦金轮廓，无文字，无肖像，无亲密或恋爱元素。仅采用已登记日常职业，不绘制人物私事。"
+  },
+  {
+    "id": "npc_bs_076_3",
+    "name": "季笙",
+    "occupation": "学馆抄录",
+    "age": 44,
+    "minor": false,
+    "crest": "crests/scribe.svg",
+    "prompt": "原创河谷日常职业纹章；季笙，44岁，学馆抄录。以scribe工具图形置于圆角盾牌，松绿底与麦金轮廓，无文字，无肖像，无亲密或恋爱元素。仅采用已登记日常职业，不绘制人物私事。"
+  },
+  {
+    "id": "npc_bs_077_1",
+    "name": "裴澄",
+    "occupation": "字样板描写",
+    "age": 74,
+    "minor": false,
+    "crest": "crests/scribe.svg",
+    "prompt": "原创河谷日常职业纹章；裴澄，74岁，字样板描写。以scribe工具图形置于圆角盾牌，松绿底与麦金轮廓，无文字，无肖像，无亲密或恋爱元素。仅采用已登记日常职业，不绘制人物私事。"
+  },
+  {
+    "id": "npc_bs_077_2",
+    "name": "裴绵",
+    "occupation": "学馆抄录",
+    "age": 48,
+    "minor": false,
+    "crest": "crests/scribe.svg",
+    "prompt": "原创河谷日常职业纹章；裴绵，48岁，学馆抄录。以scribe工具图形置于圆角盾牌，松绿底与麦金轮廓，无文字，无肖像，无亲密或恋爱元素。仅采用已登记日常职业，不绘制人物私事。"
+  },
+  {
+    "id": "npc_bs_077_3",
+    "name": "裴笙",
+    "occupation": "灯祠照看",
+    "age": 45,
+    "minor": false,
+    "crest": "crests/household.svg",
+    "prompt": "原创河谷日常职业纹章；裴笙，45岁，灯祠照看。以household工具图形置于圆角盾牌，松绿底与麦金轮廓，无文字，无肖像，无亲密或恋爱元素。仅采用已登记日常职业，不绘制人物私事。"
+  },
+  {
+    "id": "npc_bs_078_1",
+    "name": "舒澄",
+    "occupation": "学馆抄录",
+    "age": 75,
+    "minor": false,
+    "crest": "crests/scribe.svg",
+    "prompt": "原创河谷日常职业纹章；舒澄，75岁，学馆抄录。以scribe工具图形置于圆角盾牌，松绿底与麦金轮廓，无文字，无肖像，无亲密或恋爱元素。仅采用已登记日常职业，不绘制人物私事。"
+  },
+  {
+    "id": "npc_bs_078_2",
+    "name": "舒绵",
+    "occupation": "灯祠照看",
+    "age": 49,
+    "minor": false,
+    "crest": "crests/household.svg",
+    "prompt": "原创河谷日常职业纹章；舒绵，49岁，灯祠照看。以household工具图形置于圆角盾牌，松绿底与麦金轮廓，无文字，无肖像，无亲密或恋爱元素。仅采用已登记日常职业，不绘制人物私事。"
+  },
+  {
+    "id": "npc_bs_078_3",
+    "name": "舒笙",
+    "occupation": "字样板描写",
+    "age": 46,
+    "minor": false,
+    "crest": "crests/scribe.svg",
+    "prompt": "原创河谷日常职业纹章；舒笙，46岁，字样板描写。以scribe工具图形置于圆角盾牌，松绿底与麦金轮廓，无文字，无肖像，无亲密或恋爱元素。仅采用已登记日常职业，不绘制人物私事。"
+  },
+  {
+    "id": "npc_bs_079_1",
+    "name": "曲澄",
+    "occupation": "灯祠照看",
+    "age": 76,
+    "minor": false,
+    "crest": "crests/household.svg",
+    "prompt": "原创河谷日常职业纹章；曲澄，76岁，灯祠照看。以household工具图形置于圆角盾牌，松绿底与麦金轮廓，无文字，无肖像，无亲密或恋爱元素。仅采用已登记日常职业，不绘制人物私事。"
+  },
+  {
+    "id": "npc_bs_079_2",
+    "name": "曲绵",
+    "occupation": "字样板描写",
+    "age": 50,
+    "minor": false,
+    "crest": "crests/scribe.svg",
+    "prompt": "原创河谷日常职业纹章；曲绵，50岁，字样板描写。以scribe工具图形置于圆角盾牌，松绿底与麦金轮廓，无文字，无肖像，无亲密或恋爱元素。仅采用已登记日常职业，不绘制人物私事。"
+  },
+  {
+    "id": "npc_bs_079_3",
+    "name": "曲笙",
+    "occupation": "学馆抄录",
+    "age": 47,
+    "minor": false,
+    "crest": "crests/scribe.svg",
+    "prompt": "原创河谷日常职业纹章；曲笙，47岁，学馆抄录。以scribe工具图形置于圆角盾牌，松绿底与麦金轮廓，无文字，无肖像，无亲密或恋爱元素。仅采用已登记日常职业，不绘制人物私事。"
+  },
+  {
+    "id": "npc_bs_080_1",
+    "name": "苗澄",
+    "occupation": "字样板描写",
+    "age": 72,
+    "minor": false,
+    "crest": "crests/scribe.svg",
+    "prompt": "原创河谷日常职业纹章；苗澄，72岁，字样板描写。以scribe工具图形置于圆角盾牌，松绿底与麦金轮廓，无文字，无肖像，无亲密或恋爱元素。仅采用已登记日常职业，不绘制人物私事。"
+  },
+  {
+    "id": "npc_bs_080_2",
+    "name": "苗绵",
+    "occupation": "学馆抄录",
+    "age": 46,
+    "minor": false,
+    "crest": "crests/scribe.svg",
+    "prompt": "原创河谷日常职业纹章；苗绵，46岁，学馆抄录。以scribe工具图形置于圆角盾牌，松绿底与麦金轮廓，无文字，无肖像，无亲密或恋爱元素。仅采用已登记日常职业，不绘制人物私事。"
+  },
+  {
+    "id": "npc_bs_080_3",
+    "name": "苗笙",
+    "occupation": "灯祠照看",
+    "age": 43,
+    "minor": false,
+    "crest": "crests/household.svg",
+    "prompt": "原创河谷日常职业纹章；苗笙，43岁，灯祠照看。以household工具图形置于圆角盾牌，松绿底与麦金轮廓，无文字，无肖像，无亲密或恋爱元素。仅采用已登记日常职业，不绘制人物私事。"
+  },
+  {
     "id": "npc_hw_fangqin",
     "name": "方芩",
     "occupation": "家务与旧账抄录",
@@ -4014,60 +4905,6 @@
     "prompt": "原创河谷日常职业纹章；邸泉，11岁，学生。以student工具图形置于圆角盾牌，松绿底与麦金轮廓，无文字，无肖像，无亲密或恋爱元素。仅采用已登记日常职业，不绘制人物私事。"
   },
   {
-    "id": "npc_bs_001_2",
-    "name": "贺绵",
-    "occupation": "码头计数",
-    "age": 32,
-    "minor": false,
-    "crest": "crests/household.svg",
-    "prompt": "原创河谷日常职业纹章；贺绵，32岁，码头计数。以household工具图形置于圆角盾牌，松绿底与麦金轮廓，无文字，无肖像，无亲密或恋爱元素。仅采用已登记日常职业，不绘制人物私事。"
-  },
-  {
-    "id": "npc_bs_001_3",
-    "name": "贺笙",
-    "occupation": "系缆与装卸",
-    "age": 29,
-    "minor": false,
-    "crest": "crests/household.svg",
-    "prompt": "原创河谷日常职业纹章；贺笙，29岁，系缆与装卸。以household工具图形置于圆角盾牌，松绿底与麦金轮廓，无文字，无肖像，无亲密或恋爱元素。仅采用已登记日常职业，不绘制人物私事。"
-  },
-  {
-    "id": "npc_bs_001_4",
-    "name": "贺砺",
-    "occupation": "船具修补",
-    "age": 26,
-    "minor": false,
-    "crest": "crests/boatman.svg",
-    "prompt": "原创河谷日常职业纹章；贺砺，26岁，船具修补。以boatman工具图形置于圆角盾牌，松绿底与麦金轮廓，无文字，无肖像，无亲密或恋爱元素。仅采用已登记日常职业，不绘制人物私事。"
-  },
-  {
-    "id": "npc_bs_002_1",
-    "name": "顾澄",
-    "occupation": "码头计数",
-    "age": 46,
-    "minor": false,
-    "crest": "crests/household.svg",
-    "prompt": "原创河谷日常职业纹章；顾澄，46岁，码头计数。以household工具图形置于圆角盾牌，松绿底与麦金轮廓，无文字，无肖像，无亲密或恋爱元素。仅采用已登记日常职业，不绘制人物私事。"
-  },
-  {
-    "id": "npc_bs_002_2",
-    "name": "顾绵",
-    "occupation": "系缆与装卸",
-    "age": 43,
-    "minor": false,
-    "crest": "crests/household.svg",
-    "prompt": "原创河谷日常职业纹章；顾绵，43岁，系缆与装卸。以household工具图形置于圆角盾牌，松绿底与麦金轮廓，无文字，无肖像，无亲密或恋爱元素。仅采用已登记日常职业，不绘制人物私事。"
-  },
-  {
-    "id": "npc_bs_002_3",
-    "name": "顾笙",
-    "occupation": "船具修补",
-    "age": 22,
-    "minor": false,
-    "crest": "crests/boatman.svg",
-    "prompt": "原创河谷日常职业纹章；顾笙，22岁，船具修补。以boatman工具图形置于圆角盾牌，松绿底与麦金轮廓，无文字，无肖像，无亲密或恋爱元素。仅采用已登记日常职业，不绘制人物私事。"
-  },
-  {
     "id": "npc_bs_002_4",
     "name": "顾砺",
     "occupation": "日常识字与家中轻活",
@@ -4075,33 +4912,6 @@
     "minor": true,
     "crest": "crests/student.svg",
     "prompt": "原创河谷日常职业纹章；顾砺，11岁，日常识字与家中轻活。以student工具图形置于圆角盾牌，松绿底与麦金轮廓，无文字，无肖像，无亲密或恋爱元素。仅采用已登记日常职业，不绘制人物私事。"
-  },
-  {
-    "id": "npc_bs_003_1",
-    "name": "邵澄",
-    "occupation": "系缆与装卸",
-    "age": 47,
-    "minor": false,
-    "crest": "crests/household.svg",
-    "prompt": "原创河谷日常职业纹章；邵澄，47岁，系缆与装卸。以household工具图形置于圆角盾牌，松绿底与麦金轮廓，无文字，无肖像，无亲密或恋爱元素。仅采用已登记日常职业，不绘制人物私事。"
-  },
-  {
-    "id": "npc_bs_003_2",
-    "name": "邵绵",
-    "occupation": "船具修补",
-    "age": 44,
-    "minor": false,
-    "crest": "crests/boatman.svg",
-    "prompt": "原创河谷日常职业纹章；邵绵，44岁，船具修补。以boatman工具图形置于圆角盾牌，松绿底与麦金轮廓，无文字，无肖像，无亲密或恋爱元素。仅采用已登记日常职业，不绘制人物私事。"
-  },
-  {
-    "id": "npc_bs_003_3",
-    "name": "邵笙",
-    "occupation": "码头计数",
-    "age": 22,
-    "minor": false,
-    "crest": "crests/household.svg",
-    "prompt": "原创河谷日常职业纹章；邵笙，22岁，码头计数。以household工具图形置于圆角盾牌，松绿底与麦金轮廓，无文字，无肖像，无亲密或恋爱元素。仅采用已登记日常职业，不绘制人物私事。"
   },
   {
     "id": "npc_bs_003_4",
@@ -4113,33 +4923,6 @@
     "prompt": "原创河谷日常职业纹章；邵砺，11岁，日常识字与家中轻活。以student工具图形置于圆角盾牌，松绿底与麦金轮廓，无文字，无肖像，无亲密或恋爱元素。仅采用已登记日常职业，不绘制人物私事。"
   },
   {
-    "id": "npc_bs_004_1",
-    "name": "傅澄",
-    "occupation": "船具修补",
-    "age": 48,
-    "minor": false,
-    "crest": "crests/boatman.svg",
-    "prompt": "原创河谷日常职业纹章；傅澄，48岁，船具修补。以boatman工具图形置于圆角盾牌，松绿底与麦金轮廓，无文字，无肖像，无亲密或恋爱元素。仅采用已登记日常职业，不绘制人物私事。"
-  },
-  {
-    "id": "npc_bs_004_2",
-    "name": "傅绵",
-    "occupation": "码头计数",
-    "age": 45,
-    "minor": false,
-    "crest": "crests/household.svg",
-    "prompt": "原创河谷日常职业纹章；傅绵，45岁，码头计数。以household工具图形置于圆角盾牌，松绿底与麦金轮廓，无文字，无肖像，无亲密或恋爱元素。仅采用已登记日常职业，不绘制人物私事。"
-  },
-  {
-    "id": "npc_bs_004_3",
-    "name": "傅笙",
-    "occupation": "系缆与装卸",
-    "age": 22,
-    "minor": false,
-    "crest": "crests/household.svg",
-    "prompt": "原创河谷日常职业纹章；傅笙，22岁，系缆与装卸。以household工具图形置于圆角盾牌，松绿底与麦金轮廓，无文字，无肖像，无亲密或恋爱元素。仅采用已登记日常职业，不绘制人物私事。"
-  },
-  {
     "id": "npc_bs_004_4",
     "name": "傅砺",
     "occupation": "日常识字与家中轻活",
@@ -4149,33 +4932,6 @@
     "prompt": "原创河谷日常职业纹章；傅砺，11岁，日常识字与家中轻活。以student工具图形置于圆角盾牌，松绿底与麦金轮廓，无文字，无肖像，无亲密或恋爱元素。仅采用已登记日常职业，不绘制人物私事。"
   },
   {
-    "id": "npc_bs_005_1",
-    "name": "罗澄",
-    "occupation": "码头计数",
-    "age": 49,
-    "minor": false,
-    "crest": "crests/household.svg",
-    "prompt": "原创河谷日常职业纹章；罗澄，49岁，码头计数。以household工具图形置于圆角盾牌，松绿底与麦金轮廓，无文字，无肖像，无亲密或恋爱元素。仅采用已登记日常职业，不绘制人物私事。"
-  },
-  {
-    "id": "npc_bs_005_2",
-    "name": "罗绵",
-    "occupation": "系缆与装卸",
-    "age": 46,
-    "minor": false,
-    "crest": "crests/household.svg",
-    "prompt": "原创河谷日常职业纹章；罗绵，46岁，系缆与装卸。以household工具图形置于圆角盾牌，松绿底与麦金轮廓，无文字，无肖像，无亲密或恋爱元素。仅采用已登记日常职业，不绘制人物私事。"
-  },
-  {
-    "id": "npc_bs_005_3",
-    "name": "罗笙",
-    "occupation": "船具修补",
-    "age": 22,
-    "minor": false,
-    "crest": "crests/boatman.svg",
-    "prompt": "原创河谷日常职业纹章；罗笙，22岁，船具修补。以boatman工具图形置于圆角盾牌，松绿底与麦金轮廓，无文字，无肖像，无亲密或恋爱元素。仅采用已登记日常职业，不绘制人物私事。"
-  },
-  {
     "id": "npc_bs_005_4",
     "name": "罗砺",
     "occupation": "日常识字与家中轻活",
@@ -4183,24 +4939,6 @@
     "minor": true,
     "crest": "crests/student.svg",
     "prompt": "原创河谷日常职业纹章；罗砺，11岁，日常识字与家中轻活。以student工具图形置于圆角盾牌，松绿底与麦金轮廓，无文字，无肖像，无亲密或恋爱元素。仅采用已登记日常职业，不绘制人物私事。"
-  },
-  {
-    "id": "npc_bs_006_1",
-    "name": "夏澄",
-    "occupation": "系缆与装卸",
-    "age": 50,
-    "minor": false,
-    "crest": "crests/household.svg",
-    "prompt": "原创河谷日常职业纹章；夏澄，50岁，系缆与装卸。以household工具图形置于圆角盾牌，松绿底与麦金轮廓，无文字，无肖像，无亲密或恋爱元素。仅采用已登记日常职业，不绘制人物私事。"
-  },
-  {
-    "id": "npc_bs_006_2",
-    "name": "夏绵",
-    "occupation": "船具修补",
-    "age": 47,
-    "minor": false,
-    "crest": "crests/boatman.svg",
-    "prompt": "原创河谷日常职业纹章；夏绵，47岁，船具修补。以boatman工具图形置于圆角盾牌，松绿底与麦金轮廓，无文字，无肖像，无亲密或恋爱元素。仅采用已登记日常职业，不绘制人物私事。"
   },
   {
     "id": "npc_bs_006_3",
@@ -4545,24 +5283,6 @@
     "prompt": "原创河谷日常职业纹章；陆砺，11岁，日常识字与家中轻活。以student工具图形置于圆角盾牌，松绿底与麦金轮廓，无文字，无肖像，无亲密或恋爱元素。仅采用已登记日常职业，不绘制人物私事。"
   },
   {
-    "id": "npc_bs_016_1",
-    "name": "汪澄",
-    "occupation": "车运安排",
-    "age": 46,
-    "minor": false,
-    "crest": "crests/household.svg",
-    "prompt": "原创河谷日常职业纹章；汪澄，46岁，车运安排。以household工具图形置于圆角盾牌，松绿底与麦金轮廓，无文字，无肖像，无亲密或恋爱元素。仅采用已登记日常职业，不绘制人物私事。"
-  },
-  {
-    "id": "npc_bs_016_2",
-    "name": "汪绵",
-    "occupation": "货单抄写",
-    "age": 43,
-    "minor": false,
-    "crest": "crests/scribe.svg",
-    "prompt": "原创河谷日常职业纹章；汪绵，43岁，货单抄写。以scribe工具图形置于圆角盾牌，松绿底与麦金轮廓，无文字，无肖像，无亲密或恋爱元素。仅采用已登记日常职业，不绘制人物私事。"
-  },
-  {
     "id": "npc_bs_016_3",
     "name": "汪笙",
     "occupation": "日常识字与家中轻活",
@@ -4579,24 +5299,6 @@
     "minor": true,
     "crest": "crests/student.svg",
     "prompt": "原创河谷日常职业纹章；汪砺，11岁，日常识字与家中轻活。以student工具图形置于圆角盾牌，松绿底与麦金轮廓，无文字，无肖像，无亲密或恋爱元素。仅采用已登记日常职业，不绘制人物私事。"
-  },
-  {
-    "id": "npc_bs_017_1",
-    "name": "邢澄",
-    "occupation": "货单抄写",
-    "age": 47,
-    "minor": false,
-    "crest": "crests/scribe.svg",
-    "prompt": "原创河谷日常职业纹章；邢澄，47岁，货单抄写。以scribe工具图形置于圆角盾牌，松绿底与麦金轮廓，无文字，无肖像，无亲密或恋爱元素。仅采用已登记日常职业，不绘制人物私事。"
-  },
-  {
-    "id": "npc_bs_017_2",
-    "name": "邢绵",
-    "occupation": "货栈交接",
-    "age": 44,
-    "minor": false,
-    "crest": "crests/merchant.svg",
-    "prompt": "原创河谷日常职业纹章；邢绵，44岁，货栈交接。以merchant工具图形置于圆角盾牌，松绿底与麦金轮廓，无文字，无肖像，无亲密或恋爱元素。仅采用已登记日常职业，不绘制人物私事。"
   },
   {
     "id": "npc_bs_017_3",
@@ -4617,24 +5319,6 @@
     "prompt": "原创河谷日常职业纹章；邢砺，11岁，日常识字与家中轻活。以student工具图形置于圆角盾牌，松绿底与麦金轮廓，无文字，无肖像，无亲密或恋爱元素。仅采用已登记日常职业，不绘制人物私事。"
   },
   {
-    "id": "npc_bs_018_1",
-    "name": "钟澄",
-    "occupation": "货栈交接",
-    "age": 48,
-    "minor": false,
-    "crest": "crests/merchant.svg",
-    "prompt": "原创河谷日常职业纹章；钟澄，48岁，货栈交接。以merchant工具图形置于圆角盾牌，松绿底与麦金轮廓，无文字，无肖像，无亲密或恋爱元素。仅采用已登记日常职业，不绘制人物私事。"
-  },
-  {
-    "id": "npc_bs_018_2",
-    "name": "钟绵",
-    "occupation": "车运安排",
-    "age": 45,
-    "minor": false,
-    "crest": "crests/household.svg",
-    "prompt": "原创河谷日常职业纹章；钟绵，45岁，车运安排。以household工具图形置于圆角盾牌，松绿底与麦金轮廓，无文字，无肖像，无亲密或恋爱元素。仅采用已登记日常职业，不绘制人物私事。"
-  },
-  {
     "id": "npc_bs_018_3",
     "name": "钟笙",
     "occupation": "日常识字与家中轻活",
@@ -4651,24 +5335,6 @@
     "minor": true,
     "crest": "crests/student.svg",
     "prompt": "原创河谷日常职业纹章；钟砺，11岁，日常识字与家中轻活。以student工具图形置于圆角盾牌，松绿底与麦金轮廓，无文字，无肖像，无亲密或恋爱元素。仅采用已登记日常职业，不绘制人物私事。"
-  },
-  {
-    "id": "npc_bs_019_1",
-    "name": "侯澄",
-    "occupation": "车运安排",
-    "age": 49,
-    "minor": false,
-    "crest": "crests/household.svg",
-    "prompt": "原创河谷日常职业纹章；侯澄，49岁，车运安排。以household工具图形置于圆角盾牌，松绿底与麦金轮廓，无文字，无肖像，无亲密或恋爱元素。仅采用已登记日常职业，不绘制人物私事。"
-  },
-  {
-    "id": "npc_bs_019_2",
-    "name": "侯绵",
-    "occupation": "货单抄写",
-    "age": 46,
-    "minor": false,
-    "crest": "crests/scribe.svg",
-    "prompt": "原创河谷日常职业纹章；侯绵，46岁，货单抄写。以scribe工具图形置于圆角盾牌，松绿底与麦金轮廓，无文字，无肖像，无亲密或恋爱元素。仅采用已登记日常职业，不绘制人物私事。"
   },
   {
     "id": "npc_bs_019_3",
@@ -4689,24 +5355,6 @@
     "prompt": "原创河谷日常职业纹章；侯砺，11岁，日常识字与家中轻活。以student工具图形置于圆角盾牌，松绿底与麦金轮廓，无文字，无肖像，无亲密或恋爱元素。仅采用已登记日常职业，不绘制人物私事。"
   },
   {
-    "id": "npc_bs_020_1",
-    "name": "薛澄",
-    "occupation": "货单抄写",
-    "age": 50,
-    "minor": false,
-    "crest": "crests/scribe.svg",
-    "prompt": "原创河谷日常职业纹章；薛澄，50岁，货单抄写。以scribe工具图形置于圆角盾牌，松绿底与麦金轮廓，无文字，无肖像，无亲密或恋爱元素。仅采用已登记日常职业，不绘制人物私事。"
-  },
-  {
-    "id": "npc_bs_020_2",
-    "name": "薛绵",
-    "occupation": "货栈交接",
-    "age": 47,
-    "minor": false,
-    "crest": "crests/merchant.svg",
-    "prompt": "原创河谷日常职业纹章；薛绵，47岁，货栈交接。以merchant工具图形置于圆角盾牌，松绿底与麦金轮廓，无文字，无肖像，无亲密或恋爱元素。仅采用已登记日常职业，不绘制人物私事。"
-  },
-  {
     "id": "npc_bs_020_3",
     "name": "薛笙",
     "occupation": "日常识字与家中轻活",
@@ -4723,24 +5371,6 @@
     "minor": true,
     "crest": "crests/student.svg",
     "prompt": "原创河谷日常职业纹章；薛砺，11岁，日常识字与家中轻活。以student工具图形置于圆角盾牌，松绿底与麦金轮廓，无文字，无肖像，无亲密或恋爱元素。仅采用已登记日常职业，不绘制人物私事。"
-  },
-  {
-    "id": "npc_bs_021_1",
-    "name": "石澄",
-    "occupation": "货栈交接",
-    "age": 44,
-    "minor": false,
-    "crest": "crests/merchant.svg",
-    "prompt": "原创河谷日常职业纹章；石澄，44岁，货栈交接。以merchant工具图形置于圆角盾牌，松绿底与麦金轮廓，无文字，无肖像，无亲密或恋爱元素。仅采用已登记日常职业，不绘制人物私事。"
-  },
-  {
-    "id": "npc_bs_021_2",
-    "name": "石绵",
-    "occupation": "车运安排",
-    "age": 41,
-    "minor": false,
-    "crest": "crests/household.svg",
-    "prompt": "原创河谷日常职业纹章；石绵，41岁，车运安排。以household工具图形置于圆角盾牌，松绿底与麦金轮廓，无文字，无肖像，无亲密或恋爱元素。仅采用已登记日常职业，不绘制人物私事。"
   },
   {
     "id": "npc_bs_021_3",
@@ -4761,24 +5391,6 @@
     "prompt": "原创河谷日常职业纹章；石砺，11岁，日常识字与家中轻活。以student工具图形置于圆角盾牌，松绿底与麦金轮廓，无文字，无肖像，无亲密或恋爱元素。仅采用已登记日常职业，不绘制人物私事。"
   },
   {
-    "id": "npc_bs_022_1",
-    "name": "熊澄",
-    "occupation": "车运安排",
-    "age": 45,
-    "minor": false,
-    "crest": "crests/household.svg",
-    "prompt": "原创河谷日常职业纹章；熊澄，45岁，车运安排。以household工具图形置于圆角盾牌，松绿底与麦金轮廓，无文字，无肖像，无亲密或恋爱元素。仅采用已登记日常职业，不绘制人物私事。"
-  },
-  {
-    "id": "npc_bs_022_2",
-    "name": "熊绵",
-    "occupation": "货单抄写",
-    "age": 42,
-    "minor": false,
-    "crest": "crests/scribe.svg",
-    "prompt": "原创河谷日常职业纹章；熊绵，42岁，货单抄写。以scribe工具图形置于圆角盾牌，松绿底与麦金轮廓，无文字，无肖像，无亲密或恋爱元素。仅采用已登记日常职业，不绘制人物私事。"
-  },
-  {
     "id": "npc_bs_022_3",
     "name": "熊笙",
     "occupation": "日常识字与家中轻活",
@@ -4795,24 +5407,6 @@
     "minor": true,
     "crest": "crests/student.svg",
     "prompt": "原创河谷日常职业纹章；熊砺，11岁，日常识字与家中轻活。以student工具图形置于圆角盾牌，松绿底与麦金轮廓，无文字，无肖像，无亲密或恋爱元素。仅采用已登记日常职业，不绘制人物私事。"
-  },
-  {
-    "id": "npc_bs_023_1",
-    "name": "乔澄",
-    "occupation": "货单抄写",
-    "age": 46,
-    "minor": false,
-    "crest": "crests/scribe.svg",
-    "prompt": "原创河谷日常职业纹章；乔澄，46岁，货单抄写。以scribe工具图形置于圆角盾牌，松绿底与麦金轮廓，无文字，无肖像，无亲密或恋爱元素。仅采用已登记日常职业，不绘制人物私事。"
-  },
-  {
-    "id": "npc_bs_023_2",
-    "name": "乔绵",
-    "occupation": "货栈交接",
-    "age": 43,
-    "minor": false,
-    "crest": "crests/merchant.svg",
-    "prompt": "原创河谷日常职业纹章；乔绵，43岁，货栈交接。以merchant工具图形置于圆角盾牌，松绿底与麦金轮廓，无文字，无肖像，无亲密或恋爱元素。仅采用已登记日常职业，不绘制人物私事。"
   },
   {
     "id": "npc_bs_023_3",
@@ -5085,24 +5679,6 @@
     "prompt": "原创河谷日常职业纹章；任砺，11岁，日常识字与家中轻活。以student工具图形置于圆角盾牌，松绿底与麦金轮廓，无文字，无肖像，无亲密或恋爱元素。仅采用已登记日常职业，不绘制人物私事。"
   },
   {
-    "id": "npc_bs_031_1",
-    "name": "姜澄",
-    "occupation": "公署递件",
-    "age": 47,
-    "minor": false,
-    "crest": "crests/household.svg",
-    "prompt": "原创河谷日常职业纹章；姜澄，47岁，公署递件。以household工具图形置于圆角盾牌，松绿底与麦金轮廓，无文字，无肖像，无亲密或恋爱元素。仅采用已登记日常职业，不绘制人物私事。"
-  },
-  {
-    "id": "npc_bs_031_2",
-    "name": "姜绵",
-    "occupation": "巡更交接",
-    "age": 44,
-    "minor": false,
-    "crest": "crests/warden.svg",
-    "prompt": "原创河谷日常职业纹章；姜绵，44岁，巡更交接。以warden工具图形置于圆角盾牌，松绿底与麦金轮廓，无文字，无肖像，无亲密或恋爱元素。仅采用已登记日常职业，不绘制人物私事。"
-  },
-  {
     "id": "npc_bs_031_3",
     "name": "姜笙",
     "occupation": "日常识字与家中轻活",
@@ -5119,24 +5695,6 @@
     "minor": true,
     "crest": "crests/student.svg",
     "prompt": "原创河谷日常职业纹章；姜砺，11岁，日常识字与家中轻活。以student工具图形置于圆角盾牌，松绿底与麦金轮廓，无文字，无肖像，无亲密或恋爱元素。仅采用已登记日常职业，不绘制人物私事。"
-  },
-  {
-    "id": "npc_bs_032_1",
-    "name": "潘澄",
-    "occupation": "巡更交接",
-    "age": 48,
-    "minor": false,
-    "crest": "crests/warden.svg",
-    "prompt": "原创河谷日常职业纹章；潘澄，48岁，巡更交接。以warden工具图形置于圆角盾牌，松绿底与麦金轮廓，无文字，无肖像，无亲密或恋爱元素。仅采用已登记日常职业，不绘制人物私事。"
-  },
-  {
-    "id": "npc_bs_032_2",
-    "name": "潘绵",
-    "occupation": "户籍抄录",
-    "age": 45,
-    "minor": false,
-    "crest": "crests/scribe.svg",
-    "prompt": "原创河谷日常职业纹章；潘绵，45岁，户籍抄录。以scribe工具图形置于圆角盾牌，松绿底与麦金轮廓，无文字，无肖像，无亲密或恋爱元素。仅采用已登记日常职业，不绘制人物私事。"
   },
   {
     "id": "npc_bs_032_3",
@@ -5157,24 +5715,6 @@
     "prompt": "原创河谷日常职业纹章；潘砺，11岁，日常识字与家中轻活。以student工具图形置于圆角盾牌，松绿底与麦金轮廓，无文字，无肖像，无亲密或恋爱元素。仅采用已登记日常职业，不绘制人物私事。"
   },
   {
-    "id": "npc_bs_033_1",
-    "name": "余澄",
-    "occupation": "户籍抄录",
-    "age": 49,
-    "minor": false,
-    "crest": "crests/scribe.svg",
-    "prompt": "原创河谷日常职业纹章；余澄，49岁，户籍抄录。以scribe工具图形置于圆角盾牌，松绿底与麦金轮廓，无文字，无肖像，无亲密或恋爱元素。仅采用已登记日常职业，不绘制人物私事。"
-  },
-  {
-    "id": "npc_bs_033_2",
-    "name": "余绵",
-    "occupation": "公署递件",
-    "age": 46,
-    "minor": false,
-    "crest": "crests/household.svg",
-    "prompt": "原创河谷日常职业纹章；余绵，46岁，公署递件。以household工具图形置于圆角盾牌，松绿底与麦金轮廓，无文字，无肖像，无亲密或恋爱元素。仅采用已登记日常职业，不绘制人物私事。"
-  },
-  {
     "id": "npc_bs_033_3",
     "name": "余笙",
     "occupation": "日常识字与家中轻活",
@@ -5191,24 +5731,6 @@
     "minor": true,
     "crest": "crests/student.svg",
     "prompt": "原创河谷日常职业纹章；余砺，11岁，日常识字与家中轻活。以student工具图形置于圆角盾牌，松绿底与麦金轮廓，无文字，无肖像，无亲密或恋爱元素。仅采用已登记日常职业，不绘制人物私事。"
-  },
-  {
-    "id": "npc_bs_034_1",
-    "name": "杜澄",
-    "occupation": "公署递件",
-    "age": 50,
-    "minor": false,
-    "crest": "crests/household.svg",
-    "prompt": "原创河谷日常职业纹章；杜澄，50岁，公署递件。以household工具图形置于圆角盾牌，松绿底与麦金轮廓，无文字，无肖像，无亲密或恋爱元素。仅采用已登记日常职业，不绘制人物私事。"
-  },
-  {
-    "id": "npc_bs_034_2",
-    "name": "杜绵",
-    "occupation": "巡更交接",
-    "age": 47,
-    "minor": false,
-    "crest": "crests/warden.svg",
-    "prompt": "原创河谷日常职业纹章；杜绵，47岁，巡更交接。以warden工具图形置于圆角盾牌，松绿底与麦金轮廓，无文字，无肖像，无亲密或恋爱元素。仅采用已登记日常职业，不绘制人物私事。"
   },
   {
     "id": "npc_bs_034_3",
@@ -5229,24 +5751,6 @@
     "prompt": "原创河谷日常职业纹章；杜砺，11岁，日常识字与家中轻活。以student工具图形置于圆角盾牌，松绿底与麦金轮廓，无文字，无肖像，无亲密或恋爱元素。仅采用已登记日常职业，不绘制人物私事。"
   },
   {
-    "id": "npc_bs_035_1",
-    "name": "钱澄",
-    "occupation": "巡更交接",
-    "age": 44,
-    "minor": false,
-    "crest": "crests/warden.svg",
-    "prompt": "原创河谷日常职业纹章；钱澄，44岁，巡更交接。以warden工具图形置于圆角盾牌，松绿底与麦金轮廓，无文字，无肖像，无亲密或恋爱元素。仅采用已登记日常职业，不绘制人物私事。"
-  },
-  {
-    "id": "npc_bs_035_2",
-    "name": "钱绵",
-    "occupation": "户籍抄录",
-    "age": 41,
-    "minor": false,
-    "crest": "crests/scribe.svg",
-    "prompt": "原创河谷日常职业纹章；钱绵，41岁，户籍抄录。以scribe工具图形置于圆角盾牌，松绿底与麦金轮廓，无文字，无肖像，无亲密或恋爱元素。仅采用已登记日常职业，不绘制人物私事。"
-  },
-  {
     "id": "npc_bs_035_3",
     "name": "钱笙",
     "occupation": "日常识字与家中轻活",
@@ -5263,24 +5767,6 @@
     "minor": true,
     "crest": "crests/student.svg",
     "prompt": "原创河谷日常职业纹章；钱砺，11岁，日常识字与家中轻活。以student工具图形置于圆角盾牌，松绿底与麦金轮廓，无文字，无肖像，无亲密或恋爱元素。仅采用已登记日常职业，不绘制人物私事。"
-  },
-  {
-    "id": "npc_bs_036_1",
-    "name": "蒋澄",
-    "occupation": "户籍抄录",
-    "age": 45,
-    "minor": false,
-    "crest": "crests/scribe.svg",
-    "prompt": "原创河谷日常职业纹章；蒋澄，45岁，户籍抄录。以scribe工具图形置于圆角盾牌，松绿底与麦金轮廓，无文字，无肖像，无亲密或恋爱元素。仅采用已登记日常职业，不绘制人物私事。"
-  },
-  {
-    "id": "npc_bs_036_2",
-    "name": "蒋绵",
-    "occupation": "公署递件",
-    "age": 42,
-    "minor": false,
-    "crest": "crests/household.svg",
-    "prompt": "原创河谷日常职业纹章；蒋绵，42岁，公署递件。以household工具图形置于圆角盾牌，松绿底与麦金轮廓，无文字，无肖像，无亲密或恋爱元素。仅采用已登记日常职业，不绘制人物私事。"
   },
   {
     "id": "npc_bs_036_3",
@@ -5301,24 +5787,6 @@
     "prompt": "原创河谷日常职业纹章；蒋砺，11岁，日常识字与家中轻活。以student工具图形置于圆角盾牌，松绿底与麦金轮廓，无文字，无肖像，无亲密或恋爱元素。仅采用已登记日常职业，不绘制人物私事。"
   },
   {
-    "id": "npc_bs_037_1",
-    "name": "丁澄",
-    "occupation": "公署递件",
-    "age": 46,
-    "minor": false,
-    "crest": "crests/household.svg",
-    "prompt": "原创河谷日常职业纹章；丁澄，46岁，公署递件。以household工具图形置于圆角盾牌，松绿底与麦金轮廓，无文字，无肖像，无亲密或恋爱元素。仅采用已登记日常职业，不绘制人物私事。"
-  },
-  {
-    "id": "npc_bs_037_2",
-    "name": "丁绵",
-    "occupation": "巡更交接",
-    "age": 43,
-    "minor": false,
-    "crest": "crests/warden.svg",
-    "prompt": "原创河谷日常职业纹章；丁绵，43岁，巡更交接。以warden工具图形置于圆角盾牌，松绿底与麦金轮廓，无文字，无肖像，无亲密或恋爱元素。仅采用已登记日常职业，不绘制人物私事。"
-  },
-  {
     "id": "npc_bs_037_3",
     "name": "丁笙",
     "occupation": "日常识字与家中轻活",
@@ -5328,24 +5796,6 @@
     "prompt": "原创河谷日常职业纹章；丁笙，15岁，日常识字与家中轻活。以student工具图形置于圆角盾牌，松绿底与麦金轮廓，无文字，无肖像，无亲密或恋爱元素。仅采用已登记日常职业，不绘制人物私事。"
   },
   {
-    "id": "npc_bs_038_1",
-    "name": "沈澄",
-    "occupation": "巡更交接",
-    "age": 47,
-    "minor": false,
-    "crest": "crests/warden.svg",
-    "prompt": "原创河谷日常职业纹章；沈澄，47岁，巡更交接。以warden工具图形置于圆角盾牌，松绿底与麦金轮廓，无文字，无肖像，无亲密或恋爱元素。仅采用已登记日常职业，不绘制人物私事。"
-  },
-  {
-    "id": "npc_bs_038_2",
-    "name": "沈绵",
-    "occupation": "户籍抄录",
-    "age": 44,
-    "minor": false,
-    "crest": "crests/scribe.svg",
-    "prompt": "原创河谷日常职业纹章；沈绵，44岁，户籍抄录。以scribe工具图形置于圆角盾牌，松绿底与麦金轮廓，无文字，无肖像，无亲密或恋爱元素。仅采用已登记日常职业，不绘制人物私事。"
-  },
-  {
     "id": "npc_bs_038_3",
     "name": "沈笙",
     "occupation": "日常识字与家中轻活",
@@ -5353,15 +5803,6 @@
     "minor": true,
     "crest": "crests/student.svg",
     "prompt": "原创河谷日常职业纹章；沈笙，15岁，日常识字与家中轻活。以student工具图形置于圆角盾牌，松绿底与麦金轮廓，无文字，无肖像，无亲密或恋爱元素。仅采用已登记日常职业，不绘制人物私事。"
-  },
-  {
-    "id": "npc_bs_039_1",
-    "name": "孟澄",
-    "occupation": "户籍抄录",
-    "age": 48,
-    "minor": false,
-    "crest": "crests/scribe.svg",
-    "prompt": "原创河谷日常职业纹章；孟澄，48岁，户籍抄录。以scribe工具图形置于圆角盾牌，松绿底与麦金轮廓，无文字，无肖像，无亲密或恋爱元素。仅采用已登记日常职业，不绘制人物私事。"
   },
   {
     "id": "npc_bs_039_2",
@@ -5544,24 +5985,6 @@
     "prompt": "原创河谷日常职业纹章；苏笙，15岁，日常识字与家中轻活。以student工具图形置于圆角盾牌，松绿底与麦金轮廓，无文字，无肖像，无亲密或恋爱元素。仅采用已登记日常职业，不绘制人物私事。"
   },
   {
-    "id": "npc_bs_046_1",
-    "name": "白澄",
-    "occupation": "摊位整理",
-    "age": 48,
-    "minor": false,
-    "crest": "crests/household.svg",
-    "prompt": "原创河谷日常职业纹章；白澄，48岁，摊位整理。以household工具图形置于圆角盾牌，松绿底与麦金轮廓，无文字，无肖像，无亲密或恋爱元素。仅采用已登记日常职业，不绘制人物私事。"
-  },
-  {
-    "id": "npc_bs_046_2",
-    "name": "白绵",
-    "occupation": "客舍洗晒",
-    "age": 45,
-    "minor": false,
-    "crest": "crests/household.svg",
-    "prompt": "原创河谷日常职业纹章；白绵，45岁，客舍洗晒。以household工具图形置于圆角盾牌，松绿底与麦金轮廓，无文字，无肖像，无亲密或恋爱元素。仅采用已登记日常职业，不绘制人物私事。"
-  },
-  {
     "id": "npc_bs_046_3",
     "name": "白笙",
     "occupation": "日常识字与家中轻活",
@@ -5569,24 +5992,6 @@
     "minor": true,
     "crest": "crests/student.svg",
     "prompt": "原创河谷日常职业纹章；白笙，15岁，日常识字与家中轻活。以student工具图形置于圆角盾牌，松绿底与麦金轮廓，无文字，无肖像，无亲密或恋爱元素。仅采用已登记日常职业，不绘制人物私事。"
-  },
-  {
-    "id": "npc_bs_047_1",
-    "name": "马澄",
-    "occupation": "客舍洗晒",
-    "age": 49,
-    "minor": false,
-    "crest": "crests/household.svg",
-    "prompt": "原创河谷日常职业纹章；马澄，49岁，客舍洗晒。以household工具图形置于圆角盾牌，松绿底与麦金轮廓，无文字，无肖像，无亲密或恋爱元素。仅采用已登记日常职业，不绘制人物私事。"
-  },
-  {
-    "id": "npc_bs_047_2",
-    "name": "马绵",
-    "occupation": "麦饼烘制",
-    "age": 46,
-    "minor": false,
-    "crest": "crests/household.svg",
-    "prompt": "原创河谷日常职业纹章；马绵，46岁，麦饼烘制。以household工具图形置于圆角盾牌，松绿底与麦金轮廓，无文字，无肖像，无亲密或恋爱元素。仅采用已登记日常职业，不绘制人物私事。"
   },
   {
     "id": "npc_bs_047_3",
@@ -5598,24 +6003,6 @@
     "prompt": "原创河谷日常职业纹章；马笙，15岁，日常识字与家中轻活。以student工具图形置于圆角盾牌，松绿底与麦金轮廓，无文字，无肖像，无亲密或恋爱元素。仅采用已登记日常职业，不绘制人物私事。"
   },
   {
-    "id": "npc_bs_048_1",
-    "name": "龚澄",
-    "occupation": "麦饼烘制",
-    "age": 50,
-    "minor": false,
-    "crest": "crests/household.svg",
-    "prompt": "原创河谷日常职业纹章；龚澄，50岁，麦饼烘制。以household工具图形置于圆角盾牌，松绿底与麦金轮廓，无文字，无肖像，无亲密或恋爱元素。仅采用已登记日常职业，不绘制人物私事。"
-  },
-  {
-    "id": "npc_bs_048_2",
-    "name": "龚绵",
-    "occupation": "摊位整理",
-    "age": 47,
-    "minor": false,
-    "crest": "crests/household.svg",
-    "prompt": "原创河谷日常职业纹章；龚绵，47岁，摊位整理。以household工具图形置于圆角盾牌，松绿底与麦金轮廓，无文字，无肖像，无亲密或恋爱元素。仅采用已登记日常职业，不绘制人物私事。"
-  },
-  {
     "id": "npc_bs_048_3",
     "name": "龚笙",
     "occupation": "日常识字与家中轻活",
@@ -5623,24 +6010,6 @@
     "minor": true,
     "crest": "crests/student.svg",
     "prompt": "原创河谷日常职业纹章；龚笙，15岁，日常识字与家中轻活。以student工具图形置于圆角盾牌，松绿底与麦金轮廓，无文字，无肖像，无亲密或恋爱元素。仅采用已登记日常职业，不绘制人物私事。"
-  },
-  {
-    "id": "npc_bs_049_1",
-    "name": "汤澄",
-    "occupation": "摊位整理",
-    "age": 44,
-    "minor": false,
-    "crest": "crests/household.svg",
-    "prompt": "原创河谷日常职业纹章；汤澄，44岁，摊位整理。以household工具图形置于圆角盾牌，松绿底与麦金轮廓，无文字，无肖像，无亲密或恋爱元素。仅采用已登记日常职业，不绘制人物私事。"
-  },
-  {
-    "id": "npc_bs_049_2",
-    "name": "汤绵",
-    "occupation": "客舍洗晒",
-    "age": 41,
-    "minor": false,
-    "crest": "crests/household.svg",
-    "prompt": "原创河谷日常职业纹章；汤绵，41岁，客舍洗晒。以household工具图形置于圆角盾牌，松绿底与麦金轮廓，无文字，无肖像，无亲密或恋爱元素。仅采用已登记日常职业，不绘制人物私事。"
   },
   {
     "id": "npc_bs_049_3",
@@ -5652,24 +6021,6 @@
     "prompt": "原创河谷日常职业纹章；汤笙，15岁，日常识字与家中轻活。以student工具图形置于圆角盾牌，松绿底与麦金轮廓，无文字，无肖像，无亲密或恋爱元素。仅采用已登记日常职业，不绘制人物私事。"
   },
   {
-    "id": "npc_bs_050_1",
-    "name": "于澄",
-    "occupation": "客舍洗晒",
-    "age": 45,
-    "minor": false,
-    "crest": "crests/household.svg",
-    "prompt": "原创河谷日常职业纹章；于澄，45岁，客舍洗晒。以household工具图形置于圆角盾牌，松绿底与麦金轮廓，无文字，无肖像，无亲密或恋爱元素。仅采用已登记日常职业，不绘制人物私事。"
-  },
-  {
-    "id": "npc_bs_050_2",
-    "name": "于绵",
-    "occupation": "麦饼烘制",
-    "age": 42,
-    "minor": false,
-    "crest": "crests/household.svg",
-    "prompt": "原创河谷日常职业纹章；于绵，42岁，麦饼烘制。以household工具图形置于圆角盾牌，松绿底与麦金轮廓，无文字，无肖像，无亲密或恋爱元素。仅采用已登记日常职业，不绘制人物私事。"
-  },
-  {
     "id": "npc_bs_050_3",
     "name": "于笙",
     "occupation": "日常识字与家中轻活",
@@ -5677,24 +6028,6 @@
     "minor": true,
     "crest": "crests/student.svg",
     "prompt": "原创河谷日常职业纹章；于笙，15岁，日常识字与家中轻活。以student工具图形置于圆角盾牌，松绿底与麦金轮廓，无文字，无肖像，无亲密或恋爱元素。仅采用已登记日常职业，不绘制人物私事。"
-  },
-  {
-    "id": "npc_bs_051_1",
-    "name": "段澄",
-    "occupation": "麦饼烘制",
-    "age": 46,
-    "minor": false,
-    "crest": "crests/household.svg",
-    "prompt": "原创河谷日常职业纹章；段澄，46岁，麦饼烘制。以household工具图形置于圆角盾牌，松绿底与麦金轮廓，无文字，无肖像，无亲密或恋爱元素。仅采用已登记日常职业，不绘制人物私事。"
-  },
-  {
-    "id": "npc_bs_051_2",
-    "name": "段绵",
-    "occupation": "摊位整理",
-    "age": 43,
-    "minor": false,
-    "crest": "crests/household.svg",
-    "prompt": "原创河谷日常职业纹章；段绵，43岁，摊位整理。以household工具图形置于圆角盾牌，松绿底与麦金轮廓，无文字，无肖像，无亲密或恋爱元素。仅采用已登记日常职业，不绘制人物私事。"
   },
   {
     "id": "npc_bs_051_3",
@@ -5706,24 +6039,6 @@
     "prompt": "原创河谷日常职业纹章；段笙，15岁，日常识字与家中轻活。以student工具图形置于圆角盾牌，松绿底与麦金轮廓，无文字，无肖像，无亲密或恋爱元素。仅采用已登记日常职业，不绘制人物私事。"
   },
   {
-    "id": "npc_bs_052_1",
-    "name": "朱澄",
-    "occupation": "摊位整理",
-    "age": 47,
-    "minor": false,
-    "crest": "crests/household.svg",
-    "prompt": "原创河谷日常职业纹章；朱澄，47岁，摊位整理。以household工具图形置于圆角盾牌，松绿底与麦金轮廓，无文字，无肖像，无亲密或恋爱元素。仅采用已登记日常职业，不绘制人物私事。"
-  },
-  {
-    "id": "npc_bs_052_2",
-    "name": "朱绵",
-    "occupation": "客舍洗晒",
-    "age": 44,
-    "minor": false,
-    "crest": "crests/household.svg",
-    "prompt": "原创河谷日常职业纹章；朱绵，44岁，客舍洗晒。以household工具图形置于圆角盾牌，松绿底与麦金轮廓，无文字，无肖像，无亲密或恋爱元素。仅采用已登记日常职业，不绘制人物私事。"
-  },
-  {
     "id": "npc_bs_052_3",
     "name": "朱笙",
     "occupation": "日常识字与家中轻活",
@@ -5731,24 +6046,6 @@
     "minor": true,
     "crest": "crests/student.svg",
     "prompt": "原创河谷日常职业纹章；朱笙，15岁，日常识字与家中轻活。以student工具图形置于圆角盾牌，松绿底与麦金轮廓，无文字，无肖像，无亲密或恋爱元素。仅采用已登记日常职业，不绘制人物私事。"
-  },
-  {
-    "id": "npc_bs_053_1",
-    "name": "金澄",
-    "occupation": "客舍洗晒",
-    "age": 48,
-    "minor": false,
-    "crest": "crests/household.svg",
-    "prompt": "原创河谷日常职业纹章；金澄，48岁，客舍洗晒。以household工具图形置于圆角盾牌，松绿底与麦金轮廓，无文字，无肖像，无亲密或恋爱元素。仅采用已登记日常职业，不绘制人物私事。"
-  },
-  {
-    "id": "npc_bs_053_2",
-    "name": "金绵",
-    "occupation": "麦饼烘制",
-    "age": 45,
-    "minor": false,
-    "crest": "crests/household.svg",
-    "prompt": "原创河谷日常职业纹章；金绵，45岁，麦饼烘制。以household工具图形置于圆角盾牌，松绿底与麦金轮廓，无文字，无肖像，无亲密或恋爱元素。仅采用已登记日常职业，不绘制人物私事。"
   },
   {
     "id": "npc_bs_053_3",
@@ -5949,24 +6246,6 @@
     "prompt": "原创河谷日常职业纹章；赖笙，15岁，日常识字与家中轻活。以student工具图形置于圆角盾牌，松绿底与麦金轮廓，无文字，无肖像，无亲密或恋爱元素。仅采用已登记日常职业，不绘制人物私事。"
   },
   {
-    "id": "npc_bs_061_1",
-    "name": "阎澄",
-    "occupation": "陶坯制作",
-    "age": 49,
-    "minor": false,
-    "crest": "crests/household.svg",
-    "prompt": "原创河谷日常职业纹章；阎澄，49岁，陶坯制作。以household工具图形置于圆角盾牌，松绿底与麦金轮廓，无文字，无肖像，无亲密或恋爱元素。仅采用已登记日常职业，不绘制人物私事。"
-  },
-  {
-    "id": "npc_bs_061_2",
-    "name": "阎绵",
-    "occupation": "衣物缝补",
-    "age": 46,
-    "minor": false,
-    "crest": "crests/weaver.svg",
-    "prompt": "原创河谷日常职业纹章；阎绵，46岁，衣物缝补。以weaver工具图形置于圆角盾牌，松绿底与麦金轮廓，无文字，无肖像，无亲密或恋爱元素。仅采用已登记日常职业，不绘制人物私事。"
-  },
-  {
     "id": "npc_bs_061_3",
     "name": "阎笙",
     "occupation": "日常识字与家中轻活",
@@ -5974,24 +6253,6 @@
     "minor": true,
     "crest": "crests/student.svg",
     "prompt": "原创河谷日常职业纹章；阎笙，15岁，日常识字与家中轻活。以student工具图形置于圆角盾牌，松绿底与麦金轮廓，无文字，无肖像，无亲密或恋爱元素。仅采用已登记日常职业，不绘制人物私事。"
-  },
-  {
-    "id": "npc_bs_062_1",
-    "name": "陶澄",
-    "occupation": "衣物缝补",
-    "age": 50,
-    "minor": false,
-    "crest": "crests/weaver.svg",
-    "prompt": "原创河谷日常职业纹章；陶澄，50岁，衣物缝补。以weaver工具图形置于圆角盾牌，松绿底与麦金轮廓，无文字，无肖像，无亲密或恋爱元素。仅采用已登记日常职业，不绘制人物私事。"
-  },
-  {
-    "id": "npc_bs_062_2",
-    "name": "陶绵",
-    "occupation": "铁件修补",
-    "age": 47,
-    "minor": false,
-    "crest": "crests/smith.svg",
-    "prompt": "原创河谷日常职业纹章；陶绵，47岁，铁件修补。以smith工具图形置于圆角盾牌，松绿底与麦金轮廓，无文字，无肖像，无亲密或恋爱元素。仅采用已登记日常职业，不绘制人物私事。"
   },
   {
     "id": "npc_bs_062_3",
@@ -6003,24 +6264,6 @@
     "prompt": "原创河谷日常职业纹章；陶笙，15岁，日常识字与家中轻活。以student工具图形置于圆角盾牌，松绿底与麦金轮廓，无文字，无肖像，无亲密或恋爱元素。仅采用已登记日常职业，不绘制人物私事。"
   },
   {
-    "id": "npc_bs_063_1",
-    "name": "邝澄",
-    "occupation": "铁件修补",
-    "age": 44,
-    "minor": false,
-    "crest": "crests/smith.svg",
-    "prompt": "原创河谷日常职业纹章；邝澄，44岁，铁件修补。以smith工具图形置于圆角盾牌，松绿底与麦金轮廓，无文字，无肖像，无亲密或恋爱元素。仅采用已登记日常职业，不绘制人物私事。"
-  },
-  {
-    "id": "npc_bs_063_2",
-    "name": "邝绵",
-    "occupation": "陶坯制作",
-    "age": 41,
-    "minor": false,
-    "crest": "crests/household.svg",
-    "prompt": "原创河谷日常职业纹章；邝绵，41岁，陶坯制作。以household工具图形置于圆角盾牌，松绿底与麦金轮廓，无文字，无肖像，无亲密或恋爱元素。仅采用已登记日常职业，不绘制人物私事。"
-  },
-  {
     "id": "npc_bs_063_3",
     "name": "邝笙",
     "occupation": "日常识字与家中轻活",
@@ -6028,24 +6271,6 @@
     "minor": true,
     "crest": "crests/student.svg",
     "prompt": "原创河谷日常职业纹章；邝笙，15岁，日常识字与家中轻活。以student工具图形置于圆角盾牌，松绿底与麦金轮廓，无文字，无肖像，无亲密或恋爱元素。仅采用已登记日常职业，不绘制人物私事。"
-  },
-  {
-    "id": "npc_bs_064_1",
-    "name": "崔澄",
-    "occupation": "陶坯制作",
-    "age": 45,
-    "minor": false,
-    "crest": "crests/household.svg",
-    "prompt": "原创河谷日常职业纹章；崔澄，45岁，陶坯制作。以household工具图形置于圆角盾牌，松绿底与麦金轮廓，无文字，无肖像，无亲密或恋爱元素。仅采用已登记日常职业，不绘制人物私事。"
-  },
-  {
-    "id": "npc_bs_064_2",
-    "name": "崔绵",
-    "occupation": "衣物缝补",
-    "age": 42,
-    "minor": false,
-    "crest": "crests/weaver.svg",
-    "prompt": "原创河谷日常职业纹章；崔绵，42岁，衣物缝补。以weaver工具图形置于圆角盾牌，松绿底与麦金轮廓，无文字，无肖像，无亲密或恋爱元素。仅采用已登记日常职业，不绘制人物私事。"
   },
   {
     "id": "npc_bs_064_3",
@@ -6057,24 +6282,6 @@
     "prompt": "原创河谷日常职业纹章；崔笙，15岁，日常识字与家中轻活。以student工具图形置于圆角盾牌，松绿底与麦金轮廓，无文字，无肖像，无亲密或恋爱元素。仅采用已登记日常职业，不绘制人物私事。"
   },
   {
-    "id": "npc_bs_065_1",
-    "name": "武澄",
-    "occupation": "衣物缝补",
-    "age": 46,
-    "minor": false,
-    "crest": "crests/weaver.svg",
-    "prompt": "原创河谷日常职业纹章；武澄，46岁，衣物缝补。以weaver工具图形置于圆角盾牌，松绿底与麦金轮廓，无文字，无肖像，无亲密或恋爱元素。仅采用已登记日常职业，不绘制人物私事。"
-  },
-  {
-    "id": "npc_bs_065_2",
-    "name": "武绵",
-    "occupation": "铁件修补",
-    "age": 43,
-    "minor": false,
-    "crest": "crests/smith.svg",
-    "prompt": "原创河谷日常职业纹章；武绵，43岁，铁件修补。以smith工具图形置于圆角盾牌，松绿底与麦金轮廓，无文字，无肖像，无亲密或恋爱元素。仅采用已登记日常职业，不绘制人物私事。"
-  },
-  {
     "id": "npc_bs_065_3",
     "name": "武笙",
     "occupation": "日常识字与家中轻活",
@@ -6082,24 +6289,6 @@
     "minor": true,
     "crest": "crests/student.svg",
     "prompt": "原创河谷日常职业纹章；武笙，15岁，日常识字与家中轻活。以student工具图形置于圆角盾牌，松绿底与麦金轮廓，无文字，无肖像，无亲密或恋爱元素。仅采用已登记日常职业，不绘制人物私事。"
-  },
-  {
-    "id": "npc_bs_066_1",
-    "name": "费澄",
-    "occupation": "铁件修补",
-    "age": 47,
-    "minor": false,
-    "crest": "crests/smith.svg",
-    "prompt": "原创河谷日常职业纹章；费澄，47岁，铁件修补。以smith工具图形置于圆角盾牌，松绿底与麦金轮廓，无文字，无肖像，无亲密或恋爱元素。仅采用已登记日常职业，不绘制人物私事。"
-  },
-  {
-    "id": "npc_bs_066_2",
-    "name": "费绵",
-    "occupation": "陶坯制作",
-    "age": 44,
-    "minor": false,
-    "crest": "crests/household.svg",
-    "prompt": "原创河谷日常职业纹章；费绵，44岁，陶坯制作。以household工具图形置于圆角盾牌，松绿底与麦金轮廓，无文字，无肖像，无亲密或恋爱元素。仅采用已登记日常职业，不绘制人物私事。"
   },
   {
     "id": "npc_bs_066_3",
@@ -6111,24 +6300,6 @@
     "prompt": "原创河谷日常职业纹章；费笙，15岁，日常识字与家中轻活。以student工具图形置于圆角盾牌，松绿底与麦金轮廓，无文字，无肖像，无亲密或恋爱元素。仅采用已登记日常职业，不绘制人物私事。"
   },
   {
-    "id": "npc_bs_067_1",
-    "name": "高澄",
-    "occupation": "陶坯制作",
-    "age": 48,
-    "minor": false,
-    "crest": "crests/household.svg",
-    "prompt": "原创河谷日常职业纹章；高澄，48岁，陶坯制作。以household工具图形置于圆角盾牌，松绿底与麦金轮廓，无文字，无肖像，无亲密或恋爱元素。仅采用已登记日常职业，不绘制人物私事。"
-  },
-  {
-    "id": "npc_bs_067_2",
-    "name": "高绵",
-    "occupation": "衣物缝补",
-    "age": 45,
-    "minor": false,
-    "crest": "crests/weaver.svg",
-    "prompt": "原创河谷日常职业纹章；高绵，45岁，衣物缝补。以weaver工具图形置于圆角盾牌，松绿底与麦金轮廓，无文字，无肖像，无亲密或恋爱元素。仅采用已登记日常职业，不绘制人物私事。"
-  },
-  {
     "id": "npc_bs_067_3",
     "name": "高笙",
     "occupation": "日常识字与家中轻活",
@@ -6138,24 +6309,6 @@
     "prompt": "原创河谷日常职业纹章；高笙，15岁，日常识字与家中轻活。以student工具图形置于圆角盾牌，松绿底与麦金轮廓，无文字，无肖像，无亲密或恋爱元素。仅采用已登记日常职业，不绘制人物私事。"
   },
   {
-    "id": "npc_bs_068_1",
-    "name": "郭澄",
-    "occupation": "衣物缝补",
-    "age": 49,
-    "minor": false,
-    "crest": "crests/weaver.svg",
-    "prompt": "原创河谷日常职业纹章；郭澄，49岁，衣物缝补。以weaver工具图形置于圆角盾牌，松绿底与麦金轮廓，无文字，无肖像，无亲密或恋爱元素。仅采用已登记日常职业，不绘制人物私事。"
-  },
-  {
-    "id": "npc_bs_068_2",
-    "name": "郭绵",
-    "occupation": "铁件修补",
-    "age": 46,
-    "minor": false,
-    "crest": "crests/smith.svg",
-    "prompt": "原创河谷日常职业纹章；郭绵，46岁，铁件修补。以smith工具图形置于圆角盾牌，松绿底与麦金轮廓，无文字，无肖像，无亲密或恋爱元素。仅采用已登记日常职业，不绘制人物私事。"
-  },
-  {
     "id": "npc_bs_068_3",
     "name": "郭笙",
     "occupation": "日常识字与家中轻活",
@@ -6163,24 +6316,6 @@
     "minor": true,
     "crest": "crests/student.svg",
     "prompt": "原创河谷日常职业纹章；郭笙，15岁，日常识字与家中轻活。以student工具图形置于圆角盾牌，松绿底与麦金轮廓，无文字，无肖像，无亲密或恋爱元素。仅采用已登记日常职业，不绘制人物私事。"
-  },
-  {
-    "id": "npc_bs_069_1",
-    "name": "翁澄",
-    "occupation": "铁件修补",
-    "age": 50,
-    "minor": false,
-    "crest": "crests/smith.svg",
-    "prompt": "原创河谷日常职业纹章；翁澄，50岁，铁件修补。以smith工具图形置于圆角盾牌，松绿底与麦金轮廓，无文字，无肖像，无亲密或恋爱元素。仅采用已登记日常职业，不绘制人物私事。"
-  },
-  {
-    "id": "npc_bs_069_2",
-    "name": "翁绵",
-    "occupation": "陶坯制作",
-    "age": 47,
-    "minor": false,
-    "crest": "crests/household.svg",
-    "prompt": "原创河谷日常职业纹章；翁绵，47岁，陶坯制作。以household工具图形置于圆角盾牌，松绿底与麦金轮廓，无文字，无肖像，无亲密或恋爱元素。仅采用已登记日常职业，不绘制人物私事。"
   },
   {
     "id": "npc_bs_069_3",
@@ -6352,141 +6487,6 @@
     "minor": false,
     "crest": "crests/weaver.svg",
     "prompt": "原创河谷日常职业纹章；鲍笙，43岁，衣物缝补。以weaver工具图形置于圆角盾牌，松绿底与麦金轮廓，无文字，无肖像，无亲密或恋爱元素。仅采用已登记日常职业，不绘制人物私事。"
-  },
-  {
-    "id": "npc_bs_076_1",
-    "name": "季澄",
-    "occupation": "灯祠照看",
-    "age": 73,
-    "minor": false,
-    "crest": "crests/household.svg",
-    "prompt": "原创河谷日常职业纹章；季澄，73岁，灯祠照看。以household工具图形置于圆角盾牌，松绿底与麦金轮廓，无文字，无肖像，无亲密或恋爱元素。仅采用已登记日常职业，不绘制人物私事。"
-  },
-  {
-    "id": "npc_bs_076_2",
-    "name": "季绵",
-    "occupation": "字样板描写",
-    "age": 47,
-    "minor": false,
-    "crest": "crests/scribe.svg",
-    "prompt": "原创河谷日常职业纹章；季绵，47岁，字样板描写。以scribe工具图形置于圆角盾牌，松绿底与麦金轮廓，无文字，无肖像，无亲密或恋爱元素。仅采用已登记日常职业，不绘制人物私事。"
-  },
-  {
-    "id": "npc_bs_076_3",
-    "name": "季笙",
-    "occupation": "学馆抄录",
-    "age": 44,
-    "minor": false,
-    "crest": "crests/scribe.svg",
-    "prompt": "原创河谷日常职业纹章；季笙，44岁，学馆抄录。以scribe工具图形置于圆角盾牌，松绿底与麦金轮廓，无文字，无肖像，无亲密或恋爱元素。仅采用已登记日常职业，不绘制人物私事。"
-  },
-  {
-    "id": "npc_bs_077_1",
-    "name": "裴澄",
-    "occupation": "字样板描写",
-    "age": 74,
-    "minor": false,
-    "crest": "crests/scribe.svg",
-    "prompt": "原创河谷日常职业纹章；裴澄，74岁，字样板描写。以scribe工具图形置于圆角盾牌，松绿底与麦金轮廓，无文字，无肖像，无亲密或恋爱元素。仅采用已登记日常职业，不绘制人物私事。"
-  },
-  {
-    "id": "npc_bs_077_2",
-    "name": "裴绵",
-    "occupation": "学馆抄录",
-    "age": 48,
-    "minor": false,
-    "crest": "crests/scribe.svg",
-    "prompt": "原创河谷日常职业纹章；裴绵，48岁，学馆抄录。以scribe工具图形置于圆角盾牌，松绿底与麦金轮廓，无文字，无肖像，无亲密或恋爱元素。仅采用已登记日常职业，不绘制人物私事。"
-  },
-  {
-    "id": "npc_bs_077_3",
-    "name": "裴笙",
-    "occupation": "灯祠照看",
-    "age": 45,
-    "minor": false,
-    "crest": "crests/household.svg",
-    "prompt": "原创河谷日常职业纹章；裴笙，45岁，灯祠照看。以household工具图形置于圆角盾牌，松绿底与麦金轮廓，无文字，无肖像，无亲密或恋爱元素。仅采用已登记日常职业，不绘制人物私事。"
-  },
-  {
-    "id": "npc_bs_078_1",
-    "name": "舒澄",
-    "occupation": "学馆抄录",
-    "age": 75,
-    "minor": false,
-    "crest": "crests/scribe.svg",
-    "prompt": "原创河谷日常职业纹章；舒澄，75岁，学馆抄录。以scribe工具图形置于圆角盾牌，松绿底与麦金轮廓，无文字，无肖像，无亲密或恋爱元素。仅采用已登记日常职业，不绘制人物私事。"
-  },
-  {
-    "id": "npc_bs_078_2",
-    "name": "舒绵",
-    "occupation": "灯祠照看",
-    "age": 49,
-    "minor": false,
-    "crest": "crests/household.svg",
-    "prompt": "原创河谷日常职业纹章；舒绵，49岁，灯祠照看。以household工具图形置于圆角盾牌，松绿底与麦金轮廓，无文字，无肖像，无亲密或恋爱元素。仅采用已登记日常职业，不绘制人物私事。"
-  },
-  {
-    "id": "npc_bs_078_3",
-    "name": "舒笙",
-    "occupation": "字样板描写",
-    "age": 46,
-    "minor": false,
-    "crest": "crests/scribe.svg",
-    "prompt": "原创河谷日常职业纹章；舒笙，46岁，字样板描写。以scribe工具图形置于圆角盾牌，松绿底与麦金轮廓，无文字，无肖像，无亲密或恋爱元素。仅采用已登记日常职业，不绘制人物私事。"
-  },
-  {
-    "id": "npc_bs_079_1",
-    "name": "曲澄",
-    "occupation": "灯祠照看",
-    "age": 76,
-    "minor": false,
-    "crest": "crests/household.svg",
-    "prompt": "原创河谷日常职业纹章；曲澄，76岁，灯祠照看。以household工具图形置于圆角盾牌，松绿底与麦金轮廓，无文字，无肖像，无亲密或恋爱元素。仅采用已登记日常职业，不绘制人物私事。"
-  },
-  {
-    "id": "npc_bs_079_2",
-    "name": "曲绵",
-    "occupation": "字样板描写",
-    "age": 50,
-    "minor": false,
-    "crest": "crests/scribe.svg",
-    "prompt": "原创河谷日常职业纹章；曲绵，50岁，字样板描写。以scribe工具图形置于圆角盾牌，松绿底与麦金轮廓，无文字，无肖像，无亲密或恋爱元素。仅采用已登记日常职业，不绘制人物私事。"
-  },
-  {
-    "id": "npc_bs_079_3",
-    "name": "曲笙",
-    "occupation": "学馆抄录",
-    "age": 47,
-    "minor": false,
-    "crest": "crests/scribe.svg",
-    "prompt": "原创河谷日常职业纹章；曲笙，47岁，学馆抄录。以scribe工具图形置于圆角盾牌，松绿底与麦金轮廓，无文字，无肖像，无亲密或恋爱元素。仅采用已登记日常职业，不绘制人物私事。"
-  },
-  {
-    "id": "npc_bs_080_1",
-    "name": "苗澄",
-    "occupation": "字样板描写",
-    "age": 72,
-    "minor": false,
-    "crest": "crests/scribe.svg",
-    "prompt": "原创河谷日常职业纹章；苗澄，72岁，字样板描写。以scribe工具图形置于圆角盾牌，松绿底与麦金轮廓，无文字，无肖像，无亲密或恋爱元素。仅采用已登记日常职业，不绘制人物私事。"
-  },
-  {
-    "id": "npc_bs_080_2",
-    "name": "苗绵",
-    "occupation": "学馆抄录",
-    "age": 46,
-    "minor": false,
-    "crest": "crests/scribe.svg",
-    "prompt": "原创河谷日常职业纹章；苗绵，46岁，学馆抄录。以scribe工具图形置于圆角盾牌，松绿底与麦金轮廓，无文字，无肖像，无亲密或恋爱元素。仅采用已登记日常职业，不绘制人物私事。"
-  },
-  {
-    "id": "npc_bs_080_3",
-    "name": "苗笙",
-    "occupation": "灯祠照看",
-    "age": 43,
-    "minor": false,
-    "crest": "crests/household.svg",
-    "prompt": "原创河谷日常职业纹章；苗笙，43岁，灯祠照看。以household工具图形置于圆角盾牌，松绿底与麦金轮廓，无文字，无肖像，无亲密或恋爱元素。仅采用已登记日常职业，不绘制人物私事。"
   },
   {
     "id": "npc_bs_081_1",

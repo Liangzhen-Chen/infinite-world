@@ -19,10 +19,12 @@ async function fixture(){
   world.skills.push({id:skill,name:skill,attribute:'精神',profession:null});
   world.spells.push({...base,id,name:id,skill,mp:2,minutes:1,materials:[],duration:['consent_link','team_link'].includes(kind)?8:0,effectSpec:{kind,power:1,maxChars:80,maxDistanceMeters:100000,delayMinutes:2,...(['consent_link','team_link'].includes(kind)?{upkeepMp:3,upkeepMinutes:2}:{}),...(kind==='team_link'?{maxMembers:4}:{}),...(kind==='mind_message'?{markText:'心音符'}:{})}});
  }
+ // T145起战役解析器扩展自引擎构造时的索引，夹具法术须在构造引擎前登记，不能事后塞进engine.entities。
+ const markSpell={...base,id:'spell_message_mark',name:'传讯符刻',skill:'skill_message_message',mp:2,minutes:1,materials:[],duration:8,rangeMeters:3,effectSpec:{kind:'mark',power:40,medium:'fire',visibility:'normal'}};world.spells.push(markSpell);
  const engine=new WorldEngine(world),doc=engine.initialFromLegacy(seed,'message-test');
  Object.assign(doc.state.player,{mp:100,maxMp:100,hp:10000,maxHp:10000,companions:[target,third]});
  for(const id of[target,third])Object.assign(doc.state.npcs[id],{hp:10000,maxHp:10000,location:doc.state.location,activity:'交谈'});
- const markSpell={...base,id:'spell_message_mark',name:'传讯符刻',skill:'skill_message_message',mp:2,minutes:1,materials:[],duration:8,rangeMeters:3,effectSpec:{kind:'mark',power:40,medium:'fire',visibility:'normal'}};world.spells.push(markSpell);engine.entities.push(markSpell);engine.byId.set(markSpell.id,markSpell);doc.state.spells[markSpell.id]={source:{type:'fixture'}};doc.state.inventory.item_whittling_knife={quantity:1,durability:100};
+ doc.state.spells[markSpell.id]={source:{type:'fixture'}};doc.state.inventory.item_whittling_knife={quantity:1,durability:100};
  for(const kind of ['message','mind_message','consent_link','team_link']){doc.state.spells[`spell_message_${kind}`]={source:{type:'fixture'}};doc.state.skills[`skill_message_${kind}`]={proficiency:200,breakthroughs:[],daily:{}};}
  const run=async(d,tool,args,id)=>{const out=await engine.reduce(d,{tool,args,eventId:id});return{doc:applyPatches(d,out.patches),result:out.result,id};};
  let serial=0;

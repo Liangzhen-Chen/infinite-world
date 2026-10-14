@@ -1,4 +1,4 @@
-import {MemoryIndex} from './retrieval.mjs';
+import {MemoryIndex,engineIndexOptions} from './retrieval.mjs';
 import {scheduleAt,advanceWithNpcParticipants} from './npc-schedule.mjs';
 
 const awake=n=>n&&!n.scheduleTravel&&!n.cognitionTravel&&!['死亡','濒死','昏迷','患病'].includes(n.status)&&!/睡眠|睡觉|熟睡/.test(n.activity??'');
@@ -37,7 +37,7 @@ export function npcRumorSeeds(engine,id){
 }
 
 export function selectNpcRumors(engine,id,query='',document=null){
-    const rows=npcRumors(engine,id,document),index=new MemoryIndex({entities:engine.entities});
+    const rows=npcRumors(engine,id,document),index=new MemoryIndex(engineIndexOptions(engine));
     for(const row of rows)index.upsert({id:row.id,text:row.claim,keywords:[row.id,'传闻'],entities:[id]});
     const selected=new Set(index.search(query,{present:[id],limit:2}).map(r=>r.id));
     return rows.filter(r=>selected.has(r.id));

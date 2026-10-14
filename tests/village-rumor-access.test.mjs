@@ -43,7 +43,9 @@ async function approach(engine,read,run,speaker){
 }
 
 test('40登记种子仅投影给source/carriers，所有claim逐条经实际引擎交谈产生可追溯事件',async t=>{
-    assert.equal(all.length,40);assert.equal(toolDefinitions().length,25);
+    // T90白石镇骨架另登记传闻种子（正式目录合计52）；四村仍各10条共40条，白石镇条目同样走下面的逐条投影与交谈检查。
+    for(const p of profiles.filter(p=>p.id!=='loc_bs'))assert.equal(p.details.rumors.length,10,p.id);
+    assert.equal(all.length,40+(profiles.find(p=>p.id==='loc_bs')?.details.rumors.length??0));assert.equal(new Set(all.map(r=>r.id)).size,all.length);assert.equal(toolDefinitions().length,25);
     const original=structuredClone(world.npcs),engine=new WorldEngine(world);
     const contextDoc=engine.createCharacter(seed,{},'projection');
     for(const r of all)for(const npc of world.npcs){

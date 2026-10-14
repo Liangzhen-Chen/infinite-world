@@ -12,6 +12,7 @@ import {validateNpcProfiles,findNpcRuleWording} from '../tools/npc-profile-valid
 import {hashContent} from '../tools/content-pipeline.mjs';
 import {depthEntries,patchDraft,applyDepthDraft,validateDraft,validatePatchResults,contextFor,buildReviewRequest,getPath,validateAuthoredBackground,checkIncrementalReview,verifyUnchanged} from '../tools/npc-depth-content.mjs';
 import {prepareNpcDepth,publishNpcDepth} from '../tools/publish-npc-depth.mjs';
+import {publishNpcDepthSerial} from './fixtures/depth-publish-retry.mjs';
 import * as design from '../world/design/w1-lq-depth.mjs';
 import {liquanRoster} from '../world/design/w1-villages-liquan.mjs';
 import {compactReviewRequest} from '../tools/npc-depth-review.mjs';
@@ -45,15 +46,17 @@ const offlineCandidate=JSON.parse(await fs.readFile(path.join(legacyRoot,'reopen
 const offlineDesign={...frozenDesign,patchRows:frozenEntries.map(e=>({...e,patches:offlineCandidate.find(d=>d.id===e.id).patches}))};
 
 test('砾泉正式30人等于已审批完整档，全体152个full深度及规则措辞零缺口，原17traits保留',()=>{
- assert.equal(approvedEntries.length,30);assert.equal(liveWorld.npcs.filter(n=>n.tier==='full').length,152);
- assert.equal(liveWorld.residents.filter(n=>n.settlement!=='loc_bs').length,294);assert.equal(liveWorld.residents.filter(n=>n.settlement==='loc_bs').length,305);assert.deepEqual(liveWorld.npcs.map(n=>n.id),world.npcs.map(n=>n.id));
+ // 白石镇后续批次把99名名册人升为npc_bs_*完整档，正式目录现为251 full；此处只核对村落与河湾原152人未变，白石镇名册加升档仍为305。
+ assert.equal(approvedEntries.length,30);assert.equal(liveWorld.npcs.filter(n=>n.tier==='full'&&!n.id.startsWith('npc_bs_')).length,152);
+ assert.equal(liveWorld.residents.filter(n=>n.settlement!=='loc_bs').length,294);assert.equal(liveWorld.residents.filter(n=>n.settlement==='loc_bs').length+liveWorld.npcs.filter(n=>n.id.startsWith('npc_bs_')).length,305);assert.deepEqual(liveWorld.npcs.map(n=>n.id),world.npcs.map(n=>n.id));
  for(const entry of approvedEntries){
   const current=liveWorld.npcs.find(n=>n.id===entry.id);
   assert.deepEqual(current,entry.facts);verifyUnchanged(entry.before,current,entry);
   for(const field of ['coins','inventory','secrets'])assert.deepEqual(current[field],entry.before[field]);
   assert.deepEqual(current.memorySeeds.slice(0,entry.before.memorySeeds.length),entry.before.memorySeeds);
  }
- const audit=auditNpcDepth(liveWorld);assert.equal(audit.checked,152);assert.deepEqual(audit.issues,[]);assert.equal(audit.legacyTraits.ok,true);
+ const audit=auditNpcDepth(liveWorld);assert.equal(audit.checked,liveWorld.npcs.filter(n=>n.tier==='full').length);// 审计覆盖正式目录全部full（白石镇升档后为251）
+ assert.deepEqual(audit.issues,[]);assert.equal(audit.legacyTraits.ok,true);
  assert.deepEqual(liveWorld.npcs.filter(n=>n.tier==='full').flatMap(findNpcRuleWording),[]);
 });
 
@@ -78,7 +81,7 @@ test('砾泉冻结原档首次预演零写入，正式发布闭合6事件30人�
 test('砾泉已发布完整卡重发零写入，不重复追加共享记忆',async()=>{
  const baseline=path.resolve('world/people/baseline.json'),bytes=await fs.readFile(baseline),stat=await fs.stat(baseline);
  for(const publish of [false,true]){
-  const repeat=await publishNpcDepth({manifest:publicationManifest,publish});
+  const repeat=await publishNpcDepthSerial({manifest:publicationManifest,publish});
   assert.equal(repeat.published,publish);assert.deepEqual(repeat.changed,[]);assert.deepEqual(repeat.changes,[]);
   assert.deepEqual(repeat.eventClosure,[]);assert.equal(repeat.baselineSourceHash,repeat.baselineResultHash);
   assert.deepEqual(repeat.selectedQuality.issues,[]);assert.deepEqual(repeat.globalQuality.issues,[]);

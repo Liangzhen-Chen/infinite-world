@@ -29,8 +29,8 @@ test('W5正式内容经world_upgrade进入旧战役检索，保持钱袋与NPC�
  assert.deepEqual(after.document.memories,before.document.memories);
  const oldActors=before.document.state.npcs;assert.equal(Object.keys(oldActors).length,18);
  for(const [id,actor]of Object.entries(oldActors))assert.deepEqual(after.document.state.npcs[id],actor,id);
- // All five village batches are now published: 152 full actors, 18 legacy.
- const added=published.npcs.filter(row=>!Object.hasOwn(oldActors,row.id));assert.equal(added.length,134);
+ // 五村批次与白石镇升档后正式目录为251个full，旧战役18人；新增数按正式目录核对而不写死。
+ const added=published.npcs.filter(row=>!Object.hasOwn(oldActors,row.id));assert.equal(added.length,published.npcs.length-18);assert.ok(added.length>0);
  assert.deepEqual(Object.keys(after.document.state.npcs).sort(),published.npcs.map(row=>row.id).sort());
  for(const row of added)assert.deepEqual(after.document.state.npcs[row.id],{id:row.id,name:row.name,location:row.location,coins:row.coins??0,inventory:row.inventory??{},trust:row.trust??0,affection:row.affection??0,developments:[],relationships:{}},row.id);
  for(const row of [...published.residents,...published.factionPeople])assert.equal(after.document.state.npcs[row.id],undefined,row.id);

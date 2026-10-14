@@ -12,6 +12,7 @@ import {readPublishedNpcDepth} from '../tools/npc-depth-publication-sources.mjs'
 import {WorldEngine} from '../server-plugin/engine.mjs';
 import {compatibleWorld,planWorldUpgrade} from '../server-plugin/world-upgrade.mjs';
 import {applyPatches} from '../server-plugin/storage.mjs';
+import {writePreBaishiWorld,preBaishiNpc} from './fixtures/pre-baishi-world.mjs';
 const world=await loadWorld(),root=path.resolve('world/drafts/m2-people');
 const baseline=JSON.parse(await fs.readFile(path.join(root,'baseline.json'),'utf8'));
 const candidate=JSON.parse(await fs.readFile(path.join(root,'candidate.json'),'utf8'));
@@ -56,10 +57,9 @@ test('人物不能投影本人不知的记忆或秘密，出生日期与元年�
 });
 test('实际写入只在隔离世界执行一次，第二次无写入且不改变字节',async()=>{
  const temp=await fs.mkdtemp(path.join(os.tmpdir(),'m2-publish-'));await fs.cp(path.resolve('world'),temp,{recursive:true,filter:file=>!file.split(path.sep).includes('drafts')});
- try{const oldLocations=world.locations.filter(l=>l.scope!=='loc_bs'||['loc_bs','bld_bs_shrine'].includes(l.id)),placeIds=new Set(oldLocations.map(l=>l.id));
- for(const [file,value]of Object.entries({'geo/locations.json':oldLocations,'geo/routes.json':world.routes.filter(r=>placeIds.has(r.from)&&placeIds.has(r.to)),'geo/settlements.json':world.settlementProfiles.filter(p=>p.id!=='loc_bs'),'people/residents.json':world.residents.filter(n=>n.settlement!=='loc_bs'),'people/households.json':world.households.filter(h=>h.settlement!=='loc_bs')}))await fs.writeFile(path.join(temp,file),JSON.stringify(value));
- const rules=structuredClone(world.rules);for(const region of rules.weather.regions){region.locations=region.locations.filter(id=>placeIds.has(id));region.indoor=region.indoor.filter(id=>placeIds.has(id));}await fs.writeFile(path.join(temp,'meta/rules.json'),JSON.stringify(rules));
- await fs.writeFile(path.join(temp,'people/baseline.json'),JSON.stringify(world.npcs.map(n=>{const original=baseline.find(x=>x.id===n.id);return original?{...original,inventory:n.inventory,schedule:n.schedule}:n;}),null,2)+'\n');
+ try{// T92/T93后白石镇另有升档人物、入门书和法规场所，旧世界剔除逻辑集中在夹具里。
+ await writePreBaishiWorld(temp,world);
+ await fs.writeFile(path.join(temp,'people/baseline.json'),JSON.stringify(world.npcs.filter(preBaishiNpc).map(n=>{const original=baseline.find(x=>x.id===n.id);return original?{...original,inventory:n.inventory,schedule:n.schedule}:n;}),null,2)+'\n');
  const first=await publishNpcProfiles({worldRoot:temp,root,write:true});assert.equal(first.written,true);const before=await fs.readFile(path.join(temp,'people/baseline.json'),'utf8');const second=await publishNpcProfiles({worldRoot:temp,root,write:true});assert.equal(second.written,false);assert.equal(await fs.readFile(path.join(temp,'people/baseline.json'),'utf8'),before);
  }finally{assert.ok(path.resolve(temp).startsWith(path.resolve(os.tmpdir())+path.sep));await fs.rm(temp,{recursive:true,force:true});}
 });

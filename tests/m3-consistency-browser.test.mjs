@@ -56,7 +56,8 @@ test('浏览器 MESSAGE_RECEIVED 等待纯文字改写后再提交唯一尾注�
  const message=await page.evaluate(()=>window.fixtureContext.chat[2]);
  assert.equal(message.mes,final);assert.equal(message.extra.fields_consistency.status,'verified');assert.equal(message.extra.fields_consistency.attempts,1);
  assert.equal(endpoints.filter(r=>r.body.tool==='world_trade').length,1);assert.equal(endpoints.filter(r=>r.body.tool==='world_turn').length,1);assert.equal(requests.length,3);
- assert.equal(await page.locator('.mes_text').innerText(),'林穗：面包给你。');assert.equal(await page.locator('.mes_text').isVisible(),true);
+ // T76起对白渲染为头像名牌加段落（blockquote.fields-dialogue），innerText不再是“名字：台词”一行；分别核对登记姓名与台词。
+ assert.equal(await page.locator('.mes_text .fields-dialogue .fields-speaker').innerText(),'林穗');assert.equal(await page.locator('.mes_text .fields-dialogue p').innerText(),'面包给你。');assert.equal(await page.locator('.mes_text .fields-dialogue').count(),1);assert.equal(await page.locator('.mes_text').isVisible(),true);
  assert.equal(await page.evaluate(()=>window.infiniteFieldsV2.view.document.state.player.coins),178);
  assert.doesNotMatch(JSON.stringify(endpoints),/DEEPSEEK_API_KEY|Authorization|Bearer/);
 
