@@ -16,10 +16,11 @@ import {buildCard} from '../tools/build-card.mjs';
 import {ritualSpellCandidates} from '../tools/w2-mechanism-map.mjs';
 import {consumeMagicProtection} from '../server-plugin/magic-primitives.mjs';
 import {withoutS2} from '../tools/publish-w2-s2.mjs';
+import {withoutS3} from '../tools/publish-w2-s3.mjs';
 
 // T102 later adds furnace scenes, stock and lessons to these teachers; this
 // batch is checked against the edition before that addition.
-const world=withoutS2(await loadWorld()),bundle=authorCraft(world),ids=new Set(bundle.people.map(p=>p.id));
+const world=withoutS2(withoutS3(await loadWorld())),bundle=authorCraft(world),ids=new Set(bundle.people.map(p=>p.id));
 const legacy=JSON.parse(await fs.readFile('tests/fixtures/legacy/seed.json','utf8'));
 const before={...world,npcs:world.npcs.filter(p=>!ids.has(p.id)),residents:[...world.residents,...bundle.sources]};
 

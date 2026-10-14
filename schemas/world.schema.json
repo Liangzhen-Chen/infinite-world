@@ -3311,7 +3311,11 @@
                   "passage",
                   "levee",
                   "seam",
-                  "ledge"
+                  "ledge",
+                  "lamp",
+                  "aperture",
+                  "surface",
+                  "sample"
                 ]
               },
               "owner": {
@@ -4234,7 +4238,9 @@
                 "water_earth",
                 "care",
                 "heat",
-                "air"
+                "air",
+                "optics",
+                "mind_space"
               ]
             },
             "power": {
@@ -4346,7 +4352,25 @@
                 "sense_soil",
                 "till",
                 "structural_sense",
-                "level_ground"
+                "level_ground",
+                "sense_mind",
+                "memory_guard",
+                "record_feeling",
+                "preserve",
+                "dim",
+                "privacy",
+                "fog_light",
+                "waymark",
+                "focus_light",
+                "reflect",
+                "dark_area",
+                "light_screen",
+                "color",
+                "shadow_measure",
+                "reveal",
+                "bind_shadow",
+                "decoy",
+                "reveal_wear"
               ]
             },
             "unit": {
