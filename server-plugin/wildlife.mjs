@@ -5,6 +5,7 @@ import {canonical} from './storage.mjs';
 import {speciesInHabitat} from './wildlife-range.mjs';
 import {reservedMigrationCapacity,advanceSeasonalMigration} from './seasonal-migration.mjs';
 import {crossPredatorFed,advanceFarmPredation} from './farm-pests.mjs';
+import {sapient,advanceWildlifeAwakening,awakeningAction,awakeningView,validateWildlifeAwakening} from './wildlife-awakening.mjs';
 const clone=v=>structuredClone(v),path=h=>['state','records',`ecology:${h}`];
 const alive=a=>a&&a.status!=='死亡'&&a.hp>0;
 // T160 owns identity changes. Clocks pass an existing individual and a stable
@@ -26,7 +27,7 @@ export function applyWildlifeAwakeningEffect(d,engine,effect,context){
 const random=(engine,seed,label)=>seededRandom(createHash('sha256').update(`${seed}:${canonical(engine.rules.wildlife)}:${label}`).digest().readUInt32LE(0));
 const activeAt=(hours,minute)=>hours[0]<=hours[1]?minute>=hours[0]&&minute<hours[1]:minute>=hours[0]||minute<hours[1];
 const speciesAt=(engine,habitat)=>speciesInHabitat(engine.rules,engine.world.monsters,habitat.id);
-const wildPresent=(d,species,location)=>Object.values(d.get('state','creatures')??{}).filter(a=>a.species===species&&a.location===location&&!a.owner&&alive(a)).length;
+const wildPresent=(d,species,location)=>Object.values(d.get('state','creatures')??{}).filter(a=>a.species===species&&a.location===location&&!a.owner&&!sapient(a)&&alive(a)).length;
 const encounterPath=h=>['state','records',`wildlife:encounter:${h}`];
 const WINDOW=360;
 const encounterEnabled=engine=>!engine.replaying||engine.replayResult?.wildlifeEncounterVersion===1;
@@ -46,7 +47,7 @@ export function wildlifeEncounterAt(d,engine,location,minute){
     const window=Math.floor(minute/WINDOW),old=d.get(...encounterPath(habitat.id));
     if(old?.checkedWindow>=window)return null;
     const rng=random(engine,d.document.randomSeed,`encounter:${habitat.id}:${window}`),chance=rng();
-    const here=Object.entries(d.get('state','creatures')??{}).filter(([,a])=>a.location===location&&!a.owner&&alive(a));
+    const here=Object.entries(d.get('state','creatures')??{}).filter(([,a])=>a.location===location&&!a.owner&&!sapient(a)&&alive(a));
     const populations=d.get(...path(habitat.id),'populations');
     const eligible=speciesAt(engine,habitat).filter(s=>populations?.[s.id]?.count>0&&activeAt(s.wildlife.activeHours,minute%1440));
     const base={habitat,window,minute};
@@ -65,7 +66,7 @@ function createWildlifeInstance(d,engine,habitat,s,eventId,rng){
     const level=s.levelRange[0]+Math.floor(rng()*(s.levelRange[1]-s.levelRange[0]+1)),stats=monsterStats({level,template:s.template},engine.rules),name=`${s.name}·${hash.slice(0,4)}`;
     p.count--;p.withdrawn++;d.set(path(habitat.id),latest);
     d.set(['state','created',id],{id,name,aliases:[],monster:s.id,template:s.template,scope:habitat.location});
-    d.set(['state','creatures',id],{name,species:s.id,ecology:habitat.id,location:habitat.location,level,hp:stats.maxHp,maxHp:stats.maxHp,status:'正常',owner:null});
+    d.set(['state','creatures',id],{name,species:s.id,ecology:habitat.id,location:habitat.location,level,hp:stats.maxHp,maxHp:stats.maxHp,status:'正常',owner:null,...(engine.rules.wildlifeAwakening?{since:d.get('state','minute')}:{})});
     return{id,name,species:s.name,level,hp:stats.maxHp};
 }
 export function settleWildlifeEncounter(d,engine,attempt,eventId){
@@ -118,7 +119,7 @@ export function validateWildlife(world){
         }
         if(cursor!==to.location)errors.push(`迁徙道路未到达目标栖地：${r.id}`);
     }
-    return errors;
+    return [...errors,...validateWildlifeAwakening(world)];
 }
 export function advanceWildlife(d,engine,day){
     if(!engine.rules.wildlife)return;
@@ -149,6 +150,7 @@ export function advanceWildlife(d,engine,day){
     }
     advanceFarmPredation(d,engine,day);
     advanceSeasonalMigration(d,engine,day);
+    advanceWildlifeAwakening(d,engine,day);
 }
 export function resolveCreature(engine,d,name){
     if(typeof name!=='string'||!name.trim())throw new Error('需要实际动物名称或实例编号');
@@ -172,16 +174,19 @@ export function wildlifePriceFactor(engine,document,item,location){
     const actors=Object.values(document.state.creatures??{});
     const initial=ranges.reduce((n,{s,h})=>n+(s.wildlife.habitat===h.id?s.wildlife.population:0),0),current=ranges.reduce((n,{s,h})=>{
         const unseen=document.state.records[`ecology:${h.id}`]?.populations[s.id]?.count??(s.wildlife.habitat===h.id?s.wildlife.population:0);
-        const present=actors.filter(a=>a.species===s.id&&a.ecology===h.id&&a.location===h.location&&!a.owner&&alive(a)).length;
+        const present=actors.filter(a=>a.species===s.id&&a.ecology===h.id&&a.location===h.location&&!a.owner&&!sapient(a)&&alive(a)).length;
         return n+unseen+present;
     },0);
     return Math.min(engine.rules.wildlife.scarcityMaximum,Math.max(1,initial/Math.max(1,current)));
 }
+const mindOf=(engine,d,id,a)=>{const mind=awakeningView(engine,d.document.randomSeed,id,a,d.get('state','minute'));return mind?{mind}:{};};
 export function wildlifeAction(d,args,eventId){
     if(!this.rules.wildlife)throw new Error('当前世界没有启用野外生态');
-    const operation=args.operation??'observe',habitat=this.rules.wildlife.habitats.find(h=>h.location===d.get('state','location'));
+    const operation=args.operation??'observe';
+    if(['nurture','enlighten','pact'].includes(operation))return awakeningAction.call(this,d,args,eventId,resolveCreature(this,d,args.target));
+    const habitat=this.rules.wildlife.habitats.find(h=>h.location===d.get('state','location'));
     if(!habitat)throw new Error('这里没有登记可接触的野外栖地');
-    if(operation==='observe')return{habitat:habitat.name,animals:Object.entries(d.get('state','creatures')??{}).filter(([,a])=>a.location===habitat.location).map(([id,a])=>({id,name:a.name,status:a.status,hp:a.hp,owner:a.owner??null,
+    if(operation==='observe')return{habitat:habitat.name,animals:Object.entries(d.get('state','creatures')??{}).filter(([,a])=>a.location===habitat.location).map(([id,a])=>({id,name:a.name,status:a.status,hp:a.hp,owner:a.owner??null,...mindOf(this,d,id,a),
         ...(a.corpse?{corpse:{status:a.corpse.status,expires:a.corpse.expires,hasMaterials:a.corpse.items.length>0}}:{})})),traces:wildlifeEncounterView(d.document).filter(r=>r.kind==='trace'),actionScope:{kind:'instant',instantaneous:true}};
     if(operation==='track'){
         const r=clone(d.get(...path(habitat.id))),here=Object.values(d.get('state','creatures')??{}).filter(a=>a.location===habitat.location&&alive(a));

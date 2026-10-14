@@ -1,13 +1,14 @@
 import {createHash} from 'node:crypto';
 import {seededRandom} from './combat.mjs';
 import {speciesInHabitat} from './wildlife-range.mjs';
+import {sapient} from './wildlife-awakening.mjs';
 const path=h=>['state','records',`ecology:${h}`],alive=a=>a&&a.status!=='死亡'&&a.hp>0;
 const profiles=e=>e.rules.wildlife?.farmPests?.fields??[];
 export function farmPestProfile(engine,settlement){return profiles(engine).find(p=>p.settlement===settlement);}
 function count(d,e,species,habitat){
     const record=d.get(...path(habitat),'populations',species),h=e.rules.wildlife.habitats.find(h=>h.id===habitat);
     if(!record||!Number.isSafeInteger(record.count)||record.count<0)throw new Error('害兽关联种群缺失或损坏');
-    return record.count+Object.values(d.get('state','creatures')??{}).filter(a=>a.species===species&&a.location===h.location&&a.ecology===habitat&&!a.owner&&alive(a)).length;
+    return record.count+Object.values(d.get('state','creatures')??{}).filter(a=>a.species===species&&a.location===h.location&&a.ecology===habitat&&!a.owner&&!sapient(a)&&alive(a)).length;
 }
 function open(e,rule,season){return rule.path.every(id=>!e.world.routes.find(r=>r.id===id).closedSeasons.includes(season));}
 export function crossPredatorFed(d,e,habitat,species,season){
