@@ -43,6 +43,7 @@ export function renderHistoryPanel(container,data,kind,{query='',page=1,level='s
             const avatar=node('span',row.identity.slice(0,1),'fields-history-avatar');avatar.setAttribute('aria-hidden','true');card.append(avatar,node('h3',row.name),node('p',row.identity));
             card.append(node('p',`最后获知位置：${row.location} · ${row.locationTime}`,'fields-note'),node('p',row.description));
             card.append(node('p',`信任 ${row.relationship.trust} · 亲近 ${row.relationship.affection} · 敬重 ${row.relationship.respect} · 畏惧 ${row.relationship.fear}`));
+            if(row.life?.length){card.append(node('h4','家况（截至你最后获知）'));for(const line of row.life)card.append(node('p',line));}
             card.append(node('h4','共同经历'));if(!row.shared.length)card.append(node('p','尚无共同经历摘记。','fields-note'));
             for(const event of row.shared)card.append(node('p',`${event.time}：${event.text}`));
             card.append(node('h4','彼此的承诺'));if(!row.promises.length)card.append(node('p','尚无彼此的承诺。','fields-note'));

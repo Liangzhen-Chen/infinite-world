@@ -35,12 +35,15 @@ import {initializeWorldClocks,advanceWorldClocks,nextWorldClockMinute}from'./wor
 import {initializeFactionClocks,advanceFactionClocks,nextFactionClockMinute,factionClockRules}from'./faction-clock.mjs';
 import {advanceFestivals,nextFestivalMinute,festivalCalendar,validateFestivalRuntime}from'./festival.mjs';
 import {advanceWildlife,wildlifePriceFactor,nextWildlifeEncounterMinute,wildlifeEncounterAt,settleWildlifeEncounter,wildlifeEncounterView}from'./wildlife.mjs';
+import {wildlifeAwakeningConsumer}from'./wildlife-awakening.mjs';
+import {spiritSocietyConsumer,moveSpiritCompanions}from'./wildlife-society.mjs';
 import {advanceBosses}from'./bosses.mjs';
 import {sceneCard}from'./scene-card.mjs';
 import {stateNotices}from'./state-notices.mjs';
 import {assertNpcService}from'./npc-schedule.mjs';
 import {advanceNpcCognition,nextNpcCognitionMinute}from'./npc-cognition.mjs';
 import {advanceNpcAutonomy,nextNpcAutonomyMinute,npcAutonomyBusy,assertNpcAutonomyAction,applyNpcPlan}from'./npc-autonomy.mjs';
+import {advanceNpcLife,nextNpcLifeMinute}from'./npc-life.mjs';
 import {recordNpcMemories}from'./npc-memory.mjs';
 import {hearNpcRumor}from'./npc-rumors.mjs';
 import {createNpcObligation,advanceNpcObligations,assertNpcObligationAction,npcObligationAt,nextNpcObligationMinute}from'./npc-obligations.mjs';
@@ -76,7 +79,7 @@ export class WorldEngine {
         this.byId = this.resolver.entities;
         const festivalErrors=validateFestivalRuntime(world);if(festivalErrors.length)throw Error(festivalErrors.join('；'));
         if((this.rules.engineRevision??1)===1)this.compat=new Phase1Engine(world);
-        this.factionEffectConsumers={society_news:societyNewsConsumer};
+        this.factionEffectConsumers={society_news:societyNewsConsumer,spirit_society:spiritSocietyConsumer};this.wildlifeAwakening=wildlifeAwakeningConsumer;
     }
     resolve(name, kind, scope) {
         if(!kind||kind==='npc'){
@@ -248,7 +251,7 @@ export class WorldEngine {
         const patchStart=d.patches.length,npcsBefore=d.get('state','npcs');
         while(d.get('state','minute')<end){
             const now=d.get('state','minute'),state=d.get('state');
-            const next=Math.min(end,(Math.floor(now/1440)+1)*1440,nextWorldClockMinute(state,now),nextFactionClockMinute(state,now),nextFestivalMinute(state,this,now),nextSettlementTradeMinute(state,this,now),nextNpcCognitionMinute(state,now),nextNpcAutonomyMinute(state,now),nextNpcObligationMinute(state,now),nextMagicAreaMinute(state,now),nextWildlifeEncounterMinute(d,this,now));
+            const next=Math.min(end,(Math.floor(now/1440)+1)*1440,nextWorldClockMinute(state,now),nextFactionClockMinute(state,now),nextFestivalMinute(state,this,now),nextSettlementTradeMinute(state,this,now),nextNpcCognitionMinute(state,now),nextNpcAutonomyMinute(state,now),nextNpcObligationMinute(state,now),nextNpcLifeMinute(state,now),nextMagicAreaMinute(state,now),nextWildlifeEncounterMinute(d,this,now));
             this.advanceInterval(d,next-now,id);
         }
         // Intermediate clock boundaries matter to simulation, not to replay.
@@ -289,6 +292,7 @@ export class WorldEngine {
         if(this.world.npcs.some(n=>n.tier==='full')){
             advanceNpcCognition(d,this,before,after,id,{beforeState});
             advanceNpcAutonomy(d,this,before,after,id,{beforeState});
+            advanceNpcLife(d,this,before,after);
         }
         advanceWorldClocks(d,this,after);
         advanceFactionClocks(d,this,after);
@@ -413,7 +417,7 @@ export class WorldEngine {
             d.set(['state','npcs',npc,'location'],destination);
             if(d.get('state','records',`local_actor_position:${npc}`))d.remove(['state','records',`local_actor_position:${npc}`]);
         }
-        movePets(d,this,old,destination,route.movingMinutes);
+        movePets(d,this,old,destination,route.movingMinutes);moveSpiritCompanions(d,old,destination);
         for(const[key,effect]of Object.entries(d.get('state','effects')))if(effect.kind==='summon'&&effect.owner==='player'&&effect.location===old)d.set(['state','effects',key,'location'],destination);
         this.npcObligationAction.arrivalMinute=d.get('state','minute')+route.minutes;
         const areaTravel=Object.values(d.get('state','effects')??{}).some(e=>e.kind==='area');

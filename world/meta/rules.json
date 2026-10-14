@@ -2505,6 +2505,90 @@
       ]
     }
   },
+  "wildlifeAwakening": {
+    "version": 1,
+    "stages": [
+      {
+        "id": "tingxi",
+        "name": "听息",
+        "points": 30,
+        "sign": "会停步辨听人声与同类的呼唤，对反复出现的称呼有回应"
+      },
+      {
+        "id": "liyi",
+        "name": "立意",
+        "points": 100,
+        "sign": "能以固定的声响和动作表达愿与不愿，可以交流，不再只凭本能行事"
+      }
+    ],
+    "age": {
+      "thresholdDays": 720,
+      "initialMaxDays": 1080,
+      "daysPerPoint": 7,
+      "maximumPoints": 40
+    },
+    "experience": {
+      "pointsPerDay": 1,
+      "maximumPoints": 20
+    },
+    "spiritLands": [
+      {
+        "location": "bld_bs_reed_dao",
+        "pointsPerDay": 2
+      },
+      {
+        "location": "bld_bs_still_temple",
+        "pointsPerDay": 2
+      }
+    ],
+    "spiritItems": [
+      {
+        "item": "item_herb",
+        "points": 10
+      }
+    ],
+    "nurtureMinutes": 10,
+    "mentor": {
+      "operation": "spirit_sense",
+      "points": 25,
+      "minutes": 60
+    },
+    "clockPoints": 50,
+    "pactMinutes": 10,
+    "pactTerms": [
+      "可交谈、互助",
+      "不受命令驱使",
+      "不可买卖、骑乘或作为任何人的财物"
+    ],
+    "talkMinutes": 10,
+    "borrowForm": {
+      "sessions": 3,
+      "acquireMinutes": 120,
+      "acquireItems": [
+        {
+          "item": "item_herb",
+          "amount": 3
+        }
+      ],
+      "useMinutes": 30,
+      "useItems": [
+        {
+          "item": "item_herb",
+          "amount": 1
+        }
+      ],
+      "durationMinutes": 360,
+      "forms": [
+        "人形"
+      ]
+    },
+    "society": {
+      "periodDays": 90,
+      "minimumMembers": 2,
+      "foragePerMember": 5,
+      "homes": []
+    }
+  },
   "bossEcology": {
     "version": 1,
     "hpMultiplier": 5.45,
@@ -3708,5 +3792,184 @@
         ]
       }
     ]
+  },
+  "npcLife": {
+    "adultAge": 18,
+    "kinTypes": [
+      "配偶",
+      "子女",
+      "女儿",
+      "儿子",
+      "母亲",
+      "父亲",
+      "姐弟",
+      "父女",
+      "姐姐",
+      "妹妹",
+      "兄长",
+      "弟弟",
+      "孙女",
+      "孙子",
+      "孙辈",
+      "外孙",
+      "外孙女",
+      "外甥",
+      "外甥女",
+      "外祖父",
+      "儿媳",
+      "女婿",
+      "岳父",
+      "同户小辈",
+      "同户长者",
+      "同户晚辈"
+    ],
+    "courtship": {
+      "minimumTrust": 50,
+      "minimumAffection": 50,
+      "days": 90,
+      "marriageChancePerDay": 0.02
+    },
+    "marriageRelation": {
+      "trust": 3,
+      "affection": 5,
+      "romance": 30
+    },
+    "birth": {
+      "minimumTrust": 30,
+      "minimumAffection": 40,
+      "motherAge": [
+        18,
+        40
+      ],
+      "conceptionChancePerDay": 0.0006,
+      "gestationDays": 270,
+      "spacingDays": 540,
+      "givenNames": [
+        "禾",
+        "苗",
+        "安",
+        "宁",
+        "青",
+        "川",
+        "岚",
+        "松",
+        "桐",
+        "溪",
+        "穗",
+        "晴",
+        "石",
+        "芽",
+        "灯",
+        "雁"
+      ]
+    },
+    "health": {
+      "bands": [
+        {
+          "fromAge": 0,
+          "illnessPerYear": 1.2,
+          "graveShare": 0.04,
+          "suddenDeathPerYear": 0.001
+        },
+        {
+          "fromAge": 18,
+          "illnessPerYear": 1,
+          "graveShare": 0.05,
+          "suddenDeathPerYear": 0.002
+        },
+        {
+          "fromAge": 40,
+          "illnessPerYear": 1.2,
+          "graveShare": 0.1,
+          "suddenDeathPerYear": 0.005
+        },
+        {
+          "fromAge": 60,
+          "illnessPerYear": 1.5,
+          "graveShare": 0.2,
+          "suddenDeathPerYear": 0.015
+        },
+        {
+          "fromAge": 70,
+          "illnessPerYear": 2,
+          "graveShare": 0.3,
+          "suddenDeathPerYear": 0.04
+        }
+      ],
+      "mildDays": [
+        3,
+        10
+      ],
+      "graveDays": [
+        14,
+        40
+      ],
+      "graveFatality": {
+        "cared": 0.2,
+        "alone": 0.35
+      },
+      "weakenedGraveMultiplier": 2,
+      "bloodMl": 4500,
+      "feverC": [
+        38.2,
+        39.5
+      ]
+    },
+    "migration": {
+      "departMinute": 300,
+      "noticeDays": 1,
+      "marriageMoveDays": 3,
+      "maxPostponeDays": 10,
+      "newsDays": 90,
+      "joinKin": {
+        "afterDeathDays": 7,
+        "elderAge": 60,
+        "minimumTrust": 0
+      },
+      "livelihood": {
+        "starvationDays": 3,
+        "chancePerDay": 0.15
+      },
+      "refuge": {
+        "withinDays": 30,
+        "chancePerDay": 0.1
+      },
+      "host": {
+        "minimumTrust": 40,
+        "minimumAffection": 30
+      },
+      "stranger": {
+        "foodDays": 20,
+        "maxHousehold": 5,
+        "perHousehold": 1,
+        "chancePerDay": 0.03,
+        "minimumTrust": 0,
+        "minimumAffection": 0
+      }
+    },
+    "kindness": {
+      "help": {
+        "affection": 2
+      },
+      "gift": {
+        "trust": 1,
+        "affection": 3
+      },
+      "festival": {
+        "affection": 2
+      },
+      "care": {
+        "trust": 2,
+        "affection": 3,
+        "carerAffection": 1
+      },
+      "cowork": {
+        "minutes": 180,
+        "everyDays": 10,
+        "trust": 1,
+        "affection": 2,
+        "cap": 60
+      }
+    }
   }
 }

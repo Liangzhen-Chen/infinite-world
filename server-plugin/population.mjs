@@ -328,3 +328,28 @@ export function profileBrief(document,person){
         householdRole:e.householdRole,household:e.kin.map(k=>({id:k.with,name:k.name,relation:k.relation,age:k.age})),district:e.home.district,dwelling:e.home.dwelling},
         settlement:e.settlement,districtWork:record?.template.districts[e.home.district]?.work??[]};
 }
+
+// ---- Roster people entering family life ---------------------------------------
+// A registered roster resident (spouse, child or housemate of a full person)
+// has no campaign state until family life needs them: to bear or father a
+// child, to nurse a sick housemate, to inherit or to move with their family.
+// Then their catalog identity becomes a campaign actor exactly as an on-demand
+// profile does: no purse or goods are granted, the profile is not rewritten,
+// and they keep a plain home routine. A roster person has no authored view of
+// others, so their first view of each housemate or relative is the one that
+// person registered towards them.
+export function lifeRoutine(home,{minor=false,occupation=''}={}){
+    const day=minor?'在家中玩耍，由家人照看':`在家操持家务${occupation?`（${occupation}）`:''}`;
+    return {default:[{start:0,end:360,location:home,activity:'睡眠',services:[]},{start:360,end:1260,location:home,activity:day,services:[]},{start:1260,end:1440,location:home,activity:'睡眠',services:[]}]};
+}
+export function rosterLifeState(engine,state,id,minute,reason,{minor=false}={}){
+    const entity=engine.byId.get(id);
+    if(!entity||entity.tier!=='roster'||state.npcs?.[id]||!entity.householdId)return null;
+    const house=engine.world.households?.find(h=>h.id===entity.householdId&&h.members.includes(id));
+    const home=house?.homeLocation??entity.home?.location;if(!home)return null;
+    const relationships={};
+    for(const other of engine.world.npcs??[])for(const tie of other.relationships??[])if(tie.with===id&&state.npcs?.[other.id])
+        relationships[other.id]={trust:tie.trust??0,affection:tie.affection??0,respect:0,fear:0,romance:0,competition:0,favors:[],evidenceKeys:[]};
+    return {...initialNpcState({...entity,location:home,coins:0,inventory:{}}),occupation:entity.occupation??'',activity:'在家',relationships,
+        routine:lifeRoutine(home,{minor,occupation:entity.occupation}),life:{kind:'roster',since:minute,reason}};
+}

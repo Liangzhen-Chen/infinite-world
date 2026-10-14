@@ -1,4 +1,5 @@
 import {civicRules} from '../world/design/m5-civic-rules.mjs';
+import {npcHousehold} from './npc-life.mjs';
 
 const recordPath=id=>['state','records',id];
 const key=(kind,settlement)=>`civic_${kind}:${settlement}:player`;
@@ -134,7 +135,7 @@ export function civicAction(d,args,eventId){
     }
     if(operation==='civic_sponsor'){
         const sponsor=present(d,this,args.sponsor),base=this.byId.get(sponsor);
-        if((base.age??0)<18||!this.world.households?.some(h=>h.settlement===settlement&&h.members.includes(sponsor)))throw Error('担保人须为当地成年登记住户');
+        if((base.age??0)<18||npcHousehold(this,d.get('state'),sponsor)?.settlement!==settlement)throw Error('担保人须为当地成年登记住户');
         if(!belongs(this,d.get('state','location'),settlement))throw Error('须在当地当面确认担保');
         const id=key('sponsor',settlement),old=d.get(...recordPath(id));
         if(old&&old.category!=='civic_sponsor')throw Error('担保编号冲突');
@@ -151,7 +152,7 @@ export function civicAction(d,args,eventId){
     if(proof.days<gate.days)throw Error(`连续居住不足${gate.days}天`);
     const sponsor=d.get(...recordPath(key('sponsor',settlement)));
     if(sponsor?.category!=='civic_sponsor'||sponsor.subject!=='player'||sponsor.settlement!==settlement||sponsor.sponsor!==present(d,this,args.sponsor))throw Error('需要当面登记的当地担保人');
-    if((this.byId.get(sponsor.sponsor)?.age??0)<18||!this.world.households?.some(h=>h.settlement===settlement&&h.members.includes(sponsor.sponsor)))throw Error('担保人须为当地成年登记住户');
+    if((this.byId.get(sponsor.sponsor)?.age??0)<18||npcHousehold(this,d.get('state'),sponsor.sponsor)?.settlement!==settlement)throw Error('担保人须为当地成年登记住户');
     if(kind==='citizen'&&d.get(...recordPath(key('resident',settlement)))?.category!=='civic_resident')throw Error('公民申请需要已登记居民身份');
     if(total(d,settlement)<gate.contribution)throw Error('本聚落贡献不足，不能申请公民');
     reviewCrime(d);

@@ -15,6 +15,8 @@ import {siteView}from'./sites.mjs';
 import {selectNpcRumors,assertRumorConversation}from'./npc-rumors.mjs';
 import {localOpinion,opinionPlace,STANCE_LABEL}from'./public-opinion.mjs';
 import {wildlifeEncounterView}from'./wildlife.mjs';
+import {spiritScene}from'./wildlife-society.mjs';
+import {npcLifeLines,npcAgeAt}from'./npc-life.mjs';
 
 const text=(value,limit=200)=>typeof value==='string'?value.replace(/\s+/g,' ').slice(0,limit):'';
 const list=value=>Array.isArray(value)?value.map(row=>typeof row==='string'?row:row.content??row.description??'').filter(Boolean).join('；'):text(value);
@@ -58,8 +60,12 @@ export function sceneCard(engine,document,query='',index=null){
         const context=npcContext(engine,document,id,query);
         const relationship=relationView(engine,s,id,'player');
         const shared=(context?.memories??Object.values(document.memories??{}).filter(m=>m.subject===id).slice(-2)).map(m=>`${engine.calendar(m.minute??0).text} ${m.sourceType??''}：${text(m.content,140)}`);
-        parts.push(`${base.name}（${id}）｜${s.npcs[id]?.occupation??base.occupation??''}，${base.age??''}岁｜此刻：${text(available.activity)}\n  对你：信任${relationship.trust} 亲近${relationship.affection} 敬重${relationship.respect} 畏惧${relationship.fear}${relationship.favors.some(row=>row.status==='未还')?'，记得欠你的人情':''}｜涉及你的经历：${text(shared.join('；'),compactPeople?180:500)||'尚无已核实记录'}\n  说话：${text(base.speakingStyle??base.voice?.register??base.voice)}｜挂心：${text(context?.concern??list(npc.goals??base.goals),130)}\n  TA不知道：${text(list(context?.unknown??npc.unknownFacts??base.knowledge?.unknown??base.unknownFacts),160)}${!context&&base.notes?`\n  人物资料：${text(base.notes,180)}`:''}`);
+        parts.push(`${base.name}（${id}）｜${s.npcs[id]?.occupation??base.occupation??''}，${(base.tier==='full'?base.age:npcAgeAt(engine,s,id))??base.age??''}岁｜此刻：${text(available.activity)}\n  对你：信任${relationship.trust} 亲近${relationship.affection} 敬重${relationship.respect} 畏惧${relationship.fear}${relationship.favors.some(row=>row.status==='未还')?'，记得欠你的人情':''}｜涉及你的经历：${text(shared.join('；'),compactPeople?180:500)||'尚无已核实记录'}\n  说话：${text(base.speakingStyle??base.voice?.register??base.voice)}｜挂心：${text(context?.concern??list(npc.goals??base.goals),130)}\n  TA不知道：${text(list(context?.unknown??npc.unknownFacts??base.knowledge?.unknown??base.unknownFacts),160)}${!context&&base.notes?`\n  人物资料：${text(base.notes,180)}`:''}`);
         if(context?.recentActivities?.length)parts.push(`  本人近期经历，玩家未必知情：${text(context.recentActivities.map(row=>`${engine.calendar(row.minute).text} ${row.content}`).join('；'),compactPeople?100:220)}`);
+        if(context?.lifeNews?.length)parts.push(`  本人知道的乡里人事，玩家未必知情：${text(context.lifeNews.map(row=>`${engine.calendar(row.minute).text} ${row.sourceType}${row.heardFrom?`（听${name(row.heardFrom)}说）`:''}：${row.content}`).join('；'),compactPeople?120:260)}`);
+        // The person in front of you: their own household, health and move.
+        const life=engine.rules.npcLife?npcLifeLines(engine,s,id,{changedOnly:true}):[];
+        if(life.length)parts.push(`  家况，当面可知：${text(life.join('；'),compactPeople?100:200)}`);
         if(context?.background?.relations.length)parts.push(`  本人已有往来及对方公开职务：${context.background.relations.map(row=>`${row.name}（${row.with}） ${row.publicRole}｜${row.type}：${row.note}｜来源 ${row.source}`).join('；')}`);
         if(context?.background&&mentioned.has(id))parts.push(`  本人今日作息背景：${context.background.schedule.slots.map(row=>`${engine.calendar(row.start).text}至${engine.calendar(row.end).text} ${name(row.location)}：${row.activity}｜来源 ${row.source}`).join('；')}。当前确认：${JSON.stringify(context.background.schedule.current)}。${context.background.schedule.limit}`);
         if(context?.opinions?.length)parts.push(`  本人已获知事件的看法：${context.opinions.slice(0,2).map(row=>`${text(row.label,60)}｜${STANCE_LABEL[row.stance]}（${row.basis}，${row.sourceType}）`).join('；')}`);
@@ -80,6 +86,7 @@ export function sceneCard(engine,document,query='',index=null){
     const features=environmentCatalog(engine,document).entries;
     if(features.length)parts.push(`【可见环境】${features.slice(0,3).map(row=>`${row.name??name(row.id)}（${row.id}）${row.waterMl!==undefined?`，现有水${row.waterMl}毫升`:''}`).join('；')}`);
     const animals=petView(engine,document).presentAnimals;
+    const spirits=spiritScene(engine,document);if(spirits)parts.push(spirits);
     if(animals.length)parts.push(`【在场动物】${animals.slice(0,3).map(row=>`${row.name??row.id}（${row.id}）`).join('；')}`);
     const encounters=wildlifeEncounterView(document);
     if(encounters.length)parts.push(`【野外接触】${encounters.map(row=>`${row.name}（${row.target??row.species}）｜${text(row.description,120)}｜${engine.calendar(row.minute).text}，来源${row.source}`).join('；')}。可沿路离开避开；踪迹可用world_wildlife追踪，在场个体可用实际编号接触。`);

@@ -3,6 +3,7 @@ import {scheduleAt,npcAvailability}from'./npc-schedule.mjs';
 import {MemoryIndex}from'./retrieval.mjs';
 import {npcRumors}from'./npc-rumors.mjs';
 import {npcOpinions}from'./public-opinion.mjs';
+import {npcLifeNews}from'./npc-life.mjs';
 import {memoryGuardUntil,mindSleepUntil}from'./magic-mind-space.mjs';
 import {waterEarthHeldUntil}from'./magic-water-earth.mjs';
 
@@ -123,7 +124,7 @@ export function npcContext(engine,document,id,query=''){
     return{appearance:base.appearance,voice:base.voice,values:base.personality.values,flaws:base.personality.flaws,
         concern:goals[0]?.content??'',known:base.knowledge.known.map(row=>row.fact),unknown:base.knowledge.unknown,rumors:npcRumors(engine,id,document),
         recentActivities:Object.values(document.state.npcAutonomy?.actions??{}).filter(row=>row.npc===id&&row.minute<=document.state.minute).slice(-2).map(row=>({minute:row.minute,content:row.summary})),
-        memories:shared,opinions:npcOpinions(engine,document,id).slice(0,3),reflections:cognition.reflections.filter(row=>row.about==='player').slice(-1),seeds:selectNpcSeedMemories(engine,document,id,query),behavior:base.behaviorRules,
+        memories:shared,lifeNews:npcLifeNews(engine,document,id),opinions:npcOpinions(engine,document,id).slice(0,3),reflections:cognition.reflections.filter(row=>row.about==='player').slice(-1),seeds:selectNpcSeedMemories(engine,document,id,query),behavior:base.behaviorRules,
         relations:base.relationships.map(row=>({with:row.with,type:row.type,note:row.note})),
         background:npcBackground(engine,document,id,query)};
 }

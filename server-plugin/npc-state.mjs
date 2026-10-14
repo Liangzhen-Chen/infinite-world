@@ -16,5 +16,17 @@ export function actorPath(world,id){
 export function bossCognitionField(actor){return actor?.id?.startsWith('npc_')?'bossCognition':'cognition';}
 // A changed livelihood replaces the catalog schedule and teaching services in
 // campaign state; the authored catalog stays untouched for other campaigns.
-export function npcSchedule(engine,state,id){return state?.npcs?.[id]?.vocation?.schedule??engine.byId.get(id)?.schedule;}
+// A household member caring for a gravely ill person stays home all day and
+// offers no services until the illness ends (npc-life sets and clears this).
+// A roster person or campaign-born child brought into the simulation by
+// npc-life keeps a home routine in campaign state instead of a catalog one.
+export function npcSchedule(engine,state,id){
+    const own=state?.npcs?.[id],base=engine.byId.get(id)?.schedule??own?.routine,care=own?.caring;
+    if(care&&base)return {default:[{start:0,end:1440,location:care.location,activity:'照护病人',services:[]}]};
+    // A move (npc-life) remaps home and work; a later change of livelihood is
+    // built from that new home and then takes precedence.
+    const residence=own?.residence;
+    if(residence&&base&&!(own.vocation&&own.vocation.since>residence.since))return residence.schedule;
+    return own?.vocation?.schedule??base;
+}
 export function npcServices(engine,state,id){return state?.npcs?.[id]?.vocation?.services??engine.byId.get(id)?.services??[];}

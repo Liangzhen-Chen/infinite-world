@@ -272,21 +272,9 @@ N1–N17至少12项完整有效且≥90%，N6/N16零泄漏，N12真实盲辨，N
 
 ### S5 并入T143：已完成（T143的人口子项）。玩家第一次进入未展开的住区或巢窟时按种子生成名册，写进战役状态，只扣剩余配额，不写回world/；白石镇6区全部展开正好694人、210户。点名交谈时才生成完整档（起草一次、自查一次、代码检查硬约束后入库，0钱物），失败只记次数、身份不变。新测试6/6，相关98/98，发布构建ok。真实入口验证尚未运行：模型槽空闲时执行 node tools/population-live-check.mjs --live --count 6（上限18次、0.8元）。
 
-### T160（S6）野兽开启灵智。
+### T160（S6）已完成：野兽灵智按“听息→立意”累积，来源分别记录（年岁与随人经历、灵地停留、喂灵物、点化），只观察不涨进度；world_wildlife加nurture（喂灵物）、enlighten（点化，复用T93仪式资格且师门须登记spirit_sense）、pact（结缘，有边界的同意关系）；势力时钟可真正触发觉醒。参数在rules.json的wildlifeAwakening，暂以药草为灵物、芦衡观与止波寺为灵地，正式内容待T162。新增4项、领域387/390（余为旧失败）、CORE40、发布构建ok，提示约11377，0模型。遗留：结缘后个体还不会跟随玩家、没有专门对话入口（归T161）。
 
-1. 玩家结果：能观察普通野兽的灵智变化，用实际灵物或具资格的点化帮助它成为可交流的个体。
-2. 可改 server-plugin/wildlife.mjs、world-clock/T109 的觉醒效果调用点、npc-state、pets、world-upgrade、magic-ritual 必要接点及 extension/tools.mjs、规则 schema 和 tests/wildlife-awakening.test.mjs；锁定正式物种及术式正文。依赖 S1/S5/T109，与 T153/T154、T93/T104 和生态时间写者串行，可并行 S8 起草。
-3. 验收 CORE 及 `node --test "tests/wildlife*.test.mjs" "tests/w4-*.test.mjs" "tests/boss*.test.mjs" "tests/magic*.test.mjs" "tests/population*.test.mjs" tests/pets.test.mjs tests/faction-clock.test.mjs tests/world-clock.test.mjs tests/seasonal-migration.test.mjs tests/farm-pests.test.mjs tests/prompt.test.mjs tests/tool-groups.test.mjs`；覆盖自然累积、吞食、点化、资源不足、重放及长短步一致。
-4. 真实模型零次，零元；本批正式条件参数和解释由 S8 同批审核发布。
-5. 预计三小时。灵智采用原创阶段“听息、立意、借形”，与九阶战力分开；本卡做到立意。来源分别记录物种年岁阈值与经历累积、灵地停留、真实灵物消耗或导师点化；观察不能刷进度。未见种群只扣一次，已实例化个体不再扣；保留原身体、伤势与遭遇来源，进入社会后退出野生捕食/自动恢复统计。觉醒后的收伏转为有边界的同意关系，旧宠物身份不自动变成居民财产。静态提示不超过 11900 token。
-
-### T161（S7）成精后的修习与结社。
-
-1. 玩家结果：能教导已立意的精怪、帮助其取得借形能力，并参与它们定居或加入现存精怪之乡。
-2. 可改 S6 觉醒模块、server-plugin/{learning,manufacturing,npc-planning-service,npc-autonomy,magic-ritual}.mjs 的非人消费者接点、T109 faction-clock 结社效果、settlement-profile、world-upgrade、extension/tools.mjs 和 tests/wildlife-society.test.mjs；锁定 S6 身份转移规则及目录正文。依赖 S6/T109，与相关学习、生产和 engine 写者串行。
-3. 验收 CORE 及 `node --test "tests/wildlife*.test.mjs" "tests/npc-*.test.mjs" "tests/population*.test.mjs" "tests/magic*.test.mjs" tests/learning.test.mjs tests/manufacturing.test.mjs tests/professions.test.mjs tests/faction-clock.test.mjs tests/world-clock.test.mjs tests/prompt.test.mjs tests/tool-groups.test.mjs`；验证真实教学和制作、变形前后同一身体、加入/退出群落及季度推进无重复人口与库存。
-4. 真实模型零次，零元；新能力和结社参数由 S8 发布，新增术式正文并入 T104。
-5. 预计三至四小时。立意后可依实际资格学习并制造工具，借形需修习经历及真实施术代价，不默认化人或提升战力。T109 按季度或年检查自愿成员、可居住地点和口粮来源，满足后形成新组织或并入现存聚落；不足则保留游居状态。寺观关系与猎户冲突沿事件记忆，点化、结缘、报恩和寻仇均绑定具体当事人。静态提示不超过 11900 token。
+### T161（S7）已完成：world_learn带student可每天教已立意的精怪技能和配方；结缘后它能跟随、留守、交谈（wildlife_talk），能用学会的配方替玩家做东西（world_craft带maker，材料与工坊费由玩家出）；借形须修习满3次、有仪式资格并耗灵物，每次指定形貌，同一身体、战力不变、到时散形；每90天检查自愿成员、栖地和口粮，够则结群或并入精怪之乡，不够继续游居。新增5项、CORE40、发布构建ok，提示约11435，0模型。遗留：没有NPC狩猎机制，猎户冲突只记玩家攻击；精怪之乡名单与借形可选形貌等正式参数待T162。
 
 ### T162（S8）回汐埠、灰棚集与成精路线正式落地。
 
@@ -631,11 +619,13 @@ C部分只拆缺口：governance.mjs的任职入口止于“待上级决定”�
 
 ### T129（C7）已完成：玩家教学（world_learn加student）和NPC日常工作带来有上限、有时间成本的技能增长；人物计划层可发起换营生，作息与服务随之改变，登记机构的导师不自行改行；先登记4个营生模板（磨坊木作、青灯帮厨、学馆助教、武馆陪练）。npc-growth 8/8、CORE40、发布构建ok，提示约11300，0模型。遗留：换营生后场景显示的公开职务仍读原目录。
 
-### T130（C8） 成年家庭关系与出生。结果：长期关系可在双方条件满足时发展为婚姻，出生进入真实家户与人口状态，并通过当地渠道被知晓。可改新server-plugin/npc-life.mjs、npc-relations/npc-state/engine接点、world/meta/rules.json、docs/决策.md参数段、tests/npc-life-family.test.mjs；锁定旧人物静态经历，禁止未成年恋爱。验收node --test "tests/npc-*.test.mjs" ，CORE。模型0；约2.5小时，接C7，与C9/C10同文件串行。
+### T130（C8）已完成：两个成年NPC的长期关系在双方条件满足时可成婚（未成年人一律不进入），出生的孩子与新增家户成员记入state.family，消息按正常渠道传播；参数在world/meta/rules.json的npcLife，依据在docs/决策.md。新增7项、CORE40、发布构建ok，0模型。遗留（写入T164）：84对正式夫妻里81对的配偶是名册人物，暂不能生育；交往要求信任与好感都≥50，而现有关系最高好感45、提高好感的事件很少，正常游玩中成婚会很少见；场景与人物提示里看不到婚姻与子女；孩子不进入state.npcs。
 
-### T131（C9） 生病、衰老与自然死亡。结果：NPC按年龄、健康和种子概率发生人生变化，服务及义务按真实失能状态处理。可改npc-life.mjs、npc-state/npc-obligations/engine接点、world/meta/rules.json、docs/决策.md参数段、tests/npc-life-health.test.mjs；接C8，复用已有死亡结算，不重置旧伤病。验收node --test "tests/npc-*.test.mjs" tests/activities.test.mjs，CORE；跨年长短步、照护和死亡后履约均覆盖。模型0；约2小时，与C10串行。
+### T164 已完成：场景里在场的人带出“家况，当面可知”，人物面板加“家况”栏（截至最后一次见到此人，之后要亲见或从知情者处听来才更新），亲见之事进编年史；帮忙、送礼、节日同席、照护痊愈、同处干活能提高好感（成婚门槛仍为≥50），正式参数离屏一年成婚3对；无亲友时谋生、避祸可每日小概率投奔存粮够、肯收留的外乡人家；名册配偶与家人在需要时补成有状态的人物，出生的孩子进入人口与作息、不干活不交往；议事资格按当前户籍、年龄与是否在世；随行人物的猝亡与重病致死在分开后结算。新增8项、相关88/88、CORE40、发布构建ok，0模型。遗留：NPC之间日常增进好感的场合仍少。
 
-### T132（C10） 迁入迁出与人生消息。结果：NPC有原因地迁居，实际走路线，住户、工作与未履约事项在抵达后更新，玩家回来能听到变化。可改npc-life.mjs、npc-schedule/npc-cognition/civic接点、tests/npc-life-migration.test.mjs；接C9和B10，搬家不复制财产或新增同名人物。验收node --test "tests/npc-*.test.mjs" tests/civic.test.mjs ，CORE。模型0；约2小时，与认知/日程写者串行。
+### T131（C9）已完成：NPC按年龄每晚判定生病与猝亡，重病由同户成年人照护（照护者整天在家、不提供服务），病故或寿终后结算约定（记为取消，不判违约）、遗产（依次给配偶、子女、同户成年人；债务只列入遗产记录）和人口账，消息只经目击和日常交谈传播；参数在npcLife.health。新增7项、CORE40、发布构建ok，0模型。遗留（并入T164）：名册人物和战役出生的孩子无独立状态，不会生病或死亡；跟在玩家身边的人物不在离屏结算里生病或死亡。
+
+### T132（C10）已完成：NPC因成婚、投亲、谋生或避祸迁居（须有愿意接纳的人家），沿实际路线耗时前往；抵达后户籍、两地人口、作息和工作更新，赶不上的约定取消；财产随人走、不复制、不新增人物；消息经本人、同户目击者和日常交谈传开，玩家回来时场景里的旧邻会带出“乡里人事”。新增6项、CORE40、发布构建ok，0模型。遗留（并入T164）：议事资格仍按静态户籍；名册人物和战役出生的孩子不会迁居；现有人物之间几乎没有跨聚落亲友，正常两个月内实际无人迁居。
 
 ### T133（D1）已完成：NPC从本人库存添燃料维持热源并完成需火工序，缺料拒绝、离岗或失能停止，热账与窑炉裂损保留；新增11项通过/CORE40，0模型。
 
