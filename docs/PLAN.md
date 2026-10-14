@@ -635,7 +635,7 @@ T28-R1修好新回执undefined规范化并保留严格篡改拒绝，相关31/32
 
 C部分只拆缺口：governance.mjs的任职入口止于“待上级决定”，quest-board.mjs不承认玩家官职来源，公款建房也无审批主体；爵位执行与个人看法聚合尚无消费者。NPC现有关系/战斗死亡继续复用，新增范围是离屏成长与人生事件。
 
-### T123（C1） 治理权责、地块与封爵来源。结果：玩家能向正式登记机构申请任职、工程或封地，审批依据有可查来源。可改world/design/m5-authority.mjs、对应草稿/发布入口、world/geo/settlements.json及本批地块、world/lore/factions.json、world/meta/rules.json、tests/m5-authority-content.test.mjs；依赖T92的官署人物，不另造同职官员。约15–25条来源，包含上级职责、官职/月额度、可建地块/费率、公库来源及九级爵位权利义务。验收node --test "tests/governance*.test.mjs" tests/m5-authority-content.test.mjs tests/quest-board.test.mjs tests/world-validation.test.mjs，CORE。L2预计25–50次，≤2.5元；约2.5小时，正式发布与B4/B5及地理卡串行。
+### T123–T127 已完成（见PROGRESS）。原 T123（C1） 治理权责、地块与封爵来源。结果：玩家能向正式登记机构申请任职、工程或封地，审批依据有可查来源。可改world/design/m5-authority.mjs、对应草稿/发布入口、world/geo/settlements.json及本批地块、world/lore/factions.json、world/meta/rules.json、tests/m5-authority-content.test.mjs；依赖T92的官署人物，不另造同职官员。约15–25条来源，包含上级职责、官职/月额度、可建地块/费率、公库来源及九级爵位权利义务。验收node --test "tests/governance*.test.mjs" tests/m5-authority-content.test.mjs tests/quest-board.test.mjs tests/world-validation.test.mjs，CORE。L2预计25–50次，≤2.5元；约2.5小时，正式发布与B4/B5及地理卡串行。
 
 ### T124（C2） 任命与官职任务额度。结果：上级依据贡献和意见实际任免玩家，生效身份按月提供任务额度并支持公款托管。可改server-plugin/{governance,civic,quest-board}.mjs、activities/extension/tools.mjs接点、tests/governance-office.test.mjs；接C1，拒绝自报官职，按1B=10C=100D折算，免职停止新增用额但不抹既有合同。验收node --test "tests/governance*.test.mjs" tests/civic.test.mjs tests/quest-board.test.mjs tests/activities.test.mjs tests/law.test.mjs tests/reputation-law.test.mjs tests/prompt.test.mjs，CORE。模型0；约2小时，与C3–C5串行，提示≤11900。
 
