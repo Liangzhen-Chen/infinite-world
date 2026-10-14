@@ -3301,7 +3301,17 @@
                   "soil",
                   "silt_heap",
                   "object",
-                  "plant"
+                  "plant",
+                  "room",
+                  "grain",
+                  "prop",
+                  "structure",
+                  "rock",
+                  "road",
+                  "passage",
+                  "levee",
+                  "seam",
+                  "ledge"
                 ]
               },
               "owner": {
@@ -4222,7 +4232,9 @@
                 "consent_link",
                 "team_link",
                 "water_earth",
-                "care"
+                "care",
+                "heat",
+                "air"
               ]
             },
             "power": {
@@ -4305,7 +4317,36 @@
                 "seedling",
                 "roots",
                 "graft",
-                "preserve_food"
+                "preserve_food",
+                "craft_heat",
+                "forge_heat",
+                "warm",
+                "contain_fire",
+                "barrier",
+                "smoke",
+                "quiet",
+                "area_wind",
+                "deflect",
+                "slow_fall",
+                "air_bubble",
+                "sense_air",
+                "lift",
+                "clean_air",
+                "carry_voice",
+                "dry_grain",
+                "veil_water",
+                "levee",
+                "support",
+                "mud_seal",
+                "fracture",
+                "bind_water",
+                "mud_trap",
+                "survey_earth",
+                "ore",
+                "sense_soil",
+                "till",
+                "structural_sense",
+                "level_ground"
               ]
             },
             "unit": {
@@ -4419,7 +4460,9 @@
                       "cool",
                       "dry",
                       "sense_heat",
-                      "fuel"
+                      "fuel",
+                      "forge_heat",
+                      "craft_heat"
                     ]
                   }
                 }
@@ -7460,6 +7503,42 @@
             "additionalProperties": false
           },
           "uniqueItems": true
+        },
+        "wallOffsetsC": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "minimum": -1200,
+            "maximum": 1200
+          },
+          "minItems": 2,
+          "maxItems": 16
+        },
+        "kiln": {
+          "type": "object",
+          "properties": {
+            "safeGradientC": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 1200
+            },
+            "safeRiseCPerMinute": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 1200
+            },
+            "crackPermillePerStress": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 1000
+            }
+          },
+          "required": [
+            "safeGradientC",
+            "safeRiseCPerMinute",
+            "crackPermillePerStress"
+          ],
+          "additionalProperties": false
         }
       },
       "required": [

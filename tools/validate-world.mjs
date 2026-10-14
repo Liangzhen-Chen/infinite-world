@@ -141,7 +141,11 @@ export function validateWorld(world,{stage='engine'}={}){
         if(row.kind==='soil'&&['baseMoisturePercent','moisturePercent','worked'].some(field=>s[field]===undefined))errors.push(`土壤状态缺失：${row.id}`);
         if(row.kind==='silt_heap'&&s.siltGrams===undefined)errors.push(`堆泥地状态缺失：${row.id}`);
     }
-    for(const row of features.values())for(const[field,id]of Object.entries(row.links??{})){
+    const routeIds=new Set((world.routes??[]).map(route=>route.id));
+    for(const row of features.values())for(const pair of row.fireLinks??[])for(const id of pair)if(features.get(id)?.location!==row.location||!features.get(id)?.thermalModel)errors.push(`房间火势连接缺少同地燃物：${row.id}`);
+    for(const row of features.values())for(const[field,value]of Object.entries(row.links??{}))for(const id of Array.isArray(value)?value:[value]){
+        // A road segment links to the travel route it slows, not to a scene object.
+        if(field==='route'){if(!routeIds.has(id))errors.push(`环境连通路线不存在：${row.id}.route`);continue;}
         const other=features.get(id);if(!other)errors.push(`环境连通引用不存在：${row.id}.${field}`);
         else if(other.location!==row.location)errors.push(`本地沟渠跨场景连通未定义：${row.id}`);
         else if(field==='source'&&other.kind!=='water'||field==='destination'&&other.kind!=='soil'||field==='channel'&&other.kind!=='channel')errors.push(`环境连通类型不符：${row.id}.${field}`);
