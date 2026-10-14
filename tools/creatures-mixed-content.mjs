@@ -6,7 +6,8 @@ import {runContentPipeline,defaultReviewRequest,readApprovedContent} from './con
 import {numberValue} from './w4-content.mjs';
 import {revision,species,speciesProse,items,places,proseFields,clockText} from '../world/design/creatures-mixed.mjs';
 export {revision};
-const CARD='T154',MAX_REQUESTS=50;
+// 2026-10-14 主会话追加：上限由50次/1.5元改为56次/1.6元，账内有修订记录。
+const CARD='T154',MAX_REQUESTS=56;
 export const draftRoot=path.resolve('world/drafts/creatures-mixed');
 const budgetRoot=path.resolve('world/drafts/m4-object');
 const world=await loadWorld(),blocklist=JSON.parse(await fs.readFile(new URL('../world/meta/blocklist.json',import.meta.url),'utf8'));
@@ -18,7 +19,9 @@ const tacticNames={armed:'刀剑等兵刃',unarmed:'拳脚及棍棒砸击',magic
 const tacticWords={armed:/刀|剑|兵刃/,unarmed:/拳|棍|砸/,magic_fire:/火/,magic_cold:/寒|冷|冻/,magic_wind:/风/,magic_earth:/石|土/,magic_mind:/心神|迷惑/};
 const seasonNames=['春','夏','秋','冬'];
 // Final L2 round: two kiln species share one review call (both skeletons and drafts, reviewed part by part).
-export const pairs=[['pair_kiln_goblin_lamp',['monster_ash_cave_goblin','monster_tile_lamp_wraith']]];
+// The combined call failed on rows the reviewer itself called consistent; the
+// 2026-10-14 supplement reviews both species separately again.
+export const pairs=[];
 const paired=new Set(pairs.flatMap(([,ids])=>ids));
 const speciesEntry=s=>({...s,category:'species'});
 export const entries=[
@@ -106,14 +109,14 @@ export function validateDraft(d,e){
 }
 export function buildReviewRequest(e,d,c){
  const r=defaultReviewRequest(e,d,c);r.max_tokens=2000;
- r.messages[0].content+='这是原创中西混合幻想世界的生物、材料与野外地点条目。publishedFacts中的combat、spirit、reproduction、civilized是已实现规则，正文写“伤害更重/只有一半/法事可驱离/驱邪无效/不会生养”与之一致即可。nature.group的妖怪、亡灵、异族、灵兽、元素体、魔物是门类，民间说法会在同段纠正，被纠正的传言不是能力。习性中的取暖、发冷、行为偏好、背景食源、地形风险属于正常描写，不是新增机制，最多soft。外观尺寸用尺、人高等约数不算新增数值。cohabitants是同栖地已有或本批物种，relations可引用它们及乌鸦野狗等背景动物。地点描述的步行到达方式与routeKm相容即可。skeleton.parts与draft.parts、publishedFacts.parts按顺序一一对应时，逐个物种审查，只引用对应物种的事实。打倒（生命归零后按gather取材得drops）与仪式驱离（直接消失不留材料）是两条不同路径，同时写出不矛盾；“只造成1点擦伤”可写成最多擦伤一点。breeding物种写生养幼崽是正常的。同栖地物种之间的避让、各不相干等描写不是新增机制。每个hard必须指出实际不相容的两个值；reason认为一致、不构成矛盾的句子绝不能列出，也不能标hard。';
+ r.messages[0].content+='这是原创中西混合幻想世界的生物、材料与野外地点条目。publishedFacts中的combat、spirit、reproduction、civilized是已实现规则，正文写“伤害更重/只有一半/法事可驱离/驱邪无效/不会生养”与之一致即可。nature.group的妖怪、亡灵、异族、灵兽、元素体、魔物是门类，民间说法会在同段纠正，被纠正的传言不是能力。习性中的取暖、发冷、行为偏好、背景食源、地形风险属于正常描写，不是新增机制，最多soft。外观尺寸用尺、人高等约数不算新增数值。cohabitants是同栖地已有或本批物种，relations可引用它们及乌鸦野狗等背景动物。地点描述的步行到达方式与routeKm相容即可。skeleton.parts与draft.parts、publishedFacts.parts按顺序一一对应时，逐个物种审查，只引用对应物种的事实。打倒（生命归零后按gather取材得drops）与仪式驱离（直接消失不留材料）是两条不同路径，同时写出不矛盾；“只造成1点擦伤”可写成最多擦伤一点。breeding物种写生养幼崽是正常的。同栖地物种之间的避让、各不相干等描写不是新增机制。每个hard必须指出实际不相容的两个值；reason认为一致、不构成矛盾的句子绝不能列出，也不能标hard；核对通过的句子一律不输出。示例：若所有句子都与骨架和publishedFacts一致，唯一正确的输出是 {"contradictions":[]}；把一致的句子写进数组属于输出格式错误。';
  return r;
 }
 export async function reviewMixed({retryManual=false,ids=null}={}){
  if(!process.env.DEEPSEEK_API_KEY)throw Error('DEEPSEEK_API_KEY 环境变量未配置');
  const chosen=ids?entries.filter(e=>ids.includes(e.id)):entries;
  return runContentPipeline({entries:chosen,root:draftRoot,budgetRoot,revision,contextFor,validateDraft,reviewDraftFor,reuseFrozenDrafts:true,retryManual,
-  cardId:CARD,allocation:{cardId:CARD,incrementLimitYuan:1.5,waveLimitYuan:25,maxRequests:MAX_REQUESTS},concurrency:1,batchSize:50,
+  cardId:CARD,allocation:{cardId:CARD,incrementLimitYuan:1.6,waveLimitYuan:25,maxRequests:MAX_REQUESTS},concurrency:1,batchSize:50,
   client:new DeepSeekClient({budgetYuan:25,logFile:path.join(draftRoot,'usage.jsonl')}),
   buildDraftRequest:()=>{throw Error('T154正文由执行会话起草，禁止模型起草');},buildReviewRequest,
   requestTransform:async({body})=>{const ledger=JSON.parse(await fs.readFile(path.join(budgetRoot,'budget.json'),'utf8'));const issued=Object.values(ledger.requests??{}).filter(r=>r.card===CARD&&['sent','settled','unknown'].includes(r.status)).length;if(issued>=MAX_REQUESTS)throw Object.assign(Error(`${CARD}已达${MAX_REQUESTS}次L2调用上限`),{code:'CONTENT_BUDGET_STOP'});return {body};}});

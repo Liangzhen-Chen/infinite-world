@@ -23,7 +23,8 @@ before.locations=before.locations.filter(l=>!newIds.locations.has(l.id));before.
 before.rules.wildlife.habitats=before.rules.wildlife.habitats.filter(h=>!newIds.habitats.has(h.id));
 const settlements=['loc_hw','loc_bs_yupo','loc_bs_weiting','loc_bs_liquan','loc_bs_sangban','loc_bs'];
 const habitatOf=s=>world.rules.wildlife.habitats.find(h=>h.id===s.wildlife.habitat);
-const clock=m=>m%1440;
+// Held species may be appended by a later supplement, so catalog order is not compared.
+const norm=w=>({...w,monsters:[...w.monsters].sort((a,b)=>a.id.localeCompare(b.id))});
 const insideHours=([a,b])=>a<b?a+30:(a+30)%1440;
 function setup(seed,mutate){
  const w=mutate?structuredClone(world):world;if(mutate)mutate(w);
@@ -49,7 +50,7 @@ test('本批正式发布：中西各九的设计，已过L2者入正式目录，
  assert.deepEqual([...published.map(m=>m.id),...held].sort(),[...batchIds.species].sort());
  assert.ok(published.filter(m=>m.template<=2).length>=12);
  for(const m of published){const d=designed.find(s=>s.id===m.id);for(const k of Object.keys(d))assert.deepEqual(m[k],d[k],`${m.id}.${k}`);}
- assert.deepEqual(mergeMixedPublication(before,publication),world);assert.deepEqual(mergeMixedPublication(world,publication),world);
+ assert.deepEqual(norm(mergeMixedPublication(before,publication)),norm(world));assert.deepEqual(mergeMixedPublication(world,publication),world);
  const bad=structuredClone(world);bad.monsters.find(m=>m.id===published[0].id).habits+='异文';assert.throws(()=>mergeMixedPublication(bad,publication),/冲突/);
  // Old reviewed species keep their exact text.
  for(const m of before.monsters)assert.deepEqual(world.monsters.find(x=>x.id===m.id),m);
@@ -163,7 +164,7 @@ test('隔离正式发布与重发零写；候选与L4篡改在写入前拒绝',a
  const write=async(file,value)=>fs.writeFile(path.join(root,file),JSON.stringify(value));
  await write('meta/monsters.json',before.monsters);await write('meta/items.json',before.items);await write('geo/locations.json',before.locations);await write('geo/routes.json',before.routes);await write('meta/rules.json',before.rules);
  const preview=await publishMixed({root});assert.equal(preview.published,false);assert.equal(preview.changed.length,5);
- await publishMixed({root,publish:true});assert.deepEqual(await loadWorld(root),world);assert.deepEqual((await publishMixed({root,publish:true})).changed,[]);
+ await publishMixed({root,publish:true});assert.deepEqual(norm(await loadWorld(root)),norm(world));assert.deepEqual((await publishMixed({root,publish:true})).changed,[]);
  for(const [name,mutate,pattern]of [['candidate.json',r=>r.monsters[0].habits+='异文',/候选/],['batch-0.json',r=>r.l4.wave[0].scores[0]=2,/评分/],['batch-0.json',r=>r.l4.approved=false,/L4/]]){
   const p=path.join(root,'drafts/creatures-mixed',name),original=await fs.readFile(p,'utf8'),r=JSON.parse(original);mutate(r);await fs.writeFile(p,JSON.stringify(r));await assert.rejects(publishMixed({root,publish:true}),pattern);await fs.writeFile(p,original);
  }

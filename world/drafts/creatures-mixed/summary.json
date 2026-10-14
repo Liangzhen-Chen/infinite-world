@@ -1,11 +1,11 @@
 {
-  "total": 28,
-  "passed": 27,
-  "manual": 1,
+  "total": 29,
+  "passed": 29,
+  "manual": 0,
   "pending": 0,
-  "costUpperYuan": 18.412015759999996,
+  "costUpperYuan": 18.42727168,
   "budget": {
-    "spentYuan": 18.232801759999997,
+    "spentYuan": 18.248057680000002,
     "reservedYuan": 0.17921399999999976,
     "limitYuan": 25,
     "waveLimitYuan": 25,
@@ -203,10 +203,21 @@
         "reservedYuan": 0
       },
       "T154": {
-        "limitYuan": 1.5,
-        "spentYuan": 0.16607016000000002,
+        "limitYuan": 1.6,
+        "spentYuan": 0.18132608000000003,
         "reservedYuan": 0,
-        "maxRequests": 50
+        "maxRequests": 56,
+        "amendments": [
+          {
+            "note": "2026-10-14 主会话追加",
+            "at": "2026-10-14T10:40:29.298Z",
+            "oldLimitYuan": 1.5,
+            "newLimitYuan": 1.6,
+            "oldMaxRequests": 50,
+            "newMaxRequests": 56,
+            "reason": "灰窟哥布林与瓦灯魅各补审一次，上限最多6次、0.1元"
+          }
+        ]
       }
     },
     "requests": {
@@ -19447,6 +19458,134 @@
           "latencyMs": 3148.2952000000005,
           "timestamp": "2026-10-14T08:54:03.902Z"
         }
+      },
+      "d9136e76-7efa-4e63-bea6-dd0393475cec": {
+        "card": "T154",
+        "label": "content-creatures-mixed-monster_tile_lamp_wraith-review0",
+        "requestHash": "39934623deb5cd21a4b59e44547808150d5cb8107697ca0b8c0128493cde3ff7",
+        "reservedYuan": 0.0295,
+        "status": "settled",
+        "responseEvidence": {
+          "file": "budget-responses/d9136e76-7efa-4e63-bea6-dd0393475cec.json",
+          "requestHash": "39934623deb5cd21a4b59e44547808150d5cb8107697ca0b8c0128493cde3ff7",
+          "responseHash": "fd1815106f3a2ffe23147b9244a085b1744a6421dfa28ad719e4678fa564cf5f"
+        },
+        "costUpperYuan": 0.0029822399999999997,
+        "measurement": {
+          "label": "content-creatures-mixed-monster_tile_lamp_wraith-review0",
+          "model": "deepseek-flash",
+          "thinking": "disabled",
+          "usage": {
+            "prompt_tokens": 1714,
+            "completion_tokens": 7,
+            "total_tokens": 1721,
+            "prompt_tokens_details": {
+              "cached_tokens": 256
+            },
+            "prompt_cache_hit_tokens": 256,
+            "prompt_cache_miss_tokens": 1458
+          },
+          "costUpperYuan": 0.0029822399999999997,
+          "cumulativeUpperYuan": 18.235784,
+          "latencyMs": 1112.7272,
+          "timestamp": "2026-10-14T10:40:46.291Z"
+        }
+      },
+      "5a1860bd-e888-44a7-b27f-642c8ee3c854": {
+        "card": "T154",
+        "label": "content-creatures-mixed-monster_ash_cave_goblin-review0",
+        "requestHash": "9ba69549a2c24d837bd1e121c1a760c6855281fd31d84d47e0e6ff27c46acbaa",
+        "reservedYuan": 0.02954,
+        "status": "settled",
+        "responseEvidence": {
+          "file": "budget-responses/5a1860bd-e888-44a7-b27f-642c8ee3c854.json",
+          "requestHash": "9ba69549a2c24d837bd1e121c1a760c6855281fd31d84d47e0e6ff27c46acbaa",
+          "responseHash": "17354e4dccb480e90c0ae76cccf3f78d88c83503afa6d1879cd2bd3f69fb2fd8"
+        },
+        "costUpperYuan": 0.0040982399999999995,
+        "measurement": {
+          "label": "content-creatures-mixed-monster_ash_cave_goblin-review0",
+          "model": "deepseek-flash",
+          "thinking": "disabled",
+          "usage": {
+            "prompt_tokens": 1672,
+            "completion_tokens": 157,
+            "total_tokens": 1829,
+            "prompt_tokens_details": {
+              "cached_tokens": 256
+            },
+            "prompt_cache_hit_tokens": 256,
+            "prompt_cache_miss_tokens": 1416
+          },
+          "costUpperYuan": 0.0040982399999999995,
+          "cumulativeUpperYuan": 18.23988224,
+          "latencyMs": 1759.5039000000002,
+          "timestamp": "2026-10-14T10:40:48.117Z"
+        }
+      },
+      "cc898d15-4158-413e-b599-eecc754e1624": {
+        "card": "T154",
+        "label": "content-creatures-mixed-monster_ash_cave_goblin-review0",
+        "requestHash": "2cffde353ba722e1198127580d1efc8e7e7e70fe8bcacb1ee1c2639f3ee38d5d",
+        "reservedYuan": 0.029462,
+        "status": "settled",
+        "responseEvidence": {
+          "file": "budget-responses/cc898d15-4158-413e-b599-eecc754e1624.json",
+          "requestHash": "2cffde353ba722e1198127580d1efc8e7e7e70fe8bcacb1ee1c2639f3ee38d5d",
+          "responseHash": "9429eb1a81f3778e87fb347f0d77a29f7d57c1274fe099669cfa79bfd8833b7c"
+        },
+        "costUpperYuan": 0.0052252,
+        "measurement": {
+          "label": "content-creatures-mixed-monster_ash_cave_goblin-review0",
+          "model": "deepseek-flash",
+          "thinking": "disabled",
+          "usage": {
+            "prompt_tokens": 1663,
+            "completion_tokens": 551,
+            "total_tokens": 2214,
+            "prompt_tokens_details": {
+              "cached_tokens": 1280
+            },
+            "prompt_cache_hit_tokens": 1280,
+            "prompt_cache_miss_tokens": 383
+          },
+          "costUpperYuan": 0.0052252,
+          "cumulativeUpperYuan": 18.24510744,
+          "latencyMs": 2879.8786999999998,
+          "timestamp": "2026-10-14T10:41:02.745Z"
+        }
+      },
+      "420bd0ba-39fb-49c4-a923-86a38c601044": {
+        "card": "T154",
+        "label": "content-creatures-mixed-monster_ash_cave_goblin-review0",
+        "requestHash": "798d47c2a7eda9f6c63e1f9fc5dad27220f068c0e775bf3df5c128aee693f51e",
+        "reservedYuan": 0.029784,
+        "status": "settled",
+        "responseEvidence": {
+          "file": "budget-responses/420bd0ba-39fb-49c4-a923-86a38c601044.json",
+          "requestHash": "798d47c2a7eda9f6c63e1f9fc5dad27220f068c0e775bf3df5c128aee693f51e",
+          "responseHash": "d1c844963b9d89e14483bf764ae7faeba9b748028ff6099c4bc69761da3dc6a7"
+        },
+        "costUpperYuan": 0.00295024,
+        "measurement": {
+          "label": "content-creatures-mixed-monster_ash_cave_goblin-review0",
+          "model": "deepseek-flash",
+          "thinking": "disabled",
+          "usage": {
+            "prompt_tokens": 1698,
+            "completion_tokens": 7,
+            "total_tokens": 1705,
+            "prompt_tokens_details": {
+              "cached_tokens": 256
+            },
+            "prompt_cache_hit_tokens": 256,
+            "prompt_cache_miss_tokens": 1442
+          },
+          "costUpperYuan": 0.00295024,
+          "cumulativeUpperYuan": 18.248057680000002,
+          "latencyMs": 1130.4158,
+          "timestamp": "2026-10-14T10:41:16.245Z"
+        }
       }
     },
     "historicalUnallocatedSpentYuan": 0.9480150399999997,
@@ -33927,9 +34066,9 @@
   "batches": [
     {
       "index": 0,
-      "fingerprint": "a5da50da043f3b27774b6604a61c1519803489af5b395ea6858cc15e878c40bf",
-      "count": 28,
-      "passed": 27,
+      "fingerprint": "eeb361357a1bccfd9b785dcfc2f6f90db401fb7e35290a452cc098b9166c798d",
+      "count": 29,
+      "passed": 29,
       "ids": [
         "monster_moss_lamp_fox",
         "monster_knot_elm_sprite",
@@ -33938,7 +34077,9 @@
         "monster_reed_water_monkey",
         "monster_gravel_womb_sprite",
         "monster_barrow_stiff_corpse",
+        "monster_tile_lamp_wraith",
         "monster_moon_dew_toad",
+        "monster_ash_cave_goblin",
         "monster_split_tusk_orc",
         "monster_moss_back_troll",
         "monster_tower_footing_skeleton",
@@ -33947,7 +34088,6 @@
         "monster_acid_moss_ooze",
         "monster_stone_crest_cockatrice",
         "monster_barrow_ghoul",
-        "pair_kiln_goblin_lamp",
         "item_mist_frost",
         "item_marsh_phosphor",
         "item_ember_core",
@@ -33961,27 +34101,25 @@
         "loc_wild_bs_kiln"
       ],
       "rewritten": 0,
-      "manual": [
-        "pair_kiln_goblin_lamp"
-      ],
+      "manual": [],
       "pending": [],
       "flagged": [
         "monster_gravel_womb_sprite",
         "monster_tower_footing_skeleton"
       ],
       "sample": [
-        "monster_marsh_wisp",
-        "monster_ember_elemental",
-        "monster_knot_elm_sprite",
-        "item_mist_frost",
-        "loc_wild_yp_north"
+        "monster_ash_cave_goblin",
+        "monster_reed_water_monkey",
+        "loc_wild_lq_adit",
+        "item_stone_crest_quill",
+        "monster_split_tusk_orc"
       ],
       "l4": {
         "approved": false,
         "notes": []
       },
-      "costUpperYuan": 18.412015759999996,
-      "manualRatio": 0.03571428571428571,
+      "costUpperYuan": 18.42727168,
+      "manualRatio": 0,
       "needsSystemicRepair": false
     }
   ],

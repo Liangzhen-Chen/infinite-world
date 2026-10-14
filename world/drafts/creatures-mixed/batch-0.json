@@ -1,8 +1,8 @@
 {
   "index": 0,
-  "fingerprint": "a5da50da043f3b27774b6604a61c1519803489af5b395ea6858cc15e878c40bf",
-  "count": 28,
-  "passed": 27,
+  "fingerprint": "eeb361357a1bccfd9b785dcfc2f6f90db401fb7e35290a452cc098b9166c798d",
+  "count": 29,
+  "passed": 29,
   "ids": [
     "monster_moss_lamp_fox",
     "monster_knot_elm_sprite",
@@ -11,7 +11,9 @@
     "monster_reed_water_monkey",
     "monster_gravel_womb_sprite",
     "monster_barrow_stiff_corpse",
+    "monster_tile_lamp_wraith",
     "monster_moon_dew_toad",
+    "monster_ash_cave_goblin",
     "monster_split_tusk_orc",
     "monster_moss_back_troll",
     "monster_tower_footing_skeleton",
@@ -20,7 +22,6 @@
     "monster_acid_moss_ooze",
     "monster_stone_crest_cockatrice",
     "monster_barrow_ghoul",
-    "pair_kiln_goblin_lamp",
     "item_mist_frost",
     "item_marsh_phosphor",
     "item_ember_core",
@@ -34,25 +35,23 @@
     "loc_wild_bs_kiln"
   ],
   "rewritten": 0,
-  "manual": [
-    "pair_kiln_goblin_lamp"
-  ],
+  "manual": [],
   "pending": [],
   "flagged": [
     "monster_gravel_womb_sprite",
     "monster_tower_footing_skeleton"
   ],
   "sample": [
-    "monster_marsh_wisp",
-    "monster_ember_elemental",
-    "monster_knot_elm_sprite",
-    "item_mist_frost",
-    "loc_wild_yp_north"
+    "monster_ash_cave_goblin",
+    "monster_reed_water_monkey",
+    "loc_wild_lq_adit",
+    "item_stone_crest_quill",
+    "monster_split_tusk_orc"
   ],
   "l4": {
     "approved": true,
     "reviewer": "Claude（T154执行会话）",
-    "method": "人工逐条阅读：L2标记2条加随机5条写阅读记录；另随机10条六项评分；读完未过L2的合审条目但不发布",
+    "method": "人工逐条阅读：L2标记2条加随机5条写阅读记录；另随机10条六项评分；2026-10-14补审后批次指纹变化，新随机5条与补审两种补读，随机10条评分沿用原波次",
     "dimensions": [
       "原创辨识",
       "事实一致",
@@ -129,6 +128,18 @@
       {
         "id": "loc_wild_lq_adit",
         "note": "废坑道口与泉沟同时容纳兽人巨魔与石胎精灵蟾，坑道未支护的风险写清。"
+      },
+      {
+        "id": "monster_ash_cave_goblin",
+        "note": "补审通过：兵刃更重、土石减半与规则一致；文明族群不取材，以小铁钉与干栽培蘑菇片交换；怕强光结队拾荒，与炭阶式地宫题材衔接。"
+      },
+      {
+        "id": "monster_tile_lamp_wraith",
+        "note": "补审通过：器物精怪为低阶邪秽灵体，法事驱离不留物、打灭后拣回陶油灯两条路径分开；火法减半风法更重，不生养写明。"
+      },
+      {
+        "id": "item_stone_crest_quill",
+        "note": "五十克、无固定保存期一致；明确羽毛不能石化，只作匠人试用材料。"
       }
     ],
     "wave": [
@@ -254,7 +265,7 @@
       }
     ]
   },
-  "costUpperYuan": 18.412015759999996,
-  "manualRatio": 0.03571428571428571,
+  "costUpperYuan": 18.42727168,
+  "manualRatio": 0,
   "needsSystemicRepair": false
 }
