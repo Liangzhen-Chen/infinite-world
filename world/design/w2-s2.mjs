@@ -192,7 +192,7 @@ export const recipes=[
   output:{item:'item_s2_pill',quantity:10},byproducts:[],learningRequired:true,learnFee:20,learnMinutes:60,teachers:[DAN],toolWear:0,failure:{recoverFraction:0,injury:0}},
 ];
 export const recipeProse={
- recipe_s2_talisman:'在芦衡观符案上，用短毫画笔蘸朱砂调成的符墨，在一帖四张黄表纸上依次画成四张黄符；笔划断续或墨色不匀时整帖作废，纸和朱砂都不退回。',
+ recipe_s2_talisman:'在芦衡观符案上取一份黄表纸小帖和一份朱砂小包，用短毫画笔蘸朱砂调成的符墨，把这份小帖里的四张纸依次画成四张黄符；笔划断续或墨色不匀时整份作废，纸和朱砂都不退回。',
  recipe_s2_pill:'把制黄精片、茯苓块和甘草片研成细粉，与滤蜜调成药泥搓成十粒蜜丸，放在东街学馆丹炉上隔火烘40分钟；整段时间炉火须在燃烧，炉温保持在70至140摄氏度之间，炉壁温区不匀时一部分丹丸会焦裂。',
 };
 export function recipeDraft(r){return{id:r.id,prose:{process:recipeProse[r.id]}};}

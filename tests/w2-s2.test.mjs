@@ -4,14 +4,14 @@ import fs from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
 import {loadWorld} from '../tools/load-world.mjs';
-import {readS2Publication,designPublication,mergeS2Publication,publishS2,withoutS2,files as publishedFiles} from '../tools/publish-w2-s2.mjs';
+import {readS2Publication,mergeS2Publication,publishS2,withoutS2,files as publishedFiles} from '../tools/publish-w2-s2.mjs';
 import {spells,books,items,recipes,placements,stations,mentors,routes,routeOf} from '../world/design/w2-s2.mjs';
 import {WorldEngine} from '../server-plugin/engine.mjs';
 import {applyPatches} from '../server-plugin/storage.mjs';
 import {compatibleWorld,planWorldUpgrade} from '../server-plugin/world-upgrade.mjs';
 import {projectileAirPenalty} from '../server-plugin/magic-air.mjs';
 
-const formal=await loadWorld(),publication=process.env.S2_DESIGN?designPublication():await readS2Publication();
+const formal=await loadWorld(),publication=await readS2Publication();
 const ids={spells:new Set(spells.map(s=>s.id)),skills:new Set(spells.map(s=>s.skill)),items:new Set([...books,...items].map(i=>i.id)),recipes:new Set(recipes.map(r=>r.id))};
 // The edition before this batch is rebuilt from the formal world, so the test
 // works before and after publication and never pins catalogue totals.
@@ -25,7 +25,7 @@ const fid=k=>`feature_s2_${k}`;
 let serial=0;
 async function run(doc,tool,args){const out=await engine.reduce(doc,{tool,args,eventId:`s2-${++serial}`});return {doc:applyPatches(doc,out.patches),result:out.result};}
 // Select a reproducible successful dice event without editing dice or state.
-async function success(doc,tool,args,key='success'){for(let i=0;i<60;i++){const r=await run(doc,tool,args).catch(e=>{e.message+=` @${tool} ${JSON.stringify(args)} t=${doc.state.minute} day=${JSON.stringify(engine.calendar(doc.state.minute))} loc=${doc.state.location} npc=${JSON.stringify(Object.fromEntries(['npc_bs_077_1','npc_bs_079_1','npc_bs_078_1'].map(id=>[id,[doc.state.npcs[id].location,doc.state.npcs[id].activity,doc.state.npcs[id].status]])))}`;throw e;});if(r.result.effectFailed)assert.fail(r.result.effectFailed);if(r.result[key])return r;}assert.fail(`未取得成功检定：${tool} ${JSON.stringify(args)}`);}
+async function success(doc,tool,args,key='success'){for(let i=0;i<60;i++){const r=await run(doc,tool,args).catch(e=>{e.message+=` @${tool} ${JSON.stringify(args)} t=${doc.state.minute}`;throw e;});if(r.result.effectFailed)assert.fail(r.result.effectFailed);if(r.result[key])return r;}assert.fail(`未取得成功检定：${tool} ${JSON.stringify(args)}`);}
 async function wait(doc,minutes){return (await run(doc,'world_time',{minutes,activity:'等待'})).doc;}
 async function at(doc,minuteOfDay){let target=Math.floor(doc.state.minute/1440)*1440+minuteOfDay;if(target<=doc.state.minute)target+=1440;while([10,20,30].includes(engine.calendar(target).day))target+=1440;return wait(doc,target-doc.state.minute);}
 // Residents can fall ill (NPC life simulation); lessons wait for a day the teacher is actually there.

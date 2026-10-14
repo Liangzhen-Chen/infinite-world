@@ -79,7 +79,7 @@ export function contextFor(e){
   return {seller,usedBy:used,recipe:made?{name:made.name,materials:made.materials.map(m=>({name:allItems.get(m.item)?.name,amount:m.amount})),output:made.output,minutes:made.minutes,station:made.workstation?stations.bld_bs_school[0]:null,process:recipeProse[made.id]}:null,
    facts:['朱砂是含汞的硫化汞矿物，有毒，不可入口；黄精、茯苓、甘草是常见中药材，蜂蜜用来调丸；艾绒是常用引火料。','物品没有直接的治疗或战斗数值，用途以use字段为准。','炉温区不匀时烘制会按裂损规则让部分成品焦裂。']};}
  const r=e;return {materials:r.materials.map(m=>({...m,name:allItems.get(m.item)?.name})),tools:r.tools.map(id=>allItems.get(id)?.name),output:{...r.output,name:allItems.get(r.output.item)?.name},teacher:person(r.teachers[0]),place:placeName(r.location),skill:world.skills.find(s=>s.id===r.skill)?.name,
-  station:r.workstation?stations.bld_bs_school[0]:null,rules:'server-plugin/manufacturing.mjs：开始前检查已学配方、技能、地点、工作台和工具；工作台有thermalRequirement时，整个工序每分钟炉温须在min/max之间且燃烧，否则拒绝不收费。检定失败按failure.recoverFraction回收材料（此处为0）。炉子登记kiln时，成功后按工序中累计的裂损逐件判定焦裂，全部焦裂算失败。'};
+  station:r.workstation?stations.bld_bs_school[0]:null,units:r.materials.map(m=>({name:allItems.get(m.item)?.name,amount:m.amount,unitContent:itemProse[m.item]?.use??allItems.get(m.item)?.use})),rules:'server-plugin/manufacturing.mjs：开始前检查已学配方、技能、地点、工作台和工具；工作台有thermalRequirement时，整个工序每分钟炉温须在min/max之间且燃烧，否则拒绝不收费。检定失败按failure.recoverFraction回收材料（此处为0）。炉子登记kiln时，成功后按工序中累计的裂损逐件判定焦裂，全部焦裂算失败。'};
 }
 const leak=/候选|引擎|主持人|玩家|骨架|schema|JSON|effectSpec|原语|尚未接入|不宣称|此处不称/;
 export function validateDraft(d,e){
