@@ -20,14 +20,17 @@ async function trace({quiet=false,seed='advance-registry',steps}){
  return out;
 }
 const days=n=>Array.from({length:n},()=>['world_time',{minutes:DAY}]);
-// Golden hashes were recorded from the hand-written advance()/advanceInterval() before the registry refactor.
+// Golden hashes: first recorded from the hand-written advance() before the registry refactor (K7, equivalence verified at merge).
+// They are now a regression snapshot; after an intended behaviour change regenerate with UPDATE_ADVANCE_GOLDEN=1.
 const GOLDEN=JSON.parse(await fs.readFile(new URL('./fixtures/advance-registry-golden.json',import.meta.url),'utf8'));
 const SCENARIOS={
  full:{steps:[...days(3),['world_time',{minutes:17*60+13}],['world_time',{minutes:5*DAY}]]},
  quiet:{quiet:true,seed:'advance-quiet',steps:[...days(2),['world_time',{minutes:14*DAY}],['world_time',{minutes:37}]]},
 };
-for(const [name,scenario]of Object.entries(SCENARIOS))test(`对照：${name}存档推进结果与注册表改造前逐字节相同`,async()=>{
- assert.deepEqual(await trace(scenario),GOLDEN[name]);
+for(const [name,scenario]of Object.entries(SCENARIOS))test(`对照：${name}存档推进结果可重放且与快照逐字节相同`,async()=>{
+ const got=await trace(scenario);assert.deepEqual(await trace(scenario),got);
+ if(process.env.UPDATE_ADVANCE_GOLDEN){GOLDEN[name]=got;await fs.writeFile(new URL('./fixtures/advance-registry-golden.json',import.meta.url),JSON.stringify(GOLDEN,null,1)+'\n');return;}
+ assert.deepEqual(got,GOLDEN[name]);
 });
 test('注册表按order排序、编号唯一，并覆盖原有推进系统',()=>{
  const orders=advanceRegistry.map(s=>s.order),ids=advanceRegistry.map(s=>s.id);

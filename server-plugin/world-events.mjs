@@ -5,6 +5,7 @@
 // that wounds, a theft and a gift reach the same reactions as a sword blow.
 // Social events are kept in records as `world_event:<eventId>[:n]`.
 import {eventWeight} from './standing.mjs';
+import {recordCareerMetrics} from './career-metrics.mjs';
 export const WORLD_EVENT_VERSION=1;
 export const SOCIAL_VERBS=new Set(['harm','clash','steal','gift','help','trade','learn','organize','breach']);
 const awake=n=>n&&!['死亡','濒死','昏迷'].includes(n.status)&&!n.scheduleTravel&&!n.cognitionTravel&&!/(睡眠|熟睡|睡觉)/.test(n.activity??'');
@@ -85,6 +86,8 @@ export function publishWorldEvents(d,engine,events,context,subscribers){
         const {legacy:_,...row}=e;d.set(['state','records',key],{category:'world_event',...row});
     }
     for(const s of subscribers)s(d,engine,events,context);
+    // Career metrics observe every settled call, after the social subscribers.
+    recordCareerMetrics(d,engine,events,context);
 }
 
 export function worldEvents(state,filter=()=>true){

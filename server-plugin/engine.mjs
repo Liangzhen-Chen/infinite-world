@@ -30,6 +30,7 @@ import {localWeather,weatherEdge}from'./weather.mjs';
 import {initializeAgriculture}from'./agriculture-migration.mjs';
 import {agricultureView,settleAgricultureExpiry}from'./agriculture.mjs';
 import {advanceSettlementTrade,regionalTradePrice}from'./settlement-trade.mjs';
+import {tradeQuote,recordDeal}from'./shop.mjs';
 import {initializeWorldClocks}from'./world-clock.mjs';
 import {initializeFactionClocks,factionClockRules}from'./faction-clock.mjs';
 import {validateFestivalRuntime}from'./festival.mjs';
@@ -51,6 +52,7 @@ import {deriveWorldEvents,publishWorldEvents,WORLD_EVENT_VERSION}from'./world-ev
 import {recordSpiritGrudges}from'./wildlife-society.mjs';
 import {recordBossEvents}from'./boss-cognition.mjs';
 import {transmitStanding}from'./standing.mjs';
+import {evidenceBreakthrough,breakthroughPaths}from'./career-metrics.mjs';
 import {recordIntelligenceEvents,INTELLIGENCE_VERSION}from'./npc-intelligence.mjs';
 // Social subscribers, in settlement order; each reads the event verb and tags.
 const worldEventSubscribers=[
@@ -252,13 +254,15 @@ export class WorldEngine {
         const quantity=number(args.quantity,1,100000,'数量'), catalog=this.byId.get(item);
         const quoteKey=`${Math.floor(d.get('state','minute')/1440)}_${seller}_${buyer}_${item}`;
         const existing=d.get('state','quotes',quoteKey);
-        const quoteBase=Math.ceil(regionalTradePrice(d,this,item,playerLocation)*wildlifePriceFactor(this,d.document,item,playerLocation));
-        const price=existing ?? number(args.unitPrice ?? quoteBase,Math.ceil(quoteBase*0.8),Math.ceil(quoteBase*1.5),'单价');
+        // Day list price: region/transport/season x wildlife x shop markup x regard; bargaining moves it within rules.economy.priceFactorLimits.bargain.
+        const quote=tradeQuote(d,this,{buyer,seller,item,location:playerLocation,base:()=>Math.ceil(regionalTradePrice(d,this,item,playerLocation)*wildlifePriceFactor(this,d.document,item,playerLocation))});
+        const [bargainLow,bargainHigh]=this.rules.economy.priceFactorLimits.bargain;
+        const price=existing ?? number(args.unitPrice ?? quote.listPrice,Math.ceil(quote.listPrice*bargainLow),Math.ceil(quote.listPrice*bargainHigh),'单价');
         const cost=quantity*price;
         if(this.quantity(d,seller,item)<quantity) throw new Error(`对方库存不足：${catalog.name}只剩${this.quantity(d,seller,item)}`);
         const payment=chargeTrade(d,this,{buyer,seller,cost,payment:args.payment,creditMinutes:args.creditMinutes,description:`${catalog.name}货款`},id);
         const moved=transferItems(d,this,seller,buyer,item,quantity,args.instances??null);
-        d.set(['state','quotes',quoteKey],price);this.advance(d,5,id);d.say(`${catalog.name}×${quantity}，${payment.debt?'赊账':'成交'}${cost}铜`);
+        d.set(['state','quotes',quoteKey],price);recordDeal(d,quote,price,quantity,id);this.advance(d,5,id);d.say(`${catalog.name}×${quantity}，${payment.debt?'赊账':'成交'}${cost}铜`);
         return {buyer,seller,item,quantity,cost,instances:moved.instances,...payment};
     }
     advance(d,minutes,id) {
@@ -455,6 +459,8 @@ export class WorldEngine {
         if(!old)throw new Error('尚未学会这项技能');
         const stage=Math.floor(old.proficiency/300),day=String(Math.floor(d.get('state','minute')/1440));
         if(args.breakthroughSource){
+            // Masterpiece, completed research or a key battle recorded by career metrics.
+            const evidence=evidenceBreakthrough(d,this,skill,args.breakthroughSource,old);if(evidence)return evidence;
             const teacher=this.resolve(args.breakthroughSource,'npc'),base=this.byId.get(teacher),role=this.byId.get(skill).profession;
             if(!((base.services??[]).includes(role)||(base.services??[]).includes(skill)||(base.skills??[]).includes(skill))||d.get('state','npcs',teacher,'location')!==d.get('state','location'))throw new Error('突破导师不具备资格或不在场');
             assertNpcService(d,this,teacher,'teach',120);
@@ -476,7 +482,8 @@ export class WorldEngine {
         row.gain+=actual;row.targets[target]=repeats+1;daily[day]=row;
         for(const key of Object.keys(daily))if(Number(key)<Number(day)-1)delete daily[key];
         d.set(['state','skills',skill],{...old,proficiency,grade:skillGrade(proficiency),daily});d.say(`${this.byId.get(skill).name}熟练度 +${actual}`);
-        return {skill,gain:actual,proficiency,needsBreakthrough:proficiency%300===299};
+        const paths=proficiency%300===299?breakthroughPaths(d.get('state'),skill,proficiency):[];
+        return {skill,gain:actual,proficiency,needsBreakthrough:proficiency%300===299,...(paths.length?{breakthroughPaths:paths}:{})};
     }
     applyMagicArea(d,catalog,args,id,source='player'){
         return applyAreaMagic.call(this,d,prepareAreaMagic.call(this,d,catalog,args,{source}),id);

@@ -23,6 +23,7 @@ import {validateNpcProfiles,validateNpcDepth,findNpcRuleWording}from'./npc-profi
 import {validatePopulation}from'./population-validation.mjs';
 import {validateFestivalRuntime}from'../server-plugin/festival.mjs';
 import {validateSites}from'../server-plugin/sites.mjs';
+import {validateShopRules}from'../server-plugin/shop.mjs';
 const schema=JSON.parse(await fs.readFile(new URL('../schemas/world.schema.json',import.meta.url),'utf8'));
 const blocklist=JSON.parse(await fs.readFile(new URL('../world/meta/blocklist.json',import.meta.url),'utf8'));
 const validate=new Ajv({allErrors:true,strict:true,allowUnionTypes:true}).compile(schema);
@@ -45,6 +46,7 @@ export function validateWorld(world,{stage='engine'}={}){
     for(const boss of world.bosses??[])errors.push(...validateBossNegotiation(boss,negotiationItems).map(error=>`${boss.id}:${error}`));
     errors.push(...validateObjectWorld(world));
     errors.push(...validateSites(world));
+    errors.push(...validateShopRules(world));
     errors.push(...validateNpcSchedules(world));
     errors.push(...validateNpcGrowthRules(world));
     errors.push(...validateNpcLifeRules(world));
@@ -170,6 +172,14 @@ export function validateWorld(world,{stage='engine'}={}){
                 reference(choice.requiredSkill,`${row.id}.promotion`);
                 if(promotionIds.has(choice.id))errors.push(`升职方向编号重复：${choice.id}`);promotionIds.add(choice.id);
             }
+        }
+    }
+    // U4 career data: variant routes, entry tasks and ultimates per profession.
+    for(const [role,career]of Object.entries(world.careers??{})){
+        reference(role,'careers');if(career.ultimate)reference(career.ultimate.skill,`${role}.ultimate`);
+        for(const step of career.variants??[])for(const choice of step){
+            reference(choice.requiredSkill,`${role}.variant`);
+            if(promotionIds.has(choice.id))errors.push(`升职方向编号重复：${choice.id}`);promotionIds.add(choice.id);
         }
     }
     const checkPrerequisites=row=>{for(const requirement of row.prerequisites??[])reference(typeof requirement==='string'?requirement:requirement.skill,`${row.id}.prerequisite`);};
