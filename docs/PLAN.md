@@ -246,13 +246,7 @@ N1–N17至少12项完整有效且≥90%，N6/N16零泄漏，N12真实盲辨，N
 
 ### T156（S1）已完成：非人居民复用NPC的作息与交易；智能首领与其完整档共用同一身体和库存，伤势与死亡同时影响谈话、交易和巢穴；据点按公共区、议事区、私巢分别授权；升级恢复已接通。专项6/6，首领/据点/白石镇/CORE共150/150，发布构建ok，0模型。
 
-### T157（S2）炭阶地宫与苔灯坞正式落地。
-
-1. 玩家结果：在白石镇和河湾附近分别进入单族地宫与狐族住区，接触居民并进行有限库存交易。
-2. 可改 world/design/monster-society-1.mjs、对应 drafts、world/geo/{locations,routes,settlements}.json、people/{baseline,residents,households}.json、lore/{cultures,factions}.json、本批发布入口及必要物品库存配置；锁定无关居民和已审生物。依赖 S1、T154，本批地点与 T94 共用 ID；正式发布与 T90–T94、T110/T111、T142 串行。
-3. 验收 CORE 及 `node --test tests/monster-society-content.test.mjs "tests/population*.test.mjs" "tests/npc-*.test.mjs" "tests/w1-*.test.mjs" "tests/w5-*.test.mjs" "tests/world-*.test.mjs" tests/sites.test.mjs tests/settlement-trade.test.mjs tests/retrieval.test.mjs`；`node tools/audit-npc-depth.mjs`。按两处 ID 检查路线、四名 full 深度、户巢和库存；待生成人口须与具名成员分开。
-4. 真实 L2 预计八十至一百三十次，上限一点五元；含人物、建筑、社会与文化新事实。
-5. 预计三至四小时加后台 L2。两处共二十四名具名成员，其中八 full；每处二至三个住区、四至六项公共设施、至少两组内部立场。生活空间和初始交易本卡可玩，动态争端接 S3/T109，委托接 T155；不把尚未接入的内容标成已生效。
+### T157（S2）已完成：炭阶地宫loc_ms_tanjie（白石镇西郊废窑下约4.1km，哥布林240名49户；完整档：窟主烟砧、炉祭钉缨、菌床管事烟苔、抢粮派砾牙；3住区、5项公共设施、议事窟、可潜入仓窟）与苔灯坞loc_ms_taideng（河湾北林约3.1km，苔灯狐48名12户；完整档：坞主栗衡、长老苔眠、药圃管事青芷、追偿派栗针；3家巢群、5项设施、长老树洞、可潜入收夹洞）正式发布；其余成员按种子按需生成；两处各两组立场、两项议题，文化入world/lore。102次L2全过，0.42233248元；L4均4.4/最低4。正式完整档259个零缺口。遗留：未新增对应势力与T109时钟（议题只登记），修风井、送还尾结只是钩子未接委托（归T155），monsterSociety.positions尚未被T158读取。
 
 ### T158（S3）已完成：玩家可与聚居地首领立约（贸易、朝贡、通行，按10天一期履约），可潜入登记过的据点（私宅和议事区不可登记潜入）；守约、背约、交锋、潜入被发现都会改变成员态度，消息沿步行路线传到邻村后改变邻村态度（目前邻村反应只有“敌对后拒绝交易”一种）；议事可推动势力时钟。聚居地用location.monsterSociety、潜入用site.infiltration登记，正式数据由T157等内容卡发布。新增5项、CORE40、发布构建ok，提示约11330，0模型。
 
