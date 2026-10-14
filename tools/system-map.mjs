@@ -153,7 +153,7 @@ const SYSTEMS=[
  {id:'sim_agriculture',layer:'sim',name:'农业',modules:['agriculture.mjs']},
  {id:'sim_society',layer:'sim',name:'社会',modules:['monster-society.mjs','reputation.mjs','public-opinion.mjs','organizations.mjs','civic.mjs','governance.mjs','quest-board.mjs']},
  {id:'sim_clock',layer:'sim',name:'时钟与节令',modules:['world-clock.mjs','faction-clock.mjs','festival.mjs']},
- {id:'sim_law',layer:'sim',name:'法律',modules:['law.mjs']},
+ {id:'sim_law',layer:'sim',name:'法律与通缉',modules:['law.mjs','bounty.mjs']},
  {id:'sim_works',layer:'sim',name:'著作',modules:['works.mjs']},
  // 玩家接口层
  {id:'ui_tools',layer:'ui',name:'模型工具',modules:['ext:tools.mjs']},

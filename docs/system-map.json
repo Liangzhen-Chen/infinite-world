@@ -2,7 +2,7 @@
  "title": "无限原野系统地图",
  "card": "K9",
  "generatedFrom": {
-  "commit": "refs/heads/k9",
+  "commit": null,
   "method": "运行时导出（注册表、规则表、工具定义、效果表、立场传导表）+ 静态正则扫描（import 图、函数体标识符、state 分区与 records 前缀、rules/world 读取）。静态扫描是近似：经 engine.byId、helper 间接或动态拼接路径的访问不计入。"
  },
  "scanMethods": {
@@ -18,14 +18,14 @@
  "counts": {
   "layers": 6,
   "systems": 37,
-  "modules": 149,
-  "advance": 32,
+  "modules": 150,
+  "advance": 33,
   "tools": 25,
   "verbs": 12,
   "subscribers": 8,
   "interactionRules": 24,
   "effectKinds": 11,
-  "links": 320
+  "links": 323
  },
  "layers": [
   {
@@ -590,7 +590,7 @@
    "modules": [
     "server-plugin/world-events.mjs"
    ],
-   "lines": 112,
+   "lines": 115,
    "stateWrites": [
     "records"
    ],
@@ -722,7 +722,7 @@
    "modules": [
     "server-plugin/advance-registry.mjs"
    ],
-   "lines": 139,
+   "lines": 142,
    "stateWrites": [
     "effects",
     "obligations",
@@ -1525,7 +1525,7 @@
     "server-plugin/governance.mjs",
     "server-plugin/quest-board.mjs"
    ],
-   "lines": 1554,
+   "lines": 1557,
    "stateWrites": [
     "npcs",
     "obligations",
@@ -1657,19 +1657,21 @@
   },
   {
    "id": "sim_law",
-   "name": "法律",
+   "name": "法律与通缉",
    "layer": "sim",
    "card": null,
    "dir": null,
    "modules": [
-    "server-plugin/law.mjs"
+    "server-plugin/law.mjs",
+    "server-plugin/bounty.mjs"
    ],
-   "lines": 346,
+   "lines": 784,
    "stateWrites": [
     "itemInstances",
     "location",
     "npcs",
-    "player"
+    "player",
+    "quests"
    ],
    "stateReads": [
     "inventory",
@@ -1677,14 +1679,18 @@
     "records"
    ],
    "recordWrites": [],
-   "recordReads": [],
+   "recordReads": [
+    "legal_dismissal"
+   ],
    "rules": [
     "economy",
-    "law"
+    "law",
+    "quests"
    ],
    "world": [],
    "advance": [
-    "law"
+    "law",
+    "bounty"
    ],
    "subscribes": [],
    "effects": [],
@@ -2128,6 +2134,7 @@
    "to": "sim_law",
    "kind": "advance",
    "labels": [
+    "bounty",
     "law"
    ]
   },
@@ -2248,6 +2255,7 @@
    "to": "sim_law",
    "kind": "call",
    "labels": [
+    "bounty.mjs",
     "law.mjs"
    ]
   },
@@ -3194,9 +3202,26 @@
   },
   {
    "from": "sim_law",
+   "to": "base_standing",
+   "kind": "call",
+   "labels": [
+    "standing.mjs"
+   ]
+  },
+  {
+   "from": "sim_law",
+   "to": "kernel_storage",
+   "kind": "call",
+   "labels": [
+    "storage.mjs"
+   ]
+  },
+  {
+   "from": "sim_law",
    "to": "sim_character",
    "kind": "call",
    "labels": [
+    "progression.mjs",
     "training.mjs"
    ]
   },
@@ -3222,6 +3247,7 @@
    "to": "sim_society",
    "kind": "call",
    "labels": [
+    "organizations.mjs",
     "reputation.mjs"
    ]
   },
@@ -3479,6 +3505,14 @@
    "kind": "call",
    "labels": [
     "items.mjs"
+   ]
+  },
+  {
+   "from": "sim_society",
+   "to": "sim_law",
+   "kind": "call",
+   "labels": [
+    "bounty.mjs"
    ]
   },
   {
@@ -5015,6 +5049,17 @@
    "partitions": []
   },
   {
+   "id": "bounty",
+   "order": 1150,
+   "stepped": true,
+   "nextMinute": true,
+   "modules": [
+    "server-plugin/bounty.mjs"
+   ],
+   "inline": false,
+   "partitions": []
+  },
+  {
    "id": "npc_life",
    "order": 1200,
    "stepped": true,
@@ -5380,6 +5425,7 @@
     "server-plugin/works.mjs"
    ],
    "breach": [
+    "server-plugin/law.mjs",
     "server-plugin/world-events.mjs"
    ],
    "cast": [
@@ -5429,6 +5475,7 @@
    "trade": [
     "trade"
    ],
+   "law": [],
    "learn": [
     "learn"
    ]
@@ -6185,6 +6232,7 @@
   ],
   "readers": [
    "server-plugin/boss-negotiation.mjs",
+   "server-plugin/bounty.mjs",
    "server-plugin/credit.mjs",
    "server-plugin/effects.mjs",
    "server-plugin/engine.mjs",
@@ -7299,7 +7347,8 @@
     "prison",
     "compensate",
     "claim",
-    "grant_magic_permit"
+    "grant_magic_permit",
+    "bribe"
    ],
    "routes": [
     {
@@ -7334,7 +7383,8 @@
       "prison",
       "compensate",
       "claim",
-      "grant_magic_permit"
+      "grant_magic_permit",
+      "bribe"
      ],
      "handler": "activities.law",
      "modules": [
@@ -7683,6 +7733,7 @@
     "server-plugin/boss-migration.mjs",
     "server-plugin/boss-negotiation.mjs",
     "server-plugin/bosses.mjs",
+    "server-plugin/bounty.mjs",
     "server-plugin/business.mjs",
     "server-plugin/career-metrics.mjs",
     "server-plugin/catalog.mjs",
@@ -7823,6 +7874,13 @@
    ]
   },
   {
+   "dir": "world/orgs",
+   "files": 0,
+   "keys": [],
+   "readers": [],
+   "tools": []
+  },
+  {
    "dir": "world/people",
    "files": 3,
    "keys": [
@@ -7882,6 +7940,13 @@
     "tools/w3-trades-publish.mjs",
     "tools/w5-content.mjs"
    ]
+  },
+  {
+   "dir": "world/sites",
+   "files": 0,
+   "keys": [],
+   "readers": [],
+   "tools": []
   }
  ],
  "prompt": {
@@ -7968,6 +8033,7 @@
    "server-plugin/pets.mjs"
   ],
   "quests": [
+   "server-plugin/bounty.mjs",
    "server-plugin/compat/v2-phase1-activities.mjs",
    "server-plugin/quest-board.mjs",
    "server-plugin/ui-affairs.mjs"
@@ -7998,6 +8064,7 @@
   ],
   "governance": [],
   "economy": [
+   "server-plugin/bounty.mjs",
    "server-plugin/business.mjs",
    "server-plugin/credit.mjs",
    "server-plugin/engine.mjs",
@@ -8020,6 +8087,7 @@
   ],
   "law": [
    "server-plugin/agriculture.mjs",
+   "server-plugin/bounty.mjs",
    "server-plugin/governance.mjs",
    "server-plugin/law.mjs",
    "server-plugin/magic-targeting.mjs"
@@ -8482,6 +8550,7 @@
   "quests": {
    "writers": [
     "kernel_storage",
+    "sim_law",
     "sim_society"
    ],
    "readers": [
@@ -9378,6 +9447,7 @@
      "pattern": "\\.law\\b",
      "modules": [
       "server-plugin/agriculture.mjs",
+      "server-plugin/bounty.mjs",
       "server-plugin/governance.mjs",
       "server-plugin/law.mjs",
       "server-plugin/magic-targeting.mjs",
@@ -9477,6 +9547,7 @@
      "pattern": "tier==='full'",
      "modules": [
       "server-plugin/advance-registry.mjs",
+      "server-plugin/bounty.mjs",
       "server-plugin/engine.mjs",
       "server-plugin/festival.mjs",
       "server-plugin/npc-autonomy.mjs",
@@ -9493,6 +9564,7 @@
       "base_advance",
       "kernel_engine",
       "sim_clock",
+      "sim_law",
       "sim_npc",
       "ui_scene"
      ]
@@ -10878,6 +10950,7 @@
    "imports": [
     "server-plugin/agriculture.mjs",
     "server-plugin/bosses.mjs",
+    "server-plugin/bounty.mjs",
     "server-plugin/contracts.mjs",
     "server-plugin/credit.mjs",
     "server-plugin/effects.mjs",
@@ -10929,7 +11002,7 @@
     "npcs"
    ],
    "worldDirs": [],
-   "lines": 139
+   "lines": 142
   },
   "server-plugin/agriculture-migration.mjs": {
    "system": "kernel_storage",
@@ -11133,6 +11206,37 @@
    ],
    "worldDirs": [],
    "lines": 156
+  },
+  "server-plugin/bounty.mjs": {
+   "system": "sim_law",
+   "imports": [
+    "server-plugin/organizations.mjs",
+    "server-plugin/progression.mjs",
+    "server-plugin/standing.mjs",
+    "server-plugin/storage.mjs"
+   ],
+   "stateWrites": [
+    "location",
+    "npcs",
+    "player",
+    "quests"
+   ],
+   "stateReads": [
+    "minute",
+    "records"
+   ],
+   "recordWrites": [],
+   "recordReads": [
+    "legal_dismissal"
+   ],
+   "rules": [
+    "economy",
+    "law",
+    "quests"
+   ],
+   "world": [],
+   "worldDirs": [],
+   "lines": 336
   },
   "server-plugin/business.mjs": {
    "system": "sim_economy",
@@ -11942,6 +12046,7 @@
   "server-plugin/law.mjs": {
    "system": "sim_law",
    "imports": [
+    "server-plugin/bounty.mjs",
     "server-plugin/items.mjs",
     "server-plugin/npc-cognition.mjs",
     "server-plugin/npc-schedule.mjs",
@@ -11957,6 +12062,7 @@
    "stateReads": [
     "inventory",
     "minute",
+    "quests",
     "records"
    ],
    "recordWrites": [],
@@ -11967,7 +12073,7 @@
    ],
    "world": [],
    "worldDirs": [],
-   "lines": 346
+   "lines": 448
   },
   "server-plugin/learning.mjs": {
    "system": "sim_character",
@@ -13186,6 +13292,7 @@
   "server-plugin/quest-board.mjs": {
    "system": "sim_society",
    "imports": [
+    "server-plugin/bounty.mjs",
     "server-plugin/items.mjs",
     "server-plugin/npc-obligations.mjs",
     "server-plugin/npc-schedule.mjs",
@@ -13215,7 +13322,7 @@
     "locations"
    ],
    "worldDirs": [],
-   "lines": 190
+   "lines": 193
   },
   "server-plugin/repair.mjs": {
    "system": "sim_economy",
@@ -14142,7 +14249,7 @@
    "rules": [],
    "world": [],
    "worldDirs": [],
-   "lines": 112
+   "lines": 115
   },
   "server-plugin/world-registry.mjs": {
    "system": "kernel_storage",
@@ -14401,7 +14508,7 @@
   "extension/index.js": {
    "system": "ui_host",
    "imports": [
-    "../../extensions.js",
+    "../extensions.js",
     "extension/core.js"
    ],
    "stateWrites": [],
@@ -14515,7 +14622,7 @@
   "extension/runtime.js": {
    "system": "ui_host",
    "imports": [
-    "../../extensions.js",
+    "../extensions.js",
     "extension/ambient-audio.mjs",
     "extension/background-view.mjs",
     "extension/history-window.mjs",
