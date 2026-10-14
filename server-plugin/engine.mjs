@@ -50,6 +50,7 @@ import {deriveWorldEvents,publishWorldEvents,WORLD_EVENT_VERSION}from'./world-ev
 import {recordSpiritGrudges}from'./wildlife-society.mjs';
 import {recordBossEvents}from'./boss-cognition.mjs';
 import {transmitStanding}from'./standing.mjs';
+import {evidenceBreakthrough,breakthroughPaths}from'./career-metrics.mjs';
 // Social subscribers, in settlement order; each reads the event verb and tags.
 const worldEventSubscribers=[
     (d,e,events)=>recordSocietyActs(d,e,events),
@@ -442,6 +443,8 @@ export class WorldEngine {
         if(!old)throw new Error('尚未学会这项技能');
         const stage=Math.floor(old.proficiency/300),day=String(Math.floor(d.get('state','minute')/1440));
         if(args.breakthroughSource){
+            // Masterpiece, completed research or a key battle recorded by career metrics.
+            const evidence=evidenceBreakthrough(d,this,skill,args.breakthroughSource,old);if(evidence)return evidence;
             const teacher=this.resolve(args.breakthroughSource,'npc'),base=this.byId.get(teacher),role=this.byId.get(skill).profession;
             if(!((base.services??[]).includes(role)||(base.services??[]).includes(skill)||(base.skills??[]).includes(skill))||d.get('state','npcs',teacher,'location')!==d.get('state','location'))throw new Error('突破导师不具备资格或不在场');
             assertNpcService(d,this,teacher,'teach',120);
@@ -463,7 +466,8 @@ export class WorldEngine {
         row.gain+=actual;row.targets[target]=repeats+1;daily[day]=row;
         for(const key of Object.keys(daily))if(Number(key)<Number(day)-1)delete daily[key];
         d.set(['state','skills',skill],{...old,proficiency,grade:skillGrade(proficiency),daily});d.say(`${this.byId.get(skill).name}熟练度 +${actual}`);
-        return {skill,gain:actual,proficiency,needsBreakthrough:proficiency%300===299};
+        const paths=proficiency%300===299?breakthroughPaths(d.get('state'),skill,proficiency):[];
+        return {skill,gain:actual,proficiency,needsBreakthrough:proficiency%300===299,...(paths.length?{breakthroughPaths:paths}:{})};
     }
     applyMagicArea(d,catalog,args,id,source='player'){
         return applyAreaMagic.call(this,d,prepareAreaMagic.call(this,d,catalog,args,{source}),id);

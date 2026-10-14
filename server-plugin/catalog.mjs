@@ -25,10 +25,14 @@ export function catalogDefinition(engine,document,{entity,kind,offset=0}={}){
     if(locationKinds.has(category))return{id,name:row.name,description:row.description??'',parent:row.parent??null,
         ...(publicSettlement(selected.world,id,document)?{settlement:publicSettlement(selected.world,id,document)}:{}),
         routes:engine.world.routes.filter(route=>[route.from,route.to].includes(id)).map(route=>({destination:route.from===id?route.to:route.from,modes:route.modes,lengthKm:route.lengthKm,closedSeasons:route.closedSeasons}))};
-    if(category==='profession'&&row.kind==='hidden'&&!document.state.professions.hidden.includes(id))return{id,available:false,note:'隐藏身份的条件与能力尚未识别'};
+    if(category==='profession'&&row.kind==='hidden'&&!document.state.professions.hidden.includes(id))return document.state.careerMetrics?.opportunities?.[id]
+        ?{id,name:row.name,available:false,opportunity:true,initiation:row.initiation,note:'已感到契机；完成这段经历（profession certify）才取得'}
+        :{id,available:false,note:'隐藏身份的条件与能力尚未识别'};
     if(category==='profession'&&row.kind==='hidden'){
         const{id,name,ability,cost}=row;return{id,name,ability,cost};
     }
+    // Combat career data (entry task, variant routes, ultimate task) is public.
+    if(category==='profession'&&engine.world.careers?.[id])return{...structuredClone(row),career:structuredClone(engine.world.careers[id])};
     if(category==='item')return{...structuredClone(row),repairs:structuredClone(selected.rules.repairs?.filter(plan=>plan.item===id)??[])};
     if(category==='spell')return{...structuredClone(row),learned:Object.hasOwn(document.state.spells??{},id),
         learningStatus:Object.hasOwn(document.state.spells??{},id)?'玩家已经学会此法术，可按当前魔力与施法条件尝试；无需重复学习':'玩家尚未学会此法术；查到目录不等于学会'};

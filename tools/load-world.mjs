@@ -8,5 +8,6 @@ export async function loadWorld(root = path.resolve(import.meta.dirname, '..', '
     const [recipes,monsters,bosses]=await Promise.all(['recipes','monsters','bosses'].map(name=>optional(`meta/${name}.json`)));
     const [cultures,deities,factions,history,factionPeople,eras,festivals,rumors]=await Promise.all(['cultures','deities','factions','history','factionPeople','eras','festivals','rumors'].map(name=>optional(`lore/${name}.json`)));
     const [residents,households,settlementProfiles]=await Promise.all([optional('people/residents.json'),optional('people/households.json'),optional('geo/settlements.json')]);
-    return {version:rules.version,rules,npcs,locations,routes,items,professions,skills,spells,recipes,monsters,bosses,cultures,deities,factions,history,factionPeople,eras,...(festivals.length?{festivals}:{}),...(rumors.length===0?{}:{rumors}),residents,households,settlementProfiles};
+    const careers=await optional('meta/careers.json');
+    return {version:rules.version,rules,npcs,locations,routes,items,professions,skills,spells,recipes,monsters,bosses,cultures,deities,factions,history,factionPeople,eras,...(festivals.length?{festivals}:{}),...(rumors.length===0?{}:{rumors}),residents,households,settlementProfiles,...(Array.isArray(careers)?{}:{careers})};
 }
