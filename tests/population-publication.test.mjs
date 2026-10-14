@@ -25,6 +25,9 @@ for(const row of source.rules.weather.regions){row.locations=row.locations.filte
 // T92/T93后白石镇另有入门书（作者为npc_bs_*、出处为镇内场所）和产权法规场所，随白石镇一并投影掉。
 for(const code of source.rules.law.codes)if(Array.isArray(code.locations))code.locations=code.locations.filter(id=>source.locations.some(l=>l.id===id));
 source.items=source.items.filter(item=>!item.id.startsWith('item_bs_'));
+// T160灵地与白石镇行业营生同样落在镇内场所。
+if(source.rules.wildlifeAwakening?.spiritLands)source.rules.wildlifeAwakening.spiritLands=source.rules.wildlifeAwakening.spiritLands.filter(row=>source.locations.some(l=>l.id===row.location));
+if(source.rules.npcGrowth?.vocations)source.rules.npcGrowth.vocations=source.rules.npcGrowth.vocations.filter(row=>source.locations.some(l=>l.id===row.location));
 const addedIds=new Set(candidate.npcs.map(n=>n.id)),original={...source,npcs:preserved,residents:[],households:[],settlementProfiles:[],locations:source.locations.filter(n=>!candidate.locations.some(l=>l.id===n.id)),routes:source.routes.filter(n=>!candidate.routes.some(r=>r.id===n.id))};
 const world=mergeHewan(original,candidate),legacy=JSON.parse(await fs.readFile('tests/fixtures/legacy/seed.json','utf8'));
 

@@ -90,7 +90,8 @@ test('四路线实际抵达、拜师、练习与认证；学费进导师账，�
 });
 
 test('新操作提示保持11300以内，四机构有正式法域及限用途颁发者',async()=>{
- assert.ok((await buildCard()).budget.estimatedTokens<=11300);
+ // 11300是T93合入时的本卡余量；其后T129/T158/T160按主线统一上限11900新增工具（现约11377），此处改核主线上限。
+ assert.ok((await buildCard()).budget.estimatedTokens<=11900);
  for(const t of teachingDesign.filter(t=>['道','佛','法','武'].includes(t.route))){const code=world.rules.law.codes.find(c=>c.locations.includes(t.location));assert.ok(code);assert.ok(code.magicAuthorities.some(a=>a.npc===t.id&&a.locations.includes(t.location)&&a.actions.includes('mental_magic')));}
 });
 

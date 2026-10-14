@@ -9,6 +9,9 @@ export async function writePreBaishiWorld(dir,world){
  const rules=structuredClone(world.rules);
  for(const region of rules.weather.regions){region.locations=region.locations.filter(id=>placeIds.has(id));region.indoor=region.indoor.filter(id=>placeIds.has(id));}
  for(const code of rules.law?.codes??[])if(Array.isArray(code.locations))code.locations=code.locations.filter(id=>placeIds.has(id));
+ // T160灵地与白石镇行业营生同样落在镇内场所。
+ if(rules.wildlifeAwakening?.spiritLands)rules.wildlifeAwakening.spiritLands=rules.wildlifeAwakening.spiritLands.filter(row=>placeIds.has(row.location));
+ if(rules.npcGrowth?.vocations)rules.npcGrowth.vocations=rules.npcGrowth.vocations.filter(row=>placeIds.has(row.location));
  const files={'geo/locations.json':oldLocations,'geo/routes.json':world.routes.filter(r=>placeIds.has(r.from)&&placeIds.has(r.to)),'geo/settlements.json':world.settlementProfiles.filter(p=>p.id!=='loc_bs'),'people/residents.json':world.residents.filter(n=>n.settlement!=='loc_bs'),'people/households.json':world.households.filter(h=>h.settlement!=='loc_bs'),'meta/rules.json':rules,'meta/items.json':world.items.filter(i=>!i.id.startsWith('item_bs_'))};
  for(const [file,value] of Object.entries(files))await fs.writeFile(path.join(dir,file),JSON.stringify(value));
 }
