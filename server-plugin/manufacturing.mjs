@@ -5,6 +5,7 @@ import {milestone}from'./progression.mjs';
 import {prepareThermalWorkstation}from'./magic-object.mjs';
 import {createHash}from'node:crypto';
 import {spiritManufacture}from'./wildlife-society.mjs';
+import {recordArtWork}from'./works.mjs';
 const integer=(value,min,max,label)=>{if(!Number.isSafeInteger(value)||value<min||value>max)throw new Error(`${label}无效`);return value;};
 export function registerRecipe(d,engine,data,project,maximumStage){
     if(!data||typeof data!=='object')throw new Error('配方数据无效');
@@ -105,10 +106,11 @@ export function manufacture(d,args,eventId){
     for(const item of recipe.tools??[]){const before=heldUnit(d,this,'player',item).durability??this.byId.get(item).durability;
         toolWear.push({item,name:this.byId.get(item).name,before,after:wearItem(d,this,'player',item,wear)});}
     const ids=[],salvage=[];
-    let workmanship=null;
+    let workmanship=null,work=null;
     if(outcome.success){
         workmanship=outcome.degree==='勉强成功'?'粗糙':outcome.degree==='大成功'?(proficiency>=2100?'杰作':proficiency>=1500?'优秀':'精良'):'普通';
         for(const row of products)if(row.amount)ids.push(...produceItems(d,this,row.item,row.amount,{eventId,recipe:recipe.id,workmanship}));
+        work=recordArtWork(d,this,{recipe,instances:ids.filter(unit=>d.get('state','itemInstances',unit,'item')===recipe.output.item),workmanship,eventId});
         this.practice(d,{skill:recipe.skill,gain:3,target:recipe.id},eventId);
         Object.assign(outcome,milestone(d,this,'craft',recipe.id,eventId));d.say(`制成${this.byId.get(recipe.output.item).name}，做工${workmanship}`);
     }else{
@@ -120,7 +122,7 @@ export function manufacture(d,args,eventId){
         maker:'player',name:d.get('state','player','name'),minute:d.get('state','minute'),station:station?.id??null,fee:station?.fee??0,
         degree:outcome.degree,workmanship,instances:ids,byproducts:outcome.success?recipe.byproducts??[]:[],salvage};
     d.set(['state','crafted',receipt.id],receipt);
-    return{recipe:recipe.id,...outcome,receipt:receipt.id,instances:ids,workmanship,salvage,...(thermal?{thermal}:{}),
+    return{recipe:recipe.id,...outcome,receipt:receipt.id,instances:ids,workmanship,...(work?{work}:{}),salvage,...(thermal?{thermal}:{}),
         spent:{feePaid:station?.fee??0,minutes:recipe.minutes,materials:[...materials].map(([item,quantity])=>({item,name:this.byId.get(item).name,quantity})),toolWear},
         healthDelta:d.get('state','player','hp')-hpBefore,produced:outcome.success?products.filter(row=>row.amount).map(row=>({...row,name:this.byId.get(row.item).name})):[],
         factSummary:`${outcome.success?`制成${this.byId.get(recipe.output.item).name}${products[0].amount}件`:'未得到任何成品'}；${salvage.length?`实际回收${salvage.map(row=>`${this.byId.get(row.item).name}${row.amount}份`).join('、')}`:'没有回收到任何可用材料'}；工坊费${station?.fee??0}铜已支付，耗时${recipe.minutes}分钟。`,

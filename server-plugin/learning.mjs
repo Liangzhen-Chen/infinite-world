@@ -4,6 +4,7 @@ import {npcServices}from'./npc-state.mjs';
 import {teachNpc}from'./npc-growth.mjs';
 import {spiritStudent,teachSpirit}from'./wildlife-society.mjs';
 import {growIntelligence,GROWTH_POINTS}from'./npc-intelligence.mjs';
+import {heldBookGrade}from'./works.mjs';
 const integer=(value,label,maximum=1e9)=>{if(!Number.isSafeInteger(value)||value<0||value>maximum)throw new Error(`${label}不在允许范围`);return value;};
 const grades=['初级','中级','高级','特级','专家级','大师级','宗师级','圣级','神级'];
 const grade=value=>`${grades[Math.min(8,Math.floor(value/300))]}${Math.floor(value%300/100)+1}等`;
@@ -76,7 +77,8 @@ export function learn(d,args,id){
         if(d.get('state','inventory',source,'durability')===0)throw new Error('书页已损坏，不能作为完整学习来源');
         const book=sourceDefinition.book;
         if(!book||!(book.teaches??[]).includes(entity))throw new Error('这本书没有所需学习内容');
-        const bookStage=this.rules.books.grades.indexOf(book.grade);
+        // A copy carries its own grade, never above its original (works.mjs).
+        const held=heldBookGrade(d,this,source),copied=held?.unit?.book,bookStage=copied?held.index:this.rules.books.grades.indexOf(book.grade);
         if(bookStage<0||bookStage<Math.min(stage,4))throw new Error('书籍品级不足或未登记');
         if(kind==='spell'&&stage>=4&&book.rare!==true)throw new Error('专家级以上法术需要稀有典籍');
         if((d.get('state','skills','skill_literacy','proficiency')??0)<this.rules.books.minimumLiteracy)throw new Error('识字熟练度不足以阅读技能书');
@@ -85,7 +87,7 @@ export function learn(d,args,id){
             if(effectiveProficiency(d,this,requirementId)<minimum)throw new Error('未满足书籍前置技能');
         }
         minutes=integer(Math.max(book.readingMinutes??0,this.rules.books.readingMinutes[bookStage]),'阅读时间',43200);
-        sourceRecord={type:'book',id:source,author:book.author,edition:book.edition};
+        sourceRecord={type:'book',id:source,author:book.author,edition:book.edition,...(copied?{copy:{instance:held.unit.id,grade:copied.grade,edition:copied.edition,chain:copied.chain}}:{})};
     }else throw new Error('学习需要合格导师、实际持有的技能书或对应的已登记研究成果');
     if(d.get('state',partition,entity))throw new Error(`已经学会${catalog.name}`);
     if(minutes<1)throw new Error('学习必须花费实际时间');
