@@ -647,7 +647,7 @@ C部分只拆缺口：governance.mjs的任职入口止于“待上级决定”�
 
 ### T128（C6） 群体舆论。结果：同一事件经关系网传播后形成当地支持/反对比例，议事和NPC反应读取各自真实获知的看法。可改新server-plugin/public-opinion.mjs、npc-cognition/npc-relations/governance及场景投影、tests/public-opinion.test.mjs；接B10，复用已有意见记录与声望，不另起通用好感分。验收node --test "tests/governance*.test.mjs" "tests/npc-*.test.mjs" tests/public-opinion.test.mjs tests/reputation-law.test.mjs tests/village-rumor-access.test.mjs，CORE。模型0；约2小时，与B10/C2串行。
 
-### T129（C7） NPC学习与换营生。结果：玩家教学和NPC实际工作能带来有限技能增长，达到条件后可以换营生，作息与服务随之改变。可改新server-plugin/npc-growth.mjs、npc-autonomy/npc-state/npc-schedule、教学工具接点、world/meta/rules.json、tests/npc-growth.test.mjs；保留原有玩家成长与职业认证。验收node --test "tests/npc-*.test.mjs" tests/learning.test.mjs tests/professions.test.mjs tests/prompt.test.mjs，CORE。模型0；约2.5小时，与D1及其他NPC时间写者串行，工具提示≤11900。
+### T129（C7）已完成：玩家教学（world_learn加student）和NPC日常工作带来有上限、有时间成本的技能增长；人物计划层可发起换营生，作息与服务随之改变，登记机构的导师不自行改行；先登记4个营生模板（磨坊木作、青灯帮厨、学馆助教、武馆陪练）。npc-growth 8/8、CORE40、发布构建ok，提示约11300，0模型。遗留：换营生后场景显示的公开职务仍读原目录。
 
 ### T130（C8） 成年家庭关系与出生。结果：长期关系可在双方条件满足时发展为婚姻，出生进入真实家户与人口状态，并通过当地渠道被知晓。可改新server-plugin/npc-life.mjs、npc-relations/npc-state/engine接点、world/meta/rules.json、docs/决策.md参数段、tests/npc-life-family.test.mjs；锁定旧人物静态经历，禁止未成年恋爱。验收node --test "tests/npc-*.test.mjs" ，CORE。模型0；约2.5小时，接C7，与C9/C10同文件串行。
 
