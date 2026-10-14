@@ -19,7 +19,7 @@
   "layers": 6,
   "systems": 37,
   "modules": 154,
-  "advance": 35,
+  "advance": 36,
   "tools": 25,
   "verbs": 13,
   "subscribers": 8,
@@ -335,7 +335,7 @@
     "server-plugin/campaign-reducer.mjs",
     "server-plugin/archived-reducer.mjs"
    ],
-   "lines": 852,
+   "lines": 853,
    "stateWrites": [
     "combatDisengaged",
     "created",
@@ -720,7 +720,7 @@
    "modules": [
     "server-plugin/advance-registry.mjs"
    ],
-   "lines": 146,
+   "lines": 147,
    "stateWrites": [
     "effects",
     "obligations",
@@ -1527,7 +1527,7 @@
     "server-plugin/public-projects.mjs",
     "server-plugin/quest-board.mjs"
    ],
-   "lines": 1846,
+   "lines": 1983,
    "stateWrites": [
     "buildings",
     "created",
@@ -1552,6 +1552,7 @@
    ],
    "recordReads": [
     "civic_citizen",
+    "civic_resident",
     "organization",
     "society_motion",
     "stance"
@@ -1578,6 +1579,7 @@
     "projects",
     "public_projects",
     "governance_offices",
+    "housing_steward",
     "organizations",
     "society_news"
    ],
@@ -1845,7 +1847,7 @@
     "server-plugin/ui-overview.mjs",
     "server-plugin/ui-personal.mjs"
    ],
-   "lines": 640,
+   "lines": 641,
    "stateWrites": [],
    "stateReads": [
     "created",
@@ -2180,6 +2182,7 @@
    "kind": "advance",
    "labels": [
     "governance_offices",
+    "housing_steward",
     "organizations",
     "projects",
     "public_projects",
@@ -5130,6 +5133,17 @@
    "nextMinute": true,
    "modules": [
     "server-plugin/governance.mjs"
+   ],
+   "inline": false,
+   "partitions": []
+  },
+  {
+   "id": "housing_steward",
+   "order": 1135,
+   "stepped": false,
+   "nextMinute": true,
+   "modules": [
+    "server-plugin/public-projects.mjs"
    ],
    "inline": false,
    "partitions": []
@@ -11010,7 +11024,7 @@
    ],
    "world": [],
    "worldDirs": [],
-   "lines": 216
+   "lines": 217
   },
   "server-plugin/advance-registry.mjs": {
    "system": "base_advance",
@@ -11071,7 +11085,7 @@
     "npcs"
    ],
    "worldDirs": [],
-   "lines": 146
+   "lines": 147
   },
   "server-plugin/agriculture-migration.mjs": {
    "system": "kernel_storage",
@@ -12009,6 +12023,7 @@
     "server-plugin/npc-life.mjs",
     "server-plugin/npc-obligations.mjs",
     "server-plugin/public-opinion.mjs",
+    "server-plugin/public-projects.mjs",
     "server-plugin/standing.mjs",
     "server-plugin/storage.mjs"
    ],
@@ -12039,7 +12054,7 @@
     "settlementProfiles"
    ],
    "worldDirs": [],
-   "lines": 385
+   "lines": 392
   },
   "server-plugin/index.mjs": {
    "system": "ui_server",
@@ -13415,6 +13430,7 @@
    "system": "sim_society",
    "imports": [
     "server-plugin/governance.mjs",
+    "server-plugin/items.mjs",
     "server-plugin/npc-life.mjs",
     "server-plugin/progression.mjs"
    ],
@@ -13428,14 +13444,17 @@
    ],
    "stateReads": [
     "location",
-    "minute"
+    "minute",
+    "player"
    ],
    "recordWrites": [],
-   "recordReads": [],
+   "recordReads": [
+    "civic_resident"
+   ],
    "rules": [],
    "world": [],
    "worldDirs": [],
-   "lines": 107
+   "lines": 237
   },
   "server-plugin/quest-board.mjs": {
    "system": "sim_society",
@@ -14036,7 +14055,7 @@
     "settlementProfiles"
    ],
    "worldDirs": [],
-   "lines": 61
+   "lines": 62
   },
   "server-plugin/ui-history.mjs": {
    "system": "ui_server",

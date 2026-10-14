@@ -21,7 +21,7 @@ import {wildlifeAction,resolveCreature,recordWildlifeDeath}from'./wildlife.mjs';
 import {lairAction,bossCounter,rememberBossTactic,defeatBoss}from'./bosses.mjs';
 import {civicAction,recordDonationContribution,publicProjectApproval,donationReceipt,saveDonationReceipt}from'./civic.mjs';
 import {governanceAction,assertGovernedProject,playerOffices}from'./governance.mjs';
-import {startPublicProject,abortPublicProject}from'./public-projects.mjs';
+import {startPublicProject,abortPublicProject,startHouse}from'./public-projects.mjs';
 import {questBoardAction}from'./quest-board.mjs';
 import {businessAction}from'./business.mjs';
 import {festivalAction}from'./festival.mjs';
@@ -166,6 +166,7 @@ export const activities={
         if(!row)throw new Error('没有该聚落公共账目');
         // T125: a sitting official's own power replaces a delegated authorization.
         if(args.operation==='project_abort')return abortPublicProject(d,this,args);
+        if(args.operation==='start_project'&&d.get('state','records',args.authorization)?.category==='housing_permit')return startHouse(d,this,args,id,args.authorization);
         if(args.operation==='start_project'&&!args.authorization&&playerOffices(d.get('state'),{settlement,power:'public_project'}).length)return startPublicProject(d,this,args,id,settlement);
         const authorization=d.get('state','records',args.authorization);
         if(!authorization||authorization.category!=='authorization'||authorization.settlement!==settlement)throw new Error('公共物资需要已成立的授权');

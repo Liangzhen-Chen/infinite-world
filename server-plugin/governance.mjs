@@ -6,6 +6,7 @@ import {opinionAmong} from './public-opinion.mjs';
 import {npcHousehold,householdMembers,npcAgeAt} from './npc-life.mjs';
 import {standing} from './standing.mjs';
 import {contributionTotal} from './civic.mjs';
+import {grantHousingSteward,revokeHousingSteward,fileHousingApplication} from './public-projects.mjs';
 
 const DAY=1440;
 const path=id=>['state','records',id];
@@ -176,6 +177,8 @@ function action(d,args,eventId){
         d.set(path(id),row);return {referral:id,request:row,granted:false};
     }
     case 'governance_grant':{
+        // T126: a sitting village head (the player) delegates housing review by written rules.
+        if(args.authority==='player'&&args.action==='housing')return grantHousingSteward(d,this,args,eventId,settlement,g.meetingPlace);
         const authority=chair(d,this,settlement,args.authority);
         if(args.action!=='account_report')throw Error(unavailable);
         // A report only copies public balances, within the source head's existing
@@ -191,12 +194,16 @@ function action(d,args,eventId){
         d.set(path(id),a);return {authorization:id,permission:a};
     }
     case 'governance_revoke':{
+        const housing=d.get(...path(args.authorization));
+        if(housing?.category==='housing_steward'&&housing.settlement===settlement)return revokeHousingSteward(d,housing);
         const authority=chair(d,this,settlement,args.authority),a=record(d,args.authorization,'authorization',settlement);
         if(a.grantor!==authority||a.action!=='account_report')throw Error('只有原签发者可撤销该范围的授权');
         if(a.revoked)return {authorization:args.authorization,permission:a,duplicate:true};
         const revoked={...a,revoked:true,revokedAt:now,revokedBy:authority};d.set(path(args.authorization),revoked);return {authorization:args.authorization,permission:revoked};
     }
     case 'governance_queue':{
+        const housing=d.get(...path(args.authorization));
+        if(housing?.category==='housing_steward'&&housing.settlement===settlement)return fileHousingApplication(d,this,args,eventId,settlement,housing);
         const a=permission(d,this,args.authorization,settlement,now);
         chair(d,this,settlement,args.authority);
         if(!['account_report','housing'].includes(args.action))throw Error('待办类型未实现');

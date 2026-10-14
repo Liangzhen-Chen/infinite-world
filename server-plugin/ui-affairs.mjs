@@ -39,8 +39,9 @@ export function affairs(engine,document){
         const pending=Object.entries(records).filter(([,row])=>row?.settlement===id&&
             (row.category==='governance_request'&&['待办理','待权限决定'].includes(row.status)||
              row.category==='governance_proposal'&&['议事中','意见已确认'].includes(row.status)||
-             row.category==='governance_referral'&&row.status==='待上级决定'))
-            .map(([key,row])=>({id:key,name:row.name??row.requestedOffice??(row.kind==='account_report'?'公账核对':'建房事务'),
+             row.category==='governance_referral'&&row.status==='待上级决定'||
+             row.category==='housing_application'&&row.status==='待管事办理'))
+            .map(([key,row])=>({id:key,name:row.name??row.requestedOffice??(row.kind==='account_report'?'公账核对':row.category==='housing_application'?'建房申请':'建房事务'),
                 status:row.status,deadline:finite(row.due),deadlineText:date(row.due),reason:row.reason??null})).sort(byDeadline);
         const reports=Object.entries(records).filter(([,row])=>row?.settlement===id&&row.category==='governance_execution')
             .map(([key,row])=>({id:key,steward:name(row.steward),status:row.status,minute:row.minute??null,time:date(row.minute),reason:row.reason??null,
