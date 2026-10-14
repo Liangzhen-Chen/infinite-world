@@ -96,6 +96,12 @@ export function applyNpcRelation(d,engine,args,eventId){
  if(dimensions.some(key=>args[`${key}Delta`]!==undefined)||args.favor!==undefined)throw new Error('关系幅度由实际事件确定，不能手填加分或欠情');
  return {npc:from,from,to,changes:candidates.map(e=>applyEvidence(d,engine,e)),relationship:relationView(engine,d.get('state'),from,to)};
 }
+// Family events from npc-life: both people must be adults before any romance
+// enters the ledger; the evidence key keeps replays from counting twice.
+export function recordLifeRelation(d,engine,evidence,isMinor){
+ if(evidence.delta.romance&&(isMinor(evidence.from)||isMinor(evidence.to)))throw new Error('未成年人物拒绝恋爱关系写入');
+ return register(d,engine,evidence);
+}
 export function recordFestivalRelations(d,engine,event){
  if(event.status!=='held'||d.get('state','records',event.id)?.resultEvent!==event.resultEvent)return;
  for(const from of event.participants)for(const to of event.participants){

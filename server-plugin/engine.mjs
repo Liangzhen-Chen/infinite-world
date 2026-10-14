@@ -41,6 +41,7 @@ import {stateNotices}from'./state-notices.mjs';
 import {assertNpcService}from'./npc-schedule.mjs';
 import {advanceNpcCognition,nextNpcCognitionMinute}from'./npc-cognition.mjs';
 import {advanceNpcAutonomy,nextNpcAutonomyMinute,npcAutonomyBusy,assertNpcAutonomyAction,applyNpcPlan}from'./npc-autonomy.mjs';
+import {advanceNpcLife}from'./npc-life.mjs';
 import {recordNpcMemories}from'./npc-memory.mjs';
 import {hearNpcRumor}from'./npc-rumors.mjs';
 import {createNpcObligation,advanceNpcObligations,assertNpcObligationAction,npcObligationAt,nextNpcObligationMinute}from'./npc-obligations.mjs';
@@ -289,6 +290,7 @@ export class WorldEngine {
         if(this.world.npcs.some(n=>n.tier==='full')){
             advanceNpcCognition(d,this,before,after,id,{beforeState});
             advanceNpcAutonomy(d,this,before,after,id,{beforeState});
+            advanceNpcLife(d,this,before,after);
         }
         advanceWorldClocks(d,this,after);
         advanceFactionClocks(d,this,after);

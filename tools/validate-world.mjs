@@ -15,6 +15,7 @@ import {worldLoreCategories,validateWorldLore}from'./w5-validation.mjs';
 import {socialCategories,validateSocialWorld}from'./w5-social-validation.mjs';
 import {validateNpcSchedules}from'../server-plugin/npc-schedule.mjs';
 import {validateNpcGrowthRules}from'../server-plugin/npc-growth.mjs';
+import {validateNpcLifeRules}from'../server-plugin/npc-life.mjs';
 import {validateNpcProfiles,validateNpcDepth,findNpcRuleWording}from'./npc-profile-validation.mjs';
 import {validatePopulation}from'./population-validation.mjs';
 import {validateFestivalRuntime}from'../server-plugin/festival.mjs';
@@ -41,6 +42,7 @@ export function validateWorld(world,{stage='engine'}={}){
     errors.push(...validateSites(world));
     errors.push(...validateNpcSchedules(world));
     errors.push(...validateNpcGrowthRules(world));
+    errors.push(...validateNpcLifeRules(world));
     errors.push(...validateFestivalRuntime(world));
     errors.push(...validateNpcProfiles(world));
     if(stage==='release'||stage==='final'){
