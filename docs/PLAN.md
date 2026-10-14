@@ -260,13 +260,7 @@ N1–N17至少12项完整有效且≥90%，N6/N16零泄漏，N12真实盲辨，N
 4. 真实 L2 预计八十至一百三十次，上限一点五元；含人物、建筑、社会与文化新事实。
 5. 预计三至四小时加后台 L2。两处共二十四名具名成员，其中八 full；每处二至三个住区、四至六项公共设施、至少两组内部立场。生活空间和初始交易本卡可玩，动态争端接 S3/T109，委托接 T155；不把尚未接入的内容标成已生效。
 
-### T158（S3）社会关系、交涉与潜入。
-
-1. 玩家结果：能与聚居地达成交易或通行约定，也能潜入受限区域，行为会改变成员及邻村的后续反应。
-2. 可改 server-plugin/{sites,boss-negotiation,boss-cognition,npc-cognition,npc-relations,settlement-profile,governance,quest-board}.mjs、T109 faction-clock 的事件消费接点、engine 必要分派和 extension/tools.mjs；可加紧邻模块的社会关系实现。锁定正文和 T109 的资产推进实现；依赖 S1/T109，与 T155、T124 及工具写者串行，可并行 S4 草稿。
-3. 验收 CORE 及 `node --test tests/monster-society.test.mjs tests/sites.test.mjs "tests/boss*.test.mjs" "tests/npc-*.test.mjs" "tests/quest-*.test.mjs" "tests/w5-*.test.mjs" tests/faction-clock.test.mjs tests/world-clock.test.mjs tests/settlement-trade.test.mjs tests/prompt.test.mjs tests/tool-groups.test.mjs`。覆盖守约与背约、未被发现的潜入、被发现后的驱逐或交锋，以及第三方村镇行为经消息传播后改变关系。
-4. 真实模型零次，零元。
-5. 预计三至四小时。态度按对象保存敌对、戒备或中立，交易与朝贡另记协议，避免一个枚举互相覆盖；首领只能承诺其辖区和库存。潜入消耗时间并做实际检定，只用于登记的可潜入据点，不放开原私宅同意规则；内部议事沿既有提议/意见动作，实际后果交 T109，结算回执供 T155 使用。静态提示不超过 11900 token。
+### T158（S3）已完成：玩家可与聚居地首领立约（贸易、朝贡、通行，按10天一期履约），可潜入登记过的据点（私宅和议事区不可登记潜入）；守约、背约、交锋、潜入被发现都会改变成员态度，消息沿步行路线传到邻村后改变邻村态度（目前邻村反应只有“敌对后拒绝交易”一种）；议事可推动势力时钟。聚居地用location.monsterSociety、潜入用site.infiltration登记，正式数据由T157等内容卡发布。新增5项、CORE40、发布构建ok，提示约11330，0模型。
 
 ### T159（S4）榆根里与裂炉营正式落地。
 
