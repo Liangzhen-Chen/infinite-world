@@ -2,7 +2,9 @@
 // combat. Spirits enter the same `spirit` actor state that magic-ritual reads;
 // non-breeding species (undead, elementals, object spirits) recover only by
 // their registered manifestation rule, never by pairing.
-export const affinityTactics=Object.freeze(['armed','unarmed','magic_fire','magic_cold','magic_wind','magic_earth','magic_light','magic_shadow','magic_mind','magic_physical']);
+import {TACTICS}from'./traits.mjs';
+// Single vocabulary lives in traits.mjs; this name stays for older importers.
+export const affinityTactics=TACTICS;
 export const affinityMultipliers=Object.freeze({weak:1.5,resist:0.5});
 const groups=['妖怪','灵兽','亡灵','异族','元素体','魔物'];
 

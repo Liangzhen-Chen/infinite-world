@@ -1,5 +1,7 @@
 import {environmentFeatures}from'./environment.mjs';
 import {heldUnit,trackSingleItem}from'./items.mjs';
+import {itemTraits,featureTraits,hasTrait}from'./traits.mjs';
+const traitsOfMarkTarget=(d,row)=>row.held?itemTraits(row.definition,row.held):featureTraits(row.definition,row.state,d.get('state','minute'));
 export function validateMarkCatalog(catalog){
  const s=catalog.effectSpec,errors=[];
  if(!['fire','soil','ink'].includes(s.medium)||!['normal','dim'].includes(s.visibility))errors.push('痕迹介质或显现条件未登记');
@@ -26,8 +28,9 @@ export function prepareMark(d,catalog,args){
  const target=args.target?.startsWith('feature_')?args.target:this.resolve(args.target),row=targetOf(d,this,target,{...args,rangeMeters:catalog.rangeMeters}),s=catalog.effectSpec;
  const text=args.text;if(typeof text!=='string'||!text.trim()||[...text].length>s.power||/[\u0000-\u001f]/u.test(text))throw Error('刻记文字缺失、过长或含控制符');
  if(s.medium==='soil'&&(row.definition.kind!=='soil'||row.state.worked!==true))throw Error('压印须使用已经松动的真实软土');
- if(s.medium==='ink'&&!(row.definition.tags??[]).includes('paper'))throw Error('暗字只适用于纸张');
- if(s.medium==='fire'&&!(row.definition.tags??[]).some(t=>['wood','metal','paper'].includes(t)))throw Error('火纹只作用于可刻记材料');
+ const traits=traitsOfMarkTarget(d,row);
+ if(s.medium==='ink'&&!hasTrait(traits,'paper'))throw Error('暗字只适用于纸张');
+ if(s.medium==='fire'&&!['wood','metal','paper'].some(t=>hasTrait(traits,t)))throw Error('火纹只作用于可刻记材料');
  return{...row,catalog,spec:s,text:text.trim(),args:{...args,target}};
 }
 export function applyMark(d,p,eventId){

@@ -21,6 +21,7 @@ import {validateObjectCatalog,prepareObjectMagic,applyObjectMagic,validateHeatCa
 import {validateAirCatalog,prepareAirMagic,applyAirMagic,prepareWindObject,applyWindObject,windArmorMultiplier}from'./magic-air.mjs';
 import {validateWaterEarthCatalog,prepareWaterEarthMagic,applyWaterEarthMagic,prepareStone,launchStone,waterEarthState}from'./magic-water-earth.mjs';
 import {projectileAirPenalty}from'./magic-air.mjs';
+import {itemTraits,hasTrait}from'./traits.mjs';
 import {validateLightCatalog,prepareLight,applyLight,prepareOptics,applyOptics,lightDamageMultiplier}from'./magic-light.mjs';
 export function validateMagicCatalog(catalog,{requireHandler=false}={}){
     const spec=catalog.effectSpec,errors=[];
@@ -77,8 +78,9 @@ export function prepareMagic(d,catalog,args,context={}){
         if(!target.startsWith('item_')||this.quantity(d,'player',target)<1)throw new Error('施法需要实际持有的目标物品');
         const held=heldUnit(d,this,'player',target),definition=this.byId.get(target);
         if(held.quantity!==1)throw new Error('需要分出单件目标，不能对整叠物品施法');
-        if(spec.kind==='repair'&&!(definition.tags??[]).includes('metal'))throw new Error('目标不是可修缮的金属器具');
-        if(spec.kind==='dry'&&!(definition.tags??[]).includes('clothing'))throw new Error('目标不是一件衣物');
+        const traits=itemTraits(definition,held);
+        if(spec.kind==='repair'&&!hasTrait(traits,'metal'))throw new Error('目标不是可修缮的金属器具');
+        if(spec.kind==='dry'&&!hasTrait(traits,'clothing'))throw new Error('目标不是一件衣物');
         return{target,path:['state','inventory',target],held,definition,spec,catalog};
     }
     const partition=target.startsWith('npc_')?'npcs':target.startsWith('monster_')||target.startsWith('boss_')?'creatures':null;
