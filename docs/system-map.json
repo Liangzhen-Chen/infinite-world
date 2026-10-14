@@ -2025,7 +2025,7 @@
     "server-plugin/catalog.mjs",
     "server-plugin/chronicle.mjs"
    ],
-   "lines": 401,
+   "lines": 404,
    "stateWrites": [],
    "stateReads": [
     "careerMetrics",
@@ -13466,7 +13466,7 @@
     "locations"
    ],
    "worldDirs": [],
-   "lines": 164
+   "lines": 167
   },
   "server-plugin/return-summary.mjs": {
    "system": "ui_scene",

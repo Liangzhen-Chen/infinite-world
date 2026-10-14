@@ -277,3 +277,5 @@ M2修复批审定写入PLAN（T61–T64）：Astra草案F4工具机会标注并�
 - 2026-10-14 U8 已合入：lies.mjs——world_remember 带 truth/motive/knowers 登记谎言，同 key 不带 truth 为揭穿（知情者、物证、记忆三途径），灵智≥2 且前后不一或屡被骗时自动识破；新动词 deceive，谎言走传闻、揭穿影响立场与记仇，一致性审查区分有意说谎。提示11862（+37）。合后CORE等60项过。主线已有失败待T163：npc-memory私有流、village-rumor-access种子数52≠40、m3-consistency-browser 渲染“林穗
 
 面包给你”（未核基线）。
+
+- 2026-10-14 T163 已合入（停止追主线，基于 21b83e6）：约40处过期断言改为按批次ID或正式目录核对；npc-depth 冻结名册剔除白石镇升档99人与聚居地名册；场景复用引擎 EntityResolver（约80ms→12ms）；补新地点美术映射。分支上除 agriculture 外1728项中1726过，剩 performance 两项（负载下超时，待空闲复核）；agriculture 单文件70分钟以上。合后CORE等56项过、发布构建通过。T163之后合入的卡造成的新失败留给收尾的空闲全量测试。
