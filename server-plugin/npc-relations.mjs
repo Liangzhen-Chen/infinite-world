@@ -44,6 +44,16 @@ export function recordNpcRelationEvidence(d,engine,before,tool,args,detail,event
   const minute=o.resolvedAt??o.completion?.minute??(['付款','送货'].includes(o.type)?o.deadline:after.minute);
   const people=[o.promisor,o.promisee],kept=o.keptBy??(o.status==='已完成'?[o.promisor]:[]),breached=o.breachedBy??(o.status==='违约'?[o.promisor]:[]);
   for(const who of kept){const observer=people.find(x=>x!==who);add(`obligation:${id}:kept:${who}`,id,'信守约定',observer,who,minute,{trust:3,respect:1,...(['会面','等候'].includes(o.type)?{affection:1}:{})},['带路','协助'].includes(o.type)?{favor:`${o.content}；依据${id}的实际完成记录`}:{});}
+  // Kindness on top of keeping one's word: real help raises regard, and a
+  // delivery nobody paid for is a gift (npcLife.kindness; none when absent).
+  const kind=engine.rules?.npcLife?.kindness;
+  if(kind&&o.status==='已完成')for(const who of kept){
+   const observer=people.find(x=>x!==who);
+   if(kind.help&&['带路','协助'].includes(o.type))add(`obligation:${id}:help:${who}`,id,'帮忙',observer,who,minute,{...kind.help});
+   const paid=Object.values(after.obligations).some(x=>x.type==='付款'&&x.promisor===o.promisee&&x.promisee===o.promisor&&Math.abs((x.createdAt??0)-(o.createdAt??0))<=1440)
+    ||Object.values(after.records??{}).some(r=>r.category==='debt'&&r.debtor===o.promisee&&r.creditor===o.promisor);
+   if(kind.gift&&o.type==='送货'&&who===o.promisor&&!paid)add(`obligation:${id}:gift`,id,'送礼',observer,who,minute,{...kind.gift});
+  }
   for(const who of breached){const observer=people.find(x=>x!==who);add(`obligation:${id}:breached:${who}`,id,'违约',observer,who,minute,{trust:-5,affection:-1,respect:-1},{reason:o.reason??'未履行约定'});}
  }
  for(const [id,debt]of Object.entries(after.records??{})){
@@ -107,6 +117,6 @@ export function recordFestivalRelations(d,engine,event){
  for(const from of event.participants)for(const to of event.participants){
   if(from===to)continue;
   register(d,engine,{key:`${event.resultEvent}:${from}:${to}`,sourceEvent:event.resultEvent,eventType:'共同参加节俗',
-   from,to,minute:event.resolvedAt,delta:{trust:1,respect:1}});
+   from,to,minute:event.resolvedAt,delta:{trust:1,respect:1,...(engine.rules?.npcLife?.kindness?.festival??{})}});
  }
 }

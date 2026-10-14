@@ -3884,6 +3884,38 @@
       "host": {
         "minimumTrust": 40,
         "minimumAffection": 30
+      },
+      "stranger": {
+        "foodDays": 20,
+        "maxHousehold": 5,
+        "perHousehold": 1,
+        "chancePerDay": 0.03,
+        "minimumTrust": 0,
+        "minimumAffection": 0
+      }
+    },
+    "kindness": {
+      "help": {
+        "affection": 2
+      },
+      "gift": {
+        "trust": 1,
+        "affection": 3
+      },
+      "festival": {
+        "affection": 2
+      },
+      "care": {
+        "trust": 2,
+        "affection": 3,
+        "carerAffection": 1
+      },
+      "cowork": {
+        "minutes": 180,
+        "everyDays": 10,
+        "trust": 1,
+        "affection": 2,
+        "cap": 60
       }
     }
   }

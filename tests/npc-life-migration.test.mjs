@@ -21,7 +21,8 @@ function fixture({migration={},prep=()=>{},hostTie=true}={}){
  const world=structuredClone(source),find=id=>world.npcs.find(n=>n.id===id),life=world.rules.npcLife;
  life.health={...life.health,bands:[{fromAge:0,illnessPerYear:0,graveShare:0,suddenDeathPerYear:0}]};
  const m=life.migration;
- life.migration={...m,...migration,livelihood:{...m.livelihood,chancePerDay:1,...migration.livelihood},refuge:{...m.refuge,chancePerDay:1,...migration.refuge}};
+ // Strangers taking people in is covered in npc-life-t164; these cases keep to kin and friends.
+ life.migration={...m,stranger:undefined,...migration,livelihood:{...m.livelihood,chancePerDay:1,...migration.livelihood},refuge:{...m.refuge,chancePerDay:1,...migration.refuge}};
  find(mover).schedule={default:[{start:0,end:480,location:fromHome,activity:'睡眠',services:[]},{start:480,end:1080,location:shop,activity:'在药铺帮手、教人认药',services:['teach']},{start:1080,end:1440,location:fromHome,activity:'歇息',services:[]}]};
  if(hostTie){find(mover).relationships.push(tie(mover,host));find(host).relationships.push(tie(host,mover));}
  prep(world,find);
@@ -41,6 +42,16 @@ const moves=s=>Object.values(s.doc.state.family?.migrations??{});
 const knows=(s,id,root)=>(npc(s,id).memoryStream??[]).find(m=>(m.rootMemoryId??m.id)===root);
 const meeting=(s,id,{with:other=friend,location=shop,at})=>{s.doc.state.obligations[id]={id,reservationVersion:1,type:'会面',promisor:mover,promisee:other,content:'一起理一遍药柜',location,start:at,deadline:at+60,
  departures:{[mover]:at,[other]:at},createdAt:start,status:'待履行',attendance:{[mover]:0,[other]:0},togetherMinutes:0};};
+// Since T164 family life may bring a roster spouse or housemate into campaign
+// state, and births add children; nothing else may appear, and nobody vanishes.
+function onlyLifeAdditions(s,ids,people={},created={}){
+ const st=s.doc.state,born=id=>Boolean(st.family?.births?.[st.npcs[id]?.life?.source]);
+ assert.ok(ids.every(id=>st.npcs[id]),'原有人物都还在');
+ for(const id of Object.keys(st.npcs).filter(x=>!ids.includes(x)))
+  assert.ok(st.npcs[id].life?.kind==='roster'&&s.engine.world.residents.some(r=>r.id===id)||st.npcs[id].life?.kind==='born'&&born(id),id);
+ for(const [id,row] of Object.entries(st.family?.people??{}))if(!people[id])assert.ok(st.family.births[row.sourceEvent],id);
+ for(const [id,row] of Object.entries(st.created??{}))if(!created[id])assert.ok(row.generated==='birth'&&st.family.births[row.sourceEvent],id);
+}
 const hungry=s=>{s.doc.state.settlements.loc_hw.starvation=5;return s;};
 
 test('迁居参数有效；没有原因或没有愿意接纳的人家时谁也不搬',async()=>{
@@ -98,8 +109,7 @@ test('缺粮谋生：预告、沿实际路线走完全程，抵达后住户、�
  // Property travels with the person; nobody is copied or newly created.
  assert.equal(npc(s,mover).coins,coins-go.routeCost);assert.deepEqual(npc(s,mover).inventory,goods);
  assert.equal(npc(s,host).coins,hostCoins);assert.deepEqual(npc(s,host).inventory,hostGoods);
- assert.deepEqual(Object.keys(s.doc.state.npcs).sort(),ids);
- assert.equal(JSON.stringify(s.doc.state.family?.people??{}),people);assert.equal(JSON.stringify(s.doc.state.created??{}),created);
+ onlyLifeAdditions(s,ids,JSON.parse(people),JSON.parse(created));
  assert.equal(Object.values(s.doc.state.npcs).filter(n=>n.name===npc(s,mover).name).length,1);
  const next=Math.floor(go.arriveAt/DAY+1)*DAY;
  await until(s,next+540,'f');
@@ -170,6 +180,6 @@ test('正式参数下全世界离屏两个月：每次迁居都有登记的原�
  const ids=Object.keys(doc.state.npcs).sort(),catalog=JSON.stringify(source.npcs);let s={engine,doc};
  for(let i=0;i<2;i++)await wait(s,30*DAY,`q${i}`);
  for(const m of moves(s)){assert.ok(['成婚','投亲','谋生','避祸'].includes(m.reason));assert.ok(m.host&&m.cause);}
- assert.deepEqual(Object.keys(s.doc.state.npcs).sort(),ids);
+ onlyLifeAdditions(s,ids);
  assert.equal(JSON.stringify(source.npcs),catalog);
 });
