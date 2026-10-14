@@ -2,6 +2,7 @@ import {heldUnit} from './items.mjs';
 import {consumeMagicProtection} from './magic-primitives.mjs';
 import {assertLocationAccess} from './location-access.mjs';
 import {actorPath} from './npc-state.mjs';
+import {validateMonsterSocieties,passageAllows,assertSocietyEntry,infiltrationDetected,infiltrationSucceeded,societyAt} from './monster-society.mjs';
 
 // A location's optional site contains occupants (actor IDs), manager, owner,
 // entryMechanisms, mechanisms, clues, resources and truths. Local IDs stay stable
@@ -18,7 +19,7 @@ const ownerOf=(place,row=place.site)=>Object.hasOwn(row,'owner')?row.owner:place
 const authorityOf=(place,owner)=>owner===ownerOf(place)?place.site.manager??owner:owner;
 const living=actor=>actor&&actor.status!=='死亡'&&(actor.hp===undefined||actor.hp>0);
 const allowed=(document,place,owner,authorization,operation='enter')=>{
-    if(!owner||owner==='player')return true;
+    if(!owner||owner==='player'||passageAllows(document,place,owner,operation))return true;
     return (Array.isArray(authorization)?authorization:[authorization]).some(id=>{
         const p=document.state.records?.[id];
         return p?.category==='authorization'&&p.action==='site_use'&&p.subject===place.id&&p.grantee==='player'
@@ -52,6 +53,12 @@ export function validateSites(world){
         if(s.manager&&!world.npcs.some(row=>row.id===s.manager&&row.age>=18))fail('管理人须为登记成年NPC');
         if(s.occupants!==undefined){references(s.occupants,entities,'occupants');if(Array.isArray(s.occupants)&&s.occupants.some(id=>! /^(npc|boss|monster)_/.test(id)))fail('占据者须为实际人物或生物');}
         references(s.entryMechanisms??[],mechanisms,'entryMechanisms');
+        if(s.infiltration!==undefined){const p=s.infiltration,c=p?.check;
+            if(['private','council'].includes(place.access?.mode))fail('私宅与议事区不能登记为可潜入');
+            if(!p||typeof p!=='object'||!Number.isSafeInteger(p.minutes)||p.minutes<1||p.minutes>1440||!c||!world.rules.attributes.includes(c.attribute)||
+                !Object.values(world.rules.check.difficulties).includes(c.difficulty)||c.skill&&!world.skills.some(x=>x.id===c.skill)||
+                p.damage!==undefined&&(!Number.isSafeInteger(p.damage)||p.damage<0))fail('潜入参数须有1至1440分钟耗时及有效检定');
+        }
         for(const [kind,list]of Object.entries(rows))for(const row of list){
             if(!row||typeof row!=='object')continue;
             if(kind!=='truths'&&(typeof row.name!=='string'||!row.name.trim()||!Number.isSafeInteger(row.minutes)||row.minutes<1||row.minutes>1440))fail(`${row.id}须有名称及1至1440分钟耗时`);
@@ -76,7 +83,7 @@ export function validateSites(world){
             }
         }
     }
-    return errors;
+    return [...errors,...validateMonsterSocieties(world)];
 }
 
 export function siteKnowledge(world,document){
@@ -112,6 +119,43 @@ function ledger(d,place){
 }
 const unblocked=(row,gates)=>{if(gates.some(id=>row.mechanisms[id]?.status!=='已解除'))throw Error('机关尚未解除');};
 const inside=(d,place)=>d.get('state','records','site_presence')?.site===place.id&&d.get('state','records','site_presence')?.actor==='player';
+const covert=(d,place)=>inside(d,place)&&d.get('state','records','site_presence').covert===true;
+function watchers(d,engine,place){
+    const society=societyAt(engine,place.id)?.id,occupants=new Set(place.site.occupants??[]);
+    return engine.world.npcs.filter(n=>(occupants.has(n.id)||society&&n.society===society||[place.site.manager,ownerOf(place)].includes(n.id))&&(n.age??18)>=18).map(n=>n.id).sort().filter(id=>{
+        const a=d.get('state','npcs',id);return a?.location===place.id&&!['死亡','濒死','昏迷','患病'].includes(a.status)&&(a.hp===undefined||a.hp>0)&&!a.scheduleTravel&&!a.cognitionTravel&&!/睡眠|睡觉|熟睡/.test(a.activity??'');
+    });
+}
+function infiltrate(d,engine,place,eventId){
+    const plan=place.site.infiltration;
+    if(!plan)throw Error('这里不是登记可潜入的据点；私宅与其他据点仍须许可');
+    if(inside(d,place))return{...siteView(engine,d.document),duplicate:true};
+    if(d.get('state','player','companions')?.length)throw Error('潜入不能带同行者');
+    unblocked(ledger(d,place),place.site.entryMechanisms??[]);
+    engine.advance(d,plan.minutes,eventId);
+    if(d.get('state','location')!==place.id||d.get('state','player','status')!=='正常')return{entered:false,note:'潜入途中失去行动能力或离开此地'};
+    const watcher=watchers(d,engine,place)[0],{difficulty,...rest}=plan.check;
+    const check=engine.check(d,watcher?{...rest,opponent:{npc:watcher,attribute:'精神'}}:plan.check,eventId);
+    if(check.success){
+        d.set(['state','records',siteKey(place.id)],ledger(d,place));
+        d.set(['state','records','site_presence'],{category:'site_presence',site:place.id,actor:'player',covert:true,minute:d.get('state','minute'),sourceEvent:eventId});
+        infiltrationSucceeded(d,engine,place,eventId);
+        return{...siteView(engine,d.document),covert:true,detected:false,check,minutes:plan.minutes};
+    }
+    if(!watcher)return{entered:false,detected:false,check,minutes:plan.minutes,note:'未能找到潜入路径，无人察觉'};
+    const outcome=infiltrationDetected(d,engine,place,watcher,eventId);let damage=0;
+    if(outcome.response==='交锋'){
+        damage=consumeMagicProtection(d,'player',plan.damage??0,'physical').damage;
+        if(damage)engine.health(d,{delta:-damage},eventId);
+    }
+    let expelled=null;
+    if(place.parent&&d.get('state','player','status')==='正常'){
+        // Expulsion is a real walk out of the site, timed and routed like world_move.
+        const action=engine.npcObligationAction;engine.npcObligationAction={tool:'move',args:{destination:place.parent}};
+        try{expelled=engine.move(d,{destination:place.parent},eventId).destination;}finally{engine.npcObligationAction=action;}
+    }
+    return{entered:false,detected:true,watcher,check,...outcome,damage,expelled,minutes:plan.minutes};
+}
 
 export function siteView(engine,document){
     const place=engine.byId.get(document.state.location);if(!place?.site)return null;
@@ -133,8 +177,11 @@ export function siteAction(d,args,eventId){
     if(args.authorizations!==undefined&&(!Array.isArray(args.authorizations)||args.authorizations.length>8))throw Error('据点许可名单最多8项');
     const authorizations=[args.authorization,...args.authorizations??[]];
     if(operation==='inspect')return siteView(this,d.document);
-    if(!['enter','investigate','disarm','gather'].includes(operation))throw Error('据点操作须为inspect、enter、investigate、disarm或gather');
+    if(operation==='infiltrate')return infiltrate(d,this,place,eventId);
+    if(!['enter','investigate','disarm','gather'].includes(operation))throw Error('据点操作须为inspect、enter、investigate、disarm、gather或infiltrate');
     const assertAccess=()=>{
+        if(operation==='investigate'&&covert(d,place))return;
+        assertSocietyEntry(d,this,place);
         if(['private','council'].includes(place.access?.mode)&&place.access.requiresConsent){
             const authorization=authorizations.find(id=>d.get('state','records',id)?.subject===place.id&&['site_use','enter_home','enter_council'].includes(d.get('state','records',id)?.action));
             assertLocationAccess(d,this,place.id,{authorization,companions:d.get('state','player','companions')??[]});

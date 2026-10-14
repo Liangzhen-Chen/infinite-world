@@ -1,6 +1,7 @@
 import {digest} from './storage.mjs';
 import {npcPresenceAt} from './npc-cognition.mjs';
 import {npcObligationAt} from './npc-obligations.mjs';
+import {societyGovernance} from './monster-society.mjs';
 
 const DAY=1440;
 const path=id=>['state','records',id];
@@ -112,6 +113,8 @@ function runRequest(d,engine,requestId,authorization,at,presence=d.get('state'))
 }
 
 function action(d,args,eventId){
+    const society=this.world.locations.find(l=>l.id===this.resolve(args.settlement,'loc')&&l.monsterSociety);
+    if(society)return societyGovernance(d,this,args,eventId,society.id);
     const settlement=this.resolve(args.settlement,'loc'),{g,p}=profile(this,settlement),now=d.get('state','minute');
     switch(args.operation){
     case 'governance_inspect':return {settlement,appointment:structuredClone(g.appointment),permissions:structuredClone(g.permissions),

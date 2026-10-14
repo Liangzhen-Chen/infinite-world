@@ -10,6 +10,7 @@ import {planWorldUpgrade}from'../server-plugin/world-upgrade.mjs';
 import {planBossMigration}from'../server-plugin/boss-migration.mjs';
 import {validateWorld}from'../tools/validate-world.mjs';
 import {readBossCognition}from'../server-plugin/boss-cognition.mjs';
+import {validateSites}from'../server-plugin/sites.mjs';
 
 const baseline=await loadWorld(),seed=JSON.parse(await fs.readFile('tests/fixtures/legacy/seed.json','utf8'));
 const person='npc_hw_linsui',market='site_ms_market',council='site_ms_council',home='bld_hw_qingdeng',bossId='boss_ms_leader',lairKey='lair:lair_ms_market';
@@ -150,4 +151,144 @@ test('旧野生首领转居民时移动已有身体和库存，死亡与旧历�
  assert.deepEqual(planBossMigration(next,f.world.rules,f.world.bosses,f.world),[]);
  const conflict=structuredClone(before);conflict.state.npcs[person].hp=1;
  assert.throws(()=>planBossMigration(conflict,f.world.rules,f.world.bosses,f.world),/冲突的身体/);
+});
+
+// T158: per-target stance, separate agreements, infiltration and message travel.
+const seatId='loc_ms_test',store='site_ms_store',guardId='npc_hw_baihui',elderId='npc_hw_fanrong',villager='npc_hw_shijin',DAY=1440;
+function society({clocks}={}){
+ const world=structuredClone(baseline),boss=structuredClone(world.bosses.find(b=>b.intelligence>0));
+ Object.assign(boss,{id:bossId,name:'测试窟主',aliases:[],actor:person,lair:market,minions:[],cognition:{goal:'avoid_conflict',territory:[market,store]},
+  negotiation:{stock:[{item:'item_ration',quantity:100}],accepts:['item_ration']},residence:{id:'lair_ms_market',name:'测试社会首领驻地',location:market}});
+ world.bosses.push(boss);
+ world.locations.push({id:seatId,name:'测试地宫',aliases:[],parent:'loc_hw',scope:'loc_hw',coordinates:[3,0],terrain:'丘陵',
+  monsterSociety:{leader:bossId,neighbors:{loc_hw:'中立'},meetingPlace:market,motions:[{id:'raid',name:'是否出窟抢粮'}]}});
+ world.routes.push({id:'route_ms_seat',from:'loc_hw',to:seatId,lengthKm:3,terrainMultiplier:1,modes:['walk'],closedSeasons:[],toll:0,risk:0});
+ const site=(id,name,extra)=>({id,name,aliases:[],parent:seatId,scope:'loc_hw',coordinates:[3,0],terrain:'丘陵',owner:person,...extra});
+ world.locations.push(site(market,'测试共市',{access:{mode:'public'},site:{owner:person,manager:person,occupants:[person,bossId],entryMechanisms:[],mechanisms:[],clues:[],resources:[],truths:[]}}),
+  site(store,'测试仓窟',{site:{owner:person,manager:person,occupants:[guardId],entryMechanisms:[],mechanisms:[],resources:[{id:'grain',name:'窟粮',item:'item_ration',quantity:5,minutes:5}],
+   clues:[{id:'ledger',name:'刻痕账',text:'仓窟刻痕记着三袋粮来自河湾。',minutes:10}],truths:[],infiltration:{minutes:30,check:{attribute:'敏捷',difficulty:15},damage:5}}}),
+  site(council,'测试议事室',{access:{mode:'council',requiresConsent:true,authority:person},site:{owner:person,manager:person,occupants:[],entryMechanisms:[],mechanisms:[],clues:[],resources:[],truths:[]}}));
+ for(const id of [market,store,council])world.routes.push({id:`route_ms_${id}`,from:seatId,to:id,lengthKm:0,terrainMultiplier:1,modes:['walk'],closedSeasons:[],toll:0,risk:0});
+ const member=(id,location,activity,services=[])=>{const npc=world.npcs.find(n=>n.id===id),slots=[{start:0,end:1440,location,activity,services}];
+  Object.assign(npc,{species:boss.monster,society:seatId,settlement:seatId,location,schedule:{default:slots,market:slots,rest:slots,restDays:[],seasonal:{}}});return npc;};
+ Object.assign(member(person,market,'摊位接待',['trade']),{coins:37,inventory:{item_ration:20}});
+ member(guardId,store,'看守仓窟');member(elderId,market,'晒菌');
+ if(clocks)world.rules.factionClock={version:1,clocks};
+ for(const id of ['faction_saltboat','faction_riverhomes'])Object.assign(world.factions.find(f=>f.id===id).resources,{treasuryCopper:100,items:{}});
+ const engine=new WorldEngine(world);let document=engine.createCharacter(seed,{},'monster-society-t158');
+ Object.assign(document.state,{location:seatId,minute:600});Object.assign(document.state.player,{coins:1000,hp:100,maxHp:100});
+ document.state.inventory.item_ration={quantity:20};
+ for(const [id,loc]of [[person,market],[guardId,store],[elderId,market]])document.state.npcs[id].location=loc;
+ document=applyPatches(document,planBossMigration(document,world.rules,world.bosses,world));
+ const run=async(doc,tool,args,eventId)=>{const out=await engine.reduce(doc,{tool,args,eventId});return{document:applyPatches(doc,out.patches),result:out.result};};
+ return{world,engine,document,run};
+}
+const stance=(f,doc,holder,target='player')=>doc.state.records[`stance:${holder}:${target}`]?.stance;
+const receipts=(doc,kind)=>Object.values(doc.state.records).filter(r=>r.category==='society_receipt'&&r.kind===kind);
+const at=async(f,doc,place)=>(await f.run(doc,'world_move',{destination:place},`go_${place}_${doc.state.minute}`)).document;
+const pact=(f,doc,args,id)=>f.run(doc,'world_field',{operation:'lair_negotiate',lair:'lair_ms_market',pact:'nonaggression',...args},id);
+const sneak=(f,doc,id)=>f.run(doc,'world_field',{operation:'site_infiltrate'},id);
+const waitFor=async(f,doc,minutes,id)=>(await f.run(doc,'world_time',{minutes},id)).document;
+
+test('通行朝贡只覆盖首领辖区与库存，按期交付守约改善态度并经消息传到邻村',async()=>{
+ const f=society();assert.deepEqual(validateSites(f.world),[]);
+ let d=await at(f,f.document,market);
+ await assert.rejects(pact(f,d,{term:'passage',days:5,location:council},'own_council'),/私宅与议事区|辖区/);
+ await assert.rejects(pact(f,d,{term:'passage',days:5,location:'loc_hw'},'other_land'),/只能承诺其辖区/);
+ await assert.rejects(pact(f,d,{term:'tribute',days:5,offer:[{item:'item_ration',quantity:1}],request:[{item:'item_ration',quantity:1}]},'tribute_back'),/朝贡/);
+ const short=await pact(f,d,{term:'trade',days:20,offer:[{item:'item_ration',quantity:1}],request:[{item:'item_oats',quantity:500}]},'no_stock');
+ assert.equal(short.result.accepted,false);assert.equal(short.result.agreement,null);assert.match(short.result.reason,/库存不足/);
+ const signed=await pact(f,d,{term:'tribute',days:15,offer:[{item:'item_ration',quantity:2}]},'tribute');d=signed.document;
+ const key=signed.result.agreement,row=d.state.records[key];
+ assert.equal(row.kind,'tribute');assert.deepEqual(row.locations,[market,store]);assert.equal(row.nextDue,row.signedAt+10*DAY);
+ assert.equal(stance(f,d,seatId),undefined,'立约不覆盖态度枚举');
+ assert.equal(d.state.npcs[person].inventory.item_ration.quantity,22);
+ const view=await f.run(d,'world_field',{operation:'lair_observe',lair:'lair_ms_market'},'look');
+ assert.equal(view.result.occupant.cognition.society.stance,'戒备');assert.equal(view.result.occupant.cognition.society.agreements[0].id,key);
+ const inStore=await f.run(await at(f,d,store),'world_field',{operation:'site_enter'},'enter_store');
+ assert.equal(inStore.result.entered,true,'朝贡通行覆盖首领辖区的仓窟');
+ await assert.rejects(f.run(inStore.document,'world_field',{operation:'site_gather',target:'grain'},'take'),/许可|物权|发现/);
+ d=await at(f,inStore.document,market);
+ const kept=await pact(f,d,{contract:key},'pay_1');d=kept.document;
+ assert.equal(kept.result.kept,true);assert.equal(stance(f,d,seatId),'中立');assert.equal(d.state.records[key].nextDue,null);
+ assert.equal(receipts(d,'agreement_kept').length,1);assert.equal(receipts(d,'agreement_kept')[0].agreement,key);
+ const news=d.state.records['society_news:pay_1:loc_hw'];assert.equal(news.act,'aid');assert.ok(news.arrivesAt>d.state.minute);
+ d=await waitFor(f,d,16*DAY,'term_end');
+ assert.equal(d.state.records[key].status,'到期');assert.equal(d.state.records['society_news:pay_1:loc_hw'].status,'已送达');
+ assert.equal(stance(f,d,'loc_hw'),undefined,'中立村收到守约消息仍为中立');
+});
+
+test('背约：逾期未交朝贡记为玩家背约，态度转敌对，成员拒绝交易与立约，回执可供除妖委托使用',async()=>{
+ const f=society();let d=await at(f,f.document,market);
+ const signed=await pact(f,d,{term:'tribute',days:30,offer:[{item:'item_ration',quantity:1}]},'tribute');d=signed.document;const key=signed.result.agreement;
+ d=await waitFor(f,d,10*DAY+5,'skip');
+ const row=d.state.records[key];assert.equal(row.status,'背约');assert.equal(row.breachedBy,'player');
+ assert.equal(stance(f,d,seatId),'敌对');assert.equal(d.state.npcs[person].negotiation?.relation??null,null);
+ const breached=receipts(d,'agreement_breached');assert.equal(breached.length,1);assert.equal(breached[0].society,seatId);assert.equal(breached[0].stance.after,'敌对');
+ assert.equal(d.state.records[`society_news:${key}:due:${row.signedAt+10*DAY}:loc_hw`].act,'harm');
+ await assert.rejects(f.run(d,'world_trade',{seller:person,item:'item_ration',quantity:1},'buy'),/敌对/);
+ await assert.rejects(pact(f,d,{term:'passage',days:3},'again'),/敌对/);
+ await assert.rejects(f.run(d,'world_field',{operation:'site_enter'},'enter'),/敌对/);
+});
+
+test('未被发现的潜入耗时并实际检定，只开放调查；未登记据点与私宅不能潜入',async()=>{
+ const f=society();let d=await at(f,f.document,store);
+ await assert.rejects(f.run(d,'world_field',{operation:'site_enter'},'plain'),/占据者|许可/);
+ d.state.player.attributes=Object.fromEntries(f.engine.rules.attributes.map(k=>[k,1000]));
+ let out;for(const id of ['quiet_a','quiet_b','quiet_c','quiet_d']){out=await sneak(f,d,id);if(out.result.covert)break;}
+ assert.equal(out.result.covert,true);assert.equal(out.result.detected,false);assert.equal(out.result.check.opponent.npc,guardId);
+ assert.equal(out.document.state.minute,d.state.minute+30);assert.equal(stance(f,out.document,seatId),undefined);
+ assert.equal(receipts(out.document,'infiltration')[0].detected,false);
+ const clue=await f.run(out.document,'world_field',{operation:'site_investigate',target:'ledger'},'read_ledger');assert.equal(clue.result.discovered,true);
+ await assert.rejects(f.run(clue.document,'world_field',{operation:'site_gather',target:'grain'},'steal'),/许可|物权/);
+ const home=await at(f,f.document,market);await assert.rejects(sneak(f,home,'not_registered'),/登记可潜入/);
+ const bad=structuredClone(f.world);Object.assign(bad.locations.find(l=>l.id===council).site,{infiltration:{minutes:10,check:{attribute:'敏捷',difficulty:15}}});
+ assert.match(validateSites(bad).join(),/私宅与议事区不能登记为可潜入/);
+ const loose=structuredClone(f.world);loose.locations.find(l=>l.id===seatId).monsterSociety.neighbors.loc_hw='友好';assert.match(validateSites(loose).join(),/初始态度无效/);
+});
+
+test('被发现：戒备时驱逐并转敌对，敌对时交锋受伤；交锋成员与消息传播令邻村转敌对后拒绝交易',async()=>{
+ const f=society();let d=await at(f,f.document,store);
+ d.state.player.attributes.敏捷=1;
+ let out;for(const id of ['loud_a','loud_b','loud_c','loud_d']){out=await sneak(f,d,id);if(out.result.detected)break;}
+ assert.equal(out.result.detected,true);assert.equal(out.result.response,'驱逐');assert.equal(out.result.expelled,seatId);
+ d=out.document;assert.equal(d.state.location,seatId);assert.equal(stance(f,d,seatId),'敌对');
+ assert.equal(d.state.records.site_presence,undefined);
+ const news=Object.values(d.state.records).find(r=>r.category==='society_news'&&r.to==='loc_hw');
+ assert.equal(news.status,'在途');assert.equal(stance(f,d,'loc_hw'),undefined,'消息未到前邻村不知情');
+ d=await at(f,d,store);
+ for(const id of ['again_a','again_b','again_c','again_d']){out=await sneak(f,d,id);if(out.result.detected)break;}
+ assert.equal(out.result.response,'交锋');assert.equal(out.result.damage,5);assert.equal(out.document.state.player.hp,d.state.player.hp-5);
+ d=await at(f,out.document,store);d.state.player.attributes=Object.fromEntries(f.engine.rules.attributes.map(k=>[k,30]));
+ d=(await f.run(d,'world_combat',{target:guardId},'hit_guard')).document;
+ assert.equal(receipts(d,'clash')[0].target,guardId);
+ d=await waitFor(f,d,DAY,'news_travel');
+ assert.equal(stance(f,d,'loc_hw'),'敌对','伤害本村友邻的消息逐条传到后转敌对');
+ Object.assign(d.state,{location:'loc_hw'});Object.assign(d.state.npcs[villager],{location:'loc_hw',inventory:{item_ration:3},status:'正常',activity:'闲坐'});
+ await assert.rejects(f.run(d,'world_trade',{seller:villager,item:'item_ration',quantity:1},'village_buy'),/本村已对你敌对/);
+});
+
+test('内部议事沿用提议与意见动作，闭合记录推动势力时钟；第三方村镇行为经消息传到后改变关系',async()=>{
+ const motion=`society_motion:${seatId}:raid`;
+ const clocks=[{id:'ms_raid',faction:'faction_saltboat',settlement:seatId,source:'test',intervalDays:1,probability:1,
+   stages:[{id:'raid',name:'出窟抢粮',condition:{kind:'record',id:motion,field:'status',equals:'通过'},effect:{kind:'society_news',target:'loc_hw',act:'harm'}}]},
+  {id:'hw_dam',faction:'faction_riverhomes',settlement:'loc_hw',source:'test',intervalDays:1,probability:1,
+   stages:[{id:'dam',name:'封堵风井',condition:{kind:'always'},effect:{kind:'society_news',target:seatId,act:'harm'}}]}];
+ const f=society({clocks});let d=await at(f,f.document,market);
+ const gov=(args,id)=>f.run(d,'world_settlement',{settlement:seatId,...args},id);
+ await assert.rejects(gov({operation:'governance_propose',issue:'unknown'},'bad'),/议题/);
+ d=(await gov({operation:'governance_propose',issue:'raid'},'propose')).document;
+ await assert.rejects(gov({operation:'governance_opinion',proposal:motion,speaker:guardId,opinion:'approve',content:'去'},'absent'),/在场/);
+ d=(await gov({operation:'governance_opinion',proposal:motion,speaker:elderId,opinion:'approve',content:'粮不够过冬'},'elder')).document;
+ await assert.rejects(gov({operation:'governance_close',proposal:motion,authority:elderId},'not_leader'),/首领/);
+ d=(await gov({operation:'governance_close',proposal:motion,authority:person},'close')).document;
+ assert.equal(d.state.records[motion].status,'通过');
+ d=await waitFor(f,d,2*DAY,'clock_days');
+ const event=Object.values(d.state.records).find(r=>r.category==='faction_event'&&r.stage==='raid');assert.ok(event);
+ assert.equal(d.state.records[`society_news:${event.sourceEvent}:loc_hw`].status,'已送达');
+ assert.equal(stance(f,d,'loc_hw',seatId),'戒备','邻村得知抢粮后对聚居地转戒备');
+ const dam=Object.values(d.state.records).find(r=>r.category==='faction_event'&&r.stage==='dam');
+ const heard=d.state.records[`society_news:${dam.sourceEvent}:${seatId}`];assert.ok(heard.arrivesAt>dam.minute);assert.equal(heard.status,'已送达');
+ assert.equal(stance(f,d,seatId,'loc_hw'),'戒备','第三方村镇行为经消息到达后改变聚居地对它的态度');
+ assert.equal(stance(f,d,seatId),undefined,'玩家未参与时聚居地对玩家态度不变');
 });
