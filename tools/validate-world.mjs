@@ -23,6 +23,7 @@ import {validateNpcProfiles,validateNpcDepth,findNpcRuleWording}from'./npc-profi
 import {validatePopulation}from'./population-validation.mjs';
 import {validateFestivalRuntime}from'../server-plugin/festival.mjs';
 import {validateSites}from'../server-plugin/sites.mjs';
+import {validateShopRules}from'../server-plugin/shop.mjs';
 const schema=JSON.parse(await fs.readFile(new URL('../schemas/world.schema.json',import.meta.url),'utf8'));
 const blocklist=JSON.parse(await fs.readFile(new URL('../world/meta/blocklist.json',import.meta.url),'utf8'));
 const validate=new Ajv({allErrors:true,strict:true,allowUnionTypes:true}).compile(schema);
@@ -45,6 +46,7 @@ export function validateWorld(world,{stage='engine'}={}){
     for(const boss of world.bosses??[])errors.push(...validateBossNegotiation(boss,negotiationItems).map(error=>`${boss.id}:${error}`));
     errors.push(...validateObjectWorld(world));
     errors.push(...validateSites(world));
+    errors.push(...validateShopRules(world));
     errors.push(...validateNpcSchedules(world));
     errors.push(...validateNpcGrowthRules(world));
     errors.push(...validateNpcLifeRules(world));

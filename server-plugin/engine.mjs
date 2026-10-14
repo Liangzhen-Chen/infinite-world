@@ -30,6 +30,7 @@ import {localWeather,weatherEdge}from'./weather.mjs';
 import {initializeAgriculture}from'./agriculture-migration.mjs';
 import {agricultureView,settleAgricultureExpiry}from'./agriculture.mjs';
 import {advanceSettlementTrade,regionalTradePrice}from'./settlement-trade.mjs';
+import {tradeQuote,recordDeal}from'./shop.mjs';
 import {initializeWorldClocks}from'./world-clock.mjs';
 import {initializeFactionClocks,factionClockRules}from'./faction-clock.mjs';
 import {validateFestivalRuntime}from'./festival.mjs';
@@ -246,13 +247,15 @@ export class WorldEngine {
         const quantity=number(args.quantity,1,100000,'数量'), catalog=this.byId.get(item);
         const quoteKey=`${Math.floor(d.get('state','minute')/1440)}_${seller}_${buyer}_${item}`;
         const existing=d.get('state','quotes',quoteKey);
-        const quoteBase=Math.ceil(regionalTradePrice(d,this,item,playerLocation)*wildlifePriceFactor(this,d.document,item,playerLocation));
-        const price=existing ?? number(args.unitPrice ?? quoteBase,Math.ceil(quoteBase*0.8),Math.ceil(quoteBase*1.5),'单价');
+        // Day list price: region/transport/season x wildlife x shop markup x regard; bargaining moves it within rules.economy.priceFactorLimits.bargain.
+        const quote=tradeQuote(d,this,{buyer,seller,item,location:playerLocation,base:()=>Math.ceil(regionalTradePrice(d,this,item,playerLocation)*wildlifePriceFactor(this,d.document,item,playerLocation))});
+        const [bargainLow,bargainHigh]=this.rules.economy.priceFactorLimits.bargain;
+        const price=existing ?? number(args.unitPrice ?? quote.listPrice,Math.ceil(quote.listPrice*bargainLow),Math.ceil(quote.listPrice*bargainHigh),'单价');
         const cost=quantity*price;
         if(this.quantity(d,seller,item)<quantity) throw new Error(`对方库存不足：${catalog.name}只剩${this.quantity(d,seller,item)}`);
         const payment=chargeTrade(d,this,{buyer,seller,cost,payment:args.payment,creditMinutes:args.creditMinutes,description:`${catalog.name}货款`},id);
         const moved=transferItems(d,this,seller,buyer,item,quantity,args.instances??null);
-        d.set(['state','quotes',quoteKey],price);this.advance(d,5,id);d.say(`${catalog.name}×${quantity}，${payment.debt?'赊账':'成交'}${cost}铜`);
+        d.set(['state','quotes',quoteKey],price);recordDeal(d,quote,price,quantity,id);this.advance(d,5,id);d.say(`${catalog.name}×${quantity}，${payment.debt?'赊账':'成交'}${cost}铜`);
         return {buyer,seller,item,quantity,cost,instances:moved.instances,...payment};
     }
     advance(d,minutes,id) {
