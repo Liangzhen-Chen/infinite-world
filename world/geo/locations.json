@@ -12755,7 +12755,364 @@
       }
     ],
     "inventory": {},
-    "description": "东街学馆用于识字与抄录联络，可见字样板、前厅书桌。前厅可问学，未成年学徒只安排日常学习。前厅接洽时间为每日8时至18时，打烊后另约。"
+    "description": "东街学馆用于识字与抄录联络，可见字样板、前厅书桌。前厅可问学，未成年学徒只安排日常学习。前厅接洽时间为每日8时至18时，打烊后另约。",
+    "features": [
+      {
+        "id": "feature_s2_pill_room",
+        "name": "学馆丹房",
+        "aliases": [],
+        "kind": "room",
+        "owner": "npc_bs_078_1",
+        "access": "consent",
+        "position": [
+          0,
+          0
+        ],
+        "state": {},
+        "airModel": {
+          "hearingRadiusMeters": 2,
+          "capacityMg": 400000,
+          "ventilationMgPerMinute": 50,
+          "vaporCapacityMg": 200000,
+          "windVector": [
+            0,
+            1
+          ],
+          "echoDelayMs": 20
+        },
+        "links": {
+          "exits": [
+            "feature_s2_school_hall"
+          ]
+        },
+        "fireLinks": [
+          [
+            "feature_s2_pill_furnace",
+            "feature_s2_coal_box"
+          ]
+        ]
+      },
+      {
+        "id": "feature_s2_school_hall",
+        "name": "学馆前廊",
+        "aliases": [],
+        "kind": "room",
+        "owner": "loc_bs",
+        "access": "public",
+        "position": [
+          1,
+          0
+        ],
+        "state": {},
+        "airModel": {
+          "hearingRadiusMeters": 2,
+          "capacityMg": 400000,
+          "ventilationMgPerMinute": 2000,
+          "vaporCapacityMg": 400000,
+          "windVector": [
+            1,
+            0
+          ],
+          "echoDelayMs": 30
+        },
+        "links": {
+          "exits": [
+            "feature_s2_school_yard"
+          ]
+        }
+      },
+      {
+        "id": "feature_s2_school_yard",
+        "name": "学馆后院",
+        "aliases": [],
+        "kind": "room",
+        "owner": "loc_bs",
+        "access": "public",
+        "position": [
+          2,
+          0
+        ],
+        "state": {},
+        "airModel": {
+          "hearingRadiusMeters": 2,
+          "capacityMg": 1000000,
+          "ventilationMgPerMinute": 50000,
+          "vaporCapacityMg": 1000000,
+          "windVector": [
+            1,
+            1
+          ],
+          "echoDelayMs": 60
+        },
+        "links": {
+          "exits": []
+        }
+      },
+      {
+        "id": "feature_s2_pill_furnace",
+        "name": "学馆丹炉",
+        "aliases": [],
+        "kind": "object",
+        "owner": "npc_bs_078_1",
+        "access": "consent",
+        "position": [
+          0,
+          0
+        ],
+        "state": {},
+        "thermalModel": {
+          "ambientC": 20,
+          "efficiencyPermille": 900,
+          "ashPermille": 50,
+          "ignitionMaximumMg": 5000,
+          "ignitable": true,
+          "dryable": false,
+          "fuels": [
+            {
+              "item": "item_charcoal",
+              "milligramsPerUnit": 250000
+            },
+            {
+              "item": "item_s2_tinder",
+              "milligramsPerUnit": 4000
+            }
+          ],
+          "heatCapacityJPerC": 1000,
+          "maximumC": 400,
+          "passiveExchangeJPerMinute": 1500,
+          "burnMgPerMinute": 100,
+          "fuelJPerMg": 20,
+          "wallOffsetsC": [
+            -5,
+            5
+          ],
+          "kiln": {
+            "safeGradientC": 6,
+            "safeRiseCPerMinute": 4,
+            "crackPermillePerStress": 3
+          }
+        },
+        "thermalInitial": {
+          "temperatureC": 20,
+          "fuelMg": 0,
+          "moistureMg": 0
+        }
+      },
+      {
+        "id": "feature_s2_coal_box",
+        "name": "丹房炭箱",
+        "aliases": [],
+        "kind": "object",
+        "owner": "npc_bs_078_1",
+        "access": "consent",
+        "position": [
+          0,
+          0.5
+        ],
+        "state": {},
+        "thermalModel": {
+          "ambientC": 20,
+          "efficiencyPermille": 1,
+          "ashPermille": 0,
+          "ignitionMaximumMg": 1,
+          "ignitable": false,
+          "dryable": false,
+          "fuels": [],
+          "heatCapacityJPerC": 5000,
+          "maximumC": 100,
+          "passiveExchangeJPerMinute": 100,
+          "burnMgPerMinute": 1,
+          "fuelJPerMg": 1
+        },
+        "thermalInitial": {
+          "temperatureC": 20,
+          "fuelMg": 0,
+          "moistureMg": 0
+        }
+      },
+      {
+        "id": "feature_s2_grain_sieve",
+        "name": "前廊晾谷筛",
+        "aliases": [],
+        "kind": "grain",
+        "owner": "loc_bs",
+        "access": "public",
+        "position": [
+          1,
+          1
+        ],
+        "state": {
+          "moistureMg": 50000,
+          "turned": false,
+          "exposed": false
+        },
+        "links": {
+          "air": "feature_s2_school_hall"
+        }
+      },
+      {
+        "id": "feature_s2_dusty_curtain",
+        "name": "前廊积尘挂帘",
+        "aliases": [],
+        "kind": "prop",
+        "owner": "loc_bs",
+        "access": "public",
+        "position": [
+          1,
+          0.5
+        ],
+        "state": {
+          "looseDustMg": 20000,
+          "stainMg": 300,
+          "material": "cloth",
+          "integrity": 100
+        },
+        "links": {
+          "air": "feature_s2_school_hall"
+        }
+      },
+      {
+        "id": "feature_s2_herb_tray",
+        "name": "前廊晾药竹匾",
+        "aliases": [],
+        "kind": "prop",
+        "owner": "loc_bs",
+        "access": "public",
+        "position": [
+          1,
+          -0.5
+        ],
+        "state": {
+          "massMg": 800000,
+          "heightMeters": 0
+        }
+      },
+      {
+        "id": "feature_s2_loose_tags",
+        "name": "竹匾旁散放药签",
+        "aliases": [],
+        "kind": "prop",
+        "owner": "loc_bs",
+        "access": "public",
+        "position": [
+          1.5,
+          -0.5
+        ],
+        "state": {
+          "massMg": 1000,
+          "loose": true
+        }
+      },
+      {
+        "id": "feature_s2_school_beam",
+        "name": "前廊承重梁",
+        "aliases": [],
+        "kind": "structure",
+        "owner": "loc_bs",
+        "access": "public",
+        "position": [
+          1,
+          -1
+        ],
+        "state": {
+          "integrity": 2000,
+          "loadKg": 400,
+          "capacityKg": 600
+        }
+      },
+      {
+        "id": "feature_s2_trial_plot",
+        "name": "后院试种土畦",
+        "aliases": [],
+        "kind": "soil",
+        "owner": "loc_bs",
+        "access": "public",
+        "position": [
+          2,
+          -1
+        ],
+        "state": {
+          "capacityMl": 200000,
+          "waterMl": 60000,
+          "turbidity": 0,
+          "saltMg": 0,
+          "toxinUg": 0,
+          "pathogenRisk": 0,
+          "odor": "无明显气味",
+          "baseMoisturePercent": 15,
+          "moisturePercent": 30,
+          "worked": false,
+          "texture": "loam",
+          "compactionPercent": 70,
+          "areaM2": 4
+        }
+      },
+      {
+        "id": "feature_s2_rock_ledge",
+        "name": "后院露头岩坎",
+        "aliases": [],
+        "kind": "rock",
+        "owner": "loc_bs",
+        "access": "public",
+        "position": [
+          2.5,
+          0
+        ],
+        "state": {
+          "integrity": 3000,
+          "crackMm": 1,
+          "echoErrorMeters": 0.5,
+          "strata": [
+            {
+              "depthMeters": 0.5,
+              "material": "砂岩",
+              "echoMs": 8,
+              "gap": false
+            },
+            {
+              "depthMeters": 1.5,
+              "material": "页岩夹层",
+              "echoMs": 15,
+              "gap": true
+            },
+            {
+              "depthMeters": 4,
+              "material": "深层灰岩",
+              "echoMs": 40,
+              "gap": false
+            }
+          ],
+          "oreBands": [
+            {
+              "depthMeters": 0.3,
+              "mineral": "褐铁矿细带"
+            },
+            {
+              "depthMeters": 5,
+              "mineral": "方铅矿脉"
+            }
+          ]
+        },
+        "links": {
+          "structures": []
+        }
+      }
+    ],
+    "workstations": [
+      {
+        "id": "station_s2_pill_furnace",
+        "kind": "pill_furnace",
+        "owner": "npc_bs_078_1",
+        "access": "public",
+        "fee": 4,
+        "thermalRequirement": {
+          "feature": "feature_s2_pill_furnace",
+          "minimumC": 70,
+          "maximumC": 140,
+          "burning": true
+        }
+      }
+    ]
   },
   {
     "id": "bld_bs_temple",
@@ -16357,7 +16714,380 @@
       }
     ],
     "inventory": {},
-    "description": "裴澄白日坐在公开课桌授符笔控墨，观内留有试墨盘。学费按课结算，仪式主持另须合格许可。前廊每日8时至18时开放；每旬10、20、30日导师在家休息。基础师授每课12铜、120分钟，本处战斗职业认证须10级及基础100熟练度，成功付30铜；学馆的炼金师是生活职业，另按原目录一级、20铜办理。"
+    "description": "裴澄白日坐在公开课桌授符笔控墨，观内留有试墨盘。学费按课结算，仪式主持另须合格许可。前廊每日8时至18时开放；每旬10、20、30日导师在家休息。基础师授每课12铜、120分钟，本处战斗职业认证须10级及基础100熟练度，成功付30铜；学馆的炼金师是生活职业，另按原目录一级、20铜办理。",
+    "features": [
+      {
+        "id": "feature_s2_talisman_room",
+        "name": "芦衡观符房",
+        "aliases": [],
+        "kind": "room",
+        "owner": "npc_bs_077_1",
+        "access": "consent",
+        "position": [
+          0,
+          0
+        ],
+        "state": {},
+        "airModel": {
+          "hearingRadiusMeters": 2,
+          "capacityMg": 200000,
+          "ventilationMgPerMinute": 1000,
+          "vaporCapacityMg": 200000,
+          "windVector": [
+            0,
+            1
+          ],
+          "echoDelayMs": 25
+        },
+        "links": {
+          "exits": [
+            "feature_s2_dao_court"
+          ]
+        },
+        "fireLinks": [
+          [
+            "feature_s2_incense_burner",
+            "feature_s2_paper_rack"
+          ]
+        ]
+      },
+      {
+        "id": "feature_s2_dao_court",
+        "name": "芦衡观前庭",
+        "aliases": [],
+        "kind": "room",
+        "owner": "loc_bs",
+        "access": "public",
+        "position": [
+          2,
+          1.5
+        ],
+        "state": {},
+        "airModel": {
+          "hearingRadiusMeters": 2,
+          "capacityMg": 1000000,
+          "ventilationMgPerMinute": 50000,
+          "vaporCapacityMg": 1000000,
+          "windVector": [
+            1,
+            0
+          ],
+          "echoDelayMs": 50
+        },
+        "links": {
+          "exits": []
+        }
+      },
+      {
+        "id": "feature_s2_incense_burner",
+        "name": "符房铜香炉",
+        "aliases": [],
+        "kind": "object",
+        "owner": "npc_bs_077_1",
+        "access": "consent",
+        "position": [
+          0,
+          0
+        ],
+        "state": {},
+        "thermalModel": {
+          "ambientC": 20,
+          "efficiencyPermille": 900,
+          "ashPermille": 100,
+          "ignitionMaximumMg": 5000,
+          "ignitable": true,
+          "dryable": false,
+          "fuels": [
+            {
+              "item": "item_s2_tinder",
+              "milligramsPerUnit": 4000
+            }
+          ],
+          "heatCapacityJPerC": 500,
+          "maximumC": 300,
+          "passiveExchangeJPerMinute": 200,
+          "burnMgPerMinute": 20,
+          "fuelJPerMg": 20
+        },
+        "thermalInitial": {
+          "temperatureC": 20,
+          "fuelMg": 4000,
+          "moistureMg": 0
+        }
+      },
+      {
+        "id": "feature_s2_paper_rack",
+        "name": "符房旧纸架",
+        "aliases": [],
+        "kind": "object",
+        "owner": "npc_bs_077_1",
+        "access": "consent",
+        "position": [
+          1,
+          0
+        ],
+        "state": {},
+        "thermalModel": {
+          "ambientC": 20,
+          "efficiencyPermille": 800,
+          "ashPermille": 80,
+          "ignitionMaximumMg": 5000,
+          "ignitable": true,
+          "dryable": true,
+          "fuels": [],
+          "heatCapacityJPerC": 2000,
+          "maximumC": 600,
+          "passiveExchangeJPerMinute": 300,
+          "burnMgPerMinute": 200,
+          "fuelJPerMg": 15
+        },
+        "thermalInitial": {
+          "temperatureC": 20,
+          "fuelMg": 60000,
+          "moistureMg": 0
+        }
+      },
+      {
+        "id": "feature_s2_fire_strip",
+        "name": "观前引火草线",
+        "aliases": [],
+        "kind": "object",
+        "owner": "npc_bs_077_1",
+        "access": "consent",
+        "position": [
+          0,
+          1
+        ],
+        "state": {},
+        "thermalModel": {
+          "ambientC": 20,
+          "efficiencyPermille": 500,
+          "ashPermille": 100,
+          "ignitionMaximumMg": 5000,
+          "ignitable": true,
+          "dryable": true,
+          "fuels": [
+            {
+              "item": "item_s2_tinder",
+              "milligramsPerUnit": 4000
+            }
+          ],
+          "heatCapacityJPerC": 200,
+          "maximumC": 600,
+          "passiveExchangeJPerMinute": 100,
+          "burnMgPerMinute": 300,
+          "fuelJPerMg": 15
+        },
+        "thermalInitial": {
+          "temperatureC": 20,
+          "fuelMg": 3000,
+          "moistureMg": 0
+        },
+        "fireLine": {
+          "end": [
+            2,
+            1
+          ],
+          "exitTo": []
+        }
+      },
+      {
+        "id": "feature_s2_gate_road",
+        "name": "观门土路",
+        "aliases": [],
+        "kind": "road",
+        "owner": "loc_bs",
+        "access": "public",
+        "position": [
+          0,
+          2
+        ],
+        "state": {
+          "resistanceMinutes": 5
+        },
+        "links": {
+          "route": "route_bld_bs_reed_dao"
+        }
+      },
+      {
+        "id": "feature_s2_side_passage",
+        "name": "观门侧廊",
+        "aliases": [],
+        "kind": "passage",
+        "owner": "npc_bs_077_1",
+        "access": "consent",
+        "position": [
+          1,
+          1
+        ],
+        "state": {
+          "widthMeters": 1.2
+        }
+      },
+      {
+        "id": "feature_s2_water_jar",
+        "name": "观门水缸",
+        "aliases": [],
+        "kind": "container",
+        "owner": "npc_bs_077_1",
+        "access": "consent",
+        "position": [
+          1,
+          0.5
+        ],
+        "state": {
+          "capacityMl": 50000,
+          "waterMl": 30000,
+          "turbidity": 0,
+          "saltMg": 0,
+          "toxinUg": 0,
+          "pathogenRisk": 0,
+          "odor": "无明显气味"
+        }
+      },
+      {
+        "id": "feature_s2_ditch_bank",
+        "name": "观后渠埂",
+        "aliases": [],
+        "kind": "levee",
+        "owner": "npc_bs_077_1",
+        "access": "consent",
+        "position": [
+          2,
+          0
+        ],
+        "state": {
+          "earthGrams": 50000000,
+          "erosionGramsPerMinute": 20,
+          "erodedGrams": 0
+        },
+        "waterEarthProcess": "erosion",
+        "links": {
+          "silt": "feature_s2_bank_silt"
+        }
+      },
+      {
+        "id": "feature_s2_bank_silt",
+        "name": "渠埂下淤泥",
+        "aliases": [],
+        "kind": "silt_heap",
+        "owner": "npc_bs_077_1",
+        "access": "consent",
+        "position": [
+          2,
+          0.5
+        ],
+        "state": {
+          "siltGrams": 0
+        }
+      },
+      {
+        "id": "feature_s2_altar_ground",
+        "name": "观中设坛地",
+        "aliases": [],
+        "kind": "soil",
+        "owner": "npc_bs_077_1",
+        "access": "consent",
+        "position": [
+          0,
+          -1
+        ],
+        "state": {
+          "capacityMl": 100000,
+          "waterMl": 20000,
+          "turbidity": 0,
+          "saltMg": 0,
+          "toxinUg": 0,
+          "pathogenRisk": 0,
+          "odor": "无明显气味",
+          "baseMoisturePercent": 15,
+          "moisturePercent": 25,
+          "worked": false,
+          "texture": "loam",
+          "areaM2": 3,
+          "reliefCm": 6,
+          "soilVolumeLitres": 300,
+          "roots": [
+            "老槐根须"
+          ],
+          "pipes": []
+        }
+      },
+      {
+        "id": "feature_s2_cracked_vat",
+        "name": "后院裂缝水缸",
+        "aliases": [],
+        "kind": "seam",
+        "owner": "npc_bs_077_1",
+        "access": "consent",
+        "position": [
+          1,
+          -1
+        ],
+        "state": {
+          "capacityMl": 20000,
+          "waterMl": 15000,
+          "turbidity": 0,
+          "saltMg": 0,
+          "toxinUg": 0,
+          "pathogenRisk": 0,
+          "odor": "无明显气味",
+          "pressureKpa": 3,
+          "leakMlPerMinute": 5
+        },
+        "waterEarthProcess": "leak",
+        "links": {
+          "drain": "feature_s2_vat_basin"
+        }
+      },
+      {
+        "id": "feature_s2_vat_basin",
+        "name": "裂缝承水盆",
+        "aliases": [],
+        "kind": "container",
+        "owner": "npc_bs_077_1",
+        "access": "consent",
+        "position": [
+          1.5,
+          -1
+        ],
+        "state": {
+          "capacityMl": 20000,
+          "waterMl": 0,
+          "turbidity": 0,
+          "saltMg": 0,
+          "toxinUg": 0,
+          "pathogenRisk": 0,
+          "odor": "无明显气味"
+        }
+      },
+      {
+        "id": "feature_s2_clay_heap",
+        "name": "观后黏土堆",
+        "aliases": [],
+        "kind": "soil",
+        "owner": "npc_bs_077_1",
+        "access": "consent",
+        "position": [
+          2,
+          -1
+        ],
+        "state": {
+          "capacityMl": 100000,
+          "waterMl": 20000,
+          "turbidity": 0,
+          "saltMg": 0,
+          "toxinUg": 0,
+          "pathogenRisk": 0,
+          "odor": "无明显气味",
+          "baseMoisturePercent": 20,
+          "moisturePercent": 40,
+          "worked": false,
+          "texture": "clay",
+          "clayGrams": 100000
+        }
+      }
+    ]
   },
   {
     "id": "bld_bs_still_temple",
@@ -16413,7 +17143,165 @@
       }
     ],
     "inventory": {},
-    "description": "曲澄白日在公开练步廊授探步量距，练习者须留出行人通道。兵器实练仍需学习目录中相应技能。前廊每日8时至18时开放；每旬10、20、30日导师在家休息。基础师授每课12铜、120分钟，本处战斗职业认证须10级及基础100熟练度，成功付30铜；学馆的炼金师是生活职业，另按原目录一级、20铜办理。"
+    "description": "曲澄白日在公开练步廊授探步量距，练习者须留出行人通道。兵器实练仍需学习目录中相应技能。前廊每日8时至18时开放；每旬10、20、30日导师在家休息。基础师授每课12铜、120分钟，本处战斗职业认证须10级及基础100熟练度，成功付30铜；学馆的炼金师是生活职业，另按原目录一级、20铜办理。",
+    "features": [
+      {
+        "id": "feature_s2_practice_corridor",
+        "name": "练步长廊",
+        "aliases": [],
+        "kind": "room",
+        "owner": "npc_bs_079_1",
+        "access": "consent",
+        "position": [
+          0,
+          0
+        ],
+        "state": {},
+        "airModel": {
+          "hearingRadiusMeters": 2,
+          "capacityMg": 300000,
+          "ventilationMgPerMinute": 3000,
+          "vaporCapacityMg": 300000,
+          "windVector": [
+            1,
+            0
+          ],
+          "echoDelayMs": 30
+        },
+        "links": {
+          "exits": [
+            "feature_s2_outer_court"
+          ]
+        }
+      },
+      {
+        "id": "feature_s2_outer_court",
+        "name": "武馆外场",
+        "aliases": [],
+        "kind": "room",
+        "owner": "npc_bs_079_1",
+        "access": "consent",
+        "position": [
+          2,
+          0
+        ],
+        "state": {},
+        "airModel": {
+          "hearingRadiusMeters": 3,
+          "capacityMg": 1000000,
+          "ventilationMgPerMinute": 50000,
+          "vaporCapacityMg": 1000000,
+          "windVector": [
+            1,
+            1
+          ],
+          "echoDelayMs": 60
+        },
+        "links": {
+          "exits": []
+        }
+      },
+      {
+        "id": "feature_s2_rope_post",
+        "name": "缠索木桩",
+        "aliases": [],
+        "kind": "prop",
+        "owner": "npc_bs_079_1",
+        "access": "consent",
+        "position": [
+          1,
+          0
+        ],
+        "state": {
+          "massGrams": 1500,
+          "integrity": 100,
+          "material": "wood"
+        }
+      },
+      {
+        "id": "feature_s2_wash_trough",
+        "name": "洗手水槽",
+        "aliases": [],
+        "kind": "container",
+        "owner": "npc_bs_079_1",
+        "access": "consent",
+        "position": [
+          1,
+          1
+        ],
+        "state": {
+          "capacityMl": 40000,
+          "waterMl": 20000,
+          "turbidity": 0,
+          "saltMg": 0,
+          "toxinUg": 0,
+          "pathogenRisk": 0,
+          "odor": "无明显气味"
+        }
+      },
+      {
+        "id": "feature_s2_mud_pit",
+        "name": "外场湿泥坑",
+        "aliases": [],
+        "kind": "soil",
+        "owner": "npc_bs_079_1",
+        "access": "consent",
+        "position": [
+          2,
+          1
+        ],
+        "state": {
+          "capacityMl": 100000,
+          "waterMl": 60000,
+          "turbidity": 0,
+          "saltMg": 0,
+          "toxinUg": 0,
+          "pathogenRisk": 0,
+          "odor": "无明显气味",
+          "baseMoisturePercent": 20,
+          "moisturePercent": 70,
+          "worked": false,
+          "texture": "loam",
+          "compactionPercent": 30,
+          "areaM2": 3,
+          "radiusMeters": 1
+        }
+      },
+      {
+        "id": "feature_s2_trial_stone",
+        "name": "外场试劲石",
+        "aliases": [],
+        "kind": "rock",
+        "owner": "npc_bs_079_1",
+        "access": "consent",
+        "position": [
+          2,
+          -1
+        ],
+        "state": {
+          "integrity": 5000,
+          "crackMm": 2
+        },
+        "links": {
+          "structures": []
+        }
+      },
+      {
+        "id": "feature_s2_jump_platform",
+        "name": "练功高台",
+        "aliases": [],
+        "kind": "ledge",
+        "owner": "npc_bs_079_1",
+        "access": "consent",
+        "position": [
+          0,
+          1
+        ],
+        "state": {
+          "fallHeightMeters": 3
+        }
+      }
+    ]
   },
   {
     "id": "loc_wild_yp_north",

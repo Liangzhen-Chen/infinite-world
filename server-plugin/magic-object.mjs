@@ -341,8 +341,10 @@ function advanceHeatScenes(d,engine,after){
   const cursors=linked.map(f=>d.get('state','records',recordKey(f.id),'state','thermal','lastMinute')).filter(Number.isSafeInteger);
   const airCursors=effects.map(([,e])=>e).filter(e=>e.kind==='air'&&e.location===row.location).map(e=>e.lastMinute);
   const start=d.get('state','records',recordKey(row.id),'state','air','lastMinute')??(cursors.length?Math.min(...cursors):airCursors.length?Math.min(...airCursors):after);
-  return{row,state:roomState(d,row,start),objects:linked.map(f=>({row:f,state:rawFeatureState(d,f,start)}))};
- });
+  return{row,recorded:Boolean(d.get('state','records',recordKey(row.id))),state:roomState(d,row,start),objects:linked.map(f=>({row:f,state:rawFeatureState(d,f,start)}))};
+ // A registered room nobody has touched stays at its catalogue state; it is
+ // materialized only once a fire, air effect or spell actually involves it.
+ }).filter(x=>x.recorded||x.state.air.lastMinute<after);
  const hands=[{path:['state','player'],target:'player',actor:d.get('state','player')},...Object.entries(d.get('state','npcs')??{}).map(([target,actor])=>({target,actor,path:['state','npcs',target]}))]
   .filter(x=>x.actor?.handThermal).map(x=>({...x,hand:handState(x.actor,after)}));
  const starts=[...rooms.map(x=>x.state.air.lastMinute),...hands.map(x=>x.hand.lastMinute)];

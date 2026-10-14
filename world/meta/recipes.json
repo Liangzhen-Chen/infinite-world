@@ -9676,5 +9676,94 @@
       }
     ],
     "process": "将紧织麻帆布摊平，用短刃裁革剪逐段合剪成一方补片，剪口齐直；木炭小袋取炭入厚底煮锅小灶，炭屑不混入成品。松脂块置锅上低温软化，趁软以偏柄木匙背沿补片一面薄薄推开，只涂一面，脂层匀薄不见堆厚。涂毕摊开静置冷却，至指触不粘即收。全程一百分钟。只备材料，修补原物须另走实际工序；余料弃置，工具保留。"
+  },
+  {
+    "id": "recipe_s2_talisman",
+    "name": "画朱砂黄符",
+    "aliases": [],
+    "scope": null,
+    "skill": "skill_taoist_combat_01",
+    "minimumProficiency": 0,
+    "minutes": 40,
+    "difficulty": 10,
+    "materials": [
+      {
+        "item": "item_s2_yellow_paper",
+        "amount": 1
+      },
+      {
+        "item": "item_s2_cinnabar",
+        "amount": 1
+      }
+    ],
+    "tools": [
+      "item_ink_brush"
+    ],
+    "location": "bld_bs_reed_dao",
+    "output": {
+      "item": "item_s2_talisman",
+      "quantity": 4
+    },
+    "byproducts": [],
+    "learningRequired": true,
+    "learnFee": 12,
+    "learnMinutes": 60,
+    "teachers": [
+      "npc_bs_077_1"
+    ],
+    "toolWear": 1,
+    "failure": {
+      "recoverFraction": 0,
+      "injury": 0
+    },
+    "process": "在芦衡观符案上取一份黄表纸小帖和一份朱砂小包，用短毫画笔蘸朱砂调成的符墨，把这份小帖里的四张纸依次画成四张黄符；笔划断续或墨色不匀时整份作废，纸和朱砂都不退回。"
+  },
+  {
+    "id": "recipe_s2_pill",
+    "name": "烘制黄精茯苓蜜丸",
+    "aliases": [],
+    "scope": null,
+    "skill": "skill_life_8_core",
+    "minimumProficiency": 0,
+    "minutes": 40,
+    "difficulty": 15,
+    "materials": [
+      {
+        "item": "item_s2_huangjing",
+        "amount": 2
+      },
+      {
+        "item": "item_s2_fuling",
+        "amount": 2
+      },
+      {
+        "item": "item_s2_gancao",
+        "amount": 1
+      },
+      {
+        "item": "item_honey",
+        "amount": 1
+      }
+    ],
+    "tools": [],
+    "workstation": "pill_furnace",
+    "location": "bld_bs_school",
+    "output": {
+      "item": "item_s2_pill",
+      "quantity": 10
+    },
+    "byproducts": [],
+    "learningRequired": true,
+    "learnFee": 20,
+    "learnMinutes": 60,
+    "teachers": [
+      "npc_bs_078_1"
+    ],
+    "toolWear": 0,
+    "failure": {
+      "recoverFraction": 0,
+      "injury": 0
+    },
+    "process": "把制黄精片、茯苓块和甘草片研成细粉，与滤蜜调成药泥搓成十粒蜜丸，放在东街学馆丹炉上隔火烘40分钟；整段时间炉火须在燃烧，炉温保持在70至140摄氏度之间，炉壁温区不匀时一部分丹丸会焦裂。"
   }
 ]
