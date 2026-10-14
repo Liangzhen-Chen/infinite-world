@@ -7,7 +7,7 @@
 import {eventWeight} from './standing.mjs';
 import {recordCareerMetrics} from './career-metrics.mjs';
 export const WORLD_EVENT_VERSION=1;
-export const SOCIAL_VERBS=new Set(['harm','clash','steal','gift','help','trade','learn','organize','breach','author']);
+export const SOCIAL_VERBS=new Set(['harm','clash','steal','gift','help','trade','learn','organize','breach','author','deceive']);
 const awake=n=>n&&!['死亡','濒死','昏迷'].includes(n.status)&&!n.scheduleTravel&&!n.cognitionTravel&&!/(睡眠|熟睡|睡觉)/.test(n.activity??'');
 const resolve=(engine,value)=>{if(!value)return null;try{return engine.resolve(value);}catch{return null;}};
 
@@ -70,6 +70,9 @@ export function deriveWorldEvents(engine,before,after,{tool,args={},detail={},ev
     }else if(tool==='law'&&detail.worldEvent){
         // An exposed bribe: the taker breached the office; the briber's own case is filed separately.
         e={...detail.worldEvent,tags:[...detail.worldEvent.tags]};
+    }else if(detail.lieEvent){
+        // U8: an exposed lie. The liar deceived the target; private lies keep their tag.
+        e={...detail.lieEvent,tags:[...detail.lieEvent.tags],witnesses:[...detail.lieEvent.witnesses]};
     }else if(detail.workEvent){
         e={actor:'player',...detail.workEvent};
     }else if(detail.organizationEvent){
@@ -111,4 +114,10 @@ export function eventRumorId(engine,state,e){
 }
 export function eventRumorRecorded(state,rumor){
     return typeof rumor==='string'&&rumor.startsWith('rumor_event:')&&state.records?.[`world_event:${rumor.slice(12)}`]?.category==='world_event';
+}
+// U8: a recorded lie travels as a rumor under its own id while its ledger row exists.
+export const lieRumorId=id=>`rumor_${id}`;
+export function lieRumorRecorded(state,rumor){
+    if(typeof rumor!=='string'||!rumor.startsWith('rumor_lie:'))return false;
+    const lie=state.records?.[rumor.slice(6)];return lie?.category==='lie'&&!lie.private;
 }

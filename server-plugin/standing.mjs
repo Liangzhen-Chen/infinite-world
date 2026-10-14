@@ -95,6 +95,7 @@ export function eventWeight(e){
     if(e.verb==='steal'&&e.witnesses?.length)return -10;
     if(e.verb==='gift'&&e.value>0)return Math.min(15,3+Math.floor(e.value/10));
     if(e.verb==='help'&&e.value>0)return Math.min(10,2+Math.floor(e.value/5));
+    if(e.verb==='deceive'&&e.tags.includes('exposed'))return -8;
     if(e.verb==='breach')return -(5+Math.min(15,Math.floor((e.value??0)/10)));
     return 0;
 }

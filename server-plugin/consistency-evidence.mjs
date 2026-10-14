@@ -2,6 +2,7 @@ import {npcContext,npcBackground} from './npc-memory.mjs';
 import {npcCognitionView} from './npc-cognition.mjs';
 import {isOutOfCharacter} from '../extension/prompt.mjs';
 import {normalize} from './retrieval.mjs';
+import {lieKnowledge} from './lies.mjs';
 
 const pick=(row,keys)=>Object.fromEntries(keys.filter(key=>row[key]!==undefined).map(key=>[key,structuredClone(row[key])]));
 const resultOf=event=>event.result?.result??event.result??{};
@@ -89,6 +90,6 @@ export function reviewNpcKnowledge(engine,document,{before,receipts=[],events=[]
    const related=memories.filter(memory=>sources.has(memory.sourceEvent)||memory.id.endsWith(`:obligation_${contract.id}`));
    return {reference:contract.id,kind:contract.kind,party:contract.parties.includes(id),awareness:related.length?'recorded-memory':'no-recorded-channel',facts:pick(contract.row,['name','content','status','objective','reward','amount','deadline','subject','coins','item','quantity']),parties:contract.parties,memories:related.map(memory=>pick(memory,['id','sourceEvent','sourceType','heardFrom','minute','content','blurred','reliability','participants']))};
   });
-  return [[id,{scope:'reviewer-only',present:state.npcs[id].location===state.location&&!state.npcs[id].scheduleTravel&&!state.npcs[id].cognitionTravel,known:context.known,unknown:context.unknown,background:context.background,memories:memories.map(memory=>pick(memory,['id','sourceEvent','sourceType','heardFrom','minute','content','blurred','reliability','participants'])),contracts:contractKnowledge,recall:recallEvidence(state,id,events)}]];
+  return [[id,{scope:'reviewer-only',present:state.npcs[id].location===state.location&&!state.npcs[id].scheduleTravel&&!state.npcs[id].cognitionTravel,known:context.known,unknown:context.unknown,background:context.background,memories:memories.map(memory=>pick(memory,['id','sourceEvent','sourceType','heardFrom','minute','content','blurred','reliability','participants'])),contracts:contractKnowledge,recall:recallEvidence(state,id,events),...(lieKnowledge(state,id).length?{lies:lieKnowledge(state,id)}:{})}]];
  }));
 }

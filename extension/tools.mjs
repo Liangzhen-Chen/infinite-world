@@ -22,7 +22,7 @@ define('world_profession','认证/入门守戒/仪式资格/退职/升职',{prof
 define('world_attributes','依玩家选自由点',{attributes:object({'力量':int,'敏捷':int,'体质':int,'智力':int,'精神':int,'魅力':int})},['attributes']);
 define('world_relation','据实改双方关系',{npc:str,from:str,to:str,eventType:str,sourceEvent:str,romance:bool},['eventType','sourceEvent']);
 define('world_promise','承诺/取消；住户准用途签/撤入宅许可',{operation:{enum:['create','cancel','grant_access','revoke_access']},promisor:{...str,description:'承诺者/在场成年住户'},promisee:str,type:{...str,enum:['带路','送货','付款','等候','会面','协助'],description:'新建必填，交物用送货；私宅免填'},content:str,destination:str,location:{...str,description:'等候/会面/送货地点或获准私宅；不追收件人'},start:{...int,description:'起始分默认现在'},deadline:{...int,description:'到期绝对分'},minutes:{...int,description:'占用分；私宅1-1440'},authorization:str,guests:{type:'array',items:str,maxItems:8,description:'同行者须住户另准'},obligation:str,actor:str,item:str,quantity:int,coins:int,skill:str,attribute:str},[]);
-define('world_remember','有源事实/在场未核实传闻',{subject:str,key:str,content:str,source:str,rumor:str,keywords:{type:'array',items:str}},['subject','key','content']);
+define('world_remember','有源事实/在场传闻/谎言与揭穿',{subject:str,key:str,content:str,source:str,rumor:str,truth:str,motive:str,knowers:{type:'array',items:str},keywords:{type:'array',items:str}},['subject','key','content']);
 const sitePermitType=definitions.find(row=>row.function.name==='world_promise').function.parameters.properties.type;
 sitePermitType.enum.push('site_visit','site_disarm','site_gather');
 sitePermitType.description='新承诺必填；据点参观/机关/采集，私宅免填';
