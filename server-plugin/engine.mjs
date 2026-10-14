@@ -7,13 +7,12 @@ import {validateSites}from'./sites.mjs';
 import {WorldEngine as Phase1Engine}from'./compat/v2-phase1-engine.mjs';
 import {learn}from'./learning.mjs';
 import {prepareMagic,applyMagic}from'./magic.mjs';
-import {settleMagicAreas,nextMagicAreaMinute,prepareAreaMagic,applyAreaMagic,areaTargetFacts}from'./magic-area.mjs';
-import {advanceMagicObjects,assertFireTravel}from'./magic-object.mjs';
-import {advanceAirEffects,adjustAirTravel}from'./magic-air.mjs';
-import {advanceWaterEarth,assertWaterEarthMovement,waterEarthWalkMinutes}from'./magic-water-earth.mjs';
-import {advanceCare,strainCare}from'./magic-care.mjs';
-import {advanceMindSpace,assertMindAwake,assertMindSpacePath}from'./magic-mind-space.mjs';
-import {advanceShadowContracts}from'./contracts.mjs';
+import {settleMagicAreas,prepareAreaMagic,applyAreaMagic,areaTargetFacts}from'./magic-area.mjs';
+import {assertFireTravel}from'./magic-object.mjs';
+import {adjustAirTravel}from'./magic-air.mjs';
+import {assertWaterEarthMovement,waterEarthWalkMinutes}from'./magic-water-earth.mjs';
+import {strainCare}from'./magic-care.mjs';
+import {assertMindAwake,assertMindSpacePath}from'./magic-mind-space.mjs';
 import {assertLightMovement}from'./magic-light.mjs';
 import{targetFacts,statusContext}from'./magic-context.mjs';
 import {profession,effectiveProficiency,certifiedForSkill}from'./professions.mjs';
@@ -27,33 +26,31 @@ import {environmentCatalog}from'./environment.mjs';
 import {advancePets,petView,preparePetTravel,movePets}from'./pets.mjs';
 import {advanceSummons,summonView}from'./summons.mjs';
 import {enforceLegalRestriction,advanceLaw,lawView}from'./law.mjs';
-import {localWeather,weatherEdge,cropProduction}from'./weather.mjs';
+import {localWeather,weatherEdge}from'./weather.mjs';
 import {initializeAgriculture}from'./agriculture-migration.mjs';
-import {advanceAgriculture,agricultureView,settleAgricultureExpiry}from'./agriculture.mjs';
-import {advanceSettlementTrade,nextSettlementTradeMinute,regionalTradePrice}from'./settlement-trade.mjs';
-import {initializeWorldClocks,advanceWorldClocks,nextWorldClockMinute}from'./world-clock.mjs';
-import {initializeFactionClocks,advanceFactionClocks,nextFactionClockMinute,factionClockRules}from'./faction-clock.mjs';
-import {advanceFestivals,nextFestivalMinute,festivalCalendar,validateFestivalRuntime}from'./festival.mjs';
-import {advanceWildlife,wildlifePriceFactor,nextWildlifeEncounterMinute,wildlifeEncounterAt,settleWildlifeEncounter,wildlifeEncounterView}from'./wildlife.mjs';
+import {agricultureView,settleAgricultureExpiry}from'./agriculture.mjs';
+import {advanceSettlementTrade,regionalTradePrice}from'./settlement-trade.mjs';
+import {initializeWorldClocks}from'./world-clock.mjs';
+import {initializeFactionClocks,factionClockRules}from'./faction-clock.mjs';
+import {validateFestivalRuntime}from'./festival.mjs';
+import {wildlifePriceFactor,wildlifeEncounterAt,settleWildlifeEncounter,wildlifeEncounterView}from'./wildlife.mjs';
 import {wildlifeAwakeningConsumer}from'./wildlife-awakening.mjs';
 import {spiritSocietyConsumer,moveSpiritCompanions}from'./wildlife-society.mjs';
-import {advanceBosses}from'./bosses.mjs';
 import {sceneCard}from'./scene-card.mjs';
 import {stateNotices}from'./state-notices.mjs';
 import {assertNpcService}from'./npc-schedule.mjs';
-import {advanceNpcCognition,nextNpcCognitionMinute}from'./npc-cognition.mjs';
-import {advanceNpcAutonomy,nextNpcAutonomyMinute,npcAutonomyBusy,assertNpcAutonomyAction,applyNpcPlan}from'./npc-autonomy.mjs';
-import {advanceNpcLife,nextNpcLifeMinute}from'./npc-life.mjs';
+import {npcAutonomyBusy,assertNpcAutonomyAction,applyNpcPlan}from'./npc-autonomy.mjs';
 import {recordNpcMemories}from'./npc-memory.mjs';
 import {hearNpcRumor}from'./npc-rumors.mjs';
-import {createNpcObligation,advanceNpcObligations,assertNpcObligationAction,npcObligationAt,nextNpcObligationMinute}from'./npc-obligations.mjs';
+import {createNpcObligation,assertNpcObligationAction,npcObligationAt}from'./npc-obligations.mjs';
 import {recordNpcRelationEvidence,applyNpcRelation}from'./npc-relations.mjs';
-import {recordSocietyActs,advanceSocietyNews,assertSocietyTrade,societyNewsConsumer}from'./monster-society.mjs';
+import {recordSocietyActs,assertSocietyTrade,societyNewsConsumer}from'./monster-society.mjs';
 import {resolveToolCall}from'../extension/tools.mjs';
-import {chargeTrade,repayDebt,advanceContracts}from'./contracts.mjs';
+import {chargeTrade,repayDebt}from'./contracts.mjs';
 import {businessTrade,recordBusinessReceipt}from'./business.mjs';
 import {initializeR1,planR1,planPreR1Partitions}from'./migrations/r1.mjs';
 import {unfoldPopulationAt,acceptPopulationProfile}from'./population.mjs';
+import {advanceNeedsSteps,nextAdvanceMinute,runAdvance}from'./advance-registry.mjs';
 const clone = value => structuredClone(value);
 const number = (value, min = 0, max = 1e9, label = '数值') => {
     if (!Number.isSafeInteger(value) || value < min || value > max) throw new Error(`${label}必须在${min}到${max}之间`);
@@ -246,12 +243,12 @@ export class WorldEngine {
         initializeWorldClocks(d,this,d.get('state','minute'),end);
         initializeFactionClocks(d,this,d.get('state','minute'),end);
         advanceSettlementTrade(d,this,d.get('state','minute'));
-        if(nextWildlifeEncounterMinute(d,this,d.get('state','minute'))===Infinity&&!this.rules.settlementTrade&&!this.rules.worldClock&&!factionClockRules(this).length&&!festivalCalendar(this).length&&!this.world.npcs.some(n=>n.tier==='full')&&!Object.values(d.get('state','effects')??{}).some(e=>e.kind==='area'))return this.advanceInterval(d,minutes,id);
+        if(!advanceNeedsSteps(this,d,d.get('state','minute')))return this.advanceInterval(d,minutes,id);
         if(!minutes)return this.advanceInterval(d,0,id);
         const patchStart=d.patches.length,npcsBefore=d.get('state','npcs');
         while(d.get('state','minute')<end){
-            const now=d.get('state','minute'),state=d.get('state');
-            const next=Math.min(end,(Math.floor(now/1440)+1)*1440,nextWorldClockMinute(state,now),nextFactionClockMinute(state,now),nextFestivalMinute(state,this,now),nextSettlementTradeMinute(state,this,now),nextNpcCognitionMinute(state,now),nextNpcAutonomyMinute(state,now),nextNpcObligationMinute(state,now),nextNpcLifeMinute(state,now),nextMagicAreaMinute(state,now),nextWildlifeEncounterMinute(d,this,now));
+            const now=d.get('state','minute');
+            const next=nextAdvanceMinute(this,d,now,end);
             this.advanceInterval(d,next-now,id);
         }
         // Intermediate clock boundaries matter to simulation, not to replay.
@@ -264,63 +261,7 @@ export class WorldEngine {
     }
     advanceInterval(d,minutes,id){
         const beforeState=d.get('state'),before=beforeState.minute,after=before+minutes;d.set(['state','minute'],after);
-        advanceNpcObligations(d,this,before,after,id);
-        advanceContracts(d,this,after);
-        advanceSummons(d,after);
-        advanceLaw(d,after,this);
-        const days=Math.floor(after/1440)-Math.floor(before/1440);
-        for(let day=Math.floor(before/1440);day<Math.floor(after/1440);day++){
-          for(const [sid,source] of Object.entries(d.get('state','settlements'))) {
-            const farming=advanceAgriculture(d,this,sid,source,day),s=farming?.settlement??clone(source);
-            const production=farming?0:cropProduction(this,d.document.randomSeed,sid,day*1440,s.foodPerDay),available=s.food+production;
-            const missing=farming?.missingMeals??Math.max(0,s.population-available);
-            if(!farming)s.food=Math.max(0,available-s.population);s.unmetMeals=(s.unmetMeals??0)+missing;
-            s.starvation=missing ? (s.starvation??0)+1 : Math.max(0,(s.starvation??0)-1);
-            if(s.starvation>=7){s.population=Math.max(0,s.population-1);s.starvation=0;d.say(`${s.name}发生饥荒死亡`);}
-            s.wood+=farming?.woodProduced??s.woodPerDay;d.set(['state','settlements',sid],s);
-          }
-            advancePets(d,this,(day+1)*1440);
-            advanceWildlife(d,this,day);advanceBosses(d,this,day);
-        }
-        advancePets(d,this,after);
-        settleAgricultureExpiry(d,this);
-        advanceSettlementTrade(d,this,after);
-        if(days)for(const [key,project]of Object.entries(d.get('state','projects')))if(project.type==='工程'&&project.status==='施工中'){
-            const remainingDays=Math.max(0,project.remainingDays-days);d.set(['state','projects',key],{...project,remainingDays,status:remainingDays?'施工中':'已完成'});
-            if(!remainingDays&&project.creator==='player')milestone(d,this,'publicContribution',key,id);
-        }
-        if(this.world.npcs.some(n=>n.tier==='full')){
-            advanceNpcCognition(d,this,before,after,id,{beforeState});
-            advanceNpcAutonomy(d,this,before,after,id,{beforeState});
-            advanceNpcLife(d,this,before,after);
-        }
-        advanceWorldClocks(d,this,after);
-        advanceFactionClocks(d,this,after);
-        advanceSocietyNews(d,this,after);
-        advanceFestivals(d,this,after);
-        for(const[key,row]of Object.entries(d.get('state','records')??{}))if(key.startsWith('local_actor_position:')){
-            const actor=d.get('state',row.subject?.startsWith('npc_')?'npcs':'creatures',row.subject);
-            if(!actor||actor.location!==row.location||actor.scheduleTravel||actor.cognitionTravel||actor.status==='死亡'||row.expires<=after)d.remove(['state','records',key]);
-        }
-        advanceCare(d,this,before,after);
-        advanceMindSpace(d,this,before,after);
-        advanceShadowContracts(d,before,after);
-        advanceMagicObjects(d,this,after);
-        advanceAirEffects(d,this,before,after);
-        advanceWaterEarth(d,this,before,after);
-        settleMagicAreas(d,this);
-        for(const [key,effect] of Object.entries(d.get('state','effects'))) if(effect.expires<=after) d.remove(['state','effects',key]);
-        const p=d.get('state','player');
-        if(p.status==='濒死' && after-p.dyingSince>=this.rules.death.dyingMinutes) this.death(d);
-        for(const [key,obligation] of Object.entries(d.get('state','obligations'))) {
-            if((obligation.status==='待履行'||obligation.deliveryVersion===1&&obligation.status==='进行中') && obligation.deadline<=after && ['送货','付款'].includes(obligation.type)) {
-                try { this.deliver(d,key,obligation,id); } catch(error) {
-                    const courier=obligation.deliveryVersion===1;
-                    d.set(['state','obligations',key],{...obligation,status:'违约',reason:error.message,...(courier?{resolvedAt:after,breachedBy:[error.deliveryResponsibility??obligation.promisor]}:{})});
-                }
-            }
-        }
-        if(after===nextWildlifeEncounterMinute(d,this,before))settleWildlifeEncounter(d,this,wildlifeEncounterAt(d,this,d.get('state','location'),after),id);
+        runAdvance(this,d,{before,after,id,beforeState,days:Math.floor(after/1440)-Math.floor(before/1440)});
     }
     time(d,args,id) {
         if(d.get('state','player','status')==='死亡')this.revive(d,{},id);
