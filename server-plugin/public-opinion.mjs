@@ -1,6 +1,5 @@
-import {digest} from './storage.mjs';
-import {relationView} from './npc-relations.mjs';
-import {societyOfActor,stanceOf} from './monster-society.mjs';
+import {societyOfActor} from './monster-society.mjs';
+import {standing,HOSTILE} from './standing.mjs';
 import {settlementAt} from './reputation.mjs';
 
 // Public opinion is a projection, never a stored score. A person counts only
@@ -56,23 +55,23 @@ export function knownTopics(engine,document,id){
     return topics;
 }
 
-// Existing ties only: self, own settlement, relation ledger and settlement stance.
+// Existing ties only: self, own settlement, and the unified standing read
+// (relation ledger, settlement stance and what reached each through members).
 function tie(engine,state,who,other){
     if(!other)return null;
     if(who===other)return 'self';
     const own=societyOfActor(engine,who);
     if(seatOf(engine,other)){
         if(own===other)return 'kin';
-        return own&&stanceOf(state,engine,own,other)==='敌对'?'enemy':null;
+        return own&&standing(engine,state,own,other)<=HOSTILE?'enemy':null;
     }
     const theirs=other==='player'?null:societyOfActor(engine,other);
     if(own&&theirs&&own===theirs)return 'kin';
-    if(own&&stanceOf(state,engine,own,theirs??other)==='敌对')return 'enemy';
-    const relation=relationView(engine,state,who,other);
-    return relation.trust>=20?'friend':relation.trust<0?'enemy':null;
+    if(own&&standing(engine,state,own,theirs??other)<=HOSTILE)return 'enemy';
+    const regard=standing(engine,state,who,other);
+    return regard>=20?'friend':regard<0?'enemy':null;
 }
-const reputationOf=(state,subject,scope,target)=>state.records?.[`reputation:${digest([subject,scope,target]).slice(0,24)}`]?.reputation??0;
-
+const reputationOf=(engine,state,subject,scope)=>standing(engine,state,scope,subject);
 export function opinionOf(engine,state,who,topic){
     if(topic.act==='cleared')return {stance:'neutral',basis:'已获知原裁判撤销'};
     const sign=topic.act==='aid'?1:-1,pick=(n,basis)=>({stance:n>0?'support':'oppose',basis});
@@ -84,11 +83,11 @@ export function opinionOf(engine,state,who,topic){
     if(actor==='enemy')return pick(-1,'与行事者敌对');
     for(const faction of engine.rules.reputation?.factions??[]){
         if(!(faction.members??[]).includes(who))continue;
-        const value=reputationOf(state,topic.actor,'faction',faction.id);
+        const value=reputationOf(engine,state,topic.actor,faction.id);
         if(value)return pick(value,`所属${engine.byId.get(faction.id)?.name??faction.id}对行事者的声望`);
     }
     const local=settlementAt(engine,state.npcs[who]?.location);
-    const value=local?reputationOf(state,topic.actor,'settlement',local):0;
+    const value=local?reputationOf(engine,state,topic.actor,local):0;
     if(value)return pick(value,`${engine.byId.get(local)?.name??local}对行事者的口碑`);
     return {stance:'neutral',basis:'与双方无利害'};
 }

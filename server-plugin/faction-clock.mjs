@@ -1,3 +1,4 @@
+import {standingLedger} from './standing.mjs';
 import {clockRoll,assertClockEffect,applyClockEffect,clockTransaction} from './world-clock.mjs';
 
 const DAY=1440,accountPath=id=>['state','records',`faction-assets:${id}`],clockPath=id=>['state','records',`faction-clock:${id}`];
@@ -101,7 +102,7 @@ function condition(d,rule,clock,assets){
  switch(c.kind){
  case 'always':return true;
  case 'asset':return affordable(assets,c.minimum);
- case 'relation':return (assets.relations[c.target]??0)>=c.minimum;
+ case 'relation':return (assets.relations[c.target]??0)+(standingLedger(d.get('state'),rule.faction,c.target)?.value??0)>=c.minimum;
  case 'dispute':return assets.disputes[`${c.target}:${c.id}`]?.status===c.status;
  case 'record':return d.get('state','records',c.id,c.field)===c.equals;
  case 'intervention':return clock.interventions.some(e=>e.choice===c.id&&e.success);

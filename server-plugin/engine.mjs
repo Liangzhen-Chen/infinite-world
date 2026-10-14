@@ -53,6 +53,7 @@ import {resolveToolCall}from'../extension/tools.mjs';
 import {deriveWorldEvents,publishWorldEvents,WORLD_EVENT_VERSION}from'./world-events.mjs';
 import {recordSpiritGrudges}from'./wildlife-society.mjs';
 import {recordBossEvents}from'./boss-cognition.mjs';
+import {transmitStanding}from'./standing.mjs';
 // Social subscribers, in settlement order; each reads the event verb and tags.
 const worldEventSubscribers=[
     (d,e,events)=>recordSocietyActs(d,e,events),
@@ -60,6 +61,7 @@ const worldEventSubscribers=[
     (d,e,events,c)=>recordNpcMemories(d,e,c.before,events,c),
     (d,e,events)=>recordSpiritGrudges(d,e,events),
     (d,e,events)=>recordBossEvents(d,e,events),
+    (d,e,events)=>transmitStanding(d,e,events),
 ];
 import {chargeTrade,repayDebt,advanceContracts}from'./contracts.mjs';
 import {businessTrade,recordBusinessReceipt}from'./business.mjs';

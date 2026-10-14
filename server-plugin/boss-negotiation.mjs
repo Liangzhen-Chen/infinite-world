@@ -1,3 +1,4 @@
+import {standing} from './standing.mjs';
 import {transferItems}from'./items.mjs';
 import {readBossCognition}from'./boss-cognition.mjs';
 import {societyAgreement}from'./monster-society.mjs';
@@ -102,7 +103,7 @@ export function negotiateBoss(d,engine,boss,residence,args,eventId){
     let reason;
     if(goal==='defend_territory'&&t.pact!=='respect_territory')reason='目标是守住领地，条件必须承诺尊重领地边界';
     else if(goal==='defend_territory'&&threats.some(e=>territory.includes(e.location)))reason='记得你在领地内发起交锋，拒绝交换物资或结盟';
-    else if(goal==='avoid_conflict'&&t.alliance&&threats.length)reason='目标是避免冲突，曾发起进攻的来者只能议定互不攻击';
+    else if(goal==='avoid_conflict'&&t.alliance&&(threats.length||standing(engine,d.get('state'),target)<0))reason='目标是避免冲突，曾发起进攻的来者只能议定互不攻击';
     else if(!['defend_territory','avoid_conflict'].includes(goal))throw new Error('首领认知目标无效');
     const accepts=new Set(boss.negotiation?.accepts??[]);
     const bag=Object.create(engine);

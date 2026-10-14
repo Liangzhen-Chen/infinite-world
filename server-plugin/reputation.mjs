@@ -1,4 +1,5 @@
 import {digest} from './storage.mjs';
+import {standing} from './standing.mjs';
 
 const path=id=>['state','records',id];
 const key=(...parts)=>digest(parts).slice(0,24);
@@ -24,8 +25,8 @@ export function observeLegalReputation(d,engine,npc,memory,location=memory.locat
     if(local)scopes.push({scope:'settlement',id:local,sign:1,source:rules.source});
     for(const faction of rules.factions??[]) {
         if(!(faction.members??[]).includes(npc)||!engine.byId.has(faction.id))continue;
-        const relation=faction.relations?.find(r=>r.faction===row.faction);
-        scopes.push({scope:'faction',id:faction.id,sign:(relation?.score??0)<0?-1:1,source:faction.source});
+        // The member's faction judges a case by how it now regards the case's faction.
+        scopes.push({scope:'faction',id:faction.id,sign:row.faction&&standing(engine,d.get('state'),faction.id,row.faction)<0?-1:1,source:faction.source});
     }
     for(const scope of scopes) {
         const id=`reputation:${key(row.offender,scope.scope,scope.id)}`;
