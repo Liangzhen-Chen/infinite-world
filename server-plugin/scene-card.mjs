@@ -15,6 +15,7 @@ import {siteView}from'./sites.mjs';
 import {selectNpcRumors,assertRumorConversation}from'./npc-rumors.mjs';
 import {localOpinion,opinionPlace,STANCE_LABEL}from'./public-opinion.mjs';
 import {wildlifeEncounterView}from'./wildlife.mjs';
+import {spiritScene}from'./wildlife-society.mjs';
 import {npcLifeLines,npcAgeAt}from'./npc-life.mjs';
 
 const text=(value,limit=200)=>typeof value==='string'?value.replace(/\s+/g,' ').slice(0,limit):'';
@@ -85,6 +86,7 @@ export function sceneCard(engine,document,query='',index=null){
     const features=environmentCatalog(engine,document).entries;
     if(features.length)parts.push(`【可见环境】${features.slice(0,3).map(row=>`${row.name??name(row.id)}（${row.id}）${row.waterMl!==undefined?`，现有水${row.waterMl}毫升`:''}`).join('；')}`);
     const animals=petView(engine,document).presentAnimals;
+    const spirits=spiritScene(engine,document);if(spirits)parts.push(spirits);
     if(animals.length)parts.push(`【在场动物】${animals.slice(0,3).map(row=>`${row.name??row.id}（${row.id}）`).join('；')}`);
     const encounters=wildlifeEncounterView(document);
     if(encounters.length)parts.push(`【野外接触】${encounters.map(row=>`${row.name}（${row.target??row.species}）｜${text(row.description,120)}｜${engine.calendar(row.minute).text}，来源${row.source}`).join('；')}。可沿路离开避开；踪迹可用world_wildlife追踪，在场个体可用实际编号接触。`);

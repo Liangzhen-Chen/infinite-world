@@ -1,5 +1,6 @@
 import {createHash} from 'node:crypto';
 import {assertTrainingRitual} from './training.mjs';
+import {spiritOperations,spiritAction,advanceSpiritSocieties,validateSpiritRules,activeForm} from './wildlife-society.mjs';
 
 // 灵智（听息、立意）与九阶战力分开：只写 actor.mind，不改等级、体力或模板。
 // 年岁按需计算，不为每只野兽每日写账；灵地、随人经历、灵物、点化和时钟各自记来源。
@@ -24,7 +25,8 @@ export function awakeningView(engine,seed,id,actor,minute){
     if(!engine.rules.wildlifeAwakening||!awakeningEligible(engine,actor))return undefined;
     const stage=sapient(actor)?stageRule(engine,'liyi'):awakeningTotal(engine,seed,id,actor,Math.floor(minute/DAY))>=stageRule(engine,'tingxi').points?stageRule(engine,'tingxi'):null;
     if(!stage)return undefined;
-    return{stage:stage.name,sign:stage.sign,communicable:stage.id==='liyi',...(actor.companion?{companion:clone(actor.companion)}:{})};
+    const form=activeForm(actor,minute);
+    return{stage:stage.name,sign:stage.sign,communicable:stage.id==='liyi',...(actor.companion?{companion:clone(actor.companion)}:{}),...(form?{form:form.name}:{}),...(actor.society?{society:actor.society.location}:{})};
 }
 function blankMind(day){return{version:1,firstDay:day,points:{experience:0,place:0,item:0,mentor:0,clock:0},placeDays:{},sources:[]};}
 // 立意保留原身体、伤势、生态来源和遭遇记录；旧宠物归属结束，改为有边界的同意关系，不转为任何人的财产。
@@ -61,6 +63,7 @@ export function advanceWildlifeAwakening(d,engine,day){
         if(changed)d.set(['state','creatures',id,'mind'],mind);
         settle(d,engine,id,'natural',minute,`wildlife-awakening:${id}:${day}`);
     }
+    advanceSpiritSocieties(d,engine,day);
 }
 function addSource(d,id,day,kind,points,row){
     const actor=d.get('state','creatures',id),mind=clone(actor.mind??blankMind(day));
@@ -78,6 +81,7 @@ export function validateWildlifeAwakening(world){
     if(!['thresholdDays','initialMaxDays','daysPerPoint','maximumPoints'].every(k=>int(r.age?.[k],1))||r.age.maximumPoints+r.experience.maximumPoints>=l?.points)errors.push('年岁与经历参数无效，或不靠灵气即可立意');
     for(const s of r.spiritLands??[])if(!ids.has(s.location)||!int(s.pointsPerDay,1))errors.push(`灵地无效：${s.location}`);
     for(const s of r.spiritItems??[])if(!items.has(s.item)||!int(s.points,1))errors.push(`灵物无效：${s.item}`);
+    errors.push(...validateSpiritRules(world));
     if(!int(r.mentor?.points,1)||!int(r.mentor?.minutes,1)||!int(r.clockPoints,1)||!int(r.nurtureMinutes,1)||!int(r.pactMinutes,1)||!r.pactTerms?.length)errors.push('点化、时钟或结缘参数无效');
     return errors;
 }
@@ -98,9 +102,11 @@ export const wildlifeAwakeningConsumer=Object.freeze({
         return{applied:true,target:id,points,stage:awakened?'立意':awakeningView(engine,d.document.randomSeed,id,d.get('state','creatures',id),minute)?.stage??null};
     },
 });
-// world_wildlife 的 nurture / enlighten / pact。观察只读，不在此处。
+// world_wildlife 的 nurture / enlighten / pact；立意后的交谈、跟随、结社与借形在 wildlife-society。观察只读，不在此处。
+export const awakeningOperations=['nurture','enlighten','pact',...spiritOperations];
 export function awakeningAction(d,args,eventId,target){
     const rules=this.rules.wildlifeAwakening;if(!rules)throw Error('当前世界未启用开灵规则');
+    if(spiritOperations.includes(args.operation))return spiritAction.call(this,d,args,eventId,target);
     const op=args.operation,actor=d.get('state','creatures',target),start=d.get('state','minute'),day=Math.floor(start/DAY);
     if(!awakeningEligible(this,actor))throw Error('需要存活的普通野兽个体');
     if(actor.location!==d.get('state','location'))throw Error('动物不在场');
@@ -118,7 +124,7 @@ export function awakeningAction(d,args,eventId,target){
         d.set(['state','creatures',target,'companion'],companion);
         return{success:true,target,companion,note:'双方同意的有边界关系，不是宠物或财产'};
     }
-    if(sapient(actor))throw Error('已经立意；之后的修习与借形尚未开放');
+    if(sapient(actor))throw Error('已经立意；修习改用world_learn的student传授，借形用borrow_form');
     if(op==='nurture'){
         const item=args.item?this.resolve(args.item,'item'):null,spec=rules.spiritItems.find(r=>r.item===item);
         if(!spec)throw Error('这不是登记的灵物');
