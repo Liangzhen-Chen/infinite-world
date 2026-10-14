@@ -50,6 +50,7 @@ import {deriveWorldEvents,publishWorldEvents,WORLD_EVENT_VERSION}from'./world-ev
 import {recordSpiritGrudges}from'./wildlife-society.mjs';
 import {recordBossEvents}from'./boss-cognition.mjs';
 import {transmitStanding}from'./standing.mjs';
+import {recordIntelligenceEvents,INTELLIGENCE_VERSION}from'./npc-intelligence.mjs';
 // Social subscribers, in settlement order; each reads the event verb and tags.
 const worldEventSubscribers=[
     (d,e,events)=>recordSocietyActs(d,e,events),
@@ -58,6 +59,7 @@ const worldEventSubscribers=[
     (d,e,events)=>recordSpiritGrudges(d,e,events),
     (d,e,events)=>recordBossEvents(d,e,events),
     (d,e,events)=>transmitStanding(d,e,events),
+    (d,e,events,c)=>recordIntelligenceEvents(d,e,events,c),
 ];
 import {chargeTrade,repayDebt}from'./contracts.mjs';
 import {businessTrade,recordBusinessReceipt}from'./business.mjs';
@@ -150,9 +152,10 @@ export class WorldEngine {
         if(input.type==='npc_plan'){
             if(document.releaseVersion!==1)throw new Error('人物计划需要完成战役初始化');
             const d=new Draft(document),session=this.scoped(document),id=text(input.eventId,120);
+            session.replaying=Boolean(options.replay);session.replayResult=options.result;
             const detail=applyNpcPlan(d,session,input.plan,id);
             d.set(['state','npcPlanning'],{day:Math.floor(document.state.minute/1440),minute:document.state.minute,location:document.state.location,sourceEvent:id});
-            return{patches:d.patches,result:{ok:true,...detail,minute:d.get('state','minute'),notices:stateNotices(document.state,d.get('state'),key=>session.byId.get(key)?.name)}};
+            return{patches:d.patches,result:{ok:true,...detail,npcIntelligenceVersion:INTELLIGENCE_VERSION,minute:d.get('state','minute'),notices:stateNotices(document.state,d.get('state'),key=>session.byId.get(key)?.name)}};
         }
         const resolved=resolveToolCall(input.tool,input.args??{});
         const d = new Draft(document), args=resolved.args, id=text(input.eventId,120);
@@ -193,7 +196,7 @@ export class WorldEngine {
         recordBusinessReceipt(d,document.state,{tool:resolved.tool,args,eventId:id,detail});
         if(tool==='check')detail.actionScope={kind:'judgement',healthChanged:false,inventoryChanged:false,feePaid:0,
             note:'仅结算判断或对抗，并履行已引用的协助；未伤人、毁物或制造。不得从骰点虚构这些变化。'};
-        return { patches:d.patches,result:{ok:true,...detail,...(population?{population}:{}),legalProcedureVersion:1,worldEventVersion:WORLD_EVENT_VERSION,...(factionClockRules(session).length?{factionClockVersion:1}:{}),minute:d.get('state','minute'),messages:d.messages,
+        return { patches:d.patches,result:{ok:true,...detail,...(population?{population}:{}),legalProcedureVersion:1,worldEventVersion:WORLD_EVENT_VERSION,npcIntelligenceVersion:INTELLIGENCE_VERSION,...(factionClockRules(session).length?{factionClockVersion:1}:{}),minute:d.get('state','minute'),messages:d.messages,
             notices:stateNotices(document.state,d.document.state,id=>session.byId.get(id)?.name)} };
     }
     scoped(document){

@@ -14,6 +14,7 @@ import {npcSchedule} from './npc-state.mjs';
 import {validateNpcSchedules,scheduleAt} from './npc-schedule.mjs';
 import {rosterLifeState,lifeRoutine} from './population.mjs';
 import {initialNpcState} from './npc-state.mjs';
+import {advanceNpcNeeds} from './npc-intelligence.mjs';
 
 const DAY=1440,YEAR=360*DAY,unable=['死亡','濒死'];
 const rules=engine=>engine.rules.npcLife;
@@ -719,6 +720,8 @@ export function advanceNpcLife(d,engine,before,after){
  for(let day=Math.floor(before/DAY)+1;day*DAY<=after;day++){
   migrationsDue(d,engine,before,day*DAY);before=day*DAY;
   healthDay(d,engine,day*DAY);coworkDay(d,engine,day*DAY);familyDay(d,engine,day*DAY);migrationDay(d,engine,day*DAY);
+  // 饥饿之外的需求（钱、安全、地位）按灵智生成或了结目标。
+  advanceNpcNeeds(d,engine,day*DAY);
  }
  migrationsDue(d,engine,before,after);
 }
