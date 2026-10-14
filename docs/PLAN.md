@@ -631,7 +631,12 @@ C部分只拆缺口：governance.mjs的任职入口止于“待上级决定”�
 
 ### T129（C7）已完成：玩家教学（world_learn加student）和NPC日常工作带来有上限、有时间成本的技能增长；人物计划层可发起换营生，作息与服务随之改变，登记机构的导师不自行改行；先登记4个营生模板（磨坊木作、青灯帮厨、学馆助教、武馆陪练）。npc-growth 8/8、CORE40、发布构建ok，提示约11300，0模型。遗留：换营生后场景显示的公开职务仍读原目录。
 
-### T130（C8） 成年家庭关系与出生。结果：长期关系可在双方条件满足时发展为婚姻，出生进入真实家户与人口状态，并通过当地渠道被知晓。可改新server-plugin/npc-life.mjs、npc-relations/npc-state/engine接点、world/meta/rules.json、docs/决策.md参数段、tests/npc-life-family.test.mjs；锁定旧人物静态经历，禁止未成年恋爱。验收node --test "tests/npc-*.test.mjs" ，CORE。模型0；约2.5小时，接C7，与C9/C10同文件串行。
+### T130（C8）已完成：两个成年NPC的长期关系在双方条件满足时可成婚（未成年人一律不进入），出生的孩子与新增家户成员记入state.family，消息按正常渠道传播；参数在world/meta/rules.json的npcLife，依据在docs/决策.md。新增7项、CORE40、发布构建ok，0模型。遗留（写入T164）：84对正式夫妻里81对的配偶是名册人物，暂不能生育；交往要求信任与好感都≥50，而现有关系最高好感45、提高好感的事件很少，正常游玩中成婚会很少见；场景与人物提示里看不到婚姻与子女；孩子不进入state.npcs。
+
+### T164 让人生变化在游戏里看得见、发生得了【零模型；待T131/T132合入后派】
+
+结果：玩家在场景和人物面板里能看到NPC的婚姻、子女、病痛、搬迁；日常的善意往来（帮忙、送礼、共同干活、节日同席）能实际提高好感，使成婚在正常游玩中可能发生；名册人物配偶在需要时经按需人口生成补足为有状态的人物；孩子进入人口与作息（不进入恋爱与亲密情节）。
+可改：server-plugin/{npc-life,npc-relations,scene-card,npc-memory,population,npc-state}.mjs及extension/people-history.mjs的展示接点、对应测试。验收：`node --test "tests/npc-*.test.mjs" "tests/population*.test.mjs" tests/public-opinion.test.mjs tests/m6-04.test.mjs`、CORE、发布构建。模型0。
 
 ### T131（C9） 生病、衰老与自然死亡。结果：NPC按年龄、健康和种子概率发生人生变化，服务及义务按真实失能状态处理。可改npc-life.mjs、npc-state/npc-obligations/engine接点、world/meta/rules.json、docs/决策.md参数段、tests/npc-life-health.test.mjs；接C8，复用已有死亡结算，不重置旧伤病。验收node --test "tests/npc-*.test.mjs" tests/activities.test.mjs，CORE；跨年长短步、照护和死亡后履约均覆盖。模型0；约2小时，与C10串行。
 
