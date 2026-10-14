@@ -9053,7 +9053,10 @@
       "item_book_s1_movement": 2,
       "item_book_s1_message": 2,
       "item_book_s1_utility": 2,
-      "item_book_s1_growth": 2
+      "item_book_s1_growth": 2,
+      "item_book_s2_air": 2,
+      "item_book_s2_stone": 2,
+      "item_book_s2_farm": 2
     },
     "skills": [],
     "services": [
@@ -136365,20 +136368,42 @@
     "coins": 21,
     "inventory": {
       "item_wood": 1,
-      "item_bs_dao_primer": 2
+      "item_bs_dao_primer": 2,
+      "item_s2_yellow_paper": 6,
+      "item_s2_cinnabar": 3,
+      "item_s2_talisman": 4,
+      "item_s2_tinder": 4,
+      "item_ink_brush": 1
     },
     "skills": [
       "skill_taoist_combat_01",
       "skill_mind_01",
       "skill_s1_marked_letter",
-      "skill_mind_05"
+      "skill_mind_05",
+      "skill_s2_fire_seal",
+      "skill_s2_fire_line",
+      "skill_s2_hush",
+      "skill_s2_wind_block",
+      "skill_s2_water_veil",
+      "skill_s2_bank_hold",
+      "skill_s2_altar_level",
+      "skill_s2_seam_seal"
     ],
     "services": [
       "profession_taoist",
       "skill_taoist_combat_01",
       "spell_mind_01",
       "spell_s1_marked_letter",
-      "spell_mind_05"
+      "spell_mind_05",
+      "spell_s2_fire_seal",
+      "spell_s2_fire_line",
+      "spell_s2_hush",
+      "spell_s2_wind_block",
+      "spell_s2_water_veil",
+      "spell_s2_bank_hold",
+      "spell_s2_altar_level",
+      "spell_s2_seam_seal",
+      "recipe_s2_talisman"
     ],
     "intelligence": {
       "level": 2,
@@ -136424,7 +136449,15 @@
       "skill_taoist_combat_01": 600,
       "skill_mind_01": 600,
       "skill_s1_marked_letter": 600,
-      "skill_mind_05": 600
+      "skill_mind_05": 600,
+      "skill_s2_fire_seal": 600,
+      "skill_s2_fire_line": 600,
+      "skill_s2_hush": 600,
+      "skill_s2_wind_block": 600,
+      "skill_s2_water_veil": 600,
+      "skill_s2_bank_hold": 600,
+      "skill_s2_altar_level": 600,
+      "skill_s2_seam_seal": 600
     },
     "professions": [
       "profession_taoist"
@@ -136842,6 +136875,87 @@
         "price": {
           "mode": "catalog",
           "source": "spell_mind_05"
+        },
+        "unlocksService": false
+      },
+      {
+        "kind": "teach",
+        "what": "spell_s2_fire_seal",
+        "price": {
+          "mode": "catalog",
+          "source": "spell_s2_fire_seal"
+        },
+        "unlocksService": false
+      },
+      {
+        "kind": "teach",
+        "what": "spell_s2_fire_line",
+        "price": {
+          "mode": "catalog",
+          "source": "spell_s2_fire_line"
+        },
+        "unlocksService": false
+      },
+      {
+        "kind": "teach",
+        "what": "spell_s2_hush",
+        "price": {
+          "mode": "catalog",
+          "source": "spell_s2_hush"
+        },
+        "unlocksService": false
+      },
+      {
+        "kind": "teach",
+        "what": "spell_s2_wind_block",
+        "price": {
+          "mode": "catalog",
+          "source": "spell_s2_wind_block"
+        },
+        "unlocksService": false
+      },
+      {
+        "kind": "teach",
+        "what": "spell_s2_water_veil",
+        "price": {
+          "mode": "catalog",
+          "source": "spell_s2_water_veil"
+        },
+        "unlocksService": false
+      },
+      {
+        "kind": "teach",
+        "what": "spell_s2_bank_hold",
+        "price": {
+          "mode": "catalog",
+          "source": "spell_s2_bank_hold"
+        },
+        "unlocksService": false
+      },
+      {
+        "kind": "teach",
+        "what": "spell_s2_altar_level",
+        "price": {
+          "mode": "catalog",
+          "source": "spell_s2_altar_level"
+        },
+        "unlocksService": false
+      },
+      {
+        "kind": "teach",
+        "what": "spell_s2_seam_seal",
+        "price": {
+          "mode": "catalog",
+          "source": "spell_s2_seam_seal"
+        },
+        "unlocksService": false
+      },
+      {
+        "kind": "teach",
+        "what": "recipe_s2_talisman",
+        "price": {
+          "mode": "catalog",
+          "source": "recipe_s2_talisman"
         },
         "unlocksService": false
       }
@@ -137891,14 +138005,33 @@
     "affection": 0,
     "coins": 24,
     "inventory": {
-      "item_flax_cord": 1
+      "item_flax_cord": 1,
+      "item_s2_huangjing": 6,
+      "item_s2_fuling": 6,
+      "item_s2_gancao": 4,
+      "item_honey": 3,
+      "item_s2_tinder": 6,
+      "item_charcoal": 6
     },
     "skills": [
-      "skill_life_8_core"
+      "skill_life_8_core",
+      "skill_s2_even_fire",
+      "skill_s2_bellows_fire",
+      "skill_s2_slow_fire",
+      "skill_s2_wall_trace",
+      "skill_s2_smoke_vent",
+      "skill_s1_tinder"
     ],
     "services": [
       "profession_life_8",
-      "skill_life_8_core"
+      "skill_life_8_core",
+      "spell_s2_even_fire",
+      "spell_s2_bellows_fire",
+      "spell_s2_slow_fire",
+      "spell_s2_wall_trace",
+      "spell_s2_smoke_vent",
+      "spell_s1_tinder",
+      "recipe_s2_pill"
     ],
     "intelligence": {
       "level": 2,
@@ -137941,7 +138074,13 @@
       ]
     },
     "proficiencies": {
-      "skill_life_8_core": 600
+      "skill_life_8_core": 600,
+      "skill_s2_even_fire": 600,
+      "skill_s2_bellows_fire": 600,
+      "skill_s2_slow_fire": 600,
+      "skill_s2_wall_trace": 600,
+      "skill_s2_smoke_vent": 600,
+      "skill_s1_tinder": 600
     },
     "professions": [
       "profession_life_8"
@@ -138332,6 +138471,69 @@
         "price": {
           "mode": "catalog",
           "source": "skill_life_8_core"
+        },
+        "unlocksService": false
+      },
+      {
+        "kind": "teach",
+        "what": "spell_s2_even_fire",
+        "price": {
+          "mode": "catalog",
+          "source": "spell_s2_even_fire"
+        },
+        "unlocksService": false
+      },
+      {
+        "kind": "teach",
+        "what": "spell_s2_bellows_fire",
+        "price": {
+          "mode": "catalog",
+          "source": "spell_s2_bellows_fire"
+        },
+        "unlocksService": false
+      },
+      {
+        "kind": "teach",
+        "what": "spell_s2_slow_fire",
+        "price": {
+          "mode": "catalog",
+          "source": "spell_s2_slow_fire"
+        },
+        "unlocksService": false
+      },
+      {
+        "kind": "teach",
+        "what": "spell_s2_wall_trace",
+        "price": {
+          "mode": "catalog",
+          "source": "spell_s2_wall_trace"
+        },
+        "unlocksService": false
+      },
+      {
+        "kind": "teach",
+        "what": "spell_s2_smoke_vent",
+        "price": {
+          "mode": "catalog",
+          "source": "spell_s2_smoke_vent"
+        },
+        "unlocksService": false
+      },
+      {
+        "kind": "teach",
+        "what": "spell_s1_tinder",
+        "price": {
+          "mode": "catalog",
+          "source": "spell_s1_tinder"
+        },
+        "unlocksService": false
+      },
+      {
+        "kind": "teach",
+        "what": "recipe_s2_pill",
+        "price": {
+          "mode": "catalog",
+          "source": "recipe_s2_pill"
         },
         "unlocksService": false
       }
@@ -139348,14 +139550,31 @@
     "coins": 18,
     "inventory": {
       "item_wood": 1,
-      "item_bs_martial_primer": 2
+      "item_bs_martial_primer": 2,
+      "item_s2_talc": 10
     },
     "skills": [
-      "skill_swordsman_combat_01"
+      "skill_swordsman_combat_01",
+      "skill_s2_arrow_turn",
+      "skill_s2_light_drop",
+      "skill_s2_held_breath",
+      "skill_s2_wind_listen",
+      "skill_s2_warm_palm",
+      "skill_s2_stone_wedge",
+      "skill_s2_water_rope",
+      "skill_s2_mire_step"
     ],
     "services": [
       "profession_swordsman",
-      "skill_swordsman_combat_01"
+      "skill_swordsman_combat_01",
+      "spell_s2_arrow_turn",
+      "spell_s2_light_drop",
+      "spell_s2_held_breath",
+      "spell_s2_wind_listen",
+      "spell_s2_warm_palm",
+      "spell_s2_stone_wedge",
+      "spell_s2_water_rope",
+      "spell_s2_mire_step"
     ],
     "intelligence": {
       "level": 2,
@@ -139398,7 +139617,15 @@
       ]
     },
     "proficiencies": {
-      "skill_swordsman_combat_01": 600
+      "skill_swordsman_combat_01": 600,
+      "skill_s2_arrow_turn": 600,
+      "skill_s2_light_drop": 600,
+      "skill_s2_held_breath": 600,
+      "skill_s2_wind_listen": 600,
+      "skill_s2_warm_palm": 600,
+      "skill_s2_stone_wedge": 600,
+      "skill_s2_water_rope": 600,
+      "skill_s2_mire_step": 600
     },
     "professions": [
       "profession_swordsman"
@@ -139789,6 +140016,78 @@
         "price": {
           "mode": "catalog",
           "source": "skill_swordsman_combat_01"
+        },
+        "unlocksService": false
+      },
+      {
+        "kind": "teach",
+        "what": "spell_s2_arrow_turn",
+        "price": {
+          "mode": "catalog",
+          "source": "spell_s2_arrow_turn"
+        },
+        "unlocksService": false
+      },
+      {
+        "kind": "teach",
+        "what": "spell_s2_light_drop",
+        "price": {
+          "mode": "catalog",
+          "source": "spell_s2_light_drop"
+        },
+        "unlocksService": false
+      },
+      {
+        "kind": "teach",
+        "what": "spell_s2_held_breath",
+        "price": {
+          "mode": "catalog",
+          "source": "spell_s2_held_breath"
+        },
+        "unlocksService": false
+      },
+      {
+        "kind": "teach",
+        "what": "spell_s2_wind_listen",
+        "price": {
+          "mode": "catalog",
+          "source": "spell_s2_wind_listen"
+        },
+        "unlocksService": false
+      },
+      {
+        "kind": "teach",
+        "what": "spell_s2_warm_palm",
+        "price": {
+          "mode": "catalog",
+          "source": "spell_s2_warm_palm"
+        },
+        "unlocksService": false
+      },
+      {
+        "kind": "teach",
+        "what": "spell_s2_stone_wedge",
+        "price": {
+          "mode": "catalog",
+          "source": "spell_s2_stone_wedge"
+        },
+        "unlocksService": false
+      },
+      {
+        "kind": "teach",
+        "what": "spell_s2_water_rope",
+        "price": {
+          "mode": "catalog",
+          "source": "spell_s2_water_rope"
+        },
+        "unlocksService": false
+      },
+      {
+        "kind": "teach",
+        "what": "spell_s2_mire_step",
+        "price": {
+          "mode": "catalog",
+          "source": "spell_s2_mire_step"
         },
         "unlocksService": false
       }
