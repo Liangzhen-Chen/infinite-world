@@ -2604,5 +2604,77 @@
       "npc_bs_090_3"
     ],
     "tenure": "本户共居私宅；户籍不合并成员钱物，不补写买卖或租金债务。"
+  },
+  {
+    "id": "house_ms_tj_01",
+    "settlement": "loc_ms_tanjie",
+    "homeLocation": "bld_ms_tj_home_01",
+    "members": [
+      "npc_ms_tj_yanzhen",
+      "npc_ms_tj_yantai",
+      "npc_ms_tj_yanya",
+      "npc_ms_tj_yandou"
+    ],
+    "tenure": "烟灶铺归烟灶窟共有，三名成年成员同铺，这一季轮养幼崽烟豆；登记不认定个人产权。"
+  },
+  {
+    "id": "house_ms_tj_02",
+    "settlement": "loc_ms_tanjie",
+    "homeLocation": "bld_ms_tj_home_02",
+    "members": [
+      "npc_ms_tj_dingying",
+      "npc_ms_tj_dingkou",
+      "npc_ms_tj_dingcuo",
+      "npc_ms_tj_dingli"
+    ],
+    "tenure": "钉灶铺归钉灶窟共有，三名成年成员同铺，这一季轮养幼崽钉粒；登记不认定个人产权。"
+  },
+  {
+    "id": "house_ms_tj_03",
+    "settlement": "loc_ms_tanjie",
+    "homeLocation": "bld_ms_tj_home_03",
+    "members": [
+      "npc_ms_tj_liya",
+      "npc_ms_tj_lishuan",
+      "npc_ms_tj_lipian",
+      "npc_ms_tj_litiao"
+    ],
+    "tenure": "砾灶铺归砾灶窟共有，三名成年成员同铺，这一季轮养幼崽砾跳；登记不认定个人产权。"
+  },
+  {
+    "id": "house_ms_td_01",
+    "settlement": "loc_ms_taideng",
+    "homeLocation": "bld_ms_td_home_01",
+    "members": [
+      "npc_ms_td_taimian",
+      "npc_ms_td_taixu",
+      "npc_ms_td_tailing",
+      "npc_ms_td_taijian"
+    ],
+    "tenure": "苔家巢由苔家共居，三名成年成员与幼崽苔尖同巢；登记不认定个人产权。"
+  },
+  {
+    "id": "house_ms_td_02",
+    "settlement": "loc_ms_taideng",
+    "homeLocation": "bld_ms_td_home_02",
+    "members": [
+      "npc_ms_td_qingzhi",
+      "npc_ms_td_qingpeng",
+      "npc_ms_td_qingsui",
+      "npc_ms_td_qingyuan"
+    ],
+    "tenure": "青家巢由青家共居，三名成年成员与幼崽青圆同巢；登记不认定个人产权。"
+  },
+  {
+    "id": "house_ms_td_03",
+    "settlement": "loc_ms_taideng",
+    "homeLocation": "bld_ms_td_home_03",
+    "members": [
+      "npc_ms_td_liheng",
+      "npc_ms_td_lizhen",
+      "npc_ms_td_lizhi",
+      "npc_ms_td_limao"
+    ],
+    "tenure": "栗家巢由栗家共居，三名成年成员与幼崽栗毛同巢；登记不认定个人产权。"
   }
 ]
