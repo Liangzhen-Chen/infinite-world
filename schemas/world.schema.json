@@ -3311,7 +3311,13 @@
                   "passage",
                   "levee",
                   "seam",
-                  "ledge"
+                  "ledge",
+                  "lamp",
+                  "aperture",
+                  "surface",
+                  "sample",
+                  "door",
+                  "altar"
                 ]
               },
               "owner": {
@@ -4234,7 +4240,10 @@
                 "water_earth",
                 "care",
                 "heat",
-                "air"
+                "air",
+                "optics",
+                "mind_space",
+                "ritual"
               ]
             },
             "power": {
@@ -4247,7 +4256,9 @@
                 "water_cup",
                 "fire_projection",
                 "water_guard",
-                "elemental_guard"
+                "elemental_guard",
+                "dust_servant",
+                "rubble_servant"
               ]
             },
             "upkeepMp": {
@@ -4346,7 +4357,48 @@
                 "sense_soil",
                 "till",
                 "structural_sense",
-                "level_ground"
+                "level_ground",
+                "sense_mind",
+                "memory_guard",
+                "record_feeling",
+                "preserve",
+                "dim",
+                "privacy",
+                "fog_light",
+                "waymark",
+                "focus_light",
+                "reflect",
+                "dark_area",
+                "light_screen",
+                "color",
+                "shadow_measure",
+                "reveal",
+                "bind_shadow",
+                "decoy",
+                "reveal_wear",
+                "exorcise",
+                "ward",
+                "purify_area",
+                "discipline",
+                "ferry",
+                "witness_oath",
+                "consecrate",
+                "clean_altar",
+                "spirit_sense",
+                "spirit_census",
+                "reassign",
+                "coordinate",
+                "lock_space",
+                "alarm",
+                "block_space",
+                "repair_space",
+                "calibrate_anchor",
+                "store",
+                "retrieve",
+                "corrode",
+                "anchor_cargo",
+                "measure",
+                "contract_sense"
               ]
             },
             "unit": {

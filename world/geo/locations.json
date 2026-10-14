@@ -13096,6 +13096,74 @@
         "links": {
           "structures": []
         }
+      },
+      {
+        "id": "feature_s4_brick_pile",
+        "name": "院角碎砖堆",
+        "aliases": [],
+        "kind": "silt_heap",
+        "owner": "npc_bs_077_2",
+        "access": "consent",
+        "position": [
+          2,
+          1
+        ],
+        "state": {
+          "rubbleGrams": 6000,
+          "capacityGrams": 10000,
+          "siltGrams": 0
+        }
+      },
+      {
+        "id": "feature_s4_tile_pile",
+        "name": "檐下碎瓦堆",
+        "aliases": [],
+        "kind": "silt_heap",
+        "owner": "npc_bs_077_2",
+        "access": "consent",
+        "position": [
+          3,
+          1
+        ],
+        "state": {
+          "rubbleGrams": 5000,
+          "capacityGrams": 10000,
+          "siltGrams": 0
+        }
+      },
+      {
+        "id": "feature_s4_rubble_cart",
+        "name": "运渣板车",
+        "aliases": [],
+        "kind": "silt_heap",
+        "owner": "npc_bs_077_2",
+        "access": "consent",
+        "position": [
+          3,
+          2
+        ],
+        "state": {
+          "rubbleGrams": 0,
+          "capacityGrams": 20000,
+          "siltGrams": 0
+        }
+      },
+      {
+        "id": "feature_s4_iron_latch",
+        "name": "锈死的旧门闩",
+        "aliases": [],
+        "kind": "surface",
+        "owner": "npc_bs_077_2",
+        "access": "consent",
+        "position": [
+          0,
+          -2
+        ],
+        "state": {
+          "material": "metal",
+          "integrity": 100,
+          "corrosionResistance": 0.2
+        }
       }
     ],
     "workstations": [
@@ -13140,7 +13208,283 @@
       }
     ],
     "inventory": {},
-    "description": "东街灯祠用于送行与灯会联络，可见灯架、避风门廊。门廊可歇脚，供灯须先问保管人。前厅接洽时间为每日7时至19时，打烊后另约。"
+    "description": "东街灯祠用于送行与灯会联络，可见灯架、避风门廊。门廊可歇脚，供灯须先问保管人。前厅接洽时间为每日7时至19时，打烊后另约。",
+    "features": [
+      {
+        "id": "feature_s3_altar_lamp",
+        "name": "祠堂供灯",
+        "aliases": [],
+        "kind": "lamp",
+        "owner": "npc_bs_080_3",
+        "access": "consent",
+        "position": [
+          0,
+          1
+        ],
+        "state": {
+          "emissionLuxAt1m": 30,
+          "heightMeters": 1.5,
+          "lit": true,
+          "covered": false
+        }
+      },
+      {
+        "id": "feature_s3_offering_table",
+        "name": "灯祠供案",
+        "aliases": [],
+        "kind": "surface",
+        "owner": "npc_bs_080_3",
+        "access": "consent",
+        "position": [
+          1,
+          0
+        ],
+        "state": {
+          "focusAreaM2": 0.5
+        }
+      },
+      {
+        "id": "feature_s3_bronze_mirror",
+        "name": "祠中铜镜",
+        "aliases": [],
+        "kind": "surface",
+        "owner": "npc_bs_080_3",
+        "access": "consent",
+        "position": [
+          1,
+          1
+        ],
+        "state": {
+          "reflectivityPercent": 60,
+          "reflectionAreaM2": 0.3
+        }
+      },
+      {
+        "id": "feature_s3_side_seat",
+        "name": "祠中侧席",
+        "aliases": [],
+        "kind": "surface",
+        "owner": "loc_bs",
+        "access": "public",
+        "position": [
+          2,
+          1
+        ],
+        "state": {}
+      },
+      {
+        "id": "feature_s3_rest_couch",
+        "name": "偏殿卧榻",
+        "aliases": [],
+        "kind": "prop",
+        "owner": "npc_bs_080_3",
+        "access": "consent",
+        "position": [
+          -1,
+          0
+        ],
+        "state": {
+          "radiusMeters": 1.5
+        }
+      },
+      {
+        "id": "feature_s3_side_passage",
+        "name": "灯祠侧廊",
+        "aliases": [],
+        "kind": "passage",
+        "owner": "npc_bs_080_3",
+        "access": "consent",
+        "position": [
+          0,
+          -1
+        ],
+        "state": {
+          "widthMeters": 1.5
+        }
+      },
+      {
+        "id": "feature_s3_fog_stand",
+        "name": "祠前雾灯台",
+        "aliases": [],
+        "kind": "prop",
+        "owner": "npc_bs_078_2",
+        "access": "consent",
+        "position": [
+          1,
+          -1
+        ],
+        "state": {
+          "radiusMeters": 2
+        }
+      },
+      {
+        "id": "feature_s3_porch_lamp",
+        "name": "祠前廊灯",
+        "aliases": [],
+        "kind": "lamp",
+        "owner": "loc_bs",
+        "access": "public",
+        "position": [
+          -1,
+          1
+        ],
+        "state": {
+          "emissionLuxAt1m": 20,
+          "heightMeters": 2.5,
+          "lit": true,
+          "covered": false
+        }
+      },
+      {
+        "id": "feature_s3_ore_tray",
+        "name": "祠前矿样盘",
+        "aliases": [],
+        "kind": "sample",
+        "owner": "loc_bs",
+        "access": "public",
+        "position": [
+          -1,
+          -1
+        ],
+        "state": {
+          "sampleType": "mineral",
+          "sampleGrams": 30,
+          "heightMeters": 0.1,
+          "spectrum": [
+            {
+              "wavelengthNm": 450,
+              "reflectance": 0.12
+            },
+            {
+              "wavelengthNm": 550,
+              "reflectance": 0.2
+            },
+            {
+              "wavelengthNm": 650,
+              "reflectance": 0.62
+            }
+          ]
+        }
+      },
+      {
+        "id": "feature_s3_incense_post",
+        "name": "祠前香柱",
+        "aliases": [],
+        "kind": "prop",
+        "owner": "loc_bs",
+        "access": "public",
+        "position": [
+          -0.5,
+          1.5
+        ],
+        "state": {
+          "heightMeters": 1
+        }
+      },
+      {
+        "id": "feature_s3_screen_wall",
+        "name": "祠前影壁",
+        "aliases": [],
+        "kind": "surface",
+        "owner": "loc_bs",
+        "access": "public",
+        "position": [
+          0,
+          2
+        ],
+        "state": {}
+      },
+      {
+        "id": "feature_s3_old_mortar",
+        "name": "祠前旧药臼",
+        "aliases": [],
+        "kind": "surface",
+        "owner": "loc_bs",
+        "access": "public",
+        "position": [
+          -2,
+          0
+        ],
+        "state": {
+          "wear": [
+            {
+              "kind": "研磨凹痕",
+              "depthMm": 1.5,
+              "lengthMm": 40
+            },
+            {
+              "kind": "细裂纹",
+              "depthMm": 0.3,
+              "lengthMm": 12
+            }
+          ]
+        }
+      },
+      {
+        "id": "feature_s3_drying_cloth",
+        "name": "祠前晾帕",
+        "aliases": [],
+        "kind": "object",
+        "owner": "loc_bs",
+        "access": "public",
+        "position": [
+          -1,
+          -2
+        ],
+        "state": {},
+        "thermalModel": {
+          "ambientC": 20,
+          "heatCapacityJPerC": 400,
+          "maximumC": 100,
+          "passiveExchangeJPerMinute": 200,
+          "burnMgPerMinute": 1,
+          "fuelJPerMg": 1,
+          "efficiencyPermille": 1,
+          "ashPermille": 0,
+          "ignitionMaximumMg": 1,
+          "ignitable": false,
+          "dryable": true,
+          "fuels": []
+        },
+        "thermalInitial": {
+          "temperatureC": 20,
+          "fuelMg": 0,
+          "moistureMg": 5000
+        }
+      },
+      {
+        "id": "feature_s3_dark_corner",
+        "name": "祠后暗角",
+        "aliases": [],
+        "kind": "prop",
+        "owner": "loc_bs",
+        "access": "public",
+        "position": [
+          5,
+          -5
+        ],
+        "state": {}
+      },
+      {
+        "id": "feature_s4_lintel_altar",
+        "name": "门印神坛",
+        "aliases": [],
+        "kind": "altar",
+        "owner": "npc_bs_080_3",
+        "access": "consent",
+        "position": [
+          -2,
+          1
+        ],
+        "state": {
+          "deity": "deity_lintel",
+          "church": "门印证契堂",
+          "integrity": 100,
+          "contamination": 60,
+          "pollutionKind": "ordinary"
+        }
+      }
+    ]
   },
   {
     "id": "bld_bs_home_001",
@@ -17086,6 +17430,104 @@
           "texture": "clay",
           "clayGrams": 100000
         }
+      },
+      {
+        "id": "feature_s4_scripture_door",
+        "name": "经阁门",
+        "aliases": [],
+        "kind": "door",
+        "owner": "npc_bs_077_1",
+        "access": "consent",
+        "position": [
+          -1,
+          0
+        ],
+        "state": {
+          "locked": true,
+          "open": false,
+          "keyItem": "item_s4_scripture_key",
+          "lockGapMm": 1,
+          "blockRadiusMeters": 0.4
+        }
+      },
+      {
+        "id": "feature_s4_scripture_shelf",
+        "name": "经阁书架",
+        "aliases": [],
+        "kind": "prop",
+        "owner": "npc_bs_077_1",
+        "access": "consent",
+        "position": [
+          -2,
+          0
+        ],
+        "state": {
+          "dustGrams": 400,
+          "collectedDustGrams": 0,
+          "heavyWasteGrams": 0
+        }
+      },
+      {
+        "id": "feature_s4_gate",
+        "name": "观门",
+        "aliases": [],
+        "kind": "door",
+        "owner": "npc_bs_077_1",
+        "access": "consent",
+        "position": [
+          0,
+          1.6
+        ],
+        "state": {
+          "locked": false,
+          "open": true,
+          "blockRadiusMeters": 0.6
+        },
+        "connects": [
+          "bld_bs_reed_dao",
+          "loc_bs_dongxue"
+        ]
+      },
+      {
+        "id": "feature_s4_anchor_stone",
+        "name": "观中锚石",
+        "aliases": [],
+        "kind": "rock",
+        "owner": "npc_bs_077_1",
+        "access": "consent",
+        "position": [
+          1,
+          -2
+        ],
+        "state": {
+          "anchorIntact": true,
+          "anchorOffsetMeters": [
+            0.3,
+            0
+          ]
+        },
+        "spaceAnchor": true
+      },
+      {
+        "id": "feature_s4_old_rift",
+        "name": "旧阵残隙",
+        "aliases": [],
+        "kind": "surface",
+        "owner": "npc_bs_077_1",
+        "access": "consent",
+        "position": [
+          -1,
+          -2
+        ],
+        "state": {
+          "blocksSpace": true,
+          "blockRadiusMeters": 0.2,
+          "spaceAnomaly": {
+            "divine": false,
+            "radiusMeters": 0.2,
+            "intensity": 1
+          }
+        }
       }
     ]
   },
@@ -17115,7 +17557,127 @@
       }
     ],
     "inventory": {},
-    "description": "季笙白日在公开静息廊授三息定桩，廊外留出通行处。寺中采用止波师承，度亡主持另须合格许可。前廊每日8时至18时开放；每旬10、20、30日导师在家休息。基础师授每课12铜、120分钟，本处战斗职业认证须10级及基础100熟练度，成功付30铜；学馆的炼金师是生活职业，另按原目录一级、20铜办理。"
+    "description": "季笙白日在公开静息廊授三息定桩，廊外留出通行处。寺中采用止波师承，度亡主持另须合格许可。前廊每日8时至18时开放；每旬10、20、30日导师在家休息。基础师授每课12铜、120分钟，本处战斗职业认证须10级及基础100熟练度，成功付30铜；学馆的炼金师是生活职业，另按原目录一级、20铜办理。",
+    "features": [
+      {
+        "id": "feature_s3_hall_lamp",
+        "name": "静息廊长明灯",
+        "aliases": [],
+        "kind": "lamp",
+        "owner": "npc_bs_076_3",
+        "access": "consent",
+        "position": [
+          0,
+          1
+        ],
+        "state": {
+          "emissionLuxAt1m": 20,
+          "heightMeters": 2,
+          "lit": true,
+          "covered": false
+        }
+      },
+      {
+        "id": "feature_s3_chan_door",
+        "name": "禅房门缝",
+        "aliases": [],
+        "kind": "aperture",
+        "owner": "npc_bs_076_3",
+        "access": "consent",
+        "position": [
+          1,
+          0
+        ],
+        "state": {
+          "widthMeters": 0.8,
+          "apertureMeters": 0.02,
+          "open": false
+        }
+      },
+      {
+        "id": "feature_s3_herb_cabinet",
+        "name": "寺中药柜",
+        "aliases": [],
+        "kind": "container",
+        "owner": "npc_bs_076_3",
+        "access": "consent",
+        "position": [
+          0,
+          -1
+        ],
+        "state": {
+          "capacityMl": 1000,
+          "waterMl": 0,
+          "turbidity": 0,
+          "saltMg": 0,
+          "toxinUg": 0,
+          "pathogenRisk": 0,
+          "odor": "干燥药香",
+          "closed": true,
+          "integrity": 100,
+          "temperatureC": 18,
+          "insulationPercent": 100,
+          "foodLots": [
+            {
+              "id": "lot_s3_dried_herbs",
+              "kind": "herb",
+              "amountGrams": 3000,
+              "spoiledGrams": 0,
+              "badGrams": 0,
+              "decayGramsPerMinute": 0.02
+            }
+          ]
+        },
+        "careProcess": "food"
+      },
+      {
+        "id": "feature_s3_compress_cloth",
+        "name": "寺中湿敷帕",
+        "aliases": [],
+        "kind": "object",
+        "owner": "npc_bs_076_3",
+        "access": "consent",
+        "position": [
+          0.5,
+          -0.5
+        ],
+        "state": {},
+        "thermalModel": {
+          "ambientC": 20,
+          "heatCapacityJPerC": 400,
+          "maximumC": 100,
+          "passiveExchangeJPerMinute": 200,
+          "burnMgPerMinute": 1,
+          "fuelJPerMg": 1,
+          "efficiencyPermille": 1,
+          "ashPermille": 0,
+          "ignitionMaximumMg": 1,
+          "ignitable": false,
+          "dryable": true,
+          "fuels": []
+        },
+        "thermalInitial": {
+          "temperatureC": 20,
+          "fuelMg": 0,
+          "moistureMg": 20000
+        }
+      },
+      {
+        "id": "feature_s4_rest_tablet",
+        "name": "度亡牌位",
+        "aliases": [],
+        "kind": "prop",
+        "owner": "npc_bs_076_3",
+        "access": "consent",
+        "position": [
+          -1,
+          1
+        ],
+        "state": {
+          "names": []
+        }
+      }
+    ]
   },
   {
     "id": "bld_bs_measured_hall",
