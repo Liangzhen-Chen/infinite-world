@@ -180,7 +180,9 @@ export function advanceNpcObligations(d,engine,before,after,eventId){
    // anywhere inside the agreed window, but absence is explicitly remembered.
    if(o.type==='等候'&&o.attendance[o.promisee]>0){o.breachedBy=o.breachedBy.filter(id=>id!==o.promisee);if(!o.keptBy.includes(o.promisee))o.keptBy.push(o.promisee);}
    o.status=o.breachedBy.length?'违约':'已完成';o.resolvedAt=o.deadline;
-   o.reason=o.status==='违约'?'当事人未在约定地点完成约定占时':'按约定地点和时段履行';
+   // A breach while bedridden is still a breach, but the record says why.
+   const ill=o.breachedBy.filter(actor=>actor!=='player'&&d.get('state','npcs',actor,'status')==='患病');
+   o.reason=o.status==='违约'?(ill.length?`${ill.map(id=>engine.byId.get(id)?.name??id).join('、')}患病卧床，未能在约定地点完成约定占时`:'当事人未在约定地点完成约定占时'):'按约定地点和时段履行';
   }
   d.set(['state','obligations',o.id],o);
  }
