@@ -17,7 +17,7 @@ import {validateSummonCatalog,prepareSummon,applySummon}from'./summons.mjs';
 import {resolveCreature,recordWildlifeDeath}from'./wildlife.mjs';
 import {bossCounter,rememberBossTactic,defeatBoss}from'./bosses.mjs';
 import {validateEffectSpec,resolveVitalityPrimitive,applyProtectionPrimitive,consumeMagicProtection}from'./magic-primitives.mjs';
-import {validateObjectCatalog,prepareObjectMagic,applyObjectMagic,validateHeatCatalog,prepareHeatMagic,applyHeatMagic,ambientHeatC,coldHeatMultiplier}from'./magic-object.mjs';
+import {prepareElementObject,applyElementObject,validateObjectCatalog,prepareObjectMagic,applyObjectMagic,validateHeatCatalog,prepareHeatMagic,applyHeatMagic,ambientHeatC,coldHeatMultiplier}from'./magic-object.mjs';
 import {validateAirCatalog,prepareAirMagic,applyAirMagic,prepareWindObject,applyWindObject,windArmorMultiplier}from'./magic-air.mjs';
 import {validateWaterEarthCatalog,prepareWaterEarthMagic,applyWaterEarthMagic,prepareStone,launchStone,waterEarthState}from'./magic-water-earth.mjs';
 import {projectileAirPenalty}from'./magic-air.mjs';
@@ -64,6 +64,7 @@ export function prepareMagic(d,catalog,args,context={}){
     if(spec.stoneProjectile&&args.target?.startsWith('feature_'))return{stone:prepareStone.call(this,d,catalog,args),target:args.target,spec,catalog,stoneObject:true};
     if(spec.kind==='air')return prepareAirMagic.call(this,d,catalog,args);
     if(spec.windBlade&&args.target?.startsWith('feature_'))return prepareWindObject.call(this,d,catalog,args);
+    if(spec.kind==='damage'&&args.target?.startsWith('feature_'))return prepareElementObject.call(this,d,catalog,args);
     if(messageKinds.includes(spec.kind))return prepareMessage.call(this,d,catalog,args);
     if(movementKinds.includes(spec.kind))return prepareMovement.call(this,d,catalog,args);
     if(spec.kind==='area')return prepareAreaMagic.call(this,d,catalog,args,context);
@@ -117,6 +118,7 @@ export function applyMagic(d,prepared,id){
     if(spec.kind==='optics')return applyOptics.call(this,d,prepared,id);
     if(prepared.windObject)return applyWindObject.call(this,d,prepared);
     if(spec.kind==='water_earth')return applyWaterEarthMagic.call(this,d,prepared,id);
+    if(prepared.elementObject)return applyElementObject.call(this,d,prepared);
     if(prepared.stoneObject){
         let stone;try{stone=prepareStone.call(this,d,catalog,prepared.stone.args);}catch(e){return{target,effectFailed:e.message};}
         const projectile=launchStone(d,stone,id),s=waterEarthState(d,stone.row),damage=Math.min(s.integrity,spec.power);

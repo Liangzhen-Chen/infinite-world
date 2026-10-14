@@ -53,6 +53,13 @@ export function weatherAt(engine, seed, location, minute) {
 export function localWeather(engine, document, location=document.state.location, minute=document.state.minute) {
     return weatherAt(engine,document.randomSeed,location,minute);
 }
+// Precipitation as an interaction agent: 'rain' (rain/storm) or 'snow', only
+// outdoors in a registered climate region; null otherwise.
+export function precipitationAt(engine, seed, location, minute) {
+    const row = engine.rules?.weather ? weatherAt(engine,seed,location,minute) : null;
+    if (!row || row.indoors) return null;
+    return row.kind === 'rain' || row.kind === 'storm' ? 'rain' : row.kind === 'snow' ? 'snow' : null;
+}
 export function humidityAt(engine, document, location) {
     const explicit = document.state.weather?.[location]?.humidityPercent;
     if (explicit !== undefined) return explicit;

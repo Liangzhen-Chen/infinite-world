@@ -117,7 +117,9 @@ export const traitHas=(engine,doc,id,tag)=>hasTrait(traitsOf(engine,doc,id),tag)
 export function validateTraits(world){
  const errors=[];
  for(const s of world.monsters??[]){
-  if(!Array.isArray(s.tags)||!s.tags.length)errors.push(`${s.id}: 生物须登记性状标签`);
+  // Tags are optional for draft/fixture worlds; the published catalog carries them.
+  if(s.tags===undefined)continue;
+  if(!Array.isArray(s.tags)||!s.tags.length)errors.push(`${s.id}: 生物性状标签须为非空列表`);
   else if(s.tags.some(t=>!CREATURE_TAGS.includes(t))||new Set(s.tags).size!==s.tags.length)errors.push(`${s.id}: 生物性状标签不在词表或重复`);
  }
  return errors;

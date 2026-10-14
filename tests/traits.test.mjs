@@ -37,7 +37,8 @@ test('全部生物都有词表内性状标签，旧生物属性弱点抗性原�
  assert.ok(ghost.tags.includes('undead')&&ghost.tags.includes('spirit'));
  const broken=structuredClone(world);broken.monsters[0].tags=['dragonfire'];
  assert.match(validateTraits(broken)[0],/词表/);
- delete broken.monsters[0].tags;assert.match(validateTraits(broken)[0],/须登记/);
+ broken.monsters[0].tags=[];assert.match(validateTraits(broken)[0],/非空/);
+ for(const s of world.monsters)assert.ok(Array.isArray(s.tags)&&s.tags.length,`${s.id} 正式目录须有标签`);
 });
 
 test('物品标签派生材质：书即纸、铁即金属、潮湿与可燃互斥', () => {

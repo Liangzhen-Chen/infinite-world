@@ -8,6 +8,7 @@ import {validateAgricultureRules}from'../server-plugin/agriculture.mjs';
 import {validateWildlife}from'../server-plugin/wildlife.mjs';
 import {validateCreatureNature}from'../server-plugin/creature-nature.mjs';
 import {validateTraits}from'../server-plugin/traits.mjs';
+import {validateInteractionRules}from'../server-plugin/interactions.mjs';
 import {validateFarmPests}from'../server-plugin/farm-pests.mjs';
 import {validateBossEcology}from'../server-plugin/bosses.mjs';
 import {validateBossCognition}from'../server-plugin/boss-cognition.mjs';
@@ -35,7 +36,7 @@ export function validateWorld(world,{stage='engine'}={}){
     errors.push(...validateAgricultureRules(world));
     errors.push(...validateWildlife(world));
     errors.push(...validateCreatureNature(world));
-    errors.push(...validateTraits(world));
+    errors.push(...validateTraits(world),...validateInteractionRules());
     errors.push(...validateFarmPests(world));
     errors.push(...validateBossEcology(world));
     const cognitionLocations=new Set(world.locations.map(location=>location.id));
