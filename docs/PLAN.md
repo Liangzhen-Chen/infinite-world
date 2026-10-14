@@ -72,7 +72,7 @@ review-002-yp=782a49e阶段审核通过，范围限T06正式发布与c64163d修�
 
 排在底座 K1–K7 之后，按被依赖程度排序。每张卡：不加新工具（复用现有入口），静态提示增量≤100 token（硬上限12000），验收 CORE + 同领域测试整组 + build-world --release；改结算数值逐条列旧→新与理由。世界公告、首杀广播、其他玩家层不做。
 
-- U1 组织实体（依赖K4，S-M）：创立或加入行会、帮派、商号；组织有成员、公库、章程、议事方式（会长定、投票、长老定）。新 organizations.mjs；activities.mjs 的 create(org)、governance.mjs、public-opinion.mjs。补 5.11 家户、行会、教会、帮派的群体决策。
+- U1 已完成。原文：（依赖K4，S-M）：创立或加入行会、帮派、商号；组织有成员、公库、章程、议事方式（会长定、投票、长老定）。新 organizations.mjs；activities.mjs 的 create(org)、governance.mjs、public-opinion.mjs。补 5.11 家户、行会、教会、帮派的群体决策。
 - U2 契约与信用（依赖K3、K4、K7，M）：借贷计息、钱庄存取与兑换（铸币成色、手续费）、通用租房住宿（不再只认一家）、玩家受雇打工、合伙；违约进入法律流程。contracts.mjs、engine.mjs 交易段、business.mjs:87、law.mjs、rules.economy。
 - U3 季节与灾害世界时钟（依赖K2、K6、K7，M）：汛期、冬荒、疫病流行（户间传染）、物价波动，分阶段可干预。rules.worldClock、world-clock.mjs、npc-life.mjs、settlement-trade.mjs。
 - U4 职业深化（依赖K1、K3，M）：新 career-metrics.mjs 订阅世界事件统计长期行为，隐藏职业“契机”真正触发并可取得；地域、元素变异升职；终极技能；杰作、研究、实战三种突破；入职任务。professions.mjs、engine.mjs:491-508、world/design 职业数据。
