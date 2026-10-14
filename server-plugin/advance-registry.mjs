@@ -34,6 +34,7 @@ import {advanceSeasonEffects}from'./effects.mjs';
 import {advanceOrganizations}from'./organizations.mjs';
 import {advanceBounties,nextBountyMinute,bountyActive}from'./bounty.mjs';
 import {advanceOffices,nextOfficeMinute}from'./governance.mjs';
+import {advancePublicProjects,isPublicProject}from'./public-projects.mjs';
 
 const clone=value=>structuredClone(value);
 const fullNpcs=engine=>engine.world.npcs.some(n=>n.tier==='full');
@@ -83,11 +84,12 @@ const systems=[
   advance:(e,d,{after})=>advanceSettlementTrade(d,e,after)},
  {id:'shop_restock',order:850,advance:(e,d,{before,after})=>advanceShops(d,e,before,after)},
  {id:'projects',order:900,advance(e,d,{days,id}){
-    if(days)for(const [key,project]of Object.entries(d.get('state','projects')))if(project.type==='工程'&&project.status==='施工中'){
+    if(days)for(const [key,project]of Object.entries(d.get('state','projects')))if(project.type==='工程'&&project.status==='施工中'&&!isPublicProject(project)){
         const remainingDays=Math.max(0,project.remainingDays-days);d.set(['state','projects',key],{...project,remainingDays,status:remainingDays?'施工中':'已完成'});
         if(!remainingDays&&project.creator==='player')milestone(d,e,'publicContribution',key,id);
     }
  }},
+ {id:'public_projects',order:910,advance:(e,d,ctx)=>advancePublicProjects(d,e,ctx)},
  {id:'npc_cognition',order:1000,active:e=>fullNpcs(e),nextMinute:(e,d,now)=>nextNpcCognitionMinute(d.get('state'),now),
   advance:(e,d,{before,after,id,beforeState})=>{if(fullNpcs(e))advanceNpcCognition(d,e,before,after,id,{beforeState});}},
  {id:'npc_autonomy',order:1100,active:e=>fullNpcs(e),nextMinute:(e,d,now)=>nextNpcAutonomyMinute(d.get('state'),now),

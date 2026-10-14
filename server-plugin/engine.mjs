@@ -308,6 +308,12 @@ export class WorldEngine {
         return {elapsed:minutes,date:this.calendar(d.get('state','minute')).text,...(!this.replaying||this.replayResult?.wildlifeEncounterVersion===1?{wildlifeEncounterVersion:1,encounters:wildlifeEncounterView(d.document)}:{})};
     }
     route(from,to,mode,minute,seed='default-campaign',weatherCache=null,graphCache=null) {
+        // A facility completed by a public project stands inside its site: reach the site, then step in.
+        const built=id=>this.world.locations.some(l=>l.id===id)?null:this.byId?.get(id)?.builtProject?this.byId.get(id).parent:null;
+        if(built(to)||built(from)){
+            const r=this.route(built(from)??from,built(to)??to,mode,minute,seed,weatherCache,graphCache),step=(built(to)?2:0)+(built(from)?2:0);
+            r.minutes+=step;r.movingMinutes+=step;return r;
+        }
         const distances=new Map([[from,0]]), movingTimes=new Map([[from,0]]), previous=new Map(),costs=new Map([[from,0]]);
         const season=this.calendar(minute).season,key=`${mode}:${season}`;
         // Callers may reuse topology only within one synchronous schedule
