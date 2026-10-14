@@ -6040,5 +6040,241 @@
       "adults": 11,
       "elders": 5
     }
+  },
+  {
+    "id": "loc_ms_yugen",
+    "parent": "loc_bs",
+    "population": 64,
+    "householdCount": 17,
+    "residentIds": [
+      "npc_ms_yg_jiecang",
+      "npc_ms_yg_jieyin",
+      "npc_ms_yg_gonghou",
+      "npc_ms_yg_xuxiao",
+      "npc_ms_yg_jiecha",
+      "npc_ms_yg_jieqing",
+      "npc_ms_yg_jieya",
+      "npc_ms_yg_xushi",
+      "npc_ms_yg_xuhe",
+      "npc_ms_yg_xumo",
+      "npc_ms_yg_gongni",
+      "npc_ms_yg_gongtuan"
+    ],
+    "visitors": [],
+    "commuters": [],
+    "externalRelatives": [],
+    "facts": [
+      "榆根里共64名成员、17户；登记具名成员12名3户，另有52名14户按稳定种子待生成，不计入当前名册。",
+      "分物种配额：节榆木精30名（具名5名，待生成25名6户，住老榆树穴）；开了灵智的石须穴鼬18名（具名4名，待生成14名4户，住鼬石窟）；开了灵智的穴脚林獾16名（具名3名，待生成13名4户，住獾土窟）。",
+      "住区：老榆树穴、鼬石窟、獾土窟；公共设施：根门、育苗地、修具棚、排水沟、归根坡。",
+      "内部立场“护林派”：林产由护林的木精按树分份，穴居者按出的力领份；先和榆坡把伐界说定。",
+      "内部立场“共议派”：排水运土的也该在议根洞里有一席，林产由树穴和地窟同议分配；伐界要等分配说定再谈。",
+      "榆根里的穴鼬和林獾都是已经立意、开了灵智的成员；北岗老林里未开灵智的同类另记在野外种群，不计入本聚居地人口。"
+    ],
+    "kinship": [],
+    "coordinates": [
+      18.75,
+      12.9
+    ],
+    "terrain": "丘陵",
+    "climate": "林下背阴潮湿，雨后积水，排水沟一夜不通，育苗地就泡水",
+    "buildingIds": [
+      "site_ms_yg_gate",
+      "site_ms_yg_nursery",
+      "site_ms_yg_shed",
+      "site_ms_yg_ditch",
+      "site_ms_yg_rootslope",
+      "site_ms_yg_crown",
+      "site_ms_yg_stone",
+      "site_ms_yg_sett",
+      "bld_ms_yg_home_01",
+      "bld_ms_yg_home_02",
+      "bld_ms_yg_home_03",
+      "site_ms_yg_council",
+      "site_ms_yg_store"
+    ],
+    "ageStructure": {
+      "children": 16,
+      "youngAdults": 17,
+      "adults": 23,
+      "elders": 8
+    },
+    "registrationMode": "seeded-on-demand",
+    "populationSeed": "t159-yugen-population-1",
+    "registeredPopulation": 12,
+    "pendingPopulation": 52,
+    "registeredHouseholdCount": 3,
+    "pendingHouseholdCount": 14,
+    "registeredAgeStructure": {
+      "children": 3,
+      "youngAdults": 3,
+      "adults": 4,
+      "elders": 2
+    },
+    "pendingAgeStructure": {
+      "children": 13,
+      "youngAdults": 14,
+      "adults": 19,
+      "elders": 6
+    },
+    "pendingSpeciesStructure": {
+      "monster_knot_elm_sprite": {
+        "population": 25,
+        "households": 6,
+        "ageStructure": {
+          "children": 6,
+          "youngAdults": 6,
+          "adults": 9,
+          "elders": 4
+        },
+        "districts": [
+          "site_ms_yg_crown"
+        ]
+      },
+      "monster_stone_whisker_weasel": {
+        "population": 14,
+        "households": 4,
+        "ageStructure": {
+          "children": 4,
+          "youngAdults": 4,
+          "adults": 5,
+          "elders": 1
+        },
+        "districts": [
+          "site_ms_yg_stone"
+        ]
+      },
+      "monster_burrow_badger": {
+        "population": 13,
+        "households": 4,
+        "ageStructure": {
+          "children": 3,
+          "youngAdults": 4,
+          "adults": 5,
+          "elders": 1
+        },
+        "districts": [
+          "site_ms_yg_sett"
+        ]
+      }
+    }
+  },
+  {
+    "id": "loc_ms_lielu",
+    "parent": "loc_bs",
+    "population": 104,
+    "householdCount": 27,
+    "residentIds": [
+      "npc_ms_ll_yayue",
+      "npc_ms_ll_yajin",
+      "npc_ms_ll_cuozhen",
+      "npc_ms_ll_cuomang",
+      "npc_ms_ll_yashi",
+      "npc_ms_ll_yahang",
+      "npc_ms_ll_yasun",
+      "npc_ms_ll_cuoqian",
+      "npc_ms_ll_cuohui",
+      "npc_ms_ll_cuosu",
+      "npc_ms_ll_panfu",
+      "npc_ms_ll_panlei"
+    ],
+    "visitors": [],
+    "commuters": [],
+    "externalRelatives": [],
+    "facts": [
+      "裂炉营共104名成员、27户；登记具名成员12名3户，另有92名24户按稳定种子待生成，不计入当前名册。",
+      "分物种配额：裂牙兽人72名（具名5名，待生成67名16户，住兽人棚区）；灰窟哥布林24名（具名5名，待生成19名5户，住工棚区）；苔背巨魔8名（具名2名，待生成6名3户，住石窝）。",
+      "住区：兽人棚区、工棚区、石窝；公共设施：营口、共炉、修具棚、矿口、卸石场。",
+      "内部立场“守贡派”：兽人掌营地的武力和分配，砾泉照旧纳粮换走矿道，工匠和搬运的按兽人分的份吃饭。",
+      "内部立场“工匠派”：把纳贡改成按件贸易，修好的矿具和挖出的石料按件换粮，工匠按工分粮，不再由兽人一手分配。",
+      "裂炉营的幼体不下矿、不搬运、不服劳役。"
+    ],
+    "kinship": [],
+    "coordinates": [
+      36.2,
+      15.35
+    ],
+    "terrain": "丘陵",
+    "climate": "坡上风硬，共炉边暖，石窝里阴冷",
+    "buildingIds": [
+      "site_ms_ll_gate",
+      "site_ms_ll_forge",
+      "site_ms_ll_shop",
+      "site_ms_ll_adit",
+      "site_ms_ll_yard",
+      "site_ms_ll_tents",
+      "site_ms_ll_huts",
+      "site_ms_ll_rocks",
+      "bld_ms_ll_home_01",
+      "bld_ms_ll_home_02",
+      "bld_ms_ll_home_03",
+      "site_ms_ll_council",
+      "site_ms_ll_store"
+    ],
+    "ageStructure": {
+      "children": 23,
+      "youngAdults": 30,
+      "adults": 40,
+      "elders": 11
+    },
+    "registrationMode": "seeded-on-demand",
+    "populationSeed": "t159-lielu-population-1",
+    "registeredPopulation": 12,
+    "pendingPopulation": 92,
+    "registeredHouseholdCount": 3,
+    "pendingHouseholdCount": 24,
+    "registeredAgeStructure": {
+      "children": 2,
+      "youngAdults": 2,
+      "adults": 7,
+      "elders": 1
+    },
+    "pendingAgeStructure": {
+      "children": 21,
+      "youngAdults": 28,
+      "adults": 33,
+      "elders": 10
+    },
+    "pendingSpeciesStructure": {
+      "monster_split_tusk_orc": {
+        "population": 67,
+        "households": 16,
+        "ageStructure": {
+          "children": 16,
+          "youngAdults": 20,
+          "adults": 24,
+          "elders": 7
+        },
+        "districts": [
+          "site_ms_ll_tents"
+        ]
+      },
+      "monster_ash_cave_goblin": {
+        "population": 19,
+        "households": 5,
+        "ageStructure": {
+          "children": 5,
+          "youngAdults": 6,
+          "adults": 6,
+          "elders": 2
+        },
+        "districts": [
+          "site_ms_ll_huts"
+        ]
+      },
+      "monster_moss_back_troll": {
+        "population": 6,
+        "households": 3,
+        "ageStructure": {
+          "children": 0,
+          "youngAdults": 2,
+          "adults": 3,
+          "elders": 1
+        },
+        "districts": [
+          "site_ms_ll_rocks"
+        ]
+      }
+    }
   }
 ]

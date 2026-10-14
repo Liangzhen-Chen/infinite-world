@@ -17316,5 +17316,568 @@
     },
     "currentConcern": "想学栗针闻出捕夹上的铁锈味。",
     "visibleFeature": "毛还是一团绒，走路跌跌撞撞。"
+  },
+  {
+    "id": "npc_ms_yg_jiecha",
+    "name": "节杈",
+    "aliases": [],
+    "tier": "roster",
+    "age": 34,
+    "sex": "男",
+    "species": "monster_knot_elm_sprite",
+    "society": "loc_ms_yugen",
+    "culture": "culture_ms_yugen",
+    "settlement": "loc_ms_yugen",
+    "scope": "loc_ms_yugen",
+    "householdId": "house_ms_yg_01",
+    "household": [
+      "npc_ms_yg_jiecang",
+      "npc_ms_yg_jieyin",
+      "npc_ms_yg_jieqing",
+      "npc_ms_yg_jieya"
+    ],
+    "occupation": "守林",
+    "traits": [
+      "听话",
+      "警觉"
+    ],
+    "home": {
+      "location": "bld_ms_yg_home_01",
+      "access": "同住共居；进入私宅须先取得成年住户的有效许可。"
+    },
+    "location": "bld_ms_yg_home_01",
+    "flags": {
+      "minor": false,
+      "romanceable": false
+    },
+    "currentConcern": "他照节苍的话削掉了分账树皮上的三道，夜里扎根时总觉得不踏实。",
+    "visibleFeature": "左臂的枝条断过一截，新抽的嫩条比别处细。"
+  },
+  {
+    "id": "npc_ms_yg_jieqing",
+    "name": "节青",
+    "aliases": [],
+    "tier": "roster",
+    "age": 23,
+    "sex": "女",
+    "species": "monster_knot_elm_sprite",
+    "society": "loc_ms_yugen",
+    "culture": "culture_ms_yugen",
+    "settlement": "loc_ms_yugen",
+    "scope": "loc_ms_yugen",
+    "householdId": "house_ms_yg_01",
+    "household": [
+      "npc_ms_yg_jiecang",
+      "npc_ms_yg_jieyin",
+      "npc_ms_yg_jiecha",
+      "npc_ms_yg_jieya"
+    ],
+    "occupation": "育苗",
+    "traits": [
+      "温和",
+      "有主见"
+    ],
+    "home": {
+      "location": "bld_ms_yg_home_01",
+      "access": "同住共居；进入私宅须先取得成年住户的有效许可。"
+    },
+    "location": "bld_ms_yg_home_01",
+    "flags": {
+      "minor": false,
+      "romanceable": false
+    },
+    "currentConcern": "她觉得地窟清沟出了大力，分份该多给，可在议根洞里不敢顶撞节荫。",
+    "visibleFeature": "头顶的榆条上总挂着几片嫩绿的新叶。"
+  },
+  {
+    "id": "npc_ms_yg_jieya",
+    "name": "节芽",
+    "aliases": [],
+    "tier": "roster",
+    "age": 9,
+    "sex": "女",
+    "species": "monster_knot_elm_sprite",
+    "society": "loc_ms_yugen",
+    "culture": "culture_ms_yugen",
+    "settlement": "loc_ms_yugen",
+    "scope": "loc_ms_yugen",
+    "householdId": "house_ms_yg_01",
+    "household": [
+      "npc_ms_yg_jiecang",
+      "npc_ms_yg_jieyin",
+      "npc_ms_yg_jiecha",
+      "npc_ms_yg_jieqing"
+    ],
+    "occupation": "随育苗地学认苗",
+    "traits": [
+      "好奇",
+      "爱学样"
+    ],
+    "home": {
+      "location": "bld_ms_yg_home_01",
+      "access": "同住共居；进入私宅须先取得成年住户的有效许可。"
+    },
+    "location": "bld_ms_yg_home_01",
+    "flags": {
+      "minor": true,
+      "romanceable": false
+    },
+    "currentConcern": "想早点学会认苗，好跟节荫一起给伤苗糊泥。",
+    "visibleFeature": "个子才到大人膝盖，须根细得像一把草。"
+  },
+  {
+    "id": "npc_ms_yg_xushi",
+    "name": "须石",
+    "aliases": [],
+    "tier": "roster",
+    "age": 41,
+    "sex": "男",
+    "species": "monster_stone_whisker_weasel",
+    "society": "loc_ms_yugen",
+    "culture": "culture_ms_yugen",
+    "settlement": "loc_ms_yugen",
+    "scope": "loc_ms_yugen",
+    "householdId": "house_ms_yg_02",
+    "household": [
+      "npc_ms_yg_xuxiao",
+      "npc_ms_yg_xuhe",
+      "npc_ms_yg_xumo"
+    ],
+    "occupation": "巡夜",
+    "traits": [
+      "沉默",
+      "护家"
+    ],
+    "home": {
+      "location": "bld_ms_yg_home_02",
+      "access": "同住共居；进入私宅须先取得成年住户的有效许可。"
+    },
+    "location": "bld_ms_yg_home_02",
+    "flags": {
+      "minor": false,
+      "romanceable": false
+    },
+    "currentConcern": "他夜里巡林时看见榆坡那边有人在老林边上做记号，想告诉须晓又怕惹事。",
+    "visibleFeature": "尾尖秃了一块，是早年被石块砸的。"
+  },
+  {
+    "id": "npc_ms_yg_xuhe",
+    "name": "须禾",
+    "aliases": [],
+    "tier": "roster",
+    "age": 57,
+    "sex": "女",
+    "species": "monster_stone_whisker_weasel",
+    "society": "loc_ms_yugen",
+    "culture": "culture_ms_yugen",
+    "settlement": "loc_ms_yugen",
+    "scope": "loc_ms_yugen",
+    "householdId": "house_ms_yg_02",
+    "household": [
+      "npc_ms_yg_xuxiao",
+      "npc_ms_yg_xushi",
+      "npc_ms_yg_xumo"
+    ],
+    "occupation": "搬土",
+    "traits": [
+      "唠叨",
+      "能吃苦"
+    ],
+    "home": {
+      "location": "bld_ms_yg_home_02",
+      "access": "同住共居；进入私宅须先取得成年住户的有效许可。"
+    },
+    "location": "bld_ms_yg_home_02",
+    "flags": {
+      "minor": false,
+      "romanceable": false
+    },
+    "currentConcern": "分到的干粮少了，她把自己那份省给须末，夜里搬土时腿发软。",
+    "visibleFeature": "须子灰白，一走动就掉砂。"
+  },
+  {
+    "id": "npc_ms_yg_xumo",
+    "name": "须末",
+    "aliases": [],
+    "tier": "roster",
+    "age": 12,
+    "sex": "男",
+    "species": "monster_stone_whisker_weasel",
+    "society": "loc_ms_yugen",
+    "culture": "culture_ms_yugen",
+    "settlement": "loc_ms_yugen",
+    "scope": "loc_ms_yugen",
+    "householdId": "house_ms_yg_02",
+    "household": [
+      "npc_ms_yg_xuxiao",
+      "npc_ms_yg_xushi",
+      "npc_ms_yg_xuhe"
+    ],
+    "occupation": "随修具棚递木屑",
+    "traits": [
+      "机灵",
+      "好动"
+    ],
+    "home": {
+      "location": "bld_ms_yg_home_02",
+      "access": "同住共居；进入私宅须先取得成年住户的有效许可。"
+    },
+    "location": "bld_ms_yg_home_02",
+    "flags": {
+      "minor": true,
+      "romanceable": false
+    },
+    "currentConcern": "想学须晓削铲柄，可她只让他递木屑。",
+    "visibleFeature": "须尖还没凝砂，软软地翘着。"
+  },
+  {
+    "id": "npc_ms_yg_gongni",
+    "name": "拱泥",
+    "aliases": [],
+    "tier": "roster",
+    "age": 36,
+    "sex": "女",
+    "species": "monster_burrow_badger",
+    "society": "loc_ms_yugen",
+    "culture": "culture_ms_yugen",
+    "settlement": "loc_ms_yugen",
+    "scope": "loc_ms_yugen",
+    "householdId": "house_ms_yg_03",
+    "household": [
+      "npc_ms_yg_gonghou",
+      "npc_ms_yg_gongtuan"
+    ],
+    "occupation": "挖沟",
+    "traits": [
+      "直爽",
+      "爱抱怨"
+    ],
+    "home": {
+      "location": "bld_ms_yg_home_03",
+      "access": "同住共居；进入私宅须先取得成年住户的有效许可。"
+    },
+    "location": "bld_ms_yg_home_03",
+    "flags": {
+      "minor": false,
+      "romanceable": false
+    },
+    "currentConcern": "分份少了三道，她在沟边跟别的林獾说这一季干脆少挖几夜。",
+    "visibleFeature": "肩背上总抖落着细土粒。"
+  },
+  {
+    "id": "npc_ms_yg_gongtuan",
+    "name": "拱团",
+    "aliases": [],
+    "tier": "roster",
+    "age": 6,
+    "sex": "女",
+    "species": "monster_burrow_badger",
+    "society": "loc_ms_yugen",
+    "culture": "culture_ms_yugen",
+    "settlement": "loc_ms_yugen",
+    "scope": "loc_ms_yugen",
+    "householdId": "house_ms_yg_03",
+    "household": [
+      "npc_ms_yg_gonghou",
+      "npc_ms_yg_gongni"
+    ],
+    "occupation": "随家人在侧口学认土",
+    "traits": [
+      "贪玩",
+      "胆大"
+    ],
+    "home": {
+      "location": "bld_ms_yg_home_03",
+      "access": "同住共居；进入私宅须先取得成年住户的有效许可。"
+    },
+    "location": "bld_ms_yg_home_03",
+    "flags": {
+      "minor": true,
+      "romanceable": false
+    },
+    "currentConcern": "想跟拱厚下沟，可每回都被推回侧口。",
+    "visibleFeature": "圆滚滚的，前爪上的泥总是干了又湿。"
+  },
+  {
+    "id": "npc_ms_ll_yashi",
+    "name": "牙石",
+    "aliases": [],
+    "tier": "roster",
+    "age": 27,
+    "sex": "男",
+    "species": "monster_split_tusk_orc",
+    "society": "loc_ms_lielu",
+    "culture": "culture_ms_lielu",
+    "settlement": "loc_ms_lielu",
+    "scope": "loc_ms_lielu",
+    "householdId": "house_ms_ll_01",
+    "household": [
+      "npc_ms_ll_yayue",
+      "npc_ms_ll_yajin",
+      "npc_ms_ll_yahang",
+      "npc_ms_ll_yasun"
+    ],
+    "occupation": "守营",
+    "traits": [
+      "勇猛",
+      "直来直去"
+    ],
+    "home": {
+      "location": "bld_ms_ll_home_01",
+      "access": "同住共居；进入私宅须先取得成年住户的有效许可。"
+    },
+    "location": "bld_ms_ll_home_01",
+    "flags": {
+      "minor": false,
+      "romanceable": false
+    },
+    "currentConcern": "牙钺让他盯着锉芒，他觉得为几袋粮跟工匠翻脸不值得。",
+    "visibleFeature": "右边獠牙的裂口刚裂不久，还渗着血丝。"
+  },
+  {
+    "id": "npc_ms_ll_yahang",
+    "name": "牙夯",
+    "aliases": [],
+    "tier": "roster",
+    "age": 38,
+    "sex": "男",
+    "species": "monster_split_tusk_orc",
+    "society": "loc_ms_lielu",
+    "culture": "culture_ms_lielu",
+    "settlement": "loc_ms_lielu",
+    "scope": "loc_ms_lielu",
+    "householdId": "house_ms_ll_01",
+    "household": [
+      "npc_ms_ll_yayue",
+      "npc_ms_ll_yajin",
+      "npc_ms_ll_yashi",
+      "npc_ms_ll_yasun"
+    ],
+    "occupation": "挖矿",
+    "traits": [
+      "能干",
+      "爱抱怨"
+    ],
+    "home": {
+      "location": "bld_ms_ll_home_01",
+      "access": "同住共居；进入私宅须先取得成年住户的有效许可。"
+    },
+    "location": "bld_ms_ll_home_01",
+    "flags": {
+      "minor": false,
+      "romanceable": false
+    },
+    "currentConcern": "修具棚这几天交来的镐修得慢，他下矿时总得换着用。",
+    "visibleFeature": "两条胳膊粗得像撑木，手掌全是老茧。"
+  },
+  {
+    "id": "npc_ms_ll_yasun",
+    "name": "牙笋",
+    "aliases": [],
+    "tier": "roster",
+    "age": 10,
+    "sex": "男",
+    "species": "monster_split_tusk_orc",
+    "society": "loc_ms_lielu",
+    "culture": "culture_ms_lielu",
+    "settlement": "loc_ms_lielu",
+    "scope": "loc_ms_lielu",
+    "householdId": "house_ms_ll_01",
+    "household": [
+      "npc_ms_ll_yayue",
+      "npc_ms_ll_yajin",
+      "npc_ms_ll_yashi",
+      "npc_ms_ll_yahang"
+    ],
+    "occupation": "随棚区学认矿石",
+    "traits": [
+      "好胜",
+      "爱模仿"
+    ],
+    "home": {
+      "location": "bld_ms_ll_home_01",
+      "access": "同住共居；进入私宅须先取得成年住户的有效许可。"
+    },
+    "location": "bld_ms_ll_home_01",
+    "flags": {
+      "minor": true,
+      "romanceable": false
+    },
+    "currentConcern": "想跟队下矿，可牙钺只让他在棚区里认石头。",
+    "visibleFeature": "獠牙才冒出一点尖，还没有裂口。"
+  },
+  {
+    "id": "npc_ms_ll_cuoqian",
+    "name": "锉钳",
+    "aliases": [],
+    "tier": "roster",
+    "age": 35,
+    "sex": "男",
+    "species": "monster_ash_cave_goblin",
+    "society": "loc_ms_lielu",
+    "culture": "culture_ms_lielu",
+    "settlement": "loc_ms_lielu",
+    "scope": "loc_ms_lielu",
+    "householdId": "house_ms_ll_02",
+    "household": [
+      "npc_ms_ll_cuozhen",
+      "npc_ms_ll_cuomang",
+      "npc_ms_ll_cuohui",
+      "npc_ms_ll_cuosu"
+    ],
+    "occupation": "修矿具",
+    "traits": [
+      "老实",
+      "跟随"
+    ],
+    "home": {
+      "location": "bld_ms_ll_home_02",
+      "access": "同住共居；进入私宅须先取得成年住户的有效许可。"
+    },
+    "location": "bld_ms_ll_home_02",
+    "flags": {
+      "minor": false,
+      "romanceable": false
+    },
+    "currentConcern": "锉芒要他也去抹手印，锉针又让他别闹，他夹在中间不知道听谁的。",
+    "visibleFeature": "左手总戴着一只磨破了的皮手套。"
+  },
+  {
+    "id": "npc_ms_ll_cuohui",
+    "name": "锉灰",
+    "aliases": [],
+    "tier": "roster",
+    "age": 52,
+    "sex": "女",
+    "species": "monster_ash_cave_goblin",
+    "society": "loc_ms_lielu",
+    "culture": "culture_ms_lielu",
+    "settlement": "loc_ms_lielu",
+    "scope": "loc_ms_lielu",
+    "householdId": "house_ms_ll_02",
+    "household": [
+      "npc_ms_ll_cuozhen",
+      "npc_ms_ll_cuomang",
+      "npc_ms_ll_cuoqian",
+      "npc_ms_ll_cuosu"
+    ],
+    "occupation": "烧炭",
+    "traits": [
+      "精明",
+      "嘴碎"
+    ],
+    "home": {
+      "location": "bld_ms_ll_home_02",
+      "access": "同住共居；进入私宅须先取得成年住户的有效许可。"
+    },
+    "location": "bld_ms_ll_home_02",
+    "flags": {
+      "minor": false,
+      "romanceable": false
+    },
+    "currentConcern": "巨魔背来的木柴越来越湿，烧出的木炭不够修具棚用。",
+    "visibleFeature": "脸上总是一层黑灰，只露出两只大眼睛。"
+  },
+  {
+    "id": "npc_ms_ll_cuosu",
+    "name": "锉粟",
+    "aliases": [],
+    "tier": "roster",
+    "age": 8,
+    "sex": "女",
+    "species": "monster_ash_cave_goblin",
+    "society": "loc_ms_lielu",
+    "culture": "culture_ms_lielu",
+    "settlement": "loc_ms_lielu",
+    "scope": "loc_ms_lielu",
+    "householdId": "house_ms_ll_02",
+    "household": [
+      "npc_ms_ll_cuozhen",
+      "npc_ms_ll_cuomang",
+      "npc_ms_ll_cuoqian",
+      "npc_ms_ll_cuohui"
+    ],
+    "occupation": "随工棚学认工具名",
+    "traits": [
+      "好奇",
+      "胆小"
+    ],
+    "home": {
+      "location": "bld_ms_ll_home_02",
+      "access": "同住共居；进入私宅须先取得成年住户的有效许可。"
+    },
+    "location": "bld_ms_ll_home_02",
+    "flags": {
+      "minor": true,
+      "romanceable": false
+    },
+    "currentConcern": "想摸一摸锤子，可锉针只让她认工具的名字。",
+    "visibleFeature": "手腕上套着一枚锉芒给的小铁环，大得直往下滑。"
+  },
+  {
+    "id": "npc_ms_ll_panfu",
+    "name": "磐负",
+    "aliases": [],
+    "tier": "roster",
+    "age": 51,
+    "sex": "男",
+    "species": "monster_moss_back_troll",
+    "society": "loc_ms_lielu",
+    "culture": "culture_ms_lielu",
+    "settlement": "loc_ms_lielu",
+    "scope": "loc_ms_lielu",
+    "householdId": "house_ms_ll_03",
+    "household": [
+      "npc_ms_ll_panlei"
+    ],
+    "occupation": "搬运",
+    "traits": [
+      "懒散",
+      "力大"
+    ],
+    "home": {
+      "location": "bld_ms_ll_home_03",
+      "access": "同住共居；进入私宅须先取得成年住户的有效许可。"
+    },
+    "location": "bld_ms_ll_home_03",
+    "flags": {
+      "minor": false,
+      "romanceable": false
+    },
+    "currentConcern": "分到的粮总不够一顿，他夜里搬完石料还得去坡上嚼草根。",
+    "visibleFeature": "背上的青苔厚得能藏住一只小鸟。"
+  },
+  {
+    "id": "npc_ms_ll_panlei",
+    "name": "磐垒",
+    "aliases": [],
+    "tier": "roster",
+    "age": 47,
+    "sex": "女",
+    "species": "monster_moss_back_troll",
+    "society": "loc_ms_lielu",
+    "culture": "culture_ms_lielu",
+    "settlement": "loc_ms_lielu",
+    "scope": "loc_ms_lielu",
+    "householdId": "house_ms_ll_03",
+    "household": [
+      "npc_ms_ll_panfu"
+    ],
+    "occupation": "搬运",
+    "traits": [
+      "慢性子",
+      "记仇"
+    ],
+    "home": {
+      "location": "bld_ms_ll_home_03",
+      "access": "同住共居；进入私宅须先取得成年住户的有效许可。"
+    },
+    "location": "bld_ms_ll_home_03",
+    "flags": {
+      "minor": false,
+      "romanceable": false
+    },
+    "currentConcern": "上回分粮巨魔又排在最后，她打算下一期交割时先坐到贡粮棚门口。",
+    "visibleFeature": "一只手指头比别的粗一圈，是早年被石块压的。"
   }
 ]

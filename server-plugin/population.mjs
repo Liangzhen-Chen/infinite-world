@@ -58,7 +58,7 @@ export function populationTemplate(world,settlementId,{blocklist=defaultBlocklis
     const places=new Map((world.locations??[]).map(l=>[l.id,l]));
     const registered=profile.residentIds.map(id=>people.get(id)).filter(Boolean);
     const districtOf=home=>{const parent=places.get(home)?.parent;return parent&&parent!==settlementId?parent:home;};
-    const districts={},minorWork=new Set(),composition={},cultures={},surnames=new Set(),given=new Set();
+    const districts={},minorWork=new Set(),composition={},cultures={},surnames=new Set(),given=new Set(),speciesSurnames={};
     for(const h of world.households??[])if(h.settlement===settlementId){const d=districtOf(h.homeLocation);if(d)(districts[d]??={households:0,work:new Set()}).households++;}
     for(const p of registered){
         const d=districtOf(p.home?.location??p.location);
@@ -66,7 +66,7 @@ export function populationTemplate(world,settlementId,{blocklist=defaultBlocklis
         if(p.age<18&&p.occupation)minorWork.add(p.occupation);
         const species=p.species??'';composition[species]=(composition[species]??0)+1;
         if(p.culture)(cultures[species]??={})[p.culture]=(cultures[species][p.culture]??0)+1;
-        const chars=[...p.name];if(chars.length>=2){surnames.add(chars[0]);for(const c of chars.slice(1))given.add(c);}
+        const chars=[...p.name];if(chars.length>=2){surnames.add(chars[0]);for(const c of chars.slice(1))given.add(c);if(profile.pendingSpeciesStructure)(speciesSurnames[species]??=new Set()).add(chars[0]);}
     }
     const usable=Object.entries(districts).filter(([,d])=>d.households>0&&d.work.size>0);
     for(const c of GIVEN_STOCK)given.add(c);
@@ -79,13 +79,16 @@ export function populationTemplate(world,settlementId,{blocklist=defaultBlocklis
         composition:Object.fromEntries(Object.entries(composition).sort()),
         cultures:Object.fromEntries(Object.keys(composition).sort().map(s=>[s,topCulture(cultures[s])??topCulture(Object.assign({},...Object.values(cultures)))])),
         surnames:[...surnames].sort(),given:[...given].sort(),
+        // Mixed settlements name each species by its own registered clan characters.
+        ...(profile.pendingSpeciesStructure?{speciesSurnames:Object.fromEntries(Object.entries(speciesSurnames).sort().map(([k,v])=>[k,[...v].sort()]))}:{}),
         taken:[...new Set([...people.values()].map(p=>p.name).filter(Boolean))].sort(),
         blocked:[...new Set(blocklist)].sort(),
     };
 }
 export function populationBasis(world,settlementId){
     const p=world.settlementProfiles.find(row=>row.id===settlementId);
-    return {pendingPopulation:p.pendingPopulation,pendingHouseholdCount:p.pendingHouseholdCount,pendingAgeStructure:structuredClone(p.pendingAgeStructure)};
+    return {pendingPopulation:p.pendingPopulation,pendingHouseholdCount:p.pendingHouseholdCount,pendingAgeStructure:structuredClone(p.pendingAgeStructure),
+        ...(p.pendingSpeciesStructure?{bySpecies:structuredClone(p.pendingSpeciesStructure)}:{})};
 }
 
 const planCache=new Map();
@@ -94,27 +97,47 @@ const planCache=new Map();
 export function populationPlan(template,basis){
     const key=hashText([template,basis]);if(planCache.has(key))return planCache.get(key);
     const rng=stream(`${template.seed}:population-plan:v${POPULATION_VERSION}`);
-    const H=basis.pendingHouseholdCount,P=basis.pendingPopulation,ages=basis.pendingAgeStructure;
+    const H=basis.pendingHouseholdCount,P=basis.pendingPopulation;
     if(!Number.isInteger(H)||!Number.isInteger(P)||H<0||P<H||(H===0&&P>0))throw Error('待生成人口与户数不成立');
-    if(AGE_KEYS.reduce((n,k)=>n+(ages?.[k]??NaN),0)!==P)throw Error('待生成年龄配额与人数不符');
-    if(P-ages.children<H)throw Error('成年人数不足以为每户安排户主');
-    const base=Math.floor(P/(H||1)),extra=H?P%H:0;
-    const sizes=shuffle(rng,Array.from({length:H},(_,i)=>base+(i<extra?1:0)));
-    const pool=Object.fromEntries(AGE_KEYS.map(k=>[k,Array.from({length:ages[k]},()=>{const [lo,hi]=AGE_RANGES[k];return lo+Math.floor(rng()*(hi-lo+1));}).sort((a,b)=>b-a)]));
-    const heads=[...shuffle(rng,pool.adults),...shuffle(rng,pool.elders),...[...pool.youngAdults].sort((a,b)=>b-a)];
-    const headAges=heads.slice(0,H),otherAdults=heads.slice(H);
-    const homes=sizes.map((size,i)=>({size,members:[{age:headAges[i],role:'户主'}]}));
-    for(const age of pool.children){
-        const eligible=homes.filter(h=>h.members.length<h.size&&h.members[0].age-age>=MIN_PARENT_GAP);
-        if(!eligible.length)throw Error('未成年人找不到年龄相符的户主，人口模板不可生成');
-        pick(rng,eligible).members.push({age,role:'子女'});
+    if(AGE_KEYS.reduce((n,k)=>n+(basis.pendingAgeStructure?.[k]??NaN),0)!==P)throw Error('待生成年龄配额与人数不符');
+    function buildHomes(H,P,ages){
+        if(P-ages.children<H)throw Error('成年人数不足以为每户安排户主');
+        const base=Math.floor(P/(H||1)),extra=H?P%H:0;
+        const sizes=shuffle(rng,Array.from({length:H},(_,i)=>base+(i<extra?1:0)));
+        const pool=Object.fromEntries(AGE_KEYS.map(k=>[k,Array.from({length:ages[k]},()=>{const [lo,hi]=AGE_RANGES[k];return lo+Math.floor(rng()*(hi-lo+1));}).sort((a,b)=>b-a)]));
+        const heads=[...shuffle(rng,pool.adults),...shuffle(rng,pool.elders),...[...pool.youngAdults].sort((a,b)=>b-a)];
+        const headAges=heads.slice(0,H),otherAdults=heads.slice(H);
+        const homes=sizes.map((size,i)=>({size,members:[{age:headAges[i],role:'户主'}]}));
+        for(const age of pool.children){
+            const eligible=homes.filter(h=>h.members.length<h.size&&h.members[0].age-age>=MIN_PARENT_GAP);
+            if(!eligible.length)throw Error('未成年人找不到年龄相符的户主，人口模板不可生成');
+            pick(rng,eligible).members.push({age,role:'子女'});
+        }
+        for(const age of shuffle(rng,otherAdults)){
+            const open=homes.filter(h=>h.members.length<h.size);
+            pick(rng,open).members.push({age,role:null});
+        }
+        return homes;
     }
-    for(const age of shuffle(rng,otherAdults)){
-        const open=homes.filter(h=>h.members.length<h.size);
-        pick(rng,open).members.push({age,role:null});
+    const weights=ids=>Object.fromEntries(Object.entries(template.districts).filter(([id])=>!ids||ids.includes(id)).map(([id,d])=>[id,d.weight]));
+    let homes,districtSlots,speciesSlots;
+    if(!basis.bySpecies){
+        homes=buildHomes(H,P,basis.pendingAgeStructure);
+        districtSlots=shuffle(rng,Object.entries(apportion(H,weights())).flatMap(([id,n])=>Array(n).fill(id)));
+        speciesSlots=shuffle(rng,Object.entries(apportion(H,template.composition)).flatMap(([s,n])=>Array(n).fill(s)));
+    }else{
+        // Mixed settlements fix each species' own households, ages and quarters.
+        homes=[];districtSlots=[];speciesSlots=[];
+        const groups=Object.entries(basis.bySpecies).sort(([a],[b])=>a.localeCompare(b));
+        if(groups.reduce((n,[,g])=>n+g.population,0)!==P||groups.reduce((n,[,g])=>n+g.households,0)!==H||
+            AGE_KEYS.some(k=>groups.reduce((n,[,g])=>n+(g.ageStructure?.[k]??NaN),0)!==basis.pendingAgeStructure[k]))throw Error('分物种待生成配额与总数不符');
+        for(const [species,g] of groups){
+            if(AGE_KEYS.reduce((n,k)=>n+g.ageStructure[k],0)!==g.population||g.households<1&&g.population>0)throw Error(`分物种待生成配额不成立：${species}`);
+            homes.push(...buildHomes(g.households,g.population,g.ageStructure));
+            districtSlots.push(...shuffle(rng,Object.entries(apportion(g.households,weights(g.districts))).flatMap(([id,n])=>Array(n).fill(id))));
+            speciesSlots.push(...Array(g.households).fill(species));
+        }
     }
-    const districtSlots=shuffle(rng,Object.entries(apportion(H,Object.fromEntries(Object.entries(template.districts).map(([id,d])=>[id,d.weight])))).flatMap(([id,n])=>Array(n).fill(id)));
-    const speciesSlots=shuffle(rng,Object.entries(apportion(H,template.composition)).flatMap(([s,n])=>Array(n).fill(s)));
     const taken=new Set(template.taken),blocked=template.blocked;
     const nameOk=name=>!taken.has(name)&&!blocked.some(w=>name.includes(w)||w===name);
     function nameFor(surname){
@@ -123,13 +146,14 @@ export function populationPlan(template,basis){
     }
     const households=homes.map((h,i)=>{
         const index=i+1,district=districtSlots[i],species=speciesSlots[i]||null,headSex=rng()<0.5?'男':'女';
-        const id=`house_pop_${template.short}_${pad(index)}`,surname=pick(rng,template.surnames);
+        const clan=template.speciesSurnames?.[species]??template.surnames;
+        const id=`house_pop_${template.short}_${pad(index)}`,surname=pick(rng,clan);
         const head=h.members[0];let spouse=null;
         for(const m of h.members.slice(1))if(m.role===null&&!spouse&&Math.abs(m.age-head.age)<=10){m.role='伴侣';spouse=m;}
         for(const m of h.members.slice(1))if(m.role===null)m.role=head.age-m.age>=MIN_PARENT_GAP?'子女':m.age-head.age>=MIN_PARENT_GAP?'父母':'同住亲友';
         const members=h.members.map((m,j)=>{
             const sex=j===0?headSex:m===spouse?(headSex==='男'?'女':'男'):(rng()<0.5?'男':'女');
-            const ownSurname=j===0||m.role==='子女'||(m.role==='父母'&&sex==='男')?surname:pick(rng,template.surnames);
+            const ownSurname=j===0||m.role==='子女'||(m.role==='父母'&&sex==='男')?surname:pick(rng,clan);
             const occupation=m.age<18?pick(rng,template.minorWork):pick(rng,template.districts[district].work);
             return {id:`npc_pop_${template.short}_${pad(index)}_${j+1}`,name:nameFor(ownSurname),age:m.age,sex,role:m.role,occupation};
         });

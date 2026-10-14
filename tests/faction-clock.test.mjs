@@ -16,6 +16,8 @@ const relation=(delta=10)=>({kind:'relation',target:peer,delta});
 const stage=(id,effect=relation(),cost={coins:3,items:{item_oats:2}},condition={kind:'always'})=>({id,name:id,condition,cost,effect});
 function setup(stages=[stage('start')],{intervalDays=1,probability=1}={}){
  const world=structuredClone(source);for(const npc of world.npcs){delete npc.tier;delete npc.schedule;}
+ // Isolate the authored test rule from settlement clocks published in the catalog.
+ for(const f of world.factions)if(f.clock?.stages){const {settlement,source,cycle,stages,contact,interventions,...plan}=f.clock;f.clock=plan;}
  const f=world.factions.find(f=>f.id===owner);f.resources.treasuryCopper=40;f.resources.items={item_oats:10};
  const other=world.factions.find(f=>f.id===peer);other.resources.treasuryCopper=50;other.resources.items={item_oats:0};
  const rule={id:'test_plan',faction:owner,settlement:'loc_hw',source:'test authored runtime',intervalDays,probability,stages,
@@ -38,7 +40,11 @@ function atContact(s,doc=s.doc){
 }
 
 test('旧文字计划不执行；运行参数与未知效果明确拒绝，不以名册生成NPC',()=>{
- assert.deepEqual(factionClockRules(new WorldEngine(source)),[]);
+ // Only factions that publish runtime stages execute; declarative W5 plans never do.
+ const published=factionClockRules(new WorldEngine(source));
+ assert.ok(published.every(r=>source.factions.find(f=>f.id===r.faction)?.clock?.stages===r.stages));
+ assert.deepEqual(published.filter(r=>!source.factions.find(f=>f.id===r.faction)?.clock?.stages),[]);
+ assert.ok(!published.some(r=>[owner,peer].includes(r.faction)));
  const s=setup();assert.doesNotThrow(()=>assertFactionClockRules(s.engine));
  for(const mutate of [r=>r.intervalDays=2,r=>r.stages[0].effect={kind:'made_up'},r=>r.stages[0].cost.items.item_oats=-1,r=>r.stages[0].cost={labor:5},r=>r.stages[0].condition={kind:'made_up'}]){
   const c=setup();mutate(c.rule);assert.throws(()=>assertFactionClockRules(c.engine));

@@ -146616,5 +146616,3548 @@
     "portraitPrompt": "原创年轻苔灯狐守林哨，赤灰皮毛，左后腿一圈秃痕微跛，尾结短而紧，尾尖苔光，站在挂着铁夹的旧根洞口",
     "notes": "苔灯坞守林哨，追偿派带头人；前年冬天被捕夹夹伤后腿，看管收夹洞。",
     "description": "栗针是苔灯坞的守林哨，二十二岁，前年冬天在北林边踩进捕夹，左后腿至今微跛。他带着栗枝收走北林边的捕夹存进收夹洞，要河湾猎户为被夹伤的狐给个说法，不愿再等长老的结缘。他话不多，开口就顶，说到猎户时后腿会不自觉地缩一下。"
+  },
+  {
+    "id": "npc_ms_yg_jiecang",
+    "name": "节苍",
+    "aliases": [],
+    "tier": "full",
+    "age": 96,
+    "sex": "男",
+    "species": "monster_knot_elm_sprite",
+    "society": "loc_ms_yugen",
+    "culture": "culture_ms_yugen",
+    "settlement": "loc_ms_yugen",
+    "scope": "loc_ms_yugen",
+    "householdId": "house_ms_yg_01",
+    "household": [
+      "npc_ms_yg_jieyin",
+      "npc_ms_yg_jiecha",
+      "npc_ms_yg_jieqing",
+      "npc_ms_yg_jieya"
+    ],
+    "occupation": "护林",
+    "traits": [
+      "慢性子",
+      "护短"
+    ],
+    "home": {
+      "location": "bld_ms_yg_home_01",
+      "access": "同住共居；进入私宅须先取得成年住户的有效许可。",
+      "ownership": "unspecified"
+    },
+    "location": "bld_ms_yg_home_01",
+    "flags": {
+      "minor": false,
+      "romanceable": false
+    },
+    "currentConcern": "分账树皮上地窟那一栏少刻了三道，须晓要进议根洞理论，他想先把伐界和榆坡说定，再说分份的事。",
+    "visibleFeature": "右肩的节疤裂过一道，用湿泥糊着，泥干了就再糊。",
+    "trust": 0,
+    "affection": 0,
+    "coins": 0,
+    "birth": {
+      "year": -96,
+      "month": 1,
+      "day": 2
+    },
+    "inventory": {
+      "item_hazelnut": 8,
+      "item_walnut": 6,
+      "item_dried_fruit": 4
+    },
+    "skills": [],
+    "services": [
+      "trade"
+    ],
+    "intelligence": {
+      "level": 2,
+      "growth": 0
+    },
+    "role": "林主",
+    "familyNotes": "节苍与节荫、节杈、节青同住节家树穴，小木精节芽也由他们带着；他每天天亮前先看一眼节芽扎根的地方有没有积水。",
+    "appearance": [
+      "右肩的节疤裂过一道，用湿泥糊着，泥干了就再糊。",
+      "头顶的细榆条比别的木精多出三枝",
+      "脚下的须根比旁人长，走过的土坑也深"
+    ],
+    "voice": {
+      "register": "说话极慢，一句话中间要停好几回",
+      "accent": "像风过枝条的沙沙声里夹着字",
+      "habits": [
+        "开口前先用指节在树干上敲两下"
+      ],
+      "samples": [
+        "拿枯的，不砍活的。",
+        "树的事，树先说。",
+        "分份刻在树皮上，刻了就算。"
+      ]
+    },
+    "personality": {
+      "traits": [
+        "慢性子",
+        "护短"
+      ],
+      "values": [
+        "老林和新苗比什么都要紧",
+        "话说出口就刻上树皮"
+      ],
+      "flaws": [
+        "认定木精护林在先，听不进穴居者的委屈"
+      ]
+    },
+    "proficiencies": {},
+    "professions": [],
+    "level": 1,
+    "combat": null,
+    "wealth": {
+      "cashRange": [
+        0,
+        0
+      ],
+      "property": [],
+      "valuables": [],
+      "debts": []
+    },
+    "workplace": {
+      "location": "site_ms_yg_gate",
+      "access": "公共林地、窟道或营地可当面招呼；工具和存物另问看管者。"
+    },
+    "schedule": {
+      "default": [
+        {
+          "start": 0,
+          "end": 300,
+          "location": "bld_ms_yg_home_01",
+          "activity": "扎根睡眠",
+          "services": []
+        },
+        {
+          "start": 300,
+          "end": 360,
+          "location": "site_ms_yg_nursery",
+          "activity": "巡看育苗地",
+          "services": []
+        },
+        {
+          "start": 360,
+          "end": 1080,
+          "location": "site_ms_yg_gate",
+          "activity": "在根门见来客、换林产",
+          "services": [
+            "trade"
+          ]
+        },
+        {
+          "start": 1080,
+          "end": 1140,
+          "location": "site_ms_yg_council",
+          "activity": "议根洞黄昏议事",
+          "services": []
+        },
+        {
+          "start": 1140,
+          "end": 1440,
+          "location": "bld_ms_yg_home_01",
+          "activity": "扎根睡眠",
+          "services": []
+        }
+      ],
+      "market": [
+        {
+          "start": 0,
+          "end": 300,
+          "location": "bld_ms_yg_home_01",
+          "activity": "扎根睡眠",
+          "services": []
+        },
+        {
+          "start": 300,
+          "end": 360,
+          "location": "site_ms_yg_nursery",
+          "activity": "巡看育苗地",
+          "services": []
+        },
+        {
+          "start": 360,
+          "end": 1080,
+          "location": "site_ms_yg_gate",
+          "activity": "在根门见来客、换林产",
+          "services": [
+            "trade"
+          ]
+        },
+        {
+          "start": 1080,
+          "end": 1140,
+          "location": "site_ms_yg_council",
+          "activity": "议根洞黄昏议事",
+          "services": []
+        },
+        {
+          "start": 1140,
+          "end": 1440,
+          "location": "bld_ms_yg_home_01",
+          "activity": "扎根睡眠",
+          "services": []
+        }
+      ],
+      "rest": [
+        {
+          "start": 0,
+          "end": 300,
+          "location": "bld_ms_yg_home_01",
+          "activity": "扎根睡眠",
+          "services": []
+        },
+        {
+          "start": 300,
+          "end": 360,
+          "location": "site_ms_yg_nursery",
+          "activity": "巡看育苗地",
+          "services": []
+        },
+        {
+          "start": 360,
+          "end": 1080,
+          "location": "site_ms_yg_gate",
+          "activity": "在根门见来客、换林产",
+          "services": [
+            "trade"
+          ]
+        },
+        {
+          "start": 1080,
+          "end": 1140,
+          "location": "site_ms_yg_council",
+          "activity": "议根洞黄昏议事",
+          "services": []
+        },
+        {
+          "start": 1140,
+          "end": 1440,
+          "location": "bld_ms_yg_home_01",
+          "activity": "扎根睡眠",
+          "services": []
+        }
+      ],
+      "restDays": [],
+      "seasonal": {}
+    },
+    "relationships": [
+      {
+        "with": "npc_ms_yg_jieyin",
+        "type": "同穴议事",
+        "trust": 35,
+        "affection": 12,
+        "note": "节荫比他早长成，他当上林主那年是她在议根洞头一个刻下同意的记号；如今两人都主张林产由木精按树分份。"
+      },
+      {
+        "with": "npc_ms_yg_gonghou",
+        "type": "林主与排水头",
+        "trust": 20,
+        "affection": 6,
+        "note": "拱厚每夜带林獾清沟，天亮前把运进林产窖的篓数刻上树皮；节苍信他刻的数，却没答应让他进议根洞。"
+      },
+      {
+        "with": "npc_ms_yg_xuxiao",
+        "type": "林主与异议者",
+        "trust": -8,
+        "affection": 4,
+        "note": "须晓在根门当着来换东西的人说分份不公，要进议根洞理论；他当时只说“树先说”，没有让她进。"
+      },
+      {
+        "with": "npc_ms_yg_jieya",
+        "type": "同穴照看",
+        "trust": 10,
+        "affection": 18,
+        "note": "小木精节芽跟着他学认苗，他每天教她分辨哪根是榆苗、哪根是杂草。"
+      }
+    ],
+    "memorySeeds": [
+      {
+        "id": "memory_t159_yg_cut",
+        "event": "上个月分林产那天黄昏，节苍、节荫、拱厚、须晓在根门对着分账树皮清点，地窟那一栏比上一季少刻了三道；须晓当场要进议根洞理论，节荫没有让她进。",
+        "location": "site_ms_yg_gate",
+        "salience": 5,
+        "knownBy": [
+          "npc_ms_yg_jiecang",
+          "npc_ms_yg_jieyin",
+          "npc_ms_yg_gonghou",
+          "npc_ms_yg_xuxiao"
+        ],
+        "reliability": "亲历"
+      },
+      {
+        "id": "memory_t159_yg_jiecang_flood",
+        "event": "很多年前的一场大雨冲垮了育苗地，他守着泡烂的苗站了一夜，第二天才有林獾来挖第一条沟。",
+        "location": "site_ms_yg_nursery",
+        "salience": 4,
+        "knownBy": [
+          "npc_ms_yg_jiecang"
+        ],
+        "reliability": "个人回忆"
+      }
+    ],
+    "goals": {
+      "short": [
+        {
+          "id": "goal_t159_yg_jiecang_short",
+          "content": "先和榆坡把伐界说定",
+          "progress": 0,
+          "deadlineDay": 30,
+          "resources": [
+            {
+              "kind": "协商",
+              "description": "须当事人另行确认的空闲时辰",
+              "availability": "unverified",
+              "grantsInventory": false
+            }
+          ],
+          "steps": [
+            {
+              "content": "请来根门换东西的榆坡人给村里带话",
+              "status": "pending"
+            },
+            {
+              "content": "把北岗老林里该留的老树刻上节疤记号",
+              "status": "pending"
+            }
+          ]
+        }
+      ],
+      "mid": [
+        {
+          "id": "goal_t159_yg_jiecang_mid",
+          "content": "让分账树皮上的数重新对得上",
+          "progress": 0,
+          "deadlineDay": 180,
+          "resources": [
+            {
+              "kind": "协商",
+              "description": "须当事人另行确认的空闲时辰",
+              "availability": "unverified",
+              "grantsInventory": false
+            }
+          ],
+          "steps": [
+            {
+              "content": "请节荫把本季分份逐行念一遍",
+              "status": "pending"
+            },
+            {
+              "content": "亲自到林产窖看篓沿的刻数",
+              "status": "pending"
+            }
+          ]
+        }
+      ],
+      "long": [
+        {
+          "id": "goal_t159_yg_jiecang_long",
+          "content": "让育苗地十年后长成新的一片榆林",
+          "progress": 0,
+          "deadlineDay": 720,
+          "resources": [
+            {
+              "kind": "协商",
+              "description": "须当事人另行确认的空闲时辰",
+              "availability": "unverified",
+              "grantsInventory": false
+            }
+          ],
+          "steps": [
+            {
+              "content": "每季多栽一行榆苗",
+              "status": "pending"
+            },
+            {
+              "content": "请拱厚把排水沟再往坡下引一段",
+              "status": "pending"
+            }
+          ]
+        }
+      ]
+    },
+    "fears": [
+      "怕榆坡人越过老林砍到育苗地边上"
+    ],
+    "redLines": [
+      "活树和新苗谁也不能砍",
+      "林产不拿去换伤林的东西"
+    ],
+    "secrets": [
+      {
+        "content": "分账树皮上那三道是他让节杈削掉的，那三份榛仁留在窖里，他想拿去和榆坡换伐界的承诺。",
+        "knownBy": [
+          "npc_ms_yg_jiecang",
+          "npc_ms_yg_jiecha"
+        ]
+      }
+    ],
+    "knowledge": {
+      "known": [
+        {
+          "fact": "分账树皮上地窟那一栏本季比上季少了三道刻痕。",
+          "source": "site_ms_yg_store",
+          "reliability": "亲眼看过"
+        },
+        {
+          "fact": "拱厚每夜带林獾清沟，天亮前把运进林产窖的篓数刻上树皮。",
+          "source": "npc_ms_yg_gonghou",
+          "reliability": "每天读他刻下的篓数"
+        },
+        {
+          "fact": "榆坡人来根门换东西，多是用盐、鱼和干粮换榛仁和干果。",
+          "source": "site_ms_yg_gate",
+          "reliability": "多年往来"
+        }
+      ],
+      "unknown": [
+        "榆坡哪一位肯出面和榆根里说伐界？",
+        "须晓是否会在黄昏议事时闯进议根洞？"
+      ]
+    },
+    "opinions": {
+      "factions": "榆坡人里有拣枯枝的，也有想砍活树的，要分开看。",
+      "magic": "带火的法术在林外就熄掉。",
+      "adventurers": "外来人肯替榆根里去榆坡传伐界的话，他愿意多给一篓榛仁。",
+      "neighbors": [
+        {
+          "with": "npc_ms_yg_xuxiao",
+          "view": "手巧，嘴太快。"
+        },
+        {
+          "with": "npc_ms_yg_jieyin",
+          "view": "议根洞里最稳的一个。"
+        }
+      ]
+    },
+    "towardPlayer": {
+      "baseline": {
+        "trust": 0,
+        "affection": 0
+      },
+      "raises": [
+        "进林前熄火",
+        "只拣枯枝不碰活树"
+      ],
+      "lowers": [
+        "踩进育苗地",
+        "在林里点火"
+      ],
+      "attitude": "中立，愿意在根门谈换林产和伐界的事。"
+    },
+    "behaviorRules": {
+      "bargaining": "用手头的榛仁、核桃和干果换东西，换完就停，不收钱。",
+      "honesty": "刻在树皮上的照实说，没刻的说“没刻”。",
+      "risk": "不离开榆根里去榆坡。",
+      "threatResponse": "用枝条敲树干叫守林的节杈，自己挡在育苗地前。",
+      "bribeResponse": "收下的东西当众刻进分账树皮，不因此替人改份数。"
+    },
+    "serviceCatalog": [
+      {
+        "kind": "trade",
+        "what": "本人手头的榛仁、核桃与干果",
+        "price": {
+          "mode": "engineQuote"
+        },
+        "unlocksService": false
+      }
+    ],
+    "hooks": [
+      "分账树皮少了三道",
+      "和榆坡划伐界"
+    ],
+    "ttsVoice": "zh_male_low_01",
+    "portraitPrompt": "原创节榆木精林主，半人高的老榆树干身形，肩背满是节疤，右肩裂口糊着湿泥，头顶几枝细榆条，脚下长须根，站在两棵老榆交错的拱根下",
+    "notes": "榆根里林主，护林派；白天在根门见客换林产，想先和榆坡说定伐界，不愿让穴居者进议根洞。",
+    "description": "节苍是榆根里的林主，九十六岁的节榆木精，右肩节疤裂过一道，常年用湿泥糊着。白天他在根门见客，用榛仁、核桃和干果换榆坡人带来的盐、鱼和干粮。分账树皮上地窟那一栏少了三道，须晓要进议根洞理论，他想先和榆坡说定伐界，再谈分份。他说话极慢，认定木精护林在先。"
+  },
+  {
+    "id": "npc_ms_yg_jieyin",
+    "name": "节荫",
+    "aliases": [],
+    "tier": "full",
+    "age": 131,
+    "sex": "女",
+    "species": "monster_knot_elm_sprite",
+    "society": "loc_ms_yugen",
+    "culture": "culture_ms_yugen",
+    "settlement": "loc_ms_yugen",
+    "scope": "loc_ms_yugen",
+    "householdId": "house_ms_yg_01",
+    "household": [
+      "npc_ms_yg_jiecang",
+      "npc_ms_yg_jiecha",
+      "npc_ms_yg_jieqing",
+      "npc_ms_yg_jieya"
+    ],
+    "occupation": "照看育苗根",
+    "traits": [
+      "守旧",
+      "细致"
+    ],
+    "home": {
+      "location": "bld_ms_yg_home_01",
+      "access": "同住共居；进入私宅须先取得成年住户的有效许可。",
+      "ownership": "unspecified"
+    },
+    "location": "bld_ms_yg_home_01",
+    "flags": {
+      "minor": false,
+      "romanceable": false
+    },
+    "currentConcern": "育苗地东头那一行榆苗根旁积了水，她怕排水沟再不往那边挖，苗根就要烂了。",
+    "visibleFeature": "身上的节疤一圈压一圈，数不清有多少圈。",
+    "trust": 0,
+    "affection": 0,
+    "coins": 0,
+    "birth": {
+      "year": -131,
+      "month": 12,
+      "day": 23
+    },
+    "inventory": {
+      "item_herb": 3
+    },
+    "skills": [],
+    "services": [],
+    "intelligence": {
+      "level": 2,
+      "growth": 0
+    },
+    "role": "长老",
+    "familyNotes": "节荫与节苍、节杈、节青同住节家树穴，节芽扎根的地方是她亲手垫的腐叶。",
+    "appearance": [
+      "身上的节疤一圈压一圈，数不清有多少圈。",
+      "须根上总沾着育苗地的湿泥",
+      "头顶的榆条已经不发新叶，只剩几片老叶"
+    ],
+    "voice": {
+      "register": "声音低而干，像老树皮摩擦",
+      "accent": "说到树的事会把字拖得很长",
+      "habits": [
+        "说到规矩时用枝条点一下地"
+      ],
+      "samples": [
+        "苗根伤了，一季都补不回来。",
+        "议根洞里的话，要刻上去才算。",
+        "新的那几个，先学认根。"
+      ]
+    },
+    "personality": {
+      "traits": [
+        "守旧",
+        "细致"
+      ],
+      "values": [
+        "育苗根比谁的面子都大",
+        "议根洞的规矩是老榆传下来的"
+      ],
+      "flaws": [
+        "看不起穴居者翻土的本事，常说他们只会刨"
+      ]
+    },
+    "proficiencies": {},
+    "professions": [],
+    "level": 1,
+    "combat": null,
+    "wealth": {
+      "cashRange": [
+        0,
+        0
+      ],
+      "property": [],
+      "valuables": [],
+      "debts": []
+    },
+    "workplace": {
+      "location": "site_ms_yg_nursery",
+      "access": "公共林地、窟道或营地可当面招呼；工具和存物另问看管者。"
+    },
+    "schedule": {
+      "default": [
+        {
+          "start": 0,
+          "end": 300,
+          "location": "bld_ms_yg_home_01",
+          "activity": "扎根睡眠",
+          "services": []
+        },
+        {
+          "start": 300,
+          "end": 1080,
+          "location": "site_ms_yg_nursery",
+          "activity": "照看育苗根、糊湿泥",
+          "services": []
+        },
+        {
+          "start": 1080,
+          "end": 1140,
+          "location": "site_ms_yg_council",
+          "activity": "议根洞黄昏议事",
+          "services": []
+        },
+        {
+          "start": 1140,
+          "end": 1440,
+          "location": "bld_ms_yg_home_01",
+          "activity": "扎根睡眠",
+          "services": []
+        }
+      ],
+      "market": [
+        {
+          "start": 0,
+          "end": 300,
+          "location": "bld_ms_yg_home_01",
+          "activity": "扎根睡眠",
+          "services": []
+        },
+        {
+          "start": 300,
+          "end": 1080,
+          "location": "site_ms_yg_nursery",
+          "activity": "照看育苗根、糊湿泥",
+          "services": []
+        },
+        {
+          "start": 1080,
+          "end": 1140,
+          "location": "site_ms_yg_council",
+          "activity": "议根洞黄昏议事",
+          "services": []
+        },
+        {
+          "start": 1140,
+          "end": 1440,
+          "location": "bld_ms_yg_home_01",
+          "activity": "扎根睡眠",
+          "services": []
+        }
+      ],
+      "rest": [
+        {
+          "start": 0,
+          "end": 300,
+          "location": "bld_ms_yg_home_01",
+          "activity": "扎根睡眠",
+          "services": []
+        },
+        {
+          "start": 300,
+          "end": 1080,
+          "location": "site_ms_yg_nursery",
+          "activity": "照看育苗根、糊湿泥",
+          "services": []
+        },
+        {
+          "start": 1080,
+          "end": 1140,
+          "location": "site_ms_yg_council",
+          "activity": "议根洞黄昏议事",
+          "services": []
+        },
+        {
+          "start": 1140,
+          "end": 1440,
+          "location": "bld_ms_yg_home_01",
+          "activity": "扎根睡眠",
+          "services": []
+        }
+      ],
+      "restDays": [],
+      "seasonal": {}
+    },
+    "relationships": [
+      {
+        "with": "npc_ms_yg_jiecang",
+        "type": "同穴议事",
+        "trust": 35,
+        "affection": 12,
+        "note": "节苍当上林主那年，她在议根洞头一个刻下同意的记号；她觉得他太看重伐界，忘了育苗地东头的积水。"
+      },
+      {
+        "with": "npc_ms_yg_xuxiao",
+        "type": "长老与异议者",
+        "trust": -10,
+        "affection": 2,
+        "note": "上个月在根门清点以后，须晓追到议根洞口要进去，是她用枝条拦住的；她说议根洞历来只坐木精。"
+      },
+      {
+        "with": "npc_ms_yg_gonghou",
+        "type": "看苗与挖沟",
+        "trust": 15,
+        "affection": 5,
+        "note": "她每季把哪里积水告诉拱厚，拱厚照她指的地方挖沟；两人为沟线离苗根多远争过好几回。"
+      },
+      {
+        "with": "npc_ms_yg_jieya",
+        "type": "同穴照看",
+        "trust": 12,
+        "affection": 20,
+        "note": "小木精节芽扎根的那圈腐叶是她垫的，她教节芽怎样给伤苗糊湿泥。"
+      }
+    ],
+    "memorySeeds": [
+      {
+        "id": "memory_t159_yg_cut",
+        "event": "上个月分林产那天黄昏，节苍、节荫、拱厚、须晓在根门对着分账树皮清点，地窟那一栏比上一季少刻了三道；须晓当场要进议根洞理论，节荫没有让她进。",
+        "location": "site_ms_yg_gate",
+        "salience": 5,
+        "knownBy": [
+          "npc_ms_yg_jiecang",
+          "npc_ms_yg_jieyin",
+          "npc_ms_yg_gonghou",
+          "npc_ms_yg_xuxiao"
+        ],
+        "reliability": "亲历"
+      },
+      {
+        "id": "memory_t159_yg_jieyin_badger",
+        "event": "早年第一批开了灵智的林獾来到榆根里，她看着它们在育苗地边刨坏了半行苗，后来才答应让它们挖沟。",
+        "location": "site_ms_yg_nursery",
+        "salience": 3,
+        "knownBy": [
+          "npc_ms_yg_jieyin"
+        ],
+        "reliability": "个人回忆"
+      }
+    ],
+    "goals": {
+      "short": [
+        {
+          "id": "goal_t159_yg_jieyin_short",
+          "content": "赶在下一场雨前把育苗地东头的积水排掉",
+          "progress": 0,
+          "deadlineDay": 30,
+          "resources": [
+            {
+              "kind": "协商",
+              "description": "须当事人另行确认的空闲时辰",
+              "availability": "unverified",
+              "grantsInventory": false
+            }
+          ],
+          "steps": [
+            {
+              "content": "请拱厚把沟往东头引",
+              "status": "pending"
+            },
+            {
+              "content": "给积水那一行苗根糊上新泥",
+              "status": "pending"
+            }
+          ]
+        }
+      ],
+      "mid": [
+        {
+          "id": "goal_t159_yg_jieyin_mid",
+          "content": "守住议根洞只坐木精的老规矩",
+          "progress": 0,
+          "deadlineDay": 180,
+          "resources": [
+            {
+              "kind": "协商",
+              "description": "须当事人另行确认的空闲时辰",
+              "availability": "unverified",
+              "grantsInventory": false
+            }
+          ],
+          "steps": [
+            {
+              "content": "黄昏议事时先说老榆传下的规矩",
+              "status": "pending"
+            },
+            {
+              "content": "请节苍别在伐界的事上松口",
+              "status": "pending"
+            }
+          ]
+        }
+      ],
+      "long": [
+        {
+          "id": "goal_t159_yg_jieyin_long",
+          "content": "把育苗根的认法教给每个小木精",
+          "progress": 0,
+          "deadlineDay": 720,
+          "resources": [
+            {
+              "kind": "协商",
+              "description": "须当事人另行确认的空闲时辰",
+              "availability": "unverified",
+              "grantsInventory": false
+            }
+          ],
+          "steps": [
+            {
+              "content": "每天带节芽认一遍苗",
+              "status": "pending"
+            },
+            {
+              "content": "让节青轮着陪小木精练",
+              "status": "pending"
+            }
+          ]
+        }
+      ]
+    },
+    "fears": [
+      "怕穴居者进了议根洞，往后沟线都从苗根底下过"
+    ],
+    "redLines": [
+      "伤了育苗根的要赔一季劳力",
+      "议根洞里的刻痕谁也不能削"
+    ],
+    "secrets": [
+      {
+        "content": "她心里清楚这一季地窟的林獾清沟比往年都卖力，分份少刻三道说不过去，只是不肯当众认。",
+        "knownBy": [
+          "npc_ms_yg_jieyin"
+        ]
+      }
+    ],
+    "knowledge": {
+      "known": [
+        {
+          "fact": "育苗地东头那一行榆苗根旁积了水。",
+          "source": "site_ms_yg_nursery",
+          "reliability": "每天亲手照看"
+        },
+        {
+          "fact": "拱厚的林獾照她指的地方挖沟，沟线要先对过节疤记号。",
+          "source": "npc_ms_yg_gonghou",
+          "reliability": "每季当面说定"
+        },
+        {
+          "fact": "议根洞历来只坐木精，穴居者只在根门外等消息。",
+          "source": "site_ms_yg_council",
+          "reliability": "老榆传下的规矩"
+        }
+      ],
+      "unknown": [
+        "林产窖分账树皮上那三道是谁削掉的？",
+        "排水沟要多少夜才能引到育苗地东头？"
+      ]
+    },
+    "opinions": {
+      "factions": "榆坡人只认得树，不认得苗。",
+      "magic": "能让苗长快的法术她不信，苗要一年一年长。",
+      "adventurers": "外来人进林先学认苗，别一脚踩下去。",
+      "neighbors": [
+        {
+          "with": "npc_ms_yg_jiecang",
+          "view": "稳当，只是太惦着伐界。"
+        },
+        {
+          "with": "npc_ms_yg_xuxiao",
+          "view": "手巧，可不懂老林的规矩。"
+        }
+      ]
+    },
+    "towardPlayer": {
+      "baseline": {
+        "trust": -5,
+        "affection": 0
+      },
+      "raises": [
+        "沿苗行边走",
+        "帮着给伤苗糊泥"
+      ],
+      "lowers": [
+        "踩伤苗根",
+        "打听议根洞里的事"
+      ],
+      "attitude": "冷淡，先看来人认不认得苗。"
+    },
+    "behaviorRules": {
+      "bargaining": "她不管换东西，只管苗。",
+      "honesty": "苗的事照实说，议根洞里的事只说已刻上的。",
+      "risk": "苗在，她就不离开育苗地。",
+      "threatResponse": "用枝条敲树干叫人，自己挡在苗行前。",
+      "bribeResponse": "给育苗地的东西收下，给她本人的退回去。"
+    },
+    "serviceCatalog": [],
+    "hooks": [
+      "育苗地东头积水",
+      "议根洞只坐木精的规矩"
+    ],
+    "ttsVoice": "zh_female_mature_01",
+    "portraitPrompt": "原创年老节榆木精长老，矮而粗的老榆树干身形，节疤层层叠叠，头顶榆条只剩几片老叶，须根沾满湿泥，站在一行细榆苗旁",
+    "notes": "榆根里长老，掌议根洞许可，护林派；白天照看育苗根，主张议根洞只坐木精。",
+    "description": "节荫是榆根里的长老，一百三十一岁的节榆木精，身上的节疤一圈压一圈。她白天守在育苗地给伤苗糊湿泥，黄昏在议根洞议事，外人进议根洞须她点头。上个月须晓要进议根洞理论，是她拦在洞口。她担心育苗地东头积水，也守着议根洞只坐木精的老规矩。"
+  },
+  {
+    "id": "npc_ms_yg_gonghou",
+    "name": "拱厚",
+    "aliases": [],
+    "tier": "full",
+    "age": 48,
+    "sex": "男",
+    "species": "monster_burrow_badger",
+    "society": "loc_ms_yugen",
+    "culture": "culture_ms_yugen",
+    "settlement": "loc_ms_yugen",
+    "scope": "loc_ms_yugen",
+    "householdId": "house_ms_yg_03",
+    "household": [
+      "npc_ms_yg_gongni",
+      "npc_ms_yg_gongtuan"
+    ],
+    "occupation": "排水运土",
+    "traits": [
+      "踏实",
+      "少言"
+    ],
+    "home": {
+      "location": "bld_ms_yg_home_03",
+      "access": "同住共居；进入私宅须先取得成年住户的有效许可。",
+      "ownership": "unspecified"
+    },
+    "location": "site_ms_yg_ditch",
+    "flags": {
+      "minor": false,
+      "romanceable": false
+    },
+    "currentConcern": "长老节荫要他把沟引到育苗地东头，可挖沟的林獾觉得分份少了，干活不如往常卖力。",
+    "visibleFeature": "前爪第三趾的爪缘磨得发圆，掌垫上总沾着红褐色的土。",
+    "trust": 0,
+    "affection": 0,
+    "coins": 0,
+    "birth": {
+      "year": -48,
+      "month": 1,
+      "day": 2
+    },
+    "inventory": {
+      "item_ration": 2
+    },
+    "skills": [],
+    "services": [],
+    "intelligence": {
+      "level": 2,
+      "growth": 0
+    },
+    "role": "排水头",
+    "familyNotes": "拱厚与拱泥、小林獾拱团同住拱家土窝；拱团还小，他不让她下沟，只让她在侧口边看。",
+    "appearance": [
+      "前爪第三趾的爪缘磨得发圆，掌垫上总沾着红褐色的土。",
+      "肩背的毛被沟沿的泥糊成一绺一绺",
+      "鼻头上有一道被铲刃蹭破的旧疤"
+    ],
+    "voice": {
+      "register": "话少，一次只说一两句",
+      "accent": "鼻息短促，说话间夹着低低的咕噜",
+      "habits": [
+        "说话前先用前爪刨两下地"
+      ],
+      "samples": [
+        "沟通了，苗就不泡。",
+        "少了三道，林獾都看见了。",
+        "我挖沟，不进洞。"
+      ]
+    },
+    "personality": {
+      "traits": [
+        "踏实",
+        "少言"
+      ],
+      "values": [
+        "沟不能断",
+        "说好的份数就该给"
+      ],
+      "flaws": [
+        "有委屈不说，闷着干活"
+      ]
+    },
+    "proficiencies": {},
+    "professions": [],
+    "level": 1,
+    "combat": null,
+    "wealth": {
+      "cashRange": [
+        0,
+        0
+      ],
+      "property": [],
+      "valuables": [],
+      "debts": []
+    },
+    "workplace": {
+      "location": "site_ms_yg_ditch",
+      "access": "公共林地、窟道或营地可当面招呼；工具和存物另问看管者。"
+    },
+    "schedule": {
+      "default": [
+        {
+          "start": 0,
+          "end": 270,
+          "location": "site_ms_yg_ditch",
+          "activity": "带林獾清沟运土",
+          "services": []
+        },
+        {
+          "start": 270,
+          "end": 330,
+          "location": "site_ms_yg_store",
+          "activity": "把运进林产窖的干果篓数刻上树皮",
+          "services": []
+        },
+        {
+          "start": 330,
+          "end": 1080,
+          "location": "bld_ms_yg_home_03",
+          "activity": "睡眠",
+          "services": []
+        },
+        {
+          "start": 1080,
+          "end": 1140,
+          "location": "site_ms_yg_shed",
+          "activity": "在修具棚领铲、修铲",
+          "services": []
+        },
+        {
+          "start": 1140,
+          "end": 1440,
+          "location": "site_ms_yg_ditch",
+          "activity": "带林獾清沟运土",
+          "services": []
+        }
+      ],
+      "market": [
+        {
+          "start": 0,
+          "end": 270,
+          "location": "site_ms_yg_ditch",
+          "activity": "带林獾清沟运土",
+          "services": []
+        },
+        {
+          "start": 270,
+          "end": 330,
+          "location": "site_ms_yg_store",
+          "activity": "把运进林产窖的干果篓数刻上树皮",
+          "services": []
+        },
+        {
+          "start": 330,
+          "end": 1080,
+          "location": "bld_ms_yg_home_03",
+          "activity": "睡眠",
+          "services": []
+        },
+        {
+          "start": 1080,
+          "end": 1140,
+          "location": "site_ms_yg_shed",
+          "activity": "在修具棚领铲、修铲",
+          "services": []
+        },
+        {
+          "start": 1140,
+          "end": 1440,
+          "location": "site_ms_yg_ditch",
+          "activity": "带林獾清沟运土",
+          "services": []
+        }
+      ],
+      "rest": [
+        {
+          "start": 0,
+          "end": 270,
+          "location": "site_ms_yg_ditch",
+          "activity": "带林獾清沟运土",
+          "services": []
+        },
+        {
+          "start": 270,
+          "end": 330,
+          "location": "site_ms_yg_store",
+          "activity": "把运进林产窖的干果篓数刻上树皮",
+          "services": []
+        },
+        {
+          "start": 330,
+          "end": 1080,
+          "location": "bld_ms_yg_home_03",
+          "activity": "睡眠",
+          "services": []
+        },
+        {
+          "start": 1080,
+          "end": 1140,
+          "location": "site_ms_yg_shed",
+          "activity": "在修具棚领铲、修铲",
+          "services": []
+        },
+        {
+          "start": 1140,
+          "end": 1440,
+          "location": "site_ms_yg_ditch",
+          "activity": "带林獾清沟运土",
+          "services": []
+        }
+      ],
+      "restDays": [],
+      "seasonal": {}
+    },
+    "relationships": [
+      {
+        "with": "npc_ms_yg_jieyin",
+        "type": "挖沟与看苗",
+        "trust": 15,
+        "affection": 5,
+        "note": "节荫每季告诉他哪里积水，他照她指的地方挖沟；两人为沟线离苗根多远争过好几回。"
+      },
+      {
+        "with": "npc_ms_yg_jiecang",
+        "type": "排水头与林主",
+        "trust": 20,
+        "affection": 6,
+        "note": "他天亮前把运进林产窖的篓数刻上树皮留给节苍看，每回都刻得清清楚楚；节苍信他的数，却没答应让他进议根洞。"
+      },
+      {
+        "with": "npc_ms_yg_xuxiao",
+        "type": "地窟同伴",
+        "trust": 18,
+        "affection": 10,
+        "note": "须晓修好的铲子都先给他的林獾用；她拉他一起去议根洞理论，他说要先把沟挖完再说。"
+      },
+      {
+        "with": "npc_ms_yg_gongtuan",
+        "type": "同窝照看",
+        "trust": 10,
+        "affection": 20,
+        "note": "小林獾拱团总想跟着下沟，他每回都把她推回侧口，教她认哪块土松。"
+      }
+    ],
+    "memorySeeds": [
+      {
+        "id": "memory_t159_yg_cut",
+        "event": "上个月分林产那天黄昏，节苍、节荫、拱厚、须晓在根门对着分账树皮清点，地窟那一栏比上一季少刻了三道；须晓当场要进议根洞理论，节荫没有让她进。",
+        "location": "site_ms_yg_gate",
+        "salience": 5,
+        "knownBy": [
+          "npc_ms_yg_jiecang",
+          "npc_ms_yg_jieyin",
+          "npc_ms_yg_gonghou",
+          "npc_ms_yg_xuxiao"
+        ],
+        "reliability": "亲历"
+      },
+      {
+        "id": "memory_t159_yg_gonghou_first",
+        "event": "他刚开灵智那年跟着几只林獾来到榆根里，头一夜就在育苗地边刨坏了半行苗，是挖了一整季沟才被准许留下。",
+        "location": "site_ms_yg_nursery",
+        "salience": 4,
+        "knownBy": [
+          "npc_ms_yg_gonghou"
+        ],
+        "reliability": "个人回忆"
+      }
+    ],
+    "goals": {
+      "short": [
+        {
+          "id": "goal_t159_yg_gonghou_short",
+          "content": "赶在下一场雨前把沟引到育苗地东头",
+          "progress": 0,
+          "deadlineDay": 30,
+          "resources": [
+            {
+              "kind": "协商",
+              "description": "须当事人另行确认的空闲时辰",
+              "availability": "unverified",
+              "grantsInventory": false
+            }
+          ],
+          "steps": [
+            {
+              "content": "先清干净下游那段淤泥",
+              "status": "pending"
+            },
+            {
+              "content": "请须晓多修两把铲",
+              "status": "pending"
+            }
+          ]
+        }
+      ],
+      "mid": [
+        {
+          "id": "goal_t159_yg_gonghou_mid",
+          "content": "让林獾这一季的分份照数给足",
+          "progress": 0,
+          "deadlineDay": 180,
+          "resources": [
+            {
+              "kind": "协商",
+              "description": "须当事人另行确认的空闲时辰",
+              "availability": "unverified",
+              "grantsInventory": false
+            }
+          ],
+          "steps": [
+            {
+              "content": "天亮前把运进窖的篓数刻清",
+              "status": "pending"
+            },
+            {
+              "content": "请节苍把分账树皮重刻一遍",
+              "status": "pending"
+            }
+          ]
+        }
+      ],
+      "long": [
+        {
+          "id": "goal_t159_yg_gonghou_long",
+          "content": "让地窟成员不用再在根门外等消息",
+          "progress": 0,
+          "deadlineDay": 720,
+          "resources": [
+            {
+              "kind": "协商",
+              "description": "须当事人另行确认的空闲时辰",
+              "availability": "unverified",
+              "grantsInventory": false
+            }
+          ],
+          "steps": [
+            {
+              "content": "把沟挖得没人能挑错",
+              "status": "pending"
+            },
+            {
+              "content": "等议根洞松口再去说",
+              "status": "pending"
+            }
+          ]
+        }
+      ]
+    },
+    "fears": [
+      "怕林獾心里不服，哪一夜沟没清，育苗地就泡了水"
+    ],
+    "redLines": [
+      "不挖断育苗根",
+      "说好的份数不能少"
+    ],
+    "secrets": [
+      {
+        "content": "他天亮前刻篓数时就看出篓数和分账树皮对不上，多出的三份榛仁还在窖里，可他没跟须晓说。",
+        "knownBy": [
+          "npc_ms_yg_gonghou"
+        ]
+      }
+    ],
+    "knowledge": {
+      "known": [
+        {
+          "fact": "育苗地东头那一行榆苗根旁积了水，节荫要他把沟引过去。",
+          "source": "npc_ms_yg_jieyin",
+          "reliability": "当面吩咐"
+        },
+        {
+          "fact": "林产窖的篓数和分账树皮两栏相加对不上，多出三份榛仁。",
+          "source": "site_ms_yg_store",
+          "reliability": "天亮前刻数时亲眼点过"
+        },
+        {
+          "fact": "须晓修好的铲子先给挖沟的林獾用。",
+          "source": "npc_ms_yg_xuxiao",
+          "reliability": "每夜亲手领铲"
+        }
+      ],
+      "unknown": [
+        "多出来的三份榛仁节苍打算拿去换什么、换给谁？",
+        "议根洞是否会让地窟成员进去议事？"
+      ]
+    },
+    "opinions": {
+      "factions": "榆坡人来砍树，雨水就往窟里灌。",
+      "magic": "能让土变干的法术他想见识一回。",
+      "adventurers": "外来人肯下沟清一夜淤泥，他愿意分一口干粮。",
+      "neighbors": [
+        {
+          "with": "npc_ms_yg_xuxiao",
+          "view": "敢说话，比我强。"
+        },
+        {
+          "with": "npc_ms_yg_jieyin",
+          "view": "认苗没人比得上，就是不肯让一步。"
+        }
+      ]
+    },
+    "towardPlayer": {
+      "baseline": {
+        "trust": 0,
+        "affection": 0
+      },
+      "raises": [
+        "帮着清一夜沟",
+        "绕开育苗地走"
+      ],
+      "lowers": [
+        "踩塌沟沿",
+        "在侧口边吵闹"
+      ],
+      "attitude": "中立，夜里在沟边可以搭话，白天在窝里睡。"
+    },
+    "behaviorRules": {
+      "bargaining": "他手里只有一点干粮，不拿去换。",
+      "honesty": "篓数照实说，别人的事不多说。",
+      "risk": "不离开排水沟太远。",
+      "threatResponse": "低头拱背，咕噜一声叫拱泥，护着侧口。",
+      "bribeResponse": "不收，说“我挖沟”。"
+    },
+    "serviceCatalog": [],
+    "hooks": [
+      "把沟引到育苗地东头",
+      "林产窖多出的三份榛仁"
+    ],
+    "ttsVoice": "zh_male_steady_01",
+    "portraitPrompt": "原创开了灵智的穴脚林獾排水头，前爪粗短，掌垫沾红褐土，肩背毛糊着泥，鼻头一道旧疤，蹲在林下排水沟沿上",
+    "notes": "榆根里排水头，开了灵智的穴脚林獾，夜里带林獾清沟运土；不属两派，想把沟挖完再谈议事。",
+    "description": "拱厚是榆根里的排水头，四十八岁，开了灵智的穴脚林獾，前爪第三趾磨得发圆。他每夜带林獾清沟运土，天亮前把运进林产窖的篓数刻上树皮。节荫要他把沟引到育苗地东头，可林獾觉得分份少了，干活不如往常卖力。他话少，有委屈闷着，不属护林派也不属共议派。"
+  },
+  {
+    "id": "npc_ms_yg_xuxiao",
+    "name": "须晓",
+    "aliases": [],
+    "tier": "full",
+    "age": 29,
+    "sex": "女",
+    "species": "monster_stone_whisker_weasel",
+    "society": "loc_ms_yugen",
+    "culture": "culture_ms_yugen",
+    "settlement": "loc_ms_yugen",
+    "scope": "loc_ms_yugen",
+    "householdId": "house_ms_yg_02",
+    "household": [
+      "npc_ms_yg_xushi",
+      "npc_ms_yg_xuhe",
+      "npc_ms_yg_xumo"
+    ],
+    "occupation": "修具",
+    "traits": [
+      "机敏",
+      "好强"
+    ],
+    "home": {
+      "location": "bld_ms_yg_home_02",
+      "access": "同住共居；进入私宅须先取得成年住户的有效许可。",
+      "ownership": "unspecified"
+    },
+    "location": "site_ms_yg_shed",
+    "flags": {
+      "minor": false,
+      "romanceable": false
+    },
+    "currentConcern": "地窟那一份少刻了三道，她想进议根洞当面问清，可议根洞只坐木精，她只能在根门外等。",
+    "visibleFeature": "须尖凝着一层细砂，说话激动时须子一抖一抖。",
+    "trust": 0,
+    "affection": 0,
+    "coins": 4,
+    "birth": {
+      "year": -29,
+      "month": 6,
+      "day": 9
+    },
+    "inventory": {
+      "item_tool_handle": 6,
+      "item_wood": 2
+    },
+    "skills": [],
+    "services": [
+      "trade"
+    ],
+    "intelligence": {
+      "level": 2,
+      "growth": 0
+    },
+    "role": "持不同主张者",
+    "familyNotes": "须晓与须石、须禾、小穴鼬须末同住须家石窝；须末夜里常跑到修具棚看她削柄，她让他只递木屑。",
+    "appearance": [
+      "须尖凝着一层细砂，说话激动时须子一抖一抖。",
+      "前爪的毛被刀柄磨秃了一块",
+      "颈侧的浅色斑比别的穴鼬大"
+    ],
+    "voice": {
+      "register": "说话快，一句接一句",
+      "accent": "句尾常带一声短促的“嗤”",
+      "habits": [
+        "说到要紧处用须尖蹭一下石头"
+      ],
+      "samples": [
+        "少了三道，谁削的？",
+        "我们清沟运土，凭什么只在门外等？",
+        "铲柄修好了，拿去用。"
+      ]
+    },
+    "personality": {
+      "traits": [
+        "机敏",
+        "好强"
+      ],
+      "values": [
+        "出了力就该有份",
+        "有话要当面说"
+      ],
+      "flaws": [
+        "话说得太冲，常把能谈的事谈僵"
+      ]
+    },
+    "proficiencies": {},
+    "professions": [],
+    "level": 1,
+    "combat": null,
+    "wealth": {
+      "cashRange": [
+        4,
+        4
+      ],
+      "property": [],
+      "valuables": [],
+      "debts": []
+    },
+    "workplace": {
+      "location": "site_ms_yg_shed",
+      "access": "公共林地、窟道或营地可当面招呼；工具和存物另问看管者。"
+    },
+    "schedule": {
+      "default": [
+        {
+          "start": 0,
+          "end": 300,
+          "location": "site_ms_yg_shed",
+          "activity": "削铲柄、补土筐",
+          "services": [
+            "trade"
+          ]
+        },
+        {
+          "start": 300,
+          "end": 1080,
+          "location": "bld_ms_yg_home_02",
+          "activity": "睡眠",
+          "services": []
+        },
+        {
+          "start": 1080,
+          "end": 1140,
+          "location": "site_ms_yg_gate",
+          "activity": "在根门外等议事的消息",
+          "services": []
+        },
+        {
+          "start": 1140,
+          "end": 1440,
+          "location": "site_ms_yg_shed",
+          "activity": "削铲柄、补土筐",
+          "services": [
+            "trade"
+          ]
+        }
+      ],
+      "market": [
+        {
+          "start": 0,
+          "end": 300,
+          "location": "site_ms_yg_shed",
+          "activity": "削铲柄、补土筐",
+          "services": [
+            "trade"
+          ]
+        },
+        {
+          "start": 300,
+          "end": 1080,
+          "location": "bld_ms_yg_home_02",
+          "activity": "睡眠",
+          "services": []
+        },
+        {
+          "start": 1080,
+          "end": 1140,
+          "location": "site_ms_yg_gate",
+          "activity": "在根门外等议事的消息",
+          "services": []
+        },
+        {
+          "start": 1140,
+          "end": 1440,
+          "location": "site_ms_yg_shed",
+          "activity": "削铲柄、补土筐",
+          "services": [
+            "trade"
+          ]
+        }
+      ],
+      "rest": [
+        {
+          "start": 0,
+          "end": 300,
+          "location": "site_ms_yg_shed",
+          "activity": "削铲柄、补土筐",
+          "services": [
+            "trade"
+          ]
+        },
+        {
+          "start": 300,
+          "end": 1080,
+          "location": "bld_ms_yg_home_02",
+          "activity": "睡眠",
+          "services": []
+        },
+        {
+          "start": 1080,
+          "end": 1140,
+          "location": "site_ms_yg_gate",
+          "activity": "在根门外等议事的消息",
+          "services": []
+        },
+        {
+          "start": 1140,
+          "end": 1440,
+          "location": "site_ms_yg_shed",
+          "activity": "削铲柄、补土筐",
+          "services": [
+            "trade"
+          ]
+        }
+      ],
+      "restDays": [],
+      "seasonal": {}
+    },
+    "relationships": [
+      {
+        "with": "npc_ms_yg_jiecang",
+        "type": "异议者与林主",
+        "trust": -8,
+        "affection": 4,
+        "note": "她在根门当着来换东西的人说分份不公，要进议根洞理论；节苍只说“树先说”，没有让她进。"
+      },
+      {
+        "with": "npc_ms_yg_jieyin",
+        "type": "异议者与长老",
+        "trust": -10,
+        "affection": 2,
+        "note": "上个月是节荫用枝条拦在议根洞口没让她进；她记着这件事，见了节荫总不打招呼。"
+      },
+      {
+        "with": "npc_ms_yg_gonghou",
+        "type": "地窟同伴",
+        "trust": 18,
+        "affection": 10,
+        "note": "她修好的铲子都先给拱厚的林獾用；她拉他一起去议根洞理论，他说要先把沟挖完。"
+      },
+      {
+        "with": "npc_ms_yg_jieqing",
+        "type": "共议派同伴",
+        "trust": 15,
+        "affection": 8,
+        "note": "育苗的节青是唯一站在共议派这边的木精，常在黄昏替她带出议根洞里的消息。"
+      }
+    ],
+    "memorySeeds": [
+      {
+        "id": "memory_t159_yg_cut",
+        "event": "上个月分林产那天黄昏，节苍、节荫、拱厚、须晓在根门对着分账树皮清点，地窟那一栏比上一季少刻了三道；须晓当场要进议根洞理论，节荫没有让她进。",
+        "location": "site_ms_yg_gate",
+        "salience": 5,
+        "knownBy": [
+          "npc_ms_yg_jiecang",
+          "npc_ms_yg_jieyin",
+          "npc_ms_yg_gonghou",
+          "npc_ms_yg_xuxiao"
+        ],
+        "reliability": "亲历"
+      },
+      {
+        "id": "memory_t159_yg_xuxiao_wake",
+        "event": "她开灵智以后离开塔基的石缝，在林边转了一个冬天，是一只老林獾把她领到榆根里的地窟。",
+        "location": "site_ms_yg_stone",
+        "salience": 3,
+        "knownBy": [
+          "npc_ms_yg_xuxiao"
+        ],
+        "reliability": "个人回忆"
+      }
+    ],
+    "goals": {
+      "short": [
+        {
+          "id": "goal_t159_yg_xuxiao_short",
+          "content": "弄清分账树皮上那三道是谁削掉的",
+          "progress": 0,
+          "deadlineDay": 30,
+          "resources": [
+            {
+              "kind": "协商",
+              "description": "须当事人另行确认的空闲时辰",
+              "availability": "unverified",
+              "grantsInventory": false
+            }
+          ],
+          "steps": [
+            {
+              "content": "找机会看林产窖里的篓数",
+              "status": "pending"
+            },
+            {
+              "content": "问节青议根洞里有没有说起",
+              "status": "pending"
+            }
+          ]
+        }
+      ],
+      "mid": [
+        {
+          "id": "goal_t159_yg_xuxiao_mid",
+          "content": "让地窟成员在议根洞里有一席",
+          "progress": 0,
+          "deadlineDay": 180,
+          "resources": [
+            {
+              "kind": "协商",
+              "description": "须当事人另行确认的空闲时辰",
+              "availability": "unverified",
+              "grantsInventory": false
+            }
+          ],
+          "steps": [
+            {
+              "content": "拉拱厚和共议派一起去议根洞外等",
+              "status": "pending"
+            },
+            {
+              "content": "请来根门的外人替地窟说句话",
+              "status": "pending"
+            }
+          ]
+        }
+      ],
+      "long": [
+        {
+          "id": "goal_t159_yg_xuxiao_long",
+          "content": "让修具棚修的工具也算进林产分份",
+          "progress": 0,
+          "deadlineDay": 720,
+          "resources": [
+            {
+              "kind": "协商",
+              "description": "须当事人另行确认的空闲时辰",
+              "availability": "unverified",
+              "grantsInventory": false
+            }
+          ],
+          "steps": [
+            {
+              "content": "把每夜修好的铲子刻在棚柱上",
+              "status": "pending"
+            },
+            {
+              "content": "攒够数再去议根洞讲",
+              "status": "pending"
+            }
+          ]
+        }
+      ]
+    },
+    "fears": [
+      "怕自己说得太冲，连拱厚也不肯站出来"
+    ],
+    "redLines": [
+      "不偷林产窖的东西",
+      "修好的铲子不扣给挖沟的林獾"
+    ],
+    "secrets": [
+      {
+        "content": "她曾在收工回窝前趴在林产窖外，听见拱厚一边刻篓数一边嘀咕数目不对，只是还没进窖看过。",
+        "knownBy": [
+          "npc_ms_yg_xuxiao"
+        ]
+      }
+    ],
+    "knowledge": {
+      "known": [
+        {
+          "fact": "分账树皮上地窟那一栏本季比上季少刻了三道。",
+          "source": "site_ms_yg_store",
+          "reliability": "在根门清点时亲眼看过"
+        },
+        {
+          "fact": "议根洞历来只坐木精，穴居者只在根门外等消息。",
+          "source": "site_ms_yg_council",
+          "reliability": "被拦在洞口过"
+        },
+        {
+          "fact": "节青常在黄昏替她带出议根洞里的消息。",
+          "source": "npc_ms_yg_jieqing",
+          "reliability": "多次当面听说"
+        }
+      ],
+      "unknown": [
+        "林产窖分账树皮上那三道是谁削掉的？",
+        "节荫愿不愿让地窟成员进议根洞？"
+      ]
+    },
+    "opinions": {
+      "factions": "榆坡人换东西还算公道，比议根洞讲理。",
+      "magic": "会术的外来人她想见识见识，只要别在林里点火。",
+      "adventurers": "外来人要是肯替地窟在议根洞说句话，她愿意多修一把铲送他。",
+      "neighbors": [
+        {
+          "with": "npc_ms_yg_gonghou",
+          "view": "肯干，就是不肯开口。"
+        },
+        {
+          "with": "npc_ms_yg_jiecang",
+          "view": "慢得像树，偏心也像树。"
+        }
+      ]
+    },
+    "towardPlayer": {
+      "baseline": {
+        "trust": 0,
+        "affection": 0
+      },
+      "raises": [
+        "替地窟说话",
+        "在修具棚换她修的柄"
+      ],
+      "lowers": [
+        "替议根洞来劝她闭嘴",
+        "白天吵醒石窝"
+      ],
+      "attitude": "中立偏热络，夜里在修具棚愿意多说几句。"
+    },
+    "behaviorRules": {
+      "bargaining": "用修好的小工具柄换东西，按她手头的数，不赊。",
+      "honesty": "她知道的直说，猜的会说明是猜的。",
+      "risk": "敢在根门顶撞林主，不敢闯议根洞。",
+      "threatResponse": "贴地缩身，嗤嗤两声叫须石。",
+      "bribeResponse": "收下也照样说分份不公。"
+    },
+    "serviceCatalog": [
+      {
+        "kind": "trade",
+        "what": "本人修好的小工具柄",
+        "price": {
+          "mode": "engineQuote"
+        },
+        "unlocksService": false
+      }
+    ],
+    "hooks": [
+      "分账树皮少了三道",
+      "地窟成员争议事权"
+    ],
+    "ttsVoice": "zh_female_bright_01",
+    "portraitPrompt": "原创开了灵智的石须穴鼬修具匠，细长灰褐身形，须尖凝细砂，前爪握一截削了一半的铲柄，蹲在枯枝搭的矮棚口",
+    "notes": "榆根里修具的穴鼬，开了灵智，共议派带头人；夜里在修具棚削铲柄，要进议根洞争林产分份。",
+    "description": "须晓是榆根里的修具匠，二十九岁，开了灵智的石须穴鼬，须尖凝着细砂。她夜里在修具棚削铲柄、补土筐，修好的铲子先给挖沟的林獾。地窟那一份少刻了三道，她要进议根洞当面问清，却被拦在洞口。她说话快，好强，是共议派的带头人。"
+  },
+  {
+    "id": "npc_ms_ll_yayue",
+    "name": "牙钺",
+    "aliases": [],
+    "tier": "full",
+    "age": 46,
+    "sex": "男",
+    "species": "monster_split_tusk_orc",
+    "society": "loc_ms_lielu",
+    "culture": "culture_ms_lielu",
+    "settlement": "loc_ms_lielu",
+    "scope": "loc_ms_lielu",
+    "householdId": "house_ms_ll_01",
+    "household": [
+      "npc_ms_ll_yajin",
+      "npc_ms_ll_yashi",
+      "npc_ms_ll_yahang",
+      "npc_ms_ll_yasun"
+    ],
+    "occupation": "带队挖矿",
+    "traits": [
+      "强硬",
+      "讲信用"
+    ],
+    "home": {
+      "location": "bld_ms_ll_home_01",
+      "access": "同住共居；进入私宅须先取得成年住户的有效许可。",
+      "ownership": "unspecified"
+    },
+    "location": "bld_ms_ll_home_01",
+    "flags": {
+      "minor": false,
+      "romanceable": false
+    },
+    "currentConcern": "锉芒当众抹掉了契板上的手印，工匠们要把纳贡改成按件贸易，他担心分配一松，营里就管不住了。",
+    "visibleFeature": "左边獠牙裂到牙根，裂口里嵌着一圈铁箍。",
+    "trust": 0,
+    "affection": 0,
+    "coins": 40,
+    "birth": {
+      "year": -46,
+      "month": 11,
+      "day": 16
+    },
+    "inventory": {
+      "item_stone": 12,
+      "item_iron": 4
+    },
+    "skills": [],
+    "services": [
+      "trade"
+    ],
+    "intelligence": {
+      "level": 2,
+      "growth": 0
+    },
+    "role": "营头",
+    "familyNotes": "牙钺与牙烬、牙石、牙夯同住牙家皮棚，小兽人牙笋也在棚里；他不让牙笋跟队下矿，只让他在棚区里学认矿石。",
+    "appearance": [
+      "左边獠牙裂到牙根，裂口里嵌着一圈铁箍。",
+      "肩上的皮甲拼了好几种兽皮",
+      "右手少了半片指甲，是早年挖矿砸的"
+    ],
+    "voice": {
+      "register": "嗓门低沉，说话短，像下命令",
+      "accent": "带着很重的兽人口音",
+      "habits": [
+        "说完一句就用拳头捶一下胸口"
+      ],
+      "samples": [
+        "这是我们的营。",
+        "贡粮照板上画的分。",
+        "要换，先在契板前说。"
+      ]
+    },
+    "personality": {
+      "traits": [
+        "强硬",
+        "讲信用"
+      ],
+      "values": [
+        "营里要有人说了算",
+        "画在契板上的约就要守"
+      ],
+      "flaws": [
+        "把工匠的不服当成挑衅，不肯细听"
+      ]
+    },
+    "proficiencies": {},
+    "professions": [],
+    "level": 1,
+    "combat": null,
+    "wealth": {
+      "cashRange": [
+        40,
+        40
+      ],
+      "property": [],
+      "valuables": [],
+      "debts": []
+    },
+    "workplace": {
+      "location": "site_ms_ll_forge",
+      "access": "公共林地、窟道或营地可当面招呼；工具和存物另问看管者。"
+    },
+    "schedule": {
+      "default": [
+        {
+          "start": 0,
+          "end": 360,
+          "location": "bld_ms_ll_home_01",
+          "activity": "睡眠",
+          "services": []
+        },
+        {
+          "start": 360,
+          "end": 690,
+          "location": "site_ms_ll_adit",
+          "activity": "带队下矿",
+          "services": []
+        },
+        {
+          "start": 690,
+          "end": 720,
+          "location": "site_ms_ll_store",
+          "activity": "清点贡粮棚",
+          "services": []
+        },
+        {
+          "start": 720,
+          "end": 1200,
+          "location": "site_ms_ll_forge",
+          "activity": "在共炉边见来人、收贡、派活",
+          "services": [
+            "trade"
+          ]
+        },
+        {
+          "start": 1200,
+          "end": 1260,
+          "location": "site_ms_ll_council",
+          "activity": "议事棚议事",
+          "services": []
+        },
+        {
+          "start": 1260,
+          "end": 1440,
+          "location": "bld_ms_ll_home_01",
+          "activity": "睡眠",
+          "services": []
+        }
+      ],
+      "market": [
+        {
+          "start": 0,
+          "end": 360,
+          "location": "bld_ms_ll_home_01",
+          "activity": "睡眠",
+          "services": []
+        },
+        {
+          "start": 360,
+          "end": 690,
+          "location": "site_ms_ll_adit",
+          "activity": "带队下矿",
+          "services": []
+        },
+        {
+          "start": 690,
+          "end": 720,
+          "location": "site_ms_ll_store",
+          "activity": "清点贡粮棚",
+          "services": []
+        },
+        {
+          "start": 720,
+          "end": 1200,
+          "location": "site_ms_ll_forge",
+          "activity": "在共炉边见来人、收贡、派活",
+          "services": [
+            "trade"
+          ]
+        },
+        {
+          "start": 1200,
+          "end": 1260,
+          "location": "site_ms_ll_council",
+          "activity": "议事棚议事",
+          "services": []
+        },
+        {
+          "start": 1260,
+          "end": 1440,
+          "location": "bld_ms_ll_home_01",
+          "activity": "睡眠",
+          "services": []
+        }
+      ],
+      "rest": [
+        {
+          "start": 0,
+          "end": 360,
+          "location": "bld_ms_ll_home_01",
+          "activity": "睡眠",
+          "services": []
+        },
+        {
+          "start": 360,
+          "end": 690,
+          "location": "site_ms_ll_adit",
+          "activity": "带队下矿",
+          "services": []
+        },
+        {
+          "start": 690,
+          "end": 720,
+          "location": "site_ms_ll_store",
+          "activity": "清点贡粮棚",
+          "services": []
+        },
+        {
+          "start": 720,
+          "end": 1200,
+          "location": "site_ms_ll_forge",
+          "activity": "在共炉边见来人、收贡、派活",
+          "services": [
+            "trade"
+          ]
+        },
+        {
+          "start": 1200,
+          "end": 1260,
+          "location": "site_ms_ll_council",
+          "activity": "议事棚议事",
+          "services": []
+        },
+        {
+          "start": 1260,
+          "end": 1440,
+          "location": "bld_ms_ll_home_01",
+          "activity": "睡眠",
+          "services": []
+        }
+      ],
+      "restDays": [],
+      "seasonal": {}
+    },
+    "relationships": [
+      {
+        "with": "npc_ms_ll_yajin",
+        "type": "同棚议事",
+        "trust": 35,
+        "affection": 14,
+        "note": "牙烬看着他长大，他当上营头那天的首火是她点的；如今两人都主张照旧纳贡、由兽人分粮。"
+      },
+      {
+        "with": "npc_ms_ll_cuozhen",
+        "type": "营头与工匠头",
+        "trust": 15,
+        "affection": 4,
+        "note": "锉针修的矿镐他每天带下矿，她傍晚到议事棚报工；她提过按件换粮，他说等契板上的约到期再议。"
+      },
+      {
+        "with": "npc_ms_ll_cuomang",
+        "type": "营头与异议者",
+        "trust": -12,
+        "affection": 0,
+        "note": "锉芒在营口当众抹掉契板上自己的手印，说工匠不认这份分法；他没有让人重画，也没有罚他。"
+      },
+      {
+        "with": "npc_ms_ll_yasun",
+        "type": "同棚照看",
+        "trust": 10,
+        "affection": 18,
+        "note": "小兽人牙笋总想跟队下矿，他每回都把牙笋留在棚区，教他认哪块石头里有铁。"
+      }
+    ],
+    "memorySeeds": [
+      {
+        "id": "memory_t159_ll_board",
+        "event": "上一期砾泉送贡粮那天，牙钺、牙烬、锉针、锉芒在营口对着炉灰契板分粮，工匠和搬运合起来那份只有兽人那份的一半；锉芒当众抹掉了契板上自己的手印，牙钺没有让人重画。",
+        "location": "site_ms_ll_gate",
+        "salience": 5,
+        "knownBy": [
+          "npc_ms_ll_yayue",
+          "npc_ms_ll_yajin",
+          "npc_ms_ll_cuozhen",
+          "npc_ms_ll_cuomang"
+        ],
+        "reliability": "亲历"
+      },
+      {
+        "id": "memory_t159_ll_yayue_cave",
+        "event": "十四年前他带着几队兽人打通了这条旧矿道，第一夜塌了一段，是他和队里的兽人连夜把压住的人刨出来的。",
+        "location": "site_ms_ll_adit",
+        "salience": 4,
+        "knownBy": [
+          "npc_ms_ll_yayue"
+        ],
+        "reliability": "个人回忆"
+      }
+    ],
+    "goals": {
+      "short": [
+        {
+          "id": "goal_t159_ll_yayue_short",
+          "content": "让锉芒在契板上重新按手印",
+          "progress": 0,
+          "deadlineDay": 30,
+          "resources": [
+            {
+              "kind": "协商",
+              "description": "须当事人另行确认的空闲时辰",
+              "availability": "unverified",
+              "grantsInventory": false
+            }
+          ],
+          "steps": [
+            {
+              "content": "在共炉边当众问锉芒要什么",
+              "status": "pending"
+            },
+            {
+              "content": "让牙烬出面说契板的规矩",
+              "status": "pending"
+            }
+          ]
+        }
+      ],
+      "mid": [
+        {
+          "id": "goal_t159_ll_yayue_mid",
+          "content": "守住砾泉的纳贡，不让营里的分配乱掉",
+          "progress": 0,
+          "deadlineDay": 180,
+          "resources": [
+            {
+              "kind": "协商",
+              "description": "须当事人另行确认的空闲时辰",
+              "availability": "unverified",
+              "grantsInventory": false
+            }
+          ],
+          "steps": [
+            {
+              "content": "下一期交割时亲自在营口点数",
+              "status": "pending"
+            },
+            {
+              "content": "请砾泉人给村里带话，贡约照旧",
+              "status": "pending"
+            }
+          ]
+        }
+      ],
+      "long": [
+        {
+          "id": "goal_t159_ll_yayue_long",
+          "content": "让裂炉营在这条矿道上站稳十年",
+          "progress": 0,
+          "deadlineDay": 720,
+          "resources": [
+            {
+              "kind": "协商",
+              "description": "须当事人另行确认的空闲时辰",
+              "availability": "unverified",
+              "grantsInventory": false
+            }
+          ],
+          "steps": [
+            {
+              "content": "把矿道再往里打通一段",
+              "status": "pending"
+            },
+            {
+              "content": "教牙笋这一辈认矿",
+              "status": "pending"
+            }
+          ]
+        }
+      ]
+    },
+    "fears": [
+      "怕营里分成几伙，砾泉人看出来就不再送贡粮"
+    ],
+    "redLines": [
+      "共炉首火不让私占",
+      "画在契板上的约不能赖"
+    ],
+    "secrets": [
+      {
+        "content": "他私下觉得按件换粮未必吃亏，只是怕一松口，兽人就不再听他的。",
+        "knownBy": [
+          "npc_ms_ll_yayue"
+        ]
+      }
+    ],
+    "knowledge": {
+      "known": [
+        {
+          "fact": "上一期砾泉送来的贡粮，兽人份是工匠和搬运合起来那份的两倍。",
+          "source": "site_ms_ll_store",
+          "reliability": "亲手清点"
+        },
+        {
+          "fact": "锉芒在营口抹掉了炉灰契板上自己的手印。",
+          "source": "npc_ms_ll_cuomang",
+          "reliability": "当场看见"
+        },
+        {
+          "fact": "砾泉村为走矿道向裂炉营纳粮，交割画在营口的炉灰契板上。",
+          "source": "site_ms_ll_gate",
+          "reliability": "亲自立的约"
+        }
+      ],
+      "unknown": [
+        "砾泉村谁肯出面谈按件贸易？",
+        "锉芒是否会带工匠停工？"
+      ]
+    },
+    "opinions": {
+      "factions": "砾泉人怕我们，可也离不开这条矿道。",
+      "magic": "会冻人的法术最好别在营里用。",
+      "adventurers": "外来人肯护送石料去砾泉，他按趟给干粮。",
+      "neighbors": [
+        {
+          "with": "npc_ms_ll_cuomang",
+          "view": "有胆子，没规矩。"
+        },
+        {
+          "with": "npc_ms_ll_yajin",
+          "view": "营里最懂契板的人。"
+        }
+      ]
+    },
+    "towardPlayer": {
+      "baseline": {
+        "trust": -5,
+        "affection": 0
+      },
+      "raises": [
+        "进营先在营口报来意",
+        "照契板上的约交付"
+      ],
+      "lowers": [
+        "不打招呼闯矿道",
+        "替工匠来压他"
+      ],
+      "attitude": "戒备，愿意在共炉边谈换石料、护运和通行。"
+    },
+    "behaviorRules": {
+      "bargaining": "用手头的石料和铁料换粮和盐，按库存换，换完就停。",
+      "honesty": "契板上画的照实说，没画的说“没画”。",
+      "risk": "能守营就不出营。",
+      "threatResponse": "吼一声叫牙石，带兽人挡在共炉前。",
+      "bribeResponse": "私下给的东西他会当众画进契板。"
+    },
+    "serviceCatalog": [
+      {
+        "kind": "trade",
+        "what": "本人手头的石料与铁料",
+        "price": {
+          "mode": "engineQuote"
+        },
+        "unlocksService": false
+      }
+    ],
+    "hooks": [
+      "契板上被抹掉的手印",
+      "改贡为贸易之争"
+    ],
+    "ttsVoice": "zh_male_low_01",
+    "portraitPrompt": "原创裂牙兽人营头，比常人高一头，灰褐皮肤，左边獠牙裂到牙根嵌铁箍，拼皮甲，背矿镐，站在石砌大炉旁",
+    "notes": "裂炉营营头，裂牙兽人，守贡派；白天带队下矿、在共炉边收贡派活，不愿改动纳贡和分配。",
+    "description": "牙钺是裂炉营的营头，四十六岁的裂牙兽人，左边獠牙裂到牙根，嵌着一圈铁箍。他白天带队下矿，午后在共炉边见来人、收贡、派活。锉芒当众抹掉了契板上的手印，工匠们要把纳贡改成按件贸易，他怕分配一松营里就管不住。他说话短，讲信用，属守贡派。"
+  },
+  {
+    "id": "npc_ms_ll_yajin",
+    "name": "牙烬",
+    "aliases": [],
+    "tier": "full",
+    "age": 68,
+    "sex": "女",
+    "species": "monster_split_tusk_orc",
+    "society": "loc_ms_lielu",
+    "culture": "culture_ms_lielu",
+    "settlement": "loc_ms_lielu",
+    "scope": "loc_ms_lielu",
+    "householdId": "house_ms_ll_01",
+    "household": [
+      "npc_ms_ll_yayue",
+      "npc_ms_ll_yashi",
+      "npc_ms_ll_yahang",
+      "npc_ms_ll_yasun"
+    ],
+    "occupation": "看守共炉",
+    "traits": [
+      "严厉",
+      "念旧"
+    ],
+    "home": {
+      "location": "bld_ms_ll_home_01",
+      "access": "同住共居；进入私宅须先取得成年住户的有效许可。",
+      "ownership": "unspecified"
+    },
+    "location": "bld_ms_ll_home_01",
+    "flags": {
+      "minor": false,
+      "romanceable": false
+    },
+    "currentConcern": "工匠们要按轮次点首火，她觉得首火一乱，营里的规矩就散了，可她也知道首火本该是大家的。",
+    "visibleFeature": "两颗獠牙都裂了口，嘴角被炉火燎得发黑。",
+    "trust": 0,
+    "affection": 0,
+    "coins": 2,
+    "birth": {
+      "year": -68,
+      "month": 9,
+      "day": 2
+    },
+    "inventory": {
+      "item_charcoal": 4
+    },
+    "skills": [],
+    "services": [],
+    "intelligence": {
+      "level": 2,
+      "growth": 0
+    },
+    "role": "炉老",
+    "familyNotes": "牙烬与牙钺、牙石、牙夯同住牙家皮棚，她睡前给小兽人牙笋讲营里的旧事。",
+    "appearance": [
+      "两颗獠牙都裂了口，嘴角被炉火燎得发黑。",
+      "手指关节粗大，指缝里嵌着炉灰",
+      "脖子上挂着一串亡者留下的小铁片"
+    ],
+    "voice": {
+      "register": "嗓音沙哑，说话慢而重",
+      "accent": "兽人老口音，常夹着旧时的号子",
+      "habits": [
+        "说到规矩时用火钳敲一下炉沿"
+      ],
+      "samples": [
+        "首火是共炉的，不是谁家的。",
+        "亡者的工具挂到炉边，归共营。",
+        "画了灰的约，就是约。"
+      ]
+    },
+    "personality": {
+      "traits": [
+        "严厉",
+        "念旧"
+      ],
+      "values": [
+        "共炉的火不能断",
+        "亡者的工具归所属共营"
+      ],
+      "flaws": [
+        "嘴上说首火是大家的，手上从不让别族碰"
+      ]
+    },
+    "proficiencies": {},
+    "professions": [],
+    "level": 1,
+    "combat": null,
+    "wealth": {
+      "cashRange": [
+        2,
+        2
+      ],
+      "property": [],
+      "valuables": [],
+      "debts": []
+    },
+    "workplace": {
+      "location": "site_ms_ll_forge",
+      "access": "公共林地、窟道或营地可当面招呼；工具和存物另问看管者。"
+    },
+    "schedule": {
+      "default": [
+        {
+          "start": 0,
+          "end": 360,
+          "location": "bld_ms_ll_home_01",
+          "activity": "睡眠",
+          "services": []
+        },
+        {
+          "start": 360,
+          "end": 1200,
+          "location": "site_ms_ll_forge",
+          "activity": "看守共炉、点首火",
+          "services": []
+        },
+        {
+          "start": 1200,
+          "end": 1260,
+          "location": "site_ms_ll_council",
+          "activity": "议事棚议事",
+          "services": []
+        },
+        {
+          "start": 1260,
+          "end": 1440,
+          "location": "bld_ms_ll_home_01",
+          "activity": "睡眠",
+          "services": []
+        }
+      ],
+      "market": [
+        {
+          "start": 0,
+          "end": 360,
+          "location": "bld_ms_ll_home_01",
+          "activity": "睡眠",
+          "services": []
+        },
+        {
+          "start": 360,
+          "end": 1200,
+          "location": "site_ms_ll_forge",
+          "activity": "看守共炉、点首火",
+          "services": []
+        },
+        {
+          "start": 1200,
+          "end": 1260,
+          "location": "site_ms_ll_council",
+          "activity": "议事棚议事",
+          "services": []
+        },
+        {
+          "start": 1260,
+          "end": 1440,
+          "location": "bld_ms_ll_home_01",
+          "activity": "睡眠",
+          "services": []
+        }
+      ],
+      "rest": [
+        {
+          "start": 0,
+          "end": 360,
+          "location": "bld_ms_ll_home_01",
+          "activity": "睡眠",
+          "services": []
+        },
+        {
+          "start": 360,
+          "end": 1200,
+          "location": "site_ms_ll_forge",
+          "activity": "看守共炉、点首火",
+          "services": []
+        },
+        {
+          "start": 1200,
+          "end": 1260,
+          "location": "site_ms_ll_council",
+          "activity": "议事棚议事",
+          "services": []
+        },
+        {
+          "start": 1260,
+          "end": 1440,
+          "location": "bld_ms_ll_home_01",
+          "activity": "睡眠",
+          "services": []
+        }
+      ],
+      "restDays": [],
+      "seasonal": {}
+    },
+    "relationships": [
+      {
+        "with": "npc_ms_ll_yayue",
+        "type": "同棚议事",
+        "trust": 35,
+        "affection": 14,
+        "note": "她看着牙钺长大，他当上营头那天的首火是她点的；她觉得他太硬，可在议事棚里总站在他那边。"
+      },
+      {
+        "with": "npc_ms_ll_cuozhen",
+        "type": "炉老与工匠头",
+        "trust": 20,
+        "affection": 8,
+        "note": "锉针每天傍晚借共炉的火修镐，烧出的木炭交到她手里；两人为首火该由谁点争过一回。"
+      },
+      {
+        "with": "npc_ms_ll_cuomang",
+        "type": "长辈与后生",
+        "trust": -5,
+        "affection": 6,
+        "note": "锉芒抹掉契板手印那天，她用火钳敲炉沿让他住手；她记得锉芒小时候是在共炉边烤火长大的。"
+      },
+      {
+        "with": "npc_ms_ll_yasun",
+        "type": "同棚照看",
+        "trust": 10,
+        "affection": 16,
+        "note": "她睡前给小兽人牙笋讲营里的旧事，教他认炉边挂的每一件亡者工具。"
+      }
+    ],
+    "memorySeeds": [
+      {
+        "id": "memory_t159_ll_board",
+        "event": "上一期砾泉送贡粮那天，牙钺、牙烬、锉针、锉芒在营口对着炉灰契板分粮，工匠和搬运合起来那份只有兽人那份的一半；锉芒当众抹掉了契板上自己的手印，牙钺没有让人重画。",
+        "location": "site_ms_ll_gate",
+        "salience": 5,
+        "knownBy": [
+          "npc_ms_ll_yayue",
+          "npc_ms_ll_yajin",
+          "npc_ms_ll_cuozhen",
+          "npc_ms_ll_cuomang"
+        ],
+        "reliability": "亲历"
+      },
+      {
+        "id": "memory_t159_ll_yajin_tool",
+        "event": "早年营里一个哥布林工匠死在塌方里，他的锤子是她亲手挂上共炉边的工具架的。",
+        "location": "site_ms_ll_forge",
+        "salience": 4,
+        "knownBy": [
+          "npc_ms_ll_yajin"
+        ],
+        "reliability": "个人回忆"
+      }
+    ],
+    "goals": {
+      "short": [
+        {
+          "id": "goal_t159_ll_yajin_short",
+          "content": "让首火的事在议事棚里有个说法",
+          "progress": 0,
+          "deadlineDay": 30,
+          "resources": [
+            {
+              "kind": "协商",
+              "description": "须当事人另行确认的空闲时辰",
+              "availability": "unverified",
+              "grantsInventory": false
+            }
+          ],
+          "steps": [
+            {
+              "content": "先听锉针说按轮次怎么点",
+              "status": "pending"
+            },
+            {
+              "content": "请牙钺别当场回绝",
+              "status": "pending"
+            }
+          ]
+        }
+      ],
+      "mid": [
+        {
+          "id": "goal_t159_ll_yajin_mid",
+          "content": "把共炉边的亡者工具都按共营挂好",
+          "progress": 0,
+          "deadlineDay": 180,
+          "resources": [
+            {
+              "kind": "协商",
+              "description": "须当事人另行确认的空闲时辰",
+              "availability": "unverified",
+              "grantsInventory": false
+            }
+          ],
+          "steps": [
+            {
+              "content": "清点工具架上每件工具的来处",
+              "status": "pending"
+            },
+            {
+              "content": "让各族认回自己共营的那排",
+              "status": "pending"
+            }
+          ]
+        }
+      ],
+      "long": [
+        {
+          "id": "goal_t159_ll_yajin_long",
+          "content": "让营里的小辈都记得共炉的规矩",
+          "progress": 0,
+          "deadlineDay": 720,
+          "resources": [
+            {
+              "kind": "协商",
+              "description": "须当事人另行确认的空闲时辰",
+              "availability": "unverified",
+              "grantsInventory": false
+            }
+          ],
+          "steps": [
+            {
+              "content": "每天睡前给牙笋讲一段旧事",
+              "status": "pending"
+            },
+            {
+              "content": "让锉粟也来炉边听",
+              "status": "pending"
+            }
+          ]
+        }
+      ]
+    },
+    "fears": [
+      "怕首火的事吵到动手，共炉边见了血"
+    ],
+    "redLines": [
+      "亡者的工具不能拿走",
+      "共炉的火一夜不能断"
+    ],
+    "secrets": [
+      {
+        "content": "她心里知道，按兽人老家的规矩，共炉首火本该由住在炉边的各家轮着点，营里一直只由兽人点，这事她没跟工匠们说过。",
+        "knownBy": [
+          "npc_ms_ll_yajin"
+        ]
+      }
+    ],
+    "knowledge": {
+      "known": [
+        {
+          "fact": "共炉每天的首火由她点燃，向来只由兽人点。",
+          "source": "site_ms_ll_forge",
+          "reliability": "亲手点了多年"
+        },
+        {
+          "fact": "锉针每天傍晚借共炉的火修镐，烧出的木炭交给她。",
+          "source": "npc_ms_ll_cuozhen",
+          "reliability": "每天傍晚当面收下"
+        },
+        {
+          "fact": "锉芒在营口抹掉了炉灰契板上自己的手印。",
+          "source": "site_ms_ll_gate",
+          "reliability": "当场看见"
+        }
+      ],
+      "unknown": [
+        "若在共炉按轮次点首火，各族多少天轮一回？",
+        "牙钺是否肯在议事棚里让首火的事上议？"
+      ]
+    },
+    "opinions": {
+      "factions": "砾泉人送粮是为走路，不是怕我们。",
+      "magic": "会点火的外来人别碰共炉。",
+      "adventurers": "外来人先在炉边坐下，听完再说话。",
+      "neighbors": [
+        {
+          "with": "npc_ms_ll_yayue",
+          "view": "太硬，可营里离不了他。"
+        },
+        {
+          "with": "npc_ms_ll_cuozhen",
+          "view": "手稳，心也稳。"
+        }
+      ]
+    },
+    "towardPlayer": {
+      "baseline": {
+        "trust": -5,
+        "affection": 0
+      },
+      "raises": [
+        "在共炉边守规矩",
+        "帮着清点亡者工具"
+      ],
+      "lowers": [
+        "乱动炉火",
+        "拿炉边挂的工具"
+      ],
+      "attitude": "冷淡，先看来人懂不懂共炉的规矩。"
+    },
+    "behaviorRules": {
+      "bargaining": "她不管买卖，只管炉火。",
+      "honesty": "规矩和旧事照实说，不知道的说“炉灰上没有”。",
+      "risk": "炉火在，她就不离开共炉。",
+      "threatResponse": "敲急声叫牙石，自己守着炉火不退。",
+      "bribeResponse": "给共炉的炭收下，给她本人的退回去。"
+    },
+    "serviceCatalog": [],
+    "hooks": [
+      "首火之争",
+      "共炉边的亡者工具"
+    ],
+    "ttsVoice": "zh_female_mature_01",
+    "portraitPrompt": "原创年老裂牙兽人炉老，灰褐皮肤，双獠牙裂口，嘴角燎黑，颈挂一串小铁片，手持火钳守着石砌大炉",
+    "notes": "裂炉营炉老，守共炉、点首火，主持亡者工具归营；守贡派，嘴上认首火归共炉。",
+    "description": "牙烬是裂炉营的炉老，六十八岁的裂牙兽人，两颗獠牙都裂了口，脖子上挂着亡者留下的小铁片。她日夜守着共炉，每天的首火由她点燃，亡者的工具也由她挂上炉边的工具架。工匠们要按轮次点首火，她怕规矩散了，在议事棚里多半站在牙钺那边。"
+  },
+  {
+    "id": "npc_ms_ll_cuozhen",
+    "name": "锉针",
+    "aliases": [],
+    "tier": "full",
+    "age": 44,
+    "sex": "女",
+    "species": "monster_ash_cave_goblin",
+    "society": "loc_ms_lielu",
+    "culture": "culture_ms_lielu",
+    "settlement": "loc_ms_lielu",
+    "scope": "loc_ms_lielu",
+    "householdId": "house_ms_ll_02",
+    "household": [
+      "npc_ms_ll_cuomang",
+      "npc_ms_ll_cuoqian",
+      "npc_ms_ll_cuohui",
+      "npc_ms_ll_cuosu"
+    ],
+    "occupation": "修矿具",
+    "traits": [
+      "稳重",
+      "算得精"
+    ],
+    "home": {
+      "location": "bld_ms_ll_home_02",
+      "access": "同住共居；进入私宅须先取得成年住户的有效许可。",
+      "ownership": "unspecified"
+    },
+    "location": "site_ms_ll_shop",
+    "flags": {
+      "minor": false,
+      "romanceable": false
+    },
+    "currentConcern": "她想把纳贡改成按件贸易，让修好的矿镐直接换粮，可又怕锉芒闹得太凶，牙钺一怒连报工都不让她报。",
+    "visibleFeature": "右耳尖缺了一块，是早年被飞出的铁屑削掉的。",
+    "trust": 0,
+    "affection": 0,
+    "coins": 18,
+    "birth": {
+      "year": -44,
+      "month": 9,
+      "day": 2
+    },
+    "inventory": {
+      "item_iron_nail": 30,
+      "item_mining_pick": 2
+    },
+    "skills": [],
+    "services": [
+      "trade"
+    ],
+    "intelligence": {
+      "level": 2,
+      "growth": 0
+    },
+    "role": "工匠头",
+    "familyNotes": "锉针与锉芒、锉钳、锉灰同住锉家矮棚，小哥布林锉粟也在棚里；她不让锉粟碰锤子，只让他认工具的名字。",
+    "appearance": [
+      "右耳尖缺了一块，是早年被飞出的铁屑削掉的。",
+      "腰上缠着三圈挂工具的绳子",
+      "指缝里总嵌着黑亮的铁屑"
+    ],
+    "voice": {
+      "register": "说话快而清楚，报数一个不落",
+      "accent": "咂舌少，人话说得比别的哥布林好",
+      "habits": [
+        "说到数时用小锤在砧上点一下"
+      ],
+      "samples": [
+        "一把镐，换几袋粮，说清楚。",
+        "修好的先给下矿的用。",
+        "锉芒，话留着到议事棚说。"
+      ]
+    },
+    "personality": {
+      "traits": [
+        "稳重",
+        "算得精"
+      ],
+      "values": [
+        "出了工就该照工分粮",
+        "修得好的东西不扔"
+      ],
+      "flaws": [
+        "太想两边都不得罪，常把话说得含糊"
+      ]
+    },
+    "proficiencies": {},
+    "professions": [],
+    "level": 1,
+    "combat": null,
+    "wealth": {
+      "cashRange": [
+        18,
+        18
+      ],
+      "property": [],
+      "valuables": [],
+      "debts": []
+    },
+    "workplace": {
+      "location": "site_ms_ll_shop",
+      "access": "公共林地、窟道或营地可当面招呼；工具和存物另问看管者。"
+    },
+    "schedule": {
+      "default": [
+        {
+          "start": 0,
+          "end": 300,
+          "location": "site_ms_ll_shop",
+          "activity": "修矿镐、敲铁钉",
+          "services": [
+            "trade"
+          ]
+        },
+        {
+          "start": 300,
+          "end": 1020,
+          "location": "bld_ms_ll_home_02",
+          "activity": "睡眠",
+          "services": []
+        },
+        {
+          "start": 1020,
+          "end": 1200,
+          "location": "site_ms_ll_shop",
+          "activity": "修矿镐、敲铁钉",
+          "services": [
+            "trade"
+          ]
+        },
+        {
+          "start": 1200,
+          "end": 1260,
+          "location": "site_ms_ll_council",
+          "activity": "到议事棚报工",
+          "services": []
+        },
+        {
+          "start": 1260,
+          "end": 1440,
+          "location": "site_ms_ll_shop",
+          "activity": "修矿镐、敲铁钉",
+          "services": [
+            "trade"
+          ]
+        }
+      ],
+      "market": [
+        {
+          "start": 0,
+          "end": 300,
+          "location": "site_ms_ll_shop",
+          "activity": "修矿镐、敲铁钉",
+          "services": [
+            "trade"
+          ]
+        },
+        {
+          "start": 300,
+          "end": 1020,
+          "location": "bld_ms_ll_home_02",
+          "activity": "睡眠",
+          "services": []
+        },
+        {
+          "start": 1020,
+          "end": 1200,
+          "location": "site_ms_ll_shop",
+          "activity": "修矿镐、敲铁钉",
+          "services": [
+            "trade"
+          ]
+        },
+        {
+          "start": 1200,
+          "end": 1260,
+          "location": "site_ms_ll_council",
+          "activity": "到议事棚报工",
+          "services": []
+        },
+        {
+          "start": 1260,
+          "end": 1440,
+          "location": "site_ms_ll_shop",
+          "activity": "修矿镐、敲铁钉",
+          "services": [
+            "trade"
+          ]
+        }
+      ],
+      "rest": [
+        {
+          "start": 0,
+          "end": 300,
+          "location": "site_ms_ll_shop",
+          "activity": "修矿镐、敲铁钉",
+          "services": [
+            "trade"
+          ]
+        },
+        {
+          "start": 300,
+          "end": 1020,
+          "location": "bld_ms_ll_home_02",
+          "activity": "睡眠",
+          "services": []
+        },
+        {
+          "start": 1020,
+          "end": 1200,
+          "location": "site_ms_ll_shop",
+          "activity": "修矿镐、敲铁钉",
+          "services": [
+            "trade"
+          ]
+        },
+        {
+          "start": 1200,
+          "end": 1260,
+          "location": "site_ms_ll_council",
+          "activity": "到议事棚报工",
+          "services": []
+        },
+        {
+          "start": 1260,
+          "end": 1440,
+          "location": "site_ms_ll_shop",
+          "activity": "修矿镐、敲铁钉",
+          "services": [
+            "trade"
+          ]
+        }
+      ],
+      "restDays": [],
+      "seasonal": {}
+    },
+    "relationships": [
+      {
+        "with": "npc_ms_ll_yayue",
+        "type": "工匠头与营头",
+        "trust": 15,
+        "affection": 4,
+        "note": "她修的矿镐牙钺每天带下矿，傍晚她到议事棚报工；她提过按件换粮，牙钺说等契板上的约到期再议。"
+      },
+      {
+        "with": "npc_ms_ll_cuomang",
+        "type": "同棚工匠",
+        "trust": 20,
+        "affection": 12,
+        "note": "锉芒是她带出来的徒弟，手艺好，脾气急；他抹手印那天她拉了他一把，没拉住。"
+      },
+      {
+        "with": "npc_ms_ll_yajin",
+        "type": "工匠头与炉老",
+        "trust": 20,
+        "affection": 8,
+        "note": "修具棚看着共炉烧出的木炭由她交到牙烬手里；两人为首火该由谁点争过一回。"
+      },
+      {
+        "with": "npc_ms_ll_cuosu",
+        "type": "同棚照看",
+        "trust": 8,
+        "affection": 16,
+        "note": "小哥布林锉粟总想摸锤子，她只让他认工具的名字，说等长大了再学。"
+      }
+    ],
+    "memorySeeds": [
+      {
+        "id": "memory_t159_ll_board",
+        "event": "上一期砾泉送贡粮那天，牙钺、牙烬、锉针、锉芒在营口对着炉灰契板分粮，工匠和搬运合起来那份只有兽人那份的一半；锉芒当众抹掉了契板上自己的手印，牙钺没有让人重画。",
+        "location": "site_ms_ll_gate",
+        "salience": 5,
+        "knownBy": [
+          "npc_ms_ll_yayue",
+          "npc_ms_ll_yajin",
+          "npc_ms_ll_cuozhen",
+          "npc_ms_ll_cuomang"
+        ],
+        "reliability": "亲历"
+      },
+      {
+        "id": "memory_t159_ll_cuozhen_pick",
+        "event": "她来裂炉营的头一年，一夜修好了十二把断柄的矿镐，第二天牙钺才准工匠在共炉边搭棚。",
+        "location": "site_ms_ll_shop",
+        "salience": 3,
+        "knownBy": [
+          "npc_ms_ll_cuozhen"
+        ],
+        "reliability": "个人回忆"
+      }
+    ],
+    "goals": {
+      "short": [
+        {
+          "id": "goal_t159_ll_cuozhen_short",
+          "content": "让议事棚把改贡为贸易提上来议",
+          "progress": 0,
+          "deadlineDay": 30,
+          "resources": [
+            {
+              "kind": "协商",
+              "description": "须当事人另行确认的空闲时辰",
+              "availability": "unverified",
+              "grantsInventory": false
+            }
+          ],
+          "steps": [
+            {
+              "content": "先把每把镐换几袋粮算清楚",
+              "status": "pending"
+            },
+            {
+              "content": "请牙烬在议事棚里听她说完",
+              "status": "pending"
+            }
+          ]
+        }
+      ],
+      "mid": [
+        {
+          "id": "goal_t159_ll_cuozhen_mid",
+          "content": "让工匠按工分粮",
+          "progress": 0,
+          "deadlineDay": 180,
+          "resources": [
+            {
+              "kind": "协商",
+              "description": "须当事人另行确认的空闲时辰",
+              "availability": "unverified",
+              "grantsInventory": false
+            }
+          ],
+          "steps": [
+            {
+              "content": "把每夜修好的镐数画在棚柱上",
+              "status": "pending"
+            },
+            {
+              "content": "攒一季的数给牙钺看",
+              "status": "pending"
+            }
+          ]
+        }
+      ],
+      "long": [
+        {
+          "id": "goal_t159_ll_cuozhen_long",
+          "content": "让修具棚的手艺传到下一辈",
+          "progress": 0,
+          "deadlineDay": 720,
+          "resources": [
+            {
+              "kind": "协商",
+              "description": "须当事人另行确认的空闲时辰",
+              "availability": "unverified",
+              "grantsInventory": false
+            }
+          ],
+          "steps": [
+            {
+              "content": "等锉粟长大了教他敲钉",
+              "status": "pending"
+            },
+            {
+              "content": "把修镐的法子画在旧契板上",
+              "status": "pending"
+            }
+          ]
+        }
+      ]
+    },
+    "fears": [
+      "怕锉芒带工匠停工，兽人一怒把修具棚拆了"
+    ],
+    "redLines": [
+      "修好的镐不扣给下矿的人",
+      "不偷贡粮棚的粮"
+    ],
+    "secrets": [
+      {
+        "content": "她私下和砾泉一个石匠说过按件换镐的价，这事牙钺还不知道。",
+        "knownBy": [
+          "npc_ms_ll_cuozhen"
+        ]
+      }
+    ],
+    "knowledge": {
+      "known": [
+        {
+          "fact": "上一期贡粮里工匠和搬运合起来那份只有兽人那份的一半。",
+          "source": "site_ms_ll_gate",
+          "reliability": "在契板前亲眼看过"
+        },
+        {
+          "fact": "锉芒在营口抹掉了炉灰契板上自己的手印。",
+          "source": "npc_ms_ll_cuomang",
+          "reliability": "当场拉过他"
+        },
+        {
+          "fact": "牙钺每天带下矿的矿镐是修具棚修的。",
+          "source": "npc_ms_ll_yayue",
+          "reliability": "修好就亲手送到矿口"
+        }
+      ],
+      "unknown": [
+        "砾泉村是否肯按件换修好的矿镐？",
+        "牙钺会在哪一夜让议事棚议改贡的事？"
+      ]
+    },
+    "opinions": {
+      "factions": "砾泉的石匠识货，按件换对两边都好。",
+      "magic": "土石类的法术伤不了我们多少，别在矿道里乱用就行。",
+      "adventurers": "外来人肯护送修好的镐去砾泉，她愿意多给一把旧镐。",
+      "neighbors": [
+        {
+          "with": "npc_ms_ll_cuomang",
+          "view": "手艺好，性子急。"
+        },
+        {
+          "with": "npc_ms_ll_yayue",
+          "view": "讲信用，就是听不进。"
+        }
+      ]
+    },
+    "towardPlayer": {
+      "baseline": {
+        "trust": 0,
+        "affection": 0
+      },
+      "raises": [
+        "在修具棚换她修的东西",
+        "替工匠在议事棚说句话"
+      ],
+      "lowers": [
+        "白天吵醒工棚",
+        "乱动修具棚的工具"
+      ],
+      "attitude": "中立，夜里在修具棚口愿意谈换东西和改贡的事。"
+    },
+    "behaviorRules": {
+      "bargaining": "用修好的矿镐和铁钉换东西，按手头的数，不赊。",
+      "honesty": "数照实报，不知道的说“还没算”。",
+      "risk": "不带工匠停工。",
+      "threatResponse": "咂舌叫锉钳，带工匠退进修具棚。",
+      "bribeResponse": "收下的东西当众画进棚柱。"
+    },
+    "serviceCatalog": [
+      {
+        "kind": "trade",
+        "what": "本人修好的矿镐与铁钉",
+        "price": {
+          "mode": "engineQuote"
+        },
+        "unlocksService": false
+      }
+    ],
+    "hooks": [
+      "改贡为贸易",
+      "按件换镐的价"
+    ],
+    "ttsVoice": "zh_female_bright_01",
+    "portraitPrompt": "原创灰窟哥布林工匠头，个子只到人腰，灰绿皮肤，右耳尖缺一块，腰缠三圈挂工具的绳子，坐在皮棚口的小铁砧前",
+    "notes": "裂炉营工匠头，灰窟哥布林，工匠派；夜里在修具棚修矿镐，傍晚到议事棚报工，想把纳贡改成按件贸易。",
+    "description": "锉针是裂炉营的工匠头，四十四岁的灰窟哥布林，右耳尖缺了一块。她夜里在修具棚修矿镐、敲铁钉，修好的镐交给兽人下矿，傍晚到议事棚报工。她想把纳贡改成按件贸易，让工匠按工分粮，又怕锉芒闹得太凶。她报数一个不落，属工匠派。"
+  },
+  {
+    "id": "npc_ms_ll_cuomang",
+    "name": "锉芒",
+    "aliases": [],
+    "tier": "full",
+    "age": 26,
+    "sex": "男",
+    "species": "monster_ash_cave_goblin",
+    "society": "loc_ms_lielu",
+    "culture": "culture_ms_lielu",
+    "settlement": "loc_ms_lielu",
+    "scope": "loc_ms_lielu",
+    "householdId": "house_ms_ll_02",
+    "household": [
+      "npc_ms_ll_cuozhen",
+      "npc_ms_ll_cuoqian",
+      "npc_ms_ll_cuohui",
+      "npc_ms_ll_cuosu"
+    ],
+    "occupation": "修矿具",
+    "traits": [
+      "冲动",
+      "讲义气"
+    ],
+    "home": {
+      "location": "bld_ms_ll_home_02",
+      "access": "同住共居；进入私宅须先取得成年住户的有效许可。",
+      "ownership": "unspecified"
+    },
+    "location": "site_ms_ll_adit",
+    "flags": {
+      "minor": false,
+      "romanceable": false
+    },
+    "currentConcern": "他抹掉了契板上的手印，要工匠们一起不认这份分法，可锉针劝他别闹，他觉得再等下去工匠只会越分越少。",
+    "visibleFeature": "右手手背上一片烫伤的疤，形状像半个手印。",
+    "trust": 0,
+    "affection": 0,
+    "coins": 3,
+    "birth": {
+      "year": -26,
+      "month": 3,
+      "day": 16
+    },
+    "inventory": {
+      "item_iron_nail": 4
+    },
+    "skills": [],
+    "services": [],
+    "intelligence": {
+      "level": 2,
+      "growth": 0
+    },
+    "role": "持不同主张者",
+    "familyNotes": "锉芒与锉针、锉钳、锉灰同住锉家矮棚，小哥布林锉粟最爱跟着他，他夜里下矿前总给锉粟带一块炭渣玩。",
+    "appearance": [
+      "右手手背上一片烫伤的疤，形状像半个手印。",
+      "耳朵上穿着两枚自己打的小铁环",
+      "走路总带着一股炭渣味"
+    ],
+    "voice": {
+      "register": "说话又快又冲，声音尖",
+      "accent": "咂舌多，急了就夹着哥布林话",
+      "habits": [
+        "说到气头上用指头在地上画灰道"
+      ],
+      "samples": [
+        "我出的工，凭什么少一半？",
+        "手印我不按了。",
+        "首火也该我们点一回。"
+      ]
+    },
+    "personality": {
+      "traits": [
+        "冲动",
+        "讲义气"
+      ],
+      "values": [
+        "工匠出的力该有工匠的份",
+        "不服就当面说"
+      ],
+      "flaws": [
+        "一急就不管后果"
+      ]
+    },
+    "proficiencies": {},
+    "professions": [],
+    "level": 1,
+    "combat": null,
+    "wealth": {
+      "cashRange": [
+        3,
+        3
+      ],
+      "property": [],
+      "valuables": [],
+      "debts": []
+    },
+    "workplace": {
+      "location": "site_ms_ll_shop",
+      "access": "公共林地、窟道或营地可当面招呼；工具和存物另问看管者。"
+    },
+    "schedule": {
+      "default": [
+        {
+          "start": 0,
+          "end": 300,
+          "location": "site_ms_ll_adit",
+          "activity": "进矿道补撑木",
+          "services": []
+        },
+        {
+          "start": 300,
+          "end": 1020,
+          "location": "bld_ms_ll_home_02",
+          "activity": "睡眠",
+          "services": []
+        },
+        {
+          "start": 1020,
+          "end": 1200,
+          "location": "site_ms_ll_shop",
+          "activity": "修矿具",
+          "services": []
+        },
+        {
+          "start": 1200,
+          "end": 1260,
+          "location": "site_ms_ll_gate",
+          "activity": "在营口契板前和工匠们说话",
+          "services": []
+        },
+        {
+          "start": 1260,
+          "end": 1440,
+          "location": "site_ms_ll_adit",
+          "activity": "进矿道补撑木",
+          "services": []
+        }
+      ],
+      "market": [
+        {
+          "start": 0,
+          "end": 300,
+          "location": "site_ms_ll_adit",
+          "activity": "进矿道补撑木",
+          "services": []
+        },
+        {
+          "start": 300,
+          "end": 1020,
+          "location": "bld_ms_ll_home_02",
+          "activity": "睡眠",
+          "services": []
+        },
+        {
+          "start": 1020,
+          "end": 1200,
+          "location": "site_ms_ll_shop",
+          "activity": "修矿具",
+          "services": []
+        },
+        {
+          "start": 1200,
+          "end": 1260,
+          "location": "site_ms_ll_gate",
+          "activity": "在营口契板前和工匠们说话",
+          "services": []
+        },
+        {
+          "start": 1260,
+          "end": 1440,
+          "location": "site_ms_ll_adit",
+          "activity": "进矿道补撑木",
+          "services": []
+        }
+      ],
+      "rest": [
+        {
+          "start": 0,
+          "end": 300,
+          "location": "site_ms_ll_adit",
+          "activity": "进矿道补撑木",
+          "services": []
+        },
+        {
+          "start": 300,
+          "end": 1020,
+          "location": "bld_ms_ll_home_02",
+          "activity": "睡眠",
+          "services": []
+        },
+        {
+          "start": 1020,
+          "end": 1200,
+          "location": "site_ms_ll_shop",
+          "activity": "修矿具",
+          "services": []
+        },
+        {
+          "start": 1200,
+          "end": 1260,
+          "location": "site_ms_ll_gate",
+          "activity": "在营口契板前和工匠们说话",
+          "services": []
+        },
+        {
+          "start": 1260,
+          "end": 1440,
+          "location": "site_ms_ll_adit",
+          "activity": "进矿道补撑木",
+          "services": []
+        }
+      ],
+      "restDays": [],
+      "seasonal": {}
+    },
+    "relationships": [
+      {
+        "with": "npc_ms_ll_yayue",
+        "type": "异议者与营头",
+        "trust": -12,
+        "affection": 0,
+        "note": "他在营口当众抹掉契板上自己的手印，说工匠不认这份分法；牙钺没有让人重画，他反倒更不服。"
+      },
+      {
+        "with": "npc_ms_ll_cuozhen",
+        "type": "徒弟与师傅",
+        "trust": 20,
+        "affection": 14,
+        "note": "锉针是带他出来的师傅，他抹手印那天她拉了他一把；他觉得她太想两边都不得罪。"
+      },
+      {
+        "with": "npc_ms_ll_yajin",
+        "type": "后生与长辈",
+        "trust": -5,
+        "affection": 6,
+        "note": "他小时候在共炉边烤火长大，是牙烬守着炉火看他长大的；抹手印那天她用火钳敲炉沿让他住手，他没有停。"
+      },
+      {
+        "with": "npc_ms_ll_panfu",
+        "type": "下矿同伴",
+        "trust": 15,
+        "affection": 10,
+        "note": "夜里他补撑木，巨魔磐负替他把木柱背进矿道；他劝磐负也来争粮，磐负只说“饿”。"
+      }
+    ],
+    "memorySeeds": [
+      {
+        "id": "memory_t159_ll_board",
+        "event": "上一期砾泉送贡粮那天，牙钺、牙烬、锉针、锉芒在营口对着炉灰契板分粮，工匠和搬运合起来那份只有兽人那份的一半；锉芒当众抹掉了契板上自己的手印，牙钺没有让人重画。",
+        "location": "site_ms_ll_gate",
+        "salience": 5,
+        "knownBy": [
+          "npc_ms_ll_yayue",
+          "npc_ms_ll_yajin",
+          "npc_ms_ll_cuozhen",
+          "npc_ms_ll_cuomang"
+        ],
+        "reliability": "亲历"
+      },
+      {
+        "id": "memory_t159_ll_cuomang_burn",
+        "event": "他小时候在共炉边偷着点过一回火，被烫伤了手背，那块疤到现在还在。",
+        "location": "site_ms_ll_forge",
+        "salience": 3,
+        "knownBy": [
+          "npc_ms_ll_cuomang"
+        ],
+        "reliability": "个人回忆"
+      }
+    ],
+    "goals": {
+      "short": [
+        {
+          "id": "goal_t159_ll_cuomang_short",
+          "content": "让工匠们都不在契板上按这份分法的手印",
+          "progress": 0,
+          "deadlineDay": 30,
+          "resources": [
+            {
+              "kind": "协商",
+              "description": "须当事人另行确认的空闲时辰",
+              "availability": "unverified",
+              "grantsInventory": false
+            }
+          ],
+          "steps": [
+            {
+              "content": "夜里在营口契板前一个个去说",
+              "status": "pending"
+            },
+            {
+              "content": "拉锉钳和锉灰先站出来",
+              "status": "pending"
+            }
+          ]
+        }
+      ],
+      "mid": [
+        {
+          "id": "goal_t159_ll_cuomang_mid",
+          "content": "让议事棚议按轮次点首火",
+          "progress": 0,
+          "deadlineDay": 180,
+          "resources": [
+            {
+              "kind": "协商",
+              "description": "须当事人另行确认的空闲时辰",
+              "availability": "unverified",
+              "grantsInventory": false
+            }
+          ],
+          "steps": [
+            {
+              "content": "去问牙烬早年首火是谁点的",
+              "status": "pending"
+            },
+            {
+              "content": "在共炉边当众提一回",
+              "status": "pending"
+            }
+          ]
+        }
+      ],
+      "long": [
+        {
+          "id": "goal_t159_ll_cuomang_long",
+          "content": "让工匠不再看兽人的脸色吃饭",
+          "progress": 0,
+          "deadlineDay": 720,
+          "resources": [
+            {
+              "kind": "协商",
+              "description": "须当事人另行确认的空闲时辰",
+              "availability": "unverified",
+              "grantsInventory": false
+            }
+          ],
+          "steps": [
+            {
+              "content": "把纳贡改成按件贸易",
+              "status": "pending"
+            },
+            {
+              "content": "让工匠也能在议事棚说上话",
+              "status": "pending"
+            }
+          ]
+        }
+      ]
+    },
+    "fears": [
+      "怕自己闹到最后，连锉针也被赶出修具棚"
+    ],
+    "redLines": [
+      "不偷贡粮",
+      "不对共炉动手"
+    ],
+    "secrets": [
+      {
+        "content": "他夜里补撑木时发现矿道深处有一段新塌的，还没告诉任何人，怕兽人借这事说工匠补得不好。",
+        "knownBy": [
+          "npc_ms_ll_cuomang"
+        ]
+      }
+    ],
+    "knowledge": {
+      "known": [
+        {
+          "fact": "上一期贡粮里工匠和搬运合起来那份只有兽人那份的一半。",
+          "source": "site_ms_ll_gate",
+          "reliability": "在契板前亲眼看过"
+        },
+        {
+          "fact": "巨魔磐负夜里替他把木柱背进矿道。",
+          "source": "npc_ms_ll_panfu",
+          "reliability": "每夜同去"
+        },
+        {
+          "fact": "锉针每天傍晚到议事棚报工。",
+          "source": "npc_ms_ll_cuozhen",
+          "reliability": "同棚亲见"
+        }
+      ],
+      "unknown": [
+        "早年共炉的首火是谁点的？",
+        "砾泉村是否知道营里在争分粮？"
+      ]
+    },
+    "opinions": {
+      "factions": "砾泉人送的粮，进了兽人棚就出不来。",
+      "magic": "会术的外来人他不在乎，只要肯站工匠这边。",
+      "adventurers": "外来人要是替工匠在议事棚开口，他愿意带路下矿看撑木。",
+      "neighbors": [
+        {
+          "with": "npc_ms_ll_cuozhen",
+          "view": "手艺比谁都好，就是太软。"
+        },
+        {
+          "with": "npc_ms_ll_yayue",
+          "view": "只认兽人的份。"
+        }
+      ]
+    },
+    "towardPlayer": {
+      "baseline": {
+        "trust": 0,
+        "affection": 0
+      },
+      "raises": [
+        "替工匠说话",
+        "在营口听他讲完"
+      ],
+      "lowers": [
+        "替兽人来劝他按手印",
+        "白天吵醒工棚"
+      ],
+      "attitude": "热络但急，先问来人站哪边。"
+    },
+    "behaviorRules": {
+      "bargaining": "他手里只有几枚铁钉，不拿去换。",
+      "honesty": "分粮的事照直说，矿道的事只说一半。",
+      "risk": "敢在营口当众顶撞营头，不敢碰共炉。",
+      "threatResponse": "尖叫一声叫锉钳，往修具棚退。",
+      "bribeResponse": "不收兽人的东西。"
+    },
+    "serviceCatalog": [],
+    "hooks": [
+      "抹掉的手印",
+      "按轮次点首火"
+    ],
+    "ttsVoice": "zh_male_bright_01",
+    "portraitPrompt": "原创年轻灰窟哥布林工匠，灰绿皮肤，耳挂两枚小铁环，右手背有半个手印形烫疤，蹲在抹满炉灰的石契板前",
+    "notes": "裂炉营年轻工匠，灰窟哥布林，工匠派里最激进的一个；抹掉契板手印，主张改贡为贸易、轮点首火。",
+    "description": "锉芒是裂炉营的年轻工匠，二十六岁的灰窟哥布林，右手背上有一片像半个手印的烫疤。他傍晚在修具棚修矿具，入夜后进矿道补撑木。上一期分粮时他当众抹掉了契板上自己的手印，要工匠们都不认这份分法，还要议事棚议按轮次点首火。他说话又快又冲，讲义气。"
   }
 ]

@@ -18159,11 +18159,13 @@
       "motions": [
         {
           "id": "grain_pact",
-          "name": "是否与白石镇立按旬交付的粮约"
+          "name": "是否与白石镇立按旬交付的粮约",
+          "opens": "trade"
         },
         {
           "id": "grain_raid",
-          "name": "是否出窟抢粮过冬"
+          "name": "是否出窟抢粮过冬",
+          "closes": "trade"
         }
       ],
       "positions": [
@@ -18176,7 +18178,12 @@
             "npc_ms_tj_yantai",
             "npc_ms_tj_dingkou"
           ],
-          "claim": "守住共灶，用菌粮和修补活计向白石镇换粮，入冬前谈下粮约。"
+          "claim": "守住共灶，用菌粮和修补活计向白石镇换粮，入冬前谈下粮约。",
+          "stances": {
+            "grain_pact": "approve",
+            "grain_raid": "reject"
+          },
+          "persuasion": 20
         },
         {
           "id": "raid_challenge",
@@ -18185,7 +18192,12 @@
             "npc_ms_tj_liya",
             "npc_ms_tj_lishuan"
           ],
-          "claim": "嫌换粮台换得太贱，主张出窟抢粮过冬，并在换季那夜挑战窟主之位。"
+          "claim": "嫌换粮台换得太贱，主张出窟抢粮过冬，并在换季那夜挑战窟主之位。",
+          "stances": {
+            "grain_pact": "reject",
+            "grain_raid": "approve"
+          },
+          "persuasion": 15
         }
       ]
     },
@@ -18753,7 +18765,8 @@
       "motions": [
         {
           "id": "allow_bonds",
-          "name": "是否容许成员与外人结缘并一律打绳记"
+          "name": "是否容许成员与外人结缘并一律打绳记",
+          "opens": "trade"
         },
         {
           "id": "trap_redress",
@@ -18770,7 +18783,12 @@
             "npc_ms_td_taixu",
             "npc_ms_td_tailing"
           ],
-          "claim": "受恩要还，容许成员与外人结下互助之缘，边界的事先结缘再谈。"
+          "claim": "受恩要还，容许成员与外人结下互助之缘，边界的事先结缘再谈。",
+          "stances": {
+            "allow_bonds": "approve",
+            "trap_redress": "reject"
+          },
+          "persuasion": 15
         },
         {
           "id": "redress",
@@ -18779,7 +18797,12 @@
             "npc_ms_td_lizhen",
             "npc_ms_td_lizhi"
           ],
-          "claim": "被捕夹夹伤的旧伤要河湾猎户认账赔偿，收来的夹子等对方来认。"
+          "claim": "被捕夹夹伤的旧伤要河湾猎户认账赔偿，收来的夹子等对方来认。",
+          "stances": {
+            "allow_bonds": "reject",
+            "trap_redress": "approve"
+          },
+          "persuasion": 20
         }
       ]
     },
@@ -19287,6 +19310,1312 @@
           "difficulty": 20
         },
         "damage": 3
+      }
+    }
+  },
+  {
+    "id": "loc_ms_yugen",
+    "name": "榆根里",
+    "aliases": [],
+    "parent": "loc_bs",
+    "scope": "loc_bs_yupo",
+    "coordinates": [
+      18.75,
+      12.9
+    ],
+    "terrain": "丘陵",
+    "openHours": [
+      0,
+      1440
+    ],
+    "owner": null,
+    "purpose": "节榆木精与开了灵智的石须穴鼬、穴脚林獾混居的林下聚居地",
+    "rooms": [],
+    "inventory": {},
+    "mapHierarchy": [
+      {
+        "id": "known-continent",
+        "name": "已知大陆片区"
+      },
+      {
+        "id": "known-region",
+        "name": "已知地区片区"
+      },
+      {
+        "id": "known-county",
+        "name": "已知郡级片区"
+      },
+      {
+        "id": "loc_bs_yupo",
+        "name": "榆坡村"
+      }
+    ],
+    "monsterSociety": {
+      "leader": "boss_ms_yugen",
+      "neighbors": {
+        "loc_bs_yupo": "中立"
+      },
+      "stances": {
+        "player": "中立"
+      },
+      "meetingPlace": "site_ms_yg_council",
+      "motions": [
+        {
+          "id": "shared_allocation",
+          "name": "是否让地窟成员进议根洞，与树穴同议林产分配"
+        },
+        {
+          "id": "logging_line",
+          "name": "是否与榆坡划定伐界，容村民在界外伐木",
+          "opens": "trade"
+        }
+      ],
+      "positions": [
+        {
+          "id": "keep_grove",
+          "name": "护林派",
+          "members": [
+            "npc_ms_yg_jiecang",
+            "npc_ms_yg_jieyin",
+            "npc_ms_yg_jiecha"
+          ],
+          "claim": "林产由护林的木精按树分份，穴居者按出的力领份；先和榆坡把伐界说定。",
+          "stances": {
+            "shared_allocation": "reject",
+            "logging_line": "approve"
+          },
+          "persuasion": 20
+        },
+        {
+          "id": "shared_council",
+          "name": "共议派",
+          "members": [
+            "npc_ms_yg_xuxiao",
+            "npc_ms_yg_xushi",
+            "npc_ms_yg_gongni",
+            "npc_ms_yg_jieqing"
+          ],
+          "claim": "排水运土的也该在议根洞里有一席，林产由树穴和地窟同议分配；伐界要等分配说定再谈。",
+          "stances": {
+            "shared_allocation": "approve",
+            "logging_line": "reject"
+          },
+          "persuasion": 15
+        }
+      ],
+      "supplies": [
+        {
+          "item": "item_hazelnut",
+          "species": "monster_knot_elm_sprite",
+          "place": "site_ms_yg_nursery",
+          "use": "木精护着的榛树结的榛仁，分给穴居者或拿到根门换东西"
+        },
+        {
+          "item": "item_walnut",
+          "species": "monster_knot_elm_sprite",
+          "place": "site_ms_yg_nursery",
+          "use": "老林核桃树落下的果仁，木精拣收后按份分"
+        },
+        {
+          "item": "item_dried_fruit",
+          "species": "monster_knot_elm_sprite",
+          "place": "site_ms_yg_nursery",
+          "use": "林下浆果晒成的干果"
+        },
+        {
+          "item": "item_herb",
+          "species": "monster_knot_elm_sprite",
+          "place": "site_ms_yg_nursery",
+          "use": "育苗地边的药草，木精照看"
+        },
+        {
+          "item": "item_wood",
+          "species": "monster_knot_elm_sprite",
+          "place": "site_ms_yg_rootslope",
+          "use": "木精只拣枯枝落木，修具棚做柄用"
+        },
+        {
+          "item": "item_tool_handle",
+          "species": "monster_stone_whisker_weasel",
+          "place": "site_ms_yg_shed",
+          "use": "穴鼬在修具棚削出的铲柄和小工具柄"
+        },
+        {
+          "item": "item_ration",
+          "from": "loc_bs_yupo",
+          "place": "site_ms_yg_gate",
+          "use": "在根门用林产向榆坡人换来的干粮，给吃粮的穴居者"
+        },
+        {
+          "item": "item_fish",
+          "from": "loc_bs_yupo",
+          "place": "site_ms_yg_gate",
+          "use": "向榆坡人换来的鲜鱼，石须穴鼬最认的吃食"
+        }
+      ]
+    },
+    "authoredFacts": {
+      "climate": "林下背阴潮湿，雨后积水，排水沟一夜不通，育苗地就泡水",
+      "senses": [
+        "树干上一处处刻着节疤样的记号",
+        "石面上抹着几种颜色的湿土图",
+        "黄昏时敲树干的笃笃声和刨土声混在一起"
+      ],
+      "entryRule": "根门、育苗地、修具棚、排水沟、归根坡和三处住区的林地可以通行，各家树穴窟洞和议根洞须当面许可；进林先熄火",
+      "noMechanics": "公共林地、窟道与营地只登记通行、作息与有限库存；不新增工作站、产量或收费服务"
+    },
+    "description": "榆根里在榆坡北岗老林再往深处去的一片老榆林下，是节榆木精和开了灵智的石须穴鼬、穴脚林獾混住的聚居地。几棵老榆的根下掏着树穴，树穴底下连着穴居者挖的石窟和土窟，分成三处住区；林下有育苗地、修具棚、排水沟和归根坡。白天木精在林下慢慢挪动，入夜它们扎根不动，换穴鼬和林獾出窟干活。"
+  },
+  {
+    "id": "site_ms_yg_gate",
+    "name": "根门",
+    "aliases": [],
+    "parent": "loc_ms_yugen",
+    "scope": "loc_ms_yugen",
+    "coordinates": [
+      18.78,
+      12.9
+    ],
+    "terrain": "丘陵",
+    "openHours": [
+      0,
+      1440
+    ],
+    "owner": null,
+    "purpose": "公共设施",
+    "rooms": [],
+    "inventory": {},
+    "authoredFacts": {
+      "climate": "林缘透进些光，比林子深处干爽",
+      "senses": [
+        "交错的老根被踩得发亮",
+        "树皮上的节疤记号一排排往上刻",
+        "石头上的湿土图颜色深浅不一"
+      ],
+      "entryRule": "公共入口，白天在这里和木精交换，越过拱根往里走要先打招呼",
+      "noMechanics": "只登记通行与作息；不新增工作站、产量或收费服务"
+    },
+    "description": "根门是进榆根里的入口，两棵老榆的根在地面上交错拱起，像一道低矮的门。白天林主节苍站在根门旁见来客，用榛仁、核桃和干果换榆坡人带来的盐、鱼和干粮。根门的树皮上刻着一排节疤记号，下面的石头抹着土染图，记着每回换了什么。",
+    "access": {
+      "mode": "public"
+    }
+  },
+  {
+    "id": "site_ms_yg_nursery",
+    "name": "育苗地",
+    "aliases": [],
+    "parent": "loc_ms_yugen",
+    "scope": "loc_ms_yugen",
+    "coordinates": [
+      18.776,
+      12.916
+    ],
+    "terrain": "丘陵",
+    "openHours": [
+      0,
+      1440
+    ],
+    "owner": null,
+    "purpose": "公共设施",
+    "rooms": [],
+    "inventory": {},
+    "authoredFacts": {
+      "climate": "向阳，土松而湿，雨后容易积水",
+      "senses": [
+        "苗根旁的腐叶踩着发软",
+        "细榆条上挂着几片新叶",
+        "苗行间插着刻了节疤的小木签"
+      ],
+      "entryRule": "公共林地，可以沿苗行边走，苗根踩不得，苗边的林产不经木精点头不能拿",
+      "noMechanics": "只登记通行与作息；不新增工作站、产量或收费服务"
+    },
+    "description": "育苗地在老榆林中间一片向阳的空地上，一行行插着细榆条和榛苗，苗根旁埋着木精翻进去的腐叶。长老节荫白天守在这里，给伤了的苗糊湿泥。空地四周挖着排水沟，雨大时全靠穴居者连夜把水引走。在榆根里，伤了育苗根是最重的忌讳。",
+    "access": {
+      "mode": "public"
+    }
+  },
+  {
+    "id": "site_ms_yg_shed",
+    "name": "修具棚",
+    "aliases": [],
+    "parent": "loc_ms_yugen",
+    "scope": "loc_ms_yugen",
+    "coordinates": [
+      18.764,
+      12.927
+    ],
+    "terrain": "丘陵",
+    "openHours": [
+      0,
+      1440
+    ],
+    "owner": null,
+    "purpose": "公共设施",
+    "rooms": [],
+    "inventory": {},
+    "authoredFacts": {
+      "climate": "棚顶挡雨，棚里堆着木屑，干燥",
+      "senses": [
+        "刀削枯枝的沙沙声",
+        "木屑和湿泥的气味",
+        "棚柱上一道道借铲的刻痕"
+      ],
+      "entryRule": "公共工棚，可以在棚口看，铲和工具归修具棚，动手前要问须晓",
+      "noMechanics": "只登记通行与作息；不新增工作站、产量或收费服务"
+    },
+    "description": "修具棚是排水沟边一座用枯枝和树皮搭的矮棚，棚里堆着铲头、筐子和木精拣来的枯枝。入夜后须晓在这里削铲柄、补土筐，修好的铲子给挖沟的林獾用，多出的小工具柄也拿到根门换东西。棚柱上刻着谁借走了哪把铲。",
+    "access": {
+      "mode": "public"
+    }
+  },
+  {
+    "id": "site_ms_yg_ditch",
+    "name": "榆根排水沟",
+    "aliases": [
+      "排水沟"
+    ],
+    "parent": "loc_ms_yugen",
+    "scope": "loc_ms_yugen",
+    "coordinates": [
+      18.748,
+      12.93
+    ],
+    "terrain": "丘陵",
+    "openHours": [
+      0,
+      1440
+    ],
+    "owner": null,
+    "purpose": "公共设施",
+    "rooms": [],
+    "inventory": {},
+    "authoredFacts": {
+      "climate": "沟里常年有水，夜里湿气重",
+      "senses": [
+        "沟底流水细细地响",
+        "沟沿的新土堆成一道矮埂",
+        "土里留着林獾宽爪刨过的印子"
+      ],
+      "entryRule": "公共沟渠，可以沿沟沿走，下沟清土要跟拱厚说一声",
+      "noMechanics": "只登记通行与作息；不新增工作站、产量或收费服务"
+    },
+    "description": "排水沟是穴居者在林下挖的一圈沟渠，把育苗地和树穴根下的积水引到坡下。排水头拱厚每夜带林獾清沟运土，挖出的土堆在沟沿，干了再填回树根旁。沟线怎么走，要先和木精对过节疤记号，不能挖断育苗根。",
+    "access": {
+      "mode": "public"
+    }
+  },
+  {
+    "id": "site_ms_yg_rootslope",
+    "name": "归根坡",
+    "aliases": [],
+    "parent": "loc_ms_yugen",
+    "scope": "loc_ms_yugen",
+    "coordinates": [
+      18.732,
+      12.924
+    ],
+    "terrain": "丘陵",
+    "openHours": [
+      0,
+      1440
+    ],
+    "owner": null,
+    "purpose": "公共设施",
+    "rooms": [],
+    "inventory": {},
+    "authoredFacts": {
+      "climate": "缓坡朝西，傍晚有余光，夜里很静",
+      "senses": [
+        "一根根新榆条高矮不齐",
+        "坡上的落叶没人去扫",
+        "老榆根旁的土比别处松"
+      ],
+      "entryRule": "公共坡地，可以在坡边静立，拔走坡上的榆条是重忌",
+      "noMechanics": "只登记通行与作息；不新增工作站、产量或收费服务"
+    },
+    "description": "归根坡在榆根里西边的一道缓坡上，是送亡者归根的地方。木精亡故后，身躯埋回坡上老榆的根旁；穴鼬和林獾亡故后，埋在坡下各窟外的土里。每处都插一根新榆条，活下来的榆条就是记号。坡上的枯枝落木由木精拣起，拿去修具棚做柄。",
+    "access": {
+      "mode": "public"
+    }
+  },
+  {
+    "id": "site_ms_yg_crown",
+    "name": "老榆树穴",
+    "aliases": [],
+    "parent": "loc_ms_yugen",
+    "scope": "loc_ms_yugen",
+    "coordinates": [
+      18.722,
+      12.911
+    ],
+    "terrain": "丘陵",
+    "openHours": [
+      0,
+      1440
+    ],
+    "owner": null,
+    "purpose": "住区",
+    "rooms": [],
+    "inventory": {},
+    "authoredFacts": {
+      "climate": "树根挡风，穴里干爽",
+      "senses": [
+        "老榆根粗得像矮墙",
+        "穴口挂着刻了节疤的树皮片",
+        "夜里穴里站着一动不动的身影"
+      ],
+      "entryRule": "住区林地可以通行，各家树穴须住户当面许可",
+      "noMechanics": "只登记通行与作息；不新增工作站、产量或收费服务"
+    },
+    "description": "老榆树穴是木精住的地方，在几棵最粗的老榆底下，根与根之间掏出一个个树穴。木精入夜扎根时就站在穴里，看上去和树桩没有两样。林主节苍、长老节荫、守林的节杈和育苗的节青都住在这里的节家树穴，小木精节芽也由他们带着。",
+    "access": {
+      "mode": "public"
+    }
+  },
+  {
+    "id": "site_ms_yg_stone",
+    "name": "鼬石窟",
+    "aliases": [],
+    "parent": "loc_ms_yugen",
+    "scope": "loc_ms_yugen",
+    "coordinates": [
+      18.72,
+      12.895
+    ],
+    "terrain": "丘陵",
+    "openHours": [
+      0,
+      1440
+    ],
+    "owner": null,
+    "purpose": "住区",
+    "rooms": [],
+    "inventory": {},
+    "authoredFacts": {
+      "climate": "石缝阴凉，比土窟干",
+      "senses": [
+        "窟壁的碎石被须尖蹭得发亮",
+        "斜道口抹着灰白色的土染",
+        "石缝里垫着枯草和兽毛"
+      ],
+      "entryRule": "住区窟道可以通行，各家石窝须住户当面许可",
+      "noMechanics": "只登记通行与作息；不新增工作站、产量或收费服务"
+    },
+    "description": "鼬石窟在老榆树穴底下，是穴鼬沿着林下埋着的碎石层挖出来的一串窄窟，有一条斜道通到树穴根下。穴鼬白天蜷在石缝里睡，入夜才出窟。修具的须晓、巡夜的须石、搬土的须禾和小穴鼬须末住在这里的须家石窝。",
+    "access": {
+      "mode": "public"
+    }
+  },
+  {
+    "id": "site_ms_yg_sett",
+    "name": "獾土窟",
+    "aliases": [],
+    "parent": "loc_ms_yugen",
+    "scope": "loc_ms_yugen",
+    "coordinates": [
+      18.727,
+      12.88
+    ],
+    "terrain": "丘陵",
+    "openHours": [
+      0,
+      1440
+    ],
+    "owner": null,
+    "purpose": "住区",
+    "rooms": [],
+    "inventory": {},
+    "authoredFacts": {
+      "climate": "土窟潮湿，雨后侧口积泥",
+      "senses": [
+        "侧口外的泥扇推成半月形",
+        "窟里传出低哑的咕噜声",
+        "枯叶和干草垫在主穴深处"
+      ],
+      "entryRule": "住区窟道可以通行，各家土窝须住户当面许可",
+      "noMechanics": "只登记通行与作息；不新增工作站、产量或收费服务"
+    },
+    "description": "獾土窟在排水沟下游的一片坡地里，是林獾挖的一处主穴连着几个侧口，侧口外堆着推出来的新泥扇。排水头拱厚、挖沟的拱泥和小林獾拱团住在这里的拱家土窝。雨后侧口最忙，林獾要把灌进窟里的泥水推出去。",
+    "access": {
+      "mode": "public"
+    }
+  },
+  {
+    "id": "bld_ms_yg_home_01",
+    "name": "节家树穴",
+    "aliases": [],
+    "parent": "site_ms_yg_crown",
+    "scope": "loc_ms_yugen",
+    "coordinates": [
+      18.741,
+      12.871
+    ],
+    "terrain": "丘陵",
+    "openHours": [
+      0,
+      1440
+    ],
+    "owner": null,
+    "purpose": "私宅",
+    "rooms": [],
+    "inventory": {},
+    "authoredFacts": {
+      "climate": "干爽，树根间有风穿过",
+      "senses": [
+        "树皮片一层层挂在穴壁上",
+        "腐叶垫得软软的",
+        "老根上留着多年的节疤刻痕"
+      ],
+      "entryRule": "私宅，须成年住户当面许可",
+      "noMechanics": "只登记通行与作息；不新增工作站、产量或收费服务"
+    },
+    "description": "节家树穴是老榆树穴里最大的一处，住着节苍、节荫、节杈、节青和小木精节芽。穴壁上挂着刻满节疤记号的树皮片，节芽扎根的地方垫着一圈软腐叶。门前可以招呼，进穴须成年住户许可。",
+    "access": {
+      "mode": "private",
+      "requiresConsent": true,
+      "residents": [
+        "npc_ms_yg_jiecang",
+        "npc_ms_yg_jieyin",
+        "npc_ms_yg_jiecha",
+        "npc_ms_yg_jieqing",
+        "npc_ms_yg_jieya"
+      ]
+    }
+  },
+  {
+    "id": "bld_ms_yg_home_02",
+    "name": "须家石窝",
+    "aliases": [],
+    "parent": "site_ms_yg_stone",
+    "scope": "loc_ms_yugen",
+    "coordinates": [
+      18.757,
+      12.871
+    ],
+    "terrain": "丘陵",
+    "openHours": [
+      0,
+      1440
+    ],
+    "owner": null,
+    "purpose": "私宅",
+    "rooms": [],
+    "inventory": {},
+    "authoredFacts": {
+      "climate": "阴凉，石缝透着一点风",
+      "senses": [
+        "枯草和兽毛垫得厚",
+        "角落里斜靠着半截铲柄",
+        "石壁上抹着几道灰白土色"
+      ],
+      "entryRule": "私宅，须成年住户当面许可",
+      "noMechanics": "只登记通行与作息；不新增工作站、产量或收费服务"
+    },
+    "description": "须家石窝是鼬石窟里的一处窄窝，住着须晓、须石、须禾和小穴鼬须末。窝里垫着枯草和兽毛，角落放着须晓带回来的半截铲柄。门前可以招呼，进窝须成年住户许可。",
+    "access": {
+      "mode": "private",
+      "requiresConsent": true,
+      "residents": [
+        "npc_ms_yg_xuxiao",
+        "npc_ms_yg_xushi",
+        "npc_ms_yg_xuhe",
+        "npc_ms_yg_xumo"
+      ]
+    }
+  },
+  {
+    "id": "bld_ms_yg_home_03",
+    "name": "拱家土窝",
+    "aliases": [],
+    "parent": "site_ms_yg_sett",
+    "scope": "loc_ms_yugen",
+    "coordinates": [
+      18.771,
+      12.879
+    ],
+    "terrain": "丘陵",
+    "openHours": [
+      0,
+      1440
+    ],
+    "owner": null,
+    "purpose": "私宅",
+    "rooms": [],
+    "inventory": {},
+    "authoredFacts": {
+      "climate": "潮湿，雨后侧口要清泥",
+      "senses": [
+        "枯叶垫在主穴深处",
+        "侧口边靠着两把木铲",
+        "土墙上留着宽爪的刨痕"
+      ],
+      "entryRule": "私宅，须成年住户当面许可",
+      "noMechanics": "只登记通行与作息；不新增工作站、产量或收费服务"
+    },
+    "description": "拱家土窝是獾土窟里的主穴，住着拱厚、拱泥和小林獾拱团。主穴深处垫着枯叶和干草，侧口边靠着两把挖沟的木铲。门前可以招呼，进窝须成年住户许可。",
+    "access": {
+      "mode": "private",
+      "requiresConsent": true,
+      "residents": [
+        "npc_ms_yg_gonghou",
+        "npc_ms_yg_gongni",
+        "npc_ms_yg_gongtuan"
+      ]
+    }
+  },
+  {
+    "id": "site_ms_yg_council",
+    "name": "议根洞",
+    "aliases": [],
+    "parent": "loc_ms_yugen",
+    "scope": "loc_ms_yugen",
+    "coordinates": [
+      18.779,
+      12.893
+    ],
+    "terrain": "丘陵",
+    "openHours": [
+      0,
+      1440
+    ],
+    "owner": null,
+    "purpose": "议事区",
+    "rooms": [],
+    "inventory": {},
+    "authoredFacts": {
+      "climate": "洞里安静阴凉，黄昏时透进一点余光",
+      "senses": [
+        "洞壁刻满层层节疤记号",
+        "老根盘成一圈当座",
+        "洞口外听得见刨土声"
+      ],
+      "entryRule": "议事区，须长老节荫当面许可",
+      "noMechanics": "只登记通行与作息；不新增工作站、产量或收费服务"
+    },
+    "description": "议根洞在最老的一棵榆树根下，是一个圆形的大树穴，洞壁上刻满了历代议过的事。每天黄昏木精扎根以前，林主节苍和长老节荫在这里议事，议林产怎么分，也议跟榆坡的伐界。这里历来只坐木精，穴居者只在根门外等消息。外人要进，须长老节荫当面许可。",
+    "access": {
+      "mode": "council",
+      "requiresConsent": true,
+      "authority": "npc_ms_yg_jieyin"
+    }
+  },
+  {
+    "id": "site_ms_yg_store",
+    "name": "林产窖",
+    "aliases": [],
+    "parent": "loc_ms_yugen",
+    "scope": "loc_ms_yugen",
+    "coordinates": [
+      18.779,
+      12.909
+    ],
+    "terrain": "丘陵",
+    "openHours": [
+      0,
+      1440
+    ],
+    "owner": "npc_ms_yg_jiecang",
+    "purpose": "存放处",
+    "rooms": [],
+    "inventory": {},
+    "authoredFacts": {
+      "climate": "窖里干燥阴凉",
+      "senses": [
+        "榛仁和核桃装在树皮篓里",
+        "窖口挂着刻满记号的分账树皮",
+        "地上落着几粒干果"
+      ],
+      "entryRule": "林产归林主，进入须节苍或拱厚许可；林产窖登记为可潜入之处",
+      "noMechanics": "只登记通行与作息；不新增工作站、产量或收费服务"
+    },
+    "description": "林产窖是老榆树穴旁挖进土坡的一个窖，存着木精收下的榛仁、核桃和干果，窖口挂着一块分账树皮，用节疤记号刻着每季分给树穴和地窟各多少份。本季地窟那一栏比上季少了三道刻痕。天亮前拱厚来这里把篓数刻上树皮。",
+    "site": {
+      "owner": "npc_ms_yg_jiecang",
+      "manager": "npc_ms_yg_jiecang",
+      "occupants": [
+        "npc_ms_yg_gonghou"
+      ],
+      "entryMechanisms": [],
+      "mechanisms": [],
+      "resources": [
+        {
+          "id": "yg_store_hazelnut",
+          "name": "窖存榛仁",
+          "item": "item_hazelnut",
+          "quantity": 24,
+          "minutes": 5
+        }
+      ],
+      "clues": [
+        {
+          "id": "yg_store_bark",
+          "name": "分账树皮",
+          "text": "窖口的分账树皮用节疤记号分成两栏，一栏记树穴，一栏记地窟；地窟那栏本季比上季少了三道刻痕，削口还是新的，木屑没干。",
+          "minutes": 10
+        },
+        {
+          "id": "yg_store_tally",
+          "name": "篓沿刻数",
+          "text": "窖里的树皮篓按季码着，篓沿刻着数；本季的篓数和分账树皮上两栏相加对不上，多出来的三份榛仁仍在窖里，没有分出去。",
+          "minutes": 15
+        }
+      ],
+      "truths": [],
+      "infiltration": {
+        "minutes": 30,
+        "check": {
+          "attribute": "敏捷",
+          "difficulty": 15
+        },
+        "damage": 3
+      }
+    }
+  },
+  {
+    "id": "loc_ms_lielu",
+    "name": "裂炉营",
+    "aliases": [],
+    "parent": "loc_bs",
+    "scope": "loc_bs_liquan",
+    "coordinates": [
+      36.2,
+      15.35
+    ],
+    "terrain": "丘陵",
+    "openHours": [
+      0,
+      1440
+    ],
+    "owner": null,
+    "purpose": "裂牙兽人、灰窟哥布林与苔背巨魔主从同营的矿道营地",
+    "rooms": [],
+    "inventory": {},
+    "mapHierarchy": [
+      {
+        "id": "known-continent",
+        "name": "已知大陆片区"
+      },
+      {
+        "id": "known-region",
+        "name": "已知地区片区"
+      },
+      {
+        "id": "known-county",
+        "name": "已知郡级片区"
+      },
+      {
+        "id": "loc_bs_liquan",
+        "name": "砾泉村"
+      }
+    ],
+    "monsterSociety": {
+      "leader": "boss_ms_lielu",
+      "neighbors": {
+        "loc_bs_liquan": "戒备"
+      },
+      "stances": {
+        "player": "戒备"
+      },
+      "meetingPlace": "site_ms_ll_council",
+      "motions": [
+        {
+          "id": "tribute_to_trade",
+          "name": "是否把砾泉的纳贡改为按件贸易",
+          "opens": "trade",
+          "closes": "tribute"
+        },
+        {
+          "id": "shared_first_fire",
+          "name": "是否让各族按轮次共点共炉首火"
+        }
+      ],
+      "positions": [
+        {
+          "id": "keep_tribute",
+          "name": "守贡派",
+          "members": [
+            "npc_ms_ll_yayue",
+            "npc_ms_ll_yajin",
+            "npc_ms_ll_yashi",
+            "npc_ms_ll_yahang"
+          ],
+          "claim": "兽人掌营地的武力和分配，砾泉照旧纳粮换走矿道，工匠和搬运的按兽人分的份吃饭。",
+          "stances": {
+            "tribute_to_trade": "reject",
+            "shared_first_fire": "reject"
+          },
+          "persuasion": 20
+        },
+        {
+          "id": "craft_trade",
+          "name": "工匠派",
+          "members": [
+            "npc_ms_ll_cuozhen",
+            "npc_ms_ll_cuomang",
+            "npc_ms_ll_cuoqian",
+            "npc_ms_ll_cuohui"
+          ],
+          "claim": "把纳贡改成按件贸易，修好的矿具和挖出的石料按件换粮，工匠按工分粮，不再由兽人一手分配。",
+          "stances": {
+            "tribute_to_trade": "approve",
+            "shared_first_fire": "approve"
+          },
+          "persuasion": 15
+        }
+      ],
+      "supplies": [
+        {
+          "item": "item_stone",
+          "species": "monster_split_tusk_orc",
+          "place": "site_ms_ll_adit",
+          "use": "兽人在矿口挖出的石料，巨魔搬到卸石场"
+        },
+        {
+          "item": "item_iron",
+          "species": "monster_split_tusk_orc",
+          "place": "site_ms_ll_adit",
+          "use": "兽人从旧矿道里挖出、在共炉边粗炼的铁料"
+        },
+        {
+          "item": "item_iron_nail",
+          "species": "monster_ash_cave_goblin",
+          "place": "site_ms_ll_shop",
+          "use": "哥布林在修具棚敲出的小铁钉"
+        },
+        {
+          "item": "item_mining_pick",
+          "species": "monster_ash_cave_goblin",
+          "place": "site_ms_ll_shop",
+          "use": "哥布林修好的旧矿镐"
+        },
+        {
+          "item": "item_charcoal",
+          "species": "monster_ash_cave_goblin",
+          "place": "site_ms_ll_forge",
+          "use": "哥布林看着共炉烧出的木炭，木柴由巨魔从坡上背来"
+        },
+        {
+          "item": "item_ration",
+          "from": "loc_bs_liquan",
+          "place": "site_ms_ll_store",
+          "use": "砾泉村为走矿道送来的贡粮，存在贡粮棚由兽人分"
+        }
+      ]
+    },
+    "authoredFacts": {
+      "climate": "坡上风硬，共炉边暖，石窝里阴冷",
+      "senses": [
+        "共炉的烟顺着坡往上飘",
+        "矿镐敲石头的声音从矿口传出来",
+        "炉灰契板上按满了大小不一的手印"
+      ],
+      "entryRule": "营口、共炉、修具棚、矿口、卸石场和三处住区可以通行，各家棚窝和议事棚须当面许可；矿口深处要先问兽人",
+      "noMechanics": "公共林地、窟道与营地只登记通行、作息与有限库存；不新增工作站、产量或收费服务"
+    },
+    "description": "裂炉营在砾泉旧矿道口再往里走的一条矿道支路尽头，是裂牙兽人、灰窟哥布林和苔背巨魔同住的矿道营地。坡上搭着一片皮棚和石窝，中间是一口共炉；兽人掌着武力和分配，哥布林修矿具，巨魔搬石料。营口立着一块抹满炉灰的契板，营里的约定都画在上面。"
+  },
+  {
+    "id": "site_ms_ll_gate",
+    "name": "裂炉营口",
+    "aliases": [
+      "营口"
+    ],
+    "parent": "loc_ms_lielu",
+    "scope": "loc_ms_lielu",
+    "coordinates": [
+      36.23,
+      15.35
+    ],
+    "terrain": "丘陵",
+    "openHours": [
+      0,
+      1440
+    ],
+    "owner": null,
+    "purpose": "公共设施",
+    "rooms": [],
+    "inventory": {},
+    "authoredFacts": {
+      "climate": "坡口风大，契板上的炉灰常被吹散一层",
+      "senses": [
+        "契板上的炉灰画痕一道压一道",
+        "板脚堆着几块垫粮袋的石头",
+        "被抹掉的手印留下一块灰白的空处"
+      ],
+      "entryRule": "公共入口，交割和立约在契板前进行，往里走要先报来意",
+      "noMechanics": "只登记通行与作息；不新增工作站、产量或收费服务"
+    },
+    "description": "营口是裂炉营的入口，立着一块用石板做的炉灰契板，营里与外面立的约都用指头蘸炉灰画在板上，各族按手印。砾泉人送贡粮时在这里交割，兽人照板上画的数收下。最近板上有一处手印被抹掉了，没人重画。",
+    "access": {
+      "mode": "public"
+    }
+  },
+  {
+    "id": "site_ms_ll_forge",
+    "name": "共炉",
+    "aliases": [],
+    "parent": "loc_ms_lielu",
+    "scope": "loc_ms_lielu",
+    "coordinates": [
+      36.226,
+      15.366
+    ],
+    "terrain": "丘陵",
+    "openHours": [
+      0,
+      1440
+    ],
+    "owner": null,
+    "purpose": "公共设施",
+    "rooms": [],
+    "inventory": {},
+    "authoredFacts": {
+      "climate": "炉边烤得发烫，离炉几步就被坡风吹凉",
+      "senses": [
+        "炉膛里的炭火终日不灭",
+        "炉边架子上挂着一排旧工具",
+        "烤肉和铁锈的气味混在一起"
+      ],
+      "entryRule": "公共炉场，可以在炉边等候，首火和炉膛只归炉老照看",
+      "noMechanics": "只登记通行与作息；不新增工作站、产量或收费服务"
+    },
+    "description": "共炉是裂炉营正中一口石砌的大炉，各族的饭和铁都在这口炉上做。炉老牙烬日夜守着炉火，每天的首火由她点燃。营头牙钺白天在炉边见来人、收贡、派活。私占共炉首火是营里最重的忌讳，可首火向来只由兽人点，工匠们为此不服。",
+    "access": {
+      "mode": "public"
+    }
+  },
+  {
+    "id": "site_ms_ll_shop",
+    "name": "修具棚",
+    "aliases": [],
+    "parent": "loc_ms_lielu",
+    "scope": "loc_ms_lielu",
+    "coordinates": [
+      36.214,
+      15.377
+    ],
+    "terrain": "丘陵",
+    "openHours": [
+      0,
+      1440
+    ],
+    "owner": null,
+    "purpose": "公共设施",
+    "rooms": [],
+    "inventory": {},
+    "authoredFacts": {
+      "climate": "挨着共炉，棚里暖，夜里点小油灯",
+      "senses": [
+        "小锤敲铁的叮当声不停",
+        "棚壁上挂满补好的镐头",
+        "地上落着铁屑和炭渣"
+      ],
+      "entryRule": "公共工棚，可以在棚口看和换东西，工具归修具棚，动手前要问锉针",
+      "noMechanics": "只登记通行与作息；不新增工作站、产量或收费服务"
+    },
+    "description": "修具棚是共炉旁一座矮皮棚，哥布林夜里在这里修矿镐、敲铁钉。工匠头锉针坐在棚口，修好的矿镐交给兽人下矿，多出的铁钉和旧镐也在棚口换东西。棚里的工具挂得满满当当，锉芒常在这里和工匠们说改贡的事。",
+    "access": {
+      "mode": "public"
+    }
+  },
+  {
+    "id": "site_ms_ll_adit",
+    "name": "矿口",
+    "aliases": [],
+    "parent": "loc_ms_lielu",
+    "scope": "loc_ms_lielu",
+    "coordinates": [
+      36.198,
+      15.38
+    ],
+    "terrain": "丘陵",
+    "openHours": [
+      0,
+      1440
+    ],
+    "owner": null,
+    "purpose": "公共设施",
+    "rooms": [],
+    "inventory": {},
+    "authoredFacts": {
+      "climate": "坑道里阴冷，口外有风",
+      "senses": [
+        "坑道深处有滴水声",
+        "新撑木的树皮还没剥净",
+        "口外的碎石堆一层压一层"
+      ],
+      "entryRule": "公共矿口，可以在口外看，进坑道要先问兽人",
+      "noMechanics": "只登记通行与作息；不新增工作站、产量或收费服务"
+    },
+    "description": "矿口是裂炉营挖石取铁的坑道口，旧矿道被兽人重新打通，往里撑着新砍的木柱。白天营头牙钺带兽人下矿，夜里哥布林进去补撑木。挖出的石料和铁料堆在口外，等巨魔搬去卸石场。",
+    "access": {
+      "mode": "public"
+    }
+  },
+  {
+    "id": "site_ms_ll_yard",
+    "name": "卸石场",
+    "aliases": [],
+    "parent": "loc_ms_lielu",
+    "scope": "loc_ms_lielu",
+    "coordinates": [
+      36.182,
+      15.374
+    ],
+    "terrain": "丘陵",
+    "openHours": [
+      0,
+      1440
+    ],
+    "owner": null,
+    "purpose": "公共设施",
+    "rooms": [],
+    "inventory": {},
+    "authoredFacts": {
+      "climate": "平地开阔，白天晒，夜里凉",
+      "senses": [
+        "石垛码得比人还高",
+        "地上留着水盆大的脚印",
+        "巨魔的呼噜声嗡嗡作响"
+      ],
+      "entryRule": "公共场地，可以在场边看，别在白天吵醒巨魔",
+      "noMechanics": "只登记通行与作息；不新增工作站、产量或收费服务"
+    },
+    "description": "卸石场在矿口下方一块平地上，巨魔夜里把矿口外的石料一趟趟背下来，码成石垛。送往砾泉换粮的石料也从这里装走。磐负和磐垒白天背靠石垛睡觉，背上的青苔把太阳挡得严严实实。",
+    "access": {
+      "mode": "public"
+    }
+  },
+  {
+    "id": "site_ms_ll_tents",
+    "name": "兽人棚区",
+    "aliases": [],
+    "parent": "loc_ms_lielu",
+    "scope": "loc_ms_lielu",
+    "coordinates": [
+      36.172,
+      15.361
+    ],
+    "terrain": "丘陵",
+    "openHours": [
+      0,
+      1440
+    ],
+    "owner": null,
+    "purpose": "住区",
+    "rooms": [],
+    "inventory": {},
+    "authoredFacts": {
+      "climate": "坡上风大，皮棚里比外面暖",
+      "senses": [
+        "棚前插着成排的矿镐和猎矛",
+        "火塘边堆着啃过的骨头",
+        "皮棚被风吹得哗哗响"
+      ],
+      "entryRule": "住区可以通行，各家皮棚须住户当面许可",
+      "noMechanics": "只登记通行与作息；不新增工作站、产量或收费服务"
+    },
+    "description": "兽人棚区在共炉上坡一侧，一顶顶兽皮棚按队搭着，棚前插着矿镐和猎矛。营头牙钺、炉老牙烬、守营的牙石、挖矿的牙夯和小兽人牙笋住在这里的牙家皮棚。兽人的孩子留在棚区里，不跟队下矿。",
+    "access": {
+      "mode": "public"
+    }
+  },
+  {
+    "id": "site_ms_ll_huts",
+    "name": "工棚区",
+    "aliases": [],
+    "parent": "loc_ms_lielu",
+    "scope": "loc_ms_lielu",
+    "coordinates": [
+      36.17,
+      15.345
+    ],
+    "terrain": "丘陵",
+    "openHours": [
+      0,
+      1440
+    ],
+    "owner": null,
+    "purpose": "住区",
+    "rooms": [],
+    "inventory": {},
+    "authoredFacts": {
+      "climate": "低洼，挨得紧，棚里闷",
+      "senses": [
+        "棚檐下挂着成串的铁钉",
+        "棚门口垫着炭渣",
+        "白天棚里只有鼾声"
+      ],
+      "entryRule": "住区可以通行，各家矮棚须住户当面许可",
+      "noMechanics": "只登记通行与作息；不新增工作站、产量或收费服务"
+    },
+    "description": "工棚区在共炉下坡一侧，是哥布林搭的一排矮棚，挨得很紧。工匠头锉针、锉芒、锉钳、拾炭的锉灰和小哥布林锉粟住在这里的锉家矮棚。哥布林白天挤在棚里睡，黄昏才出来干活。",
+    "access": {
+      "mode": "public"
+    }
+  },
+  {
+    "id": "site_ms_ll_rocks",
+    "name": "石窝",
+    "aliases": [],
+    "parent": "loc_ms_lielu",
+    "scope": "loc_ms_lielu",
+    "coordinates": [
+      36.177,
+      15.33
+    ],
+    "terrain": "丘陵",
+    "openHours": [
+      0,
+      1440
+    ],
+    "owner": null,
+    "purpose": "住区",
+    "rooms": [],
+    "inventory": {},
+    "authoredFacts": {
+      "climate": "乱石间阴冷，石缝漏风",
+      "senses": [
+        "大石块垒得歪歪斜斜",
+        "窝顶的苔藓湿漉漉的",
+        "地上散着啃剩的草根"
+      ],
+      "entryRule": "住区可以通行，各家石窝须住户当面许可",
+      "noMechanics": "只登记通行与作息；不新增工作站、产量或收费服务"
+    },
+    "description": "石窝在卸石场后面的一片乱石里，是巨魔用大石块垒的窝，顶上盖着枯枝和苔藓。搬运的磐负和磐垒住在这里的磐家石窝。石窝离共炉最远，分粮时巨魔常排在最后。",
+    "access": {
+      "mode": "public"
+    }
+  },
+  {
+    "id": "bld_ms_ll_home_01",
+    "name": "牙家皮棚",
+    "aliases": [],
+    "parent": "site_ms_ll_tents",
+    "scope": "loc_ms_lielu",
+    "coordinates": [
+      36.191,
+      15.321
+    ],
+    "terrain": "丘陵",
+    "openHours": [
+      0,
+      1440
+    ],
+    "owner": null,
+    "purpose": "私宅",
+    "rooms": [],
+    "inventory": {},
+    "authoredFacts": {
+      "climate": "火塘烘着，棚里暖",
+      "senses": [
+        "兽皮铺了好几层",
+        "火塘边摆着磨亮的骨碗",
+        "棚柱上挂着一张旧弓"
+      ],
+      "entryRule": "私宅，须成年住户当面许可",
+      "noMechanics": "只登记通行与作息；不新增工作站、产量或收费服务"
+    },
+    "description": "牙家皮棚是兽人棚区里最大的一顶，住着牙钺、牙烬、牙石、牙夯和小兽人牙笋。棚里铺着兽皮，火塘边摆着几只磨亮的骨碗。门前可以招呼，进棚须成年住户许可。",
+    "access": {
+      "mode": "private",
+      "requiresConsent": true,
+      "residents": [
+        "npc_ms_ll_yayue",
+        "npc_ms_ll_yajin",
+        "npc_ms_ll_yashi",
+        "npc_ms_ll_yahang",
+        "npc_ms_ll_yasun"
+      ]
+    }
+  },
+  {
+    "id": "bld_ms_ll_home_02",
+    "name": "锉家矮棚",
+    "aliases": [],
+    "parent": "site_ms_ll_huts",
+    "scope": "loc_ms_lielu",
+    "coordinates": [
+      36.207,
+      15.321
+    ],
+    "terrain": "丘陵",
+    "openHours": [
+      0,
+      1440
+    ],
+    "owner": null,
+    "purpose": "私宅",
+    "rooms": [],
+    "inventory": {},
+    "authoredFacts": {
+      "climate": "闷而暖，炭渣味重",
+      "senses": [
+        "墙角堆着没修完的镐头",
+        "门口的小草铺上放着一枚铁环",
+        "棚顶挂着一串铁钉"
+      ],
+      "entryRule": "私宅，须成年住户当面许可",
+      "noMechanics": "只登记通行与作息；不新增工作站、产量或收费服务"
+    },
+    "description": "锉家矮棚是工棚区里的一间矮棚，住着锉针、锉芒、锉钳、锉灰和小哥布林锉粟。棚里堆着没修完的镐头，锉粟的小草铺挨着门口。门前可以招呼，进棚须成年住户许可。",
+    "access": {
+      "mode": "private",
+      "requiresConsent": true,
+      "residents": [
+        "npc_ms_ll_cuozhen",
+        "npc_ms_ll_cuomang",
+        "npc_ms_ll_cuoqian",
+        "npc_ms_ll_cuohui",
+        "npc_ms_ll_cuosu"
+      ]
+    }
+  },
+  {
+    "id": "bld_ms_ll_home_03",
+    "name": "磐家石窝",
+    "aliases": [],
+    "parent": "site_ms_ll_rocks",
+    "scope": "loc_ms_lielu",
+    "coordinates": [
+      36.221,
+      15.329
+    ],
+    "terrain": "丘陵",
+    "openHours": [
+      0,
+      1440
+    ],
+    "owner": null,
+    "purpose": "私宅",
+    "rooms": [],
+    "inventory": {},
+    "authoredFacts": {
+      "climate": "阴冷，石缝漏风",
+      "senses": [
+        "地上铺着厚厚的枯草",
+        "角落堆着嚼过的树皮",
+        "石壁上长着一层薄苔"
+      ],
+      "entryRule": "私宅，须成年住户当面许可",
+      "noMechanics": "只登记通行与作息；不新增工作站、产量或收费服务"
+    },
+    "description": "磐家石窝是石窝里最大的一处，用几块大石垒成，顶上盖着枯枝和苔藓，住着磐负和磐垒。窝里地上铺着枯草，角落堆着嚼过的树皮。门前可以招呼，进窝须成年住户许可。",
+    "access": {
+      "mode": "private",
+      "requiresConsent": true,
+      "residents": [
+        "npc_ms_ll_panfu",
+        "npc_ms_ll_panlei"
+      ]
+    }
+  },
+  {
+    "id": "site_ms_ll_council",
+    "name": "议事棚",
+    "aliases": [],
+    "parent": "loc_ms_lielu",
+    "scope": "loc_ms_lielu",
+    "coordinates": [
+      36.229,
+      15.343
+    ],
+    "terrain": "丘陵",
+    "openHours": [
+      0,
+      1440
+    ],
+    "owner": null,
+    "purpose": "议事区",
+    "rooms": [],
+    "inventory": {},
+    "authoredFacts": {
+      "climate": "棚里闷，炉灰味重",
+      "senses": [
+        "平石上的炉灰画了又抹",
+        "棚壁挂着几块旧契板",
+        "棚外能听见共炉的火声"
+      ],
+      "entryRule": "议事区，须营头牙钺当面许可",
+      "noMechanics": "只登记通行与作息；不新增工作站、产量或收费服务"
+    },
+    "description": "议事棚是共炉后面一顶大皮棚，棚中间埋着一块平石，石上落满炉灰。每天傍晚兽人收工以后，营头牙钺、炉老牙烬在这里议事，工匠头锉针也来报工，议的是贡粮怎么分、首火由谁点。外人要进，须营头牙钺当面许可。",
+    "access": {
+      "mode": "council",
+      "requiresConsent": true,
+      "authority": "npc_ms_ll_yayue"
+    }
+  },
+  {
+    "id": "site_ms_ll_store",
+    "name": "贡粮棚",
+    "aliases": [],
+    "parent": "loc_ms_lielu",
+    "scope": "loc_ms_lielu",
+    "coordinates": [
+      36.229,
+      15.359
+    ],
+    "terrain": "丘陵",
+    "openHours": [
+      0,
+      1440
+    ],
+    "owner": "npc_ms_ll_yayue",
+    "purpose": "存放处",
+    "rooms": [],
+    "inventory": {},
+    "authoredFacts": {
+      "climate": "石墙挡风，棚里干燥",
+      "senses": [
+        "粮袋码成一垛",
+        "棚柱上的炉灰账一道一道",
+        "地上落着粮袋漏出的碎屑"
+      ],
+      "entryRule": "贡粮归营头，进入须牙钺许可；贡粮棚登记为可潜入之处",
+      "noMechanics": "只登记通行与作息；不新增工作站、产量或收费服务"
+    },
+    "description": "贡粮棚是兽人棚区旁一顶加了石墙的皮棚，存着砾泉送来的贡粮。棚柱上用炉灰画着账，记着每一期收了多少、分给谁。营头牙钺每天中午来清点，别人要进得先问他。",
+    "site": {
+      "owner": "npc_ms_ll_yayue",
+      "manager": "npc_ms_ll_yayue",
+      "occupants": [
+        "npc_ms_ll_yayue"
+      ],
+      "entryMechanisms": [],
+      "mechanisms": [],
+      "resources": [
+        {
+          "id": "ll_store_ration",
+          "name": "贡粮",
+          "item": "item_ration",
+          "quantity": 18,
+          "minutes": 5
+        }
+      ],
+      "clues": [
+        {
+          "id": "ll_store_ledger",
+          "name": "炉灰账",
+          "text": "棚柱上的炉灰账画着上一期砾泉送来的贡粮，兽人那份画了两大道，工匠和搬运合起来只画了一道；按道数算，兽人份是另一份的两倍。",
+          "minutes": 10
+        },
+        {
+          "id": "ll_store_print",
+          "name": "抹掉的手印",
+          "text": "炉灰账底下按着几枚手印，兽人的手印都在，工匠头锉针的手印也在，可锉芒的那一枚被抹掉了，只剩一块灰白的空处。",
+          "minutes": 10
+        }
+      ],
+      "truths": [],
+      "infiltration": {
+        "minutes": 30,
+        "check": {
+          "attribute": "敏捷",
+          "difficulty": 20
+        },
+        "damage": 6
       }
     }
   }

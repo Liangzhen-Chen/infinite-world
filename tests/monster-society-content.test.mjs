@@ -189,3 +189,6 @@ test('发布入口只认已过L1/L2/L4的稿件，重发零写入',async()=>{
  const approved=await readMonsterSocietyPublication();assert.deepEqual(approved,batch);
  const again=await publishMonsterSociety();assert.deepEqual(again.changed,[]);assert.equal(again.validation.ok,true);
 });
+
+// T159：榆根里、裂炉营与四处聚居地组织的议题时钟。
+import './monster-society-content-t159.mjs';
