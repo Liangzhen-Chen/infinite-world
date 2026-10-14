@@ -1,5 +1,6 @@
 import {civicRules} from '../world/design/m5-civic-rules.mjs';
 import {npcHousehold} from './npc-life.mjs';
+import {workContribution} from './works.mjs';
 
 const recordPath=id=>['state','records',id];
 const key=(kind,settlement)=>`civic_${kind}:${settlement}:player`;
@@ -115,7 +116,13 @@ function contribution(d,engine,args,settlement){
         if(learning.success!==true||learning.source.type!=='teacher'||!memory||!belongs(engine,memory.location,settlement)||!engine.world.npcs.some(row=>row.id===teacher)||!integer(learning.start)||!integer(learning.end)||learning.end<=learning.start)throw Error('教学缺少成功与当地亲历证据，不能记贡献');
         return credit(d,{sourceEvent:args.sourceEvent,settlement,subject:teacher,kind:'teaching',points:civicRules.teachingPoints,minute:learning.end});
     }
-    throw Error('没有可核验的工程、教学或实际捐赠 sourceEvent');
+    // U6: a publication, counted performance or survey made in this settlement.
+    const work=workContribution(d.get('state'),args.sourceEvent);
+    if(work){
+        if(!work.settlement||!belongs(engine,work.location,settlement))throw Error('作品不在本聚落发表，不能记贡献');
+        return credit(d,{sourceEvent:args.sourceEvent,settlement,kind:`work_${work.kind}`,points:work.points,minute:work.minute});
+    }
+    throw Error('没有可核验的工程、教学、作品或实际捐赠 sourceEvent');
 }
 export function civicAction(d,args,eventId){
     const settlement=this.resolve(args.settlement,'loc'),p=profile(this,settlement);
