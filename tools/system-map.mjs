@@ -141,7 +141,7 @@ const SYSTEMS=[
  {id:'base_advance',layer:'base',name:'推进注册表',card:'K7',modules:['advance-registry.mjs']},
  // 模拟系统层
  {id:'sim_npc',layer:'sim',name:'人物',modules:['npc-state.mjs','npc-schedule.mjs','npc-cognition.mjs','npc-autonomy.mjs','npc-life.mjs','npc-memory.mjs','npc-relations.mjs','npc-rumors.mjs',
-   'npc-obligations.mjs','npc-growth.mjs','npc-intelligence.mjs','npc-planning-service.mjs','population.mjs','population-service.mjs','settlement-profile.mjs']},
+   'npc-obligations.mjs','npc-growth.mjs','npc-intelligence.mjs','lies.mjs','npc-planning-service.mjs','population.mjs','population-service.mjs','settlement-profile.mjs']},
  {id:'sim_character',layer:'sim',name:'角色成长',modules:['character.mjs','progression.mjs','professions.mjs','career-metrics.mjs','training.mjs','learning.mjs','checks.mjs','revival.mjs']},
  {id:'sim_combat',layer:'sim',name:'战斗',modules:['combat.mjs']},
  {id:'sim_boss',layer:'sim',name:'首领',modules:['bosses.mjs','boss-abilities.mjs','boss-cognition.mjs','boss-negotiation.mjs']},

@@ -18,14 +18,14 @@
  "counts": {
   "layers": 6,
   "systems": 37,
-  "modules": 152,
+  "modules": 153,
   "advance": 33,
   "tools": 25,
-  "verbs": 12,
+  "verbs": 13,
   "subscribers": 8,
   "interactionRules": 24,
   "effectKinds": 11,
-  "links": 327
+  "links": 328
  },
  "layers": [
   {
@@ -335,7 +335,7 @@
     "server-plugin/campaign-reducer.mjs",
     "server-plugin/archived-reducer.mjs"
    ],
-   "lines": 836,
+   "lines": 840,
    "stateWrites": [
     "combatDisengaged",
     "created",
@@ -589,7 +589,7 @@
    "modules": [
     "server-plugin/world-events.mjs"
    ],
-   "lines": 129,
+   "lines": 138,
    "stateWrites": [
     "records"
    ],
@@ -599,6 +599,7 @@
    "recordWrites": [],
    "recordReads": [
     "rumor_event",
+    "rumor_lie",
     "world_event"
    ],
    "rules": [],
@@ -618,7 +619,7 @@
    "modules": [
     "server-plugin/standing.mjs"
    ],
-   "lines": 135,
+   "lines": 136,
    "stateWrites": [
     "records"
    ],
@@ -644,6 +645,7 @@
      "fn": "transmitStanding",
      "verbs": [
       "breach",
+      "deceive",
       "gift",
       "harm",
       "help",
@@ -779,12 +781,13 @@
     "server-plugin/npc-obligations.mjs",
     "server-plugin/npc-growth.mjs",
     "server-plugin/npc-intelligence.mjs",
+    "server-plugin/lies.mjs",
     "server-plugin/npc-planning-service.mjs",
     "server-plugin/population.mjs",
     "server-plugin/population-service.mjs",
     "server-plugin/settlement-profile.mjs"
    ],
-   "lines": 2735,
+   "lines": 2902,
    "stateWrites": [
     "created",
     "family",
@@ -796,6 +799,7 @@
     "obligations",
     "population",
     "quotes",
+    "records",
     "relationEvidence",
     "settlements",
     "workshopFunds"
@@ -807,12 +811,12 @@
     "minute",
     "npcPlanning",
     "player",
-    "records",
     "skills"
    ],
    "recordWrites": [],
    "recordReads": [
     "agriculture",
+    "rumor_lie",
     "village-fiscal",
     "village-trade"
    ],
@@ -1776,7 +1780,7 @@
     "server-plugin/state-notices.mjs",
     "server-plugin/return-summary.mjs"
    ],
-   "lines": 397,
+   "lines": 405,
    "stateWrites": [
     "visits"
    ],
@@ -1982,7 +1986,7 @@
     "server-plugin/consistency-service.mjs",
     "server-plugin/consistency-evidence.mjs"
    ],
-   "lines": 662,
+   "lines": 681,
    "stateWrites": [],
    "stateReads": [
     "location",
@@ -2020,7 +2024,7 @@
     "server-plugin/catalog.mjs",
     "server-plugin/chronicle.mjs"
    ],
-   "lines": 401,
+   "lines": 404,
    "stateWrites": [],
    "stateReads": [
     "careerMetrics",
@@ -2609,6 +2613,7 @@
    "to": "sim_npc",
    "kind": "call",
    "labels": [
+    "lies.mjs",
     "npc-autonomy.mjs",
     "npc-intelligence.mjs",
     "npc-obligations.mjs",
@@ -2744,6 +2749,7 @@
    "to": "sim_npc",
    "kind": "call",
    "labels": [
+    "lies.mjs",
     "npc-cognition.mjs",
     "npc-memory.mjs"
    ]
@@ -3396,6 +3402,14 @@
   },
   {
    "from": "sim_npc",
+   "to": "base_standing",
+   "kind": "call",
+   "labels": [
+    "standing.mjs"
+   ]
+  },
+  {
+   "from": "sim_npc",
    "to": "kernel_storage",
    "kind": "call",
    "labels": [
@@ -3777,6 +3791,7 @@
    "to": "sim_npc",
    "kind": "call",
    "labels": [
+    "lies.mjs",
     "npc-intelligence.mjs",
     "npc-life.mjs",
     "npc-memory.mjs",
@@ -5326,13 +5341,15 @@
    "learn",
    "organize",
    "breach",
-   "author"
+   "author",
+   "deceive"
   ],
   "verbs": [
    "author",
    "breach",
    "cast",
    "clash",
+   "deceive",
    "gift",
    "harm",
    "help",
@@ -5428,6 +5445,7 @@
     "module": "server-plugin/standing.mjs",
     "verbs": [
      "breach",
+     "deceive",
      "gift",
      "harm",
      "help",
@@ -5473,6 +5491,9 @@
    ],
    "clash": [
     "server-plugin/world-events.mjs"
+   ],
+   "deceive": [
+    "server-plugin/lies.mjs"
    ],
    "gift": [
     "server-plugin/world-events.mjs"
@@ -6256,6 +6277,7 @@
   },
   "weightedVerbs": [
    "breach",
+   "deceive",
    "gift",
    "harm",
    "help",
@@ -6279,6 +6301,7 @@
    "server-plugin/credit.mjs",
    "server-plugin/effects.mjs",
    "server-plugin/faction-clock.mjs",
+   "server-plugin/lies.mjs",
    "server-plugin/monster-society.mjs",
    "server-plugin/organizations.mjs",
    "server-plugin/public-opinion.mjs",
@@ -6710,7 +6733,7 @@
   },
   {
    "name": "world_remember",
-   "description": "有源事实/在场未核实传闻",
+   "description": "有源事实/在场传闻/谎言与揭穿",
    "readOnly": false,
    "operations": null,
    "routes": [
@@ -6720,6 +6743,7 @@
      "handler": "WorldEngine.remember",
      "modules": [
       "server-plugin/engine.mjs",
+      "server-plugin/lies.mjs",
       "server-plugin/npc-rumors.mjs",
       "server-plugin/retrieval.mjs"
      ],
@@ -8606,6 +8630,7 @@
     "sim_economy",
     "sim_environment",
     "sim_magic",
+    "sim_npc",
     "sim_society",
     "sim_wildlife",
     "sim_works"
@@ -8616,7 +8641,6 @@
     "nar_memory",
     "sim_character",
     "sim_law",
-    "sim_npc",
     "ui_scene"
    ]
   },
@@ -9177,6 +9201,7 @@
       "server-plugin/credit.mjs",
       "server-plugin/environment.mjs",
       "server-plugin/festival.mjs",
+      "server-plugin/lies.mjs",
       "server-plugin/location-access.mjs",
       "server-plugin/magic-air.mjs",
       "server-plugin/magic-light.mjs",
@@ -9586,6 +9611,7 @@
       "server-plugin/bounty.mjs",
       "server-plugin/engine.mjs",
       "server-plugin/festival.mjs",
+      "server-plugin/lies.mjs",
       "server-plugin/npc-autonomy.mjs",
       "server-plugin/npc-cognition.mjs",
       "server-plugin/npc-growth.mjs",
@@ -11445,6 +11471,7 @@
    "system": "nar_consistency",
    "imports": [
     "extension/prompt.mjs",
+    "server-plugin/lies.mjs",
     "server-plugin/npc-cognition.mjs",
     "server-plugin/npc-memory.mjs",
     "server-plugin/retrieval.mjs"
@@ -11464,7 +11491,7 @@
    "rules": [],
    "world": [],
    "worldDirs": [],
-   "lines": 95
+   "lines": 96
   },
   "server-plugin/consistency-review.mjs": {
    "system": "nar_consistency",
@@ -11484,7 +11511,7 @@
    "rules": [],
    "world": [],
    "worldDirs": [],
-   "lines": 326
+   "lines": 344
   },
   "server-plugin/consistency-service.mjs": {
    "system": "nar_consistency",
@@ -11646,6 +11673,7 @@
     "server-plugin/items.mjs",
     "server-plugin/law.mjs",
     "server-plugin/learning.mjs",
+    "server-plugin/lies.mjs",
     "server-plugin/location-access.mjs",
     "server-plugin/magic-air.mjs",
     "server-plugin/magic-area.mjs",
@@ -11744,7 +11772,7 @@
     "spells"
    ],
    "worldDirs": [],
-   "lines": 586
+   "lines": 590
   },
   "server-plugin/environment.mjs": {
    "system": "sim_environment",
@@ -12080,6 +12108,32 @@
    "world": [],
    "worldDirs": [],
    "lines": 113
+  },
+  "server-plugin/lies.mjs": {
+   "system": "sim_npc",
+   "imports": [
+    "server-plugin/npc-intelligence.mjs",
+    "server-plugin/npc-relations.mjs",
+    "server-plugin/retrieval.mjs",
+    "server-plugin/standing.mjs",
+    "server-plugin/storage.mjs",
+    "server-plugin/world-events.mjs"
+   ],
+   "stateWrites": [
+    "npcs",
+    "records"
+   ],
+   "stateReads": [
+    "location",
+    "minute",
+    "player"
+   ],
+   "recordWrites": [],
+   "recordReads": [],
+   "rules": [],
+   "world": [],
+   "worldDirs": [],
+   "lines": 165
   },
   "server-plugin/location-access.mjs": {
    "system": "sim_environment",
@@ -13037,17 +13091,20 @@
     "location",
     "minute",
     "npcs",
-    "player"
+    "player",
+    "records"
    ],
    "recordWrites": [],
-   "recordReads": [],
+   "recordReads": [
+    "rumor_lie"
+   ],
    "rules": [],
    "world": [
     "rumors",
     "settlementProfiles"
    ],
    "worldDirs": [],
-   "lines": 87
+   "lines": 89
   },
   "server-plugin/npc-schedule.mjs": {
    "system": "sim_npc",
@@ -13421,7 +13478,7 @@
     "locations"
    ],
    "worldDirs": [],
-   "lines": 164
+   "lines": 167
   },
   "server-plugin/return-summary.mjs": {
    "system": "ui_scene",
@@ -13459,7 +13516,7 @@
     "settlementProfiles"
    ],
    "worldDirs": [],
-   "lines": 147
+   "lines": 151
   },
   "server-plugin/revival.mjs": {
    "system": "sim_character",
@@ -13515,6 +13572,7 @@
     "server-plugin/chronicle.mjs",
     "server-plugin/environment.mjs",
     "server-plugin/festival.mjs",
+    "server-plugin/lies.mjs",
     "server-plugin/monster-society.mjs",
     "server-plugin/npc-intelligence.mjs",
     "server-plugin/npc-life.mjs",
@@ -13549,7 +13607,7 @@
     "routes"
    ],
    "worldDirs": [],
-   "lines": 137
+   "lines": 141
   },
   "server-plugin/seasonal-migration.mjs": {
    "system": "sim_wildlife",
@@ -13744,7 +13802,7 @@
     "locations"
    ],
    "worldDirs": [],
-   "lines": 135
+   "lines": 136
   },
   "server-plugin/state-notices.mjs": {
    "system": "ui_scene",
@@ -14258,12 +14316,13 @@
    "recordWrites": [],
    "recordReads": [
     "rumor_event",
+    "rumor_lie",
     "world_event"
    ],
    "rules": [],
    "world": [],
    "worldDirs": [],
-   "lines": 129
+   "lines": 138
   },
   "server-plugin/world-registry.mjs": {
    "system": "kernel_storage",

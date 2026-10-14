@@ -152,7 +152,8 @@ test('统一工具公开治理入口，户籍费用仍不能由正文填写',()=
 test('隔离HTTP正式工具签发公账授权、办事、导出导入，并拒绝伪称官职建房',async t=>{
     const express=createRequire(new URL('../SillyTavern/package.json',import.meta.url))('express');
     const root=await fs.mkdtemp(path.join(os.tmpdir(),'governance-http-'));t.after(()=>fs.rm(root,{recursive:true,force:true}));
-    const s=setup(),app=express();app.use(express.json({limit:'20mb'}));
+    // 与宿主酒馆的bodyParser上限（500mb）一致；世界扩充后导出包已超过20MB的UTF-8字节。
+    const s=setup(),app=express();app.use(express.json({limit:'500mb'}));
     const router=express.Router();await init(router,{baseRoot:root,world});app.use(router);
     const server=app.listen(0,'127.0.0.1');await once(server,'listening');t.after(()=>server.close());
     const post=async(endpoint,body)=>{const r=await fetch(`http://127.0.0.1:${server.address().port}${endpoint}`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});return {status:r.status,body:await r.json()};};

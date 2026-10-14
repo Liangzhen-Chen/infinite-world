@@ -14,6 +14,24 @@ const negated=/(?:没有|没能|未能|未曾|尚未|不曾|并未|无法|不能
 const normalizedReceipt=receipt=>({...receipt,result:receipt.result?.result??receipt.result??{}});
 const chineseNumber=value=>{if(/^\d+$/.test(value))return Number(value);const digits='零一二三四五六七八九';if(value==='两')return 2;if(value==='十')return 10;if(value.includes('十')){const [a,b]=value.split('十');return (a?digits.indexOf(a):1)*10+(b?digits.indexOf(b):0);}return digits.indexOf(value);};
 const uncertain=text=>/[？?吗]|不知|不清楚|没听说|没看见|没有.{0,6}(?:见|听)|如果|假如|可能|也许/.test(text);
+// U8: a clause that speaks a lie the speaker has on record (lies ledger) is the
+// character lying on purpose, not a narration error. Narration and unrecorded
+// falsehoods are still reviewed.
+function intentionalLie(lies,clause,labels={}){
+ const c=normalize(clause??'');if(!Array.isArray(lies)||c.length<2)return null;
+ const grams=s=>{const out=new Set();for(let i=0;i<s.length-1;i++)out.add(s.slice(i,i+2));return out;};
+ for(const lie of lies)for(const claim of lie.claims??[]){
+  const n=normalize(claim),a=grams(c),b=grams(n);let hit=0;for(const g of a)if(b.has(g))hit++;
+  if(c.length>=4&&n.includes(c)||c.includes(n)||a.size&&hit/a.size>=0.5||(lie.entities??[]).some(id=>labels[id]&&clause.includes(labels[id])))return lie;
+ }
+ return null;
+}
+function lyingQuote(issue,input,context){
+ if(!['fact','knowledge'].includes(issue.category)||context.outOfCharacter)return false;
+ for(const [,id,text] of stripTurn(context.raw).matchAll(/<q\s+who="([^"]+)"\s*>([\s\S]*?)<\/q>/g))
+  if(text.includes(issue.quote)&&intentionalLie(input.knowledge?.[id]?.lies,issue.quote,context.labels))return true;
+ return false;
+}
 function contractMention(text,contract,labels,entities=[]){
  const facts=contract.facts??{},literal=[contract.reference,facts.name,facts.content].filter(x=>typeof x==='string'&&x.length>=4);
  if(literal.some(x=>text.includes(x)))return true;
@@ -109,7 +127,7 @@ function fixedIssues(input,context){
   }
   for(const clause of context.outOfCharacter?[]:text.match(/[^。！？；\n]+[。！？；]?/g)??[])for(const [item,stock] of Object.entries(stateOf(input.after).npcs?.[id]?.inventory??{})){
    const name=context.labels[item],at=name?clause.indexOf(name):-1;
-   if(quantity(stock)>0&&at>=0&&!uncertain(clause)&&!future.test(clause)&&(/^(?:没有现成|没有能卖|没(?:有)?(?:货|库存)|没有|没剩|售罄|卖光)/.test(clause.slice(at+name.length).replace(/^\s*/,''))||/(?:没有|没剩|售罄|卖光)(?:现成的|可卖的)?$/.test(clause.slice(0,at))))add('fact',clause,'人物否认现有货物，但该人物真实库存仍有此物',[cite('after')]);
+   if(quantity(stock)>0&&at>=0&&!uncertain(clause)&&!intentionalLie(input.knowledge?.[id]?.lies,clause,context.labels)&&!future.test(clause)&&(/^(?:没有现成|没有能卖|没(?:有)?(?:货|库存)|没有|没剩|售罄|卖光)/.test(clause.slice(at+name.length).replace(/^\s*/,''))||/(?:没有|没剩|售罄|卖光)(?:现成的|可卖的)?$/.test(clause.slice(0,at))))add('fact',clause,'人物否认现有货物，但该人物真实库存仍有此物',[cite('after')]);
   }
   const knowledge=input.knowledge?.[id];
   for(const clause of text.match(/[^。！？；\n]+[。！？；]?/g)??[]){
@@ -230,6 +248,7 @@ export function consistencyReviewRequest(input,{maxTokens=1800}={}){
  场外核账没有人物获得新知识。经验、报酬、库存、约定状态及历史答复的矛盾归 fact，不归 knowledge。historical-receipt 是有效历史事件的原始工具回执，经验与结算字段不能被摘要中遗漏的数值否定；chat 可直接证明原答复说了什么，不能证明其中账本主张真实。未承接委托仍可能托管报酬，不能因 taker 未填就否认登记或托管。空 obligations 可以支持没有登记约定的结论。
  knowledge 必须填写 subject 为无渠道人物编号、privateContent 为原句实际披露的具体私密内容，并引用 knowledge:subject 的渠道证据。普通否认、没提上午问话、含糊的“你上午的事”没有说出秘密内容，不能计为泄漏；若确实说出委托货物、期限或债额，仍须报错。库存数量以 before/after 的 npcInventory 核对，不把缺少人物知识条目当作库存事实冲突。
  工具 ok=false 不能写成成功，保留失败原因和实际地点、分钟；移动意图不是移动结果。检索留证 retrieval 仅 status=complete 且 sealed=true 才能证明本回合调用完整；零调用才证明未检索，unknown 或缺回执最多给 warning。scene 中的旧事不是 world_search 调用，空 results 只能证明查过，不能证明找到。`;
+ request.messages[0].content+='\nknowledge.lies是该人物已登记的有意谎言（claims为说法，truth为实情）。其台词说出这些说法是人物在撒谎，不算叙述矛盾；旁白把谎言写成事实、或人物说出未登记的假话，仍按证据报问题。';
  request.messages[0].content+='\nclock.currentTime是服务端换算好的当前时刻，elapsedMinutes是实际差值，不另算历法。正文当前时刻一致且额外为0时，不因许可早已到期或等待起点不同报time；reason若承认时间无误，就不列该项。缺经历来源用warning，直接矛盾须引用相反记录才用error。每条reason最多200字；草稿quote最多120字，证据quote最多160字，只摘短的连续原文。JSON引文不得删除aliases/kind等中间字段再拼接，不自行补闭合标签。';
  for(const branch of request.tools[0].function.parameters.properties.issues.items.oneOf){
   branch.properties.quote={...shortString,maxLength:120};branch.properties.reason={...shortString,maxLength:200};
@@ -265,7 +284,7 @@ export function validateConsistencyResponse(response,input){
    if(context.entities.some(e=>[e.id,e.name,...e.aliases??[]].some(n=>normalize(n)===normalize(issue.entityName))))throw Error('审查误报了已登记实体');
   }
  }
- return parsed.issues.filter(issue=>!acknowledgedCorrectTime(issue,input)).map(issue=>({...clone(issue),source:'model'}));
+ return parsed.issues.filter(issue=>!acknowledgedCorrectTime(issue,input)&&!lyingQuote(issue,input,context)).map(issue=>({...clone(issue),source:'model'}));
 }
 
 // Only repair the invalid response, never solicit another full review.
@@ -287,9 +306,8 @@ function assertCorrectionPreservesIssues(original,corrected,input){
   if(originalIssues.some(row=>!row.severity||!row.quote||!row.reason))throw Error('原审查问题截断，格式修正不能恢复完整负评');
  }
  if(!Array.isArray(originalIssues))return;
- const old=originalIssues.filter(issue=>!acknowledgedCorrectTime(issue,input));
+ const context=prepare(input),old=originalIssues.filter(issue=>!acknowledgedCorrectTime(issue,input)&&!(typeof issue.quote==='string'&&lyingQuote(issue,input,context)));
  if(old.length!==corrected.length)throw Error('格式修正不得删除或新增原审查问题');
- const context=prepare(input);
  for(const [index,issue] of old.entries()){
   const fixed=corrected[index];
   for(const key of ['category','severity','reason','entityName','entityKind','subject','privateContent'])if(issue[key]!==undefined&&issue[key]!==fixed[key])throw Error('格式修正不得改变原负评');

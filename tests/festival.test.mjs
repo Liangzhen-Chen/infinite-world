@@ -30,7 +30,8 @@ async function plan(s,{cost=7,join=true,authorize=true}={}){
 }
 const cash=doc=>doc.state.player.coins+Object.values(doc.state.npcs).reduce((n,p)=>n+p.coins,0)+Object.values(doc.state.settlements).reduce((n,p)=>n+p.treasury,0)+Object.values(doc.state.records).filter(r=>r.category==='settlement_trade').reduce((n,r)=>n+r.escrowCopper,0);
 test('四村只适配已发布节俗，24候选没有进入正式节日库；正常工具可检查预约',async()=>{
- const s=setup();assert.equal(localFestivalCalendar(s.engine).length,4);assert.ok(localFestivalCalendar(s.engine).every(f=>f.kind==='local-custom'&&f.status==='custom-only'));
+ // T90白石镇骨架发布东街送灯日，节俗由四村4条变为四村加白石镇5条；按聚落核对而不只写死总数。
+ const s=setup(),villageIds=['loc_bs_yupo','loc_bs_weiting','loc_bs_liquan','loc_bs_sangban'];assert.equal(localFestivalCalendar(s.engine).filter(f=>villageIds.includes(f.settlement)).length,4);assert.deepEqual(localFestivalCalendar(s.engine).filter(f=>!villageIds.includes(f.settlement)).map(f=>f.settlement),['loc_bs']);assert.ok(localFestivalCalendar(s.engine).every(f=>f.kind==='local-custom'&&f.status==='custom-only'));
  const inspect=await s.run(s.doc,{operation:'festival_inspect'},'inspect');assert.equal(inspect.out.result.calendar.length,1);
  const tool=toolDefinitions().find(t=>t.function.name==='world_settlement');assert.ok(tool.function.parameters.properties.operation.enum.includes('festival_authorize'));
  await assert.rejects(s.run(s.doc,{operation:'festival_plan',festival:'festival_rainmark'},'candidate'),/候选/);

@@ -59,9 +59,12 @@ export class EntityResolver {
     }
 }
 
+// The engine's own resolver indexes exactly engine.entities (sessions extend it alongside entities).
+export const engineIndexOptions = engine => ({ entities: engine.entities, resolver: engine.resolver && engine.byId === engine.resolver.entities ? engine.resolver : null });
 export class MemoryIndex {
-    constructor({ entities = [], dictionary = [] } = {}) {
-        this.resolver = new EntityResolver(entities); this.dictionary = [...new Set([...dictionary, ...RETRIEVAL_DICTIONARY])];
+    constructor({ entities = [], dictionary = [], resolver = null } = {}) {
+        // Per-scene indexes may reuse the engine's resolver for the same entities; it is never mutated here.
+        this.resolver = resolver ?? new EntityResolver(entities); this.dictionary = [...new Set([...dictionary, ...RETRIEVAL_DICTIONARY])];
         this.documents = new Map(); this.postings = new Map(); this.totalLength = 0; this.tokenizations = 0;
         this.chatMessages = []; this.messageRefs = new WeakMap();
     }

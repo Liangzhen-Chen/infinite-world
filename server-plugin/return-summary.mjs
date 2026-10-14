@@ -76,6 +76,10 @@ export function returnChanges(engine,state,place,{from,to=state.minute,before={}
             continue;
         }
         if(e.actor==='player')continue;
+        if(e.verb==='deceive'){
+            if(![e.actor,e.target].some(id=>minor(engine,state,id)))add(e.target==='player'?80:58,`${name(e.actor)}骗${name(e.target)}的事被揭穿了`);
+            continue;
+        }
         if(e.verb==='breach'){
             if(e.target==='player')add(80,`${name(e.actor)}欠你的债已违约`);
             else if(e.case&&!minor(engine,state,e.actor))add(55,`${name(e.actor)}欠债违约，已经立案`);

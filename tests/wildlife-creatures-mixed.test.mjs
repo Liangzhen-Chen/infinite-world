@@ -24,7 +24,9 @@ before.rules.wildlife.habitats=before.rules.wildlife.habitats.filter(h=>!newIds.
 const settlements=['loc_hw','loc_bs_yupo','loc_bs_weiting','loc_bs_liquan','loc_bs_sangban','loc_bs'];
 const habitatOf=s=>world.rules.wildlife.habitats.find(h=>h.id===s.wildlife.habitat);
 // Held species may be appended by a later supplement, so catalog order is not compared.
-const norm=w=>({...w,monsters:[...w.monsters].sort((a,b)=>a.id.localeCompare(b.id))});
+// T102/T157等后续批次在本批之后追加物品、地点、路线与首领；剔除本批再合并会把本批排到末尾，同样按编号比较。
+const sortId=rows=>[...rows].sort((a,b)=>a.id.localeCompare(b.id));
+const norm=w=>({...w,monsters:sortId(w.monsters),items:sortId(w.items),locations:sortId(w.locations),routes:sortId(w.routes),bosses:sortId(w.bosses),rules:{...w.rules,wildlife:{...w.rules.wildlife,habitats:sortId(w.rules.wildlife.habitats)}}});
 const insideHours=([a,b])=>a<b?a+30:(a+30)%1440;
 function setup(seed,mutate){
  const w=mutate?structuredClone(world):world;if(mutate)mutate(w);

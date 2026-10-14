@@ -11,6 +11,8 @@ import {applyPatches} from '../server-plugin/storage.mjs';
 import {compatibleWorld,planWorldUpgrade} from '../server-plugin/world-upgrade.mjs';
 import {consumeMagicProtection} from '../server-plugin/magic-primitives.mjs';
 import {wildlifeEncounterAt} from '../server-plugin/wildlife.mjs';
+// 跳日的夹具用skipTo同时把势力时钟移到下一边界（T159新增日钟）。
+import {skipTo} from './fixtures/skip-clock.mjs';
 
 const formal=await loadWorld(),publication=process.env.W2S4_DESIGN?designPublication():await readS4Publication();
 const ids={spells:new Set(spells.map(s=>s.id)),skills:new Set(spells.map(s=>s.skill)),items:new Set([...books,...items].map(i=>i.id))};
@@ -127,7 +129,7 @@ test('佛门守戒与立愿：持戒护身吸收刀棍与暗影伤害，立愿�
  const vow=await cast(fresh(),{spell:id('still_vow'),target:'player',text:'每日清扫静息廊，不再迟到',permit:p});
  const contract=vow.doc.state.records[vow.result.contract];assert.equal(contract.kind,'oath');assert.equal(contract.church,'止波师承');assert.deepEqual(contract.parties,['player']);
  // The general primer is bought and read at the Hewan bookshop like any other volume.
- let doc=vow.doc;doc.state.location='bld_hw_school';doc.state.minute=Math.ceil(doc.state.minute/1440)*1440+540;doc.state.skills.skill_literacy={proficiency:100,daily:{},breakthroughs:[]};doc.state.player.coins+=200;doc.state.inventory.item_charcoal={quantity:3,durability:100};
+ let doc=vow.doc;doc.state.location='bld_hw_school';skipTo(engine,doc,Math.ceil(doc.state.minute/1440)*1440+540);doc.state.skills.skill_literacy={proficiency:100,daily:{},breakthroughs:[]};doc.state.player.coins+=200;doc.state.inventory.item_charcoal={quantity:3,durability:100};
  const primer=books.find(b=>b.book.teaches.includes(id('contract_read')));doc=(await run(doc,'world_trade',{seller:LU,item:primer.id,quantity:1})).doc;
  doc=(await success(doc,'world_learn',{kind:'spell',entity:id('contract_read'),source:primer.id})).doc;
  const read=await cast(doc,{spell:id('contract_read'),target:vow.result.contract});assert.deepEqual(read.result.changes,[]);assert.equal(read.result.legalJudgement,false);

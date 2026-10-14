@@ -273,3 +273,9 @@ M2修复批审定写入PLAN（T61–T64）：Astra草案F4工具机会标注并�
 - 2026-10-14 U5 已合入：bounty.mjs——逾期未到案、脱逃、逃债、受贿事发生成通缉（发布村加四协查村，文书沿路线延迟，后成公开记忆）；守卫扣押、平民报官、受贿者装不认得；猎人与赏金行会离屏追捕；玩家接赏、arrest缉拿押送、complete交付、confess自首；world_law加bribe（按廉洁度与立场定价，被看破另成罪名并悬赏受贿者）。五村法典正文未动，参数在 rules.law。提示11825（+2）。合后CORE等59项过。未解决：在押NPC日程不受限；NPC间犯罪无来源。
 
 - 2026-10-14 K9 已合入：tools/system-map.mjs 从代码导出系统地图（6层37系统、32推进项、25工具、12事件动词、8订阅者、24交互规则、11效果、320连线、16类内容查表），docs/system-map.html 已发布给用户（https://claude.ai/artifact/JgMkFvD9EDyiVdwB8u39Zj）。合并后补收 bounty.mjs 并重生成。仍需手动接线：新栖地登记 rules.wildlife.habitats（待K8）、聚落与势力成员登记声望表、新法术 effectSpec.kind 需改 magic.mjs、世界事件订阅者无注册入口、新工具需改三处。注：K9 子代理预览后用 taskkill /IM python.exe 结束了本机全部 python 进程。
+
+- 2026-10-14 U8 已合入：lies.mjs——world_remember 带 truth/motive/knowers 登记谎言，同 key 不带 truth 为揭穿（知情者、物证、记忆三途径），灵智≥2 且前后不一或屡被骗时自动识破；新动词 deceive，谎言走传闻、揭穿影响立场与记仇，一致性审查区分有意说谎。提示11862（+37）。合后CORE等60项过。主线已有失败待T163：npc-memory私有流、village-rumor-access种子数52≠40、m3-consistency-browser 渲染“林穗
+
+面包给你”（未核基线）。
+
+- 2026-10-14 T163 已合入（停止追主线，基于 21b83e6）：约40处过期断言改为按批次ID或正式目录核对；npc-depth 冻结名册剔除白石镇升档99人与聚居地名册；场景复用引擎 EntityResolver（约80ms→12ms）；补新地点美术映射。分支上除 agriculture 外1728项中1726过，剩 performance 两项（负载下超时，待空闲复核）；agriculture 单文件70分钟以上。合后CORE等56项过、发布构建通过。T163之后合入的卡造成的新失败留给收尾的空闲全量测试。
