@@ -12,7 +12,8 @@ import {compatibleWorld,planWorldUpgrade} from '../server-plugin/world-upgrade.m
 import {applyPatches} from '../server-plugin/storage.mjs';
 import {villagesOriginalWorld} from '../tools/publish-w1-villages.mjs';
 import {withoutMonsterSociety} from '../tools/publish-monster-society.mjs';
-const formal=await loadWorld(),source=structuredClone(withoutMonsterSociety(villagesOriginalWorld(formal))),candidate=JSON.parse(await fs.readFile('world/drafts/w1/hewan/candidate.json','utf8')),preserved=JSON.parse(await fs.readFile('world/drafts/w1/hewan/preserved-npcs.json','utf8'));
+import {withoutMonsterSociety2} from '../tools/publish-monster-society-2.mjs';
+const formal=await loadWorld(),source=structuredClone(withoutMonsterSociety2(withoutMonsterSociety(villagesOriginalWorld(formal)))),candidate=JSON.parse(await fs.readFile('world/drafts/w1/hewan/candidate.json','utf8')),preserved=JSON.parse(await fs.readFile('world/drafts/w1/hewan/preserved-npcs.json','utf8'));
 // This historical fixture omits four villages, including their dependent rules.
 // Only references to those deliberately removed entities are projected out.
 const removedLocations=new Set(formal.locations.filter(row=>!source.locations.some(location=>location.id===row.id)).map(row=>row.id));

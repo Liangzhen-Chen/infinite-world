@@ -32,17 +32,17 @@ export const settlements=[
   population:240,householdCount:49,registeredHouseholdCount:3,pendingHouseholdCount:46,
   pendingAgeStructure:{children:60,youngAdults:80,adults:66,elders:22},
   society:{leader:'boss_ms_tanjie',neighbors:{loc_bs:'戒备'},stances:{player:'戒备'},meetingPlace:tj.council,
-   motions:[{id:'grain_pact',name:'是否与白石镇立按旬交付的粮约'},{id:'grain_raid',name:'是否出窟抢粮过冬'}],
-   positions:[{id:'keep_trade',name:'守窟换粮',members:[P.yanzhen,P.dingying,P.yantai,P.dingkou],claim:'守住共灶，用菌粮和修补活计向白石镇换粮，入冬前谈下粮约。'},
-    {id:'raid_challenge',name:'抢粮挑战',members:[P.liya,P.lishuan],claim:'嫌换粮台换得太贱，主张出窟抢粮过冬，并在换季那夜挑战窟主之位。'}]}},
+   motions:[{id:'grain_pact',name:'是否与白石镇立按旬交付的粮约',opens:'trade'},{id:'grain_raid',name:'是否出窟抢粮过冬',closes:'trade'}],
+   positions:[{id:'keep_trade',name:'守窟换粮',members:[P.yanzhen,P.dingying,P.yantai,P.dingkou],claim:'守住共灶，用菌粮和修补活计向白石镇换粮，入冬前谈下粮约。',stances:{grain_pact:'approve',grain_raid:'reject'},persuasion:20},
+    {id:'raid_challenge',name:'抢粮挑战',members:[P.liya,P.lishuan],claim:'嫌换粮台换得太贱，主张出窟抢粮过冬，并在换季那夜挑战窟主之位。',stances:{grain_pact:'reject',grain_raid:'approve'},persuasion:15}]}},
  {id:TD,name:'苔灯坞',species:FOX,culture:'culture_ms_taideng',parent:'loc_hw',parentName:'河湾村',scope:'loc_hw',coordinates:[2.6,0.9],terrain:'平地',
   from:'loc_hw_northwood',routeKm:1.1,routeRisk:0,expectedKm:3,populationSeed:'t157-taideng-population-1',
   population:48,householdCount:12,registeredHouseholdCount:3,pendingHouseholdCount:9,
   pendingAgeStructure:{children:10,youngAdults:10,adults:11,elders:5},
   society:{leader:'boss_ms_taideng',neighbors:{loc_hw:'戒备'},stances:{player:'中立'},meetingPlace:td.council,
-   motions:[{id:'allow_bonds',name:'是否容许成员与外人结缘并一律打绳记'},{id:'trap_redress',name:'是否向河湾猎户追偿被捕夹夹伤的旧伤'}],
-   positions:[{id:'bonds',name:'结缘派',members:[P.taimian,P.qingzhi,P.taixu,P.tailing],claim:'受恩要还，容许成员与外人结下互助之缘，边界的事先结缘再谈。'},
-    {id:'redress',name:'追偿派',members:[P.lizhen,P.lizhi],claim:'被捕夹夹伤的旧伤要河湾猎户认账赔偿，收来的夹子等对方来认。'}]}},
+   motions:[{id:'allow_bonds',name:'是否容许成员与外人结缘并一律打绳记',opens:'trade'},{id:'trap_redress',name:'是否向河湾猎户追偿被捕夹夹伤的旧伤'}],
+   positions:[{id:'bonds',name:'结缘派',members:[P.taimian,P.qingzhi,P.taixu,P.tailing],claim:'受恩要还，容许成员与外人结下互助之缘，边界的事先结缘再谈。',stances:{allow_bonds:'approve',trap_redress:'reject'},persuasion:15},
+    {id:'redress',name:'追偿派',members:[P.lizhen,P.lizhi],claim:'被捕夹夹伤的旧伤要河湾猎户认账赔偿，收来的夹子等对方来认。',stances:{allow_bonds:'reject',trap_redress:'approve'},persuasion:20}]}},
 ];
 
 // Places. kind: seat | facility | district | home | council | store

@@ -64,7 +64,34 @@ review-002-yp=782a49e阶段审核通过，范围限T06正式发布与c64163d修�
 - K7 推进注册表：engine.mjs:254、:265-310 手工列的约25个 advance* 改为注册表，新系统自动参与休息和赶路结算。验收：CORE + world-clock/faction-clock/performance。规模S。
 - K8 按地形产生栖地（最后做，需存档迁移）：新地点按地形标签自动出现生物。验收：CORE + wildlife/w4-wildlife/wildlife-encounters。规模L。
 
+- K9 系统地图（用户 2026-10-14 要求）：底座 K1–K7 合入后，产出可视化的游戏系统图：一共几层、每层有哪些系统、系统之间如何串联（读写哪些共享状态、订阅哪些世界事件、受哪些交互规则和效果驱动），并附“新增一种内容要接哪些系统”的查表。按代码实际生成（脚本从注册表、规则表、订阅关系导出数据），发布为 Artifact 给用户，并在 docs/ 留一份。
+
 派工：K1→K2 一个子代理连续做；K3→K4→K5 一个子代理连续做（等T159合入后开）；K7 随时；K6 在K2、K4之后。
+
+## 缺失系统补齐（2026-10-14 主会话审定，来源：规格覆盖审计；用户：“世界公告…不需要，其他需要你继续设计”）
+
+排在底座 K1–K7 之后，按被依赖程度排序。每张卡：不加新工具（复用现有入口），静态提示增量≤100 token（硬上限12000），验收 CORE + 同领域测试整组 + build-world --release；改结算数值逐条列旧→新与理由。世界公告、首杀广播、其他玩家层不做。
+
+- U1 组织实体（依赖K4，S-M）：创立或加入行会、帮派、商号；组织有成员、公库、章程、议事方式（会长定、投票、长老定）。新 organizations.mjs；activities.mjs 的 create(org)、governance.mjs、public-opinion.mjs。补 5.11 家户、行会、教会、帮派的群体决策。
+- U2 契约与信用（依赖K3、K4、K7，M）：借贷计息、钱庄存取与兑换（铸币成色、手续费）、通用租房住宿（不再只认一家）、玩家受雇打工、合伙；违约进入法律流程。contracts.mjs、engine.mjs 交易段、business.mjs:87、law.mjs、rules.economy。
+- U3 季节与灾害世界时钟（依赖K2、K6、K7，M）：汛期、冬荒、疫病流行（户间传染）、物价波动，分阶段可干预。rules.worldClock、world-clock.mjs、npc-life.mjs、settlement-trade.mjs。
+- U4 职业深化（依赖K1、K3，M）：新 career-metrics.mjs 订阅世界事件统计长期行为，隐藏职业“契机”真正触发并可取得；地域、元素变异升职；终极技能；杰作、研究、实战三种突破；入职任务。professions.mjs、engine.mjs:491-508、world/design 职业数据。
+- U6 作品系统（依赖K1、K3，M）：写作出版、技能书抄写（需原本与抄写员）、表演、测绘出图，形成有署名作品，带来收入、贡献、名望；技能融合实验。新 works.mjs；learning.mjs、manufacturing.mjs、civic.mjs。
+- U7 灵智等级生效与成长（依赖K3，S-M）：等级决定计划长度与打破惯例程度；教导和共同经历使NPC成长并有可见迹象。npc-planning-service、npc-autonomy、npc-growth、scene-card。
+- U9 商店补货与价格系数（依赖K4、K7，S）：按周期与产地补货，高品质只在相应渠道；关系、声望、店家加成进报价。engine.mjs 交易段、settlement-trade.mjs、rules.economy。
+- U5 通缉与赏金（依赖K4、K5、U1、U2，M）：通缉范围、逃犯、NPC赏金猎人追捕、玩家接赏金、法典里的贿赂空间。law.mjs、quest-board.mjs、npc-autonomy.mjs。
+- U8 谎言账（依赖K3、K5，S）：撒谎时真相与谎言成对记录，可被揭穿。npc-memory.mjs、world_remember 参数、consistency-review.mjs。
+- U10 生活魔法的经济反馈（依赖K2、K4、K6，S-M）：保鲜降损耗与价格、引水改产量，受益方与竞争方立场变化，官府收费或管制。
+- U14 返场变化汇总（依赖K3、K5，S）：回到某地时汇总离开期间当地的变化。
+- U17 任务自动来源（依赖K3、K4、U1，S-M）：NPC按自身需求与短缺自动出任务；势力委托；世界事件任务。quest-board.mjs、npc-life.mjs、faction-clock.mjs。
+- U13 名士与聚落升格（依赖U1、U6、T124，S-M）。
+- U11 族群觉醒动态（依赖K4、K6、U1、U3，L）：怪物族群按季度与年觉醒、提出诉求、内部分化、生成新势力；玩家可教导、贸易、调停、镇压。
+- U12 军队、兵役、战争与外交（依赖U1、U2、U3、K4、K6、T127、T142，L，开工前再拆）。
+- U15 余下动词（依赖K8、U1、U5，S-M）：钓鱼、开矿、决斗、走私、竞选。
+- U16 建国（依赖U12、T127，L，最后做）。
+- 小修：5.2 人物分布检查并入 build-world 发布构建（S，零依赖，可随任一卡带上）。
+
+执行顺序：K1–K7 → U1/U2/U3/U4/U6/U7/U9（可并行，注意锁 engine.mjs 交易段的 U2、U9 串行）→ U5/U8/U10/U14/U17 → U13/U11 → T142/T143 九省 → U12/U15 → U16。内容卡（首领、聚居地、节日、遗迹、传闻）在 K1–K4 合入后穿插进行。
 
 ## 近期完整任务卡
 
@@ -265,11 +292,7 @@ N1–N17至少12项完整有效且≥90%，N6/N16零泄漏，N12真实盲辨，N
 
 ### T158（S3）已完成：玩家可与聚居地首领立约（贸易、朝贡、通行，按10天一期履约），可潜入登记过的据点（私宅和议事区不可登记潜入）；守约、背约、交锋、潜入被发现都会改变成员态度，消息沿步行路线传到邻村后改变邻村态度（目前邻村反应只有“敌对后拒绝交易”一种）；议事可推动势力时钟。聚居地用location.monsterSociety、潜入用site.infiltration登记，正式数据由T157等内容卡发布。新增5项、CORE40、发布构建ok，提示约11330，0模型。
 
-### T159（S4）榆根里与裂炉营正式落地。
-
-1. 玩家结果：在榆坡与砾泉附近接触共生聚落和主从营地，并能改变其中一项具体争端。
-2. 可改 S2 对应的 monster-society-2 设计、drafts、发布入口及这两处正式 geo/people/lore 条目和本批 tests；锁定 S2 内容及无关目录。依赖 S1/S3/T154/T109；可与 S6 零模型开发并行，共享目录和真实 L2 串行。
-3. 验收 CORE 及 `node --test tests/monster-society-content.test.mjs tests/monster-society.test.mjs "tests/population*.test.mjs" "tests/npc-*.test.mjs" "tests/w5-*.test.mjs" "tests/world-*.test.mjs" tests/sites.test.mjs tests/faction-clock.test.mjs tests/settlement-trade.test.mjs tests/retrieval.test.mjs`；`node tools/audit-npc-depth.mjs`。核对混居物种配额、资源来源及两地内部方案的不同后果。
+### T159 已完成：榆根里64名与裂炉营104名正式发布，四处聚居地组织时钟与派别立场谈判；L2 94次0.513元，L4均4.38。
 4. 真实 L2 预计八十至一百三十次，上限一点五元。
 5. 预计三至四小时加后台 L2，二十四名具名成员含八 full，结构规模同 S2。榆根里发布林产分配争议，裂炉营发布贡粮与劳动争议，消耗和结局接 T109；议事、交易和已授权生产实际生效，公开风俗与派系私下目标分开检索。
 

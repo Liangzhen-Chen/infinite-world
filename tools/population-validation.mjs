@@ -78,7 +78,12 @@ export function validatePopulation(world){
    if(row.pendingPopulation>0&&row.populationSeed&&errors.length===0){
     try{const template=populationTemplate(world,row.id);if(!template)throw Error('缺少可用住区、职业或姓名骨架');
      const plan=populationPlan(template,populationBasis(world,row.id));
-     check(plan.households.length===row.pendingHouseholdCount&&plan.households.reduce((n,h)=>n+h.members.length,0)===row.pendingPopulation,`按需人口生成配额不符：${row.id}`);}
+     check(plan.households.length===row.pendingHouseholdCount&&plan.households.reduce((n,h)=>n+h.members.length,0)===row.pendingPopulation,`按需人口生成配额不符：${row.id}`);
+     for(const [species,g]of Object.entries(row.pendingSpeciesStructure??{})){
+      check(Object.hasOwn(template.composition,species),`分物种配额不是登记成员的物种：${row.id}/${species}`);
+      check((g.districts??[]).every(id=>template.districts[id]),`分物种住区不是登记住区：${row.id}/${species}`);
+      check(plan.households.filter(h=>h.species===species).reduce((n,h)=>n+h.members.length,0)===g.population,`分物种生成人数不符：${row.id}/${species}`);
+     }}
     catch(error){errors.push(`按需人口无法生成：${row.id}：${error.message}`);}
    }
   }

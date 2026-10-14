@@ -4572,5 +4572,369 @@
     "closedSeasons": [],
     "toll": 0,
     "risk": 0
+  },
+  {
+    "id": "route_t159_loc_ms_yugen",
+    "from": "loc_wild_yp_north",
+    "to": "loc_ms_yugen",
+    "lengthKm": 2.5,
+    "terrainMultiplier": 1.2,
+    "modes": [
+      "walk"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 1
+  },
+  {
+    "id": "route_t159_loc_ms_lielu",
+    "from": "loc_wild_lq_adit",
+    "to": "loc_ms_lielu",
+    "lengthKm": 3.6,
+    "terrainMultiplier": 1.2,
+    "modes": [
+      "walk"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 1
+  },
+  {
+    "id": "route_t159_site_ms_yg_gate",
+    "from": "loc_ms_yugen",
+    "to": "site_ms_yg_gate",
+    "lengthKm": 0.08,
+    "terrainMultiplier": 1.2,
+    "modes": [
+      "walk"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 0
+  },
+  {
+    "id": "route_t159_site_ms_yg_nursery",
+    "from": "loc_ms_yugen",
+    "to": "site_ms_yg_nursery",
+    "lengthKm": 0.08,
+    "terrainMultiplier": 1.2,
+    "modes": [
+      "walk"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 0
+  },
+  {
+    "id": "route_t159_site_ms_yg_shed",
+    "from": "loc_ms_yugen",
+    "to": "site_ms_yg_shed",
+    "lengthKm": 0.08,
+    "terrainMultiplier": 1.2,
+    "modes": [
+      "walk"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 0
+  },
+  {
+    "id": "route_t159_site_ms_yg_ditch",
+    "from": "loc_ms_yugen",
+    "to": "site_ms_yg_ditch",
+    "lengthKm": 0.08,
+    "terrainMultiplier": 1.2,
+    "modes": [
+      "walk"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 0
+  },
+  {
+    "id": "route_t159_site_ms_yg_rootslope",
+    "from": "loc_ms_yugen",
+    "to": "site_ms_yg_rootslope",
+    "lengthKm": 0.08,
+    "terrainMultiplier": 1.2,
+    "modes": [
+      "walk"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 0
+  },
+  {
+    "id": "route_t159_site_ms_yg_crown",
+    "from": "loc_ms_yugen",
+    "to": "site_ms_yg_crown",
+    "lengthKm": 0.08,
+    "terrainMultiplier": 1.2,
+    "modes": [
+      "walk"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 0
+  },
+  {
+    "id": "route_t159_site_ms_yg_stone",
+    "from": "loc_ms_yugen",
+    "to": "site_ms_yg_stone",
+    "lengthKm": 0.08,
+    "terrainMultiplier": 1.2,
+    "modes": [
+      "walk"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 0
+  },
+  {
+    "id": "route_t159_site_ms_yg_sett",
+    "from": "loc_ms_yugen",
+    "to": "site_ms_yg_sett",
+    "lengthKm": 0.08,
+    "terrainMultiplier": 1.2,
+    "modes": [
+      "walk"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 0
+  },
+  {
+    "id": "route_t159_bld_ms_yg_home_01",
+    "from": "site_ms_yg_crown",
+    "to": "bld_ms_yg_home_01",
+    "lengthKm": 0.02,
+    "terrainMultiplier": 1.2,
+    "modes": [
+      "walk"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 0
+  },
+  {
+    "id": "route_t159_bld_ms_yg_home_02",
+    "from": "site_ms_yg_stone",
+    "to": "bld_ms_yg_home_02",
+    "lengthKm": 0.02,
+    "terrainMultiplier": 1.2,
+    "modes": [
+      "walk"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 0
+  },
+  {
+    "id": "route_t159_bld_ms_yg_home_03",
+    "from": "site_ms_yg_sett",
+    "to": "bld_ms_yg_home_03",
+    "lengthKm": 0.02,
+    "terrainMultiplier": 1.2,
+    "modes": [
+      "walk"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 0
+  },
+  {
+    "id": "route_t159_site_ms_yg_council",
+    "from": "loc_ms_yugen",
+    "to": "site_ms_yg_council",
+    "lengthKm": 0.08,
+    "terrainMultiplier": 1.2,
+    "modes": [
+      "walk"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 0
+  },
+  {
+    "id": "route_t159_site_ms_yg_store",
+    "from": "loc_ms_yugen",
+    "to": "site_ms_yg_store",
+    "lengthKm": 0.08,
+    "terrainMultiplier": 1.2,
+    "modes": [
+      "walk"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 0
+  },
+  {
+    "id": "route_t159_site_ms_ll_gate",
+    "from": "loc_ms_lielu",
+    "to": "site_ms_ll_gate",
+    "lengthKm": 0.08,
+    "terrainMultiplier": 1.2,
+    "modes": [
+      "walk"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 0
+  },
+  {
+    "id": "route_t159_site_ms_ll_forge",
+    "from": "loc_ms_lielu",
+    "to": "site_ms_ll_forge",
+    "lengthKm": 0.08,
+    "terrainMultiplier": 1.2,
+    "modes": [
+      "walk"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 0
+  },
+  {
+    "id": "route_t159_site_ms_ll_shop",
+    "from": "loc_ms_lielu",
+    "to": "site_ms_ll_shop",
+    "lengthKm": 0.08,
+    "terrainMultiplier": 1.2,
+    "modes": [
+      "walk"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 0
+  },
+  {
+    "id": "route_t159_site_ms_ll_adit",
+    "from": "loc_ms_lielu",
+    "to": "site_ms_ll_adit",
+    "lengthKm": 0.08,
+    "terrainMultiplier": 1.2,
+    "modes": [
+      "walk"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 0
+  },
+  {
+    "id": "route_t159_site_ms_ll_yard",
+    "from": "loc_ms_lielu",
+    "to": "site_ms_ll_yard",
+    "lengthKm": 0.08,
+    "terrainMultiplier": 1.2,
+    "modes": [
+      "walk"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 0
+  },
+  {
+    "id": "route_t159_site_ms_ll_tents",
+    "from": "loc_ms_lielu",
+    "to": "site_ms_ll_tents",
+    "lengthKm": 0.08,
+    "terrainMultiplier": 1.2,
+    "modes": [
+      "walk"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 0
+  },
+  {
+    "id": "route_t159_site_ms_ll_huts",
+    "from": "loc_ms_lielu",
+    "to": "site_ms_ll_huts",
+    "lengthKm": 0.08,
+    "terrainMultiplier": 1.2,
+    "modes": [
+      "walk"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 0
+  },
+  {
+    "id": "route_t159_site_ms_ll_rocks",
+    "from": "loc_ms_lielu",
+    "to": "site_ms_ll_rocks",
+    "lengthKm": 0.08,
+    "terrainMultiplier": 1.2,
+    "modes": [
+      "walk"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 0
+  },
+  {
+    "id": "route_t159_bld_ms_ll_home_01",
+    "from": "site_ms_ll_tents",
+    "to": "bld_ms_ll_home_01",
+    "lengthKm": 0.02,
+    "terrainMultiplier": 1.2,
+    "modes": [
+      "walk"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 0
+  },
+  {
+    "id": "route_t159_bld_ms_ll_home_02",
+    "from": "site_ms_ll_huts",
+    "to": "bld_ms_ll_home_02",
+    "lengthKm": 0.02,
+    "terrainMultiplier": 1.2,
+    "modes": [
+      "walk"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 0
+  },
+  {
+    "id": "route_t159_bld_ms_ll_home_03",
+    "from": "site_ms_ll_rocks",
+    "to": "bld_ms_ll_home_03",
+    "lengthKm": 0.02,
+    "terrainMultiplier": 1.2,
+    "modes": [
+      "walk"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 0
+  },
+  {
+    "id": "route_t159_site_ms_ll_council",
+    "from": "loc_ms_lielu",
+    "to": "site_ms_ll_council",
+    "lengthKm": 0.08,
+    "terrainMultiplier": 1.2,
+    "modes": [
+      "walk"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 0
+  },
+  {
+    "id": "route_t159_site_ms_ll_store",
+    "from": "loc_ms_lielu",
+    "to": "site_ms_ll_store",
+    "lengthKm": 0.08,
+    "terrainMultiplier": 1.2,
+    "modes": [
+      "walk"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 0
   }
 ]

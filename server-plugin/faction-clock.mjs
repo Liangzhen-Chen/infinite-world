@@ -47,7 +47,8 @@ export function assertFactionClockRules(engine){
   for(const stage of rule.stages){
    if(!stage.id||stageIds.has(stage.id))throw Error('势力阶段编号缺失或重复');stageIds.add(stage.id);
    const c=stage.condition;
-   if(!['always','asset','relation','dispute','record','intervention'].includes(c?.kind))throw Error('势力阶段条件未实现');
+   if(!['always','asset','relation','dispute','record','intervention','motion'].includes(c?.kind))throw Error('势力阶段条件未实现');
+   if(c.kind==='motion'&&(typeof c.id!=='string'||!c.id.startsWith('society_motion:')||c.statuses!==undefined&&(!Array.isArray(c.statuses)||!c.statuses.length||c.statuses.some(v=>!['议事中','通过','否决'].includes(v)))))throw Error('议题阶段条件无效');
    if(c.kind==='asset')assertCost(engine,c.minimum);
    if(c.kind==='relation'){faction(engine,c.target);if(!Number.isSafeInteger(c.minimum)||Math.abs(c.minimum)>100)throw Error('势力关系阈值无效');}
    if(c.kind==='dispute'){faction(engine,c.target);if(!c.id||!['open','settled','escalated'].includes(c.status))throw Error('势力争端条件无效');}
@@ -81,6 +82,11 @@ function changeAssets(d,engine,id,cost,sign,event){
  const coins=row.coins+sign*(cost.coins??0);if(!uint(coins)||Object.values(items).some(n=>!uint(n)))throw Error('势力资源不足或溢出');
  d.set(accountPath(id),{...row,coins,items,ledger:[...row.ledger,{...event,coins:sign*(cost.coins??0),items:Object.fromEntries(Object.entries(cost.items??{}).map(([id,n])=>[id,sign*n]))}]});
 }
+// Used by effect consumers that carry their own outcome price.
+export function spendFactionAssets(d,engine,id,cost,event){
+ assertCost(engine,cost);const row=ensureAccount(d,engine,id);if(!affordable(row,cost))return false;
+ changeAssets(d,engine,id,cost,-1,event);return true;
+}
 export function initializeFactionClocks(d,engine,minute,end=minute){
  assertFactionClockRules(engine);
  for(const rule of factionClockRules(engine))if(!d.get(...clockPath(rule.id))){
@@ -99,6 +105,7 @@ function condition(d,rule,clock,assets){
  case 'dispute':return assets.disputes[`${c.target}:${c.id}`]?.status===c.status;
  case 'record':return d.get('state','records',c.id,c.field)===c.equals;
  case 'intervention':return clock.interventions.some(e=>e.choice===c.id&&e.success);
+ case 'motion':return (c.statuses??['通过','否决']).includes(d.get('state','records',c.id,'status'));
  }
 }
 function applyEffect(d,engine,effect,context){
