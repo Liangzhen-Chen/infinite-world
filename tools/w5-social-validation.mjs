@@ -23,7 +23,9 @@ export function validateSocialWorld(world,{reference,blocked=[]}){
         if(category==='factions'){
             const members=[row.leader,...row.coreMembers];
             if(new Set(members).size!==members.length||row.resources.memberCount<members.length)errors.push(`势力成员数量不一致：${row.id}`);
-            for(const member of members){if(!people.some(person=>person.id===member&&person.faction===row.id))errors.push(`势力成员未登记或归属不符：${row.id}/${member}`);}
+            // A settlement organisation is run by registered residents of the seat it is anchored to.
+            const resident=member=>world.locations.find(place=>place.id===row.contactAnchor)?.monsterSociety&&world.npcs.some(npc=>npc.id===member&&npc.society===row.contactAnchor);
+            for(const member of members){if(!people.some(person=>person.id===member&&person.faction===row.id)&&!resident(member))errors.push(`势力成员未登记或归属不符：${row.id}/${member}`);}
             for(const relation of row.relations)requireKind(relation.faction,'faction',`${row.id}.relations`);
             expected.push(...members,...row.relations.map(peer=>peer.faction));
             const publicDescription=`${row.name}活动于${row.region}，公开目标是${row.publicGoal}。行事方式：${row.method}。可提供${row.offers}；${row.demands}。`;
