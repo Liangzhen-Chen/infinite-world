@@ -6,6 +6,7 @@ import {assertNpcObligationAction,assertCourierRouteAccess} from './npc-obligati
 import {bountyQuestAction} from './bounty.mjs';
 import {officeQuotaD,spendPublic,refundPublic} from './governance.mjs';
 import {titleQuotaD} from './titles.mjs';
+import {notableCulturalQuotaD} from './notables.mjs';
 
 const DAY=1440,active=q=>['公开','进行中'].includes(q.status);
 const integer=(n,min,max,label)=>{if(!Number.isSafeInteger(n)||n<min||n>max)throw Error(`${label}必须在${min}到${max}之间`);return n;};
@@ -16,9 +17,9 @@ const actorPath=id=>id==='player'?['state','player']:['state','npcs',id];
 
 // The player's quota comes only from offices actually held (appointed by the
 // Baishi office and still in term) and a granted title, the larger of the two;
-// a self-declared office adds none.
-export function questPublishingRights(engine,state,publisher='player'){
- const month=Math.floor(state.minute/(DAY*30)),limit=publisher==='player'?Math.max(officeQuotaD(state),titleQuotaD(engine,state)):engine.byId.get(publisher)?.monthlyQuotaD??0;
+// a self-declared office adds none. A notable's quota covers cultural quests only.
+export function questPublishingRights(engine,state,publisher='player',{cultural=false}={}){
+ const month=Math.floor(state.minute/(DAY*30)),limit=publisher==='player'?Math.max(officeQuotaD(state),titleQuotaD(engine,state),cultural?notableCulturalQuotaD(engine,state):0):engine.byId.get(publisher)?.monthlyQuotaD??0;
  return {month,limitD:limit,usedD:state.questQuota?.[`${month}_${publisher}`]??0,personal:true};
 }
 function notice(d,engine,q,minute,stage,location=q.location){
@@ -93,7 +94,7 @@ export function questBoardAction(d,engine,args,eventId){
   const publisher=args.publisher==='player'?'player':engine.resolve(args.publisher,'npc'),actor=engine.actor(d,publisher),grade=args.grade;
   if(!awake(actor))throw Error('任务发布者无法清醒履约');
   if(!(grade in engine.rules.quests.quotaUnits))throw Error('任务等级无效');
-  const rights=questPublishingRights(engine,d.get('state'),publisher),personal=args.personal===true||publisher==='player'&&args.personal!==false;
+  const rights=questPublishingRights(engine,d.get('state'),publisher,{cultural:args.cultural===true}),personal=args.personal===true||publisher==='player'&&args.personal!==false;
   if(!personal&&rights.usedD+engine.rules.quests.quotaUnits[grade]>rights.limitD)throw Error('身份或本月任务发布额度不足');
   if(personal&&grade!=='D')throw Error('未登记官职的私人任务只能发布D级，身份额度不足');
   const reward=integer(args.reward,20,1e6,'报酬'),publicFund=publisher==='player'&&!personal&&args.settlement!==undefined;
@@ -104,7 +105,7 @@ export function questBoardAction(d,engine,args,eventId){
   let fundedBy=null;
   if(publicFund){const settlement=engine.resolve(args.settlement,'loc'),spend=spendPublic(d,engine,{settlement,copper:reward,power:'quest_publish',purpose:`委托托管 ${quest}`,sourceEvent:quest});fundedBy={settlement,month:spend.month,spend:spend.id};}
   else d.set([...actorPath(publisher),'coins'],actor.coins-reward);
-  const row={id:quest,boardVersion:1,publisher,personal,grade,reward,escrow:reward,objective:verified,content,location,deadline,createdAt:now,status:'公开',taker:null,...(fundedBy?{fundedBy}:{})};
+  const row={id:quest,boardVersion:1,publisher,personal,grade,reward,escrow:reward,objective:verified,content,location,deadline,createdAt:now,status:'公开',taker:null,...(fundedBy?{fundedBy}:{}),...(args.cultural===true?{cultural:true}:{})};
   d.set(['state','quests',quest],row);
   if(!personal)d.set(['state','questQuota',`${rights.month}_${publisher}`],rights.usedD+engine.rules.quests.quotaUnits[grade]);
   notice(d,engine,row,now,'publish');return {quest,status:row.status};

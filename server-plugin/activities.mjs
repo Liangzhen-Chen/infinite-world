@@ -23,6 +23,8 @@ import {civicAction,recordDonationContribution,publicProjectApproval,donationRec
 import {governanceAction,assertGovernedProject,playerOffices}from'./governance.mjs';
 import {startPublicProject,abortPublicProject,startHouse}from'./public-projects.mjs';
 import {titleAction}from'./titles.mjs';
+import {notableAction}from'./notables.mjs';
+import {promotionAction}from'./promotion.mjs';
 import {questBoardAction}from'./quest-board.mjs';
 import {businessAction}from'./business.mjs';
 import {festivalAction}from'./festival.mjs';
@@ -164,6 +166,8 @@ export const activities={
         if(args.operation?.startsWith('governance_'))return governanceAction.call(this,d,args,id);
         if(args.operation?.startsWith('org_'))return organizationAction.call(this,d,args,id);
         if(args.operation?.startsWith('title_'))return titleAction.call(this,d,args,id);
+        if(args.operation?.startsWith('notable_'))return notableAction.call(this,d,args,id);
+        if(args.operation?.startsWith('promotion_'))return promotionAction.call(this,d,args,id);
         const settlement=this.resolve(args.settlement,'loc'),row=d.get('state','settlements',settlement);
         if(!row)throw new Error('没有该聚落公共账目');
         // T125: a sitting official's own power replaces a delegated authorization.
