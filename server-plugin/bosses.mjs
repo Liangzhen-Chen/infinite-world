@@ -3,7 +3,9 @@ import {monsterStats,tacticDefense} from './combat.mjs';
 import {validateBossMechanics,templateBossCounter}from'./boss-abilities.mjs';
 import {emptyBossCognition,rememberBossEncounter,bossPublicAttitude}from'./boss-cognition.mjs';
 import {initialBossNegotiation,negotiateBoss}from'./boss-negotiation.mjs';
-import {spiritStateFor,natureCounter}from'./creature-nature.mjs';
+import {spiritStateFor}from'./creature-nature.mjs';
+import {creatureCounter}from'./interactions.mjs';
+import {traitsOf}from'./traits.mjs';
 const clone=v=>structuredClone(v),key=b=>['state','records',`lair:${b.residence.id}`];
 const living=a=>a&&a.status!=='死亡'&&a.hp>0;
 export function validateBossEcology(world){
@@ -39,11 +41,15 @@ export function validateBossEcology(world){
 }
 export function bossCounter(d,engine,target,tactic){
     const actor=engine.actor(d,target),r=engine.rules.bossEcology;
-    if(!r||!actor?.boss||!living(actor)){const n=living(actor)&&!actor.boss?natureCounter(engine.byId.get(actor.species),tactic):null;return{tactic,seen:0,damageMultiplier:n?.damageMultiplier??1,adapted:false,...(n?{nature:n.nature}:{})};}
+    // Species nature and body tags go through the interaction table (K2).
+    const n=living(actor)?creatureCounter(traitsOf(engine,d.get('state'),target),tactic):null;
+    const element=n?{damageMultiplier:n.damageMultiplier,interaction:n.interaction,...(n.nature?{nature:n.nature}:{})}:null;
+    if(!r||!actor?.boss||!living(actor))return{tactic,seen:0,damageMultiplier:actor?.boss?1:element?.damageMultiplier??1,adapted:false,...(element&&!actor.boss?{...element}:{})};
     const seen=actor.battleMemory?.tactics?.[tactic]??0;
     if(!Number.isSafeInteger(seen)||seen<0)throw new Error('首领战术记忆数据损坏，拒绝伪造防备或覆盖原记录');
-    return templateBossCounter(d,engine.byId.get(actor.boss),actor,tactic,engine.magicStatusContext?.(d,target))??{tactic,seen,...tacticDefense(seen,engine.rules),
+    const counter=templateBossCounter(d,engine.byId.get(actor.boss),actor,tactic,engine.magicStatusContext?.(d,target))??{tactic,seen,...tacticDefense(seen,engine.rules),
         ...(tactic==='flee'&&seen>=r.learningThreshold?{escapeDifficulty:r.escapeDifficulty}:{})};
+    return element?{...counter,...element,damageMultiplier:counter.damageMultiplier*element.damageMultiplier}:counter;
 }
 export function rememberBossTactic(d,engine,target,tactic,eventId){
     const actor=engine.actor(d,target);if(!engine.rules.bossEcology||!actor?.boss)return;

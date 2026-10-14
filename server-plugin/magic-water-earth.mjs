@@ -1,6 +1,7 @@
 import {environmentFeatures,localPlayerPoint,localSightClear}from'./environment.mjs';
 import {areaTargetFacts}from'./magic-area.mjs';
 import {assertMagicTargeting}from'./magic-targeting.mjs';
+import {assertLiquidWater}from'./interactions.mjs';
 
 // Fixed consumer bounds. Candidates do not publish new formal world content.
 export const waterEarthMechanisms=Object.freeze({
@@ -92,6 +93,7 @@ export function prepareWaterEarthMagic(d,c,args){
  if(['bind_water','veil_water'].includes(op)){
   p.source=locate(this,args.source,location);access(d,this,p.source,args,c.rangeMeters);const src=waterEarthState(d,p.source);water(src);
   if(!['container','water'].includes(p.source.kind)||src.waterMl<c.effectSpec.power)throw Error('媒介实际水量不足');
+  assertLiquidWater(this,d,p.source);
   const point=row?.position??facts.point;if(dist(p.source.position,point)>3)throw Error('水体媒介与目标不连通');
   if(op==='bind_water'&&row){integer(s.massGrams,1,c.effectSpec.power,'物件载荷');if(s.fixed)throw Error('水绳不能牵动固定物');}
   if(op==='veil_water'){

@@ -1,6 +1,8 @@
 import {ritualProtectionValid}from'./magic-ritual.mjs';
 // Shared numerical handlers; callers own targeting, consent, costs and death effects.
-export const damageTypes=Object.freeze(['physical','fire','cold','wind','earth','light','shadow','mind']);
+import {SPELL_DAMAGE_TYPES}from'./traits.mjs';
+// Spell damage types are the first eight entries of the unified element list.
+export const damageTypes=SPELL_DAMAGE_TYPES;
 const fields={ritual:['operation','destination','group'],mind_space:['operation'],care:['operation'],damage:['damageType','armorFactor','coldDecay','windBlade','stoneProjectile','lightDecay','shadowDecay'],optics:['operation'],water_earth:['operation'],air:['operation'],heal:[],repair:[],dry:[],status:['status'],relief:['statuses'],mark:['medium','visibility'],light:[],environment:['operation','unit'],summon:['summonType','upkeepMp','upkeepMinutes'],summon_contract:['operation','offering'],protection:['damageTypes','stacking'],object:['operation','limitC','surface'],heat:['operation','limitC','upkeepMp'],area:['radiusMeters','intervalMinutes','trigger','effect']};
 export function validateEffectSpec(spec){
  const errors=[];
@@ -35,7 +37,7 @@ const finite=(value,min,max,name)=>{if(!Number.isFinite(value)||value<min||value
 export function resolveVitalityPrimitive({spec,hp,maxHp,defense=0,resistance=0,multiplier=1}){
  const errors=validateEffectSpec(spec);if(errors.length)throw new Error(errors.join('；'));
  if(!['damage','heal'].includes(spec.kind))throw new Error('此处理器只接受伤害或治疗');
- finite(maxHp,1,Number.MAX_SAFE_INTEGER,'生命上限');finite(hp,0,maxHp,'当前生命');finite(defense,0,Number.MAX_SAFE_INTEGER,'防御');finite(resistance,0,1,'抗性');finite(multiplier,0,1,'适应伤害系数');
+ finite(maxHp,1,Number.MAX_SAFE_INTEGER,'生命上限');finite(hp,0,maxHp,'当前生命');finite(defense,0,Number.MAX_SAFE_INTEGER,'防御');finite(resistance,0,1,'抗性');finite(multiplier,0,3,'适应伤害系数');
  const amount=spec.kind==='heal'?spec.power:(spec.coldDecay||spec.lightDecay||spec.shadowDecay)&&multiplier===0?0:Math.max(1,Math.round((spec.power-defense*(spec.armorFactor??0.25))*(1-resistance)*multiplier));
  const nextHp=Math.max(0,Math.min(maxHp,hp+(spec.kind==='heal'?amount:-amount)));
  return {amount:Math.abs(nextHp-hp),rawAmount:amount,nextHp,delta:nextHp-hp};
