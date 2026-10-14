@@ -1,3 +1,4 @@
+import {registerMagicEffect}from'./magic-effects.mjs';
 import {environmentFeatures,localPlayerPoint,localSightClear}from'./environment.mjs';
 import {assertMagicTargeting}from'./magic-targeting.mjs';
 import {resolveCreature}from'./wildlife.mjs';
@@ -377,3 +378,5 @@ export function inspectMindCarrier(d,engine,args){
  const feelings=Object.values(d.get('state','records')??{}).filter(r=>r.category==='feeling_carrier'&&r.owner==='player'&&r.targetInstance===held?.instance&&r.expires>now).map(r=>({feeling:r.feeling,minute:r.minute,sourceEvent:r.sourceEvent}));
  return{item,feelings,actionScope:{kind:'instant',instantaneous:true}};
 }
+// Spell effect family (dispatched by magic.mjs through magic-effects.mjs).
+registerMagicEffect({kinds:['mind_space'],validate:validateMindSpaceCatalog,prepare(d,c,args){return prepareMindSpace.call(this,d,c,args);},apply(d,p,id){return applyMindSpace.call(this,d,p,id);}});

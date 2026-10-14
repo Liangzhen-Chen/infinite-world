@@ -20,7 +20,11 @@ import {agricultureAction}from'./agriculture.mjs';
 import {wildlifeAction,resolveCreature,recordWildlifeDeath}from'./wildlife.mjs';
 import {lairAction,bossCounter,rememberBossTactic,defeatBoss}from'./bosses.mjs';
 import {civicAction,recordDonationContribution,publicProjectApproval,donationReceipt,saveDonationReceipt}from'./civic.mjs';
-import {governanceAction,assertGovernedProject}from'./governance.mjs';
+import {governanceAction,assertGovernedProject,playerOffices}from'./governance.mjs';
+import {startPublicProject,abortPublicProject,startHouse}from'./public-projects.mjs';
+import {titleAction}from'./titles.mjs';
+import {notableAction}from'./notables.mjs';
+import {promotionAction}from'./promotion.mjs';
 import {questBoardAction}from'./quest-board.mjs';
 import {businessAction}from'./business.mjs';
 import {festivalAction}from'./festival.mjs';
@@ -162,8 +166,15 @@ export const activities={
         if(args.operation?.startsWith('civic_'))return civicAction.call(this,d,args,id);
         if(args.operation?.startsWith('governance_'))return governanceAction.call(this,d,args,id);
         if(args.operation?.startsWith('org_'))return organizationAction.call(this,d,args,id);
+        if(args.operation?.startsWith('title_'))return titleAction.call(this,d,args,id);
+        if(args.operation?.startsWith('notable_'))return notableAction.call(this,d,args,id);
+        if(args.operation?.startsWith('promotion_'))return promotionAction.call(this,d,args,id);
         const settlement=this.resolve(args.settlement,'loc'),row=d.get('state','settlements',settlement);
         if(!row)throw new Error('没有该聚落公共账目');
+        // T125: a sitting official's own power replaces a delegated authorization.
+        if(args.operation==='project_abort')return abortPublicProject(d,this,args);
+        if(args.operation==='start_project'&&d.get('state','records',args.authorization)?.category==='housing_permit')return startHouse(d,this,args,id,args.authorization);
+        if(args.operation==='start_project'&&!args.authorization&&playerOffices(d.get('state'),{settlement,power:'public_project'}).length)return startPublicProject(d,this,args,id,settlement);
         const authorization=d.get('state','records',args.authorization);
         if(!authorization||authorization.category!=='authorization'||authorization.settlement!==settlement)throw new Error('公共物资需要已成立的授权');
         if(args.operation==='start_project'){

@@ -14,6 +14,8 @@ import{w3Context}from'../tools/w3-content.mjs';
 import{WorldEngine}from'../server-plugin/engine.mjs';
 import{applyPatches}from'../server-plugin/storage.mjs';
 import{validateWorld}from'../tools/validate-world.mjs';
+// T159榆根里、裂炉营的库存与资源引用本批物品；回到本批之前的旧版须一并移出这批聚居地。
+import {withoutMonsterSociety2} from '../tools/publish-monster-society-2.mjs';
 const world=await loadWorld(),bones=economyW3Trades(world);
 const lore=[...bones.items.map(row=>({id:row.id,description:row.use,inspection:'检查可见磨损与裂口，记录不能确认之处。',storage:row.shelfLifeDays===null?'干燥放置并避开磕碰，实际破损另行检查。':`保存上限${row.shelfLifeDays}天。`})),...bones.recipes.map(row=>({id:row.id,process:row.processFacts}))];
 
@@ -48,7 +50,7 @@ test('候选 world_upgrade 保留已交易库存和人物变化，新的书及�
     const registry=new WorldRegistry(path.join(root,'worlds')),store=new CampaignStorage(path.join(root,'saves'),{reducer:archivedReducer(registry)});
     // Reconstruct the edition before this batch. Once published, loadWorld()
     // already contains these supplies and cannot stand in for an old edition.
-    const old=structuredClone(world),addedItems=new Set(bones.items.map(row=>row.id)),addedRecipes=new Set(bones.recipes.map(row=>row.id));
+    const old=withoutMonsterSociety2(world),addedItems=new Set(bones.items.map(row=>row.id)),addedRecipes=new Set(bones.recipes.map(row=>row.id));
     old.items=old.items.filter(row=>!addedItems.has(row.id));old.recipes=old.recipes.filter(row=>!addedRecipes.has(row.id));
     for(const npc of old.npcs)for(const id of Object.keys(npc.inventory??{}))if(addedItems.has(id))delete npc.inventory[id];
     const oldEngine=new WorldEngine(old),seed=JSON.parse(await fs.readFile('tests/fixtures/legacy/seed.json','utf8')),document=oldEngine.initialFromLegacy(seed,'w3-trades-upgrade');

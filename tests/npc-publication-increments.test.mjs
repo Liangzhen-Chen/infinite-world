@@ -7,6 +7,7 @@ import {loadWorld} from '../tools/load-world.mjs';
 import {prepareNpcPublication,publishNpcProfiles,mergeNpcProfiles,protectedNpcFields} from '../tools/m2-people-publish.mjs';
 import {readPublishedNpcIncrements} from '../tools/npc-publication-sources.mjs';
 import {readPublishedNpcDepth} from '../tools/npc-depth-publication-sources.mjs';
+import {writePreBaishiWorld,preBaishiNpc} from './fixtures/pre-baishi-world.mjs';
 const formal=await loadWorld(),root=path.resolve('world/drafts/m2-people');
 // T24's existing negative fixtures stay on their frozen pre-depth catalog.
 const depthBefore=JSON.parse(await fs.readFile('world/drafts/w1/existing-depth/first-review/base.json','utf8'));
@@ -41,7 +42,9 @@ test('真实正式世界prepare保留四项教学、17人特征和钱物，直�
 test('隔离世界预演不写，首次写入后重发零变动，运行字段与17人traits完全保留',async t=>{
  const dir=await sourceCopy(t);
  for(const sub of ['meta','people','geo','lore'])await fs.cp(path.resolve('world',sub),path.join(dir,sub),{recursive:true});
- const npcs=structuredClone(world.npcs);
+ // 冻结的深度前人物（含严哲）早于白石镇整合，隔离世界须同样回到白石镇整合前。
+ await writePreBaishiWorld(dir,formal);
+ const npcs=structuredClone(world.npcs.filter(preBaishiNpc));
  for(const n of npcs)if(candidate.npcs.some(p=>p.id===n.id)){delete n.wealth;delete n.towardPlayer;}
  teacher({npcs}).coins=27;teacher({npcs}).inventory.item_wood=0;
  const file=path.join(dir,'people/baseline.json');await fs.writeFile(file,JSON.stringify(npcs));const before=await fs.readFile(file,'utf8');

@@ -144,7 +144,10 @@ test('制造真实磨损小刀；实际交锋磨损正式木杖后经公共repai
     // The public promise is the supplied lawful agreement for this engine precondition.
     // This does not claim autonomous NPC consent in a real model conversation.
     const waited=await s.turn(17,async()=>[await s.call('world_time',{minutes:2010-s.document.state.minute,activity:'休息'})]);
-    const nonPerishable=records=>Object.fromEntries(Object.entries(records).filter(([id])=>id!=='physical_feature:feature_s1_fruit'));
+    // 登记的实体（果实、渗漏缸、积淤堤岸、药柜等）会随时间自然腐败渗漏，各法术批次陆续增加；它们由各自测试核对。
+    // 这里核对其余记录不变、记录键集合不变，果实的总量守恒在下面单独核对。
+    const nonPerishable=records=>Object.fromEntries(Object.entries(records).filter(([id])=>!id.startsWith('physical_feature:')));
+    assert.deepEqual(Object.keys(waited.after.state.records).sort(),Object.keys(waited.before.state.records).sort());
     assert.deepEqual(nonPerishable(waited.after.state.records),nonPerishable(waited.before.state.records));
     const oldFruit=waited.before.state.records['physical_feature:feature_s1_fruit'].state.foodLots[0],newFruit=waited.after.state.records['physical_feature:feature_s1_fruit'].state.foodLots[0];
     assert.ok(Math.abs(oldFruit.amountGrams+oldFruit.spoiledGrams-newFruit.amountGrams-newFruit.spoiledGrams)<1e-8);

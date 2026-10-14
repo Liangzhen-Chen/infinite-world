@@ -1,3 +1,4 @@
+import {registerMagicEffect}from'./magic-effects.mjs';
 import {environmentFeatures,localPlayerPoint,localSightClear}from'./environment.mjs';
 import {areaTargetFacts}from'./magic-area.mjs';
 import {assertMagicTargeting}from'./magic-targeting.mjs';
@@ -338,3 +339,6 @@ export function lightEnvironmentAction(d,args){
  }
  store(d,row,s);return{target:row.id,covered:s.covered,open:s.open,actionScope:{kind:'instant',instantaneous:true}};
 }
+// Spell effect family (dispatched by magic.mjs through magic-effects.mjs).
+registerMagicEffect({kinds:['light'],validate:validateLightCatalog,prepare(d,c,args){return prepareLight.call(this,d,c,args);},apply(d,p,id){return applyLight.call(this,d,p,id);}});
+registerMagicEffect({kinds:['optics'],validate:validateLightCatalog,prepare(d,c,args){return prepareOptics.call(this,d,c,args);},apply(d,p,id){return applyOptics.call(this,d,p,id);}});

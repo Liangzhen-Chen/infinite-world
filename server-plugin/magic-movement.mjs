@@ -1,3 +1,4 @@
+import {registerMagicEffect}from'./magic-effects.mjs';
 import {environmentFeatures,localPlayerPoint,localSightClear}from'./environment.mjs';
 import {areaTargetFacts}from'./magic-area.mjs';
 import {assertLocationAccess}from'./location-access.mjs';
@@ -158,3 +159,5 @@ export function prepareAnchorCargo(d,catalog,args,{completion=false}={}){
  assertLocationAccess(d,this,destination.location,{authorization:args.authorization,arrivalMinute:until});
  return{source,destination,permissions,metres};
 }
+// Spell effect family (dispatched by magic.mjs through magic-effects.mjs).
+registerMagicEffect({kinds:movementKinds,validateSpec:validateMovementCatalog,prepare(d,c,args){return prepareMovement.call(this,d,c,args);},apply(d,p,id){return applyMovement.call(this,d,p,id);}});

@@ -10,7 +10,8 @@ const seed=JSON.parse(await fs.readFile('tests/fixtures/legacy/seed.json','utf8'
 function draft(document){return{document,get(...p){return p.reduce((v,k)=>v?.[k],document);},set(p,v){let o=document;for(const k of p.slice(0,-1))o=o[k]??={};o[p.at(-1)]=structuredClone(v);},remove(p){let o=document;for(const k of p.slice(0,-1))o=o[k];delete o[p.at(-1)];},say(){}};}
 function setup({bosses=false}={}){
  const world=withPetRules(structuredClone(source));for(const spell of batch2SpellCandidates()){if(!world.spells.some(s=>s.id===spell.id))world.spells.push(spell);if(!world.skills.some(s=>s.id===spell.skill))world.skills.push({id:spell.skill,name:spell.name,attribute:'精神',profession:null});}
- if(bosses){world.bosses=batch2BossCandidates();world.rules.bossEcology=bossFoundation().rules;}
+ // T157怪物聚居地的首领由聚居地登记引用，换成本批候选首领时须保留它们，否则聚居地校验断开。
+ if(bosses){const leaders=new Set(world.locations.map(l=>l.monsterSociety?.leader).filter(Boolean));world.bosses=[...batch2BossCandidates(),...world.bosses.filter(b=>leaders.has(b.id))];world.rules.bossEcology=bossFoundation().rules;}
  const engine=new WorldEngine(world);let document=engine.initialFromLegacy(seed,'m4-batch2');if(bosses)document=applyPatches(document,planRuleStateMigration(document,world.rules));document.state.player.mp=1000;document.state.player.maxMp=1000;document.state.location='loc_hw_dock';
  for(const s of world.spells){document.state.spells[s.id]={source:{type:'fixture'}};document.state.skills[s.skill]={proficiency:299,daily:{},breakthroughs:[]};}
  for(const item of['item_resin','item_charcoal','item_parchment']){const def=world.items.find(i=>i.id===item);document.state.inventory[item]={quantity:item==='item_parchment'?1:10,quality:def.quality,durability:def.durability,weight:def.weight};}

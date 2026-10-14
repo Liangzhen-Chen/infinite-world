@@ -1,3 +1,4 @@
+import {isReputationSettlement,reputationSettlements}from'./reputation-registry.mjs';
 // 返场变化汇总：玩家回到离开过的聚落、聚居地或据点时，从已有账目里汇总离开
 // 期间当地发生、按认知边界玩家回来后可能得知的变化。只读世界事件、人物生活、
 // 立场、组织议决、粮价与公仓、时钟阶段和传闻，不新造事实；不给数字，不含
@@ -18,7 +19,7 @@ const hidden=row=>row?.private||['private','secret'].includes(row?.visibility)||
 
 // The settlement, monster seat or site that a location belongs to.
 export function returnPlace(engine,location){
-    const settlements=new Set([...(engine.rules.reputation?.settlements??[]),...(engine.rules.agriculture?.settlements??[]).map(p=>p.settlement)]),seen=new Set();
+    const settlements=new Set([...reputationSettlements(engine),...(engine.rules.agriculture?.settlements??[]).map(p=>p.settlement)]),seen=new Set();
     while(location&&!seen.has(location)){
         const row=engine.byId.get(location);
         if(settlements.has(location)||row?.site||row?.monsterSociety)return location;
@@ -26,7 +27,7 @@ export function returnPlace(engine,location){
     }
     return null;
 }
-const holders=(engine,place)=>[...new Set([(engine.rules.reputation?.settlements??[]).includes(place)?place:null,engine.byId.get(place)?.monsterSociety?place:null].filter(Boolean))];
+const holders=(engine,place)=>[...new Set([isReputationSettlement(engine,place)?place:null,engine.byId.get(place)?.monsterSociety?place:null].filter(Boolean))];
 function grainOf(state,place){
     const r=state.records?.[`agriculture:${place}`];if(r?.mode!=='managed'||!Array.isArray(r.batches))return null;
     const day=Math.floor(state.minute/DAY);return r.batches.filter(b=>b.kind==='grain'&&b.expiresDay>day).reduce((n,b)=>n+b.amount,0);
@@ -75,6 +76,10 @@ export function returnChanges(engine,state,place,{from,to=state.minute,before={}
             continue;
         }
         if(e.actor==='player')continue;
+        if(e.verb==='deceive'){
+            if(![e.actor,e.target].some(id=>minor(engine,state,id)))add(e.target==='player'?80:58,`${name(e.actor)}骗${name(e.target)}的事被揭穿了`);
+            continue;
+        }
         if(e.verb==='breach'){
             if(e.target==='player')add(80,`${name(e.actor)}欠你的债已违约`);
             else if(e.case&&!minor(engine,state,e.actor))add(55,`${name(e.actor)}欠债违约，已经立案`);

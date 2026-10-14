@@ -1,4 +1,4 @@
-import {deriveWorldEvents}from'./world-events.mjs';
+import {deriveWorldEvents,registerWorldEventSubscriber}from'./world-events.mjs';
 const clamp=(n,min=-100,max=100)=>Math.max(min,Math.min(max,n));
 const actor=(state,id)=>id==='player'?state.player:state.npcs[id];
 const path=id=>id==='player'?['state','player']:['state','npcs',id];
@@ -130,3 +130,5 @@ export function recordFestivalRelations(d,engine,event){
    from,to,minute:event.resolvedAt,delta:{trust:1,respect:1,...(engine.rules?.npcLife?.kindness?.festival??{})}});
  }
 }
+// World-event subscriber; settlement order is the `order` field.
+registerWorldEventSubscriber({id:'npc_relations',order:20,on:(d,engine,events,c)=>recordNpcRelationEvidence(d,engine,c.before,events,c)});

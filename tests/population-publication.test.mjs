@@ -12,6 +12,7 @@ import {compatibleWorld,planWorldUpgrade} from '../server-plugin/world-upgrade.m
 import {applyPatches} from '../server-plugin/storage.mjs';
 import {villagesOriginalWorld} from '../tools/publish-w1-villages.mjs';
 import {withoutMonsterSociety} from '../tools/publish-monster-society.mjs';
+import {pruneCatalog} from './fixtures/pre-baishi-world.mjs';
 import {withoutMonsterSociety2} from '../tools/publish-monster-society-2.mjs';
 const formal=await loadWorld(),source=structuredClone(withoutMonsterSociety2(withoutMonsterSociety(villagesOriginalWorld(formal)))),candidate=JSON.parse(await fs.readFile('world/drafts/w1/hewan/candidate.json','utf8')),preserved=JSON.parse(await fs.readFile('world/drafts/w1/hewan/preserved-npcs.json','utf8'));
 // This historical fixture omits four villages, including their dependent rules.
@@ -29,6 +30,14 @@ source.rules.wildlife.habitats=source.rules.wildlife.habitats.filter(h=>source.l
 source.monsters=source.monsters.filter(m=>!m.wildlife||source.rules.wildlife.habitats.some(h=>h.id===m.wildlife.habitat));
 source.routes=source.routes.filter(r=>source.locations.some(l=>l.id===r.from)&&source.locations.some(l=>l.id===r.to));
 for(const row of source.rules.weather.regions){row.locations=row.locations.filter(id=>source.locations.some(l=>l.id===id));row.indoor=row.indoor.filter(id=>row.locations.includes(id));}
+// T92/T93后白石镇另有入门书（作者为npc_bs_*、出处为镇内场所）和产权法规场所，随白石镇一并投影掉。
+for(const code of source.rules.law.codes)if(Array.isArray(code.locations))code.locations=code.locations.filter(id=>source.locations.some(l=>l.id===id));
+source.items=source.items.filter(item=>!item.id.startsWith('item_bs_'));
+// T160灵地与白石镇行业营生同样落在镇内场所。
+if(source.rules.wildlifeAwakening?.spiritLands)source.rules.wildlifeAwakening.spiritLands=source.rules.wildlifeAwakening.spiritLands.filter(row=>source.locations.some(l=>l.id===row.location));
+if(source.rules.npcGrowth?.vocations)source.rules.npcGrowth.vocations=source.rules.npcGrowth.vocations.filter(row=>source.locations.some(l=>l.id===row.location));
+// T102后法术、配方以白石镇升档人物为来源；人物和镇内场所已投影掉，依赖它们的目录条目随之移出。
+{const keptNpcs=new Set([...preserved,...candidate.npcs].map(n=>n.id)),keptPlaces=new Set(source.locations.map(l=>l.id));Object.assign(source,pruneCatalog(source,[...formal.npcs.filter(n=>!keptNpcs.has(n.id)).map(n=>n.id),...formal.locations.filter(l=>!keptPlaces.has(l.id)).map(l=>l.id),...source.items.filter(i=>i.id.startsWith('item_bs_')).map(i=>i.id)]));}
 const addedIds=new Set(candidate.npcs.map(n=>n.id)),original={...source,npcs:preserved,residents:[],households:[],settlementProfiles:[],locations:source.locations.filter(n=>!candidate.locations.some(l=>l.id===n.id)),routes:source.routes.filter(n=>!candidate.routes.some(r=>r.id===n.id))};
 const world=mergeHewan(original,candidate),legacy=JSON.parse(await fs.readFile('tests/fixtures/legacy/seed.json','utf8'));
 

@@ -1,3 +1,4 @@
+import {registerMagicEffect}from'./magic-effects.mjs';
 import {inspectCare}from'./magic-care.mjs';
 import {inspectMindSpace,inspectMindCarrier,assertMindSpacePath,unlockMindSpaceDoor,assertMindAwake}from'./magic-mind-space.mjs';
 import {normalize}from'./retrieval.mjs';
@@ -229,3 +230,5 @@ export function interactEnvironment(d,args,eventId){
     return{operation,...outcome,removedGrams:outcome.success?amount:0,minutes,target:row.id,destination:destination.id};
 }
 import {humidityAt}from'./weather.mjs';
+// Spell effect family (dispatched by magic.mjs through magic-effects.mjs).
+registerMagicEffect({kinds:['environment'],validate:validateEnvironmentCatalog,prepare(d,c,args){return prepareEnvironmentMagic.call(this,d,c,args);},apply(d,p,id){return applyEnvironmentMagic.call(this,d,p,id);}});

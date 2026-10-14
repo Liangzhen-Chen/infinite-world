@@ -15,6 +15,8 @@ import {templateBossCounter,applyBossCounterAbility} from '../server-plugin/boss
 import {compatibleWorld,planWorldUpgrade} from '../server-plugin/world-upgrade.mjs';
 const world=await loadWorld(),publication=await readB1Publication(),ids=new Set(bosses.map(b=>b.id));
 const before={...structuredClone(world),bosses:world.bosses.filter(b=>!ids.has(b.id))};
+// T157等后续批次的首领排在本批之后；从现目录剔除本批再合并时本批追加到末尾，故按编号排序后比较内容。
+const byId=w=>({...w,bosses:w.bosses.toSorted((a,b)=>a.id.localeCompare(b.id))});
 const legacy=JSON.parse(await fs.readFile('tests/fixtures/legacy/seed.json','utf8'));
 function setup(b){
  const engine=new WorldEngine(world),fresh=engine.createCharacter(legacy,{},b.id),doc=applyPatches(fresh,planRuleStateMigration(fresh,world.rules));
@@ -31,7 +33,7 @@ test('本批12条模板正文经审核发布，已有及后续首领保持原样
  assert.equal(bosses.length,12);assert.equal(bosses.filter(b=>b.cognition&&b.negotiation).length,2);
  assert.equal(validateWorld(world).ok,true);
  for(const e of entries){assert.deepEqual(validateDraft(reviewDraftFor(e),e).errors,[]);assert.deepEqual(world.bosses.find(b=>b.id===e.id),publication.bosses.find(b=>b.id===e.id));}
- assert.deepEqual(mergeB1Publication(before,publication),world);
+ assert.deepEqual(byId(mergeB1Publication(before,publication)),byId(world));
  const future=structuredClone(before);future.bosses.push({...structuredClone(before.bosses[0]),id:'boss_later_batch',name:'后批占位',residence:{...before.bosses[0].residence,id:'lair_later_batch'}});
  assert.deepEqual(mergeB1Publication(future,publication).bosses.filter(b=>!ids.has(b.id)),future.bosses);
  assert.deepEqual(mergeB1Publication(world,publication),world);
@@ -131,7 +133,7 @@ test('隔离正式发布与重发零写；候选、审核及L4篡改均在写入
  await fs.mkdir(path.join(root,'drafts'));await fs.cp(path.resolve('world/drafts/w4-b1'),path.join(root,'drafts/w4-b1'),{recursive:true});
  const file=path.join(root,'meta/bosses.json');await fs.writeFile(file,JSON.stringify(before.bosses));const bytes=await fs.readFile(file,'utf8');
  const preview=await publishB1({root});assert.equal(preview.published,false);assert.deepEqual(preview.changed,['meta/bosses.json']);assert.equal(await fs.readFile(file,'utf8'),bytes);
- const first=await publishB1({root,publish:true});assert.deepEqual(first.batchBossIds,bosses.map(b=>b.id));assert.deepEqual(await loadWorld(root),world);
+ const first=await publishB1({root,publish:true});assert.deepEqual(first.batchBossIds,bosses.map(b=>b.id));assert.deepEqual(byId(await loadWorld(root)),byId(world));
  const stat=(await fs.stat(file)).mtimeMs;assert.deepEqual((await publishB1({root,publish:true})).changed,[]);
  for(const [name,mutate,pattern]of [['candidate.json',r=>r.bosses[0].origin+='异文',/候选/],[`${bosses[0].id}.json`,r=>r.draft.prose.behavior+='免费',/内容已改变/],['batch-0.json',r=>r.l4.approved=false,/L4/],['batch-0.json',r=>r.l4.wave[0].scores[0]=2,/评分/]]){
   const p=path.join(root,'drafts/w4-b1',name),original=await fs.readFile(p,'utf8'),r=JSON.parse(original);mutate(r);await fs.writeFile(p,JSON.stringify(r));await assert.rejects(publishB1({root,publish:true}),pattern);await fs.writeFile(p,original);

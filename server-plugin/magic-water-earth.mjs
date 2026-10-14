@@ -1,3 +1,4 @@
+import {registerMagicEffect}from'./magic-effects.mjs';
 import {environmentFeatures,localPlayerPoint,localSightClear}from'./environment.mjs';
 import {areaTargetFacts}from'./magic-area.mjs';
 import {assertMagicTargeting}from'./magic-targeting.mjs';
@@ -271,3 +272,5 @@ export function launchStone(d,p,id){
  d.set(['state','records',landing],{category:'physical_projectile',source:p.source.id,owner:p.source.owner,target:p.args.target,location:p.source.location,point:clone(p.point),massGrams:p.massGrams,stoneCount:1,minute:d.get('state','minute')});
  return{projectile:landing,projectileMassGrams:p.massGrams};
 }
+// Spell effect family (dispatched by magic.mjs through magic-effects.mjs).
+registerMagicEffect({kinds:['water_earth'],validate:validateWaterEarthCatalog,prepare(d,c,args){return prepareWaterEarthMagic.call(this,d,c,args);},apply(d,p,id){return applyWaterEarthMagic.call(this,d,p,id);}});

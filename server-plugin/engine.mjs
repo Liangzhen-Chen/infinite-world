@@ -42,28 +42,19 @@ import {stateNotices}from'./state-notices.mjs';
 import {recordReturnVisit}from'./return-summary.mjs';
 import {assertNpcService}from'./npc-schedule.mjs';
 import {npcAutonomyBusy,assertNpcAutonomyAction,applyNpcPlan}from'./npc-autonomy.mjs';
-import {recordNpcMemories}from'./npc-memory.mjs';
+import './npc-memory.mjs';// world-event subscriber (registers itself)
 import {hearNpcRumor}from'./npc-rumors.mjs';
+import {recordLie,exposeLieCall}from'./lies.mjs';
 import {createNpcObligation,assertNpcObligationAction,npcObligationAt}from'./npc-obligations.mjs';
-import {recordNpcRelationEvidence,applyNpcRelation}from'./npc-relations.mjs';
-import {recordSocietyActs,assertSocietyTrade,societyNewsConsumer,societyIssueConsumer}from'./monster-society.mjs';
+import {applyNpcRelation}from'./npc-relations.mjs';
+import {assertSocietyTrade,societyNewsConsumer,societyIssueConsumer}from'./monster-society.mjs';
 import {resolveToolCall}from'../extension/tools.mjs';
 import {deriveWorldEvents,publishWorldEvents,WORLD_EVENT_VERSION}from'./world-events.mjs';
-import {recordSpiritGrudges}from'./wildlife-society.mjs';
-import {recordBossEvents}from'./boss-cognition.mjs';
-import {transmitStanding}from'./standing.mjs';
+import './wildlife-society.mjs';// world-event subscriber (registers itself)
+import './boss-cognition.mjs';// world-event subscriber (registers itself)
+import './standing.mjs';// world-event subscriber (registers itself)
 import {evidenceBreakthrough,breakthroughPaths}from'./career-metrics.mjs';
-import {recordIntelligenceEvents,INTELLIGENCE_VERSION}from'./npc-intelligence.mjs';
-// Social subscribers, in settlement order; each reads the event verb and tags.
-const worldEventSubscribers=[
-    (d,e,events)=>recordSocietyActs(d,e,events),
-    (d,e,events,c)=>recordNpcRelationEvidence(d,e,c.before,events,c),
-    (d,e,events,c)=>recordNpcMemories(d,e,c.before,events,c),
-    (d,e,events)=>recordSpiritGrudges(d,e,events),
-    (d,e,events)=>recordBossEvents(d,e,events),
-    (d,e,events)=>transmitStanding(d,e,events),
-    (d,e,events,c)=>recordIntelligenceEvents(d,e,events,c),
-];
+import {INTELLIGENCE_VERSION}from'./npc-intelligence.mjs';
 import {chargeTrade,repayDebt}from'./contracts.mjs';
 import {businessTrade,recordBusinessReceipt}from'./business.mjs';
 import {CREDIT_OPERATIONS,creditTrade,isCreditDebt,repayCredit,lodgingOf,assertLodgingHost,grantLodgingAccess}from'./credit.mjs';
@@ -198,7 +189,9 @@ export class WorldEngine {
         advanceSummons(d,d.get('state','minute'));
         advanceLaw(d,d.get('state','minute'),session);
         const worldEvent={tool,args,detail,eventId:id,before:document.state,legacy:Boolean(options.replay)&&options.result!==undefined&&options.result?.worldEventVersion!==WORLD_EVENT_VERSION};
-        publishWorldEvents(d,session,deriveWorldEvents(session,document.state,d.get('state'),worldEvent),worldEvent,worldEventSubscribers);
+        // A read-only instant look (inspect, view) changes nothing and is no world event.
+        const readOnly=detail?.actionScope?.kind==='instant'&&!d.patches.length;
+        if(!readOnly)publishWorldEvents(d,session,deriveWorldEvents(session,document.state,d.get('state'),worldEvent),worldEvent);
         recordBusinessReceipt(d,document.state,{tool:resolved.tool,args,eventId:id,detail});
         if(tool==='check')detail.actionScope={kind:'judgement',healthChanged:false,inventoryChanged:false,feePaid:0,
             note:'仅结算判断或对抗，并履行已引用的协助；未伤人、毁物或制造。不得从骰点虚构这些变化。'};
@@ -315,6 +308,12 @@ export class WorldEngine {
         return {elapsed:minutes,date:this.calendar(d.get('state','minute')).text,...(!this.replaying||this.replayResult?.wildlifeEncounterVersion===1?{wildlifeEncounterVersion:1,encounters:wildlifeEncounterView(d.document)}:{})};
     }
     route(from,to,mode,minute,seed='default-campaign',weatherCache=null,graphCache=null) {
+        // A facility completed by a public project stands inside its site: reach the site, then step in.
+        const built=id=>this.world.locations.some(l=>l.id===id)?null:this.byId?.get(id)?.builtProject?this.byId.get(id).parent:null;
+        if(built(to)||built(from)){
+            const r=this.route(built(from)??from,built(to)??to,mode,minute,seed,weatherCache,graphCache),step=(built(to)?2:0)+(built(from)?2:0);
+            r.minutes+=step;r.movingMinutes+=step;return r;
+        }
         const distances=new Map([[from,0]]), movingTimes=new Map([[from,0]]), previous=new Map(),costs=new Map([[from,0]]);
         const season=this.calendar(minute).season,key=`${mode}:${season}`;
         // Callers may reuse topology only within one synchronous schedule
@@ -584,6 +583,9 @@ export class WorldEngine {
     }
     remember(d,args,id) {
         if(args.rumor!==undefined)return hearNpcRumor(d,this,args,id);
+        if(args.truth!==undefined)return recordLie(d,this,args,id);
+        if(args.motive!==undefined||args.knowers!==undefined)throw new Error('motive/knowers只用于带truth的谎言登记');
+        const exposed=exposeLieCall(d,this,args,id);if(exposed)return exposed;
         const subject=this.resolve(args.subject),content=validateMemory(args.content),key=text(args.key,100),memoryId=`${subject}::${key}`;
         if(d.get('memories',memoryId,'rumor'))throw new Error('登记传闻的获知记录只能由受校验的交谈生成');
         d.set(['memories',memoryId],{subject,key,content,keywords:args.keywords??[],pinned:d.get('memories',memoryId,'pinned')??false,minute:d.get('state','minute'),source:args.source??'亲历'});

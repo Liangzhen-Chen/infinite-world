@@ -59,7 +59,11 @@ test('未取得的隐藏身份不泄露触发条件，取得后仅返回已知�
 
 test('四村公共目录区分登记产量、期初库存和当前结算，治理权限仅按任命展示',async()=>{
     const world=await loadWorld(),engine=new WorldEngine(world),document=engine.createCharacter(seed,{},'public-village-account'),before=structuredClone(document);
-    for(const profile of world.settlementProfiles.filter(row=>row.details)){
+    // T90后白石镇也有details，但经济为pending-ledger、未任命镇长；本项只核四村账，白石镇须如实显示待接账而不虚设数字。
+    const villages=['loc_bs_yupo','loc_bs_weiting','loc_bs_liquan','loc_bs_sangban'],town=catalogDefinition(engine,document,{entity:'loc_bs',kind:'location'}).settlement;
+    assert.equal(town.economy.status,'pending-ledger');assert.deepEqual(town.economy.production,[]);assert.equal(town.governance.head,null);
+    assert.deepEqual(world.settlementProfiles.filter(row=>row.details&&row.id!=='loc_bs').map(row=>row.id).sort(),villages.toSorted());
+    for(const profile of world.settlementProfiles.filter(row=>villages.includes(row.id))){
         const view=catalogDefinition(engine,document,{entity:profile.id,kind:'location'}).settlement,e=view.economy,g=view.governance;
         assert.equal(e.units.foodUnitKg,.5);assert.equal(e.units.treasury,'铜币');assert.equal(e.period.startDay,0);assert.equal(e.period.endDay,360);
         assert.equal(e.production[0].quantity,profile.details.economy.production[0].quantity);assert.equal(e.production[0].cycleDays,360);

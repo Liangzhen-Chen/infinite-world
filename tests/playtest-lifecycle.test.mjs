@@ -1,6 +1,7 @@
 import test from'node:test';
 import assert from'node:assert/strict';
 import {createPlaytestServer}from'../tools/playtest-runner.mjs';
+import {recordedLifeChange} from './fixtures/life-population.mjs';
 
 async function campaign(t,mode,seed){
     const server=await createPlaytestServer({seed});t.after(()=>server.close());
@@ -22,7 +23,8 @@ test('魔力边界会话前置可达：十次真实施法、超额拒绝、休�
 });
 
 test('零级实战与死亡会话前置可达：实际追踪、濒死、死亡、出生点复活和撤销',async t=>{
-    const c=await campaign(t,'new','lifecycle-r1');
+    // 交锋骰随战役状态而定；T102扩充目录后原种子lifecycle-r1让零级玩家先打死野猪，换用仍会走到濒死—死亡的种子。
+    const c=await campaign(t,'new','lifecycle-r3');
     await c.act('world_move',{destination:'北林边'},'prepare');
     await c.act('world_time',{until:{dayOffset:0,hour:20},activity:'等待'},'prepare');
     let found;
@@ -49,7 +51,8 @@ test('冬季会话前置可达：九个月真实日结后抵达高林，封闭�
     await c.act('world_move',{destination:'白冠高林'});
     const before=await c.read();assert.equal(before.state.location,'site_white_canopy');
     assert.ok(before.state.minute>=270*1440&&before.state.minute<360*1440);
-    assert.equal(before.state.settlements.loc_hw.population,58);
+    // T131/T132起NPC会自然死亡、出生和迁居并记账人口前后值；应等于58加这些登记变化，不能有饥荒等未记账减员。
+    assert.equal(before.state.settlements.loc_hw.population,58+recordedLifeChange(before.state,'loc_hw'));
     await assert.rejects(c.act('world_move',{destination:'冰回裂谷'}),/没有.*可通行/);
     assert.deepEqual((await c.read()).state,before.state);
 });

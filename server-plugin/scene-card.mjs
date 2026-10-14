@@ -22,6 +22,7 @@ import {societyAt}from'./monster-society.mjs';
 import {settlementAt}from'./reputation.mjs';
 import {intelligenceSign,adaptedTricks}from'./npc-intelligence.mjs';
 import {returnScene}from'./return-summary.mjs';
+import {liesToldBy}from'./lies.mjs';
 
 const text=(value,limit=200)=>typeof value==='string'?value.replace(/\s+/g,' ').slice(0,limit):'';
 const list=value=>Array.isArray(value)?value.map(row=>typeof row==='string'?row:row.content??row.description??'').filter(Boolean).join('；'):text(value);
@@ -77,6 +78,9 @@ export function sceneCard(engine,document,query='',index=null){
         // 灵智成长与防备只给世界内迹象，不给等级数字。
         const sign=intelligenceSign(s,id),wary=adaptedTricks(engine,s,id);
         if(sign||wary.length)parts.push(`  近来变化：${text([sign,wary.length?`对你惯用的${wary.join('、')}手法已起防备`:''].filter(Boolean).join('；'),120)}`);
+        // U8：本人撒过、尚未全部揭穿的谎，供主持保持说法一致。
+        const told=liesToldBy(s,id).filter(r=>r.status!=='已揭穿').slice(-2);
+        if(told.length)parts.push(`  本人所撒的谎，玩家未必知情：${text(told.map(r=>`对${[...new Set(r.tellings.map(t=>t.to==='player'?'你':name(t.to)))].join('、')}称“${r.tellings.at(-1).claim}”，实情${r.truth}（key ${r.key}）`).join('；'),220)}`);
         if(context?.background?.relations.length)parts.push(`  本人已有往来及对方公开职务：${context.background.relations.map(row=>`${row.name}（${row.with}） ${row.publicRole}｜${row.type}：${row.note}｜来源 ${row.source}`).join('；')}`);
         if(context?.background&&mentioned.has(id))parts.push(`  本人今日作息背景：${context.background.schedule.slots.map(row=>`${engine.calendar(row.start).text}至${engine.calendar(row.end).text} ${name(row.location)}：${row.activity}｜来源 ${row.source}`).join('；')}。当前确认：${JSON.stringify(context.background.schedule.current)}。${context.background.schedule.limit}`);
         if(context?.opinions?.length)parts.push(`  本人已获知事件的看法：${context.opinions.slice(0,2).map(row=>`${text(row.label,60)}｜${STANCE_LABEL[row.stance]}（${row.basis}，${row.sourceType}）`).join('；')}`);

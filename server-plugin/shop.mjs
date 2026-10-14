@@ -1,4 +1,6 @@
+import {isReputationSettlement,reputationSettlements}from'./reputation-registry.mjs';
 import {standing} from './standing.mjs';
+import {marketFactor}from'./promotion.mjs';
 
 // Shops (guide 3.7, 3.13): each registered shop restocks on its own cycle from
 // local production, the settlement's own stock, or trade-route arrivals, never
@@ -9,10 +11,45 @@ const DAY=1440,SOURCES=['local','settlement','route'],LEDGER_ROWS=40;
 const integer=(v,min=0)=>Number.isSafeInteger(v)&&v>=min;
 const clamp=(v,[a,b])=>Math.max(a,Math.min(b,v));
 export const shopRules=engine=>engine.rules.economy?.shops??null;
-const shopsOf=engine=>shopRules(engine)?.stores??[];
-export const shopOfKeeper=(engine,keeper)=>shopsOf(engine).find(s=>s.keeper===keeper)??null;
 
 function settlementIds(world,rules){return new Set([...(world.settlementProfiles??[]).map(p=>p.id),...(rules?.quality?.capitals??[])]);}
+const held=(npc,item)=>{const v=npc?.inventory?.[item];return typeof v==='number'?v:v?.quantity??0;};
+const trades=npc=>(npc.services??[]).includes('trade')||(npc.serviceCatalog??[]).some(s=>s?.kind==='trade');
+// Derived shops: a person who offers trade (services or serviceCatalog) and whose
+// `shopType` names a type in rules.economy.shops.types becomes a shop with that
+// type's channels, markup and cycle. Its settlement is found by walking up from
+// the person's settlement, workplace, home or location; its restock is the
+// person's `shopRestock` rows, or else each held item produced locally and
+// admitted by quality, restocked locally by half the shelf (at least 1) up to
+// what the person holds now. Hand-registered stores always win for their keeper.
+export function derivedShops(world,rules=world.rules.economy?.shops){
+    const types=rules?.types??{},keepers=new Set((rules?.stores??[]).map(s=>s.keeper));
+    if(!rules||!Object.keys(types).length)return[];
+    const places=settlementIds(world,rules),byId=new Map(world.locations.map(l=>[l.id,l])),rows=[];
+    const settle=npc=>{for(let at of [npc.settlement,npc.workplace?.location,npc.home?.location??npc.home,npc.location]){const seen=new Set();
+        while(typeof at==='string'&&!seen.has(at)){if(places.has(at))return at;seen.add(at);at=byId.get(at)?.parent;}}return null;};
+    for(const npc of world.npcs){
+        if(typeof npc.shopType!=='string'||keepers.has(npc.id))continue;
+        const type=Object.hasOwn(types,npc.shopType)?types[npc.shopType]:null,settlement=settle(npc);
+        const shop={id:`shop_${npc.id.replace(/^npc_/,'')}`,name:byId.get(npc.workplace?.location)?.name??npc.occupation??npc.name,keeper:npc.id,settlement,
+            channels:[...type?.channels??[]],markup:type?.markup,cycleDays:type?.cycleDays,firstDay:type?.firstDay,shopType:npc.shopType,derived:true,trades:trades(npc),restock:[]};
+        shop.restock=Array.isArray(npc.shopRestock)?structuredClone(npc.shopRestock):type&&settlement?Object.keys(npc.inventory??{}).filter(item=>held(npc,item)>0&&world.items.some(i=>i.id===item)
+            &&originSettlement(world,item,rules)===settlement&&qualityAllowed(world,shop,item,rules)).sort().map(item=>({item,source:'local',amount:Math.max(1,Math.ceil(held(npc,item)/2)),maximum:held(npc,item)})):[];
+        rows.push(shop);
+    }
+    return rows;
+}
+const storeCache=new WeakMap();
+// Every shop that restocks and quotes: hand-registered stores, then derived ones.
+export function shopStores(world){
+    const rules=world.rules.economy?.shops;if(!rules)return[];
+    const key=[rules,rules.stores,rules.types,world.npcs,world.items,world.locations],hit=storeCache.get(world);
+    if(hit&&hit.key.every((v,i)=>v===key[i]))return hit.value;
+    const value=[...rules.stores??[],...derivedShops(world,rules).filter(s=>s.trades&&s.restock.length)];
+    storeCache.set(world,{key,value});return value;
+}
+const shopsOf=engine=>shopStores(engine.world);
+export const shopOfKeeper=(engine,keeper)=>shopsOf(engine).find(s=>s.keeper===keeper)??null;
 // The settlement an item is produced in: walk its origin up the location tree.
 export function originSettlement(world,item,rules=world.rules.economy?.shops){
     const ids=settlementIds(world,rules),byId=new Map(world.locations.map(l=>[l.id,l])),seen=new Set();
@@ -44,8 +81,16 @@ export function validateShopRules(world,{stock=true}={}){
     const q=r.quality;
     if(!q||!order.includes(q.open)||!Array.isArray(q.scales)||!q.scales.some(s=>s.minPopulation===0)||!Array.isArray(q.capitals)||!Array.isArray(q.tiers)||q.tiers.some(t=>order.indexOf(t.quality)<=order.indexOf(q.open)||!Array.isArray(t.scales)||!Array.isArray(t.channels)))errors.push('商店品质渠道规则无效');
     for(const [stock,id]of Object.entries(r.stockItems??{}))if(!['wood','stone','iron','food'].includes(stock)||!item(id))errors.push(`聚落库存货品无效：${stock}`);
+    for(const [name,t]of Object.entries(r.types??{}))
+        if(!Array.isArray(t?.channels)||!t.channels.length||!(t.markup>=shopLow&&t.markup<=shopHigh)||!integer(t.cycleDays,1)||!integer(t.firstDay))errors.push(`店铺类型${name}无效`);
     if(errors.length)return errors;
-    for(const s of r.stores){
+    const derived=derivedShops(world,r);
+    for(const s of derived){
+        if(!Object.hasOwn(r.types??{},s.shopType))errors.push(`人物${s.keeper}的店铺类型${s.shopType}未登记`);
+        else if(!s.trades)errors.push(`人物${s.keeper}登记了店铺类型却没有交易服务`);
+    }
+    if(errors.length)return errors;
+    for(const s of [...r.stores,...derived]){
         const keeper=npc(s.keeper),bad=m=>errors.push(`商店${s.id??'?'}：${m}`);
         if(!s.id||ids.has(s.id))bad('编号缺失或重复');ids.add(s.id);
         if(!keeper||keepers.has(s.keeper))bad('店主缺失或重复登记');keepers.add(s.keeper);
@@ -74,12 +119,13 @@ function assertRules(engine){
     const errors=validateShopRules(engine.world,{stock:false});if(errors.length)throw Error(errors.join('；'));checked.add(engine.world);
 }
 
-const held=(engine,d,id,item)=>engine.quantity(d,id,item);
+const shelf=(engine,d,id,item)=>engine.quantity(d,id,item);
 function managed(d,sid){return d.get('state','records',`agriculture:${sid}`)?.mode==='managed';}
 // One restock row at one boundary. Returns the ledger entry, or null when the
 // shelf was already full (nothing to record).
 function restockRow(d,engine,shop,row,minute){
-    const want=Math.min(row.amount,row.maximum-held(engine,d,shop.keeper,row.item));
+    // U13: a promoted settlement holds a market; restock amount and ceiling scale with it.
+    const market=marketFactor(engine,d.get('state'),shop.settlement),want=Math.min(row.amount*market,row.maximum*market-shelf(engine,d,shop.keeper,row.item));
     if(want<=0)return null;
     const base=engine.byId.get(row.item).basePrice,entry={day:Math.floor(minute/DAY),minute,item:row.item,source:row.source,wanted:want,added:0,paidCopper:0};
     const keeper=d.get('state','npcs',shop.keeper),afford=n=>Math.min(n,Math.floor(keeper.coins/base));
@@ -119,7 +165,7 @@ export function advanceShops(d,engine,before,after){
 }
 
 function settlementAt(engine,location){
-    const list=engine.rules.reputation?.settlements??[],seen=new Set();
+    const list=reputationSettlements(engine),seen=new Set();
     while(location&&!seen.has(location)){if(list.includes(location))return location;seen.add(location);location=engine.byId.get(location)?.parent;}
     return null;
 }
@@ -134,7 +180,7 @@ export function tradeQuote(d,engine,{buyer,seller,item,location,base}){
     const place=shop?.settlement??settlementAt(engine,location);
     if(npc&&rules){
         const state=d.get('state');keeperRegard=standing(engine,state,npc,'player');
-        settlementRegard=place&&(engine.rules.reputation?.settlements??[]).includes(place)?standing(engine,state,place,'player'):0;
+        settlementRegard=place&&isReputationSettlement(engine,place)?standing(engine,state,place,'player'):0;
         const regard=rules.relation.keeper*keeperRegard+rules.relation.settlement*settlementRegard;
         relation=clamp(1+(npc===seller?-1:1)*rules.relation.span*regard/100,limits.relation);
     }

@@ -1,3 +1,4 @@
+import {isReputationSettlement}from'./reputation-registry.mjs';
 // K6 unified effect table. World clocks, faction clocks, festivals and the
 // seasonal table all validate and apply stage effects here. A system adds an
 // effect kind with registerEffect(kind,{sources,validate,apply}); rules data in
@@ -124,7 +125,7 @@ registerEffect('rumor',{
 // Standing change through the K4 single write entry.
 registerEffect('standing',{
  validate(engine,effect){
-  const known=id=>id==='player'||engine.byId.has(id)||(engine.rules.reputation?.settlements??[]).includes(id)||String(id).startsWith('spirit_society:');
+  const known=id=>id==='player'||engine.byId.has(id)||isReputationSettlement(engine,id)||String(id).startsWith('spirit_society:');
   if(typeof effect.holder!=='string'||typeof effect.target!=='string'||effect.holder===effect.target||!known(effect.holder)||effect.holder==='player'||!known(effect.target))throw Error('立场效果双方未登记');
   if(!int(Math.abs(effect.delta),1,100))throw Error('立场变化幅度无效');
  },
