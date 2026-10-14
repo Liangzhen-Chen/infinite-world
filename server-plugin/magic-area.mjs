@@ -1,3 +1,4 @@
+import {registerMagicEffect}from'./magic-effects.mjs';
 // Areas use trusted world/state coordinates. Presence alone never implies range.
 import {environmentFeatures,localSightClear}from'./environment.mjs';
 import {validateEffectSpec}from'./magic-primitives.mjs';
@@ -147,3 +148,5 @@ export function nextMagicAreaMinute(state,now){
  }
  return next;
 }
+// Spell effect family (dispatched by magic.mjs through magic-effects.mjs).
+registerMagicEffect({kinds:['area'],validate:validateAreaCatalog,prepare(d,c,args,context){return prepareAreaMagic.call(this,d,c,args,context);},apply(d,p,id){return applyAreaMagic.call(this,d,p,id);}});

@@ -72,3 +72,29 @@ test('施法结果可确定重放，失败有实际消耗，未接入的规则�
     await assert.rejects(changed.reduce(document,{tool:'world_cast',args,eventId:'unsupported'}),/尚未接入/);
     assert.equal(document.state.player.mp,10);
 });
+test('K10：九个机制族经效果注册表分派；新 kind 只需登记，不改 magic.mjs',async()=>{
+    const {magicEffectKinds,registerMagicEffect}=await import('../server-plugin/magic-effects.mjs');
+    const {validateMagicCatalog}=await import('../server-plugin/magic.mjs');
+    for(const kind of ['heat','object','air','water_earth','light','optics','care','growth','mind_space','message','mind_message','consent_link','team_link','anchor_sense','blink','teleport','summon','summon_contract','ritual','area','environment','mark'])
+        assert.ok(magicEffectKinds().includes(kind),kind);
+    assert.throws(()=>registerMagicEffect({kinds:['heat']}),/重复登记/);
+    const calls=[];
+    const off=registerMagicEffect({kinds:['k10_glow'],fields:['tint'],
+        validate:c=>c.effectSpec.tint==='red'?[]:['只有红光'],
+        prepare(d,c,args){calls.push(['prepare',args.target,typeof this.resolve]);return{spec:c.effectSpec,catalog:c,target:args.target};},
+        apply(d,p,id){calls.push(['apply',id]);d.set(['state','records',`k10_glow:${id}`],{category:'k10_glow',tint:p.spec.tint});return{target:p.target,glow:p.spec.tint};}});
+    try{
+        const world=await loadWorld(),base=world.spells[0];
+        const spell={...base,id:'spell_k10_glow',name:'试炼红光',skill:'skill_k10_glow',mp:1,duration:0,materials:[],targeting:undefined,effectSpec:{kind:'k10_glow',power:1,tint:'red'}};
+        world.skills.push({id:'skill_k10_glow',name:'试炼红光术',attribute:'精神',profession:null});world.spells.push(spell);
+        assert.deepEqual(validateMagicCatalog({...spell,effectSpec:{kind:'k10_glow',power:1,tint:'blue'}}),['只有红光']);
+        assert.match(validateMagicCatalog({...spell,effectSpec:{kind:'k10_glow',power:1,hue:1}}).join(),/未实现参数:hue/);
+        const engine=new WorldEngine(world),document=engine.initialFromLegacy(seed,'k10-glow');
+        document.state.spells.spell_k10_glow={source:{type:'fixture'}};document.state.skills.skill_k10_glow={proficiency:10,daily:{},breakthroughs:[]};
+        let out;for(let i=0;i<100&&!out?.success;i++)out=(await engine.reduce(document,{tool:'world_cast',args:{spell:'spell_k10_glow',target:'player'},eventId:`glow_${i}`})).result;
+        assert.ok(out.success);assert.equal(out.glow,'red');
+        assert.deepEqual(calls.filter(c=>c[0]==='prepare').at(-1),['prepare','player','function']);
+        assert.ok(calls.some(c=>c[0]==='apply'));
+    }finally{off();}
+    assert.ok(!magicEffectKinds().includes('k10_glow'));
+});

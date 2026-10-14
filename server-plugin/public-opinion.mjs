@@ -1,3 +1,4 @@
+import {reputationFactions}from'./reputation-registry.mjs';
 import {societyOfActor} from './monster-society.mjs';
 import {standing,HOSTILE} from './standing.mjs';
 import {settlementAt} from './reputation.mjs';
@@ -82,7 +83,7 @@ export function opinionOf(engine,state,who,topic){
     const actor=tie(engine,state,who,topic.actor);
     if(['self','kin','friend'].includes(actor))return pick(1,actor==='kin'?'与行事者同属一地':'与行事者交好');
     if(actor==='enemy')return pick(-1,'与行事者敌对');
-    for(const faction of engine.rules.reputation?.factions??[]){
+    for(const faction of reputationFactions(engine)){
         if(!(faction.members??[]).includes(who))continue;
         const value=reputationOf(engine,state,topic.actor,faction.id);
         if(value)return pick(value,`所属${engine.byId.get(faction.id)?.name??faction.id}对行事者的声望`);

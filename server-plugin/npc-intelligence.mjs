@@ -1,3 +1,4 @@
+import {registerWorldEventSubscriber}from'./world-events.mjs';
 // U7 灵智等级（指南5.3）：人物与已开灵的精怪共用一张等级表。等级不决定说话
 // 聪不聪明，只决定主动性、计划几步、看多远、多敢打破惯例、多快识破玩家反复用
 // 的手法。成长只来自教导、共同经历和重大世界事件（K3），很慢，有世界内迹象，
@@ -175,3 +176,5 @@ export function goalsWithinHorizon(goals,horizonDays,today){
  for(const [k,rows] of Object.entries(goals??{}))out[k]=(Array.isArray(rows)?rows:[]).filter(g=>((g.source==='need'?g.deadlineDay-today:g.deadlineDay)??0)<=horizonDays);
  return out;
 }
+// World-event subscriber; settlement order is the `order` field.
+registerWorldEventSubscriber({id:'npc_intelligence',order:70,on:(d,engine,events,c)=>recordIntelligenceEvents(d,engine,events,c)});

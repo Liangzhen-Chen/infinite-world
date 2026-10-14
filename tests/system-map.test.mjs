@@ -3,7 +3,8 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import {execFileSync} from 'node:child_process';
 import {advanceRegistry} from '../server-plugin/advance-registry.mjs';
-import {SOCIAL_VERBS} from '../server-plugin/world-events.mjs';
+import '../server-plugin/engine.mjs';
+import {SOCIAL_VERBS,worldEventSubscribers} from '../server-plugin/world-events.mjs';
 import {toolDefinitions} from '../extension/tools.mjs';
 import {effectKinds} from '../server-plugin/effects.mjs';
 import {interactionRules} from '../world/design/interaction-rules.mjs';
@@ -37,11 +38,16 @@ test('导出覆盖全部 25 个工具，且每个工具都分派到处理模块'
 
 test('导出覆盖全部世界事件动词与订阅者',()=>{
  for(const v of SOCIAL_VERBS)assert.ok(data.worldEvents.verbs.includes(v),`缺动词 ${v}`);
- const engine=fs.readFileSync('server-plugin/engine.mjs','utf8');
- const block=/const worldEventSubscribers=\[([\s\S]*?)\];/.exec(engine)[1];
- const count=[...block.matchAll(/=>\s*\w+\(/g)].length;
- assert.equal(data.worldEvents.subscribers.length,count+1);
+ const registered=worldEventSubscribers();
+ assert.equal(data.worldEvents.subscribers.length,registered.length+1);
+ assert.deepEqual(data.worldEvents.subscribers.slice(0,-1).map(s=>s.id),registered.map(s=>s.id));
  for(const s of data.worldEvents.subscribers)assert.ok(s.module,`订阅者 ${s.fn} 没有来源模块`);
+});
+
+test('K10：仍需手动接线只剩新工具与 K8 栖地；engine 不再持订阅者数组',()=>{
+ assert.deepEqual(data.findings.manualWiring.map(m=>m.content),['怪物 / 野物种类','工具']);
+ assert.match(data.findings.manualWiring[0].item,/K8/);
+ assert.doesNotMatch(fs.readFileSync('server-plugin/engine.mjs','utf8'),/worldEventSubscribers/);
 });
 
 test('交互规则、效果类型、立场传导与实际注册一致',()=>{

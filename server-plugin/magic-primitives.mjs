@@ -1,3 +1,4 @@
+import {magicEffect}from'./magic-effects.mjs';
 import {ritualProtectionValid}from'./magic-ritual.mjs';
 // Shared numerical handlers; callers own targeting, consent, costs and death effects.
 import {SPELL_DAMAGE_TYPES}from'./traits.mjs';
@@ -7,8 +8,10 @@ const fields={ritual:['operation','destination','group'],mind_space:['operation'
 export function validateEffectSpec(spec){
  const errors=[];
  if(!spec||typeof spec!=='object'||Array.isArray(spec))return ['法术效果必须是规则对象'];
- if(!Object.hasOwn(fields,spec.kind))return ['此法术效果类型尚未接入规则，不能叙述已实现'];
- const keys=new Set(['kind','power',...fields[spec.kind]]);
+ // Kinds outside the primitive table declare their parameters when they register.
+ const own=Object.hasOwn(fields,spec.kind)?fields[spec.kind]:magicEffect(spec.kind)?.fields;
+ if(!own)return ['此法术效果类型尚未接入规则，不能叙述已实现'];
+ const keys=new Set(['kind','power',...own]);
  for(const key of Object.keys(spec))if(!keys.has(key))errors.push(`法术效果含未实现参数:${key}`);
  if(!Number.isSafeInteger(spec.power)||spec.power<1||spec.power>5000)errors.push('法术规则强度非法');
  if(spec.damageType!==undefined&&!damageTypes.includes(spec.damageType))errors.push('伤害门类不在规则表');
