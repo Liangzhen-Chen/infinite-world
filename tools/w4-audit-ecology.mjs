@@ -30,7 +30,7 @@ export async function auditEcology({seeds=20,months=36}={}){
             failures.push(...auditPopulations(document,bones).map(issue=>({...issue,month:month+1})));
             monthly.push(Object.fromEntries(bones.monsters.map(s=>[s.id,document.state.records[`ecology:${s.wildlife.habitat}`].populations[s.id].count])));
         }
-        runs.push({seed,ok:failures.length===0,failures,minimum:Math.min(...monthly.flatMap(m=>Object.values(m))),final:monthly.at(-1),batchMinimum:Object.fromEntries(batch.map(id=>[id,Math.min(...monthly.map(m=>m[id]))]))});
+        runs.push({seed,ok:failures.length===0,failures,minimum:Math.min(...monthly.flatMap(m=>Object.values(m))),final:monthly.at(-1),batchMinimum:Object.fromEntries(batch.map(id=>[id,Math.min(...monthly.map(m=>m[id]))])),batchMaximum:Object.fromEntries(batch.map(id=>[id,Math.max(...monthly.map(m=>m[id]))]))});
     }
     const batchMinimum=Object.fromEntries(batch.map(id=>[id,Math.min(...runs.map(r=>r.batchMinimum[id]))]));
     return{ok:runs.every(r=>r.ok)&&batch.every(id=>batchMinimum[id]>0),catalogHash:digest(bones),species:bones.monsters.length,habitats:world.rules.wildlife.habitats.length,seeds,months,days:months*30,batch,held,batchMinimum,
@@ -38,6 +38,7 @@ export async function auditEcology({seeds=20,months=36}={}){
 }
 if(process.argv[1]&&import.meta.url===pathToFileURL(process.argv[1]).href){
     await fs.mkdir('world/drafts/w4',{recursive:true});
-    try{const report=await auditEcology();await fs.writeFile('world/drafts/w4/ecology.json',JSON.stringify(report,null,2)+'\n');console.log(JSON.stringify({ok:report.ok,species:report.species,batch:report.batch.length,held:report.held,batchMinimum:report.batchMinimum,days:report.days,seeds:report.seeds,failures:report.runs.filter(r=>!r.ok).map(r=>({seed:r.seed,failures:r.failures.slice(0,5)}))}));if(!report.ok)process.exitCode=1;}
-    catch(error){await fs.writeFile('world/drafts/w4/ecology.json',JSON.stringify({ok:false,error:error.message},null,2));process.exitCode=1;}
+    const arg=name=>{const i=process.argv.indexOf(name);return i<0?undefined:Number(process.argv[i+1]);},seeds=arg('--seeds')??20,months=arg('--months')??36,out=seeds===20&&months===36?'world/drafts/w4/ecology.json':`world/drafts/w4/ecology-sample-s${seeds}.json`;
+    try{const report=await auditEcology({seeds,months});await fs.writeFile(out,JSON.stringify(report,null,2)+'\n');console.log(JSON.stringify({ok:report.ok,species:report.species,batch:report.batch.length,held:report.held,batchMinimum:report.batchMinimum,batchMaximum:Object.fromEntries(report.batch.map(id=>[id,Math.max(...report.runs.map(r=>r.batchMaximum[id]))])),days:report.days,seeds:report.seeds,failures:report.runs.filter(r=>!r.ok).map(r=>({seed:r.seed,failures:r.failures.slice(0,5)}))}));if(!report.ok)process.exitCode=1;}
+    catch(error){await fs.writeFile(out,JSON.stringify({ok:false,error:error.message},null,2));process.exitCode=1;}
 }
