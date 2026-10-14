@@ -35,6 +35,8 @@ const ritualEffects=(d,op)=>Object.values(d.get('state','effects')??{}).filter(e
 const warded=(d,location,minute)=>ritualEffects(d,'ward').some(e=>e.target==='player'&&e.location===location&&e.started<=minute&&e.expires>minute);
 const consecrated=(d,habitat,s,day)=>ritualEffects(d,'consecrate').some(e=>e.habitat===habitat&&e.group===s.nature?.group&&e.started<(day+1)*1440&&e.expires>day*1440);
 const wildPresent=(d,species,location)=>Object.values(d.get('state','creatures')??{}).filter(a=>a.species===species&&a.location===location&&!a.owner&&!sapient(a)&&alive(a)).length;
+// K6 wildlife_stir effect: a stirred habitat yields encounters more often until it calms.
+export function wildlifeStirFactor(state,habitatId,minute){const r=state.records?.[`wildlife:stir:${habitatId}`];return r?.category==='wildlife_stir'&&r.since<=minute&&r.until>minute?r.factor:1;}
 const encounterPath=h=>['state','records',`wildlife:encounter:${h}`];
 const WINDOW=360;
 const encounterEnabled=engine=>!engine.replaying||engine.replayResult?.wildlifeEncounterVersion===1;
@@ -58,7 +60,7 @@ export function wildlifeEncounterAt(d,engine,location,minute){
     const populations=d.get(...path(habitat.id),'populations');
     const ward=warded(d,location,minute),eligible=speciesAt(engine,habitat).filter(s=>populations?.[s.id]?.count>0&&activeAt(s.wildlife.activeHours,minute%1440)&&!(ward&&s.nature?.spirit));
     const base={habitat,window,minute};
-    if(chance>=0.25)return {...base,kind:null};
+    if(chance>=0.25*wildlifeStirFactor(d.get('state'),habitat.id,minute))return {...base,kind:null};
     const known=here.filter(([,actor])=>engine.byId.get(actor.species)?.wildlife);
     if(known.length){const [target,actor]=known[Math.floor(rng()*known.length)];return {...base,kind:'present',target,species:engine.byId.get(actor.species)};}
     if(!eligible.length)return {...base,kind:null};

@@ -1,5 +1,6 @@
 import {standingLedger} from './standing.mjs';
-import {clockRoll,assertClockEffect,applyClockEffect,clockTransaction} from './world-clock.mjs';
+import {clockRoll,clockTransaction} from './world-clock.mjs';
+import {registerEffect,assertEffect as assertTableEffect,applyEffect as applyTableEffect,hookedEffects} from './effects.mjs';
 
 const DAY=1440,accountPath=id=>['state','records',`faction-assets:${id}`],clockPath=id=>['state','records',`faction-clock:${id}`];
 const uint=n=>Number.isSafeInteger(n)&&n>=0;
@@ -17,24 +18,11 @@ function assertCost(engine,cost={}){
   cost.items!==undefined&&(!cost.items||typeof cost.items!=='object'||Array.isArray(cost.items))||
   !uint(cost.coins??0)||Object.entries(cost.items??{}).some(([id,n])=>!engine.world.items.some(i=>i.id===id)||!uint(n)))throw Error('势力资源代价无效');
 }
-function assertEffect(engine,effect){
- if(['relation','dispute','trade'].includes(effect?.kind)){
-  faction(engine,effect.target);
-  if(effect.kind==='relation'&&(!Number.isSafeInteger(effect.delta)||Math.abs(effect.delta)>100))throw Error('势力关系变化无效');
-  if(effect.kind==='dispute'&&(!effect.id||!['open','settled','escalated'].includes(effect.status)))throw Error('势力争端阶段无效');
-  if(effect.kind==='trade'){
-   if(!engine.world.items.some(i=>i.id===effect.item)||!Number.isSafeInteger(effect.quantity)||effect.quantity<1||!uint(effect.unitPrice))throw Error('势力交易参数无效');
-  }
-  return;
- }
- if(engine.factionEffectConsumers?.[effect?.kind]){
-  const consumer=engine.factionEffectConsumers[effect.kind];
-  if(typeof consumer.validate!=='function'||typeof consumer.apply!=='function')throw Error(`势力效果消费者未实现：${effect.kind}`);
-  return consumer.validate(engine,effect);
- }
- return assertClockEffect(engine,effect);
-}
+// K6: relation/dispute/trade are faction-only kinds in the unified effect table;
+// engine.factionEffectConsumers and the shared kinds resolve through it too.
+function assertEffect(engine,effect){return assertTableEffect(engine,effect,'faction');}
 const effects=stage=>stage.effects??[stage.effect];
+const stageEffects=(engine,rule,stage)=>[...effects(stage),...hookedEffects(engine,'faction',rule.id,stage.id)];
 export function assertFactionClockRules(engine){
  const ids=new Set();
  for(const rule of factionClockRules(engine)){
@@ -56,7 +44,7 @@ export function assertFactionClockRules(engine){
    if(['record','intervention'].includes(c.kind)&&(!c.id||c.kind==='record'&&(!c.field||!['string','boolean','number'].includes(typeof c.equals))))throw Error('势力阶段证据条件无效');
    assertCost(engine,stage.cost);
    if(!effects(stage).length)throw Error('势力阶段缺少效果');
-   for(const effect of effects(stage)){if(effect.target===rule.faction&&['trade','relation','dispute'].includes(effect.kind))throw Error('势力效果不能以自身为对手');assertEffect(engine,effect);}
+   for(const effect of stageEffects(engine,rule,stage)){if(effect.target===rule.faction&&['trade','relation','dispute'].includes(effect.kind))throw Error('势力效果不能以自身为对手');assertEffect(engine,effect);}
   }
   for(const action of rule.interventions??[]){
    if(!action.id||!engine.world.locations.some(l=>l.id===action.location)||!Number.isSafeInteger(action.minutes)||action.minutes<1||action.minutes>1440||
@@ -67,6 +55,8 @@ export function assertFactionClockRules(engine){
   }
   if(rule.contact&&(!engine.world.locations.some(l=>l.id===rule.contact.location)||![f.leader,...f.coreMembers??[]].includes(rule.contact.representative)))throw Error('势力供资接点未登记代表');
  }
+ const published=factionClockRules(engine);// Hooks for clocks absent from this world stay inert.
+ for(const h of published.length?engine.rules.effectTable?.hooks??[]:[])if(h.source==='faction'&&published.some(r=>r.id===h.owner&&!r.stages.some(s=>s.id===h.stage)))throw Error(`效果挂接的势力时钟阶段未登记：${h.owner}`);
 }
 function ensureAccount(d,engine,id){
  const prior=d.get(...accountPath(id));if(prior){if(prior.category!=='faction_assets')throw Error('势力资产记录冲突');return prior;}
@@ -110,8 +100,14 @@ function condition(d,rule,clock,assets){
  }
 }
 function applyEffect(d,engine,effect,context){
- const {faction:owner,sourceEvent,minute}=context;
- if(effect.kind==='trade'){
+ const result=applyTableEffect(d,engine,effect,context,'faction');
+ if(!result||typeof result.applied!=='boolean')throw Error(`势力效果缺少 applied 回执：${effect.kind}`);
+ return result;
+}
+const owned=(engine,effect)=>faction(engine,effect.target);
+registerEffect('trade',{sources:['faction'],
+ validate(engine,effect){owned(engine,effect);if(!engine.world.items.some(i=>i.id===effect.item)||!Number.isSafeInteger(effect.quantity)||effect.quantity<1||!uint(effect.unitPrice))throw Error('势力交易参数无效');},
+ apply(d,engine,effect,{faction:owner,sourceEvent,minute}){
   const seller=ensureAccount(d,engine,owner),buyer=ensureAccount(d,engine,effect.target),payment=effect.quantity*effect.unitPrice;
   if(!uint(payment))throw Error('势力交易金额溢出');
   if(!affordable(seller,{items:{[effect.item]:effect.quantity}})||!affordable(buyer,{coins:payment}))return {applied:false,reason:'交易对手资金或卖方库存不足'};
@@ -119,22 +115,21 @@ function applyEffect(d,engine,effect,context){
   changeAssets(d,engine,owner,{items:{[effect.item]:effect.quantity}},-1,event);changeAssets(d,engine,effect.target,{items:{[effect.item]:effect.quantity}},1,{...event,counterparty:owner});
   changeAssets(d,engine,effect.target,{coins:payment},-1,{...event,counterparty:owner});changeAssets(d,engine,owner,{coins:payment},1,event);
   return {applied:true,...effect,payment};
- }
- if(['relation','dispute'].includes(effect.kind)){
+ }});
+registerEffect('relation',{sources:['faction'],
+ validate(engine,effect){owned(engine,effect);if(!Number.isSafeInteger(effect.delta)||Math.abs(effect.delta)>100)throw Error('势力关系变化无效');},
+ apply(d,engine,effect,{faction:owner}){
+  const account=ensureAccount(d,engine,owner),score=Math.max(-100,Math.min(100,(account.relations[effect.target]??0)+effect.delta));
+  d.set(accountPath(owner),{...account,relations:{...account.relations,[effect.target]:score}});
+  return {applied:true,...effect,score};
+ }});
+registerEffect('dispute',{sources:['faction'],
+ validate(engine,effect){owned(engine,effect);if(!effect.id||!['open','settled','escalated'].includes(effect.status))throw Error('势力争端阶段无效');},
+ apply(d,engine,effect,{faction:owner,sourceEvent,minute}){
   const account=ensureAccount(d,engine,owner),key=`${effect.target}:${effect.id}`;
-  if(effect.kind==='relation'){
-   const score=Math.max(-100,Math.min(100,(account.relations[effect.target]??0)+effect.delta));
-   d.set(accountPath(owner),{...account,relations:{...account.relations,[effect.target]:score}});
-   return {applied:true,...effect,score};
-  }
   d.set(accountPath(owner),{...account,disputes:{...account.disputes,[key]:{status:effect.status,sourceEvent,minute}}});
   return {applied:true,...effect};
- }
- const consumer=engine.factionEffectConsumers?.[effect.kind];
- const result=consumer?consumer.apply(d,engine,effect,context):applyClockEffect(d,engine,effect,context);
- if(!result||typeof result.applied!=='boolean')throw Error(`势力效果缺少 applied 回执：${effect.kind}`);
- return result;
-}
+ }});
 export function advanceFactionClocks(d,engine,at){
  for(const rule of factionClockRules(engine)){
   let row=d.get(...clockPath(rule.id));if(!row)continue;
@@ -150,7 +145,7 @@ export function advanceFactionClocks(d,engine,at){
      if(!affordable(assets,stage.cost))return {applied:false,reason:'阶段资源不足'};
      changeAssets(tx,engine,rule.faction,stage.cost??{},-1,{sourceEvent,minute:at,kind:'stage_cost',stage:stage.id});
      const results=[];
-     for(const effect of effects(stage)){const result=applyEffect(tx,engine,effect,context);if(!result.applied)return result;results.push(result);}
+     for(const effect of stageEffects(engine,rule,stage)){const result=applyEffect(tx,engine,effect,context);if(!result.applied)return result;results.push(result);}
      return {applied:true,effects:results};
     });
     row.blocked=receipt.applied?null:receipt.reason??'效果条件未满足';

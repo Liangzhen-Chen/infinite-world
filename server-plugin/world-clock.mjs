@@ -1,33 +1,15 @@
 import {createHash} from 'node:crypto';
-import {regionalTradePrice} from './settlement-trade.mjs';
 import {weatherAt} from './weather.mjs';
-import {assertWildlifeAwakeningEffect,applyWildlifeAwakeningEffect} from './wildlife.mjs';
-import {applyPatches} from './storage.mjs';
+import {assertEffect,applyEffect,clockTransaction,assertEffectTable} from './effects.mjs';
+export {clockTransaction};
 
 const DAY=1440,path=id=>['state','records',`world-clock:${id}`];
 // Rolls are keyed by campaign, clock and absolute tick. Tool IDs and the number
 // of calls never change the random stream or weather's own seeded sequence.
 export function clockRoll(seed,id,day){return createHash('sha256').update(JSON.stringify([seed,id,day])).digest().readUInt32LE(0)/2**32;}
-export function assertClockEffect(engine,effect){
- if(effect?.kind==='regional_quote'&&effect.item===engine.rules.settlementTrade?.item)return;
- if(['awakening','awaken'].includes(effect?.kind))return assertWildlifeAwakeningEffect(engine,effect);
- throw Error('世界时钟未知效果或缺少贸易消费者，拒绝推进');
-}
-export function applyClockEffect(d,engine,effect,context){
- assertClockEffect(engine,effect);
- if(['awakening','awaken'].includes(effect.kind))return applyWildlifeAwakeningEffect(d,engine,effect,context);
- return {applied:true,...effect,price:regionalTradePrice(d,engine,effect.item,context.settlement,context.minute)};
-}
-// A refused effect cannot leave costs or partial identity changes in the draft.
-export function clockTransaction(d,apply){
- const tx={document:d.document,patches:[],messages:[],get(...p){return p.reduce((v,k)=>v?.[k],this.document);},
-  set(path,value){const patch={op:'set',path,value};this.document=applyPatches(this.document,[patch]);this.patches.push(patch);},
-  remove(path){const patch={op:'delete',path};this.document=applyPatches(this.document,[patch]);this.patches.push(patch);},say(content){this.messages.push(content);}};
- const result=apply(tx);if(result?.applied===false)return result;
- for(const p of tx.patches)if(p.op==='set')d.set(p.path,p.value);else d.remove(p.path);
- for(const message of tx.messages)d.say(message);
- return result;
-}
+// K6: stage effects are validated and applied by the unified effect table.
+export function assertClockEffect(engine,effect){return assertEffect(engine,effect,'world');}
+export function applyClockEffect(d,engine,effect,context){return applyEffect(d,engine,effect,context,'world');}
 function condition(d,engine,c,rule,at,clock){
  const state=d.get('state'),farm=state.records?.[`agriculture:${rule.settlement}`],year=Math.floor(at/DAY/360);
  switch(c.kind){
@@ -47,6 +29,7 @@ function condition(d,engine,c,rule,at,clock){
  }
 }
 export function assertWorldClockRules(engine){
+ assertEffectTable(engine);
  const rules=engine.rules.worldClock;if(!rules)return;
  const ids=new Set();if(rules.version!==1||!Array.isArray(rules.clocks))throw Error('世界时钟规则版本无效');
  for(const r of rules.clocks){
