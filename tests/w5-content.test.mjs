@@ -8,6 +8,7 @@ import {loadWorld} from '../tools/load-world.mjs';
 import {validateWorld} from '../tools/validate-world.mjs';
 import {validateDraft,materialize} from '../tools/w5-content.mjs';
 import {bigramSimilarity} from '../tools/w5-validation.mjs';
+import {withoutMonsterSociety} from '../tools/publish-monster-society.mjs';
 
 const fixture=entry=>({id:entry.id,prose:Object.fromEntries(entry.proseFields.map(field=>[field,field==='proverbs'?Array.from({length:10},(_,i)=>`${entry.name}的记事谚语${i}`):`${entry.name} ${field} ${entry.focus??entry.symbol}`]))});
 function addFixtures(world){
@@ -47,7 +48,7 @@ test('旧测试世界没有lore目录时仍能读取，不要求新内容倒灌�
  const temp=await fs.mkdtemp(path.join(os.tmpdir(),'w5-optional-'));
  t.after(()=>fs.rm(temp,{recursive:true,force:true}));
  for(const folder of ['meta','people','geo'])await fs.cp(new URL(`../world/${folder}`,import.meta.url),path.join(temp,folder),{recursive:true});
- const old=await loadWorld(temp);assert.deepEqual(old.cultures,[]);assert.deepEqual(old.deities,[]);
+ const old=withoutMonsterSociety(await loadWorld(temp));assert.deepEqual(old.cultures,[]);assert.deepEqual(old.deities,[]);
  // Current full profiles require their cultural references. Historical worlds
  // predate the full-profile contract, rather than containing broken full rows.
  assert.ok(validateWorld(old).errors.some(error=>error.includes('culture')));

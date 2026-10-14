@@ -168,13 +168,7 @@ N1–N17至少12项完整有效且≥90%，N6/N16零泄漏，N12真实盲辨，N
 4. 模型0次、0元。
 5. 预计3–4小时，先让已有物种进入日常旅行；不以每次移动必出怪或全图刷新实现。
 
-### T154（C2）补中西生物缺口并落在六个聚落周边。
-
-1. 玩家结果：五村与白石镇各有可达的怪物活动区，能辨认妖怪、亡灵和西式生物的不同习性与应对办法。
-2. 可改world/design/creatures-mixed.mjs、对应drafts与发布入口、meta/{monsters,rules,items,recipes}.json及栖地地理接点；允许wildlife/bosses实例化、magic-ritual/combat和schema的本批必要接点，锁定旧生物正文及人物。复用C1，地点优先取T94本批ID；T94的meta锁由主会话交给本卡串行发布，既有T90骨架不重做。
-3. 验收CORE及node --test "tests/wildlife*.test.mjs" "tests/w4-*.test.mjs" "tests/boss*.test.mjs" "tests/magic*.test.mjs" "tests/w3-*.test.mjs" tests/combat.test.mjs tests/pets.test.mjs tests/seasonal-migration.test.mjs tests/farm-pests.test.mjs tests/world-validation.test.mjs；node tools/w4-audit-ecology.mjs。将现有生态工具改为读取正式目录及本批ID，保留20种子三年，避免只查旧100种骨架；新增本批正常遭遇、弱点、取材与world_upgrade用例。
-4. 真实L2预计30–50次，上限1.5元；含生物、材料和栖地新事实。
-5. 预计18种，约4–5小时加后台生态模拟：中式9种覆盖狐妖、木精、游魂、僵尸与灵兽；西式9种覆盖哥布林、兽人、巨魔、骷髅、元素体及魔兽。每种明确生态位、食性或能量来源、作息、弱点、人兽关系和可得材料；至少12种处于一至二阶，每个聚落至少2种可接触。新增材料最多6项，优先复用已有物品；文明族群以交换产物表达资源，不把居民统一设成可猎取材料。灵体定义须在追踪及首领生成时进入实际状态，非生殖性亡灵按既定生成条件恢复，不能套普通动物繁殖文案。
+### T154（C2）已完成：18种中西生物经L1/真实L2/L4发布（中9：苔灯狐、节榆木精、衔芝白獐、汀雾游魂、汀苇水猴、石胎精、冢坡硬尸、瓦灯魅、月涎灵蟾；西9：灰窟哥布林、裂牙兽人、苔背巨魔、塔基骷髅、余烬元素、沼光鬼火、酸苔软泥、石冠鸡蛇、掘冢食尸鬼），14种一至二阶，6项新材料，5处野外活动区（编号loc_wild_*，未沿用T94）；各聚落周边可接触：河湾2、榆坡3、苇汀3、砾泉4、桑坂2、白石镇4。灵体与非繁殖亡灵接入生态。54次L2共0.1813元（主会话追加4次）；L4均4.32/最低3。生态小样本（2种子×3年）全目录守恒、本批全部存续；20种子三年全量审计未跑，留到T106波次末尾。审核提示补了一句“核对一致的句子不输出”（审核方曾把一致的句子列为矛盾），不改变判定标准。
 
 ### C3 并入T93：改寺庙学馆选题并补修行入口。
 
@@ -252,13 +246,7 @@ N1–N17至少12项完整有效且≥90%，N6/N16零泄漏，N12真实盲辨，N
 
 ### T156（S1）已完成：非人居民复用NPC的作息与交易；智能首领与其完整档共用同一身体和库存，伤势与死亡同时影响谈话、交易和巢穴；据点按公共区、议事区、私巢分别授权；升级恢复已接通。专项6/6，首领/据点/白石镇/CORE共150/150，发布构建ok，0模型。
 
-### T157（S2）炭阶地宫与苔灯坞正式落地。
-
-1. 玩家结果：在白石镇和河湾附近分别进入单族地宫与狐族住区，接触居民并进行有限库存交易。
-2. 可改 world/design/monster-society-1.mjs、对应 drafts、world/geo/{locations,routes,settlements}.json、people/{baseline,residents,households}.json、lore/{cultures,factions}.json、本批发布入口及必要物品库存配置；锁定无关居民和已审生物。依赖 S1、T154，本批地点与 T94 共用 ID；正式发布与 T90–T94、T110/T111、T142 串行。
-3. 验收 CORE 及 `node --test tests/monster-society-content.test.mjs "tests/population*.test.mjs" "tests/npc-*.test.mjs" "tests/w1-*.test.mjs" "tests/w5-*.test.mjs" "tests/world-*.test.mjs" tests/sites.test.mjs tests/settlement-trade.test.mjs tests/retrieval.test.mjs`；`node tools/audit-npc-depth.mjs`。按两处 ID 检查路线、四名 full 深度、户巢和库存；待生成人口须与具名成员分开。
-4. 真实 L2 预计八十至一百三十次，上限一点五元；含人物、建筑、社会与文化新事实。
-5. 预计三至四小时加后台 L2。两处共二十四名具名成员，其中八 full；每处二至三个住区、四至六项公共设施、至少两组内部立场。生活空间和初始交易本卡可玩，动态争端接 S3/T109，委托接 T155；不把尚未接入的内容标成已生效。
+### T157（S2）已完成：炭阶地宫loc_ms_tanjie（白石镇西郊废窑下约4.1km，哥布林240名49户；完整档：窟主烟砧、炉祭钉缨、菌床管事烟苔、抢粮派砾牙；3住区、5项公共设施、议事窟、可潜入仓窟）与苔灯坞loc_ms_taideng（河湾北林约3.1km，苔灯狐48名12户；完整档：坞主栗衡、长老苔眠、药圃管事青芷、追偿派栗针；3家巢群、5项设施、长老树洞、可潜入收夹洞）正式发布；其余成员按种子按需生成；两处各两组立场、两项议题，文化入world/lore。102次L2全过，0.42233248元；L4均4.4/最低4。正式完整档259个零缺口。遗留：未新增对应势力与T109时钟（议题只登记），修风井、送还尾结只是钩子未接委托（归T155），monsterSociety.positions尚未被T158读取。
 
 ### T158（S3）已完成：玩家可与聚居地首领立约（贸易、朝贡、通行，按10天一期履约），可潜入登记过的据点（私宅和议事区不可登记潜入）；守约、背约、交锋、潜入被发现都会改变成员态度，消息沿步行路线传到邻村后改变邻村态度（目前邻村反应只有“敌对后拒绝交易”一种）；议事可推动势力时钟。聚居地用location.monsterSociety、潜入用site.infiltration登记，正式数据由T157等内容卡发布。新增5项、CORE40、发布构建ok，提示约11330，0模型。
 
@@ -274,13 +262,7 @@ N1–N17至少12项完整有效且≥90%，N6/N16零泄漏，N12真实盲辨，N
 
 ### T160（S6）已完成：野兽灵智按“听息→立意”累积，来源分别记录（年岁与随人经历、灵地停留、喂灵物、点化），只观察不涨进度；world_wildlife加nurture（喂灵物）、enlighten（点化，复用T93仪式资格且师门须登记spirit_sense）、pact（结缘，有边界的同意关系）；势力时钟可真正触发觉醒。参数在rules.json的wildlifeAwakening，暂以药草为灵物、芦衡观与止波寺为灵地，正式内容待T162。新增4项、领域387/390（余为旧失败）、CORE40、发布构建ok，提示约11377，0模型。遗留：结缘后个体还不会跟随玩家、没有专门对话入口（归T161）。
 
-### T161（S7）成精后的修习与结社。
-
-1. 玩家结果：能教导已立意的精怪、帮助其取得借形能力，并参与它们定居或加入现存精怪之乡。
-2. 可改 S6 觉醒模块、server-plugin/{learning,manufacturing,npc-planning-service,npc-autonomy,magic-ritual}.mjs 的非人消费者接点、T109 faction-clock 结社效果、settlement-profile、world-upgrade、extension/tools.mjs 和 tests/wildlife-society.test.mjs；锁定 S6 身份转移规则及目录正文。依赖 S6/T109，与相关学习、生产和 engine 写者串行。
-3. 验收 CORE 及 `node --test "tests/wildlife*.test.mjs" "tests/npc-*.test.mjs" "tests/population*.test.mjs" "tests/magic*.test.mjs" tests/learning.test.mjs tests/manufacturing.test.mjs tests/professions.test.mjs tests/faction-clock.test.mjs tests/world-clock.test.mjs tests/prompt.test.mjs tests/tool-groups.test.mjs`；验证真实教学和制作、变形前后同一身体、加入/退出群落及季度推进无重复人口与库存。
-4. 真实模型零次，零元；新能力和结社参数由 S8 发布，新增术式正文并入 T104。
-5. 预计三至四小时。立意后可依实际资格学习并制造工具，借形需修习经历及真实施术代价，不默认化人或提升战力。T109 按季度或年检查自愿成员、可居住地点和口粮来源，满足后形成新组织或并入现存聚落；不足则保留游居状态。寺观关系与猎户冲突沿事件记忆，点化、结缘、报恩和寻仇均绑定具体当事人。静态提示不超过 11900 token。
+### T161（S7）已完成：world_learn带student可每天教已立意的精怪技能和配方；结缘后它能跟随、留守、交谈（wildlife_talk），能用学会的配方替玩家做东西（world_craft带maker，材料与工坊费由玩家出）；借形须修习满3次、有仪式资格并耗灵物，每次指定形貌，同一身体、战力不变、到时散形；每90天检查自愿成员、栖地和口粮，够则结群或并入精怪之乡，不够继续游居。新增5项、CORE40、发布构建ok，提示约11435，0模型。遗留：没有NPC狩猎机制，猎户冲突只记玩家攻击；精怪之乡名单与借形可选形貌等正式参数待T162。
 
 ### T162（S8）回汐埠、灰棚集与成精路线正式落地。
 
@@ -627,10 +609,7 @@ C部分只拆缺口：governance.mjs的任职入口止于“待上级决定”�
 
 ### T130（C8）已完成：两个成年NPC的长期关系在双方条件满足时可成婚（未成年人一律不进入），出生的孩子与新增家户成员记入state.family，消息按正常渠道传播；参数在world/meta/rules.json的npcLife，依据在docs/决策.md。新增7项、CORE40、发布构建ok，0模型。遗留（写入T164）：84对正式夫妻里81对的配偶是名册人物，暂不能生育；交往要求信任与好感都≥50，而现有关系最高好感45、提高好感的事件很少，正常游玩中成婚会很少见；场景与人物提示里看不到婚姻与子女；孩子不进入state.npcs。
 
-### T164 让人生变化在游戏里看得见、发生得了【零模型；可派】
-
-结果：玩家在场景和人物面板里能看到NPC的婚姻、子女、病痛、搬迁；日常的善意往来（帮忙、送礼、共同干活、节日同席）能实际提高好感，使成婚在正常游玩中可能发生；名册人物配偶在需要时经按需人口生成补足为有状态的人物；孩子进入人口与作息（不进入恋爱与亲密情节）。
-可改：server-plugin/{npc-life,npc-relations,scene-card,npc-memory,population,npc-state}.mjs及extension/people-history.mjs的展示接点、对应测试。验收：`node --test "tests/npc-*.test.mjs" "tests/population*.test.mjs" tests/public-opinion.test.mjs tests/m6-04.test.mjs`、CORE、发布构建。模型0。
+### T164 已完成：场景里在场的人带出“家况，当面可知”，人物面板加“家况”栏（截至最后一次见到此人，之后要亲见或从知情者处听来才更新），亲见之事进编年史；帮忙、送礼、节日同席、照护痊愈、同处干活能提高好感（成婚门槛仍为≥50），正式参数离屏一年成婚3对；无亲友时谋生、避祸可每日小概率投奔存粮够、肯收留的外乡人家；名册配偶与家人在需要时补成有状态的人物，出生的孩子进入人口与作息、不干活不交往；议事资格按当前户籍、年龄与是否在世；随行人物的猝亡与重病致死在分开后结算。新增8项、相关88/88、CORE40、发布构建ok，0模型。遗留：NPC之间日常增进好感的场合仍少。
 
 ### T131（C9）已完成：NPC按年龄每晚判定生病与猝亡，重病由同户成年人照护（照护者整天在家、不提供服务），病故或寿终后结算约定（记为取消，不判违约）、遗产（依次给配偶、子女、同户成年人；债务只列入遗产记录）和人口账，消息只经目击和日常交谈传播；参数在npcLife.health。新增7项、CORE40、发布构建ok，0模型。遗留（并入T164）：名册人物和战役出生的孩子无独立状态，不会生病或死亡；跟在玩家身边的人物不在离屏结算里生病或死亡。
 

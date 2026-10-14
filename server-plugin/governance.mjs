@@ -3,6 +3,7 @@ import {npcPresenceAt} from './npc-cognition.mjs';
 import {npcObligationAt} from './npc-obligations.mjs';
 import {societyGovernance} from './monster-society.mjs';
 import {opinionAmong} from './public-opinion.mjs';
+import {npcHousehold,householdMembers,npcAgeAt} from './npc-life.mjs';
 
 const DAY=1440;
 const path=id=>['state','records',id];
@@ -31,10 +32,15 @@ function local(engine,location,settlement){
     while(location&&!seen.has(location)){if(location===settlement)return true;seen.add(location);location=engine.byId.get(location)?.parent;}
     return false;
 }
-function eligible(engine,settlement){
+// Adult members of the settlement's households as they stand in this
+// campaign: someone who moved away no longer counts, a newcomer who moved in
+// does, the dead do not, and campaign-born children count once grown.
+function eligible(engine,settlement,state){
     const {p}=profile(engine,settlement);
-    const people=new Map([...(engine.world.residents??[]),...engine.world.npcs].map(p=>[p.id,p]));
-    return p.residentIds.filter(id=>(people.get(id)?.age??0)>=18&&engine.world.households?.some(h=>h.settlement===settlement&&h.members.includes(id))).sort();
+    const houses=(engine.world.households??[]).filter(h=>h.settlement===settlement);
+    const people=new Set([...p.residentIds,...houses.flatMap(h=>householdMembers(engine,state,h.id))]);
+    return [...people].filter(id=>npcHousehold(engine,state,id)?.settlement===settlement&&state.npcs?.[id]?.status!=='死亡'
+        &&(npcAgeAt(engine,state,id)??0)>=18).sort();
 }
 function person(d,engine,name){
     const id=engine.resolve(name,'npc'),actor=d.get('state','npcs',id);
@@ -54,7 +60,7 @@ function record(d,id,category,settlement){
 }
 // Deliberation reads only what the people actually in the hall have learned.
 function hallOpinion(d,engine,settlement){
-    const {g}=profile(engine,settlement),state=d.get('state'),all=eligible(engine,settlement);
+    const {g}=profile(engine,settlement),state=d.get('state'),all=eligible(engine,settlement,state);
     const present=Object.entries(state.npcs).filter(([id,n])=>all.includes(id)&&awake(n)&&n.location===g.meetingPlace).map(([id])=>id);
     return {place:g.meetingPlace,present:present.sort(),topics:opinionAmong(engine,d.document,present),note:'只计在场且实际获知的人；未获知者不计入比例。'};
 }
@@ -66,7 +72,7 @@ function proposal(d,engine,args,eventId,settlement){
     if(!engine.world.locations.some(p=>p.id===plot)||!local(engine,plot,settlement))throw Error('地块不属于本村');
     const issue=args.issue?p.details.problems.find(i=>i.id===args.issue):null;
     if(args.issue&&(!issue||issue.location!==plot))throw Error('议案问题与现有地点不相符');
-    const all=eligible(engine,settlement),affected=issue?[...new Set(issue.stakeholders.map(s=>s.person))].sort():all;
+    const all=eligible(engine,settlement,d.get('state')),affected=issue?[...new Set(issue.stakeholders.map(s=>s.person))].sort():all;
     if(affected.some(id=>!all.includes(id)))throw Error('当事人资格缺少成年住户依据');
     const id=`governance_proposal:${eventId}`;unique(d,id);
     const row={category:'governance_proposal',id,settlement,proposer:'player',name:text(args.name),plot,
@@ -87,7 +93,7 @@ function permission(d,engine,id,settlement,at){
         receipt.result.permission.grantee!==a.grantee||digest(a)!==digest(receipt.result.permission)||
         !safe(a.createdAt)||a.createdAt>at||!safe(a.expires)||a.expires<=at||a.revoked||
         a.scope?.actions?.length!==1||a.scope.actions[0]!=='account_report'||a.scope.budget!==0||a.scope.fee!==0||
-        !eligible(engine,settlement).includes(a.grantee))throw Error('授权来源不成立、已撤销、到期或超出范围');
+        !eligible(engine,settlement,d.get('state')).includes(a.grantee))throw Error('授权来源不成立、已撤销、到期或超出范围');
     return a;
 }
 function runRequest(d,engine,requestId,authorization,at,presence=d.get('state')){
@@ -131,7 +137,7 @@ function action(d,args,eventId){
     const settlement=this.resolve(args.settlement,'loc'),{g,p}=profile(this,settlement),now=d.get('state','minute');
     switch(args.operation){
     case 'governance_inspect':return {settlement,appointment:structuredClone(g.appointment),permissions:structuredClone(g.permissions),
-        eligible:eligible(this,settlement),referral:structuredClone(g.referral),note:unavailable,publicOpinion:hallOpinion(d,this,settlement),
+        eligible:eligible(this,settlement,d.get('state')),referral:structuredClone(g.referral),note:unavailable,publicOpinion:hallOpinion(d,this,settlement),
         records:Object.entries(d.get('state','records')??{}).filter(([,r])=>r.settlement===settlement&&
             (r.category?.startsWith('governance_')||r.category==='authorization'&&r.action==='account_report')).map(([id,row])=>({id,...row})),actionScope:{kind:'instant'}};
     case 'governance_propose':return proposal(d,this,args,eventId,settlement);
@@ -143,7 +149,7 @@ function action(d,args,eventId){
         if(speaker==='player'){
             const citizen=d.get(...path(`civic_citizen:${settlement}:player`));
             if(citizen?.category!=='civic_citizen'||citizen.subject!=='player'||citizen.settlement!==settlement||citizen.status!=='已登记')throw Error('玩家参加大会表决须有本村公民登记');
-        }else if(!row.eligible.includes(speaker)||!eligible(this,settlement).includes(speaker))throw Error('发言人没有本村成年住户资格');
+        }else if(!row.eligible.includes(speaker)||!eligible(this,settlement,d.get('state')).includes(speaker))throw Error('发言人没有本村成年住户资格');
         if(!['approve','reject','abstain'].includes(args.opinion))throw Error('意见须为approve、reject或abstain');
         const entry={speaker,opinion:args.opinion,content:text(args.content),minute:now,sourceEvent:eventId};
         const old=row.opinions.find(o=>o.speaker===speaker);
@@ -172,7 +178,7 @@ function action(d,args,eventId){
         // ledger duties. It confers no fiscal, judicial or land approval powers.
         if(!g.permissions.head.includes('在登记议事屋核验粮约、分列已收税款'))throw Error('任命没有可核验的公账记录权限');
         const steward=person(d,this,args.steward);
-        if(steward===authority||!eligible(this,settlement).includes(steward)||args.consent!==true)throw Error('管事须为另一个在场成年住户并明确同意');
+        if(steward===authority||!eligible(this,settlement,d.get('state')).includes(steward)||args.consent!==true)throw Error('管事须为另一个在场成年住户并明确同意');
         if((args.budget??0)!==0||(args.proposedFee??0)!==0||args.taxBps!==undefined&&args.taxBps!==p.details.economy.tax.rateBps)throw Error('公账报告授权无支出或收费额度，不能修改税率');
         const minutes=number(args.minutes,1,30*DAY),id=`governance_permission:${eventId}`;unique(d,id);
         const a={category:'authorization',action:'account_report',settlement,grantor:authority,grantee:steward,appointmentSource:source(this,settlement,now),

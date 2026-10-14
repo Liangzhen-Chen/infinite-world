@@ -21,7 +21,7 @@ function setup(){const world=structuredClone(source),engine=new WorldEngine(worl
     const run=async(doc,tool,args,id)=>{const out=await engine.reduce(doc,{tool,args,eventId:id});return{document:applyPatches(doc,out.patches),result:out.result};};return{world,engine,c,run};}
 const ecology=(c,h='habitat_hw_wood')=>c.state.records[`ecology:${h}`];
 function conservation(c){for(const r of Object.values(c.state.records).filter(r=>r.category==='ecology'))for(const p of Object.values(r.populations)){
-    assert.equal(p.initial+p.born-p.predated-p.starved-p.withdrawn,p.count);assert.ok(p.count>=0);
+    assert.equal(p.initial+p.born+(p.arisen??0)-p.predated-p.starved-p.withdrawn,p.count);assert.ok(p.count>=0);
 }}
 async function track(run,c,species='monster_red_ear_fox',label='track'){
     for(let i=0;i<60;i++){const out=await run(c,'world_wildlife',{operation:'track',species},`${label}${i}`);if(out.result.success)return out;}

@@ -2385,6 +2385,31 @@
         "id": "habitat_deep_star_bowl",
         "name": "沉星山坳野地",
         "location": "site_deep_star_bowl"
+      },
+      {
+        "id": "habitat_yp_north_grove",
+        "name": "北岗老林下",
+        "location": "loc_wild_yp_north"
+      },
+      {
+        "id": "habitat_wt_mist_flat",
+        "name": "下游雾滩",
+        "location": "loc_wild_wt_mist"
+      },
+      {
+        "id": "habitat_lq_old_adit",
+        "name": "旧矿道口",
+        "location": "loc_wild_lq_adit"
+      },
+      {
+        "id": "habitat_sb_barrow_slope",
+        "name": "西坡荒冢",
+        "location": "loc_wild_sb_barrow"
+      },
+      {
+        "id": "habitat_bs_west_kiln",
+        "name": "西郊废窑",
+        "location": "loc_wild_bs_kiln"
       }
     ],
     "migration": {
@@ -2534,7 +2559,35 @@
       "可交谈、互助",
       "不受命令驱使",
       "不可买卖、骑乘或作为任何人的财物"
-    ]
+    ],
+    "talkMinutes": 10,
+    "borrowForm": {
+      "sessions": 3,
+      "acquireMinutes": 120,
+      "acquireItems": [
+        {
+          "item": "item_herb",
+          "amount": 3
+        }
+      ],
+      "useMinutes": 30,
+      "useItems": [
+        {
+          "item": "item_herb",
+          "amount": 1
+        }
+      ],
+      "durationMinutes": 360,
+      "forms": [
+        "人形"
+      ]
+    },
+    "society": {
+      "periodDays": 90,
+      "minimumMembers": 2,
+      "foragePerMember": 5,
+      "homes": []
+    }
   },
   "bossEcology": {
     "version": 1,
@@ -3884,6 +3937,38 @@
       "host": {
         "minimumTrust": 40,
         "minimumAffection": 30
+      },
+      "stranger": {
+        "foodDays": 20,
+        "maxHousehold": 5,
+        "perHousehold": 1,
+        "chancePerDay": 0.03,
+        "minimumTrust": 0,
+        "minimumAffection": 0
+      }
+    },
+    "kindness": {
+      "help": {
+        "affection": 2
+      },
+      "gift": {
+        "trust": 1,
+        "affection": 3
+      },
+      "festival": {
+        "affection": 2
+      },
+      "care": {
+        "trust": 2,
+        "affection": 3,
+        "carerAffection": 1
+      },
+      "cowork": {
+        "minutes": 180,
+        "everyDays": 10,
+        "trust": 1,
+        "affection": 2,
+        "cap": 60
       }
     }
   }

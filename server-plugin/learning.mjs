@@ -2,12 +2,13 @@ import {effectiveProficiency,certifiedForSkill}from'./professions.mjs';
 import {assertNpcService}from'./npc-schedule.mjs';
 import {npcServices}from'./npc-state.mjs';
 import {teachNpc}from'./npc-growth.mjs';
+import {spiritStudent,teachSpirit}from'./wildlife-society.mjs';
 const integer=(value,label,maximum=1e9)=>{if(!Number.isSafeInteger(value)||value<0||value>maximum)throw new Error(`${label}不在允许范围`);return value;};
 const grades=['初级','中级','高级','特级','专家级','大师级','宗师级','圣级','神级'];
 const grade=value=>`${grades[Math.min(8,Math.floor(value/300))]}${Math.floor(value%300/100)+1}等`;
 
 export function learn(d,args,id){
-    if(args.student!==undefined)return teachNpc(d,this,args,id);
+    if(args.student!==undefined){const spirit=spiritStudent(d,args.student);return spirit?teachSpirit(d,this,args,id,spirit):teachNpc(d,this,args,id);}
     let entity;
     try{entity=this.resolve(args.entity,args.kind);}catch(error){
         // Old calls used a spell's display name; its associated skill can

@@ -38,6 +38,12 @@ export function collectChronicleFacts(engine,beforeDocument,afterDocument,input,
   const row=observed.get(memory.id)??{memory,holders:[]};row.holders.push(npcId);observed.set(memory.id,row);
  }
  for(const {memory,holders} of observed.values())add(`memory:${memory.id}`,memory.content,{minute:memory.minute,location:memory.location,participants:memory.participants??[],entities:memory.entities??[],visibleTo:unique([...holders,...(memory.participants?.includes('player')?['player']:[])]),salience:memory.salience,kind:memory.kind,reference:memory.rumor?`rumor:${memory.rumor}`:null,status:memory.rumor?'未核实':null});
+ // Family, health and moving events the player stood right there for
+ // (npc-life marks them); the text is the first-hand memory of those involved.
+ for(const [root,minute] of Object.entries(after.family?.seenByPlayer??{}))if(before.family?.seenByPlayer?.[root]===undefined){
+  const memory=Object.values(after.npcs??{}).flatMap(npc=>npc.memoryStream??[]).find(row=>(row.rootMemoryId??row.id)===root);
+  if(memory)add(`life:${root}`,memory.content,{minute,location:memory.location??after.location,participants:['player',...memory.participants??[]],visibleTo:['player'],salience:memory.salience??3,kind:memory.kind});
+ }
  if(before.location!==after.location)add('move',`${name('player')}从${name(before.location)}抵达${name(after.location)}`,{kind:'move',entities:[before.location],participants:['player',...after.player.companions??[]]});
  // Reuse observable state deltas. Do not turn private NPC records or remote
  // autonomous work into something the player supposedly witnessed.

@@ -11,7 +11,8 @@ import {WorldEngine} from '../server-plugin/engine.mjs';
 import {compatibleWorld,planWorldUpgrade} from '../server-plugin/world-upgrade.mjs';
 import {applyPatches} from '../server-plugin/storage.mjs';
 import {villagesOriginalWorld} from '../tools/publish-w1-villages.mjs';
-const formal=await loadWorld(),source=structuredClone(villagesOriginalWorld(formal)),candidate=JSON.parse(await fs.readFile('world/drafts/w1/hewan/candidate.json','utf8')),preserved=JSON.parse(await fs.readFile('world/drafts/w1/hewan/preserved-npcs.json','utf8'));
+import {withoutMonsterSociety} from '../tools/publish-monster-society.mjs';
+const formal=await loadWorld(),source=structuredClone(withoutMonsterSociety(villagesOriginalWorld(formal))),candidate=JSON.parse(await fs.readFile('world/drafts/w1/hewan/candidate.json','utf8')),preserved=JSON.parse(await fs.readFile('world/drafts/w1/hewan/preserved-npcs.json','utf8'));
 // This historical fixture omits four villages, including their dependent rules.
 // Only references to those deliberately removed entities are projected out.
 const removedLocations=new Set(formal.locations.filter(row=>!source.locations.some(location=>location.id===row.id)).map(row=>row.id));
@@ -20,6 +21,11 @@ source.rules.agriculture.settlements=source.rules.agriculture.settlements.filter
 source.rules.worldClock.clocks=source.rules.worldClock.clocks.filter(row=>!removedLocations.has(row.settlement));
 source.rules.law.codes=source.rules.law.codes.filter(row=>!removedLocations.has(row.court));
 source.locations=source.locations.filter(l=>!(l.scope==='loc_bs'&&!['loc_bs','bld_bs_shrine'].includes(l.id)));
+// T157 settlements depend on later full residents and bosses; they leave the historical fixture.
+// T154 wild areas are scoped to the omitted villages/town; their habitats and species leave with them.
+source.locations=source.locations.filter(l=>!removedLocations.has(l.scope));
+source.rules.wildlife.habitats=source.rules.wildlife.habitats.filter(h=>source.locations.some(l=>l.id===h.location));
+source.monsters=source.monsters.filter(m=>!m.wildlife||source.rules.wildlife.habitats.some(h=>h.id===m.wildlife.habitat));
 source.routes=source.routes.filter(r=>source.locations.some(l=>l.id===r.from)&&source.locations.some(l=>l.id===r.to));
 for(const row of source.rules.weather.regions){row.locations=row.locations.filter(id=>source.locations.some(l=>l.id===id));row.indoor=row.indoor.filter(id=>row.locations.includes(id));}
 // T92/T93后白石镇另有入门书（作者为npc_bs_*、出处为镇内场所）和产权法规场所，随白石镇一并投影掉。

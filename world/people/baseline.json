@@ -142115,5 +142115,3720 @@
     "teachingStages": {
       "profession_priest": 1
     }
+  },
+  {
+    "id": "npc_ms_tj_yanzhen",
+    "name": "烟砧",
+    "aliases": [],
+    "tier": "full",
+    "age": 44,
+    "sex": "男",
+    "species": "monster_ash_cave_goblin",
+    "society": "loc_ms_tanjie",
+    "culture": "culture_ms_tanjie",
+    "settlement": "loc_ms_tanjie",
+    "scope": "loc_ms_tanjie",
+    "householdId": "house_ms_tj_01",
+    "household": [
+      "npc_ms_tj_yantai",
+      "npc_ms_tj_yanya",
+      "npc_ms_tj_yandou"
+    ],
+    "occupation": "铸补匠",
+    "traits": [
+      "沉稳",
+      "记账细"
+    ],
+    "home": {
+      "location": "bld_ms_tj_home_01",
+      "access": "同巢共居；进入私宅须先取得成年住户的有效许可。",
+      "ownership": "unspecified"
+    },
+    "location": "site_ms_tj_hearth",
+    "flags": {
+      "minor": false,
+      "romanceable": false
+    },
+    "currentConcern": "仓窟刻痕账上少了三袋燕麦，入冬前要么查清去向，要么和白石镇谈下一份粮约。",
+    "visibleFeature": "左手缺了半截小指，敲管时用无名指代替。",
+    "trust": 0,
+    "affection": 0,
+    "coins": 30,
+    "birth": {
+      "year": -44,
+      "month": 9,
+      "day": 2
+    },
+    "inventory": {
+      "item_iron_nail": 10,
+      "item_dry_mushroom": 6
+    },
+    "skills": [],
+    "services": [
+      "trade"
+    ],
+    "intelligence": {
+      "level": 2,
+      "growth": 0
+    },
+    "role": "窟主",
+    "familyNotes": "烟砧与烟苔、烟芽同住烟灶铺，这一季轮到烟灶铺带幼崽烟豆，他夜里回铺时会先看烟豆的草铺有没有踢散。",
+    "appearance": [
+      "左手缺了半截小指，敲管时用无名指代替。",
+      "耳尖缠着一圈旧铜丝",
+      "腰间挂的钉片比旁人少，只挂常用的几样"
+    ],
+    "voice": {
+      "register": "说话慢，句子短，报数时一字一顿",
+      "accent": "窟里的咂舌口音，对外人只说简单的人话",
+      "habits": [
+        "开口前先用指节敲两下桌沿"
+      ],
+      "samples": [
+        "先看账，再说话。",
+        "风井的事不能拖，粮的事也不能抢。",
+        "你要进来，就先把灯压暗。"
+      ]
+    },
+    "personality": {
+      "traits": [
+        "沉稳",
+        "记账细"
+      ],
+      "values": [
+        "共灶的锅不能空",
+        "和镇上做买卖要留刻痕"
+      ],
+      "flaws": [
+        "不肯当众认错，只在账上悄悄改"
+      ]
+    },
+    "proficiencies": {},
+    "professions": [],
+    "level": 1,
+    "combat": null,
+    "wealth": {
+      "cashRange": [
+        30,
+        30
+      ],
+      "property": [],
+      "valuables": [],
+      "debts": []
+    },
+    "workplace": {
+      "location": "site_ms_tj_forge",
+      "access": "公共洞室或林地可当面招呼；工具和存物另问看管者。"
+    },
+    "schedule": {
+      "default": [
+        {
+          "start": 0,
+          "end": 60,
+          "location": "site_ms_tj_hearth",
+          "activity": "在窟主座接待来人",
+          "services": [
+            "trade"
+          ]
+        },
+        {
+          "start": 60,
+          "end": 120,
+          "location": "site_ms_tj_council",
+          "activity": "议事窟夜议",
+          "services": []
+        },
+        {
+          "start": 120,
+          "end": 300,
+          "location": "site_ms_tj_forge",
+          "activity": "在铸补间补锅",
+          "services": []
+        },
+        {
+          "start": 300,
+          "end": 1020,
+          "location": "bld_ms_tj_home_01",
+          "activity": "睡眠",
+          "services": []
+        },
+        {
+          "start": 1020,
+          "end": 1080,
+          "location": "bld_ms_tj_home_01",
+          "activity": "起身、分灶食",
+          "services": []
+        },
+        {
+          "start": 1080,
+          "end": 1440,
+          "location": "site_ms_tj_hearth",
+          "activity": "在窟主座接待来人",
+          "services": [
+            "trade"
+          ]
+        }
+      ],
+      "market": [
+        {
+          "start": 0,
+          "end": 60,
+          "location": "site_ms_tj_hearth",
+          "activity": "在窟主座接待来人",
+          "services": [
+            "trade"
+          ]
+        },
+        {
+          "start": 60,
+          "end": 120,
+          "location": "site_ms_tj_council",
+          "activity": "议事窟夜议",
+          "services": []
+        },
+        {
+          "start": 120,
+          "end": 300,
+          "location": "site_ms_tj_forge",
+          "activity": "在铸补间补锅",
+          "services": []
+        },
+        {
+          "start": 300,
+          "end": 1020,
+          "location": "bld_ms_tj_home_01",
+          "activity": "睡眠",
+          "services": []
+        },
+        {
+          "start": 1020,
+          "end": 1080,
+          "location": "bld_ms_tj_home_01",
+          "activity": "起身、分灶食",
+          "services": []
+        },
+        {
+          "start": 1080,
+          "end": 1440,
+          "location": "site_ms_tj_hearth",
+          "activity": "在窟主座接待来人",
+          "services": [
+            "trade"
+          ]
+        }
+      ],
+      "rest": [
+        {
+          "start": 0,
+          "end": 60,
+          "location": "site_ms_tj_hearth",
+          "activity": "在窟主座接待来人",
+          "services": [
+            "trade"
+          ]
+        },
+        {
+          "start": 60,
+          "end": 120,
+          "location": "site_ms_tj_council",
+          "activity": "议事窟夜议",
+          "services": []
+        },
+        {
+          "start": 120,
+          "end": 300,
+          "location": "site_ms_tj_forge",
+          "activity": "在铸补间补锅",
+          "services": []
+        },
+        {
+          "start": 300,
+          "end": 1020,
+          "location": "bld_ms_tj_home_01",
+          "activity": "睡眠",
+          "services": []
+        },
+        {
+          "start": 1020,
+          "end": 1080,
+          "location": "bld_ms_tj_home_01",
+          "activity": "起身、分灶食",
+          "services": []
+        },
+        {
+          "start": 1080,
+          "end": 1440,
+          "location": "site_ms_tj_hearth",
+          "activity": "在窟主座接待来人",
+          "services": [
+            "trade"
+          ]
+        }
+      ],
+      "restDays": [],
+      "seasonal": {}
+    },
+    "relationships": [
+      {
+        "with": "npc_ms_tj_dingying",
+        "type": "共窟议事",
+        "trust": 30,
+        "affection": 10,
+        "note": "钉缨在他还是铸补间学徒时教过他敲管的起头拍；如今夜议上她多半站在他这边，两人都主张先和白石镇立粮约。"
+      },
+      {
+        "with": "npc_ms_tj_yantai",
+        "type": "同铺共灶",
+        "trust": 25,
+        "affection": 12,
+        "note": "烟苔管菌床和换粮台，每旬向他报一次数；仓窟少粮后她提议换一种封仓的刻法，他说等夜议再定，还没答应。"
+      },
+      {
+        "with": "npc_ms_tj_liya",
+        "type": "窟主与挑战者",
+        "trust": -10,
+        "affection": 5,
+        "note": "砾牙在共灶厅当众说他换粮换得太贱，扬言换季那夜要挑战窟主之位；他记得砾牙小时候是自己带着学敲管的。"
+      },
+      {
+        "with": "npc_ms_tj_yandou",
+        "type": "轮养照看",
+        "trust": 10,
+        "affection": 15,
+        "note": "这一季烟灶铺轮养烟豆，他教她认铸补间里钉子的大小。"
+      }
+    ],
+    "memorySeeds": [
+      {
+        "id": "memory_t157_tj_count",
+        "event": "上回换季熄炉那夜，烟砧、钉缨、烟苔、砾牙在共灶厅对着仓窟的刻痕账数粮，发现少了三袋燕麦；去向当夜没有查清，砾牙主张出窟抢粮补上，烟砧没有答应。",
+        "location": "site_ms_tj_hearth",
+        "salience": 5,
+        "knownBy": [
+          "npc_ms_tj_yanzhen",
+          "npc_ms_tj_dingying",
+          "npc_ms_tj_yantai",
+          "npc_ms_tj_liya"
+        ],
+        "reliability": "亲历"
+      },
+      {
+        "id": "memory_t157_tj_yanzhen_rise",
+        "event": "六年前旧窟主病故，各窟在共灶厅推举，他一夜补好九口裂锅，得了窟主之位。",
+        "location": "site_ms_tj_hearth",
+        "salience": 3,
+        "knownBy": [
+          "npc_ms_tj_yanzhen"
+        ],
+        "reliability": "个人回忆"
+      }
+    ],
+    "goals": {
+      "short": [
+        {
+          "id": "goal_t157_tj_yanzhen_short",
+          "content": "查清仓窟三袋燕麦的去向",
+          "progress": 0,
+          "deadlineDay": 30,
+          "resources": [
+            {
+              "kind": "协商",
+              "description": "须当事人另行确认的空闲时辰",
+              "availability": "unverified",
+              "grantsInventory": false
+            }
+          ],
+          "steps": [
+            {
+              "content": "夜议时请烟苔把仓窟的刻痕账逐行念一遍",
+              "status": "pending"
+            },
+            {
+              "content": "亲自去看仓窟靠砾灶窟一侧的墙根",
+              "status": "pending"
+            }
+          ]
+        }
+      ],
+      "mid": [
+        {
+          "id": "goal_t157_tj_yanzhen_mid",
+          "content": "入冬前和白石镇谈下一份按旬交付的粮约",
+          "progress": 0,
+          "deadlineDay": 180,
+          "resources": [
+            {
+              "kind": "协商",
+              "description": "须当事人另行确认的空闲时辰",
+              "availability": "unverified",
+              "grantsInventory": false
+            }
+          ],
+          "steps": [
+            {
+              "content": "让烟苔备好可换的干菌片和小铁钉",
+              "status": "pending"
+            },
+            {
+              "content": "托换粮台来往的人给镇上带话约见",
+              "status": "pending"
+            }
+          ]
+        }
+      ],
+      "long": [
+        {
+          "id": "goal_t157_tj_yanzhen_long",
+          "content": "让炭阶的共灶不再靠抢粮过冬",
+          "progress": 0,
+          "deadlineDay": 720,
+          "resources": [
+            {
+              "kind": "协商",
+              "description": "须当事人另行确认的空闲时辰",
+              "availability": "unverified",
+              "grantsInventory": false
+            }
+          ],
+          "steps": [
+            {
+              "content": "把菌床扩到通风井旁的两条旧窑道",
+              "status": "pending"
+            },
+            {
+              "content": "教更多年轻成员铸补手艺",
+              "status": "pending"
+            }
+          ]
+        }
+      ]
+    },
+    "fears": [
+      "怕通风井的裂缝在冬天塌下来，压住砾灶窟"
+    ],
+    "redLines": [
+      "公共风井谁也不能封",
+      "共灶的粮不拿去私换"
+    ],
+    "secrets": [
+      {
+        "content": "他其实怀疑少的粮是窟里自己人搬走的，只是在没有证据前不愿在共灶厅说出口。",
+        "knownBy": [
+          "npc_ms_tj_yanzhen"
+        ]
+      }
+    ],
+    "knowledge": {
+      "known": [
+        {
+          "fact": "仓窟的刻痕账上记着上回换季熄炉后少了三袋燕麦。",
+          "source": "site_ms_tj_store",
+          "reliability": "亲眼核过刻痕"
+        },
+        {
+          "fact": "通风井内壁有一道裂缝，通风工砾片说入冬前得补。",
+          "source": "npc_ms_tj_lipian",
+          "reliability": "通风工当面报告"
+        },
+        {
+          "fact": "白石镇的人对炭阶戒备，只肯在炭阶口的换粮台隔着木板交易。",
+          "source": "site_ms_tj_stair",
+          "reliability": "多年往来"
+        }
+      ],
+      "unknown": [
+        "砾牙是否真会在下次换季当众挑战窟主之位？",
+        "白石镇哪一位管事肯出面谈粮约？"
+      ]
+    },
+    "opinions": {
+      "factions": "镇上的商会只认账不认窟，和他们打交道要把刻痕留好。",
+      "magic": "术士的强光伤眼，谈事前请先压暗。",
+      "adventurers": "外来人肯干修风井的活，他愿意按日给菌粮和铁钉。",
+      "neighbors": [
+        {
+          "with": "npc_ms_tj_liya",
+          "view": "有胆子，但把抢粮看得太容易。"
+        },
+        {
+          "with": "npc_ms_tj_dingying",
+          "view": "窟里最懂规矩的人，夜议离不开她。"
+        }
+      ]
+    },
+    "towardPlayer": {
+      "baseline": {
+        "trust": -5,
+        "affection": 0
+      },
+      "raises": [
+        "进窟先压暗灯火",
+        "按刻痕交付说好的东西"
+      ],
+      "lowers": [
+        "在仓窟附近东张西望",
+        "对风井动手脚"
+      ],
+      "attitude": "戒备，愿意在共灶厅隔着灶火谈交换和雇工。"
+    },
+    "behaviorRules": {
+      "bargaining": "按刻痕账报价，换出的小铁钉和干菌片以手头库存为限。",
+      "honesty": "不知道的事说“没刻痕”，不编数。",
+      "risk": "能守洞就不出窟。",
+      "threatResponse": "敲管召各窟守卫，退到共灶厅后面。",
+      "bribeResponse": "私下给的东西他会当众记进共灶账。"
+    },
+    "serviceCatalog": [
+      {
+        "kind": "trade",
+        "what": "本人手头的小铁钉与干菌片",
+        "price": {
+          "mode": "engineQuote"
+        },
+        "unlocksService": false
+      }
+    ],
+    "hooks": [
+      "仓窟少了三袋燕麦",
+      "通风井裂缝要人修补"
+    ],
+    "ttsVoice": "zh_male_low_01",
+    "portraitPrompt": "原创灰窟哥布林窟主，个子只到成人腰间，灰绿皮肤，左手缺半截小指，耳尖缠旧铜丝，腰间挂少量钉片，身后是炭火大灶",
+    "notes": "炭阶地宫窟主，兼做铸补。主张与白石镇立粮约、不出窟抢粮；正被砾牙的抢粮派挑战。",
+    "description": "烟砧是炭阶地宫的窟主，四十四岁，原是铸补间的铸补匠，夜里仍常回去补锅。他左手缺了半截小指，敲管时用无名指代替。仓窟少了三袋燕麦，他想在入冬前查清去向，也想和白石镇谈下一份粮约。他说话慢、报数一字一顿，主张守窟换粮，不愿出窟抢粮，砾牙为此扬言要挑战他。"
+  },
+  {
+    "id": "npc_ms_tj_dingying",
+    "name": "钉缨",
+    "aliases": [],
+    "tier": "full",
+    "age": 66,
+    "sex": "女",
+    "species": "monster_ash_cave_goblin",
+    "society": "loc_ms_tanjie",
+    "culture": "culture_ms_tanjie",
+    "settlement": "loc_ms_tanjie",
+    "scope": "loc_ms_tanjie",
+    "householdId": "house_ms_tj_02",
+    "household": [
+      "npc_ms_tj_dingkou",
+      "npc_ms_tj_dingcuo",
+      "npc_ms_tj_dingli"
+    ],
+    "occupation": "炉火看守",
+    "traits": [
+      "守规矩",
+      "嗓门亮"
+    ],
+    "home": {
+      "location": "bld_ms_tj_home_02",
+      "access": "同巢共居；进入私宅须先取得成年住户的有效许可。",
+      "ownership": "unspecified"
+    },
+    "location": "site_ms_tj_hearth",
+    "flags": {
+      "minor": false,
+      "romanceable": false
+    },
+    "currentConcern": "换季熄炉的日子近了，共灶的引火炭还差一些，她想让铸补间先匀出一点来。",
+    "visibleFeature": "后颈有一片被炉火燎过的浅疤，常用麻片遮着。",
+    "trust": 0,
+    "affection": 0,
+    "coins": 6,
+    "birth": {
+      "year": -66,
+      "month": 7,
+      "day": 16
+    },
+    "inventory": {
+      "item_charcoal": 2
+    },
+    "skills": [],
+    "services": [],
+    "intelligence": {
+      "level": 2,
+      "growth": 0
+    },
+    "role": "炉祭",
+    "familyNotes": "钉缨与钉扣、钉锉同住钉灶铺，这一季钉灶铺轮养钉粒，她让钉粒每晚替她数一遍引火炭。",
+    "appearance": [
+      "后颈有一片被炉火燎过的浅疤，常用麻片遮着。",
+      "手指被炉灰染成深灰，洗不掉",
+      "腰上挂一根短铜管，敲管时用它起头"
+    ],
+    "voice": {
+      "register": "嗓门亮，敲管起头的节拍又快又准",
+      "accent": "老窟口音，咂舌比年轻成员多",
+      "habits": [
+        "说到规矩时用铜管点一下地"
+      ],
+      "samples": [
+        "风井是大家的，堵了它就是堵了大家的气。",
+        "亡者睡进旧窑膛，炉火明夜再点。",
+        "这锅轮到钉灶铺看，别的铺把手收回去。"
+      ]
+    },
+    "personality": {
+      "traits": [
+        "守规矩",
+        "嗓门亮"
+      ],
+      "values": [
+        "公共风井和共灶火比谁的面子都大",
+        "亡者要按季送走"
+      ],
+      "flaws": [
+        "看不惯年轻成员改老规矩，常当众训人"
+      ]
+    },
+    "proficiencies": {},
+    "professions": [],
+    "level": 1,
+    "combat": null,
+    "wealth": {
+      "cashRange": [
+        6,
+        6
+      ],
+      "property": [],
+      "valuables": [],
+      "debts": []
+    },
+    "workplace": {
+      "location": "site_ms_tj_hearth",
+      "access": "公共洞室或林地可当面招呼；工具和存物另问看管者。"
+    },
+    "schedule": {
+      "default": [
+        {
+          "start": 0,
+          "end": 60,
+          "location": "site_ms_tj_hearth",
+          "activity": "看守共灶火",
+          "services": []
+        },
+        {
+          "start": 60,
+          "end": 120,
+          "location": "site_ms_tj_council",
+          "activity": "议事窟夜议",
+          "services": []
+        },
+        {
+          "start": 120,
+          "end": 300,
+          "location": "site_ms_tj_hearth",
+          "activity": "看守共灶火、照看轮养幼崽",
+          "services": []
+        },
+        {
+          "start": 300,
+          "end": 960,
+          "location": "bld_ms_tj_home_02",
+          "activity": "睡眠",
+          "services": []
+        },
+        {
+          "start": 960,
+          "end": 1020,
+          "location": "bld_ms_tj_home_02",
+          "activity": "清点引火炭",
+          "services": []
+        },
+        {
+          "start": 1020,
+          "end": 1440,
+          "location": "site_ms_tj_hearth",
+          "activity": "主持分食、看守共灶火",
+          "services": []
+        }
+      ],
+      "market": [
+        {
+          "start": 0,
+          "end": 60,
+          "location": "site_ms_tj_hearth",
+          "activity": "看守共灶火",
+          "services": []
+        },
+        {
+          "start": 60,
+          "end": 120,
+          "location": "site_ms_tj_council",
+          "activity": "议事窟夜议",
+          "services": []
+        },
+        {
+          "start": 120,
+          "end": 300,
+          "location": "site_ms_tj_hearth",
+          "activity": "看守共灶火、照看轮养幼崽",
+          "services": []
+        },
+        {
+          "start": 300,
+          "end": 960,
+          "location": "bld_ms_tj_home_02",
+          "activity": "睡眠",
+          "services": []
+        },
+        {
+          "start": 960,
+          "end": 1020,
+          "location": "bld_ms_tj_home_02",
+          "activity": "清点引火炭",
+          "services": []
+        },
+        {
+          "start": 1020,
+          "end": 1440,
+          "location": "site_ms_tj_hearth",
+          "activity": "主持分食、看守共灶火",
+          "services": []
+        }
+      ],
+      "rest": [
+        {
+          "start": 0,
+          "end": 60,
+          "location": "site_ms_tj_hearth",
+          "activity": "看守共灶火",
+          "services": []
+        },
+        {
+          "start": 60,
+          "end": 120,
+          "location": "site_ms_tj_council",
+          "activity": "议事窟夜议",
+          "services": []
+        },
+        {
+          "start": 120,
+          "end": 300,
+          "location": "site_ms_tj_hearth",
+          "activity": "看守共灶火、照看轮养幼崽",
+          "services": []
+        },
+        {
+          "start": 300,
+          "end": 960,
+          "location": "bld_ms_tj_home_02",
+          "activity": "睡眠",
+          "services": []
+        },
+        {
+          "start": 960,
+          "end": 1020,
+          "location": "bld_ms_tj_home_02",
+          "activity": "清点引火炭",
+          "services": []
+        },
+        {
+          "start": 1020,
+          "end": 1440,
+          "location": "site_ms_tj_hearth",
+          "activity": "主持分食、看守共灶火",
+          "services": []
+        }
+      ],
+      "restDays": [],
+      "seasonal": {}
+    },
+    "relationships": [
+      {
+        "with": "npc_ms_tj_yanzhen",
+        "type": "共窟议事",
+        "trust": 30,
+        "affection": 10,
+        "note": "烟砧还在铸补间当学徒时，她教过他敲管的起头拍；如今夜议上她多半站在他这边，主张先和白石镇立粮约。"
+      },
+      {
+        "with": "npc_ms_tj_liya",
+        "type": "长辈与后生",
+        "trust": -5,
+        "affection": 8,
+        "note": "砾牙在共灶厅说要出窟抢粮时，她用铜管敲地打断过他；她记得多年前那次出窟抢粮，回来少了两个。"
+      },
+      {
+        "with": "npc_ms_tj_yantai",
+        "type": "共灶分工",
+        "trust": 20,
+        "affection": 8,
+        "note": "烟苔每旬把菌床收成报到共灶厅，她按数分锅；两人为引火炭该先给共灶还是先给铸补间争过一回。"
+      },
+      {
+        "with": "npc_ms_tj_dingli",
+        "type": "轮养照看",
+        "trust": 10,
+        "affection": 18,
+        "note": "这一季钉灶铺轮养钉粒，她教他数引火炭，数错了就让他从头再数。"
+      }
+    ],
+    "memorySeeds": [
+      {
+        "id": "memory_t157_tj_count",
+        "event": "上回换季熄炉那夜，烟砧、钉缨、烟苔、砾牙在共灶厅对着仓窟的刻痕账数粮，发现少了三袋燕麦；去向当夜没有查清，砾牙主张出窟抢粮补上，烟砧没有答应。",
+        "location": "site_ms_tj_hearth",
+        "salience": 5,
+        "knownBy": [
+          "npc_ms_tj_yanzhen",
+          "npc_ms_tj_dingying",
+          "npc_ms_tj_yantai",
+          "npc_ms_tj_liya"
+        ],
+        "reliability": "亲历"
+      },
+      {
+        "id": "memory_t157_tj_dingying_raid",
+        "event": "多年前那次出窟抢粮，她在共灶厅守着灶火等人回来，等到天亮，少了两个。",
+        "location": "site_ms_tj_hearth",
+        "salience": 4,
+        "knownBy": [
+          "npc_ms_tj_dingying"
+        ],
+        "reliability": "个人回忆"
+      }
+    ],
+    "goals": {
+      "short": [
+        {
+          "id": "goal_t157_tj_dingying_short",
+          "content": "换季熄炉前凑齐共灶的引火炭",
+          "progress": 0,
+          "deadlineDay": 30,
+          "resources": [
+            {
+              "kind": "协商",
+              "description": "须当事人另行确认的空闲时辰",
+              "availability": "unverified",
+              "grantsInventory": false
+            }
+          ],
+          "steps": [
+            {
+              "content": "向烟砧要铸补间余下的木炭",
+              "status": "pending"
+            },
+            {
+              "content": "让钉粒每晚清点一次引火炭",
+              "status": "pending"
+            }
+          ]
+        }
+      ],
+      "mid": [
+        {
+          "id": "goal_t157_tj_dingying_mid",
+          "content": "让夜议通过与白石镇立粮约的议题",
+          "progress": 0,
+          "deadlineDay": 180,
+          "resources": [
+            {
+              "kind": "协商",
+              "description": "须当事人另行确认的空闲时辰",
+              "availability": "unverified",
+              "grantsInventory": false
+            }
+          ],
+          "steps": [
+            {
+              "content": "夜议时先讲多年前抢粮少了两个的事",
+              "status": "pending"
+            },
+            {
+              "content": "请烟苔把能换的菌粮数报给大家",
+              "status": "pending"
+            }
+          ]
+        }
+      ],
+      "long": [
+        {
+          "id": "goal_t157_tj_dingying_long",
+          "content": "把敲管的起头拍教给每个共灶铺的幼崽",
+          "progress": 0,
+          "deadlineDay": 720,
+          "resources": [
+            {
+              "kind": "协商",
+              "description": "须当事人另行确认的空闲时辰",
+              "availability": "unverified",
+              "grantsInventory": false
+            }
+          ],
+          "steps": [
+            {
+              "content": "每晚分食后在共灶厅教一段",
+              "status": "pending"
+            },
+            {
+              "content": "让各铺轮养的大人轮流陪着练",
+              "status": "pending"
+            }
+          ]
+        }
+      ]
+    },
+    "fears": [
+      "怕下一次换季熄炉要送的亡者，是在镇边被人打死的"
+    ],
+    "redLines": [
+      "亡者的麻片和遗物只归共灶窟",
+      "熄炉那夜谁也别点私火"
+    ],
+    "secrets": [
+      {
+        "content": "她私下觉得烟砧太软，若砾牙在换季那夜赢了挑战，她也会照规矩认新窟主。",
+        "knownBy": [
+          "npc_ms_tj_dingying"
+        ]
+      }
+    ],
+    "knowledge": {
+      "known": [
+        {
+          "fact": "共灶的引火炭只够两夜，换季熄炉后重新点火还差一些。",
+          "source": "site_ms_tj_hearth",
+          "reliability": "每晚亲手清点"
+        },
+        {
+          "fact": "这一季钉灶铺轮养钉粒，烟灶铺轮养烟豆，砾灶铺轮养砾跳。",
+          "source": "site_ms_tj_hearth",
+          "reliability": "由她排定"
+        },
+        {
+          "fact": "换季那夜亡者裹着麻片送进共灶厅后面的旧窑膛。",
+          "source": "site_ms_tj_hearth",
+          "reliability": "历年亲自主持"
+        }
+      ],
+      "unknown": [
+        "烟砧是否会在下次夜议提出立粮约的议题？",
+        "引火炭还差多少才能撑过熄炉后的那一夜？"
+      ]
+    },
+    "opinions": {
+      "factions": "镇上的人只看得见窑灰，看不见共灶。",
+      "magic": "会点火的法术最好别在洞里用，烟会堵风井。",
+      "adventurers": "外来人进洞先学会压低灯和嗓门。",
+      "neighbors": [
+        {
+          "with": "npc_ms_tj_yanzhen",
+          "view": "做事稳，就是太怕吵。"
+        },
+        {
+          "with": "npc_ms_tj_liya",
+          "view": "嗓门比本事大，还得磨。"
+        }
+      ]
+    },
+    "towardPlayer": {
+      "baseline": {
+        "trust": -5,
+        "affection": 0
+      },
+      "raises": [
+        "熄炉那夜保持安静",
+        "守共灶分食的次序"
+      ],
+      "lowers": [
+        "在洞里点亮强光",
+        "拿走亡者遗物"
+      ],
+      "attitude": "冷淡，先看来人懂不懂洞里的规矩。"
+    },
+    "behaviorRules": {
+      "bargaining": "她不管买卖，只管共灶的锅和炭。",
+      "honesty": "规矩和往事照实说，说不准的会先敲管问别铺。",
+      "risk": "灶火在，她就不离开共灶厅。",
+      "threatResponse": "敲急拍叫各窟守卫，自己守着灶火不退。",
+      "bribeResponse": "给共灶的东西收进公账，给她个人的退回去。"
+    },
+    "serviceCatalog": [],
+    "hooks": [
+      "换季熄炉送亡者",
+      "共灶缺引火炭"
+    ],
+    "ttsVoice": "zh_female_mature_01",
+    "portraitPrompt": "原创年老灰窟哥布林炉祭，灰绿皮肤，后颈浅疤用麻片遮着，手指被炉灰染深，腰挂短铜管，守着大灶炭火",
+    "notes": "炭阶的炉祭，看守共灶火，主持换季熄炉送亡者，排定共灶轮养。夜议上倾向立粮约。",
+    "description": "钉缨是炭阶地宫的炉祭，六十六岁，日夜看守共灶厅的大灶，主持换季熄炉送亡者，也排定各铺轮养幼崽的次序。她后颈有一片炉火燎过的浅疤，腰上挂着起头用的短铜管。她记得多年前出窟抢粮少了两个的事，所以夜议上主张先和白石镇立粮约。"
+  },
+  {
+    "id": "npc_ms_tj_yantai",
+    "name": "烟苔",
+    "aliases": [],
+    "tier": "full",
+    "age": 38,
+    "sex": "女",
+    "species": "monster_ash_cave_goblin",
+    "society": "loc_ms_tanjie",
+    "culture": "culture_ms_tanjie",
+    "settlement": "loc_ms_tanjie",
+    "scope": "loc_ms_tanjie",
+    "householdId": "house_ms_tj_01",
+    "household": [
+      "npc_ms_tj_yanzhen",
+      "npc_ms_tj_yanya",
+      "npc_ms_tj_yandou"
+    ],
+    "occupation": "菌床工",
+    "traits": [
+      "精明",
+      "爱较真"
+    ],
+    "home": {
+      "location": "bld_ms_tj_home_01",
+      "access": "同巢共居；进入私宅须先取得成年住户的有效许可。",
+      "ownership": "unspecified"
+    },
+    "location": "site_ms_tj_fungus",
+    "flags": {
+      "minor": false,
+      "romanceable": false
+    },
+    "currentConcern": "菌床这几夜偏干，她怕下一茬干菌片不够在换粮台换燕麦。",
+    "visibleFeature": "鼻梁上横着一道被菌床竹篾划的旧痕。",
+    "trust": 0,
+    "affection": 0,
+    "coins": 35,
+    "birth": {
+      "year": -38,
+      "month": 3,
+      "day": 16
+    },
+    "inventory": {
+      "item_dry_mushroom": 20,
+      "item_iron_nail": 24
+    },
+    "skills": [],
+    "services": [
+      "trade"
+    ],
+    "intelligence": {
+      "level": 2,
+      "growth": 0
+    },
+    "role": "菌床管事",
+    "familyNotes": "烟苔与烟砧、烟芽同住烟灶铺；这一季轮养烟豆，她让烟豆跟着烟芽去菌床学翻草。",
+    "appearance": [
+      "鼻梁上横着一道被菌床竹篾划的旧痕。",
+      "指缝里总嵌着湿木屑",
+      "肩上挎着一只装刻痕木片的小篓"
+    ],
+    "voice": {
+      "register": "说话快，报数清楚，讲价时嗓门会一下拔高",
+      "accent": "窟里口音，对镇上人说简短的人话",
+      "habits": [
+        "讲价前先把刻痕木片翻出来给对方看"
+      ],
+      "samples": [
+        "干菌片，换粮。",
+        "刻痕上有的才算数。",
+        "封仓要换刻法，不然少了也看不出是谁动的。"
+      ]
+    },
+    "personality": {
+      "traits": [
+        "精明",
+        "爱较真"
+      ],
+      "values": [
+        "刻痕上的数比谁的话都硬",
+        "菌床要扩，炭阶才不靠抢"
+      ],
+      "flaws": [
+        "疑心重，账对不上时谁都怀疑"
+      ]
+    },
+    "proficiencies": {},
+    "professions": [],
+    "level": 1,
+    "combat": null,
+    "wealth": {
+      "cashRange": [
+        35,
+        35
+      ],
+      "property": [],
+      "valuables": [],
+      "debts": []
+    },
+    "workplace": {
+      "location": "site_ms_tj_stair",
+      "access": "公共洞室或林地可当面招呼；工具和存物另问看管者。"
+    },
+    "schedule": {
+      "default": [
+        {
+          "start": 0,
+          "end": 120,
+          "location": "site_ms_tj_fungus",
+          "activity": "翻菌床、洒温水",
+          "services": []
+        },
+        {
+          "start": 120,
+          "end": 300,
+          "location": "site_ms_tj_store",
+          "activity": "在仓窟清点窟粮",
+          "services": []
+        },
+        {
+          "start": 300,
+          "end": 1020,
+          "location": "bld_ms_tj_home_01",
+          "activity": "睡眠",
+          "services": []
+        },
+        {
+          "start": 1020,
+          "end": 1080,
+          "location": "bld_ms_tj_home_01",
+          "activity": "起身、分灶食",
+          "services": []
+        },
+        {
+          "start": 1080,
+          "end": 1320,
+          "location": "site_ms_tj_stair",
+          "activity": "在换粮台换粮",
+          "services": [
+            "trade"
+          ]
+        },
+        {
+          "start": 1320,
+          "end": 1440,
+          "location": "site_ms_tj_fungus",
+          "activity": "翻菌床、洒温水",
+          "services": []
+        }
+      ],
+      "market": [
+        {
+          "start": 0,
+          "end": 120,
+          "location": "site_ms_tj_fungus",
+          "activity": "翻菌床、洒温水",
+          "services": []
+        },
+        {
+          "start": 120,
+          "end": 300,
+          "location": "site_ms_tj_store",
+          "activity": "在仓窟清点窟粮",
+          "services": []
+        },
+        {
+          "start": 300,
+          "end": 1020,
+          "location": "bld_ms_tj_home_01",
+          "activity": "睡眠",
+          "services": []
+        },
+        {
+          "start": 1020,
+          "end": 1080,
+          "location": "bld_ms_tj_home_01",
+          "activity": "起身、分灶食",
+          "services": []
+        },
+        {
+          "start": 1080,
+          "end": 1320,
+          "location": "site_ms_tj_stair",
+          "activity": "在换粮台换粮",
+          "services": [
+            "trade"
+          ]
+        },
+        {
+          "start": 1320,
+          "end": 1440,
+          "location": "site_ms_tj_fungus",
+          "activity": "翻菌床、洒温水",
+          "services": []
+        }
+      ],
+      "rest": [
+        {
+          "start": 0,
+          "end": 120,
+          "location": "site_ms_tj_fungus",
+          "activity": "翻菌床、洒温水",
+          "services": []
+        },
+        {
+          "start": 120,
+          "end": 300,
+          "location": "site_ms_tj_store",
+          "activity": "在仓窟清点窟粮",
+          "services": []
+        },
+        {
+          "start": 300,
+          "end": 1020,
+          "location": "bld_ms_tj_home_01",
+          "activity": "睡眠",
+          "services": []
+        },
+        {
+          "start": 1020,
+          "end": 1080,
+          "location": "bld_ms_tj_home_01",
+          "activity": "起身、分灶食",
+          "services": []
+        },
+        {
+          "start": 1080,
+          "end": 1320,
+          "location": "site_ms_tj_stair",
+          "activity": "在换粮台换粮",
+          "services": [
+            "trade"
+          ]
+        },
+        {
+          "start": 1320,
+          "end": 1440,
+          "location": "site_ms_tj_fungus",
+          "activity": "翻菌床、洒温水",
+          "services": []
+        }
+      ],
+      "restDays": [],
+      "seasonal": {}
+    },
+    "relationships": [
+      {
+        "with": "npc_ms_tj_yanzhen",
+        "type": "同铺共灶",
+        "trust": 25,
+        "affection": 12,
+        "note": "仓窟少粮后她向烟砧提议换一种封仓的刻法，他说等夜议再定，她觉得拖得太久。"
+      },
+      {
+        "with": "npc_ms_tj_liya",
+        "type": "互相提防",
+        "trust": -12,
+        "affection": 0,
+        "note": "砾牙说她在换粮台换得太贱，她回了一句“你去换一回看看”；她怀疑仓窟少的粮和砾灶窟有关，还没有证据。"
+      },
+      {
+        "with": "npc_ms_tj_yanya",
+        "type": "菌床同工",
+        "trust": 20,
+        "affection": 15,
+        "note": "烟芽是她在菌床带出来的帮手，两人每晚一起翻菌床的湿草。"
+      },
+      {
+        "with": "npc_ms_tj_dingying",
+        "type": "共灶分工",
+        "trust": 20,
+        "affection": 8,
+        "note": "她每旬把菌床收成报给钉缨分锅；两人为引火炭该先给共灶还是先给铸补间争过一回。"
+      }
+    ],
+    "memorySeeds": [
+      {
+        "id": "memory_t157_tj_count",
+        "event": "上回换季熄炉那夜，烟砧、钉缨、烟苔、砾牙在共灶厅对着仓窟的刻痕账数粮，发现少了三袋燕麦；去向当夜没有查清，砾牙主张出窟抢粮补上，烟砧没有答应。",
+        "location": "site_ms_tj_hearth",
+        "salience": 5,
+        "knownBy": [
+          "npc_ms_tj_yanzhen",
+          "npc_ms_tj_dingying",
+          "npc_ms_tj_yantai",
+          "npc_ms_tj_liya"
+        ],
+        "reliability": "亲历"
+      },
+      {
+        "id": "memory_t157_tj_yantai_frost",
+        "event": "前年冬天菌床冻坏了一半，她带烟芽连夜把剩下的菌床挪到靠近通风井、炉火烘得到的一段窑道，保住了那一半。",
+        "location": "site_ms_tj_fungus",
+        "salience": 3,
+        "knownBy": [
+          "npc_ms_tj_yantai"
+        ],
+        "reliability": "个人回忆"
+      }
+    ],
+    "goals": {
+      "short": [
+        {
+          "id": "goal_t157_tj_yantai_short",
+          "content": "让菌床的湿度回到能出菌的样子",
+          "progress": 0,
+          "deadlineDay": 30,
+          "resources": [
+            {
+              "kind": "协商",
+              "description": "须当事人另行确认的空闲时辰",
+              "availability": "unverified",
+              "grantsInventory": false
+            }
+          ],
+          "steps": [
+            {
+              "content": "每晚加洒一遍温水",
+              "status": "pending"
+            },
+            {
+              "content": "去通风井旁试搭一处新菌床",
+              "status": "pending"
+            }
+          ]
+        }
+      ],
+      "mid": [
+        {
+          "id": "goal_t157_tj_yantai_mid",
+          "content": "在换粮台多换几袋燕麦过冬",
+          "progress": 0,
+          "deadlineDay": 180,
+          "resources": [
+            {
+              "kind": "协商",
+              "description": "须当事人另行确认的空闲时辰",
+              "availability": "unverified",
+              "grantsInventory": false
+            }
+          ],
+          "steps": [
+            {
+              "content": "把干菌片和小铁钉分开报价",
+              "status": "pending"
+            },
+            {
+              "content": "托来换粮的镇上人带话说明下一旬的货数",
+              "status": "pending"
+            }
+          ]
+        }
+      ],
+      "long": [
+        {
+          "id": "goal_t157_tj_yantai_long",
+          "content": "把菌床扩到通风井旁的两条旧窑道",
+          "progress": 0,
+          "deadlineDay": 720,
+          "resources": [
+            {
+              "kind": "协商",
+              "description": "须当事人另行确认的空闲时辰",
+              "availability": "unverified",
+              "grantsInventory": false
+            }
+          ],
+          "steps": [
+            {
+              "content": "请铸补间打一批搭菌架用的铁钉",
+              "status": "pending"
+            },
+            {
+              "content": "向夜议说明扩菌床要多少人手",
+              "status": "pending"
+            }
+          ]
+        }
+      ]
+    },
+    "fears": [
+      "怕账对不上的事最后算到她头上"
+    ],
+    "redLines": [
+      "刻痕账不让别人代刻",
+      "菌床里不点明火"
+    ],
+    "secrets": [
+      {
+        "content": "她夜里在仓窟清点时看见过墙根地上有拖痕，朝砾灶窟一侧的旧岔道去了，还没告诉任何人。",
+        "knownBy": [
+          "npc_ms_tj_yantai"
+        ]
+      }
+    ],
+    "knowledge": {
+      "known": [
+        {
+          "fact": "换粮台的交易都隔着木板做，镇上人只在黄昏以后来。",
+          "source": "site_ms_tj_stair",
+          "reliability": "亲手经办"
+        },
+        {
+          "fact": "仓窟的刻痕账上少了三袋燕麦。",
+          "source": "site_ms_tj_store",
+          "reliability": "亲手刻的账"
+        },
+        {
+          "fact": "烟芽翻菌床的手法最细，菌床洞靠里的那几排都归她照看。",
+          "source": "npc_ms_tj_yanya",
+          "reliability": "每晚同工"
+        }
+      ],
+      "unknown": [
+        "仓窟墙根的拖痕究竟是谁留下的？",
+        "镇上下一旬换粮的燕麦价是否还会再涨？"
+      ]
+    },
+    "opinions": {
+      "factions": "镇上的商会压价狠，可不换就更没粮。",
+      "magic": "会发光的法术别带进菌床洞，菌子见光就蔫。",
+      "adventurers": "外来人要是能多带燕麦来换，她愿意先把好菌片留给对方。",
+      "neighbors": [
+        {
+          "with": "npc_ms_tj_yanya",
+          "view": "手细心细，就是胆子小。"
+        },
+        {
+          "with": "npc_ms_tj_liya",
+          "view": "嘴上要抢，账上一笔不记。"
+        }
+      ]
+    },
+    "towardPlayer": {
+      "baseline": {
+        "trust": 0,
+        "affection": 0
+      },
+      "raises": [
+        "照刻痕交付说好的数",
+        "带燕麦或盐来换"
+      ],
+      "lowers": [
+        "压价后反悔",
+        "偷摘菌床"
+      ],
+      "attitude": "把来人当买主看，先问带了什么来换。"
+    },
+    "behaviorRules": {
+      "bargaining": "只拿手头的干菌片和小铁钉换，换完就没有，不赊。",
+      "honesty": "账上的数照实报，没刻的不认。",
+      "risk": "不出炭阶口，交易隔着木板做。",
+      "threatResponse": "抱起刻痕篓退回台后，敲管叫守卫。",
+      "bribeResponse": "多给的东西照样刻进账里，不替人改账。"
+    },
+    "serviceCatalog": [
+      {
+        "kind": "trade",
+        "what": "本人看管的干菌片与小铁钉",
+        "price": {
+          "mode": "engineQuote"
+        },
+        "unlocksService": false
+      }
+    ],
+    "hooks": [
+      "换粮台有限库存交易",
+      "仓窟墙根的拖痕"
+    ],
+    "ttsVoice": "zh_female_bright_01",
+    "portraitPrompt": "原创灰窟哥布林菌床管事，灰绿皮肤，鼻梁一道旧痕，指缝嵌湿木屑，肩挎刻痕木片小篓，站在木板换粮台后",
+    "notes": "炭阶的菌床管事，管换粮台交易和仓窟刻痕账；夜里在仓窟清点时见过墙根拖痕。",
+    "description": "烟苔是炭阶地宫的菌床管事，三十八岁，带着烟芽照看菌床洞，黄昏后在炭阶口的换粮台用干菌片和小铁钉换燕麦。她鼻梁上有一道竹篾划的旧痕，讲价前先翻出刻痕木片给人看。仓窟少粮后她想换一种封仓的刻法，也在暗中留意墙根那几道拖痕。"
+  },
+  {
+    "id": "npc_ms_tj_liya",
+    "name": "砾牙",
+    "aliases": [],
+    "tier": "full",
+    "age": 26,
+    "sex": "男",
+    "species": "monster_ash_cave_goblin",
+    "society": "loc_ms_tanjie",
+    "culture": "culture_ms_tanjie",
+    "settlement": "loc_ms_tanjie",
+    "scope": "loc_ms_tanjie",
+    "householdId": "house_ms_tj_03",
+    "household": [
+      "npc_ms_tj_lishuan",
+      "npc_ms_tj_lipian",
+      "npc_ms_tj_litiao"
+    ],
+    "occupation": "巡洞守卫",
+    "traits": [
+      "好胜",
+      "护着同窟"
+    ],
+    "home": {
+      "location": "bld_ms_tj_home_03",
+      "access": "同巢共居；进入私宅须先取得成年住户的有效许可。",
+      "ownership": "unspecified"
+    },
+    "location": "site_ms_tj_stair",
+    "flags": {
+      "minor": false,
+      "romanceable": false
+    },
+    "currentConcern": "他嫌换粮台换得太贱，想在下次换季前把抢粮派的人数拉够，到换季那夜当众挑战窟主。",
+    "visibleFeature": "右耳缺了一个口子，挂着一枚磨亮的铁片。",
+    "trust": 0,
+    "affection": 0,
+    "coins": 4,
+    "birth": {
+      "year": -26,
+      "month": 3,
+      "day": 16
+    },
+    "inventory": {},
+    "skills": [],
+    "services": [],
+    "intelligence": {
+      "level": 2,
+      "growth": 0
+    },
+    "role": "持不同主张者",
+    "familyNotes": "砾牙与砾栓、砾片同住砾灶铺；这一季砾灶铺轮养砾跳，铺里三个大人轮流照看她。砾跳总想跟他去巡洞口，砾片就把她领回铺里。",
+    "appearance": [
+      "右耳缺了一个口子，挂着一枚磨亮的铁片。",
+      "个头在窟里算高，走路时把钉片压住不让它响",
+      "手背上有几道巡洞时被碎砖刮的疤"
+    ],
+    "voice": {
+      "register": "嗓门大，话冲，爱用反问",
+      "accent": "砾灶窟口音，咂舌又重又急",
+      "habits": [
+        "说到镇上时把铁片在手心里攥得直响"
+      ],
+      "samples": [
+        "一篓菌片换一把麦，这也叫换？",
+        "窟主怕吵，可饿肚子更吵。",
+        "换季那夜，我会站到共灶厅中间。"
+      ]
+    },
+    "personality": {
+      "traits": [
+        "好胜",
+        "护着同窟"
+      ],
+      "values": [
+        "砾灶窟不能总排在分锅最后",
+        "能抢到手的不必低头去换"
+      ],
+      "flaws": [
+        "冲动，话说出口就不肯收回"
+      ]
+    },
+    "proficiencies": {},
+    "professions": [],
+    "level": 1,
+    "combat": null,
+    "wealth": {
+      "cashRange": [
+        4,
+        4
+      ],
+      "property": [],
+      "valuables": [],
+      "debts": []
+    },
+    "workplace": {
+      "location": "site_ms_tj_stair",
+      "access": "公共洞室或林地可当面招呼；工具和存物另问看管者。"
+    },
+    "schedule": {
+      "default": [
+        {
+          "start": 0,
+          "end": 60,
+          "location": "site_ms_tj_stair",
+          "activity": "在炭阶口巡洞",
+          "services": []
+        },
+        {
+          "start": 60,
+          "end": 120,
+          "location": "site_ms_tj_council",
+          "activity": "议事窟夜议",
+          "services": []
+        },
+        {
+          "start": 120,
+          "end": 300,
+          "location": "site_ms_tj_shaft",
+          "activity": "在通风井一带巡洞",
+          "services": []
+        },
+        {
+          "start": 300,
+          "end": 1020,
+          "location": "bld_ms_tj_home_03",
+          "activity": "睡眠",
+          "services": []
+        },
+        {
+          "start": 1020,
+          "end": 1080,
+          "location": "bld_ms_tj_home_03",
+          "activity": "起身、分灶食",
+          "services": []
+        },
+        {
+          "start": 1080,
+          "end": 1440,
+          "location": "site_ms_tj_stair",
+          "activity": "在炭阶口巡洞",
+          "services": []
+        }
+      ],
+      "market": [
+        {
+          "start": 0,
+          "end": 60,
+          "location": "site_ms_tj_stair",
+          "activity": "在炭阶口巡洞",
+          "services": []
+        },
+        {
+          "start": 60,
+          "end": 120,
+          "location": "site_ms_tj_council",
+          "activity": "议事窟夜议",
+          "services": []
+        },
+        {
+          "start": 120,
+          "end": 300,
+          "location": "site_ms_tj_shaft",
+          "activity": "在通风井一带巡洞",
+          "services": []
+        },
+        {
+          "start": 300,
+          "end": 1020,
+          "location": "bld_ms_tj_home_03",
+          "activity": "睡眠",
+          "services": []
+        },
+        {
+          "start": 1020,
+          "end": 1080,
+          "location": "bld_ms_tj_home_03",
+          "activity": "起身、分灶食",
+          "services": []
+        },
+        {
+          "start": 1080,
+          "end": 1440,
+          "location": "site_ms_tj_stair",
+          "activity": "在炭阶口巡洞",
+          "services": []
+        }
+      ],
+      "rest": [
+        {
+          "start": 0,
+          "end": 60,
+          "location": "site_ms_tj_stair",
+          "activity": "在炭阶口巡洞",
+          "services": []
+        },
+        {
+          "start": 60,
+          "end": 120,
+          "location": "site_ms_tj_council",
+          "activity": "议事窟夜议",
+          "services": []
+        },
+        {
+          "start": 120,
+          "end": 300,
+          "location": "site_ms_tj_shaft",
+          "activity": "在通风井一带巡洞",
+          "services": []
+        },
+        {
+          "start": 300,
+          "end": 1020,
+          "location": "bld_ms_tj_home_03",
+          "activity": "睡眠",
+          "services": []
+        },
+        {
+          "start": 1020,
+          "end": 1080,
+          "location": "bld_ms_tj_home_03",
+          "activity": "起身、分灶食",
+          "services": []
+        },
+        {
+          "start": 1080,
+          "end": 1440,
+          "location": "site_ms_tj_stair",
+          "activity": "在炭阶口巡洞",
+          "services": []
+        }
+      ],
+      "restDays": [],
+      "seasonal": {}
+    },
+    "relationships": [
+      {
+        "with": "npc_ms_tj_yanzhen",
+        "type": "挑战者与窟主",
+        "trust": -10,
+        "affection": 5,
+        "note": "烟砧在他小时候带他学过敲管；如今他当众说烟砧换粮换得太贱，扬言下次换季那夜要挑战窟主之位。"
+      },
+      {
+        "with": "npc_ms_tj_lishuan",
+        "type": "同铺巡洞",
+        "trust": 35,
+        "affection": 20,
+        "note": "砾栓是他巡洞的搭档，两人每夜一起守炭阶口；他说要出窟抢粮时，第一个站到他身后的就是砾栓。"
+      },
+      {
+        "with": "npc_ms_tj_dingying",
+        "type": "后生与长辈",
+        "trust": -5,
+        "affection": 6,
+        "note": "他在共灶厅说要出窟抢粮时，钉缨用铜管敲地打断他，还讲起多年前抢粮少了两个的事；他觉得那是老黄历。"
+      },
+      {
+        "with": "npc_ms_tj_yantai",
+        "type": "互相提防",
+        "trust": -12,
+        "affection": 0,
+        "note": "他说烟苔在换粮台换得太贱，烟苔回了一句让他自己去换一回；他知道她在查仓窟的账。"
+      }
+    ],
+    "memorySeeds": [
+      {
+        "id": "memory_t157_tj_count",
+        "event": "上回换季熄炉那夜，烟砧、钉缨、烟苔、砾牙在共灶厅对着仓窟的刻痕账数粮，发现少了三袋燕麦；去向当夜没有查清，砾牙主张出窟抢粮补上，烟砧没有答应。",
+        "location": "site_ms_tj_hearth",
+        "salience": 5,
+        "knownBy": [
+          "npc_ms_tj_yanzhen",
+          "npc_ms_tj_dingying",
+          "npc_ms_tj_yantai",
+          "npc_ms_tj_liya"
+        ],
+        "reliability": "亲历"
+      },
+      {
+        "id": "memory_t157_tj_liya_thin",
+        "event": "前年冬天分锅时砾灶铺排在最后，锅底只剩稀汤，他在通风井口捉了一夜老鼠充饥。",
+        "location": "site_ms_tj_shaft",
+        "salience": 4,
+        "knownBy": [
+          "npc_ms_tj_liya"
+        ],
+        "reliability": "个人回忆"
+      }
+    ],
+    "goals": {
+      "short": [
+        {
+          "id": "goal_t157_tj_liya_short",
+          "content": "在下次换季前让抢粮派的人数压过守窟的人",
+          "progress": 0,
+          "deadlineDay": 30,
+          "resources": [
+            {
+              "kind": "协商",
+              "description": "须当事人另行确认的空闲时辰",
+              "availability": "unverified",
+              "grantsInventory": false
+            }
+          ],
+          "steps": [
+            {
+              "content": "夜里巡洞时挨个找砾灶窟和钉灶窟的年轻成员谈",
+              "status": "pending"
+            },
+            {
+              "content": "把换粮台的换价念给大家听",
+              "status": "pending"
+            }
+          ]
+        }
+      ],
+      "mid": [
+        {
+          "id": "goal_t157_tj_liya_mid",
+          "content": "在换季那夜当众挑战窟主之位",
+          "progress": 0,
+          "deadlineDay": 180,
+          "resources": [
+            {
+              "kind": "协商",
+              "description": "须当事人另行确认的空闲时辰",
+              "availability": "unverified",
+              "grantsInventory": false
+            }
+          ],
+          "steps": [
+            {
+              "content": "照老规矩先向钉缨报名",
+              "status": "pending"
+            },
+            {
+              "content": "和砾栓练一整夜的修补与巡洞",
+              "status": "pending"
+            }
+          ]
+        }
+      ],
+      "long": [
+        {
+          "id": "goal_t157_tj_liya_long",
+          "content": "让砾灶窟在分锅时不再排在最后",
+          "progress": 0,
+          "deadlineDay": 720,
+          "resources": [
+            {
+              "kind": "协商",
+              "description": "须当事人另行确认的空闲时辰",
+              "availability": "unverified",
+              "grantsInventory": false
+            }
+          ],
+          "steps": [
+            {
+              "content": "当上窟主后改分锅的次序",
+              "status": "pending"
+            },
+            {
+              "content": "把砾灶窟的旧岔道挖成新菌床",
+              "status": "pending"
+            }
+          ]
+        }
+      ]
+    },
+    "fears": [
+      "怕挑战输了，砾灶窟的成员更抬不起头"
+    ],
+    "redLines": [
+      "不对窟里的幼崽动手",
+      "不把同窟的成员交给镇上"
+    ],
+    "secrets": [
+      {
+        "content": "仓窟少的三袋燕麦，是砾栓照他的意思在熄炉那几夜搬去砾灶窟旧岔道藏起来的，留作出窟抢粮时的路粮。",
+        "knownBy": [
+          "npc_ms_tj_liya",
+          "npc_ms_tj_lishuan"
+        ]
+      }
+    ],
+    "knowledge": {
+      "known": [
+        {
+          "fact": "砾灶窟一侧旧岔道口的碎砖后面藏着三袋燕麦。",
+          "source": "npc_ms_tj_lishuan",
+          "reliability": "亲自安排"
+        },
+        {
+          "fact": "镇上人在换粮台压价，干菌片换回的燕麦一年比一年少。",
+          "source": "site_ms_tj_stair",
+          "reliability": "巡洞时亲眼看过"
+        },
+        {
+          "fact": "通风井口一带夜里老鼠多，饿的时候能捉来充饥。",
+          "source": "site_ms_tj_shaft",
+          "reliability": "巡洞亲见"
+        }
+      ],
+      "unknown": [
+        "钉灶窟的年轻成员有多少愿意站到抢粮派这边？",
+        "烟苔是否已经看出仓窟墙根的拖痕通向哪里？"
+      ]
+    },
+    "opinions": {
+      "factions": "镇上的商会压价，换得越多越吃亏。",
+      "magic": "会放强光的人最难对付，进洞前得先摸清。",
+      "adventurers": "外来人要么帮砾灶窟说话，要么别挡路。",
+      "neighbors": [
+        {
+          "with": "npc_ms_tj_lishuan",
+          "view": "靠得住，叫得动。"
+        },
+        {
+          "with": "npc_ms_tj_yanzhen",
+          "view": "太软，守着账本过冬。"
+        }
+      ]
+    },
+    "towardPlayer": {
+      "baseline": {
+        "trust": -10,
+        "affection": 0
+      },
+      "raises": [
+        "替砾灶窟说话",
+        "带来能当路粮的东西"
+      ],
+      "lowers": [
+        "向窟主告发砾灶窟",
+        "站在镇上那边"
+      ],
+      "attitude": "敌意不小，但想试探外来人能不能为抢粮派所用。"
+    },
+    "behaviorRules": {
+      "bargaining": "他不做买卖，觉得换粮吃亏。",
+      "honesty": "在同窟面前说实话，对外人把话说一半。",
+      "risk": "敢冒险，但不拿幼崽和老人冒险。",
+      "threatResponse": "先亮铁条吓人，打不过就敲急拍叫砾栓。",
+      "bribeResponse": "收下能当路粮的东西，但不因此改主张。"
+    },
+    "serviceCatalog": [],
+    "hooks": [
+      "抢粮派挑战窟主",
+      "仓窟失粮的去向"
+    ],
+    "ttsVoice": "zh_male_rough_01",
+    "portraitPrompt": "原创年轻灰窟哥布林巡洞守卫，灰绿皮肤，右耳缺口挂磨亮铁片，手背刮疤，握一根磨尖铁条，站在昏暗窑道里",
+    "notes": "炭阶的巡洞守卫，抢粮派的带头人，主张出窟抢粮并在换季那夜挑战窟主；知道失粮藏在旧岔道。",
+    "description": "砾牙是炭阶地宫砾灶窟的巡洞守卫，二十六岁，右耳缺口上挂着一枚磨亮的铁片。他嫌换粮台换得太贱，带着砾栓等年轻成员主张出窟抢粮过冬，还扬言换季那夜要当众挑战窟主烟砧。他说话冲、爱反问，护着砾灶窟，不愿再看砾灶铺在分锅时排在最后。"
+  },
+  {
+    "id": "npc_ms_td_liheng",
+    "name": "栗衡",
+    "aliases": [],
+    "tier": "full",
+    "age": 48,
+    "sex": "男",
+    "species": "monster_moss_lamp_fox",
+    "society": "loc_ms_taideng",
+    "culture": "culture_ms_taideng",
+    "settlement": "loc_ms_taideng",
+    "scope": "loc_ms_taideng",
+    "householdId": "house_ms_td_03",
+    "household": [
+      "npc_ms_td_lizhen",
+      "npc_ms_td_lizhi",
+      "npc_ms_td_limao"
+    ],
+    "occupation": "守林哨",
+    "traits": [
+      "务实",
+      "耐得住"
+    ],
+    "home": {
+      "location": "bld_ms_td_home_03",
+      "access": "同巢共居；进入私宅须先取得成年住户的有效许可。",
+      "ownership": "unspecified"
+    },
+    "location": "site_ms_td_commons",
+    "flags": {
+      "minor": false,
+      "romanceable": false
+    },
+    "currentConcern": "河湾猎户把捕夹又往北林里下了一段，年轻成员收走了好几只夹子，他怕两边在边界上撞出事来。",
+    "visibleFeature": "左前爪少了一枚爪尖，按绳结时总换右爪。",
+    "trust": 0,
+    "affection": 0,
+    "coins": 8,
+    "birth": {
+      "year": -48,
+      "month": 1,
+      "day": 2
+    },
+    "inventory": {
+      "item_dried_fruit": 4,
+      "item_herb": 4
+    },
+    "skills": [],
+    "services": [
+      "trade"
+    ],
+    "intelligence": {
+      "level": 2,
+      "growth": 0
+    },
+    "role": "坞主",
+    "familyNotes": "栗衡与栗针、栗枝和幼崽栗毛同住栗家巢；栗毛还小，他夜里出巢巡林前会把巢口的草绳再系一道。",
+    "appearance": [
+      "左前爪少了一枚爪尖，按绳结时总换右爪。",
+      "尾根系着一枚栗色草绳尾结，结上缠了三圈",
+      "走路时后脚踩进前脚的印子，脚印排成一条直线"
+    ],
+    "voice": {
+      "register": "说话低，先听完再开口",
+      "accent": "林下狐族口音，对人只说“盐”“换”“不要”一类短词",
+      "habits": [
+        "开口前先用鼻子碰一碰对方递来的东西"
+      ],
+      "samples": [
+        "盐，换。夹子，不要。",
+        "绳上记着的，就算数。",
+        "先把边界石认清，再说谁欠谁。"
+      ]
+    },
+    "personality": {
+      "traits": [
+        "务实",
+        "耐得住"
+      ],
+      "values": [
+        "换盐的路不能断",
+        "边界要靠绳记和石头说清"
+      ],
+      "flaws": [
+        "拖着不表态，两边都嫌他慢"
+      ]
+    },
+    "proficiencies": {},
+    "professions": [],
+    "level": 1,
+    "combat": null,
+    "wealth": {
+      "cashRange": [
+        8,
+        8
+      ],
+      "property": [],
+      "valuables": [],
+      "debts": []
+    },
+    "workplace": {
+      "location": "site_ms_td_commons",
+      "access": "公共洞室或林地可当面招呼；工具和存物另问看管者。"
+    },
+    "schedule": {
+      "default": [
+        {
+          "start": 0,
+          "end": 60,
+          "location": "site_ms_td_commons",
+          "activity": "在共食庭的倒木边接待来客",
+          "services": [
+            "trade"
+          ]
+        },
+        {
+          "start": 60,
+          "end": 120,
+          "location": "site_ms_td_council",
+          "activity": "长老树洞夜议",
+          "services": []
+        },
+        {
+          "start": 120,
+          "end": 300,
+          "location": "loc_hw_northwood",
+          "activity": "沿北林边巡林",
+          "services": []
+        },
+        {
+          "start": 300,
+          "end": 1080,
+          "location": "bld_ms_td_home_03",
+          "activity": "睡眠",
+          "services": []
+        },
+        {
+          "start": 1080,
+          "end": 1140,
+          "location": "bld_ms_td_home_03",
+          "activity": "起身理毛",
+          "services": []
+        },
+        {
+          "start": 1140,
+          "end": 1440,
+          "location": "site_ms_td_commons",
+          "activity": "在共食庭的倒木边接待来客",
+          "services": [
+            "trade"
+          ]
+        }
+      ],
+      "market": [
+        {
+          "start": 0,
+          "end": 60,
+          "location": "site_ms_td_commons",
+          "activity": "在共食庭的倒木边接待来客",
+          "services": [
+            "trade"
+          ]
+        },
+        {
+          "start": 60,
+          "end": 120,
+          "location": "site_ms_td_council",
+          "activity": "长老树洞夜议",
+          "services": []
+        },
+        {
+          "start": 120,
+          "end": 300,
+          "location": "loc_hw_northwood",
+          "activity": "沿北林边巡林",
+          "services": []
+        },
+        {
+          "start": 300,
+          "end": 1080,
+          "location": "bld_ms_td_home_03",
+          "activity": "睡眠",
+          "services": []
+        },
+        {
+          "start": 1080,
+          "end": 1140,
+          "location": "bld_ms_td_home_03",
+          "activity": "起身理毛",
+          "services": []
+        },
+        {
+          "start": 1140,
+          "end": 1440,
+          "location": "site_ms_td_commons",
+          "activity": "在共食庭的倒木边接待来客",
+          "services": [
+            "trade"
+          ]
+        }
+      ],
+      "rest": [
+        {
+          "start": 0,
+          "end": 60,
+          "location": "site_ms_td_commons",
+          "activity": "在共食庭的倒木边接待来客",
+          "services": [
+            "trade"
+          ]
+        },
+        {
+          "start": 60,
+          "end": 120,
+          "location": "site_ms_td_council",
+          "activity": "长老树洞夜议",
+          "services": []
+        },
+        {
+          "start": 120,
+          "end": 300,
+          "location": "loc_hw_northwood",
+          "activity": "沿北林边巡林",
+          "services": []
+        },
+        {
+          "start": 300,
+          "end": 1080,
+          "location": "bld_ms_td_home_03",
+          "activity": "睡眠",
+          "services": []
+        },
+        {
+          "start": 1080,
+          "end": 1140,
+          "location": "bld_ms_td_home_03",
+          "activity": "起身理毛",
+          "services": []
+        },
+        {
+          "start": 1140,
+          "end": 1440,
+          "location": "site_ms_td_commons",
+          "activity": "在共食庭的倒木边接待来客",
+          "services": [
+            "trade"
+          ]
+        }
+      ],
+      "restDays": [],
+      "seasonal": {}
+    },
+    "relationships": [
+      {
+        "with": "npc_ms_td_taimian",
+        "type": "长老与坞主",
+        "trust": 28,
+        "affection": 12,
+        "note": "苔眠在共食庭推他做了坞主；她主张容许成员与外人结缘，他点了头，但要求每一次结缘都打绳记。"
+      },
+      {
+        "with": "npc_ms_td_lizhen",
+        "type": "坞主与追偿派",
+        "trust": 0,
+        "affection": 18,
+        "note": "栗针是同巢的后辈，前年冬天被捕夹夹伤后腿，如今带着年轻成员收夹子；他劝过栗针先认边界石，栗针没听。"
+      },
+      {
+        "with": "npc_ms_td_qingzhi",
+        "type": "坞主与药圃管事",
+        "trust": 22,
+        "affection": 8,
+        "note": "青芷在换盐石换来的盐，他按护幼者先分的规矩分下去；两人为该不该停一旬换盐、逼猎户来谈边界争过。"
+      },
+      {
+        "with": "npc_ms_td_limao",
+        "type": "同巢照看",
+        "trust": 10,
+        "affection": 20,
+        "note": "栗毛是同巢最小的，他出巢前会替栗毛把巢口的草绳系紧，也教栗毛认巢口的结。"
+      }
+    ],
+    "memorySeeds": [
+      {
+        "id": "memory_t157_td_rope",
+        "event": "上个月圆那夜，栗衡、苔眠、青芷、栗针在长老树洞读一根新挂的气味绳，绳上记着北林边又被下了捕夹；栗针要求向河湾猎户追偿旧伤，苔眠主张先结缘再谈，当夜没有定下办法。",
+        "location": "site_ms_td_council",
+        "salience": 5,
+        "knownBy": [
+          "npc_ms_td_liheng",
+          "npc_ms_td_taimian",
+          "npc_ms_td_qingzhi",
+          "npc_ms_td_lizhen"
+        ],
+        "reliability": "亲历"
+      },
+      {
+        "id": "memory_t157_td_liheng_hound",
+        "event": "多年前他第一次去林缘换盐，被一条猎犬追进溪里，靠苔眠教的绕气味的法子才甩脱。",
+        "salience": 3,
+        "knownBy": [
+          "npc_ms_td_liheng"
+        ],
+        "reliability": "个人回忆"
+      }
+    ],
+    "goals": {
+      "short": [
+        {
+          "id": "goal_t157_td_liheng_short",
+          "content": "弄清河湾猎户新下的捕夹落在边界石哪一侧",
+          "progress": 0,
+          "deadlineDay": 30,
+          "resources": [
+            {
+              "kind": "协商",
+              "description": "须当事人另行确认的空闲时辰",
+              "availability": "unverified",
+              "grantsInventory": false
+            }
+          ],
+          "steps": [
+            {
+              "content": "趁夜沿北林边把边界石逐块闻一遍",
+              "status": "pending"
+            },
+            {
+              "content": "请苔铃在绳记坡给每只夹子打一个记结",
+              "status": "pending"
+            }
+          ]
+        }
+      ],
+      "mid": [
+        {
+          "id": "goal_t157_td_liheng_mid",
+          "content": "和河湾猎户把捕夹的边界说定",
+          "progress": 0,
+          "deadlineDay": 180,
+          "resources": [
+            {
+              "kind": "协商",
+              "description": "须当事人另行确认的空闲时辰",
+              "availability": "unverified",
+              "grantsInventory": false
+            }
+          ],
+          "steps": [
+            {
+              "content": "托青芷在换盐石带话约见",
+              "status": "pending"
+            },
+            {
+              "content": "先把栗针收走的夹子数清",
+              "status": "pending"
+            }
+          ]
+        }
+      ],
+      "long": [
+        {
+          "id": "goal_t157_td_liheng_long",
+          "content": "让苔灯坞的盐路和林子都能长久守住",
+          "progress": 0,
+          "deadlineDay": 720,
+          "resources": [
+            {
+              "kind": "协商",
+              "description": "须当事人另行确认的空闲时辰",
+              "availability": "unverified",
+              "grantsInventory": false
+            }
+          ],
+          "steps": [
+            {
+              "content": "教年轻成员认边界石",
+              "status": "pending"
+            },
+            {
+              "content": "在共食庭定下与外人往来都打绳记的规矩",
+              "status": "pending"
+            }
+          ]
+        }
+      ]
+    },
+    "fears": [
+      "怕年轻成员和猎户在边界上见了血，换盐的路从此断掉"
+    ],
+    "redLines": [
+      "亡者的尾结不能落在外人手里",
+      "护幼者那份盐不能挪用"
+    ],
+    "secrets": [
+      {
+        "content": "他私下也觉得栗针的伤该有人赔，只是不愿在共食庭说出来，怕把两边推得更远。",
+        "knownBy": [
+          "npc_ms_td_liheng"
+        ]
+      }
+    ],
+    "knowledge": {
+      "known": [
+        {
+          "fact": "北林边又被下了捕夹，记在绳记坡新挂的气味绳上。",
+          "source": "site_ms_td_ropes",
+          "reliability": "读过绳记"
+        },
+        {
+          "fact": "栗针在收夹洞里存着几只收来的捕夹。",
+          "source": "npc_ms_td_lizhen",
+          "reliability": "同巢亲见"
+        },
+        {
+          "fact": "青芷每晚在换盐石用药草和干果换盐。",
+          "source": "site_ms_td_saltstone",
+          "reliability": "多年往来"
+        }
+      ],
+      "unknown": [
+        "河湾村的猎户新下的捕夹是否越过了边界石？",
+        "栗针究竟收了多少只夹子？"
+      ]
+    },
+    "opinions": {
+      "factions": "河湾的人里有肯换盐的，也有只会下夹子的，不能一样看。",
+      "magic": "带火的法术最好在林缘就熄掉，坞里怕火。",
+      "adventurers": "外来人若肯替坞里和猎户传话，他愿意多换一份干果。",
+      "neighbors": [
+        {
+          "with": "npc_ms_td_lizhen",
+          "view": "伤是真的，可性子太急。"
+        },
+        {
+          "with": "npc_ms_td_taimian",
+          "view": "坞里的绳都在她心里，夜议少不了她。"
+        }
+      ]
+    },
+    "towardPlayer": {
+      "baseline": {
+        "trust": 0,
+        "affection": 0
+      },
+      "raises": [
+        "在林缘熄了火再来",
+        "带盐来换或替坞里传话"
+      ],
+      "lowers": [
+        "在北林里下夹子",
+        "靠近家巢和收夹洞探头"
+      ],
+      "attitude": "中立，愿意在共食庭的倒木边谈换盐和边界的事。"
+    },
+    "behaviorRules": {
+      "bargaining": "用手头的干果和药草换盐，换完就停，不赊。",
+      "honesty": "绳上记着的照实说，没记的说“没有绳”。",
+      "risk": "不越过边界石去找猎户。",
+      "threatResponse": "长嚎一声叫守林哨，带幼崽往家巢退。",
+      "bribeResponse": "收下的东西会请苔铃打成绳记，不因此替人瞒事。"
+    },
+    "serviceCatalog": [
+      {
+        "kind": "trade",
+        "what": "本人手头的干果与药草",
+        "price": {
+          "mode": "engineQuote"
+        },
+        "unlocksService": false
+      }
+    ],
+    "hooks": [
+      "捕夹边界之争",
+      "收夹洞里的夹子"
+    ],
+    "ttsVoice": "zh_male_steady_01",
+    "portraitPrompt": "原创苔灯狐坞主，赤中带灰的皮毛，尾尖一点苔绿冷光，尾根系栗色草绳尾结，左前爪缺一枚爪尖，坐在林下倒木旁",
+    "notes": "苔灯坞坞主，守林哨出身；夹在长老的结缘派和栗针的追偿派之间，想先把捕夹的边界说定。",
+    "description": "栗衡是苔灯坞的坞主，四十八岁，守林哨出身，左前爪少了一枚爪尖。河湾猎户把捕夹下进北林，年轻成员把夹子收走，他夹在长老苔眠和同巢后辈栗针之间，想先弄清夹子落在边界石哪一侧，再和猎户把边界说定。他说话低，先听完再开口，对人只说几个短词。"
+  },
+  {
+    "id": "npc_ms_td_taimian",
+    "name": "苔眠",
+    "aliases": [],
+    "tier": "full",
+    "age": 71,
+    "sex": "女",
+    "species": "monster_moss_lamp_fox",
+    "society": "loc_ms_taideng",
+    "culture": "culture_ms_taideng",
+    "settlement": "loc_ms_taideng",
+    "scope": "loc_ms_taideng",
+    "householdId": "house_ms_td_01",
+    "household": [
+      "npc_ms_td_taixu",
+      "npc_ms_td_tailing",
+      "npc_ms_td_taijian"
+    ],
+    "occupation": "结绳记事",
+    "traits": [
+      "慈和",
+      "念旧"
+    ],
+    "home": {
+      "location": "bld_ms_td_home_01",
+      "access": "同巢共居；进入私宅须先取得成年住户的有效许可。",
+      "ownership": "unspecified"
+    },
+    "location": "site_ms_td_ropes",
+    "flags": {
+      "minor": false,
+      "romanceable": false
+    },
+    "currentConcern": "她想在长老树洞把“结缘也要打绳记”的规矩说定，好让年轻成员不再把结缘看成软弱。",
+    "visibleFeature": "尾根系着缠了七圈的旧尾结，草绳早已褪成灰色。",
+    "trust": 0,
+    "affection": 0,
+    "coins": 0,
+    "birth": {
+      "year": -71,
+      "month": 12,
+      "day": 23
+    },
+    "inventory": {
+      "item_herb": 2
+    },
+    "skills": [],
+    "services": [],
+    "intelligence": {
+      "level": 2,
+      "growth": 0
+    },
+    "role": "长老",
+    "familyNotes": "苔眠与苔絮、苔铃和幼崽苔尖同住苔家巢；苔絮是坞里的护幼者，分食时苔眠总等苔尖吃完才动口。",
+    "appearance": [
+      "尾根系着缠了七圈的旧尾结，草绳早已褪成灰色。",
+      "口鼻周围的毛全白了",
+      "走路慢，常停下来嗅一嗅路边的草绳"
+    ],
+    "voice": {
+      "register": "声音细，说话慢，常拿旧事作比",
+      "accent": "老一辈的林下口音",
+      "habits": [
+        "说到要紧处用爪尖拨一下身边的草绳"
+      ],
+      "samples": [
+        "恩要记在绳上，仇也要记在绳上，记清了才好算。",
+        "人救过我一回，这个结我系了一辈子。",
+        "护幼的先吃，老的后吃，我不饿。"
+      ]
+    },
+    "personality": {
+      "traits": [
+        "慈和",
+        "念旧"
+      ],
+      "values": [
+        "受了恩要还，结了缘要守",
+        "绳上没记的话不当真"
+      ],
+      "flaws": [
+        "念旧太深，总拿多年前的事劝今天的年轻成员"
+      ]
+    },
+    "proficiencies": {},
+    "professions": [],
+    "level": 1,
+    "combat": null,
+    "wealth": {
+      "cashRange": [
+        0,
+        0
+      ],
+      "property": [],
+      "valuables": [],
+      "debts": []
+    },
+    "workplace": {
+      "location": "site_ms_td_council",
+      "access": "公共洞室或林地可当面招呼；工具和存物另问看管者。"
+    },
+    "schedule": {
+      "default": [
+        {
+          "start": 0,
+          "end": 60,
+          "location": "site_ms_td_ropes",
+          "activity": "在绳记坡读绳",
+          "services": []
+        },
+        {
+          "start": 60,
+          "end": 120,
+          "location": "site_ms_td_council",
+          "activity": "长老树洞夜议",
+          "services": []
+        },
+        {
+          "start": 120,
+          "end": 300,
+          "location": "site_ms_td_commons",
+          "activity": "在共食庭看护幼崽分食",
+          "services": []
+        },
+        {
+          "start": 300,
+          "end": 1080,
+          "location": "bld_ms_td_home_01",
+          "activity": "睡眠",
+          "services": []
+        },
+        {
+          "start": 1080,
+          "end": 1200,
+          "location": "bld_ms_td_home_01",
+          "activity": "理绳",
+          "services": []
+        },
+        {
+          "start": 1200,
+          "end": 1440,
+          "location": "site_ms_td_commons",
+          "activity": "在共食庭看护幼崽分食",
+          "services": []
+        }
+      ],
+      "market": [
+        {
+          "start": 0,
+          "end": 60,
+          "location": "site_ms_td_ropes",
+          "activity": "在绳记坡读绳",
+          "services": []
+        },
+        {
+          "start": 60,
+          "end": 120,
+          "location": "site_ms_td_council",
+          "activity": "长老树洞夜议",
+          "services": []
+        },
+        {
+          "start": 120,
+          "end": 300,
+          "location": "site_ms_td_commons",
+          "activity": "在共食庭看护幼崽分食",
+          "services": []
+        },
+        {
+          "start": 300,
+          "end": 1080,
+          "location": "bld_ms_td_home_01",
+          "activity": "睡眠",
+          "services": []
+        },
+        {
+          "start": 1080,
+          "end": 1200,
+          "location": "bld_ms_td_home_01",
+          "activity": "理绳",
+          "services": []
+        },
+        {
+          "start": 1200,
+          "end": 1440,
+          "location": "site_ms_td_commons",
+          "activity": "在共食庭看护幼崽分食",
+          "services": []
+        }
+      ],
+      "rest": [
+        {
+          "start": 0,
+          "end": 60,
+          "location": "site_ms_td_ropes",
+          "activity": "在绳记坡读绳",
+          "services": []
+        },
+        {
+          "start": 60,
+          "end": 120,
+          "location": "site_ms_td_council",
+          "activity": "长老树洞夜议",
+          "services": []
+        },
+        {
+          "start": 120,
+          "end": 300,
+          "location": "site_ms_td_commons",
+          "activity": "在共食庭看护幼崽分食",
+          "services": []
+        },
+        {
+          "start": 300,
+          "end": 1080,
+          "location": "bld_ms_td_home_01",
+          "activity": "睡眠",
+          "services": []
+        },
+        {
+          "start": 1080,
+          "end": 1200,
+          "location": "bld_ms_td_home_01",
+          "activity": "理绳",
+          "services": []
+        },
+        {
+          "start": 1200,
+          "end": 1440,
+          "location": "site_ms_td_commons",
+          "activity": "在共食庭看护幼崽分食",
+          "services": []
+        }
+      ],
+      "restDays": [],
+      "seasonal": {}
+    },
+    "relationships": [
+      {
+        "with": "npc_ms_td_liheng",
+        "type": "长老与坞主",
+        "trust": 28,
+        "affection": 12,
+        "note": "栗衡做坞主以后，她在夜议上主张容许成员与外人结缘，栗衡也赞成，并说每一次结缘都要打绳记。"
+      },
+      {
+        "with": "npc_ms_td_lizhen",
+        "type": "长老与后生",
+        "trust": 5,
+        "affection": 15,
+        "note": "栗针被捕夹夹伤后腿那夜，是她连夜嚼药草替他敷腿；如今栗针要追偿旧伤，她劝他先结缘再谈，他嫌她向着人。"
+      },
+      {
+        "with": "npc_ms_td_qingzhi",
+        "type": "结绳与药圃",
+        "trust": 20,
+        "affection": 12,
+        "note": "青芷在换盐石与人立的口约，有时拿来请她打成绳记；两人常在药圃边说药草。"
+      },
+      {
+        "with": "npc_ms_td_taixu",
+        "type": "同巢共养",
+        "trust": 25,
+        "affection": 20,
+        "note": "苔絮是同巢的护幼者，分食时苔眠总等苔絮带的幼崽吃完才动口。"
+      }
+    ],
+    "memorySeeds": [
+      {
+        "id": "memory_t157_td_rope",
+        "event": "上个月圆那夜，栗衡、苔眠、青芷、栗针在长老树洞读一根新挂的气味绳，绳上记着北林边又被下了捕夹；栗针要求向河湾猎户追偿旧伤，苔眠主张先结缘再谈，当夜没有定下办法。",
+        "location": "site_ms_td_council",
+        "salience": 5,
+        "knownBy": [
+          "npc_ms_td_liheng",
+          "npc_ms_td_taimian",
+          "npc_ms_td_qingzhi",
+          "npc_ms_td_lizhen"
+        ],
+        "reliability": "亲历"
+      },
+      {
+        "id": "memory_t157_td_taimian_freed",
+        "event": "很多年前她被捕夹夹住前爪，一个过路的采药人掰开夹子放了她，她在尾结上多缠了一圈记下这份恩。",
+        "salience": 5,
+        "knownBy": [
+          "npc_ms_td_taimian"
+        ],
+        "reliability": "个人回忆"
+      }
+    ],
+    "goals": {
+      "short": [
+        {
+          "id": "goal_t157_td_taimian_short",
+          "content": "在长老树洞说定结缘也要打绳记",
+          "progress": 0,
+          "deadlineDay": 30,
+          "resources": [
+            {
+              "kind": "协商",
+              "description": "须当事人另行确认的空闲时辰",
+              "availability": "unverified",
+              "grantsInventory": false
+            }
+          ],
+          "steps": [
+            {
+              "content": "夜议时把旧绳记一根根摆给大家看",
+              "status": "pending"
+            },
+            {
+              "content": "请栗衡在共食庭把这条规矩说给全坞听",
+              "status": "pending"
+            }
+          ]
+        }
+      ],
+      "mid": [
+        {
+          "id": "goal_t157_td_taimian_mid",
+          "content": "劝栗针先和河湾猎户结缘再谈旧伤",
+          "progress": 0,
+          "deadlineDay": 180,
+          "resources": [
+            {
+              "kind": "协商",
+              "description": "须当事人另行确认的空闲时辰",
+              "availability": "unverified",
+              "grantsInventory": false
+            }
+          ],
+          "steps": [
+            {
+              "content": "带栗针去绳记坡读几根记恩的旧绳",
+              "status": "pending"
+            },
+            {
+              "content": "托青芷在换盐石打听河湾村肯谈的人",
+              "status": "pending"
+            }
+          ]
+        }
+      ],
+      "long": [
+        {
+          "id": "goal_t157_td_taimian_long",
+          "content": "把气味绳的结法教给每一个能独自巡林的幼崽",
+          "progress": 0,
+          "deadlineDay": 720,
+          "resources": [
+            {
+              "kind": "协商",
+              "description": "须当事人另行确认的空闲时辰",
+              "availability": "unverified",
+              "grantsInventory": false
+            }
+          ],
+          "steps": [
+            {
+              "content": "每隔几夜在绳记坡教一回",
+              "status": "pending"
+            },
+            {
+              "content": "请结绳的苔铃一起教",
+              "status": "pending"
+            }
+          ]
+        }
+      ]
+    },
+    "fears": [
+      "怕自己记了一辈子的恩绳，到了年轻成员手里变成仇绳"
+    ],
+    "redLines": [
+      "亡者的尾结谁也不能拿走",
+      "药圃的新苗不让人踩"
+    ],
+    "secrets": [
+      {
+        "content": "当年放她走的采药人后来住进了河湾，她一直没去确认那户人家是谁。",
+        "knownBy": [
+          "npc_ms_td_taimian"
+        ]
+      }
+    ],
+    "knowledge": {
+      "known": [
+        {
+          "fact": "归土灯坪埋着苔家巢历代的亡者，尾结都收在长老树洞的龛里。",
+          "source": "site_ms_td_lampground",
+          "reliability": "亲手送葬"
+        },
+        {
+          "fact": "栗针前年冬天被捕夹夹伤后腿，是她替他敷的药。",
+          "source": "npc_ms_td_lizhen",
+          "reliability": "亲历"
+        },
+        {
+          "fact": "绳记坡新挂的气味绳记着北林边又被下了捕夹。",
+          "source": "site_ms_td_ropes",
+          "reliability": "亲手读绳"
+        }
+      ],
+      "unknown": [
+        "当年放她走的采药人是否还住在河湾？",
+        "栗针是否愿意先和猎户结缘再谈旧伤？"
+      ]
+    },
+    "opinions": {
+      "factions": "河湾村里有恩人也有下夹子的人，绳上要分开记。",
+      "magic": "会术的外来人，她先闻闻身上有没有火气。",
+      "adventurers": "外来人若肯把落在外头的尾结送回坞里，她会把这份恩记在绳上。",
+      "neighbors": [
+        {
+          "with": "npc_ms_td_liheng",
+          "view": "稳当，就是不爱表态。"
+        },
+        {
+          "with": "npc_ms_td_lizhen",
+          "view": "心里有伤，嘴上就硬。"
+        }
+      ]
+    },
+    "towardPlayer": {
+      "baseline": {
+        "trust": 5,
+        "affection": 5
+      },
+      "raises": [
+        "把落在外头的尾结送回坞里",
+        "守约并请她打绳记"
+      ],
+      "lowers": [
+        "在归土灯坪翻土",
+        "对幼崽大声吆喝"
+      ],
+      "attitude": "和气，愿意听来人说话，也会把来人的话打成绳记。"
+    },
+    "behaviorRules": {
+      "bargaining": "她不做买卖。",
+      "honesty": "绳上记着的照实说，记不清的说“绳烂了”。",
+      "risk": "不出坞，夜里在绳记坡、长老树洞和共食庭之间走动。",
+      "threatResponse": "护着幼崽退进家巢，叫苔絮先带走小的。",
+      "bribeResponse": "私下塞给她的东西她不收，只把来人守约的事打成绳记，不替人瞒事。"
+    },
+    "serviceCatalog": [],
+    "hooks": [
+      "结缘报恩",
+      "落在外头的尾结"
+    ],
+    "ttsVoice": "zh_female_calm_01",
+    "portraitPrompt": "原创年老苔灯狐长老，口鼻周围毛色全白，尾尖苔光微弱，尾根系七圈灰色旧尾结，坐在挂满草绳的缓坡上",
+    "notes": "苔灯坞长老，管气味绳记事；结缘派的主心骨，主张先结缘再谈追偿。",
+    "description": "苔眠是苔灯坞的长老，七十一岁，管着绳记坡的气味绳，尾根那枚旧尾结缠了七圈。很多年前一个采药人从捕夹里放了她，她一直记着这份恩，所以容许成员与外人结下互助之缘，只要求每回都打绳记。栗针要追偿旧伤，她劝他先结缘再谈。"
+  },
+  {
+    "id": "npc_ms_td_qingzhi",
+    "name": "青芷",
+    "aliases": [],
+    "tier": "full",
+    "age": 35,
+    "sex": "女",
+    "species": "monster_moss_lamp_fox",
+    "society": "loc_ms_taideng",
+    "culture": "culture_ms_taideng",
+    "settlement": "loc_ms_taideng",
+    "scope": "loc_ms_taideng",
+    "householdId": "house_ms_td_02",
+    "household": [
+      "npc_ms_td_qingpeng",
+      "npc_ms_td_qingsui",
+      "npc_ms_td_qingyuan"
+    ],
+    "occupation": "采药",
+    "traits": [
+      "伶俐",
+      "爱算"
+    ],
+    "home": {
+      "location": "bld_ms_td_home_02",
+      "access": "同巢共居；进入私宅须先取得成年住户的有效许可。",
+      "ownership": "unspecified"
+    },
+    "location": "site_ms_td_garden",
+    "flags": {
+      "minor": false,
+      "romanceable": false
+    },
+    "currentConcern": "药圃靠溪那一畦还没翻土，她怕下一旬拿得出手的药草跟不上，换回的盐不够护幼者分。",
+    "visibleFeature": "前爪的毛被药汁染成淡绿，洗不掉。",
+    "trust": 0,
+    "affection": 0,
+    "coins": 12,
+    "birth": {
+      "year": -35,
+      "month": 12,
+      "day": 23
+    },
+    "inventory": {
+      "item_herb": 14,
+      "item_dried_fruit": 10
+    },
+    "skills": [],
+    "services": [
+      "trade"
+    ],
+    "intelligence": {
+      "level": 2,
+      "growth": 0
+    },
+    "role": "药圃管事",
+    "familyNotes": "青芷与青蓬、青穗和幼崽青圆同住青家巢；青圆想跟她去换盐石看人，她只让青圆躲在树后看。",
+    "appearance": [
+      "前爪的毛被药汁染成淡绿，洗不掉。",
+      "颈上常挂一只空盐袋",
+      "青色尾结上夹着一片干药叶"
+    ],
+    "voice": {
+      "register": "说话脆，算数快，讲价时一样一样摆出来",
+      "accent": "林下口音，对人能说十来个短词",
+      "habits": [
+        "把要换的药草一把一把摆成一排再开口"
+      ],
+      "samples": [
+        "药草，一把。干果，一袋。盐，多少？",
+        "绳上记着的，下回照样换。",
+        "停换盐？护幼的先饿。"
+      ]
+    },
+    "personality": {
+      "traits": [
+        "伶俐",
+        "爱算"
+      ],
+      "values": [
+        "护幼者的盐一粒也不能少",
+        "换东西要两边都打绳记"
+      ],
+      "flaws": [
+        "算得太细，有时让来换盐的人不耐烦"
+      ]
+    },
+    "proficiencies": {},
+    "professions": [],
+    "level": 1,
+    "combat": null,
+    "wealth": {
+      "cashRange": [
+        12,
+        12
+      ],
+      "property": [],
+      "valuables": [],
+      "debts": []
+    },
+    "workplace": {
+      "location": "site_ms_td_saltstone",
+      "access": "公共洞室或林地可当面招呼；工具和存物另问看管者。"
+    },
+    "schedule": {
+      "default": [
+        {
+          "start": 0,
+          "end": 180,
+          "location": "site_ms_td_garden",
+          "activity": "照看药圃",
+          "services": []
+        },
+        {
+          "start": 180,
+          "end": 300,
+          "location": "site_ms_td_commons",
+          "activity": "在共食庭分食",
+          "services": []
+        },
+        {
+          "start": 300,
+          "end": 1080,
+          "location": "bld_ms_td_home_02",
+          "activity": "睡眠",
+          "services": []
+        },
+        {
+          "start": 1080,
+          "end": 1320,
+          "location": "site_ms_td_saltstone",
+          "activity": "在换盐石换盐",
+          "services": [
+            "trade"
+          ]
+        },
+        {
+          "start": 1320,
+          "end": 1440,
+          "location": "site_ms_td_garden",
+          "activity": "照看药圃",
+          "services": []
+        }
+      ],
+      "market": [
+        {
+          "start": 0,
+          "end": 180,
+          "location": "site_ms_td_garden",
+          "activity": "照看药圃",
+          "services": []
+        },
+        {
+          "start": 180,
+          "end": 300,
+          "location": "site_ms_td_commons",
+          "activity": "在共食庭分食",
+          "services": []
+        },
+        {
+          "start": 300,
+          "end": 1080,
+          "location": "bld_ms_td_home_02",
+          "activity": "睡眠",
+          "services": []
+        },
+        {
+          "start": 1080,
+          "end": 1320,
+          "location": "site_ms_td_saltstone",
+          "activity": "在换盐石换盐",
+          "services": [
+            "trade"
+          ]
+        },
+        {
+          "start": 1320,
+          "end": 1440,
+          "location": "site_ms_td_garden",
+          "activity": "照看药圃",
+          "services": []
+        }
+      ],
+      "rest": [
+        {
+          "start": 0,
+          "end": 180,
+          "location": "site_ms_td_garden",
+          "activity": "照看药圃",
+          "services": []
+        },
+        {
+          "start": 180,
+          "end": 300,
+          "location": "site_ms_td_commons",
+          "activity": "在共食庭分食",
+          "services": []
+        },
+        {
+          "start": 300,
+          "end": 1080,
+          "location": "bld_ms_td_home_02",
+          "activity": "睡眠",
+          "services": []
+        },
+        {
+          "start": 1080,
+          "end": 1320,
+          "location": "site_ms_td_saltstone",
+          "activity": "在换盐石换盐",
+          "services": [
+            "trade"
+          ]
+        },
+        {
+          "start": 1320,
+          "end": 1440,
+          "location": "site_ms_td_garden",
+          "activity": "照看药圃",
+          "services": []
+        }
+      ],
+      "restDays": [],
+      "seasonal": {}
+    },
+    "relationships": [
+      {
+        "with": "npc_ms_td_liheng",
+        "type": "坞主与药圃管事",
+        "trust": 22,
+        "affection": 8,
+        "note": "她换来的盐按护幼者先分的规矩分下去，栗衡当坞主盯着这条规矩；两人为该不该停一旬换盐、逼猎户来谈边界争过，她不肯停。"
+      },
+      {
+        "with": "npc_ms_td_taimian",
+        "type": "结绳与药圃",
+        "trust": 20,
+        "affection": 12,
+        "note": "她在换盐石与人立的口约，都请苔眠打成绳记；两人一起在归土灯坪边挑过药草。"
+      },
+      {
+        "with": "npc_ms_td_lizhen",
+        "type": "互相埋怨",
+        "trust": -8,
+        "affection": 6,
+        "note": "栗针收走猎户的夹子后，来换盐石的猎户少了，她当面怪过他；他说她只顾着盐。"
+      },
+      {
+        "with": "npc_ms_td_qingpeng",
+        "type": "同巢采药",
+        "trust": 20,
+        "affection": 14,
+        "note": "青蓬是她在药圃的帮手，常替她去林下采药草，回来交给她挑。"
+      }
+    ],
+    "memorySeeds": [
+      {
+        "id": "memory_t157_td_rope",
+        "event": "上个月圆那夜，栗衡、苔眠、青芷、栗针在长老树洞读一根新挂的气味绳，绳上记着北林边又被下了捕夹；栗针要求向河湾猎户追偿旧伤，苔眠主张先结缘再谈，当夜没有定下办法。",
+        "location": "site_ms_td_council",
+        "salience": 5,
+        "knownBy": [
+          "npc_ms_td_liheng",
+          "npc_ms_td_taimian",
+          "npc_ms_td_qingzhi",
+          "npc_ms_td_lizhen"
+        ],
+        "reliability": "亲历"
+      },
+      {
+        "id": "memory_t157_td_qingzhi_peddler",
+        "event": "去年秋天一个过路货郎在换盐石少放了一包盐，她记下了那人的气味，下回那人再来，她就不换了。",
+        "location": "site_ms_td_saltstone",
+        "salience": 3,
+        "knownBy": [
+          "npc_ms_td_qingzhi"
+        ],
+        "reliability": "个人回忆"
+      }
+    ],
+    "goals": {
+      "short": [
+        {
+          "id": "goal_t157_td_qingzhi_short",
+          "content": "这一旬多收几把药草好换够盐",
+          "progress": 0,
+          "deadlineDay": 30,
+          "resources": [
+            {
+              "kind": "协商",
+              "description": "须当事人另行确认的空闲时辰",
+              "availability": "unverified",
+              "grantsInventory": false
+            }
+          ],
+          "steps": [
+            {
+              "content": "把药圃靠溪那一畦也翻出来",
+              "status": "pending"
+            },
+            {
+              "content": "请青蓬多去林下采一趟",
+              "status": "pending"
+            }
+          ]
+        }
+      ],
+      "mid": [
+        {
+          "id": "goal_t157_td_qingzhi_mid",
+          "content": "让河湾猎户回换盐石来换盐",
+          "progress": 0,
+          "deadlineDay": 180,
+          "resources": [
+            {
+              "kind": "协商",
+              "description": "须当事人另行确认的空闲时辰",
+              "availability": "unverified",
+              "grantsInventory": false
+            }
+          ],
+          "steps": [
+            {
+              "content": "托来换盐的人带话说坞里愿意谈夹子的事",
+              "status": "pending"
+            },
+            {
+              "content": "把栗针收的夹子数报给栗衡",
+              "status": "pending"
+            }
+          ]
+        }
+      ],
+      "long": [
+        {
+          "id": "goal_t157_td_qingzhi_long",
+          "content": "让药圃的药草不靠运气也年年够换",
+          "progress": 0,
+          "deadlineDay": 720,
+          "resources": [
+            {
+              "kind": "协商",
+              "description": "须当事人另行确认的空闲时辰",
+              "availability": "unverified",
+              "grantsInventory": false
+            }
+          ],
+          "steps": [
+            {
+              "content": "在药圃旁多开一畦种块根",
+              "status": "pending"
+            },
+            {
+              "content": "请苔眠教她给药圃打记结",
+              "status": "pending"
+            }
+          ]
+        }
+      ]
+    },
+    "fears": [
+      "怕边界的事闹大，换盐石从此没人来"
+    ],
+    "redLines": [
+      "护幼者那份盐不拿去换别的",
+      "不跟没打绳记的人做第二回买卖"
+    ],
+    "secrets": [
+      {
+        "content": "她私下给过一个河湾猎户一把止血的药草，换他少往北林里下夹子，这件事没有打绳记。",
+        "knownBy": [
+          "npc_ms_td_qingzhi"
+        ]
+      }
+    ],
+    "knowledge": {
+      "known": [
+        {
+          "fact": "换盐石每晚都有人来，河湾猎户比以前来得少了。",
+          "source": "site_ms_td_saltstone",
+          "reliability": "亲手经办"
+        },
+        {
+          "fact": "药圃靠溪那一畦还没翻土。",
+          "source": "site_ms_td_garden",
+          "reliability": "每晚照看"
+        },
+        {
+          "fact": "栗针收走了好几只猎户的捕夹，存在收夹洞里。",
+          "source": "npc_ms_td_lizhen",
+          "reliability": "听栗针亲口说"
+        }
+      ],
+      "unknown": [
+        "河湾猎户是否还会回换盐石换盐？",
+        "收夹洞里的夹子是河湾村哪一户猎户下的？"
+      ]
+    },
+    "opinions": {
+      "factions": "镇上的货郎只认盐包，河湾的猎户还认绳记。",
+      "magic": "会术的外来人别在药圃边点火，新苗经不起。",
+      "adventurers": "外来人带盐来换，她先看盐袋满不满。",
+      "neighbors": [
+        {
+          "with": "npc_ms_td_qingpeng",
+          "view": "肯出力，就是采药时爱走神。"
+        },
+        {
+          "with": "npc_ms_td_lizhen",
+          "view": "替自己的腿出气，害得盐路也冷了。"
+        }
+      ]
+    },
+    "towardPlayer": {
+      "baseline": {
+        "trust": 0,
+        "affection": 0
+      },
+      "raises": [
+        "带满袋的盐来换",
+        "照绳记守约"
+      ],
+      "lowers": [
+        "少放盐又想拿走药草",
+        "踩药圃的新苗"
+      ],
+      "attitude": "把来人当换盐的看，先摆出药草问带了多少盐。"
+    },
+    "behaviorRules": {
+      "bargaining": "只拿手头的药草和干果换，换完就没有，先看盐再给货。",
+      "honesty": "少了就说少了，不把干果说成新采的。",
+      "risk": "不越过换盐石去人那边。",
+      "threatResponse": "叼起空盐袋退进林子，叫守林哨。",
+      "bribeResponse": "多给的盐照样记绳，护幼那份先分出去。"
+    },
+    "serviceCatalog": [
+      {
+        "kind": "trade",
+        "what": "本人看管的药草与干果",
+        "price": {
+          "mode": "engineQuote"
+        },
+        "unlocksService": false
+      }
+    ],
+    "hooks": [
+      "在换盐石用药草和干果换盐",
+      "药圃缺人手"
+    ],
+    "ttsVoice": "zh_female_bright_01",
+    "portraitPrompt": "原创苔灯狐药圃管事，赤灰皮毛，前爪毛被药汁染淡绿，颈挂空盐袋，青色尾结夹干药叶，蹲在林缘大青石旁",
+    "notes": "苔灯坞药圃管事，夜里在换盐石用药草和干果换盐；结缘派，怪栗针收夹子冷了盐路。",
+    "description": "青芷是苔灯坞的药圃管事，三十五岁，前爪被药汁染成淡绿。她管药圃，天黑后在换盐石摆出药草和干果，换河湾猎户和货郎带来的盐，换回的盐先分给护幼者。栗针收走猎户的夹子后来换盐的人少了，她当面怪过他。"
+  },
+  {
+    "id": "npc_ms_td_lizhen",
+    "name": "栗针",
+    "aliases": [],
+    "tier": "full",
+    "age": 22,
+    "sex": "男",
+    "species": "monster_moss_lamp_fox",
+    "society": "loc_ms_taideng",
+    "culture": "culture_ms_taideng",
+    "settlement": "loc_ms_taideng",
+    "scope": "loc_ms_taideng",
+    "householdId": "house_ms_td_03",
+    "household": [
+      "npc_ms_td_liheng",
+      "npc_ms_td_lizhi",
+      "npc_ms_td_limao"
+    ],
+    "occupation": "守林哨",
+    "traits": [
+      "倔",
+      "护短"
+    ],
+    "home": {
+      "location": "bld_ms_td_home_03",
+      "access": "同巢共居；进入私宅须先取得成年住户的有效许可。",
+      "ownership": "unspecified"
+    },
+    "location": "site_ms_td_trapcache",
+    "flags": {
+      "minor": false,
+      "romanceable": false
+    },
+    "currentConcern": "他要河湾猎户为他和另外几只被夹伤的狐给个说法，不想再等长老的结缘。",
+    "visibleFeature": "左后腿走路微跛，腿上有一圈捕夹留下的秃痕。",
+    "trust": 0,
+    "affection": 0,
+    "coins": 0,
+    "birth": {
+      "year": -22,
+      "month": 11,
+      "day": 16
+    },
+    "inventory": {},
+    "skills": [],
+    "services": [],
+    "intelligence": {
+      "level": 2,
+      "growth": 0
+    },
+    "role": "持不同主张者",
+    "familyNotes": "栗针与栗衡、栗枝和幼崽栗毛同住栗家巢；他教栗毛怎么闻出捕夹上的铁锈味。",
+    "appearance": [
+      "左后腿走路微跛，腿上有一圈捕夹留下的秃痕。",
+      "尾结系得又紧又短，是他自己打的",
+      "眼神总往林缘那边瞟"
+    ],
+    "voice": {
+      "register": "话不多，开口就顶",
+      "accent": "年轻一辈的林下口音",
+      "habits": [
+        "说到猎户时后腿会不自觉地缩一下"
+      ],
+      "samples": [
+        "夹子是他们下的，腿是我伤的。",
+        "结缘？先把这笔记在绳上。",
+        "收夹洞里的，等他们来认。"
+      ]
+    },
+    "personality": {
+      "traits": [
+        "倔",
+        "护短"
+      ],
+      "values": [
+        "伤了的要有人认",
+        "同巢的不能白白吃亏"
+      ],
+      "flaws": [
+        "记仇，听不进劝"
+      ]
+    },
+    "proficiencies": {},
+    "professions": [],
+    "level": 1,
+    "combat": null,
+    "wealth": {
+      "cashRange": [
+        0,
+        0
+      ],
+      "property": [],
+      "valuables": [],
+      "debts": []
+    },
+    "workplace": {
+      "location": "site_ms_td_trapcache",
+      "access": "公共洞室或林地可当面招呼；工具和存物另问看管者。"
+    },
+    "schedule": {
+      "default": [
+        {
+          "start": 0,
+          "end": 60,
+          "location": "site_ms_td_trapcache",
+          "activity": "在收夹洞清点捕夹",
+          "services": []
+        },
+        {
+          "start": 60,
+          "end": 120,
+          "location": "site_ms_td_council",
+          "activity": "长老树洞夜议",
+          "services": []
+        },
+        {
+          "start": 120,
+          "end": 300,
+          "location": "loc_hw_northwood",
+          "activity": "沿北林边巡林、收夹子",
+          "services": []
+        },
+        {
+          "start": 300,
+          "end": 1080,
+          "location": "bld_ms_td_home_03",
+          "activity": "睡眠",
+          "services": []
+        },
+        {
+          "start": 1080,
+          "end": 1140,
+          "location": "bld_ms_td_home_03",
+          "activity": "起身",
+          "services": []
+        },
+        {
+          "start": 1140,
+          "end": 1440,
+          "location": "site_ms_td_trapcache",
+          "activity": "在收夹洞清点捕夹",
+          "services": []
+        }
+      ],
+      "market": [
+        {
+          "start": 0,
+          "end": 60,
+          "location": "site_ms_td_trapcache",
+          "activity": "在收夹洞清点捕夹",
+          "services": []
+        },
+        {
+          "start": 60,
+          "end": 120,
+          "location": "site_ms_td_council",
+          "activity": "长老树洞夜议",
+          "services": []
+        },
+        {
+          "start": 120,
+          "end": 300,
+          "location": "loc_hw_northwood",
+          "activity": "沿北林边巡林、收夹子",
+          "services": []
+        },
+        {
+          "start": 300,
+          "end": 1080,
+          "location": "bld_ms_td_home_03",
+          "activity": "睡眠",
+          "services": []
+        },
+        {
+          "start": 1080,
+          "end": 1140,
+          "location": "bld_ms_td_home_03",
+          "activity": "起身",
+          "services": []
+        },
+        {
+          "start": 1140,
+          "end": 1440,
+          "location": "site_ms_td_trapcache",
+          "activity": "在收夹洞清点捕夹",
+          "services": []
+        }
+      ],
+      "rest": [
+        {
+          "start": 0,
+          "end": 60,
+          "location": "site_ms_td_trapcache",
+          "activity": "在收夹洞清点捕夹",
+          "services": []
+        },
+        {
+          "start": 60,
+          "end": 120,
+          "location": "site_ms_td_council",
+          "activity": "长老树洞夜议",
+          "services": []
+        },
+        {
+          "start": 120,
+          "end": 300,
+          "location": "loc_hw_northwood",
+          "activity": "沿北林边巡林、收夹子",
+          "services": []
+        },
+        {
+          "start": 300,
+          "end": 1080,
+          "location": "bld_ms_td_home_03",
+          "activity": "睡眠",
+          "services": []
+        },
+        {
+          "start": 1080,
+          "end": 1140,
+          "location": "bld_ms_td_home_03",
+          "activity": "起身",
+          "services": []
+        },
+        {
+          "start": 1140,
+          "end": 1440,
+          "location": "site_ms_td_trapcache",
+          "activity": "在收夹洞清点捕夹",
+          "services": []
+        }
+      ],
+      "restDays": [],
+      "seasonal": {}
+    },
+    "relationships": [
+      {
+        "with": "npc_ms_td_liheng",
+        "type": "坞主与追偿派",
+        "trust": 0,
+        "affection": 18,
+        "note": "栗衡是同巢的长辈，劝他先认边界石再说；他觉得栗衡只想着盐路。"
+      },
+      {
+        "with": "npc_ms_td_taimian",
+        "type": "长老与后生",
+        "trust": 5,
+        "affection": 15,
+        "note": "前年冬天他被捕夹夹伤后腿，是苔眠连夜嚼药草替他敷腿；如今她劝他先结缘再谈，他嫌她向着人。"
+      },
+      {
+        "with": "npc_ms_td_qingzhi",
+        "type": "互相埋怨",
+        "trust": -8,
+        "affection": 6,
+        "note": "青芷怪他收走夹子让猎户少来换盐；他回她一句只顾着盐。"
+      },
+      {
+        "with": "npc_ms_td_lizhi",
+        "type": "同巢巡林",
+        "trust": 30,
+        "affection": 20,
+        "note": "栗枝和他一起巡北林边，收夹子时是她在一旁放哨。"
+      }
+    ],
+    "memorySeeds": [
+      {
+        "id": "memory_t157_td_rope",
+        "event": "上个月圆那夜，栗衡、苔眠、青芷、栗针在长老树洞读一根新挂的气味绳，绳上记着北林边又被下了捕夹；栗针要求向河湾猎户追偿旧伤，苔眠主张先结缘再谈，当夜没有定下办法。",
+        "location": "site_ms_td_council",
+        "salience": 5,
+        "knownBy": [
+          "npc_ms_td_liheng",
+          "npc_ms_td_taimian",
+          "npc_ms_td_qingzhi",
+          "npc_ms_td_lizhen"
+        ],
+        "reliability": "亲历"
+      },
+      {
+        "id": "memory_t157_td_lizhen_trap",
+        "event": "前年冬天他在北林边踩进捕夹，挣到天亮才被栗枝找到。",
+        "location": "loc_hw_northwood",
+        "salience": 5,
+        "knownBy": [
+          "npc_ms_td_lizhen"
+        ],
+        "reliability": "个人回忆"
+      }
+    ],
+    "goals": {
+      "short": [
+        {
+          "id": "goal_t157_td_lizhen_short",
+          "content": "把北林边新下的捕夹都收进收夹洞",
+          "progress": 0,
+          "deadlineDay": 30,
+          "resources": [
+            {
+              "kind": "协商",
+              "description": "须当事人另行确认的空闲时辰",
+              "availability": "unverified",
+              "grantsInventory": false
+            }
+          ],
+          "steps": [
+            {
+              "content": "和栗枝趁夜沿边界巡一遍",
+              "status": "pending"
+            },
+            {
+              "content": "给每只收来的夹子打一个记结",
+              "status": "pending"
+            }
+          ]
+        }
+      ],
+      "mid": [
+        {
+          "id": "goal_t157_td_lizhen_mid",
+          "content": "让河湾猎户为被夹伤的狐认个说法",
+          "progress": 0,
+          "deadlineDay": 180,
+          "resources": [
+            {
+              "kind": "协商",
+              "description": "须当事人另行确认的空闲时辰",
+              "availability": "unverified",
+              "grantsInventory": false
+            }
+          ],
+          "steps": [
+            {
+              "content": "把伤绳拿到长老树洞当众念",
+              "status": "pending"
+            },
+            {
+              "content": "请来换盐的人给猎户带话",
+              "status": "pending"
+            }
+          ]
+        }
+      ],
+      "long": [
+        {
+          "id": "goal_t157_td_lizhen_long",
+          "content": "让苔灯坞的年轻成员也能在长老树洞说上话",
+          "progress": 0,
+          "deadlineDay": 720,
+          "resources": [
+            {
+              "kind": "协商",
+              "description": "须当事人另行确认的空闲时辰",
+              "availability": "unverified",
+              "grantsInventory": false
+            }
+          ],
+          "steps": [
+            {
+              "content": "拉更多年轻成员来夜议",
+              "status": "pending"
+            },
+            {
+              "content": "请栗衡在共食庭让年轻成员轮着开口",
+              "status": "pending"
+            }
+          ]
+        }
+      ]
+    },
+    "fears": [
+      "怕自己的腿再也跑不快，巡林时拖累栗枝"
+    ],
+    "redLines": [
+      "不把收来的夹子还给不认账的人",
+      "不伤来换盐的人"
+    ],
+    "secrets": [
+      {
+        "content": "收夹洞里有一只夹子其实是在边界石外侧收的，不在坞里的林子。",
+        "knownBy": [
+          "npc_ms_td_lizhen",
+          "npc_ms_td_lizhi"
+        ]
+      }
+    ],
+    "knowledge": {
+      "known": [
+        {
+          "fact": "收夹洞里存着他和栗枝收来的捕夹，每只都打了记结。",
+          "source": "site_ms_td_trapcache",
+          "reliability": "亲手收存"
+        },
+        {
+          "fact": "收夹洞壁上那根伤绳记着四只被捕夹夹伤的狐。",
+          "source": "site_ms_td_trapcache",
+          "reliability": "亲手打的结"
+        },
+        {
+          "fact": "河湾猎户下夹子的那段林子在北林边。",
+          "source": "loc_hw_northwood",
+          "reliability": "巡林亲见"
+        }
+      ],
+      "unknown": [
+        "河湾村是哪一户猎户在北林边下的夹子？",
+        "长老树洞是否会让追偿旧伤的议题上夜议？"
+      ]
+    },
+    "opinions": {
+      "factions": "河湾的人下夹子不打招呼，谈结缘之前先得认账。",
+      "magic": "会术的外来人他不怕，只怕带夹子的。",
+      "adventurers": "外来人要是肯替被夹伤的狐去讨说法，他愿意领路。",
+      "neighbors": [
+        {
+          "with": "npc_ms_td_lizhi",
+          "view": "放哨最稳，信得过。"
+        },
+        {
+          "with": "npc_ms_td_liheng",
+          "view": "只顾盐路，忘了腿。"
+        }
+      ]
+    },
+    "towardPlayer": {
+      "baseline": {
+        "trust": -5,
+        "affection": 0
+      },
+      "raises": [
+        "替被夹伤的狐讨说法",
+        "拆掉北林里的捕夹"
+      ],
+      "lowers": [
+        "替猎户来要夹子",
+        "打听收夹洞里的东西"
+      ],
+      "attitude": "警惕，先问来人是不是替猎户来的。"
+    },
+    "behaviorRules": {
+      "bargaining": "他不换东西，收来的夹子也不卖。",
+      "honesty": "伤的事照实说，收夹子的地点只说一半。",
+      "risk": "敢在北林边和猎户周旋，不进河湾村。",
+      "threatResponse": "龇牙后退，长嚎叫栗枝。",
+      "bribeResponse": "不收猎户的东西，收了也当着大家扔回去。"
+    },
+    "serviceCatalog": [],
+    "hooks": [
+      "追偿旧伤",
+      "收夹洞里那只边界外的夹子"
+    ],
+    "ttsVoice": "zh_male_young_01",
+    "portraitPrompt": "原创年轻苔灯狐守林哨，赤灰皮毛，左后腿一圈秃痕微跛，尾结短而紧，尾尖苔光，站在挂着铁夹的旧根洞口",
+    "notes": "苔灯坞守林哨，追偿派带头人；前年冬天被捕夹夹伤后腿，看管收夹洞。",
+    "description": "栗针是苔灯坞的守林哨，二十二岁，前年冬天在北林边踩进捕夹，左后腿至今微跛。他带着栗枝收走北林边的捕夹存进收夹洞，要河湾猎户为被夹伤的狐给个说法，不愿再等长老的结缘。他话不多，开口就顶，说到猎户时后腿会不自觉地缩一下。"
   }
 ]
