@@ -4,6 +4,7 @@
 import {scheduleAt,advanceWithNpcParticipants,validateNpcSchedules}from'./npc-schedule.mjs';
 import {effectiveProficiency}from'./professions.mjs';
 import {npcSchedule}from'./npc-state.mjs';
+import {growIntelligence,GROWTH_POINTS}from'./npc-intelligence.mjs';
 
 const DAY=1440,unable=['死亡','濒死','昏迷','患病'],sleeping=/睡眠|睡觉|熟睡/;
 const rules=engine=>{const r=engine.rules.npcGrowth;if(!r)throw Error('世界规则没有登记人物成长');return r;};
@@ -71,6 +72,8 @@ export function teachNpc(d,engine,args,eventId){
  d.set(['state','npcs',student,'growth','today'],{...mark,teach:mark.teach+1});
  const name=engine.byId.get(student).name,summary=kind==='skill'?`跟玩家学了${minutes}分钟${catalog.name}，熟练度提高${gain}`:`跟玩家学会配方${catalog.name}`;
  remember(d,engine,student,eventId,`${name}${summary}。`,['player',student]);
+ // 被教导是灵智成长的来源之一；学会新配方算接触新事物，比熟练度增长略多。
+ growIntelligence(d,engine,student,kind==='recipe'?GROWTH_POINTS.teachRecipe:GROWTH_POINTS.teachSkill,'教导',eventId);
  d.say(`${name}${summary}`);
  return{student,entity,kind,minutes,gained:gain,...(skill?{proficiency:npcProficiency(engine,d.get('state'),student,skill)}:{})};
 }

@@ -20,6 +20,7 @@ import {npcLifeLines,npcAgeAt}from'./npc-life.mjs';
 import {standing,standingWords}from'./standing.mjs';
 import {societyAt}from'./monster-society.mjs';
 import {settlementAt}from'./reputation.mjs';
+import {intelligenceSign,adaptedTricks}from'./npc-intelligence.mjs';
 
 const text=(value,limit=200)=>typeof value==='string'?value.replace(/\s+/g,' ').slice(0,limit):'';
 const list=value=>Array.isArray(value)?value.map(row=>typeof row==='string'?row:row.content??row.description??'').filter(Boolean).join('；'):text(value);
@@ -71,6 +72,9 @@ export function sceneCard(engine,document,query='',index=null){
         // The person in front of you: their own household, health and move.
         const life=engine.rules.npcLife?npcLifeLines(engine,s,id,{changedOnly:true}):[];
         if(life.length)parts.push(`  家况，当面可知：${text(life.join('；'),compactPeople?100:200)}`);
+        // 灵智成长与防备只给世界内迹象，不给等级数字。
+        const sign=intelligenceSign(s,id),wary=adaptedTricks(engine,s,id);
+        if(sign||wary.length)parts.push(`  近来变化：${text([sign,wary.length?`对你惯用的${wary.join('、')}手法已起防备`:''].filter(Boolean).join('；'),120)}`);
         if(context?.background?.relations.length)parts.push(`  本人已有往来及对方公开职务：${context.background.relations.map(row=>`${row.name}（${row.with}） ${row.publicRole}｜${row.type}：${row.note}｜来源 ${row.source}`).join('；')}`);
         if(context?.background&&mentioned.has(id))parts.push(`  本人今日作息背景：${context.background.schedule.slots.map(row=>`${engine.calendar(row.start).text}至${engine.calendar(row.end).text} ${name(row.location)}：${row.activity}｜来源 ${row.source}`).join('；')}。当前确认：${JSON.stringify(context.background.schedule.current)}。${context.background.schedule.limit}`);
         if(context?.opinions?.length)parts.push(`  本人已获知事件的看法：${context.opinions.slice(0,2).map(row=>`${text(row.label,60)}｜${STANCE_LABEL[row.stance]}（${row.basis}，${row.sourceType}）`).join('；')}`);
@@ -92,6 +96,8 @@ export function sceneCard(engine,document,query='',index=null){
     if(features.length)parts.push(`【可见环境】${features.slice(0,3).map(row=>`${row.name??name(row.id)}（${row.id}）${row.waterMl!==undefined?`，现有水${row.waterMl}毫升`:''}`).join('；')}`);
     const animals=petView(engine,document).presentAnimals;
     const spirits=spiritScene(engine,document);if(spirits)parts.push(spirits);
+    const spiritSigns=Object.entries(s.creatures??{}).filter(([id,a])=>a.location===s.location&&a.status!=='死亡'&&intelligenceSign(s,id)).slice(0,3);
+    if(spiritSigns.length)parts.push(`【精怪近况】${spiritSigns.map(([id,a])=>`${a.name??name(a.species)}（${id}）${intelligenceSign(s,id)}`).join('；')}`);
     if(animals.length)parts.push(`【在场动物】${animals.slice(0,3).map(row=>`${row.name??row.id}（${row.id}）`).join('；')}`);
     const encounters=wildlifeEncounterView(document);
     if(encounters.length)parts.push(`【野外接触】${encounters.map(row=>`${row.name}（${row.target??row.species}）｜${text(row.description,120)}｜${engine.calendar(row.minute).text}，来源${row.source}`).join('；')}。可沿路离开避开；踪迹可用world_wildlife追踪，在场个体可用实际编号接触。`);
