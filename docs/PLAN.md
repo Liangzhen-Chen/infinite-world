@@ -292,11 +292,7 @@ N1–N17至少12项完整有效且≥90%，N6/N16零泄漏，N12真实盲辨，N
 
 ### T158（S3）已完成：玩家可与聚居地首领立约（贸易、朝贡、通行，按10天一期履约），可潜入登记过的据点（私宅和议事区不可登记潜入）；守约、背约、交锋、潜入被发现都会改变成员态度，消息沿步行路线传到邻村后改变邻村态度（目前邻村反应只有“敌对后拒绝交易”一种）；议事可推动势力时钟。聚居地用location.monsterSociety、潜入用site.infiltration登记，正式数据由T157等内容卡发布。新增5项、CORE40、发布构建ok，提示约11330，0模型。
 
-### T159（S4）榆根里与裂炉营正式落地。
-
-1. 玩家结果：在榆坡与砾泉附近接触共生聚落和主从营地，并能改变其中一项具体争端。
-2. 可改 S2 对应的 monster-society-2 设计、drafts、发布入口及这两处正式 geo/people/lore 条目和本批 tests；锁定 S2 内容及无关目录。依赖 S1/S3/T154/T109；可与 S6 零模型开发并行，共享目录和真实 L2 串行。
-3. 验收 CORE 及 `node --test tests/monster-society-content.test.mjs tests/monster-society.test.mjs "tests/population*.test.mjs" "tests/npc-*.test.mjs" "tests/w5-*.test.mjs" "tests/world-*.test.mjs" tests/sites.test.mjs tests/faction-clock.test.mjs tests/settlement-trade.test.mjs tests/retrieval.test.mjs`；`node tools/audit-npc-depth.mjs`。核对混居物种配额、资源来源及两地内部方案的不同后果。
+### T159 已完成：榆根里64名与裂炉营104名正式发布，四处聚居地组织时钟与派别立场谈判；L2 94次0.513元，L4均4.38。
 4. 真实 L2 预计八十至一百三十次，上限一点五元。
 5. 预计三至四小时加后台 L2，二十四名具名成员含八 full，结构规模同 S2。榆根里发布林产分配争议，裂炉营发布贡粮与劳动争议，消耗和结局接 T109；议事、交易和已授权生产实际生效，公开风俗与派系私下目标分开检索。
 
