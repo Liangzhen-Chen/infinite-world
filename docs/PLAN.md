@@ -272,13 +272,7 @@ N1–N17至少12项完整有效且≥90%，N6/N16零泄漏，N12真实盲辨，N
 
 ### S5 并入T143：已完成（T143的人口子项）。玩家第一次进入未展开的住区或巢窟时按种子生成名册，写进战役状态，只扣剩余配额，不写回world/；白石镇6区全部展开正好694人、210户。点名交谈时才生成完整档（起草一次、自查一次、代码检查硬约束后入库，0钱物），失败只记次数、身份不变。新测试6/6，相关98/98，发布构建ok。真实入口验证尚未运行：模型槽空闲时执行 node tools/population-live-check.mjs --live --count 6（上限18次、0.8元）。
 
-### T160（S6）野兽开启灵智。
-
-1. 玩家结果：能观察普通野兽的灵智变化，用实际灵物或具资格的点化帮助它成为可交流的个体。
-2. 可改 server-plugin/wildlife.mjs、world-clock/T109 的觉醒效果调用点、npc-state、pets、world-upgrade、magic-ritual 必要接点及 extension/tools.mjs、规则 schema 和 tests/wildlife-awakening.test.mjs；锁定正式物种及术式正文。依赖 S1/S5/T109，与 T153/T154、T93/T104 和生态时间写者串行，可并行 S8 起草。
-3. 验收 CORE 及 `node --test "tests/wildlife*.test.mjs" "tests/w4-*.test.mjs" "tests/boss*.test.mjs" "tests/magic*.test.mjs" "tests/population*.test.mjs" tests/pets.test.mjs tests/faction-clock.test.mjs tests/world-clock.test.mjs tests/seasonal-migration.test.mjs tests/farm-pests.test.mjs tests/prompt.test.mjs tests/tool-groups.test.mjs`；覆盖自然累积、吞食、点化、资源不足、重放及长短步一致。
-4. 真实模型零次，零元；本批正式条件参数和解释由 S8 同批审核发布。
-5. 预计三小时。灵智采用原创阶段“听息、立意、借形”，与九阶战力分开；本卡做到立意。来源分别记录物种年岁阈值与经历累积、灵地停留、真实灵物消耗或导师点化；观察不能刷进度。未见种群只扣一次，已实例化个体不再扣；保留原身体、伤势与遭遇来源，进入社会后退出野生捕食/自动恢复统计。觉醒后的收伏转为有边界的同意关系，旧宠物身份不自动变成居民财产。静态提示不超过 11900 token。
+### T160（S6）已完成：野兽灵智按“听息→立意”累积，来源分别记录（年岁与随人经历、灵地停留、喂灵物、点化），只观察不涨进度；world_wildlife加nurture（喂灵物）、enlighten（点化，复用T93仪式资格且师门须登记spirit_sense）、pact（结缘，有边界的同意关系）；势力时钟可真正触发觉醒。参数在rules.json的wildlifeAwakening，暂以药草为灵物、芦衡观与止波寺为灵地，正式内容待T162。新增4项、领域387/390（余为旧失败）、CORE40、发布构建ok，提示约11377，0模型。遗留：结缘后个体还不会跟随玩家、没有专门对话入口（归T161）。
 
 ### T161（S7）成精后的修习与结社。
 
