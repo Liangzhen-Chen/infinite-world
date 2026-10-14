@@ -143,3 +143,19 @@ test('负例：无人目击、私密或秘密记忆、未成年当事人都不�
  const forged=structuredClone(doc);forged.state.npcs[witness].memoryStream.push({...row,id:'forged',rumor:'rumor_event:never'});
  assert.equal(npcRumors(f.engine,witness,forged).some(r=>r.id==='rumor_event:never'),false,'没有世界事件记录的不算');
 });
+
+test('K10：订阅者由各模块自行登记，按原结算顺序执行，可登记新订阅者',async()=>{
+ const {worldEventSubscribers,registerWorldEventSubscriber,publishWorldEvents}=await import('../server-plugin/world-events.mjs');
+ assert.deepEqual(worldEventSubscribers().map(s=>s.id),['monster_society','npc_relations','npc_memory','spirit_grudges','boss_cognition','standing','npc_intelligence']);
+ assert.throws(()=>registerWorldEventSubscriber({id:'standing',order:1,on(){}}),/重复登记/);
+ assert.throws(()=>registerWorldEventSubscriber({id:'k10_bad',order:1}),/须有/);
+ const seen=[],first=registerWorldEventSubscriber({id:'k10_first',order:-1,on:(d,e,events)=>seen.push(['first',events.length])});
+ const last=registerWorldEventSubscriber({id:'k10_last',order:1e9,on:(d,e,events,c)=>seen.push(['last',c.tag])});
+ try{
+  const ids=worldEventSubscribers().map(s=>s.id);
+  assert.equal(ids[0],'k10_first');assert.equal(ids.at(-1),'k10_last');
+  publishWorldEvents(draft({state:{records:{}}}),{},[],{legacy:true,tag:'x'},[(d,e,ev)=>seen.push(['explicit'])]);
+  assert.deepEqual(seen,[['explicit']]);
+ }finally{first();last();}
+ assert.ok(!worldEventSubscribers().some(s=>s.id.startsWith('k10_')));
+});

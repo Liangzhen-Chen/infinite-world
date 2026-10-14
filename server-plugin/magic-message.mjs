@@ -1,3 +1,4 @@
+import {registerMagicEffect}from'./magic-effects.mjs';
 import {localPlayerPoint}from'./environment.mjs';
 import {areaTargetFacts}from'./magic-area.mjs';
 import {heldUnit}from'./items.mjs';
@@ -234,3 +235,5 @@ function publishDeclaration(d,engine,args,eventId,from,kind){
  d.say(`${engine.byId.get(from).name}主动发出有限声明，将于${engine.formatCalendar(now+e.delayMinutes)}抵达`);
  return{from,recipients,link:id,messageIds,arrive:now+e.delayMinutes,declared:args.content,upkeepPayer:'player'};
 }
+// Spell effect family (dispatched by magic.mjs through magic-effects.mjs).
+registerMagicEffect({kinds:messageKinds,validateSpec:validateMessageCatalog,prepare(d,c,args){return prepareMessage.call(this,d,c,args);},apply(d,p,id){return applyMessage.call(this,d,p,id);}});

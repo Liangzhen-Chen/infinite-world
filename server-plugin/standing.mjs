@@ -1,3 +1,5 @@
+import {isReputationSettlement,reputationFactions,reputationSettlements}from'./reputation-registry.mjs';
+import {registerWorldEventSubscriber}from'./world-events.mjs';
 import {digest} from './storage.mjs';
 import {relationView,recordStandingEvidence} from './npc-relations.mjs';
 import {stanceOf} from './monster-society.mjs';
@@ -20,14 +22,14 @@ const STANCE_VALUE={敌对:-60,戒备:-20,中立:0};
 const rec=(holder,target)=>`standing:${holder}:${target}`;
 const seat=(engine,id)=>engine.world.locations.some(l=>l.id===id&&l.monsterSociety);
 const reputationOf=(state,subject,scope,target)=>state.records?.[`reputation:${digest([subject,scope,target]).slice(0,24)}`]?.reputation??0;
-const factionRules=(engine,id)=>(engine.rules.reputation?.factions??[]).find(f=>f.id===id);
+const factionRules=(engine,id)=>reputationFactions(engine).find(f=>f.id===id);
 
 export function standingKind(engine,state,id){
     if(id==='player')return 'player';
     if(state.npcs?.[id])return 'npc';
     if(seat(engine,id))return 'society';
     if(String(id).startsWith('spirit_society:'))return 'spirit_society';
-    if((engine.rules.reputation?.settlements??[]).includes(id))return 'settlement';
+    if(isReputationSettlement(engine,id))return 'settlement';
     if(String(id).startsWith('faction_'))return 'faction';
     if(state.creatures?.[id])return 'creature';
     if(state.records?.[`organization:${id}`])return 'organization';
@@ -104,13 +106,13 @@ export function collectivesOf(engine,state,member){
     if(npc||base?.id?.startsWith('npc_')){
         const house=npc?npcHousehold(engine,state,member):null;
         for(const id of house?.members??[])if(id!==member&&state.npcs[id]&&state.npcs[id].status!=='死亡')rows.push({holder:id,ratio:TRANSMISSION.household,via:`household:${house.id}`});
-        const settlements=engine.rules.reputation?.settlements??[];
+        const settlements=reputationSettlements(engine),factions=reputationFactions(engine);
         let place=base?.settlement??npc?.settlement??null;const seen=new Set();
         if(!settlements.includes(place)){place=npc?.location??base?.location;while(place&&!seen.has(place)&&!settlements.includes(place)){seen.add(place);place=engine.byId.get(place)?.parent;}}
         if(place&&settlements.includes(place))rows.push({holder:place,ratio:TRANSMISSION.settlement,via:`settlement:${place}`});
-        for(const f of engine.rules.reputation?.factions??[])if((f.members??[]).includes(member)){
+        for(const f of factions)if((f.members??[]).includes(member)){
             rows.push({holder:f.id,ratio:TRANSMISSION.faction,via:`faction:${f.id}`});
-            for(const other of engine.rules.reputation.factions)if(other.id!==f.id&&standing(engine,state,other.id,f.id)>=TRANSMISSION.allyMinimum)
+            for(const other of factions)if(other.id!==f.id&&standing(engine,state,other.id,f.id)>=TRANSMISSION.allyMinimum)
                 rows.push({holder:other.id,ratio:TRANSMISSION.faction*TRANSMISSION.ally,via:`ally:${f.id}`});
         }
         // Organizations joined in this campaign (player-founded guilds, gangs,
@@ -129,3 +131,5 @@ export function transmitStanding(d,engine,events){
             adjustStanding(d,engine,c.holder,'player',weight*c.ratio,{sourceEvent:e.id,reason:`${e.verb}:${e.target}`,via:c.via,minute:e.minute});
     }
 }
+// World-event subscriber; settlement order is the `order` field.
+registerWorldEventSubscriber({id:'standing',order:60,on:(d,engine,events)=>transmitStanding(d,engine,events)});

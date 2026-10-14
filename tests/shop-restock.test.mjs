@@ -142,3 +142,36 @@ test('当日报价一致：同日立场变化不改价，次日按新立场重�
     assert.ok(third.cost>first.cost,'次日报价反映新的敌意');
     assert.equal(f.doc.state.records[`trade-quote:1:${host}:player:item_mutton`].listPrice,third.cost);
 });
+
+test('K10：有交易服务并登记店铺类型的人物自动成为店铺；现有三家店不变',async()=>{
+    const {shopStores,derivedShops}=await import('../server-plugin/shop.mjs');
+    // Published world: no person declares a shop type, so the shop list is exactly the three registered stores.
+    assert.deepEqual(derivedShops(world),[]);
+    assert.deepEqual(shopStores(world),rules.stores);
+    assert.deepEqual(rules.stores.map(s=>s.id),['shop_hw_qingdeng','shop_hw_forge','shop_bs_yanzhe']);
+    const miller='npc_hw_ayan',mill='bld_hw_mill';
+    const edit=w=>{const n=w.npcs.find(x=>x.id===miller);n.shopType='merchant';n.inventory={...n.inventory,item_iron_nail:6};};
+    const w=structuredClone(world);edit(w);
+    const shop=derivedShops(w).find(s=>s.keeper===miller);
+    assert.equal(shop.id,'shop_hw_ayan');assert.equal(shop.settlement,'loc_hw');
+    assert.deepEqual([shop.channels,shop.markup,shop.cycleDays,shop.firstDay],[['merchant'],1.2,7,1]);
+    assert.deepEqual(shop.restock.find(r=>r.item==='item_iron_nail'),{item:'item_iron_nail',source:'local',amount:3,maximum:6});
+    assert.ok(shop.restock.every(r=>r.source==='local'&&originSettlement(w,r.item)==='loc_hw'));
+    assert.deepEqual(validateShopRules(w),[]);
+    assert.deepEqual(shopStores(w).slice(0,3),rules.stores);
+    // Validation: unknown type, or a shop type without a trade service.
+    const unknown=structuredClone(w);unknown.npcs.find(x=>x.id===miller).shopType='bakery';
+    assert.match(validateShopRules(unknown).join(),/店铺类型bakery未登记/);
+    const mute=structuredClone(w);const m=mute.npcs.find(x=>x.id===miller);m.serviceCatalog=m.serviceCatalog.filter(s=>s.kind!=='trade');
+    assert.match(validateShopRules(mute).join(),/没有交易服务/);
+    // Runtime: the derived shop quotes with its markup and restocks on its cycle.
+    const f=fixture({at:mill,edit:x=>{edit(x);const n=x.npcs.find(y=>y.id===miller);delete n.tier;n.schedule={default:[{start:0,end:1440,location:mill,activity:'营业',services:['trade']}]};}});
+    f.doc.state.npcs[miller]={...f.doc.state.npcs[miller],coins:200,location:mill,activity:'营业',status:'正常',goals:{},memoryStream:[],inventory:{...f.doc.state.npcs[miller].inventory,item_iron_nail:6}};
+    const r=await f.act('world_trade',{seller:miller,item:'item_iron_nail',quantity:4},'nails');
+    assert.ok(r.cost>0);
+    assert.equal(f.doc.state.records[Object.keys(f.doc.state.records).find(k=>k.startsWith('trade-quote:')&&k.includes(miller))].shop,'shop_hw_ayan');
+    assert.equal(qty(f.doc,miller,'item_iron_nail'),2);
+    await f.act('world_time',{minutes:DAY},'day1');
+    assert.equal(qty(f.doc,miller,'item_iron_nail'),5);
+    assert.equal(ledger(f.doc,'shop_hw_ayan').entries.find(e=>e.item==='item_iron_nail').added,3);
+});

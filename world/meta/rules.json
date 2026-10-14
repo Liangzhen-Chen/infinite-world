@@ -803,6 +803,11 @@
           }
         ]
       },
+      "types": {
+        "tavern": {"channels": ["tavern"], "markup": 1, "cycleDays": 1, "firstDay": 1},
+        "smithy": {"channels": ["smithy"], "markup": 1, "cycleDays": 7, "firstDay": 1},
+        "merchant": {"channels": ["merchant"], "markup": 1.2, "cycleDays": 7, "firstDay": 1}
+      },
       "stores": [
         {
           "id": "shop_hw_qingdeng",

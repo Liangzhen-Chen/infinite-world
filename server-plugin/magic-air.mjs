@@ -1,3 +1,4 @@
+import {registerMagicEffect}from'./magic-effects.mjs';
 import {environmentFeatures,localPlayerPoint,localSightClear} from './environment.mjs';
 import {assertMagicTargeting} from './magic-targeting.mjs';
 import {areaTargetFacts} from './magic-area.mjs';
@@ -295,3 +296,5 @@ export function applyWindObject(d,p){
  const s=state(d,p.row),damage=Math.min(s.integrity,Math.floor(p.catalog.effectSpec.power*windArmorMultiplier(s.material)));
  s.integrity-=damage;s.cutDamage=(s.cutDamage??0)+damage;store(d,p.row,s);return{target:p.target,damage,integrity:s.integrity,material:s.material};
 }
+// Spell effect family (dispatched by magic.mjs through magic-effects.mjs).
+registerMagicEffect({kinds:['air'],validate:validateAirCatalog,prepare(d,c,args){return prepareAirMagic.call(this,d,c,args);},apply(d,p,id){return applyAirMagic.call(this,d,p,id);}});

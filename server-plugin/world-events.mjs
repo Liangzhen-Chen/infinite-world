@@ -87,8 +87,22 @@ export function deriveWorldEvents(engine,before,after,{tool,args={},detail={},ev
     return [primary,...gifts,...breaches];
 }
 
-// Subscribers: {verbs?:Set, on(d,engine,event,context)}; registered in engine order.
-export function publishWorldEvents(d,engine,events,context,subscribers){
+// Subscribers register themselves from their own module:
+//   registerWorldEventSubscriber({id,order,on(d,engine,events,context)})
+// and are settled in ascending order (ties keep registration order). The store
+// lives on a hoisted function so modules in an import cycle with this one can
+// register while it is still evaluating.
+function subscriberStore(){return subscriberStore.rows??=[];}
+export function registerWorldEventSubscriber(subscriber){
+    const {id,order,on}=subscriber??{};
+    if(typeof id!=='string'||!id||!Number.isFinite(order)||typeof on!=='function')throw Error('世界事件订阅者须有 id、order 与 on');
+    const rows=subscriberStore();
+    if(rows.some(s=>s.id===id))throw Error(`世界事件订阅者重复登记：${id}`);
+    rows.push({id,order,on});rows.sort((a,b)=>a.order-b.order);
+    return()=>{const i=rows.findIndex(s=>s.id===id);if(i>=0)rows.splice(i,1);};
+}
+export function worldEventSubscribers(){return subscriberStore().map(({id,order})=>({id,order}));}
+export function publishWorldEvents(d,engine,events,context,subscribers=subscriberStore().map(s=>s.on)){
     if(!context.legacy)for(const e of events)if(SOCIAL_VERBS.has(e.verb)&&e.actor){
         const key=`world_event:${e.id}`;if(d.get('state','records',key))continue;
         const {legacy:_,...row}=e;d.set(['state','records',key],{category:'world_event',...row});

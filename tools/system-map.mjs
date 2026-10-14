@@ -151,7 +151,7 @@ const SYSTEMS=[
  {id:'sim_magic',layer:'sim',name:'法术',modules:SERVER.map(f=>f.slice(14)).filter(f=>/^magic(-[\w-]+)?\.mjs$/.test(f))},
  {id:'sim_economy',layer:'sim',name:'经济',modules:['items.mjs','shop.mjs','business.mjs','contracts.mjs','credit.mjs','settlement-trade.mjs','manufacturing.mjs','repair.mjs']},
  {id:'sim_agriculture',layer:'sim',name:'农业',modules:['agriculture.mjs']},
- {id:'sim_society',layer:'sim',name:'社会',modules:['monster-society.mjs','reputation.mjs','public-opinion.mjs','organizations.mjs','civic.mjs','governance.mjs','quest-board.mjs']},
+ {id:'sim_society',layer:'sim',name:'社会',modules:['monster-society.mjs','reputation.mjs','reputation-registry.mjs','public-opinion.mjs','organizations.mjs','civic.mjs','governance.mjs','quest-board.mjs']},
  {id:'sim_clock',layer:'sim',name:'时钟与节令',modules:['world-clock.mjs','faction-clock.mjs','festival.mjs']},
  {id:'sim_law',layer:'sim',name:'法律与通缉',modules:['law.mjs','bounty.mjs']},
  {id:'sim_works',layer:'sim',name:'著作',modules:['works.mjs']},
@@ -204,9 +204,11 @@ const advance=advanceRegistry.map(s=>{
 if(!registryText.includes('registerAdvance(system)'))throw Error('推进注册方式已变化');
 
 // World events: verbs and subscribers.
-const engineText=src('server-plugin/engine.mjs');
-const subBlock=/const worldEventSubscribers=\[([\s\S]*?)\];/.exec(engineText)?.[1];
-if(!subBlock)throw Error('找不到 worldEventSubscribers');
+// Subscribers register themselves (registerWorldEventSubscriber); the runtime list
+// (after loading the engine) gives the order, a scan of each call gives the function.
+await imp('server-plugin/engine.mjs');
+const registeredSubscribers=WE.worldEventSubscribers();
+const subscriberCalls=new Map(SERVER.flatMap(f=>[...src(f).matchAll(/registerWorldEventSubscriber\(\{id:'(\w+)',order:([\d.]+),on:[^=]*=>\s*([A-Za-z_$][\w$]*)\(/g)].map(m=>[m[1],{file:f,order:Number(m[2]),fn:m[3]}])));
 const verbLiterals=uniq(CODE.flatMap(f=>[...src(f).matchAll(/\bverb\s*:\s*'(\w+)'/g)].map(m=>m[1])));
 // Tool → verbs derived in deriveWorldEvents (one `tool==='x'` branch each); other tools use their own name.
 const toolVerbs={};
@@ -216,10 +218,12 @@ for(const seg of functionBody('server-plugin/world-events.mjs','deriveWorldEvent
 }
 const VERBS=uniq([...WE.SOCIAL_VERBS,...verbLiterals,'cast']);
 const verbsInModule=file=>uniq(src(file).split('\n').filter(l=>/verb/.test(l)).flatMap(l=>[...l.matchAll(/'(\w+)'/g)].map(m=>m[1])).filter(v=>VERBS.includes(v)));
-const subscribers=[...subBlock.matchAll(/=>\s*([A-Za-z_$][\w$]*)\(/g)].map((m,i)=>{
- const fn=m[1],module=IMPORTS['server-plugin/engine.mjs'].map.get(fn);
- return{order:i+1,fn,module,verbs:module?verbsInModule(module):[]};
+const subscribers=registeredSubscribers.map((r,i)=>{
+ const call=subscriberCalls.get(r.id);if(!call||call.order!==r.order)throw Error(`找不到世界事件订阅者登记：${r.id}`);
+ const module=call.file;
+ return{order:i+1,id:r.id,fn:call.fn,module,verbs:verbsInModule(module)};
 });
+if(subscriberCalls.size!==subscribers.length)throw Error('有世界事件订阅者登记未在运行时生效');
 subscribers.push({order:subscribers.length+1,fn:'recordCareerMetrics',module:IMPORTS['server-plugin/world-events.mjs'].map.get('recordCareerMetrics'),verbs:verbsInModule('server-plugin/career-metrics.mjs'),note:'publishWorldEvents 内固定最后调用'});
 // Producers: modules with a verb:'x' literal; deriveWorldEvents also derives verbs from tool results.
 const deriveBody=functionBody('server-plugin/world-events.mjs','deriveWorldEvents')+functionBody('server-plugin/world-events.mjs','obligationGifts')+functionBody('server-plugin/world-events.mjs','creditBreaches');
@@ -386,37 +390,40 @@ const CONTENT=[
    ['drops','\\.drops\\b','真实尸体取材'],
    ['intelligence','\\.intelligence\\b','灵智等级与可交谈性'],
    ['diet','\\.diet\\b','农田害虫'],
-  ],manual:['新栖地要在 meta/rules.json 的 wildlife.habitats 登记，并在 wildlife.habitat 指向它（按地形自动产生栖地是 K8，尚未完成）','季节迁徙需在 rules.wildlife.migration.routes 加路线','新身体标签要在 interaction-rules.mjs 加规则才会影响倍率（traits.CREATURE_TAGS 外的标签不会被规则校验接受）']},
+  ],manual:['新栖地要在 meta/rules.json 的 wildlife.habitats 登记，并在 wildlife.habitat 指向它；地点有野物同样靠这张栖地表（按地形自动产生栖地是 K8，尚未完成）'],
+  refs:['季节迁徙路线写在 rules.wildlife.migration.routes'],
+  extend:['新的身体标签词要加进 traits.CREATURE_TAGS，并在 interaction-rules.mjs 写规则才会影响倍率（沿用已有标签的新物种不需要）']},
  {id:'boss',name:'首领 / 巢穴',file:'meta/bosses.json',required:req('boss'),hooks:[
    ['monster','\\.monster\\b','套用物种性状与本性'],['lair / territory','\\.lair\\b','巢穴接近、谈判、驻地'],['tactics','\\.tactics\\b','首领反制技能'],
    ['minions','\\.minions\\b','随从'],['cognition','\\.cognition\\b','记得交锋，立场由此推出'],['negotiation','\\.negotiation\\b','谈判与盟约'],
-  ],manual:['lair 指向的地点须已在 geo/locations.json','生态参数在 rules.bossEcology']},
+  ],manual:[],refs:['lair 指向的地点须已在 geo/locations.json','生态参数在 rules.bossEcology']},
  {id:'location',name:'地点',file:'geo/locations.json',required:req('location'),hooks:[
    ['terrain','\\.terrain\\b','地形标签进入性状（林/湿/石…）'],['parent','\\.parent\\b','聚落归属：立场传导沿 parent 找聚落'],
    ['features + thermalModel','\\.features\\b|thermalModel','场所物件：交互规则可点燃、浇湿、冻结'],['workstations','workstations','制造工位'],
    ['lodging','lodging','住宿出租'],['monsterSociety','monsterSociety','怪物聚居地：社会立场、治理、舆论'],['site','\\.site\\b','据点：进入、调查、机关、采集'],
    ['access / owner / rooms','\\.access\\b','私宅许可与进入'],['openHours','openHours','营业时间'],['coordinates','coordinates','地图与距离、法术范围'],['microclimate','microclimate','小气候'],
-  ],manual:['成为“聚落”需加入 rules.reputation.settlements，否则不参与聚落声望和立场传导','有野物需在 rules.wildlife.habitats 登记栖地','可达性靠 geo/routes.json 路线','人口展开需 geo/settlements.json 档案','商店在 rules.economy.shops 登记']},
+  ],manual:[],refs:['聚落：geo/settlements.json 有档案即自动成为声望与立场传导的聚落（reputation-registry.mjs 派生；怪物聚居地走社会立场）','可达性靠 geo/routes.json 路线','人口展开需 geo/settlements.json 档案']},
  {id:'route',name:'路线',file:'geo/routes.json',required:req('route'),hooks:[
    ['lengthKm','lengthKm','移动耗时、地区价差、传讯'],['closedSeasons','closedSeasons','封路季节、迁徙'],['toll','\\.toll\\b','路费'],
   ],manual:[]},
  {id:'spell',name:'法术',file:'meta/spells.json',required:req('spell'),hooks:[
    ['effectSpec.kind','effectSpec','按 kind 分派到 magic-* 模块'],['effectSpec.damageType','damageType','元素进入交互规则；伤害型命中产生 harm 事件'],
    ['targeting','\\.targeting\\b','目标边界与同意'],['law','\\.law\\b','施法许可与违法'],['learnFee / learnMinutes','learnFee','学习'],
-  ],manual:['新的 effectSpec.kind 要在 magic.mjs 的校验与分派里加分支','需要随时间结算的效果要 registerAdvance 登记']},
+  ],manual:[],refs:[],
+  extend:['新的 effectSpec.kind 由所在模块调用 registerMagicEffect 登记校验与结算（magic-effects.mjs），不改 magic.mjs','需要随时间结算的效果在推进注册表登记']},
  {id:'npc',name:'人物（名册）',file:'people/baseline.json',required:uniq([...req('npc'),...req('npcProfile')]),hooks:[
    ["tier: 'full'","tier==='full'",'完整人物参与认知、自主、生活、承诺推进'],['schedule','\\.schedule\\b','日程移动与服务时段'],
    ['household / householdId','householdId|\\.household\\b','家庭：立场按家庭传导'],['settlement','\\.settlement\\b','所属聚落：立场传导'],
    ['services / serviceCatalog','\\.services\\b|serviceCatalog','交易、授课、节日供货'],['creditPolicy','creditPolicy','赊账政策'],['memorySeeds','memorySeeds','初始记忆'],
    ['goals / redLines','\\.goals\\b|redLines','自主行动计划'],['intelligence','\\.intelligence\\b','灵智等级'],['relationships','relationships','初始关系'],
-  ],manual:['势力成员要写进 rules.reputation.factions[].members 才会传导立场','传闻种子在 geo/settlements.json 的 details.rumors（经 settlement-profile 白名单）']},
+  ],manual:[],refs:['势力成员：势力的 leader/coreMembers 或人物的 faction 字段即自动成为成员（reputation-registry.mjs 派生）','开店：有交易服务并写 shopType（rules.economy.shops.types 已登记的类型）即自动成为店铺（shop.mjs derivedShops）','传闻种子在 geo/settlements.json 的 details.rumors（经 settlement-profile 白名单）']},
  {id:'resident',name:'居民（按需展开）',file:'people/residents.json',required:req('resident'),hooks:[
    ['householdId','householdId','按需展开到户'],['settlement','residentIds|populationSeed','聚落人口档案'],
-  ],manual:['须在 geo/settlements.json 的 residentIds 列出，户在 people/households.json']},
+  ],manual:[],refs:['人口册：geo/settlements.json 的 residentIds 列出（人数由人口校验核对），户在 people/households.json']},
  {id:'item',name:'物品',file:'meta/items.json',required:req('item'),hooks:[
    ['tags','itemTraits|applyInteraction','材质标签：可燃、导电、纸张等进入交互规则'],['basePrice','basePrice','定价、赠礼价值、立场权重'],['shelfLifeDays','shelfLifeDays','腐坏'],
    ['book','\\.book\\b','持书学习、著作'],['checkBonus','checkBonus','检定工具加值'],['durability','\\.durability\\b','耐久与维修'],['combat','\\.combat\\b','武器'],
-  ],manual:['上架要在 rules.economy.shops 登记','产出要有配方（meta/recipes.json）或掉落']},
+  ],manual:[],refs:['上架：登记店铺的补货条目，或派生店铺店主持有的本地产物（shop.mjs derivedShops）','产出要有配方（meta/recipes.json）或掉落']},
  {id:'recipe',name:'配方',file:'meta/recipes.json',required:req('recipe'),hooks:[
    ['workstation','\\.workstation\\b','须在有工位的地点'],['output / byproducts','\\.output\\b|byproducts','产物登记为物品单件'],['toolWear','toolWear','工具损耗'],['learnFee','learnFee','学习'],
   ],manual:[]},
@@ -425,19 +432,19 @@ const CONTENT=[
   ],manual:[]},
  {id:'profession',name:'职业',file:'meta/professions.json',required:req('profession'),hooks:[
    ['certification','certification','认证'],['trainingInstitutions','trainingInstitutions','训练机构'],['skillTree / promotions','skillTree|promotions','升职'],
-  ],manual:['长期职业指标与突破在 meta/careers.json']},
+  ],manual:[],refs:['长期职业指标与突破在 meta/careers.json']},
  {id:'faction',name:'势力',file:'lore/factions.json',required:['id','name','contactAnchor','relations','clock'],hooks:[
    ['contactAnchor','contactAnchor','联络地点：社会与组织'],['clock','\\.clock\\b','势力时钟阶段'],['relations','\\.relations\\b','势力间关系 → 盟友传导'],
-  ],manual:['参与立场传导须在 rules.reputation.factions 登记 id、members、relations','时钟阶段效果在 rules.effectTable.hooks（source: faction）']},
+  ],manual:[],refs:['立场传导：lore/factions.json 的势力自动登记（reputation-registry.mjs 派生，relations 照抄目录）；rules.reputation.factions 手填条目作为覆盖','时钟阶段效果在 rules.effectTable.hooks（source: faction）']},
  {id:'organization',name:'组织（游戏中创立）',file:null,required:['world_create type=org','name','data.occupation（行会/帮派/商号/教会）','scope'],hooks:[
    ['organization:<id> 记录','organization:','成员、职位、公库、章程'],['standing kind organization',"'organization'",'成员受损害/恩惠按 0.5 传导给组织'],['organizationEvent','organizationEvent','产生 organize 世界事件'],
   ],manual:[]},
  {id:'festival',name:'节日',file:'lore/festivals.json',required:['id','calendar.month','calendar.day','venue.location','runtime.status=active','runtime.host'],hooks:[
    ['runtime / calendar / venue','festivalCalendar','节日日历、筹办、参加'],['effectTable source:festival',"'festival'",'节日阶段效果'],
-  ],manual:['主持人 runtime.host 须是名册人物','阶段效果在 rules.effectTable.hooks 用 source: festival 登记']},
+  ],manual:[],refs:['主持人 runtime.host 须是名册人物','阶段效果在 rules.effectTable.hooks 用 source: festival 登记']},
  {id:'clock',name:'世界时钟 / 阶段',file:'meta/rules.json#worldClock',required:['id','settlement','intervalDays','probability','stages[].effects[].kind'],hooks:[
    ['stages[].effects','applyEffects?\\(','阶段效果交给效果表执行'],
-  ],manual:['效果 kind 须已在效果表注册且允许 world 来源']},
+  ],manual:[],refs:['效果 kind 须已在效果表注册且允许 world 来源']},
  {id:'lore',name:'文化 / 神祇 / 历史',file:'lore/*.json',required:uniq([...req('culture'),...req('deity')]),hooks:[
    ['church（神祇）','\\.church\\b','复活点、训练、仪式'],['全文','publicLoreEntries|catalogDefinition','目录查询与检索'],
   ],manual:[]},
@@ -449,7 +456,7 @@ const contentTypes=CONTENT.map(c=>{
   return{field,means,pattern,modules:mods,systems:uniq(mods.map(f=>SYSTEM_OF.get(f)).filter(Boolean))};
  });
  const s=c.file&&!c.file.includes('*')&&!c.file.includes('#')?sample(c.file):null;
- return{id:c.id,name:c.name,file:c.file?`world/${c.file}`:null,count:s?.count??null,required:c.required,hooks,autoSystems:uniq(hooks.flatMap(h=>h.systems)),manual:c.manual};
+ return{id:c.id,name:c.name,file:c.file?`world/${c.file}`:null,count:s?.count??null,required:c.required,hooks,autoSystems:uniq(hooks.flatMap(h=>h.systems)),manual:c.manual,refs:c.refs??[],extend:c.extend??[]};
 });
 // Authored fields that no module reads: they only reach the model through catalog/prompt text.
 const CONSUMER_SCAN=SCAN_FILES.map(src).join('\n');
@@ -475,11 +482,13 @@ const passiveSystems=systemFacts.filter(s=>s.layer==='sim'&&!s.advance.length&&!
 const unusedEffects=effects.filter(e=>!e.usedIn.length).map(e=>e.kind);
 const manualWiring=[
  ...contentTypes.flatMap(c=>c.manual.map(m=>({content:c.name,item:m}))),
- {content:'世界事件',item:'订阅者列表是 engine.mjs 里的私有数组 worldEventSubscribers，新增订阅者要改 engine.mjs（没有 registerSubscriber 入口）'},
  {content:'工具',item:'新工具要同时改 extension/tools.mjs 定义、engine.mjs 的职责白名单与 activities.mjs 处理器'},
+];
+// Not wiring for new content: structural notes about existing registries.
+const structureNotes=[
  {content:'推进',item:'推进注册表里的 daily 项内联了农业、宠物、野物、首领的日结；pets 同时在 daily 与 pets 两处被调用'},
 ];
-const findings={manualWiring,isolatedSystems,passiveSystems,orphanModules,unusedEffects:unusedEffects.map(k=>({kind:k,note:'已注册，但 rules.json 与 lore 的任何 effects 列表都没有用到'})),deadFields,unassignedModules:unassigned};
+const findings={manualWiring,structureNotes,isolatedSystems,passiveSystems,orphanModules,unusedEffects:unusedEffects.map(k=>({kind:k,note:'已注册，但 rules.json 与 lore 的任何 effects 列表都没有用到'})),deadFields,unassignedModules:unassigned};
 
 // ---------------------------------------------------------------- output
 const data={
@@ -642,6 +651,7 @@ section[hidden]{display:none}
 
 <section id="tab-findings" hidden>
  <h2>仍需手动接线</h2><ul id="manual"></ul>
+ <h3>结构备注（不影响新增内容）</h3><ul id="structure"></ul>
  <h2>孤立或被动的系统</h2><ul id="isolated"></ul>
  <h2>没有被任何模块 import 的模块</h2><ul id="orphans"></ul>
  <h2>静态扫描未发现代码读取的内容字段</h2><p class="muted">这些字段可能只通过目录查询或整条输出到达模型，不参与结算（静态近似，经动态键读取的会漏报）。</p><ul id="dead"></ul>
@@ -725,6 +735,8 @@ for(const ct of D.contentTypes){
  card.append(el('p',{},el('b',{},'自动参与 '),...(ct.autoSystems.length?ct.autoSystems.map(sysTag):tags([]))));
  for(const h of ct.hooks)card.append(el('div',{class:'hook'},el('b',{},h.field),' — ',h.means,el('br'),...(h.systems.length?h.systems.map(sysTag):[el('span',{class:'muted'},'（代码中未找到读取者）')])));
  if(ct.manual.length)card.append(el('div',{class:'hook'},el('b',{},'手动接线'),el('ul',{},ct.manual.map(m=>el('li',{class:'manual'},m)))));
+ if(ct.refs.length)card.append(el('div',{class:'hook'},el('b',{},'配套数据（只写数据，由校验核对）'),el('ul',{},ct.refs.map(m=>el('li',{},m)))));
+ if(ct.extend.length)card.append(el('div',{class:'hook'},el('b',{},'扩展机制或词表时'),el('ul',{},ct.extend.map(m=>el('li',{},m)))));
  $('#content').append(card);
 }
 
@@ -761,6 +773,7 @@ renderTools();$('#toolq').oninput=e=>renderTools(e.target.value.trim());
 // findings
 const F=D.findings;
 for(const m of F.manualWiring)$('#manual').append(el('li',{},el('b',{},m.content+'：'),m.item));
+for(const m of F.structureNotes)$('#structure').append(el('li',{},el('b',{},m.content+'：'),m.item));
 for(const s of F.isolatedSystems)$('#isolated').append(el('li',{},sysTag(s.id),' ',s.note));
 for(const s of F.passiveSystems)$('#isolated').append(el('li',{},sysTag(s.id),'（被动）',s.note,'；工具：',s.tools.join('、')||'无','；产生事件：',s.produces.join('、')||'无'));
 for(const e of F.unusedEffects)$('#isolated').append(el('li',{},'效果类型 ',el('code',{},e.kind),'：',e.note));

@@ -1,32 +1,35 @@
-import {validateRitualCatalog,prepareRitual,applyRitual,recordRitualCare}from'./magic-ritual.mjs';
-import {validateCareCatalog,prepareCare,applyCare}from'./magic-care.mjs';
-import {validateMindSpaceCatalog,prepareMindSpace,applyMindSpace}from'./magic-mind-space.mjs';
-import {validateGrowthCatalog,prepareGrowthMagic,applyGrowthMagic}from'./magic-growth.mjs';
-import {messageKinds,validateMessageCatalog,prepareMessage,applyMessage}from'./magic-message.mjs';
-import {movementKinds,validateMovementCatalog,prepareMovement,applyMovement}from'./magic-movement.mjs';
-import {validateAreaCatalog,prepareAreaMagic,applyAreaMagic}from'./magic-area.mjs';
+// Effect families register their effectSpec.kind values in magic-effects.mjs;
+// importing them here loads them before the first cast.
+import './magic-ritual.mjs';
+import './magic-care.mjs';
+import './magic-mind-space.mjs';
+import './magic-growth.mjs';
+import './magic-message.mjs';
+import './magic-movement.mjs';
+import './magic-area.mjs';
+import './magic-marks.mjs';
+import './environment.mjs';
+import './summons.mjs';
+import {magicEffect}from'./magic-effects.mjs';
 import {derivedStats,monsterStats}from'./combat.mjs';
 import {recordDisciplineBreach}from'./training.mjs';
 import {magicStatuses,magicStatusStats,relieveMagicStatuses,applyMagicStatus}from'./magic-status.mjs';
 import {validateTargeting,assertMagicTargeting}from'./magic-targeting.mjs';
-import {validateMarkCatalog,prepareMark,applyMark}from'./magic-marks.mjs';
 import {monsterReward}from'./progression.mjs';
 import {heldUnit,trackSingleItem}from'./items.mjs';
-import {validateEnvironmentCatalog,prepareEnvironmentMagic,applyEnvironmentMagic}from'./environment.mjs';
-import {validateSummonCatalog,prepareSummon,applySummon}from'./summons.mjs';
 import {resolveCreature,recordWildlifeDeath}from'./wildlife.mjs';
 import {bossCounter,rememberBossTactic,defeatBoss}from'./bosses.mjs';
 import {validateEffectSpec,resolveVitalityPrimitive,applyProtectionPrimitive,consumeMagicProtection}from'./magic-primitives.mjs';
-import {prepareElementObject,applyElementObject,validateObjectCatalog,prepareObjectMagic,applyObjectMagic,validateHeatCatalog,prepareHeatMagic,applyHeatMagic,ambientHeatC,coldHeatMultiplier}from'./magic-object.mjs';
-import {validateAirCatalog,prepareAirMagic,applyAirMagic,prepareWindObject,applyWindObject,windArmorMultiplier}from'./magic-air.mjs';
-import {validateWaterEarthCatalog,prepareWaterEarthMagic,applyWaterEarthMagic,prepareStone,launchStone,waterEarthState}from'./magic-water-earth.mjs';
-import {projectileAirPenalty}from'./magic-air.mjs';
+import {prepareElementObject,applyElementObject,ambientHeatC,coldHeatMultiplier}from'./magic-object.mjs';
+import {prepareWindObject,applyWindObject,windArmorMultiplier,projectileAirPenalty}from'./magic-air.mjs';
+import {prepareStone,launchStone,waterEarthState}from'./magic-water-earth.mjs';
 import {itemTraits,hasTrait}from'./traits.mjs';
-import {validateLightCatalog,prepareLight,applyLight,prepareOptics,applyOptics,lightDamageMultiplier}from'./magic-light.mjs';
+import {lightDamageMultiplier}from'./magic-light.mjs';
 export function validateMagicCatalog(catalog,{requireHandler=false}={}){
     const spec=catalog.effectSpec,errors=[];
     if(!spec){if(requireHandler||catalog.mechanism)errors.push('此法术机制尚未接入规则，不能叙述已实现');return errors;}
-    errors.push(...(movementKinds.includes(spec.kind)?validateMovementCatalog(catalog):messageKinds.includes(spec.kind)?validateMessageCatalog(catalog):spec.kind==='growth'?validateGrowthCatalog(catalog):validateEffectSpec(spec)));
+    const effect=magicEffect(spec.kind);
+    errors.push(...(effect?.validateSpec?effect.validateSpec(catalog):validateEffectSpec(spec)));
     errors.push(...validateTargeting(catalog));
     if(['status','light','protection'].includes(spec.kind)&&(!Number.isSafeInteger(catalog.duration)||catalog.duration<1||catalog.duration>Math.min(catalog.durationLimit??43200,43200)))errors.push('持续效果的时限非法');
     if(spec.kind==='status'&&(!magicStatuses[spec.status]||spec.power>magicStatuses[spec.status].maximum))errors.push('状态效果或强度不在规则表');
@@ -34,18 +37,7 @@ export function validateMagicCatalog(catalog,{requireHandler=false}={}){
     if(spec.kind==='status'&&['dazzle','illusion'].includes(spec.status)&&catalog.duration!==1)errors.push('瞬时注意力干扰须最多保留一分钟待用');
     if(spec.kind==='relief'&&(spec.power>3||catalog.duration!==0||catalog.targeting?.consent!=='mental_magic'||catalog.targeting?.permit!=='mental_magic'))errors.push('精神解除须有限强度、本人同意与施法许可');
     if(spec.kind==='status'&&magicStatuses[spec.status]?.mental&&catalog.targeting?.permit!=='mental_magic')errors.push('精神干扰须明确施法许可');
-    if(spec.kind==='area')errors.push(...validateAreaCatalog(catalog));
-    if(spec.kind==='environment')errors.push(...validateEnvironmentCatalog(catalog));
-    if(['summon','summon_contract'].includes(spec.kind))errors.push(...validateSummonCatalog(catalog));
-    if(spec.kind==='mark')errors.push(...validateMarkCatalog(catalog));
-    if(spec.kind==='object')errors.push(...validateObjectCatalog(catalog));
-    if(spec.kind==='heat')errors.push(...validateHeatCatalog(catalog));
-    if(spec.kind==='air')errors.push(...validateAirCatalog(catalog));
-    if(spec.kind==='ritual')errors.push(...validateRitualCatalog(catalog));
-    if(spec.kind==='care')errors.push(...validateCareCatalog(catalog));
-    if(spec.kind==='mind_space')errors.push(...validateMindSpaceCatalog(catalog));
-    if(spec.kind==='water_earth')errors.push(...validateWaterEarthCatalog(catalog));
-    if(['optics','light'].includes(spec.kind))errors.push(...validateLightCatalog(catalog));
+    if(effect?.validate)errors.push(...effect.validate(catalog));
     if((spec.lightDecay||spec.shadowDecay)&&(!catalog.targeting||catalog.duration!==0||!Number.isFinite(catalog.rangeMeters)||catalog.rangeMeters>40))errors.push('光束须声明实际目标边界、有限射程且为瞬时伤害');
     if(spec.stoneProjectile&&(!catalog.targeting||catalog.duration!==0||catalog.rangeMeters>20))errors.push('石弹须声明实际目标边界、有限射程且为瞬时伤害');
     if(spec.windBlade&&(!catalog.targeting||catalog.duration!==0))errors.push('风刃须声明实际目标边界且为瞬时伤害');
@@ -55,25 +47,11 @@ export function validateMagicCatalog(catalog,{requireHandler=false}={}){
 export function prepareMagic(d,catalog,args,context={}){
     const errors=validateMagicCatalog(catalog);if(errors.length)throw new Error(errors.join('；'));
     const spec=catalog.effectSpec;if(!spec)return null;
-    if(spec.kind==='ritual')return prepareRitual.call(this,d,catalog,args);
-    if(spec.kind==='mind_space')return prepareMindSpace.call(this,d,catalog,args);
-    if(spec.kind==='care')return prepareCare.call(this,d,catalog,args);
-    if(spec.kind==='light')return prepareLight.call(this,d,catalog,args);
-    if(spec.kind==='optics')return prepareOptics.call(this,d,catalog,args);
-    if(spec.kind==='water_earth')return prepareWaterEarthMagic.call(this,d,catalog,args);
+    const effect=magicEffect(spec.kind);
+    if(effect?.prepare)return effect.prepare.call(this,d,catalog,args,context);
     if(spec.stoneProjectile&&args.target?.startsWith('feature_'))return{stone:prepareStone.call(this,d,catalog,args),target:args.target,spec,catalog,stoneObject:true};
-    if(spec.kind==='air')return prepareAirMagic.call(this,d,catalog,args);
     if(spec.windBlade&&args.target?.startsWith('feature_'))return prepareWindObject.call(this,d,catalog,args);
     if(spec.kind==='damage'&&args.target?.startsWith('feature_'))return prepareElementObject.call(this,d,catalog,args);
-    if(messageKinds.includes(spec.kind))return prepareMessage.call(this,d,catalog,args);
-    if(movementKinds.includes(spec.kind))return prepareMovement.call(this,d,catalog,args);
-    if(spec.kind==='area')return prepareAreaMagic.call(this,d,catalog,args,context);
-    if(spec.kind==='environment')return prepareEnvironmentMagic.call(this,d,catalog,args);
-    if(['summon','summon_contract'].includes(spec.kind))return prepareSummon.call(this,d,catalog,args);
-    if(spec.kind==='mark')return prepareMark.call(this,d,catalog,args);
-    if(spec.kind==='object')return prepareObjectMagic.call(this,d,catalog,args);
-    if(spec.kind==='heat')return prepareHeatMagic.call(this,d,catalog,args);
-    if(spec.kind==='growth')return prepareGrowthMagic.call(this,d,catalog,args);
     const target=['repair','dry','light'].includes(spec.kind)?this.resolve(args.target??'player'):resolveCreature(this,d,args.target??'player');
     if(['repair','dry','light'].includes(spec.kind)){
         if(!target.startsWith('item_')||this.quantity(d,'player',target)<1)throw new Error('施法需要实际持有的目标物品');
@@ -111,29 +89,15 @@ export function prepareMagic(d,catalog,args,context={}){
 export function applyMagic(d,prepared,id){
     if(!prepared)return{};
     let{spec,target,path,catalog}=prepared;
-    if(spec.kind==='ritual')return applyRitual.call(this,d,prepared,id);
-    if(spec.kind==='mind_space')return applyMindSpace.call(this,d,prepared,id);
-    if(spec.kind==='care'){const result=applyCare.call(this,d,prepared,id);recordRitualCare(d,prepared,result,id);return result;}
-    if(spec.kind==='light')return applyLight.call(this,d,prepared,id);
-    if(spec.kind==='optics')return applyOptics.call(this,d,prepared,id);
+    const effect=magicEffect(spec.kind);
+    if(effect?.apply)return effect.apply.call(this,d,prepared,id);
     if(prepared.windObject)return applyWindObject.call(this,d,prepared);
-    if(spec.kind==='water_earth')return applyWaterEarthMagic.call(this,d,prepared,id);
     if(prepared.elementObject)return applyElementObject.call(this,d,prepared);
     if(prepared.stoneObject){
         let stone;try{stone=prepareStone.call(this,d,catalog,prepared.stone.args);}catch(e){return{target,effectFailed:e.message};}
         const projectile=launchStone(d,stone,id),s=waterEarthState(d,stone.row),damage=Math.min(s.integrity,spec.power);
         s.integrity-=damage;d.set(['state','records',`physical_feature:${target}`],{id:target,category:'physical_feature',location:stone.row.location,state:s});return{target,damage,integrity:s.integrity,...projectile};
     }
-    if(spec.kind==='air')return applyAirMagic.call(this,d,prepared,id);
-    if(messageKinds.includes(spec.kind))return applyMessage.call(this,d,prepared,id);
-    if(movementKinds.includes(spec.kind))return applyMovement.call(this,d,prepared,id);
-    if(spec.kind==='area')return applyAreaMagic.call(this,d,prepared,id);
-    if(spec.kind==='environment')return applyEnvironmentMagic.call(this,d,prepared,id);
-    if(['summon','summon_contract'].includes(spec.kind))return applySummon.call(this,d,prepared,id);
-    if(spec.kind==='mark')return applyMark.call(this,d,prepared,id);
-    if(spec.kind==='object')return applyObjectMagic.call(this,d,prepared,id);
-    if(spec.kind==='heat')return applyHeatMagic.call(this,d,prepared,id);
-    if(spec.kind==='growth')return applyGrowthMagic.call(this,d,prepared,id);
     if(prepared.completionArgs){
         try{prepared=prepareMagic.call(this,d,catalog,prepared.completionArgs,prepared.context);}
         catch(error){return{target,effectFailed:`施法完成前条件失效：${error.message}`};}

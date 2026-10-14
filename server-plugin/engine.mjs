@@ -42,29 +42,19 @@ import {stateNotices}from'./state-notices.mjs';
 import {recordReturnVisit}from'./return-summary.mjs';
 import {assertNpcService}from'./npc-schedule.mjs';
 import {npcAutonomyBusy,assertNpcAutonomyAction,applyNpcPlan}from'./npc-autonomy.mjs';
-import {recordNpcMemories}from'./npc-memory.mjs';
+import './npc-memory.mjs';// world-event subscriber (registers itself)
 import {hearNpcRumor}from'./npc-rumors.mjs';
 import {recordLie,exposeLieCall}from'./lies.mjs';
 import {createNpcObligation,assertNpcObligationAction,npcObligationAt}from'./npc-obligations.mjs';
-import {recordNpcRelationEvidence,applyNpcRelation}from'./npc-relations.mjs';
-import {recordSocietyActs,assertSocietyTrade,societyNewsConsumer,societyIssueConsumer}from'./monster-society.mjs';
+import {applyNpcRelation}from'./npc-relations.mjs';
+import {assertSocietyTrade,societyNewsConsumer,societyIssueConsumer}from'./monster-society.mjs';
 import {resolveToolCall}from'../extension/tools.mjs';
 import {deriveWorldEvents,publishWorldEvents,WORLD_EVENT_VERSION}from'./world-events.mjs';
-import {recordSpiritGrudges}from'./wildlife-society.mjs';
-import {recordBossEvents}from'./boss-cognition.mjs';
-import {transmitStanding}from'./standing.mjs';
+import './wildlife-society.mjs';// world-event subscriber (registers itself)
+import './boss-cognition.mjs';// world-event subscriber (registers itself)
+import './standing.mjs';// world-event subscriber (registers itself)
 import {evidenceBreakthrough,breakthroughPaths}from'./career-metrics.mjs';
-import {recordIntelligenceEvents,INTELLIGENCE_VERSION}from'./npc-intelligence.mjs';
-// Social subscribers, in settlement order; each reads the event verb and tags.
-const worldEventSubscribers=[
-    (d,e,events)=>recordSocietyActs(d,e,events),
-    (d,e,events,c)=>recordNpcRelationEvidence(d,e,c.before,events,c),
-    (d,e,events,c)=>recordNpcMemories(d,e,c.before,events,c),
-    (d,e,events)=>recordSpiritGrudges(d,e,events),
-    (d,e,events)=>recordBossEvents(d,e,events),
-    (d,e,events)=>transmitStanding(d,e,events),
-    (d,e,events,c)=>recordIntelligenceEvents(d,e,events,c),
-];
+import {INTELLIGENCE_VERSION}from'./npc-intelligence.mjs';
 import {chargeTrade,repayDebt}from'./contracts.mjs';
 import {businessTrade,recordBusinessReceipt}from'./business.mjs';
 import {CREDIT_OPERATIONS,creditTrade,isCreditDebt,repayCredit,lodgingOf,assertLodgingHost,grantLodgingAccess}from'./credit.mjs';
@@ -199,7 +189,7 @@ export class WorldEngine {
         advanceSummons(d,d.get('state','minute'));
         advanceLaw(d,d.get('state','minute'),session);
         const worldEvent={tool,args,detail,eventId:id,before:document.state,legacy:Boolean(options.replay)&&options.result!==undefined&&options.result?.worldEventVersion!==WORLD_EVENT_VERSION};
-        publishWorldEvents(d,session,deriveWorldEvents(session,document.state,d.get('state'),worldEvent),worldEvent,worldEventSubscribers);
+        publishWorldEvents(d,session,deriveWorldEvents(session,document.state,d.get('state'),worldEvent),worldEvent);
         recordBusinessReceipt(d,document.state,{tool:resolved.tool,args,eventId:id,detail});
         if(tool==='check')detail.actionScope={kind:'judgement',healthChanged:false,inventoryChanged:false,feePaid:0,
             note:'仅结算判断或对抗，并履行已引用的协助；未伤人、毁物或制造。不得从骰点虚构这些变化。'};
