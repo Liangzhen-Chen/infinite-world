@@ -9058,7 +9058,9 @@
       "item_book_s2_stone": 2,
       "item_book_s2_farm": 2,
       "item_book_s3_optics": 2,
-      "item_book_s3_care": 2
+      "item_book_s3_care": 2,
+      "item_book_s4_space": 2,
+      "item_book_s4_measure": 2
     },
     "skills": [],
     "services": [
@@ -135867,7 +135869,11 @@
       "skill_s3_herb_cool",
       "skill_s3_lamp_dim",
       "skill_s3_door_shade",
-      "skill_s3_cool_cloth"
+      "skill_s3_cool_cloth",
+      "skill_s4_vow_guard",
+      "skill_s4_ferry",
+      "skill_s4_still_vow",
+      "skill_s4_calm_flat"
     ],
     "services": [
       "profession_monk",
@@ -135883,7 +135889,11 @@
       "spell_s3_herb_cool",
       "spell_s3_lamp_dim",
       "spell_s3_door_shade",
-      "spell_s3_cool_cloth"
+      "spell_s3_cool_cloth",
+      "spell_s4_vow_guard",
+      "spell_s4_ferry",
+      "spell_s4_still_vow",
+      "spell_s4_calm_flat"
     ],
     "intelligence": {
       "level": 2,
@@ -135938,7 +135948,11 @@
       "skill_s3_herb_cool": 600,
       "skill_s3_lamp_dim": 600,
       "skill_s3_door_shade": 600,
-      "skill_s3_cool_cloth": 600
+      "skill_s3_cool_cloth": 600,
+      "skill_s4_vow_guard": 600,
+      "skill_s4_ferry": 600,
+      "skill_s4_still_vow": 600,
+      "skill_s4_calm_flat": 600
     },
     "professions": [
       "profession_monk"
@@ -136439,6 +136453,42 @@
           "source": "spell_s3_cool_cloth"
         },
         "unlocksService": false
+      },
+      {
+        "kind": "teach",
+        "what": "spell_s4_vow_guard",
+        "price": {
+          "mode": "catalog",
+          "source": "spell_s4_vow_guard"
+        },
+        "unlocksService": false
+      },
+      {
+        "kind": "teach",
+        "what": "spell_s4_ferry",
+        "price": {
+          "mode": "catalog",
+          "source": "spell_s4_ferry"
+        },
+        "unlocksService": false
+      },
+      {
+        "kind": "teach",
+        "what": "spell_s4_still_vow",
+        "price": {
+          "mode": "catalog",
+          "source": "spell_s4_still_vow"
+        },
+        "unlocksService": false
+      },
+      {
+        "kind": "teach",
+        "what": "spell_s4_calm_flat",
+        "price": {
+          "mode": "catalog",
+          "source": "spell_s4_calm_flat"
+        },
+        "unlocksService": false
       }
     ],
     "hooks": [
@@ -136510,7 +136560,16 @@
       "skill_s2_water_veil",
       "skill_s2_bank_hold",
       "skill_s2_altar_level",
-      "skill_s2_seam_seal"
+      "skill_s2_seam_seal",
+      "skill_s4_expel",
+      "skill_s4_ward_seal",
+      "skill_s4_door_lock",
+      "skill_s4_door_alarm",
+      "skill_s4_seal_way",
+      "skill_s4_mend_rift",
+      "skill_s4_true_anchor",
+      "skill_s4_dust_talisman",
+      "skill_s4_home_purify"
     ],
     "services": [
       "profession_taoist",
@@ -136526,7 +136585,16 @@
       "spell_s2_bank_hold",
       "spell_s2_altar_level",
       "spell_s2_seam_seal",
-      "recipe_s2_talisman"
+      "recipe_s2_talisman",
+      "spell_s4_expel",
+      "spell_s4_ward_seal",
+      "spell_s4_door_lock",
+      "spell_s4_door_alarm",
+      "spell_s4_seal_way",
+      "spell_s4_mend_rift",
+      "spell_s4_true_anchor",
+      "spell_s4_dust_talisman",
+      "spell_s4_home_purify"
     ],
     "intelligence": {
       "level": 2,
@@ -136580,7 +136648,16 @@
       "skill_s2_water_veil": 600,
       "skill_s2_bank_hold": 600,
       "skill_s2_altar_level": 600,
-      "skill_s2_seam_seal": 600
+      "skill_s2_seam_seal": 600,
+      "skill_s4_expel": 600,
+      "skill_s4_ward_seal": 600,
+      "skill_s4_door_lock": 600,
+      "skill_s4_door_alarm": 600,
+      "skill_s4_seal_way": 600,
+      "skill_s4_mend_rift": 600,
+      "skill_s4_true_anchor": 600,
+      "skill_s4_dust_talisman": 600,
+      "skill_s4_home_purify": 600
     },
     "professions": [
       "profession_taoist"
@@ -137079,6 +137156,87 @@
         "price": {
           "mode": "catalog",
           "source": "recipe_s2_talisman"
+        },
+        "unlocksService": false
+      },
+      {
+        "kind": "teach",
+        "what": "spell_s4_expel",
+        "price": {
+          "mode": "catalog",
+          "source": "spell_s4_expel"
+        },
+        "unlocksService": false
+      },
+      {
+        "kind": "teach",
+        "what": "spell_s4_ward_seal",
+        "price": {
+          "mode": "catalog",
+          "source": "spell_s4_ward_seal"
+        },
+        "unlocksService": false
+      },
+      {
+        "kind": "teach",
+        "what": "spell_s4_door_lock",
+        "price": {
+          "mode": "catalog",
+          "source": "spell_s4_door_lock"
+        },
+        "unlocksService": false
+      },
+      {
+        "kind": "teach",
+        "what": "spell_s4_door_alarm",
+        "price": {
+          "mode": "catalog",
+          "source": "spell_s4_door_alarm"
+        },
+        "unlocksService": false
+      },
+      {
+        "kind": "teach",
+        "what": "spell_s4_seal_way",
+        "price": {
+          "mode": "catalog",
+          "source": "spell_s4_seal_way"
+        },
+        "unlocksService": false
+      },
+      {
+        "kind": "teach",
+        "what": "spell_s4_mend_rift",
+        "price": {
+          "mode": "catalog",
+          "source": "spell_s4_mend_rift"
+        },
+        "unlocksService": false
+      },
+      {
+        "kind": "teach",
+        "what": "spell_s4_true_anchor",
+        "price": {
+          "mode": "catalog",
+          "source": "spell_s4_true_anchor"
+        },
+        "unlocksService": false
+      },
+      {
+        "kind": "teach",
+        "what": "spell_s4_dust_talisman",
+        "price": {
+          "mode": "catalog",
+          "source": "spell_s4_dust_talisman"
+        },
+        "unlocksService": false
+      },
+      {
+        "kind": "teach",
+        "what": "spell_s4_home_purify",
+        "price": {
+          "mode": "catalog",
+          "source": "spell_s4_home_purify"
         },
         "unlocksService": false
       }
@@ -138723,7 +138881,9 @@
       "skill_s3_shade_ward",
       "skill_s3_fog_lamp",
       "skill_s3_way_lamp",
-      "skill_s3_wind_cold_guard"
+      "skill_s3_wind_cold_guard",
+      "skill_s4_spirit_look",
+      "skill_s4_spirit_ask"
     ],
     "services": [
       "profession_witch",
@@ -138734,7 +138894,9 @@
       "spell_s3_shade_ward",
       "spell_s3_fog_lamp",
       "spell_s3_way_lamp",
-      "spell_s3_wind_cold_guard"
+      "spell_s3_wind_cold_guard",
+      "spell_s4_spirit_look",
+      "spell_s4_spirit_ask"
     ],
     "intelligence": {
       "level": 2,
@@ -138784,7 +138946,9 @@
       "skill_s3_shade_ward": 600,
       "skill_s3_fog_lamp": 600,
       "skill_s3_way_lamp": 600,
-      "skill_s3_wind_cold_guard": 600
+      "skill_s3_wind_cold_guard": 600,
+      "skill_s4_spirit_look": 600,
+      "skill_s4_spirit_ask": 600
     },
     "professions": [
       "profession_witch"
@@ -139238,6 +139402,24 @@
         "price": {
           "mode": "catalog",
           "source": "spell_s3_wind_cold_guard"
+        },
+        "unlocksService": false
+      },
+      {
+        "kind": "teach",
+        "what": "spell_s4_spirit_look",
+        "price": {
+          "mode": "catalog",
+          "source": "spell_s4_spirit_look"
+        },
+        "unlocksService": false
+      },
+      {
+        "kind": "teach",
+        "what": "spell_s4_spirit_ask",
+        "price": {
+          "mode": "catalog",
+          "source": "spell_s4_spirit_ask"
         },
         "unlocksService": false
       }
@@ -142161,7 +142343,12 @@
       "skill_s3_lamp_focus",
       "skill_s3_mirror_turn",
       "skill_s3_veil_dark",
-      "skill_s3_lamp_screen"
+      "skill_s3_lamp_screen",
+      "skill_s4_purify",
+      "skill_s4_altar_clean",
+      "skill_s4_lamp_oath",
+      "skill_s4_lintel_vow",
+      "skill_s4_kiln_settle"
     ],
     "services": [
       "profession_priest",
@@ -142169,7 +142356,12 @@
       "spell_s3_lamp_focus",
       "spell_s3_mirror_turn",
       "spell_s3_veil_dark",
-      "spell_s3_lamp_screen"
+      "spell_s3_lamp_screen",
+      "spell_s4_purify",
+      "spell_s4_altar_clean",
+      "spell_s4_lamp_oath",
+      "spell_s4_lintel_vow",
+      "spell_s4_kiln_settle"
     ],
     "intelligence": {
       "level": 2,
@@ -142216,7 +142408,12 @@
       "skill_s3_lamp_focus": 600,
       "skill_s3_mirror_turn": 600,
       "skill_s3_veil_dark": 600,
-      "skill_s3_lamp_screen": 600
+      "skill_s3_lamp_screen": 600,
+      "skill_s4_purify": 600,
+      "skill_s4_altar_clean": 600,
+      "skill_s4_lamp_oath": 600,
+      "skill_s4_lintel_vow": 600,
+      "skill_s4_kiln_settle": 600
     },
     "professions": [
       "profession_priest"
@@ -142643,6 +142840,51 @@
         "price": {
           "mode": "catalog",
           "source": "spell_s3_lamp_screen"
+        },
+        "unlocksService": false
+      },
+      {
+        "kind": "teach",
+        "what": "spell_s4_purify",
+        "price": {
+          "mode": "catalog",
+          "source": "spell_s4_purify"
+        },
+        "unlocksService": false
+      },
+      {
+        "kind": "teach",
+        "what": "spell_s4_altar_clean",
+        "price": {
+          "mode": "catalog",
+          "source": "spell_s4_altar_clean"
+        },
+        "unlocksService": false
+      },
+      {
+        "kind": "teach",
+        "what": "spell_s4_lamp_oath",
+        "price": {
+          "mode": "catalog",
+          "source": "spell_s4_lamp_oath"
+        },
+        "unlocksService": false
+      },
+      {
+        "kind": "teach",
+        "what": "spell_s4_lintel_vow",
+        "price": {
+          "mode": "catalog",
+          "source": "spell_s4_lintel_vow"
+        },
+        "unlocksService": false
+      },
+      {
+        "kind": "teach",
+        "what": "spell_s4_kiln_settle",
+        "price": {
+          "mode": "catalog",
+          "source": "spell_s4_kiln_settle"
         },
         "unlocksService": false
       }

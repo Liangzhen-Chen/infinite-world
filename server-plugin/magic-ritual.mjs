@@ -7,6 +7,7 @@ import {magicContractTrace,createBusinessContract}from'./contracts.mjs';
 import {prepareRevivalMark}from'./revival.mjs';
 import {monsterStats}from'./combat.mjs';
 import {assertTrainingRitual}from'./training.mjs';
+import {speciesInHabitat}from'./wildlife-range.mjs';
 
 // These bounds enable authoring; they do not publish or teach spells.
 export const ritualMechanisms=Object.freeze({
@@ -14,6 +15,8 @@ export const ritualMechanisms=Object.freeze({
  clean_altar:[100,0],witness_oath:[1,0],ritual_heal:[10,0],spirit_sense:[1,0],
  ward:[3,60],exorcise:[1,0],discipline:[10,90],faith_contract:[1,0],
  revival_mark:[1,90],restore:[20,0],faith_shield:[20,120],purify_area:[3,0],
+ // T104: ferrying a low wandering soul, reading a habitat's spirit ledger, and a seven-day rite against new manifestations.
+ ferry:[1,0],spirit_census:[1,0],consecrate:[1,10080],
 });
 const clone=x=>structuredClone(x),key=id=>`physical_feature:${id}`;
 const actorPath=id=>id==='player'?['state','player']:['state',id.startsWith('npc_')?'npcs':'creatures',id];
@@ -80,6 +83,8 @@ export function validateRitualCatalog(c){
  if(!m)return['役灵仪式机制尚未接入'];
  if(s.power>m[0]||c.duration!==m[1]||!Number.isSafeInteger(c.minutes)||c.minutes<1||c.minutes>60||!Number.isFinite(c.rangeMeters)||c.rangeMeters<0||c.rangeMeters>10)errors.push('役灵仪式强度、期限或射程越过固定边界');
  if(['ritual_heal','restore'].includes(s.operation)&&!c.materials?.some(m=>m.item==='item_herb'&&m.amount>=1))errors.push('仪式治疗需要真实药材');
+ if(s.operation==='ferry'&&(typeof s.destination!=='string'||!s.destination.startsWith('feature_')))errors.push('度亡须登记实际去向');
+ if(s.operation==='consecrate'&&!['亡灵','妖怪'].includes(s.group))errors.push('安地法事须限定一类灵体');
  return errors;
 }
 function ownSummon(d,id,until){
@@ -170,6 +175,22 @@ export function prepareRitual(d,c,args,{completion=false}={}){
   if(p.accepted)p.permission=authorization(d,args,'realm_visit',p.id,p.id,until+spirit.invitation.visitMinutes);return p;
  }
  p.deity=qualification(d,this,{...args,ritualOperation:op},until);
+ if(['spirit_census','consecrate'].includes(op)){
+  p.habitat=this.rules.wildlife?.habitats.find(h=>h.location===location);
+  if(!p.habitat)throw Error('这里没有登记的野外栖地，无从问灵或安地');
+  p.species=speciesInHabitat(this.rules,this.world.monsters,p.habitat.id).filter(s=>s.nature?.spirit&&s.nature.reproduction==='manifest'&&s.wildlife?.manifest&&(op==='spirit_census'||s.nature.group===p.spec.group));
+  if(!p.species.length)throw Error('此地没有登记的这类自行聚成的低阶灵体');
+  if(op==='consecrate'&&Object.values(d.get('state','effects')??{}).some(e=>e.kind==='ritual'&&e.operation==='consecrate'&&e.habitat===p.habitat.id&&e.group===p.spec.group&&e.expires>d.get('state','minute')))throw Error('此地同类安地法事仍在期限内，不能叠加');
+  return p;
+ }
+ if(op==='ferry'){
+  p.id=resolveCreature(this,d,args.target);p.actor=d.get('state','creatures',p.id);
+  const base=this.byId.get(p.actor?.species),s=p.actor?.spirit;
+  if(!p.actor||!awake(p.actor)||p.actor.location!==location||p.actor.owner||!p.actor.ecology||base?.nature?.kind!=='游魂'||!s||s.divine!==false||s.rank!==0||s.realm!=='local')throw Error('度亡只适用于在场、无主的低阶游魂个体；不能用于活人、亡者遗体或复活');
+  assertMagicTargeting(d,this,{...c,targeting:{lineOfSight:true}},args,p.id);
+  p.tablet=environmentFeatures(this).find(r=>r.id===p.spec.destination);
+  if(!p.tablet)throw Error('度亡去向未登记');return p;
+ }
  if(['clean_altar','revival_mark'].includes(op)){
   p.row=feature(this,args.target,location);p.state=stateOf(d,p.row);access(d,this,p.row,c,args,until);
   if(p.row.kind!=='altar'||p.state.deity!==p.deity.id||p.state.church!==p.deity.church.name||!(p.state.integrity>0))throw Error('祭坛必须完整且属于本教派');
@@ -192,7 +213,8 @@ export function prepareRitual(d,c,args,{completion=false}={}){
  const action=['ritual_heal','restore'].includes(op)?'healing':op==='spirit_sense'?'mental_magic':op==='witness_oath'?'ritual_oath':'support_magic';
  Object.assign(p,life(d,this,c,args,args.target??'player',until,action));
  if(op==='spirit_sense'){
-  number(p.actor.mental?.stress,0,100,'悲恸压力');p.spirits=nearbySpirits(d,this,c);return p;
+  // Stress is eased only where a mental state is actually registered.
+  if(p.actor.mental!==undefined)number(p.actor.mental?.stress,0,100,'悲恸压力');p.spirits=nearbySpirits(d,this,c);return p;
  }
  if(['ritual_heal','restore'].includes(op)){
   faithOf(d,p.id,p.deity);const m=clone(p.actor.medical),w=m?.wounds?.find(w=>w.id===args.source);
@@ -265,10 +287,26 @@ export function applyRitual(d,initial,eventId){
   recordRitualCare(d,p,result,eventId);return{...result,healed,wound:p.wound,depthMm:w.depthMm};
  }
  if(p.op==='spirit_sense'){
-  d.set([...p.path,'mental','stress'],Math.max(0,p.actor.mental.stress-1));
+  if(p.actor.mental)d.set([...p.path,'mental','stress'],Math.max(0,p.actor.mental.stress-1));
   return{...result,spirits:p.spirits.map(([id,a])=>({id,lowRank:a.spirit.rank===0,divine:a.spirit.divine,nature:a.spirit.nature??'unknown'}))};
  }
  if(p.op==='ward')return{...result,...put(d,p,eventId,{authorization:p.permission})};
+ if(p.op==='consecrate')return{...result,habitat:p.habitat.id,group:p.spec.group,species:p.species.map(s=>s.id),...put(d,p,eventId,{habitat:p.habitat.id,group:p.spec.group,species:p.species.map(s=>s.id)})};
+ if(p.op==='spirit_census'){
+  const rows=d.get('state','records',`ecology:${p.habitat.id}`)?.populations??{};
+  return{...result,habitat:p.habitat.id,spirits:p.species.map(s=>{const r=rows[s.id]??{},present=Object.values(d.get('state','creatures')??{}).filter(a=>a.species===s.id&&a.location===p.habitat.location&&a.status!=='死亡'&&a.hp>0&&!a.owner).length;
+   return{species:s.id,name:s.name,kind:s.nature.kind,nature:s.nature.spirit.nature,rank:s.nature.spirit.rank,unseen:r.count??s.wildlife.population,present,arisen:r.arisen??0,ferried:r.ferried??0,seasons:[...s.wildlife.manifest.seasons],cause:s.wildlife.manifest.cause};})};
+ }
+ if(p.op==='ferry'){
+  // Terminal: the soul leaves the scene and the habitat ledger; nothing here revives anyone.
+  const now=d.get('state','minute'),record=`spirit_ferry:${eventId}`,path=actorPath(p.id),ecology=`ecology:${p.actor.ecology}`,row=d.get('state','records',ecology)?.populations?.[p.actor.species];
+  d.set(path,{...clone(p.actor),status:'已超度',hp:0,location:null,activity:'已超度',spirit:{...clone(p.actor.spirit),realm:'beyond',ferried:{record,minute:now,destination:p.tablet.id}}});
+  d.remove(['state','records',`local_actor_position:${p.id}`]);
+  if(row)d.set(['state','records',ecology,'populations',p.actor.species,'ferried'],(row.ferried??0)+1);
+  const t=stateOf(d,p.tablet);t.names=[...(Array.isArray(t.names)?t.names:[]),{subject:p.id,name:p.actor.name,species:p.actor.species,minute:now,record}];store(d,p.tablet,t);
+  d.set(['state','records',record],{category:'spirit_ferry',subject:p.id,species:p.actor.species,habitat:p.actor.ecology,from:p.location,destination:p.tablet.id,minute:now,revivable:false,source:eventId});
+  return{...result,ferried:true,record,destination:p.tablet.id,revived:false};
+ }
  if(['exorcise','purify_area'].includes(p.op)){
   const rows=p.op==='exorcise'?[[p.id,p.actor]]:p.spirits.slice(0,p.spec.power),expelled=[];
   for(const[id,a]of rows){
