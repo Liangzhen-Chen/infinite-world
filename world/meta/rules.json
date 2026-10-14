@@ -1485,6 +1485,122 @@
           }
         }
       }
+    ],
+    "wanted": {
+      "source": "U5 通缉与赏金；按政体追加数据见 rules.law.polities",
+      "appearanceMinutes": 4320,
+      "relayBaseMinutes": 60,
+      "recognitionDifficulty": 12,
+      "recognitionCooldownMinutes": 360,
+      "bounty": {
+        "base": 20,
+        "perFine": 1,
+        "maximum": 2000,
+        "victimPledgeShare": 0.5
+      },
+      "hunters": {
+        "guilds": [
+          "faction_fieldguild"
+        ],
+        "roster": [
+          "npc_hw_wushuo"
+        ],
+        "pursuitDays": 7,
+        "trackDifficulty": 14,
+        "leadBonus": 5,
+        "refuseStanding": 60
+      }
+    },
+    "bribery": {
+      "source": "U5 贿赂空间：执法者按廉洁度与对你的立场决定是否受贿",
+      "minimumCoins": 5,
+      "defaultIntegrity": 60,
+      "refuseAtIntegrity": 90,
+      "penalties": {
+        "bribery": {
+          "baseFine": 30,
+          "valueMultiplier": 0
+        },
+        "bribery_attempt": {
+          "baseFine": 10,
+          "valueMultiplier": 0
+        },
+        "corruption": {
+          "baseFine": 40,
+          "valueMultiplier": 1
+        }
+      }
+    },
+    "polities": [
+      {
+        "law": "law_hw_property",
+        "cooperates": [
+          "law_yp_property",
+          "law_wt_property",
+          "law_lq_property",
+          "law_sb_property"
+        ],
+        "guards": [],
+        "integrity": {
+          "npc_hw_gucen": 80,
+          "npc_hw_chenbai": 70
+        },
+        "source": "白石镇辖下五村协查"
+      },
+      {
+        "law": "law_yp_property",
+        "cooperates": [
+          "law_hw_property",
+          "law_wt_property",
+          "law_lq_property",
+          "law_sb_property"
+        ],
+        "guards": [
+          "npc_yp_renbo"
+        ],
+        "integrity": {},
+        "source": "白石镇辖下五村协查"
+      },
+      {
+        "law": "law_wt_property",
+        "cooperates": [
+          "law_hw_property",
+          "law_yp_property",
+          "law_lq_property",
+          "law_sb_property"
+        ],
+        "guards": [
+          "npc_wt_zhangou"
+        ],
+        "integrity": {},
+        "source": "白石镇辖下五村协查"
+      },
+      {
+        "law": "law_lq_property",
+        "cooperates": [
+          "law_hw_property",
+          "law_yp_property",
+          "law_wt_property",
+          "law_sb_property"
+        ],
+        "guards": [],
+        "integrity": {},
+        "source": "白石镇辖下五村协查"
+      },
+      {
+        "law": "law_sb_property",
+        "cooperates": [
+          "law_hw_property",
+          "law_yp_property",
+          "law_wt_property",
+          "law_lq_property"
+        ],
+        "guards": [
+          "npc_sb_quanli"
+        ],
+        "integrity": {},
+        "source": "白石镇辖下五村协查"
+      }
     ]
   },
   "weather": {

@@ -3,6 +3,7 @@ import {transferItems,heldUnit,wearItem,changeItems} from './items.mjs';
 import {awardExperience} from './progression.mjs';
 import {scheduleAt} from './npc-schedule.mjs';
 import {assertNpcObligationAction,assertCourierRouteAccess} from './npc-obligations.mjs';
+import {bountyQuestAction} from './bounty.mjs';
 
 const DAY=1440,active=q=>['公开','进行中'].includes(q.status);
 const integer=(n,min,max,label)=>{if(!Number.isSafeInteger(n)||n<min||n>max)throw Error(`${label}必须在${min}到${max}之间`);return n;};
@@ -101,6 +102,8 @@ export function questBoardAction(d,engine,args,eventId){
   notice(d,engine,row,now,'publish');return {quest,status:row.status};
  }
  const q=d.get('state','quests',args.quest);if(!q)throw Error('不存在这个任务');
+ // Court bounties: rewards sit in the code treasury; capture goes through world_law arrest.
+ if(q.bounty)return bountyQuestAction(d,engine,q,args,eventId);
  if(args.operation==='inspect'){
   if(![q.publisher,q.taker].includes('player')&&q.location!==d.get('state','location'))throw Error('没有获知该委托进度的渠道');
   return {quest:q.id,...([q.publisher,q.taker].includes('player')?{status:q.status,reason:q.reason??null,escrow:q.escrow,refund:q.refund??0}:{status:'告示',content:q.content,grade:q.grade,reward:q.reward})};

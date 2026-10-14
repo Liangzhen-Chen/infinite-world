@@ -92,6 +92,14 @@ export function validateWorld(world,{stage='engine'}={}){
             if((ids.get(actor)?.age??0)<18)errors.push(`执法审判人员必须成年：${actor}`);
         }
     }
+    // U5 per-polity supplements: cooperation, guards, integrity; hunters must exist.
+    for(const p of world.rules.law?.polities??[]){
+        if(!lawIds.has(p.law))errors.push(`政体补充引用未登记法典：${p.law}`);
+        for(const c of p.cooperates??[])if(!lawIds.has(c)||c===p.law)errors.push(`协查法典无效：${p.law} -> ${c}`);
+        for(const g of p.guards??[])reference(g,`${p.law}.guards`);
+        for(const[npc,value]of Object.entries(p.integrity??{})){reference(npc,`${p.law}.integrity`);if(!Number.isInteger(value)||value<0||value>100)errors.push(`廉洁度须为0到100整数：${npc}`);}
+    }
+    for(const npc of world.rules.law?.wanted?.hunters?.roster??[])reference(npc,'law.wanted.hunters.roster');
     if(world.rules.petCare){
         const r=world.rules.petCare;
         reference(r.tamingSkill,'petCare.tamingSkill');reference(r.medicineSkill,'petCare.medicineSkill');reference(r.treatmentItem,'petCare.treatmentItem');
