@@ -15,7 +15,9 @@ export const lawFoundation = {
 };
 export function withLawRules(source) {
     const world = structuredClone(source), existing = world.rules.law?.codes ?? [];
-    world.rules.law = { ...structuredClone(lawFoundation),
+    // Wanted, bribery and per-polity supplements (U5) live beside the codes and are kept.
+    const kept = Object.fromEntries(['wanted', 'bribery', 'polities'].filter(key => world.rules.law?.[key] !== undefined).map(key => [key, world.rules.law[key]]));
+    world.rules.law = { ...kept, ...structuredClone(lawFoundation),
         codes: [...existing.filter(code => !lawFoundation.codes.some(row => row.id === code.id)), ...structuredClone(lawFoundation.codes)] };
     return world;
 }

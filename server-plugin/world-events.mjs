@@ -67,6 +67,9 @@ export function deriveWorldEvents(engine,before,after,{tool,args={},detail={},ev
     }else if(tool==='trade'){
         const buyer=detail.buyer??resolve(engine,args.buyer??'player'),seller=detail.seller??resolve(engine,args.seller);
         e={verb:'trade',actor:buyer,target:seller,value:detail.cost??0,tags:['trade',args.payment==='repay'?'repay':detail.debt?'credit':'cash']};
+    }else if(tool==='law'&&detail.worldEvent){
+        // An exposed bribe: the taker breached the office; the briber's own case is filed separately.
+        e={...detail.worldEvent,tags:[...detail.worldEvent.tags]};
     }else if(detail.workEvent){
         e={actor:'player',...detail.workEvent};
     }else if(detail.organizationEvent){
