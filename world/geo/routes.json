@@ -4143,5 +4143,70 @@
     "toll": 0,
     "risk": 0,
     "description": "从东学街沿公开门廊抵达，夜里按门前开放钟点另约。"
+  },
+  {
+    "id": "route_loc_wild_yp_north",
+    "from": "loc_bs_yupo",
+    "to": "loc_wild_yp_north",
+    "lengthKm": 2.5,
+    "terrainMultiplier": 1.2,
+    "modes": [
+      "walk"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 1
+  },
+  {
+    "id": "route_loc_wild_wt_mist",
+    "from": "loc_bs_weiting",
+    "to": "loc_wild_wt_mist",
+    "lengthKm": 1.9,
+    "terrainMultiplier": 1.3,
+    "modes": [
+      "walk"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 1
+  },
+  {
+    "id": "route_loc_wild_lq_adit",
+    "from": "loc_bs_liquan",
+    "to": "loc_wild_lq_adit",
+    "lengthKm": 2.4,
+    "terrainMultiplier": 1.4,
+    "modes": [
+      "walk"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 1
+  },
+  {
+    "id": "route_loc_wild_sb_barrow",
+    "from": "loc_bs_sangban",
+    "to": "loc_wild_sb_barrow",
+    "lengthKm": 2,
+    "terrainMultiplier": 1.2,
+    "modes": [
+      "walk"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 1
+  },
+  {
+    "id": "route_loc_wild_bs_kiln",
+    "from": "loc_bs",
+    "to": "loc_wild_bs_kiln",
+    "lengthKm": 3.7,
+    "terrainMultiplier": 1.1,
+    "modes": [
+      "walk"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 1
   }
 ]
