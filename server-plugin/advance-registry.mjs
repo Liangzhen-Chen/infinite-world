@@ -34,6 +34,7 @@ import {advanceSeasonEffects}from'./effects.mjs';
 import {advanceOrganizations}from'./organizations.mjs';
 import {advanceBounties,nextBountyMinute,bountyActive}from'./bounty.mjs';
 import {advanceOffices,nextOfficeMinute}from'./governance.mjs';
+import {advanceTitles,nextTitleMinute}from'./titles.mjs';
 import {advancePublicProjects,isPublicProject,advanceHouses,advanceHousing,nextHousingMinute}from'./public-projects.mjs';
 
 const clone=value=>structuredClone(value);
@@ -96,6 +97,7 @@ const systems=[
   advance:(e,d,{before,after,id,beforeState})=>{if(fullNpcs(e))advanceNpcAutonomy(d,e,before,after,id,{beforeState});}},
  {id:'governance_offices',order:1130,nextMinute:(e,d,now)=>nextOfficeMinute(d.get('state'),now),advance:(e,d,ctx)=>advanceOffices(d,e,ctx)},
  {id:'housing_steward',order:1135,nextMinute:(e,d,now)=>nextHousingMinute(d.get('state'),now),advance:(e,d,ctx)=>advanceHousing(d,e,ctx)},
+ {id:'titles',order:1140,nextMinute:(e,d,now)=>nextTitleMinute(d.get('state'),now),advance:(e,d,ctx)=>advanceTitles(d,e,ctx)},
  {id:'bounty',order:1150,active:(e,d)=>bountyActive(d.get('state')),nextMinute:(e,d,now)=>nextBountyMinute(d.get('state'),now),
   advance:(e,d,{before,after})=>advanceBounties(d,e,before,after)},
  {id:'npc_life',order:1200,active:e=>fullNpcs(e),nextMinute:(e,d,now)=>nextNpcLifeMinute(d.get('state'),now),

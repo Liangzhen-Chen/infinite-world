@@ -5,6 +5,7 @@ import {scheduleAt} from './npc-schedule.mjs';
 import {assertNpcObligationAction,assertCourierRouteAccess} from './npc-obligations.mjs';
 import {bountyQuestAction} from './bounty.mjs';
 import {officeQuotaD,spendPublic,refundPublic} from './governance.mjs';
+import {titleQuotaD} from './titles.mjs';
 
 const DAY=1440,active=q=>['公开','进行中'].includes(q.status);
 const integer=(n,min,max,label)=>{if(!Number.isSafeInteger(n)||n<min||n>max)throw Error(`${label}必须在${min}到${max}之间`);return n;};
@@ -14,9 +15,10 @@ const place=(s,id)=>id==='player'?s.location:s.npcs[id]?.location;
 const actorPath=id=>id==='player'?['state','player']:['state','npcs',id];
 
 // The player's quota comes only from offices actually held (appointed by the
-// Baishi office and still in term); a self-declared office adds none.
+// Baishi office and still in term) and a granted title, the larger of the two;
+// a self-declared office adds none.
 export function questPublishingRights(engine,state,publisher='player'){
- const month=Math.floor(state.minute/(DAY*30)),limit=publisher==='player'?officeQuotaD(state):engine.byId.get(publisher)?.monthlyQuotaD??0;
+ const month=Math.floor(state.minute/(DAY*30)),limit=publisher==='player'?Math.max(officeQuotaD(state),titleQuotaD(engine,state)):engine.byId.get(publisher)?.monthlyQuotaD??0;
  return {month,limitD:limit,usedD:state.questQuota?.[`${month}_${publisher}`]??0,personal:true};
 }
 function notice(d,engine,q,minute,stage,location=q.location){

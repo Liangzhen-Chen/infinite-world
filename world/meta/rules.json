@@ -578,6 +578,7 @@
       "feeCopper": 100,
       "requiresNoCrime": true
     },
+    "titleDomainPopulation": 100,
     "villageHead": {
       "contribution": 120,
       "requiresRecommendation": true,
