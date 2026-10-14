@@ -1,6 +1,7 @@
 import {relationView} from './npc-relations.mjs';
 import {normalize} from './retrieval.mjs';
 import {buildChronicle,getChronicle} from './chronicle.mjs';
+import {npcLifeLines} from './npc-life.mjs';
 
 // All collections are filtered by the player's recorded knowledge before search
 // or pagination. World NPC locations, seed memories and rumor truth stay private.
@@ -31,13 +32,22 @@ export function history(engine,document,chronicle,options={}){
     const name=id=>id==='player'?state.player?.name??'旅人':engine.byId.get(id)?.name??'未知';
     const when=minute=>Number.isSafeInteger(minute)?engine.calendar(minute).text:'时间未记录';
     const shared=id=>facts.filter(row=>row.participants?.includes('player')&&row.participants.includes(id)).slice(-5).reverse().map(row=>({text:row.text,time:when(row.minute)}));
+    // Family, health and moving news reach the player as of the last meeting
+    // with that person, by being there, or from someone met afterwards who
+    // went through or saw it themselves. Hearsay of hearsay does not count.
+    const lifeKnown=new Set(Object.keys(state.family?.seenByPlayer??{}));
+    for(const [id,npc]of Object.entries(state.npcs??{})){
+        const met=known.get(id);if(!met)continue;
+        for(const row of npc.memoryStream??[])if(['family','health','migration'].includes(row.kind)&&['亲历','目击'].includes(row.sourceType)&&row.minute<=met.minute)lifeKnown.add(row.rootMemoryId??row.id);
+    }
     const people=[...known].map(([id,last])=>{
         const base=engine.byId.get(id),relationship=relationView(engine,state,id,'player');
         const relation=Object.fromEntries(['trust','affection','respect','fear'].map(key=>[key,relationship[key]]));
         const description=[relation.trust>0?'对你较为放心':relation.trust<0?'对你保持戒心':'信任尚未变化',relation.affection>0?'与你较为亲近':relation.affection<0?'与你有些疏远':'亲近尚未变化'].join('，');
         const promises=Object.entries(state.obligations??{}).filter(([,row])=>[row.promisor,row.promisee].includes('player')&&[row.promisor,row.promisee].includes(id))
             .map(([key,row])=>({id:key,text:`${name(row.promisor)}向${name(row.promisee)}作出的${row.type??'约定'}：${row.content??''} · ${row.status??'未记录'}`,deadline:row.deadline===undefined?null:when(row.deadline)}));
-        return {id,name:base.name,identity:base.occupation??'身份未记录',location:last.location?name(last.location):'未获知',locationTime:when(last.locationMinute),relationship:relation,description,shared:shared(id),promises};
+        const life=engine.rules.npcLife?npcLifeLines(engine,state,id,{asOf:Math.min(now,last.minute),known:event=>lifeKnown.has(event)}):[];
+        return {id,name:base.name,identity:base.occupation??'身份未记录',location:last.location?name(last.location):'未获知',locationTime:when(last.locationMinute),relationship:relation,description,life,shared:shared(id),promises};
     }).sort((a,b)=>a.name.localeCompare(b.name,'zh-CN'));
     const rumors=memories.filter(([,row])=>row.subject==='player'&&row.rumor&&row.sourceType==='听说'&&row.participants?.includes('player'))
         .map(([id,row])=>({id,text:row.content,source:name(row.source),time:when(row.minute),minute:row.minute,reliability:row.reliability??'未核实'}));
@@ -54,7 +64,7 @@ export function history(engine,document,chronicle,options={}){
         return {id:row.id,text:matched?`${row.text}\n${matched.text}`:row.text,time:when(row.minute),minute:row.minute};
     });
     if(level==='facts'||level==='scenes')for(const [id,row]of memories)if(!row.rumor)past.push({id:`memory:${id}`,text:row.content,time:when(row.minute??row.updated),minute:row.minute??row.updated??0});
-    const matches=row=>!query||normalize([row.text,row.name,row.identity,row.location,row.source,...(row.shared??[]).map(item=>item.text)].filter(Boolean).join(' ')).includes(query);
+    const matches=row=>!query||normalize([row.text,row.name,row.identity,row.location,row.source,...(row.life??[]),...(row.shared??[]).map(item=>item.text)].filter(Boolean).join(' ')).includes(query);
     const pageSize=Number.isSafeInteger(options.pageSize)?Math.max(1,Math.min(50,options.pageSize)):20;
     const page=Number.isSafeInteger(options.page)?Math.max(1,options.page):1;
     const paginate=rows=>{const filtered=rows.filter(matches);return {items:filtered.slice((page-1)*pageSize,page*pageSize),total:filtered.length,page,pageSize};};

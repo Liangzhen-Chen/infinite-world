@@ -62,7 +62,7 @@ export function advanceNpcSchedules(d,engine,before,after){
     if(after<=before)return;
     const weatherCache=new Map(),graphCache=new Map(); // One immutable world/seed and time advance only.
     for(const npcId of Object.keys(d.get('state','npcs'))){
-        if(!engine.byId.get(npcId)?.schedule)continue;
+        if(!engine.byId.get(npcId)?.schedule&&!d.get('state','npcs',npcId,'routine'))continue;
         if(engine.npcScheduleReservations?.has(npcId))continue;
         if(d.get('state','npcs',npcId,'cognitionTravel')||engine.npcAutonomyBusy?.(d.get('state'),npcId,before))continue;
         const original=d.get('state','npcs',npcId),npc={...original},path=['state','npcs',npcId];

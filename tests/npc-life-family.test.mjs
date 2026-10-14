@@ -37,6 +37,7 @@ async function wait(s,minutes,tag='w'){const out=await s.engine.reduce(s.doc,{to
 const family=s=>s.doc.state.family??{};
 const marriages=s=>Object.values(family(s).marriages??{}).filter(m=>m.partners.includes(woman)&&m.since!==undefined);
 const population=s=>s.doc.state.settlements.loc_hw.population;
+const ours=rows=>Object.values(rows??{}).filter(r=>r.mother===woman);
 const knows=(s,id,root)=>(s.doc.state.npcs[id].memoryStream??[]).find(m=>(m.rootMemoryId??m.id)===root);
 
 test('世界规则登记的家庭参数有效，旧人物静态资料不改',()=>{
@@ -56,9 +57,9 @@ test('双方成年、愿意且同村，长期交往后成婚；成婚后怀孕�
  assert.ok(s.doc.state.npcs[man].relationships[woman].romance>0,'成婚写入关系账的恋慕维度');
  assert.ok(knows(s,man,m.id)&&knows(s,woman,m.id),'双方亲历');
  assert.equal(knows(s,sister,m.id)?.sourceType,'目击','同户在场者目击');
- const [p]=Object.values(family(s).pregnancies);assert.equal(p.mother,woman);assert.equal(p.father,man);
+ const [p]=ours(family(s).pregnancies);assert.equal(p.mother,woman);assert.equal(p.father,man);
  await wait(s,4*DAY,'c');
- const [b]=Object.values(family(s).births),child=family(s).people[b.child];
+ const [b]=ours(family(s).births),child=family(s).people[b.child];
  assert.equal(b.household,house);assert.ok(householdMembers(s.engine,s.doc.state,house).includes(b.child));
  assert.equal(npcHousehold(s.engine,s.doc.state,b.child).id,house);
  assert.equal(population(s),before+1);assert.deepEqual(b.population,{before,after:before+1});
@@ -98,14 +99,14 @@ test('未成年人一律不进入恋爱或婚姻流程，关系账也拒绝写�
  assert.ok(!Object.values(family(s).marriages??{}).some(m=>m.partners.includes(minor)));
  const d={document:s.doc,get(...p){return p.reduce((x,k)=>x?.[k],this.document);},set(path,value){this.document=applyPatches(this.document,[{op:'set',path,value}]);}};
  assert.throws(()=>recordLifeRelation(d,s.engine,{key:'k',sourceEvent:'e',eventType:'成婚',from:man,to:minor,minute:s.doc.state.minute,delta:{romance:10}},id=>npcIsMinor(s.engine,s.doc.state,id)),/未成年/);
- const babies=fixture();await wait(babies,8*DAY);const [b]=Object.values(family(babies).births);
+ const babies=fixture();await wait(babies,8*DAY);const [b]=ours(family(babies).births);
  assert.equal(marriageBlocker(babies.engine,babies.doc.state,b.child,friend),'须为有独立状态的人物');
  assert.ok(npcIsMinor(babies.engine,babies.doc.state,b.child,babies.doc.state.minute+17*360*DAY));
 });
 
 test('婚讯与出生只经亲历、同户在场与人物日常交谈传开，远方生人和玩家不会凭空得知',async()=>{
  const s=fixture();await wait(s,8*DAY);
- const [b]=Object.values(family(s).births),[m]=marriages(s);
+ const [b]=ours(family(s).births),[m]=marriages(s);
  assert.equal(knows(s,sister,b.id)?.sourceType,'目击');
  assert.equal(knows(s,away,b.id),undefined,'同户但不在场者当时不知');
  const heard=knows(s,friend,b.id)??knows(s,friend,m.id);
@@ -122,11 +123,11 @@ test('跨年长步与分段短步、存档重载后继续，家庭结果一致',
  const short=fixture();for(const minutes of [7*60,DAY-7*60,DAY,DAY+333,DAY-333,2*DAY,DAY,DAY+1,DAY-1])await wait(short,minutes,'short');
  assert.equal(pick(short),pick(long));
  const reload=fixture();await wait(reload,4*DAY+120,'r1');
- assert.ok(Object.values(family(reload).pregnancies??{}).some(p=>p.status==='怀孕'),'重载点处于孕期');
+ assert.ok(ours(family(reload).pregnancies).some(p=>p.status==='怀孕'),'重载点处于孕期');
  const restored={world:reload.world,engine:new WorldEngine(structuredClone(reload.world)),doc:JSON.parse(JSON.stringify(reload.doc))};
  await wait(restored,5*DAY-120,'r2');
  assert.equal(pick(restored),pick(long));
- assert.equal(Object.keys(family(long).births).length,1);
+ assert.equal(ours(family(long).births).length,1);
 });
 
 test('正式参数下没有满足条件的旧人物，不会凭空成婚或生育',async()=>{
