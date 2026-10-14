@@ -43,8 +43,10 @@ test('旧文字计划不执行；运行参数与未知效果明确拒绝，不�
  for(const mutate of [r=>r.intervalDays=2,r=>r.stages[0].effect={kind:'made_up'},r=>r.stages[0].cost.items.item_oats=-1,r=>r.stages[0].cost={labor:5},r=>r.stages[0].condition={kind:'made_up'}]){
   const c=setup();mutate(c.rule);assert.throws(()=>assertFactionClockRules(c.engine));
  }
- s.rule.stages=[stage('awaken',{kind:'awakening',target:'animal'})];
- assert.throws(()=>assertFactionClockRules(s.engine),/觉醒效果未实现.*T160/);
+ s.rule.stages=[stage('awaken',{kind:'awakening',target:'animal'})];for(const i of s.rule.interventions)i.stage='awaken';
+ assert.doesNotThrow(()=>assertFactionClockRules(s.engine));
+ s.rule.stages=[stage('awaken',{kind:'awakening',target:'animal',points:0})];assert.throws(()=>assertFactionClockRules(s.engine),/觉醒效果点数无效/);
+ delete s.engine.wildlifeAwakening;assert.throws(()=>assertFactionClockRules(s.engine),/觉醒效果未实现.*T160/);
 });
 
 test('日阶段付真实钱粮，关系和争端变更有回执；不注入远方现场或消息',async()=>{
@@ -146,6 +148,7 @@ test('觉醒接口消费原生态个体；未实现或消费者拒绝不改身�
  await assert.rejects(s.wait(s.doc,DAY),/觉醒效果未实现.*T160/);assert.deepEqual(s.doc,before);
  // world-clock uses the same consumer, rather than treating awakening as a quote.
  const w=setup();const r=w.world.rules.worldClock.clocks[0];r.intervalDays=1;r.stages=[{name:'开灵',condition:{kind:'managed_granary'},effect:{kind:'awakening',target:'test_animal'}}];
+ assert.doesNotThrow(()=>assertWorldClockRules(w.engine));delete w.engine.wildlifeAwakening;
  assert.throws(()=>assertWorldClockRules(w.engine),/觉醒效果未实现/);
  w.engine.wildlifeAwakening={validate(){},apply(d,engine,effect,context){d.set(['state','creatures',effect.target,'awakened'],context.sourceEvent);return {applied:true};}};
  w.doc.state.created.test_animal=before.state.created.test_animal;w.doc.state.creatures={test_animal:before.state.creatures.test_animal};

@@ -2480,6 +2480,62 @@
       ]
     }
   },
+  "wildlifeAwakening": {
+    "version": 1,
+    "stages": [
+      {
+        "id": "tingxi",
+        "name": "听息",
+        "points": 30,
+        "sign": "会停步辨听人声与同类的呼唤，对反复出现的称呼有回应"
+      },
+      {
+        "id": "liyi",
+        "name": "立意",
+        "points": 100,
+        "sign": "能以固定的声响和动作表达愿与不愿，可以交流，不再只凭本能行事"
+      }
+    ],
+    "age": {
+      "thresholdDays": 720,
+      "initialMaxDays": 1080,
+      "daysPerPoint": 7,
+      "maximumPoints": 40
+    },
+    "experience": {
+      "pointsPerDay": 1,
+      "maximumPoints": 20
+    },
+    "spiritLands": [
+      {
+        "location": "bld_bs_reed_dao",
+        "pointsPerDay": 2
+      },
+      {
+        "location": "bld_bs_still_temple",
+        "pointsPerDay": 2
+      }
+    ],
+    "spiritItems": [
+      {
+        "item": "item_herb",
+        "points": 10
+      }
+    ],
+    "nurtureMinutes": 10,
+    "mentor": {
+      "operation": "spirit_sense",
+      "points": 25,
+      "minutes": 60
+    },
+    "clockPoints": 50,
+    "pactMinutes": 10,
+    "pactTerms": [
+      "可交谈、互助",
+      "不受命令驱使",
+      "不可买卖、骑乘或作为任何人的财物"
+    ]
+  },
   "bossEcology": {
     "version": 1,
     "hpMultiplier": 5.45,

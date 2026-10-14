@@ -35,6 +35,7 @@ import {initializeWorldClocks,advanceWorldClocks,nextWorldClockMinute}from'./wor
 import {initializeFactionClocks,advanceFactionClocks,nextFactionClockMinute,factionClockRules}from'./faction-clock.mjs';
 import {advanceFestivals,nextFestivalMinute,festivalCalendar,validateFestivalRuntime}from'./festival.mjs';
 import {advanceWildlife,wildlifePriceFactor,nextWildlifeEncounterMinute,wildlifeEncounterAt,settleWildlifeEncounter,wildlifeEncounterView}from'./wildlife.mjs';
+import {wildlifeAwakeningConsumer}from'./wildlife-awakening.mjs';
 import {advanceBosses}from'./bosses.mjs';
 import {sceneCard}from'./scene-card.mjs';
 import {stateNotices}from'./state-notices.mjs';
@@ -76,7 +77,7 @@ export class WorldEngine {
         this.byId = this.resolver.entities;
         const festivalErrors=validateFestivalRuntime(world);if(festivalErrors.length)throw Error(festivalErrors.join('；'));
         if((this.rules.engineRevision??1)===1)this.compat=new Phase1Engine(world);
-        this.factionEffectConsumers={society_news:societyNewsConsumer};
+        this.factionEffectConsumers={society_news:societyNewsConsumer};this.wildlifeAwakening=wildlifeAwakeningConsumer;
     }
     resolve(name, kind, scope) {
         if(!kind||kind==='npc'){
