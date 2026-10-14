@@ -1,3 +1,4 @@
+import {registerWorldEventSubscriber}from'./world-events.mjs';
 import {bossCognitionField}from'./npc-state.mjs';
 import {readBossNegotiation,breakBossAgreement}from'./boss-negotiation.mjs';
 import {societyView}from'./monster-society.mjs';
@@ -91,3 +92,5 @@ export function recordBossEvents(d,engine,events){
         rememberBossEncounter(d,engine,e.target,e.verb==='steal'?{kind:'clash',tactic:'theft',eventId:e.id}:{kind:'approach',eventId:e.id});
     }
 }
+// World-event subscriber; settlement order is the `order` field.
+registerWorldEventSubscriber({id:'boss_cognition',order:50,on:(d,engine,events)=>recordBossEvents(d,engine,events)});

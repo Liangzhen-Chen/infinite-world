@@ -1,3 +1,4 @@
+import {registerMagicEffect}from'./magic-effects.mjs';
 import {environmentFeatures,localPlayerPoint,localSightClear} from './environment.mjs';
 import {localWeather} from './weather.mjs';
 import {areaTargetFacts} from './magic-area.mjs';
@@ -469,3 +470,6 @@ export function ambientHeatC(d,engine,location=d.get('state','location')){
  return temperature;
 }
 export function coldHeatMultiplier(temperature){return Math.max(0,1-Math.max(0,temperature-20)/100);}
+// Spell effect family (dispatched by magic.mjs through magic-effects.mjs).
+registerMagicEffect({kinds:['object'],validate:validateObjectCatalog,prepare(d,c,args){return prepareObjectMagic.call(this,d,c,args);},apply(d,p,id){return applyObjectMagic.call(this,d,p,id);}});
+registerMagicEffect({kinds:['heat'],validate:validateHeatCatalog,prepare(d,c,args){return prepareHeatMagic.call(this,d,c,args);},apply(d,p,id){return applyHeatMagic.call(this,d,p,id);}});

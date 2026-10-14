@@ -1,3 +1,4 @@
+import {registerMagicEffect}from'./magic-effects.mjs';
 import {environmentFeatures,localPlayerPoint,localSightClear,recordLocalContact}from'./environment.mjs';
 import {areaTargetFacts}from'./magic-area.mjs';
 import {assertMagicTargeting}from'./magic-targeting.mjs';
@@ -374,3 +375,5 @@ export function advanceRituals(d,engine,after){
   d.set([...actorPath(id),'spirit','interference','remaining'],i.remaining-amount);
  }
 }
+// Spell effect family (dispatched by magic.mjs through magic-effects.mjs).
+registerMagicEffect({kinds:['ritual'],validate:validateRitualCatalog,prepare(d,c,args){return prepareRitual.call(this,d,c,args);},apply(d,p,id){return applyRitual.call(this,d,p,id);}});

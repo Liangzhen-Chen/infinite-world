@@ -1,3 +1,4 @@
+import {registerMagicEffect}from'./magic-effects.mjs';
 import {environmentFeatures,localPlayerPoint,localSightClear} from './environment.mjs';
 
 const unit=1440000,clone=x=>structuredClone(x);
@@ -147,3 +148,5 @@ export function consumeGrowthDay(d,engine,r,p,day,weather){
   d.set(['state','records',`physical_feature:${f.id}`],{id:f.id,category:'physical_feature',location:f.location,state:s});
  }
 }
+// Spell effect family (dispatched by magic.mjs through magic-effects.mjs).
+registerMagicEffect({kinds:['growth'],validateSpec:validateGrowthCatalog,prepare(d,c,args){return prepareGrowthMagic.call(this,d,c,args);},apply(d,p,id){return applyGrowthMagic.call(this,d,p,id);}});

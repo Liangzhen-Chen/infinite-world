@@ -1,3 +1,5 @@
+import {registerMagicEffect}from'./magic-effects.mjs';
+import {recordRitualCare}from'./magic-ritual.mjs';
 import {environmentFeatures,localPlayerPoint,localSightClear}from'./environment.mjs';
 import {assertMagicTargeting}from'./magic-targeting.mjs';
 import {ambientHeatC}from'./magic-object.mjs';
@@ -337,3 +339,5 @@ export function inspectCare(d,engine,args){
  featureAccess(d,engine,row,args,3,true);
  return{target:row.id,...(s.plant?{plant:{stage:s.plant.stage,alive:s.plant.alive,health:s.plant.health,rootLengthMeters:s.plant.rootLengthMeters,graft:clone(s.plant.graft??null)},waterMl:s.waterMl,nutrientMg:s.nutrientMg}:{}),...(s.foodLots?{foodLots:s.foodLots.map(b=>({id:b.id,kind:b.kind,amountGrams:b.amountGrams,spoiledGrams:b.spoiledGrams})),temperatureC:s.temperatureC}:{}),observations:Object.values(d.get('state','records')??{}).filter(r=>r.category==='care_observation'&&r.owner==='player'&&r.target===row.id&&r.location===location).map(r=>({operation:r.operation,observation:clone(r.observation)}))};
 }
+// Spell effect family (dispatched by magic.mjs through magic-effects.mjs).
+registerMagicEffect({kinds:['care'],validate:validateCareCatalog,prepare(d,c,args){return prepareCare.call(this,d,c,args);},apply(d,p,id){const result=applyCare.call(this,d,p,id);recordRitualCare(d,p,result,id);return result;}});

@@ -1,4 +1,4 @@
-import {deriveWorldEvents,eventRumorId}from'./world-events.mjs';
+import {deriveWorldEvents,eventRumorId,registerWorldEventSubscriber}from'./world-events.mjs';
 import {npcCognitionView}from'./npc-cognition.mjs';
 import {scheduleAt,npcAvailability}from'./npc-schedule.mjs';
 import {MemoryIndex,engineIndexOptions}from'./retrieval.mjs';
@@ -164,3 +164,5 @@ export function npcBackground(engine,document,id,query=''){
     return {relations,schedule:{scope:'routine-background',slots,current,
         limit:'作息是有时间边界的工作背景；current仅确认当前状态。过去活动须重建实际时段并排除行程、约定及失能覆盖；不证明完成数量或具体进度。'}};
 }
+// World-event subscriber; settlement order is the `order` field.
+registerWorldEventSubscriber({id:'npc_memory',order:30,on:(d,engine,events,c)=>recordNpcMemories(d,engine,c.before,events,c)});
