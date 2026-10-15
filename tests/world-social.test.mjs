@@ -9,12 +9,16 @@ import {withoutMonsterSociety}from'../tools/publish-monster-society.mjs';
 import {withoutMonsterSociety2} from '../tools/publish-monster-society-2.mjs';
 import {withoutMonsterSociety3} from '../tools/publish-monster-society-3.mjs';
 import {withoutT142} from '../tools/t142-merge.mjs';
+import {buildBatch as siteBatch,withoutSites} from '../tools/w5-sites.mjs';
+import * as sites1 from '../world/design/w5-sites-1.mjs';
+import * as sites2 from '../world/design/w5-sites-2.mjs';
+import * as sites3 from '../world/design/w5-sites-3.mjs';
 
 const candidate=JSON.parse(await fs.readFile('world/drafts/w5/social-candidate.json','utf8'));
 // W5 candidate replaces the social catalogs; T142's far regions, cultures and factions are a later batch.
 // U11族群觉醒动态挂靠的议事势力不在W5社会候选里，且晚于W5，候选世界不含。
 const beforeSocieties=world=>withoutMonsterSociety3(withoutMonsterSociety2(withoutMonsterSociety(world)));
-const socialWorld=async()=>{const world={...beforeSocieties(withoutT142(await loadWorld())),...structuredClone(candidate)};delete world.rules.tribalAwakening;delete world.rules.hazardClock;delete world.rules.questSources;return world;};
+const socialWorld=async()=>{const world={...beforeSocieties(withoutT142(await loadWorld())),...structuredClone(candidate)};delete world.rules.tribalAwakening;delete world.rules.hazardClock;delete world.rules.questSources;delete world.rules.military;delete world.rules.warDiplomacy;return world;};
 
 test('势力历史进入正式校验，拒绝坏归属、伪造公开说明、古人复活及纪元错误',async()=>{
     const world=await socialWorld();assert.equal(validateWorld(world).ok,true);
@@ -50,7 +54,9 @@ test('HTTP目录和搜索共用公开投影，内部目标与历史真相不外�
 });
 
 test('旧战役升级加入社会资料不实例化名册或资源，导出往返和历史编号保留',async t=>{
-    const old=beforeSocieties(withoutT142(await loadWorld())),baseline=JSON.parse(await fs.readFile('world/drafts/m2-people/baseline.json','utf8'));old.npcs=old.npcs.filter(n=>baseline.some(b=>b.id===n.id));for(const key of['factions','history','factionPeople','eras'])old[key]=[];
+    // T113–T115 sites rely on the later village NPCs and social factions.
+    let beforeSites=await loadWorld();for(const design of [sites3,sites2,sites1])beforeSites=withoutSites(beforeSites,siteBatch(design.sites,beforeSites),design.priorNoMechanics);
+    const old=beforeSocieties(withoutT142(beforeSites)),baseline=JSON.parse(await fs.readFile('world/drafts/m2-people/baseline.json','utf8'));old.npcs=old.npcs.filter(n=>baseline.some(b=>b.id===n.id));for(const key of['factions','history','factionPeople','eras'])old[key]=[];
     old.rules.worldClock.clocks=old.rules.worldClock.clocks.filter(c=>old.factions.some(f=>f.id===c.faction));
     // K6效果表挂在势力时钟上的效果随属主势力时钟一并不在旧世界（如炭阶地宫粮路传闻的魔物社会携带者）。
     const factionClocks=new Set([...old.rules.factionClock?.clocks??[],...old.factions.map(f=>f.clock).filter(Boolean)].map(c=>c.id));
@@ -58,6 +64,7 @@ test('旧战役升级加入社会资料不实例化名册或资源，导出往�
     delete old.festivals;// The festival catalog (T108) postdates this historical world.
     delete old.rules.tribalAwakening;// So do U11 tribal-awakening dynamics.
     delete old.rules.hazardClock;delete old.rules.questSources;// U3/U17/D1 postdate the social-catalog fixture.
+    delete old.rules.military;delete old.rules.warDiplomacy;// U12 relies on later factions and places.
     const original=await createPlaytestServer({world:old});t.after(original.close);
     const created=await original.api('create',{}),id=created.reference.campaignId;
     await original.api('execute',{campaignId:id,tool:'world_time',args:{minutes:10},eventId:'before-upgrade'});

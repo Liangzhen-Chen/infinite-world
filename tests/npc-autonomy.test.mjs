@@ -68,17 +68,21 @@ test('NPC 交易双方真实同场才成交，钱和物品守恒，买方无需�
  assert.equal(count(d,seller,item),stock-1);assert.equal(count(d,actor,item)+count(d,seller,item),items);assert.equal(d.get('state','npcs',actor,'coins')+d.get('state','npcs',seller,'coins'),money);
 });
 async function plannerTemp(t){const dir=await fs.mkdtemp(path.join(os.tmpdir(),'dnd-npc-planner-'));t.after(async()=>{const resolved=path.resolve(dir);assert.ok(resolved.startsWith(path.resolve(os.tmpdir())+path.sep));await fs.rm(resolved,{recursive:true,force:true});});return path.join(dir,'ledger.json');}
+// The expanded rumor catalog leaves less of the unchanged 60000-token daily
+// reservation for output. These mock replies need fewer than 1000 tokens.
+const plannerOptions={maxTokens:1000};
 test('智能规划复用预算客户端并冻结输入，同日缓存与限额不重复调用模型',async t=>{
  const {engine,d}=await setup(),ledgerFile=await plannerTemp(t);let calls=0;
  const client={generate:async body=>{calls++;const context=JSON.parse(body.messages[1].content);return {usage:{prompt_tokens:100,completion_tokens:80},choices:[{message:{tool_calls:[{function:{name:'propose_npc_actions',arguments:JSON.stringify({proposals:context.people.map(n=>({npc:n.id,actions:[]}))})}}]}}]};}};
- const result=await planNpcAutonomy(engine,d.document,{client,ledgerFile});assert.equal(result.status,'ready');assert.equal(result.input.type,'npc_plan');assert.equal(result.input.plan.proposals.length,12);
- assert.equal((await planNpcAutonomy(engine,d.document,{client,ledgerFile})).cached,true);assert.equal(calls,1);
- d.set(['state','minute'],541);assert.equal((await planNpcAutonomy(engine,d.document,{client,ledgerFile})).status,'limited');assert.equal(calls,1);
+ assert.equal((await planNpcAutonomy(engine,d.document,{client,ledgerFile,maxTokensPerDay:1})).status,'limited');assert.equal(calls,0);
+ const result=await planNpcAutonomy(engine,d.document,{...plannerOptions,client,ledgerFile});assert.equal(result.status,'ready');assert.equal(result.input.type,'npc_plan');assert.equal(result.input.plan.proposals.length,12);
+ assert.equal((await planNpcAutonomy(engine,d.document,{...plannerOptions,client,ledgerFile})).cached,true);assert.equal(calls,1);
+ d.set(['state','minute'],541);assert.equal((await planNpcAutonomy(engine,d.document,{...plannerOptions,client,ledgerFile})).status,'limited');assert.equal(calls,1);
 });
 test('模型故障与无效响应保留失败及费用预留，不伪造成功计划',async t=>{
  const {engine,d}=await setup(),ledgerFile=await plannerTemp(t);let calls=0;const client={generate:async()=>{calls++;throw Error('测试网络故障');}};
- const result=await planNpcAutonomy(engine,d.document,{client,ledgerFile});assert.equal(result.status,'failed');assert.equal(result.input,null);assert.ok(result.spentYuan>0);
- const again=await planNpcAutonomy(engine,d.document,{client,ledgerFile});assert.equal(again.status,'limited');assert.equal(calls,1);
+ const result=await planNpcAutonomy(engine,d.document,{...plannerOptions,client,ledgerFile});assert.equal(result.status,'failed');assert.equal(result.input,null);assert.ok(result.spentYuan>0);
+ const again=await planNpcAutonomy(engine,d.document,{...plannerOptions,client,ledgerFile});assert.equal(again.status,'limited');assert.equal(calls,1);
  d.set(['state','minute'],1440);const invalid={generate:async()=>({usage:{prompt_tokens:10,completion_tokens:10},choices:[{message:{tool_calls:[{function:{name:'propose_npc_actions',arguments:JSON.stringify({proposals:[{npc:'invented',actions:[]}]})}}]}}]})};
- assert.equal((await planNpcAutonomy(engine,d.document,{client:invalid,ledgerFile})).status,'failed');
+ assert.equal((await planNpcAutonomy(engine,d.document,{...plannerOptions,client:invalid,ledgerFile})).status,'failed');
 });
