@@ -17,6 +17,7 @@
 import {registerEffect,assertEffect,applyEffects} from './effects.mjs';
 import {applyInteraction} from './interactions.mjs';
 import {environmentFeatures} from './environment.mjs';
+import {waterExposure} from './water-cycle.mjs';
 import {contractIllness,householdMembers} from './npc-life.mjs';
 import {famineAt} from './hazard-calendar.mjs';
 import {hazardClocks,hazardKey,hazardRoll,isPureClock,isHazardTick,pureHazardFires,pureHazardPhase,pureConditionMet,hazardRouteClosed,PURE_CONDITIONS} from './hazard-calendar.mjs';
@@ -298,6 +299,7 @@ function stepEpidemic(d,engine,rule,ep,at){
  d.set(['state','records',ep.id],ep);
 }
 function advanceEpidemics(d,engine,at){
+ for(const ep of Object.values(d.get('state','records')??{}).filter(r=>r.category==='epidemic'&&r.waterExposure&&r.status==='流行'&&r.since<at))stepEpidemic(d,engine,{spread:{routes:[]}},structuredClone(ep),at);
  for(const rule of hazardClocks(engine))if(rule.kind==='epidemic')for(const y of [yearOf(at)-1,yearOf(at)]){
   const ep=y>=0?d.get('state','records',epidemicKey(rule.id,y)):null;
   if(ep?.status==='流行'&&ep.since<at)stepEpidemic(d,engine,rule,structuredClone(ep),at);
@@ -306,12 +308,28 @@ function advanceEpidemics(d,engine,at){
 // Registered with the advance registry after the world clocks. Every
 // midnight in (before, after] is settled once, with the state of that midnight.
 export function advanceHazardClocks(d,engine,{before,after}){
- const rules=hazardClocks(engine);if(!rules.length)return;
+ const rules=hazardClocks(engine);if(!rules.length&&!engine.rules.forestWater)return;
  assertHazardRules(engine);
  for(let day=Math.floor(before/DAY)+1;day*DAY<=after;day++){
   const at=day*DAY;
   advanceEpidemics(d,engine,at);
+  exposeDrinkingWater(d,engine,day-1,at);
   for(const rule of rules)if(isHazardTick(rule,day))tick(d,engine,rule,at);
+ }
+}
+
+// Use U3's household incubation, course and actual illness consumer. Water
+// exposure has its own stable outbreak id and does not advance a disaster clock.
+function exposeDrinkingWater(d,engine,day,at){
+ const r=engine.rules.forestWater?.water,disease=table(engine)?.diseases?.find(x=>x.route==='water');if(!r||!disease)return;
+ for(const settlement of Object.keys(d.get('state','settlements')??{})){
+  const water=waterExposure(engine,d.get('state'),settlement);if(water?.day!==day||!water.takenMl||water.pathogenRisk<r.diseaseThreshold)continue;
+  const rule=hazardClocks(engine).find(c=>c.kind==='epidemic'&&c.settlement===settlement&&c.disease===disease.id);
+  const key=rule?epidemicKey(rule.id,yearOf(at)):`epidemic:water:${settlement}:${disease.id}:${yearOf(at)}`,old=d.get('state','records',key);
+  const ep=structuredClone(old??{category:'epidemic',id:key,clock:rule?.id??null,waterExposure:!rule,disease:disease.id,origin:settlement,since:at,status:'流行',settlements:[settlement],households:{},measures:[],sourceEvent:`water:${settlement}:${day}`});
+  const candidates=housesIn(engine,settlement).filter(h=>!ep.households[h]),chance=Math.min(1,r.exposureRate*water.pathogenRisk/100)*measureFactor(engine,ep,settlement,at,'household',disease);
+  for(const house of candidates)if(hazardRoll(d.document.randomSeed,`water:${settlement}:${house}`,day)<chance)infect(engine,d.document.randomSeed,ep,house,settlement,at,{source:'drinking_water',pathogenRisk:water.pathogenRisk});
+  if(Object.keys(ep.households).length){ep.status='流行';d.set(['state','records',key],ep);}
  }
 }
 

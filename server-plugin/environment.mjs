@@ -73,10 +73,14 @@ function visible(row,state){
     if(state.charcoalTrace)out.charcoalTrace=structuredClone(state.charcoalTrace);
     if(state.waterMl!==undefined)out.waterSafety='毒素和病原尚未检验；外观清澈不等于可安全饮用';return out;
 }
+import {forestView} from './forest-water.mjs';
+import {basinForLocation,basinState,waterBasins} from './water-cycle.mjs';
 export function environmentCatalog(engine,document,{entity}={}){
     const d={get:(...path)=>path.reduce((v,k)=>v?.[k],document)},location=document.state.location;
     if(entity){const row=feature(engine,entity,location);inReach(d,row,Number.POSITIVE_INFINITY);return visible(row,stateOf(d,row));}
-    return{kind:'feature',entries:environmentFeatures(engine).filter(row=>row.location===location).map(row=>visible(row,stateOf(d,row)))};
+    const forest=forestView(engine,document.state,location),basin=basinForLocation(engine,location,waterBasins(engine,document.state)),water=basin&&basinState(engine,document.state,basin);
+    return{kind:'feature',entries:environmentFeatures(engine).filter(row=>row.location===location).map(row=>visible(row,stateOf(d,row))),
+        ...(forest?{forest}:{}),...(basin?{watershed:{id:basin.id,location:basin.location,waterMl:water.waterMl,capacityMl:water.capacityMl}}:{})};
 }
 export function servantCarryWater(d,args,maximumMl,inspectOnly=false){
     const source=feature(this,args.source,d.get('state','location')),destination=feature(this,args.destination,d.get('state','location'));

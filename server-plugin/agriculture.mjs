@@ -1,6 +1,8 @@
 import {consumeGrowthDay,validateGrowthRules,validateGrowthWorld}from'./magic-growth.mjs';
 import {weatherAt}from'./weather.mjs';
 import {damageFarmCrops,farmPestProfile}from'./farm-pests.mjs';
+import {harvestSettlementWood}from'./forest-water.mjs';
+import {farmWaterFactor}from'./water-cycle.mjs';
 
 const key=id=>`agriculture:${id}`,path=id=>['state','records',key(id)];
 const clone=value=>structuredClone(value);
@@ -105,7 +107,7 @@ export function advanceAgriculture(d,engine,id,source,day){
     const pestDamage=damageFarmCrops(d,engine,r,id,day);
     for(const row of r.field.cohorts){
         if(row.ready)continue;
-        if((weather?.temperatureC??10)>=engine.rules.agriculture.crop.minimumTemperatureC){row.grownDays++;row.qualityDays++;row.qualitySum+=weather?.cropMultiplier??1;}
+        if((weather?.temperatureC??10)>=engine.rules.agriculture.crop.minimumTemperatureC){row.grownDays++;row.qualityDays++;row.qualitySum+=(weather?.cropMultiplier??1)*farmWaterFactor(engine,d.get('state'),id,day);}
         }
     consumeGrowthDay(d,engine,r,p,day,weather);
     for(const row of r.field.cohorts)if(!row.ready&&row.grownDays>=engine.rules.agriculture.crop.growthDays){row.ready=true;row.readyDay=day;}
@@ -116,7 +118,7 @@ export function advanceAgriculture(d,engine,id,source,day){
     const grainEaten=takeFood(r,s,Math.min(mouths-freshEaten,processing*p.processingPerWorker),'grain');
     const eaten=freshEaten+grainEaten;r.ledger.eaten+=eaten;
     const missingMeals=mouths-eaten;r.lastDay=day;
-    const woodWorkers=Math.min(2,Math.max(0,availableWorkers-processing-freshWorkers-fieldWorkers)),woodProduced=Math.floor(s.woodPerDay*woodWorkers/2);
+    const woodWorkers=Math.min(2,Math.max(0,availableWorkers-processing-freshWorkers-fieldWorkers)),woodProduced=harvestSettlementWood(d,engine,id,Math.floor(s.woodPerDay*woodWorkers/2),(day+1)*1440);
     r.lastReport={day,workers:{available:availableWorkers,processing,fresh:freshWorkers,field:fieldWorkers,wood:woodWorkers},fresh,wood:woodProduced,planted:planted.units,seedSpent:planted.seed,harvest:result.grain,seedReserved:result.reserved,stored:result.stored,freshEaten,grainEaten,eaten,missingMeals,
         ...(pestDamage?{harvestLostToPests:result.pestLost??0,pestDamageAddedMaxPercent:pestDamage.maximumAddedPercent}:{})};
     balanced(r,s);d.set(path(id),r);return{settlement:s,missingMeals,woodProduced};

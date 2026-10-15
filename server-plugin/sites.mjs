@@ -5,6 +5,7 @@ import {actorPath} from './npc-state.mjs';
 import {validateMonsterSocieties,passageAllows,assertSocietyEntry,infiltrationDetected,infiltrationSucceeded,societyAt} from './monster-society.mjs';
 import {traitsOf} from './traits.mjs';
 import {personAge,personConstraint}from'./entity-view.mjs';
+import {forestView,harvestForest}from'./forest-water.mjs';
 
 // A location's optional site contains occupants (actor IDs), manager, owner,
 // entryMechanisms, mechanisms, clues, resources and truths. Local IDs stay stable
@@ -160,6 +161,18 @@ function ledger(d,place){
 const unblocked=(row,gates)=>{if(gates.some(id=>row.mechanisms[id]?.status!=='已解除'))throw Error('机关尚未解除');};
 const inside=(d,place)=>d.get('state','records','site_presence')?.site===place.id&&d.get('state','records','site_presence')?.actor==='player';
 const covert=(d,place)=>inside(d,place)&&d.get('state','records','site_presence').covert===true;
+export function assertSiteHarvest(d,engine,place,args){
+ const authorizations=[args.authorization,...args.authorizations??[]];
+ assertSocietyEntry(d,engine,place);
+ if(['private','council'].includes(place.access?.mode)&&place.access.requiresConsent){
+  const authorization=authorizations.find(id=>d.get('state','records',id)?.subject===place.id&&['site_use','enter_home','enter_council'].includes(d.get('state','records',id)?.action));
+  assertLocationAccess(d,engine,place.id,{authorization,companions:d.get('state','player','companions')??[]});
+ }
+ if(!allowed(d.document,place,ownerOf(place),authorizations,'enter')||!allowed(d.document,place,ownerOf(place),authorizations,'gather'))throw Error('采伐需所有者的采集许可');
+ assertOccupants(d,engine,place,authorizations);
+ if(!inside(d,place))throw Error('须先进入据点再采伐');
+ unblocked(ledger(d,place),place.site.entryMechanisms??[]);
+}
 function watchers(d,engine,place){
     const society=societyAt(engine,place.id)?.id,occupants=new Set(place.site.occupants??[]);
     return engine.world.npcs.filter(n=>(occupants.has(n.id)||society&&n.society===society||[place.site.manager,ownerOf(place)].includes(n.id))&&(personAge(engine,d.get('state'),n.id).value??0)>=18).map(n=>n.id).sort().filter(id=>{
@@ -284,6 +297,7 @@ export function siteAction(d,args,eventId){
         if(row.remaining[target.id]<quantity)throw Error('有限资源不足，不会因重访刷新');
         advance(target.minutes);
         if(!allowed(d.document,place,ownerOf(place,target),authorizations,'gather'))throw Error('资源许可已到期');
+        if(target.item==='item_wood'&&forestView(this,d.get('state'),place.id)&&harvestForest(d,this,place.id,quantity)!==quantity)throw Error('林木存量不足');
         row.remaining[target.id]-=quantity;d.set(['state','records',siteKey(place.id)],row);
         this.itemDelta(d,'player',target.item,quantity);
         return{target:target.id,item:target.item,quantity,remaining:row.remaining[target.id],owner:'player'};

@@ -2,7 +2,7 @@
  "title": "无限原野系统地图",
  "card": "K9",
  "generatedFrom": {
-  "commit": "refs/heads/v6",
+  "commit": "refs/heads/rw04",
   "method": "运行时导出（注册表、规则表、工具定义、效果表、立场传导表）+ 静态正则扫描（import 图、函数体标识符、state 分区与 records 前缀、rules/world 读取）。静态扫描是近似：经 engine.byId、helper 间接或动态拼接路径的访问不计入。"
  },
  "scanMethods": {
@@ -18,14 +18,14 @@
  "counts": {
   "layers": 6,
   "systems": 38,
-  "modules": 180,
+  "modules": 182,
   "advance": 45,
   "tools": 25,
   "verbs": 28,
   "subscribers": 8,
   "interactionRules": 25,
   "effectKinds": 19,
-  "links": 395
+  "links": 405
  },
  "layers": [
   {
@@ -773,7 +773,7 @@
    "modules": [
     "server-plugin/advance-registry.mjs"
    ],
-   "lines": 172,
+   "lines": 176,
    "stateWrites": [
     "effects",
     "obligations",
@@ -1166,9 +1166,11 @@
     "server-plugin/wildlife-migration.mjs",
     "server-plugin/creature-nature.mjs",
     "server-plugin/seasonal-migration.mjs",
-    "server-plugin/farm-pests.mjs"
+    "server-plugin/farm-pests.mjs",
+    "server-plugin/forest-water.mjs",
+    "server-plugin/water-cycle.mjs"
    ],
-   "lines": 1015,
+   "lines": 1326,
    "stateWrites": [
     "crafted",
     "created",
@@ -1185,19 +1187,30 @@
     "location",
     "minute",
     "recipes",
+    "settlements",
     "skills"
    ],
-   "recordWrites": [],
-   "recordReads": [
+   "recordWrites": [
     "ecology",
+    "physical_feature"
+   ],
+   "recordReads": [
+    "agriculture",
+    "forest",
+    "forest-supply",
+    "water-cycle",
     "wildlife"
    ],
    "rules": [
     "agriculture",
     "check",
+    "economy",
+    "forestWater",
     "habitatDerivation",
     "monsters",
     "npcGrowth",
+    "settlementTrade",
+    "weather",
     "wildlife",
     "wildlifeAwakening"
    ],
@@ -1297,7 +1310,7 @@
     "server-plugin/regions.mjs",
     "server-plugin/remote-generation.mjs"
    ],
-   "lines": 1588,
+   "lines": 1606,
    "stateWrites": [
     "npcs",
     "records",
@@ -1490,7 +1503,7 @@
     "server-plugin/extraction.mjs",
     "server-plugin/smuggling.mjs"
    ],
-   "lines": 1599,
+   "lines": 1620,
    "stateWrites": [
     "crafted",
     "itemInstances",
@@ -1526,6 +1539,7 @@
     "economy",
     "equipment",
     "extraction",
+    "forestWater",
     "law",
     "repairs",
     "settlementTrade",
@@ -1573,7 +1587,7 @@
    "modules": [
     "server-plugin/agriculture.mjs"
    ],
-   "lines": 325,
+   "lines": 327,
    "stateWrites": [
     "player",
     "records",
@@ -1645,7 +1659,7 @@
     "server-plugin/tribal-awakening.mjs",
     "server-plugin/elections.mjs"
    ],
-   "lines": 3640,
+   "lines": 3654,
    "stateWrites": [
     "buildings",
     "created",
@@ -1691,6 +1705,7 @@
    "rules": [
     "agriculture",
     "elections",
+    "forestWater",
     "governance",
     "law",
     "levels",
@@ -1823,7 +1838,7 @@
     "server-plugin/seasonal-hazards.mjs",
     "server-plugin/hazard-calendar.mjs"
    ],
-   "lines": 1015,
+   "lines": 1033,
    "stateWrites": [
     "family",
     "npcs",
@@ -1859,6 +1874,7 @@
     "attributes",
     "effectTable",
     "factionClock",
+    "forestWater",
     "hazardClock",
     "npcLife",
     "questSources",
@@ -2002,7 +2018,7 @@
    "modules": [
     "extension/tools.mjs"
    ],
-   "lines": 110,
+   "lines": 111,
    "stateWrites": [],
    "stateReads": [],
    "recordWrites": [],
@@ -2596,6 +2612,8 @@
    "to": "sim_wildlife",
    "kind": "call",
    "labels": [
+    "forest-water.mjs",
+    "water-cycle.mjs",
     "wildlife.mjs"
    ]
   },
@@ -3173,7 +3191,9 @@
    "to": "sim_wildlife",
    "kind": "call",
    "labels": [
-    "farm-pests.mjs"
+    "farm-pests.mjs",
+    "forest-water.mjs",
+    "water-cycle.mjs"
    ]
   },
   {
@@ -3406,6 +3426,14 @@
    ]
   },
   {
+   "from": "sim_clock",
+   "to": "sim_wildlife",
+   "kind": "call",
+   "labels": [
+    "water-cycle.mjs"
+   ]
+  },
+  {
    "from": "sim_combat",
    "to": "base_standing",
    "kind": "call",
@@ -3521,6 +3549,7 @@
    "to": "sim_environment",
    "kind": "call",
    "labels": [
+    "sites.mjs",
     "weather.mjs"
    ]
   },
@@ -3566,6 +3595,7 @@
    "to": "sim_wildlife",
    "kind": "call",
    "labels": [
+    "forest-water.mjs",
     "wildlife-society.mjs",
     "wildlife.mjs"
    ]
@@ -3682,6 +3712,8 @@
    "to": "sim_wildlife",
    "kind": "call",
    "labels": [
+    "forest-water.mjs",
+    "water-cycle.mjs",
     "wildlife-habitats.mjs",
     "wildlife-migration.mjs"
    ]
@@ -4198,6 +4230,7 @@
    "to": "base_events",
    "kind": "call",
    "labels": [
+    "entity-transitions.mjs",
     "world-events.mjs"
    ]
   },
@@ -4255,7 +4288,8 @@
    "to": "sim_environment",
    "kind": "call",
    "labels": [
-    "environment.mjs"
+    "environment.mjs",
+    "weather.mjs"
    ]
   },
   {
@@ -5394,6 +5428,14 @@
   },
   {
    "from": "sim_clock",
+   "to": "sim_wildlife",
+   "kind": "record",
+   "labels": [
+    "agriculture"
+   ]
+  },
+  {
+   "from": "sim_clock",
    "to": "ui_scene",
    "kind": "record",
    "labels": [
@@ -5439,6 +5481,14 @@
    "kind": "record",
    "labels": [
     "village-fiscal"
+   ]
+  },
+  {
+   "from": "sim_economy",
+   "to": "sim_wildlife",
+   "kind": "record",
+   "labels": [
+    "agriculture"
    ]
   },
   {
@@ -5565,18 +5615,75 @@
   },
   {
    "from": "sim_society",
-   "to": "sim_wildlife",
+   "to": "ui_scene",
+   "kind": "record",
+   "labels": [
+    "world_event"
+   ]
+  },
+  {
+   "from": "sim_wildlife",
+   "to": "base_effects",
    "kind": "record",
    "labels": [
     "ecology"
    ]
   },
   {
-   "from": "sim_society",
-   "to": "ui_scene",
+   "from": "sim_wildlife",
+   "to": "base_standing",
    "kind": "record",
    "labels": [
-    "world_event"
+    "ecology",
+    "physical_feature"
+   ]
+  },
+  {
+   "from": "sim_wildlife",
+   "to": "sim_boss",
+   "kind": "record",
+   "labels": [
+    "ecology"
+   ]
+  },
+  {
+   "from": "sim_wildlife",
+   "to": "sim_character",
+   "kind": "record",
+   "labels": [
+    "physical_feature"
+   ]
+  },
+  {
+   "from": "sim_wildlife",
+   "to": "sim_clock",
+   "kind": "record",
+   "labels": [
+    "ecology"
+   ]
+  },
+  {
+   "from": "sim_wildlife",
+   "to": "sim_companion",
+   "kind": "record",
+   "labels": [
+    "physical_feature"
+   ]
+  },
+  {
+   "from": "sim_wildlife",
+   "to": "sim_economy",
+   "kind": "record",
+   "labels": [
+    "physical_feature"
+   ]
+  },
+  {
+   "from": "sim_wildlife",
+   "to": "sim_magic",
+   "kind": "record",
+   "labels": [
+    "ecology"
    ]
   },
   {
@@ -5900,8 +6007,10 @@
    "modules": [
     "server-plugin/agriculture.mjs",
     "server-plugin/bosses.mjs",
+    "server-plugin/forest-water.mjs",
     "server-plugin/hazard-calendar.mjs",
     "server-plugin/pets.mjs",
+    "server-plugin/water-cycle.mjs",
     "server-plugin/weather.mjs",
     "server-plugin/wildlife.mjs"
    ],
@@ -6556,7 +6665,10 @@
     "server-plugin/war-diplomacy.mjs",
     "server-plugin/world-events.mjs"
    ],
-   "close": [],
+   "close": [
+    "server-plugin/forest-water.mjs",
+    "server-plugin/water-cycle.mjs"
+   ],
    "deceive": [
     "server-plugin/lies.mjs"
    ],
@@ -7173,6 +7285,7 @@
    "server-plugin/creature-nature.mjs",
    "server-plugin/effects.mjs",
    "server-plugin/extraction.mjs",
+   "server-plugin/forest-water.mjs",
    "server-plugin/interactions.mjs",
    "server-plugin/magic-marks.mjs",
    "server-plugin/magic-object.mjs",
@@ -8581,7 +8694,8 @@
     "site_disarm",
     "site_gather",
     "site_infiltrate",
-    "site_mine"
+    "site_mine",
+    "site_woodcut"
    ],
    "routes": [
     {
@@ -8705,7 +8819,8 @@
       "site_disarm→disarm",
       "site_gather→gather",
       "site_infiltrate→infiltrate",
-      "site_mine→mine"
+      "site_mine→mine",
+      "site_woodcut→woodcut"
      ],
      "handler": "activities.site",
      "modules": [
@@ -9127,6 +9242,7 @@
     "server-plugin/faction-clock.mjs",
     "server-plugin/farm-pests.mjs",
     "server-plugin/festival.mjs",
+    "server-plugin/forest-water.mjs",
     "server-plugin/governance.mjs",
     "server-plugin/magic-air.mjs",
     "server-plugin/magic-light.mjs",
@@ -9168,6 +9284,7 @@
     "server-plugin/tribal-awakening.mjs",
     "server-plugin/ui-map.mjs",
     "server-plugin/war-diplomacy.mjs",
+    "server-plugin/water-cycle.mjs",
     "server-plugin/weather.mjs",
     "server-plugin/wildlife-awakening.mjs",
     "server-plugin/wildlife-habitats.mjs",
@@ -9300,6 +9417,7 @@
     "server-plugin/farm-pests-migration.mjs",
     "server-plugin/farm-pests.mjs",
     "server-plugin/festival.mjs",
+    "server-plugin/forest-water.mjs",
     "server-plugin/governance.mjs",
     "server-plugin/hazard-calendar.mjs",
     "server-plugin/items.mjs",
@@ -9359,6 +9477,7 @@
     "server-plugin/ui-overview.mjs",
     "server-plugin/ui-personal.mjs",
     "server-plugin/war-diplomacy.mjs",
+    "server-plugin/water-cycle.mjs",
     "server-plugin/weather.mjs",
     "server-plugin/wildlife-awakening.mjs",
     "server-plugin/wildlife-habitats.mjs",
@@ -9542,6 +9661,13 @@
   "version": [
    "server-plugin/world-clock.mjs"
   ],
+  "forestWater": [
+   "server-plugin/extraction.mjs",
+   "server-plugin/forest-water.mjs",
+   "server-plugin/seasonal-hazards.mjs",
+   "server-plugin/tribal-awakening.mjs",
+   "server-plugin/water-cycle.mjs"
+  ],
   "levels": [
    "server-plugin/character.mjs",
    "server-plugin/progression.mjs",
@@ -9656,6 +9782,7 @@
    "server-plugin/business.mjs",
    "server-plugin/credit.mjs",
    "server-plugin/engine.mjs",
+   "server-plugin/forest-water.mjs",
    "server-plugin/law.mjs",
    "server-plugin/remote-generation.mjs",
    "server-plugin/settlement-trade.mjs",
@@ -9688,6 +9815,7 @@
   "weather": [
    "server-plugin/agriculture.mjs",
    "server-plugin/engine.mjs",
+   "server-plugin/water-cycle.mjs",
    "server-plugin/weather.mjs"
   ],
   "agriculture": [
@@ -9696,6 +9824,7 @@
    "server-plugin/civic.mjs",
    "server-plugin/entity-view.mjs",
    "server-plugin/farm-pests.mjs",
+   "server-plugin/forest-water.mjs",
    "server-plugin/governance.mjs",
    "server-plugin/location-access.mjs",
    "server-plugin/magic-growth.mjs",
@@ -9705,6 +9834,7 @@
    "server-plugin/return-summary.mjs",
    "server-plugin/settlement-profile.mjs",
    "server-plugin/settlement-trade.mjs",
+   "server-plugin/water-cycle.mjs",
    "server-plugin/world-clock.mjs"
   ],
   "habitatDerivation": [
@@ -9717,6 +9847,7 @@
    "server-plugin/extraction.mjs",
    "server-plugin/farm-pests-migration.mjs",
    "server-plugin/farm-pests.mjs",
+   "server-plugin/forest-water.mjs",
    "server-plugin/magic-ritual.mjs",
    "server-plugin/quest-sources.mjs",
    "server-plugin/remote-generation.mjs",
@@ -9746,6 +9877,7 @@
   "settlementTrade": [
    "server-plugin/advance-registry.mjs",
    "server-plugin/effects.mjs",
+   "server-plugin/forest-water.mjs",
    "server-plugin/return-summary.mjs",
    "server-plugin/settlement-trade.mjs",
    "server-plugin/world-clock.mjs"
@@ -10319,7 +10451,8 @@
    ],
    "readers": [
     "base_standing",
-    "sim_clock"
+    "sim_clock",
+    "sim_wildlife"
    ]
   },
   "shrineTreasuries": {
@@ -10739,7 +10872,9 @@
      "means": "野地按地形、群落标签与性状派生栖地并自动长出生物（K8 wildlife-habitats.mjs）",
      "pattern": "locationHabitatTypes|areaKm2",
      "modules": [
+      "server-plugin/forest-water.mjs",
       "server-plugin/remote-generation.mjs",
+      "server-plugin/water-cycle.mjs",
       "server-plugin/wildlife-habitats.mjs"
      ],
      "systems": [
@@ -10755,11 +10890,13 @@
       "server-plugin/activities.mjs",
       "server-plugin/career-metrics.mjs",
       "server-plugin/extraction.mjs",
+      "server-plugin/forest-water.mjs",
       "server-plugin/regions.mjs",
       "server-plugin/remote-generation.mjs",
       "server-plugin/settlement-profile.mjs",
       "server-plugin/traits.mjs",
       "server-plugin/war-diplomacy.mjs",
+      "server-plugin/water-cycle.mjs",
       "server-plugin/wildlife-habitats.mjs"
      ],
      "systems": [
@@ -10784,6 +10921,7 @@
       "server-plugin/civic.mjs",
       "server-plugin/engine.mjs",
       "server-plugin/entity-view.mjs",
+      "server-plugin/forest-water.mjs",
       "server-plugin/governance.mjs",
       "server-plugin/hazard-calendar.mjs",
       "server-plugin/military.mjs",
@@ -10811,6 +10949,7 @@
       "server-plugin/ui-affairs.mjs",
       "server-plugin/ui-map.mjs",
       "server-plugin/ui-overview.mjs",
+      "server-plugin/water-cycle.mjs",
       "server-plugin/wildlife.mjs",
       "extension/runtime.js"
      ],
@@ -10841,12 +10980,14 @@
       "server-plugin/entity-view.mjs",
       "server-plugin/environment.mjs",
       "server-plugin/extraction.mjs",
+      "server-plugin/forest-water.mjs",
       "server-plugin/interactions.mjs",
       "server-plugin/magic-object.mjs",
       "server-plugin/npc-autonomy.mjs",
       "server-plugin/revival.mjs",
       "server-plugin/sites.mjs",
-      "server-plugin/traits.mjs"
+      "server-plugin/traits.mjs",
+      "server-plugin/water-cycle.mjs"
      ],
      "systems": [
       "base_effects",
@@ -10857,7 +10998,8 @@
       "sim_economy",
       "sim_environment",
       "sim_magic",
-      "sim_npc"
+      "sim_npc",
+      "sim_wildlife"
      ]
     },
     {
@@ -10922,6 +11064,8 @@
      "means": "据点：进入、调查、机关、采集",
      "pattern": "\\.site\\b",
      "modules": [
+      "server-plugin/extraction.mjs",
+      "server-plugin/forest-water.mjs",
       "server-plugin/location-access.mjs",
       "server-plugin/retrieval.mjs",
       "server-plugin/return-summary.mjs",
@@ -10929,7 +11073,9 @@
      ],
      "systems": [
       "nar_memory",
+      "sim_economy",
       "sim_environment",
+      "sim_wildlife",
       "ui_scene"
      ]
     },
@@ -10943,6 +11089,7 @@
       "server-plugin/entity-view.mjs",
       "server-plugin/environment.mjs",
       "server-plugin/festival.mjs",
+      "server-plugin/forest-water.mjs",
       "server-plugin/lies.mjs",
       "server-plugin/location-access.mjs",
       "server-plugin/magic-air.mjs",
@@ -10959,6 +11106,7 @@
       "server-plugin/quest-board.mjs",
       "server-plugin/sites.mjs",
       "server-plugin/summons.mjs",
+      "server-plugin/water-cycle.mjs",
       "server-plugin/wildlife-habitats.mjs"
      ],
      "systems": [
@@ -11003,12 +11151,14 @@
       "server-plugin/remote-generation.mjs",
       "server-plugin/tribal-awakening.mjs",
       "server-plugin/ui-map.mjs",
+      "server-plugin/water-cycle.mjs",
       "extension/map-view.mjs"
      ],
      "systems": [
       "sim_environment",
       "sim_magic",
       "sim_society",
+      "sim_wildlife",
       "ui_client",
       "ui_server"
      ]
@@ -11082,6 +11232,7 @@
      "modules": [
       "server-plugin/catalog.mjs",
       "server-plugin/engine.mjs",
+      "server-plugin/forest-water.mjs",
       "server-plugin/magic-message.mjs",
       "server-plugin/magic-movement.mjs",
       "server-plugin/remote-generation.mjs",
@@ -11098,6 +11249,7 @@
       "sim_economy",
       "sim_environment",
       "sim_magic",
+      "sim_wildlife",
       "ui_client",
       "ui_server"
      ]
@@ -11110,6 +11262,7 @@
       "server-plugin/catalog.mjs",
       "server-plugin/engine.mjs",
       "server-plugin/farm-pests.mjs",
+      "server-plugin/forest-water.mjs",
       "server-plugin/remote-generation.mjs",
       "server-plugin/seasonal-hazards.mjs",
       "server-plugin/seasonal-migration.mjs",
@@ -11468,6 +11621,7 @@
       "server-plugin/farm-pests-migration.mjs",
       "server-plugin/farm-pests.mjs",
       "server-plugin/festival.mjs",
+      "server-plugin/forest-water.mjs",
       "server-plugin/governance.mjs",
       "server-plugin/hazard-calendar.mjs",
       "server-plugin/law.mjs",
@@ -11501,6 +11655,7 @@
       "server-plugin/ui-affairs.mjs",
       "server-plugin/ui-personal.mjs",
       "server-plugin/war-diplomacy.mjs",
+      "server-plugin/water-cycle.mjs",
       "server-plugin/wildlife-awakening.mjs",
       "server-plugin/works.mjs",
       "server-plugin/world-clock.mjs",
@@ -11783,6 +11938,7 @@
      "pattern": "itemTraits|applyInteraction",
      "modules": [
       "server-plugin/effects.mjs",
+      "server-plugin/forest-water.mjs",
       "server-plugin/interactions.mjs",
       "server-plugin/magic-marks.mjs",
       "server-plugin/magic-object.mjs",
@@ -11797,7 +11953,8 @@
       "base_traits",
       "sim_clock",
       "sim_economy",
-      "sim_magic"
+      "sim_magic",
+      "sim_wildlife"
      ]
     },
     {
@@ -12982,6 +13139,7 @@
     "server-plugin/entity-view.mjs",
     "server-plugin/faction-clock.mjs",
     "server-plugin/festival.mjs",
+    "server-plugin/forest-water.mjs",
     "server-plugin/governance.mjs",
     "server-plugin/hazard-calendar.mjs",
     "server-plugin/law.mjs",
@@ -13012,6 +13170,7 @@
     "server-plugin/titles.mjs",
     "server-plugin/tribal-awakening.mjs",
     "server-plugin/war-diplomacy.mjs",
+    "server-plugin/water-cycle.mjs",
     "server-plugin/weather.mjs",
     "server-plugin/wildlife.mjs",
     "server-plugin/world-clock.mjs"
@@ -13042,7 +13201,7 @@
     "npcs"
    ],
    "worldDirs": [],
-   "lines": 172
+   "lines": 176
   },
   "server-plugin/agriculture-migration.mjs": {
    "system": "kernel_storage",
@@ -13066,7 +13225,9 @@
    "system": "sim_agriculture",
    "imports": [
     "server-plugin/farm-pests.mjs",
+    "server-plugin/forest-water.mjs",
     "server-plugin/magic-growth.mjs",
+    "server-plugin/water-cycle.mjs",
     "server-plugin/weather.mjs"
    ],
    "stateWrites": [
@@ -13101,7 +13262,7 @@
     "spells"
    ],
    "worldDirs": [],
-   "lines": 325
+   "lines": 327
   },
   "server-plugin/archived-reducer.mjs": {
    "system": "kernel_engine",
@@ -13984,6 +14145,7 @@
   "server-plugin/environment.mjs": {
    "system": "sim_environment",
    "imports": [
+    "server-plugin/forest-water.mjs",
     "server-plugin/interactions.mjs",
     "server-plugin/magic-air.mjs",
     "server-plugin/magic-care.mjs",
@@ -13994,6 +14156,7 @@
     "server-plugin/magic-object.mjs",
     "server-plugin/magic-water-earth.mjs",
     "server-plugin/retrieval.mjs",
+    "server-plugin/water-cycle.mjs",
     "server-plugin/weather.mjs",
     "world/design/water-foundation.mjs"
    ],
@@ -14020,14 +14183,16 @@
    "worldDirs": [
     "design"
    ],
-   "lines": 235
+   "lines": 239
   },
   "server-plugin/extraction.mjs": {
    "system": "sim_economy",
    "imports": [
     "server-plugin/entity-view.mjs",
+    "server-plugin/forest-water.mjs",
     "server-plugin/items.mjs",
     "server-plugin/law.mjs",
+    "server-plugin/sites.mjs",
     "server-plugin/traits.mjs"
    ],
    "stateWrites": [
@@ -14043,13 +14208,14 @@
    "recordReads": [],
    "rules": [
     "extraction",
+    "forestWater",
     "wildlife"
    ],
    "world": [
     "monsters"
    ],
    "worldDirs": [],
-   "lines": 94
+   "lines": 114
   },
   "server-plugin/faction-clock.mjs": {
    "system": "sim_clock",
@@ -14168,6 +14334,45 @@
     "lore"
    ],
    "lines": 234
+  },
+  "server-plugin/forest-water.mjs": {
+   "system": "sim_wildlife",
+   "imports": [
+    "server-plugin/entity-transitions.mjs",
+    "server-plugin/seasonal-migration.mjs",
+    "server-plugin/traits.mjs",
+    "server-plugin/water-cycle.mjs",
+    "server-plugin/wildlife-habitats.mjs"
+   ],
+   "stateWrites": [
+    "records"
+   ],
+   "stateReads": [
+    "creatures",
+    "minute",
+    "settlements"
+   ],
+   "recordWrites": [
+    "ecology"
+   ],
+   "recordReads": [
+    "forest",
+    "forest-supply"
+   ],
+   "rules": [
+    "agriculture",
+    "economy",
+    "forestWater",
+    "settlementTrade",
+    "wildlife"
+   ],
+   "world": [
+    "locations",
+    "monsters",
+    "routes"
+   ],
+   "worldDirs": [],
+   "lines": 150
   },
   "server-plugin/governance.mjs": {
    "system": "sim_society",
@@ -16390,7 +16595,8 @@
     "server-plugin/environment.mjs",
     "server-plugin/hazard-calendar.mjs",
     "server-plugin/interactions.mjs",
-    "server-plugin/npc-life.mjs"
+    "server-plugin/npc-life.mjs",
+    "server-plugin/water-cycle.mjs"
    ],
    "stateWrites": [
     "family",
@@ -16413,6 +16619,7 @@
    "recordReads": [],
    "rules": [
     "attributes",
+    "forestWater",
     "hazardClock",
     "npcLife",
     "worldClock"
@@ -16429,13 +16636,13 @@
    "worldDirs": [
     "design"
    ],
-   "lines": 363
+   "lines": 381
   },
   "server-plugin/seasonal-migration.mjs": {
    "system": "sim_wildlife",
    "imports": [
+    "server-plugin/forest-water.mjs",
     "server-plugin/wildlife-awakening.mjs",
-    "server-plugin/wildlife-habitats.mjs",
     "server-plugin/wildlife-range.mjs"
    ],
    "stateWrites": [
@@ -16491,6 +16698,7 @@
    "system": "sim_economy",
    "imports": [
     "server-plugin/agriculture.mjs",
+    "server-plugin/forest-water.mjs",
     "server-plugin/hazard-calendar.mjs",
     "server-plugin/traits.mjs",
     "server-plugin/weather.mjs"
@@ -16525,7 +16733,7 @@
     "rules"
    ],
    "worldDirs": [],
-   "lines": 236
+   "lines": 237
   },
   "server-plugin/shop.mjs": {
    "system": "sim_economy",
@@ -16567,6 +16775,7 @@
    "system": "sim_environment",
    "imports": [
     "server-plugin/entity-view.mjs",
+    "server-plugin/forest-water.mjs",
     "server-plugin/items.mjs",
     "server-plugin/location-access.mjs",
     "server-plugin/magic-primitives.mjs",
@@ -16603,7 +16812,7 @@
     "skills"
    ],
    "worldDirs": [],
-   "lines": 329
+   "lines": 343
   },
   "server-plugin/smuggling.mjs": {
    "system": "sim_economy",
@@ -16848,6 +17057,7 @@
    ],
    "recordReads": [],
    "rules": [
+    "forestWater",
     "quests",
     "tribalAwakening",
     "wildlife",
@@ -16863,7 +17073,7 @@
     "rules"
    ],
    "worldDirs": [],
-   "lines": 406
+   "lines": 420
   },
   "server-plugin/ui-affairs.mjs": {
    "system": "ui_server",
@@ -17051,6 +17261,38 @@
    "worldDirs": [],
    "lines": 182
   },
+  "server-plugin/water-cycle.mjs": {
+   "system": "sim_wildlife",
+   "imports": [
+    "server-plugin/entity-transitions.mjs",
+    "server-plugin/weather.mjs",
+    "server-plugin/wildlife-habitats.mjs"
+   ],
+   "stateWrites": [
+    "records"
+   ],
+   "stateReads": [
+    "settlements"
+   ],
+   "recordWrites": [
+    "physical_feature"
+   ],
+   "recordReads": [
+    "agriculture",
+    "water-cycle"
+   ],
+   "rules": [
+    "agriculture",
+    "forestWater",
+    "weather"
+   ],
+   "world": [
+    "locations",
+    "routes"
+   ],
+   "worldDirs": [],
+   "lines": 160
+  },
   "server-plugin/weather.mjs": {
    "system": "sim_environment",
    "imports": [
@@ -17216,6 +17458,7 @@
     "server-plugin/creature-nature.mjs",
     "server-plugin/environment.mjs",
     "server-plugin/farm-pests.mjs",
+    "server-plugin/forest-water.mjs",
     "server-plugin/items.mjs",
     "server-plugin/quest-wildlife.mjs",
     "server-plugin/seasonal-migration.mjs",
@@ -17254,7 +17497,7 @@
     "rules"
    ],
    "worldDirs": [],
-   "lines": 237
+   "lines": 238
   },
   "server-plugin/works.mjs": {
    "system": "sim_works",
@@ -17769,7 +18012,7 @@
    "rules": [],
    "world": [],
    "worldDirs": [],
-   "lines": 110
+   "lines": 111
   },
   "extension/topbar.mjs": {
    "system": "ui_client",

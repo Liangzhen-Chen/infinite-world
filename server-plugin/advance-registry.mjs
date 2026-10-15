@@ -66,6 +66,8 @@ export function nextAdvanceMinute(engine,d,now,end){
 export const advanceNeedsSteps=(engine,d,now)=>advanceRegistry.some(system=>system.active?.(engine,d,now));
 export function runAdvance(engine,d,ctx){for(const system of advanceRegistry)system.advance(engine,d,ctx);}
 
+import {advanceForestWater,harvestSettlementWood,settleFuel,displaceForestWildlife} from './forest-water.mjs';
+import {farmWaterFactor} from './water-cycle.mjs';
 // Order mirrors the original hand-written WorldEngine.advanceInterval sequence.
 const systems=[
  {id:'npc_obligations',order:100,active:e=>fullNpcs(e),nextMinute:(e,d,now)=>nextNpcObligationMinute(d.get('state'),now),
@@ -76,18 +78,20 @@ const systems=[
  {id:'law',order:400,advance:(e,d,{after})=>advanceLaw(d,after,e)},
  {id:'daily',order:500,advance(e,d,{before,after}){
     for(let day=Math.floor(before/1440);day<Math.floor(after/1440);day++){
+      advanceForestWater(d,e,day);
       for(const [sid,source] of Object.entries(d.get('state','settlements'))) {
         if(source.granary===false)continue;// public money only, no public granary (D1 town ledger)
         const farming=advanceAgriculture(d,e,sid,source,day),s=farming?.settlement??clone(source);
-        const production=farming?0:Math.floor(cropProduction(e,d.document.randomSeed,sid,day*1440,s.foodPerDay)*hazardYieldFactor(d.get('state'),sid,day*1440+720)),available=s.food+production;
+        const production=farming?0:Math.floor(cropProduction(e,d.document.randomSeed,sid,day*1440,s.foodPerDay)*hazardYieldFactor(d.get('state'),sid,day*1440+720)*farmWaterFactor(e,d.get('state'),sid,day)),available=s.food+production;
         const missing=farming?.missingMeals??Math.max(0,s.population-available);
         if(!farming)s.food=Math.max(0,available-s.population);s.unmetMeals=(s.unmetMeals??0)+missing;
         s.starvation=missing ? (s.starvation??0)+1 : Math.max(0,(s.starvation??0)-1);
         if(s.starvation>=7){s.population=Math.max(0,s.population-1);s.starvation=0;d.say(`${s.name}发生饥荒死亡`);}
-        s.wood+=farming?.woodProduced??s.woodPerDay;d.set(['state','settlements',sid],s);
+        const wood=farming?.woodProduced??harvestSettlementWood(d,e,sid,s.woodPerDay??0,(day+1)*1440);
+        settleFuel(d,e,sid,s,wood,day);d.set(['state','settlements',sid],s);
       }
       advancePets(d,e,(day+1)*1440);
-      advanceWildlife(d,e,day);advanceBosses(d,e,day);
+      advanceWildlife(d,e,day);displaceForestWildlife(d,e,day);advanceBosses(d,e,day);
     }
  }},
  {id:'pets',order:600,advance:(e,d,{after})=>advancePets(d,e,after)},

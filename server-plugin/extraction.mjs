@@ -2,6 +2,26 @@ import {locationTraits,creatureTraits,traitsOf} from './traits.mjs';
 import {populationView} from './entity-view.mjs';
 import {heldUnit,wearItem} from './items.mjs';
 import {registerIncident} from './law.mjs';
+import {forestView,harvestForest} from './forest-water.mjs';
+import {assertSiteHarvest} from './sites.mjs';
+
+export function woodcut(d,args,id){
+ const location=d.get('state','location'),rules=this.rules.forestWater?.forest,forest=forestView(this,d.get('state'),location);
+ if(!forest||!rules)throw Error('此地没有可采林木');
+ const quantity=args.quantity??1;if(!Number.isSafeInteger(quantity)||quantity<1||quantity>rules.maximumCut)throw Error('单次采伐量越界');
+ const place=this.byId.get(location);
+ // A new harvesting entry cannot bypass a site's property or consent boundary.
+ const access=()=>{if(place.site)assertSiteHarvest(d,this,place,args);else if(place.owner&&place.owner!=='player')throw Error('采伐需所有者的采集许可');};
+ access();
+ usable(d,this,rules.tool);
+ const check=this.check(d,{attribute:'力量',difficulty:rules.difficulty,tools:[rules.tool]},id);
+ wearItem(d,this,'player',rules.tool,rules.wear);this.advance(d,rules.minutes*quantity,id);
+ access();
+ const taken=check.success&&able(d)&&d.get('state','location')===location?harvestForest(d,this,location,quantity):0;
+ if(taken)this.itemDelta(d,'player','item_wood',taken);
+ return {success:taken>0,check,obtained:taken?[{item:'item_wood',quantity:taken}]:[],reserve:forestView(this,d.get('state'),location).reserve,
+  reason:taken<quantity?'林木不足或采伐未成':null,actionScope:{kind:'woodcut',clockManaged:true,minutes:rules.minutes*quantity}};
+}
 
 const path=id=>['state','records',id];
 const active=(hours,minute)=>hours[0]<=hours[1]?minute>=hours[0]&&minute<hours[1]:minute>=hours[0]||minute<hours[1];

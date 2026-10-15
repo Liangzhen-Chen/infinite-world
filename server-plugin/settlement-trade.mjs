@@ -1,4 +1,5 @@
 import {drawGranary} from './agriculture.mjs';
+import {forestWaterPriceFactor} from './forest-water.mjs';
 import {weatherTravel} from './weather.mjs';
 import {itemTraits,hasTrait} from './traits.mjs';
 import {hazardPriceFactor,hazardRouteClosed,warRouteClosed} from './hazard-calendar.mjs';
@@ -69,7 +70,7 @@ export function regionalTradePrice(d,engine,item,location,minute=d.get('state','
     const base=engine.byId.get(item).basePrice,r=engine.rules.settlementTrade,sid=region(engine,location);
     // U3 price swings (hazard clocks) scale the seasonal coefficient here, so
     // shop quotes, business and village lanes all read one figure.
-    const hazard=hazardPriceFactor(engine,d.get('state'),item,location,minute);
+    const hazard=hazardPriceFactor(engine,d.get('state'),item,location,minute)*forestWaterPriceFactor(engine,d.get('state'),item,location);
     if(!r||item!==r.item||!sid||!managed(d.get('state'),sid))return hazard===1?base:base*hazard;
     assertRules(engine);
     const day=Math.floor(minute/DAY),key=`region:${day}:${sid}:${item}`,existing=d.get('state','quotes',key);

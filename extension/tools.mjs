@@ -56,6 +56,7 @@ Object.assign(festivalParameters,{clock:{...str,description:'时钟ID；choice�
 const routes=new Map();
 definitions.find(r=>r.function.name==='world_wildlife').function.parameters.properties.operation.enum.push('fish','eat');
 definitions.find(r=>r.function.name==='world_site').function.parameters.properties.operation.enum.push('mine');
+definitions.find(r=>r.function.name==='world_site').function.parameters.properties.operation.enum.push('woodcut');
 const transport=definitions.find(r=>r.function.name==='world_trade').function.parameters.properties;
 transport.operation.enum.push('smuggle','deliver_smuggled');transport.mode=str;
 festivalParameters.operation.enum.push('duel_challenge','duel_answer','duel_yield','election_start','election_campaign','election_finish','election_expose','mining_permit');
