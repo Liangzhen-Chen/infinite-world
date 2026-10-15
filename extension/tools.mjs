@@ -51,6 +51,9 @@ festivalParameters.operation.enum.push('org_inspect','org_join','org_leave','org
 festivalParameters.operation.enum.push('family_inspect','family_marry','family_adopt','family_foster','family_split','family_manage','family_dispute','family_alliance');
 festivalParameters.operation.enum.push('faith_inspect','faith_convert','faith_give','faith_use','faith_rite','faith_pilgrim');
 festivalParameters.operation.description+='；faith_用org寺观，choice用途/祭仪';
+festivalParameters.operation.enum.push('nation_inspect','nation','domain_inspect','domain_appoint','domain_steward','domain_request');
+festivalParameters.operation.description+=';nation:found/negotiate/law/tax';
+festivalParameters.action.enum.push('commercial','customs');
 festivalParameters.operation.enum.push('war_inspect','war_join','diplomacy');
 festivalParameters.operation.enum.push('army_inspect','army_enlist','army_duty','army_recruit','army_dismiss');
 festivalParameters.action.enum.push('expel','appoint','withdraw','charter');

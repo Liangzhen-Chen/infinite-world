@@ -1,3 +1,4 @@
+import {groupAccountView,changeGroupCoins} from './group-account.mjs';
 // U12a 军队与兵役（指南3.11爵位义务、4.6势力资源、3.13经济）。
 // 势力、郡府、村庄和玩家的兵员都记在 army:<id>，每支队伍同时是一个 U1 组织
 // （organization:<id>，kind 军团）：名册里是被征的人物和入营的玩家，公库就是饷箱。
@@ -77,6 +78,7 @@ export function assertMilitary(engine){
 // ---- 所属方的钱：势力公库、郡府公库、村公账、组织公库、玩家 ------------------------------
 export function partyKind(engine,state,id){
  if(id==='player')return 'player';
+ if(state.npcs?.[id])return 'npc';
  if(String(id).startsWith('faction_')&&engine.world.factions?.some(f=>f.id===id))return 'faction';
  if(String(id).startsWith('county_'))return 'polity';
  if(state.settlements?.[id])return 'settlement';
@@ -95,6 +97,7 @@ const reserveOf=engine=>authorityOf(engine)?.treasury?.reserveCopper??0;
 function playerBanks(engine,state){return (creditRules(engine)?.banks??[]).map(b=>state.records?.[b.id]).filter(r=>r?.category==='bank'&&(r.accounts?.player??0)>0);}
 export function partyCoins(engine,state,id){
  switch(partyKind(engine,state,id)){
+ case 'npc':return Math.max(0,state.npcs[id].coins??0);
  case 'player':return (state.player?.coins??0)+playerBanks(engine,state).reduce((n,b)=>n+Math.min(b.accounts.player,b.coins),0);
  case 'faction':return organization(engine,state,id)?.treasury??0;
  case 'polity':return state.records?.[`polity:${id}`]?.coins??polityRule(engine,id)?.treasuryCopper??0;
@@ -109,6 +112,7 @@ export function partyPay(d,engine,id,coins,{sourceEvent,reason,partial=true}){
  if(amount<=0||!partial&&amount<coins)return 0;
  const minute=state.minute;
  switch(partyKind(engine,state,id)){
+ case 'npc':d.set(['state','npcs',id,'coins'],have-amount);break;
  case 'player':{
   let left=amount;const cash=Math.min(left,state.player.coins);d.set(['state','player','coins'],state.player.coins-cash);left-=cash;
   // U2：本人现钱不够时由钱庄存款代付。
@@ -118,6 +122,7 @@ export function partyPay(d,engine,id,coins,{sourceEvent,reason,partial=true}){
  case 'polity':{const row=polityRow(d,engine,id);row.coins-=amount;row.ledger=[...row.ledger,{amount:-amount,reason,sourceEvent,minute}].slice(-40);d.set(rec(`polity:${id}`),row);break;}
  case 'settlement':d.set(['state','settlements',id,'treasury'],state.settlements[id].treasury-amount);break;
  case 'organization':{
+  if(groupAccountView(engine,state,id)){changeGroupCoins(d,engine,id,-amount,{sourceEvent,reason,minute});break;}
   const row=clone(d.get(...rec(`organization:${id}`))),org=organization(engine,state,id);row.treasury-=amount;
   row.ledger=[...row.ledger??[],{kind:'军需',amount:-amount,party:null,minute,sourceEvent,reason,balance:org.treasury-amount}];d.set(rec(`organization:${id}`),row);break;}
  default:return 0;
@@ -128,11 +133,13 @@ export function partyCredit(d,engine,id,coins,{sourceEvent,reason}){
  if(coins<=0)return;
  const state=d.get('state'),minute=state.minute;
  switch(partyKind(engine,state,id)){
+ case 'npc':d.set(['state','npcs',id,'coins'],(state.npcs[id].coins??0)+coins);break;
  case 'player':d.set(['state','player','coins'],state.player.coins+coins);break;
  case 'faction':creditFactionAssets(d,engine,id,{coins},{sourceEvent,minute,kind:'military'});break;
  case 'polity':{const row=polityRow(d,engine,id);row.coins+=coins;row.ledger=[...row.ledger,{amount:coins,reason,sourceEvent,minute}].slice(-40);d.set(rec(`polity:${id}`),row);break;}
  case 'settlement':d.set(['state','settlements',id,'treasury'],state.settlements[id].treasury+coins);break;
  case 'organization':{
+  if(groupAccountView(engine,state,id)){changeGroupCoins(d,engine,id,coins,{sourceEvent,reason,minute});break;}
   const row=clone(d.get(...rec(`organization:${id}`))),org=organization(engine,state,id);row.treasury+=coins;
   row.ledger=[...row.ledger??[],{kind:'进项',amount:coins,party:null,minute,sourceEvent,reason,balance:org.treasury+coins}];d.set(rec(`organization:${id}`),row);break;}
  }

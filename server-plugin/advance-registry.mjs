@@ -1,3 +1,5 @@
+import {advanceUpperAppointments,advanceRoyalService} from './high-nobility.mjs';
+import {advanceNations} from './nation-founding.mjs';
 import {advanceEducation,nextEducationMinute,prepareEducation} from './education.mjs';
 import {advanceFacilities,nextFacilityMinute,completeFacilityProject} from './facilities.mjs';
 // Time-advance registry. Every system that reacts to elapsed time registers here:
@@ -130,6 +132,7 @@ const systems=[
  {id:'office_salaries',order:1129,nextMinute:(e,d,now)=>nextSalaryMinute(e,now),advance:(e,d,ctx)=>advanceOfficeSalaries(d,e,ctx)},
  {id:'governance_offices',order:1130,nextMinute:(e,d,now)=>nextOfficeMinute(d.get('state'),now),advance:(e,d,ctx)=>advanceOffices(d,e,ctx)},
  {id:'housing_steward',order:1135,nextMinute:(e,d,now)=>nextHousingMinute(d.get('state'),now),advance:(e,d,ctx)=>advanceHousing(d,e,ctx)},
+ {id:'upper_appointments',order:1138,advance:(e,d,ctx)=>advanceUpperAppointments(d,e,ctx)},
  {id:'titles',order:1140,nextMinute:(e,d,now)=>nextTitleMinute(d.get('state'),now),advance:(e,d,ctx)=>advanceTitles(d,e,ctx)},
  {id:'notables',order:1142,nextMinute:(e,d,now)=>nextNotableMinute(d.get('state'),now),advance:(e,d,ctx)=>advanceNotables(d,e,ctx)},
  {id:'promotion',order:1144,nextMinute:(e,d,now)=>nextPromotionMinute(d.get('state'),now),advance:(e,d,ctx)=>advancePromotion(d,e,ctx)},
@@ -156,6 +159,8 @@ const systems=[
  {id:'war_diplomacy',order:1456,advance:(e,d,ctx)=>advanceWarDiplomacy(d,e,ctx)},
  // U17 quest sources: NPC needs, world-event records and effect-table commissions post to the board at midnight.
  {id:'quest_sources',order:1460,advance:(e,d,ctx)=>advanceQuestSources(d,e,ctx)},
+ {id:'royal_service',order:1462,advance:(e,d,ctx)=>advanceRoyalService(d,e,ctx)},
+ {id:'nations',order:1464,advance:(e,d,ctx)=>advanceNations(d,e,ctx)},
  {id:'society_news',order:1500,advance:(e,d,{after})=>advanceSocietyNews(d,e,after)},
  {id:'festival',order:1600,active:e=>festivalCalendar(e).length>0,nextMinute:(e,d,now)=>nextFestivalMinute(d.get('state'),e,now),
   advance:(e,d,{after})=>advanceFestivals(d,e,after)},
