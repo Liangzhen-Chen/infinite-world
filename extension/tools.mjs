@@ -71,6 +71,7 @@ transport.task.enum.push('register','book','trace','lease','repair','intercept',
 transport.service.enum.push('passage');
 transport.escort=str;
 transport.authorization=str;
+transport.operation.enum.push('labor_inspect','labor_guarantee','labor_mediate','labor_poach');
 function group(name,description,members){
     const selected=definitions.filter(row=>members.includes(row.function.name)),properties={},operations=[],mapping=new Map();
     for(const row of selected){

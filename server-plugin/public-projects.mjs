@@ -5,6 +5,7 @@ import {npcHousehold,npcAgeAt} from './npc-life.mjs';
 import {changeItems} from './items.mjs';
 import {prepareFacilityProject} from './facility-state.mjs';
 import {completeFacilityProject} from './facilities.mjs';
+import {currentEmployment,employmentReservation} from './employment-state.mjs';
 
 // T125 public works. A sitting official (works deputy or village head) starts
 // a project in their own village: materials leave the village stock and the
@@ -39,6 +40,7 @@ export function startPublicProject(d,engine,args,eventId,settlement){
     if(days*workers.length<plan.requiredWork)throw Error('工程实际工时不足');
     for(const id of workers){
         const n=state.npcs[id];
+        if(currentEmployment(state,id))throw Error('做工的人已有未结束的雇佣排班');
         if(!awake(n)||n.location!==state.location)throw Error('做工的人须当面在场且清醒');
         if(npcHousehold(engine,state,id)?.settlement!==settlement||(npcAgeAt(engine,state,id)??0)<18)throw Error('做工的人须是本村成年住户');
     }
@@ -105,7 +107,7 @@ export function advancePublicProjects(d,engine,{before,after,id}){
         const worked=new Set(Object.values(d.get('state','projects')??{}).flatMap(p=>Object.entries(p.public?.lastPaidDay??{}).filter(([,at])=>at===day).map(([npc])=>npc)));
         for(const [key,p]of Object.entries(d.get('state','projects')??{}).sort(([a],[b])=>a.localeCompare(b))){
             if(!isPublicProject(p)||p.status!=='施工中')continue;
-            const state=d.get('state'),present=p.building&&state.buildings?.[p.building]?.burning?[]:p.public.workers.filter(w=>!worked.has(w)&&able(state.npcs[w])&&!state.npcs[w].levy&&!state.npcs[w].caring).slice(0,p.remainingWork??20);
+            const state=d.get('state'),present=p.building&&state.buildings?.[p.building]?.burning?[]:p.public.workers.filter(w=>!worked.has(w)&&able(state.npcs[w])&&!state.npcs[w].levy&&!state.npcs[w].caring&&!employmentReservation(state,w,day*DAY+480,540,engine.byId.get(w)?.schedule?.restDays??[])).slice(0,p.remainingWork??20);
             const pub=structuredClone(p.public);
             if(!present.length){pub.lostDays++;d.set(['state','projects',key],{...p,public:pub});continue;}
             for(const w of present){
@@ -248,7 +250,8 @@ export function advanceHouses(d,engine,{before,after}){
     for(const [key,p]of Object.entries(d.get('state','projects')??{}).sort(([a],[b])=>a.localeCompare(b))){
         if(p.type!=='建房'||p.status!=='施工中')continue;
         if(p.creator!=='player'&&(!able(d.get('state','npcs',p.creator))||d.get('state','npcs',p.creator,'levy')||d.get('state','npcs',p.creator,'caring')))continue;
-        const remainingDays=Math.max(0,p.remainingDays-days);
+        const hired=Object.values(d.get('state','records')??{}).some(r=>r.laborMarket===1&&r.project===key);
+        const remainingDays=hired?Math.ceil(p.remainingWork??p.remainingDays):Math.max(0,p.remainingDays-days);
         if(remainingDays){d.set(['state','projects',key],{...p,remainingDays});continue;}
         const id=completeFacilityProject(d,engine,p);
         d.set(['state','buildings',id,'permit'],p.permit);
