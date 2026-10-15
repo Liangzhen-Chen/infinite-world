@@ -1,9 +1,13 @@
 // Explicit allow-list: author rumor seeds/truth, hidden places and proposed
 // solutions stay private. Registered contracts retain their settlement status.
+import {placeView} from './entity-view.mjs';
 const pick=(row,keys)=>Object.fromEntries(keys.filter(key=>row?.[key]!==undefined).map(key=>[key,structuredClone(row[key])]));
 export function publicSettlement(world,id,document=null){
- const p=world.settlementProfiles?.find(p=>p.id===id),d=p?.details;if(!d)return null;
- const name=id=>world.npcs.find(n=>n.id===id)?.name??world.residents?.find(n=>n.id===id)?.name??world.locations.find(l=>l.id===id)?.name??id;
+ const p=world.settlementProfiles?.find(p=>p.id===id),d=p?.details;if(!p)return null;
+ const name=id=>id==='player'?document?.state?.player?.name??'玩家':document?.state?.npcs?.[id]?.name??document?.state?.creatures?.[id]?.name??document?.state?.created?.[id]?.name??world.npcs.find(n=>n.id===id)?.name??world.residents?.find(n=>n.id===id)?.name??world.locations.find(l=>l.id===id)?.name??id;
+ const currentView=document?placeView({world,rules:world.rules,byId:new Map([...world.locations,...world.npcs,...world.residents??[],...Object.values(document.state.created??{})].map(e=>[e.id,e]))},document.state,id):null;
+ if(!d)return {id,name:name(id),population:currentView?.population.population.value??p.population,householdCount:currentView?.population.householdCount.value??p.householdCount,
+  governance:{head:currentView?.government.head.value?{id:currentView.government.head.value,name:name(currentView.government.head.value)}:null,permissions:{head:currentView?.government.powers.value??[]}}};
  const person=id=>({id,name:name(id)}),e=d.economy,g=d.governance,foodUnitKg=world.rules?.agriculture?.foodUnitKg;
  const economy={status:e.status,source:e.source,period:pick(e.period,['startDay','endDay','status','calendar']),
   units:{food:'粮单位',foodUnitKg,seed:'粮单位',treasury:'铜币',wood:'木料单位',iron:'铁料单位'},
@@ -18,10 +22,11 @@ export function publicSettlement(world,id,document=null){
   economy.currentFiscal={asOfMinute:document.state.minute,...pick(records[`village-fiscal:${id}`],['salesGrossCopper','salesNetCopper','taxReceiptsCopper','advanceCopper','purchasesCopper','exportedFood','importedFood'])};
   for(const contract of economy.tradeContracts){const actual=records[`village-trade:${contract.id}`];if(actual)contract.settlement={asOfMinute:document.state.minute,...pick(actual,['status','prepaidCopper','paidCopper','receivedCopper','taxCopper'])};}
  }
- return {id:p.id,name:d.name,population:p.population,householdCount:p.householdCount,terrain:d.terrain,climate:d.climate,
+ const government=currentView?.government,head=government?government.head.value:g.head;
+ return {id:p.id,name:d.name,population:currentView?.population.population.value??p.population,householdCount:currentView?.population.householdCount.value??p.householdCount,terrain:d.terrain,climate:d.climate,
   industries:[...e.industries],economy,coordination:{people:g.coordinators.map(person),place:g.meetingPlace,meeting:g.meeting,customs:[...g.customs],authority:g.authority},
-  governance:{head:g.head?person(g.head):null,enforcers:(g.enforcers??[]).map(person),appointment:pick(g.appointment,['source','effectiveDay','lawCode']),jurisdiction:[...g.jurisdiction??[]],
-   permissions:{head:[...g.permissions?.head??[]],enforcers:[...g.permissions?.enforcers??[]],coordinators:[...g.permissions?.coordinators??[]]},limits:[...g.limits??[]],referral:pick(g.referral,['institution','location','matters','status','note'])},
+  governance:{head:head?person(head):null,enforcers:(government?.enforcers.value??g.enforcers??[]).map(person),appointment:pick(government?.appointment.value??g.appointment,['source','effectiveDay','lawCode','appointedAt','until']),jurisdiction:[...g.jurisdiction??[]],
+   permissions:{head:government?.powers.value??[...g.permissions?.head??[]],enforcers:[...g.permissions?.enforcers??[]],coordinators:[...g.permissions?.coordinators??[]]},limits:[...g.limits??[]],referral:pick(g.referral,['institution','location','matters','status','note'])},
   issues:d.problems.map(p=>({id:p.id,title:p.title,location:p.location,status:'有待当事人协商；查到资料不代表此刻都在现场',people:p.stakeholders.map(s=>({id:s.person,name:name(s.person),position:s.position}))})),
   market:{days:[...d.calendar.marketDays],location:d.calendar.marketLocation},
   festivals:d.calendar.festivals.map(f=>({name:f.name,month:f.month,day:f.day,location:f.location,practice:f.practice,note:'当地节俗；当天是否举办和谁来参与须向在场者核实。'}))};
@@ -30,7 +35,7 @@ export function publicSettlement(world,id,document=null){
 // become search records; acquired claims remain in actual chat/memory entries.
 export function publicSettlementEntries(world,document=null){
  const rows=[],name=id=>world.locations.find(row=>row.id===id)?.name??world.npcs.find(row=>row.id===id)?.name??id;
- for(const profile of world.settlementProfiles??[]){const p=publicSettlement(world,profile.id,document);if(!p)continue;
+ for(const profile of world.settlementProfiles??[]){const p=publicSettlement(world,profile.id,document);if(!p?.economy)continue;
   const add=(key,text,keywords=[])=>rows.push({id:`settlement_${p.id}_${key}`,scope:p.id,entities:[p.id],source:'公开聚落资料',text:`${p.name}：${text}`,keywords:[p.name,...keywords]});
   add('industries',`地方产业：${p.industries.join('；')}。地形：${p.terrain}；气候：${p.climate}`,['产业']);
   for(const [i,r]of p.economy.production.entries())add(`production_${i}`,`生产登记：${r.name}，潜在产量${r.quantity}${r.unit}／${r.cycleDays}日${r.unitKg?`，每粮单位${r.unitKg}千克`:''}；${r.areaHa?`田地${r.areaHa}公顷；`:''}实际产量受天气、劳力和仓储影响，登记值尚未成为库存。`,['生产','产量','收成','年粮']);
@@ -50,6 +55,6 @@ export function publicSettlementEntries(world,document=null){
 }
 export function settlementScene(engine,document){
  let location=engine.byId.get(document.state.location);const seen=new Set();
- while(location&&!seen.has(location.id)){seen.add(location.id);const p=publicSettlement(engine.world,location.id,document);if(p){const e=p.economy,r=e.production[0],s=e.currentStock??e.publicStock;return `【本地事务】${p.name}：${p.issues.map(i=>i.title).join('；')}。协调处：${engine.byId.get(p.coordination.place)?.name??p.coordination.place}；头人${p.governance.head?.name??'未登记'}，执法者${p.governance.enforcers.map(r=>r.name).join('、')}；相关人员须以实际在场为准。${p.coordination.authority}【公共经济】${r?`登记潜在产量${r.quantity}${r.unit}／${r.cycleDays}日；`:''}${e.currentStock?`当前第${s.asOfMinute}分钟账面`:`第${s.openingDay??0}日期初登记`}粮食${s.food??'未登记'}粮单位，每粮单位${e.units.foodUnitKg??'未登记'}千克；公款${s.treasuryCopper??'未登记'}铜币。潜在产量不等于库存，粮约提粮与送达分阶段结算。集日每月${p.market.days.join('、')}日；节俗日历不等于节日实际举办。`; }location=engine.byId.get(location.parent);}
+ while(location&&!seen.has(location.id)){seen.add(location.id);const p=publicSettlement(engine.world,location.id,document);if(p?.economy){const e=p.economy,r=e.production[0],s=e.currentStock??e.publicStock;return `【本地事务】${p.name}：${p.issues.map(i=>i.title).join('；')}。协调处：${engine.byId.get(p.coordination.place)?.name??p.coordination.place}；头人${p.governance.head?.name??'未登记'}，执法者${p.governance.enforcers.map(r=>r.name).join('、')}；相关人员须以实际在场为准。${p.coordination.authority}【公共经济】${r?`登记潜在产量${r.quantity}${r.unit}／${r.cycleDays}日；`:''}${e.currentStock?`当前第${s.asOfMinute}分钟账面`:`第${s.openingDay??0}日期初登记`}粮食${s.food??'未登记'}粮单位，每粮单位${e.units.foodUnitKg??'未登记'}千克；公款${s.treasuryCopper??'未登记'}铜币。潜在产量不等于库存，粮约提粮与送达分阶段结算。集日每月${p.market.days.join('、')}日；节俗日历不等于节日实际举办。`; }location=engine.byId.get(location.parent);}
  return '';
 }

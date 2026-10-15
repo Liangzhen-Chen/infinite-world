@@ -536,6 +536,17 @@ export function generateCounty(world,countyId,campaignSeed){
 // ---------------------------------------------------------------- campaign state
 export function unfoldRemoteAt(d,engine,location){
     const base=engine.remoteBase?.world??engine.world,county=remoteCountyOf(engine.world,location);
+    // Existing U11 saves already contain the founding skeleton. First entry
+    // supplies only missing campaign ledgers and K8 ranges, once.
+    const tribal=Object.values(d.get('state','records')??{}).find(r=>r.category==='tribal_settlement'&&[r.skeleton.id,`${r.skeleton.id}_wild`,...r.skeleton.districts.map(l=>l.id)].includes(location));
+    if(tribal){
+        const s=tribal.skeleton,overlay=materializeWildlifeHabitats(remoteWorld(base,d.get('state'))),habitats=overlay.rules.wildlife?.habitats.filter(h=>h.location===`${s.id}_wild`)??[];
+        const missingLedger=!d.get('state','settlements',s.id);
+        if(missingLedger)d.set(['state','settlements',s.id],{name:s.name,population:s.population,food:0,wood:0,stone:0,iron:0,treasury:0});
+        const patches=planWildlifeMigration(d.document,{...overlay.rules,wildlife:{...overlay.rules.wildlife,habitats}},overlay.monsters??[]);
+        for(const patch of patches)d.set(patch.path,patch.value);
+        return missingLedger||patches.length?{version:REMOTE_VERSION,kind:'tribal',settlement:s.id,habitats:habitats.map(h=>h.id)}:null;
+    }
     if(!county||d.get('state','remote',county))return null;
     const skeleton=generateCounty(base,county,d.document.randomSeed??'default-campaign');
     const record={version:REMOTE_VERSION,county,seed:d.document.randomSeed??'default-campaign',minute:d.get('state','minute'),firstPlace:location,hash:digest(skeleton).slice(0,24),revision:0,profiles:{},skeleton};
@@ -562,11 +573,29 @@ const PROFILE_KEYS=['personality','voice','background','currentConcern','goals',
 // Skeletons generated before D1 (no hazards field) keep their officials as roster entries.
 const active=(p,skeleton)=>p.remoteRole==='keeper'||Boolean(skeleton.hazards)&&['official','festival_host'].includes(p.remoteRole);
 export function remoteKey(state){
-    const remote=state?.remote;if(!remote)return '';
-    return Object.keys(remote).sort().map(k=>`${k}:${remote[k].hash}:${remote[k].revision}`).join('|');
+    const remote=state?.remote??{};
+    return [...Object.keys(remote).sort().map(k=>`${k}:${remote[k].hash}:${remote[k].revision}`),
+        ...Object.entries(state?.records??{}).filter(([,r])=>r.category==='tribal_settlement').sort(([a],[b])=>a.localeCompare(b)).map(([k,r])=>`${k}:${r.hash}`)].join('|');
+}
+// The existing remote/population overlay also admits U11 settlements. The
+// founding skeleton remains historical; current households/offices read state.
+export function tribalOverlay(base,s){
+    const home=base.locations.find(l=>l.id===s.near),root={id:s.id,name:s.name,parent:s.parent,scope:s.id,region:home?.region,coordinates:s.coordinates,
+        terrain:home?.terrain??'林地',biome:home?.biome??[],owner:s.council,generated:'tribal',openHours:[0,1440],description:`${s.name}是族群觉醒后建立的自治聚居地。`};
+    const road=(from,to,i,lengthKm=0.3)=>({id:`route_${s.id}_${i}`,from,to,lengthKm,terrainMultiplier:0.7,modes:['walk'],closedSeasons:[],toll:0,risk:0,generated:'tribal'});
+    const locations=[root,...s.districts.map(d=>({...root,id:d.id,name:d.name,parent:s.id,scope:s.id,coordinates:s.coordinates})),
+        {...root,id:`${s.id}_wild`,name:`${s.name}近郊`,parent:s.id,scope:s.id,owner:null,areaKm2:0.3}];
+    const population=Math.max(0,s.population-(s.inhabitants?.length??0)),households=population?Math.max(1,Math.ceil(population/4)):0;
+    const ages={children:0,youngAdults:0,adults:population,elders:0},template={settlement:s.id,seed:`${s.name}:${s.id}:${s.foundedAt}`,short:s.id.replace(/^loc_/,''),
+        districts:Object.fromEntries(s.districts.map(d=>[d.id,{weight:1,work:d.work}])),minorWork:['随群里学认气味'],composition:{[s.species]:population},cultures:{[s.species]:'culture_beast'},
+        surnames:['苔','石','溪','叶'],given:GIVEN_STOCK};
+    const profile={id:s.id,generated:'tribal',council:s.council,population:s.population,householdCount:households+(s.inhabitants?.length??0),residentIds:s.inhabitants??[],
+        registeredPopulation:s.inhabitants?.length??0,pendingPopulation:population,pendingHouseholdCount:households,pendingAgeStructure:ages,
+        registrationMode:'seeded-on-demand',populationSeed:template.seed,populationTemplate:template};
+    return {locations,routes:[road(s.near,s.id,'entrance'),...locations.slice(1).map((l,i)=>road(s.id,l.id,i))],people:[],households:[],profiles:[profile],rumors:[],jurisdiction:{}};
 }
 export function remoteWorld(base,state){
-    const records=Object.keys(state?.remote??{}).sort().map(k=>state.remote[k]);if(!records.length)return base;
+    const records=[...Object.keys(state?.remote??{}).sort().map(k=>state.remote[k]),...Object.values(state?.records??{}).filter(r=>r.category==='tribal_settlement').map(r=>({skeleton:tribalOverlay(base,{...r.skeleton,inhabitants:r.inhabitants??(r.skeleton.leader?[r.skeleton.leader]:[])})}))];if(!records.length)return base;
     const ids=new Set(base.locations.map(l=>l.id)),locations=new Map(),routes=new Map(),relocated=new Set();
     const merge=(p,rec)=>{const done=rec.profiles?.[p.id];return done?.status==='full'?{...p,...Object.fromEntries(PROFILE_KEYS.filter(k=>done.profile?.[k]!==undefined).map(k=>[k,done.profile[k]])),profileStatus:'full'}:p;};
     const npcs=[],residents=[],households=[],profiles=[],rumors=[],jurisdiction={},hazards=[],publishers={};
@@ -595,7 +624,7 @@ export function remoteWorld(base,state){
         ...(base.rules.hazardClock&&hazards.length?{hazardClock:{...base.rules.hazardClock,clocks:[...base.rules.hazardClock.clocks,...hazards]}}:{}),
         ...(base.rules.questSources&&Object.keys(publishers).length?{questSources:{...base.rules.questSources,publishers:{...base.rules.questSources.publishers,...publishers}}}:{}),
         ...(p?{governance:{...g,promotion:{...p,jurisdiction:{...p.jurisdiction,...Object.fromEntries(Object.entries(jurisdiction).filter(([k])=>!p.jurisdiction?.[k]))}}}}:{})};
-    world.remoteCounties=records.map(r=>r.county);
+    world.remoteCounties=records.map(r=>r.county).filter(Boolean);
     return world;
 }
 // The engine a campaign runs on: its base engine, or one over the overlay world.

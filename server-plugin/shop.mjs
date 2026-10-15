@@ -1,6 +1,8 @@
-import {isReputationSettlement,reputationSettlements}from'./reputation-registry.mjs';
+import {isReputationSettlement}from'./reputation-registry.mjs';
 import {standing} from './standing.mjs';
 import {marketFactor}from'./promotion.mjs';
+import {personBusiness,placeSettlement,settlementPopulation} from './entity-view.mjs';
+import {actorPath} from './npc-state.mjs';
 
 // Shops (guide 3.7, 3.13): each registered shop restocks on its own cycle from
 // local production, the settlement's own stock, or trade-route arrivals, never
@@ -39,17 +41,38 @@ export function derivedShops(world,rules=world.rules.economy?.shops){
     }
     return rows;
 }
-const storeCache=new WeakMap();
 // Every shop that restocks and quotes: hand-registered stores, then derived ones.
 export function shopStores(world){
     const rules=world.rules.economy?.shops;if(!rules)return[];
-    const key=[rules,rules.stores,rules.types,world.npcs,world.items,world.locations],hit=storeCache.get(world);
-    if(hit&&hit.key.every((v,i)=>v===key[i]))return hit.value;
-    const value=[...rules.stores??[],...derivedShops(world,rules).filter(s=>s.trades&&s.restock.length)];
-    storeCache.set(world,{key,value});return value;
+    return [...rules.stores??[],...derivedShops(world,rules).filter(s=>s.trades&&s.restock.length)];
 }
-const shopsOf=engine=>shopStores(engine.world);
-export const shopOfKeeper=(engine,keeper)=>shopsOf(engine).find(s=>s.keeper===keeper)??null;
+export function currentShops(engine,state){
+    const rules=shopRules(engine);if(!rules)return[];
+    const businesses=new Map([...new Set([...engine.world.npcs.map(n=>n.id),...Object.keys(state.npcs??{})])].map(id=>[id,personBusiness(engine,state,id)]));
+    const projected=[...businesses].map(([id,b])=>b?{...engine.byId.get(id),shopType:b.shopType.value,settlement:b.settlement.value,workplace:{location:b.location.value},services:b.open.value?['trade']:[],serviceCatalog:[]}:null).filter(Boolean);
+    const stores=[...rules.stores??[],...derivedShops({...engine.world,npcs:projected},rules).filter(s=>s.trades&&s.restock.length)],used=new Set(),out=[];
+    for(const store of stores){
+        let business=businesses.get(store.keeper);
+        const original=engine.byId.get(store.keeper),location=original?.workplace?.location??original?.location;
+        // An existing trader taking up the former workplace succeeds its keeper.
+        if(!business?.open.value)business=[...businesses.values()].find(b=>b?.open.value&&b.location.value===location&&(b.shopType.value===(store.shopType??original?.shopType)||store.channels.includes(b.shopType.value)));
+        if(!business?.open.value||used.has(business.keeper.value))continue;
+        const keeper=business.keeper.value,settlement=business.settlement.value??store.settlement,type=business.shopType.value;
+        if(!settlement)continue;
+        const changedType=type&&type!==(store.shopType??original?.shopType)&&!store.channels.includes(type),template=changedType?rules.types?.[type]:null;
+        if(changedType&&!template)continue;
+        const shop={...store,...template,keeper,settlement,location:business.location.value,shopType:type,channels:template?.channels??store.channels};
+        const rows=engine.byId.get(keeper)?.shopRestock??store.restock;
+        shop.restock=rows.map(row=>{
+            if(row.source==='settlement')return {...row};
+            const from=originSettlement(engine.world,row.item,rules);
+            return from?{...row,source:from===settlement?'local':'route',...(from!==settlement?{from}:{})}:row;
+        }).filter(row=>qualityAllowed(engine.world,shop,row.item,rules,settlementPopulation(engine,state,settlement).population.value));
+        used.add(keeper);out.push(shop);
+    }
+    return out;
+}
+export const shopOfKeeper=(engine,keeper,state=null)=>(state?currentShops(engine,state):shopStores(engine.world)).find(s=>s.keeper===keeper)??null;
 // The settlement an item is produced in: walk its origin up the location tree.
 export function originSettlement(world,item,rules=world.rules.economy?.shops){
     const ids=settlementIds(world,rules),byId=new Map(world.locations.map(l=>[l.id,l])),seen=new Set();
@@ -128,7 +151,7 @@ function restockRow(d,engine,shop,row,minute){
     const market=marketFactor(engine,d.get('state'),shop.settlement),want=Math.min(row.amount*market,row.maximum*market-shelf(engine,d,shop.keeper,row.item));
     if(want<=0)return null;
     const base=engine.byId.get(row.item).basePrice,entry={day:Math.floor(minute/DAY),minute,item:row.item,source:row.source,wanted:want,added:0,paidCopper:0};
-    const keeper=d.get('state','npcs',shop.keeper),afford=n=>Math.min(n,Math.floor(keeper.coins/base));
+    const keeperPath=actorPath(engine.world,shop.keeper),keeper=d.get(...keeperPath),afford=n=>Math.min(n,Math.floor(keeper.coins/base));
     if(row.source==='local'){entry.added=want;}
     else{
         const from=row.source==='route'?row.from:shop.settlement,s=structuredClone(d.get('state','settlements',from));
@@ -140,14 +163,14 @@ function restockRow(d,engine,shop,row,minute){
         if(!quantity)return{...entry,reason:spare?'店主现钱不足':'聚落库存已到保留量'};
         if(row.source==='settlement')s[row.stock]-=quantity;
         const cost=quantity*base;s.treasury+=cost;d.set(['state','settlements',from],s);
-        d.set(['state','npcs',shop.keeper,'coins'],keeper.coins-cost);
+        d.set([...keeperPath,'coins'],keeper.coins-cost);
         entry.added=quantity;entry.paidCopper=cost;entry.from=from;
     }
     engine.itemDelta(d,shop.keeper,row.item,entry.added);
     return entry;
 }
 function restockShop(d,engine,shop,minute){
-    const keeper=d.get('state','npcs',shop.keeper);
+    const keeper=d.get('state','npcs',shop.keeper)??d.get('state','creatures',shop.keeper);
     if(!keeper||['死亡','濒死'].includes(keeper.status))return;
     const entries=shop.restock.map(row=>restockRow(d,engine,shop,row,minute)).filter(Boolean);
     if(!entries.length)return;
@@ -158,26 +181,21 @@ function restockShop(d,engine,shop,minute){
 // Registered with the advance registry. Restock happens at the midnight that opens
 // a cycle day; each boundary inside (before,after] is settled once, in order.
 export function advanceShops(d,engine,before,after){
-    const stores=shopsOf(engine);if(!stores.length)return;
+    const stores=currentShops(engine,d.get('state'));if(!stores.length)return;
     assertRules(engine);
     for(let day=Math.floor(before/DAY)+1;day<=Math.floor(after/DAY);day++)
         for(const shop of stores)if(day>=shop.firstDay&&(day-shop.firstDay)%shop.cycleDays===0)restockShop(d,engine,shop,day*DAY);
 }
 
-function settlementAt(engine,location){
-    const list=reputationSettlements(engine),seen=new Set();
-    while(location&&!seen.has(location)){if(list.includes(location))return location;seen.add(location);location=engine.byId.get(location)?.parent;}
-    return null;
-}
 // The day's list price between a player and an NPC. Written once per day and
 // counterpart into the ledger; later calls that day read it back unchanged.
 export function tradeQuote(d,engine,{buyer,seller,item,location,base}){
     const minute=d.get('state','minute'),day=Math.floor(minute/DAY),key=`trade-quote:${day}:${seller}:${buyer}:${item}`,old=d.get('state','records',key);
     if(old){if(old.category!=='trade_quote'||!integer(old.listPrice,1))throw Error('当日报价账无效');return old;}
     const rules=shopRules(engine),limits=engine.rules.economy.priceFactorLimits,price=base();
-    const npc=buyer==='player'?seller:seller==='player'?buyer:null,shop=buyer==='player'?shopOfKeeper(engine,seller):null;
+    const npc=buyer==='player'?seller:seller==='player'?buyer:null,shop=buyer==='player'?shopOfKeeper(engine,seller,d.get('state')):null;
     let relation=1,keeperRegard=null,settlementRegard=null;
-    const place=shop?.settlement??settlementAt(engine,location);
+    const place=shop?.settlement??placeSettlement(engine,d.get('state'),location).value;
     if(npc&&rules){
         const state=d.get('state');keeperRegard=standing(engine,state,npc,'player');
         settlementRegard=place&&isReputationSettlement(engine,place)?standing(engine,state,place,'player'):0;

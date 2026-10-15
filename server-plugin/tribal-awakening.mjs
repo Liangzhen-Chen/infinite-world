@@ -18,6 +18,9 @@ import {speciesInHabitat} from './wildlife-range.mjs';
 import {adjustStanding,standing} from './standing.mjs';
 import {worldEvents,publishTransitionEvent} from './world-events.mjs';
 import {groupView} from './entity-view.mjs';
+import {remoteWorld} from './remote-generation.mjs';
+import {materializeWildlifeHabitats} from './wildlife-habitats.mjs';
+import {planWildlifeMigration} from './wildlife-migration.mjs';
 import {clockRoll} from './world-clock.mjs';
 import {registerQuestGenerator,postGeneratedQuest} from './quest-sources.mjs';
 import {growIntelligence,levelProfile,GROWTH_POINTS} from './npc-intelligence.mjs';
@@ -276,8 +279,17 @@ function resolveOutcome(d,engine,t,dyn,rec,{stance,kind},at,sourceEvent){
   setOrg(accord,{status:'结盟',affiliation:dyn.board});setOrg(radical,{status:'散入'});
   event('pact',accord,dyn.board,['pact','alliance']);
  }else if(kind==='autonomy'){
-  const skeleton=tribalSettlementSkeleton(d.document.randomSeed,dyn,{population:rec.population,leader:groupView(engine,d.get('state'),accord)?.leader.value??null,council:accord,minute:at,home:engine.byId.get(dyn.home)});
-  d.set(['state','records',`tribal_settlement:${dyn.id}`],{category:'tribal_settlement',dynamic:dyn.id,minute:at,sourceEvent:ev,hash:createHash('sha256').update(JSON.stringify(skeleton)).digest('hex').slice(0,24),skeleton});
+  const inhabitants=rec.awakened.filter(id=>alive(d.get('state','creatures',id)));
+  const skeleton=tribalSettlementSkeleton(d.document.randomSeed,dyn,{population:ecologyCount(d,dyn)+inhabitants.length,leader:groupView(engine,d.get('state'),accord)?.leader.value??null,council:accord,minute:at,home:engine.byId.get(dyn.home)});
+  d.set(['state','records',`tribal_settlement:${dyn.id}`],{category:'tribal_settlement',dynamic:dyn.id,minute:at,sourceEvent:ev,hash:createHash('sha256').update(JSON.stringify(skeleton)).digest('hex').slice(0,24),skeleton,inhabitants});
+  d.set(['state','settlements',skeleton.id],{name:skeleton.name,population:skeleton.population,food:0,wood:0,stone:0,iron:0,treasury:0});
+  for(const id of inhabitants)d.set(['state','creatures',id,'location'],skeleton.id);
+  // Unseen members now belong to the settlement census, not wild stock.
+  const ecology=d.get('state','records',`ecology:${dyn.habitat}`)?.populations?.[dyn.species];
+  if(ecology){const moved=Math.min(ecology.count,Math.max(0,skeleton.population-inhabitants.length));d.set(['state','records',`ecology:${dyn.habitat}`,'populations',dyn.species],{...ecology,count:ecology.count-moved,withdrawn:ecology.withdrawn+moved});}
+  const overlay=materializeWildlifeHabitats(remoteWorld(engine.remoteBase?.world??engine.world,d.get('state')));
+  const habitats=overlay.rules.wildlife?.habitats.filter(h=>h.location===`${skeleton.id}_wild`)??[];
+  for(const patch of planWildlifeMigration(d.document,{...overlay.rules,wildlife:{...overlay.rules.wildlife,habitats}},overlay.monsters))d.set(patch.path,patch.value);
   setOrg(accord,{status:'自治',settlement:skeleton.id});outcome.settlement=skeleton.id;
   adjustStanding(d,engine,dyn.board,accord,5,{sourceEvent:ev,reason:`${dyn.name}自立聚居地`,minute:at});
   event('organize',accord,null,['organization','org:found','autonomy']);

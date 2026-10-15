@@ -1,4 +1,5 @@
-import {locationTraits,creatureTraits,featureTraits} from './traits.mjs';
+import {locationTraits,creatureTraits,traitsOf} from './traits.mjs';
+import {populationView} from './entity-view.mjs';
 import {heldUnit,wearItem} from './items.mjs';
 import {registerIncident} from './law.mjs';
 
@@ -18,9 +19,9 @@ export function fish(d,args,id){
     const location=d.get('state','location'),habitat=this.rules.wildlife?.habitats.find(h=>h.location===location);
     const features=(this.byId.get(location)?.features??[]);
     const water=locationTraits(this.byId.get(location)).tags.some(t=>['water','aquatic','wet'].includes(t))
-        ||features.some(f=>featureTraits(f,d.get('state','records',`physical_feature:${f.id}`)??f.state,d.get('state','minute')).tags.includes('water'));
+        ||features.some(f=>traitsOf(this,d.get('state'),f.id)?.tags.includes('water'));
     const ecology=habitat&&d.get(...path(`ecology:${habitat.id}`));
-    const species=this.world.monsters.filter(s=>s.wildlife&&creatureTraits(s).tags.includes('fish')&&ecology?.populations[s.id]);
+    const species=this.world.monsters.filter(s=>s.wildlife&&creatureTraits(s).tags.includes('fish')&&populationView(this,d.get('state'),habitat?.id,s.id)?.population.value);
     if(!habitat||!ecology||!water&&!species.length)throw Error('这里没有水域鱼类栖地');
     const requested=args.species?this.resolve(args.species,'monster'):null;
     if(requested&&!species.some(s=>s.id===requested))throw Error('该鱼种不在本地栖地');
@@ -32,7 +33,7 @@ export function fish(d,args,id){
     const check=this.check(d,{attribute:'敏捷',skill:'skill_life_2_core',difficulty},id);
     wearItem(d,this,'player',tool,1);this.itemDelta(d,'player','item_water',-1);this.advance(d,minutes,id);
     const now=d.get('state','minute'),latest=d.get(...path(`ecology:${habitat.id}`));
-    const frozen=features.some(f=>featureTraits(f,d.get('state','records',`physical_feature:${f.id}`)??f.state,now).tags.includes('frozen'));
+    const frozen=features.some(f=>f.kind==='water'&&traitsOf(this,d.get('state'),f.id)?.tags.includes('frozen'));
     const eligible=species.filter(s=>(!requested||s.id===requested)&&latest.populations[s.id].count>0&&active(s.wildlife.activeHours,now%1440));
     const selected=eligible[0],success=check.success&&!frozen&&able(d)&&d.get('state','location')===location&&Boolean(selected);
     if(success){
