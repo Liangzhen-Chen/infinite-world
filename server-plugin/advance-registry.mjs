@@ -22,6 +22,8 @@ import {advanceNpcCrime,nextNpcCrimeMinute}from'./npc-crime.mjs';
 import {cropProduction}from'./weather.mjs';
 import {advanceAgriculture,settleAgricultureExpiry}from'./agriculture.mjs';
 import {advanceSettlementTrade,nextSettlementTradeMinute}from'./settlement-trade.mjs';
+import {advanceTransport,nextTransportMinute} from './transport.mjs';
+import {advancePost,nextPostMinute} from './post.mjs';
 import {advanceShops}from'./shop.mjs';
 import {advanceWorldClocks,nextWorldClockMinute}from'./world-clock.mjs';
 import {advanceFactionClocks,nextFactionClockMinute,factionClockRules}from'./faction-clock.mjs';
@@ -105,6 +107,8 @@ const systems=[
  {id:'agriculture_expiry',order:700,advance:(e,d)=>settleAgricultureExpiry(d,e)},
  {id:'settlement_trade',order:800,active:e=>!!e.rules.settlementTrade,nextMinute:(e,d,now)=>nextSettlementTradeMinute(d.get('state'),e,now),
   advance:(e,d,{after})=>advanceSettlementTrade(d,e,after)},
+ {id:'transport',order:790,nextMinute:(e,d,now)=>nextTransportMinute(d.get('state'),now),active:(e,d,now)=>nextTransportMinute(d.get('state'),now)!==Infinity,advance:(e,d,{after})=>advanceTransport(d,e,after)},
+ {id:'post',order:820,nextMinute:(e,d,now)=>nextPostMinute(d.get('state'),now),advance:(e,d,{after})=>advancePost(d,e,after)},
  {id:'shop_restock',order:850,advance:(e,d,{before,after})=>advanceShops(d,e,before,after)},
  {id:'facilities',order:890,nextMinute:(e,d,now)=>nextFacilityMinute(d.get('state'),now),advance:(e,d,ctx)=>advanceFacilities(d,e,ctx)},
  {id:'projects',order:900,advance(e,d,{days,id}){

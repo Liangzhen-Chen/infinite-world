@@ -89,6 +89,11 @@ export function applyInteraction(d,engine,{agent,target,owner='player',traits=nu
  if(moistureMg!==undefined)outcome.moistureMg=moistureMg;
  if(minutes!==undefined&&outcome.minutes>0)outcome.minutes=minutes;
  let changed={added:[],removed:[]};
+ const asset=d.get('state','records',target);
+ if(asset?.category==='transport_asset'){
+  if(outcome.add.includes('wet')){d.set(['state','records',target,'wetUntil'],d.get('state','minute')+60);changed.added.push('wet');}
+  if(agent==='fire'&&!((asset.wetUntil??0)>d.get('state','minute')))d.set(['state','records',target,'durability'],Math.max(0,asset.durability-25));
+ }
  if(target?.startsWith('feature_')){const row=featureRow(engine,target);if(row)changed=writeFeature(d,row,outcome);}
  else if(target?.startsWith('item_'))changed=writeItem(d,owner,target,outcome);
  else if(facilityView(engine,d.get('state'),target))changed=applyFacilityInteraction(d,engine,target,outcome,{minute,sourceEvent});

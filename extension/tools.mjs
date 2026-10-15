@@ -64,8 +64,13 @@ const transport=definitions.find(r=>r.function.name==='world_trade').function.pa
 transport.operation.enum.push('smuggle','deliver_smuggled','bank_inspect','extend','prepay','lend','collect','pawn','redeem','auction','remit','cash_bill','asset_inspect','invest','dividend','share_transfer','rent_out','workshop','workshop_terms','dismiss');transport.mode=str;
 festivalParameters.operation.enum.push('duel_challenge','duel_answer','duel_yield','election_start','election_campaign','election_finish','election_expose','mining_permit');
 festivalParameters.choice={...str,description:'touch/death；gift/speech/promise/buy_votes'};
+transport.operation.description='trade/business/bank/asset/transport/post';
+transport.operation.enum.push('transport','post');
+transport.task.enum.push('register','book','trace','lease','repair','intercept','recover','open','lose','collect');
+transport.service.enum.push('passage');
+transport.escort=str;
+transport.authorization=str;
 transport.operation.enum.push('labor_inspect','labor_guarantee','labor_mediate','labor_poach');
-transport.operation.description='trade/business/bank/asset; bank_inspect,asset_inspect';
 function group(name,description,members){
     const selected=definitions.filter(row=>members.includes(row.function.name)),properties={},operations=[],mapping=new Map();
     for(const row of selected){

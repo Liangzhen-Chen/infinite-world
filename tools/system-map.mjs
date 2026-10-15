@@ -120,6 +120,7 @@ const WORLD_USE=Object.fromEntries(CODE.map(f=>[f,scanWorldUse(f)]));
 // ---------------------------------------------------------------- systems & layers
 // 模块→系统归属（人工归类；脚本会校验 server-plugin 与 extension 的每个模块都有归属）。
 const SYSTEMS=[
+ {id:'sim_transport',layer:'sim',name:'承运与驿传',modules:['transport.mjs','transport-route.mjs','post.mjs']},
  {id:'sim_faith',layer:'sim',name:'寺观与信仰',modules:['faith-catalog.mjs','faith-state.mjs','faith.mjs']},
  // 数据层（world/ 目录与 prompt/）
  {id:'data_meta',layer:'data',name:'规则与目录',dir:'world/meta',modules:[]},

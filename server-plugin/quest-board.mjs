@@ -165,6 +165,7 @@ export function advanceQuestBoard(d,engine,before,after,{beforeState}={}){
  const results=[];
  for(const q of Object.values(d.get('state','quests')??{})){
   if(q.boardVersion!==1||!active(q))continue;
+  if(q.transport){if(q.deadline<=after)results.push(close(d,engine,q,'已过期','护送运单逾期，退回未支付报酬',after));continue;}
   if(q.status==='进行中'&&q.taker!=='player'){
    const booking=d.get('state','obligations',q.reservation);
    try{

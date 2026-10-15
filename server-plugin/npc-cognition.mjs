@@ -8,6 +8,8 @@ import {assertNpcObligationAction} from './npc-obligations.mjs';
 import {observeLegalReputation} from './reputation.mjs';
 import {npcRumorSeeds,rumorChainView} from './npc-rumors.mjs';
 import {personSimulation,personConstraint}from'./entity-view.mjs';
+import {transportServices,quoteTransport} from './transport.mjs';
+import {sendPost} from './post.mjs';
 
 const DAY=1440,clone=value=>cloneData(value); // P2: same result as structuredClone, faster
 const awake=n=>n&&n.location&&!n.scheduleTravel&&!n.cognitionTravel&&!['死亡','濒死','昏迷','患病'].includes(n.status)&&!/睡眠|睡觉|熟睡/.test(n.activity??'');
@@ -15,11 +17,11 @@ const key=(...parts)=>digest(parts).slice(0,24);
 const relation=(engine,state,from,to)=>state.npcs[from]?.relationships?.[to]||engine.byId.get(from)?.relationships?.some(r=>r.with===to)?relationView(engine,state,from,to):null;
 const originalId=row=>row.rootMemoryId??row.id;
 const known=(engine,state,id,memory)=>state.npcs[id]?.memoryStream?.some(row=>originalId(row)===originalId(memory))||memory.kind==='rumor'&&npcRumorSeeds(engine,id).some(row=>originalId(row)===originalId(memory));
-function permitted(memory,to){
+export function permitted(memory,to){
  const privateFact=memory.private===true||memory.visibility==='private'||memory.visibility==='secret'||['secret','debt','obligation','quest'].includes(memory.kind)||memory.sourceType==='约定核对';
  return !privateFact||(memory.permittedRecipients??memory.knownBy??[]).includes(to);
 }
-function memoryFor(engine,state,from,id,at){
+export function memoryFor(engine,state,from,id,at){
  const row=state.npcs[from]?.memoryStream?.find(x=>x.id===id)??npcRumorSeeds(engine,from).find(x=>x.id===id);
  if(!row||row.minute>at||!['亲历','目击','听说','约定核对'].includes(row.sourceType))throw Error('传话者没有这条已发生的个人记忆');
  return row;
@@ -31,7 +33,7 @@ function retell(engine,state,from,memory){
  const omit=hops>=2||/夸|急|偏|先下判断/.test(flaws);
  return {input:text,content:omit?`听来的大意：${text.replace(/[0-9]+(?:\.\d+)?(?:铜|份|件|分钟)/g,'若干')}`:`转述：${text}`,distortion:omit?'省略数量，需核实':'保留来源的转述',hops};
 }
-function appendHeard(d,engine,from,to,memory,minute,channel,messageId,location=d.get('state','npcs',to,'location'),version=null){
+export function appendHeard(d,engine,from,to,memory,minute,channel,messageId,location=d.get('state','npcs',to,'location'),version=null){
  if(known(engine,d.get('state'),to,memory))return false;
  const told=version??retell(engine,d.get('state'),from,memory),row={id:`heard_${key(originalId(memory),to)}`,rootMemoryId:originalId(memory),sourceEvent:memory.sourceEvent,
   kind:memory.kind,minute,occurredAt:memory.occurredAt??memory.minute,location,participants:clone(memory.participants??[]),
@@ -69,6 +71,17 @@ export function shareNpcMemory(d,engine,{from,to,memoryId,channel='conversation'
   appendHeard(d,engine,from,to,memory,at,'conversation',messageId);return {messageId,delivered:true,minute:at};
  }
  if(channel!=='carry')throw Error('未登记的消息渠道');
+ // NPCs purchase an available carrier before taking the letter themselves.
+ // The ordinary walking path remains available when no paid service can run.
+ if(b.location&&a.location!==b.location){
+  const existing=state.records?.[`post:${messageId}`];if(existing)return {duplicate:true,messageId:existing.id};
+  for(const service of transportServices(engine,state,a.location).filter(s=>s.driver!==from)){
+   let quote;try{quote=quoteTransport(d,engine,{asset:service.asset,from:a.location,to:b.location,departAt:service.nextDeparture});}catch(error){if(!error.message.startsWith('没有当前季节'))throw error;continue;}
+   if(a.coins<quote.total)continue;
+   const posted=sendPost(d,engine,{from,to,memoryId,legs:[{asset:service.asset,to:b.location}],receipt:false},messageId);
+   return {messageId:posted.id,delivered:false,arrive:posted.estimatedArrivalAt,channel:'post'};
+  }
+ }
  if(waterEarthHeldUntil(state,from,at)>at)throw Error('水绳束缚期间不能携信离开');
  if(occupied(state,from,at,at+1))throw Error('携信者正受同行或义务占用');
  if(!b.location)throw Error('收件人正在途中，没有可确认的投递地址');

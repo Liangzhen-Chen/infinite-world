@@ -130,7 +130,7 @@ function boardOf(engine,place,boards){
 const generated=state=>Object.values(state.quests??{}).filter(q=>q.boardVersion===1&&q.source);
 // 托管：人物从自己钱里出，势力从势力公库出，聚落从公账出（不得动用留底）。
 function escrow(d,engine,funding,reward,quest){
- if(funding.npc){const coins=d.get('state','npcs',funding.npc,'coins')??0;if(coins<reward)return false;d.set(['state','npcs',funding.npc,'coins'],coins-reward);return true;}
+ if(funding.npc){const account=funding.npc==='player'?['state','player']:['state','npcs',funding.npc],coins=d.get(...account,'coins')??0;if(coins<reward)return false;d.set([...account,'coins'],coins-reward);return true;}
  if(funding.faction)return spendFactionAssets(d,engine,funding.faction,{coins:reward},{sourceEvent:quest,minute:d.get('state','minute'),kind:'quest_escrow'});
  if(funding.treasury){
   const treasury=d.get('state','settlements',funding.treasury,'treasury'),reserve=authorityOf(engine)?.treasury?.reserveCopper??0;
