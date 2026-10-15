@@ -8,8 +8,35 @@
         },
         {
           "error": "模型没有返回 JSON 正文"
+        },
+        {
+          "supplemental": true,
+          "authorization": "M4R-sol-002-parse-supplement",
+          "result": {
+            "contradictions": []
+          },
+          "usage": {
+            "label": "M4R:L2:profession_hidden_01:3",
+            "model": "deepseek-flash",
+            "thinking": "disabled",
+            "usage": {
+              "prompt_tokens": 215,
+              "completion_tokens": 7,
+              "total_tokens": 222,
+              "prompt_tokens_details": {
+                "cached_tokens": 0
+              },
+              "prompt_cache_hit_tokens": 0,
+              "prompt_cache_miss_tokens": 215
+            },
+            "costUpperYuan": 0.000486,
+            "cumulativeUpperYuan": 0.026675120000000004,
+            "latencyMs": 1046.9231,
+            "timestamp": "2026-10-15T16:19:18.569Z"
+          }
         }
-      ]
+      ],
+      "passed": true
     },
     {
       "id": "profession_hidden_02",
@@ -19,8 +46,35 @@
         },
         {
           "error": "模型没有返回 JSON 正文"
+        },
+        {
+          "supplemental": true,
+          "authorization": "M4R-sol-002-parse-supplement",
+          "result": {
+            "contradictions": []
+          },
+          "usage": {
+            "label": "M4R:L2:profession_hidden_02:3",
+            "model": "deepseek-flash",
+            "thinking": "disabled",
+            "usage": {
+              "prompt_tokens": 209,
+              "completion_tokens": 7,
+              "total_tokens": 216,
+              "prompt_tokens_details": {
+                "cached_tokens": 0
+              },
+              "prompt_cache_hit_tokens": 0,
+              "prompt_cache_miss_tokens": 209
+            },
+            "costUpperYuan": 0.000474,
+            "cumulativeUpperYuan": 0.027149120000000002,
+            "latencyMs": 945.3049000000001,
+            "timestamp": "2026-10-15T16:19:19.519Z"
+          }
         }
-      ]
+      ],
+      "passed": true
     },
     {
       "id": "profession_hidden_03",
@@ -30,8 +84,35 @@
         },
         {
           "error": "模型没有返回 JSON 正文"
+        },
+        {
+          "supplemental": true,
+          "authorization": "M4R-sol-002-parse-supplement",
+          "result": {
+            "contradictions": []
+          },
+          "usage": {
+            "label": "M4R:L2:profession_hidden_03:3",
+            "model": "deepseek-flash",
+            "thinking": "disabled",
+            "usage": {
+              "prompt_tokens": 216,
+              "completion_tokens": 7,
+              "total_tokens": 223,
+              "prompt_tokens_details": {
+                "cached_tokens": 0
+              },
+              "prompt_cache_hit_tokens": 0,
+              "prompt_cache_miss_tokens": 216
+            },
+            "costUpperYuan": 0.000488,
+            "cumulativeUpperYuan": 0.02763712,
+            "latencyMs": 962.3706000000002,
+            "timestamp": "2026-10-15T16:19:20.485Z"
+          }
         }
-      ]
+      ],
+      "passed": true
     },
     {
       "id": "profession_hidden_04",
@@ -41,8 +122,35 @@
         },
         {
           "error": "模型没有返回 JSON 正文"
+        },
+        {
+          "supplemental": true,
+          "authorization": "M4R-sol-002-parse-supplement",
+          "result": {
+            "contradictions": []
+          },
+          "usage": {
+            "label": "M4R:L2:profession_hidden_04:3",
+            "model": "deepseek-flash",
+            "thinking": "disabled",
+            "usage": {
+              "prompt_tokens": 205,
+              "completion_tokens": 7,
+              "total_tokens": 212,
+              "prompt_tokens_details": {
+                "cached_tokens": 0
+              },
+              "prompt_cache_hit_tokens": 0,
+              "prompt_cache_miss_tokens": 205
+            },
+            "costUpperYuan": 0.000466,
+            "cumulativeUpperYuan": 0.028103120000000002,
+            "latencyMs": 900.3764000000001,
+            "timestamp": "2026-10-15T16:19:21.388Z"
+          }
         }
-      ]
+      ],
+      "passed": true
     },
     {
       "id": "profession_hidden_05",
@@ -52,8 +160,35 @@
         },
         {
           "error": "模型没有返回 JSON 正文"
+        },
+        {
+          "supplemental": true,
+          "authorization": "M4R-sol-002-parse-supplement",
+          "result": {
+            "contradictions": []
+          },
+          "usage": {
+            "label": "M4R:L2:profession_hidden_05:3",
+            "model": "deepseek-flash",
+            "thinking": "disabled",
+            "usage": {
+              "prompt_tokens": 209,
+              "completion_tokens": 7,
+              "total_tokens": 216,
+              "prompt_tokens_details": {
+                "cached_tokens": 0
+              },
+              "prompt_cache_hit_tokens": 0,
+              "prompt_cache_miss_tokens": 209
+            },
+            "costUpperYuan": 0.000474,
+            "cumulativeUpperYuan": 0.02857712,
+            "latencyMs": 904.9302000000002,
+            "timestamp": "2026-10-15T16:19:22.296Z"
+          }
         }
-      ]
+      ],
+      "passed": true
     },
     {
       "id": "profession_hidden_06",
@@ -63,8 +198,35 @@
         },
         {
           "error": "模型没有返回 JSON 正文"
+        },
+        {
+          "supplemental": true,
+          "authorization": "M4R-sol-002-parse-supplement",
+          "result": {
+            "contradictions": []
+          },
+          "usage": {
+            "label": "M4R:L2:profession_hidden_06:3",
+            "model": "deepseek-flash",
+            "thinking": "disabled",
+            "usage": {
+              "prompt_tokens": 206,
+              "completion_tokens": 7,
+              "total_tokens": 213,
+              "prompt_tokens_details": {
+                "cached_tokens": 0
+              },
+              "prompt_cache_hit_tokens": 0,
+              "prompt_cache_miss_tokens": 206
+            },
+            "costUpperYuan": 0.000468,
+            "cumulativeUpperYuan": 0.02904512,
+            "latencyMs": 1012.9845000000005,
+            "timestamp": "2026-10-15T16:19:23.312Z"
+          }
         }
-      ]
+      ],
+      "passed": true
     },
     {
       "id": "profession_hidden_07",
@@ -74,8 +236,35 @@
         },
         {
           "error": "模型没有返回 JSON 正文"
+        },
+        {
+          "supplemental": true,
+          "authorization": "M4R-sol-002-parse-supplement",
+          "result": {
+            "contradictions": []
+          },
+          "usage": {
+            "label": "M4R:L2:profession_hidden_07:3",
+            "model": "deepseek-flash",
+            "thinking": "disabled",
+            "usage": {
+              "prompt_tokens": 207,
+              "completion_tokens": 7,
+              "total_tokens": 214,
+              "prompt_tokens_details": {
+                "cached_tokens": 0
+              },
+              "prompt_cache_hit_tokens": 0,
+              "prompt_cache_miss_tokens": 207
+            },
+            "costUpperYuan": 0.00047,
+            "cumulativeUpperYuan": 0.029515120000000002,
+            "latencyMs": 1002.5823,
+            "timestamp": "2026-10-15T16:19:24.317Z"
+          }
         }
-      ]
+      ],
+      "passed": true
     },
     {
       "id": "profession_hidden_08",
@@ -85,8 +274,35 @@
         },
         {
           "error": "模型没有返回 JSON 正文"
+        },
+        {
+          "supplemental": true,
+          "authorization": "M4R-sol-002-parse-supplement",
+          "result": {
+            "contradictions": []
+          },
+          "usage": {
+            "label": "M4R:L2:profession_hidden_08:3",
+            "model": "deepseek-flash",
+            "thinking": "disabled",
+            "usage": {
+              "prompt_tokens": 205,
+              "completion_tokens": 7,
+              "total_tokens": 212,
+              "prompt_tokens_details": {
+                "cached_tokens": 0
+              },
+              "prompt_cache_hit_tokens": 0,
+              "prompt_cache_miss_tokens": 205
+            },
+            "costUpperYuan": 0.000466,
+            "cumulativeUpperYuan": 0.029981120000000003,
+            "latencyMs": 890.1122999999998,
+            "timestamp": "2026-10-15T16:19:25.210Z"
+          }
         }
-      ]
+      ],
+      "passed": true
     },
     {
       "id": "profession_hidden_09",
@@ -96,8 +312,35 @@
         },
         {
           "error": "模型没有返回 JSON 正文"
+        },
+        {
+          "supplemental": true,
+          "authorization": "M4R-sol-002-parse-supplement",
+          "result": {
+            "contradictions": []
+          },
+          "usage": {
+            "label": "M4R:L2:profession_hidden_09:3",
+            "model": "deepseek-flash",
+            "thinking": "disabled",
+            "usage": {
+              "prompt_tokens": 212,
+              "completion_tokens": 7,
+              "total_tokens": 219,
+              "prompt_tokens_details": {
+                "cached_tokens": 0
+              },
+              "prompt_cache_hit_tokens": 0,
+              "prompt_cache_miss_tokens": 212
+            },
+            "costUpperYuan": 0.00048,
+            "cumulativeUpperYuan": 0.030461120000000005,
+            "latencyMs": 596.8144999999995,
+            "timestamp": "2026-10-15T16:19:25.810Z"
+          }
         }
-      ]
+      ],
+      "passed": true
     },
     {
       "id": "profession_hidden_10",
@@ -107,8 +350,35 @@
         },
         {
           "error": "模型没有返回 JSON 正文"
+        },
+        {
+          "supplemental": true,
+          "authorization": "M4R-sol-002-parse-supplement",
+          "result": {
+            "contradictions": []
+          },
+          "usage": {
+            "label": "M4R:L2:profession_hidden_10:3",
+            "model": "deepseek-flash",
+            "thinking": "disabled",
+            "usage": {
+              "prompt_tokens": 205,
+              "completion_tokens": 7,
+              "total_tokens": 212,
+              "prompt_tokens_details": {
+                "cached_tokens": 0
+              },
+              "prompt_cache_hit_tokens": 0,
+              "prompt_cache_miss_tokens": 205
+            },
+            "costUpperYuan": 0.000466,
+            "cumulativeUpperYuan": 0.030927120000000006,
+            "latencyMs": 762.0779999999995,
+            "timestamp": "2026-10-15T16:19:26.575Z"
+          }
         }
-      ]
+      ],
+      "passed": true
     },
     {
       "id": "profession_hidden_11",
@@ -118,8 +388,35 @@
         },
         {
           "error": "模型没有返回 JSON 正文"
+        },
+        {
+          "supplemental": true,
+          "authorization": "M4R-sol-002-parse-supplement",
+          "result": {
+            "contradictions": []
+          },
+          "usage": {
+            "label": "M4R:L2:profession_hidden_11:3",
+            "model": "deepseek-flash",
+            "thinking": "disabled",
+            "usage": {
+              "prompt_tokens": 218,
+              "completion_tokens": 7,
+              "total_tokens": 225,
+              "prompt_tokens_details": {
+                "cached_tokens": 0
+              },
+              "prompt_cache_hit_tokens": 0,
+              "prompt_cache_miss_tokens": 218
+            },
+            "costUpperYuan": 0.000492,
+            "cumulativeUpperYuan": 0.03141912000000001,
+            "latencyMs": 1076.3163999999997,
+            "timestamp": "2026-10-15T16:19:27.654Z"
+          }
         }
-      ]
+      ],
+      "passed": true
     },
     {
       "id": "profession_hidden_12",
@@ -129,8 +426,35 @@
         },
         {
           "error": "模型没有返回 JSON 正文"
+        },
+        {
+          "supplemental": true,
+          "authorization": "M4R-sol-002-parse-supplement",
+          "result": {
+            "contradictions": []
+          },
+          "usage": {
+            "label": "M4R:L2:profession_hidden_12:3",
+            "model": "deepseek-flash",
+            "thinking": "disabled",
+            "usage": {
+              "prompt_tokens": 203,
+              "completion_tokens": 7,
+              "total_tokens": 210,
+              "prompt_tokens_details": {
+                "cached_tokens": 0
+              },
+              "prompt_cache_hit_tokens": 0,
+              "prompt_cache_miss_tokens": 203
+            },
+            "costUpperYuan": 0.000462,
+            "cumulativeUpperYuan": 0.031881120000000006,
+            "latencyMs": 735.4680000000008,
+            "timestamp": "2026-10-15T16:19:28.392Z"
+          }
         }
-      ]
+      ],
+      "passed": true
     },
     {
       "id": "profession_hidden_13",
@@ -140,8 +464,35 @@
         },
         {
           "error": "模型没有返回 JSON 正文"
+        },
+        {
+          "supplemental": true,
+          "authorization": "M4R-sol-002-parse-supplement",
+          "result": {
+            "contradictions": []
+          },
+          "usage": {
+            "label": "M4R:L2:profession_hidden_13:3",
+            "model": "deepseek-flash",
+            "thinking": "disabled",
+            "usage": {
+              "prompt_tokens": 205,
+              "completion_tokens": 7,
+              "total_tokens": 212,
+              "prompt_tokens_details": {
+                "cached_tokens": 0
+              },
+              "prompt_cache_hit_tokens": 0,
+              "prompt_cache_miss_tokens": 205
+            },
+            "costUpperYuan": 0.000466,
+            "cumulativeUpperYuan": 0.03234712000000001,
+            "latencyMs": 895.7435000000005,
+            "timestamp": "2026-10-15T16:19:29.291Z"
+          }
         }
-      ]
+      ],
+      "passed": true
     },
     {
       "id": "profession_hidden_14",
@@ -151,8 +502,35 @@
         },
         {
           "error": "模型没有返回 JSON 正文"
+        },
+        {
+          "supplemental": true,
+          "authorization": "M4R-sol-002-parse-supplement",
+          "result": {
+            "contradictions": []
+          },
+          "usage": {
+            "label": "M4R:L2:profession_hidden_14:3",
+            "model": "deepseek-flash",
+            "thinking": "disabled",
+            "usage": {
+              "prompt_tokens": 215,
+              "completion_tokens": 7,
+              "total_tokens": 222,
+              "prompt_tokens_details": {
+                "cached_tokens": 0
+              },
+              "prompt_cache_hit_tokens": 0,
+              "prompt_cache_miss_tokens": 215
+            },
+            "costUpperYuan": 0.000486,
+            "cumulativeUpperYuan": 0.03283312000000001,
+            "latencyMs": 938.0705999999991,
+            "timestamp": "2026-10-15T16:19:30.236Z"
+          }
         }
-      ]
+      ],
+      "passed": true
     },
     {
       "id": "profession_hidden_15",
@@ -162,8 +540,35 @@
         },
         {
           "error": "模型没有返回 JSON 正文"
+        },
+        {
+          "supplemental": true,
+          "authorization": "M4R-sol-002-parse-supplement",
+          "result": {
+            "contradictions": []
+          },
+          "usage": {
+            "label": "M4R:L2:profession_hidden_15:3",
+            "model": "deepseek-flash",
+            "thinking": "disabled",
+            "usage": {
+              "prompt_tokens": 204,
+              "completion_tokens": 7,
+              "total_tokens": 211,
+              "prompt_tokens_details": {
+                "cached_tokens": 0
+              },
+              "prompt_cache_hit_tokens": 0,
+              "prompt_cache_miss_tokens": 204
+            },
+            "costUpperYuan": 0.000464,
+            "cumulativeUpperYuan": 0.033297120000000006,
+            "latencyMs": 870.3256999999994,
+            "timestamp": "2026-10-15T16:19:31.109Z"
+          }
         }
-      ]
+      ],
+      "passed": true
     },
     {
       "id": "profession_hidden_16",
@@ -173,8 +578,35 @@
         },
         {
           "error": "模型没有返回 JSON 正文"
+        },
+        {
+          "supplemental": true,
+          "authorization": "M4R-sol-002-parse-supplement",
+          "result": {
+            "contradictions": []
+          },
+          "usage": {
+            "label": "M4R:L2:profession_hidden_16:3",
+            "model": "deepseek-flash",
+            "thinking": "disabled",
+            "usage": {
+              "prompt_tokens": 206,
+              "completion_tokens": 7,
+              "total_tokens": 213,
+              "prompt_tokens_details": {
+                "cached_tokens": 0
+              },
+              "prompt_cache_hit_tokens": 0,
+              "prompt_cache_miss_tokens": 206
+            },
+            "costUpperYuan": 0.000468,
+            "cumulativeUpperYuan": 0.03376512000000001,
+            "latencyMs": 959.9269000000004,
+            "timestamp": "2026-10-15T16:19:32.072Z"
+          }
         }
-      ]
+      ],
+      "passed": true
     },
     {
       "id": "profession_hidden_17",
@@ -184,8 +616,35 @@
         },
         {
           "error": "模型没有返回 JSON 正文"
+        },
+        {
+          "supplemental": true,
+          "authorization": "M4R-sol-002-parse-supplement",
+          "result": {
+            "contradictions": []
+          },
+          "usage": {
+            "label": "M4R:L2:profession_hidden_17:3",
+            "model": "deepseek-flash",
+            "thinking": "disabled",
+            "usage": {
+              "prompt_tokens": 204,
+              "completion_tokens": 7,
+              "total_tokens": 211,
+              "prompt_tokens_details": {
+                "cached_tokens": 0
+              },
+              "prompt_cache_hit_tokens": 0,
+              "prompt_cache_miss_tokens": 204
+            },
+            "costUpperYuan": 0.000464,
+            "cumulativeUpperYuan": 0.03422912000000001,
+            "latencyMs": 1013.7849999999999,
+            "timestamp": "2026-10-15T16:19:33.088Z"
+          }
         }
-      ]
+      ],
+      "passed": true
     },
     {
       "id": "profession_hidden_18",
@@ -195,8 +654,35 @@
         },
         {
           "error": "模型没有返回 JSON 正文"
+        },
+        {
+          "supplemental": true,
+          "authorization": "M4R-sol-002-parse-supplement",
+          "result": {
+            "contradictions": []
+          },
+          "usage": {
+            "label": "M4R:L2:profession_hidden_18:3",
+            "model": "deepseek-flash",
+            "thinking": "disabled",
+            "usage": {
+              "prompt_tokens": 206,
+              "completion_tokens": 7,
+              "total_tokens": 213,
+              "prompt_tokens_details": {
+                "cached_tokens": 0
+              },
+              "prompt_cache_hit_tokens": 0,
+              "prompt_cache_miss_tokens": 206
+            },
+            "costUpperYuan": 0.000468,
+            "cumulativeUpperYuan": 0.03469712000000001,
+            "latencyMs": 863.0110000000004,
+            "timestamp": "2026-10-15T16:19:33.954Z"
+          }
         }
-      ]
+      ],
+      "passed": true
     },
     {
       "id": "profession_hidden_19",
@@ -206,8 +692,35 @@
         },
         {
           "error": "模型没有返回 JSON 正文"
+        },
+        {
+          "supplemental": true,
+          "authorization": "M4R-sol-002-parse-supplement",
+          "result": {
+            "contradictions": []
+          },
+          "usage": {
+            "label": "M4R:L2:profession_hidden_19:3",
+            "model": "deepseek-flash",
+            "thinking": "disabled",
+            "usage": {
+              "prompt_tokens": 215,
+              "completion_tokens": 7,
+              "total_tokens": 222,
+              "prompt_tokens_details": {
+                "cached_tokens": 0
+              },
+              "prompt_cache_hit_tokens": 0,
+              "prompt_cache_miss_tokens": 215
+            },
+            "costUpperYuan": 0.000486,
+            "cumulativeUpperYuan": 0.03518312000000001,
+            "latencyMs": 642.7475999999988,
+            "timestamp": "2026-10-15T16:19:34.600Z"
+          }
         }
-      ]
+      ],
+      "passed": true
     },
     {
       "id": "profession_hidden_20",
@@ -217,8 +730,35 @@
         },
         {
           "error": "模型没有返回 JSON 正文"
+        },
+        {
+          "supplemental": true,
+          "authorization": "M4R-sol-002-parse-supplement",
+          "result": {
+            "contradictions": []
+          },
+          "usage": {
+            "label": "M4R:L2:profession_hidden_20:3",
+            "model": "deepseek-flash",
+            "thinking": "disabled",
+            "usage": {
+              "prompt_tokens": 205,
+              "completion_tokens": 7,
+              "total_tokens": 212,
+              "prompt_tokens_details": {
+                "cached_tokens": 0
+              },
+              "prompt_cache_hit_tokens": 0,
+              "prompt_cache_miss_tokens": 205
+            },
+            "costUpperYuan": 0.000466,
+            "cumulativeUpperYuan": 0.03564912000000001,
+            "latencyMs": 917.5636999999988,
+            "timestamp": "2026-10-15T16:19:35.521Z"
+          }
         }
-      ]
+      ],
+      "passed": true
     },
     {
       "id": "profession_hidden_21",
@@ -228,8 +768,35 @@
         },
         {
           "error": "模型没有返回 JSON 正文"
+        },
+        {
+          "supplemental": true,
+          "authorization": "M4R-sol-002-parse-supplement",
+          "result": {
+            "contradictions": []
+          },
+          "usage": {
+            "label": "M4R:L2:profession_hidden_21:3",
+            "model": "deepseek-flash",
+            "thinking": "disabled",
+            "usage": {
+              "prompt_tokens": 207,
+              "completion_tokens": 7,
+              "total_tokens": 214,
+              "prompt_tokens_details": {
+                "cached_tokens": 0
+              },
+              "prompt_cache_hit_tokens": 0,
+              "prompt_cache_miss_tokens": 207
+            },
+            "costUpperYuan": 0.00047,
+            "cumulativeUpperYuan": 0.03611912000000001,
+            "latencyMs": 691.4411999999975,
+            "timestamp": "2026-10-15T16:19:36.216Z"
+          }
         }
-      ]
+      ],
+      "passed": true
     },
     {
       "id": "profession_hidden_22",
@@ -239,8 +806,35 @@
         },
         {
           "error": "模型没有返回 JSON 正文"
+        },
+        {
+          "supplemental": true,
+          "authorization": "M4R-sol-002-parse-supplement",
+          "result": {
+            "contradictions": []
+          },
+          "usage": {
+            "label": "M4R:L2:profession_hidden_22:3",
+            "model": "deepseek-flash",
+            "thinking": "disabled",
+            "usage": {
+              "prompt_tokens": 207,
+              "completion_tokens": 7,
+              "total_tokens": 214,
+              "prompt_tokens_details": {
+                "cached_tokens": 0
+              },
+              "prompt_cache_hit_tokens": 0,
+              "prompt_cache_miss_tokens": 207
+            },
+            "costUpperYuan": 0.00047,
+            "cumulativeUpperYuan": 0.03658912000000001,
+            "latencyMs": 851.2646000000022,
+            "timestamp": "2026-10-15T16:19:37.069Z"
+          }
         }
-      ]
+      ],
+      "passed": true
     },
     {
       "id": "profession_hidden_23",
@@ -250,8 +844,35 @@
         },
         {
           "error": "模型没有返回 JSON 正文"
+        },
+        {
+          "supplemental": true,
+          "authorization": "M4R-sol-002-parse-supplement",
+          "result": {
+            "contradictions": []
+          },
+          "usage": {
+            "label": "M4R:L2:profession_hidden_23:3",
+            "model": "deepseek-flash",
+            "thinking": "disabled",
+            "usage": {
+              "prompt_tokens": 212,
+              "completion_tokens": 7,
+              "total_tokens": 219,
+              "prompt_tokens_details": {
+                "cached_tokens": 0
+              },
+              "prompt_cache_hit_tokens": 0,
+              "prompt_cache_miss_tokens": 212
+            },
+            "costUpperYuan": 0.00048,
+            "cumulativeUpperYuan": 0.03706912000000001,
+            "latencyMs": 910.4435999999987,
+            "timestamp": "2026-10-15T16:19:37.982Z"
+          }
         }
-      ]
+      ],
+      "passed": true
     },
     {
       "id": "profession_hidden_24",
