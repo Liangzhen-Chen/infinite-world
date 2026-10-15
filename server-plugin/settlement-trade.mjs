@@ -1,6 +1,7 @@
+import {drawGranary} from './agriculture.mjs';
 import {weatherTravel} from './weather.mjs';
 import {itemTraits,hasTrait} from './traits.mjs';
-import {hazardPriceFactor,hazardRouteClosed} from './hazard-calendar.mjs';
+import {hazardPriceFactor,hazardRouteClosed,warRouteClosed} from './hazard-calendar.mjs';
 
 const DAY=1440, CLOCK='settlement-trade:clock';
 const clone=value=>structuredClone(value);
@@ -87,7 +88,7 @@ export function regionalTradePrice(d,engine,item,location,minute=d.get('state','
 }
 function spareWorkers(state,engine,sid){
     const p=profile(engine,sid),s=state.settlements[sid],r=engine.rules.settlementTrade;
-    const available=Math.floor(s.population*p.workerFraction);
+    const available=Math.max(0,Math.floor(s.population*p.workerFraction)-(state.records?.[`levy:${sid}`]?.count??0));// U12 levy
     const spare=Math.max(0,available-p.processingWorkers-p.freshWorkers-p.farmWorkers-2);
     const busy=orders(state).filter(o=>o.seller===sid&&o.transport&&o.transport.phase!=='home').reduce((n,o)=>n+o.workers,0);
     return Math.max(0,Math.min(r.workersMaximum,spare)-busy);
@@ -110,7 +111,7 @@ function schedule(d,engine,o,minute){
         t.segment={kind:'rest',minutes:DAY-budget};t.nextAt=minute+DAY-budget;return;
     }
     const oriented=edge?{...edge,from:t.location}:null,conditions=edge?weatherTravel(engine,d.document.randomSeed,oriented,o.mode,minute):null;
-    if(!edge||!edge.modes.includes(o.mode)||edge.closedSeasons.includes(engine.calendar(minute).season)||conditions?.closed||hazardRouteClosed(engine,d.document.randomSeed,edge.id,minute)){
+    if(warRouteClosed(d.get('state'),edge?.id,minute)||!edge||!edge.modes.includes(o.mode)||edge.closedSeasons.includes(engine.calendar(minute).season)||conditions?.closed||hazardRouteClosed(engine,d.document.randomSeed,edge.id,minute)){
         t.segment={kind:'wait',minutes:DAY-minute%DAY};t.nextAt=minute+t.segment.minutes;t.waitReason='道路或天气不通';
         entry(o,'blocked',minute,{location:t.location,edge:t.edges[t.edgeIndex]});return;
     }
@@ -223,3 +224,12 @@ export function advanceSettlementTrade(d,engine,minute){
         d.set(['state','records',CLOCK],{...clock,nextDispatchAt:minute+r.cycleDays*DAY,lastDispatchAt:minute});
     }else if(!d.get('state','records',CLOCK))d.set(['state','records',CLOCK],clock);
 }
+
+// Military quartermasters use the same regional quote, route availability and granary outflow.
+export function armySupplyQuote(d,engine,base,location,minute){
+    const item=engine.rules.settlementTrade?.item??engine.rules.agriculture?.grainItem??'item_oats';
+    let closed=false;
+    if(base!==location)try{engine.route(base,location,'walk',minute,d.document.randomSeed);}catch(error){if(!error.message.startsWith('没有当前季节'))throw error;closed=true;}
+    return {price:Math.ceil(regionalTradePrice(d,engine,item,base,minute)),closed};
+}
+export function drawArmyRations(d,engine,settlement,quantity,options){return drawGranary(d,engine,settlement,quantity,options);}

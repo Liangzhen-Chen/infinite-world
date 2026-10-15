@@ -15,7 +15,8 @@ const DAY=1440;
 export const DUES_PERIOD=30*DAY,PROPOSAL_LAPSE=7*DAY,EXPEL_ARREARS=3;
 export const MODES=Object.freeze({leader:'会长定',vote:'成员投票',elders:'长老定'});
 export const KINDS=Object.freeze(['行会','帮派','商号','教会','会社']);
-const LEADER={行会:'会长',帮派:'帮主',商号:'掌柜',教会:'主祭',会社:'会长',家户:'家长'};
+// U12: armies are organizations of kind 军团 (created by military.mjs, not by world_create).
+const LEADER={行会:'会长',帮派:'帮主',商号:'掌柜',教会:'主祭',会社:'会长',家户:'家长',军团:'统领'};
 const ELDER='长老',MEMBER='成员';
 const key=id=>`organization:${id}`;
 const path=id=>['state','records',key(id)];

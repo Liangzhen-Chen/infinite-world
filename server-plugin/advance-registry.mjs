@@ -34,6 +34,8 @@ import {advanceSeasonEffects}from'./effects.mjs';
 import {advanceOrganizations}from'./organizations.mjs';
 import {advanceQuestSources}from'./quest-sources.mjs';
 import {advanceTribalAwakening}from'./tribal-awakening.mjs';
+import {advanceMilitary}from'./military.mjs';
+import {advanceWarDiplomacy}from'./war-diplomacy.mjs';
 import {advanceHazardClocks}from'./seasonal-hazards.mjs';
 import {hazardClocks,hazardYieldFactor}from'./hazard-calendar.mjs';
 import {advanceBounties,nextBountyMinute,bountyActive}from'./bounty.mjs';
@@ -118,8 +120,11 @@ const systems=[
  {id:'faction_clock',order:1400,active:e=>factionClockRules(e).length>0,nextMinute:(e,d,now)=>nextFactionClockMinute(d.get('state'),now),
   advance:(e,d,{after})=>advanceFactionClocks(d,e,after)},
  {id:'organizations',order:1450,advance:(e,d,ctx)=>advanceOrganizations(d,e,ctx)},
+ // U12a armies: weekly supply, drill, morale and desertion; monthly pay (rules.military).
+ {id:'military',order:1452,advance:(e,d,ctx)=>advanceMilitary(d,e,ctx)},
  // U11 tribal awakening: species-and-habitat tribes accumulate, awaken, split and resolve at quarter boundaries.
  {id:'tribal_awakening',order:1455,advance:(e,d,ctx)=>advanceTribalAwakening(d,e,ctx)},
+ {id:'war_diplomacy',order:1456,advance:(e,d,ctx)=>advanceWarDiplomacy(d,e,ctx)},
  // U17 quest sources: NPC needs, world-event records and effect-table commissions post to the board at midnight.
  {id:'quest_sources',order:1460,advance:(e,d,ctx)=>advanceQuestSources(d,e,ctx)},
  {id:'society_news',order:1500,advance:(e,d,{after})=>advanceSocietyNews(d,e,after)},

@@ -153,6 +153,17 @@ export function postGeneratedQuest(d,engine,offer){
 
 // ---- 完成后果：势力委托改变时钟阶段并影响立场 -----------------------------------
 export function settleQuestOutcome(d,engine,q,minute){
+ // War commissions use the existing effect-table generator and its funded delivery.
+ if(q.source?.generator==='effect_table'&&q.source.cause?.startsWith('war:')&&q.objective.type==='deliver'){
+  const war=d.get('state','records',q.source.cause),unit=war?.armyIds.map(id=>d.get('state','records',`army:${id}`)).find(a=>(a?.warSide??a?.party)===war.defender&&(a.regular+a.private+a.levy.count+(a.mercenary?.count??0)>0));
+  const n=q.objective.quantity;
+  if(war?.status==='交战'&&unit&&engine.quantity(d,q.publisher,q.objective.item)>=n){
+   engine.itemDelta(d,q.publisher,q.objective.item,-n);
+   d.set(['state','records',`army:${unit.id}`],{...unit,food:unit.food+n});
+   const result={category:'quest_outcome',quest:q.id,war:war.id,army:unit.id,supplied:n,minute};d.set(['state','records',`${q.id}:outcome`],result);return result;
+  }
+ }
+
  const o=q.source?.outcome;if(!o)return null;
  const key=`faction-clock:${o.clock}`,clock=d.get('state','records',key),rule=factionClockRules(engine).find(r=>r.id===o.clock);
  let result={clock:o.clock,effect:o.effect,applied:false};
