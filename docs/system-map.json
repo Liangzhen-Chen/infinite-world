@@ -2,7 +2,7 @@
  "title": "无限原野系统地图",
  "card": "K9",
  "generatedFrom": {
-  "commit": "refs/heads/rw06",
+  "commit": "refs/heads/s0",
   "method": "运行时导出（注册表、规则表、工具定义、效果表、立场传导表）+ 静态正则扫描（import 图、函数体标识符、state 分区与 records 前缀、rules/world 读取）。静态扫描是近似：经 engine.byId、helper 间接或动态拼接路径的访问不计入。"
  },
  "scanMethods": {
@@ -17,7 +17,7 @@
  },
  "counts": {
   "layers": 6,
-  "systems": 40,
+  "systems": 41,
   "modules": 217,
   "advance": 59,
   "tools": 25,
@@ -39,7 +39,8 @@
     "data_lore",
     "data_design",
     "data_assets",
-    "data_drafts"
+    "data_drafts",
+    "data_ontology"
    ]
   },
   {
@@ -469,6 +470,27 @@
    "tools": [],
    "readBy": [],
    "files": 42
+  },
+  {
+   "id": "data_ontology",
+   "name": "词汇表（L1，S0）",
+   "layer": "data",
+   "card": null,
+   "dir": "world/ontology",
+   "modules": [],
+   "lines": 0,
+   "stateWrites": [],
+   "stateReads": [],
+   "recordWrites": [],
+   "recordReads": [],
+   "rules": [],
+   "world": [],
+   "advance": [],
+   "subscribes": [],
+   "effects": [],
+   "tools": [],
+   "readBy": [],
+   "files": 9
   },
   {
    "id": "kernel_engine",
@@ -10252,6 +10274,7 @@
    "readers": [],
    "tools": [
     "tools/build-m6-art.mjs",
+    "tools/derived-scan.mjs",
     "tools/system-map.mjs"
    ]
   },
@@ -10261,6 +10284,7 @@
    "keys": [],
    "readers": [],
    "tools": [
+    "tools/derived-scan.mjs",
     "tools/system-map.mjs"
    ]
   },
@@ -10282,6 +10306,7 @@
     "tools/audit-spell-drafts.mjs",
     "tools/creatures-mixed-content.mjs",
     "tools/d1-system-data.mjs",
+    "tools/derived-scan.mjs",
     "tools/design-career-catalog.mjs",
     "tools/design-profession-catalog.mjs",
     "tools/draft-economy.mjs",
@@ -10389,6 +10414,7 @@
    "tools": [
     "tools/audit-spell-drafts.mjs",
     "tools/creatures-mixed-content.mjs",
+    "tools/derived-scan.mjs",
     "tools/draft-economy.mjs",
     "tools/draft-spells.mjs",
     "tools/draft-wildlife.mjs",
@@ -10809,6 +10835,7 @@
     "tools/bootstrap-world.mjs",
     "tools/creatures-mixed-content.mjs",
     "tools/d1-system-data.mjs",
+    "tools/derived-scan.mjs",
     "tools/design-career-catalog.mjs",
     "tools/design-combat-rules.mjs",
     "tools/design-profession-catalog.mjs",
@@ -10823,6 +10850,7 @@
     "tools/monster-society-2-content.mjs",
     "tools/monster-society-3-content.mjs",
     "tools/monster-society-content.mjs",
+    "tools/ontology.mjs",
     "tools/playtests.mjs",
     "tools/prepare-agriculture-rules.mjs",
     "tools/prepare-economy-catalog.mjs",
@@ -10882,6 +10910,17 @@
     "tools/w5-rumors.mjs",
     "tools/w5-sites.mjs",
     "tools/w5-social.mjs"
+   ]
+  },
+  {
+   "dir": "world/ontology",
+   "files": 9,
+   "keys": [],
+   "readers": [],
+   "tools": [
+    "tools/derived-scan.mjs",
+    "tools/ontology.mjs",
+    "tools/system-map.mjs"
    ]
   },
   {
@@ -14646,6 +14685,95 @@
   ],
   "unassignedModules": []
  },
+ "metricTools": [
+  {
+   "tool": "tools/ontology.mjs",
+   "script": "metrics:ontology",
+   "measures": "词汇表 schema 校验与 I18 词汇封闭（代码用到未登记的动词/标签/罪名）",
+   "reads": [
+    "world/ontology",
+    "schemas/ontology.schema.json"
+   ],
+   "baseline": null
+  },
+  {
+   "tool": "tools/import-graph.mjs",
+   "script": "metrics:imports",
+   "measures": "I19 import 图：按 tools/arch-layers.mjs 标层，统计向上依赖与包间 import",
+   "reads": [
+    "server-plugin",
+    "extension",
+    "tools/arch-layers.mjs"
+   ],
+   "baseline": "tests/metrics/import-graph.baseline.json"
+  },
+  {
+   "tool": "tools/derived-scan.mjs",
+   "script": "metrics:derived",
+   "measures": "I10 派生黑名单：存档写入点与作者数据中应派生却存储的字段",
+   "reads": [
+    "world/ontology/derived-fields.json",
+    "server-plugin",
+    "world"
+   ],
+   "baseline": "tests/metrics/derived-scan.baseline.json"
+  },
+  {
+   "tool": "tools/export-actions.mjs",
+   "script": "metrics:actions",
+   "measures": "动作清单自动导出（工具 × 子操作 × 处理器）",
+   "reads": [
+    "extension/tools.mjs",
+    "server-plugin"
+   ],
+   "output": "docs/actions.json"
+  },
+  {
+   "tool": "tools/intent-score.mjs",
+   "script": "metrics:intents",
+   "measures": "意图语料校验与评分骨架（路由、签名、不支持率、兜底实体无系统反应率）",
+   "reads": [
+    "tests/intents",
+    "docs/actions.json",
+    "world/ontology"
+   ],
+   "baseline": null
+  },
+  {
+   "tool": "tools/probe-score.mjs",
+   "script": "metrics:probes",
+   "measures": "run-001 事件推演脚本化合理率",
+   "reads": [
+    "tests/probes/run-001"
+   ],
+   "baseline": "tests/probes/run-001/baseline.json"
+  },
+  {
+   "tool": "tools/gap-list.mjs",
+   "script": "docs:gaps",
+   "measures": "函数级差距清单（保留/改造/替换与迁移阶段）",
+   "reads": [
+    "server-plugin",
+    "extension",
+    "tools/arch-layers.mjs"
+   ],
+   "output": "docs/架构设计/差距清单.md"
+  },
+  {
+   "tool": "tools/arch-layers.mjs",
+   "script": null,
+   "measures": "模块 → 目标层与玩法包归组表（第 10 章），供 import 图与差距清单使用",
+   "reads": [],
+   "baseline": null
+  },
+  {
+   "tool": "tools/s0-metrics.mjs",
+   "script": "metrics",
+   "measures": "以上全部一键产出",
+   "reads": [],
+   "baseline": null
+  }
+ ],
  "modules": {
   "server-plugin/activities.mjs": {
    "system": "kernel_engine",

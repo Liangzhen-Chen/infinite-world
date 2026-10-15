@@ -1,0 +1,123 @@
+{
+ "$schema": "../../schemas/ontology.schema.json",
+ "kind": "resources",
+ "namespace": "core",
+ "version": 1,
+ "note": "资源种类（01 §1.6）。账户 = (实体, 资源, 用途)。item:* 表示 world/meta/items.json 中可计量模板按 item:<模板ID> 计；生命/魔力不是资源。",
+ "entries": [
+  {
+   "id": "coin",
+   "label": "货币（按政体铸币分种）",
+   "family": "currency",
+   "unit": "铜"
+  },
+  {
+   "id": "food",
+   "label": "粮（foodUnit）",
+   "family": "stock",
+   "unit": "份"
+  },
+  {
+   "id": "wood",
+   "label": "木材",
+   "family": "stock",
+   "unit": "件"
+  },
+  {
+   "id": "ore",
+   "label": "矿石储量",
+   "family": "stock",
+   "unit": "份"
+  },
+  {
+   "id": "herb",
+   "label": "药材",
+   "family": "stock",
+   "unit": "份"
+  },
+  {
+   "id": "water",
+   "label": "水量",
+   "family": "stock",
+   "unit": "升"
+  },
+  {
+   "id": "water_quality",
+   "label": "水质指标",
+   "family": "index",
+   "unit": "点"
+  },
+  {
+   "id": "pollution",
+   "label": "污染量",
+   "family": "index",
+   "unit": "点"
+  },
+  {
+   "id": "incense",
+   "label": "香火",
+   "family": "stock",
+   "unit": "点"
+  },
+  {
+   "id": "contribution",
+   "label": "贡献度",
+   "family": "stock",
+   "unit": "点"
+  },
+  {
+   "id": "population",
+   "label": "种群数量",
+   "family": "stock",
+   "unit": "只"
+  },
+  {
+   "id": "fodder",
+   "label": "饲草",
+   "family": "stock",
+   "unit": "份"
+  },
+  {
+   "id": "fuel",
+   "label": "燃料",
+   "family": "stock",
+   "unit": "份"
+  },
+  {
+   "id": "item:*",
+   "label": "可计量物品（按物品模板 item_*）",
+   "family": "item",
+   "unit": "件",
+   "pattern": true
+  }
+ ],
+ "sourcesAndSinks": [
+  {
+   "id": "src:regrowth"
+  },
+  {
+   "id": "src:birth"
+  },
+  {
+   "id": "src:weather"
+  },
+  {
+   "id": "src:mint"
+  },
+  {
+   "id": "sink:consume"
+  },
+  {
+   "id": "sink:decay"
+  },
+  {
+   "id": "sink:destroy"
+  },
+  {
+   "id": "sink:death"
+  },
+  {
+   "id": "sink:export"
+  }
+ ]
+}

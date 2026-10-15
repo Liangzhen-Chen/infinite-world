@@ -1,0 +1,145 @@
+{
+ "$schema": "../../schemas/ontology.schema.json",
+ "kind": "entity-templates",
+ "namespace": "core",
+ "version": 1,
+ "note": "实体模板（01 §1.2）。artifact 为“尊重玩家想象力”兜底原语 create(tagged) 的模板：带标签、可被系统按标签反应的持久实体（壁画、新酒令、陷阱、诉状……）。",
+ "entries": [
+  {
+   "id": "agent",
+   "label": "个体",
+   "kinds": [
+    "person",
+    "creature"
+   ],
+   "accounts": true,
+   "holder": true,
+   "subject": true,
+   "obligationParty": true,
+   "located": true
+  },
+  {
+   "id": "collective",
+   "label": "群体",
+   "kinds": [
+    "org",
+    "settlement"
+   ],
+   "accounts": true,
+   "holder": true,
+   "subject": true,
+   "obligationParty": true,
+   "located": true
+  },
+  {
+   "id": "thing",
+   "label": "物",
+   "kinds": [
+    "item",
+    "building",
+    "node"
+   ],
+   "accounts": true,
+   "holder": false,
+   "subject": true,
+   "obligationParty": false,
+   "located": true
+  },
+  {
+   "id": "population",
+   "label": "群",
+   "kinds": [
+    "population"
+   ],
+   "accounts": true,
+   "holder": false,
+   "subject": true,
+   "obligationParty": false,
+   "located": true
+  },
+  {
+   "id": "place",
+   "label": "地",
+   "kinds": [
+    "loc"
+   ],
+   "accounts": false,
+   "holder": false,
+   "subject": true,
+   "obligationParty": false,
+   "located": true
+  },
+  {
+   "id": "office",
+   "label": "职",
+   "kinds": [
+    "office"
+   ],
+   "accounts": false,
+   "holder": true,
+   "subject": true,
+   "obligationParty": true,
+   "located": false
+  },
+  {
+   "id": "instrument",
+   "label": "契",
+   "kinds": [
+    "obligation",
+    "claim",
+    "permit",
+    "bill"
+   ],
+   "accounts": true,
+   "holder": false,
+   "subject": true,
+   "obligationParty": false,
+   "located": false
+  },
+  {
+   "id": "interim",
+   "label": "临时法人",
+   "kinds": [
+    "estate",
+    "liquidation",
+    "case",
+    "project"
+   ],
+   "accounts": true,
+   "holder": true,
+   "subject": false,
+   "obligationParty": true,
+   "located": false
+  },
+  {
+   "id": "artifact",
+   "label": "创意实体（兜底）",
+   "kinds": [
+    "mark",
+    "work",
+    "custom",
+    "structure"
+   ],
+   "accounts": false,
+   "holder": false,
+   "subject": true,
+   "obligationParty": false,
+   "located": true
+  }
+ ],
+ "idPrefixes": [
+  "npc_",
+  "loc_",
+  "bld_",
+  "item_",
+  "org_",
+  "office_",
+  "obl_",
+  "case_",
+  "estate_",
+  "node_",
+  "pop_",
+  "evt_",
+  "art_"
+ ]
+}

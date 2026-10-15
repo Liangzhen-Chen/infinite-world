@@ -1,0 +1,9 @@
+{
+ "kind": "verbs",
+ "namespace": "broken",
+ "version": 1,
+ "entries": [
+  {"id": "smash", "label": "砸", "family": "nonsense"},
+  {"id": "core:harm", "label": "冒用核心命名空间", "family": "pack"}
+ ]
+}

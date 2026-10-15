@@ -1,0 +1,611 @@
+{
+ "$schema": "../../schemas/ontology.schema.json",
+ "kind": "tags",
+ "namespace": "core",
+ "version": 1,
+ "note": "事件与实体标签词汇表（I18）。family 为标签族；pattern=true 表示“族:*”整族登记。trait 族另由 traits.mjs 的 ELEMENTS/CREATURE_TAGS/FLAMMABLE 在加载时并入，不在此重复。",
+ "entries": [
+  {
+   "id": "alliance",
+   "family": "event",
+   "source": "code"
+  },
+  {
+   "id": "army",
+   "family": "event",
+   "source": "code"
+  },
+  {
+   "id": "arrears",
+   "family": "event",
+   "source": "code"
+  },
+  {
+   "id": "attempt",
+   "family": "event",
+   "source": "code"
+  },
+  {
+   "id": "breach",
+   "family": "event",
+   "source": "code"
+  },
+  {
+   "id": "bribery",
+   "family": "event",
+   "source": "code"
+  },
+  {
+   "id": "broken",
+   "family": "event",
+   "source": "code"
+  },
+  {
+   "id": "cash",
+   "family": "event",
+   "source": "code"
+  },
+  {
+   "id": "combat",
+   "family": "event",
+   "source": "code"
+  },
+  {
+   "id": "contract",
+   "family": "event",
+   "source": "code"
+  },
+  {
+   "id": "conversion",
+   "family": "event",
+   "source": "code"
+  },
+  {
+   "id": "corruption",
+   "family": "event",
+   "source": "code"
+  },
+  {
+   "id": "credit",
+   "family": "event",
+   "source": "code"
+  },
+  {
+   "id": "crime",
+   "family": "event",
+   "source": "code"
+  },
+  {
+   "id": "debt",
+   "family": "event",
+   "source": "code"
+  },
+  {
+   "id": "desertion",
+   "family": "event",
+   "source": "code"
+  },
+  {
+   "id": "diplomacy",
+   "family": "event",
+   "source": "code"
+  },
+  {
+   "id": "disaster",
+   "family": "event",
+   "source": "code"
+  },
+  {
+   "id": "discovered",
+   "family": "event",
+   "source": "code"
+  },
+  {
+   "id": "dividend",
+   "family": "event",
+   "source": "code"
+  },
+  {
+   "id": "duel",
+   "family": "event",
+   "source": "code"
+  },
+  {
+   "id": "effect",
+   "family": "event",
+   "source": "code"
+  },
+  {
+   "id": "election",
+   "family": "event",
+   "source": "code"
+  },
+  {
+   "id": "employment",
+   "family": "event",
+   "source": "code"
+  },
+  {
+   "id": "entity-transition",
+   "family": "event",
+   "source": "code"
+  },
+  {
+   "id": "exchange",
+   "family": "event",
+   "source": "code"
+  },
+  {
+   "id": "exposed",
+   "family": "event",
+   "source": "code"
+  },
+  {
+   "id": "facility",
+   "family": "event",
+   "source": "code"
+  },
+  {
+   "id": "faith",
+   "family": "event",
+   "source": "code"
+  },
+  {
+   "id": "family",
+   "family": "event",
+   "source": "code"
+  },
+  {
+   "id": "finance",
+   "family": "event",
+   "source": "code"
+  },
+  {
+   "id": "fusion",
+   "family": "event",
+   "source": "code"
+  },
+  {
+   "id": "gift",
+   "family": "event",
+   "source": "code"
+  },
+  {
+   "id": "guardianship",
+   "family": "event",
+   "source": "code"
+  },
+  {
+   "id": "hazard",
+   "family": "event",
+   "source": "code"
+  },
+  {
+   "id": "heal",
+   "family": "event",
+   "source": "code"
+  },
+  {
+   "id": "hired",
+   "family": "event",
+   "source": "code"
+  },
+  {
+   "id": "hostile",
+   "family": "event",
+   "source": "code"
+  },
+  {
+   "id": "illness",
+   "family": "event",
+   "source": "code"
+  },
+  {
+   "id": "item",
+   "family": "event",
+   "source": "code"
+  },
+  {
+   "id": "law",
+   "family": "event",
+   "source": "code"
+  },
+  {
+   "id": "learn",
+   "family": "event",
+   "source": "code"
+  },
+  {
+   "id": "levy",
+   "family": "event",
+   "source": "code"
+  },
+  {
+   "id": "lie",
+   "family": "event",
+   "source": "code"
+  },
+  {
+   "id": "magic",
+   "family": "event",
+   "source": "code"
+  },
+  {
+   "id": "masterpiece",
+   "family": "event",
+   "source": "code"
+  },
+  {
+   "id": "mercenary",
+   "family": "event",
+   "source": "code"
+  },
+  {
+   "id": "nation",
+   "family": "event",
+   "source": "code"
+  },
+  {
+   "id": "negotiation",
+   "family": "event",
+   "source": "code"
+  },
+  {
+   "id": "npc_crime",
+   "family": "event",
+   "source": "code"
+  },
+  {
+   "id": "obligation",
+   "family": "event",
+   "source": "code"
+  },
+  {
+   "id": "organization",
+   "family": "event",
+   "source": "code"
+  },
+  {
+   "id": "pack",
+   "family": "event",
+   "source": "code"
+  },
+  {
+   "id": "passed",
+   "family": "event",
+   "source": "code"
+  },
+  {
+   "id": "peace",
+   "family": "event",
+   "source": "code"
+  },
+  {
+   "id": "post",
+   "family": "event",
+   "source": "code"
+  },
+  {
+   "id": "private",
+   "family": "event",
+   "source": "code"
+  },
+  {
+   "id": "public",
+   "family": "event",
+   "source": "code"
+  },
+  {
+   "id": "quest",
+   "family": "event",
+   "source": "code"
+  },
+  {
+   "id": "rejected",
+   "family": "event",
+   "source": "code"
+  },
+  {
+   "id": "rent",
+   "family": "event",
+   "source": "code"
+  },
+  {
+   "id": "repay",
+   "family": "event",
+   "source": "code"
+  },
+  {
+   "id": "royal_service",
+   "family": "event",
+   "source": "code"
+  },
+  {
+   "id": "rumor",
+   "family": "event",
+   "source": "code"
+  },
+  {
+   "id": "shop",
+   "family": "event",
+   "source": "code"
+  },
+  {
+   "id": "success",
+   "family": "event",
+   "source": "code"
+  },
+  {
+   "id": "succession",
+   "family": "event",
+   "source": "code"
+  },
+  {
+   "id": "teach",
+   "family": "event",
+   "source": "code"
+  },
+  {
+   "id": "theft",
+   "family": "event",
+   "source": "code"
+  },
+  {
+   "id": "trade",
+   "family": "event",
+   "source": "code"
+  },
+  {
+   "id": "transport",
+   "family": "event",
+   "source": "code"
+  },
+  {
+   "id": "tribal",
+   "family": "event",
+   "source": "code"
+  },
+  {
+   "id": "violence",
+   "family": "event",
+   "source": "code"
+  },
+  {
+   "id": "wage",
+   "family": "event",
+   "source": "code"
+  },
+  {
+   "id": "wage_arrears",
+   "family": "event",
+   "source": "code"
+  },
+  {
+   "id": "wage_complaint",
+   "family": "event",
+   "source": "code"
+  },
+  {
+   "id": "war",
+   "family": "event",
+   "source": "code"
+  },
+  {
+   "id": "work",
+   "family": "event",
+   "source": "code"
+  },
+  {
+   "id": "workshop",
+   "family": "event",
+   "source": "code"
+  },
+  {
+   "id": "org:decide",
+   "family": "org",
+   "source": "code"
+  },
+  {
+   "id": "org:expel",
+   "family": "org",
+   "source": "code"
+  },
+  {
+   "id": "org:found",
+   "family": "org",
+   "source": "code"
+  },
+  {
+   "id": "org:join",
+   "family": "org",
+   "source": "code"
+  },
+  {
+   "id": "org:leave",
+   "family": "org",
+   "source": "code"
+  },
+  {
+   "id": "org:recruit",
+   "family": "org",
+   "source": "code"
+  },
+  {
+   "id": "kind:军团",
+   "family": "kind",
+   "source": "code"
+  },
+  {
+   "id": "通过",
+   "family": "event",
+   "source": "code",
+   "note": "中文字面量标签（军队议案结果），与 passed 同义，待统一"
+  },
+  {
+   "id": "flesh",
+   "family": "trait",
+   "source": "code"
+  },
+  {
+   "id": "untyped",
+   "family": "damage",
+   "source": "code"
+  },
+  {
+   "id": "wood",
+   "family": "trait",
+   "source": "code"
+  },
+  {
+   "id": "tactic:*",
+   "family": "tactic",
+   "source": "code",
+   "pattern": true
+  },
+  {
+   "id": "damage:*",
+   "family": "damage",
+   "source": "code",
+   "pattern": true
+  },
+  {
+   "id": "offense:*",
+   "family": "offense",
+   "source": "design",
+   "pattern": true,
+   "note": "罪名族；具体罪名见 offenses.json"
+  },
+  {
+   "id": "harm:injury",
+   "family": "harm",
+   "source": "design"
+  },
+  {
+   "id": "harm:property",
+   "family": "harm",
+   "source": "design"
+  },
+  {
+   "id": "harm:reputation",
+   "family": "harm",
+   "source": "design"
+  },
+  {
+   "id": "fire",
+   "family": "event",
+   "source": "design"
+  },
+  {
+   "id": "burning",
+   "family": "status",
+   "source": "design"
+  },
+  {
+   "id": "satire",
+   "family": "expression",
+   "source": "design",
+   "note": "讽刺、嘲弄类表达物（兜底实体常用）"
+  },
+  {
+   "id": "public_display",
+   "family": "expression",
+   "source": "design"
+  },
+  {
+   "id": "art",
+   "family": "expression",
+   "source": "design"
+  },
+  {
+   "id": "petition",
+   "family": "expression",
+   "source": "design"
+  },
+  {
+   "id": "custom",
+   "family": "culture",
+   "source": "design",
+   "note": "新创习俗、游戏、酒令"
+  },
+  {
+   "id": "invention",
+   "family": "culture",
+   "source": "design"
+  },
+  {
+   "id": "nuisance",
+   "family": "harm",
+   "source": "design"
+  },
+  {
+   "id": "pollution",
+   "family": "harm",
+   "source": "design"
+  },
+  {
+   "id": "sacred",
+   "family": "faith",
+   "source": "design"
+  },
+  {
+   "id": "omen",
+   "family": "faith",
+   "source": "design"
+  },
+  {
+   "id": "trap",
+   "family": "thing",
+   "source": "design"
+  },
+  {
+   "id": "marker",
+   "family": "thing",
+   "source": "design"
+  },
+  {
+   "id": "disguise",
+   "family": "status",
+   "source": "design"
+  },
+  {
+   "id": "hidden",
+   "family": "status",
+   "source": "design"
+  },
+  {
+   "id": "kind:*",
+   "family": "kind",
+   "source": "code",
+   "pattern": true
+  },
+  {
+   "id": "motion:*",
+   "family": "motion",
+   "source": "code",
+   "pattern": true
+  },
+  {
+   "id": "org:*",
+   "family": "org",
+   "source": "code",
+   "pattern": true
+  },
+  {
+   "id": "route:*",
+   "family": "route",
+   "source": "code",
+   "pattern": true
+  },
+  {
+   "id": "stance:*",
+   "family": "stance",
+   "source": "code",
+   "pattern": true
+  },
+  {
+   "id": "herb",
+   "family": "thing",
+   "source": "design"
+  }
+ ]
+}
