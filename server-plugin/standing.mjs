@@ -1,4 +1,4 @@
-import {isReputationSettlement,reputationFactions,reputationSettlements}from'./reputation-registry.mjs';
+import {isReputationSettlement,reputationFactions,reputationSettlements,factionRelations}from'./reputation-registry.mjs';
 import {registerWorldEventSubscriber}from'./world-events.mjs';
 import {digest} from './storage.mjs';
 import {relationView,recordStandingEvidence} from './npc-relations.mjs';
@@ -22,7 +22,10 @@ const STANCE_VALUE={敌对:-60,戒备:-20,中立:0};
 const rec=(holder,target)=>`standing:${holder}:${target}`;
 const seat=(engine,id)=>engine.world.locations.some(l=>l.id===id&&l.monsterSociety);
 const reputationOf=(state,subject,scope,target)=>state.records?.[`reputation:${digest([subject,scope,target]).slice(0,24)}`]?.reputation??0;
-const factionRules=(engine,id)=>reputationFactions(engine).find(f=>f.id===id);
+// Society councils keep their own player stance; independently supplemented
+// inter-faction relations are also readable without adding a reputation roster.
+const factionRules=(engine,id)=>reputationFactions(engine).find(f=>f.id===id)??
+    (engine.rules.factionRelations?.[id]?{relations:factionRelations(engine,id)}:undefined);
 
 export function standingKind(engine,state,id){
     if(id==='player')return 'player';

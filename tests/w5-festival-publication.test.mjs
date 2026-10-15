@@ -66,11 +66,12 @@ async function hold(s,{join=true}={}){
  return {id,doc:await s.run(doc,{minutes:120+s.f.runtime.durationMinutes},'wait','world_time')};
 }
 
-test('T108：玩家可在河湾参加正式节日，自带材料实际扣除，举办后有观感与传述',async()=>{
+test('T108：玩家可参加正式节日，材料按用法扣除或归还，举办后有观感与传述',async()=>{
  for(const id of activeIds){
   const s=setup(id),before=have(s.doc,s.f.resourceNeeds[0].item),{id:row,doc}=await hold(s),r=doc.state.records[row];
   assert.equal(r.status,'held',`${id}:${r.reason}`);assert.ok(r.participants.includes('player'));
-  assert.equal(have(doc,s.f.resourceNeeds[0].item),before-s.f.resourceNeeds[0].quantity,id);
+  const consumed=s.f.resourceNeeds[0].use==='consume'?s.f.resourceNeeds[0].quantity:0;
+  assert.equal(have(doc,s.f.resourceNeeds[0].item),before-consumed,id);
   assert.deepEqual(r.effects.map(e=>e.kind),s.f.runtime.effects.map(e=>e.kind));
   const st=s.f.runtime.effects.find(e=>e.kind==='standing');assert.equal(standing(s.engine,doc.state,st.holder,'player')-standing(s.engine,s.doc.state,st.holder,'player'),st.delta);
   const rumor=s.f.runtime.effects.find(e=>e.kind==='rumor');
@@ -84,12 +85,14 @@ test('T108：玩家可在河湾参加正式节日，自带材料实际扣除，�
 });
 
 test('T108：借用与交换的材料须到场出示但不被用掉；等候主办人的节日不能预约',async()=>{
- const w=structuredClone(world),f=w.festivals.find(x=>x.id==='festival_borrowbench');
- assert.equal(f.resourceNeeds[0].use,'borrow');
+ const w=structuredClone(world);let f=w.festivals.find(x=>x.id==='festival_steps');
+ assert.equal(f.runtime.status,'awaiting_host');
  const engine=new WorldEngine(w),doc=engine.createCharacter(seed,{},'t108-await');doc.state.location=f.venue.location;
  await assert.rejects(engine.reduce(doc,{tool:'world_settlement',args:{operation:'festival_plan',festival:f.id},eventId:'p'}),/候选节日不可执行|没有已发布/);
- // With a resident host the same published row runs, and the stool is returned.
- const host='npc_hw_wengqiao';f.runtime={...f.runtime,status:'active',host};delete f.runtime.hostRequirement;
+ // The now-hosted borrowing festival runs, and the stool is returned.
+ f=w.festivals.find(x=>x.id==='festival_borrowbench');
+ assert.equal(f.resourceNeeds[0].use,'borrow');assert.equal(f.runtime.status,'active');
+ const host=f.runtime.host;assert.equal(host,'npc_bs_076_1');
  for(const n of w.npcs){delete n.schedule;delete n.tier;}
  const e2=new WorldEngine(w),d0=e2.createCharacter(seed,{},'t108-borrow');d0.state.location=f.venue.location;
  Object.assign(d0.state.npcs[host],{location:f.venue.location,status:'正常',activity:'歇工'});d0.state.inventory.item_three_leg_stool={quantity:1};
@@ -100,6 +103,39 @@ test('T108：借用与交换的材料须到场出示但不被用掉；等候主�
  d=await run(d,{operation:'festival_join',festival:id,speaker:'player',consent:true},'j');d.state.npcs[host].location=f.venue.location;
  d=await run(d,{minutes:300},'w','world_time');
  assert.equal(d.state.records[id].status,'held',d.state.records[id].reason);assert.equal(have(d,'item_three_leg_stool'),1);assert.deepEqual(d.state.records[id].consumed,[]);
+});
+
+test('W5：季澄按现职在借凳节工作时段到归途殿，平日、改业、迁居与照护仍用原作息',()=>{
+ const engine=new WorldEngine(world),f=world.festivals.find(f=>f.id==='festival_borrowbench'),host=f.runtime.host;
+ const at=((f.calendar.month-1)*30+f.calendar.day-1)*DAY+f.runtime.startMinute;
+ const slot=scheduleAt(engine,host,at);assert.equal(slot.location,f.venue.location);assert.equal(slot.variant,'festival-duty');
+ assert.deepEqual(slot.services,[]);assert.equal(slot.start,480);assert.ok(slot.end>=f.runtime.startMinute+f.runtime.durationMinutes);
+ assert.equal(scheduleAt(engine,host,at-DAY).location,'bld_bs_temple');
+ const state=engine.createCharacter(seed,{},'w5-duty').state,home='bld_bs_home_076';
+ state.npcs[host].occupation='抄书';assert.equal(scheduleAt(engine,host,at,state).location,'bld_bs_temple');
+ delete state.npcs[host].occupation;
+ state.npcs[host].caring={location:home};assert.equal(scheduleAt(engine,host,at,state).location,home);
+ delete state.npcs[host].caring;
+ state.npcs[host].levy={location:'loc_bs'};assert.equal(scheduleAt(engine,host,at,state).location,'loc_bs');
+ delete state.npcs[host].levy;
+ state.npcs[host].residence={settlement:'loc_hw',since:0,schedule:{default:[{start:0,end:1440,location:'loc_hw',activity:'灯祠照看',services:[]}]}};
+ assert.equal(scheduleAt(engine,host,at,state).location,'loc_hw');
+});
+
+test('W5：保持真实作息，从家出发到场主持借凳节，授权、归还与重放均保留',async()=>{
+ const engine=new WorldEngine(world),f=world.festivals.find(f=>f.id==='festival_borrowbench'),host=f.runtime.host;
+ let doc=engine.createCharacter(seed,{},'w5-natural-host');doc.state.location=f.venue.location;
+ doc.state.minute=((f.calendar.month-1)*30+f.calendar.day-1)*DAY+420;doc.state.inventory.item_three_leg_stool={quantity:1};
+ const run=async(args,eventId,tool='world_settlement')=>{const out=await engine.reduce(doc,{tool,args,eventId});doc=applyPatches(doc,out.patches);return out;};
+ await run({minutes:120},'arrive','world_time');assert.equal(doc.state.npcs[host].location,f.venue.location);
+ await run({operation:'festival_plan',festival:f.id,cost:0},'plan');const id=`festival:${f.id}:1`;
+ for(const speaker of [host,'player'])await run({operation:'festival_authorize',festival:id,speaker,consent:true},`auth-${speaker}`);
+ await run({operation:'festival_join',festival:id,speaker:'player',consent:true},'join');
+ const request={tool:'world_time',args:{minutes:150},eventId:'hold'};
+ const before=doc,out=await engine.reduce(before,request);doc=applyPatches(before,out.patches);
+ assert.equal(doc.state.records[id].status,'held',doc.state.records[id].reason);
+ assert.ok(doc.state.records[id].participants.includes(host));assert.equal(have(doc,'item_three_leg_stool'),1);
+ const replay=await engine.reduce(before,request,{replay:true,result:out.result});assert.deepEqual(applyPatches(before,replay.patches),doc);
 });
 
 test('T108：节日进入公开目录与检索，不暴露主办效果；旧存档升级保留原有变化',()=>{

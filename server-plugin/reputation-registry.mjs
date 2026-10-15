@@ -13,6 +13,13 @@ const cache=new WeakMap();
 const people=world=>[...world.npcs??[],...world.factionPeople??[],...world.residents??[]];
 const affiliations=p=>[...(typeof p.faction==='string'?[p.faction]:[]),...(Array.isArray(p.factions)?p.factions:[])];
 
+// Separate relation supplements leave reviewed society council rows intact.
+// Existing catalog directions win; campaign account values win at their reader.
+export function factionRelations(engine,id){
+    const base=engine.world.factions?.find(f=>f.id===id)?.relations??[];
+    return [...base,...(engine.rules.factionRelations?.[id]??[]).filter(r=>!base.some(b=>b.faction===r.faction))];
+}
+
 export function deriveReputationRegistry(world,rules){
     if(!rules)return{settlements:[],factions:[]};
     const seats=new Set((world.locations??[]).filter(l=>l.monsterSociety).map(l=>l.id));
