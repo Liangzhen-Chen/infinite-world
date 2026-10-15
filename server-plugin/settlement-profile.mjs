@@ -1,11 +1,17 @@
 // Explicit allow-list: author rumor seeds/truth, hidden places and proposed
 // solutions stay private. Registered contracts retain their settlement status.
-import {placeView} from './entity-view.mjs';
+import {placeView,personName} from './entity-view.mjs';
+import {beginHouseholdReads} from './npc-state.mjs';
+function settlementReader(world,document){
+ const engine={world,rules:world.rules,byId:new Map([...world.locations,...world.npcs,...world.residents??[],...Object.values(document?.state.created??{})].map(e=>[e.id,e]))};
+ engine.advanceHouseholds=beginHouseholdReads(engine);return engine;
+}
 const pick=(row,keys)=>Object.fromEntries(keys.filter(key=>row?.[key]!==undefined).map(key=>[key,structuredClone(row[key])]));
-export function publicSettlement(world,id,document=null){
+export function publicSettlement(world,id,document=null,reader=null){
  const p=world.settlementProfiles?.find(p=>p.id===id),d=p?.details;if(!p)return null;
- const name=id=>id==='player'?document?.state?.player?.name??'玩家':document?.state?.npcs?.[id]?.name??document?.state?.creatures?.[id]?.name??document?.state?.created?.[id]?.name??world.npcs.find(n=>n.id===id)?.name??world.residents?.find(n=>n.id===id)?.name??world.locations.find(l=>l.id===id)?.name??id;
- const currentView=document?placeView({world,rules:world.rules,byId:new Map([...world.locations,...world.npcs,...world.residents??[],...Object.values(document.state.created??{})].map(e=>[e.id,e]))},document.state,id):null;
+ const engine=reader??settlementReader(world,document);
+ const name=id=>personName(engine,document?.state??{},id).value??engine.byId.get(id)?.name??id;
+ const currentView=document?placeView(engine,document.state,id):null;
  if(!d)return {id,name:name(id),population:currentView?.population.population.value??p.population,householdCount:currentView?.population.householdCount.value??p.householdCount,
   governance:{head:currentView?.government.head.value?{id:currentView.government.head.value,name:name(currentView.government.head.value)}:null,permissions:{head:currentView?.government.powers.value??[]}}};
  const person=id=>({id,name:name(id)}),e=d.economy,g=d.governance,foodUnitKg=world.rules?.agriculture?.foodUnitKg;
@@ -33,9 +39,10 @@ export function publicSettlement(world,id,document=null){
 }
 // Only the public view supplies search text. Author rumors and proposals never
 // become search records; acquired claims remain in actual chat/memory entries.
-export function publicSettlementEntries(world,document=null){
+export function publicSettlementEntries(world,document=null,profiles=world.settlementProfiles){
+ const reader=document?settlementReader(world,document):null;
  const rows=[],name=id=>world.locations.find(row=>row.id===id)?.name??world.npcs.find(row=>row.id===id)?.name??id;
- for(const profile of world.settlementProfiles??[]){const p=publicSettlement(world,profile.id,document);if(!p?.economy)continue;
+ for(const profile of profiles??[]){if(!profile.details)continue;const p=publicSettlement(world,profile.id,document,reader);if(!p?.economy)continue;
   const add=(key,text,keywords=[])=>rows.push({id:`settlement_${p.id}_${key}`,scope:p.id,entities:[p.id],source:'公开聚落资料',text:`${p.name}：${text}`,keywords:[p.name,...keywords]});
   add('industries',`地方产业：${p.industries.join('；')}。地形：${p.terrain}；气候：${p.climate}`,['产业']);
   for(const [i,r]of p.economy.production.entries())add(`production_${i}`,`生产登记：${r.name}，潜在产量${r.quantity}${r.unit}／${r.cycleDays}日${r.unitKg?`，每粮单位${r.unitKg}千克`:''}；${r.areaHa?`田地${r.areaHa}公顷；`:''}实际产量受天气、劳力和仓储影响，登记值尚未成为库存。`,['生产','产量','收成','年粮']);

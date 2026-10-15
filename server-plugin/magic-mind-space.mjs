@@ -7,6 +7,8 @@ import {trackSingleItem,changeItems,heldUnit}from'./items.mjs';
 import {magicContractTrace}from'./contracts.mjs';
 import {prepareAnchorCargo}from'./magic-movement.mjs';
 import {monsterStats}from'./combat.mjs';
+import {assertSpellConsent,hasSpellConsent}from'./magic-consent.mjs';
+import {personMental}from'./entity-view.mjs';
 
 // Bounds describe consumers for unpublished authoring candidates.
 export const mindSpaceMechanisms=Object.freeze({
@@ -45,13 +47,11 @@ function access(d,engine,row,c,args,until,read=false){
  if(!point(row.position)||distance(from,row.position)>c.rangeMeters||!localSightClear(d,engine,row.location,from,row.position))throw Error('对象超过实际距离或视线被遮挡');
  return read?null:permission(d,row,args,until);
 }
-function consent(d,id,authorization,until){
- if(id==='player')return true;
- const r=d.get('state','records',authorization);
- return r?.category==='authorization'&&r.action==='mental_magic'&&r.subject===id&&r.grantor===id&&r.grantee==='player'&&!r.revoked&&Number.isSafeInteger(r.expires)&&r.expires>until;
+function consent(d,id,authorization,until,spell,location){
+ return hasSpellConsent(d,id,authorization,'mental_magic',{id:spell,location},until);
 }
-function mind(d,id){
- const m=clone(d.get(...path(id),'mental'));
+function mind(d,id,engine){
+ const m=clone(d.get(...path(id),'mental')??(engine?personMental(engine,d.get('state'),id).value:null));
  if(!m)throw Error('目标没有登记实际精神与疲劳状态');
  for(const k of ['fatigue','alertness','stress'])number(m[k],0,100,k);
  if(!Array.isArray(m.interference))throw Error('精神干扰状态未知');return m;
@@ -60,14 +60,14 @@ function targetMind(d,engine,c,args,until){
  const id=resolveCreature(engine,d,args.target??'player'),a=d.get(...path(id));
  if(!a||['死亡','濒死','昏迷'].includes(a.status)||id!=='player'&&a.location!==d.get('state','location'))throw Error('精神观察目标不在场或无法同意');
  assertMagicTargeting(d,engine,c,args,id);
- if(!consent(d,id,args.authorization,until))throw Error('精神类需要本人仍有效的自愿同意');
+ assertSpellConsent(d,engine,c,args,id,'mental_magic',until);
  if(!id.startsWith('npc_')&&id!=='player'){
   const base=engine.byId.get(id),template=base?.template??engine.byId.get(base?.monster)?.template;
   if(!Number.isFinite(template)||monsterStats({level:a.level??base?.levelRange?.[0]??1,template,bossTier:base?.tier??0},engine.rules).divine)throw Error('不能越过神性屏障或未知生命规则');
  }
  // Existing memories and status effects do not require a fatigue subsystem.
  const needsVitals=['sleep','rest_bless','comfort'].includes(c.effectSpec.operation);
- return{id,actor:a,mind:needsVitals||a.mental?mind(d,id):null};
+ return{id,actor:a,mind:needsVitals||a.mental?mind(d,id,engine):null};
 }
 function unit(d,engine,id){
  const u=d.get('state','itemInstances',id),def=u&&engine.byId.get(u.item);
@@ -178,7 +178,7 @@ export function prepareMindSpace(d,c,args,{completion=false}={}){
  return p;
 }
 function putEffect(d,p,eventId,extra={}){
- const now=d.get('state','minute'),e={kind:'mind_space',operation:p.op,spell:p.catalog.id,target:p.id??p.row?.id??p.item,owner:'player',power:p.spec.power,location:p.location,started:now,expires:now+p.catalog.duration,sourceEvent:eventId,...(p.args.authorization?{authorization:p.args.authorization}:{}),...(p.permission?{permission:p.permission}:{}),...extra};
+ const now=d.get('state','minute'),e={kind:'mind_space',operation:p.op,spell:p.catalog.id,target:p.id??p.row?.id??p.item,owner:'player',power:p.spec.power,location:p.location,started:now,expires:now+p.catalog.duration,sourceEvent:eventId,...(p.args.authorization?{authorization:p.args.authorization}:{}),...(p.args.force===true?{forced:true}:{}),...(p.permission?{permission:p.permission}:{}),...extra};
  d.set(['state','effects',eventId],e);return e;
 }
 function detach(d,engine,item,eventId,status,extra={}){
@@ -215,7 +215,7 @@ export function applyMindSpace(d,initial,eventId){
  if(['memory_guard','rest_bless','comfort'].includes(op)){
   const e=putEffect(d,p,eventId,{...(p.memory?{memory:p.memory.id}:{} )});
   if(op==='memory_guard'&&p.id==='player')d.set(['memories',p.memory.id,'guardUntil'],e.expires);
-  if(op==='comfort')d.set([...path(p.id),'mental','stress'],Math.max(0,p.mind.stress-p.spec.power));
+  if(op==='comfort')d.set([...path(p.id),'mental'],{...p.mind,stress:Math.max(0,p.mind.stress-p.spec.power)});
   return{...result,effect:eventId,expires:e.expires,...(p.memory?{memory:p.memory.id,truthVerified:false}:{})};
  }
  if(op==='contract_sense')return{...result,target:p.args.target,changes:p.contract.changes,legalJudgement:false};
@@ -224,7 +224,7 @@ export function applyMindSpace(d,initial,eventId){
   if(success){e.active=false;e.endedAt=now;e.counterSource=eventId;d.set(['state','records',p.args.target,'enforcement'],e);}
   else for(const id of [...new Set(p.contract.parties)]){
    if(!d.get(...path(id)))continue;
-   const m=mind(d,id);d.set([...path(id),'mental','stress'],Math.min(100,m.stress+Math.min(20,e.power-p.spec.power)));
+   const m=mind(d,id,this);d.set([...path(id),'mental'],{...m,stress:Math.min(100,m.stress+Math.min(20,e.power-p.spec.power))});
   }
   d.set(['state','records',`counter_contract:${eventId}`],{category:'contract_counter',contract:p.args.target,success,minute:now,sourceEvent:eventId});
   return{...result,target:p.args.target,countered:success,backlash:!success};
@@ -261,7 +261,7 @@ export function applyMindSpace(d,initial,eventId){
 
 function effective(d,e,minute){
  if(e.started>minute||e.expires<=minute)return false;
- if(mental.has(e.operation))return consent(d,e.target,e.authorization,minute);
+ if(mental.has(e.operation))return e.forced===true||consent(d,e.target,e.authorization,minute,e.spell,e.location);
  if(e.permission){const r=d.get('state','records',e.permission);return r?.grantee==='player'&&!r.revoked&&r.expires>minute;}
  return true;
 }
@@ -282,7 +282,7 @@ export function advanceMindSpace(d,engine,before,after){
  const byTarget=new Map();
  for(const [id,e]of effects(d)){
   let end=Math.min(after,e.expires),start=Math.max(before,e.started);
-  if(e.authorization&&e.target!=='player'){
+  if(e.authorization&&e.target!=='player'&&!e.forced){
    const r=d.get('state','records',e.authorization);end=r?.revoked||!r?start:Math.min(end,r.expires);
   }
   if(e.permission){const r=d.get('state','records',e.permission);end=r?.revoked||!r?start:Math.min(end,r.expires);}
@@ -295,7 +295,7 @@ export function advanceMindSpace(d,engine,before,after){
    const a=d.get(...path(e.target));if(!a)continue;
    if(e.operation==='sleep'&&e.sleeping){
     if(minutes>0&&a.status!=='死亡'){
-     const m=mind(d,e.target);m.fatigue=Math.max(0,m.fatigue-minutes/2);d.set([...path(e.target),'mental'],m);
+     const m=mind(d,e.target,engine);m.fatigue=Math.max(0,m.fatigue-minutes/2);d.set([...path(e.target),'mental'],m);
      d.set([...path(e.target),'activity'],'睡眠');
     }
     if(!effective(d,e,after)||a.status==='死亡'){
@@ -317,7 +317,7 @@ export function advanceMindSpace(d,engine,before,after){
   }
  }
  for(const [target,minutes]of byTarget){
-  const m=mind(d,target);m.fatigue=Math.max(0,m.fatigue-minutes/4);m.stress=Math.max(0,m.stress-minutes/10);d.set([...path(target),'mental'],m);
+  const m=mind(d,target,engine);m.fatigue=Math.max(0,m.fatigue-minutes/4);m.stress=Math.max(0,m.stress-minutes/10);d.set([...path(target),'mental'],m);
  }
  // Physical water ingress continues without a spell; holes always leak.
  for(const row of environmentFeatures(engine)){

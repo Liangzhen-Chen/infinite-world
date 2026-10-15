@@ -1,4 +1,5 @@
 import {magicMessagePermission}from'./magic-message.mjs';
+import {spellConsentPermission}from'./magic-consent.mjs';
 import {environmentFeatures}from'./environment.mjs';
 import {sitePermission}from'./sites.mjs';
 import {personAge,personSimulation,personConstraint,homeResidents}from'./entity-view.mjs';
@@ -18,6 +19,7 @@ export function assertLocationAccess(d,engine,destination,{authorization,compani
 // Register the host's NPC decision using the existing authorization ledger.
 // A named resident in the roster cannot act or consent without an active NPC.
 export function homePermission(d,engine,args,eventId){
+ const spellResult=spellConsentPermission(d,engine,args,eventId);if(spellResult)return spellResult;
  const messageResult=magicMessagePermission(d,engine,args,eventId);if(messageResult)return messageResult;
  if(!['grant_access','revoke_access'].includes(args.operation))return null;
  const siteResult=sitePermission(d,engine,args,eventId);if(siteResult)return siteResult;

@@ -7,6 +7,7 @@ import {clockRoll} from './world-clock.mjs';
 import {presentWitnesses,publishTransitionEvent} from './world-events.mjs';
 import {legalCodeAt,legalCodeById} from './law-codes.mjs';
 import {registerIncident,evidenceScore,adjudicateLegalCase} from './law.mjs';
+import {entityTransition,businessSnapshot,businessTransitions} from './entity-transitions.mjs';
 import {issueWanted,wantedOfCase,WANTED_REASONS} from './bounty.mjs';
 import {monsterStats} from './combat.mjs';
 import {transferItems} from './items.mjs';
@@ -75,8 +76,11 @@ function settleNpcSentence(d,e,row,code,minute){
   d.set(path(row.id),{...row,status:'已结案',finePaid:fine,fineDischarged:true,compensationPaid:true,closed:minute});
  }else if(!row.fineDischarged){
   const key=`legal_custody:${row.id}`;if(d.get(...path(key)))return;
+  const shops=businessSnapshot(e,d.get('state'));
   d.set(path(key),{category:'legal_custody',case:row.id,subject:row.offender,reason:'劳役',location:code.court,status:'生效',started:minute,expires:minute+row.judgment.communityMinutes});
   d.set(path(row.id),{...row,status:'服役中',sentence:'labor',compensationPaid:row.value===0});
+  entityTransition(d,e,{id:`${key}:detain`,verb:'detain',actor:row.judgment.judge,target:row.offender,minute,location:code.court,visibility:row.private?'private':row.visibility??'public',summary:`${e.byId.get(row.offender)?.name??row.offender}依法开始劳役`});
+  businessTransitions(d,e,shops,key,minute);
  }
 }
 export function advanceNpcJustice(d,e,after){
@@ -94,7 +98,12 @@ export function advanceNpcJustice(d,e,after){
    if(evidenceScore(d,row)<code.evidenceRequired){if(row.status!=='证据不足')d.set(path(row.id),{...row,status:'证据不足'});continue;}
    if(offender.location!==code.court){if(!wantedOfCase(d.get('state'),row.id)&&after-row.reportedAt>=e.rules.law.wanted.appearanceMinutes)issueWanted(d,e,row,WANTED_REASONS.unappeared,after);continue;}
    adjudicateLegalCase(d,e,row,code,judge,`${row.sourceEvent}:hearing`,presentWitnesses(d.get('state'),code.court));row=d.get(...path(row.id));
-   for(const[key,hold]of Object.entries(d.get('state','records')))if(hold.category==='legal_detention'&&hold.case===row.id&&hold.status==='生效')d.set(path(key),{...hold,status:'已结束',ended:after});
+   for(const[key,hold]of Object.entries(d.get('state','records')))if(hold.category==='legal_detention'&&hold.case===row.id&&hold.status==='生效'){
+    const shops=businessSnapshot(e,d.get('state'));
+    d.set(path(key),{...hold,status:'已结束',ended:after});
+    entityTransition(d,e,{id:`${key}:release`,verb:'release',actor:judge,target:row.offender,minute:after,location:hold.location,visibility:row.private?'private':row.visibility??hold.visibility??'public',summary:`${e.byId.get(row.offender)?.name??row.offender}审结后解除待审拘留`});
+    businessTransitions(d,e,shops,`${key}:release`,after);
+   }
   }
   if(row.judgment&&['已裁定','已到案','待赔偿'].includes(row.status))settleNpcSentence(d,e,row,code,after);
   row=d.get(...path(row.id));const escrow=d.get(...path(`legal_deposit:${row.id}`));

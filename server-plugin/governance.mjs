@@ -1,3 +1,4 @@
+import {entityTransition} from './entity-transitions.mjs';
 import {personOffices,personRegistrar,settlementHead,personSimulation} from './entity-view.mjs';
 import {digest} from './storage.mjs';
 import {npcPresenceAt} from './npc-cognition.mjs';
@@ -43,8 +44,14 @@ function local(engine,location,settlement){
 // does, the dead do not, and campaign-born children count once grown.
 export function eligible(engine,settlement,state){
     const {p}=profile(engine,settlement);
+    return residentAdults(engine,settlement,state,p);
+}
+// Population membership does not imply appointment powers. Promotion also
+// reads residents in remote settlements which have no four-village charter.
+export function residentAdults(engine,settlement,state,p=engine.world.settlementProfiles?.find(p=>p.id===settlement)){
     const houses=(engine.world.households??[]).filter(h=>h.settlement===settlement);
-    const people=new Set([...p.residentIds,...houses.flatMap(h=>householdMembers(engine,state,h.id))]);
+    const people=new Set([...p?.residentIds??[],...houses.flatMap(h=>householdMembers(engine,state,h.id)),
+        ...Object.values(state.created??{}).filter(p=>p.generated==='population'&&p.settlement===settlement).map(p=>p.id)]);
     return [...people].filter(id=>npcHousehold(engine,state,id)?.settlement===settlement&&state.npcs?.[id]?.status!=='死亡'
         &&(npcAgeAt(engine,state,id)??0)>=18).sort();
 }
@@ -348,6 +355,7 @@ function decide(d,engine,row,at){
         since:at,until:at+office.termDays*DAY,nextReview:at+authorityOf(engine).superiors.auth_bs_office_charter.reviewEveryDays*DAY,
         appointedBy:office.appointingInstitution,application:row.id,basis,source:office.source,sourceEvent:row.id});
     d.set(path(row.id),{...row,status:'已任命',decidedAt:at,basis});
+    entityTransition(d,engine,{id:`${row.id}:appoint`,verb:'appoint',actor:office.appointingInstitution,target:'player',minute:at,location:row.settlement,office:office.id,summary:`${state.player.name}获任${office.name}`});
 }
 function review(d,engine,row,at){
     const charter=authorityOf(engine).superiors.auth_bs_office_charter,state=d.get('state');
@@ -355,7 +363,11 @@ function review(d,engine,row,at){
     if(at>=row.until)reason='任期届满';
     else if(crimeJudged(state))reason='犯罪裁定';
     else{const v=residentViews(engine,state,row.settlement);if(v.oppose>v.support)reason=`成年住户反对${v.oppose}多于支持${v.support}`;}
-    if(reason)d.set(path(row.id),{...row,status:'已免职',removedAt:at,reason});
+    if(reason){
+        const name=personOffices(engine,{...state,minute:Math.min(at,row.until-1)},row.holder,{settlement:row.settlement}).find(o=>o.value.id===row.id)?.value.name??row.name;
+        d.set(path(row.id),{...row,status:'已免职',removedAt:at,reason});
+        entityTransition(d,engine,{id:`${row.id}:dismiss:${at}`,verb:'dismiss',actor:row.appointedBy,target:row.holder,minute:at,location:row.settlement,office:row.office,reason,summary:`${state.player.name}卸任${name}：${reason}`});
+    }
     else d.set(path(row.id),{...row,nextReview:row.nextReview+charter.reviewEveryDays*DAY,reviews:[...(row.reviews??[]),at]});
 }
 const dueAt=r=>r.category==='governance_application'?r.due:Math.min(r.nextReview,r.until);

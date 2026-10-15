@@ -1,12 +1,13 @@
 import {legalCodeAt} from './law-codes.mjs';
 import {digest}from'./storage.mjs';
+import {assertSpellConsent}from'./magic-consent.mjs';
 // This boundary consumes trusted engine facts, never model-supplied coordinates.
 export function validateTargeting(catalog){
  const t=catalog.targeting;if(!t)return[];const errors=[];
  if(!t||typeof t!=='object'||Array.isArray(t)||Object.keys(t).some(k=>!['lineOfSight','consent','permit'].includes(k)))return['施法目标边界含未知字段'];
  if(t.lineOfSight!==true)errors.push('新目标规则须声明视线边界');
  if(!Number.isFinite(catalog.rangeMeters)||catalog.rangeMeters<0||catalog.rangeMeters>100)errors.push('施法射程无效');
- if(t.consent!==undefined&&!['support_magic','mental_magic'].includes(t.consent))errors.push('本人同意类别无效');
+ if(t.consent!==undefined&&!['support_magic','mental_magic','healing'].includes(t.consent))errors.push('本人同意类别无效');
  if(t.permit!==undefined&&t.permit!=='mental_magic')errors.push('施法许可类别无效');
  return errors;
 }
@@ -22,8 +23,7 @@ export function assertMagicTargeting(d,engine,catalog,args,target){
  assertTargetFacts(catalog,facts);
  const now=d.get('state','minute');
  if(t.consent&&target!=='player'){
-  const r=d.get('state','records',args.authorization);
-  if(r?.category!=='authorization'||r.action!==t.consent||r.subject!==target||r.grantor!==target||r.grantee!=='player'||r.revoked||!Number.isSafeInteger(r.expires)||r.expires<=now)throw Error('施法需要本人仍有效的自愿同意');
+  assertSpellConsent(d,engine,catalog,args,target,t.consent);
  }
  if(t.permit){
   const r=d.get('state','records',args.permit),location=d.get('state','location');

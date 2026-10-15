@@ -7,7 +7,8 @@ import {loadWorld} from '../tools/load-world.mjs';
 import {WorldEngine} from '../server-plugin/engine.mjs';
 import {PatchCursor,applyPatches,CampaignStorage} from '../server-plugin/storage.mjs';
 import {npcCrimePlan,commitNpcCrime,advanceNpcJustice,advanceNpcCrime} from '../server-plugin/npc-crime.mjs';
-import {evidenceScore,advanceLaw} from '../server-plugin/law.mjs';
+import {evidenceScore,advanceLaw,adjudicateLegalCase} from '../server-plugin/law.mjs';
+import {worldEvents} from '../server-plugin/world-events.mjs';
 import {advocateService} from '../server-plugin/legal-representation.mjs';
 import {npcRumors} from '../server-plugin/npc-rumors.mjs';
 import {returnChanges} from '../server-plugin/return-summary.mjs';
@@ -75,8 +76,11 @@ test('NPC证据充分但未到案会通缉，缺钱劳役约束本人，玩家�
  assert.ok(d.get('state','records',key,'wanted'));assert.equal(d.get('state','records',key,'judgment'),undefined);
  d.set(['state','npcs',actor,'location'],court);d.set(['state','npcs',actor,'coins'],0);d.set(['state','minute'],at+5001);advanceNpcJustice(d,engine,at+5001);assert.equal(d.get('state','records',key,'status'),'服役中');
  const lock=d.get('state','records',`legal_custody:${key}`);assert.equal(lock.subject,actor);assert.ok(personConstraint(engine,d.get('state'),actor));
+ assert.equal(worldEvents(d.get('state'),e=>e.id===`legal_custody:${key}:detain`)[0].target,actor);
  advanceLaw(d,lock.expires-1,engine);assert.equal(d.get('state','records',`legal_custody:${key}`,'status'),'生效');
  advanceLaw(d,lock.expires,engine);assert.equal(d.get('state','records',key,'status'),'待赔偿');assert.equal(personConstraint(engine,{...d.get('state'),minute:lock.expires},actor),null);
+ const released=worldEvents(d.get('state'),e=>e.id===`legal_custody:${key}:release`);assert.equal(released.length,1);assert.equal(released[0].target,actor);
+ advanceLaw(d,lock.expires,engine);assert.equal(worldEvents(d.get('state'),e=>e.id===released[0].id).length,1);
 });
 test('讼师费用实付、技能减罚且不减赔偿，缺证不获定罪，重复委托或改业不能沿用服务',async()=>{
  const f=setup(),{engine,lawyer}=f;let doc=f.document;doc.state.location=court;
@@ -100,4 +104,15 @@ test('推进注册表触发离屏来源，当前现场不结算，旧回执不�
  assert.deepEqual((await store.read('npc-crime')).document,after);assert.deepEqual((await new CampaignStorage(dir,{reducer}).read('npc-crime')).document,after);
  assert.deepEqual((await store.import(await store.export('npc-crime'),'npc-crime-copy')).document,after);assert.deepEqual((await store.reconcile('npc-crime',[])).document,document);
  const local=setup();local.document.state.location=scene;const d=cursor(local.document);advanceNpcCrime(d,local.engine,{before:599,after:601});assert.ok(!Object.values(d.get('state','records')).some(r=>r.npcCrime));
+});
+
+test('共用审判保留强施与生活魔法违规罚则，并按实际被告解除拘押',()=>{
+ const {engine,document}=setup(),d=cursor(document),code=engine.rules.law.codes[0];
+ for(const [offense,penalty]of Object.entries({...engine.rules.law.spellConsent.penalties,...engine.rules.magicEconomy.penalties})){
+  const id=`legal_case:merged:${offense}`,key=`legal_custody:${id}`,row={category:'legal_case',id,law:code.id,offender:actor,victim:null,offense,value:10,reported:true,status:'已报案',evidence:[{kind:'confession',subject:actor}]};
+  d.set(['state','records',id],row);d.set(['state','records',key],{category:'legal_custody',case:id,subject:actor,reason:'待审',status:'生效',location:court});
+  const result=adjudicateLegalCase(d,engine,row,code,judge,`merged:${offense}`);
+  assert.equal(result.judgment.fine,penalty.baseFine+Math.ceil(10*penalty.valueMultiplier));
+  const released=worldEvents(d.get('state'),e=>e.id===`${key}:release`);assert.equal(released.length,1);assert.equal(released[0].target,actor);
+ }
 });

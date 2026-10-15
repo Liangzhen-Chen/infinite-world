@@ -1,6 +1,7 @@
 import fs from 'node:fs/promises';
 import * as OpenCC from 'opencc-js';
 import {isDeepStrictEqual} from 'node:util';
+import {consistencyThreshold} from '../server-plugin/consistency-outcome.mjs';
 
 const simplify=OpenCC.Converter({from:'tw',to:'cn'});
 const cliches=JSON.parse(await fs.readFile(new URL('../prompt/cliches.json',import.meta.url),'utf8'));
@@ -52,7 +53,8 @@ export function summarizeLanguageAcceptance(results,scenarios,repetitions=1){
         return {id,measured,score,pass:measured&&score>=95};
     });
     const complete=sessions.length>0&&sessions.every(s=>s.complete),realModelMeasured=complete&&sessions.every(s=>s.realModelMeasured);
-    const ledgerPass=complete&&sessions.every(s=>s.ledgerPass),reviewsComplete=complete&&sessions.every(s=>s.reviewComplete&&s.consistencyPass);
+    const relevant=results.filter(r=>scenarios.some(s=>s.id===r.id&&s.requirements?.some(id=>ids.includes(id))));
+    const ledgerPass=complete&&sessions.every(s=>s.ledgerPass),reviewsComplete=complete&&sessions.every(s=>s.reviewComplete)&&consistencyThreshold(relevant,.95);
     return {scope:'V1–V7逐项≥95，陈词≤0.5次/千字；时间与库存断言100%。离线准备不计真实通过',complete,realModelMeasured,ledgerPass,reviewsComplete,
         thresholdReached:complete&&realModelMeasured&&ledgerPass&&reviewsComplete&&rows.every(row=>row.pass),rows,
         sessions:sessions.map(({review,scenario,...session})=>session)};

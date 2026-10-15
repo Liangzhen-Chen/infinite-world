@@ -57,3 +57,14 @@ test('五村旧案保留原法典，可携卷到已展开的上级治所复审�
  state.location=hierarchy[2].court;assert.equal(lawAction.call(engine,draft(state),{operation:'appeal',case:id,authority:hierarchy[2].judges[0]},'home-final').final,true);
 });
 
+
+test('分级复审撤销裁判时释放实际被告，私密案件不公开通知',()=>{
+ const {engine,state}=setup(),local=state.remote.county_hanlu_tongji.skeleton.settlements[1],code=legalCodeAt(engine,local.id,state),hierarchy=courtHierarchy(engine,state,code),subject='player';
+ const id='legal_case:merged-appeal',key=`legal_custody:${id}`;
+ state.player={name:'测试玩家',coins:100};state.location=hierarchy[1].court;
+ state.records[id]={id,category:'legal_case',law:code.id,offender:subject,status:'已裁定',private:true,evidence:[],judgment:{judge:code.judges[0],fine:20}};
+ state.records[key]={category:'legal_custody',case:id,subject,reason:'待审',status:'生效',location:code.court};engine.advance=()=>{};
+ const r=lawAction.call(engine,draft(state),{operation:'appeal',case:id,authority:hierarchy[1].judges[0]},'merged-appeal');assert.equal(r.upheld,false);
+ assert.equal(state.records[key].status,'已结束');const event=state.records[`world_event:${key}:release`];assert.equal(event.target,subject);assert.equal(event.visibility,'private');assert.equal(event.location,code.court);
+ assert.throws(()=>lawAction.call(engine,draft(state),{operation:'appeal',case:id,authority:hierarchy[1].judges[0]},'again'),/终审/);
+});

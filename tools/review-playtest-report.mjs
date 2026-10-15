@@ -6,6 +6,7 @@ import {DeepSeekClient,normalizeAssistantContent} from './deepseek-client.mjs';
 import {atomicJSON} from '../server-plugin/storage.mjs';
 import {reviewPlaytest} from './playtest-review.mjs';
 import {reviewNpcRequirements,summarizeNpcAcceptance} from './npc-acceptance.mjs';
+import {summarizeConsistency} from '../server-plugin/consistency-outcome.mjs';
 
 const root=path.resolve(import.meta.dirname,'..');
 export function playtestEvidenceHash(report){
@@ -71,6 +72,7 @@ export async function reassessPlaytestReport(client,report,scenarios,{world}={})
     const relevant=scenarios.filter(s=>output.results.some(r=>r.id===s.id));
     const repetitions=report.targetSessions&&report.targetSessions%relevant.length===0?report.targetSessions/relevant.length:1;
     output.m2=summarizeNpcAcceptance(output.results,relevant,repetitions);
+    output.consistency=summarizeConsistency(output.results);
     if(report.complete===false||report.targetSessions!==undefined&&report.targetSessions!==report.results.length)output.m2.thresholdReached=false;
     output.reassessment={date:new Date().toISOString(),gameExecuted:false,manualVerified:false,
         scope:'只重评已存真实回合；旧评分原文保留于reviewHistory，不是新增游戏证据',

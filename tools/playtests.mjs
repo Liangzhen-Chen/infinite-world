@@ -8,6 +8,7 @@ import {digest}from'../server-plugin/storage.mjs';
 import {loadHostPromptProcessor}from'./host-prompt.mjs';
 import {toolSelectionMetrics,playtestAcceptance,playtestExitCode,summarizeMemoryAcceptance}from'./playtest-metrics.mjs';
 import {reviewPlaytest}from'./playtest-review.mjs';
+import {summarizeConsistency,consistencyThreshold}from'../server-plugin/consistency-outcome.mjs';
 import {summarizeLanguageAcceptance}from'./playtest-language.mjs';
 import {reviewNpcRequirements,summarizeNpcAcceptance}from'./npc-acceptance.mjs';
 import * as OpenCC from'opencc-js';
@@ -72,7 +73,8 @@ function summary(){const assertions=results.reduce((n,row)=>n+row.assertions,0),
     targetSessions:tasks.length,completedSessions:results.length,assertions,passed,ledgerRatio:passed/Math.max(1,assertions),
     promptHash:digest(bundle),scenariosHash:digest(scenarios),providerProcessing:host.identity,
     fullCohort,missingRequirements,milestone:milestone||'release-ledger',
-    releaseLedgerPass:complete&&fullCohort&&!missingRequirements.length&&assertions>0&&passed===assertions,
+    releaseLedgerPass:complete&&fullCohort&&!missingRequirements.length&&assertions>0&&passed===assertions&&consistencyThreshold(results),
+    consistency:summarizeConsistency(results),
     m1ThresholdReached:complete&&fullCohort&&assertions>0&&passed/assertions>=.9,
     calls:{total:calls.length,rejected:calls.filter(call=>call.result?.ok===false).length},
     toolSelection:toolSelectionMetrics(results,scenarios),
@@ -145,6 +147,6 @@ try{
         }
     }));
     const report=summary();await save();
-    await atomicJSON(path.join(destination,'真实试玩失败.json'),{date:report.date,scope:report.scope,sessionErrors:results.filter(row=>row.error).map(({id,attempt,error})=>({id,attempt,error})),failures:results.flatMap(result=>result.turns.filter(turn=>turn.errors.length||turn.assertions.some(rule=>!rule.pass)).map(turn=>({session:result.id,attempt:result.attempt,...turn}))),reviews:results.map(row=>({id:row.id,attempt:row.attempt,review:row.review}))});
+    await atomicJSON(path.join(destination,'真实试玩失败.json'),{date:report.date,scope:report.scope,consistency:report.consistency,sessionErrors:results.filter(row=>row.error).map(({id,attempt,error})=>({id,attempt,error})),failures:results.flatMap(result=>result.turns.filter(turn=>turn.reviewFailure||turn.errors.length||turn.assertions.some(rule=>!rule.pass)).map(turn=>({session:result.id,attempt:result.attempt,...turn}))),reviews:results.map(row=>({id:row.id,attempt:row.attempt,review:row.review}))});
     console.log(JSON.stringify({...report,results:undefined}));process.exitCode=playtestExitCode(report);
 }finally{await server?.close();await client.close();}

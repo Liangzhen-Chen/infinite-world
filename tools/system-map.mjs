@@ -135,10 +135,10 @@ const SYSTEMS=[
  // 底座层 K1–K7
  {id:'base_traits',layer:'base',name:'性状标签',card:'K1',modules:['traits.mjs']},
  {id:'base_interactions',layer:'base',name:'交互规则',card:'K2',modules:['interactions.mjs']},
- {id:'base_events',layer:'base',name:'世界事件',card:'K3',modules:['world-events.mjs']},
+ {id:'base_events',layer:'base',name:'世界事件',card:'K3/V6',modules:['world-events.mjs','entity-transitions.mjs']},
  {id:'base_standing',layer:'base',name:'统一立场',card:'K4/K5',modules:['standing.mjs','entity-view.mjs']},
  {id:'base_effects',layer:'base',name:'效果表',card:'K6',modules:['effects.mjs']},
- {id:'base_advance',layer:'base',name:'推进注册表',card:'K7',modules:['advance-registry.mjs']},
+ {id:'base_advance',layer:'base',name:'推进注册表',card:'K7/P3',modules:['advance-registry.mjs','advance-layers.mjs']},
  // 模拟系统层
  {id:'sim_npc',layer:'sim',name:'人物',modules:['npc-state.mjs','npc-schedule.mjs','npc-cognition.mjs','npc-autonomy.mjs','npc-life.mjs','npc-memory.mjs','npc-relations.mjs','npc-rumors.mjs',
    'npc-obligations.mjs','npc-growth.mjs','npc-intelligence.mjs','lies.mjs','npc-planning-service.mjs','population.mjs','population-service.mjs','settlement-profile.mjs']},
@@ -148,8 +148,9 @@ const SYSTEMS=[
  {id:'sim_wildlife',layer:'sim',name:'生态',modules:['wildlife.mjs','wildlife-awakening.mjs','wildlife-range.mjs','wildlife-habitats.mjs','wildlife-society.mjs','wildlife-migration.mjs','creature-nature.mjs','seasonal-migration.mjs','farm-pests.mjs']},
  {id:'sim_companion',layer:'sim',name:'伙伴',modules:['pets.mjs','summons.mjs']},
  {id:'sim_environment',layer:'sim',name:'环境与地点',modules:['environment.mjs','weather.mjs','location-access.mjs','sites.mjs','regions.mjs','remote-generation.mjs']},
- {id:'sim_magic',layer:'sim',name:'法术',modules:SERVER.map(f=>f.slice(14)).filter(f=>/^magic(-[\w-]+)?\.mjs$/.test(f))},
- {id:'sim_economy',layer:'sim',name:'经济',modules:['items.mjs','shop.mjs','business.mjs','contracts.mjs','credit.mjs','settlement-trade.mjs','manufacturing.mjs','repair.mjs','extraction.mjs','smuggling.mjs']},
+ {id:'sim_magic',layer:'sim',name:'法术',modules:SERVER.map(f=>f.slice(14)).filter(f=>/^magic(-[\w-]+)?\.mjs$/.test(f)&&f!=='magic-economy.mjs')},
+ // magic-economy.mjs (U10): settlement-scale prices, losses and reactions to life magic.
+ {id:'sim_economy',layer:'sim',name:'经济',modules:['items.mjs','shop.mjs','business.mjs','contracts.mjs','credit.mjs','settlement-trade.mjs','manufacturing.mjs','repair.mjs','magic-economy.mjs','extraction.mjs','smuggling.mjs']},
  {id:'sim_agriculture',layer:'sim',name:'农业',modules:['agriculture.mjs']},
  {id:'sim_society',layer:'sim',name:'社会',modules:['monster-society.mjs','reputation.mjs','reputation-registry.mjs','reputation-catalog.mjs','organization-state.mjs','group-account.mjs','office-salary.mjs','public-opinion.mjs','organizations.mjs','civic.mjs','governance.mjs','public-projects.mjs','titles.mjs','notables.mjs','promotion.mjs','promotion-view.mjs','quest-board.mjs','quest-sources.mjs','quest-wildlife.mjs','tribal-awakening.mjs','elections.mjs']},
  {id:'sim_military',layer:'sim',name:'军队、战争与外交',modules:['military.mjs','war-diplomacy.mjs']},
@@ -158,7 +159,7 @@ const SYSTEMS=[
  {id:'sim_works',layer:'sim',name:'著作',modules:['works.mjs']},
  // 玩家接口层
  {id:'ui_tools',layer:'ui',name:'模型工具',modules:['ext:tools.mjs']},
- {id:'ui_scene',layer:'ui',name:'场景卡与状态提示',modules:['scene-card.mjs','state-notices.mjs','return-summary.mjs']},
+ {id:'ui_scene',layer:'ui',name:'场景卡与状态提示',modules:['scene-card.mjs','prompt-scope.mjs','state-notices.mjs','return-summary.mjs']},
  {id:'ui_server',layer:'ui',name:'服务与界面接口',modules:['index.mjs','ui-routes.mjs','ui-affairs.mjs','ui-history.mjs','ui-map.mjs','ui-messages.mjs','ui-overview.mjs','ui-personal.mjs']},
  {id:'ui_client',layer:'ui',name:'浏览器界面',modules:['ext:ui-shell.mjs','ext:ui-affairs.mjs','ext:ui-art.mjs','ext:ui-history.mjs','ext:ui-map.mjs','ext:ui-messages.mjs','ext:ui-personal.mjs','ext:ui-settings.mjs',
    'ext:affairs-panels.mjs','ext:background-view.mjs','ext:input-view.mjs','ext:ledger-view.mjs','ext:mail-view.mjs','ext:map-view.mjs','ext:message-view.mjs','ext:people-history.mjs',
@@ -166,7 +167,7 @@ const SYSTEMS=[
  {id:'ui_host',layer:'ui',name:'酒馆接入',modules:['ext:index.js','ext:runtime.js','ext:core.js','ext:turn.mjs']},
  // 叙述层
  {id:'nar_prompt',layer:'narr',name:'提示词',dir:'prompt/',modules:['ext:prompt.mjs','ext:generation.mjs']},
- {id:'nar_consistency',layer:'narr',name:'一致性审查',modules:['consistency-review.mjs','consistency-service.mjs','consistency-evidence.mjs']},
+ {id:'nar_consistency',layer:'narr',name:'一致性审查',modules:['consistency-review.mjs','consistency-service.mjs','consistency-evidence.mjs','consistency-outcome.mjs']},
  {id:'nar_memory',layer:'narr',name:'档案与检索',modules:['retrieval.mjs','retrieval-lexicon.mjs','lore.mjs','catalog.mjs','chronicle.mjs']},
 ];
 const fileOf=m=>m.startsWith('ext:')?`extension/${m.slice(4)}`:`server-plugin/${m}`;
@@ -413,7 +414,7 @@ const CONTENT=[
    ['effectSpec.kind','effectSpec','按 kind 分派到 magic-* 模块'],['effectSpec.damageType','damageType','元素进入交互规则；伤害型命中产生 harm 事件'],
    ['targeting','\\.targeting\\b','目标边界与同意'],['law','\\.law\\b','施法许可与违法'],['learnFee / learnMinutes','learnFee','学习'],
   ],manual:[],refs:[],
-  extend:['新的 effectSpec.kind 由所在模块调用 registerMagicEffect 登记校验与结算（magic-effects.mjs），不改 magic.mjs','需要随时间结算的效果在推进注册表登记']},
+  extend:['magic-consent.mjs 从 entity-view、standing 与灵智派生本人决定；rules.law 配置急救例外与强施处罚','新的 effectSpec.kind 由所在模块调用 registerMagicEffect 登记校验与结算（magic-effects.mjs），不改 magic.mjs','需要随时间结算的效果在推进注册表登记']},
  {id:'npc',name:'人物（名册）',file:'people/baseline.json',required:uniq([...req('npc'),...req('npcProfile')]),hooks:[
    ["tier: 'full'","tier==='full'",'完整人物参与认知、自主、生活、承诺推进'],['schedule','\\.schedule\\b','日程移动与服务时段'],
    ['household / householdId','householdId|\\.household\\b','家庭：立场按家庭传导'],['settlement','\\.settlement\\b','所属聚落：立场传导'],
