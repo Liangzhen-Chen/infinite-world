@@ -2,7 +2,7 @@
  "title": "无限原野系统地图",
  "card": "K9",
  "generatedFrom": {
-  "commit": "refs/heads/wm2",
+  "commit": "refs/heads/r20",
   "method": "运行时导出（注册表、规则表、工具定义、效果表、立场传导表）+ 静态正则扫描（import 图、函数体标识符、state 分区与 records 前缀、rules/world 读取）。静态扫描是近似：经 engine.byId、helper 间接或动态拼接路径的访问不计入。"
  },
  "scanMethods": {
@@ -504,7 +504,7 @@
     "server-plugin/campaign-reducer.mjs",
     "server-plugin/archived-reducer.mjs"
    ],
-   "lines": 1040,
+   "lines": 1051,
    "stateWrites": [
     "combatDisengaged",
     "created",
@@ -1015,7 +1015,7 @@
     "server-plugin/population-service.mjs",
     "server-plugin/settlement-profile.mjs"
    ],
-   "lines": 3549,
+   "lines": 3561,
    "stateWrites": [
     "created",
     "creatures",
@@ -1158,7 +1158,7 @@
     "server-plugin/checks.mjs",
     "server-plugin/revival.mjs"
    ],
-   "lines": 1380,
+   "lines": 1385,
    "stateWrites": [
     "careerCooldowns",
     "careerFunds",
@@ -15717,7 +15717,7 @@
     "factions"
    ],
    "worldDirs": [],
-   "lines": 201
+   "lines": 206
   },
   "server-plugin/effect-registry.mjs": {
    "system": "base_effects",
@@ -15983,7 +15983,7 @@
     "spells"
    ],
    "worldDirs": [],
-   "lines": 739
+   "lines": 750
   },
   "server-plugin/entity-transitions.mjs": {
    "system": "base_events",
@@ -18319,7 +18319,7 @@
    "rules": [],
    "world": [],
    "worldDirs": [],
-   "lines": 191
+   "lines": 193
   },
   "server-plugin/npc-obligations.mjs": {
    "system": "sim_npc",
@@ -18394,7 +18394,7 @@
     "npcs"
    ],
    "worldDirs": [],
-   "lines": 136
+   "lines": 137
   },
   "server-plugin/npc-rumors.mjs": {
    "system": "sim_npc",
@@ -18455,7 +18455,7 @@
     "npcs"
    ],
    "worldDirs": [],
-   "lines": 206
+   "lines": 208
   },
   "server-plugin/npc-state.mjs": {
    "system": "sim_npc",
@@ -18480,7 +18480,7 @@
     "households"
    ],
    "worldDirs": [],
-   "lines": 102
+   "lines": 109
   },
   "server-plugin/office-salary.mjs": {
    "system": "sim_society",

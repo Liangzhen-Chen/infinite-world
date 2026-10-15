@@ -277,7 +277,7 @@ export function advanceLaborMarket(d,e,{before,after,id,beforeState}){
         if(layer(e,d.get('state'),offer.location,plan)==='statistics'&&Math.floor(before/(7*DAY))===Math.floor(after/(7*DAY)))continue;
         const s=d.get('state'),pool=pools.get(placeSettlement(e,s,offer.location).value)??[];
         const apps=pool.map(worker=>laborApplication(e,s,worker,offer,{minute:after,changing:Boolean(currentEmployment(s,worker,after))})).filter(Boolean).sort((a,b)=>b.score-a.score||a.worker.localeCompare(b.worker));
-        for(const app of apps){const old=currentEmployment(d.get('state'),app.worker,after),trial={...offer,worker:app.worker,id:old?.id};if(conflict(d,e,trial,Math.floor(after/DAY)*DAY+480))continue;sign(d,e,offer,app,after,`${id}:labor:${offer.id}:${after}`);break;}
+        for(const app of apps){const old=currentEmployment(d.get('state'),app.worker,after),trial={...offer,worker:app.worker,id:old?.id};if(conflict(d,e,trial,Math.floor(after/DAY)*DAY+480))continue;sign(d,e,offer,app,after,`labor:${offer.id}:${after}`);break;}
     }
 }
 export function nextLaborMinute(e,d,now){
