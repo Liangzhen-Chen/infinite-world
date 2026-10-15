@@ -2,6 +2,7 @@ import {drawGranary} from './agriculture.mjs';
 import {weatherTravel} from './weather.mjs';
 import {itemTraits,hasTrait} from './traits.mjs';
 import {hazardPriceFactor,hazardRouteClosed,warRouteClosed} from './hazard-calendar.mjs';
+import {tradeTax} from './finance-tax.mjs';
 import {magicPriceFactor} from './magic-economy.mjs';
 
 const DAY=1440, CLOCK='settlement-trade:clock';
@@ -178,7 +179,7 @@ function dispatch(d,engine,lane,minute){
     const sf=fiscal(d,lane.seller),bf=fiscal(d,lane.buyer);
     sf.exportedFood+=quantity;sf.entries.push({eventId:id,contract:id,phase:'pickup',other:lane.buyer,minute,food:-quantity,copper:0,advanceCopper:0,taxCopper:0});
     bf.entries.push({eventId:id,contract:id,phase:'reserve',other:lane.seller,minute,food:0,copper:-cost,escrowCopper:cost});
-    const o={category:'settlement_trade',id,lane:lane.id,seller:lane.seller,buyer:lane.buyer,item:r.item,mode:lane.mode,source:r.source,status:'in-transit',quantity,workers:Math.ceil(quantity*r.unitKg/r.carryKgPerWorker),unitPriceCopper:price,taxBps:lane.taxBps,batches:parts,spoiledFood:0,rejectedFood:0,deliveredFood:0,paidCopper:0,refundCopper:0,taxCopper:0,escrowCopper:cost,dispatchAt:minute,estimatedArrivalAt:minute+route.minutes,entries:[],transport:{phase:'outbound',edges:route.edges,edgeIndex:0,location:profile(engine,lane.seller).counter,remainingKm:null,movingMinutes:0,restedBudgets:0,nextAt:null,segment:null}};
+    const o={category:'settlement_trade',id,lane:lane.id,seller:lane.seller,buyer:lane.buyer,item:r.item,mode:lane.mode,source:r.source,status:'in-transit',quantity,workers:Math.ceil(quantity*r.unitKg/r.carryKgPerWorker),unitPriceCopper:price,taxBps:tradeTax(engine,d.get('state'),lane.seller).bps,batches:parts,spoiledFood:0,rejectedFood:0,deliveredFood:0,paidCopper:0,refundCopper:0,taxCopper:0,escrowCopper:cost,dispatchAt:minute,estimatedArrivalAt:minute+route.minutes,entries:[],transport:{phase:'outbound',edges:route.edges,edgeIndex:0,location:profile(engine,lane.seller).counter,remainingKm:null,movingMinutes:0,restedBudgets:0,nextAt:null,segment:null}};
     entry(o,'dispatch',minute,{seller:o.seller,buyer:o.buyer,item:o.item,unitPriceCopper:price,taxBps:o.taxBps,quantity,escrowCopper:cost,workers:o.workers,route:route.edges,estimatedMinutes:route.minutes});
     if(d.get('state','location')===profile(engine,lane.seller).counter)d.say?.(`周贸易${id}发货：${engine.byId.get(r.item).name}${quantity}份，运往${engine.byId.get(lane.buyer).name}，预付款${cost}铜入在途账`);
     putWarehouse(d,lane.seller,a);putWarehouse(d,lane.buyer,b);

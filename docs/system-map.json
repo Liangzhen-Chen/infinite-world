@@ -2,7 +2,7 @@
  "title": "无限原野系统地图",
  "card": "K9",
  "generatedFrom": {
-  "commit": "refs/heads/rw07",
+  "commit": "refs/heads/f1",
   "method": "运行时导出（注册表、规则表、工具定义、效果表、立场传导表）+ 静态正则扫描（import 图、函数体标识符、state 分区与 records 前缀、rules/world 读取）。静态扫描是近似：经 engine.byId、helper 间接或动态拼接路径的访问不计入。"
  },
  "scanMethods": {
@@ -18,14 +18,14 @@
  "counts": {
   "layers": 6,
   "systems": 39,
-  "modules": 190,
+  "modules": 194,
   "advance": 48,
   "tools": 25,
   "verbs": 28,
   "subscribers": 9,
   "interactionRules": 25,
   "effectKinds": 21,
-  "links": 428
+  "links": 430
  },
  "layers": [
   {
@@ -333,6 +333,7 @@
     "base_standing",
     "kernel_engine",
     "sim_clock",
+    "sim_economy",
     "sim_environment",
     "sim_faith",
     "sim_military",
@@ -423,7 +424,7 @@
     "server-plugin/campaign-reducer.mjs",
     "server-plugin/archived-reducer.mjs"
    ],
-   "lines": 993,
+   "lines": 998,
    "stateWrites": [
     "combatDisengaged",
     "created",
@@ -718,7 +719,7 @@
     "server-plugin/standing.mjs",
     "server-plugin/entity-view.mjs"
    ],
-   "lines": 592,
+   "lines": 596,
    "stateWrites": [
     "records"
    ],
@@ -926,7 +927,7 @@
     "server-plugin/population-service.mjs",
     "server-plugin/settlement-profile.mjs"
    ],
-   "lines": 3187,
+   "lines": 3200,
    "stateWrites": [
     "created",
     "creatures",
@@ -1570,6 +1571,10 @@
     "server-plugin/business.mjs",
     "server-plugin/contracts.mjs",
     "server-plugin/credit.mjs",
+    "server-plugin/finance-bank.mjs",
+    "server-plugin/finance-assets.mjs",
+    "server-plugin/finance-tax.mjs",
+    "server-plugin/finance-operations.mjs",
     "server-plugin/settlement-trade.mjs",
     "server-plugin/manufacturing.mjs",
     "server-plugin/repair.mjs",
@@ -1577,7 +1582,7 @@
     "server-plugin/extraction.mjs",
     "server-plugin/smuggling.mjs"
    ],
-   "lines": 1858,
+   "lines": 2418,
    "stateWrites": [
     "crafted",
     "itemInstances",
@@ -1591,6 +1596,7 @@
    ],
    "stateReads": [
     "buildings",
+    "created",
     "creatures",
     "inventory",
     "location",
@@ -1605,9 +1611,11 @@
     "village-fiscal"
    ],
    "recordReads": [
+    "bank",
     "levy",
     "magic-economy",
-    "physical_feature"
+    "physical_feature",
+    "territory"
    ],
    "rules": [
     "agriculture",
@@ -1623,6 +1631,7 @@
     "wildlife"
    ],
    "world": [
+    "factions",
     "items",
     "locations",
     "monsters",
@@ -1643,7 +1652,8 @@
    "subscribes": [],
    "effects": [
     "crop_damage",
-    "regional_quote"
+    "regional_quote",
+    "trade"
    ],
    "tools": [
     "world_trade",
@@ -1916,7 +1926,7 @@
     "server-plugin/seasonal-hazards.mjs",
     "server-plugin/hazard-calendar.mjs"
    ],
-   "lines": 1032,
+   "lines": 1035,
    "stateWrites": [
     "family",
     "npcs",
@@ -2012,7 +2022,7 @@
     "server-plugin/npc-crime.mjs",
     "server-plugin/bounty.mjs"
    ],
-   "lines": 1132,
+   "lines": 1151,
    "stateWrites": [
     "itemInstances",
     "location",
@@ -3032,6 +3042,8 @@
     "contracts.mjs",
     "credit.mjs",
     "extraction.mjs",
+    "finance-assets.mjs",
+    "finance-tax.mjs",
     "items.mjs",
     "magic-economy.mjs",
     "manufacturing.mjs",
@@ -3551,6 +3563,7 @@
    "to": "sim_economy",
    "kind": "call",
    "labels": [
+    "finance-tax.mjs",
     "items.mjs",
     "magic-economy.mjs"
    ]
@@ -3662,6 +3675,14 @@
   },
   {
    "from": "sim_economy",
+   "to": "base_events",
+   "kind": "call",
+   "labels": [
+    "world-events.mjs"
+   ]
+  },
+  {
+   "from": "sim_economy",
    "to": "base_standing",
    "kind": "call",
    "labels": [
@@ -3716,6 +3737,7 @@
    "to": "sim_environment",
    "kind": "call",
    "labels": [
+    "regions.mjs",
     "weather.mjs"
    ]
   },
@@ -3754,6 +3776,7 @@
    "labels": [
     "group-account.mjs",
     "organizations.mjs",
+    "promotion-view.mjs",
     "promotion.mjs",
     "reputation-registry.mjs"
    ]
@@ -3993,6 +4016,7 @@
    "to": "sim_economy",
    "kind": "call",
    "labels": [
+    "finance-bank.mjs",
     "items.mjs"
    ]
   },
@@ -5137,6 +5161,14 @@
   },
   {
    "from": "data_lore",
+   "to": "sim_economy",
+   "kind": "data",
+   "labels": [
+    "world/lore"
+   ]
+  },
+  {
+   "from": "data_lore",
    "to": "sim_environment",
    "kind": "data",
    "labels": [
@@ -5577,7 +5609,8 @@
    "kind": "effect",
    "labels": [
     "crop_damage",
-    "regional_quote"
+    "regional_quote",
+    "trade"
    ]
   },
   {
@@ -7629,6 +7662,7 @@
    "server-plugin/creature-nature.mjs",
    "server-plugin/effects.mjs",
    "server-plugin/extraction.mjs",
+   "server-plugin/finance-tax.mjs",
    "server-plugin/interactions.mjs",
    "server-plugin/magic-marks.mjs",
    "server-plugin/magic-object.mjs",
@@ -7971,7 +8005,8 @@
     ],
     "registeredIn": "server-plugin/faction-clock.mjs",
     "modules": [
-     "server-plugin/faction-clock.mjs"
+     "server-plugin/faction-clock.mjs",
+     "server-plugin/finance-tax.mjs"
     ],
     "usedByHooks": [],
     "usedIn": []
@@ -8094,6 +8129,8 @@
    "server-plugin/elections.mjs",
    "server-plugin/faction-clock.mjs",
    "server-plugin/faith.mjs",
+   "server-plugin/finance-assets.mjs",
+   "server-plugin/finance-bank.mjs",
    "server-plugin/governance.mjs",
    "server-plugin/law-codes.mjs",
    "server-plugin/lies.mjs",
@@ -8140,7 +8177,25 @@
     "work",
     "partner",
     "smuggle",
-    "deliver_smuggled"
+    "deliver_smuggled",
+    "bank_inspect",
+    "extend",
+    "prepay",
+    "lend",
+    "collect",
+    "pawn",
+    "redeem",
+    "auction",
+    "remit",
+    "cash_bill",
+    "asset_inspect",
+    "invest",
+    "dividend",
+    "share_transfer",
+    "rent_out",
+    "workshop",
+    "workshop_terms",
+    "dismiss"
    ],
    "routes": [
     {
@@ -8161,7 +8216,25 @@
       "work",
       "partner",
       "smuggle",
-      "deliver_smuggled"
+      "deliver_smuggled",
+      "bank_inspect",
+      "extend",
+      "prepay",
+      "lend",
+      "collect",
+      "pawn",
+      "redeem",
+      "auction",
+      "remit",
+      "cash_bill",
+      "asset_inspect",
+      "invest",
+      "dividend",
+      "share_transfer",
+      "rent_out",
+      "workshop",
+      "workshop_terms",
+      "dismiss"
      ],
      "handler": "WorldEngine.trade",
      "modules": [
@@ -8170,6 +8243,8 @@
       "server-plugin/contracts.mjs",
       "server-plugin/credit.mjs",
       "server-plugin/engine.mjs",
+      "server-plugin/finance-assets.mjs",
+      "server-plugin/finance-tax.mjs",
       "server-plugin/items.mjs",
       "server-plugin/monster-society.mjs",
       "server-plugin/npc-schedule.mjs",
@@ -9645,6 +9720,7 @@
     "server-plugin/faith-catalog.mjs",
     "server-plugin/farm-pests.mjs",
     "server-plugin/festival.mjs",
+    "server-plugin/finance-tax.mjs",
     "server-plugin/governance.mjs",
     "server-plugin/law-codes.mjs",
     "server-plugin/magic-air.mjs",
@@ -9746,6 +9822,8 @@
     "server-plugin/faith-catalog.mjs",
     "server-plugin/faith-state.mjs",
     "server-plugin/festival.mjs",
+    "server-plugin/finance-assets.mjs",
+    "server-plugin/finance-tax.mjs",
     "server-plugin/group-account.mjs",
     "server-plugin/military.mjs",
     "server-plugin/monster-society.mjs",
@@ -9826,6 +9904,9 @@
     "server-plugin/farm-pests-migration.mjs",
     "server-plugin/farm-pests.mjs",
     "server-plugin/festival.mjs",
+    "server-plugin/finance-assets.mjs",
+    "server-plugin/finance-bank.mjs",
+    "server-plugin/finance-tax.mjs",
     "server-plugin/governance.mjs",
     "server-plugin/hazard-calendar.mjs",
     "server-plugin/items.mjs",
@@ -10188,6 +10269,9 @@
    "server-plugin/business.mjs",
    "server-plugin/credit.mjs",
    "server-plugin/engine.mjs",
+   "server-plugin/finance-assets.mjs",
+   "server-plugin/finance-bank.mjs",
+   "server-plugin/finance-tax.mjs",
    "server-plugin/law.mjs",
    "server-plugin/remote-generation.mjs",
    "server-plugin/settlement-trade.mjs",
@@ -10279,6 +10363,7 @@
   "settlementTrade": [
    "server-plugin/advance-registry.mjs",
    "server-plugin/effects.mjs",
+   "server-plugin/finance-bank.mjs",
    "server-plugin/return-summary.mjs",
    "server-plugin/settlement-trade.mjs",
    "server-plugin/world-clock.mjs"
@@ -10360,6 +10445,7 @@
    "server-plugin/elections.mjs"
   ],
   "smuggling": [
+   "server-plugin/finance-tax.mjs",
    "server-plugin/npc-crime.mjs",
    "server-plugin/smuggling.mjs"
   ],
@@ -10448,6 +10534,7 @@
     "base_events",
     "base_standing",
     "sim_character",
+    "sim_economy",
     "ui_scene",
     "ui_server"
    ]
@@ -11075,6 +11162,7 @@
       "server-plugin/boss-migration.mjs",
       "server-plugin/boss-negotiation.mjs",
       "server-plugin/bosses.mjs",
+      "server-plugin/finance-bank.mjs",
       "server-plugin/npc-crime.mjs",
       "server-plugin/npc-intelligence.mjs",
       "server-plugin/quest-sources.mjs",
@@ -11083,6 +11171,7 @@
      "systems": [
       "kernel_storage",
       "sim_boss",
+      "sim_economy",
       "sim_law",
       "sim_npc",
       "sim_society"
@@ -11433,6 +11522,7 @@
      "means": "制造工位",
      "pattern": "workstations",
      "modules": [
+      "server-plugin/finance-assets.mjs",
       "server-plugin/magic-object.mjs",
       "server-plugin/manufacturing.mjs",
       "server-plugin/npc-autonomy.mjs",
@@ -11452,6 +11542,7 @@
      "modules": [
       "server-plugin/credit.mjs",
       "server-plugin/engine.mjs",
+      "server-plugin/finance-assets.mjs",
       "server-plugin/wildlife-habitats.mjs"
      ],
      "systems": [
@@ -11511,6 +11602,7 @@
       "server-plugin/entity-view.mjs",
       "server-plugin/environment.mjs",
       "server-plugin/festival.mjs",
+      "server-plugin/finance-assets.mjs",
       "server-plugin/lies.mjs",
       "server-plugin/location-access.mjs",
       "server-plugin/magic-air.mjs",
@@ -11704,6 +11796,7 @@
      "pattern": "\\.toll\\b",
      "modules": [
       "server-plugin/engine.mjs",
+      "server-plugin/finance-tax.mjs",
       "server-plugin/smuggling.mjs"
      ],
      "systems": [
@@ -11990,6 +12083,7 @@
       "server-plugin/engine.mjs",
       "server-plugin/entity-view.mjs",
       "server-plugin/festival.mjs",
+      "server-plugin/finance-assets.mjs",
       "server-plugin/npc-memory.mjs",
       "server-plugin/npc-schedule.mjs",
       "server-plugin/npc-state.mjs",
@@ -12002,6 +12096,7 @@
       "kernel_engine",
       "nar_consistency",
       "sim_clock",
+      "sim_economy",
       "sim_environment",
       "sim_npc",
       "ui_scene"
@@ -12049,6 +12144,9 @@
       "server-plugin/farm-pests-migration.mjs",
       "server-plugin/farm-pests.mjs",
       "server-plugin/festival.mjs",
+      "server-plugin/finance-assets.mjs",
+      "server-plugin/finance-bank.mjs",
+      "server-plugin/finance-tax.mjs",
       "server-plugin/governance.mjs",
       "server-plugin/hazard-calendar.mjs",
       "server-plugin/law-codes.mjs",
@@ -12193,6 +12291,7 @@
       "server-plugin/boss-migration.mjs",
       "server-plugin/boss-negotiation.mjs",
       "server-plugin/bosses.mjs",
+      "server-plugin/finance-bank.mjs",
       "server-plugin/npc-crime.mjs",
       "server-plugin/npc-intelligence.mjs",
       "server-plugin/quest-sources.mjs",
@@ -12201,6 +12300,7 @@
      "systems": [
       "kernel_storage",
       "sim_boss",
+      "sim_economy",
       "sim_law",
       "sim_npc",
       "sim_society"
@@ -12372,6 +12472,7 @@
      "pattern": "itemTraits|applyInteraction",
      "modules": [
       "server-plugin/effects.mjs",
+      "server-plugin/finance-tax.mjs",
       "server-plugin/interactions.mjs",
       "server-plugin/magic-marks.mjs",
       "server-plugin/magic-object.mjs",
@@ -12400,6 +12501,9 @@
       "server-plugin/credit.mjs",
       "server-plugin/elections.mjs",
       "server-plugin/extraction.mjs",
+      "server-plugin/finance-assets.mjs",
+      "server-plugin/finance-bank.mjs",
+      "server-plugin/finance-tax.mjs",
       "server-plugin/law.mjs",
       "server-plugin/military.mjs",
       "server-plugin/npc-autonomy.mjs",
@@ -12469,6 +12573,7 @@
       "server-plugin/consistency-review.mjs",
       "server-plugin/engine.mjs",
       "server-plugin/extraction.mjs",
+      "server-plugin/finance-assets.mjs",
       "server-plugin/items.mjs",
       "server-plugin/magic-message.mjs",
       "server-plugin/magic-mind-space.mjs",
@@ -12591,6 +12696,7 @@
      "means": "须在有工位的地点",
      "pattern": "\\.workstation\\b",
      "modules": [
+      "server-plugin/finance-assets.mjs",
       "server-plugin/manufacturing.mjs",
       "server-plugin/npc-autonomy.mjs"
      ],
@@ -12605,6 +12711,7 @@
      "pattern": "\\.output\\b|byproducts",
      "modules": [
       "server-plugin/career-metrics.mjs",
+      "server-plugin/finance-assets.mjs",
       "server-plugin/manufacturing.mjs",
       "server-plugin/npc-autonomy.mjs",
       "server-plugin/npc-memory.mjs",
@@ -12627,6 +12734,7 @@
      "pattern": "toolWear",
      "modules": [
       "server-plugin/agriculture.mjs",
+      "server-plugin/finance-assets.mjs",
       "server-plugin/manufacturing.mjs",
       "server-plugin/npc-autonomy.mjs",
       "server-plugin/repair.mjs",
@@ -12922,6 +13030,8 @@
       "server-plugin/elections.mjs",
       "server-plugin/entity-view.mjs",
       "server-plugin/faith.mjs",
+      "server-plugin/finance-assets.mjs",
+      "server-plugin/finance-bank.mjs",
       "server-plugin/group-account.mjs",
       "server-plugin/military.mjs",
       "server-plugin/monster-society.mjs",
@@ -12936,6 +13046,7 @@
      "systems": [
       "base_standing",
       "sim_character",
+      "sim_economy",
       "sim_faith",
       "sim_military",
       "sim_society"
@@ -12950,6 +13061,7 @@
       "server-plugin/consistency-review.mjs",
       "server-plugin/entity-view.mjs",
       "server-plugin/faith.mjs",
+      "server-plugin/finance-bank.mjs",
       "server-plugin/military.mjs",
       "server-plugin/notables.mjs",
       "server-plugin/organization-state.mjs",
@@ -12961,6 +13073,7 @@
       "base_advance",
       "base_standing",
       "nar_consistency",
+      "sim_economy",
       "sim_faith",
       "sim_military",
       "sim_society"
@@ -12988,6 +13101,7 @@
     "base_standing",
     "nar_consistency",
     "sim_character",
+    "sim_economy",
     "sim_faith",
     "sim_military",
     "sim_society"
@@ -13132,6 +13246,7 @@
      "pattern": "regionOf",
      "modules": [
       "server-plugin/catalog.mjs",
+      "server-plugin/finance-tax.mjs",
       "server-plugin/law-codes.mjs",
       "server-plugin/regions.mjs",
       "server-plugin/ui-map.mjs",
@@ -13139,6 +13254,7 @@
      ],
      "systems": [
       "nar_memory",
+      "sim_economy",
       "sim_environment",
       "sim_law",
       "sim_military",
@@ -13150,10 +13266,12 @@
      "means": "统治方与非人统治标记（地图）",
      "pattern": "rulerOf|mapRegions",
      "modules": [
+      "server-plugin/finance-tax.mjs",
       "server-plugin/regions.mjs",
       "server-plugin/ui-map.mjs"
      ],
      "systems": [
+      "sim_economy",
       "sim_environment",
       "ui_server"
      ]
@@ -13175,6 +13293,7 @@
    ],
    "autoSystems": [
     "nar_memory",
+    "sim_economy",
     "sim_environment",
     "sim_law",
     "sim_military",
@@ -13498,8 +13617,7 @@
      "styles",
      "trainingRule",
      "upstream",
-     "weapons",
-     "workshop"
+     "weapons"
     ]
    },
    {
@@ -13946,6 +14064,8 @@
    "imports": [
     "server-plugin/contracts.mjs",
     "server-plugin/credit.mjs",
+    "server-plugin/finance-assets.mjs",
+    "server-plugin/finance-tax.mjs",
     "server-plugin/items.mjs",
     "server-plugin/npc-schedule.mjs",
     "server-plugin/settlement-trade.mjs",
@@ -13970,7 +14090,7 @@
    ],
    "world": [],
    "worldDirs": [],
-   "lines": 250
+   "lines": 256
   },
   "server-plugin/campaign-reducer.mjs": {
    "system": "kernel_engine",
@@ -14262,6 +14382,8 @@
   "server-plugin/contracts.mjs": {
    "system": "sim_economy",
    "imports": [
+    "server-plugin/finance-assets.mjs",
+    "server-plugin/finance-tax.mjs",
     "server-plugin/magic-ritual.mjs",
     "server-plugin/storage.mjs"
    ],
@@ -14278,7 +14400,7 @@
    "rules": [],
    "world": [],
    "worldDirs": [],
-   "lines": 127
+   "lines": 130
   },
   "server-plugin/creature-nature.mjs": {
    "system": "sim_wildlife",
@@ -14303,6 +14425,9 @@
    "imports": [
     "server-plugin/business.mjs",
     "server-plugin/entity-view.mjs",
+    "server-plugin/finance-assets.mjs",
+    "server-plugin/finance-bank.mjs",
+    "server-plugin/group-account.mjs",
     "server-plugin/items.mjs",
     "server-plugin/law.mjs",
     "server-plugin/npc-schedule.mjs",
@@ -14328,7 +14453,7 @@
     "locations"
    ],
    "worldDirs": [],
-   "lines": 280
+   "lines": 300
   },
   "server-plugin/duels.mjs": {
    "system": "sim_combat",
@@ -14464,6 +14589,8 @@
     "server-plugin/environment.mjs",
     "server-plugin/faction-clock.mjs",
     "server-plugin/festival.mjs",
+    "server-plugin/finance-assets.mjs",
+    "server-plugin/finance-tax.mjs",
     "server-plugin/hazard-calendar.mjs",
     "server-plugin/items.mjs",
     "server-plugin/law.mjs",
@@ -14586,7 +14713,7 @@
     "spells"
    ],
    "worldDirs": [],
-   "lines": 712
+   "lines": 717
   },
   "server-plugin/entity-transitions.mjs": {
    "system": "base_events",
@@ -14657,7 +14784,7 @@
     "settlementProfiles"
    ],
    "worldDirs": [],
-   "lines": 442
+   "lines": 446
   },
   "server-plugin/environment.mjs": {
    "system": "sim_environment",
@@ -14735,6 +14862,7 @@
     "server-plugin/effects.mjs",
     "server-plugin/entity-view.mjs",
     "server-plugin/faith-catalog.mjs",
+    "server-plugin/finance-tax.mjs",
     "server-plugin/group-account.mjs",
     "server-plugin/reputation-registry.mjs",
     "server-plugin/standing.mjs",
@@ -14767,7 +14895,7 @@
     "locations"
    ],
    "worldDirs": [],
-   "lines": 235
+   "lines": 238
   },
   "server-plugin/faith-catalog.mjs": {
    "system": "sim_faith",
@@ -14932,6 +15060,121 @@
     "lore"
    ],
    "lines": 234
+  },
+  "server-plugin/finance-assets.mjs": {
+   "system": "sim_economy",
+   "imports": [
+    "server-plugin/credit.mjs",
+    "server-plugin/entity-view.mjs",
+    "server-plugin/finance-bank.mjs",
+    "server-plugin/finance-operations.mjs",
+    "server-plugin/finance-tax.mjs",
+    "server-plugin/group-account.mjs",
+    "server-plugin/items.mjs",
+    "server-plugin/law.mjs",
+    "server-plugin/standing.mjs"
+   ],
+   "stateWrites": [
+    "itemInstances",
+    "workshopFunds"
+   ],
+   "stateReads": [
+    "buildings",
+    "location",
+    "minute",
+    "npcs",
+    "records"
+   ],
+   "recordWrites": [],
+   "recordReads": [],
+   "rules": [
+    "economy"
+   ],
+   "world": [
+    "factions"
+   ],
+   "worldDirs": [],
+   "lines": 221
+  },
+  "server-plugin/finance-bank.mjs": {
+   "system": "sim_economy",
+   "imports": [
+    "server-plugin/credit.mjs",
+    "server-plugin/entity-view.mjs",
+    "server-plugin/finance-operations.mjs",
+    "server-plugin/group-account.mjs",
+    "server-plugin/hazard-calendar.mjs",
+    "server-plugin/items.mjs",
+    "server-plugin/law.mjs",
+    "server-plugin/promotion-view.mjs",
+    "server-plugin/standing.mjs",
+    "server-plugin/world-events.mjs"
+   ],
+   "stateWrites": [],
+   "stateReads": [
+    "created",
+    "location",
+    "minute",
+    "npcs",
+    "quotes",
+    "records"
+   ],
+   "recordWrites": [],
+   "recordReads": [
+    "bank"
+   ],
+   "rules": [
+    "economy",
+    "settlementTrade"
+   ],
+   "world": [],
+   "worldDirs": [],
+   "lines": 246
+  },
+  "server-plugin/finance-operations.mjs": {
+   "system": "sim_economy",
+   "imports": [],
+   "stateWrites": [],
+   "stateReads": [],
+   "recordWrites": [],
+   "recordReads": [],
+   "rules": [],
+   "world": [],
+   "worldDirs": [],
+   "lines": 6
+  },
+  "server-plugin/finance-tax.mjs": {
+   "system": "sim_economy",
+   "imports": [
+    "server-plugin/entity-view.mjs",
+    "server-plugin/group-account.mjs",
+    "server-plugin/promotion-view.mjs",
+    "server-plugin/regions.mjs",
+    "server-plugin/traits.mjs"
+   ],
+   "stateWrites": [
+    "records",
+    "settlements"
+   ],
+   "stateReads": [
+    "inventory",
+    "minute"
+   ],
+   "recordWrites": [],
+   "recordReads": [
+    "territory"
+   ],
+   "rules": [
+    "economy",
+    "smuggling"
+   ],
+   "world": [
+    "factions",
+    "routes",
+    "settlementProfiles"
+   ],
+   "worldDirs": [],
+   "lines": 55
   },
   "server-plugin/governance.mjs": {
    "system": "sim_society",
@@ -15145,6 +15388,7 @@
     "server-plugin/bounty.mjs",
     "server-plugin/entity-transitions.mjs",
     "server-plugin/entity-view.mjs",
+    "server-plugin/finance-bank.mjs",
     "server-plugin/items.mjs",
     "server-plugin/law-codes.mjs",
     "server-plugin/legal-representation.mjs",
@@ -15174,7 +15418,7 @@
    ],
    "world": [],
    "worldDirs": [],
-   "lines": 536
+   "lines": 555
   },
   "server-plugin/learning.mjs": {
    "system": "sim_character",
@@ -16500,7 +16744,8 @@
     "created",
     "family",
     "minute",
-    "npcs"
+    "npcs",
+    "records"
    ],
    "recordWrites": [],
    "recordReads": [],
@@ -16512,7 +16757,7 @@
     "households"
    ],
    "worldDirs": [],
-   "lines": 86
+   "lines": 99
   },
   "server-plugin/office-salary.mjs": {
    "system": "sim_society",
@@ -17424,6 +17669,7 @@
    "system": "sim_economy",
    "imports": [
     "server-plugin/agriculture.mjs",
+    "server-plugin/finance-tax.mjs",
     "server-plugin/hazard-calendar.mjs",
     "server-plugin/magic-economy.mjs",
     "server-plugin/traits.mjs",
@@ -17459,7 +17705,7 @@
     "rules"
    ],
    "worldDirs": [],
-   "lines": 238
+   "lines": 239
   },
   "server-plugin/shop.mjs": {
    "system": "sim_economy",
@@ -17543,6 +17789,7 @@
    "system": "sim_economy",
    "imports": [
     "server-plugin/bounty.mjs",
+    "server-plugin/finance-tax.mjs",
     "server-plugin/items.mjs",
     "server-plugin/law-codes.mjs",
     "server-plugin/law.mjs",
@@ -17567,7 +17814,7 @@
     "routes"
    ],
    "worldDirs": [],
-   "lines": 87
+   "lines": 89
   },
   "server-plugin/standing.mjs": {
    "system": "base_standing",

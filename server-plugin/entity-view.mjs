@@ -2,7 +2,7 @@
 // catalog/state path; override marks an explicit campaign or authored override.
 // These projections never persist or cache results. They grant no capabilities.
 import {actorId,actorPath} from './npc-state.mjs';
-import {npcHousehold,npcAgeAt,npcSchedule,npcServices,beginHouseholdReads} from './npc-state.mjs';
+import {npcHousehold,npcAgeAt,npcSchedule,npcServices,activeRental,beginHouseholdReads} from './npc-state.mjs';
 import {organizationState,memberOrganizations} from './organization-state.mjs';
 import {rankedOffice,adminLevel} from './promotion-view.mjs';
 import {faithOf} from './faith-state.mjs';
@@ -214,7 +214,8 @@ function householdView(engine,state,id){
     const h=npcHousehold(engine,state,id);
     const changed=Object.values(state.family?.households??{}).some(r=>r.members?.includes(id)||r.left?.includes(id));
     const generated=state.created?.[id]?.householdId===h?.id;
-    return fact(h,generated?`state.created.${id}.householdId + state.family.households`:changed?'state.family.households + world.households':'world.households',Boolean(changed||generated));
+    const rental=activeRental(state,id);
+    return fact(h,rental?.use==='home'?`state.records.${rental.id}`:generated?`state.created.${id}.householdId + state.family.households`:changed?'state.family.households + world.households':'world.households',Boolean(changed||generated||rental?.use==='home'));
 }
 function socialIdentities(engine,state,id){
     return memberOrganizations(engine,state,id).map(org=>{
@@ -282,6 +283,7 @@ export function homeResidents(engine,state,location){
         const h=personHousehold(engine,state,id);return !h.override||h.value?.homeLocation===location;
     });
     const owner=placeView(engine,state,location)?.owner.value;
+    for(const r of Object.values(state.records??{}))if(r.kind==='asset_lease'&&r.use==='home'&&r.subject===location&&r.status==='有效'&&r.deadline>state.minute)members.push(r.tenant);
     if(typeof owner==='string'&&(state.npcs?.[owner]||engine.byId.get(owner)?.tier))members.push(owner);
     return fact([...new Set(members)].filter(id=>at(state,actorPath(engine.world,id).slice(1))?.status!=='死亡'),houses.length?'world.households + state.family.households + place.owner':'place.access.residents + place.owner',Boolean(houses.some(h=>state.family?.households?.[h.id])));
 }
@@ -360,8 +362,10 @@ export function personBusiness(engine,state,id){
     const slots=Object.values(schedule??{}).filter(Array.isArray).flat().filter(s=>s.services?.includes('trade'));
     const changed=Boolean(vocation||actor?.residence||actor?.workplace),trades=vocation?npcServices(engine,state,id).includes('trade')||slots.length>0:
         (base.services??[]).includes('trade')||(base.serviceCatalog??[]).some(s=>s.kind==='trade');
-    const location=actor?.workplace?.location??rule?.location??(changed?slots[0]?.location:null)??base.workplace?.location??base.location;
-    const open=Boolean(actor)&&!['死亡','濒死','昏迷','患病'].includes(actor.status)&&!personConstraint(engine,state,id)&&!actor.caring&&!actor.levy&&!actor.scheduleTravel&&!actor.cognitionTravel&&trades&&!(actor.residence?.workChanged&&!vocation);
+    const rental=activeRental(state,id),rentedWork=rental&&rental.use!=='home'?rental.subject:null;
+    const location=rentedWork??actor?.workplace?.location??rule?.location??(changed?slots[0]?.location:null)??base.workplace?.location??base.location;
+    const employed=Object.values(state.records??{}).some(r=>r.kind==='workshop'&&r.worker===id&&['有效','要求加薪'].includes(r.status)&&r.starts<=state.minute&&state.minute<r.deadline);
+    const open=Boolean(actor)&&!employed&&!['死亡','濒死','昏迷','患病'].includes(actor.status)&&!personConstraint(engine,state,id)&&!actor.caring&&!actor.levy&&!actor.scheduleTravel&&!actor.cognitionTravel&&trades&&!(actor.residence?.workChanged&&!vocation);
     return {keeper:fact(id,'identity'),location:fact(location,changed?`state.npcs.${id} + npc-state.npcSchedule`:`catalog.${id}.workplace`,changed),
         settlement:placeSettlement(engine,state,location),shopType:fact(actor?.shopType??rule?.shopType??base.shopType,changed?`state.npcs.${id} + rules.npcGrowth.vocations`:`catalog.${id}.shopType`,changed),
         open:fact(open,'current services + health + legal constraints',changed||Boolean(personConstraint(engine,state,id)))};

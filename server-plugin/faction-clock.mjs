@@ -124,6 +124,7 @@ function applyEffect(d,engine,effect,context){
  return result;
 }
 const owned=(engine,effect)=>faction(engine,effect.target);
+import {assessTradeTax} from './finance-tax.mjs';
 registerEffect('trade',{sources:['faction'],
  validate(engine,effect){owned(engine,effect);if(!engine.world.items.some(i=>i.id===effect.item)||!Number.isSafeInteger(effect.quantity)||effect.quantity<1||!uint(effect.unitPrice))throw Error('势力交易参数无效');},
  apply(d,engine,effect,{faction:owner,sourceEvent,minute}){
@@ -133,6 +134,8 @@ registerEffect('trade',{sources:['faction'],
   const event={sourceEvent,minute,kind:'trade',counterparty:effect.target};
   changeAssets(d,engine,owner,{items:{[effect.item]:effect.quantity}},-1,event);changeAssets(d,engine,effect.target,{items:{[effect.item]:effect.quantity}},1,{...event,counterparty:owner});
   changeAssets(d,engine,effect.target,{coins:payment},-1,{...event,counterparty:owner});changeAssets(d,engine,owner,{coins:payment},1,event);
+  const location=faction(engine,owner).contactAnchor;
+  if(location)assessTradeTax(d,engine,{seller:owner,cost:payment,location,sourceEvent});
   return {applied:true,...effect,payment};
  }});
 registerEffect('relation',{sources:['faction'],
