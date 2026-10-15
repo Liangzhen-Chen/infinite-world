@@ -165,7 +165,7 @@ RW-10｜家畜与牧业：玩家能经营有饲草约束的畜群，繁殖、挤
 - U9 已完成。原文：（依赖K4、K7，S）：按周期与产地补货，高品质只在相应渠道；关系、声望、店家加成进报价。engine.mjs 交易段、settlement-trade.mjs、rules.economy。
 - U5 已完成。原文：（依赖K4、K5、U1、U2，M）：通缉范围、逃犯、NPC赏金猎人追捕、玩家接赏金、法典里的贿赂空间。law.mjs、quest-board.mjs、npc-autonomy.mjs。
 - U8 已完成。原文：（依赖K3、K5，S）：撒谎时真相与谎言成对记录，可被揭穿。npc-memory.mjs、world_remember 参数、consistency-review.mjs。
-- U10 生活魔法的经济反馈（依赖K2、K4、K6，S-M）：保鲜降损耗与价格、引水改产量，受益方与竞争方立场变化，官府收费或管制。
+- U10 已完成。原文：（依赖K2、K4、K6，S-M）：保鲜降损耗与价格、引水改产量，受益方与竞争方立场变化，官府收费或管制。
 - U14 已完成。原文：（依赖K3、K5，S）：回到某地时汇总离开期间当地的变化。
 - U17 已完成。原文：（依赖K3、K4、U1，S-M）：NPC按自身需求与短缺自动出任务；势力委托；世界事件任务。quest-board.mjs、npc-life.mjs、faction-clock.mjs。
 - U13 已完成。原文：（依赖U1、U6、T124，S-M）。

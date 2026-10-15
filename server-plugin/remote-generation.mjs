@@ -4,6 +4,7 @@ import {initialNpcState} from './npc-state.mjs';
 import {originSettlement} from './shop.mjs';
 import {materializeWildlifeHabitats} from './wildlife-habitats.mjs';
 import {planWildlifeMigration} from './wildlife-migration.mjs';
+import {legalTemplate,courtFacilities,legalStaffing} from './law-codes.mjs';
 
 // T143: far counties are generated when the player first arrives. The world
 // keeps only the T142 outline (world/geo/regions.json); the skeleton of a
@@ -437,6 +438,23 @@ export function generateCounty(world,countyId,campaignSeed){
             occupation:`${plan.name}${officeName(kind,role,level,seat.name)}`,remoteRole:'official'});
         officeRows.push({id:`office_rg_${short}_${isSeat?'s0':plan.id.split('_').at(-1)}`,name:officeName(kind,role,level,seat.name),level,settlement:sid,holder:head.id,source:'generated'});
         head.office=officeRows.at(-1).id;head.schedule=officeSchedule(officeHall);offices.push(...officeRows);officials[sid]=head.id;
+        // People are employment facts; courts and legal powers are derived on read.
+        if(legalTemplate(world,county)){
+            const roles=[...Array(legalStaffing(level)).fill('officer'),...(isSeat?['review','final']:[])];
+            for(const judicialRole of roles){
+                const titles={orc:{officer:'守誓者',review:'会火复议者',final:'众部终议者'},lignum:{officer:'守林者',review:'根席复议者',final:'异坡长根议者'},beast:{officer:'嗅迹记录者',review:'猎林复议者',final:'异群议者'}};
+                const occupation=titles[kind]?.[judicialRole]??({officer:'巡差',review:'复审议者',final:'终审议者'}[judicialRole]);
+                const clan=clanFor(g0.culture,g0.species),p=person({name:nameFor(g0.culture,g0.species,clan),age:int(rng,35,65),sex:rng()<0.5?'男':'女',
+                    ...(g0.species?{species:g0.species}:{}),culture:g0.culture,settlement:sid,location:officeHall,occupation,remoteRole:'official',judicialRole});
+                p.schedule=officeSchedule(officeHall);
+            }
+        }
+        if(legalTemplate(world,county)){
+            const occupation=isSeat||role==='town'?'讼师':'代书人',clan=clanFor(g0.culture,g0.species);
+            const p=person({name:nameFor(g0.culture,g0.species,clan),age:int(rng,30,62),sex:rng()<0.5?'?':'?',...(g0.species?{species:g0.species}:{}),
+                culture:g0.culture,settlement:sid,location:officeHall,occupation,remoteRole:'advocate',skills:{skill_literacy:{proficiency:isSeat?400:200}}});
+            p.schedule={default:[{start:0,end:480,location:officeHall,activity:'休息',services:[]},{start:480,end:1020,location:officeHall,activity:'代写诉状与听取委托',services:['law']},{start:1020,end:1440,location:officeHall,activity:'休息',services:[]}]};
+        }
         jurisdiction[sid]={level,superior:isSeat?countyId:seat.id};
         // Roster quota: fixed people are registered; the rest is pending, seeded on demand.
         const registered=fixed.filter(id=>people.find(p=>p.id===id).settlement===sid);
@@ -571,7 +589,7 @@ export function unfoldRemoteAt(d,engine,location){
 // ---------------------------------------------------------------- overlay world
 const PROFILE_KEYS=['personality','voice','background','currentConcern','goals','fears','knowledge','relationships','visibleFeature','notes'];
 // Skeletons generated before D1 (no hazards field) keep their officials as roster entries.
-const active=(p,skeleton)=>p.remoteRole==='keeper'||Boolean(skeleton.hazards)&&['official','festival_host'].includes(p.remoteRole);
+const active=(p,skeleton)=>p.remoteRole==='keeper'||Boolean(skeleton.hazards)&&['official','festival_host','advocate'].includes(p.remoteRole);
 export function remoteKey(state){
     const remote=state?.remote??{};
     return [...Object.keys(remote).sort().map(k=>`${k}:${remote[k].hash}:${remote[k].revision}`),
@@ -650,8 +668,10 @@ export function remoteScene(engine,document){
     const name=id=>engine.byId.get(id)?.name??id;
     const offices=sk.offices.filter(o=>o.settlement===profile.id).map(o=>`${o.name}${name(o.holder)}`).join('、');
     const shops=(sk.settlements.find(x=>x.id===profile.id)?.shops??[]).map(x=>name(x.location)).join('、');
+    const justice=courtFacilities(engine,s,profile.id);
     const here=sk.people.filter(p=>p.location===s.location&&p.remoteRole!=='keeper').map(p=>`${p.name}（${p.id}）${p.title??p.occupation}${rec.profiles?.[p.id]?.status==='full'?'':'，仅名册身份'}`);
     return `【远方郡骨架】${sk.name}（${engine.byId.get(sk.province)?.name??''}，${engine.byId.get(profile.county)?.ruler?.polity??''}）：${name(profile.id)}为${profile.level}级，登记${profile.population}名${profile.householdCount}户，其中具名${profile.registeredPopulation}名，其余到访住区才生成；官职：${offices||'无'}；店铺：${shops||'无'}。`+
+        (justice?`法庭：${name(justice.court)}，按${engine.byId.get(profile.county)?.ruler?.polity??''}的法典审理；执法：${justice.officers.map(name).join('、')||'暂缺'}。`:'')+
         (here.length?`此处有：${here.join('；')}。首次交谈才建立完整档，身份以纲要为准。`:'')+`纲要人口${sk.census.outline}只是概数，不计入完整档。`;
 }
 // Fixed people the player names here who still have only a roster identity.

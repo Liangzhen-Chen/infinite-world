@@ -90,6 +90,13 @@ export function returnChanges(engine,state,place,{from,to=state.minute,before={}
             continue;
         }
         if(e.actor==='player')continue;
+        if(e.tags?.includes('npc_crime')){
+            if(eventRumorId(engine,state,e)&&![e.actor,e.target].some(id=>minor(engine,state,id))){
+                const action=e.tags.includes('fraud')?'骗取了':e.tags.includes('smuggling')?'私运货物，被人撞见':e.verb==='harm'?'斗殴伤及':'偷取了';
+                add(70,`${name(e.actor)}${action}${e.tags.includes('smuggling')?'':name(e.target)}`);
+            }
+            continue;
+        }
         if(e.verb==='deceive'){
             if(![e.actor,e.target].some(id=>minor(engine,state,id)))add(e.target==='player'?80:58,`${name(e.actor)}骗${name(e.target)}的事被揭穿了`);
             continue;

@@ -10,7 +10,8 @@ import {allFacilities,within as facilityWithin} from './facility-state.mjs';
 // effects.mjs (applyEffects); this module only registers the new kinds:
 //   route_closure  flood closes routes (decided purely from seed, see hazard-calendar)
 //   flood          soaks place features through the K2 'flood' interaction
-//   crop_damage    lowers the standing crop (managed fields) or field output
+//   crop_damage    lowers the standing crop (managed fields) or field output;
+//                  cause 'drought' is eased by this season's irrigation (U10)
 //   price_shift    scales the seasonal price coefficient of settlement-trade
 //   famine         marks a famine: livelihood moves and food needs (npc-life / npc-intelligence)
 //   epidemic       starts a named disease spreading between households and along routes
@@ -20,12 +21,13 @@ import {applyInteraction} from './interactions.mjs';
 import {environmentFeatures} from './environment.mjs';
 import {contractIllness,householdMembers} from './npc-life.mjs';
 import {famineAt} from './hazard-calendar.mjs';
+import {droughtRelief,purifiedWaterFactor} from './magic-economy.mjs';
 import {hazardClocks,hazardKey,hazardRoll,isPureClock,isHazardTick,pureHazardFires,pureHazardPhase,pureConditionMet,hazardRouteClosed,PURE_CONDITIONS} from './hazard-calendar.mjs';
 
 const DAY=1440,YEAR=360*DAY,int=(n,min,max)=>Number.isSafeInteger(n)&&n>=min&&n<=max;
 const KINDS=['flood','famine','epidemic','price'],WEATHER=['clear','cloudy','rain','storm','snow','fog'];
 const CONDITIONS=[...PURE_CONDITIONS,'granary_short','hunger','hazard_phase','epidemic_cases','epidemic_clear','all'];
-const ROUTES=['water','contact','air'],MEASURES=['quarantine','treatment','purify','ritual'];
+const CAUSES=['drought','flood','frost','hail','pest'],ROUTES=['water','contact','air'],MEASURES=['quarantine','treatment','purify','ritual'];
 const table=engine=>engine.rules.hazardClock;
 const locationKnown=(engine,id)=>engine.world.locations.some(l=>l.id===id);
 const diseaseOf=(engine,id)=>table(engine)?.diseases?.find(x=>x.id===id);
@@ -57,9 +59,12 @@ registerEffect('flood',{
  },
 });
 registerEffect('crop_damage',{
- validate(engine,e){if(!locationKnown(engine,e.settlement)||!int(e.percent,1,90)||!int(e.minutes,1,360*DAY))throw Error('减产效果地点、比例或时长无效');},
+ validate(engine,e){if(!locationKnown(engine,e.settlement)||!int(e.percent,1,90)||!int(e.minutes,1,360*DAY)||e.cause!==undefined&&!CAUSES.includes(e.cause))throw Error('减产效果地点、比例、时长或成因无效');},
  apply(d,engine,e,context){
   const ledger=d.get('state','settlements',e.settlement);if(!ledger)return {applied:false,reason:'受灾聚落没有钱粮账'};
+  // U10: this season's irrigation (magic-economy) absorbs part of a drought.
+  const relief=e.cause==='drought'?droughtRelief(engine,d.get('state'),e.settlement,context.minute):0;
+  if(relief)e={...e,percent:Math.round(e.percent*(1000-relief)/1000),irrigationReliefPermille:relief};
   const farm=d.get('state','records',`agriculture:${e.settlement}`),keep=(100-e.percent)/100;
   // Managed fields: the standing crop not yet cut loses quality, so its
   // harvest is lower; grain already harvested is never taken back.
@@ -280,7 +285,7 @@ function stepEpidemic(d,engine,rule,ep,at){
  for(const s of [...ep.settlements].sort()){
   const n=counts[s];if(!n)continue;
   // householdRate: households one sick household reaches per day, spread over the settlement.
-  const houses=housesIn(engine,s),beta=Math.min(1,disease.householdRate/houses.length)*measureFactor(engine,ep,s,at,'household',disease),p=1-(1-beta)**n;
+  const houses=housesIn(engine,s),beta=Math.min(1,disease.householdRate/houses.length)*measureFactor(engine,ep,s,at,'household',disease)*purifiedWaterFactor(engine,d.get('state'),s,at,'household',disease),p=1-(1-beta)**n;
   for(const house of houses)if(!ep.households[house]&&hazardRoll(seed,`epi:${ep.id}:${house}`,day)<p)infect(engine,seed,ep,house,s,at,{source:'household'});
  }
  // 3. Along open routes to the next settlement.
@@ -290,7 +295,7 @@ function stepEpidemic(d,engine,rule,ep,at){
   if(!a||!b||a===b||edge.closedSeasons.includes(season)||hazardRouteClosed(engine,seed,edge.id,at))continue;
   for(const [from,to] of [[a,b],[b,a]]){
    const n=counts[from]??0;if(!n)continue;
-   const beta=disease.routeRate*Math.min(1,10/Math.max(1,edge.lengthKm))*measureFactor(engine,ep,from,at,'route',disease),p=1-(1-beta)**n;
+   const beta=disease.routeRate*Math.min(1,10/Math.max(1,edge.lengthKm))*measureFactor(engine,ep,from,at,'route',disease)*purifiedWaterFactor(engine,d.get('state'),from,at,'route',disease),p=1-(1-beta)**n;
    if(hazardRoll(seed,`epi-route:${ep.id}:${edge.id}:${to}`,day)>=p)continue;
    const left=housesIn(engine,to).filter(h=>!ep.households[h]);if(!left.length)continue;
    infect(engine,seed,ep,left[Math.floor(hazardRoll(seed,`epi-pick:${ep.id}:${to}`,day)*left.length)],to,at,{source:'route',from,via:edge.id});

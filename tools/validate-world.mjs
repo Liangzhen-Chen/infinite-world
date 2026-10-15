@@ -26,6 +26,7 @@ import {validateSites}from'../server-plugin/sites.mjs';
 import {validateShopRules}from'../server-plugin/shop.mjs';
 import {validateRegions}from'../server-plugin/regions.mjs';
 import {validateHazardRules}from'../server-plugin/seasonal-hazards.mjs';
+import {validateMagicEconomyRules}from'../server-plugin/magic-economy.mjs';
 import {validateQuestSources}from'../server-plugin/quest-sources.mjs';
 import {validateTribalAwakening}from'../server-plugin/tribal-awakening.mjs';
 import {validateMilitary}from'../server-plugin/military.mjs';
@@ -58,6 +59,7 @@ export function validateWorld(world,{stage='engine'}={}){
     errors.push(...validateNpcLifeRules(world));
     errors.push(...validateFestivalRuntime(world));
     errors.push(...validateHazardRules(world));
+    errors.push(...validateMagicEconomyRules(world));
     errors.push(...validateQuestSources(world));
     errors.push(...validateTribalAwakening(world));
     errors.push(...validateMilitary(world));

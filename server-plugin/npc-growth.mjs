@@ -128,7 +128,7 @@ export function validateNpcGrowthRules(world){
  for(const v of r.vocations??[]){
   if(!/^vocation_/.test(v.id)||!v.name||!v.activity||!ids.has(v.skill)||!ids.has(v.location)||!positive(v.minimumProficiency))errors.push(`${v.id}:营生字段不完整`);
   if(!Array.isArray(v.hours)||!(v.hours[0]>0&&v.hours[0]<v.hours[1]&&v.hours[1]<1440))errors.push(`${v.id}:工时须在一天之内`);
-  if(!v.slotServices?.every(s=>['trade','teach'].includes(s))||!v.teaches?.every(s=>ids.has(s)))errors.push(`${v.id}:服务未登记`);
+  if(!v.slotServices?.every(s=>['trade','teach','law'].includes(s))||!v.teaches?.every(s=>ids.has(s)))errors.push(`${v.id}:服务未登记`);
  }
  return errors;
 }
