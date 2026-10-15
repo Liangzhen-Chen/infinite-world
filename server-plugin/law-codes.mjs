@@ -88,3 +88,43 @@ export function legalCooperation(engine,state,from,to){
  const explicit=engine.rules.law?.polities?.find(p=>p.law===from.id)?.cooperates?.includes(to.id);
  return{notices:same||ally||score>=10||Boolean(explicit),extradition:same||ally||score>=30||Boolean(explicit),reason:same?'同政体司法协作':ally?'结盟司法协作':'双方立场'};
 }
+// The polity template a code belongs to: its own template, or (five original
+// village codes) the L1 code of the county ruler where its court sits.
+export function codeTemplate(engine,code){
+ if(!code)return null;const templates=engine.rules.law?.templates??[];
+ if(code.template)return templates.find(t=>t.id===code.template)??null;
+ const county=regionOf(engine.world,code.court??code.settlement??code.locations?.[0])?.county;
+ return county?legalTemplate(engine.world,county)??null:null;
+}
+// A code's sentence for an offense: the code itself, then its polity's L1 code.
+export function codePenalty(engine,code,offense){return code?.penalties?.[offense]??codeTemplate(engine,code)?.penalties?.[offense]??null;}
+// R10A: who judges unlicensed mining here, derived from where the place is now.
+// A registered code (or its settlement's) files a case under the local polity's
+// sentence; autonomous settlements answer to their own council's custom; polity
+// land without a staffed court reads the polity's L1 code but has no executor.
+// Missing data is an error, never a borrowed village code.
+export function miningJurisdiction(engine,state,location,offense='illegal_mining'){
+ const world=engine.world,byId=new Map(world.locations.map(l=>[l.id,l])),profiles=new Map((world.settlementProfiles??[]).map(p=>[p.id,p]));
+ const codes=legalCodes(world,state);let code=codes.find(c=>c.locations.includes(location))??null;
+ const chain=[];for(let at=location,seen=new Set();at&&!seen.has(at);at=byId.get(at)?.parent){seen.add(at);chain.push(at);}
+ if(!code)for(const at of chain){code=codes.find(c=>c.settlement===at)??null;if(code)break;if(profiles.has(at))break;}
+ if(code){
+  const penalty=codePenalty(engine,code,offense),template=codeTemplate(engine,code);
+  if(!penalty)throw Error(`法典 ${code.id} 缺少${offense}罪名`);
+  return{kind:'code',code,law:code.id,polity:code.polity??(template?.polity??null),template:template?.id??null,penalty,stance:template?.stances?.mining??null,executable:true};
+ }
+ const autonomy=engine.rules.law?.autonomy;
+ for(const at of chain){
+  const place=byId.get(at),profile=profiles.get(at);
+  const tribal=profile?.generated==='tribal'?profile.council:null;
+  const society=place?.monsterSociety?(world.factions??[]).find(f=>f.kind==='聚居地议事'&&f.contactAnchor===at)?.id:null;
+  if(!tribal&&!society)continue;
+  const holder=society??tribal,rule=(society?autonomy?.factions?.[society]:autonomy?.tribal)?.offenses?.[offense];
+  if(!rule)throw Error(`自治地 ${at} 的所属势力 ${holder} 缺少${offense}规矩`);
+  return{kind:'faction',settlement:at,faction:holder,rule,executable:false};
+ }
+ const county=regionOf(world,location)?.county,template=county&&legalTemplate(world,county);
+ if(!template)throw Error(`${location} 无法派生所属政体法典`);
+ const penalty=template.penalties?.[offense];if(!penalty)throw Error(`法典 ${template.id} 缺少${offense}罪名`);
+ return{kind:'polity',law:template.id,polity:template.polity,template:template.id,county:county.id,penalty,stance:template.stances?.mining??null,executable:false};
+}

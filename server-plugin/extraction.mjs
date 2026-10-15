@@ -2,6 +2,8 @@ import {locationTraits,creatureTraits,traitsOf} from './traits.mjs';
 import {populationView} from './entity-view.mjs';
 import {heldUnit,wearItem} from './items.mjs';
 import {registerIncident} from './law.mjs';
+import {miningJurisdiction} from './law-codes.mjs';
+import {adjustStanding} from './standing.mjs';
 
 const path=id=>['state','records',id];
 const active=(hours,minute)=>hours[0]<=hours[1]?minute>=hours[0]&&minute<hours[1]:minute>=hours[0]||minute<hours[1];
@@ -73,14 +75,19 @@ export function mine(d,args,id){
     if(!row.reserve)throw Error('矿脉已枯竭或尚未恢复');
     const owner=spec.owner??place.owner,permit=args.authorization&&d.get(...path(args.authorization));
     const licensed=owner==='player'||permit?.category==='authorization'&&permit.action==='mining'&&permit.grantee==='player'&&permit.grantor===owner&&permit.location===location&&!permit.revoked&&permit.expires>now;
+    // Read before acting: a place whose ruling code or council custom is missing refuses the dig outright.
+    const jurisdiction=owner&&!licensed?miningJurisdiction(this,d.get('state'),location):null;
     const check=this.check(d,{attribute:'力量',skill:'skill_life_17_core',difficulty:rules.difficulty,tools:[rules.tool]},id);
     wearItem(d,this,'player',rules.tool,rules.wear);this.advance(d,rules.minutes,id);
     const success=check.success&&able(d)&&d.get('state','location')===location;
     if(success){row.reserve--;row.extracted++;this.itemDelta(d,'player',item,1);}
     d.set(path(key),row);
     const witnesses=Object.entries(d.get('state','npcs')).filter(([,n])=>n.location===location&&n.status==='正常'&&!/睡/.test(n.activity??'')).map(([id])=>id);
-    const incident=owner&&!licensed?registerIncident(d,this,{victim:owner,offense:'illegal_mining',value:success?this.byId.get(item).basePrice:0,witnesses,eventId:id,optional:true}):null;
-    return {success,check,obtained:success?[{item,quantity:1}]:[],reserve:row.reserve,case:incident,illegal:Boolean(owner&&!licensed),
+    const value=success?this.byId.get(item).basePrice:0;
+    const incident=jurisdiction?.kind==='code'?registerIncident(d,this,{victim:owner,offense:'illegal_mining',value,witnesses,eventId:id,code:jurisdiction.code}):null;
+    const custom=jurisdiction?.kind==='faction'&&witnesses.length?adjustStanding(d,this,jurisdiction.faction,'player',jurisdiction.rule.standing,{sourceEvent:id,reason:'盗采'}):null;
+    const judged=jurisdiction&&{kind:jurisdiction.kind,executable:jurisdiction.executable,...(jurisdiction.kind==='faction'?{faction:jurisdiction.faction,settlement:jurisdiction.settlement,standing:custom?jurisdiction.rule.standing:0,witnessed:witnesses.length>0}:{law:jurisdiction.law,polity:jurisdiction.polity,penalty:jurisdiction.penalty})};
+    return {success,check,obtained:success?[{item,quantity:1}]:[],reserve:row.reserve,case:incident,illegal:Boolean(owner&&!licensed),jurisdiction:judged,
         training:able(d)?practice(d,this,'skill_life_17_core',`开矿:${location}`):null,actionScope:{kind:'mining',clockManaged:true,minutes:rules.minutes}};
 }
 

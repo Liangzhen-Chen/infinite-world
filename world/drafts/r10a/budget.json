@@ -1,0 +1,8 @@
+{
+  "card": "R10A",
+  "limitYuan": 1,
+  "spentYuan": 0.02296656,
+  "reservedYuan": 0,
+  "calls": 16,
+  "note": "本卡独立预算账；只记本卡真实 DeepSeek L2 调用"
+}

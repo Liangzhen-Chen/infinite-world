@@ -1,6 +1,6 @@
 import {entityTransition,businessSnapshot,businessTransitions} from './entity-transitions.mjs';
 import {lawAuthorities,personName} from './entity-view.mjs';
-import {legalCodes,legalCodeAt,legalCodeById,legalCooperation} from './law-codes.mjs';
+import {legalCodes,legalCodeAt,legalCodeById,legalCooperation,codePenalty} from './law-codes.mjs';
 // Wanted notices, fugitives, bounty hunters and the bribery space of the codes (guide 3.12).
 // A judged-but-absent offender, a jail-breaker, a defaulting debtor or an exposed
 // corrupt officer becomes `wanted:<case>` (category legal_wanted). The notice covers
@@ -311,7 +311,7 @@ export function bribePrice(engine,state,npc,stake){
     return Math.max(b.minimumCoins??5,Math.ceil(stake*integrity/50*(1-regard/200)));
 }
 export function bribeStake(engine,row,w){
-    const code=codeById(engine,row.law),penalty=code?.penalties?.[row.offense]??lawRules(engine).bribery?.penalties?.[row.offense]??lawRules(engine).activityPenalties?.[row.offense]??engine.rules.economy?.credit?.loan?.defaultPenalty;
+    const code=codeById(engine,row.law),penalty=codePenalty(engine,code,row.offense)??lawRules(engine).bribery?.penalties?.[row.offense]??lawRules(engine).activityPenalties?.[row.offense]??engine.rules.economy?.credit?.loan?.defaultPenalty;
     const fine=row.judgment?.fine??((penalty?.baseFine??10)+Math.ceil((row.value??0)*(penalty?.valueMultiplier??0)));
     return Math.max(fine,w?.bounty??0,1);
 }
