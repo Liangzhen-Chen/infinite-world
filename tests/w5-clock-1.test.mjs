@@ -14,7 +14,9 @@ import {withoutClockBatch} from '../tools/w5-clock-publication.mjs';
 const world=await loadWorld(),seed=JSON.parse(await fs.readFile('tests/fixtures/legacy/seed.json','utf8')),DAY=1440;
 const faction=id=>world.factions.find(f=>f.id===id);
 function quiet(mutate=()=>{}){
- const w=structuredClone(world);for(const n of w.npcs){delete n.schedule;delete n.tier;}mutate(w);
+ const w=structuredClone(world);for(const n of w.npcs){delete n.schedule;delete n.tier;}
+ // Isolate stage costs from D1's separately tested commission escrow.
+ w.rules.questSources.commissions=[];mutate(w);
  const engine=new WorldEngine(w);return {w,engine,doc:engine.createCharacter(seed,{},'w5-clock-1')};
 }
 const run=async(engine,doc,tool,args,eventId)=>applyPatches(doc,(await engine.reduce(doc,{tool,args,eventId})).patches);

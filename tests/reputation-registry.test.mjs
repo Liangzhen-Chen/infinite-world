@@ -22,13 +22,21 @@ test('K10：只从 world 数据派生的势力与成员覆盖每条手填条目�
         for(const m of f.members)assert.ok(d.members.includes(m),`${f.id} 派生缺成员 ${m}`);
         assert.deepEqual(d.members,f.members);assert.deepEqual(d.relations,f.relations);assert.equal(d.source,f.source);
     }
-    assert.deepEqual([...derived.keys()].sort(),manual.factions.map(f=>f.id).sort());
+    // T142后正式势力目录多于手填条目：未手填的非魔物社会势力按设计只靠数据派生接入（手填之外不多不少）。
+    const seats=new Set(world.locations.filter(l=>l.monsterSociety).map(l=>l.id));
+    assert.deepEqual([...derived.keys()].sort(),[...new Set([...manual.factions.map(f=>f.id),...world.factions.filter(f=>!seats.has(f.contactAnchor)).map(f=>f.id)])].sort());
+    for(const f of world.factions.filter(f=>!seats.has(f.contactAnchor)&&!manual.factions.some(m=>m.id===f.id))){
+        const d=derived.get(f.id);assert.equal(d.derived,true);assert.equal(d.source,`world/lore/factions.json#${f.id}`);
+        assert.deepEqual(d.relations,f.relations);assert.equal(d.members[0],f.leader);for(const m of f.coreMembers??[])assert.ok(d.members.includes(m),`${f.id} 派生缺核心成员 ${m}`);
+    }
 });
 
 test('K10：引擎读到的登记 = 手填覆盖在前 + 派生；与现有手填结果逐项一致',()=>{
     const engine=new WorldEngine(world);
     assert.deepEqual(reputationSettlements(engine),manual.settlements);
-    assert.deepEqual(reputationFactions(engine),manual.factions);
+    const rows=reputationFactions(engine);
+    assert.deepEqual(rows.slice(0,manual.factions.length),manual.factions);
+    assert.deepEqual(rows.slice(manual.factions.length),pure(world).factions.filter(f=>!manual.factions.some(m=>m.id===f.id)));
     assert.equal(settlementAt(engine,'loc_hw'),'loc_hw');
 });
 

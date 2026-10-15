@@ -332,6 +332,7 @@ function apply(d,engine,args,eventId,settlement){
 }
 function decide(d,engine,row,at){
     const state=d.get('state'),office=rankedOffice(engine,state,row.settlement,authorityOf(engine).offices[row.office]),{reasons,points,head,views}=appraise(engine,state,row.settlement,office);
+    if(row.election&&(state.records[row.election]?.status!=='当选'||state.records[row.election]?.disqualified))reasons.push('推选资格已撤销');
     const basis={contribution:points,headStanding:head,residents:views};
     if(reasons.length){d.set(path(row.id),{...row,status:'未获任命',decidedAt:at,reasons,basis});return;}
     const key=officeKey(row.settlement,office.id);

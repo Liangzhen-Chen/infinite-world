@@ -164,6 +164,19 @@ function propose(d,engine,org,motion,proposer,eventId,{escrow=0,content=null}={}
     return settle(d,engine,id,minute,eventId);
 }
 
+// Elections use the same proposal, majority and appointment executor as ordinary U1 motions.
+export function electOrganizationLeader(d,engine,org,eventId){
+    if(org.charter.mode!=='vote'||!org.members.player)throw Error('本组织不实行成员选任或玩家不是成员');
+    const p=propose(d,engine,org,{action:'appoint',member:'player',name:org.leaderTitle},'player',eventId);
+    if(p.status!=='议事中')return p;
+    const votes=[...p.votes];
+    for(const voter of p.deciders.filter(v=>v!=='player')){
+        const [opinion,basis]=npcVote(engine,d.get('state'),org,voter,p);
+        votes.push({voter,opinion,basis,minute:d.get('state','minute'),sourceEvent:eventId});
+    }
+    d.set(['state','records',p.id],{...p,votes});return settle(d,engine,p.id,d.get('state','minute'),eventId);
+}
+
 // NPC deciders who did not vote in person vote at the next day boundary by
 // their own regard; recorded with the basis so the result can be read back.
 function npcVote(engine,state,org,voter,p){

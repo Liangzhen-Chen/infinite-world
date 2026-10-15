@@ -33,7 +33,8 @@ import {advanceSettlementTrade,regionalTradePrice}from'./settlement-trade.mjs';
 import {tradeQuote,recordDeal}from'./shop.mjs';
 import {initializeWorldClocks}from'./world-clock.mjs';
 import {initializeFactionClocks,factionClockRules}from'./faction-clock.mjs';
-import {QUEST_SOURCES_VERSION}from'./quest-sources.mjs';
+import {QUEST_SOURCES_VERSION,openSettlementLedgers}from'./quest-sources.mjs';
+import {villageWildlifeFresh}from'./quest-wildlife.mjs';
 import {TRIBAL_AWAKENING_VERSION}from'./tribal-awakening.mjs';
 import {MILITARY_VERSION}from'./military.mjs';
 import {WAR_VERSION}from'./war-diplomacy.mjs';
@@ -59,7 +60,7 @@ import './wildlife-society.mjs';// world-event subscriber (registers itself)
 import './boss-cognition.mjs';// world-event subscriber (registers itself)
 import './standing.mjs';// world-event subscriber (registers itself)
 import {evidenceBreakthrough,breakthroughPaths}from'./career-metrics.mjs';
-import {INTELLIGENCE_VERSION}from'./npc-intelligence.mjs';
+import {INTELLIGENCE_VERSION,intelligenceFresh}from'./npc-intelligence.mjs';
 import {chargeTrade,repayDebt}from'./contracts.mjs';
 import {businessTrade,recordBusinessReceipt}from'./business.mjs';
 import {CREDIT_OPERATIONS,creditTrade,isCreditDebt,repayCredit,lodgingOf,assertLodgingHost,grantLodgingAccess}from'./credit.mjs';
@@ -68,6 +69,7 @@ import {materializeWildlifeHabitats}from'./wildlife-habitats.mjs';
 import {unfoldPopulationAt,acceptPopulationProfile}from'./population.mjs';
 import {remoteEngine,unfoldRemoteAt}from'./remote-generation.mjs';
 import {advanceNeedsSteps,nextAdvanceMinute,runAdvance}from'./advance-registry.mjs';
+import {smuggleTrade,inspectSmuggling}from'./smuggling.mjs';
 const clone = value => structuredClone(value);
 const number = (value, min = 0, max = 1e9, label = '数值') => {
     if (!Number.isSafeInteger(value) || value < min || value > max) throw new Error(`${label}必须在${min}到${max}之间`);
@@ -165,7 +167,7 @@ export class WorldEngine {
                 buildings:{bld_hw_qingdeng:{owner:'npc_hw_linsui',condition:70}},projects:{},effects:{},obligations:{},quests:{},quotes:{},created:{},weather:{},turns:{},checks:{},learning:{},recipes:{}}};
         return prepare?initializeR1(document,this.world):document;
     }
-    createCharacter(legacy,options,seed){return initializeR1(initializeAgriculture(this,createCharacter.call(this,legacy,options,seed)),this.world);}
+    createCharacter(legacy,options,seed){return initializeR1(openSettlementLedgers(this,initializeAgriculture(this,createCharacter.call(this,legacy,options,seed))),this.world);}
     calendar(minute) {
         number(minute,0,Number.MAX_SAFE_INTEGER,'分钟');
         const day=Math.floor(minute/1440),month=Math.floor(day/30)%12,year=Math.floor(day/360)+1;
@@ -192,7 +194,7 @@ export class WorldEngine {
             session.replaying=Boolean(options.replay);session.replayResult=options.result;
             const detail=applyNpcPlan(d,session,input.plan,id);
             d.set(['state','npcPlanning'],{day:Math.floor(document.state.minute/1440),minute:document.state.minute,location:document.state.location,sourceEvent:id});
-            return{patches:d.patches,result:{ok:true,...detail,npcIntelligenceVersion:INTELLIGENCE_VERSION,minute:d.get('state','minute'),notices:stateNotices(document.state,d.get('state'),key=>session.byId.get(key)?.name)}};
+            return{patches:d.patches,result:{ok:true,...detail,...(intelligenceFresh(session)?{npcIntelligenceVersion:INTELLIGENCE_VERSION}:{}),minute:d.get('state','minute'),notices:stateNotices(document.state,d.get('state'),key=>session.byId.get(key)?.name)}};
         }
         const resolved=resolveToolCall(input.tool,input.args??{});
         const d = new Draft(document), args=resolved.args, id=text(input.eventId,120);
@@ -232,14 +234,15 @@ export class WorldEngine {
         advancePets(d,session,d.get('state','minute'));
         advanceSummons(d,d.get('state','minute'));
         advanceLaw(d,d.get('state','minute'),session);
-        const worldEvent={tool,args,detail,eventId:id,before:document.state,legacy:Boolean(options.replay)&&options.result!==undefined&&options.result?.worldEventVersion!==WORLD_EVENT_VERSION};
+        const worldEvent={tool,args,detail,eventId:id,before:document.state,legacy:Boolean(options.replay)&&options.result!==undefined&&options.result?.worldEventVersion!==WORLD_EVENT_VERSION,noop:!d.patches.length};
         // A read-only instant look (inspect, view) changes nothing and is no world event.
         const readOnly=detail?.actionScope?.kind==='instant'&&!d.patches.length;
         if(!readOnly)publishWorldEvents(d,session,deriveWorldEvents(session,document.state,d.get('state'),worldEvent),worldEvent);
         recordBusinessReceipt(d,document.state,{tool:resolved.tool,args,eventId:id,detail});
         if(tool==='check')detail.actionScope={kind:'judgement',healthChanged:false,inventoryChanged:false,feePaid:0,
             note:'仅结算判断或对抗，并履行已引用的协助；未伤人、毁物或制造。不得从骰点虚构这些变化。'};
-        return { patches:d.patches,result:{ok:true,...detail,...(remote?{remote}:{}),...(population?{population}:{}),legalProcedureVersion:1,worldEventVersion:WORLD_EVENT_VERSION,npcIntelligenceVersion:INTELLIGENCE_VERSION,...(factionClockRules(session).length?{factionClockVersion:1}:{}),...(session.rules.questSources?{questSourcesVersion:QUEST_SOURCES_VERSION}:{}),...(session.rules.tribalAwakening?{tribalAwakeningVersion:TRIBAL_AWAKENING_VERSION}:{}),...(session.rules.military?{militaryVersion:MILITARY_VERSION}:{}),...(session.rules.warDiplomacy?{warVersion:WAR_VERSION}:{}),minute:d.get('state','minute'),messages:d.messages,
+        return { patches:d.patches,result:{ok:true,...detail,...(remote?{remote}:{}),...(population?{population}:{}),legalProcedureVersion:1,worldEventVersion:WORLD_EVENT_VERSION,...(intelligenceFresh(session)?{npcIntelligenceVersion:INTELLIGENCE_VERSION}:{}),...(factionClockRules(session).length?{factionClockVersion:1}:{}),...(session.rules.questSources?{questSourcesVersion:QUEST_SOURCES_VERSION}:{}),...(session.rules.tribalAwakening?{tribalAwakeningVersion:TRIBAL_AWAKENING_VERSION}:{}),...(session.rules.military?{militaryVersion:MILITARY_VERSION}:{}),...(session.rules.warDiplomacy?{warVersion:WAR_VERSION}:{}),minute:d.get('state','minute'),messages:d.messages,
+            ...(session.rules.questSources?.wildlife?.length&&villageWildlifeFresh(session)?{villageWildlifeVersion:1}:{}),
             notices:stateNotices(document.state,d.document.state,id=>session.byId.get(id)?.name)} };
     }
     scoped(document){
@@ -260,6 +263,7 @@ export class WorldEngine {
         return changeItems(d,this,id,item,delta);
     }
     async trade(d,args,id) {
+        if(['smuggle','deliver_smuggled'].includes(args.operation))return smuggleTrade.call(this,d,args,id);
         if(CREDIT_OPERATIONS.has(args.operation))return creditTrade.call(this,d,args,id);
         if(args.operation&&args.operation!=='trade')return businessTrade.call(this,d,args,id);
         if(args.service!==undefined&&args.service!=='住宿')throw new Error('未登记该服务；住宿请传 service="住宿" 与 days，购买物品请传 item 与 quantity');
@@ -466,6 +470,7 @@ export class WorldEngine {
         if(areaTravel)d.set(['state','records','magic_area_transit'],{category:'magic_area_transit',subjects:['player',...d.get('state','player','companions')],start:d.get('state','minute'),arrival:this.npcObligationAction.arrivalMinute,source:id});
         strainCare(d,this,'player',route.movingMinutes);
         this.advance(d,route.minutes,id);
+        inspectSmuggling(d,this,route,id);
         let encounter=null;
         for(const attempt of attempts){const seen=settleWildlifeEncounter(d,this,attempt,id);if(seen)encounter=seen;}
         if(areaTravel)d.remove(['state','records','magic_area_transit']);

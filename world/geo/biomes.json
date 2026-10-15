@@ -1,0 +1,23 @@
+{
+  "version": 1,
+  "source": "D1 系统数据铺开：五村与白石镇田地、果园、菜圃、林地等地点的群落标签与面积（K8 栖地派生）。独立于 locations.json，由 tools/load-world.mjs 并入地点；田地面积按村账公共田（每公顷100田亩单位）连同各户小块地、田埂与排沟估定，果园、菜圃按地块实况估定。白石镇镇内只有街巷与建筑、西郊废窑已有登记栖地，无可补地块。",
+  "locations": {
+    "loc_hw_northwood": {"biome": ["林"], "areaKm2": 1.2},
+    "loc_hw_dock": {"biome": ["河", "滩"], "areaKm2": 0.05},
+    "loc_hw_fields": {"biome": ["田", "埂"], "areaKm2": 0.5},
+    "loc_hw_orchard": {"biome": ["果园"], "areaKm2": 0.04},
+    "loc_hw_apiary": {"biome": ["蜂", "草"], "areaKm2": 0.03},
+    "loc_yp_fields": {"biome": ["田", "埂"], "areaKm2": 0.55},
+    "loc_yp_orchard": {"biome": ["果园"], "areaKm2": 0.12},
+    "loc_yp_garden": {"biome": ["圃"], "areaKm2": 0.02},
+    "loc_wt_bank": {"biome": ["汀", "滩"], "areaKm2": 0.04},
+    "loc_wt_reeds": {"biome": ["苇", "滩"], "areaKm2": 0.03},
+    "loc_wt_garden": {"biome": ["田", "圃"], "areaKm2": 0.45},
+    "loc_lq_spring": {"biome": ["泉"], "areaKm2": 0.01},
+    "loc_lq_garden": {"biome": ["圃"], "areaKm2": 0.02},
+    "loc_lq_fields": {"biome": ["田", "埂"], "areaKm2": 0.6},
+    "loc_sb_orchard": {"biome": ["果园"], "areaKm2": 0.35},
+    "loc_sb_fields": {"biome": ["田", "埂"], "areaKm2": 0.65},
+    "loc_sb_garden": {"biome": ["圃"], "areaKm2": 0.02}
+  }
+}

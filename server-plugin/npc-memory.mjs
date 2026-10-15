@@ -57,6 +57,8 @@ export function recordNpcMemories(d,engine,before,events,...rest){
         if(spell)add('cast',`${name('player')}施放${spell.name}，${detail.success?'施法成功':'施法失败'}`,['player',resolve(args.target)],{salience:3});
     }else if((verb==='harm'||verb==='clash')&&event.tags.includes('magic')){
         add('conflict',`${name('player')}施放${name(event.spell)}伤及${name(event.target)}，对方受伤${event.harm}`,['player',event.target],{salience:4,emotion:'警惕'});
+    }else if(verb==='duel'){
+        add('duel',`${name('player')}与${name(detail.target)}按战书正式交锋，${detail.duelRule==='touch'?'点到为止':'生死决斗'}`,['player',detail.target],{salience:3,emotion:'郑重'});
     }else if(verb==='harm'||verb==='clash'){
         add('conflict',`${name('player')}与${name(detail.target)}交锋，对方受伤${detail.damage}，自己受伤${detail.received}`,['player',detail.target],{salience:4,emotion:'警惕'});
     }else if(verb==='steal'){

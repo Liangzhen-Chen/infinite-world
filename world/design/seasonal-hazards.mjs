@@ -17,18 +17,141 @@
 // hungry, so a well-fed 河湾 rides out an ordinary summer flood.
 const grain=['item_oats','item_ration','item_oat_flour','item_oat_flatbread','item_pearl_barley','item_rye_flour','item_wheat_grain'];
 const DAY=1440;
-const famine=(settlement,carriers)=>({
+// tight/short: days of food per head below which stores count as tight and
+// as famine (D1: villages that lean on fish keep less, drought-prone ones more).
+const famine=(settlement,carriers,{tight=90,short=45}={})=>({
  id:`famine:${settlement}`,kind:'famine',name:'冬荒',settlement,seasons:[3],intervalDays:7,
  stages:[
-  {id:'tight',name:'存粮告紧',probability:1,condition:{kind:'granary_short',days:90},
+  {id:'tight',name:'存粮告紧',probability:1,condition:{kind:'granary_short',days:tight},
    effects:[{kind:'price_shift',settlement,items:grain,factor:1.2,minutes:120*DAY,reason:'冬季存粮告紧'},
     {kind:'rumor',id:'famine_tight',claim:'今冬仓里的粮撑不到开春，粮价已经往上走了。',carriers,salience:2}]},
-  {id:'famine',name:'冬荒',probability:1,condition:{kind:'granary_short',days:45},
+  {id:'famine',name:'冬荒',probability:1,condition:{kind:'granary_short',days:short},
    effects:[{kind:'price_shift',settlement,items:grain,factor:1.6,minutes:120*DAY,reason:'冬荒缺粮'},
     {kind:'famine',settlement,minutes:120*DAY},
     {kind:'rumor',id:'famine_hunger',claim:'冬荒了，有人家已经断顿，有人说要去外乡投亲，也有人盯上了别家的粮囤。',carriers,salience:3}]},
  ],
 });
+// ---- D1: the other core settlements and the monster settlements ------------
+// Every core settlement carries flood, epidemic, famine and price clocks; the
+// parameters follow its land, water, trade and stores. New clocks carry no new
+// rumor text: their stages act through route, flood, crop, price, standing and
+// wildlife effects only (the shared famine helper keeps its reviewed wording).
+// 榆坡 loess slopes: summer storms wash the slope fields, rarely more.
+// 苇汀 wetland: spring and summer high water over bank, reeds and garden.
+// 砾泉 gravel spring: floods are rare and short; summer drought is the risk.
+// 桑坂 mulberry slopes: storm water in the ditch fields.
+// 白石镇 river port: high water over the dock street, ferries and carts stop.
+const flood=(settlement,{seasons=[1],intervalDays=5,rise,crest,rain=['rain','storm'],peak=rain,low,soaked,closures,days,crop=0,price=null})=>({
+ id:`flood:${settlement}`,kind:'flood',name:'汛期',settlement,seasons,intervalDays,
+ stages:[
+  {id:'rise',name:'水位上涨',probability:rise,condition:{kind:'weather',kinds:rain},
+   effects:[{kind:'flood',locations:low,minutes:DAY}]},
+  {id:'crest',name:'洪峰过境',probability:crest,condition:{kind:'weather',kinds:peak},
+   effects:[{kind:'route_closure',routes:closures,minutes:days*DAY,reason:'洪水漫过道路'},
+    {kind:'flood',locations:soaked,minutes:days*DAY},
+    ...(crop?[{kind:'crop_damage',settlement,percent:crop,minutes:30*DAY}]:[]),
+    ...(price?[{kind:'price_shift',settlement,items:grain,factor:price,minutes:20*DAY,reason:'水路车路中断，粮运受阻'}]:[])]},
+  {id:'recede',name:'退水',probability:0.6,condition:{kind:'always'},
+   effects:[{kind:'environment',state:'dry',locations:soaked}]},
+ ],
+});
+// Epidemic: disease, season window, what lets the first cases appear, routes
+// it travels, and the herb price where the sick buy medicine.
+const epidemic=(settlement,{disease,seasons,intervalDays=3,first,probability,cases=2,minimum=5,routes=[],herbs=settlement,quarantine=null})=>({
+ id:`epidemic:${settlement}`,kind:'epidemic',name:'疫病流行',settlement,seasons,intervalDays,disease,spread:{routes},
+ stages:[
+  {id:'cases',name:'零星病例',probability,condition:first,effects:[{kind:'epidemic',disease,settlement,cases}]},
+  {id:'spread',name:'疫病流行',probability:1,condition:{kind:'epidemic_cases',minimum},
+   effects:[{kind:'price_shift',settlement:herbs,items:['item_herb'],factor:1.4,minutes:30*DAY,reason:'疫病流行，药草紧缺'}]},
+  {id:'wane',name:'疫退',probability:1,condition:{kind:'epidemic_clear'},
+   effects:[{kind:'price_shift',settlement:herbs,items:['item_herb'],factor:1,minutes:1,reason:'疫退，药价回落'}]},
+ ],
+ ...(quarantine?{interventions:[{id:'quarantine',name:'劝乡里隔离病家',measure:'quarantine',phases:[1,2],location:quarantine.location,representative:quarantine.representative,cost:{},minutes:120,attribute:'魅力',difficulty:12,
+  effects:[{kind:'epidemic_measure',measure:'quarantine',minutes:15*DAY},{kind:'standing',holder:settlement,target:'player',delta:2,reason:'帮乡里安排病家隔离'}]}]}:{}),
+});
+// Grain price swing between harvests: rise, peak, ease back.
+const price=(settlement,{seasons=[1],intervalDays=10,rise,peak,up,high,name='青黄不接粮价波动'})=>({
+ id:`price:${settlement}`,kind:'price',name,settlement,seasons,intervalDays,
+ stages:[
+  {id:'rise',name:'粮价看涨',probability:rise,condition:{kind:'always'},
+   effects:[{kind:'price_shift',settlement,items:grain,factor:up,minutes:60*DAY,reason:'青黄不接，陈粮见少'}]},
+  {id:'peak',name:'粮价高企',probability:peak,condition:{kind:'always'},
+   effects:[{kind:'price_shift',settlement,items:grain,factor:high,minutes:60*DAY,reason:'青黄不接，粮商惜售'}]},
+  {id:'ease',name:'粮价回落',probability:0.5,condition:{kind:'always'},
+   effects:[{kind:'price_shift',settlement,items:grain,factor:1,minutes:1,reason:'新麦将下，粮价回落'}]},
+ ],
+});
+const cough='disease_cold_cough',flux='disease_river_flux',cold={kind:'weather',kinds:['snow','fog']};
+// Monster settlements keep no village granary: their winter hunger follows
+// their own food source (bought grain, forage, forest yield, tribute grain)
+// and shows as hard feelings toward the neighbour and more foraging nearby.
+const lean=(settlement,faction,{tight,short,neighbour,habitat})=>({
+ id:`famine:${settlement}`,kind:'famine',name:'冬荒',settlement,seasons:[3],intervalDays:7,
+ stages:[
+  {id:'tight',name:'存粮告紧',probability:tight.probability??1,condition:tight.condition,
+   effects:[{kind:'wildlife_stir',habitat,minutes:10*DAY,factor:1.5},{kind:'standing',holder:faction,target:neighbour,delta:-3,reason:'冬季口粮告紧，换粮受阻'}]},
+  {id:'famine',name:'冬荒',probability:short.probability??1,condition:short.condition,
+   effects:[{kind:'wildlife_stir',habitat,minutes:20*DAY,factor:2.5},{kind:'standing',holder:faction,target:neighbour,delta:-6,reason:'冬荒断粮'}]},
+ ],
+});
+const coreClocks=[
+ price('loc_hw',{rise:0.3,peak:0.2,up:1.1,high:1.2}),
+ // 榆坡
+ flood('loc_bs_yupo',{intervalDays:6,rise:0.25,crest:0.3,rain:['storm'],low:['loc_yp_garden'],soaked:['loc_yp_fields','loc_yp_garden'],closures:['route_loc_yp_fields'],days:2,crop:15}),
+ epidemic('loc_bs_yupo',{disease:cough,seasons:[3],intervalDays:4,first:cold,probability:0.1,routes:['route_bs_yp'],
+  quarantine:{location:'bld_yp_hall',representative:'npc_yp_zhaofeng'}}),
+ famine('loc_bs_yupo',['npc_yp_zhaofeng','npc_yp_lisha']),
+ price('loc_bs_yupo',{rise:0.35,peak:0.25,up:1.1,high:1.25}),
+ // 苇汀
+ flood('loc_bs_weiting',{seasons:[0,1],intervalDays:4,rise:0.5,crest:0.5,low:['loc_wt_bank'],soaked:['loc_wt_bank','loc_wt_reeds','loc_wt_garden'],
+  closures:['route_loc_wt_bank','route_loc_wt_reeds','route_loc_wild_wt_mist'],days:6,crop:35}),
+ epidemic('loc_bs_weiting',{disease:flux,seasons:[1,2],first:{kind:'hazard_phase',clock:'flood:loc_bs_weiting',minimum:2},probability:0.25,routes:['route_bs_wt'],
+  quarantine:{location:'bld_wt_hall',representative:'npc_wt_zhengxi'}}),
+ famine('loc_bs_weiting',['npc_wt_zhengxi','npc_wt_xiangzhen'],{tight:75,short:35}),
+ price('loc_bs_weiting',{rise:0.3,peak:0.2,up:1.08,high:1.15}),
+ // 砾泉：旱多涝少
+ flood('loc_bs_liquan',{intervalDays:10,rise:0.1,crest:0.15,rain:['storm'],low:['loc_lq_spring'],soaked:['loc_lq_fields'],closures:['route_loc_lq_fields'],days:1,crop:10}),
+ epidemic('loc_bs_liquan',{disease:cough,seasons:[3],intervalDays:4,first:cold,probability:0.08,routes:['route_bs_lq'],
+  quarantine:{location:'bld_lq_hall',representative:'npc_lq_luanpei'}}),
+ famine('loc_bs_liquan',['npc_lq_luanpei','npc_lq_shaluo'],{tight:120,short:60}),
+ {id:'price:loc_bs_liquan',kind:'price',name:'旱情粮价',settlement:'loc_bs_liquan',seasons:[1],intervalDays:8,
+  stages:[
+   {id:'dry',name:'久晴少雨',probability:0.35,condition:{kind:'weather',kinds:['clear']},
+    effects:[{kind:'crop_damage',settlement:'loc_bs_liquan',percent:15,minutes:30*DAY},{kind:'price_shift',settlement:'loc_bs_liquan',items:grain,factor:1.15,minutes:60*DAY,reason:'久晴少雨，坡田缺水'}]},
+   {id:'drought',name:'旱情',probability:0.3,condition:{kind:'weather',kinds:['clear']},
+    effects:[{kind:'crop_damage',settlement:'loc_bs_liquan',percent:25,minutes:30*DAY},{kind:'price_shift',settlement:'loc_bs_liquan',items:grain,factor:1.35,minutes:60*DAY,reason:'旱情加重，泉水减量'}]},
+   {id:'rain',name:'雨水回来',probability:0.6,condition:{kind:'weather',kinds:['rain','storm']},
+    effects:[{kind:'price_shift',settlement:'loc_bs_liquan',items:grain,factor:1,minutes:1,reason:'下了透雨，粮价回落'}]},
+  ]},
+ // 桑坂
+ flood('loc_bs_sangban',{intervalDays:6,rise:0.25,crest:0.3,peak:['storm'],low:['loc_sb_garden'],soaked:['loc_sb_fields','loc_sb_garden'],closures:['route_loc_sb_fields'],days:2,crop:20}),
+ epidemic('loc_bs_sangban',{disease:cough,seasons:[3],intervalDays:4,first:cold,probability:0.1,routes:['route_bs_sb'],
+  quarantine:{location:'bld_sb_hall',representative:'npc_sb_zhangluo'}}),
+ famine('loc_bs_sangban',['npc_sb_zhangluo','npc_sb_shikui']),
+ price('loc_bs_sangban',{rise:0.3,peak:0.2,up:1.1,high:1.2}),
+ // 白石镇：河埠受淹断渡；人多疫重；镇上无公仓，冬荒随产粮村吃紧而起
+ flood('loc_bs',{intervalDays:5,rise:0.35,crest:0.4,low:['bld_bs_dock'],soaked:['loc_bs_hebu','bld_bs_dock'],closures:['route_t90_bld_bs_dock_loc_bs_hebu'],days:4,price:1.1}),
+ epidemic('loc_bs',{disease:cough,seasons:[3],intervalDays:3,first:cold,probability:0.15,cases:3,minimum:8,routes:['route_hw_bs','route_bs_yp','route_bs_wt','route_bs_lq','route_bs_sb'],
+  quarantine:{location:'bld_bs_office',representative:'npc_bs_031_1'}}),
+ {id:'famine:loc_bs',kind:'famine',name:'冬荒',settlement:'loc_bs',seasons:[3],intervalDays:7,
+  stages:[
+   {id:'tight',name:'粮价告紧',probability:0.3,condition:{kind:'always'},
+    effects:[{kind:'price_shift',settlement:'loc_bs',items:grain,factor:1.25,minutes:120*DAY,reason:'冬季粮源见少'}]},
+   {id:'famine',name:'冬荒',probability:1,condition:{kind:'hazard_phase',clock:'famine:loc_bs_sangban',minimum:1},
+    effects:[{kind:'price_shift',settlement:'loc_bs',items:grain,factor:1.6,minutes:120*DAY,reason:'产粮村存粮告紧，镇上断了粮源'},{kind:'famine',settlement:'loc_bs',minutes:120*DAY}]},
+  ]},
+ // Monster settlements (T156/T159): 炭阶地宫 buys grain in 白石镇; 苔灯坞 forages
+ // and trades fruit for salt with 河湾; 榆根里 lives off forest yield; 裂炉营
+ // takes grain from 砾泉 for tribute and labour.
+ lean('loc_ms_tanjie','faction_ms_tanjie',{tight:{condition:{kind:'hazard_phase',clock:'famine:loc_bs',minimum:1}},short:{condition:{kind:'hazard_phase',clock:'famine:loc_bs',minimum:2}},neighbour:'loc_bs',habitat:'habitat_bs_west_kiln'}),
+ epidemic('loc_ms_tanjie',{disease:cough,seasons:[3],intervalDays:4,first:{kind:'weather',kinds:['snow','fog'],location:'loc_bs'},probability:0.15,cases:1,minimum:2,routes:['route_t157_loc_ms_tanjie'],herbs:'loc_bs'}),
+ lean('loc_ms_taideng','faction_ms_taideng',{tight:{probability:0.3,condition:{kind:'weather',kinds:['snow'],location:'loc_hw'}},short:{condition:{kind:'hazard_phase',clock:'famine:loc_hw',minimum:1}},neighbour:'loc_hw',habitat:'habitat_hw_wood'}),
+ epidemic('loc_ms_taideng',{disease:cough,seasons:[3],intervalDays:4,first:{kind:'weather',kinds:['snow'],location:'loc_hw'},probability:0.1,cases:1,minimum:2,routes:['route_t157_loc_ms_taideng'],herbs:'loc_hw'}),
+ lean('loc_ms_yugen','faction_ms_yugen',{tight:{probability:0.3,condition:{kind:'weather',kinds:['snow'],location:'loc_bs_yupo'}},short:{condition:{kind:'hazard_phase',clock:'famine:loc_bs_yupo',minimum:1}},neighbour:'loc_bs_yupo',habitat:'habitat_yp_north_grove'}),
+ epidemic('loc_ms_yugen',{disease:flux,seasons:[1],intervalDays:4,first:{kind:'weather',kinds:['rain','storm'],location:'loc_bs_yupo'},probability:0.12,cases:1,minimum:2,routes:['route_t159_loc_ms_yugen'],herbs:'loc_bs_yupo'}),
+ lean('loc_ms_lielu','faction_ms_lielu',{tight:{condition:{kind:'hazard_phase',clock:'famine:loc_bs_liquan',minimum:1}},short:{condition:{kind:'hazard_phase',clock:'famine:loc_bs_liquan',minimum:2}},neighbour:'loc_bs_liquan',habitat:'habitat_lq_old_adit'}),
+ epidemic('loc_ms_lielu',{disease:cough,seasons:[3],intervalDays:4,first:{kind:'weather',kinds:['snow'],location:'loc_bs_liquan'},probability:0.12,cases:1,minimum:2,routes:['route_t159_loc_ms_lielu'],herbs:'loc_bs_liquan'}),
+];
 export const hazardClockRules={version:1,source:'U3 季节与灾害世界时钟；指南3.14季节影响农事、行路、价格，4.9世界时钟（汛期、冬荒、瘟疫、物价波动）',
  diseases:[
   {id:'disease_river_flux',name:'河泻症',route:'water',symptoms:'腹泻、发热、口渴乏力',incubationDays:[1,3],courseDays:[6,14],
@@ -92,5 +215,6 @@ export const hazardClockRules={version:1,source:'U3 季节与灾害世界时钟�
      effects:[{kind:'price_shift',settlement:'loc_bs',items:grain,factor:1,minutes:1,reason:'新麦将下，粮价回落'}]},
    ]},
   famine('loc_hw',['npc_hw_linsui','npc_hw_chenbai']),
+  ...coreClocks,
  ],
 };

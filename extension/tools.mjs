@@ -54,6 +54,13 @@ festivalParameters.action.enum.push('expel','appoint','withdraw','charter');
 Object.assign(festivalParameters,{org:{...str,description:'组织名/ID；world_create org创立，occupation填行会/帮派/商号/教会'},member:str});
 Object.assign(festivalParameters,{clock:{...str,description:'时钟ID；choice为干预ID'},choice:str,item:str,quantity:int,coins:int});
 const routes=new Map();
+definitions.find(r=>r.function.name==='world_wildlife').function.parameters.properties.operation.enum.push('fish','eat');
+definitions.find(r=>r.function.name==='world_site').function.parameters.properties.operation.enum.push('mine');
+const transport=definitions.find(r=>r.function.name==='world_trade').function.parameters.properties;
+transport.operation.enum.push('smuggle','deliver_smuggled');transport.mode=str;
+festivalParameters.operation.enum.push('duel_challenge','duel_answer','duel_yield','election_start','election_campaign','election_finish','election_expose','mining_permit');
+festivalParameters.choice={...str,description:'touch/death；gift/speech/promise/buy_votes'};
+transport.operation.description='交易/租铺/采购/雇盘点/履约/同意收购/还债/取消/借款/存取兑币/受雇/合伙；smuggle:seller买方location终点；交货contract';
 function group(name,description,members){
     const selected=definitions.filter(row=>members.includes(row.function.name)),properties={},operations=[],mapping=new Map();
     for(const row of selected){
@@ -69,9 +76,9 @@ function group(name,description,members){
 const fieldTools=['world_weather','world_farm','world_wildlife','world_environment','world_lair','world_site'];
 const companionTools=['world_pet','world_summon'];
 const field=group('world_field','粮仓farm_buy燕麦；农事/环境/采集及天气动物巢穴',fieldTools);
-field.function.parameters.properties.operation.description='farm_buy粮；site_依次查/进/调查/解机关/有限采集/潜入；先world_move，许可world_promise';
+field.function.parameters.properties.operation.description='先move；许可promise';
 field.function.parameters.properties.settlement={...str,description:'粮仓名/ID；本人柜台管理员清醒在场'};
-field.function.parameters.properties.item={...str,description:'仅燕麦/带壳燕麦/item_oats'};
+field.function.parameters.properties.item={...str,description:'farm_buy仅燕麦；mine矿石'};
 field.function.parameters.properties.quantity={...int,description:'买粮0.5公斤/份；采集份数'};
 const companion=group('world_companion','照料驯骑；召唤契约/搬水/限额守卫',companionTools);
 const law=structuredClone(definitions.find(row=>row.function.name==='world_law'));

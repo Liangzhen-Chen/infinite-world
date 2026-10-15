@@ -13,7 +13,7 @@ import {npcRumors} from '../server-plugin/npc-rumors.mjs';
 const world=await loadWorld(),seed=JSON.parse(await fs.readFile('tests/fixtures/legacy/seed.json','utf8')),DAY=1440;
 const board='loc_hw',owner='npc_hw_linsui',witness='npc_hw_ayan',clerk='npc_hw_chenbai';
 function setup(mutate=()=>{}){
- const w=structuredClone(world);mutate(w);
+ const w=structuredClone(world);w.rules.questSources.wildlife=[];mutate(w);
  const engine=new WorldEngine(w),document=engine.initialFromLegacy(seed,'quest-sources-test');
  document.state.minute=540;document.state.location=board;
  for(const id of [owner,witness,clerk]){
@@ -30,7 +30,7 @@ const money=c=>c.state.player.coins+Object.values(c.state.npcs).reduce((n,x)=>n+
 
 test('生成器登记：三种来源都以生成器登记，推进注册表在势力时钟之后跑',()=>{
  // U11 族群觉醒以第四个生成器登记，排在世界事件与效果表之间。
- assert.deepEqual(questGenerators().map(g=>g.id),['npc_needs','world_events','tribal_awakening','effect_table']);
+ assert.deepEqual(questGenerators().map(g=>g.id),['npc_needs','world_events','tribal_awakening','village_wildlife','effect_table']);
  assert.throws(()=>registerQuestGenerator({id:'npc_needs',order:1}),/重复/);
  const order=id=>advanceRegistry.find(s=>s.id===id).order;
  assert.ok(order('quest_sources')>order('faction_clock')&&order('quest_sources')>order('hazard_clock'));

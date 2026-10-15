@@ -17,6 +17,8 @@ import {famineAt} from './hazard-calendar.mjs';
 import {factionClockRules,spendFactionAssets,creditFactionAssets} from './faction-clock.mjs';
 import {adjustStanding} from './standing.mjs';
 import {authorityOf} from './governance.mjs';
+import {speciesInHabitat} from './wildlife-range.mjs';
+import {villageWildlifeFresh} from './quest-wildlife.mjs';
 
 const DAY=1440,GRADES=['D','C','B','A','S'],OBJECTIVES=['deliver','visit','record'],FUNDING=['faction','treasury'];
 const OUTCOMES=['pause','resume','redirect','support'],active=q=>['公开','进行中'].includes(q.status);
@@ -73,6 +75,10 @@ export function assertQuestSources(engine){
  if(!int(l.perBoard,1,50)||!int(l.perDay,1,50)||!int(l.cooldownDays,0,360)||!int(l.monthlyUnitsDPerBoard,1,1e6)||
   [0,1,2,3,4,5].some(k=>!int(l.perNpcByLevel?.[k],0,5)||!int(l.minUrgencyByLevel?.[k],1,4)))throw Error('任务来源节流参数无效');
  for(const [board,npc] of Object.entries(t.publishers??{}))if(!locationKnown(engine,board)||!engine.world.npcs.some(n=>n.id===npc))throw Error(`公告栏主事人未登记：${board}`);
+ // D1: a board whose public money is an organization treasury (monster settlements, T159).
+ for(const [board,faction] of Object.entries(t.funds??{}))if(!t.publishers?.[board]||!engine.world.factions?.some(f=>f.id===faction))throw Error(`公告栏公库未登记：${board}`);
+ for(const row of t.ledgers??[]){const o=row.opening;
+  if(!locationKnown(engine,row.settlement)||!o?.name||['population','treasury','wood','iron'].some(k=>!int(o[k],0,1e9)))throw Error(`聚落公账开账无效：${row.settlement}`);}
  const needs=new Set();
  for(const r of t.npcNeeds??[]){
   if(!NEED_KINDS.includes(r.need)||needs.has(r.need))throw Error(`人物需求任务种类无效或重复：${r.need}`);needs.add(r.need);
@@ -84,6 +90,23 @@ export function assertQuestSources(engine){
   if(typeof r.id!=='string'||!/^[a-z0-9_]{1,40}$/.test(r.id)||ids.has(r.id))throw Error(`事件任务编号无效或重复：${r.id}`);ids.add(r.id);
   if(!r.match||typeof r.match.category!=='string'||typeof r.board!=='string')throw Error(`事件任务订阅条件无效：${r.id}`);
   assertOffer(engine,r,`事件任务${r.id}`);
+ }
+ for(const r of t.wildlife??[]){
+  if(typeof r.id!=='string'||ids.has(r.id))throw Error(`生物委托编号无效或重复：${r.id}`);ids.add(r.id);
+  if(!t.publishers?.[r.board])throw Error(`生物委托没有公告栏主事人：${r.id}`);
+  if(r.objective.type==='deliver')assertOffer(engine,r,`生物委托${r.id}`);
+  else{
+   assertOffer(engine,{...r,objective:{type:'visit',location:r.objective.location}},`生物委托${r.id}`);
+   const o=r.objective;
+   if(o.type==='creature'){
+    const s=engine.world.monsters.find(s=>s.id===o.species),h=engine.rules.wildlife?.habitats.find(h=>h.location===o.location);
+    if(!s||!h||!speciesInHabitat(engine.rules,engine.world.monsters,h.id).some(s=>s.id===o.species)||!o.outcomes?.length||o.outcomes.some(x=>!['death','expelled','ferried'].includes(x)))throw Error(`生物委托物种、栖地或结果无效：${r.id}`);
+    if(o.outcomes.includes('expelled')&&s.nature?.spirit?.nature!=='malevolent'||o.outcomes.includes('ferried')&&s.nature?.kind!=='游魂')throw Error(`生物委托仪式不适用：${r.id}`);
+   }else if(o.type==='pact'){
+    const b=engine.world.bosses.find(b=>(b.actor??b.id)===o.target);
+    if(!b||b.intelligence<=0||b.residence.location!==o.location||!['respect_territory','nonaggression'].includes(o.pact)||!Array.isArray(o.offer)||!Array.isArray(o.request)||[...o.offer,...o.request].some(x=>!engine.world.items.some(i=>i.id===x.item)||!int(x.quantity,1,100000))||o.offer.some(x=>!b.negotiation?.accepts?.includes(x.item)))throw Error(`生物委托交涉条件无效：${r.id}`);
+   }else throw Error(`生物委托目标不支持：${r.id}`);
+  }
  }
  checked.add(t);
 }
@@ -247,6 +270,8 @@ function scanNpcNeeds(d,engine,at){
 }
 
 // ---- 生成器二：世界事件订阅 --------------------------------------------------------
+// 公事出资：聚落公账；登记了组织公库的公告栏（怪物聚居地）由该组织公库托管。
+const publicFunding=(t,board)=>t?.funds?.[board]?{faction:t.funds[board]}:{treasury:board};
 const matches=(record,match)=>Object.entries(match).every(([k,v])=>Array.isArray(v)?v.includes(pick(record,k)):pick(record,k)===v);
 const monthOf=minute=>Math.floor(minute/(DAY*30));
 function scanWorldEvents(d,engine,at){
@@ -266,7 +291,7 @@ function scanWorldEvents(d,engine,at){
    const vars={key,board:nameOf(engine,board),place:nameOf(engine,value)},objective=resolveObjective(engine,{...row.objective,record:row.objective.record==='$key'?key:row.objective.record},vars,board,value);
    if(!objective)continue;
    const q=postGeneratedQuest(d,engine,{key:sourceKey,generator:'world_events',label:row.label?fill(row.label,vars):`${nameOf(engine,board)}公事`,grade:row.grade,reward:row.reward,days:row.days,
-    content:fill(row.content,vars),objective,board,publisher:t.publishers[board],funding:{treasury:board},minute:at,cause:key});
+    content:fill(row.content,vars),objective,board,publisher:t.publishers[board],funding:publicFunding(t,board),minute:at,cause:key});
    if(q)posted.push(q.id);
   }
  }
@@ -276,6 +301,42 @@ function scanWorldEvents(d,engine,at){
 registerQuestGenerator({id:'npc_needs',order:100,scan:scanNpcNeeds});
 registerQuestGenerator({id:'world_events',order:200,scan:scanWorldEvents});
 registerQuestGenerator({id:'effect_table',order:300});
+
+// Local offers share U17 posting, escrow and expiration. Never spawn a target.
+function scanVillageWildlife(d,engine,at){
+ if(!villageWildlifeFresh(engine))return [];
+ const t=rules(engine),posted=[];
+ for(const row of t?.wildlife??[]){
+  const o=row.objective,targets=o.type==='creature'?Object.entries(d.get('state','creatures')??{}).filter(([,a])=>a.species===o.species&&a.location===o.location&&a.hp>0&&a.status==='正常'&&!a.owner).map(([id])=>id).sort():[o.target??'once'];
+  for(const target of targets){
+   const qs=generated(d.get('state'));
+   if(posted.length>=t.limits.perDay)return posted;
+   if(qs.filter(q=>active(q)&&q.location===row.board).length>=t.limits.perBoard)continue;
+   const used=qs.filter(q=>q.location===row.board&&monthOf(q.createdAt)===monthOf(at)).reduce((n,q)=>n+q.unitsD,0);
+   if(used+gradeUnitsD(engine,row.grade)>t.limits.monthlyUnitsDPerBoard)continue;
+   if(o.type==='creature'&&qs.some(q=>q.objective.type==='creature'&&q.objective.target===target))continue;
+   const q=postGeneratedQuest(d,engine,{...row,key:`village:${row.id}:${target}`,generator:'village_wildlife',label:row.name,
+    objective:{...structuredClone(o),...(o.type==='creature'?{target}:{})},publisher:t.publishers[row.board],funding:publicFunding(t,row.board),minute:at,
+    content:row.content+(o.type==='creature'?` 指定个体：${d.get('state','creatures',target,'name')}（${target}）。`:''),cause:row.id});
+   if(q)posted.push(q.id);
+  }
+ }
+ return posted;
+}
+registerQuestGenerator({id:'village_wildlife',order:275,scan:scanVillageWildlife});
+
+// D1 聚落公账开账：没有农事粮仓的聚落（白石镇）只开公款账，granary:false 让每日口粮结算跳过它；
+// 已有账的聚落不覆盖。新战役开局与远方郡展开时调用。
+export function settlementLedger(opening){
+ return {name:opening.name,population:opening.population,treasury:opening.treasury,wood:opening.wood,iron:opening.iron,
+  food:opening.food??0,foodPerDay:opening.foodPerDay??0,woodPerDay:opening.woodPerDay??0,starvation:0,...(opening.granary===false?{granary:false}:{})};
+}
+export function openSettlementLedgers(engine,document){
+ const rows=rules(engine)?.ledgers??[];if(!rows.length)return document;
+ const doc=structuredClone(document);doc.state.settlements??={};
+ for(const row of rows)if(!doc.state.settlements[row.settlement])doc.state.settlements[row.settlement]=settlementLedger(row.opening);
+ return doc;
+}
 
 // 推进注册表：每个午夜（含跨日一段推进中的每个午夜）跑一次各生成器。
 export function advanceQuestSources(d,engine,{before,after}){
@@ -308,7 +369,7 @@ registerEffect('quest_post',{
   const vars={board:nameOf(engine,board),faction:f?.name??''};
   const objective=resolveObjective(engine,e.objective,vars,board,board);
   const row=objective&&publisher?postGeneratedQuest(d,engine,{key:`effect:${context.sourceEvent}:${e.id}`,generator:'effect_table',label:e.label??(f&&funding==='faction'?`${f.name}委托`:`${nameOf(engine,board)}公事`),
-   grade:e.grade,reward:e.reward,days:e.days,content:fill(e.content,vars),objective,board,publisher,funding:funding==='faction'?{faction:owner}:{treasury:board},minute:context.minute,
+   grade:e.grade,reward:e.reward,days:e.days,content:fill(e.content,vars),objective,board,publisher,funding:funding==='faction'?{faction:owner}:publicFunding(rules(engine),board),minute:context.minute,
    cause:context.sourceEvent,outcome:e.onComplete?{...e.onComplete,choice:e.onComplete.choice??e.id}:undefined}):null;
   return {applied:true,kind:e.kind,id:e.id,posted:Boolean(row),...(row?{quest:row.id}:{reason:'出资方出不起或已有同源委托'})};
  },

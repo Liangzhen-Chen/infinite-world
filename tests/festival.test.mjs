@@ -28,7 +28,8 @@ async function plan(s,{cost=7,join=true,authorize=true}={}){
  if(join)doc=(await s.run(doc,{operation:'festival_join',festival:id,speaker:s.person,consent:true},'join')).doc;
  return {doc,id};
 }
-const cash=doc=>doc.state.player.coins+Object.values(doc.state.npcs).reduce((n,p)=>n+p.coins,0)+Object.values(doc.state.settlements).reduce((n,p)=>n+p.treasury,0)+Object.values(doc.state.records).filter(r=>r.category==='settlement_trade').reduce((n,r)=>n+r.escrowCopper,0);
+// U17/U11起生成的委托从人物或聚落公账托管赏金，托管额同样计入（势力公库出资的不在此口径内）。
+const cash=doc=>doc.state.player.coins+Object.values(doc.state.npcs).reduce((n,p)=>n+p.coins,0)+Object.values(doc.state.settlements).reduce((n,p)=>n+p.treasury,0)+Object.values(doc.state.records).filter(r=>r.category==='settlement_trade').reduce((n,r)=>n+r.escrowCopper,0)+Object.values(doc.state.quests??{}).filter(q=>!q.fundedBy?.faction).reduce((n,q)=>n+(q.escrow??0),0);
 test('四村只适配已发布节俗，24候选没有进入正式节日库；正常工具可检查预约',async()=>{
  // T90白石镇骨架发布东街送灯日，节俗由四村4条变为四村加白石镇5条；按聚落核对而不只写死总数。
  const s=setup(),villageIds=['loc_bs_yupo','loc_bs_weiting','loc_bs_liquan','loc_bs_sangban'];assert.equal(localFestivalCalendar(s.engine).filter(f=>villageIds.includes(f.settlement)).length,4);assert.deepEqual(localFestivalCalendar(s.engine).filter(f=>!villageIds.includes(f.settlement)).map(f=>f.settlement),['loc_bs']);assert.ok(localFestivalCalendar(s.engine).every(f=>f.kind==='local-custom'&&f.status==='custom-only'));
