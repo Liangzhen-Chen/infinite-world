@@ -1,3 +1,5 @@
+import {npcAgeAt,npcHousehold,householdMembers} from './npc-state.mjs';
+export {npcAgeAt,npcHousehold,householdMembers} from './npc-state.mjs';
 // Adult family life: a mutual long relationship may become a marriage, and a
 // married couple may have a child who joins a real household and the
 // settlement population. Everything is decided once per midnight from the
@@ -25,14 +27,6 @@ const pairKey=(a,b)=>[a,b].sort().join('|');
 function calendarDate(minute){const day=Math.floor(minute/DAY);return {year:Math.floor(day/360)+1,month:Math.floor(day/30)%12+1,day:day%30+1};}
 // Age follows the authored birth date on the world calendar; a person without
 // one ages from the authored age at minute 0.
-export function npcAgeAt(engine,state,id,minute=state.minute){
- const person=state.family?.people?.[id]??engine.byId.get(id);if(!person)return null;
- if(person.birth){
-  const now=calendarDate(minute),b=person.birth;
-  return now.year-b.year-((now.month<b.month||now.month===b.month&&now.day<b.day)?1:0);
- }
- return Number.isFinite(person.age)?person.age+Math.floor(minute/YEAR):null;
-}
 // No known age counts as a minor unless the profile explicitly says otherwise.
 export function npcIsMinor(engine,state,id,minute=state.minute){
  const age=npcAgeAt(engine,state,id,minute);
@@ -62,15 +56,6 @@ function admit(engine,entity){
 
 // Registered households plus campaign births and moves. The catalog list is
 // not edited: a registered member who moved away is listed under `left`.
-const leftOf=(state,houseId)=>state.family?.households?.[houseId]?.left??[];
-export function npcHousehold(engine,state,id){
- const house=engine.world.households?.find(h=>h.members.includes(id)&&!leftOf(state,h.id).includes(id)||state.family?.households?.[h.id]?.members?.includes(id));
- return house?{id:house.id,settlement:house.settlement,homeLocation:house.homeLocation,members:householdMembers(engine,state,house.id)}:null;
-}
-export function householdMembers(engine,state,houseId){
- const house=engine.world.households?.find(h=>h.id===houseId),left=leftOf(state,houseId);
- return house?[...house.members.filter(m=>!left.includes(m)),...state.family?.households?.[houseId]?.members??[]]:[];
-}
 function setMembership(d,engine,houseId,id,inside){
  const house=engine.world.households.find(h=>h.id===houseId),row=d.get('state','family','households',houseId)??{};
  const members=(row.members??[]).filter(m=>m!==id),left=(row.left??[]).filter(m=>m!==id);

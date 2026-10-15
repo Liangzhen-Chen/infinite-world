@@ -32,3 +32,24 @@ export function npcSchedule(engine,state,id){
     return own?.vocation?.schedule??base;
 }
 export function npcServices(engine,state,id){return state?.npcs?.[id]?.vocation?.services??engine.byId.get(id)?.services??[];}
+
+// Read-only age and household selectors shared without loading simulation.
+const DAY=1440,YEAR=360*DAY;
+function calendarDate(minute){const day=Math.floor(minute/DAY);return {year:Math.floor(day/360)+1,month:Math.floor(day/30)%12+1,day:day%30+1};}
+export function npcAgeAt(engine,state,id,minute=state.minute){
+ const person=state.family?.people?.[id]??engine.byId.get(id);if(!person)return null;
+ if(person.birth){
+  const now=calendarDate(minute),b=person.birth;
+  return now.year-b.year-((now.month<b.month||now.month===b.month&&now.day<b.day)?1:0);
+ }
+ return Number.isFinite(person.age)?person.age+Math.floor(minute/YEAR):null;
+}
+const leftOf=(state,houseId)=>state.family?.households?.[houseId]?.left??[];
+export function npcHousehold(engine,state,id){
+ const house=engine.world.households?.find(h=>h.members.includes(id)&&!leftOf(state,h.id).includes(id)||state.family?.households?.[h.id]?.members?.includes(id));
+ return house?{id:house.id,settlement:house.settlement,homeLocation:house.homeLocation,members:householdMembers(engine,state,house.id)}:null;
+}
+export function householdMembers(engine,state,houseId){
+ const house=engine.world.households?.find(h=>h.id===houseId),left=leftOf(state,houseId);
+ return house?[...house.members.filter(m=>!left.includes(m)),...state.family?.households?.[houseId]?.members??[]]:[];
+}

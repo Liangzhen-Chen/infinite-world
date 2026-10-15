@@ -1,6 +1,5 @@
-import {reputationFactions}from'./reputation-registry.mjs';
+import {organizationState as organization,memberOrganizations} from './organization-state.mjs';
 import {standing,adjustStanding} from './standing.mjs';
-import {householdMembers,npcAgeAt} from './npc-life.mjs';
 import {opinionAmong} from './public-opinion.mjs';
 import {assertAcademyAdmission} from './notables.mjs';
 
@@ -24,42 +23,10 @@ const int=(n,min,max)=>{if(!Number.isSafeInteger(n)||n<min||n>max)throw Error(`�
 const text=n=>{if(typeof n!=='string'||!n.trim()||n.length>1200)throw Error('需要实际文字');return n.trim();};
 const awake=n=>n&&!n.scheduleTravel&&!n.cognitionTravel&&!['死亡','濒死','昏迷'].includes(n.status)&&!/睡眠|睡觉|熟睡/.test(n.activity??'');
 const within=(engine,location,place)=>{const seen=new Set();while(location&&!seen.has(location)){if(location===place)return true;seen.add(location);location=engine.byId.get(location)?.parent;}return false;};
-const living=(state,id)=>id==='player'?state.player?.status!=='死亡':state.npcs?.[id]?state.npcs[id].status!=='死亡':true;
-
-function factionBase(engine,id){
-    const f=engine.world.factions?.find(f=>f.id===id);if(!f)return null;
-    const members={},add=(m,position)=>{if(m&&!members[m])members[m]={position,joinedAt:null,arrears:0};};
-    add(f.leader,'首领');for(const m of f.coreMembers??[])add(m,ELDER);
-    for(const m of reputationFactions(engine).find(r=>r.id===id)?.members??[])add(m,MEMBER);
-    for(const n of engine.world.npcs)if(n.faction===id)add(n.id,MEMBER);
-    const mode=['地方议会','居民筹备组织'].includes(f.kind)?'vote':['教会','学派','学院'].includes(f.kind)?'elders':'leader';
-    return {id,name:f.name,source:'faction',kind:f.kind,seat:f.contactAnchor,leader:f.leader,leaderTitle:'首领',members,treasury:f.resources?.treasuryCopper??0,
-        charter:{mode,approval:true,fee:0,dues:0,rules:[f.method,f.demands].filter(Boolean)}};
-}
-function householdBase(engine,state,id){
-    const h=engine.world.households?.find(h=>h.id===id);if(!h)return null;
-    const age=m=>npcAgeAt(engine,state,m)??0;
-    const people=householdMembers(engine,state,id).filter(m=>living(state,m)),adults=people.filter(m=>age(m)>=18);
-    const head=[...adults].sort((a,b)=>age(b)-age(a)||a.localeCompare(b))[0]??null,members={};
-    for(const m of people)members[m]={position:m===head?'家长':adults.includes(m)?ELDER:MEMBER,joinedAt:null,arrears:0};
-    return {id,name:`${engine.byId.get(h.homeLocation)?.name??id}一户`,source:'household',kind:'家户',seat:h.homeLocation,leader:head,leaderTitle:'家长',members,treasury:0,
-        charter:{mode:'elders',approval:true,fee:0,dues:0,rules:['家事由成年家人商定']}};
-}
-// Derived view: catalog or household base, then this campaign's record on top.
-export function organization(engine,state,id){
-    const row=state.records?.[key(id)];
-    const base=row?.source==='created'?null:factionBase(engine,id)??householdBase(engine,state,id);
-    if(!base&&row?.source!=='created')return null;
-    const b=base??{id,name:row.name,source:'created',kind:row.kind,seat:row.seat,leader:null,leaderTitle:LEADER[row.kind]??'会长',members:{},treasury:0,charter:{}};
-    const members={...b.members};
-    for(const m of Object.keys(row?.removed??{}))delete members[m];
-    Object.assign(members,row?.members??{});
-    for(const m of Object.keys(members))if(!living(state,m))delete members[m];
-    return {...b,leader:row?.leader??b.leader,members,charter:{...b.charter,...row?.charter},treasury:b.treasury+(row?.treasury??0),
-        ledger:row?.ledger??[],founder:row?.founder??null,nextDues:row?.nextDues??null};
-}
-// Organizations a person joined in this campaign (catalog membership is read by standing through reputation factions and households).
-export function organizationsOf(state,member){
+// Shared selector keeps current removals, vacancies and actor aliases consistent.
+export {organizationState as organization} from './organization-state.mjs';
+export function organizationsOf(state,member,engine=null){
+    if(engine)return memberOrganizations(engine,state,member).map(o=>o.id).sort();
     return Object.values(state.records??{}).filter(r=>r.category==='organization'&&r.members?.[member]).map(r=>r.id).sort();
 }
 function rowOf(d,engine,org){

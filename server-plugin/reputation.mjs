@@ -24,7 +24,7 @@ export function observeLegalReputation(d,engine,npc,memory,location=memory.locat
     if(!rules)return;
     const local=settlementAt(engine,location),scopes=[];
     if(local)scopes.push({scope:'settlement',id:local,sign:1,source:rules.source});
-    for(const faction of reputationFactions(engine)) {
+    for(const faction of reputationFactions(engine,d.get('state'))) {
         if(!(faction.members??[]).includes(npc)||!engine.byId.has(faction.id))continue;
         // The member's faction judges a case by how it now regards the case's faction.
         scopes.push({scope:'faction',id:faction.id,sign:row.faction&&standing(engine,d.get('state'),faction.id,row.faction)<0?-1:1,source:faction.source});

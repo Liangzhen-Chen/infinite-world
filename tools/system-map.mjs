@@ -136,7 +136,7 @@ const SYSTEMS=[
  {id:'base_traits',layer:'base',name:'性状标签',card:'K1',modules:['traits.mjs']},
  {id:'base_interactions',layer:'base',name:'交互规则',card:'K2',modules:['interactions.mjs']},
  {id:'base_events',layer:'base',name:'世界事件',card:'K3',modules:['world-events.mjs']},
- {id:'base_standing',layer:'base',name:'统一立场',card:'K4/K5',modules:['standing.mjs']},
+ {id:'base_standing',layer:'base',name:'统一立场',card:'K4/K5',modules:['standing.mjs','entity-view.mjs']},
  {id:'base_effects',layer:'base',name:'效果表',card:'K6',modules:['effects.mjs']},
  {id:'base_advance',layer:'base',name:'推进注册表',card:'K7',modules:['advance-registry.mjs']},
  // 模拟系统层
@@ -151,7 +151,7 @@ const SYSTEMS=[
  {id:'sim_magic',layer:'sim',name:'法术',modules:SERVER.map(f=>f.slice(14)).filter(f=>/^magic(-[\w-]+)?\.mjs$/.test(f))},
  {id:'sim_economy',layer:'sim',name:'经济',modules:['items.mjs','shop.mjs','business.mjs','contracts.mjs','credit.mjs','settlement-trade.mjs','manufacturing.mjs','repair.mjs','extraction.mjs','smuggling.mjs']},
  {id:'sim_agriculture',layer:'sim',name:'农业',modules:['agriculture.mjs']},
- {id:'sim_society',layer:'sim',name:'社会',modules:['monster-society.mjs','reputation.mjs','reputation-registry.mjs','public-opinion.mjs','organizations.mjs','civic.mjs','governance.mjs','public-projects.mjs','titles.mjs','notables.mjs','promotion.mjs','quest-board.mjs','quest-sources.mjs','quest-wildlife.mjs','tribal-awakening.mjs','elections.mjs']},
+ {id:'sim_society',layer:'sim',name:'社会',modules:['monster-society.mjs','reputation.mjs','reputation-registry.mjs','reputation-catalog.mjs','organization-state.mjs','public-opinion.mjs','organizations.mjs','civic.mjs','governance.mjs','public-projects.mjs','titles.mjs','notables.mjs','promotion.mjs','quest-board.mjs','quest-sources.mjs','quest-wildlife.mjs','tribal-awakening.mjs','elections.mjs']},
  {id:'sim_military',layer:'sim',name:'军队、战争与外交',modules:['military.mjs','war-diplomacy.mjs']},
  {id:'sim_clock',layer:'sim',name:'时钟、节令与灾害',modules:['world-clock.mjs','faction-clock.mjs','festival.mjs','seasonal-hazards.mjs','hazard-calendar.mjs']},
  {id:'sim_law',layer:'sim',name:'法律与通缉',modules:['law.mjs','bounty.mjs']},
