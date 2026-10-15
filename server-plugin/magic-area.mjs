@@ -3,6 +3,7 @@ import {registerMagicEffect}from'./magic-effects.mjs';
 import {environmentFeatures,localSightClear}from'./environment.mjs';
 import {validateEffectSpec}from'./magic-primitives.mjs';
 import {validateMagicCatalog,prepareMagic,applyMagic}from'./magic.mjs';
+import {assertSpellConsent,recordSpellViolation}from'./magic-consent.mjs';
 const pointValid=p=>Array.isArray(p)&&p.length===2&&p.every(Number.isFinite);
 const living=(d,target)=>target==='player'?d.get('state','player'):d.get('state',target.startsWith('npc_')?'npcs':'creatures',target);
 const locationOf=(d,target)=>target==='player'?d.get('state','location'):living(d,target)?.location;
@@ -37,15 +38,14 @@ export function validateAreaCatalog(catalog){
  if(['damage','heal','protection'].includes(s.effect?.kind))errors.push(...validateMagicCatalog({...catalog,effectSpec:s.effect,duration:s.effect.kind==='protection'?catalog.duration:0,rangeMeters:s.radiusMeters}));
  return errors;
 }
-function childCatalog(area){return{...area.catalog,effectSpec:area.catalog.effectSpec.effect,rangeMeters:area.radiusMeters,duration:Math.max(1,area.expires-area.created)};}
-function targetArgs(d,area,target){
+function childCatalog(area){return{...area.catalog,location:area.location,effectSpec:area.catalog.effectSpec.effect,rangeMeters:area.radiusMeters,duration:Math.max(1,area.expires-area.created)};}
+function targetArgs(d,engine,area,target){
  const catalog=childCatalog(area),action=catalog.effectSpec.kind==='heal'?'healing':catalog.effectSpec.kind==='protection'?'support_magic':catalog.targeting?.consent;
  const authorization=area.authorizations.find(key=>d.get('state','records',key)?.subject===target);
  if(action&&target!=='player'){
-  const row=d.get('state','records',authorization);
-  if(row?.category!=='authorization'||row.action!==action||row.subject!==target||row.grantor!==target||row.grantee!==area.owner||row.revoked||!Number.isSafeInteger(row.expires)||row.expires<=d.get('state','minute'))throw Error('区域施加需要本人仍有效的自愿同意');
+  assertSpellConsent(d,engine,catalog,{authorization,force:area.force},target,action);
  }
- return{target,authorization,permit:area.permit};
+ return{target,authorization,permit:area.permit,...(area.force?{force:true}:{})};
 }
 export function prepareAreaMagic(d,catalog,args,context={}){
  const errors=validateAreaCatalog(catalog);if(errors.length)throw Error(errors.join('；'));
@@ -72,7 +72,7 @@ export function applyAreaMagic(d,prepared,id){
  try{prepared=prepareAreaMagic.call(this,d,prepared.catalog,prepared.completionArgs,prepared.context);}
  catch(error){return{target:prepared.target,effectFailed:`施法完成前条件失效：${error.message}`};}
  const now=d.get('state','minute'),s=prepared.spec;
- const area={kind:'area',owner:prepared.owner,source:id,spell:prepared.catalog.id,location:prepared.location,center:prepared.center,radiusMeters:s.radiusMeters,created:now,expires:now+prepared.catalog.duration,nextPulse:now+s.intervalMinutes,cursor:now,authorizations:prepared.authorizations,...(prepared.permit?{permit:prepared.permit}:{}),catalog:structuredClone(prepared.catalog),members:{}};
+ const area={kind:'area',owner:prepared.owner,source:id,spell:prepared.catalog.id,location:prepared.location,center:prepared.center,radiusMeters:s.radiusMeters,created:now,expires:now+prepared.catalog.duration,nextPulse:now+s.intervalMinutes,cursor:now,authorizations:prepared.authorizations,...(prepared.completionArgs.force===true?{force:true}:{}),...(prepared.permit?{permit:prepared.permit}:{}),catalog:structuredClone(prepared.catalog),members:{}};
  d.set(['state','effects',id],area);
  const outcomes=settleOne(d,this,id,area,true);
  return{target:prepared.target,effect:id,expires:area.expires,location:area.location,radiusMeters:area.radiusMeters,outcomes};
@@ -96,9 +96,13 @@ function settleOne(d,engine,id,area,pulse=false){
   const distance=f?Math.hypot(f.point[0]-area.center[0],f.point[1]-area.center[1]):Infinity;
   if(now>=area.expires||distance>area.radiusMeters||f?.lineOfSight!==true){if(member.inside)members[target]=leave(d,id,target,member);continue;}
   let prepared;
-  try{prepared=prepareMagic.call(engine,d,childCatalog(area),targetArgs(d,area,target),{location:area.location,source:area.owner,targetFacts:{distanceMeters:distance,lineOfSight:true}});}
+  try{prepared=prepareMagic.call(engine,d,childCatalog(area),targetArgs(d,engine,area,target),{location:area.location,source:area.owner,targetFacts:{distanceMeters:distance,lineOfSight:true}});}
   catch(error){if(member.inside)members[target]=leave(d,id,target,member);outcomes.push({target,skipped:error.message});continue;}
   const entry=!member.inside,s=area.catalog.effectSpec;
+  if(area.force){
+   const incident=`${area.source}:consent:${target}`;
+   if(!d.get('state','records',`legal_case:${incident}`))recordSpellViolation(d,engine,childCatalog(area),targetArgs(d,engine,area,target),target,incident);
+  }
   if(s.trigger==='presence'){
    const key=childId(id,target);
    if(entry&&member.remaining!==0){
@@ -127,7 +131,7 @@ export function settleMagicAreas(d,engine){
   const members={...area.members};let changed=false;
   for(const[target,member]of Object.entries(members))if(member.inside){
    const f=facts(d,engine,target,area.location,area.center);let allowed=now<area.expires&&f?.lineOfSight===true&&Math.hypot(f.point[0]-area.center[0],f.point[1]-area.center[1])<=area.radiusMeters;
-   if(allowed)try{targetArgs(d,area,target);}catch{allowed=false;}
+   if(allowed)try{targetArgs(d,engine,area,target);}catch{allowed=false;}
    if(!allowed){members[target]=leave(d,id,target,member);changed=true;}
   }
   if(changed)d.set(['state','effects',id],{...area,members});

@@ -2547,6 +2547,50 @@
         "baseFine": 40,
         "valueMultiplier": 1
       }
+    },
+    "emergencyHealing": {
+      "source": "C1：仅濒死且无法明确表达的救命急救，不授权精神或辅助施法；各法典可独立退出 laws。",
+      "laws": [
+        "law_hw_property",
+        "law_yp_property",
+        "law_wt_property",
+        "law_lq_property",
+        "law_sb_property"
+      ],
+      "statuses": [
+        "濒死"
+      ],
+      "operations": [
+        "heal",
+        "stabilize",
+        "hemostasis",
+        "clean_wound"
+      ]
+    },
+    "spellConsent": {
+      "source": "C1：未经本人同意强施入当地法典；强迫与篡改记忆即使持同意或机构许可仍为重罪。code.penalties 可覆盖各罪处罚。",
+      "memoryOperations": [
+        "memory_edit",
+        "rewrite_memory",
+        "erase_memory",
+        "alter_memory"
+      ],
+      "penalties": {
+        "unconsented_magic": {
+          "baseFine": 30,
+          "valueMultiplier": 0
+        },
+        "compulsion": {
+          "baseFine": 100,
+          "valueMultiplier": 0,
+          "severity": "重罪"
+        },
+        "memory_tampering": {
+          "baseFine": 100,
+          "valueMultiplier": 0,
+          "severity": "重罪"
+        }
+      }
     }
   },
   "weather": {

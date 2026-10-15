@@ -6,6 +6,7 @@ import {normalize} from './retrieval.mjs';
 import {advanceAirMinute}from'./magic-air.mjs';
 import {precipitationAt} from './weather.mjs';
 import {featureTraits} from './traits.mjs';
+import {assertSpellConsent}from'./magic-consent.mjs';
 import {resolveInteraction,applyInteraction,assertLiquidWater} from './interactions.mjs';
 
 const ops=new Set(['ignite','extinguish','heat','cool','dry','sense_heat','fuel','forge_heat','craft_heat']);
@@ -310,22 +311,22 @@ function roomState(d,row,minute){
  state.air??={lastMinute:minute,oxygenMg:row.airModel.capacityMg,smokeMg:0,smokeInputMg:0,burnedFuelMg:0,ventedSmokeMg:0,oxygenUsedMg:0,oxygenAddedMg:0,spreadCount:0};
  return validateRoomState(state,row);
 }
-function livingHand(d,engine,args){
+function livingHand(d,engine,args,catalog){
  const target=args.target??'player',partition=target==='player'?'player':target.startsWith('npc_')?'npcs':null;
  if(!partition)throw new Error('暖掌需要真实活体目标');
  const path=target==='player'?['state','player']:['state',partition,target],actor=d.get(...path);
  if(!actor||actor.status==='死亡'||target!=='player'&&(actor.location!==d.get('state','location')||actor.scheduleTravel||actor.cognitionTravel))throw new Error('暖掌目标不在场或已经死亡');
  if(target!=='player'){
-  const facts=areaTargetFacts(d,engine,target,d.get('state','location'),localPlayerPoint(d)),p=d.get('state','records',args.authorization);
+  const facts=areaTargetFacts(d,engine,target,d.get('state','location'),localPlayerPoint(d));
   if(!facts?.lineOfSight||Math.hypot(facts.point[0]-localPlayerPoint(d)[0],facts.point[1]-localPlayerPoint(d)[1])!==0)throw new Error('暖掌须真实接触活体');
-  if(p?.category!=='authorization'||p.subject!==target||p.grantor!==target||p.grantee!=='player'||p.action!=='support_magic'||p.revoked||!Number.isSafeInteger(p.expires)||p.expires<=d.get('state','minute'))throw new Error('暖掌需要本人有效同意');
+  assertSpellConsent(d,engine,catalog,args,target,'support_magic');
  }
  return{target,path,actor};
 }
 export function prepareHeatMagic(d,catalog,args){
  const errors=validateHeatCatalog(catalog);if(errors.length)throw new Error(errors.join('；'));
  const spec=catalog.effectSpec;
- if(spec.operation==='warm')return{...livingHand(d,this,args),catalog,spec,heatArgs:clone(args)};
+ if(spec.operation==='warm')return{...livingHand(d,this,args,catalog),catalog,spec,heatArgs:clone(args)};
  const row=spec.operation==='contain_fire'?roomOf(this,args.target,d.get('state','location')):locate(this,args.target,d.get('state','location'));
  access(d,row,args,catalog.rangeMeters);
  if(!localSightClear(d,this,row.location,localPlayerPoint(d),row.position))throw new Error('热场缺少无遮挡视线');
