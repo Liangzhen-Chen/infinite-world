@@ -75,12 +75,13 @@ export function registerIncident(d,engine,{victim,offense,value=0,stolen=null,wi
 
 // A credit default (credit.mjs) is filed by the creditor under the code where the
 // contract was signed; the contract is the evidence. No code there, no case.
+import {financeBalance,financeChange,financeTransfer} from './finance-bank.mjs';
 export function registerCreditDefault(d,engine,{debt,row,value,minute}){
     const code=codeFor(engine,row.location);if(!code)return null;
     const id=`legal_case:default:${debt}`;if(d.get(...path(id)))return id;
     const receiver=code.officers[0];
     d.set(path(id),{category:'legal_case',id,law:code.id,procedureVersion:1,settlement:code.settlement??null,faction:code.faction??null,sourceEvent:row.source,witnesses:[],
-        offender:'player',victim:row.keeper??row.creditor,...(row.bank?{bank:row.bank}:{}),debt,offense:'debt_default',value,stolen:null,location:row.location,minute,
+        offender:row.debtor??'player',victim:row.keeper??row.creditor,...(row.bank?{bank:row.bank}:{}),debt,offense:'debt_default',value,stolen:null,location:row.location,minute,
         status:'已报案',reported:true,receiver,reportedAt:minute,evidence:[{kind:'contract',debt,minute}]});
     if(d.get('state','npcs',receiver))knowledge(d,receiver,id,minute);
     return id;
@@ -326,7 +327,25 @@ export function lawAction(d,args,eventId){
         if(!memory)throw new Error('传话者没有本案的个人法律消息');
         return shareNpcMemory(d,this,{from,to,memoryId:memory.id,channel:args.channel??'carry',eventId});
     }
-    if(row.offender!=='player'){
+    const creditorClaim=row.debt&&d.get(...path(row.debt),'creditor')==='player';
+    if(row.offender!=='player'&&creditorClaim){
+        if(!['hear','pay'].includes(operation))throw Error('债权追讨须由法院审理后执行');
+        if(operation==='pay'){
+            authority(d,this,code,args.authority,'officer');
+            if(d.get('state','location')!==code.court||row.status!=='已裁定')throw Error('须在法院持有效裁判执行，不能重复追讨');
+            const debt=d.get(...path(row.debt)),balance=financeBalance(d,this,debt.debtor),amount=Math.min(debt.amount-debt.paid,balance);
+            const fine=Math.min(balance-amount,Math.max(0,row.judgment.fine-(row.finePaid??0)));
+            if(amount+fine<=0)throw Error('债务人没有可执行资金，欠款保留');
+            if(amount)financeTransfer(d,this,debt.debtor,'player',amount,eventId);
+            if(fine){financeChange(d,this,debt.debtor,-fine,eventId);const key=`legal_treasury:${row.law}`,fund=safeFund(d,key,'legal_treasury',{law:row.law});d.set(path(key),{...fund,coins:fund.coins+fine});}
+            const paid=debt.paid+amount,remaining=debt.amount-paid;
+            d.set(path(row.debt),{...debt,paid,status:remaining?'逾期':'已还清',settledBy:row.id});
+            const finePaid=(row.finePaid??0)+fine,closed=!remaining&&finePaid===row.judgment.fine;
+            d.set(path(row.id),{...row,value:remaining,status:closed?'已结案':'已裁定',finePaid,fineDischarged:finePaid===row.judgment.fine,compensationPaid:!remaining,judgment:{...row.judgment,compensation:remaining},recovered:(row.recovered??0)+amount});
+            return {case:row.id,recovered:amount,fine,remaining,closed};
+        }
+    }
+    if(row.offender!=='player'&&!creditorClaim){
         if(operation!=='arrest')throw new Error('此案被告是他人；你只能接下赏金后缉拿交付');
         return captureFugitive(d,this,row,eventId);
     }

@@ -4,6 +4,8 @@ import {transferItems} from './items.mjs';
 import {assertNpcService,scheduleAt,advanceWithNpcParticipants} from './npc-schedule.mjs';
 import {regionalTradePrice} from './settlement-trade.mjs';
 import {wildlifePriceFactor} from './wildlife.mjs';
+import {assessTradeTax} from './finance-tax.mjs';
+import {recordFinanceSale} from './finance-assets.mjs';
 
 const path=id=>['state','records',id];
 const int=(n,min,max,label)=>{if(!Number.isSafeInteger(n)||n<min||n>max)throw Error(`${label}必须在${min}到${max}之间`);return n;};
@@ -121,7 +123,9 @@ export async function businessTrade(d,args,eventId){
         if(spent+cost>capacity)throw Error(`顾客当日店铺消费上限${capacity}铜，不无限消费`);
         const incomeBefore=this.actor(d,buyer).coins;
         chargeTrade(d,this,{buyer,seller:'player',cost},eventId);
+        const tax=assessTradeTax(d,this,{seller:'player',cost,location:shop.location,sourceEvent:eventId});
         const moved=transferItems(d,this,'player',buyer,item,quantity,args.instances??null);
+        recordFinanceSale(d,this,{buyer,seller:'player',item,quantity,cost,tax:tax.amount,eventId});
         const row=createBusinessContract(d,{kind:'sale',parties:['player',buyer],subject:item,quantity,deadline:d.get('state','minute')+5,business:shop.id,cost,unitPrice:q.price,quote:q.key,consentEvent:eventId,customerCashBefore:incomeBefore,customerBudget:capacity},eventId);
         finishBusinessContract(d,row,{status:'已完成',fulfilled:quantity,paid:cost,source:eventId});this.advance(d,5,eventId);
         return {business:shop.id,contract:row.id,buyer,seller:'player',item,quantity,cost,instances:moved.instances};
@@ -215,11 +219,13 @@ export function businessReport(d,engine,shop){
         row.reconciled=row.opening+row.sources.reduce((sum,r)=>sum+r.quantity,0)===row.closing;goods[item]=row;
     }
     const revenue=contracts.filter(r=>r.kind==='sale'&&r.status==='已完成').reduce((sum,r)=>sum+r.paid,0);
-    const rent=contracts.filter(r=>r.kind==='lease').reduce((sum,r)=>sum+r.cost,0),wages=contracts.filter(r=>r.kind==='hire'&&r.status==='已完成').reduce((sum,r)=>sum+r.paid,0);
+    const rent=contracts.filter(r=>r.kind==='lease').reduce((sum,r)=>sum+r.cost,0),wages=contracts.filter(r=>r.kind==='hire'&&r.status==='已完成').reduce((sum,r)=>sum+r.paid,0)
+        +Object.values(d.get('state','records')??{}).filter(r=>r.kind==='workshop'&&r.location===shop.location&&r.createdAt>=shop.createdAt).reduce((n,r)=>n+r.paid,0);
+    const taxes=Object.values(d.get('state','records')??{}).filter(r=>r.category==='trade_tax'&&r.payer==='player'&&r.minute>=shop.createdAt&&r.minute<=(shop.endedAt??Infinity)).reduce((n,r)=>n+r.amount,0);
     const debts=Object.entries(d.get('state','records')??{}).filter(([id,r])=>r.category==='debt'&&contracts.some(c=>c.debt===id||c.loan===id)).map(([id,r])=>({id,amount:r.amount-r.paid,status:r.status}));
     return {business:shop.id,status:shop.status,period:{from:shop.createdAt,to:shop.endedAt??d.get('state','minute')},
         cash:{opening:shop.opening.coins,closing:closing.coins,net:closing.coins-shop.opening.coins,sources:cashSources,reconciled:cashSources.reduce((sum,r)=>sum+r.amount,0)===closing.coins},goods,
-        profit:{revenue,stockCostOfSales,rent,wages,net:revenue-stockCostOfSales-rent-wages,method:'已成交收入减先进先出销货成本、整期租金和已付工钱；未售库存为资产，期初旧货按目录基价估值'},
+        profit:{revenue,stockCostOfSales,rent,wages,taxes,net:revenue-stockCostOfSales-rent-wages-taxes,method:'已成交收入减先进先出销货成本、整期租金、已付工钱与实缴税；未售库存为资产，期初旧货按目录基价估值'},
         escrow:contracts.filter(r=>r.escrow).map(r=>({contract:r.id,amount:r.escrow,source:r.source})),debts,
         contracts:contracts.map(r=>({id:r.id,kind:r.kind,parties:r.parties,subject:r.subject,quantity:r.quantity,location:r.location??shop.location,deadline:r.deadline,paid:r.paid,fulfilled:r.fulfilled,status:r.status,source:r.source,performance:r.performance,breaches:r.breaches})),
         quoteAnchor:engine.rules.economy.dailyIncomeBySkillStage,note:'日收入表仅供报价参考；营业和等待不会生成钱或顾客交易。'};

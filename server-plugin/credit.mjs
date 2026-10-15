@@ -13,9 +13,12 @@ import {standing}from'./standing.mjs';
 import {registerCreditDefault,settleCreditCase}from'./law.mjs';
 import {businessReport}from'./business.mjs';
 import {personAge,personConstraint}from'./entity-view.mjs';
+import {derivedBankAt,derivedBankById,BANK_OPERATIONS,bankTrade,advanceBankFinance}from'./finance-bank.mjs';
+import {ASSET_OPERATIONS,assetTrade,advanceFinanceAssets}from'./finance-assets.mjs';
+import {groupAccountView,ensureGroupAccount,groupAccountPath}from'./group-account.mjs';
 
-export const CREDIT_OPERATIONS=new Set(['borrow','deposit','withdraw','exchange','work','partner']);
-export const CREDIT_KINDS=new Set(['loan','partnership']);
+export const CREDIT_OPERATIONS=new Set(['borrow','deposit','withdraw','exchange','work','partner',...BANK_OPERATIONS,...ASSET_OPERATIONS]);
+export const CREDIT_KINDS=new Set(['loan','partnership','pawn']);
 const rec=id=>['state','records',id];
 const int=(n,min,max,label)=>{if(!Number.isSafeInteger(n)||n<min||n>max)throw Error(`${label}必须在${min}到${max}之间`);return n;};
 const awake=n=>n&&!['死亡','濒死','昏迷','患病'].includes(n.status)&&!/睡眠|睡觉|熟睡/.test(n.activity??'')&&!n.scheduleTravel&&!n.cognitionTravel;
@@ -25,7 +28,7 @@ const nameOf=(engine,id)=>engine.byId.get(id)?.name??id;
 const valueOf=(engine,item,quantity)=>(engine.byId.get(item)?.basePrice??0)*quantity;
 
 // A present, awake adult who agreed now and has a waking window at this place.
-function counterpart(d,engine,name,{consent,minutes=5}){
+export function counterpart(d,engine,name,{consent,minutes=5}){
     const id=engine.resolve(name),row=engine.actor(d,id),base=engine.byId.get(id);
     if(id==='player'||!id.startsWith('npc_')||!awake(row)||row.location!==d.get('state','location'))throw Error('契约对方须实际在场且清醒');
     if(personConstraint(engine,d.get('state'),id))throw Error('契约对方正在依法拘留，不能提供服务');
@@ -41,11 +44,12 @@ function counterpart(d,engine,name,{consent,minutes=5}){
 }
 
 // ---- counting house ----------------------------------------------------------
-export const bankAt=(engine,location)=>(creditRules(engine)?.banks??[]).find(b=>b.location===location)??null;
-const bankById=(engine,id)=>(creditRules(engine)?.banks??[]).find(b=>b.id===id)??null;
-function bankRow(d,b){return structuredClone(d.get(...rec(b.id))??{category:'bank',id:b.id,name:b.name,location:b.location,coins:b.reserveCopper,goods:{...b.reserveCoins??{}},accounts:{}});}
-function openBank(d,engine,keeperName){
-    const b=bankAt(engine,d.get('state','location'));if(!b)throw Error('此处没有登记钱庄或汇兑柜');
+export const bankAt=(engine,location,state=engine.document?.state)=>derivedBankAt(engine,state,location);
+export const bankById=(engine,id,state)=>derivedBankById(engine,state,id);
+export function bankRow(d,b){return structuredClone(d.get(...rec(b.id))??{category:'bank',id:b.id,name:b.name,location:b.location,coins:b.reserveCopper??0,goods:{...b.reserveCoins??{}},accounts:{}});}
+export function openBank(d,engine,keeperName){
+    const b=bankAt(engine,d.get('state','location'),d.get('state'));if(!b)throw Error('此处没有登记钱庄或汇兑柜');
+    if(d.get(...rec(b.id),'status')==='倒闭')throw Error('钱庄已经倒闭，暂不能兑付');
     const keeper=counterpart(d,engine,keeperName,{consent:true,minutes:5});
     if(!b.keepers.includes(keeper))throw Error(`${b.name}只由登记柜员经手`);
     return {b,row:bankRow(d,b),keeper};
@@ -54,18 +58,25 @@ const coinage=(engine,item)=>(rules(engine).coinages??[]).find(c=>c.item===item)
 const coinRate=c=>c.faceCopper*c.fineness;
 
 // ---- pledges ---------------------------------------------------------------
-function pledge(d,engine,key,item,quantity){
-    if(engine.quantity(d,'player',item)<quantity)throw Error('抵押物不在你的行囊中');
-    const moved=changeItems(d,engine,'player',item,-quantity,{preserve:true});
+export function pledge(d,engine,key,item,quantity,owner='player'){
+    if(groupAccountView(engine,d.get('state'),owner)){
+        const account=ensureGroupAccount(d,engine,owner);if((account.items[item]??0)<quantity)throw Error('组织公库没有足够抵押实物');
+        d.set(groupAccountPath(owner),{...account,items:{...account.items,[item]:account.items[item]-quantity},ledger:[...account.ledger,{kind:'pledge',sourceEvent:key,items:{[item]:-quantity},minute:d.get('state','minute')}]});
+        const row={category:'pledge',owner,item,quantity,instances:[],value:valueOf(engine,item,quantity),status:'质押中',createdAt:d.get('state','minute')};d.set(rec(key),row);return row;
+    }
+    if(engine.quantity(d,owner,item)<quantity)throw Error('抵押物不在当事人的行囊中');
+    const moved=changeItems(d,engine,owner,item,-quantity,{preserve:true});
     for(const unit of moved.instances)d.set(['state','itemInstances',unit],{...d.get('state','itemInstances',unit),owner:key,status:'质押'});
-    const row={category:'pledge',item,quantity,instances:moved.instances,value:valueOf(engine,item,quantity),status:'质押中',createdAt:d.get('state','minute')};
+    const row={category:'pledge',owner,item,quantity,instances:moved.instances,value:valueOf(engine,item,quantity),status:'质押中',createdAt:d.get('state','minute')};
     d.set(rec(key),row);return row;
 }
-function releasePledge(d,engine,key,to,bank=null){
+export function releasePledge(d,engine,key,to,bank=null){
     const p=d.get(...rec(key));if(p?.category!=='pledge'||p.status!=='质押中')return null;
     if(bank){
         const row=bankRow(d,bank);row.goods[p.item]=(row.goods[p.item]??0)+p.quantity;d.set(rec(bank.id),row);
         for(const unit of p.instances)d.set(['state','itemInstances',unit],{...d.get('state','itemInstances',unit),owner:bank.id,status:'没收'});
+    }else if(groupAccountView(engine,d.get('state'),to)){
+        const account=ensureGroupAccount(d,engine,to);d.set(groupAccountPath(to),{...account,items:{...account.items,[p.item]:(account.items[p.item]??0)+p.quantity},ledger:[...account.ledger,{kind:'pledge_return',sourceEvent:key,items:{[p.item]:p.quantity},minute:d.get('state','minute')}]});
     }else{
         changeItems(d,engine,to,p.item,p.quantity);
         if(p.instances.length){
@@ -73,7 +84,7 @@ function releasePledge(d,engine,key,to,bank=null){
             for(const unit of p.instances)d.set(['state','itemInstances',unit],{...d.get('state','itemInstances',unit),owner:to,status:'持有'});
         }
     }
-    const next={...p,status:to==='player'?'已退还':'已没收',releasedAt:d.get('state','minute'),holder:bank?.id??to};d.set(rec(key),next);return next;
+    const next={...p,status:to===(p.owner??'player')?'已退还':'已没收',releasedAt:d.get('state','minute'),holder:bank?.id??to};d.set(rec(key),next);return next;
 }
 
 // ---- loans -----------------------------------------------------------------
@@ -116,26 +127,29 @@ export function openLoan(d,engine,{lender,bank=null,keeper=null,principal,days,c
 }
 export const isCreditDebt=row=>row?.category==='debt'&&CREDIT_KINDS.has(row.kind);
 // Repayment through the ordinary trade repay call; the creditor or the bank's keeper must be present.
-export function repayCredit(d,engine,{seller,debt:id},eventId){
+export function repayCredit(d,engine,{seller,debt:id,coins:partial},eventId){
     const row=d.get(...rec(id));
     if(!isCreditDebt(row)||row.debtor!=='player')throw Error('需要 debt 指定本人的真实借据');
     if(row.status==='已还清')throw Error('这笔欠款已经还清，不重复付款');
-    const bank=row.bank?bankById(engine,row.bank):null;
+    const bank=row.bank?bankById(engine,row.bank,d.get('state')):null;
     if(bank?!(bank.keepers.includes(seller)&&d.get('state','location')===bank.location):row.creditor!==seller)throw Error(bank?`须到${bank.name}向登记柜员还款`:'还款对象不是债主');
-    const amount=row.amount-row.paid,coins=d.get('state','player','coins');
-    if(coins<amount)throw Error(`须一次还清${amount}铜，现钱不足`);
+    counterpart(d,engine,seller,{consent:true});
+    const amount=partial===undefined?row.amount-row.paid:int(partial,1,row.amount-row.paid,'还款金额'),coins=d.get('state','player','coins');
+    if(coins<amount)throw Error(`还款${amount}铜，现钱不足`);
     d.set(['state','player','coins'],coins-amount);
     if(bank){const b=bankRow(d,bank);b.coins+=amount;d.set(rec(bank.id),b);}
     else d.set([...engine.actorPath(row.creditor),'coins'],engine.actor(d,row.creditor).coins+amount);
     const now=d.get('state','minute');
-    d.set(rec(id),{...row,paid:row.amount,status:'已还清',paidAt:now});
-    const returned=row.pledgeRecord?releasePledge(d,engine,row.pledgeRecord,'player'):null;
-    if(row.defaulted?.case)settleCreditCase(d,engine,row.defaulted.case,eventId);
-    engine.advance(d,5,eventId);d.say(`还清${bank?.name??nameOf(engine,row.creditor)}欠款${amount}铜${returned?`，取回抵押${nameOf(engine,returned.item)}×${returned.quantity}`:''}`);
-    return {debt:id,repaid:amount,status:'已还清',...(returned?{pledgeReturned:returned.item}:{})};
+    const paid=row.paid+amount,status=paid===row.amount?'已还清':row.status;
+    d.set(rec(id),{...row,paid,status,...(status==='已还清'?{paidAt:now}:{})});
+    const returned=status==='已还清'&&row.pledgeRecord?releasePledge(d,engine,row.pledgeRecord,'player'):null;
+    if(status==='已还清'&&row.defaulted?.case)settleCreditCase(d,engine,row.defaulted.case,eventId);
+    if(status!=='已还清'&&row.defaulted?.case){const claim=d.get(...rec(row.defaulted.case));if(claim)d.set(rec(row.defaulted.case),{...claim,value:row.amount-paid,...(claim.judgment?{judgment:{...claim.judgment,compensation:row.amount-paid}}:{})});}
+    engine.advance(d,5,eventId);d.say(`偿还${bank?.name??nameOf(engine,row.creditor)}欠款${amount}铜，${status}${returned?`，取回抵押${nameOf(engine,returned.item)}×${returned.quantity}`:''}`);
+    return {debt:id,repaid:amount,status,...(returned?{pledgeReturned:returned.item}:{})};
 }
 function defaultDebt(d,engine,id,row){
-    const minute=row.deadline+(rules(engine).loan.defaultGraceMinutes??0),bank=row.bank?bankById(engine,row.bank):null;
+    const minute=(row.installmentOverdueAt??row.deadline)+(rules(engine).loan.defaultGraceMinutes??0),bank=row.bank?bankById(engine,row.bank,d.get('state')):null;
     let next={...row};
     const forfeited=row.pledgeRecord?releasePledge(d,engine,row.pledgeRecord,row.creditor,bank):null;
     if(forfeited){const covered=Math.min(forfeited.value,next.amount-next.paid);next.paid+=covered;if(next.paid===next.amount)Object.assign(next,{status:'已还清',paidAt:minute,settledBy:'pledge'});}
@@ -183,13 +197,16 @@ export function grantLodgingAccess(d,engine,place,host,{starts,expires,eventId})
 // ---- operations (world_trade) -----------------------------------------------
 export async function creditTrade(d,args,eventId){
     const engine=this,op=args.operation;
+    if(BANK_OPERATIONS.has(op))return bankTrade(d,engine,args,eventId);
+    if(ASSET_OPERATIONS.has(op))return assetTrade(d,engine,args,eventId);
     if(op==='borrow'){
-        const bankHere=bankAt(engine,d.get('state','location')),lender=engine.resolve(args.seller);
+        const bankHere=bankAt(engine,d.get('state','location'),d.get('state')),lender=engine.resolve(args.seller);
         const days=args.days??7,collateral=args.item?{item:engine.resolve(args.item,'item'),quantity:int(args.quantity??1,1,100000,'抵押数量')}:null;
         let bank=null,keeper=null;
         if(bankHere?.keepers.includes(lender)){({b:bank,keeper}=openBank(d,engine,lender));}
         else counterpart(d,engine,lender,{consent:args.consent,minutes:5});
         const loan=openLoan(d,engine,{lender,bank,keeper,principal:args.coins,days,collateral,eventId});
+        if(args.quantity&&!args.item){const count=int(args.quantity,1,days,'分期期数'),row=d.get(...rec(loan.debt));d.set(rec(loan.debt),{...row,installments:count,nextInstallment:1});}
         engine.advance(d,5,eventId);
         d.say(`向${bank?.name??nameOf(engine,lender)}借${loan.principal}铜，月息${loan.monthlyInterest*100}%，${days}天后还本息${loan.amount}铜`);
         return {lender:bank?.id??lender,...loan};
@@ -200,6 +217,7 @@ export async function creditTrade(d,args,eventId){
         if(op==='deposit'){
             const amount=int(args.coins,b.depositFeeCopper+1,1e7,'存入铜钱');if(coins<amount)throw Error('现钱不足');
             row.coins+=amount;row.accounts.player=(row.accounts.player??0)+amount-b.depositFeeCopper;
+            row.interestAt??=d.get('state','minute');
             d.set(['state','player','coins'],coins-amount);detail={deposited:amount-b.depositFeeCopper,fee:b.depositFeeCopper};
         }else if(op==='withdraw'){
             const amount=int(args.coins,1,row.accounts.player??0,'支取铜钱');if(row.coins<amount)throw Error(`${b.name}现银不足，暂不能兑付`);
@@ -272,8 +290,10 @@ export async function creditTrade(d,args,eventId){
 // ---- time --------------------------------------------------------------------
 export function advanceCredit(d,engine,minute){
     const c=creditRules(engine);if(!c)return;
+    advanceBankFinance(d,engine,minute);
+    advanceFinanceAssets(d,engine,minute);
     for(const [id,row]of Object.entries(d.get('state','records')??{}))
         if(row.category==='contract'&&row.kind==='partnership'&&row.status==='有效'&&row.deadline<=minute)settlePartnership(d,engine,id,row,{minute:row.deadline,eventId:`deadline_${id}`});
     for(const [id,row]of Object.entries(d.get('state','records')??{}))
-        if(isCreditDebt(row)&&row.status==='逾期'&&!row.defaulted&&row.deadline+(c.loan.defaultGraceMinutes??0)<=minute)defaultDebt(d,engine,id,row);
+        if(isCreditDebt(row)&&row.kind!=='pawn'&&row.status==='逾期'&&!row.defaulted&&(row.installmentOverdueAt??row.deadline)+(c.loan.defaultGraceMinutes??0)<=minute)defaultDebt(d,engine,id,row);
 }

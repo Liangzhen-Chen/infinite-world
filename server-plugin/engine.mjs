@@ -66,6 +66,8 @@ import {INTELLIGENCE_VERSION,intelligenceFresh}from'./npc-intelligence.mjs';
 import {chargeTrade,repayDebt}from'./contracts.mjs';
 import {businessTrade,recordBusinessReceipt}from'./business.mjs';
 import {CREDIT_OPERATIONS,creditTrade,isCreditDebt,repayCredit,lodgingOf,assertLodgingHost,grantLodgingAccess}from'./credit.mjs';
+import {recordFinanceSale}from'./finance-assets.mjs';
+import {assessTradeTax}from'./finance-tax.mjs';
 import {initializeR1,planR1,planPreR1Partitions}from'./migrations/r1.mjs';
 import {materializeWildlifeHabitats}from'./wildlife-habitats.mjs';
 import {unfoldPopulationAt,acceptPopulationProfile}from'./population.mjs';
@@ -276,7 +278,7 @@ export class WorldEngine {
         const playerLocation=d.get('state','location');
         for(const actor of [buyer,seller]) if(actor!=='player' && this.actor(d,actor).location!==playerLocation) throw new Error('交易对方不在场');
         assertSocietyTrade(d,this,buyer,seller);
-        if(args.payment==='repay')return isCreditDebt(d.get('state','records',args.debt))?repayCredit(d,this,{seller,debt:args.debt},id):repayDebt(d,this,{buyer,seller,debt:args.debt},id);
+        if(args.payment==='repay')return isCreditDebt(d.get('state','records',args.debt))?repayCredit(d,this,{seller,debt:args.debt,coins:args.coins},id):repayDebt(d,this,{buyer,seller,debt:args.debt},id);
         // Any location registering lodging:{host,kind,rooms} rents rooms at the economy anchors.
         const place=args.service==='住宿'&&buyer==='player'?lodgingOf(this,seller,playerLocation):null;
         if(args.service==='住宿'&&!place)throw new Error('这个人没有登记住宿服务');
@@ -306,8 +308,11 @@ export class WorldEngine {
         if(this.quantity(d,seller,item)<quantity) throw new Error(`对方库存不足：${catalog.name}只剩${this.quantity(d,seller,item)}`);
         const payment=chargeTrade(d,this,{buyer,seller,cost,payment:args.payment,creditMinutes:args.creditMinutes,description:`${catalog.name}货款`},id);
         const moved=transferItems(d,this,seller,buyer,item,quantity,args.instances??null);
+        const tax=payment.debt?{amount:0}:assessTradeTax(d,this,{seller,cost,location:playerLocation,sourceEvent:id});
+        const basis=recordFinanceSale(d,this,{buyer,seller,item,quantity,cost,tax:tax.amount,eventId:id,paid:!payment.debt});
+        if(payment.debt)d.set(['state','records',payment.debt],{...d.get('state','records',payment.debt),sale:{buyer,seller,item,quantity,cost,basis,location:playerLocation}});
         d.set(['state','quotes',quoteKey],price);recordDeal(d,quote,price,quantity,id);this.advance(d,5,id);d.say(`${catalog.name}×${quantity}，${payment.debt?'赊账':'成交'}${cost}铜`);
-        return {buyer,seller,item,quantity,cost,instances:moved.instances,...payment};
+        return {buyer,seller,item,quantity,cost,instances:moved.instances,...(tax.amount?{tax}:{}),...payment};
     }
     advance(d,minutes,id) {
         // P2: one elapsed-time event shares each region's yearly weather

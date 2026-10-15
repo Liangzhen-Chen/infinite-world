@@ -57,10 +57,10 @@ const routes=new Map();
 definitions.find(r=>r.function.name==='world_wildlife').function.parameters.properties.operation.enum.push('fish','eat');
 definitions.find(r=>r.function.name==='world_site').function.parameters.properties.operation.enum.push('mine');
 const transport=definitions.find(r=>r.function.name==='world_trade').function.parameters.properties;
-transport.operation.enum.push('smuggle','deliver_smuggled');transport.mode=str;
+transport.operation.enum.push('smuggle','deliver_smuggled','bank_inspect','extend','prepay','lend','collect','pawn','redeem','auction','remit','cash_bill','asset_inspect','invest','dividend','share_transfer','rent_out','workshop','workshop_terms','dismiss');transport.mode=str;
 festivalParameters.operation.enum.push('duel_challenge','duel_answer','duel_yield','election_start','election_campaign','election_finish','election_expose','mining_permit');
 festivalParameters.choice={...str,description:'touch/death；gift/speech/promise/buy_votes'};
-transport.operation.description='交易/租铺/采购/雇盘点/履约/同意收购/还债/取消/借款/存取兑币/受雇/合伙；smuggle:seller买方location终点；交货contract';
+transport.operation.description='trade/business/bank/asset; bank_inspect,asset_inspect';
 function group(name,description,members){
     const selected=definitions.filter(row=>members.includes(row.function.name)),properties={},operations=[],mapping=new Map();
     for(const row of selected){

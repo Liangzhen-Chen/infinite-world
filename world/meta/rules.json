@@ -1617,7 +1617,69 @@
           "loanMaximumDays": 60,
           "collateralRatio": 0.5
         }
-      ]
+      ],
+      "depositInterest": {
+        "periodDays": 30,
+        "monthlyRate": 0.01,
+        "minimum": 0.001,
+        "maximum": 0.03,
+        "seasonal": [
+          1,
+          1.1,
+          0.9,
+          1.2
+        ]
+      },
+      "derivedBanks": {
+        "levels": [
+          "镇",
+          "城",
+          "郡",
+          "省"
+        ],
+        "depositFeeCopper": 1,
+        "exchangeFeeRate": 0.03,
+        "loanMaximumCopper": 10000
+      },
+      "pawn": {
+        "advanceRatio": 0.5,
+        "graceDays": 3
+      },
+      "remittance": {
+        "feeRate": 0.02
+      },
+      "taxes": {
+        "regimes": {
+          "kingdom": {
+            "commercial": 500,
+            "tariff": 800
+          },
+          "council": {
+            "commercial": 300,
+            "tariff": 500
+          },
+          "tribal": {
+            "commercial": 200,
+            "tariff": 400
+          }
+        },
+        "levelBps": {
+          "村": 0,
+          "镇": 100,
+          "城": 200,
+          "郡": 300,
+          "省": 400
+        },
+        "personalAllowance": 2,
+        "cargoTags": [
+          "grain",
+          "material",
+          "trade_goods",
+          "food",
+          "wood",
+          "metal"
+        ]
+      }
     },
     "shops": {
       "version": 1,

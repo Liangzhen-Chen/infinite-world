@@ -23,7 +23,8 @@ async function wait(engine,doc,end,eventId='wait'){
 }
 function draft(doc){return {document:doc,get(...p){return p.reduce((v,k)=>v?.[k],this.document);},set(p,value){this.document=applyPatches(this.document,[{op:'set',path:p,value}]);}};}
 function snapshotCash(doc){
-    return doc.state.player.coins+Object.values(doc.state.npcs).reduce((n,p)=>n+p.coins,0)+Object.values(doc.state.settlements).reduce((n,s)=>n+s.treasury,0)+Object.values(doc.state.workshopFunds??{}).reduce((n,copper)=>n+copper,0)+Object.values(doc.state.records).filter(r=>r.category==='settlement_trade').reduce((n,o)=>n+o.escrowCopper,0);
+    return doc.state.player.coins+Object.values(doc.state.npcs).reduce((n,p)=>n+p.coins,0)+Object.values(doc.state.settlements).reduce((n,s)=>n+s.treasury,0)+Object.values(doc.state.workshopFunds??{}).reduce((n,copper)=>n+copper,0)+Object.values(doc.state.records).filter(r=>r.category==='settlement_trade').reduce((n,o)=>n+o.escrowCopper,0)
+        +Object.values(doc.state.quests).filter(q=>!q.fundedBy?.faction).reduce((n,q)=>n+(q.escrow??0),0);
 }
 function conservation(doc){
     for(const p of world.rules.agriculture.settlements.filter(p=>p.opening)){
@@ -217,7 +218,8 @@ test('旧档沿正常world_time不生成四村公仓、现金或周订单',async
     const {engine}=setup();const old=engine.initialFromLegacy(legacy,'old-trade'),stocks=structuredClone(old.state.settlements);
     const c=(await wait(engine,old,DEPART+DAY)).doc;
     for(const lane of lanes){assert.equal(c.state.settlements[lane.seller],undefined);assert.equal(c.state.records[key(lane)],undefined);}
-    assert.equal(c.state.records['settlement-trade:clock'],undefined);assert.equal(c.state.settlements.loc_hw.treasury,stocks.loc_hw.treasury);
+    const escrow=Object.values(c.state.quests).filter(q=>q.fundedBy?.treasury==='loc_hw').reduce((n,q)=>n+(q.escrow??0),0);
+    assert.equal(c.state.records['settlement-trade:clock'],undefined);assert.equal(c.state.settlements.loc_hw.treasury+escrow,stocks.loc_hw.treasury);
 });
 test('错误实际批次与篡改税账拒绝，reduce不修改传入存档',async()=>{
     for(const tamper of ['batch','fiscal']){
