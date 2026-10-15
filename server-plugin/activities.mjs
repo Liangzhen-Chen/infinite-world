@@ -29,6 +29,7 @@ import {questBoardAction}from'./quest-board.mjs';
 import {businessAction}from'./business.mjs';
 import {festivalAction}from'./festival.mjs';
 import {factionClockAction}from'./faction-clock.mjs';
+import {isHazardClock,hazardClockAction}from'./seasonal-hazards.mjs';
 import {siteAction}from'./sites.mjs';
 import {organizationAction,foundOrganization}from'./organizations.mjs';
 import {workAction,isWorkOperation}from'./works.mjs';
@@ -159,7 +160,7 @@ export const activities={
         return {project:key,stage,...outcome,note:stage==='打磨'?'研究成果需进入受限实体登记，才能获得规则认可':'原型未被系统承认，不能宣称已学会新法术'};
     },
     settlement(d,args,id){
-        if(args.operation?.startsWith('faction_'))return factionClockAction.call(this,d,args,id);
+        if(args.operation?.startsWith('faction_'))return (isHazardClock(this,args.clock)?hazardClockAction:factionClockAction).call(this,d,args,id);
         if(args.operation?.startsWith('festival_'))return festivalAction.call(this,d,args,id);
         if(args.operation?.startsWith('business_'))return businessAction.call(this,d,args,id);
         if(args.operation?.startsWith('civic_'))return civicAction.call(this,d,args,id);

@@ -25,6 +25,7 @@ import {validateFestivalRuntime}from'../server-plugin/festival.mjs';
 import {validateSites}from'../server-plugin/sites.mjs';
 import {validateShopRules}from'../server-plugin/shop.mjs';
 import {validateRegions}from'../server-plugin/regions.mjs';
+import {validateHazardRules}from'../server-plugin/seasonal-hazards.mjs';
 const schema=JSON.parse(await fs.readFile(new URL('../schemas/world.schema.json',import.meta.url),'utf8'));
 const blocklist=JSON.parse(await fs.readFile(new URL('../world/meta/blocklist.json',import.meta.url),'utf8'));
 const validate=new Ajv({allErrors:true,strict:true,allowUnionTypes:true}).compile(schema);
@@ -52,6 +53,7 @@ export function validateWorld(world,{stage='engine'}={}){
     errors.push(...validateNpcGrowthRules(world));
     errors.push(...validateNpcLifeRules(world));
     errors.push(...validateFestivalRuntime(world));
+    errors.push(...validateHazardRules(world));
     errors.push(...validateNpcProfiles(world));
     if(stage==='release'||stage==='final'){
         const depth=validateNpcDepth(world);

@@ -15,6 +15,7 @@ import {validateNpcSchedules,scheduleAt} from './npc-schedule.mjs';
 import {rosterLifeState,lifeRoutine} from './population.mjs';
 import {initialNpcState} from './npc-state.mjs';
 import {advanceNpcNeeds} from './npc-intelligence.mjs';
+import {famineAt} from './hazard-calendar.mjs';
 
 const DAY=1440,YEAR=360*DAY,unable=['死亡','濒死'];
 const rules=engine=>engine.rules.npcLife;
@@ -322,15 +323,30 @@ function fallIll(d,engine,id,minute,band){
  const h=healthRules(engine),seed=d.document.randomSeed,day=minute/DAY,state=d.get('state'),npc=state.npcs[id];
  const graveChance=Math.min(1,band.graveShare*(weakened(npc)?h.weakenedGraveMultiplier:1));
  const severity=clockRoll(seed,`illness-severity:${id}`,day)<graveChance?'重':'轻',[low,high]=severity==='重'?h.graveDays:h.mildDays;
- const days=low+Math.floor(clockRoll(seed,`illness-days:${id}`,day)*(high-low+1)),illId=`illness_${key(id,minute)}`;
- const illness={id:illId,patient:id,severity,since:minute,endsAt:minute+days*DAY,status:'患病中',previousStatus:npc.status??null,household:npcHousehold(engine,state,id)?.id??null,caregivers:[]};
+ const days=low+Math.floor(clockRoll(seed,`illness-days:${id}`,day)*(high-low+1));
+ beginIllness(d,engine,id,minute,{severity,days,illId:`illness_${key(id,minute)}`});
+}
+function beginIllness(d,engine,id,minute,{severity,days,illId,disease=null}){
+ const state=d.get('state'),npc=state.npcs[id];
+ const illness={id:illId,patient:id,severity,since:minute,endsAt:minute+days*DAY,status:'患病中',previousStatus:npc.status??null,household:npcHousehold(engine,state,id)?.id??null,caregivers:[],
+  ...(disease?{disease:disease.id,diseaseName:disease.name,epidemic:disease.epidemic,...(disease.fatality?{fatality:disease.fatality}:{})}:{})};
  illness.medicalCreated=addFever(d,engine,id,illness);
  d.set(['state','family','illnesses',illId],illness);
  d.set(['state','npcs',id,'status'],'患病');d.set(['state','npcs',id,'activity'],'患病');
- d.set(['state','npcs',id,'developments'],[...d.get('state','npcs',id,'developments')??[],{type:'患病',source:illId,minute,severity}]);
+ d.set(['state','npcs',id,'developments'],[...d.get('state','npcs',id,'developments')??[],{type:'患病',source:illId,minute,severity,...(disease?{disease:disease.id}:{})}]);
  if(severity==='重')assignCare(d,engine,illness,minute);
- const content=`${nameOf(engine,state,id)}在${engine.calendar(minute).text.slice(0,-6)}${severity==='重'?'病重卧床':'染病在家歇着'}。`;
+ const date=engine.calendar(minute).text.slice(0,-6);
+ const content=disease?`${nameOf(engine,state,id)}在${date}染上${disease.name}（${disease.symptoms}），${severity==='重'?'病重卧床':'在家歇着'}。`:`${nameOf(engine,state,id)}在${date}${severity==='重'?'病重卧床':'染病在家歇着'}。`;
  witness(d,engine,illId,[id],illness.household?[illness.household]:[],{minute,kind:'health',content,salience:severity==='重'?3:1});
+ return illness;
+}
+// U3: an epidemic (seasonal-hazards.mjs) gives a named disease with its own
+// course and fatality. The person must be in campaign life and not already
+// ill or incapable; nursing, recovery and death then follow the rules above.
+export function contractIllness(d,engine,id,minute,{severity,days,disease}){
+ const state=d.get('state'),npc=state.npcs?.[id];
+ if(!healthRules(engine)||!npc||!lifeActor(engine,state,id)||incapable.includes(npc.status)||npcIllness(state,id))return null;
+ return beginIllness(d,engine,id,minute,{severity,days,disease,illId:`illness_${key(id,minute,disease.id)}`});
 }
 function recover(d,engine,illness,minute){
  const id=illness.patient;
@@ -397,7 +413,7 @@ function healthDay(d,engine,minute){
   if(illness.severity!=='重'||npc.status!=='患病'||withPlayer(d.get('state'),illness.patient))continue;
   const carer=assignCare(d,engine,illness,minute);
   if(minute<=illness.since)continue;
-  const fatality=carer?h.graveFatality.cared:h.graveFatality.alone,daily=1-(1-fatality)**(DAY/(illness.endsAt-illness.since));
+  const odds=illness.fatality??h.graveFatality,fatality=carer?odds.cared:odds.alone,daily=1-(1-fatality)**(DAY/(illness.endsAt-illness.since));
   if(clockRoll(seed,`illness-death:${illness.id}`,day)<daily)dieNaturally(d,engine,illness.patient,minute,'病故',illness);
  }
  for(const id of Object.keys(d.get('state','npcs')).sort()){
@@ -430,7 +446,8 @@ function within(engine,location,place){
 }
 export function npcMigration(state,id){return Object.values(state.family?.migrations??{}).find(m=>m.person===id&&['待出发','在途'].includes(m.status))??null;}
 const placeName=(engine,id)=>engine.byId.get(id)?.name??id;
-const hungry=(engine,state,settlement)=>(state.settlements?.[settlement]?.starvation??0)>=migrationRules(engine).livelihood.starvationDays;
+// U3: a declared winter famine (hazard clock) counts as going hungry too.
+const hungry=(engine,state,settlement,minute)=>(state.settlements?.[settlement]?.starvation??0)>=migrationRules(engine).livelihood.starvationDays||Boolean(famineAt(state,settlement,minute));
 const present=(engine,state,x)=>state.npcs[x]?alive(state,x):Boolean(engine.byId.get(x));
 function mobile(engine,state,id){
  const n=state.npcs[id];
@@ -490,7 +507,7 @@ function migrationReason(engine,state,id,minute,seed){
   if(death&&minute-death.minute>=r.joinKin.afterDeathDays*DAY){const h=hostFor(engine,state,id,{elsewhere:false,kinOnly:true},minute);if(h)return {reason:'投亲',host:h.host,house:h.house,cause:death.id};}
  }
  if(npcIsMinor(engine,state,id,minute))return null;
- if(hungry(engine,state,house.settlement)&&clockRoll(seed,`migration:livelihood:${id}`,day)<r.livelihood.chancePerDay){
+ if(hungry(engine,state,house.settlement,minute)&&clockRoll(seed,`migration:livelihood:${id}`,day)<r.livelihood.chancePerDay){
   const h=hostFor(engine,state,id,{elsewhere:true},minute)??(clockRoll(seed,`migration:stranger:${id}`,day)<(r.stranger?.chancePerDay??0)?strangerHost(engine,state,id,house,minute):null);
   if(h)return {reason:'谋生',host:h.host,house:h.house,cause:`starvation:${house.settlement}`,stranger:Boolean(h.stranger)};
  }
@@ -698,7 +715,7 @@ export function npcLifeLines(engine,state,id,{asOf=state.minute,known=()=>false,
  if(pregnant&&!own)lines.push('有孕在身');
  const during=r=>r.since<=asOf&&!(r.endedAt<=asOf);
  const ill=Object.values(f.illnesses??{}).find(r=>r.patient===id&&during(r));
- if(ill&&!own)lines.push(ill.severity==='重'?`${when(ill.since)}起病重卧床`:`${when(ill.since)}起染病在家歇着`);
+ if(ill&&!own)lines.push(ill.diseaseName?`${when(ill.since)}起染上${ill.diseaseName}${ill.severity==='重'?'，病重卧床':'，在家歇着'}`:ill.severity==='重'?`${when(ill.since)}起病重卧床`:`${when(ill.since)}起染病在家歇着`);
  const caring=Object.values(f.illnesses??{}).find(r=>r.patient!==id&&r.caregivers?.includes(id)&&during(r));
  if(caring&&!own)lines.push(`在家照护${nameOf(engine,state,caring.patient)}`);
  for(const m of Object.values(f.migrations??{}).filter(m=>m.person===id).sort((a,b)=>a.decidedAt-b.decidedAt)){
