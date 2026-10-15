@@ -59,6 +59,7 @@ import {chargeTrade,repayDebt}from'./contracts.mjs';
 import {businessTrade,recordBusinessReceipt}from'./business.mjs';
 import {CREDIT_OPERATIONS,creditTrade,isCreditDebt,repayCredit,lodgingOf,assertLodgingHost,grantLodgingAccess}from'./credit.mjs';
 import {initializeR1,planR1,planPreR1Partitions}from'./migrations/r1.mjs';
+import {materializeWildlifeHabitats}from'./wildlife-habitats.mjs';
 import {unfoldPopulationAt,acceptPopulationProfile}from'./population.mjs';
 import {remoteEngine,unfoldRemoteAt}from'./remote-generation.mjs';
 import {advanceNeedsSteps,nextAdvanceMinute,runAdvance}from'./advance-registry.mjs';
@@ -79,6 +80,8 @@ class Draft {
 }
 export class WorldEngine {
     constructor(world) {
+        // K8: derived habitats join the authored ones before any consumer reads them.
+        materializeWildlifeHabitats(world);
         this.world = world; this.rules = world.rules;
         const siteErrors=validateSites(world);if(siteErrors.length)throw Error(siteErrors.join('；'));
         if(![1,2].includes(this.rules.engineRevision??1))throw new Error('此世界使用尚不支持的引擎版本，停止加载');

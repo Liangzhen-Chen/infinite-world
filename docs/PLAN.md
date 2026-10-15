@@ -62,7 +62,7 @@ review-002-yp=782a49e阶段审核通过，范围限T06正式发布与c64163d修�
 - K5 已完成。原文：有目击且分量够的世界事件自动成为可传播传闻（不再只传作者预登记的ID）；private/secret 记忆与未成年保护不得成为传闻。依赖K3、K4。验收：CORE + rumor-route/village-rumor-access/npc-memory/public-opinion/monster-society。规模M。
 - K6 已完成。原文：新 effects.mjs，合并 world-clock 封闭效果集与 faction-clock 效果消费者；势力时钟可触发野物躁动、传闻、立场变化，季节可冻河。依赖K2、K4。验收：CORE + world-clock/faction-clock/wildlife-awakening/festival/wildlife-society。规模S-M。
 - K7 已完成（推进注册表28系统，逐字节一致）。原文：engine.mjs:254、:265-310 手工列的约25个 advance* 改为注册表，新系统自动参与休息和赶路结算。验收：CORE + world-clock/faction-clock/performance。规模S。
-- K8 按地形产生栖地（最后做，需存档迁移）：新地点按地形标签自动出现生物。验收：CORE + wildlife/w4-wildlife/wildlife-encounters。规模L。
+- K8 已完成。原文：按地形产生栖地（最后做，需存档迁移）：新地点按地形标签自动出现生物。验收：CORE + wildlife/w4-wildlife/wildlife-encounters。规模L。
 
 - K9 已完成（发布见PROGRESS）。原文：（用户 2026-10-14 要求）：底座 K1–K7 合入后，产出可视化的游戏系统图：一共几层、每层有哪些系统、系统之间如何串联（读写哪些共享状态、订阅哪些世界事件、受哪些交互规则和效果驱动），并附“新增一种内容要接哪些系统”的查表。按代码实际生成（脚本从注册表、规则表、订阅关系导出数据），发布为 Artifact 给用户，并在 docs/ 留一份。
 
@@ -597,7 +597,7 @@ T28-R1修好新回执undefined规范化并保留严格篡改拒绝，相关31/32
 
 ### T104（A3）已完成：29条法术发布，正式法术121→150，达到指南数量。道9（裴澄）、佛4（季笙）、祭5（苗笙）、巫2（舒绵）、法7与通2（陆青书铺）；符阵、驱邪、守戒、度亡共17条。度亡（ferry）只对在场、无主的低阶汀雾游魂有效：进入“已超度”终态、去向beyond、记入止波寺度亡牌位，不可复活，种群相应扣减；安滩法会与镇窑灯礼七天内阻止对应灵体新生成。32次L2一次全过，0.10820872元；L4均4.58/最低4。build:final不再报法术不足，只剩首领18<40。遗留：角色没有精神状态，护界吸收精神干扰与观灵减压不生效；需要玩家自有容器的役灵与空间操作未选。
 
-### T105（A4） W4-B2 首领第二批。结果：新增12个可交锋首领，其中3名智能存在可记忆、交涉和拒绝。可改world/design/w4-b2.mjs、world/drafts/w4-b2/、仿w4-b1的内容/发布入口、world/meta/bosses.json、tests/w4-b2.test.mjs及本批平衡报告；不改法术/人物目录，可与A1–A3零模型准备并行，发布账串行。验收node --test "tests/boss*.test.mjs" "tests/w4-*.test.mjs" tests/combat.test.mjs；node tools/m4-balance.mjs --catalog world/meta/bosses.json --out world/design/w4-b2-balance.json；CORE。L2预计25–40次，≤0.6元；约1.5小时。
+### T105–T106 已完成（见PROGRESS）。原 T105（A4） W4-B2 首领第二批。结果：新增12个可交锋首领，其中3名智能存在可记忆、交涉和拒绝。可改world/design/w4-b2.mjs、world/drafts/w4-b2/、仿w4-b1的内容/发布入口、world/meta/bosses.json、tests/w4-b2.test.mjs及本批平衡报告；不改法术/人物目录，可与A1–A3零模型准备并行，发布账串行。验收node --test "tests/boss*.test.mjs" "tests/w4-*.test.mjs" tests/combat.test.mjs；node tools/m4-balance.mjs --catalog world/meta/bosses.json --out world/design/w4-b2-balance.json；CORE。L2预计25–40次，≤0.6元；约1.5小时。
 
 ### T106（A5） W4-B3 首领第三批。结果：再增12个、含3名智能存在，使首领达到40个、智能存在达到8名。文件与A4对应换w4-b3，另可更新world/drafts/w4/ecology.json；接A4，同一bosses.json串行。验收node --test "tests/boss*.test.mjs" "tests/w4-*.test.mjs" tests/combat.test.mjs；node tools/m4-balance.mjs --catalog world/meta/bosses.json --out world/design/w4-b3-balance.json；node tools/w4-audit-ecology.mjs；CORE。保留单人≤15%、标准五人55%–65%的多种子平衡及20种子三年生态要求。L2预计25–40次，≤0.6元；约2小时，模拟后台运行。
 

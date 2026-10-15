@@ -3482,6 +3482,29 @@
       }
     ]
   },
+  "habitatDerivation": {
+    "version": 1,
+    "referenceAreaKm2": 4,
+    "maximumScale": 1,
+    "defaultScale": {
+      "site": 0.5,
+      "area": 0.25
+    },
+    "rarity": [
+      {
+        "minimumPopulation": 10,
+        "factor": 1
+      },
+      {
+        "minimumPopulation": 4,
+        "factor": 0.5
+      },
+      {
+        "minimumPopulation": 0,
+        "factor": 0
+      }
+    ]
+  },
   "wildlife": {
     "version": 1,
     "trackMinutes": 60,
