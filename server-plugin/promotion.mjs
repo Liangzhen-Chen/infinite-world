@@ -2,6 +2,8 @@ import {settlementHead,personRegistrar} from './entity-view.mjs';
 import {authorityOf,playerOffices,eligible} from './governance.mjs';
 import {standing} from './standing.mjs';
 import {knownTopics,opinionOf} from './public-opinion.mjs';
+import {promotionRules,adminLevel,marketFactor} from './promotion-view.mjs';
+export {promotionRules,adminLevel,rankedOffice,marketFactor} from './promotion-view.mjs';
 
 // U13 settlement promotion. Administrative level (village, town, city,
 // county, province; five to one) is kept apart from size: it is set by the
@@ -16,38 +18,13 @@ import {knownTopics,opinionOf} from './public-opinion.mjs';
 const DAY=1440,rec=id=>['state','records',id],rankKey=s=>`settlement_rank:${s}`;
 const awake=n=>n&&!['死亡','濒死','昏迷','患病'].includes(n.status)&&!n.scheduleTravel&&!n.cognitionTravel&&!/睡眠|睡觉|熟睡/.test(n.activity??'');
 const CAP={村:'villagesPerTown',镇:'townsPerCity',城:'citiesPerCounty',郡:'countiesPerProvince'};
-export const promotionRules=engine=>engine.rules.governance?.promotion??null;
 function within(engine,location,place){const seen=new Set();while(location&&!seen.has(location)){if(location===place)return true;seen.add(location);location=engine.byId.get(location)?.parent;}return false;}
 
-export function adminLevel(engine,state,settlement){
-    const r=state.records?.[rankKey(settlement)];
-    if(r?.category==='settlement_rank')return {level:r.level,superior:r.superior,since:r.since,record:r.id};
-    const j=promotionRules(engine)?.jurisdiction?.[settlement];
-    return j?{level:j.level,superior:j.superior,since:null,record:null}:null;
-}
 function allLevels(engine,state){
     const ids=new Set([...Object.keys(promotionRules(engine)?.jurisdiction??{}),...Object.values(state.records??{}).filter(r=>r.category==='settlement_rank').map(r=>r.settlement)]);
     return [...ids].map(id=>({id,...adminLevel(engine,state,id)}));
 }
 const stepFor=(engine,level)=>promotionRules(engine)?.steps.find(s=>s.from===level)??null;
-const effectsOf=(engine,state,settlement)=>{
-    // Only a promotion changes what a settlement had; founding levels keep their own terms.
-    const rules=promotionRules(engine),rank=state.records?.[rankKey(settlement)],now=rank?.category==='settlement_rank'?rank.level:null;if(!rules||!now)return null;
-    const i=rules.levels.indexOf(now);if(i<=0)return null;
-    return rules.steps.filter(s=>rules.levels.indexOf(s.to)<=i).at(-1)?.effects??null;
-};
-// An office as it stands in a promoted settlement (name, quota, budget, tax range).
-export function rankedOffice(engine,state,settlement,office){
-    const e=effectsOf(engine,state,settlement)?.offices?.[office.id];
-    if(!e){
-        const level=adminLevel(engine,state,settlement)?.level,key={村:'villageHead',镇:'townHead',城:'cityHeadFirstBaron',郡:'countyHead',省:'provinceHead'}[level];
-        return office.id==='office_village_head'&&key?{...office,name:level==='村'?office.name:`${level}长`,monthlyQuotaD:engine.rules.quests.monthlyQuotaD[key]}:office;
-    }
-    return {...office,name:e.name??office.name,monthlyQuotaD:e.quotaKey?engine.rules.quests.monthlyQuotaD[e.quotaKey]:e.monthlyQuotaD??office.monthlyQuotaD,
-        monthlyBudgetCopper:e.monthlyBudgetCopper??office.monthlyBudgetCopper,...(e.taxBps?{taxBps:{...e.taxBps}}:{})};
-}
-export function marketFactor(engine,state,settlement){return effectsOf(engine,state,settlement)?.market?.restockFactor??1;}
-
 // Who answers for the settlement: the player while sitting as head, else the original headman.
 const governor=(engine,state,settlement)=>settlementHead(engine,state,settlement).value;
 // Residents' view of the governor: what they know of the governor's deeds

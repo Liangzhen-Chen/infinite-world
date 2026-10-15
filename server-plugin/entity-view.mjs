@@ -4,7 +4,7 @@
 import {actorId,actorPath} from './npc-state.mjs';
 import {npcHousehold,npcAgeAt,npcSchedule,npcServices} from './npc-state.mjs';
 import {organizationState,memberOrganizations} from './organization-state.mjs';
-import {rankedOffice,adminLevel} from './promotion.mjs';
+import {rankedOffice,adminLevel} from './promotion-view.mjs';
 
 const fact=(value,source,override=false)=>({value:structuredClone(value??null),source,override});
 const at=(state,path)=>path.reduce((o,k)=>o?.[k],state);
@@ -13,21 +13,22 @@ const recordFacts=(state,predicate)=>records(state).filter(([,r])=>predicate(r))
 const baseOf=(engine,state,id)=>state.created?.[id]??state.family?.people?.[id]??engine.byId.get(id);
 
 const living=(engine,state,id)=>at(state,actorPath(engine.world,id).slice(1))?.status!=='死亡';
-const dismissed=(state,id)=>Object.values(state.records??{}).some(r=>r.category==='legal_dismissal'&&(r.npc??r.subject)===id);
+const dismissed=(state,id)=>Object.values(state.records??{}).some(r=>r.category==='legal_dismissal'&&(r.subject??r.npc)===id&&r.status!=='撤销');
 const officeRows=state=>Object.entries(state.records??{}).filter(([,r])=>r.category==='governance_office');
-function currentHeadRow(state,settlement){
+function remoteHeadOffice(state,settlement){
+    for(const [county,r] of Object.entries(state.remote??{})){
+        const office=r.skeleton?.offices?.find(o=>o.settlement===settlement&&o.source==='generated');
+        if(office)return {office,source:`state.remote.${county}.skeleton.offices`};
+    }
+    return null;
+}
+function currentHeadRow(state,settlement,remote){
     let latest=null;
     for(const entry of officeRows(state)){
-        const r=entry[1];if(r.settlement!==settlement||r.office!=='office_village_head'||(r.since??0)>(state.minute??0))continue;
-        if(!latest||(r.since??0)>=(latest[1].since??0))latest=entry;
+        const r=entry[1];if(r.settlement!==settlement||!(r.office==='office_village_head'||remote&&r.office===remote.id)||(r.since??r.appointedAt??0)>(state.minute??0))continue;
+        if(!latest||(r.since??r.appointedAt??0)>=(latest[1].since??latest[1].appointedAt??0))latest=entry;
     }
     return latest;
-}
-export function settlementGovernment(engine,state,settlement){
-    const g=engine.world.settlementProfiles?.find(p=>p.id===settlement)?.details?.governance;
-    const ag=engine.rules.agriculture?.settlements?.find(p=>p.settlement===settlement);
-    const generated=Object.values(state.remote??{}).flatMap(r=>r.skeleton?.offices??[]).find(o=>o.settlement===settlement&&o.source==='generated');
-    return {head:g?.head??ag?.manager??generated?.holder??null,seat:g?.meetingPlace??ag?.counter??engine.byId.get(generated?.holder)?.location??settlement,source:g?.appointment?.source??(generated?'state.remote.skeleton.offices':`rules.agriculture.${settlement}.manager`)};
 }
 function officeFact(engine,state,key,row,override=true){
     const def=engine.rules.governance?.authority?.offices?.[row.office];
@@ -36,9 +37,9 @@ function officeFact(engine,state,key,row,override=true){
     const head=row.office==='office_village_head';
     const foundingName=!override&&!state.records?.[`settlement_rank:${row.settlement}`]?baseOf(engine,state,row.holder)?.occupation:null;
     return fact({...row,name:foundingName??ranked.name,monthlyQuotaD:ranked.monthlyQuotaD??0,monthlyBudgetCopper:override?ranked.monthlyBudgetCopper??0:0,
-        taxBps:override?ranked.taxBps??null:null,powers:override?[...ranked.powers??[],...(head?['chair','register']:[])]:['quest_publish','chair','register'],workplace:row.workplace??gov.seat,
+        taxBps:override?ranked.taxBps??null:null,powers:override?[...ranked.powers??[],...(head?['chair','register']:[])]:['quest_publish','chair','register'],workplace:row.workplace??gov.seat.value,
         monthlySalaryCopper:engine.rules.governance?.salaries?.monthlyCopper?.[row.office]?.[adminLevel(engine,state,row.settlement)?.level??'村']??0},
-        `${override?`state.records.${key}`:gov.source} + rules.governance.authority.offices.${row.office} + promotion + rules.governance.salaries`,override);
+        `${override?`state.records.${key}`:gov.head.source} + rules.governance.authority.offices.${row.office} + promotion + rules.governance.salaries`,override);
 }
 // Appointment records hold facts. Names, quotas, powers and pay are read from
 // the office definition at the settlement's current administrative level.
@@ -46,8 +47,11 @@ export function personOffices(engine,state,requested,{settlement=null,power=null
     const id=actorId(engine.world,requested),rows=officeRows(state),out=[];
     if(!living(engine,state,id)||dismissed(state,id))return out;
     for(const [key,row] of rows){
-        if(actorId(engine.world,row.holder)!==id||row.status!=='在任'||(row.since??0)>(state.minute??0)||(row.until??Infinity)<=(state.minute??0))continue;
-        if(row.office==='office_village_head'&&currentHeadRow(state,row.settlement)?.[0]!==key)continue;
+        if(actorId(engine.world,row.holder)!==id||row.status!=='在任'||(row.since??row.appointedAt??0)>(state.minute??0)||(row.until??Infinity)<=(state.minute??0))continue;
+        if(row.office==='office_village_head'||row.office===remoteHeadOffice(state,row.settlement)?.office.id){
+            const gov=settlementGovernment(engine,state,row.settlement);
+            if(gov.head.value!==id||gov.appointment.source!==`state.records.${key}`)continue;
+        }
         const entry=officeFact(engine,state,key,row);if(entry)out.push(entry);
     }
     for(const [key,row] of records(state)){
@@ -59,23 +63,14 @@ export function personOffices(engine,state,requested,{settlement=null,power=null
     const settlements=new Set([...(engine.world.settlementProfiles??[]).map(p=>p.id),...(engine.rules.agriculture?.settlements??[]).map(p=>p.settlement),...Object.values(state.remote??{}).flatMap(r=>(r.skeleton?.offices??[]).map(o=>o.settlement))]);
     for(const sid of settlements){
         const g=settlementGovernment(engine,state,sid);
-        if(g.head!==id||currentHeadRow(state,sid))continue;
-        const entry=officeFact(engine,state,`catalog:${sid}`,{id:`catalog:${sid}`,category:'governance_office',office:'office_village_head',holder:id,settlement:sid,status:'在任',since:0,source:g.source},false);
+        if(g.head.value!==id||g.head.override||engine.world.settlementProfiles?.find(p=>p.id===sid)?.council)continue;
+        const entry=officeFact(engine,state,`catalog:${sid}`,{id:`catalog:${sid}`,category:'governance_office',office:'office_village_head',holder:id,settlement:sid,status:'在任',since:0,source:g.source.value},false);
         if(entry)out.push(entry);
     }
     return out.filter(e=>(!settlement||e.value.settlement===settlement)&&(!power||e.value.powers.includes(power)));
 }
 export function settlementHead(engine,state,settlement){
-    const current=currentHeadRow(state,settlement);
-    if(current){
-        const [key,row]=current,valid=row.status==='在任'&&(row.until??Infinity)>(state.minute??0)&&living(engine,state,row.holder)&&!dismissed(state,row.holder);
-        return fact(valid?actorId(engine.world,row.holder):null,`state.records.${key}`,true);
-    }
-    const gov=settlementGovernment(engine,state,settlement),head=gov.head;
-    if(head)return fact(living(engine,state,head)&&!dismissed(state,head)?head:null,gov.source);
-    const group=engine.rules.questSources?.funds?.[settlement];
-    if(group)return fact(groupView(engine,state,group)?.leader.value??null,`groupView.${group}.leader`);
-    return fact(null,gov.source);
+    return settlementGovernment(engine,state,settlement).head;
 }
 export function questPublisher(engine,state,board){
     const publishers=engine.rules.questSources?.publishers??{};
@@ -160,7 +155,7 @@ export function personQuestRights(engine,state,id,{cultural=false}={}){
 export function personRoutine(engine,state,id,constraints=null){
     const actor=state.npcs?.[id],base=baseOf(engine,state,id),career=personCareer(engine,state,id).value;
     const rows=constraints?.offices??officeRows(state),ownRows=rows.some(([,r])=>r.holder===id);
-    const displaced=(engine.world.settlementProfiles??[]).some(p=>p.details?.governance?.head===id&&currentHeadRow(state,p.id));
+    const displaced=(engine.world.settlementProfiles??[]).some(p=>p.details?.governance?.head===id&&settlementHead(engine,state,p.id).value!==id);
     const removed=constraints?.dismissals?constraints.dismissals.has(id):dismissed(state,id);
     const delegated=(constraints?.stewards??Object.values(state.records??{}).filter(r=>r.category==='housing_steward')).some(r=>r.steward===id);
     const orgRow=(constraints?.organizations??Object.values(state.records??{}).filter(r=>r.category==='organization')).find(r=>r.members?.[id]&&r.members[id].position!=='成员'&&!r.removed?.[id]);
@@ -351,18 +346,32 @@ export function settlementPopulation(engine,state,id){
 }
 export function settlementGovernment(engine,state,id){
     const profile=engine.world.settlementProfiles?.find(p=>p.id===id),g=profile?.details?.governance;
-    if(profile?.council){const group=groupView(engine,state,profile.council);return {head:group?.leader??fact(null,'current council'),powers:fact(group?.organization.value.charter?.rules??[],'current council charter'),appointment:fact(null,'current council'),enforcers:fact([],'current council')};}
-    const remote=state.remote?.[profile?.county]?.skeleton.offices?.find(o=>o.settlement===id),originalHead=g?.head??remote?.holder;
-    const rows=records(state).filter(([,r])=>r.category==='governance_office'&&r.settlement===id&&(r.office==='office_village_head'||remote&&r.office===remote.id)).sort((a,b)=>(b[1].appointedAt??b[1].since??0)-(a[1].appointedAt??a[1].since??0));
-    const alive=id=>id==='player'?state.player?.status!=='死亡':state.npcs?.[id]?.status!=='死亡'&&state.creatures?.[id]?.status!=='死亡';
-    const dismissed=id=>records(state).some(([,r])=>r.category==='legal_dismissal'&&(r.subject??r.npc)===id&&r.status!=='撤销');
-    const active=rows.find(([,r])=>r.status==='在任'&&(r.since??r.appointedAt??0)<=(state.minute??0)&&(r.until??Infinity)>(state.minute??0)&&alive(r.holder)&&!dismissed(r.holder));
-    const office=engine.rules.governance?.authority?.offices?.[active?.[1].office];
-    const head=active?.[1].holder??(rows.length?null:alive(originalHead)&&!dismissed(originalHead)?originalHead:null);
-    return {head:fact(head,rows.length?'state.records.governance_office':remote?`state.remote.${profile.county}.skeleton.offices`:`catalog.${id}.details.governance.head`,Boolean(rows.length)),
-        powers:fact(active?office?.powers??[]:head?g?.permissions?.head??[]:[],active?'rules.governance.authority.offices':`catalog.${id}.details.governance.permissions`,Boolean(rows.length)),
-        appointment:fact(active?.[1]??g?.appointment,active?`state.records.${active[0]}`:`catalog.${id}.details.governance.appointment`,Boolean(active)),
-        enforcers:fact((g?.enforcers??[]).filter(p=>alive(p)&&!dismissed(p)),`catalog.${id}.details.governance + legal dismissals`)};
+    if(profile?.council){
+        const group=groupView(engine,state,profile.council),leader=group?.leader??fact(null,'current council');
+        return {head:fact(leader.value&&!dismissed(state,leader.value)?leader.value:null,leader.source,leader.override),
+            powers:fact(group?.organization.value.charter?.rules??[],'current council charter'),appointment:fact(null,'current council'),enforcers:fact([],'current council'),
+            seat:group?.seat??fact(id,'current council'),source:fact(profile.council,'current council')};
+    }
+    const ag=engine.rules.agriculture?.settlements?.find(p=>p.settlement===id),generated=remoteHeadOffice(state,id),remote=generated?.office;
+    const originalHead=g?.head??ag?.manager??remote?.holder,current=currentHeadRow(state,id,remote),row=current?.[1];
+    const eligible=holder=>Boolean(holder)&&living(engine,state,holder)&&!dismissed(state,actorId(engine.world,holder));
+    // Select the last effective appointment before checking its validity. An
+    // expired or removed successor leaves a vacancy rather than restoring a predecessor.
+    const active=row?.status==='在任'&&(row.until??Infinity)>(state.minute??0)&&eligible(row.holder);
+    const office=engine.rules.governance?.authority?.offices?.[row?.office];
+    let head=fact(row?active?actorId(engine.world,row.holder):null:eligible(originalHead)?actorId(engine.world,originalHead):null,
+        current?`state.records.${current[0]}`:g?.head?`catalog.${id}.details.governance.head`:ag?.manager?`rules.agriculture.${id}.manager`:generated?.source??`catalog.${id}.details.governance.head`,Boolean(current));
+    if(!current&&!originalHead){
+        const group=engine.rules.questSources?.funds?.[id];
+        if(group){const leader=groupView(engine,state,group)?.leader.value;head=fact(eligible(leader)?leader:null,`groupView.${group}.leader`);}
+    }
+    const seat=row?.workplace??g?.meetingPlace??ag?.counter??baseOf(engine,state,remote?.holder)?.location??id;
+    const seatSource=row?.workplace?`state.records.${current[0]}.workplace`:g?.meetingPlace?`catalog.${id}.details.governance.meetingPlace`:ag?.counter?`rules.agriculture.${id}.counter`:generated?.source??`catalog.${id}`;
+    return {head,
+        powers:fact(active?office?.powers??[]:head.value?g?.permissions?.head??[]:[],active?'rules.governance.authority.offices':`catalog.${id}.details.governance.permissions`,Boolean(current)),
+        appointment:fact(row??g?.appointment,current?`state.records.${current[0]}`:`catalog.${id}.details.governance.appointment`,Boolean(current)),
+        enforcers:fact((g?.enforcers??[]).filter(eligible),`catalog.${id}.details.governance + legal dismissals`),
+        seat:fact(seat,seatSource,Boolean(row?.workplace)),source:fact(row?.source??g?.appointment?.source??generated?.source??head.source,head.source,Boolean(current))};
 }
 export function placeView(engine,state,id){
     const base=state.created?.[id]??engine.byId.get(id);if(!base)return null;

@@ -4,7 +4,7 @@ import fs from 'node:fs/promises';
 import {loadWorld} from '../tools/load-world.mjs';
 import {WorldEngine} from '../server-plugin/engine.mjs';
 import {applyPatches} from '../server-plugin/storage.mjs';
-import {personOffices,personOccupation,personCareer,personTeaching,personCertified,personQuestRights,settlementHead,questPublisher,personRoutine,personLawRoles,personSimulation} from '../server-plugin/entity-view.mjs';
+import {personOffices,personOccupation,personCareer,personTeaching,personCertified,personQuestRights,settlementHead,settlementGovernment,placeView,questPublisher,personRoutine,personLawRoles,personSimulation} from '../server-plugin/entity-view.mjs';
 import {questPublishingRights} from '../server-plugin/quest-board.mjs';
 import {governanceAction} from '../server-plugin/governance.mjs';
 import {trainingInstitution} from '../server-plugin/training.mjs';
@@ -57,6 +57,50 @@ test('同一主官席位以最后生效任命为准；新任离职后不复活�
     assert.equal(personOffices(engine,state,NPC,{settlement:SID}).length,0);
     newer.status='已免职';assert.equal(settlementHead(engine,state,SID).value,null);
     assert.equal(personOffices(engine,state,NPC,{settlement:SID}).length,0);
+});
+
+test('主事人、任职和地点视图共用生效任命；撤职、到期、死亡留下同一空缺',()=>{
+    const {engine,state}=fixture(),initial=settlementGovernment(engine,state,SID),before=structuredClone(state);
+    assert.deepEqual(initial.head,settlementHead(engine,state,SID));
+    assert.equal(personOffices(engine,state,head,{settlement:SID})[0].value.workplace,initial.seat.value);
+    assert.deepEqual(state,before);
+    const row=appoint(state,'player');delete row.since;row.appointedAt=state.minute+60;row.workplace='loc_bs';
+    assert.equal(settlementGovernment(engine,state,SID).head.value,head);
+    assert.equal(personOffices(engine,state,'player',{settlement:SID}).length,0);
+    state.minute+=60;
+    const current=settlementGovernment(engine,state,SID);
+    assert.equal(current.head.value,'player');assert.equal(current.seat.value,'loc_bs');assert.equal(current.source.value,row.source);
+    assert.deepEqual(placeView(engine,state,SID).government,current);
+    assert.deepEqual(questPublisher(engine,state,SID),current.head);
+    assert.equal(personOffices(engine,state,'player',{settlement:SID})[0].value.workplace,current.seat.value);
+    assert.equal(personOffices(engine,state,head,{settlement:SID}).length,0);
+    for(const reason of ['免职','到期','死亡','撤职记录']){
+        row.status='在任';row.until=20*MONTH;state.player.status='正常';delete state.records.dismissal;
+        if(reason==='免职')row.status='已免职';
+        if(reason==='到期')row.until=state.minute;
+        if(reason==='死亡')state.player.status='死亡';
+        if(reason==='撤职记录')state.records.dismissal={category:'legal_dismissal',subject:'player',status:'生效'};
+        assert.equal(settlementGovernment(engine,state,SID).head.value,null,reason);
+        assert.equal(questPublisher(engine,state,SID).value,null,reason);
+        assert.deepEqual(personOffices(engine,state,'player',{settlement:SID}),[],reason);
+        assert.deepEqual(placeView(engine,state,SID).government.powers.value,[],reason);
+    }
+    state.records.dismissal.status='撤销';assert.equal(settlementHead(engine,state,SID).value,'player');
+});
+
+test('议会主官和办公地点保持同一 fact 结构，现任变化不授予另一套村长席位',()=>{
+    const {engine,state}=fixture(),profile=engine.world.settlementProfiles.find(p=>p.id===SID),id='org_authority_council';
+    profile.council=id;
+    state.records[`organization:${id}`]={category:'organization',id,source:'created',name:'议会',kind:'会社',seat:'loc_bs',leader:NPC,members:{[NPC]:{position:'会长'},player:{position:'成员'}},removed:{},charter:{rules:['议会表决']}};
+    appoint(state,'player');
+    const council=settlementGovernment(engine,state,SID);
+    assert.deepEqual(Object.keys(council).sort(),['head','powers','appointment','enforcers','seat','source'].sort());
+    for(const entry of Object.values(council))assert.ok(Object.hasOwn(entry,'value')&&Object.hasOwn(entry,'source')&&Object.hasOwn(entry,'override'));
+    assert.equal(council.head.value,NPC);assert.equal(council.seat.value,'loc_bs');assert.deepEqual(council.powers.value,['议会表决']);
+    assert.deepEqual(settlementHead(engine,state,SID),council.head);assert.equal(questPublisher(engine,state,SID).value,NPC);
+    assert.deepEqual(personOffices(engine,state,NPC,{settlement:SID}),[]);assert.deepEqual(personOffices(engine,state,'player',{settlement:SID}),[]);
+    state.records[`organization:${id}`].leader='player';assert.equal(settlementGovernment(engine,state,SID).head.value,'player');
+    state.player.status='死亡';assert.equal(settlementHead(engine,state,SID).value,null);assert.equal(placeView(engine,state,SID).government.head.value,null);
 });
 test('所有身份额度取最大值，名士只授文化额度；组织职位变化与个人覆盖实时生效',()=>{
     const {engine,state}=fixture();appoint(state,NPC,'office_works_deputy');
@@ -138,8 +182,15 @@ test('远方生成聚落默认主事人跟随新任；名册补成 full 后取�
     state.remote={[county]:{county,skeleton,profiles:{}}};
     const engine=new WorldEngine(remoteWorld(world,state)),sid=skeleton.settlements[0].id,original=skeleton.publishers[sid];
     assert.equal(questPublisher(engine,state,sid).value,original);
+    const gov=settlementGovernment(engine,state,sid),office=skeleton.offices.find(o=>o.settlement===sid&&o.source==='generated');
+    assert.equal(gov.head.value,office.holder);assert.equal(gov.head.source,`state.remote.${county}.skeleton.offices`);
+    assert.equal(gov.seat.value,engine.byId.get(original).location);assert.equal(gov.source.value,gov.head.source);
+    assert.equal(personOffices(engine,state,original,{settlement:sid})[0].value.workplace,gov.seat.value);
     const row=appoint(state);row.settlement=sid;
     assert.equal(questPublisher(engine,state,sid).value,NPC);
+    assert.equal(placeView(engine,state,sid).government.head.value,NPC);assert.deepEqual(personOffices(engine,state,original,{settlement:sid}),[]);
+    row.office=office.id;assert.equal(settlementHead(engine,state,sid).value,NPC);
+    row.status='已免职';assert.equal(settlementHead(engine,state,sid).value,null);assert.deepEqual(personOffices(engine,state,NPC,{settlement:sid}),[]);
     const resident=skeleton.people.find(p=>!engine.world.npcs.some(n=>n.id===p.id));
     if(resident){assert.equal(personSimulation(engine,state,resident.id).value,false);state.remote[county].profiles[resident.id]={status:'full'};assert.equal(personSimulation(engine,state,resident.id).value,true);}
 });
