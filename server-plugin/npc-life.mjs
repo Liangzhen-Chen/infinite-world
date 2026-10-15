@@ -18,6 +18,9 @@ import {rosterLifeState,lifeRoutine} from './population.mjs';
 import {initialNpcState} from './npc-state.mjs';
 import {advanceNpcNeeds} from './npc-intelligence.mjs';
 import {famineAt} from './hazard-calendar.mjs';
+import {personSimulation,personConstraint,personHousehold} from './entity-view.mjs';
+import {actorId,actorPath,householdDefinition} from './npc-state.mjs';
+import {finishBusinessContract,refundContractEscrow,releaseBusinessLease} from './contracts.mjs';
 
 const DAY=1440,YEAR=360*DAY,unable=['死亡','濒死'];
 const rules=engine=>engine.rules.npcLife;
@@ -36,7 +39,7 @@ export function npcIsMinor(engine,state,id,minute=state.minute){
 const alive=(state,id)=>Boolean(state.npcs[id])&&!unable.includes(state.npcs[id].status);
 // Full catalog people, plus roster people and campaign-born children whom
 // family life has brought into the simulation (they carry state.npcs.*.life).
-const lifeActor=(engine,state,id)=>Boolean(state.npcs[id])&&(engine.byId.get(id)?.tier==='full'||Boolean(state.npcs[id].life));
+const lifeActor=(engine,state,id)=>Boolean(state.npcs[id])&&(personSimulation(engine,state,id).value||Boolean(state.npcs[id].life));
 // Bring a roster housemate or relative into campaign state when a family
 // event needs them (see population.mjs); false when they cannot be.
 function bring(d,engine,id,minute,reason){
@@ -57,7 +60,7 @@ function admit(engine,entity){
 // Registered households plus campaign births and moves. The catalog list is
 // not edited: a registered member who moved away is listed under `left`.
 function setMembership(d,engine,houseId,id,inside){
- const house=engine.world.households.find(h=>h.id===houseId),row=d.get('state','family','households',houseId)??{};
+ const house=householdDefinition(engine,d.get('state'),houseId),row=d.get('state','family','households',houseId)??{};
  const members=(row.members??[]).filter(m=>m!==id),left=(row.left??[]).filter(m=>m!==id);
  if(house.members.includes(id)){if(!inside)left.push(id);}else if(inside)members.push(id);
  d.set(['state','family','households',houseId],{...row,members,...(left.length||row.left?{left}:{})});
@@ -96,7 +99,7 @@ export function marriageBlocker(engine,state,a,b,minute=state.minute){
  const r=rules(engine);if(!r)return '世界规则没有登记成年家庭关系';
  if(a===b)return '须为两个人';
  for(const id of [a,b]){
-  if(engine.byId.get(id)?.tier!=='full'||!state.npcs[id])return '须为有独立状态的人物';
+  if(!personSimulation(engine,state,id).value||!state.npcs[id])return '须为有独立状态的人物';
   if(npcIsMinor(engine,state,id,minute))return '未成年人不进入恋爱或婚姻';
  }
  for(const id of [a,b])if(!alive(state,id))return '一方已死亡或濒死';
@@ -113,7 +116,7 @@ export function marriageBlocker(engine,state,a,b,minute=state.minute){
 function candidatePairs(engine,state){
  const pairs=new Map();
  for(const id of Object.keys(state.npcs).sort()){
-  if(engine.byId.get(id)?.tier!=='full')continue;
+  if(!personSimulation(engine,state,id).value)continue;
   const others=[...(engine.byId.get(id).relationships??[]).map(r=>r.with),...Object.keys(state.npcs[id].relationships??{})];
   for(const other of others)if(other!==id&&other.startsWith('npc_')&&state.npcs[other])pairs.set(pairKey(id,other),[id,other].sort());
  }
@@ -360,33 +363,59 @@ function heirOf(engine,state,id,minute){
  if(children.length)return children[0];
  return npcHousehold(engine,state,id)?.members.filter(ok).sort()[0]??null;
 }
-export function recordMilitaryDeath(d,engine,id,minute){if(d.get('state','npcs',id)&&d.get('state','npcs',id,'diedAt')===undefined)dieNaturally(d,engine,id,minute,'战死');}
-function dieNaturally(d,engine,id,minute,cause,illness=null){
+export function recordMilitaryDeath(d,engine,id,minute){return recordEntityDeath(d,engine,id,minute,'战死');}
+export function recordEntityDeath(d,engine,id,minute,cause,illness=null){
+ id=actorId(engine.world,id);const path=actorPath(engine.world,id),actor=d.get(...path);
+ if(!actor||id==='player')return null;
+ const previous=Object.values(d.get('state','family','deaths')??{}).find(r=>r.person===id);
+ if(previous||actor.diedAt!==undefined)return previous??null;
+ const npc=path[1]==='npcs',household=personHousehold(engine,d.get('state'),id).value;
  // Roster housemates are the ones who inherit, mourn and may later have to
  // move to kin; they enter campaign state now.
- for(const x of npcHousehold(engine,d.get('state'),id)?.members??[])if(x!==id&&!d.get('state','npcs',x))bring(d,engine,x,minute,'家中有人去世');
- const state=d.get('state'),house=npcHousehold(engine,state,id),deathId=`death_${key(id,minute)}`,name=nameOf(engine,state,id);
- d.set(['state','npcs',id,'status'],'死亡');d.set(['state','npcs',id,'activity'],'已故');d.set(['state','npcs',id,'diedAt'],minute);
- if(state.npcs[id].caring)d.remove(['state','npcs',id,'caring']);
+ for(const x of household?.members??[])if(x!==id&&!d.get('state','npcs',x))bring(d,engine,x,minute,'家中有人去世');
+ const state=d.get('state'),house=household,deathId=`death_${key(id,minute)}`,name=nameOf(engine,state,id);
+ d.set([...path,'status'],'死亡');d.set([...path,'activity'],'已故');d.set([...path,'diedAt'],minute);
+ if(actor.hp!==undefined)d.set([...path,'hp'],0);
+ for(const field of ['caring','scheduleTravel','cognitionTravel'])if(actor[field])d.remove([...path,field]);
+ if(state.player.companions?.includes(id))d.set(['state','player','companions'],state.player.companions.filter(x=>x!==id));
  for(const row of Object.values(state.family?.illnesses??{}).filter(r=>r.patient===id&&r.status==='患病中')){
-  release(d,row);d.set(['state','family','illnesses',row.id],{...d.get('state','family','illnesses',row.id),status:'病故',endedAt:minute});
+  release(d,row);d.set(['state','family','illnesses',row.id],{...d.get('state','family','illnesses',row.id),status:cause==='病故'?'病故':'中止',endedAt:minute});
  }
  const obligations=[];
  for(const o of Object.values(state.obligations??{}).sort((a,b)=>a.id.localeCompare(b.id)))if(['待履行','进行中'].includes(o.status)&&[o.promisor,o.promisee].includes(id)){
   d.set(['state','obligations',o.id],{...o,status:'取消',reason:`${name}已${cause}，约定终止`,resolvedAt:minute,endedByDeath:deathId});obligations.push(o.id);
  }
- const heir=heirOf(engine,state,id,minute);
- const estate={heir,coins:state.npcs[id].coins??0,items:{},debts:Object.entries(state.records??{}).filter(([,r])=>r.category==='debt'&&[r.debtor,r.creditor].includes(id)&&r.amount>(r.paid??0)).map(([k])=>k).sort()};
+ const heir=npc?heirOf(engine,state,id,minute):null;
+ const contracts=[];
+ for(const [cid,row] of Object.entries(state.records??{}))if(row.category==='contract'&&row.parties?.includes(id)&&['有效','待履行'].includes(row.status)){
+  if(row.version===1&&row.business){
+   if(row.kind==='lease')releaseBusinessLease(d,engine,row,{status:'已终止',source:deathId});
+   else finishBusinessContract(d,refundContractEscrow(d,row),{status:'已取消',source:deathId});
+   d.set(['state','records',cid,'endedByDeath'],deathId);
+  }else d.set(['state','records',cid],{...row,status:'已终止',resolvedAt:minute,endedByDeath:deathId});
+  if(row.enforcement?.active)d.set(['state','records',cid,'enforcement','active'],false);
+  contracts.push(cid);
+ }
+ const current=d.get(...path),estate={heir,coins:current.coins??0,items:{},debts:Object.entries(state.records??{}).filter(([,r])=>r.category==='debt'&&[r.debtor,r.creditor].includes(id)&&r.amount>(r.paid??0)).map(([k])=>k).sort()};
  if(heir){
-  for(const item of Object.keys(state.npcs[id].inventory??{}).sort()){const n=engine.quantity(d,id,item);if(n>0){transferItems(d,engine,id,heir,item,n);estate.items[item]=n;}}
-  if(estate.coins){d.set(['state','npcs',heir,'coins'],(d.get('state','npcs',heir,'coins')??0)+estate.coins);d.set(['state','npcs',id,'coins'],0);}
+  for(const item of Object.keys(current.inventory??{}).sort()){const n=engine.quantity(d,id,item);if(n>0){transferItems(d,engine,id,heir,item,n);estate.items[item]=n;}}
+  if(estate.coins){d.set(['state','npcs',heir,'coins'],(d.get('state','npcs',heir,'coins')??0)+estate.coins);d.set([...path,'coins'],0);}
   d.set(['state','npcs',heir,'developments'],[...d.get('state','npcs',heir,'developments')??[],{type:'继承',source:deathId,minute,from:id}]);
+ }
+ const pets=[];
+ for(const [pet,body] of Object.entries(state.creatures??{}))if(body.owner===id||pet===id){
+  const owner=pet===id?null:heir;d.set(['state','creatures',pet,'owner'],owner);pets.push(pet);
+  const entry=d.get('state','pets',pet);
+  if(entry)d.set(['state','pets',pet],{...entry,status:pet===id?'死亡':'已解除',following:false,ended:minute,endedByDeath:deathId});
+  if(state.player.mount===pet)d.remove(['state','player','mount']);
  }
  const ledger=house?state.settlements?.[house.settlement]:null,population=Number.isSafeInteger(ledger?.population)?{before:ledger.population,after:Math.max(0,ledger.population-1)}:null;
  if(population)d.set(['state','settlements',house.settlement,'population'],population.after);
  const content=`${name}在${engine.calendar(minute).text.slice(0,-6)}${cause}。`;
- const witnesses=witness(d,engine,deathId,[id],house?[house.id]:[],{minute,kind:'health',content,salience:4});
- d.set(['state','family','deaths',deathId],{id:deathId,person:id,minute,cause,illness:illness?.id??null,household:house?.id??null,settlement:house?.settlement??null,population,estate,obligations,witnesses});
+ const witnesses=witness(d,engine,deathId,[id],house?[house.id]:[],{minute,kind:'health',content,salience:4,...(!npc?{at:[actor.location].filter(Boolean)}:{})});
+ const result={id:deathId,person:id,minute,cause,illness:illness?.id??null,household:house?.id??null,settlement:house?.settlement??null,population,estate,obligations,witnesses,
+  ...(contracts.length?{contracts}:{}),...(pets.length?{pets}:{})};
+ d.set(['state','family','deaths',deathId],result);return result;
 }
 
 function healthDay(d,engine,minute){
@@ -400,14 +429,14 @@ function healthDay(d,engine,minute){
   const carer=assignCare(d,engine,illness,minute);
   if(minute<=illness.since)continue;
   const odds=illness.fatality??h.graveFatality,fatality=carer?odds.cared:odds.alone,daily=1-(1-fatality)**(DAY/(illness.endsAt-illness.since));
-  if(clockRoll(seed,`illness-death:${illness.id}`,day)<daily)dieNaturally(d,engine,illness.patient,minute,'病故',illness);
+  if(clockRoll(seed,`illness-death:${illness.id}`,day)<daily)recordEntityDeath(d,engine,illness.patient,minute,'病故',illness);
  }
  for(const id of Object.keys(d.get('state','npcs')).sort()){
   const state=d.get('state'),npc=state.npcs[id];
   const along=withPlayer(state,id);
   if(!lifeActor(engine,state,id)||incapable.includes(npc.status)||!(settled(state,id)||along)||ended.has(id))continue;
   const age=npcAgeAt(engine,state,id,minute),band=age===null?null:ageBand(h,age);if(!band)continue;
-  if(clockRoll(seed,`natural-death:${id}`,day)<perDay(band.suddenDeathPerYear)&&!along){dieNaturally(d,engine,id,minute,'寿终');continue;}
+  if(clockRoll(seed,`natural-death:${id}`,day)<perDay(band.suddenDeathPerYear)&&!along){recordEntityDeath(d,engine,id,minute,'寿终');continue;}
   if(clockRoll(seed,`illness:${id}`,day)<Math.min(1,band.illnessPerYear/360))fallIll(d,engine,id,minute,band);
  }
 }
@@ -436,6 +465,7 @@ const placeName=(engine,id)=>engine.byId.get(id)?.name??id;
 const hungry=(engine,state,settlement,minute)=>(state.settlements?.[settlement]?.starvation??0)>=migrationRules(engine).livelihood.starvationDays||Boolean(famineAt(state,settlement,minute));
 const present=(engine,state,x)=>state.npcs[x]?alive(state,x):Boolean(engine.byId.get(x));
 function mobile(engine,state,id){
+ if(personConstraint(engine,state,id))return false;
  if(state.npcs[id]?.levy)return false;
  const n=state.npcs[id];
  return lifeActor(engine,state,id)&&Boolean(npcSchedule(engine,state,id))&&settled(state,id)&&!incapable.includes(n.status)&&!n.caring&&!npcMigration(state,id);

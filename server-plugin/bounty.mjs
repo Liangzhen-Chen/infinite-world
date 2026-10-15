@@ -147,7 +147,9 @@ export function deliverFugitive(d,engine,w,by,minute){
     const code=codeById(engine,w.law),row=d.get(...rec(w.case)),npc=w.subject;
     d.set(['state','player','companions'],(d.get('state','player','companions')??[]).filter(n=>n!==npc));
     d.set(['state','npcs',npc,'location'],code.court);
-    d.set(rec(`legal_detention:${w.id}`),{category:'legal_detention',subject:npc,case:w.case,wanted:w.id,location:code.court,deliveredBy:by,minute});
+    d.set(['state','npcs',npc,'activity'],'依法拘留');
+    for(const field of ['scheduleTravel','cognitionTravel'])if(d.get('state','npcs',npc,field))d.remove(['state','npcs',npc,field]);
+    d.set(rec(`legal_detention:${w.id}`),{category:'legal_detention',subject:npc,case:w.case,wanted:w.id,location:code.court,deliveredBy:by,minute,status:'生效',expires:minute+code.maximumDetentionMinutes});
     if(row)d.set(rec(row.id),{...row,status:'已到案',deliveredBy:by,deliveredAt:minute});
     const next={...w};const paid=payReward(d,next,by,minute);
     closeQuest(d,next,'已完成','逃犯已交付法院',minute,{taker:by,rewardPaid:paid});

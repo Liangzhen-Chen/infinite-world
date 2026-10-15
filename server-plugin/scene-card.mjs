@@ -1,3 +1,4 @@
+import {personAge}from'./entity-view.mjs';
 import {environmentCatalog} from './environment.mjs';
 import {petView} from './pets.mjs';
 import {summonView} from './summons.mjs';
@@ -20,7 +21,7 @@ import {spiritScene}from'./wildlife-society.mjs';
 import {tribalScene}from'./tribal-awakening.mjs';
 import {militaryScene}from'./military.mjs';
 import {warScene}from'./war-diplomacy.mjs';
-import {npcLifeLines,npcAgeAt}from'./npc-life.mjs';
+import {npcLifeLines}from'./npc-life.mjs';
 import {standing,standingWords}from'./standing.mjs';
 import {societyAt}from'./monster-society.mjs';
 import {settlementAt}from'./reputation.mjs';
@@ -74,7 +75,7 @@ export function sceneCard(engine,document,query='',index=null){
         const context=npcContext(engine,document,id,query);
         const relationship=relationView(engine,s,id,'player');
         const shared=(context?.memories??Object.values(document.memories??{}).filter(m=>m.subject===id).slice(-2)).map(m=>`${engine.calendar(m.minute??0).text} ${m.sourceType??''}：${text(m.content,140)}`);
-        parts.push(`${base.name}（${id}）｜${s.npcs[id]?.occupation??base.occupation??''}，${(base.tier==='full'?base.age:npcAgeAt(engine,s,id))??base.age??''}岁｜此刻：${text(available.activity)}\n  对你：信任${relationship.trust} 亲近${relationship.affection} 敬重${relationship.respect} 畏惧${relationship.fear}${relationship.favors.some(row=>row.status==='未还')?'，记得欠你的人情':''}｜涉及你的经历：${text(shared.join('；'),compactPeople?180:500)||'尚无已核实记录'}\n  说话：${text(base.speakingStyle??base.voice?.register??base.voice)}｜挂心：${text(context?.concern??list(npc.goals??base.goals),130)}\n  TA不知道：${text(list(context?.unknown??npc.unknownFacts??base.knowledge?.unknown??base.unknownFacts),160)}${!context&&base.notes?`\n  人物资料：${text(base.notes,180)}`:''}`);
+        parts.push(`${base.name}（${id}）｜${s.npcs[id]?.occupation??base.occupation??''}，${personAge(engine,s,id).value??base.age??''}岁｜此刻：${text(available.activity)}\n  对你：信任${relationship.trust} 亲近${relationship.affection} 敬重${relationship.respect} 畏惧${relationship.fear}${relationship.favors.some(row=>row.status==='未还')?'，记得欠你的人情':''}｜涉及你的经历：${text(shared.join('；'),compactPeople?180:500)||'尚无已核实记录'}\n  说话：${text(base.speakingStyle??base.voice?.register??base.voice)}｜挂心：${text(context?.concern??list(npc.goals??base.goals),130)}\n  TA不知道：${text(list(context?.unknown??npc.unknownFacts??base.knowledge?.unknown??base.unknownFacts),160)}${!context&&base.notes?`\n  人物资料：${text(base.notes,180)}`:''}`);
         if(context?.recentActivities?.length)parts.push(`  本人近期经历，玩家未必知情：${text(context.recentActivities.map(row=>`${engine.calendar(row.minute).text} ${row.content}`).join('；'),compactPeople?100:220)}`);
         if(context?.lifeNews?.length)parts.push(`  本人知道的乡里人事，玩家未必知情：${text(context.lifeNews.map(row=>`${engine.calendar(row.minute).text} ${row.sourceType}${row.heardFrom?`（听${name(row.heardFrom)}说）`:''}：${row.content}`).join('；'),compactPeople?120:260)}`);
         // The person in front of you: their own household, health and move.

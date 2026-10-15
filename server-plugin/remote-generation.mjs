@@ -655,6 +655,7 @@ export function acceptRemoteProfile(d,engine,input,{check,maxFailures,fields}){
         ...(input.generator?{generator:{model:String(input.generator.model??'').slice(0,60),calls:Number(input.generator.calls)||0}}:{})});
     d.set(['state','remote',county,'revision'],(rec.revision??0)+1);
     // No purse or goods come with a profile; a shopkeeper keeps the shop it already had.
-    if(!d.get('state','npcs',person))d.set(['state','npcs',person],{...initialNpcState({...entity,...profile,coins:0,inventory:{}}),occupation:entity.occupation});
+    if(!d.get('state','npcs',person))d.set(['state','npcs',person],{...initialNpcState({...entity,...profile,coins:0,inventory:{}}),occupation:entity.occupation,
+        ...(!entity.schedule?{routine:{default:[{start:0,end:1440,location:entity.home?.location??entity.location,activity:'在家',services:[]}]}}:{})});
     return {person,status:'full',name:entity.name,county};
 }

@@ -5,10 +5,11 @@ import {scheduleAt,advanceWithNpcParticipants,validateNpcSchedules}from'./npc-sc
 import {effectiveProficiency}from'./professions.mjs';
 import {npcSchedule}from'./npc-state.mjs';
 import {growIntelligence,GROWTH_POINTS}from'./npc-intelligence.mjs';
+import {personSimulation,personConstraint}from'./entity-view.mjs';
 
 const DAY=1440,unable=['死亡','濒死','昏迷','患病'],sleeping=/睡眠|睡觉|熟睡/;
 const rules=engine=>{const r=engine.rules.npcGrowth;if(!r)throw Error('世界规则没有登记人物成长');return r;};
-const full=(engine,id)=>engine.byId.get(id)?.tier==='full';
+const full=(engine,id)=>personSimulation(engine,{},id).value;
 
 export function npcProficiency(engine,state,id,skill){
  const v=state.npcs[id]?.skills?.[skill]??engine.byId.get(id)?.skills?.[skill]??engine.byId.get(id)?.proficiencies?.[skill]??0;
@@ -43,6 +44,7 @@ export function teachNpc(d,engine,args,eventId){
  if(!full(engine,student)||!npc)throw Error('这位人物没有独立成长记录');
  if(npc.location!==state.location)throw Error('学生不在场');
  if(unable.includes(npc.status))throw Error(`学生此刻${npc.status}，不能受教`);
+ if(personConstraint(engine,state,student))throw Error('学生正在依法拘留，不能受教');
  const minutes=kind==='recipe'?catalog.learnMinutes??r.minutes:r.minutes,companion=state.player.companions?.includes(student);
  engine.assertNpcObligationAction?.(d,['player',student],{minutes,location:state.location,kind:'teach'});
  engine.assertNpcAutonomyAction?.(state,[student],{minutes});
@@ -91,6 +93,7 @@ function vocationBlocker(engine,state,id,vocation){
  const r=rules(engine),npc=state.npcs[id],row=npc?.growth?.skills?.[vocation.skill],minute=state.minute;
  if(!full(engine,id)||!npc)return '人物没有独立成长记录';
  if(unable.includes(npc.status))return `人物此刻${npc.status}`;
+ if(personConstraint(engine,state,id))return '人物正在依法拘留';
  if(npc.vocation?.id===vocation.id)return '已经以这门营生为业';
  if((r.institutionTeachersStay??true)&&engine.rules.training?.institutions?.some(e=>e.teacher===id))return '登记机构导师不能自行离职';
  if(npc.vocation&&minute-npc.vocation.since<r.switchCooldownDays*DAY)return '刚换过营生，尚未做满规定天数';

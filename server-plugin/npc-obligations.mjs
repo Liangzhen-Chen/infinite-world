@@ -1,8 +1,9 @@
 import {scheduleAt,advanceNpcSchedules} from './npc-schedule.mjs';
 import {waterEarthHeldUntil}from'./magic-water-earth.mjs';
+import {personConstraint,personConstraints,personSimulation}from'./entity-view.mjs';
 
 const live=o=>o?.reservationVersion===1&&['待履行','进行中'].includes(o.status);
-const full=(engine,id)=>engine.byId.get(id)?.tier==='full';
+const full=(engine,id)=>personSimulation(engine,{},id).value;
 const capable=row=>row&&!['死亡','濒死','昏迷','患病'].includes(row.status);
 const integer=(n,min,max,label)=>{if(!Number.isSafeInteger(n)||n<min||n>max)throw new Error(`${label}必须在${min}到${max}之间`);return n;};
 const parties=o=>[o.promisor,o.promisee];
@@ -113,9 +114,12 @@ export function nextNpcObligationMinute(state,after){
 // Record occupied intervals so an endpoint or a trip never counts as attendance.
 function simulateNpc(d,engine,id,before,after,bookings){
  const old=d.get('state','npcs',id),npc=structuredClone(old),segments=[];let t=before;
+ const constraints=personConstraints(engine,d.get('state'));
  const add=(end,available=true)=>{if(end>t)segments.push({start:t,end,location:npc.location,available});t=end;};
  const visited=o=>(o.attendance[id]??0)+segments.filter(s=>s.available&&s.location===o.location).reduce((n,s)=>n+Math.max(0,Math.min(s.end,o.deadline)-Math.max(s.start,o.start)),0)>0;
  while(t<=after){
+  const constraint=personConstraint(engine,d.get('state'),id,t,constraints)?.value;
+  if(constraint){npc.location=constraint.location;npc.activity='依法拘留';delete npc.scheduleTravel;add(Math.min(after,constraint.expires??after),false);if(t>=after)break;continue;}
   const heldUntil=waterEarthHeldUntil(d.get('state'),id,t);
   if(heldUntil>t){add(Math.min(after,heldUntil),capable(npc));if(t>=after)break;continue;}
   if(!capable(npc)){npc.activity=npc.status;add(after,false);break;}
@@ -127,7 +131,7 @@ function simulateNpc(d,engine,id,before,after,bookings){
   const pending=bookings.filter(o=>!(o.type==='等候'&&o.promisee===id&&visited(o)));
   const active=pending.find(o=>(o.departures[id]??o.start)<=t&&(t<o.deadline||o.deliveryVersion===1&&t===o.deadline));
   const upcoming=pending.map(o=>o.departures[id]??o.start).filter(n=>n>t);
-  const slot=active?{location:active.location,activity:active.type,until:active.deadline}:scheduleAt(engine,id,t,d.get('state'));
+  const slot=active?{location:active.location,activity:active.type,until:active.deadline}:scheduleAt(engine,id,t,d.get('state'),constraints);
   if(!slot){add(after);break;}
   const visitEnd=active?.type==='等候'&&active.promisee===id?Math.max(t,active.start)+1:Infinity;
   const end=Math.min(after,slot.until,visitEnd,...upcoming);

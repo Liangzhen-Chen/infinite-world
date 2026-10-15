@@ -3,6 +3,7 @@ import { EntityResolver, validateMemory, normalize } from './retrieval.mjs';
 import {assertLocationAccess,homePermission}from'./location-access.mjs';
 import {activities}from'./activities.mjs';
 import {actorId,actorPath}from'./npc-state.mjs';
+import {personSimulation,personConstraint}from'./entity-view.mjs';
 import {validateSites}from'./sites.mjs';
 import {WorldEngine as Phase1Engine}from'./compat/v2-phase1-engine.mjs';
 import {learn}from'./learning.mjs';
@@ -615,6 +616,7 @@ export class WorldEngine {
         if(!['带路','送货','付款','等候','会面','协助'].includes(type))throw new Error('义务类别不支持；type 可选：带路、送货、付款、等候、会面、协助');
         if(promisor!=='player'&&!d.get('state','npcs',promisor))throw new Error('承诺者不在战役中');
         for(const actor of[promisor,promisee])if(['死亡','濒死'].includes(this.actor(d,actor)?.status))throw new Error('义务当事人无法清醒履约');
+        for(const actor of[promisor,promisee])if(actor!=='player'&&personConstraint(this,d.get('state'),actor))throw new Error('义务当事人正在依法拘留，不能自由行动');
         const obligation={id:`obl_${id}`,type,promisor,promisee,content:text(args.content),status:'待履行',deadline:number(args.deadline??d.get('state','minute')+1440,0,Number.MAX_SAFE_INTEGER)};
         let routePreview;
         if(type==='带路'){
@@ -650,7 +652,7 @@ export class WorldEngine {
         }
         if(o.deliveryVersion===1&&(['死亡','濒死','昏迷','患病'].includes(target.status)||/(睡眠|熟睡|睡觉)/.test(target.activity??'')||o.promisee==='player'&&this.npcObligationAction?.args?.activity==='睡眠'))throw Object.assign(new Error('收件人无法清醒接收货物'),{deliveryResponsibility:o.promisee});
         if([source,target].some(actor=>['死亡','濒死'].includes(actor.status)))throw new Error('义务当事人无法清醒履约');
-        if([o.promisor,o.promisee].some(actor=>this.byId.get(actor)?.tier==='full')){
+        if([o.promisor,o.promisee].some(actor=>personSimulation(this,d.get('state'),actor).value)){
             const from=o.promisor==='player'?d.get('state','location'):source.location,to=o.promisee==='player'?d.get('state','location'):target.location;
             if(!from||!to||from!==to)throw new Error('双方尚未在同一地点交付，不能隔空转移钱物');
             if([source,target].some(actor=>['昏迷','患病'].includes(actor.status)||/(睡眠|熟睡|睡觉)/.test(actor.activity??'')))throw new Error('义务当事人尚不能清醒交付');

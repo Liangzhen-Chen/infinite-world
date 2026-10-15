@@ -4,6 +4,7 @@ import {assertLocationAccess} from './location-access.mjs';
 import {actorPath} from './npc-state.mjs';
 import {validateMonsterSocieties,passageAllows,assertSocietyEntry,infiltrationDetected,infiltrationSucceeded,societyAt} from './monster-society.mjs';
 import {traitsOf} from './traits.mjs';
+import {personAge,personConstraint}from'./entity-view.mjs';
 
 // A location's optional site contains occupants (actor IDs), manager, owner,
 // entryMechanisms, mechanisms, clues, resources and truths. Local IDs stay stable
@@ -161,7 +162,7 @@ const inside=(d,place)=>d.get('state','records','site_presence')?.site===place.i
 const covert=(d,place)=>inside(d,place)&&d.get('state','records','site_presence').covert===true;
 function watchers(d,engine,place){
     const society=societyAt(engine,place.id)?.id,occupants=new Set(place.site.occupants??[]);
-    return engine.world.npcs.filter(n=>(occupants.has(n.id)||society&&n.society===society||[place.site.manager,ownerOf(place)].includes(n.id))&&(n.age??18)>=18).map(n=>n.id).sort().filter(id=>{
+    return engine.world.npcs.filter(n=>(occupants.has(n.id)||society&&n.society===society||[place.site.manager,ownerOf(place)].includes(n.id))&&(personAge(engine,d.get('state'),n.id).value??0)>=18).map(n=>n.id).sort().filter(id=>{
         const a=d.get('state','npcs',id);return a?.location===place.id&&!['死亡','濒死','昏迷','患病'].includes(a.status)&&(a.hp===undefined||a.hp>0)&&!a.scheduleTravel&&!a.cognitionTravel&&!/睡眠|睡觉|熟睡/.test(a.activity??'');
     });
 }
@@ -306,7 +307,7 @@ export function sitePermission(d,engine,args,eventId){
     const owned=[...new Set(owners.filter(owner=>authorityOf(place,owner)===grantor))],owner=owned[0];
     const propertyOwners=[ownerOf(place),...(place.site.resources??[]).map(row=>ownerOf(place,row))];
     const onlyOccupant=owner&&!propertyOwners.includes(owner)&&!place.site.manager;
-    if(!owner||base?.age<18||!actor||onlyOccupant&&actor.location!==place.id||actor.location!==d.get('state','location')||actor.scheduleTravel||actor.cognitionTravel||['死亡','濒死','昏迷','患病'].includes(actor.status)||/睡眠|熟睡|睡觉/.test(actor.activity??''))throw Error('据点许可须由现场清醒成年所有者、管理人或占据者签发');
+    if(!owner||(personAge(engine,d.get('state'),grantor).value??0)<18||personConstraint(engine,d.get('state'),grantor)||!actor||onlyOccupant&&actor.location!==place.id||actor.location!==d.get('state','location')||actor.scheduleTravel||actor.cognitionTravel||['死亡','濒死','昏迷','患病'].includes(actor.status)||/睡眠|熟睡|睡觉/.test(actor.activity??''))throw Error('据点许可须由现场清醒成年所有者、管理人或占据者签发');
     if(args.promisee!==undefined&&engine.resolve(args.promisee)!=='player')throw Error('据点许可只登记给玩家');
     if(place.access?.mode==='private'&&place.access.requiresConsent&&!place.access.residents?.includes(grantor))throw Error('私宅据点许可仍须由登记住户签发');
     if(place.access?.mode==='council'&&place.access.authority!==grantor)throw Error('议事区许可须由登记负责人签发');

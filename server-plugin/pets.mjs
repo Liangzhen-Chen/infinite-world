@@ -2,6 +2,7 @@ import { effectiveProficiency } from './professions.mjs';
 import { xpRequired } from './progression.mjs';
 import {resolveCreature}from'./wildlife.mjs';
 import {sapient,awakeningView}from'./wildlife-awakening.mjs';
+import {recordEntityDeath}from'./npc-life.mjs';
 
 const clamp = value => Math.max(0, Math.min(100, value));
 const activeStatuses = new Set(['活跃', '留守']);
@@ -77,7 +78,7 @@ export function advancePets(d, engine, after) {
             if (care.hunger >= 100 || care.sickness) hp = Math.max(0, hp - rules.starvationDamage);
             care.nextTick += 60;
             if (!hp) {
-                d.set(['state', 'creatures', id, 'status'], '死亡'); detach(d, id, '死亡', minute);
+                recordEntityDeath(d,engine,id,minute,'饥病死亡'); detach(d, id, '死亡', minute);
                 d.say(`${actor.name ?? id}因饥病死亡`); break;
             }
             if (d.get('state', 'creatures', id, 'owner') === 'player' && care.loyalty <= rules.escapeLoyalty && care.neglectHours >= rules.neglectHours) {

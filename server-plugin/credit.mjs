@@ -12,6 +12,7 @@ import {npcSchedule}from'./npc-state.mjs';
 import {standing}from'./standing.mjs';
 import {registerCreditDefault,settleCreditCase}from'./law.mjs';
 import {businessReport}from'./business.mjs';
+import {personAge,personConstraint}from'./entity-view.mjs';
 
 export const CREDIT_OPERATIONS=new Set(['borrow','deposit','withdraw','exchange','work','partner']);
 export const CREDIT_KINDS=new Set(['loan','partnership']);
@@ -27,7 +28,8 @@ const valueOf=(engine,item,quantity)=>(engine.byId.get(item)?.basePrice??0)*quan
 function counterpart(d,engine,name,{consent,minutes=5}){
     const id=engine.resolve(name),row=engine.actor(d,id),base=engine.byId.get(id);
     if(id==='player'||!id.startsWith('npc_')||!awake(row)||row.location!==d.get('state','location'))throw Error('契约对方须实际在场且清醒');
-    if(base?.flags?.minor||(row.age??base?.age??18)<18)throw Error('未成年人不能订立借贷、雇佣或合伙契约');
+    if(personConstraint(engine,d.get('state'),id))throw Error('契约对方正在依法拘留，不能提供服务');
+    if((personAge(engine,d.get('state'),id).value??0)<18)throw Error('未成年人不能订立借贷、雇佣或合伙契约');
     if(consent!==true)throw Error('契约对方必须明确同意本次条款');
     engine.assertNpcObligationAction(d,['player',id],{minutes});engine.assertNpcAutonomyAction(d.get('state'),['player',id],{minutes});
     const now=d.get('state','minute');

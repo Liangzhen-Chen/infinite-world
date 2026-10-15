@@ -18,6 +18,7 @@ import {validateTargeting,assertMagicTargeting}from'./magic-targeting.mjs';
 import {monsterReward}from'./progression.mjs';
 import {heldUnit,trackSingleItem}from'./items.mjs';
 import {resolveCreature,recordWildlifeDeath}from'./wildlife.mjs';
+import {recordEntityDeath}from'./npc-life.mjs';
 import {bossCounter,rememberBossTactic,defeatBoss}from'./bosses.mjs';
 import {validateEffectSpec,resolveVitalityPrimitive,applyProtectionPrimitive,consumeMagicProtection}from'./magic-primitives.mjs';
 import {prepareElementObject,applyElementObject,ambientHeatC,coldHeatMultiplier}from'./magic-object.mjs';
@@ -140,7 +141,7 @@ export function applyMagic(d,prepared,id){
     if(target==='player')this.health(d,{delta:next-old},id);
     else{
         d.set([...path,'hp'],next);d.set([...path,'maxHp'],maximum);
-        if(!next)d.set([...path,'status'],'死亡');
+        if(!next)recordEntityDeath(d,this,target,d.get('state','minute'),'法术致死');
         else if(spec.kind==='heal'&&current.status==='濒死'){d.set([...path,'status'],'正常');d.set([...path,'dyingSince'],null);}
         if(spec.kind==='damage'&&target.startsWith('npc_')&&(prepared.context?.source??'player')==='player'){
             if(next<old)recordDisciplineBreach(d,this,'violence',id);
