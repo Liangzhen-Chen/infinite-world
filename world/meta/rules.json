@@ -1632,9 +1632,30 @@
         ]
       },
       "types": {
-        "tavern": {"channels": ["tavern"], "markup": 1, "cycleDays": 1, "firstDay": 1},
-        "smithy": {"channels": ["smithy"], "markup": 1, "cycleDays": 7, "firstDay": 1},
-        "merchant": {"channels": ["merchant"], "markup": 1.2, "cycleDays": 7, "firstDay": 1}
+        "tavern": {
+          "channels": [
+            "tavern"
+          ],
+          "markup": 1,
+          "cycleDays": 1,
+          "firstDay": 1
+        },
+        "smithy": {
+          "channels": [
+            "smithy"
+          ],
+          "markup": 1,
+          "cycleDays": 7,
+          "firstDay": 1
+        },
+        "merchant": {
+          "channels": [
+            "merchant"
+          ],
+          "markup": 1.2,
+          "cycleDays": 7,
+          "firstDay": 1
+        }
       },
       "stores": [
         {
@@ -4040,6 +4061,11 @@
             "faction": "faction_scentkin",
             "score": 27,
             "reason": "共同保存猎道见证，但树冠和地面边界有分歧"
+          },
+          {
+            "faction": "faction_seedcourt",
+            "score": 22,
+            "reason": "给入籍贡献提供可查实绩"
           }
         ],
         "source": "world/lore/factions.json#faction_forestcouncil"
@@ -4100,6 +4126,26 @@
             "faction": "faction_oathkeepers",
             "score": 25,
             "reason": "共用见证标准，但宗教证明不代替法庭裁判"
+          },
+          {
+            "faction": "faction_thresholdhouse",
+            "score": 15,
+            "reason": "承认法庭核契但争税款公开程度"
+          },
+          {
+            "faction": "faction_fieldguild",
+            "score": 12,
+            "reason": "严重争议移交既有法庭"
+          },
+          {
+            "faction": "faction_icearchive",
+            "score": 8,
+            "reason": "可提供出处，不能替法庭宣告完整事实"
+          },
+          {
+            "faction": "faction_quietledger",
+            "score": -70,
+            "reason": "卷宗造假破坏公开判例与债务归属"
           }
         ],
         "source": "world/lore/factions.json#faction_civiccourt"
@@ -4145,6 +4191,11 @@
             "faction": "faction_civiccourt",
             "score": 12,
             "reason": "严重争议移交既有法庭"
+          },
+          {
+            "faction": "faction_starpact",
+            "score": -8,
+            "reason": "公所愿记绕行线，但少数冒险者仍误认无主战利品"
           }
         ],
         "source": "world/lore/factions.json#faction_fieldguild"
@@ -4190,6 +4241,11 @@
             "faction": "faction_wellkin",
             "score": 16,
             "reason": "迁徙帐群可见证动物长期习性"
+          },
+          {
+            "faction": "faction_saltcaravan",
+            "score": 19,
+            "reason": "依赖驯养会识别病畜与超载"
           }
         ],
         "source": "world/lore/factions.json#faction_hoofguild"
@@ -4250,6 +4306,11 @@
             "faction": "faction_seaweed",
             "score": -31,
             "reason": "填湾可能占去海草农场"
+          },
+          {
+            "faction": "faction_blackfloat",
+            "score": -48,
+            "reason": "偷换浮标妨碍合法航道检查"
           }
         ],
         "source": "world/lore/factions.json#faction_harboroffice"
@@ -4460,6 +4521,16 @@
             "faction": "faction_reedpact",
             "score": 32,
             "reason": "共同研究同意与契约边界"
+          },
+          {
+            "faction": "faction_stonethread",
+            "score": 11,
+            "reason": "交换水位记录，拒绝用符契代替地层证据"
+          },
+          {
+            "faction": "faction_reedpaper",
+            "score": 21,
+            "reason": "符纸需求稳定，但拒绝把所有纸都冒称灵符"
           }
         ],
         "source": "world/lore/factions.json#faction_bankorder"
@@ -4490,6 +4561,11 @@
             "faction": "faction_civiccourt",
             "score": 25,
             "reason": "提供见证，不代替法庭断案"
+          },
+          {
+            "faction": "faction_returnorder",
+            "score": 23,
+            "reason": "借助公开契约划清无籍者担保责任"
           }
         ],
         "source": "world/lore/factions.json#faction_oathkeepers"

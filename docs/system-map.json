@@ -6444,7 +6444,9 @@
      "server-plugin/faction-clock.mjs"
     ],
     "usedByHooks": [],
-    "usedIn": []
+    "usedIn": [
+     "world/lore/factions.json"
+    ]
    },
    {
     "kind": "environment",
@@ -6570,7 +6572,8 @@
     ],
     "usedByHooks": [],
     "usedIn": [
-     "rules.worldClock"
+     "rules.worldClock",
+     "world/lore/factions.json"
     ]
    },
    {
@@ -6583,7 +6586,9 @@
      "server-plugin/faction-clock.mjs"
     ],
     "usedByHooks": [],
-    "usedIn": []
+    "usedIn": [
+     "world/lore/factions.json"
+    ]
    },
    {
     "kind": "route_closure",
@@ -6621,6 +6626,7 @@
     "usedIn": [
      "rules.effectTable",
      "rules.hazardClock",
+     "world/lore/factions.json",
      "world/lore/festivals.json"
     ]
    },
@@ -6644,6 +6650,7 @@
     "usedIn": [
      "rules.effectTable",
      "rules.hazardClock",
+     "world/lore/factions.json",
      "world/lore/festivals.json"
     ]
    },
@@ -11507,14 +11514,6 @@
    },
    {
     "kind": "awakening",
-    "note": "已注册，但 rules.json 与 lore 的任何 effects 列表都没有用到"
-   },
-   {
-    "kind": "dispute",
-    "note": "已注册，但 rules.json 与 lore 的任何 effects 列表都没有用到"
-   },
-   {
-    "kind": "relation",
     "note": "已注册，但 rules.json 与 lore 的任何 effects 列表都没有用到"
    },
    {
