@@ -16,6 +16,7 @@ import {milestone}from'./progression.mjs';
 import {advancePets}from'./pets.mjs';
 import {advanceSummons}from'./summons.mjs';
 import {advanceLaw}from'./law.mjs';
+import {advanceNpcCrime,nextNpcCrimeMinute}from'./npc-crime.mjs';
 import {cropProduction}from'./weather.mjs';
 import {advanceAgriculture,settleAgricultureExpiry}from'./agriculture.mjs';
 import {advanceSettlementTrade,nextSettlementTradeMinute}from'./settlement-trade.mjs';
@@ -122,6 +123,7 @@ const systems=[
   advance:(e,d,{before,after})=>advanceBounties(d,e,before,after)},
  {id:'npc_life',order:1200,active:e=>fullNpcs(e),nextMinute:(e,d,now)=>nextNpcLifeMinute(d.get('state'),now),
   advance:(e,d,{before,after})=>{if(fullNpcs(e))advanceNpcLife(d,e,before,after);}},
+ {id:'npc_crime',order:1210,nextMinute:(e,d,now)=>nextNpcCrimeMinute(e,d,now),advance:(e,d,ctx)=>advanceNpcCrime(d,e,ctx)},
  {id:'world_clock',order:1300,active:e=>!!e.rules.worldClock,nextMinute:(e,d,now)=>nextWorldClockMinute(d.get('state'),now),
   advance:(e,d,{after})=>advanceWorldClocks(d,e,after)},
  {id:'season_effects',order:1350,advance:(e,d,{before,after})=>advanceSeasonEffects(d,e,before,after)},

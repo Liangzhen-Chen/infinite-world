@@ -155,7 +155,7 @@ const SYSTEMS=[
  {id:'sim_society',layer:'sim',name:'社会',modules:['monster-society.mjs','reputation.mjs','reputation-registry.mjs','reputation-catalog.mjs','organization-state.mjs','group-account.mjs','office-salary.mjs','public-opinion.mjs','organizations.mjs','civic.mjs','governance.mjs','public-projects.mjs','titles.mjs','notables.mjs','promotion.mjs','promotion-view.mjs','quest-board.mjs','quest-sources.mjs','quest-wildlife.mjs','tribal-awakening.mjs','elections.mjs']},
  {id:'sim_military',layer:'sim',name:'军队、战争与外交',modules:['military.mjs','war-diplomacy.mjs']},
  {id:'sim_clock',layer:'sim',name:'时钟、节令与灾害',modules:['world-clock.mjs','faction-clock.mjs','festival.mjs','seasonal-hazards.mjs','hazard-calendar.mjs']},
- {id:'sim_law',layer:'sim',name:'法律与通缉',modules:['law.mjs','bounty.mjs']},
+ {id:'sim_law',layer:'sim',name:'法律与通缉',modules:['law.mjs','law-codes.mjs','legal-representation.mjs','npc-crime.mjs','bounty.mjs']},
  {id:'sim_works',layer:'sim',name:'著作',modules:['works.mjs']},
  // 玩家接口层
  {id:'ui_tools',layer:'ui',name:'模型工具',modules:['ext:tools.mjs']},
