@@ -11,6 +11,7 @@ import {standing} from './standing.mjs';
 import {registerCreditDefault,settleCreditCase} from './law.mjs';
 import {advanceLayerPlan} from './advance-layers.mjs';
 import {transferItems} from './items.mjs';
+import {medicineSites,medicalSkill} from './medicine-state.mjs';
 
 const DAY=1440,rec=id=>['state','records',id],rows=s=>Object.values(s.records??{});
 const base=(e,s,id)=>s.created?.[id]??e.byId.get(id);
@@ -75,6 +76,13 @@ export function laborOffers(e,s,minute=s.minute){
     for(const p of Object.values(s.projects??{}))if(['工程','建房'].includes(p.type)&&p.status==='施工中'&&!p.public&&p.creator!=='player'){
         add({owner:p.creator??p.owner,location:p.location??p.settlement,task:'工程施工',project:p.id,quantity:p.remainingWork??p.remainingDays,source:p.id,reason:'工程缺工',deadline:minute+Math.max(2,p.remainingDays??7)*DAY});
     }
+    // RW-06: an NPC clinic whose patients could not be scheduled recruits a doctor
+    // when a skilled resident exists, otherwise a helper; the need is read from delays.
+    for(const site of medicineSites(e,s)){
+        if(!site.owner||!s.npcs?.[site.owner]||!rows(s).some(r=>r.category==='medicine_delay'&&r.clinic===site.id&&/排期/.test(r.reason)&&minute-r.minute<7*DAY))continue;
+        add({owner:site.owner,location:site.seat,task:'医师诊疗',medicalSkill:1,quantity:1,source:`clinic:${site.seat}:doctor`,reason:'医馆排期不足'});
+        if(!site.assistants.length)add({owner:site.owner,location:site.seat,task:'药童',quantity:1,source:`clinic:${site.seat}:helper`,reason:'医馆排期不足'});
+    }
     const day=Math.floor(minute/DAY)%360,crop=e.rules.agriculture?.crop;
     for(const p of e.rules.agriculture?.settlements??[]){
         const farm=s.records?.[`agriculture:${p.settlement}`];if(farm?.mode!=='managed')continue;
@@ -102,6 +110,7 @@ export function laborApplication(e,s,id,offer,{minute=s.minute,changing=false}={
     if(old&&!changing)return null;
     if(old&&old.owner===offer.owner)return null;
     if(old&&offer.wage<=old.wage*1.2&&old.status!=='罢工')return null;
+    if(offer.medicalSkill&&medicalSkill(e,s,id)<offer.medicalSkill)return null;
     const skill=offer.recipe?workerSkill(e,s,id,e.byId.get(offer.recipe)):0,r=offer.recipe&&e.byId.get(offer.recipe);
     const knows=r&&(r.teachers?.includes(id)||n.recipes?.[r.id]||!r.learningRequired);
     if(r&&(!knows||skill<(r.minimumProficiency??0)))return null;

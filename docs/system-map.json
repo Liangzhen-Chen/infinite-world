@@ -2,7 +2,7 @@
  "title": "无限原野系统地图",
  "card": "K9",
  "generatedFrom": {
-  "commit": "refs/heads/m4r",
+  "commit": "refs/heads/rw06",
   "method": "运行时导出（注册表、规则表、工具定义、效果表、立场传导表）+ 静态正则扫描（import 图、函数体标识符、state 分区与 records 前缀、rules/world 读取）。静态扫描是近似：经 engine.byId、helper 间接或动态拼接路径的访问不计入。"
  },
  "scanMethods": {
@@ -18,14 +18,14 @@
  "counts": {
   "layers": 6,
   "systems": 40,
-  "modules": 215,
-  "advance": 57,
+  "modules": 217,
+  "advance": 59,
   "tools": 25,
   "verbs": 28,
   "subscribers": 9,
   "interactionRules": 25,
   "effectKinds": 22,
-  "links": 464
+  "links": 467
  },
  "layers": [
   {
@@ -481,7 +481,7 @@
     "server-plugin/campaign-reducer.mjs",
     "server-plugin/archived-reducer.mjs"
    ],
-   "lines": 1037,
+   "lines": 1040,
    "stateWrites": [
     "combatDisengaged",
     "created",
@@ -917,7 +917,7 @@
     "server-plugin/advance-registry.mjs",
     "server-plugin/advance-layers.mjs"
    ],
-   "lines": 264,
+   "lines": 267,
    "stateWrites": [
     "effects",
     "obligations",
@@ -978,6 +978,8 @@
     "server-plugin/npc-cognition.mjs",
     "server-plugin/npc-autonomy.mjs",
     "server-plugin/npc-life.mjs",
+    "server-plugin/medicine.mjs",
+    "server-plugin/medicine-state.mjs",
     "server-plugin/npc-memory.mjs",
     "server-plugin/npc-relations.mjs",
     "server-plugin/npc-rumors.mjs",
@@ -990,7 +992,7 @@
     "server-plugin/population-service.mjs",
     "server-plugin/settlement-profile.mjs"
    ],
-   "lines": 3271,
+   "lines": 3537,
    "stateWrites": [
     "created",
     "creatures",
@@ -1019,6 +1021,7 @@
    "recordWrites": [],
    "recordReads": [
     "agriculture",
+    "medicine_fund",
     "post",
     "rumor_lie",
     "village-fiscal",
@@ -1028,7 +1031,9 @@
    "rules": [
     "agriculture",
     "check",
+    "economy",
     "equipment",
+    "hazardClock",
     "law",
     "npcGrowth",
     "npcLife",
@@ -1050,9 +1055,11 @@
     "skills"
    ],
    "advance": [
+    "medicine_booking",
     "npc_obligations",
     "npc_cognition",
     "npc_autonomy",
+    "medicine",
     "npc_life"
    ],
    "subscribes": [
@@ -1101,7 +1108,8 @@
     "world_relation",
     "world_promise",
     "world_remember",
-    "world_combat"
+    "world_combat",
+    "world_settlement"
    ],
    "readBy": []
   },
@@ -1673,7 +1681,7 @@
     "server-plugin/extraction.mjs",
     "server-plugin/smuggling.mjs"
    ],
-   "lines": 2840,
+   "lines": 2850,
    "stateWrites": [
     "crafted",
     "itemInstances",
@@ -1857,7 +1865,7 @@
     "server-plugin/tribal-awakening.mjs",
     "server-plugin/elections.mjs"
    ],
-   "lines": 4742,
+   "lines": 4745,
    "stateWrites": [
     "buildings",
     "created",
@@ -1895,6 +1903,7 @@
    "recordReads": [
     "civic_citizen",
     "civic_resident",
+    "clinic",
     "diplomacy",
     "facility_region",
     "faction-assets",
@@ -2251,7 +2260,7 @@
    "modules": [
     "extension/tools.mjs"
    ],
-   "lines": 124,
+   "lines": 126,
    "stateWrites": [],
    "stateReads": [],
    "recordWrites": [],
@@ -2683,6 +2692,8 @@
    "to": "sim_npc",
    "kind": "advance",
    "labels": [
+    "medicine",
+    "medicine_booking",
     "npc_autonomy",
     "npc_cognition",
     "npc_life",
@@ -2858,6 +2869,7 @@
    "to": "sim_npc",
    "kind": "call",
    "labels": [
+    "medicine.mjs",
     "npc-autonomy.mjs",
     "npc-cognition.mjs",
     "npc-life.mjs",
@@ -3315,6 +3327,7 @@
    "kind": "call",
    "labels": [
     "lies.mjs",
+    "medicine.mjs",
     "npc-autonomy.mjs",
     "npc-intelligence.mjs",
     "npc-life.mjs",
@@ -4025,6 +4038,7 @@
    "to": "sim_npc",
    "kind": "call",
    "labels": [
+    "medicine-state.mjs",
     "npc-intelligence.mjs",
     "npc-schedule.mjs",
     "npc-state.mjs"
@@ -4550,6 +4564,14 @@
   },
   {
    "from": "sim_npc",
+   "to": "base_effects",
+   "kind": "call",
+   "labels": [
+    "effects.mjs"
+   ]
+  },
+  {
+   "from": "sim_npc",
    "to": "base_events",
    "kind": "call",
    "labels": [
@@ -4617,8 +4639,11 @@
    "kind": "call",
    "labels": [
     "contracts.mjs",
+    "credit.mjs",
     "employment-state.mjs",
+    "finance-bank.mjs",
     "items.mjs",
+    "labor-market.mjs",
     "manufacturing.mjs"
    ]
   },
@@ -4629,6 +4654,14 @@
    "labels": [
     "remote-generation.mjs",
     "weather.mjs"
+   ]
+  },
+  {
+   "from": "sim_npc",
+   "to": "sim_faith",
+   "kind": "call",
+   "labels": [
+    "faith-catalog.mjs"
    ]
   },
   {
@@ -4652,6 +4685,7 @@
     "family-inheritance.mjs",
     "family-state.mjs",
     "governance.mjs",
+    "group-account.mjs",
     "public-opinion.mjs",
     "quest-board.mjs",
     "reputation.mjs"
@@ -4815,6 +4849,7 @@
    "kind": "call",
    "labels": [
     "lies.mjs",
+    "medicine-state.mjs",
     "npc-cognition.mjs",
     "npc-intelligence.mjs",
     "npc-life.mjs",
@@ -6147,6 +6182,14 @@
    ]
   },
   {
+   "from": "sim_npc",
+   "to": "base_effects",
+   "kind": "effect",
+   "labels": [
+    "applyEffects"
+   ]
+  },
+  {
    "from": "sim_society",
    "to": "base_effects",
    "kind": "effect",
@@ -6685,6 +6728,7 @@
     "world_promise",
     "world_relation",
     "world_remember",
+    "world_settlement",
     "world_trade"
    ]
   },
@@ -6762,6 +6806,17 @@
    "nextMinute": false,
    "modules": [
     "server-plugin/education.mjs"
+   ],
+   "inline": false,
+   "partitions": []
+  },
+  {
+   "id": "medicine_booking",
+   "order": 60,
+   "stepped": false,
+   "nextMinute": false,
+   "modules": [
+    "server-plugin/medicine.mjs"
    ],
    "inline": false,
    "partitions": []
@@ -7072,6 +7127,17 @@
    "nextMinute": true,
    "modules": [
     "server-plugin/bounty.mjs"
+   ],
+   "inline": false,
+   "partitions": []
+  },
+  {
+   "id": "medicine",
+   "order": 1190,
+   "stepped": false,
+   "nextMinute": true,
+   "modules": [
+    "server-plugin/medicine.mjs"
    ],
    "inline": false,
    "partitions": []
@@ -8676,6 +8742,7 @@
    "server-plugin/faith.mjs",
    "server-plugin/festival.mjs",
    "server-plugin/magic-economy.mjs",
+   "server-plugin/medicine.mjs",
    "server-plugin/seasonal-hazards.mjs",
    "server-plugin/tribal-awakening.mjs",
    "server-plugin/war-diplomacy.mjs",
@@ -9465,6 +9532,11 @@
     "school_fund",
     "school_inspect",
     "school_close",
+    "medicine_inspect",
+    "medicine_seek",
+    "medicine_fund",
+    "medicine_hire",
+    "medicine_health",
     "festival_inspect",
     "festival_plan",
     "festival_authorize",
@@ -9554,6 +9626,11 @@
       "school_fund",
       "school_inspect",
       "school_close",
+      "medicine_inspect",
+      "medicine_seek",
+      "medicine_fund",
+      "medicine_hire",
+      "medicine_health",
       "festival_inspect",
       "festival_plan",
       "festival_authorize",
@@ -9621,6 +9698,7 @@
       "server-plugin/festival.mjs",
       "server-plugin/governance.mjs",
       "server-plugin/high-nobility.mjs",
+      "server-plugin/medicine.mjs",
       "server-plugin/military.mjs",
       "server-plugin/nation-founding.mjs",
       "server-plugin/noble-state.mjs",
@@ -9640,6 +9718,7 @@
       "sim_economy",
       "sim_faith",
       "sim_military",
+      "sim_npc",
       "sim_society"
      ]
     }
@@ -9652,6 +9731,7 @@
     "sim_economy",
     "sim_faith",
     "sim_military",
+    "sim_npc",
     "sim_society"
    ]
   },
@@ -10643,6 +10723,8 @@
     "server-plugin/magic-object.mjs",
     "server-plugin/magic-ritual.mjs",
     "server-plugin/manufacturing.mjs",
+    "server-plugin/medicine-state.mjs",
+    "server-plugin/medicine.mjs",
     "server-plugin/migrations/r1.mjs",
     "server-plugin/military.mjs",
     "server-plugin/monster-society.mjs",
@@ -11018,6 +11100,7 @@
    "server-plugin/finance-tax.mjs",
    "server-plugin/labor-market.mjs",
    "server-plugin/law.mjs",
+   "server-plugin/medicine.mjs",
    "server-plugin/remote-generation.mjs",
    "server-plugin/settlement-trade.mjs",
    "server-plugin/shop.mjs"
@@ -11151,12 +11234,14 @@
    "server-plugin/education-state.mjs",
    "server-plugin/education.mjs",
    "server-plugin/entity-view.mjs",
+   "server-plugin/medicine-state.mjs",
    "server-plugin/npc-growth.mjs",
    "server-plugin/wildlife-society.mjs"
   ],
   "npcLife": [
    "server-plugin/family-inheritance.mjs",
    "server-plugin/family-state.mjs",
+   "server-plugin/medicine.mjs",
    "server-plugin/npc-life.mjs",
    "server-plugin/npc-relations.mjs",
    "server-plugin/scene-card.mjs",
@@ -11170,6 +11255,7 @@
   "hazardClock": [
    "server-plugin/advance-registry.mjs",
    "server-plugin/hazard-calendar.mjs",
+   "server-plugin/medicine.mjs",
    "server-plugin/remote-generation.mjs",
    "server-plugin/seasonal-hazards.mjs"
   ],
@@ -12992,6 +13078,7 @@
       "server-plugin/location-access.mjs",
       "server-plugin/magic-economy.mjs",
       "server-plugin/magic-growth.mjs",
+      "server-plugin/medicine.mjs",
       "server-plugin/military.mjs",
       "server-plugin/monster-society.mjs",
       "server-plugin/nation-founding.mjs",
@@ -13364,6 +13451,7 @@
       "server-plugin/finance-tax.mjs",
       "server-plugin/labor-market.mjs",
       "server-plugin/law.mjs",
+      "server-plugin/medicine.mjs",
       "server-plugin/military.mjs",
       "server-plugin/npc-autonomy.mjs",
       "server-plugin/npc-crime.mjs",
@@ -14089,6 +14177,7 @@
       "server-plugin/faith.mjs",
       "server-plugin/festival.mjs",
       "server-plugin/magic-economy.mjs",
+      "server-plugin/medicine.mjs",
       "server-plugin/seasonal-hazards.mjs",
       "server-plugin/tribal-awakening.mjs",
       "server-plugin/war-diplomacy.mjs",
@@ -14100,6 +14189,7 @@
       "sim_economy",
       "sim_faith",
       "sim_military",
+      "sim_npc",
       "sim_society"
      ]
     }
@@ -14110,6 +14200,7 @@
     "sim_economy",
     "sim_faith",
     "sim_military",
+    "sim_npc",
     "sim_society"
    ],
    "manual": [],
@@ -14561,6 +14652,7 @@
     "server-plugin/magic-status.mjs",
     "server-plugin/magic-water-earth.mjs",
     "server-plugin/manufacturing.mjs",
+    "server-plugin/medicine.mjs",
     "server-plugin/military.mjs",
     "server-plugin/nation-founding.mjs",
     "server-plugin/noble-state.mjs",
@@ -14611,7 +14703,7 @@
    ],
    "world": [],
    "worldDirs": [],
-   "lines": 261
+   "lines": 263
   },
   "server-plugin/advance-layers.mjs": {
    "system": "base_advance",
@@ -14664,6 +14756,7 @@
     "server-plugin/magic-mind-space.mjs",
     "server-plugin/magic-object.mjs",
     "server-plugin/magic-water-earth.mjs",
+    "server-plugin/medicine.mjs",
     "server-plugin/military.mjs",
     "server-plugin/monster-society.mjs",
     "server-plugin/nation-founding.mjs",
@@ -14720,7 +14813,7 @@
     "npcs"
    ],
    "worldDirs": [],
-   "lines": 202
+   "lines": 205
   },
   "server-plugin/agriculture-migration.mjs": {
    "system": "kernel_storage",
@@ -15731,7 +15824,7 @@
     "spells"
    ],
    "worldDirs": [],
-   "lines": 738
+   "lines": 739
   },
   "server-plugin/entity-transitions.mjs": {
    "system": "base_events",
@@ -16618,6 +16711,7 @@
     "server-plugin/high-nobility.mjs",
     "server-plugin/items.mjs",
     "server-plugin/law.mjs",
+    "server-plugin/medicine-state.mjs",
     "server-plugin/noble-state.mjs",
     "server-plugin/npc-intelligence.mjs",
     "server-plugin/shop.mjs",
@@ -16646,7 +16740,7 @@
     "recipes"
    ],
    "worldDirs": [],
-   "lines": 326
+   "lines": 335
   },
   "server-plugin/law-codes.mjs": {
    "system": "sim_law",
@@ -17551,6 +17645,61 @@
    "worldDirs": [],
    "lines": 134
   },
+  "server-plugin/medicine-state.mjs": {
+   "system": "sim_npc",
+   "imports": [
+    "server-plugin/employment-state.mjs",
+    "server-plugin/facility-state.mjs"
+   ],
+   "stateWrites": [],
+   "stateReads": [],
+   "recordWrites": [],
+   "recordReads": [],
+   "rules": [
+    "npcGrowth"
+   ],
+   "world": [],
+   "worldDirs": [],
+   "lines": 48
+  },
+  "server-plugin/medicine.mjs": {
+   "system": "sim_npc",
+   "imports": [
+    "server-plugin/credit.mjs",
+    "server-plugin/education-state.mjs",
+    "server-plugin/effects.mjs",
+    "server-plugin/employment-state.mjs",
+    "server-plugin/entity-view.mjs",
+    "server-plugin/faith-catalog.mjs",
+    "server-plugin/finance-bank.mjs",
+    "server-plugin/group-account.mjs",
+    "server-plugin/items.mjs",
+    "server-plugin/labor-market.mjs",
+    "server-plugin/medicine-state.mjs",
+    "server-plugin/npc-life.mjs",
+    "server-plugin/npc-state.mjs",
+    "server-plugin/world-clock.mjs"
+   ],
+   "stateWrites": [
+    "family",
+    "npcs"
+   ],
+   "stateReads": [
+    "records"
+   ],
+   "recordWrites": [],
+   "recordReads": [
+    "medicine_fund"
+   ],
+   "rules": [
+    "economy",
+    "hazardClock",
+    "npcLife"
+   ],
+   "world": [],
+   "worldDirs": [],
+   "lines": 210
+  },
   "server-plugin/migrations.mjs": {
    "system": "kernel_storage",
    "imports": [
@@ -17976,7 +18125,7 @@
     "rules"
    ],
    "worldDirs": [],
-   "lines": 806
+   "lines": 811
   },
   "server-plugin/npc-memory.mjs": {
    "system": "sim_npc",
@@ -18016,6 +18165,7 @@
     "server-plugin/employment-state.mjs",
     "server-plugin/entity-view.mjs",
     "server-plugin/magic-water-earth.mjs",
+    "server-plugin/medicine-state.mjs",
     "server-plugin/npc-schedule.mjs"
    ],
    "stateWrites": [
@@ -18036,7 +18186,7 @@
     "routes"
    ],
    "worldDirs": [],
-   "lines": 199
+   "lines": 201
   },
   "server-plugin/npc-planning-service.mjs": {
    "system": "sim_npc",
@@ -18142,7 +18292,7 @@
     "npcs"
    ],
    "worldDirs": [],
-   "lines": 205
+   "lines": 206
   },
   "server-plugin/npc-state.mjs": {
    "system": "sim_npc",
@@ -18203,6 +18353,7 @@
     "server-plugin/faith-catalog.mjs",
     "server-plugin/family-state.mjs",
     "server-plugin/group-account.mjs",
+    "server-plugin/medicine-state.mjs",
     "server-plugin/npc-state.mjs",
     "server-plugin/reputation-catalog.mjs"
    ],
@@ -18213,6 +18364,7 @@
    ],
    "recordWrites": [],
    "recordReads": [
+    "clinic",
     "family",
     "temple"
    ],
@@ -18225,7 +18377,7 @@
     "residents"
    ],
    "worldDirs": [],
-   "lines": 78
+   "lines": 81
   },
   "server-plugin/organizations.mjs": {
    "system": "sim_society",
@@ -19163,6 +19315,7 @@
    "system": "sim_economy",
    "imports": [
     "server-plugin/entity-view.mjs",
+    "server-plugin/medicine-state.mjs",
     "server-plugin/npc-state.mjs",
     "server-plugin/promotion.mjs",
     "server-plugin/reputation-registry.mjs",
@@ -19193,7 +19346,7 @@
     "settlementProfiles"
    ],
    "worldDirs": [],
-   "lines": 216
+   "lines": 217
   },
   "server-plugin/sites.mjs": {
    "system": "sim_environment",
@@ -20501,7 +20654,7 @@
    "rules": [],
    "world": [],
    "worldDirs": [],
-   "lines": 124
+   "lines": 126
   },
   "extension/topbar.mjs": {
    "system": "ui_client",
