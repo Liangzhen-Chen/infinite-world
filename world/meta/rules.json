@@ -4016,6 +4016,11 @@
             "faction": "faction_riverhomes",
             "score": -35,
             "reason": "公用岸线与独家泊位之争"
+          },
+          {
+            "faction": "faction_tidebrokers",
+            "score": -12,
+            "reason": "双方争长途河海联运代理但共享航期"
           }
         ],
         "source": "world/lore/factions.json#faction_saltboat"
@@ -4046,6 +4051,11 @@
             "faction": "faction_bankorder",
             "score": 32,
             "reason": "符契与召唤契约共享见证方法"
+          },
+          {
+            "faction": "faction_mossstudy",
+            "score": 10,
+            "reason": "交流生物边界但不同意无观察期的召唤试验"
           }
         ],
         "source": "world/lore/factions.json#faction_reedpact"
@@ -4066,6 +4076,11 @@
             "faction": "faction_seedcourt",
             "score": 22,
             "reason": "给入籍贡献提供可查实绩"
+          },
+          {
+            "faction": "faction_far_scentmoot",
+            "score": 20,
+            "reason": "共治猎林，采伐配额与禁猎季常要互相让步"
           }
         ],
         "source": "world/lore/factions.json#faction_forestcouncil"
@@ -4096,6 +4111,11 @@
             "faction": "faction_saltboat",
             "score": -35,
             "reason": "尚未成立，不能代所有住户签独家合同"
+          },
+          {
+            "faction": "faction_furroworder",
+            "score": 17,
+            "reason": "支持公开账目，但未授权住户联盟代所有人决定"
           }
         ],
         "source": "world/lore/factions.json#faction_riverhomes"
@@ -4226,6 +4246,11 @@
             "faction": "faction_wellorder",
             "score": 30,
             "reason": "共享水程记录，部族不让祭司独占井水"
+          },
+          {
+            "faction": "faction_hoofguild",
+            "score": 16,
+            "reason": "迁徙帐群可见证动物长期习性"
           }
         ],
         "source": "world/lore/factions.json#faction_wellkin"
@@ -4261,6 +4286,11 @@
             "faction": "faction_forestcouncil",
             "score": 27,
             "reason": "共同维护林路，采伐范围需另议"
+          },
+          {
+            "faction": "faction_far_scentmoot",
+            "score": 45,
+            "reason": "砾耳交证群替共席保管和核对嗅迹证物"
           }
         ],
         "source": "world/lore/factions.json#faction_scentkin"
@@ -4476,6 +4506,11 @@
             "faction": "faction_wedgeorder",
             "score": 29,
             "reason": "退楔会要求承包人承担已知危险"
+          },
+          {
+            "faction": "faction_far_orcmoot",
+            "score": -25,
+            "reason": "停战互市，旧仇未消"
           }
         ],
         "source": "world/lore/factions.json#faction_kilnkin"
@@ -4491,6 +4526,11 @@
             "faction": "faction_kilnkin",
             "score": 29,
             "reason": "承认炉契分工但不接受掩盖危险"
+          },
+          {
+            "faction": "faction_hollowcircle",
+            "score": 14,
+            "reason": "都要保留事故痕，但对匿名证词分歧明显"
           }
         ],
         "source": "world/lore/factions.json#faction_wedgeorder"
@@ -4641,6 +4681,11 @@
             "faction": "faction_fieldguild",
             "score": -8,
             "reason": "公所愿记绕行线，但少数冒险者仍误认无主战利品"
+          },
+          {
+            "faction": "faction_far_lignum",
+            "score": 5,
+            "reason": "沉星山坳的守窝群不属联邑，互不打扰"
           }
         ],
         "source": "world/lore/factions.json#faction_starpact"
@@ -4659,6 +4704,456 @@
           }
         ],
         "source": "world/lore/factions.json#faction_wellorder"
+      }
+    ]
+  },
+  "factionClock": {
+    "version": 1,
+    "clocks": [
+      {
+        "id": "clock_far_orcmoot",
+        "faction": "faction_far_orcmoot",
+        "name": "重画炉契",
+        "intervalDays": 30,
+        "probability": 0.3,
+        "settlement": "loc_far_duanqi",
+        "source": "T111 w5-clock-2 far",
+        "cycle": "year",
+        "contact": {
+          "location": "loc_far_duanqi"
+        },
+        "stages": [
+          {
+            "id": "s1",
+            "name": "各部报出本年愿换的矿和皮",
+            "condition": {
+              "kind": "asset",
+              "minimum": {
+                "coins": 620
+              }
+            },
+            "cost": {
+              "coins": 120
+            },
+            "effects": [
+              {
+                "kind": "relation",
+                "target": "faction_kilnkin",
+                "delta": -2
+              }
+            ]
+          },
+          {
+            "id": "s2",
+            "name": "大帐议定是否续约",
+            "condition": {
+              "kind": "always"
+            },
+            "cost": {
+              "coins": 190
+            },
+            "effects": [
+              {
+                "kind": "dispute",
+                "target": "faction_kilnkin",
+                "id": "clock_far_orcmoot",
+                "status": "open"
+              }
+            ]
+          },
+          {
+            "id": "s3",
+            "name": "在断契坡重画炉契或撤摊",
+            "condition": {
+              "kind": "dispute",
+              "target": "faction_kilnkin",
+              "id": "clock_far_orcmoot",
+              "status": "open"
+            },
+            "cost": {
+              "coins": 310
+            },
+            "effects": [
+              {
+                "kind": "rumor",
+                "id": "far_orcmoot_s3",
+                "claim": "寒炉回来的货商说，赭牙部盟在断契坡重画了炉契，停战互市又续了一年。",
+                "carriers": [
+                  "npc_bs_016_2",
+                  "npc_bs_017_2"
+                ],
+                "salience": 2
+              },
+              {
+                "kind": "dispute",
+                "target": "faction_kilnkin",
+                "id": "clock_far_orcmoot",
+                "status": "settled"
+              },
+              {
+                "kind": "relation",
+                "target": "faction_kilnkin",
+                "delta": 3
+              }
+            ]
+          },
+          {
+            "id": "alt",
+            "name": "补足欠盐后续约",
+            "condition": {
+              "kind": "intervention",
+              "id": "redirect"
+            },
+            "cost": {
+              "coins": 250
+            },
+            "effects": [
+              {
+                "kind": "rumor",
+                "id": "far_orcmoot_alt",
+                "claim": "断契坡那边据说有人替双方核实了越界和私掘的指控，欠付的盐补足了，炉契照旧续上。",
+                "carriers": [
+                  "npc_bs_016_2",
+                  "npc_bs_017_2"
+                ],
+                "salience": 2
+              },
+              {
+                "kind": "dispute",
+                "target": "faction_kilnkin",
+                "id": "clock_far_orcmoot",
+                "status": "settled"
+              },
+              {
+                "kind": "relation",
+                "target": "faction_kilnkin",
+                "delta": 5
+              }
+            ]
+          }
+        ],
+        "interventions": [
+          {
+            "id": "pause",
+            "name": "核实越界指控请暂缓议约",
+            "stage": "s2",
+            "location": "loc_far_duanqi",
+            "minutes": 60,
+            "cost": {},
+            "effect": "pause",
+            "attribute": "智力",
+            "difficulty": 14
+          },
+          {
+            "id": "resume",
+            "name": "撤回暂缓请求",
+            "stage": "s2",
+            "location": "loc_far_duanqi",
+            "minutes": 20,
+            "cost": {},
+            "effect": "resume"
+          },
+          {
+            "id": "redirect",
+            "name": "补足欠付的盐",
+            "stage": "s3",
+            "location": "loc_far_duanqi",
+            "minutes": 90,
+            "cost": {
+              "items": {
+                "item_salt": 20
+              }
+            },
+            "effect": "redirect",
+            "nextStage": "alt"
+          }
+        ]
+      },
+      {
+        "id": "clock_far_lignum",
+        "faction": "faction_far_lignum",
+        "name": "清点木牌",
+        "intervalDays": 30,
+        "probability": 0.25,
+        "settlement": "loc_far_jijie",
+        "source": "T111 w5-clock-2 far",
+        "cycle": "year",
+        "contact": {
+          "location": "loc_far_jijie"
+        },
+        "stages": [
+          {
+            "id": "s1",
+            "name": "清点去年收回的木牌",
+            "condition": {
+              "kind": "asset",
+              "minimum": {
+                "coins": 0
+              }
+            },
+            "cost": {
+              "coins": 0
+            },
+            "effects": [
+              {
+                "kind": "relation",
+                "target": "faction_ms_yugen",
+                "delta": 2
+              }
+            ]
+          },
+          {
+            "id": "s2",
+            "name": "查对外林春季的伐痕",
+            "condition": {
+              "kind": "relation",
+              "target": "faction_ms_yugen",
+              "minimum": 20
+            },
+            "cost": {
+              "coins": 0
+            },
+            "effects": [
+              {
+                "kind": "relation",
+                "target": "faction_ms_yugen",
+                "delta": 3
+              }
+            ]
+          },
+          {
+            "id": "s3",
+            "name": "议定今年发多少木牌",
+            "condition": {
+              "kind": "always"
+            },
+            "cost": {
+              "coins": 0
+            },
+            "effects": [
+              {
+                "kind": "rumor",
+                "id": "far_lignum_s3",
+                "claim": "听说杉根联邑的长老议定了今年发出的木牌数目，外林春季的伐痕也查对过了。",
+                "carriers": [
+                  "npc_hw_shendu",
+                  "npc_hw_yanzhe"
+                ],
+                "salience": 2
+              },
+              {
+                "kind": "relation",
+                "target": "faction_ms_yugen",
+                "delta": 2
+              }
+            ]
+          },
+          {
+            "id": "alt",
+            "name": "补种育苗坡后再发牌",
+            "condition": {
+              "kind": "intervention",
+              "id": "redirect"
+            },
+            "cost": {
+              "coins": 0
+            },
+            "effects": [
+              {
+                "kind": "rumor",
+                "id": "far_lignum_alt",
+                "claim": "杉根联邑据说先让人补种了育苗坡，偷伐的人也被找了出来，木牌照往年的数目发。",
+                "carriers": [
+                  "npc_hw_shendu",
+                  "npc_hw_yanzhe"
+                ],
+                "salience": 2
+              },
+              {
+                "kind": "relation",
+                "target": "faction_ms_yugen",
+                "delta": 4
+              }
+            ]
+          }
+        ],
+        "interventions": [
+          {
+            "id": "pause",
+            "name": "请守界者暂缓发牌",
+            "stage": "s2",
+            "location": "loc_far_jijie",
+            "minutes": 60,
+            "cost": {},
+            "effect": "pause",
+            "attribute": "魅力",
+            "difficulty": 13
+          },
+          {
+            "id": "resume",
+            "name": "撤回暂缓请求",
+            "stage": "s2",
+            "location": "loc_far_jijie",
+            "minutes": 20,
+            "cost": {},
+            "effect": "resume"
+          },
+          {
+            "id": "redirect",
+            "name": "替育苗坡补种",
+            "stage": "s3",
+            "location": "loc_far_jijie",
+            "minutes": 90,
+            "cost": {},
+            "effect": "redirect",
+            "nextStage": "alt",
+            "attribute": "体质",
+            "difficulty": 12
+          }
+        ]
+      },
+      {
+        "id": "clock_far_scentmoot",
+        "faction": "faction_far_scentmoot",
+        "name": "划出育幼地",
+        "intervalDays": 30,
+        "probability": 0.25,
+        "settlement": "loc_far_xiushi",
+        "source": "T111 w5-clock-2 far",
+        "cycle": "year",
+        "contact": {
+          "location": "loc_far_xiushi"
+        },
+        "stages": [
+          {
+            "id": "s1",
+            "name": "各养育群报出育幼地的边界",
+            "condition": {
+              "kind": "asset",
+              "minimum": {
+                "coins": 380
+              }
+            },
+            "cost": {
+              "coins": 80
+            },
+            "effects": [
+              {
+                "kind": "relation",
+                "target": "faction_scentkin",
+                "delta": 2
+              }
+            ]
+          },
+          {
+            "id": "s2",
+            "name": "与林民席位核对采伐配额",
+            "condition": {
+              "kind": "relation",
+              "target": "faction_scentkin",
+              "minimum": 35
+            },
+            "cost": {
+              "coins": 110
+            },
+            "effects": [
+              {
+                "kind": "relation",
+                "target": "faction_scentkin",
+                "delta": 3
+              }
+            ]
+          },
+          {
+            "id": "s3",
+            "name": "在共席石台议决是否划出育幼地",
+            "condition": {
+              "kind": "always"
+            },
+            "cost": {
+              "coins": 190
+            },
+            "effects": [
+              {
+                "kind": "rumor",
+                "id": "far_scentmoot_s3",
+                "claim": "听林道商人说，砾耳猎林共席在石台议决划出了今年的育幼地，禁猎季里外人不得进入。",
+                "carriers": [
+                  "npc_hw_shendu",
+                  "npc_hw_yanzhe"
+                ],
+                "salience": 2
+              },
+              {
+                "kind": "relation",
+                "target": "faction_scentkin",
+                "delta": 2
+              }
+            ]
+          },
+          {
+            "id": "alt",
+            "name": "林民让出配额后划地",
+            "condition": {
+              "kind": "intervention",
+              "id": "redirect"
+            },
+            "cost": {
+              "coins": 150
+            },
+            "effects": [
+              {
+                "kind": "rumor",
+                "id": "far_scentmoot_alt",
+                "claim": "猎林共席那次议事据说林民席位让出了一段采伐配额，育幼地划得比原先大。",
+                "carriers": [
+                  "npc_hw_shendu",
+                  "npc_hw_yanzhe"
+                ],
+                "salience": 2
+              },
+              {
+                "kind": "relation",
+                "target": "faction_scentkin",
+                "delta": 4
+              }
+            ]
+          }
+        ],
+        "interventions": [
+          {
+            "id": "pause",
+            "name": "核实越界嗅迹请暂缓议决",
+            "stage": "s2",
+            "location": "loc_far_xiushi",
+            "minutes": 60,
+            "cost": {},
+            "effect": "pause",
+            "attribute": "智力",
+            "difficulty": 13
+          },
+          {
+            "id": "resume",
+            "name": "撤回暂缓请求",
+            "stage": "s2",
+            "location": "loc_far_xiushi",
+            "minutes": 20,
+            "cost": {},
+            "effect": "resume"
+          },
+          {
+            "id": "redirect",
+            "name": "说服林民席位让出配额",
+            "stage": "s3",
+            "location": "loc_far_xiushi",
+            "minutes": 90,
+            "cost": {},
+            "effect": "redirect",
+            "nextStage": "alt",
+            "attribute": "魅力",
+            "difficulty": 14
+          }
+        ]
       }
     ]
   },

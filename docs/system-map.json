@@ -1693,6 +1693,7 @@
     "agriculture",
     "attributes",
     "effectTable",
+    "factionClock",
     "hazardClock",
     "npcLife",
     "settlementTrade",
@@ -6445,6 +6446,7 @@
     ],
     "usedByHooks": [],
     "usedIn": [
+     "rules.factionClock",
      "world/lore/factions.json"
     ]
    },
@@ -6587,6 +6589,7 @@
     ],
     "usedByHooks": [],
     "usedIn": [
+     "rules.factionClock",
      "world/lore/factions.json"
     ]
    },
@@ -6625,6 +6628,7 @@
     ],
     "usedIn": [
      "rules.effectTable",
+     "rules.factionClock",
      "rules.hazardClock",
      "world/lore/factions.json",
      "world/lore/festivals.json"
@@ -6698,7 +6702,8 @@
      "faction:clock_ms_tanjie"
     ],
     "usedIn": [
-     "rules.effectTable"
+     "rules.effectTable",
+     "world/lore/factions.json"
     ]
    }
   ],
@@ -8771,6 +8776,9 @@
   "reputation": [
    "server-plugin/reputation-registry.mjs",
    "server-plugin/reputation.mjs"
+  ],
+  "factionClock": [
+   "server-plugin/faction-clock.mjs"
   ],
   "worldClock": [
    "server-plugin/advance-registry.mjs",
@@ -12625,7 +12633,8 @@
     "society_motion"
    ],
    "rules": [
-    "effectTable"
+    "effectTable",
+    "factionClock"
    ],
    "world": [
     "factions",
