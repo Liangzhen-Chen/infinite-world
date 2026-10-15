@@ -346,8 +346,12 @@ export function contractIllness(d,engine,id,minute,{severity,days,disease}){
  if(!healthRules(engine)||!npc||!lifeActor(engine,state,id)||incapable.includes(npc.status)||npcIllness(state,id))return null;
  return beginIllness(d,engine,id,minute,{severity,days,disease,illId:`illness_${key(id,minute,disease.id)}`});
 }
-function recover(d,engine,illness,minute){
+export function recoverIllness(d,engine,illness,minute){
  const id=illness.patient;
+ if(id==='player'){
+  const row=d.get('state','family','illnesses',illness.id);d.set(['state','family','illnesses',illness.id],{...row,status:'痊愈',endedAt:minute});
+  const m=d.get('state','player','medical');if(m)d.set(['state','player','medical'],{...m,symptoms:(m.symptoms??[]).filter(s=>s.illness!==illness.id)});return;
+ }
  if(d.get('state','npcs',id,'status')==='患病'){if(illness.previousStatus===null)d.remove(['state','npcs',id,'status']);else d.set(['state','npcs',id,'status'],illness.previousStatus);}
  removeFever(d,id,illness);release(d,illness);
  const row=d.get('state','family','illnesses',illness.id);
@@ -421,9 +425,10 @@ function healthDay(d,engine,minute){
  const h=healthRules(engine);if(!h)return;
  const seed=d.document.randomSeed,day=minute/DAY,ended=new Set();
  for(const illness of Object.values(d.get('state','family','illnesses')??{}).filter(r=>r.status==='患病中').sort((a,b)=>a.id.localeCompare(b.id))){
+  if(illness.patient==='player')continue;
   const npc=d.get('state','npcs',illness.patient);
   if(!npc||npc.status==='死亡'){release(d,illness);d.set(['state','family','illnesses',illness.id],{...d.get('state','family','illnesses',illness.id),status:'中止',endedAt:minute});continue;}
-  if(minute>=illness.endsAt){recover(d,engine,illness,minute);ended.add(illness.patient);continue;}
+  if(minute>=illness.endsAt){recoverIllness(d,engine,illness,minute);ended.add(illness.patient);continue;}
   if(illness.severity!=='重'||npc.status!=='患病'||withPlayer(d.get('state'),illness.patient))continue;
   const carer=assignCare(d,engine,illness,minute);
   if(minute<=illness.since)continue;

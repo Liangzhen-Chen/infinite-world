@@ -43,6 +43,8 @@ definitions.find(row=>row.function.name==='world_trade').function.parameters.pro
 definitions.find(row=>row.function.name==='world_remember').function.parameters.properties.rumor={...str,description:'编号；玩家/rumor键/在场来源/未核实原文；10分'};
 definitions.find(row=>row.function.name==='world_settlement').function.parameters.properties.operation.description='business编号办开店、停业、现金破产、期末盈亏。';
 const festivalParameters=definitions.find(row=>row.function.name==='world_settlement').function.parameters.properties;
+festivalParameters.operation.enum.push('medicine_inspect','medicine_seek','medicine_fund','medicine_hire','medicine_health');
+festivalParameters.action.enum.push('credit','charity');
 festivalParameters.operation.enum.push('festival_inspect','festival_plan','festival_authorize','festival_join','festival_cancel');
 Object.assign(festivalParameters,{festival:{...str,description:'plan用custom，后续用festival ID'},year:{...int,minimum:1},cost:{...int,minimum:0,description:'同意自费，非公款'},supplier:str});
 festivalParameters.operation.description='business经营；festival_依次查现场/约日期/各speaker准自费收费/各speaker同意参加/组织者述因取消';
