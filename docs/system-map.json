@@ -2,7 +2,7 @@
  "title": "无限原野系统地图",
  "card": "K9",
  "generatedFrom": {
-  "commit": null,
+  "commit": "refs/heads/t142",
   "method": "运行时导出（注册表、规则表、工具定义、效果表、立场传导表）+ 静态正则扫描（import 图、函数体标识符、state 分区与 records 前缀、rules/world 读取）。静态扫描是近似：经 engine.byId、helper 间接或动态拼接路径的访问不计入。"
  },
  "scanMethods": {
@@ -18,14 +18,14 @@
  "counts": {
   "layers": 6,
   "systems": 37,
-  "modules": 157,
+  "modules": 158,
   "advance": 39,
   "tools": 25,
   "verbs": 13,
   "subscribers": 8,
   "interactionRules": 24,
   "effectKinds": 11,
-  "links": 329
+  "links": 330
  },
  "layers": [
   {
@@ -193,7 +193,7 @@
     "ui_scene",
     "ui_server"
    ],
-   "files": 3
+   "files": 4
   },
   {
    "id": "data_people",
@@ -279,7 +279,7 @@
     "sim_environment",
     "sim_society"
    ],
-   "files": 85
+   "files": 86
   },
   {
    "id": "data_assets",
@@ -321,7 +321,7 @@
    "effects": [],
    "tools": [],
    "readBy": [],
-   "files": 20
+   "files": 21
   },
   {
    "id": "kernel_engine",
@@ -394,6 +394,7 @@
     "npcs",
     "professions",
     "recipes",
+    "regions",
     "residents",
     "routes",
     "rules",
@@ -496,7 +497,6 @@
    ],
    "world": [
     "bosses",
-    "festivals",
     "items",
     "locations",
     "monsters",
@@ -1222,9 +1222,10 @@
     "server-plugin/environment.mjs",
     "server-plugin/weather.mjs",
     "server-plugin/location-access.mjs",
-    "server-plugin/sites.mjs"
+    "server-plugin/sites.mjs",
+    "server-plugin/regions.mjs"
    ],
-   "lines": 743,
+   "lines": 818,
    "stateWrites": [
     "records"
    ],
@@ -1246,6 +1247,7 @@
     "attributes",
     "check",
     "environment",
+    "law",
     "travel",
     "weather"
    ],
@@ -1257,6 +1259,7 @@
     "locations",
     "monsters",
     "npcs",
+    "regions",
     "rules",
     "skills"
    ],
@@ -1857,7 +1860,7 @@
     "server-plugin/ui-overview.mjs",
     "server-plugin/ui-personal.mjs"
    ],
-   "lines": 641,
+   "lines": 644,
    "stateWrites": [],
    "stateReads": [
     "created",
@@ -1925,7 +1928,7 @@
     "extension/ambient-audio.mjs",
     "extension/state-read.mjs"
    ],
-   "lines": 1319,
+   "lines": 1324,
    "stateWrites": [],
    "stateReads": [],
    "recordWrites": [],
@@ -2045,7 +2048,7 @@
     "server-plugin/catalog.mjs",
     "server-plugin/chronicle.mjs"
    ],
-   "lines": 404,
+   "lines": 409,
    "stateWrites": [],
    "stateReads": [
     "careerMetrics",
@@ -2821,6 +2824,7 @@
    "kind": "call",
    "labels": [
     "environment.mjs",
+    "regions.mjs",
     "sites.mjs"
    ]
   },
@@ -3201,6 +3205,14 @@
    "kind": "call",
    "labels": [
     "interactions.mjs"
+   ]
+  },
+  {
+   "from": "sim_environment",
+   "to": "base_traits",
+   "kind": "call",
+   "labels": [
+    "traits.mjs"
    ]
   },
   {
@@ -3913,6 +3925,7 @@
    "to": "sim_environment",
    "kind": "call",
    "labels": [
+    "regions.mjs",
     "weather.mjs"
    ]
   },
@@ -6156,6 +6169,7 @@
    "server-plugin/magic-object.mjs",
    "server-plugin/magic-primitives.mjs",
    "server-plugin/magic.mjs",
+   "server-plugin/regions.mjs",
    "server-plugin/settlement-trade.mjs"
   ]
  },
@@ -7223,7 +7237,7 @@
   },
   {
    "name": "world_catalog",
-   "description": "规则/文化/势力/历史分页查",
+   "description": "规则/文化/势力/历史/地区分页查",
    "readOnly": true,
    "operations": null,
    "routes": [
@@ -7631,7 +7645,7 @@
   },
   {
    "dir": "world/design",
-   "files": 85,
+   "files": 86,
    "keys": [],
    "readers": [
     "server-plugin/civic.mjs",
@@ -7689,6 +7703,8 @@
     "tools/quick-migration-scenarios.mjs",
     "tools/quick-pet-scenarios.mjs",
     "tools/system-map.mjs",
+    "tools/t142-merge.mjs",
+    "tools/t142-provinces-content.mjs",
     "tools/w1-baishi.mjs",
     "tools/w1-hewan.mjs",
     "tools/w1-village-profiles-content.mjs",
@@ -7727,7 +7743,7 @@
   },
   {
    "dir": "world/drafts",
-   "files": 20,
+   "files": 21,
    "keys": [],
    "readers": [],
    "tools": [
@@ -7770,6 +7786,7 @@
     "tools/publish-w4-b1.mjs",
     "tools/record-economy-review.mjs",
     "tools/system-map.mjs",
+    "tools/t142-provinces-content.mjs",
     "tools/w1-baishi.mjs",
     "tools/w1-hewan-l4.mjs",
     "tools/w1-hewan-review.mjs",
@@ -7812,11 +7829,12 @@
   },
   {
    "dir": "world/geo",
-   "files": 3,
+   "files": 4,
    "keys": [
     "locations",
     "routes",
-    "settlementProfiles"
+    "settlementProfiles",
+    "regions"
    ],
    "readers": [
     "server-plugin/agriculture.mjs",
@@ -7849,6 +7867,7 @@
     "server-plugin/promotion.mjs",
     "server-plugin/public-opinion.mjs",
     "server-plugin/quest-board.mjs",
+    "server-plugin/regions.mjs",
     "server-plugin/reputation-registry.mjs",
     "server-plugin/retrieval.mjs",
     "server-plugin/return-summary.mjs",
@@ -7889,6 +7908,7 @@
     "tools/publish-w2-s3.mjs",
     "tools/publish-w2-s4.mjs",
     "tools/system-map.mjs",
+    "tools/t142-merge.mjs",
     "tools/w1-baishi.mjs",
     "tools/w4-publish.mjs",
     "tools/w5-content.mjs"
@@ -7912,6 +7932,7 @@
     "server-plugin/monster-society.mjs",
     "server-plugin/notables.mjs",
     "server-plugin/organizations.mjs",
+    "server-plugin/regions.mjs",
     "server-plugin/reputation-registry.mjs",
     "server-plugin/sites.mjs",
     "server-plugin/world-clock.mjs"
@@ -7920,6 +7941,7 @@
     "tools/publish-monster-society-2.mjs",
     "tools/publish-monster-society.mjs",
     "tools/system-map.mjs",
+    "tools/t142-merge.mjs",
     "tools/w5-content.mjs",
     "tools/w5-social-publish.mjs"
    ]
@@ -7992,6 +8014,7 @@
     "server-plugin/progression.mjs",
     "server-plugin/promotion.mjs",
     "server-plugin/quest-board.mjs",
+    "server-plugin/regions.mjs",
     "server-plugin/repair.mjs",
     "server-plugin/reputation-registry.mjs",
     "server-plugin/reputation.mjs",
@@ -8063,6 +8086,7 @@
     "tools/publish-w2-s4.mjs",
     "tools/publish-w4-b1.mjs",
     "tools/system-map.mjs",
+    "tools/t142-provinces-content.mjs",
     "tools/validate-world.mjs",
     "tools/w1-baishi.mjs",
     "tools/w1-hewan-content.mjs",
@@ -8087,13 +8111,6 @@
     "tools/w5-festivals.mjs",
     "tools/w5-social.mjs"
    ]
-  },
-  {
-   "dir": "world/orgs",
-   "files": 0,
-   "keys": [],
-   "readers": [],
-   "tools": []
   },
   {
    "dir": "world/people",
@@ -8159,13 +8176,6 @@
     "tools/w3-trades-publish.mjs",
     "tools/w5-content.mjs"
    ]
-  },
-  {
-   "dir": "world/sites",
-   "files": 0,
-   "keys": [],
-   "readers": [],
-   "tools": []
   }
  ],
  "prompt": {
@@ -8316,7 +8326,8 @@
    "server-plugin/bounty.mjs",
    "server-plugin/governance.mjs",
    "server-plugin/law.mjs",
-   "server-plugin/magic-targeting.mjs"
+   "server-plugin/magic-targeting.mjs",
+   "server-plugin/regions.mjs"
   ],
   "weather": [
    "server-plugin/agriculture.mjs",
@@ -9225,7 +9236,7 @@
    "id": "location",
    "name": "地点",
    "file": "world/geo/locations.json",
-   "count": 377,
+   "count": 387,
    "required": [
     "id",
     "name",
@@ -9241,6 +9252,7 @@
      "modules": [
       "server-plugin/activities.mjs",
       "server-plugin/career-metrics.mjs",
+      "server-plugin/regions.mjs",
       "server-plugin/settlement-profile.mjs",
       "server-plugin/traits.mjs"
      ],
@@ -9248,6 +9260,7 @@
       "base_traits",
       "kernel_engine",
       "sim_character",
+      "sim_environment",
       "sim_npc"
      ]
     },
@@ -9270,6 +9283,7 @@
       "server-plugin/promotion.mjs",
       "server-plugin/public-opinion.mjs",
       "server-plugin/public-projects.mjs",
+      "server-plugin/regions.mjs",
       "server-plugin/reputation.mjs",
       "server-plugin/return-summary.mjs",
       "server-plugin/scene-card.mjs",
@@ -9504,7 +9518,7 @@
    "id": "route",
    "name": "路线",
    "file": "world/geo/routes.json",
-   "count": 377,
+   "count": 389,
    "required": [
     "id",
     "from",
@@ -9706,10 +9720,12 @@
       "server-plugin/governance.mjs",
       "server-plugin/law.mjs",
       "server-plugin/magic-targeting.mjs",
+      "server-plugin/regions.mjs",
       "server-plugin/reputation.mjs"
      ],
      "systems": [
       "sim_agriculture",
+      "sim_environment",
       "sim_law",
       "sim_magic",
       "sim_society"
@@ -10574,7 +10590,7 @@
    "id": "faction",
    "name": "势力",
    "file": "world/lore/factions.json",
-   "count": 44,
+   "count": 47,
    "required": [
     "id",
     "name",
@@ -10592,10 +10608,12 @@
       "server-plugin/monster-society.mjs",
       "server-plugin/notables.mjs",
       "server-plugin/organizations.mjs",
+      "server-plugin/regions.mjs",
       "server-plugin/reputation-registry.mjs"
      ],
      "systems": [
       "nar_memory",
+      "sim_environment",
       "sim_society"
      ]
     },
@@ -10643,6 +10661,7 @@
     "nar_memory",
     "sim_clock",
     "sim_economy",
+    "sim_environment",
     "sim_society",
     "ui_host",
     "ui_scene"
@@ -10815,6 +10834,76 @@
    "manual": [],
    "refs": [
     "效果 kind 须已在效果表注册且允许 world 来源"
+   ],
+   "extend": []
+  },
+  {
+   "id": "region",
+   "name": "省郡纲要",
+   "file": "world/geo/regions.json",
+   "count": 40,
+   "required": [
+    "id",
+    "name",
+    "category（province/county）",
+    "terrain",
+    "biomes",
+    "keyPeople",
+    "郡：province / ruler / control / places / ties"
+   ],
+   "hooks": [
+    {
+     "field": "places",
+     "means": "地点按挂接与上级链归属省郡",
+     "pattern": "regionOf",
+     "modules": [
+      "server-plugin/catalog.mjs",
+      "server-plugin/regions.mjs",
+      "server-plugin/ui-map.mjs"
+     ],
+     "systems": [
+      "nar_memory",
+      "sim_environment",
+      "ui_server"
+     ]
+    },
+    {
+     "field": "ruler / control",
+     "means": "统治方与非人统治标记（地图）",
+     "pattern": "rulerOf|mapRegions",
+     "modules": [
+      "server-plugin/regions.mjs",
+      "server-plugin/ui-map.mjs"
+     ],
+     "systems": [
+      "sim_environment",
+      "ui_server"
+     ]
+    },
+    {
+     "field": "全文",
+     "means": "目录查询与检索",
+     "pattern": "publicLoreEntries|catalogDefinition",
+     "modules": [
+      "server-plugin/catalog.mjs",
+      "server-plugin/index.mjs",
+      "server-plugin/lore.mjs"
+     ],
+     "systems": [
+      "nar_memory",
+      "ui_server"
+     ]
+    }
+   ],
+   "autoSystems": [
+    "nar_memory",
+    "sim_environment",
+    "ui_server"
+   ],
+   "manual": [],
+   "refs": [
+    "biomes 由 traits 地形词派生（terrainBiomes），K8 据此生成栖地",
+    "聚落骨架与人物完整档由后续按需生成"
    ],
    "extend": []
   },
@@ -10992,7 +11081,8 @@
     "content": "location",
     "file": "world/geo/locations.json",
     "fields": [
-     "authoredFacts"
+     "authoredFacts",
+     "farNode"
     ]
    },
    {
@@ -11076,8 +11166,7 @@
     "fields": [
      "descriptionVisibility",
      "foundedYear",
-     "offers",
-     "prose"
+     "offers"
     ]
    }
   ],
@@ -11530,6 +11619,7 @@
    "imports": [
     "server-plugin/environment.mjs",
     "server-plugin/lore.mjs",
+    "server-plugin/regions.mjs",
     "server-plugin/settlement-profile.mjs",
     "server-plugin/sites.mjs"
    ],
@@ -11549,7 +11639,7 @@
     "routes"
    ],
    "worldDirs": [],
-   "lines": 41
+   "lines": 44
   },
   "server-plugin/character.mjs": {
    "system": "sim_character",
@@ -11978,6 +12068,7 @@
     "npcs",
     "professions",
     "recipes",
+    "regions",
     "residents",
     "routes",
     "rules",
@@ -12383,7 +12474,9 @@
   },
   "server-plugin/lore.mjs": {
    "system": "nar_memory",
-   "imports": [],
+   "imports": [
+    "server-plugin/regions.mjs"
+   ],
    "stateWrites": [],
    "stateReads": [],
    "recordWrites": [],
@@ -12391,7 +12484,7 @@
    "rules": [],
    "world": [],
    "worldDirs": [],
-   "lines": 15
+   "lines": 17
   },
   "server-plugin/magic-air.mjs": {
    "system": "sim_magic",
@@ -13689,6 +13782,29 @@
    "worldDirs": [],
    "lines": 202
   },
+  "server-plugin/regions.mjs": {
+   "system": "sim_environment",
+   "imports": [
+    "server-plugin/traits.mjs"
+   ],
+   "stateWrites": [],
+   "stateReads": [],
+   "recordWrites": [],
+   "recordReads": [],
+   "rules": [
+    "law"
+   ],
+   "world": [
+    "factions",
+    "locations",
+    "regions",
+    "rules"
+   ],
+   "worldDirs": [
+    "geo"
+   ],
+   "lines": 75
+  },
   "server-plugin/repair.mjs": {
    "system": "sim_economy",
    "imports": [
@@ -14312,6 +14428,7 @@
   "server-plugin/ui-map.mjs": {
    "system": "ui_server",
    "imports": [
+    "server-plugin/regions.mjs",
     "server-plugin/weather.mjs",
     "server-plugin/works.mjs"
    ],
@@ -14329,7 +14446,7 @@
     "routes"
    ],
    "worldDirs": [],
-   "lines": 98
+   "lines": 101
   },
   "server-plugin/ui-messages.mjs": {
    "system": "ui_server",
@@ -14708,7 +14825,6 @@
     "npcStockUpdateVersion"
    ],
    "world": [
-    "festivals",
     "npcs",
     "residents",
     "routes"
@@ -14931,7 +15047,7 @@
   "extension/index.js": {
    "system": "ui_host",
    "imports": [
-    "../extensions.js",
+    "../../extensions.js",
     "extension/core.js"
    ],
    "stateWrites": [],
@@ -14989,7 +15105,7 @@
    "rules": [],
    "world": [],
    "worldDirs": [],
-   "lines": 204
+   "lines": 209
   },
   "extension/message-view.mjs": {
    "system": "ui_client",
@@ -15045,7 +15161,7 @@
   "extension/runtime.js": {
    "system": "ui_host",
    "imports": [
-    "../extensions.js",
+    "../../extensions.js",
     "extension/ambient-audio.mjs",
     "extension/background-view.mjs",
     "extension/history-window.mjs",

@@ -87,6 +87,8 @@ export function renderMapPanel(container,data,{api,chatContext=null,isCurrent=()
     const area=node('select');area.setAttribute('aria-label','地图片区');const areaLabel=node('label','片区');areaLabel.append(area);toolbar.append(areaLabel);
     const destination=node('select');destination.setAttribute('aria-label','地图目的地');const destinationLabel=node('label','地点');destinationLabel.append(destination);toolbar.append(destinationLabel);
     destination.onchange=()=>{const row=byId.get(destination.value);if(row)return select(row);};
+    const regionNote=node('p');regionNote.className='fields-map-region';fragment.append(regionNote);
+    const controlText={human:'人类治理',shared:'非人与人类共治',nonhuman:'非人统治'};
     const svg=svgNode('svg',{role:'group','aria-label':'已知地点地图',preserveAspectRatio:'none',tabindex:'0'});svg.classList.add('fields-map-viewport');fragment.append(svg);
     const legend=node('div');legend.className='fields-map-legend';for(const [kind,text]of Object.entries(knowledgeText)){const e=node('span',text);e.className=`map-${kind}`;legend.append(e);}fragment.append(legend);
     fragment.append(node('p','滚轮或双指缩放，拖动平移；封路以红色虚线表示。未获知地点不显示。'));
@@ -124,6 +126,9 @@ export function renderMapPanel(container,data,{api,chatContext=null,isCurrent=()
     };
     const draw=()=>{
         const index=Number(level.value);shown=data.locations.filter(row=>row.hierarchy[index].id===area.value);
+        const region=(data.regions??[]).find(row=>row.id===area.value),counties=(data.regions??[]).filter(row=>row.province===area.value);
+        regionNote.textContent=!region?'':region.level==='郡'?`${region.name}：${region.ruler}，${controlText[region.control]}`:
+            `${region.name}：${counties.map(row=>`${row.name}（${row.ruler}${row.control==='human'?'':'，'+controlText[row.control]}）`).join('、')}`;
         const ids=new Set(shown.map(row=>row.id));
         roadPoints=[...shown,...(index<3?(data.transit??[]).filter(stop=>data.routes.some(edge=>edge.from===stop.id&&ids.has(edge.to)||edge.to===stop.id&&ids.has(edge.from))):[])];
         const roadIds=new Set(roadPoints.map(row=>row.id));svg.classList.toggle('map-sparse',shown.length<=5);svg.replaceChildren();destination.replaceChildren();symbols=[];
