@@ -18,7 +18,7 @@
  "counts": {
   "layers": 6,
   "systems": 38,
-  "modules": 178,
+  "modules": 179,
   "advance": 45,
   "tools": 25,
   "verbs": 16,
@@ -2226,9 +2226,10 @@
    "modules": [
     "server-plugin/consistency-review.mjs",
     "server-plugin/consistency-service.mjs",
-    "server-plugin/consistency-evidence.mjs"
+    "server-plugin/consistency-evidence.mjs",
+    "server-plugin/consistency-outcome.mjs"
    ],
-   "lines": 681,
+   "lines": 722,
    "stateWrites": [],
    "stateReads": [
     "location",
@@ -12628,6 +12629,11 @@
   ],
   "orphanModules": [
    {
+    "module": "server-plugin/consistency-outcome.mjs",
+    "usedByTests": true,
+    "usedByTools": true
+   },
+   {
     "module": "extension/generation.mjs",
     "usedByTests": true,
     "usedByTools": true
@@ -13420,6 +13426,18 @@
    "worldDirs": [],
    "lines": 96
   },
+  "server-plugin/consistency-outcome.mjs": {
+   "system": "nar_consistency",
+   "imports": [],
+   "stateWrites": [],
+   "stateReads": [],
+   "recordWrites": [],
+   "recordReads": [],
+   "rules": [],
+   "world": [],
+   "worldDirs": [],
+   "lines": 40
+  },
   "server-plugin/consistency-review.mjs": {
    "system": "nar_consistency",
    "imports": [
@@ -13463,7 +13481,7 @@
    "worldDirs": [
     "meta"
    ],
-   "lines": 241
+   "lines": 242
   },
   "server-plugin/contracts.mjs": {
    "system": "sim_economy",

@@ -166,7 +166,7 @@ const SYSTEMS=[
  {id:'ui_host',layer:'ui',name:'酒馆接入',modules:['ext:index.js','ext:runtime.js','ext:core.js','ext:turn.mjs']},
  // 叙述层
  {id:'nar_prompt',layer:'narr',name:'提示词',dir:'prompt/',modules:['ext:prompt.mjs','ext:generation.mjs']},
- {id:'nar_consistency',layer:'narr',name:'一致性审查',modules:['consistency-review.mjs','consistency-service.mjs','consistency-evidence.mjs']},
+ {id:'nar_consistency',layer:'narr',name:'一致性审查',modules:['consistency-review.mjs','consistency-service.mjs','consistency-evidence.mjs','consistency-outcome.mjs']},
  {id:'nar_memory',layer:'narr',name:'档案与检索',modules:['retrieval.mjs','retrieval-lexicon.mjs','lore.mjs','catalog.mjs','chronicle.mjs']},
 ];
 const fileOf=m=>m.startsWith('ext:')?`extension/${m.slice(4)}`:`server-plugin/${m}`;
