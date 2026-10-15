@@ -5,8 +5,8 @@ import {relationView,recordStandingEvidence} from './npc-relations.mjs';
 import {stanceOf} from './monster-society.mjs';
 import {readBossCognition} from './boss-cognition.mjs';
 import {readBossNegotiation} from './boss-negotiation.mjs';
-import {npcHousehold} from './npc-life.mjs';
-import {organizationsOf} from './organizations.mjs';
+import {personView} from './entity-view.mjs';
+import {actorId} from './npc-state.mjs';
 
 // One read model for "how does X regard Y", normalized to -100..100. It wraps
 // the seven existing stores without changing them:
@@ -28,6 +28,7 @@ const factionRules=(engine,id)=>reputationFactions(engine).find(f=>f.id===id)??
     (engine.rules.factionRelations?.[id]?{relations:factionRelations(engine,id)}:undefined);
 
 export function standingKind(engine,state,id){
+    id=actorId(engine.world,id);
     if(id==='player')return 'player';
     if(state.npcs?.[id])return 'npc';
     if(engine.world.regions?.some(r=>r.id===id&&r.category==='county'))return 'polity';
@@ -69,6 +70,7 @@ function baseStanding(engine,state,holder,target,kind){
 }
 export function standingLedger(state,holder,target){return state.records?.[rec(holder,target)]??null;}
 export function standing(engine,state,holder,target='player'){
+    holder=actorId(engine.world,holder);target=actorId(engine.world,target);
     const kind=standingKind(engine,state,holder);
     return clamp(baseStanding(engine,state,holder,target,kind)+(standingLedger(state,holder,target)?.value??0));
 }
@@ -80,6 +82,7 @@ export function standingWords(value){
 // Single write entry. A person's change goes into their own relation ledger;
 // any other holder gets a standing record with its history.
 export function adjustStanding(d,engine,holder,target,delta,{sourceEvent,reason,via=null,minute=d.get('state','minute')}){
+    holder=actorId(engine.world,holder);target=actorId(engine.world,target);
     delta=Math.round(delta);if(!delta||holder===target)return null;
     const state=d.get('state'),kind=standingKind(engine,state,holder);if(!kind||kind==='player')return null;
     if(kind==='npc'){
@@ -107,24 +110,27 @@ export function eventWeight(e){
     return 0;
 }
 export function collectivesOf(engine,state,member){
-    const rows=[],npc=state.npcs?.[member],base=engine.byId.get(member);
-    if(npc||base?.id?.startsWith('npc_')){
-        const house=npc?npcHousehold(engine,state,member):null;
-        for(const id of house?.members??[])if(id!==member&&state.npcs[id]&&state.npcs[id].status!=='死亡')rows.push({holder:id,ratio:TRANSMISSION.household,via:`household:${house.id}`});
-        const settlements=reputationSettlements(engine),factions=reputationFactions(engine);
-        let place=base?.settlement??npc?.settlement??null;const seen=new Set();
-        if(!settlements.includes(place)){place=npc?.location??base?.location;while(place&&!seen.has(place)&&!settlements.includes(place)){seen.add(place);place=engine.byId.get(place)?.parent;}}
-        if(place&&settlements.includes(place))rows.push({holder:place,ratio:TRANSMISSION.settlement,via:`settlement:${place}`});
-        for(const f of factions)if((f.members??[]).includes(member)){
-            rows.push({holder:f.id,ratio:TRANSMISSION.faction,via:`faction:${f.id}`});
-            for(const other of factions)if(other.id!==f.id&&standing(engine,state,other.id,f.id)>=TRANSMISSION.allyMinimum)
-                rows.push({holder:other.id,ratio:TRANSMISSION.faction*TRANSMISSION.ally,via:`ally:${f.id}`});
-        }
-        // Organizations joined in this campaign (player-founded guilds, gangs,
-        // shops, churches; new members of catalog factions).
-        for(const org of organizationsOf(state,member))if(!rows.some(r=>r.holder===org))
-            rows.push({holder:org,ratio:TRANSMISSION.organization,via:`organization:${org}`});
-    }else if(state.creatures?.[member]?.society?.id)rows.push({holder:state.creatures[member].society.id,ratio:TRANSMISSION.spiritSociety,via:`spirit_society:${member}`});
+    const view=personView(engine,state,member);if(!view)return [];
+    member=view.id.value;
+    const rows=[],house=view.household.value;
+    for(const id of house?.members??[])if(id!==member&&state.npcs?.[id]&&state.npcs[id].status!=='\u6b7b\u4ea1')
+        rows.push({holder:id,ratio:TRANSMISSION.household,via:`household:${house.id}`});
+    const settlements=reputationSettlements(engine),factions=reputationFactions(engine,state);
+    let place=view.settlement.value;
+    // A visitor remains affiliated to their residence; location is only a legacy fallback.
+    if(!place){place=view.residence.value?.home??view.location.value;const seen=new Set();
+        while(place&&!seen.has(place)&&!settlements.includes(place)){seen.add(place);place=engine.byId.get(place)?.parent;}}
+    if(place&&settlements.includes(place))rows.push({holder:place,ratio:TRANSMISSION.settlement,via:`settlement:${place}`});
+    for(const f of factions)if(f.members.includes(member)){
+        rows.push({holder:f.id,ratio:TRANSMISSION.faction,via:`faction:${f.id}`});
+        for(const other of factions)if(other.id!==f.id&&standing(engine,state,other.id,f.id)>=TRANSMISSION.allyMinimum)
+            rows.push({holder:other.id,ratio:TRANSMISSION.faction*TRANSMISSION.ally,via:`ally:${f.id}`});
+    }
+    for(const entry of view.organizations){const org=entry.value;
+        if(org.source!=='household'&&org.source!=='faction'&&!rows.some(r=>r.holder===org.id))
+            rows.push({holder:org.id,ratio:TRANSMISSION.organization,via:`organization:${org.id}`});
+    }
+    if(state.creatures?.[member]?.society?.id)rows.push({holder:state.creatures[member].society.id,ratio:TRANSMISSION.spiritSociety,via:`spirit_society:${member}`});
     return rows;
 }
 // World-event subscriber.
