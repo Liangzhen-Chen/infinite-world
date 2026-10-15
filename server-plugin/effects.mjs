@@ -1,5 +1,7 @@
 import {registerEffect,effectConsumer} from './effect-registry.mjs';
 export {EFFECT_SOURCES,registerEffect,effectKinds,effectConsumer} from './effect-registry.mjs';
+import {damageFacilities} from './facilities.mjs';
+import {allFacilities,within} from './facility-state.mjs';
 import {isReputationSettlement}from'./reputation-registry.mjs';
 // K6 unified effect table. World clocks, faction clocks, festivals and the
 // seasonal table all validate and apply stage effects here. A system adds an
@@ -146,6 +148,17 @@ registerEffect('environment',{
 });
 
 // ---- Rules effect table (world/meta/rules.json effectTable) ---------------
+registerEffect('facility',{
+ validate(engine,e){
+  if(!Array.isArray(e.locations)||!e.locations.length||e.locations.some(id=>!engine.byId.has(id))||!['damage','fire','water'].includes(e.action)||e.action==='damage'&&!int(e.amount,1,100))throw Error('设施效果地点、动作或损毁量无效');
+ },
+ apply(d,engine,e,context){
+  if(e.action==='damage')return {applied:true,changed:damageFacilities(d,engine,e.locations,e.amount,{cause:'灾害',minute:context.minute,sourceEvent:context.sourceEvent})};
+  const state=d.get('state'),changed=allFacilities(engine,state).filter(b=>e.locations.some(id=>within(engine,state,b.id,id))).map(b=>({id:b.id,...applyInteraction(d,engine,{agent:e.action,target:b.id,minute:context.minute,sourceEvent:context.sourceEvent})}));
+  return {applied:true,changed};
+ },
+});
+
 // hooks: extra effects attached to an existing clock stage or festival without
 // rewriting its reviewed row. seasons: effects at the first midnight of a season.
 export function effectTable(engine){return engine.rules.effectTable??null;}

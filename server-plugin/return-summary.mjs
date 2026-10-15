@@ -73,6 +73,7 @@ export function returnChanges(engine,state,place,{from,to=state.minute,before={}
     // 统一世界事件：有人目击、够分量的当地事；组织议决只给成员、当事人或公议机构。
     for(const e of Object.values(state.records??{})){
         if(e.category!=='world_event'||!inWindow(e.minute)||!within(engine,e.location,place)||hidden(e)||e.legacy)continue;
+        if(e.tags?.includes('facility')){if(e.summary)add(75,e.summary);continue;}
         if(e.tags?.includes('entity-transition')){
             // Family ledgers above already supply these same historical facts.
             if(publicTransition(engine,state,e)&&!['die','marry','migrate'].includes(e.verb)&&e.summary)add(75,e.summary);

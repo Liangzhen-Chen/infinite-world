@@ -23,6 +23,7 @@ import {lairAction,bossCounter,rememberBossTactic,defeatBoss}from'./bosses.mjs';
 import {civicAction,recordDonationContribution,publicProjectApproval,donationReceipt,saveDonationReceipt}from'./civic.mjs';
 import {governanceAction,assertGovernedProject,playerOffices}from'./governance.mjs';
 import {startPublicProject,abortPublicProject,startHouse}from'./public-projects.mjs';
+import {prepareFacilityProject}from'./facility-state.mjs';
 import {titleAction}from'./titles.mjs';
 import {militaryAction}from'./military.mjs';
 import {warAction,warCombatResult}from'./war-diplomacy.mjs';
@@ -193,17 +194,19 @@ export const activities={
         // T125: a sitting official's own power replaces a delegated authorization.
         if(args.operation==='project_abort')return abortPublicProject(d,this,args);
         if(args.operation==='start_project'&&d.get('state','records',args.authorization)?.category==='housing_permit')return startHouse(d,this,args,id,args.authorization);
-        if(args.operation==='start_project'&&!args.authorization&&playerOffices(d.get('state'),{settlement,power:'public_project'},this).length)return startPublicProject(d,this,args,id,settlement);
+        if(args.operation==='start_project'&&(args.funding==='private'||!args.authorization&&playerOffices(d.get('state'),{settlement,power:'public_project'},this).length))return startPublicProject(d,this,args,id,settlement);
         const authorization=d.get('state','records',args.authorization);
         if(!authorization||authorization.category!=='authorization'||authorization.settlement!==settlement)throw new Error('公共物资需要已成立的授权');
         if(args.operation==='start_project'){
+            const plan=prepareFacilityProject(this,d.get('state'),args,settlement);
+            if(plan.building)throw Error('修缮扩建须使用在任官职或私人出资');
             assertGovernedProject(d,this,settlement,args);
             if(authorization.revoked||authorization.expires!==undefined&&authorization.expires<=d.get('state','minute'))throw new Error('公共工程授权已撤销或到期');
             const wood=integer(args.wood,1,10000),stone=integer(args.stone??0,0,10000),days=integer(args.days,1,365);
             if(row.wood<wood||row.stone<stone)throw new Error('公共工程材料不足');
             d.set(['state','settlements',settlement,'wood'],row.wood-wood);d.set(['state','settlements',settlement,'stone'],row.stone-stone);
             const civicApproval=publicProjectApproval(d,this,settlement,args.authorization,args.beneficiaries);
-            const project=`project_${id}`;d.set(['state','projects',project],{id:project,type:'工程',creator:'player',name:requiredText(args.name),settlement,remainingDays:days,wood,stone,status:'施工中',beneficiaries:args.beneficiaries??[],sourceEvent:id,...(civicApproval?{civicApproval}:{})});
+            const project=`project_${id}`;d.set(['state','projects',project],{id:project,type:'工程',creator:'player',name:requiredText(args.name),settlement,remainingDays:days,wood,stone,status:'施工中',beneficiaries:args.beneficiaries??[],sourceEvent:id,...plan,...(civicApproval?{civicApproval}:{})});
             return {project};
         }
         throw new Error('未知聚落事务');

@@ -1,3 +1,4 @@
+import {damageFacilities} from './facilities.mjs';
 // U12b: campaigns share military ledgers, K4 standing, K6 effects and U17 commissions.
 import {armies,armyKey,armyStrength,createArmy,ensureArmies,raiseLevy,loseSoldiers,releaseLevy,partyPay,partyCredit,partyName} from './military.mjs';
 import {standing,adjustStanding,standingKind} from './standing.mjs';
@@ -64,6 +65,7 @@ function sidePower(d,e,w,party,at){
 }
 function raid(d,e,w,winner,at,src){
  const village=w.villages[w.rounds%Math.max(1,w.villages.length)];if(!village)return null;
+ damageFacilities(d,e,[village],15,{cause:'战事',minute:at,sourceEvent:src,actor:winner});
  const food=drawArmyRations(d,e,village,rules(e).raidFood,{raid:true}),unit=w.armyIds.map(id=>d.get(...path(armyKey(id)))).find(a=>a&&sideOf(w,a)===winner);
  if(unit&&food)d.set(path(armyKey(unit.id)),{...unit,food:unit.food+food});
  // Ordinary family migration chooses a host and route; the war supplies the danger.

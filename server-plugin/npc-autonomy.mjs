@@ -1,3 +1,4 @@
+import {facilityView} from './facility-state.mjs';
 import {applyPatches,digest} from './storage.mjs';
 import {scheduleAt} from './npc-schedule.mjs';
 import {npcPresenceAt,shareNpcMemory,npcCognitionView} from './npc-cognition.mjs';
@@ -27,7 +28,7 @@ export function assertNpcAutonomyAction(state,actors,{start=state.minute,minutes
  for(const t of Object.values(state.npcAutonomy?.tasks??{}))if(t.status==='进行中'&&actors.some(id=>[t.npc,t.action.seller].includes(id))&&start<t.finish&&start+Math.max(1,minutes)>t.start)throw Error('人物正在完成已经开始的自主工作');
 }
 function validateAction(d,engine,id,action,{at=d.get('state','minute'),presence=d.get('state'),ignoreTask=false}={}){
- const state=d.get('state'),actor=presence.npcs[id],base=engine.byId.get(id),minutes=duration(engine,action);let furnace,work;
+ const state=d.get('state'),actor=presence.npcs[id],base=engine.byId.get(id),minutes=Math.ceil(duration(engine,action)/(action.kind==='craft'?(facilityView(engine,state,actor?.location)?.factor||1):1));let furnace,work;
  if(!full(engine,id)||!awake(actor)||personConstraint(engine,state,id,at)||state.player.companions?.includes(id))throw Error('人物不具备独立行动条件');
  if(['死亡','濒死','昏迷','患病'].includes(state.npcs[id]?.status))throw Error('人物当前无法完成工作');
  if(ignoreTask)for(const who of [id,action.seller].filter(Boolean))if(!awake(state.npcs[who])||personConstraint(engine,state,who,at)||state.npcs[who].location!==presence.npcs[who]?.location)throw Error('工作完成时人物已离开或不能继续行动');
@@ -49,8 +50,8 @@ function validateAction(d,engine,id,action,{at=d.get('state','minute'),presence=
   const totals=new Map();for(const m of recipe.materials)totals.set(m.item,(totals.get(m.item)??0)+m.amount);
   for(const [item,amount] of totals)if(engine.quantity(d,id,item)<amount)throw Error('实际制造材料不足');
   for(const item of recipe.tools??[]){if(recipe.materials.some(m=>m.item===item))throw Error('工具不能同时消耗');if(engine.quantity(d,id,item)<1||(heldUnit(d,engine,id,item)?.durability??engine.byId.get(item)?.durability??0)<=0)throw Error('没有完好的实际工具');}
-  const station=engine.byId.get(actor.location)?.workstations?.find(s=>s.kind===recipe.workstation);
-  if(recipe.workstation&&!station||station&&station.access!=='public'&&station.owner!==id||state.buildings?.[actor.location]?.condition===0)throw Error('没有可用且获准的工作台');
+  const station=(facilityView(engine,state,actor.location)?.workstations??engine.byId.get(actor.location)?.workstations)?.find(s=>s.kind===recipe.workstation);
+  if(recipe.workstation&&!station||station&&station.access!=='public'&&station.owner!==id||facilityView(engine,state,actor.location)?.factor===0)throw Error('没有可用且获准的工作台');
   const fee=station?.owner===id?0:station?.fee??0;if(!safe(fee)||state.npcs[id].coins<fee)throw Error('工坊费用不足');
   if(station?.owner?.startsWith('npc_')&&(!state.npcs[station.owner]||['死亡','濒死'].includes(state.npcs[station.owner].status)))throw Error('工坊收费人无法履约');
   npcToolBonus(d,engine,id,recipe);
@@ -78,7 +79,7 @@ function advanceFurnace(d,engine,task,until){
  const actor=d.get('state','npcs',task.npc),location=task.presence.npcs[task.npc].location;
  if(!awake(actor)||personConstraint(engine,d.get('state'),task.npc,until)||actor.location!==location||d.get('state','player','companions')?.includes(task.npc))throw Error('照管炉火的人物已离岗或失能');
  const recipe=engine.byId.get(task.action.recipe),station=engine.byId.get(location)?.workstations?.find(s=>s.kind===recipe.workstation);
- if(!station||station.access!=='public'&&station.owner!==task.npc||d.get('state','buildings',location,'condition')===0)throw Error('炉火工坊已不可用');
+ if(!station||station.access!=='public'&&station.owner!==task.npc||facilityView(engine,d.get('state'),location)?.factor===0)throw Error('炉火工坊已不可用');
  const work=draft(d.document,task.furnace.checkedUntil);
  const row=engine.byId.get(location)?.features?.find(f=>f.id===task.furnace.plan.feature);
  if(!row||row.owner!==task.npc&&row.access!=='public')throw Error('人物没有热源的使用权限');

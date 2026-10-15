@@ -1,3 +1,4 @@
+import {allFacilities,within as facilityWithin} from './facility-state.mjs';
 // U3 seasonal and disaster world clocks (rules.hazardClock; data in
 // world/design/seasonal-hazards.mjs). A separate table and record category
 // ('hazard_clock') from the reviewed grain monitors in rules.worldClock, whose
@@ -50,6 +51,7 @@ registerEffect('flood',{
  validate(engine,e){if(!Array.isArray(e.locations)||!e.locations.length||e.locations.some(id=>!locationKnown(engine,id))||!int(e.minutes,1,90*DAY))throw Error('受淹效果地点或时长无效');},
  apply(d,engine,e,context){
   const soaked=[];
+  for(const b of allFacilities(engine,d.get('state')))if(e.locations.some(id=>facilityWithin(engine,d.get('state'),b.id,id)))applyInteraction(d,engine,{agent:'flood',target:b.id,minute:context.minute,sourceEvent:context.sourceEvent});
   for(const row of environmentFeatures(engine).filter(f=>e.locations.includes(f.location)))
    if(applyInteraction(d,engine,{agent:'flood',target:row.id}).added.includes('wet'))soaked.push(row.id);
   for(const location of e.locations)d.set(['state','records',`hazard-flood:${location}`],{category:'hazard_flood',location,since:context.minute,until:context.minute+e.minutes,soaked:soaked.filter(id=>environmentFeatures(engine).find(f=>f.id===id).location===location),sourceEvent:context.sourceEvent});

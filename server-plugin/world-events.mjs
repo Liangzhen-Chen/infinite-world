@@ -140,6 +140,7 @@ export function publicTransition(engine,state,e){
 }
 export function eventRumorId(engine,state,e){
     if(!e||e.legacy||privateWorldEvent(e)||!e.witnesses?.length)return null;
+    if(e.tags?.includes('facility'))return `rumor_event:${e.id}`;
     if(publicTransition(engine,state,e))return `rumor_event:${e.id}`;
     if(!['harm','steal','help','gift'].includes(e.verb)&&!e.tags?.includes('npc_crime')||Math.abs(eventWeight(e))<RUMOR_WEIGHT||[e.actor,e.target].some(id=>minor(engine,state,id,e.minute)))return null;
     return `rumor_event:${e.id}`;

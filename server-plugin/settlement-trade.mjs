@@ -1,3 +1,4 @@
+import {facilityRouteStates,granaryCapacity} from './facility-state.mjs';
 import {drawGranary} from './agriculture.mjs';
 import {weatherTravel} from './weather.mjs';
 import {itemTraits,hasTrait} from './traits.mjs';
@@ -114,7 +115,7 @@ function schedule(d,engine,o,minute){
         t.segment={kind:'rest',minutes:DAY-budget};t.nextAt=minute+DAY-budget;return;
     }
     const oriented=edge?{...edge,from:t.location}:null,conditions=edge?weatherTravel(engine,d.document.randomSeed,oriented,o.mode,minute):null;
-    if(warRouteClosed(d.get('state'),edge?.id,minute)||!edge||!edge.modes.includes(o.mode)||edge.closedSeasons.includes(engine.calendar(minute).season)||conditions?.closed||hazardRouteClosed(engine,d.document.randomSeed,edge.id,minute)){
+    if(facilityRouteStates(engine,d.get('state')).get(edge?.id)?.factor===0||warRouteClosed(d.get('state'),edge?.id,minute)||!edge||!edge.modes.includes(o.mode)||edge.closedSeasons.includes(engine.calendar(minute).season)||conditions?.closed||hazardRouteClosed(engine,d.document.randomSeed,edge.id,minute)){
         t.segment={kind:'wait',minutes:DAY-minute%DAY};t.nextAt=minute+t.segment.minutes;t.waitReason='道路或天气不通';
         entry(o,'blocked',minute,{location:t.location,edge:t.edges[t.edgeIndex]});return;
     }
@@ -132,7 +133,7 @@ function arrive(d,engine,o,minute){
     const a=warehouse(d,o.seller),b=warehouse(d,o.buyer);
     if(!a||!b)throw Error('周贸易到货两端真实账缺失；不能生成公仓');
     spoil(o,minute);
-    const space=Math.max(0,b.r.granary.capacity-b.s.food-b.r.field.seedBank),accepted=Math.min(cargo(o),space);
+    const space=Math.max(0,granaryCapacity(engine,d.get('state'),o.buyer,b.r.granary.capacity)-b.s.food-b.r.field.seedBank),accepted=Math.min(cargo(o),space);
     const gross=accepted*o.unitPriceCopper,refund=o.escrowCopper-gross,tax=Math.floor(gross*o.taxBps/10000);
     if(!integer(refund))throw Error('周贸易预付资金不守恒');
     let remaining=accepted;
