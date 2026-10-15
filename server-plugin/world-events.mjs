@@ -7,7 +7,7 @@
 import {eventWeight} from './standing.mjs';
 import {recordCareerMetrics} from './career-metrics.mjs';
 export const WORLD_EVENT_VERSION=1;
-export const SOCIAL_VERBS=new Set(['harm','clash','steal','gift','help','trade','learn','organize','breach','author','deceive']);
+export const SOCIAL_VERBS=new Set(['harm','clash','steal','gift','help','trade','learn','organize','breach','author','deceive','pact']);
 const awake=n=>n&&!['死亡','濒死','昏迷'].includes(n.status)&&!n.scheduleTravel&&!n.cognitionTravel&&!/(睡眠|熟睡|睡觉)/.test(n.activity??'');
 const resolve=(engine,value)=>{if(!value)return null;try{return engine.resolve(value);}catch{return null;}};
 
@@ -77,6 +77,8 @@ export function deriveWorldEvents(engine,before,after,{tool,args={},detail={},ev
         e={actor:'player',...detail.workEvent};
     }else if(detail.organizationEvent){
         e={actor:'player',...detail.organizationEvent};
+    }else if(detail.socialEvent){
+        e={actor:'player',...detail.socialEvent};
     }else if(tool==='learn'){
         e={verb:'learn',actor:'player',target:detail.teacher??null,tags:['learn',detail.success?'success':'attempt']};
     }

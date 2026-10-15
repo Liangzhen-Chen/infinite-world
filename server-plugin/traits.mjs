@@ -54,6 +54,16 @@ export function creatureTraits(species,actor=null){
  if(actor?.status==='死亡')tags.add('dead');
  return finish('creature',species?.id,tags,{elements,affinity,source:n?.affinity?'nature':undefined});
 }
+// A boss may author its own body and material tags. They join the species
+// tags and the individual then takes part in the tag rules of the interaction
+// table; an explicit species nature still overrides the tactics it names.
+export function bossTraits(species,boss,actor=null){
+ const base=creatureTraits(species,actor);
+ if(!Array.isArray(boss?.tags)||!boss.tags.length)return base;
+ const tags=add(new Set(base.tags.filter(t=>!['flammable','conductive'].includes(t))),boss.tags);
+ const elements=[...base.elements,...tags.has('ember')?['fire']:[],...tags.has('frost')?['cold']:[],...tags.has('aquatic')?['water']:[]];
+ return finish('creature',species?.id,tags,{elements,affinity:base.affinity,source:'boss'});
+}
 export function featureTraits(row,state=row?.state,minute=0){
  const tags=add(new Set(['feature',row?.kind]),FEATURE_KINDS[row?.kind]);
  const material=MATERIALS[state?.material];if(material)tags.add(material);
@@ -94,6 +104,11 @@ const featureRow=(engine,id)=>engine.world.locations.flatMap(place=>(place.featu
 export function traitsOf(engine,doc,id,{weather=null}={}){
  const state=stateOf(doc)??{},minute=state.minute??0;
  if(typeof id!=='string')return null;
+ if(id.startsWith('npc_')){
+  // A resident who is also a boss body carries the boss's authored body tags.
+  const boss=engine.byId?.get(state.npcs?.[id]?.boss),species=boss?.tags?engine.byId?.get(boss.monster):null;
+  if(species)return bossTraits(species,boss,state.npcs[id]);
+ }
  if(id==='player'||id.startsWith('npc_'))return finish('person',id,new Set(['person','humanoid','flesh']));
  if(id.startsWith('feature_')){
   const row=featureRow(engine,id);if(!row)return null;
@@ -104,7 +119,8 @@ export function traitsOf(engine,doc,id,{weather=null}={}){
  if(id.startsWith('monster_')||id.startsWith('boss_')){
   const actor=state.creatures?.[id];
   const species=engine.byId?.get(actor?.species)??(id.startsWith('monster_')?definition:engine.byId?.get(definition?.monster));
-  return species?creatureTraits(species,actor):null;
+  const boss=engine.byId?.get(actor?.boss??(id.startsWith('boss_')?id:null));
+  return species?(boss?.tags?bossTraits(species,boss,actor):creatureTraits(species,actor)):null;
  }
  if(id.startsWith('spell_')||definition?.effectSpec)return spellTraits(definition);
  if(definition&&engine.world?.locations?.includes?.(definition))return locationTraits(definition,weather);
@@ -121,6 +137,10 @@ export function validateTraits(world){
   if(s.tags===undefined)continue;
   if(!Array.isArray(s.tags)||!s.tags.length)errors.push(`${s.id}: 生物性状标签须为非空列表`);
   else if(s.tags.some(t=>!CREATURE_TAGS.includes(t))||new Set(s.tags).size!==s.tags.length)errors.push(`${s.id}: 生物性状标签不在词表或重复`);
+ }
+ for(const b of world.bosses??[]){
+  if(b.tags===undefined)continue;
+  if(!Array.isArray(b.tags)||!b.tags.length||b.tags.some(t=>!CREATURE_TAGS.includes(t))||new Set(b.tags).size!==b.tags.length)errors.push(`${b.id}: 首领体表与材质标签须为词表内不重复的非空列表`);
  }
  return errors;
 }

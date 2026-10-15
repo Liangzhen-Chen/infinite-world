@@ -82,6 +82,10 @@ function publicResult(n,h,boss){
         actionScope:{kind:'instant',instantaneous:true}};
 }
 export function negotiateBoss(d,engine,boss,residence,args,eventId){
+    // Only the registered leader speaks for a settlement; another resident boss
+    // negotiates for itself alone.
+    if((args.term!==undefined||args.contract!==undefined)&&boss.actor&&!engine.world.locations.some(l=>l.monsterSociety?.leader===boss.id))
+        throw Error('只有聚居地首领能代表聚居地立约；这名居民只能为自己议定和平与交换');
     if(args.term!==undefined||args.contract!==undefined)return societyAgreement(d,engine,boss,args,eventId,()=>negotiateBoss(d,engine,boss,residence,{...args,term:undefined},eventId));
     const target=boss.actor??residence.occupant?.actor,actor=engine.actor(d,target);
     if(!boss.actor&&(residence.occupant?.kind!=='boss'||residence.occupant.definition!==boss.id)||!actor||actor.boss!==boss.id||
@@ -123,5 +127,10 @@ export function negotiateBoss(d,engine,boss,residence,args,eventId){
         for(const r of t.request)transferItems(d,bag,target,'player',r.item,r.quantity);
     }
     d.say(`${actor.name}：${h.reason}`);
-    return publicResult(readBossNegotiation(engine.actor(d,target)),h,boss);
+    const out=publicResult(readBossNegotiation(engine.actor(d,target)),h,boss);
+    // An accepted pact enters the shared world-event stream (K3); standing and
+    // its transmission to the resident's collectives read it from there (K4).
+    if(h.accepted)out.socialEvent={verb:'pact',target,value:value(t.offer),
+        tags:['negotiation',t.pact,t.alliance?'alliance':'peace',...(t.offer.length||t.request.length?['exchange']:[])]};
+    return out;
 }
