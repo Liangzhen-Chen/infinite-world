@@ -11,6 +11,7 @@ import './magic-marks.mjs';
 import './environment.mjs';
 import './summons.mjs';
 import {magicEffect}from'./magic-effects.mjs';
+import {assertSpellConsent}from'./magic-consent.mjs';
 import {derivedStats,monsterStats}from'./combat.mjs';
 import {recordDisciplineBreach}from'./training.mjs';
 import {magicStatuses,magicStatusStats,relieveMagicStatuses,applyMagicStatus}from'./magic-status.mjs';
@@ -71,17 +72,14 @@ export function prepareMagic(d,catalog,args,context={}){
     const targetingEngine=Object.create(this);
     if(context.targetFacts)targetingEngine.magicTargetFacts=()=>context.targetFacts;
     assertMagicTargeting(d,targetingEngine,catalog,args,target);
+    if(spec.kind==='status'&&magicStatuses[spec.status]?.mental&&!catalog.targeting?.consent)assertSpellConsent(d,this,catalog,args,target,'mental_magic');
     const derived=target==='player'?{maxHp:actor.maxHp,defense:0}:partition==='npcs'
         ?derivedStats({level:actor.level??definition.level??1,attributes:definition.attributes,profession:Boolean(definition.combatProfession)},this.rules)
         :monsterStats({level:actor.level??definition.level??definition.levelRange?.[0]??1,template:definition.template??this.byId.get(definition.monster)?.template??2,bossTier:definition.tier??0},this.rules);
     if(derived.divine&&!d.get('state','divinePermissions',target))throw new Error('此法术无法越过神性屏障');
-    if(spec.kind==='heal'&&target!=='player'&&actor.status!=='濒死'){
-        const permission=d.get('state','records',args.authorization);
-        if(!permission||permission.category!=='authorization'||permission.subject!==target||permission.action!=='healing'||permission.expires!==undefined&&permission.expires<=d.get('state','minute'))throw new Error('治疗需要本人同意；濒死急救除外');
-    }
+    if(spec.kind==='heal')assertSpellConsent(d,this,catalog,args,target,'healing');
     if((spec.kind==='protection'||spec.kind==='status'&&magicStatuses[spec.status].beneficial)&&target!=='player'){
-        const permission=d.get('state','records',args.authorization);
-        if(!permission||permission.category!=='authorization'||permission.subject!==target||permission.action!=='support_magic'||permission.expires!==undefined&&permission.expires<=d.get('state','minute'))throw new Error('向他人施加防护需要本人同意');
+        assertSpellConsent(d,this,catalog,args,target,'support_magic');
     }
     const ambientC=spec.coldDecay?ambientHeatC(d,this,context.location??d.get('state','location')):undefined;
     const stone=spec.stoneProjectile?prepareStone.call(this,d,catalog,{...args,target}):undefined;

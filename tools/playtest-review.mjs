@@ -1,6 +1,7 @@
 import {reviewVoiceBlind} from './playtest-voice-blind.mjs';
 const criteria=['truth','agency','language','continuity'];
 export const compactPlaytestTurn=turn=>({turn:turn.index,input:turn.input,reply:turn.visible??turn.reply,
+    originalReply:turn.originalReply,reviewFailure:turn.reviewFailure,
     calls:(turn.calls??[]).map(call=>({tool:call.tool,args:call.args,result:call.result})),assertions:turn.assertions,
     player:turn.player,minute:turn.minute,location:turn.location,sceneBefore:turn.sceneBefore,sceneBeforeReply:turn.sceneBeforeReply,turnResult:turn.turnResult,
     feedback:turn.feedback,

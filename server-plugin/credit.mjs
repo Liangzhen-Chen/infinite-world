@@ -17,7 +17,7 @@ import {derivedBankAt,derivedBankById,BANK_OPERATIONS,bankTrade,advanceBankFinan
 import {ASSET_OPERATIONS,assetTrade,advanceFinanceAssets}from'./finance-assets.mjs';
 import {groupAccountView,ensureGroupAccount,groupAccountPath}from'./group-account.mjs';
 
-export const CREDIT_OPERATIONS=new Set(['borrow','deposit','withdraw','exchange','work','partner',...BANK_OPERATIONS,...ASSET_OPERATIONS]);
+export {CREDIT_OPERATIONS} from './finance-operations.mjs';
 export const CREDIT_KINDS=new Set(['loan','partnership','pawn']);
 const rec=id=>['state','records',id];
 const int=(n,min,max,label)=>{if(!Number.isSafeInteger(n)||n<min||n>max)throw Error(`${label}必须在${min}到${max}之间`);return n;};

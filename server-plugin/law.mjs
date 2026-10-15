@@ -1,4 +1,7 @@
-import {lawAuthorities} from './entity-view.mjs';
+import {entityTransition,businessSnapshot,businessTransitions} from './entity-transitions.mjs';
+import {lawAuthorities,personName} from './entity-view.mjs';
+import {legalCodeAt,legalCodeById,courtHierarchy,legalCooperation} from './law-codes.mjs';
+import {hireAdvocate,representationEffect,advocateService} from './legal-representation.mjs';
 import { trackTransferUnit, transferItems, changeItems } from './items.mjs';
 import {advanceWithNpcParticipants,assertNpcService}from'./npc-schedule.mjs';
 import {shareNpcMemory}from'./npc-cognition.mjs';
@@ -11,8 +14,8 @@ const path=id=>['state','records',id];
 const cases=d=>Object.entries(d.get('state','records')??{}).filter(([,row])=>row?.category==='legal_case');
 const alive=actor=>actor&&!['死亡','濒死'].includes(actor.status);
 const awake=actor=>alive(actor)&&!['睡眠','熟睡'].includes(actor.activity);
-const codeFor=(engine,location)=>engine.rules.law?.codes?.find(code=>code.locations.includes(location));
-function currentCode(d,engine){const code=codeFor(engine,d.get('state','location'));if(!code)throw new Error('当地尚未登记可执行法典，无执行权限');return code;}
+const codeFor=legalCodeAt;
+function currentCode(d,engine){const code=codeFor(engine,d.get('state','location'),d.get('state'));if(!code)throw new Error('当地尚未登记可执行法典，无执行权限');return code;}
 function unique(d,id){if(d.get(...path(id)))throw new Error('法律登记编号已占用，拒绝覆盖');}
 function present(d,engine,name,allowSleeping=false){const id=engine.resolve(name,'npc'),actor=d.get('state','npcs',id);if(!(allowSleeping?alive(actor):awake(actor))||actor.location!==d.get('state','location'))throw new Error('当事人不在场或不能清醒行动');return id;}
 function authority(d,engine,code,name,kind){
@@ -25,14 +28,14 @@ function authority(d,engine,code,name,kind){
     if(dismissed(d.get('state'),id))throw new Error('此人已因受贿事发被撤职，不再有执法或审判资格');
     if(!eligible.includes(id))throw new Error('此人没有该法典的执法或审判资格');return id;
 }
-function caseRow(d,engine,id){const row=d.get(...path(id));if(row?.category!=='legal_case')throw new Error('案件未登记');const code=engine.rules.law?.codes?.find(c=>c.id===row.law);if(!code)throw new Error('案件对应法典不可用，无执行权限');return{row,code};}
+function caseRow(d,engine,id){const row=d.get(...path(id));if(row?.category!=='legal_case')throw new Error('案件未登记');const code=legalCodeById(engine,row.law,d.get('state'));if(!code)throw new Error('案件对应法典不可用，无执行权限');return{row,code};}
 function safeFund(d,id,category,extra={}){
     const existing=d.get(...path(id));if(existing&&existing.category!==category)throw new Error('法律资金登记键冲突');
     return existing??{category,coins:0,...extra};
 }
-function evidenceScore(d,row){
+export function evidenceScore(d,row){
     const witnesses=new Set();let score=0;
-    let confessed=false,possessed=false,contracted=false;
+    let confessed=false,possessed=false,contracted=false,ledgered=false;
     for(const evidence of row.evidence??[]){
         if(evidence.disproven||evidence.falseStatement||evidence.invalidatedAt!==undefined)continue;
         if(evidence.kind==='eyewitness'){
@@ -44,6 +47,8 @@ function evidenceScore(d,row){
         else if(evidence.kind==='possession'&&evidence.unit===row.stolen?.unit&&!possessed&&d.get('state','itemInstances',evidence.unit,'legalClaims')?.some(claim=>claim.case===row.id)){score++;possessed=true;}
         // A signed loan the debtor left unpaid is documentary proof while the debt stands.
         else if(evidence.kind==='contract'&&!contracted){const debt=d.get(...path(evidence.debt));if(debt?.category==='debt'&&debt.defaulted&&debt.status!=='已还清'){score+=2;contracted=true;}}
+        // U10: the village's magic ledger records the uncovered casts.
+        else if(evidence.kind==='ledger'&&!ledgered&&d.get(...path(evidence.record))?.category==='magic_economy'){score+=2;ledgered=true;}
     }
     return score;
 }
@@ -51,14 +56,14 @@ function knowledge(d,npc,id,minute){
     const prior=d.get('state','npcs',npc,'legalKnowledge')??[];
     if(!prior.some(row=>row.case===id))d.set(['state','npcs',npc,'legalKnowledge'],[...prior,{case:id,minute,source:'亲见或在场受理'}]);
 }
-export function registerIncident(d,engine,{victim,offense,value=0,stolen=null,witnesses,eventId,relationshipApplied=false,location=d.get('state','location'),optional=false}){
-    const code=codeFor(engine,location);if(!code&&optional)return null;if(!code)throw Error('当地尚未登记可执行法典，无执行权限');
+export function registerIncident(d,engine,{victim,offender='player',offense,value=0,stolen=null,witnesses,eventId,relationshipApplied=false,location=d.get('state','location'),optional=false,minute=d.get('state','minute')}){
+    const code=codeFor(engine,location,d.get('state'));if(!code&&optional)return null;if(!code)throw Error('当地尚未登记可执行法典，无执行权限');
     const id=`legal_case:${eventId}`;unique(d,id);
-    const now=d.get('state','minute'),evidence=witnesses.map(witness=>({kind:'eyewitness',witness,identified:true,testified:false,minute:now}));
+    const now=minute,evidence=witnesses.map(witness=>({kind:'eyewitness',witness,identified:true,testified:false,minute:now}));
     const officer=witnesses.find(witness=>code.officers.includes(witness));
     const legacyReplay=engine.replaying&&engine.replayResult?.legalProcedureVersion!==1;
     const row={category:'legal_case',id,law:code.id,
-        ...(!legacyReplay?{procedureVersion:1,settlement:code.settlement??null,faction:code.faction??null,sourceEvent:eventId,witnesses:[...witnesses]}:{}),offender:'player',victim,offense,value,stolen,
+        ...(!legacyReplay?{procedureVersion:1,settlement:code.settlement??null,faction:code.faction??null,sourceEvent:eventId,witnesses:[...witnesses]}:{}),offender,victim,offense,value,stolen,
         location,minute:now,status:officer?'已报案':'未报案',reported:Boolean(officer),evidence,
         ...(officer?{receiver:officer,reportedAt:now}:{})};
     if(officer)row.evidence=row.evidence.map(entry=>({...entry,testified:entry.witness===officer}));
@@ -83,6 +88,18 @@ export function registerCreditDefault(d,engine,{debt,row,value,minute}){
     d.set(path(id),{category:'legal_case',id,law:code.id,procedureVersion:1,settlement:code.settlement??null,faction:code.faction??null,sourceEvent:row.source,witnesses:[],
         offender:row.debtor??'player',victim:row.keeper??row.creditor,...(row.bank?{bank:row.bank}:{}),debt,offense:'debt_default',value,stolen:null,location:row.location,minute,
         status:'已报案',reported:true,receiver,reportedAt:minute,evidence:[{kind:'contract',debt,minute}]});
+    if(d.get('state','npcs',receiver))knowledge(d,receiver,id,minute);
+    return id;
+}
+// U10: a cast past the village's fee, licence or limit (magic-economy.mjs) is
+// filed by the code's officer; the village ledger is the evidence.
+export function registerMagicViolation(d,engine,{location,settlement,offense,value,minute,sourceEvent}){
+    const code=codeFor(engine,location);if(!code)return null;
+    const id=`legal_case:magic:${sourceEvent}`;if(d.get(...path(id)))return id;
+    const receiver=lawAuthorities(engine,d.get('state'),code)[0];if(!receiver)return null;
+    d.set(path(id),{category:'legal_case',id,law:code.id,procedureVersion:1,settlement:code.settlement??settlement,faction:code.faction??null,sourceEvent,witnesses:[],
+        offender:'player',victim:settlement,offense,value,stolen:null,location,minute,status:'已报案',reported:true,receiver,reportedAt:minute,
+        evidence:[{kind:'ledger',record:`magic-economy:${settlement}`,minute}]});
     if(d.get('state','npcs',receiver))knowledge(d,receiver,id,minute);
     return id;
 }
@@ -139,7 +156,7 @@ export function crimeAction(d,args,eventId){
 
 export function recordViolence(d,engine,{victim,damage,killed,intent,eventId,duel=null}){
     const code=codeFor(engine,d.get('state','location'));
-    if(duel&&engine.rules.law?.duels?.[code?.id]?.[duel.rule]===true)return null;
+    if(duel&&(code?.duels??engine.rules.law?.duels?.[code?.id])?.[duel.rule]===true)return null;
     if(damage>0&&['attack','shove'].includes(intent))recordDisciplineBreach(d,engine,'violence',eventId);
     if(!codeFor(engine,d.get('state','location'))||!['attack','shove'].includes(intent))return null;
     const witnesses=Object.entries(d.get('state','npcs')).filter(([,actor])=>awake(actor)&&actor.location===d.get('state','location')).map(([id])=>id);
@@ -151,18 +168,28 @@ export function enforceLegalRestriction(d,tool,args){
     if(!lock)return;
     if(['time','turn','health','revive'].includes(tool)||tool==='law'&&(args.operation??'inspect')==='inspect')return;
     if(tool==='law'&&lock.reason==='到案'&&['confess','bribe'].includes(args.operation))return;
-    if(tool==='law'&&args.operation==='hear'&&lock.reason==='待审')return;
+    if(tool==='law'&&['hear','hire_advocate'].includes(args.operation)&&lock.reason==='待审')return;
     throw new Error('当前正在依法羁押或服役，不能自由移动交易或行动；可推进时间或在待审时申请审理');
 }
 
+function custodyInterrupted(d,lock){
+    const subject=lock.subject??d.get(...path(lock.case),'offender')??'player';
+    return subject==='player'?d.get('state','player','status')==='死亡'||d.get('state','location')!==lock.location:
+        d.get('state','npcs',subject,'status')==='死亡'||d.get('state','npcs',subject,'location')!==lock.location;
+}
 export function advanceLaw(d,after,engine){
     for(const [id,hold] of Object.entries(d.get('state','records')??{}))if(hold.category==='legal_detention'&&(!hold.status||hold.status==='生效')){
         const dead=d.get('state','npcs',hold.subject,'status')==='死亡';
-        if(dead||(hold.expires??Infinity)<=after)d.set(path(id),{...hold,status:dead?'已中止':'已释放',ended:dead?after:hold.expires});
+        if(dead||(hold.expires??Infinity)<=after){
+            const shops=engine&&!dead?businessSnapshot(engine,{...d.get('state'),minute:hold.expires-1}):null;
+            d.set(path(id),{...hold,status:dead?'已中止':'已释放',ended:dead?after:hold.expires});
+            if(engine&&!dead)entityTransition(d,engine,{id:`${id}:release`,verb:'release',actor:hold.deliveredBy??hold.location,target:hold.subject,minute:hold.expires,location:hold.location,visibility:hold.private?'private':hold.visibility??'public',summary:`${personName(engine,d.get('state'),hold.subject).value??hold.subject}拘留期满释放`});
+            if(shops)businessTransitions(d,engine,shops,`${id}:release`,hold.expires);
+        }
     }
     for(const[id,r]of Object.entries(d.get('state','records')??{}))if(r.category==='authorization'&&r.sourceType==='magic_permit'&&!r.revoked&&r.expires<=after)d.set(path(id),{...r,revoked:true,status:'已到期',ended:r.expires});
     for(const[id,lock]of Object.entries(d.get('state','records')??{}))if(lock?.category==='legal_custody'&&lock.status==='生效'&&lock.reason!=='到案'&&
-        (d.get('state','player','status')==='死亡'||d.get('state','location')!==lock.location)){
+        custodyInterrupted(d,lock)){
         d.set(path(id),{...lock,status:'已中止',ended:after,remaining:Math.max(0,lock.expires-after)});
         const row=d.get(...path(lock.case));
         if(row?.category==='legal_case'&&lock.reason!=='待审')d.set(path(lock.case),{...row,status:'已裁定',
@@ -170,8 +197,12 @@ export function advanceLaw(d,after,engine){
         d.say('羁押或服役因死亡/离开登记地点中止；未完成判罚仍保留');
     }
     for(const[id,lock]of Object.entries(d.get('state','records')??{}))if(lock?.category==='legal_custody'&&lock.status==='生效'&&lock.reason!=='到案'&&lock.expires<=after){
+        const subject=lock.subject??d.get(...path(lock.case),'offender')??'player';
+        const shops=engine&&subject!=='player'?businessSnapshot(engine,{...d.get('state'),minute:lock.expires-1}):null;
         d.set(path(id),{...lock,status:'已结束',ended:lock.expires});
         const row=d.get(...path(lock.case));
+        if(engine)entityTransition(d,engine,{id:`${id}:release`,verb:'release',actor:lock.location,target:subject,minute:lock.expires,location:lock.location,visibility:row?.private?'private':row?.visibility??lock.visibility??'public',summary:`${personName(engine,d.get('state'),subject).value??subject}羁押或服役期满释放`});
+        if(shops)businessTransitions(d,engine,shops,`${id}:release`,lock.expires);
         if(row?.category==='legal_case'&&lock.reason!=='待审'){
             d.set(path(lock.case),{...row,status:row.compensationPaid?'已结案':'待赔偿',sentenceCompleted:lock.expires,finePaid:0,fineDischarged:true});
             if(engine&&row.compensationPaid)recordLegalNotification(d,engine,d.get(...path(lock.case)),'fulfilled',`${row.id}:sentence:${lock.expires}`,localObservers(d));
@@ -204,7 +235,7 @@ function deposit(d,engine,row,{fine=0,compensate=true}={}){
 }
 
 export function recordExposedCorruption(d,engine,{target,law,offer,witnesses,eventId,location=d.get('state','location')}){
-    const code=engine.rules.law.codes.find(c=>c.id===law),now=d.get('state','minute');
+    const code=legalCodeById(engine,law,d.get('state')),now=d.get('state','minute');
     let corruption=null,wanted=null;
     corruption=`legal_case:corruption:${eventId}`;
     d.set(path(corruption),{category:'legal_case',id:corruption,law,procedureVersion:1,settlement:code.settlement??null,faction:code.faction??null,sourceEvent:eventId,witnesses:[...witnesses],
@@ -215,6 +246,7 @@ export function recordExposedCorruption(d,engine,{target,law,offer,witnesses,eve
     const fund=safeFund(d,`legal_treasury:${law}`,'legal_treasury',{law}),seized=Math.min(offer,d.get('state','npcs',target,'coins'));
     d.set(['state','npcs',target,'coins'],d.get('state','npcs',target,'coins')-seized);d.set(path(`legal_treasury:${law}`),{...fund,coins:fund.coins+seized});
     d.set(path(`legal_dismissal:${target}`),{category:'legal_dismissal',npc:target,law,case:corruption,minute:now,sourceEvent:eventId});
+    entityTransition(d,engine,{id:`${corruption}:dismiss`,verb:'dismiss',actor:law,target,minute:now,location,witnesses,summary:`${personName(engine,d.get('state'),target).value??target}因受贿被撤职`});
     wanted=issueWanted(d,engine,d.get(...path(corruption)),WANTED_REASONS.flight,now);
     if(wanted)d.set(['state','npcs',target,'fugitive'],wanted.id);
     return {corruption,wanted};
@@ -260,10 +292,11 @@ function bribe(d,engine,args,eventId,row){
     }
     const effects=[];
     if(captor){const key=Object.entries(d.get('state','records')).find(([,r])=>r===hold||r?.category==='legal_custody'&&r.reason==='到案'&&r.status==='生效')?.[0];
-        if(key){d.set(path(key),{...d.get(...path(key)),status:'已放行',ended:now,releasedBy:target});effects.push('放行');}}
+        if(key){d.set(path(key),{...d.get(...path(key)),status:'已放行',ended:now,releasedBy:target});
+            entityTransition(d,engine,{id:`${key}:release`,verb:'release',actor:target,target:'player',minute:now,location:d.get('state','location'),visibility:'private',summary:`${personName(engine,d.get('state'),'player').value}获准离开羁押`});effects.push('放行');}}
     const latest=d.get(...path(row.id));
     if(enforcer&&['未报案','已报案','证据不足'].includes(latest.status)){d.set(path(row.id),{...latest,status:'已撤案',suppressedBy:target,closed:now});effects.push('撤案');}
-    else if(w&&engine.rules.law.codes.find(c=>c.id===w.law)?.judges.includes(target)){closeWanted(d,engine,d.get(...path(w.id)),'已销案','审判者收钱销案',now);effects.push('销案');}
+    else if(w&&legalCodeById(engine,w.law,d.get('state'))?.judges.includes(target)){closeWanted(d,engine,d.get(...path(w.id)),'已销案','审判者收钱销案',now);effects.push('销案');}
     else if(w){const cur=d.get(...path(w.id));d.set(path(w.id),{...cur,silenced:[...new Set([...cur.silenced,target])]});effects.push('装作不认得');}
     if(eyewitness&&!enforcer){const cur=d.get(...path(row.id));d.set(path(row.id),{...cur,evidence:cur.evidence.map(e=>e===eyewitness||e.kind==='eyewitness'&&e.witness===target&&!e.invalidatedAt?{...e,invalidatedAt:now,invalidReason:'收钱改口'}:e)});effects.push('改口');}
     d.set(path(`legal_bribe:${eventId}`),{category:'legal_bribe',briber:'player',recipient:target,coins:offer,case:row.id,minute:now,location,effects,discovered:false});
@@ -276,7 +309,7 @@ function surrender(d,engine,args,eventId,row){
     const state=d.get('state'),w=wantedOfCase(state,row.id),now=state.minute,hold=activeHold(state);
     if(hold&&hold.case===row.id){advanceWithNpcParticipants(d,engine,Math.max(0,hold.expires-now),eventId,[hold.captor].filter(id=>state.npcs[id]));
         return{case:row.id,surrendered:true,location:d.get('state','location'),note:'跟着押解的人到案，通缉解除，原判罚或审理照常进行'};}
-    const local=codeFor(engine,state.location);if(!local||!w.scope.includes(local.id))throw new Error('须在通缉范围内向执法者自首');
+    const local=codeFor(engine,state.location,state),issuer=legalCodeById(engine,row.law,state);if(!local||!issuer||!w.scope.includes(local.id)||!legalCooperation(engine,state,issuer,local).extradition)throw new Error('须在通缉范围内向执法者自首');
     const officer=authority(d,engine,local,args.authority,'officer');
     const key=holdPlayer(d,engine,w,{captor:officer,location:state.location,minute:now,surrendered:true});
     advanceWithNpcParticipants(d,engine,d.get(...path(key)).expires-now,eventId,[officer]);
@@ -287,7 +320,7 @@ function captureFugitive(d,engine,row,eventId){
     const state=d.get('state'),w=wantedOfCase(state,row.id);if(!w)throw new Error('此人没有生效的通缉，不能擅自拘人');
     const quest=state.quests?.[w.quest];if(quest?.taker!=='player'||quest.status!=='进行中')throw new Error('须先在告示处接下这份赏金（world_quest accept）');
     if(w.captive)throw new Error('此人已在押解中');
-    if(!wantedReachedAt(engine,w,state.location,state.minute))throw new Error('此地不在通缉范围或文书未到，不能擅自拘人');
+    if(!wantedReachedAt(engine,w,state.location,state.minute,state))throw new Error('此地不在通缉范围或文书未到，不能擅自拘人');
     const target=present(d,engine,row.offender,true);
     if(w.evadedAt!==undefined&&state.minute-w.evadedAt<60)throw new Error('逃犯刚甩脱你，需过一阵再找机会');
     const result=engine.check(d,{attribute:'力量',opponent:{npc:target,attribute:'敏捷'}},eventId);
@@ -298,6 +331,27 @@ function captureFugitive(d,engine,row,eventId){
     return{case:row.id,target,captured,check:result,note:captured?'已拿下，随你同行押解；到发布法院用world_quest complete交付':'对方挣脱了，一小时后才有机会再试'};
 }
 
+
+// Player and NPC defendants share evidence and sentencing; the caller supplies the court witnesses.
+export function adjudicateLegalCase(d,engine,row,code,judge,eventId,observers=[]){
+    const score=evidenceScore(d,row);
+        if(score<code.evidenceRequired){d.set(path(row.id),{...row,status:'证据不足'});return{case:row.id,convicted:false,evidenceScore:score};}
+        const penalty=code.penalties[row.offense]??engine.rules.law.spellConsent?.penalties?.[row.offense]??engine.rules.law.bribery?.penalties?.[row.offense]??engine.rules.law.activityPenalties?.[row.offense]??(row.offense==='debt_default'?engine.rules.economy?.credit?.loan?.defaultPenalty:undefined)??engine.rules.magicEconomy?.penalties?.[row.offense];if(!penalty)throw new Error('本案罪名没有判罚规则');
+        const baseFine=penalty.baseFine+Math.ceil(row.value*penalty.valueMultiplier),advocate=representationEffect(d,engine,row),fine=baseFine-Math.floor(baseFine*(advocate?.discount??0));
+        const judgment={...(advocate?{advocate}:{}),judge,minute:d.get('state','minute'),fine,compensation:row.victim?row.value:0,evidenceScore:score,
+            communityMinutes:Math.min(code.maximumSentenceMinutes,fine*code.communityMinutesPerCopper),prisonMinutes:Math.min(code.maximumSentenceMinutes,fine*code.prisonMinutesPerCopper)};
+        d.set(path(row.id),{...row,status:'已裁定',judgment});
+        recordLegalNotification(d,engine,d.get(...path(row.id)),'conviction',eventId,observers,{fresh:true,location:code.court});
+        for(const[lockKey,lock]of Object.entries(d.get('state','records')))if(lock?.category==='legal_custody'&&lock.case===row.id&&lock.reason==='待审'&&lock.status==='生效'){
+            d.set(path(lockKey),{...lock,status:'已结束',ended:d.get('state','minute')});
+            const subject=lock.subject??row.offender;
+            entityTransition(d,engine,{id:`${lockKey}:release`,verb:'release',actor:judge,target:subject,location:code.court,visibility:row.private?'private':row.visibility??'public',summary:`${personName(engine,d.get('state'),subject).value??subject}审结后解除待审羁押`});
+        }
+        const victim={id:row.victim,name:engine.byId.get(row.victim)?.name??row.victim};
+        return{case:row.id,convicted:true,victim,judgment,fineCalculation:{base:penalty.baseFine,value:row.value,multiplier:penalty.valueMultiplier,total:fine},
+            factSummary:`受害人为${victim.name??'公共法益'}。罚款基额=${penalty.baseFine}铜+${row.value}铜×${penalty.valueMultiplier}=${baseFine}铜${advocate?`，代理量罚减免${baseFine-fine}铜`:' ' }；实罚${fine}铜，赔偿${judgment.compensation}铜另付。社区服役${judgment.communityMinutes}分钟，监禁${judgment.prisonMinutes}分钟。当前没有付款，也没有开始服役。`,
+            note:'已裁判，尚未支付或开始服役；选择由玩家明确决定'};
+}
 export function lawAction(d,args,eventId){
     const operation=args.operation??'inspect';
     if(operation==='inspect')return lawView(this,d.document);
@@ -349,9 +403,10 @@ export function lawAction(d,args,eventId){
         if(operation!=='arrest')throw new Error('此案被告是他人；你只能接下赏金后缉拿交付');
         return captureFugitive(d,this,row,eventId);
     }
+    if(operation==='hire_advocate')return hireAdvocate(d,this,row,args,eventId);
     if(operation==='bribe')return bribe(d,this,args,eventId,row);
     if(operation==='confess'&&wantedOfCase(d.get('state'),row.id))return surrender(d,this,args,eventId,row);
-    if(!code.locations.includes(d.get('state','location')))throw new Error('当前不在该案件法典辖区');
+    if(operation!=='appeal'&&!code.locations.includes(d.get('state','location')))throw new Error('当前不在该案件法典辖区');
     if(operation==='publish'){
         authority(d,this,code,args.authority,'officer');
         if(d.get('state','location')!==code.court)throw new Error('公示须在登记法院');
@@ -361,6 +416,29 @@ export function lawAction(d,args,eventId){
         return{case:row.id,published:true,sourceEvent:notification.sourceEvent,note:'仅在场人物获知公示，异地须沿实际渠道传播'};
     }
     if(operation==='appeal'){
+        const hierarchy=courtHierarchy(this,d.get('state'),code);
+        if(hierarchy&&(code.derived||d.get('state','location')!==code.court)){
+            const level=(row.appeals?.length??0)+1,target=hierarchy[level];
+            if(!target||row.status!=='已裁定'||row.fineDischarged||row.sentenceCompleted!==undefined)throw Error('案件已履行或已终审，不能再次上诉');
+            if(d.get('state','location')!==target.court)throw Error(`上诉须到${target.name}：${target.court}`);
+            const appellate=legalCodeById(this,target.code,d.get('state'));
+            const judge=authority(d,this,{...appellate,judges:target.judges},args.authority,'judge');
+            if(judge===row.judgment?.judge||row.appeals?.some(a=>a.judge===judge))throw Error('原审判者须回避复审');
+            advanceWithNpcParticipants(d,this,code.hearingMinutes,eventId,[judge]);
+            if(!awake(d.get('state','npcs',judge)))return{success:false,effectFailed:'复核完成前审判者无法履约'};
+            const score=evidenceScore(d,row),upheld=score>=code.evidenceRequired,appeal={level,judge,court:target.court,minute:d.get('state','minute'),evidenceScore:score,outcome:upheld?'upheld':'overturned',originalJudgment:structuredClone(row.judgment)};
+            const next={...row,appeal,appeals:[...row.appeals??[],appeal]};
+            if(!upheld){
+                next.status='证据不足';delete next.judgment;
+                for(const[key,lock]of Object.entries(d.get('state','records')))if(lock.category==='legal_custody'&&lock.case===row.id&&lock.status==='生效'){
+                    d.set(path(key),{...lock,status:'已结束',ended:d.get('state','minute')});
+                    const subject=lock.subject??row.offender;
+                    entityTransition(d,this,{id:`${key}:release`,verb:'release',actor:judge,target:subject,location:lock.location,visibility:row.private?'private':row.visibility??'public',summary:`${personName(this,d.get('state'),subject).value??subject}复核后解除羁押`});
+                }
+            }
+            d.set(path(row.id),next);if(!upheld)recordLegalNotification(d,this,next,'overturned',eventId,localObservers(d));
+            return{case:row.id,upheld,appeal,final:level===2};
+        }
         if(!code.appeal)throw new Error('该法典未配置复核权限');
         const judge=authority(d,this,{...code,judges:code.appeal.judges},args.authority,'judge');
         if(d.get('state','location')!==code.court||row.status!=='已裁定'||row.fineDischarged||row.sentenceCompleted!==undefined||row.appeal)throw new Error('案件已履行、已上诉或不在可复核阶段，不能重复判罚');
@@ -372,7 +450,10 @@ export function lawAction(d,args,eventId){
         else{
             const next={...row,status:'证据不足',appeal};delete next.judgment;d.set(path(row.id),next);
             const custody=d.get(...path(`legal_custody:${row.id}`));
-            if(custody?.status==='生效')d.set(path(`legal_custody:${row.id}`),{...custody,status:'已结束',ended:d.get('state','minute')});
+            if(custody?.status==='生效'){
+                d.set(path(`legal_custody:${row.id}`),{...custody,status:'已结束',ended:d.get('state','minute')});
+                entityTransition(d,this,{id:`legal_custody:${row.id}:release`,verb:'release',actor:judge,target:'player',location:code.court,visibility:row.private?'private':row.visibility??'public',summary:`${personName(this,d.get('state'),'player').value}复核后解除羁押`});
+            }
             recordLegalNotification(d,this,next,'overturned',eventId,localObservers(d));
         }
         return{case:row.id,upheld,appeal,note:'复核不重新收费或重新计算刑期'};
@@ -408,25 +489,15 @@ export function lawAction(d,args,eventId){
         advanceWithNpcParticipants(d,this,route.minutes,eventId,[officer]);d.set(['state','location'],code.court);d.set(['state','npcs',officer,'location'],code.court);
         if(d.get('state','player','mount'))d.remove(['state','player','mount']);
         d.set(path(custodyKey),{category:'legal_custody',case:row.id,reason:'待审',location:code.court,status:'生效',started:d.get('state','minute'),expires:d.get('state','minute')+code.maximumDetentionMinutes});
+        entityTransition(d,this,{id:`${custodyKey}:detain`,verb:'detain',actor:officer,target:'player',location:code.court,visibility:row.private?'private':row.visibility??'public',summary:`${d.get('state','player','name')}已依法羁押待审`});
         return{case:row.id,arrested:true,destination:code.court,route,custody:code.maximumDetentionMinutes};
     }
     if(operation==='hear'){
         const judge=authority(d,this,code,args.authority,'judge');if(d.get('state','location')!==code.court)throw new Error('必须在登记审理地点开庭');
         if(!row.reported||!['已报案','证据不足'].includes(row.status))throw new Error('案件未报案或已经裁判');
-        const score=evidenceScore(d,row);this.advance(d,code.hearingMinutes,eventId);
+        this.advance(d,code.hearingMinutes,eventId);
         if(!awake(d.get('state','npcs',judge)))return{success:false,effectFailed:'审理完成前审判者无法履约'};
-        if(score<code.evidenceRequired){d.set(path(row.id),{...row,status:'证据不足'});return{case:row.id,convicted:false,evidenceScore:score};}
-        const penalty=code.penalties[row.offense]??this.rules.law.bribery?.penalties?.[row.offense]??this.rules.law.activityPenalties?.[row.offense]??(row.offense==='debt_default'?this.rules.economy?.credit?.loan?.defaultPenalty:undefined);if(!penalty)throw new Error('本案罪名没有判罚规则');
-        const fine=penalty.baseFine+Math.ceil(row.value*penalty.valueMultiplier);
-        const judgment={judge,minute:d.get('state','minute'),fine,compensation:row.value,evidenceScore:score,
-            communityMinutes:Math.min(code.maximumSentenceMinutes,fine*code.communityMinutesPerCopper),prisonMinutes:Math.min(code.maximumSentenceMinutes,fine*code.prisonMinutesPerCopper)};
-        d.set(path(row.id),{...row,status:'已裁定',judgment});
-        recordLegalNotification(d,this,d.get(...path(row.id)),'conviction',eventId,localObservers(d),{fresh:true});
-        for(const[lockKey,lock]of Object.entries(d.get('state','records')))if(lock?.category==='legal_custody'&&lock.case===row.id&&lock.reason==='待审'&&lock.status==='生效')d.set(path(lockKey),{...lock,status:'已结束',ended:d.get('state','minute')});
-        const victim={id:row.victim,name:this.byId.get(row.victim)?.name??row.victim};
-        return{case:row.id,convicted:true,victim,judgment,fineCalculation:{base:penalty.baseFine,value:row.value,multiplier:penalty.valueMultiplier,total:fine},
-            factSummary:`受害人为${victim.name}。罚款=${penalty.baseFine}铜+${row.value}铜×${penalty.valueMultiplier}=${fine}铜；赔偿${row.value}铜另付。社区服役${judgment.communityMinutes}分钟，监禁${judgment.prisonMinutes}分钟。当前没有付款，也没有开始服役。`,
-            note:'已裁判，尚未支付或开始服役；选择由玩家明确决定'};
+        return adjudicateLegalCase(d,this,row,code,judge,eventId,localObservers(d));
     }
     if(operation==='pay'||operation==='compensate'){
         authority(d,this,code,args.authority,'officer');if(d.get('state','location')!==code.court)throw new Error('判罚资金与返还物须在登记法院交存');
@@ -445,6 +516,7 @@ export function lawAction(d,args,eventId){
         if(prior&&!(prior.category==='legal_custody'&&prior.case===row.id&&prior.status==='已中止'))throw new Error('服役记录已占用，不能重置或覆盖');
         const minutes=row.remainingSentence?.type===operation?row.remainingSentence.minutes:operation==='labor'?row.judgment.communityMinutes:row.judgment.prisonMinutes;
         d.set(path(key),{category:'legal_custody',case:row.id,reason:operation==='labor'?'劳役':'监禁',location:code.court,status:'生效',started:now,expires:now+minutes});
+        entityTransition(d,this,{id:`${eventId}:detain`,verb:'detain',actor:code.id,target:'player',location:code.court,visibility:row.private?'private':row.visibility??'public',summary:`${personName(this,d.get('state'),'player').value}开始${operation==='labor'?'劳役':'监禁'}`});
         d.set(path(row.id),{...row,status:'服役中',sentence:{type:operation,minutes},compensationPaid:row.value===0||Boolean(row.debt&&row.compensationPaid)});
         return{case:row.id,sentenceMinutes:minutes,compensationDebt:row.value,note:'刑期由真实世界时间推进，罚款折役；赔偿债务仍保留，不自动造钱或已经完成服役'};
     }
@@ -468,13 +540,13 @@ export function lawAction(d,args,eventId){
 }
 
 export function lawView(engine,document){
-    const code=codeFor(engine,document.state.location);
+    const code=codeFor(engine,document.state.location,document.state);
     const d={get:(...parts)=>parts.reduce((v,k)=>v?.[k],document)};
     const notifications=localObservers(d).flatMap(from=>(d.get('state','npcs',from,'memoryStream')??[]).filter(memory=>memory.kind==='law'&&memory.visibility==='public'&&!memory.private&&memory.minute<=document.state.minute&&memory.legalCase).map(memory=>({from,memory:memory.id,case:memory.legalCase,stage:memory.legalStage,sourceType:memory.sourceType,sourceEvent:memory.sourceEvent})));
-    const wanted=activeWanted(document.state).filter(w=>w.subject==='player').map(w=>({id:w.id,case:w.case,law:w.law,reason:w.reason,scope:[...w.scope],bounty:w.bounty,reachedHere:wantedReachedAt(engine,w,document.state.location,document.state.minute)}));
+    const wanted=activeWanted(document.state).filter(w=>w.subject==='player').map(w=>({id:w.id,case:w.case,law:w.law,reason:w.reason,scope:[...w.scope],bounty:w.bounty,reachedHere:wantedReachedAt(engine,w,document.state.location,document.state.minute,document.state)}));
     const bounties=Object.values(document.state.quests??{}).filter(q=>q.bounty&&['公开','进行中'].includes(q.status)&&(q.taker==='player'||q.location===document.state.location))
         .map(q=>({quest:q.id,content:q.content,reward:q.reward,status:q.status,takenBy:q.taker==='player'?'player':q.taker?'他人':null}));
-    return{law:code?structuredClone(code):null,executionAuthority:Boolean(code),reputation:reputationView(document),notifications,wanted,bounties,cases:cases(d).filter(([,row])=>row.offender==='player').map(([id,row])=>({id,law:row.law,victim:row.victim,offense:row.offense,status:row.status,reported:row.reported,confessed:row.evidence.some(entry=>entry.kind==='confession'&&entry.subject==='player'),
+    return{advocates:Object.keys(document.state.npcs??{}).filter(id=>document.state.npcs[id].location===document.state.location).map(id=>advocateService(engine,document.state,id)).filter(Boolean),law:code?structuredClone(code):null,courts:code?courtHierarchy(engine,document.state,code):null,executionAuthority:Boolean(code),reputation:reputationView(document),notifications,wanted,bounties,cases:cases(d).filter(([,row])=>row.offender==='player').map(([id,row])=>({id,law:row.law,victim:row.victim,offense:row.offense,status:row.status,reported:row.reported,confessed:row.evidence.some(entry=>entry.kind==='confession'&&entry.subject==='player'),
         settlement:row.settlement??null,faction:row.faction??null,appeal:structuredClone(row.appeal),
         judgment:structuredClone(row.judgment),location:row.location,stolen:structuredClone(row.stolen),
         wanted:wanted.find(w=>w.case===id)?.id??null,

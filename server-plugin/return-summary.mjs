@@ -6,15 +6,15 @@ import {isReputationSettlement,reputationSettlements}from'./reputation-registry.
 // 玩家上次在各地点的时间记在 state.visits.places[地点]。
 import {standing,standingWords,eventWeight} from './standing.mjs';
 import {organization} from './organizations.mjs';
-import {eventRumorId,eventRumorRecorded} from './world-events.mjs';
-import {npcAgeAt} from './npc-life.mjs';
+import {eventRumorId,eventRumorRecorded,publicTransition} from './world-events.mjs';
+import {personAge,personName} from './entity-view.mjs';
 
 const DAY=1440;
 export const RETURN_MIN_ABSENCE=3*DAY,RETURN_LIMIT=5,RETURN_LINE_CHARS=40,RETURN_SCENE_DAYS=1;
 
 const within=(engine,location,place)=>{const seen=new Set();while(location&&!seen.has(location)){if(location===place)return true;seen.add(location);location=engine.byId.get(location)?.parent;}return false;};
-const nameOf=(engine,state,id)=>state.family?.people?.[id]?.name??state.created?.[id]?.name??engine.byId.get(id)?.name??id;
-const minor=(engine,state,id)=>{const base=engine.byId.get(id),born=state.family?.people?.[id];if(base?.flags?.minor||born?.flags?.minor)return true;const age=npcAgeAt(engine,state,id);return age!==null&&age<18;};
+const nameOf=(engine,state,id)=>personName(engine,state,id).value??engine.byId.get(id)?.name??id;
+const minor=(engine,state,id,minute=state.minute)=>{const age=personAge(engine,state,id,minute).value,base=state.family?.people?.[id]??state.created?.[id]??engine.byId.get(id);return Boolean(base?.flags?.minor||base?.minor||age!==null&&age<18);};
 const hidden=row=>row?.private||['private','secret'].includes(row?.visibility)||row?.tags?.some(t=>['private','secret'].includes(t));
 
 // The settlement, monster seat or site that a location belongs to.
@@ -46,17 +46,25 @@ export function returnChanges(engine,state,place,{from,to=state.minute,before={}
     const rows=[],add=(weight,text)=>rows.push({weight,text:text.slice(0,RETURN_LINE_CHARS)});
     const inWindow=m=>Number.isFinite(m)&&m>from&&m<=to,name=id=>id==='player'?'你':nameOf(engine,state,id);
     const f=state.family??{};
+    const familyText=(id,fallback)=>{
+        const event=state.records?.[`world_event:${id}`];
+        return event?.tags?.includes('entity-transition')?publicTransition(engine,state,event)?event.summary:null:fallback;
+    };
+    const familyChange=(weight,id,fallback)=>{const text=familyText(id,fallback);if(text)add(weight,text);};
     // 生老病死与迁居：村里人回头都会说起；怀孕和轻病不外传，未成年人不点名。
-    for(const r of Object.values(f.deaths??{}))if(r.settlement===place&&inWindow(r.minute))
-        add(90,minor(engine,state,r.person)?'有户人家没了孩子':`${name(r.person)}已经${r.cause??'过世'}`);
-    for(const r of Object.values(f.births??{}))if(r.settlement===place&&inWindow(r.minute))
+    for(const r of Object.values(f.deaths??{}))if(r.settlement===place&&inWindow(r.minute)&&!hidden(r)){
+        if(hidden(state.records?.[`world_event:${r.id}`]))continue;
+        if(minor(engine,state,r.person,r.minute))add(90,'有户人家没了孩子');
+        else familyChange(90,r.id,`${name(r.person)}已经${r.cause??'过世'}`);
+    }
+    for(const r of Object.values(f.births??{}))if(r.settlement===place&&inWindow(r.minute)&&!hidden(r))
         add(55,`${name(r.mother)}家添了${f.people?.[r.child]?.sex==='女'?'女儿':f.people?.[r.child]?.sex==='男'?'儿子':'孩子'}`);
-    for(const m of Object.values(f.marriages??{}))if(!m.static&&m.settlement===place&&inWindow(m.since)&&!m.partners.some(p=>minor(engine,state,p)))
-        add(60,`${name(m.partners[0])}与${name(m.partners[1])}成了亲`);
+    for(const m of Object.values(f.marriages??{}))if(!m.static&&m.settlement===place&&inWindow(m.since)&&!hidden(m)&&!m.partners.some(p=>minor(engine,state,p,m.since)))
+        familyChange(60,m.id,`${name(m.partners[0])}与${name(m.partners[1])}成了亲`);
     for(const m of Object.values(f.migrations??{})){
-        if(minor(engine,state,m.person))continue;
-        if(m.from?.settlement===place&&inWindow(m.departedAt))add(50,`${name(m.person)}已搬去${nameOf(engine,state,m.to?.settlement)}`);
-        else if(m.to?.settlement===place&&m.status==='已抵达'&&inWindow(m.arrivedAt))add(50,`${name(m.person)}从${nameOf(engine,state,m.from?.settlement)}搬来了`);
+        if(hidden(m)||minor(engine,state,m.person,m.departedAt??m.arrivedAt))continue;
+        if(m.from?.settlement===place&&inWindow(m.departedAt))familyChange(50,`${m.id}:depart`,`${name(m.person)}已搬去${nameOf(engine,state,m.to?.settlement)}`);
+        else if(m.to?.settlement===place&&m.status==='已抵达'&&inWindow(m.arrivedAt))familyChange(50,`${m.id}:arrive`,`${name(m.person)}从${nameOf(engine,state,m.from?.settlement)}搬来了`);
     }
     for(const r of Object.values(f.illnesses??{})){
         if(r.severity!=='重'||houseSettlement(engine,r.household)!==place||!inWindow(r.since)||r.status==='病故'||minor(engine,state,r.patient))continue;
@@ -65,6 +73,11 @@ export function returnChanges(engine,state,place,{from,to=state.minute,before={}
     // 统一世界事件：有人目击、够分量的当地事；组织议决只给成员、当事人或公议机构。
     for(const e of Object.values(state.records??{})){
         if(e.category!=='world_event'||!inWindow(e.minute)||!within(engine,e.location,place)||hidden(e)||e.legacy)continue;
+        if(e.tags?.includes('entity-transition')){
+            // Family ledgers above already supply these same historical facts.
+            if(publicTransition(engine,state,e)&&!['die','marry','migrate'].includes(e.verb)&&e.summary)add(75,e.summary);
+            continue;
+        }
         if(e.verb==='organize'){
             const org=organization(engine,state,e.actor);if(!org||org.source==='household')continue;
             const known=org.members?.player||e.target==='player'||org.source==='faction'&&org.charter?.mode==='vote';
@@ -76,6 +89,13 @@ export function returnChanges(engine,state,place,{from,to=state.minute,before={}
             continue;
         }
         if(e.actor==='player')continue;
+        if(e.tags?.includes('npc_crime')){
+            if(eventRumorId(engine,state,e)&&![e.actor,e.target].some(id=>minor(engine,state,id))){
+                const action=e.tags.includes('fraud')?'骗取了':e.tags.includes('smuggling')?'私运货物，被人撞见':e.verb==='harm'?'斗殴伤及':'偷取了';
+                add(70,`${name(e.actor)}${action}${e.tags.includes('smuggling')?'':name(e.target)}`);
+            }
+            continue;
+        }
         if(e.verb==='deceive'){
             if(![e.actor,e.target].some(id=>minor(engine,state,id)))add(e.target==='player'?80:58,`${name(e.actor)}骗${name(e.target)}的事被揭穿了`);
             continue;

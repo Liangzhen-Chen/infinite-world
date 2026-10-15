@@ -8,7 +8,8 @@ import {registerCreditDefault,settleCreditCase} from './law.mjs';
 import {assessTradeTax,tradeTax} from './finance-tax.mjs';
 
 const DAY=1440,MONTH=30*DAY;
-export const ASSET_OPERATIONS=new Set(['asset_inspect','invest','dividend','share_transfer','rent_out','workshop','workshop_terms','dismiss']);
+import {ASSET_OPERATIONS} from './finance-operations.mjs';
+export {ASSET_OPERATIONS};
 const all=d=>Object.values(d.get('state','records')??{}),base=(e,s,id)=>s.created?.[id]??e.byId.get(id);
 const alive=(s,id)=>s.npcs?.[id]&&!['死亡','濒死','昏迷','患病'].includes(s.npcs[id].status);
 function ownsWorkshop(state,id){return state.buildings?.[id]?.owner==='player'||allState(state).some(r=>r.kind==='lease'&&r.subject===id&&r.parties?.[0]==='player'&&r.status==='有效'&&r.deadline>state.minute);}

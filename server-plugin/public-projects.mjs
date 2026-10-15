@@ -1,3 +1,4 @@
+import {entityTransition} from './entity-transitions.mjs';
 import {playerOffices,spendPublic,refundPublic,authorityOf} from './governance.mjs';
 import {milestone} from './progression.mjs';
 import {npcHousehold,npcAgeAt} from './npc-life.mjs';
@@ -143,12 +144,16 @@ export function grantHousingSteward(d,engine,args,eventId,settlement,hall){
     const id=`housing_steward:${eventId}`;if(d.get(...rec(id)))throw Error('事务编号已占用');
     const row={category:'housing_steward',id,settlement,grantor:'player',steward,hall,rules:{plots:plots.map(p=>p.id),fees,eligibility:'resident'},
         createdAt:state.minute,expires:state.minute+minutes,revoked:false,source:office.source,sourceEvent:eventId};
-    d.set(rec(id),row);return {authorization:id,steward:row};
+    d.set(rec(id),row);
+    entityTransition(d,engine,{id:`${id}:appoint`,verb:'appoint',actor:'player',target:steward,location:hall,office:'office_village_steward',summary:`${engine.byId.get(steward)?.name??steward}受任宅基管事`});
+    return {authorization:id,steward:row};
 }
 export function revokeHousingSteward(d,a,engine){
     if(a.revoked)return {authorization:a.id,steward:a,duplicate:true};
     if(!playerOffices(d.get('state'),{settlement:a.settlement,power:'steward'},engine).length)throw Error('只有在任村长可撤回管事');
-    const row={...a,revoked:true,revokedAt:d.get('state','minute')};d.set(rec(a.id),row);return {authorization:a.id,steward:row};
+    const row={...a,revoked:true,revokedAt:d.get('state','minute')};d.set(rec(a.id),row);
+    entityTransition(d,engine,{id:`${a.id}:dismiss`,verb:'dismiss',actor:'player',target:a.steward,location:a.hall,office:'office_village_steward',summary:`${engine.byId.get(a.steward)?.name??a.steward}不再担任宅基管事`});
+    return {authorization:a.id,steward:row};
 }
 export function fileHousingApplication(d,engine,args,eventId,settlement,a){
     const state=d.get('state');

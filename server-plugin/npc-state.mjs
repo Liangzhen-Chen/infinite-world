@@ -67,9 +67,20 @@ export function npcAgeAt(engine,state,id,minute=state.minute){
  return Number.isFinite(person.age)?person.age+Math.floor(minute/YEAR):null;
 }
 const leftOf=(state,houseId)=>state.family?.households?.[houseId]?.left??[];
+// Lifetime is one elapsed-time event; the world is fixed and created entities
+// are indexed by the current immutable branch, never by a person's old home.
+export function beginHouseholdReads(engine){
+ const byId=new Map(),byMember=new Map();
+ for(const h of engine.world.households??[]){if(!byId.has(h.id))byId.set(h.id,h);for(const id of h.members){const rows=byMember.get(id)??[];rows.push(h);byMember.set(id,rows);}}
+ return {byId,byMember,created:null,population:null};
+}
 export function householdDefinition(engine,state,houseId){
- const authored=engine.world.households?.find(h=>h.id===houseId);if(authored)return authored;
- const people=Object.values(state.created??{}).filter(p=>p.generated==='population'&&p.householdId===houseId);
+ const cache=engine.advanceHouseholds,authored=cache?cache.byId.get(houseId):engine.world.households?.find(h=>h.id===houseId);if(authored)return authored;
+ if(cache&&cache.created!==state.created){
+  cache.created=state.created;cache.population=new Map();
+  for(const p of Object.values(state.created??{}))if(p.generated==='population'){const rows=cache.population.get(p.householdId)??[];rows.push(p);cache.population.set(p.householdId,rows);}
+ }
+ const people=cache?(cache.population?.get(houseId)??[]):Object.values(state.created??{}).filter(p=>p.generated==='population'&&p.householdId===houseId);
  if(!people.length)return null;
  return {id:houseId,settlement:people[0].settlement,homeLocation:people[0].home?.location??people[0].home?.district,members:people.map(p=>p.id)};
 }
@@ -77,7 +88,8 @@ export function npcHousehold(engine,state,id){
  const rental=activeRental(state,id);if(rental?.use==='home')return {id:rental.id,settlement:rental.settlement,homeLocation:rental.subject,members:[id]};
  const entered=Object.entries(state.family?.households??{}).find(([,r])=>r.members?.includes(id))?.[0];
  const entity=state.created?.[id]??engine.byId.get(id);
- const house=entered?householdDefinition(engine,state,entered):(engine.world.households??[]).find(h=>h.members.includes(id)&&!leftOf(state,h.id).includes(id))??(entity?.householdId&&!leftOf(state,entity.householdId).includes(id)?householdDefinition(engine,state,entity.householdId):null);
+ const homes=engine.advanceHouseholds?engine.advanceHouseholds.byMember.get(id)??[]:engine.world.households??[];
+ const house=entered?householdDefinition(engine,state,entered):homes.find(h=>h.members.includes(id)&&!leftOf(state,h.id).includes(id))??(entity?.householdId&&!leftOf(state,entity.householdId).includes(id)?householdDefinition(engine,state,entity.householdId):null);
  return house?{id:house.id,settlement:house.settlement,homeLocation:house.homeLocation,members:householdMembers(engine,state,house.id)}:null;
 }
 export function householdMembers(engine,state,houseId){

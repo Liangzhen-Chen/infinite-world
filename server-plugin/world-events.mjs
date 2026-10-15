@@ -6,8 +6,9 @@
 // Social events are kept in records as `world_event:<eventId>[:n]`.
 import {eventWeight} from './standing.mjs';
 import {recordCareerMetrics} from './career-metrics.mjs';
+import {personAge} from './entity-view.mjs';
 export const WORLD_EVENT_VERSION=1;
-export const SOCIAL_VERBS=new Set(['harm','clash','steal','gift','help','trade','learn','organize','breach','author','deceive','pact','duel']);
+export const SOCIAL_VERBS=new Set(['harm','clash','steal','gift','help','trade','learn','organize','breach','author','deceive','pact','duel','appoint','dismiss','salary','die','detain','release','migrate','close','transfer','promote','marry','vocation']);
 const awake=n=>n&&!['死亡','濒死','昏迷'].includes(n.status)&&!n.scheduleTravel&&!n.cognitionTravel&&!/(睡眠|熟睡|睡觉)/.test(n.activity??'');
 const resolve=(engine,value)=>{if(!value)return null;try{return engine.resolve(value);}catch{return null;}};
 
@@ -131,10 +132,16 @@ export function publishTransitionEvent(d,engine,event){
 // along the existing conversation and courier routes. Minors are never the
 // subject of an event rumor; private facts are excluded where memories are made.
 export const RUMOR_WEIGHT=10;
-const minor=(engine,state,id)=>{const base=engine.byId.get(id),now=state.npcs?.[id];return Boolean(base?.flags?.minor||base?.minor||base?.age<18||now?.age<18);};
+const minor=(engine,state,id,minute)=>{const age=personAge(engine,state,id,minute).value,base=state.created?.[id]??state.family?.people?.[id]??engine.byId.get(id);return Boolean(base?.flags?.minor||base?.minor||age!==null&&age<18);};
+export const privateWorldEvent=e=>e?.private||['private','secret','members'].includes(e?.visibility)||e?.tags?.some(t=>['private','secret'].includes(t));
+export function publicTransition(engine,state,e){
+    return e?.tags?.includes('entity-transition')&&e.visibility==='public'&&!privateWorldEvent(e)&&
+        ![e.subject,e.actor,e.target,...e.participants??[]].some(id=>id&&minor(engine,state,id,e.minute));
+}
 export function eventRumorId(engine,state,e){
-    if(!e||e.legacy||!e.witnesses?.length||!['harm','steal','help','gift'].includes(e.verb))return null;
-    if(Math.abs(eventWeight(e))<RUMOR_WEIGHT||[e.actor,e.target].some(id=>minor(engine,state,id)))return null;
+    if(!e||e.legacy||privateWorldEvent(e)||!e.witnesses?.length)return null;
+    if(publicTransition(engine,state,e))return `rumor_event:${e.id}`;
+    if(!['harm','steal','help','gift'].includes(e.verb)&&!e.tags?.includes('npc_crime')||Math.abs(eventWeight(e))<RUMOR_WEIGHT||[e.actor,e.target].some(id=>minor(engine,state,id,e.minute)))return null;
     return `rumor_event:${e.id}`;
 }
 export function eventRumorRecorded(state,rumor){

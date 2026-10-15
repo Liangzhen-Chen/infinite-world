@@ -1,5 +1,6 @@
 import {isDeepStrictEqual}from'node:util';
 import {resolveToolCall}from'../extension/tools.mjs';
+import {consistencyThreshold}from'../server-plugin/consistency-outcome.mjs';
 
 const at=(object,path)=>String(path).split('.').reduce((value,key)=>value?.[key],object);
 const matches=(args,expected)=>Object.entries(expected??{}).every(([key,value])=>isDeepStrictEqual(at(args,key),value));
@@ -134,7 +135,7 @@ export function summarizeMemoryAcceptance(results,scenarios,repetitions=1){
             typeof request.model==='string'&&typeof request.timestamp==='string'&&Number.isFinite(request.latencyMs)&&
             Number.isFinite(request.usage?.prompt_tokens)&&Number.isFinite(request.usage?.completion_tokens))));
     const complete=rows.every(row=>row.measured),passed=rows.filter(row=>row.pass).length;
-    const reviewsComplete=relevant.length>0&&relevant.every(r=>r.review?.complete===true&&r.consistencyPass===true);
+    const reviewsComplete=relevant.length>0&&relevant.every(r=>r.review?.complete===true)&&consistencyThreshold(relevant);
     return {scope:'M2–M9 短程HTTP证据；离线准备不计真实模型验收，M1长程另验',complete,measured:rows.filter(r=>r.measured).length,
         passed,unmeasured:rows.filter(r=>!r.measured).map(r=>r.id),realModelMeasured,reviewsComplete,
         thresholdReached:complete&&passed===ids.length&&realModelMeasured&&reviewsComplete,

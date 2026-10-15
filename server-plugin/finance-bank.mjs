@@ -9,7 +9,8 @@ import {registerCreditDefault,settleCreditCase} from './law.mjs';
 import {publishTransitionEvent} from './world-events.mjs';
 import {changeItems} from './items.mjs';
 
-export const BANK_OPERATIONS=new Set(['bank_inspect','extend','prepay','lend','collect','pawn','redeem','auction','remit','cash_bill']);
+import {BANK_OPERATIONS} from './finance-operations.mjs';
+export {BANK_OPERATIONS};
 export const financePath=id=>['state','records',id];
 const DAY=1440,MONTH=30*DAY;
 export const financeInt=(n,min,max,label)=>{if(!Number.isSafeInteger(n)||n<min||n>max)throw Error(`${label}必须在${min}到${max}之间`);return n;};
