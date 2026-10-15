@@ -9557,6 +9557,158 @@
           }
         ]
       }
+    ],
+    "wildlife": [
+      {
+        "id": "t155_hw_tower",
+        "name": "废塔骨架清理",
+        "board": "loc_hw",
+        "grade": "D",
+        "reward": 60,
+        "days": 10,
+        "objective": {
+          "type": "creature",
+          "location": "site_beilin_tower",
+          "species": "monster_tower_footing_skeleton",
+          "outcomes": [
+            "death"
+          ]
+        },
+        "content": "陈柏收废观测塔林隙的清理单。只核对告示指定的塔基骷髅，须有该个体死亡的实据；绕塔走一圈不算完工。"
+      },
+      {
+        "id": "t155_wt_soul",
+        "name": "雾滩送离",
+        "board": "loc_bs_weiting",
+        "grade": "D",
+        "reward": 60,
+        "days": 10,
+        "objective": {
+          "type": "creature",
+          "location": "loc_wild_wt_mist",
+          "species": "monster_mist_flat_soul",
+          "outcomes": [
+            "expelled",
+            "ferried"
+          ]
+        },
+        "content": "郑汐收下游雾滩的送离单。指定汀雾游魂可用驱邪符驱离，也可用度亡送往安魂牌；只伤它或见过它都不交割。"
+      },
+      {
+        "id": "t155_bs_lamp",
+        "name": "废窑驱灯",
+        "board": "loc_bs",
+        "grade": "D",
+        "reward": 60,
+        "days": 10,
+        "objective": {
+          "type": "creature",
+          "location": "loc_wild_bs_kiln",
+          "species": "monster_tile_lamp_wraith",
+          "outcomes": [
+            "expelled"
+          ]
+        },
+        "content": "白石镇公告栏收西郊废窑的驱灯单。核清指定瓦灯魅后用驱邪符送离；灯挪到另一堆碎瓦上，还不算驱净。"
+      },
+      {
+        "id": "t155_sb_corpse",
+        "name": "荒冢止尸",
+        "board": "loc_bs_sangban",
+        "grade": "D",
+        "reward": 60,
+        "days": 10,
+        "objective": {
+          "type": "creature",
+          "location": "loc_wild_sb_barrow",
+          "species": "monster_barrow_stiff_corpse",
+          "outcomes": [
+            "death"
+          ]
+        },
+        "content": "张洛收西坡荒冢的止尸单。告示指向一具已现身的冢坡硬尸，核验其死亡才付酬；活人、遗体与别的个体均不能顶替。"
+      },
+      {
+        "id": "t155_yp_offering",
+        "name": "榆根守界供物",
+        "board": "loc_bs_yupo",
+        "grade": "D",
+        "reward": 60,
+        "days": 10,
+        "objective": {
+          "type": "pact",
+          "location": "site_ms_yg_gate",
+          "target": "npc_ms_yg_jiecang",
+          "pact": "respect_territory",
+          "offer": [
+            {
+              "item": "item_ration",
+              "quantity": 1
+            }
+          ],
+          "request": []
+        },
+        "content": "赵枫托人向节苍交一份自备干粮，并议定守界。供物从携带的实物中交出；节苍不收的东西不可强塞，供奉也不使他归人役使。"
+      },
+      {
+        "id": "t155_lq_trade",
+        "name": "裂炉换铁",
+        "board": "loc_bs_liquan",
+        "grade": "D",
+        "reward": 60,
+        "days": 10,
+        "objective": {
+          "type": "pact",
+          "location": "site_ms_ll_forge",
+          "target": "npc_ms_ll_yayue",
+          "pact": "respect_territory",
+          "offer": [
+            {
+              "item": "item_ration",
+              "quantity": 1
+            }
+          ],
+          "request": [
+            {
+              "item": "item_iron",
+              "quantity": 1
+            }
+          ]
+        },
+        "content": "栾佩托人向牙钺议守界，以自备干粮参与换铁，至少交一份干粮并带回一份铁料。交出的目录价值须够，铁料也须仍在对方库存里。"
+      },
+      {
+        "id": "t155_hw_avoid",
+        "name": "北林守界商谈",
+        "board": "loc_hw",
+        "grade": "D",
+        "reward": 60,
+        "days": 10,
+        "objective": {
+          "type": "pact",
+          "location": "site_ms_td_commons",
+          "target": "npc_ms_td_liheng",
+          "pact": "respect_territory",
+          "offer": [],
+          "request": []
+        },
+        "content": "陈柏托人到苔灯坞与栗衡议定守界，彼此避让领地。须由栗衡当面接受；不能把在林口留话当成双方立约，也不因狐族身份先定敌我。"
+      },
+      {
+        "id": "t155_bs_material",
+        "name": "公署备药",
+        "board": "loc_bs",
+        "grade": "D",
+        "reward": 60,
+        "days": 10,
+        "objective": {
+          "type": "deliver",
+          "location": "loc_bs",
+          "item": "item_herb",
+          "quantity": 2
+        },
+        "content": "白石镇公告栏收两份药草作往来备料。当面交给告示主事人，药草从承接人的行囊移入收件人的库存；口头报有货不能领酬。"
+      }
     ]
   },
   "tribalAwakening": {

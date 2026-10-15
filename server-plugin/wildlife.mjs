@@ -8,6 +8,7 @@ import {reservedMigrationCapacity,advanceSeasonalMigration} from './seasonal-mig
 import {crossPredatorFed,advanceFarmPredation} from './farm-pests.mjs';
 import {spiritStateFor,manifestArisals} from './creature-nature.mjs';
 import {recordLocalContact} from './environment.mjs';
+import {recordCreatureResolution} from './quest-wildlife.mjs';
 import {sapient,advanceWildlifeAwakening,awakeningAction,awakeningOperations,awakeningView,validateWildlifeAwakening} from './wildlife-awakening.mjs';
 const clone=v=>structuredClone(v),path=h=>['state','records',`ecology:${h}`];
 const alive=a=>a&&a.status!=='死亡'&&a.hp>0;
@@ -174,6 +175,7 @@ export function resolveCreature(engine,d,name){
 export function recordWildlifeDeath(d,engine,target,eventId){
     const actor=d.get('state','creatures',target);if(!actor?.ecology||actor.corpse)return null;
     const bone=engine.byId.get(actor.boss??actor.species);if(!bone)throw new Error('生态个体缺物种定义');
+    recordCreatureResolution(d,engine,{target,outcome:'death',eventId,location:actor.location});
     const corpse={status:'未取材',killedBy:'player',source:eventId,expires:d.get('state','minute')+engine.rules.wildlife.corpseMinutes,
         items:clone(bone.drops)};d.set(['state','creatures',target,'corpse'],corpse);
     return{target,expires:corpse.expires,hasMaterials:corpse.items.length>0,note:'仍在尸体中，尚未进入行囊'};

@@ -8,6 +8,7 @@ import {officeQuotaD,spendPublic,refundPublic} from './governance.mjs';
 import {titleQuotaD} from './titles.mjs';
 import {notableCulturalQuotaD} from './notables.mjs';
 import {refundQuestFunding,settleQuestOutcome} from './quest-sources.mjs';
+import {wildlifeQuestEvidence,claimWildlifeQuest,existingWildlifeEvidence} from './quest-wildlife.mjs';
 
 const DAY=1440,active=q=>['公开','进行中'].includes(q.status);
 const integer=(n,min,max,label)=>{if(!Number.isSafeInteger(n)||n<min||n>max)throw Error(`${label}必须在${min}到${max}之间`);return n;};
@@ -66,6 +67,7 @@ function construction(engine,d,q,id){
  return p;
 }
 function acceptNpc(d,engine,q,id,now,state=d.get('state')){
+ if(!['deliver','visit','build'].includes(q.objective.type))throw Error('NPC尚无执行这种目标的能力，不能接单');
  const actor=state.npcs[id];
  if(engine.byId.get(id)?.tier!=='full'||!awake(actor)||actor.scheduleTravel||actor.cognitionTravel||state.player.companions?.includes(id))throw Error('承接者须是可独立行动的现有full人物');
  if(id===q.publisher||actor.location!==q.location)throw Error('承接者没有实际看到该地点告示');
@@ -136,10 +138,14 @@ export function questBoardAction(d,engine,args,eventId){
    const row=acceptNpc(d,engine,q,taker,now);return {quest:q.id,status:row.status,taker};
   }
   if(q.publisher!=='player'&&standing(engine,d.get('state'),q.publisher)<=HOSTILE)throw Error('委托人对你怀有敌意，不肯把委托交给你');
-  d.set(['state','quests',q.id],{...q,status:'进行中',taker:'player'});return {quest:q.id,status:'进行中'};
+  d.set(['state','quests',q.id],{...q,status:'进行中',taker:'player',...(['creature','pact'].includes(q.objective.type)?{acceptedAt:now,evidenceBefore:existingWildlifeEvidence(d.get('state'),q.objective)}:{})});return {quest:q.id,status:'进行中'};
  }
  if(q.status!=='进行中'||q.taker!=='player')throw Error('任务不在可结算状态；NPC履约由世界时间验证');
  const o=q.objective;let done=false;
+ if(['creature','pact'].includes(o.type)){
+  const evidence=wildlifeQuestEvidence(d,q);done=Boolean(evidence);
+  if(evidence)claimWildlifeQuest(d,q,evidence);
+ }
  if(o.type==='visit')done=Boolean(d.get('state','discoveries',engine.resolve(o.location)));
  if(o.type==='build')done=d.get('state','projects',o.project,'status')==='已完成';
  // U17 generated quests: a world record reaching the stated state (a lair cleared, a motion decided).

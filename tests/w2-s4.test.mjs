@@ -11,6 +11,7 @@ import {applyPatches} from '../server-plugin/storage.mjs';
 import {compatibleWorld,planWorldUpgrade} from '../server-plugin/world-upgrade.mjs';
 import {consumeMagicProtection} from '../server-plugin/magic-primitives.mjs';
 import {wildlifeEncounterAt} from '../server-plugin/wildlife.mjs';
+import {questGenerators} from '../server-plugin/quest-sources.mjs';
 // 跳日的夹具用skipTo同时把势力时钟移到下一边界（T159新增日钟）。
 import {skipTo} from './fixtures/skip-clock.mjs';
 
@@ -20,6 +21,8 @@ const ids={spells:new Set(spells.map(s=>s.id)),skills:new Set(spells.map(s=>s.sk
 // works before and after publication and never pins catalogue totals.
 const before=withoutS4(formal),world=mergeS4Publication(before,publication),engine=new WorldEngine(world);
 const published=formal.spells.some(s=>ids.spells.has(s.id));
+// Reconstruct the edition in its formal catalogue order, including later items.
+if(published){const order=new Map(formal.items.map((r,i)=>[r.id,i]));world.items.sort((a,b)=>order.get(a.id)-order.get(b.id));}
 const seed=JSON.parse(await fs.readFile('tests/fixtures/legacy/seed.json','utf8'));
 const DAO='npc_bs_077_1',JI='npc_bs_076_3',SHU='npc_bs_078_2',MIAO='npc_bs_080_3',MAGE='npc_bs_077_2',LU='npc_hw_luqing';
 const MIST='loc_wild_wt_mist',KILN='loc_wild_bs_kiln',SOUL='monster_mist_flat_soul',WISP='monster_marsh_wisp',LAMP='monster_tile_lamp_wraith';
@@ -43,6 +46,21 @@ async function cast(doc,args){const prior=doc,r=await success(doc,'world_cast',a
  for(const m of s.materials)assert.equal(r.doc.state.inventory[m.item]?.quantity??0,(prior.state.inventory[m.item]?.quantity??0)-m.amount);
  return r;}
 async function track(doc,species){const r=await success(doc,'world_wildlife',{operation:'track',species});assert.equal(r.result.found.species,world.monsters.find(m=>m.id===species).name);return{doc:r.doc,target:r.result.found.id};}
+async function takeT155(doc,cause,target){
+ // Public templates run through their registered U17 generator after tracking.
+ const q=world.rules.questSources.wildlife.find(r=>r.id===cause),saved=world.rules.questSources.wildlife;
+ world.rules.questSources.wildlife=[q];
+ try{questGenerators().find(g=>g.id==='village_wildlife').scan(writer(doc),engine,doc.state.minute);}finally{world.rules.questSources.wildlife=saved;}
+ const row=Object.values(doc.state.quests).find(q=>q.source?.cause===cause&&q.objective.target===target);assert.ok(row,`告示必须指向实际个体 ${target}`);
+ doc=(await run(doc,'world_quest',{operation:'accept',quest:row.id})).doc;
+ await assert.rejects(run(doc,'world_quest',{operation:'complete',quest:row.id}),/证据/);
+ return {doc,quest:row.id};
+}
+async function settleT155(doc,quest){
+ const coins=doc.state.player.coins,r=await run(doc,'world_quest',{operation:'complete',quest});
+ assert.equal(r.result.reward,60);assert.equal(r.doc.state.player.coins,coins+60);
+ await assert.rejects(run(r.doc,'world_quest',{operation:'complete',quest}),/可结算/);return r.doc;
+}
 const eco=(doc,habitat)=>doc.state.records[`ecology:${habitat}`].populations;
 const present=(doc,species,location)=>Object.values(doc.state.creatures??{}).filter(a=>a.species===species&&a.location===location&&a.status!=='死亡'&&a.hp>0).length;
 
@@ -99,7 +117,9 @@ test('度亡：止波寺资格对雾滩低阶游魂施放，游魂进入已超�
  await assert.rejects(engine.reduce(wisp.doc,{tool:'world_cast',args:{spell:id('ferry'),target:JI,permit:p},eventId:'ferry-npc'}),/游魂|复活|在场/);
  const found=await track(doc,SOUL);doc=found.doc;
  assert.equal(eco(doc,'habitat_wt_mist_flat')[SOUL].count+present(doc,SOUL,MIST),total0);
+ const job=await takeT155(doc,'t155_wt_soul',found.target);doc=job.doc;
  const f=await cast(doc,{spell:id('ferry'),target:found.target,permit:p});doc=f.doc;
+ doc=await settleT155(doc,job.quest);
  assert.equal(f.result.ferried,true);assert.equal(f.result.revived,false);assert.equal(f.result.destination,TABLET);
  const soul=doc.state.creatures[found.target];assert.equal(soul.status,'已超度');assert.equal(soul.location,null);assert.equal(soul.hp,0);assert.equal(soul.spirit.realm,'beyond');
  const ledger=doc.state.records[f.result.record];assert.equal(ledger.category,'spirit_ferry');assert.equal(ledger.revivable,false);assert.equal(ledger.destination,TABLET);
@@ -140,7 +160,7 @@ test('道门符阵：驱邪、护界、镇宅在雾滩真实生效；锁隙、�
  let night=await field(fresh(),MIST,1290);
  let t=await track(night,WISP);const expel=await cast(t.doc,{spell:id('expel'),target:t.target,permit:p});
  assert.deepEqual(expel.result.expelled,[t.target]);assert.equal(expel.doc.state.creatures[t.target].location,null);
- t=await track(night,SOUL);const purge=await cast(t.doc,{spell:id('home_purify'),permit:p});assert.deepEqual(purge.result.expelled,[t.target]);
+ t=await track(night,SOUL);const job=await takeT155(t.doc,'t155_wt_soul',t.target);const purge=await cast(job.doc,{spell:id('home_purify'),permit:p});assert.deepEqual(purge.result.expelled,[t.target]);await settleT155(purge.doc,job.quest);
  await assert.rejects(engine.reduce(night,{tool:'world_cast',args:{spell:id('home_purify'),permit:p},eventId:'purify-empty'}),/邪秽/);
  // Ward: new spirit encounters are withheld while it lasts; other wildlife still comes.
  const ward=await cast(night,{spell:id('ward_seal'),target:'player',permit:p}),e=Object.values(ward.doc.state.effects).find(x=>x.spell===id('ward_seal'));
@@ -175,7 +195,7 @@ test('道门符阵：驱邪、护界、镇宅在雾滩真实生效；锁隙、�
 test('灯祠祭礼：净场与镇窑灯礼作用于废窑瓦灯魅，净坛、灯前立誓与门印守戒按教派资格生效',async()=>{
  const base=learnedByRoute.祭;assert.ok(base);const fresh=()=>structuredClone(base),p=permits.祭;
  const night=await field(fresh(),KILN,1200);const t=await track(night,LAMP);
- const purify=await cast(t.doc,{spell:id('purify'),permit:p});assert.deepEqual(purify.result.expelled,[t.target]);
+ const job=await takeT155(t.doc,'t155_bs_lamp',t.target);const purify=await cast(job.doc,{spell:id('purify'),permit:p});assert.deepEqual(purify.result.expelled,[t.target]);await settleT155(purify.doc,job.quest);
  const settle=await cast(night,{spell:id('kiln_settle'),permit:p});assert.deepEqual(settle.result.species,[LAMP]);
  await assert.rejects(engine.reduce(await field(fresh(),MIST,1290),{tool:'world_cast',args:{spell:id('kiln_settle'),permit:p},eventId:'kiln-mist'}),/这类/);
  let doc=await attend(fresh(),MIAO,home.祭,600);

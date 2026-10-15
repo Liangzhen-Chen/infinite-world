@@ -17,6 +17,8 @@ import {famineAt} from './hazard-calendar.mjs';
 import {factionClockRules,spendFactionAssets,creditFactionAssets} from './faction-clock.mjs';
 import {adjustStanding} from './standing.mjs';
 import {authorityOf} from './governance.mjs';
+import {speciesInHabitat} from './wildlife-range.mjs';
+import {villageWildlifeFresh} from './quest-wildlife.mjs';
 
 const DAY=1440,GRADES=['D','C','B','A','S'],OBJECTIVES=['deliver','visit','record'],FUNDING=['faction','treasury'];
 const OUTCOMES=['pause','resume','redirect','support'],active=q=>['公开','进行中'].includes(q.status);
@@ -88,6 +90,23 @@ export function assertQuestSources(engine){
   if(typeof r.id!=='string'||!/^[a-z0-9_]{1,40}$/.test(r.id)||ids.has(r.id))throw Error(`事件任务编号无效或重复：${r.id}`);ids.add(r.id);
   if(!r.match||typeof r.match.category!=='string'||typeof r.board!=='string')throw Error(`事件任务订阅条件无效：${r.id}`);
   assertOffer(engine,r,`事件任务${r.id}`);
+ }
+ for(const r of t.wildlife??[]){
+  if(typeof r.id!=='string'||ids.has(r.id))throw Error(`生物委托编号无效或重复：${r.id}`);ids.add(r.id);
+  if(!t.publishers?.[r.board])throw Error(`生物委托没有公告栏主事人：${r.id}`);
+  if(r.objective.type==='deliver')assertOffer(engine,r,`生物委托${r.id}`);
+  else{
+   assertOffer(engine,{...r,objective:{type:'visit',location:r.objective.location}},`生物委托${r.id}`);
+   const o=r.objective;
+   if(o.type==='creature'){
+    const s=engine.world.monsters.find(s=>s.id===o.species),h=engine.rules.wildlife?.habitats.find(h=>h.location===o.location);
+    if(!s||!h||!speciesInHabitat(engine.rules,engine.world.monsters,h.id).some(s=>s.id===o.species)||!o.outcomes?.length||o.outcomes.some(x=>!['death','expelled','ferried'].includes(x)))throw Error(`生物委托物种、栖地或结果无效：${r.id}`);
+    if(o.outcomes.includes('expelled')&&s.nature?.spirit?.nature!=='malevolent'||o.outcomes.includes('ferried')&&s.nature?.kind!=='游魂')throw Error(`生物委托仪式不适用：${r.id}`);
+   }else if(o.type==='pact'){
+    const b=engine.world.bosses.find(b=>(b.actor??b.id)===o.target);
+    if(!b||b.intelligence<=0||b.residence.location!==o.location||!['respect_territory','nonaggression'].includes(o.pact)||!Array.isArray(o.offer)||!Array.isArray(o.request)||[...o.offer,...o.request].some(x=>!engine.world.items.some(i=>i.id===x.item)||!int(x.quantity,1,100000))||o.offer.some(x=>!b.negotiation?.accepts?.includes(x.item)))throw Error(`生物委托交涉条件无效：${r.id}`);
+   }else throw Error(`生物委托目标不支持：${r.id}`);
+  }
  }
  checked.add(t);
 }
@@ -271,6 +290,29 @@ function scanWorldEvents(d,engine,at){
 registerQuestGenerator({id:'npc_needs',order:100,scan:scanNpcNeeds});
 registerQuestGenerator({id:'world_events',order:200,scan:scanWorldEvents});
 registerQuestGenerator({id:'effect_table',order:300});
+
+// Local offers share U17 posting, escrow and expiration. Never spawn a target.
+function scanVillageWildlife(d,engine,at){
+ if(!villageWildlifeFresh(engine))return [];
+ const t=rules(engine),posted=[];
+ for(const row of t?.wildlife??[]){
+  const o=row.objective,targets=o.type==='creature'?Object.entries(d.get('state','creatures')??{}).filter(([,a])=>a.species===o.species&&a.location===o.location&&a.hp>0&&a.status==='正常'&&!a.owner).map(([id])=>id).sort():[o.target??'once'];
+  for(const target of targets){
+   const qs=generated(d.get('state'));
+   if(posted.length>=t.limits.perDay)return posted;
+   if(qs.filter(q=>active(q)&&q.location===row.board).length>=t.limits.perBoard)continue;
+   const used=qs.filter(q=>q.location===row.board&&monthOf(q.createdAt)===monthOf(at)).reduce((n,q)=>n+q.unitsD,0);
+   if(used+gradeUnitsD(engine,row.grade)>t.limits.monthlyUnitsDPerBoard)continue;
+   if(o.type==='creature'&&qs.some(q=>q.objective.type==='creature'&&q.objective.target===target))continue;
+   const q=postGeneratedQuest(d,engine,{...row,key:`village:${row.id}:${target}`,generator:'village_wildlife',label:row.name,
+    objective:{...structuredClone(o),...(o.type==='creature'?{target}:{})},publisher:t.publishers[row.board],funding:publicFunding(t,row.board),minute:at,
+    content:row.content+(o.type==='creature'?` 指定个体：${d.get('state','creatures',target,'name')}（${target}）。`:''),cause:row.id});
+   if(q)posted.push(q.id);
+  }
+ }
+ return posted;
+}
+registerQuestGenerator({id:'village_wildlife',order:275,scan:scanVillageWildlife});
 
 // D1 聚落公账开账：没有农事粮仓的聚落（白石镇）只开公款账，granary:false 让每日口粮结算跳过它；
 // 已有账的聚落不覆盖。新战役开局与远方郡展开时调用。
