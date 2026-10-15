@@ -127,21 +127,27 @@ function deadPatchValues(patches) {
 // the document root, state and records on every write. Every reference that
 // escaped, and everything below it, is copied before it would change.
 export class PatchCursor {
-    constructor(document) { this.epoch = 0; this.reset(document); }
+    constructor(document) { this.reset(document); }
     // marks: 1 = this cursor's own copy, writable in place; 2 = own copy whose
     // reference escaped. Anything unmarked is never written in place.
-    // chain: the own copies along the last written path. While no mark has
-    // changed since (epoch) and each still hangs where it did, they are still
+    // chain: the own copies along the last written path. While none of them
+    // has escaped since and each still hangs where it did, they are still
     // writable, so consecutive writes below them skip the mark lookups.
-    reset(document) { this.root = document; this.marks = new WeakMap(); this.chain = null; this.epoch++; }
+    reset(document) { this.root = document; this.marks = new WeakMap(); this.chain = null; }
     // Only this cursor's own copies are ever written in place, so only they need marking.
-    expose(value) { if (value && typeof value === 'object' && this.marks.get(value) === 1) { this.marks.set(value, 2); this.epoch++; } return value; }
+    expose(value) {
+        if (value && typeof value === 'object' && this.marks.get(value) === 1) {
+            this.marks.set(value, 2);
+            if (this.chain?.nodes.includes(value)) this.chain = null;
+        }
+        return value;
+    }
     take(value) {
         const mark = this.marks.get(value);
         if (mark === 1) return value;
         const copy = Array.isArray(value) ? [...value] : { ...value };
         // An escaped copy's children are now reachable from the escaped original too.
-        if (mark === 2) { this.epoch++; for (const key in copy) { const child = copy[key]; if (child && typeof child === 'object' && this.marks.get(child) === 1) this.marks.set(child, 2); } }
+        if (mark === 2) { this.chain = null; for (const key in copy) { const child = copy[key]; if (child && typeof child === 'object' && this.marks.get(child) === 1) this.marks.set(child, 2); } }
         this.marks.set(copy, 1);
         return copy;
     }
@@ -163,7 +169,7 @@ export class PatchCursor {
         const value = patch.op === 'delete' ? undefined : clone ? cloneData(patch.value) : patch.value;
         const chain = this.chain;
         let target, reused = 0;
-        if (chain && chain.epoch === this.epoch && chain.nodes[0] === root) {
+        if (chain && chain.nodes[0] === root) {
             target = root;
             while (reused < last && reused < chain.keys.length && chain.keys[reused] === path[reused] && target[path[reused]] === chain.nodes[reused + 1]) target = chain.nodes[++reused];
         } else target = this.root = this.take(root);
@@ -179,7 +185,7 @@ export class PatchCursor {
         const key = path[last];
         if (patch.op === 'delete') delete target[key];
         else target[key] = value;
-        this.chain = { epoch: this.epoch, nodes, keys: path.slice(0, last) };
+        this.chain = { nodes, keys: path.slice(0, last) };
         return this.root;
     }
 }

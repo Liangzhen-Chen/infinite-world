@@ -374,9 +374,11 @@ export class WorldEngine {
                 if(!edge.modes.includes(mode)||edge.closedSeasons.includes(season))continue;
                 for(const node of [edge.from,edge.to]){if(!adjacent.has(node))adjacent.set(node,[]);adjacent.get(node).push(edge);}
             }
-            graph={order,adjacent};graphCache?.set(key,graph);
+            graph={order,adjacent,oriented:new Map()};graphCache?.set(key,graph);
         }
-        const {order,adjacent}=graph,settled=new Set();
+        const {order,adjacent}=graph,settled=new Set(),oriented=graph.oriented??new Map();
+        // P2: each edge as seen from one end, built once per topology (read-only).
+        const from_=(edge,node)=>{let ends=oriented.get(edge);if(!ends){ends=new Map();oriented.set(edge,ends);}let row=ends.get(node);if(!row){row={...edge,from:node};ends.set(node,row);}return row;};
         // P2: a binary heap of discovered nodes ordered by (distance, world
         // location order). Equal distances retain the original world-location
         // order, including its chosen path and toll total; an entry whose node
@@ -402,7 +404,7 @@ export class WorldEngine {
             for(const edge of adjacent.get(current)??[]){
                 const next=edge.from===current?edge.to:edge.to===current?edge.from:null;if(!next||!order.has(next)||settled.has(next))continue;
                 const speed=edge.speedKmh??(mode==='cart'?this.rules.travel.cartKmh:this.rules.travel.walkKmh*(mode==='horse'?this.rules.travel.horseMultiplier:1))*(edge.terrainMultiplier??1);
-                const travel=this.rules.weather?weatherEdge(this,seed,{...edge,from:current},mode,minute,distances.get(current),movingTimes.get(current),speed,weatherCache):null;
+                const travel=this.rules.weather?weatherEdge(this,seed,from_(edge,current),mode,minute,distances.get(current),movingTimes.get(current),speed,weatherCache):null;
                 if(this.rules.weather&&!travel)continue;
                 const elapsed=Math.max(1,Math.ceil(edge.lengthKm/speed*60)),candidate=travel?.elapsed??distances.get(current)+elapsed;
                 if(candidate<(distances.get(next)??Infinity)){distances.set(next,candidate);movingTimes.set(next,travel?.moving??movingTimes.get(current)+elapsed);previous.set(next,{node:current,edge});costs.set(next,costs.get(current)+edge.toll);push(next);}
