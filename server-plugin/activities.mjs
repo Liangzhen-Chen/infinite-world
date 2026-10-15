@@ -36,6 +36,7 @@ import {factionClockAction}from'./faction-clock.mjs';
 import {isHazardClock,hazardClockAction}from'./seasonal-hazards.mjs';
 import {siteAction}from'./sites.mjs';
 import {organizationAction,foundOrganization}from'./organizations.mjs';
+import {familyAction} from './family-politics.mjs';
 import {faithAction}from'./faith.mjs';
 import {workAction,isWorkOperation}from'./works.mjs';
 import {fish,eatFish,mine,miningPermit}from'./extraction.mjs';
@@ -174,6 +175,7 @@ export const activities={
         return {project:key,stage,...outcome,note:stage==='打磨'?'研究成果需进入受限实体登记，才能获得规则认可':'原型未被系统承认，不能宣称已学会新法术'};
     },
     settlement(d,args,id){
+        if(args.operation?.startsWith('family_'))return familyAction.call(this,d,args,id);
         if(args.operation==='mining_permit')return miningPermit.call(this,d,args,id);
         if(args.operation?.startsWith('duel_'))return duelAction.call(this,d,args,id);
         if(args.operation?.startsWith('election_'))return electionAction.call(this,d,args,id);

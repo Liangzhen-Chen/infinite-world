@@ -2,6 +2,7 @@ import {entityTransition,businessSnapshot,businessTransitions} from './entity-tr
 import {lawAuthorities,personName} from './entity-view.mjs';
 import {legalCodeAt,legalCodeById,courtHierarchy,legalCooperation} from './law-codes.mjs';
 import {hireAdvocate,representationEffect,advocateService} from './legal-representation.mjs';
+import {adjudicateFamilyDispute,recoverFamilyCompensation} from './family-law.mjs';
 import { trackTransferUnit, transferItems, changeItems } from './items.mjs';
 import {advanceWithNpcParticipants,assertNpcService}from'./npc-schedule.mjs';
 import {shareNpcMemory}from'./npc-cognition.mjs';
@@ -334,6 +335,7 @@ function captureFugitive(d,engine,row,eventId){
 
 // Player and NPC defendants share evidence and sentencing; the caller supplies the court witnesses.
 export function adjudicateLegalCase(d,engine,row,code,judge,eventId,observers=[]){
+    if(row.familyCivil)return adjudicateFamilyDispute(d,engine,row,code,judge,eventId);
     const score=evidenceScore(d,row);
         if(score<code.evidenceRequired){d.set(path(row.id),{...row,status:'证据不足'});return{case:row.id,convicted:false,evidenceScore:score};}
         const penalty=code.penalties[row.offense]??engine.rules.law.spellConsent?.penalties?.[row.offense]??engine.rules.law.bribery?.penalties?.[row.offense]??engine.rules.law.activityPenalties?.[row.offense]??(row.offense==='debt_default'?engine.rules.economy?.credit?.loan?.defaultPenalty:undefined)??engine.rules.magicEconomy?.penalties?.[row.offense];if(!penalty)throw new Error('本案罪名没有判罚规则');
@@ -374,6 +376,23 @@ export function lawAction(d,args,eventId){
         return{permit:key,permission,cost:fee,minutes:5};
     }
     const {row,code}=caseRow(d,this,args.case),now=d.get('state','minute');
+    if(row.familyCivil){
+        if(operation==='hear'){
+            if(d.get('state','location')!==code.court)throw Error('须到案件所属法院审理');
+            const judge=authority(d,this,code,args.authority,'judge');return adjudicateFamilyDispute(d,this,row,code,judge,eventId);
+        }
+        if(operation==='compensate'||operation==='claim'){
+            if(d.get('state','location')!==code.court)throw Error('须到案件所属法院执行');
+            authority(d,this,code,args.authority,'judge');return recoverFamilyCompensation(d,this,row,eventId);
+        }
+        if(operation==='appeal'){
+            if(!row.judgment)throw Error('尚未初审');
+            const level=(row.appealLevel??0)+1,court=courtHierarchy(this,d.get('state'),code)?.[level];
+            if(!court||d.get('state','location')!==court.court||!court.judges.includes(args.authority))throw Error('须由上一级有权法院在场复审');
+            present(d,this,args.authority);d.set(path(row.id),{...row,appealLevel:level,appeals:[...row.appeals??[],{judge:args.authority,minute:now,upheld:true}]});return {case:row.id,upheld:true,final:level===2};
+        }
+        throw Error('家族民事案可 hear、appeal、compensate 或 claim');
+    }
     if(operation==='notify'){
         const from=this.resolve(args.from,'npc'),to=this.resolve(args.to,'npc');
         if(d.get('state','npcs',from,'location')!==d.get('state','location'))throw new Error('须向在场传话者提出携信或转述请求');
