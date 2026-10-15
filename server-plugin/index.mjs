@@ -4,6 +4,7 @@ import { randomUUID } from 'node:crypto';
 import { CampaignStorage, digest } from './storage.mjs';
 import { WorldEngine } from './engine.mjs';
 import { MemoryIndex } from './retrieval.mjs';
+import {promptScope} from './prompt-scope.mjs';
 import { archivedReducer } from './archived-reducer.mjs';
 import { loadWorld } from '../tools/load-world.mjs';
 import { migrateLegacyChat } from './migrations.mjs';
@@ -64,10 +65,10 @@ export async function init(router,{ world=null, baseRoot=null, newCampaignSeed=r
     };
     const getIndex=async(store,id,document,chronicle)=>{
         const key=`${store.root}:${id}`;
-        const selectedEngine=(await store.worldRegistry.get(document.worldHash)).scoped(document);
-        const identity=`${document.worldHash}:${digest(document.state.created??{})}`;
+        const selectedEngine=(await store.worldRegistry.get(document.worldHash)).promptScoped(document);
+        const identity=`${document.worldHash}:${selectedEngine.remoteKey??''}:${document.state.location}:${document.state.player.name}:${digest(document.state.created??{})}`;
         if(indexes.get(key)?.entityIdentity!==identity){
-            const old=indexes.get(key),next=new MemoryIndex({entities:selectedEngine.entities});
+            const old=indexes.get(key),next=new MemoryIndex({entities:selectedEngine.entities,resolver:selectedEngine.resolver});
             next.entityIdentity=identity;
             if(old){
                 for(const record of old.documents.values())if(!record.id.startsWith('chat_')&&!record.id.startsWith('memory_')&&!record.id.startsWith('lore_')&&!record.id.startsWith('settlement_'))next.upsert({...record,revision:undefined});
@@ -76,7 +77,7 @@ export async function init(router,{ world=null, baseRoot=null, newCampaignSeed=r
             indexes.set(key,next);
         }
         const index=indexes.get(key),wanted=new Set();
-        index.syncSettlements(selectedEngine.world,document);
+        index.syncSettlements(selectedEngine.world,document,promptScope(selectedEngine,document.state).profiles);
         index.syncSites(selectedEngine.world,document);
         for(const row of publicLoreEntries(selectedEngine.world))index.upsert({
             id:`lore_${row.id}`,text:`${row.name}：${row.description}`,source:'公开世界设定',entities:[row.id,...row.references??[]],

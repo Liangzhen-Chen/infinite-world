@@ -1,6 +1,6 @@
 import {advanceMagicMessages,nextMagicMessageMinute}from'./magic-message.mjs';
 import {memoryBlurMinute}from'./npc-memory.mjs';
-import {applyPatches,cloneData,digest} from './storage.mjs';
+import {PatchCursor,cloneData,digest} from './storage.mjs';
 import {advanceNpcSchedules} from './npc-schedule.mjs';
 import {waterEarthHeldUntil}from'./magic-water-earth.mjs';
 import {relationView} from './npc-relations.mjs';
@@ -46,10 +46,10 @@ function appendHeard(d,engine,from,to,memory,minute,channel,messageId,location=d
 // Used only on an immutable interval-start snapshot. Obligations are checked by
 // callers; actors carrying messages or following the player are not simulated.
 export function npcPresenceAt(engine,state,before,minute,randomSeed){
- let document={state,randomSeed}; // applyPatches copies ancestors; the input snapshot stays immutable.
- const d={get document(){return document;},get:(...p)=>p.reduce((x,k)=>x?.[k],document),set:(p,v)=>{document=applyPatches(document,[{op:'set',path:p,value:v}]);},remove:p=>{document=applyPatches(document,[{op:'delete',path:p}]);}};
+ const cursor=new PatchCursor({state,randomSeed});
+ const d={get document(){return cursor.expose(cursor.root);},get:(...p)=>cursor.expose(p.reduce((x,k)=>x?.[k],cursor.root)),peek:(...p)=>p.reduce((x,k)=>x?.[k],cursor.root),set:(p,v)=>cursor.apply({op:'set',path:p,value:v}),remove:p=>cursor.apply({op:'delete',path:p})};
  if(minute>before)advanceNpcSchedules(d,engine,before,minute);
- return document.state;
+ return cursor.root.state;
 }
 function working(state,id,start,end){return Object.values(state.npcAutonomy?.tasks??{}).some(t=>t.status==='进行中'&&[t.npc,t.action.seller].includes(id)&&start<t.finish&&end>t.start);}
 function occupied(state,id,start,end){return state.player.companions?.includes(id)||state.npcs[id]?.cognitionTravel||working(state,id,start,end)||Object.values(state.obligations??{}).some(o=>

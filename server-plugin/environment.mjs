@@ -12,7 +12,7 @@ import {opticalSightClear,opticalVisibility,inspectLight,normalLightAction,asser
 
 const integer=(value,min,max,label)=>{if(!Number.isSafeInteger(value)||value<min||value>max)throw new Error(`${label}无效`);return value;};
 const key=id=>`physical_feature:${id}`;
-export const environmentFeatures=engine=>engine.world.locations.flatMap(place=>(place.features??[]).map(feature=>({...feature,location:place.id})));
+export const environmentFeatures=engine=>engine.advanceFeatures??engine.world.locations.flatMap(place=>(place.features??[]).map(feature=>({...feature,location:place.id})));
 function feature(engine,name,location){
     const matches=environmentFeatures(engine).filter(row=>row.id===name||row.location===location&&[row.name,...row.aliases??[]].some(label=>normalize(label)===normalize(name??'')));
     if(matches.length!==1)throw new Error(matches.length?'环境对象称呼有歧义':'环境对象未登记');return matches[0];

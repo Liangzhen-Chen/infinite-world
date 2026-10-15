@@ -9,11 +9,11 @@ import { groupHistory, planHistoryWindow } from '../extension/history-window.mjs
 import { assembleMessages } from '../extension/prompt.mjs';
 import { toolDefinitions } from '../extension/tools.mjs';
 
-export async function benchmarkContext({ messages = 5000 } = {}) {
+export async function benchmarkContext({ messages = 5000, world: suppliedWorld, engine: suppliedEngine, document: suppliedDocument } = {}) {
     if (!Number.isInteger(messages) || messages < 20 || messages % 2) throw Error('消息数必须是至少20的偶数');
-    const world = await loadWorld(), engine = new WorldEngine(world);
+    const world = suppliedWorld ?? await loadWorld(), engine = suppliedEngine ?? new WorldEngine(world);
     const seed = JSON.parse(await fs.readFile(new URL('../tests/fixtures/legacy/seed.json', import.meta.url), 'utf8'));
-    const document = engine.initialFromLegacy({ state: seed.state, memories: seed.memories });
+    const document = suppliedDocument ?? engine.initialFromLegacy({ state: seed.state, memories: seed.memories });
     const bundle = await loadPromptBundle({ world });
     const chat = Array.from({ length: messages }, (_, i) => ({
         is_user: i % 2 === 0, name: i % 2 === 0 ? '旅人' : '主持人',
@@ -27,7 +27,7 @@ export async function benchmarkContext({ messages = 5000 } = {}) {
     const index = new MemoryIndex();
     const indexingStart = performance.now(); index.syncChat(chat);
     const initialIndexMs = performance.now() - indexingStart;
-    const tokenizations = index.tokenizations, samples = [];
+    const tokenizations = index.tokenizations, samples = [], sceneSamples = [];
     let payload, retainedMessages, removedTurns, groupingMs, sceneMs, assemblyMs, unchanged = true, scenePresent = true;
     for (let attempt = 0; attempt < 3; attempt++) {
         // Also exercise the normal delta path when a new reply replaces the
@@ -42,6 +42,7 @@ export async function benchmarkContext({ messages = 5000 } = {}) {
         const grouped = performance.now();
         const scene = engine.scene(document, '河边路况', index);
         const sceneDone = performance.now();
+        sceneSamples.push(sceneDone-grouped);
         payload = JSON.stringify({ messages: assembleMessages(bundle, planned.messages.map(message => ({ role: message.is_user ? 'user' : 'assistant', content: message.mes })), scene), tools: toolDefinitions() });
         const done = performance.now();
         samples.push(done - begin); groupingMs = grouped - begin; sceneMs = sceneDone - grouped; assemblyMs = done - sceneDone;
@@ -53,7 +54,7 @@ export async function benchmarkContext({ messages = 5000 } = {}) {
     unchanged &&= originalDocument === JSON.stringify(document);
     const incrementalIndex = index.tokenizations === tokenizations + 2;
     return { scope: '正式提示与场景消费者、合成聊天；包含完整历史摘要、覆盖裁剪、检索、消息组装和工具序列化；不含宿主分词、网络及模型',
-        messages, initialIndexMs, samples, assemblyTotalMs, groupingMs, sceneMs, assemblyMs,
+        messages, initialIndexMs, samples, sceneSamples, assemblyTotalMs, groupingMs, sceneMs, assemblyMs,
         retainedMessages, removedTurns, requestBytes: Buffer.byteLength(payload), staticEstimatedTokens: bundle.budget.estimatedTokens,
         unchanged, incrementalIndex, scenePresent, pass: assemblyTotalMs <= 150 && unchanged && incrementalIndex && scenePresent && removedTurns === Math.ceil(messages * .15) && retainedMessages === messages - removedTurns * 2 };
 }
