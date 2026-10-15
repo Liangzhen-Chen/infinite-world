@@ -2,7 +2,7 @@
  "title": "无限原野系统地图",
  "card": "K9",
  "generatedFrom": {
-  "commit": "refs/heads/t155",
+  "commit": null,
   "method": "运行时导出（注册表、规则表、工具定义、效果表、立场传导表）+ 静态正则扫描（import 图、函数体标识符、state 分区与 records 前缀、rules/world 读取）。静态扫描是近似：经 engine.byId、helper 间接或动态拼接路径的访问不计入。"
  },
  "scanMethods": {
@@ -324,7 +324,7 @@
    "effects": [],
    "tools": [],
    "readBy": [],
-   "files": 42
+   "files": 28
   },
   {
    "id": "kernel_engine",
@@ -8337,7 +8337,7 @@
   },
   {
    "dir": "world/drafts",
-   "files": 42,
+   "files": 28,
    "keys": [],
    "readers": [],
    "tools": [
@@ -8746,6 +8746,13 @@
    ]
   },
   {
+   "dir": "world/orgs",
+   "files": 0,
+   "keys": [],
+   "readers": [],
+   "tools": []
+  },
+  {
    "dir": "world/people",
    "files": 3,
    "keys": [
@@ -8814,6 +8821,13 @@
     "tools/w3-trades-publish.mjs",
     "tools/w5-content.mjs"
    ]
+  },
+  {
+   "dir": "world/sites",
+   "files": 0,
+   "keys": [],
+   "readers": [],
+   "tools": []
   }
  ],
  "prompt": {
@@ -16299,7 +16313,7 @@
   "extension/index.js": {
    "system": "ui_host",
    "imports": [
-    "../../extensions.js",
+    "../extensions.js",
     "extension/core.js"
    ],
    "stateWrites": [],
@@ -16413,7 +16427,7 @@
   "extension/runtime.js": {
    "system": "ui_host",
    "imports": [
-    "../../extensions.js",
+    "../extensions.js",
     "extension/ambient-audio.mjs",
     "extension/background-view.mjs",
     "extension/history-window.mjs",
