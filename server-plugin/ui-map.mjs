@@ -1,5 +1,6 @@
 import {localWeather,weatherTravel} from './weather.mjs';
 import {heldMapLocations} from './works.mjs';
+import {regionOf,mapRegions} from './regions.mjs';
 
 const rank={rumor:1,reliable:2,experienced:3};
 const levels=['大陆','地区','郡','镇'];
@@ -41,8 +42,10 @@ export function mapView(engine,document){
         while(places.get(parent)?.mapHierarchy&&!visited.has(parent)){visited.add(parent);add(parent,kind);parent=places.get(parent).parent;}
     }
     const locations=[...known].filter(([id])=>places.get(id).mapHierarchy).map(([id,knowledge])=>{
-        const place=places.get(id);return {id,name:place.name,coordinates:place.coordinates,knowledge,
-            hierarchy:place.mapHierarchy.map((row,index)=>({...row,level:levels[index]})),current:id===state.location};
+        // T142: the region and county levels name the published province and county.
+        const place=places.get(id),region=regionOf(engine.world,id),named=[null,region?.province,region?.county];
+        return {id,name:place.name,coordinates:place.coordinates,knowledge,
+            hierarchy:place.mapHierarchy.map((row,index)=>({...(named[index]?{id:named[index].id,name:named[index].name}:row),level:levels[index]})),current:id===state.location};
     });
     const routes=engine.world.routes.filter(edge=>known.has(edge.from)&&known.has(edge.to)).map(edge=>{
         const seasonClosed=edge.closedSeasons.includes(engine.calendar(now).season);
@@ -53,7 +56,7 @@ export function mapView(engine,document){
             risk:riskKnown&&Number.isFinite(edge.risk)?edge.risk:null};
     });
     return {minute:now,location:state.location,season:engine.calendar(now).season,time:engine.calendar(now).text,
-        weather:localWeather(engine,document)?.name??'天气未记录',levels,locations,routes,
+        weather:localWeather(engine,document)?.name??'天气未记录',levels,locations,routes,regions:mapRegions(engine.world),
         // Existing, explicitly known transit stops can connect village routes.
         // They gain no map hierarchy before their publication task completes.
         transit:[...known].filter(([id])=>!places.get(id).mapHierarchy).map(([id,knowledge])=>({id,name:places.get(id).name,coordinates:places.get(id).coordinates,knowledge}))};

@@ -4936,5 +4936,181 @@
     "closedSeasons": [],
     "toll": 0,
     "risk": 0
+  },
+  {
+    "id": "route_far_bs_huancheng",
+    "from": "loc_bs",
+    "to": "loc_far_huancheng",
+    "lengthKm": 226.3,
+    "terrainMultiplier": 1,
+    "modes": [
+      "walk",
+      "horse",
+      "cart"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 1
+  },
+  {
+    "id": "route_far_huancheng_capital",
+    "from": "loc_far_huancheng",
+    "to": "loc_capital",
+    "lengthKm": 190.4,
+    "terrainMultiplier": 1,
+    "modes": [
+      "walk",
+      "horse",
+      "cart"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 1
+  },
+  {
+    "id": "route_far_bs_tongji",
+    "from": "loc_bs",
+    "to": "loc_far_tongji",
+    "lengthKm": 71.7,
+    "terrainMultiplier": 1,
+    "modes": [
+      "walk",
+      "horse",
+      "cart"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 1
+  },
+  {
+    "id": "route_far_tongji_duanqi",
+    "from": "loc_far_tongji",
+    "to": "loc_far_duanqi",
+    "lengthKm": 45.6,
+    "terrainMultiplier": 0.6,
+    "modes": [
+      "walk",
+      "horse"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 2
+  },
+  {
+    "id": "route_far_tongji_xuedeng",
+    "from": "loc_far_tongji",
+    "to": "loc_far_xuedeng",
+    "lengthKm": 78.6,
+    "terrainMultiplier": 0.5,
+    "modes": [
+      "walk",
+      "horse"
+    ],
+    "closedSeasons": [
+      3
+    ],
+    "toll": 0,
+    "risk": 2
+  },
+  {
+    "id": "route_far_yandu_shuqiao",
+    "from": "loc_yandu",
+    "to": "loc_far_shuqiao",
+    "lengthKm": 50,
+    "terrainMultiplier": 0.7,
+    "modes": [
+      "walk",
+      "horse"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 1
+  },
+  {
+    "id": "route_far_shuqiao_xiushi",
+    "from": "loc_far_shuqiao",
+    "to": "loc_far_xiushi",
+    "lengthKm": 43.9,
+    "terrainMultiplier": 0.7,
+    "modes": [
+      "walk"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 1
+  },
+  {
+    "id": "route_far_yandu_hupo",
+    "from": "loc_yandu",
+    "to": "loc_far_hupo",
+    "lengthKm": 128.4,
+    "terrainMultiplier": 1,
+    "modes": [
+      "walk",
+      "horse",
+      "cart"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 1
+  },
+  {
+    "id": "route_far_yandu_hupo_boat",
+    "from": "loc_yandu",
+    "to": "loc_far_hupo",
+    "lengthKm": 128.4,
+    "speedKmh": 6,
+    "modes": [
+      "boat"
+    ],
+    "closedSeasons": [],
+    "toll": 10,
+    "risk": 1
+  },
+  {
+    "id": "route_far_capital_zhufeng",
+    "from": "loc_capital",
+    "to": "loc_far_zhufeng",
+    "lengthKm": 127.6,
+    "terrainMultiplier": 1,
+    "modes": [
+      "walk",
+      "horse",
+      "cart"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 1
+  },
+  {
+    "id": "route_far_zhufeng_luyu",
+    "from": "loc_far_zhufeng",
+    "to": "loc_far_luyu",
+    "lengthKm": 96,
+    "terrainMultiplier": 1,
+    "modes": [
+      "walk",
+      "horse",
+      "cart"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 1
+  },
+  {
+    "id": "route_far_capital_jijie",
+    "from": "loc_capital",
+    "to": "loc_far_jijie",
+    "lengthKm": 123.7,
+    "terrainMultiplier": 0.7,
+    "modes": [
+      "walk",
+      "horse"
+    ],
+    "closedSeasons": [
+      3
+    ],
+    "toll": 0,
+    "risk": 1
   }
 ]
