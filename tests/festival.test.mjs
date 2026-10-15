@@ -68,7 +68,7 @@ test('实际作息、睡眠和已占用义务不会被节俗瞬移或代参与',
 test('月份与年界一次发生，30日离开分步一致且只有本地场景显示结果',async()=>{
  const s=setup({day:30,month:12});
  while(s.doc.state.minute<359*DAY+540)s.doc=(await s.wait(s.doc,Math.min(30*DAY,359*DAY+540-s.doc.state.minute),'prepare-year')).doc;
- const p=await plan(s);p.doc.state.location='loc_hw';
+ const p=await plan(s);p.doc.state.location='loc_hw_dock';// T108 publishes festivals at loc_hw; the remote view stays a place without any
  const large=await s.wait(p.doc,30*DAY,'large');let split=p.doc;
  for(let i=0;i<30;i++)split=(await s.wait(split,DAY,`small-${i}`)).doc;
  const selected=doc=>Object.values(doc.state.records).filter(r=>r.category==='festival');

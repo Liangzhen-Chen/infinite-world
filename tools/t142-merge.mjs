@@ -20,5 +20,13 @@ export function withoutT142(world,batch=buildBatch()){
  const ids=batchIds(batch),next=structuredClone(world);
  for(const [,key] of FILES)next[key]=(next[key]??[]).filter(r=>!ids.has(r.id));
  if(!next.regions.length)delete next.regions;
+ // Later cards answer the polities on other rows (reverse relations) and run
+ // their clocks from rules.factionClock; neither existed before this batch.
+ for(const f of next.factions??[]){
+  if(f.relations?.some(r=>ids.has(r.faction)))f.relations=f.relations.filter(r=>!ids.has(r.faction));
+  if(f.references?.some(id=>ids.has(id)))f.references=f.references.filter(id=>!ids.has(id));
+ }
+ for(const r of next.rules?.reputation?.factions??[])if(r.relations?.some(x=>ids.has(x.faction)))r.relations=r.relations.filter(x=>!ids.has(x.faction));
+ if(next.rules?.factionClock){next.rules.factionClock.clocks=next.rules.factionClock.clocks.filter(c=>!ids.has(c.faction));if(!next.rules.factionClock.clocks.length)delete next.rules.factionClock;}
  return next;
 }

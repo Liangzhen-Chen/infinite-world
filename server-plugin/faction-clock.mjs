@@ -28,7 +28,7 @@ export function assertFactionClockRules(engine){
  for(const rule of factionClockRules(engine)){
   const f=faction(engine,rule.faction);
   if(!rule.id||ids.has(rule.id)||!rule.source||!engine.world.locations.some(l=>l.id===rule.settlement)||
-   ![1,7].includes(rule.intervalDays)||!Number.isFinite(rule.probability)||rule.probability<0||rule.probability>1||
+   ![1,7,30].includes(rule.intervalDays)||!Number.isFinite(rule.probability)||rule.probability<0||rule.probability>1||
    !['once','year'].includes(rule.cycle??'once')||!Array.isArray(rule.stages)||!rule.stages.length)throw Error('势力时钟来源、地点或日周周期无效');
   ids.add(rule.id);assertCost(engine,{coins:f.resources?.treasuryCopper,items:f.resources?.items});
   if(!uint(f.resources?.treasuryCopper))throw Error('势力初始公库未登记');
@@ -53,7 +53,9 @@ export function assertFactionClockRules(engine){
    if(action.representative&&![f.leader,...f.coreMembers??[]].includes(action.representative))throw Error('势力干预代表不属于该组织');
    assertCost(engine,action.cost);
   }
-  if(rule.contact&&(!engine.world.locations.some(l=>l.id===rule.contact.location)||![f.leader,...f.coreMembers??[]].includes(rule.contact.representative)))throw Error('势力供资接点未登记代表');
+  // A contact without a representative is the faction's registration point
+  // (contactAnchor): enquiries and contributions are lodged, nobody is summoned.
+  if(rule.contact&&(!engine.world.locations.some(l=>l.id===rule.contact.location)||rule.contact.representative!==undefined&&![f.leader,...f.coreMembers??[]].includes(rule.contact.representative)))throw Error('势力供资接点未登记代表');
  }
  const published=factionClockRules(engine);// Hooks for clocks absent from this world stay inert.
  for(const h of published.length?engine.rules.effectTable?.hooks??[]:[])if(h.source==='faction'&&published.some(r=>r.id===h.owner&&!r.stages.some(s=>s.id===h.stage)))throw Error(`效果挂接的势力时钟阶段未登记：${h.owner}`);
@@ -169,13 +171,15 @@ function requireContact(d,engine,contact){
 }
 export function factionClockAction(d,args,eventId){
  assertFactionClockRules(this);
- const rule=factionClockRules(this).find(r=>r.id===args.clock&&(!args.faction||r.faction===this.resolve(args.faction,'faction')));
+ // Naming the faction is enough when it publishes a single clock.
+ const owner=args.faction?this.resolve(args.faction,'faction'):null,rules=factionClockRules(this).filter(r=>(args.clock===undefined||r.id===args.clock)&&(!owner||r.faction===owner));
+ const rule=args.clock!==undefined||owner&&rules.length===1?rules[0]:undefined;
  if(!rule)throw Error('没有已发布的可执行势力时钟');
  const before=d.get('state','minute');initializeFactionClocks(d,this,before,before+rule.intervalDays*DAY);
  const row=d.get(...clockPath(rule.id)),stage=rule.stages[row.phase];
  if(args.operation==='faction_inspect'){
   requireContact(d,this,rule.contact);
-  return {faction:rule.faction,clock:rule.id,phase:row.phase,paused:row.paused,choices:(rule.interventions??[]).filter(a=>a.stage===stage?.id).map(a=>({id:a.id,location:a.location,cost:a.cost??{},minutes:a.minutes}))};
+  return {faction:rule.faction,clock:rule.id,phase:row.phase,paused:row.paused,...(stage?.name?{stage:stage.name}:{}),choices:(rule.interventions??[]).filter(a=>a.stage===stage?.id).map(a=>({id:a.id,...(a.name?{name:a.name}:{}),location:a.location,cost:a.cost??{},minutes:a.minutes}))};
  }
  if(args.operation==='faction_contribute'){
   requireContact(d,this,rule.contact);

@@ -25,7 +25,7 @@
   "subscribers": 8,
   "interactionRules": 25,
   "effectKinds": 18,
-  "links": 340
+  "links": 341
  },
  "layers": [
   {
@@ -249,13 +249,14 @@
    "effects": [],
    "tools": [],
    "readBy": [
+    "base_effects",
     "kernel_engine",
     "sim_clock",
     "sim_environment",
     "sim_npc",
     "sim_society"
    ],
-   "files": 6
+   "files": 7
   },
   {
    "id": "data_design",
@@ -281,7 +282,7 @@
     "sim_environment",
     "sim_society"
    ],
-   "files": 92
+   "files": 95
   },
   {
    "id": "data_assets",
@@ -389,6 +390,7 @@
     "eras",
     "factionPeople",
     "factions",
+    "festivals",
     "history",
     "items",
     "locations",
@@ -1656,7 +1658,7 @@
     "server-plugin/seasonal-hazards.mjs",
     "server-plugin/hazard-calendar.mjs"
    ],
-   "lines": 973,
+   "lines": 979,
    "stateWrites": [
     "family",
     "npcs",
@@ -1691,6 +1693,7 @@
     "agriculture",
     "attributes",
     "effectTable",
+    "factionClock",
     "hazardClock",
     "npcLife",
     "settlementTrade",
@@ -2100,7 +2103,7 @@
     "server-plugin/catalog.mjs",
     "server-plugin/chronicle.mjs"
    ],
-   "lines": 409,
+   "lines": 415,
    "stateWrites": [],
    "stateReads": [
     "careerMetrics",
@@ -4262,6 +4265,14 @@
    "kind": "data",
    "labels": [
     "world/geo"
+   ]
+  },
+  {
+   "from": "data_lore",
+   "to": "base_effects",
+   "kind": "data",
+   "labels": [
+    "world/lore"
    ]
   },
   {
@@ -6434,7 +6445,10 @@
      "server-plugin/faction-clock.mjs"
     ],
     "usedByHooks": [],
-    "usedIn": []
+    "usedIn": [
+     "rules.factionClock",
+     "world/lore/factions.json"
+    ]
    },
    {
     "kind": "environment",
@@ -6560,7 +6574,8 @@
     ],
     "usedByHooks": [],
     "usedIn": [
-     "rules.worldClock"
+     "rules.worldClock",
+     "world/lore/factions.json"
     ]
    },
    {
@@ -6573,7 +6588,10 @@
      "server-plugin/faction-clock.mjs"
     ],
     "usedByHooks": [],
-    "usedIn": []
+    "usedIn": [
+     "rules.factionClock",
+     "world/lore/factions.json"
+    ]
    },
    {
     "kind": "route_closure",
@@ -6610,7 +6628,10 @@
     ],
     "usedIn": [
      "rules.effectTable",
-     "rules.hazardClock"
+     "rules.factionClock",
+     "rules.hazardClock",
+     "world/lore/factions.json",
+     "world/lore/festivals.json"
     ]
    },
    {
@@ -6632,7 +6653,9 @@
     ],
     "usedIn": [
      "rules.effectTable",
-     "rules.hazardClock"
+     "rules.hazardClock",
+     "world/lore/factions.json",
+     "world/lore/festivals.json"
     ]
    },
    {
@@ -6679,7 +6702,8 @@
      "faction:clock_ms_tanjie"
     ],
     "usedIn": [
-     "rules.effectTable"
+     "rules.effectTable",
+     "world/lore/factions.json"
     ]
    }
   ],
@@ -7973,7 +7997,7 @@
   },
   {
    "dir": "world/design",
-   "files": 92,
+   "files": 95,
    "keys": [],
    "readers": [
     "server-plugin/civic.mjs",
@@ -8065,7 +8089,9 @@
     "tools/w4-draft.mjs",
     "tools/w4-publish.mjs",
     "tools/w4-repair.mjs",
+    "tools/w5-clock-publication.mjs",
     "tools/w5-content.mjs",
+    "tools/w5-festival-publication.mjs",
     "tools/w5-festivals.mjs",
     "tools/w5-social.mjs",
     "tools/wildlife-content.mjs"
@@ -8153,7 +8179,9 @@
     "tools/w4-draft.mjs",
     "tools/w4-publish.mjs",
     "tools/w4-repair.mjs",
+    "tools/w5-clock-publication.mjs",
     "tools/w5-content.mjs",
+    "tools/w5-festival-publication.mjs",
     "tools/w5-festivals.mjs",
     "tools/w5-social.mjs"
    ]
@@ -8251,16 +8279,18 @@
   },
   {
    "dir": "world/lore",
-   "files": 6,
+   "files": 7,
    "keys": [
     "cultures",
     "deities",
     "factions",
     "history",
     "factionPeople",
-    "eras"
+    "eras",
+    "festivals"
    ],
    "readers": [
+    "server-plugin/effects.mjs",
     "server-plugin/engine.mjs",
     "server-plugin/faction-clock.mjs",
     "server-plugin/festival.mjs",
@@ -8279,7 +8309,9 @@
     "tools/publish-monster-society.mjs",
     "tools/system-map.mjs",
     "tools/t142-merge.mjs",
+    "tools/w5-clock-publication.mjs",
     "tools/w5-content.mjs",
+    "tools/w5-festival-publication.mjs",
     "tools/w5-social-publish.mjs"
    ]
   },
@@ -8449,17 +8481,12 @@
     "tools/w4-boss-content.mjs",
     "tools/w4-content.mjs",
     "tools/w4-publish.mjs",
+    "tools/w5-clock-publication.mjs",
     "tools/w5-content.mjs",
+    "tools/w5-festival-publication.mjs",
     "tools/w5-festivals.mjs",
     "tools/w5-social.mjs"
    ]
-  },
-  {
-   "dir": "world/orgs",
-   "files": 0,
-   "keys": [],
-   "readers": [],
-   "tools": []
   },
   {
    "dir": "world/people",
@@ -8528,13 +8555,6 @@
     "tools/w3-trades-publish.mjs",
     "tools/w5-content.mjs"
    ]
-  },
-  {
-   "dir": "world/sites",
-   "files": 0,
-   "keys": [],
-   "readers": [],
-   "tools": []
   }
  ],
  "prompt": {
@@ -8756,6 +8776,9 @@
   "reputation": [
    "server-plugin/reputation-registry.mjs",
    "server-plugin/reputation.mjs"
+  ],
+  "factionClock": [
+   "server-plugin/faction-clock.mjs"
   ],
   "worldClock": [
    "server-plugin/advance-registry.mjs",
@@ -11060,6 +11083,7 @@
      "means": "联络地点：社会与组织",
      "pattern": "contactAnchor",
      "modules": [
+      "server-plugin/faction-clock.mjs",
       "server-plugin/lore.mjs",
       "server-plugin/monster-society.mjs",
       "server-plugin/notables.mjs",
@@ -11069,6 +11093,7 @@
      ],
      "systems": [
       "nar_memory",
+      "sim_clock",
       "sim_environment",
       "sim_society"
      ]
@@ -11204,7 +11229,7 @@
    "id": "festival",
    "name": "节日",
    "file": "world/lore/festivals.json",
-   "count": 0,
+   "count": 24,
    "required": [
     "id",
     "calendar.month",
@@ -11233,13 +11258,16 @@
      "pattern": "'festival'",
      "modules": [
       "server-plugin/advance-registry.mjs",
+      "server-plugin/catalog.mjs",
       "server-plugin/effects.mjs",
       "server-plugin/festival.mjs",
+      "server-plugin/lore.mjs",
       "server-plugin/npc-life.mjs"
      ],
      "systems": [
       "base_advance",
       "base_effects",
+      "nar_memory",
       "sim_clock",
       "sim_npc"
      ]
@@ -11248,6 +11276,7 @@
    "autoSystems": [
     "base_advance",
     "base_effects",
+    "nar_memory",
     "sim_clock",
     "sim_npc"
    ],
@@ -11496,14 +11525,6 @@
     "note": "已注册，但 rules.json 与 lore 的任何 effects 列表都没有用到"
    },
    {
-    "kind": "dispute",
-    "note": "已注册，但 rules.json 与 lore 的任何 effects 列表都没有用到"
-   },
-   {
-    "kind": "relation",
-    "note": "已注册，但 rules.json 与 lore 的任何 effects 列表都没有用到"
-   },
-   {
     "kind": "trade",
     "note": "已注册，但 rules.json 与 lore 的任何 effects 列表都没有用到"
    },
@@ -11620,6 +11641,14 @@
      "descriptionVisibility",
      "foundedYear",
      "offers"
+    ]
+   },
+   {
+    "content": "festival",
+    "file": "world/lore/festivals.json",
+    "fields": [
+     "possibleConflict",
+     "socialOpportunity"
     ]
    }
   ],
@@ -12521,6 +12550,7 @@
     "eras",
     "factionPeople",
     "factions",
+    "festivals",
     "history",
     "items",
     "locations",
@@ -12603,7 +12633,8 @@
     "society_motion"
    ],
    "rules": [
-    "effectTable"
+    "effectTable",
+    "factionClock"
    ],
    "world": [
     "factions",
@@ -12611,7 +12642,7 @@
     "locations"
    ],
    "worldDirs": [],
-   "lines": 208
+   "lines": 212
   },
   "server-plugin/farm-pests-migration.mjs": {
    "system": "kernel_storage",
@@ -12691,7 +12722,7 @@
     "geo",
     "lore"
    ],
-   "lines": 212
+   "lines": 214
   },
   "server-plugin/governance.mjs": {
    "system": "sim_society",
@@ -12967,7 +12998,7 @@
    "rules": [],
    "world": [],
    "worldDirs": [],
-   "lines": 17
+   "lines": 23
   },
   "server-plugin/magic-air.mjs": {
    "system": "sim_magic",
@@ -15661,7 +15692,7 @@
   "extension/index.js": {
    "system": "ui_host",
    "imports": [
-    "../extensions.js",
+    "../../extensions.js",
     "extension/core.js"
    ],
    "stateWrites": [],
@@ -15775,7 +15806,7 @@
   "extension/runtime.js": {
    "system": "ui_host",
    "imports": [
-    "../extensions.js",
+    "../../extensions.js",
     "extension/ambient-audio.mjs",
     "extension/background-view.mjs",
     "extension/history-window.mjs",
