@@ -798,7 +798,7 @@
     "server-plugin/population-service.mjs",
     "server-plugin/settlement-profile.mjs"
    ],
-   "lines": 2959,
+   "lines": 2960,
    "stateWrites": [
     "created",
     "family",
@@ -13984,7 +13984,7 @@
     "households"
    ],
    "worldDirs": [],
-   "lines": 194
+   "lines": 195
   },
   "server-plugin/npc-life.mjs": {
    "system": "sim_npc",
