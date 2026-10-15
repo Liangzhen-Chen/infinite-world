@@ -32,6 +32,7 @@ import {advanceNpcObligations,nextNpcObligationMinute}from'./npc-obligations.mjs
 import {advanceSocietyNews}from'./monster-society.mjs';
 import {advanceSeasonEffects}from'./effects.mjs';
 import {advanceOrganizations}from'./organizations.mjs';
+import {advanceQuestSources}from'./quest-sources.mjs';
 import {advanceHazardClocks}from'./seasonal-hazards.mjs';
 import {hazardClocks,hazardYieldFactor}from'./hazard-calendar.mjs';
 import {advanceBounties,nextBountyMinute,bountyActive}from'./bounty.mjs';
@@ -116,6 +117,8 @@ const systems=[
  {id:'faction_clock',order:1400,active:e=>factionClockRules(e).length>0,nextMinute:(e,d,now)=>nextFactionClockMinute(d.get('state'),now),
   advance:(e,d,{after})=>advanceFactionClocks(d,e,after)},
  {id:'organizations',order:1450,advance:(e,d,ctx)=>advanceOrganizations(d,e,ctx)},
+ // U17 quest sources: NPC needs, world-event records and effect-table commissions post to the board at midnight.
+ {id:'quest_sources',order:1460,advance:(e,d,ctx)=>advanceQuestSources(d,e,ctx)},
  {id:'society_news',order:1500,advance:(e,d,{after})=>advanceSocietyNews(d,e,after)},
  {id:'festival',order:1600,active:e=>festivalCalendar(e).length>0,nextMinute:(e,d,now)=>nextFestivalMinute(d.get('state'),e,now),
   advance:(e,d,{after})=>advanceFestivals(d,e,after)},

@@ -6432,5 +6432,197 @@
         ]
       }
     ]
+  },
+  "questSources": {
+    "version": 1,
+    "source": "U17 任务自动来源（指南3.10）：人物需求、世界事件订阅；势力委托走效果表 quest_post",
+    "limits": {
+      "perNpcByLevel": {
+        "0": 0,
+        "1": 1,
+        "2": 1,
+        "3": 2,
+        "4": 2,
+        "5": 3
+      },
+      "minUrgencyByLevel": {
+        "0": 4,
+        "1": 3,
+        "2": 2,
+        "3": 1,
+        "4": 1,
+        "5": 1
+      },
+      "perBoard": 6,
+      "perDay": 3,
+      "cooldownDays": 7,
+      "monthlyUnitsDPerBoard": 40
+    },
+    "publishers": {
+      "loc_hw": "npc_hw_chenbai"
+    },
+    "npcNeeds": [
+      {
+        "need": "food",
+        "grade": "D",
+        "reward": 40,
+        "days": 7,
+        "content": "{name}家断了口粮，求人送{quantity}份干粮来",
+        "objective": {
+          "type": "deliver",
+          "item": "item_ration",
+          "quantity": 5
+        }
+      },
+      {
+        "need": "medicine",
+        "grade": "D",
+        "reward": 30,
+        "days": 5,
+        "content": "{patient}病倒在床，{name}求人送{quantity}份药草来",
+        "objective": {
+          "type": "deliver",
+          "item": "item_herb",
+          "quantity": 3
+        }
+      },
+      {
+        "need": "repair",
+        "grade": "D",
+        "reward": 50,
+        "days": 10,
+        "below": 50,
+        "content": "{building}年久失修，{name}求人送{quantity}份木料修屋",
+        "objective": {
+          "type": "deliver",
+          "item": "item_wood",
+          "quantity": 6
+        }
+      },
+      {
+        "need": "escort",
+        "grade": "D",
+        "reward": 80,
+        "days": 5,
+        "content": "{name}近来遭了祸事，不敢独行，求人结伴护送去白石镇",
+        "objective": {
+          "type": "visit",
+          "location": "loc_bs"
+        }
+      },
+      {
+        "need": "missing",
+        "grade": "C",
+        "reward": 120,
+        "days": 15,
+        "content": "{person}下落不明，{name}求人去最后见到的地方寻人",
+        "objective": {
+          "type": "visit",
+          "location": "$place"
+        }
+      }
+    ],
+    "events": [
+      {
+        "id": "epidemic_care",
+        "label": "{board}村务·疫病",
+        "match": {
+          "category": "epidemic",
+          "status": "流行"
+        },
+        "board": "$origin",
+        "instance": "id",
+        "grade": "C",
+        "reward": 150,
+        "days": 10,
+        "content": "{board}疫病流行，村务求购药草十份救治病家",
+        "objective": {
+          "type": "deliver",
+          "item": "item_herb",
+          "quantity": 10
+        }
+      },
+      {
+        "id": "flood_levee",
+        "label": "{board}村务·汛情",
+        "match": {
+          "category": "hazard_flood"
+        },
+        "board": "$location",
+        "instance": "since",
+        "grade": "D",
+        "reward": 80,
+        "days": 7,
+        "content": "{place}受淹，村务求人送石料十份修堤",
+        "objective": {
+          "type": "deliver",
+          "item": "item_stone",
+          "quantity": 10
+        }
+      },
+      {
+        "id": "famine_grain",
+        "label": "{board}村务·冬荒",
+        "match": {
+          "category": "hazard_famine"
+        },
+        "board": "$settlement",
+        "instance": "since",
+        "grade": "C",
+        "reward": 200,
+        "days": 15,
+        "content": "{board}冬荒缺粮，村务求人运来干粮三十份",
+        "objective": {
+          "type": "deliver",
+          "item": "item_ration",
+          "quantity": 30
+        }
+      },
+      {
+        "id": "lair_drive",
+        "label": "{board}村务·驱赶",
+        "match": {
+          "category": "lair",
+          "status": "易主"
+        },
+        "board": "$lair",
+        "instance": "occupant.actor",
+        "grade": "C",
+        "reward": 150,
+        "days": 20,
+        "content": "{place}有野物占了旧巢，村务悬赏驱赶，巢穴空出即算办成",
+        "objective": {
+          "type": "record",
+          "record": "$key",
+          "field": "status",
+          "equals": [
+            "空置"
+          ]
+        }
+      },
+      {
+        "id": "motion_mediate",
+        "label": "{board}议事·调停",
+        "match": {
+          "category": "society_motion",
+          "status": "议事中"
+        },
+        "board": "$society",
+        "instance": "minute",
+        "grade": "D",
+        "reward": 60,
+        "days": 10,
+        "content": "{board}的议题久争不下，求人居中调停，议定即算办成",
+        "objective": {
+          "type": "record",
+          "record": "$key",
+          "field": "status",
+          "equals": [
+            "通过",
+            "否决"
+          ]
+        }
+      }
+    ]
   }
 }

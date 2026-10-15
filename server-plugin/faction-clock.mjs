@@ -80,6 +80,8 @@ export function spendFactionAssets(d,engine,id,cost,event){
  assertCost(engine,cost);const row=ensureAccount(d,engine,id);if(!affordable(row,cost))return false;
  changeAssets(d,engine,id,cost,-1,event);return true;
 }
+// U17: an unpaid commission's escrow goes back to the faction treasury.
+export function creditFactionAssets(d,engine,id,cost,event){assertCost(engine,cost);changeAssets(d,engine,id,cost,1,event);}
 export function initializeFactionClocks(d,engine,minute,end=minute){
  assertFactionClockRules(engine);
  for(const rule of factionClockRules(engine))if(!d.get(...clockPath(rule.id))){
