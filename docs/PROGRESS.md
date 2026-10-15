@@ -295,3 +295,5 @@ M2修复批审定写入PLAN（T61–T64）：Astra草案F4工具机会标注并�
 - 2026-10-15 K8 已合入：wildlife-habitats.mjs 按地形、群落、traits 派生栖地，168种按栖息地标签自动分布（规模=原种群×地点规模×稀有度），手工25栖地为覆盖项，捕食者随猎物扩散；派生在载入与 world_upgrade 时进行。合并后修正：聚落节点与T142远方据点误派生栖地（已排除），推进快照因T142/T105内容变化重生成。合后CORE等58项过。系统地图“仍需手动接线”只剩新工具。T143 已被告知在运行时生成地点后调用派生。
 
 - 2026-10-15 T143 已合入：remote-generation.mjs——玩家首到远方郡时按“战役种子+郡编号”生成骨架写入 state.remote（人类郡：治所、1–2镇、2–3村及住区、公所、客栈货栈铁铺祠堂；赭牙兽人大营部营矮洞石窝，砾耳兽裔穴与坡屋，杉根木精老林扎根处），进出重启导入一致，不写回 world；名册配额按S5到访展开；店铺、声望立场、事件、传闻、行政级别、路线自动接入，31郡相通；到达时K8派生栖地并登记种群；纲要关键人物为治所固定名册，首次交谈按S5起草。真实验证15次、已结算0.033元，DeepSeek 503/超时，远方关键人物与白石3人待补跑（node tools/population-live-check.mjs --live --remote-only）。合后CORE等58项过。world-validation 2项失败（首领 boss_b2_liya 数据），T142势力相关 population-publication、reputation-registry、world-social 失败，留回归卡。
+
+- 2026-10-15 U3 已合入：seasonal-hazards.mjs 与 hazard-calendar.mjs——汛期（按种子封路、洪水浸湿、减产）、疫病（户间与路线传染、自带病死率，可治疗、隔离、煮沸分水、祭祀干预）、冬荒（存粮不足90日告紧、45日成荒，涨价，口粮需求带迁居与偷盗动机）、物价波动；另建 hazardClock 表，旧四粮食时钟不变；干预走 world_settlement faction_inspect/faction_intervene。提示增量0。默认数据只配河湾与白石，其他地方待内容卡。合后CORE等67项过、发布构建通过。

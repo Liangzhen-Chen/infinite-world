@@ -78,7 +78,7 @@ review-002-yp=782a49e阶段审核通过，范围限T06正式发布与c64163d修�
 
 - U1 已完成。原文：（依赖K4，S-M）：创立或加入行会、帮派、商号；组织有成员、公库、章程、议事方式（会长定、投票、长老定）。新 organizations.mjs；activities.mjs 的 create(org)、governance.mjs、public-opinion.mjs。补 5.11 家户、行会、教会、帮派的群体决策。
 - U2 已完成。原文：（依赖K3、K4、K7，M）：借贷计息、钱庄存取与兑换（铸币成色、手续费）、通用租房住宿（不再只认一家）、玩家受雇打工、合伙；违约进入法律流程。contracts.mjs、engine.mjs 交易段、business.mjs:87、law.mjs、rules.economy。
-- U3 季节与灾害世界时钟（依赖K2、K6、K7，M）：汛期、冬荒、疫病流行（户间传染）、物价波动，分阶段可干预。rules.worldClock、world-clock.mjs、npc-life.mjs、settlement-trade.mjs。
+- U3 已完成。原文：（依赖K2、K6、K7，M）：汛期、冬荒、疫病流行（户间传染）、物价波动，分阶段可干预。rules.worldClock、world-clock.mjs、npc-life.mjs、settlement-trade.mjs。
 - U4 已完成。原文：（依赖K1、K3，M）：新 career-metrics.mjs 订阅世界事件统计长期行为，隐藏职业“契机”真正触发并可取得；地域、元素变异升职；终极技能；杰作、研究、实战三种突破；入职任务。professions.mjs、engine.mjs:491-508、world/design 职业数据。
 - U6 已完成。原文：（依赖K1、K3，M）：写作出版、技能书抄写（需原本与抄写员）、表演、测绘出图，形成有署名作品，带来收入、贡献、名望；技能融合实验。新 works.mjs；learning.mjs、manufacturing.mjs、civic.mjs。
 - U7 已完成。原文：（依赖K3，S-M）：等级决定计划长度与打破惯例程度；教导和共同经历使NPC成长并有可见迹象。npc-planning-service、npc-autonomy、npc-growth、scene-card。
