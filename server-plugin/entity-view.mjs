@@ -6,6 +6,7 @@ import {npcHousehold,npcAgeAt,npcSchedule,npcServices,activeRental,beginHousehol
 import {currentEmployment} from './employment-state.mjs';
 import {organizationState,memberOrganizations} from './organization-state.mjs';
 import {rankedOffice,adminLevel} from './promotion-view.mjs';
+import {upperOffice} from './noble-state.mjs';
 import {faithOf} from './faith-state.mjs';
 import {hiddenPassives} from './hidden-passives.mjs';
 
@@ -42,7 +43,7 @@ function currentHeadRow(state,settlement,remote){
 function officeFact(engine,state,key,row,override=true){
     const def=engine.rules.governance?.authority?.offices?.[row.office];
     if(!def)return fact({...row,powers:[],monthlyQuotaD:0,monthlyBudgetCopper:0,monthlySalaryCopper:0},`state.records.${key}`,true);
-    const ranked=rankedOffice(engine,state,row.settlement,def),gov=settlementGovernment(engine,state,row.settlement);
+    const ranked=upperOffice(engine,state,row,rankedOffice(engine,state,row.settlement,def)),gov=settlementGovernment(engine,state,row.settlement);
     const head=row.office==='office_village_head';
     const foundingName=!override&&!state.records?.[`settlement_rank:${row.settlement}`]?baseOf(engine,state,row.holder)?.occupation:null;
     return fact({...row,name:foundingName??ranked.name,monthlyQuotaD:ranked.monthlyQuotaD??0,monthlyBudgetCopper:override?ranked.monthlyBudgetCopper??0:0,
@@ -165,7 +166,7 @@ export function personQuestRights(engine,state,id,{cultural=false}={}){
     }
     for(const org of memberOrganizations(engine,state,id)){
         const position=org.members[id].position,q=engine.rules.governance?.organizationQuestQuotaD?.[position];
-        if(org.source!=='household'&&q!==undefined)sources.push(fact(q,`groupView.${org.id}.members.${id}.position + rules.governance.organizationQuestQuotaD`));
+        if(!['household','family'].includes(org.source)&&q!==undefined)sources.push(fact(q,`groupView.${org.id}.members.${id}.position + rules.governance.organizationQuestQuotaD`));
     }
     const actor=at(state,actorPath(engine.world,id).slice(1)),base=baseOf(engine,state,id),own=actor?.monthlyQuotaD??base?.monthlyQuotaD;
     const override=own!==undefined?fact(own,actor?.monthlyQuotaD!==undefined?`state.${actorPath(engine.world,id).slice(1).join('.')}.monthlyQuotaD`:`catalog.${id}.monthlyQuotaD`,true):null;

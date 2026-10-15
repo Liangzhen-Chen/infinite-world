@@ -18,8 +18,8 @@
  "counts": {
   "layers": 6,
   "systems": 40,
-  "modules": 212,
-  "advance": 54,
+  "modules": 215,
+  "advance": 57,
   "tools": 25,
   "verbs": 28,
   "subscribers": 9,
@@ -396,7 +396,7 @@
     "sim_society",
     "ui_scene"
    ],
-   "files": 11
+   "files": 12
   },
   {
    "id": "data_design",
@@ -425,7 +425,7 @@
     "sim_society",
     "sim_transport"
    ],
-   "files": 116
+   "files": 117
   },
   {
    "id": "data_assets",
@@ -467,7 +467,7 @@
    "effects": [],
    "tools": [],
    "readBy": [],
-   "files": 40
+   "files": 41
   },
   {
    "id": "kernel_engine",
@@ -481,7 +481,7 @@
     "server-plugin/campaign-reducer.mjs",
     "server-plugin/archived-reducer.mjs"
    ],
-   "lines": 1030,
+   "lines": 1037,
    "stateWrites": [
     "combatDisengaged",
     "created",
@@ -780,7 +780,7 @@
     "server-plugin/standing.mjs",
     "server-plugin/entity-view.mjs"
    ],
-   "lines": 609,
+   "lines": 610,
    "stateWrites": [
     "records"
    ],
@@ -917,7 +917,7 @@
     "server-plugin/advance-registry.mjs",
     "server-plugin/advance-layers.mjs"
    ],
-   "lines": 259,
+   "lines": 264,
    "stateWrites": [
     "effects",
     "obligations",
@@ -1673,7 +1673,7 @@
     "server-plugin/extraction.mjs",
     "server-plugin/smuggling.mjs"
    ],
-   "lines": 2831,
+   "lines": 2840,
    "stateWrites": [
     "crafted",
     "itemInstances",
@@ -1706,6 +1706,7 @@
    ],
    "recordReads": [
     "bank",
+    "domain-tax",
     "levy",
     "magic-economy",
     "organization",
@@ -1844,6 +1845,9 @@
     "server-plugin/facilities.mjs",
     "server-plugin/facility-state.mjs",
     "server-plugin/titles.mjs",
+    "server-plugin/noble-state.mjs",
+    "server-plugin/high-nobility.mjs",
+    "server-plugin/nation-founding.mjs",
     "server-plugin/notables.mjs",
     "server-plugin/promotion.mjs",
     "server-plugin/promotion-view.mjs",
@@ -1853,7 +1857,7 @@
     "server-plugin/tribal-awakening.mjs",
     "server-plugin/elections.mjs"
    ],
-   "lines": 4330,
+   "lines": 4742,
    "stateWrites": [
     "buildings",
     "created",
@@ -1891,12 +1895,17 @@
    "recordReads": [
     "civic_citizen",
     "civic_resident",
+    "diplomacy",
     "facility_region",
     "faction-assets",
     "family",
+    "military_service",
+    "nation",
     "society_motion",
     "stance",
     "temple",
+    "territory",
+    "title",
     "village-fiscal",
     "war"
    ],
@@ -1913,6 +1922,7 @@
     "reputation",
     "training",
     "tribalAwakening",
+    "warDiplomacy",
     "wildlife",
     "wildlifeAwakening"
    ],
@@ -1925,6 +1935,7 @@
     "locations",
     "monsters",
     "npcs",
+    "regions",
     "residents",
     "routes",
     "rules",
@@ -1937,12 +1948,15 @@
     "office_salaries",
     "governance_offices",
     "housing_steward",
+    "upper_appointments",
     "titles",
     "notables",
     "promotion",
     "organizations",
     "tribal_awakening",
     "quest_sources",
+    "royal_service",
+    "nations",
     "society_news"
    ],
    "subscribes": [
@@ -1980,7 +1994,7 @@
     "server-plugin/military.mjs",
     "server-plugin/war-diplomacy.mjs"
    ],
-   "lines": 666,
+   "lines": 676,
    "stateWrites": [
     "npcs",
     "player",
@@ -2137,7 +2151,7 @@
     "server-plugin/npc-crime.mjs",
     "server-plugin/bounty.mjs"
    ],
-   "lines": 1170,
+   "lines": 1182,
    "stateWrites": [
     "itemInstances",
     "location",
@@ -2237,7 +2251,7 @@
    "modules": [
     "extension/tools.mjs"
    ],
-   "lines": 121,
+   "lines": 124,
    "stateWrites": [],
    "stateReads": [],
    "recordWrites": [],
@@ -2683,6 +2697,7 @@
     "facilities",
     "governance_offices",
     "housing_steward",
+    "nations",
     "notables",
     "office_salaries",
     "organizations",
@@ -2690,9 +2705,11 @@
     "promotion",
     "public_projects",
     "quest_sources",
+    "royal_service",
     "society_news",
     "titles",
-    "tribal_awakening"
+    "tribal_awakening",
+    "upper_appointments"
    ]
   },
   {
@@ -2854,7 +2871,9 @@
    "labels": [
     "facilities.mjs",
     "governance.mjs",
+    "high-nobility.mjs",
     "monster-society.mjs",
+    "nation-founding.mjs",
     "notables.mjs",
     "office-salary.mjs",
     "organizations.mjs",
@@ -3080,6 +3099,7 @@
    "labels": [
     "facility-state.mjs",
     "monster-society.mjs",
+    "noble-state.mjs",
     "organization-state.mjs",
     "promotion-view.mjs",
     "reputation-registry.mjs"
@@ -3316,7 +3336,10 @@
     "facility-state.mjs",
     "family-politics.mjs",
     "governance.mjs",
+    "high-nobility.mjs",
     "monster-society.mjs",
+    "nation-founding.mjs",
+    "noble-state.mjs",
     "notables.mjs",
     "organizations.mjs",
     "promotion.mjs",
@@ -4014,6 +4037,8 @@
    "labels": [
     "facility-state.mjs",
     "group-account.mjs",
+    "high-nobility.mjs",
+    "noble-state.mjs",
     "organizations.mjs",
     "promotion-view.mjs",
     "promotion.mjs",
@@ -4294,6 +4319,7 @@
    "kind": "call",
    "labels": [
     "family-law.mjs",
+    "noble-state.mjs",
     "organizations.mjs",
     "promotion-view.mjs",
     "reputation.mjs"
@@ -4507,6 +4533,8 @@
    "labels": [
     "facilities.mjs",
     "governance.mjs",
+    "group-account.mjs",
+    "nation-founding.mjs",
     "organizations.mjs",
     "titles.mjs",
     "tribal-awakening.mjs"
@@ -4739,6 +4767,7 @@
    "kind": "call",
    "labels": [
     "employment-state.mjs",
+    "finance-tax.mjs",
     "items.mjs",
     "labor-market.mjs"
    ]
@@ -4748,6 +4777,7 @@
    "to": "sim_environment",
    "kind": "call",
    "labels": [
+    "regions.mjs",
     "remote-generation.mjs",
     "weather.mjs"
    ]
@@ -4775,7 +4805,8 @@
    "to": "sim_military",
    "kind": "call",
    "labels": [
-    "military.mjs"
+    "military.mjs",
+    "war-diplomacy.mjs"
    ]
   },
   {
@@ -6991,6 +7022,17 @@
    "partitions": []
   },
   {
+   "id": "upper_appointments",
+   "order": 1138,
+   "stepped": false,
+   "nextMinute": false,
+   "modules": [
+    "server-plugin/high-nobility.mjs"
+   ],
+   "inline": false,
+   "partitions": []
+  },
+  {
    "id": "titles",
    "order": 1140,
    "stepped": false,
@@ -7174,6 +7216,28 @@
    "nextMinute": false,
    "modules": [
     "server-plugin/quest-sources.mjs"
+   ],
+   "inline": false,
+   "partitions": []
+  },
+  {
+   "id": "royal_service",
+   "order": 1462,
+   "stepped": false,
+   "nextMinute": false,
+   "modules": [
+    "server-plugin/high-nobility.mjs"
+   ],
+   "inline": false,
+   "partitions": []
+  },
+  {
+   "id": "nations",
+   "order": 1464,
+   "stepped": false,
+   "nextMinute": false,
+   "modules": [
+    "server-plugin/nation-founding.mjs"
    ],
    "inline": false,
    "partitions": []
@@ -7544,6 +7608,7 @@
     "server-plugin/family-inheritance.mjs",
     "server-plugin/family-politics.mjs",
     "server-plugin/governance.mjs",
+    "server-plugin/high-nobility.mjs",
     "server-plugin/public-projects.mjs"
    ],
    "author": [
@@ -7575,6 +7640,7 @@
    ],
    "dismiss": [
     "server-plugin/governance.mjs",
+    "server-plugin/high-nobility.mjs",
     "server-plugin/law.mjs",
     "server-plugin/public-projects.mjs"
    ],
@@ -7593,6 +7659,7 @@
     "server-plugin/seasonal-hazards.mjs"
    ],
    "help": [
+    "server-plugin/high-nobility.mjs",
     "server-plugin/seasonal-hazards.mjs",
     "server-plugin/world-events.mjs"
    ],
@@ -8682,6 +8749,7 @@
    "server-plugin/finance-assets.mjs",
    "server-plugin/finance-bank.mjs",
    "server-plugin/governance.mjs",
+   "server-plugin/high-nobility.mjs",
    "server-plugin/labor-market.mjs",
    "server-plugin/law-codes.mjs",
    "server-plugin/lies.mjs",
@@ -8689,6 +8757,7 @@
    "server-plugin/magic-economy.mjs",
    "server-plugin/military.mjs",
    "server-plugin/monster-society.mjs",
+   "server-plugin/nation-founding.mjs",
    "server-plugin/notables.mjs",
    "server-plugin/npc-crime.mjs",
    "server-plugin/organizations.mjs",
@@ -9424,6 +9493,12 @@
     "faith_use",
     "faith_rite",
     "faith_pilgrim",
+    "nation_inspect",
+    "nation",
+    "domain_inspect",
+    "domain_appoint",
+    "domain_steward",
+    "domain_request",
     "war_inspect",
     "war_join",
     "diplomacy",
@@ -9507,6 +9582,12 @@
       "faith_use",
       "faith_rite",
       "faith_pilgrim",
+      "nation_inspect",
+      "nation",
+      "domain_inspect",
+      "domain_appoint",
+      "domain_steward",
+      "domain_request",
       "war_inspect",
       "war_join",
       "diplomacy",
@@ -9539,7 +9620,10 @@
       "server-plugin/family-politics.mjs",
       "server-plugin/festival.mjs",
       "server-plugin/governance.mjs",
+      "server-plugin/high-nobility.mjs",
       "server-plugin/military.mjs",
+      "server-plugin/nation-founding.mjs",
+      "server-plugin/noble-state.mjs",
       "server-plugin/notables.mjs",
       "server-plugin/organizations.mjs",
       "server-plugin/promotion.mjs",
@@ -10091,7 +10175,7 @@
   },
   {
    "dir": "world/design",
-   "files": 116,
+   "files": 117,
    "keys": [],
    "readers": [
     "server-plugin/civic.mjs",
@@ -10164,6 +10248,7 @@
     "tools/t142-merge.mjs",
     "tools/t142-provinces-content.mjs",
     "tools/t155-wildlife-content.mjs",
+    "tools/u16-sovereignty-content.mjs",
     "tools/w1-baishi.mjs",
     "tools/w1-hewan.mjs",
     "tools/w1-village-profiles-content.mjs",
@@ -10207,7 +10292,7 @@
   },
   {
    "dir": "world/drafts",
-   "files": 40,
+   "files": 41,
    "keys": [],
    "readers": [],
    "tools": [
@@ -10259,6 +10344,7 @@
     "tools/system-map.mjs",
     "tools/t142-provinces-content.mjs",
     "tools/t155-wildlife-content.mjs",
+    "tools/u16-sovereignty-content.mjs",
     "tools/w1-baishi.mjs",
     "tools/w1-hewan-l4.mjs",
     "tools/w1-hewan-review.mjs",
@@ -10335,6 +10421,7 @@
     "server-plugin/festival.mjs",
     "server-plugin/finance-tax.mjs",
     "server-plugin/governance.mjs",
+    "server-plugin/high-nobility.mjs",
     "server-plugin/law-codes.mjs",
     "server-plugin/local-exams.mjs",
     "server-plugin/magic-air.mjs",
@@ -10346,6 +10433,8 @@
     "server-plugin/manufacturing.mjs",
     "server-plugin/military.mjs",
     "server-plugin/monster-society.mjs",
+    "server-plugin/nation-founding.mjs",
+    "server-plugin/noble-state.mjs",
     "server-plugin/notables.mjs",
     "server-plugin/npc-growth.mjs",
     "server-plugin/npc-life.mjs",
@@ -10419,7 +10508,7 @@
   },
   {
    "dir": "world/lore",
-   "files": 11,
+   "files": 12,
    "keys": [
     "cultures",
     "deities",
@@ -10444,6 +10533,7 @@
     "server-plugin/group-account.mjs",
     "server-plugin/military.mjs",
     "server-plugin/monster-society.mjs",
+    "server-plugin/nation-founding.mjs",
     "server-plugin/notables.mjs",
     "server-plugin/npc-rumors.mjs",
     "server-plugin/organization-state.mjs",
@@ -10468,6 +10558,7 @@
     "tools/rw09-family-content.mjs",
     "tools/system-map.mjs",
     "tools/t142-merge.mjs",
+    "tools/u16-sovereignty-content.mjs",
     "tools/w5-clock-publication.mjs",
     "tools/w5-content.mjs",
     "tools/w5-festival-publication.mjs",
@@ -10535,6 +10626,7 @@
     "server-plugin/governance.mjs",
     "server-plugin/hazard-calendar.mjs",
     "server-plugin/hidden-passives.mjs",
+    "server-plugin/high-nobility.mjs",
     "server-plugin/items.mjs",
     "server-plugin/labor-market.mjs",
     "server-plugin/law-codes.mjs",
@@ -10554,6 +10646,8 @@
     "server-plugin/migrations/r1.mjs",
     "server-plugin/military.mjs",
     "server-plugin/monster-society.mjs",
+    "server-plugin/nation-founding.mjs",
+    "server-plugin/noble-state.mjs",
     "server-plugin/notables.mjs",
     "server-plugin/npc-autonomy.mjs",
     "server-plugin/npc-crime.mjs",
@@ -10661,6 +10755,7 @@
     "tools/system-map.mjs",
     "tools/t142-provinces-content.mjs",
     "tools/t155-wildlife-content.mjs",
+    "tools/u16-sovereignty-content.mjs",
     "tools/validate-world.mjs",
     "tools/w1-baishi.mjs",
     "tools/w1-hewan-content.mjs",
@@ -10713,6 +10808,7 @@
     "server-plugin/family-state.mjs",
     "server-plugin/festival.mjs",
     "server-plugin/governance.mjs",
+    "server-plugin/high-nobility.mjs",
     "server-plugin/labor-market.mjs",
     "server-plugin/law-codes.mjs",
     "server-plugin/military.mjs",
@@ -10860,6 +10956,7 @@
   "quests": [
    "server-plugin/bounty.mjs",
    "server-plugin/compat/v2-phase1-activities.mjs",
+   "server-plugin/noble-state.mjs",
    "server-plugin/promotion-view.mjs",
    "server-plugin/quest-board.mjs",
    "server-plugin/quest-sources.mjs",
@@ -10899,11 +10996,15 @@
    "server-plugin/elections.mjs",
    "server-plugin/entity-view.mjs",
    "server-plugin/governance.mjs",
+   "server-plugin/high-nobility.mjs",
    "server-plugin/local-exams.mjs",
+   "server-plugin/nation-founding.mjs",
+   "server-plugin/noble-state.mjs",
    "server-plugin/notables.mjs",
    "server-plugin/office-salary.mjs",
    "server-plugin/promotion-view.mjs",
    "server-plugin/promotion.mjs",
+   "server-plugin/quest-sources.mjs",
    "server-plugin/remote-generation.mjs",
    "server-plugin/titles.mjs"
   ],
@@ -11093,6 +11194,7 @@
   ],
   "warDiplomacy": [
    "server-plugin/engine.mjs",
+   "server-plugin/nation-founding.mjs",
    "server-plugin/war-diplomacy.mjs"
   ],
   "extraction": [
@@ -12128,6 +12230,7 @@
       "server-plugin/magic-economy.mjs",
       "server-plugin/military.mjs",
       "server-plugin/monster-society.mjs",
+      "server-plugin/noble-state.mjs",
       "server-plugin/notables.mjs",
       "server-plugin/npc-life.mjs",
       "server-plugin/organizations.mjs",
@@ -12256,7 +12359,9 @@
       "server-plugin/boss-negotiation.mjs",
       "server-plugin/entity-view.mjs",
       "server-plugin/governance.mjs",
+      "server-plugin/high-nobility.mjs",
       "server-plugin/monster-society.mjs",
+      "server-plugin/noble-state.mjs",
       "server-plugin/organization-state.mjs",
       "server-plugin/public-opinion.mjs",
       "server-plugin/reputation-catalog.mjs",
@@ -12879,6 +12984,7 @@
       "server-plugin/finance-tax.mjs",
       "server-plugin/governance.mjs",
       "server-plugin/hazard-calendar.mjs",
+      "server-plugin/high-nobility.mjs",
       "server-plugin/labor-market.mjs",
       "server-plugin/law-codes.mjs",
       "server-plugin/law.mjs",
@@ -12888,6 +12994,8 @@
       "server-plugin/magic-growth.mjs",
       "server-plugin/military.mjs",
       "server-plugin/monster-society.mjs",
+      "server-plugin/nation-founding.mjs",
+      "server-plugin/noble-state.mjs",
       "server-plugin/npc-intelligence.mjs",
       "server-plugin/npc-life.mjs",
       "server-plugin/npc-state.mjs",
@@ -13011,6 +13119,7 @@
      "means": "自主行动计划",
      "pattern": "\\.goals\\b|redLines",
      "modules": [
+      "server-plugin/nation-founding.mjs",
       "server-plugin/npc-autonomy.mjs",
       "server-plugin/npc-intelligence.mjs",
       "server-plugin/npc-memory.mjs",
@@ -13018,6 +13127,7 @@
      ],
      "systems": [
       "sim_npc",
+      "sim_society",
       "ui_scene"
      ]
     },
@@ -13812,6 +13922,7 @@
       "server-plugin/labor-market.mjs",
       "server-plugin/military.mjs",
       "server-plugin/monster-society.mjs",
+      "server-plugin/nation-founding.mjs",
       "server-plugin/organization-state.mjs",
       "server-plugin/organizations.mjs",
       "server-plugin/public-opinion.mjs",
@@ -13843,6 +13954,7 @@
       "server-plugin/finance-bank.mjs",
       "server-plugin/labor-market.mjs",
       "server-plugin/military.mjs",
+      "server-plugin/nation-founding.mjs",
       "server-plugin/notables.mjs",
       "server-plugin/organization-state.mjs",
       "server-plugin/organizations.mjs",
@@ -14029,6 +14141,8 @@
       "server-plugin/catalog.mjs",
       "server-plugin/finance-tax.mjs",
       "server-plugin/law-codes.mjs",
+      "server-plugin/nation-founding.mjs",
+      "server-plugin/noble-state.mjs",
       "server-plugin/regions.mjs",
       "server-plugin/ui-map.mjs",
       "server-plugin/war-diplomacy.mjs"
@@ -14039,6 +14153,7 @@
       "sim_environment",
       "sim_law",
       "sim_military",
+      "sim_society",
       "ui_server"
      ]
     },
@@ -14078,6 +14193,7 @@
     "sim_environment",
     "sim_law",
     "sim_military",
+    "sim_society",
     "ui_server"
    ],
    "manual": [],
@@ -14435,6 +14551,7 @@
     "server-plugin/festival.mjs",
     "server-plugin/governance.mjs",
     "server-plugin/hidden-passives.mjs",
+    "server-plugin/high-nobility.mjs",
     "server-plugin/items.mjs",
     "server-plugin/law.mjs",
     "server-plugin/magic-air.mjs",
@@ -14445,6 +14562,8 @@
     "server-plugin/magic-water-earth.mjs",
     "server-plugin/manufacturing.mjs",
     "server-plugin/military.mjs",
+    "server-plugin/nation-founding.mjs",
+    "server-plugin/noble-state.mjs",
     "server-plugin/notables.mjs",
     "server-plugin/npc-life.mjs",
     "server-plugin/organizations.mjs",
@@ -14492,7 +14611,7 @@
    ],
    "world": [],
    "worldDirs": [],
-   "lines": 255
+   "lines": 261
   },
   "server-plugin/advance-layers.mjs": {
    "system": "base_advance",
@@ -14535,6 +14654,7 @@
     "server-plugin/festival.mjs",
     "server-plugin/governance.mjs",
     "server-plugin/hazard-calendar.mjs",
+    "server-plugin/high-nobility.mjs",
     "server-plugin/labor-market.mjs",
     "server-plugin/law.mjs",
     "server-plugin/magic-air.mjs",
@@ -14546,6 +14666,7 @@
     "server-plugin/magic-water-earth.mjs",
     "server-plugin/military.mjs",
     "server-plugin/monster-society.mjs",
+    "server-plugin/nation-founding.mjs",
     "server-plugin/notables.mjs",
     "server-plugin/npc-autonomy.mjs",
     "server-plugin/npc-cognition.mjs",
@@ -14599,7 +14720,7 @@
     "npcs"
    ],
    "worldDirs": [],
-   "lines": 197
+   "lines": 202
   },
   "server-plugin/agriculture-migration.mjs": {
    "system": "kernel_storage",
@@ -15610,7 +15731,7 @@
     "spells"
    ],
    "worldDirs": [],
-   "lines": 737
+   "lines": 738
   },
   "server-plugin/entity-transitions.mjs": {
    "system": "base_events",
@@ -15637,6 +15758,7 @@
     "server-plugin/facility-state.mjs",
     "server-plugin/faith-state.mjs",
     "server-plugin/hidden-passives.mjs",
+    "server-plugin/noble-state.mjs",
     "server-plugin/npc-state.mjs",
     "server-plugin/organization-state.mjs",
     "server-plugin/promotion-view.mjs"
@@ -15684,7 +15806,7 @@
     "settlementProfiles"
    ],
    "worldDirs": [],
-   "lines": 459
+   "lines": 460
   },
   "server-plugin/environment.mjs": {
    "system": "sim_environment",
@@ -16219,6 +16341,7 @@
    "imports": [
     "server-plugin/entity-view.mjs",
     "server-plugin/group-account.mjs",
+    "server-plugin/noble-state.mjs",
     "server-plugin/promotion-view.mjs",
     "server-plugin/regions.mjs",
     "server-plugin/traits.mjs"
@@ -16233,6 +16356,7 @@
    ],
    "recordWrites": [],
    "recordReads": [
+    "domain-tax",
     "territory"
    ],
    "rules": [
@@ -16245,7 +16369,7 @@
     "settlementProfiles"
    ],
    "worldDirs": [],
-   "lines": 55
+   "lines": 58
   },
   "server-plugin/governance.mjs": {
    "system": "sim_society",
@@ -16253,8 +16377,10 @@
     "server-plugin/civic.mjs",
     "server-plugin/entity-transitions.mjs",
     "server-plugin/entity-view.mjs",
+    "server-plugin/high-nobility.mjs",
     "server-plugin/local-exams.mjs",
     "server-plugin/monster-society.mjs",
+    "server-plugin/noble-state.mjs",
     "server-plugin/npc-cognition.mjs",
     "server-plugin/npc-life.mjs",
     "server-plugin/npc-obligations.mjs",
@@ -16293,7 +16419,7 @@
     "settlementProfiles"
    ],
    "worldDirs": [],
-   "lines": 415
+   "lines": 418
   },
   "server-plugin/group-account.mjs": {
    "system": "sim_society",
@@ -16309,6 +16435,7 @@
    "recordWrites": [],
    "recordReads": [
     "faction-assets",
+    "nation",
     "organization",
     "temple"
    ],
@@ -16362,6 +16489,41 @@
    "world": [],
    "worldDirs": [],
    "lines": 130
+  },
+  "server-plugin/high-nobility.mjs": {
+   "system": "sim_society",
+   "imports": [
+    "server-plugin/employment-state.mjs",
+    "server-plugin/entity-transitions.mjs",
+    "server-plugin/entity-view.mjs",
+    "server-plugin/finance-tax.mjs",
+    "server-plugin/military.mjs",
+    "server-plugin/noble-state.mjs",
+    "server-plugin/npc-life.mjs",
+    "server-plugin/public-projects.mjs",
+    "server-plugin/quest-sources.mjs",
+    "server-plugin/standing.mjs"
+   ],
+   "stateWrites": [],
+   "stateReads": [
+    "minute",
+    "quests",
+    "records"
+   ],
+   "recordWrites": [],
+   "recordReads": [
+    "military_service"
+   ],
+   "rules": [
+    "governance"
+   ],
+   "world": [
+    "npcs",
+    "regions",
+    "settlementProfiles"
+   ],
+   "worldDirs": [],
+   "lines": 129
   },
   "server-plugin/index.mjs": {
    "system": "ui_server",
@@ -16453,8 +16615,10 @@
     "server-plugin/finance-assets.mjs",
     "server-plugin/finance-bank.mjs",
     "server-plugin/group-account.mjs",
+    "server-plugin/high-nobility.mjs",
     "server-plugin/items.mjs",
     "server-plugin/law.mjs",
+    "server-plugin/noble-state.mjs",
     "server-plugin/npc-intelligence.mjs",
     "server-plugin/shop.mjs",
     "server-plugin/standing.mjs"
@@ -16482,12 +16646,13 @@
     "recipes"
    ],
    "worldDirs": [],
-   "lines": 320
+   "lines": 326
   },
   "server-plugin/law-codes.mjs": {
    "system": "sim_law",
    "imports": [
     "server-plugin/entity-view.mjs",
+    "server-plugin/noble-state.mjs",
     "server-plugin/promotion-view.mjs",
     "server-plugin/regions.mjs",
     "server-plugin/standing.mjs"
@@ -16515,7 +16680,7 @@
     "settlementProfiles"
    ],
    "worldDirs": [],
-   "lines": 79
+   "lines": 91
   },
   "server-plugin/law.mjs": {
    "system": "sim_law",
@@ -17409,6 +17574,7 @@
     "server-plugin/credit.mjs",
     "server-plugin/faction-clock.mjs",
     "server-plugin/governance.mjs",
+    "server-plugin/group-account.mjs",
     "server-plugin/hazard-calendar.mjs",
     "server-plugin/npc-life.mjs",
     "server-plugin/organizations.mjs",
@@ -17448,7 +17614,7 @@
     "rules"
    ],
    "worldDirs": [],
-   "lines": 482
+   "lines": 489
   },
   "server-plugin/monster-society.mjs": {
    "system": "sim_society",
@@ -17484,6 +17650,67 @@
    ],
    "worldDirs": [],
    "lines": 420
+  },
+  "server-plugin/nation-founding.mjs": {
+   "system": "sim_society",
+   "imports": [
+    "server-plugin/entity-transitions.mjs",
+    "server-plugin/entity-view.mjs",
+    "server-plugin/group-account.mjs",
+    "server-plugin/law-codes.mjs",
+    "server-plugin/military.mjs",
+    "server-plugin/noble-state.mjs",
+    "server-plugin/regions.mjs",
+    "server-plugin/standing.mjs",
+    "server-plugin/war-diplomacy.mjs"
+   ],
+   "stateWrites": [],
+   "stateReads": [
+    "minute",
+    "records",
+    "settlements"
+   ],
+   "recordWrites": [],
+   "recordReads": [
+    "diplomacy",
+    "nation",
+    "organization",
+    "title"
+   ],
+   "rules": [
+    "governance",
+    "warDiplomacy"
+   ],
+   "world": [
+    "factions",
+    "locations",
+    "regions"
+   ],
+   "worldDirs": [],
+   "lines": 153
+  },
+  "server-plugin/noble-state.mjs": {
+   "system": "sim_society",
+   "imports": [
+    "server-plugin/promotion-view.mjs",
+    "server-plugin/regions.mjs"
+   ],
+   "stateWrites": [],
+   "stateReads": [],
+   "recordWrites": [],
+   "recordReads": [
+    "territory"
+   ],
+   "rules": [
+    "governance",
+    "quests"
+   ],
+   "world": [
+    "regions",
+    "settlementProfiles"
+   ],
+   "worldDirs": [],
+   "lines": 94
   },
   "server-plugin/notables.mjs": {
    "system": "sim_society",
@@ -18328,7 +18555,7 @@
    "rules": [],
    "world": [],
    "worldDirs": [],
-   "lines": 262
+   "lines": 269
   },
   "server-plugin/quest-board.mjs": {
    "system": "sim_society",
@@ -18404,6 +18631,7 @@
     "war"
    ],
    "rules": [
+    "governance",
     "questSources",
     "quests",
     "wildlife"
@@ -18418,7 +18646,7 @@
     "rules"
    ],
    "worldDirs": [],
-   "lines": 378
+   "lines": 386
   },
   "server-plugin/quest-wildlife.mjs": {
    "system": "sim_society",
@@ -19160,7 +19388,9 @@
    "imports": [
     "server-plugin/entity-view.mjs",
     "server-plugin/governance.mjs",
+    "server-plugin/high-nobility.mjs",
     "server-plugin/military.mjs",
+    "server-plugin/noble-state.mjs",
     "server-plugin/npc-state.mjs"
    ],
    "stateWrites": [
@@ -19186,7 +19416,7 @@
     "npcs"
    ],
    "worldDirs": [],
-   "lines": 145
+   "lines": 163
   },
   "server-plugin/training.mjs": {
    "system": "sim_character",
@@ -19510,6 +19740,7 @@
     "server-plugin/effects.mjs",
     "server-plugin/facilities.mjs",
     "server-plugin/military.mjs",
+    "server-plugin/nation-founding.mjs",
     "server-plugin/regions.mjs",
     "server-plugin/settlement-trade.mjs",
     "server-plugin/standing.mjs",
@@ -19549,7 +19780,7 @@
     "rules"
    ],
    "worldDirs": [],
-   "lines": 184
+   "lines": 187
   },
   "server-plugin/weather.mjs": {
    "system": "sim_environment",
@@ -20270,7 +20501,7 @@
    "rules": [],
    "world": [],
    "worldDirs": [],
-   "lines": 121
+   "lines": 124
   },
   "extension/topbar.mjs": {
    "system": "ui_client",

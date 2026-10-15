@@ -1,3 +1,4 @@
+import {nationAt,currentDomains,containsDomain} from './noble-state.mjs';
 import {placeSettlement,settlementGovernment} from './entity-view.mjs';
 import {adminLevel} from './promotion-view.mjs';
 import {rulerOf,regionOf} from './regions.mjs';
@@ -13,8 +14,10 @@ export function tradeTax(e,state,location,kind='commercial'){
     const current=controller&&e.world.factions?.find(f=>f.id===controller);
     const polity=current?.kind??rulerOf(e.world,location)?.polity??'',council=!controller&&e.world.settlementProfiles?.find(p=>p.id===sid)?.council;
     const regime=/部|帐|兽/.test(polity)?'tribal':/联|盟|议|城邦/.test(polity)||council?'council':'kingdom';
+    const nation=nationAt(e,state,location),local=state.records?.[`domain-tax:${sid}`];
+    const explicit=nation?.taxes?.[kind]??(local&&currentDomains(e,state,local.holder).some(d=>containsDomain(e,state,d,sid))?local.bps:null);
     const rank=adminLevel(e,state,sid)?.level??'村',basis=r.regimes[regime][kind]??0;
-    return {settlement:sid,bps:basis+(r.levelBps[rank]??0),kind,regime,level:rank};
+    return {settlement:sid,bps:explicit??basis+(r.levelBps[rank]??0),kind,regime,level:rank};
 }
 export function assessTradeTax(d,e,{seller,cost,location,sourceEvent,kind='commercial'}){
     const tax=tradeTax(e,d.get('state'),location,kind),amount=Math.floor(cost*tax.bps/10000);

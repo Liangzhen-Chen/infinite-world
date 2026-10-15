@@ -6,7 +6,7 @@ const amount=l=>l.amount??l.coins??0;
 const signature=l=>l.sourceEvent?JSON.stringify([l.sourceEvent,amount(l)]):null;
 export function groupAccountView(engine,state,id){
     if(state.settlements?.[id])return {category:'settlement_account',settlement:id,coins:state.settlements[id].treasury??0,ledger:state.settlements[id].treasuryLedger??[]};
-    const f=engine.world.factions?.find(f=>f.id===id)??(String(id).startsWith('temple:')&&templeById(engine,id)?.source==='temple'?{id,resources:{treasuryCopper:0,items:{}}}:null);if(!f)return null;
+    const f=engine.world.factions?.find(f=>f.id===id)??(state.records?.[`nation:${id}`]?{id,resources:{treasuryCopper:0,items:{}}}:null)??(String(id).startsWith('temple:')&&templeById(engine,id)?.source==='temple'?{id,resources:{treasuryCopper:0,items:{}}}:null);if(!f)return null;
     const row=state.records?.[`organization:${id}`],prior=state.records?.[`faction-assets:${id}`],base=f.resources?.treasuryCopper??0;
     if(prior&&prior.category!=='faction_assets')throw Error('势力资产记录冲突');
     let delta=0,overlap=0,unverified=0;
