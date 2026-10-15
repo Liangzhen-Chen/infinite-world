@@ -1,0 +1,47 @@
+{
+  "$id": "pack-manifest.schema.json",
+  "title": "内容包清单 manifest.json（format 1 草案，12 §12.2.2；S0 只建 schema，加载器在后续阶段实现）",
+  "type": "object",
+  "required": ["format", "id", "name", "version", "license", "contentLicense", "engine", "contract", "vocabulary", "trust", "provides", "prompt"],
+  "properties": {
+    "$schema": {"type": "string"},
+    "format": {"const": 1},
+    "id": {"type": "string", "pattern": "^[a-z][a-z0-9-]{1,31}$", "not": {"enum": ["core", "world", "engine", "src", "sink", "player"]}},
+    "name": {"type": "string", "minLength": 1},
+    "version": {"type": "string", "pattern": "^\\d+\\.\\d+\\.\\d+(?:[-+][\\w.]+)?$"},
+    "summary": {"type": "string"},
+    "authors": {"type": "array", "items": {"type": "object", "required": ["name"], "properties": {"name": {"type": "string"}, "contact": {"type": "string"}}, "additionalProperties": false}},
+    "license": {"type": "string", "minLength": 1},
+    "contentLicense": {"type": "string", "minLength": 1},
+    "homepage": {"type": "string"},
+    "engine": {"type": "string", "minLength": 1},
+    "contract": {"type": "string", "minLength": 1},
+    "vocabulary": {"type": "string", "minLength": 1},
+    "trust": {"enum": ["data", "native"]},
+    "dependencies": {"type": "object", "additionalProperties": {"type": "string"}},
+    "optionalDependencies": {"type": "object", "additionalProperties": {"type": "string"}},
+    "suggests": {"type": "array", "items": {"type": "string"}},
+    "conflicts": {"type": "array", "items": {"type": "string"}},
+    "overrides": {"type": "array", "items": {"type": "string"}},
+    "provides": {
+      "type": "object",
+      "properties": {
+        "kinds": {"type": "array", "items": {"type": "string"}},
+        "holdings": {"type": "array", "items": {"type": "string"}},
+        "obligations": {"type": "array", "items": {"type": "string"}},
+        "resources": {"type": "array", "items": {"type": "string"}},
+        "statuses": {"type": "array", "items": {"type": "string"}},
+        "places": {"type": "boolean"}, "entities": {"type": "boolean"}, "law": {"type": "boolean"},
+        "rules": {"type": "array", "items": {"enum": ["derivations", "reactions", "clock", "tagging", "modifiers", "inferences"]}},
+        "actions": {"type": "boolean"}, "narration": {"type": "boolean"}, "ui": {"type": "boolean"}
+      },
+      "additionalProperties": false
+    },
+    "slots": {"type": "array", "items": {"type": "object", "required": ["slot", "target", "mode"], "properties": {"slot": {"type": "string"}, "target": {"type": "string"}, "mode": {"enum": ["claim", "override", "extend"]}}, "additionalProperties": false}},
+    "params": {"type": "string"},
+    "uninstall": {"type": "string"},
+    "prompt": {"type": "object", "required": ["staticTokens"], "properties": {"staticTokens": {"const": 0}}, "additionalProperties": false},
+    "budgets": {"type": "object", "additionalProperties": {"type": "integer", "minimum": 0}}
+  },
+  "additionalProperties": false
+}

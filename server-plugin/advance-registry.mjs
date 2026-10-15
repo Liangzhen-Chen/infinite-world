@@ -1,6 +1,7 @@
 import {advanceUpperAppointments,advanceRoyalService} from './high-nobility.mjs';
 import {advanceNations} from './nation-founding.mjs';
 import {advanceEducation,nextEducationMinute,prepareEducation} from './education.mjs';
+import {prepareMedicine,advanceMedicine,nextMedicineMinute} from './medicine.mjs';
 import {advanceFacilities,nextFacilityMinute,completeFacilityProject} from './facilities.mjs';
 // Time-advance registry. Every system that reacts to elapsed time registers here:
 //   {id, order, nextMinute?(engine,d,now), active?(engine,d,now), advance(engine,d,ctx)}
@@ -23,7 +24,7 @@ import {advanceSummons}from'./summons.mjs';
 import {advanceLaw}from'./law.mjs';
 import {advanceNpcCrime,nextNpcCrimeMinute}from'./npc-crime.mjs';
 import {cropProduction}from'./weather.mjs';
-import {advanceAgriculture,settleAgricultureExpiry}from'./agriculture.mjs';
+import {advanceAgriculture,settleAgricultureExpiry,advanceForestWater,harvestSettlementWood,settleFuel,farmWaterFactor}from'./agriculture.mjs';
 import {advanceSettlementTrade,nextSettlementTradeMinute}from'./settlement-trade.mjs';
 import {advanceTransport,nextTransportMinute} from './transport.mjs';
 import {advancePost,nextPostMinute} from './post.mjs';
@@ -31,7 +32,7 @@ import {advanceShops}from'./shop.mjs';
 import {advanceWorldClocks,nextWorldClockMinute}from'./world-clock.mjs';
 import {advanceFactionClocks,nextFactionClockMinute,factionClockRules}from'./faction-clock.mjs';
 import {advanceFestivals,nextFestivalMinute,festivalCalendar}from'./festival.mjs';
-import {advanceWildlife,nextWildlifeEncounterMinute,wildlifeEncounterAt,settleWildlifeEncounter}from'./wildlife.mjs';
+import {advanceWildlife,nextWildlifeEncounterMinute,wildlifeEncounterAt,settleWildlifeEncounter,displaceForestWildlife}from'./wildlife.mjs';
 import {advanceBosses}from'./bosses.mjs';
 import {advanceNpcCognition,nextNpcCognitionMinute}from'./npc-cognition.mjs';
 import {advanceNpcAutonomy,nextNpcAutonomyMinute}from'./npc-autonomy.mjs';
@@ -81,11 +82,11 @@ export function runAdvance(engine,d,ctx){
     try{for(const system of advanceRegistry)system.advance(engine,d,ctx);}finally{engine.advanceLayerContext=prior;delete engine.educationCourseContext;delete engine.educationAttendance;}
 }
 
-import {advanceForestWater,harvestSettlementWood,settleFuel,displaceForestWildlife} from './forest-water.mjs';
-import {farmWaterFactor} from './water-cycle.mjs';
 // Order mirrors the original hand-written WorldEngine.advanceInterval sequence.
 const systems=[
  {id:'education_enrollment',order:50,advance:(e,d,ctx)=>prepareEducation(d,e,ctx)},
+ {id:'medicine_booking',order:60,advance:(e,d,ctx)=>prepareMedicine(d,e,ctx)},
+ {id:'medicine',order:1190,layers:ADVANCE_LAYERS,nextMinute:(e,d,now)=>nextMedicineMinute(e,d,now),advance:(e,d,ctx)=>advanceMedicine(d,e,ctx)},
  {id:'education',order:1090,nextMinute:(e,d,now)=>nextEducationMinute(e,d,now),advance:(e,d,ctx)=>advanceEducation(d,e,ctx)},
  {id:'npc_obligations',order:100,layers:ADVANCE_LAYERS,active:e=>fullNpcs(e),nextMinute:(e,d,now)=>nextNpcObligationMinute(d.get('state'),now),
   advance:(e,d,{before,after,id})=>advanceNpcObligations(d,e,before,after,id)},

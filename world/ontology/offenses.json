@@ -1,0 +1,169 @@
+{
+ "$schema": "../../schemas/ontology.schema.json",
+ "kind": "offenses",
+ "namespace": "core",
+ "version": 1,
+ "note": "罪名词汇表（事件标签 offense:<id>）。template = rules.law.templates[*].penalties 的键；code = 代码中出现的 offense 字面量；design = 设计文档、run-001 与意图语料需要的罪名，S0 只登记不接线（法典条款仍在 rules.law）。",
+ "entries": [
+  {
+   "id": "theft",
+   "label": "盗窃",
+   "source": "template"
+  },
+  {
+   "id": "theft_attempt",
+   "label": "盗窃未遂",
+   "source": "template"
+  },
+  {
+   "id": "assault",
+   "label": "伤人",
+   "source": "template"
+  },
+  {
+   "id": "assault_attempt",
+   "label": "伤人未遂",
+   "source": "template"
+  },
+  {
+   "id": "homicide",
+   "label": "杀人",
+   "source": "template"
+  },
+  {
+   "id": "fraud",
+   "label": "诈骗",
+   "source": "template"
+  },
+  {
+   "id": "smuggling",
+   "label": "走私",
+   "source": "template"
+  },
+  {
+   "id": "illegal_mining",
+   "label": "盗采矿产",
+   "source": "template"
+  },
+  {
+   "id": "enslavement",
+   "label": "奴役",
+   "source": "template"
+  },
+  {
+   "id": "trafficking",
+   "label": "贩运人口",
+   "source": "template"
+  },
+  {
+   "id": "mental_magic",
+   "label": "擅施心术",
+   "source": "template"
+  },
+  {
+   "id": "bribery",
+   "label": "行贿",
+   "source": "code"
+  },
+  {
+   "id": "bribery_attempt",
+   "label": "行贿未遂",
+   "source": "code"
+  },
+  {
+   "id": "corruption",
+   "label": "受贿渎职",
+   "source": "code"
+  },
+  {
+   "id": "debt_default",
+   "label": "债务违约",
+   "source": "code"
+  },
+  {
+   "id": "vote_buying",
+   "label": "贿选",
+   "source": "code"
+  },
+  {
+   "id": "unconsented_magic",
+   "label": "未经同意施法",
+   "source": "code"
+  },
+  {
+   "id": "breach",
+   "label": "违约",
+   "source": "design"
+  },
+  {
+   "id": "negligent_fire",
+   "label": "失火",
+   "source": "design"
+  },
+  {
+   "id": "arson",
+   "label": "纵火",
+   "source": "design"
+  },
+  {
+   "id": "illegal_logging",
+   "label": "滥伐",
+   "source": "design"
+  },
+  {
+   "id": "receiving_stolen",
+   "label": "收买赃物",
+   "source": "design"
+  },
+  {
+   "id": "unlicensed_teaching",
+   "label": "无照授法",
+   "source": "design"
+  },
+  {
+   "id": "break_in",
+   "label": "撬锁入室",
+   "source": "design"
+  },
+  {
+   "id": "trespass",
+   "label": "擅入私宅",
+   "source": "design"
+  },
+  {
+   "id": "defamation",
+   "label": "诽谤侮辱",
+   "source": "design"
+  },
+  {
+   "id": "poaching",
+   "label": "盗猎",
+   "source": "design"
+  },
+  {
+   "id": "pollution",
+   "label": "排污",
+   "source": "design"
+  },
+  {
+   "id": "public_nuisance",
+   "label": "扰乱公共秩序",
+   "source": "design"
+  },
+  {
+   "id": "embezzlement",
+   "label": "挪用侵占",
+   "source": "design"
+  },
+  {
+   "id": "vandalism",
+   "label": "毁损公物",
+   "source": "design"
+  },
+  {
+   "id": "blasphemy",
+   "label": "亵渎",
+   "source": "design"
+  }
+ ]
+}

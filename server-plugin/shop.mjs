@@ -203,7 +203,7 @@ export function tradeQuote(d,engine,{buyer,seller,item,location,base}){
         const regard=rules.relation.keeper*keeperRegard+rules.relation.settlement*settlementRegard;
         relation=clamp(1+(npc===seller?-1:1)*rules.relation.span*regard/100,limits.relation);
     }
-    const markup=shop?clamp(shop.markup,limits.shop):1,listPrice=Math.max(1,Math.round(price*markup*relation));
+    const markup=shop?clamp(shop.markup,limits.shop):1,listPrice=Math.max(1,Math.round(price*markup*relation*medicinePriceFactor(engine,d.get('state'),item,location)));
     const row={category:'trade_quote',day,buyer,seller,item,shop:shop?.id??null,settlement:place,basePrice:engine.byId.get(item).basePrice,regionalPrice:price,
         shopFactor:markup,relationFactor:relation,keeperRegard,settlementRegard,listPrice,quotedAt:minute};
     d.set(['state','records',key],row);
@@ -213,3 +213,4 @@ export function recordDeal(d,quote,price,quantity,eventId){
     const key=`trade-quote:${quote.day}:${quote.seller}:${quote.buyer}:${quote.item}`,row=d.get('state','records',key);
     d.set(['state','records',key],{...row,dealPrice:price,bargainFactor:price/row.listPrice,deals:[...row.deals??[],{eventId,quantity,unitPrice:price,minute:d.get('state','minute')}]});
 }
+import {medicinePriceFactor} from './medicine-state.mjs';

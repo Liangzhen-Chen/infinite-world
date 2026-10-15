@@ -1,6 +1,5 @@
 import {granaryCapacity} from './facility-state.mjs';
-import {drawGranary} from './agriculture.mjs';
-import {forestWaterPriceFactor} from './forest-water.mjs';
+import {drawGranary,forestWaterPriceFactor} from './agriculture.mjs';
 import {itemTraits,hasTrait} from './traits.mjs';
 import {hazardPriceFactor} from './hazard-calendar.mjs';
 import {tradeTax} from './finance-tax.mjs';

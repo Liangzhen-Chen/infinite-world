@@ -1,5 +1,6 @@
 import {createHash} from 'node:crypto';
 import {forestHabitatCapacity,forestView} from './forest-water.mjs';
+export {displaceForestWildlife} from './forest-water.mjs';
 import {monsterStats,seededRandom} from './combat.mjs';
 import {heldUnit,wearItem} from './items.mjs';
 import {canonical} from './storage.mjs';

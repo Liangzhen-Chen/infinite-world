@@ -2,26 +2,8 @@ import {locationTraits,creatureTraits,traitsOf} from './traits.mjs';
 import {populationView} from './entity-view.mjs';
 import {heldUnit,wearItem} from './items.mjs';
 import {registerIncident} from './law.mjs';
-import {forestView,harvestForest} from './forest-water.mjs';
-import {assertSiteHarvest} from './sites.mjs';
-
-export function woodcut(d,args,id){
- const location=d.get('state','location'),rules=this.rules.forestWater?.forest,forest=forestView(this,d.get('state'),location);
- if(!forest||!rules)throw Error('此地没有可采林木');
- const quantity=args.quantity??1;if(!Number.isSafeInteger(quantity)||quantity<1||quantity>rules.maximumCut)throw Error('单次采伐量越界');
- const place=this.byId.get(location);
- // A new harvesting entry cannot bypass a site's property or consent boundary.
- const access=()=>{if(place.site)assertSiteHarvest(d,this,place,args);else if(place.owner&&place.owner!=='player')throw Error('采伐需所有者的采集许可');};
- access();
- usable(d,this,rules.tool);
- const check=this.check(d,{attribute:'力量',difficulty:rules.difficulty,tools:[rules.tool]},id);
- wearItem(d,this,'player',rules.tool,rules.wear);this.advance(d,rules.minutes*quantity,id);
- access();
- const taken=check.success&&able(d)&&d.get('state','location')===location?harvestForest(d,this,location,quantity):0;
- if(taken)this.itemDelta(d,'player','item_wood',taken);
- return {success:taken>0,check,obtained:taken?[{item:'item_wood',quantity:taken}]:[],reserve:forestView(this,d.get('state'),location).reserve,
-  reason:taken<quantity?'林木不足或采伐未成':null,actionScope:{kind:'woodcut',clockManaged:true,minutes:rules.minutes*quantity}};
-}
+import {miningJurisdiction} from './law-codes.mjs';
+import {adjustStanding} from './standing.mjs';
 
 const path=id=>['state','records',id];
 const active=(hours,minute)=>hours[0]<=hours[1]?minute>=hours[0]&&minute<hours[1]:minute>=hours[0]||minute<hours[1];
@@ -93,21 +75,29 @@ export function mine(d,args,id){
     if(!row.reserve)throw Error('矿脉已枯竭或尚未恢复');
     const owner=spec.owner??place.owner,permit=args.authorization&&d.get(...path(args.authorization));
     const licensed=owner==='player'||permit?.category==='authorization'&&permit.action==='mining'&&permit.grantee==='player'&&permit.grantor===owner&&permit.location===location&&!permit.revoked&&permit.expires>now;
-    const check=this.check(d,{attribute:'力量',skill:'skill_life_17_core',difficulty:rules.difficulty,tools:[rules.tool]},id);
+    // Read before acting: a place whose ruling code or council custom is missing refuses the dig outright.
+    const jurisdiction=owner&&!licensed?miningJurisdiction(this,d.get('state'),location):null;
+    // An hour's digging is seen by whoever was there when it began as well as whoever is there at the end.
+    const present=()=>Object.entries(d.get('state','npcs')).filter(([,n])=>n.location===location&&n.status==='正常'&&!/睡/.test(n.activity??'')).map(([id])=>id);
+    const atStart=present();
+    const check=this.check(d,{attribute:rules.check.attribute,skill:rules.check.skill,difficulty:rules.difficulty,tools:[rules.tool]},id);
     wearItem(d,this,'player',rules.tool,rules.wear);this.advance(d,rules.minutes,id);
     const success=check.success&&able(d)&&d.get('state','location')===location;
     if(success){row.reserve--;row.extracted++;this.itemDelta(d,'player',item,1);}
     d.set(path(key),row);
-    const witnesses=Object.entries(d.get('state','npcs')).filter(([,n])=>n.location===location&&n.status==='正常'&&!/睡/.test(n.activity??'')).map(([id])=>id);
-    const incident=owner&&!licensed?registerIncident(d,this,{victim:owner,offense:'illegal_mining',value:success?this.byId.get(item).basePrice:0,witnesses,eventId:id,optional:true}):null;
-    return {success,check,obtained:success?[{item,quantity:1}]:[],reserve:row.reserve,case:incident,illegal:Boolean(owner&&!licensed),
-        training:able(d)?practice(d,this,'skill_life_17_core',`开矿:${location}`):null,actionScope:{kind:'mining',clockManaged:true,minutes:rules.minutes}};
+    const witnesses=[...new Set([...atStart,...present()])];
+    const value=success?this.byId.get(item).basePrice:0;
+    const incident=jurisdiction?.kind==='code'?registerIncident(d,this,{victim:owner,offense:'illegal_mining',value,witnesses,eventId:id,code:jurisdiction.code}):null;
+    const custom=jurisdiction?.kind==='faction'&&witnesses.length?adjustStanding(d,this,jurisdiction.faction,'player',jurisdiction.rule.standing,{sourceEvent:id,reason:'盗采'}):null;
+    const judged=jurisdiction&&{kind:jurisdiction.kind,executable:jurisdiction.executable,...(jurisdiction.kind==='faction'?{faction:jurisdiction.faction,settlement:jurisdiction.settlement,standing:custom?jurisdiction.rule.standing:0,witnessed:witnesses.length>0}:{law:jurisdiction.law,polity:jurisdiction.polity,penalty:jurisdiction.penalty})};
+    return {success,check,obtained:success?[{item,quantity:1}]:[],reserve:row.reserve,case:incident,illegal:Boolean(owner&&!licensed),jurisdiction:judged,
+        training:able(d)?practice(d,this,rules.check.skill,`开矿:${location}`):null,actionScope:{kind:'mining',clockManaged:true,minutes:rules.minutes}};
 }
 
 export function miningPermit(d,args,id){
     const location=d.get('state','location'),place=this.byId.get(location),owner=this.rules.extraction.mining.locations?.[location]?.find(m=>m.owner)?.owner??place.owner;
     if(!owner||owner!==this.resolve(args.authority,'npc')||d.get('state','npcs',owner,'location')!==location||d.get('state','npcs',owner,'status')!=='正常'||args.consent!==true)throw Error('须由本矿区在场所有者明确同意');
-    const minutes=args.minutes??1440;if(!Number.isSafeInteger(minutes)||minutes<1||minutes>43200)throw Error('开采许可期限无效');
+    const permit=this.rules.extraction.mining.permit,minutes=args.minutes??permit.defaultMinutes;if(!Number.isSafeInteger(minutes)||minutes<1||minutes>permit.maxMinutes)throw Error('开采许可期限无效');
     const key=`mining_permit:${id}`,permission={category:'authorization',action:'mining',location,grantee:'player',grantor:owner,expires:d.get('state','minute')+minutes,revoked:false,sourceEvent:id};
     d.set(path(key),permission);return {permit:key,permission};
 }

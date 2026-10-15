@@ -1,0 +1,131 @@
+{
+ "$schema": "../../schemas/ontology.schema.json",
+ "kind": "entity-templates",
+ "namespace": "core",
+ "version": 1,
+ "note": "实体模板（01 §1.2）。兜底原语 create(kind: mark) 的痕迹实体属 thing 模板（06 §6.9.5）：带 mark:* 与性状标签、不带资源与数值效果。",
+ "entries": [
+  {
+   "id": "agent",
+   "label": "个体",
+   "kinds": [
+    "person",
+    "creature"
+   ],
+   "accounts": true,
+   "holder": true,
+   "subject": true,
+   "obligationParty": true,
+   "located": true
+  },
+  {
+   "id": "collective",
+   "label": "群体",
+   "kinds": [
+    "org",
+    "settlement"
+   ],
+   "accounts": true,
+   "holder": true,
+   "subject": true,
+   "obligationParty": true,
+   "located": true
+  },
+  {
+   "id": "thing",
+   "label": "物",
+   "kinds": [
+    "item",
+    "building",
+    "node",
+    "mark"
+   ],
+   "accounts": true,
+   "holder": false,
+   "subject": true,
+   "obligationParty": false,
+   "located": true
+  },
+  {
+   "id": "population",
+   "label": "群",
+   "kinds": [
+    "population"
+   ],
+   "accounts": true,
+   "holder": false,
+   "subject": true,
+   "obligationParty": false,
+   "located": true
+  },
+  {
+   "id": "place",
+   "label": "地",
+   "kinds": [
+    "loc"
+   ],
+   "accounts": false,
+   "holder": false,
+   "subject": true,
+   "obligationParty": false,
+   "located": true
+  },
+  {
+   "id": "office",
+   "label": "职",
+   "kinds": [
+    "office"
+   ],
+   "accounts": false,
+   "holder": true,
+   "subject": true,
+   "obligationParty": true,
+   "located": false
+  },
+  {
+   "id": "instrument",
+   "label": "契",
+   "kinds": [
+    "obligation",
+    "claim",
+    "permit",
+    "bill"
+   ],
+   "accounts": true,
+   "holder": false,
+   "subject": true,
+   "obligationParty": false,
+   "located": false
+  },
+  {
+   "id": "interim",
+   "label": "临时法人",
+   "kinds": [
+    "estate",
+    "liquidation",
+    "case",
+    "project"
+   ],
+   "accounts": true,
+   "holder": true,
+   "subject": false,
+   "obligationParty": true,
+   "located": false
+  }
+ ],
+ "idPrefixes": [
+  "npc_",
+  "loc_",
+  "bld_",
+  "item_",
+  "org_",
+  "office_",
+  "obl_",
+  "case_",
+  "estate_",
+  "node_",
+  "pop_",
+  "evt_",
+  "mark_"
+ ]
+}

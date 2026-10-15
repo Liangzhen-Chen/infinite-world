@@ -1,6 +1,6 @@
 import {entityTransition,businessSnapshot,businessTransitions} from './entity-transitions.mjs';
 import {lawAuthorities,personName} from './entity-view.mjs';
-import {legalCodeAt,legalCodeById,courtHierarchy,legalCooperation} from './law-codes.mjs';
+import {legalCodeAt,legalCodeById,courtHierarchy,legalCooperation,codePenalty} from './law-codes.mjs';
 import {hireAdvocate,representationEffect,advocateService} from './legal-representation.mjs';
 import {adjudicateFamilyDispute,recoverFamilyCompensation} from './family-law.mjs';
 import { trackTransferUnit, transferItems, changeItems } from './items.mjs';
@@ -57,8 +57,8 @@ function knowledge(d,npc,id,minute){
     const prior=d.get('state','npcs',npc,'legalKnowledge')??[];
     if(!prior.some(row=>row.case===id))d.set(['state','npcs',npc,'legalKnowledge'],[...prior,{case:id,minute,source:'亲见或在场受理'}]);
 }
-export function registerIncident(d,engine,{victim,offender='player',offense,value=0,stolen=null,witnesses,eventId,relationshipApplied=false,location=d.get('state','location'),optional=false,minute=d.get('state','minute')}){
-    const code=codeFor(engine,location,d.get('state'));if(!code&&optional)return null;if(!code)throw Error('当地尚未登记可执行法典，无执行权限');
+export function registerIncident(d,engine,{victim,offender='player',offense,value=0,stolen=null,witnesses,eventId,relationshipApplied=false,location=d.get('state','location'),optional=false,minute=d.get('state','minute'),code:given=null}){
+    const code=given??codeFor(engine,location,d.get('state'));if(!code&&optional)return null;if(!code)throw Error('当地尚未登记可执行法典，无执行权限');
     const id=`legal_case:${eventId}`;unique(d,id);
     const now=minute,evidence=witnesses.map(witness=>({kind:'eyewitness',witness,identified:true,testified:false,minute:now}));
     const officer=witnesses.find(witness=>code.officers.includes(witness));
@@ -338,7 +338,7 @@ export function adjudicateLegalCase(d,engine,row,code,judge,eventId,observers=[]
     if(row.familyCivil)return adjudicateFamilyDispute(d,engine,row,code,judge,eventId);
     const score=evidenceScore(d,row);
         if(score<code.evidenceRequired){d.set(path(row.id),{...row,status:'证据不足'});return{case:row.id,convicted:false,evidenceScore:score};}
-        const penalty=code.penalties[row.offense]??engine.rules.law.spellConsent?.penalties?.[row.offense]??engine.rules.law.bribery?.penalties?.[row.offense]??engine.rules.law.activityPenalties?.[row.offense]??(row.offense==='debt_default'?engine.rules.economy?.credit?.loan?.defaultPenalty:undefined)??engine.rules.magicEconomy?.penalties?.[row.offense];if(!penalty)throw new Error('本案罪名没有判罚规则');
+        const penalty=codePenalty(engine,code,row.offense)??engine.rules.law.spellConsent?.penalties?.[row.offense]??engine.rules.law.bribery?.penalties?.[row.offense]??engine.rules.law.activityPenalties?.[row.offense]??(row.offense==='debt_default'?engine.rules.economy?.credit?.loan?.defaultPenalty:undefined)??engine.rules.magicEconomy?.penalties?.[row.offense];if(!penalty)throw new Error('本案罪名没有判罚规则');
         const baseFine=penalty.baseFine+Math.ceil(row.value*penalty.valueMultiplier),advocate=representationEffect(d,engine,row),fine=baseFine-Math.floor(baseFine*(advocate?.discount??0));
         const judgment={...(advocate?{advocate}:{}),judge,minute:d.get('state','minute'),fine,compensation:row.victim?row.value:0,evidenceScore:score,
             communityMinutes:Math.min(code.maximumSentenceMinutes,fine*code.communityMinutesPerCopper),prisonMinutes:Math.min(code.maximumSentenceMinutes,penalty.detentionMinutes??fine*code.prisonMinutesPerCopper)};

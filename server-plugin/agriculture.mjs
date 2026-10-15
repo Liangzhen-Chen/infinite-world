@@ -4,6 +4,9 @@ import {consumeGrowthDay,validateGrowthRules,validateGrowthWorld}from'./magic-gr
 import {weatherAt}from'./weather.mjs';
 import {damageFarmCrops,farmPestProfile}from'./farm-pests.mjs';
 import {harvestSettlementWood}from'./forest-water.mjs';
+// RW-04 forest/water stay inside the ecology pack; adapters reach them through this entry.
+export {harvestSettlementWood,advanceForestWater,settleFuel,forestWaterPriceFactor}from'./forest-water.mjs';
+export {farmWaterFactor}from'./water-cycle.mjs';
 import {farmWaterFactor}from'./water-cycle.mjs';
 import {preservedSpoilage}from'./magic-economy.mjs';
 import {agriculturalEmployment} from './employment-state.mjs';

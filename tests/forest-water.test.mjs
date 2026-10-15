@@ -9,7 +9,7 @@ import {waterBasins,waterConnections,advanceWaterCycle,farmWaterFactor,waterExpo
 import {regionalTradePrice} from '../server-plugin/settlement-trade.mjs';
 import {advanceHazardClocks} from '../server-plugin/seasonal-hazards.mjs';
 import {advanceAgriculture} from '../server-plugin/agriculture.mjs';
-import {woodcut} from '../server-plugin/extraction.mjs';
+import {woodcut} from '../server-plugin/sites.mjs';
 import {siteAction} from '../server-plugin/sites.mjs';
 import {environmentCatalog} from '../server-plugin/environment.mjs';
 import {advanceRegistry} from '../server-plugin/advance-registry.mjs';

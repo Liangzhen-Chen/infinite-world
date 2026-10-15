@@ -37,7 +37,7 @@ import {businessAction}from'./business.mjs';
 import {festivalAction}from'./festival.mjs';
 import {factionClockAction}from'./faction-clock.mjs';
 import {isHazardClock,hazardClockAction}from'./seasonal-hazards.mjs';
-import {siteAction}from'./sites.mjs';
+import {siteAction,woodcut}from'./sites.mjs';
 import {organizationAction,foundOrganization}from'./organizations.mjs';
 import {familyAction} from './family-politics.mjs';
 import {faithAction}from'./faith.mjs';
@@ -45,7 +45,8 @@ import {workAction,isWorkOperation}from'./works.mjs';
 import {registerResearchSpell}from'./spell-research.mjs';
 import {hiddenCombat}from'./hidden-passives.mjs';
 import {educationAction} from './education.mjs';
-import {fish,eatFish,mine,miningPermit,woodcut}from'./extraction.mjs';
+import {medicineAction} from './medicine.mjs';
+import {fish,eatFish,mine,miningPermit}from'./extraction.mjs';
 import {duelAction,activeDuel,finishDuel}from'./duels.mjs';
 import {electionAction}from'./elections.mjs';
 const integer=(value,min=0,max=1e9)=>{if(!Number.isSafeInteger(value)||value<min||value>max)throw new Error(`数值需在${min}到${max}之间`);return value;};
@@ -184,6 +185,7 @@ export const activities={
         return {project:key,stage,...outcome,note:stage==='打磨'?'研究成果需进入受限实体登记，才能获得规则认可':'原型未被系统承认，不能宣称已学会新法术'};
     },
     settlement(d,args,id){
+        if(args.operation?.startsWith('medicine_'))return medicineAction.call(this,d,args,id);
         if(args.operation?.startsWith('family_'))return familyAction.call(this,d,args,id);
         if(args.operation?.startsWith('school_'))return educationAction.call(this,d,{operation:args.operation,entity:args.plot,source:args.authority,students:args.beneficiaries,start:args.due,minutes:args.minutes,days:args.days,coins:args.budget,wage:args.proposedFee,org:args.business,course:args.project,name:args.name,location:args.settlement,consent:args.consent},id);
         if(args.operation==='mining_permit')return miningPermit.call(this,d,args,id);

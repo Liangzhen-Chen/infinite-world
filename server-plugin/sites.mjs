@@ -1,4 +1,4 @@
-import {heldUnit} from './items.mjs';
+import {heldUnit,wearItem} from './items.mjs';
 import {consumeMagicProtection} from './magic-primitives.mjs';
 import {assertLocationAccess} from './location-access.mjs';
 import {actorPath} from './npc-state.mjs';
@@ -339,4 +339,28 @@ export function sitePermission(d,engine,args,eventId){
     if(new Set(guests).size!==guests.length||guests.some(id=>d.get('state','npcs',id,'location')!==actor.location||!d.get('state','player','companions')?.includes(id)))throw Error('获准同行者须为实际在场且不重复的同行人');
     const permission={category:'authorization',action:'site_use',subject:place.id,owner,owners:owned,grantor,grantee:'player',operations,guests,expires:now+minutes,revoked:false,content:args.content.trim(),sourceEvent:eventId};
     d.set(['state','records',authorization],permission);return{authorization,permission};
+}
+
+// RW-04 woodcutting lives with site harvest boundaries in the ecology pack.
+function usableTool(d,engine,tool){
+    const held=heldUnit(d,engine,'player',tool),definition=engine.byId.get(tool);
+    if(!engine.quantity(d,'player',tool)||(held?.durability??definition?.durability??0)<=0)throw Error('需要实际完好的工具');
+    if(typeof held==='number')d.set([...engine.bagPath('player'),tool],{quantity:held,quality:definition.quality,durability:definition.durability,weight:definition.weight});
+}
+export function woodcut(d,args,id){
+ const location=d.get('state','location'),rules=this.rules.forestWater?.forest,forest=forestView(this,d.get('state'),location);
+ if(!forest||!rules)throw Error('此地没有可采林木');
+ const quantity=args.quantity??1;if(!Number.isSafeInteger(quantity)||quantity<1||quantity>rules.maximumCut)throw Error('单次采伐量越界');
+ const place=this.byId.get(location);
+ // A new harvesting entry cannot bypass a site's property or consent boundary.
+ const access=()=>{if(place.site)assertSiteHarvest(d,this,place,args);else if(place.owner&&place.owner!=='player')throw Error('采伐需所有者的采集许可');};
+ access();
+ usableTool(d,this,rules.tool);
+ const check=this.check(d,{attribute:'力量',difficulty:rules.difficulty,tools:[rules.tool]},id);
+ wearItem(d,this,'player',rules.tool,rules.wear);this.advance(d,rules.minutes*quantity,id);
+ access();
+ const taken=check.success&&d.get('state','player','status')==='正常'&&d.get('state','location')===location?harvestForest(d,this,location,quantity):0;
+ if(taken)this.itemDelta(d,'player','item_wood',taken);
+ return {success:taken>0,check,obtained:taken?[{item:'item_wood',quantity:taken}]:[],reserve:forestView(this,d.get('state'),location).reserve,
+  reason:taken<quantity?'林木不足或采伐未成':null,actionScope:{kind:'woodcut',clockManaged:true,minutes:rules.minutes*quantity}};
 }

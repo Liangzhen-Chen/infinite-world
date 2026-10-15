@@ -1,4 +1,5 @@
 import {educationSites} from './education-state.mjs';
+import {medicineSites} from './medicine-state.mjs';
 // Read-only organization selector, shared by gameplay and entity/reputation views.
 import {reputationFactions} from './reputation-catalog.mjs';
 import {householdMembers,npcAgeAt} from './npc-state.mjs';
@@ -46,8 +47,10 @@ export function organizationState(engine,state,id){
     const t=String(id).startsWith('temple:')?templeById(engine,id):null;
     const temple=t?.source==='temple'?{...t,kind:'教会',leader:t.teacher,leaderTitle:'主祭',members:{[t.teacher]:{position:'主祭',joinedAt:null,arrears:0}},treasury:0,charter:{mode:'leader',approval:true,fee:0,dues:0,rules:[t.rule]}}:null;
     const school=educationSites(engine,state).find(o=>o.id===id);
+    const clinic=String(id).startsWith('clinic:')?medicineSites(engine,state).find(o=>o.id===id):null;
+    const medical=clinic?{...clinic,source:'medicine',leaderTitle:'医师',treasury:0,charter:{mode:'leader',fee:0,dues:0,rules:[]}}:null;
     const education=school?{...school,source:'education',leaderTitle:'先生',members:school.leader?{[school.leader]:{position:'先生',joinedAt:null,arrears:0}}:{},treasury:0,charter:{mode:'leader',fee:0,dues:0,rules:[]}}:null;
-    const base=row?.source==='created'?null:(String(id).startsWith('family:')?familyGroup(engine,state,id.slice(7)):null)??factionBase(engine,id)??householdBase(engine,state,id)??societyBase(engine,id)??temple??education;
+    const base=row?.source==='created'?null:(String(id).startsWith('family:')?familyGroup(engine,state,id.slice(7)):null)??factionBase(engine,id)??householdBase(engine,state,id)??societyBase(engine,id)??temple??education??medical;
     if(!base&&row?.source!=='created')return null;
     const b=base??{id,name:row.name,source:'created',kind:row.kind,seat:row.seat,leader:null,leaderTitle:LEADER[row.kind]??'会长',members:{},treasury:0,charter:{}};
     const members={};
@@ -68,7 +71,7 @@ export function organizationState(engine,state,id){
 export function organizationIds(engine,state){
     return [...new Set([...(engine.world.factions??[]).map(f=>f.id),...reputationFactions(engine).map(f=>f.id),...(engine.world.households??[]).map(h=>h.id),
         ...(engine.world.locations??[]).filter(l=>l.monsterSociety&&!engine.world.factions?.some(f=>f.contactAnchor===l.id)).map(l=>l.id),
-        ...temples(engine).map(t=>t.id),...educationSites(engine,state).map(t=>t.id),...Object.values(state.records??{}).filter(r=>r.category==='organization').map(r=>r.id)])];
+        ...temples(engine).map(t=>t.id),...educationSites(engine,state).map(t=>t.id),...medicineSites(engine,state).map(t=>t.id),...Object.values(state.records??{}).filter(r=>r.category==='organization').map(r=>r.id)])];
 }
 export function memberOrganizations(engine,state,member){
     member=actorId(engine.world,member);
