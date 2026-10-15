@@ -41,7 +41,14 @@ export function npcSchedule(engine,state,id,minute=state?.minute,constraints=nul
     // A move (npc-life) remaps home and work; a later change of livelihood is
     // built from that new home and then takes precedence.
     const residence=own?.residence;
-    const schedule=routine??(residence&&base&&!(own.vocation&&own.vocation.since>residence.since)?residence.schedule:own?.vocation?.schedule??base);
+    let schedule=routine??(residence&&base&&!(own.vocation&&own.vocation.since>residence.since)?residence.schedule:own?.vocation?.schedule??base);
+    // A hired person with no other routine whose contract does not put them at
+    // work today (strike/stoppage, not yet started) stays at home: derived from
+    // the contract's current status, never left without a whereabouts.
+    if(!schedule&&employed){
+        const home=npcHousehold(engine,state,id)?.homeLocation??engine.byId.get(id)?.home?.location??own?.location??employed.location;
+        schedule={default:[{start:0,end:1440,location:home,activity:employed.status==='罢工'?'停工在家':'日常起居',services:[]}]};
+    }
     const lease=activeRental(state,id,minute);
     if(!lease||!schedule)return schedule;
     const prior=lease.use==='home'?lease.oldHome:engine.byId.get(id)?.workplace?.location;

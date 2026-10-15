@@ -4,7 +4,7 @@
 export function temples(engine){
  const out=(engine.world.factions??[]).filter(f=>f.kind==='教会').map(f=>({id:f.id,name:f.name,seat:f.contactAnchor,
   deity:engine.world.deities?.find(g=>g.church.name===f.name)?.id??null,teacher:f.leader,source:'faction'}));
- for(const e of engine.rules.training?.institutions??[]){
+ for(const e of engine.rules?.training?.institutions??[]){
   if(!e.ritual)continue;
   const id=`temple:${e.institution}:${e.deity??e.profession}`;
   if(out.some(t=>t.id===id))continue;

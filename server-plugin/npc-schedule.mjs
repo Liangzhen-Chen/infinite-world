@@ -136,6 +136,8 @@ function settleSchedules(d,engine,before,after,{promote=false}={}){
                 continue;
             }
             const slot=scheduleAt(engine,npcId,cursor,peekState(d),constraints);
+            // No derivable routine (e.g. a contract past its term awaiting settlement): stay put.
+            if(!slot)break;
             if(npc.location!==slot.location){
                 let route;
                 try{
