@@ -1,6 +1,8 @@
 import {personCareer} from './entity-view.mjs';
 import {assertNpcService} from './npc-schedule.mjs';
 import {digest} from './storage.mjs';
+import {convertFaith} from './faith.mjs';
+import {temples} from './faith-catalog.mjs';
 
 const record=id=>['state','records',id];
 const awake=a=>a&&!['死亡','濒死','昏迷','患病'].includes(a.status)&&!['睡眠','熟睡'].includes(a.activity)&&!a.scheduleTravel&&!a.cognitionTravel;
@@ -35,7 +37,11 @@ export function initiation(d,engine,args,id){
  const now=d.get('state','minute'),key=`training_initiation:${id}`,row={category:'training_initiation',profession:role,teacher,institution,rule:entry.rule,observedSince:now,lastBreach:previous?.lastBreach??-1,status:'守戒中',sourceEvent:id,cost:entry.initiationFee};
  d.set(record(key),row);d.set(record(`training_source:${id}`),{initiation:structuredClone(row)});
  d.set(['state','careers',role,'initiation'],{...row,record:key});
- if(entry.ritual){const deity=entry.deity&&engine.byId.get(entry.deity);
+ if(entry.ritual&&engine.rules.faith){
+  const t=temples(engine).find(t=>t.seat===institution&&t.teacher===teacher);
+  convertFaith(d,engine,{...t,organization:{leader:teacher}},'player',id,{paid:true});
+  d.set(['state','player','faith'],{...d.get('state','player','faith'),initiation:key});
+ }else if(entry.ritual){const deity=entry.deity&&engine.byId.get(entry.deity);
   d.set(['state','player','faith'],{deity:deity?.id??null,institution,church:deity?.church.name??entry.church,taboo:deity?.taboo??entry.rule,observedSince:now,lastBreach:row.lastBreach,initiation:key});
  }
  return{initiated:true,profession:role,institution,teacher,initiation:key,rule:entry.rule,cost:entry.initiationFee,minutes:entry.initiationMinutes};
