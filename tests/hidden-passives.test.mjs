@@ -7,9 +7,7 @@ import {applyPatches} from '../server-plugin/storage.mjs';
 import {personView,personCareer} from '../server-plugin/entity-view.mjs';
 import {hiddenPassives,hiddenCheckBonus,hiddenCombat,petTrustGain} from '../server-plugin/hidden-passives.mjs';
 const world=await loadWorld(),draft=JSON.parse(await fs.readFile('world/drafts/m4r/hidden-passives.json','utf8'));
-// Candidate rules are tested before publication. Production data is installed
-// only after the required L2/L4 gates; tests do not mark that gate passed.
-for(const row of draft)world.professions.find(p=>p.id===row.id).passive=row.passive;
+// Exercise the published catalog directly; a missing release must fail here.
 const engine=new WorldEngine(world),seed=JSON.parse(await fs.readFile('tests/fixtures/legacy/seed.json','utf8'));
 const role=n=>`profession_hidden_${String(n).padStart(2,'0')}`;
 const learned=p=>({proficiency:p,breakthroughs:[],daily:{}});
@@ -26,6 +24,11 @@ function escort(c){c.state.obligations.escort={id:'escort',type:'带路',promiso
 
 test('全部30种隐藏职业只从当前持有身份派生；无关检定不吃统一加一，读取不落盘',async()=>{
  assert.equal(draft.length,30);
+ for(const row of draft){
+  const published=world.professions.find(p=>p.id===row.id);
+  assert.equal(published.ability,row.ability);assert.equal(published.cost,row.cost);
+  assert.deepEqual(published.passive,row.passive,row.id);
+ }
  for(let i=1;i<=30;i++){
   const c=fresh(i),before=structuredClone(c),rows=personView(engine,c.state,'player').hiddenPassives.value;
   assert.equal(rows.length,1);assert.equal(rows[0].domain,draft[i-1].passive.domain);assert.deepEqual(c,before);
