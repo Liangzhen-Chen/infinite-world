@@ -16,7 +16,14 @@ import {pruneCatalog} from './fixtures/pre-baishi-world.mjs';
 import {withoutMonsterSociety2} from '../tools/publish-monster-society-2.mjs';
 import {withoutT142} from '../tools/t142-merge.mjs';
 import {withoutClockBatch} from '../tools/w5-clock-publication.mjs';
-const formal=await loadWorld(),source=structuredClone(withoutT142(withoutClockBatch(withoutClockBatch(withoutMonsterSociety2(withoutMonsterSociety(villagesOriginalWorld(formal))),2),1))),candidate=JSON.parse(await fs.readFile('world/drafts/w1/hewan/candidate.json','utf8')),preserved=JSON.parse(await fs.readFile('world/drafts/w1/hewan/preserved-npcs.json','utf8'));
+import {buildBatch as buildSiteBatch,withoutSites} from '../tools/w5-sites.mjs';
+const formal=await loadWorld();let beforeSites=formal;
+// Site resources and ownership belong to later catalogs absent from the W1 fixture.
+for(const n of [3,2,1]){
+ const design=await import(`../world/design/w5-sites-${n}.mjs`);
+ beforeSites=withoutSites(beforeSites,buildSiteBatch(design.sites,beforeSites),design.priorNoMechanics);
+}
+const source=structuredClone(withoutT142(withoutClockBatch(withoutClockBatch(withoutMonsterSociety2(withoutMonsterSociety(villagesOriginalWorld(beforeSites))),2),1))),candidate=JSON.parse(await fs.readFile('world/drafts/w1/hewan/candidate.json','utf8')),preserved=JSON.parse(await fs.readFile('world/drafts/w1/hewan/preserved-npcs.json','utf8'));
 // This historical fixture omits four villages, including their dependent rules.
 // Only references to those deliberately removed entities are projected out.
 const removedLocations=new Set(formal.locations.filter(row=>!source.locations.some(location=>location.id===row.id)).map(row=>row.id));
@@ -54,6 +61,13 @@ delete source.rules.tribalAwakening;// U11族群觉醒动态（挂靠魔物社�
  const kept=new Set(kinds.flatMap(k=>(k==='npcs'?[...preserved,...candidate.npcs]:k==='residents'?candidate.residents:source[k]??[]).map(r=>r.id)));
  const removed=new Set(kinds.flatMap(k=>(formal[k]??[]).map(r=>r.id)).filter(id=>!kept.has(id)));
  const bound=row=>[...JSON.stringify(row).matchAll(/"([a-z]+_[a-z0-9_]+)"/g)].some(m=>m[1]!==row.id&&removed.has(m[1]));
+ // D1 sources attached to omitted villages and their officials leave with them.
+ if(source.rules.hazardClock)source.rules.hazardClock.clocks=source.rules.hazardClock.clocks.filter(row=>registered.has(row.settlement)&&!bound(row));
+ const sources=source.rules.questSources;
+ if(sources){
+  sources.publishers=Object.fromEntries(Object.entries(sources.publishers??{}).filter(([place,npc])=>kept.has(place)&&kept.has(npc)));
+  sources.funds=Object.fromEntries(Object.entries(sources.funds??{}).filter(([place,faction])=>kept.has(place)&&kept.has(faction)));
+ }
  for(let changed=true;changed;){changed=false;for(const key of ['bosses','cultures','factionPeople']){const rows=source[key]??[],next=rows.filter(row=>!bound(row));if(next.length!==rows.length){for(const row of rows)if(!next.includes(row))removed.add(row.id);source[key]=next;changed=true;}}}
  // K6效果表：属主时钟已移出或效果对象（栖地、人物、地点）已移出的挂钩与季节条目一并移出。
  for(const h of formal.rules.wildlife.habitats)if(!source.rules.wildlife.habitats.some(row=>row.id===h.id))removed.add(h.id);
@@ -75,6 +89,8 @@ test('河湾历史候选逐条核对审核，完整深度不足拒绝且重复�
  const root=await fs.mkdtemp(path.join(os.tmpdir(),'fields-population-publish-'));
  t.after(async()=>{const target=path.resolve(root);assert.ok(target.startsWith(path.resolve(os.tmpdir())+path.sep));await fs.rm(target,{recursive:true,force:true});});
  await fs.cp(path.resolve('world'),root,{recursive:true,filter:file=>!file.split(path.sep).includes('drafts')});
+ // The fixture writes loaded locations with biome fields already merged in.
+ await fs.rm(path.join(root,'geo/biomes.json'),{force:true});
  await fs.mkdir(path.join(root,'drafts/w1'),{recursive:true});await fs.cp(path.resolve('world/drafts/w1/hewan'),path.join(root,'drafts/w1/hewan'),{recursive:true});
  for(const [file,value]of Object.entries({'meta/rules.json':original.rules,'people/baseline.json':original.npcs,'people/residents.json':[],'people/households.json':[],'geo/settlements.json':[],'geo/locations.json':original.locations,'geo/routes.json':original.routes}))await fs.writeFile(path.join(root,file),JSON.stringify(value));
  const saved=await fs.readFile(path.join(root,'people/baseline.json'),'utf8');

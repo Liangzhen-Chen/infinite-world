@@ -5112,5 +5112,604 @@
     ],
     "toll": 0,
     "risk": 1
+  },
+  {
+    "id": "route_w5_tj_old_draft",
+    "from": "loc_ms_tanjie",
+    "to": "site_w5_tj_old_draft",
+    "lengthKm": 0.1,
+    "terrainMultiplier": 1.2,
+    "modes": [
+      "walk"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 0
+  },
+  {
+    "id": "route_w5_td_trap_shrine",
+    "from": "loc_ms_taideng",
+    "to": "site_w5_td_trap_shrine",
+    "lengthKm": 0.25,
+    "terrainMultiplier": 1.2,
+    "modes": [
+      "walk"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 0
+  },
+  {
+    "id": "route_w5_halfway_post_bs",
+    "from": "loc_bs",
+    "to": "site_w5_halfway_post",
+    "lengthKm": 12.01,
+    "terrainMultiplier": 0.6,
+    "modes": [
+      "walk",
+      "horse",
+      "cart"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 1
+  },
+  {
+    "id": "route_w5_halfway_post_hw",
+    "from": "loc_hw",
+    "to": "site_w5_halfway_post",
+    "lengthKm": 12.01,
+    "terrainMultiplier": 0.6,
+    "modes": [
+      "walk",
+      "horse",
+      "cart"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 1
+  },
+  {
+    "id": "route_w5_white_quarry",
+    "from": "loc_bs",
+    "to": "site_w5_white_quarry",
+    "lengthKm": 5.3,
+    "terrainMultiplier": 0.9,
+    "modes": [
+      "walk",
+      "cart"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 1
+  },
+  {
+    "id": "route_w5_broken_bell",
+    "from": "loc_bs_sangban",
+    "to": "site_w5_broken_bell",
+    "lengthKm": 6.11,
+    "terrainMultiplier": 0.9,
+    "modes": [
+      "walk"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 1
+  },
+  {
+    "id": "route_w5_old_bank_altar",
+    "from": "loc_bs_weiting",
+    "to": "site_w5_old_bank_altar",
+    "lengthKm": 4.28,
+    "terrainMultiplier": 0.9,
+    "modes": [
+      "walk"
+    ],
+    "closedSeasons": [
+      0
+    ],
+    "toll": 0,
+    "risk": 1
+  },
+  {
+    "id": "route_w5_light_workshop",
+    "from": "loc_bs",
+    "to": "site_w5_light_workshop",
+    "lengthKm": 3.71,
+    "terrainMultiplier": 0.9,
+    "modes": [
+      "walk",
+      "horse"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 0
+  },
+  {
+    "id": "route_w5_ash_market",
+    "from": "loc_bs",
+    "to": "site_w5_ash_market",
+    "lengthKm": 3.32,
+    "terrainMultiplier": 0.9,
+    "modes": [
+      "walk",
+      "cart"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 1
+  },
+  {
+    "id": "route_w5_yupo_beacon",
+    "from": "loc_bs_yupo",
+    "to": "site_w5_yupo_beacon",
+    "lengthKm": 4.02,
+    "terrainMultiplier": 0.9,
+    "modes": [
+      "walk"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 1
+  },
+  {
+    "id": "route_w5_sunk_dock",
+    "from": "loc_bs_weiting",
+    "to": "site_w5_sunk_dock",
+    "lengthKm": 2.86,
+    "terrainMultiplier": 0.9,
+    "modes": [
+      "walk",
+      "boat"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 1
+  },
+  {
+    "id": "route_w5_stone_markers",
+    "from": "loc_bs_liquan",
+    "to": "site_w5_stone_markers",
+    "lengthKm": 3.7,
+    "terrainMultiplier": 0.9,
+    "modes": [
+      "walk"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 0
+  },
+  {
+    "id": "route_w5_silk_shrine",
+    "from": "loc_bs_sangban",
+    "to": "site_w5_silk_shrine",
+    "lengthKm": 3.13,
+    "terrainMultiplier": 0.9,
+    "modes": [
+      "walk"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 0
+  },
+  {
+    "id": "route_w5_old_mill",
+    "from": "loc_bs",
+    "to": "site_w5_old_mill",
+    "lengthKm": 4.44,
+    "terrainMultiplier": 0.9,
+    "modes": [
+      "walk",
+      "cart"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 1
+  },
+  {
+    "id": "route_w5_east_barracks",
+    "from": "loc_bs",
+    "to": "site_w5_east_barracks",
+    "lengthKm": 6.26,
+    "terrainMultiplier": 0.9,
+    "modes": [
+      "walk",
+      "horse",
+      "cart"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 1
+  },
+  {
+    "id": "route_w5_yg_drowned_sett",
+    "from": "loc_ms_yugen",
+    "to": "site_w5_yg_drowned_sett",
+    "lengthKm": 0.15,
+    "terrainMultiplier": 1.2,
+    "modes": [
+      "walk"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 0
+  },
+  {
+    "id": "route_w5_ll_deep_drift",
+    "from": "loc_ms_lielu",
+    "to": "site_w5_ll_deep_drift",
+    "lengthKm": 0.2,
+    "terrainMultiplier": 1.2,
+    "modes": [
+      "walk"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 1
+  },
+  {
+    "id": "route_w5_north_toll",
+    "from": "loc_bs",
+    "to": "site_w5_north_toll",
+    "lengthKm": 14.5,
+    "terrainMultiplier": 0.9,
+    "modes": [
+      "walk",
+      "horse",
+      "cart"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 1
+  },
+  {
+    "id": "route_w5_broken_rut_bridge",
+    "from": "loc_bs",
+    "to": "site_w5_broken_rut_bridge",
+    "lengthKm": 32.5,
+    "terrainMultiplier": 0.9,
+    "modes": [
+      "walk",
+      "horse",
+      "cart"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 1
+  },
+  {
+    "id": "route_w5_charcoal_camp",
+    "from": "loc_bs",
+    "to": "site_w5_charcoal_camp",
+    "lengthKm": 43.5,
+    "terrainMultiplier": 0.9,
+    "modes": [
+      "walk",
+      "horse"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 1
+  },
+  {
+    "id": "route_w5_cold_smelter",
+    "from": "loc_far_tongji",
+    "to": "site_w5_cold_smelter",
+    "lengthKm": 16.5,
+    "terrainMultiplier": 0.9,
+    "modes": [
+      "walk",
+      "horse"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 1
+  },
+  {
+    "id": "route_w5_tongji_flooded_mine",
+    "from": "loc_far_tongji",
+    "to": "site_w5_tongji_flooded_mine",
+    "lengthKm": 5.5,
+    "terrainMultiplier": 0.9,
+    "modes": [
+      "walk"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 2
+  },
+  {
+    "id": "route_w5_raid_fort",
+    "from": "loc_far_duanqi",
+    "to": "site_w5_raid_fort",
+    "lengthKm": 7.5,
+    "terrainMultiplier": 0.9,
+    "modes": [
+      "walk",
+      "horse"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 2
+  },
+  {
+    "id": "route_w5_orc_cairn",
+    "from": "loc_far_duanqi",
+    "to": "site_w5_orc_cairn",
+    "lengthKm": 8.5,
+    "terrainMultiplier": 0.9,
+    "modes": [
+      "walk"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 2
+  },
+  {
+    "id": "route_w5_seventy_li",
+    "from": "loc_bs",
+    "to": "site_w5_seventy_li",
+    "lengthKm": 46,
+    "terrainMultiplier": 0.9,
+    "modes": [
+      "walk",
+      "horse",
+      "cart"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 1
+  },
+  {
+    "id": "route_w5_way_temple",
+    "from": "loc_bs",
+    "to": "site_w5_way_temple",
+    "lengthKm": 72,
+    "terrainMultiplier": 0.9,
+    "modes": [
+      "walk",
+      "horse",
+      "cart"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 1
+  },
+  {
+    "id": "route_w5_boundary_pavilion",
+    "from": "loc_bs",
+    "to": "site_w5_boundary_pavilion",
+    "lengthKm": 104,
+    "terrainMultiplier": 0.9,
+    "modes": [
+      "walk",
+      "horse",
+      "cart"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 1
+  },
+  {
+    "id": "route_w5_granary_watergate",
+    "from": "loc_far_huancheng",
+    "to": "site_w5_granary_watergate",
+    "lengthKm": 3.4,
+    "terrainMultiplier": 0.9,
+    "modes": [
+      "walk"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 0
+  },
+  {
+    "id": "route_w5_indigo_ditch",
+    "from": "loc_far_huancheng",
+    "to": "site_w5_indigo_ditch",
+    "lengthKm": 8,
+    "terrainMultiplier": 0.9,
+    "modes": [
+      "walk",
+      "cart"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 0
+  },
+  {
+    "id": "route_w5_ferry_shrine_yandu",
+    "from": "loc_yandu",
+    "to": "site_w5_ferry_shrine",
+    "lengthKm": 15,
+    "terrainMultiplier": 0.9,
+    "modes": [
+      "walk"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 1
+  },
+  {
+    "id": "route_w5_ferry_shrine_hw",
+    "from": "loc_hw",
+    "to": "site_w5_ferry_shrine",
+    "lengthKm": 17,
+    "terrainMultiplier": 0.9,
+    "modes": [
+      "boat"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 1
+  },
+  {
+    "id": "route_w5_yandu_wreck",
+    "from": "loc_yandu",
+    "to": "site_w5_yandu_wreck",
+    "lengthKm": 3.9,
+    "terrainMultiplier": 0.9,
+    "modes": [
+      "walk",
+      "boat"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 1
+  },
+  {
+    "id": "route_w5_reed_salt",
+    "from": "loc_yandu",
+    "to": "site_w5_reed_salt",
+    "lengthKm": 8.8,
+    "terrainMultiplier": 0.9,
+    "modes": [
+      "walk",
+      "boat"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 1
+  },
+  {
+    "id": "route_w5_tj_kiln_shrine",
+    "from": "loc_ms_tanjie",
+    "to": "site_w5_tj_kiln_shrine",
+    "lengthKm": 0.12,
+    "terrainMultiplier": 1.2,
+    "modes": [
+      "walk"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 0
+  },
+  {
+    "id": "route_w5_yg_hollow_elm",
+    "from": "loc_ms_yugen",
+    "to": "site_w5_yg_hollow_elm",
+    "lengthKm": 0.1,
+    "terrainMultiplier": 1.2,
+    "modes": [
+      "walk"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 0
+  },
+  {
+    "id": "route_w5_rope_bridge_old",
+    "from": "loc_far_shuqiao",
+    "to": "site_w5_rope_bridge_old",
+    "lengthKm": 6,
+    "terrainMultiplier": 0.9,
+    "modes": [
+      "walk"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 2
+  },
+  {
+    "id": "route_w5_scent_watch",
+    "from": "loc_far_xiushi",
+    "to": "site_w5_scent_watch",
+    "lengthKm": 6.5,
+    "terrainMultiplier": 0.9,
+    "modes": [
+      "walk"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 1
+  },
+  {
+    "id": "route_w5_harbor_lamp",
+    "from": "loc_far_hupo",
+    "to": "site_w5_harbor_lamp",
+    "lengthKm": 8,
+    "terrainMultiplier": 0.9,
+    "modes": [
+      "walk",
+      "boat"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 1
+  },
+  {
+    "id": "route_w5_ice_cellar",
+    "from": "loc_far_xuedeng",
+    "to": "site_w5_ice_cellar",
+    "lengthKm": 7.4,
+    "terrainMultiplier": 0.9,
+    "modes": [
+      "walk"
+    ],
+    "closedSeasons": [
+      3
+    ],
+    "toll": 0,
+    "risk": 1
+  },
+  {
+    "id": "route_w5_silver_trial",
+    "from": "loc_capital",
+    "to": "site_w5_silver_trial",
+    "lengthKm": 16.6,
+    "terrainMultiplier": 0.9,
+    "modes": [
+      "walk",
+      "horse",
+      "cart"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 0
+  },
+  {
+    "id": "route_w5_well_camp",
+    "from": "loc_far_zhufeng",
+    "to": "site_w5_well_camp",
+    "lengthKm": 15.6,
+    "terrainMultiplier": 0.9,
+    "modes": [
+      "walk",
+      "horse"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 1
+  },
+  {
+    "id": "route_w5_reed_circle",
+    "from": "loc_far_luyu",
+    "to": "site_w5_reed_circle",
+    "lengthKm": 9.8,
+    "terrainMultiplier": 0.9,
+    "modes": [
+      "walk",
+      "boat"
+    ],
+    "closedSeasons": [
+      0
+    ],
+    "toll": 0,
+    "risk": 1
+  },
+  {
+    "id": "route_w5_old_season_post",
+    "from": "loc_far_jijie",
+    "to": "site_w5_old_season_post",
+    "lengthKm": 9.8,
+    "terrainMultiplier": 0.9,
+    "modes": [
+      "walk"
+    ],
+    "closedSeasons": [
+      3
+    ],
+    "toll": 0,
+    "risk": 1
   }
 ]

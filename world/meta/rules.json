@@ -1414,6 +1414,17 @@
           "source": "m5-authority/title_9_huangdi"
         }
       ]
+    },
+    "elections": {
+      "office_village_head": {
+        "settlements": [
+          "loc_bs_yupo",
+          "loc_bs_weiting",
+          "loc_bs_liquan",
+          "loc_bs_sangban"
+        ],
+        "source": "村民推选后报公署按现行任免章审定"
+      }
     }
   },
   "economy": {
@@ -2455,7 +2466,43 @@
         "integrity": {},
         "source": "白石镇辖下五村协查"
       }
-    ]
+    ],
+    "duels": {
+      "law_hw_property": {
+        "touch": true,
+        "death": false
+      },
+      "law_yp_property": {
+        "touch": true,
+        "death": false
+      },
+      "law_wt_property": {
+        "touch": true,
+        "death": false
+      },
+      "law_lq_property": {
+        "touch": true,
+        "death": false
+      },
+      "law_sb_property": {
+        "touch": true,
+        "death": false
+      }
+    },
+    "activityPenalties": {
+      "illegal_mining": {
+        "baseFine": 15,
+        "valueMultiplier": 2
+      },
+      "smuggling": {
+        "baseFine": 20,
+        "valueMultiplier": 2
+      },
+      "vote_buying": {
+        "baseFine": 40,
+        "valueMultiplier": 1
+      }
+    }
   },
   "weather": {
     "version": 1,
@@ -10066,6 +10113,78 @@
             "claim": "北岗老林里的白獐不见了，听说开了灵的都躲进了雾里。"
           }
         }
+      }
+    ]
+  },
+  "extraction": {
+    "fishing": {
+      "tool": "item_kitchen_knife",
+      "minutes": 30,
+      "difficultyBySeason": [
+        10,
+        15,
+        10,
+        20
+      ]
+    },
+    "mining": {
+      "tool": "item_mining_pick",
+      "minutes": 60,
+      "wear": 2,
+      "difficulty": 15,
+      "terrain": [
+        {
+          "tag": "stone",
+          "minerals": [
+            {
+              "item": "item_iron_ore",
+              "reserve": 12,
+              "recoveryDays": 30,
+              "recoveryAmount": 1
+            }
+          ]
+        },
+        {
+          "tag": "earth",
+          "minerals": [
+            {
+              "item": "item_iron_ore",
+              "reserve": 4,
+              "recoveryDays": 60,
+              "recoveryAmount": 1
+            }
+          ]
+        }
+      ],
+      "locations": {
+        "site_ms_ll_adit": [
+          {
+            "item": "item_iron_ore",
+            "reserve": 30,
+            "owner": "npc_ms_ll_yayue",
+            "recoveryDays": 0
+          }
+        ]
+      }
+    }
+  },
+  "elections": {
+    "campaignDays": 3
+  },
+  "smuggling": {
+    "cargoTaxBps": 1500,
+    "contrabandPremium": 1.5,
+    "contraband": [
+      "item_ember_core"
+    ],
+    "checkpoints": [
+      {
+        "route": "route_hw_yandu",
+        "location": "loc_hw_gate",
+        "guards": [
+          "npc_hw_gucen"
+        ],
+        "taxBps": 1500
       }
     ]
   }
