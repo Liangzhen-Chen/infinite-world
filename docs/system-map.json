@@ -2,7 +2,7 @@
  "title": "无限原野系统地图",
  "card": "K9",
  "generatedFrom": {
-  "commit": "refs/heads/v6",
+  "commit": "refs/heads/u10b",
   "method": "运行时导出（注册表、规则表、工具定义、效果表、立场传导表）+ 静态正则扫描（import 图、函数体标识符、state 分区与 records 前缀、rules/world 读取）。静态扫描是近似：经 engine.byId、helper 间接或动态拼接路径的访问不计入。"
  },
  "scanMethods": {
@@ -18,14 +18,14 @@
  "counts": {
   "layers": 6,
   "systems": 38,
-  "modules": 180,
-  "advance": 45,
+  "modules": 181,
+  "advance": 46,
   "tools": 25,
   "verbs": 28,
   "subscribers": 8,
   "interactionRules": 25,
   "effectKinds": 19,
-  "links": 395
+  "links": 399
  },
  "layers": [
   {
@@ -288,10 +288,11 @@
    "readBy": [
     "base_interactions",
     "sim_clock",
+    "sim_economy",
     "sim_environment",
     "sim_society"
    ],
-   "files": 109
+   "files": 110
   },
   {
    "id": "data_assets",
@@ -347,7 +348,7 @@
     "server-plugin/campaign-reducer.mjs",
     "server-plugin/archived-reducer.mjs"
    ],
-   "lines": 960,
+   "lines": 963,
    "stateWrites": [
     "combatDisengaged",
     "created",
@@ -773,7 +774,7 @@
    "modules": [
     "server-plugin/advance-registry.mjs"
    ],
-   "lines": 172,
+   "lines": 175,
    "stateWrites": [
     "effects",
     "obligations",
@@ -1487,10 +1488,11 @@
     "server-plugin/settlement-trade.mjs",
     "server-plugin/manufacturing.mjs",
     "server-plugin/repair.mjs",
+    "server-plugin/magic-economy.mjs",
     "server-plugin/extraction.mjs",
     "server-plugin/smuggling.mjs"
    ],
-   "lines": 1599,
+   "lines": 1856,
    "stateWrites": [
     "crafted",
     "itemInstances",
@@ -1512,12 +1514,14 @@
    ],
    "recordWrites": [
     "agriculture",
+    "magic-levy",
     "quote",
     "settlement-trade",
     "village-fiscal"
    ],
    "recordReads": [
     "levy",
+    "magic-economy",
     "physical_feature"
    ],
    "rules": [
@@ -1527,6 +1531,7 @@
     "equipment",
     "extraction",
     "law",
+    "magicEconomy",
     "repairs",
     "settlementTrade",
     "smuggling",
@@ -1545,17 +1550,21 @@
    "advance": [
     "contracts",
     "credit",
+    "daily",
     "settlement_trade",
     "shop_restock",
+    "magic_economy",
     "shadow_contracts"
    ],
    "subscribes": [],
    "effects": [
+    "crop_damage",
     "regional_quote"
    ],
    "tools": [
     "world_trade",
     "world_move",
+    "world_cast",
     "world_combat",
     "world_craft",
     "world_settlement",
@@ -1573,7 +1582,7 @@
    "modules": [
     "server-plugin/agriculture.mjs"
    ],
-   "lines": 325,
+   "lines": 327,
    "stateWrites": [
     "player",
     "records",
@@ -1645,7 +1654,7 @@
     "server-plugin/tribal-awakening.mjs",
     "server-plugin/elections.mjs"
    ],
-   "lines": 3640,
+   "lines": 3644,
    "stateWrites": [
     "buildings",
     "created",
@@ -1823,7 +1832,7 @@
     "server-plugin/seasonal-hazards.mjs",
     "server-plugin/hazard-calendar.mjs"
    ],
-   "lines": 1015,
+   "lines": 1020,
    "stateWrites": [
     "family",
     "npcs",
@@ -1915,7 +1924,7 @@
     "server-plugin/law.mjs",
     "server-plugin/bounty.mjs"
    ],
-   "lines": 828,
+   "lines": 842,
    "stateWrites": [
     "itemInstances",
     "location",
@@ -1935,6 +1944,7 @@
    "rules": [
     "economy",
     "law",
+    "magicEconomy",
     "quests"
    ],
    "world": [],
@@ -2369,6 +2379,8 @@
    "labels": [
     "contracts",
     "credit",
+    "daily",
+    "magic_economy",
     "settlement_trade",
     "shadow_contracts",
     "shop_restock"
@@ -2520,6 +2532,7 @@
    "labels": [
     "contracts.mjs",
     "credit.mjs",
+    "magic-economy.mjs",
     "settlement-trade.mjs",
     "shop.mjs"
    ]
@@ -2891,6 +2904,7 @@
     "credit.mjs",
     "extraction.mjs",
     "items.mjs",
+    "magic-economy.mjs",
     "manufacturing.mjs",
     "repair.mjs",
     "settlement-trade.mjs",
@@ -3154,6 +3168,14 @@
   },
   {
    "from": "sim_agriculture",
+   "to": "sim_economy",
+   "kind": "call",
+   "labels": [
+    "magic-economy.mjs"
+   ]
+  },
+  {
+   "from": "sim_agriculture",
    "to": "sim_environment",
    "kind": "call",
    "labels": [
@@ -3373,7 +3395,8 @@
    "to": "sim_economy",
    "kind": "call",
    "labels": [
-    "items.mjs"
+    "items.mjs",
+    "magic-economy.mjs"
    ]
   },
   {
@@ -3467,6 +3490,14 @@
   },
   {
    "from": "sim_economy",
+   "to": "base_effects",
+   "kind": "call",
+   "labels": [
+    "effects.mjs"
+   ]
+  },
+  {
+   "from": "sim_economy",
    "to": "base_standing",
    "kind": "call",
    "labels": [
@@ -3556,6 +3587,7 @@
    "to": "sim_society",
    "kind": "call",
    "labels": [
+    "group-account.mjs",
     "organizations.mjs",
     "promotion.mjs",
     "reputation-registry.mjs"
@@ -4590,6 +4622,14 @@
   },
   {
    "from": "data_design",
+   "to": "sim_economy",
+   "kind": "data",
+   "labels": [
+    "world/design"
+   ]
+  },
+  {
+   "from": "data_design",
    "to": "sim_environment",
    "kind": "data",
    "labels": [
@@ -5215,6 +5255,7 @@
    "to": "sim_economy",
    "kind": "effect",
    "labels": [
+    "crop_damage",
     "regional_quote"
    ]
   },
@@ -5256,6 +5297,14 @@
   },
   {
    "from": "sim_clock",
+   "to": "base_effects",
+   "kind": "effect",
+   "labels": [
+    "applyEffects"
+   ]
+  },
+  {
+   "from": "sim_economy",
    "to": "base_effects",
    "kind": "effect",
    "labels": [
@@ -5716,6 +5765,7 @@
    "to": "sim_economy",
    "kind": "tool",
    "labels": [
+    "world_cast",
     "world_combat",
     "world_craft",
     "world_create",
@@ -5901,6 +5951,7 @@
     "server-plugin/agriculture.mjs",
     "server-plugin/bosses.mjs",
     "server-plugin/hazard-calendar.mjs",
+    "server-plugin/magic-economy.mjs",
     "server-plugin/pets.mjs",
     "server-plugin/weather.mjs",
     "server-plugin/wildlife.mjs"
@@ -6119,6 +6170,17 @@
    "modules": [
     "server-plugin/hazard-calendar.mjs",
     "server-plugin/seasonal-hazards.mjs"
+   ],
+   "inline": false,
+   "partitions": []
+  },
+  {
+   "id": "magic_economy",
+   "order": 1370,
+   "stepped": false,
+   "nextMinute": false,
+   "modules": [
+    "server-plugin/magic-economy.mjs"
    ],
    "inline": false,
    "partitions": []
@@ -7229,6 +7291,7 @@
     ],
     "registeredIn": "server-plugin/seasonal-hazards.mjs",
     "modules": [
+     "server-plugin/magic-economy.mjs",
      "server-plugin/seasonal-hazards.mjs"
     ],
     "usedByHooks": [],
@@ -7538,6 +7601,7 @@
   "callers": [
    "server-plugin/faction-clock.mjs",
    "server-plugin/festival.mjs",
+   "server-plugin/magic-economy.mjs",
    "server-plugin/seasonal-hazards.mjs",
    "server-plugin/tribal-awakening.mjs",
    "server-plugin/war-diplomacy.mjs",
@@ -7609,6 +7673,7 @@
    "server-plugin/governance.mjs",
    "server-plugin/lies.mjs",
    "server-plugin/magic-consent.mjs",
+   "server-plugin/magic-economy.mjs",
    "server-plugin/military.mjs",
    "server-plugin/monster-society.mjs",
    "server-plugin/notables.mjs",
@@ -7850,12 +7915,14 @@
       "server-plugin/checks.mjs",
       "server-plugin/engine.mjs",
       "server-plugin/magic-consent.mjs",
+      "server-plugin/magic-economy.mjs",
       "server-plugin/magic.mjs"
      ],
      "systems": [
       "base_advance",
       "kernel_engine",
       "sim_character",
+      "sim_economy",
       "sim_magic"
      ]
     }
@@ -7864,6 +7931,7 @@
     "base_advance",
     "kernel_engine",
     "sim_character",
+    "sim_economy",
     "sim_magic"
    ]
   },
@@ -8903,12 +8971,13 @@
   },
   {
    "dir": "world/design",
-   "files": 109,
+   "files": 110,
    "keys": [],
    "readers": [
     "server-plugin/civic.mjs",
     "server-plugin/environment.mjs",
     "server-plugin/interactions.mjs",
+    "server-plugin/magic-economy.mjs",
     "server-plugin/seasonal-hazards.mjs"
    ],
    "tools": [
@@ -9129,6 +9198,7 @@
     "server-plugin/festival.mjs",
     "server-plugin/governance.mjs",
     "server-plugin/magic-air.mjs",
+    "server-plugin/magic-economy.mjs",
     "server-plugin/magic-light.mjs",
     "server-plugin/magic-message.mjs",
     "server-plugin/magic-movement.mjs",
@@ -9308,6 +9378,7 @@
     "server-plugin/location-access.mjs",
     "server-plugin/magic-care.mjs",
     "server-plugin/magic-consent.mjs",
+    "server-plugin/magic-economy.mjs",
     "server-plugin/magic-growth.mjs",
     "server-plugin/magic-movement.mjs",
     "server-plugin/magic-object.mjs",
@@ -9825,6 +9896,10 @@
   ],
   "smuggling": [
    "server-plugin/smuggling.mjs"
+  ],
+  "magicEconomy": [
+   "server-plugin/law.mjs",
+   "server-plugin/magic-economy.mjs"
   ]
  },
  "stateShare": {
@@ -10786,6 +10861,7 @@
       "server-plugin/entity-view.mjs",
       "server-plugin/governance.mjs",
       "server-plugin/hazard-calendar.mjs",
+      "server-plugin/magic-economy.mjs",
       "server-plugin/military.mjs",
       "server-plugin/monster-society.mjs",
       "server-plugin/notables.mjs",
@@ -11191,6 +11267,7 @@
       "server-plugin/magic-area.mjs",
       "server-plugin/magic-care.mjs",
       "server-plugin/magic-consent.mjs",
+      "server-plugin/magic-economy.mjs",
       "server-plugin/magic-effects.mjs",
       "server-plugin/magic-growth.mjs",
       "server-plugin/magic-light.mjs",
@@ -11214,6 +11291,7 @@
       "sim_boss",
       "sim_character",
       "sim_companion",
+      "sim_economy",
       "sim_environment",
       "sim_magic"
      ]
@@ -11472,6 +11550,7 @@
       "server-plugin/hazard-calendar.mjs",
       "server-plugin/law.mjs",
       "server-plugin/location-access.mjs",
+      "server-plugin/magic-economy.mjs",
       "server-plugin/magic-growth.mjs",
       "server-plugin/military.mjs",
       "server-plugin/monster-society.mjs",
@@ -12475,6 +12554,7 @@
       "server-plugin/effects.mjs",
       "server-plugin/faction-clock.mjs",
       "server-plugin/festival.mjs",
+      "server-plugin/magic-economy.mjs",
       "server-plugin/seasonal-hazards.mjs",
       "server-plugin/tribal-awakening.mjs",
       "server-plugin/war-diplomacy.mjs",
@@ -12483,6 +12563,7 @@
      "systems": [
       "base_effects",
       "sim_clock",
+      "sim_economy",
       "sim_military",
       "sim_society"
      ]
@@ -12491,6 +12572,7 @@
    "autoSystems": [
     "base_effects",
     "sim_clock",
+    "sim_economy",
     "sim_military",
     "sim_society"
    ],
@@ -12988,6 +13070,7 @@
     "server-plugin/magic-air.mjs",
     "server-plugin/magic-area.mjs",
     "server-plugin/magic-care.mjs",
+    "server-plugin/magic-economy.mjs",
     "server-plugin/magic-mind-space.mjs",
     "server-plugin/magic-object.mjs",
     "server-plugin/magic-water-earth.mjs",
@@ -13042,7 +13125,7 @@
     "npcs"
    ],
    "worldDirs": [],
-   "lines": 172
+   "lines": 175
   },
   "server-plugin/agriculture-migration.mjs": {
    "system": "kernel_storage",
@@ -13066,6 +13149,7 @@
    "system": "sim_agriculture",
    "imports": [
     "server-plugin/farm-pests.mjs",
+    "server-plugin/magic-economy.mjs",
     "server-plugin/magic-growth.mjs",
     "server-plugin/weather.mjs"
    ],
@@ -13101,7 +13185,7 @@
     "spells"
    ],
    "worldDirs": [],
-   "lines": 325
+   "lines": 327
   },
   "server-plugin/archived-reducer.mjs": {
    "system": "kernel_engine",
@@ -13803,6 +13887,7 @@
     "server-plugin/magic-care.mjs",
     "server-plugin/magic-consent.mjs",
     "server-plugin/magic-context.mjs",
+    "server-plugin/magic-economy.mjs",
     "server-plugin/magic-light.mjs",
     "server-plugin/magic-mind-space.mjs",
     "server-plugin/magic-object.mjs",
@@ -13910,7 +13995,7 @@
     "spells"
    ],
    "worldDirs": [],
-   "lines": 681
+   "lines": 684
   },
   "server-plugin/entity-transitions.mjs": {
    "system": "base_events",
@@ -14365,11 +14450,12 @@
    "recordReads": [],
    "rules": [
     "economy",
-    "law"
+    "law",
+    "magicEconomy"
    ],
    "world": [],
    "worldDirs": [],
-   "lines": 481
+   "lines": 495
   },
   "server-plugin/learning.mjs": {
    "system": "sim_character",
@@ -14625,6 +14711,46 @@
    "world": [],
    "worldDirs": [],
    "lines": 32
+  },
+  "server-plugin/magic-economy.mjs": {
+   "system": "sim_economy",
+   "imports": [
+    "server-plugin/effects.mjs",
+    "server-plugin/entity-view.mjs",
+    "server-plugin/group-account.mjs",
+    "server-plugin/law.mjs",
+    "server-plugin/reputation-registry.mjs",
+    "server-plugin/standing.mjs"
+   ],
+   "stateWrites": [
+    "npcs",
+    "player",
+    "records"
+   ],
+   "stateReads": [
+    "location",
+    "minute",
+    "settlements"
+   ],
+   "recordWrites": [
+    "magic-levy"
+   ],
+   "recordReads": [
+    "agriculture",
+    "magic-economy"
+   ],
+   "rules": [
+    "magicEconomy"
+   ],
+   "world": [
+    "items",
+    "locations",
+    "rules"
+   ],
+   "worldDirs": [
+    "design"
+   ],
+   "lines": 255
   },
   "server-plugin/magic-effects.mjs": {
    "system": "sim_magic",
@@ -15904,7 +16030,7 @@
     "locations"
    ],
    "worldDirs": [],
-   "lines": 145
+   "lines": 149
   },
   "server-plugin/public-projects.mjs": {
    "system": "sim_society",
@@ -16390,6 +16516,7 @@
     "server-plugin/environment.mjs",
     "server-plugin/hazard-calendar.mjs",
     "server-plugin/interactions.mjs",
+    "server-plugin/magic-economy.mjs",
     "server-plugin/npc-life.mjs"
    ],
    "stateWrites": [
@@ -16429,7 +16556,7 @@
    "worldDirs": [
     "design"
    ],
-   "lines": 363
+   "lines": 368
   },
   "server-plugin/seasonal-migration.mjs": {
    "system": "sim_wildlife",
@@ -16492,6 +16619,7 @@
    "imports": [
     "server-plugin/agriculture.mjs",
     "server-plugin/hazard-calendar.mjs",
+    "server-plugin/magic-economy.mjs",
     "server-plugin/traits.mjs",
     "server-plugin/weather.mjs"
    ],
@@ -16525,7 +16653,7 @@
     "rules"
    ],
    "worldDirs": [],
-   "lines": 236
+   "lines": 238
   },
   "server-plugin/shop.mjs": {
    "system": "sim_economy",

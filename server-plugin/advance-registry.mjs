@@ -38,6 +38,7 @@ import {advanceMilitary}from'./military.mjs';
 import {advanceWarDiplomacy}from'./war-diplomacy.mjs';
 import {advanceHazardClocks}from'./seasonal-hazards.mjs';
 import {hazardClocks,hazardYieldFactor}from'./hazard-calendar.mjs';
+import {advanceMagicEconomy,magicYieldFactor}from'./magic-economy.mjs';
 import {advanceBounties,nextBountyMinute,bountyActive}from'./bounty.mjs';
 import {advanceOffices,nextOfficeMinute}from'./governance.mjs';
 import {advanceOfficeSalaries,nextSalaryMinute}from'./office-salary.mjs';
@@ -79,7 +80,7 @@ const systems=[
       for(const [sid,source] of Object.entries(d.get('state','settlements'))) {
         if(source.granary===false)continue;// public money only, no public granary (D1 town ledger)
         const farming=advanceAgriculture(d,e,sid,source,day),s=farming?.settlement??clone(source);
-        const production=farming?0:Math.floor(cropProduction(e,d.document.randomSeed,sid,day*1440,s.foodPerDay)*hazardYieldFactor(d.get('state'),sid,day*1440+720)),available=s.food+production;
+        const production=farming?0:Math.floor(cropProduction(e,d.document.randomSeed,sid,day*1440,s.foodPerDay)*hazardYieldFactor(d.get('state'),sid,day*1440+720)*magicYieldFactor(d.get('state'),sid,day*1440+720)),available=s.food+production;
         const missing=farming?.missingMeals??Math.max(0,s.population-available);
         if(!farming)s.food=Math.max(0,available-s.population);s.unmetMeals=(s.unmetMeals??0)+missing;
         s.starvation=missing ? (s.starvation??0)+1 : Math.max(0,(s.starvation??0)-1);
@@ -121,6 +122,8 @@ const systems=[
  {id:'season_effects',order:1350,advance:(e,d,{before,after})=>advanceSeasonEffects(d,e,before,after)},
  // U3 floods, famine, epidemics and price swings (rules.hazardClock).
  {id:'hazard_clock',order:1360,active:e=>hazardClocks(e).length>0,advance:(e,d,ctx)=>advanceHazardClocks(d,e,ctx)},
+ // U10 life-magic economy: price curve, beneficiaries, competitors and complaints at midnight.
+ {id:'magic_economy',order:1370,advance:(e,d,ctx)=>advanceMagicEconomy(d,e,ctx)},
  {id:'faction_clock',order:1400,active:e=>factionClockRules(e).length>0,nextMinute:(e,d,now)=>nextFactionClockMinute(d.get('state'),now),
   advance:(e,d,{after})=>advanceFactionClocks(d,e,after)},
  {id:'organizations',order:1450,advance:(e,d,ctx)=>advanceOrganizations(d,e,ctx)},

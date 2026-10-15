@@ -1,6 +1,7 @@
 import {consumeGrowthDay,validateGrowthRules,validateGrowthWorld}from'./magic-growth.mjs';
 import {weatherAt}from'./weather.mjs';
 import {damageFarmCrops,farmPestProfile}from'./farm-pests.mjs';
+import {preservedSpoilage}from'./magic-economy.mjs';
 
 const key=id=>`agriculture:${id}`,path=id=>['state','records',key(id)];
 const clone=value=>structuredClone(value);
@@ -28,14 +29,15 @@ function takeGrain(r,s,amount,trace=false){
     for(const batch of r.batches.filter(b=>b.kind==='grain')){const used=Math.min(remaining,batch.amount);if(used)parts.push({...batch,amount:used});batch.amount-=used;remaining-=used;if(!remaining)break;}
     r.batches=r.batches.filter(b=>b.amount>0);s.food-=amount-remaining;return trace?{taken:amount-remaining,parts}:amount-remaining;
 }
-function expire(r,s,day,p,monthly=false){
+function expire(r,s,day,p,monthly=false,preserved=()=>0){
     for(const b of r.batches){if(b.kind==='grain'&&r.granary.condition<50)b.expiresDay=Math.min(b.expiresDay,b.harvestDay+p.normalStorageDays);}
     const expired=r.batches.filter(b=>b.expiresDay<=day).reduce((n,b)=>n+b.amount,0);
     r.batches=r.batches.filter(b=>b.expiresDay>day);s.food-=expired;r.ledger.spoiled+=expired;
     for(const b of r.field.seedBatches)if(r.granary.condition<50)b.expiresDay=Math.min(b.expiresDay,b.harvestDay+p.normalStorageDays);
     const spoiledSeed=r.field.seedBatches.filter(b=>b.expiresDay<=day).reduce((n,b)=>n+b.amount,0);
     r.field.seedBatches=r.field.seedBatches.filter(b=>b.expiresDay>day);r.field.seedBank-=spoiledSeed;r.ledger.spoiled+=spoiledSeed;
-    if(monthly&&day%30===29&&s.food){const spoil=Math.min(s.food,Math.ceil(s.food*p.spoilagePerMonth*(2-r.granary.condition/100)));r.ledger.spoiled+=takeFood(r,s,spoil);}
+    // U10: preservation casts covering the stock this month cut the spoilage.
+    if(monthly&&day%30===29&&s.food){let spoil=Math.min(s.food,Math.ceil(s.food*p.spoilagePerMonth*(2-r.granary.condition/100)));spoil-=preserved(spoil,s.food);r.ledger.spoiled+=takeFood(r,s,spoil);}
 }
 function sow(r,engine,p,day,units){
     const c=engine.rules.agriculture.crop,f=r.field,year=Math.floor(day/360);
@@ -98,7 +100,7 @@ export function advanceAgriculture(d,engine,id,source,day){
         if(r.granary.condition<=70&&maintenanceWorkers>0&&s.wood>=p.repairWood){s.wood-=p.repairWood;r.granary.condition=Math.min(100,r.granary.condition+p.repairCondition);}
         if(r.tools.condition<50&&maintenanceWorkers>0&&s.wood>=p.repairWood&&s.iron>=p.repairIron){s.wood-=p.repairWood;s.iron-=p.repairIron;r.tools.condition=Math.min(100,r.tools.condition+p.repairCondition);}
     }
-    expire(r,s,day,p,true);
+    expire(r,s,day,p,true,(spoil,food)=>preservedSpoilage(d,engine,id,day,spoil,food));
     let capacity=r.tools.condition>0?Math.floor(fieldWorkers*p.areaPerWorkerDay*r.tools.condition/100):0;
     const sowable=day%360>=engine.rules.agriculture.crop.sowDays[0]&&day%360<=engine.rules.agriculture.crop.sowDays[1]&&weather?.kind!=='storm'&&weather?.kind!=='snow';
     const planted=sowable?sow(r,engine,p,day,capacity):{units:0,seed:0};capacity-=planted.units;

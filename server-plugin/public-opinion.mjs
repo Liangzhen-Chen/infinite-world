@@ -34,6 +34,9 @@ function shape(state,memory){
         const order=(row.reputationHistory??[]).findIndex(e=>e.sourceEvent===memory.sourceEvent);
         return {topic:`case:${row.id}`,kind:'law',actor:row.offender,affected:row.victim??null,act,stage:memory.legalStage,order:order<0?0:order,case:row.id};
     }
+    // U10: a competitor's complaint that someone's life magic took their living.
+    if(memory.kind==='complaint'&&memory.sourceEvent&&memory.participants?.length>=2)
+        return {topic:`event:${memory.sourceEvent}`,kind:'complaint',actor:memory.participants[0],affected:memory.participants[1],act:'harm',order:0};
     if(['conflict','crime'].includes(memory.kind)&&memory.sourceEvent&&memory.participants?.length>=2)
         return {topic:`event:${memory.sourceEvent}`,kind:memory.kind,actor:memory.participants[0],affected:memory.participants[1],act:'harm',order:0};
     return null;
@@ -104,6 +107,7 @@ export function topicLabel(engine,document,topic){
     const name=id=>id==='player'?document.state.player.name:engine.byId.get(id)?.name??id;
     if(topic.kind==='law')return `${topic.case}：${name(topic.actor)}被控侵害${name(topic.affected)}`;
     if(topic.kind==='crime')return `${name(topic.actor)}试图偷取${name(topic.affected)}的财物`;
+    if(topic.kind==='complaint')return `${name(topic.affected)}投诉${name(topic.actor)}的生活魔法断了生计`;
     if(topic.kind==='conflict')return `${name(topic.actor)}与${name(topic.affected)}交锋`;
     return `${name(topic.actor)}${topic.act==='harm'?'侵害':'援助'}${name(topic.affected)}`;
 }
