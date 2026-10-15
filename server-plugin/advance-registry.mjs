@@ -72,6 +72,7 @@ const systems=[
  {id:'daily',order:500,advance(e,d,{before,after}){
     for(let day=Math.floor(before/1440);day<Math.floor(after/1440);day++){
       for(const [sid,source] of Object.entries(d.get('state','settlements'))) {
+        if(source.granary===false)continue;// public money only, no public granary (D1 town ledger)
         const farming=advanceAgriculture(d,e,sid,source,day),s=farming?.settlement??clone(source);
         const production=farming?0:Math.floor(cropProduction(e,d.document.randomSeed,sid,day*1440,s.foodPerDay)*hazardYieldFactor(d.get('state'),sid,day*1440+720)),available=s.food+production;
         const missing=farming?.missingMeals??Math.max(0,s.population-available);

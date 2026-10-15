@@ -33,7 +33,7 @@ import {advanceSettlementTrade,regionalTradePrice}from'./settlement-trade.mjs';
 import {tradeQuote,recordDeal}from'./shop.mjs';
 import {initializeWorldClocks}from'./world-clock.mjs';
 import {initializeFactionClocks,factionClockRules}from'./faction-clock.mjs';
-import {QUEST_SOURCES_VERSION}from'./quest-sources.mjs';
+import {QUEST_SOURCES_VERSION,openSettlementLedgers}from'./quest-sources.mjs';
 import {validateFestivalRuntime}from'./festival.mjs';
 import {wildlifePriceFactor,wildlifeEncounterAt,settleWildlifeEncounter,wildlifeEncounterView}from'./wildlife.mjs';
 import {wildlifeAwakeningConsumer}from'./wildlife-awakening.mjs';
@@ -130,7 +130,7 @@ export class WorldEngine {
                 buildings:{bld_hw_qingdeng:{owner:'npc_hw_linsui',condition:70}},projects:{},effects:{},obligations:{},quests:{},quotes:{},created:{},weather:{},turns:{},checks:{},learning:{},recipes:{}}};
         return prepare?initializeR1(document,this.world):document;
     }
-    createCharacter(legacy,options,seed){return initializeR1(initializeAgriculture(this,createCharacter.call(this,legacy,options,seed)),this.world);}
+    createCharacter(legacy,options,seed){return initializeR1(openSettlementLedgers(this,initializeAgriculture(this,createCharacter.call(this,legacy,options,seed))),this.world);}
     calendar(minute) {
         number(minute,0,Number.MAX_SAFE_INTEGER,'分钟');
         const day=Math.floor(minute/1440),month=Math.floor(day/30)%12,year=Math.floor(day/360)+1;

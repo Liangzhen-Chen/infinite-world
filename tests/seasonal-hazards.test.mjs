@@ -21,7 +21,11 @@ const hazards=doc=>Object.fromEntries(Object.entries(doc.state.records).filter((
 // them. A pure clock's day-0 stage lies before the campaign's first minute and
 // is never applied (old saves start from their own date): flood and price
 // apply their second stage on day 2 (or day `flood`) and the third after that.
+// The mechanism tests run on U3's own four clocks; the other places' clocks
+// (D1) are checked by tests/data-coverage.test.mjs.
+const U3_CLOCKS=['flood:loc_hw','epidemic:loc_hw','price:loc_bs','famine:loc_hw'];
 function spring(w,{rates=false,flood=2}={}){
+ w.rules.hazardClock.clocks=w.rules.hazardClock.clocks.filter(r=>U3_CLOCKS.includes(r.id));
  for(const r of w.rules.hazardClock.clocks){
   r.seasons=[0];r.intervalDays=r.kind==='epidemic'||r.kind==='famine'?1:r.kind==='flood'?flood:2;
   for(const s of r.stages){s.probability=1;if(s.condition.kind==='all')s.condition=s.condition.conditions[0];if(s.condition.kind==='weather')s.condition={kind:'always'};if(s.condition.kind==='granary_short')s.condition.days=1000;}
