@@ -35,7 +35,7 @@ test('玩家默认合法私人D身份；自称官职、公账授权不能增加�
  for(const patch of [{grade:'C'},{personal:false},{grade:'S',authorization:'report-only'},{reward:1000000}])await assert.rejects(publish(document,patch),/额度|托管/);
  assert.deepEqual(document,before);
  const posted=await publish(document);assert.equal(posted.document.state.player.coins,document.state.player.coins-20);assert.equal(posted.document.state.quests.quest_offer.escrow,20);
- assert.equal(total(posted.document),total(document));assert.deepEqual(questPublishingRights(engine,document.state),{month:0,limitD:0,usedD:0,personal:true});
+ assert.equal(total(posted.document),total(document));assert.deepEqual(questPublishingRights(engine,document.state),{month:0,limitD:0,usedD:0,personal:true,kinds:['personal'],rule:'各身份取最大值；名士仅文化类；monthlyQuotaD 显式覆盖全部身份额度',sources:[],override:null});
  const view=affairs(engine,posted.document);assert.equal(view.quota.personal,true);assert.equal(view.quota.limitD,null);assert.equal(view.tasks[0].direction,'outgoing');
 });
 test('测试授权身份沿D–S单位扣减，取消退托管不补发月额度',async()=>{

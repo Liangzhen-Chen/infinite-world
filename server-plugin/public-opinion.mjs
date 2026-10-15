@@ -26,6 +26,7 @@ function within(engine,location,place){
 // affected party. Topic ids join witnesses, retellings and society messages
 // of the same source event; a legal case is one topic across its stages.
 function shape(state,memory){
+    if(memory.kind==='salary'&&state.records?.[memory.salary]?.category==='office_salary')return {topic:`salary:${memory.salary}`,kind:'salary',actor:memory.participants[0],affected:memory.participants[1],act:'harm',order:0};
     if(memory.kind==='campaign')return {topic:`event:${memory.sourceEvent}`,kind:'campaign',actor:memory.participants[0],affected:memory.participants[1],act:memory.campaignSuccess?'aid':'harm',order:0};
     if(memory.legalCase){
         const row=state.records?.[memory.legalCase],act=STAGE_ACT[memory.legalStage];

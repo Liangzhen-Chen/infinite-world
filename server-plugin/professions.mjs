@@ -2,6 +2,7 @@ import {checkPetCareer}from'./pets.mjs';
 import {assertNpcService}from'./npc-schedule.mjs';
 import {initiation,ritualOfficiate}from'./training.mjs';
 import {npcServices}from'./npc-state.mjs';
+import {personCertified}from'./entity-view.mjs';
 import {acquireHiddenProfession,variantProgress,professionUltimate,completeProfessionUltimate,careerOf}from'./career-metrics.mjs';
 const int=(value,min,max,label)=>{if(!Number.isSafeInteger(value)||value<min||value>max)throw new Error(`${label}不在允许范围`);return value;};
 export function effectiveProficiency(d,engine,skill){
@@ -10,8 +11,7 @@ export function effectiveProficiency(d,engine,skill){
     return value;
 }
 export function certifiedForSkill(d,engine,skill){
-    const catalog=engine.byId.get(skill),roles=catalog?.learningProfessions??(catalog?.profession?[catalog.profession]:[]),current=d.get('state','professions');
-    return !roles.length||roles.some(role=>[current.combat,...current.life,...current.hidden].includes(role));
+    return personCertified(engine,d.get('state'),'player',skill);
 }
 export function careerEquipment(state){
     const role=state.professions.combat,history=role?state.careers?.[role]?.promotions??[]:[];

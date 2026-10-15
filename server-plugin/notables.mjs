@@ -1,3 +1,4 @@
+import {personRegistrar} from './entity-view.mjs';
 import {authorityOf} from './governance.mjs';
 import {standing,adjustStanding} from './standing.mjs';
 import {organization} from './organizations.mjs';
@@ -82,7 +83,7 @@ function appraise(engine,state,petition){
 function registrar(d,engine){
     const charter=authorityOf(engine)?.superiors?.auth_bs_office_charter,state=d.get('state');
     if(!charter||state.location!==charter.seat)throw Error('须在白石镇公署前厅递件转呈');
-    const staff=engine.world.npcs.filter(n=>n.workplace?.location===charter.seat&&charter.registrars.occupations.includes(n.occupation)&&awake(state.npcs[n.id])&&state.npcs[n.id].location===state.location).map(n=>n.id).sort();
+    const staff=engine.world.npcs.filter(n=>personRegistrar(engine,state,n.id,charter.seat,charter.registrars.occupations)&&awake(state.npcs[n.id])&&state.npcs[n.id].location===state.location).map(n=>n.id).sort();
     if(!staff.length)throw Error('前厅没有在岗的递件或抄录人，不能登记');
     return staff[0];
 }

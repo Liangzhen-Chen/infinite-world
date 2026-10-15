@@ -1,3 +1,4 @@
+import {settlementHead,personSimulation} from './entity-view.mjs';
 import {civicRules} from '../world/design/m5-civic-rules.mjs';
 import {npcHousehold} from './npc-life.mjs';
 import {workContribution} from './works.mjs';
@@ -21,14 +22,14 @@ function belongs(engine,location,settlement){
 }
 function present(d,engine,name){
     const id=engine.resolve(name,'npc'),actor=d.get('state','npcs',id);
-    if(!engine.world.npcs.some(row=>row.id===id)||!alive(actor)||actor.location!==d.get('state','location')||actor.scheduleTravel||actor.cognitionTravel)throw Error('需要实际在场且清醒的既有人物');
+    if(!(engine.world.npcs.some(row=>row.id===id)||personSimulation(engine,d.get('state'),id).value)||!alive(actor)||actor.location!==d.get('state','location')||actor.scheduleTravel||actor.cognitionTravel)throw Error('需要实际在场且清醒的既有人物');
     return id;
 }
 function manager(d,engine,p,name){
     if(d.get('state','location')!==p.counter)throw Error('须在本村登记柜台办理');
     if(!name)throw Error('需要 authority 指定正式在场管理人');
-    const id=present(d,engine,name);
-    if(id!==p.manager)throw Error('此人不是当地正式管理人');
+    const id=name==='player'?'player':present(d,engine,name);
+    if(id!==settlementHead(engine,d.get('state'),p.settlement).value)throw Error('此人不是当地正式管理人');
     return id;
 }
 // Only recorded contracts establish dates. A home roster and narrative cannot

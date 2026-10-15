@@ -1,3 +1,4 @@
+import {lawAuthorities} from './entity-view.mjs';
 import { trackTransferUnit, transferItems, changeItems } from './items.mjs';
 import {advanceWithNpcParticipants,assertNpcService}from'./npc-schedule.mjs';
 import {shareNpcMemory}from'./npc-cognition.mjs';
@@ -15,13 +16,14 @@ function currentCode(d,engine){const code=codeFor(engine,d.get('state','location
 function unique(d,id){if(d.get(...path(id)))throw new Error('法律登记编号已占用，拒绝覆盖');}
 function present(d,engine,name,allowSleeping=false){const id=engine.resolve(name,'npc'),actor=d.get('state','npcs',id);if(!(allowSleeping?alive(actor):awake(actor))||actor.location!==d.get('state','location'))throw new Error('当事人不在场或不能清醒行动');return id;}
 function authority(d,engine,code,name,kind){
-    const eligible=kind==='judge'?code.judges:[...code.officers,...code.judges];
+    const eligible=lawAuthorities(engine,d.get('state'),code,kind);
     if(!name){
         const candidates=eligible.filter(id=>awake(d.get('state','npcs',id))&&d.get('state','npcs',id).location===d.get('state','location'));
         throw new Error(`需要 authority 指定在场${kind==='judge'?'审判者':'执法者'}；候选：${candidates.map(id=>`${engine.byId.get(id)?.name}（${id}）`).join('、')||'无'}`);
     }
-    const id=present(d,engine,name);if(!eligible.includes(id))throw new Error('此人没有该法典的执法或审判资格');
-    if(dismissed(d.get('state'),id))throw new Error('此人已因受贿事发被撤职，不再有执法或审判资格');return id;
+    const id=present(d,engine,name);
+    if(dismissed(d.get('state'),id))throw new Error('此人已因受贿事发被撤职，不再有执法或审判资格');
+    if(!eligible.includes(id))throw new Error('此人没有该法典的执法或审判资格');return id;
 }
 function caseRow(d,engine,id){const row=d.get(...path(id));if(row?.category!=='legal_case')throw new Error('案件未登记');const code=engine.rules.law?.codes?.find(c=>c.id===row.law);if(!code)throw new Error('案件对应法典不可用，无执行权限');return{row,code};}
 function safeFund(d,id,category,extra={}){
@@ -224,7 +226,7 @@ function bribe(d,engine,args,eventId,row){
     if(dismissed(state,target))throw new Error('此人已被撤职，收钱也压不下案件');
     const offer=integer(args.coins,1,1e6,'贿金');if(state.player.coins<offer)throw new Error('钱不够这笔贿金');
     const w=wantedOfCase(state,row.id),hold=activeHold(state),npc=state.npcs[target];
-    const enforcer=[row.law,...w?.scope??[]].some(law=>enforcersOf(engine,law).includes(target));
+    const enforcer=[row.law,...w?.scope??[]].some(law=>enforcersOf(engine,law,d.get('state')).includes(target));
     const captor=hold?.case===row.id&&hold.captor===target;
     const eyewitness=row.evidence.find(e=>e.kind==='eyewitness'&&e.witness===target&&!e.invalidatedAt);
     const knower=eyewitness||(npc.memoryStream??[]).some(m=>m.legalCase===row.id)||(npc.legalKnowledge??[]).some(k=>k.case===row.id);
@@ -248,7 +250,7 @@ function bribe(d,engine,args,eventId,row){
         const incident=local?registerIncident(d,engine,{victim:target,offense:'bribery',witnesses,eventId,relationshipApplied:true}):null;
         let corruption=null,wanted=null;
         if(enforcer){
-            const law=[row.law,...w?.scope??[]].find(id=>enforcersOf(engine,id).includes(target));
+            const law=[row.law,...w?.scope??[]].find(id=>enforcersOf(engine,id,d.get('state')).includes(target));
             ({corruption,wanted}=recordExposedCorruption(d,engine,{target,law,offer,witnesses,eventId,location}));
         }
         return{case:row.id,accepted:true,exposed:true,offer,witnesses,bribeCase:incident,corruptionCase:corruption,wanted:wanted?.id??null,
@@ -303,7 +305,7 @@ export function lawAction(d,args,eventId){
         const code=currentCode(d,this),location=this.resolve(args.location),issuer=present(d,this,args.authority);
         if(location!==d.get('state','location')||!code.locations.includes(location)||args.subject!=='player'||args.action!=='mental_magic')throw Error('施法许可只限当前法域、在场申请人与登记用途');
         const delegation=code.magicAuthorities?.find(a=>a.npc===issuer&&a.locations.includes(location)&&a.actions.includes(args.action));
-        if(!delegation&&!code.officers.includes(issuer)&&!code.judges.includes(issuer))throw Error('机构或当事人没有颁发此施法许可的权限');
+        if(!delegation&&!lawAuthorities(this,d.get('state'),code).includes(issuer))throw Error('机构或当事人没有颁发此施法许可的权限');
         const duration=integer(args.minutes,1,delegation?.maximumMinutes??1440,'施法许可期限'),fee=integer(delegation?.fee??2,0,1e9,'施法许可费用');
         if(delegation)assertNpcService(d,this,issuer,'teach',5);
         if(d.get('state','player','coins')<fee)throw Error('施法许可费用不足');

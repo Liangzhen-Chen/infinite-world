@@ -1,3 +1,4 @@
+import {personTeaching} from './entity-view.mjs';
 import { applyPatches, canonical, PatchCursor } from './storage.mjs';
 import { EntityResolver, validateMemory, normalize } from './retrieval.mjs';
 import {assertLocationAccess,homePermission}from'./location-access.mjs';
@@ -540,7 +541,7 @@ export class WorldEngine {
             // Masterpiece, completed research or a key battle recorded by career metrics.
             const evidence=evidenceBreakthrough(d,this,skill,args.breakthroughSource,old);if(evidence)return evidence;
             const teacher=this.resolve(args.breakthroughSource,'npc'),base=this.byId.get(teacher),role=this.byId.get(skill).profession;
-            if(!((base.services??[]).includes(role)||(base.services??[]).includes(skill)||(base.skills??[]).includes(skill))||d.get('state','npcs',teacher,'location')!==d.get('state','location'))throw new Error('突破导师不具备资格或不在场');
+            if(!personTeaching(this,d.get('state'),teacher,skill)||d.get('state','npcs',teacher,'location')!==d.get('state','location'))throw new Error('突破导师不具备资格或不在场');
             assertNpcService(d,this,teacher,'teach',120);
             if(old.proficiency%300!==299)throw new Error('尚未达到当前阶段上限');
             if(!certifiedForSkill(d,this,skill))throw new Error('未认证职业不能跨越初级阶段');

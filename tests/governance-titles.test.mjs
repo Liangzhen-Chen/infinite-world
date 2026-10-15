@@ -66,7 +66,9 @@ test('勋爵须治理凭据且封地是现任村长之村；按封地实收税�
  // Base = what actually came in: the fees plus whatever tax the village's real trade produced.
  assert.ok(paid.base>=1200);const income=Math.floor(paid.base*xunjue.incomeBps/10000),tribute=Math.floor(income*xunjue.tributeBps/10000);
  assert.equal(paid.income,income);assert.equal(paid.tribute,tribute);
- assert.equal(c.state.player.coins,coins+income-tribute);assert.ok(treasury>0);
+ const salary=Object.values(c.state.records).filter(r=>r.category==='office_salary'&&r.holder==='player').reduce((sum,r)=>sum+r.paid,0);
+ assert.equal(salary,world.rules.governance.salaries.monthlyCopper.office_village_head.村);
+ assert.equal(c.state.player.coins,coins+income-tribute+salary);assert.ok(treasury>0);
  c=structuredClone(c);c.state.records[`governance_office:${village}:office_village_head:player`].status='已免职';
  const after=c.state.player.coins;c=await s.wait(c,30,'month2');
  assert.equal(c.state.player.coins,after);assert.equal(c.state.records['title:player'].status,'失封地');

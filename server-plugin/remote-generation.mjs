@@ -622,7 +622,7 @@ export function remoteWorld(base,state){
     // D1: generated settlements bring their hazard clocks and notice boards.
     world.rules={...base.rules,...(base.rules.wildlife?{wildlife:{...base.rules.wildlife}}:{}),
         ...(base.rules.hazardClock&&hazards.length?{hazardClock:{...base.rules.hazardClock,clocks:[...base.rules.hazardClock.clocks,...hazards]}}:{}),
-        ...(base.rules.questSources&&Object.keys(publishers).length?{questSources:{...base.rules.questSources,publishers:{...base.rules.questSources.publishers,...publishers}}}:{}),
+        ...(base.rules.questSources&&Object.keys(publishers).length?{questSources:{...base.rules.questSources,publishers:{...base.rules.questSources.publishers}}}:{}),
         ...(p?{governance:{...g,promotion:{...p,jurisdiction:{...p.jurisdiction,...Object.fromEntries(Object.entries(jurisdiction).filter(([k])=>!p.jurisdiction?.[k]))}}}}:{})};
     world.remoteCounties=records.map(r=>r.county).filter(Boolean);
     return world;

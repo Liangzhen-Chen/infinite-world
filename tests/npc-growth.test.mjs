@@ -95,7 +95,7 @@ test('达到条件后换营生：作息、服务与职务改变，存档恢复�
  out=await plan(s,[{kind:'switch_vocation',vocation:'vocation_hw_qingdeng_cook'}]);assert.equal(out.result.results[0].status,'已完成');
  const vocation=s.doc.state.npcs[npc].vocation;assert.equal(vocation.id,'vocation_hw_qingdeng_cook');assert.equal(s.doc.state.npcs[npc].occupation,'青灯酒馆帮厨');assert.equal(vocation.previous.occupation,'修理学徒');
  const day=Math.floor(s.doc.state.minute/DAY)*DAY;
- assert.deepEqual([scheduleAt(s.engine,npc,day+60,s.doc.state).location,scheduleAt(s.engine,npc,day+600,s.doc.state).location],[mill,'bld_hw_qingdeng']);
+ assert.deepEqual([scheduleAt(s.engine,npc,day+60,s.doc.state).location,scheduleAt(s.engine,npc,day+600,s.doc.state).location],['bld_hw_qingdeng','bld_hw_qingdeng'],'改业基准夜间居所取当前家户，不复制旧工作日程');
  assert.deepEqual(scheduleAt(s.engine,npc,day+600,s.doc.state).services,['trade']);
  const saved=reload(s);await nextMorning(saved);
  assert.equal(saved.doc.state.npcs[npc].location,'bld_hw_qingdeng');assert.equal(saved.doc.state.npcs[npc].activity,'在青灯酒馆后厨帮厨');
