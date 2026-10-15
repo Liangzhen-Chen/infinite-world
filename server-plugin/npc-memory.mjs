@@ -1,5 +1,5 @@
-import {personOccupation,personRelationships,personRemuneration} from './entity-view.mjs';
-import {deriveWorldEvents,eventRumorId,registerWorldEventSubscriber}from'./world-events.mjs';
+import {personPublicRole,personRelationships,personRemuneration,personName} from './entity-view.mjs';
+import {deriveWorldEvents,eventRumorId,registerWorldEventSubscriber,privateWorldEvent}from'./world-events.mjs';
 import {npcCognitionView}from'./npc-cognition.mjs';
 import {scheduleAt,npcAvailability}from'./npc-schedule.mjs';
 import {MemoryIndex,engineIndexOptions}from'./retrieval.mjs';
@@ -35,9 +35,21 @@ export function recordNpcMemories(d,engine,before,events,...rest){
     // Direct callers may still pass (tool,args,detail,eventId); it becomes the same event.
     if(typeof events==='string')rest=[{args:rest[0]??{},detail:rest[1]??{},eventId:rest[2]}],events=deriveWorldEvents(engine,before,d.get('state'),{tool:events,...rest[0]});
     const {args={},detail={},eventId}=rest[0];
-    if(!Object.keys(d.get('state','npcs')).some(id=>full(engine,id)))return;
     const event=events[0],verb=event.verb;
     const after=d.get('state'),name=id=>id==='player'?after.player.name:engine.byId.get(id)?.name??id;
+    if(event.tags?.includes('entity-transition')){
+        const participants=event.participants??[event.actor,event.target].filter(Boolean),hidden=privateWorldEvent(event),rumor=eventRumorId(engine,after,event);
+        const recipients=new Set([...participants,...(!hidden?event.witnesses??[]:[])]);
+        for(const id of recipients){
+            const npc=after.npcs?.[id];if(!npc||npc.status==='死亡')continue;
+            const key=`${event.id}:transition`,stream=npc.memoryStream??[];if(stream.some(m=>m.id===key))continue;
+            d.set(['state','npcs',id,'memoryStream'],[...stream,{id:key,sourceEvent:event.id,kind:'transition',minute:event.minute,location:event.location,participants,
+                content:event.summary,sourceType:participants.includes(id)?'亲历':'目击',salience:3,...(hidden?{private:true}:{}),
+                ...(rumor&&!hidden?{rumor,rumorSource:id,eventRumor:true}:{})}]);
+        }
+        return;
+    }
+    if(!Object.keys(d.get('state','npcs')).some(id=>full(engine,id)))return;
     const resolve=value=>{if(!value)return null;try{return engine.resolve(value);}catch{return null;}};
     const facts=[],add=(key,content,participants,options={})=>facts.push({key,content,participants:[...new Set(participants.filter(Boolean))],location:before.location,minute:after.minute,salience:2,emotion:'平静',...options});
     if(verb==='remember'&&detail.rumor&&!detail.duplicate){
@@ -141,7 +153,7 @@ export function npcContext(engine,document,id,query=''){
         known:(base.knowledge.known??[]).map(row=>row.fact),unknown:base.knowledge.unknown,rumors:npcRumors(engine,id,document),
         recentActivities:Object.values(document.state.npcAutonomy?.actions??{}).filter(row=>row.npc===id&&row.minute<=document.state.minute).slice(-2).map(row=>({minute:row.minute,content:row.summary})),
         memories:shared,lifeNews:npcLifeNews(engine,document,id),opinions:npcOpinions(engine,document,id).slice(0,3),reflections:cognition.reflections.filter(row=>row.about==='player').slice(-1),seeds:selectNpcSeedMemories(engine,document,id,query),behavior:base.behaviorRules??{},
-        relations:base.relationships.map(row=>({with:row.with,type:row.type,note:row.note})),
+        relations:personRelationships(engine,document.state,id).value.map(row=>({with:row.with,type:row.type,note:row.note})),
         background:npcBackground(engine,document,id,query)};
 }
 
@@ -150,8 +162,8 @@ export function npcBackground(engine,document,id,query=''){
     const base=engine.byId.get(id),state=document.state;if(!base||!state.npcs[id])return null;
     const mentioned=engine.resolver.mentions(query,state.location);
     const relations=personRelationships(engine,state,id).value.filter(row=>mentioned.has(id)||mentioned.has(row.with)||state.npcs[row.with]?.location===state.location)
-        .map(row=>({source:row.source,with:row.with,name:engine.byId.get(row.with)?.name??row.with,type:row.type,note:row.note,
-            publicRole:personOccupation(engine,state,row.with).value}));
+        .map(row=>({source:row.source,with:row.with,name:personName(engine,state,row.with).value??row.with,type:row.type,note:row.note,
+            publicRole:personPublicRole(engine,state,row.with).value}));
     const dayStart=state.minute-state.minute%1440,slots=[];
     if(base.schedule)for(let minute=dayStart;minute<dayStart+1440;){
         const slot=scheduleAt(engine,id,minute,state);if(!slot)break;

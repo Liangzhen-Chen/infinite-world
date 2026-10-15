@@ -11,6 +11,9 @@ export function renderPersonalPanel(container,data,kind){
     const provenance=(parent,row)=>{parent.append(node('p',`来源：${row.source.name}${row.source.author?` · 作者 ${row.source.author}`:''}${row.source.edition?` · 版本 ${row.source.edition}`:''}`,'fields-note'));if(row.learnedAt!==null)parent.append(node('p',`学会于第${Math.floor(row.learnedAt/1440)+1}天`,'fields-note'));};
     if(kind==='character'){
         const p=data.player,overview=section(p.name);overview.append(node('p',`${p.level}级 · ${p.status}`));
+        if(p.occupation||p.age!==null&&p.age!==undefined)overview.append(node('p',[p.occupation,p.age!==null&&p.age!==undefined?`${p.age}岁`:null].filter(Boolean).join(' · ')));
+        for(const r of p.relations??[])overview.append(node('p',`${r.type}：${r.name}`));
+        for(const r of p.positions??[])overview.append(node('p',`${r.name}：${r.position}`));
         stats(overview,[['生命',`${value(p.hp)} / ${value(p.maxHp)}`],['魔力',`${value(p.mp)} / ${value(p.maxMp)}`],['钱袋',`${p.coins}铜`],['待分配属性点',p.freeAttributePoints]]);
         if(p.nextLevelXp!==null)bar(overview,`经验 ${p.xp} / ${p.nextLevelXp} · 距${p.level+1}级还需${Math.max(0,p.nextLevelXp-p.xp)}`,p.xp,p.nextLevelXp);
         else overview.append(node('p',`已达${p.levelMaximum}级上限`));

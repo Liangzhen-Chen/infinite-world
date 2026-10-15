@@ -1,4 +1,5 @@
-import {lawAuthorities} from './entity-view.mjs';
+import {entityTransition,businessSnapshot,businessTransitions} from './entity-transitions.mjs';
+import {lawAuthorities,personName} from './entity-view.mjs';
 // Wanted notices, fugitives, bounty hunters and the bribery space of the codes (guide 3.12).
 // A judged-but-absent offender, a jail-breaker, a defaulting debtor or an exposed
 // corrupt officer becomes `wanted:<case>` (category legal_wanted). The notice covers
@@ -123,6 +124,8 @@ export function holdPlayer(d,engine,w,{captor,location,minute,surrendered=false}
     try{escort=Math.max(30,engine.route(location,code.court,'walk',minute,d.document.randomSeed).minutes);}catch{}
     const key=`legal_custody:${w.id}:${minute}`;
     d.set(rec(key),{category:'legal_custody',case:w.case,wanted:w.id,reason:'到案',captor,location,status:'生效',started:minute,expires:minute+escort,surrendered});
+    const caseRow=d.get(...rec(w.case));
+    entityTransition(d,engine,{id:`${key}:detain`,verb:'detain',actor:captor,target:'player',minute,location,visibility:caseRow?.private?'private':caseRow?.visibility??'public',summary:`${d.get('state','player','name')}已被拘押`});
     save(d,{...w,history:[...w.history,{kind:surrendered?'自首':'拦截',by:captor,location,minute}]});
     d.say(surrendered?`你向${nameOf(engine,d.get('state'),captor)}自首，将被押往${engine.byId.get(code.court)?.name??code.court}`:`${nameOf(engine,d.get('state'),captor)}认出你是通缉之人，当场扣下，要押往${engine.byId.get(code.court)?.name??code.court}`);
     return key;
@@ -146,15 +149,20 @@ function arrivePlayer(d,engine,lockKey,lock,minute){
 // The bounty handed in: the captive is detained at the court and the captor paid.
 export function deliverFugitive(d,engine,w,by,minute){
     const code=codeById(engine,w.law),row=d.get(...rec(w.case)),npc=w.subject;
+    if(d.get(...rec(`legal_detention:${w.id}`)))return 0;
+    const shops=businessSnapshot(engine,d.get('state'));
     d.set(['state','player','companions'],(d.get('state','player','companions')??[]).filter(n=>n!==npc));
     d.set(['state','npcs',npc,'location'],code.court);
     d.set(['state','npcs',npc,'activity'],'依法拘留');
     for(const field of ['scheduleTravel','cognitionTravel'])if(d.get('state','npcs',npc,field))d.remove(['state','npcs',npc,field]);
-    d.set(rec(`legal_detention:${w.id}`),{category:'legal_detention',subject:npc,case:w.case,wanted:w.id,location:code.court,deliveredBy:by,minute,status:'生效',expires:minute+code.maximumDetentionMinutes});
+    d.set(rec(`legal_detention:${w.id}`),{category:'legal_detention',subject:npc,case:w.case,wanted:w.id,location:code.court,deliveredBy:by,minute,status:'生效',expires:minute+code.maximumDetentionMinutes,
+        ...(row?.private||['private','secret'].includes(row?.visibility)?{visibility:row.private?'private':row.visibility}:{})});
     if(row)d.set(rec(row.id),{...row,status:'已到案',deliveredBy:by,deliveredAt:minute});
     const next={...w};const paid=payReward(d,next,by,minute);
     closeQuest(d,next,'已完成','逃犯已交付法院',minute,{taker:by,rewardPaid:paid});
     save(d,next);closeWanted(d,engine,next,'已到案','缉拿交付',minute);
+    entityTransition(d,engine,{id:`legal_detention:${w.id}:detain`,verb:'detain',actor:by,target:npc,minute,location:code.court,visibility:row?.private?'private':row?.visibility??'public',summary:`${personName(engine,d.get('state'),npc).value??npc}已依法拘留`});
+    businessTransitions(d,engine,shops,`legal_detention:${w.id}`,minute);
     if(by!=='player')remember(d,engine,by,next,minute,`把${nameOf(engine,d.get('state'),npc)}押到${engine.byId.get(code.court)?.name}，领赏${paid}铜。`,{visibility:'private',kind:'quest'});
     return paid;
 }

@@ -1,11 +1,12 @@
 // Explicit allow-list: author rumor seeds/truth, hidden places and proposed
 // solutions stay private. Registered contracts retain their settlement status.
-import {placeView} from './entity-view.mjs';
+import {placeView,personName} from './entity-view.mjs';
 const pick=(row,keys)=>Object.fromEntries(keys.filter(key=>row?.[key]!==undefined).map(key=>[key,structuredClone(row[key])]));
 export function publicSettlement(world,id,document=null){
  const p=world.settlementProfiles?.find(p=>p.id===id),d=p?.details;if(!p)return null;
- const name=id=>id==='player'?document?.state?.player?.name??'玩家':document?.state?.npcs?.[id]?.name??document?.state?.creatures?.[id]?.name??document?.state?.created?.[id]?.name??world.npcs.find(n=>n.id===id)?.name??world.residents?.find(n=>n.id===id)?.name??world.locations.find(l=>l.id===id)?.name??id;
- const currentView=document?placeView({world,rules:world.rules,byId:new Map([...world.locations,...world.npcs,...world.residents??[],...Object.values(document.state.created??{})].map(e=>[e.id,e]))},document.state,id):null;
+ const engine={world,rules:world.rules,byId:new Map([...world.locations,...world.npcs,...world.residents??[],...Object.values(document?.state.created??{})].map(e=>[e.id,e]))};
+ const name=id=>personName(engine,document?.state??{},id).value??engine.byId.get(id)?.name??id;
+ const currentView=document?placeView(engine,document.state,id):null;
  if(!d)return {id,name:name(id),population:currentView?.population.population.value??p.population,householdCount:currentView?.population.householdCount.value??p.householdCount,
   governance:{head:currentView?.government.head.value?{id:currentView.government.head.value,name:name(currentView.government.head.value)}:null,permissions:{head:currentView?.government.powers.value??[]}}};
  const person=id=>({id,name:name(id)}),e=d.economy,g=d.governance,foodUnitKg=world.rules?.agriculture?.foodUnitKg;

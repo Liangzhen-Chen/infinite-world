@@ -1,4 +1,4 @@
-import {personOccupation} from './entity-view.mjs';
+import {personOccupation,personName} from './entity-view.mjs';
 import {personAge}from'./entity-view.mjs';
 import {environmentCatalog} from './environment.mjs';
 import {petView} from './pets.mjs';
@@ -35,7 +35,7 @@ const list=value=>Array.isArray(value)?value.map(row=>typeof row==='string'?row:
 
 export function sceneCard(engine,document,query='',index=null){
     const s=document.state,place=engine.byId.get(s.location),mentioned=engine.resolver.mentions(query,s.location);
-    const name=id=>engine.byId.get(id)?.name??s.created?.[id]?.name??id;
+    const name=id=>personName(engine,s,id).value??engine.byId.get(id)?.name??s.created?.[id]?.name??id;
     const present=Object.entries(s.npcs).filter(([,npc])=>npc.location===s.location)
         .sort(([a],[b])=>Number(mentioned.has(b))-Number(mentioned.has(a))||a.localeCompare(b));
     const compactPeople=Math.min(present.length,engine.rules.prompt.npcLimit)>4;
@@ -43,7 +43,7 @@ export function sceneCard(engine,document,query='',index=null){
     while(location&&!seen.has(location.id)){seen.add(location.id);path.unshift(location.name);location=engine.byId.get(location.parent);}
     const p=s.player,parts=[`【时间】${engine.calendar(s.minute).text}${weather?`｜${weather.name}｜${weather.temperatureC}℃`:''}`,
         `【地点】${path.join(' › ')||s.location}（${s.location}）`,
-        `【你】${p.name}｜${p.level}级｜生命${p.hp}/${p.maxHp} 魔力${p.mp}/${p.maxMp}｜铜${p.coins}｜同行：${(p.companions??[]).map(name).join('、')||'无'}`,
+        `【你】${name('player')}｜${p.level}级｜生命${p.hp}/${p.maxHp} 魔力${p.mp}/${p.maxMp}｜铜${p.coins}｜同行：${(p.companions??[]).map(name).join('、')||'无'}`,
         `【在场】共${present.length}人`];
     const adjacent=new Set([place?.parent,...engine.world.locations.filter(row=>row.parent===s.location).map(row=>row.id),
         ...engine.world.routes.filter(route=>[route.from,route.to].includes(s.location)).map(route=>route.from===s.location?route.to:route.from)]);
@@ -76,7 +76,7 @@ export function sceneCard(engine,document,query='',index=null){
         const context=npcContext(engine,document,id,query);
         const relationship=relationView(engine,s,id,'player');
         const shared=(context?.memories??Object.values(document.memories??{}).filter(m=>m.subject===id).slice(-2)).map(m=>`${engine.calendar(m.minute??0).text} ${m.sourceType??''}：${text(m.content,140)}`);
-        parts.push(`${base.name}（${id}）｜${personOccupation(engine,s,id).value}，${personAge(engine,s,id).value??base.age??''}岁｜此刻：${text(available.activity)}\n  对你：信任${relationship.trust} 亲近${relationship.affection} 敬重${relationship.respect} 畏惧${relationship.fear}${relationship.favors.some(row=>row.status==='未还')?'，记得欠你的人情':''}｜涉及你的经历：${text(shared.join('；'),compactPeople?180:500)||'尚无已核实记录'}\n  说话：${text(base.speakingStyle??base.voice?.register??base.voice)}｜挂心：${text(context?.concern??list(npc.goals??base.goals),130)}\n  TA不知道：${text(list(context?.unknown??npc.unknownFacts??base.knowledge?.unknown??base.unknownFacts),160)}${!context&&base.notes?`\n  人物资料：${text(base.notes,180)}`:''}`);
+        parts.push(`${name(id)}（${id}）｜${personOccupation(engine,s,id).value}，${personAge(engine,s,id).value??base.age??''}岁｜此刻：${text(available.activity)}\n  对你：信任${relationship.trust} 亲近${relationship.affection} 敬重${relationship.respect} 畏惧${relationship.fear}${relationship.favors.some(row=>row.status==='未还')?'，记得欠你的人情':''}｜涉及你的经历：${text(shared.join('；'),compactPeople?180:500)||'尚无已核实记录'}\n  说话：${text(base.speakingStyle??base.voice?.register??base.voice)}｜挂心：${text(context?.concern??list(npc.goals??base.goals),130)}\n  TA不知道：${text(list(context?.unknown??npc.unknownFacts??base.knowledge?.unknown??base.unknownFacts),160)}${!context&&base.notes?`\n  人物资料：${text(base.notes,180)}`:''}`);
         if(context?.recentActivities?.length)parts.push(`  本人近期经历，玩家未必知情：${text(context.recentActivities.map(row=>`${engine.calendar(row.minute).text} ${row.content}`).join('；'),compactPeople?100:220)}`);
         if(context?.lifeNews?.length)parts.push(`  本人知道的乡里人事，玩家未必知情：${text(context.lifeNews.map(row=>`${engine.calendar(row.minute).text} ${row.sourceType}${row.heardFrom?`（听${name(row.heardFrom)}说）`:''}：${row.content}`).join('；'),compactPeople?120:260)}`);
         // The person in front of you: their own household, health and move.
