@@ -4,6 +4,7 @@ import {householdMembers,npcAgeAt} from './npc-state.mjs';
 import {actorId,actorPath} from './npc-state.mjs';
 import {groupAccountView} from './group-account.mjs';
 import {temples,templeById} from './faith-catalog.mjs';
+import {familyGroup,natalFamily} from './family-state.mjs';
 const LEADER={行会:'会长',帮派:'帮主',商号:'掌柜',教会:'主祭',会社:'会长',家户:'家长'};
 const ELDER='长老',MEMBER='成员',key=id=>`organization:${id}`;
 const living=(engine,state,id)=>{
@@ -43,7 +44,7 @@ export function organizationState(engine,state,id){
     const row=state.records?.[key(id)];
     const t=String(id).startsWith('temple:')?templeById(engine,id):null;
     const temple=t?.source==='temple'?{...t,kind:'教会',leader:t.teacher,leaderTitle:'主祭',members:{[t.teacher]:{position:'主祭',joinedAt:null,arrears:0}},treasury:0,charter:{mode:'leader',approval:true,fee:0,dues:0,rules:[t.rule]}}:null;
-    const base=row?.source==='created'?null:factionBase(engine,id)??householdBase(engine,state,id)??societyBase(engine,id)??temple;
+    const base=row?.source==='created'?null:(String(id).startsWith('family:')?familyGroup(engine,state,id.slice(7)):null)??factionBase(engine,id)??householdBase(engine,state,id)??societyBase(engine,id)??temple;
     if(!base&&row?.source!=='created')return null;
     const b=base??{id,name:row.name,source:'created',kind:row.kind,seat:row.seat,leader:null,leaderTitle:LEADER[row.kind]??'会长',members:{},treasury:0,charter:{}};
     const members={};
@@ -68,5 +69,6 @@ export function organizationIds(engine,state){
 }
 export function memberOrganizations(engine,state,member){
     member=actorId(engine.world,member);
-    return organizationIds(engine,state).map(id=>organizationState(engine,state,id)).filter(o=>o?.members[member]);
+    const ids=organizationIds(engine,state),family=natalFamily(engine,state,member);if(family)ids.push(family);
+    return ids.map(id=>organizationState(engine,state,id)).filter(o=>o?.members[member]);
 }

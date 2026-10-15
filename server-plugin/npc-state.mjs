@@ -75,6 +75,7 @@ export function beginHouseholdReads(engine){
  return {byId,byMember,created:null,population:null};
 }
 export function householdDefinition(engine,state,houseId){
+ const split=state.family?.households?.[houseId];if(split?.homeLocation&&split?.settlement)return split;
  const cache=engine.advanceHouseholds,authored=cache?cache.byId.get(houseId):engine.world.households?.find(h=>h.id===houseId);if(authored)return authored;
  if(cache&&cache.created!==state.created){
   cache.created=state.created;cache.population=new Map();

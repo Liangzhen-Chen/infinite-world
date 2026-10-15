@@ -37,7 +37,7 @@ export function standingKind(engine,state,id){
     if(isReputationSettlement(engine,id))return 'settlement';
     if(String(id).startsWith('faction_'))return 'faction';
     if(state.creatures?.[id])return 'creature';
-    if(state.records?.[`organization:${id}`])return 'organization';
+    if(state.records?.[`organization:${id}`]||String(id).startsWith('family:'))return 'organization';
     return null;
 }
 // A resident boss's regard comes from what it remembers of real encounters.
