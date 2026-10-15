@@ -1,6 +1,6 @@
 import {educationCourses,educationSites,educationStatistics,knowledgeProficiency,knowsKnowledge,courseWindow,educationReservation} from './education-state.mjs';
 import {npcLessonGain,settleNpcLesson} from './npc-growth.mjs';
-import {personConstraint,personHousehold,personAge} from './entity-view.mjs';
+import {personConstraint,personHousehold,personAge,personCertified} from './entity-view.mjs';
 import {facilityView} from './facility-state.mjs';
 import {transferItems} from './items.mjs';
 import {financeTransfer,financeBalance} from './finance-bank.mjs';
@@ -34,7 +34,8 @@ export function prepareEducation(d,e,{before,after}){
 function present(d,e,id){const s=d.get('state');if(!able(s,id)||location(s,id)!==s.location||personConstraint(e,s,id))throw Error('参与者须清醒在场且不受拘留');}
 function teaching(e,s,teacher,entity){
  if(!knowsKnowledge(e,s,teacher,entity))return false;
- const b=definition(e,s,entity);return entity.startsWith('skill_')||knowledgeProficiency(e,s,teacher,b.skill)>=(b.minimumProficiency??0);
+ const b=definition(e,s,entity);if(entity.startsWith('spell_')&&b.stage>=4)return false;
+ return entity.startsWith('skill_')||knowledgeProficiency(e,s,teacher,b.skill)>=(b.minimumProficiency??0);
 }
 export function studyBook(d,e,holder,source,entity){
  const s=d.get('state'),unit=s.itemInstances?.[source],item=unit?.item??source,b=definition(e,s,item);
@@ -46,12 +47,14 @@ export function studyBook(d,e,holder,source,entity){
  if(!book||!teaches.includes(entity)||!definition(e,s,entity))throw Error('书中没有这项已登记成果');
  if(knowledgeProficiency(e,s,holder,'skill_literacy')<e.rules.books.minimumLiteracy)throw Error('读者识字能力不足');
  const grade=e.rules.books.grades.indexOf(book.grade),content=definition(e,s,entity),stage=content.stage??Math.floor((content.minimumProficiency??0)/300);
+ if(entity.startsWith('spell_')&&stage>=4&&book.rare!==true)throw Error('专家级以上法术需要稀有典籍');
  if(grade<0||grade<Math.min(stage,4))throw Error('书籍品级不足');
  for(const r of b?.book?.prerequisites??[]){const sk=typeof r==='string'?r:r.skill;if(knowledgeProficiency(e,s,holder,sk)<(typeof r==='string'?1:r.minimum))throw Error('未满足书籍前置技能');}
  return {item,book,minutes:Math.max(content.learnMinutes??0,b?.book?.readingMinutes??0,e.rules.books.readingMinutes[grade]),ceiling:Math.min((grade+1)*300,book.ceilings?.[entity]??Infinity)};
 }
 function compatible(e,s,student,entity){
  const b=definition(e,s,entity),skill=entity.startsWith('skill_')?entity:b?.skill;if(!b||!skill)return false;
+ if(entity.startsWith('spell_')&&b.stage>0&&(!personCertified(e,s,student,skill)||knowledgeProficiency(e,s,student,skill)<b.stage*300))return false;
  if(!entity.startsWith('skill_')&&knowledgeProficiency(e,s,student,skill)<(b.minimumProficiency??0))return false;
  const sk=definition(e,s,skill);
  return [...b.prerequisites??[],...sk?.prerequisites??[]].every(r=>knowledgeProficiency(e,s,student,typeof r==='string'?r:r.skill)>=(typeof r==='string'?1:r.minimum));
@@ -135,7 +138,7 @@ export function educationAction(d,args,id){
  }
  if(operation==='school_open'||operation==='book_study'){
   const book=operation==='book_study',teacher=book?null:actor(e,args.source),entity=e.resolve(args.entity,args.kind),b=definition(e,s,entity);
-  if(!['skill','recipe'].includes(entity.split('_')[0]))throw Error('课程只接已登记技能或配方；法术研究沿原登记入口');
+  if(!['skill','recipe','spell'].includes(entity.split('_')[0]))throw Error('课程只接已登记技能、配方或法术');
   const students=[...new Set((args.students??[args.student]).filter(Boolean).map(n=>actor(e,n)))];if(!students.length||students.includes('player'))throw Error('须指定实际居民学生');
   for(const who of students)if(!d.get('state','npcs',who)&&args.consent===true){
    const student=rosterLifeState(e,d.get('state'),who,s.minute,'报名受教',{minor:(e.byId.get(who)?.age??18)<18});

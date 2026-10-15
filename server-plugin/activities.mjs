@@ -42,6 +42,8 @@ import {organizationAction,foundOrganization}from'./organizations.mjs';
 import {familyAction} from './family-politics.mjs';
 import {faithAction}from'./faith.mjs';
 import {workAction,isWorkOperation}from'./works.mjs';
+import {registerResearchSpell}from'./spell-research.mjs';
+import {hiddenCombat}from'./hidden-passives.mjs';
 import {educationAction} from './education.mjs';
 import {fish,eatFish,mine,miningPermit}from'./extraction.mjs';
 import {duelAction,activeDuel,finishDuel}from'./duels.mjs';
@@ -90,7 +92,10 @@ export const activities={
         const rawWeaponStats=weapon?this.byId.get(weapon).combat??{}:{},held=weapon?heldUnit(d,this,'player',weapon):null;
         const workmanshipFactor=this.rules.equipment.workmanship?.find(row=>row.name===held?.workmanship)?.multiplier??1;
         const weaponStats=Object.fromEntries(Object.entries(rawWeaponStats).map(([key,value])=>[key,value*workmanshipFactor])),careerStats=careerEquipment(d.get('state'));
+        const hidden=hiddenCombat(this,d.get('state'),'player',args.intent??'attack'),otherHidden=hiddenCombat(this,d.get('state'),target,'attack');
+        opponent.defense+=otherHidden.defense;
         const equipment=Object.fromEntries([...new Set([...Object.keys(weaponStats),...Object.keys(careerStats)])].map(key=>[key,(weaponStats[key]??0)+(careerStats[key]??0)]));
+        equipment.defense=(equipment.defense??0)+hidden.defense;
         const playerBase=derivedStats({level:p.level,attributes:p.attributes,profession:Boolean(d.get('state','professions','combat')),equipment},this.rules),playerContext=this.magicStatusContext(d,'player');
         playerContext.moving=['flee','shove'].includes(args.intent);
         const stats=withMagicStats(playerBase,magicStatusStats(d,'player',playerContext));
@@ -112,7 +117,7 @@ export const activities={
         const damage=nonlethal?Math.min(protection.damage,Math.max(0,hp-1)):protection.damage,remaining=Math.max(0,hp-damage);
         let escaped=false;if(intent==='flee')escaped=this.check(d,{attribute:'敏捷',difficulty:counter.escapeDifficulty??15},`${id}_escape`).success;
         let received=0,absorbed=0;const bossAbilities=[];for(let i=0;i<(opponent.attacks??1);i++)if(remaining>0&&!escaped&&received<p.hp&&!(nonlethal&&attack.hit)){
-            const currentOpponent=withMagicStats(opponentBase,magicStatusStats(d,target,opponentContext)),currentPlayer=withMagicStats(playerBase,magicStatusStats(d,'player',playerContext));
+            const currentOpponent=withMagicStats({...opponentBase,defense:opponentBase.defense+otherHidden.defense},magicStatusStats(d,target,opponentContext)),currentPlayer=withMagicStats(playerBase,magicStatusStats(d,'player',playerContext));
             currentPlayer.evasion=Math.max(0,currentPlayer.evasion-waterEarthMudPenalty(d,this)*.05);
             const opponentDark=opponentContext.illumination==='lit'?0:terrain.includes('dark')||night?this.rules.combat.terrain.dark.hit:0;
             const opponentHit=visibilityPenalty(hitModifier-(playerContext.illumination==='lit'?0:terrain.includes('dark')||night?this.rules.combat.terrain.dark.hit:0)+opponentDark,magicStatusStats(d,target,opponentContext),opponentContext);
@@ -230,14 +235,14 @@ export const activities={
         if(entity.id!==`${type}_created_${id.replace(/[^a-zA-Z0-9_-]/g,'_')}`||entity.name!==name)throw new Error('不能覆盖系统分配的编号或名称');
         if(['skill','spell','recipe'].includes(type)){
             const project=d.get('state','projects',args.project);if(!project||project.type!=='研究'||project.stage!=='打磨')throw new Error('新技能、法术或配方需要完成多日研究');
-            if(type==='spell')throw new Error('自创法术效果还需按规则目录审查，当前不能直接登记');
             if(project.result)throw new Error('这个研究项目已经登记成果');
             const maximum=Math.max(...project.skills.map(skill=>effectiveProficiency(d,this,skill))),stage=Math.floor(maximum/300)-1;
             if(stage<0)throw new Error('研究相关技能不足以承认成果');
             entity={id:entity.id,name,aliases:[],scope:d.get('state','location')};
             if(type==='skill'){
                 Object.assign(entity,{attribute:'智力',profession:null,stage,prerequisites:project.skills,notes:project.concept});
-            }else Object.assign(entity,registerRecipe(d,this,args.data,project,stage));
+            }else if(type==='spell')Object.assign(entity,registerResearchSpell(d,this,args.data,project,stage));
+            else Object.assign(entity,registerRecipe(d,this,args.data,project,stage));
             entity.source=args.project;
             d.set(['state','projects',args.project,'result'],entity.id);
         }

@@ -2,6 +2,7 @@ import {createHash}from'node:crypto';
 import {effectiveProficiency}from'./professions.mjs';
 import {heldUnit}from'./items.mjs';
 import {trickKey,adaptationBonus,noteTrick,intelligenceFresh}from'./npc-intelligence.mjs';
+import {hiddenCheckBonus,passiveDomain,observationTime}from'./hidden-passives.mjs';
 const integer=(value,min,max,label)=>{if(!Number.isSafeInteger(value)||value<min||value>max)throw new Error(`${label}不在允许范围`);return value;};
 const die=(document,eventId,label)=>createHash('sha256').update(`${document.randomSeed}:${eventId}:${label}`).digest().readUInt32LE(0)%20+1;
 const attributeOf=(engine,value)=>{if(!engine.rules.attributes.includes(value))throw new Error('属性不在规则表');return value;};
@@ -16,9 +17,9 @@ function presentNpc(d,engine,name){
     if(['死亡','濒死'].includes(actor.status))throw new Error('检定当事人无法清醒行动');
     return npc;
 }
-function modifierForNpc(d,engine,npc,attribute,skill){
+function modifierForNpc(d,engine,npc,attribute,skill,domain=null){
     const score=d.get('state','npcs',npc,'attributes',attribute)??engine.byId.get(npc)?.attributes?.[attribute]??10;
-    return Math.floor((integer(score,1,1000,'人物属性')-10)/2)+Math.floor((skill?npcProficiency(d,engine,npc,skill):0)/engine.rules.check.skillDivisor);
+    return Math.floor((integer(score,1,1000,'人物属性')-10)/2)+Math.floor((skill?npcProficiency(d,engine,npc,skill):0)/engine.rules.check.skillDivisor)+hiddenCheckBonus(engine,d.get('state'),npc,domain).bonus;
 }
 export function npcEntryCheck(d,engine,npc,{attribute,skill,difficulty},eventId){
     const score=d.get('state','npcs',npc,'attributes',attribute)??engine.byId.get(npc)?.attributes?.[attribute]??10;
@@ -47,6 +48,7 @@ export function toolBonuses(d,engine,tools,attribute,skill){
 export function check(d,args,eventId){
     if(args.modifier!==undefined)throw new Error('修正由属性和技能计算，不能直接指定');
     const attribute=attributeOf(this,args.attribute??'精神'),skill=args.skill?this.resolve(args.skill,'skill'):null;
+    const domain=passiveDomain(this,d.get('state'),{...args,skill});
     const context=integer(args.context??0,-this.rules.check.contextLimit,this.rules.check.contextLimit,'情境修正');
     if(context&&(typeof args.contextReason!=='string'||!args.contextReason.trim()))throw new Error('情境修正缺少理由');
     let difficulty,opponent,trick;
@@ -57,7 +59,7 @@ export function check(d,args,eventId){
         const otherSkill=args.opponent.skill?this.resolve(args.opponent.skill,'skill'):null;
         // 灵智：玩家同一手法屡次得手后，对手起防备（只看玩家所用属性与技能）。
         trick=trickKey(attribute,skill);const wary=intelligenceFresh(this)?adaptationBonus(this,d.get('state'),npc,trick):0;
-        const roll=die(d.document,eventId,'opponent:d20'),modifier=modifierForNpc(d,this,npc,otherAttribute,otherSkill)+wary;
+        const roll=die(d.document,eventId,'opponent:d20'),modifier=modifierForNpc(d,this,npc,otherAttribute,otherSkill,domain)+wary;
         opponent={npc,attribute:otherAttribute,skill:otherSkill,die:roll,modifier,total:roll+modifier,...(wary?{wary}:{})};difficulty=opponent.total;
     }else{
         difficulty=typeof args.difficulty==='string'?this.rules.check.difficulties[args.difficulty]:args.difficulty;
@@ -73,13 +75,14 @@ export function check(d,args,eventId){
         if(people.has(npc)||opponent?.npc===npc)throw new Error('同一人物不能重复协助或同时作为对手');people.add(npc);
         if(obligation.skill!==skill||obligation.attribute!==attribute)throw new Error('协助承诺与本次技能或属性不符');
         if(skill&&npcProficiency(d,this,npc,skill)<(this.rules.check.helperMinimumProficiency??100))throw new Error('协助者技能不足');
-        const roll=die(d.document,eventId,`helper:${npc}`),modifier=modifierForNpc(d,this,npc,attribute,skill);
+        const roll=die(d.document,eventId,`helper:${npc}`),modifier=modifierForNpc(d,this,npc,attribute,skill,domain);
         const success=roll!==1&&(roll===20||roll+modifier>=10);
         helpers.push({obligation:key,npc,die:roll,modifier,total:roll+modifier,success,bonus:success?this.rules.check.helperBonus??2:0});
     }
     const tools=toolBonuses(d,this,args.tools??[],attribute,skill);
     const baseModifier=Math.floor((d.get('state','player','attributes',attribute)-10)/2)+Math.floor((skill?effectiveProficiency(d,this,skill):0)/this.rules.check.skillDivisor);
-    const modifier=baseModifier+context+tools.bonus+helpers.reduce((sum,row)=>sum+row.bonus,0);
+    const hidden=hiddenCheckBonus(this,d.get('state'),'player',domain);
+    const modifier=baseModifier+context+tools.bonus+helpers.reduce((sum,row)=>sum+row.bonus,0)+hidden.bonus;
     const rolls=[die(d.document,eventId,'d20')];if(args.advantage||args.disadvantage)rolls.push(die(d.document,eventId,'second'));
     const roll=args.advantage===args.disadvantage?rolls[0]:args.advantage?Math.max(...rolls):Math.min(...rolls),total=roll+modifier;
     let degree,success;
@@ -91,8 +94,10 @@ export function check(d,args,eventId){
         degree=roll===1||total<=difficulty-10?'大失败':roll===20||total>=difficulty+10?'大成功':total<difficulty?'失败':total<difficulty+5?'勉强成功':'成功';
         success=['勉强成功','成功','大成功'].includes(degree);
     }
-    const result={die:roll,rolls,modifier,total,difficulty,degree,success,
+    const result={die:roll,rolls,modifier,total,difficulty,degree,success,...(hidden.bonus?{hiddenPassive:{domain,...hidden}}:{}),
         ...(opponent?{opponent}:{}),...(helpers.length?{helpers}:{}),...(tools.details.length?{tools:tools.details,toolBonus:tools.bonus}:{})};
+    const minutes=this.npcObligationAction?.tool==='check'?observationTime(this,d.get('state'),'player',domain):0;
+    if(minutes){this.advance(d,minutes,eventId);result.observationMinutes=minutes;}
     d.set(['state','checks',eventId],result);
     if(opponent&&success)noteTrick(d,this,opponent.npc,trick,eventId);
     for(const row of helpers){

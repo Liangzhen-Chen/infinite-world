@@ -19,7 +19,7 @@ export function emergencyHealing(d,engine,target,catalog){
 export function assertSpellConsent(d,engine,catalog,args,target,action,until=d.get('state','minute')){
  if(hasSpellConsent(d,target,args.authorization,action,catalog,until)||action==='healing'&&emergencyHealing(d,engine,target,catalog))return;
  if(args.force===true&&target!=='player')return;
- throw Error(action==='healing'?'照护或病症观察需要本人有效同意与授权；濒死急救除外':'施法需要本人仍有效的自愿同意与授权');
+ throw Error(action==='healing'?'需要本人同意：照护或病症观察须验证本人有效同意与授权；濒死急救除外':'施法需要本人同意，且自愿授权仍有效');
 }
 export function spellConsentPermission(d,engine,args,eventId){
  if(!['grant_access','revoke_access'].includes(args.operation))return null;

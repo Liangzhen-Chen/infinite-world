@@ -8,6 +8,7 @@ import {organizationState,memberOrganizations} from './organization-state.mjs';
 import {rankedOffice,adminLevel} from './promotion-view.mjs';
 import {upperOffice} from './noble-state.mjs';
 import {faithOf} from './faith-state.mjs';
+import {hiddenPassives} from './hidden-passives.mjs';
 
 const fact=(value,source,override=false)=>({value:structuredClone(value??null),source,override});
 const at=(state,path)=>path.reduce((o,k)=>o?.[k],state);
@@ -93,6 +94,7 @@ export function personCareer(engine,state,requested){
     const vocation=actor?.vocation,def=engine.rules.npcGrowth?.vocations?.find(v=>v.id===vocation?.id);
     const services=id==='player'?[]:vocation?(def?.teaches??vocation.services??[]):base?.services??[];
     const roles=id==='player'?[state.professions?.combat,...state.professions?.life??[],...state.professions?.hidden??[]].filter(Boolean):[...new Set([...Object.keys(actor?.certifications??{}),...services.filter(s=>s.startsWith('profession_')),...(!vocation?[base?.combatProfession,...base?.lifeProfessions??[]].filter(Boolean):[])])];
+    if(id!=='player')for(const role of actor?.hiddenProfessions??base?.hiddenProfessions??[])if(!roles.includes(role))roles.push(role);
     const apprenticeships=id==='player'?Object.entries(state.careers??{}).filter(([,r])=>r.initiation?.status==='守戒中').map(([r])=>r):[];
     return fact({occupation:vocation?(def?.name??vocation.name):actor?.occupation??base?.occupation??'',roles,apprenticeships,services:[...services],vocation:def??vocation??null},
         id==='player'?'state.professions + state.careers':vocation?`state.npcs.${id}.vocation + rules.npcGrowth.vocations`:`catalog.${id}.services`,Boolean(vocation||id==='player'));
@@ -311,7 +313,7 @@ export function personView(engine,state,requested){
         settlement:fact(settlement,settlementSource,Boolean(residence||household.override||actor?.settlement)),
         location:fact(location,id==='player'?'state.location':actor&&Object.hasOwn(actor,'location')?`${root}.location`:`catalog.${id}.location`,Boolean(actor)),
         organizations:socialIdentities(engine,state,id),faith:faithOf(engine,state,id),
-        offices:personOffices(engine,state,id),career:personCareer(engine,state,id),occupation:personOccupation(engine,state,id),employment:personEmployment(engine,state,id),remuneration:personRemuneration(engine,state,id),
+        offices:personOffices(engine,state,id),career:personCareer(engine,state,id),hiddenPassives:fact(hiddenPassives(engine,state,id),'current career + passive conditions'),occupation:personOccupation(engine,state,id),employment:personEmployment(engine,state,id),remuneration:personRemuneration(engine,state,id),
         titles:recordFacts(state,r=>r.category==='title'&&actorId(engine.world,r.holder)===id&&r.status!=='已除爵'),
         notables:recordFacts(state,r=>r.category==='notable'&&actorId(engine.world,r.holder)===id&&r.status==='在册'),
         legal:legalIdentities(engine,state,id),

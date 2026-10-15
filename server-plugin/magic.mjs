@@ -11,6 +11,7 @@ import './magic-marks.mjs';
 import './environment.mjs';
 import './summons.mjs';
 import {magicEffect}from'./magic-effects.mjs';
+import {hiddenCombat}from'./hidden-passives.mjs';
 import {assertSpellConsent}from'./magic-consent.mjs';
 import {derivedStats,monsterStats}from'./combat.mjs';
 import {recordDisciplineBreach}from'./training.mjs';
@@ -133,7 +134,7 @@ export function applyMagic(d,prepared,id){
     const protection=magicStatusStats(d,target),resistance=protection[`${spec.damageType}Resistance`]??0;
     const tactic=`magic_${spec.damageType??'untyped'}`,counter=spec.kind==='damage'?bossCounter(d,this,target,tactic):{damageMultiplier:1};
     const heatMultiplier=spec.lightDecay||spec.shadowDecay?lightDamageMultiplier(d,this,target,spec):spec.coldDecay?coldHeatMultiplier(prepared.ambientC):spec.windBlade?windArmorMultiplier(current.armorMaterial??this.byId.get(target)?.armorMaterial):prepared.stone?1+projectileAirPenalty(d,target,prepared.stone.massGrams*1000):1;
-    const resolved=resolveVitalityPrimitive({spec,hp:old,maxHp:maximum,defense:prepared.derived.defense+protection.defense,resistance,multiplier:counter.damageMultiplier*heatMultiplier});
+    const resolved=resolveVitalityPrimitive({spec,hp:old,maxHp:maximum,defense:prepared.derived.defense+protection.defense+hiddenCombat(this,d.get('state'),target).defense,resistance,multiplier:counter.damageMultiplier*heatMultiplier});
     const shield=spec.kind==='damage'?consumeMagicProtection(d,target,resolved.rawAmount,spec.damageType??'physical'):{damage:0,absorbed:0};
     const next=spec.kind==='damage'?Math.max(0,old-shield.damage):resolved.nextHp;
     if(target==='player')this.health(d,{delta:next-old},id);

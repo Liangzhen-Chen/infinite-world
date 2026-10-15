@@ -8,6 +8,7 @@ import {effectiveProficiency}from'./professions.mjs';
 import {npcSchedule,npcHousehold}from'./npc-state.mjs';
 import {growIntelligence,GROWTH_POINTS}from'./npc-intelligence.mjs';
 import {personSimulation,personConstraint,personCertified}from'./entity-view.mjs';
+import {hiddenCheckBonus}from'./hidden-passives.mjs';
 
 const DAY=1440,unable=['死亡','濒死','昏迷','患病'],sleeping=/睡眠|睡觉|熟睡/;
 const rules=engine=>{const r=engine.rules.npcGrowth;if(!r)throw Error('世界规则没有登记人物成长');return r;};
@@ -71,7 +72,7 @@ export function teachNpc(d,engine,args,eventId){
   cursor=slot.until;
  }
  if(today(state,student,state.minute).teach>=r.dailySessions)throw Error('今天已经教过这位人物，需隔日再教');
- let gain=0,skill;
+ let gain=0,skill=kind==='skill'?entity:catalog.skill;
  if(kind==='skill'){
   skill=entity;
   if(!knowsKnowledge(engine,state,teacherId,skill))throw Error('你没有掌握这项技能');
@@ -86,6 +87,14 @@ export function teachNpc(d,engine,args,eventId){
  advanceWithNpcParticipants(d,engine,minutes,eventId,[student,...teacherId!=='player'?[teacherId]:[]]);
  if(unable.includes(d.get('state','npcs',student,'status')))throw Error('教学中途学生失去行动能力');
  const at=d.get('state','minute'),mark=today(d.get('state'),student,state.minute);
+ const teacherSpecies=teacherId==='player'?state.player.species??'human':state.npcs[teacherId]?.species??engine.byId.get(teacherId)?.species??'human';
+ const studentSpecies=npc.species??engine.byId.get(student)?.species??'human';
+ let teachingCheck=null;
+ if(teacherId==='player'&&teacherSpecies!==studentSpecies&&hiddenCheckBonus(engine,d.get('state'),'player','teaching').bonus){
+  if((npc.trust??0)<0)throw Error('学生不愿接受这次授业');
+  teachingCheck=engine.check(d,{attribute:'智力',skill, difficulty:10,passiveDomain:'teaching'},eventId);
+  if(!teachingCheck.success){d.set(['state','npcs',student,'growth','today'],{...mark,teach:mark.teach+1});return{student,entity,kind,minutes,gained:0,...teachingCheck};}
+ }
  if(kind==='skill')gain=grow(d,engine,student,skill,gain,'teach');
  else d.set(['state','npcs',student,'recipes',entity],{source:{type:teacherId==='player'?'player':'teacher',id:teacherId},learnedAt:at,sourceEvent:eventId});
  d.set(['state','npcs',student,'growth','today'],{...mark,teach:mark.teach+1});
@@ -94,7 +103,7 @@ export function teachNpc(d,engine,args,eventId){
  // 被教导是灵智成长的来源之一；学会新配方算接触新事物，比熟练度增长略多。
  growIntelligence(d,engine,student,kind==='recipe'?GROWTH_POINTS.teachRecipe:GROWTH_POINTS.teachSkill,'教导',eventId);
  d.say(`${name}${summary}`);
- return{student,entity,kind,minutes,gained:gain,...(skill?{proficiency:npcProficiency(engine,d.get('state'),student,skill)}:{})};
+ return{student,entity,kind,minutes,gained:gain,...(teachingCheck?{teachingCheck}:{}),...(skill?{proficiency:npcProficiency(engine,d.get('state'),student,skill)}:{})};
 }
 
 // Called once when an autonomous craft action settles; the action id is the

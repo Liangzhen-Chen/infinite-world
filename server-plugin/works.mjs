@@ -70,7 +70,7 @@ function write(d,engine,args,id){
     literate(d,engine);
     const title=text(args.name,'书名'),concept=text(args.concept,'内容提要'),skill=learned(d,engine,(args.skills??[])[0]??WORK_RULES.literacySkill);
     const teaches=[...new Set((args.entities??[skill]).map(x=>engine.resolve(x)))];
-    for(const entity of teaches)if(!['skill','recipe'].includes(entity.split('_')[0])||!knowsKnowledge(engine,d.get('state'),'player',entity))throw Error('只能写入本人已掌握的已登记技能或配方');
+    for(const entity of teaches)if(!['skill','recipe','spell'].includes(entity.split('_')[0])||!knowsKnowledge(engine,d.get('state'),'player',entity))throw Error('只能写入本人已掌握的已登记技能、配方或法术');
     const minutes=integer(args.minutes??240,120,480,'写作时间');
     spend(d,engine,[[WORK_RULES.paper,1]]);
     engine.advance(d,minutes,id);
@@ -136,14 +136,15 @@ function copy(d,engine,args,id){
     if(!outcome.success){d.say(`抄写《${definition.name}》失败，纸墨已耗`);return{operation:'copy',item,minutes,...outcome};}
     const origin=source.unit?.book??null,chain=[...origin?.chain??[],source.unit?.book?source.unit.id:`catalog:${item}`];
     const edition=(origin?.edition??0)+1,[instance]=produceItems(d,engine,item,1,{eventId:id,workmanship:workQuality(outcome,scribe)});
-    const book={...origin,teaches:origin?.teaches??definition.book?.teaches??[],grade:grades[index],edition,chain,source:source.unit?.id??null,scribe:'player',scribeName:d.get('state','player','name'),copiedAt:d.get('state','minute')};
+    const author=origin?.author??definition.book?.author,recordAuthor=Boolean(author)&&(!engine.replaying||engine.replayResult?.bookAuthor!==undefined);
+    const book={...origin,...(recordAuthor?{author}:{}),teaches:origin?.teaches??definition.book?.teaches??[],grade:grades[index],edition,chain,source:source.unit?.id??null,scribe:'player',scribeName:d.get('state','player','name'),copiedAt:d.get('state','minute')};
     d.set(['state','itemInstances',instance,'book'],book);
     const{location,settlement}=placeOf(d,engine);
     const work=save(d,{id:`work_${id}`,kind:'copy',title:definition.name,author:definition.book?.author??origin?.author,scribe:'player',skill:WORK_RULES.scribeSkill,quality:workQuality(outcome,scribe),
         masterpiece:false,minute:d.get('state','minute'),location,settlement,sourceEvent:id,item,instance,grade:book.grade,edition,chain});
     d.set(['state','itemInstances',instance,'work'],work.id);
     d.say(`抄成《${definition.name}》第${edition}代抄本，品级${book.grade}`);
-    return{operation:'copy',work:work.id,item,instance,grade:book.grade,edition,chain,minutes,...outcome,workEvent:event('copy',work)};
+    return{operation:'copy',work:work.id,item,instance,grade:book.grade,edition,chain,minutes,...(recordAuthor?{bookAuthor:author}:{}),...outcome,workEvent:event('copy',work)};
 }
 
 function perform(d,engine,args,id){

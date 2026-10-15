@@ -1,6 +1,7 @@
 import {facilityView,facilityRouteStates} from './facility-state.mjs';
 import {NPC_CRIME_VERSION} from './npc-crime.mjs';
 import {personTeaching} from './entity-view.mjs';
+import {hiddenCheckBonus} from './hidden-passives.mjs';
 import { applyPatches, canonical, PatchCursor } from './storage.mjs';
 import { EntityResolver, validateMemory, normalize } from './retrieval.mjs';
 import {assertLocationAccess,homePermission}from'./location-access.mjs';
@@ -618,12 +619,20 @@ export class WorldEngine {
         this.advance(d,catalog.minutes,id);this.practice(d,{skill:catalog.skill,gain:3,target:args.target??'施法'},id);
         if(result.success&&catalog.duration&&!prepared)d.set(['state','effects',id],{spell,target:text(args.target??'近处物体',200),expires:d.get('state','minute')+catalog.duration});
         const effect=result.success?applyMagic.call(this,d,prepared,id):{};
-        if(!result.success&&result.degree==='大失败'&&catalog.failureDamage)this.health(d,{delta:-catalog.failureDamage},id);
+        let backlash=null;
+        if(!result.success&&result.degree==='大失败'&&catalog.failureDamage){
+            let damage=catalog.failureDamage;
+            if(catalog.stage<=1&&hiddenCheckBonus(this,d.get('state'),'player','backlash').bonus){
+                const tolerance=this.check(d,{attribute:'体质',difficulty:10,passiveDomain:'backlash'},`${id}:backlash`);
+                damage=Math.max(1,damage-(tolerance.success?1:0));backlash={...tolerance,damage};
+            }
+            this.health(d,{delta:-damage},id);
+        }
         const completed=result.success&&!effect.effectFailed;
         // U10: village-scale economy of life magic (ledger, regulation).
         const economy=completed?recordMagicEconomy.call(this,d,catalog,effect,id):null;
         d.say(`${catalog.name}${completed?'施放成功':'施放失败'}，消耗${catalog.mp}魔力`);
-        return {spell,...result,...effect,...(legalCase?{case:legalCase}:{}),checkSuccess:result.success,success:completed,mpCost:catalog.mp,...(economy?{economy}:{})};
+        return {spell,...result,...effect,...(backlash?{backlash}:{}),...(legalCase?{case:legalCase}:{}),checkSuccess:result.success,success:completed,mpCost:catalog.mp,...(economy?{economy}:{})};
     }
     learn(d,args,id) {
         return learn.call(this,d,args,id);
@@ -665,6 +674,7 @@ export class WorldEngine {
         if(type==='送货'){obligation.item=this.resolve(args.item,'item');obligation.quantity=number(args.quantity,1,100000);}
         if(type==='付款'){
             obligation.coins=number(args.coins,1,1e9);
+            if(!this.replaying||this.replayResult?.obligation?.recordCompletionTime===true)obligation.recordCompletionTime=true;
             if(!this.replaying){
                 const existing=Object.entries(d.get('state','records')??{}).find(([,row])=>row.category==='debt'&&row.debtor===promisor&&row.creditor===promisee&&row.status!=='已还清'&&row.amount-row.paid===obligation.coins);
                 if(existing)throw new Error(`这笔付款已有欠款记录 ${existing[0]}，不能再登记会重复扣款的付款约定；还款请按该欠款编号办理，赊账期限应在交易时用 creditMinutes 设置`);
@@ -695,7 +705,7 @@ export class WorldEngine {
         }
         if(o.type==='送货'){if(this.quantity(d,o.promisor,o.item)<o.quantity)throw new Error('承诺者缺少货物');transferItems(d,this,o.promisor,o.promisee,o.item,o.quantity);}
         if(o.type==='付款'){if(source.coins<o.coins)throw new Error('承诺者资金不足');d.set([...this.actorPath(o.promisor),'coins'],source.coins-o.coins);d.set([...this.actorPath(o.promisee),'coins'],target.coins+o.coins);}
-        d.set(['state','obligations',key,'status'],'已完成');if(o.deliveryVersion===1)d.set(['state','obligations',key,'resolvedAt'],d.get('state','minute'));d.say(`${o.content}已履行`);
+        d.set(['state','obligations',key,'status'],'已完成');if(o.deliveryVersion===1||o.recordCompletionTime)d.set(['state','obligations',key,'resolvedAt'],d.get('state','minute'));d.say(`${o.content}已履行`);
     }
     remember(d,args,id) {
         if(args.rumor!==undefined)return hearNpcRumor(d,this,args,id);

@@ -1,0 +1,522 @@
+{
+  "rows": [
+    {
+      "id": "profession_hidden_01",
+      "attempts": [
+        {
+          "error": "模型没有返回 JSON 正文"
+        },
+        {
+          "error": "模型没有返回 JSON 正文"
+        }
+      ]
+    },
+    {
+      "id": "profession_hidden_02",
+      "attempts": [
+        {
+          "error": "模型没有返回 JSON 正文"
+        },
+        {
+          "error": "模型没有返回 JSON 正文"
+        }
+      ]
+    },
+    {
+      "id": "profession_hidden_03",
+      "attempts": [
+        {
+          "error": "模型没有返回 JSON 正文"
+        },
+        {
+          "error": "模型没有返回 JSON 正文"
+        }
+      ]
+    },
+    {
+      "id": "profession_hidden_04",
+      "attempts": [
+        {
+          "error": "模型没有返回 JSON 正文"
+        },
+        {
+          "error": "模型没有返回 JSON 正文"
+        }
+      ]
+    },
+    {
+      "id": "profession_hidden_05",
+      "attempts": [
+        {
+          "error": "模型没有返回 JSON 正文"
+        },
+        {
+          "error": "模型没有返回 JSON 正文"
+        }
+      ]
+    },
+    {
+      "id": "profession_hidden_06",
+      "attempts": [
+        {
+          "error": "模型没有返回 JSON 正文"
+        },
+        {
+          "error": "模型没有返回 JSON 正文"
+        }
+      ]
+    },
+    {
+      "id": "profession_hidden_07",
+      "attempts": [
+        {
+          "error": "模型没有返回 JSON 正文"
+        },
+        {
+          "error": "模型没有返回 JSON 正文"
+        }
+      ]
+    },
+    {
+      "id": "profession_hidden_08",
+      "attempts": [
+        {
+          "error": "模型没有返回 JSON 正文"
+        },
+        {
+          "error": "模型没有返回 JSON 正文"
+        }
+      ]
+    },
+    {
+      "id": "profession_hidden_09",
+      "attempts": [
+        {
+          "error": "模型没有返回 JSON 正文"
+        },
+        {
+          "error": "模型没有返回 JSON 正文"
+        }
+      ]
+    },
+    {
+      "id": "profession_hidden_10",
+      "attempts": [
+        {
+          "error": "模型没有返回 JSON 正文"
+        },
+        {
+          "error": "模型没有返回 JSON 正文"
+        }
+      ]
+    },
+    {
+      "id": "profession_hidden_11",
+      "attempts": [
+        {
+          "error": "模型没有返回 JSON 正文"
+        },
+        {
+          "error": "模型没有返回 JSON 正文"
+        }
+      ]
+    },
+    {
+      "id": "profession_hidden_12",
+      "attempts": [
+        {
+          "error": "模型没有返回 JSON 正文"
+        },
+        {
+          "error": "模型没有返回 JSON 正文"
+        }
+      ]
+    },
+    {
+      "id": "profession_hidden_13",
+      "attempts": [
+        {
+          "error": "模型没有返回 JSON 正文"
+        },
+        {
+          "error": "模型没有返回 JSON 正文"
+        }
+      ]
+    },
+    {
+      "id": "profession_hidden_14",
+      "attempts": [
+        {
+          "error": "模型没有返回 JSON 正文"
+        },
+        {
+          "error": "模型没有返回 JSON 正文"
+        }
+      ]
+    },
+    {
+      "id": "profession_hidden_15",
+      "attempts": [
+        {
+          "error": "模型没有返回 JSON 正文"
+        },
+        {
+          "error": "模型没有返回 JSON 正文"
+        }
+      ]
+    },
+    {
+      "id": "profession_hidden_16",
+      "attempts": [
+        {
+          "error": "模型没有返回 JSON 正文"
+        },
+        {
+          "error": "模型没有返回 JSON 正文"
+        }
+      ]
+    },
+    {
+      "id": "profession_hidden_17",
+      "attempts": [
+        {
+          "error": "模型没有返回 JSON 正文"
+        },
+        {
+          "error": "模型没有返回 JSON 正文"
+        }
+      ]
+    },
+    {
+      "id": "profession_hidden_18",
+      "attempts": [
+        {
+          "error": "模型没有返回 JSON 正文"
+        },
+        {
+          "error": "模型没有返回 JSON 正文"
+        }
+      ]
+    },
+    {
+      "id": "profession_hidden_19",
+      "attempts": [
+        {
+          "error": "模型没有返回 JSON 正文"
+        },
+        {
+          "error": "模型没有返回 JSON 正文"
+        }
+      ]
+    },
+    {
+      "id": "profession_hidden_20",
+      "attempts": [
+        {
+          "error": "模型没有返回 JSON 正文"
+        },
+        {
+          "error": "模型没有返回 JSON 正文"
+        }
+      ]
+    },
+    {
+      "id": "profession_hidden_21",
+      "attempts": [
+        {
+          "error": "模型没有返回 JSON 正文"
+        },
+        {
+          "error": "模型没有返回 JSON 正文"
+        }
+      ]
+    },
+    {
+      "id": "profession_hidden_22",
+      "attempts": [
+        {
+          "error": "模型没有返回 JSON 正文"
+        },
+        {
+          "error": "模型没有返回 JSON 正文"
+        }
+      ]
+    },
+    {
+      "id": "profession_hidden_23",
+      "attempts": [
+        {
+          "error": "模型没有返回 JSON 正文"
+        },
+        {
+          "error": "模型没有返回 JSON 正文"
+        }
+      ]
+    },
+    {
+      "id": "profession_hidden_24",
+      "attempts": [
+        {
+          "result": {
+            "contradictions": []
+          },
+          "usage": {
+            "label": "M4R:L2:profession_hidden_24:1",
+            "model": "deepseek-flash",
+            "thinking": "disabled",
+            "usage": {
+              "prompt_tokens": 205,
+              "completion_tokens": 7,
+              "total_tokens": 212,
+              "prompt_tokens_details": {
+                "cached_tokens": 0
+              },
+              "prompt_cache_hit_tokens": 0,
+              "prompt_cache_miss_tokens": 205
+            },
+            "costUpperYuan": 0.000466,
+            "cumulativeUpperYuan": 0.022226000000000006,
+            "latencyMs": 837.5600000000001,
+            "timestamp": "2026-10-15T15:48:53.294Z"
+          }
+        }
+      ],
+      "passed": true
+    },
+    {
+      "id": "profession_hidden_25",
+      "attempts": [
+        {
+          "result": {
+            "contradictions": []
+          },
+          "usage": {
+            "label": "M4R:L2:profession_hidden_25:1",
+            "model": "deepseek-flash",
+            "thinking": "disabled",
+            "usage": {
+              "prompt_tokens": 209,
+              "completion_tokens": 7,
+              "total_tokens": 216,
+              "prompt_tokens_details": {
+                "cached_tokens": 0
+              },
+              "prompt_cache_hit_tokens": 0,
+              "prompt_cache_miss_tokens": 209
+            },
+            "costUpperYuan": 0.000474,
+            "cumulativeUpperYuan": 0.022700000000000005,
+            "latencyMs": 741.1683,
+            "timestamp": "2026-10-15T15:48:54.041Z"
+          }
+        }
+      ],
+      "passed": true
+    },
+    {
+      "id": "profession_hidden_26",
+      "attempts": [
+        {
+          "result": {
+            "contradictions": []
+          },
+          "usage": {
+            "label": "M4R:L2:profession_hidden_26:1",
+            "model": "deepseek-flash",
+            "thinking": "disabled",
+            "usage": {
+              "prompt_tokens": 203,
+              "completion_tokens": 7,
+              "total_tokens": 210,
+              "prompt_tokens_details": {
+                "cached_tokens": 0
+              },
+              "prompt_cache_hit_tokens": 0,
+              "prompt_cache_miss_tokens": 203
+            },
+            "costUpperYuan": 0.000462,
+            "cumulativeUpperYuan": 0.023162000000000006,
+            "latencyMs": 764.6695000000002,
+            "timestamp": "2026-10-15T15:48:54.813Z"
+          }
+        }
+      ],
+      "passed": true
+    },
+    {
+      "id": "profession_hidden_27",
+      "attempts": [
+        {
+          "result": {
+            "contradictions": []
+          },
+          "usage": {
+            "label": "M4R:L2:profession_hidden_27:1",
+            "model": "deepseek-flash",
+            "thinking": "disabled",
+            "usage": {
+              "prompt_tokens": 208,
+              "completion_tokens": 7,
+              "total_tokens": 215,
+              "prompt_tokens_details": {
+                "cached_tokens": 0
+              },
+              "prompt_cache_hit_tokens": 0,
+              "prompt_cache_miss_tokens": 208
+            },
+            "costUpperYuan": 0.000472,
+            "cumulativeUpperYuan": 0.023634000000000006,
+            "latencyMs": 1070.4735,
+            "timestamp": "2026-10-15T15:48:55.886Z"
+          }
+        }
+      ],
+      "passed": true
+    },
+    {
+      "id": "profession_hidden_28",
+      "attempts": [
+        {
+          "result": {
+            "contradictions": []
+          },
+          "usage": {
+            "label": "M4R:L2:profession_hidden_28:1",
+            "model": "deepseek-flash",
+            "thinking": "disabled",
+            "usage": {
+              "prompt_tokens": 206,
+              "completion_tokens": 7,
+              "total_tokens": 213,
+              "prompt_tokens_details": {
+                "cached_tokens": 0
+              },
+              "prompt_cache_hit_tokens": 0,
+              "prompt_cache_miss_tokens": 206
+            },
+            "costUpperYuan": 0.000468,
+            "cumulativeUpperYuan": 0.024102000000000005,
+            "latencyMs": 788.3768,
+            "timestamp": "2026-10-15T15:48:56.677Z"
+          }
+        }
+      ],
+      "passed": true
+    },
+    {
+      "id": "profession_hidden_29",
+      "attempts": [
+        {
+          "result": {
+            "contradictions": []
+          },
+          "usage": {
+            "label": "M4R:L2:profession_hidden_29:1",
+            "model": "deepseek-flash",
+            "thinking": "disabled",
+            "usage": {
+              "prompt_tokens": 215,
+              "completion_tokens": 7,
+              "total_tokens": 222,
+              "prompt_tokens_details": {
+                "cached_tokens": 0
+              },
+              "prompt_cache_hit_tokens": 0,
+              "prompt_cache_miss_tokens": 215
+            },
+            "costUpperYuan": 0.000486,
+            "cumulativeUpperYuan": 0.024588000000000006,
+            "latencyMs": 667.4092,
+            "timestamp": "2026-10-15T15:48:57.347Z"
+          }
+        }
+      ],
+      "passed": true
+    },
+    {
+      "id": "profession_hidden_30",
+      "attempts": [
+        {
+          "result": {
+            "contradictions": []
+          },
+          "usage": {
+            "label": "M4R:L2:profession_hidden_30:1",
+            "model": "deepseek-flash",
+            "thinking": "disabled",
+            "usage": {
+              "prompt_tokens": 209,
+              "completion_tokens": 7,
+              "total_tokens": 216,
+              "prompt_tokens_details": {
+                "cached_tokens": 0
+              },
+              "prompt_cache_hit_tokens": 0,
+              "prompt_cache_miss_tokens": 209
+            },
+            "costUpperYuan": 0.000474,
+            "cumulativeUpperYuan": 0.025062000000000004,
+            "latencyMs": 916.1648999999998,
+            "timestamp": "2026-10-15T15:48:58.266Z"
+          }
+        }
+      ],
+      "passed": true
+    },
+    {
+      "id": "research_spell_registration",
+      "attempts": [
+        {
+          "result": {
+            "contradictions": []
+          },
+          "usage": {
+            "label": "M4R:L2:research_spell_registration:1",
+            "model": "deepseek-flash",
+            "thinking": "disabled",
+            "usage": {
+              "prompt_tokens": 248,
+              "completion_tokens": 7,
+              "total_tokens": 255,
+              "prompt_tokens_details": {
+                "cached_tokens": 0
+              },
+              "prompt_cache_hit_tokens": 0,
+              "prompt_cache_miss_tokens": 248
+            },
+            "costUpperYuan": 0.000552,
+            "cumulativeUpperYuan": 0.025614000000000005,
+            "latencyMs": 992.6472000000003,
+            "timestamp": "2026-10-15T15:48:59.261Z"
+          }
+        },
+        {
+          "result": {
+            "contradictions": []
+          },
+          "usage": {
+            "label": "M4R:L2:research_spell_registration:2",
+            "model": "deepseek-flash",
+            "thinking": "disabled",
+            "usage": {
+              "prompt_tokens": 385,
+              "completion_tokens": 7,
+              "total_tokens": 392,
+              "prompt_tokens_details": {
+                "cached_tokens": 128
+              },
+              "prompt_cache_hit_tokens": 128,
+              "prompt_cache_miss_tokens": 257
+            },
+            "costUpperYuan": 0.00057512,
+            "cumulativeUpperYuan": 0.026189120000000003,
+            "latencyMs": 1258.7695999999999,
+            "timestamp": "2026-10-15T16:01:09.287Z"
+          }
+        }
+      ],
+      "passed": true,
+      "revision": 2
+    }
+  ]
+}
