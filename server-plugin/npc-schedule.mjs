@@ -5,6 +5,7 @@ import {festivalScheduleAt}from'./festival.mjs';
 import {npcSchedule}from'./npc-state.mjs';
 import {personConstraint,personConstraints}from'./entity-view.mjs';
 import {WEATHER_SEQUENCES}from'./weather.mjs';
+import {remoteScheduleBatch,regionProgressKey}from'./advance-layers.mjs';
 // A travelling NPC occupies neither endpoint until the route has finished.
 export function scheduleAt(engine,npcId,minute,state,constraints=null){
     constraints??=state?personConstraints(engine,state):null;
@@ -69,11 +70,15 @@ export function assertNpcService(d,engine,npcId,service,minutes){
 // P2: a read-only look at the current state for the lookups below, which use
 // it only before this NPC's writes; it does not make the draft recopy state.
 const peekState=d=>typeof d.peek==='function'?d.peek('state'):d.get('state');
-export function advanceNpcSchedules(d,engine,before,after){
-    if(after<=before)return;
-    const weatherCache=new Map(engine.weatherSequences?[[WEATHER_SEQUENCES,engine.weatherSequences]]:[]),graphCache=new Map(); // One immutable world/seed and time advance only.
-    const constraints=personConstraints(engine,peekState(d));
+export function advanceNpcSchedules(d,engine,before,after,{promote=false}={}){
+    if(after<=before&&!promote)return;
+    const weatherCache=new Map(engine.weatherSequences?[[WEATHER_SEQUENCES,engine.weatherSequences]]:[]),graphCache=engine.advanceGraphs??new Map(); // One immutable world/seed and time advance only.
+    const constraints=personConstraints(engine,peekState(d)),routes=new Map();
+    const batch=Object.keys(d.get('state','remote')??{}).length?remoteScheduleBatch(engine,peekState(d),before,after,{promote}):null;
     for(const npcId of Object.keys(d.get('state','npcs'))){
+        const regional=batch?.persons.get(npcId);
+        if(promote&&!regional)continue;
+        if(regional&&!regional.due)continue;
         const hold=personConstraint(engine,peekState(d),npcId,after,constraints)?.value;
         if(hold){
             if(d.get('state','npcs',npcId,'status')!=='死亡'){
@@ -87,7 +92,11 @@ export function advanceNpcSchedules(d,engine,before,after){
         if(d.get('state','npcs',npcId,'cognitionTravel')||engine.npcAutonomyBusy?.(peekState(d),npcId,before))continue;
         const original=d.get('state','npcs',npcId),npc={...original},path=['state','npcs',npcId];
         const activity=value=>{npc.activity=value;};
-        let cursor=Math.max(waterEarthHeldUntil(peekState(d),npcId,before),mindSleepUntil(d,npcId,before));
+        const since=regional?.before??before;
+        let cursor=Math.max(waterEarthHeldUntil(peekState(d),npcId,since),mindSleepUntil(d,npcId,since));
+        // Eligible skeleton routines never travel or charge money. Their last
+        // slot is exactly the result of walking every intervening slot.
+        if(regional)cursor=after;
         while(cursor<=after){
             if(incapacitated(npc)){activity(npc.status);break;}
             if(d.get('state','player','companions')?.includes(npcId)){activity('同行');break;}
@@ -101,7 +110,11 @@ export function advanceNpcSchedules(d,engine,before,after){
             const slot=scheduleAt(engine,npcId,cursor,peekState(d),constraints);
             if(npc.location!==slot.location){
                 let route;
-                try{route=engine.route(npc.location,slot.location,'walk',cursor,d.get('randomSeed'),weatherCache,graphCache);}
+                try{
+                    const key=JSON.stringify([npc.location,slot.location,cursor]);
+                    route=routes.get(key);
+                    if(!route){route=engine.route(npc.location,slot.location,'walk',cursor,d.get('randomSeed'),weatherCache,graphCache);routes.set(key,route);}
+                }
                 catch{activity('行程受阻');}
                 if(route&&npc.coins<route.cost){route=null;activity('路费不足，暂留原处');}
                 if(route){
@@ -120,6 +133,7 @@ export function advanceNpcSchedules(d,engine,before,after){
             if(npc[field]===undefined)d.remove([...path,field]);else d.set([...path,field],npc[field]);
         }
     }
+    if(batch)for(const g of batch.groups.values())if(g.due&&g.people.length&&d.get('state','records',regionProgressKey(g.county),'scheduleThrough')!==after)d.set(['state','records',regionProgressKey(g.county)],{category:'advance_region',county:g.county,scheduleThrough:after});
 }
 
 export function advanceWithNpcParticipants(d,engine,minutes,eventId,participants){

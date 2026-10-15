@@ -18,14 +18,14 @@
  "counts": {
   "layers": 6,
   "systems": 38,
-  "modules": 181,
+  "modules": 183,
   "advance": 46,
   "tools": 25,
   "verbs": 28,
   "subscribers": 8,
   "interactionRules": 25,
   "effectKinds": 19,
-  "links": 399
+  "links": 402
  },
  "layers": [
   {
@@ -176,6 +176,7 @@
    "effects": [],
    "tools": [],
    "readBy": [
+    "base_advance",
     "base_effects",
     "base_standing",
     "base_traits",
@@ -348,7 +349,7 @@
     "server-plugin/campaign-reducer.mjs",
     "server-plugin/archived-reducer.mjs"
    ],
-   "lines": 963,
+   "lines": 990,
    "stateWrites": [
     "combatDisengaged",
     "created",
@@ -372,6 +373,7 @@
    "stateReads": [
     "divinePermissions",
     "professions",
+    "remote",
     "spells"
    ],
    "recordWrites": [
@@ -642,7 +644,7 @@
     "server-plugin/standing.mjs",
     "server-plugin/entity-view.mjs"
    ],
-   "lines": 581,
+   "lines": 588,
    "stateWrites": [
     "records"
    ],
@@ -769,12 +771,13 @@
    "id": "base_advance",
    "name": "推进注册表",
    "layer": "base",
-   "card": "K7",
+   "card": "K7/P3",
    "dir": null,
    "modules": [
-    "server-plugin/advance-registry.mjs"
+    "server-plugin/advance-registry.mjs",
+    "server-plugin/advance-layers.mjs"
    ],
-   "lines": 175,
+   "lines": 242,
    "stateWrites": [
     "effects",
     "obligations",
@@ -784,7 +787,9 @@
    ],
    "stateReads": [
     "location",
-    "player"
+    "npcs",
+    "player",
+    "remote"
    ],
    "recordWrites": [],
    "recordReads": [
@@ -798,7 +803,9 @@
     "worldClock"
    ],
    "world": [
-    "npcs"
+    "locations",
+    "npcs",
+    "regions"
    ],
    "advance": [
     "local_actor_positions",
@@ -843,7 +850,7 @@
     "server-plugin/population-service.mjs",
     "server-plugin/settlement-profile.mjs"
    ],
-   "lines": 3076,
+   "lines": 3170,
    "stateWrites": [
     "created",
     "creatures",
@@ -868,6 +875,7 @@
     "location",
     "minute",
     "npcPlanning",
+    "remote",
     "skills"
    ],
    "recordWrites": [],
@@ -1492,7 +1500,7 @@
     "server-plugin/extraction.mjs",
     "server-plugin/smuggling.mjs"
    ],
-   "lines": 1856,
+   "lines": 1857,
    "stateWrites": [
     "crafted",
     "itemInstances",
@@ -1654,7 +1662,7 @@
     "server-plugin/tribal-awakening.mjs",
     "server-plugin/elections.mjs"
    ],
-   "lines": 3644,
+   "lines": 3651,
    "stateWrites": [
     "buildings",
     "created",
@@ -1832,7 +1840,7 @@
     "server-plugin/seasonal-hazards.mjs",
     "server-plugin/hazard-calendar.mjs"
    ],
-   "lines": 1020,
+   "lines": 1021,
    "stateWrites": [
     "family",
     "npcs",
@@ -2033,10 +2041,11 @@
    "dir": null,
    "modules": [
     "server-plugin/scene-card.mjs",
+    "server-plugin/prompt-scope.mjs",
     "server-plugin/state-notices.mjs",
     "server-plugin/return-summary.mjs"
    ],
-   "lines": 428,
+   "lines": 442,
    "stateWrites": [
     "visits"
    ],
@@ -2093,7 +2102,7 @@
     "server-plugin/ui-overview.mjs",
     "server-plugin/ui-personal.mjs"
    ],
-   "lines": 652,
+   "lines": 653,
    "stateWrites": [],
    "stateReads": [
     "created",
@@ -2281,7 +2290,7 @@
     "server-plugin/catalog.mjs",
     "server-plugin/chronicle.mjs"
    ],
-   "lines": 416,
+   "lines": 428,
    "stateWrites": [],
    "stateReads": [
     "careerMetrics",
@@ -2303,7 +2312,8 @@
    "world": [
     "careers",
     "locations",
-    "routes"
+    "routes",
+    "settlementProfiles"
    ],
    "advance": [],
    "subscribes": [],
@@ -2792,6 +2802,7 @@
    "to": "base_advance",
    "kind": "call",
    "labels": [
+    "advance-layers.mjs",
     "advance-registry.mjs"
    ]
   },
@@ -3021,6 +3032,7 @@
    "to": "ui_scene",
    "kind": "call",
    "labels": [
+    "prompt-scope.mjs",
     "return-summary.mjs",
     "scene-card.mjs",
     "state-notices.mjs"
@@ -3990,6 +4002,14 @@
   },
   {
    "from": "sim_npc",
+   "to": "base_advance",
+   "kind": "call",
+   "labels": [
+    "advance-layers.mjs"
+   ]
+  },
+  {
+   "from": "sim_npc",
    "to": "base_events",
    "kind": "call",
    "labels": [
@@ -4389,6 +4409,14 @@
   },
   {
    "from": "ui_scene",
+   "to": "base_advance",
+   "kind": "call",
+   "labels": [
+    "advance-layers.mjs"
+   ]
+  },
+  {
+   "from": "ui_scene",
    "to": "base_events",
    "kind": "call",
    "labels": [
@@ -4600,6 +4628,7 @@
    "to": "ui_scene",
    "kind": "call",
    "labels": [
+    "prompt-scope.mjs",
     "state-notices.mjs"
    ]
   },
@@ -4644,6 +4673,14 @@
    "labels": [
     "m5-civic-rules.mjs",
     "world/design"
+   ]
+  },
+  {
+   "from": "data_geo",
+   "to": "base_advance",
+   "kind": "data",
+   "labels": [
+    "world/geo"
    ]
   },
   {
@@ -9181,6 +9218,7 @@
     "regions"
    ],
    "readers": [
+    "server-plugin/advance-layers.mjs",
     "server-plugin/agriculture.mjs",
     "server-plugin/boss-negotiation.mjs",
     "server-plugin/bosses.mjs",
@@ -9216,6 +9254,7 @@
     "server-plugin/organization-state.mjs",
     "server-plugin/population.mjs",
     "server-plugin/promotion.mjs",
+    "server-plugin/prompt-scope.mjs",
     "server-plugin/public-opinion.mjs",
     "server-plugin/quest-board.mjs",
     "server-plugin/quest-sources.mjs",
@@ -10209,6 +10248,7 @@
     "sim_works"
    ],
    "readers": [
+    "base_advance",
     "base_events",
     "base_standing",
     "nar_consistency",
@@ -10370,7 +10410,10 @@
     "sim_environment"
    ],
    "readers": [
+    "base_advance",
     "base_standing",
+    "kernel_engine",
+    "sim_npc",
     "sim_society"
    ]
   },
@@ -10853,6 +10896,7 @@
      "means": "聚落归属：立场传导沿 parent 找聚落",
      "pattern": "\\.parent\\b",
      "modules": [
+      "server-plugin/advance-layers.mjs",
       "server-plugin/bosses.mjs",
       "server-plugin/career-metrics.mjs",
       "server-plugin/catalog.mjs",
@@ -10891,6 +10935,7 @@
       "extension/runtime.js"
      ],
      "systems": [
+      "base_advance",
       "base_standing",
       "kernel_engine",
       "nar_memory",
@@ -10914,6 +10959,7 @@
      "pattern": "\\.features\\b|thermalModel",
      "modules": [
       "server-plugin/effects.mjs",
+      "server-plugin/engine.mjs",
       "server-plugin/entity-view.mjs",
       "server-plugin/environment.mjs",
       "server-plugin/extraction.mjs",
@@ -10929,6 +10975,7 @@
       "base_interactions",
       "base_standing",
       "base_traits",
+      "kernel_engine",
       "sim_character",
       "sim_economy",
       "sim_environment",
@@ -11104,6 +11151,7 @@
     }
    ],
    "autoSystems": [
+    "base_advance",
     "base_effects",
     "base_interactions",
     "base_standing",
@@ -11464,6 +11512,7 @@
      "means": "完整人物参与认知、自主、生活、承诺推进",
      "pattern": "tier==='full'",
      "modules": [
+      "server-plugin/advance-layers.mjs",
       "server-plugin/bounty.mjs",
       "server-plugin/entity-view.mjs",
       "server-plugin/festival.mjs",
@@ -11474,6 +11523,7 @@
       "server-plugin/seasonal-hazards.mjs"
      ],
      "systems": [
+      "base_advance",
       "base_standing",
       "sim_clock",
       "sim_law",
@@ -11486,6 +11536,7 @@
      "means": "日程移动与服务时段",
      "pattern": "\\.schedule\\b",
      "modules": [
+      "server-plugin/advance-layers.mjs",
       "server-plugin/consistency-evidence.mjs",
       "server-plugin/engine.mjs",
       "server-plugin/entity-view.mjs",
@@ -11497,6 +11548,7 @@
       "server-plugin/scene-card.mjs"
      ],
      "systems": [
+      "base_advance",
       "base_standing",
       "kernel_engine",
       "nar_consistency",
@@ -12428,6 +12480,7 @@
      "means": "成员受损害/恩惠按 0.5 传导给组织",
      "pattern": "'organization'",
      "modules": [
+      "server-plugin/advance-layers.mjs",
       "server-plugin/consistency-review.mjs",
       "server-plugin/entity-view.mjs",
       "server-plugin/military.mjs",
@@ -12438,6 +12491,7 @@
       "server-plugin/tribal-awakening.mjs"
      ],
      "systems": [
+      "base_advance",
       "base_standing",
       "nar_consistency",
       "sim_military",
@@ -12461,6 +12515,7 @@
     }
    ],
    "autoSystems": [
+    "base_advance",
     "base_events",
     "base_standing",
     "nar_consistency",
@@ -13052,9 +13107,33 @@
    "worldDirs": [],
    "lines": 241
   },
+  "server-plugin/advance-layers.mjs": {
+   "system": "base_advance",
+   "imports": [],
+   "stateWrites": [],
+   "stateReads": [
+    "effects",
+    "location",
+    "npcs",
+    "obligations",
+    "player",
+    "records",
+    "remote"
+   ],
+   "recordWrites": [],
+   "recordReads": [],
+   "rules": [],
+   "world": [
+    "locations",
+    "regions"
+   ],
+   "worldDirs": [],
+   "lines": 62
+  },
   "server-plugin/advance-registry.mjs": {
    "system": "base_advance",
    "imports": [
+    "server-plugin/advance-layers.mjs",
     "server-plugin/agriculture.mjs",
     "server-plugin/bosses.mjs",
     "server-plugin/bounty.mjs",
@@ -13108,7 +13187,8 @@
    ],
    "stateReads": [
     "location",
-    "player"
+    "player",
+    "remote"
    ],
    "recordWrites": [],
    "recordReads": [
@@ -13125,7 +13205,7 @@
     "npcs"
    ],
    "worldDirs": [],
-   "lines": 175
+   "lines": 180
   },
   "server-plugin/agriculture-migration.mjs": {
    "system": "kernel_storage",
@@ -13862,6 +13942,7 @@
    "imports": [
     "extension/tools.mjs",
     "server-plugin/activities.mjs",
+    "server-plugin/advance-layers.mjs",
     "server-plugin/advance-registry.mjs",
     "server-plugin/agriculture-migration.mjs",
     "server-plugin/agriculture.mjs",
@@ -13907,6 +13988,7 @@
     "server-plugin/population.mjs",
     "server-plugin/professions.mjs",
     "server-plugin/progression.mjs",
+    "server-plugin/prompt-scope.mjs",
     "server-plugin/quest-sources.mjs",
     "server-plugin/quest-wildlife.mjs",
     "server-plugin/remote-generation.mjs",
@@ -13949,6 +14031,7 @@
    ],
    "stateReads": [
     "created",
+    "remote",
     "spells"
    ],
    "recordWrites": [
@@ -13995,7 +14078,7 @@
     "spells"
    ],
    "worldDirs": [],
-   "lines": 684
+   "lines": 711
   },
   "server-plugin/entity-transitions.mjs": {
    "system": "base_events",
@@ -14064,7 +14147,7 @@
     "settlementProfiles"
    ],
    "worldDirs": [],
-   "lines": 434
+   "lines": 441
   },
   "server-plugin/environment.mjs": {
    "system": "sim_environment",
@@ -14275,6 +14358,7 @@
     "settlements"
    ],
    "stateReads": [
+    "created",
     "location",
     "minute",
     "npcAutonomy",
@@ -14298,7 +14382,7 @@
     "settlementProfiles"
    ],
    "worldDirs": [],
-   "lines": 407
+   "lines": 413
   },
   "server-plugin/group-account.mjs": {
    "system": "sim_society",
@@ -14342,7 +14426,7 @@
    ],
    "world": [],
    "worldDirs": [],
-   "lines": 107
+   "lines": 108
   },
   "server-plugin/index.mjs": {
    "system": "ui_server",
@@ -14357,6 +14441,7 @@
     "server-plugin/migrations.mjs",
     "server-plugin/npc-planning-service.mjs",
     "server-plugin/population-service.mjs",
+    "server-plugin/prompt-scope.mjs",
     "server-plugin/retrieval.mjs",
     "server-plugin/storage.mjs",
     "server-plugin/ui-routes.mjs",
@@ -14375,7 +14460,7 @@
    "rules": [],
    "world": [],
    "worldDirs": [],
-   "lines": 249
+   "lines": 250
   },
   "server-plugin/interactions.mjs": {
    "system": "base_interactions",
@@ -15685,6 +15770,7 @@
   "server-plugin/npc-schedule.mjs": {
    "system": "sim_npc",
    "imports": [
+    "server-plugin/advance-layers.mjs",
     "server-plugin/entity-view.mjs",
     "server-plugin/festival.mjs",
     "server-plugin/magic-mind-space.mjs",
@@ -15693,12 +15779,14 @@
     "server-plugin/weather.mjs"
    ],
    "stateWrites": [
-    "npcs"
+    "npcs",
+    "records"
    ],
    "stateReads": [
     "location",
     "minute",
-    "player"
+    "player",
+    "remote"
    ],
    "recordWrites": [],
    "recordReads": [],
@@ -15708,7 +15796,7 @@
     "npcs"
    ],
    "worldDirs": [],
-   "lines": 159
+   "lines": 173
   },
   "server-plugin/npc-state.mjs": {
    "system": "sim_npc",
@@ -15732,7 +15820,7 @@
     "households"
    ],
    "worldDirs": [],
-   "lines": 74
+   "lines": 86
   },
   "server-plugin/office-salary.mjs": {
    "system": "sim_society",
@@ -15873,6 +15961,7 @@
   "server-plugin/population.mjs": {
    "system": "sim_npc",
    "imports": [
+    "server-plugin/advance-layers.mjs",
     "server-plugin/npc-state.mjs",
     "server-plugin/remote-generation.mjs"
    ],
@@ -15883,7 +15972,8 @@
    ],
    "stateReads": [
     "location",
-    "minute"
+    "minute",
+    "remote"
    ],
    "recordWrites": [],
    "recordReads": [],
@@ -15899,7 +15989,7 @@
    "worldDirs": [
     "meta"
    ],
-   "lines": 399
+   "lines": 461
   },
   "server-plugin/professions.mjs": {
    "system": "sim_character",
@@ -16003,7 +16093,25 @@
     "settlementProfiles"
    ],
    "worldDirs": [],
-   "lines": 141
+   "lines": 142
+  },
+  "server-plugin/prompt-scope.mjs": {
+   "system": "ui_scene",
+   "imports": [
+    "server-plugin/advance-layers.mjs"
+   ],
+   "stateWrites": [],
+   "stateReads": [
+    "location"
+   ],
+   "recordWrites": [],
+   "recordReads": [],
+   "rules": [],
+   "world": [
+    "settlementProfiles"
+   ],
+   "worldDirs": [],
+   "lines": 14
   },
   "server-plugin/public-opinion.mjs": {
    "system": "sim_society",
@@ -16369,10 +16477,11 @@
    ],
    "rules": [],
    "world": [
-    "locations"
+    "locations",
+    "settlementProfiles"
    ],
    "worldDirs": [],
-   "lines": 167
+   "lines": 179
   },
   "server-plugin/return-summary.mjs": {
    "system": "ui_scene",
@@ -16585,7 +16694,8 @@
   "server-plugin/settlement-profile.mjs": {
    "system": "sim_npc",
    "imports": [
-    "server-plugin/entity-view.mjs"
+    "server-plugin/entity-view.mjs",
+    "server-plugin/npc-state.mjs"
    ],
    "stateWrites": [],
    "stateReads": [
@@ -16612,7 +16722,7 @@
     "settlementProfiles"
    ],
    "worldDirs": [],
-   "lines": 62
+   "lines": 68
   },
   "server-plugin/settlement-trade.mjs": {
    "system": "sim_economy",
@@ -16689,7 +16799,7 @@
     "settlementProfiles"
    ],
    "worldDirs": [],
-   "lines": 215
+   "lines": 216
   },
   "server-plugin/sites.mjs": {
    "system": "sim_environment",

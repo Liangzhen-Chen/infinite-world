@@ -44,8 +44,14 @@ function local(engine,location,settlement){
 // does, the dead do not, and campaign-born children count once grown.
 export function eligible(engine,settlement,state){
     const {p}=profile(engine,settlement);
+    return residentAdults(engine,settlement,state,p);
+}
+// Population membership does not imply appointment powers. Promotion also
+// reads residents in remote settlements which have no four-village charter.
+export function residentAdults(engine,settlement,state,p=engine.world.settlementProfiles?.find(p=>p.id===settlement)){
     const houses=(engine.world.households??[]).filter(h=>h.settlement===settlement);
-    const people=new Set([...p.residentIds,...houses.flatMap(h=>householdMembers(engine,state,h.id))]);
+    const people=new Set([...p?.residentIds??[],...houses.flatMap(h=>householdMembers(engine,state,h.id)),
+        ...Object.values(state.created??{}).filter(p=>p.generated==='population'&&p.settlement===settlement).map(p=>p.id)]);
     return [...people].filter(id=>npcHousehold(engine,state,id)?.settlement===settlement&&state.npcs?.[id]?.status!=='死亡'
         &&(npcAgeAt(engine,state,id)??0)>=18).sort();
 }

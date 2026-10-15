@@ -635,7 +635,7 @@ export function remoteEngine(engine,document,make){
     let hit=base.remoteEngines.get(key);
     if(!hit){
         hit=make(remoteWorld(base.world,document.state));hit.remoteBase=base;hit.remoteKey=key;
-        base.remoteEngines.set(key,hit);if(base.remoteEngines.size>8)base.remoteEngines.delete(base.remoteEngines.keys().next().value);
+        base.remoteEngines.set(key,hit);if(base.remoteEngines.size>1)base.remoteEngines.delete(base.remoteEngines.keys().next().value);
     }
     return hit;
 }

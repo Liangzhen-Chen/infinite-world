@@ -49,6 +49,7 @@ import {advancePublicProjects,isPublicProject,advanceHouses,advanceHousing,nextH
 
 const clone=value=>structuredClone(value);
 import {personSimulation}from'./entity-view.mjs';
+import {advanceLayerPlan,ADVANCE_LAYERS}from'./advance-layers.mjs';
 const fullNpcs=engine=>(engine.entities??engine.world.npcs).some(n=>n.id?.startsWith('npc_')&&personSimulation(engine,{},n.id).value);
 export const advanceRegistry=[];
 export function registerAdvance(system){
@@ -65,11 +66,15 @@ export function nextAdvanceMinute(engine,d,now,end){
     return next;
 }
 export const advanceNeedsSteps=(engine,d,now)=>advanceRegistry.some(system=>system.active?.(engine,d,now));
-export function runAdvance(engine,d,ctx){for(const system of advanceRegistry)system.advance(engine,d,ctx);}
+export function runAdvance(engine,d,ctx){
+    const prior=engine.advanceLayerContext;
+    engine.advanceLayerContext=Object.keys(d.get('state','remote')??{}).length?advanceLayerPlan(engine,d.get('state')):null;
+    try{for(const system of advanceRegistry)system.advance(engine,d,ctx);}finally{engine.advanceLayerContext=prior;}
+}
 
 // Order mirrors the original hand-written WorldEngine.advanceInterval sequence.
 const systems=[
- {id:'npc_obligations',order:100,active:e=>fullNpcs(e),nextMinute:(e,d,now)=>nextNpcObligationMinute(d.get('state'),now),
+ {id:'npc_obligations',order:100,layers:ADVANCE_LAYERS,active:e=>fullNpcs(e),nextMinute:(e,d,now)=>nextNpcObligationMinute(d.get('state'),now),
   advance:(e,d,{before,after,id})=>advanceNpcObligations(d,e,before,after,id)},
  {id:'contracts',order:200,advance:(e,d,{after})=>advanceContracts(d,e,after)},
  {id:'credit',order:250,advance:(e,d,{after})=>advanceCredit(d,e,after)},

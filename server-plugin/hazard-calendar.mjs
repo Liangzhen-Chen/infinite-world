@@ -104,3 +104,4 @@ export function famineAt(state,settlement,minute=state.minute){
 
 // Campaign closures are stateful and shared by travel, NPC schedules and trade.
 export function warRouteClosed(state,route,minute){return Object.values(state?.records??{}).some(r=>r.category==='war_disruption'&&active(r,minute)&&r.routes.includes(route));}
+export function warClosedRoutes(state,minute){return new Set(Object.values(state?.records??{}).filter(r=>r.category==='war_disruption'&&active(r,minute)).flatMap(r=>r.routes));}
