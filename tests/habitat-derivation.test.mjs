@@ -33,7 +33,12 @@ test('地形、群落标签与 traits 派生栖地类型；泛地形、人居和
     assert.deepEqual(rows.get('loc_k8_reedplain').types,['wetland']);assert.deepEqual(rows.get('loc_k8_rock').types,['rock']);
     assert.equal(rows.has('loc_k8_plain'),false);assert.equal(rows.has('loc_k8_owned'),false);
     // The shipped world: every wild place already has an authored habitat; none is duplicated.
-    assert.deepEqual(deriveHabitats(source),[]);
+    // The shipped world: wild places all have authored habitats; settlement nodes (incl. T142 far seats) never derive.
+    const shipped=deriveHabitats(source);
+    for(const h of shipped){const l=source.locations.find(l=>l.id===h.location);assert.ok(l.scope!==l.id&&!l.farNode&&!l.owner,h.location);}
+    for(const l of source.locations.filter(l=>l.scope===l.id||l.farNode))assert.ok(!shipped.some(h=>h.location===l.id),l.id);
+    const town=withPine();town.locations.push(place('loc_k8_town','松镇','针叶林',{scope:'loc_k8_town'}),place('loc_k8_far','远松集','针叶林',{farNode:'seat'}));
+    assert.ok(!deriveHabitats(town).some(h=>['loc_k8_town','loc_k8_far'].includes(h.location)));
     const tagged=withPine(source,{biome:['苇塘']});assert.equal(validateWorld(tagged).ok,true);
     const bad=withPine(source,{biome:['无名']});assert.equal(validateWorld(bad).ok,false);
 });

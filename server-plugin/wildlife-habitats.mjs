@@ -33,10 +33,11 @@ export function speciesHabitatTypes(world,species,manual){
  if(species.tags?.some(t=>AQUATIC.includes(t)))types.add('wetland');
  return [...types].sort();
 }
-// Built, owned or inhabited places never host a wild range of their own.
+// Built, owned or inhabited places never host a wild range of their own;
+// a settlement node (its own scope, or a T142 far seat/market) is inhabited.
 export function wildPlace(world,location){
  const settlements=new Set((world.settlementProfiles??[]).map(p=>p.id));
- return !location.owner&&!location.access&&!location.rooms?.length&&!location.lodging&&!location.workstations?.length&&!location.monsterSociety&&!settlements.has(location.id);
+ return location.scope!==location.id&&!location.farNode&&!location.owner&&!location.access&&!location.rooms?.length&&!location.lodging&&!location.workstations?.length&&!location.monsterSociety&&!settlements.has(location.id);
 }
 const rarityFactor=(config,population)=>config.rarity.find(r=>population>=r.minimumPopulation)?.factor??0;
 const placeScale=(config,location)=>Number.isFinite(location.areaKm2)?Math.min(config.maximumScale,location.areaKm2/config.referenceAreaKm2):config.defaultScale[location.scope?'area':'site'];
