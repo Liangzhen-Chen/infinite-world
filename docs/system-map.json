@@ -2,7 +2,7 @@
  "title": "无限原野系统地图",
  "card": "K9",
  "generatedFrom": {
-  "commit": "refs/heads/v2",
+  "commit": "refs/heads/v5",
   "method": "运行时导出（注册表、规则表、工具定义、效果表、立场传导表）+ 静态正则扫描（import 图、函数体标识符、state 分区与 records 前缀、rules/world 读取）。静态扫描是近似：经 engine.byId、helper 间接或动态拼接路径的访问不计入。"
  },
  "scanMethods": {
@@ -25,7 +25,7 @@
   "subscribers": 8,
   "interactionRules": 25,
   "effectKinds": 19,
-  "links": 381
+  "links": 388
  },
  "layers": [
   {
@@ -541,19 +541,16 @@
    "modules": [
     "server-plugin/traits.mjs"
    ],
-   "lines": 147,
+   "lines": 151,
    "stateWrites": [],
    "stateReads": [
     "creatures",
     "inventory",
-    "minute",
-    "npcs",
-    "records"
+    "itemInstances",
+    "minute"
    ],
    "recordWrites": [],
-   "recordReads": [
-    "physical_feature"
-   ],
+   "recordReads": [],
    "rules": [],
    "world": [
     "bosses",
@@ -640,7 +637,7 @@
     "server-plugin/standing.mjs",
     "server-plugin/entity-view.mjs"
    ],
-   "lines": 296,
+   "lines": 359,
    "stateWrites": [
     "records"
    ],
@@ -662,10 +659,13 @@
     "ecology",
     "faction-assets",
     "organization",
+    "physical_feature",
     "reputation",
     "spirit_society"
    ],
    "rules": [
+    "governance",
+    "npcGrowth",
     "reputation",
     "wildlife"
    ],
@@ -674,7 +674,8 @@
     "factions",
     "households",
     "locations",
-    "regions"
+    "regions",
+    "settlementProfiles"
    ],
    "advance": [],
    "subscribes": [
@@ -829,7 +830,7 @@
     "server-plugin/population-service.mjs",
     "server-plugin/settlement-profile.mjs"
    ],
-   "lines": 3044,
+   "lines": 3049,
    "stateWrites": [
     "created",
     "creatures",
@@ -1283,7 +1284,7 @@
     "server-plugin/regions.mjs",
     "server-plugin/remote-generation.mjs"
    ],
-   "lines": 1557,
+   "lines": 1585,
    "stateWrites": [
     "npcs",
     "records",
@@ -1474,7 +1475,7 @@
     "server-plugin/extraction.mjs",
     "server-plugin/smuggling.mjs"
    ],
-   "lines": 1580,
+   "lines": 1599,
    "stateWrites": [
     "crafted",
     "itemInstances",
@@ -1488,6 +1489,7 @@
    ],
    "stateReads": [
     "buildings",
+    "creatures",
     "inventory",
     "location",
     "minute",
@@ -1626,10 +1628,11 @@
     "server-plugin/tribal-awakening.mjs",
     "server-plugin/elections.mjs"
    ],
-   "lines": 3535,
+   "lines": 3547,
    "stateWrites": [
     "buildings",
     "created",
+    "creatures",
     "npcs",
     "obligations",
     "player",
@@ -1641,7 +1644,6 @@
    ],
    "stateReads": [
     "careerMetrics",
-    "creatures",
     "discoveries",
     "learning",
     "location",
@@ -1651,6 +1653,7 @@
    ],
    "recordWrites": [
     "army",
+    "ecology",
     "organization",
     "quest_wildlife_claim",
     "tribal_awakening",
@@ -1661,7 +1664,6 @@
    "recordReads": [
     "civic_citizen",
     "civic_resident",
-    "ecology",
     "faction-assets",
     "society_motion",
     "stance",
@@ -2730,6 +2732,14 @@
     "monster-society.mjs",
     "organization-state.mjs",
     "reputation-registry.mjs"
+   ]
+  },
+  {
+   "from": "base_traits",
+   "to": "base_standing",
+   "kind": "call",
+   "labels": [
+    "entity-view.mjs"
    ]
   },
   {
@@ -4062,6 +4072,14 @@
   },
   {
    "from": "sim_society",
+   "to": "sim_environment",
+   "kind": "call",
+   "labels": [
+    "remote-generation.mjs"
+   ]
+  },
+  {
+   "from": "sim_society",
    "to": "sim_law",
    "kind": "call",
    "labels": [
@@ -4097,6 +4115,8 @@
    "kind": "call",
    "labels": [
     "wildlife-awakening.mjs",
+    "wildlife-habitats.mjs",
+    "wildlife-migration.mjs",
     "wildlife-range.mjs",
     "wildlife.mjs"
    ]
@@ -5245,7 +5265,7 @@
   },
   {
    "from": "base_interactions",
-   "to": "base_traits",
+   "to": "base_standing",
    "kind": "record",
    "labels": [
     "physical_feature"
@@ -5375,7 +5395,7 @@
   },
   {
    "from": "sim_magic",
-   "to": "base_traits",
+   "to": "base_standing",
    "kind": "record",
    "labels": [
     "physical_feature"
@@ -5407,6 +5427,14 @@
   },
   {
    "from": "sim_society",
+   "to": "base_effects",
+   "kind": "record",
+   "labels": [
+    "ecology"
+   ]
+  },
+  {
+   "from": "sim_society",
    "to": "base_events",
    "kind": "record",
    "labels": [
@@ -5418,7 +5446,32 @@
    "to": "base_standing",
    "kind": "record",
    "labels": [
+    "ecology",
     "organization"
+   ]
+  },
+  {
+   "from": "sim_society",
+   "to": "sim_boss",
+   "kind": "record",
+   "labels": [
+    "ecology"
+   ]
+  },
+  {
+   "from": "sim_society",
+   "to": "sim_clock",
+   "kind": "record",
+   "labels": [
+    "ecology"
+   ]
+  },
+  {
+   "from": "sim_society",
+   "to": "sim_magic",
+   "kind": "record",
+   "labels": [
+    "ecology"
    ]
   },
   {
@@ -5427,6 +5480,14 @@
    "kind": "record",
    "labels": [
     "organization"
+   ]
+  },
+  {
+   "from": "sim_society",
+   "to": "sim_wildlife",
+   "kind": "record",
+   "labels": [
+    "ecology"
    ]
   },
   {
@@ -9411,6 +9472,7 @@
   ],
   "governance": [
    "server-plugin/elections.mjs",
+   "server-plugin/entity-view.mjs",
    "server-plugin/governance.mjs",
    "server-plugin/notables.mjs",
    "server-plugin/promotion.mjs",
@@ -9535,6 +9597,7 @@
    "server-plugin/training.mjs"
   ],
   "npcGrowth": [
+   "server-plugin/entity-view.mjs",
    "server-plugin/npc-growth.mjs",
    "server-plugin/wildlife-society.mjs"
   ],
@@ -9673,6 +9736,7 @@
     "sim_companion",
     "sim_magic",
     "sim_npc",
+    "sim_society",
     "sim_wildlife"
    ],
    "readers": [
@@ -9680,7 +9744,7 @@
     "base_traits",
     "kernel_storage",
     "sim_character",
-    "sim_society"
+    "sim_economy"
    ]
   },
   "discoveries": {
@@ -9766,7 +9830,8 @@
     "sim_works"
    ],
    "readers": [
-    "base_standing"
+    "base_standing",
+    "base_traits"
    ]
   },
   "learning": {
@@ -9889,7 +9954,6 @@
    "readers": [
     "base_events",
     "base_standing",
-    "base_traits",
     "nar_consistency",
     "sim_agriculture",
     "sim_combat",
@@ -10026,7 +10090,6 @@
     "sim_works"
    ],
    "readers": [
-    "base_traits",
     "nar_consistency",
     "nar_memory",
     "sim_character",
@@ -10345,6 +10408,7 @@
       "server-plugin/boss-migration.mjs",
       "server-plugin/bosses.mjs",
       "server-plugin/combat.mjs",
+      "server-plugin/entity-view.mjs",
       "server-plugin/magic-care.mjs",
       "server-plugin/magic-mind-space.mjs",
       "server-plugin/magic.mjs",
@@ -10353,6 +10417,7 @@
       "server-plugin/traits.mjs"
      ],
      "systems": [
+      "base_standing",
       "base_traits",
       "kernel_engine",
       "kernel_storage",
@@ -10448,6 +10513,7 @@
     }
    ],
    "autoSystems": [
+    "base_standing",
     "base_traits",
     "kernel_engine",
     "kernel_storage",
@@ -10531,6 +10597,7 @@
       "server-plugin/catalog.mjs",
       "server-plugin/civic.mjs",
       "server-plugin/engine.mjs",
+      "server-plugin/entity-view.mjs",
       "server-plugin/governance.mjs",
       "server-plugin/hazard-calendar.mjs",
       "server-plugin/military.mjs",
@@ -10585,6 +10652,7 @@
      "pattern": "\\.features\\b|thermalModel",
      "modules": [
       "server-plugin/effects.mjs",
+      "server-plugin/entity-view.mjs",
       "server-plugin/environment.mjs",
       "server-plugin/extraction.mjs",
       "server-plugin/interactions.mjs",
@@ -10597,6 +10665,7 @@
      "systems": [
       "base_effects",
       "base_interactions",
+      "base_standing",
       "base_traits",
       "sim_character",
       "sim_economy",
@@ -11145,6 +11214,7 @@
      "modules": [
       "server-plugin/consistency-evidence.mjs",
       "server-plugin/engine.mjs",
+      "server-plugin/entity-view.mjs",
       "server-plugin/festival.mjs",
       "server-plugin/npc-memory.mjs",
       "server-plugin/npc-schedule.mjs",
@@ -11153,6 +11223,7 @@
       "server-plugin/scene-card.mjs"
      ],
      "systems": [
+      "base_standing",
       "kernel_engine",
       "nar_consistency",
       "sim_clock",
@@ -11272,6 +11343,7 @@
       "server-plugin/activities.mjs",
       "server-plugin/business.mjs",
       "server-plugin/engine.mjs",
+      "server-plugin/entity-view.mjs",
       "server-plugin/festival.mjs",
       "server-plugin/npc-autonomy.mjs",
       "server-plugin/npc-schedule.mjs",
@@ -11281,6 +11353,7 @@
       "server-plugin/training.mjs"
      ],
      "systems": [
+      "base_standing",
       "kernel_engine",
       "sim_character",
       "sim_clock",
@@ -11466,11 +11539,13 @@
      "means": "聚落人口档案",
      "pattern": "residentIds|populationSeed",
      "modules": [
+      "server-plugin/entity-view.mjs",
       "server-plugin/governance.mjs",
       "server-plugin/population.mjs",
       "server-plugin/remote-generation.mjs"
      ],
      "systems": [
+      "base_standing",
       "sim_environment",
       "sim_npc",
       "sim_society"
@@ -13615,6 +13690,7 @@
    "stateReads": [
     "buildings",
     "created",
+    "creatures",
     "family",
     "itemInstances",
     "location",
@@ -13629,9 +13705,12 @@
    "recordReads": [
     "ecology",
     "faction-assets",
-    "organization"
+    "organization",
+    "physical_feature"
    ],
    "rules": [
+    "governance",
+    "npcGrowth",
     "reputation",
     "wildlife"
    ],
@@ -13639,10 +13718,11 @@
     "bosses",
     "factions",
     "households",
-    "locations"
+    "locations",
+    "settlementProfiles"
    ],
    "worldDirs": [],
-   "lines": 149
+   "lines": 212
   },
   "server-plugin/environment.mjs": {
    "system": "sim_environment",
@@ -13688,6 +13768,7 @@
   "server-plugin/extraction.mjs": {
    "system": "sim_economy",
    "imports": [
+    "server-plugin/entity-view.mjs",
     "server-plugin/items.mjs",
     "server-plugin/law.mjs",
     "server-plugin/traits.mjs"
@@ -13699,13 +13780,10 @@
     "location",
     "minute",
     "npcs",
-    "player",
-    "records"
+    "player"
    ],
    "recordWrites": [],
-   "recordReads": [
-    "physical_feature"
-   ],
+   "recordReads": [],
    "rules": [
     "extraction",
     "wildlife"
@@ -13714,7 +13792,7 @@
     "monsters"
    ],
    "worldDirs": [],
-   "lines": 93
+   "lines": 94
   },
   "server-plugin/faction-clock.mjs": {
    "system": "sim_clock",
@@ -15652,7 +15730,8 @@
     "settlements"
    ],
    "stateReads": [
-    "minute"
+    "minute",
+    "records"
    ],
    "recordWrites": [],
    "recordReads": [],
@@ -15683,7 +15762,7 @@
    "worldDirs": [
     "geo"
    ],
-   "lines": 662
+   "lines": 690
   },
   "server-plugin/repair.mjs": {
    "system": "sim_economy",
@@ -16021,11 +16100,17 @@
   },
   "server-plugin/settlement-profile.mjs": {
    "system": "sim_npc",
-   "imports": [],
+   "imports": [
+    "server-plugin/entity-view.mjs"
+   ],
    "stateWrites": [],
    "stateReads": [
+    "created",
+    "creatures",
     "location",
     "minute",
+    "npcs",
+    "player",
     "records",
     "settlements"
    ],
@@ -16046,7 +16131,7 @@
     "settlementProfiles"
    ],
    "worldDirs": [],
-   "lines": 56
+   "lines": 61
   },
   "server-plugin/settlement-trade.mjs": {
    "system": "sim_economy",
@@ -16091,17 +16176,20 @@
   "server-plugin/shop.mjs": {
    "system": "sim_economy",
    "imports": [
+    "server-plugin/entity-view.mjs",
+    "server-plugin/npc-state.mjs",
     "server-plugin/promotion.mjs",
     "server-plugin/reputation-registry.mjs",
     "server-plugin/standing.mjs"
    ],
    "stateWrites": [
-    "npcs",
     "records",
     "settlements"
    ],
    "stateReads": [
-    "minute"
+    "creatures",
+    "minute",
+    "npcs"
    ],
    "recordWrites": [],
    "recordReads": [
@@ -16119,7 +16207,7 @@
     "settlementProfiles"
    ],
    "worldDirs": [],
-   "lines": 197
+   "lines": 215
   },
   "server-plugin/sites.mjs": {
    "system": "sim_environment",
@@ -16347,19 +16435,18 @@
   },
   "server-plugin/traits.mjs": {
    "system": "base_traits",
-   "imports": [],
+   "imports": [
+    "server-plugin/entity-view.mjs"
+   ],
    "stateWrites": [],
    "stateReads": [
     "creatures",
     "inventory",
-    "minute",
-    "npcs",
-    "records"
+    "itemInstances",
+    "minute"
    ],
    "recordWrites": [],
-   "recordReads": [
-    "physical_feature"
-   ],
+   "recordReads": [],
    "rules": [],
    "world": [
     "bosses",
@@ -16369,7 +16456,7 @@
    "worldDirs": [
     "meta"
    ],
-   "lines": 147
+   "lines": 151
   },
   "server-plugin/tribal-awakening.mjs": {
    "system": "sim_society",
@@ -16378,29 +16465,32 @@
     "server-plugin/entity-view.mjs",
     "server-plugin/npc-intelligence.mjs",
     "server-plugin/quest-sources.mjs",
+    "server-plugin/remote-generation.mjs",
     "server-plugin/standing.mjs",
     "server-plugin/wildlife-awakening.mjs",
+    "server-plugin/wildlife-habitats.mjs",
+    "server-plugin/wildlife-migration.mjs",
     "server-plugin/wildlife-range.mjs",
     "server-plugin/world-clock.mjs",
     "server-plugin/world-events.mjs"
    ],
    "stateWrites": [
-    "records"
+    "creatures",
+    "records",
+    "settlements"
    ],
    "stateReads": [
-    "creatures",
     "npcs",
     "quests"
    ],
    "recordWrites": [
+    "ecology",
     "organization",
     "tribal_awakening",
     "tribal_settlement",
     "tribal_war"
    ],
-   "recordReads": [
-    "ecology"
-   ],
+   "recordReads": [],
    "rules": [
     "quests",
     "tribalAwakening",
@@ -16417,7 +16507,7 @@
     "rules"
    ],
    "worldDirs": [],
-   "lines": 393
+   "lines": 405
   },
   "server-plugin/ui-affairs.mjs": {
    "system": "ui_server",

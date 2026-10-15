@@ -1,6 +1,7 @@
 // K1: derived trait view. Items, creatures, terrain, place features and spells
 // are read into one material/form tag vocabulary plus element affinity. Nothing
 // here writes state; consumers decide what a trait permits.
+import {personBody,physicalFeature,itemView,placeView} from './entity-view.mjs';
 
 // One element vocabulary. The first eight are the spell damage types already in
 // saves and catalogs (order kept); water and lightning are interaction agents.
@@ -99,23 +100,28 @@ export function spellTraits(spell){
 }
 
 const stateOf=doc=>doc?.state??doc;
-const featureRow=(engine,id)=>engine.world.locations.flatMap(place=>(place.features??[]).filter(f=>f.id===id).map(f=>({...f,location:place.id})))[0];
 // traitsOf(engine,stateOrDocument,id,{weather}) — single read entry for any id.
 export function traitsOf(engine,doc,id,{weather=null}={}){
  const state=stateOf(doc)??{},minute=state.minute??0;
  if(typeof id!=='string')return null;
- if(id.startsWith('npc_')){
-  // A resident who is also a boss body carries the boss's authored body tags.
-  const boss=engine.byId?.get(state.npcs?.[id]?.boss),species=boss?.tags?engine.byId?.get(boss.monster):null;
-  if(species)return bossTraits(species,boss,state.npcs[id]);
+ if(id==='player'||id.startsWith('npc_')||state.creatures?.[id]||id.startsWith('boss_')){
+  const view=personBody(engine,state,id),species=engine.byId.get(view?.body.value?.species)??view?.species.value;
+  if(species){
+   const actor={status:view.status.value},body=view.body.value,boss=view.boss.value;
+   const base=boss?.tags?bossTraits(species,boss,actor):creatureTraits(species,actor),tags=new Set(base.tags.filter(t=>!['flammable','conductive'].includes(t)));
+   add(tags,body?.tags);if(id==='player'||id.startsWith('npc_'))tags.add('person');
+   // Borrowed forms change appearance; U6 explicitly retains the real body.
+   if(view.form.value)tags.add('shapeshifted');
+   return finish(id.startsWith('npc_')||id==='player'?'person':'creature',id,tags,base);
+  }
+  if(id==='player'||id.startsWith('npc_'))return finish('person',id,new Set(['person',...view?.body.value?.tags??['humanoid','flesh']]));
  }
- if(id==='player'||id.startsWith('npc_'))return finish('person',id,new Set(['person','humanoid','flesh']));
  if(id.startsWith('feature_')){
-  const row=featureRow(engine,id);if(!row)return null;
-  return featureTraits(row,state.records?.[`physical_feature:${id}`]?.state??row.state,minute);
+  const view=physicalFeature(engine,state,id);if(!view)return null;
+  return featureTraits(view.definition.value,view.state.value,minute);
  }
  const definition=engine.byId?.get(id);
- if(id.startsWith('item_'))return definition?itemTraits(definition,state.inventory?.[id]):null;
+ if(id.startsWith('item_')||state.itemInstances?.[id]){const view=itemView(engine,state,id);return view?itemTraits(view.definition.value,state.itemInstances?.[id]??state.inventory?.[id]):null;}
  if(id.startsWith('monster_')||id.startsWith('boss_')){
   const actor=state.creatures?.[id];
   const species=engine.byId?.get(actor?.species)??(id.startsWith('monster_')?definition:engine.byId?.get(definition?.monster));
@@ -123,9 +129,7 @@ export function traitsOf(engine,doc,id,{weather=null}={}){
   return species?(boss?.tags?bossTraits(species,boss,actor):creatureTraits(species,actor)):null;
  }
  if(id.startsWith('spell_')||definition?.effectSpec)return spellTraits(definition);
- if(definition&&engine.world?.locations?.includes?.(definition))return locationTraits(definition,weather);
- const location=engine.world?.locations?.find(l=>l.id===id);
- if(location)return locationTraits(location,weather);
+ if(definition&&engine.world?.locations?.some(l=>l.id===id))return locationTraits({...definition,owner:placeView(engine,state,id)?.owner.value},weather);
  return null;
 }
 export const hasTrait=(traits,tag)=>Boolean(traits?.tags?.includes(tag));
