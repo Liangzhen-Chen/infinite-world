@@ -639,17 +639,17 @@ T28-R1修好新回执undefined规范化并保留严格篡改拒绝，相关31/32
 
 ### T116（B10）已完成：传闻随真实携带者和登记渠道沿路线抵达，逐手版本可追溯源头，按实际获知问询；相关与CORE通过，0模型。
 
-### T117（B11） 传闻第一组45条。结果：新增45条可由实际渠道获知的真、半真或假传闻。可改world/design/w5-rumors-1.mjs、对应草稿/内容发布工具、world/lore/rumors.json、tests/w5-rumors-1.test.mjs；接B10，关联已发布事件、携带者及路线，与B12–B16同目录串行。验收node --test "tests/w5-rumors-*.test.mjs" tests/rumor-route.test.mjs tests/village-rumor-access.test.mjs，CORE。L2预计50–75次，≤1.5元；约1.5小时。
+### 已完成 T117（B11） 传闻第一组45条。结果：新增45条可由实际渠道获知的真、半真或假传闻。可改world/design/w5-rumors-1.mjs、对应草稿/内容发布工具、world/lore/rumors.json、tests/w5-rumors-1.test.mjs；接B10，关联已发布事件、携带者及路线，与B12–B16同目录串行。验收node --test "tests/w5-rumors-*.test.mjs" tests/rumor-route.test.mjs tests/village-rumor-access.test.mjs，CORE。L2预计50–75次，≤1.5元；约1.5小时。
 
-### T118（B12） 传闻第二组45条。结果：新增45条，覆盖第二组已发布势力/地方事件。文件同B11，批次换w5-rumors-2；接B11，同目录串行。验收node --test "tests/w5-rumors-*.test.mjs" tests/rumor-route.test.mjs tests/village-rumor-access.test.mjs，CORE。L2预计50–75次，≤1.5元；约1.5小时。
+### 已完成 T118（B12） 传闻第二组45条。结果：新增45条，覆盖第二组已发布势力/地方事件。文件同B11，批次换w5-rumors-2；接B11，同目录串行。验收node --test "tests/w5-rumors-*.test.mjs" tests/rumor-route.test.mjs tests/village-rumor-access.test.mjs，CORE。L2预计50–75次，≤1.5元；约1.5小时。
 
-### T119（B13） 传闻第三组45条。结果：新增45条，覆盖可调查遗迹和沿路见闻。文件同B11，批次换w5-rumors-3；接B12及B7，同目录串行。验收node --test "tests/w5-rumors-*.test.mjs" tests/rumor-route.test.mjs tests/village-rumor-access.test.mjs，CORE。L2预计50–75次，≤1.5元；约1.5小时。
+### 已完成 T119（B13） 传闻第三组45条。结果：新增45条，覆盖可调查遗迹和沿路见闻。文件同B11，批次换w5-rumors-3；接B12及B7，同目录串行。验收node --test "tests/w5-rumors-*.test.mjs" tests/rumor-route.test.mjs tests/village-rumor-access.test.mjs，CORE。L2预计50–75次，≤1.5元；约1.5小时。
 
-### T120（B14） 传闻第四组45条。结果：新增45条，给节日与势力阶段提供不同立场的消息。文件同B11，批次换w5-rumors-4；接B13及B2/B5，同目录串行。验收node --test "tests/w5-rumors-*.test.mjs" tests/rumor-route.test.mjs tests/village-rumor-access.test.mjs，CORE。L2预计50–75次，≤1.5元；约1.5小时。
+### 已完成 T120（B14） 传闻第四组45条。结果：新增45条，给节日与势力阶段提供不同立场的消息。文件同B11，批次换w5-rumors-4；接B13及B2/B5，同目录串行。验收node --test "tests/w5-rumors-*.test.mjs" tests/rumor-route.test.mjs tests/village-rumor-access.test.mjs，CORE。L2预计50–75次，≤1.5元；约1.5小时。
 
-### T121（B15） 传闻第五组40条。结果：新增40条，把第二组据点接进调查和消息网络。文件同B11，批次换w5-rumors-5；接B14及B8，同目录串行。验收node --test "tests/w5-rumors-*.test.mjs" tests/rumor-route.test.mjs tests/village-rumor-access.test.mjs，CORE。L2预计45–70次，≤1.5元；约1.5小时。
+### 已完成 T121（B15） 传闻第五组40条。结果：新增40条，把第二组据点接进调查和消息网络。文件同B11，批次换w5-rumors-5；接B14及B8，同目录串行。验收node --test "tests/w5-rumors-*.test.mjs" tests/rumor-route.test.mjs tests/village-rumor-access.test.mjs，CORE。L2预计45–70次，≤1.5元；约1.5小时。
 
-### T122（B16） 传闻第六组40条。结果：新增40条，与已有40条去重后至少300条，沿路线确实可获知。文件同B11，批次换w5-rumors-6；接B15及B9，同目录串行，不重做旧40条。验收node --test "tests/w5-rumors-*.test.mjs" tests/rumor-route.test.mjs tests/village-rumor-access.test.mjs，CORE。L2预计45–70次，≤1.5元；约1.5小时。
+### 已完成 T122（B16） 传闻第六组40条。结果：新增40条，与已有40条去重后至少300条，沿路线确实可获知。文件同B11，批次换w5-rumors-6；接B15及B9，同目录串行，不重做旧40条。验收node --test "tests/w5-rumors-*.test.mjs" tests/rumor-route.test.mjs tests/village-rumor-access.test.mjs，CORE。L2预计45–70次，≤1.5元；约1.5小时。
 
 C部分只拆缺口：governance.mjs的任职入口止于“待上级决定”，quest-board.mjs不承认玩家官职来源，公款建房也无审批主体；爵位执行与个人看法聚合尚无消费者。NPC现有关系/战斗死亡继续复用，新增范围是离屏成长与人生事件。
 
