@@ -2,9 +2,10 @@
 // catalog/state path; override marks an explicit campaign or authored override.
 // These projections never persist or cache results. They grant no capabilities.
 import {actorId,actorPath} from './npc-state.mjs';
-import {npcHousehold,npcAgeAt,npcSchedule,npcServices,beginHouseholdReads} from './npc-state.mjs';
+import {npcHousehold,npcAgeAt,npcSchedule,npcServices,activeRental,beginHouseholdReads} from './npc-state.mjs';
 import {organizationState,memberOrganizations} from './organization-state.mjs';
 import {rankedOffice,adminLevel} from './promotion-view.mjs';
+import {faithOf} from './faith-state.mjs';
 
 const fact=(value,source,override=false)=>({value:structuredClone(value??null),source,override});
 const at=(state,path)=>path.reduce((o,k)=>o?.[k],state);
@@ -213,7 +214,8 @@ function householdView(engine,state,id){
     const h=npcHousehold(engine,state,id);
     const changed=Object.values(state.family?.households??{}).some(r=>r.members?.includes(id)||r.left?.includes(id));
     const generated=state.created?.[id]?.householdId===h?.id;
-    return fact(h,generated?`state.created.${id}.householdId + state.family.households`:changed?'state.family.households + world.households':'world.households',Boolean(changed||generated));
+    const rental=activeRental(state,id);
+    return fact(h,rental?.use==='home'?`state.records.${rental.id}`:generated?`state.created.${id}.householdId + state.family.households`:changed?'state.family.households + world.households':'world.households',Boolean(changed||generated||rental?.use==='home'));
 }
 function socialIdentities(engine,state,id){
     return memberOrganizations(engine,state,id).map(org=>{
@@ -281,6 +283,7 @@ export function homeResidents(engine,state,location){
         const h=personHousehold(engine,state,id);return !h.override||h.value?.homeLocation===location;
     });
     const owner=placeView(engine,state,location)?.owner.value;
+    for(const r of Object.values(state.records??{}))if(r.kind==='asset_lease'&&r.use==='home'&&r.subject===location&&r.status==='有效'&&r.deadline>state.minute)members.push(r.tenant);
     if(typeof owner==='string'&&(state.npcs?.[owner]||engine.byId.get(owner)?.tier))members.push(owner);
     return fact([...new Set(members)].filter(id=>at(state,actorPath(engine.world,id).slice(1))?.status!=='死亡'),houses.length?'world.households + state.family.households + place.owner':'place.access.residents + place.owner',Boolean(houses.some(h=>state.family?.households?.[h.id])));
 }
@@ -299,7 +302,7 @@ export function personView(engine,state,requested){
         household,residence:fact(residence??{household:h?.id??base?.householdId,settlement,home:h?.homeLocation??base?.home?.location},residence?`${root}.residence`:household.source,Boolean(residence)),
         settlement:fact(settlement,settlementSource,Boolean(residence||household.override||actor?.settlement)),
         location:fact(location,id==='player'?'state.location':actor&&Object.hasOwn(actor,'location')?`${root}.location`:`catalog.${id}.location`,Boolean(actor)),
-        organizations:socialIdentities(engine,state,id),
+        organizations:socialIdentities(engine,state,id),faith:faithOf(engine,state,id),
         offices:personOffices(engine,state,id),career:personCareer(engine,state,id),occupation:personOccupation(engine,state,id),remuneration:personRemuneration(engine,state,id),
         titles:recordFacts(state,r=>r.category==='title'&&actorId(engine.world,r.holder)===id&&r.status!=='已除爵'),
         notables:recordFacts(state,r=>r.category==='notable'&&actorId(engine.world,r.holder)===id&&r.status==='在册'),
@@ -311,13 +314,13 @@ export function personView(engine,state,requested){
 
 export function groupView(engine,state,id){
     const org=organizationState(engine,state,id);if(!org)return null;
-    const row=state.records?.[`organization:${id}`],source=org.source==='created'?`state.records.organization:${id}`:org.source==='household'?'world.households + state.family.households':org.source==='society'?`world.locations.${id}.monsterSociety`:`world.factions.${id} + rules.reputation.factions`;
+    const row=state.records?.[`organization:${id}`],source=org.source==='created'?`state.records.organization:${id}`:org.source==='temple'?'rules.training.institutions':org.source==='household'?'world.households + state.family.households':org.source==='society'?`world.locations.${id}.monsterSociety`:`world.factions.${id} + rules.reputation.factions`;
     return {organization:fact(org,source,Boolean(row)),id:fact(id,'identity'),source:fact(org.source,source),
         members:fact(org.members,row?`${source} + state.records.organization:${id}`:source,Boolean(row||org.source==='household'&&state.family?.households?.[id])),
         leader:fact(org.leader,row&&Object.hasOwn(row,'leader')?`state.records.organization:${id}.leader`:source,Boolean(row&&Object.hasOwn(row,'leader'))),
         seat:fact(org.seat,source),kind:fact(org.kind,source),
         officials:fact(Object.entries(org.members).filter(([m,r])=>m===org.leader||!['成员'].includes(r.position)).map(([m])=>m),row?`${source} + state.records.organization:${id}.members`:source,Boolean(row)),
-        treasury:fact(org.treasury,org.source==='faction'?`state.records.faction-assets:${id} + world.factions.${id}.resources`:`state.records.organization:${id}.treasury`,Boolean(row||state.records?.[`faction-assets:${id}`]))};
+        treasury:fact(org.treasury,['faction','temple'].includes(org.source)?`state.records.faction-assets:${id} + world.factions.${id}.resources`:`state.records.organization:${id}.treasury`,Boolean(row||state.records?.[`faction-assets:${id}`]))};
 }
 
 // A contact names a founding office holder. Resolve that office on every read;
@@ -359,8 +362,10 @@ export function personBusiness(engine,state,id){
     const slots=Object.values(schedule??{}).filter(Array.isArray).flat().filter(s=>s.services?.includes('trade'));
     const changed=Boolean(vocation||actor?.residence||actor?.workplace),trades=vocation?npcServices(engine,state,id).includes('trade')||slots.length>0:
         (base.services??[]).includes('trade')||(base.serviceCatalog??[]).some(s=>s.kind==='trade');
-    const location=actor?.workplace?.location??rule?.location??(changed?slots[0]?.location:null)??base.workplace?.location??base.location;
-    const open=Boolean(actor)&&!['死亡','濒死','昏迷','患病'].includes(actor.status)&&!personConstraint(engine,state,id)&&!actor.caring&&!actor.levy&&!actor.scheduleTravel&&!actor.cognitionTravel&&trades&&!(actor.residence?.workChanged&&!vocation);
+    const rental=activeRental(state,id),rentedWork=rental&&rental.use!=='home'?rental.subject:null;
+    const location=rentedWork??actor?.workplace?.location??rule?.location??(changed?slots[0]?.location:null)??base.workplace?.location??base.location;
+    const employed=Object.values(state.records??{}).some(r=>r.kind==='workshop'&&r.worker===id&&['有效','要求加薪'].includes(r.status)&&r.starts<=state.minute&&state.minute<r.deadline);
+    const open=Boolean(actor)&&!employed&&!['死亡','濒死','昏迷','患病'].includes(actor.status)&&!personConstraint(engine,state,id)&&!actor.caring&&!actor.levy&&!actor.scheduleTravel&&!actor.cognitionTravel&&trades&&!(actor.residence?.workChanged&&!vocation);
     return {keeper:fact(id,'identity'),location:fact(location,changed?`state.npcs.${id} + npc-state.npcSchedule`:`catalog.${id}.workplace`,changed),
         settlement:placeSettlement(engine,state,location),shopType:fact(actor?.shopType??rule?.shopType??base.shopType,changed?`state.npcs.${id} + rules.npcGrowth.vocations`:`catalog.${id}.shopType`,changed),
         open:fact(open,'current services + health + legal constraints',changed||Boolean(personConstraint(engine,state,id)))};

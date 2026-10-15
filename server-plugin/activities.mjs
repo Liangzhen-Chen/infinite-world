@@ -36,6 +36,7 @@ import {factionClockAction}from'./faction-clock.mjs';
 import {isHazardClock,hazardClockAction}from'./seasonal-hazards.mjs';
 import {siteAction}from'./sites.mjs';
 import {organizationAction,foundOrganization}from'./organizations.mjs';
+import {faithAction}from'./faith.mjs';
 import {workAction,isWorkOperation}from'./works.mjs';
 import {fish,eatFish,mine,miningPermit}from'./extraction.mjs';
 import {duelAction,activeDuel,finishDuel}from'./duels.mjs';
@@ -181,6 +182,7 @@ export const activities={
         if(args.operation?.startsWith('business_'))return businessAction.call(this,d,args,id);
         if(args.operation?.startsWith('civic_'))return civicAction.call(this,d,args,id);
         if(args.operation?.startsWith('governance_'))return governanceAction.call(this,d,args,id);
+        if(args.operation?.startsWith('faith_'))return faithAction.call(this,d,args,id);
         if(args.operation?.startsWith('org_'))return organizationAction.call(this,d,args,id);
         if(args.operation?.startsWith('title_'))return titleAction.call(this,d,args,id);
         if(args.operation==='diplomacy'||args.operation?.startsWith('war_'))return warAction.call(this,d,args,id);

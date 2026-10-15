@@ -144,9 +144,12 @@ test('租房服务：报价来自引擎、实际扣款转入店主、期限保�
 test('交易性质：任意可负担数量与铜币守恒',async()=>{
     await fc.assert(fc.asyncProperty(fc.integer({min:1,max:12}),async quantity=>{
         const c=fresh();c.state.npcs.npc_hw_linsui.inventory.item_bread={quantity:12};
-        const initial=c.state.player.coins+c.state.npcs.npc_hw_linsui.coins;
+        const publicMoney=state=>Object.values(state.settlements).reduce((n,s)=>n+(s.treasury??0),0);
+        const initial=c.state.player.coins+c.state.npcs.npc_hw_linsui.coins+publicMoney(c.state);
         const next=(await run(c,'world_trade',{seller:'林穗',item:'面包',quantity})).document;
-        assert.equal(next.state.player.coins+next.state.npcs.npc_hw_linsui.coins,initial);
+        assert.equal(next.state.player.coins+next.state.npcs.npc_hw_linsui.coins+publicMoney(next.state),initial);
+        const taxes=Object.values(next.state.records).filter(r=>r.category==='trade_tax').reduce((n,r)=>n+r.amount,0);
+        assert.equal(publicMoney(next.state)-publicMoney(c.state),taxes);
         assert.equal(next.state.inventory.item_bread.quantity+(next.state.npcs.npc_hw_linsui.inventory.item_bread?.quantity??0),12);
     }),{numRuns:30,seed:20261010});
 });

@@ -131,6 +131,8 @@ export function collectivesOf(engine,state,member){
         if(org.source!=='household'&&org.source!=='faction'&&org.source!=='society'&&!rows.some(r=>r.holder===org.id))
             rows.push({holder:org.id,ratio:TRANSMISSION.organization,via:`organization:${org.id}`});
     }
+    const temple=view.faith.value?.temple;
+    if(temple&&!rows.some(r=>r.holder===temple))rows.push({holder:temple,ratio:TRANSMISSION.organization,via:`faith:${temple}`});
     if(state.creatures?.[member]?.society?.id)rows.push({holder:state.creatures[member].society.id,ratio:TRANSMISSION.spiritSociety,via:`spirit_society:${member}`});
     return rows;
 }

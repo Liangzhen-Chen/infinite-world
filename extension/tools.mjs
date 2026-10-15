@@ -48,6 +48,8 @@ Object.assign(festivalParameters,{festival:{...str,description:'plan用custom，
 festivalParameters.operation.description='business经营；festival_依次查现场/约日期/各speaker准自费收费/各speaker同意参加/组织者述因取消';
 festivalParameters.operation.enum.push('faction_inspect','faction_contribute','faction_intervene');
 festivalParameters.operation.enum.push('org_inspect','org_join','org_leave','org_deposit','org_propose','org_vote');
+festivalParameters.operation.enum.push('faith_inspect','faith_convert','faith_give','faith_use','faith_rite','faith_pilgrim');
+festivalParameters.operation.description+='；faith_用org寺观，choice用途/祭仪';
 festivalParameters.operation.enum.push('war_inspect','war_join','diplomacy');
 festivalParameters.operation.enum.push('army_inspect','army_enlist','army_duty','army_recruit','army_dismiss');
 festivalParameters.action.enum.push('expel','appoint','withdraw','charter');
@@ -59,10 +61,10 @@ const routes=new Map();
 definitions.find(r=>r.function.name==='world_wildlife').function.parameters.properties.operation.enum.push('fish','eat');
 definitions.find(r=>r.function.name==='world_site').function.parameters.properties.operation.enum.push('mine');
 const transport=definitions.find(r=>r.function.name==='world_trade').function.parameters.properties;
-transport.operation.enum.push('smuggle','deliver_smuggled');transport.mode=str;
+transport.operation.enum.push('smuggle','deliver_smuggled','bank_inspect','extend','prepay','lend','collect','pawn','redeem','auction','remit','cash_bill','asset_inspect','invest','dividend','share_transfer','rent_out','workshop','workshop_terms','dismiss');transport.mode=str;
 festivalParameters.operation.enum.push('duel_challenge','duel_answer','duel_yield','election_start','election_campaign','election_finish','election_expose','mining_permit');
 festivalParameters.choice={...str,description:'touch/death；gift/speech/promise/buy_votes'};
-transport.operation.description='交易/租铺/采购/雇盘点/履约/同意收购/还债/取消/借款/存取兑币/受雇/合伙；smuggle:seller买方location终点；交货contract';
+transport.operation.description='trade/business/bank/asset; bank_inspect,asset_inspect';
 function group(name,description,members){
     const selected=definitions.filter(row=>members.includes(row.function.name)),properties={},operations=[],mapping=new Map();
     for(const row of selected){

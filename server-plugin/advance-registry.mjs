@@ -34,6 +34,7 @@ import {advanceNpcObligations,nextNpcObligationMinute}from'./npc-obligations.mjs
 import {advanceSocietyNews}from'./monster-society.mjs';
 import {advanceSeasonEffects}from'./effects.mjs';
 import {advanceOrganizations}from'./organizations.mjs';
+import {advanceFaith}from'./faith.mjs';
 import {advanceQuestSources}from'./quest-sources.mjs';
 import {advanceTribalAwakening}from'./tribal-awakening.mjs';
 import {advanceMilitary}from'./military.mjs';
@@ -137,6 +138,7 @@ const systems=[
  {id:'faction_clock',order:1400,active:e=>factionClockRules(e).length>0,nextMinute:(e,d,now)=>nextFactionClockMinute(d.get('state'),now),
   advance:(e,d,{after})=>advanceFactionClocks(d,e,after)},
  {id:'organizations',order:1450,advance:(e,d,ctx)=>advanceOrganizations(d,e,ctx)},
+ {id:'faith_experience',order:1451,advance:(e,d,ctx)=>advanceFaith(d,e,ctx)},
  // U12a armies: weekly supply, drill, morale and desertion; monthly pay (rules.military).
  {id:'military',order:1452,advance:(e,d,ctx)=>advanceMilitary(d,e,ctx)},
  // U11 tribal awakening: species-and-habitat tribes accumulate, awaken, split and resolve at quarter boundaries.

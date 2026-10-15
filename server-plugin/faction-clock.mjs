@@ -1,6 +1,7 @@
 import {ensureGroupAccount} from './group-account.mjs';
 import {groupRepresentative,personView} from './entity-view.mjs';
 import {standingLedger} from './standing.mjs';
+import {templeById} from './faith-catalog.mjs';
 import {factionRelations} from './reputation-registry.mjs';
 import {clockRoll,clockTransaction} from './world-clock.mjs';
 import {registerEffect,assertEffect as assertTableEffect,applyEffect as applyTableEffect,hookedEffects} from './effects.mjs';
@@ -15,7 +16,11 @@ export function factionClockRules(engine){
  if(configured&&(configured.version!==1||!Array.isArray(configured.clocks)))throw Error('势力时钟规则版本无效');
  return [...configured?.clocks??[],...(engine.world.factions??[]).filter(f=>f.clock?.stages).map(f=>({...f.clock,faction:f.id}))];
 }
-function faction(engine,id){const f=engine.world.factions?.find(f=>f.id===id);if(!f)throw Error(`未登记势力：${id}`);return f;}
+function faction(engine,id){
+ const t=String(id).startsWith('temple:')?templeById(engine,id):null;
+ const f=engine.world.factions?.find(f=>f.id===id)??(t?{id:t.id,name:t.name,leader:t.teacher,contactAnchor:t.seat,resources:{treasuryCopper:0,items:{}}}:null);
+ if(!f)throw Error(`未登记势力：${id}`);return f;
+}
 function assertCost(engine,cost={}){
  if(!cost||typeof cost!=='object'||Array.isArray(cost)||Object.keys(cost).some(k=>!['coins','items'].includes(k))||
   cost.items!==undefined&&(!cost.items||typeof cost.items!=='object'||Array.isArray(cost.items))||
@@ -94,6 +99,7 @@ export function creditFactionAssets(d,engine,id,cost,event){assertCost(engine,co
 export function initializeFactionClocks(d,engine,minute,end=minute){
  assertFactionClockRules(engine);
  for(const rule of factionClockRules(engine))if(!d.get(...clockPath(rule.id))){
+  if(rule.triggerRecord&&!d.get('state','records',rule.triggerRecord,'active'))continue;
   const nextAt=(Math.floor(minute/DAY/rule.intervalDays)+1)*rule.intervalDays*DAY;if(nextAt>end)continue;
   ensureAccount(d,engine,rule.faction);
   d.set(clockPath(rule.id),{category:'faction_clock',id:rule.id,faction:rule.faction,phase:0,year:Math.floor(minute/DAY/360)+1,initializedAt:nextAt,nextAt,paused:false,history:[],interventions:[]});
@@ -118,6 +124,7 @@ function applyEffect(d,engine,effect,context){
  return result;
 }
 const owned=(engine,effect)=>faction(engine,effect.target);
+import {assessTradeTax} from './finance-tax.mjs';
 registerEffect('trade',{sources:['faction'],
  validate(engine,effect){owned(engine,effect);if(!engine.world.items.some(i=>i.id===effect.item)||!Number.isSafeInteger(effect.quantity)||effect.quantity<1||!uint(effect.unitPrice))throw Error('势力交易参数无效');},
  apply(d,engine,effect,{faction:owner,sourceEvent,minute}){
@@ -127,6 +134,8 @@ registerEffect('trade',{sources:['faction'],
   const event={sourceEvent,minute,kind:'trade',counterparty:effect.target};
   changeAssets(d,engine,owner,{items:{[effect.item]:effect.quantity}},-1,event);changeAssets(d,engine,effect.target,{items:{[effect.item]:effect.quantity}},1,{...event,counterparty:owner});
   changeAssets(d,engine,effect.target,{coins:payment},-1,{...event,counterparty:owner});changeAssets(d,engine,owner,{coins:payment},1,event);
+  const location=faction(engine,owner).contactAnchor;
+  if(location)assessTradeTax(d,engine,{seller:owner,cost:payment,location,sourceEvent});
   return {applied:true,...effect,payment};
  }});
 registerEffect('relation',{sources:['faction'],
@@ -187,7 +196,12 @@ export function factionClockAction(d,args,eventId){
  const rule=args.clock!==undefined||owner&&rules.length===1?rules[0]:undefined;
  if(!rule)throw Error('没有已发布的可执行势力时钟');
  const before=d.get('state','minute');initializeFactionClocks(d,this,before,before+rule.intervalDays*DAY);
- const row=d.get(...clockPath(rule.id)),stage=rule.stages[row.phase];
+ const row=d.get(...clockPath(rule.id));
+ if(!row){
+  if(args.operation!=='faction_inspect')throw Error('教派尚无实际争夺，时钟未启动');
+  requireContact(d,this,rule.contact,rule.faction);return {faction:rule.faction,clock:rule.id,phase:0,dormant:true,choices:[]};
+ }
+ const stage=rule.stages[row.phase];
  if(args.operation==='faction_inspect'){
   requireContact(d,this,rule.contact,rule.faction);
   const assets=ensureAccount(d,this,rule.faction);

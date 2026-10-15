@@ -22,6 +22,19 @@ function room(engine,state,id,skill){
  return Math.max(0,Math.min(r.maximumGain-((row?.teach??0)+(row?.work??0)),Math.max(current,personCertified(engine,state,id,skill)?r.maximumProficiency:Math.min(r.maximumProficiency,engine.rules.npcGrowth.uncertifiedMaximumProficiency??r.maximumProficiency))-current));
 }
 const today=(state,id,minute)=>{const day=Math.floor(minute/DAY),row=state.npcs[id]?.growth?.today;return row?.day===day?row:{day,teach:0,work:0};};
+// RW07's resident classes share the existing teaching budget and growth caps.
+export function npcLessonGain(engine,state,id,skill,teacher,amount){
+ const r=rules(engine).teach;
+ if(today(state,id,state.minute).teach>=r.dailySessions)throw Error('今天已经教过这位人物，需隔日再教');
+ const gain=Math.min(amount,r.gain,teacher-r.teacherMargin-npcProficiency(engine,state,id,skill),room(engine,state,id,skill));
+ if(gain<=0)throw Error('学生已接近主持水平或达到成长上限');return gain;
+}
+export function settleNpcLesson(d,engine,id,skill,amount,eventId){
+ if(unable.includes(d.get('state','npcs',id,'status')))throw Error('教学中途学生失去行动能力');
+ const gain=grow(d,engine,id,skill,amount,'teach'),mark=today(d.get('state'),id,d.get('state','minute'));
+ d.set(['state','npcs',id,'growth','today'],{...mark,teach:mark.teach+1});
+ remember(d,engine,id,eventId,`在寺观义学修习${engine.byId.get(skill)?.name??skill}。`,[id]);return gain;
+}
 function grow(d,engine,id,skill,amount,source){
  const state=d.get('state'),gain=Math.min(amount,room(engine,state,id,skill));if(gain<=0)return 0;
  const current=npcProficiency(engine,state,id,skill),row=state.npcs[id].growth?.skills?.[skill]??{base:current,teach:0,work:0,sessions:0};
