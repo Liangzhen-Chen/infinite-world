@@ -20,6 +20,14 @@ function modifierForNpc(d,engine,npc,attribute,skill){
     const score=d.get('state','npcs',npc,'attributes',attribute)??engine.byId.get(npc)?.attributes?.[attribute]??10;
     return Math.floor((integer(score,1,1000,'人物属性')-10)/2)+Math.floor((skill?npcProficiency(d,engine,npc,skill):0)/engine.rules.check.skillDivisor);
 }
+export function npcEntryCheck(d,engine,npc,{attribute,skill,difficulty},eventId){
+    const score=d.get('state','npcs',npc,'attributes',attribute)??engine.byId.get(npc)?.attributes?.[attribute]??10;
+    const raw=d.get('state','npcs',npc,'skills',skill)??engine.byId.get(npc)?.proficiencies?.[skill]??engine.byId.get(npc)?.skills?.[skill]??0;
+    const proficiency=typeof raw==='number'?raw:raw.proficiency??0;
+    const roll=die(d.document,eventId,`exam:${npc}`),modifier=Math.floor((score-10)/2)+Math.floor(proficiency/engine.rules.check.skillDivisor),total=roll+modifier;
+    const result={die:roll,modifier,total,difficulty,success:roll!==1&&(roll===20||total>=difficulty)};
+    d.set(['state','checks',eventId],{...result,npc,attribute,skill});return result;
+}
 export function toolBonuses(d,engine,tools,attribute,skill){
     if(!Array.isArray(tools)||tools.length>8)throw new Error('工具列表无效');
     const ids=tools.map(name=>engine.resolve(name,'item'));if(new Set(ids).size!==ids.length)throw new Error('同一工具不能重复计加值');

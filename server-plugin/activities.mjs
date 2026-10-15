@@ -38,6 +38,7 @@ import {siteAction}from'./sites.mjs';
 import {organizationAction,foundOrganization}from'./organizations.mjs';
 import {faithAction}from'./faith.mjs';
 import {workAction,isWorkOperation}from'./works.mjs';
+import {educationAction} from './education.mjs';
 import {fish,eatFish,mine,miningPermit}from'./extraction.mjs';
 import {duelAction,activeDuel,finishDuel}from'./duels.mjs';
 import {electionAction}from'./elections.mjs';
@@ -174,6 +175,7 @@ export const activities={
         return {project:key,stage,...outcome,note:stage==='打磨'?'研究成果需进入受限实体登记，才能获得规则认可':'原型未被系统承认，不能宣称已学会新法术'};
     },
     settlement(d,args,id){
+        if(args.operation?.startsWith('school_'))return educationAction.call(this,d,{operation:args.operation,entity:args.plot,source:args.authority,students:args.beneficiaries,start:args.due,minutes:args.minutes,days:args.days,coins:args.budget,wage:args.proposedFee,org:args.business,course:args.project,name:args.name,location:args.settlement,consent:args.consent},id);
         if(args.operation==='mining_permit')return miningPermit.call(this,d,args,id);
         if(args.operation?.startsWith('duel_'))return duelAction.call(this,d,args,id);
         if(args.operation?.startsWith('election_'))return electionAction.call(this,d,args,id);

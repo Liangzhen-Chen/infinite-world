@@ -1,3 +1,4 @@
+import {educationReservation} from './education-state.mjs';
 import {scheduleAt,advanceNpcSchedules} from './npc-schedule.mjs';
 import {waterEarthHeldUntil}from'./magic-water-earth.mjs';
 import {personConstraint,personConstraints,personSimulation}from'./entity-view.mjs';
@@ -16,6 +17,7 @@ export function npcObligationAt(state,id,minute=state.minute){
 }
 export function assertNpcObligationAction(d,engine,actors,{start=d.get('state','minute'),minutes=0,location,kind='action'}={}){
  const finish=start+minutes;
+ if(kind!=='education')for(const actor of actors)if(educationReservation(engine,d.get('state'),actor,start,minutes,{automatic:kind==='autonomy'}))throw Error('与已登记授业课时冲突');
  if(kind!=='employment')for(const actor of actors)if(employmentReservation(d.get('state'),actor,start,minutes,engine.byId.get(actor)?.schedule?.restDays??[]))throw Error('与雇佣合同的实际工时冲突');
  if(kind==='wait'||kind==='meeting')return;
  for(const o of Object.values(d.get('state','obligations')??{}).filter(live))for(const actor of actors){
@@ -54,6 +56,7 @@ export function createNpcObligation(d,engine,args,eventId){
  if(typeof args.content!=='string'||!args.content.trim()||args.content.length>1200)throw new Error('约定内容为空或过长');
  const departures={};
  for(const actor of [promisor,promisee]){
+  if(educationReservation(engine,state,actor,start,deadline-start))throw Error('与已登记授业课时冲突');
   const row=engine.actor(d,actor);if(!capable(row)||/(睡眠|熟睡|睡觉)/.test(row.activity??''))throw new Error('义务当事人无法清醒履约');
   if(actor!=='player'&&(row.scheduleTravel||row.cognitionTravel||state.player.companions?.includes(actor)))throw new Error('在途或同行人物不能另占会面时段');
   const from=locationOf(state,actor);if(!from)throw new Error('当事人没有可用的出发地点');

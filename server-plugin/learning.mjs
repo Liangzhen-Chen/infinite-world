@@ -1,3 +1,4 @@
+import {educationAction} from './education.mjs';
 import {personTeaching} from './entity-view.mjs';
 import {effectiveProficiency,certifiedForSkill}from'./professions.mjs';
 import {assertNpcService}from'./npc-schedule.mjs';
@@ -10,6 +11,7 @@ const grades=['初级','中级','高级','特级','专家级','大师级','宗�
 const grade=value=>`${grades[Math.min(8,Math.floor(value/300))]}${Math.floor(value%300/100)+1}等`;
 
 export function learn(d,args,id){
+    if(args.operation)return educationAction.call(this,d,args,id);
     if(args.student!==undefined){
         const spirit=spiritStudent(d,args.student);if(!spirit)return teachNpc(d,this,args,id);
         // 已立意的精怪与人物共用灵智等级：教导同样使其成长。
@@ -52,7 +54,8 @@ export function learn(d,args,id){
         if(!foundation||effectiveProficiency(d,this,foundation)<stage*300)throw new Error('共享术式所需路线基础熟练度不足');
     }
     const project=d.get('state','projects',args.source);
-    const source=project?args.source:this.resolve(args.source),sourceDefinition=this.byId.get(source);
+    const sourceInstance=d.get('state','itemInstances',args.source);
+    const source=project?args.source:sourceInstance?.item??this.resolve(args.source),sourceDefinition=this.byId.get(source);
     let sourceRecord,fee=0,minutes;
     if(project){
         if(project.type!=='研究'||project.stage!=='打磨'||catalog.source!==source||!d.get('state','created',entity)
@@ -72,10 +75,12 @@ export function learn(d,args,id){
     }else if(source.startsWith('item_')){
         if(this.quantity(d,'player',source)<1)throw new Error('没有这本书');
         if(d.get('state','inventory',source,'durability')===0)throw new Error('书页已损坏，不能作为完整学习来源');
-        const book=sourceDefinition.book;
+        const held=sourceInstance?{unit:sourceInstance,index:this.rules.books.grades.indexOf(sourceInstance.book?.grade)}:heldBookGrade(d,this,source);
+        if(sourceInstance&&(sourceInstance.owner!=='player'||sourceInstance.status!=='持有'||sourceInstance.durability===0))throw Error('没有完好的这册书');
+        const book=held?.unit?.book?.teaches?{...sourceDefinition.book,...held.unit.book}:sourceDefinition.book;
         if(!book||!(book.teaches??[]).includes(entity))throw new Error('这本书没有所需学习内容');
         // A copy carries its own grade, never above its original (works.mjs).
-        const held=heldBookGrade(d,this,source),copied=held?.unit?.book,bookStage=copied?held.index:this.rules.books.grades.indexOf(book.grade);
+        const copied=held?.unit?.book,bookStage=copied?held.index:this.rules.books.grades.indexOf(book.grade);
         if(bookStage<0||bookStage<Math.min(stage,4))throw new Error('书籍品级不足或未登记');
         if(kind==='spell'&&stage>=4&&book.rare!==true)throw new Error('专家级以上法术需要稀有典籍');
         if((d.get('state','skills','skill_literacy','proficiency')??0)<this.rules.books.minimumLiteracy)throw new Error('识字熟练度不足以阅读技能书');

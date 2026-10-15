@@ -29,7 +29,7 @@ export function npcSchedule(engine,state,id,minute=state?.minute,constraints=nul
     // U12: a levied villager serves at the army's camp until released.
     if(own?.levy)return {default:[{start:0,end:1440,location:own.levy.location,activity:'服役',services:[]}]};
     const employed=state&&personEmployment(engine,state,id,minute)?.value;
-    const job=employed&&['有效','要求加薪'].includes(employed.status)&&Math.floor(employed.starts/1440)<=Math.floor(minute/1440)?employed:null;
+    const job=employed&&!employed.education&&['有效','要求加薪'].includes(employed.status)&&Math.floor(employed.starts/1440)<=Math.floor(minute/1440)?employed:null;
     if(job){
         const home=npcHousehold(engine,state,id)?.homeLocation??engine.byId.get(id)?.home?.location??job.location;
         const slot=(start,end,location,activity)=>({start,end,location,activity,services:[]});
