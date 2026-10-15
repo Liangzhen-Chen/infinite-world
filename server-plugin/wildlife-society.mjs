@@ -4,6 +4,7 @@ import {assertTrainingRitual} from './training.mjs';
 import {effectiveProficiency} from './professions.mjs';
 import {heldUnit,wearItem,produceItems} from './items.mjs';
 import {speciesInHabitat} from './wildlife-range.mjs';
+import {initialIn} from './wildlife-habitats.mjs';
 
 // T161 成精后的修习与结社。只作用于已立意的同一身体：修习、借形、结社都写在
 // creatures[id] 上，不改等级、体力、物种或生态来源，不生成新人口，也不凭空造物。
@@ -245,7 +246,7 @@ function forage(d,engine,location){
     const habitat=engine.rules.wildlife?.habitats.find(h=>h.location===location);if(!habitat)return null;
     const record=d.get('state','records',`ecology:${habitat.id}`);
     const total=record?Object.values(record.populations).reduce((n,p)=>n+p.count,0)
-        :speciesInHabitat(engine.rules,engine.world.monsters,habitat.id).reduce((n,s)=>n+(s.wildlife.habitat===habitat.id?s.wildlife.population:0),0);
+        :speciesInHabitat(engine.rules,engine.world.monsters,habitat.id).reduce((n,s)=>n+initialIn(habitat,s),0);
     return{habitat:habitat.id,total};
 }
 const voluntary=a=>sapient(a)&&alive(a)&&!a.owner&&!a.society&&a.location&&!a.companion?.following&&(!partner(a)||a.mind.settle?.location===a.location);
