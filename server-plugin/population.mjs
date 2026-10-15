@@ -153,6 +153,15 @@ export function populationPlan(template,basis){
             if(spec){const name=composeName(rng,spec,surname,i);if(nameOk(name)){taken.add(name);return name;}continue;}
             const first=pick(rng,template.given),second=pick(rng,template.given);const name=surname+first+(i<4||second===first?'':second);if(nameOk(name)){taken.add(name);return name;}
         }
+        // Large nonhuman quarters can exhaust the two-syllable combinations.
+        // Preserve every existing successful draw; only the exhausted path
+        // adds a third syllable, keeping the culture's lead/clan placement.
+        for(let i=0;i<4096;i++){
+            const base=spec?composeName(rng,spec,surname,96):surname+pick(rng,template.given)+pick(rng,template.given);
+            const extra=pick(rng,spec?.given??spec?.second??template.given),dot=base.indexOf('·');
+            const name=dot<0?base+extra:base.slice(0,dot)+extra+base.slice(dot);
+            if(nameOk(name)){taken.add(name);return name;}
+        }
         throw Error('人口模板姓名库不足');
     }
     const households=homes.map((h,i)=>{

@@ -18,7 +18,7 @@ import {rosterLifeState,lifeRoutine} from './population.mjs';
 import {initialNpcState} from './npc-state.mjs';
 import {advanceNpcNeeds} from './npc-intelligence.mjs';
 import {famineAt} from './hazard-calendar.mjs';
-import {personSimulation,personConstraint,personHousehold} from './entity-view.mjs';
+import {personSimulation,personConstraint,personHousehold,personConstraints} from './entity-view.mjs';
 import {actorId,actorPath,householdDefinition} from './npc-state.mjs';
 import {finishBusinessContract,refundContractEscrow,releaseBusinessLease} from './contracts.mjs';
 
@@ -678,13 +678,13 @@ const RESTING=/睡|歇息|休息|赶路|前往|返回|照护/;
 const tied=(engine,state,a,b)=>staticTie(engine,a,b).length>0||Boolean(state.npcs[a]?.relationships?.[b]||state.npcs[b]?.relationships?.[a]);
 function coworkDay(d,engine,minute){
  const k=rules(engine).kindness?.cowork;if(!k)return;
- const state=d.get('state'),period=Math.floor(minute/DAY/k.everyDays),start=minute-DAY,at=new Map();
+ const state=d.get('state'),period=Math.floor(minute/DAY/k.everyDays),start=minute-DAY,at=new Map(),constraints=personConstraints(engine,state);
  for(const id of Object.keys(state.npcs).sort()){
   const n=state.npcs[id];
   if(!lifeActor(engine,state,id)||incapable.includes(n.status)||!settled(state,id)||n.caring||npcIsMinor(engine,state,id,minute))continue;
   try{
    for(let cursor=start;cursor<minute;){
-    const slot=scheduleAt(engine,id,cursor,state);if(!slot)break;
+    const slot=scheduleAt(engine,id,cursor,state,constraints);if(!slot)break;
     const end=Math.min(slot.until,minute);
     if(!RESTING.test(slot.activity??'')){const rows=at.get(slot.location)??[];rows.push({id,start:cursor,end});at.set(slot.location,rows);}
     cursor=end;

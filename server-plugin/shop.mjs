@@ -1,7 +1,7 @@
 import {isReputationSettlement}from'./reputation-registry.mjs';
 import {standing} from './standing.mjs';
 import {marketFactor}from'./promotion.mjs';
-import {personBusiness,placeSettlement,settlementPopulation} from './entity-view.mjs';
+import {personBusiness,placeSettlement,settlementPopulationCount} from './entity-view.mjs';
 import {actorPath} from './npc-state.mjs';
 
 // Shops (guide 3.7, 3.13): each registered shop restocks on its own cycle from
@@ -63,11 +63,12 @@ export function currentShops(engine,state){
         if(changedType&&!template)continue;
         const shop={...store,...template,keeper,settlement,location:business.location.value,shopType:type,channels:template?.channels??store.channels};
         const rows=engine.byId.get(keeper)?.shopRestock??store.restock;
+        const population=settlementPopulationCount(engine,state,settlement).value;
         shop.restock=rows.map(row=>{
             if(row.source==='settlement')return {...row};
             const from=originSettlement(engine.world,row.item,rules);
             return from?{...row,source:from===settlement?'local':'route',...(from!==settlement?{from}:{})}:row;
-        }).filter(row=>qualityAllowed(engine.world,shop,row.item,rules,settlementPopulation(engine,state,settlement).population.value));
+        }).filter(row=>qualityAllowed(engine.world,shop,row.item,rules,population));
         used.add(keeper);out.push(shop);
     }
     return out;

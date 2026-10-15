@@ -3,14 +3,23 @@ import {RETRIEVAL_DICTIONARY,expandRetrievalText,prepareRetrievalRecord,isSystem
 import {publicSettlementEntries} from './settlement-profile.mjs';
 import {siteKnowledge} from './sites.mjs';
 const convert = OpenCC.Converter({ from: 'tw', to: 'cn' });
-export const normalize = text => convert(String(text)).toLowerCase().replaceAll('帐', '账').normalize('NFKC');
+// Pure text results cannot become stale when an entity moves or changes name.
+// The bound covers the 35k-resident fixture without retaining unlimited chats.
+const normalizedText=new Map(),NORMALIZED_TEXT_LIMIT=65536;
+export const normalize = text => {
+    const source=String(text);if(/^[\x00-\x7f]*$/.test(source))return source.toLowerCase();
+    const cached=normalizedText.get(source);if(cached!==undefined)return cached;
+    const value=convert(source).toLowerCase().replaceAll('帐', '账').normalize('NFKC');
+    if(normalizedText.size>=NORMALIZED_TEXT_LIMIT)normalizedText.delete(normalizedText.keys().next().value);
+    normalizedText.set(source,value);return value;
+};
 export function validateMemory(content) {
     if (typeof content !== 'string' || !content.trim() || content.length > 2000) throw new Error('记忆正文为空或过长');
     if (isSystemMemoryText(content)) throw new Error('记忆包含系统用语，请改写成世界内发生的具体事实');
     return content.trim();
 }
 export class EntityResolver {
-    constructor(entities) {
+    constructor(entities,{sortNames=true}={}) {
         this.entities = new Map(); this.aliases = new Map();
         for (const entity of entities) {
             if (this.entities.has(entity.id)) throw new Error(`重复实体编号${entity.id}`);
@@ -21,18 +30,21 @@ export class EntityResolver {
                 const entries = this.aliases.get(name) ?? new Set(); entries.add(entity.id); this.aliases.set(name, entries);
             }
         }
-        this.names = [...this.aliases.keys()].sort((a, b) => b.length - a.length);
+        if(sortNames)this.names = [...this.aliases.keys()].sort((a, b) => b.length - a.length);
     }
     extend(entities) {
         // Normalize only campaign additions. Copy the maps and merge alias
         // sets on collision so one campaign never changes the world resolver.
-        const additions = new EntityResolver(entities), resolver = Object.create(this);
+        const additions = new EntityResolver(entities,{sortNames:false}), resolver = Object.create(this);
         resolver.entities = new Map(this.entities); resolver.aliases = new Map(this.aliases);
         for (const [id, entity] of additions.entities) {
             if (resolver.entities.has(id)) throw new Error(`重复实体编号${id}`);
             resolver.entities.set(id, entity);
         }
-        for (const [name, ids] of additions.aliases) resolver.aliases.set(name, new Set([...resolver.aliases.get(name) ?? [], ...ids]));
+        for (const [name, ids] of additions.aliases) {
+            const previous=resolver.aliases.get(name);
+            resolver.aliases.set(name,previous?new Set([...previous,...ids]):ids);
+        }
         resolver.names = [...resolver.aliases.keys()].sort((a, b) => b.length - a.length);
         return resolver;
     }

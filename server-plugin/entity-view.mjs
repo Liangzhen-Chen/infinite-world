@@ -2,7 +2,7 @@
 // catalog/state path; override marks an explicit campaign or authored override.
 // These projections never persist or cache results. They grant no capabilities.
 import {actorId,actorPath} from './npc-state.mjs';
-import {npcHousehold,npcAgeAt,npcSchedule,npcServices} from './npc-state.mjs';
+import {npcHousehold,npcAgeAt,npcSchedule,npcServices,beginHouseholdReads} from './npc-state.mjs';
 import {organizationState,memberOrganizations} from './organization-state.mjs';
 import {rankedOffice,adminLevel} from './promotion-view.mjs';
 
@@ -153,13 +153,14 @@ export function personQuestRights(engine,state,id,{cultural=false}={}){
 // A changed job gets a fresh baseline; promises are overlaid by npc-schedule.
 // No old schedule is copied into an appointment or a vocation record.
 export function personRoutine(engine,state,id,constraints=null){
-    const actor=state.npcs?.[id],base=baseOf(engine,state,id),career=personCareer(engine,state,id).value;
+    const actor=state.npcs?.[id],base=baseOf(engine,state,id);
     const rows=constraints?.offices??officeRows(state),ownRows=rows.some(([,r])=>r.holder===id);
     const displaced=(engine.world.settlementProfiles??[]).some(p=>p.details?.governance?.head===id&&settlementHead(engine,state,p.id).value!==id);
     const removed=constraints?.dismissals?constraints.dismissals.has(id):dismissed(state,id);
     const delegated=(constraints?.stewards??Object.values(state.records??{}).filter(r=>r.category==='housing_steward')).some(r=>r.steward===id);
     const orgRow=(constraints?.organizations??Object.values(state.records??{}).filter(r=>r.category==='organization')).find(r=>r.members?.[id]&&r.members[id].position!=='成员'&&!r.removed?.[id]);
     if(!actor?.vocation&&!ownRows&&!displaced&&!removed&&!orgRow&&!delegated)return null;
+    const career=personCareer(engine,state,id).value;
     const offices=personOffices(engine,state,id).filter(e=>e.override),office=offices.sort((a,b)=>(b.value.since??0)-(a.value.since??0))[0]?.value;
     const job=career.vocation,changed=Boolean(office||job||ownRows||displaced||removed||orgRow||delegated),residence=actor?.residence;
     if(!changed)return null;
@@ -331,14 +332,20 @@ export function personBusiness(engine,state,id){
         settlement:placeSettlement(engine,state,location),shopType:fact(actor?.shopType??rule?.shopType??base.shopType,changed?`state.npcs.${id} + rules.npcGrowth.vocations`:`catalog.${id}.shopType`,changed),
         open:fact(open,'current services + health + legal constraints',changed||Boolean(personConstraint(engine,state,id)))};
 }
+export function settlementPopulationCount(engine,state,id){
+    const population=state.settlements?.[id]?.population;
+    return population!==null&&population!==undefined?fact(population,'state.settlements + current households',true):settlementPopulation(engine,state,id).population;
+}
 export function settlementPopulation(engine,state,id){
+    const reader=Object.create(engine);reader.advanceHouseholds=engine.advanceHouseholds??beginHouseholdReads(engine);
     const profile=engine.world.settlementProfiles?.find(p=>p.id===id),ledger=state.settlements?.[id];
     const houses=(engine.world.households??[]).filter(h=>h.settlement===id),generated=Object.values(state.created??{}).filter(p=>p.generated==='population'&&p.settlement===id);
     const baseline=new Set([...profile?.residentIds??[],...houses.flatMap(h=>h.members),...generated.map(p=>p.id)]);
     const candidates=new Set([...baseline,...Object.values(state.family?.households??{}).flatMap(h=>h.members??[])]);
-    const current=[...candidates].filter(p=>{const h=personHousehold(engine,state,p).value;return state.npcs?.[p]?.status!=='死亡'&&(h?h.settlement===id:baseline.has(p));});
+    const homes=new Map([...candidates].map(p=>[p,personHousehold(reader,state,p).value]));
+    const current=[...candidates].filter(p=>{const h=homes.get(p);return state.npcs?.[p]?.status!=='死亡'&&(h?h.settlement===id:baseline.has(p));});
     const count=ledger?.population??Math.max(0,(profile?.population??baseline.size)+current.length-baseline.size);
-    const occupied=new Set(current.map(p=>personHousehold(engine,state,p).value?.id).filter(Boolean));
+    const occupied=new Set(current.map(p=>homes.get(p)?.id).filter(Boolean));
     const initial=new Set([...houses.map(h=>h.id),...generated.map(p=>p.householdId)]);
     return {population:fact(count,ledger?'state.settlements + current households':'catalog population + current households',Boolean(ledger||state.family)),
         householdCount:fact(Math.max(0,(profile?.householdCount??initial.size)+occupied.size-initial.size),'current households + pending population quota',Boolean(state.family)),

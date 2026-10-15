@@ -138,7 +138,7 @@ const SYSTEMS=[
  {id:'base_events',layer:'base',name:'世界事件',card:'K3',modules:['world-events.mjs']},
  {id:'base_standing',layer:'base',name:'统一立场',card:'K4/K5',modules:['standing.mjs','entity-view.mjs']},
  {id:'base_effects',layer:'base',name:'效果表',card:'K6',modules:['effects.mjs']},
- {id:'base_advance',layer:'base',name:'推进注册表',card:'K7',modules:['advance-registry.mjs']},
+ {id:'base_advance',layer:'base',name:'推进注册表',card:'K7/P3',modules:['advance-registry.mjs','advance-layers.mjs']},
  // 模拟系统层
  {id:'sim_npc',layer:'sim',name:'人物',modules:['npc-state.mjs','npc-schedule.mjs','npc-cognition.mjs','npc-autonomy.mjs','npc-life.mjs','npc-memory.mjs','npc-relations.mjs','npc-rumors.mjs',
    'npc-obligations.mjs','npc-growth.mjs','npc-intelligence.mjs','lies.mjs','npc-planning-service.mjs','population.mjs','population-service.mjs','settlement-profile.mjs']},
