@@ -1,0 +1,119 @@
+import {temples} from './faith-catalog.mjs';
+// Course agreements and completed study are facts. Seats, teachers and resident
+// skill distributions are projections of the current campaign.
+import {facilityView} from './facility-state.mjs';
+import {npcSchedule,npcAgeAt} from './npc-state.mjs';
+import {advanceLayerPlan} from './advance-layers.mjs';
+import {cohortSeats,expandedEducation} from './education-cohorts.mjs';
+const DAY=1440;
+export const educationFresh=e=>!e.replaying||e.replayResult?.educationVersion===1;
+export const educationRows=s=>Object.values(s.records??{}).filter(r=>r.category==='education_course'&&r.status==='开课');
+export const knowledgeProficiency=(e,s,id,skill)=>{
+ const b=s.created?.[id]??e.byId.get(id),v=id==='player'?s.skills?.[skill]:s.npcs?.[id]?.skills?.[skill]??b?.proficiencies?.[skill]??b?.skills?.[skill];
+ return typeof v==='number'?v:v?.proficiency??0;
+};
+export function knowsKnowledge(e,s,id,entity){
+ const b=s.created?.[entity]??e.byId.get(entity);if(!b)return false;
+ if(entity.startsWith('skill_'))return knowledgeProficiency(e,s,id,entity)>0;
+ const partition=entity.startsWith('recipe_')?'recipes':'spells';
+ return Boolean(id==='player'?s[partition]?.[entity]:s.npcs?.[id]?.[partition]?.[entity]||b.teachers?.includes(id));
+}
+export function educationSites(e,s){
+ const places=[...e.world.locations,...Object.values(s.created??{}).filter(x=>x.id?.startsWith('bld_'))];
+ const out=places.filter(p=>/学堂|学馆|私塾|书院|义学/.test(`${p.name??''} ${p.purpose??''}`)||p.facilityType==='school').map(p=>({id:`school:${p.id}`,name:p.name,kind:/书院/.test(p.name)?'书院':/私塾/.test(p.name)?'私塾':'学馆',seat:p.id,leader:null}));
+ for(const t of temples(e))if(t.seat&&!out.some(o=>o.seat===t.seat))out.push({id:t.id,name:t.name,kind:'寺观义学',seat:t.seat,leader:t.teacher});
+ for(const r of educationRows(s))if(!out.some(o=>o.id===r.org))out.push({id:r.org,name:r.name,kind:r.schoolKind,seat:r.location,leader:r.teacher});
+ return out.map(o=>({...o,capacity:facilityView(e,s,o.seat)?.capacity??0}));
+}
+function settlement(e,s,id){
+ const n=s.npcs?.[id],b=s.created?.[id]??e.byId.get(id);
+ if(n?.residence?.settlement)return n.residence.settlement;
+ const hid=n?.residence?.household??n?.householdId??b?.householdId;
+ const h=e.world.households?.find(h=>h.id===hid);return h?.settlement??b?.settlement??b?.scope;
+}
+export function educationCourses(e,s){
+ if(e.educationCourseContext)return e.educationCourseContext;
+ if(!educationFresh(e))return [];
+ const rows=educationRows(s),out=[...rows];
+ // Derive classes from the teacher's current work, not just the authored
+ // schedule. Hired teachers and changed livelihoods use the same entrance.
+ const people=[...new Map([...e.world.residents??[],...e.world.npcs,...Object.values(s.created??{})].filter(p=>p.id?.startsWith('npc_')).map(p=>[p.id,p])).values()];
+ const layers=Object.keys(s.population??{}).length?(e.advanceLayerContext??advanceLayerPlan(e,s)):null;
+ const settlements=new Set((e.world.settlementProfiles??[]).map(p=>p.id));
+ for(const site of educationSites(e,s)){
+  if(!site.capacity)continue;
+  const teachers=Object.keys(s.npcs??{}).filter(id=>knowledgeProficiency(e,s,id,'skill_literacy')>100).sort();
+  for(const teacher of teachers){
+   const routine=npcSchedule(e,s,teacher),calendar=e.calendar(s.minute),variant=calendar.market?'market':routine?.restDays?.includes(calendar.day)?'rest':'default';
+   const seasonal=routine?.seasonal?.[String(calendar.season)],slots=seasonal?.[variant]??routine?.[variant]??seasonal?.default??routine?.default??[];
+   const job=Object.values(s.records??{}).find(r=>r.category==='contract'&&r.worker===teacher&&r.location===site.seat&&['有效','要求加薪'].includes(r.status)&&r.starts<=s.minute&&r.deadline>s.minute&&/授业|先生|教学/.test(r.task??''));
+   const teaching=slots.filter(w=>w.location===site.seat&&(w.services?.includes('teach')||job&&w.activity===job.task));
+   for(const slot of teaching){
+    const occupied=out.filter(c=>c.location===site.seat&&c.start<slot.end&&c.end>slot.start).reduce((n,c)=>n+c.students.length+(c.cohort?.roster.length??0),0),seats=Math.max(0,site.capacity-occupied);
+    if(!seats)continue;
+    const available=id=>!out.some(c=>[c.teacher,...c.students].includes(id)&&c.start<slot.end&&c.end>slot.start);
+    if(!available(teacher))continue;
+    let town=site.seat;const seen=new Set();while(town&&!settlements.has(town)&&!seen.has(town)){seen.add(town);const place=s.created?.[town]??e.byId.get(town);town=place?.parent??place?.scope;}
+    town??=settlement(e,s,teacher);
+    const statistical=layers?.layers.get(layers.countyOf(town))==='statistics';
+    const students=people.filter(p=>p.id!==teacher&&available(p.id)&&settlement(e,s,p.id)===town&&
+     !(statistical&&p.generated==='population'&&!s.npcs?.[p.id])&&(npcAgeAt(e,s,p.id)??0)>=(e.rules.education?.minimumAge??6)&&(npcAgeAt(e,s,p.id)??99)<=(e.rules.education?.maximumAge??17)&&s.npcs?.[p.id]?.status!=='死亡'&&
+     knowledgeProficiency(e,s,p.id,'skill_literacy')<knowledgeProficiency(e,s,teacher,'skill_literacy')-e.rules.npcGrowth.teach.teacherMargin)
+     .map(p=>p.id).sort().slice(0,seats);
+    const previous=s.records?.[`education_cohort:education:auto:${site.id}:${teacher}:${slot.start}:${Math.floor(s.minute/DAY)}`];
+    const roster=statistical?(previous?.roster??cohortSeats(e,s,town,'skill_literacy',knowledgeProficiency(e,s,teacher,'skill_literacy'),seats-students.length,s.minute)):[];
+    if(students.length||roster.length)out.push({id:`education:auto:${site.id}:${teacher}:${slot.start}`,org:site.id,teacher,entity:'skill_literacy',students,location:site.seat,start:slot.start,end:slot.end,since:0,until:Infinity,status:'开课',automatic:true,school:true,...(job?.laborMarket?{employment:job.id}:{}),...(roster.length?{cohort:{settlement:town,roster}}:{})});
+   }
+  }
+ }
+ // A carried copy can be studied without the player scheduling each page.
+ for(const unit of Object.values(s.itemInstances??{}))if(unit.book?.teaches?.length&&unit.owner?.startsWith('npc_')&&unit.status==='持有'&&unit.durability!==0){
+  const student=unit.owner;if(rows.some(c=>c.students.includes(student)))continue;
+  const entity=unit.book.teaches.find(k=>k.startsWith('skill_')?knowledgeProficiency(e,s,student,k)<Math.min(unit.book.ceilings?.[k]??Infinity,(e.rules.books.grades.indexOf(unit.book.grade)+1)*300)-100:!knowsKnowledge(e,s,student,k));
+  if(!entity||knowledgeProficiency(e,s,student,'skill_literacy')<(e.rules.books?.minimumLiteracy??100))continue;
+  const n=s.npcs[student],home=n?.residence?.home??e.byId.get(student)?.home?.location??n?.location;
+  out.push({id:`education:book:${unit.id}:${student}`,org:null,teacher:null,source:unit.id,book:true,entity,students:[student],location:home,start:1080,end:1200,since:unit.minute??0,until:Infinity,status:'开课',automatic:true});
+ }
+ // The apprenticeship relationship supplies the obligation; the master's
+ // current residence supplies the destination after migration or study travel.
+ for(const [student,n]of Object.entries(s.npcs??{})){
+  if(out.some(c=>c.students.includes(student)))continue;
+  const rel=Object.entries(n.relationships??{}).find(([,r])=>r.type==='师父'),base=e.byId.get(student);
+  const teacher=rel?.[0]??base?.relationships?.find(r=>r.type==='师父')?.with,master=s.npcs?.[teacher];if(!master)continue;
+  const entity=Object.keys(master.recipes??{}).sort().find(k=>!knowsKnowledge(e,s,student,k));if(!entity)continue;
+  const home=master.residence?.home??e.byId.get(teacher)?.home?.location??master.location;
+  if(settlement(e,s,student)!==settlement(e,s,teacher))continue;
+  out.push({id:`education:apprentice:${teacher}:${student}:${entity}`,org:null,teacher,entity,students:[student],location:home,start:1080,end:1200,since:master.recipes[entity].learnedAt??0,until:Infinity,status:'开课',automatic:true,apprentice:true});
+ }
+ return out;
+}
+export function courseWindow(c,minute){
+ const day=Math.floor(minute/DAY),start=day*DAY+c.start,end=day*DAY+c.end;
+ return start>=c.since&&start<c.until&&!c.restDays?.includes(day%30+1)?{start,end}:null;
+}
+export function educationSlot(e,s,id,minute){
+ for(const c of educationCourses(e,s))if((!c.automatic||c.apprentice)&&c.teacher===id||c.students.includes(id)){
+  const w=courseWindow(c,minute);if(w&&minute>=w.start&&minute<w.end)return {location:c.location,activity:c.teacher===id?'授课':'受教',services:[],until:w.end,education:c.id};
+ }
+ return null;
+}
+export function educationReservation(e,s,id,start,minutes,{automatic=false}={}){
+ return (automatic?educationCourses(e,s):educationRows(s)).find(c=>[c.teacher,...c.students].includes(id)&&Array.from({length:Math.ceil(Math.max(1,minutes)/DAY)+1},(_,i)=>courseWindow(c,Math.floor(start/DAY)*DAY+i*DAY)).some(w=>w&&start<w.end&&start+Math.max(1,minutes)>w.start));
+}
+export function educationStatistics(e,s,location){
+ const ids=[...new Set([...e.world.npcs.map(n=>n.id),...(e.world.residents??[]).map(n=>n.id),...Object.values(s.created??{}).filter(n=>n.id?.startsWith('npc_')).map(n=>n.id),...Object.keys(s.npcs??{})])];
+ const residents=ids.filter(id=>s.npcs?.[id]?.status!=='死亡'&&settlement(e,s,id)===location),distribution={},record=s.population?.[location],progress=record?expandedEducation(e,s,location):new Map();let literate=0;
+ const proficiency=(id,skill)=>Math.max(knowledgeProficiency(e,s,id,skill),s.npcs?.[id]?0:progress.get(id)?.skills[skill]??0);
+ for(const id of residents){if(proficiency(id,'skill_literacy')>=(e.rules.books?.minimumLiteracy??100))literate++;
+  for(const skill of e.world.skills){const p=proficiency(id,skill.id);if(p>0){const bin=Math.floor(p/300),counts=distribution[skill.id]??{};counts[bin]=(counts[bin]??0)+1;distribution[skill.id]=counts;}}
+ }
+ let count=residents.length;
+ if(record){
+  const known=new Set(residents);
+  for(const [id,p]of progress){if(known.has(id))continue;for(const [skill,value]of Object.entries(p.skills)){const bins=distribution[skill]??={};bins[Math.floor(value/300)]=(bins[Math.floor(value/300)]??0)+1;}if((p.skills.skill_literacy??0)>=(e.rules.books?.minimumLiteracy??100))literate++;}
+  // Seeded people exist even while compacted; profiles and individual states
+  // above replace their projections, without adding another population.
+  count=Math.max(count,record.basis.pendingPopulation+(residents.filter(id=>!id.startsWith('npc_pop_')).length));
+ }
+ return {residents:count,literate,literacyRate:count?literate/count:0,distribution};
+}

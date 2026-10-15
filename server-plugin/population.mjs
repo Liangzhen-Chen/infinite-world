@@ -2,6 +2,7 @@ import {createHash} from 'node:crypto';
 import {readFileSync} from 'node:fs';
 import {initialNpcState,householdDefinition} from './npc-state.mjs';
 import {composeName,acceptRemoteProfile} from './remote-generation.mjs';
+import {expandedEducation} from './education-cohorts.mjs';
 import {isDeepStrictEqual} from 'node:util';
 import {advanceLayerPlan} from './advance-layers.mjs';
 
@@ -272,7 +273,14 @@ export function settlePopulationLayers(d,engine){
     for(const {sid,record,location,district} of [...far,...near]){
         const rows=populationPlan(record.template,record.basis).households.filter(h=>h.district===location);
         if(district.compacted){
-            for(const h of rows)for(const m of h.members)if(!state.created?.[m.id])edit()[m.id]=rosterEntity(record.template,h,m);
+            const learned=expandedEducation(engine,state,sid);
+            for(const h of rows)for(const m of h.members){
+                const existing=state.created?.[m.id];
+                if(!existing||learned.has(m.id)&&!state.npcs?.[m.id]){
+                    const skills={...existing?.skills};for(const [skill,value]of Object.entries(learned.get(m.id)?.skills??{}))skills[skill]=Math.max(skills[skill]??0,value);
+                    edit()[m.id]={...existing??rosterEntity(record.template,h,m),...(Object.keys(skills).length?{skills}:{})};
+                }
+            }
             const {compacted,...rest}=district;update(sid,record,location,{...rest,households:rows.map(h=>h.id)});
         }else{
             for(const h of rows){
@@ -452,9 +460,11 @@ export function rosterLifeState(engine,state,id,minute,reason,{minor=false}={}){
     if(!entity||entity.tier!=='roster'||state.npcs?.[id]||!entity.householdId)return null;
     const house=householdDefinition(engine,state,entity.householdId);
     const home=house?.homeLocation??entity.home?.location;if(!home)return null;
+    const learned=entity.generated==='population'?expandedEducation(engine,state,entity.settlement).get(id):null;
+    const educationGrowth=learned?{today:{day:Math.floor(minute/1440),teach:learned.today[Math.floor(minute/1440)]??0,work:0},skills:Object.fromEntries(Object.entries(learned.growth).map(([skill,teach])=>[skill,{base:0,teach,work:0,sessions:learned.sessions[skill]}]))}:null;
     const relationships={};
     for(const other of engine.world.npcs??[])for(const tie of other.relationships??[])if(tie.with===id&&state.npcs?.[other.id])
         relationships[other.id]={trust:tie.trust??0,affection:tie.affection??0,respect:0,fear:0,romance:0,competition:0,favors:[],evidenceKeys:[]};
-    return {...initialNpcState({...entity,location:home,coins:0,inventory:{}}),occupation:entity.occupation??'',activity:'在家',relationships,
+    return {...initialNpcState({...entity,location:home,coins:0,inventory:{}}),...(learned||entity.skills&&!Array.isArray(entity.skills)?{skills:{...entity.skills,...learned?.skills}}:{}),...(educationGrowth?{growth:educationGrowth}:{}),occupation:entity.occupation??'',activity:'在家',relationships,
         routine:lifeRoutine(home,{minor,occupation:entity.occupation}),life:{kind:'roster',since:minute,reason}};
 }

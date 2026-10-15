@@ -1,3 +1,5 @@
+import {examineNpc} from './education.mjs';
+import {localExamination} from './local-exams.mjs';
 import {checkPetCareer}from'./pets.mjs';
 import {assertNpcService}from'./npc-schedule.mjs';
 import {initiation,ritualOfficiate}from'./training.mjs';
@@ -24,6 +26,8 @@ function validMentor(d,engine,teacher,profession){
     return definition;
 }
 export function profession(d,args,id){
+    if(args.operation==='examine')return localExamination.call(this,d,args,id);
+    if(args.student)return examineNpc(d,this,args,id);
     const role=this.resolve(args.profession,'profession'),catalog=this.byId.get(role),current=d.get('state','professions');
     const operation=args.operation??'certify';
     if(operation==='initiate')return initiation(d,this,args,id);

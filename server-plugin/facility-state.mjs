@@ -13,13 +13,13 @@ export const facilityDefinition=(engine,state,id)=>state?.created?.[id]??engine.
 export const isFacility=p=>p?.type==='bld'||p?.id?.startsWith('bld_');
 export function facilityKind(base){
  if(base.facilityType)return base.facilityType;
- const purpose=base.purpose??'';
+ const purpose=`${base.purpose??''} ${base.name??''}`;
  return /私宅|住宅|居住/.test(purpose)||base.lodging?'house':base.workstations?.length?'workshop':
-  /医馆|药铺/.test(purpose)?'clinic':/学堂|学馆/.test(purpose)?'school':/仓廪|粮仓/.test(purpose)?'granary':/桥梁/.test(purpose)?'bridge':/道路/.test(purpose)?'road':'public';
+  /医馆|药铺/.test(purpose)?'clinic':/学堂|学馆|私塾|书院|义学/.test(purpose)?'school':/仓廪|粮仓/.test(purpose)?'granary':/桥梁/.test(purpose)?'bridge':/道路/.test(purpose)?'road':'public';
 }
 export function facilityView(engine,state,id){
  const base=facilityDefinition(engine,state,id);if(!isFacility(base))return null;
- const row=state.buildings?.[id]??{},kind=facilityKind(base),spec=FACILITY_TYPES[kind]??FACILITY_TYPES.public;
+ const row=state.buildings?.[id]??{},authoredKind=facilityKind(base),kind=authoredKind==='public'&&engine.rules.training?.institutions?.some(r=>r.institution===id)?'school':authoredKind,spec=FACILITY_TYPES[kind]??FACILITY_TYPES.public;
  const material=row.material??base.material??(base.tags?.includes('stone')?'stone':'wood');
  const regional=base.generated==='remote'?state.records?.[`facility_region:${base.region}`]:null;
  const condition=row.condition??Math.max(0,100-Math.floor((regional?.wear?.[material]??0)/10)),burning=Boolean(row.burning),factor=burning||condition<25?0:condition<60?0.5:1;
