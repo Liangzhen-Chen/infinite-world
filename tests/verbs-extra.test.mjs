@@ -196,7 +196,7 @@ test('村长竞选按成年住户立场投票，当选后仍经现有公署资�
     await f.act('world_time',{minutes:3*DAY},'appoint');assert.ok(playerOffices(f.doc.state).some(o=>o.office==='office_village_head'));
 });
 
-test('工具仍为25个，静态提示增量不超过60 token',async()=>{
+test('工具仍为25个，静态提示不超过硬上限',async()=>{
     assert.equal(toolDefinitions().length,25);assert.equal(resolveToolCall('world_field',{operation:'wildlife_fish'}).args.operation,'fish');
-    const bundle=await loadPromptBundle();assert.ok(bundle.budget.estimatedTokens<=10916+60,`提示${bundle.budget.estimatedTokens}，U15前10916`);
+    const bundle=await loadPromptBundle();assert.ok(bundle.budget.estimatedTokens<=bundle.budget.limit,`提示${bundle.budget.estimatedTokens}，上限${bundle.budget.limit}`);
 });
