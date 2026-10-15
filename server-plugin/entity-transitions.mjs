@@ -23,3 +23,32 @@ export function businessTransitions(d,engine,before,sourceEvent,minute=d.get('st
             summary:verb==='close'?`${shop.name}已停业`:`${shop.name}改由${name(next.keeper)}经营`});
     }
 }
+
+// PR-01 obligation handover (K11). Each kind of obligation a holder carries
+// registers how to find it and what happens when the holder is gone (death,
+// removal, destruction, defection, departure). Real transition entries call
+// settleHolderGone once, before publishing their own event; each kind that
+// actually hands something over publishes one transition through entityTransition.
+// var: kinds may register while this module is still in an import cycle.
+var obligationKinds;
+function kindList(){return obligationKinds??=[];}
+export function registerObligation(kind){
+    if(!kind||typeof kind.kind!=='string'||typeof kind.list!=='function'||typeof (kind.settle??kind.onHolderGone)!=='function')throw new Error('义务类型需要 kind、list 和 onHolderGone');
+    const obligationKinds=kindList();
+    if(obligationKinds.some(k=>k.kind===kind.kind))throw new Error(`义务类型重复：${kind.kind}`);
+    obligationKinds.push({order:100,stage:'handover',...kind});obligationKinds.sort((a,b)=>a.order-b.order);
+}
+export const obligationKindNames=()=>kindList().map(k=>k.kind);
+export function settleHolderGone(engine,d,holder,reason,{stage='handover',minute=d.get('state','minute'),eventId=`${reason}:${holder}:${minute}`,location=null,...context}={}){
+    const out={};
+    for(const kind of kindList()){
+        if(kind.stage!==stage||kind.reasons&&!kind.reasons.includes(reason))continue;
+        const list=kind.list(engine,d,holder,reason);if(!list?.length)continue;
+        const ctx={...context,holder,reason,minute,eventId,location};
+        const done=(kind.settle?kind.settle(engine,d,list,ctx):list.map(o=>kind.onHolderGone(engine,d,o,ctx)))?.filter(Boolean)??[];
+        if(!done.length)continue;out[kind.kind]=done;
+        entityTransition(d,engine,{id:`${eventId}:${kind.kind}`,verb:kind.verb??'transfer',actor:holder,target:kind.target?.(done,ctx)??null,minute,location,visibility:kind.visibility??'public',
+            tags:['obligation',kind.kind,reason],summary:kind.summary(done,ctx),handover:done});
+    }
+    return out;
+}

@@ -1,6 +1,6 @@
 import {reviewUpperOffice} from './high-nobility.mjs';
 import {domainAuthority} from './noble-state.mjs';
-import {entityTransition} from './entity-transitions.mjs';
+import {entityTransition,settleHolderGone} from './entity-transitions.mjs';
 import {qualificationForApplication} from './local-exams.mjs';
 import {personOffices,personRegistrar,settlementHead,settlementGovernment,personSimulation,personName} from './entity-view.mjs';
 import {digest} from './storage.mjs';
@@ -372,6 +372,7 @@ function review(d,engine,row,at){
     if(reason){
         const name=personOffices(engine,{...state,minute:Math.min(at,row.until-1)},row.holder,{settlement:row.settlement}).find(o=>o.value.id===row.id)?.value.name??row.name;
         d.set(path(row.id),{...row,status:'已免职',removedAt:at,reason});
+        settleHolderGone(engine,d,row.holder,'removed',{minute:at,eventId:`${row.id}:dismiss:${at}`,location:row.settlement});
         entityTransition(d,engine,{id:`${row.id}:dismiss:${at}`,verb:'dismiss',actor:row.appointedBy,target:row.holder,minute:at,location:row.settlement,office:row.office,reason,summary:`${personName(engine,state,row.holder).value??row.holder}卸任${name}：${reason}`});
     }
     else d.set(path(row.id),{...row,nextReview:row.nextReview+charter.reviewEveryDays*DAY,reviews:[...(row.reviews??[]),at]});

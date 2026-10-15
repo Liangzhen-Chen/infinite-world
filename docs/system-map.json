@@ -25,7 +25,7 @@
   "subscribers": 9,
   "interactionRules": 25,
   "effectKinds": 22,
-  "links": 467
+  "links": 473
  },
  "layers": [
   {
@@ -252,6 +252,7 @@
    "readBy": [
     "base_advance",
     "base_effects",
+    "base_events",
     "base_standing",
     "base_traits",
     "kernel_engine",
@@ -301,6 +302,7 @@
    "readBy": [
     "base_advance",
     "base_effects",
+    "base_events",
     "base_standing",
     "base_traits",
     "kernel_engine",
@@ -384,6 +386,7 @@
    "tools": [],
    "readBy": [
     "base_effects",
+    "base_events",
     "base_standing",
     "kernel_engine",
     "sim_character",
@@ -744,9 +747,10 @@
    "dir": null,
    "modules": [
     "server-plugin/world-events.mjs",
-    "server-plugin/entity-transitions.mjs"
+    "server-plugin/entity-transitions.mjs",
+    "server-plugin/estate.mjs"
    ],
-   "lines": 183,
+   "lines": 332,
    "stateWrites": [
     "records"
    ],
@@ -758,12 +762,19 @@
    ],
    "recordWrites": [],
    "recordReads": [
+    "estate",
+    "organization",
     "rumor_event",
     "rumor_lie",
     "world_event"
    ],
-   "rules": [],
-   "world": [],
+   "rules": [
+    "law"
+   ],
+   "world": [
+    "factions",
+    "settlementProfiles"
+   ],
    "advance": [],
    "subscribes": [],
    "effects": [],
@@ -990,7 +1001,7 @@
     "server-plugin/population-service.mjs",
     "server-plugin/settlement-profile.mjs"
    ],
-   "lines": 3273,
+   "lines": 3276,
    "stateWrites": [
     "created",
     "creatures",
@@ -1828,7 +1839,6 @@
     "server-plugin/family-state.mjs",
     "server-plugin/family-politics.mjs",
     "server-plugin/family-inheritance.mjs",
-    "server-plugin/estate.mjs",
     "server-plugin/family-law.mjs",
     "server-plugin/family-diplomacy.mjs",
     "server-plugin/monster-society.mjs",
@@ -1858,7 +1868,7 @@
     "server-plugin/tribal-awakening.mjs",
     "server-plugin/elections.mjs"
    ],
-   "lines": 4950,
+   "lines": 4865,
    "stateWrites": [
     "buildings",
     "created",
@@ -1897,7 +1907,6 @@
     "civic_citizen",
     "civic_resident",
     "diplomacy",
-    "estate",
     "facility_region",
     "faction-assets",
     "family",
@@ -3003,7 +3012,35 @@
    "to": "sim_economy",
    "kind": "call",
    "labels": [
+    "credit.mjs",
+    "employment-state.mjs",
+    "finance-bank.mjs",
     "shop.mjs"
+   ]
+  },
+  {
+   "from": "base_events",
+   "to": "sim_law",
+   "kind": "call",
+   "labels": [
+    "law.mjs"
+   ]
+  },
+  {
+   "from": "base_events",
+   "to": "sim_npc",
+   "kind": "call",
+   "labels": [
+    "npc-state.mjs"
+   ]
+  },
+  {
+   "from": "base_events",
+   "to": "sim_society",
+   "kind": "call",
+   "labels": [
+    "family-inheritance.mjs",
+    "organization-state.mjs"
    ]
   },
   {
@@ -4577,6 +4614,7 @@
    "kind": "call",
    "labels": [
     "entity-transitions.mjs",
+    "estate.mjs",
     "world-events.mjs"
    ]
   },
@@ -4670,7 +4708,6 @@
    "to": "sim_society",
    "kind": "call",
    "labels": [
-    "estate.mjs",
     "facility-state.mjs",
     "family-diplomacy.mjs",
     "family-inheritance.mjs",
@@ -4721,6 +4758,7 @@
    "kind": "call",
    "labels": [
     "entity-transitions.mjs",
+    "estate.mjs",
     "world-events.mjs"
    ]
   },
@@ -4798,9 +4836,7 @@
    "to": "sim_economy",
    "kind": "call",
    "labels": [
-    "credit.mjs",
     "employment-state.mjs",
-    "finance-bank.mjs",
     "finance-tax.mjs",
     "items.mjs",
     "labor-market.mjs"
@@ -5424,6 +5460,14 @@
   },
   {
    "from": "data_geo",
+   "to": "base_events",
+   "kind": "data",
+   "labels": [
+    "world/geo"
+   ]
+  },
+  {
+   "from": "data_geo",
    "to": "base_standing",
    "kind": "data",
    "labels": [
@@ -5608,6 +5652,14 @@
   },
   {
    "from": "data_lore",
+   "to": "base_events",
+   "kind": "data",
+   "labels": [
+    "world/lore"
+   ]
+  },
+  {
+   "from": "data_lore",
    "to": "base_standing",
    "kind": "data",
    "labels": [
@@ -5705,6 +5757,14 @@
   {
    "from": "data_meta",
    "to": "base_effects",
+   "kind": "data",
+   "labels": [
+    "world/meta"
+   ]
+  },
+  {
+   "from": "data_meta",
+   "to": "base_events",
    "kind": "data",
    "labels": [
     "world/meta"
@@ -6437,6 +6497,7 @@
    "to": "base_events",
    "kind": "record",
    "labels": [
+    "organization",
     "world_event"
    ]
   },
@@ -7651,6 +7712,7 @@
   "producers": {
    "appoint": [
     "server-plugin/elections.mjs",
+    "server-plugin/estate.mjs",
     "server-plugin/family-inheritance.mjs",
     "server-plugin/family-politics.mjs",
     "server-plugin/governance.mjs",
@@ -7723,6 +7785,7 @@
    ],
    "organize": [
     "server-plugin/elections.mjs",
+    "server-plugin/estate.mjs",
     "server-plugin/faith.mjs",
     "server-plugin/military.mjs",
     "server-plugin/organizations.mjs",
@@ -10463,6 +10526,7 @@
     "server-plugin/engine.mjs",
     "server-plugin/entity-view.mjs",
     "server-plugin/environment.mjs",
+    "server-plugin/estate.mjs",
     "server-plugin/facility-state.mjs",
     "server-plugin/faction-clock.mjs",
     "server-plugin/faith-catalog.mjs",
@@ -10573,6 +10637,7 @@
     "server-plugin/effects.mjs",
     "server-plugin/engine.mjs",
     "server-plugin/entity-view.mjs",
+    "server-plugin/estate.mjs",
     "server-plugin/faction-clock.mjs",
     "server-plugin/faith-catalog.mjs",
     "server-plugin/faith-state.mjs",
@@ -12822,6 +12887,7 @@
       "server-plugin/reputation.mjs"
      ],
      "systems": [
+      "base_events",
       "base_standing",
       "sim_environment",
       "sim_faith",
@@ -13968,6 +14034,7 @@
       "server-plugin/education.mjs",
       "server-plugin/elections.mjs",
       "server-plugin/entity-view.mjs",
+      "server-plugin/estate.mjs",
       "server-plugin/faith.mjs",
       "server-plugin/family-politics.mjs",
       "server-plugin/finance-assets.mjs",
@@ -13986,6 +14053,7 @@
       "server-plugin/war-diplomacy.mjs"
      ],
      "systems": [
+      "base_events",
       "base_standing",
       "sim_character",
       "sim_economy",
@@ -14003,6 +14071,7 @@
       "server-plugin/consistency-review.mjs",
       "server-plugin/education.mjs",
       "server-plugin/entity-view.mjs",
+      "server-plugin/estate.mjs",
       "server-plugin/faith.mjs",
       "server-plugin/finance-assets.mjs",
       "server-plugin/finance-bank.mjs",
@@ -14017,6 +14086,7 @@
      ],
      "systems": [
       "base_advance",
+      "base_events",
       "base_standing",
       "nar_consistency",
       "sim_character",
@@ -15810,7 +15880,7 @@
    "rules": [],
    "world": [],
    "worldDirs": [],
-   "lines": 26
+   "lines": 55
   },
   "server-plugin/entity-view.mjs": {
    "system": "base_standing",
@@ -15913,30 +15983,37 @@
    "lines": 247
   },
   "server-plugin/estate.mjs": {
-   "system": "sim_society",
+   "system": "base_events",
    "imports": [
     "server-plugin/credit.mjs",
     "server-plugin/employment-state.mjs",
     "server-plugin/entity-transitions.mjs",
     "server-plugin/entity-view.mjs",
+    "server-plugin/family-inheritance.mjs",
     "server-plugin/finance-bank.mjs",
     "server-plugin/law.mjs",
-    "server-plugin/npc-state.mjs"
+    "server-plugin/npc-state.mjs",
+    "server-plugin/organization-state.mjs"
    ],
    "stateWrites": [],
    "stateReads": [
+    "minute",
     "records"
    ],
    "recordWrites": [],
    "recordReads": [
-    "estate"
+    "estate",
+    "organization"
    ],
    "rules": [
     "law"
    ],
-   "world": [],
+   "world": [
+    "factions",
+    "settlementProfiles"
+   ],
    "worldDirs": [],
-   "lines": 84
+   "lines": 120
   },
   "server-plugin/extraction.mjs": {
    "system": "sim_economy",
@@ -16190,7 +16267,7 @@
    ],
    "world": [],
    "worldDirs": [],
-   "lines": 136
+   "lines": 134
   },
   "server-plugin/family-law.mjs": {
    "system": "sim_society",
@@ -16507,7 +16584,7 @@
     "settlementProfiles"
    ],
    "worldDirs": [],
-   "lines": 419
+   "lines": 420
   },
   "server-plugin/group-account.mjs": {
    "system": "sim_society",
@@ -18065,7 +18142,7 @@
     "rules"
    ],
    "worldDirs": [],
-   "lines": 808
+   "lines": 811
   },
   "server-plugin/npc-memory.mjs": {
    "system": "sim_npc",

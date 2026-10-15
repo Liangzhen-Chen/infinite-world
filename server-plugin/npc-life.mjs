@@ -21,8 +21,9 @@ import {famineAt} from './hazard-calendar.mjs';
 import {personSimulation,personConstraint,personHousehold,personConstraints,personName,personAge,personRelationships} from './entity-view.mjs';
 import {actorId,actorPath,householdDefinition} from './npc-state.mjs';
 import {finishBusinessContract,refundContractEscrow,releaseBusinessLease} from './contracts.mjs';
-import {settleFamilyEstate,advanceGuardianships,reassignGuardianships} from './family-inheritance.mjs';
-import {continueEmployment,continuedOnDeath} from './estate.mjs';
+import {settleFamilyEstate,advanceGuardianships} from './family-inheritance.mjs';
+import {continuedOnDeath} from './estate.mjs';
+import {settleHolderGone} from './entity-transitions.mjs';
 import {marriagePolitics,advanceFamilyAlliances} from './family-diplomacy.mjs';
 import {familyEdges} from './family-state.mjs';
 
@@ -400,7 +401,9 @@ export function recordEntityDeath(d,engine,id,minute,cause,illness=null){
   contracts.push(cid);
  }
  const current=d.get(...path),estate=npc?settleFamilyEstate(d,engine,id,minute,deathId,actor.location):{heir:null,coins:current.coins??0,items:{},debts:[]},heir=estate.heir;
- const employment=npc?continueEmployment(d,engine,id,heir??estate.sealed,deathId,minute):[],guardianships=reassignGuardianships(d,engine,id,minute,deathId);
+ // Obligations hand over before the death itself is published.
+ const handover=settleHolderGone(engine,d,id,'death',{minute,eventId:deathId,location:actor.location??house?.settlement??null,successor:npc?heir??estate.sealed:null});
+ const employment=handover.employment??[],guardianships=handover.guardianship??[];
  const pets=[];
  for(const [pet,body] of Object.entries(state.creatures??{}))if(body.owner===id||pet===id){
   const owner=pet===id?null:heir;d.set(['state','creatures',pet,'owner'],owner);pets.push(pet);

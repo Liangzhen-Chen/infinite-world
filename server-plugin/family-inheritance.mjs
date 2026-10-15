@@ -4,7 +4,8 @@ import {rosterLifeState} from './population.mjs';
 import {transferItems} from './items.mjs';
 import {legalCodeAt} from './law-codes.mjs';
 import {entityTransition} from './entity-transitions.mjs';
-import {settleEstateDebts,sealEstate,debtClosed} from './estate.mjs';
+import {sealEstate,debtClosed} from './estate.mjs';
+import {settleHolderGone} from './entity-transitions.mjs';
 
 const DAY=1440,YEAR=360*DAY,rec=id=>['state','records',id];
 export function inheritanceRule(e,s,id,location){
@@ -54,7 +55,7 @@ export function settleFamilyEstate(d,e,id,minute,deathId,location){
  const heirs=selection.heirs.filter(x=>d.get('state','npcs',x)),current=d.get(...actorPath(e.world,id));
  const debts=Object.entries(s.records??{}).filter(([,r])=>r.category==='debt'&&[r.debtor,r.creditor].includes(id)&&r.amount>(r.paid??0)).map(([key])=>key).sort();
  // Liabilities are paid before any allocation; claims pass to the heir.
- const settlements=settleEstateDebts(d,e,id,minute,deathId),gross=current.coins??0;
+ const settlements=settleHolderGone(e,d,id,'death',{stage:'liabilities',minute,eventId:deathId,location}).debt??[],gross=current.coins??0;
  const estate={heir:heirs[0]??null,heirs,rule,grossCoins:gross,coins:d.get(...actorPath(e.world,id),'coins')??0,items:{},allocations:heirs.map(heir=>({heir,coins:0,items:{},assets:[]})),debts,settlements,guardianships:[]};
  for(const [key,row]of Object.entries(d.get('state','records')??{}))if(heirs.length&&row.category==='debt'&&row.creditor===id&&!debtClosed(row))d.set(rec(key),{...row,creditor:heirs[0],previousCreditor:id,inheritance:deathId});
  if(!heirs.length){
@@ -120,16 +121,13 @@ export function advanceGuardianships(d,e,minute){
 }
 // A guardian who dies (or can no longer serve) is replaced by the next person
 // in genealogical order; only without qualified kin does the court appoint.
+// eventId null: the handover registry publishes one event for the whole kind.
 export function reassignGuardian(d,e,r,minute,eventId){
  const s=d.get('state'),previous=[...r.previousGuardians??[],r.guardian].filter(Boolean),next=guardianOrder(e,s,r.ward,previous,minute)[0]??null;
  const row={...r,guardian:next,status:next?'代管中':'待指定',previousGuardian:r.guardian,previousGuardians:previous,reassignedAt:minute,...(next?{}:{custodian:'官府'})};
  d.set(rec(r.id),row);
- entityTransition(d,e,{id:eventId,verb:'appoint',actor:next??natalFamily(e,s,r.ward),target:r.ward,minute,location:npcHousehold(e,s,r.ward)?.homeLocation,visibility:'members',tags:['family','guardianship'],
+ if(eventId)entityTransition(d,e,{id:eventId,verb:'appoint',actor:next??natalFamily(e,s,r.ward),target:r.ward,minute,location:npcHousehold(e,s,r.ward)?.homeLocation,visibility:'members',tags:['family','guardianship'],
   summary:next?'原监护人不能继续代管，按族谱顺位改由下一位亲属监护':'原监护人不能继续代管且无合格亲属，交官府待指定监护人'});
  return row;
 }
-export function reassignGuardianships(d,e,dead,minute,deathId){
- const out=[];
- for(const r of Object.values(d.get('state','records')??{}))if(r.category==='guardianship'&&r.guardian===dead&&r.status==='代管中')out.push(reassignGuardian(d,e,r,minute,`${deathId}:guardian:${r.id}`).id);
- return out;
-}
+
