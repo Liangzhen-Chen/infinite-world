@@ -1,3 +1,4 @@
+import {settlementHead,personRegistrar} from './entity-view.mjs';
 import {authorityOf,playerOffices,eligible} from './governance.mjs';
 import {standing} from './standing.mjs';
 import {knownTopics,opinionOf} from './public-opinion.mjs';
@@ -37,17 +38,18 @@ const effectsOf=(engine,state,settlement)=>{
 };
 // An office as it stands in a promoted settlement (name, quota, budget, tax range).
 export function rankedOffice(engine,state,settlement,office){
-    const e=effectsOf(engine,state,settlement)?.offices?.[office.id];if(!e)return office;
+    const e=effectsOf(engine,state,settlement)?.offices?.[office.id];
+    if(!e){
+        const level=adminLevel(engine,state,settlement)?.level,key={村:'villageHead',镇:'townHead',城:'cityHeadFirstBaron',郡:'countyHead',省:'provinceHead'}[level];
+        return office.id==='office_village_head'&&key?{...office,name:level==='村'?office.name:`${level}长`,monthlyQuotaD:engine.rules.quests.monthlyQuotaD[key]}:office;
+    }
     return {...office,name:e.name??office.name,monthlyQuotaD:e.quotaKey?engine.rules.quests.monthlyQuotaD[e.quotaKey]:e.monthlyQuotaD??office.monthlyQuotaD,
         monthlyBudgetCopper:e.monthlyBudgetCopper??office.monthlyBudgetCopper,...(e.taxBps?{taxBps:{...e.taxBps}}:{})};
 }
 export function marketFactor(engine,state,settlement){return effectsOf(engine,state,settlement)?.market?.restockFactor??1;}
 
 // Who answers for the settlement: the player while sitting as head, else the original headman.
-function governor(engine,state,settlement){
-    if(playerOffices(state,{settlement,power:'housing'}).length)return 'player';
-    return engine.world.settlementProfiles?.find(p=>p.id===settlement)?.details?.governance?.head??null;
-}
+const governor=(engine,state,settlement)=>settlementHead(engine,state,settlement).value;
 // Residents' view of the governor: what they know of the governor's deeds
 // (public opinion), otherwise their own regard.
 function opinion(engine,state,settlement,who){
@@ -88,7 +90,7 @@ function capacity(engine,state,settlement,step){
 function registrar(d,engine){
     const charter=authorityOf(engine)?.superiors?.auth_bs_office_charter,state=d.get('state');
     if(!charter||state.location!==charter.seat)throw Error('升格申请须在白石镇公署前厅递件转呈');
-    const staff=engine.world.npcs.filter(n=>n.workplace?.location===charter.seat&&charter.registrars.occupations.includes(n.occupation)&&awake(state.npcs[n.id])&&state.npcs[n.id].location===state.location).map(n=>n.id).sort();
+    const staff=engine.world.npcs.filter(n=>personRegistrar(engine,state,n.id,charter.seat,charter.registrars.occupations)&&awake(state.npcs[n.id])&&state.npcs[n.id].location===state.location).map(n=>n.id).sort();
     if(!staff.length)throw Error('前厅没有在岗的递件或抄录人，不能登记');
     return staff[0];
 }
@@ -103,7 +105,7 @@ function file(d,engine,settlement,applicant,clerk,eventId,at){
 function petition(d,engine,args,eventId){
     const rules=promotionRules(engine);if(!rules)throw Error('升格章程未登记');
     const settlement=engine.resolve(args.settlement,'loc'),state=d.get('state');
-    if(!playerOffices(state,{settlement,power:'housing'}).length)throw Error('只有在任村长或原头人能为本村申请升格');
+    if(!playerOffices(state,{settlement,power:'housing'},engine).length)throw Error('只有在任村长或原头人能为本村申请升格');
     const clerk=registrar(d,engine);
     if(pending(state,settlement))throw Error('本村已有待审定的升格申请');
     const c=promotionConditions(engine,state,settlement);if(!c.ok)throw Error(`升格条件未齐：${c.reasons.join('；')}`);
@@ -119,13 +121,7 @@ function decide(d,engine,p,at){
     const key=rankKey(p.settlement),old=adminLevel(engine,state,p.settlement);
     d.set(rec(key),{category:'settlement_rank',id:key,settlement:p.settlement,level:c.to,superior:cap.superior,since:at,previous:{level:old.level,superior:old.superior},petition:p.id,approvedBy:promotionRules(engine).approver.name,source:promotionRules(engine).source});
     d.set(rec(p.id),{...p,status:'已批准',decidedAt:at,checks:c.checks});
-    // Sitting officials keep their seat under the new level's name and scale.
-    const after=d.get('state');
-    for(const r of Object.values(after.records).filter(r=>r.category==='governance_office'&&r.settlement===p.settlement&&r.status==='在任')){
-        const def=authorityOf(engine)?.offices?.[r.office];if(!def)continue;
-        const o=rankedOffice(engine,after,p.settlement,def);
-        d.set(rec(r.id),{...r,name:o.name,monthlyQuotaD:o.monthlyQuotaD,monthlyBudgetCopper:o.monthlyBudgetCopper,taxBps:o.taxBps??r.taxBps,rankedBy:key});
-    }
+
 }
 // Off screen, on the registry's cycle: a village that meets the conditions is
 // put forward by its original headman, or its sitting player head is told.

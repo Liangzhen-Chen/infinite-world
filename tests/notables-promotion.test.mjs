@@ -1,3 +1,4 @@
+import {personOffices} from '../server-plugin/entity-view.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
@@ -143,7 +144,7 @@ test('聚落升格：条件有来源、在公署由在任村长递件，版籍�
  const c=await s.wait(filed.document,P.approver.decisionDays);
  assert.equal(c.state.records[`promotion_petition:${village}:pp`].status,'已批准',JSON.stringify(c.state.records[`promotion_petition:${village}:pp`].reasons));
  const rank=adminLevel(s.engine,c.state,village);assert.equal(rank.level,'镇');assert.equal(rank.superior,P.jurisdiction.loc_bs.superior);
- const office=c.state.records[`governance_office:${village}:office_village_head:player`];
+ const office=personOffices(s.engine,c.state,'player',{settlement:village})[0].value;
  assert.equal(office.name,'镇长');assert.equal(office.monthlyQuotaD,world.rules.quests.monthlyQuotaD.townHead);
  assert.equal(office.monthlyBudgetCopper,5000);assert.deepEqual(office.taxBps,{min:0,max:1000});
  assert.equal(questPublishingRights(s.engine,c.state).limitD,world.rules.quests.monthlyQuotaD.townHead);

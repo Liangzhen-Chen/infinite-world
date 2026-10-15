@@ -4,9 +4,8 @@ import {awardExperience} from './progression.mjs';
 import {scheduleAt} from './npc-schedule.mjs';
 import {assertNpcObligationAction,assertCourierRouteAccess} from './npc-obligations.mjs';
 import {bountyQuestAction} from './bounty.mjs';
-import {officeQuotaD,spendPublic,refundPublic} from './governance.mjs';
-import {titleQuotaD} from './titles.mjs';
-import {notableCulturalQuotaD} from './notables.mjs';
+import {spendPublic,refundPublic} from './governance.mjs';
+import {personQuestRights} from './entity-view.mjs';
 import {refundQuestFunding,settleQuestOutcome} from './quest-sources.mjs';
 import {wildlifeQuestEvidence,claimWildlifeQuest,existingWildlifeEvidence} from './quest-wildlife.mjs';
 
@@ -21,8 +20,7 @@ const actorPath=id=>id==='player'?['state','player']:['state','npcs',id];
 // Baishi office and still in term) and a granted title, the larger of the two;
 // a self-declared office adds none. A notable's quota covers cultural quests only.
 export function questPublishingRights(engine,state,publisher='player',{cultural=false}={}){
- const month=Math.floor(state.minute/(DAY*30)),limit=publisher==='player'?Math.max(officeQuotaD(state),titleQuotaD(engine,state),cultural?notableCulturalQuotaD(engine,state):0):engine.byId.get(publisher)?.monthlyQuotaD??0;
- return {month,limitD:limit,usedD:state.questQuota?.[`${month}_${publisher}`]??0,personal:true};
+ return personQuestRights(engine,state,publisher,{cultural});
 }
 function notice(d,engine,q,minute,stage,location=q.location){
  const id=`${q.id}:${stage}`,participants=[q.publisher,q.taker].filter(Boolean);

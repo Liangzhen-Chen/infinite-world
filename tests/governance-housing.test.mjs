@@ -25,7 +25,8 @@ async function setup(office='村长'){
  const run=async(c,tool,args,eventId)=>{const out=await engine.reduce(c,{tool,args,eventId});return {document:applyPatches(c,out.patches),result:out.result};};
  doc=(await run(doc,'world_settlement',{operation:'governance_apply',settlement:village.id,name:office},'apply')).document;
  doc=(await run(doc,'world_time',{minutes:3*DAY},'decide')).document;
- doc.state.location=hall;doc.state.minute=Math.floor(doc.state.minute/DAY)*DAY+480;
+ doc=(await run(doc,'world_time',{minutes:DAY-60},'next-morning')).document;
+ doc.state.location=hall;
  for(const id of [steward,neighbour,outsider])Object.assign(doc.state.npcs[id],{location:hall,activity:'议事',status:'正常',coins:200});
  const settle=(c,args,event)=>run(c,'world_settlement',{settlement:village.id,...args},event);
  const grant=(c,extra={},event='steward')=>settle(c,{operation:'governance_grant',authority:'player',action:'housing',steward,consent:true,plot:plot.id,proposedFee:30,...extra},event);

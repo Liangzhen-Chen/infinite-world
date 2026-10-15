@@ -4,6 +4,7 @@ export const groupAccountPath=id=>['state','records',`faction-assets:${id}`];
 const amount=l=>l.amount??l.coins??0;
 const signature=l=>l.sourceEvent?JSON.stringify([l.sourceEvent,amount(l)]):null;
 export function groupAccountView(engine,state,id){
+    if(state.settlements?.[id])return {category:'settlement_account',settlement:id,coins:state.settlements[id].treasury??0,ledger:state.settlements[id].treasuryLedger??[]};
     const f=engine.world.factions?.find(f=>f.id===id);if(!f)return null;
     const row=state.records?.[`organization:${id}`],prior=state.records?.[`faction-assets:${id}`],base=f.resources?.treasuryCopper??0;
     if(prior&&prior.category!=='faction_assets')throw Error('势力资产记录冲突');
@@ -36,6 +37,13 @@ export function ensureGroupAccount(d,engine,id){
     d.set(groupAccountPath(id),row);return row;
 }
 export function changeGroupCoins(d,engine,id,delta,event){
+    if(d.get('state','settlements',id)){
+        const row=groupAccountView(engine,d.get('state'),id),coins=row.coins+delta;
+        if(!Number.isSafeInteger(coins)||coins<0)throw Error('聚落公账不足或溢出');
+        d.set(['state','settlements',id,'treasury'],coins);
+        d.set(['state','settlements',id,'treasuryLedger'],[...row.ledger,{...event,coins:delta}]);
+        return coins;
+    }
     const row=ensureGroupAccount(d,engine,id),coins=row.coins+delta;
     if(!Number.isSafeInteger(coins)||coins<0)throw Error('组织公库不足或溢出');
     d.set(groupAccountPath(id),{...row,coins,ledger:[...row.ledger,{...event,coins:delta}]});

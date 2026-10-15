@@ -19,7 +19,7 @@ function within(engine,location,place){const seen=new Set();while(location&&!see
 
 export const isPublicProject=p=>p?.type==='工程'&&Boolean(p.public);
 export function startPublicProject(d,engine,args,eventId,settlement){
-    const state=d.get('state'),offices=playerOffices(state,{settlement,power:'public_project'});
+    const state=d.get('state'),offices=playerOffices(state,{settlement,power:'public_project'},engine);
     if(!offices.length)throw Error('没有在任官职授予本村公共工程权限');
     const name=text(args.name),days=int(args.days,1,365,'工期'),wood=int(args.wood??0,0,10000,'木料'),stone=int(args.stone??0,0,10000,'石料');
     const location=engine.resolve(args.plot??settlement);
@@ -82,7 +82,7 @@ export function abortPublicProject(d,engine,args){
     const p=d.get('state','projects',args.project);
     if(!isPublicProject(p))throw Error('没有这个公款工程');
     if(p.status!=='施工中')return {project:p.id,status:p.status,duplicate:true};
-    if(!playerOffices(d.get('state'),{settlement:p.settlement,power:'public_project'}).length)throw Error('没有在任官职可中止本村工程');
+    if(!playerOffices(d.get('state'),{settlement:p.settlement,power:'public_project'},engine).length)throw Error('没有在任官职可中止本村工程');
     const row=finish(d,engine,p,'已中止',d.get('state','minute'));
     return {project:p.id,status:row.status,returned:row.returned};
 }
@@ -127,7 +127,7 @@ function plotByArg(engine,settlement,arg){
 function adultResident(engine,state,id,settlement){return npcHousehold(engine,state,id)?.settlement===settlement&&(npcAgeAt(engine,state,id)??0)>=18&&state.npcs[id]?.status!=='死亡';}
 export function grantHousingSteward(d,engine,args,eventId,settlement,hall){
     const state=d.get('state');
-    if(!playerOffices(state,{settlement,power:'steward'}).length)throw Error('没有在任村长官职，未登记建房审批与派管事的权限');
+    if(!playerOffices(state,{settlement,power:'steward'},engine).length)throw Error('没有在任村长官职，未登记建房审批与派管事的权限');
     if(state.location!==hall)throw Error('须在本村登记议事屋当面交代');
     const steward=engine.resolve(args.steward,'npc'),n=state.npcs[steward];
     if(!awake(n)||n.location!==hall||!adultResident(engine,state,steward,settlement)||args.consent!==true)throw Error('管事须为在场清醒的本村成年住户并明确同意');
@@ -145,9 +145,9 @@ export function grantHousingSteward(d,engine,args,eventId,settlement,hall){
         createdAt:state.minute,expires:state.minute+minutes,revoked:false,source:office.source,sourceEvent:eventId};
     d.set(rec(id),row);return {authorization:id,steward:row};
 }
-export function revokeHousingSteward(d,a){
+export function revokeHousingSteward(d,a,engine){
     if(a.revoked)return {authorization:a.id,steward:a,duplicate:true};
-    if(!playerOffices(d.get('state'),{settlement:a.settlement,power:'steward'}).length)throw Error('只有在任村长可撤回管事');
+    if(!playerOffices(d.get('state'),{settlement:a.settlement,power:'steward'},engine).length)throw Error('只有在任村长可撤回管事');
     const row={...a,revoked:true,revokedAt:d.get('state','minute')};d.set(rec(a.id),row);return {authorization:a.id,steward:row};
 }
 export function fileHousingApplication(d,engine,args,eventId,settlement,a){
@@ -173,7 +173,7 @@ function handle(d,engine,r,at){
     // A steward who cannot work today leaves the file for tomorrow.
     if(!s||['死亡','濒死','昏迷','患病'].includes(s.status)){if(s?.status==='死亡')returned('管事已故，申请退回');else d.set(rec(r.id),{...r,due:r.due+DAY,delays:(r.delays??0)+1});return;}
     if(!a||a.revoked||a.expires<=at)return returned('管事授权已撤回或到期');
-    if(!playerOffices(state,{settlement:r.settlement,power:'housing'}).length)return returned('授权的村长已不在任，管事无权批准');
+    if(!playerOffices(state,{settlement:r.settlement,power:'housing'},engine).length)return returned('授权的村长已不在任，管事无权批准');
     if(!a.rules.plots.includes(r.plot))return returned('所申地块不在村长写定的范围内');
     const resident=r.applicant==='player'?state.records[`civic_resident:${r.settlement}:player`]?.category==='civic_resident':adultResident(engine,state,r.applicant,r.settlement);
     if(!resident)return returned('申请人不是本村登记居民');

@@ -1,3 +1,4 @@
+import {personRegistrar} from './entity-view.mjs';
 import {authorityOf,playerOffices} from './governance.mjs';
 import {titleMilitaryService,militaryFresh} from './military.mjs';
 
@@ -21,11 +22,11 @@ export function titleQuotaD(engine,state){
 function office(d,engine){
     const charter=authorityOf(engine)?.superiors?.auth_bs_office_charter,state=d.get('state');
     if(!charter||state.location!==charter.seat)throw Error('封爵申请须在白石镇公署前厅递件转呈');
-    const staff=engine.world.npcs.filter(n=>n.workplace?.location===charter.seat&&charter.registrars.occupations.includes(n.occupation)&&awake(state.npcs[n.id])&&state.npcs[n.id].location===state.location);
+    const staff=engine.world.npcs.filter(n=>personRegistrar(engine,state,n.id,charter.seat,charter.registrars.occupations)&&awake(state.npcs[n.id])&&state.npcs[n.id].location===state.location);
     if(!staff.length)throw Error('前厅没有在岗的递件或抄录人，不能登记');
     return staff[0].id;
 }
-const heads=(state,settlement)=>playerOffices(state,{settlement,power:'housing'});
+const heads=(engine,state,settlement)=>playerOffices(state,{settlement,power:'housing'},engine);
 // Bases are read from records that exist; each lists its evidence.
 export function titleBases(engine,state,fief){
     const out={};
@@ -35,7 +36,7 @@ export function titleBases(engine,state,fief){
     const military=[...Object.values(state.records??{}).filter(r=>r.category==='legal_detention'&&r.deliveredBy==='player').map(r=>r.wanted),
         ...Object.entries(state.careerMetrics?.evidence??{}).filter(([,e])=>e.kind==='battle').map(([k])=>k)];
     if(military.length)out['军功']=military;
-    const ruled=[...new Set(playerOffices(state,{power:'housing'}).map(r=>r.settlement))],people=ruled.reduce((n,s)=>n+(state.settlements?.[s]?.population??0),0);
+    const ruled=[...new Set(playerOffices(state,{power:'housing'},engine).map(r=>r.settlement))],people=ruled.reduce((n,s)=>n+(state.settlements?.[s]?.population??0),0);
     if(people>=engine.rules.governance.titleDomainPopulation)out['领地规模']=ruled;
     return out;
 }
@@ -44,7 +45,7 @@ function qualifies(engine,state,def,fief){
     const reasons=[];
     if(have.length<def.bases.min)reasons.push(`凭据不足：需${def.bases.min}样（${def.bases.from.join('、')}），现有${have.join('、')||'无'}`);
     if(def.bases.required&&!bases[def.bases.required])reasons.push(`缺少必需的${def.bases.required}凭据`);
-    if(def.fief==='一村'&&(!fief||!heads(state,fief).length))reasons.push('封地须是现任村长所辖之村');
+    if(def.fief==='一村'&&(!fief||!heads(engine,state,fief).length))reasons.push('封地须是现任村长所辖之村');
     return {reasons,bases:Object.fromEntries(have.map(b=>[b,bases[b]]))};
 }
 function petition(d,engine,args,eventId){
@@ -86,7 +87,7 @@ function income(d,engine,t,at){
     const month=Math.floor(at/MONTH),row={category:'title_income',holder:'player',title:t.title,fief:t.fief,minute:at,base:mark-t.incomeMark,income:0,tribute:0};
     if(!t.fief||!def.incomeBps){d.set(rec(KEY),next);return;}
     if(t.status==='停俸')row.reason='停俸期间不发封地收入';
-    else if(!heads(state,t.fief).length){row.reason='不再任该村村长，封地收入停发';next.status='失封地';}
+    else if(!heads(engine,state,t.fief).length){row.reason='不再任该村村长，封地收入停发';next.status='失封地';}
     else{
         const owed=Math.floor(row.base*def.incomeBps/10000),treasury=state.settlements[t.fief].treasury,reserve=authorityOf(engine).treasury.reserveCopper;
         row.income=Math.max(0,Math.min(owed,treasury-reserve));if(row.income<owed)row.shortfall=owed-row.income;

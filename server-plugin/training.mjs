@@ -1,13 +1,14 @@
+import {personCareer} from './entity-view.mjs';
 import {assertNpcService} from './npc-schedule.mjs';
 import {digest} from './storage.mjs';
 
 const record=id=>['state','records',id];
 const awake=a=>a&&!['死亡','濒死','昏迷','患病'].includes(a.status)&&!['睡眠','熟睡'].includes(a.activity)&&!a.scheduleTravel&&!a.cognitionTravel;
 const roles=d=>{const p=d.get('state','professions');return[p.combat,...p.life,...p.hidden];};
-export function trainingInstitution(engine,institution,profession,teacher){
+export function trainingInstitution(engine,institution,profession,teacher,state={}){
  const entry=engine.rules.training?.institutions?.find(e=>e.institution===institution&&e.profession===profession&&e.teacher===teacher);
  const mentor=engine.byId.get(teacher),place=engine.byId.get(institution);
- if(!entry||!place?.openHours||!(mentor?.services??[]).includes(profession)||!(engine.byId.get(profession)?.trainingInstitutions??[]).includes(institution))throw Error('导师、职业与登记机构不相符');
+ if(!entry||!place?.openHours||!personCareer(engine,state,teacher).value.roles.includes(profession)||!(engine.byId.get(profession)?.trainingInstitutions??[]).includes(institution))throw Error('导师、职业与登记机构不相符');
  return entry;
 }
 function present(d,engine,entry,minutes){
@@ -24,7 +25,7 @@ function pay(d,engine,entry,fee,minutes,id){
 }
 export function initiation(d,engine,args,id){
  const role=engine.resolve(args.profession,'profession'),teacher=engine.resolve(args.teacher,'npc'),institution=engine.resolve(args.institution);
- const entry=trainingInstitution(engine,institution,role,teacher),catalog=engine.byId.get(role);
+ const entry=trainingInstitution(engine,institution,role,teacher,d.get('state')),catalog=engine.byId.get(role);
  if(args.rule!==undefined&&args.rule!==entry.rule)throw Error(`只能接受登记师规：${entry.rule}`);
  if(d.get(...record(`training_initiation:${id}`)))throw Error('入门编号已使用，拒绝覆盖历史');
  if(catalog.kind==='combat'&&d.get('state','professions','combat')&&d.get('state','professions','combat')!==role)throw Error('已有其他正式战斗职业，不能另拜战斗师门');
@@ -46,7 +47,7 @@ function actualInitiation(d,entry){
  return current;
 }
 export function ritualOfficiate(d,engine,args,id){
- const profession=engine.resolve(args.profession,'profession'),teacher=engine.resolve(args.teacher,'npc'),institution=engine.resolve(args.institution),entry=trainingInstitution(engine,institution,profession,teacher);
+ const profession=engine.resolve(args.profession,'profession'),teacher=engine.resolve(args.teacher,'npc'),institution=engine.resolve(args.institution),entry=trainingInstitution(engine,institution,profession,teacher,d.get('state'));
  const mentor=engine.byId.get(teacher),issuerRoles=[mentor.combatProfession,...mentor.lifeProfessions??[]];
  if(!entry.ritual||!issuerRoles.includes(profession)||!roles(d).includes(profession)||d.get('state','careers',profession,'certification','teacher')!==teacher)throw Error('主持仪式需要本机构导师认证的实际职业');
  const init=actualInitiation(d,entry),now=d.get('state','minute');

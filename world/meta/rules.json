@@ -302,7 +302,8 @@
       "provinceHead": 3000,
       "king": 15000,
       "emperor": 60000
-    }
+    },
+    "publishingRule": "任何个体的现任官职、爵位、名士文化类及组织职位额度取最大值，不叠加；monthlyQuotaD 为显式覆盖并显示来源。私人委托只受本人财产及既有节流约束。"
   },
   "prompt": {
     "dynamicMaximumCharacters": 16000,
@@ -1070,7 +1071,8 @@
         ],
         "spending": [
           "获批工程的材料与工钱",
-          "以公家名义发布委托的托管报酬"
+          "以公家名义发布委托的托管报酬",
+          "按现任职级与聚落级别支付月俸，欠俸顺延"
         ],
         "reserveCopper": 300,
         "wagePerWorkerDayCopper": 24,
@@ -1425,6 +1427,49 @@
         ],
         "source": "村民推选后报公署按现行任免章审定"
       }
+    },
+    "officeHours": [
+      480,
+      1020
+    ],
+    "organizationQuestQuotaD": {
+      "首领": 10,
+      "会长": 10,
+      "帮主": 10,
+      "掌柜": 10,
+      "主祭": 10,
+      "长老": 3
+    },
+    "salaries": {
+      "source": "V3 官职公账月俸制度",
+      "periodDays": 30,
+      "assessment": "月末结算边界前实际在任者，按当前职级及聚落级别整月计发；离任后不再新增应付，已记欠俸保留并优先补付",
+      "account": "所辖聚落公账，经 group-account 支付，保留公库留底；逐官职计发，不与爵位分税混同",
+      "monthlyCopper": {
+        "office_village_head": {
+          "村": 120,
+          "镇": 360,
+          "城": 900,
+          "郡": 2400,
+          "省": 6000
+        },
+        "office_works_deputy": {
+          "村": 60,
+          "镇": 180,
+          "城": 450,
+          "郡": 1200,
+          "省": 3000
+        },
+        "office_village_steward": {
+          "村": 40,
+          "镇": 120,
+          "城": 300,
+          "郡": 800,
+          "省": 2000
+        }
+      },
+      "moraleBase": 60,
+      "unpaidMoraleLoss": 5
     }
   },
   "economy": {
@@ -5651,7 +5696,9 @@
           30
         ]
       }
-    ]
+    ],
+    "uncertifiedMaximumProficiency": 1200,
+    "qualificationRule": "同用当前职业及师承资格解析。NPC 非认证实作上限仍为1200，玩家未认证职业核心有效上限仍为299；个人技能历史不因改业删除。"
   },
   "npcLife": {
     "adultAge": 18,
@@ -8985,16 +9032,7 @@
       "monthlyUnitsDPerBoard": 40
     },
     "publishers": {
-      "loc_hw": "npc_hw_chenbai",
-      "loc_bs_yupo": "npc_yp_zhaofeng",
-      "loc_bs_weiting": "npc_wt_zhengxi",
-      "loc_bs_liquan": "npc_lq_luanpei",
-      "loc_bs_sangban": "npc_sb_zhangluo",
-      "loc_bs": "npc_bs_031_1",
-      "loc_ms_tanjie": "npc_ms_tj_yanzhen",
-      "loc_ms_taideng": "npc_ms_td_liheng",
-      "loc_ms_yugen": "npc_ms_yg_jiecang",
-      "loc_ms_lielu": "npc_ms_ll_yayue"
+      "loc_bs": "npc_bs_031_1"
     },
     "npcNeeds": [
       {

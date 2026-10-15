@@ -1,3 +1,4 @@
+import {questPublisher} from '../server-plugin/entity-view.mjs';
 // D1 系统数据铺开：按地点、势力阶段与节日 ID 核对默认数据确实接上了已有系统。
 import test from 'node:test';
 import assert from 'node:assert/strict';
@@ -46,7 +47,7 @@ test('公告栏与公账：核心聚落各有主事人与公账，聚居地用�
  assertQuestSources(engine);
  const t=world.rules.questSources,doc=engine.createCharacter(seed,{},'d1-ledgers');
  for(const id of [...CORE,...Object.keys(SOCIETIES)]){
-  const npc=world.npcs.find(n=>n.id===t.publishers[id]);
+  const npc=world.npcs.find(n=>n.id===questPublisher(engine,doc.state,id).value);
   assert.ok(npc,id);assert.equal(npc.tier,'full',id);
   let at=npc.location,inside=false;for(const seen=new Set();at&&!seen.has(at);at=engine.byId.get(at)?.parent){seen.add(at);if(at===id)inside=true;}
   assert.ok(inside||npc.settlement===id,`${id}主事人住在本地`);
@@ -82,7 +83,7 @@ test('势力委托：至少15个势力时钟阶段挂了委托，且能按阶段
   const rule=rules.find(r=>r.id===owner),effects=hooks.find(h=>h.owner===owner&&h.stage===stage).effects;
   const receipt=applyEffects(d,engine,effects,{settlement:rule.settlement,faction:rule.faction,minute:d.get('state','minute'),sourceEvent:`test:${owner}:${stage}`},'faction');
   assert.equal(receipt.applied,true);assert.equal(receipt.effects[0].posted,true,owner);
-  const q=d.get('state','quests',receipt.effects[0].quest);assert.equal(q.fundedBy.faction,rule.faction);assert.equal(q.publisher,world.rules.questSources.publishers[q.location]);
+  const q=d.get('state','quests',receipt.effects[0].quest);assert.equal(q.fundedBy.faction,rule.faction);assert.equal(q.publisher,questPublisher(engine,d.get('state'),q.location).value);
  }
 });
 

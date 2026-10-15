@@ -1,3 +1,4 @@
+import {lawAuthorities} from './entity-view.mjs';
 // Wanted notices, fugitives, bounty hunters and the bribery space of the codes (guide 3.12).
 // A judged-but-absent offender, a jail-breaker, a defaulting debtor or an exposed
 // corrupt officer becomes `wanted:<case>` (category legal_wanted). The notice covers
@@ -31,7 +32,7 @@ export const codeById=(engine,id)=>lawRules(engine).codes?.find(c=>c.id===id)??n
 export const codeAt=(engine,location)=>lawRules(engine).codes?.find(c=>c.locations.includes(location))??null;
 const polity=(engine,law)=>lawRules(engine).polities?.find(p=>p.law===law)??null;
 export function wantedScope(engine,law){const scope=new Set([law]);for(const c of polity(engine,law)?.cooperates??[])if(codeById(engine,c))scope.add(c);return [...scope];}
-export function enforcersOf(engine,law){const c=codeById(engine,law);return c?[...new Set([...c.officers,...c.judges,...polity(engine,law)?.guards??[]])]:[];}
+export function enforcersOf(engine,law,state={}){const c=codeById(engine,law);return c?[...new Set([...lawAuthorities(engine,state,c),...(polity(engine,law)?.guards??[]).filter(id=>!dismissed(state,id)&&state.npcs?.[id]?.status!=='死亡')])]:[];}
 export const dismissed=(state,npc)=>state.records?.[`legal_dismissal:${npc}`]?.category==='legal_dismissal';
 export function integrityOf(engine,npc){
     for(const p of lawRules(engine).polities??[])if(p.integrity?.[npc]!==undefined)return p.integrity[npc];
@@ -43,7 +44,7 @@ export const activeHold=state=>Object.values(state.records??{}).find(r=>r?.categ
 // Whether the notice has reached this place, and whether this person knows of it.
 export function wantedReachedAt(engine,w,location,minute){const code=codeAt(engine,location);return Boolean(code&&w.scope.includes(code.id)&&w.reach[code.id]!==undefined&&w.reach[code.id]<=minute);}
 function knows(engine,state,w,npc,minute){
-    if(w.scope.some(law=>w.reach[law]<=minute&&enforcersOf(engine,law).includes(npc)))return true;
+    if(w.scope.some(law=>w.reach[law]<=minute&&enforcersOf(engine,law,state).includes(npc)))return true;
     return (state.npcs[npc]?.memoryStream??[]).some(m=>m.legalCase===w.case&&m.legalStage==='wanted'&&m.minute<=minute);
 }
 function save(d,w){d.set(rec(w.id),w);}
@@ -136,7 +137,7 @@ function arrivePlayer(d,engine,lockKey,lock,minute){
         d.set(rec(key),{category:'legal_custody',case:row.id,reason:'待审',location:code.court,status:'生效',started:minute,expires:minute+code.maximumDetentionMinutes});
     }
     if(row)d.set(rec(row.id),{...row,appearedAt:minute});
-    const enforcer=w.scope.some(law=>enforcersOf(engine,law).includes(lock.captor));
+    const enforcer=w.scope.some(law=>enforcersOf(engine,law,d.get('state')).includes(lock.captor));
     const next={...d.get(...rec(w.id))};const paid=!enforcer&&!lock.surrendered?payReward(d,next,lock.captor,minute):0;
     if(next.quest)closeQuest(d,next,'已完成','逃犯已押到',minute,{taker:lock.captor,rewardPaid:paid});
     save(d,next);closeWanted(d,engine,next,'已到案',lock.surrendered?'自首到案':'押解到案',minute);
@@ -192,7 +193,7 @@ function relay(d,engine,w,after){
     for(const law of w.scope){
         if(notified.includes(law)||!(w.reach[law]<=after))continue;
         const code=codeById(engine,law);notified=[...notified,law];
-        for(const npc of enforcersOf(engine,law)){
+        for(const npc of enforcersOf(engine,law,d.get('state'))){
             if(!d.get('state','npcs',npc)||dismissed(d.get('state'),npc))continue;
             const known=d.get('state','npcs',npc,'legalKnowledge')??[];
             if(!known.some(k=>k.case===w.case&&k.source==='通缉文书'))d.set(['state','npcs',npc,'legalKnowledge'],[...known,{case:w.case,minute:w.reach[law],source:'通缉文书'}]);
@@ -216,8 +217,8 @@ function recognise(d,engine,rules,w,after){
         const n=state.npcs[npc];
         if(n.location!==location||!awake(n)||state.player.companions?.includes(npc)||w.silenced.includes(npc)||dismissed(state,npc)||!knows(engine,state,w,npc,after))continue;
         if(d20(d.document,w.id,npc,after,'recognise')+mod(attribute(engine,state,npc,'精神'))<dc)continue;
-        const enforcer=w.scope.some(law=>enforcersOf(engine,law).includes(npc));
-        const officer=enforcer?npc:code.officers.find(o=>state.npcs[o]&&!dead(state.npcs[o])&&!dismissed(state,o));
+        const enforcer=w.scope.some(law=>enforcersOf(engine,law,state).includes(npc));
+        const officer=enforcer?npc:lawAuthorities(engine,state,code).find(o=>state.npcs[o]&&!dead(state.npcs[o])&&!dismissed(state,o));
         const sighting={location,minute:after,by:npc,reaction:enforcer?'拦截':officer?'报官':'记下'};
         save(d,{...w,sightings:[...w.sightings,sighting],...(!enforcer&&officer?{pending:{location,at:after+code.reportMinutes,officer,reporter:npc}}:{})});
         remember(d,engine,npc,w,after,`在${engine.byId.get(location)?.name??location}认出了被通缉的${nameOf(engine,state,'player')}，${enforcer?'当场拦下':'赶去报官'}。`,{visibility:'private'});
@@ -328,7 +329,7 @@ export function bountyQuestAction(d,engine,q,args,eventId){
     const code=codeById(engine,w.law),here=d.get('state','location');
     if(here!==code.court)throw Error(`须把逃犯押到${engine.byId.get(code.court)?.name??code.court}交付`);
     if(w.captive?.by!=='player'||!d.get('state','player','companions')?.includes(w.subject))throw Error('逃犯不在你押解之下，没有可交付的人');
-    const receiver=enforcersOf(engine,code.id).find(id=>{const n=d.get('state','npcs',id);return awake(n)&&n.location===here&&!dismissed(d.get('state'),id);});
+    const receiver=enforcersOf(engine,code.id,d.get('state')).find(id=>{const n=d.get('state','npcs',id);return awake(n)&&n.location===here&&!dismissed(d.get('state'),id);});
     if(!receiver)throw Error('法院没有清醒在场的执法或审判人员接收');
     const paid=deliverFugitive(d,engine,w,'player',now);
     d.say(`把${nameOf(engine,d.get('state'),w.subject)}交给${engine.byId.get(receiver)?.name}，领赏${paid}铜`);

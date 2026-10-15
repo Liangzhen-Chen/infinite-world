@@ -1,6 +1,6 @@
 // Only active catalog people are instantiated. Faction rosters and profile
 // prose never become money, inventory or private knowledge in a campaign.
-import {personConstraint} from './entity-view.mjs';
+import {personConstraint,personCareer,personRoutine,personLawRoles} from './entity-view.mjs';
 export function initialNpcState(npc,{newCharacter=false}={}){
     return{id:npc.id,name:npc.name,location:npc.location,coins:npc.coins??0,
         ...(npc.species?{species:npc.species}:{}),...(npc.society?{society:npc.society}:{}),
@@ -28,13 +28,20 @@ export function npcSchedule(engine,state,id,minute=state?.minute,constraints=nul
     if(care&&base)return {default:[{start:0,end:1440,location:care.location,activity:'照护病人',services:[]}]};
     // U12: a levied villager serves at the army's camp until released.
     if(own?.levy)return {default:[{start:0,end:1440,location:own.levy.location,activity:'服役',services:[]}]};
+    const routine=state&&personRoutine(engine,state,id,constraints);if(routine)return routine;
     // A move (npc-life) remaps home and work; a later change of livelihood is
     // built from that new home and then takes precedence.
     const residence=own?.residence;
     if(residence&&base&&!(own.vocation&&own.vocation.since>residence.since))return residence.schedule;
     return own?.vocation?.schedule??base;
 }
-export function npcServices(engine,state,id){return state&&personConstraint(engine,state,id)?[]:state?.npcs?.[id]?.vocation?.services??engine.byId.get(id)?.services??[];}
+export function npcServices(engine,state,id){
+    if(state&&personConstraint(engine,state,id))return [];
+    return personCareer(engine,state??{},id).value.services.filter(service=>{
+        if(!['judge','officer','law','register'].includes(service))return true;
+        return engine.rules.law?.codes?.some(c=>personLawRoles(engine,state??{},id,c).length);
+    });
+}
 
 // Read-only age and household selectors shared without loading simulation.
 const DAY=1440,YEAR=360*DAY;

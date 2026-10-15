@@ -11,18 +11,8 @@ export const source='D1 系统数据铺开：五村、白石镇与四处聚居�
 // 五村取村级任命册的头人（坡田轮水记录人、水岸议事记录人、泉槽轮用簿抄录人、
 // 桑园换工记录人），河湾沿用陈柏；白石镇取公署递件的姜澄（镇务协调人）；
 // 聚居地取各自组织时钟的联络代表（首领或议事人）。
-export const publishers={
- loc_hw:'npc_hw_chenbai',
- loc_bs_yupo:'npc_yp_zhaofeng',
- loc_bs_weiting:'npc_wt_zhengxi',
- loc_bs_liquan:'npc_lq_luanpei',
- loc_bs_sangban:'npc_sb_zhangluo',
- loc_bs:'npc_bs_031_1',
- loc_ms_tanjie:'npc_ms_tj_yanzhen',
- loc_ms_taideng:'npc_ms_td_liheng',
- loc_ms_yugen:'npc_ms_yg_jiecang',
- loc_ms_lielu:'npc_ms_ll_yayue',
-};
+// V3：任命册及组织现任首领由 entity-view 派生；这里只保留明确覆盖。
+export const publishers={loc_bs:'npc_bs_031_1'};
 // 聚居地没有村级公账，公事委托由各自的组织公库（T159 组织，势力资产账）托管。
 export const funds={
  loc_ms_tanjie:'faction_ms_tanjie',

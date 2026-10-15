@@ -1,11 +1,11 @@
 // NPC skill growth comes only from a real lesson by the player or from a
 // finished autonomous work action. Both are bounded per day and per skill, and
 // a changed livelihood is stored in campaign state (never in world/ people).
-import {scheduleAt,advanceWithNpcParticipants,validateNpcSchedules}from'./npc-schedule.mjs';
+import {scheduleAt,advanceWithNpcParticipants}from'./npc-schedule.mjs';
 import {effectiveProficiency}from'./professions.mjs';
-import {npcSchedule}from'./npc-state.mjs';
+import {npcSchedule,npcHousehold}from'./npc-state.mjs';
 import {growIntelligence,GROWTH_POINTS}from'./npc-intelligence.mjs';
-import {personSimulation,personConstraint}from'./entity-view.mjs';
+import {personSimulation,personConstraint,personCertified}from'./entity-view.mjs';
 
 const DAY=1440,unable=['死亡','濒死','昏迷','患病'],sleeping=/睡眠|睡觉|熟睡/;
 const rules=engine=>{const r=engine.rules.npcGrowth;if(!r)throw Error('世界规则没有登记人物成长');return r;};
@@ -18,7 +18,7 @@ export function npcProficiency(engine,state,id,skill){
 // Remaining growth for one skill: total gain and absolute proficiency caps.
 function room(engine,state,id,skill){
  const r=rules(engine),row=state.npcs[id]?.growth?.skills?.[skill],current=npcProficiency(engine,state,id,skill);
- return Math.max(0,Math.min(r.maximumGain-((row?.teach??0)+(row?.work??0)),r.maximumProficiency-current));
+ return Math.max(0,Math.min(r.maximumGain-((row?.teach??0)+(row?.work??0)),Math.max(current,personCertified(engine,state,id,skill)?r.maximumProficiency:Math.min(r.maximumProficiency,engine.rules.npcGrowth.uncertifiedMaximumProficiency??r.maximumProficiency))-current));
 }
 const today=(state,id,minute)=>{const day=Math.floor(minute/DAY),row=state.npcs[id]?.growth?.today;return row?.day===day?row:{day,teach:0,work:0};};
 function grow(d,engine,id,skill,amount,source){
@@ -104,21 +104,11 @@ function vocationBlocker(engine,state,id,vocation){
 export function npcVocationOptions(engine,state,id){
  return (engine.rules.npcGrowth?.vocations??[]).filter(v=>!vocationBlocker(engine,state,id,v)).map(v=>({id:v.id,name:v.name}));
 }
-// Build the whole new schedule from the vocation template once, at the switch.
-function vocationSchedule(engine,state,id,vocation){
- const old=npcSchedule(engine,state,id)?.default,home=old?.find(s=>s.start===0)?.location??state.npcs[id].location;
- const day=[{start:0,end:vocation.hours[0],location:home,activity:'睡眠',services:[]},
-  {start:vocation.hours[0],end:vocation.hours[1],location:vocation.location,activity:vocation.activity,services:[...vocation.slotServices]},
-  {start:vocation.hours[1],end:1440,location:home,activity:'收工歇息、睡眠',services:[]}];
- const schedule={default:day,...(vocation.restDays?.length?{restDays:[...vocation.restDays],rest:[{start:0,end:1440,location:home,activity:'歇业休息',services:[]}]}:{})};
- const errors=validateNpcSchedules({locations:engine.world.locations,npcs:[{id,schedule}]});if(errors.length)throw Error(errors[0]);
- return{home,schedule};
-}
 export function switchVocation(d,engine,id,vocationId,eventId){
  const vocation=engine.rules.npcGrowth?.vocations?.find(v=>v.id===vocationId);if(!vocation)throw Error('营生未登记');
  const state=d.get('state'),blocker=vocationBlocker(engine,state,id,vocation);if(blocker)throw Error(`不能改行：${blocker}`);
- const npc=state.npcs[id],{home,schedule}=vocationSchedule(engine,state,id,vocation),minute=state.minute;
- d.set(['state','npcs',id,'vocation'],{id:vocation.id,name:vocation.name,skill:vocation.skill,since:minute,sourceEvent:eventId,home,schedule,services:[...vocation.teaches],
+ const npc=state.npcs[id],home=npcHousehold(engine,state,id)?.homeLocation??npcSchedule(engine,state,id)?.default?.[0]?.location??npc.location,minute=state.minute;
+ d.set(['state','npcs',id,'vocation'],{id:vocation.id,name:vocation.name,skill:vocation.skill,since:minute,sourceEvent:eventId,home,
   previous:{id:npc.vocation?.id??null,occupation:npc.occupation??engine.byId.get(id).occupation??''}});
  d.set(['state','npcs',id,'occupation'],vocation.name);
  remember(d,engine,id,eventId,`${engine.byId.get(id).name}改行做${vocation.name}，此后按新作息在${engine.byId.get(vocation.location)?.name??vocation.location}做事。`,[id]);

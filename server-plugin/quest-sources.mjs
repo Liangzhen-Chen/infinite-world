@@ -1,3 +1,4 @@
+import {personSimulation,questPublisher,questBoards} from './entity-view.mjs';
 // U17 任务自动来源（指南3.10）。任务公告栏的来源除玩家与官员手发外，还有：
 //   npc_needs     人物按自身短缺与需求目标（口粮、找药、修屋、护送、寻人）出私人委托，
 //                 报酬从本人钱里托管，出不起就不出；数量按灵智等级与紧迫度节流。
@@ -76,7 +77,7 @@ export function assertQuestSources(engine){
   [0,1,2,3,4,5].some(k=>!int(l.perNpcByLevel?.[k],0,5)||!int(l.minUrgencyByLevel?.[k],1,4)))throw Error('任务来源节流参数无效');
  for(const [board,npc] of Object.entries(t.publishers??{}))if(!locationKnown(engine,board)||!engine.world.npcs.some(n=>n.id===npc))throw Error(`公告栏主事人未登记：${board}`);
  // D1: a board whose public money is an organization treasury (monster settlements, T159).
- for(const [board,faction] of Object.entries(t.funds??{}))if(!t.publishers?.[board]||!engine.world.factions?.some(f=>f.id===faction))throw Error(`公告栏公库未登记：${board}`);
+ for(const [board,faction] of Object.entries(t.funds??{}))if(!questPublisher(engine,{},board).value||!engine.world.factions?.some(f=>f.id===faction))throw Error(`公告栏公库未登记：${board}`);
  for(const row of t.ledgers??[]){const o=row.opening;
   if(!locationKnown(engine,row.settlement)||!o?.name||['population','treasury','wood','iron'].some(k=>!int(o[k],0,1e9)))throw Error(`聚落公账开账无效：${row.settlement}`);}
  const needs=new Set();
@@ -93,7 +94,7 @@ export function assertQuestSources(engine){
  }
  for(const r of t.wildlife??[]){
   if(typeof r.id!=='string'||ids.has(r.id))throw Error(`生物委托编号无效或重复：${r.id}`);ids.add(r.id);
-  if(!t.publishers?.[r.board])throw Error(`生物委托没有公告栏主事人：${r.id}`);
+  if(!questPublisher(engine,{},r.board).value)throw Error(`生物委托没有公告栏主事人：${r.id}`);
   if(r.objective.type==='deliver')assertOffer(engine,r,`生物委托${r.id}`);
   else{
    assertOffer(engine,{...r,objective:{type:'visit',location:r.objective.location}},`生物委托${r.id}`);
@@ -241,7 +242,7 @@ function scanNpcNeeds(d,engine,at){
  const state=d.get('state'),l=t.limits,posted=[],open=generated(state).filter(active);
  const offers=[];
  for(const id of Object.keys(state.npcs??{}).sort()){
-  const npc=state.npcs[id];if(engine.byId.get(id)?.tier!=='full'||!alive(npc))continue;
+  const npc=state.npcs[id];if(!personSimulation(engine,state,id).value||!alive(npc))continue;
   const {level}=intelligenceOf(engine,state,id),limit=l.perNpcByLevel[level]??0;
   if(open.filter(q=>q.publisher===id&&q.source.generator==='npc_needs').length>=limit)continue;
   const home=npcHousehold(engine,state,id)?.settlement;if(!home||!locationKnown(engine,home))continue;
@@ -276,7 +277,7 @@ const matches=(record,match)=>Object.entries(match).every(([k,v])=>Array.isArray
 const monthOf=minute=>Math.floor(minute/(DAY*30));
 function scanWorldEvents(d,engine,at){
  const t=rules(engine);if(!t?.events?.length)return [];
- const posted=[],boards=Object.keys(t.publishers??{});
+ const posted=[],boards=questBoards(engine,d.get('state'));
  for(const [key,record] of Object.entries(d.get('state','records')??{}).sort(([a],[b])=>a.localeCompare(b))){
   for(const row of t.events){
    if(!matches(record,row.match))continue;
@@ -291,7 +292,7 @@ function scanWorldEvents(d,engine,at){
    const vars={key,board:nameOf(engine,board),place:nameOf(engine,value)},objective=resolveObjective(engine,{...row.objective,record:row.objective.record==='$key'?key:row.objective.record},vars,board,value);
    if(!objective)continue;
    const q=postGeneratedQuest(d,engine,{key:sourceKey,generator:'world_events',label:row.label?fill(row.label,vars):`${nameOf(engine,board)}公事`,grade:row.grade,reward:row.reward,days:row.days,
-    content:fill(row.content,vars),objective,board,publisher:t.publishers[board],funding:publicFunding(t,board),minute:at,cause:key});
+    content:fill(row.content,vars),objective,board,publisher:questPublisher(engine,d.get('state'),board).value,funding:publicFunding(t,board),minute:at,cause:key});
    if(q)posted.push(q.id);
   }
  }
@@ -316,7 +317,7 @@ function scanVillageWildlife(d,engine,at){
    if(used+gradeUnitsD(engine,row.grade)>t.limits.monthlyUnitsDPerBoard)continue;
    if(o.type==='creature'&&qs.some(q=>q.objective.type==='creature'&&q.objective.target===target))continue;
    const q=postGeneratedQuest(d,engine,{...row,key:`village:${row.id}:${target}`,generator:'village_wildlife',label:row.name,
-    objective:{...structuredClone(o),...(o.type==='creature'?{target}:{})},publisher:t.publishers[row.board],funding:publicFunding(t,row.board),minute:at,
+    objective:{...structuredClone(o),...(o.type==='creature'?{target}:{})},publisher:questPublisher(engine,d.get('state'),row.board).value,funding:publicFunding(t,row.board),minute:at,
     content:row.content+(o.type==='creature'?` 指定个体：${d.get('state','creatures',target,'name')}（${target}）。`:''),cause:row.id});
    if(q)posted.push(q.id);
   }
@@ -365,7 +366,7 @@ registerEffect('quest_post',{
   if(funding==='faction'&&!context.faction&&!e.faction)return {applied:true,kind:e.kind,id:e.id,posted:false,reason:'没有出资的势力'};
   const owner=e.faction??context.faction,f=owner?engine.world.factions?.find(x=>x.id===owner):null;
   const contact=factionClockRules(engine).find(r=>r.faction===owner)?.contact?.representative;
-  const publisher=e.publisher??(funding==='faction'?contact??f?.leader:rules(engine)?.publishers?.[board]);
+  const publisher=e.publisher??(funding==='faction'?contact??f?.leader:questPublisher(engine,d.get('state'),board).value);
   const vars={board:nameOf(engine,board),faction:f?.name??''};
   const objective=resolveObjective(engine,e.objective,vars,board,board);
   const row=objective&&publisher?postGeneratedQuest(d,engine,{key:`effect:${context.sourceEvent}:${e.id}`,generator:'effect_table',label:e.label??(f&&funding==='faction'?`${f.name}委托`:`${nameOf(engine,board)}公事`),

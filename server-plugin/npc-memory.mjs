@@ -1,3 +1,4 @@
+import {personOccupation,personRelationships,personRemuneration} from './entity-view.mjs';
 import {deriveWorldEvents,eventRumorId,registerWorldEventSubscriber}from'./world-events.mjs';
 import {npcCognitionView}from'./npc-cognition.mjs';
 import {scheduleAt,npcAvailability}from'./npc-schedule.mjs';
@@ -134,8 +135,10 @@ export function npcContext(engine,document,id,query=''){
     const selected=new Set(index.search(query.replace(/吃食|食品/g,'食物'),{now:document.state.minute,present:[id],limit:3}).map(row=>row.id));
     const shared=memories.filter(row=>selected.has(row.id)).sort((a,b)=>a.minute-b.minute);
     const goals=Object.values(npc.goals??base.goals??{}).flat().filter(row=>row.progress<100&&row.status!=='已完成');
+    const remuneration=personRemuneration(engine,document.state,id)?.value;
     return{appearance:base.appearance,voice:base.voice,values:base.personality.values,flaws:base.personality.flaws,
-        concern:goals[0]?.content??base.currentConcern??'',known:(base.knowledge.known??[]).map(row=>row.fact),unknown:base.knowledge.unknown,rumors:npcRumors(engine,id,document),
+        concern:remuneration?.arrearsCopper?`公账尚欠本人月俸${remuneration.arrearsCopper}铜，士气${remuneration.morale}`:goals[0]?.content??base.currentConcern??'',remuneration,
+        known:(base.knowledge.known??[]).map(row=>row.fact),unknown:base.knowledge.unknown,rumors:npcRumors(engine,id,document),
         recentActivities:Object.values(document.state.npcAutonomy?.actions??{}).filter(row=>row.npc===id&&row.minute<=document.state.minute).slice(-2).map(row=>({minute:row.minute,content:row.summary})),
         memories:shared,lifeNews:npcLifeNews(engine,document,id),opinions:npcOpinions(engine,document,id).slice(0,3),reflections:cognition.reflections.filter(row=>row.about==='player').slice(-1),seeds:selectNpcSeedMemories(engine,document,id,query),behavior:base.behaviorRules??{},
         relations:base.relationships.map(row=>({with:row.with,type:row.type,note:row.note})),
@@ -146,9 +149,9 @@ export function npcContext(engine,document,id,query=''){
 export function npcBackground(engine,document,id,query=''){
     const base=engine.byId.get(id),state=document.state;if(!base||!state.npcs[id])return null;
     const mentioned=engine.resolver.mentions(query,state.location);
-    const relations=(base.relationships??[]).filter(row=>mentioned.has(id)||mentioned.has(row.with)||state.npcs[row.with]?.location===state.location)
-        .map(row=>({source:`${id}.relationships`,with:row.with,name:engine.byId.get(row.with)?.name??row.with,type:row.type,note:row.note,
-            publicRole:engine.byId.get(row.with)?.occupation??''}));
+    const relations=personRelationships(engine,state,id).value.filter(row=>mentioned.has(id)||mentioned.has(row.with)||state.npcs[row.with]?.location===state.location)
+        .map(row=>({source:row.source,with:row.with,name:engine.byId.get(row.with)?.name??row.with,type:row.type,note:row.note,
+            publicRole:personOccupation(engine,state,row.with).value}));
     const dayStart=state.minute-state.minute%1440,slots=[];
     if(base.schedule)for(let minute=dayStart;minute<dayStart+1440;){
         const slot=scheduleAt(engine,id,minute,state);if(!slot)break;

@@ -191,7 +191,7 @@ export const activities={
         // T125: a sitting official's own power replaces a delegated authorization.
         if(args.operation==='project_abort')return abortPublicProject(d,this,args);
         if(args.operation==='start_project'&&d.get('state','records',args.authorization)?.category==='housing_permit')return startHouse(d,this,args,id,args.authorization);
-        if(args.operation==='start_project'&&!args.authorization&&playerOffices(d.get('state'),{settlement,power:'public_project'}).length)return startPublicProject(d,this,args,id,settlement);
+        if(args.operation==='start_project'&&!args.authorization&&playerOffices(d.get('state'),{settlement,power:'public_project'},this).length)return startPublicProject(d,this,args,id,settlement);
         const authorization=d.get('state','records',args.authorization);
         if(!authorization||authorization.category!=='authorization'||authorization.settlement!==settlement)throw new Error('公共物资需要已成立的授权');
         if(args.operation==='start_project'){

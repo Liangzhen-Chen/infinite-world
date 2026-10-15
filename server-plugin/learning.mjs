@@ -1,6 +1,6 @@
+import {personTeaching} from './entity-view.mjs';
 import {effectiveProficiency,certifiedForSkill}from'./professions.mjs';
 import {assertNpcService}from'./npc-schedule.mjs';
-import {npcServices}from'./npc-state.mjs';
 import {teachNpc}from'./npc-growth.mjs';
 import {spiritStudent,teachSpirit}from'./wildlife-society.mjs';
 import {growIntelligence,GROWTH_POINTS}from'./npc-intelligence.mjs';
@@ -64,10 +64,7 @@ export function learn(d,args,id){
         const npc=d.get('state','npcs',source);
         if(!npc||npc.location!==d.get('state','location'))throw new Error('导师不在场');
         if(npc.status==='死亡')throw new Error('导师已经死亡');
-        const services=npcServices(this,d.get('state'),source),direct=services.includes(entity),role=skill.profession;
-        const core=role&&services.includes(role)&&(this.byId.get(role)?.skillTree??[]).includes(skill.id)
-            &&stage<=(sourceDefinition.teachingStages?.[role]??0);
-        if(!direct&&!core)throw new Error('导师没有教授这项内容的资格');
+        if(!personTeaching(this,d.get('state'),source,entity,{stage}))throw new Error('导师没有教授这项内容的资格');
         fee=integer(catalog.learnFee??12,'教学费');minutes=integer(catalog.learnMinutes??120,'教学时间',43200);
         assertNpcService(d,this,source,'teach',minutes);
         if(d.get('state','player','coins')<fee)throw new Error('教学费不足');
