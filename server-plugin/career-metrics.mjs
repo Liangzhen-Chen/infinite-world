@@ -50,6 +50,8 @@ export function recordCareerMetrics(d,engine,events,context){
             inc(m.battles,e.location??before.location);
             if(status(after,e.target)==='死亡'&&status(before,e.target)!=='死亡'){
                 m.kills++;m.lastKill=minute;
+                const previous=before.npcs?.[e.target]??before.creatures?.[e.target];
+                if(previous?.surrendered||/投降/.test(previous?.activity??''))m.surrenderKills=[...m.surrenderKills??[],{actor:'player',target:e.target,minute,sourceEvent:id}];
                 if(isBoss(engine,before,e.target)||opponentLevel(engine,before,e.target)>=before.player.level){
                     const role=after.professions?.combat,skills=Object.keys(after.skills??{}).filter(skill=>role&&engine.byId.get(skill)?.profession===role);
                     addEvidence(m,`battle:${e.id}`,'battle',skills,after,minute);

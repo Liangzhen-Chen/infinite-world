@@ -1,0 +1,7 @@
+{
+  "limitYuan": 1,
+  "spentYuan": 0.026189120000000003,
+  "reservedYuan": 0.02,
+  "unknownReservedYuan": 0.02,
+  "unknownReason": "中断时可能仍有一条请求在服务端执行；原始响应未留存，按0.02元保守保留，不记零。"
+}

@@ -141,7 +141,10 @@ function sendSound(d,engine,rows,text,volume,id){
 export function applyAirMagic(d,p,id){
  try{p=prepareAirMagic.call(this,d,p.catalog,p.args);}catch(e){return{target:p.target,effectFailed:e.message};}
  const {operation,power}=p.spec,now=d.get('state','minute');
- if(operation==='sense_air')return{target:p.target,windVector:[...p.row.airModel.windVector],echoDelayMs:p.rows.at(-1).airModel.echoDelayMs,path:p.rows.map(r=>r.id)};
+ if(operation==='sense_air'){
+  d.set(['state','records',`air_weather:${d.get('state','location')}`],{category:'air_weather',location:d.get('state','location'),windVector:[...p.row.airModel.windVector],minute:now,expires:now+1,source:id});
+  return{target:p.target,windVector:[...p.row.airModel.windVector],echoDelayMs:p.rows.at(-1).airModel.echoDelayMs,path:p.rows.map(r=>r.id)};
+ }
  if(operation==='carry_voice')return{target:p.target,...sendSound(d,this,p.rows,p.args.text,80,id),alongPath:p.rows.map(r=>r.id)};
  if(operation==='clean_air'){
   const s=state(d,p.row),air=locate(this,d,p.row.links.air),a=roomState(d,air,now),removed=Math.min(power,s.looseDustMg);

@@ -2,7 +2,7 @@
  "title": "无限原野系统地图",
  "card": "K9",
  "generatedFrom": {
-  "commit": "refs/heads/u16",
+  "commit": "refs/heads/p4",
   "method": "运行时导出（注册表、规则表、工具定义、效果表、立场传导表）+ 静态正则扫描（import 图、函数体标识符、state 分区与 records 前缀、rules/world 读取）。静态扫描是近似：经 engine.byId、helper 间接或动态拼接路径的访问不计入。"
  },
  "scanMethods": {
@@ -18,14 +18,14 @@
  "counts": {
   "layers": 6,
   "systems": 40,
-  "modules": 213,
+  "modules": 215,
   "advance": 57,
   "tools": 25,
   "verbs": 28,
   "subscribers": 9,
   "interactionRules": 25,
   "effectKinds": 22,
-  "links": 462
+  "links": 464
  },
  "layers": [
   {
@@ -425,7 +425,7 @@
     "sim_society",
     "sim_transport"
    ],
-   "files": 116
+   "files": 117
   },
   {
    "id": "data_assets",
@@ -467,7 +467,7 @@
    "effects": [],
    "tools": [],
    "readBy": [],
-   "files": 40
+   "files": 41
   },
   {
    "id": "kernel_engine",
@@ -481,7 +481,7 @@
     "server-plugin/campaign-reducer.mjs",
     "server-plugin/archived-reducer.mjs"
    ],
-   "lines": 1022,
+   "lines": 1037,
    "stateWrites": [
     "combatDisengaged",
     "created",
@@ -780,7 +780,7 @@
     "server-plugin/standing.mjs",
     "server-plugin/entity-view.mjs"
    ],
-   "lines": 608,
+   "lines": 610,
    "stateWrites": [
     "records"
    ],
@@ -990,7 +990,7 @@
     "server-plugin/population-service.mjs",
     "server-plugin/settlement-profile.mjs"
    ],
-   "lines": 3262,
+   "lines": 3271,
    "stateWrites": [
     "created",
     "creatures",
@@ -1116,6 +1116,8 @@
     "server-plugin/progression.mjs",
     "server-plugin/professions.mjs",
     "server-plugin/career-metrics.mjs",
+    "server-plugin/hidden-passives.mjs",
+    "server-plugin/spell-research.mjs",
     "server-plugin/training.mjs",
     "server-plugin/learning.mjs",
     "server-plugin/education.mjs",
@@ -1125,7 +1127,7 @@
     "server-plugin/checks.mjs",
     "server-plugin/revival.mjs"
    ],
-   "lines": 1184,
+   "lines": 1380,
    "stateWrites": [
     "careerCooldowns",
     "careerFunds",
@@ -1176,7 +1178,9 @@
     "levels",
     "magic",
     "npcGrowth",
-    "training"
+    "petCare",
+    "training",
+    "wildlife"
    ],
    "world": [
     "bosses",
@@ -1188,7 +1192,8 @@
     "professions",
     "residents",
     "settlementProfiles",
-    "skills"
+    "skills",
+    "spells"
    ],
    "advance": [
     "education_enrollment",
@@ -1415,7 +1420,7 @@
     "server-plugin/pets.mjs",
     "server-plugin/summons.mjs"
    ],
-   "lines": 447,
+   "lines": 448,
    "stateWrites": [
     "creatures",
     "effects",
@@ -1564,7 +1569,7 @@
     "server-plugin/magic-water-earth.mjs",
     "server-plugin/magic.mjs"
    ],
-   "lines": 3789,
+   "lines": 3793,
    "stateWrites": [
     "creatures",
     "discoveries",
@@ -1588,6 +1593,7 @@
    ],
    "recordWrites": [
     "air_heard",
+    "air_weather",
     "anchor_cargo",
     "corrosion_trace",
     "counter_contract",
@@ -2202,7 +2208,7 @@
    "modules": [
     "server-plugin/works.mjs"
    ],
-   "lines": 267,
+   "lines": 268,
    "stateWrites": [
     "created",
     "fusionAttempts",
@@ -3055,6 +3061,14 @@
   },
   {
    "from": "base_standing",
+   "to": "sim_character",
+   "kind": "call",
+   "labels": [
+    "hidden-passives.mjs"
+   ]
+  },
+  {
+   "from": "base_standing",
    "to": "sim_economy",
    "kind": "call",
    "labels": [
@@ -3180,10 +3194,12 @@
     "character.mjs",
     "checks.mjs",
     "education.mjs",
+    "hidden-passives.mjs",
     "learning.mjs",
     "professions.mjs",
     "progression.mjs",
-    "revival.mjs"
+    "revival.mjs",
+    "spell-research.mjs"
    ]
   },
   {
@@ -3717,6 +3733,14 @@
   },
   {
    "from": "sim_character",
+   "to": "sim_magic",
+   "kind": "call",
+   "labels": [
+    "magic.mjs"
+   ]
+  },
+  {
+   "from": "sim_character",
    "to": "sim_npc",
    "kind": "call",
    "labels": [
@@ -3854,6 +3878,7 @@
    "to": "sim_character",
    "kind": "call",
    "labels": [
+    "hidden-passives.mjs",
     "professions.mjs",
     "progression.mjs"
    ]
@@ -4354,6 +4379,7 @@
    "to": "sim_character",
    "kind": "call",
    "labels": [
+    "hidden-passives.mjs",
     "progression.mjs",
     "revival.mjs",
     "training.mjs"
@@ -4563,6 +4589,7 @@
    "labels": [
     "education-cohorts.mjs",
     "education-state.mjs",
+    "hidden-passives.mjs",
     "professions.mjs"
    ]
   },
@@ -8963,7 +8990,7 @@
   },
   {
    "name": "world_revival",
-   "description": "神殿/祭坛付费设复活点",
+   "description": "神殿/祭坛付费定复活点",
    "readOnly": false,
    "operations": null,
    "routes": [
@@ -9025,6 +9052,7 @@
       "server-plugin/advance-registry.mjs",
       "server-plugin/checks.mjs",
       "server-plugin/engine.mjs",
+      "server-plugin/hidden-passives.mjs",
       "server-plugin/magic-consent.mjs",
       "server-plugin/magic-economy.mjs",
       "server-plugin/magic.mjs"
@@ -9048,7 +9076,7 @@
   },
   {
    "name": "world_learn",
-   "description": "师授/读书/研究；student受教；book_give/study",
+   "description": "师授/读书/研究；student受教，book_give/study",
    "readOnly": false,
    "operations": null,
    "routes": [
@@ -9198,7 +9226,7 @@
   },
   {
    "name": "world_promise",
-   "description": "承诺/私宅许可；施法同意location类别、skill法术、consent确认",
+   "description": "承诺/私宅许可/施法同意：location类别，skill法术，consent确认",
    "readOnly": false,
    "operations": [
     "create",
@@ -9287,6 +9315,7 @@
       "server-plugin/combat.mjs",
       "server-plugin/duels.mjs",
       "server-plugin/environment.mjs",
+      "server-plugin/hidden-passives.mjs",
       "server-plugin/items.mjs",
       "server-plugin/law.mjs",
       "server-plugin/magic-air.mjs",
@@ -9665,7 +9694,7 @@
   },
   {
    "name": "world_create",
-   "description": "人物/组织登记；技能配方须完成研究，产物用已有物品ID",
+   "description": "登记；研究法术template原型、spec规则JSON；产物用已有ID",
    "readOnly": false,
    "operations": null,
    "routes": [
@@ -9677,7 +9706,8 @@
       "server-plugin/activities.mjs",
       "server-plugin/manufacturing.mjs",
       "server-plugin/organizations.mjs",
-      "server-plugin/professions.mjs"
+      "server-plugin/professions.mjs",
+      "server-plugin/spell-research.mjs"
      ],
      "systems": [
       "kernel_engine",
@@ -10145,7 +10175,7 @@
   },
   {
    "dir": "world/design",
-   "files": 116,
+   "files": 117,
    "keys": [],
    "readers": [
     "server-plugin/civic.mjs",
@@ -10175,6 +10205,7 @@
     "tools/m4-batch2-content.mjs",
     "tools/m4-mechanism-audit.mjs",
     "tools/m4-object-content.mjs",
+    "tools/m4r-skeleton-map.mjs",
     "tools/m5-authority.mjs",
     "tools/monster-society-2-content.mjs",
     "tools/monster-society-3-content.mjs",
@@ -10261,7 +10292,7 @@
   },
   {
    "dir": "world/drafts",
-   "files": 40,
+   "files": 41,
    "keys": [],
    "readers": [],
    "tools": [
@@ -10279,6 +10310,8 @@
     "tools/m4-books-content.mjs",
     "tools/m4-mechanism-audit.mjs",
     "tools/m4-object-content.mjs",
+    "tools/m4r-review.mjs",
+    "tools/m4r-skeleton-map.mjs",
     "tools/m5-authority.mjs",
     "tools/monster-society-2-content.mjs",
     "tools/monster-society-3-content.mjs",
@@ -10592,6 +10625,7 @@
     "server-plugin/finance-tax.mjs",
     "server-plugin/governance.mjs",
     "server-plugin/hazard-calendar.mjs",
+    "server-plugin/hidden-passives.mjs",
     "server-plugin/high-nobility.mjs",
     "server-plugin/items.mjs",
     "server-plugin/labor-market.mjs",
@@ -10647,6 +10681,7 @@
     "server-plugin/shop.mjs",
     "server-plugin/sites.mjs",
     "server-plugin/smuggling.mjs",
+    "server-plugin/spell-research.mjs",
     "server-plugin/summons.mjs",
     "server-plugin/titles.mjs",
     "server-plugin/training.mjs",
@@ -10893,6 +10928,7 @@
    "server-plugin/manufacturing.mjs",
    "server-plugin/npc-autonomy.mjs",
    "server-plugin/sites.mjs",
+   "server-plugin/spell-research.mjs",
    "server-plugin/wildlife-society.mjs"
   ],
   "travel": [
@@ -10949,7 +10985,8 @@
   ],
   "magic": [
    "server-plugin/engine.mjs",
-   "server-plugin/learning.mjs"
+   "server-plugin/learning.mjs",
+   "server-plugin/spell-research.mjs"
   ],
   "monsters": [
    "server-plugin/bosses.mjs",
@@ -10994,6 +11031,7 @@
   ],
   "petCare": [
    "server-plugin/engine.mjs",
+   "server-plugin/hidden-passives.mjs",
    "server-plugin/magic-movement.mjs",
    "server-plugin/pets.mjs",
    "server-plugin/summons.mjs",
@@ -11046,6 +11084,7 @@
    "server-plugin/extraction.mjs",
    "server-plugin/farm-pests-migration.mjs",
    "server-plugin/farm-pests.mjs",
+   "server-plugin/hidden-passives.mjs",
    "server-plugin/magic-ritual.mjs",
    "server-plugin/quest-sources.mjs",
    "server-plugin/remote-generation.mjs",
@@ -12623,6 +12662,7 @@
       "server-plugin/career-metrics.mjs",
       "server-plugin/engine.mjs",
       "server-plugin/environment.mjs",
+      "server-plugin/hidden-passives.mjs",
       "server-plugin/magic-air.mjs",
       "server-plugin/magic-area.mjs",
       "server-plugin/magic-care.mjs",
@@ -12639,6 +12679,7 @@
       "server-plugin/magic-ritual.mjs",
       "server-plugin/magic-water-earth.mjs",
       "server-plugin/magic.mjs",
+      "server-plugin/spell-research.mjs",
       "server-plugin/summons.mjs",
       "server-plugin/traits.mjs",
       "server-plugin/world-events.mjs"
@@ -12698,9 +12739,11 @@
       "server-plugin/magic-object.mjs",
       "server-plugin/magic-targeting.mjs",
       "server-plugin/magic-water-earth.mjs",
-      "server-plugin/magic.mjs"
+      "server-plugin/magic.mjs",
+      "server-plugin/spell-research.mjs"
      ],
      "systems": [
+      "sim_character",
       "sim_magic"
      ]
     },
@@ -13361,6 +13404,7 @@
       "server-plugin/career-metrics.mjs",
       "server-plugin/education-state.mjs",
       "server-plugin/education.mjs",
+      "server-plugin/hidden-passives.mjs",
       "server-plugin/learning.mjs",
       "server-plugin/works.mjs"
      ],
@@ -13375,6 +13419,7 @@
      "pattern": "checkBonus",
      "modules": [
       "server-plugin/checks.mjs",
+      "server-plugin/hidden-passives.mjs",
       "server-plugin/npc-autonomy.mjs"
      ],
      "systems": [
@@ -13396,6 +13441,7 @@
       "server-plugin/engine.mjs",
       "server-plugin/extraction.mjs",
       "server-plugin/finance-assets.mjs",
+      "server-plugin/hidden-passives.mjs",
       "server-plugin/interactions.mjs",
       "server-plugin/items.mjs",
       "server-plugin/learning.mjs",
@@ -13448,6 +13494,7 @@
       "server-plugin/combat.mjs",
       "server-plugin/engine.mjs",
       "server-plugin/entity-view.mjs",
+      "server-plugin/hidden-passives.mjs",
       "server-plugin/learning.mjs",
       "server-plugin/professions.mjs",
       "server-plugin/state-notices.mjs",
@@ -13684,6 +13731,7 @@
       "server-plugin/career-metrics.mjs",
       "server-plugin/education.mjs",
       "server-plugin/entity-view.mjs",
+      "server-plugin/hidden-passives.mjs",
       "server-plugin/professions.mjs",
       "server-plugin/training.mjs",
       "server-plugin/ui-personal.mjs",
@@ -14402,17 +14450,6 @@
     ]
    },
    {
-    "content": "spell",
-    "file": "world/meta/spells.json",
-    "fields": [
-     "boundaries",
-     "casting",
-     "proficiencyEffects",
-     "socialConsequences",
-     "theory"
-    ]
-   },
-   {
     "content": "npc",
     "file": "world/people/baseline.json",
     "fields": [
@@ -14513,6 +14550,7 @@
     "server-plugin/family-politics.mjs",
     "server-plugin/festival.mjs",
     "server-plugin/governance.mjs",
+    "server-plugin/hidden-passives.mjs",
     "server-plugin/high-nobility.mjs",
     "server-plugin/items.mjs",
     "server-plugin/law.mjs",
@@ -14538,6 +14576,7 @@
     "server-plugin/repair.mjs",
     "server-plugin/seasonal-hazards.mjs",
     "server-plugin/sites.mjs",
+    "server-plugin/spell-research.mjs",
     "server-plugin/summons.mjs",
     "server-plugin/titles.mjs",
     "server-plugin/war-diplomacy.mjs",
@@ -14572,7 +14611,7 @@
    ],
    "world": [],
    "worldDirs": [],
-   "lines": 256
+   "lines": 261
   },
   "server-plugin/advance-layers.mjs": {
    "system": "base_advance",
@@ -15001,7 +15040,7 @@
     "professions"
    ],
    "worldDirs": [],
-   "lines": 207
+   "lines": 209
   },
   "server-plugin/catalog.mjs": {
    "system": "nar_memory",
@@ -15069,6 +15108,7 @@
   "server-plugin/checks.mjs": {
    "system": "sim_character",
    "imports": [
+    "server-plugin/hidden-passives.mjs",
     "server-plugin/items.mjs",
     "server-plugin/npc-intelligence.mjs",
     "server-plugin/professions.mjs"
@@ -15092,7 +15132,7 @@
    ],
    "world": [],
    "worldDirs": [],
-   "lines": 104
+   "lines": 109
   },
   "server-plugin/chronicle.mjs": {
    "system": "nar_memory",
@@ -15425,7 +15465,7 @@
     "factions"
    ],
    "worldDirs": [],
-   "lines": 198
+   "lines": 201
   },
   "server-plugin/effect-registry.mjs": {
    "system": "base_effects",
@@ -15567,6 +15607,7 @@
     "server-plugin/finance-assets.mjs",
     "server-plugin/finance-tax.mjs",
     "server-plugin/hazard-calendar.mjs",
+    "server-plugin/hidden-passives.mjs",
     "server-plugin/items.mjs",
     "server-plugin/law.mjs",
     "server-plugin/learning.mjs",
@@ -15690,7 +15731,7 @@
     "spells"
    ],
    "worldDirs": [],
-   "lines": 728
+   "lines": 738
   },
   "server-plugin/entity-transitions.mjs": {
    "system": "base_events",
@@ -15716,6 +15757,7 @@
     "server-plugin/employment-state.mjs",
     "server-plugin/facility-state.mjs",
     "server-plugin/faith-state.mjs",
+    "server-plugin/hidden-passives.mjs",
     "server-plugin/noble-state.mjs",
     "server-plugin/npc-state.mjs",
     "server-plugin/organization-state.mjs",
@@ -15764,7 +15806,7 @@
     "settlementProfiles"
    ],
    "worldDirs": [],
-   "lines": 458
+   "lines": 460
   },
   "server-plugin/environment.mjs": {
    "system": "sim_environment",
@@ -16427,6 +16469,27 @@
    "worldDirs": [],
    "lines": 108
   },
+  "server-plugin/hidden-passives.mjs": {
+   "system": "sim_character",
+   "imports": [
+    "server-plugin/entity-view.mjs"
+   ],
+   "stateWrites": [
+    "careers"
+   ],
+   "stateReads": [
+    "professions"
+   ],
+   "recordWrites": [],
+   "recordReads": [],
+   "rules": [
+    "petCare",
+    "wildlife"
+   ],
+   "world": [],
+   "worldDirs": [],
+   "lines": 130
+  },
   "server-plugin/high-nobility.mjs": {
    "system": "sim_society",
    "imports": [
@@ -16842,6 +16905,7 @@
    ],
    "recordWrites": [
     "air_heard",
+    "air_weather",
     "local_actor_position"
    ],
    "recordReads": [],
@@ -16850,7 +16914,7 @@
     "routes"
    ],
    "worldDirs": [],
-   "lines": 304
+   "lines": 307
   },
   "server-plugin/magic-area.mjs": {
    "system": "sim_magic",
@@ -17410,6 +17474,7 @@
    "imports": [
     "server-plugin/bosses.mjs",
     "server-plugin/combat.mjs",
+    "server-plugin/hidden-passives.mjs",
     "server-plugin/items.mjs",
     "server-plugin/magic-air.mjs",
     "server-plugin/magic-consent.mjs",
@@ -17445,7 +17510,7 @@
    "rules": [],
    "world": [],
    "worldDirs": [],
-   "lines": 158
+   "lines": 159
   },
   "server-plugin/manufacturing.mjs": {
    "system": "sim_economy",
@@ -17806,6 +17871,7 @@
     "server-plugin/education-state.mjs",
     "server-plugin/entity-transitions.mjs",
     "server-plugin/entity-view.mjs",
+    "server-plugin/hidden-passives.mjs",
     "server-plugin/npc-intelligence.mjs",
     "server-plugin/npc-schedule.mjs",
     "server-plugin/npc-state.mjs",
@@ -17832,7 +17898,7 @@
     "skills"
    ],
    "worldDirs": [],
-   "lines": 151
+   "lines": 160
   },
   "server-plugin/npc-intelligence.mjs": {
    "system": "sim_npc",
@@ -18199,6 +18265,7 @@
   "server-plugin/pets.mjs": {
    "system": "sim_companion",
    "imports": [
+    "server-plugin/hidden-passives.mjs",
     "server-plugin/npc-life.mjs",
     "server-plugin/professions.mjs",
     "server-plugin/progression.mjs",
@@ -18226,7 +18293,7 @@
    ],
    "world": [],
    "worldDirs": [],
-   "lines": 279
+   "lines": 280
   },
   "server-plugin/population-service.mjs": {
    "system": "sim_npc",
@@ -18310,6 +18377,7 @@
     "server-plugin/career-metrics.mjs",
     "server-plugin/education.mjs",
     "server-plugin/entity-view.mjs",
+    "server-plugin/hidden-passives.mjs",
     "server-plugin/local-exams.mjs",
     "server-plugin/npc-schedule.mjs",
     "server-plugin/npc-state.mjs",
@@ -18334,7 +18402,7 @@
    "rules": [],
    "world": [],
    "worldDirs": [],
-   "lines": 106
+   "lines": 107
   },
   "server-plugin/progression.mjs": {
    "system": "sim_character",
@@ -19200,6 +19268,25 @@
    "worldDirs": [],
    "lines": 89
   },
+  "server-plugin/spell-research.mjs": {
+   "system": "sim_character",
+   "imports": [
+    "server-plugin/magic.mjs"
+   ],
+   "stateWrites": [],
+   "stateReads": [],
+   "recordWrites": [],
+   "recordReads": [],
+   "rules": [
+    "check",
+    "magic"
+   ],
+   "world": [
+    "spells"
+   ],
+   "worldDirs": [],
+   "lines": 55
+  },
   "server-plugin/standing.mjs": {
    "system": "base_standing",
    "imports": [
@@ -19938,7 +20025,7 @@
     "spells"
    ],
    "worldDirs": [],
-   "lines": 267
+   "lines": 268
   },
   "server-plugin/world-clock.mjs": {
    "system": "sim_clock",
