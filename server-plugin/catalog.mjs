@@ -3,7 +3,7 @@ import {publicLore}from'./lore.mjs';
 import {regionOf}from'./regions.mjs';
 import {publicSettlement}from'./settlement-profile.mjs';
 import {siteKnowledge}from'./sites.mjs';
-const publicKinds=new Set(['profession','skill','spell','recipe','item','loc','bld','site','culture','deity','faction','history','prov','county']);
+const publicKinds=new Set(['profession','skill','spell','recipe','item','loc','bld','site','culture','deity','faction','history','prov','county','festival']);
 export function catalogDefinition(engine,document,{entity,kind,offset=0}={}){
     const selected=engine.scoped(document);
     if(!Number.isSafeInteger(offset)||offset<0)throw new Error('目录 offset 必须为非负整数');
@@ -22,7 +22,7 @@ export function catalogDefinition(engine,document,{entity,kind,offset=0}={}){
         const known=siteKnowledge(selected.world,document).filter(truth=>truth.history===id);
         if(known.length)return{...publicLore(row),description:known.map(truth=>truth.text).join('\n'),verified:true,source:'遗迹发现',evidence:known.flatMap(truth=>truth.evidence)};
     }
-    if(['culture','deity','faction','history','prov','county'].includes(category))return publicLore(row);
+    if(['culture','deity','faction','history','prov','county','festival'].includes(category))return publicLore(row);
     if(kind==='location'&&!locationKinds.has(category))throw new Error('需要地点名称或编号');
     if(locationKinds.has(category))return{id,name:row.name,description:row.description??'',parent:row.parent??null,
         ...(publicSettlement(selected.world,id,document)?{settlement:publicSettlement(selected.world,id,document)}:{}),

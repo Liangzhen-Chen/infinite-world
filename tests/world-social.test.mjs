@@ -49,6 +49,7 @@ test('HTTP目录和搜索共用公开投影，内部目标与历史真相不外�
 test('旧战役升级加入社会资料不实例化名册或资源，导出往返和历史编号保留',async t=>{
     const old=withoutMonsterSociety2(withoutMonsterSociety(withoutT142(await loadWorld()))),baseline=JSON.parse(await fs.readFile('world/drafts/m2-people/baseline.json','utf8'));old.npcs=old.npcs.filter(n=>baseline.some(b=>b.id===n.id));for(const key of['factions','history','factionPeople','eras'])old[key]=[];
     old.rules.worldClock.clocks=old.rules.worldClock.clocks.filter(c=>old.factions.some(f=>f.id===c.faction));
+    delete old.festivals;// The festival catalog (T108) postdates this historical world.
     const original=await createPlaytestServer({world:old});t.after(original.close);
     const created=await original.api('create',{}),id=created.reference.campaignId;
     await original.api('execute',{campaignId:id,tool:'world_time',args:{minutes:10},eventId:'before-upgrade'});

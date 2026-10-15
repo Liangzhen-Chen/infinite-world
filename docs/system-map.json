@@ -18,14 +18,14 @@
  "counts": {
   "layers": 6,
   "systems": 37,
-  "modules": 162,
-  "advance": 40,
+  "modules": 163,
+  "advance": 41,
   "tools": 25,
   "verbs": 15,
   "subscribers": 8,
   "interactionRules": 25,
-  "effectKinds": 18,
-  "links": 340
+  "effectKinds": 19,
+  "links": 342
  },
  "layers": [
   {
@@ -249,13 +249,14 @@
    "effects": [],
    "tools": [],
    "readBy": [
+    "base_effects",
     "kernel_engine",
     "sim_clock",
     "sim_environment",
     "sim_npc",
     "sim_society"
    ],
-   "files": 6
+   "files": 7
   },
   {
    "id": "data_design",
@@ -281,7 +282,7 @@
     "sim_environment",
     "sim_society"
    ],
-   "files": 92
+   "files": 95
   },
   {
    "id": "data_assets",
@@ -337,7 +338,7 @@
     "server-plugin/campaign-reducer.mjs",
     "server-plugin/archived-reducer.mjs"
    ],
-   "lines": 869,
+   "lines": 870,
    "stateWrites": [
     "combatDisengaged",
     "created",
@@ -379,6 +380,7 @@
     "magic",
     "petCare",
     "practice",
+    "questSources",
     "travel",
     "weather"
    ],
@@ -389,6 +391,7 @@
     "eras",
     "factionPeople",
     "factions",
+    "festivals",
     "history",
     "items",
     "locations",
@@ -726,7 +729,7 @@
    "modules": [
     "server-plugin/advance-registry.mjs"
    ],
-   "lines": 157,
+   "lines": 160,
    "stateWrites": [
     "effects",
     "obligations",
@@ -1556,9 +1559,10 @@
     "server-plugin/titles.mjs",
     "server-plugin/notables.mjs",
     "server-plugin/promotion.mjs",
-    "server-plugin/quest-board.mjs"
+    "server-plugin/quest-board.mjs",
+    "server-plugin/quest-sources.mjs"
    ],
-   "lines": 2455,
+   "lines": 2766,
    "stateWrites": [
     "buildings",
     "created",
@@ -1596,6 +1600,7 @@
     "governance",
     "law",
     "levels",
+    "questSources",
     "quests",
     "reputation"
    ],
@@ -1608,6 +1613,7 @@
     "locations",
     "npcs",
     "residents",
+    "rules",
     "settlementProfiles"
    ],
    "advance": [
@@ -1619,6 +1625,7 @@
     "notables",
     "promotion",
     "organizations",
+    "quest_sources",
     "society_news"
    ],
    "subscribes": [
@@ -1632,6 +1639,7 @@
     }
    ],
    "effects": [
+    "quest_post",
     "standing"
    ],
    "tools": [
@@ -1656,7 +1664,7 @@
     "server-plugin/seasonal-hazards.mjs",
     "server-plugin/hazard-calendar.mjs"
    ],
-   "lines": 973,
+   "lines": 981,
    "stateWrites": [
     "family",
     "npcs",
@@ -1691,6 +1699,7 @@
     "agriculture",
     "attributes",
     "effectTable",
+    "factionClock",
     "hazardClock",
     "npcLife",
     "settlementTrade",
@@ -1726,6 +1735,7 @@
     "famine",
     "flood",
     "price_shift",
+    "quest_post",
     "relation",
     "route_closure",
     "trade"
@@ -2100,7 +2110,7 @@
     "server-plugin/catalog.mjs",
     "server-plugin/chronicle.mjs"
    ],
-   "lines": 409,
+   "lines": 415,
    "stateWrites": [],
    "stateReads": [
     "careerMetrics",
@@ -2255,6 +2265,7 @@
     "projects",
     "promotion",
     "public_projects",
+    "quest_sources",
     "society_news",
     "titles"
    ]
@@ -2384,6 +2395,7 @@
     "organizations.mjs",
     "promotion.mjs",
     "public-projects.mjs",
+    "quest-sources.mjs",
     "titles.mjs"
    ]
   },
@@ -2731,6 +2743,7 @@
     "promotion.mjs",
     "public-projects.mjs",
     "quest-board.mjs",
+    "quest-sources.mjs",
     "titles.mjs"
    ]
   },
@@ -3645,6 +3658,14 @@
   },
   {
    "from": "sim_society",
+   "to": "base_effects",
+   "kind": "call",
+   "labels": [
+    "effects.mjs"
+   ]
+  },
+  {
+   "from": "sim_society",
    "to": "base_events",
    "kind": "call",
    "labels": [
@@ -3688,7 +3709,8 @@
    "to": "sim_clock",
    "kind": "call",
    "labels": [
-    "faction-clock.mjs"
+    "faction-clock.mjs",
+    "hazard-calendar.mjs"
    ]
   },
   {
@@ -3713,6 +3735,7 @@
    "kind": "call",
    "labels": [
     "npc-cognition.mjs",
+    "npc-intelligence.mjs",
     "npc-life.mjs",
     "npc-obligations.mjs",
     "npc-schedule.mjs"
@@ -4266,6 +4289,14 @@
   },
   {
    "from": "data_lore",
+   "to": "base_effects",
+   "kind": "data",
+   "labels": [
+    "world/lore"
+   ]
+  },
+  {
+   "from": "data_lore",
    "to": "kernel_engine",
    "kind": "data",
    "labels": [
@@ -4637,6 +4668,7 @@
     "famine",
     "flood",
     "price_shift",
+    "quest_post",
     "relation",
     "route_closure",
     "trade"
@@ -4672,6 +4704,7 @@
    "to": "sim_society",
    "kind": "effect",
    "labels": [
+    "quest_post",
     "standing"
    ]
   },
@@ -5455,6 +5488,17 @@
    "partitions": []
   },
   {
+   "id": "quest_sources",
+   "order": 1460,
+   "stepped": false,
+   "nextMinute": false,
+   "modules": [
+    "server-plugin/quest-sources.mjs"
+   ],
+   "inline": false,
+   "partitions": []
+  },
+  {
    "id": "society_news",
    "order": 1500,
    "stepped": false,
@@ -5814,7 +5858,8 @@
     "server-plugin/boss-negotiation.mjs"
    ],
    "rumor": [
-    "server-plugin/effects.mjs"
+    "server-plugin/effects.mjs",
+    "server-plugin/quest-sources.mjs"
    ],
    "steal": [
     "server-plugin/world-events.mjs"
@@ -6434,7 +6479,10 @@
      "server-plugin/faction-clock.mjs"
     ],
     "usedByHooks": [],
-    "usedIn": []
+    "usedIn": [
+     "rules.factionClock",
+     "world/lore/factions.json"
+    ]
    },
    {
     "kind": "environment",
@@ -6546,6 +6594,22 @@
     ]
    },
    {
+    "kind": "quest_post",
+    "sources": [
+     "world",
+     "faction",
+     "festival",
+     "season"
+    ],
+    "registeredIn": "server-plugin/quest-sources.mjs",
+    "modules": [
+     "server-plugin/faction-clock.mjs",
+     "server-plugin/quest-sources.mjs"
+    ],
+    "usedByHooks": [],
+    "usedIn": []
+   },
+   {
     "kind": "regional_quote",
     "sources": [
      "world",
@@ -6560,7 +6624,8 @@
     ],
     "usedByHooks": [],
     "usedIn": [
-     "rules.worldClock"
+     "rules.worldClock",
+     "world/lore/factions.json"
     ]
    },
    {
@@ -6573,7 +6638,10 @@
      "server-plugin/faction-clock.mjs"
     ],
     "usedByHooks": [],
-    "usedIn": []
+    "usedIn": [
+     "rules.factionClock",
+     "world/lore/factions.json"
+    ]
    },
    {
     "kind": "route_closure",
@@ -6610,7 +6678,10 @@
     ],
     "usedIn": [
      "rules.effectTable",
-     "rules.hazardClock"
+     "rules.factionClock",
+     "rules.hazardClock",
+     "world/lore/factions.json",
+     "world/lore/festivals.json"
     ]
    },
    {
@@ -6632,7 +6703,9 @@
     ],
     "usedIn": [
      "rules.effectTable",
-     "rules.hazardClock"
+     "rules.hazardClock",
+     "world/lore/factions.json",
+     "world/lore/festivals.json"
     ]
    },
    {
@@ -6679,7 +6752,8 @@
      "faction:clock_ms_tanjie"
     ],
     "usedIn": [
-     "rules.effectTable"
+     "rules.effectTable",
+     "world/lore/factions.json"
     ]
    }
   ],
@@ -6763,6 +6837,7 @@
    "server-plugin/promotion.mjs",
    "server-plugin/public-opinion.mjs",
    "server-plugin/quest-board.mjs",
+   "server-plugin/quest-sources.mjs",
    "server-plugin/reputation.mjs",
    "server-plugin/return-summary.mjs",
    "server-plugin/scene-card.mjs",
@@ -7973,7 +8048,7 @@
   },
   {
    "dir": "world/design",
-   "files": 92,
+   "files": 95,
    "keys": [],
    "readers": [
     "server-plugin/civic.mjs",
@@ -8065,7 +8140,9 @@
     "tools/w4-draft.mjs",
     "tools/w4-publish.mjs",
     "tools/w4-repair.mjs",
+    "tools/w5-clock-publication.mjs",
     "tools/w5-content.mjs",
+    "tools/w5-festival-publication.mjs",
     "tools/w5-festivals.mjs",
     "tools/w5-social.mjs",
     "tools/wildlife-content.mjs"
@@ -8153,7 +8230,9 @@
     "tools/w4-draft.mjs",
     "tools/w4-publish.mjs",
     "tools/w4-repair.mjs",
+    "tools/w5-clock-publication.mjs",
     "tools/w5-content.mjs",
+    "tools/w5-festival-publication.mjs",
     "tools/w5-festivals.mjs",
     "tools/w5-social.mjs"
    ]
@@ -8199,6 +8278,7 @@
     "server-plugin/promotion.mjs",
     "server-plugin/public-opinion.mjs",
     "server-plugin/quest-board.mjs",
+    "server-plugin/quest-sources.mjs",
     "server-plugin/regions.mjs",
     "server-plugin/remote-generation.mjs",
     "server-plugin/reputation-registry.mjs",
@@ -8251,16 +8331,18 @@
   },
   {
    "dir": "world/lore",
-   "files": 6,
+   "files": 7,
    "keys": [
     "cultures",
     "deities",
     "factions",
     "history",
     "factionPeople",
-    "eras"
+    "eras",
+    "festivals"
    ],
    "readers": [
+    "server-plugin/effects.mjs",
     "server-plugin/engine.mjs",
     "server-plugin/faction-clock.mjs",
     "server-plugin/festival.mjs",
@@ -8268,6 +8350,7 @@
     "server-plugin/notables.mjs",
     "server-plugin/organizations.mjs",
     "server-plugin/population.mjs",
+    "server-plugin/quest-sources.mjs",
     "server-plugin/regions.mjs",
     "server-plugin/remote-generation.mjs",
     "server-plugin/reputation-registry.mjs",
@@ -8279,7 +8362,9 @@
     "tools/publish-monster-society.mjs",
     "tools/system-map.mjs",
     "tools/t142-merge.mjs",
+    "tools/w5-clock-publication.mjs",
     "tools/w5-content.mjs",
+    "tools/w5-festival-publication.mjs",
     "tools/w5-social-publish.mjs"
    ]
   },
@@ -8352,6 +8437,7 @@
     "server-plugin/progression.mjs",
     "server-plugin/promotion.mjs",
     "server-plugin/quest-board.mjs",
+    "server-plugin/quest-sources.mjs",
     "server-plugin/regions.mjs",
     "server-plugin/remote-generation.mjs",
     "server-plugin/repair.mjs",
@@ -8449,7 +8535,9 @@
     "tools/w4-boss-content.mjs",
     "tools/w4-content.mjs",
     "tools/w4-publish.mjs",
+    "tools/w5-clock-publication.mjs",
     "tools/w5-content.mjs",
+    "tools/w5-festival-publication.mjs",
     "tools/w5-festivals.mjs",
     "tools/w5-social.mjs"
    ]
@@ -8492,6 +8580,7 @@
     "server-plugin/organizations.mjs",
     "server-plugin/population.mjs",
     "server-plugin/promotion.mjs",
+    "server-plugin/quest-sources.mjs",
     "server-plugin/remote-generation.mjs",
     "server-plugin/reputation-registry.mjs",
     "server-plugin/return-summary.mjs",
@@ -8628,6 +8717,7 @@
    "server-plugin/compat/v2-phase1-activities.mjs",
    "server-plugin/promotion.mjs",
    "server-plugin/quest-board.mjs",
+   "server-plugin/quest-sources.mjs",
    "server-plugin/ui-affairs.mjs"
   ],
   "prompt": [
@@ -8757,6 +8847,9 @@
    "server-plugin/reputation-registry.mjs",
    "server-plugin/reputation.mjs"
   ],
+  "factionClock": [
+   "server-plugin/faction-clock.mjs"
+  ],
   "worldClock": [
    "server-plugin/advance-registry.mjs",
    "server-plugin/return-summary.mjs",
@@ -8786,6 +8879,10 @@
    "server-plugin/advance-registry.mjs",
    "server-plugin/hazard-calendar.mjs",
    "server-plugin/seasonal-hazards.mjs"
+  ],
+  "questSources": [
+   "server-plugin/engine.mjs",
+   "server-plugin/quest-sources.mjs"
   ]
  },
  "stateShare": {
@@ -9696,6 +9793,7 @@
       "server-plugin/promotion.mjs",
       "server-plugin/public-opinion.mjs",
       "server-plugin/public-projects.mjs",
+      "server-plugin/quest-sources.mjs",
       "server-plugin/regions.mjs",
       "server-plugin/remote-generation.mjs",
       "server-plugin/reputation.mjs",
@@ -10352,6 +10450,7 @@
       "server-plugin/promotion.mjs",
       "server-plugin/public-projects.mjs",
       "server-plugin/quest-board.mjs",
+      "server-plugin/quest-sources.mjs",
       "server-plugin/remote-generation.mjs",
       "server-plugin/reputation.mjs",
       "server-plugin/return-summary.mjs",
@@ -11060,6 +11159,7 @@
      "means": "联络地点：社会与组织",
      "pattern": "contactAnchor",
      "modules": [
+      "server-plugin/faction-clock.mjs",
       "server-plugin/lore.mjs",
       "server-plugin/monster-society.mjs",
       "server-plugin/notables.mjs",
@@ -11069,6 +11169,7 @@
      ],
      "systems": [
       "nar_memory",
+      "sim_clock",
       "sim_environment",
       "sim_society"
      ]
@@ -11083,6 +11184,7 @@
       "server-plugin/consistency-service.mjs",
       "server-plugin/faction-clock.mjs",
       "server-plugin/monster-society.mjs",
+      "server-plugin/quest-sources.mjs",
       "server-plugin/seasonal-hazards.mjs",
       "server-plugin/settlement-trade.mjs",
       "extension/turn.mjs"
@@ -11204,7 +11306,7 @@
    "id": "festival",
    "name": "节日",
    "file": "world/lore/festivals.json",
-   "count": 0,
+   "count": 24,
    "required": [
     "id",
     "calendar.month",
@@ -11233,13 +11335,16 @@
      "pattern": "'festival'",
      "modules": [
       "server-plugin/advance-registry.mjs",
+      "server-plugin/catalog.mjs",
       "server-plugin/effects.mjs",
       "server-plugin/festival.mjs",
+      "server-plugin/lore.mjs",
       "server-plugin/npc-life.mjs"
      ],
      "systems": [
       "base_advance",
       "base_effects",
+      "nar_memory",
       "sim_clock",
       "sim_npc"
      ]
@@ -11248,6 +11353,7 @@
    "autoSystems": [
     "base_advance",
     "base_effects",
+    "nar_memory",
     "sim_clock",
     "sim_npc"
    ],
@@ -11496,11 +11602,7 @@
     "note": "已注册，但 rules.json 与 lore 的任何 effects 列表都没有用到"
    },
    {
-    "kind": "dispute",
-    "note": "已注册，但 rules.json 与 lore 的任何 effects 列表都没有用到"
-   },
-   {
-    "kind": "relation",
+    "kind": "quest_post",
     "note": "已注册，但 rules.json 与 lore 的任何 effects 列表都没有用到"
    },
    {
@@ -11621,6 +11723,14 @@
      "foundedYear",
      "offers"
     ]
+   },
+   {
+    "content": "festival",
+    "file": "world/lore/festivals.json",
+    "fields": [
+     "possibleConflict",
+     "socialOpportunity"
+    ]
    }
   ],
   "unassignedModules": []
@@ -11725,6 +11835,7 @@
     "server-plugin/progression.mjs",
     "server-plugin/promotion.mjs",
     "server-plugin/public-projects.mjs",
+    "server-plugin/quest-sources.mjs",
     "server-plugin/seasonal-hazards.mjs",
     "server-plugin/settlement-trade.mjs",
     "server-plugin/shop.mjs",
@@ -11759,7 +11870,7 @@
     "npcs"
    ],
    "worldDirs": [],
-   "lines": 157
+   "lines": 160
   },
   "server-plugin/agriculture-migration.mjs": {
    "system": "kernel_storage",
@@ -12458,6 +12569,7 @@
     "server-plugin/population.mjs",
     "server-plugin/professions.mjs",
     "server-plugin/progression.mjs",
+    "server-plugin/quest-sources.mjs",
     "server-plugin/remote-generation.mjs",
     "server-plugin/retrieval.mjs",
     "server-plugin/return-summary.mjs",
@@ -12511,6 +12623,7 @@
     "magic",
     "petCare",
     "practice",
+    "questSources",
     "travel",
     "weather"
    ],
@@ -12521,6 +12634,7 @@
     "eras",
     "factionPeople",
     "factions",
+    "festivals",
     "history",
     "items",
     "locations",
@@ -12536,7 +12650,7 @@
     "spells"
    ],
    "worldDirs": [],
-   "lines": 607
+   "lines": 608
   },
   "server-plugin/environment.mjs": {
    "system": "sim_environment",
@@ -12603,7 +12717,8 @@
     "society_motion"
    ],
    "rules": [
-    "effectTable"
+    "effectTable",
+    "factionClock"
    ],
    "world": [
     "factions",
@@ -12611,7 +12726,7 @@
     "locations"
    ],
    "worldDirs": [],
-   "lines": 208
+   "lines": 214
   },
   "server-plugin/farm-pests-migration.mjs": {
    "system": "kernel_storage",
@@ -12691,7 +12806,7 @@
     "geo",
     "lore"
    ],
-   "lines": 212
+   "lines": 214
   },
   "server-plugin/governance.mjs": {
    "system": "sim_society",
@@ -12967,7 +13082,7 @@
    "rules": [],
    "world": [],
    "worldDirs": [],
-   "lines": 17
+   "lines": 23
   },
   "server-plugin/magic-air.mjs": {
    "system": "sim_magic",
@@ -14245,6 +14360,7 @@
     "server-plugin/npc-obligations.mjs",
     "server-plugin/npc-schedule.mjs",
     "server-plugin/progression.mjs",
+    "server-plugin/quest-sources.mjs",
     "server-plugin/standing.mjs",
     "server-plugin/titles.mjs"
    ],
@@ -14271,7 +14387,48 @@
     "locations"
    ],
    "worldDirs": [],
-   "lines": 202
+   "lines": 208
+  },
+  "server-plugin/quest-sources.mjs": {
+   "system": "sim_society",
+   "imports": [
+    "server-plugin/effects.mjs",
+    "server-plugin/faction-clock.mjs",
+    "server-plugin/governance.mjs",
+    "server-plugin/hazard-calendar.mjs",
+    "server-plugin/npc-intelligence.mjs",
+    "server-plugin/npc-life.mjs",
+    "server-plugin/standing.mjs",
+    "server-plugin/world-events.mjs"
+   ],
+   "stateWrites": [
+    "npcs",
+    "quests",
+    "records",
+    "settlements"
+   ],
+   "stateReads": [
+    "buildings",
+    "minute"
+   ],
+   "recordWrites": [
+    "world_event"
+   ],
+   "recordReads": [],
+   "rules": [
+    "questSources",
+    "quests"
+   ],
+   "world": [
+    "bosses",
+    "factions",
+    "items",
+    "locations",
+    "npcs",
+    "rules"
+   ],
+   "worldDirs": [],
+   "lines": 305
   },
   "server-plugin/regions.mjs": {
    "system": "sim_environment",
