@@ -1,3 +1,4 @@
+import {cloneData} from './storage.mjs';
 import {registerMagicEffect}from'./magic-effects.mjs';
 import {environmentFeatures,localPlayerPoint,localSightClear}from'./environment.mjs';
 import {assertMagicTargeting}from'./magic-targeting.mjs';
@@ -15,7 +16,7 @@ export const mindSpaceMechanisms=Object.freeze({
  lock_space:[1,30],alarm:[1,120],block_space:[1,30],calibrate_anchor:[1,0],anchor_cargo:[2,0],repair_space:[1,0],
 });
 const mental=new Set(['sense_mind','sleep','memory_guard','rest_bless','comfort']);
-const clone=x=>structuredClone(x),key=id=>`physical_feature:${id}`;
+const clone=x=>cloneData(x),key=id=>`physical_feature:${id}`;
 const distance=(a,b)=>Math.hypot(a[0]-b[0],a[1]-b[1]);
 const path=id=>id==='player'?['state','player']:['state',id.startsWith('npc_')?'npcs':'creatures',id];
 const number=(n,min,max,label)=>{if(!Number.isFinite(n)||n<min||n>max)throw Error(`${label}未登记或超出范围`);return n;};

@@ -1,4 +1,5 @@
 import {registerMagicEffect}from'./magic-effects.mjs';
+import {cloneData}from'./storage.mjs';
 import {environmentFeatures,localPlayerPoint,localSightClear}from'./environment.mjs';
 import {areaTargetFacts}from'./magic-area.mjs';
 import {assertMagicTargeting}from'./magic-targeting.mjs';
@@ -10,18 +11,24 @@ export const waterEarthMechanisms=Object.freeze({
  sense_soil:[1,0],till:[4,0],survey_earth:[3,0],mud_seal:[5,10],levee:[50,10],
  level_ground:[4,0],ore:[1,0],structural_sense:[1,0],mud_trap:[4,5],support:[500,2],fracture:[5,0],
 });
-const clone=x=>structuredClone(x),key=id=>`physical_feature:${id}`;
+const clone=x=>cloneData(x),key=id=>`physical_feature:${id}`;
 const dist=(a,b)=>Math.hypot(a[0]-b[0],a[1]-b[1]);
 const number=(v,min,max,label)=>{if(!Number.isFinite(v)||v<min||v>max)throw Error(`${label}无效`);return v;};
 const integer=(v,min,max,label)=>{if(!Number.isSafeInteger(v)||v<min||v>max)throw Error(`${label}无效`);return v;};
+// P2: rows are read here only to be copied (peek), and the per-minute
+// simulation hands each freshly built row to the draft (adopt).
 export function waterEarthState(d,row){
- const r=d.get('state','records',key(row.id));
+ const r=typeof d.peek==='function'?d.peek('state','records',key(row.id)):d.get('state','records',key(row.id));
  if(r&&(r.category!=='physical_feature'||r.id!==row.id||r.location!==row.location))throw Error('水土对象状态键冲突');
  return clone(r?.state??row.state??{});
 }
 const store=(d,row,state)=>d.set(['state','records',key(row.id)],{id:row.id,category:'physical_feature',location:row.location,state});
-function locate(engine,id,location){
- const rows=environmentFeatures(engine).filter(r=>r.location===location&&(r.id===id||r.name===id));
+const storeFresh=(d,row,state)=>{const path=['state','records',key(row.id)],value={id:row.id,category:'physical_feature',location:row.location,state};if(typeof d.adopt==='function')d.adopt(path,value);else d.set(path,value);};
+// P2: a daily advance passes one feature index (the world does not change
+// inside it) instead of rebuilding every feature row each simulated minute.
+const featureIndex=engine=>{const index=new Map();for(const r of environmentFeatures(engine)){if(!index.has(r.location))index.set(r.location,[]);index.get(r.location).push(r);}return index;};
+function locate(engine,id,location,index=null){
+ const rows=(index?index.get(location)??[]:environmentFeatures(engine)).filter(r=>r.location===location&&(r.id===id||r.name===id));
  if(rows.length!==1)throw Error('需要同地登记的真实水土对象');return rows[0];
 }
 function access(d,engine,row,args,range,read=false){
@@ -54,9 +61,9 @@ function reserveWater(d,row,amount){
  for(const f of ['saltMg','toxinUg']){held[f]=(s[f]??0)*amount/s.waterMl;s[f]=(s[f]??0)-held[f];}
  s.waterMl-=amount;s.reservedWaterMl=(s.reservedWaterMl??0)+amount;store(d,row,s);return held;
 }
-function returnWater(d,engine,e){
+function returnWater(d,engine,e,index=null){
  if(!e.held||e.returned)return;
- const row=locate(engine,e.medium,e.location),s=waterEarthState(d,row),h=e.held;
+ const row=locate(engine,e.medium,e.location,index),s=waterEarthState(d,row),h=e.held;
  // A reserved volume still occupies its original container capacity.
  s.turbidity=s.waterMl?(s.waterMl*(s.turbidity??0)+h.waterMl*h.turbidity)/(s.waterMl+h.waterMl):h.turbidity;
  s.waterMl+=h.waterMl;s.reservedWaterMl-=h.waterMl;
@@ -209,40 +216,41 @@ function drain(d,from,to,amount){
  b.turbidity=((b.turbidity??0)*b.waterMl+(a.turbidity??0)*amount)/(b.waterMl+amount);
  b.pathogenRisk=Math.max(b.pathogenRisk??0,a.pathogenRisk??0);b.odor=a.odor??'';
  a.waterMl-=amount;b.waterMl+=amount;a.drainedWaterMl=(a.drainedWaterMl??0)+amount;b.receivedWaterMl=(b.receivedWaterMl??0)+amount;
- store(d,from,a);store(d,to,b);return amount;
+ storeFresh(d,from,a);storeFresh(d,to,b);return amount;
 }
 export function advanceWaterEarth(d,engine,before,after){
  const rows=environmentFeatures(engine).filter(r=>r.waterEarthProcess);
  if(!rows.length&&!Object.values(d.get('state','effects')??{}).some(e=>e.kind==='water_earth'))return;
+ const index=featureIndex(engine);
  for(let minute=before;minute<after;minute++){
   for(const [id,e]of Object.entries(d.get('state','effects')??{})){
    if(e.kind!=='water_earth'||e.started>minute)continue;
    if(['seal','mud_seal'].includes(e.operation)){
-    const row=locate(engine,e.target,e.location),s=waterEarthState(d,row);
+    const row=locate(engine,e.target,e.location,index),s=waterEarthState(d,row);
     if(s.pressureKpa>e.power||e.operation==='mud_seal'&&minute-e.lastChecked>=3)e.expires=Math.min(e.expires,minute);
    }
-   if(e.expires<=minute)returnWater(d,engine,e);
+   if(e.expires<=minute)returnWater(d,engine,e,index);
    d.set(['state','effects',id],e);
   }
   for(const row of rows){
    const s=waterEarthState(d,row);
    if(row.waterEarthProcess==='leak'){
     number(s.pressureKpa,0,100000,'实际压力');number(s.leakMlPerMinute,0,100000,'实际漏量');
-    if(!strongest(d,'seal',row.id,minute)&&!strongest(d,'mud_seal',row.id,minute))drain(d,row,locate(engine,row.links.drain,row.location),s.leakMlPerMinute);
+    if(!strongest(d,'seal',row.id,minute)&&!strongest(d,'mud_seal',row.id,minute))drain(d,row,locate(engine,row.links.drain,row.location,index),s.leakMlPerMinute);
    }
    if(row.waterEarthProcess==='erosion'){
-    const receiver=locate(engine,row.links.silt,row.location),dst=waterEarthState(d,receiver);
+    const receiver=locate(engine,row.links.silt,row.location,index),dst=waterEarthState(d,receiver);
     integer(s.earthGrams,0,100000000,'土堤土量');number(s.erosionGramsPerMinute,0,100000,'冲刷量');
     const grams=Math.min(s.earthGrams,Math.ceil(s.erosionGramsPerMinute*(1-strongest(d,'levee',row.id,minute)/100)));
-    s.earthGrams-=grams;s.erodedGrams=(s.erodedGrams??0)+grams;dst.siltGrams=(dst.siltGrams??0)+grams;store(d,row,s);store(d,receiver,dst);
+    s.earthGrams-=grams;s.erodedGrams=(s.erodedGrams??0)+grams;dst.siltGrams=(dst.siltGrams??0)+grams;storeFresh(d,row,s);storeFresh(d,receiver,dst);
    }
    if(row.waterEarthProcess==='sink'){
     number(s.loadKg,0,100000,'结构负载');number(s.capacityKg,0,100000,'结构承载');number(s.sinkMmPerMinute,0,100,'下沉速度');integer(s.integrity,0,100000,'结构完整度');
-    if(s.integrity&&s.loadKg>s.capacityKg+strongest(d,'support',row.id,minute)){s.sagMm=(s.sagMm??0)+s.sinkMmPerMinute;s.integrity=Math.max(0,s.integrity-1);s.collapsed=s.integrity===0;store(d,row,s);}
+    if(s.integrity&&s.loadKg>s.capacityKg+strongest(d,'support',row.id,minute)){s.sagMm=(s.sagMm??0)+s.sinkMmPerMinute;s.integrity=Math.max(0,s.integrity-1);s.collapsed=s.integrity===0;storeFresh(d,row,s);}
    }
   }
  }
- for(const [id,e]of Object.entries(d.get('state','effects')??{}))if(e.kind==='water_earth'&&e.expires<=after){returnWater(d,engine,e);d.set(['state','effects',id],e);}
+ for(const [id,e]of Object.entries(d.get('state','effects')??{}))if(e.kind==='water_earth'&&e.expires<=after){returnWater(d,engine,e,index);d.set(['state','effects',id],e);}
 }
 export function inspectWaterEarth(d,engine,row,{check=false}={}){
  if(check)for(const [id,e]of active(d,'mud_seal'))if(e.target===row.id){e.lastChecked=d.get('state','minute');d.set(['state','effects',id],e);}

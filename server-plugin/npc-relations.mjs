@@ -1,3 +1,4 @@
+import {cloneData} from './storage.mjs';
 import {deriveWorldEvents,registerWorldEventSubscriber}from'./world-events.mjs';
 const clamp=(n,min=-100,max=100)=>Math.max(min,Math.min(max,n));
 const actor=(state,id)=>id==='player'?state.player:state.npcs[id];
@@ -9,7 +10,7 @@ export function relationView(engine,state,from,to){
  const current=actor(state,from)?.relationships?.[to];
  const base=engine.byId.get(from)?.relationships?.find?.(row=>row.with===to);
  const initial=to==='player'?actor(state,from):base;
- return {trust:initial?.trust??0,affection:initial?.affection??0,respect:0,fear:0,romance:0,competition:0,favors:[],evidenceKeys:[],...structuredClone(current??{})};
+ return {trust:initial?.trust??0,affection:initial?.affection??0,respect:0,fear:0,romance:0,competition:0,favors:[],evidenceKeys:[],...cloneData(current??{})}; // P2: same result as structuredClone
 }
 function applyEvidence(d,engine,evidence){
  if(!enabled(engine,evidence.from,evidence.to)||!actor(d.get('state'),evidence.from)||!actor(d.get('state'),evidence.to))return null;

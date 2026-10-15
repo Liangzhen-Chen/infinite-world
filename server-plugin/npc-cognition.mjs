@@ -1,6 +1,6 @@
 import {advanceMagicMessages,nextMagicMessageMinute}from'./magic-message.mjs';
 import {memoryBlurMinute}from'./npc-memory.mjs';
-import {applyPatches,digest} from './storage.mjs';
+import {applyPatches,cloneData,digest} from './storage.mjs';
 import {advanceNpcSchedules} from './npc-schedule.mjs';
 import {waterEarthHeldUntil}from'./magic-water-earth.mjs';
 import {relationView} from './npc-relations.mjs';
@@ -8,7 +8,7 @@ import {assertNpcObligationAction} from './npc-obligations.mjs';
 import {observeLegalReputation} from './reputation.mjs';
 import {npcRumorSeeds,rumorChainView} from './npc-rumors.mjs';
 
-const DAY=1440,clone=value=>structuredClone(value);
+const DAY=1440,clone=value=>cloneData(value); // P2: same result as structuredClone, faster
 const awake=n=>n&&n.location&&!n.scheduleTravel&&!n.cognitionTravel&&!['死亡','濒死','昏迷','患病'].includes(n.status)&&!/睡眠|睡觉|熟睡/.test(n.activity??'');
 const key=(...parts)=>digest(parts).slice(0,24);
 const relation=(engine,state,from,to)=>state.npcs[from]?.relationships?.[to]||engine.byId.get(from)?.relationships?.some(r=>r.with===to)?relationView(engine,state,from,to):null;

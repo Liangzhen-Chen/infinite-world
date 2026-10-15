@@ -338,7 +338,7 @@
     "server-plugin/campaign-reducer.mjs",
     "server-plugin/archived-reducer.mjs"
    ],
-   "lines": 870,
+   "lines": 928,
    "stateWrites": [
     "combatDisengaged",
     "created",
@@ -455,7 +455,7 @@
     "server-plugin/compat/v2-phase1-engine.mjs",
     "server-plugin/legacy/core.js"
    ],
-   "lines": 1398,
+   "lines": 1534,
    "stateWrites": [
     "checks",
     "crafted",
@@ -797,7 +797,7 @@
     "server-plugin/population-service.mjs",
     "server-plugin/settlement-profile.mjs"
    ],
-   "lines": 2953,
+   "lines": 2959,
    "stateWrites": [
     "created",
     "family",
@@ -1240,7 +1240,7 @@
     "server-plugin/regions.mjs",
     "server-plugin/remote-generation.mjs"
    ],
-   "lines": 1399,
+   "lines": 1422,
    "stateWrites": [
     "npcs",
     "records",
@@ -1332,7 +1332,7 @@
     "server-plugin/magic-water-earth.mjs",
     "server-plugin/magic.mjs"
    ],
-   "lines": 3674,
+   "lines": 3690,
    "stateWrites": [
     "creatures",
     "discoveries",
@@ -3622,7 +3622,8 @@
    "to": "sim_environment",
    "kind": "call",
    "labels": [
-    "remote-generation.mjs"
+    "remote-generation.mjs",
+    "weather.mjs"
    ]
   },
   {
@@ -12650,7 +12651,7 @@
     "spells"
    ],
    "worldDirs": [],
-   "lines": 608
+   "lines": 666
   },
   "server-plugin/environment.mjs": {
    "system": "sim_environment",
@@ -13116,7 +13117,7 @@
     "routes"
    ],
    "worldDirs": [],
-   "lines": 301
+   "lines": 303
   },
   "server-plugin/magic-area.mjs": {
    "system": "sim_magic",
@@ -13155,6 +13156,7 @@
     "server-plugin/magic-object.mjs",
     "server-plugin/magic-ritual.mjs",
     "server-plugin/magic-targeting.mjs",
+    "server-plugin/storage.mjs",
     "server-plugin/wildlife.mjs"
    ],
    "stateWrites": [
@@ -13180,7 +13182,7 @@
     "skills"
    ],
    "worldDirs": [],
-   "lines": 344
+   "lines": 349
   },
   "server-plugin/magic-context.mjs": {
    "system": "sim_magic",
@@ -13348,6 +13350,7 @@
     "server-plugin/magic-effects.mjs",
     "server-plugin/magic-movement.mjs",
     "server-plugin/magic-targeting.mjs",
+    "server-plugin/storage.mjs",
     "server-plugin/wildlife.mjs"
    ],
    "stateWrites": [
@@ -13369,7 +13372,7 @@
    "rules": [],
    "world": [],
    "worldDirs": [],
-   "lines": 383
+   "lines": 384
   },
   "server-plugin/magic-movement.mjs": {
    "system": "sim_magic",
@@ -13568,7 +13571,8 @@
     "server-plugin/interactions.mjs",
     "server-plugin/magic-area.mjs",
     "server-plugin/magic-effects.mjs",
-    "server-plugin/magic-targeting.mjs"
+    "server-plugin/magic-targeting.mjs",
+    "server-plugin/storage.mjs"
    ],
    "stateWrites": [
     "effects",
@@ -13588,7 +13592,7 @@
    "rules": [],
    "world": [],
    "worldDirs": [],
-   "lines": 277
+   "lines": 285
   },
   "server-plugin/magic.mjs": {
    "system": "sim_magic",
@@ -13864,6 +13868,7 @@
    "system": "sim_npc",
    "imports": [
     "server-plugin/hazard-calendar.mjs",
+    "server-plugin/storage.mjs",
     "server-plugin/wildlife-awakening.mjs",
     "server-plugin/world-events.mjs"
    ],
@@ -13886,7 +13891,7 @@
     "households"
    ],
    "worldDirs": [],
-   "lines": 193
+   "lines": 194
   },
   "server-plugin/npc-life.mjs": {
    "system": "sim_npc",
@@ -14009,6 +14014,7 @@
   "server-plugin/npc-relations.mjs": {
    "system": "sim_npc",
    "imports": [
+    "server-plugin/storage.mjs",
     "server-plugin/world-events.mjs"
    ],
    "stateWrites": [
@@ -14028,7 +14034,7 @@
     "npcs"
    ],
    "worldDirs": [],
-   "lines": 135
+   "lines": 136
   },
   "server-plugin/npc-rumors.mjs": {
    "system": "sim_npc",
@@ -14063,7 +14069,8 @@
     "server-plugin/festival.mjs",
     "server-plugin/magic-mind-space.mjs",
     "server-plugin/magic-water-earth.mjs",
-    "server-plugin/npc-state.mjs"
+    "server-plugin/npc-state.mjs",
+    "server-plugin/weather.mjs"
    ],
    "stateWrites": [],
    "stateReads": [
@@ -14080,7 +14087,7 @@
     "npcs"
    ],
    "worldDirs": [],
-   "lines": 139
+   "lines": 143
   },
   "server-plugin/npc-state.mjs": {
    "system": "sim_npc",
@@ -15011,7 +15018,7 @@
    "rules": [],
    "world": [],
    "worldDirs": [],
-   "lines": 270
+   "lines": 406
   },
   "server-plugin/summons.mjs": {
    "system": "sim_companion",
@@ -15286,7 +15293,7 @@
     "rules"
    ],
    "worldDirs": [],
-   "lines": 122
+   "lines": 145
   },
   "server-plugin/wildlife-awakening.mjs": {
    "system": "sim_wildlife",
