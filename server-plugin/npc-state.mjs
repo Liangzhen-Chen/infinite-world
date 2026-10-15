@@ -1,6 +1,6 @@
 // Only active catalog people are instantiated. Faction rosters and profile
 // prose never become money, inventory or private knowledge in a campaign.
-import {personConstraint,personCareer,personRoutine,personLawRoles} from './entity-view.mjs';
+import {personConstraint,personCareer,personRoutine,personLawRoles,personEmployment} from './entity-view.mjs';
 export function initialNpcState(npc,{newCharacter=false}={}){
     return{id:npc.id,name:npc.name,location:npc.location,coins:npc.coins??0,
         ...(npc.species?{species:npc.species}:{}),...(npc.society?{society:npc.society}:{}),
@@ -28,13 +28,27 @@ export function npcSchedule(engine,state,id,minute=state?.minute,constraints=nul
     if(care&&base)return {default:[{start:0,end:1440,location:care.location,activity:'照护病人',services:[]}]};
     // U12: a levied villager serves at the army's camp until released.
     if(own?.levy)return {default:[{start:0,end:1440,location:own.levy.location,activity:'服役',services:[]}]};
-    const routine=state&&personRoutine(engine,state,id,constraints);if(routine)return routine;
+    const employed=state&&personEmployment(engine,state,id,minute)?.value;
+    const job=employed&&!employed.education&&['有效','要求加薪'].includes(employed.status)&&Math.floor(employed.starts/1440)<=Math.floor(minute/1440)?employed:null;
+    if(job){
+        const home=npcHousehold(engine,state,id)?.homeLocation??engine.byId.get(id)?.home?.location??job.location;
+        const slot=(start,end,location,activity)=>({start,end,location,activity,services:[]});
+        const activity=job.task??'受雇工坊生产',work=job.workMinutes??480,end=480+work+60;
+        return {default:[slot(0,480,home,'睡眠与休息'),slot(480,720,job.location,activity),slot(720,780,job.location,'午间休息'),slot(780,end+1,job.location,activity),slot(end+1,1440,home,'家务与休息')],
+            restDays:base?.restDays??[],rest:[slot(0,1440,home,'休息')]};
+    }
+    const routine=state&&personRoutine(engine,state,id,constraints);
     // A move (npc-life) remaps home and work; a later change of livelihood is
     // built from that new home and then takes precedence.
     const residence=own?.residence;
-    if(residence&&base&&!(own.vocation&&own.vocation.since>residence.since))return residence.schedule;
-    return own?.vocation?.schedule??base;
+    const schedule=routine??(residence&&base&&!(own.vocation&&own.vocation.since>residence.since)?residence.schedule:own?.vocation?.schedule??base);
+    const lease=activeRental(state,id,minute);
+    if(!lease||!schedule)return schedule;
+    const prior=lease.use==='home'?lease.oldHome:engine.byId.get(id)?.workplace?.location;
+    const remap=value=>Array.isArray(value)?value.map(remap):value&&typeof value==='object'?Object.fromEntries(Object.entries(value).map(([k,v])=>[k,k==='location'&&v===prior?lease.subject:remap(v)])):value;
+    return remap(schedule);
 }
+export const activeRental=(state,id,minute=state?.minute)=>Object.values(state?.records??{}).find(r=>r.kind==='asset_lease'&&r.tenant===id&&r.status==='有效'&&r.createdAt<=minute&&minute<r.deadline);
 export function npcServices(engine,state,id){
     if(state&&personConstraint(engine,state,id))return [];
     return personCareer(engine,state??{},id).value.services.filter(service=>{
@@ -55,16 +69,30 @@ export function npcAgeAt(engine,state,id,minute=state.minute){
  return Number.isFinite(person.age)?person.age+Math.floor(minute/YEAR):null;
 }
 const leftOf=(state,houseId)=>state.family?.households?.[houseId]?.left??[];
+// Lifetime is one elapsed-time event; the world is fixed and created entities
+// are indexed by the current immutable branch, never by a person's old home.
+export function beginHouseholdReads(engine){
+ const byId=new Map(),byMember=new Map();
+ for(const h of engine.world.households??[]){if(!byId.has(h.id))byId.set(h.id,h);for(const id of h.members){const rows=byMember.get(id)??[];rows.push(h);byMember.set(id,rows);}}
+ return {byId,byMember,created:null,population:null};
+}
 export function householdDefinition(engine,state,houseId){
- const authored=engine.world.households?.find(h=>h.id===houseId);if(authored)return authored;
- const people=Object.values(state.created??{}).filter(p=>p.generated==='population'&&p.householdId===houseId);
+ const split=state.family?.households?.[houseId];if(split?.homeLocation&&split?.settlement)return split;
+ const cache=engine.advanceHouseholds,authored=cache?cache.byId.get(houseId):engine.world.households?.find(h=>h.id===houseId);if(authored)return authored;
+ if(cache&&cache.created!==state.created){
+  cache.created=state.created;cache.population=new Map();
+  for(const p of Object.values(state.created??{}))if(p.generated==='population'){const rows=cache.population.get(p.householdId)??[];rows.push(p);cache.population.set(p.householdId,rows);}
+ }
+ const people=cache?(cache.population?.get(houseId)??[]):Object.values(state.created??{}).filter(p=>p.generated==='population'&&p.householdId===houseId);
  if(!people.length)return null;
  return {id:houseId,settlement:people[0].settlement,homeLocation:people[0].home?.location??people[0].home?.district,members:people.map(p=>p.id)};
 }
 export function npcHousehold(engine,state,id){
+ const rental=activeRental(state,id);if(rental?.use==='home')return {id:rental.id,settlement:rental.settlement,homeLocation:rental.subject,members:[id]};
  const entered=Object.entries(state.family?.households??{}).find(([,r])=>r.members?.includes(id))?.[0];
  const entity=state.created?.[id]??engine.byId.get(id);
- const house=entered?householdDefinition(engine,state,entered):(engine.world.households??[]).find(h=>h.members.includes(id)&&!leftOf(state,h.id).includes(id))??(entity?.householdId&&!leftOf(state,entity.householdId).includes(id)?householdDefinition(engine,state,entity.householdId):null);
+ const homes=engine.advanceHouseholds?engine.advanceHouseholds.byMember.get(id)??[]:engine.world.households??[];
+ const house=entered?householdDefinition(engine,state,entered):homes.find(h=>h.members.includes(id)&&!leftOf(state,h.id).includes(id))??(entity?.householdId&&!leftOf(state,entity.householdId).includes(id)?householdDefinition(engine,state,entity.householdId):null);
  return house?{id:house.id,settlement:house.settlement,homeLocation:house.homeLocation,members:householdMembers(engine,state,house.id)}:null;
 }
 export function householdMembers(engine,state,houseId){

@@ -1,3 +1,5 @@
+import {facilityView,isFacility} from './facility-state.mjs';
+import {applyInteraction} from './interactions.mjs';
 import {registerMagicEffect}from'./magic-effects.mjs';
 import {inspectCare}from'./magic-care.mjs';
 import {inspectMindSpace,inspectMindCarrier,assertMindSpacePath,unlockMindSpaceDoor,assertMindAwake}from'./magic-mind-space.mjs';
@@ -12,7 +14,7 @@ import {opticalSightClear,opticalVisibility,inspectLight,normalLightAction,asser
 
 const integer=(value,min,max,label)=>{if(!Number.isSafeInteger(value)||value<min||value>max)throw new Error(`${label}无效`);return value;};
 const key=id=>`physical_feature:${id}`;
-export const environmentFeatures=engine=>engine.world.locations.flatMap(place=>(place.features??[]).map(feature=>({...feature,location:place.id})));
+export const environmentFeatures=engine=>engine.advanceFeatures??engine.world.locations.flatMap(place=>(place.features??[]).map(feature=>({...feature,location:place.id})));
 function feature(engine,name,location){
     const matches=environmentFeatures(engine).filter(row=>row.id===name||row.location===location&&[row.name,...row.aliases??[]].some(label=>normalize(label)===normalize(name??'')));
     if(matches.length!==1)throw new Error(matches.length?'环境对象称呼有歧义':'环境对象未登记');return matches[0];
@@ -173,6 +175,16 @@ export function applyEnvironmentMagic(d,prepared,eventId){
 
 export function interactEnvironment(d,args,eventId){
     const location=d.get('state','location'),operation=args.operation??'inspect';
+    const building=args.target&&(d.get('state','created',args.target)??this.byId.get(args.target));
+    if(isFacility(building)){
+        if(building.id!==location&&building.parent!==location)throw Error('建筑不在近旁');
+        if(operation==='inspect')return {facility:facilityView(this,d.get('state'),building.id),actionScope:{kind:'instant',instantaneous:true}};
+        if(operation==='douse_fire'){
+            if(this.quantity(d,'player','item_water')<1)throw Error('没有可用来灭火的水');
+            this.itemDelta(d,'player','item_water',-1);
+            const changed=applyInteraction(d,this,{agent:'water',target:building.id});this.advance(d,1,eventId);return {target:building.id,...changed,minutes:1};
+        }
+    }
     const lightAction=normalLightAction.call(this,d,args);if(lightAction)return lightAction;
     if(['turn_grain','sound','fall','breathe'].includes(operation))return airEnvironmentAction.call(this,d,args,eventId);
     if(operation==='inspect'){

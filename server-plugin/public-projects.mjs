@@ -3,6 +3,9 @@ import {playerOffices,spendPublic,refundPublic,authorityOf} from './governance.m
 import {milestone} from './progression.mjs';
 import {npcHousehold,npcAgeAt} from './npc-life.mjs';
 import {changeItems} from './items.mjs';
+import {prepareFacilityProject} from './facility-state.mjs';
+import {completeFacilityProject} from './facilities.mjs';
+import {currentEmployment,employmentReservation} from './employment-state.mjs';
 
 // T125 public works. A sitting official (works deputy or village head) starts
 // a project in their own village: materials leave the village stock and the
@@ -20,41 +23,49 @@ function within(engine,location,place){const seen=new Set();while(location&&!see
 
 export const isPublicProject=p=>p?.type==='工程'&&Boolean(p.public);
 export function startPublicProject(d,engine,args,eventId,settlement){
-    const state=d.get('state'),offices=playerOffices(state,{settlement,power:'public_project'},engine);
-    if(!offices.length)throw Error('没有在任官职授予本村公共工程权限');
+    if(args.funding!==undefined&&!['private','public'].includes(args.funding))throw Error('工程出资须为private或public');
+    const state=d.get('state'),privateFunding=args.funding==='private',offices=playerOffices(state,{settlement,power:'public_project'},engine);
+    if(!privateFunding&&!offices.length)throw Error('没有在任官职授予本村公共工程权限');
     const name=text(args.name),days=int(args.days,1,365,'工期'),wood=int(args.wood??0,0,10000,'木料'),stone=int(args.stone??0,0,10000,'石料');
-    const location=engine.resolve(args.plot??settlement);
+    const plan=prepareFacilityProject(engine,state,args,settlement),location=plan.location;
+    if(privateFunding&&!plan.building&&plan.facilityType==='house')throw Error('私人住宅新建须使用本人宅基批文');
+    const owner=plan.building?(state.buildings?.[plan.building]?.owner??state.created?.[plan.building]?.owner??engine.byId.get(plan.building)?.owner):null;
+    if(plan.building&&owner!==(privateFunding?'player':settlement))throw Error('工程出资方没有该建筑的修缮扩建权');
+    if(privateFunding&&!plan.building&&(state.created?.[location]??engine.byId.get(location))?.owner!=='player')throw Error('私人新建须有本人名下场地；住宅使用宅基批文');
     if(!within(engine,location,settlement))throw Error('工程地点不在本村');
     const beneficiaries=args.beneficiaries??[settlement];
-    if(!beneficiaries.includes(settlement)||beneficiaries.includes('player'))throw Error('公款工程的受益人须为本村，不能是本人');
+    if(!privateFunding&&(!beneficiaries.includes(settlement)||beneficiaries.includes('player')))throw Error('公款工程的受益人须为本村，不能是本人');
     const workers=[...new Set((args.workers??[]).map(w=>engine.resolve(w,'npc')))].sort();
     if(!workers.length||workers.length>20)throw Error('需要1到20名实际做工的人');
+    if(days*workers.length<plan.requiredWork)throw Error('工程实际工时不足');
     for(const id of workers){
         const n=state.npcs[id];
+        if(currentEmployment(state,id))throw Error('做工的人已有未结束的雇佣排班');
         if(!awake(n)||n.location!==state.location)throw Error('做工的人须当面在场且清醒');
         if(npcHousehold(engine,state,id)?.settlement!==settlement||(npcAgeAt(engine,state,id)??0)<18)throw Error('做工的人须是本村成年住户');
     }
     if(args.consent!==true)throw Error('做工的人须当面同意工期与工钱');
     const row=state.settlements[settlement];
-    if((row.wood??0)<wood||(row.stone??0)<stone)throw Error('公共工程材料不足');
+    if(privateFunding){for(const [item,n]of [['item_wood',wood],['item_stone',stone]])if(n&&engine.quantity(d,'player',item)<n)throw Error('自备工程材料不足');}
+    else if((row.wood??0)<wood||(row.stone??0)<stone)throw Error('公共工程材料不足');
     const wage=authorityOf(engine).treasury.wagePerWorkerDayCopper,bill=wage*workers.length*days;
     const project=`project_${eventId}`;
-    const spend=spendPublic(d,engine,{settlement,copper:bill,power:'public_project',purpose:`工程工钱 ${name}`,sourceEvent:project});
-    d.set(['state','settlements',settlement,'wood'],row.wood-wood);if(stone)d.set(['state','settlements',settlement,'stone'],row.stone-stone);
+    let spend;
+    if(privateFunding){
+        if(state.player.coins<bill)throw Error('私人工程工钱不足');
+        for(const [item,n]of [['item_wood',wood],['item_stone',stone]])if(n)changeItems(d,engine,'player',item,-n);
+        d.set(['state','player','coins'],state.player.coins-bill);
+    }else{
+        spend=spendPublic(d,engine,{settlement,copper:bill,power:'public_project',purpose:`工程工钱 ${name}`,sourceEvent:project});
+        d.set(['state','settlements',settlement,'wood'],row.wood-wood);if(stone)d.set(['state','settlements',settlement,'stone'],row.stone-stone);
+    }
     const office=offices[0];
-    const p={id:project,type:'工程',creator:'player',name,settlement,location,remainingDays:days,days,wood,stone,status:'施工中',beneficiaries,sourceEvent:eventId,
-        public:{office:office.id,workers,wage,escrow:bill,month:spend.month,spend:spend.id,workedDays:0,labor:{},paid:{},lostDays:0},
-        civicApproval:{settlement,office:office.id,grantor:office.appointedBy,minute:state.minute,source:office.source}};
+    const p={id:project,type:'工程',creator:'player',name,settlement,location,remainingDays:days,days,wood,stone,status:'施工中',beneficiaries,sourceEvent:eventId,...plan,
+        public:{office:office?.id,workers,wage,escrow:bill,...(privateFunding?{payer:'player'}:{month:spend.month,spend:spend.id}),workedDays:0,labor:{},paid:{},lostDays:0},
+        ...(!privateFunding?{civicApproval:{settlement,office:office.id,grantor:office.appointedBy,minute:state.minute,source:office.source}}:{}),
+        ...(plan.requiredWork?{remainingWork:days*workers.length}:{})};
     d.set(['state','projects',project],p);
-    return {project,escrow:bill,note:'工钱已从公账押入工程，按实际做工日付给本人；材料已从公共库存拨出。'};
-}
-function facility(d,engine,p){
-    const id=`bld_built_${p.id.replace(/[^a-zA-Z0-9_-]/g,'_')}`;
-    if(d.get('state','created',id))return id;
-    d.set(['state','created',id],{id,name:p.name,aliases:[],type:'bld',scope:p.settlement,parent:p.location,owner:p.settlement,access:{mode:'public'},
-        purpose:'公共设施',builtProject:p.id,openHours:[0,1440]});
-    d.set(['state','buildings',id],{owner:p.settlement,condition:100,project:p.id});
-    return id;
+    return {project,escrow:bill,note:privateFunding?'自备材料与本人工钱已投入，按实际人工支付。':'工钱已从公账押入工程，按实际做工日付给本人；材料已从公共库存拨出。'};
 }
 function settleLabor(d,p,minute){
     for(const [npc,days]of Object.entries(p.public.labor)){
@@ -65,42 +76,48 @@ function settleLabor(d,p,minute){
 function finish(d,engine,p,status,minute,eventId){
     const escrow=p.public.escrow;
     const next={...p,status,remainingDays:status==='已完成'?0:p.remainingDays,public:{...p.public,escrow:0},closedAt:minute};
-    if(escrow)refundPublic(d,{settlement:p.settlement,copper:escrow,month:p.public.month,purpose:`工程结余退回 ${p.name}`,sourceEvent:`${p.id}:refund`});
-    if(status==='已完成'){next.facility=facility(d,engine,p);}
+    if(escrow){if(p.public.payer)d.set(['state','player','coins'],d.get('state','player','coins')+escrow);
+    else refundPublic(d,{settlement:p.settlement,copper:escrow,month:p.public.month,purpose:`工程结余退回 ${p.name}`,sourceEvent:`${p.id}:refund`});}
+    if(status==='已完成'){next.facility=completeFacilityProject(d,engine,p,minute);}
     else{
         // Materials go in evenly over the planned days; the unused share returns.
-        const used=k=>Math.floor(p[k]*p.public.workedDays/p.days),back={wood:p.wood-used('wood'),stone:p.stone-used('stone')};
+        const fraction=p.remainingWork===undefined?p.public.workedDays/p.days:1-p.remainingWork/(p.days*p.public.workers.length);
+        const used=k=>Math.floor(p[k]*fraction),back={wood:p.wood-used('wood'),stone:p.stone-used('stone')};
         const s=d.get('state','settlements',p.settlement);
-        d.set(['state','settlements',p.settlement,'wood'],s.wood+back.wood);if(back.stone)d.set(['state','settlements',p.settlement,'stone'],(s.stone??0)+back.stone);
+        if(p.public.payer){for(const [item,n]of [['item_wood',back.wood],['item_stone',back.stone]])if(n)changeItems(d,engine,'player',item,n);}
+        else{d.set(['state','settlements',p.settlement,'wood'],s.wood+back.wood);if(back.stone)d.set(['state','settlements',p.settlement,'stone'],(s.stone??0)+back.stone);}
         next.returned={...back,copper:escrow};
     }
-    settleLabor(d,next,minute);
+    if(!p.public.payer)settleLabor(d,next,minute);
     d.set(['state','projects',p.id],next);
-    if(status==='已完成')milestone(d,engine,'publicContribution',p.id,eventId);
+    if(status==='已完成'&&!p.public.payer)milestone(d,engine,'publicContribution',p.id,eventId);
     return next;
 }
 export function abortPublicProject(d,engine,args){
     const p=d.get('state','projects',args.project);
     if(!isPublicProject(p))throw Error('没有这个公款工程');
     if(p.status!=='施工中')return {project:p.id,status:p.status,duplicate:true};
-    if(!playerOffices(d.get('state'),{settlement:p.settlement,power:'public_project'},engine).length)throw Error('没有在任官职可中止本村工程');
+    if(!p.public.payer&&!playerOffices(d.get('state'),{settlement:p.settlement,power:'public_project'},engine).length)throw Error('没有在任官职可中止本村工程');
     const row=finish(d,engine,p,'已中止',d.get('state','minute'));
     return {project:p.id,status:row.status,returned:row.returned};
 }
 // One step per elapsed midnight: able workers are paid and the work advances.
 export function advancePublicProjects(d,engine,{before,after,id}){
     for(let day=Math.floor(before/DAY);day<Math.floor(after/DAY);day++){
+        const worked=new Set(Object.values(d.get('state','projects')??{}).flatMap(p=>Object.entries(p.public?.lastPaidDay??{}).filter(([,at])=>at===day).map(([npc])=>npc)));
         for(const [key,p]of Object.entries(d.get('state','projects')??{}).sort(([a],[b])=>a.localeCompare(b))){
             if(!isPublicProject(p)||p.status!=='施工中')continue;
-            const state=d.get('state'),present=p.public.workers.filter(w=>able(state.npcs[w]));
+            const state=d.get('state'),present=p.building&&state.buildings?.[p.building]?.burning?[]:p.public.workers.filter(w=>!worked.has(w)&&able(state.npcs[w])&&!state.npcs[w].levy&&!state.npcs[w].caring&&!employmentReservation(state,w,day*DAY+480,540,engine.byId.get(w)?.schedule?.restDays??[])).slice(0,p.remainingWork??20);
             const pub=structuredClone(p.public);
             if(!present.length){pub.lostDays++;d.set(['state','projects',key],{...p,public:pub});continue;}
             for(const w of present){
                 d.set(['state','npcs',w,'coins'],(state.npcs[w].coins??0)+pub.wage);
                 pub.escrow-=pub.wage;pub.paid[w]=(pub.paid[w]??0)+pub.wage;pub.labor[w]=(pub.labor[w]??0)+1;
+                (pub.lastPaidDay??={})[w]=day;worked.add(w);
             }
             pub.workedDays++;
-            const next={...p,public:pub,remainingDays:p.remainingDays-1};
+            const remainingWork=p.remainingWork===undefined?undefined:p.remainingWork-present.length;
+            const next={...p,public:pub,remainingDays:remainingWork===undefined?p.remainingDays-1:Math.ceil(remainingWork/p.public.workers.length),...(remainingWork===undefined?{}:{remainingWork})};
             if(next.remainingDays<=0)finish(d,engine,next,'已完成',(day+1)*DAY,id);
             else d.set(['state','projects',key],next);
         }
@@ -175,6 +192,10 @@ function pay(d,who,settlement,copper){
 function handle(d,engine,r,at){
     const state=d.get('state'),a=state.records[r.authorization],plot=authorityOf(engine).plots[r.plot],returned=reason=>{d.set(rec(r.id),{...r,status:'已退回',decidedAt:at,reason});};
     const s=state.npcs[r.steward];
+    if(a?.employment){const job=state.records[a.employment];
+        if(!job?.domainSteward||job.worker!==r.steward||job.owner!==a.grantor||!['有效','要求加薪'].includes(job.status)||job.deadline<=at)return returned('管事雇佣已停止');
+        if(!job.shifts?.some(shift=>shift.minute===at&&shift.paid===shift.earned&&shift.paid>0)){d.set(rec(r.id),{...r,due:at+DAY});return;}
+    }
     // A steward who cannot work today leaves the file for tomorrow.
     if(!s||['死亡','濒死','昏迷','患病'].includes(s.status)){if(s?.status==='死亡')returned('管事已故，申请退回');else d.set(rec(r.id),{...r,due:r.due+DAY,delays:(r.delays??0)+1});return;}
     if(!a||a.revoked||a.expires<=at)return returned('管事授权已撤回或到期');
@@ -192,6 +213,9 @@ function handle(d,engine,r,at){
         feePaid:fee,annualRentCopper:plot.annualRentCopper,rentDue:at+YEAR,arrears:0,materials:plot.materials,buildDays:plot.buildDays,status:'已批准',approvedAt:at,application:r.id});
     d.set(rec(`housing_fee:${r.id}`),{category:'housing_fee',settlement:r.settlement,payer:r.applicant,copper:fee,kind:'宅基费',minute:at,permit,sourceEvent:r.id});
     d.set(rec(r.id),{...r,status:'已批准',decidedAt:at,permit});
+}
+export function processEmployedHousing(d,engine,contract,at){
+ for(const r of Object.values(d.get('state','records')??{}))if(r.category==='housing_application'&&r.status==='待管事办理'&&r.filedAt<=at&&d.get('state','records',r.authorization)?.employment===contract.id)handle(d,engine,r,at);
 }
 function collectRent(d,p,at){
     const state=d.get('state'),due=p.annualRentCopper+p.arrears;
@@ -215,13 +239,15 @@ export function advanceHousing(d,engine,{after}){
 // Construction is the holder's own: their materials, the plot's build days.
 export function startHouse(d,engine,args,eventId,permitId){
     const p=d.get(...rec(permitId)),state=d.get('state');
-    if(p?.category!=='housing_permit'||p.holder!=='player')throw Error('没有本人名下的宅基批文');
+    const holder=args.speaker&&args.speaker!=='player'?engine.resolve(args.speaker,'npc'):'player';
+    if(p?.category!=='housing_permit'||p.holder!==holder)throw Error('没有本人名下的宅基批文');
+    if(holder!=='player'&&(!awake(state.npcs[holder])||state.npcs[holder].location!==state.location||args.consent!==true))throw Error('建房人须本人在场同意');
     if(p.status!=='已批准')throw Error('这块宅基已开工或已收回');
     if(state.location!==p.location)throw Error('须到宅基所在地开工');
-    for(const [item,n]of [['item_wood',p.materials.wood],['item_stone',p.materials.stone]])if(n&&engine.quantity(d,'player',item)<n)throw Error('自备建房材料不足');
-    for(const [item,n]of [['item_wood',p.materials.wood],['item_stone',p.materials.stone]])if(n)changeItems(d,engine,'player',item,-n);
+    for(const [item,n]of [['item_wood',p.materials.wood],['item_stone',p.materials.stone]])if(n&&engine.quantity(d,holder,item)<n)throw Error('自备建房材料不足');
+    for(const [item,n]of [['item_wood',p.materials.wood],['item_stone',p.materials.stone]])if(n)changeItems(d,engine,holder,item,-n);
     const project=`project_${eventId}`;
-    d.set(['state','projects',project],{id:project,type:'建房',creator:'player',name:text(args.name??'自家宅屋'),settlement:p.settlement,location:p.location,permit:p.id,
+    d.set(['state','projects',project],{id:project,type:'建房',creator:holder,name:text(args.name??'自家宅屋'),settlement:p.settlement,location:p.location,permit:p.id,facilityType:'house',material:p.materials.stone>p.materials.wood?'stone':'wood',
         remainingDays:p.buildDays,days:p.buildDays,wood:p.materials.wood,stone:p.materials.stone,status:'施工中',sourceEvent:eventId});
     d.set(rec(p.id),{...p,status:'施工中',project});
     return {project,note:'自备材料已投入；按宅基工期逐日施工。'};
@@ -230,11 +256,12 @@ export function advanceHouses(d,engine,{before,after}){
     const days=Math.floor(after/DAY)-Math.floor(before/DAY);if(!days)return;
     for(const [key,p]of Object.entries(d.get('state','projects')??{}).sort(([a],[b])=>a.localeCompare(b))){
         if(p.type!=='建房'||p.status!=='施工中')continue;
-        const remainingDays=Math.max(0,p.remainingDays-days);
+        if(p.creator!=='player'&&(!able(d.get('state','npcs',p.creator))||d.get('state','npcs',p.creator,'levy')||d.get('state','npcs',p.creator,'caring')))continue;
+        const hired=Object.values(d.get('state','records')??{}).some(r=>r.laborMarket===1&&r.project===key);
+        const remainingDays=hired?Math.ceil(p.remainingWork??p.remainingDays):Math.max(0,p.remainingDays-days);
         if(remainingDays){d.set(['state','projects',key],{...p,remainingDays});continue;}
-        const id=`bld_house_${key.replace(/[^a-zA-Z0-9_-]/g,'_')}`;
-        d.set(['state','created',id],{id,name:p.name,aliases:[],type:'bld',scope:p.settlement,parent:p.location,owner:'player',access:{mode:'private'},purpose:'私宅',builtProject:key,openHours:[0,1440]});
-        d.set(['state','buildings',id],{owner:'player',condition:100,project:key,permit:p.permit});
+        const id=completeFacilityProject(d,engine,p);
+        d.set(['state','buildings',id,'permit'],p.permit);
         d.set(['state','projects',key],{...p,remainingDays:0,status:'已完成',facility:id});
         d.set(rec(p.permit),{...d.get(...rec(p.permit)),status:'已建成',building:id});
     }

@@ -17,15 +17,15 @@
  },
  "counts": {
   "layers": 6,
-  "systems": 38,
-  "modules": 182,
-  "advance": 45,
+  "systems": 40,
+  "modules": 217,
+  "advance": 57,
   "tools": 25,
   "verbs": 28,
-  "subscribers": 8,
+  "subscribers": 9,
   "interactionRules": 25,
-  "effectKinds": 19,
-  "links": 405
+  "effectKinds": 22,
+  "links": 474
  },
  "layers": [
   {
@@ -69,6 +69,8 @@
    "name": "模拟系统层",
    "reason": "各自持有 state 分区或 records 前缀的玩法系统。它们由工具分派驱动，或登记在推进表、订阅世界事件、实现效果类型，彼此主要通过底座和共享 records 交互。",
    "systems": [
+    "sim_transport",
+    "sim_faith",
     "sim_npc",
     "sim_character",
     "sim_combat",
@@ -111,6 +113,125 @@
  ],
  "systems": [
   {
+   "id": "sim_transport",
+   "name": "承运与驿传",
+   "layer": "sim",
+   "card": null,
+   "dir": null,
+   "modules": [
+    "server-plugin/transport.mjs",
+    "server-plugin/transport-route.mjs",
+    "server-plugin/post.mjs"
+   ],
+   "lines": 360,
+   "stateWrites": [
+    "creatures",
+    "itemInstances",
+    "location",
+    "npcs",
+    "quests",
+    "settlements"
+   ],
+   "stateReads": [
+    "minute",
+    "player",
+    "records"
+   ],
+   "recordWrites": [],
+   "recordReads": [
+    "post",
+    "transport",
+    "transport_asset"
+   ],
+   "rules": [
+    "petCare",
+    "quests",
+    "travel"
+   ],
+   "world": [
+    "routes",
+    "settlementProfiles"
+   ],
+   "advance": [
+    "transport",
+    "post"
+   ],
+   "subscribes": [],
+   "effects": [],
+   "tools": [
+    "world_trade"
+   ],
+   "readBy": []
+  },
+  {
+   "id": "sim_faith",
+   "name": "寺观与信仰",
+   "layer": "sim",
+   "card": null,
+   "dir": null,
+   "modules": [
+    "server-plugin/faith-catalog.mjs",
+    "server-plugin/faith-state.mjs",
+    "server-plugin/faith.mjs"
+   ],
+   "lines": 308,
+   "stateWrites": [
+    "effects",
+    "obligations"
+   ],
+   "stateReads": [
+    "careers",
+    "family",
+    "inventory",
+    "location",
+    "minute",
+    "npcs",
+    "player",
+    "records"
+   ],
+   "recordWrites": [],
+   "recordReads": [
+    "faction-clock",
+    "faith",
+    "household"
+   ],
+   "rules": [
+    "factionClock",
+    "law",
+    "training"
+   ],
+   "world": [
+    "deities",
+    "factions",
+    "items",
+    "locations",
+    "settlementProfiles"
+   ],
+   "advance": [
+    "faith_experience"
+   ],
+   "subscribes": [
+    {
+     "fn": "faithExperience",
+     "verbs": [
+      "deceive",
+      "harm",
+      "help",
+      "learn",
+      "organize"
+     ]
+    }
+   ],
+   "effects": [
+    "faith_claim",
+    "faith_omen"
+   ],
+   "tools": [
+    "world_settlement"
+   ],
+   "readBy": []
+  },
+  {
    "id": "data_meta",
    "name": "规则与目录",
    "layer": "data",
@@ -145,11 +266,13 @@
     "sim_companion",
     "sim_economy",
     "sim_environment",
+    "sim_faith",
     "sim_law",
     "sim_magic",
     "sim_military",
     "sim_npc",
     "sim_society",
+    "sim_transport",
     "sim_wildlife",
     "sim_works",
     "ui_scene",
@@ -176,6 +299,7 @@
    "effects": [],
    "tools": [],
    "readBy": [
+    "base_advance",
     "base_effects",
     "base_standing",
     "base_traits",
@@ -188,10 +312,13 @@
     "sim_clock",
     "sim_economy",
     "sim_environment",
+    "sim_faith",
+    "sim_law",
     "sim_magic",
     "sim_military",
     "sim_npc",
     "sim_society",
+    "sim_transport",
     "sim_wildlife",
     "sim_works",
     "ui_scene",
@@ -229,6 +356,7 @@
     "sim_clock",
     "sim_economy",
     "sim_environment",
+    "sim_law",
     "sim_military",
     "sim_npc",
     "sim_society",
@@ -258,14 +386,17 @@
     "base_effects",
     "base_standing",
     "kernel_engine",
+    "sim_character",
     "sim_clock",
+    "sim_economy",
     "sim_environment",
+    "sim_faith",
     "sim_military",
     "sim_npc",
     "sim_society",
     "ui_scene"
    ],
-   "files": 9
+   "files": 12
   },
   {
    "id": "data_design",
@@ -287,11 +418,14 @@
    "tools": [],
    "readBy": [
     "base_interactions",
+    "base_traits",
     "sim_clock",
+    "sim_economy",
     "sim_environment",
-    "sim_society"
+    "sim_society",
+    "sim_transport"
    ],
-   "files": 109
+   "files": 117
   },
   {
    "id": "data_assets",
@@ -333,7 +467,7 @@
    "effects": [],
    "tools": [],
    "readBy": [],
-   "files": 35
+   "files": 41
   },
   {
    "id": "kernel_engine",
@@ -347,7 +481,7 @@
     "server-plugin/campaign-reducer.mjs",
     "server-plugin/archived-reducer.mjs"
    ],
-   "lines": 960,
+   "lines": 1037,
    "stateWrites": [
     "combatDisengaged",
     "created",
@@ -371,6 +505,7 @@
    "stateReads": [
     "divinePermissions",
     "professions",
+    "remote",
     "spells"
    ],
    "recordWrites": [
@@ -541,13 +676,16 @@
    "modules": [
     "server-plugin/traits.mjs"
    ],
-   "lines": 151,
+   "lines": 159,
    "stateWrites": [],
    "stateReads": [
+    "buildings",
+    "created",
     "creatures",
     "inventory",
     "itemInstances",
-    "minute"
+    "minute",
+    "records"
    ],
    "recordWrites": [],
    "recordReads": [],
@@ -574,7 +712,7 @@
    "modules": [
     "server-plugin/interactions.mjs"
    ],
-   "lines": 111,
+   "lines": 119,
    "stateWrites": [
     "inventory",
     "records"
@@ -592,6 +730,7 @@
    "subscribes": [],
    "effects": [
     "environment",
+    "facility",
     "flood"
    ],
    "tools": [],
@@ -607,7 +746,7 @@
     "server-plugin/world-events.mjs",
     "server-plugin/entity-transitions.mjs"
    ],
-   "lines": 182,
+   "lines": 183,
    "stateWrites": [
     "records"
    ],
@@ -641,7 +780,7 @@
     "server-plugin/standing.mjs",
     "server-plugin/entity-view.mjs"
    ],
-   "lines": 581,
+   "lines": 610,
    "stateWrites": [
     "records"
    ],
@@ -665,6 +804,7 @@
    "recordReads": [
     "ecology",
     "faction-assets",
+    "family",
     "organization",
     "physical_feature",
     "reputation",
@@ -677,6 +817,7 @@
     "npcGrowth",
     "questSources",
     "reputation",
+    "training",
     "wildlife"
    ],
    "world": [
@@ -719,9 +860,10 @@
    "card": "K6",
    "dir": null,
    "modules": [
-    "server-plugin/effects.mjs"
+    "server-plugin/effects.mjs",
+    "server-plugin/effect-registry.mjs"
    ],
-   "lines": 195,
+   "lines": 211,
    "stateWrites": [
     "npcs",
     "records"
@@ -755,6 +897,7 @@
     "awaken",
     "awakening",
     "environment",
+    "facility",
     "regional_quote",
     "rumor",
     "standing",
@@ -768,12 +911,13 @@
    "id": "base_advance",
    "name": "推进注册表",
    "layer": "base",
-   "card": "K7",
+   "card": "K7/P3",
    "dir": null,
    "modules": [
-    "server-plugin/advance-registry.mjs"
+    "server-plugin/advance-registry.mjs",
+    "server-plugin/advance-layers.mjs"
    ],
-   "lines": 176,
+   "lines": 268,
    "stateWrites": [
     "effects",
     "obligations",
@@ -783,7 +927,9 @@
    ],
    "stateReads": [
     "location",
-    "player"
+    "npcs",
+    "player",
+    "remote"
    ],
    "recordWrites": [],
    "recordReads": [
@@ -797,7 +943,9 @@
     "worldClock"
    ],
    "world": [
-    "npcs"
+    "locations",
+    "npcs",
+    "regions"
    ],
    "advance": [
     "local_actor_positions",
@@ -842,7 +990,7 @@
     "server-plugin/population-service.mjs",
     "server-plugin/settlement-profile.mjs"
    ],
-   "lines": 3076,
+   "lines": 3271,
    "stateWrites": [
     "created",
     "creatures",
@@ -863,15 +1011,15 @@
     "workshopFunds"
    ],
    "stateReads": [
-    "buildings",
     "location",
     "minute",
     "npcPlanning",
-    "skills"
+    "remote"
    ],
    "recordWrites": [],
    "recordReads": [
     "agriculture",
+    "post",
     "rumor_lie",
     "village-fiscal",
     "village-trade",
@@ -922,6 +1070,7 @@
     {
      "fn": "recordNpcMemories",
      "verbs": [
+      "breach",
       "cast",
       "clash",
       "duel",
@@ -967,12 +1116,18 @@
     "server-plugin/progression.mjs",
     "server-plugin/professions.mjs",
     "server-plugin/career-metrics.mjs",
+    "server-plugin/hidden-passives.mjs",
+    "server-plugin/spell-research.mjs",
     "server-plugin/training.mjs",
     "server-plugin/learning.mjs",
+    "server-plugin/education.mjs",
+    "server-plugin/education-state.mjs",
+    "server-plugin/education-cohorts.mjs",
+    "server-plugin/local-exams.mjs",
     "server-plugin/checks.mjs",
     "server-plugin/revival.mjs"
    ],
-   "lines": 759,
+   "lines": 1380,
    "stateWrites": [
     "careerCooldowns",
     "careerFunds",
@@ -998,6 +1153,7 @@
     "discoveries",
     "effects",
     "inventory",
+    "itemInstances",
     "minute",
     "projects",
     "records",
@@ -1005,27 +1161,44 @@
    ],
    "recordWrites": [],
    "recordReads": [
-    "physical_feature"
+    "education_cohort",
+    "education_qualification_source",
+    "organization",
+    "physical_feature",
+    "temple"
    ],
    "rules": [
     "attributes",
     "books",
     "check",
     "death",
+    "education",
     "equipment",
+    "governance",
     "levels",
     "magic",
-    "training"
+    "npcGrowth",
+    "petCare",
+    "training",
+    "wildlife"
    ],
    "world": [
     "bosses",
     "careers",
+    "factions",
+    "households",
     "locations",
     "npcs",
-    "professions"
+    "professions",
+    "residents",
+    "settlementProfiles",
+    "skills",
+    "spells"
    ],
    "advance": [
-    "projects"
+    "education_enrollment",
+    "projects",
+    "education"
    ],
    "subscribes": [
     {
@@ -1050,6 +1223,7 @@
     "world_promise",
     "world_combat",
     "world_research",
+    "world_settlement",
     "world_create"
    ],
    "readBy": []
@@ -1259,7 +1433,7 @@
     "server-plugin/pets.mjs",
     "server-plugin/summons.mjs"
    ],
-   "lines": 447,
+   "lines": 448,
    "stateWrites": [
     "creatures",
     "effects",
@@ -1310,7 +1484,7 @@
     "server-plugin/regions.mjs",
     "server-plugin/remote-generation.mjs"
    ],
-   "lines": 1606,
+   "lines": 1640,
    "stateWrites": [
     "npcs",
     "records",
@@ -1318,6 +1492,7 @@
     "settlements"
    ],
    "stateReads": [
+    "created",
     "effects",
     "location",
     "minute",
@@ -1407,7 +1582,7 @@
     "server-plugin/magic-water-earth.mjs",
     "server-plugin/magic.mjs"
    ],
-   "lines": 3788,
+   "lines": 3793,
    "stateWrites": [
     "creatures",
     "discoveries",
@@ -1431,6 +1606,7 @@
    ],
    "recordWrites": [
     "air_heard",
+    "air_weather",
     "anchor_cargo",
     "corrosion_trace",
     "counter_contract",
@@ -1497,18 +1673,26 @@
     "server-plugin/business.mjs",
     "server-plugin/contracts.mjs",
     "server-plugin/credit.mjs",
+    "server-plugin/finance-bank.mjs",
+    "server-plugin/finance-assets.mjs",
+    "server-plugin/finance-tax.mjs",
+    "server-plugin/finance-operations.mjs",
+    "server-plugin/labor-market.mjs",
+    "server-plugin/employment-state.mjs",
     "server-plugin/settlement-trade.mjs",
     "server-plugin/manufacturing.mjs",
     "server-plugin/repair.mjs",
+    "server-plugin/magic-economy.mjs",
     "server-plugin/extraction.mjs",
     "server-plugin/smuggling.mjs"
    ],
-   "lines": 1620,
+   "lines": 2861,
    "stateWrites": [
     "crafted",
     "itemInstances",
     "npcs",
     "player",
+    "projects",
     "quotes",
     "records",
     "settlements",
@@ -1517,21 +1701,31 @@
    ],
    "stateReads": [
     "buildings",
+    "created",
     "creatures",
     "inventory",
     "location",
     "minute",
+    "npcAutonomy",
+    "obligations",
     "recipes"
    ],
    "recordWrites": [
     "agriculture",
+    "magic-levy",
     "quote",
     "settlement-trade",
     "village-fiscal"
    ],
    "recordReads": [
+    "bank",
+    "domain-tax",
     "levy",
-    "physical_feature"
+    "magic-economy",
+    "organization",
+    "physical_feature",
+    "shop",
+    "territory"
    ],
    "rules": [
     "agriculture",
@@ -1540,7 +1734,7 @@
     "equipment",
     "extraction",
     "forestWater",
-    "law",
+    "magicEconomy",
     "repairs",
     "settlementTrade",
     "smuggling",
@@ -1548,28 +1742,37 @@
     "wildlife"
    ],
    "world": [
+    "factions",
+    "households",
     "items",
     "locations",
     "monsters",
     "npcs",
+    "recipes",
     "routes",
     "rules",
     "settlementProfiles"
    ],
    "advance": [
     "contracts",
+    "labor_market",
     "credit",
+    "daily",
     "settlement_trade",
     "shop_restock",
+    "magic_economy",
     "shadow_contracts"
    ],
    "subscribes": [],
    "effects": [
-    "regional_quote"
+    "crop_damage",
+    "regional_quote",
+    "trade"
    ],
    "tools": [
     "world_trade",
     "world_move",
+    "world_cast",
     "world_combat",
     "world_craft",
     "world_settlement",
@@ -1587,7 +1790,7 @@
    "modules": [
     "server-plugin/agriculture.mjs"
    ],
-   "lines": 327,
+   "lines": 333,
    "stateWrites": [
     "player",
     "records",
@@ -1607,7 +1810,6 @@
    ],
    "rules": [
     "agriculture",
-    "law",
     "magicGrowth",
     "weather"
    ],
@@ -1637,6 +1839,11 @@
    "card": null,
    "dir": null,
    "modules": [
+    "server-plugin/family-state.mjs",
+    "server-plugin/family-politics.mjs",
+    "server-plugin/family-inheritance.mjs",
+    "server-plugin/family-law.mjs",
+    "server-plugin/family-diplomacy.mjs",
     "server-plugin/monster-society.mjs",
     "server-plugin/reputation.mjs",
     "server-plugin/reputation-registry.mjs",
@@ -1649,7 +1856,12 @@
     "server-plugin/civic.mjs",
     "server-plugin/governance.mjs",
     "server-plugin/public-projects.mjs",
+    "server-plugin/facilities.mjs",
+    "server-plugin/facility-state.mjs",
     "server-plugin/titles.mjs",
+    "server-plugin/noble-state.mjs",
+    "server-plugin/high-nobility.mjs",
+    "server-plugin/nation-founding.mjs",
     "server-plugin/notables.mjs",
     "server-plugin/promotion.mjs",
     "server-plugin/promotion-view.mjs",
@@ -1659,11 +1871,12 @@
     "server-plugin/tribal-awakening.mjs",
     "server-plugin/elections.mjs"
    ],
-   "lines": 3654,
+   "lines": 4756,
    "stateWrites": [
     "buildings",
     "created",
     "creatures",
+    "family",
     "npcs",
     "obligations",
     "player",
@@ -1696,9 +1909,17 @@
    "recordReads": [
     "civic_citizen",
     "civic_resident",
+    "diplomacy",
+    "facility_region",
     "faction-assets",
+    "family",
+    "military_service",
+    "nation",
     "society_motion",
     "stance",
+    "temple",
+    "territory",
+    "title",
     "village-fiscal",
     "war"
    ],
@@ -1710,10 +1931,13 @@
     "law",
     "levels",
     "military",
+    "npcLife",
     "questSources",
     "quests",
     "reputation",
+    "training",
     "tribalAwakening",
+    "warDiplomacy",
     "wildlife",
     "wildlifeAwakening"
    ],
@@ -1726,22 +1950,28 @@
     "locations",
     "monsters",
     "npcs",
+    "regions",
     "residents",
+    "routes",
     "rules",
     "settlementProfiles"
    ],
    "advance": [
+    "facilities",
     "projects",
     "public_projects",
     "office_salaries",
     "governance_offices",
     "housing_steward",
+    "upper_appointments",
     "titles",
     "notables",
     "promotion",
     "organizations",
     "tribal_awakening",
     "quest_sources",
+    "royal_service",
+    "nations",
     "society_news"
    ],
    "subscribes": [
@@ -1755,6 +1985,8 @@
     }
    ],
    "effects": [
+    "facility",
+    "flood",
     "quest_post",
     "standing"
    ],
@@ -1777,7 +2009,7 @@
     "server-plugin/military.mjs",
     "server-plugin/war-diplomacy.mjs"
    ],
-   "lines": 664,
+   "lines": 676,
    "stateWrites": [
     "npcs",
     "player",
@@ -1838,7 +2070,7 @@
     "server-plugin/seasonal-hazards.mjs",
     "server-plugin/hazard-calendar.mjs"
    ],
-   "lines": 1033,
+   "lines": 1055,
    "stateWrites": [
     "family",
     "npcs",
@@ -1867,6 +2099,7 @@
     "hazard-yield",
     "quote",
     "society_motion",
+    "temple",
     "world-clock"
    ],
    "rules": [
@@ -1929,9 +2162,12 @@
    "dir": null,
    "modules": [
     "server-plugin/law.mjs",
+    "server-plugin/law-codes.mjs",
+    "server-plugin/legal-representation.mjs",
+    "server-plugin/npc-crime.mjs",
     "server-plugin/bounty.mjs"
    ],
-   "lines": 828,
+   "lines": 1182,
    "stateWrites": [
     "itemInstances",
     "location",
@@ -1942,21 +2178,34 @@
    "stateReads": [
     "inventory",
     "minute",
-    "records"
+    "records",
+    "remote"
    ],
    "recordWrites": [],
    "recordReads": [
+    "diplomacy",
+    "legal_case",
     "legal_dismissal"
    ],
    "rules": [
     "economy",
     "law",
-    "quests"
+    "magicEconomy",
+    "quests",
+    "smuggling"
    ],
-   "world": [],
+   "world": [
+    "locations",
+    "npcs",
+    "regions",
+    "residents",
+    "rules",
+    "settlementProfiles"
+   ],
    "advance": [
     "law",
-    "bounty"
+    "bounty",
+    "npc_crime"
    ],
    "subscribes": [],
    "effects": [],
@@ -1975,7 +2224,7 @@
    "modules": [
     "server-plugin/works.mjs"
    ],
-   "lines": 262,
+   "lines": 268,
    "stateWrites": [
     "created",
     "fusionAttempts",
@@ -2018,7 +2267,7 @@
    "modules": [
     "extension/tools.mjs"
    ],
-   "lines": 111,
+   "lines": 125,
    "stateWrites": [],
    "stateReads": [],
    "recordWrites": [],
@@ -2039,10 +2288,11 @@
    "dir": null,
    "modules": [
     "server-plugin/scene-card.mjs",
+    "server-plugin/prompt-scope.mjs",
     "server-plugin/state-notices.mjs",
     "server-plugin/return-summary.mjs"
    ],
-   "lines": 428,
+   "lines": 453,
    "stateWrites": [
     "visits"
    ],
@@ -2099,7 +2349,7 @@
     "server-plugin/ui-overview.mjs",
     "server-plugin/ui-personal.mjs"
    ],
-   "lines": 652,
+   "lines": 653,
    "stateWrites": [],
    "stateReads": [
     "created",
@@ -2287,7 +2537,7 @@
     "server-plugin/catalog.mjs",
     "server-plugin/chronicle.mjs"
    ],
-   "lines": 416,
+   "lines": 428,
    "stateWrites": [],
    "stateReads": [
     "careerMetrics",
@@ -2309,7 +2559,8 @@
    "world": [
     "careers",
     "locations",
-    "routes"
+    "routes",
+    "settlementProfiles"
    ],
    "advance": [],
    "subscribes": [],
@@ -2353,6 +2604,8 @@
    "to": "sim_character",
    "kind": "advance",
    "labels": [
+    "education",
+    "education_enrollment",
     "projects"
    ]
   },
@@ -2385,6 +2638,9 @@
    "labels": [
     "contracts",
     "credit",
+    "daily",
+    "labor_market",
+    "magic_economy",
     "settlement_trade",
     "shadow_contracts",
     "shop_restock"
@@ -2400,11 +2656,20 @@
   },
   {
    "from": "base_advance",
+   "to": "sim_faith",
+   "kind": "advance",
+   "labels": [
+    "faith_experience"
+   ]
+  },
+  {
+   "from": "base_advance",
    "to": "sim_law",
    "kind": "advance",
    "labels": [
     "bounty",
-    "law"
+    "law",
+    "npc_crime"
    ]
   },
   {
@@ -2445,8 +2710,10 @@
    "to": "sim_society",
    "kind": "advance",
    "labels": [
+    "facilities",
     "governance_offices",
     "housing_steward",
+    "nations",
     "notables",
     "office_salaries",
     "organizations",
@@ -2454,9 +2721,20 @@
     "promotion",
     "public_projects",
     "quest_sources",
+    "royal_service",
     "society_news",
     "titles",
-    "tribal_awakening"
+    "tribal_awakening",
+    "upper_appointments"
+   ]
+  },
+  {
+   "from": "base_advance",
+   "to": "sim_transport",
+   "kind": "advance",
+   "labels": [
+    "post",
+    "transport"
    ]
   },
   {
@@ -2505,6 +2783,7 @@
    "to": "sim_character",
    "kind": "call",
    "labels": [
+    "education.mjs",
     "progression.mjs"
    ]
   },
@@ -2536,6 +2815,8 @@
    "labels": [
     "contracts.mjs",
     "credit.mjs",
+    "labor-market.mjs",
+    "magic-economy.mjs",
     "settlement-trade.mjs",
     "shop.mjs"
    ]
@@ -2550,11 +2831,20 @@
   },
   {
    "from": "base_advance",
+   "to": "sim_faith",
+   "kind": "call",
+   "labels": [
+    "faith.mjs"
+   ]
+  },
+  {
+   "from": "base_advance",
    "to": "sim_law",
    "kind": "call",
    "labels": [
     "bounty.mjs",
-    "law.mjs"
+    "law.mjs",
+    "npc-crime.mjs"
    ]
   },
   {
@@ -2595,8 +2885,11 @@
    "to": "sim_society",
    "kind": "call",
    "labels": [
+    "facilities.mjs",
     "governance.mjs",
+    "high-nobility.mjs",
     "monster-society.mjs",
+    "nation-founding.mjs",
     "notables.mjs",
     "office-salary.mjs",
     "organizations.mjs",
@@ -2605,6 +2898,15 @@
     "quest-sources.mjs",
     "titles.mjs",
     "tribal-awakening.mjs"
+   ]
+  },
+  {
+   "from": "base_advance",
+   "to": "sim_transport",
+   "kind": "call",
+   "labels": [
+    "post.mjs",
+    "transport.mjs"
    ]
   },
   {
@@ -2678,6 +2980,8 @@
    "to": "sim_society",
    "kind": "call",
    "labels": [
+    "facilities.mjs",
+    "facility-state.mjs",
     "reputation-registry.mjs"
    ]
   },
@@ -2740,6 +3044,15 @@
    ]
   },
   {
+   "from": "base_interactions",
+   "to": "sim_society",
+   "kind": "call",
+   "labels": [
+    "facilities.mjs",
+    "facility-state.mjs"
+   ]
+  },
+  {
    "from": "base_standing",
    "to": "base_events",
    "kind": "call",
@@ -2766,6 +3079,30 @@
   },
   {
    "from": "base_standing",
+   "to": "sim_character",
+   "kind": "call",
+   "labels": [
+    "hidden-passives.mjs"
+   ]
+  },
+  {
+   "from": "base_standing",
+   "to": "sim_economy",
+   "kind": "call",
+   "labels": [
+    "employment-state.mjs"
+   ]
+  },
+  {
+   "from": "base_standing",
+   "to": "sim_faith",
+   "kind": "call",
+   "labels": [
+    "faith-state.mjs"
+   ]
+  },
+  {
+   "from": "base_standing",
    "to": "sim_npc",
    "kind": "call",
    "labels": [
@@ -2778,7 +3115,9 @@
    "to": "sim_society",
    "kind": "call",
    "labels": [
+    "facility-state.mjs",
     "monster-society.mjs",
+    "noble-state.mjs",
     "organization-state.mjs",
     "promotion-view.mjs",
     "reputation-registry.mjs"
@@ -2793,10 +3132,19 @@
    ]
   },
   {
+   "from": "base_traits",
+   "to": "sim_society",
+   "kind": "call",
+   "labels": [
+    "facility-state.mjs"
+   ]
+  },
+  {
    "from": "kernel_engine",
    "to": "base_advance",
    "kind": "call",
    "labels": [
+    "advance-layers.mjs",
     "advance-registry.mjs"
    ]
   },
@@ -2863,10 +3211,13 @@
     "career-metrics.mjs",
     "character.mjs",
     "checks.mjs",
+    "education.mjs",
+    "hidden-passives.mjs",
     "learning.mjs",
     "professions.mjs",
     "progression.mjs",
-    "revival.mjs"
+    "revival.mjs",
+    "spell-research.mjs"
    ]
   },
   {
@@ -2908,7 +3259,10 @@
     "contracts.mjs",
     "credit.mjs",
     "extraction.mjs",
+    "finance-assets.mjs",
+    "finance-tax.mjs",
     "items.mjs",
+    "magic-economy.mjs",
     "manufacturing.mjs",
     "repair.mjs",
     "settlement-trade.mjs",
@@ -2930,10 +3284,19 @@
   },
   {
    "from": "kernel_engine",
+   "to": "sim_faith",
+   "kind": "call",
+   "labels": [
+    "faith.mjs"
+   ]
+  },
+  {
+   "from": "kernel_engine",
    "to": "sim_law",
    "kind": "call",
    "labels": [
-    "law.mjs"
+    "law.mjs",
+    "npc-crime.mjs"
    ]
   },
   {
@@ -2988,8 +3351,13 @@
    "labels": [
     "civic.mjs",
     "elections.mjs",
+    "facility-state.mjs",
+    "family-politics.mjs",
     "governance.mjs",
+    "high-nobility.mjs",
     "monster-society.mjs",
+    "nation-founding.mjs",
+    "noble-state.mjs",
     "notables.mjs",
     "organizations.mjs",
     "promotion.mjs",
@@ -2999,6 +3367,15 @@
     "quest-wildlife.mjs",
     "titles.mjs",
     "tribal-awakening.mjs"
+   ]
+  },
+  {
+   "from": "kernel_engine",
+   "to": "sim_transport",
+   "kind": "call",
+   "labels": [
+    "post.mjs",
+    "transport.mjs"
    ]
   },
   {
@@ -3025,6 +3402,7 @@
    "to": "ui_scene",
    "kind": "call",
    "labels": [
+    "prompt-scope.mjs",
     "return-summary.mjs",
     "scene-card.mjs",
     "state-notices.mjs"
@@ -3172,6 +3550,15 @@
   },
   {
    "from": "sim_agriculture",
+   "to": "sim_economy",
+   "kind": "call",
+   "labels": [
+    "employment-state.mjs",
+    "magic-economy.mjs"
+   ]
+  },
+  {
+   "from": "sim_agriculture",
    "to": "sim_environment",
    "kind": "call",
    "labels": [
@@ -3180,10 +3567,26 @@
   },
   {
    "from": "sim_agriculture",
+   "to": "sim_law",
+   "kind": "call",
+   "labels": [
+    "law-codes.mjs"
+   ]
+  },
+  {
+   "from": "sim_agriculture",
    "to": "sim_magic",
    "kind": "call",
    "labels": [
     "magic-growth.mjs"
+   ]
+  },
+  {
+   "from": "sim_agriculture",
+   "to": "sim_society",
+   "kind": "call",
+   "labels": [
+    "facility-state.mjs"
    ]
   },
   {
@@ -3280,6 +3683,14 @@
   },
   {
    "from": "sim_character",
+   "to": "base_advance",
+   "kind": "call",
+   "labels": [
+    "advance-layers.mjs"
+   ]
+  },
+  {
+   "from": "sim_character",
    "to": "base_standing",
    "kind": "call",
    "labels": [
@@ -3325,7 +3736,27 @@
    "to": "sim_economy",
    "kind": "call",
    "labels": [
-    "items.mjs"
+    "employment-state.mjs",
+    "finance-bank.mjs",
+    "items.mjs",
+    "labor-market.mjs"
+   ]
+  },
+  {
+   "from": "sim_character",
+   "to": "sim_faith",
+   "kind": "call",
+   "labels": [
+    "faith-catalog.mjs",
+    "faith.mjs"
+   ]
+  },
+  {
+   "from": "sim_character",
+   "to": "sim_magic",
+   "kind": "call",
+   "labels": [
+    "magic.mjs"
    ]
   },
   {
@@ -3336,7 +3767,17 @@
     "npc-growth.mjs",
     "npc-intelligence.mjs",
     "npc-schedule.mjs",
-    "npc-state.mjs"
+    "npc-state.mjs",
+    "population.mjs"
+   ]
+  },
+  {
+   "from": "sim_character",
+   "to": "sim_society",
+   "kind": "call",
+   "labels": [
+    "facility-state.mjs",
+    "organization-state.mjs"
    ]
   },
   {
@@ -3393,7 +3834,9 @@
    "to": "sim_economy",
    "kind": "call",
    "labels": [
-    "items.mjs"
+    "finance-tax.mjs",
+    "items.mjs",
+    "magic-economy.mjs"
    ]
   },
   {
@@ -3403,6 +3846,14 @@
    "labels": [
     "environment.mjs",
     "weather.mjs"
+   ]
+  },
+  {
+   "from": "sim_clock",
+   "to": "sim_faith",
+   "kind": "call",
+   "labels": [
+    "faith-catalog.mjs"
    ]
   },
   {
@@ -3421,6 +3872,7 @@
    "to": "sim_society",
    "kind": "call",
    "labels": [
+    "facility-state.mjs",
     "group-account.mjs",
     "reputation-registry.mjs"
    ]
@@ -3454,6 +3906,7 @@
    "to": "sim_character",
    "kind": "call",
    "labels": [
+    "hidden-passives.mjs",
     "professions.mjs",
     "progression.mjs"
    ]
@@ -3491,6 +3944,30 @@
    "labels": [
     "wildlife-awakening.mjs",
     "wildlife.mjs"
+   ]
+  },
+  {
+   "from": "sim_economy",
+   "to": "base_advance",
+   "kind": "call",
+   "labels": [
+    "advance-layers.mjs"
+   ]
+  },
+  {
+   "from": "sim_economy",
+   "to": "base_effects",
+   "kind": "call",
+   "labels": [
+    "effects.mjs"
+   ]
+  },
+  {
+   "from": "sim_economy",
+   "to": "base_events",
+   "kind": "call",
+   "labels": [
+    "world-events.mjs"
    ]
   },
   {
@@ -3549,8 +4026,8 @@
    "to": "sim_environment",
    "kind": "call",
    "labels": [
-    "sites.mjs",
-    "weather.mjs"
+    "regions.mjs",
+    "sites.mjs"
    ]
   },
   {
@@ -3559,6 +4036,7 @@
    "kind": "call",
    "labels": [
     "bounty.mjs",
+    "law-codes.mjs",
     "law.mjs"
    ]
   },
@@ -3576,6 +4054,7 @@
    "to": "sim_npc",
    "kind": "call",
    "labels": [
+    "npc-intelligence.mjs",
     "npc-schedule.mjs",
     "npc-state.mjs"
    ]
@@ -3585,9 +4064,23 @@
    "to": "sim_society",
    "kind": "call",
    "labels": [
+    "facility-state.mjs",
+    "group-account.mjs",
+    "high-nobility.mjs",
+    "noble-state.mjs",
     "organizations.mjs",
+    "promotion-view.mjs",
     "promotion.mjs",
     "reputation-registry.mjs"
+   ]
+  },
+  {
+   "from": "sim_economy",
+   "to": "sim_transport",
+   "kind": "call",
+   "labels": [
+    "transport-route.mjs",
+    "transport.mjs"
    ]
   },
   {
@@ -3675,6 +4168,14 @@
   },
   {
    "from": "sim_environment",
+   "to": "sim_law",
+   "kind": "call",
+   "labels": [
+    "law-codes.mjs"
+   ]
+  },
+  {
+   "from": "sim_environment",
    "to": "sim_magic",
    "kind": "call",
    "labels": [
@@ -3704,6 +4205,7 @@
    "to": "sim_society",
    "kind": "call",
    "labels": [
+    "facility-state.mjs",
     "monster-society.mjs"
    ]
   },
@@ -3719,11 +4221,58 @@
    ]
   },
   {
+   "from": "sim_faith",
+   "to": "base_effects",
+   "kind": "call",
+   "labels": [
+    "effects.mjs"
+   ]
+  },
+  {
+   "from": "sim_faith",
+   "to": "base_events",
+   "kind": "call",
+   "labels": [
+    "entity-transitions.mjs",
+    "world-events.mjs"
+   ]
+  },
+  {
+   "from": "sim_faith",
+   "to": "base_standing",
+   "kind": "call",
+   "labels": [
+    "entity-view.mjs",
+    "standing.mjs"
+   ]
+  },
+  {
+   "from": "sim_faith",
+   "to": "sim_npc",
+   "kind": "call",
+   "labels": [
+    "npc-growth.mjs",
+    "npc-obligations.mjs",
+    "npc-schedule.mjs",
+    "npc-state.mjs"
+   ]
+  },
+  {
+   "from": "sim_faith",
+   "to": "sim_society",
+   "kind": "call",
+   "labels": [
+    "group-account.mjs",
+    "organization-state.mjs"
+   ]
+  },
+  {
    "from": "sim_law",
    "to": "base_events",
    "kind": "call",
    "labels": [
-    "entity-transitions.mjs"
+    "entity-transitions.mjs",
+    "world-events.mjs"
    ]
   },
   {
@@ -3754,10 +4303,35 @@
   },
   {
    "from": "sim_law",
+   "to": "sim_clock",
+   "kind": "call",
+   "labels": [
+    "world-clock.mjs"
+   ]
+  },
+  {
+   "from": "sim_law",
+   "to": "sim_combat",
+   "kind": "call",
+   "labels": [
+    "combat.mjs"
+   ]
+  },
+  {
+   "from": "sim_law",
    "to": "sim_economy",
    "kind": "call",
    "labels": [
+    "finance-bank.mjs",
     "items.mjs"
+   ]
+  },
+  {
+   "from": "sim_law",
+   "to": "sim_environment",
+   "kind": "call",
+   "labels": [
+    "regions.mjs"
    ]
   },
   {
@@ -3766,7 +4340,9 @@
    "kind": "call",
    "labels": [
     "npc-cognition.mjs",
-    "npc-schedule.mjs"
+    "npc-intelligence.mjs",
+    "npc-schedule.mjs",
+    "npc-state.mjs"
    ]
   },
   {
@@ -3774,7 +4350,10 @@
    "to": "sim_society",
    "kind": "call",
    "labels": [
+    "family-law.mjs",
+    "noble-state.mjs",
     "organizations.mjs",
+    "promotion-view.mjs",
     "reputation.mjs"
    ]
   },
@@ -3832,6 +4411,7 @@
    "to": "sim_character",
    "kind": "call",
    "labels": [
+    "hidden-passives.mjs",
     "progression.mjs",
     "revival.mjs",
     "training.mjs"
@@ -3869,6 +4449,7 @@
    "to": "sim_law",
    "kind": "call",
    "labels": [
+    "law-codes.mjs",
     "law.mjs"
    ]
   },
@@ -3982,10 +4563,21 @@
    "to": "sim_society",
    "kind": "call",
    "labels": [
+    "facilities.mjs",
     "governance.mjs",
+    "group-account.mjs",
+    "nation-founding.mjs",
     "organizations.mjs",
     "titles.mjs",
     "tribal-awakening.mjs"
+   ]
+  },
+  {
+   "from": "sim_npc",
+   "to": "base_advance",
+   "kind": "call",
+   "labels": [
+    "advance-layers.mjs"
    ]
   },
   {
@@ -4027,6 +4619,9 @@
    "to": "sim_character",
    "kind": "call",
    "labels": [
+    "education-cohorts.mjs",
+    "education-state.mjs",
+    "hidden-passives.mjs",
     "professions.mjs"
    ]
   },
@@ -4054,6 +4649,7 @@
    "kind": "call",
    "labels": [
     "contracts.mjs",
+    "employment-state.mjs",
     "items.mjs",
     "manufacturing.mjs"
    ]
@@ -4083,10 +4679,23 @@
    "to": "sim_society",
    "kind": "call",
    "labels": [
+    "facility-state.mjs",
+    "family-diplomacy.mjs",
+    "family-inheritance.mjs",
+    "family-state.mjs",
     "governance.mjs",
     "public-opinion.mjs",
     "quest-board.mjs",
     "reputation.mjs"
+   ]
+  },
+  {
+   "from": "sim_npc",
+   "to": "sim_transport",
+   "kind": "call",
+   "labels": [
+    "post.mjs",
+    "transport.mjs"
    ]
   },
   {
@@ -4096,6 +4705,14 @@
    "labels": [
     "wildlife-awakening.mjs",
     "wildlife.mjs"
+   ]
+  },
+  {
+   "from": "sim_society",
+   "to": "base_advance",
+   "kind": "call",
+   "labels": [
+    "advance-layers.mjs"
    ]
   },
   {
@@ -4117,11 +4734,27 @@
   },
   {
    "from": "sim_society",
+   "to": "base_interactions",
+   "kind": "call",
+   "labels": [
+    "interactions.mjs"
+   ]
+  },
+  {
+   "from": "sim_society",
    "to": "base_standing",
    "kind": "call",
    "labels": [
     "entity-view.mjs",
     "standing.mjs"
+   ]
+  },
+  {
+   "from": "sim_society",
+   "to": "base_traits",
+   "kind": "call",
+   "labels": [
+    "traits.mjs"
    ]
   },
   {
@@ -4145,6 +4778,8 @@
    "to": "sim_character",
    "kind": "call",
    "labels": [
+    "education-state.mjs",
+    "local-exams.mjs",
     "progression.mjs"
    ]
   },
@@ -4163,7 +4798,10 @@
    "to": "sim_economy",
    "kind": "call",
    "labels": [
-    "items.mjs"
+    "employment-state.mjs",
+    "finance-tax.mjs",
+    "items.mjs",
+    "labor-market.mjs"
    ]
   },
   {
@@ -4171,7 +4809,17 @@
    "to": "sim_environment",
    "kind": "call",
    "labels": [
-    "remote-generation.mjs"
+    "regions.mjs",
+    "remote-generation.mjs",
+    "weather.mjs"
+   ]
+  },
+  {
+   "from": "sim_society",
+   "to": "sim_faith",
+   "kind": "call",
+   "labels": [
+    "faith-catalog.mjs"
    ]
   },
   {
@@ -4180,6 +4828,7 @@
    "kind": "call",
    "labels": [
     "bounty.mjs",
+    "law-codes.mjs",
     "law.mjs"
    ]
   },
@@ -4188,7 +4837,8 @@
    "to": "sim_military",
    "kind": "call",
    "labels": [
-    "military.mjs"
+    "military.mjs",
+    "war-diplomacy.mjs"
    ]
   },
   {
@@ -4201,8 +4851,10 @@
     "npc-intelligence.mjs",
     "npc-life.mjs",
     "npc-obligations.mjs",
+    "npc-relations.mjs",
     "npc-schedule.mjs",
-    "npc-state.mjs"
+    "npc-state.mjs",
+    "population.mjs"
    ]
   },
   {
@@ -4223,6 +4875,76 @@
    "kind": "call",
    "labels": [
     "works.mjs"
+   ]
+  },
+  {
+   "from": "sim_transport",
+   "to": "base_events",
+   "kind": "call",
+   "labels": [
+    "world-events.mjs"
+   ]
+  },
+  {
+   "from": "sim_transport",
+   "to": "base_standing",
+   "kind": "call",
+   "labels": [
+    "entity-view.mjs"
+   ]
+  },
+  {
+   "from": "sim_transport",
+   "to": "sim_clock",
+   "kind": "call",
+   "labels": [
+    "hazard-calendar.mjs"
+   ]
+  },
+  {
+   "from": "sim_transport",
+   "to": "sim_economy",
+   "kind": "call",
+   "labels": [
+    "finance-bank.mjs",
+    "finance-tax.mjs",
+    "items.mjs"
+   ]
+  },
+  {
+   "from": "sim_transport",
+   "to": "sim_environment",
+   "kind": "call",
+   "labels": [
+    "location-access.mjs",
+    "weather.mjs"
+   ]
+  },
+  {
+   "from": "sim_transport",
+   "to": "sim_magic",
+   "kind": "call",
+   "labels": [
+    "magic-water-earth.mjs"
+   ]
+  },
+  {
+   "from": "sim_transport",
+   "to": "sim_npc",
+   "kind": "call",
+   "labels": [
+    "npc-cognition.mjs",
+    "npc-obligations.mjs"
+   ]
+  },
+  {
+   "from": "sim_transport",
+   "to": "sim_society",
+   "kind": "call",
+   "labels": [
+    "facility-state.mjs",
+    "group-account.mjs",
+    "quest-sources.mjs"
    ]
   },
   {
@@ -4330,6 +5052,7 @@
    "kind": "call",
    "labels": [
     "career-metrics.mjs",
+    "education-state.mjs",
     "professions.mjs"
    ]
   },
@@ -4391,6 +5114,14 @@
   },
   {
    "from": "ui_scene",
+   "to": "base_advance",
+   "kind": "call",
+   "labels": [
+    "advance-layers.mjs"
+   ]
+  },
+  {
+   "from": "ui_scene",
    "to": "base_events",
    "kind": "call",
    "labels": [
@@ -4438,6 +5169,14 @@
    "labels": [
     "pets.mjs",
     "summons.mjs"
+   ]
+  },
+  {
+   "from": "ui_scene",
+   "to": "sim_economy",
+   "kind": "call",
+   "labels": [
+    "labor-market.mjs"
    ]
   },
   {
@@ -4602,6 +5341,7 @@
    "to": "ui_scene",
    "kind": "call",
    "labels": [
+    "prompt-scope.mjs",
     "state-notices.mjs"
    ]
   },
@@ -4616,7 +5356,24 @@
   },
   {
    "from": "data_design",
+   "to": "base_traits",
+   "kind": "data",
+   "labels": [
+    "transport-rules.mjs",
+    "world/design"
+   ]
+  },
+  {
+   "from": "data_design",
    "to": "sim_clock",
+   "kind": "data",
+   "labels": [
+    "world/design"
+   ]
+  },
+  {
+   "from": "data_design",
+   "to": "sim_economy",
    "kind": "data",
    "labels": [
     "world/design"
@@ -4638,6 +5395,23 @@
    "labels": [
     "m5-civic-rules.mjs",
     "world/design"
+   ]
+  },
+  {
+   "from": "data_design",
+   "to": "sim_transport",
+   "kind": "data",
+   "labels": [
+    "transport-rules.mjs",
+    "world/design"
+   ]
+  },
+  {
+   "from": "data_geo",
+   "to": "base_advance",
+   "kind": "data",
+   "labels": [
+    "world/geo"
    ]
   },
   {
@@ -4738,6 +5512,22 @@
   },
   {
    "from": "data_geo",
+   "to": "sim_faith",
+   "kind": "data",
+   "labels": [
+    "world/geo"
+   ]
+  },
+  {
+   "from": "data_geo",
+   "to": "sim_law",
+   "kind": "data",
+   "labels": [
+    "world/geo"
+   ]
+  },
+  {
+   "from": "data_geo",
    "to": "sim_magic",
    "kind": "data",
    "labels": [
@@ -4763,6 +5553,14 @@
   {
    "from": "data_geo",
    "to": "sim_society",
+   "kind": "data",
+   "labels": [
+    "world/geo"
+   ]
+  },
+  {
+   "from": "data_geo",
+   "to": "sim_transport",
    "kind": "data",
    "labels": [
     "world/geo"
@@ -4826,6 +5624,14 @@
   },
   {
    "from": "data_lore",
+   "to": "sim_character",
+   "kind": "data",
+   "labels": [
+    "world/lore"
+   ]
+  },
+  {
+   "from": "data_lore",
    "to": "sim_clock",
    "kind": "data",
    "labels": [
@@ -4834,7 +5640,23 @@
   },
   {
    "from": "data_lore",
+   "to": "sim_economy",
+   "kind": "data",
+   "labels": [
+    "world/lore"
+   ]
+  },
+  {
+   "from": "data_lore",
    "to": "sim_environment",
+   "kind": "data",
+   "labels": [
+    "world/lore"
+   ]
+  },
+  {
+   "from": "data_lore",
+   "to": "sim_faith",
    "kind": "data",
    "labels": [
     "world/lore"
@@ -5002,6 +5824,14 @@
   },
   {
    "from": "data_meta",
+   "to": "sim_faith",
+   "kind": "data",
+   "labels": [
+    "world/meta"
+   ]
+  },
+  {
+   "from": "data_meta",
    "to": "sim_law",
    "kind": "data",
    "labels": [
@@ -5035,6 +5865,14 @@
   {
    "from": "data_meta",
    "to": "sim_society",
+   "kind": "data",
+   "labels": [
+    "world/meta"
+   ]
+  },
+  {
+   "from": "data_meta",
+   "to": "sim_transport",
    "kind": "data",
    "labels": [
     "world/meta"
@@ -5162,6 +6000,14 @@
   },
   {
    "from": "data_people",
+   "to": "sim_law",
+   "kind": "data",
+   "labels": [
+    "world/people"
+   ]
+  },
+  {
+   "from": "data_people",
    "to": "sim_military",
    "kind": "data",
    "labels": [
@@ -5206,6 +6052,7 @@
    "kind": "effect",
    "labels": [
     "environment",
+    "facility",
     "flood"
    ]
   },
@@ -5249,7 +6096,9 @@
    "to": "sim_economy",
    "kind": "effect",
    "labels": [
-    "regional_quote"
+    "crop_damage",
+    "regional_quote",
+    "trade"
    ]
   },
   {
@@ -5259,6 +6108,15 @@
    "labels": [
     "environment",
     "flood"
+   ]
+  },
+  {
+   "from": "base_effects",
+   "to": "sim_faith",
+   "kind": "effect",
+   "labels": [
+    "faith_claim",
+    "faith_omen"
    ]
   },
   {
@@ -5274,6 +6132,8 @@
    "to": "sim_society",
    "kind": "effect",
    "labels": [
+    "facility",
+    "flood",
     "quest_post",
     "standing"
    ]
@@ -5290,6 +6150,22 @@
   },
   {
    "from": "sim_clock",
+   "to": "base_effects",
+   "kind": "effect",
+   "labels": [
+    "applyEffects"
+   ]
+  },
+  {
+   "from": "sim_economy",
+   "to": "base_effects",
+   "kind": "effect",
+   "labels": [
+    "applyEffects"
+   ]
+  },
+  {
+   "from": "sim_faith",
    "to": "base_effects",
    "kind": "effect",
    "labels": [
@@ -5334,6 +6210,14 @@
    "kind": "event",
    "labels": [
     "recordCareerMetrics"
+   ]
+  },
+  {
+   "from": "base_events",
+   "to": "sim_faith",
+   "kind": "event",
+   "labels": [
+    "faithExperience"
    ]
   },
   {
@@ -5591,10 +6475,26 @@
   },
   {
    "from": "sim_society",
+   "to": "sim_character",
+   "kind": "record",
+   "labels": [
+    "organization"
+   ]
+  },
+  {
+   "from": "sim_society",
    "to": "sim_clock",
    "kind": "record",
    "labels": [
     "ecology"
+   ]
+  },
+  {
+   "from": "sim_society",
+   "to": "sim_economy",
+   "kind": "record",
+   "labels": [
+    "organization"
    ]
   },
   {
@@ -5789,7 +6689,8 @@
     "world_profession",
     "world_promise",
     "world_research",
-    "world_revival"
+    "world_revival",
+    "world_settlement"
    ]
   },
   {
@@ -5823,6 +6724,7 @@
    "to": "sim_economy",
    "kind": "tool",
    "labels": [
+    "world_cast",
     "world_combat",
     "world_craft",
     "world_create",
@@ -5841,6 +6743,14 @@
     "world_field",
     "world_move",
     "world_promise"
+   ]
+  },
+  {
+   "from": "ui_tools",
+   "to": "sim_faith",
+   "kind": "tool",
+   "labels": [
+    "world_settlement"
    ]
   },
   {
@@ -5899,6 +6809,14 @@
   },
   {
    "from": "ui_tools",
+   "to": "sim_transport",
+   "kind": "tool",
+   "labels": [
+    "world_trade"
+   ]
+  },
+  {
+   "from": "ui_tools",
    "to": "sim_wildlife",
    "kind": "tool",
    "labels": [
@@ -5945,6 +6863,17 @@
  ],
  "advance": [
   {
+   "id": "education_enrollment",
+   "order": 50,
+   "stepped": false,
+   "nextMinute": false,
+   "modules": [
+    "server-plugin/education.mjs"
+   ],
+   "inline": false,
+   "partitions": []
+  },
+  {
    "id": "npc_obligations",
    "order": 100,
    "stepped": true,
@@ -5962,6 +6891,17 @@
    "nextMinute": false,
    "modules": [
     "server-plugin/contracts.mjs"
+   ],
+   "inline": false,
+   "partitions": []
+  },
+  {
+   "id": "labor_market",
+   "order": 240,
+   "stepped": false,
+   "nextMinute": true,
+   "modules": [
+    "server-plugin/labor-market.mjs"
    ],
    "inline": false,
    "partitions": []
@@ -6009,6 +6949,7 @@
     "server-plugin/bosses.mjs",
     "server-plugin/forest-water.mjs",
     "server-plugin/hazard-calendar.mjs",
+    "server-plugin/magic-economy.mjs",
     "server-plugin/pets.mjs",
     "server-plugin/water-cycle.mjs",
     "server-plugin/weather.mjs",
@@ -6042,12 +6983,34 @@
    "partitions": []
   },
   {
+   "id": "transport",
+   "order": 790,
+   "stepped": true,
+   "nextMinute": true,
+   "modules": [
+    "server-plugin/transport.mjs"
+   ],
+   "inline": false,
+   "partitions": []
+  },
+  {
    "id": "settlement_trade",
    "order": 800,
    "stepped": true,
    "nextMinute": true,
    "modules": [
     "server-plugin/settlement-trade.mjs"
+   ],
+   "inline": false,
+   "partitions": []
+  },
+  {
+   "id": "post",
+   "order": 820,
+   "stepped": false,
+   "nextMinute": true,
+   "modules": [
+    "server-plugin/post.mjs"
    ],
    "inline": false,
    "partitions": []
@@ -6064,17 +7027,30 @@
    "partitions": []
   },
   {
+   "id": "facilities",
+   "order": 890,
+   "stepped": false,
+   "nextMinute": true,
+   "modules": [
+    "server-plugin/facilities.mjs"
+   ],
+   "inline": false,
+   "partitions": []
+  },
+  {
    "id": "projects",
    "order": 900,
    "stepped": false,
    "nextMinute": false,
    "modules": [
+    "server-plugin/facilities.mjs",
     "server-plugin/progression.mjs",
     "server-plugin/public-projects.mjs"
    ],
    "inline": false,
    "partitions": [
-    "projects"
+    "projects",
+    "records"
    ]
   },
   {
@@ -6095,6 +7071,17 @@
    "nextMinute": true,
    "modules": [
     "server-plugin/npc-cognition.mjs"
+   ],
+   "inline": false,
+   "partitions": []
+  },
+  {
+   "id": "education",
+   "order": 1090,
+   "stepped": false,
+   "nextMinute": true,
+   "modules": [
+    "server-plugin/education.mjs"
    ],
    "inline": false,
    "partitions": []
@@ -6139,6 +7126,17 @@
    "nextMinute": true,
    "modules": [
     "server-plugin/public-projects.mjs"
+   ],
+   "inline": false,
+   "partitions": []
+  },
+  {
+   "id": "upper_appointments",
+   "order": 1138,
+   "stepped": false,
+   "nextMinute": false,
+   "modules": [
+    "server-plugin/high-nobility.mjs"
    ],
    "inline": false,
    "partitions": []
@@ -6199,6 +7197,17 @@
    "partitions": []
   },
   {
+   "id": "npc_crime",
+   "order": 1210,
+   "stepped": false,
+   "nextMinute": true,
+   "modules": [
+    "server-plugin/npc-crime.mjs"
+   ],
+   "inline": false,
+   "partitions": []
+  },
+  {
    "id": "world_clock",
    "order": 1300,
    "stepped": true,
@@ -6233,6 +7242,17 @@
    "partitions": []
   },
   {
+   "id": "magic_economy",
+   "order": 1370,
+   "stepped": false,
+   "nextMinute": false,
+   "modules": [
+    "server-plugin/magic-economy.mjs"
+   ],
+   "inline": false,
+   "partitions": []
+  },
+  {
    "id": "faction_clock",
    "order": 1400,
    "stepped": true,
@@ -6250,6 +7270,17 @@
    "nextMinute": false,
    "modules": [
     "server-plugin/organizations.mjs"
+   ],
+   "inline": false,
+   "partitions": []
+  },
+  {
+   "id": "faith_experience",
+   "order": 1451,
+   "stepped": false,
+   "nextMinute": false,
+   "modules": [
+    "server-plugin/faith.mjs"
    ],
    "inline": false,
    "partitions": []
@@ -6294,6 +7325,28 @@
    "nextMinute": false,
    "modules": [
     "server-plugin/quest-sources.mjs"
+   ],
+   "inline": false,
+   "partitions": []
+  },
+  {
+   "id": "royal_service",
+   "order": 1462,
+   "stepped": false,
+   "nextMinute": false,
+   "modules": [
+    "server-plugin/high-nobility.mjs"
+   ],
+   "inline": false,
+   "partitions": []
+  },
+  {
+   "id": "nations",
+   "order": 1464,
+   "stepped": false,
+   "nextMinute": false,
+   "modules": [
+    "server-plugin/nation-founding.mjs"
    ],
    "inline": false,
    "partitions": []
@@ -6573,6 +7626,7 @@
     "fn": "recordNpcMemories",
     "module": "server-plugin/npc-memory.mjs",
     "verbs": [
+     "breach",
      "cast",
      "clash",
      "duel",
@@ -6621,6 +7675,19 @@
    },
    {
     "order": 7,
+    "id": "faith_experience",
+    "fn": "faithExperience",
+    "module": "server-plugin/faith.mjs",
+    "verbs": [
+     "deceive",
+     "harm",
+     "help",
+     "learn",
+     "organize"
+    ]
+   },
+   {
+    "order": 8,
     "id": "npc_intelligence",
     "fn": "recordIntelligenceEvents",
     "module": "server-plugin/npc-intelligence.mjs",
@@ -6634,7 +7701,7 @@
     ]
    },
    {
-    "order": 8,
+    "order": 9,
     "fn": "recordCareerMetrics",
     "module": "server-plugin/career-metrics.mjs",
     "verbs": [
@@ -6647,7 +7714,10 @@
   ],
   "producers": {
    "appoint": [
+    "server-plugin/family-inheritance.mjs",
+    "server-plugin/family-politics.mjs",
     "server-plugin/governance.mjs",
+    "server-plugin/high-nobility.mjs",
     "server-plugin/public-projects.mjs"
    ],
    "author": [
@@ -6674,13 +7744,15 @@
    ],
    "detain": [
     "server-plugin/bounty.mjs",
-    "server-plugin/law.mjs"
+    "server-plugin/law.mjs",
+    "server-plugin/npc-crime.mjs"
    ],
    "die": [
     "server-plugin/npc-life.mjs"
    ],
    "dismiss": [
     "server-plugin/governance.mjs",
+    "server-plugin/high-nobility.mjs",
     "server-plugin/law.mjs",
     "server-plugin/public-projects.mjs"
    ],
@@ -6692,12 +7764,14 @@
     "server-plugin/world-events.mjs"
    ],
    "harm": [
+    "server-plugin/faith.mjs",
     "server-plugin/world-events.mjs"
    ],
    "hazard": [
     "server-plugin/seasonal-hazards.mjs"
    ],
    "help": [
+    "server-plugin/high-nobility.mjs",
     "server-plugin/seasonal-hazards.mjs",
     "server-plugin/world-events.mjs"
    ],
@@ -6709,24 +7783,29 @@
     "server-plugin/npc-life.mjs"
    ],
    "migrate": [
+    "server-plugin/family-politics.mjs",
     "server-plugin/npc-life.mjs"
    ],
    "organize": [
+    "server-plugin/faith.mjs",
     "server-plugin/military.mjs",
     "server-plugin/organizations.mjs",
     "server-plugin/tribal-awakening.mjs"
    ],
    "pact": [
-    "server-plugin/boss-negotiation.mjs"
+    "server-plugin/boss-negotiation.mjs",
+    "server-plugin/family-diplomacy.mjs"
    ],
    "promote": [
     "server-plugin/promotion.mjs"
    ],
    "release": [
-    "server-plugin/law.mjs"
+    "server-plugin/law.mjs",
+    "server-plugin/npc-crime.mjs"
    ],
    "rumor": [
     "server-plugin/effects.mjs",
+    "server-plugin/post.mjs",
     "server-plugin/quest-sources.mjs"
    ],
    "salary": [
@@ -6736,9 +7815,14 @@
     "server-plugin/world-events.mjs"
    ],
    "trade": [
+    "server-plugin/transport.mjs",
     "server-plugin/world-events.mjs"
    ],
-   "transfer": [],
+   "transfer": [
+    "server-plugin/family-inheritance.mjs",
+    "server-plugin/family-law.mjs",
+    "server-plugin/family-politics.mjs"
+   ],
    "vocation": [
     "server-plugin/npc-growth.mjs"
    ]
@@ -7214,6 +8298,7 @@
    "server-plugin/creature-nature.mjs",
    "server-plugin/effects.mjs",
    "server-plugin/environment.mjs",
+   "server-plugin/facilities.mjs",
    "server-plugin/magic-marks.mjs",
    "server-plugin/magic-object.mjs",
    "server-plugin/magic-water-earth.mjs",
@@ -7285,6 +8370,8 @@
    "server-plugin/creature-nature.mjs",
    "server-plugin/effects.mjs",
    "server-plugin/extraction.mjs",
+   "server-plugin/facilities.mjs",
+   "server-plugin/finance-tax.mjs",
    "server-plugin/forest-water.mjs",
    "server-plugin/interactions.mjs",
    "server-plugin/magic-marks.mjs",
@@ -7342,6 +8429,7 @@
     ],
     "registeredIn": "server-plugin/seasonal-hazards.mjs",
     "modules": [
+     "server-plugin/magic-economy.mjs",
      "server-plugin/seasonal-hazards.mjs"
     ],
     "usedByHooks": [],
@@ -7422,6 +8510,52 @@
     ]
    },
    {
+    "kind": "facility",
+    "sources": [
+     "world",
+     "faction",
+     "festival",
+     "season"
+    ],
+    "registeredIn": "server-plugin/effects.mjs",
+    "modules": [
+     "server-plugin/effects.mjs",
+     "server-plugin/facilities.mjs",
+     "server-plugin/facility-state.mjs",
+     "server-plugin/interactions.mjs"
+    ],
+    "usedByHooks": [],
+    "usedIn": []
+   },
+   {
+    "kind": "faith_claim",
+    "sources": [
+     "faction"
+    ],
+    "registeredIn": "server-plugin/faith.mjs",
+    "modules": [
+     "server-plugin/faith-catalog.mjs",
+     "server-plugin/faith.mjs"
+    ],
+    "usedByHooks": [],
+    "usedIn": []
+   },
+   {
+    "kind": "faith_omen",
+    "sources": [
+     "world",
+     "faction",
+     "festival",
+     "season"
+    ],
+    "registeredIn": "server-plugin/faith.mjs",
+    "modules": [
+     "server-plugin/faith.mjs"
+    ],
+    "usedByHooks": [],
+    "usedIn": []
+   },
+   {
     "kind": "famine",
     "sources": [
      "world",
@@ -7449,6 +8583,7 @@
     "registeredIn": "server-plugin/seasonal-hazards.mjs",
     "modules": [
      "server-plugin/environment.mjs",
+     "server-plugin/facility-state.mjs",
      "server-plugin/interactions.mjs",
      "server-plugin/seasonal-hazards.mjs"
     ],
@@ -7599,7 +8734,8 @@
     ],
     "registeredIn": "server-plugin/faction-clock.mjs",
     "modules": [
-     "server-plugin/faction-clock.mjs"
+     "server-plugin/faction-clock.mjs",
+     "server-plugin/finance-tax.mjs"
     ],
     "usedByHooks": [],
     "usedIn": []
@@ -7650,7 +8786,9 @@
   ],
   "callers": [
    "server-plugin/faction-clock.mjs",
+   "server-plugin/faith.mjs",
    "server-plugin/festival.mjs",
+   "server-plugin/magic-economy.mjs",
    "server-plugin/seasonal-hazards.mjs",
    "server-plugin/tribal-awakening.mjs",
    "server-plugin/war-diplomacy.mjs",
@@ -7719,12 +8857,22 @@
    "server-plugin/effects.mjs",
    "server-plugin/elections.mjs",
    "server-plugin/faction-clock.mjs",
+   "server-plugin/faith.mjs",
+   "server-plugin/family-diplomacy.mjs",
+   "server-plugin/finance-assets.mjs",
+   "server-plugin/finance-bank.mjs",
    "server-plugin/governance.mjs",
+   "server-plugin/high-nobility.mjs",
+   "server-plugin/labor-market.mjs",
+   "server-plugin/law-codes.mjs",
    "server-plugin/lies.mjs",
    "server-plugin/magic-consent.mjs",
+   "server-plugin/magic-economy.mjs",
    "server-plugin/military.mjs",
    "server-plugin/monster-society.mjs",
+   "server-plugin/nation-founding.mjs",
    "server-plugin/notables.mjs",
+   "server-plugin/npc-crime.mjs",
    "server-plugin/organizations.mjs",
    "server-plugin/promotion.mjs",
    "server-plugin/public-opinion.mjs",
@@ -7762,7 +8910,31 @@
     "work",
     "partner",
     "smuggle",
-    "deliver_smuggled"
+    "deliver_smuggled",
+    "bank_inspect",
+    "extend",
+    "prepay",
+    "lend",
+    "collect",
+    "pawn",
+    "redeem",
+    "auction",
+    "remit",
+    "cash_bill",
+    "asset_inspect",
+    "invest",
+    "dividend",
+    "share_transfer",
+    "rent_out",
+    "workshop",
+    "workshop_terms",
+    "dismiss",
+    "transport",
+    "post",
+    "labor_inspect",
+    "labor_guarantee",
+    "labor_mediate",
+    "labor_poach"
    ],
    "routes": [
     {
@@ -7783,7 +8955,31 @@
       "work",
       "partner",
       "smuggle",
-      "deliver_smuggled"
+      "deliver_smuggled",
+      "bank_inspect",
+      "extend",
+      "prepay",
+      "lend",
+      "collect",
+      "pawn",
+      "redeem",
+      "auction",
+      "remit",
+      "cash_bill",
+      "asset_inspect",
+      "invest",
+      "dividend",
+      "share_transfer",
+      "rent_out",
+      "workshop",
+      "workshop_terms",
+      "dismiss",
+      "transport",
+      "post",
+      "labor_inspect",
+      "labor_guarantee",
+      "labor_mediate",
+      "labor_poach"
      ],
      "handler": "WorldEngine.trade",
      "modules": [
@@ -7792,12 +8988,17 @@
       "server-plugin/contracts.mjs",
       "server-plugin/credit.mjs",
       "server-plugin/engine.mjs",
+      "server-plugin/facility-state.mjs",
+      "server-plugin/finance-assets.mjs",
+      "server-plugin/finance-tax.mjs",
       "server-plugin/items.mjs",
       "server-plugin/monster-society.mjs",
       "server-plugin/npc-schedule.mjs",
+      "server-plugin/post.mjs",
       "server-plugin/settlement-trade.mjs",
       "server-plugin/shop.mjs",
       "server-plugin/smuggling.mjs",
+      "server-plugin/transport.mjs",
       "server-plugin/wildlife.mjs"
      ],
      "systems": [
@@ -7806,6 +9007,7 @@
       "sim_economy",
       "sim_npc",
       "sim_society",
+      "sim_transport",
       "sim_wildlife"
      ]
     }
@@ -7816,6 +9018,7 @@
     "sim_economy",
     "sim_npc",
     "sim_society",
+    "sim_transport",
     "sim_wildlife"
    ]
   },
@@ -7900,7 +9103,7 @@
   },
   {
    "name": "world_revival",
-   "description": "神殿/祭坛付费设复活点",
+   "description": "神殿/祭坛付费定复活点",
    "readOnly": false,
    "operations": null,
    "routes": [
@@ -7962,13 +9165,16 @@
       "server-plugin/advance-registry.mjs",
       "server-plugin/checks.mjs",
       "server-plugin/engine.mjs",
+      "server-plugin/hidden-passives.mjs",
       "server-plugin/magic-consent.mjs",
+      "server-plugin/magic-economy.mjs",
       "server-plugin/magic.mjs"
      ],
      "systems": [
       "base_advance",
       "kernel_engine",
       "sim_character",
+      "sim_economy",
       "sim_magic"
      ]
     }
@@ -7977,12 +9183,13 @@
     "base_advance",
     "kernel_engine",
     "sim_character",
+    "sim_economy",
     "sim_magic"
    ]
   },
   {
    "name": "world_learn",
-   "description": "师授/持书/研究学技能法术配方；有student则玩家教在场NPC/精怪",
+   "description": "师授/读书/研究；student受教，book_give/study",
    "readOnly": false,
    "operations": null,
    "routes": [
@@ -8050,7 +9257,8 @@
     "abandon",
     "promote",
     "initiate",
-    "ritual_officiate"
+    "ritual_officiate",
+    "examine"
    ],
    "routes": [
     {
@@ -8060,7 +9268,8 @@
       "abandon",
       "promote",
       "initiate",
-      "ritual_officiate"
+      "ritual_officiate",
+      "examine"
      ],
      "handler": "WorldEngine.profession",
      "modules": [
@@ -8130,7 +9339,7 @@
   },
   {
    "name": "world_promise",
-   "description": "承诺/私宅许可；施法同意location类别、skill法术、consent确认",
+   "description": "承诺/私宅许可/施法同意：location类别，skill法术，consent确认",
    "readOnly": false,
    "operations": [
     "create",
@@ -8219,6 +9428,7 @@
       "server-plugin/combat.mjs",
       "server-plugin/duels.mjs",
       "server-plugin/environment.mjs",
+      "server-plugin/hidden-passives.mjs",
       "server-plugin/items.mjs",
       "server-plugin/law.mjs",
       "server-plugin/magic-air.mjs",
@@ -8364,6 +9574,10 @@
     "notable_inspect",
     "promotion_petition",
     "promotion_inspect",
+    "school_open",
+    "school_fund",
+    "school_inspect",
+    "school_close",
     "festival_inspect",
     "festival_plan",
     "festival_authorize",
@@ -8378,6 +9592,26 @@
     "org_deposit",
     "org_propose",
     "org_vote",
+    "family_inspect",
+    "family_marry",
+    "family_adopt",
+    "family_foster",
+    "family_split",
+    "family_manage",
+    "family_dispute",
+    "family_alliance",
+    "faith_inspect",
+    "faith_convert",
+    "faith_give",
+    "faith_use",
+    "faith_rite",
+    "faith_pilgrim",
+    "nation_inspect",
+    "nation",
+    "domain_inspect",
+    "domain_appoint",
+    "domain_steward",
+    "domain_request",
     "war_inspect",
     "war_join",
     "diplomacy",
@@ -8429,6 +9663,10 @@
       "notable_inspect",
       "promotion_petition",
       "promotion_inspect",
+      "school_open",
+      "school_fund",
+      "school_inspect",
+      "school_close",
       "festival_inspect",
       "festival_plan",
       "festival_authorize",
@@ -8443,6 +9681,26 @@
       "org_deposit",
       "org_propose",
       "org_vote",
+      "family_inspect",
+      "family_marry",
+      "family_adopt",
+      "family_foster",
+      "family_split",
+      "family_manage",
+      "family_dispute",
+      "family_alliance",
+      "faith_inspect",
+      "faith_convert",
+      "faith_give",
+      "faith_use",
+      "faith_rite",
+      "faith_pilgrim",
+      "nation_inspect",
+      "nation",
+      "domain_inspect",
+      "domain_appoint",
+      "domain_steward",
+      "domain_request",
       "war_inspect",
       "war_join",
       "diplomacy",
@@ -8466,12 +9724,19 @@
       "server-plugin/business.mjs",
       "server-plugin/civic.mjs",
       "server-plugin/duels.mjs",
+      "server-plugin/education.mjs",
       "server-plugin/elections.mjs",
       "server-plugin/extraction.mjs",
+      "server-plugin/facility-state.mjs",
       "server-plugin/faction-clock.mjs",
+      "server-plugin/faith.mjs",
+      "server-plugin/family-politics.mjs",
       "server-plugin/festival.mjs",
       "server-plugin/governance.mjs",
+      "server-plugin/high-nobility.mjs",
       "server-plugin/military.mjs",
+      "server-plugin/nation-founding.mjs",
+      "server-plugin/noble-state.mjs",
       "server-plugin/notables.mjs",
       "server-plugin/organizations.mjs",
       "server-plugin/promotion.mjs",
@@ -8482,9 +9747,11 @@
      ],
      "systems": [
       "kernel_engine",
+      "sim_character",
       "sim_clock",
       "sim_combat",
       "sim_economy",
+      "sim_faith",
       "sim_military",
       "sim_society"
      ]
@@ -8492,9 +9759,11 @@
    ],
    "systems": [
     "kernel_engine",
+    "sim_character",
     "sim_clock",
     "sim_combat",
     "sim_economy",
+    "sim_faith",
     "sim_military",
     "sim_society"
    ]
@@ -8538,7 +9807,7 @@
   },
   {
    "name": "world_create",
-   "description": "人物/组织登记；技能配方须完成研究，产物用已有物品ID",
+   "description": "登记；研究法术template原型、spec规则JSON；产物用已有ID",
    "readOnly": false,
    "operations": null,
    "routes": [
@@ -8550,7 +9819,8 @@
       "server-plugin/activities.mjs",
       "server-plugin/manufacturing.mjs",
       "server-plugin/organizations.mjs",
-      "server-plugin/professions.mjs"
+      "server-plugin/professions.mjs",
+      "server-plugin/spell-research.mjs"
      ],
      "systems": [
       "kernel_engine",
@@ -8941,7 +10211,8 @@
     "compensate",
     "claim",
     "grant_magic_permit",
-    "bribe"
+    "bribe",
+    "hire_advocate"
    ],
    "routes": [
     {
@@ -8977,7 +10248,8 @@
       "compensate",
       "claim",
       "grant_magic_permit",
-      "bribe"
+      "bribe",
+      "hire_advocate"
      ],
      "handler": "activities.law",
      "modules": [
@@ -9018,13 +10290,16 @@
   },
   {
    "dir": "world/design",
-   "files": 109,
+   "files": 117,
    "keys": [],
    "readers": [
     "server-plugin/civic.mjs",
     "server-plugin/environment.mjs",
     "server-plugin/interactions.mjs",
-    "server-plugin/seasonal-hazards.mjs"
+    "server-plugin/magic-economy.mjs",
+    "server-plugin/seasonal-hazards.mjs",
+    "server-plugin/traits.mjs",
+    "server-plugin/transport.mjs"
    ],
    "tools": [
     "tools/audit-farm-pests-food.mjs",
@@ -9036,6 +10311,7 @@
     "tools/draft-economy.mjs",
     "tools/draft-spells.mjs",
     "tools/economy-content.mjs",
+    "tools/l1-law-content.mjs",
     "tools/m2-people-age-repair.mjs",
     "tools/m2-people-content.mjs",
     "tools/m2-people-draft.mjs",
@@ -9044,6 +10320,7 @@
     "tools/m4-batch2-content.mjs",
     "tools/m4-mechanism-audit.mjs",
     "tools/m4-object-content.mjs",
+    "tools/m4r-skeleton-map.mjs",
     "tools/m5-authority.mjs",
     "tools/monster-society-2-content.mjs",
     "tools/monster-society-3-content.mjs",
@@ -9079,10 +10356,14 @@
     "tools/quick-farm-pests-scenarios.mjs",
     "tools/quick-migration-scenarios.mjs",
     "tools/quick-pet-scenarios.mjs",
+    "tools/rw05-education-content.mjs",
+    "tools/rw07-faith-content.mjs",
+    "tools/rw09-family-content.mjs",
     "tools/system-map.mjs",
     "tools/t142-merge.mjs",
     "tools/t142-provinces-content.mjs",
     "tools/t155-wildlife-content.mjs",
+    "tools/u16-sovereignty-content.mjs",
     "tools/w1-baishi.mjs",
     "tools/w1-hewan.mjs",
     "tools/w1-village-profiles-content.mjs",
@@ -9126,7 +10407,7 @@
   },
   {
    "dir": "world/drafts",
-   "files": 35,
+   "files": 41,
    "keys": [],
    "readers": [],
    "tools": [
@@ -9135,6 +10416,7 @@
     "tools/draft-economy.mjs",
     "tools/draft-spells.mjs",
     "tools/draft-wildlife.mjs",
+    "tools/l1-law-content.mjs",
     "tools/m2-people-age-repair.mjs",
     "tools/m2-people-draft.mjs",
     "tools/m2-people-publish.mjs",
@@ -9143,6 +10425,8 @@
     "tools/m4-books-content.mjs",
     "tools/m4-mechanism-audit.mjs",
     "tools/m4-object-content.mjs",
+    "tools/m4r-review.mjs",
+    "tools/m4r-skeleton-map.mjs",
     "tools/m5-authority.mjs",
     "tools/monster-society-2-content.mjs",
     "tools/monster-society-3-content.mjs",
@@ -9169,9 +10453,13 @@
     "tools/publish-w2-s4.mjs",
     "tools/publish-w4-b1.mjs",
     "tools/record-economy-review.mjs",
+    "tools/rw05-education-content.mjs",
+    "tools/rw07-faith-content.mjs",
+    "tools/rw09-family-content.mjs",
     "tools/system-map.mjs",
     "tools/t142-provinces-content.mjs",
     "tools/t155-wildlife-content.mjs",
+    "tools/u16-sovereignty-content.mjs",
     "tools/w1-baishi.mjs",
     "tools/w1-hewan-l4.mjs",
     "tools/w1-hewan-review.mjs",
@@ -9227,6 +10515,7 @@
     "regions"
    ],
    "readers": [
+    "server-plugin/advance-layers.mjs",
     "server-plugin/agriculture.mjs",
     "server-plugin/boss-negotiation.mjs",
     "server-plugin/bosses.mjs",
@@ -9234,17 +10523,25 @@
     "server-plugin/civic.mjs",
     "server-plugin/compat/v2-phase1-engine.mjs",
     "server-plugin/credit.mjs",
+    "server-plugin/education-state.mjs",
     "server-plugin/effects.mjs",
     "server-plugin/elections.mjs",
     "server-plugin/engine.mjs",
     "server-plugin/entity-view.mjs",
     "server-plugin/environment.mjs",
+    "server-plugin/facility-state.mjs",
     "server-plugin/faction-clock.mjs",
+    "server-plugin/faith-catalog.mjs",
     "server-plugin/farm-pests.mjs",
     "server-plugin/festival.mjs",
+    "server-plugin/finance-tax.mjs",
     "server-plugin/forest-water.mjs",
     "server-plugin/governance.mjs",
+    "server-plugin/high-nobility.mjs",
+    "server-plugin/law-codes.mjs",
+    "server-plugin/local-exams.mjs",
     "server-plugin/magic-air.mjs",
+    "server-plugin/magic-economy.mjs",
     "server-plugin/magic-light.mjs",
     "server-plugin/magic-message.mjs",
     "server-plugin/magic-movement.mjs",
@@ -9252,6 +10549,8 @@
     "server-plugin/manufacturing.mjs",
     "server-plugin/military.mjs",
     "server-plugin/monster-society.mjs",
+    "server-plugin/nation-founding.mjs",
+    "server-plugin/noble-state.mjs",
     "server-plugin/notables.mjs",
     "server-plugin/npc-growth.mjs",
     "server-plugin/npc-life.mjs",
@@ -9262,6 +10561,7 @@
     "server-plugin/organization-state.mjs",
     "server-plugin/population.mjs",
     "server-plugin/promotion.mjs",
+    "server-plugin/prompt-scope.mjs",
     "server-plugin/public-opinion.mjs",
     "server-plugin/quest-board.mjs",
     "server-plugin/quest-sources.mjs",
@@ -9281,6 +10581,8 @@
     "server-plugin/smuggling.mjs",
     "server-plugin/standing.mjs",
     "server-plugin/traits.mjs",
+    "server-plugin/transport-route.mjs",
+    "server-plugin/transport.mjs",
     "server-plugin/tribal-awakening.mjs",
     "server-plugin/ui-map.mjs",
     "server-plugin/war-diplomacy.mjs",
@@ -9323,7 +10625,7 @@
   },
   {
    "dir": "world/lore",
-   "files": 9,
+   "files": 12,
    "keys": [
     "cultures",
     "deities",
@@ -9335,14 +10637,20 @@
     "rumors"
    ],
    "readers": [
+    "server-plugin/education.mjs",
     "server-plugin/effects.mjs",
     "server-plugin/engine.mjs",
     "server-plugin/entity-view.mjs",
     "server-plugin/faction-clock.mjs",
+    "server-plugin/faith-catalog.mjs",
+    "server-plugin/faith-state.mjs",
     "server-plugin/festival.mjs",
+    "server-plugin/finance-assets.mjs",
+    "server-plugin/finance-tax.mjs",
     "server-plugin/group-account.mjs",
     "server-plugin/military.mjs",
     "server-plugin/monster-society.mjs",
+    "server-plugin/nation-founding.mjs",
     "server-plugin/notables.mjs",
     "server-plugin/npc-rumors.mjs",
     "server-plugin/organization-state.mjs",
@@ -9363,8 +10671,11 @@
     "tools/publish-monster-society-2.mjs",
     "tools/publish-monster-society-3.mjs",
     "tools/publish-monster-society.mjs",
+    "tools/rw07-faith-content.mjs",
+    "tools/rw09-family-content.mjs",
     "tools/system-map.mjs",
     "tools/t142-merge.mjs",
+    "tools/u16-sovereignty-content.mjs",
     "tools/w5-clock-publication.mjs",
     "tools/w5-content.mjs",
     "tools/w5-festival-publication.mjs",
@@ -9407,36 +10718,57 @@
     "server-plugin/consistency-service.mjs",
     "server-plugin/creature-nature.mjs",
     "server-plugin/credit.mjs",
+    "server-plugin/education-cohorts.mjs",
+    "server-plugin/education-state.mjs",
+    "server-plugin/education.mjs",
     "server-plugin/effects.mjs",
     "server-plugin/elections.mjs",
     "server-plugin/engine.mjs",
     "server-plugin/entity-view.mjs",
     "server-plugin/environment.mjs",
     "server-plugin/extraction.mjs",
+    "server-plugin/facility-state.mjs",
     "server-plugin/faction-clock.mjs",
+    "server-plugin/faith-catalog.mjs",
+    "server-plugin/faith.mjs",
+    "server-plugin/family-diplomacy.mjs",
+    "server-plugin/family-inheritance.mjs",
+    "server-plugin/family-state.mjs",
     "server-plugin/farm-pests-migration.mjs",
     "server-plugin/farm-pests.mjs",
     "server-plugin/festival.mjs",
+    "server-plugin/finance-assets.mjs",
+    "server-plugin/finance-bank.mjs",
+    "server-plugin/finance-tax.mjs",
     "server-plugin/forest-water.mjs",
     "server-plugin/governance.mjs",
     "server-plugin/hazard-calendar.mjs",
+    "server-plugin/hidden-passives.mjs",
+    "server-plugin/high-nobility.mjs",
     "server-plugin/items.mjs",
+    "server-plugin/labor-market.mjs",
+    "server-plugin/law-codes.mjs",
     "server-plugin/law.mjs",
     "server-plugin/learning.mjs",
+    "server-plugin/legal-representation.mjs",
+    "server-plugin/local-exams.mjs",
     "server-plugin/location-access.mjs",
     "server-plugin/magic-care.mjs",
     "server-plugin/magic-consent.mjs",
+    "server-plugin/magic-economy.mjs",
     "server-plugin/magic-growth.mjs",
     "server-plugin/magic-movement.mjs",
     "server-plugin/magic-object.mjs",
     "server-plugin/magic-ritual.mjs",
-    "server-plugin/magic-targeting.mjs",
     "server-plugin/manufacturing.mjs",
     "server-plugin/migrations/r1.mjs",
     "server-plugin/military.mjs",
     "server-plugin/monster-society.mjs",
+    "server-plugin/nation-founding.mjs",
+    "server-plugin/noble-state.mjs",
     "server-plugin/notables.mjs",
     "server-plugin/npc-autonomy.mjs",
+    "server-plugin/npc-crime.mjs",
     "server-plugin/npc-growth.mjs",
     "server-plugin/npc-intelligence.mjs",
     "server-plugin/npc-life.mjs",
@@ -9467,10 +10799,13 @@
     "server-plugin/shop.mjs",
     "server-plugin/sites.mjs",
     "server-plugin/smuggling.mjs",
+    "server-plugin/spell-research.mjs",
     "server-plugin/summons.mjs",
     "server-plugin/titles.mjs",
     "server-plugin/training.mjs",
     "server-plugin/traits.mjs",
+    "server-plugin/transport-route.mjs",
+    "server-plugin/transport.mjs",
     "server-plugin/tribal-awakening.mjs",
     "server-plugin/ui-affairs.mjs",
     "server-plugin/ui-history.mjs",
@@ -9500,6 +10835,7 @@
     "tools/design-combat-rules.mjs",
     "tools/design-profession-catalog.mjs",
     "tools/freeze-phase1.mjs",
+    "tools/l1-law-content.mjs",
     "tools/load-world.mjs",
     "tools/m2-people-content.mjs",
     "tools/m4-batch2-content.mjs",
@@ -9532,9 +10868,13 @@
     "tools/publish-w2-s3.mjs",
     "tools/publish-w2-s4.mjs",
     "tools/publish-w4-b1.mjs",
+    "tools/rw05-education-content.mjs",
+    "tools/rw07-faith-content.mjs",
+    "tools/rw09-family-content.mjs",
     "tools/system-map.mjs",
     "tools/t142-provinces-content.mjs",
     "tools/t155-wildlife-content.mjs",
+    "tools/u16-sovereignty-content.mjs",
     "tools/validate-world.mjs",
     "tools/w1-baishi.mjs",
     "tools/w1-hewan-content.mjs",
@@ -9580,11 +10920,16 @@
     "server-plugin/character.mjs",
     "server-plugin/civic.mjs",
     "server-plugin/compat/v2-phase1-engine.mjs",
+    "server-plugin/education-state.mjs",
     "server-plugin/effects.mjs",
     "server-plugin/engine.mjs",
     "server-plugin/entity-view.mjs",
+    "server-plugin/family-state.mjs",
     "server-plugin/festival.mjs",
     "server-plugin/governance.mjs",
+    "server-plugin/high-nobility.mjs",
+    "server-plugin/labor-market.mjs",
+    "server-plugin/law-codes.mjs",
     "server-plugin/military.mjs",
     "server-plugin/monster-society.mjs",
     "server-plugin/notables.mjs",
@@ -9709,12 +11054,14 @@
    "server-plugin/manufacturing.mjs",
    "server-plugin/npc-autonomy.mjs",
    "server-plugin/sites.mjs",
+   "server-plugin/spell-research.mjs",
    "server-plugin/wildlife-society.mjs"
   ],
   "travel": [
    "server-plugin/compat/v2-phase1-engine.mjs",
    "server-plugin/engine.mjs",
    "server-plugin/settlement-trade.mjs",
+   "server-plugin/transport-route.mjs",
    "server-plugin/weather.mjs"
   ],
   "equipment": [
@@ -9735,9 +11082,11 @@
   "quests": [
    "server-plugin/bounty.mjs",
    "server-plugin/compat/v2-phase1-activities.mjs",
+   "server-plugin/noble-state.mjs",
    "server-plugin/promotion-view.mjs",
    "server-plugin/quest-board.mjs",
    "server-plugin/quest-sources.mjs",
+   "server-plugin/transport.mjs",
    "server-plugin/tribal-awakening.mjs",
    "server-plugin/ui-affairs.mjs",
    "server-plugin/war-diplomacy.mjs"
@@ -9755,12 +11104,15 @@
    "server-plugin/engine.mjs"
   ],
   "books": [
+   "server-plugin/education-state.mjs",
+   "server-plugin/education.mjs",
    "server-plugin/learning.mjs",
    "server-plugin/works.mjs"
   ],
   "magic": [
    "server-plugin/engine.mjs",
-   "server-plugin/learning.mjs"
+   "server-plugin/learning.mjs",
+   "server-plugin/spell-research.mjs"
   ],
   "monsters": [
    "server-plugin/bosses.mjs",
@@ -9770,10 +11122,15 @@
    "server-plugin/elections.mjs",
    "server-plugin/entity-view.mjs",
    "server-plugin/governance.mjs",
+   "server-plugin/high-nobility.mjs",
+   "server-plugin/local-exams.mjs",
+   "server-plugin/nation-founding.mjs",
+   "server-plugin/noble-state.mjs",
    "server-plugin/notables.mjs",
    "server-plugin/office-salary.mjs",
    "server-plugin/promotion-view.mjs",
    "server-plugin/promotion.mjs",
+   "server-plugin/quest-sources.mjs",
    "server-plugin/remote-generation.mjs",
    "server-plugin/titles.mjs"
   ],
@@ -9782,7 +11139,11 @@
    "server-plugin/business.mjs",
    "server-plugin/credit.mjs",
    "server-plugin/engine.mjs",
+   "server-plugin/finance-assets.mjs",
+   "server-plugin/finance-bank.mjs",
+   "server-plugin/finance-tax.mjs",
    "server-plugin/forest-water.mjs",
+   "server-plugin/labor-market.mjs",
    "server-plugin/law.mjs",
    "server-plugin/remote-generation.mjs",
    "server-plugin/settlement-trade.mjs",
@@ -9797,20 +11158,25 @@
   ],
   "petCare": [
    "server-plugin/engine.mjs",
+   "server-plugin/hidden-passives.mjs",
    "server-plugin/magic-movement.mjs",
    "server-plugin/pets.mjs",
-   "server-plugin/summons.mjs"
+   "server-plugin/summons.mjs",
+   "server-plugin/transport.mjs"
   ],
   "law": [
-   "server-plugin/agriculture.mjs",
    "server-plugin/bounty.mjs",
+   "server-plugin/faith.mjs",
+   "server-plugin/family-diplomacy.mjs",
+   "server-plugin/family-inheritance.mjs",
    "server-plugin/governance.mjs",
+   "server-plugin/law-codes.mjs",
    "server-plugin/law.mjs",
+   "server-plugin/legal-representation.mjs",
    "server-plugin/magic-consent.mjs",
-   "server-plugin/magic-targeting.mjs",
+   "server-plugin/npc-crime.mjs",
    "server-plugin/npc-state.mjs",
-   "server-plugin/regions.mjs",
-   "server-plugin/smuggling.mjs"
+   "server-plugin/regions.mjs"
   ],
   "weather": [
    "server-plugin/agriculture.mjs",
@@ -9826,6 +11192,7 @@
    "server-plugin/farm-pests.mjs",
    "server-plugin/forest-water.mjs",
    "server-plugin/governance.mjs",
+   "server-plugin/labor-market.mjs",
    "server-plugin/location-access.mjs",
    "server-plugin/magic-growth.mjs",
    "server-plugin/migrations/r1.mjs",
@@ -9848,6 +11215,7 @@
    "server-plugin/farm-pests-migration.mjs",
    "server-plugin/farm-pests.mjs",
    "server-plugin/forest-water.mjs",
+   "server-plugin/hidden-passives.mjs",
    "server-plugin/magic-ritual.mjs",
    "server-plugin/quest-sources.mjs",
    "server-plugin/remote-generation.mjs",
@@ -9877,6 +11245,7 @@
   "settlementTrade": [
    "server-plugin/advance-registry.mjs",
    "server-plugin/effects.mjs",
+   "server-plugin/finance-bank.mjs",
    "server-plugin/forest-water.mjs",
    "server-plugin/return-summary.mjs",
    "server-plugin/settlement-trade.mjs",
@@ -9892,7 +11261,8 @@
    "server-plugin/reputation.mjs"
   ],
   "factionClock": [
-   "server-plugin/faction-clock.mjs"
+   "server-plugin/faction-clock.mjs",
+   "server-plugin/faith.mjs"
   ],
   "worldClock": [
    "server-plugin/advance-registry.mjs",
@@ -9901,15 +11271,24 @@
    "server-plugin/world-clock.mjs"
   ],
   "training": [
+   "server-plugin/entity-view.mjs",
+   "server-plugin/facility-state.mjs",
+   "server-plugin/faith-catalog.mjs",
+   "server-plugin/local-exams.mjs",
    "server-plugin/npc-growth.mjs",
    "server-plugin/training.mjs"
   ],
   "npcGrowth": [
+   "server-plugin/education-cohorts.mjs",
+   "server-plugin/education-state.mjs",
+   "server-plugin/education.mjs",
    "server-plugin/entity-view.mjs",
    "server-plugin/npc-growth.mjs",
    "server-plugin/wildlife-society.mjs"
   ],
   "npcLife": [
+   "server-plugin/family-inheritance.mjs",
+   "server-plugin/family-state.mjs",
    "server-plugin/npc-life.mjs",
    "server-plugin/npc-relations.mjs",
    "server-plugin/scene-card.mjs",
@@ -9947,6 +11326,7 @@
   ],
   "warDiplomacy": [
    "server-plugin/engine.mjs",
+   "server-plugin/nation-founding.mjs",
    "server-plugin/war-diplomacy.mjs"
   ],
   "extraction": [
@@ -9956,7 +11336,18 @@
    "server-plugin/elections.mjs"
   ],
   "smuggling": [
+   "server-plugin/finance-tax.mjs",
+   "server-plugin/npc-crime.mjs",
    "server-plugin/smuggling.mjs"
+  ],
+  "magicEconomy": [
+   "server-plugin/law.mjs",
+   "server-plugin/magic-economy.mjs"
+  ],
+  "education": [
+   "server-plugin/education-cohorts.mjs",
+   "server-plugin/education-state.mjs",
+   "server-plugin/local-exams.mjs"
   ]
  },
  "stateShare": {
@@ -9966,10 +11357,10 @@
    ],
    "readers": [
     "base_standing",
+    "base_traits",
     "sim_character",
     "sim_clock",
-    "sim_economy",
-    "sim_npc"
+    "sim_economy"
    ]
   },
   "careerCooldowns": {
@@ -9998,7 +11389,8 @@
     "sim_character"
    ],
    "readers": [
-    "base_standing"
+    "base_standing",
+    "sim_faith"
    ]
   },
   "checks": {
@@ -10037,7 +11429,10 @@
    "readers": [
     "base_events",
     "base_standing",
+    "base_traits",
     "sim_character",
+    "sim_economy",
+    "sim_environment",
     "ui_scene",
     "ui_server"
    ]
@@ -10049,6 +11444,7 @@
     "sim_magic",
     "sim_npc",
     "sim_society",
+    "sim_transport",
     "sim_wildlife"
    ],
    "readers": [
@@ -10078,6 +11474,7 @@
     "kernel_engine",
     "kernel_storage",
     "sim_companion",
+    "sim_faith",
     "sim_magic"
    ],
    "readers": [
@@ -10102,11 +11499,13 @@
   "family": {
    "writers": [
     "sim_clock",
-    "sim_npc"
+    "sim_npc",
+    "sim_society"
    ],
    "readers": [
     "base_events",
     "base_standing",
+    "sim_faith",
     "ui_scene",
     "ui_server"
    ]
@@ -10128,6 +11527,7 @@
     "sim_clock",
     "sim_companion",
     "sim_economy",
+    "sim_faith",
     "sim_law",
     "sim_magic",
     "ui_scene"
@@ -10139,12 +11539,14 @@
     "sim_law",
     "sim_magic",
     "sim_npc",
+    "sim_transport",
     "sim_wildlife",
     "sim_works"
    ],
    "readers": [
     "base_standing",
-    "base_traits"
+    "base_traits",
+    "sim_character"
    ]
   },
   "learning": {
@@ -10161,7 +11563,8 @@
     "kernel_storage",
     "sim_character",
     "sim_law",
-    "sim_magic"
+    "sim_magic",
+    "sim_transport"
    ],
    "readers": [
     "base_advance",
@@ -10174,6 +11577,7 @@
     "sim_companion",
     "sim_economy",
     "sim_environment",
+    "sim_faith",
     "sim_military",
     "sim_npc",
     "sim_society",
@@ -10205,10 +11609,12 @@
     "sim_companion",
     "sim_economy",
     "sim_environment",
+    "sim_faith",
     "sim_law",
     "sim_military",
     "sim_npc",
     "sim_society",
+    "sim_transport",
     "sim_wildlife",
     "sim_works",
     "ui_scene",
@@ -10222,6 +11628,7 @@
    ],
    "readers": [
     "nar_consistency",
+    "sim_economy",
     "sim_society"
    ]
   },
@@ -10262,15 +11669,18 @@
     "sim_military",
     "sim_npc",
     "sim_society",
+    "sim_transport",
     "sim_wildlife",
     "sim_works"
    ],
    "readers": [
+    "base_advance",
     "base_events",
     "base_standing",
     "nar_consistency",
     "sim_agriculture",
     "sim_combat",
+    "sim_faith",
     "ui_scene",
     "ui_server"
    ]
@@ -10281,11 +11691,13 @@
     "kernel_engine",
     "kernel_storage",
     "sim_character",
+    "sim_faith",
     "sim_npc",
     "sim_society"
    ],
    "readers": [
     "nar_consistency",
+    "sim_economy",
     "ui_server"
    ]
   },
@@ -10322,6 +11734,8 @@
     "base_standing",
     "sim_boss",
     "sim_environment",
+    "sim_faith",
+    "sim_transport",
     "ui_scene",
     "ui_server"
    ]
@@ -10350,6 +11764,7 @@
     "base_advance",
     "kernel_engine",
     "kernel_storage",
+    "sim_economy",
     "sim_society"
    ],
    "readers": [
@@ -10369,7 +11784,8 @@
    "writers": [
     "kernel_storage",
     "sim_law",
-    "sim_society"
+    "sim_society",
+    "sim_transport"
    ],
    "readers": [
     "nar_consistency"
@@ -10407,12 +11823,15 @@
     "sim_works"
    ],
    "readers": [
+    "base_traits",
     "nar_consistency",
     "nar_memory",
     "sim_character",
     "sim_combat",
+    "sim_faith",
     "sim_law",
     "sim_military",
+    "sim_transport",
     "ui_scene"
    ]
   },
@@ -10427,7 +11846,11 @@
     "sim_environment"
    ],
    "readers": [
+    "base_advance",
     "base_standing",
+    "kernel_engine",
+    "sim_law",
+    "sim_npc",
     "sim_society"
    ]
   },
@@ -10447,7 +11870,8 @@
     "sim_environment",
     "sim_military",
     "sim_npc",
-    "sim_society"
+    "sim_society",
+    "sim_transport"
    ],
    "readers": [
     "base_standing",
@@ -10473,7 +11897,6 @@
     "sim_agriculture",
     "sim_companion",
     "sim_magic",
-    "sim_npc",
     "sim_wildlife"
    ]
   },
@@ -10624,10 +12047,12 @@
      "pattern": "tamingRule|\\.taming\\b",
      "modules": [
       "server-plugin/creature-nature.mjs",
-      "server-plugin/pets.mjs"
+      "server-plugin/pets.mjs",
+      "server-plugin/transport.mjs"
      ],
      "systems": [
       "sim_companion",
+      "sim_transport",
       "sim_wildlife"
      ]
     },
@@ -10652,6 +12077,8 @@
       "server-plugin/boss-migration.mjs",
       "server-plugin/boss-negotiation.mjs",
       "server-plugin/bosses.mjs",
+      "server-plugin/finance-bank.mjs",
+      "server-plugin/npc-crime.mjs",
       "server-plugin/npc-intelligence.mjs",
       "server-plugin/quest-sources.mjs",
       "server-plugin/tribal-awakening.mjs"
@@ -10659,6 +12086,8 @@
      "systems": [
       "kernel_storage",
       "sim_boss",
+      "sim_economy",
+      "sim_law",
       "sim_npc",
       "sim_society"
      ]
@@ -10684,9 +12113,11 @@
     "sim_boss",
     "sim_companion",
     "sim_economy",
+    "sim_law",
     "sim_magic",
     "sim_npc",
     "sim_society",
+    "sim_transport",
     "sim_wildlife"
    ],
    "manual": [],
@@ -10915,17 +12346,29 @@
      "means": "聚落归属：立场传导沿 parent 找聚落",
      "pattern": "\\.parent\\b",
      "modules": [
+      "server-plugin/advance-layers.mjs",
       "server-plugin/bosses.mjs",
       "server-plugin/career-metrics.mjs",
       "server-plugin/catalog.mjs",
       "server-plugin/civic.mjs",
+      "server-plugin/education-state.mjs",
+      "server-plugin/education.mjs",
       "server-plugin/engine.mjs",
       "server-plugin/entity-view.mjs",
+      "server-plugin/environment.mjs",
+      "server-plugin/facilities.mjs",
+      "server-plugin/facility-state.mjs",
+      "server-plugin/faith-catalog.mjs",
+      "server-plugin/family-state.mjs",
       "server-plugin/forest-water.mjs",
       "server-plugin/governance.mjs",
       "server-plugin/hazard-calendar.mjs",
+      "server-plugin/law-codes.mjs",
+      "server-plugin/local-exams.mjs",
+      "server-plugin/magic-economy.mjs",
       "server-plugin/military.mjs",
       "server-plugin/monster-society.mjs",
+      "server-plugin/noble-state.mjs",
       "server-plugin/notables.mjs",
       "server-plugin/npc-life.mjs",
       "server-plugin/organizations.mjs",
@@ -10954,6 +12397,7 @@
       "extension/runtime.js"
      ],
      "systems": [
+      "base_advance",
       "base_standing",
       "kernel_engine",
       "nar_memory",
@@ -10962,6 +12406,8 @@
       "sim_clock",
       "sim_economy",
       "sim_environment",
+      "sim_faith",
+      "sim_law",
       "sim_military",
       "sim_npc",
       "sim_society",
@@ -10977,9 +12423,11 @@
      "pattern": "\\.features\\b|thermalModel",
      "modules": [
       "server-plugin/effects.mjs",
+      "server-plugin/engine.mjs",
       "server-plugin/entity-view.mjs",
       "server-plugin/environment.mjs",
       "server-plugin/extraction.mjs",
+      "server-plugin/facilities.mjs",
       "server-plugin/forest-water.mjs",
       "server-plugin/interactions.mjs",
       "server-plugin/magic-object.mjs",
@@ -10994,11 +12442,13 @@
       "base_interactions",
       "base_standing",
       "base_traits",
+      "kernel_engine",
       "sim_character",
       "sim_economy",
       "sim_environment",
       "sim_magic",
       "sim_npc",
+      "sim_society",
       "sim_wildlife"
      ]
     },
@@ -11007,15 +12457,21 @@
      "means": "制造工位",
      "pattern": "workstations",
      "modules": [
+      "server-plugin/entity-view.mjs",
+      "server-plugin/facility-state.mjs",
+      "server-plugin/finance-assets.mjs",
+      "server-plugin/labor-market.mjs",
       "server-plugin/magic-object.mjs",
       "server-plugin/manufacturing.mjs",
       "server-plugin/npc-autonomy.mjs",
       "server-plugin/wildlife-habitats.mjs"
      ],
      "systems": [
+      "base_standing",
       "sim_economy",
       "sim_magic",
       "sim_npc",
+      "sim_society",
       "sim_wildlife"
      ]
     },
@@ -11026,11 +12482,14 @@
      "modules": [
       "server-plugin/credit.mjs",
       "server-plugin/engine.mjs",
+      "server-plugin/facility-state.mjs",
+      "server-plugin/finance-assets.mjs",
       "server-plugin/wildlife-habitats.mjs"
      ],
      "systems": [
       "kernel_engine",
       "sim_economy",
+      "sim_society",
       "sim_wildlife"
      ]
     },
@@ -11042,7 +12501,9 @@
       "server-plugin/boss-negotiation.mjs",
       "server-plugin/entity-view.mjs",
       "server-plugin/governance.mjs",
+      "server-plugin/high-nobility.mjs",
       "server-plugin/monster-society.mjs",
+      "server-plugin/noble-state.mjs",
       "server-plugin/organization-state.mjs",
       "server-plugin/public-opinion.mjs",
       "server-plugin/reputation-catalog.mjs",
@@ -11088,8 +12549,11 @@
       "server-plugin/credit.mjs",
       "server-plugin/entity-view.mjs",
       "server-plugin/environment.mjs",
+      "server-plugin/facility-state.mjs",
       "server-plugin/festival.mjs",
+      "server-plugin/finance-assets.mjs",
       "server-plugin/forest-water.mjs",
+      "server-plugin/labor-market.mjs",
       "server-plugin/lies.mjs",
       "server-plugin/location-access.mjs",
       "server-plugin/magic-air.mjs",
@@ -11127,8 +12591,8 @@
      "pattern": "openHours",
      "modules": [
       "server-plugin/agriculture.mjs",
+      "server-plugin/facilities.mjs",
       "server-plugin/festival.mjs",
-      "server-plugin/public-projects.mjs",
       "server-plugin/remote-generation.mjs",
       "server-plugin/training.mjs"
      ],
@@ -11145,6 +12609,7 @@
      "means": "地图与距离、法术范围",
      "pattern": "coordinates",
      "modules": [
+      "server-plugin/facilities.mjs",
       "server-plugin/magic-area.mjs",
       "server-plugin/magic-context.mjs",
       "server-plugin/magic-targeting.mjs",
@@ -11178,6 +12643,7 @@
     }
    ],
    "autoSystems": [
+    "base_advance",
     "base_effects",
     "base_interactions",
     "base_standing",
@@ -11191,6 +12657,8 @@
     "sim_companion",
     "sim_economy",
     "sim_environment",
+    "sim_faith",
+    "sim_law",
     "sim_magic",
     "sim_military",
     "sim_npc",
@@ -11238,6 +12706,8 @@
       "server-plugin/remote-generation.mjs",
       "server-plugin/seasonal-hazards.mjs",
       "server-plugin/settlement-trade.mjs",
+      "server-plugin/transport-route.mjs",
+      "server-plugin/transport.mjs",
       "server-plugin/ui-map.mjs",
       "server-plugin/weather.mjs",
       "extension/map-view.mjs"
@@ -11249,6 +12719,7 @@
       "sim_economy",
       "sim_environment",
       "sim_magic",
+      "sim_transport",
       "sim_wildlife",
       "ui_client",
       "ui_server"
@@ -11266,7 +12737,7 @@
       "server-plugin/remote-generation.mjs",
       "server-plugin/seasonal-hazards.mjs",
       "server-plugin/seasonal-migration.mjs",
-      "server-plugin/settlement-trade.mjs",
+      "server-plugin/transport-route.mjs",
       "server-plugin/ui-map.mjs",
       "server-plugin/weather.mjs"
      ],
@@ -11274,8 +12745,8 @@
       "kernel_engine",
       "nar_memory",
       "sim_clock",
-      "sim_economy",
       "sim_environment",
+      "sim_transport",
       "sim_wildlife",
       "ui_server"
      ]
@@ -11286,11 +12757,14 @@
      "pattern": "\\.toll\\b",
      "modules": [
       "server-plugin/engine.mjs",
-      "server-plugin/smuggling.mjs"
+      "server-plugin/finance-tax.mjs",
+      "server-plugin/smuggling.mjs",
+      "server-plugin/transport.mjs"
      ],
      "systems": [
       "kernel_engine",
-      "sim_economy"
+      "sim_economy",
+      "sim_transport"
      ]
     }
    ],
@@ -11301,6 +12775,7 @@
     "sim_economy",
     "sim_environment",
     "sim_magic",
+    "sim_transport",
     "sim_wildlife",
     "ui_client",
     "ui_server"
@@ -11340,10 +12815,12 @@
       "server-plugin/career-metrics.mjs",
       "server-plugin/engine.mjs",
       "server-plugin/environment.mjs",
+      "server-plugin/hidden-passives.mjs",
       "server-plugin/magic-air.mjs",
       "server-plugin/magic-area.mjs",
       "server-plugin/magic-care.mjs",
       "server-plugin/magic-consent.mjs",
+      "server-plugin/magic-economy.mjs",
       "server-plugin/magic-effects.mjs",
       "server-plugin/magic-growth.mjs",
       "server-plugin/magic-light.mjs",
@@ -11355,6 +12832,7 @@
       "server-plugin/magic-ritual.mjs",
       "server-plugin/magic-water-earth.mjs",
       "server-plugin/magic.mjs",
+      "server-plugin/spell-research.mjs",
       "server-plugin/summons.mjs",
       "server-plugin/traits.mjs",
       "server-plugin/world-events.mjs"
@@ -11367,6 +12845,7 @@
       "sim_boss",
       "sim_character",
       "sim_companion",
+      "sim_economy",
       "sim_environment",
       "sim_magic"
      ]
@@ -11413,9 +12892,11 @@
       "server-plugin/magic-object.mjs",
       "server-plugin/magic-targeting.mjs",
       "server-plugin/magic-water-earth.mjs",
-      "server-plugin/magic.mjs"
+      "server-plugin/magic.mjs",
+      "server-plugin/spell-research.mjs"
      ],
      "systems": [
+      "sim_character",
       "sim_magic"
      ]
     },
@@ -11424,23 +12905,26 @@
      "means": "施法许可与违法",
      "pattern": "\\.law\\b",
      "modules": [
-      "server-plugin/agriculture.mjs",
       "server-plugin/bounty.mjs",
       "server-plugin/entity-view.mjs",
+      "server-plugin/faith.mjs",
+      "server-plugin/family-diplomacy.mjs",
+      "server-plugin/family-inheritance.mjs",
       "server-plugin/governance.mjs",
+      "server-plugin/law-codes.mjs",
       "server-plugin/law.mjs",
+      "server-plugin/legal-representation.mjs",
       "server-plugin/magic-consent.mjs",
       "server-plugin/magic-targeting.mjs",
+      "server-plugin/npc-crime.mjs",
       "server-plugin/npc-state.mjs",
       "server-plugin/regions.mjs",
-      "server-plugin/reputation.mjs",
-      "server-plugin/smuggling.mjs"
+      "server-plugin/reputation.mjs"
      ],
      "systems": [
       "base_standing",
-      "sim_agriculture",
-      "sim_economy",
       "sim_environment",
+      "sim_faith",
       "sim_law",
       "sim_magic",
       "sim_npc",
@@ -11470,6 +12954,7 @@
     "sim_companion",
     "sim_economy",
     "sim_environment",
+    "sim_faith",
     "sim_law",
     "sim_magic",
     "sim_npc",
@@ -11539,6 +13024,7 @@
      "means": "完整人物参与认知、自主、生活、承诺推进",
      "pattern": "tier==='full'",
      "modules": [
+      "server-plugin/advance-layers.mjs",
       "server-plugin/bounty.mjs",
       "server-plugin/entity-view.mjs",
       "server-plugin/festival.mjs",
@@ -11549,6 +13035,7 @@
       "server-plugin/seasonal-hazards.mjs"
      ],
      "systems": [
+      "base_advance",
       "base_standing",
       "sim_clock",
       "sim_law",
@@ -11561,23 +13048,32 @@
      "means": "日程移动与服务时段",
      "pattern": "\\.schedule\\b",
      "modules": [
+      "server-plugin/advance-layers.mjs",
       "server-plugin/consistency-evidence.mjs",
       "server-plugin/engine.mjs",
       "server-plugin/entity-view.mjs",
+      "server-plugin/family-politics.mjs",
       "server-plugin/festival.mjs",
+      "server-plugin/finance-assets.mjs",
+      "server-plugin/labor-market.mjs",
       "server-plugin/npc-memory.mjs",
+      "server-plugin/npc-obligations.mjs",
       "server-plugin/npc-schedule.mjs",
       "server-plugin/npc-state.mjs",
+      "server-plugin/public-projects.mjs",
       "server-plugin/remote-generation.mjs",
       "server-plugin/scene-card.mjs"
      ],
      "systems": [
+      "base_advance",
       "base_standing",
       "kernel_engine",
       "nar_consistency",
       "sim_clock",
+      "sim_economy",
       "sim_environment",
       "sim_npc",
+      "sim_society",
       "ui_scene"
      ]
     },
@@ -11586,7 +13082,10 @@
      "means": "家庭：立场按家庭传导",
      "pattern": "householdId|\\.household\\b",
      "modules": [
+      "server-plugin/education-state.mjs",
       "server-plugin/entity-view.mjs",
+      "server-plugin/family-politics.mjs",
+      "server-plugin/family-state.mjs",
       "server-plugin/npc-life.mjs",
       "server-plugin/npc-state.mjs",
       "server-plugin/population-service.mjs",
@@ -11597,8 +13096,10 @@
      ],
      "systems": [
       "base_standing",
+      "sim_character",
       "sim_environment",
       "sim_npc",
+      "sim_society",
       "ui_scene"
      ]
     },
@@ -11612,23 +13113,43 @@
       "server-plugin/agriculture-migration.mjs",
       "server-plugin/agriculture.mjs",
       "server-plugin/civic.mjs",
+      "server-plugin/education-cohorts.mjs",
+      "server-plugin/education-state.mjs",
+      "server-plugin/education.mjs",
       "server-plugin/effects.mjs",
       "server-plugin/elections.mjs",
+      "server-plugin/employment-state.mjs",
       "server-plugin/engine.mjs",
       "server-plugin/entity-transitions.mjs",
       "server-plugin/entity-view.mjs",
+      "server-plugin/facilities.mjs",
       "server-plugin/faction-clock.mjs",
+      "server-plugin/faith-state.mjs",
+      "server-plugin/faith.mjs",
+      "server-plugin/family-inheritance.mjs",
+      "server-plugin/family-law.mjs",
+      "server-plugin/family-politics.mjs",
       "server-plugin/farm-pests-migration.mjs",
       "server-plugin/farm-pests.mjs",
       "server-plugin/festival.mjs",
+      "server-plugin/finance-assets.mjs",
+      "server-plugin/finance-bank.mjs",
+      "server-plugin/finance-tax.mjs",
       "server-plugin/forest-water.mjs",
       "server-plugin/governance.mjs",
       "server-plugin/hazard-calendar.mjs",
+      "server-plugin/high-nobility.mjs",
+      "server-plugin/labor-market.mjs",
+      "server-plugin/law-codes.mjs",
       "server-plugin/law.mjs",
+      "server-plugin/local-exams.mjs",
       "server-plugin/location-access.mjs",
+      "server-plugin/magic-economy.mjs",
       "server-plugin/magic-growth.mjs",
       "server-plugin/military.mjs",
       "server-plugin/monster-society.mjs",
+      "server-plugin/nation-founding.mjs",
+      "server-plugin/noble-state.mjs",
       "server-plugin/npc-intelligence.mjs",
       "server-plugin/npc-life.mjs",
       "server-plugin/npc-state.mjs",
@@ -11651,6 +13172,7 @@
       "server-plugin/standing.mjs",
       "server-plugin/state-notices.mjs",
       "server-plugin/titles.mjs",
+      "server-plugin/transport.mjs",
       "server-plugin/tribal-awakening.mjs",
       "server-plugin/ui-affairs.mjs",
       "server-plugin/ui-personal.mjs",
@@ -11673,14 +13195,17 @@
       "kernel_engine",
       "kernel_storage",
       "sim_agriculture",
+      "sim_character",
       "sim_clock",
       "sim_economy",
       "sim_environment",
+      "sim_faith",
       "sim_law",
       "sim_magic",
       "sim_military",
       "sim_npc",
       "sim_society",
+      "sim_transport",
       "sim_wildlife",
       "sim_works",
       "ui_client",
@@ -11697,7 +13222,9 @@
      "modules": [
       "server-plugin/activities.mjs",
       "server-plugin/business.mjs",
+      "server-plugin/education-state.mjs",
       "server-plugin/entity-view.mjs",
+      "server-plugin/facility-state.mjs",
       "server-plugin/festival.mjs",
       "server-plugin/npc-autonomy.mjs",
       "server-plugin/npc-schedule.mjs",
@@ -11708,9 +13235,11 @@
      "systems": [
       "base_standing",
       "kernel_engine",
+      "sim_character",
       "sim_clock",
       "sim_economy",
       "sim_npc",
+      "sim_society",
       "ui_scene"
      ]
     },
@@ -11745,6 +13274,7 @@
      "means": "自主行动计划",
      "pattern": "\\.goals\\b|redLines",
      "modules": [
+      "server-plugin/nation-founding.mjs",
       "server-plugin/npc-autonomy.mjs",
       "server-plugin/npc-intelligence.mjs",
       "server-plugin/npc-memory.mjs",
@@ -11752,6 +13282,7 @@
      ],
      "systems": [
       "sim_npc",
+      "sim_society",
       "ui_scene"
      ]
     },
@@ -11764,6 +13295,8 @@
       "server-plugin/boss-migration.mjs",
       "server-plugin/boss-negotiation.mjs",
       "server-plugin/bosses.mjs",
+      "server-plugin/finance-bank.mjs",
+      "server-plugin/npc-crime.mjs",
       "server-plugin/npc-intelligence.mjs",
       "server-plugin/quest-sources.mjs",
       "server-plugin/tribal-awakening.mjs"
@@ -11771,6 +13304,8 @@
      "systems": [
       "kernel_storage",
       "sim_boss",
+      "sim_economy",
+      "sim_law",
       "sim_npc",
       "sim_society"
      ]
@@ -11781,8 +13316,11 @@
      "pattern": "relationships",
      "modules": [
       "server-plugin/character.mjs",
+      "server-plugin/education-state.mjs",
       "server-plugin/engine.mjs",
       "server-plugin/entity-view.mjs",
+      "server-plugin/faith-state.mjs",
+      "server-plugin/family-state.mjs",
       "server-plugin/npc-autonomy.mjs",
       "server-plugin/npc-cognition.mjs",
       "server-plugin/npc-life.mjs",
@@ -11803,7 +13341,9 @@
       "kernel_storage",
       "sim_character",
       "sim_environment",
+      "sim_faith",
       "sim_npc",
+      "sim_society",
       "ui_client",
       "ui_host",
       "ui_scene"
@@ -11824,11 +13364,13 @@
     "sim_clock",
     "sim_economy",
     "sim_environment",
+    "sim_faith",
     "sim_law",
     "sim_magic",
     "sim_military",
     "sim_npc",
     "sim_society",
+    "sim_transport",
     "sim_wildlife",
     "sim_works",
     "ui_client",
@@ -11876,6 +13418,7 @@
      "means": "按需展开到户",
      "pattern": "householdId",
      "modules": [
+      "server-plugin/education-state.mjs",
       "server-plugin/entity-view.mjs",
       "server-plugin/npc-life.mjs",
       "server-plugin/npc-state.mjs",
@@ -11884,6 +13427,7 @@
      ],
      "systems": [
       "base_standing",
+      "sim_character",
       "sim_environment",
       "sim_npc"
      ]
@@ -11908,6 +13452,7 @@
    ],
    "autoSystems": [
     "base_standing",
+    "sim_character",
     "sim_environment",
     "sim_npc",
     "sim_society"
@@ -11938,6 +13483,8 @@
      "pattern": "itemTraits|applyInteraction",
      "modules": [
       "server-plugin/effects.mjs",
+      "server-plugin/environment.mjs",
+      "server-plugin/finance-tax.mjs",
       "server-plugin/forest-water.mjs",
       "server-plugin/interactions.mjs",
       "server-plugin/magic-marks.mjs",
@@ -11953,6 +13500,7 @@
       "base_traits",
       "sim_clock",
       "sim_economy",
+      "sim_environment",
       "sim_magic",
       "sim_wildlife"
      ]
@@ -11968,12 +13516,18 @@
       "server-plugin/credit.mjs",
       "server-plugin/elections.mjs",
       "server-plugin/extraction.mjs",
+      "server-plugin/finance-assets.mjs",
+      "server-plugin/finance-bank.mjs",
+      "server-plugin/finance-tax.mjs",
+      "server-plugin/labor-market.mjs",
       "server-plugin/law.mjs",
       "server-plugin/military.mjs",
       "server-plugin/npc-autonomy.mjs",
+      "server-plugin/npc-crime.mjs",
       "server-plugin/settlement-trade.mjs",
       "server-plugin/shop.mjs",
       "server-plugin/smuggling.mjs",
+      "server-plugin/transport.mjs",
       "server-plugin/world-events.mjs"
      ],
      "systems": [
@@ -11984,7 +13538,8 @@
       "sim_law",
       "sim_military",
       "sim_npc",
-      "sim_society"
+      "sim_society",
+      "sim_transport"
      ]
     },
     {
@@ -12004,6 +13559,9 @@
      "pattern": "\\.book\\b",
      "modules": [
       "server-plugin/career-metrics.mjs",
+      "server-plugin/education-state.mjs",
+      "server-plugin/education.mjs",
+      "server-plugin/hidden-passives.mjs",
       "server-plugin/learning.mjs",
       "server-plugin/works.mjs"
      ],
@@ -12018,6 +13576,7 @@
      "pattern": "checkBonus",
      "modules": [
       "server-plugin/checks.mjs",
+      "server-plugin/hidden-passives.mjs",
       "server-plugin/npc-autonomy.mjs"
      ],
      "systems": [
@@ -12034,9 +13593,15 @@
       "server-plugin/boss-negotiation.mjs",
       "server-plugin/checks.mjs",
       "server-plugin/consistency-review.mjs",
+      "server-plugin/education-state.mjs",
+      "server-plugin/education.mjs",
       "server-plugin/engine.mjs",
       "server-plugin/extraction.mjs",
+      "server-plugin/finance-assets.mjs",
+      "server-plugin/hidden-passives.mjs",
+      "server-plugin/interactions.mjs",
       "server-plugin/items.mjs",
+      "server-plugin/learning.mjs",
       "server-plugin/magic-message.mjs",
       "server-plugin/magic-mind-space.mjs",
       "server-plugin/magic.mjs",
@@ -12047,6 +13612,8 @@
       "server-plugin/repair.mjs",
       "server-plugin/sites.mjs",
       "server-plugin/state-notices.mjs",
+      "server-plugin/traits.mjs",
+      "server-plugin/transport.mjs",
       "server-plugin/ui-personal.mjs",
       "server-plugin/wildlife-society.mjs",
       "server-plugin/wildlife.mjs",
@@ -12055,6 +13622,8 @@
       "extension/personal-panels.mjs"
      ],
      "systems": [
+      "base_interactions",
+      "base_traits",
       "kernel_engine",
       "nar_consistency",
       "sim_boss",
@@ -12064,6 +13633,7 @@
       "sim_magic",
       "sim_npc",
       "sim_society",
+      "sim_transport",
       "sim_wildlife",
       "sim_works",
       "ui_client",
@@ -12081,6 +13651,7 @@
       "server-plugin/combat.mjs",
       "server-plugin/engine.mjs",
       "server-plugin/entity-view.mjs",
+      "server-plugin/hidden-passives.mjs",
       "server-plugin/learning.mjs",
       "server-plugin/professions.mjs",
       "server-plugin/state-notices.mjs",
@@ -12122,6 +13693,7 @@
     "sim_military",
     "sim_npc",
     "sim_society",
+    "sim_transport",
     "sim_wildlife",
     "sim_works",
     "ui_client",
@@ -12158,6 +13730,8 @@
      "means": "须在有工位的地点",
      "pattern": "\\.workstation\\b",
      "modules": [
+      "server-plugin/finance-assets.mjs",
+      "server-plugin/labor-market.mjs",
       "server-plugin/manufacturing.mjs",
       "server-plugin/npc-autonomy.mjs"
      ],
@@ -12172,6 +13746,8 @@
      "pattern": "\\.output\\b|byproducts",
      "modules": [
       "server-plugin/career-metrics.mjs",
+      "server-plugin/finance-assets.mjs",
+      "server-plugin/labor-market.mjs",
       "server-plugin/manufacturing.mjs",
       "server-plugin/npc-autonomy.mjs",
       "server-plugin/npc-memory.mjs",
@@ -12194,6 +13770,7 @@
      "pattern": "toolWear",
      "modules": [
       "server-plugin/agriculture.mjs",
+      "server-plugin/finance-assets.mjs",
       "server-plugin/manufacturing.mjs",
       "server-plugin/npc-autonomy.mjs",
       "server-plugin/repair.mjs",
@@ -12259,6 +13836,7 @@
      "pattern": "prerequisites",
      "modules": [
       "server-plugin/activities.mjs",
+      "server-plugin/education.mjs",
       "server-plugin/learning.mjs",
       "server-plugin/works.mjs"
      ],
@@ -12308,7 +13886,9 @@
      "pattern": "certification",
      "modules": [
       "server-plugin/career-metrics.mjs",
+      "server-plugin/education.mjs",
       "server-plugin/entity-view.mjs",
+      "server-plugin/hidden-passives.mjs",
       "server-plugin/professions.mjs",
       "server-plugin/training.mjs",
       "server-plugin/ui-personal.mjs",
@@ -12382,6 +13962,7 @@
      "pattern": "contactAnchor",
      "modules": [
       "server-plugin/faction-clock.mjs",
+      "server-plugin/faith-catalog.mjs",
       "server-plugin/lore.mjs",
       "server-plugin/monster-society.mjs",
       "server-plugin/notables.mjs",
@@ -12393,6 +13974,7 @@
       "nar_memory",
       "sim_clock",
       "sim_environment",
+      "sim_faith",
       "sim_society"
      ]
     },
@@ -12429,6 +14011,8 @@
      "pattern": "\\.relations\\b",
      "modules": [
       "server-plugin/faction-clock.mjs",
+      "server-plugin/family-politics.mjs",
+      "server-plugin/family-state.mjs",
       "server-plugin/group-account.mjs",
       "server-plugin/reputation-catalog.mjs",
       "server-plugin/reputation-registry.mjs",
@@ -12453,6 +14037,7 @@
     "sim_clock",
     "sim_economy",
     "sim_environment",
+    "sim_faith",
     "sim_military",
     "sim_society",
     "ui_client",
@@ -12483,20 +14068,31 @@
      "means": "成员、职位、公库、章程",
      "pattern": "organization:",
      "modules": [
+      "server-plugin/education.mjs",
       "server-plugin/elections.mjs",
       "server-plugin/entity-view.mjs",
+      "server-plugin/faith.mjs",
+      "server-plugin/family-politics.mjs",
+      "server-plugin/finance-assets.mjs",
+      "server-plugin/finance-bank.mjs",
       "server-plugin/group-account.mjs",
+      "server-plugin/labor-market.mjs",
       "server-plugin/military.mjs",
       "server-plugin/monster-society.mjs",
+      "server-plugin/nation-founding.mjs",
       "server-plugin/organization-state.mjs",
       "server-plugin/organizations.mjs",
       "server-plugin/public-opinion.mjs",
       "server-plugin/standing.mjs",
+      "server-plugin/training.mjs",
       "server-plugin/tribal-awakening.mjs",
       "server-plugin/war-diplomacy.mjs"
      ],
      "systems": [
       "base_standing",
+      "sim_character",
+      "sim_economy",
+      "sim_faith",
       "sim_military",
       "sim_society"
      ]
@@ -12506,9 +14102,16 @@
      "means": "成员受损害/恩惠按 0.5 传导给组织",
      "pattern": "'organization'",
      "modules": [
+      "server-plugin/advance-layers.mjs",
       "server-plugin/consistency-review.mjs",
+      "server-plugin/education.mjs",
       "server-plugin/entity-view.mjs",
+      "server-plugin/faith.mjs",
+      "server-plugin/finance-assets.mjs",
+      "server-plugin/finance-bank.mjs",
+      "server-plugin/labor-market.mjs",
       "server-plugin/military.mjs",
+      "server-plugin/nation-founding.mjs",
       "server-plugin/notables.mjs",
       "server-plugin/organization-state.mjs",
       "server-plugin/organizations.mjs",
@@ -12516,8 +14119,12 @@
       "server-plugin/tribal-awakening.mjs"
      ],
      "systems": [
+      "base_advance",
       "base_standing",
       "nar_consistency",
+      "sim_character",
+      "sim_economy",
+      "sim_faith",
       "sim_military",
       "sim_society"
      ]
@@ -12539,9 +14146,13 @@
     }
    ],
    "autoSystems": [
+    "base_advance",
     "base_events",
     "base_standing",
     "nar_consistency",
+    "sim_character",
+    "sim_economy",
+    "sim_faith",
     "sim_military",
     "sim_society"
    ],
@@ -12583,6 +14194,7 @@
      "modules": [
       "server-plugin/advance-registry.mjs",
       "server-plugin/catalog.mjs",
+      "server-plugin/effect-registry.mjs",
       "server-plugin/effects.mjs",
       "server-plugin/festival.mjs",
       "server-plugin/lore.mjs",
@@ -12631,7 +14243,9 @@
      "modules": [
       "server-plugin/effects.mjs",
       "server-plugin/faction-clock.mjs",
+      "server-plugin/faith.mjs",
       "server-plugin/festival.mjs",
+      "server-plugin/magic-economy.mjs",
       "server-plugin/seasonal-hazards.mjs",
       "server-plugin/tribal-awakening.mjs",
       "server-plugin/war-diplomacy.mjs",
@@ -12640,6 +14254,8 @@
      "systems": [
       "base_effects",
       "sim_clock",
+      "sim_economy",
+      "sim_faith",
       "sim_military",
       "sim_society"
      ]
@@ -12648,6 +14264,8 @@
    "autoSystems": [
     "base_effects",
     "sim_clock",
+    "sim_economy",
+    "sim_faith",
     "sim_military",
     "sim_society"
    ],
@@ -12678,14 +14296,21 @@
      "pattern": "regionOf",
      "modules": [
       "server-plugin/catalog.mjs",
+      "server-plugin/finance-tax.mjs",
+      "server-plugin/law-codes.mjs",
+      "server-plugin/nation-founding.mjs",
+      "server-plugin/noble-state.mjs",
       "server-plugin/regions.mjs",
       "server-plugin/ui-map.mjs",
       "server-plugin/war-diplomacy.mjs"
      ],
      "systems": [
       "nar_memory",
+      "sim_economy",
       "sim_environment",
+      "sim_law",
       "sim_military",
+      "sim_society",
       "ui_server"
      ]
     },
@@ -12694,10 +14319,12 @@
      "means": "统治方与非人统治标记（地图）",
      "pattern": "rulerOf|mapRegions",
      "modules": [
+      "server-plugin/finance-tax.mjs",
       "server-plugin/regions.mjs",
       "server-plugin/ui-map.mjs"
      ],
      "systems": [
+      "sim_economy",
       "sim_environment",
       "ui_server"
      ]
@@ -12719,8 +14346,11 @@
    ],
    "autoSystems": [
     "nar_memory",
+    "sim_economy",
     "sim_environment",
+    "sim_law",
     "sim_military",
+    "sim_society",
     "ui_server"
    ],
    "manual": [],
@@ -12825,12 +14455,16 @@
      "means": "复活点、训练、仪式",
      "pattern": "\\.church\\b",
      "modules": [
+      "server-plugin/faith-catalog.mjs",
+      "server-plugin/faith-state.mjs",
+      "server-plugin/faith.mjs",
       "server-plugin/magic-ritual.mjs",
       "server-plugin/revival.mjs",
       "server-plugin/training.mjs"
      ],
      "systems": [
       "sim_character",
+      "sim_faith",
       "sim_magic"
      ]
     },
@@ -12852,6 +14486,7 @@
    "autoSystems": [
     "nar_memory",
     "sim_character",
+    "sim_faith",
     "sim_magic",
     "ui_server"
    ],
@@ -12923,6 +14558,18 @@
     "note": "已注册，但 rules.json 与 lore 的任何 effects 列表都没有用到"
    },
    {
+    "kind": "facility",
+    "note": "已注册，但 rules.json 与 lore 的任何 effects 列表都没有用到"
+   },
+   {
+    "kind": "faith_claim",
+    "note": "已注册，但 rules.json 与 lore 的任何 effects 列表都没有用到"
+   },
+   {
+    "kind": "faith_omen",
+    "note": "已注册，但 rules.json 与 lore 的任何 effects 列表都没有用到"
+   },
+   {
     "kind": "trade",
     "note": "已注册，但 rules.json 与 lore 的任何 effects 列表都没有用到"
    },
@@ -12960,17 +14607,6 @@
     ]
    },
    {
-    "content": "spell",
-    "file": "world/meta/spells.json",
-    "fields": [
-     "boundaries",
-     "casting",
-     "proficiencyEffects",
-     "socialConsequences",
-     "theory"
-    ]
-   },
-   {
     "content": "npc",
     "file": "world/people/baseline.json",
     "fields": [
@@ -12997,8 +14633,7 @@
     "fields": [
      "acquisition",
      "inspection",
-     "seasonality",
-     "storage"
+     "seasonality"
     ]
    },
    {
@@ -13028,8 +14663,7 @@
      "styles",
      "trainingRule",
      "upstream",
-     "weapons",
-     "workshop"
+     "weapons"
     ]
    },
    {
@@ -13063,12 +14697,18 @@
     "server-plugin/civic.mjs",
     "server-plugin/combat.mjs",
     "server-plugin/duels.mjs",
+    "server-plugin/education.mjs",
     "server-plugin/elections.mjs",
     "server-plugin/environment.mjs",
     "server-plugin/extraction.mjs",
+    "server-plugin/facility-state.mjs",
     "server-plugin/faction-clock.mjs",
+    "server-plugin/faith.mjs",
+    "server-plugin/family-politics.mjs",
     "server-plugin/festival.mjs",
     "server-plugin/governance.mjs",
+    "server-plugin/hidden-passives.mjs",
+    "server-plugin/high-nobility.mjs",
     "server-plugin/items.mjs",
     "server-plugin/law.mjs",
     "server-plugin/magic-air.mjs",
@@ -13079,6 +14719,8 @@
     "server-plugin/magic-water-earth.mjs",
     "server-plugin/manufacturing.mjs",
     "server-plugin/military.mjs",
+    "server-plugin/nation-founding.mjs",
+    "server-plugin/noble-state.mjs",
     "server-plugin/notables.mjs",
     "server-plugin/npc-life.mjs",
     "server-plugin/organizations.mjs",
@@ -13091,6 +14733,7 @@
     "server-plugin/repair.mjs",
     "server-plugin/seasonal-hazards.mjs",
     "server-plugin/sites.mjs",
+    "server-plugin/spell-research.mjs",
     "server-plugin/summons.mjs",
     "server-plugin/titles.mjs",
     "server-plugin/war-diplomacy.mjs",
@@ -13125,40 +14768,73 @@
    ],
    "world": [],
    "worldDirs": [],
-   "lines": 241
+   "lines": 261
+  },
+  "server-plugin/advance-layers.mjs": {
+   "system": "base_advance",
+   "imports": [],
+   "stateWrites": [],
+   "stateReads": [
+    "effects",
+    "location",
+    "npcs",
+    "obligations",
+    "player",
+    "records",
+    "remote"
+   ],
+   "recordWrites": [],
+   "recordReads": [],
+   "rules": [],
+   "world": [
+    "locations",
+    "regions"
+   ],
+   "worldDirs": [],
+   "lines": 62
   },
   "server-plugin/advance-registry.mjs": {
    "system": "base_advance",
    "imports": [
+    "server-plugin/advance-layers.mjs",
     "server-plugin/agriculture.mjs",
     "server-plugin/bosses.mjs",
     "server-plugin/bounty.mjs",
     "server-plugin/contracts.mjs",
     "server-plugin/credit.mjs",
+    "server-plugin/education.mjs",
     "server-plugin/effects.mjs",
     "server-plugin/entity-view.mjs",
+    "server-plugin/facilities.mjs",
     "server-plugin/faction-clock.mjs",
+    "server-plugin/faith.mjs",
     "server-plugin/festival.mjs",
     "server-plugin/forest-water.mjs",
     "server-plugin/governance.mjs",
     "server-plugin/hazard-calendar.mjs",
+    "server-plugin/high-nobility.mjs",
+    "server-plugin/labor-market.mjs",
     "server-plugin/law.mjs",
     "server-plugin/magic-air.mjs",
     "server-plugin/magic-area.mjs",
     "server-plugin/magic-care.mjs",
+    "server-plugin/magic-economy.mjs",
     "server-plugin/magic-mind-space.mjs",
     "server-plugin/magic-object.mjs",
     "server-plugin/magic-water-earth.mjs",
     "server-plugin/military.mjs",
     "server-plugin/monster-society.mjs",
+    "server-plugin/nation-founding.mjs",
     "server-plugin/notables.mjs",
     "server-plugin/npc-autonomy.mjs",
     "server-plugin/npc-cognition.mjs",
+    "server-plugin/npc-crime.mjs",
     "server-plugin/npc-life.mjs",
     "server-plugin/npc-obligations.mjs",
     "server-plugin/office-salary.mjs",
     "server-plugin/organizations.mjs",
     "server-plugin/pets.mjs",
+    "server-plugin/post.mjs",
     "server-plugin/progression.mjs",
     "server-plugin/promotion.mjs",
     "server-plugin/public-projects.mjs",
@@ -13168,6 +14844,7 @@
     "server-plugin/shop.mjs",
     "server-plugin/summons.mjs",
     "server-plugin/titles.mjs",
+    "server-plugin/transport.mjs",
     "server-plugin/tribal-awakening.mjs",
     "server-plugin/war-diplomacy.mjs",
     "server-plugin/water-cycle.mjs",
@@ -13184,7 +14861,8 @@
    ],
    "stateReads": [
     "location",
-    "player"
+    "player",
+    "remote"
    ],
    "recordWrites": [],
    "recordReads": [
@@ -13201,7 +14879,7 @@
     "npcs"
    ],
    "worldDirs": [],
-   "lines": 176
+   "lines": 206
   },
   "server-plugin/agriculture-migration.mjs": {
    "system": "kernel_storage",
@@ -13224,8 +14902,12 @@
   "server-plugin/agriculture.mjs": {
    "system": "sim_agriculture",
    "imports": [
+    "server-plugin/employment-state.mjs",
+    "server-plugin/facility-state.mjs",
     "server-plugin/farm-pests.mjs",
     "server-plugin/forest-water.mjs",
+    "server-plugin/law-codes.mjs",
+    "server-plugin/magic-economy.mjs",
     "server-plugin/magic-growth.mjs",
     "server-plugin/water-cycle.mjs",
     "server-plugin/weather.mjs"
@@ -13249,7 +14931,6 @@
    ],
    "rules": [
     "agriculture",
-    "law",
     "magicGrowth",
     "weather"
    ],
@@ -13262,7 +14943,7 @@
     "spells"
    ],
    "worldDirs": [],
-   "lines": 327
+   "lines": 333
   },
   "server-plugin/archived-reducer.mjs": {
    "system": "kernel_engine",
@@ -13416,6 +15097,7 @@
    "imports": [
     "server-plugin/entity-transitions.mjs",
     "server-plugin/entity-view.mjs",
+    "server-plugin/law-codes.mjs",
     "server-plugin/organizations.mjs",
     "server-plugin/progression.mjs",
     "server-plugin/standing.mjs",
@@ -13442,13 +15124,15 @@
    ],
    "world": [],
    "worldDirs": [],
-   "lines": 347
+   "lines": 351
   },
   "server-plugin/business.mjs": {
    "system": "sim_economy",
    "imports": [
     "server-plugin/contracts.mjs",
     "server-plugin/credit.mjs",
+    "server-plugin/finance-assets.mjs",
+    "server-plugin/finance-tax.mjs",
     "server-plugin/items.mjs",
     "server-plugin/npc-schedule.mjs",
     "server-plugin/settlement-trade.mjs",
@@ -13473,7 +15157,7 @@
    ],
    "world": [],
    "worldDirs": [],
-   "lines": 250
+   "lines": 256
   },
   "server-plugin/campaign-reducer.mjs": {
    "system": "kernel_engine",
@@ -13517,7 +15201,7 @@
     "professions"
    ],
    "worldDirs": [],
-   "lines": 207
+   "lines": 209
   },
   "server-plugin/catalog.mjs": {
    "system": "nar_memory",
@@ -13585,6 +15269,7 @@
   "server-plugin/checks.mjs": {
    "system": "sim_character",
    "imports": [
+    "server-plugin/hidden-passives.mjs",
     "server-plugin/items.mjs",
     "server-plugin/npc-intelligence.mjs",
     "server-plugin/professions.mjs"
@@ -13608,7 +15293,7 @@
    ],
    "world": [],
    "worldDirs": [],
-   "lines": 96
+   "lines": 109
   },
   "server-plugin/chronicle.mjs": {
    "system": "nar_memory",
@@ -13765,6 +15450,8 @@
   "server-plugin/contracts.mjs": {
    "system": "sim_economy",
    "imports": [
+    "server-plugin/finance-assets.mjs",
+    "server-plugin/finance-tax.mjs",
     "server-plugin/magic-ritual.mjs",
     "server-plugin/storage.mjs"
    ],
@@ -13781,7 +15468,7 @@
    "rules": [],
    "world": [],
    "worldDirs": [],
-   "lines": 127
+   "lines": 130
   },
   "server-plugin/creature-nature.mjs": {
    "system": "sim_wildlife",
@@ -13806,6 +15493,9 @@
    "imports": [
     "server-plugin/business.mjs",
     "server-plugin/entity-view.mjs",
+    "server-plugin/finance-assets.mjs",
+    "server-plugin/finance-bank.mjs",
+    "server-plugin/group-account.mjs",
     "server-plugin/items.mjs",
     "server-plugin/law.mjs",
     "server-plugin/npc-schedule.mjs",
@@ -13831,7 +15521,7 @@
     "locations"
    ],
    "worldDirs": [],
-   "lines": 280
+   "lines": 300
   },
   "server-plugin/duels.mjs": {
    "system": "sim_combat",
@@ -13853,10 +15543,110 @@
    "worldDirs": [],
    "lines": 60
   },
+  "server-plugin/education-cohorts.mjs": {
+   "system": "sim_character",
+   "imports": [],
+   "stateWrites": [],
+   "stateReads": [],
+   "recordWrites": [],
+   "recordReads": [],
+   "rules": [
+    "education",
+    "npcGrowth"
+   ],
+   "world": [],
+   "worldDirs": [],
+   "lines": 36
+  },
+  "server-plugin/education-state.mjs": {
+   "system": "sim_character",
+   "imports": [
+    "server-plugin/advance-layers.mjs",
+    "server-plugin/education-cohorts.mjs",
+    "server-plugin/facility-state.mjs",
+    "server-plugin/faith-catalog.mjs",
+    "server-plugin/npc-state.mjs"
+   ],
+   "stateWrites": [],
+   "stateReads": [],
+   "recordWrites": [],
+   "recordReads": [
+    "education_cohort"
+   ],
+   "rules": [
+    "books",
+    "education",
+    "npcGrowth"
+   ],
+   "world": [
+    "households",
+    "locations",
+    "npcs",
+    "residents",
+    "settlementProfiles",
+    "skills"
+   ],
+   "worldDirs": [],
+   "lines": 120
+  },
+  "server-plugin/education.mjs": {
+   "system": "sim_character",
+   "imports": [
+    "server-plugin/checks.mjs",
+    "server-plugin/education-state.mjs",
+    "server-plugin/employment-state.mjs",
+    "server-plugin/entity-view.mjs",
+    "server-plugin/facility-state.mjs",
+    "server-plugin/finance-bank.mjs",
+    "server-plugin/items.mjs",
+    "server-plugin/labor-market.mjs",
+    "server-plugin/npc-growth.mjs",
+    "server-plugin/npc-schedule.mjs",
+    "server-plugin/npc-state.mjs",
+    "server-plugin/organization-state.mjs",
+    "server-plugin/population.mjs"
+   ],
+   "stateWrites": [
+    "npcs"
+   ],
+   "stateReads": [
+    "minute",
+    "records"
+   ],
+   "recordWrites": [],
+   "recordReads": [
+    "organization",
+    "temple"
+   ],
+   "rules": [
+    "books",
+    "npcGrowth"
+   ],
+   "world": [
+    "factions"
+   ],
+   "worldDirs": [],
+   "lines": 201
+  },
+  "server-plugin/effect-registry.mjs": {
+   "system": "base_effects",
+   "imports": [],
+   "stateWrites": [],
+   "stateReads": [],
+   "recordWrites": [],
+   "recordReads": [],
+   "rules": [],
+   "world": [],
+   "worldDirs": [],
+   "lines": 18
+  },
   "server-plugin/effects.mjs": {
    "system": "base_effects",
    "imports": [
+    "server-plugin/effect-registry.mjs",
     "server-plugin/environment.mjs",
+    "server-plugin/facilities.mjs",
+    "server-plugin/facility-state.mjs",
     "server-plugin/interactions.mjs",
     "server-plugin/magic-object.mjs",
     "server-plugin/reputation-registry.mjs",
@@ -13895,7 +15685,7 @@
    "worldDirs": [
     "meta"
    ],
-   "lines": 195
+   "lines": 193
   },
   "server-plugin/elections.mjs": {
    "system": "sim_society",
@@ -13934,11 +15724,32 @@
    "worldDirs": [],
    "lines": 108
   },
+  "server-plugin/employment-state.mjs": {
+   "system": "sim_economy",
+   "imports": [],
+   "stateWrites": [
+    "records"
+   ],
+   "stateReads": [
+    "minute",
+    "npcAutonomy",
+    "npcs",
+    "obligations",
+    "player"
+   ],
+   "recordWrites": [],
+   "recordReads": [],
+   "rules": [],
+   "world": [],
+   "worldDirs": [],
+   "lines": 43
+  },
   "server-plugin/engine.mjs": {
    "system": "kernel_engine",
    "imports": [
     "extension/tools.mjs",
     "server-plugin/activities.mjs",
+    "server-plugin/advance-layers.mjs",
     "server-plugin/advance-registry.mjs",
     "server-plugin/agriculture-migration.mjs",
     "server-plugin/agriculture.mjs",
@@ -13951,9 +15762,13 @@
     "server-plugin/credit.mjs",
     "server-plugin/entity-view.mjs",
     "server-plugin/environment.mjs",
+    "server-plugin/facility-state.mjs",
     "server-plugin/faction-clock.mjs",
     "server-plugin/festival.mjs",
+    "server-plugin/finance-assets.mjs",
+    "server-plugin/finance-tax.mjs",
     "server-plugin/hazard-calendar.mjs",
+    "server-plugin/hidden-passives.mjs",
     "server-plugin/items.mjs",
     "server-plugin/law.mjs",
     "server-plugin/learning.mjs",
@@ -13964,6 +15779,7 @@
     "server-plugin/magic-care.mjs",
     "server-plugin/magic-consent.mjs",
     "server-plugin/magic-context.mjs",
+    "server-plugin/magic-economy.mjs",
     "server-plugin/magic-light.mjs",
     "server-plugin/magic-mind-space.mjs",
     "server-plugin/magic-object.mjs",
@@ -13973,6 +15789,7 @@
     "server-plugin/military.mjs",
     "server-plugin/monster-society.mjs",
     "server-plugin/npc-autonomy.mjs",
+    "server-plugin/npc-crime.mjs",
     "server-plugin/npc-intelligence.mjs",
     "server-plugin/npc-obligations.mjs",
     "server-plugin/npc-relations.mjs",
@@ -13981,8 +15798,10 @@
     "server-plugin/npc-state.mjs",
     "server-plugin/pets.mjs",
     "server-plugin/population.mjs",
+    "server-plugin/post.mjs",
     "server-plugin/professions.mjs",
     "server-plugin/progression.mjs",
+    "server-plugin/prompt-scope.mjs",
     "server-plugin/quest-sources.mjs",
     "server-plugin/quest-wildlife.mjs",
     "server-plugin/remote-generation.mjs",
@@ -13998,6 +15817,7 @@
     "server-plugin/state-notices.mjs",
     "server-plugin/storage.mjs",
     "server-plugin/summons.mjs",
+    "server-plugin/transport.mjs",
     "server-plugin/tribal-awakening.mjs",
     "server-plugin/war-diplomacy.mjs",
     "server-plugin/weather.mjs",
@@ -14025,6 +15845,7 @@
    ],
    "stateReads": [
     "created",
+    "remote",
     "spells"
    ],
    "recordWrites": [
@@ -14071,7 +15892,7 @@
     "spells"
    ],
    "worldDirs": [],
-   "lines": 681
+   "lines": 738
   },
   "server-plugin/entity-transitions.mjs": {
    "system": "base_events",
@@ -14094,6 +15915,11 @@
   "server-plugin/entity-view.mjs": {
    "system": "base_standing",
    "imports": [
+    "server-plugin/employment-state.mjs",
+    "server-plugin/facility-state.mjs",
+    "server-plugin/faith-state.mjs",
+    "server-plugin/hidden-passives.mjs",
+    "server-plugin/noble-state.mjs",
     "server-plugin/npc-state.mjs",
     "server-plugin/organization-state.mjs",
     "server-plugin/promotion-view.mjs"
@@ -14130,6 +15956,7 @@
     "npcGrowth",
     "questSources",
     "reputation",
+    "training",
     "wildlife"
    ],
    "world": [
@@ -14140,11 +15967,12 @@
     "settlementProfiles"
    ],
    "worldDirs": [],
-   "lines": 434
+   "lines": 460
   },
   "server-plugin/environment.mjs": {
    "system": "sim_environment",
    "imports": [
+    "server-plugin/facility-state.mjs",
     "server-plugin/forest-water.mjs",
     "server-plugin/interactions.mjs",
     "server-plugin/magic-air.mjs",
@@ -14164,6 +15992,7 @@
     "records"
    ],
    "stateReads": [
+    "created",
     "effects",
     "location",
     "minute",
@@ -14183,7 +16012,7 @@
    "worldDirs": [
     "design"
    ],
-   "lines": 239
+   "lines": 251
   },
   "server-plugin/extraction.mjs": {
    "system": "sim_economy",
@@ -14217,11 +16046,66 @@
    "worldDirs": [],
    "lines": 114
   },
+  "server-plugin/facilities.mjs": {
+   "system": "sim_society",
+   "imports": [
+    "server-plugin/advance-layers.mjs",
+    "server-plugin/facility-state.mjs",
+    "server-plugin/interactions.mjs",
+    "server-plugin/traits.mjs",
+    "server-plugin/weather.mjs",
+    "server-plugin/world-events.mjs"
+   ],
+   "stateWrites": [
+    "buildings",
+    "created",
+    "records"
+   ],
+   "stateReads": [
+    "location",
+    "minute",
+    "npcs"
+   ],
+   "recordWrites": [],
+   "recordReads": [
+    "world_event"
+   ],
+   "rules": [],
+   "world": [],
+   "worldDirs": [],
+   "lines": 129
+  },
+  "server-plugin/facility-state.mjs": {
+   "system": "sim_society",
+   "imports": [],
+   "stateWrites": [],
+   "stateReads": [
+    "buildings",
+    "created",
+    "projects",
+    "records"
+   ],
+   "recordWrites": [],
+   "recordReads": [
+    "facility_region"
+   ],
+   "rules": [
+    "training"
+   ],
+   "world": [
+    "locations",
+    "routes"
+   ],
+   "worldDirs": [],
+   "lines": 90
+  },
   "server-plugin/faction-clock.mjs": {
    "system": "sim_clock",
    "imports": [
     "server-plugin/effects.mjs",
     "server-plugin/entity-view.mjs",
+    "server-plugin/faith-catalog.mjs",
+    "server-plugin/finance-tax.mjs",
     "server-plugin/group-account.mjs",
     "server-plugin/reputation-registry.mjs",
     "server-plugin/standing.mjs",
@@ -14240,7 +16124,8 @@
    "recordReads": [
     "faction-assets",
     "faction-clock",
-    "society_motion"
+    "society_motion",
+    "temple"
    ],
    "rules": [
     "effectTable",
@@ -14253,7 +16138,205 @@
     "locations"
    ],
    "worldDirs": [],
-   "lines": 224
+   "lines": 238
+  },
+  "server-plugin/faith-catalog.mjs": {
+   "system": "sim_faith",
+   "imports": [],
+   "stateWrites": [],
+   "stateReads": [],
+   "recordWrites": [],
+   "recordReads": [],
+   "rules": [
+    "training"
+   ],
+   "world": [
+    "deities",
+    "factions",
+    "locations",
+    "settlementProfiles"
+   ],
+   "worldDirs": [],
+   "lines": 43
+  },
+  "server-plugin/faith-state.mjs": {
+   "system": "sim_faith",
+   "imports": [
+    "server-plugin/faith-catalog.mjs",
+    "server-plugin/npc-state.mjs"
+   ],
+   "stateWrites": [],
+   "stateReads": [
+    "careers"
+   ],
+   "recordWrites": [],
+   "recordReads": [],
+   "rules": [],
+   "world": [
+    "deities"
+   ],
+   "worldDirs": [],
+   "lines": 32
+  },
+  "server-plugin/faith.mjs": {
+   "system": "sim_faith",
+   "imports": [
+    "server-plugin/effects.mjs",
+    "server-plugin/entity-transitions.mjs",
+    "server-plugin/entity-view.mjs",
+    "server-plugin/faith-catalog.mjs",
+    "server-plugin/faith-state.mjs",
+    "server-plugin/group-account.mjs",
+    "server-plugin/npc-growth.mjs",
+    "server-plugin/npc-obligations.mjs",
+    "server-plugin/npc-schedule.mjs",
+    "server-plugin/npc-state.mjs",
+    "server-plugin/organization-state.mjs",
+    "server-plugin/standing.mjs",
+    "server-plugin/world-events.mjs"
+   ],
+   "stateWrites": [
+    "effects",
+    "obligations"
+   ],
+   "stateReads": [
+    "family",
+    "inventory",
+    "location",
+    "minute",
+    "npcs",
+    "player",
+    "records"
+   ],
+   "recordWrites": [],
+   "recordReads": [
+    "faction-clock",
+    "faith",
+    "household"
+   ],
+   "rules": [
+    "factionClock",
+    "law"
+   ],
+   "world": [
+    "items"
+   ],
+   "worldDirs": [],
+   "lines": 233
+  },
+  "server-plugin/family-diplomacy.mjs": {
+   "system": "sim_society",
+   "imports": [
+    "server-plugin/entity-transitions.mjs",
+    "server-plugin/family-state.mjs",
+    "server-plugin/organization-state.mjs",
+    "server-plugin/standing.mjs"
+   ],
+   "stateWrites": [],
+   "stateReads": [],
+   "recordWrites": [],
+   "recordReads": [],
+   "rules": [
+    "law"
+   ],
+   "world": [],
+   "worldDirs": [],
+   "lines": 52
+  },
+  "server-plugin/family-inheritance.mjs": {
+   "system": "sim_society",
+   "imports": [
+    "server-plugin/entity-transitions.mjs",
+    "server-plugin/family-state.mjs",
+    "server-plugin/items.mjs",
+    "server-plugin/law-codes.mjs",
+    "server-plugin/npc-state.mjs",
+    "server-plugin/population.mjs"
+   ],
+   "stateWrites": [
+    "buildings",
+    "npcs"
+   ],
+   "stateReads": [
+    "records"
+   ],
+   "recordWrites": [],
+   "recordReads": [],
+   "rules": [
+    "law",
+    "npcLife"
+   ],
+   "world": [],
+   "worldDirs": [],
+   "lines": 105
+  },
+  "server-plugin/family-law.mjs": {
+   "system": "sim_society",
+   "imports": [
+    "server-plugin/entity-transitions.mjs",
+    "server-plugin/family-inheritance.mjs",
+    "server-plugin/family-state.mjs",
+    "server-plugin/law-codes.mjs",
+    "server-plugin/npc-state.mjs"
+   ],
+   "stateWrites": [
+    "buildings"
+   ],
+   "stateReads": [],
+   "recordWrites": [],
+   "recordReads": [],
+   "rules": [],
+   "world": [],
+   "worldDirs": [],
+   "lines": 69
+  },
+  "server-plugin/family-politics.mjs": {
+   "system": "sim_society",
+   "imports": [
+    "server-plugin/entity-transitions.mjs",
+    "server-plugin/entity-view.mjs",
+    "server-plugin/family-diplomacy.mjs",
+    "server-plugin/family-inheritance.mjs",
+    "server-plugin/family-law.mjs",
+    "server-plugin/family-state.mjs",
+    "server-plugin/law-codes.mjs",
+    "server-plugin/npc-life.mjs",
+    "server-plugin/npc-relations.mjs",
+    "server-plugin/npc-state.mjs",
+    "server-plugin/organization-state.mjs"
+   ],
+   "stateWrites": [
+    "family",
+    "npcs",
+    "settlements"
+   ],
+   "stateReads": [],
+   "recordWrites": [],
+   "recordReads": [],
+   "rules": [],
+   "world": [],
+   "worldDirs": [],
+   "lines": 106
+  },
+  "server-plugin/family-state.mjs": {
+   "system": "sim_society",
+   "imports": [
+    "server-plugin/npc-state.mjs"
+   ],
+   "stateWrites": [],
+   "stateReads": [],
+   "recordWrites": [],
+   "recordReads": [],
+   "rules": [
+    "npcLife"
+   ],
+   "world": [
+    "households",
+    "npcs",
+    "residents"
+   ],
+   "worldDirs": [],
+   "lines": 85
   },
   "server-plugin/farm-pests-migration.mjs": {
    "system": "kernel_storage",
@@ -14335,6 +16418,125 @@
    ],
    "lines": 234
   },
+  "server-plugin/finance-assets.mjs": {
+   "system": "sim_economy",
+   "imports": [
+    "server-plugin/credit.mjs",
+    "server-plugin/entity-view.mjs",
+    "server-plugin/facility-state.mjs",
+    "server-plugin/finance-bank.mjs",
+    "server-plugin/finance-operations.mjs",
+    "server-plugin/finance-tax.mjs",
+    "server-plugin/group-account.mjs",
+    "server-plugin/items.mjs",
+    "server-plugin/labor-market.mjs",
+    "server-plugin/law.mjs",
+    "server-plugin/standing.mjs"
+   ],
+   "stateWrites": [
+    "workshopFunds"
+   ],
+   "stateReads": [
+    "buildings",
+    "location",
+    "minute",
+    "npcs",
+    "projects",
+    "records"
+   ],
+   "recordWrites": [],
+   "recordReads": [],
+   "rules": [
+    "economy"
+   ],
+   "world": [
+    "factions"
+   ],
+   "worldDirs": [],
+   "lines": 253
+  },
+  "server-plugin/finance-bank.mjs": {
+   "system": "sim_economy",
+   "imports": [
+    "server-plugin/credit.mjs",
+    "server-plugin/entity-view.mjs",
+    "server-plugin/finance-operations.mjs",
+    "server-plugin/group-account.mjs",
+    "server-plugin/hazard-calendar.mjs",
+    "server-plugin/items.mjs",
+    "server-plugin/law.mjs",
+    "server-plugin/promotion-view.mjs",
+    "server-plugin/standing.mjs",
+    "server-plugin/world-events.mjs"
+   ],
+   "stateWrites": [],
+   "stateReads": [
+    "created",
+    "location",
+    "minute",
+    "npcs",
+    "quotes",
+    "records"
+   ],
+   "recordWrites": [],
+   "recordReads": [
+    "bank"
+   ],
+   "rules": [
+    "economy",
+    "settlementTrade"
+   ],
+   "world": [],
+   "worldDirs": [],
+   "lines": 246
+  },
+  "server-plugin/finance-operations.mjs": {
+   "system": "sim_economy",
+   "imports": [],
+   "stateWrites": [],
+   "stateReads": [],
+   "recordWrites": [],
+   "recordReads": [],
+   "rules": [],
+   "world": [],
+   "worldDirs": [],
+   "lines": 6
+  },
+  "server-plugin/finance-tax.mjs": {
+   "system": "sim_economy",
+   "imports": [
+    "server-plugin/entity-view.mjs",
+    "server-plugin/group-account.mjs",
+    "server-plugin/noble-state.mjs",
+    "server-plugin/promotion-view.mjs",
+    "server-plugin/regions.mjs",
+    "server-plugin/traits.mjs"
+   ],
+   "stateWrites": [
+    "records",
+    "settlements"
+   ],
+   "stateReads": [
+    "inventory",
+    "minute"
+   ],
+   "recordWrites": [],
+   "recordReads": [
+    "domain-tax",
+    "territory"
+   ],
+   "rules": [
+    "economy",
+    "smuggling"
+   ],
+   "world": [
+    "factions",
+    "routes",
+    "settlementProfiles"
+   ],
+   "worldDirs": [],
+   "lines": 58
+  },
   "server-plugin/forest-water.mjs": {
    "system": "sim_wildlife",
    "imports": [
@@ -14380,7 +16582,10 @@
     "server-plugin/civic.mjs",
     "server-plugin/entity-transitions.mjs",
     "server-plugin/entity-view.mjs",
+    "server-plugin/high-nobility.mjs",
+    "server-plugin/local-exams.mjs",
     "server-plugin/monster-society.mjs",
+    "server-plugin/noble-state.mjs",
     "server-plugin/npc-cognition.mjs",
     "server-plugin/npc-life.mjs",
     "server-plugin/npc-obligations.mjs",
@@ -14395,6 +16600,7 @@
     "settlements"
    ],
    "stateReads": [
+    "created",
     "location",
     "minute",
     "npcAutonomy",
@@ -14418,11 +16624,13 @@
     "settlementProfiles"
    ],
    "worldDirs": [],
-   "lines": 407
+   "lines": 418
   },
   "server-plugin/group-account.mjs": {
    "system": "sim_society",
-   "imports": [],
+   "imports": [
+    "server-plugin/faith-catalog.mjs"
+   ],
    "stateWrites": [
     "settlements"
    ],
@@ -14432,14 +16640,16 @@
    "recordWrites": [],
    "recordReads": [
     "faction-assets",
-    "organization"
+    "nation",
+    "organization",
+    "temple"
    ],
    "rules": [],
    "world": [
     "factions"
    ],
    "worldDirs": [],
-   "lines": 52
+   "lines": 53
   },
   "server-plugin/hazard-calendar.mjs": {
    "system": "sim_clock",
@@ -14462,7 +16672,63 @@
    ],
    "world": [],
    "worldDirs": [],
-   "lines": 107
+   "lines": 108
+  },
+  "server-plugin/hidden-passives.mjs": {
+   "system": "sim_character",
+   "imports": [
+    "server-plugin/entity-view.mjs"
+   ],
+   "stateWrites": [
+    "careers"
+   ],
+   "stateReads": [
+    "professions"
+   ],
+   "recordWrites": [],
+   "recordReads": [],
+   "rules": [
+    "petCare",
+    "wildlife"
+   ],
+   "world": [],
+   "worldDirs": [],
+   "lines": 130
+  },
+  "server-plugin/high-nobility.mjs": {
+   "system": "sim_society",
+   "imports": [
+    "server-plugin/employment-state.mjs",
+    "server-plugin/entity-transitions.mjs",
+    "server-plugin/entity-view.mjs",
+    "server-plugin/finance-tax.mjs",
+    "server-plugin/military.mjs",
+    "server-plugin/noble-state.mjs",
+    "server-plugin/npc-life.mjs",
+    "server-plugin/public-projects.mjs",
+    "server-plugin/quest-sources.mjs",
+    "server-plugin/standing.mjs"
+   ],
+   "stateWrites": [],
+   "stateReads": [
+    "minute",
+    "quests",
+    "records"
+   ],
+   "recordWrites": [],
+   "recordReads": [
+    "military_service"
+   ],
+   "rules": [
+    "governance"
+   ],
+   "world": [
+    "npcs",
+    "regions",
+    "settlementProfiles"
+   ],
+   "worldDirs": [],
+   "lines": 129
   },
   "server-plugin/index.mjs": {
    "system": "ui_server",
@@ -14477,6 +16743,7 @@
     "server-plugin/migrations.mjs",
     "server-plugin/npc-planning-service.mjs",
     "server-plugin/population-service.mjs",
+    "server-plugin/prompt-scope.mjs",
     "server-plugin/retrieval.mjs",
     "server-plugin/storage.mjs",
     "server-plugin/ui-routes.mjs",
@@ -14495,12 +16762,14 @@
    "rules": [],
    "world": [],
    "worldDirs": [],
-   "lines": 249
+   "lines": 250
   },
   "server-plugin/interactions.mjs": {
    "system": "base_interactions",
    "imports": [
     "server-plugin/environment.mjs",
+    "server-plugin/facilities.mjs",
+    "server-plugin/facility-state.mjs",
     "server-plugin/magic-object.mjs",
     "server-plugin/traits.mjs",
     "world/design/interaction-rules.mjs"
@@ -14521,7 +16790,7 @@
    "worldDirs": [
     "design"
    ],
-   "lines": 111
+   "lines": 119
   },
   "server-plugin/items.mjs": {
    "system": "sim_economy",
@@ -14542,13 +16811,93 @@
    "worldDirs": [],
    "lines": 103
   },
+  "server-plugin/labor-market.mjs": {
+   "system": "sim_economy",
+   "imports": [
+    "server-plugin/advance-layers.mjs",
+    "server-plugin/employment-state.mjs",
+    "server-plugin/entity-view.mjs",
+    "server-plugin/finance-assets.mjs",
+    "server-plugin/finance-bank.mjs",
+    "server-plugin/group-account.mjs",
+    "server-plugin/high-nobility.mjs",
+    "server-plugin/items.mjs",
+    "server-plugin/law.mjs",
+    "server-plugin/noble-state.mjs",
+    "server-plugin/npc-intelligence.mjs",
+    "server-plugin/shop.mjs",
+    "server-plugin/standing.mjs"
+   ],
+   "stateWrites": [
+    "projects"
+   ],
+   "stateReads": [
+    "npcs",
+    "records"
+   ],
+   "recordWrites": [],
+   "recordReads": [
+    "agriculture",
+    "levy",
+    "organization",
+    "shop"
+   ],
+   "rules": [
+    "agriculture",
+    "economy"
+   ],
+   "world": [
+    "households",
+    "recipes"
+   ],
+   "worldDirs": [],
+   "lines": 326
+  },
+  "server-plugin/law-codes.mjs": {
+   "system": "sim_law",
+   "imports": [
+    "server-plugin/entity-view.mjs",
+    "server-plugin/noble-state.mjs",
+    "server-plugin/promotion-view.mjs",
+    "server-plugin/regions.mjs",
+    "server-plugin/standing.mjs"
+   ],
+   "stateWrites": [],
+   "stateReads": [
+    "npcs",
+    "records",
+    "remote"
+   ],
+   "recordWrites": [],
+   "recordReads": [
+    "diplomacy",
+    "legal_dismissal"
+   ],
+   "rules": [
+    "law"
+   ],
+   "world": [
+    "locations",
+    "npcs",
+    "regions",
+    "residents",
+    "rules",
+    "settlementProfiles"
+   ],
+   "worldDirs": [],
+   "lines": 91
+  },
   "server-plugin/law.mjs": {
    "system": "sim_law",
    "imports": [
     "server-plugin/bounty.mjs",
     "server-plugin/entity-transitions.mjs",
     "server-plugin/entity-view.mjs",
+    "server-plugin/family-law.mjs",
+    "server-plugin/finance-bank.mjs",
     "server-plugin/items.mjs",
+    "server-plugin/law-codes.mjs",
+    "server-plugin/legal-representation.mjs",
     "server-plugin/npc-cognition.mjs",
     "server-plugin/npc-schedule.mjs",
     "server-plugin/reputation.mjs",
@@ -14570,15 +16919,17 @@
    "recordReads": [],
    "rules": [
     "economy",
-    "law"
+    "law",
+    "magicEconomy"
    ],
    "world": [],
    "worldDirs": [],
-   "lines": 481
+   "lines": 574
   },
   "server-plugin/learning.mjs": {
    "system": "sim_character",
    "imports": [
+    "server-plugin/education.mjs",
     "server-plugin/entity-view.mjs",
     "server-plugin/npc-growth.mjs",
     "server-plugin/npc-intelligence.mjs",
@@ -14596,6 +16947,7 @@
    "stateReads": [
     "created",
     "inventory",
+    "itemInstances",
     "location",
     "minute",
     "professions",
@@ -14609,7 +16961,31 @@
    ],
    "world": [],
    "worldDirs": [],
-   "lines": 110
+   "lines": 115
+  },
+  "server-plugin/legal-representation.mjs": {
+   "system": "sim_law",
+   "imports": [
+    "server-plugin/entity-view.mjs",
+    "server-plugin/npc-schedule.mjs",
+    "server-plugin/npc-state.mjs"
+   ],
+   "stateWrites": [
+    "npcs",
+    "player"
+   ],
+   "stateReads": [
+    "location",
+    "minute"
+   ],
+   "recordWrites": [],
+   "recordReads": [],
+   "rules": [
+    "law"
+   ],
+   "world": [],
+   "worldDirs": [],
+   "lines": 33
   },
   "server-plugin/lies.mjs": {
    "system": "sim_npc",
@@ -14637,11 +17013,42 @@
    "worldDirs": [],
    "lines": 165
   },
+  "server-plugin/local-exams.mjs": {
+   "system": "sim_character",
+   "imports": [
+    "server-plugin/checks.mjs",
+    "server-plugin/education-state.mjs",
+    "server-plugin/entity-view.mjs",
+    "server-plugin/npc-schedule.mjs",
+    "server-plugin/professions.mjs",
+    "server-plugin/storage.mjs"
+   ],
+   "stateWrites": [],
+   "stateReads": [
+    "minute",
+    "npcs"
+   ],
+   "recordWrites": [],
+   "recordReads": [
+    "education_qualification_source"
+   ],
+   "rules": [
+    "education",
+    "governance",
+    "training"
+   ],
+   "world": [
+    "settlementProfiles"
+   ],
+   "worldDirs": [],
+   "lines": 48
+  },
   "server-plugin/location-access.mjs": {
    "system": "sim_environment",
    "imports": [
     "server-plugin/entity-view.mjs",
     "server-plugin/environment.mjs",
+    "server-plugin/facility-state.mjs",
     "server-plugin/magic-consent.mjs",
     "server-plugin/magic-message.mjs",
     "server-plugin/sites.mjs"
@@ -14662,7 +17069,7 @@
    ],
    "world": [],
    "worldDirs": [],
-   "lines": 113
+   "lines": 115
   },
   "server-plugin/lore.mjs": {
    "system": "nar_memory",
@@ -14703,6 +17110,7 @@
    ],
    "recordWrites": [
     "air_heard",
+    "air_weather",
     "local_actor_position"
    ],
    "recordReads": [],
@@ -14711,7 +17119,7 @@
     "routes"
    ],
    "worldDirs": [],
-   "lines": 304
+   "lines": 307
   },
   "server-plugin/magic-area.mjs": {
    "system": "sim_magic",
@@ -14830,6 +17238,46 @@
    "world": [],
    "worldDirs": [],
    "lines": 32
+  },
+  "server-plugin/magic-economy.mjs": {
+   "system": "sim_economy",
+   "imports": [
+    "server-plugin/effects.mjs",
+    "server-plugin/entity-view.mjs",
+    "server-plugin/group-account.mjs",
+    "server-plugin/law.mjs",
+    "server-plugin/reputation-registry.mjs",
+    "server-plugin/standing.mjs"
+   ],
+   "stateWrites": [
+    "npcs",
+    "player",
+    "records"
+   ],
+   "stateReads": [
+    "location",
+    "minute",
+    "settlements"
+   ],
+   "recordWrites": [
+    "magic-levy"
+   ],
+   "recordReads": [
+    "agriculture",
+    "magic-economy"
+   ],
+   "rules": [
+    "magicEconomy"
+   ],
+   "world": [
+    "items",
+    "locations",
+    "rules"
+   ],
+   "worldDirs": [
+    "design"
+   ],
+   "lines": 255
   },
   "server-plugin/magic-effects.mjs": {
    "system": "sim_magic",
@@ -15176,6 +17624,7 @@
   "server-plugin/magic-targeting.mjs": {
    "system": "sim_magic",
    "imports": [
+    "server-plugin/law-codes.mjs",
     "server-plugin/magic-consent.mjs",
     "server-plugin/storage.mjs"
    ],
@@ -15190,12 +17639,10 @@
     "magic_permission",
     "magic_permission_source"
    ],
-   "rules": [
-    "law"
-   ],
+   "rules": [],
    "world": [],
    "worldDirs": [],
-   "lines": 36
+   "lines": 37
   },
   "server-plugin/magic-water-earth.mjs": {
    "system": "sim_magic",
@@ -15232,6 +17679,7 @@
    "imports": [
     "server-plugin/bosses.mjs",
     "server-plugin/combat.mjs",
+    "server-plugin/hidden-passives.mjs",
     "server-plugin/items.mjs",
     "server-plugin/magic-air.mjs",
     "server-plugin/magic-consent.mjs",
@@ -15267,12 +17715,13 @@
    "rules": [],
    "world": [],
    "worldDirs": [],
-   "lines": 158
+   "lines": 159
   },
   "server-plugin/manufacturing.mjs": {
    "system": "sim_economy",
    "imports": [
     "server-plugin/checks.mjs",
+    "server-plugin/facility-state.mjs",
     "server-plugin/items.mjs",
     "server-plugin/magic-object.mjs",
     "server-plugin/professions.mjs",
@@ -15287,7 +17736,6 @@
     "workshopFunds"
    ],
    "stateReads": [
-    "buildings",
     "itemInstances",
     "location",
     "minute",
@@ -15306,7 +17754,7 @@
     "locations"
    ],
    "worldDirs": [],
-   "lines": 131
+   "lines": 134
   },
   "server-plugin/migrations.mjs": {
    "system": "kernel_storage",
@@ -15331,6 +17779,7 @@
     "server-plugin/credit.mjs",
     "server-plugin/faction-clock.mjs",
     "server-plugin/governance.mjs",
+    "server-plugin/group-account.mjs",
     "server-plugin/hazard-calendar.mjs",
     "server-plugin/npc-life.mjs",
     "server-plugin/organizations.mjs",
@@ -15370,7 +17819,7 @@
     "rules"
    ],
    "worldDirs": [],
-   "lines": 482
+   "lines": 489
   },
   "server-plugin/monster-society.mjs": {
    "system": "sim_society",
@@ -15406,6 +17855,67 @@
    ],
    "worldDirs": [],
    "lines": 420
+  },
+  "server-plugin/nation-founding.mjs": {
+   "system": "sim_society",
+   "imports": [
+    "server-plugin/entity-transitions.mjs",
+    "server-plugin/entity-view.mjs",
+    "server-plugin/group-account.mjs",
+    "server-plugin/law-codes.mjs",
+    "server-plugin/military.mjs",
+    "server-plugin/noble-state.mjs",
+    "server-plugin/regions.mjs",
+    "server-plugin/standing.mjs",
+    "server-plugin/war-diplomacy.mjs"
+   ],
+   "stateWrites": [],
+   "stateReads": [
+    "minute",
+    "records",
+    "settlements"
+   ],
+   "recordWrites": [],
+   "recordReads": [
+    "diplomacy",
+    "nation",
+    "organization",
+    "title"
+   ],
+   "rules": [
+    "governance",
+    "warDiplomacy"
+   ],
+   "world": [
+    "factions",
+    "locations",
+    "regions"
+   ],
+   "worldDirs": [],
+   "lines": 153
+  },
+  "server-plugin/noble-state.mjs": {
+   "system": "sim_society",
+   "imports": [
+    "server-plugin/promotion-view.mjs",
+    "server-plugin/regions.mjs"
+   ],
+   "stateWrites": [],
+   "stateReads": [],
+   "recordWrites": [],
+   "recordReads": [
+    "territory"
+   ],
+   "rules": [
+    "governance",
+    "quests"
+   ],
+   "world": [
+    "regions",
+    "settlementProfiles"
+   ],
+   "worldDirs": [],
+   "lines": 94
   },
   "server-plugin/notables.mjs": {
    "system": "sim_society",
@@ -15449,6 +17959,7 @@
    "imports": [
     "server-plugin/combat.mjs",
     "server-plugin/entity-view.mjs",
+    "server-plugin/facility-state.mjs",
     "server-plugin/governance.mjs",
     "server-plugin/items.mjs",
     "server-plugin/magic-object.mjs",
@@ -15470,7 +17981,6 @@
     "workshopFunds"
    ],
    "stateReads": [
-    "buildings",
     "created",
     "location",
     "minute",
@@ -15487,7 +17997,7 @@
     "recipes"
    ],
    "worldDirs": [],
-   "lines": 210
+   "lines": 211
   },
   "server-plugin/npc-cognition.mjs": {
    "system": "sim_npc",
@@ -15500,8 +18010,10 @@
     "server-plugin/npc-relations.mjs",
     "server-plugin/npc-rumors.mjs",
     "server-plugin/npc-schedule.mjs",
+    "server-plugin/post.mjs",
     "server-plugin/reputation.mjs",
-    "server-plugin/storage.mjs"
+    "server-plugin/storage.mjs",
+    "server-plugin/transport.mjs"
    ],
    "stateWrites": [
     "npcCognition",
@@ -15515,17 +18027,56 @@
     "records"
    ],
    "recordWrites": [],
-   "recordReads": [],
+   "recordReads": [
+    "post"
+   ],
    "rules": [],
    "world": [],
    "worldDirs": [],
-   "lines": 148
+   "lines": 161
+  },
+  "server-plugin/npc-crime.mjs": {
+   "system": "sim_law",
+   "imports": [
+    "server-plugin/bounty.mjs",
+    "server-plugin/combat.mjs",
+    "server-plugin/entity-transitions.mjs",
+    "server-plugin/entity-view.mjs",
+    "server-plugin/items.mjs",
+    "server-plugin/law-codes.mjs",
+    "server-plugin/law.mjs",
+    "server-plugin/npc-intelligence.mjs",
+    "server-plugin/npc-state.mjs",
+    "server-plugin/standing.mjs",
+    "server-plugin/world-clock.mjs",
+    "server-plugin/world-events.mjs"
+   ],
+   "stateWrites": [
+    "npcs"
+   ],
+   "stateReads": [
+    "location",
+    "records"
+   ],
+   "recordWrites": [],
+   "recordReads": [
+    "legal_case"
+   ],
+   "rules": [
+    "law",
+    "smuggling"
+   ],
+   "world": [],
+   "worldDirs": [],
+   "lines": 133
   },
   "server-plugin/npc-growth.mjs": {
    "system": "sim_npc",
    "imports": [
+    "server-plugin/education-state.mjs",
     "server-plugin/entity-transitions.mjs",
     "server-plugin/entity-view.mjs",
+    "server-plugin/hidden-passives.mjs",
     "server-plugin/npc-intelligence.mjs",
     "server-plugin/npc-schedule.mjs",
     "server-plugin/npc-state.mjs",
@@ -15537,8 +18088,7 @@
    "stateReads": [
     "location",
     "minute",
-    "player",
-    "skills"
+    "player"
    ],
    "recordWrites": [],
    "recordReads": [],
@@ -15553,7 +18103,7 @@
     "skills"
    ],
    "worldDirs": [],
-   "lines": 135
+   "lines": 160
   },
   "server-plugin/npc-intelligence.mjs": {
    "system": "sim_npc",
@@ -15591,8 +18141,10 @@
     "server-plugin/contracts.mjs",
     "server-plugin/entity-transitions.mjs",
     "server-plugin/entity-view.mjs",
+    "server-plugin/family-diplomacy.mjs",
+    "server-plugin/family-inheritance.mjs",
+    "server-plugin/family-state.mjs",
     "server-plugin/hazard-calendar.mjs",
-    "server-plugin/items.mjs",
     "server-plugin/npc-intelligence.mjs",
     "server-plugin/npc-relations.mjs",
     "server-plugin/npc-schedule.mjs",
@@ -15629,7 +18181,7 @@
     "rules"
    ],
    "worldDirs": [],
-   "lines": 811
+   "lines": 806
   },
   "server-plugin/npc-memory.mjs": {
    "system": "sim_npc",
@@ -15660,11 +18212,13 @@
    "rules": [],
    "world": [],
    "worldDirs": [],
-   "lines": 187
+   "lines": 191
   },
   "server-plugin/npc-obligations.mjs": {
    "system": "sim_npc",
    "imports": [
+    "server-plugin/education-state.mjs",
+    "server-plugin/employment-state.mjs",
     "server-plugin/entity-view.mjs",
     "server-plugin/magic-water-earth.mjs",
     "server-plugin/npc-schedule.mjs"
@@ -15687,7 +18241,7 @@
     "routes"
    ],
    "worldDirs": [],
-   "lines": 194
+   "lines": 199
   },
   "server-plugin/npc-planning-service.mjs": {
    "system": "sim_npc",
@@ -15764,7 +18318,11 @@
   "server-plugin/npc-schedule.mjs": {
    "system": "sim_npc",
    "imports": [
+    "server-plugin/advance-layers.mjs",
+    "server-plugin/education-state.mjs",
+    "server-plugin/employment-state.mjs",
     "server-plugin/entity-view.mjs",
+    "server-plugin/facility-state.mjs",
     "server-plugin/festival.mjs",
     "server-plugin/magic-mind-space.mjs",
     "server-plugin/magic-water-earth.mjs",
@@ -15772,12 +18330,14 @@
     "server-plugin/weather.mjs"
    ],
    "stateWrites": [
-    "npcs"
+    "npcs",
+    "records"
    ],
    "stateReads": [
     "location",
     "minute",
-    "player"
+    "player",
+    "remote"
    ],
    "recordWrites": [],
    "recordReads": [],
@@ -15787,7 +18347,7 @@
     "npcs"
    ],
    "worldDirs": [],
-   "lines": 159
+   "lines": 205
   },
   "server-plugin/npc-state.mjs": {
    "system": "sim_npc",
@@ -15799,7 +18359,8 @@
     "created",
     "family",
     "minute",
-    "npcs"
+    "npcs",
+    "records"
    ],
    "recordWrites": [],
    "recordReads": [],
@@ -15811,7 +18372,7 @@
     "households"
    ],
    "worldDirs": [],
-   "lines": 74
+   "lines": 102
   },
   "server-plugin/office-salary.mjs": {
    "system": "sim_society",
@@ -15843,6 +18404,9 @@
   "server-plugin/organization-state.mjs": {
    "system": "sim_society",
    "imports": [
+    "server-plugin/education-state.mjs",
+    "server-plugin/faith-catalog.mjs",
+    "server-plugin/family-state.mjs",
     "server-plugin/group-account.mjs",
     "server-plugin/npc-state.mjs",
     "server-plugin/reputation-catalog.mjs"
@@ -15853,7 +18417,10 @@
     "records"
    ],
    "recordWrites": [],
-   "recordReads": [],
+   "recordReads": [
+    "family",
+    "temple"
+   ],
    "rules": [],
    "world": [
     "factions",
@@ -15863,13 +18430,14 @@
     "residents"
    ],
    "worldDirs": [],
-   "lines": 70
+   "lines": 78
   },
   "server-plugin/organizations.mjs": {
    "system": "sim_society",
    "imports": [
     "server-plugin/entity-transitions.mjs",
     "server-plugin/entity-view.mjs",
+    "server-plugin/family-state.mjs",
     "server-plugin/group-account.mjs",
     "server-plugin/notables.mjs",
     "server-plugin/npc-state.mjs",
@@ -15897,11 +18465,12 @@
     "households"
    ],
    "worldDirs": [],
-   "lines": 321
+   "lines": 329
   },
   "server-plugin/pets.mjs": {
    "system": "sim_companion",
    "imports": [
+    "server-plugin/hidden-passives.mjs",
     "server-plugin/npc-life.mjs",
     "server-plugin/professions.mjs",
     "server-plugin/progression.mjs",
@@ -15929,7 +18498,7 @@
    ],
    "world": [],
    "worldDirs": [],
-   "lines": 279
+   "lines": 280
   },
   "server-plugin/population-service.mjs": {
    "system": "sim_npc",
@@ -15952,6 +18521,8 @@
   "server-plugin/population.mjs": {
    "system": "sim_npc",
    "imports": [
+    "server-plugin/advance-layers.mjs",
+    "server-plugin/education-cohorts.mjs",
     "server-plugin/npc-state.mjs",
     "server-plugin/remote-generation.mjs"
    ],
@@ -15962,7 +18533,8 @@
    ],
    "stateReads": [
     "location",
-    "minute"
+    "minute",
+    "remote"
    ],
    "recordWrites": [],
    "recordReads": [],
@@ -15978,13 +18550,40 @@
    "worldDirs": [
     "meta"
    ],
-   "lines": 399
+   "lines": 471
+  },
+  "server-plugin/post.mjs": {
+   "system": "sim_transport",
+   "imports": [
+    "server-plugin/finance-bank.mjs",
+    "server-plugin/npc-cognition.mjs",
+    "server-plugin/transport.mjs",
+    "server-plugin/world-events.mjs"
+   ],
+   "stateWrites": [],
+   "stateReads": [
+    "location",
+    "npcs",
+    "player",
+    "records"
+   ],
+   "recordWrites": [],
+   "recordReads": [
+    "post"
+   ],
+   "rules": [],
+   "world": [],
+   "worldDirs": [],
+   "lines": 93
   },
   "server-plugin/professions.mjs": {
    "system": "sim_character",
    "imports": [
     "server-plugin/career-metrics.mjs",
+    "server-plugin/education.mjs",
     "server-plugin/entity-view.mjs",
+    "server-plugin/hidden-passives.mjs",
+    "server-plugin/local-exams.mjs",
     "server-plugin/npc-schedule.mjs",
     "server-plugin/npc-state.mjs",
     "server-plugin/pets.mjs",
@@ -16008,7 +18607,7 @@
    "rules": [],
    "world": [],
    "worldDirs": [],
-   "lines": 102
+   "lines": 107
   },
   "server-plugin/progression.mjs": {
    "system": "sim_character",
@@ -16082,7 +18681,25 @@
     "settlementProfiles"
    ],
    "worldDirs": [],
-   "lines": 141
+   "lines": 142
+  },
+  "server-plugin/prompt-scope.mjs": {
+   "system": "ui_scene",
+   "imports": [
+    "server-plugin/advance-layers.mjs"
+   ],
+   "stateWrites": [],
+   "stateReads": [
+    "location"
+   ],
+   "recordWrites": [],
+   "recordReads": [],
+   "rules": [],
+   "world": [
+    "settlementProfiles"
+   ],
+   "worldDirs": [],
+   "lines": 14
   },
   "server-plugin/public-opinion.mjs": {
    "system": "sim_society",
@@ -16109,12 +18726,15 @@
     "locations"
    ],
    "worldDirs": [],
-   "lines": 145
+   "lines": 149
   },
   "server-plugin/public-projects.mjs": {
    "system": "sim_society",
    "imports": [
+    "server-plugin/employment-state.mjs",
     "server-plugin/entity-transitions.mjs",
+    "server-plugin/facilities.mjs",
+    "server-plugin/facility-state.mjs",
     "server-plugin/governance.mjs",
     "server-plugin/items.mjs",
     "server-plugin/npc-life.mjs",
@@ -16122,16 +18742,16 @@
    ],
    "stateWrites": [
     "buildings",
-    "created",
     "npcs",
+    "player",
     "projects",
     "records",
     "settlements"
    ],
    "stateReads": [
+    "created",
     "location",
-    "minute",
-    "player"
+    "minute"
    ],
    "recordWrites": [],
    "recordReads": [
@@ -16140,7 +18760,7 @@
    "rules": [],
    "world": [],
    "worldDirs": [],
-   "lines": 242
+   "lines": 269
   },
   "server-plugin/quest-board.mjs": {
    "system": "sim_society",
@@ -16149,6 +18769,7 @@
     "server-plugin/entity-view.mjs",
     "server-plugin/governance.mjs",
     "server-plugin/items.mjs",
+    "server-plugin/labor-market.mjs",
     "server-plugin/npc-obligations.mjs",
     "server-plugin/npc-schedule.mjs",
     "server-plugin/progression.mjs",
@@ -16179,7 +18800,7 @@
     "locations"
    ],
    "worldDirs": [],
-   "lines": 212
+   "lines": 215
   },
   "server-plugin/quest-sources.mjs": {
    "system": "sim_society",
@@ -16215,6 +18836,7 @@
     "war"
    ],
    "rules": [
+    "governance",
     "questSources",
     "quests",
     "wildlife"
@@ -16229,7 +18851,7 @@
     "rules"
    ],
    "worldDirs": [],
-   "lines": 378
+   "lines": 386
   },
   "server-plugin/quest-wildlife.mjs": {
    "system": "sim_society",
@@ -16279,6 +18901,7 @@
   "server-plugin/remote-generation.mjs": {
    "system": "sim_environment",
    "imports": [
+    "server-plugin/law-codes.mjs",
     "server-plugin/npc-state.mjs",
     "server-plugin/shop.mjs",
     "server-plugin/storage.mjs",
@@ -16323,7 +18946,7 @@
    "worldDirs": [
     "geo"
    ],
-   "lines": 691
+   "lines": 711
   },
   "server-plugin/repair.mjs": {
    "system": "sim_economy",
@@ -16448,10 +19071,11 @@
    ],
    "rules": [],
    "world": [
-    "locations"
+    "locations",
+    "settlementProfiles"
    ],
    "worldDirs": [],
-   "lines": 167
+   "lines": 179
   },
   "server-plugin/return-summary.mjs": {
    "system": "ui_scene",
@@ -16490,7 +19114,7 @@
     "settlementProfiles"
    ],
    "worldDirs": [],
-   "lines": 164
+   "lines": 172
   },
   "server-plugin/revival.mjs": {
    "system": "sim_character",
@@ -16547,6 +19171,7 @@
     "server-plugin/entity-view.mjs",
     "server-plugin/environment.mjs",
     "server-plugin/festival.mjs",
+    "server-plugin/labor-market.mjs",
     "server-plugin/lies.mjs",
     "server-plugin/military.mjs",
     "server-plugin/monster-society.mjs",
@@ -16586,15 +19211,17 @@
     "routes"
    ],
    "worldDirs": [],
-   "lines": 151
+   "lines": 154
   },
   "server-plugin/seasonal-hazards.mjs": {
    "system": "sim_clock",
    "imports": [
     "server-plugin/effects.mjs",
     "server-plugin/environment.mjs",
+    "server-plugin/facility-state.mjs",
     "server-plugin/hazard-calendar.mjs",
     "server-plugin/interactions.mjs",
+    "server-plugin/magic-economy.mjs",
     "server-plugin/npc-life.mjs",
     "server-plugin/water-cycle.mjs"
    ],
@@ -16636,7 +19263,7 @@
    "worldDirs": [
     "design"
    ],
-   "lines": 381
+   "lines": 388
   },
   "server-plugin/seasonal-migration.mjs": {
    "system": "sim_wildlife",
@@ -16665,7 +19292,8 @@
   "server-plugin/settlement-profile.mjs": {
    "system": "sim_npc",
    "imports": [
-    "server-plugin/entity-view.mjs"
+    "server-plugin/entity-view.mjs",
+    "server-plugin/npc-state.mjs"
    ],
    "stateWrites": [],
    "stateReads": [
@@ -16692,16 +19320,20 @@
     "settlementProfiles"
    ],
    "worldDirs": [],
-   "lines": 62
+   "lines": 68
   },
   "server-plugin/settlement-trade.mjs": {
    "system": "sim_economy",
    "imports": [
     "server-plugin/agriculture.mjs",
+    "server-plugin/facility-state.mjs",
+    "server-plugin/finance-tax.mjs",
     "server-plugin/forest-water.mjs",
     "server-plugin/hazard-calendar.mjs",
+    "server-plugin/magic-economy.mjs",
     "server-plugin/traits.mjs",
-    "server-plugin/weather.mjs"
+    "server-plugin/transport-route.mjs",
+    "server-plugin/transport.mjs"
    ],
    "stateWrites": [
     "quotes",
@@ -16733,7 +19365,7 @@
     "rules"
    ],
    "worldDirs": [],
-   "lines": 237
+   "lines": 255
   },
   "server-plugin/shop.mjs": {
    "system": "sim_economy",
@@ -16769,7 +19401,7 @@
     "settlementProfiles"
    ],
    "worldDirs": [],
-   "lines": 215
+   "lines": 216
   },
   "server-plugin/sites.mjs": {
    "system": "sim_environment",
@@ -16818,7 +19450,9 @@
    "system": "sim_economy",
    "imports": [
     "server-plugin/bounty.mjs",
+    "server-plugin/finance-tax.mjs",
     "server-plugin/items.mjs",
+    "server-plugin/law-codes.mjs",
     "server-plugin/law.mjs",
     "server-plugin/organizations.mjs",
     "server-plugin/settlement-trade.mjs"
@@ -16835,14 +19469,32 @@
    "recordWrites": [],
    "recordReads": [],
    "rules": [
-    "law",
     "smuggling"
    ],
    "world": [
     "routes"
    ],
    "worldDirs": [],
-   "lines": 86
+   "lines": 89
+  },
+  "server-plugin/spell-research.mjs": {
+   "system": "sim_character",
+   "imports": [
+    "server-plugin/magic.mjs"
+   ],
+   "stateWrites": [],
+   "stateReads": [],
+   "recordWrites": [],
+   "recordReads": [],
+   "rules": [
+    "check",
+    "magic"
+   ],
+   "world": [
+    "spells"
+   ],
+   "worldDirs": [],
+   "lines": 55
   },
   "server-plugin/standing.mjs": {
    "system": "base_standing",
@@ -16868,6 +19520,7 @@
    "recordWrites": [],
    "recordReads": [
     "faction-assets",
+    "family",
     "organization",
     "reputation",
     "spirit_society"
@@ -16878,7 +19531,7 @@
     "regions"
    ],
    "worldDirs": [],
-   "lines": 147
+   "lines": 150
   },
   "server-plugin/state-notices.mjs": {
    "system": "ui_scene",
@@ -16944,10 +19597,12 @@
    "imports": [
     "server-plugin/entity-view.mjs",
     "server-plugin/governance.mjs",
-    "server-plugin/military.mjs"
+    "server-plugin/high-nobility.mjs",
+    "server-plugin/military.mjs",
+    "server-plugin/noble-state.mjs",
+    "server-plugin/npc-state.mjs"
    ],
    "stateWrites": [
-    "player",
     "settlements"
    ],
    "stateReads": [
@@ -16955,6 +19610,7 @@
     "location",
     "minute",
     "npcs",
+    "player",
     "records"
    ],
    "recordWrites": [],
@@ -16969,12 +19625,14 @@
     "npcs"
    ],
    "worldDirs": [],
-   "lines": 144
+   "lines": 163
   },
   "server-plugin/training.mjs": {
    "system": "sim_character",
    "imports": [
     "server-plugin/entity-view.mjs",
+    "server-plugin/faith-catalog.mjs",
+    "server-plugin/faith.mjs",
     "server-plugin/npc-schedule.mjs",
     "server-plugin/storage.mjs"
    ],
@@ -16996,19 +19654,24 @@
    ],
    "world": [],
    "worldDirs": [],
-   "lines": 84
+   "lines": 90
   },
   "server-plugin/traits.mjs": {
    "system": "base_traits",
    "imports": [
-    "server-plugin/entity-view.mjs"
+    "server-plugin/entity-view.mjs",
+    "server-plugin/facility-state.mjs",
+    "world/design/transport-rules.mjs"
    ],
    "stateWrites": [],
    "stateReads": [
+    "buildings",
+    "created",
     "creatures",
     "inventory",
     "itemInstances",
-    "minute"
+    "minute",
+    "records"
    ],
    "recordWrites": [],
    "recordReads": [],
@@ -17019,9 +19682,75 @@
     "monsters"
    ],
    "worldDirs": [
+    "design",
     "meta"
    ],
-   "lines": 151
+   "lines": 159
+  },
+  "server-plugin/transport-route.mjs": {
+   "system": "sim_transport",
+   "imports": [
+    "server-plugin/facility-state.mjs",
+    "server-plugin/hazard-calendar.mjs",
+    "server-plugin/weather.mjs"
+   ],
+   "stateWrites": [],
+   "stateReads": [],
+   "recordWrites": [],
+   "recordReads": [],
+   "rules": [
+    "travel"
+   ],
+   "world": [
+    "routes"
+   ],
+   "worldDirs": [],
+   "lines": 29
+  },
+  "server-plugin/transport.mjs": {
+   "system": "sim_transport",
+   "imports": [
+    "server-plugin/entity-view.mjs",
+    "server-plugin/finance-bank.mjs",
+    "server-plugin/finance-tax.mjs",
+    "server-plugin/group-account.mjs",
+    "server-plugin/items.mjs",
+    "server-plugin/location-access.mjs",
+    "server-plugin/magic-water-earth.mjs",
+    "server-plugin/npc-obligations.mjs",
+    "server-plugin/quest-sources.mjs",
+    "server-plugin/transport-route.mjs",
+    "server-plugin/world-events.mjs",
+    "world/design/transport-rules.mjs"
+   ],
+   "stateWrites": [
+    "creatures",
+    "itemInstances",
+    "location",
+    "npcs",
+    "quests",
+    "settlements"
+   ],
+   "stateReads": [
+    "minute"
+   ],
+   "recordWrites": [],
+   "recordReads": [
+    "transport",
+    "transport_asset"
+   ],
+   "rules": [
+    "petCare",
+    "quests"
+   ],
+   "world": [
+    "routes",
+    "settlementProfiles"
+   ],
+   "worldDirs": [
+    "design"
+   ],
+   "lines": 238
   },
   "server-plugin/tribal-awakening.mjs": {
    "system": "sim_society",
@@ -17219,7 +19948,9 @@
    "system": "sim_military",
    "imports": [
     "server-plugin/effects.mjs",
+    "server-plugin/facilities.mjs",
     "server-plugin/military.mjs",
+    "server-plugin/nation-founding.mjs",
     "server-plugin/regions.mjs",
     "server-plugin/settlement-trade.mjs",
     "server-plugin/standing.mjs",
@@ -17259,7 +19990,7 @@
     "rules"
    ],
    "worldDirs": [],
-   "lines": 182
+   "lines": 187
   },
   "server-plugin/water-cycle.mjs": {
    "system": "sim_wildlife",
@@ -17503,6 +20234,7 @@
    "system": "sim_works",
    "imports": [
     "server-plugin/career-metrics.mjs",
+    "server-plugin/education-state.mjs",
     "server-plugin/items.mjs",
     "server-plugin/professions.mjs",
     "server-plugin/reputation.mjs",
@@ -17536,7 +20268,7 @@
     "spells"
    ],
    "worldDirs": [],
-   "lines": 262
+   "lines": 268
   },
   "server-plugin/world-clock.mjs": {
    "system": "sim_clock",
@@ -17595,7 +20327,7 @@
    "rules": [],
    "world": [],
    "worldDirs": [],
-   "lines": 156
+   "lines": 157
   },
   "server-plugin/world-registry.mjs": {
    "system": "kernel_storage",
@@ -18012,7 +20744,7 @@
    "rules": [],
    "world": [],
    "worldDirs": [],
-   "lines": 111
+   "lines": 125
   },
   "extension/topbar.mjs": {
    "system": "ui_client",

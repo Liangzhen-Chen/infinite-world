@@ -35,7 +35,7 @@ test('治疗需要实际同意，满血钳制，濒死自救生效且不复活�
     const before=structuredClone(document);
     await assert.rejects(run(document,{spell:'spell_test_heal',target:'林穗'},'none'),/本人同意/);assert.deepEqual(document,before);
     document.state.npcs.npc_hw_linsui.hp=10;document.state.npcs.npc_hw_linsui.maxHp=12;
-    document.state.records.medical={category:'authorization',subject:'npc_hw_linsui',action:'healing',expires:document.state.minute+30};
+    document.state.records.medical={category:'authorization',subject:'npc_hw_linsui',grantor:'npc_hw_linsui',grantee:'player',action:'healing',expires:document.state.minute+30};
     const cast=await successful(run,document,{spell:'spell_test_heal',target:'林穗',authorization:'medical'});
     assert.equal(cast.document.state.npcs.npc_hw_linsui.hp,12);assert.equal(cast.result.healed,2);
     document.state.player.hp=0;document.state.player.status='濒死';document.state.player.dyingSince=document.state.minute;

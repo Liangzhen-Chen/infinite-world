@@ -1,17 +1,19 @@
+import {legalCodeAt} from './law-codes.mjs';
 import {transferItems} from './items.mjs';
 import {integrityOf,bribePrice,dismissed} from './bounty.mjs';
 import {registerIncident,recordExposedCorruption} from './law.mjs';
 import {regionalTradePrice} from './settlement-trade.mjs';
 import {organization} from './organizations.mjs';
+import {tradeTax,collectRouteTariffs} from './finance-tax.mjs';
 
 const path=id=>['state','records',id];
 const cargo=state=>Object.values(state.records??{}).filter(r=>r.category==='smuggling'&&r.status==='运输中');
 const awake=n=>n&&!['死亡','濒死','昏迷'].includes(n.status)&&!/睡/.test(n.activity??'');
-function checkpoints(engine,route){
+function checkpoints(engine,route,state){
     return route.edges.flatMap(id=>{
         const edge=engine.world.routes.find(r=>r.id===id),registered=engine.rules.smuggling.checkpoints.filter(c=>c.route===id);
-        if(registered.length)return registered.map(c=>({...c,edge:id}));
-        return edge.toll>0||edge.guards?.length?[{edge:id,location:edge.to,guards:edge.guards??[],taxBps:engine.rules.smuggling.cargoTaxBps}]:[];
+        if(registered.length)return registered.map(c=>({...c,edge:id,taxBps:tradeTax(engine,state,c.location,'tariff').bps}));
+        return edge.toll>0||edge.guards?.length?[{edge:id,location:edge.to,guards:edge.guards??[],taxBps:tradeTax(engine,state,edge.to,'tariff').bps}]:[];
     });
 }
 export function smuggleTrade(d,args,id){
@@ -22,7 +24,7 @@ export function smuggleTrade(d,args,id){
         if(this.quantity(d,'player',item)<quantity+reserved)throw Error('没有足量未托运的货物');
         if(!awake(d.get('state','npcs',buyer)))throw Error('没有可履约的买方');
         const mode=args.mode??'walk',route=this.route(d.get('state','location'),destination,mode,d.get('state','minute'),d.document.randomSeed);
-        const checks=checkpoints(this,route),banned=this.rules.smuggling.contraband.includes(item)||this.byId.get(item).tags?.includes('contraband');
+        const checks=checkpoints(this,route,d.get('state')),banned=this.rules.smuggling.contraband.includes(item)||this.byId.get(item).tags?.includes('contraband');
         if(!checks.length||!banned&&!checks.some(c=>c.taxBps>0))throw Error('路线没有违禁或逃税货物检查点');
         const bribe=args.coins??0;if(!Number.isSafeInteger(bribe)||bribe<0||bribe>1000000)throw Error('贿金数额无效');
         const org=args.business?organization(this,d.get('state'),this.resolve(args.business)):null;
@@ -47,8 +49,9 @@ export function smuggleTrade(d,args,id){
 
 // Called with the actual traversed route, including routes shortened by wildlife encounters.
 export function inspectSmuggling(d,engine,route,eventId){
+    collectRouteTariffs(d,engine,route,eventId);
     for(const original of cargo(d.get('state'))){
-        for(const cp of checkpoints(engine,route)){
+        for(const cp of checkpoints(engine,route,d.get('state'))){
             const row=d.get(...path(original.id));if(row.status!=='运输中')break;
             if(engine.quantity(d,'player',row.item)<row.quantity){d.set(path(row.id),{...row,status:'货物遗失'});break;}
             const guards=cp.guards.filter(id=>awake(d.get('state','npcs',id))&&d.get('state','npcs',id,'location')===cp.location&&!dismissed(d.get('state'),id));
@@ -66,7 +69,7 @@ export function inspectSmuggling(d,engine,route,eventId){
                     d.set(path(`legal_bribe:${tag}`),{category:'legal_bribe',briber:'player',recipient:guard,coins:row.bribe,shipment:row.id,minute:d.get('state','minute'),location:cp.location,effects:exposed?[]:['放行'],discovered:exposed});
                     if(exposed){
                         incident=registerIncident(d,engine,{victim:guard,offense:'bribery',value:row.bribe,witnesses:observers,eventId:`${tag}_bribery`,location:cp.location,optional:true});
-                        const law=engine.rules.law.codes.find(c=>c.locations.includes(cp.location));
+                        const law=legalCodeAt(engine,cp.location,d.get('state'));
                         if(law)corruption=recordExposedCorruption(d,engine,{target:guard,law:law.id,offer:row.bribe,witnesses:observers,eventId:`${tag}_corruption`,location:cp.location}).corruption;
                     }
                     passed=!exposed;

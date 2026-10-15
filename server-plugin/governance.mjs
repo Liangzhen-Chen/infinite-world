@@ -1,4 +1,7 @@
+import {reviewUpperOffice} from './high-nobility.mjs';
+import {domainAuthority} from './noble-state.mjs';
 import {entityTransition} from './entity-transitions.mjs';
+import {qualificationForApplication} from './local-exams.mjs';
 import {personOffices,personRegistrar,settlementHead,personSimulation} from './entity-view.mjs';
 import {digest} from './storage.mjs';
 import {npcPresenceAt} from './npc-cognition.mjs';
@@ -44,8 +47,14 @@ function local(engine,location,settlement){
 // does, the dead do not, and campaign-born children count once grown.
 export function eligible(engine,settlement,state){
     const {p}=profile(engine,settlement);
+    return residentAdults(engine,settlement,state,p);
+}
+// Population membership does not imply appointment powers. Promotion also
+// reads residents in remote settlements which have no four-village charter.
+export function residentAdults(engine,settlement,state,p=engine.world.settlementProfiles?.find(p=>p.id===settlement)){
     const houses=(engine.world.households??[]).filter(h=>h.settlement===settlement);
-    const people=new Set([...p.residentIds,...houses.flatMap(h=>householdMembers(engine,state,h.id))]);
+    const people=new Set([...p?.residentIds??[],...houses.flatMap(h=>householdMembers(engine,state,h.id)),
+        ...Object.values(state.created??{}).filter(p=>p.generated==='population'&&p.settlement===settlement).map(p=>p.id)]);
     return [...people].filter(id=>npcHousehold(engine,state,id)?.settlement===settlement&&state.npcs?.[id]?.status!=='死亡'
         &&(npcAgeAt(engine,state,id)??0)>=18).sort();
 }
@@ -285,7 +294,7 @@ export const authorityOf=engine=>engine.rules.governance?.authority??null;
 const officeKey=(settlement,office)=>`governance_office:${settlement}:${office}:player`;
 const MONTH=30*DAY;
 export function playerOffices(state,{settlement=null,power=null}={},engine=null){
-    if(engine)return personOffices(engine,state,'player',{settlement,power}).map(e=>e.value);
+    if(engine){const own=personOffices(engine,state,'player',{settlement,power}).map(e=>e.value),upper=domainAuthority(engine,state,'player',settlement,power);return upper&&!own.length?[upper]:own;}
     return Object.values(state.records??{}).filter(r=>r.category==='governance_office'&&r.holder==='player'&&r.status==='在任'&&r.until>state.minute
         &&(!settlement||r.settlement===settlement)&&(!power||r.powers.includes(power)));
 }
@@ -327,6 +336,7 @@ function appraise(engine,state,settlement,office){
     return {reasons,points,head,views};
 }
 function apply(d,engine,args,eventId,settlement){
+    const qualification=args.sourceEvent?qualificationForApplication(engine,d.get('state'),args.sourceEvent,settlement):null;
     const office=findOffice(engine,args.name);
     if(!office.settlements.includes(settlement))throw Error('该官职不辖此村');
     const {charter,registrar:clerk}=registrar(d,engine),now=d.get('state','minute');
@@ -335,7 +345,7 @@ function apply(d,engine,args,eventId,settlement){
     if(Object.values(state.records??{}).some(r=>r.category==='governance_application'&&r.status==='待审定'&&r.settlement===settlement&&r.office===office.id))throw Error('同一官职已有待审定的申请');
     const id=`governance_application:${eventId}`;unique(d,id);
     const row={category:'governance_application',id,applicant:'player',settlement,office:office.id,officeName:office.name,registrar:clerk,institution:charter.institution,
-        filedAt:now,due:now+charter.decisionAfterDays*DAY,status:'待审定',source:office.source,sourceEvent:eventId};
+        filedAt:now,due:now+charter.decisionAfterDays*DAY,status:'待审定',source:office.source,sourceEvent:eventId,...(qualification?{qualification}:{})};
     d.set(path(id),row);
     return {application:id,pending:row,note:`公署按章程于登记满${charter.decisionAfterDays}日后审定；递件人只登记，不当场许诺。`};
 }
@@ -352,6 +362,7 @@ function decide(d,engine,row,at){
     entityTransition(d,engine,{id:`${row.id}:appoint`,verb:'appoint',actor:office.appointingInstitution,target:'player',minute:at,location:row.settlement,office:office.id,summary:`${state.player.name}获任${office.name}`});
 }
 function review(d,engine,row,at){
+    if(row.upper)return reviewUpperOffice(d,engine,row,at);
     const charter=authorityOf(engine).superiors.auth_bs_office_charter,state=d.get('state');
     let reason=null;
     if(at>=row.until)reason='任期届满';

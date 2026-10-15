@@ -1,6 +1,6 @@
 import {entityTransition} from './entity-transitions.mjs';
 import {settlementHead,personRegistrar} from './entity-view.mjs';
-import {authorityOf,playerOffices,eligible} from './governance.mjs';
+import {authorityOf,playerOffices,residentAdults} from './governance.mjs';
 import {standing} from './standing.mjs';
 import {knownTopics,opinionOf} from './public-opinion.mjs';
 import {promotionRules,adminLevel,marketFactor} from './promotion-view.mjs';
@@ -32,7 +32,7 @@ const governor=(engine,state,settlement)=>settlementHead(engine,state,settlement
 // (public opinion), otherwise their own regard.
 function opinion(engine,state,settlement,who){
     let support=0,oppose=0;
-    for(const id of eligible(engine,settlement,state)){
+    for(const id of residentAdults(engine,settlement,state)){
         if(id===who)continue;
         const topics=[...knownTopics(engine,{state},id).values()].filter(t=>t.actor===who);
         const net=topics.length?topics.reduce((n,t)=>{const s=opinionOf(engine,state,id,t).stance;return n+(s==='support'?1:s==='oppose'?-1:0);},0):standing(engine,state,id,who);
@@ -40,7 +40,7 @@ function opinion(engine,state,settlement,who){
     }
     return {support,oppose};
 }
-export function promotionConditions(engine,state,settlement){
+export function promotionConditions(engine,state,settlement,{survey=false}={}){
     const level=adminLevel(engine,state,settlement),step=level&&stepFor(engine,level.level);
     if(!step)return {settlement,level:level?.level??null,step:null,ok:false,reasons:['没有可升的级别']};
     const q=step.requires,s=state.settlements?.[settlement]??{},profile=engine.world.settlementProfiles?.find(p=>p.id===settlement);
@@ -50,7 +50,8 @@ export function promotionConditions(engine,state,settlement){
     const industries=(profile?.details?.economy?.industries?.length??0)+businesses;
     const facilities=created.filter(c=>c.purpose==='公共设施').length;
     const cases=Object.values(state.records??{}).filter(r=>r.category==='legal_case'&&(r.settlement===settlement||within(engine,r.location,settlement))&&r.minute>state.minute-q.caseWindowDays*DAY).length;
-    const who=governor(engine,state,settlement),views=who?opinion(engine,state,settlement,who):{support:0,oppose:0};
+    const who=governor(engine,state,settlement),ineligible=(s.population??0)<q.population||housing<q.housing||industries<q.industries||facilities<q.facilities||cases>q.maxCases;
+    const views=who&&!(survey&&ineligible)?opinion(engine,state,settlement,who):{support:0,oppose:0};
     const checks={population:{have:s.population??0,need:q.population},housing:{have:housing,need:q.housing},industries:{have:industries,need:q.industries},
         facilities:{have:facilities,need:q.facilities},order:{have:cases,max:q.maxCases},opinion:{...views,governor:who}};
     const LABEL={population:'人口',housing:'住房',industries:'产业',facilities:'公共设施'},reasons=[];
@@ -109,7 +110,7 @@ function survey(d,engine,at){
     for(const {id:settlement,level}of allLevels(engine,d.get('state')).sort((a,b)=>a.id.localeCompare(b.id))){
         const state=d.get('state');
         if(!stepFor(engine,level)||pending(state,settlement)||!state.settlements?.[settlement])continue;
-        const c=promotionConditions(engine,state,settlement);if(!c.ok)continue;
+        const c=promotionConditions(engine,state,settlement,{survey:true});if(!c.ok)continue;
         const who=c.checks.opinion.governor;
         if(who==='player'){
             const key=`promotion_notice:${settlement}:${period}`;if(d.get(...rec(key)))continue;

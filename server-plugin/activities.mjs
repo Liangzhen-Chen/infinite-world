@@ -1,3 +1,6 @@
+import {upperGovernanceAction,upperAppointment} from './high-nobility.mjs';
+import {nationAction} from './nation-founding.mjs';
+import {appointmentSource} from './noble-state.mjs';
 import {derivedStats,monsterStats,strike,combatRandom}from'./combat.mjs';
 import {careerEquipment,effectiveProficiency}from'./professions.mjs';
 import {magicStatusStats,withMagicStats,consumeTransientMagic}from'./magic-status.mjs';
@@ -23,6 +26,7 @@ import {lairAction,bossCounter,rememberBossTactic,defeatBoss}from'./bosses.mjs';
 import {civicAction,recordDonationContribution,publicProjectApproval,donationReceipt,saveDonationReceipt}from'./civic.mjs';
 import {governanceAction,assertGovernedProject,playerOffices}from'./governance.mjs';
 import {startPublicProject,abortPublicProject,startHouse}from'./public-projects.mjs';
+import {prepareFacilityProject}from'./facility-state.mjs';
 import {titleAction}from'./titles.mjs';
 import {militaryAction}from'./military.mjs';
 import {warAction,warCombatResult}from'./war-diplomacy.mjs';
@@ -35,7 +39,12 @@ import {factionClockAction}from'./faction-clock.mjs';
 import {isHazardClock,hazardClockAction}from'./seasonal-hazards.mjs';
 import {siteAction}from'./sites.mjs';
 import {organizationAction,foundOrganization}from'./organizations.mjs';
+import {familyAction} from './family-politics.mjs';
+import {faithAction}from'./faith.mjs';
 import {workAction,isWorkOperation}from'./works.mjs';
+import {registerResearchSpell}from'./spell-research.mjs';
+import {hiddenCombat}from'./hidden-passives.mjs';
+import {educationAction} from './education.mjs';
 import {fish,eatFish,mine,miningPermit,woodcut}from'./extraction.mjs';
 import {duelAction,activeDuel,finishDuel}from'./duels.mjs';
 import {electionAction}from'./elections.mjs';
@@ -83,7 +92,10 @@ export const activities={
         const rawWeaponStats=weapon?this.byId.get(weapon).combat??{}:{},held=weapon?heldUnit(d,this,'player',weapon):null;
         const workmanshipFactor=this.rules.equipment.workmanship?.find(row=>row.name===held?.workmanship)?.multiplier??1;
         const weaponStats=Object.fromEntries(Object.entries(rawWeaponStats).map(([key,value])=>[key,value*workmanshipFactor])),careerStats=careerEquipment(d.get('state'));
+        const hidden=hiddenCombat(this,d.get('state'),'player',args.intent??'attack'),otherHidden=hiddenCombat(this,d.get('state'),target,'attack');
+        opponent.defense+=otherHidden.defense;
         const equipment=Object.fromEntries([...new Set([...Object.keys(weaponStats),...Object.keys(careerStats)])].map(key=>[key,(weaponStats[key]??0)+(careerStats[key]??0)]));
+        equipment.defense=(equipment.defense??0)+hidden.defense;
         const playerBase=derivedStats({level:p.level,attributes:p.attributes,profession:Boolean(d.get('state','professions','combat')),equipment},this.rules),playerContext=this.magicStatusContext(d,'player');
         playerContext.moving=['flee','shove'].includes(args.intent);
         const stats=withMagicStats(playerBase,magicStatusStats(d,'player',playerContext));
@@ -105,7 +117,7 @@ export const activities={
         const damage=nonlethal?Math.min(protection.damage,Math.max(0,hp-1)):protection.damage,remaining=Math.max(0,hp-damage);
         let escaped=false;if(intent==='flee')escaped=this.check(d,{attribute:'敏捷',difficulty:counter.escapeDifficulty??15},`${id}_escape`).success;
         let received=0,absorbed=0;const bossAbilities=[];for(let i=0;i<(opponent.attacks??1);i++)if(remaining>0&&!escaped&&received<p.hp&&!(nonlethal&&attack.hit)){
-            const currentOpponent=withMagicStats(opponentBase,magicStatusStats(d,target,opponentContext)),currentPlayer=withMagicStats(playerBase,magicStatusStats(d,'player',playerContext));
+            const currentOpponent=withMagicStats({...opponentBase,defense:opponentBase.defense+otherHidden.defense},magicStatusStats(d,target,opponentContext)),currentPlayer=withMagicStats(playerBase,magicStatusStats(d,'player',playerContext));
             currentPlayer.evasion=Math.max(0,currentPlayer.evasion-waterEarthMudPenalty(d,this)*.05);
             const opponentDark=opponentContext.illumination==='lit'?0:terrain.includes('dark')||night?this.rules.combat.terrain.dark.hit:0;
             const opponentHit=visibilityPenalty(hitModifier-(playerContext.illumination==='lit'?0:terrain.includes('dark')||night?this.rules.combat.terrain.dark.hit:0)+opponentDark,magicStatusStats(d,target,opponentContext),opponentContext);
@@ -172,6 +184,8 @@ export const activities={
         return {project:key,stage,...outcome,note:stage==='打磨'?'研究成果需进入受限实体登记，才能获得规则认可':'原型未被系统承认，不能宣称已学会新法术'};
     },
     settlement(d,args,id){
+        if(args.operation?.startsWith('family_'))return familyAction.call(this,d,args,id);
+        if(args.operation?.startsWith('school_'))return educationAction.call(this,d,{operation:args.operation,entity:args.plot,source:args.authority,students:args.beneficiaries,start:args.due,minutes:args.minutes,days:args.days,coins:args.budget,wage:args.proposedFee,org:args.business,course:args.project,name:args.name,location:args.settlement,consent:args.consent},id);
         if(args.operation==='mining_permit')return miningPermit.call(this,d,args,id);
         if(args.operation?.startsWith('duel_'))return duelAction.call(this,d,args,id);
         if(args.operation?.startsWith('election_'))return electionAction.call(this,d,args,id);
@@ -179,7 +193,11 @@ export const activities={
         if(args.operation?.startsWith('festival_'))return festivalAction.call(this,d,args,id);
         if(args.operation?.startsWith('business_'))return businessAction.call(this,d,args,id);
         if(args.operation?.startsWith('civic_'))return civicAction.call(this,d,args,id);
+        if(args.operation==='nation'||args.operation?.startsWith('nation_'))return nationAction.call(this,d,args,id);
+        if(args.operation?.startsWith('domain_'))return upperGovernanceAction.call(this,d,args,id);
+        if(args.operation==='governance_apply'&&!['office_works_deputy','工役协理'].includes(args.name)&&appointmentSource(this,d.get('state'),args.settlement))return upperAppointment(d,this,args,id);
         if(args.operation?.startsWith('governance_'))return governanceAction.call(this,d,args,id);
+        if(args.operation?.startsWith('faith_'))return faithAction.call(this,d,args,id);
         if(args.operation?.startsWith('org_'))return organizationAction.call(this,d,args,id);
         if(args.operation?.startsWith('title_'))return titleAction.call(this,d,args,id);
         if(args.operation==='diplomacy'||args.operation?.startsWith('war_'))return warAction.call(this,d,args,id);
@@ -191,17 +209,19 @@ export const activities={
         // T125: a sitting official's own power replaces a delegated authorization.
         if(args.operation==='project_abort')return abortPublicProject(d,this,args);
         if(args.operation==='start_project'&&d.get('state','records',args.authorization)?.category==='housing_permit')return startHouse(d,this,args,id,args.authorization);
-        if(args.operation==='start_project'&&!args.authorization&&playerOffices(d.get('state'),{settlement,power:'public_project'},this).length)return startPublicProject(d,this,args,id,settlement);
+        if(args.operation==='start_project'&&(args.funding==='private'||!args.authorization&&playerOffices(d.get('state'),{settlement,power:'public_project'},this).length))return startPublicProject(d,this,args,id,settlement);
         const authorization=d.get('state','records',args.authorization);
         if(!authorization||authorization.category!=='authorization'||authorization.settlement!==settlement)throw new Error('公共物资需要已成立的授权');
         if(args.operation==='start_project'){
+            const plan=prepareFacilityProject(this,d.get('state'),args,settlement);
+            if(plan.building)throw Error('修缮扩建须使用在任官职或私人出资');
             assertGovernedProject(d,this,settlement,args);
             if(authorization.revoked||authorization.expires!==undefined&&authorization.expires<=d.get('state','minute'))throw new Error('公共工程授权已撤销或到期');
             const wood=integer(args.wood,1,10000),stone=integer(args.stone??0,0,10000),days=integer(args.days,1,365);
             if(row.wood<wood||row.stone<stone)throw new Error('公共工程材料不足');
             d.set(['state','settlements',settlement,'wood'],row.wood-wood);d.set(['state','settlements',settlement,'stone'],row.stone-stone);
             const civicApproval=publicProjectApproval(d,this,settlement,args.authorization,args.beneficiaries);
-            const project=`project_${id}`;d.set(['state','projects',project],{id:project,type:'工程',creator:'player',name:requiredText(args.name),settlement,remainingDays:days,wood,stone,status:'施工中',beneficiaries:args.beneficiaries??[],sourceEvent:id,...(civicApproval?{civicApproval}:{})});
+            const project=`project_${id}`;d.set(['state','projects',project],{id:project,type:'工程',creator:'player',name:requiredText(args.name),settlement,remainingDays:days,wood,stone,status:'施工中',beneficiaries:args.beneficiaries??[],sourceEvent:id,...plan,...(civicApproval?{civicApproval}:{})});
             return {project};
         }
         throw new Error('未知聚落事务');
@@ -215,14 +235,14 @@ export const activities={
         if(entity.id!==`${type}_created_${id.replace(/[^a-zA-Z0-9_-]/g,'_')}`||entity.name!==name)throw new Error('不能覆盖系统分配的编号或名称');
         if(['skill','spell','recipe'].includes(type)){
             const project=d.get('state','projects',args.project);if(!project||project.type!=='研究'||project.stage!=='打磨')throw new Error('新技能、法术或配方需要完成多日研究');
-            if(type==='spell')throw new Error('自创法术效果还需按规则目录审查，当前不能直接登记');
             if(project.result)throw new Error('这个研究项目已经登记成果');
             const maximum=Math.max(...project.skills.map(skill=>effectiveProficiency(d,this,skill))),stage=Math.floor(maximum/300)-1;
             if(stage<0)throw new Error('研究相关技能不足以承认成果');
             entity={id:entity.id,name,aliases:[],scope:d.get('state','location')};
             if(type==='skill'){
                 Object.assign(entity,{attribute:'智力',profession:null,stage,prerequisites:project.skills,notes:project.concept});
-            }else Object.assign(entity,registerRecipe(d,this,args.data,project,stage));
+            }else if(type==='spell')Object.assign(entity,registerResearchSpell(d,this,args.data,project,stage));
+            else Object.assign(entity,registerRecipe(d,this,args.data,project,stage));
             entity.source=args.project;
             d.set(['state','projects',args.project,'result'],entity.id);
         }

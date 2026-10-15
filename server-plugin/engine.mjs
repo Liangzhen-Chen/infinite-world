@@ -1,4 +1,7 @@
+import {facilityView,facilityRouteStates} from './facility-state.mjs';
+import {NPC_CRIME_VERSION} from './npc-crime.mjs';
 import {personTeaching} from './entity-view.mjs';
+import {hiddenCheckBonus} from './hidden-passives.mjs';
 import { applyPatches, canonical, PatchCursor } from './storage.mjs';
 import { EntityResolver, validateMemory, normalize } from './retrieval.mjs';
 import {assertLocationAccess,homePermission}from'./location-access.mjs';
@@ -10,6 +13,7 @@ import {WorldEngine as Phase1Engine}from'./compat/v2-phase1-engine.mjs';
 import {learn}from'./learning.mjs';
 import {prepareMagic,applyMagic}from'./magic.mjs';
 import {recordSpellViolation}from'./magic-consent.mjs';
+import {recordMagicEconomy}from'./magic-economy.mjs';
 import {settleMagicAreas,prepareAreaMagic,applyAreaMagic,areaTargetFacts}from'./magic-area.mjs';
 import {assertFireTravel}from'./magic-object.mjs';
 import {adjustAirTravel}from'./magic-air.mjs';
@@ -33,6 +37,8 @@ import {localWeather,weatherEdge}from'./weather.mjs';
 import {initializeAgriculture}from'./agriculture-migration.mjs';
 import {agricultureView,settleAgricultureExpiry}from'./agriculture.mjs';
 import {advanceSettlementTrade,regionalTradePrice}from'./settlement-trade.mjs';
+import {transportAction,transportScene} from './transport.mjs';
+import {postAction} from './post.mjs';
 import {tradeQuote,recordDeal}from'./shop.mjs';
 import {initializeWorldClocks}from'./world-clock.mjs';
 import {initializeFactionClocks,factionClockRules}from'./faction-clock.mjs';
@@ -41,15 +47,16 @@ import {villageWildlifeFresh}from'./quest-wildlife.mjs';
 import {TRIBAL_AWAKENING_VERSION}from'./tribal-awakening.mjs';
 import {MILITARY_VERSION}from'./military.mjs';
 import {WAR_VERSION}from'./war-diplomacy.mjs';
-import {warRouteClosed}from'./hazard-calendar.mjs';
+import {warClosedRoutes}from'./hazard-calendar.mjs';
 import {validateFestivalRuntime}from'./festival.mjs';
 import {wildlifePriceFactor,wildlifeEncounterAt,settleWildlifeEncounter,wildlifeEncounterView}from'./wildlife.mjs';
 import {wildlifeAwakeningConsumer}from'./wildlife-awakening.mjs';
 import {spiritSocietyConsumer,moveSpiritCompanions}from'./wildlife-society.mjs';
 import {sceneCard}from'./scene-card.mjs';
+import {promptScope}from'./prompt-scope.mjs';
 import {stateNotices}from'./state-notices.mjs';
 import {recordReturnVisit}from'./return-summary.mjs';
-import {assertNpcService}from'./npc-schedule.mjs';
+import {assertNpcService,advanceNpcSchedules}from'./npc-schedule.mjs';
 import {npcAutonomyBusy,assertNpcAutonomyAction,applyNpcPlan}from'./npc-autonomy.mjs';
 import './npc-memory.mjs';// world-event subscriber (registers itself)
 import {hearNpcRumor}from'./npc-rumors.mjs';
@@ -67,11 +74,15 @@ import {INTELLIGENCE_VERSION,intelligenceFresh}from'./npc-intelligence.mjs';
 import {chargeTrade,repayDebt}from'./contracts.mjs';
 import {businessTrade,recordBusinessReceipt}from'./business.mjs';
 import {CREDIT_OPERATIONS,creditTrade,isCreditDebt,repayCredit,lodgingOf,assertLodgingHost,grantLodgingAccess}from'./credit.mjs';
+import {recordFinanceSale}from'./finance-assets.mjs';
+import {assessTradeTax}from'./finance-tax.mjs';
 import {initializeR1,planR1,planPreR1Partitions}from'./migrations/r1.mjs';
 import {materializeWildlifeHabitats}from'./wildlife-habitats.mjs';
-import {unfoldPopulationAt,acceptPopulationProfile}from'./population.mjs';
+import {unfoldPopulationAt,acceptPopulationProfile,settlePopulationLayers,populationLayersFresh,populationPlan}from'./population.mjs';
 import {remoteEngine,unfoldRemoteAt}from'./remote-generation.mjs';
 import {advanceNeedsSteps,nextAdvanceMinute,runAdvance}from'./advance-registry.mjs';
+import {beginHouseholdReads}from'./npc-state.mjs';
+import {advanceLayersFresh}from'./advance-layers.mjs';
 import {smuggleTrade,inspectSmuggling}from'./smuggling.mjs';
 const clone = value => structuredClone(value);
 const number = (value, min = 0, max = 1e9, label = '数值') => {
@@ -121,6 +132,7 @@ class Draft {
 }
 export class WorldEngine {
     constructor(world) {
+        this.populationPlan=populationPlan;
         // K8: derived habitats join the authored ones before any consumer reads them.
         materializeWildlifeHabitats(world);
         this.world = world; this.rules = world.rules;
@@ -233,6 +245,11 @@ export class WorldEngine {
         // T143: the first arrival in a far county generates its skeleton once.
         const remote=document.state.location!==d.get('state','location')&&(!options.replay||options.result?.remote)?unfoldRemoteAt(d,session,d.get('state','location')):null;
         const population=document.state.location!==d.get('state','location')&&(!options.replay||options.result?.population)?unfoldPopulationAt(d,session,d.get('state','location')):null;
+        if(document.state.location!==d.get('state','location')&&Object.keys(d.get('state','remote')??{}).length&&advanceLayersFresh(session)){
+            const arrival=this.scoped(d.document),now=d.get('state','minute');
+            arrival.replaying=session.replaying;arrival.replayResult=session.replayResult;
+            advanceNpcSchedules(d,arrival,now,now,{promote:true});
+        }
         settleMagicAreas(d,session);
         advancePets(d,session,d.get('state','minute'));
         advanceSummons(d,d.get('state','minute'));
@@ -242,10 +259,15 @@ export class WorldEngine {
         const readOnly=detail?.actionScope?.kind==='instant'&&!d.patches.length;
         if(!readOnly)publishWorldEvents(d,session,deriveWorldEvents(session,document.state,d.get('state'),worldEvent),worldEvent);
         recordBusinessReceipt(d,document.state,{tool:resolved.tool,args,eventId:id,detail});
+        settlePopulationLayers(d,session);
         if(tool==='check')detail.actionScope={kind:'judgement',healthChanged:false,inventoryChanged:false,feePaid:0,
             note:'仅结算判断或对抗，并履行已引用的协助；未伤人、毁物或制造。不得从骰点虚构这些变化。'};
-        return { patches:d.patches,result:{ok:true,...detail,...(remote?{remote}:{}),...(population?{population}:{}),legalProcedureVersion:1,worldEventVersion:WORLD_EVENT_VERSION,...(intelligenceFresh(session)?{npcIntelligenceVersion:INTELLIGENCE_VERSION}:{}),...(factionClockRules(session).length?{factionClockVersion:1}:{}),...(session.rules.questSources?{questSourcesVersion:QUEST_SOURCES_VERSION}:{}),...(session.rules.tribalAwakening?{tribalAwakeningVersion:TRIBAL_AWAKENING_VERSION}:{}),...(session.rules.military?{militaryVersion:MILITARY_VERSION}:{}),...(session.rules.warDiplomacy?{warVersion:WAR_VERSION}:{}),minute:d.get('state','minute'),messages:d.messages,
+        return { patches:d.patches,result:{ok:true,...detail,...(remote?{remote}:{}),...(population?{population}:{}),legalProcedureVersion:1,...(!session.replaying||session.replayResult?.educationVersion===1?{educationVersion:1}:{}),...(!session.replaying||session.replayResult?.npcCrimeVersion===NPC_CRIME_VERSION?{npcCrimeVersion:NPC_CRIME_VERSION}:{}),worldEventVersion:WORLD_EVENT_VERSION,...(intelligenceFresh(session)?{npcIntelligenceVersion:INTELLIGENCE_VERSION}:{}),...(factionClockRules(session).length?{factionClockVersion:1}:{}),...(session.rules.questSources?{questSourcesVersion:QUEST_SOURCES_VERSION}:{}),...(session.rules.tribalAwakening?{tribalAwakeningVersion:TRIBAL_AWAKENING_VERSION}:{}),...(session.rules.military?{militaryVersion:MILITARY_VERSION}:{}),...(session.rules.warDiplomacy?{warVersion:WAR_VERSION}:{}),minute:d.get('state','minute'),messages:d.messages,
             ...(session.rules.questSources?.wildlife?.length&&villageWildlifeFresh(session)?{villageWildlifeVersion:1}:{}),
+            ...(!session.replaying||session.replayResult?.sovereigntyVersion===1?{sovereigntyVersion:1}:{}),
+            ...(!session.replaying||session.replayResult?.laborMarketVersion===1?{laborMarketVersion:1}:{}),
+            ...(Object.keys(d.get('state','remote')??{}).length&&advanceLayersFresh(session)?{advanceLayerVersion:1}:{}),
+            ...(Object.keys(d.get('state','remote')??{}).length&&populationLayersFresh(session)?{populationLayerVersion:1}:{}),
             notices:stateNotices(document.state,d.document.state,id=>session.byId.get(id)?.name)} };
     }
     scoped(document){
@@ -266,6 +288,8 @@ export class WorldEngine {
         return changeItems(d,this,id,item,delta);
     }
     async trade(d,args,id) {
+        if(args.operation==='transport')return transportAction(d,this,args,id);
+        if(args.operation==='post')return postAction(d,this,args,id);
         if(['smuggle','deliver_smuggled'].includes(args.operation))return smuggleTrade.call(this,d,args,id);
         if(CREDIT_OPERATIONS.has(args.operation))return creditTrade.call(this,d,args,id);
         if(args.operation&&args.operation!=='trade')return businessTrade.call(this,d,args,id);
@@ -277,12 +301,13 @@ export class WorldEngine {
         const playerLocation=d.get('state','location');
         for(const actor of [buyer,seller]) if(actor!=='player' && this.actor(d,actor).location!==playerLocation) throw new Error('交易对方不在场');
         assertSocietyTrade(d,this,buyer,seller);
-        if(args.payment==='repay')return isCreditDebt(d.get('state','records',args.debt))?repayCredit(d,this,{seller,debt:args.debt},id):repayDebt(d,this,{buyer,seller,debt:args.debt},id);
+        if(args.payment==='repay')return isCreditDebt(d.get('state','records',args.debt))?repayCredit(d,this,{seller,debt:args.debt,coins:args.coins},id):repayDebt(d,this,{buyer,seller,debt:args.debt},id);
         // Any location registering lodging:{host,kind,rooms} rents rooms at the economy anchors.
         const place=args.service==='住宿'&&buyer==='player'?lodgingOf(this,seller,playerLocation):null;
         if(args.service==='住宿'&&!place)throw new Error('这个人没有登记住宿服务');
         for(const actor of [buyer,seller])if(actor!=='player'&&!place)assertNpcService(d,this,actor,'trade',5);
         if(place){
+            if(facilityView(this,d.get('state'),place.id)?.factor===0)throw Error('住宿建筑已停用');
             assertLodgingHost(d,this,seller,place,args.consent);
             const economy=this.rules.economy,host=this.byId.get(seller).name;
             const days=number(args.days??1,1,7,'住宿天数'),cost=days===7?place.lodging.weeklyCopper??economy.rentalCopperPerWeek:days*(place.lodging.nightlyCopper??economy.rentalCopperPerNight);
@@ -307,8 +332,11 @@ export class WorldEngine {
         if(this.quantity(d,seller,item)<quantity) throw new Error(`对方库存不足：${catalog.name}只剩${this.quantity(d,seller,item)}`);
         const payment=chargeTrade(d,this,{buyer,seller,cost,payment:args.payment,creditMinutes:args.creditMinutes,description:`${catalog.name}货款`},id);
         const moved=transferItems(d,this,seller,buyer,item,quantity,args.instances??null);
+        const tax=payment.debt?{amount:0}:assessTradeTax(d,this,{seller,cost,location:playerLocation,sourceEvent:id});
+        const basis=recordFinanceSale(d,this,{buyer,seller,item,quantity,cost,tax:tax.amount,eventId:id,paid:!payment.debt});
+        if(payment.debt)d.set(['state','records',payment.debt],{...d.get('state','records',payment.debt),sale:{buyer,seller,item,quantity,cost,basis,location:playerLocation}});
         d.set(['state','quotes',quoteKey],price);recordDeal(d,quote,price,quantity,id);this.advance(d,5,id);d.say(`${catalog.name}×${quantity}，${payment.debt?'赊账':'成交'}${cost}铜`);
-        return {buyer,seller,item,quantity,cost,instances:moved.instances,...payment};
+        return {buyer,seller,item,quantity,cost,instances:moved.instances,...(tax.amount?{tax}:{}),...payment};
     }
     advance(d,minutes,id) {
         // P2: one elapsed-time event shares each region's yearly weather
@@ -316,7 +344,9 @@ export class WorldEngine {
         // Route topology (locations, routes) is likewise fixed for its duration.
         if(this.weatherSequences)return this.advanceElapsed(d,minutes,id);
         this.weatherSequences=new Map();this.advanceGraphs=new Map();
-        try{return this.advanceElapsed(d,minutes,id);}finally{this.weatherSequences=null;this.advanceGraphs=null;}
+        this.advanceHouseholds=beginHouseholdReads(this);
+        this.advanceFeatures=this.world.locations.flatMap(place=>(place.features??[]).map(feature=>({...feature,location:place.id})));
+        try{return this.advanceElapsed(d,minutes,id);}finally{this.weatherSequences=null;this.advanceGraphs=null;this.advanceHouseholds=null;this.advanceFeatures=null;}
     }
     advanceElapsed(d,minutes,id) {
         minutes=number(minutes,0,43200,'耗时');
@@ -388,7 +418,7 @@ export class WorldEngine {
             }
             graph={order,adjacent,oriented:new Map()};graphCache?.set(key,graph);
         }
-        const {order,adjacent}=graph,settled=new Set(),oriented=graph.oriented??new Map();
+        const {order,adjacent}=graph,settled=new Set(),oriented=graph.oriented??new Map(),closedRoutes=warClosedRoutes(this.airDraft?.get('state'),minute),facilities=facilityRouteStates(this,this.airDraft?.get('state'));
         // P2: each edge as seen from one end, built once per topology (read-only).
         const from_=(edge,node)=>{let ends=oriented.get(edge);if(!ends){ends=new Map();oriented.set(edge,ends);}let row=ends.get(node);if(!row){row={...edge,from:node};ends.set(node,row);}return row;};
         // P2: a binary heap of discovered nodes ordered by (distance, world
@@ -414,9 +444,10 @@ export class WorldEngine {
             if(settled.has(current)||nearest!==distances.get(current))continue;
             settled.add(current);if(current===to)break;
             for(const edge of adjacent.get(current)??[]){
-                if(warRouteClosed(this.airDraft?.get('state'),edge.id,minute))continue;
+                if(closedRoutes.has(edge.id))continue;
+                if(facilities.get(edge.id)?.factor===0)continue;
                 const next=edge.from===current?edge.to:edge.to===current?edge.from:null;if(!next||!order.has(next)||settled.has(next))continue;
-                const speed=edge.speedKmh??(mode==='cart'?this.rules.travel.cartKmh:this.rules.travel.walkKmh*(mode==='horse'?this.rules.travel.horseMultiplier:1))*(edge.terrainMultiplier??1);
+                const speed=(edge.speedKmh??(mode==='cart'?this.rules.travel.cartKmh:this.rules.travel.walkKmh*(mode==='horse'?this.rules.travel.horseMultiplier:1))*(edge.terrainMultiplier??1))*(facilities.has(edge.id)?1.25*facilities.get(edge.id).factor:1);
                 const travel=this.rules.weather?weatherEdge(this,seed,from_(edge,current),mode,minute,distances.get(current),movingTimes.get(current),speed,weatherCache):null;
                 if(this.rules.weather&&!travel)continue;
                 const elapsed=Math.max(1,Math.ceil(edge.lengthKm/speed*60)),candidate=travel?.elapsed??distances.get(current)+elapsed;
@@ -436,6 +467,7 @@ export class WorldEngine {
         return adjusted;
     }
     move(d,args,id) {
+        if(Object.values(d.get('state','records')??{}).some(r=>r.category==='transport'&&['booked','moving','delayed','intercepted'].includes(r.status)&&r.passengers?.includes('player')))throw Error('仍在承运班次中，须抵达或处理滞留后再自行移动');
         for(const target of ['player',...d.get('state','player','companions')??[]])assertMindAwake(d,target);
         for(const target of ['player',...d.get('state','player','companions')??[]])assertWaterEarthMovement(d,target);
         for(const target of ['player',...d.get('state','player','companions')??[]])assertLightMovement(d,this,target);
@@ -587,10 +619,20 @@ export class WorldEngine {
         this.advance(d,catalog.minutes,id);this.practice(d,{skill:catalog.skill,gain:3,target:args.target??'施法'},id);
         if(result.success&&catalog.duration&&!prepared)d.set(['state','effects',id],{spell,target:text(args.target??'近处物体',200),expires:d.get('state','minute')+catalog.duration});
         const effect=result.success?applyMagic.call(this,d,prepared,id):{};
-        if(!result.success&&result.degree==='大失败'&&catalog.failureDamage)this.health(d,{delta:-catalog.failureDamage},id);
+        let backlash=null;
+        if(!result.success&&result.degree==='大失败'&&catalog.failureDamage){
+            let damage=catalog.failureDamage;
+            if(catalog.stage<=1&&hiddenCheckBonus(this,d.get('state'),'player','backlash').bonus){
+                const tolerance=this.check(d,{attribute:'体质',difficulty:10,passiveDomain:'backlash'},`${id}:backlash`);
+                damage=Math.max(1,damage-(tolerance.success?1:0));backlash={...tolerance,damage};
+            }
+            this.health(d,{delta:-damage},id);
+        }
         const completed=result.success&&!effect.effectFailed;
+        // U10: village-scale economy of life magic (ledger, regulation).
+        const economy=completed?recordMagicEconomy.call(this,d,catalog,effect,id):null;
         d.say(`${catalog.name}${completed?'施放成功':'施放失败'}，消耗${catalog.mp}魔力`);
-        return {spell,...result,...effect,...(legalCase?{case:legalCase}:{}),checkSuccess:result.success,success:completed,mpCost:catalog.mp};
+        return {spell,...result,...effect,...(backlash?{backlash}:{}),...(legalCase?{case:legalCase}:{}),checkSuccess:result.success,success:completed,mpCost:catalog.mp,...(economy?{economy}:{})};
     }
     learn(d,args,id) {
         return learn.call(this,d,args,id);
@@ -632,6 +674,7 @@ export class WorldEngine {
         if(type==='送货'){obligation.item=this.resolve(args.item,'item');obligation.quantity=number(args.quantity,1,100000);}
         if(type==='付款'){
             obligation.coins=number(args.coins,1,1e9);
+            if(!this.replaying||this.replayResult?.obligation?.recordCompletionTime===true)obligation.recordCompletionTime=true;
             if(!this.replaying){
                 const existing=Object.entries(d.get('state','records')??{}).find(([,row])=>row.category==='debt'&&row.debtor===promisor&&row.creditor===promisee&&row.status!=='已还清'&&row.amount-row.paid===obligation.coins);
                 if(existing)throw new Error(`这笔付款已有欠款记录 ${existing[0]}，不能再登记会重复扣款的付款约定；还款请按该欠款编号办理，赊账期限应在交易时用 creditMinutes 设置`);
@@ -662,7 +705,7 @@ export class WorldEngine {
         }
         if(o.type==='送货'){if(this.quantity(d,o.promisor,o.item)<o.quantity)throw new Error('承诺者缺少货物');transferItems(d,this,o.promisor,o.promisee,o.item,o.quantity);}
         if(o.type==='付款'){if(source.coins<o.coins)throw new Error('承诺者资金不足');d.set([...this.actorPath(o.promisor),'coins'],source.coins-o.coins);d.set([...this.actorPath(o.promisee),'coins'],target.coins+o.coins);}
-        d.set(['state','obligations',key,'status'],'已完成');if(o.deliveryVersion===1)d.set(['state','obligations',key,'resolvedAt'],d.get('state','minute'));d.say(`${o.content}已履行`);
+        d.set(['state','obligations',key,'status'],'已完成');if(o.deliveryVersion===1||o.recordCompletionTime)d.set(['state','obligations',key,'resolvedAt'],d.get('state','minute'));d.say(`${o.content}已履行`);
     }
     remember(d,args,id) {
         if(args.rumor!==undefined)return hearNpcRumor(d,this,args,id);
@@ -674,7 +717,21 @@ export class WorldEngine {
         d.set(['memories',memoryId],{subject,key,content,keywords:args.keywords??[],pinned:d.get('memories',memoryId,'pinned')??false,minute:d.get('state','minute'),source:args.source??'亲历'});
         return {memoryId};
     }
-    scene(document,query,index=null){return sceneCard(this.byId.has('player')?this:this.scoped(document),document,query,index);}
+    promptScoped(document){
+        if(Object.hasOwn(this,'byId')&&this.byId.has('player'))return Object.getPrototypeOf(this).promptScoped(document);
+        const overlay=remoteEngine(this,document,world=>new WorldEngine(world));if(overlay!==this)return overlay.promptScoped(document);
+        const {nearby}=promptScope(this,document.state),created=Object.values(document.state.created??{}).filter(p=>p.generated!=='population'||document.state.npcs[p.id]||nearby(p.home?.district??p.location));
+        // Cache only the catalog extension. Current names/age/office always
+        // come from the supplied state; the player's scope is added afresh.
+        this.promptResolvers??=new WeakMap();
+        const branch=document.state.created??document.state;
+        let hit=this.promptResolvers.get(branch);
+        if(!hit||hit.location!==document.state.location||hit.npcs!==document.state.npcs){hit={location:document.state.location,npcs:document.state.npcs,created,resolver:this.resolver.extend(created)};this.promptResolvers.set(branch,hit);}
+        const player={id:'player',name:document.state.player.name,aliases:['玩家','玩家角色'],scope:document.state.location};
+        const session=Object.create(this);session.entities=[...this.entities,...hit.created,player];session.resolver=hit.resolver.extend([player]);session.byId=session.resolver.entities;
+        return session;
+    }
+    scene(document,query,index=null){return transportScene(this,document)??sceneCard(this.promptScoped(document),document,query,index);}
 
 }
 Object.assign(WorldEngine.prototype,activities);

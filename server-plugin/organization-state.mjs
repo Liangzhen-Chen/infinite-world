@@ -1,9 +1,12 @@
+import {educationSites} from './education-state.mjs';
 // Read-only organization selector, shared by gameplay and entity/reputation views.
 import {reputationFactions} from './reputation-catalog.mjs';
 import {householdMembers,npcAgeAt} from './npc-state.mjs';
 import {actorId,actorPath} from './npc-state.mjs';
 import {groupAccountView} from './group-account.mjs';
-const LEADER={行会:'会长',帮派:'帮主',商号:'掌柜',教会:'主祭',会社:'会长',家户:'家长'};
+import {temples,templeById} from './faith-catalog.mjs';
+import {familyGroup,natalFamily} from './family-state.mjs';
+const LEADER={王国:'国王',行会:'会长',帮派:'帮主',商号:'掌柜',教会:'主祭',会社:'会长',家户:'家长'};
 const ELDER='长老',MEMBER='成员',key=id=>`organization:${id}`;
 const living=(engine,state,id)=>{
     const actor=actorPath(engine.world,id).slice(1).reduce((o,k)=>o?.[k],state);
@@ -40,7 +43,11 @@ function societyBase(engine,id){
 // Derived view: catalog or household base, then this campaign's record on top.
 export function organizationState(engine,state,id){
     const row=state.records?.[key(id)];
-    const base=row?.source==='created'?null:factionBase(engine,id)??householdBase(engine,state,id)??societyBase(engine,id);
+    const t=String(id).startsWith('temple:')?templeById(engine,id):null;
+    const temple=t?.source==='temple'?{...t,kind:'教会',leader:t.teacher,leaderTitle:'主祭',members:{[t.teacher]:{position:'主祭',joinedAt:null,arrears:0}},treasury:0,charter:{mode:'leader',approval:true,fee:0,dues:0,rules:[t.rule]}}:null;
+    const school=educationSites(engine,state).find(o=>o.id===id);
+    const education=school?{...school,source:'education',leaderTitle:'先生',members:school.leader?{[school.leader]:{position:'先生',joinedAt:null,arrears:0}}:{},treasury:0,charter:{mode:'leader',fee:0,dues:0,rules:[]}}:null;
+    const base=row?.source==='created'?null:(String(id).startsWith('family:')?familyGroup(engine,state,id.slice(7)):null)??factionBase(engine,id)??householdBase(engine,state,id)??societyBase(engine,id)??temple??education;
     if(!base&&row?.source!=='created')return null;
     const b=base??{id,name:row.name,source:'created',kind:row.kind,seat:row.seat,leader:null,leaderTitle:LEADER[row.kind]??'会长',members:{},treasury:0,charter:{}};
     const members={};
@@ -61,9 +68,10 @@ export function organizationState(engine,state,id){
 export function organizationIds(engine,state){
     return [...new Set([...(engine.world.factions??[]).map(f=>f.id),...reputationFactions(engine).map(f=>f.id),...(engine.world.households??[]).map(h=>h.id),
         ...(engine.world.locations??[]).filter(l=>l.monsterSociety&&!engine.world.factions?.some(f=>f.contactAnchor===l.id)).map(l=>l.id),
-        ...Object.values(state.records??{}).filter(r=>r.category==='organization').map(r=>r.id)])];
+        ...temples(engine).map(t=>t.id),...educationSites(engine,state).map(t=>t.id),...Object.values(state.records??{}).filter(r=>r.category==='organization').map(r=>r.id)])];
 }
 export function memberOrganizations(engine,state,member){
     member=actorId(engine.world,member);
-    return organizationIds(engine,state).map(id=>organizationState(engine,state,id)).filter(o=>o?.members[member]);
+    const ids=organizationIds(engine,state),family=natalFamily(engine,state,member);if(family)ids.push(family);
+    return ids.map(id=>organizationState(engine,state,id)).filter(o=>o?.members[member]);
 }

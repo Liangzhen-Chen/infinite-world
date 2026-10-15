@@ -37,7 +37,7 @@ export function standingKind(engine,state,id){
     if(isReputationSettlement(engine,id))return 'settlement';
     if(String(id).startsWith('faction_'))return 'faction';
     if(state.creatures?.[id])return 'creature';
-    if(state.records?.[`organization:${id}`])return 'organization';
+    if(state.records?.[`organization:${id}`]||String(id).startsWith('family:'))return 'organization';
     return null;
 }
 // A resident boss's regard comes from what it remembers of real encounters.
@@ -100,6 +100,7 @@ export function adjustStanding(d,engine,holder,target,delta,{sourceEvent,reason,
 // own stance steps (monster-society), so they are not repeated here.
 export const TRANSMISSION=Object.freeze({household:0.5,settlement:0.3,faction:0.5,ally:0.25,spiritSociety:0.5,organization:0.5,allyMinimum:30});
 export function eventWeight(e){
+    if(e.tags?.includes('npc_crime')&&e.witnesses?.length)return -10;
     if(e.verb==='harm'&&e.tags.includes('hostile'))return -(10+Math.min(20,e.harm??0));
     if(e.verb==='steal'&&e.witnesses?.length)return -10;
     if(e.verb==='gift'&&e.value>0)return Math.min(15,3+Math.floor(e.value/10));
@@ -130,6 +131,8 @@ export function collectivesOf(engine,state,member){
         if(org.source!=='household'&&org.source!=='faction'&&org.source!=='society'&&!rows.some(r=>r.holder===org.id))
             rows.push({holder:org.id,ratio:TRANSMISSION.organization,via:`organization:${org.id}`});
     }
+    const temple=view.faith.value?.temple;
+    if(temple&&!rows.some(r=>r.holder===temple))rows.push({holder:temple,ratio:TRANSMISSION.organization,via:`faith:${temple}`});
     if(state.creatures?.[member]?.society?.id)rows.push({holder:state.creatures[member].society.id,ratio:TRANSMISSION.spiritSociety,via:`spirit_society:${member}`});
     return rows;
 }

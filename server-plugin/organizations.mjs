@@ -8,6 +8,7 @@ import {resolveCreature} from './wildlife.mjs';
 import {standing,adjustStanding} from './standing.mjs';
 import {opinionAmong} from './public-opinion.mjs';
 import {assertAcademyAdmission} from './notables.mjs';
+import {familyOrganizationProjection,familyAdult} from './family-state.mjs';
 
 // Organizations as running entities: members and positions, a treasury whose
 // every movement is a ledger line, a charter (entry, fee, dues, rules) and a
@@ -48,7 +49,7 @@ const resolveActor=(engine,state,name)=>{
     if(!personView(engine,state,id))throw Error('没有这个成员');return id;
 };
 function move(d,engine,row,{kind,amount,party,minute,sourceEvent,reason,balance}){
-    if(row.source==='faction')changeGroupCoins(d,engine,row.id,amount,{kind,party,minute,sourceEvent,reason});
+    if(['faction','temple'].includes(row.source))changeGroupCoins(d,engine,row.id,amount,{kind,party,minute,sourceEvent,reason});
     else row.treasury+=amount;
     row.ledger=[...row.ledger??[],{kind,amount,party,minute,sourceEvent,reason,balance}];
 }
@@ -68,7 +69,7 @@ function tally(p){
 }
 function findOrg(engine,d,name){
     const state=d.get('state');let id=name;
-    if(!state.records?.[key(id)]&&!engine.world.households?.some(h=>h.id===id))try{id=engine.resolve(name);}catch{throw Error('没有这个组织');}
+    if(!state.records?.[key(id)]&&!engine.world.households?.some(h=>h.id===id)&&!organization(engine,state,id))try{id=engine.resolve(name);}catch{throw Error('没有这个组织');}
     const org=organization(engine,state,id);if(!org)throw Error('没有这个组织');return org;
 }
 function present(d,engine,name){
@@ -80,7 +81,7 @@ const event=(org,op,extra={})=>({verb:'organize',target:org.id,tags:['organizati
 
 // Executing a decided motion. Returns the outcome text stored on the proposal.
 function execute(d,engine,org,p,minute,sourceEvent){
-    const row=rowOf(d,engine,org),m=p.motion,treasury=()=>row.source==='faction'?groupView(engine,d.get('state'),org.id).treasury.value:row.treasury;
+    const row=rowOf(d,engine,org),m=p.motion,treasury=()=>['faction','temple'].includes(row.source)?groupView(engine,d.get('state'),org.id).treasury.value:row.treasury;
     let outcome='已执行';
     if(m.action==='admit'){
         row.members[m.member]={position:MEMBER,joinedAt:minute,arrears:0};delete row.removed?.[m.member];
@@ -124,6 +125,8 @@ function settle(d,engine,proposalId,minute,sourceEvent){
 }
 function motionOf(engine,d,org,args){
     const action=args.action,state=d.get('state');
+    if(org.source==='family'&&action==='expel')throw Error('族亲由真实亲属关系派生，不能用组织除名抹去');
+    if(org.source==='family'&&action==='appoint'&&args.name===org.leaderTitle&&!familyAdult(engine,state,args.member))throw Error('族长须为成年成员');
     if(action==='charter'){
         const charter={};
         if(args.choice!==undefined){if(!MODES[args.choice])throw Error('议事方式须为leader、vote或elders');charter.mode=args.choice;}
@@ -243,6 +246,10 @@ export function foundOrganization(d,engine,entity,eventId){
 }
 
 export function inspectOrganization(engine,document,org){
+    if(org.source==='family'){
+        const view=familyOrganizationProjection(engine,document.state,org,Object.keys(org.members)[0]);
+        return {...view,organization:org.id,kind:org.kind,source:org.source,seat:org.seat,leaderTitle:org.leaderTitle,treasury:org.treasury,actionScope:{kind:'instant'}};
+    }
     const state=document.state,people=Object.keys(org.members).filter(m=>{const view=personView(engine,state,m);return m!=='player'&&view&&awake(view.actorPath.value.slice(1).reduce((o,k)=>o?.[k],state))&&view.location.value===state.location;});
     return {organization:org.id,name:org.name,kind:org.kind,source:org.source,seat:org.seat,leader:org.leader,leaderTitle:org.leaderTitle,
         mode:MODES[org.charter.mode],charter:org.charter,treasury:org.treasury,nextDues:org.nextDues,
@@ -257,7 +264,7 @@ export function organizationAction(d,args,eventId){
     switch(args.operation){
     case 'org_inspect':return inspectOrganization(engine,d.document,org);
     case 'org_join':{
-        if(org.source==='household')throw Error('家户成员随婚育迁居变化，不能申请加入');
+        if(['household','family'].includes(org.source))throw Error('家户家族成员随亲属迁居变化，不能申请加入');
         const who=args.member&&args.member!=='player'?present(d,engine,args.member):'player';
         if(who!=='player'&&args.consent!==true)throw Error('入会须本人当面同意');
         if(org.members[who])throw Error('已是成员');
@@ -281,6 +288,7 @@ export function organizationAction(d,args,eventId){
         return {organization:org.id,member:who,proposal:p.id,status:p.status,joined:p.status==='通过',note:'入会须按章程议决；入会费暂存，否决或逾期退还。',organizationEvent:event(org,'apply',{member:who,value:fee})};
     }
     case 'org_leave':{
+        if(org.source==='family')throw Error('退出居住家户用分家，族亲关系不因组织退会消失');
         const who=args.member&&args.member!=='player'?present(d,engine,args.member):'player';
         if(who!=='player'&&args.consent!==true)throw Error('退会须本人当面同意');
         if(!org.members[who])throw Error('不是成员');

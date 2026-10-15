@@ -130,7 +130,7 @@ function boardOf(engine,place,boards){
 const generated=state=>Object.values(state.quests??{}).filter(q=>q.boardVersion===1&&q.source);
 // 托管：人物从自己钱里出，势力从势力公库出，聚落从公账出（不得动用留底）。
 function escrow(d,engine,funding,reward,quest){
- if(funding.npc){const coins=d.get('state','npcs',funding.npc,'coins')??0;if(coins<reward)return false;d.set(['state','npcs',funding.npc,'coins'],coins-reward);return true;}
+ if(funding.npc){const account=funding.npc==='player'?['state','player']:['state','npcs',funding.npc],coins=d.get(...account,'coins')??0;if(coins<reward)return false;d.set([...account,'coins'],coins-reward);return true;}
  if(funding.faction)return spendFactionAssets(d,engine,funding.faction,{coins:reward},{sourceEvent:quest,minute:d.get('state','minute'),kind:'quest_escrow'});
  if(funding.treasury){
   const treasury=d.get('state','settlements',funding.treasury,'treasury'),reserve=authorityOf(engine)?.treasury?.reserveCopper??0;
@@ -177,6 +177,14 @@ export function postGeneratedQuest(d,engine,offer){
 
 // ---- 完成后果：势力委托改变时钟阶段并影响立场 -----------------------------------
 export function settleQuestOutcome(d,engine,q,minute){
+ if(q.source?.generator==='effect_table'&&q.source.cause==='royal_commission'&&q.fundedBy?.treasury===engine.rules.governance?.sovereignty?.royal.questBoard&&q.objective.type==='deliver'){
+  const prior=d.get('state','records',`${q.id}:outcome`);if(prior)return prior;
+  const n=q.objective.quantity,board=q.fundedBy.treasury;
+  if(engine.quantity(d,q.publisher,q.objective.item)<n)throw Error('王都委托未收到实际物资');
+  engine.itemDelta(d,q.publisher,q.objective.item,-n);
+  d.set(['state','settlements',board,'wood'],(d.get('state','settlements',board,'wood')??0)+n);
+  const result={category:'quest_outcome',quest:q.id,royal:true,settlement:board,supplied:n,minute};d.set(['state','records',`${q.id}:outcome`],result);return result;
+ }
  // War commissions use the existing effect-table generator and its funded delivery.
  if(q.source?.generator==='effect_table'&&q.source.cause?.startsWith('war:')&&q.objective.type==='deliver'){
   const war=d.get('state','records',q.source.cause),unit=war?.armyIds.map(id=>d.get('state','records',`army:${id}`)).find(a=>(a?.warSide??a?.party)===war.defender&&(a.regular+a.private+a.levy.count+(a.mercenary?.count??0)>0));

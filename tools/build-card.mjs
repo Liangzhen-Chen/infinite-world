@@ -18,11 +18,10 @@ function reference(world){
         `战斗职业：${world.professions.filter(row=>row.kind==='combat').map(row=>row.name).join('、')}。`,
         `生活职业：${world.professions.filter(row=>row.kind==='life').map(row=>row.name).join('、')}。隐藏职业的取得条件不公开。`,
         `起始区域：${world.locations.filter(row=>row.id==='loc_hw'||row.scope==='loc_hw').map(row=>row.name).join('、')}。地点详情用world_catalog按名查询。`,
-        // Private residences outside the start area are listed by count only; world_catalog location pages them by name.
-        `其他已登记地点：${others.filter(row=>!homes.includes(row)).map(row=>row.name).join('、')}；另有${homes.length}处“户主名+户居处”私宅。聚居地内的住区与设施按目录查询。详细地理通过目录与检索查阅。`,
+        // Non-start locations and lore use counts; their names remain in the paged public catalog.
+        `起始区外：${others.length-homes.length}处地点、${homes.length}处“户主名+户居处”私宅；world_catalog location分页/按名查名称详情及聚居地住区设施；地理亦可检索。`,
         `起始居民：${world.npcs.filter(row=>row.scope==='loc_hw').map(row=>`${row.name}，${row.occupation}`).join('；')}。`,
-        `已登记文化：${(world.cultures??[]).map(row=>row.name).join('、')||'暂无'}。`,
-        `已登记神祇：${(world.deities??[]).map(row=>row.name).join('、')||'暂无'}。具体习俗与传说须通过世界检索确认。`,
+        `文化${(world.cultures??[]).length}种、神祇${(world.deities??[]).length}位；world_catalog culture/deity分页查名，习俗传说须世界检索核实。`,
     ].join('\n\n');
 }
 export async function loadPromptBundle({world=null,source=path.join(root,'prompt'),settings={}}={}){

@@ -1,4 +1,6 @@
 import {advanceRituals}from'./magic-ritual.mjs';
+import {recordFinanceSale}from'./finance-assets.mjs';
+import {assessTradeTax}from'./finance-tax.mjs';
 const debtRows=d=>Object.entries(d.get('state','records')??{}).filter(([,row])=>row.category==='debt');
 import {canonical}from'./storage.mjs';
 const signedTerms=row=>Object.fromEntries(['parties','subject','quantity','deadline','cost','kind'].map(k=>[k,row[k]??null]));
@@ -89,6 +91,7 @@ export function repayDebt(d,engine,{buyer,seller,debt:id},eventId){
     if(row.status==='已还清')throw new Error('这笔欠款已经还清，不重复付款');
     const amount=row.amount-row.paid;
     chargeTrade(d,engine,{buyer,seller,cost:amount},eventId);
+    if(row.sale){const tax=assessTradeTax(d,engine,{seller,cost:amount,location:row.sale.location,sourceEvent:eventId});recordFinanceSale(d,engine,{...row.sale,settledBasis:row.sale.basis,tax:tax.amount,eventId});}
     d.set(['state','records',id],{...row,paid:row.amount,status:'已还清',paidAt:d.get('state','minute')});
     for(const[key,contract]of Object.entries(d.get('state','records')??{}))if(contract.category==='contract'&&contract.debt===id)d.set(['state','records',key],{...contract,paid:row.amount});
     engine.advance(d,5,eventId);d.say(`偿还${engine.byId.get(seller)?.name}欠款${amount}铜`);

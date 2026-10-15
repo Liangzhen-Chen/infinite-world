@@ -73,6 +73,7 @@ export function returnChanges(engine,state,place,{from,to=state.minute,before={}
     // 统一世界事件：有人目击、够分量的当地事；组织议决只给成员、当事人或公议机构。
     for(const e of Object.values(state.records??{})){
         if(e.category!=='world_event'||!inWindow(e.minute)||!within(engine,e.location,place)||hidden(e)||e.legacy)continue;
+        if(e.tags?.includes('facility')){if(e.summary)add(75,e.summary);continue;}
         if(e.tags?.includes('entity-transition')){
             // Family ledgers above already supply these same historical facts.
             if(publicTransition(engine,state,e)&&!['die','marry','migrate'].includes(e.verb)&&e.summary)add(75,e.summary);
@@ -89,6 +90,13 @@ export function returnChanges(engine,state,place,{from,to=state.minute,before={}
             continue;
         }
         if(e.actor==='player')continue;
+        if(e.tags?.includes('npc_crime')){
+            if(eventRumorId(engine,state,e)&&![e.actor,e.target].some(id=>minor(engine,state,id))){
+                const action=e.tags.includes('fraud')?'骗取了':e.tags.includes('smuggling')?'私运货物，被人撞见':e.verb==='harm'?'斗殴伤及':'偷取了';
+                add(70,`${name(e.actor)}${action}${e.tags.includes('smuggling')?'':name(e.target)}`);
+            }
+            continue;
+        }
         if(e.verb==='deceive'){
             if(![e.actor,e.target].some(id=>minor(engine,state,id)))add(e.target==='player'?80:58,`${name(e.actor)}骗${name(e.target)}的事被揭穿了`);
             continue;

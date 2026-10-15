@@ -24,7 +24,7 @@
 <回合 额外="10分" 地点="bld_hw_council" 在场="npc_hw_chenbai,npc_hw_wushuo,npc_hw_ayan"/>
 <START>
 {{user}}: 三人在场，问旧椅子值得修吗？
-{{char}}: <q who="npc_hw_linsui">修要多少铜？店里还得留钱买米面。</q><q who="npc_hw_hezhou">给谁坐？靠背的轮廓想留住吗？</q><q who="npc_hw_shijin">出工不能耽误收晒。椅子晃就别让孩子坐，留种的袋子也别搁上去。</q>
+{{char}}: <q who="npc_hw_linsui">修要多少铜？店里得留钱买米面。</q><q who="npc_hw_hezhou">给谁坐？留靠背轮廓吗？</q><q who="npc_hw_shijin">出工别误收晒。椅子晃别让孩子坐，也别搁留种袋。</q>
 <回合 额外="5分" 地点="bld_hw_qingdeng" 在场="npc_hw_linsui,npc_hw_hezhou,npc_hw_shijin"/>
 <START>
 {{user}}: 木柄成功、近两件失败各费2铜、只记木料；问阿砚十天及木材来源。

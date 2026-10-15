@@ -12,16 +12,18 @@ export {npcAgeAt,npcHousehold,householdMembers} from './npc-state.mjs';
 import {digest} from './storage.mjs';
 import {clockRoll} from './world-clock.mjs';
 import {relationView,recordLifeRelation} from './npc-relations.mjs';
-import {transferItems} from './items.mjs';
 import {npcSchedule} from './npc-state.mjs';
 import {validateNpcSchedules,scheduleAt} from './npc-schedule.mjs';
 import {rosterLifeState,lifeRoutine} from './population.mjs';
 import {initialNpcState} from './npc-state.mjs';
 import {advanceNpcNeeds} from './npc-intelligence.mjs';
 import {famineAt} from './hazard-calendar.mjs';
-import {personSimulation,personConstraint,personHousehold,personName,personAge,personRelationships} from './entity-view.mjs';
+import {personSimulation,personConstraint,personHousehold,personConstraints,personName,personAge,personRelationships} from './entity-view.mjs';
 import {actorId,actorPath,householdDefinition} from './npc-state.mjs';
 import {finishBusinessContract,refundContractEscrow,releaseBusinessLease} from './contracts.mjs';
+import {settleFamilyEstate,advanceGuardianships} from './family-inheritance.mjs';
+import {marriagePolitics,advanceFamilyAlliances} from './family-diplomacy.mjs';
+import {familyEdges} from './family-state.mjs';
 
 const DAY=1440,YEAR=360*DAY,unable=['死亡','濒死'];
 const rules=engine=>engine.rules.npcLife;
@@ -82,6 +84,10 @@ const staticMarriageId=(a,b)=>`marriage:static:${pairKey(a,b)}`;
 const spouseLiving=(engine,state,id)=>state.npcs[id]?alive(state,id):Boolean(engine.byId.get(id));
 function livingSpouse(engine,state,id){return marriagesOf(engine,state,id).some(m=>m.partners.some(p=>p!==id&&spouseLiving(engine,state,p)));}
 function kin(engine,state,a,b){
+ const links=familyEdges(engine,state).filter(r=>r.kind==='parent'),ancestors=id=>{
+  const seen=new Set(),pending=[id];while(pending.length){const p=pending.pop();for(const r of links)if(r.to===p&&!seen.has(r.from)){seen.add(r.from);pending.push(r.from);}}return seen;
+ },aa=ancestors(a),bb=ancestors(b);
+ if(aa.has(b)||bb.has(a)||[...aa].some(id=>bb.has(id)))return true;
  const types=new Set(rules(engine).kinTypes);
  if(staticTie(engine,a,b).some(r=>types.has(r.type)))return true;
  const parents=id=>Object.values(state.family?.people?.[id]?.parents??{});
@@ -96,7 +102,7 @@ export function npcWilling(engine,state,from,to,{minimumTrust,minimumAffection})
 }
 
 // Null when both people may court now; otherwise the first unmet condition.
-export function marriageBlocker(engine,state,a,b,minute=state.minute){
+export function marriageBlocker(engine,state,a,b,minute=state.minute,ceremony=false){
  const r=rules(engine);if(!r)return '世界规则没有登记成年家庭关系';
  if(a===b)return '须为两个人';
  for(const id of [a,b]){
@@ -107,7 +113,7 @@ export function marriageBlocker(engine,state,a,b,minute=state.minute){
  if(kin(engine,state,a,b))return '双方是亲属';
  if(livingSpouse(engine,state,a)||livingSpouse(engine,state,b))return '一方仍在婚';
  const ha=npcHousehold(engine,state,a),hb=npcHousehold(engine,state,b);
- if(!ha||!hb||ha.settlement!==hb.settlement)return '双方不在同一聚落登记居住';
+ if(!ha||!hb||ha.settlement!==hb.settlement&&!(ceremony&&state.npcs[a].location===state.npcs[b].location))return '双方不在同一聚落登记居住';
  if(!npcWilling(engine,state,a,b,r.courtship))return `${engine.byId.get(a).name}不愿意`;
  if(!npcWilling(engine,state,b,a,r.courtship))return `${engine.byId.get(b).name}不愿意`;
  return null;
@@ -145,7 +151,7 @@ function witness(d,engine,eventId,principals,houses,{minute,kind,content,salienc
  return seen;
 }
 
-function marry(d,engine,[a,b],courtship,minute){
+export function marry(d,engine,[a,b],courtship,minute){
  const state=d.get('state'),id=`marriage_${key(a,b,minute)}`,ha=npcHousehold(engine,state,a),hb=npcHousehold(engine,state,b);
  const content=`${nameOf(engine,state,a)}与${nameOf(engine,state,b)}在${engine.calendar(minute).text.slice(0,-6)}结为夫妻。`;
  d.set(['state','family','marriages',id],{id,partners:[a,b],since:minute,courtshipSince:courtship.since,settlement:ha.settlement,households:[...new Set([ha.id,hb.id])],status:'在婚',sourceEvent:id});
@@ -155,7 +161,9 @@ function marry(d,engine,[a,b],courtship,minute){
  for(const p of [a,b])d.set(['state','npcs',p,'developments'],[...d.get('state','npcs',p,'developments')??[],{type:'成婚',source:id,minute,with:p===a?b:a}]);
  const witnesses=witness(d,engine,id,[a,b],[ha.id,hb.id],{minute,kind:'family',content});
  d.set(['state','family','marriages',id,'witnesses'],witnesses);
+ const marriage=d.get('state','family','marriages',id);marriagePolitics(d,engine,marriage);
  entityTransition(d,engine,{id,verb:'marry',actor:a,target:b,minute,location:state.npcs[a]?.location??ha.settlement,witnesses,summary:content});
+ return marriage;
 }
 
 // A married opposite-sex couple living in a household with a population
@@ -355,16 +363,8 @@ function recover(d,engine,illness,minute){
 // Natural death uses the status every module already settles: services,
 // schedules, contracts, quests and marriages read '死亡'. In addition the
 // person's open appointments end without blame, the household ledger loses a
-// mouth, and coins and goods pass whole to the closest living adult heir.
-function heirOf(engine,state,id,minute){
- const ok=x=>x!==id&&Boolean(state.npcs[x])&&!['死亡','濒死'].includes(state.npcs[x].status)&&!npcIsMinor(engine,state,x,minute);
- const spouse=marriagesOf(engine,state,id).flatMap(m=>m.partners).filter(ok).sort();
- if(spouse.length)return spouse[0];
- const childTypes=new Set(['子女','女儿','儿子']);
- const children=[...(engine.byId.get(id)?.relationships??[]).filter(r=>childTypes.has(r.type)).map(r=>r.with),...Object.values(state.family?.people??{}).filter(p=>Object.values(p.parents??{}).includes(id)).map(p=>p.id)].filter(ok).sort();
- if(children.length)return children[0];
- return npcHousehold(engine,state,id)?.members.filter(ok).sort()[0]??null;
-}
+// mouth. Local law distributes the estate and appoints time-limited care
+// for minors without moving their property into the guardian's ownership.
 export function recordMilitaryDeath(d,engine,id,minute){return recordEntityDeath(d,engine,id,minute,'战死');}
 export function recordEntityDeath(d,engine,id,minute,cause,illness=null){
  id=actorId(engine.world,id);const path=actorPath(engine.world,id),actor=d.get(...path);
@@ -388,7 +388,6 @@ export function recordEntityDeath(d,engine,id,minute,cause,illness=null){
  for(const o of Object.values(state.obligations??{}).sort((a,b)=>a.id.localeCompare(b.id)))if(['待履行','进行中'].includes(o.status)&&[o.promisor,o.promisee].includes(id)){
   d.set(['state','obligations',o.id],{...o,status:'取消',reason:`${name}已${cause}，约定终止`,resolvedAt:minute,endedByDeath:deathId});obligations.push(o.id);
  }
- const heir=npc?heirOf(engine,state,id,minute):null;
  const contracts=[];
  for(const [cid,row] of Object.entries(state.records??{}))if(row.category==='contract'&&row.parties?.includes(id)&&['有效','待履行'].includes(row.status)){
   if(row.version===1&&row.business){
@@ -399,12 +398,7 @@ export function recordEntityDeath(d,engine,id,minute,cause,illness=null){
   if(row.enforcement?.active)d.set(['state','records',cid,'enforcement','active'],false);
   contracts.push(cid);
  }
- const current=d.get(...path),estate={heir,coins:current.coins??0,items:{},debts:Object.entries(state.records??{}).filter(([,r])=>r.category==='debt'&&[r.debtor,r.creditor].includes(id)&&r.amount>(r.paid??0)).map(([k])=>k).sort()};
- if(heir){
-  for(const item of Object.keys(current.inventory??{}).sort()){const n=engine.quantity(d,id,item);if(n>0){transferItems(d,engine,id,heir,item,n);estate.items[item]=n;}}
-  if(estate.coins){d.set(['state','npcs',heir,'coins'],(d.get('state','npcs',heir,'coins')??0)+estate.coins);d.set([...path,'coins'],0);}
-  d.set(['state','npcs',heir,'developments'],[...d.get('state','npcs',heir,'developments')??[],{type:'继承',source:deathId,minute,from:id}]);
- }
+ const current=d.get(...path),estate=npc?settleFamilyEstate(d,engine,id,minute,deathId,actor.location):{heir:null,coins:current.coins??0,items:{},debts:[]},heir=estate.heir;
  const pets=[];
  for(const [pet,body] of Object.entries(state.creatures??{}))if(body.owner===id||pet===id){
   const owner=pet===id?null:heir;d.set(['state','creatures',pet,'owner'],owner);pets.push(pet);
@@ -687,13 +681,13 @@ const RESTING=/睡|歇息|休息|赶路|前往|返回|照护/;
 const tied=(engine,state,a,b)=>staticTie(engine,a,b).length>0||Boolean(state.npcs[a]?.relationships?.[b]||state.npcs[b]?.relationships?.[a]);
 function coworkDay(d,engine,minute){
  const k=rules(engine).kindness?.cowork;if(!k)return;
- const state=d.get('state'),period=Math.floor(minute/DAY/k.everyDays),start=minute-DAY,at=new Map();
+ const state=d.get('state'),period=Math.floor(minute/DAY/k.everyDays),start=minute-DAY,at=new Map(),constraints=personConstraints(engine,state);
  for(const id of Object.keys(state.npcs).sort()){
   const n=state.npcs[id];
   if(!lifeActor(engine,state,id)||incapable.includes(n.status)||!settled(state,id)||n.caring||npcIsMinor(engine,state,id,minute))continue;
   try{
    for(let cursor=start;cursor<minute;){
-    const slot=scheduleAt(engine,id,cursor,state);if(!slot)break;
+    const slot=scheduleAt(engine,id,cursor,state,constraints);if(!slot)break;
     const end=Math.min(slot.until,minute);
     if(!RESTING.test(slot.activity??'')){const rows=at.get(slot.location)??[];rows.push({id,start:cursor,end});at.set(slot.location,rows);}
     cursor=end;
@@ -765,6 +759,7 @@ export function advanceNpcLife(d,engine,before,after){
  for(let day=Math.floor(before/DAY)+1;day*DAY<=after;day++){
   migrationsDue(d,engine,before,day*DAY);before=day*DAY;
   healthDay(d,engine,day*DAY);coworkDay(d,engine,day*DAY);familyDay(d,engine,day*DAY);migrationDay(d,engine,day*DAY);
+  advanceGuardianships(d,engine,day*DAY);advanceFamilyAlliances(d,engine,day*DAY);
   // 饥饿之外的需求（钱、安全、地位）按灵智生成或了结目标。
   advanceNpcNeeds(d,engine,day*DAY);
  }

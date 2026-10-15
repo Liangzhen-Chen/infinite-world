@@ -1,3 +1,7 @@
+import {advanceUpperAppointments,advanceRoyalService} from './high-nobility.mjs';
+import {advanceNations} from './nation-founding.mjs';
+import {advanceEducation,nextEducationMinute,prepareEducation} from './education.mjs';
+import {advanceFacilities,nextFacilityMinute,completeFacilityProject} from './facilities.mjs';
 // Time-advance registry. Every system that reacts to elapsed time registers here:
 //   {id, order, nextMinute?(engine,d,now), active?(engine,d,now), advance(engine,d,ctx)}
 // nextMinute: the next minute this system needs an interval boundary (Infinity when none).
@@ -11,14 +15,18 @@ import {advanceCare}from'./magic-care.mjs';
 import {advanceMindSpace}from'./magic-mind-space.mjs';
 import {advanceShadowContracts,advanceContracts}from'./contracts.mjs';
 import {advanceCredit}from'./credit.mjs';
+import {advanceLaborMarket,nextLaborMinute} from './labor-market.mjs';
 import {settleMagicAreas,nextMagicAreaMinute}from'./magic-area.mjs';
 import {milestone}from'./progression.mjs';
 import {advancePets}from'./pets.mjs';
 import {advanceSummons}from'./summons.mjs';
 import {advanceLaw}from'./law.mjs';
+import {advanceNpcCrime,nextNpcCrimeMinute}from'./npc-crime.mjs';
 import {cropProduction}from'./weather.mjs';
 import {advanceAgriculture,settleAgricultureExpiry}from'./agriculture.mjs';
 import {advanceSettlementTrade,nextSettlementTradeMinute}from'./settlement-trade.mjs';
+import {advanceTransport,nextTransportMinute} from './transport.mjs';
+import {advancePost,nextPostMinute} from './post.mjs';
 import {advanceShops}from'./shop.mjs';
 import {advanceWorldClocks,nextWorldClockMinute}from'./world-clock.mjs';
 import {advanceFactionClocks,nextFactionClockMinute,factionClockRules}from'./faction-clock.mjs';
@@ -32,12 +40,14 @@ import {advanceNpcObligations,nextNpcObligationMinute}from'./npc-obligations.mjs
 import {advanceSocietyNews}from'./monster-society.mjs';
 import {advanceSeasonEffects}from'./effects.mjs';
 import {advanceOrganizations}from'./organizations.mjs';
+import {advanceFaith}from'./faith.mjs';
 import {advanceQuestSources}from'./quest-sources.mjs';
 import {advanceTribalAwakening}from'./tribal-awakening.mjs';
 import {advanceMilitary}from'./military.mjs';
 import {advanceWarDiplomacy}from'./war-diplomacy.mjs';
 import {advanceHazardClocks}from'./seasonal-hazards.mjs';
 import {hazardClocks,hazardYieldFactor}from'./hazard-calendar.mjs';
+import {advanceMagicEconomy,magicYieldFactor}from'./magic-economy.mjs';
 import {advanceBounties,nextBountyMinute,bountyActive}from'./bounty.mjs';
 import {advanceOffices,nextOfficeMinute}from'./governance.mjs';
 import {advanceOfficeSalaries,nextSalaryMinute}from'./office-salary.mjs';
@@ -48,6 +58,7 @@ import {advancePublicProjects,isPublicProject,advanceHouses,advanceHousing,nextH
 
 const clone=value=>structuredClone(value);
 import {personSimulation}from'./entity-view.mjs';
+import {advanceLayerPlan,ADVANCE_LAYERS}from'./advance-layers.mjs';
 const fullNpcs=engine=>(engine.entities??engine.world.npcs).some(n=>n.id?.startsWith('npc_')&&personSimulation(engine,{},n.id).value);
 export const advanceRegistry=[];
 export function registerAdvance(system){
@@ -64,16 +75,23 @@ export function nextAdvanceMinute(engine,d,now,end){
     return next;
 }
 export const advanceNeedsSteps=(engine,d,now)=>advanceRegistry.some(system=>system.active?.(engine,d,now));
-export function runAdvance(engine,d,ctx){for(const system of advanceRegistry)system.advance(engine,d,ctx);}
+export function runAdvance(engine,d,ctx){
+    const prior=engine.advanceLayerContext;
+    engine.advanceLayerContext=Object.keys(d.get('state','remote')??{}).length?advanceLayerPlan(engine,d.get('state')):null;
+    try{for(const system of advanceRegistry)system.advance(engine,d,ctx);}finally{engine.advanceLayerContext=prior;delete engine.educationCourseContext;delete engine.educationAttendance;}
+}
 
 import {advanceForestWater,harvestSettlementWood,settleFuel,displaceForestWildlife} from './forest-water.mjs';
 import {farmWaterFactor} from './water-cycle.mjs';
 // Order mirrors the original hand-written WorldEngine.advanceInterval sequence.
 const systems=[
- {id:'npc_obligations',order:100,active:e=>fullNpcs(e),nextMinute:(e,d,now)=>nextNpcObligationMinute(d.get('state'),now),
+ {id:'education_enrollment',order:50,advance:(e,d,ctx)=>prepareEducation(d,e,ctx)},
+ {id:'education',order:1090,nextMinute:(e,d,now)=>nextEducationMinute(e,d,now),advance:(e,d,ctx)=>advanceEducation(d,e,ctx)},
+ {id:'npc_obligations',order:100,layers:ADVANCE_LAYERS,active:e=>fullNpcs(e),nextMinute:(e,d,now)=>nextNpcObligationMinute(d.get('state'),now),
   advance:(e,d,{before,after,id})=>advanceNpcObligations(d,e,before,after,id)},
  {id:'contracts',order:200,advance:(e,d,{after})=>advanceContracts(d,e,after)},
  {id:'credit',order:250,advance:(e,d,{after})=>advanceCredit(d,e,after)},
+ {id:'labor_market',order:240,layers:ADVANCE_LAYERS,nextMinute:(e,d,now)=>nextLaborMinute(e,d,now),advance:(e,d,ctx)=>advanceLaborMarket(d,e,ctx)},
  {id:'summons',order:300,advance:(e,d,{after})=>advanceSummons(d,after)},
  {id:'law',order:400,advance:(e,d,{after})=>advanceLaw(d,after,e)},
  {id:'daily',order:500,advance(e,d,{before,after}){
@@ -82,7 +100,7 @@ const systems=[
       for(const [sid,source] of Object.entries(d.get('state','settlements'))) {
         if(source.granary===false)continue;// public money only, no public granary (D1 town ledger)
         const farming=advanceAgriculture(d,e,sid,source,day),s=farming?.settlement??clone(source);
-        const production=farming?0:Math.floor(cropProduction(e,d.document.randomSeed,sid,day*1440,s.foodPerDay)*hazardYieldFactor(d.get('state'),sid,day*1440+720)*farmWaterFactor(e,d.get('state'),sid,day)),available=s.food+production;
+        const production=farming?0:Math.floor(cropProduction(e,d.document.randomSeed,sid,day*1440,s.foodPerDay)*hazardYieldFactor(d.get('state'),sid,day*1440+720)*magicYieldFactor(d.get('state'),sid,day*1440+720)*farmWaterFactor(e,d.get('state'),sid,day)),available=s.food+production;
         const missing=farming?.missingMeals??Math.max(0,s.population-available);
         if(!farming)s.food=Math.max(0,available-s.population);s.unmetMeals=(s.unmetMeals??0)+missing;
         s.starvation=missing ? (s.starvation??0)+1 : Math.max(0,(s.starvation??0)-1);
@@ -98,10 +116,15 @@ const systems=[
  {id:'agriculture_expiry',order:700,advance:(e,d)=>settleAgricultureExpiry(d,e)},
  {id:'settlement_trade',order:800,active:e=>!!e.rules.settlementTrade,nextMinute:(e,d,now)=>nextSettlementTradeMinute(d.get('state'),e,now),
   advance:(e,d,{after})=>advanceSettlementTrade(d,e,after)},
+ {id:'transport',order:790,nextMinute:(e,d,now)=>nextTransportMinute(d.get('state'),now),active:(e,d,now)=>nextTransportMinute(d.get('state'),now)!==Infinity,advance:(e,d,{after})=>advanceTransport(d,e,after)},
+ {id:'post',order:820,nextMinute:(e,d,now)=>nextPostMinute(d.get('state'),now),advance:(e,d,{after})=>advancePost(d,e,after)},
  {id:'shop_restock',order:850,advance:(e,d,{before,after})=>advanceShops(d,e,before,after)},
+ {id:'facilities',order:890,nextMinute:(e,d,now)=>nextFacilityMinute(d.get('state'),now),advance:(e,d,ctx)=>advanceFacilities(d,e,ctx)},
  {id:'projects',order:900,advance(e,d,{days,id}){
     if(days)for(const [key,project]of Object.entries(d.get('state','projects')))if(project.type==='工程'&&project.status==='施工中'&&!isPublicProject(project)){
-        const remainingDays=Math.max(0,project.remainingDays-days);d.set(['state','projects',key],{...project,remainingDays,status:remainingDays?'施工中':'已完成'});
+        const hired=Object.values(d.get('state','records')??{}).some(r=>r.laborMarket===1&&r.project===key);
+        const remainingDays=hired?Math.ceil(project.remainingWork??project.remainingDays):Math.max(0,project.remainingDays-days);d.set(['state','projects',key],{...project,remainingDays,status:remainingDays?'施工中':'已完成'});
+        if(!remainingDays)d.set(['state','projects',key,'facility'],completeFacilityProject(d,e,project));
         if(!remainingDays&&project.creator==='player')milestone(d,e,'publicContribution',key,id);
     }
  }},
@@ -113,6 +136,7 @@ const systems=[
  {id:'office_salaries',order:1129,nextMinute:(e,d,now)=>nextSalaryMinute(e,now),advance:(e,d,ctx)=>advanceOfficeSalaries(d,e,ctx)},
  {id:'governance_offices',order:1130,nextMinute:(e,d,now)=>nextOfficeMinute(d.get('state'),now),advance:(e,d,ctx)=>advanceOffices(d,e,ctx)},
  {id:'housing_steward',order:1135,nextMinute:(e,d,now)=>nextHousingMinute(d.get('state'),now),advance:(e,d,ctx)=>advanceHousing(d,e,ctx)},
+ {id:'upper_appointments',order:1138,advance:(e,d,ctx)=>advanceUpperAppointments(d,e,ctx)},
  {id:'titles',order:1140,nextMinute:(e,d,now)=>nextTitleMinute(d.get('state'),now),advance:(e,d,ctx)=>advanceTitles(d,e,ctx)},
  {id:'notables',order:1142,nextMinute:(e,d,now)=>nextNotableMinute(d.get('state'),now),advance:(e,d,ctx)=>advanceNotables(d,e,ctx)},
  {id:'promotion',order:1144,nextMinute:(e,d,now)=>nextPromotionMinute(d.get('state'),now),advance:(e,d,ctx)=>advancePromotion(d,e,ctx)},
@@ -120,14 +144,18 @@ const systems=[
   advance:(e,d,{before,after})=>advanceBounties(d,e,before,after)},
  {id:'npc_life',order:1200,active:e=>fullNpcs(e),nextMinute:(e,d,now)=>nextNpcLifeMinute(d.get('state'),now),
   advance:(e,d,{before,after})=>{if(fullNpcs(e))advanceNpcLife(d,e,before,after);}},
+ {id:'npc_crime',order:1210,nextMinute:(e,d,now)=>nextNpcCrimeMinute(e,d,now),advance:(e,d,ctx)=>advanceNpcCrime(d,e,ctx)},
  {id:'world_clock',order:1300,active:e=>!!e.rules.worldClock,nextMinute:(e,d,now)=>nextWorldClockMinute(d.get('state'),now),
   advance:(e,d,{after})=>advanceWorldClocks(d,e,after)},
  {id:'season_effects',order:1350,advance:(e,d,{before,after})=>advanceSeasonEffects(d,e,before,after)},
  // U3 floods, famine, epidemics and price swings (rules.hazardClock).
  {id:'hazard_clock',order:1360,active:e=>hazardClocks(e).length>0,advance:(e,d,ctx)=>advanceHazardClocks(d,e,ctx)},
+ // U10 life-magic economy: price curve, beneficiaries, competitors and complaints at midnight.
+ {id:'magic_economy',order:1370,advance:(e,d,ctx)=>advanceMagicEconomy(d,e,ctx)},
  {id:'faction_clock',order:1400,active:e=>factionClockRules(e).length>0,nextMinute:(e,d,now)=>nextFactionClockMinute(d.get('state'),now),
   advance:(e,d,{after})=>advanceFactionClocks(d,e,after)},
  {id:'organizations',order:1450,advance:(e,d,ctx)=>advanceOrganizations(d,e,ctx)},
+ {id:'faith_experience',order:1451,advance:(e,d,ctx)=>advanceFaith(d,e,ctx)},
  // U12a armies: weekly supply, drill, morale and desertion; monthly pay (rules.military).
  {id:'military',order:1452,advance:(e,d,ctx)=>advanceMilitary(d,e,ctx)},
  // U11 tribal awakening: species-and-habitat tribes accumulate, awaken, split and resolve at quarter boundaries.
@@ -135,6 +163,8 @@ const systems=[
  {id:'war_diplomacy',order:1456,advance:(e,d,ctx)=>advanceWarDiplomacy(d,e,ctx)},
  // U17 quest sources: NPC needs, world-event records and effect-table commissions post to the board at midnight.
  {id:'quest_sources',order:1460,advance:(e,d,ctx)=>advanceQuestSources(d,e,ctx)},
+ {id:'royal_service',order:1462,advance:(e,d,ctx)=>advanceRoyalService(d,e,ctx)},
+ {id:'nations',order:1464,advance:(e,d,ctx)=>advanceNations(d,e,ctx)},
  {id:'society_news',order:1500,advance:(e,d,{after})=>advanceSocietyNews(d,e,after)},
  {id:'festival',order:1600,active:e=>festivalCalendar(e).length>0,nextMinute:(e,d,now)=>nextFestivalMinute(d.get('state'),e,now),
   advance:(e,d,{after})=>advanceFestivals(d,e,after)},

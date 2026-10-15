@@ -2,6 +2,8 @@
 // are read into one material/form tag vocabulary plus element affinity. Nothing
 // here writes state; consumers decide what a trait permits.
 import {personBody,physicalFeature,itemView,placeView} from './entity-view.mjs';
+import {facilityView} from './facility-state.mjs';
+import {openingTransportAssets} from '../world/design/transport-rules.mjs';
 
 // One element vocabulary. The first eight are the spell damage types already in
 // saves and catalogs (order kept); water and lightning are interaction agents.
@@ -104,6 +106,8 @@ const stateOf=doc=>doc?.state??doc;
 export function traitsOf(engine,doc,id,{weather=null}={}){
  const state=stateOf(doc)??{},minute=state.minute??0;
  if(typeof id!=='string')return null;
+ const asset=state.records?.[id]??openingTransportAssets.find(a=>a.id===id&&engine.byId.has(a.owner));
+ if(asset?.category==='transport_asset')return finish('item',id,new Set(['item','transport',asset.kind,asset.kind==='pack'?'flesh':'wood',...asset.durability<25?['broken']:[],...asset.wetUntil>minute?['wet']:[]]));
  if(id==='player'||id.startsWith('npc_')||state.creatures?.[id]||id.startsWith('boss_')){
   const view=personBody(engine,state,id),species=engine.byId.get(view?.body.value?.species)??view?.species.value;
   if(species){
@@ -120,7 +124,11 @@ export function traitsOf(engine,doc,id,{weather=null}={}){
   const view=physicalFeature(engine,state,id);if(!view)return null;
   return featureTraits(view.definition.value,view.state.value,minute);
  }
- const definition=engine.byId?.get(id);
+ const definition=state.created?.[id]??engine.byId?.get(id);
+ const building=facilityView(engine,state,id);
+ if(building){const location=locationTraits(definition,weather),tags=new Set([...location.tags,'building',building.material,...definition.tags??[]]);
+  if(building.burning)tags.add('burning');if((state.buildings?.[id]?.wetUntil??0)>minute)tags.add('wet');
+  return finish('location',id,tags,{elements:[...location.elements,...building.burning?['fire']:[]]});}
  if(id.startsWith('item_')||state.itemInstances?.[id]){const view=itemView(engine,state,id);return view?itemTraits(view.definition.value,state.itemInstances?.[id]??state.inventory?.[id]):null;}
  if(id.startsWith('monster_')||id.startsWith('boss_')){
   const actor=state.creatures?.[id];

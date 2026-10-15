@@ -4,6 +4,8 @@
 import {interactionRules}from'../world/design/interaction-rules.mjs';
 import {traitsOf,canonicalElement,ATTACK_MODES,TACTICS,CREATURE_TAGS}from'./traits.mjs';
 import {environmentFeatures}from'./environment.mjs';
+import {applyFacilityInteraction}from'./facilities.mjs';
+import {facilityView}from'./facility-state.mjs';
 import {readObjectState,storeObjectState}from'./magic-object.mjs';
 
 export const multiplierBounds=Object.freeze({min:0.5,max:1.5});
@@ -81,14 +83,20 @@ function writeItem(d,owner,id,outcome){
 // applyInteraction(d,engine,{agent,target}) resolves on current traits and
 // writes burning/wet/frozen onto existing feature/item state. Creatures only
 // receive the combat multiplier, which the caller applies to its own damage.
-export function applyInteraction(d,engine,{agent,target,owner='player',traits=null,moistureMg,minutes}){
+export function applyInteraction(d,engine,{agent,target,owner='player',traits=null,moistureMg,minutes,minute,sourceEvent}){
  const t=traits??traitsOf(engine,d.get('state'),target);
  const outcome=resolveInteraction(agent,t);
  if(moistureMg!==undefined)outcome.moistureMg=moistureMg;
  if(minutes!==undefined&&outcome.minutes>0)outcome.minutes=minutes;
  let changed={added:[],removed:[]};
+ const asset=d.get('state','records',target);
+ if(asset?.category==='transport_asset'){
+  if(outcome.add.includes('wet')){d.set(['state','records',target,'wetUntil'],d.get('state','minute')+60);changed.added.push('wet');}
+  if(agent==='fire'&&!((asset.wetUntil??0)>d.get('state','minute')))d.set(['state','records',target,'durability'],Math.max(0,asset.durability-25));
+ }
  if(target?.startsWith('feature_')){const row=featureRow(engine,target);if(row)changed=writeFeature(d,row,outcome);}
  else if(target?.startsWith('item_'))changed=writeItem(d,owner,target,outcome);
+ else if(facilityView(engine,d.get('state'),target))changed=applyFacilityInteraction(d,engine,target,outcome,{minute,sourceEvent});
  return{...outcome,...changed};
 }
 export function assertLiquidWater(engine,d,row){

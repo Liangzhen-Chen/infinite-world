@@ -1,0 +1,197 @@
+{
+  "version": 1,
+  "marriageStanding": 10,
+  "rules": [
+    {
+      "id": "royal",
+      "polity": "王国",
+      "property": "spouse-first",
+      "title": "eldest-child",
+      "office": "vacant",
+      "text": "王国各省以共同生活的成年配偶先承个人遗产；无配偶时按登记子女长幼选一人，无子女时选同户生者。登记爵位由最长子女承接，无子女时依财产顺位；任命职位空缺，不随财产转移。"
+    },
+    {
+      "id": "orc",
+      "polity": "赭牙部盟",
+      "property": "children",
+      "title": "eldest-child",
+      "office": "vacant",
+      "text": "赭牙部盟的个人遗产由登记子女均分；无子女时依配偶及同户顺位。议事与带队职位须另议，不随遗产世袭。"
+    },
+    {
+      "id": "forest",
+      "polity": "翡翠林盟",
+      "property": "equal",
+      "title": "eldest-child",
+      "office": "vacant",
+      "text": "翡翠林盟将个人遗产在登记子女与成年配偶之间均分；无二者时依同户顺位。林地公共使用权不作个人遗产，议事职位须另议。"
+    },
+    {
+      "id": "bays",
+      "polity": "星湾诸湾",
+      "property": "equal",
+      "title": "eldest-child",
+      "office": "vacant",
+      "text": "星湾诸湾将个人财物均分给登记子女与成年配偶；无二者时依同户顺位。泊位等公共权利不作私产，公职须另议。"
+    },
+    {
+      "id": "lignum",
+      "polity": "杉根联邑",
+      "property": "household",
+      "title": "eldest-child",
+      "office": "vacant",
+      "text": "杉根联邑由同户生者均承个人遗产；共同树居与公共林地仍按原产权。联邑职位空缺后另议，不随遗产世袭。"
+    },
+    {
+      "id": "scent",
+      "polity": "砾耳兽裔",
+      "property": "children",
+      "title": "eldest-child",
+      "office": "vacant",
+      "text": "砾耳兽裔的个人遗产由登记子女均分；无子女时依配偶及同户顺位。族群议事权不由遗产分配决定。"
+    },
+    {
+      "id": "tents",
+      "polity": "风脊诸帐",
+      "property": "eldest",
+      "title": "eldest-child",
+      "office": "vacant",
+      "text": "风脊诸帐以最长登记子女承接个人遗产；无子女时依成年配偶及同户顺位。帐中公产保留原归属，领队须另议。"
+    },
+    {
+      "id": "city",
+      "polity": "细嵌城邦",
+      "property": "equal",
+      "title": "eldest-child",
+      "office": "vacant",
+      "text": "细嵌城邦按登记子女与成年配偶均分个人财产；无二者时依同户顺位。任命与推举的公职须重新产生。"
+    },
+    {
+      "id": "wells",
+      "polity": "灰盐诸井",
+      "property": "household",
+      "title": "eldest-child",
+      "office": "vacant",
+      "text": "灰盐诸井由同户生者均承个人遗产，公共井权仍按原公议归属。司井等公职不因分产自动转移。"
+    },
+    {
+      "id": "cave",
+      "polity": null,
+      "property": "household",
+      "title": "eldest-child",
+      "office": "vacant",
+      "culture": "culture_ms_tanjie",
+      "text": "炭阶灰窟人的遗物归原共灶窟，不按姓氏另分；执行时在该共灶户的生者之间登记份额，共灶公产不改变归属。窟主仍依推举与挑战产生。"
+    },
+    {
+      "id": "forge",
+      "polity": null,
+      "property": "children",
+      "title": "eldest-child",
+      "office": "vacant",
+      "culture": "culture_forge",
+      "text": "寒炉楔契氏族按登记子女均分个人遗产；无子女时依配偶及同户顺位。炉与工坊的共同产权只转亡者份额，氏族职务须另议。"
+    },
+    {
+      "id": "reed",
+      "polity": null,
+      "property": "spouse-first",
+      "title": "eldest-child",
+      "office": "vacant",
+      "culture": "culture_reed",
+      "text": "镜沼篆汀人的个人遗产以成年配偶优先，无配偶时按登记子女长幼选一人，无子女时选同户生者。共同土地只转亡者份额，地方公职不世袭。"
+    }
+  ],
+  "practices": [
+    {
+      "id": "rw09_royal",
+      "category": "family_rule",
+      "text": "王国各省以共同生活的成年配偶先承个人遗产；无配偶时按登记子女长幼选一人，无子女时选同户生者。登记爵位由最长子女承接，无子女时依财产顺位；任命职位空缺，不随财产转移。"
+    },
+    {
+      "id": "rw09_orc",
+      "category": "family_rule",
+      "text": "赭牙部盟的个人遗产由登记子女均分；无子女时依配偶及同户顺位。议事与带队职位须另议，不随遗产世袭。"
+    },
+    {
+      "id": "rw09_forest",
+      "category": "family_rule",
+      "text": "翡翠林盟将个人遗产在登记子女与成年配偶之间均分；无二者时依同户顺位。林地公共使用权不作个人遗产，议事职位须另议。"
+    },
+    {
+      "id": "rw09_bays",
+      "category": "family_rule",
+      "text": "星湾诸湾将个人财物均分给登记子女与成年配偶；无二者时依同户顺位。泊位等公共权利不作私产，公职须另议。"
+    },
+    {
+      "id": "rw09_lignum",
+      "category": "family_rule",
+      "text": "杉根联邑由同户生者均承个人遗产；共同树居与公共林地仍按原产权。联邑职位空缺后另议，不随遗产世袭。"
+    },
+    {
+      "id": "rw09_scent",
+      "category": "family_rule",
+      "text": "砾耳兽裔的个人遗产由登记子女均分；无子女时依配偶及同户顺位。族群议事权不由遗产分配决定。"
+    },
+    {
+      "id": "rw09_tents",
+      "category": "family_rule",
+      "text": "风脊诸帐以最长登记子女承接个人遗产；无子女时依成年配偶及同户顺位。帐中公产保留原归属，领队须另议。"
+    },
+    {
+      "id": "rw09_city",
+      "category": "family_rule",
+      "text": "细嵌城邦按登记子女与成年配偶均分个人财产；无二者时依同户顺位。任命与推举的公职须重新产生。"
+    },
+    {
+      "id": "rw09_wells",
+      "category": "family_rule",
+      "text": "灰盐诸井由同户生者均承个人遗产，公共井权仍按原公议归属。司井等公职不因分产自动转移。"
+    },
+    {
+      "id": "rw09_cave",
+      "category": "family_rule",
+      "text": "炭阶灰窟人的遗物归原共灶窟，不按姓氏另分；执行时在该共灶户的生者之间登记份额，共灶公产不改变归属。窟主仍依推举与挑战产生。"
+    },
+    {
+      "id": "rw09_forge",
+      "category": "family_rule",
+      "text": "寒炉楔契氏族按登记子女均分个人遗产；无子女时依配偶及同户顺位。炉与工坊的共同产权只转亡者份额，氏族职务须另议。"
+    },
+    {
+      "id": "rw09_reed",
+      "category": "family_rule",
+      "text": "镜沼篆汀人的个人遗产以成年配偶优先，无配偶时按登记子女长幼选一人，无子女时选同户生者。共同土地只转亡者份额，地方公职不世袭。"
+    },
+    {
+      "id": "rw09_minor",
+      "category": "family_rule",
+      "text": "未成年继承人可以承接财产和登记爵位。财产仍属本人，成年生父母优先代管，其次选择成年同户者；无合适人时财产保留本人名下并待法庭指定，不能转归临时照护者。"
+    },
+    {
+      "id": "rw09_account",
+      "category": "family_rule",
+      "text": "监护至继承人成年终止；监护人须保全财产并逐笔记账，死亡或失去成年行动条件时停止代管。侵吞形成可诉记录，由当地有权法院审理并按真实余额追偿，不凭判决造钱。"
+    },
+    {
+      "id": "rw09_marriage",
+      "category": "family_rule",
+      "text": "婚姻须成年双方清醒在场、自愿且各自有稳定信任与情意，无在婚配偶，不能是近亲。两家及双方所属势力各增加十点立场；联姻不直接消除战争或自动结盟。"
+    },
+    {
+      "id": "rw09_alliance",
+      "category": "family_rule",
+      "text": "有持续联姻的两家或双方所属势力，可由成年清醒的双方有权首脑在场同意结盟。敌对或交战时须先处理冲突；条件只能引用当事人的真实义务，完成后生效，义务违约或婚姻终止则解除。"
+    },
+    {
+      "id": "rw09_adopt",
+      "category": "family_rule",
+      "text": "收养与过继需养亲成年且年长至少十八岁，子女本人及现有成年父母、监护人同意；无监护人的未成年子女先由法庭指定监护人。亲生关系保留在族谱，法律亲子与户籍实际转移，不复制人口。"
+    },
+    {
+      "id": "rw09_split",
+      "category": "family_rule",
+      "text": "成年成员可同意迁出，在本人另有合法产权的居所另立家户。个人财物和原族亲关系保留，共有产权不因分家自动变为一人私产；共同财产争议可交有权法院审理。"
+    }
+  ]
+}
