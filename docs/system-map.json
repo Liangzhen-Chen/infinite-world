@@ -25,7 +25,7 @@
   "subscribers": 9,
   "interactionRules": 25,
   "effectKinds": 22,
-  "links": 467
+  "links": 468
  },
  "layers": [
   {
@@ -391,6 +391,7 @@
     "sim_economy",
     "sim_environment",
     "sim_faith",
+    "sim_law",
     "sim_military",
     "sim_npc",
     "sim_society",
@@ -467,7 +468,7 @@
    "effects": [],
    "tools": [],
    "readBy": [],
-   "files": 41
+   "files": 42
   },
   {
    "id": "kernel_engine",
@@ -1681,7 +1682,7 @@
     "server-plugin/extraction.mjs",
     "server-plugin/smuggling.mjs"
    ],
-   "lines": 2850,
+   "lines": 2860,
    "stateWrites": [
     "crafted",
     "itemInstances",
@@ -2160,7 +2161,7 @@
     "server-plugin/npc-crime.mjs",
     "server-plugin/bounty.mjs"
    ],
-   "lines": 1182,
+   "lines": 1222,
    "stateWrites": [
     "itemInstances",
     "location",
@@ -2188,6 +2189,7 @@
     "smuggling"
    ],
    "world": [
+    "factions",
     "locations",
     "npcs",
     "regions",
@@ -2409,7 +2411,7 @@
     "extension/ambient-audio.mjs",
     "extension/state-read.mjs"
    ],
-   "lines": 1329,
+   "lines": 1331,
    "stateWrites": [],
    "stateReads": [],
    "recordWrites": [],
@@ -5665,6 +5667,14 @@
   },
   {
    "from": "data_lore",
+   "to": "sim_law",
+   "kind": "data",
+   "labels": [
+    "world/lore"
+   ]
+  },
+  {
+   "from": "data_lore",
    "to": "sim_military",
    "kind": "data",
    "labels": [
@@ -8810,6 +8820,7 @@
    "server-plugin/duels.mjs",
    "server-plugin/effects.mjs",
    "server-plugin/elections.mjs",
+   "server-plugin/extraction.mjs",
    "server-plugin/faction-clock.mjs",
    "server-plugin/faith.mjs",
    "server-plugin/family-diplomacy.mjs",
@@ -10372,7 +10383,7 @@
   },
   {
    "dir": "world/drafts",
-   "files": 41,
+   "files": 42,
    "keys": [],
    "readers": [],
    "tools": [
@@ -10417,6 +10428,7 @@
     "tools/publish-w2-s3.mjs",
     "tools/publish-w2-s4.mjs",
     "tools/publish-w4-b1.mjs",
+    "tools/r10a-review.mjs",
     "tools/record-economy-review.mjs",
     "tools/rw05-education-content.mjs",
     "tools/rw07-faith-content.mjs",
@@ -10577,6 +10589,7 @@
     "tools/publish-w2-s2.mjs",
     "tools/publish-w2-s3.mjs",
     "tools/publish-w2-s4.mjs",
+    "tools/r10a-review.mjs",
     "tools/system-map.mjs",
     "tools/t142-merge.mjs",
     "tools/t155-wildlife-content.mjs",
@@ -10611,6 +10624,7 @@
     "server-plugin/finance-assets.mjs",
     "server-plugin/finance-tax.mjs",
     "server-plugin/group-account.mjs",
+    "server-plugin/law-codes.mjs",
     "server-plugin/military.mjs",
     "server-plugin/monster-society.mjs",
     "server-plugin/nation-founding.mjs",
@@ -10634,6 +10648,7 @@
     "tools/publish-monster-society-2.mjs",
     "tools/publish-monster-society-3.mjs",
     "tools/publish-monster-society.mjs",
+    "tools/r10a-review.mjs",
     "tools/rw07-faith-content.mjs",
     "tools/rw09-family-content.mjs",
     "tools/system-map.mjs",
@@ -10831,6 +10846,7 @@
     "tools/publish-w2-s3.mjs",
     "tools/publish-w2-s4.mjs",
     "tools/publish-w4-b1.mjs",
+    "tools/r10a-review.mjs",
     "tools/rw05-education-content.mjs",
     "tools/rw07-faith-content.mjs",
     "tools/rw09-family-content.mjs",
@@ -10938,6 +10954,7 @@
     "tools/publish-w2-s2.mjs",
     "tools/publish-w2-s3.mjs",
     "tools/publish-w2-s4.mjs",
+    "tools/r10a-review.mjs",
     "tools/system-map.mjs",
     "tools/w1-baishi.mjs",
     "tools/w3-journey-publish.mjs",
@@ -11007,6 +11024,7 @@
    "server-plugin/checks.mjs",
    "server-plugin/compat/v2-phase1-engine.mjs",
    "server-plugin/engine.mjs",
+   "server-plugin/extraction.mjs",
    "server-plugin/manufacturing.mjs",
    "server-plugin/npc-autonomy.mjs",
    "server-plugin/sites.mjs",
@@ -12446,6 +12464,7 @@
       "server-plugin/entity-view.mjs",
       "server-plugin/governance.mjs",
       "server-plugin/high-nobility.mjs",
+      "server-plugin/law-codes.mjs",
       "server-plugin/monster-society.mjs",
       "server-plugin/noble-state.mjs",
       "server-plugin/organization-state.mjs",
@@ -12459,6 +12478,7 @@
      "systems": [
       "base_standing",
       "sim_boss",
+      "sim_law",
       "sim_society",
       "sim_wildlife",
       "ui_scene"
@@ -12840,6 +12860,7 @@
      "modules": [
       "server-plugin/bounty.mjs",
       "server-plugin/entity-view.mjs",
+      "server-plugin/extraction.mjs",
       "server-plugin/faith.mjs",
       "server-plugin/family-diplomacy.mjs",
       "server-plugin/family-inheritance.mjs",
@@ -12856,6 +12877,7 @@
      ],
      "systems": [
       "base_standing",
+      "sim_economy",
       "sim_environment",
       "sim_faith",
       "sim_law",
@@ -13055,6 +13077,7 @@
       "server-plugin/engine.mjs",
       "server-plugin/entity-transitions.mjs",
       "server-plugin/entity-view.mjs",
+      "server-plugin/extraction.mjs",
       "server-plugin/facilities.mjs",
       "server-plugin/faction-clock.mjs",
       "server-plugin/faith-state.mjs",
@@ -13894,6 +13917,7 @@
      "modules": [
       "server-plugin/faction-clock.mjs",
       "server-plugin/faith-catalog.mjs",
+      "server-plugin/law-codes.mjs",
       "server-plugin/lore.mjs",
       "server-plugin/monster-society.mjs",
       "server-plugin/notables.mjs",
@@ -13906,6 +13930,7 @@
       "sim_clock",
       "sim_environment",
       "sim_faith",
+      "sim_law",
       "sim_society"
      ]
     },
@@ -13969,6 +13994,7 @@
     "sim_economy",
     "sim_environment",
     "sim_faith",
+    "sim_law",
     "sim_military",
     "sim_society",
     "ui_client",
@@ -15949,7 +15975,9 @@
    "imports": [
     "server-plugin/entity-view.mjs",
     "server-plugin/items.mjs",
+    "server-plugin/law-codes.mjs",
     "server-plugin/law.mjs",
+    "server-plugin/standing.mjs",
     "server-plugin/traits.mjs"
    ],
    "stateWrites": [
@@ -15964,6 +15992,7 @@
    "recordWrites": [],
    "recordReads": [],
    "rules": [
+    "check",
     "extraction",
     "wildlife"
    ],
@@ -15971,7 +16000,7 @@
     "monsters"
    ],
    "worldDirs": [],
-   "lines": 94
+   "lines": 104
   },
   "server-plugin/facilities.mjs": {
    "system": "sim_society",
@@ -16766,6 +16795,7 @@
     "law"
    ],
    "world": [
+    "factions",
     "locations",
     "npcs",
     "regions",
@@ -16774,7 +16804,7 @@
     "settlementProfiles"
    ],
    "worldDirs": [],
-   "lines": 91
+   "lines": 131
   },
   "server-plugin/law.mjs": {
    "system": "sim_law",
@@ -20642,7 +20672,7 @@
    "rules": [],
    "world": [],
    "worldDirs": [],
-   "lines": 41
+   "lines": 43
   },
   "extension/tools.mjs": {
    "system": "ui_tools",
