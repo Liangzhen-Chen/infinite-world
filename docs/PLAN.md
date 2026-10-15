@@ -617,11 +617,11 @@ T28-R1修好新回执undefined规范化并保留严格篡改拒绝，相关31/32
 
 ### T112（B6）已完成：据点进入、机关处理、有限库存（重访不刷新），凭实际发现解锁隐藏历史；提示估算11710 token；相关与CORE通过，0模型。
 
-### T113（B7） 遗迹据点第一组20处。结果：白石镇所属城市范围至少15处具备完整历史、物权、机关、资源与时间变化。可改world/design/w5-sites-1.mjs、对应草稿/工具、world/geo/{locations,routes}.json、tests/w5-sites-1.test.mjs；接B6和T94，优先补全其已建地点，同一ID只计一次。与B8/B9及其他地理发布串行。验收node --test "tests/w5-*.test.mjs" tests/sites.test.mjs tests/world-validation.test.mjs，CORE。L2预计25–45次，≤2元；约2小时。
+### 已完成 T113（B7） 遗迹据点第一组20处。结果：白石镇所属城市范围至少15处具备完整历史、物权、机关、资源与时间变化。可改world/design/w5-sites-1.mjs、对应草稿/工具、world/geo/{locations,routes}.json、tests/w5-sites-1.test.mjs；接B6和T94，优先补全其已建地点，同一ID只计一次。与B8/B9及其他地理发布串行。验收node --test "tests/w5-*.test.mjs" tests/sites.test.mjs tests/world-validation.test.mjs，CORE。L2预计25–45次，≤2元；约2小时。
 
-### T114（B8） 遗迹据点第二组20处。结果：另20处据点可沿实际道路进入，历史与占据关系形成可调查联系。文件同B7，批次换w5-sites-2；接B7，与地理发布串行。验收node --test "tests/w5-*.test.mjs" tests/sites.test.mjs tests/world-validation.test.mjs，CORE。L2预计25–45次，≤2元；约2小时。
+### 已完成 T114（B8） 遗迹据点第二组20处。结果：另20处据点可沿实际道路进入，历史与占据关系形成可调查联系。文件同B7，批次换w5-sites-2；接B7，与地理发布串行。验收node --test "tests/w5-*.test.mjs" tests/sites.test.mjs tests/world-validation.test.mjs，CORE。L2预计25–45次，≤2元；约2小时。
 
-### T115（B9） 遗迹据点第三组20处。结果：再完成20处，使不同ID的合格遗迹据点至少60处。文件同B7，批次换w5-sites-3；接B8，与地理发布串行。验收node --test "tests/w5-*.test.mjs" tests/sites.test.mjs tests/world-validation.test.mjs，CORE；逐本批ID检查，不写目录总数等于60。L2预计25–45次，≤2元；约2小时。
+### 已完成 T115（B9） 遗迹据点第三组20处。结果：再完成20处，使不同ID的合格遗迹据点至少60处。文件同B7，批次换w5-sites-3；接B8，与地理发布串行。验收node --test "tests/w5-*.test.mjs" tests/sites.test.mjs tests/world-validation.test.mjs，CORE；逐本批ID检查，不写目录总数等于60。L2预计25–45次，≤2元；约2小时。
 
 ### T116（B10）已完成：传闻随真实携带者和登记渠道沿路线抵达，逐手版本可追溯源头，按实际获知问询；相关与CORE通过，0模型。
 
