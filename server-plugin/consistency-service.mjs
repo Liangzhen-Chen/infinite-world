@@ -148,7 +148,8 @@ async function rewriteMessages(input,review){
 export function publicConsistencyResult(record){
  const r=record.result;
  return {reviewId:record.token,status:r.status,text:r.text,original:r.original,rewritten:r.rewritten,verified:r.review?.verified===true&&['verified','issues'].includes(r.status)&&!r.rewriteError,
-  canCommit:r.canCommit,feedback:r.feedback,issues:r.review?.issues??[],attempts:r.attempts,protocol:r.protocol,tail:r.tail,sequence:r.sequence,retrieval:record.evidence?.retrieval};
+  canCommit:r.canCommit,feedback:r.feedback,issues:r.review?.issues??[],originalIssues:r.firstReview?.issues??[],rewriteError:r.rewriteError,
+  attempts:r.attempts,protocol:r.protocol,tail:r.tail,sequence:r.sequence,retrieval:record.evidence?.retrieval};
 }
 
 // Captures are authoritative snapshots. Client-provided receipts, clocks and

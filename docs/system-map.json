@@ -2,7 +2,7 @@
  "title": "无限原野系统地图",
  "card": "K9",
  "generatedFrom": {
-  "commit": "refs/heads/v3",
+  "commit": "refs/heads/m2p",
   "method": "运行时导出（注册表、规则表、工具定义、效果表、立场传导表）+ 静态正则扫描（import 图、函数体标识符、state 分区与 records 前缀、rules/world 读取）。静态扫描是近似：经 engine.byId、helper 间接或动态拼接路径的访问不计入。"
  },
  "scanMethods": {
@@ -18,7 +18,7 @@
  "counts": {
   "layers": 6,
   "systems": 38,
-  "modules": 177,
+  "modules": 178,
   "advance": 45,
   "tools": 25,
   "verbs": 16,
@@ -2224,9 +2224,10 @@
    "modules": [
     "server-plugin/consistency-review.mjs",
     "server-plugin/consistency-service.mjs",
-    "server-plugin/consistency-evidence.mjs"
+    "server-plugin/consistency-evidence.mjs",
+    "server-plugin/consistency-outcome.mjs"
    ],
-   "lines": 681,
+   "lines": 722,
    "stateWrites": [],
    "stateReads": [
     "location",
@@ -12605,6 +12606,11 @@
   ],
   "orphanModules": [
    {
+    "module": "server-plugin/consistency-outcome.mjs",
+    "usedByTests": true,
+    "usedByTools": true
+   },
+   {
     "module": "extension/generation.mjs",
     "usedByTests": true,
     "usedByTools": true
@@ -13397,6 +13403,18 @@
    "worldDirs": [],
    "lines": 96
   },
+  "server-plugin/consistency-outcome.mjs": {
+   "system": "nar_consistency",
+   "imports": [],
+   "stateWrites": [],
+   "stateReads": [],
+   "recordWrites": [],
+   "recordReads": [],
+   "rules": [],
+   "world": [],
+   "worldDirs": [],
+   "lines": 40
+  },
   "server-plugin/consistency-review.mjs": {
    "system": "nar_consistency",
    "imports": [
@@ -13440,7 +13458,7 @@
    "worldDirs": [
     "meta"
    ],
-   "lines": 241
+   "lines": 242
   },
   "server-plugin/contracts.mjs": {
    "system": "sim_economy",
