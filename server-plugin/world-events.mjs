@@ -119,6 +119,14 @@ export function worldEvents(state,filter=()=>true){
     return Object.values(state.records??{}).filter(r=>r.category==='world_event'&&filter(r)).sort((a,b)=>a.minute-b.minute||a.id.localeCompare(b.id));
 }
 
+// Offscreen producers call this after committing their domain transition.
+// Stable domain ids guard both persistence and subscriber delivery on replay.
+export function publishTransitionEvent(d,engine,event){
+    if(d.get('state','records',`world_event:${event.id}`))return false;
+    publishWorldEvents(d,engine,[event],{before:d.get('state'),args:{},detail:{},eventId:event.id,tool:event.tool??'advance'});
+    return true;
+}
+
 // A witnessed event of enough weight becomes a rumor that people can retell
 // along the existing conversation and courier routes. Minors are never the
 // subject of an event rumor; private facts are excluded where memories are made.

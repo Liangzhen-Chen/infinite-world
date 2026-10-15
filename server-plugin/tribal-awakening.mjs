@@ -16,7 +16,8 @@ import {awakeningEligible,awakeningTotal,sapient} from './wildlife-awakening.mjs
 import {applyEffects,assertEffect} from './effects.mjs';
 import {speciesInHabitat} from './wildlife-range.mjs';
 import {adjustStanding,standing} from './standing.mjs';
-import {worldEvents} from './world-events.mjs';
+import {worldEvents,publishTransitionEvent} from './world-events.mjs';
+import {groupView} from './entity-view.mjs';
 import {clockRoll} from './world-clock.mjs';
 import {registerQuestGenerator,postGeneratedQuest} from './quest-sources.mjs';
 import {growIntelligence,levelProfile,GROWTH_POINTS} from './npc-intelligence.mjs';
@@ -107,7 +108,7 @@ function membersOf(d,engine,dyn,rec){
  const h=habitatOf(engine,dyn),out=new Set();
  for(const [id,a]of Object.entries(d.get('state','creatures')??{}))
   if(alive(a)&&a.species===dyn.species&&(a.ecology===dyn.habitat||h&&within(engine,a.location,h.location)))out.add(id);
- for(const org of rec?.factions??[])for(const id of Object.keys(d.get('state','records',`organization:${org}`)?.members??{}))if(alive(d.get('state','creatures',id)))out.add(id);
+ for(const org of rec?.factions??[])for(const id of Object.keys(groupView(engine,d.get('state'),org)?.members.value??{}))if(alive(d.get('state','creatures',id)))out.add(id);
  return [...out].sort();
 }
 const ecologyCount=(d,dyn)=>d.get('state','records',`ecology:${dyn.habitat}`)?.populations?.[dyn.species]?.count??0;
@@ -135,7 +136,7 @@ function gather(d,engine,t,dyn,rec,members,from,at,sourceEvent){
  const tutors=dyn.tutors.filter(n=>npcAlive(state.npcs?.[n]));
  for(const tutor of tutors){
   const id=`${sourceEvent}:teach:${tutor}`;
-  if(!d.get('state','records',`world_event:${id}`))d.set(['state','records',`world_event:${id}`],{category:'world_event',id,minute:at,location:dyn.home,witnesses:[],tool:'advance',
+  publishTransitionEvent(d,engine,{id,minute:at,location:dyn.home,witnesses:[],tool:'advance',
    verb:'learn',actor:tutor,target:rec.factions?.length?tribalOrgId(dyn.id,'accord'):null,tags:['learn','teach','tribal'],tribe:dyn.id,sourceEvent});
  }
  const teach=Math.min(w.teach.cap,taught*w.teach.player+tutors.length*w.teach.npc+questChoice('teach')*w.teach.quest);
@@ -178,15 +179,16 @@ function stanceFor(seed,dyn,id){
  for(const f of dyn.factions){if(v<f.share)return f.stance;v-=f.share;}
  return dyn.factions.at(-1).stance;
 }
-function placeMembers(d,dyn,rec,members,at,sourceEvent){
+function placeMembers(d,engine,dyn,rec,members,at,sourceEvent){
  const seed=d.document.randomSeed;
  for(const id of members){
   const actor=d.get('state','creatures',id);if(!sapient(actor))continue;
-  if(rec.factions.some(org=>d.get('state','records',`organization:${org}`)?.members?.[id]))continue;
+  if(rec.factions.some(org=>groupView(engine,d.get('state'),org)?.members.value[id])||rec.factions.some(org=>d.get('state','records',`organization:${org}`)?.removed?.[id]))continue;
   const org=tribalOrgId(dyn.id,stanceFor(seed,dyn,id)),row=clone(d.get('state','records',`organization:${org}`));
-  if(!row.leader){row.leader=id;row.members[id]={position:'会长',joinedAt:at,arrears:0};}
+  if(!groupView(engine,d.get('state'),org)?.leader.value){row.leader=id;row.members[id]={position:'会长',joinedAt:at,arrears:0};}
   else row.members[id]={position:'成员',joinedAt:at,arrears:0};
   d.set(['state','records',`organization:${org}`],row);
+  publishTransitionEvent(d,engine,{id:`${sourceEvent}:join:${id}`,minute:at,location:dyn.home,witnesses:[],tool:'advance',verb:'organize',actor:id,target:org,member:id,position:row.members[id].position,tags:['organization','org:join','tribal'],tribe:dyn.id,sourceEvent});
  }
 }
 function split(d,engine,t,dyn,rec,members,at,sourceEvent){
@@ -199,11 +201,11 @@ function split(d,engine,t,dyn,rec,members,at,sourceEvent){
    tribal:{dynamic:dyn.id,stance:f.stance,population:Math.round(population*f.share/total),status:'活动'}});
   d.set(['state','records',clockKey(id)],{category:'tribal_clock',id:clockKey(id),org:id,dynamic:dyn.id,stance:f.stance,filled:0,segments:t.clock.segments,history:[]});
   const ev=`${sourceEvent}:found:${f.stance}`;
-  d.set(['state','records',`world_event:${ev}`],{category:'world_event',id:ev,minute:at,location:dyn.home,witnesses:[],tool:'advance',verb:'organize',actor:id,target:null,
+  publishTransitionEvent(d,engine,{id:ev,minute:at,location:dyn.home,witnesses:[],tool:'advance',verb:'organize',actor:id,target:null,
    tags:['organization','org:found','tribal',`stance:${f.stance}`],tribe:dyn.id,sourceEvent});
   rec.factions.push(id);
  }
- placeMembers(d,dyn,rec,members,at,sourceEvent);
+ placeMembers(d,engine,dyn,rec,members,at,sourceEvent);
  rec.demands=dyn.demands.map(x=>({id:x.id,name:x.name,claim:x.claim,status:'提出',minute:at}));
  rec.splitAt=at;
  applyEffects(d,engine,[{kind:'rumor',id:`${dyn.id}_demands`.slice(0,40),claim:`${dyn.name}开了灵智，提出${rec.demands.map(x=>x.name).join('、')}，族里分成了${dyn.factions.map(f=>f.name).join('、')}。`.slice(0,200),
@@ -231,7 +233,7 @@ function advanceClocks(d,engine,t,dyn,rec,g,members,at,sourceEvent){
   if(value)adjustStanding(d,engine,org,'player',value,{sourceEvent:`${sourceEvent}:standing`,reason:`${dyn.name}对你本季所为的看法`,minute:at});
  }
  // U7：受教的和解派成员灵智成长。
- if(ch.teach>0)for(const id of Object.keys(d.get('state','records',`organization:${tribalOrgId(dyn.id,'accord')}`)?.members??{}))
+ if(ch.teach>0)for(const id of Object.keys(groupView(engine,d.get('state'),tribalOrgId(dyn.id,'accord'))?.members.value??{}))
   growIntelligence(d,engine,id,GROWTH_POINTS.teachSkill*Math.min(ch.teach,c.choiceCap),'tribal_teach',`${sourceEvent}:teach`);
  for(const k of TRIBAL_CHOICES)rec.choiceTotals[k]+=ch[k];
  const full=TRIBAL_STANCES.filter(s=>clocks[s].filled>=clocks[s].segments);if(!full.length)return null;
@@ -264,7 +266,8 @@ export function tribalSettlementSkeleton(seed,dyn,{population,leader,council,min
 function resolveOutcome(d,engine,t,dyn,rec,{stance,kind},at,sourceEvent){
  const ev=`${sourceEvent}:${kind}`,org=tribalOrgId(dyn.id,stance),accord=tribalOrgId(dyn.id,'accord'),radical=tribalOrgId(dyn.id,'radical');
  const receipt=applyEffects(d,engine,outcomeEffects(engine,dyn,kind,at),{settlement:dyn.board,faction:dyn.anchor.faction,minute:at,sourceEvent:ev},'world');
- const event=(verb,actor,target,tags)=>d.set(['state','records',`world_event:${ev}`],{category:'world_event',id:ev,minute:at,location:dyn.home,witnesses:[],tool:'advance',verb,actor,target,tags:['tribal',...tags],tribe:dyn.id,sourceEvent:ev});
+ let transition;
+ const event=(verb,actor,target,tags)=>{transition={id:ev,minute:at,location:dyn.home,witnesses:[],tool:'advance',verb,actor,target,tags:['tribal',...tags],tribe:dyn.id,sourceEvent:ev};};
  const setOrg=(id,patch)=>{const row=d.get('state','records',`organization:${id}`);if(row)d.set(['state','records',`organization:${id}`],{...row,tribal:{...row.tribal,...patch}});};
  const outcome={kind,status:TRIBAL_OUTCOMES[kind],stance,org,minute:at,sourceEvent:ev,effects:receipt.applied?receipt.effects.map(e=>e.kind):[]};
  if(kind==='ally'){
@@ -273,15 +276,14 @@ function resolveOutcome(d,engine,t,dyn,rec,{stance,kind},at,sourceEvent){
   setOrg(accord,{status:'结盟',affiliation:dyn.board});setOrg(radical,{status:'散入'});
   event('pact',accord,dyn.board,['pact','alliance']);
  }else if(kind==='autonomy'){
-  const row=d.get('state','records',`organization:${accord}`);
-  const skeleton=tribalSettlementSkeleton(d.document.randomSeed,dyn,{population:rec.population,leader:row?.leader??null,council:accord,minute:at,home:engine.byId.get(dyn.home)});
+  const skeleton=tribalSettlementSkeleton(d.document.randomSeed,dyn,{population:rec.population,leader:groupView(engine,d.get('state'),accord)?.leader.value??null,council:accord,minute:at,home:engine.byId.get(dyn.home)});
   d.set(['state','records',`tribal_settlement:${dyn.id}`],{category:'tribal_settlement',dynamic:dyn.id,minute:at,sourceEvent:ev,hash:createHash('sha256').update(JSON.stringify(skeleton)).digest('hex').slice(0,24),skeleton});
   setOrg(accord,{status:'自治',settlement:skeleton.id});outcome.settlement=skeleton.id;
   adjustStanding(d,engine,dyn.board,accord,5,{sourceEvent:ev,reason:`${dyn.name}自立聚居地`,minute:at});
   event('organize',accord,null,['organization','org:found','autonomy']);
  }else if(kind==='war'){
   // U12 接口：交战双方、前线、兵力与状态；军队与战争结算由 U12 接管。
-  const strength=Object.keys(d.get('state','records',`organization:${radical}`)?.members??{}).length+(d.get('state','records',`organization:${radical}`)?.tribal?.population??0);
+  const strength=Object.keys(groupView(engine,d.get('state'),radical)?.members.value??{}).length+(d.get('state','records',`organization:${radical}`)?.tribal?.population??0);
   d.set(['state','records',`tribal_war:${dyn.id}`],{category:'tribal_war',dynamic:dyn.id,aggressor:radical,defenders:[dyn.board,dyn.anchor.faction],front:dyn.home,habitat:dyn.habitat,
    strength,status:'对峙',since:at,sourceEvent:ev,handler:'U12',note:'军队、兵役与战事结算待U12接管；此前只有野物躁动与立场敌对'});
   adjustStanding(d,engine,dyn.board,radical,-40,{sourceEvent:ev,reason:`${dyn.name}起事`,minute:at});
@@ -293,6 +295,8 @@ function resolveOutcome(d,engine,t,dyn,rec,{stance,kind},at,sourceEvent){
   event('organize',tribalOrgId(dyn.id,'recluse'),null,['organization','latent']);
  }
  rec.status=TRIBAL_OUTCOMES[kind];rec.outcome=outcome;
+ d.set(['state','records',`tribal_awakening:${dyn.id}`],rec);
+ publishTransitionEvent(d,engine,transition);
  d.say(`${dyn.name}的觉醒有了结局：${TRIBAL_OUTCOMES[kind]}`);
 }
 
@@ -325,7 +329,7 @@ function tick(d,engine,t,dyn,at){
  else if(rec.liyiAt&&!['潜伏'].includes(rec.status)){
   // 后来现身的同族个体也随族群立意，并编入三派。
   const fresh=batchAwaken(d,engine,dyn,members,'liyi',at,sourceEvent);
-  if(fresh.length){rec.awakened=[...new Set([...rec.awakened,...fresh])].sort();placeMembers(d,dyn,rec,fresh,at,sourceEvent);row.awakened=fresh;}
+  if(fresh.length){rec.awakened=[...new Set([...rec.awakened,...fresh])].sort();placeMembers(d,engine,dyn,rec,fresh,at,sourceEvent);row.awakened=fresh;}
  }
  for(const x of rec.demands){const q=Object.values(d.get('state','quests')??{}).find(q=>q.source?.key===`tribal:${dyn.id}:${x.id}`);if(q?.status==='已完成'&&x.status==='提出')Object.assign(x,{status:'已回应',quest:q.id,answeredAt:q.resolvedAt});}
  if(rec.status==='分化'&&rec.splitAt<at){

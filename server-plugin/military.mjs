@@ -96,7 +96,7 @@ function playerBanks(engine,state){return (creditRules(engine)?.banks??[]).map(b
 export function partyCoins(engine,state,id){
  switch(partyKind(engine,state,id)){
  case 'player':return (state.player?.coins??0)+playerBanks(engine,state).reduce((n,b)=>n+Math.min(b.accounts.player,b.coins),0);
- case 'faction':return state.records?.[`faction-assets:${id}`]?.coins??engine.world.factions.find(f=>f.id===id)?.resources?.treasuryCopper??0;
+ case 'faction':return organization(engine,state,id)?.treasury??0;
  case 'polity':return state.records?.[`polity:${id}`]?.coins??polityRule(engine,id)?.treasuryCopper??0;
  case 'settlement':return Math.max(0,(state.settlements[id].treasury??0)-reserveOf(engine));
  case 'organization':return Math.max(0,organization(engine,state,id)?.treasury??0);

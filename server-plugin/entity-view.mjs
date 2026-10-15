@@ -21,7 +21,7 @@ function socialIdentities(engine,state,id){
     return memberOrganizations(engine,state,id).map(org=>{
         const row=state.records?.[`organization:${org.id}`];
         const changed=Object.keys(row?.members??{}).some(m=>actorId(engine.world,m)===id);
-        return fact({id:org.id,source:org.source,...org.members[id]},changed?`state.records.organization:${org.id}.members.${id}`:org.source==='household'?'world.households + state.family.households':`world.factions.${org.id} + rules.reputation.factions`,changed);
+        return fact({id:org.id,source:org.source,...org.members[id]},changed?`state.records.organization:${org.id}.members.${id}`:org.source==='household'?'world.households + state.family.households':org.source==='society'?`world.locations.${org.id}.monsterSociety`:`world.factions.${org.id} + rules.reputation.factions`,changed);
     });
 }
 function legalIdentities(engine,state,id){
@@ -102,11 +102,24 @@ export function personView(engine,state,requested){
 
 export function groupView(engine,state,id){
     const org=organizationState(engine,state,id);if(!org)return null;
-    const row=state.records?.[`organization:${id}`],source=org.source==='created'?`state.records.organization:${id}`:org.source==='household'?'world.households + state.family.households':`world.factions.${id} + rules.reputation.factions`;
-    return {id:fact(id,'identity'),source:fact(org.source,source),
+    const row=state.records?.[`organization:${id}`],source=org.source==='created'?`state.records.organization:${id}`:org.source==='household'?'world.households + state.family.households':org.source==='society'?`world.locations.${id}.monsterSociety`:`world.factions.${id} + rules.reputation.factions`;
+    return {organization:fact(org,source,Boolean(row)),id:fact(id,'identity'),source:fact(org.source,source),
         members:fact(org.members,row?`${source} + state.records.organization:${id}`:source,Boolean(row||org.source==='household'&&state.family?.households?.[id])),
         leader:fact(org.leader,row&&Object.hasOwn(row,'leader')?`state.records.organization:${id}.leader`:source,Boolean(row&&Object.hasOwn(row,'leader'))),
-        seat:fact(org.seat,source),kind:fact(org.kind,source)};
+        seat:fact(org.seat,source),kind:fact(org.kind,source),
+        officials:fact(Object.entries(org.members).filter(([m,r])=>m===org.leader||!['成员'].includes(r.position)).map(([m])=>m),row?`${source} + state.records.organization:${id}.members`:source,Boolean(row)),
+        treasury:fact(org.treasury,org.source==='faction'?`state.records.faction-assets:${id} + world.factions.${id}.resources`:`state.records.organization:${id}.treasury`,Boolean(row||state.records?.[`faction-assets:${id}`]))};
+}
+
+// A contact names a founding office holder. Resolve that office on every read;
+// an explicit vacancy must never fall back to the authored former holder.
+export function groupRepresentative(engine,state,id,requested){
+    const view=groupView(engine,state,id);if(!view)return null;
+    const f=engine.world.factions?.find(f=>f.id===id),canonical=actorId(engine.world,requested);
+    if(requested===undefined||canonical===actorId(engine.world,f?.leader))return view.leader.value;
+    if(view.officials.value.includes(canonical))return canonical;
+    if(f?.coreMembers?.some(m=>actorId(engine.world,m)===canonical))return view.officials.value.find(m=>m!==view.leader.value)??view.leader.value;
+    return null;
 }
 
 // V1 mappings only: later cards extend physical, operating and access views.

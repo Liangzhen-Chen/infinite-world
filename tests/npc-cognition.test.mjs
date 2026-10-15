@@ -39,7 +39,7 @@ test('封路、费用不足和既有预约不会造成半次携信扣款',async(
 });
 test('遗忘只改主观投影，三次真实付款形成可推翻反思，听说不当作亲身信用证据',async()=>{
  const {engine,d}=await setup();const rows=[fact('a',{salience:1}),fact('b',{minute:510}),fact('c',{minute:520}),fact('rumor',{sourceType:'听说'})];d.set(['state','npcs',from,'memoryStream'],rows);const history=structuredClone(d.get('state','npcs',from,'memoryStream'));
- settleNpcReflection(d,engine,from,40*1440);assert.deepEqual(d.get('state','npcs',from,'memoryStream'),history);const view=npcCognitionView(engine,d.document,from);assert.equal(view.memories[0].blurred,true);assert.doesNotMatch(view.memories[0].content,/12铜|4份/);assert.equal(view.reflections.length,1);assert.deepEqual(view.reflections[0].evidence,['a','b','c']);
+ settleNpcReflection(d,engine,from,40*1440);assert.deepEqual(d.get('state','npcs',from,'memoryStream'),history);const view=npcCognitionView(engine,d.document,from),forgotten=view.memories.find(m=>m.id==='a');assert.equal(forgotten.blurred,true);assert.doesNotMatch(forgotten.content,/12铜|4份/);assert.equal(view.reflections.length,1);assert.deepEqual(view.reflections[0].evidence,['a','b','c']);
  d.set(['state','npcs',from,'memoryStream'],[...rows,fact('bad',{kind:'obligation',minute:600,sourceType:'约定核对',content:'旅人付款违约。'})]);settleNpcReflection(d,engine,from,40*1440);assert.equal(d.get('state','npcs',from,'cognition','reflections').length,2);assert.match(d.get('state','npcs',from,'cognition','reflections')[1].content,/怀疑/);
 });
 test('正在工作不能被携信抽走，途中失能不瞬移送达',async()=>{

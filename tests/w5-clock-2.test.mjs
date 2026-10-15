@@ -55,7 +55,10 @@ test('T111：一年内各势力时钟自动推进并真实扣公库；野物躁�
  for(const id of moved){
   const c=clock(after,id),rule=factionClockRules(engine).find(r=>r.faction===id);
   const spent=c.history.reduce((n,e)=>n+(rule.stages.find(s=>s.id===e.stage).cost.coins??0),0);
-  assert.equal(assets(after,id).coins,faction(id).resources.treasuryCopper-spent,id);
+  const account=assets(after,id);
+  // U12 military spending and war escrow also use the faction treasury.
+  assert.equal(0-account.ledger.filter(e=>e.kind==='stage_cost').reduce((n,e)=>n+e.coins,0),spent,id);
+  assert.equal(account.coins,faction(id).resources.treasuryCopper+account.ledger.reduce((n,e)=>n+e.coins,0),id);
  }
  const star=clock(after,'faction_starpact');
  if(star.history.length)assert.ok(star.history[0].effects.some(e=>e.kind==='wildlife_stir'));

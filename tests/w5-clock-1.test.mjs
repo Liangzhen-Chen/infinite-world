@@ -55,7 +55,10 @@ test('T110：时钟随时间自动推进，阶段扣势力公库并留下传述�
  for(const id of moved){
   const c=clock(after,id),a=assets(after,id),rule=factionClockRules(engine).find(r=>r.faction===id);
   const spent=c.history.reduce((n,e)=>n+(rule.stages.find(s=>s.id===e.stage).cost.coins??0),0);
-  assert.equal(a.coins,faction(id).resources.treasuryCopper-spent,id);
+  // U12 war commissions share this account. Stage costs still reconcile
+  // exactly with executed stages, and every other debit/credit balances too.
+  assert.equal(0-a.ledger.filter(e=>e.kind==='stage_cost').reduce((n,e)=>n+e.coins,0),spent,id);
+  assert.equal(a.coins,faction(id).resources.treasuryCopper+a.ledger.reduce((n,e)=>n+e.coins,0),id);
   const first=rule.stages[0].effects.find(e=>e.kind==='rumor');
   if(first)assert.ok(first.carriers.some(n=>after.state.npcs[n].memoryStream?.some(m=>m.content===first.claim)),id);
  }
