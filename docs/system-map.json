@@ -25,7 +25,7 @@
   "subscribers": 8,
   "interactionRules": 24,
   "effectKinds": 11,
-  "links": 332
+  "links": 333
  },
  "layers": [
   {
@@ -1234,7 +1234,7 @@
     "server-plugin/regions.mjs",
     "server-plugin/remote-generation.mjs"
    ],
-   "lines": 1389,
+   "lines": 1396,
    "stateWrites": [
     "npcs",
     "records",
@@ -3302,6 +3302,15 @@
    "kind": "call",
    "labels": [
     "monster-society.mjs"
+   ]
+  },
+  {
+   "from": "sim_environment",
+   "to": "sim_wildlife",
+   "kind": "call",
+   "labels": [
+    "wildlife-habitats.mjs",
+    "wildlife-migration.mjs"
    ]
   },
   {
@@ -9335,9 +9344,11 @@
      "means": "野地按地形、群落标签与性状派生栖地并自动长出生物（K8 wildlife-habitats.mjs）",
      "pattern": "locationHabitatTypes|areaKm2",
      "modules": [
+      "server-plugin/remote-generation.mjs",
       "server-plugin/wildlife-habitats.mjs"
      ],
      "systems": [
+      "sim_environment",
       "sim_wildlife"
      ]
     },
@@ -13936,7 +13947,9 @@
    "imports": [
     "server-plugin/npc-state.mjs",
     "server-plugin/shop.mjs",
-    "server-plugin/storage.mjs"
+    "server-plugin/storage.mjs",
+    "server-plugin/wildlife-habitats.mjs",
+    "server-plugin/wildlife-migration.mjs"
    ],
    "stateWrites": [
     "npcs",
@@ -13971,7 +13984,7 @@
    "worldDirs": [
     "geo"
    ],
-   "lines": 571
+   "lines": 578
   },
   "server-plugin/repair.mjs": {
    "system": "sim_economy",

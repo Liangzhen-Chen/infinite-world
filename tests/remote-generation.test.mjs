@@ -139,6 +139,10 @@ test('自动接入：派生商店与补货、交易事件、声望与立场传�
     const wild=sk.locations.find(l=>l.purpose==='野地');
     assert.ok(!wild.owner&&!wild.access&&!wild.rooms&&wild.biome.length);
     assert.ok(locationTraits(wild).tags.includes('stone'));
+    // K8 derives the wild land's habitat on arrival and stocks it in the campaign; districts are not wild.
+    const eco=doc.state.records[`ecology:habitat_auto_${wild.id}`];
+    assert.ok(eco&&Object.values(eco.populations).some(p=>p.count>0));
+    assert.ok(!Object.keys(doc.state.records).some(k=>k.startsWith('ecology:habitat_auto_loc_rg_')&&!k.endsWith('_wild')));
     assert.equal(regionOf(overlay.world,village.districts[0]).county.id,TONGJI);
 });
 

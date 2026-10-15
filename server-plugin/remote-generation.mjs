@@ -2,6 +2,8 @@ import {createHash} from 'node:crypto';
 import {digest} from './storage.mjs';
 import {initialNpcState} from './npc-state.mjs';
 import {originSettlement} from './shop.mjs';
+import {materializeWildlifeHabitats} from './wildlife-habitats.mjs';
+import {planWildlifeMigration} from './wildlife-migration.mjs';
 
 // T143: far counties are generated when the player first arrives. The world
 // keeps only the T142 outline (world/geo/regions.json); the skeleton of a
@@ -340,7 +342,7 @@ export function generateCounty(world,countyId,campaignSeed){
             }
         }
         const districtIds=districts.map((dist,j)=>{const id=`loc_rg_${short}_${isSeat?'s0':plan.id.split('_').at(-1)}_d${j+1}`;
-            place({id,name:dist.name,parent:sid,scope:sid,coordinates:[round2(plan.coordinates[0]+0.2*Math.cos(j)),round2(plan.coordinates[1]+0.2*Math.sin(j))],purpose:'住区',
+            place({id,name:dist.name,parent:sid,scope:sid,owner:sid,coordinates:[round2(plan.coordinates[0]+0.2*Math.cos(j)),round2(plan.coordinates[1]+0.2*Math.sin(j))],purpose:'住区',
                 description:`${dist.name}是${plan.name}的住区，${dist.work.join('、')}多住在这里。街巷可以通行，入户须先招呼。`},{settlement:sid,name:plan.name});
             route(sid,id,0.3);dist.id=id;return id;});
         // Buildings: office/council, shops, shrine or workshop.
@@ -432,7 +434,7 @@ export function generateCounty(world,countyId,campaignSeed){
     });
     profiles[0].facts=[`${seat.name}按种子登记${profiles[0].population}名、${profiles[0].householdCount}户；具名${profiles[0].registeredPopulation}名（含纲要人物），其余${profiles[0].pendingPopulation}名${profiles[0].pendingHouseholdCount}户在到访住区时才生成，不计入完整档。`];
     // County wild land (K8 habitat interface: terrain + biome words, no owner or access).
-    place({id:`loc_rg_${short}_wild`,name:fresh(i=>`${county.name}${i?'旷野'+i:'野地'}`),parent:null,scope:`loc_rg_${short}_wild`,coordinates:[round2(seat.coordinates[0]+4),round2(seat.coordinates[1]+3)],
+    place({id:`loc_rg_${short}_wild`,name:fresh(i=>`${county.name}郊外${i?i+1:''}`),parent:null,scope:seat.id,areaKm2:20,coordinates:[round2(seat.coordinates[0]+4),round2(seat.coordinates[1]+3)],
         biome:biomeWords(county),purpose:'野地',description:`${county.name}城镇以外的${county.terrain}。`},null,{wild:true});
     route(seat.id,`loc_rg_${short}_wild`,5,['walk'],{risk:1});
     // Border nodes in the county (market posts) connect to the seat.
@@ -464,12 +466,17 @@ export function unfoldRemoteAt(d,engine,location){
     const skeleton=generateCounty(base,county,d.document.randomSeed??'default-campaign');
     const record={version:REMOTE_VERSION,county,seed:d.document.randomSeed??'default-campaign',minute:d.get('state','minute'),firstPlace:location,hash:digest(skeleton).slice(0,24),revision:0,profiles:{},skeleton};
     d.set(['state','remote',county],record);
+    // K8: the county's wild land gets its derived habitat now, stocked in the
+    // campaign as an edition update would, so remote wilds hold creatures on the first visit.
+    const overlay=materializeWildlifeHabitats(remoteWorld(base,d.get('state'))),places=new Set(skeleton.locations.filter(l=>l.region===county).map(l=>l.id));
+    const fresh=(overlay.rules.wildlife?.habitats??[]).filter(h=>h.derived&&places.has(h.location));
+    if(fresh.length)for(const patch of planWildlifeMigration(d.document,{...overlay.rules,wildlife:{...overlay.rules.wildlife,habitats:fresh}},overlay.monsters??[]))d.set(patch.path,patch.value);
     // Shopkeepers trade from the day they are registered; others act after a full profile.
     for(const p of skeleton.people)if(p.remoteRole==='keeper'){
         if(d.get('state','npcs',p.id))throw Error(`远方人物编号已被占用：${p.id}`);
         d.set(['state','npcs',p.id],{...initialNpcState(p),occupation:p.occupation});
     }
-    return {version:REMOTE_VERSION,county,name:skeleton.name,kind:skeleton.kind,settlements:skeleton.settlements.length,places:skeleton.locations.length,people:skeleton.people.length,
+    return {version:REMOTE_VERSION,county,name:skeleton.name,kind:skeleton.kind,settlements:skeleton.settlements.length,places:skeleton.locations.length,people:skeleton.people.length,habitats:fresh.map(h=>h.id),
         rostered:skeleton.census.rostered};
 }
 
