@@ -8,6 +8,7 @@ import {spendPublic,refundPublic} from './governance.mjs';
 import {personQuestRights} from './entity-view.mjs';
 import {refundQuestFunding,settleQuestOutcome} from './quest-sources.mjs';
 import {wildlifeQuestEvidence,claimWildlifeQuest,existingWildlifeEvidence} from './quest-wildlife.mjs';
+import {laborNotices} from './labor-market.mjs';
 
 const DAY=1440,active=q=>['公开','进行中'].includes(q.status);
 const integer=(n,min,max,label)=>{if(!Number.isSafeInteger(n)||n<min||n>max)throw Error(`${label}必须在${min}到${max}之间`);return n;};
@@ -114,6 +115,7 @@ export function questBoardAction(d,engine,args,eventId){
   if(!personal)d.set(['state','questQuota',`${rights.month}_${publisher}`],rights.usedD+engine.rules.quests.quotaUnits[grade]);
   notice(d,engine,row,now,'publish');return {quest,status:row.status};
  }
+ if(args.operation==='inspect'&&!args.quest)return {notices:laborNotices(engine,d.get('state'))};
  const q=d.get('state','quests',args.quest);if(!q)throw Error('不存在这个任务');
  // Court bounties: rewards sit in the code treasury; capture goes through world_law arrest.
  if(q.bounty)return bountyQuestAction(d,engine,q,args,eventId);

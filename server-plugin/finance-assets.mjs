@@ -1,7 +1,9 @@
 import {counterpart} from './credit.mjs';
 import {financePath as rec,financeInt as int,financeBalance,financeChange,financeTransfer,financeEvent} from './finance-bank.mjs';
 import {groupRepresentative,personHousehold,personOccupation,personBusiness,personConstraint,personOffices,placeSettlement} from './entity-view.mjs';
-import {groupAccountView} from './group-account.mjs';
+import {groupAccountView,ensureGroupAccount,groupAccountPath} from './group-account.mjs';
+import {facilityView} from './facility-state.mjs';
+import {laborTrade} from './labor-market.mjs';
 import {standing} from './standing.mjs';
 import {changeItems,produceItems,heldUnit,wearItem} from './items.mjs';
 import {registerCreditDefault,settleCreditCase} from './law.mjs';
@@ -89,9 +91,53 @@ function payDividend(d,e,row,at){
     if(paid)financeEvent(d,e,{id:`${row.id}:${at}`,actor:row.issuer,target:row.holder,value:paid,minute:at,location:row.location,tags:['dividend']});
     return next;
 }
-function workerSkill(e,s,id,recipe){const n=s.npcs[id],p=base(e,s,id);return Math.max(n?.proficiencies?.[recipe.skill]??0,p?.proficiencies?.[recipe.skill]??0,n?.skills?.[recipe.skill]?.proficiency??0);}
+export function workerSkill(e,s,id,recipe){const n=s.npcs[id],p=base(e,s,id);return Math.max(n?.proficiencies?.[recipe.skill]??0,p?.proficiencies?.[recipe.skill]??0,n?.skills?.[recipe.skill]?.proficiency??0);}
+function employmentAccount(d,e,owner){const g=groupAccountView(e,d.get('state'),owner);if(g)return g;const r=d.get(...rec(`organization:${owner}`));return r?.category==='organization'?r:null;}
+export function employmentStock(d,e,owner,item){const g=employmentAccount(d,e,owner);return g?g.items?.[item]??0:e.quantity(d,owner,item);}
+export function changeEmploymentStock(d,e,owner,item,delta,eventId){
+    const g=groupAccountView(e,d.get('state'),owner);
+    if(!g){const org=d.get(...rec(`organization:${owner}`));if(org?.category==='organization'){
+        const quantity=(org.items?.[item]??0)+delta;if(quantity<0)throw Error('组织实际库存不足');
+        d.set(rec(`organization:${owner}`),{...org,items:{...org.items,[item]:quantity},ledger:[...org.ledger??[],{kind:'employment_production',items:{[item]:delta},sourceEvent:eventId}]});return;
+    }return changeItems(d,e,owner,item,delta);}
+    const row=ensureGroupAccount(d,e,owner),quantity=(row.items[item]??0)+delta;if(quantity<0)throw Error('组织实际库存不足');
+    d.set(groupAccountPath(owner),{...row,items:{...row.items,[item]:quantity},ledger:[...row.ledger,{kind:'employment_production',items:{[item]:delta},sourceEvent:eventId}]});
+}
+// Shared F1 production: validate the complete batch before consuming anything.
+export function employmentProductionPlan(d,e,row,{minutes=480,maximum=Infinity}={}){
+    const s=d.get('state'),recipe=base(e,s,row.recipe),owner=row.owner??'player';
+    if(!recipe?.materials?.length||!recipe.output)return {reason:'配方已不可用'};
+    const skill=workerSkill(e,s,row.worker,recipe),facility=facilityView(e,s,row.location);
+    if(skill<(recipe.minimumProficiency??0))return {reason:'当前技能不足'};
+    if(facility?.factor===0||s.buildings?.[row.location]?.condition<=0)return {reason:'工坊已停用'};
+    const toolsOwner=employmentAccount(d,e,owner)?row.worker:owner;
+    let batches=Math.min(50,Math.floor(minutes/recipe.minutes*(1+skill/3000)),Math.floor(200/recipe.output.quantity),maximum);
+    for(const p of recipe.byproducts??[])batches=Math.min(batches,Math.floor(200/p.amount));
+    for(const m of recipe.materials)batches=Math.min(batches,Math.floor(employmentStock(d,e,owner,m.item)/m.amount));
+    for(const tool of recipe.tools??[]){const held=heldUnit(d,e,toolsOwner,tool);if(!held||(held.durability??e.byId.get(tool)?.durability)<=0)return {reason:'缺少完好工具'};batches=Math.min(batches,Math.floor((held.durability??e.byId.get(tool)?.durability)/Math.max(1,recipe.toolWear??1)));}
+    const place=base(e,s,row.location),station=recipe.workstation?(facility?.workstations??place?.workstations)?.find(st=>st.kind===recipe.workstation):null;
+    if(recipe.location&&recipe.location!==row.location||recipe.workstation&&(!station||station.access!=='public'&&station.owner!==owner))return {reason:'工作台使用权已失效'};
+    if(!batches)return {reason:'缺少可用材料或工时'};
+    const fee=station?.owner===owner?0:(station?.fee??0)*batches;
+    if(financeBalance(d,e,owner)<fee)return {reason:'工作台费用不足'};
+    const quality=skill>=2100?'杰作':skill>=1500?'优秀':skill>=900?'精良':skill>=300?'普通':'粗糙';
+    return {recipe,owner,toolsOwner,skill,batches,fee,station,quality};
+}
+export function settleEmploymentProduction(d,e,row,at,plan){
+    const {recipe,owner,toolsOwner,skill,batches,fee,station,quality}=plan,eventId=`${row.id}:${at}`;
+    if(fee){if(station.owner)financeTransfer(d,e,owner,station.owner,fee,`${eventId}:station`);else{financeChange(d,e,owner,-fee,`${eventId}:station`);d.set(['state','workshopFunds',station.id],(d.get('state','workshopFunds',station.id)??0)+fee);}}
+    for(const m of recipe.materials)changeEmploymentStock(d,e,owner,m.item,-m.amount*batches,eventId);
+    for(const tool of recipe.tools??[])wearItem(d,e,toolsOwner,tool,(recipe.toolWear??1)*batches);
+    const instances=[],products=[recipe.output,...(recipe.byproducts??[]).map(p=>({item:p.item,quantity:p.amount}))];
+    for(const p of products){
+        if(employmentAccount(d,e,owner))changeEmploymentStock(d,e,owner,p.item,p.quantity*batches,eventId);
+        else instances.push(...produceItems(d,e,p.item,p.quantity*batches,{eventId,recipe:recipe.id,workmanship:quality,owner,maker:row.worker}));
+    }
+    return {minute:at,fee,batches,quality,skill,instances,quantity:recipe.output.quantity*batches};
+}
 function fairWage(e,s,worker,recipe){const skill=workerSkill(e,s,worker,recipe),regard=standing(e,s,worker,'player');return Math.ceil(e.rules.economy.wageCopperPerHalfDay[0]*2*(1+skill/3000)*(regard<0?1.2:1));}
 export function assetTrade(d,e,args,id){
+    if(args.operation?.startsWith('labor_'))return laborTrade(d,e,args,id);
     const op=args.operation,state=d.get('state'),now=state.minute,location=state.location;
     if(op==='asset_inspect'){
         const subject=args.location?e.resolve(args.location):location;
@@ -144,6 +190,7 @@ export function assetTrade(d,e,args,id){
         if(all(d).some(r=>r.kind==='workshop'&&r.worker===worker&&['有效','要求加薪','罢工'].includes(r.status)))throw Error('工人已有未结束的雇佣合同');
         if(personConstraint(e,state,worker)||state.npcs[worker].levy||state.npcs[worker].caring)throw Error('工人受拘押、服役或照护义务约束');
         if(personOffices(e,state,worker).length)throw Error('现任公职不能被私人工坊排班覆盖');
+        if(Object.values(state.projects??{}).some(p=>p.status==='施工中'&&p.public?.workers?.includes(worker)))throw Error('工人已有公款工程排班');
         const wage=int(args.coins??fairWage(e,state,worker,recipe),1,1e6,'日薪'),days=int(args.days??30,1,360,'雇佣天数'),key=`workshop:${id}`;
         const row={category:'contract',kind:'workshop',id:key,worker,owner:'player',recipe:recipe.id,location:subject,wage,status:'有效',createdAt:now,deadline:now+days*DAY,
             starts:(Math.floor(now/DAY)+1)*DAY+480,nextWork:(Math.floor(now/DAY)+1)*DAY+1020,paid:0,produced:0,shifts:[],source:id};d.set(rec(key),row);return {contract:key,worker,wage,recipe:recipe.id};
@@ -173,33 +220,18 @@ function workshopShift(d,e,row,at){
     if(base(e,s,row.worker)?.schedule?.restDays?.includes(e.calendar(at).day)){d.set(rec(row.id),{...row,nextWork:at+DAY});return;}
     if(personConstraint(e,s,row.worker,at)||worker.levy||worker.caring||worker.scheduleTravel||worker.cognitionTravel||worker.location!==row.location)return end('罢工','工人未到工坊或受拘押、服役、照护、在途限制');
     const start=Math.floor(at/DAY)*DAY+480;
-    try{e.assertNpcObligationAction(d,[row.worker],{start,minutes:540});e.assertNpcAutonomyAction(s,[row.worker],{start,minutes:540});}
+    try{e.assertNpcObligationAction(d,[row.worker],{start,minutes:540,kind:'employment'});e.assertNpcAutonomyAction(s,[row.worker],{start,minutes:540});}
     catch(error){if(!/冲突|自主工作/.test(error.message))throw error;return end('罢工','本班与已有义务冲突');}
     if(!ownsWorkshop(s,row.location)||s.buildings?.[row.location]?.condition<=0)return end('罢工','工坊产权或状态不再可用');
     if(row.wage<wage&&row.raiseRequestedAt)return end('罢工','加薪要求尚未解决');
     if(financeBalance(d,e,'player')<row.wage)return end('罢工','雇主付不起本班工钱');
-    const skill=workerSkill(e,s,row.worker,recipe);
-    if(skill<(recipe.minimumProficiency??0))return end('罢工','当前技能不足');
-    let batches=Math.min(50,Math.floor(480/recipe.minutes*(1+skill/3000)),Math.floor(200/recipe.output.quantity));
-    for(const m of recipe.materials)batches=Math.min(batches,Math.floor(e.quantity(d,'player',m.item)/m.amount));
-    for(const tool of recipe.tools??[]){const held=heldUnit(d,e,'player',tool);if(!held||held.durability<=0)return end('罢工','缺少完好工具');batches=Math.min(batches,Math.floor(held.durability/Math.max(1,recipe.toolWear??1)));}
-    if(!batches)return end('罢工','缺少可用材料');
-    const place=base(e,s,row.location),station=recipe.workstation?place?.workstations?.find(st=>st.kind===recipe.workstation):null;
-    if(recipe.workstation&&(!station||station.access!=='public'&&station.owner!=='player'))return end('罢工','工作台使用权已失效');
-    const fee=(station?.fee??0)*batches;if(financeBalance(d,e,'player')<row.wage+fee)return end('罢工','工钱与工作台费用不足');
+    const plan=employmentProductionPlan(d,e,{...row,owner:'player'});
+    if(plan.reason)return end('罢工',plan.reason);
+    if(financeBalance(d,e,'player')<row.wage+plan.fee)return end('罢工','工钱与工作台费用不足');
     financeTransfer(d,e,'player',row.worker,row.wage,`${row.id}:${at}`);
-    if(fee&&station.owner!=='player'){
-        if(station.owner)financeTransfer(d,e,'player',station.owner,fee,`${row.id}:${at}:station`);
-        else{financeChange(d,e,'player',-fee,`${row.id}:${at}:station`);d.set(['state','workshopFunds',station.id],(d.get('state','workshopFunds',station.id)??0)+fee);}
-    }
-    for(const m of recipe.materials)changeItems(d,e,'player',m.item,-m.amount*batches);
-    for(const tool of recipe.tools??[])wearItem(d,e,'player',tool,(recipe.toolWear??1)*batches);
-    const quality=skill>=2100?'杰作':skill>=1500?'优秀':skill>=900?'精良':skill>=300?'普通':'粗糙',eventId=`${row.id}:${at}`;
-    const products=[recipe.output,...(recipe.byproducts??[]).map(p=>({item:p.item,quantity:p.amount}))],instances=[];
-    for(const product of products)instances.push(...produceItems(d,e,product.item,product.quantity*batches,{eventId,recipe:recipe.id,workmanship:quality}));
-    for(const unit of instances)d.set(['state','itemInstances',unit],{...d.get('state','itemInstances',unit),maker:row.worker,makerName:base(e,s,row.worker)?.name??row.worker});
-    const next={...row,nextWork:at+DAY,paid:row.paid+row.wage,produced:row.produced+recipe.output.quantity*batches,status:row.wage<wage?'要求加薪':'有效',
-        ...(row.wage<wage?{raiseRequestedAt:at,requestedWage:wage}:{}),shifts:[...row.shifts,{minute:at,wage:row.wage,fee,batches,quality,skill,instances}]};d.set(rec(row.id),next);
+    const {quantity,...shift}=settleEmploymentProduction(d,e,{...row,owner:'player'},at,plan),eventId=`${row.id}:${at}`;
+    const next={...row,nextWork:at+DAY,paid:row.paid+row.wage,produced:row.produced+quantity,status:row.wage<wage?'要求加薪':'有效',
+        ...(row.wage<wage?{raiseRequestedAt:at,requestedWage:wage}:{}),shifts:[...row.shifts,{...shift,wage:row.wage}]};d.set(rec(row.id),next);
     financeEvent(d,e,{id:eventId,actor:row.worker,target:'player',minute:at,location:row.location,value:row.wage,tags:['workshop']});
 }
 export function advanceFinanceAssets(d,e,minute){
@@ -209,7 +241,7 @@ export function advanceFinanceAssets(d,e,minute){
             for(let at=initial.nextRent;at<=minute&&at<initial.deadline;at+=MONTH)rentDue(d,e,d.get(...rec(initial.id)),at);
             if(minute>=initial.deadline)d.set(rec(initial.id),{...d.get(...rec(initial.id)),status:'已到期'});
         }
-        if(initial.kind==='workshop'&&['有效','要求加薪','罢工'].includes(initial.status)){
+        if(initial.kind==='workshop'&&!initial.laborMarket&&['有效','要求加薪','罢工'].includes(initial.status)){
             for(let at=initial.nextWork;at<=minute&&at<initial.deadline;at+=DAY){const row=d.get(...rec(initial.id));if(!['有效','要求加薪','罢工'].includes(row.status))break;workshopShift(d,e,row,at);}
             if(minute>=initial.deadline&&['有效','要求加薪','罢工'].includes(d.get(...rec(initial.id),'status')))d.set(rec(initial.id),{...d.get(...rec(initial.id)),status:'已到期'});
         }

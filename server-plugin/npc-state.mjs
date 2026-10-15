@@ -1,6 +1,6 @@
 // Only active catalog people are instantiated. Faction rosters and profile
 // prose never become money, inventory or private knowledge in a campaign.
-import {personConstraint,personCareer,personRoutine,personLawRoles} from './entity-view.mjs';
+import {personConstraint,personCareer,personRoutine,personLawRoles,personEmployment} from './entity-view.mjs';
 export function initialNpcState(npc,{newCharacter=false}={}){
     return{id:npc.id,name:npc.name,location:npc.location,coins:npc.coins??0,
         ...(npc.species?{species:npc.species}:{}),...(npc.society?{society:npc.society}:{}),
@@ -28,11 +28,13 @@ export function npcSchedule(engine,state,id,minute=state?.minute,constraints=nul
     if(care&&base)return {default:[{start:0,end:1440,location:care.location,activity:'照护病人',services:[]}]};
     // U12: a levied villager serves at the army's camp until released.
     if(own?.levy)return {default:[{start:0,end:1440,location:own.levy.location,activity:'服役',services:[]}]};
-    const job=Object.values(state?.records??{}).find(r=>r.kind==='workshop'&&r.worker===id&&['有效','要求加薪'].includes(r.status)&&r.starts<=minute&&minute<r.deadline);
+    const employed=state&&personEmployment(engine,state,id,minute)?.value;
+    const job=employed&&['有效','要求加薪'].includes(employed.status)&&Math.floor(employed.starts/1440)<=Math.floor(minute/1440)?employed:null;
     if(job){
         const home=npcHousehold(engine,state,id)?.homeLocation??engine.byId.get(id)?.home?.location??job.location;
         const slot=(start,end,location,activity)=>({start,end,location,activity,services:[]});
-        return {default:[slot(0,480,home,'睡眠与休息'),slot(480,720,job.location,'受雇工坊生产'),slot(720,780,job.location,'午间休息'),slot(780,1021,job.location,'受雇工坊生产'),slot(1021,1440,home,'家务与休息')],
+        const activity=job.task??'受雇工坊生产',work=job.workMinutes??480,end=480+work+60;
+        return {default:[slot(0,480,home,'睡眠与休息'),slot(480,720,job.location,activity),slot(720,780,job.location,'午间休息'),slot(780,end+1,job.location,activity),slot(end+1,1440,home,'家务与休息')],
             restDays:base?.restDays??[],rest:[slot(0,1440,home,'休息')]};
     }
     const routine=state&&personRoutine(engine,state,id,constraints);
