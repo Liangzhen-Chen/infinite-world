@@ -35,7 +35,7 @@ export function reviewPlayerFacts(state){
  return {
   debts:Object.fromEntries(Object.entries(state.records??{}).filter(([,r])=>r.category==='debt'&&[r.debtor,r.creditor].includes('player')).map(([id,r])=>[id,pick(r,['name','debtor','creditor','amount','paid','status','createdAt','deadline','overdueAt','paidAt'])])),
   quests:Object.fromEntries(Object.entries(state.quests??{}).filter(([,q])=>q.taker==='player'||q.publisher==='player'||!q.taker).map(([id,q])=>[id,pick(q,['publisher','taker','name','content','status','grade','reward','objective','deadline','escrow'])])),
-  authorizations:Object.fromEntries(Object.entries(state.records??{}).filter(([,r])=>r.category==='authorization'&&(r.grantee==='player'||r.grantor==='player')).map(([id,r])=>[id,pick(r,['action','subject','grantor','grantee','guests','content','createdAt','expires','revoked','revokedAt','sourceEvent'])]))
+  authorizations:Object.fromEntries(Object.entries(state.records??{}).filter(([,r])=>r.category==='authorization'&&(r.grantee==='player'||r.grantor==='player')).map(([id,r])=>[id,pick(r,['action','subject','grantor','grantee','guests','scope','content','createdAt','expires','revoked','revokedAt','sourceEvent'])]))
  };
 }
 

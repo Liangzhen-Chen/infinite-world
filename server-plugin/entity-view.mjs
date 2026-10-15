@@ -12,6 +12,12 @@ const records=state=>Object.entries(state.records??{});
 const recordFacts=(state,predicate)=>records(state).filter(([,r])=>predicate(r)).map(([key,r])=>fact(r,`state.records.${key}`,true));
 const baseOf=(engine,state,id)=>state.created?.[id]??state.family?.people?.[id]??engine.byId.get(id);
 
+// Missing vitals mean no accumulated strain. Reading never creates actor state.
+export function personMental(engine,state,id){
+    const a=at(state,actorPath(engine.world,id).slice(1));
+    return fact(a?.mental??{fatigue:0,alertness:50,stress:0,interference:[]},a?.mental?'actor.mental':'unstrained baseline',Boolean(a?.mental));
+}
+
 const living=(engine,state,id)=>at(state,actorPath(engine.world,id).slice(1))?.status!=='死亡';
 const dismissed=(state,id)=>Object.values(state.records??{}).some(r=>r.category==='legal_dismissal'&&(r.subject??r.npc)===id&&r.status!=='撤销');
 const officeRows=state=>Object.entries(state.records??{}).filter(([,r])=>r.category==='governance_office');
@@ -105,6 +111,13 @@ export function personOccupation(engine,state,id){
     const former=officeRows(state).some(([,r])=>r.holder===id&&(r.since??0)<=(state.minute??0))||dismissed(state,id)||[...(engine.world.settlementProfiles??[])].some(p=>p.details?.governance?.head===id&&settlementHead(engine,state,p.id).value!==id);
     return former&&!career.value.vocation?fact('居民','current office vacancy',true):fact(career.value.occupation,career.source,career.override);
 }
+// Public-facing roles exclude household membership and private associations.
+export function personPublicRole(engine,state,id){
+    const occupation=personOccupation(engine,state,id),roles=memberOrganizations(engine,state,actorId(engine.world,id))
+        .filter(o=>o.source==='faction'&&o.members[actorId(engine.world,id)]?.position!=='成员')
+        .map(o=>`${o.name}${o.members[actorId(engine.world,id)].position}`);
+    return fact([...new Set([occupation.value,...roles].filter(Boolean))].join('、'),`${occupation.source} + current public organization positions`,occupation.override||roles.length>0);
+}
 export function personRegistrar(engine,state,id,seat,occupations){
     const offices=personOffices(engine,state,id);
     if(offices.length&&offices.some(o=>o.override))return offices.some(o=>o.value.workplace===seat&&o.value.powers.includes('register'));
@@ -173,13 +186,27 @@ export function personRoutine(engine,state,id,constraints=null){
     return {default:day,...(!office&&job?.restDays?.length?{restDays:[...job.restDays],rest:[{start:0,end:1440,location:home,activity:'歇业休息',services:[]}]}:{})};
 }
 export function personRelationships(engine,state,id){
+    id=actorId(engine.world,id);
     const rows=(baseOf(engine,state,id)?.relationships??[]).map(r=>({...r,source:`${id}.relationships`}));
-    for(const m of Object.values(state.family?.marriages??{}))if(m.partners?.includes(id)){
+    const actor=at(state,actorPath(engine.world,id).slice(1));
+    for(const [withId,r] of Object.entries(actor?.relationships??{}))if(r.type){
+        const old=rows.findIndex(row=>row.with===withId&&row.type===r.type);
+        const row={...r,with:withId,source:`state.${actorPath(engine.world,id).slice(1).join('.')}.relationships.${withId}`};
+        if(old>=0)rows[old]=row;else rows.push(row);
+    }
+    for(const m of Object.values(state.family?.marriages??{}))if(m.partners?.includes(id)&&(m.since??0)<=(state.minute??0)){
         const other=m.partners.find(p=>p!==id),existing=rows.find(r=>r.with===other&&r.type==='配偶');
         if(existing)Object.assign(existing,{status:m.status,source:`state.family.marriages.${m.id}`});
         else if(m.status==='在婚')rows.push({with:other,type:'配偶',note:'当前婚姻登记',since:m.since,status:m.status,source:`state.family.marriages.${m.id}`});
     }
-    return fact(rows,'catalog.relationships + state.family.marriages',Boolean(state.family?.marriages));
+    if(id==='player')for(const [role,r] of Object.entries(state.careers??{})){
+        if(!personCareer(engine,state,id).value.roles.includes(role))continue;
+        const teacher=r.initiation?.status==='守戒中'?r.initiation.teacher:r.certification?.teacher;
+        if(teacher&&!rows.some(row=>row.with===teacher&&row.type==='师父'))rows.push({with:teacher,type:'师父',profession:role,source:`state.careers.${role}`});
+    }
+    return fact(rows.filter(r=>(!r.status||['在婚','有效','在任'].includes(r.status))&&
+        (r.type!=='配偶'||living(engine,state,id)&&living(engine,state,r.with))),
+        'catalog.relationships + current actor relationships + state.family.marriages + state.careers',Boolean(state.family?.marriages||actor?.relationships));
 }
 
 function householdView(engine,state,id){
@@ -209,7 +236,14 @@ function legalIdentities(engine,state,id){
 
 // Small selectors let movement and capability checks avoid constructing a
 // person's social memberships. They read the same authorities as personView.
-export function personAge(engine,state,id,minute=state.minute??0){return fact(npcAgeAt(engine,state,actorId(engine.world,id),minute),'npc-state.npcAgeAt');}
+export function personAge(engine,state,id,minute=state.minute??0){id=actorId(engine.world,id);return fact(id==='player'?state.player?.age:npcAgeAt(engine,state,id,minute),id==='player'?'state.player.age':'npc-state.npcAgeAt');}
+export function personName(engine,state,requested){
+    const id=actorId(engine.world,requested),path=actorPath(engine.world,id),actor=at(state,path.slice(1)),base=baseOf(engine,state,id);
+    // NPC actor.name is an initialization copy. The campaign's current catalog
+    // (including created/family overlays) remains the naming authority.
+    const own=id==='player'||!base?.name;
+    return fact(own?actor?.name:base.name,own?`${path.join('.')}.name`:`${state.created?.[id]?'state.created':state.family?.people?.[id]?'state.family.people':'catalog'}.${id}.name`,Boolean(own||state.created?.[id]||state.family?.people?.[id]));
+}
 export function personHousehold(engine,state,id){return householdView(engine,state,actorId(engine.world,id));}
 export function personSimulation(engine,state,id){
     const base=baseOf(engine,state,id),remote=state.remote?.[base?.county]?.profiles?.[id];
@@ -260,8 +294,7 @@ export function personView(engine,state,requested){
     const location=id==='player'?state.location:actor&&Object.hasOwn(actor,'location')?actor.location:base?.location??null;
     return {id:fact(id,requested!==id?`world.bosses.${requested}.actor`:'identity'),
         actorPath:fact(path,'npc-state.actorPath'),
-        name:fact(actor?.name??base?.name,actor?.name?`${root}.name`:`catalog.${id}.name`,Boolean(actor?.name)),
-        age:fact(id==='player'?state.player?.age:npcAgeAt(engine,state,id,state.minute??0),id==='player'?'state.player.age':`npc-life.npcAgeAt:${id}`,Boolean(state.family?.people?.[id])),
+        name:personName(engine,state,id),age:personAge(engine,state,id),relationships:personRelationships(engine,state,id),
         simulation:personSimulation(engine,state,id),constraint:personConstraint(engine,state,id),
         household,residence:fact(residence??{household:h?.id??base?.householdId,settlement,home:h?.homeLocation??base?.home?.location},residence?`${root}.residence`:household.source,Boolean(residence)),
         settlement:fact(settlement,settlementSource,Boolean(residence||household.override||actor?.settlement)),

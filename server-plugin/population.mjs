@@ -2,6 +2,8 @@ import {createHash} from 'node:crypto';
 import {readFileSync} from 'node:fs';
 import {initialNpcState,householdDefinition} from './npc-state.mjs';
 import {composeName,acceptRemoteProfile} from './remote-generation.mjs';
+import {isDeepStrictEqual} from 'node:util';
+import {advanceLayerPlan} from './advance-layers.mjs';
 
 // On-demand population for seeded settlements and lairs. The roster of a
 // residential district is a pure function of the template and quota captured
@@ -233,6 +235,57 @@ function settlementForDistrict(world,location){
 
 export function populationRecord(state,settlementId){return state.population?.[settlementId]??null;}
 
+export const populationLayersFresh=engine=>!engine.replaying||engine.replayResult?.populationLayerVersion===1;
+// Only untouched roster identities may be discarded. Anything referenced by
+// a memory, contract, household change or individual simulation remains real.
+// District aggregates and the captured template/basis replay the same names,
+// ages, kinship and minor flags when the county comes back into range.
+export function settlePopulationLayers(d,engine){
+    const state=d.get('state');if(!Object.keys(state.remote??{}).length||!populationLayersFresh(engine))return;
+    const plan=advanceLayerPlan(engine,state),far=[],near=[];
+    for(const [sid,record] of Object.entries(state.population??{})){
+        const county=plan.countyOf(sid);if(!state.remote[county])continue;
+        for(const [location,district] of Object.entries(record.districts)){
+            if(plan.layers.get(county)==='statistics'){if(!district.compacted)far.push({sid,record,location,district});}
+            else if(district.compacted)near.push({sid,record,location,district});
+        }
+    }
+    if(!far.length&&!near.length)return;
+    const pinned=new Set();
+    function references(value){
+        if(typeof value==='string'){pinned.add(value);return;}
+        if(value&&typeof value==='object')for(const [key,v] of Object.entries(value)){pinned.add(key);references(v);}
+    }
+    if(far.length){
+        for(const [key,value] of Object.entries(state))if(!['remote','population','created'].includes(key))references(value);
+        references(d.document.memories);
+        for(const p of Object.values(state.created??{}))if(p.generated!=='population')references(p);
+        for(const record of Object.values(state.population??{}))references(record.profiles);
+    }
+    let created=null;
+    const edit=()=>created??={...state.created};
+    const records=new Map();
+    const update=(sid,record,location,district)=>{
+        let next=records.get(sid);if(!next){next={...record,districts:{...record.districts}};records.set(sid,next);}
+        next.districts[location]=district;
+    };
+    for(const {sid,record,location,district} of [...far,...near]){
+        const rows=populationPlan(record.template,record.basis).households.filter(h=>h.district===location);
+        if(district.compacted){
+            for(const h of rows)for(const m of h.members)if(!state.created?.[m.id])edit()[m.id]=rosterEntity(record.template,h,m);
+            const {compacted,...rest}=district;update(sid,record,location,{...rest,households:rows.map(h=>h.id)});
+        }else{
+            for(const h of rows){
+                if(h.members.some(m=>pinned.has(m.id)||!isDeepStrictEqual(state.created?.[m.id],rosterEntity(record.template,h,m))))continue;
+                for(const m of h.members)delete edit()[m.id];
+            }
+            update(sid,record,location,{...district,households:rows.length,compacted:true});
+        }
+    }
+    if(created)d.set(['state','created'],created);
+    for(const [sid,record] of records)d.set(['state','population',sid],record);
+}
+
 // Called inside a ledger event when the player's location changes. Pure and
 // deterministic, so replay recreates exactly the same patches.
 export function unfoldPopulationAt(d,engine,location){
@@ -271,7 +324,7 @@ export function populationEncounters(document,location,limit=4){
         const day=Math.floor(s.minute/1440);
         const ids=Object.values(s.created??{}).filter(e=>e.generated==='population'&&e.settlement===settlementId&&e.home?.district===location&&!s.npcs?.[e.id]).map(e=>e.id);
         const chosen=ids.map(id=>[hashText(`${record.template.seed}:${day}:${id}`),id]).sort((a,b)=>a[0].localeCompare(b[0])).slice(0,limit).map(r=>r[1]);
-        return {settlement:settlementId,district:location,households:district.households.length,people:district.people,members:chosen.map(id=>s.created[id])};
+        return {settlement:settlementId,district:location,households:Array.isArray(district.households)?district.households.length:district.households,people:district.people,members:chosen.map(id=>s.created[id])};
     }
     return null;
 }

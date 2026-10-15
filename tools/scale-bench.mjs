@@ -8,7 +8,7 @@ import {benchmarkContext} from './benchmark-context.mjs';
 import {WorldEngine} from '../server-plugin/engine.mjs';
 import {applyPatches,atomicJSON,digest} from '../server-plugin/storage.mjs';
 import {unfoldRemoteAt,seatLocation} from '../server-plugin/remote-generation.mjs';
-import {unfoldPopulationAt,populationTemplate} from '../server-plugin/population.mjs';
+import {unfoldPopulationAt,populationTemplate,settlePopulationLayers} from '../server-plugin/population.mjs';
 import {startWar} from '../server-plugin/war-diplomacy.mjs';
 import {advanceTribalAwakening} from '../server-plugin/tribal-awakening.mjs';
 import {factionClockRules} from '../server-plugin/faction-clock.mjs';
@@ -34,7 +34,7 @@ export function fixtureDraft(document){
         set(p,v){let at=this.document;for(const k of p.slice(0,-1))at=at[k]??={};at[p.at(-1)]=structuredClone(v);},
         remove(p){let at=this.document;for(const k of p.slice(0,-1))at=at?.[k];if(at)delete at[p.at(-1)];},say(){}};
 }
-export async function scaleFixture({counties=Infinity,world=null,activate=counties>0}={}){
+export async function scaleFixture({counties=Infinity,world=null,activate=counties>0,compact=true}={}){
     world??=await loadWorld();const engine=new WorldEngine(world);
     const seed=JSON.parse(await fs.readFile(new URL('../tests/fixtures/legacy/seed.json',import.meta.url),'utf8'));
     const document=engine.createCharacter(seed,{},'p3-scale'),d=fixtureDraft(document);
@@ -51,14 +51,18 @@ export async function scaleFixture({counties=Infinity,world=null,activate=counti
         for(const source of session.rules.warDiplomacy?.sources??[])startWar(d,session,source,document.state.minute,`scale:${source.id}`);
     }
     session=engine.scoped(document);
-    return {world,engine,document,session,scale:{provinces:new Set(selected.map(c=>c.province)).size,counties:selected.length,
+    const scale={provinces:new Set(selected.map(c=>c.province)).size,counties:selected.length,
         generatedCounties:Object.keys(document.state.remote??{}).length,settlements:session.world.settlementProfiles.length,
         districts:Object.values(document.state.population??{}).reduce((n,p)=>n+Object.keys(p.districts).length,0),
         residents:Object.values(document.state.created??{}).filter(p=>p.generated==='population').length,
         simulatedNpcs:Object.keys(document.state.npcs).length,locations:session.world.locations.length,
         factionClocks:factionClockRules(session).length,hazards:session.rules.hazardClock?.clocks?.length??0,
         wars:Object.values(document.state.records).filter(r=>r.category==='war').length,
-        tribes:Object.values(document.state.records).filter(r=>r.category==='tribal_awakening').length}};
+        tribes:Object.values(document.state.records).filter(r=>r.category==='tribal_awakening').length};
+    if(compact)settlePopulationLayers(d,session);
+    scale.storedResidents=Object.values(document.state.created??{}).filter(p=>p.generated==='population').length;
+    session=engine.scoped(document);
+    return {world,engine,document,session,scale};
 }
 export async function measureScale(fixture,{month=true}={}){
     const {engine,document,world}=fixture,metrics={},hashes={};

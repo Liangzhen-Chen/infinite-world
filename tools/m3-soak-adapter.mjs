@@ -75,7 +75,6 @@ export async function createSoakAdapter({directory,client,budgetYuan=50,bundle,p
    // warning-only HTTP flag; retain that raw response and interpret the saved
    // review without asking the model again or altering its issue severities.
    const finalReview=publicConsistencyResult(records);tape.reviewOutcome=finalReview;await save();
-   if(!finalReview.verified||!finalReview.canCommit)throw Error(`回合未验证：${finalReview.status}`);
    const exported=await api('export',{campaignId:result.session.campaignId});
    const evidence=await deriveSoakEvidence(exported,task.id,task.turn);
    let answers=[];
@@ -84,8 +83,10 @@ export async function createSoakAdapter({directory,client,budgetYuan=50,bundle,p
     const parsed=JSON.parse(response.choices?.[0]?.message?.content??'null');if(!Array.isArray(parsed?.answers))throw Error('评分摘录格式错误');answers=parsed.answers;
    }
    const issues=r=>structuredClone(r?.issues??[]),count=(r,severity)=>issues(r).filter(i=>i.severity===severity).length;
-   tape.result={completed:true,costUpperYuan:0,checkpoint:result.session,eventIds:evidence.eventIds,facts:evidence.facts,timing:assessSoakTiming(evidence.timing,{input:task.input,reply:turn.reply}),
-    consistency:{verified:finalReview.verified,status:finalReview.status,originalErrors:count(records.result.firstReview,'error'),residualErrors:count(records.result.review,'error'),originalWarnings:count(records.result.firstReview,'warning'),residualWarnings:count(records.result.review,'warning'),originalIssues:issues(records.result.firstReview),residualIssues:issues(records.result.review)},text:turn.visible??turn.reply,answers,historyWindow:turn.historyWindow};await save();return structuredClone(tape.result);
+   tape.result={completed:true,pass:result.acceptancePass,originalReply:turn.originalReply,...(turn.reviewFailure?{reviewFailure:turn.reviewFailure}:{}),
+    costUpperYuan:0,checkpoint:result.session,eventIds:evidence.eventIds,facts:evidence.facts,timing:assessSoakTiming(evidence.timing,{input:task.input,reply:turn.reply}),
+    consistency:{verified:finalReview.verified,status:finalReview.status,canCommit:finalReview.canCommit,feedback:finalReview.feedback,issues:issues(finalReview),rewriteError:finalReview.rewriteError,
+     originalErrors:count(records.result.firstReview,'error'),residualErrors:count(records.result.review,'error'),originalWarnings:count(records.result.firstReview,'warning'),residualWarnings:count(records.result.review,'warning'),originalIssues:issues(records.result.firstReview),residualIssues:issues(records.result.review)},text:turn.visible??turn.reply,answers,historyWindow:turn.historyWindow};await save();return structuredClone(tape.result);
   }catch(error){tape.failures.push({error:String(error.message).replaceAll(process.env.DEEPSEEK_API_KEY??'__no_key__','[屏蔽]').slice(0,1200),at:new Date().toISOString()});await save();throw error;}
  }
  return {execute,server,client:shared,bundle,initialSession,close:server.close};

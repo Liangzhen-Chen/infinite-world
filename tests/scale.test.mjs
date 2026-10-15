@@ -7,8 +7,11 @@ import {advanceRegistry} from '../server-plugin/advance-registry.mjs';
 import {settlementPopulation,settlementPopulationCount} from '../server-plugin/entity-view.mjs';
 import {promotionConditions} from '../server-plugin/promotion.mjs';
 import {applyPatches,digest} from '../server-plugin/storage.mjs';
+import {settlePopulationLayers} from '../server-plugin/population.mjs';
+import {sceneCard} from '../server-plugin/scene-card.mjs';
+import {promptScope} from '../server-plugin/prompt-scope.mjs';
 
-const full=process.env.SCALE_FULL==='1',fixture=await scaleFixture({counties:full?Infinity:2});
+const full=process.env.SCALE_FULL==='1',fixture=await scaleFixture({counties:full?Infinity:2,compact:false});
 test('配额全展开；正式时钟、灾害、组织、战争和委托消费者保留',()=>{
     const {document,scale,session}=fixture;
     assert.equal(scale.counties,full?31:2);assert.equal(scale.generatedCounties,full?30:1);
@@ -64,6 +67,41 @@ test('补货只读人口数与完整视图一致，零人口和无账本分支�
     delete doc.state.settlements[sid];
     assert.deepEqual(settlementPopulationCount(e,doc.state,sid),settlementPopulation(e,doc.state,sid).population);
     assert.doesNotThrow(()=>promotionConditions(e,doc.state,sid));
+});
+test('统计层只留住区聚合；接近后种子重放逐字节恢复身份，保留已参与事件的整户',()=>{
+    const doc=structuredClone(fixture.document),e=fixture.engine.scoped(doc),county=Object.keys(doc.state.remote)[0];
+    const distant=e.world.locations.find(l=>advanceLayerPlan(e,{...doc.state,location:l.id}).layers.get(county)==='statistics');
+    doc.state.location=distant.id;
+    const ids=Object.keys(doc.state.created).filter(id=>e.byId.get(doc.state.created[id].settlement)?.region===county);
+    assert.ok(ids.length>100);
+    const original=new Map(ids.map(id=>[id,JSON.stringify(doc.state.created[id])]));
+    const pinned=doc.state.created[ids[0]],changed=doc.state.created[ids.at(-1)];changed.occupation='新营生';
+    original.set(changed.id,JSON.stringify(changed));
+    doc.memories.p3_pin={subject:pinned.id,content:'实际往来',minute:doc.state.minute};
+    const before=JSON.stringify(doc),d=fixtureDraft(doc);settlePopulationLayers(d,e);
+    assert.ok(Buffer.byteLength(JSON.stringify(doc))<Buffer.byteLength(before)*.7);
+    assert.ok(doc.state.created[pinned.id]);assert.ok(doc.state.created[changed.id]);
+    for(const id of [pinned.id,...pinned.household,changed.id,...changed.household])assert.ok(doc.state.created[id],id);
+    const sid=pinned.settlement,record=doc.state.population[sid];
+    assert.ok(Object.values(record.districts).every(row=>row.compacted&&Number.isInteger(row.households)));
+    assert.ok(ids.some(id=>!doc.state.created[id]));
+    const checkpoint=JSON.stringify(doc);settlePopulationLayers(d,e);assert.equal(JSON.stringify(doc),checkpoint);
+    const restored=JSON.parse(checkpoint),r=fixtureDraft(restored);
+    doc.state.location=restored.state.location=doc.state.remote[county].skeleton.seat;
+    settlePopulationLayers(d,e);settlePopulationLayers(r,fixture.engine.scoped(restored));assert.deepEqual(doc,restored);
+    for(const [id,bytes] of original)assert.equal(JSON.stringify(doc.state.created[id]),bytes,id);
+    assert.deepEqual(doc.state.population[sid],fixture.document.state.population[sid]);
+    const old=JSON.parse(before),legacy=fixture.engine.scoped(old);legacy.replaying=true;legacy.replayResult={advanceLayerVersion:1};
+    settlePopulationLayers(fixtureDraft(old),legacy);assert.equal(JSON.stringify(old),before,'旧回执不引入压缩');
+});
+test('核心默认世界提示逐字节相同；读取缓存后当前改名和年龄仍即时派生',async()=>{
+    const {engine,document}=await scaleFixture({counties:0}),before=JSON.stringify(document);
+    for(const query of ['', '河边路况', '村长与粮仓'])assert.equal(engine.scene(document,query),sceneCard(engine.scoped(document),document,query));
+    assert.equal(JSON.stringify(document),before);
+    const id=Object.keys(document.state.npcs)[0];document.state.location=document.state.npcs[id].location;
+    document.state.npcs[id].name='当前称呼';document.state.minute+=360*1440;
+    assert.equal(engine.scene(document,'当前称呼'),sceneCard(engine.scoped(document),document,'当前称呼'));
+    assert.deepEqual(promptScope(engine,document.state).profiles,engine.world.settlementProfiles);
 });
 test('真实日/月推进、5000消息提示与存档读写守住大世界预算', {timeout:180000},async()=>{
     const before=digest(fixture.document),report=await measureScale(fixture);

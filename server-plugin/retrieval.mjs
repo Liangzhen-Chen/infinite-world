@@ -107,9 +107,9 @@ export class MemoryIndex {
         this.documents.set(record.id, document); this.totalLength += terms.length;
         for (const term of frequencies.keys()) { const set = this.postings.get(term) ?? new Set(); set.add(record.id); this.postings.set(term, set); }
     }
-    syncSettlements(world,document=null){
+    syncSettlements(world,document=null,profiles=world.settlementProfiles){
         const wanted=new Set();
-        for(const row of publicSettlementEntries(world,document)){
+        for(const row of publicSettlementEntries(world,document,profiles)){
             wanted.add(row.id);this.upsert({...row,revision:JSON.stringify(row)});
         }
         for(const id of this.documents.keys())if(id.startsWith('settlement_')&&!wanted.has(id))this.remove(id);

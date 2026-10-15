@@ -293,6 +293,7 @@ function resolveOutcome(d,engine,t,dyn,rec,{stance,kind},at,sourceEvent){
   setOrg(accord,{status:'自治',settlement:skeleton.id});outcome.settlement=skeleton.id;
   adjustStanding(d,engine,dyn.board,accord,5,{sourceEvent:ev,reason:`${dyn.name}自立聚居地`,minute:at});
   event('organize',accord,null,['organization','org:found','autonomy']);
+  Object.assign(transition,{visibility:'public',subject:skeleton.id,participants:[skeleton.leader].filter(Boolean),summary:`${skeleton.name}建立自治聚居地`,tags:[...transition.tags,'entity-transition']});
  }else if(kind==='war'){
   // U12 接口：交战双方、前线、兵力与状态；军队与战争结算由 U12 接管。
   const strength=Object.keys(groupView(engine,d.get('state'),radical)?.members.value??{}).length+(d.get('state','records',`organization:${radical}`)?.tribal?.population??0);

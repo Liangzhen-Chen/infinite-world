@@ -15,6 +15,7 @@ import {planNpcAutonomy}from'./npc-autonomy-planner.mjs';
 import {groupHistory,planHistoryWindow}from'../extension/history-window.mjs';
 import {loadHistoryTokenizer}from'./m3-history-tokenizer.mjs';
 import {loadWorld}from'./load-world.mjs';
+import {summarizeConsistency,consistencyTurnFailed}from'../server-plugin/consistency-outcome.mjs';
 
 export async function createPlaytestServer({world,seed,plannerClient,consistencyClient=plannerClient??null,consistencyEnabled=true,directory:persistentDirectory=null}={}){
     const directory=persistentDirectory?path.resolve(persistentDirectory):await fs.mkdtemp(path.join(os.tmpdir(),'fields-playtests-'));await fs.mkdir(directory,{recursive:true});
@@ -116,9 +117,17 @@ export async function runPlaytest({scenario,api,client,bundle,attempt=1,processM
             if(!final)throw new Error(`${settings.toolRecursionLimit}轮调用内未返回完整正文`);
             report.originalReply=report.reply;
             report.consistency=await api('review/reply',{campaignId,token:reviewTurn.token,draft:report.reply,query:step.input,expectedSequence:view.reference.sequence});
-            report.reply=report.consistency.text;
+            report.reply=report.consistency.canCommit?report.consistency.text:report.originalReply;
             history.at(-1).content=report.reply;
-            if(!report.consistency.canCommit)throw new Error(report.consistency.feedback);
+            if(!report.consistency.canCommit){
+                const issues=report.consistency.issues.length?report.consistency.issues:report.consistency.originalIssues??[];
+                report.reviewFailure={reason:report.consistency.rewriteError??report.consistency.feedback,categories:issues.length?[...new Set(issues.map(issue=>issue.category))]:['review-unverified']};
+                // Keep the original conversation and successful action receipts;
+                // a rejected tail must never enter the game ledger.
+                chat.push({is_user:false,name:'无限原野·世界主持人',mes:report.reply});await sync();
+                report.visible=visibleReply(report.reply,scene.labels);
+                continue;
+            }
             const state=view.document.state,parsed=parseTurn(report.reply,{location:state.location,startMinute,minute:state.minute,
                 present:Object.entries(state.npcs).filter(([,npc])=>npc.location===state.location).map(([id])=>id),outOfCharacter:isOutOfCharacter(step.input)});
             report.tail={valid:parsed.valid,warning:parsed.warning};
@@ -147,10 +156,12 @@ export async function runPlaytest({scenario,api,client,bundle,attempt=1,processM
     const reviews=reports.filter(row=>row.originalReply!==undefined).map(row=>row.consistency);
     const consistencyVerified=reviews.length>0&&reviews.every(row=>row?.verified===true&&row.canCommit);
     const consistencyIssues=reviews.flatMap(row=>row?.issues??[]);
-    const consistencyPass=consistencyVerified&&reviews.every(row=>row.status==='verified')&&consistencyIssues.length===0;
+    const consistency=summarizeConsistency([{id:scenario.id,attempt,turns:reports}]);
+    const consistencyPass=consistency.thresholdReached;
     return{id:scenario.id,title:scenario.title,attempt,settings,fixture:scenario.initial??{mode:'new'},requirements:scenario.requirements,
-        ledgerPass,consistencyVerified,consistencyPass,consistencyIssues,reviewRequired:!consistencyPass,acceptancePass:ledgerPass&&consistencyPass,
-        assertions:assertions.length,passed,ratio:passed/Math.max(1,assertions.length),pass:assertions.length>0&&passed===assertions.length,turns:reports,
+        ledgerPass,consistencyVerified,consistencyPass,consistencyIssues,consistency,reviewRequired:consistency.failed>0,acceptancePass:ledgerPass&&consistencyPass,
+        assertions:assertions.length,passed,ratio:passed/Math.max(1,assertions.length),pass:assertions.length>0&&passed===assertions.length&&consistency.rejected===0,
+        failedTurns:reports.filter(turn=>turn.errors.length||turn.assertions.some(rule=>!rule.pass)||consistencyTurnFailed(turn)).length,turns:reports,
         session:{campaignId,chat,history,historyCursor},finalDocument:view.document};
 }
 

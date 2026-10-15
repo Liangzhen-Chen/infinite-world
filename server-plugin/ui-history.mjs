@@ -2,6 +2,7 @@ import {relationView} from './npc-relations.mjs';
 import {normalize} from './retrieval.mjs';
 import {buildChronicle,getChronicle} from './chronicle.mjs';
 import {npcLifeLines} from './npc-life.mjs';
+import {personName,personOccupation,personAge} from './entity-view.mjs';
 
 // All collections are filtered by the player's recorded knowledge before search
 // or pagination. World NPC locations, seed memories and rumor truth stay private.
@@ -47,7 +48,7 @@ export function history(engine,document,chronicle,options={}){
         const promises=Object.entries(state.obligations??{}).filter(([,row])=>[row.promisor,row.promisee].includes('player')&&[row.promisor,row.promisee].includes(id))
             .map(([key,row])=>({id:key,text:`${name(row.promisor)}向${name(row.promisee)}作出的${row.type??'约定'}：${row.content??''} · ${row.status??'未记录'}`,deadline:row.deadline===undefined?null:when(row.deadline)}));
         const life=engine.rules.npcLife?npcLifeLines(engine,state,id,{asOf:Math.min(now,last.minute),known:event=>lifeKnown.has(event)}):[];
-        return {id,name:base.name,identity:base.occupation??'身份未记录',location:last.location?name(last.location):'未获知',locationTime:when(last.locationMinute),relationship:relation,description,life,shared:shared(id),promises};
+        return {id,name:personName(engine,state,id).value,identity:personOccupation(engine,state,id).value??'身份未记录',age:personAge(engine,state,id).value,location:last.location?name(last.location):'未获知',locationTime:when(last.locationMinute),relationship:relation,description,life,shared:shared(id),promises};
     }).sort((a,b)=>a.name.localeCompare(b.name,'zh-CN'));
     const rumors=memories.filter(([,row])=>row.subject==='player'&&row.rumor&&row.sourceType==='听说'&&row.participants?.includes('player'))
         .map(([id,row])=>({id,text:row.content,source:name(row.source),time:when(row.minute),minute:row.minute,reliability:row.reliability??'未核实'}));

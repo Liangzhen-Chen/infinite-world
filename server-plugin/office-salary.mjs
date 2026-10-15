@@ -1,4 +1,5 @@
 import {personOffices} from './entity-view.mjs';
+import {entityTransition} from './entity-transitions.mjs';
 import {groupAccountView,changeGroupCoins} from './group-account.mjs';
 import {actorPath} from './npc-state.mjs';
 
@@ -42,6 +43,7 @@ export function advanceOfficeSalaries(d,engine,{before,after}){
                         sourceType:id===debt.holder?'亲历':'目击',salary:debt.id,content:`${debt.officeName}本月应得${debt.monthlyCopper}铜月俸，公账尚欠${arrears}铜。`,salience:3,emotion:'不满'};
                     d.set(['state','npcs',id,'memoryStream'],[...d.get('state','npcs',id,'memoryStream')??[],memory]);
                 }
+                entityTransition(d,engine,{id:`${debt.id}:arrears:${at}`,verb:'salary',actor:debt.settlement,target:debt.holder,minute:at,location:debt.settlement,witnesses,arrearsCopper:arrears,salary:debt.id,summary:`${debt.officeName}月俸欠付${arrears}铜`});
                 d.say(`${debt.officeName}月俸欠付${arrears}铜`);
             }
         }

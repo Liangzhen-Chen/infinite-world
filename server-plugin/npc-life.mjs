@@ -1,4 +1,5 @@
 import {npcAgeAt,npcHousehold,householdMembers} from './npc-state.mjs';
+import {entityTransition,businessSnapshot,businessTransitions} from './entity-transitions.mjs';
 export {npcAgeAt,npcHousehold,householdMembers} from './npc-state.mjs';
 // Adult family life: a mutual long relationship may become a marriage, and a
 // married couple may have a child who joins a real household and the
@@ -18,7 +19,7 @@ import {rosterLifeState,lifeRoutine} from './population.mjs';
 import {initialNpcState} from './npc-state.mjs';
 import {advanceNpcNeeds} from './npc-intelligence.mjs';
 import {famineAt} from './hazard-calendar.mjs';
-import {personSimulation,personConstraint,personHousehold,personConstraints} from './entity-view.mjs';
+import {personSimulation,personConstraint,personHousehold,personConstraints,personName,personAge,personRelationships} from './entity-view.mjs';
 import {actorId,actorPath,householdDefinition} from './npc-state.mjs';
 import {finishBusinessContract,refundContractEscrow,releaseBusinessLease} from './contracts.mjs';
 
@@ -124,7 +125,7 @@ function candidatePairs(engine,state){
  return [...pairs.values()].sort((x,y)=>pairKey(...x).localeCompare(pairKey(...y)));
 }
 
-const nameOf=(engine,state,id)=>state.family?.people?.[id]?.name??engine.byId.get(id)?.name??id;
+const nameOf=(engine,state,id)=>personName(engine,state,id).value??id;
 function addMemory(d,who,row){
  const stream=d.get('state','npcs',who,'memoryStream')??[];if(stream.some(m=>(m.rootMemoryId??m.id)===row.rootMemoryId))return;
  d.set(['state','npcs',who,'memoryStream'],[...stream,{...row,id:`${row.rootMemoryId}:${who}`}]);
@@ -154,6 +155,7 @@ function marry(d,engine,[a,b],courtship,minute){
  for(const p of [a,b])d.set(['state','npcs',p,'developments'],[...d.get('state','npcs',p,'developments')??[],{type:'成婚',source:id,minute,with:p===a?b:a}]);
  const witnesses=witness(d,engine,id,[a,b],[ha.id,hb.id],{minute,kind:'family',content});
  d.set(['state','family','marriages',id,'witnesses'],witnesses);
+ entityTransition(d,engine,{id,verb:'marry',actor:a,target:b,minute,location:state.npcs[a]?.location??ha.settlement,witnesses,summary:content});
 }
 
 // A married opposite-sex couple living in a household with a population
@@ -369,6 +371,7 @@ export function recordEntityDeath(d,engine,id,minute,cause,illness=null){
  if(!actor||id==='player')return null;
  const previous=Object.values(d.get('state','family','deaths')??{}).find(r=>r.person===id);
  if(previous||actor.diedAt!==undefined)return previous??null;
+ const shops=businessSnapshot(engine,d.get('state'));
  const npc=path[1]==='npcs',household=personHousehold(engine,d.get('state'),id).value;
  // Roster housemates are the ones who inherit, mourn and may later have to
  // move to kin; they enter campaign state now.
@@ -415,7 +418,9 @@ export function recordEntityDeath(d,engine,id,minute,cause,illness=null){
  const witnesses=witness(d,engine,deathId,[id],house?[house.id]:[],{minute,kind:'health',content,salience:4,...(!npc?{at:[actor.location].filter(Boolean)}:{})});
  const result={id:deathId,person:id,minute,cause,illness:illness?.id??null,household:house?.id??null,settlement:house?.settlement??null,population,estate,obligations,witnesses,
   ...(contracts.length?{contracts}:{}),...(pets.length?{pets}:{})};
- d.set(['state','family','deaths',deathId],result);return result;
+ d.set(['state','family','deaths',deathId],result);
+ entityTransition(d,engine,{id:deathId,verb:'die',actor:id,minute,location:actor.location??house?.settlement,witnesses,cause,summary:content});
+ businessTransitions(d,engine,shops,deathId,minute);return result;
 }
 
 function healthDay(d,engine,minute){
@@ -619,6 +624,7 @@ function depart(d,engine,m,at){
  if((npc.coins??0)<route.cost){postpone(d,engine,m,'路费不足');return;}
  const arriveAt=at+route.minutes,{schedule,changed}=residenceSchedule(engine,state,m);
  const early=endObligations(d,engine,m.person,o=>(o.start??o.due??0)<arriveAt,`${name}迁居途中，无法赴约`,m.id,at);
+ const shops=businessSnapshot(engine,d.get('state'));
  d.set(['state','npcs',m.person,'residence'],{household:m.to.household,settlement:m.to.settlement,home:m.to.home,since:at,migration:m.id,schedule,workChanged:changed});
  d.set(['state','npcs',m.person,'coins'],(npc.coins??0)-route.cost);
  d.set(['state','npcs',m.person,'scheduleTravel'],{from:npc.location,to:m.to.home,depart:at,arrive:arriveAt,edges:route.edges,migration:m.id});
@@ -626,6 +632,8 @@ function depart(d,engine,m,at){
  const content=`${name}${reasonText(m)}，${engine.calendar(at).text.slice(0,-6)}从${placeName(engine,npc.location)}动身，迁往${placeName(engine,m.to.settlement)}${nameOf(engine,state,m.host)}家。`;
  const witnesses=witness(d,engine,`${m.id}:depart`,[m.person],[m.from.household],{minute:at,kind:'migration',content,at:[npc.location]});
  d.set(['state','family','migrations',m.id],{...m,status:'在途',departedAt:at,arriveAt,routeMinutes:route.minutes,routeCost:route.cost,routeEdges:route.edges,origin:npc.location,obligations:early,witnesses:{depart:witnesses}});
+ entityTransition(d,engine,{id:`${m.id}:depart`,verb:'migrate',actor:m.person,minute:at,location:npc.location,witnesses,from:m.from,to:m.to,stage:'depart',summary:content});
+ businessTransitions(d,engine,shops,`${m.id}:depart`,at);
 }
 function arrive(d,engine,m,at){
  const state=d.get('state'),npc=state.npcs[m.person];
@@ -647,6 +655,7 @@ function arrive(d,engine,m,at){
  const content=`${name}${engine.calendar(at).text.slice(0,-6)}迁到${placeName(engine,m.to.home)}，与${nameOf(engine,state,m.host)}家同住。`;
  const witnesses=witness(d,engine,`${m.id}:arrive`,[m.person],[m.to.household],{minute:at,kind:'migration',content,at:[m.to.home]});
  d.set(['state','family','migrations',m.id],{...d.get('state','family','migrations',m.id),status:'已抵达',arrivedAt:at,population,obligations:[...m.obligations??[],...late],witnesses:{...m.witnesses,arrive:witnesses}});
+ entityTransition(d,engine,{id:`${m.id}:arrive`,verb:'migrate',actor:m.person,minute:at,location:m.to.home,witnesses,from:m.from,to:m.to,stage:'arrive',summary:content});
 }
 function migrationsDue(d,engine,before,after){
  for(;;){
@@ -722,13 +731,14 @@ export function npcLifeLines(engine,state,id,{asOf=state.minute,known=()=>false,
  const own=deathOf(id);
  if(own)lines.push(`已于${when(own.minute)}${own.cause}`);
  const spouses=[];
- for(const r of engine.byId.get(id)?.relationships??[])if(r.type==='配偶')spouses.push({id:r.with});
+ const ties=asOf===state.minute?personRelationships(engine,state,id).value:engine.byId.get(id)?.relationships??[];
+ for(const r of ties)if(r.type==='配偶')spouses.push({id:r.with});
  for(const m of Object.values(f.marriages??{}).sort((a,b)=>(a.since??0)-(b.since??0)))if(!m.static&&m.partners.includes(id)&&seen(m.id,m.since)){spouses.push({id:m.partners.find(p=>p!==id),since:m.since});changed=true;}
- if(spouses.length)lines.push(`配偶：${spouses.map(x=>`${nameOf(engine,state,x.id)}${deathOf(x.id)?'（已故）':x.since!==undefined?`（${when(x.since)}成婚）`:''}`).join('、')}`);
+ if(spouses.length)lines.push(`配偶：${[...new Map(spouses.map(x=>[x.id,x])).values()].map(x=>`${nameOf(engine,state,x.id)}${deathOf(x.id)?'（已故）':x.since!==undefined?`（${when(x.since)}成婚）`:''}`).join('、')}`);
  const children=new Map();
- for(const r of engine.byId.get(id)?.relationships??[])if(CHILD_TYPES.has(r.type))children.set(r.with,null);
+ for(const r of ties)if(CHILD_TYPES.has(r.type))children.set(r.with,null);
  for(const b of Object.values(f.births??{}))if([b.mother,b.father].includes(id)&&seen(b.id,b.minute)){children.set(b.child,b.minute);changed=true;}
- if(children.size)lines.push(`子女：${[...children].map(([c,born])=>{const age=npcAgeAt(engine,state,c,Math.max(asOf,born??0));return `${nameOf(engine,state,c)}${deathOf(c)?'（已故）':born!==null&&age<1?`（${when(born)}出生）`:age!==null?`（${age}岁）`:''}`;}).join('、')}`);
+ if(children.size)lines.push(`子女：${[...children].map(([c,born])=>{const age=personAge(engine,state,c,Math.max(asOf,born??0)).value;return `${nameOf(engine,state,c)}${deathOf(c)?'（已故）':born!==null&&age<1?`（${when(born)}出生）`:age!==null?`（${age}岁）`:''}`;}).join('、')}`);
  const pregnant=Object.values(f.pregnancies??{}).find(p=>p.mother===id&&p.status==='怀孕'&&p.conceivedAt<=asOf&&asOf-p.conceivedAt>=90*DAY);
  if(pregnant&&!own)lines.push('有孕在身');
  const during=r=>r.since<=asOf&&!(r.endedAt<=asOf);

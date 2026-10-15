@@ -9,6 +9,7 @@ import {validateSites}from'./sites.mjs';
 import {WorldEngine as Phase1Engine}from'./compat/v2-phase1-engine.mjs';
 import {learn}from'./learning.mjs';
 import {prepareMagic,applyMagic}from'./magic.mjs';
+import {recordSpellViolation}from'./magic-consent.mjs';
 import {settleMagicAreas,prepareAreaMagic,applyAreaMagic,areaTargetFacts}from'./magic-area.mjs';
 import {assertFireTravel}from'./magic-object.mjs';
 import {adjustAirTravel}from'./magic-air.mjs';
@@ -46,6 +47,7 @@ import {wildlifePriceFactor,wildlifeEncounterAt,settleWildlifeEncounter,wildlife
 import {wildlifeAwakeningConsumer}from'./wildlife-awakening.mjs';
 import {spiritSocietyConsumer,moveSpiritCompanions}from'./wildlife-society.mjs';
 import {sceneCard}from'./scene-card.mjs';
+import {promptScope}from'./prompt-scope.mjs';
 import {stateNotices}from'./state-notices.mjs';
 import {recordReturnVisit}from'./return-summary.mjs';
 import {assertNpcService,advanceNpcSchedules}from'./npc-schedule.mjs';
@@ -68,7 +70,7 @@ import {businessTrade,recordBusinessReceipt}from'./business.mjs';
 import {CREDIT_OPERATIONS,creditTrade,isCreditDebt,repayCredit,lodgingOf,assertLodgingHost,grantLodgingAccess}from'./credit.mjs';
 import {initializeR1,planR1,planPreR1Partitions}from'./migrations/r1.mjs';
 import {materializeWildlifeHabitats}from'./wildlife-habitats.mjs';
-import {unfoldPopulationAt,acceptPopulationProfile}from'./population.mjs';
+import {unfoldPopulationAt,acceptPopulationProfile,settlePopulationLayers,populationLayersFresh}from'./population.mjs';
 import {remoteEngine,unfoldRemoteAt}from'./remote-generation.mjs';
 import {advanceNeedsSteps,nextAdvanceMinute,runAdvance}from'./advance-registry.mjs';
 import {beginHouseholdReads}from'./npc-state.mjs';
@@ -248,11 +250,13 @@ export class WorldEngine {
         const readOnly=detail?.actionScope?.kind==='instant'&&!d.patches.length;
         if(!readOnly)publishWorldEvents(d,session,deriveWorldEvents(session,document.state,d.get('state'),worldEvent),worldEvent);
         recordBusinessReceipt(d,document.state,{tool:resolved.tool,args,eventId:id,detail});
+        settlePopulationLayers(d,session);
         if(tool==='check')detail.actionScope={kind:'judgement',healthChanged:false,inventoryChanged:false,feePaid:0,
             note:'仅结算判断或对抗，并履行已引用的协助；未伤人、毁物或制造。不得从骰点虚构这些变化。'};
         return { patches:d.patches,result:{ok:true,...detail,...(remote?{remote}:{}),...(population?{population}:{}),legalProcedureVersion:1,worldEventVersion:WORLD_EVENT_VERSION,...(intelligenceFresh(session)?{npcIntelligenceVersion:INTELLIGENCE_VERSION}:{}),...(factionClockRules(session).length?{factionClockVersion:1}:{}),...(session.rules.questSources?{questSourcesVersion:QUEST_SOURCES_VERSION}:{}),...(session.rules.tribalAwakening?{tribalAwakeningVersion:TRIBAL_AWAKENING_VERSION}:{}),...(session.rules.military?{militaryVersion:MILITARY_VERSION}:{}),...(session.rules.warDiplomacy?{warVersion:WAR_VERSION}:{}),minute:d.get('state','minute'),messages:d.messages,
             ...(session.rules.questSources?.wildlife?.length&&villageWildlifeFresh(session)?{villageWildlifeVersion:1}:{}),
             ...(Object.keys(d.get('state','remote')??{}).length&&advanceLayersFresh(session)?{advanceLayerVersion:1}:{}),
+            ...(Object.keys(d.get('state','remote')??{}).length&&populationLayersFresh(session)?{populationLayerVersion:1}:{}),
             notices:stateNotices(document.state,d.document.state,id=>session.byId.get(id)?.name)} };
     }
     scoped(document){
@@ -592,13 +596,14 @@ export class WorldEngine {
         d.set(['state','player','mp'],d.get('state','player','mp')-catalog.mp);
         for(const material of catalog.materials)this.itemDelta(d,'player',material.item,-material.amount);
         const result=this.check(d,{attribute:'精神',skill:catalog.skill,difficulty:catalog.difficulty},id);
+        const legalCase=recordSpellViolation(d,this,catalog,args,prepared?.target??prepared?.id,id);
         this.advance(d,catalog.minutes,id);this.practice(d,{skill:catalog.skill,gain:3,target:args.target??'施法'},id);
         if(result.success&&catalog.duration&&!prepared)d.set(['state','effects',id],{spell,target:text(args.target??'近处物体',200),expires:d.get('state','minute')+catalog.duration});
         const effect=result.success?applyMagic.call(this,d,prepared,id):{};
         if(!result.success&&result.degree==='大失败'&&catalog.failureDamage)this.health(d,{delta:-catalog.failureDamage},id);
         const completed=result.success&&!effect.effectFailed;
         d.say(`${catalog.name}${completed?'施放成功':'施放失败'}，消耗${catalog.mp}魔力`);
-        return {spell,...result,...effect,checkSuccess:result.success,success:completed,mpCost:catalog.mp};
+        return {spell,...result,...effect,...(legalCase?{case:legalCase}:{}),checkSuccess:result.success,success:completed,mpCost:catalog.mp};
     }
     learn(d,args,id) {
         return learn.call(this,d,args,id);
@@ -682,7 +687,21 @@ export class WorldEngine {
         d.set(['memories',memoryId],{subject,key,content,keywords:args.keywords??[],pinned:d.get('memories',memoryId,'pinned')??false,minute:d.get('state','minute'),source:args.source??'亲历'});
         return {memoryId};
     }
-    scene(document,query,index=null){return sceneCard(this.byId.has('player')?this:this.scoped(document),document,query,index);}
+    promptScoped(document){
+        if(Object.hasOwn(this,'byId')&&this.byId.has('player'))return Object.getPrototypeOf(this).promptScoped(document);
+        const overlay=remoteEngine(this,document,world=>new WorldEngine(world));if(overlay!==this)return overlay.promptScoped(document);
+        const {nearby}=promptScope(this,document.state),created=Object.values(document.state.created??{}).filter(p=>p.generated!=='population'||document.state.npcs[p.id]||nearby(p.home?.district??p.location));
+        // Cache only the catalog extension. Current names/age/office always
+        // come from the supplied state; the player's scope is added afresh.
+        this.promptResolvers??=new WeakMap();
+        const branch=document.state.created??document.state;
+        let hit=this.promptResolvers.get(branch);
+        if(!hit||hit.location!==document.state.location||hit.npcs!==document.state.npcs){hit={location:document.state.location,npcs:document.state.npcs,created,resolver:this.resolver.extend(created)};this.promptResolvers.set(branch,hit);}
+        const player={id:'player',name:document.state.player.name,aliases:['玩家','玩家角色'],scope:document.state.location};
+        const session=Object.create(this);session.entities=[...this.entities,...hit.created,player];session.resolver=hit.resolver.extend([player]);session.byId=session.resolver.entities;
+        return session;
+    }
+    scene(document,query,index=null){return sceneCard(this.promptScoped(document),document,query,index);}
 
 }
 Object.assign(WorldEngine.prototype,activities);
