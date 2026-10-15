@@ -34,6 +34,7 @@ import {tradeQuote,recordDeal}from'./shop.mjs';
 import {initializeWorldClocks}from'./world-clock.mjs';
 import {initializeFactionClocks,factionClockRules}from'./faction-clock.mjs';
 import {QUEST_SOURCES_VERSION}from'./quest-sources.mjs';
+import {TRIBAL_AWAKENING_VERSION}from'./tribal-awakening.mjs';
 import {validateFestivalRuntime}from'./festival.mjs';
 import {wildlifePriceFactor,wildlifeEncounterAt,settleWildlifeEncounter,wildlifeEncounterView}from'./wildlife.mjs';
 import {wildlifeAwakeningConsumer}from'./wildlife-awakening.mjs';
@@ -235,7 +236,7 @@ export class WorldEngine {
         recordBusinessReceipt(d,document.state,{tool:resolved.tool,args,eventId:id,detail});
         if(tool==='check')detail.actionScope={kind:'judgement',healthChanged:false,inventoryChanged:false,feePaid:0,
             note:'仅结算判断或对抗，并履行已引用的协助；未伤人、毁物或制造。不得从骰点虚构这些变化。'};
-        return { patches:d.patches,result:{ok:true,...detail,...(remote?{remote}:{}),...(population?{population}:{}),legalProcedureVersion:1,worldEventVersion:WORLD_EVENT_VERSION,...(intelligenceFresh(session)?{npcIntelligenceVersion:INTELLIGENCE_VERSION}:{}),...(factionClockRules(session).length?{factionClockVersion:1}:{}),...(session.rules.questSources?{questSourcesVersion:QUEST_SOURCES_VERSION}:{}),minute:d.get('state','minute'),messages:d.messages,
+        return { patches:d.patches,result:{ok:true,...detail,...(remote?{remote}:{}),...(population?{population}:{}),legalProcedureVersion:1,worldEventVersion:WORLD_EVENT_VERSION,...(intelligenceFresh(session)?{npcIntelligenceVersion:INTELLIGENCE_VERSION}:{}),...(factionClockRules(session).length?{factionClockVersion:1}:{}),...(session.rules.questSources?{questSourcesVersion:QUEST_SOURCES_VERSION}:{}),...(session.rules.tribalAwakening?{tribalAwakeningVersion:TRIBAL_AWAKENING_VERSION}:{}),minute:d.get('state','minute'),messages:d.messages,
             notices:stateNotices(document.state,d.document.state,id=>session.byId.get(id)?.name)} };
     }
     scoped(document){

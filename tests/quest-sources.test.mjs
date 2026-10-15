@@ -29,7 +29,8 @@ const generated=c=>Object.values(c.state.quests).filter(q=>q.source);
 const money=c=>c.state.player.coins+Object.values(c.state.npcs).reduce((n,x)=>n+(x.coins??0),0)+Object.values(c.state.quests).reduce((n,q)=>n+q.escrow,0);
 
 test('生成器登记：三种来源都以生成器登记，推进注册表在势力时钟之后跑',()=>{
- assert.deepEqual(questGenerators().map(g=>g.id),['npc_needs','world_events','effect_table']);
+ // U11 族群觉醒以第四个生成器登记，排在世界事件与效果表之间。
+ assert.deepEqual(questGenerators().map(g=>g.id),['npc_needs','world_events','tribal_awakening','effect_table']);
  assert.throws(()=>registerQuestGenerator({id:'npc_needs',order:1}),/重复/);
  const order=id=>advanceRegistry.find(s=>s.id===id).order;
  assert.ok(order('quest_sources')>order('faction_clock')&&order('quest_sources')>order('hazard_clock'));

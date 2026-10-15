@@ -18,14 +18,14 @@
  "counts": {
   "layers": 6,
   "systems": 37,
-  "modules": 163,
-  "advance": 41,
+  "modules": 164,
+  "advance": 42,
   "tools": 25,
   "verbs": 15,
   "subscribers": 8,
   "interactionRules": 25,
   "effectKinds": 19,
-  "links": 342
+  "links": 345
  },
  "layers": [
   {
@@ -338,7 +338,7 @@
     "server-plugin/campaign-reducer.mjs",
     "server-plugin/archived-reducer.mjs"
    ],
-   "lines": 928,
+   "lines": 929,
    "stateWrites": [
     "combatDisengaged",
     "created",
@@ -382,6 +382,7 @@
     "practice",
     "questSources",
     "travel",
+    "tribalAwakening",
     "weather"
    ],
    "world": [
@@ -729,7 +730,7 @@
    "modules": [
     "server-plugin/advance-registry.mjs"
    ],
-   "lines": 160,
+   "lines": 163,
    "stateWrites": [
     "effects",
     "obligations",
@@ -1560,9 +1561,10 @@
     "server-plugin/notables.mjs",
     "server-plugin/promotion.mjs",
     "server-plugin/quest-board.mjs",
-    "server-plugin/quest-sources.mjs"
+    "server-plugin/quest-sources.mjs",
+    "server-plugin/tribal-awakening.mjs"
    ],
-   "lines": 2766,
+   "lines": 3155,
    "stateWrites": [
     "buildings",
     "created",
@@ -1577,6 +1579,7 @@
    ],
    "stateReads": [
     "careerMetrics",
+    "creatures",
     "discoveries",
     "learning",
     "location",
@@ -1585,12 +1588,15 @@
     "works"
    ],
    "recordWrites": [
+    "organization",
+    "tribal_settlement",
+    "tribal_war",
     "world_event"
    ],
    "recordReads": [
     "civic_citizen",
     "civic_resident",
-    "organization",
+    "ecology",
     "society_motion",
     "stance",
     "village-fiscal"
@@ -1602,7 +1608,10 @@
     "levels",
     "questSources",
     "quests",
-    "reputation"
+    "reputation",
+    "tribalAwakening",
+    "wildlife",
+    "wildlifeAwakening"
    ],
    "world": [
     "bosses",
@@ -1611,6 +1620,7 @@
     "households",
     "items",
     "locations",
+    "monsters",
     "npcs",
     "residents",
     "rules",
@@ -1625,6 +1635,7 @@
     "notables",
     "promotion",
     "organizations",
+    "tribal_awakening",
     "quest_sources",
     "society_news"
    ],
@@ -1866,7 +1877,7 @@
     "server-plugin/state-notices.mjs",
     "server-plugin/return-summary.mjs"
    ],
-   "lines": 407,
+   "lines": 409,
    "stateWrites": [
     "visits"
    ],
@@ -2267,7 +2278,8 @@
     "public_projects",
     "quest_sources",
     "society_news",
-    "titles"
+    "titles",
+    "tribal_awakening"
    ]
   },
   {
@@ -2396,7 +2408,8 @@
     "promotion.mjs",
     "public-projects.mjs",
     "quest-sources.mjs",
-    "titles.mjs"
+    "titles.mjs",
+    "tribal-awakening.mjs"
    ]
   },
   {
@@ -2744,7 +2757,8 @@
     "public-projects.mjs",
     "quest-board.mjs",
     "quest-sources.mjs",
-    "titles.mjs"
+    "titles.mjs",
+    "tribal-awakening.mjs"
    ]
   },
   {
@@ -3711,7 +3725,8 @@
    "kind": "call",
    "labels": [
     "faction-clock.mjs",
-    "hazard-calendar.mjs"
+    "hazard-calendar.mjs",
+    "world-clock.mjs"
    ]
   },
   {
@@ -3740,6 +3755,15 @@
     "npc-life.mjs",
     "npc-obligations.mjs",
     "npc-schedule.mjs"
+   ]
+  },
+  {
+   "from": "sim_society",
+   "to": "sim_wildlife",
+   "kind": "call",
+   "labels": [
+    "wildlife-awakening.mjs",
+    "wildlife-range.mjs"
    ]
   },
   {
@@ -3990,7 +4014,8 @@
     "organizations.mjs",
     "public-opinion.mjs",
     "reputation-registry.mjs",
-    "reputation.mjs"
+    "reputation.mjs",
+    "tribal-awakening.mjs"
    ]
   },
   {
@@ -4728,6 +4753,14 @@
    ]
   },
   {
+   "from": "sim_society",
+   "to": "base_effects",
+   "kind": "effect",
+   "labels": [
+    "applyEffects"
+   ]
+  },
+  {
    "from": "base_events",
    "to": "base_standing",
    "kind": "event",
@@ -4953,6 +4986,14 @@
    "kind": "record",
    "labels": [
     "world_event"
+   ]
+  },
+  {
+   "from": "sim_society",
+   "to": "base_standing",
+   "kind": "record",
+   "labels": [
+    "organization"
    ]
   },
   {
@@ -5489,6 +5530,17 @@
    "partitions": []
   },
   {
+   "id": "tribal_awakening",
+   "order": 1455,
+   "stepped": false,
+   "nextMinute": false,
+   "modules": [
+    "server-plugin/tribal-awakening.mjs"
+   ],
+   "inline": false,
+   "partitions": []
+  },
+  {
    "id": "quest_sources",
    "order": 1460,
    "stepped": false,
@@ -5850,10 +5902,12 @@
     "server-plugin/world-events.mjs"
    ],
    "learn": [
+    "server-plugin/tribal-awakening.mjs",
     "server-plugin/world-events.mjs"
    ],
    "organize": [
-    "server-plugin/organizations.mjs"
+    "server-plugin/organizations.mjs",
+    "server-plugin/tribal-awakening.mjs"
    ],
    "pact": [
     "server-plugin/boss-negotiation.mjs"
@@ -6768,6 +6822,7 @@
    "server-plugin/faction-clock.mjs",
    "server-plugin/festival.mjs",
    "server-plugin/seasonal-hazards.mjs",
+   "server-plugin/tribal-awakening.mjs",
    "server-plugin/world-clock.mjs"
   ],
   "hooks": [
@@ -6843,6 +6898,7 @@
    "server-plugin/return-summary.mjs",
    "server-plugin/scene-card.mjs",
    "server-plugin/shop.mjs",
+   "server-plugin/tribal-awakening.mjs",
    "server-plugin/works.mjs",
    "server-plugin/world-events.mjs"
   ],
@@ -8295,6 +8351,7 @@
     "server-plugin/sites.mjs",
     "server-plugin/standing.mjs",
     "server-plugin/traits.mjs",
+    "server-plugin/tribal-awakening.mjs",
     "server-plugin/ui-affairs.mjs",
     "server-plugin/ui-map.mjs",
     "server-plugin/weather.mjs",
@@ -8356,6 +8413,7 @@
     "server-plugin/remote-generation.mjs",
     "server-plugin/reputation-registry.mjs",
     "server-plugin/sites.mjs",
+    "server-plugin/tribal-awakening.mjs",
     "server-plugin/world-clock.mjs"
    ],
    "tools": [
@@ -8458,6 +8516,7 @@
     "server-plugin/titles.mjs",
     "server-plugin/training.mjs",
     "server-plugin/traits.mjs",
+    "server-plugin/tribal-awakening.mjs",
     "server-plugin/ui-affairs.mjs",
     "server-plugin/ui-history.mjs",
     "server-plugin/ui-overview.mjs",
@@ -8590,6 +8649,7 @@
     "server-plugin/shop.mjs",
     "server-plugin/sites.mjs",
     "server-plugin/titles.mjs",
+    "server-plugin/tribal-awakening.mjs",
     "server-plugin/world-upgrade.mjs"
    ],
    "tools": [
@@ -8719,6 +8779,7 @@
    "server-plugin/promotion.mjs",
    "server-plugin/quest-board.mjs",
    "server-plugin/quest-sources.mjs",
+   "server-plugin/tribal-awakening.mjs",
    "server-plugin/ui-affairs.mjs"
   ],
   "prompt": [
@@ -8813,6 +8874,7 @@
    "server-plugin/magic-ritual.mjs",
    "server-plugin/remote-generation.mjs",
    "server-plugin/seasonal-migration.mjs",
+   "server-plugin/tribal-awakening.mjs",
    "server-plugin/wildlife-habitats.mjs",
    "server-plugin/wildlife-migration.mjs",
    "server-plugin/wildlife-range.mjs",
@@ -8821,6 +8883,7 @@
   ],
   "wildlifeAwakening": [
    "server-plugin/npc-intelligence.mjs",
+   "server-plugin/tribal-awakening.mjs",
    "server-plugin/wildlife-awakening.mjs",
    "server-plugin/wildlife-society.mjs",
    "server-plugin/wildlife.mjs"
@@ -8884,6 +8947,10 @@
   "questSources": [
    "server-plugin/engine.mjs",
    "server-plugin/quest-sources.mjs"
+  ],
+  "tribalAwakening": [
+   "server-plugin/engine.mjs",
+   "server-plugin/tribal-awakening.mjs"
   ]
  },
  "stateShare": {
@@ -8976,7 +9043,8 @@
     "base_traits",
     "kernel_storage",
     "sim_character",
-    "sim_npc"
+    "sim_npc",
+    "sim_society"
    ]
   },
   "discoveries": {
@@ -9463,6 +9531,7 @@
       "server-plugin/creature-nature.mjs",
       "server-plugin/magic-ritual.mjs",
       "server-plugin/traits.mjs",
+      "server-plugin/tribal-awakening.mjs",
       "server-plugin/wildlife.mjs"
      ],
      "systems": [
@@ -9470,6 +9539,7 @@
       "kernel_engine",
       "sim_boss",
       "sim_magic",
+      "sim_society",
       "sim_wildlife"
      ]
     },
@@ -9481,6 +9551,7 @@
       "server-plugin/effects.mjs",
       "server-plugin/farm-pests.mjs",
       "server-plugin/magic-ritual.mjs",
+      "server-plugin/tribal-awakening.mjs",
       "server-plugin/wildlife-migration.mjs",
       "server-plugin/wildlife-range.mjs",
       "server-plugin/wildlife-society.mjs",
@@ -9489,6 +9560,7 @@
      "systems": [
       "base_effects",
       "sim_magic",
+      "sim_society",
       "sim_wildlife"
      ]
     },
@@ -9537,12 +9609,14 @@
       "server-plugin/boss-migration.mjs",
       "server-plugin/boss-negotiation.mjs",
       "server-plugin/bosses.mjs",
-      "server-plugin/npc-intelligence.mjs"
+      "server-plugin/npc-intelligence.mjs",
+      "server-plugin/tribal-awakening.mjs"
      ],
      "systems": [
       "kernel_storage",
       "sim_boss",
-      "sim_npc"
+      "sim_npc",
+      "sim_society"
      ]
     },
     {
@@ -9567,6 +9641,7 @@
     "sim_companion",
     "sim_magic",
     "sim_npc",
+    "sim_society",
     "sim_wildlife"
    ],
    "manual": [],
@@ -9634,11 +9709,13 @@
       "server-plugin/boss-migration.mjs",
       "server-plugin/bosses.mjs",
       "server-plugin/seasonal-migration.mjs",
+      "server-plugin/tribal-awakening.mjs",
       "server-plugin/wildlife-awakening.mjs"
      ],
      "systems": [
       "kernel_storage",
       "sim_boss",
+      "sim_society",
       "sim_wildlife"
      ]
     },
@@ -9806,6 +9883,7 @@
       "server-plugin/shop.mjs",
       "server-plugin/sites.mjs",
       "server-plugin/standing.mjs",
+      "server-plugin/tribal-awakening.mjs",
       "server-plugin/ui-affairs.mjs",
       "server-plugin/ui-map.mjs",
       "server-plugin/ui-overview.mjs",
@@ -9896,6 +9974,7 @@
       "server-plugin/reputation-registry.mjs",
       "server-plugin/return-summary.mjs",
       "server-plugin/standing.mjs",
+      "server-plugin/tribal-awakening.mjs",
       "server-plugin/wildlife-habitats.mjs"
      ],
      "systems": [
@@ -9988,12 +10067,14 @@
       "server-plugin/magic-context.mjs",
       "server-plugin/magic-targeting.mjs",
       "server-plugin/remote-generation.mjs",
+      "server-plugin/tribal-awakening.mjs",
       "server-plugin/ui-map.mjs",
       "extension/map-view.mjs"
      ],
      "systems": [
       "sim_environment",
       "sim_magic",
+      "sim_society",
       "ui_client",
       "ui_server"
      ]
@@ -10464,6 +10545,7 @@
       "server-plugin/standing.mjs",
       "server-plugin/state-notices.mjs",
       "server-plugin/titles.mjs",
+      "server-plugin/tribal-awakening.mjs",
       "server-plugin/ui-affairs.mjs",
       "server-plugin/wildlife-awakening.mjs",
       "server-plugin/works.mjs",
@@ -10572,12 +10654,14 @@
       "server-plugin/boss-migration.mjs",
       "server-plugin/boss-negotiation.mjs",
       "server-plugin/bosses.mjs",
-      "server-plugin/npc-intelligence.mjs"
+      "server-plugin/npc-intelligence.mjs",
+      "server-plugin/tribal-awakening.mjs"
      ],
      "systems": [
       "kernel_storage",
       "sim_boss",
-      "sim_npc"
+      "sim_npc",
+      "sim_society"
      ]
     },
     {
@@ -11188,6 +11272,7 @@
       "server-plugin/quest-sources.mjs",
       "server-plugin/seasonal-hazards.mjs",
       "server-plugin/settlement-trade.mjs",
+      "server-plugin/tribal-awakening.mjs",
       "extension/turn.mjs"
      ],
      "systems": [
@@ -11256,7 +11341,8 @@
       "server-plugin/monster-society.mjs",
       "server-plugin/organizations.mjs",
       "server-plugin/public-opinion.mjs",
-      "server-plugin/standing.mjs"
+      "server-plugin/standing.mjs",
+      "server-plugin/tribal-awakening.mjs"
      ],
      "systems": [
       "base_standing",
@@ -11271,7 +11357,8 @@
       "server-plugin/consistency-review.mjs",
       "server-plugin/notables.mjs",
       "server-plugin/organizations.mjs",
-      "server-plugin/standing.mjs"
+      "server-plugin/standing.mjs",
+      "server-plugin/tribal-awakening.mjs"
      ],
      "systems": [
       "base_standing",
@@ -11387,17 +11474,20 @@
       "server-plugin/faction-clock.mjs",
       "server-plugin/festival.mjs",
       "server-plugin/seasonal-hazards.mjs",
+      "server-plugin/tribal-awakening.mjs",
       "server-plugin/world-clock.mjs"
      ],
      "systems": [
       "base_effects",
-      "sim_clock"
+      "sim_clock",
+      "sim_society"
      ]
     }
    ],
    "autoSystems": [
     "base_effects",
-    "sim_clock"
+    "sim_clock",
+    "sim_society"
    ],
    "manual": [],
    "refs": [
@@ -11842,6 +11932,7 @@
     "server-plugin/shop.mjs",
     "server-plugin/summons.mjs",
     "server-plugin/titles.mjs",
+    "server-plugin/tribal-awakening.mjs",
     "server-plugin/weather.mjs",
     "server-plugin/wildlife.mjs",
     "server-plugin/world-clock.mjs"
@@ -11871,7 +11962,7 @@
     "npcs"
    ],
    "worldDirs": [],
-   "lines": 160
+   "lines": 163
   },
   "server-plugin/agriculture-migration.mjs": {
    "system": "kernel_storage",
@@ -12583,6 +12674,7 @@
     "server-plugin/state-notices.mjs",
     "server-plugin/storage.mjs",
     "server-plugin/summons.mjs",
+    "server-plugin/tribal-awakening.mjs",
     "server-plugin/weather.mjs",
     "server-plugin/wildlife-awakening.mjs",
     "server-plugin/wildlife-habitats.mjs",
@@ -12626,6 +12718,7 @@
     "practice",
     "questSources",
     "travel",
+    "tribalAwakening",
     "weather"
    ],
    "world": [
@@ -12651,7 +12744,7 @@
     "spells"
    ],
    "worldDirs": [],
-   "lines": 666
+   "lines": 667
   },
   "server-plugin/environment.mjs": {
    "system": "sim_environment",
@@ -14725,6 +14818,7 @@
     "server-plugin/sites.mjs",
     "server-plugin/standing.mjs",
     "server-plugin/summons.mjs",
+    "server-plugin/tribal-awakening.mjs",
     "server-plugin/weather.mjs",
     "server-plugin/wildlife-society.mjs",
     "server-plugin/wildlife.mjs",
@@ -14743,7 +14837,7 @@
     "routes"
    ],
    "worldDirs": [],
-   "lines": 143
+   "lines": 145
   },
   "server-plugin/seasonal-hazards.mjs": {
    "system": "sim_clock",
@@ -15130,6 +15224,53 @@
     "meta"
    ],
    "lines": 147
+  },
+  "server-plugin/tribal-awakening.mjs": {
+   "system": "sim_society",
+   "imports": [
+    "server-plugin/effects.mjs",
+    "server-plugin/npc-intelligence.mjs",
+    "server-plugin/quest-sources.mjs",
+    "server-plugin/standing.mjs",
+    "server-plugin/wildlife-awakening.mjs",
+    "server-plugin/wildlife-range.mjs",
+    "server-plugin/world-clock.mjs",
+    "server-plugin/world-events.mjs"
+   ],
+   "stateWrites": [
+    "records"
+   ],
+   "stateReads": [
+    "creatures",
+    "npcs",
+    "quests"
+   ],
+   "recordWrites": [
+    "organization",
+    "tribal_settlement",
+    "tribal_war",
+    "world_event"
+   ],
+   "recordReads": [
+    "ecology"
+   ],
+   "rules": [
+    "quests",
+    "tribalAwakening",
+    "wildlife",
+    "wildlifeAwakening"
+   ],
+   "world": [
+    "bosses",
+    "factions",
+    "items",
+    "locations",
+    "monsters",
+    "npcs",
+    "rules"
+   ],
+   "worldDirs": [],
+   "lines": 389
   },
   "server-plugin/ui-affairs.mjs": {
    "system": "ui_server",
