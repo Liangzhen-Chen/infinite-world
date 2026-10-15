@@ -8,7 +8,7 @@ import {readObjectState,storeObjectState}from'./magic-object.mjs';
 
 export const multiplierBounds=Object.freeze({min:0.5,max:1.5});
 const MARKS=['char','temper','stain'],STATES=['burning','wet','frozen'];
-const agentOf=agent=>ATTACK_MODES.includes(agent)||['rain','ink'].includes(agent)?agent:canonicalElement(agent)??agent;
+const agentOf=agent=>ATTACK_MODES.includes(agent)||['rain','ink','flood'].includes(agent)?agent:canonicalElement(agent)??agent;
 const tacticOf=agent=>ATTACK_MODES.includes(agent)?agent:`magic_${agentOf(agent)}`;
 function matches(rule,agent,traits){
  if(rule.agent!=='*'&&rule.agent!==agent)return false;
@@ -66,6 +66,9 @@ function writeFeature(d,row,outcome){
  const state=rawState(d,row);
  if(outcome.add.includes('frozen')&&outcome.minutes>0){state.frozenUntil=minute+outcome.minutes;changed.added.push('frozen');}
  if(outcome.remove.includes('frozen')&&state.frozenUntil!==undefined){delete state.frozenUntil;changed.removed.push('frozen');}
+ // Soaking (flood) saturates a feature without a thermal ledger; traits read
+ // moisturePercent >= 60 as wet.
+ if(outcome.add.includes('wet')&&outcome.moistureMg>0&&(state.moisturePercent??0)<100){state.moisturePercent=100;changed.added.push('wet');}
  if(changed.added.length||changed.removed.length)rawStore(d,row,state);
  return changed;
 }
@@ -94,7 +97,7 @@ export function assertLiquidWater(engine,d,row){
 }
 export function validateInteractionRules(rules=interactionRules.rules){
  const errors=[],ids=new Set(),known=new Set([...CREATURE_TAGS,'creature','item','feature','location','flammable','conductive','wet','burning','frozen','water','metal','paper','cloth','wood','fiber','grass','leather','indoor']);
- const agents=new Set(['*','rain','ink',...ATTACK_MODES,...TACTICS.map(t=>t.slice(6)).filter(Boolean)]);
+ const agents=new Set(['*','rain','ink','flood',...ATTACK_MODES,...TACTICS.map(t=>t.slice(6)).filter(Boolean)]);
  for(const r of rules){
   if(!r.id||ids.has(r.id))errors.push(`交互规则编号缺失或重复：${r.id}`);ids.add(r.id);
   if(!agents.has(r.agent))errors.push(`交互规则施动者未知：${r.id}`);

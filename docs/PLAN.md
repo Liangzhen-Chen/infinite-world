@@ -62,7 +62,7 @@ review-002-yp=782a49e阶段审核通过，范围限T06正式发布与c64163d修�
 - K5 已完成。原文：有目击且分量够的世界事件自动成为可传播传闻（不再只传作者预登记的ID）；private/secret 记忆与未成年保护不得成为传闻。依赖K3、K4。验收：CORE + rumor-route/village-rumor-access/npc-memory/public-opinion/monster-society。规模M。
 - K6 已完成。原文：新 effects.mjs，合并 world-clock 封闭效果集与 faction-clock 效果消费者；势力时钟可触发野物躁动、传闻、立场变化，季节可冻河。依赖K2、K4。验收：CORE + world-clock/faction-clock/wildlife-awakening/festival/wildlife-society。规模S-M。
 - K7 已完成（推进注册表28系统，逐字节一致）。原文：engine.mjs:254、:265-310 手工列的约25个 advance* 改为注册表，新系统自动参与休息和赶路结算。验收：CORE + world-clock/faction-clock/performance。规模S。
-- K8 按地形产生栖地（最后做，需存档迁移）：新地点按地形标签自动出现生物。验收：CORE + wildlife/w4-wildlife/wildlife-encounters。规模L。
+- K8 已完成。原文：按地形产生栖地（最后做，需存档迁移）：新地点按地形标签自动出现生物。验收：CORE + wildlife/w4-wildlife/wildlife-encounters。规模L。
 
 - K9 已完成（发布见PROGRESS）。原文：（用户 2026-10-14 要求）：底座 K1–K7 合入后，产出可视化的游戏系统图：一共几层、每层有哪些系统、系统之间如何串联（读写哪些共享状态、订阅哪些世界事件、受哪些交互规则和效果驱动），并附“新增一种内容要接哪些系统”的查表。按代码实际生成（脚本从注册表、规则表、订阅关系导出数据），发布为 Artifact 给用户，并在 docs/ 留一份。
 
@@ -78,7 +78,7 @@ review-002-yp=782a49e阶段审核通过，范围限T06正式发布与c64163d修�
 
 - U1 已完成。原文：（依赖K4，S-M）：创立或加入行会、帮派、商号；组织有成员、公库、章程、议事方式（会长定、投票、长老定）。新 organizations.mjs；activities.mjs 的 create(org)、governance.mjs、public-opinion.mjs。补 5.11 家户、行会、教会、帮派的群体决策。
 - U2 已完成。原文：（依赖K3、K4、K7，M）：借贷计息、钱庄存取与兑换（铸币成色、手续费）、通用租房住宿（不再只认一家）、玩家受雇打工、合伙；违约进入法律流程。contracts.mjs、engine.mjs 交易段、business.mjs:87、law.mjs、rules.economy。
-- U3 季节与灾害世界时钟（依赖K2、K6、K7，M）：汛期、冬荒、疫病流行（户间传染）、物价波动，分阶段可干预。rules.worldClock、world-clock.mjs、npc-life.mjs、settlement-trade.mjs。
+- U3 已完成。原文：（依赖K2、K6、K7，M）：汛期、冬荒、疫病流行（户间传染）、物价波动，分阶段可干预。rules.worldClock、world-clock.mjs、npc-life.mjs、settlement-trade.mjs。
 - U4 已完成。原文：（依赖K1、K3，M）：新 career-metrics.mjs 订阅世界事件统计长期行为，隐藏职业“契机”真正触发并可取得；地域、元素变异升职；终极技能；杰作、研究、实战三种突破；入职任务。professions.mjs、engine.mjs:491-508、world/design 职业数据。
 - U6 已完成。原文：（依赖K1、K3，M）：写作出版、技能书抄写（需原本与抄写员）、表演、测绘出图，形成有署名作品，带来收入、贡献、名望；技能融合实验。新 works.mjs；learning.mjs、manufacturing.mjs、civic.mjs。
 - U7 已完成。原文：（依赖K3，S-M）：等级决定计划长度与打破惯例程度；教导和共同经历使NPC成长并有可见迹象。npc-planning-service、npc-autonomy、npc-growth、scene-card。
