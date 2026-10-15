@@ -40,8 +40,16 @@ export function validateFestivalRuntime(world){
  }
  return errors;
 }
+// D1: a festival waiting for a host runs once a far county generated on the
+// player's arrival registers a resident host for it at the venue
+// (remote-generation festivalHost); the published row itself is unchanged.
+function generatedHost(engine,f){
+ if(f.runtime?.status!=='awaiting_host')return null;
+ return engine.world.npcs.find(n=>n.generated==='remote'&&n.remoteRole==='festival_host'&&n.festivalHost===f.id&&n.location===f.venue?.location)?.id??null;
+}
 export function festivalCalendar(engine){
- const official=(engine.world.festivals??[]).filter(f=>f.runtime?.status==='active').map(f=>({...f,
+ const hosted=(engine.world.festivals??[]).map(f=>{if(f.runtime?.status==='active')return f;const host=generatedHost(engine,f);return host?{...f,runtime:{...f.runtime,status:'active',host}}:null;}).filter(Boolean);
+ const official=hosted.map(f=>({...f,
   id:f.runtime.sourceCustom??f.id,publishedId:f.id,month:f.calendar.month,day:f.calendar.day,host:f.runtime.host,location:f.venue.location,
   settlement:engine.byId.get(f.venue.location)?.scope,source:`world/lore/festivals.json#${f.id}`,kind:f.runtime.kind,practice:f.custom,formal:true}));
  const linked=new Set(official.map(f=>f.id));return [...localFestivalCalendar(engine).filter(f=>!linked.has(f.id)),...official];

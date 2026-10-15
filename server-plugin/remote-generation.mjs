@@ -260,6 +260,67 @@ function shopSchedule(place,type){
     return {default:day,market:day,rest:day};
 }
 
+function officeSchedule(place){
+    const slot=(start,end,activity)=>({start,end,location:place,activity,services:[]});
+    const day=[slot(0,420,'睡眠'),slot(420,1080,'处理公事'),slot(1080,1440,'歇息')];
+    return {default:day,market:day,rest:day};
+}
+function hostSchedule(place){
+    const slot=(start,end,activity)=>({start,end,location:place,activity,services:[]});
+    const day=[slot(0,300,'睡眠'),slot(300,1440,'料理家事')];
+    return {default:day,market:day,rest:day};
+}
+
+// D1 default hazard clocks, notice board and public ledger of every generated
+// settlement, read from the county outline (terrain, climate, biomes, industry);
+// a pure function of the skeleton, no draws. Conditions are seeded chance,
+// stores and other clocks only, since generated places have no weather region.
+// Wet land floods (spring and summer where the outline speaks of rain) and
+// then gets water-borne disease; cold or dry land gets winter cough; farming
+// counties keep more grain and see milder price swings than mining, salt,
+// port or market ones, which live on bought grain.
+const GRAIN=['item_oats','item_ration','item_oat_flour','item_oat_flatbread','item_pearl_barley','item_rye_flour','item_wheat_grain'];
+export function remoteHazardProfile(county){
+    const text=`${county.terrain}${county.climate}`,biomes=county.biomes??[];
+    const wet=biomes.includes('wet')||/河|湿|沼|滩|港|湾|岸|泥/.test(county.terrain);
+    const cold=biomes.includes('frost')||/冰|雪|寒|冬长/.test(text);
+    const rainy=/多雨|湿季|雨/.test(county.climate??'');
+    const farm=(county.industry??[]).some(t=>/燕麦|豌豆|粮|麦|豆|果园|奶|放牧|羊|牧|海草|轮作/.test(t));
+    return {wet,cold,rainy,farm,storeDays:farm?150:80};
+}
+function remoteHazards(county,seat,settlements,routes,profiles){
+    const h=remoteHazardProfile(county),DAY=1440,hazards=[],ledgers={};
+    for(const s of settlements){
+        const sid=s.id,P=profiles.find(p=>p.id===sid).population;
+        const link=routes.find(r=>r.from===seat.id&&r.to===sid)??routes.find(r=>r.from===sid&&r.to===s.districts[0]);
+        const low=s.districts.slice(0,1),soaked=[...s.districts];
+        if(h.wet)hazards.push({id:`flood:${sid}`,kind:'flood',name:'汛期',settlement:sid,seasons:h.rainy?[0,1]:[1],intervalDays:5,stages:[
+            {id:'rise',name:'水位上涨',probability:h.rainy?0.35:0.25,condition:{kind:'always'},effects:[{kind:'flood',locations:low,minutes:DAY}]},
+            {id:'crest',name:'洪峰过境',probability:h.rainy?0.3:0.2,condition:{kind:'always'},effects:[{kind:'route_closure',routes:[link.id],minutes:3*DAY,reason:'洪水漫过道路'},
+                {kind:'flood',locations:soaked,minutes:3*DAY},{kind:'crop_damage',settlement:sid,percent:h.farm?25:15,minutes:30*DAY}]},
+            {id:'recede',name:'退水',probability:0.6,condition:{kind:'always'},effects:[{kind:'environment',state:'dry',locations:soaked}]}]});
+        const water=h.wet&&!h.cold,disease=water?'disease_river_flux':'disease_cold_cough';
+        hazards.push({id:`epidemic:${sid}`,kind:'epidemic',name:'疫病流行',settlement:sid,seasons:water?[1,2]:[3],intervalDays:4,disease,spread:{routes:[link.id]},stages:[
+            {id:'cases',name:'零星病例',probability:water?0.2:0.06,condition:water?{kind:'hazard_phase',clock:`flood:${sid}`,minimum:2}:{kind:'always'},effects:[{kind:'epidemic',disease,settlement:sid,cases:1}]},
+            {id:'spread',name:'疫病流行',probability:1,condition:{kind:'epidemic_cases',minimum:3},effects:[{kind:'price_shift',settlement:sid,items:['item_herb'],factor:1.4,minutes:30*DAY,reason:'疫病流行，药草紧缺'}]},
+            {id:'wane',name:'疫退',probability:1,condition:{kind:'epidemic_clear'},effects:[{kind:'price_shift',settlement:sid,items:['item_herb'],factor:1,minutes:1,reason:'疫退，药价回落'}]}]});
+        hazards.push({id:`famine:${sid}`,kind:'famine',name:'冬荒',settlement:sid,seasons:[3],intervalDays:7,stages:[
+            {id:'tight',name:'存粮告紧',probability:1,condition:{kind:'granary_short',days:90},effects:[{kind:'price_shift',settlement:sid,items:GRAIN,factor:1.2,minutes:120*DAY,reason:'冬季存粮告紧'}]},
+            {id:'famine',name:'冬荒',probability:1,condition:{kind:'granary_short',days:45},effects:[{kind:'price_shift',settlement:sid,items:GRAIN,factor:1.6,minutes:120*DAY,reason:'冬荒缺粮'},{kind:'famine',settlement:sid,minutes:120*DAY}]}]});
+        const [up,high]=h.farm?[1.1,1.2]:[1.2,1.4];
+        hazards.push({id:`price:${sid}`,kind:'price',name:'青黄不接粮价波动',settlement:sid,seasons:[1],intervalDays:10,stages:[
+            {id:'rise',name:'粮价看涨',probability:0.35,condition:{kind:'always'},effects:[{kind:'price_shift',settlement:sid,items:GRAIN,factor:up,minutes:60*DAY,reason:'青黄不接，陈粮见少'}]},
+            {id:'peak',name:'粮价高企',probability:0.25,condition:{kind:'always'},effects:[{kind:'price_shift',settlement:sid,items:GRAIN,factor:high,minutes:60*DAY,reason:'青黄不接，粮商惜售'}]},
+            {id:'ease',name:'粮价回落',probability:0.5,condition:{kind:'always'},effects:[{kind:'price_shift',settlement:sid,items:GRAIN,factor:1,minutes:1,reason:'新粮将下，粮价回落'}]}]});
+        // Public ledger on the core village scale: about 12 copper, 0.6 wood and
+        // 0.12 iron per head; grain for storeDays; daily supply just above need
+        // in farming counties, exactly need elsewhere (grain comes in by trade).
+        ledgers[sid]={name:s.name,population:P,treasury:12*P,wood:Math.round(0.6*P),iron:Math.round(0.12*P),food:P*h.storeDays,foodPerDay:h.farm?Math.ceil(P*1.02):P,
+            woodPerDay:(county.biomes??[]).some(b=>b==='forest'||b==='plant')?4:2,starvation:0};
+    }
+    return {hazards,ledgers};
+}
+
 export function generateCounty(world,countyId,campaignSeed){
     const o=outline(world),county=o.byId.get(countyId);if(!county||county.category!=='county')throw Error(`未登记的远方郡：${countyId}`);
     if(o.home.has(countyId))throw Error('本郡已有成文聚落，不按种子生成');
@@ -269,7 +330,7 @@ export function generateCounty(world,countyId,campaignSeed){
     for(const row of [...world.npcs,...world.residents??[],...world.locations,...world.factionPeople??[],...world.factions??[],...world.items])if(row.generated!=='remote')for(const n of [row.name,...row.aliases??[]])if(n)used.add(n);
     const fresh=(make,tries=60)=>{for(let i=0;i<tries;i++){const n=make(i);if(!used.has(n)){used.add(n);return n;}}throw Error('远方地名库不足');};
     const {naming:names,clans}=naming(world,kind,county,rng);
-    const locations=[],routes=[],people=[],households=[],settlements=[],profiles=[],rumors=[],offices=[],jurisdiction={};
+    const locations=[],routes=[],people=[],households=[],settlements=[],profiles=[],rumors=[],offices=[],jurisdiction={},officials={};
     const seatShort=[...seat.name].slice(0,2).join('');
     const route=(from,to,lengthKm,modes=['walk'],extra={})=>routes.push({id:`route_rg_${short}_${from.replace(/^(loc|bld)_rg_/,'').replace(`${short}_`,'')}_${to.replace(/^(loc|bld)_rg_/,'').replace(`${short}_`,'')}`,
         from,to,lengthKm:round2(lengthKm),terrainMultiplier:1,modes,closedSeasons:[],toll:0,risk:0,generated:'remote',...extra});
@@ -375,7 +436,7 @@ export function generateCounty(world,countyId,campaignSeed){
         const head=person({name:nameFor(g0.culture,g0.species,headClan),age:int(rng,40,66),sex:rng()<0.5?'男':'女',...(g0.species?{species:g0.species}:{}),culture:g0.culture,settlement:sid,location:officeHall,
             occupation:`${plan.name}${officeName(kind,role,level,seat.name)}`,remoteRole:'official'});
         officeRows.push({id:`office_rg_${short}_${isSeat?'s0':plan.id.split('_').at(-1)}`,name:officeName(kind,role,level,seat.name),level,settlement:sid,holder:head.id,source:'generated'});
-        head.office=officeRows.at(-1).id;offices.push(...officeRows);
+        head.office=officeRows.at(-1).id;head.schedule=officeSchedule(officeHall);offices.push(...officeRows);officials[sid]=head.id;
         jurisdiction[sid]={level,superior:isSeat?countyId:seat.id};
         // Roster quota: fixed people are registered; the rest is pending, seeded on demand.
         const registered=fixed.filter(id=>people.find(p=>p.id===id).settlement===sid);
@@ -451,11 +512,24 @@ export function generateCounty(world,countyId,campaignSeed){
         rumors.push({id:`rumor_rg_${short}_${i+1}`,claim:`听说${county.name}和${other.name}之间是${t.kind}往来：${t.terms}。`,truth:'true',source:carriers[i%carriers.length],carriers,witnesses:[],
             fact:`纲要所载：${county.name}与${other.name}${t.kind}，${t.terms}`,verification:`到${other.name}或${seat.name}的官署、议处核对。`,status:'generated-seed',propagation:'pending-event',generated:'remote'});
     });
+    // D1 festival hosts: a published festival waiting for a host at a place of
+    // this county gets a resident who hosts it (drawn last, so the rest of the
+    // skeleton keeps its draws). The host lives at the venue and is there all day.
+    const venues=new Set([seat.id,...o.nodes.get(countyId)??[]]);
+    for(const f of (world.festivals??[]).filter(f=>f.runtime?.status==='awaiting_host'&&venues.has(f.venue?.location)).sort((a,b)=>a.id.localeCompare(b.id))){
+        const cult=kind==='beast'||kind==='shared'?'culture_beast':culture,species=kind==='orc'?SPECIES.orc:kind==='lignum'?SPECIES.lignum:null;
+        const row=person({id:`npc_rg_${short}_fh_${f.id.replace(/^festival_/,'')}`,name:nameFor(cult,species,clanFor(cult,species)),age:int(rng,30,64),sex:rng()<0.5?'男':'女',...(species?{species}:{}),culture:cult,
+            settlement:seat.id,location:f.venue.location,occupation:`${f.name}主办`,title:'节日主办',remoteRole:'festival_host',festivalHost:f.id,coins:int(rng,40,160),inventory:{},schedule:hostSchedule(f.venue.location)});
+        const p=profiles[0];p.residentIds.push(row.id);p.registeredPopulation++;p.registeredHouseholdCount++;p.population++;p.householdCount++;settlements[0].population++;
+    }
+    if(people.some(p=>p.remoteRole==='festival_host'))profiles[0].facts=[`${seat.name}按种子登记${profiles[0].population}名、${profiles[0].householdCount}户；具名${profiles[0].registeredPopulation}名（含纲要人物与节日主办），其余${profiles[0].pendingPopulation}名${profiles[0].pendingHouseholdCount}户在到访住区时才生成，不计入完整档。`];
     jurisdiction[countyId]={level:'郡',superior:province.id};
     const rostered=profiles.reduce((n,p)=>n+p.population,0);
+    const {hazards,ledgers}=remoteHazards(county,seat,settlements,routes,profiles);
     const skeleton={version:REMOTE_VERSION,county:countyId,name:county.name,province:province.id,kind,culture,seat:seat.id,seatExisting:seat.existing,
         census:{outline:county.population,outlineNumber:census,rostered,note:'纲要人口只是概数；名册配额按种子登记，未展开的人数不算完整档。'},
-        settlements,locations,routes,people,households,profiles,offices,rumors,jurisdiction};
+        settlements,locations,routes,people,households,profiles,offices,rumors,jurisdiction,
+        hazards,ledgers,publishers:officials};
     return skeleton;
 }
 
@@ -471,8 +545,11 @@ export function unfoldRemoteAt(d,engine,location){
     const overlay=materializeWildlifeHabitats(remoteWorld(base,d.get('state'))),places=new Set(skeleton.locations.filter(l=>l.region===county).map(l=>l.id));
     const fresh=(overlay.rules.wildlife?.habitats??[]).filter(h=>h.derived&&places.has(h.location));
     if(fresh.length)for(const patch of planWildlifeMigration(d.document,{...overlay.rules,wildlife:{...overlay.rules.wildlife,habitats:fresh}},overlay.monsters??[]))d.set(patch.path,patch.value);
-    // Shopkeepers trade from the day they are registered; others act after a full profile.
-    for(const p of skeleton.people)if(p.remoteRole==='keeper'){
+    // D1: every generated settlement opens its public ledger (notice board money, stores).
+    for(const [sid,ledger] of Object.entries(skeleton.ledgers??{}))if(!d.get('state','settlements',sid))d.set(['state','settlements',sid],structuredClone(ledger));
+    // Shopkeepers, officials (notice board) and festival hosts act from the day
+    // they are registered; others act after a full profile.
+    for(const p of skeleton.people)if(active(p,skeleton)){
         if(d.get('state','npcs',p.id))throw Error(`远方人物编号已被占用：${p.id}`);
         d.set(['state','npcs',p.id],{...initialNpcState(p),occupation:p.occupation});
     }
@@ -482,6 +559,8 @@ export function unfoldRemoteAt(d,engine,location){
 
 // ---------------------------------------------------------------- overlay world
 const PROFILE_KEYS=['personality','voice','background','currentConcern','goals','fears','knowledge','relationships','visibleFeature','notes'];
+// Skeletons generated before D1 (no hazards field) keep their officials as roster entries.
+const active=(p,skeleton)=>p.remoteRole==='keeper'||Boolean(skeleton.hazards)&&['official','festival_host'].includes(p.remoteRole);
 export function remoteKey(state){
     const remote=state?.remote;if(!remote)return '';
     return Object.keys(remote).sort().map(k=>`${k}:${remote[k].hash}:${remote[k].revision}`).join('|');
@@ -490,12 +569,13 @@ export function remoteWorld(base,state){
     const records=Object.keys(state?.remote??{}).sort().map(k=>state.remote[k]);if(!records.length)return base;
     const ids=new Set(base.locations.map(l=>l.id)),locations=new Map(),routes=new Map(),relocated=new Set();
     const merge=(p,rec)=>{const done=rec.profiles?.[p.id];return done?.status==='full'?{...p,...Object.fromEntries(PROFILE_KEYS.filter(k=>done.profile?.[k]!==undefined).map(k=>[k,done.profile[k]])),profileStatus:'full'}:p;};
-    const npcs=[],residents=[],households=[],profiles=[],rumors=[],jurisdiction={};
+    const npcs=[],residents=[],households=[],profiles=[],rumors=[],jurisdiction={},hazards=[],publishers={};
     for(const rec of records){
         const s=rec.skeleton;
         for(const l of s.locations)if(!ids.has(l.id)&&!locations.has(l.id))locations.set(l.id,l);
         for(const r of s.routes)if(!routes.has(r.id))routes.set(r.id,r);
-        for(const p of s.people){const row=merge(p,rec);(p.remoteRole==='keeper'?npcs:residents).push(row);if(p.outlinePerson)relocated.add(p.outlinePerson);}
+        for(const p of s.people){const row=merge(p,rec);(active(p,s)?npcs:residents).push(row);if(p.outlinePerson)relocated.add(p.outlinePerson);}
+        hazards.push(...s.hazards??[]);Object.assign(publishers,s.publishers??{});
         households.push(...s.households);profiles.push(...s.profiles);rumors.push(...s.rumors);Object.assign(jurisdiction,s.jurisdiction);
     }
     // A county's own seat record wins over a neighbour's stub of it (they are equal by construction).
@@ -510,7 +590,10 @@ export function remoteWorld(base,state){
     world.settlementProfiles=[...base.settlementProfiles??[],...profiles];
     world.rumors=[...base.rumors??[],...rumors];
     const g=base.rules.governance,p=g?.promotion;
+    // D1: generated settlements bring their hazard clocks and notice boards.
     world.rules={...base.rules,...(base.rules.wildlife?{wildlife:{...base.rules.wildlife}}:{}),
+        ...(base.rules.hazardClock&&hazards.length?{hazardClock:{...base.rules.hazardClock,clocks:[...base.rules.hazardClock.clocks,...hazards]}}:{}),
+        ...(base.rules.questSources&&Object.keys(publishers).length?{questSources:{...base.rules.questSources,publishers:{...base.rules.questSources.publishers,...publishers}}}:{}),
         ...(p?{governance:{...g,promotion:{...p,jurisdiction:{...p.jurisdiction,...Object.fromEntries(Object.entries(jurisdiction).filter(([k])=>!p.jurisdiction?.[k]))}}}}:{})};
     world.remoteCounties=records.map(r=>r.county);
     return world;

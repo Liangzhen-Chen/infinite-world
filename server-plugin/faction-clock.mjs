@@ -22,7 +22,10 @@ function assertCost(engine,cost={}){
 // engine.factionEffectConsumers and the shared kinds resolve through it too.
 function assertEffect(engine,effect){return assertTableEffect(engine,effect,'faction');}
 const effects=stage=>stage.effects??[stage.effect];
-const stageEffects=(engine,rule,stage)=>[...effects(stage),...hookedEffects(engine,'faction',rule.id,stage.id)];
+// D1: commissions a stage posts (U17 quest_post) are quest-source data in
+// rules.questSources.commissions, kept apart from the K6 effect table.
+const commissions=(engine,owner,stage)=>(engine.rules.questSources?.commissions??[]).filter(c=>c.owner===owner&&c.stage===stage).flatMap(c=>c.effects);
+const stageEffects=(engine,rule,stage)=>[...effects(stage),...hookedEffects(engine,'faction',rule.id,stage.id),...commissions(engine,rule.id,stage.id)];
 export function assertFactionClockRules(engine){
  const ids=new Set();
  for(const rule of factionClockRules(engine)){
@@ -59,6 +62,10 @@ export function assertFactionClockRules(engine){
  }
  const published=factionClockRules(engine);// Hooks for clocks absent from this world stay inert.
  for(const h of published.length?engine.rules.effectTable?.hooks??[]:[])if(h.source==='faction'&&published.some(r=>r.id===h.owner&&!r.stages.some(s=>s.id===h.stage)))throw Error(`效果挂接的势力时钟阶段未登记：${h.owner}`);
+ for(const c of published.length?engine.rules.questSources?.commissions??[]:[]){
+  if(!Array.isArray(c.effects)||!c.effects.length||c.effects.some(e=>e.kind!=='quest_post'))throw Error(`势力委托只能登记 quest_post：${c.owner}`);
+  if(published.some(r=>r.id===c.owner&&!r.stages.some(s=>s.id===c.stage)))throw Error(`势力委托的时钟阶段未登记：${c.owner}`);
+ }
 }
 function ensureAccount(d,engine,id){
  const prior=d.get(...accountPath(id));if(prior){if(prior.category!=='faction_assets')throw Error('势力资产记录冲突');return prior;}
