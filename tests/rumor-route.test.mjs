@@ -144,7 +144,8 @@ test('HTTP公开搜索和目录不公开作者真相，只有已交谈版本能�
     const {world,engine,document}=await setup(),sent=await planCarry(engine,document);
     const arrived=(await reduce(engine,sent.document,'world_time',{minutes:sent.delivery.arrive-540,activity:'等待'},'arrive')).document;arrived.state.location='loc_bs';arrived.worldHash=digest(world);
     const root=await temp(t),api=async()=>{
-        const app=express();app.use(express.json());const router=express.Router();await init(router,{world,baseRoot:root});app.use(router);
+        // A complete campaign includes the published population, as in village-rumor-access.
+        const app=express();app.use(express.json({limit:'100mb'}));const router=express.Router();await init(router,{world,baseRoot:root});app.use(router);
         const server=app.listen(0,'127.0.0.1');await once(server,'listening');t.after(()=>new Promise(resolve=>{server.close(resolve);server.closeAllConnections();}));
         return async(endpoint,body)=>{const response=await fetch(`http://127.0.0.1:${server.address().port}/${endpoint}`,{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify(body)});const result=await response.json();assert.equal(response.status,200,JSON.stringify(result));return result;};
     };

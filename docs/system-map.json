@@ -2,7 +2,7 @@
  "title": "无限原野系统地图",
  "card": "K9",
  "generatedFrom": {
-  "commit": null,
+  "commit": "refs/heads/t117",
   "method": "运行时导出（注册表、规则表、工具定义、效果表、立场传导表）+ 静态正则扫描（import 图、函数体标识符、state 分区与 records 前缀、rules/world 读取）。静态扫描是近似：经 engine.byId、helper 间接或动态拼接路径的访问不计入。"
  },
  "scanMethods": {
@@ -25,7 +25,7 @@
   "subscribers": 8,
   "interactionRules": 25,
   "effectKinds": 19,
-  "links": 371
+  "links": 372
  },
  "layers": [
   {
@@ -259,9 +259,10 @@
     "sim_environment",
     "sim_military",
     "sim_npc",
-    "sim_society"
+    "sim_society",
+    "ui_scene"
    ],
-   "files": 7
+   "files": 8
   },
   {
    "id": "data_design",
@@ -287,7 +288,7 @@
     "sim_environment",
     "sim_society"
    ],
-   "files": 100
+   "files": 108
   },
   {
    "id": "data_assets",
@@ -329,7 +330,7 @@
    "effects": [],
    "tools": [],
    "readBy": [],
-   "files": 28
+   "files": 34
   },
   {
    "id": "kernel_engine",
@@ -4652,6 +4653,14 @@
    ]
   },
   {
+   "from": "data_lore",
+   "to": "ui_scene",
+   "kind": "data",
+   "labels": [
+    "world/lore"
+   ]
+  },
+  {
    "from": "data_meta",
    "to": "base_advance",
    "kind": "data",
@@ -8549,7 +8558,7 @@
   },
   {
    "dir": "world/design",
-   "files": 100,
+   "files": 108,
    "keys": [],
    "readers": [
     "server-plugin/civic.mjs",
@@ -8647,6 +8656,7 @@
     "tools/w5-content.mjs",
     "tools/w5-festival-publication.mjs",
     "tools/w5-festivals.mjs",
+    "tools/w5-rumors.mjs",
     "tools/w5-sites.mjs",
     "tools/w5-social.mjs",
     "tools/wildlife-content.mjs"
@@ -8654,7 +8664,7 @@
   },
   {
    "dir": "world/drafts",
-   "files": 28,
+   "files": 34,
    "keys": [],
    "readers": [],
    "tools": [
@@ -8739,6 +8749,7 @@
     "tools/w5-content.mjs",
     "tools/w5-festival-publication.mjs",
     "tools/w5-festivals.mjs",
+    "tools/w5-rumors.mjs",
     "tools/w5-sites.mjs",
     "tools/w5-social.mjs"
    ]
@@ -8844,7 +8855,7 @@
   },
   {
    "dir": "world/lore",
-   "files": 7,
+   "files": 8,
    "keys": [
     "cultures",
     "deities",
@@ -8852,7 +8863,8 @@
     "history",
     "factionPeople",
     "eras",
-    "festivals"
+    "festivals",
+    "rumors"
    ],
    "readers": [
     "server-plugin/effects.mjs",
@@ -8862,12 +8874,14 @@
     "server-plugin/military.mjs",
     "server-plugin/monster-society.mjs",
     "server-plugin/notables.mjs",
+    "server-plugin/npc-rumors.mjs",
     "server-plugin/organizations.mjs",
     "server-plugin/population.mjs",
     "server-plugin/quest-sources.mjs",
     "server-plugin/regions.mjs",
     "server-plugin/remote-generation.mjs",
     "server-plugin/reputation-registry.mjs",
+    "server-plugin/return-summary.mjs",
     "server-plugin/sites.mjs",
     "server-plugin/tribal-awakening.mjs",
     "server-plugin/war-diplomacy.mjs",
@@ -8881,6 +8895,7 @@
     "tools/w5-clock-publication.mjs",
     "tools/w5-content.mjs",
     "tools/w5-festival-publication.mjs",
+    "tools/w5-rumors.mjs",
     "tools/w5-social-publish.mjs"
    ]
   },
@@ -9064,16 +9079,10 @@
     "tools/w5-content.mjs",
     "tools/w5-festival-publication.mjs",
     "tools/w5-festivals.mjs",
+    "tools/w5-rumors.mjs",
     "tools/w5-sites.mjs",
     "tools/w5-social.mjs"
    ]
-  },
-  {
-   "dir": "world/orgs",
-   "files": 0,
-   "keys": [],
-   "readers": [],
-   "tools": []
   },
   {
    "dir": "world/people",
@@ -9146,13 +9155,6 @@
     "tools/w3-trades-publish.mjs",
     "tools/w5-content.mjs"
    ]
-  },
-  {
-   "dir": "world/sites",
-   "files": 0,
-   "keys": [],
-   "readers": [],
-   "tools": []
   }
  ],
  "prompt": {
@@ -11269,7 +11271,7 @@
    "refs": [
     "势力成员：势力的 leader/coreMembers 或人物的 faction 字段即自动成为成员（reputation-registry.mjs 派生）",
     "开店：有交易服务并写 shopType（rules.economy.shops.types 已登记的类型）即自动成为店铺（shop.mjs derivedShops）",
-    "传闻种子在 geo/settlements.json 的 details.rumors（经 settlement-profile 白名单）"
+    "传闻种子在 geo/settlements.json 的 details.rumors 或 lore/rumors.json；world/design/w5-rumors-{1..6}.mjs 经 tools/w5-rumors.mjs 审核发布，w5-rumors-common.mjs 与 w5-rumors-sites.mjs 提供来源登记和据点说法。npc-rumors.mjs 读取；携信路线、人物在场与可交谈时间从当前状态派生"
    ],
    "extend": []
   },
@@ -16808,7 +16810,7 @@
   "extension/index.js": {
    "system": "ui_host",
    "imports": [
-    "../extensions.js",
+    "../../extensions.js",
     "extension/core.js"
    ],
    "stateWrites": [],
@@ -16922,7 +16924,7 @@
   "extension/runtime.js": {
    "system": "ui_host",
    "imports": [
-    "../extensions.js",
+    "../../extensions.js",
     "extension/ambient-audio.mjs",
     "extension/background-view.mjs",
     "extension/history-window.mjs",

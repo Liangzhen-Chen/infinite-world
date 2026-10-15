@@ -419,7 +419,7 @@ const CONTENT=[
    ['household / householdId','householdId|\\.household\\b','家庭：立场按家庭传导'],['settlement','\\.settlement\\b','所属聚落：立场传导'],
    ['services / serviceCatalog','\\.services\\b|serviceCatalog','交易、授课、节日供货'],['creditPolicy','creditPolicy','赊账政策'],['memorySeeds','memorySeeds','初始记忆'],
    ['goals / redLines','\\.goals\\b|redLines','自主行动计划'],['intelligence','\\.intelligence\\b','灵智等级'],['relationships','relationships','初始关系'],
-  ],manual:[],refs:['势力成员：势力的 leader/coreMembers 或人物的 faction 字段即自动成为成员（reputation-registry.mjs 派生）','开店：有交易服务并写 shopType（rules.economy.shops.types 已登记的类型）即自动成为店铺（shop.mjs derivedShops）','传闻种子在 geo/settlements.json 的 details.rumors（经 settlement-profile 白名单）']},
+  ],manual:[],refs:['势力成员：势力的 leader/coreMembers 或人物的 faction 字段即自动成为成员（reputation-registry.mjs 派生）','开店：有交易服务并写 shopType（rules.economy.shops.types 已登记的类型）即自动成为店铺（shop.mjs derivedShops）','传闻种子在 geo/settlements.json 的 details.rumors 或 lore/rumors.json；world/design/w5-rumors-{1..6}.mjs 经 tools/w5-rumors.mjs 审核发布，w5-rumors-common.mjs 与 w5-rumors-sites.mjs 提供来源登记和据点说法。npc-rumors.mjs 读取；携信路线、人物在场与可交谈时间从当前状态派生']},
  {id:'resident',name:'居民（按需展开）',file:'people/residents.json',required:req('resident'),hooks:[
    ['householdId','householdId','按需展开到户'],['settlement','residentIds|populationSeed','聚落人口档案'],
   ],manual:[],refs:['人口册：geo/settlements.json 的 residentIds 列出（人数由人口校验核对），户在 people/households.json']},
