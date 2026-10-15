@@ -89,6 +89,8 @@ test('分段等待和单次等待产生相同NPC状态，回放稳定',async()=>
 test('路费在出发时只收一次；封路和缺钱不会瞬移',async()=>{
     const {world,engine,document,home,school,run}=await setup();
     world.routes=[{id:'route_schedule',from:school,to:home,modes:['walk'],closedSeasons:[],lengthKm:1,toll:3}];
+    // 本例把路网换成一条合成路线；U3灾害时钟只引用正式路线，合成路网下不加载。
+    delete world.rules.hazardClock;
     document.state.minute=1019;
     const coins=document.state.npcs[teacher].coins;
     const first=await run(document,'world_time',{minutes:1});
