@@ -24,7 +24,8 @@ function fixture({at=inn,coins=300}={}){
     return {engine,act,get doc(){return doc;},set doc(v){doc=v;}};
 }
 const cash=c=>c.state.player.coins+Object.values(c.state.npcs).reduce((n,r)=>n+r.coins,0)+Object.values(c.state.records).filter(r=>r.category==='bank').reduce((n,r)=>n+r.coins,0)
-    +Object.values(c.state.records).filter(r=>r.category==='contract').reduce((n,r)=>n+(r.escrow??0),0);
+    +Object.values(c.state.records).filter(r=>r.category==='contract').reduce((n,r)=>n+(r.escrow??0),0)
+    +Object.values(c.state.settlements).reduce((n,s)=>n+s.treasury,0)+Object.values(c.state.quests).reduce((n,q)=>n+(q.escrow??0),0);
 
 test('向熟人借贷按立场定月息、到期本息与抵押，还清后取回抵押且钱数守恒',async()=>{
     const f=fixture(),total=cash(f.doc);
@@ -113,7 +114,7 @@ test('受雇打工：雇主托管工钱，做满工时后结算并涨雇主营�
 });
 
 test('合伙：伙伴出资入店，期满按盈亏分成生成应付款，还清后结束；赊购货款改为向供货人借款',async()=>{
-    const f=fixture();
+    const f=fixture(),total=cash(f.doc);
     const lease=await f.act('world_trade',{operation:'lease',seller:host,consent:true,days:5},'lease');
     const part=await f.act('world_trade',{operation:'partner',business:lease.business,seller:worker,consent:true,coins:30,quantity:50,days:1},'partner');
     assert.equal(f.doc.state.npcs[worker].coins,170);
@@ -121,10 +122,16 @@ test('合伙：伙伴出资入店，期满按盈亏分成生成应付款，还�
     const row=f.doc.state.records[part.contract];
     assert.equal(row.status,'已结算');assert.equal(row.profit,0);assert.equal(row.payout,30);
     const owed=f.doc.state.records[row.debt];assert.equal(owed.kind,'partnership');assert.equal(owed.amount,30);
-    await f.act('world_trade',{seller:worker,payment:'repay',debt:row.debt},'payout');
-    assert.equal(f.doc.state.npcs[worker].coins,200);
+    const partnerCoins=f.doc.state.npcs[worker].coins;
+    const paid=await f.act('world_trade',{seller:worker,payment:'repay',debt:row.debt},'payout');
+    assert.equal(paid.repaid,owed.amount);assert.equal(f.doc.state.records[row.debt].status,'已还清');
+    assert.equal(f.doc.state.npcs[worker].coins,partnerCoins+owed.amount);
+    // U17 may escrow the partner's private plea for an ill housemate during the day.
+    const personalEscrow=Object.values(f.doc.state.quests).filter(q=>q.personal&&q.publisher===worker).reduce((n,q)=>n+(q.escrow??0),0);
+    assert.equal(f.doc.state.npcs[worker].coins+personalEscrow,200);assert.equal(cash(f.doc),total);
     f.doc.state.npcs[host].status='正常';// a day of npc life may have made her ill; the procurement below needs her awake
     const before=f.doc.state.npcs[host].coins,cost=await f.act('world_trade',{operation:'procure',business:lease.business,seller:host,consent:true,item:'item_bread',quantity:2,payment:'credit',creditMinutes:3*DAY},'procure');
     assert.ok(cost.debt);assert.equal(f.doc.state.records[cost.debt].principal,cost.cost);assert.equal(f.doc.state.npcs[host].coins,before-cost.cost);
     assert.equal(f.doc.state.records[cost.contract].loan,cost.debt);assert.equal(f.doc.state.records[cost.contract].escrow,cost.cost);
+    assert.equal(cash(f.doc),total);
 });
