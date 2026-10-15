@@ -1,5 +1,6 @@
 import {randomUUID} from 'node:crypto';
 import {checkGeneratedProfile,profileBrief,MAX_PROFILE_FAILURES,PROFILE_FIELDS} from './population.mjs';
+import {remotePeopleAt,remoteProfileBrief} from './remote-generation.mjs';
 
 // First conversation with a seeded resident: draft once, check the hard
 // constraints in code, self-check once, check again, then store through the
@@ -41,18 +42,20 @@ function identityFromBrief(brief){
     const i=brief.identity;
     return {id:i.id,name:i.name,age:i.age,sex:i.sex,...(i.species?{species:i.species}:{}),culture:i.culture,occupation:i.occupation,
         flags:{minor:i.minor,romanceable:!i.minor},kin:i.household.map(h=>({with:h.id,name:h.name,relation:h.relation,age:h.age})),
-        home:{district:i.district,dwelling:i.dwelling},location:i.district};
+        home:{district:i.district,dwelling:i.dwelling},location:i.district,...(i.title?{title:i.title,keyPerson:true}:{})};
 }
 
 // People named in the player's words who are seeded residents of the current
 // district and still have only a roster identity.
 export function conversationCandidates(engine,document,query){
-    const s=document.state,mentioned=engine.scoped(document).resolver.mentions(String(query??''),s.location);
-    return [...mentioned].filter(id=>{
+    const scoped=engine.scoped(document),s=document.state,mentioned=scoped.resolver.mentions(String(query??''),s.location);
+    // T143: fixed people of a generated far county (outline key people, officials, shopkeepers).
+    const remote=remotePeopleAt(scoped,document,mentioned).filter(id=>(s.remote[scoped.byId.get(id).county].profiles?.[id]?.failures??0)<MAX_PROFILE_FAILURES);
+    return [...remote,...[...mentioned].filter(id=>{
         const e=s.created?.[id];if(e?.generated!=='population'||e.home?.district!==s.location||e.profileStatus==='full')return false;
         const status=s.population?.[e.settlement]?.profiles?.[id];
         return (status?.failures??0)<MAX_PROFILE_FAILURES;
-    }).sort();
+    })].sort();
 }
 
 export async function ensurePopulationProfiles(store,campaignId,{engineFor,query,generator,limit=1}){
@@ -62,11 +65,12 @@ export async function ensurePopulationProfiles(store,campaignId,{engineFor,query
         const view=await store.read(campaignId),engine=await engineFor(view.document);
         const [person]=conversationCandidates(engine,view.document,query).filter(id=>!outcomes.some(o=>o.person===id));
         if(!person)break;
-        const brief=profileBrief(view.document,person),template=view.document.state.population[brief.settlement].template;
+        const scoped=engine.scoped(view.document),remote=scoped.byId.get(person)?.generated==='remote';
+        const brief=remote?remoteProfileBrief(scoped,view.document,person):profileBrief(view.document,person),template=remote?null:view.document.state.population[brief.settlement].template;
         let input;
         try{
             const generated=await generator(brief,{template});
-            const errors=checkGeneratedProfile(view.document.state.created[person],generated?.profile,{template});
+            const errors=checkGeneratedProfile(remote?scoped.byId.get(person):view.document.state.created[person],generated?.profile,{template});
             input=errors.length?{type:'population_profile',person,outcome:'failed',reason:`硬约束未通过：${errors.join('；')}`}
                 :{type:'population_profile',person,outcome:'accepted',profile:generated.profile,generator:{model:generated.model??'injected',calls:generated.calls??0}};
         }catch(error){input={type:'population_profile',person,outcome:'failed',reason:`生成失败：${String(error?.message??error).slice(0,200)}`};}

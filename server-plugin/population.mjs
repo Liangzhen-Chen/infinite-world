@@ -1,6 +1,7 @@
 import {createHash} from 'node:crypto';
 import {readFileSync} from 'node:fs';
 import {initialNpcState} from './npc-state.mjs';
+import {composeName,acceptRemoteProfile} from './remote-generation.mjs';
 
 // On-demand population for seeded settlements and lairs. The roster of a
 // residential district is a pure function of the template and quota captured
@@ -54,6 +55,12 @@ function apportion(total,weights){
 export function populationTemplate(world,settlementId,{blocklist=defaultBlocklist()}={}){
     const profile=world.settlementProfiles?.find(p=>p.id===settlementId);
     if(!profile||profile.registrationMode!=='seeded-on-demand'||!profile.populationSeed)return null;
+    // T143: a generated far settlement carries its template; names already in
+    // the shared world (and this county's fixed people) stay taken.
+    if(profile.populationTemplate){
+        const people=[...(world.npcs??[]),...(world.residents??[]),...(world.factionPeople??[])].filter(p=>p.generated!=='remote'||p.county===profile.county);
+        return {...structuredClone(profile.populationTemplate),taken:[...new Set(people.map(p=>p.name).filter(Boolean))].sort(),blocked:[...new Set(blocklist)].sort()};
+    }
     const people=new Map([...(world.npcs??[]),...(world.residents??[])].map(p=>[p.id,p]));
     const places=new Map((world.locations??[]).map(l=>[l.id,l]));
     const registered=profile.residentIds.map(id=>people.get(id)).filter(Boolean);
@@ -140,13 +147,19 @@ export function populationPlan(template,basis){
     }
     const taken=new Set(template.taken),blocked=template.blocked;
     const nameOk=name=>!taken.has(name)&&!blocked.some(w=>name.includes(w)||w===name);
-    function nameFor(surname){
-        for(let i=0;i<96;i++){const first=pick(rng,template.given),second=pick(rng,template.given);const name=surname+first+(i<4||second===first?'':second);if(nameOk(name)){taken.add(name);return name;}}
+    function nameFor(surname,spec){
+        for(let i=0;i<96;i++){
+            // T143 far cultures name by their own rule (clan after "·", lead syllable, tree and sky).
+            if(spec){const name=composeName(rng,spec,surname,i);if(nameOk(name)){taken.add(name);return name;}continue;}
+            const first=pick(rng,template.given),second=pick(rng,template.given);const name=surname+first+(i<4||second===first?'':second);if(nameOk(name)){taken.add(name);return name;}
+        }
         throw Error('人口模板姓名库不足');
     }
     const households=homes.map((h,i)=>{
         const index=i+1,district=districtSlots[i],species=speciesSlots[i]||null,headSex=rng()<0.5?'男':'女';
-        const clan=template.speciesSurnames?.[species]??template.surnames;
+        const culture=template.districts[district]?.culture??template.cultures[species??'']??null,rule=template.naming?`${culture}:${species??''}`:null;
+        const spec=rule?template.naming[rule]??template.naming[`${culture}:`]:null;
+        const clan=rule?template.clans[rule]??template.clans[`${culture}:`]:template.speciesSurnames?.[species]??template.surnames;
         const id=`house_pop_${template.short}_${pad(index)}`,surname=pick(rng,clan);
         const head=h.members[0];let spouse=null;
         for(const m of h.members.slice(1))if(m.role===null&&!spouse&&Math.abs(m.age-head.age)<=10){m.role='伴侣';spouse=m;}
@@ -155,7 +168,7 @@ export function populationPlan(template,basis){
             const sex=j===0?headSex:m===spouse?(headSex==='男'?'女':'男'):(rng()<0.5?'男':'女');
             const ownSurname=j===0||m.role==='子女'||(m.role==='父母'&&sex==='男')?surname:pick(rng,clan);
             const occupation=m.age<18?pick(rng,template.minorWork):pick(rng,template.districts[district].work);
-            return {id:`npc_pop_${template.short}_${pad(index)}_${j+1}`,name:nameFor(ownSurname),age:m.age,sex,role:m.role,occupation};
+            return {id:`npc_pop_${template.short}_${pad(index)}_${j+1}`,name:nameFor(ownSurname,spec),age:m.age,sex,role:m.role,occupation};
         });
         const headId=members[0].id;
         const kin=[];
@@ -163,7 +176,7 @@ export function populationPlan(template,basis){
             if(m.role==='子女'){kin.push({parent:headId,child:m.id});const sp=members.find(x=>x.role==='伴侣');if(sp&&sp.age-m.age>=MIN_PARENT_GAP)kin.push({parent:sp.id,child:m.id});}
             if(m.role==='父母')kin.push({parent:m.id,child:headId});
         }
-        return {id,index,district,species,culture:template.cultures[species??'']??null,dwelling:`home_pop_${template.short}_${pad(index)}`,members,kin};
+        return {id,index,district,species,culture,dwelling:`home_pop_${template.short}_${pad(index)}`,members,kin};
     });
     const plan={settlement:template.settlement,households};
     planCache.set(key,plan);if(planCache.size>16)planCache.delete(planCache.keys().next().value);
@@ -260,7 +273,8 @@ export function populationScene(document){
 }
 
 // ---- Full profile hard constraints -------------------------------------------------
-const IDENTITY_KEYS=['id','name','age','sex','species','culture','settlement','scope','householdId','household','householdRole','home','location','occupation','flags','tier'];
+const IDENTITY_KEYS=['id','name','age','sex','species','culture','settlement','scope','householdId','household','householdRole','home','location','occupation','flags','tier',
+    'title','faction','outlineRole','keyPerson','county','polity'];
 const FORBIDDEN_KEYS=['coins','inventory','wealth','items','money','property','services','skills','level','combat','schedule'];
 const ROMANCE=/恋爱|恋人|情人|相好|心上人|意中人|婚约|订婚|定亲|成亲|成婚|嫁给|娶|求爱|求亲|约会|调情|暗恋|爱慕|亲吻|同床|共枕|私奔|情愫|结缘|心仪/;
 const AGE_CLAIM=/(\d{1,3}|[一二三四五六七八九十两]{1,3})\s*岁/g;
@@ -316,11 +330,15 @@ export function checkGeneratedProfile(identity,profile,{template=null,blocklist=
         if(ROMANCE.test(all))add('未成年人完整档出现恋爱或亲密情节');
     }
     for(const word of blocklist)if(word&&all.includes(word))add(`完整档使用了屏蔽专名：${word}`);
+    // T143: a far county's outline person keeps the office the outline gives.
+    if(identity.keyPerson&&identity.title&&!textOf(profile.background).includes(identity.title))add(`完整档背景须写明纲要职务：${identity.title}`);
     return errors;
 }
 
 export function acceptPopulationProfile(d,engine,input){
     const person=String(input.person??''),entity=d.get('state','created',person);
+    if(!entity&&engine.byId?.get(person)?.generated==='remote')
+        return acceptRemoteProfile(d,engine,input,{check:(e,p)=>checkGeneratedProfile(e,p),maxFailures:MAX_PROFILE_FAILURES,fields:PROFILE_FIELDS});
     if(!entity||entity.generated!=='population')throw Error('只有按需登记的名册人物才能建立按需完整档');
     const record=d.get('state','population',entity.settlement);if(!record)throw Error('按需人口记录缺失');
     const status=record.profiles?.[person];

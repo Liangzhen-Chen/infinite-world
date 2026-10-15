@@ -61,6 +61,7 @@ import {CREDIT_OPERATIONS,creditTrade,isCreditDebt,repayCredit,lodgingOf,assertL
 import {initializeR1,planR1,planPreR1Partitions}from'./migrations/r1.mjs';
 import {materializeWildlifeHabitats}from'./wildlife-habitats.mjs';
 import {unfoldPopulationAt,acceptPopulationProfile}from'./population.mjs';
+import {remoteEngine,unfoldRemoteAt}from'./remote-generation.mjs';
 import {advanceNeedsSteps,nextAdvanceMinute,runAdvance}from'./advance-registry.mjs';
 const clone = value => structuredClone(value);
 const number = (value, min = 0, max = 1e9, label = '数值') => {
@@ -139,6 +140,8 @@ export class WorldEngine {
     formatCalendar(minute){return this.calendar(minute).text;}
     async reduce(document,input,options={}) {
         if(this.compat)return this.compat.reduce(document,input);
+        // T143: a campaign with generated far counties runs over its overlay world.
+        const overlay=remoteEngine(this,document,world=>new WorldEngine(world));if(overlay!==this)return overlay.reduce(document,input,options);
         if (input.type==='schema_migration') return {patches:input.patches,result:{migration:true}};
         if(input.type==='release_migration'&&input.release==='R1'){const migration=planR1(document,this.world);return{patches:migration.patches,result:migration.report};}
         if(input.type==='rules_state_migration')return{patches:planRuleStateMigration(document,this.rules),result:{migration:true,runtimeRuleVersion}};
@@ -186,6 +189,8 @@ export class WorldEngine {
         if(document.state.location!==d.get('state','location'))recordReturnVisit(d,session,document.state,id);
         // Entering an unexpanded district or lair settles its seeded roster once.
         // Older ledger events replay without it, exactly as they were recorded.
+        // T143: the first arrival in a far county generates its skeleton once.
+        const remote=document.state.location!==d.get('state','location')&&(!options.replay||options.result?.remote)?unfoldRemoteAt(d,session,d.get('state','location')):null;
         const population=document.state.location!==d.get('state','location')&&(!options.replay||options.result?.population)?unfoldPopulationAt(d,session,d.get('state','location')):null;
         settleMagicAreas(d,session);
         advancePets(d,session,d.get('state','minute'));
@@ -198,10 +203,11 @@ export class WorldEngine {
         recordBusinessReceipt(d,document.state,{tool:resolved.tool,args,eventId:id,detail});
         if(tool==='check')detail.actionScope={kind:'judgement',healthChanged:false,inventoryChanged:false,feePaid:0,
             note:'仅结算判断或对抗，并履行已引用的协助；未伤人、毁物或制造。不得从骰点虚构这些变化。'};
-        return { patches:d.patches,result:{ok:true,...detail,...(population?{population}:{}),legalProcedureVersion:1,worldEventVersion:WORLD_EVENT_VERSION,npcIntelligenceVersion:INTELLIGENCE_VERSION,...(factionClockRules(session).length?{factionClockVersion:1}:{}),minute:d.get('state','minute'),messages:d.messages,
+        return { patches:d.patches,result:{ok:true,...detail,...(remote?{remote}:{}),...(population?{population}:{}),legalProcedureVersion:1,worldEventVersion:WORLD_EVENT_VERSION,npcIntelligenceVersion:INTELLIGENCE_VERSION,...(factionClockRules(session).length?{factionClockVersion:1}:{}),minute:d.get('state','minute'),messages:d.messages,
             notices:stateNotices(document.state,d.document.state,id=>session.byId.get(id)?.name)} };
     }
     scoped(document){
+        const overlay=remoteEngine(this,document,world=>new WorldEngine(world));if(overlay!==this)return overlay.scoped(document);
         const created=Object.values(document.state.created??{});
         const player={id:'player',name:document.state.player.name,aliases:['玩家','玩家角色'],scope:document.state.location};
         const session=Object.create(this);session.entities=[...this.entities,...created,player];session.resolver=this.resolver.extend([...created,player]);session.byId=session.resolver.entities;return session;
