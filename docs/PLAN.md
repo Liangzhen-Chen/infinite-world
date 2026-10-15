@@ -597,7 +597,7 @@ T28-R1修好新回执undefined规范化并保留严格篡改拒绝，相关31/32
 
 ### T104（A3）已完成：29条法术发布，正式法术121→150，达到指南数量。道9（裴澄）、佛4（季笙）、祭5（苗笙）、巫2（舒绵）、法7与通2（陆青书铺）；符阵、驱邪、守戒、度亡共17条。度亡（ferry）只对在场、无主的低阶汀雾游魂有效：进入“已超度”终态、去向beyond、记入止波寺度亡牌位，不可复活，种群相应扣减；安滩法会与镇窑灯礼七天内阻止对应灵体新生成。32次L2一次全过，0.10820872元；L4均4.58/最低4。build:final不再报法术不足，只剩首领18<40。遗留：角色没有精神状态，护界吸收精神干扰与观灵减压不生效；需要玩家自有容器的役灵与空间操作未选。
 
-### T105（A4） W4-B2 首领第二批。结果：新增12个可交锋首领，其中3名智能存在可记忆、交涉和拒绝。可改world/design/w4-b2.mjs、world/drafts/w4-b2/、仿w4-b1的内容/发布入口、world/meta/bosses.json、tests/w4-b2.test.mjs及本批平衡报告；不改法术/人物目录，可与A1–A3零模型准备并行，发布账串行。验收node --test "tests/boss*.test.mjs" "tests/w4-*.test.mjs" tests/combat.test.mjs；node tools/m4-balance.mjs --catalog world/meta/bosses.json --out world/design/w4-b2-balance.json；CORE。L2预计25–40次，≤0.6元；约1.5小时。
+### T105–T106 已完成（见PROGRESS）。原 T105（A4） W4-B2 首领第二批。结果：新增12个可交锋首领，其中3名智能存在可记忆、交涉和拒绝。可改world/design/w4-b2.mjs、world/drafts/w4-b2/、仿w4-b1的内容/发布入口、world/meta/bosses.json、tests/w4-b2.test.mjs及本批平衡报告；不改法术/人物目录，可与A1–A3零模型准备并行，发布账串行。验收node --test "tests/boss*.test.mjs" "tests/w4-*.test.mjs" tests/combat.test.mjs；node tools/m4-balance.mjs --catalog world/meta/bosses.json --out world/design/w4-b2-balance.json；CORE。L2预计25–40次，≤0.6元；约1.5小时。
 
 ### T106（A5） W4-B3 首领第三批。结果：再增12个、含3名智能存在，使首领达到40个、智能存在达到8名。文件与A4对应换w4-b3，另可更新world/drafts/w4/ecology.json；接A4，同一bosses.json串行。验收node --test "tests/boss*.test.mjs" "tests/w4-*.test.mjs" tests/combat.test.mjs；node tools/m4-balance.mjs --catalog world/meta/bosses.json --out world/design/w4-b3-balance.json；node tools/w4-audit-ecology.mjs；CORE。保留单人≤15%、标准五人55%–65%的多种子平衡及20种子三年生态要求。L2预计25–40次，≤0.6元；约2小时，模拟后台运行。
 

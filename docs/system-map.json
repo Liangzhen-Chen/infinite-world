@@ -21,7 +21,7 @@
   "modules": 158,
   "advance": 39,
   "tools": 25,
-  "verbs": 13,
+  "verbs": 14,
   "subscribers": 8,
   "interactionRules": 24,
   "effectKinds": 11,
@@ -279,7 +279,7 @@
     "sim_environment",
     "sim_society"
    ],
-   "files": 86
+   "files": 91
   },
   {
    "id": "data_assets",
@@ -321,7 +321,7 @@
    "effects": [],
    "tools": [],
    "readBy": [],
-   "files": 21
+   "files": 23
   },
   {
    "id": "kernel_engine",
@@ -524,12 +524,13 @@
    "modules": [
     "server-plugin/traits.mjs"
    ],
-   "lines": 127,
+   "lines": 147,
    "stateWrites": [],
    "stateReads": [
     "creatures",
     "inventory",
     "minute",
+    "npcs",
     "records"
    ],
    "recordWrites": [],
@@ -538,6 +539,7 @@
    ],
    "rules": [],
    "world": [
+    "bosses",
     "locations",
     "monsters"
    ],
@@ -589,7 +591,7 @@
    "modules": [
     "server-plugin/world-events.mjs"
    ],
-   "lines": 138,
+   "lines": 140,
    "stateWrites": [
     "records"
    ],
@@ -619,7 +621,7 @@
    "modules": [
     "server-plugin/standing.mjs"
    ],
-   "lines": 136,
+   "lines": 137,
    "stateWrites": [
     "records"
    ],
@@ -649,6 +651,7 @@
       "gift",
       "harm",
       "help",
+      "pact",
       "steal"
      ]
     }
@@ -1033,7 +1036,7 @@
     "server-plugin/boss-cognition.mjs",
     "server-plugin/boss-negotiation.mjs"
    ],
-   "lines": 442,
+   "lines": 451,
    "stateWrites": [
     "created",
     "creatures",
@@ -5468,7 +5471,8 @@
    "organize",
    "breach",
    "author",
-   "deceive"
+   "deceive",
+   "pact"
   ],
   "verbs": [
    "author",
@@ -5481,6 +5485,7 @@
    "help",
    "learn",
    "organize",
+   "pact",
    "rumor",
    "steal",
    "trade"
@@ -5575,6 +5580,7 @@
      "gift",
      "harm",
      "help",
+     "pact",
      "steal"
     ]
    },
@@ -5635,6 +5641,9 @@
    ],
    "organize": [
     "server-plugin/organizations.mjs"
+   ],
+   "pact": [
+    "server-plugin/boss-negotiation.mjs"
    ],
    "rumor": [
     "server-plugin/effects.mjs"
@@ -6408,6 +6417,7 @@
    "gift",
    "harm",
    "help",
+   "pact",
    "steal"
   ],
   "hostileThreshold": -50,
@@ -7645,7 +7655,7 @@
   },
   {
    "dir": "world/design",
-   "files": 86,
+   "files": 91,
    "keys": [],
    "readers": [
     "server-plugin/civic.mjs",
@@ -7731,6 +7741,7 @@
     "tools/w3-wave-score.mjs",
     "tools/w4-audit-ecology.mjs",
     "tools/w4-b1-content.mjs",
+    "tools/w4-boss-content.mjs",
     "tools/w4-content.mjs",
     "tools/w4-draft.mjs",
     "tools/w4-publish.mjs",
@@ -7743,7 +7754,7 @@
   },
   {
    "dir": "world/drafts",
-   "files": 21,
+   "files": 23,
    "keys": [],
    "readers": [],
    "tools": [
@@ -7819,6 +7830,7 @@
     "tools/w3-wave-score.mjs",
     "tools/w4-audit-ecology.mjs",
     "tools/w4-b1-content.mjs",
+    "tools/w4-boss-content.mjs",
     "tools/w4-draft.mjs",
     "tools/w4-publish.mjs",
     "tools/w4-repair.mjs",
@@ -7838,6 +7850,7 @@
    ],
    "readers": [
     "server-plugin/agriculture.mjs",
+    "server-plugin/boss-negotiation.mjs",
     "server-plugin/bosses.mjs",
     "server-plugin/catalog.mjs",
     "server-plugin/civic.mjs",
@@ -8105,6 +8118,7 @@
     "tools/w3-trades-review.mjs",
     "tools/w3-trades.mjs",
     "tools/w3-wave-score.mjs",
+    "tools/w4-boss-content.mjs",
     "tools/w4-content.mjs",
     "tools/w4-publish.mjs",
     "tools/w5-content.mjs",
@@ -8715,6 +8729,7 @@
    "readers": [
     "base_events",
     "base_standing",
+    "base_traits",
     "nar_consistency",
     "sim_agriculture",
     "sim_environment",
@@ -9102,7 +9117,7 @@
    "id": "boss",
    "name": "首领 / 巢穴",
    "file": "world/meta/bosses.json",
-   "count": 20,
+   "count": 40,
    "required": [
     "id",
     "name",
@@ -9384,6 +9399,7 @@
      "means": "怪物聚居地：社会立场、治理、舆论",
      "pattern": "monsterSociety",
      "modules": [
+      "server-plugin/boss-negotiation.mjs",
       "server-plugin/governance.mjs",
       "server-plugin/monster-society.mjs",
       "server-plugin/public-opinion.mjs",
@@ -9393,6 +9409,7 @@
      ],
      "systems": [
       "base_standing",
+      "sim_boss",
       "sim_society",
       "ui_scene"
      ]
@@ -11477,10 +11494,11 @@
    "recordReads": [],
    "rules": [],
    "world": [
-    "items"
+    "items",
+    "locations"
    ],
    "worldDirs": [],
-   "lines": 128
+   "lines": 137
   },
   "server-plugin/bosses.mjs": {
    "system": "sim_boss",
@@ -14253,7 +14271,7 @@
     "locations"
    ],
    "worldDirs": [],
-   "lines": 136
+   "lines": 137
   },
   "server-plugin/state-notices.mjs": {
    "system": "ui_scene",
@@ -14377,6 +14395,7 @@
     "creatures",
     "inventory",
     "minute",
+    "npcs",
     "records"
    ],
    "recordWrites": [],
@@ -14385,13 +14404,14 @@
    ],
    "rules": [],
    "world": [
+    "bosses",
     "locations",
     "monsters"
    ],
    "worldDirs": [
     "meta"
    ],
-   "lines": 127
+   "lines": 147
   },
   "server-plugin/ui-affairs.mjs": {
    "system": "ui_server",
@@ -14803,7 +14823,7 @@
    "rules": [],
    "world": [],
    "worldDirs": [],
-   "lines": 138
+   "lines": 140
   },
   "server-plugin/world-registry.mjs": {
    "system": "kernel_storage",
