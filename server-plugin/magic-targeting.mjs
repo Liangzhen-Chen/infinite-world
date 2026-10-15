@@ -1,3 +1,4 @@
+import {legalCodeAt} from './law-codes.mjs';
 import {digest}from'./storage.mjs';
 // This boundary consumes trusted engine facts, never model-supplied coordinates.
 export function validateTargeting(catalog){
@@ -26,7 +27,7 @@ export function assertMagicTargeting(d,engine,catalog,args,target){
  }
  if(t.permit){
   const r=d.get('state','records',args.permit),location=d.get('state','location');
-  const code=engine.rules.law?.codes.find(c=>c.locations.includes(location));
+  const code=legalCodeAt(engine,location,d.get('state'));
   const delegated=code?.magicAuthorities?.some(a=>a.npc===r?.grantor&&a.locations.includes(location)&&a.actions.includes(t.permit));
   const receipt=r?.sourceEvent&&d.get('state','records',`magic_permission_source:${r.sourceEvent}`);
   const issued=r?.sourceType==='magic_permit'&&receipt&&digest(r)===digest(receipt.permission)&&r.law===code?.id&&r.createdAt<=now;

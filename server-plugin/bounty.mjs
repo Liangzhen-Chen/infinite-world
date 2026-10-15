@@ -1,4 +1,5 @@
 import {lawAuthorities} from './entity-view.mjs';
+import {legalCodes,legalCodeAt,legalCodeById,legalCooperation} from './law-codes.mjs';
 // Wanted notices, fugitives, bounty hunters and the bribery space of the codes (guide 3.12).
 // A judged-but-absent offender, a jail-breaker, a defaulting debtor or an exposed
 // corrupt officer becomes `wanted:<case>` (category legal_wanted). The notice covers
@@ -28,11 +29,11 @@ function attribute(engine,state,id,key){return id==='player'?state.player.attrib
 function level(engine,state,id){return (id==='player'?state.player.level:state.npcs[id]?.level??engine.byId.get(id)?.level)??1;}
 
 export const lawRules=engine=>engine.rules.law??{};
-export const codeById=(engine,id)=>lawRules(engine).codes?.find(c=>c.id===id)??null;
-export const codeAt=(engine,location)=>lawRules(engine).codes?.find(c=>c.locations.includes(location))??null;
+export const codeById=legalCodeById;
+export const codeAt=legalCodeAt;
 const polity=(engine,law)=>lawRules(engine).polities?.find(p=>p.law===law)??null;
-export function wantedScope(engine,law){const scope=new Set([law]);for(const c of polity(engine,law)?.cooperates??[])if(codeById(engine,c))scope.add(c);return [...scope];}
-export function enforcersOf(engine,law,state={}){const c=codeById(engine,law);return c?[...new Set([...lawAuthorities(engine,state,c),...(polity(engine,law)?.guards??[]).filter(id=>!dismissed(state,id)&&state.npcs?.[id]?.status!=='死亡')])]:[];}
+export function wantedScope(engine,law,state={}){const code=codeById(engine,law,state);if(!code)return[];return legalCodes(engine.world,state).filter(c=>legalCooperation(engine,state,code,c).notices).map(c=>c.id);}
+export function enforcersOf(engine,law,state={}){const c=codeById(engine,law,state);return c?[...new Set([...lawAuthorities(engine,state,c),...(polity(engine,law)?.guards??[]).filter(id=>!dismissed(state,id)&&state.npcs?.[id]?.status!=='死亡')])]:[];}
 export const dismissed=(state,npc)=>state.records?.[`legal_dismissal:${npc}`]?.category==='legal_dismissal';
 export function integrityOf(engine,npc){
     for(const p of lawRules(engine).polities??[])if(p.integrity?.[npc]!==undefined)return p.integrity[npc];
@@ -42,7 +43,7 @@ export const activeWanted=state=>Object.values(state.records??{}).filter(r=>r?.c
 export function wantedOfCase(state,caseId){const id=state.records?.[caseId]?.wanted,w=id&&state.records[id];return w?.category==='legal_wanted'&&w.status===ACTIVE?w:null;}
 export const activeHold=state=>Object.values(state.records??{}).find(r=>r?.category==='legal_custody'&&r.reason==='到案'&&r.status==='生效')??null;
 // Whether the notice has reached this place, and whether this person knows of it.
-export function wantedReachedAt(engine,w,location,minute){const code=codeAt(engine,location);return Boolean(code&&w.scope.includes(code.id)&&w.reach[code.id]!==undefined&&w.reach[code.id]<=minute);}
+export function wantedReachedAt(engine,w,location,minute,state={}){const code=codeAt(engine,location,state),issuer=codeById(engine,w.law,state);return Boolean(code&&issuer&&legalCooperation(engine,state,issuer,code).extradition&&w.scope.includes(code.id)&&w.reach[code.id]!==undefined&&w.reach[code.id]<=minute);}
 function knows(engine,state,w,npc,minute){
     if(w.scope.some(law=>w.reach[law]<=minute&&enforcersOf(engine,law,state).includes(npc)))return true;
     return (state.npcs[npc]?.memoryStream??[]).some(m=>m.legalCase===w.case&&m.legalStage==='wanted'&&m.minute<=minute);
@@ -74,7 +75,7 @@ function closeQuest(d,w,status,reason,minute,extra={}){
 export function issueWanted(d,engine,row,reason,minute){
     const rules=lawRules(engine).wanted,code=codeById(engine,row.law);if(!rules||!code)return null;
     let id=`wanted:${row.id}`;for(let n=2;d.get(...rec(id));n++)id=`wanted:${row.id}:${n}`;
-    const scope=wantedScope(engine,code.id),reach={};
+    const scope=wantedScope(engine,code.id,d.get('state')),reach={};
     for(const law of scope){
         let travel=0;
         if(law!==code.id){try{travel=engine.route(code.court,codeById(engine,law).court,'walk',minute,d.document.randomSeed).minutes;}catch{continue;}}
@@ -172,7 +173,10 @@ export function advanceWanted(d,engine,after){
     for(const w of activeWanted(d.get('state'))){
         const row=d.get(...rec(w.case));
         if(!row||['已结案','服役中','已撤案','已到案'].includes(row.status)||row.appeal?.outcome==='overturned'){closeWanted(d,engine,w,'已销案',row?.status==='已撤案'?'案件撤销':'案件已结或改判',after);continue;}
-        relay(d,engine,w,after);
+        const scope=wantedScope(engine,w.law,d.get('state')),reach={...w.reach};
+        for(const law of scope)if(reach[law]===undefined){try{reach[law]=after+(rules.relayBaseMinutes??60)+engine.route(codeById(engine,w.law).court,codeById(engine,law).court,'walk',after,d.document.randomSeed).minutes;}catch{}}
+        if(scope.some(law=>!w.scope.includes(law)))save(d,{...w,scope:[...new Set([...w.scope,...scope])],reach});
+        relay(d,engine,d.get(...rec(w.id)),after);
         if(w.subject==='player')recognise(d,engine,rules,d.get(...rec(w.id)),after);
     }
 }
@@ -191,7 +195,7 @@ function issue(d,engine,rules,after){
 function relay(d,engine,w,after){
     let notified=w.notified;
     for(const law of w.scope){
-        if(notified.includes(law)||!(w.reach[law]<=after))continue;
+        if(notified.includes(law)||!(w.reach[law]<=after)||!legalCooperation(engine,d.get('state'),codeById(engine,w.law),codeById(engine,law)).notices)continue;
         const code=codeById(engine,law);notified=[...notified,law];
         for(const npc of enforcersOf(engine,law,d.get('state'))){
             if(!d.get('state','npcs',npc)||dismissed(d.get('state'),npc))continue;
@@ -206,11 +210,11 @@ function recognise(d,engine,rules,w,after){
     const state=d.get('state'),location=state.location,code=codeAt(engine,location);
     if(w.pending&&w.pending.at<=after){
         const officer=w.pending.officer,actor=state.npcs[officer],pending=w.pending;w={...w,pending:null};save(d,w);
-        if(!activeHold(state)&&location===pending.location&&actor&&!dead(actor)&&!dismissed(state,officer)&&!w.silenced.includes(officer)){
+        if(wantedReachedAt(engine,w,location,after,state)&&!activeHold(state)&&location===pending.location&&actor&&!dead(actor)&&!dismissed(state,officer)&&!w.silenced.includes(officer)){
             d.set(['state','npcs',officer,'location'],location);holdPlayer(d,engine,d.get(...rec(w.id)),{captor:officer,location,minute:after});return;
         }
     }
-    if(!code||!wantedReachedAt(engine,w,location,after)||activeHold(state)||w.pending)return;
+    if(!code||!wantedReachedAt(engine,w,location,after,state)||activeHold(state)||w.pending)return;
     const last=w.sightings.filter(s=>s.location===location).at(-1);if(last&&after-last.minute<(rules.recognitionCooldownMinutes??360))return;
     const dc=(rules.recognitionDifficulty??12)+mod(state.player.attributes?.['魅力']);
     for(const npc of Object.keys(state.npcs).sort()){
@@ -275,7 +279,7 @@ function pursue(d,engine,w,at){
     const where=w.subject==='player'?state.location:state.npcs[w.subject]?.location;
     if(w.subject==='player'&&(activeHold(state)||state.player.status==='死亡'))return;
     if(w.subject!=='player'&&(dead(state.npcs[w.subject])||w.captive))return;
-    if(!wantedReachedAt(engine,w,where,at)){save(d,{...w,history:[...w.history,{kind:'追踪无果',by:hunter,reason:'目标不在通缉范围',minute:at}]});return;}
+    if(!wantedReachedAt(engine,w,where,at,d.get('state'))){save(d,{...w,history:[...w.history,{kind:'追踪无果',by:hunter,reason:'目标不在通缉范围',minute:at}]});return;}
     const lead=w.sightings.some(s=>s.location===where&&at-s.minute<=DAY)?rules.leadBonus??0:0;
     const track=d20(d.document,w.id,hunter,at,'track')+mod(attribute(engine,state,hunter,'智力'))+Math.floor(level(engine,state,hunter)/3)+lead;
     if(track<(rules.trackDifficulty??14)){save(d,{...w,history:[...w.history,{kind:'追踪无果',by:hunter,minute:at}]});return;}

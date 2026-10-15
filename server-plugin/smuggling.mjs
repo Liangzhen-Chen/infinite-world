@@ -1,3 +1,4 @@
+import {legalCodeAt} from './law-codes.mjs';
 import {transferItems} from './items.mjs';
 import {integrityOf,bribePrice,dismissed} from './bounty.mjs';
 import {registerIncident,recordExposedCorruption} from './law.mjs';
@@ -66,7 +67,7 @@ export function inspectSmuggling(d,engine,route,eventId){
                     d.set(path(`legal_bribe:${tag}`),{category:'legal_bribe',briber:'player',recipient:guard,coins:row.bribe,shipment:row.id,minute:d.get('state','minute'),location:cp.location,effects:exposed?[]:['放行'],discovered:exposed});
                     if(exposed){
                         incident=registerIncident(d,engine,{victim:guard,offense:'bribery',value:row.bribe,witnesses:observers,eventId:`${tag}_bribery`,location:cp.location,optional:true});
-                        const law=engine.rules.law.codes.find(c=>c.locations.includes(cp.location));
+                        const law=legalCodeAt(engine,cp.location,d.get('state'));
                         if(law)corruption=recordExposedCorruption(d,engine,{target:guard,law:law.id,offer:row.bribe,witnesses:observers,eventId:`${tag}_corruption`,location:cp.location}).corruption;
                     }
                     passed=!exposed;

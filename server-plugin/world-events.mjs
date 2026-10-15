@@ -133,7 +133,7 @@ export function publishTransitionEvent(d,engine,event){
 export const RUMOR_WEIGHT=10;
 const minor=(engine,state,id)=>{const base=engine.byId.get(id),now=state.npcs?.[id];return Boolean(base?.flags?.minor||base?.minor||base?.age<18||now?.age<18);};
 export function eventRumorId(engine,state,e){
-    if(!e||e.legacy||!e.witnesses?.length||!['harm','steal','help','gift'].includes(e.verb))return null;
+    if(!e||e.legacy||!e.witnesses?.length||!['harm','steal','help','gift'].includes(e.verb)&&!e.tags?.includes('npc_crime'))return null;
     if(Math.abs(eventWeight(e))<RUMOR_WEIGHT||[e.actor,e.target].some(id=>minor(engine,state,id)))return null;
     return `rumor_event:${e.id}`;
 }
