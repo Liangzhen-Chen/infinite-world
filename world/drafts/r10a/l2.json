@@ -239,10 +239,100 @@
             "latencyMs": 3793.8871999999997,
             "timestamp": "2026-10-15T18:23:21.356Z"
           }
+        },
+        {
+          "hash": "ef67850900416dc631e056fcb71e0edfdafd1e245601afbab2a60a70cfc5d8b5",
+          "revision": 2,
+          "result": {
+            "contradictions": [
+              {
+                "quote": "矿点先看本地登记的矿产，其次看矿区专表，最后按地貌取默认储量",
+                "field": "locations",
+                "severity": "硬事实",
+                "reason": "正文将矿区专表（locations）置于本地登记矿产之后、地貌默认储量之前，但 locations 字段仅含 site_ms_ll_adit 的登记项，未体现其为独立于本地登记的中间层级；且正文未说明何谓“本地登记”与 locations 的对应关系，与结构字段的归属层级不一致。"
+              },
+              {
+                "quote": "裂炉营矿口在矿区专表里登记的所有者是营头牙钺",
+                "field": "locations.site_ms_ll_adit.owner",
+                "severity": "硬事实",
+                "reason": "正文称所有者为“营头牙钺”，结构字段 owner 为 npc_ms_ll_yayue，未给出该 NPC 名称与“营头牙钺”的对应依据，存在归属指称不一致。"
+              },
+              {
+                "quote": "有主的矿点须由登记的所有者本人在场、当面同意，才签发开采许可",
+                "field": "permit",
+                "severity": "软问题",
+                "reason": "正文规定有主矿点须所有者本人同意才签发许可，但 permit 字段未包含任何与所有者同意相关的条件或标记，措辞上未区分有主与无主矿点的许可来源，存在规则表述与结构化许可设置之间的含糊衔接。"
+              },
+              {
+                "quote": "没有许可挖有主的矿即为盗采，按矿点当时所属的法域处理",
+                "field": "jurisdiction",
+                "severity": "软问题",
+                "reason": "正文表述“按矿点当时所属的法域处理”，而 jurisdiction 强调“按矿点当时实际所属的法域处理”，措辞略有出入，未明确“所属”即“实际所属”，属软性表述不一致。"
+              }
+            ]
+          },
+          "usage": {
+            "label": "R10A:L2:u15_mining:3",
+            "model": "deepseek-flash",
+            "thinking": "disabled",
+            "usage": {
+              "prompt_tokens": 630,
+              "completion_tokens": 380,
+              "total_tokens": 1010,
+              "prompt_tokens_details": {
+                "cached_tokens": 128
+              },
+              "prompt_cache_hit_tokens": 128,
+              "prompt_cache_miss_tokens": 502
+            },
+            "costUpperYuan": 0.00404912,
+            "cumulativeUpperYuan": 0.02701568,
+            "latencyMs": 3101.5508,
+            "timestamp": "2026-10-15T18:41:32.845Z"
+          }
+        },
+        {
+          "hash": "72eefe3c230ef71d58675d32992b237ab8243754496fed74bdf4eb21bd51e1d0",
+          "revision": 2,
+          "result": {
+            "contradictions": [
+              {
+                "quote": "矿点先看该地点自身数据里登记的矿产，没有再看本规则的矿区专表，再没有才按地貌取默认储量",
+                "field": "background.lookupOrder",
+                "severity": "硬事实",
+                "reason": "正文的矿点矿产查找顺序（1.地点自身数据→2.矿区专表→3.地貌默认）与结构化背景中的引擎查找顺序（1.地点数据 minerals→2.本规则 locations[地点]→3.terrain 按地貌标签）不一致，正文把 locations 字段误作矿区专表，且缺失 locations 这一层。"
+              },
+              {
+                "quote": "裂炉营矿口在矿区专表里登记的所有者是营头牙钺",
+                "field": "locations.site_ms_ll_adit[0].owner",
+                "severity": "硬事实",
+                "reason": "结构化字段中 site_ms_ll_adit 的 owner 为 npc_ms_ll_yayue 且矿区专表指 locations，但正文称其在矿区专表登记所有者，与背景中 locations[地点] 为地点自身数据的定义相矛盾（location 与矿区专表并非同一字段）。"
+              }
+            ]
+          },
+          "usage": {
+            "label": "R10A:L2:u15_mining:4",
+            "model": "deepseek-flash",
+            "thinking": "disabled",
+            "usage": {
+              "prompt_tokens": 762,
+              "completion_tokens": 277,
+              "total_tokens": 1039,
+              "prompt_tokens_details": {
+                "cached_tokens": 128
+              },
+              "prompt_cache_hit_tokens": 128,
+              "prompt_cache_miss_tokens": 634
+            },
+            "costUpperYuan": 0.00348912,
+            "cumulativeUpperYuan": 0.0305048,
+            "latencyMs": 2061.6551000000004,
+            "timestamp": "2026-10-15T18:41:51.516Z"
+          }
         }
       ],
       "passed": false,
-      "hash": "7683a64f69366f789a11001103bda573f26b3396a48eccb984095cf81007a6bb"
+      "hash": "72eefe3c230ef71d58675d32992b237ab8243754496fed74bdf4eb21bd51e1d0"
     },
     {
       "id": "u15_autonomy_text",

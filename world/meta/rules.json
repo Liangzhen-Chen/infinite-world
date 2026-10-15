@@ -12092,6 +12092,14 @@
       "minutes": 60,
       "wear": 2,
       "difficulty": 15,
+      "check": {
+        "attribute": "力量",
+        "skill": "skill_life_17_core"
+      },
+      "permit": {
+        "defaultMinutes": 1440,
+        "maxMinutes": 43200
+      },
       "terrain": [
         {
           "tag": "stone",

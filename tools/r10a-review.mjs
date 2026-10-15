@@ -17,7 +17,6 @@ const textOf=value=>typeof value==='string'?value:JSON.stringify(value);
 const NUMBER_CHECKS={
  u13_notables:v=>[v.minFame,v.removal.minFame,v.registry.decisionDays,v.registry.reviewEveryDays,v.rights.culturalQuotaD],
  u13_promotion:v=>{const r=v.steps[0].requires,o=v.steps[0].effects.offices.office_village_head;return[r.population,r.housing,r.industries,r.facilities,r.caseWindowDays,r.maxCases,v.approver.decisionDays,v.checkEveryDays,o.monthlyBudgetCopper];},
- u15_mining:v=>[v.minutes/60===1?'一小时':v.minutes,v.difficulty,v.terrain[0].minerals[0].reserve,v.terrain[0].minerals[0].recoveryDays,v.terrain[1].minerals[0].reserve,v.terrain[1].minerals[0].recoveryDays,v.locations.site_ms_ll_adit[0].reserve],
 };
 const CN={1:'一',2:'两'};
 export function l1Entries(entries,{world,blocklist}){
@@ -38,6 +37,12 @@ export function l1Entries(entries,{world,blocklist}){
   if(e.kind==='item'&&(e.value.id!==e.target[1]||!world.locations.some(l=>l.id===e.value.origin)))errors.push(`${e.id}:物品ID或产地无效`);
  }
  const mining=entries.find(e=>e.id==='u15_mining')?.value;
+ // The mining prose cites its fields instead of restating numbers (revision 2).
+ if(mining){
+  if(/[0-9０-９]/.test(mining.text+mining.jurisdiction))errors.push('u15_mining:正文不应重复结构数值');
+  if(!world.skills?.some(k=>k.id===mining.check?.skill)||typeof mining.check?.attribute!=='string')errors.push('u15_mining:检定属性或技能无效');
+  const p=mining.permit;if(!Number.isSafeInteger(p?.defaultMinutes)||!Number.isSafeInteger(p?.maxMinutes)||p.defaultMinutes<1||p.defaultMinutes>p.maxMinutes)errors.push('u15_mining:许可期限字段无效');
+ }
  if(mining)for(const [loc,rows]of Object.entries(mining.locations??{}))for(const r of rows)if(r.owner&&!world.npcs.some(n=>n.id===r.owner))errors.push(`u15_mining:矿主不存在 ${r.owner}`);
  return{passed:!errors.length,entries:entries.length,errors};
 }
@@ -56,8 +61,10 @@ export async function reviewR10A({root=DRAFTS,client=null,limitYuan=1}={}){
   if(!r){r={id:entry.id,attempts:[]};reviews.rows.push(r);}
   if(r.passed&&r.hash===hash)continue;
   // One review plus at most one rerun after a model veto, per entry.
-  if(r.attempts.length>=2)continue;
-  const attempt={hash};
+  // A rewrite decided by the main session is a new revision with its own review and one rerun.
+  const revision=entry.revision??1;
+  if(r.attempts.filter(a=>(a.revision??1)===revision).length>=2)continue;
+  const attempt={hash,revision};
   try{
    const response=await client.generate({max_tokens:900,response_format:{type:'json_object'},messages:[{role:'system',content:SYSTEM},{role:'user',content:JSON.stringify({rule:entry.value,background:entry.context??null})}]},`R10A:L2:${entry.id}:${r.attempts.length+1}`);
    budget.calls=(budget.calls??0)+1;
@@ -97,12 +104,13 @@ export async function publishR10A({root='world',publish=false}={}){
  const locations=JSON.parse(await fs.readFile(path.join(root,'geo/locations.json'),'utf8'));
  const npcs=JSON.parse(await fs.readFile(path.join(root,'people/baseline.json'),'utf8'));
  const blocklist=JSON.parse(await fs.readFile(path.join(root,'meta/blocklist.json'),'utf8'));
- const l1=l1Entries(entries,{world:{factions,locations:Array.isArray(locations)?locations:locations.locations,npcs},blocklist});
+ const skills=JSON.parse(await fs.readFile(path.join(root,'meta/skills.json'),'utf8'));
+ const l1=l1Entries(entries,{world:{factions,skills,locations:Array.isArray(locations)?locations:locations.locations,npcs},blocklist});
  if(!l1.passed)throw Error(`L1 未通过：${l1.errors.join('；')}`);
  const withheld=[],ready=[];
  for(const e of entries){const r=l2.rows.find(x=>x.id===e.id);
   if(r?.passed&&r.hash!==hashContent(e.value))throw Error(`审核后内容已改变：${e.id}`);
-  if(!r?.passed){if(r?.attempts?.length>=2&&r.hash===hashContent(e.value)){withheld.push(e.id);continue;}throw Error(`L2 未完成：${e.id}`);}
+  if(!r?.passed){if(r?.attempts?.filter(a=>(a.revision??1)===(e.revision??1)).length>=2&&r.hash===hashContent(e.value)){withheld.push(e.id);continue;}throw Error(`L2 未完成：${e.id}`);}
   ready.push(e);}
  const scores=l4.rows.flatMap(r=>r.scores),average=scores.reduce((a,b)=>a+b,0)/scores.length;
  if(l4.rows.length<Math.min(10,entries.length)||average<4||Math.min(...scores)<3||l4.rows.some(r=>!entries.some(e=>e.id===r.id)))throw Error('L4 未达随机10条均分4、单项3');

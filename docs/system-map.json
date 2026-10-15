@@ -1674,7 +1674,7 @@
     "server-plugin/extraction.mjs",
     "server-plugin/smuggling.mjs"
    ],
-   "lines": 2847,
+   "lines": 2850,
    "stateWrites": [
     "crafted",
     "itemInstances",
@@ -2402,7 +2402,7 @@
     "extension/ambient-audio.mjs",
     "extension/state-read.mjs"
    ],
-   "lines": 1329,
+   "lines": 1331,
    "stateWrites": [],
    "stateReads": [],
    "recordWrites": [],
@@ -10942,6 +10942,7 @@
    "server-plugin/checks.mjs",
    "server-plugin/compat/v2-phase1-engine.mjs",
    "server-plugin/engine.mjs",
+   "server-plugin/extraction.mjs",
    "server-plugin/manufacturing.mjs",
    "server-plugin/npc-autonomy.mjs",
    "server-plugin/sites.mjs",
@@ -15898,6 +15899,7 @@
    "recordWrites": [],
    "recordReads": [],
    "rules": [
+    "check",
     "extraction",
     "wildlife"
    ],
@@ -15905,7 +15907,7 @@
     "monsters"
    ],
    "worldDirs": [],
-   "lines": 101
+   "lines": 104
   },
   "server-plugin/facilities.mjs": {
    "system": "sim_society",
@@ -20517,7 +20519,7 @@
    "rules": [],
    "world": [],
    "worldDirs": [],
-   "lines": 41
+   "lines": 43
   },
   "extension/tools.mjs": {
    "system": "ui_tools",

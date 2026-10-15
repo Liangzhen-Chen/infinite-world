@@ -76,7 +76,7 @@ test('展开的远方郡按各自统治政体的九省法典立案：王国寒�
   const code=legalCodeAt(f.engine,district,f.doc.state);assert.equal(code.template,template);f.place(code.officers[0],district);
   const out=await f.mine(district,county);
   assert.equal(out.success,true);assert.equal(out.illegal,true);assert.equal(out.jurisdiction.law,code.id);assert.equal(out.jurisdiction.polity,polity);
-  const row=f.doc.state.records[out.case];assert.equal(row.law,code.id);assert.equal(row.offense,'illegal_mining');assert.equal(row.victim,sk.seat);
+  const row=f.doc.state.records[out.case];assert.equal(row.law,code.id);assert.equal(row.offense,'illegal_mining');assert.equal(row.status,'已报案');assert.ok(row.witnesses.includes(code.officers[0]));assert.equal(row.victim,sk.seat);
   fines[polity]=sentence(f,out.case);
  }
  const ore=world.items.find(i=>i.id===ORE).basePrice;

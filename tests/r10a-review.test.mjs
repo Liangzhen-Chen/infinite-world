@@ -14,7 +14,7 @@ test('正式世界只含L2通过的审核原文；L2两次仍有硬事实的条�
  for(const e of entries){
   const r=l2.rows.find(x=>x.id===e.id);
   if(r.passed)assert.deepEqual(at(e.target),e.value,e.id);
-  else{assert.equal(r.attempts.length,2,e.id);assert.notDeepEqual(at(e.target),e.value,e.id);}
+  else{assert.equal(r.attempts.filter(a=>(a.revision??1)===(e.revision??1)).length,2,e.id);assert.notDeepEqual(at(e.target),e.value,e.id);}
  }
  assert.equal(world.rules.law.activityPenalties.illegal_mining,undefined);
 });
