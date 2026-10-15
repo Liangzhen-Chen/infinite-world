@@ -13,8 +13,14 @@ import {applyPatches} from '../server-plugin/storage.mjs';
 import {bossCounter} from '../server-plugin/bosses.mjs';
 import {affinityMultipliers} from '../server-plugin/creature-nature.mjs';
 import {compatibleWorld,planWorldUpgrade} from '../server-plugin/world-upgrade.mjs';
+import {buildBatch,withoutSites} from '../tools/w5-sites.mjs';
+import {sites,priorNoMechanics} from '../world/design/w5-sites-1.mjs';
 
-const world=await loadWorld(),publication=await readMixedPublication(),legacy=JSON.parse(await fs.readFile('tests/fixtures/legacy/seed.json','utf8'));
+const loaded=await loadWorld(),publication=await readMixedPublication(),legacy=JSON.parse(await fs.readFile('tests/fixtures/legacy/seed.json','utf8'));
+// T113 completed this batch's five places later. Replay T154 before those
+// patches, retaining every unrelated location and later batch unchanged.
+const patches=buildBatch(sites.filter(s=>s.existing&&batchIds.places.includes(s.id)),loaded).patches;
+const world=withoutSites(loaded,{locations:[],routes:[],patches},priorNoMechanics);
 const published=world.monsters.filter(m=>batchIds.species.includes(m.id)),held=publication.held;
 const newIds={monsters:new Set(batchIds.species),items:new Set(batchIds.items),locations:new Set(batchIds.places),habitats:new Set(batchIds.habitats),routes:new Set(places.map(p=>p.route.id))};
 const before=structuredClone(world);
@@ -167,9 +173,20 @@ test('隔离正式发布与重发零写；候选与L4篡改在写入前拒绝',a
  for(const folder of ['meta','people','geo','lore'])await fs.cp(path.resolve('world',folder),path.join(root,folder),{recursive:true});
  await fs.mkdir(path.join(root,'drafts'));await fs.cp(path.resolve('world/drafts/creatures-mixed'),path.join(root,'drafts/creatures-mixed'),{recursive:true});
  const write=async(file,value)=>fs.writeFile(path.join(root,file),JSON.stringify(value));
- await write('meta/monsters.json',before.monsters);await write('meta/items.json',before.items);await write('geo/locations.json',before.locations);await write('geo/routes.json',before.routes);await write('meta/rules.json',before.rules);
+ // This fixture writes hydrated rows back to source files; biome metadata
+ // stays exclusively in its original file, as it does in the real world.
+ const biomes=JSON.parse(await fs.readFile(path.join(root,'geo/biomes.json'),'utf8'));
+ const locations=before.locations.map(row=>{const out={...row};for(const key of Object.keys(biomes.locations?.[row.id]??{}))delete out[key];return out;});
+ await write('meta/monsters.json',before.monsters);await write('meta/items.json',before.items);await write('geo/locations.json',locations);await write('geo/routes.json',before.routes);await write('meta/rules.json',before.rules);
  const preview=await publishMixed({root});assert.equal(preview.published,false);assert.equal(preview.changed.length,5);
  await publishMixed({root,publish:true});assert.deepEqual(norm(await loadWorld(root)),norm(world));assert.deepEqual((await publishMixed({root,publish:true})).changed,[]);
+ const stored=JSON.parse(await fs.readFile(path.join(root,'geo/locations.json'),'utf8'));
+ for(const row of stored)for(const key of Object.keys(biomes.locations?.[row.id]??{}))assert.equal(Object.hasOwn(row,key),false,`${row.id}.${key}`);
+ // Conflicting sources are still rejected; the publisher must preserve the
+ // source split rather than make the loader accept duplicate biome fields.
+ const originalLocations=await fs.readFile(path.join(root,'geo/locations.json'),'utf8'),id=Object.keys(biomes.locations)[0];
+ stored.find(row=>row.id===id).biome=['无名'];await write('geo/locations.json',stored);
+ await assert.rejects(loadWorld(root),/群落数据与地点自带字段重复/);await fs.writeFile(path.join(root,'geo/locations.json'),originalLocations);
  for(const [name,mutate,pattern]of [['candidate.json',r=>r.monsters[0].habits+='异文',/候选/],['batch-0.json',r=>r.l4.wave[0].scores[0]=2,/评分/],['batch-0.json',r=>r.l4.approved=false,/L4/]]){
   const p=path.join(root,'drafts/creatures-mixed',name),original=await fs.readFile(p,'utf8'),r=JSON.parse(original);mutate(r);await fs.writeFile(p,JSON.stringify(r));await assert.rejects(publishMixed({root,publish:true}),pattern);await fs.writeFile(p,original);
  }

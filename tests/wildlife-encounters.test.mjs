@@ -13,6 +13,8 @@ const wood='loc_hw_northwood',field='loc_hw_fields',dock='loc_hw_dock',village='
 // A route through an existing habitat plus a longer alternate road. No catalog changes.
 function setup(kind='present'){
     const world=structuredClone(source);delete world.rules.weather;
+    // These encounter routes replace roads named by flood/disease clocks.
+    delete world.rules.hazardClock;
     const edge=(id,from,to,lengthKm,toll)=>({id,from,to,lengthKm,toll,terrainMultiplier:1,modes:['walk'],closedSeasons:[],risk:0});
     world.routes=[...world.routes.filter(r=>!['route_loc_hw_northwood','route_loc_hw_fields','route_loc_hw_dock'].includes(r.id)),edge('test_wood',village,wood,2,3),edge('test_field',wood,field,2,7),edge('test_dock',village,dock,1,2),edge('test_alternate',dock,field,4,5)];
     const engine=new WorldEngine(world);let c;
@@ -66,7 +68,10 @@ test('绕行从已抵达节点重新计时；返回与观察不会重新抽取�
     assert.equal(bypass.document.state.minute,first.document.state.minute+expected.minutes);assert.equal(bypass.result.cost,expected.cost);
     assert.equal(bypass.document.state.location,dock);assert.doesNotMatch(engine.scene(bypass.document),/看见褐背短鹿/);
     const back=await run(bypass.document,'world_move',{destination:wood},'back');assert.equal(back.result.encounter,null);
-    assert.deepEqual(back.document.state.creatures,first.document.state.creatures);
+    // Other habitats on the detour may yield their own encounter. Returning
+    // to the already checked wood must neither duplicate nor change any actor.
+    assert.deepEqual(back.document.state.creatures,bypass.document.state.creatures);
+    for(const [id,actor]of Object.entries(first.document.state.creatures))assert.deepEqual(back.document.state.creatures[id],actor,id);
     for(let i=0;i<3;i++){
         const observed=await run(back.document,'world_wildlife',{operation:'observe'},`observe${i}`);assert.deepEqual(observed.document,back.document);
     }
