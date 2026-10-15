@@ -44,7 +44,7 @@ export function mergeVillages(world,candidate,{npcAmendments=[],profileAmendment
   if(old&&![before,after,prior].filter(Boolean).some(p=>hashContent(p)===hashContent(old)))throw Error(`已发布聚落补充冲突：${details.id}`);
   profiles[index]=after;profileMap.delete(details.id);
  }
- return {...world,npcs:nextNpcs,residents:merge(world.residents??[],candidate.residents),households:merge(world.households??[],candidate.households),settlementProfiles:merge((world.settlementProfiles??[]).map(p=>profileMap.has(p.id)?p:profiles.find(row=>row.id===p.id)),profiles),locations:merge(world.locations,candidate.locations.map(row=>{const old=world.locations.find(p=>p.id===row.id);return old?.mapHierarchy&&!row.mapHierarchy?{...row,mapHierarchy:structuredClone(old.mapHierarchy)}:row;})),routes:merge(world.routes,candidate.routes)};
+ return {...world,npcs:nextNpcs,residents:merge(world.residents??[],candidate.residents),households:merge(world.households??[],candidate.households),settlementProfiles:merge((world.settlementProfiles??[]).map(p=>profileMap.has(p.id)?p:profiles.find(row=>row.id===p.id)),profiles),locations:merge(world.locations,candidate.locations.map(row=>{const old=world.locations.find(p=>p.id===row.id),next={...row};for(const key of ['mapHierarchy','biome','areaKm2'])if(old?.[key]!==undefined&&next[key]===undefined)next[key]=structuredClone(old[key]);return next;})),routes:merge(world.routes,candidate.routes)};
 }
 export async function publishVillages({root=path.resolve(import.meta.dirname,'../world'),publish=false}={}){
  const world=await loadWorld(root),directory=path.join(root,'drafts/w1/villages'),read=name=>fs.readFile(path.join(directory,`${name}.json`),'utf8').then(JSON.parse);
@@ -87,7 +87,12 @@ export async function publishVillages({root=path.resolve(import.meta.dirname,'..
  if(hasDepth)depthReceipt=await readPublishedNpcDepth({world,worldRoot:root,includeVillages:true});
  const merged=mergeVillages(world,candidate,{npcAmendments,profileAmendments,depthReceipt}),next=profileAmendments.length?withVillageLedgerRules(merged):merged,validation=validateWorld(next,{stage:'engine'});
  if(!validation.ok)throw Error(validation.errors.join('\n'));
- const outputs={...(profileAmendments.length?{'meta/rules.json':next.rules}:{}),'people/baseline.json':next.npcs,'people/residents.json':next.residents,'people/households.json':next.households,'geo/settlements.json':next.settlementProfiles,'geo/locations.json':next.locations,'geo/routes.json':next.routes};
+ // Persist authored source fields, not D1 biome tags or K8 habitats that
+ // loadWorld materializes for runtime consumers.
+ const sourceLocations=new Map(JSON.parse(await fs.readFile(path.join(root,'geo/locations.json'),'utf8')).map(l=>[l.id,l]));
+ const locations=next.locations.map(l=>{const row={...l},source=sourceLocations.get(l.id);for(const key of ['biome','areaKm2'])if(source&&!Object.hasOwn(source,key))delete row[key];return row;});
+ const sourceRules=JSON.parse(await fs.readFile(path.join(root,'meta/rules.json'),'utf8'));
+ const outputs={...(profileAmendments.length?{'meta/rules.json':withVillageLedgerRules({...merged,rules:sourceRules}).rules}:{}),'people/baseline.json':next.npcs,'people/residents.json':next.residents,'people/households.json':next.households,'geo/settlements.json':next.settlementProfiles,'geo/locations.json':locations,'geo/routes.json':next.routes};
  const changed=[];
  for(const [file,value]of Object.entries(outputs)){let before;try{before=JSON.parse(await fs.readFile(path.join(root,file),'utf8'));}catch(e){if(e.code!=='ENOENT')throw e;}if(hashContent(before??null)!==hashContent(value))changed.push(file);}
  if(publish)for(const file of changed)await atomicJSON(path.join(root,file),outputs[file]);
