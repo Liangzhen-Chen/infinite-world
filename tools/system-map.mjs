@@ -147,7 +147,7 @@ const SYSTEMS=[
  {id:'sim_boss',layer:'sim',name:'首领',modules:['bosses.mjs','boss-abilities.mjs','boss-cognition.mjs','boss-negotiation.mjs']},
  {id:'sim_wildlife',layer:'sim',name:'生态',modules:['wildlife.mjs','wildlife-awakening.mjs','wildlife-range.mjs','wildlife-society.mjs','wildlife-migration.mjs','creature-nature.mjs','seasonal-migration.mjs','farm-pests.mjs']},
  {id:'sim_companion',layer:'sim',name:'伙伴',modules:['pets.mjs','summons.mjs']},
- {id:'sim_environment',layer:'sim',name:'环境与地点',modules:['environment.mjs','weather.mjs','location-access.mjs','sites.mjs','regions.mjs']},
+ {id:'sim_environment',layer:'sim',name:'环境与地点',modules:['environment.mjs','weather.mjs','location-access.mjs','sites.mjs','regions.mjs','remote-generation.mjs']},
  {id:'sim_magic',layer:'sim',name:'法术',modules:SERVER.map(f=>f.slice(14)).filter(f=>/^magic(-[\w-]+)?\.mjs$/.test(f))},
  {id:'sim_economy',layer:'sim',name:'经济',modules:['items.mjs','shop.mjs','business.mjs','contracts.mjs','credit.mjs','settlement-trade.mjs','manufacturing.mjs','repair.mjs']},
  {id:'sim_agriculture',layer:'sim',name:'农业',modules:['agriculture.mjs']},

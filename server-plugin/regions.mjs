@@ -16,7 +16,7 @@ function index(world){
 export function regionOf(world,locationId){
     const {byId,places,locations}=index(world),seen=new Set();
     for(let id=locationId;id&&!seen.has(id);id=locations.get(id)?.parent){
-        seen.add(id);const county=byId.get(places.get(id));
+        seen.add(id);const own=locations.get(id)?.region,county=byId.get(places.get(id))??(byId.get(own)?.category==='county'?byId.get(own):null);
         if(county)return{county,province:byId.get(county.province)};
     }
     return null;
