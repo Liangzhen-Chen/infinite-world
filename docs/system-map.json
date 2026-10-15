@@ -2,7 +2,7 @@
  "title": "无限原野系统地图",
  "card": "K9",
  "generatedFrom": {
-  "commit": "refs/heads/t162",
+  "commit": null,
   "method": "运行时导出（注册表、规则表、工具定义、效果表、立场传导表）+ 静态正则扫描（import 图、函数体标识符、state 分区与 records 前缀、rules/world 读取）。静态扫描是近似：经 engine.byId、helper 间接或动态拼接路径的访问不计入。"
  },
  "scanMethods": {
@@ -25,7 +25,7 @@
   "subscribers": 8,
   "interactionRules": 25,
   "effectKinds": 19,
-  "links": 372
+  "links": 373
  },
  "layers": [
   {
@@ -262,7 +262,7 @@
     "sim_society",
     "ui_scene"
    ],
-   "files": 8
+   "files": 9
   },
   {
    "id": "data_design",
@@ -636,7 +636,7 @@
    "modules": [
     "server-plugin/standing.mjs"
    ],
-   "lines": 138,
+   "lines": 141,
    "stateWrites": [
     "records"
    ],
@@ -1600,7 +1600,7 @@
     "server-plugin/tribal-awakening.mjs",
     "server-plugin/elections.mjs"
    ],
-   "lines": 3394,
+   "lines": 3401,
    "stateWrites": [
     "buildings",
     "created",
@@ -1775,7 +1775,7 @@
     "server-plugin/seasonal-hazards.mjs",
     "server-plugin/hazard-calendar.mjs"
    ],
-   "lines": 1000,
+   "lines": 1017,
    "stateWrites": [
     "family",
     "npcs",
@@ -3298,6 +3298,14 @@
     "npc-life.mjs",
     "npc-obligations.mjs",
     "npc-relations.mjs"
+   ]
+  },
+  {
+   "from": "sim_clock",
+   "to": "sim_society",
+   "kind": "call",
+   "labels": [
+    "reputation-registry.mjs"
    ]
   },
   {
@@ -8859,7 +8867,7 @@
   },
   {
    "dir": "world/lore",
-   "files": 8,
+   "files": 9,
    "keys": [
     "cultures",
     "deities",
@@ -8892,6 +8900,7 @@
     "server-plugin/world-clock.mjs"
    ],
    "tools": [
+    "tools/load-world.mjs",
     "tools/publish-monster-society-2.mjs",
     "tools/publish-monster-society-3.mjs",
     "tools/publish-monster-society.mjs",
@@ -9092,6 +9101,13 @@
    ]
   },
   {
+   "dir": "world/orgs",
+   "files": 0,
+   "keys": [],
+   "readers": [],
+   "tools": []
+  },
+  {
    "dir": "world/people",
    "files": 3,
    "keys": [
@@ -9163,6 +9179,13 @@
     "tools/w3-trades-publish.mjs",
     "tools/w5-content.mjs"
    ]
+  },
+  {
+   "dir": "world/sites",
+   "files": 0,
+   "keys": [],
+   "readers": [],
+   "tools": []
   }
  ],
  "prompt": {
@@ -13528,6 +13551,7 @@
    "system": "sim_clock",
    "imports": [
     "server-plugin/effects.mjs",
+    "server-plugin/reputation-registry.mjs",
     "server-plugin/standing.mjs",
     "server-plugin/world-clock.mjs"
    ],
@@ -13558,7 +13582,7 @@
     "locations"
    ],
    "worldDirs": [],
-   "lines": 221
+   "lines": 226
   },
   "server-plugin/farm-pests-migration.mjs": {
    "system": "kernel_storage",
@@ -13638,7 +13662,7 @@
     "geo",
     "lore"
    ],
-   "lines": 222
+   "lines": 234
   },
   "server-plugin/governance.mjs": {
    "system": "sim_society",
@@ -15470,7 +15494,7 @@
    "worldDirs": [
     "lore"
    ],
-   "lines": 40
+   "lines": 47
   },
   "server-plugin/reputation.mjs": {
    "system": "sim_society",
@@ -15944,7 +15968,7 @@
     "regions"
    ],
    "worldDirs": [],
-   "lines": 138
+   "lines": 141
   },
   "server-plugin/state-notices.mjs": {
    "system": "ui_scene",
@@ -16876,7 +16900,7 @@
   "extension/index.js": {
    "system": "ui_host",
    "imports": [
-    "../../extensions.js",
+    "../extensions.js",
     "extension/core.js"
    ],
    "stateWrites": [],
@@ -16990,7 +17014,7 @@
   "extension/runtime.js": {
    "system": "ui_host",
    "imports": [
-    "../../extensions.js",
+    "../extensions.js",
     "extension/ambient-audio.mjs",
     "extension/background-view.mjs",
     "extension/history-window.mjs",
