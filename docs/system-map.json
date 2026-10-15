@@ -2,7 +2,7 @@
  "title": "无限原野系统地图",
  "card": "K9",
  "generatedFrom": {
-  "commit": "refs/heads/v1",
+  "commit": "refs/heads/v4",
   "method": "运行时导出（注册表、规则表、工具定义、效果表、立场传导表）+ 静态正则扫描（import 图、函数体标识符、state 分区与 records 前缀、rules/world 读取）。静态扫描是近似：经 engine.byId、helper 间接或动态拼接路径的访问不计入。"
  },
  "scanMethods": {
@@ -18,7 +18,7 @@
  "counts": {
   "layers": 6,
   "systems": 38,
-  "modules": 174,
+  "modules": 175,
   "advance": 44,
   "tools": 25,
   "verbs": 16,
@@ -609,7 +609,7 @@
    "modules": [
     "server-plugin/world-events.mjs"
    ],
-   "lines": 141,
+   "lines": 149,
    "stateWrites": [
     "records"
    ],
@@ -640,7 +640,7 @@
     "server-plugin/standing.mjs",
     "server-plugin/entity-view.mjs"
    ],
-   "lines": 241,
+   "lines": 254,
    "stateWrites": [
     "records"
    ],
@@ -1605,6 +1605,7 @@
     "server-plugin/reputation-registry.mjs",
     "server-plugin/reputation-catalog.mjs",
     "server-plugin/organization-state.mjs",
+    "server-plugin/group-account.mjs",
     "server-plugin/public-opinion.mjs",
     "server-plugin/organizations.mjs",
     "server-plugin/civic.mjs",
@@ -1619,7 +1620,7 @@
     "server-plugin/tribal-awakening.mjs",
     "server-plugin/elections.mjs"
    ],
-   "lines": 3434,
+   "lines": 3535,
    "stateWrites": [
     "buildings",
     "created",
@@ -1646,6 +1647,7 @@
     "army",
     "organization",
     "quest_wildlife_claim",
+    "tribal_awakening",
     "tribal_settlement",
     "tribal_war",
     "world_event"
@@ -1654,6 +1656,7 @@
     "civic_citizen",
     "civic_resident",
     "ecology",
+    "faction-assets",
     "society_motion",
     "stance",
     "village-fiscal",
@@ -1747,7 +1750,6 @@
    "recordWrites": [],
    "recordReads": [
     "diplomacy",
-    "faction-assets",
     "levy",
     "military_service",
     "organization",
@@ -1794,7 +1796,7 @@
     "server-plugin/seasonal-hazards.mjs",
     "server-plugin/hazard-calendar.mjs"
    ],
-   "lines": 1017,
+   "lines": 1015,
    "stateWrites": [
     "family",
     "npcs",
@@ -3280,6 +3282,7 @@
    "to": "base_standing",
    "kind": "call",
    "labels": [
+    "entity-view.mjs",
     "standing.mjs"
    ]
   },
@@ -3324,6 +3327,7 @@
    "to": "sim_society",
    "kind": "call",
    "labels": [
+    "group-account.mjs",
     "reputation-registry.mjs"
    ]
   },
@@ -3967,6 +3971,7 @@
    "to": "base_standing",
    "kind": "call",
    "labels": [
+    "entity-view.mjs",
     "standing.mjs"
    ]
   },
@@ -4049,7 +4054,8 @@
    "kind": "call",
    "labels": [
     "wildlife-awakening.mjs",
-    "wildlife-range.mjs"
+    "wildlife-range.mjs",
+    "wildlife.mjs"
    ]
   },
   {
@@ -8829,6 +8835,7 @@
     "server-plugin/effects.mjs",
     "server-plugin/elections.mjs",
     "server-plugin/engine.mjs",
+    "server-plugin/entity-view.mjs",
     "server-plugin/environment.mjs",
     "server-plugin/faction-clock.mjs",
     "server-plugin/farm-pests.mjs",
@@ -8848,6 +8855,7 @@
     "server-plugin/npc-obligations.mjs",
     "server-plugin/npc-rumors.mjs",
     "server-plugin/npc-schedule.mjs",
+    "server-plugin/organization-state.mjs",
     "server-plugin/population.mjs",
     "server-plugin/promotion.mjs",
     "server-plugin/public-opinion.mjs",
@@ -8928,6 +8936,7 @@
     "server-plugin/entity-view.mjs",
     "server-plugin/faction-clock.mjs",
     "server-plugin/festival.mjs",
+    "server-plugin/group-account.mjs",
     "server-plugin/military.mjs",
     "server-plugin/monster-society.mjs",
     "server-plugin/notables.mjs",
@@ -10574,8 +10583,10 @@
      "pattern": "monsterSociety",
      "modules": [
       "server-plugin/boss-negotiation.mjs",
+      "server-plugin/entity-view.mjs",
       "server-plugin/governance.mjs",
       "server-plugin/monster-society.mjs",
+      "server-plugin/organization-state.mjs",
       "server-plugin/public-opinion.mjs",
       "server-plugin/reputation-catalog.mjs",
       "server-plugin/return-summary.mjs",
@@ -11926,6 +11937,7 @@
      "pattern": "\\.relations\\b",
      "modules": [
       "server-plugin/faction-clock.mjs",
+      "server-plugin/group-account.mjs",
       "server-plugin/reputation-catalog.mjs",
       "server-plugin/reputation-registry.mjs",
       "server-plugin/scene-card.mjs",
@@ -11976,7 +11988,9 @@
      "means": "成员、职位、公库、章程",
      "pattern": "organization:",
      "modules": [
+      "server-plugin/elections.mjs",
       "server-plugin/entity-view.mjs",
+      "server-plugin/group-account.mjs",
       "server-plugin/military.mjs",
       "server-plugin/monster-society.mjs",
       "server-plugin/organization-state.mjs",
@@ -13362,16 +13376,18 @@
   "server-plugin/elections.mjs": {
    "system": "sim_society",
    "imports": [
+    "server-plugin/entity-view.mjs",
     "server-plugin/governance.mjs",
     "server-plugin/items.mjs",
     "server-plugin/law.mjs",
     "server-plugin/lies.mjs",
     "server-plugin/npc-schedule.mjs",
+    "server-plugin/npc-state.mjs",
     "server-plugin/organizations.mjs",
-    "server-plugin/standing.mjs"
+    "server-plugin/standing.mjs",
+    "server-plugin/wildlife.mjs"
    ],
    "stateWrites": [
-    "npcs",
     "player"
    ],
    "stateReads": [
@@ -13381,7 +13397,8 @@
    ],
    "recordWrites": [],
    "recordReads": [
-    "civic_citizen"
+    "civic_citizen",
+    "organization"
    ],
    "rules": [
     "elections",
@@ -13391,7 +13408,7 @@
     "settlementProfiles"
    ],
    "worldDirs": [],
-   "lines": 105
+   "lines": 108
   },
   "server-plugin/engine.mjs": {
    "system": "kernel_engine",
@@ -13550,6 +13567,7 @@
    "recordWrites": [],
    "recordReads": [
     "ecology",
+    "faction-assets",
     "organization"
    ],
    "rules": [
@@ -13559,10 +13577,11 @@
    "world": [
     "bosses",
     "factions",
-    "households"
+    "households",
+    "locations"
    ],
    "worldDirs": [],
-   "lines": 94
+   "lines": 107
   },
   "server-plugin/environment.mjs": {
    "system": "sim_environment",
@@ -13640,6 +13659,8 @@
    "system": "sim_clock",
    "imports": [
     "server-plugin/effects.mjs",
+    "server-plugin/entity-view.mjs",
+    "server-plugin/group-account.mjs",
     "server-plugin/reputation-registry.mjs",
     "server-plugin/standing.mjs",
     "server-plugin/world-clock.mjs"
@@ -13651,8 +13672,7 @@
    "stateReads": [
     "inventory",
     "location",
-    "minute",
-    "npcs"
+    "minute"
    ],
    "recordWrites": [],
    "recordReads": [
@@ -13671,7 +13691,7 @@
     "locations"
    ],
    "worldDirs": [],
-   "lines": 226
+   "lines": 224
   },
   "server-plugin/farm-pests-migration.mjs": {
    "system": "kernel_storage",
@@ -13795,6 +13815,25 @@
    ],
    "worldDirs": [],
    "lines": 394
+  },
+  "server-plugin/group-account.mjs": {
+   "system": "sim_society",
+   "imports": [],
+   "stateWrites": [],
+   "stateReads": [
+    "records"
+   ],
+   "recordWrites": [],
+   "recordReads": [
+    "faction-assets",
+    "organization"
+   ],
+   "rules": [],
+   "world": [
+    "factions"
+   ],
+   "worldDirs": [],
+   "lines": 44
   },
   "server-plugin/hazard-calendar.mjs": {
    "system": "sim_clock",
@@ -14662,7 +14701,6 @@
    ],
    "recordWrites": [],
    "recordReads": [
-    "faction-assets",
     "levy",
     "military_service",
     "organization",
@@ -14687,16 +14725,18 @@
    "system": "sim_society",
    "imports": [
     "server-plugin/boss-negotiation.mjs",
+    "server-plugin/entity-view.mjs",
     "server-plugin/faction-clock.mjs",
     "server-plugin/items.mjs",
+    "server-plugin/npc-state.mjs",
     "server-plugin/standing.mjs",
+    "server-plugin/wildlife.mjs",
     "server-plugin/world-events.mjs"
    ],
    "stateWrites": [],
    "stateReads": [
     "location",
     "minute",
-    "npcs",
     "records"
    ],
    "recordWrites": [],
@@ -14714,15 +14754,18 @@
     "residents"
    ],
    "worldDirs": [],
-   "lines": 408
+   "lines": 420
   },
   "server-plugin/notables.mjs": {
    "system": "sim_society",
    "imports": [
+    "server-plugin/entity-view.mjs",
     "server-plugin/governance.mjs",
+    "server-plugin/npc-state.mjs",
     "server-plugin/organizations.mjs",
     "server-plugin/standing.mjs",
-    "server-plugin/titles.mjs"
+    "server-plugin/titles.mjs",
+    "server-plugin/wildlife.mjs"
    ],
    "stateWrites": [
     "npcs"
@@ -14748,7 +14791,7 @@
     "settlementProfiles"
    ],
    "worldDirs": [],
-   "lines": 159
+   "lines": 166
   },
   "server-plugin/npc-autonomy.mjs": {
    "system": "sim_npc",
@@ -15106,6 +15149,7 @@
   "server-plugin/organization-state.mjs": {
    "system": "sim_society",
    "imports": [
+    "server-plugin/group-account.mjs",
     "server-plugin/npc-state.mjs",
     "server-plugin/reputation-catalog.mjs"
    ],
@@ -15120,38 +15164,45 @@
    "world": [
     "factions",
     "households",
-    "npcs"
+    "locations",
+    "npcs",
+    "residents"
    ],
    "worldDirs": [],
-   "lines": 56
+   "lines": 70
   },
   "server-plugin/organizations.mjs": {
    "system": "sim_society",
    "imports": [
+    "server-plugin/entity-view.mjs",
+    "server-plugin/group-account.mjs",
     "server-plugin/notables.mjs",
-    "server-plugin/organization-state.mjs",
+    "server-plugin/npc-state.mjs",
     "server-plugin/public-opinion.mjs",
-    "server-plugin/standing.mjs"
+    "server-plugin/standing.mjs",
+    "server-plugin/wildlife.mjs",
+    "server-plugin/world-events.mjs"
    ],
    "stateWrites": [
     "records"
    ],
    "stateReads": [
+    "creatures",
     "location",
     "minute",
     "npcs",
     "player"
    ],
-   "recordWrites": [
+   "recordWrites": [],
+   "recordReads": [
     "world_event"
    ],
-   "recordReads": [],
    "rules": [],
    "world": [
     "households"
    ],
    "worldDirs": [],
-   "lines": 295
+   "lines": 312
   },
   "server-plugin/pets.mjs": {
    "system": "sim_companion",
@@ -15610,7 +15661,7 @@
   "server-plugin/reputation-registry.mjs": {
    "system": "sim_society",
    "imports": [
-    "server-plugin/organization-state.mjs",
+    "server-plugin/entity-view.mjs",
     "server-plugin/reputation-catalog.mjs"
    ],
    "stateWrites": [],
@@ -16244,6 +16295,7 @@
    "system": "sim_society",
    "imports": [
     "server-plugin/effects.mjs",
+    "server-plugin/entity-view.mjs",
     "server-plugin/npc-intelligence.mjs",
     "server-plugin/quest-sources.mjs",
     "server-plugin/standing.mjs",
@@ -16262,9 +16314,9 @@
    ],
    "recordWrites": [
     "organization",
+    "tribal_awakening",
     "tribal_settlement",
-    "tribal_war",
-    "world_event"
+    "tribal_war"
    ],
    "recordReads": [
     "ecology"
@@ -16285,7 +16337,7 @@
     "rules"
    ],
    "worldDirs": [],
-   "lines": 389
+   "lines": 393
   },
   "server-plugin/ui-affairs.mjs": {
    "system": "ui_server",
@@ -16770,7 +16822,7 @@
    "rules": [],
    "world": [],
    "worldDirs": [],
-   "lines": 141
+   "lines": 149
   },
   "server-plugin/world-registry.mjs": {
    "system": "kernel_storage",

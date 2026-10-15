@@ -5,11 +5,14 @@ import {recordLie,exposeLieCall} from './lies.mjs';
 import {registerIncident} from './law.mjs';
 import {transferItems} from './items.mjs';
 import {advanceWithNpcParticipants} from './npc-schedule.mjs';
+import {personView} from './entity-view.mjs';
+import {actorId,actorPath} from './npc-state.mjs';
+import {resolveCreature} from './wildlife.mjs';
 
 const path=id=>['state','records',id];
 const awake=n=>n&&!['死亡','濒死','昏迷'].includes(n.status)&&!/睡/.test(n.activity??'');
 function here(d,engine,name){
-    const id=engine.resolve(name,'npc'),n=d.get('state','npcs',id);
+    const id=actorId(engine.world,resolveCreature(engine,d,name)),view=personView(engine,d.get('state'),id),n=view&&d.get(...view.actorPath.value);
     if(!awake(n)||n.location!==d.get('state','location'))throw Error('拉票或揭发当事人须实际在场');return id;
 }
 function voters(engine,state,row){
@@ -21,7 +24,7 @@ export function electionAction(d,args,id){
     if(args.operation==='election_start'){
         let org=null,settlement=null,office=null,incumbent=null;
         if(args.org){
-            org=organization(this,d.get('state'),this.resolve(args.org));
+            org=organization(this,d.get('state'),d.get('state','records',`organization:${args.org}`)?args.org:this.resolve(args.org));
             if(!org||org.charter.mode!=='vote'||!org.members.player)throw Error('只有实行成员投票的组织成员可竞选');
             if(d.get('state','location')!==org.seat)throw Error('须在组织议事地点登记竞选');
             incumbent=org.leader;
@@ -56,7 +59,7 @@ export function electionAction(d,args,id){
         if(now>=row.due)throw Error('拉票期已结束');
         const action=args.choice??'speech',electorate=voters(this,d.get('state'),row).filter(v=>v!=='player');
         if(!['gift','speech','promise','buy_votes'].includes(action))throw Error('拉票方式为gift、speech、promise或buy_votes');
-        const targets=action==='speech'?electorate.filter(v=>awake(d.get('state','npcs',v))&&d.get('state','npcs',v,'location')===d.get('state','location')):[here(d,this,args.speaker)];
+        const targets=action==='speech'?electorate.filter(v=>awake(d.get(...actorPath(this.world,v)))&&d.get(...actorPath(this.world,v),'location')===d.get('state','location')):[here(d,this,args.speaker)];
         if(!targets.length||targets.some(v=>!electorate.includes(v)))throw Error('拉票对象须是本轮实际选民');
         if(row.campaigns.some(c=>c.day===Math.floor(now/1440)&&c.action===action&&targets.some(v=>c.targets.includes(v))))throw Error('今日已用同一方式向这些选民拉票');
         if(['speech','promise'].includes(action)&&(!args.content?.trim()||args.content.length>1200))throw Error('需要实际演说或承诺内容');
@@ -71,14 +74,14 @@ export function electionAction(d,args,id){
         if(gift)transferItems(d,this,'player',targets[0],gift,1);
         const frauds=[...row.frauds];let disqualified=row.disqualified??false;
         if(coins){
-            d.set(['state','player','coins'],d.get('state','player','coins')-coins);d.set(['state','npcs',targets[0],'coins'],d.get('state','npcs',targets[0],'coins')+coins);
+            d.set(['state','player','coins'],d.get('state','player','coins')-coins);d.set([...actorPath(this.world,targets[0]),'coins'],d.get(...actorPath(this.world,targets[0]),'coins')+coins);
             const key=`vote_gift:${id}`,lie=recordLie(d,this,{source:'player',subject:observer,key,content:'这笔赠礼与选票无关。',truth:'这笔钱是要求对方投我一票的贿选款。',motive:'掩盖贿选',knowers:[targets[0]]},id);
             const exposed=Boolean(lie.exposed?.length);
             const incident=exposed?registerIncident(d,this,{victim:targets[0],offense:'vote_buying',value:coins,witnesses:[targets[0],observer],eventId:`${id}_exposed`,optional:true}):null;
             frauds.push({event:id,recipient:targets[0],observer,coins,key,lie:lie.lie,exposed,case:incident});disqualified||=exposed;
         }
         for(const voter of targets)adjustStanding(d,this,voter,'player',gain,{sourceEvent:id,reason:`竞选${action}`});
-        for(const voter of targets)d.set(['state','npcs',voter,'memoryStream'],[...d.get('state','npcs',voter,'memoryStream')??[],{
+        for(const voter of targets)d.set([...actorPath(this.world,voter),'memoryStream'],[...d.get(...actorPath(this.world,voter),'memoryStream')??[],{
             id:`campaign:${id}:${voter}`,kind:'campaign',sourceEvent:id,minute:d.get('state','minute'),location:d.get('state','location'),participants:['player',voter],sourceType:'亲历',
             content:args.content??(gift?'参选人当面送了礼物。':'参选人私下送钱求票。'),campaignSuccess:gain>0,...(coins?{private:true}:{})}]);
         d.set(path(row.id),{...row,frauds,disqualified,campaigns:[...row.campaigns,{action,targets,day:Math.floor(now/1440),content:args.content??null,gift,coins,check:check.success,sourceEvent:id}]});

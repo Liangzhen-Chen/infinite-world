@@ -127,7 +127,7 @@ export function collectivesOf(engine,state,member){
             rows.push({holder:other.id,ratio:TRANSMISSION.faction*TRANSMISSION.ally,via:`ally:${f.id}`});
     }
     for(const entry of view.organizations){const org=entry.value;
-        if(org.source!=='household'&&org.source!=='faction'&&!rows.some(r=>r.holder===org.id))
+        if(org.source!=='household'&&org.source!=='faction'&&org.source!=='society'&&!rows.some(r=>r.holder===org.id))
             rows.push({holder:org.id,ratio:TRANSMISSION.organization,via:`organization:${org.id}`});
     }
     if(state.creatures?.[member]?.society?.id)rows.push({holder:state.creatures[member].society.id,ratio:TRANSMISSION.spiritSociety,via:`spirit_society:${member}`});
