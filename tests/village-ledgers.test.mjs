@@ -78,7 +78,8 @@ test('无权协调者、缺席官员、假合同、隔空收货及缺真实货�
 test('本村法典不能把普通协调者授予搜查权，官方必须在场且不得跨区',async()=>{
  const{doc,run}=setup(),p=configs[0],d=profiles[0],normal=d.governance.coordinators[1],officer=d.governance.enforcers[0],code=world.rules.law.codes.find(c=>c.id===d.governance.appointment.lawCode);at(doc,p);
  doc.state.npcs[normal].location=p.counter;doc.state.npcs[officer].location=p.counter;
- doc.state.records['case-village']={category:'legal_case',id:'case-village',law:code.id,reported:true,status:'已报案',suspect:normal,evidence:[]};
+ // U5后非玩家被告的案件只能接赏缉拿；搜查的对象是玩家本人，本例核对的是搜查者资格。
+ doc.state.records['case-village']={category:'legal_case',id:'case-village',law:code.id,reported:true,status:'已报案',offender:'player',evidence:[]};
  const before=structuredClone(doc);await assert.rejects(run(doc,{operation:'search',case:'case-village',authority:normal},'unauthorized','world_law'),/资格/);assert.deepEqual(doc,before);
  const absent=structuredClone(doc);absent.state.npcs[officer].location=p.settlement;await assert.rejects(run(absent,{operation:'search',case:'case-village',authority:officer},'absent','world_law'),/不在场/);
  assert.equal(code.locations.includes('loc_bs'),false);

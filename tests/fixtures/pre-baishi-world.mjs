@@ -13,6 +13,8 @@ export async function writePreBaishiWorld(dir,world){
  // T160灵地与白石镇行业营生同样落在镇内场所。
  if(rules.wildlifeAwakening?.spiritLands)rules.wildlifeAwakening.spiritLands=rules.wildlifeAwakening.spiritLands.filter(row=>placeIds.has(row.location));
  if(rules.npcGrowth?.vocations)rules.npcGrowth.vocations=rules.npcGrowth.vocations.filter(row=>placeIds.has(row.location));
+ // U9白石镇固定商店及从白石镇到货的补货条目随白石镇聚落档案一并移出。
+ if(rules.economy?.shops?.stores)rules.economy.shops.stores=rules.economy.shops.stores.filter(s=>s.settlement!=='loc_bs').map(s=>({...s,restock:s.restock.filter(row=>!(row.source==='route'&&row.from==='loc_bs'))}));
  // T102等后续法术、配方及其材料以白石镇升档人物或镇内场所为来源；旧世界里连同依赖它们的条目一并没有（求闭包）。
  const catalog=pruneCatalog(world,[...world.locations.filter(l=>!placeIds.has(l.id)).map(l=>l.id),...world.npcs.filter(n=>!preBaishiNpc(n)).map(n=>n.id),...world.items.filter(i=>i.id.startsWith('item_bs_')).map(i=>i.id)]);
  const files={'geo/locations.json':oldLocations,'geo/routes.json':world.routes.filter(r=>placeIds.has(r.from)&&placeIds.has(r.to)),'geo/settlements.json':world.settlementProfiles.filter(p=>p.id!=='loc_bs'),'people/residents.json':world.residents.filter(n=>n.settlement!=='loc_bs'),'people/households.json':world.households.filter(h=>h.settlement!=='loc_bs'),'meta/rules.json':rules,'meta/items.json':catalog.items,'meta/spells.json':catalog.spells,'meta/recipes.json':catalog.recipes};

@@ -26,7 +26,9 @@ const habitatOf=s=>world.rules.wildlife.habitats.find(h=>h.id===s.wildlife.habit
 // Held species may be appended by a later supplement, so catalog order is not compared.
 // T102/T157等后续批次在本批之后追加物品、地点、路线与首领；剔除本批再合并会把本批排到末尾，同样按编号比较。
 const sortId=rows=>[...rows].sort((a,b)=>a.id.localeCompare(b.id));
-const norm=w=>({...w,monsters:sortId(w.monsters),items:sortId(w.items),locations:sortId(w.locations),routes:sortId(w.routes),bosses:sortId(w.bosses),rules:{...w.rules,wildlife:{...w.rules.wildlife,habitats:sortId(w.rules.wildlife.habitats)}}});
+// K1在本批发布后给全体物种补了性状标签tags；本批候选不含该字段，比较时只对本批物种剔除tags（正式目录须有tags另行核对）。
+const untag=m=>newIds.monsters.has(m.id)?(({tags,...row})=>row)(m):m;
+const norm=w=>({...w,monsters:sortId(w.monsters.map(untag)),items:sortId(w.items),locations:sortId(w.locations),routes:sortId(w.routes),bosses:sortId(w.bosses),rules:{...w.rules,wildlife:{...w.rules.wildlife,habitats:sortId(w.rules.wildlife.habitats)}}});
 const insideHours=([a,b])=>a<b?a+30:(a+30)%1440;
 function setup(seed,mutate){
  const w=mutate?structuredClone(world):world;if(mutate)mutate(w);
@@ -51,6 +53,7 @@ test('本批正式发布：中西各九的设计，已过L2者入正式目录，
  for(const id of held){assert.ok(!world.monsters.some(m=>m.id===id));assert.ok(['species','pair'].includes(entries.find(e=>e.id===id||e.parts?.some(p=>p.id===id))?.category));}
  assert.deepEqual([...published.map(m=>m.id),...held].sort(),[...batchIds.species].sort());
  assert.ok(published.filter(m=>m.template<=2).length>=12);
+ for(const m of published)assert.ok(Array.isArray(m.tags)&&m.tags.length,`${m.id}.tags`);
  for(const m of published){const d=designed.find(s=>s.id===m.id);for(const k of Object.keys(d))assert.deepEqual(m[k],d[k],`${m.id}.${k}`);}
  assert.deepEqual(norm(mergeMixedPublication(before,publication)),norm(world));assert.deepEqual(mergeMixedPublication(world,publication),world);
  const bad=structuredClone(world);bad.monsters.find(m=>m.id===published[0].id).habits+='异文';assert.throws(()=>mergeMixedPublication(bad,publication),/冲突/);

@@ -27,6 +27,13 @@ export function mergeMonsterSociety(world,batch){
 export function withoutMonsterSociety(world,batch=buildBatch()){
  const ids=batchIds(batch),next=structuredClone(world);
  for(const [,key] of FILES)next[key]=(next[key]??[]).filter(r=>!ids.has(r.id));
+ // Later rows that name this batch's rows (T105 social bosses on its sites, faction clocks' hooks)
+ // did not exist before it either. T142's far lore is a separate later batch: see withoutT142.
+ const gone=new Set(ids),names=row=>[...JSON.stringify(row).matchAll(/"([a-z]+_[a-z0-9_]+)"/g)].some(m=>m[1]!==row.id&&gone.has(m[1]));
+ next.bosses=(next.bosses??[]).filter(r=>!names(r));
+ // K6 effect-table hooks on a dropped faction's clock, or naming dropped rows, go with them.
+ const table=next.rules?.effectTable,lostClocks=new Set((world.factions??[]).filter(f=>f.clock&&gone.has(f.id)).map(f=>f.clock.id));
+ if(table?.hooks)table.hooks=table.hooks.filter(h=>!lostClocks.has(h.owner)&&!names({id:null,effects:h.effects}));
  return next;
 }
 async function writeLike(target,value){
