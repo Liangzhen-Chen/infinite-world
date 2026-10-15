@@ -193,7 +193,7 @@
     "ui_scene",
     "ui_server"
    ],
-   "files": 4
+   "files": 5
   },
   {
    "id": "data_people",
@@ -282,7 +282,7 @@
     "sim_environment",
     "sim_society"
    ],
-   "files": 95
+   "files": 96
   },
   {
    "id": "data_assets",
@@ -730,7 +730,7 @@
    "modules": [
     "server-plugin/advance-registry.mjs"
    ],
-   "lines": 163,
+   "lines": 164,
    "stateWrites": [
     "effects",
     "obligations",
@@ -1241,11 +1241,12 @@
     "server-plugin/regions.mjs",
     "server-plugin/remote-generation.mjs"
    ],
-   "lines": 1422,
+   "lines": 1505,
    "stateWrites": [
     "npcs",
     "records",
-    "remote"
+    "remote",
+    "settlements"
    ],
    "stateReads": [
     "effects",
@@ -1267,7 +1268,9 @@
     "environment",
     "equipment",
     "governance",
+    "hazardClock",
     "law",
+    "questSources",
     "travel",
     "weather",
     "wildlife"
@@ -1277,6 +1280,7 @@
     "cultures",
     "factionPeople",
     "factions",
+    "festivals",
     "history",
     "households",
     "items",
@@ -1564,7 +1568,7 @@
     "server-plugin/quest-sources.mjs",
     "server-plugin/tribal-awakening.mjs"
    ],
-   "lines": 3155,
+   "lines": 3174,
    "stateWrites": [
     "buildings",
     "created",
@@ -1675,7 +1679,7 @@
     "server-plugin/seasonal-hazards.mjs",
     "server-plugin/hazard-calendar.mjs"
    ],
-   "lines": 981,
+   "lines": 996,
    "stateWrites": [
     "family",
     "npcs",
@@ -1713,6 +1717,7 @@
     "factionClock",
     "hazardClock",
     "npcLife",
+    "questSources",
     "settlementTrade",
     "version",
     "worldClock"
@@ -6557,7 +6562,8 @@
     ],
     "usedByHooks": [],
     "usedIn": [
-     "rules.effectTable"
+     "rules.effectTable",
+     "rules.hazardClock"
     ]
    },
    {
@@ -6662,7 +6668,9 @@
      "server-plugin/quest-sources.mjs"
     ],
     "usedByHooks": [],
-    "usedIn": []
+    "usedIn": [
+     "rules.questSources"
+    ]
    },
    {
     "kind": "regional_quote",
@@ -6808,6 +6816,7 @@
     ],
     "usedIn": [
      "rules.effectTable",
+     "rules.hazardClock",
      "world/lore/factions.json"
     ]
    }
@@ -8105,7 +8114,7 @@
   },
   {
    "dir": "world/design",
-   "files": 95,
+   "files": 96,
    "keys": [],
    "readers": [
     "server-plugin/civic.mjs",
@@ -8117,6 +8126,7 @@
     "tools/audit-farm-pests-food.mjs",
     "tools/audit-spell-drafts.mjs",
     "tools/creatures-mixed-content.mjs",
+    "tools/d1-system-data.mjs",
     "tools/design-career-catalog.mjs",
     "tools/design-profession-catalog.mjs",
     "tools/draft-economy.mjs",
@@ -8296,7 +8306,7 @@
   },
   {
    "dir": "world/geo",
-   "files": 4,
+   "files": 5,
    "keys": [
     "locations",
     "routes",
@@ -8538,6 +8548,7 @@
     "tools/add-revival-foundation.mjs",
     "tools/bootstrap-world.mjs",
     "tools/creatures-mixed-content.mjs",
+    "tools/d1-system-data.mjs",
     "tools/design-career-catalog.mjs",
     "tools/design-combat-rules.mjs",
     "tools/design-profession-catalog.mjs",
@@ -8942,11 +8953,14 @@
   "hazardClock": [
    "server-plugin/advance-registry.mjs",
    "server-plugin/hazard-calendar.mjs",
+   "server-plugin/remote-generation.mjs",
    "server-plugin/seasonal-hazards.mjs"
   ],
   "questSources": [
    "server-plugin/engine.mjs",
-   "server-plugin/quest-sources.mjs"
+   "server-plugin/faction-clock.mjs",
+   "server-plugin/quest-sources.mjs",
+   "server-plugin/remote-generation.mjs"
   ],
   "tribalAwakening": [
    "server-plugin/engine.mjs",
@@ -9409,6 +9423,7 @@
     "kernel_storage",
     "sim_agriculture",
     "sim_economy",
+    "sim_environment",
     "sim_npc",
     "sim_society"
    ],
@@ -10474,12 +10489,14 @@
       "server-plugin/npc-memory.mjs",
       "server-plugin/npc-schedule.mjs",
       "server-plugin/npc-state.mjs",
+      "server-plugin/remote-generation.mjs",
       "server-plugin/scene-card.mjs"
      ],
      "systems": [
       "kernel_engine",
       "nar_consistency",
       "sim_clock",
+      "sim_environment",
       "sim_npc",
       "ui_scene"
      ]
@@ -11693,10 +11710,6 @@
     "note": "已注册，但 rules.json 与 lore 的任何 effects 列表都没有用到"
    },
    {
-    "kind": "quest_post",
-    "note": "已注册，但 rules.json 与 lore 的任何 effects 列表都没有用到"
-   },
-   {
     "kind": "trade",
     "note": "已注册，但 rules.json 与 lore 的任何 effects 列表都没有用到"
    },
@@ -11962,7 +11975,7 @@
     "npcs"
    ],
    "worldDirs": [],
-   "lines": 163
+   "lines": 164
   },
   "server-plugin/agriculture-migration.mjs": {
    "system": "kernel_storage",
@@ -12812,7 +12825,8 @@
    ],
    "rules": [
     "effectTable",
-    "factionClock"
+    "factionClock",
+    "questSources"
    ],
    "world": [
     "factions",
@@ -12820,7 +12834,7 @@
     "locations"
    ],
    "worldDirs": [],
-   "lines": 214
+   "lines": 221
   },
   "server-plugin/farm-pests-migration.mjs": {
    "system": "kernel_storage",
@@ -12900,7 +12914,7 @@
     "geo",
     "lore"
    ],
-   "lines": 214
+   "lines": 222
   },
   "server-plugin/governance.mjs": {
    "system": "sim_society",
@@ -14528,7 +14542,7 @@
     "rules"
    ],
    "worldDirs": [],
-   "lines": 305
+   "lines": 324
   },
   "server-plugin/regions.mjs": {
    "system": "sim_environment",
@@ -14564,7 +14578,8 @@
    ],
    "stateWrites": [
     "npcs",
-    "remote"
+    "remote",
+    "settlements"
    ],
    "stateReads": [
     "minute"
@@ -14575,12 +14590,15 @@
     "economy",
     "equipment",
     "governance",
+    "hazardClock",
+    "questSources",
     "wildlife"
    ],
    "world": [
     "cultures",
     "factionPeople",
     "factions",
+    "festivals",
     "households",
     "items",
     "locations",
@@ -14595,7 +14613,7 @@
    "worldDirs": [
     "geo"
    ],
-   "lines": 578
+   "lines": 661
   },
   "server-plugin/repair.mjs": {
    "system": "sim_economy",
