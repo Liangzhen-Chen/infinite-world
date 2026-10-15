@@ -39,7 +39,15 @@ async function writeLike(target,value){
 export async function publishMixed({root=path.resolve('world'),draftRoot=path.join(root,'drafts/creatures-mixed'),publish=false}={}){
  const world=await loadWorld(root),publication=await readMixedPublication(draftRoot),next=mergeMixedPublication(world,publication),validation=validateWorld(next);
  if(!validation.ok)throw Error(validation.errors.join('\n'));
- const files=[['meta/monsters.json',w=>w.monsters],['meta/items.json',w=>w.items],['geo/locations.json',w=>w.locations],['geo/routes.json',w=>w.routes],['meta/rules.json',w=>w.rules]];
+ // loadWorld merges geo/biomes.json into locations. Keep that source split
+ // when writing, so the published world can be loaded again without duplicates.
+ const authored=new Map((await read(path.join(root,'geo/locations.json'))).map(row=>[row.id,row]));
+ const locations=w=>w.locations.map(row=>{
+  const out={...row},original=authored.get(row.id);
+  for(const key of ['biome','areaKm2'])if(original&&!Object.hasOwn(original,key))delete out[key];
+  return out;
+ });
+ const files=[['meta/monsters.json',w=>w.monsters],['meta/items.json',w=>w.items],['geo/locations.json',locations],['geo/routes.json',w=>w.routes],['meta/rules.json',w=>w.rules]];
  const changed=files.filter(([,pick])=>!same(pick(world),pick(next))).map(([file])=>file);
  if(publish)for(const [file,pick] of files)if(changed.includes(file))await writeLike(path.join(root,file),pick(next));
  return {published:publish,changed,batch:{monsters:publication.monsters.map(m=>m.id),held:publication.held,items:publication.items.map(i=>i.id),locations:publication.locations.map(l=>l.id),habitats:publication.habitats.map(h=>h.id)},formalMonsterCount:next.monsters.length,validation:{ok:validation.ok,errors:validation.errors}};

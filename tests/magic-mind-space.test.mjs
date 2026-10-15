@@ -23,6 +23,9 @@ function fixture(){
  const world=structuredClone(original),candidates=mindSpaceSpellCandidates();
  for(const n of world.npcs){n.tier='fixture';delete n.schedule;}
  delete world.rules.weather;delete world.rules.settlementTrade;delete world.rules.worldClock;
+ // Controlled actors and contracts do not run disasters or faction trade.
+ delete world.rules.hazardClock;delete world.rules.factionClock;
+ for(const faction of world.factions)delete faction.clock;
  world.spells=world.spells.filter(s=>!candidates.some(c=>c.id===s.id));world.spells.push(...candidates);
  for(const c of candidates)if(!world.skills.some(s=>s.id===c.skill))world.skills.push({id:c.skill,name:c.skill,attribute:'精神',profession:null});
  const location=new WorldEngine(world).initialFromLegacy(seed,'mind-space').state.location;
