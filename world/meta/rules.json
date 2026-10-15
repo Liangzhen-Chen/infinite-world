@@ -238,8 +238,16 @@
     "support": 3,
     "combat": 5,
     "mount": 10,
-    "knightMount": 20,
-    "summonerCombat": 0
+    "passiveDomains": {
+      "pet_trust": {
+        "perLevels": 30,
+        "categories": [
+          "support",
+          "combat",
+          "mount"
+        ]
+      }
+    }
   },
   "quests": {
     "quotaUnits": {
@@ -1560,7 +1568,10 @@
           "baseFine": 5,
           "valueMultiplier": 0.2,
           "note": "法典未单列欠债违约时，按此罚则审理"
-        }
+        },
+        "lendMaximumDays": 720,
+        "penaltyMultiplier": 0.5,
+        "accelerateAfterMissed": 3
       },
       "partnership": {
         "minimumShare": 1,
@@ -1679,6 +1690,32 @@
           "wood",
           "metal"
         ]
+      },
+      "leaseDamage": {
+        "terminateAfterDays": 90,
+        "note": "租赁物毁损或停用期间停收租金；连续停用满期限按毁损条款终止租约"
+      },
+      "carriage": {
+        "damagePerExposedDay": 0.1,
+        "maximumDamage": 0.6,
+        "liabilityRate": 1,
+        "sensitiveTags": [
+          "food",
+          "grain",
+          "paper",
+          "book",
+          "fiber",
+          "cloth",
+          "wool",
+          "leather",
+          "hide",
+          "herb",
+          "medicine",
+          "flax",
+          "feather",
+          "incense"
+        ],
+        "note": "托运途中货物在雨雪中露天每日按比例受潮，到货按受损部分折价，承运人按契约赔付；不足部分记欠款"
       }
     },
     "shops": {

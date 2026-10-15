@@ -204,13 +204,30 @@ export function assetTrade(d,e,args,id){
     }
     throw Error('未知资产操作');
 }
+// Lease rent follows the building's current facility view: a destroyed or
+// disabled building suspends rent, a degraded one is charged by its factor, and
+// the damage clause ends the lease once the suspension outlasts its term.
+export function leaseUse(e,s,row){
+    const view=facilityView(e,s,row.subject),condition=view?.condition??s.buildings?.[row.subject]?.condition??100;
+    const factor=view?view.factor:condition<=0?0:1;
+    return {factor,status:factor===0?'停用':factor<1?'降级':'可用',condition,burning:view?.burning??false};
+}
 function rentDue(d,e,row,at){
-    const key=`debt_rent:${row.id}:${at}`,amount=Math.ceil(row.monthlyRent*Math.min(MONTH,row.deadline-at)/MONTH),paid=Math.min(amount,financeBalance(d,e,row.tenant));
+    const use=leaseUse(e,d.get('state'),row),clause=row.damageClause??e.rules.economy.credit.leaseDamage;
+    if(!use.factor){
+        const since=row.suspendedSince??at,terminate=clause&&at-since>=clause.terminateAfterDays*DAY;
+        const entry={minute:at,status:use.status,condition:use.condition,rent:0};
+        d.set(rec(row.id),{...row,suspendedSince:since,nextRent:at+MONTH,suspensions:[...row.suspensions??[],entry],
+            ...(terminate?{status:'因毁损终止',endedAt:at,reason:'租赁物毁损停用超过约定期限，按毁损条款终止'}:{})});
+        return;
+    }
+    const key=`debt_rent:${row.id}:${at}`,amount=Math.ceil(row.monthlyRent*use.factor*Math.min(MONTH,row.deadline-at)/MONTH),paid=Math.min(amount,financeBalance(d,e,row.tenant));
     if(paid)financeTransfer(d,e,row.tenant,'player',paid,key);
     if(paid<amount){
         const debt={category:'debt',kind:'rent',debtor:row.tenant,creditor:'player',amount,paid,status:'待偿还',createdAt:at,deadline:at+e.rules.economy.credit.loan.defaultGraceMinutes,source:row.source,contract:row.id,location:row.location};d.set(rec(key),debt);
     }
-    d.set(rec(row.id),{...row,paid:row.paid+paid,nextRent:at+MONTH});
+    const resumed=row.suspendedSince!==undefined&&row.suspendedSince!==null;
+    d.set(rec(row.id),{...row,paid:row.paid+paid,nextRent:at+MONTH,suspendedSince:null,...(resumed?{resumptions:[...row.resumptions??[],{minute:at,factor:use.factor}]}:{}),...(use.factor<1?{reductions:[...row.reductions??[],{minute:at,factor:use.factor,rent:amount}]}:{})});
     financeEvent(d,e,{id:key,actor:row.tenant,target:'player',value:paid,minute:at,location:row.location,tags:['rent']});
 }
 function workshopShift(d,e,row,at){
@@ -238,8 +255,8 @@ export function advanceFinanceAssets(d,e,minute){
     for(const initial of all(d)){
         if(initial.kind==='equity'&&initial.status==='有效')for(let at=initial.nextDividend;at<=minute;at+=MONTH)payDividend(d,e,d.get(...rec(initial.id)),at);
         if(initial.kind==='asset_lease'&&initial.status==='有效'){
-            for(let at=initial.nextRent;at<=minute&&at<initial.deadline;at+=MONTH)rentDue(d,e,d.get(...rec(initial.id)),at);
-            if(minute>=initial.deadline)d.set(rec(initial.id),{...d.get(...rec(initial.id)),status:'已到期'});
+            for(let at=initial.nextRent;at<=minute&&at<initial.deadline;at+=MONTH){const row=d.get(...rec(initial.id));if(row.status!=='有效')break;rentDue(d,e,row,at);}
+            if(minute>=initial.deadline&&d.get(...rec(initial.id),'status')==='有效')d.set(rec(initial.id),{...d.get(...rec(initial.id)),status:'已到期'});
         }
         if(initial.kind==='workshop'&&!initial.laborMarket&&['有效','要求加薪','罢工'].includes(initial.status)){
             for(let at=initial.nextWork;at<=minute&&at<initial.deadline;at+=DAY){const row=d.get(...rec(initial.id));if(!['有效','要求加薪','罢工'].includes(row.status))break;workshopShift(d,e,row,at);}

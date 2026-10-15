@@ -2333,20 +2333,12 @@
             },
             "mount": {
               "const": 10
-            },
-            "knightMount": {
-              "const": 20
-            },
-            "summonerCombat": {
-              "const": 0
             }
           },
           "required": [
             "support",
             "combat",
-            "mount",
-            "knightMount",
-            "summonerCombat"
+            "mount"
           ],
           "additionalProperties": true
         },

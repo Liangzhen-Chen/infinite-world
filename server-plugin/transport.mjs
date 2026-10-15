@@ -10,6 +10,7 @@ import {postGeneratedQuest} from './quest-sources.mjs';
 import {groupAccountView,groupAccountPath,ensureGroupAccount} from './group-account.mjs';
 import {publishTransitionEvent} from './world-events.mjs';
 import {openingTransportAssets} from '../world/design/transport-rules.mjs';
+import {carriageTerms,escortTerms,exposeCargo,settleCarriage,settleEscort,holdEscort} from './transport-claims.mjs';
 
 const DAY=1440,clone=x=>structuredClone(x),path=id=>['state','records',id];
 const SPECS=Object.freeze({cart:{mode:'cart',kg:600,m3:3,seats:4,wood:20,metal:2,rate:0.012},boat:{mode:'boat',kg:2400,m3:12,seats:12,wood:60,metal:4,rate:0.008},pack:{mode:'walk',kg:80,m3:0.5,seats:0,wood:0,metal:0,rate:0.02}});
@@ -128,6 +129,7 @@ export function bookTransport(d,e,args,eventId){
  for(const p of q.passages)if(p.toll&&(!p.treasury||!groupAccountView(e,s,p.treasury)&&!e.world.settlementProfiles?.some(r=>r.id===p.treasury)))throw Error('收费路段没有已登记的收款公账');
  const row={category:'transport',id,asset:a.id,carrier:service.carrier,driver:service.driver,owner,recipient,from,to,mode:q.mode,status:'booked',createdAt:now,departAt,estimatedArrivalAt:q.estimatedArrivalAt,
   freight:q.freight,tariff:q.tariff,toll:q.toll,routeCost:q.total,cargo:[],passengers:clone(passengers),escort,escortEscrow:escortFee,receiptOf,externalOrder:externalValid?args.externalOrder:null,
+  carriageTerms:carriageTerms(e,cargo),escortTerms:escortTerms(escortFee,departAt,q.estimatedArrivalAt),
   transport:{edges:q.route.edges,edgeIndex:0,location:from,remainingKm:null,movingMinutes:0,restedBudgets:0,nextAt:departAt,segment:null},history:[{minute:now,location:from,kind:'booked'}]};
  if(!d.get(...path(a.id)))d.set(path(a.id),Object.fromEntries(Object.entries(a).filter(([k])=>!['holder','capacityKg','capacityM3','seats','mode','factor','busy','tags'].includes(k))));
  if(!externalValid)for(const c of cargo){const moved=moveGoods(d,e,owner,c.item,c.quantity,{take:true});const units=moved.instances??[];row.cargo.push({...c,instances:units});for(const unit of units)d.set(['state','itemInstances',unit],{...d.get('state','itemInstances',unit),owner:id,status:'托运'});}
@@ -165,20 +167,22 @@ export function advanceTransport(d,e,minute){
   if(t.nextAt<minute)throw Error('承运时钟越过未处理节点');
   const asset=transportAssetView(e,d.get('state'),row.asset);
   if(!asset?.factor||!d.get('state','npcs',row.driver)||['死亡','昏迷','濒死','患病'].includes(d.get('state','npcs',row.driver,'status'))||personConstraint(e,d.get('state'),row.driver)){
-   row.status='delayed';t.nextAt=minute+DAY;row.reason='车船损坏、驮畜失能或承运人无法行动';d.set(path(row.id),row);continue;
+   row.status='delayed';t.nextAt=minute+DAY;row.reason='车船损坏、驮畜失能或承运人无法行动';exposeCargo(d,e,row,minute);holdEscort(d,row);d.set(path(row.id),row);continue;
   }
   if(t.segment){const waypoint=stepTransport(e,t,t.segment);
    if(asset.animal&&t.segment.kind==='move'){const care=d.get('state','creatures',asset.animal,'care');if(care)d.set(['state','creatures',asset.animal,'care'],{...care,fatigue:Math.min(100,care.fatigue+Math.ceil(t.segment.minutes/30)*e.rules.petCare.travelFatiguePer30Minutes)});}
    if(waypoint){row.history.push({minute,location:t.location,kind:'waypoint'});const wear=Math.max(1,Math.ceil(t.segment.distanceKm/20));d.set([...path(row.asset),'durability'],Math.max(0,asset.durability-wear));}}
+  exposeCargo(d,e,row,minute);
   if(t.edgeIndex>=t.edges.length){
    row.status='delivered';row.arrivedAt=minute;t.nextAt=null;t.segment=null;index(d,row.id,false);
+   settleCarriage(d,e,row,minute);
    const handover=!row.cargo.length||actorLocation(d.get('state'),row.recipient)===t.location;
    if(handover){for(const c of row.cargo)moveGoods(d,e,row.recipient,c.item,c.quantity,{instances:c.instances});row.deliveredCargo=clone(row.cargo);row.cargo=[];}
    row.history.push({minute,location:t.location,kind:'delivered'});setPosition(d,row,t.location);
    if(!handover)row.status='arrived';
    if(row.escortQuest){const q=d.get('state','quests',row.escortQuest);if(q?.escrow&&q.status==='进行中'){
-    financeChange(d,e,row.escort,q.escrow,`${row.id}:escort`);d.set(['state','quests',q.id],{...q,status:'已完成',escrow:0,rewardPaid:q.escrow,resolvedAt:minute});
-    d.set(path(`${q.id}:已完成`),{category:'quest_receipt',quest:q.id,parties:[q.publisher,q.taker],minute,location:t.location,status:'已完成',escrow:0,rewardPaid:q.escrow,refund:0,source:'npc_needs'});
+    const pay=settleEscort(d,e,row,q,minute);d.set(['state','quests',q.id],{...q,status:'已完成',escrow:0,rewardPaid:pay.paid,refund:pay.refund,resolvedAt:minute});
+    d.set(path(`${q.id}:已完成`),{category:'quest_receipt',quest:q.id,parties:[q.publisher,q.taker],minute,location:t.location,status:'已完成',escrow:0,rewardPaid:pay.paid,refund:pay.refund,source:'npc_needs'});
    }}
    publishTransitionEvent(d,e,{id:`${row.id}:arrival`,verb:'trade',actor:row.carrier,target:row.recipient,location:t.location,minute,tags:['transport'],witnesses:[]});
   }else{
@@ -187,7 +191,7 @@ export function advanceTransport(d,e,minute){
    row.status=t.segment.kind==='wait'?'delayed':'moving';row.reason=t.segment.reason??null;
    if(t.segment.kind==='wait')row.history.push({minute,location:t.location,kind:'blocked',edge:t.edges[t.edgeIndex]});
    // Between endpoints the route id and remaining distance, not a false town address, locate the shipment.
-   setPosition(d,row,t.location);
+   setPosition(d,row,t.location);holdEscort(d,row);
   }
   d.set(path(row.id),row);
  }

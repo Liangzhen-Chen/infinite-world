@@ -1,4 +1,4 @@
-import {petTrustGain} from './hidden-passives.mjs';
+import {petTrustGain,hiddenPassives} from './hidden-passives.mjs';
 import { effectiveProficiency } from './professions.mjs';
 import { xpRequired } from './progression.mjs';
 import {resolveCreature}from'./wildlife.mjs';
@@ -11,15 +11,27 @@ const categoryNames = { support: '辅助', combat: '战斗', mount: '坐骑' };
 const categoryOf = row => Object.keys(categoryNames).find(key => key === row.category || categoryNames[key] === row.category);
 const active = row => row?.petFormat === 1 ? activeStatuses.has(row.status) : !['死亡', '出走', '释放', '已解除'].includes(row?.status);
 
-export function petCapacity(engine, combat, category) {
-    return category === 'combat' && combat === 'profession_summoner' ? engine.rules.pets.summonerCombat
-        : category === 'mount' && combat === 'profession_knight' ? engine.rules.pets.knightMount : engine.rules.pets[category];
+// Pet slots are read from the professions currently held: a profession's
+// passive may set a category's slots, and active hidden passives whose domain
+// has a pet rule add slots scaled by the player's level.
+export function petCapacity(engine, state, category, { combat = state?.professions?.combat } = {}) {
+    let slots = engine.rules.pets[category] ?? 0;
+    for (const role of [combat, ...(state?.professions?.life ?? [])].filter(Boolean)) {
+        const set = engine.byId.get(role)?.passive?.petSlots;
+        if (set && Object.hasOwn(set, category)) slots = set[category];
+    }
+    const level = state?.player?.level ?? 0;
+    for (const passive of state?.professions ? hiddenPassives(engine, state).filter(row => row.active) : []) {
+        const rule = engine.rules.pets.passiveDomains?.[passive.domain];
+        if (rule?.categories?.includes(category)) slots += 1 + Math.floor(level / rule.perLevels);
+    }
+    return slots;
 }
 
 export function checkPetCareer(d, engine, combat) {
     for (const category of Object.keys(categoryNames)) {
         const count = Object.values(d.get('state', 'pets') ?? {}).filter(row => active(row) && categoryOf(row) === category).length;
-        if (count > petCapacity(engine, combat, category)) throw new Error(`现有${categoryNames[category]}宠物超过新职业名额，须先妥善安置或解除归属`);
+        if (count > petCapacity(engine, d.get('state'), category, { combat })) throw new Error(`现有${categoryNames[category]}宠物超过新职业名额，须先妥善安置或解除归属`);
     }
 }
 
@@ -137,7 +149,7 @@ export function petAction(d, args, eventId) {
             const reserved = d.get('state', 'pets', id);
             if (reserved && (reserved.petFormat !== 1 || active(reserved))) throw new Error('已有宠物记录，不能覆盖或重复登记');
             const count = Object.values(d.get('state', 'pets') ?? {}).filter(pet => active(pet) && categoryOf(pet) === rule.category).length;
-            if (count >= petCapacity(this, d.get('state', 'professions', 'combat'), rule.category)) throw new Error('宠物名额已满或当前职业不允许');
+            if (count >= petCapacity(this, d.get('state'), rule.category)) throw new Error('宠物名额已满或当前职业不允许');
         }
         const result = this.check(d, { attribute: '魅力', skill: rules.tamingSkill, difficulty: rule.difficulty }, eventId);
         if (operation === 'contact') care.contactDay = day;

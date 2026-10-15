@@ -2,7 +2,7 @@
  "title": "无限原野系统地图",
  "card": "K9",
  "generatedFrom": {
-  "commit": "refs/heads/p4",
+  "commit": "refs/heads/pr02",
   "method": "运行时导出（注册表、规则表、工具定义、效果表、立场传导表）+ 静态正则扫描（import 图、函数体标识符、state 分区与 records 前缀、rules/world 读取）。静态扫描是近似：经 engine.byId、helper 间接或动态拼接路径的访问不计入。"
  },
  "scanMethods": {
@@ -18,7 +18,7 @@
  "counts": {
   "layers": 6,
   "systems": 40,
-  "modules": 215,
+  "modules": 216,
   "advance": 57,
   "tools": 25,
   "verbs": 28,
@@ -121,9 +121,10 @@
    "modules": [
     "server-plugin/transport.mjs",
     "server-plugin/transport-route.mjs",
+    "server-plugin/transport-claims.mjs",
     "server-plugin/post.mjs"
    ],
-   "lines": 360,
+   "lines": 427,
    "stateWrites": [
     "creatures",
     "itemInstances",
@@ -144,6 +145,7 @@
     "transport_asset"
    ],
    "rules": [
+    "economy",
     "petCare",
     "quests",
     "travel"
@@ -1420,7 +1422,7 @@
     "server-plugin/pets.mjs",
     "server-plugin/summons.mjs"
    ],
-   "lines": 448,
+   "lines": 460,
    "stateWrites": [
     "creatures",
     "effects",
@@ -1673,7 +1675,7 @@
     "server-plugin/extraction.mjs",
     "server-plugin/smuggling.mjs"
    ],
-   "lines": 2840,
+   "lines": 2888,
    "stateWrites": [
     "crafted",
     "itemInstances",
@@ -10686,6 +10688,7 @@
     "server-plugin/titles.mjs",
     "server-plugin/training.mjs",
     "server-plugin/traits.mjs",
+    "server-plugin/transport-claims.mjs",
     "server-plugin/transport-route.mjs",
     "server-plugin/transport.mjs",
     "server-plugin/tribal-awakening.mjs",
@@ -11020,7 +11023,8 @@
    "server-plugin/law.mjs",
    "server-plugin/remote-generation.mjs",
    "server-plugin/settlement-trade.mjs",
-   "server-plugin/shop.mjs"
+   "server-plugin/shop.mjs",
+   "server-plugin/transport-claims.mjs"
   ],
   "repairs": [
    "server-plugin/catalog.mjs",
@@ -13370,6 +13374,7 @@
       "server-plugin/settlement-trade.mjs",
       "server-plugin/shop.mjs",
       "server-plugin/smuggling.mjs",
+      "server-plugin/transport-claims.mjs",
       "server-plugin/transport.mjs",
       "server-plugin/world-events.mjs"
      ],
@@ -13496,6 +13501,7 @@
       "server-plugin/entity-view.mjs",
       "server-plugin/hidden-passives.mjs",
       "server-plugin/learning.mjs",
+      "server-plugin/pets.mjs",
       "server-plugin/professions.mjs",
       "server-plugin/state-notices.mjs",
       "server-plugin/training.mjs",
@@ -13509,6 +13515,7 @@
       "kernel_engine",
       "sim_character",
       "sim_combat",
+      "sim_companion",
       "ui_client",
       "ui_host",
       "ui_scene",
@@ -13529,6 +13536,7 @@
     "sim_character",
     "sim_clock",
     "sim_combat",
+    "sim_companion",
     "sim_economy",
     "sim_environment",
     "sim_law",
@@ -16287,7 +16295,7 @@
     "factions"
    ],
    "worldDirs": [],
-   "lines": 253
+   "lines": 270
   },
   "server-plugin/finance-bank.mjs": {
    "system": "sim_economy",
@@ -16322,7 +16330,7 @@
    ],
    "world": [],
    "worldDirs": [],
-   "lines": 246
+   "lines": 277
   },
   "server-plugin/finance-operations.mjs": {
    "system": "sim_economy",
@@ -18293,7 +18301,7 @@
    ],
    "world": [],
    "worldDirs": [],
-   "lines": 280
+   "lines": 292
   },
   "server-plugin/population-service.mjs": {
    "system": "sim_npc",
@@ -19478,6 +19486,25 @@
    ],
    "lines": 159
   },
+  "server-plugin/transport-claims.mjs": {
+   "system": "sim_transport",
+   "imports": [
+    "server-plugin/finance-bank.mjs",
+    "server-plugin/weather.mjs"
+   ],
+   "stateWrites": [
+    "quests"
+   ],
+   "stateReads": [],
+   "recordWrites": [],
+   "recordReads": [],
+   "rules": [
+    "economy"
+   ],
+   "world": [],
+   "worldDirs": [],
+   "lines": 63
+  },
   "server-plugin/transport-route.mjs": {
    "system": "sim_transport",
    "imports": [
@@ -19510,6 +19537,7 @@
     "server-plugin/magic-water-earth.mjs",
     "server-plugin/npc-obligations.mjs",
     "server-plugin/quest-sources.mjs",
+    "server-plugin/transport-claims.mjs",
     "server-plugin/transport-route.mjs",
     "server-plugin/world-events.mjs",
     "world/design/transport-rules.mjs"
@@ -19541,7 +19569,7 @@
    "worldDirs": [
     "design"
    ],
-   "lines": 238
+   "lines": 242
   },
   "server-plugin/tribal-awakening.mjs": {
    "system": "sim_society",

@@ -75,7 +75,7 @@ function blocked(e,state,b,minute){
     const sid=placeSettlement(e,state,b.location).value;
     return Object.values(state.records??{}).some(r=>r.category==='war_disruption'&&r.since<=minute&&(r.until??Infinity)>minute&&r.locations?.some(l=>l===b.location||l===sid));
 }
-export function borrowerTerms(d,e,borrower,principal,days){
+export function borrowerTerms(d,e,borrower,principal,days,maximumDays=cfg(e).loan.maximumDays){
     const c=cfg(e),state=d.get('state'),n=state.npcs?.[borrower],base=state.created?.[borrower]??e.byId.get(borrower);
     const debts=Object.values(state.records??{}).filter(r=>r.category==='debt'&&r.debtor===borrower);
     const defaults=debts.filter(r=>r.defaulted).length,repaid=debts.filter(r=>r.status==='已还清').length;
@@ -84,7 +84,7 @@ export function borrowerTerms(d,e,borrower,principal,days){
     const cash=financeBalance(d,e,borrower),{income,expense}=borrowerCashFlow(e,state,borrower);
     const credit=clamp(50+regard/2+repaid*10-defaults*30+intellect*2+(income-expense)/Math.max(1,principal)*10,0,100);
     const [lo,hi]=e.rules.economy.loanMonthlyInterest,rate=Math.round((hi-(hi-lo)*credit/100)*10000)/10000;
-    financeInt(days,1,c.loan.maximumDays,'借期天数');
+    financeInt(days,1,maximumDays,'借期天数');
     return {rate,interest:Math.ceil(principal*rate*days/30),credit,cash,income,expense};
 }
 export function borrowerCashFlow(e,state,id,minute=state.minute){
@@ -139,18 +139,20 @@ export function bankTrade(d,e,args,id){
         const representative=args.business?groupRepresentative(e,d.get('state'),borrower,args.seller):borrower;
         if(!representative)throw Error('组织没有可签约的现任代表');
         counterpart(d,e,representative,{consent:args.consent});
-        const terms=borrowerTerms(d,e,borrower,principal,days),key=`debt_lend_${id}`;
+        const loanRules=cfg(e).loan,terms=borrowerTerms(d,e,borrower,principal,days,loanRules.lendMaximumDays??loanRules.maximumDays),key=`debt_lend_${id}`;
         const pledgeKey=args.item?`pledge:${key}`:null;
         if(pledgeKey)pledge(d,e,pledgeKey,e.resolve(args.item,'item'),financeInt(args.quantity??1,1,100000,'抵押数量'),borrower);
         financeTransfer(d,e,'player',borrower,principal,id);
         const count=financeInt(args.item?1:args.quantity??1,1,days,'分期期数');
+        // Penalty and acceleration are fixed in the signed terms, not read back from later rules.
+        const penaltyRate=Math.round(terms.rate*(loanRules.penaltyMultiplier??0.5)*10000)/10000,accelerateAfter=loanRules.accelerateAfterMissed??3;
         d.set(financePath(key),{category:'debt',kind:'player_loan',debtor:borrower,representative,creditor:'player',principal,interest:terms.interest,monthlyInterest:terms.rate,
             amount:principal+terms.interest,paid:0,status:'待偿还',installments:count,nextInstallment:1,createdAt:now,deadline:now+days*DAY,nextPayment:now+Math.ceil(days*DAY/count),
-            pledgeRecord:pledgeKey,location,source:id,signedTerms:{principal,days,rate:terms.rate,installments:count}});
-        return {debt:key,borrower,principal,interest:terms.interest,monthlyInterest:terms.rate};
+            penalty:0,overdue:[],assessedInstallments:0,pledgeRecord:pledgeKey,location,source:id,signedTerms:{principal,days,rate:terms.rate,installments:count,penaltyMonthlyRate:penaltyRate,accelerateAfterMissed:accelerateAfter}});
+        return {debt:key,borrower,principal,interest:terms.interest,monthlyInterest:terms.rate,installments:count,penaltyMonthlyRate:penaltyRate};
     }
     if(op==='collect'){
-        const key=args.debt,row=d.get(...financePath(key));if(row?.creditor!=='player'||row.status==='已还清'||!['player_loan','rent'].includes(row.kind))throw Error('没有本人可追收的未清欠款');
+        const key=args.debt,row=d.get(...financePath(key));if(row?.creditor!=='player'||row.status==='已还清'||!['player_loan','rent','transport_claim'].includes(row.kind))throw Error('没有本人可追收的未清欠款');
         const representative=row.representative??row.debtor;counterpart(d,e,representative,{consent:args.consent});
         const amount=financeInt(args.coins??row.amount-row.paid,1,row.amount-row.paid,'追收金额');
         loanPayment(d,e,key,row,amount,now,id);return {debt:key,repaid:amount};
@@ -199,6 +201,31 @@ export function bankTrade(d,e,args,id){
     }
     throw Error('未知钱庄操作');
 }
+// Borrower incapacity is read from the borrower's current status and custody.
+// It suspends payment, never the debt: arrears and penalties keep accruing.
+export function debtorIncapacity(e,state,id,minute=state.minute){
+    const actor=state.npcs?.[id];if(!actor)return null;
+    if(['死亡','濒死','昏迷'].includes(actor.status))return actor.status;
+    return personConstraint(e,state,id,minute)?'受拘押':null;
+}
+// Each installment date compares the cumulative schedule with what was paid;
+// a shortfall is recorded as overdue and charged the contract's penalty rate.
+function assessInstallments(row,at,unable){
+    const span=(row.deadline-row.createdAt)/row.installments,base=row.principal+row.interest,rate=row.signedTerms?.penaltyMonthlyRate??0;
+    let next=row;
+    for(let k=(row.assessedInstallments??0)+1;k<=row.installments;k++){
+        const due=row.createdAt+Math.ceil(span*k);if(due>at)break;
+        const shortfall=Math.max(0,Math.ceil(base*k/row.installments)+(next.penalty??0)-next.paid),penalty=shortfall?Math.ceil(shortfall*rate*span/MONTH):0;
+        const entry={installment:k,due,assessedAt:at,shortfall,penalty,...(unable?{reason:unable}:{})};
+        next={...next,assessedInstallments:k,amount:next.amount+penalty,penalty:(next.penalty??0)+penalty,
+            overdue:shortfall?[...next.overdue??[],entry]:next.overdue??[],status:shortfall?'逾期':next.status==='已还清'?'已还清':'待偿还',installmentOverdueAt:shortfall?due:null,
+            lastAssessed:{installment:k,missed:shortfall>0}};
+    }
+    return next;
+}
+function trailingMissed(row){
+    let n=0;for(let k=row.assessedInstallments??0;k>0;k--){if(row.overdue.some(o=>o.installment===k))n++;else break;}return n;
+}
 export function advanceBankFinance(d,e,minute){
     const c=cfg(e);if(!c)return;
     for(const [id,original]of Object.entries(d.get('state','records')??{})){
@@ -225,14 +252,18 @@ export function advanceBankFinance(d,e,minute){
         if(original.category==='debt'&&original.kind==='player_loan'&&original.status!=='已还清'){
             let row=original;
             for(let at=row.nextPayment;at<=minute&&row.status!=='已还清';at+=DAY){
-                const actor=d.get('state','npcs',row.debtor),unable=actor&&(['死亡','濒死','昏迷'].includes(actor.status)||personConstraint(e,d.get('state'),row.debtor,at));
+                const unable=debtorIncapacity(e,d.get('state'),row.debtor,at);
                 const cash=financeBalance(d,e,row.debtor),expense=borrowerCashFlow(e,d.get('state'),row.debtor,at).expense;
-                const elapsed=Math.floor((at-row.createdAt)/((row.deadline-row.createdAt)/row.installments));
-                const completed=Math.min(row.installments,Math.max(1,elapsed)),target=Math.ceil(row.amount*completed/row.installments);
+                const span=(row.deadline-row.createdAt)/row.installments,base=row.principal+row.interest,penalty=row.penalty??0;
+                const elapsed=Math.floor((at-row.createdAt)/span);
+                const completed=Math.min(row.installments,Math.max(1,elapsed)),target=Math.ceil(base*completed/row.installments)+penalty;
                 const amount=unable?0:Math.min(Math.max(0,cash-expense),Math.max(0,target-row.paid));
                 if(amount){loanPayment(d,e,id,row,amount,at,`${id}:${at}`);row=d.get(...financePath(id));}
                 row={...row,nextPayment:at+DAY};
-                if(row.paid<row.amount&&at>=row.deadline+c.loan.defaultGraceMinutes&&!row.defaulted){
+                if(!row.defaulted&&row.overdue)row=assessInstallments(row,at,unable);
+                const missed=row.overdue?.length?trailingMissed(row):0;
+                if(!row.defaulted&&row.paid<row.amount&&missed>=(row.signedTerms?.accelerateAfterMissed??Infinity)&&(row.assessedInstallments??0)<row.installments)row={...row,accelerated:{minute:at,missed}};
+                if(row.paid<row.amount&&(at>=row.deadline+c.loan.defaultGraceMinutes||row.accelerated)&&!row.defaulted){
                     const p=row.pledgeRecord?releasePledge(d,e,row.pledgeRecord,'player'):null;
                     if(p)row={...row,paid:Math.min(row.amount,row.paid+p.value)};
                     const remaining=row.amount-row.paid,legalCase=remaining?registerCreditDefault(d,e,{debt:id,row,value:remaining,minute:at}):null;
