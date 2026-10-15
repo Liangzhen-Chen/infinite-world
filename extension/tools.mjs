@@ -48,6 +48,8 @@ Object.assign(festivalParameters,{festival:{...str,description:'plan用custom，
 festivalParameters.operation.description='business经营；festival_依次查现场/约日期/各speaker准自费收费/各speaker同意参加/组织者述因取消';
 festivalParameters.operation.enum.push('faction_inspect','faction_contribute','faction_intervene');
 festivalParameters.operation.enum.push('org_inspect','org_join','org_leave','org_deposit','org_propose','org_vote');
+festivalParameters.operation.enum.push('faith_inspect','faith_convert','faith_give','faith_use','faith_rite','faith_pilgrim');
+festivalParameters.operation.description+='；faith_用org寺观，choice用途/祭仪';
 festivalParameters.operation.enum.push('war_inspect','war_join','diplomacy');
 festivalParameters.operation.enum.push('army_inspect','army_enlist','army_duty','army_recruit','army_dismiss');
 festivalParameters.action.enum.push('expel','appoint','withdraw','charter');

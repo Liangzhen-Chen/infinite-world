@@ -48,7 +48,7 @@ const resolveActor=(engine,state,name)=>{
     if(!personView(engine,state,id))throw Error('没有这个成员');return id;
 };
 function move(d,engine,row,{kind,amount,party,minute,sourceEvent,reason,balance}){
-    if(row.source==='faction')changeGroupCoins(d,engine,row.id,amount,{kind,party,minute,sourceEvent,reason});
+    if(['faction','temple'].includes(row.source))changeGroupCoins(d,engine,row.id,amount,{kind,party,minute,sourceEvent,reason});
     else row.treasury+=amount;
     row.ledger=[...row.ledger??[],{kind,amount,party,minute,sourceEvent,reason,balance}];
 }
@@ -68,7 +68,7 @@ function tally(p){
 }
 function findOrg(engine,d,name){
     const state=d.get('state');let id=name;
-    if(!state.records?.[key(id)]&&!engine.world.households?.some(h=>h.id===id))try{id=engine.resolve(name);}catch{throw Error('没有这个组织');}
+    if(!state.records?.[key(id)]&&!engine.world.households?.some(h=>h.id===id)&&!organization(engine,state,id))try{id=engine.resolve(name);}catch{throw Error('没有这个组织');}
     const org=organization(engine,state,id);if(!org)throw Error('没有这个组织');return org;
 }
 function present(d,engine,name){
@@ -80,7 +80,7 @@ const event=(org,op,extra={})=>({verb:'organize',target:org.id,tags:['organizati
 
 // Executing a decided motion. Returns the outcome text stored on the proposal.
 function execute(d,engine,org,p,minute,sourceEvent){
-    const row=rowOf(d,engine,org),m=p.motion,treasury=()=>row.source==='faction'?groupView(engine,d.get('state'),org.id).treasury.value:row.treasury;
+    const row=rowOf(d,engine,org),m=p.motion,treasury=()=>['faction','temple'].includes(row.source)?groupView(engine,d.get('state'),org.id).treasury.value:row.treasury;
     let outcome='已执行';
     if(m.action==='admit'){
         row.members[m.member]={position:MEMBER,joinedAt:minute,arrears:0};delete row.removed?.[m.member];
