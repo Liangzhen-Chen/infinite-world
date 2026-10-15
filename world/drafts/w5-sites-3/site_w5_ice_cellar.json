@@ -1,0 +1,94 @@
+{
+  "id": "site_w5_ice_cellar",
+  "fingerprint": "d0db820b70be8eb143cf41bffe65ef6407306c3f8aa81a69ec81df8762c0e4d6",
+  "status": "passed",
+  "attempts": 0,
+  "draft": {
+    "id": "site_w5_ice_cellar",
+    "name": "雪灯旧冰窖",
+    "description": "雪灯旧冰窖在雪灯镇北边的一个岩坳里，窖口挂着一排冰溜子，窖门上钉着一盏锈了的铁灯。镇上人说雪灯镇口那根挂灯的高杆，就是照着这盏窖灯的样子立的。冰窖废了以后，镇上的冰窖都搬到了街边。",
+    "climate": "岩坳背阴，窖口终年结冰",
+    "senses": [
+      "窖口挂着一排冰溜子",
+      "窖门上钉着一盏锈了的铁灯",
+      "窖里冷得呼气成霜"
+    ],
+    "entryRule": "废弃的旧冰窖没有主人，冬季山路封闭；窖里冷，进去自担风险",
+    "purpose": "雪灯镇北边岩坳里一座废弃的旧冰窖",
+    "featureNames": [
+      "冻住的窖门"
+    ],
+    "history": [
+      "很久以前：猎户在镇北的岩坳里凿了冰窖腌肉，窖门上钉一盏灯，雪夜回来的人认着灯找到窖口。",
+      "约五十年前：一个雪夜窖门的灯灭了，有个猎户在岩坳里迷了路没能回来。",
+      "后来：镇上在镇口立了高杆挂灯，冰窖也搬到了镇里的街边。",
+      "如今：岩坳里的旧冰窖空着，窖门上那盏铁灯锈死了。"
+    ],
+    "mechanisms": [
+      {
+        "name": "冻死的窖门",
+        "description": "窖门的门缝被冰封死了，门板冻在门框上，硬撞只会把手撞伤。"
+      }
+    ],
+    "clues": [
+      {
+        "name": "窖门上的铁灯",
+        "description": "窖门上钉着的那盏铁灯。",
+        "text": "铁灯的灯罩上刻着一行字：“灯在窖在，灯灭人寻。”灯座里的灯油冻成了一块，灯芯是新换过的，没有点过。"
+      },
+      {
+        "name": "窖里的腌肉签",
+        "description": "窖里的冰架上挂着一排木签。",
+        "text": "冰架上的木签记着各家存的腌肉，有一支签上的肉一直没取，签上刻着一个猎户的名字，名字旁边刻着一盏灯的小画。"
+      }
+    ],
+    "resources": [
+      "冰架上的凝霜",
+      "灯座里冻住的灯油"
+    ],
+    "truths": [
+      "那个迷路没回来的猎户，就是冰架上那支签的主人。窖灯是他出门那夜灭的，镇上的人后来在镇口立起高杆挂灯，照的是“灯灭人寻”这句话；旧窖灯里那根没点过的新灯芯，是有人还在替他换。"
+    ]
+  },
+  "review": {
+    "contradictions": []
+  },
+  "errors": [],
+  "warnings": [],
+  "feedback": null,
+  "frozenCandidate": {
+    "entryHash": "e533c7b684a7a99111899fb38787d51e482d0220ce83df6204a7d71837f89af9",
+    "draftHash": "78a8fe8605eefec332e5656a1bf6be152554c3eca2255cd528b33eabbfa7febd"
+  },
+  "responseEvidence": [
+    {
+      "phase": "review",
+      "attempt": 1,
+      "requestId": "fabfc5c3-8e8b-40b1-844c-0bb1e056a884",
+      "file": "budget-responses/fabfc5c3-8e8b-40b1-844c-0bb1e056a884.json",
+      "requestHash": "ed4d02d020664ef9a8b4269be4f7ce21411933713dbae6466854bbf8d80cc54c",
+      "responseHash": "7548a481e9f37800115a593f25f35b30c1fa08673db35f872bec55d27689b2e7"
+    }
+  ],
+  "measurements": [
+    {
+      "label": "content-w5-sites-3-site_w5_ice_cellar-review0",
+      "model": "deepseek-flash",
+      "thinking": "disabled",
+      "usage": {
+        "prompt_tokens": 1822,
+        "completion_tokens": 7,
+        "total_tokens": 1829,
+        "prompt_tokens_details": {
+          "cached_tokens": 256
+        },
+        "prompt_cache_hit_tokens": 256,
+        "prompt_cache_miss_tokens": 1566
+      },
+      "costUpperYuan": 0.0031982399999999998,
+      "cumulativeUpperYuan": 0.05222583999999999,
+      "latencyMs": 510.9775000000001,
+      "timestamp": "2026-10-15T05:12:51.915Z"
+    }
+  ]
+}
