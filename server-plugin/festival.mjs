@@ -82,6 +82,18 @@ function enrollment(d,row,who){
  return a&&source?.category==='festival_consent'&&source.festival===row.id&&digest(source.agreement)===digest(a)&&a.definition===row.definition&&a.createdAt<row.due;
 }
 export function festivalScheduleAt(engine,state,npcId,minute,slot){
+ // W5: a resident host's festival duty follows their current occupation and
+ // residence. Only the existing work slot containing the whole ceremony moves;
+ // sleep, care, military service and changed livelihoods keep their routines.
+ const npc=engine.byId.get(npcId),own=state?.npcs?.[npcId];
+ for(const f of engine.world.festivals??[]){
+  const r=f.runtime,duty=r?.hostDuty;if(r?.status!=='active'||r.host!==npcId||!duty||!slot)continue;
+  const occupation=own?.occupation??own?.vocation?.name??npc?.occupation;
+  const settlement=own?.residence?.settlement??npc?.settlement??npc?.scope,c=engine.calendar(minute);
+  if(occupation!==duty.occupation||settlement!==duty.settlement||slot.activity!==occupation||
+   c.month!==f.calendar.month||c.day!==f.calendar.day||slot.start>r.startMinute||slot.end<r.startMinute+r.durationMinutes)continue;
+  slot={...slot,location:f.venue.location,services:[],production:false,variant:'festival-duty'};
+ }
  if(!state||!engine.world.festivals?.length)return slot;
  const d={get:(...p)=>p.slice(1).reduce((x,k)=>x?.[k],state)};
  for(const row of Object.values(state.records??{})){

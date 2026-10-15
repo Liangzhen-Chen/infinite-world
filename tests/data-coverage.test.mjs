@@ -88,7 +88,7 @@ test('势力委托：至少15个势力时钟阶段挂了委托，且能按阶段
 
 test('节日：核心区正式节日有常住主办人；远方节日由到访生成的治所主办人主持',()=>{
  const home=world.festivals.filter(f=>!remoteCountyOf(world,f.venue.location)&&f.runtime.status==='active');
- assert.deepEqual(home.map(f=>f.id).sort(),['festival_ditchmeal','festival_orchardshare','festival_threshold']);
+ assert.deepEqual(home.map(f=>f.id).sort(),['festival_borrowbench','festival_ditchmeal','festival_orchardshare','festival_threshold']);
  for(const f of home){const n=world.npcs.find(n=>n.id===f.runtime.host);assert.equal(n?.tier,'full',f.id);}
  const remote=world.festivals.filter(f=>remoteCountyOf(world,f.venue.location));
  assert.equal(remote.length,20);

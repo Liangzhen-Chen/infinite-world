@@ -7,6 +7,7 @@ import {applyPatches,digest}from'../server-plugin/storage.mjs';
 import {standing,standingWords,adjustStanding,transmitStanding,collectivesOf,TRANSMISSION}from'../server-plugin/standing.mjs';
 import {relationView}from'../server-plugin/npc-relations.mjs';
 import {sceneStandings}from'../server-plugin/scene-card.mjs';
+import {spendFactionAssets}from'../server-plugin/faction-clock.mjs';
 
 const world=await loadWorld(),seed=JSON.parse(await fs.readFile('tests/fixtures/legacy/seed.json','utf8'));
 const engine=new WorldEngine(world);
@@ -14,6 +15,28 @@ const fresh=()=>engine.createCharacter(seed,{},'standing');
 const draft=document=>({document,get(...k){return k.reduce((o,x)=>o?.[x],this.document);},set(path,value){this.document=applyPatches(this.document,[{op:'set',path,value}]);}});
 const seat=world.locations.find(l=>l.monsterSociety?.stances?.player==='戒备').id;
 const harm=(target,id,extra={})=>({id,verb:'harm',actor:'player',target,harm:6,witnesses:[],tags:['combat','hostile'],minute:600,...extra});
+
+test('W5：独立反向关系沿用已审理由与数值，立场及新旧组织公账都读取；原正文不变',async()=>{
+ const raw=JSON.parse(await fs.readFile('world/lore/factions.json','utf8'));
+ for(const [target,source,score]of [['faction_ms_lielu','faction_far_orcmoot',10],['faction_ms_yugen','faction_far_lignum',30],['faction_ms_taideng','faction_far_scentmoot',10]]){
+  const authored=raw.find(f=>f.id===target),origin=raw.find(f=>f.id===source).relations.find(r=>r.faction===target);
+  assert.deepEqual(world.factions.find(f=>f.id===target),authored);
+  assert.deepEqual(world.rules.factionRelations[target],[{...origin,faction:source}]);assert.equal(origin.score,score);
+  const d=draft(fresh());assert.equal(standing(engine,d.document.state,target,source),score);
+  spendFactionAssets(d,engine,target,{coins:0},{sourceEvent:'w5-account'});
+  const key=`faction-assets:${target}`,account=d.document.state.records[key];
+  assert.equal(account.relations[source],score);assert.equal(account.coins,authored.resources.treasuryCopper);
+  delete account.relations[source];assert.equal(standing(engine,d.document.state,target,source),score);
+  spendFactionAssets(d,engine,target,{coins:0},{sourceEvent:'w5-old-account'});
+  assert.equal(d.document.state.records[key].relations[source],score);
+  d.document.state.records[key].relations[source]=-7;
+  spendFactionAssets(d,engine,target,{coins:0},{sourceEvent:'w5-keep-change'});
+  assert.equal(standing(engine,d.document.state,target,source),-7);assert.equal(d.document.state.records[key].relations[source],-7);
+ }
+ const tanjie=world.factions.find(f=>f.id==='faction_ms_tanjie');
+ assert.deepEqual(tanjie,raw.find(f=>f.id===tanjie.id));assert.equal(world.rules.factionRelations[tanjie.id],undefined);
+ assert.ok(!raw.filter(f=>f.id.startsWith('faction_far_')).some(f=>f.relations.some(r=>r.faction===tanjie.id)));
+});
 
 test('七份旧存储经同一入口读出 -100..100，存储结构不变',()=>{
  const doc=fresh(),s=doc.state;
