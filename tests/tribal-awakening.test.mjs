@@ -113,12 +113,14 @@ test('立意后提出诉求、分成三派组织并各带派别时钟；诉求�
  // 诉求传闻由K6 rumor效果交给携带者。
  assert.ok(d.get('state','npcs','npc_hw_wushuo').memoryStream.some(m=>m.content.includes('开了灵智')));
  // 午夜：诉求委托挂到河湾村告示处，由公账托管报酬。
- const treasury=d.get('state','settlements','loc_hw','treasury');
+ const treasury=d.get('state','settlements','loc_hw','treasury'),beforeQuests=new Set(Object.keys(d.document.state.quests));
  advanceQuestSources(d,engine,{before:Q,after:Q+DAY});
  const quests=Object.values(d.document.state.quests).filter(q=>q.source?.generator==='tribal_awakening');
  assert.equal(quests.length,dyn.demands.filter(x=>x.quest).length);
- assert.ok(quests.every(q=>q.location==='loc_hw'&&q.publisher==='npc_hw_chenbai'));
- assert.equal(d.get('state','settlements','loc_hw','treasury'),treasury-quests.reduce((n,q)=>n+q.reward,0));
+ assert.ok(quests.every(q=>q.location==='loc_hw'&&q.publisher==='npc_hw_chenbai'&&q.fundedBy?.treasury==='loc_hw'&&q.escrow===q.reward));
+ // T155 also posts a local commission; reconcile every new hold against this public account.
+ const funded=Object.values(d.document.state.quests).filter(q=>!beforeQuests.has(q.id)&&q.fundedBy?.treasury==='loc_hw');
+ assert.equal(d.get('state','settlements','loc_hw','treasury'),treasury-funded.reduce((n,q)=>n+q.escrow,0));
  advanceQuestSources(d,engine,{before:Q+DAY,after:Q+2*DAY});
  assert.equal(Object.values(d.document.state.quests).filter(q=>q.source?.generator==='tribal_awakening').length,quests.length,'同一诉求不重复出委托');
  // 激进派时钟过半时出冲突委托，以族群结局为完成条件。

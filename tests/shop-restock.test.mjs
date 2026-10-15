@@ -24,8 +24,9 @@ function fixture({at=inn,coins=500,withTown=true,edit=null}={}){
 }
 const qty=(doc,npc,item)=>{const v=doc.state.npcs[npc].inventory[item];return typeof v==='number'?v:v?.quantity??0;};
 const ledger=(doc,id)=>doc.state.records[`shop:${id}`];
-// Shop-side cash only: villagers' own autonomous spending is not part of these ledgers.
-const cash=doc=>doc.state.player.coins+Object.keys(placeOf).reduce((n,id)=>n+doc.state.npcs[id].coins,0)+Object.values(doc.state.settlements).reduce((n,s)=>n+s.treasury,0);
+// Shop-side cash includes quest escrow funded by these keepers or settlement accounts.
+const cash=doc=>doc.state.player.coins+Object.keys(placeOf).reduce((n,id)=>n+doc.state.npcs[id].coins,0)+Object.values(doc.state.settlements).reduce((n,s)=>n+s.treasury,0)
+    +Object.values(doc.state.quests).filter(q=>doc.state.settlements[q.fundedBy?.treasury]||q.personal&&q.publisher in placeOf).reduce((n,q)=>n+(q.escrow??0),0);
 
 test('发布规则自洽；面包等价格锚点不变',async()=>{
     assert.deepEqual(validateShopRules(world),[]);
