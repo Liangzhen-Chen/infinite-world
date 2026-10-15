@@ -11,7 +11,8 @@ import {withoutT142} from '../tools/t142-merge.mjs';
 
 const candidate=JSON.parse(await fs.readFile('world/drafts/w5/social-candidate.json','utf8'));
 // W5 candidate replaces the social catalogs; T142's far regions, cultures and factions are a later batch.
-const socialWorld=async()=>({...withoutT142(await loadWorld()),...structuredClone(candidate)});
+// U11族群觉醒动态挂靠的议事势力不在W5社会候选里，且晚于W5，候选世界不含。
+const socialWorld=async()=>{const world={...withoutT142(await loadWorld()),...structuredClone(candidate)};delete world.rules.tribalAwakening;return world;};
 
 test('势力历史进入正式校验，拒绝坏归属、伪造公开说明、古人复活及纪元错误',async()=>{
     const world=await socialWorld();assert.equal(validateWorld(world).ok,true);
@@ -53,6 +54,7 @@ test('旧战役升级加入社会资料不实例化名册或资源，导出往�
     const factionClocks=new Set([...old.rules.factionClock?.clocks??[],...old.factions.map(f=>f.clock).filter(Boolean)].map(c=>c.id));
     if(old.rules.effectTable)old.rules.effectTable.hooks=(old.rules.effectTable.hooks??[]).filter(h=>h.source!=='faction'||factionClocks.has(h.owner));
     delete old.festivals;// The festival catalog (T108) postdates this historical world.
+    delete old.rules.tribalAwakening;// So do U11 tribal-awakening dynamics.
     const original=await createPlaytestServer({world:old});t.after(original.close);
     const created=await original.api('create',{}),id=created.reference.campaignId;
     await original.api('execute',{campaignId:id,tool:'world_time',args:{minutes:10},eventId:'before-upgrade'});

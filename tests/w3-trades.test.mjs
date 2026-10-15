@@ -54,6 +54,7 @@ test('候选 world_upgrade 保留已交易库存和人物变化，新的书及�
     // T142九省纲要的远方文化与势力以本批之后的魔物社会人物为见证，是更晚的一批，一并投影掉。
     const old=withoutMonsterSociety2(withoutT142(world)),addedItems=new Set(bones.items.map(row=>row.id)),addedRecipes=new Set(bones.recipes.map(row=>row.id));
     delete old.festivals;// T108节日目录（材料引用本批物品）晚于本批。
+    delete old.rules.tribalAwakening;// U11族群觉醒动态（挂靠魔物社会议事势力与各村人物）晚于本批，历史世界不含。
     old.items=old.items.filter(row=>!addedItems.has(row.id));old.recipes=old.recipes.filter(row=>!addedRecipes.has(row.id));
     for(const npc of old.npcs)for(const id of Object.keys(npc.inventory??{}))if(addedItems.has(id))delete npc.inventory[id];
     const oldEngine=new WorldEngine(old),seed=JSON.parse(await fs.readFile('tests/fixtures/legacy/seed.json','utf8')),document=oldEngine.initialFromLegacy(seed,'w3-trades-upgrade');

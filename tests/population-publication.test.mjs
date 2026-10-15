@@ -42,6 +42,7 @@ if(source.rules.npcGrowth?.vocations)source.rules.npcGrowth.vocations=source.rul
 {const keptNpcs=new Set([...preserved,...candidate.npcs].map(n=>n.id)),keptPlaces=new Set(source.locations.map(l=>l.id));Object.assign(source,pruneCatalog(source,[...formal.npcs.filter(n=>!keptNpcs.has(n.id)).map(n=>n.id),...formal.locations.filter(l=>!keptPlaces.has(l.id)).map(l=>l.id),...source.items.filter(i=>i.id.startsWith('item_bs_')).map(i=>i.id)]));}
 // T108节日目录、T110/T111可执行势力时钟与T142九省纲要都晚于本批，分别移出（节日目录整表移出，时钟回到声明式计划）。
 delete source.festivals;
+delete source.rules.tribalAwakening;// U11族群觉醒动态（挂靠魔物社会议事势力与各村人物）晚于本批，历史世界不含。
 // T105/T157首领等引用本夹具已移出的魔物社会人物、营地和野外地点；
 // 各村政体补充、U3疫病传播路线和镇上商店依赖已移出的村镇法典、路线和聚落档案。依赖随之投影掉（求闭包）。
 {
