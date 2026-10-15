@@ -1,7 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
-import {execFileSync} from 'node:child_process';
 import {advanceRegistry} from '../server-plugin/advance-registry.mjs';
 import '../server-plugin/engine.mjs';
 import {SOCIAL_VERBS,worldEventSubscribers} from '../server-plugin/world-events.mjs';
@@ -9,8 +8,8 @@ import {toolDefinitions} from '../extension/tools.mjs';
 import {effectKinds} from '../server-plugin/effects.mjs';
 import {interactionRules} from '../world/design/interaction-rules.mjs';
 
-const run=()=>execFileSync(process.execPath,['tools/system-map.mjs'],{encoding:'utf8'});
-const out=run();
+// The module generates the same files as the CLI without a sandboxed child process.
+const {summary:out}=await import('../tools/system-map.mjs');
 const data=JSON.parse(fs.readFileSync('docs/system-map.json','utf8'));
 const html=fs.readFileSync('docs/system-map.html','utf8');
 

@@ -7,7 +7,7 @@
 import {eventWeight} from './standing.mjs';
 import {recordCareerMetrics} from './career-metrics.mjs';
 export const WORLD_EVENT_VERSION=1;
-export const SOCIAL_VERBS=new Set(['harm','clash','steal','gift','help','trade','learn','organize','breach','author','deceive','pact']);
+export const SOCIAL_VERBS=new Set(['harm','clash','steal','gift','help','trade','learn','organize','breach','author','deceive','pact','duel']);
 const awake=n=>n&&!['死亡','濒死','昏迷'].includes(n.status)&&!n.scheduleTravel&&!n.cognitionTravel&&!/(睡眠|熟睡|睡觉)/.test(n.activity??'');
 const resolve=(engine,value)=>{if(!value)return null;try{return engine.resolve(value);}catch{return null;}};
 
@@ -52,6 +52,7 @@ export function deriveWorldEvents(engine,before,after,{tool,args={},detail={},ev
     if(tool==='combat'&&detail.target){
         const intent=args.intent??'attack',hostile=['attack','shove'].includes(intent);
         e={verb:hostile?'harm':'clash',actor:'player',target:detail.target,harm:Math.max(0,detail.damage??0),tags:['combat',`tactic:${intent}`,...(hostile?['hostile','violence']:[])]};
+        if(detail.duel)e={verb:'duel',actor:'player',target:detail.target,harm:Math.max(0,detail.damage??0),tags:['combat','duel',detail.duelRule],duel:detail.duel};
     }else if(tool==='cast'){
         const spell=engine.byId.get(detail.spell??resolve(engine,args.spell)),kind=spell?.effectSpec?.kind;
         const target=typeof detail.target==='string'&&detail.target!=='player'?detail.target:null;

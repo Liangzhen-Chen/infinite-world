@@ -65,6 +65,7 @@ import {materializeWildlifeHabitats}from'./wildlife-habitats.mjs';
 import {unfoldPopulationAt,acceptPopulationProfile}from'./population.mjs';
 import {remoteEngine,unfoldRemoteAt}from'./remote-generation.mjs';
 import {advanceNeedsSteps,nextAdvanceMinute,runAdvance}from'./advance-registry.mjs';
+import {smuggleTrade,inspectSmuggling}from'./smuggling.mjs';
 const clone = value => structuredClone(value);
 const number = (value, min = 0, max = 1e9, label = '数值') => {
     if (!Number.isSafeInteger(value) || value < min || value > max) throw new Error(`${label}必须在${min}到${max}之间`);
@@ -257,6 +258,7 @@ export class WorldEngine {
         return changeItems(d,this,id,item,delta);
     }
     async trade(d,args,id) {
+        if(['smuggle','deliver_smuggled'].includes(args.operation))return smuggleTrade.call(this,d,args,id);
         if(CREDIT_OPERATIONS.has(args.operation))return creditTrade.call(this,d,args,id);
         if(args.operation&&args.operation!=='trade')return businessTrade.call(this,d,args,id);
         if(args.service!==undefined&&args.service!=='住宿')throw new Error('未登记该服务；住宿请传 service="住宿" 与 days，购买物品请传 item 与 quantity');
@@ -462,6 +464,7 @@ export class WorldEngine {
         if(areaTravel)d.set(['state','records','magic_area_transit'],{category:'magic_area_transit',subjects:['player',...d.get('state','player','companions')],start:d.get('state','minute'),arrival:this.npcObligationAction.arrivalMinute,source:id});
         strainCare(d,this,'player',route.movingMinutes);
         this.advance(d,route.minutes,id);
+        inspectSmuggling(d,this,route,id);
         let encounter=null;
         for(const attempt of attempts){const seen=settleWildlifeEncounter(d,this,attempt,id);if(seen)encounter=seen;}
         if(areaTravel)d.remove(['state','records','magic_area_transit']);

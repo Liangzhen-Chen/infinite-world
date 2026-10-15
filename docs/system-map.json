@@ -2,7 +2,7 @@
  "title": "无限原野系统地图",
  "card": "K9",
  "generatedFrom": {
-  "commit": null,
+  "commit": "refs/heads/u15",
   "method": "运行时导出（注册表、规则表、工具定义、效果表、立场传导表）+ 静态正则扫描（import 图、函数体标识符、state 分区与 records 前缀、rules/world 读取）。静态扫描是近似：经 engine.byId、helper 间接或动态拼接路径的访问不计入。"
  },
  "scanMethods": {
@@ -18,14 +18,14 @@
  "counts": {
   "layers": 6,
   "systems": 37,
-  "modules": 164,
+  "modules": 168,
   "advance": 42,
   "tools": 25,
-  "verbs": 15,
+  "verbs": 16,
   "subscribers": 8,
   "interactionRules": 25,
   "effectKinds": 19,
-  "links": 345
+  "links": 347
  },
  "layers": [
   {
@@ -338,7 +338,7 @@
     "server-plugin/campaign-reducer.mjs",
     "server-plugin/archived-reducer.mjs"
    ],
-   "lines": 929,
+   "lines": 943,
    "stateWrites": [
     "combatDisengaged",
     "created",
@@ -598,7 +598,7 @@
    "modules": [
     "server-plugin/world-events.mjs"
    ],
-   "lines": 140,
+   "lines": 141,
    "stateWrites": [
     "records"
    ],
@@ -798,7 +798,7 @@
     "server-plugin/population-service.mjs",
     "server-plugin/settlement-profile.mjs"
    ],
-   "lines": 2960,
+   "lines": 2962,
    "stateWrites": [
     "created",
     "family",
@@ -877,6 +877,7 @@
      "verbs": [
       "cast",
       "clash",
+      "duel",
       "harm",
       "help",
       "learn",
@@ -1012,11 +1013,17 @@
    "card": null,
    "dir": null,
    "modules": [
-    "server-plugin/combat.mjs"
+    "server-plugin/combat.mjs",
+    "server-plugin/duels.mjs"
    ],
-   "lines": 63,
+   "lines": 123,
    "stateWrites": [],
-   "stateReads": [],
+   "stateReads": [
+    "location",
+    "minute",
+    "npcs",
+    "records"
+   ],
    "recordWrites": [],
    "recordReads": [],
    "rules": [
@@ -1029,7 +1036,8 @@
    "subscribes": [],
    "effects": [],
    "tools": [
-    "world_combat"
+    "world_combat",
+    "world_settlement"
    ],
    "readBy": []
   },
@@ -1424,9 +1432,11 @@
     "server-plugin/credit.mjs",
     "server-plugin/settlement-trade.mjs",
     "server-plugin/manufacturing.mjs",
-    "server-plugin/repair.mjs"
+    "server-plugin/repair.mjs",
+    "server-plugin/extraction.mjs",
+    "server-plugin/smuggling.mjs"
    ],
-   "lines": 1389,
+   "lines": 1568,
    "stateWrites": [
     "crafted",
     "itemInstances",
@@ -1435,6 +1445,7 @@
     "quotes",
     "records",
     "settlements",
+    "skills",
     "workshopFunds"
    ],
    "stateReads": [
@@ -1442,8 +1453,7 @@
     "inventory",
     "location",
     "minute",
-    "recipes",
-    "skills"
+    "recipes"
    ],
    "recordWrites": [
     "agriculture",
@@ -1459,13 +1469,18 @@
     "check",
     "economy",
     "equipment",
+    "extraction",
+    "law",
     "repairs",
     "settlementTrade",
-    "travel"
+    "smuggling",
+    "travel",
+    "wildlife"
    ],
    "world": [
     "items",
     "locations",
+    "monsters",
     "npcs",
     "routes",
     "rules",
@@ -1484,10 +1499,12 @@
    ],
    "tools": [
     "world_trade",
+    "world_move",
     "world_combat",
     "world_craft",
     "world_settlement",
-    "world_create"
+    "world_create",
+    "world_field"
    ],
    "readBy": []
   },
@@ -1562,9 +1579,10 @@
     "server-plugin/promotion.mjs",
     "server-plugin/quest-board.mjs",
     "server-plugin/quest-sources.mjs",
-    "server-plugin/tribal-awakening.mjs"
+    "server-plugin/tribal-awakening.mjs",
+    "server-plugin/elections.mjs"
    ],
-   "lines": 3155,
+   "lines": 3275,
    "stateWrites": [
     "buildings",
     "created",
@@ -1603,6 +1621,7 @@
    ],
    "rules": [
     "agriculture",
+    "elections",
     "governance",
     "law",
     "levels",
@@ -1766,7 +1785,7 @@
     "server-plugin/law.mjs",
     "server-plugin/bounty.mjs"
    ],
-   "lines": 784,
+   "lines": 794,
    "stateWrites": [
     "itemInstances",
     "location",
@@ -1853,7 +1872,7 @@
    "modules": [
     "extension/tools.mjs"
    ],
-   "lines": 101,
+   "lines": 108,
    "stateWrites": [],
    "stateReads": [],
    "recordWrites": [],
@@ -2662,7 +2681,8 @@
    "to": "sim_combat",
    "kind": "call",
    "labels": [
-    "combat.mjs"
+    "combat.mjs",
+    "duels.mjs"
    ]
   },
   {
@@ -2682,11 +2702,13 @@
     "business.mjs",
     "contracts.mjs",
     "credit.mjs",
+    "extraction.mjs",
     "items.mjs",
     "manufacturing.mjs",
     "repair.mjs",
     "settlement-trade.mjs",
-    "shop.mjs"
+    "shop.mjs",
+    "smuggling.mjs"
    ]
   },
   {
@@ -2749,6 +2771,7 @@
    "kind": "call",
    "labels": [
     "civic.mjs",
+    "elections.mjs",
     "governance.mjs",
     "monster-society.mjs",
     "notables.mjs",
@@ -3166,6 +3189,22 @@
    ]
   },
   {
+   "from": "sim_combat",
+   "to": "base_standing",
+   "kind": "call",
+   "labels": [
+    "standing.mjs"
+   ]
+  },
+  {
+   "from": "sim_combat",
+   "to": "sim_npc",
+   "kind": "call",
+   "labels": [
+    "npc-intelligence.mjs"
+   ]
+  },
+  {
    "from": "sim_companion",
    "to": "sim_character",
    "kind": "call",
@@ -3256,6 +3295,7 @@
    "to": "sim_law",
    "kind": "call",
    "labels": [
+    "bounty.mjs",
     "law.mjs"
    ]
   },
@@ -3282,6 +3322,7 @@
    "to": "sim_society",
    "kind": "call",
    "labels": [
+    "organizations.mjs",
     "promotion.mjs",
     "reputation-registry.mjs"
    ]
@@ -3742,7 +3783,8 @@
    "to": "sim_law",
    "kind": "call",
    "labels": [
-    "bounty.mjs"
+    "bounty.mjs",
+    "law.mjs"
    ]
   },
   {
@@ -3750,6 +3792,7 @@
    "to": "sim_npc",
    "kind": "call",
    "labels": [
+    "lies.mjs",
     "npc-cognition.mjs",
     "npc-intelligence.mjs",
     "npc-life.mjs",
@@ -5106,7 +5149,8 @@
    "to": "sim_combat",
    "kind": "tool",
    "labels": [
-    "world_combat"
+    "world_combat",
+    "world_settlement"
    ]
   },
   {
@@ -5126,6 +5170,8 @@
     "world_combat",
     "world_craft",
     "world_create",
+    "world_field",
+    "world_move",
     "world_settlement",
     "world_trade"
    ]
@@ -5732,7 +5778,8 @@
    "breach",
    "author",
    "deceive",
-   "pact"
+   "pact",
+   "duel"
   ],
   "verbs": [
    "author",
@@ -5740,6 +5787,7 @@
    "cast",
    "clash",
    "deceive",
+   "duel",
    "gift",
    "harm",
    "hazard",
@@ -5802,6 +5850,7 @@
     "verbs": [
      "cast",
      "clash",
+     "duel",
      "harm",
      "help",
      "learn",
@@ -5888,7 +5937,11 @@
    "deceive": [
     "server-plugin/lies.mjs"
    ],
+   "duel": [
+    "server-plugin/world-events.mjs"
+   ],
    "gift": [
+    "server-plugin/elections.mjs",
     "server-plugin/world-events.mjs"
    ],
    "harm": [
@@ -5926,6 +5979,7 @@
   "toolVerbs": {
    "combat": [
     "clash",
+    "duel",
     "harm"
    ],
    "cast": [
@@ -6463,6 +6517,7 @@
    "server-plugin/career-metrics.mjs",
    "server-plugin/creature-nature.mjs",
    "server-plugin/effects.mjs",
+   "server-plugin/extraction.mjs",
    "server-plugin/interactions.mjs",
    "server-plugin/magic-marks.mjs",
    "server-plugin/magic-object.mjs",
@@ -6883,7 +6938,9 @@
    "server-plugin/boss-negotiation.mjs",
    "server-plugin/bounty.mjs",
    "server-plugin/credit.mjs",
+   "server-plugin/duels.mjs",
    "server-plugin/effects.mjs",
+   "server-plugin/elections.mjs",
    "server-plugin/faction-clock.mjs",
    "server-plugin/governance.mjs",
    "server-plugin/lies.mjs",
@@ -6923,7 +6980,9 @@
     "withdraw",
     "exchange",
     "work",
-    "partner"
+    "partner",
+    "smuggle",
+    "deliver_smuggled"
    ],
    "routes": [
     {
@@ -6942,7 +7001,9 @@
       "withdraw",
       "exchange",
       "work",
-      "partner"
+      "partner",
+      "smuggle",
+      "deliver_smuggled"
      ],
      "handler": "WorldEngine.trade",
      "modules": [
@@ -6956,6 +7017,7 @@
       "server-plugin/npc-schedule.mjs",
       "server-plugin/settlement-trade.mjs",
       "server-plugin/shop.mjs",
+      "server-plugin/smuggling.mjs",
       "server-plugin/wildlife.mjs"
      ],
      "systems": [
@@ -6999,6 +7061,7 @@
       "server-plugin/npc-obligations.mjs",
       "server-plugin/pets.mjs",
       "server-plugin/progression.mjs",
+      "server-plugin/smuggling.mjs",
       "server-plugin/wildlife-society.mjs",
       "server-plugin/wildlife.mjs"
      ],
@@ -7007,6 +7070,7 @@
       "kernel_engine",
       "sim_character",
       "sim_companion",
+      "sim_economy",
       "sim_environment",
       "sim_magic",
       "sim_npc",
@@ -7019,6 +7083,7 @@
     "kernel_engine",
     "sim_character",
     "sim_companion",
+    "sim_economy",
     "sim_environment",
     "sim_magic",
     "sim_npc",
@@ -7365,6 +7430,7 @@
       "server-plugin/boss-abilities.mjs",
       "server-plugin/bosses.mjs",
       "server-plugin/combat.mjs",
+      "server-plugin/duels.mjs",
       "server-plugin/environment.mjs",
       "server-plugin/items.mjs",
       "server-plugin/law.mjs",
@@ -7518,7 +7584,15 @@
     "org_leave",
     "org_deposit",
     "org_propose",
-    "org_vote"
+    "org_vote",
+    "duel_challenge",
+    "duel_answer",
+    "duel_yield",
+    "election_start",
+    "election_campaign",
+    "election_finish",
+    "election_expose",
+    "mining_permit"
    ],
    "routes": [
     {
@@ -7567,13 +7641,24 @@
       "org_leave",
       "org_deposit",
       "org_propose",
-      "org_vote"
+      "org_vote",
+      "duel_challenge",
+      "duel_answer",
+      "duel_yield",
+      "election_start",
+      "election_campaign",
+      "election_finish",
+      "election_expose",
+      "mining_permit"
      ],
      "handler": "activities.settlement",
      "modules": [
       "server-plugin/activities.mjs",
       "server-plugin/business.mjs",
       "server-plugin/civic.mjs",
+      "server-plugin/duels.mjs",
+      "server-plugin/elections.mjs",
+      "server-plugin/extraction.mjs",
       "server-plugin/faction-clock.mjs",
       "server-plugin/festival.mjs",
       "server-plugin/governance.mjs",
@@ -7587,6 +7672,7 @@
      "systems": [
       "kernel_engine",
       "sim_clock",
+      "sim_combat",
       "sim_economy",
       "sim_society"
      ]
@@ -7595,6 +7681,7 @@
    "systems": [
     "kernel_engine",
     "sim_clock",
+    "sim_combat",
     "sim_economy",
     "sim_society"
    ]
@@ -7773,6 +7860,8 @@
     "wildlife_settle",
     "wildlife_leave",
     "wildlife_borrow_form",
+    "wildlife_fish",
+    "wildlife_eat",
     "environment_inspect",
     "environment_inspect_heat",
     "environment_inspect_marks",
@@ -7791,7 +7880,8 @@
     "site_investigate",
     "site_disarm",
     "site_gather",
-    "site_infiltrate"
+    "site_infiltrate",
+    "site_mine"
    ],
    "routes": [
     {
@@ -7849,15 +7939,19 @@
       "wildlife_stay→stay",
       "wildlife_settle→settle",
       "wildlife_leave→leave",
-      "wildlife_borrow_form→borrow_form"
+      "wildlife_borrow_form→borrow_form",
+      "wildlife_fish→fish",
+      "wildlife_eat→eat"
      ],
      "handler": "activities.wildlife",
      "modules": [
       "server-plugin/activities.mjs",
+      "server-plugin/extraction.mjs",
       "server-plugin/wildlife.mjs"
      ],
      "systems": [
       "kernel_engine",
+      "sim_economy",
       "sim_wildlife"
      ]
     },
@@ -7910,15 +8004,18 @@
       "site_investigate→investigate",
       "site_disarm→disarm",
       "site_gather→gather",
-      "site_infiltrate→infiltrate"
+      "site_infiltrate→infiltrate",
+      "site_mine→mine"
      ],
      "handler": "activities.site",
      "modules": [
       "server-plugin/activities.mjs",
+      "server-plugin/extraction.mjs",
       "server-plugin/sites.mjs"
      ],
      "systems": [
       "kernel_engine",
+      "sim_economy",
       "sim_environment"
      ]
     }
@@ -7927,6 +8024,7 @@
     "kernel_engine",
     "sim_agriculture",
     "sim_boss",
+    "sim_economy",
     "sim_environment",
     "sim_society",
     "sim_wildlife"
@@ -8312,6 +8410,7 @@
     "server-plugin/compat/v2-phase1-engine.mjs",
     "server-plugin/credit.mjs",
     "server-plugin/effects.mjs",
+    "server-plugin/elections.mjs",
     "server-plugin/engine.mjs",
     "server-plugin/environment.mjs",
     "server-plugin/faction-clock.mjs",
@@ -8349,6 +8448,7 @@
     "server-plugin/settlement-trade.mjs",
     "server-plugin/shop.mjs",
     "server-plugin/sites.mjs",
+    "server-plugin/smuggling.mjs",
     "server-plugin/standing.mjs",
     "server-plugin/traits.mjs",
     "server-plugin/tribal-awakening.mjs",
@@ -8463,8 +8563,10 @@
     "server-plugin/creature-nature.mjs",
     "server-plugin/credit.mjs",
     "server-plugin/effects.mjs",
+    "server-plugin/elections.mjs",
     "server-plugin/engine.mjs",
     "server-plugin/environment.mjs",
+    "server-plugin/extraction.mjs",
     "server-plugin/faction-clock.mjs",
     "server-plugin/farm-pests-migration.mjs",
     "server-plugin/farm-pests.mjs",
@@ -8512,6 +8614,7 @@
     "server-plugin/settlement-trade.mjs",
     "server-plugin/shop.mjs",
     "server-plugin/sites.mjs",
+    "server-plugin/smuggling.mjs",
     "server-plugin/summons.mjs",
     "server-plugin/titles.mjs",
     "server-plugin/training.mjs",
@@ -8603,13 +8706,6 @@
    ]
   },
   {
-   "dir": "world/orgs",
-   "files": 0,
-   "keys": [],
-   "readers": [],
-   "tools": []
-  },
-  {
    "dir": "world/people",
    "files": 3,
    "keys": [
@@ -8678,13 +8774,6 @@
     "tools/w3-trades-publish.mjs",
     "tools/w5-content.mjs"
    ]
-  },
-  {
-   "dir": "world/sites",
-   "files": 0,
-   "keys": [],
-   "readers": [],
-   "tools": []
   }
  ],
  "prompt": {
@@ -8807,6 +8896,7 @@
    "server-plugin/wildlife.mjs"
   ],
   "governance": [
+   "server-plugin/elections.mjs",
    "server-plugin/governance.mjs",
    "server-plugin/notables.mjs",
    "server-plugin/promotion.mjs",
@@ -8842,7 +8932,8 @@
    "server-plugin/governance.mjs",
    "server-plugin/law.mjs",
    "server-plugin/magic-targeting.mjs",
-   "server-plugin/regions.mjs"
+   "server-plugin/regions.mjs",
+   "server-plugin/smuggling.mjs"
   ],
   "weather": [
    "server-plugin/agriculture.mjs",
@@ -8869,6 +8960,7 @@
   "wildlife": [
    "server-plugin/bosses.mjs",
    "server-plugin/effects.mjs",
+   "server-plugin/extraction.mjs",
    "server-plugin/farm-pests-migration.mjs",
    "server-plugin/farm-pests.mjs",
    "server-plugin/magic-ritual.mjs",
@@ -8951,6 +9043,15 @@
   "tribalAwakening": [
    "server-plugin/engine.mjs",
    "server-plugin/tribal-awakening.mjs"
+  ],
+  "extraction": [
+   "server-plugin/extraction.mjs"
+  ],
+  "elections": [
+   "server-plugin/elections.mjs"
+  ],
+  "smuggling": [
+   "server-plugin/smuggling.mjs"
   ]
  },
  "stateShare": {
@@ -9152,6 +9253,7 @@
     "sim_agriculture",
     "sim_boss",
     "sim_clock",
+    "sim_combat",
     "sim_companion",
     "sim_economy",
     "sim_environment",
@@ -9180,6 +9282,7 @@
     "sim_boss",
     "sim_character",
     "sim_clock",
+    "sim_combat",
     "sim_companion",
     "sim_economy",
     "sim_environment",
@@ -9247,6 +9350,7 @@
     "base_traits",
     "nar_consistency",
     "sim_agriculture",
+    "sim_combat",
     "ui_scene",
     "ui_server"
    ]
@@ -9380,6 +9484,7 @@
     "nar_consistency",
     "nar_memory",
     "sim_character",
+    "sim_combat",
     "sim_law",
     "ui_scene"
    ]
@@ -9427,12 +9532,12 @@
     "kernel_engine",
     "kernel_storage",
     "sim_character",
+    "sim_economy",
     "sim_works"
    ],
    "readers": [
     "sim_agriculture",
     "sim_companion",
-    "sim_economy",
     "sim_magic",
     "sim_npc",
     "sim_wildlife"
@@ -9511,6 +9616,7 @@
      "modules": [
       "server-plugin/bosses.mjs",
       "server-plugin/creature-nature.mjs",
+      "server-plugin/extraction.mjs",
       "server-plugin/interactions.mjs",
       "server-plugin/traits.mjs"
      ],
@@ -9518,6 +9624,7 @@
       "base_interactions",
       "base_traits",
       "sim_boss",
+      "sim_economy",
       "sim_wildlife"
      ]
     },
@@ -9639,6 +9746,7 @@
     "kernel_storage",
     "sim_boss",
     "sim_companion",
+    "sim_economy",
     "sim_magic",
     "sim_npc",
     "sim_society",
@@ -9836,6 +9944,7 @@
      "modules": [
       "server-plugin/activities.mjs",
       "server-plugin/career-metrics.mjs",
+      "server-plugin/extraction.mjs",
       "server-plugin/regions.mjs",
       "server-plugin/remote-generation.mjs",
       "server-plugin/settlement-profile.mjs",
@@ -9846,6 +9955,7 @@
       "base_traits",
       "kernel_engine",
       "sim_character",
+      "sim_economy",
       "sim_environment",
       "sim_npc",
       "sim_wildlife"
@@ -9914,6 +10024,7 @@
      "modules": [
       "server-plugin/effects.mjs",
       "server-plugin/environment.mjs",
+      "server-plugin/extraction.mjs",
       "server-plugin/interactions.mjs",
       "server-plugin/magic-object.mjs",
       "server-plugin/npc-autonomy.mjs",
@@ -9925,6 +10036,7 @@
       "base_interactions",
       "base_traits",
       "sim_character",
+      "sim_economy",
       "sim_environment",
       "sim_magic",
       "sim_npc"
@@ -10197,10 +10309,12 @@
      "means": "路费",
      "pattern": "\\.toll\\b",
      "modules": [
-      "server-plugin/engine.mjs"
+      "server-plugin/engine.mjs",
+      "server-plugin/smuggling.mjs"
      ],
      "systems": [
-      "kernel_engine"
+      "kernel_engine",
+      "sim_economy"
      ]
     }
    ],
@@ -10338,10 +10452,12 @@
       "server-plugin/law.mjs",
       "server-plugin/magic-targeting.mjs",
       "server-plugin/regions.mjs",
-      "server-plugin/reputation.mjs"
+      "server-plugin/reputation.mjs",
+      "server-plugin/smuggling.mjs"
      ],
      "systems": [
       "sim_agriculture",
+      "sim_economy",
       "sim_environment",
       "sim_law",
       "sim_magic",
@@ -10368,6 +10484,7 @@
     "sim_boss",
     "sim_character",
     "sim_companion",
+    "sim_economy",
     "sim_environment",
     "sim_law",
     "sim_magic",
@@ -10514,6 +10631,7 @@
       "server-plugin/agriculture.mjs",
       "server-plugin/civic.mjs",
       "server-plugin/effects.mjs",
+      "server-plugin/elections.mjs",
       "server-plugin/engine.mjs",
       "server-plugin/faction-clock.mjs",
       "server-plugin/farm-pests-migration.mjs",
@@ -10802,7 +10920,7 @@
    "id": "item",
    "name": "物品",
    "file": "world/meta/items.json",
-   "count": 454,
+   "count": 455,
    "required": [
     "id",
     "name",
@@ -10844,10 +10962,13 @@
       "server-plugin/boss-negotiation.mjs",
       "server-plugin/business.mjs",
       "server-plugin/credit.mjs",
+      "server-plugin/elections.mjs",
+      "server-plugin/extraction.mjs",
       "server-plugin/law.mjs",
       "server-plugin/npc-autonomy.mjs",
       "server-plugin/settlement-trade.mjs",
       "server-plugin/shop.mjs",
+      "server-plugin/smuggling.mjs",
       "server-plugin/world-events.mjs"
      ],
      "systems": [
@@ -10856,7 +10977,8 @@
       "sim_boss",
       "sim_economy",
       "sim_law",
-      "sim_npc"
+      "sim_npc",
+      "sim_society"
      ]
     },
     {
@@ -10907,6 +11029,7 @@
       "server-plugin/checks.mjs",
       "server-plugin/consistency-review.mjs",
       "server-plugin/engine.mjs",
+      "server-plugin/extraction.mjs",
       "server-plugin/items.mjs",
       "server-plugin/magic-message.mjs",
       "server-plugin/magic-mind-space.mjs",
@@ -11656,10 +11779,12 @@
     "id": "sim_combat",
     "name": "战斗",
     "tools": [
-     "world_combat"
+     "world_combat",
+     "world_settlement"
     ],
     "produces": [
      "clash",
+     "duel",
      "harm"
     ],
     "note": "不在推进表、不订阅世界事件、不实现效果；只在工具调用时结算"
@@ -11836,7 +11961,10 @@
     "server-plugin/business.mjs",
     "server-plugin/civic.mjs",
     "server-plugin/combat.mjs",
+    "server-plugin/duels.mjs",
+    "server-plugin/elections.mjs",
     "server-plugin/environment.mjs",
+    "server-plugin/extraction.mjs",
     "server-plugin/faction-clock.mjs",
     "server-plugin/festival.mjs",
     "server-plugin/governance.mjs",
@@ -11893,7 +12021,7 @@
    ],
    "world": [],
    "worldDirs": [],
-   "lines": 224
+   "lines": 235
   },
   "server-plugin/advance-registry.mjs": {
    "system": "base_advance",
@@ -12572,6 +12700,26 @@
    "worldDirs": [],
    "lines": 278
   },
+  "server-plugin/duels.mjs": {
+   "system": "sim_combat",
+   "imports": [
+    "server-plugin/npc-intelligence.mjs",
+    "server-plugin/standing.mjs"
+   ],
+   "stateWrites": [],
+   "stateReads": [
+    "location",
+    "minute",
+    "npcs",
+    "records"
+   ],
+   "recordWrites": [],
+   "recordReads": [],
+   "rules": [],
+   "world": [],
+   "worldDirs": [],
+   "lines": 60
+  },
   "server-plugin/effects.mjs": {
    "system": "base_effects",
    "imports": [
@@ -12615,6 +12763,40 @@
     "meta"
    ],
    "lines": 195
+  },
+  "server-plugin/elections.mjs": {
+   "system": "sim_society",
+   "imports": [
+    "server-plugin/governance.mjs",
+    "server-plugin/items.mjs",
+    "server-plugin/law.mjs",
+    "server-plugin/lies.mjs",
+    "server-plugin/npc-schedule.mjs",
+    "server-plugin/organizations.mjs",
+    "server-plugin/standing.mjs"
+   ],
+   "stateWrites": [
+    "npcs",
+    "player"
+   ],
+   "stateReads": [
+    "location",
+    "minute",
+    "records"
+   ],
+   "recordWrites": [],
+   "recordReads": [
+    "civic_citizen"
+   ],
+   "rules": [
+    "elections",
+    "governance"
+   ],
+   "world": [
+    "settlementProfiles"
+   ],
+   "worldDirs": [],
+   "lines": 105
   },
   "server-plugin/engine.mjs": {
    "system": "kernel_engine",
@@ -12671,6 +12853,7 @@
     "server-plugin/settlement-trade.mjs",
     "server-plugin/shop.mjs",
     "server-plugin/sites.mjs",
+    "server-plugin/smuggling.mjs",
     "server-plugin/state-notices.mjs",
     "server-plugin/storage.mjs",
     "server-plugin/summons.mjs",
@@ -12744,7 +12927,7 @@
     "spells"
    ],
    "worldDirs": [],
-   "lines": 667
+   "lines": 670
   },
   "server-plugin/environment.mjs": {
    "system": "sim_environment",
@@ -12786,6 +12969,37 @@
     "design"
    ],
    "lines": 235
+  },
+  "server-plugin/extraction.mjs": {
+   "system": "sim_economy",
+   "imports": [
+    "server-plugin/items.mjs",
+    "server-plugin/law.mjs",
+    "server-plugin/traits.mjs"
+   ],
+   "stateWrites": [
+    "skills"
+   ],
+   "stateReads": [
+    "location",
+    "minute",
+    "npcs",
+    "player",
+    "records"
+   ],
+   "recordWrites": [],
+   "recordReads": [
+    "physical_feature"
+   ],
+   "rules": [
+    "extraction",
+    "wildlife"
+   ],
+   "world": [
+    "monsters"
+   ],
+   "worldDirs": [],
+   "lines": 93
   },
   "server-plugin/faction-clock.mjs": {
    "system": "sim_clock",
@@ -12943,7 +13157,7 @@
     "settlementProfiles"
    ],
    "worldDirs": [],
-   "lines": 393
+   "lines": 394
   },
   "server-plugin/hazard-calendar.mjs": {
    "system": "sim_clock",
@@ -13076,7 +13290,7 @@
    ],
    "world": [],
    "worldDirs": [],
-   "lines": 448
+   "lines": 458
   },
   "server-plugin/learning.mjs": {
    "system": "sim_character",
@@ -14055,7 +14269,7 @@
     "npcs"
    ],
    "worldDirs": [],
-   "lines": 169
+   "lines": 171
   },
   "server-plugin/npc-obligations.mjs": {
    "system": "sim_npc",
@@ -14227,7 +14441,7 @@
     "npcs"
    ],
    "worldDirs": [],
-   "lines": 314
+   "lines": 327
   },
   "server-plugin/pets.mjs": {
    "system": "sim_companion",
@@ -14418,7 +14632,7 @@
     "locations"
    ],
    "worldDirs": [],
-   "lines": 143
+   "lines": 144
   },
   "server-plugin/public-projects.mjs": {
    "system": "sim_society",
@@ -15049,6 +15263,36 @@
    ],
    "worldDirs": [],
    "lines": 279
+  },
+  "server-plugin/smuggling.mjs": {
+   "system": "sim_economy",
+   "imports": [
+    "server-plugin/bounty.mjs",
+    "server-plugin/items.mjs",
+    "server-plugin/law.mjs",
+    "server-plugin/organizations.mjs",
+    "server-plugin/settlement-trade.mjs"
+   ],
+   "stateWrites": [
+    "npcs",
+    "player"
+   ],
+   "stateReads": [
+    "location",
+    "minute",
+    "records"
+   ],
+   "recordWrites": [],
+   "recordReads": [],
+   "rules": [
+    "law",
+    "smuggling"
+   ],
+   "world": [
+    "routes"
+   ],
+   "worldDirs": [],
+   "lines": 86
   },
   "server-plugin/standing.mjs": {
    "system": "base_standing",
@@ -15708,7 +15952,7 @@
    "rules": [],
    "world": [],
    "worldDirs": [],
-   "lines": 140
+   "lines": 141
   },
   "server-plugin/world-registry.mjs": {
    "system": "kernel_storage",
@@ -15966,7 +16210,7 @@
   "extension/index.js": {
    "system": "ui_host",
    "imports": [
-    "../extensions.js",
+    "../../extensions.js",
     "extension/core.js"
    ],
    "stateWrites": [],
@@ -16080,7 +16324,7 @@
   "extension/runtime.js": {
    "system": "ui_host",
    "imports": [
-    "../extensions.js",
+    "../../extensions.js",
     "extension/ambient-audio.mjs",
     "extension/background-view.mjs",
     "extension/history-window.mjs",
@@ -16125,7 +16369,7 @@
    "rules": [],
    "world": [],
    "worldDirs": [],
-   "lines": 101
+   "lines": 108
   },
   "extension/topbar.mjs": {
    "system": "ui_client",

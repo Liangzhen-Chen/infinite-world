@@ -49,14 +49,15 @@ function knowledge(d,npc,id,minute){
     const prior=d.get('state','npcs',npc,'legalKnowledge')??[];
     if(!prior.some(row=>row.case===id))d.set(['state','npcs',npc,'legalKnowledge'],[...prior,{case:id,minute,source:'亲见或在场受理'}]);
 }
-function registerIncident(d,engine,{victim,offense,value=0,stolen=null,witnesses,eventId,relationshipApplied=false}){
-    const code=currentCode(d,engine),id=`legal_case:${eventId}`;unique(d,id);
+export function registerIncident(d,engine,{victim,offense,value=0,stolen=null,witnesses,eventId,relationshipApplied=false,location=d.get('state','location'),optional=false}){
+    const code=codeFor(engine,location);if(!code&&optional)return null;if(!code)throw Error('当地尚未登记可执行法典，无执行权限');
+    const id=`legal_case:${eventId}`;unique(d,id);
     const now=d.get('state','minute'),evidence=witnesses.map(witness=>({kind:'eyewitness',witness,identified:true,testified:false,minute:now}));
     const officer=witnesses.find(witness=>code.officers.includes(witness));
     const legacyReplay=engine.replaying&&engine.replayResult?.legalProcedureVersion!==1;
     const row={category:'legal_case',id,law:code.id,
         ...(!legacyReplay?{procedureVersion:1,settlement:code.settlement??null,faction:code.faction??null,sourceEvent:eventId,witnesses:[...witnesses]}:{}),offender:'player',victim,offense,value,stolen,
-        location:d.get('state','location'),minute:now,status:officer?'已报案':'未报案',reported:Boolean(officer),evidence,
+        location,minute:now,status:officer?'已报案':'未报案',reported:Boolean(officer),evidence,
         ...(officer?{receiver:officer,reportedAt:now}:{})};
     if(officer)row.evidence=row.evidence.map(entry=>({...entry,testified:entry.witness===officer}));
     d.set(path(id),row);
@@ -133,7 +134,9 @@ export function crimeAction(d,args,eventId){
             note:'仅已列目击者知情，异地执法人员尚不自动知道。失败无财物转移；还未审判、缴罚款或监禁。'}};
 }
 
-export function recordViolence(d,engine,{victim,damage,killed,intent,eventId}){
+export function recordViolence(d,engine,{victim,damage,killed,intent,eventId,duel=null}){
+    const code=codeFor(engine,d.get('state','location'));
+    if(duel&&engine.rules.law?.duels?.[code?.id]?.[duel.rule]===true)return null;
     if(damage>0&&['attack','shove'].includes(intent))recordDisciplineBreach(d,engine,'violence',eventId);
     if(!codeFor(engine,d.get('state','location'))||!['attack','shove'].includes(intent))return null;
     const witnesses=Object.entries(d.get('state','npcs')).filter(([,actor])=>awake(actor)&&actor.location===d.get('state','location')).map(([id])=>id);
@@ -193,6 +196,23 @@ function deposit(d,engine,row,{fine=0,compensate=true}={}){
     return{cost:total,fine,compensation,returnedUnit:returnUnit?unit:null,deposit:compensate?escrowKey:null};
 }
 
+export function recordExposedCorruption(d,engine,{target,law,offer,witnesses,eventId,location=d.get('state','location')}){
+    const code=engine.rules.law.codes.find(c=>c.id===law),now=d.get('state','minute');
+    let corruption=null,wanted=null;
+    corruption=`legal_case:corruption:${eventId}`;
+    d.set(path(corruption),{category:'legal_case',id:corruption,law,procedureVersion:1,settlement:code.settlement??null,faction:code.faction??null,sourceEvent:eventId,witnesses:[...witnesses],
+        offender:target,victim:null,offense:'corruption',value:offer,stolen:null,location,minute:now,status:'已报案',reported:true,reportedAt:now,
+        evidence:witnesses.map(witness=>({kind:'eyewitness',witness,identified:true,testified:true,minute:now}))});
+    for(const witness of witnesses)knowledge(d,witness,corruption,now);
+    // The bribe is seized for the public purse; the exposed taker is dismissed and flees.
+    const fund=safeFund(d,`legal_treasury:${law}`,'legal_treasury',{law}),seized=Math.min(offer,d.get('state','npcs',target,'coins'));
+    d.set(['state','npcs',target,'coins'],d.get('state','npcs',target,'coins')-seized);d.set(path(`legal_treasury:${law}`),{...fund,coins:fund.coins+seized});
+    d.set(path(`legal_dismissal:${target}`),{category:'legal_dismissal',npc:target,law,case:corruption,minute:now,sourceEvent:eventId});
+    wanted=issueWanted(d,engine,d.get(...path(corruption)),WANTED_REASONS.flight,now);
+    if(wanted)d.set(['state','npcs',target,'fugitive'],wanted.id);
+    return {corruption,wanted};
+}
+
 // Bribery space: the offer meets the taker's price (integrity and regard) or is refused;
 // anyone present who sees it through turns it into a case and exposes the taker.
 function bribe(d,engine,args,eventId,row){
@@ -224,18 +244,8 @@ function bribe(d,engine,args,eventId,row){
         const incident=local?registerIncident(d,engine,{victim:target,offense:'bribery',witnesses,eventId,relationshipApplied:true}):null;
         let corruption=null,wanted=null;
         if(enforcer){
-            const law=[row.law,...w?.scope??[]].find(id=>enforcersOf(engine,id).includes(target)),code=engine.rules.law.codes.find(c=>c.id===law);
-            corruption=`legal_case:corruption:${eventId}`;
-            d.set(path(corruption),{category:'legal_case',id:corruption,law,procedureVersion:1,settlement:code.settlement??null,faction:code.faction??null,sourceEvent:eventId,witnesses:[...witnesses],
-                offender:target,victim:null,offense:'corruption',value:offer,stolen:null,location,minute:now,status:'已报案',reported:true,reportedAt:now,
-                evidence:witnesses.map(witness=>({kind:'eyewitness',witness,identified:true,testified:true,minute:now}))});
-            for(const witness of witnesses)knowledge(d,witness,corruption,now);
-            // The bribe is seized for the public purse; the exposed taker is dismissed and flees.
-            const fund=safeFund(d,`legal_treasury:${law}`,'legal_treasury',{law}),seized=Math.min(offer,d.get('state','npcs',target,'coins'));
-            d.set(['state','npcs',target,'coins'],d.get('state','npcs',target,'coins')-seized);d.set(path(`legal_treasury:${law}`),{...fund,coins:fund.coins+seized});
-            d.set(path(`legal_dismissal:${target}`),{category:'legal_dismissal',npc:target,law,case:corruption,minute:now,sourceEvent:eventId});
-            wanted=issueWanted(d,engine,d.get(...path(corruption)),WANTED_REASONS.flight,now);
-            if(wanted)d.set(['state','npcs',target,'fugitive'],wanted.id);
+            const law=[row.law,...w?.scope??[]].find(id=>enforcersOf(engine,id).includes(target));
+            ({corruption,wanted}=recordExposedCorruption(d,engine,{target,law,offer,witnesses,eventId,location}));
         }
         return{case:row.id,accepted:true,exposed:true,offer,witnesses,bribeCase:incident,corruptionCase:corruption,wanted:wanted?.id??null,
             worldEvent:{verb:'breach',actor:target,target:'player',value:offer,witnesses,tags:['crime','bribery','corruption','discovered'],case:corruption??incident},
@@ -381,7 +391,7 @@ export function lawAction(d,args,eventId){
         const score=evidenceScore(d,row);this.advance(d,code.hearingMinutes,eventId);
         if(!awake(d.get('state','npcs',judge)))return{success:false,effectFailed:'审理完成前审判者无法履约'};
         if(score<code.evidenceRequired){d.set(path(row.id),{...row,status:'证据不足'});return{case:row.id,convicted:false,evidenceScore:score};}
-        const penalty=code.penalties[row.offense]??this.rules.law.bribery?.penalties?.[row.offense]??(row.offense==='debt_default'?this.rules.economy?.credit?.loan?.defaultPenalty:undefined);if(!penalty)throw new Error('本案罪名没有判罚规则');
+        const penalty=code.penalties[row.offense]??this.rules.law.bribery?.penalties?.[row.offense]??this.rules.law.activityPenalties?.[row.offense]??(row.offense==='debt_default'?this.rules.economy?.credit?.loan?.defaultPenalty:undefined);if(!penalty)throw new Error('本案罪名没有判罚规则');
         const fine=penalty.baseFine+Math.ceil(row.value*penalty.valueMultiplier);
         const judgment={judge,minute:d.get('state','minute'),fine,compensation:row.value,evidenceScore:score,
             communityMinutes:Math.min(code.maximumSentenceMinutes,fine*code.communityMinutesPerCopper),prisonMinutes:Math.min(code.maximumSentenceMinutes,fine*code.prisonMinutesPerCopper)};
