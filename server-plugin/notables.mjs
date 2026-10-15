@@ -2,6 +2,9 @@ import {authorityOf} from './governance.mjs';
 import {standing,adjustStanding} from './standing.mjs';
 import {organization} from './organizations.mjs';
 import {playerTitle} from './titles.mjs';
+import {groupView,personView} from './entity-view.mjs';
+import {actorId} from './npc-state.mjs';
+import {resolveCreature} from './wildlife.mjs';
 
 // U13 notables. A social identity earned by scholarly, artistic or teaching
 // achievement (signed works, career metrics, people actually taught), put
@@ -44,9 +47,9 @@ export function notableScandals(state,since){
 
 // A recommender is an academy or guild, or a person of standing in one (or a
 // noble house, or a village's original head), who thinks well enough of you.
-function persons(engine,kinds){
+function persons(engine,state,kinds){
     const ids=new Set();
-    for(const f of engine.world.factions??[])if(kinds.includes(f.kind)){if(f.leader)ids.add(f.leader);for(const m of f.coreMembers??[])ids.add(m);}
+    for(const f of engine.world.factions??[])if(kinds.includes(f.kind))for(const m of groupView(engine,state,f.id)?.officials.value??[])ids.add(m);
     for(const p of engine.world.settlementProfiles??[])if(p.details?.governance?.appointment&&p.details.governance.head)ids.add(p.details.governance.head);
     return ids;
 }
@@ -59,8 +62,10 @@ export function recommendation(engine,state,sponsor){
         const v=standing(engine,state,sponsor,'player');
         return v>=r.organizationStanding?{ok:true,by:sponsor,kind:'organization',standing:v}:{ok:false,reason:`${org.name}对你的看法${v}，不到${r.organizationStanding}，不肯举荐`};
     }
-    if(!persons(engine,[...r.organizationKinds,...rights.nobleKinds]).has(sponsor))return {ok:false,reason:'举荐者须是学院、行会或贵族家族的首领长老，或四村原头人'};
-    if(state.npcs?.[sponsor]?.status==='死亡')return {ok:false,reason:'举荐者已不在世'};
+    sponsor=actorId(engine.world,sponsor);
+    if(!persons(engine,state,[...r.organizationKinds,...rights.nobleKinds]).has(sponsor))return {ok:false,reason:'举荐者须是学院、行会或贵族家族的首领长老，或四村原头人'};
+    const path=personView(engine,state,sponsor)?.actorPath.value;
+    if(path?.slice(1).reduce((o,k)=>o?.[k],state)?.status==='死亡')return {ok:false,reason:'举荐者已不在世'};
     const v=standing(engine,state,sponsor,'player');
     return v>=r.personStanding?{ok:true,by:sponsor,kind:'person',standing:v}:{ok:false,reason:`举荐者对你的看法${v}，不到${r.personStanding}`};
 }
@@ -86,7 +91,7 @@ function petition(d,engine,args,eventId){
     const clerk=registrar(d,engine),state=d.get('state');
     if(playerNotable(state))throw Error('已在名士册上');
     if(Object.values(state.records??{}).some(r=>r.category==='notable_petition'&&r.status==='待审定'))throw Error('已有待审定的名士申请');
-    const sponsor=args.sponsor?(engine.world.factions?.some(f=>f.id===args.sponsor)||engine.world.factionPeople?.some(p=>p.id===args.sponsor)?args.sponsor:engine.resolve(args.sponsor,'npc')):null;
+    const sponsor=args.sponsor?(engine.world.factions?.some(f=>f.id===args.sponsor)||engine.world.factionPeople?.some(p=>p.id===args.sponsor)?args.sponsor:resolveCreature(engine,d,args.sponsor)):null;
     const id=`notable_petition:${eventId}`;if(d.get(...rec(id)))throw Error('事务编号已占用');
     const row={category:'notable_petition',id,sponsor,registrar:clerk,institution:rules.registry.name,filedAt:state.minute,due:state.minute+rules.registry.decisionDays*DAY,status:'待审定',source:rules.source,sourceEvent:eventId};
     const now=appraise(engine,state,row);
@@ -114,11 +119,13 @@ function review(d,engine,n,at){
 function audience(d,engine,args,eventId){
     const rules=notableRules(engine),state=d.get('state');
     if(!playerNotable(state)&&!playerTitle(state))throw Error('觐见贵族须有名士身份或爵位');
-    const house=engine.world.factions?.find(f=>rules.rights.nobleKinds.includes(f.kind)&&(f.id===args.sponsor||f.leader===args.sponsor||f.coreMembers?.includes(args.sponsor)));
+    const sponsor=actorId(engine.world,args.sponsor);
+    const house=engine.world.factions?.find(f=>rules.rights.nobleKinds.includes(f.kind)&&(f.id===sponsor||groupView(engine,state,f.id)?.officials.value.includes(sponsor)));
     if(!house)throw Error('对方不是贵族家族或其首领、长老');
-    const target=house.id===args.sponsor?house.leader:args.sponsor;
+    const target=house.id===sponsor?groupView(engine,state,house.id).leader.value:sponsor;
+    if(!target)throw Error('家族首领职位空缺');
     if(!within(engine,state.location,house.contactAnchor))throw Error(`须到${house.name}所在地求见`);
-    const npc=state.npcs[target];
+    const view=personView(engine,state,target),npc=view?.actorPath.value.slice(1).reduce((o,k)=>o?.[k],state);
     if(npc&&(!awake(npc)||!within(engine,npc.location,house.contactAnchor)))throw Error('主人不在府中或不便见客');
     const id=`notable_audience:${eventId}`;if(d.get(...rec(id)))throw Error('事务编号已占用');
     engine.advance(d,rules.rights.audienceMinutes,eventId);

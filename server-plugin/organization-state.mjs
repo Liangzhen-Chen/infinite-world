@@ -2,6 +2,7 @@
 import {reputationFactions} from './reputation-catalog.mjs';
 import {householdMembers,npcAgeAt} from './npc-state.mjs';
 import {actorId,actorPath} from './npc-state.mjs';
+import {groupAccountView} from './group-account.mjs';
 const LEADER={行会:'会长',帮派:'帮主',商号:'掌柜',教会:'主祭',会社:'会长',家户:'家长'};
 const ELDER='长老',MEMBER='成员',key=id=>`organization:${id}`;
 const living=(engine,state,id)=>{
@@ -29,10 +30,17 @@ function householdBase(engine,state,id){
     return {id,name:`${engine.byId.get(h.homeLocation)?.name??id}一户`,source:'household',kind:'家户',seat:h.homeLocation,leader:head,leaderTitle:'家长',members,treasury:0,
         charter:{mode:'elders',approval:true,fee:0,dues:0,rules:['家事由成年家人商定']}};
 }
+function societyBase(engine,id){
+    const place=engine.world.locations?.find(l=>l.id===id&&l.monsterSociety);if(!place)return null;
+    const leader=actorId(engine.world,place.monsterSociety.leader),members={};
+    for(const n of [...engine.world.npcs??[],...engine.world.residents??[]])if(n.society===id)members[n.id]={position:n.id===leader?'首领':MEMBER,joinedAt:null,arrears:0};
+    return {id,name:place.name,source:'society',kind:'聚居地',seat:place.monsterSociety.meetingPlace??place.id,leader,leaderTitle:'首领',members,treasury:0,
+        charter:{mode:'elders',approval:true,fee:0,dues:0,rules:[]}};
+}
 // Derived view: catalog or household base, then this campaign's record on top.
 export function organizationState(engine,state,id){
     const row=state.records?.[key(id)];
-    const base=row?.source==='created'?null:factionBase(engine,id)??householdBase(engine,state,id);
+    const base=row?.source==='created'?null:factionBase(engine,id)??householdBase(engine,state,id)??societyBase(engine,id);
     if(!base&&row?.source!=='created')return null;
     const b=base??{id,name:row.name,source:'created',kind:row.kind,seat:row.seat,leader:null,leaderTitle:LEADER[row.kind]??'会长',members:{},treasury:0,charter:{}};
     const members={};
@@ -41,12 +49,18 @@ export function organizationState(engine,state,id){
     for(const [m,entry]of Object.entries(row?.members??{}))members[actorId(engine.world,m)]={...entry};
     for(const m of Object.keys(members))if(!living(engine,state,m))delete members[m];
     const leader=Object.hasOwn(row??{},'leader')?row.leader:b.leader;
-    return {...b,leader:leader&&members[actorId(engine.world,leader)]?actorId(engine.world,leader):null,members,charter:{...b.charter,...row?.charter},treasury:b.treasury+(row?.treasury??0),
+    const current=leader&&members[actorId(engine.world,leader)]?actorId(engine.world,leader):null;
+    for(const [m,entry]of Object.entries(members)){
+        if(m===current)entry.position=b.leaderTitle;
+        else if(entry.position===b.leaderTitle)entry.position=MEMBER;
+    }
+    return {...b,leader:current,members,charter:{...b.charter,...row?.charter},treasury:groupAccountView(engine,state,id)?.coins??b.treasury+(row?.treasury??0),
         ledger:row?.ledger??[],founder:row?.founder??null,nextDues:row?.nextDues??null};
 }
 
 export function organizationIds(engine,state){
     return [...new Set([...(engine.world.factions??[]).map(f=>f.id),...reputationFactions(engine).map(f=>f.id),...(engine.world.households??[]).map(h=>h.id),
+        ...(engine.world.locations??[]).filter(l=>l.monsterSociety&&!engine.world.factions?.some(f=>f.contactAnchor===l.id)).map(l=>l.id),
         ...Object.values(state.records??{}).filter(r=>r.category==='organization').map(r=>r.id)])];
 }
 export function memberOrganizations(engine,state,member){

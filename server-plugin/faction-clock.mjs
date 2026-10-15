@@ -1,3 +1,5 @@
+import {ensureGroupAccount} from './group-account.mjs';
+import {groupRepresentative,personView} from './entity-view.mjs';
 import {standingLedger} from './standing.mjs';
 import {factionRelations} from './reputation-registry.mjs';
 import {clockRoll,clockTransaction} from './world-clock.mjs';
@@ -69,16 +71,11 @@ export function assertFactionClockRules(engine){
  }
 }
 function ensureAccount(d,engine,id){
- const prior=d.get(...accountPath(id));if(prior){
-  if(prior.category!=='faction_assets')throw Error('势力资产记录冲突');
-  const defaults=Object.fromEntries((engine.rules.factionRelations?.[id]??[]).map(r=>[r.faction,r.score]));
-  return {...prior,relations:{...defaults,...prior.relations}};
+ if(!d.get(...accountPath(id))){
+  const f=faction(engine,id);assertCost(engine,{coins:f.resources?.treasuryCopper,items:f.resources?.items});
+  if(!uint(f.resources?.treasuryCopper))throw Error('势力初始公库未登记');
  }
- const f=faction(engine,id);assertCost(engine,{coins:f.resources?.treasuryCopper,items:f.resources?.items});
- if(!uint(f.resources?.treasuryCopper))throw Error('势力初始公库未登记');
- const row={category:'faction_assets',faction:id,coins:f.resources.treasuryCopper,items:{...f.resources.items??{}},
-  relations:Object.fromEntries(factionRelations(engine,id).map(r=>[r.faction,r.score])),disputes:{},ledger:[],source:`factions:${id}:resources`};
- d.set(accountPath(id),row);return row;
+ return ensureGroupAccount(d,engine,id);
 }
 function affordable(row,cost={}){return row.coins>=(cost.coins??0)&&Object.entries(cost.items??{}).every(([id,n])=>(row.items[id]??0)>=n);}
 function changeAssets(d,engine,id,cost,sign,event){
@@ -175,12 +172,12 @@ export function advanceFactionClocks(d,engine,at){
   d.set(clockPath(rule.id),row);
  }
 }
-function requireContact(d,engine,contact){
+function requireContact(d,engine,contact,faction){
  if(!contact||d.get('state','location')!==contact.location)throw Error('势力操作需要到登记地点');
  if(contact.representative){
-  const actor=d.get('state','npcs',contact.representative);
+  const id=groupRepresentative(engine,d.get('state'),faction,contact.representative),view=id&&personView(engine,d.get('state'),id),actor=view&&d.get(...view.actorPath.value);
   if(!actor||actor.location!==contact.location||actor.scheduleTravel||actor.cognitionTravel||actor.status!=='正常'||/睡眠|睡觉|熟睡/.test(actor.activity??''))throw Error('势力代表未清醒在场');
-  engine.assertNpcObligationAction(d,[contact.representative],{minutes:contact.minutes??0});
+  engine.assertNpcObligationAction(d,[id],{minutes:contact.minutes??0});
  }
 }
 export function factionClockAction(d,args,eventId){
@@ -192,11 +189,12 @@ export function factionClockAction(d,args,eventId){
  const before=d.get('state','minute');initializeFactionClocks(d,this,before,before+rule.intervalDays*DAY);
  const row=d.get(...clockPath(rule.id)),stage=rule.stages[row.phase];
  if(args.operation==='faction_inspect'){
-  requireContact(d,this,rule.contact);
-  return {faction:rule.faction,clock:rule.id,phase:row.phase,paused:row.paused,...(stage?.name?{stage:stage.name}:{}),choices:(rule.interventions??[]).filter(a=>a.stage===stage?.id).map(a=>({id:a.id,...(a.name?{name:a.name}:{}),location:a.location,cost:a.cost??{},minutes:a.minutes}))};
+  requireContact(d,this,rule.contact,rule.faction);
+  const assets=ensureAccount(d,this,rule.faction);
+  return {faction:rule.faction,clock:rule.id,phase:row.phase,paused:row.paused,treasury:assets.coins,items:assets.items,...(stage?.name?{stage:stage.name}:{}),choices:(rule.interventions??[]).filter(a=>a.stage===stage?.id).map(a=>({id:a.id,...(a.name?{name:a.name}:{}),location:a.location,cost:a.cost??{},minutes:a.minutes}))};
  }
  if(args.operation==='faction_contribute'){
-  requireContact(d,this,rule.contact);
+  requireContact(d,this,rule.contact,rule.faction);
   const coins=args.coins??0,item=args.item?this.resolve(args.item,'item'):null,quantity=args.quantity??0;
   const cost={coins,items:item?{[item]:quantity}:{}};assertCost(this,cost);
   if(!coins&&!quantity||quantity&&!item)throw Error('供资必须有实际钱物');
@@ -207,7 +205,7 @@ export function factionClockAction(d,args,eventId){
  if(args.operation!=='faction_intervene')throw Error('未知势力操作');
  const action=rule.interventions?.find(a=>a.id===args.choice&&a.stage===stage?.id);
  if(!action)throw Error('当前阶段没有该干预办法');
- requireContact(d,this,action);payPlayer(d,this,action.cost??{});
+ requireContact(d,this,action,rule.faction);payPlayer(d,this,action.cost??{});
  const check=action.difficulty===undefined?{success:true}:this.check(d,{attribute:action.attribute,difficulty:action.difficulty},eventId);
  const entry={choice:action.id,stage:stage.id,sourceEvent:eventId,minute:before,cost:action.cost??{},success:check.success};
  const updated={...row,interventions:[...row.interventions,entry]};
