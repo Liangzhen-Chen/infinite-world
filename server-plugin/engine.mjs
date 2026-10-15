@@ -9,6 +9,7 @@ import {validateSites}from'./sites.mjs';
 import {WorldEngine as Phase1Engine}from'./compat/v2-phase1-engine.mjs';
 import {learn}from'./learning.mjs';
 import {prepareMagic,applyMagic}from'./magic.mjs';
+import {recordSpellViolation}from'./magic-consent.mjs';
 import {settleMagicAreas,prepareAreaMagic,applyAreaMagic,areaTargetFacts}from'./magic-area.mjs';
 import {assertFireTravel}from'./magic-object.mjs';
 import {adjustAirTravel}from'./magic-air.mjs';
@@ -582,13 +583,14 @@ export class WorldEngine {
         d.set(['state','player','mp'],d.get('state','player','mp')-catalog.mp);
         for(const material of catalog.materials)this.itemDelta(d,'player',material.item,-material.amount);
         const result=this.check(d,{attribute:'精神',skill:catalog.skill,difficulty:catalog.difficulty},id);
+        const legalCase=recordSpellViolation(d,this,catalog,args,prepared?.target??prepared?.id,id);
         this.advance(d,catalog.minutes,id);this.practice(d,{skill:catalog.skill,gain:3,target:args.target??'施法'},id);
         if(result.success&&catalog.duration&&!prepared)d.set(['state','effects',id],{spell,target:text(args.target??'近处物体',200),expires:d.get('state','minute')+catalog.duration});
         const effect=result.success?applyMagic.call(this,d,prepared,id):{};
         if(!result.success&&result.degree==='大失败'&&catalog.failureDamage)this.health(d,{delta:-catalog.failureDamage},id);
         const completed=result.success&&!effect.effectFailed;
         d.say(`${catalog.name}${completed?'施放成功':'施放失败'}，消耗${catalog.mp}魔力`);
-        return {spell,...result,...effect,checkSuccess:result.success,success:completed,mpCost:catalog.mp};
+        return {spell,...result,...effect,...(legalCase?{case:legalCase}:{}),checkSuccess:result.success,success:completed,mpCost:catalog.mp};
     }
     learn(d,args,id) {
         return learn.call(this,d,args,id);

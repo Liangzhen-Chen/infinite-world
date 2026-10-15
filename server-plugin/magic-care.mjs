@@ -7,6 +7,7 @@ import {ambientHeatC}from'./magic-object.mjs';
 import {resolveCreature}from'./wildlife.mjs';
 import {derivedStats,monsterStats}from'./combat.mjs';
 import {recordEntityDeath}from'./npc-life.mjs';
+import {assertSpellConsent}from'./magic-consent.mjs';
 
 // Authoring bounds only. The formal catalog is not changed by these consumers.
 export const careMechanisms=Object.freeze({
@@ -64,11 +65,7 @@ function living(d,engine,c,args){
  const target=resolveCreature(engine,d,args.target??'player'),path=actorPath(target),a=d.get(...path),location=d.get('state','location');
  if(!a||target!=='player'&&a.location!==location||a.status==='死亡')throw Error('治疗目标不在场或已经死亡');
  assertMagicTargeting(d,engine,c,args,target);
- const emergency=a.status==='濒死'&&['stabilize','hemostasis','clean_wound'].includes(c.effectSpec.operation);
- if(target!=='player'&&!emergency){
-  const r=d.get('state','records',args.authorization);
-  if(r?.category!=='authorization'||r.action!=='healing'||r.subject!==target||r.grantor!==target||r.grantee!=='player'||r.revoked||!Number.isSafeInteger(r.expires)||r.expires<=d.get('state','minute'))throw Error('照护或病症观察需要本人有效同意');
- }
+ assertSpellConsent(d,engine,c,args,target,'healing');
  if(target!=='player'){
   const def=engine.byId.get(target),stats=target.startsWith('npc_')?derivedStats({level:a.level??def.level??1,attributes:def.attributes,profession:Boolean(def.combatProfession)},engine.rules):monsterStats({level:a.level??def.level??def.levelRange?.[0]??1,template:def.template??engine.byId.get(def.monster)?.template??2,bossTier:def.tier??0},engine.rules);
   if(stats.divine&&!d.get('state','divinePermissions',target))throw Error('不能越过神性屏障');

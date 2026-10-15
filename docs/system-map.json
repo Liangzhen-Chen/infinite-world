@@ -2,7 +2,7 @@
  "title": "无限原野系统地图",
  "card": "K9",
  "generatedFrom": {
-  "commit": "refs/heads/v3",
+  "commit": "refs/heads/c1",
   "method": "运行时导出（注册表、规则表、工具定义、效果表、立场传导表）+ 静态正则扫描（import 图、函数体标识符、state 分区与 records 前缀、rules/world 读取）。静态扫描是近似：经 engine.byId、helper 间接或动态拼接路径的访问不计入。"
  },
  "scanMethods": {
@@ -18,14 +18,14 @@
  "counts": {
   "layers": 6,
   "systems": 38,
-  "modules": 177,
+  "modules": 178,
   "advance": 45,
   "tools": 25,
   "verbs": 16,
   "subscribers": 8,
   "interactionRules": 25,
   "effectKinds": 19,
-  "links": 389
+  "links": 390
  },
  "layers": [
   {
@@ -347,7 +347,7 @@
     "server-plugin/campaign-reducer.mjs",
     "server-plugin/archived-reducer.mjs"
    ],
-   "lines": 958,
+   "lines": 960,
    "stateWrites": [
     "combatDisengaged",
     "created",
@@ -637,7 +637,7 @@
     "server-plugin/standing.mjs",
     "server-plugin/entity-view.mjs"
    ],
-   "lines": 548,
+   "lines": 554,
    "stateWrites": [
     "records"
    ],
@@ -1293,7 +1293,7 @@
     "server-plugin/regions.mjs",
     "server-plugin/remote-generation.mjs"
    ],
-   "lines": 1586,
+   "lines": 1588,
    "stateWrites": [
     "npcs",
     "records",
@@ -1373,6 +1373,7 @@
     "server-plugin/magic-air.mjs",
     "server-plugin/magic-area.mjs",
     "server-plugin/magic-care.mjs",
+    "server-plugin/magic-consent.mjs",
     "server-plugin/magic-context.mjs",
     "server-plugin/magic-effects.mjs",
     "server-plugin/magic-growth.mjs",
@@ -1389,7 +1390,7 @@
     "server-plugin/magic-water-earth.mjs",
     "server-plugin/magic.mjs"
    ],
-   "lines": 3695,
+   "lines": 3788,
    "stateWrites": [
     "creatures",
     "discoveries",
@@ -1427,6 +1428,7 @@
    ],
    "recordReads": [
     "ecology",
+    "legal_case",
     "magic_permission",
     "magic_permission_source",
     "ritual_permission"
@@ -2910,6 +2912,7 @@
     "magic-air.mjs",
     "magic-area.mjs",
     "magic-care.mjs",
+    "magic-consent.mjs",
     "magic-context.mjs",
     "magic-light.mjs",
     "magic-mind-space.mjs",
@@ -3633,6 +3636,7 @@
    "labels": [
     "magic-air.mjs",
     "magic-care.mjs",
+    "magic-consent.mjs",
     "magic-effects.mjs",
     "magic-light.mjs",
     "magic-marks.mjs",
@@ -3730,6 +3734,15 @@
   },
   {
    "from": "sim_magic",
+   "to": "base_standing",
+   "kind": "call",
+   "labels": [
+    "entity-view.mjs",
+    "standing.mjs"
+   ]
+  },
+  {
+   "from": "sim_magic",
    "to": "base_traits",
    "kind": "call",
    "labels": [
@@ -3811,8 +3824,10 @@
    "kind": "call",
    "labels": [
     "npc-autonomy.mjs",
+    "npc-intelligence.mjs",
     "npc-life.mjs",
-    "npc-obligations.mjs"
+    "npc-obligations.mjs",
+    "npc-relations.mjs"
    ]
   },
   {
@@ -7485,6 +7500,7 @@
    "server-plugin/faction-clock.mjs",
    "server-plugin/governance.mjs",
    "server-plugin/lies.mjs",
+   "server-plugin/magic-consent.mjs",
    "server-plugin/military.mjs",
    "server-plugin/monster-society.mjs",
    "server-plugin/notables.mjs",
@@ -7713,7 +7729,7 @@
   },
   {
    "name": "world_cast",
-   "description": "已学法术/许可同意；刻记填字",
+   "description": "已学法术；force强施入法；刻记填字",
    "readOnly": false,
    "operations": null,
    "routes": [
@@ -7725,6 +7741,7 @@
       "server-plugin/advance-registry.mjs",
       "server-plugin/checks.mjs",
       "server-plugin/engine.mjs",
+      "server-plugin/magic-consent.mjs",
       "server-plugin/magic.mjs"
      ],
      "systems": [
@@ -7892,7 +7909,7 @@
   },
   {
    "name": "world_promise",
-   "description": "承诺/取消；住户准用途签/撤入宅许可",
+   "description": "承诺/私宅许可；施法同意location类别、skill法术、consent确认",
    "readOnly": false,
    "operations": [
     "create",
@@ -9183,6 +9200,7 @@
     "server-plugin/learning.mjs",
     "server-plugin/location-access.mjs",
     "server-plugin/magic-care.mjs",
+    "server-plugin/magic-consent.mjs",
     "server-plugin/magic-growth.mjs",
     "server-plugin/magic-movement.mjs",
     "server-plugin/magic-object.mjs",
@@ -9554,6 +9572,7 @@
    "server-plugin/bounty.mjs",
    "server-plugin/governance.mjs",
    "server-plugin/law.mjs",
+   "server-plugin/magic-consent.mjs",
    "server-plugin/magic-targeting.mjs",
    "server-plugin/npc-state.mjs",
    "server-plugin/regions.mjs",
@@ -11061,6 +11080,7 @@
       "server-plugin/magic-air.mjs",
       "server-plugin/magic-area.mjs",
       "server-plugin/magic-care.mjs",
+      "server-plugin/magic-consent.mjs",
       "server-plugin/magic-effects.mjs",
       "server-plugin/magic-growth.mjs",
       "server-plugin/magic-light.mjs",
@@ -11122,6 +11142,7 @@
       "server-plugin/magic-air.mjs",
       "server-plugin/magic-area.mjs",
       "server-plugin/magic-care.mjs",
+      "server-plugin/magic-consent.mjs",
       "server-plugin/magic-light.mjs",
       "server-plugin/magic-message.mjs",
       "server-plugin/magic-mind-space.mjs",
@@ -11145,6 +11166,7 @@
       "server-plugin/entity-view.mjs",
       "server-plugin/governance.mjs",
       "server-plugin/law.mjs",
+      "server-plugin/magic-consent.mjs",
       "server-plugin/magic-targeting.mjs",
       "server-plugin/npc-state.mjs",
       "server-plugin/regions.mjs",
@@ -11193,6 +11215,7 @@
    "manual": [],
    "refs": [],
    "extend": [
+    "magic-consent.mjs 从 entity-view、standing 与灵智派生本人决定；rules.law 配置急救例外与强施处罚",
     "新的 effectSpec.kind 由所在模块调用 registerMagicEffect 登记校验与结算（magic-effects.mjs），不改 magic.mjs",
     "需要随时间结算的效果在推进注册表登记"
    ]
@@ -13642,6 +13665,7 @@
     "server-plugin/magic-air.mjs",
     "server-plugin/magic-area.mjs",
     "server-plugin/magic-care.mjs",
+    "server-plugin/magic-consent.mjs",
     "server-plugin/magic-context.mjs",
     "server-plugin/magic-light.mjs",
     "server-plugin/magic-mind-space.mjs",
@@ -13750,7 +13774,7 @@
     "spells"
    ],
    "worldDirs": [],
-   "lines": 679
+   "lines": 681
   },
   "server-plugin/entity-view.mjs": {
    "system": "base_standing",
@@ -13801,7 +13825,7 @@
     "settlementProfiles"
    ],
    "worldDirs": [],
-   "lines": 401
+   "lines": 407
   },
   "server-plugin/environment.mjs": {
    "system": "sim_environment",
@@ -14256,6 +14280,7 @@
    "imports": [
     "server-plugin/entity-view.mjs",
     "server-plugin/environment.mjs",
+    "server-plugin/magic-consent.mjs",
     "server-plugin/magic-message.mjs",
     "server-plugin/sites.mjs"
    ],
@@ -14275,7 +14300,7 @@
    ],
    "world": [],
    "worldDirs": [],
-   "lines": 111
+   "lines": 113
   },
   "server-plugin/lore.mjs": {
    "system": "nar_memory",
@@ -14330,6 +14355,7 @@
    "system": "sim_magic",
    "imports": [
     "server-plugin/environment.mjs",
+    "server-plugin/magic-consent.mjs",
     "server-plugin/magic-effects.mjs",
     "server-plugin/magic-primitives.mjs",
     "server-plugin/magic.mjs"
@@ -14347,18 +14373,20 @@
    ],
    "recordWrites": [],
    "recordReads": [
+    "legal_case",
     "local_actor_position"
    ],
    "rules": [],
    "world": [],
    "worldDirs": [],
-   "lines": 153
+   "lines": 157
   },
   "server-plugin/magic-care.mjs": {
    "system": "sim_magic",
    "imports": [
     "server-plugin/combat.mjs",
     "server-plugin/environment.mjs",
+    "server-plugin/magic-consent.mjs",
     "server-plugin/magic-effects.mjs",
     "server-plugin/magic-object.mjs",
     "server-plugin/magic-ritual.mjs",
@@ -14390,7 +14418,35 @@
     "skills"
    ],
    "worldDirs": [],
-   "lines": 350
+   "lines": 347
+  },
+  "server-plugin/magic-consent.mjs": {
+   "system": "sim_magic",
+   "imports": [
+    "server-plugin/entity-view.mjs",
+    "server-plugin/law.mjs",
+    "server-plugin/npc-intelligence.mjs",
+    "server-plugin/npc-relations.mjs",
+    "server-plugin/standing.mjs"
+   ],
+   "stateWrites": [
+    "records"
+   ],
+   "stateReads": [
+    "creatures",
+    "effects",
+    "location",
+    "minute",
+    "npcs"
+   ],
+   "recordWrites": [],
+   "recordReads": [],
+   "rules": [
+    "law"
+   ],
+   "world": [],
+   "worldDirs": [],
+   "lines": 86
   },
   "server-plugin/magic-context.mjs": {
    "system": "sim_magic",
@@ -14553,8 +14609,10 @@
    "imports": [
     "server-plugin/combat.mjs",
     "server-plugin/contracts.mjs",
+    "server-plugin/entity-view.mjs",
     "server-plugin/environment.mjs",
     "server-plugin/items.mjs",
+    "server-plugin/magic-consent.mjs",
     "server-plugin/magic-effects.mjs",
     "server-plugin/magic-movement.mjs",
     "server-plugin/magic-targeting.mjs",
@@ -14631,6 +14689,7 @@
     "server-plugin/interactions.mjs",
     "server-plugin/magic-air.mjs",
     "server-plugin/magic-area.mjs",
+    "server-plugin/magic-consent.mjs",
     "server-plugin/magic-effects.mjs",
     "server-plugin/retrieval.mjs",
     "server-plugin/traits.mjs",
@@ -14656,7 +14715,7 @@
     "routes"
    ],
    "worldDirs": [],
-   "lines": 476
+   "lines": 477
   },
   "server-plugin/magic-primitives.mjs": {
    "system": "sim_magic",
@@ -14687,8 +14746,10 @@
    "imports": [
     "server-plugin/combat.mjs",
     "server-plugin/contracts.mjs",
+    "server-plugin/entity-view.mjs",
     "server-plugin/environment.mjs",
     "server-plugin/magic-area.mjs",
+    "server-plugin/magic-consent.mjs",
     "server-plugin/magic-effects.mjs",
     "server-plugin/magic-primitives.mjs",
     "server-plugin/magic-targeting.mjs",
@@ -14725,7 +14786,7 @@
     "monsters"
    ],
    "worldDirs": [],
-   "lines": 382
+   "lines": 389
   },
   "server-plugin/magic-status.mjs": {
    "system": "sim_magic",
@@ -14753,6 +14814,7 @@
   "server-plugin/magic-targeting.mjs": {
    "system": "sim_magic",
    "imports": [
+    "server-plugin/magic-consent.mjs",
     "server-plugin/storage.mjs"
    ],
    "stateWrites": [],
@@ -14810,6 +14872,7 @@
     "server-plugin/combat.mjs",
     "server-plugin/items.mjs",
     "server-plugin/magic-air.mjs",
+    "server-plugin/magic-consent.mjs",
     "server-plugin/magic-effects.mjs",
     "server-plugin/magic-light.mjs",
     "server-plugin/magic-object.mjs",
@@ -14842,7 +14905,7 @@
    "rules": [],
    "world": [],
    "worldDirs": [],
-   "lines": 160
+   "lines": 158
   },
   "server-plugin/manufacturing.mjs": {
    "system": "sim_economy",
