@@ -34,7 +34,11 @@ import {tradeQuote,recordDeal}from'./shop.mjs';
 import {initializeWorldClocks}from'./world-clock.mjs';
 import {initializeFactionClocks,factionClockRules}from'./faction-clock.mjs';
 import {QUEST_SOURCES_VERSION,openSettlementLedgers}from'./quest-sources.mjs';
+import {villageWildlifeFresh}from'./quest-wildlife.mjs';
 import {TRIBAL_AWAKENING_VERSION}from'./tribal-awakening.mjs';
+import {MILITARY_VERSION}from'./military.mjs';
+import {WAR_VERSION}from'./war-diplomacy.mjs';
+import {warRouteClosed}from'./hazard-calendar.mjs';
 import {validateFestivalRuntime}from'./festival.mjs';
 import {wildlifePriceFactor,wildlifeEncounterAt,settleWildlifeEncounter,wildlifeEncounterView}from'./wildlife.mjs';
 import {wildlifeAwakeningConsumer}from'./wildlife-awakening.mjs';
@@ -65,6 +69,7 @@ import {materializeWildlifeHabitats}from'./wildlife-habitats.mjs';
 import {unfoldPopulationAt,acceptPopulationProfile}from'./population.mjs';
 import {remoteEngine,unfoldRemoteAt}from'./remote-generation.mjs';
 import {advanceNeedsSteps,nextAdvanceMinute,runAdvance}from'./advance-registry.mjs';
+import {smuggleTrade,inspectSmuggling}from'./smuggling.mjs';
 const clone = value => structuredClone(value);
 const number = (value, min = 0, max = 1e9, label = '数值') => {
     if (!Number.isSafeInteger(value) || value < min || value > max) throw new Error(`${label}必须在${min}到${max}之间`);
@@ -236,7 +241,8 @@ export class WorldEngine {
         recordBusinessReceipt(d,document.state,{tool:resolved.tool,args,eventId:id,detail});
         if(tool==='check')detail.actionScope={kind:'judgement',healthChanged:false,inventoryChanged:false,feePaid:0,
             note:'仅结算判断或对抗，并履行已引用的协助；未伤人、毁物或制造。不得从骰点虚构这些变化。'};
-        return { patches:d.patches,result:{ok:true,...detail,...(remote?{remote}:{}),...(population?{population}:{}),legalProcedureVersion:1,worldEventVersion:WORLD_EVENT_VERSION,...(intelligenceFresh(session)?{npcIntelligenceVersion:INTELLIGENCE_VERSION}:{}),...(factionClockRules(session).length?{factionClockVersion:1}:{}),...(session.rules.questSources?{questSourcesVersion:QUEST_SOURCES_VERSION}:{}),...(session.rules.tribalAwakening?{tribalAwakeningVersion:TRIBAL_AWAKENING_VERSION}:{}),minute:d.get('state','minute'),messages:d.messages,
+        return { patches:d.patches,result:{ok:true,...detail,...(remote?{remote}:{}),...(population?{population}:{}),legalProcedureVersion:1,worldEventVersion:WORLD_EVENT_VERSION,...(intelligenceFresh(session)?{npcIntelligenceVersion:INTELLIGENCE_VERSION}:{}),...(factionClockRules(session).length?{factionClockVersion:1}:{}),...(session.rules.questSources?{questSourcesVersion:QUEST_SOURCES_VERSION}:{}),...(session.rules.tribalAwakening?{tribalAwakeningVersion:TRIBAL_AWAKENING_VERSION}:{}),...(session.rules.military?{militaryVersion:MILITARY_VERSION}:{}),...(session.rules.warDiplomacy?{warVersion:WAR_VERSION}:{}),minute:d.get('state','minute'),messages:d.messages,
+            ...(session.rules.questSources?.wildlife?.length&&villageWildlifeFresh(session)?{villageWildlifeVersion:1}:{}),
             notices:stateNotices(document.state,d.document.state,id=>session.byId.get(id)?.name)} };
     }
     scoped(document){
@@ -257,6 +263,7 @@ export class WorldEngine {
         return changeItems(d,this,id,item,delta);
     }
     async trade(d,args,id) {
+        if(['smuggle','deliver_smuggled'].includes(args.operation))return smuggleTrade.call(this,d,args,id);
         if(CREDIT_OPERATIONS.has(args.operation))return creditTrade.call(this,d,args,id);
         if(args.operation&&args.operation!=='trade')return businessTrade.call(this,d,args,id);
         if(args.service!==undefined&&args.service!=='住宿')throw new Error('未登记该服务；住宿请传 service="住宿" 与 days，购买物品请传 item 与 quantity');
@@ -404,6 +411,7 @@ export class WorldEngine {
             if(settled.has(current)||nearest!==distances.get(current))continue;
             settled.add(current);if(current===to)break;
             for(const edge of adjacent.get(current)??[]){
+                if(warRouteClosed(this.airDraft?.get('state'),edge.id,minute))continue;
                 const next=edge.from===current?edge.to:edge.to===current?edge.from:null;if(!next||!order.has(next)||settled.has(next))continue;
                 const speed=edge.speedKmh??(mode==='cart'?this.rules.travel.cartKmh:this.rules.travel.walkKmh*(mode==='horse'?this.rules.travel.horseMultiplier:1))*(edge.terrainMultiplier??1);
                 const travel=this.rules.weather?weatherEdge(this,seed,from_(edge,current),mode,minute,distances.get(current),movingTimes.get(current),speed,weatherCache):null;
@@ -462,6 +470,7 @@ export class WorldEngine {
         if(areaTravel)d.set(['state','records','magic_area_transit'],{category:'magic_area_transit',subjects:['player',...d.get('state','player','companions')],start:d.get('state','minute'),arrival:this.npcObligationAction.arrivalMinute,source:id});
         strainCare(d,this,'player',route.movingMinutes);
         this.advance(d,route.minutes,id);
+        inspectSmuggling(d,this,route,id);
         let encounter=null;
         for(const attempt of attempts){const seen=settleWildlifeEncounter(d,this,attempt,id);if(seen)encounter=seen;}
         if(areaTravel)d.remove(['state','records','magic_area_transit']);

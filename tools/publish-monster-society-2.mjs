@@ -44,13 +44,24 @@ export function mergeMonsterSociety2(world,batch){
 export function withoutMonsterSociety2(world,batch=buildBatch()){
  const ids=batchIds(batch),next=structuredClone(world);
  for(const [,key] of FILES)next[key]=(next[key]??[]).filter(r=>!ids.has(r.id));
+ // Later content attached inside this batch's places (e.g. T113–T115 site attachments) cannot predate it.
+ next.locations=next.locations.filter(l=>![l.site?.owner,l.site?.manager,...(l.site?.occupants??[]),...(l.site?.resources??[]).map(r=>r.owner)].some(id=>ids.has(id)));
+ for(let size=-1;size!==next.locations.length;){size=next.locations.length;const have=new Set(next.locations.map(l=>l.id));next.locations=next.locations.filter(l=>!l.parent||have.has(l.parent));}
+ const have=new Set(next.locations.map(l=>l.id));next.routes=next.routes.filter(r=>have.has(r.from)&&have.has(r.to));
  // Later rows that name this batch's rows (T105 social bosses on its sites, faction clocks' hooks)
  // did not exist before it either. T142's far lore is a separate later batch: see withoutT142.
- const gone=new Set(ids),names=row=>[...JSON.stringify(row).matchAll(/"([a-z]+_[a-z0-9_]+)"/g)].some(m=>m[1]!==row.id&&gone.has(m[1]));
+ const gone=new Set([...ids,...world.locations.filter(l=>!have.has(l.id)).map(l=>l.id)]),names=row=>[...JSON.stringify(row).matchAll(/"([a-z]+_[a-z0-9_]+)"/g)].some(m=>m[1]!==row.id&&gone.has(m[1]));
  next.bosses=(next.bosses??[]).filter(r=>!names(r));
  // K6 effect-table hooks on a dropped faction's clock, or naming dropped rows, go with them.
  const table=next.rules?.effectTable,lostClocks=new Set((world.factions??[]).filter(f=>f.clock&&gone.has(f.id)).map(f=>f.clock.id));
  if(table?.hooks)table.hooks=table.hooks.filter(h=>!lostClocks.has(h.owner)&&!names({id:null,effects:h.effects}));
+ // D1 rules attached to removed settlements cannot predate those settlements.
+ if(next.rules?.hazardClock)next.rules.hazardClock.clocks=next.rules.hazardClock.clocks.filter(c=>!names(c));
+ const sources=next.rules?.questSources;
+ if(sources){
+  sources.publishers=Object.fromEntries(Object.entries(sources.publishers??{}).filter(([place,npc])=>!gone.has(place)&&!gone.has(npc)));
+  sources.funds=Object.fromEntries(Object.entries(sources.funds??{}).filter(([place,faction])=>!gone.has(place)&&!gone.has(faction)));
+ }
  return next;
 }
 async function writeLike(target,value){

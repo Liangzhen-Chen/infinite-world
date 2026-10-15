@@ -26,6 +26,9 @@ function conservation(d){
 }
 async function setup({plant=false,day=0}={}){
  const world=structuredClone(source);delete world.rules.settlementTrade;delete world.rules.worldClock;
+ // Fixed crop/resource trials exclude disasters and offscreen faction trade.
+ delete world.rules.hazardClock;delete world.rules.factionClock;
+ for(const faction of world.factions)delete faction.clock;
  for(const n of world.npcs){delete n.tier;delete n.schedule;}
  world.rules.agriculture.crop.growthDays=10;world.rules.agriculture.crop.sowDays=[day,day];
  world.rules.agriculture.crop.minimumTemperatureC=-100;

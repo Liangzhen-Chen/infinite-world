@@ -375,6 +375,7 @@ function heirOf(engine,state,id,minute){
  if(children.length)return children[0];
  return npcHousehold(engine,state,id)?.members.filter(ok).sort()[0]??null;
 }
+export function recordMilitaryDeath(d,engine,id,minute){if(d.get('state','npcs',id)&&d.get('state','npcs',id,'diedAt')===undefined)dieNaturally(d,engine,id,minute,'战死');}
 function dieNaturally(d,engine,id,minute,cause,illness=null){
  // Roster housemates are the ones who inherit, mourn and may later have to
  // move to kin; they enter campaign state now.
@@ -450,6 +451,7 @@ const placeName=(engine,id)=>engine.byId.get(id)?.name??id;
 const hungry=(engine,state,settlement,minute)=>(state.settlements?.[settlement]?.starvation??0)>=migrationRules(engine).livelihood.starvationDays||Boolean(famineAt(state,settlement,minute));
 const present=(engine,state,x)=>state.npcs[x]?alive(state,x):Boolean(engine.byId.get(x));
 function mobile(engine,state,id){
+ if(state.npcs[id]?.levy)return false;
  const n=state.npcs[id];
  return lifeActor(engine,state,id)&&Boolean(npcSchedule(engine,state,id))&&settled(state,id)&&!incapable.includes(n.status)&&!n.caring&&!npcMigration(state,id);
 }
@@ -514,7 +516,8 @@ function migrationReason(engine,state,id,minute,seed){
  const harm=(state.npcs[id].memoryStream??[]).filter(m=>['conflict','crime'].includes(m.kind)&&m.sourceType==='亲历'&&m.participants?.[1]===id&&m.participants[0]!==id&&m.minute<=minute&&minute-m.minute<=r.refuge.withinDays*DAY).sort((a,b)=>b.minute-a.minute);
  for(const m of harm){
   const actor=m.participants[0],place=actor==='player'?(state.player?.status!=='死亡'?state.location:null):alive(state,actor)?state.npcs[actor].location??npcHousehold(engine,state,actor)?.homeLocation:null;
-  if(!place||!within(engine,place,house.settlement))continue;
+  const danger=state.records?.[`war-danger:${house.settlement}`],warThreat=danger&&danger.since<=minute&&minute<danger.until&&danger.actor===actor;
+  if(!warThreat&&(!place||!within(engine,place,house.settlement)))continue;
   if(clockRoll(seed,`migration:refuge:${id}`,day)>=r.refuge.chancePerDay)break;
   const h=hostFor(engine,state,id,{elsewhere:true},minute)??(clockRoll(seed,`migration:stranger:${id}`,day)<(r.stranger?.chancePerDay??0)?strangerHost(engine,state,id,house,minute):null);
   if(h)return {reason:'避祸',host:h.host,house:h.house,cause:m.sourceEvent??m.id,fleeing:actor,stranger:Boolean(h.stranger)};

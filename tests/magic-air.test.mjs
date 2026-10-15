@@ -16,6 +16,8 @@ function fixture(){
  // These scenes use stationary actors so sound observations are controlled.
  for(const npc of world.npcs){npc.tier='fixture';delete npc.schedule;}
  delete world.rules.weather;
+ // This controlled route replaces the real flood and disease network.
+ delete world.rules.hazardClock;
  const feature=(id,kind,state={},extra={})=>({id,name:id,kind,owner:'player',access:'consent',position:[0,0],state,...extra});
  const room=(id,x,exits)=>feature(id,'room',{}, {position:[x,0],links:{exits},airModel:{capacityMg:20000,ventilationMgPerMinute:0,vaporCapacityMg:20000,windVector:[1,0],echoDelayMs:30,hearingRadiusMeters:.4}});
  const rooms=[room('feature_room',0,['feature_hall']),room('feature_hall',1,['feature_outside']),room('feature_outside',2,[])];

@@ -143,15 +143,16 @@ const SYSTEMS=[
  {id:'sim_npc',layer:'sim',name:'人物',modules:['npc-state.mjs','npc-schedule.mjs','npc-cognition.mjs','npc-autonomy.mjs','npc-life.mjs','npc-memory.mjs','npc-relations.mjs','npc-rumors.mjs',
    'npc-obligations.mjs','npc-growth.mjs','npc-intelligence.mjs','lies.mjs','npc-planning-service.mjs','population.mjs','population-service.mjs','settlement-profile.mjs']},
  {id:'sim_character',layer:'sim',name:'角色成长',modules:['character.mjs','progression.mjs','professions.mjs','career-metrics.mjs','training.mjs','learning.mjs','checks.mjs','revival.mjs']},
- {id:'sim_combat',layer:'sim',name:'战斗',modules:['combat.mjs']},
+ {id:'sim_combat',layer:'sim',name:'战斗',modules:['combat.mjs','duels.mjs']},
  {id:'sim_boss',layer:'sim',name:'首领',modules:['bosses.mjs','boss-abilities.mjs','boss-cognition.mjs','boss-negotiation.mjs']},
  {id:'sim_wildlife',layer:'sim',name:'生态',modules:['wildlife.mjs','wildlife-awakening.mjs','wildlife-range.mjs','wildlife-habitats.mjs','wildlife-society.mjs','wildlife-migration.mjs','creature-nature.mjs','seasonal-migration.mjs','farm-pests.mjs']},
  {id:'sim_companion',layer:'sim',name:'伙伴',modules:['pets.mjs','summons.mjs']},
  {id:'sim_environment',layer:'sim',name:'环境与地点',modules:['environment.mjs','weather.mjs','location-access.mjs','sites.mjs','regions.mjs','remote-generation.mjs']},
  {id:'sim_magic',layer:'sim',name:'法术',modules:SERVER.map(f=>f.slice(14)).filter(f=>/^magic(-[\w-]+)?\.mjs$/.test(f))},
- {id:'sim_economy',layer:'sim',name:'经济',modules:['items.mjs','shop.mjs','business.mjs','contracts.mjs','credit.mjs','settlement-trade.mjs','manufacturing.mjs','repair.mjs']},
+ {id:'sim_economy',layer:'sim',name:'经济',modules:['items.mjs','shop.mjs','business.mjs','contracts.mjs','credit.mjs','settlement-trade.mjs','manufacturing.mjs','repair.mjs','extraction.mjs','smuggling.mjs']},
  {id:'sim_agriculture',layer:'sim',name:'农业',modules:['agriculture.mjs']},
- {id:'sim_society',layer:'sim',name:'社会',modules:['monster-society.mjs','reputation.mjs','reputation-registry.mjs','public-opinion.mjs','organizations.mjs','civic.mjs','governance.mjs','public-projects.mjs','titles.mjs','notables.mjs','promotion.mjs','quest-board.mjs','quest-sources.mjs','tribal-awakening.mjs']},
+ {id:'sim_society',layer:'sim',name:'社会',modules:['monster-society.mjs','reputation.mjs','reputation-registry.mjs','public-opinion.mjs','organizations.mjs','civic.mjs','governance.mjs','public-projects.mjs','titles.mjs','notables.mjs','promotion.mjs','quest-board.mjs','quest-sources.mjs','quest-wildlife.mjs','tribal-awakening.mjs','elections.mjs']},
+ {id:'sim_military',layer:'sim',name:'军队、战争与外交',modules:['military.mjs','war-diplomacy.mjs']},
  {id:'sim_clock',layer:'sim',name:'时钟、节令与灾害',modules:['world-clock.mjs','faction-clock.mjs','festival.mjs','seasonal-hazards.mjs','hazard-calendar.mjs']},
  {id:'sim_law',layer:'sim',name:'法律与通缉',modules:['law.mjs','bounty.mjs']},
  {id:'sim_works',layer:'sim',name:'著作',modules:['works.mjs']},
@@ -418,7 +419,7 @@ const CONTENT=[
    ['household / householdId','householdId|\\.household\\b','家庭：立场按家庭传导'],['settlement','\\.settlement\\b','所属聚落：立场传导'],
    ['services / serviceCatalog','\\.services\\b|serviceCatalog','交易、授课、节日供货'],['creditPolicy','creditPolicy','赊账政策'],['memorySeeds','memorySeeds','初始记忆'],
    ['goals / redLines','\\.goals\\b|redLines','自主行动计划'],['intelligence','\\.intelligence\\b','灵智等级'],['relationships','relationships','初始关系'],
-  ],manual:[],refs:['势力成员：势力的 leader/coreMembers 或人物的 faction 字段即自动成为成员（reputation-registry.mjs 派生）','开店：有交易服务并写 shopType（rules.economy.shops.types 已登记的类型）即自动成为店铺（shop.mjs derivedShops）','传闻种子在 geo/settlements.json 的 details.rumors（经 settlement-profile 白名单）']},
+  ],manual:[],refs:['势力成员：势力的 leader/coreMembers 或人物的 faction 字段即自动成为成员（reputation-registry.mjs 派生）','开店：有交易服务并写 shopType（rules.economy.shops.types 已登记的类型）即自动成为店铺（shop.mjs derivedShops）','传闻种子在 geo/settlements.json 的 details.rumors 或 lore/rumors.json；world/design/w5-rumors-{1..6}.mjs 经 tools/w5-rumors.mjs 审核发布，w5-rumors-common.mjs 与 w5-rumors-sites.mjs 提供来源登记和据点说法。npc-rumors.mjs 读取；携信路线、人物在场与可交谈时间从当前状态派生']},
  {id:'resident',name:'居民（按需展开）',file:'people/residents.json',required:req('resident'),hooks:[
    ['householdId','householdId','按需展开到户'],['settlement','residentIds|populationSeed','聚落人口档案'],
   ],manual:[],refs:['人口册：geo/settlements.json 的 residentIds 列出（人数由人口校验核对），户在 people/households.json']},
@@ -523,8 +524,8 @@ const data={
 const json=JSON.stringify(data,null,1)+'\n';
 fs.writeFileSync(abs('docs/system-map.json'),json);
 fs.writeFileSync(abs('docs/system-map.html'),renderHTML(data));
-if(process.argv[1]&&path.resolve(process.argv[1])===path.resolve(import.meta.filename))
- console.log(`system-map: ${LAYERS.length} 层，${SYSTEMS.length} 个系统，${advance.length} 推进项，${tools.length} 工具，${VERBS.length} 动词，${links.length} 条连线 → docs/system-map.json, docs/system-map.html`);
+export const summary=`system-map: ${LAYERS.length} 层，${SYSTEMS.length} 个系统，${advance.length} 推进项，${tools.length} 工具，${VERBS.length} 动词，${links.length} 条连线 → docs/system-map.json, docs/system-map.html`;
+if(process.argv[1]&&path.resolve(process.argv[1])===path.resolve(import.meta.filename))console.log(summary);
 export {data};
 
 // ---------------------------------------------------------------- HTML

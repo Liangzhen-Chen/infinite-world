@@ -15,7 +15,8 @@ const DAY=1440;
 export const DUES_PERIOD=30*DAY,PROPOSAL_LAPSE=7*DAY,EXPEL_ARREARS=3;
 export const MODES=Object.freeze({leader:'会长定',vote:'成员投票',elders:'长老定'});
 export const KINDS=Object.freeze(['行会','帮派','商号','教会','会社']);
-const LEADER={行会:'会长',帮派:'帮主',商号:'掌柜',教会:'主祭',会社:'会长',家户:'家长'};
+// U12: armies are organizations of kind 军团 (created by military.mjs, not by world_create).
+const LEADER={行会:'会长',帮派:'帮主',商号:'掌柜',教会:'主祭',会社:'会长',家户:'家长',军团:'统领'};
 const ELDER='长老',MEMBER='成员';
 const key=id=>`organization:${id}`;
 const path=id=>['state','records',key(id)];
@@ -161,6 +162,19 @@ function propose(d,engine,org,motion,proposer,eventId,{escrow=0,content=null}={}
     const votes=people.includes(proposer)&&motion.action!=='admit'?[{voter:proposer,opinion:'approve',minute,sourceEvent:eventId}]:[];
     d.set(['state','records',id],{category:'organization_proposal',id,org:org.id,motion,proposer,mode,deciders:people,votes,escrow,content,status:'议事中',minute,sourceEvent:eventId});
     return settle(d,engine,id,minute,eventId);
+}
+
+// Elections use the same proposal, majority and appointment executor as ordinary U1 motions.
+export function electOrganizationLeader(d,engine,org,eventId){
+    if(org.charter.mode!=='vote'||!org.members.player)throw Error('本组织不实行成员选任或玩家不是成员');
+    const p=propose(d,engine,org,{action:'appoint',member:'player',name:org.leaderTitle},'player',eventId);
+    if(p.status!=='议事中')return p;
+    const votes=[...p.votes];
+    for(const voter of p.deciders.filter(v=>v!=='player')){
+        const [opinion,basis]=npcVote(engine,d.get('state'),org,voter,p);
+        votes.push({voter,opinion,basis,minute:d.get('state','minute'),sourceEvent:eventId});
+    }
+    d.set(['state','records',p.id],{...p,votes});return settle(d,engine,p.id,d.get('state','minute'),eventId);
 }
 
 // NPC deciders who did not vote in person vote at the next day boundary by

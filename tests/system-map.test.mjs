@@ -2,6 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import {execFileSync} from 'node:child_process';
+import {fileURLToPath} from 'node:url';
 import {advanceRegistry} from '../server-plugin/advance-registry.mjs';
 import '../server-plugin/engine.mjs';
 import {SOCIAL_VERBS,worldEventSubscribers} from '../server-plugin/world-events.mjs';
@@ -9,8 +10,21 @@ import {toolDefinitions} from '../extension/tools.mjs';
 import {effectKinds} from '../server-plugin/effects.mjs';
 import {interactionRules} from '../world/design/interaction-rules.mjs';
 
-const run=()=>execFileSync(process.execPath,['tools/system-map.mjs'],{encoding:'utf8'});
-const out=run();
+async function run(){
+ try{return execFileSync(process.execPath,['tools/system-map.mjs'],{encoding:'utf8'});}
+ catch(error){
+  if(error.code!=='EPERM')throw error;
+  // Sandboxed runners may forbid child processes; execute the same CLI entry in process.
+  const argv=process.argv,log=console.log;let out='';
+  try{
+   process.argv=[process.execPath,fileURLToPath(new URL('../tools/system-map.mjs',import.meta.url))];
+   console.log=(...args)=>{out+=args.join(' ')+'\n';};
+   await import('../tools/system-map.mjs');
+  }finally{process.argv=argv;console.log=log;}
+  return out;
+ }
+}
+const out=await run();
 const data=JSON.parse(fs.readFileSync('docs/system-map.json','utf8'));
 const html=fs.readFileSync('docs/system-map.html','utf8');
 

@@ -23,6 +23,8 @@ import {civicAction,recordDonationContribution,publicProjectApproval,donationRec
 import {governanceAction,assertGovernedProject,playerOffices}from'./governance.mjs';
 import {startPublicProject,abortPublicProject,startHouse}from'./public-projects.mjs';
 import {titleAction}from'./titles.mjs';
+import {militaryAction}from'./military.mjs';
+import {warAction,warCombatResult}from'./war-diplomacy.mjs';
 import {notableAction}from'./notables.mjs';
 import {promotionAction}from'./promotion.mjs';
 import {questBoardAction}from'./quest-board.mjs';
@@ -33,12 +35,15 @@ import {isHazardClock,hazardClockAction}from'./seasonal-hazards.mjs';
 import {siteAction}from'./sites.mjs';
 import {organizationAction,foundOrganization}from'./organizations.mjs';
 import {workAction,isWorkOperation}from'./works.mjs';
+import {fish,eatFish,mine,miningPermit}from'./extraction.mjs';
+import {duelAction,activeDuel,finishDuel}from'./duels.mjs';
+import {electionAction}from'./elections.mjs';
 const integer=(value,min=0,max=1e9)=>{if(!Number.isSafeInteger(value)||value<min||value>max)throw new Error(`数值需在${min}到${max}之间`);return value;};
 const requiredText=value=>{if(typeof value!=='string'||!value.trim()||value.length>1200)throw new Error('记录文字无效');return value.trim();};
 export const activities={
-    site(d,args,id){return siteAction.call(this,d,args,id);},
+    site(d,args,id){return args.operation==='mine'?mine.call(this,d,args,id):siteAction.call(this,d,args,id);},
     lair(d,args,id){return lairAction.call(this,d,args,id);},
-    wildlife(d,args,id){return wildlifeAction.call(this,d,args,id);},
+    wildlife(d,args,id){return args.operation==='fish'?fish.call(this,d,args,id):args.operation==='eat'?eatFish.call(this,d,args,id):wildlifeAction.call(this,d,args,id);},
     farm(d,args,id){
         const old=donationReceipt(d,this,args,id);if(old)return old;
         const result=agricultureAction.call(this,d,args,id),contribution=recordDonationContribution(d,this,result,id),receipt={...result,...(contribution?{contribution}:{})};
@@ -57,6 +62,7 @@ export const activities={
     environment(d,args,id){return interactEnvironment.call(this,d,args,id);},
     combat(d,args,id){
         const target=resolveCreature(this,d,args.target),isNpc=target.startsWith('npc_'),partition=isNpc?'npcs':'creatures',npc=d.get('state',partition,target),base=this.byId.get(npc?.boss??target),isBoss=Boolean(npc?.boss);
+        const duel=isNpc?activeDuel(d,this,target):null,nonlethal=duel?.rule==='touch';
         if(!isNpc&&!['monster_','boss_'].some(prefix=>target.startsWith(prefix)))throw new Error('这个实体不是交锋对象');
         if(!npc||npc.location!==d.get('state','location'))throw new Error('对手不在场');
         if(npc.status==='死亡')throw new Error('对手已经死亡');
@@ -95,9 +101,9 @@ export const activities={
         if(attack.hit)recordLocalContact(d,this,target,id);
         if(intent!=='flee')consumeTransientMagic(d,'player',playerContext);
         const protection=consumeMagicProtection(d,target,intent==='shove'?(attack.hit?1:0):attack.damage,'physical');
-        const damage=protection.damage,remaining=Math.max(0,hp-damage);
+        const damage=nonlethal?Math.min(protection.damage,Math.max(0,hp-1)):protection.damage,remaining=Math.max(0,hp-damage);
         let escaped=false;if(intent==='flee')escaped=this.check(d,{attribute:'敏捷',difficulty:counter.escapeDifficulty??15},`${id}_escape`).success;
-        let received=0,absorbed=0;const bossAbilities=[];for(let i=0;i<(opponent.attacks??1);i++)if(remaining>0&&!escaped&&received<p.hp){
+        let received=0,absorbed=0;const bossAbilities=[];for(let i=0;i<(opponent.attacks??1);i++)if(remaining>0&&!escaped&&received<p.hp&&!(nonlethal&&attack.hit)){
             const currentOpponent=withMagicStats(opponentBase,magicStatusStats(d,target,opponentContext)),currentPlayer=withMagicStats(playerBase,magicStatusStats(d,'player',playerContext));
             currentPlayer.evasion=Math.max(0,currentPlayer.evasion-waterEarthMudPenalty(d,this)*.05);
             const opponentDark=opponentContext.illumination==='lit'?0:terrain.includes('dark')||night?this.rules.combat.terrain.dark.hit:0;
@@ -110,6 +116,8 @@ export const activities={
             const abilityDamage=ability?.damage!==undefined?Math.max(0,Math.round(ability.damage*(intent==='defend'?.5:1))):hit.damage;
             const protectedHit=consumeMagicProtection(d,'player',abilityDamage,ability?.damageType??'physical');received+=protectedHit.damage;absorbed+=protectedHit.absorbed;
         }
+        const opponentTouched=nonlethal&&received>0;
+        if(nonlethal)received=Math.min(received,Math.max(0,p.hp-1));
         d.set(['state',partition,target,'hp'],remaining);d.set(['state',partition,target,'maxHp'],maxHp);
         if(!remaining)d.set(['state',partition,target,'status'],'死亡');
         else if(remaining<maxHp*0.25)d.set(['state',partition,target,'activity'],'退让并呼救');
@@ -117,7 +125,7 @@ export const activities={
         if(received)this.health(d,{delta:-received},id);
         const seconds=(d.get('state','subMinuteSeconds')??0)+this.rules.combat.exchangeSeconds;
         this.advance(d,Math.floor(seconds/60),id);d.set(['state','subMinuteSeconds'],seconds%60);
-        if(isNpc&&base.tier!=='full')d.set(['state','npcs',target,'trust'],Math.max(-100,npc.trust-5));
+        if(isNpc&&!duel&&base.tier!=='full')d.set(['state','npcs',target,'trust'],Math.max(-100,npc.trust-5));
         if(weapon)wearItem(d,this,'player',weapon,1);
         if(intent==='shove')d.set(['state',partition,target,'developments'],[...npc.developments??[],{type:'被推搡',source:id,minute:d.get('state','minute'),reaction:remaining<maxHp*0.25?'呼救':'还手'}]);
         if(escaped){
@@ -127,12 +135,15 @@ export const activities={
         const corpse=!isNpc&&!remaining?recordWildlifeDeath(d,this,target,id):null;
         const lair=!remaining?defeatBoss(d,this,target,id):null;
         const experience=!isNpc&&!remaining?monsterReward(d,this,target,id):{experience:0};
-        const incident=isNpc?recordViolence(d,this,{victim:target,damage,killed:!remaining,intent,eventId:id}):null;
+        const duelResult=duel&&(nonlethal&&(attack.hit||opponentTouched)||!remaining||d.get('state','player','hp')<=0||escaped)?finishDuel(d,this,duel,!remaining||nonlethal&&attack.hit?'player':target,id,escaped?'脱离':nonlethal?'点到为止':'生死已分'):null;
+        const incident=isNpc?recordViolence(d,this,{victim:target,damage,killed:!remaining,intent,eventId:id,duel}):null;
+        if(duelResult)d.say(`决斗结束：${duelResult.reason}`);
         for(let i=0;i<bossAbilities.length;i++)if(bossAbilities[i].pendingArea){
             const {catalog,id:areaId,source}=bossAbilities[i].pendingArea;
             bossAbilities[i]={ability:bossAbilities[i].ability,...this.applyMagicArea(d,catalog,{target:source},areaId,source)};
         }
-        d.say(`交锋结束，对方受伤${damage}，你受伤${received}`);return {target,damage,received,...(bossAbilities.length?{abilities:bossAbilities}:{}),...(protection.absorbed||absorbed?{absorption:{target:protection.absorbed,player:absorbed}}:{}),targetHp:d.get('state',partition,target,'hp'),actionScope:{kind:'combat_exchange',clockManaged:true,seconds:this.rules.combat.exchangeSeconds},...experience,...(corpse?{corpse}:{}),...(lair?{lair}:{}),...(counter.adapted?{adaptation:{tactic,guarded:true,note:'对手对已见过的进攻加强防备'}}:{}),...(counter.nature?{affinity:{...counter.nature,note:counter.nature.effect==='weak'?'此种对这类进攻格外怕':'此种对这类进攻抗性高，伤害减半'}}:{}),morale:remaining<maxHp*0.25?'撤退':'交战',...(weather?{weather:{name:weather.name,daylight:weather.daylight,hitModifier:weather.hitModifier,nightModifier:night}}:{}),...(incident?{case:incident}:{})};
+        const war=warCombatResult(d,this,{target,damage,received,killed:!remaining,retreated:remaining>0&&remaining<maxHp*0.25},id);
+        d.say(`交锋结束，对方受伤${damage}，你受伤${received}`);return {target,damage,received,...(duel?{duel:duel.id,duelRule:duel.rule,duelResult}:{}),...(war?{war}:{}),...(bossAbilities.length?{abilities:bossAbilities}:{}),...(protection.absorbed||absorbed?{absorption:{target:protection.absorbed,player:absorbed}}:{}),targetHp:d.get('state',partition,target,'hp'),actionScope:{kind:'combat_exchange',clockManaged:true,seconds:this.rules.combat.exchangeSeconds},...experience,...(corpse?{corpse}:{}),...(lair?{lair}:{}),...(counter.adapted?{adaptation:{tactic,guarded:true,note:'对手对已见过的进攻加强防备'}}:{}),...(counter.nature?{affinity:{...counter.nature,note:counter.nature.effect==='weak'?'此种对这类进攻格外怕':'此种对这类进攻抗性高，伤害减半'}}:{}),morale:remaining<maxHp*0.25?'撤退':'交战',...(weather?{weather:{name:weather.name,daylight:weather.daylight,hitModifier:weather.hitModifier,nightModifier:night}}:{}),...(incident?{case:incident}:{})};
     },
     craft(d,args,id){
         if(args.operation==='repair')return repair.call(this,d,args,id);
@@ -160,6 +171,9 @@ export const activities={
         return {project:key,stage,...outcome,note:stage==='打磨'?'研究成果需进入受限实体登记，才能获得规则认可':'原型未被系统承认，不能宣称已学会新法术'};
     },
     settlement(d,args,id){
+        if(args.operation==='mining_permit')return miningPermit.call(this,d,args,id);
+        if(args.operation?.startsWith('duel_'))return duelAction.call(this,d,args,id);
+        if(args.operation?.startsWith('election_'))return electionAction.call(this,d,args,id);
         if(args.operation?.startsWith('faction_'))return (isHazardClock(this,args.clock)?hazardClockAction:factionClockAction).call(this,d,args,id);
         if(args.operation?.startsWith('festival_'))return festivalAction.call(this,d,args,id);
         if(args.operation?.startsWith('business_'))return businessAction.call(this,d,args,id);
@@ -167,6 +181,8 @@ export const activities={
         if(args.operation?.startsWith('governance_'))return governanceAction.call(this,d,args,id);
         if(args.operation?.startsWith('org_'))return organizationAction.call(this,d,args,id);
         if(args.operation?.startsWith('title_'))return titleAction.call(this,d,args,id);
+        if(args.operation==='diplomacy'||args.operation?.startsWith('war_'))return warAction.call(this,d,args,id);
+        if(args.operation?.startsWith('army_'))return militaryAction.call(this,d,args,id);
         if(args.operation?.startsWith('notable_'))return notableAction.call(this,d,args,id);
         if(args.operation?.startsWith('promotion_'))return promotionAction.call(this,d,args,id);
         const settlement=this.resolve(args.settlement,'loc'),row=d.get('state','settlements',settlement);

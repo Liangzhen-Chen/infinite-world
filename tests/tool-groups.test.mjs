@@ -14,7 +14,9 @@ test('委托三步操作与公共粮仓购买参数可直接用于公开工具',
     assert.match(quest.parameters.properties.operation.description,/publish仅发布托管.*另调accept.*complete/);
     assert.match(quest.parameters.properties.quest.description,/回执.*world_read/);
     assert.match(field.description,/粮仓.*farm_buy/);
-    assert.match(field.parameters.properties.operation.description,/farm_buy.*site_.*world_move.*world_promise/);
+    assert.match(field.parameters.properties.operation.description,/move.*promise/);
+    for(const operation of ['farm_buy','site_enter','site_disarm','site_gather'])assert.ok(field.parameters.properties.operation.enum.includes(operation),operation);
+    assert.deepEqual(resolveToolCall('world_field',{operation:'site_enter'}),{tool:'world_site',args:{operation:'enter'}});
     assert.equal(field.parameters.properties.item.type,'string');
     const args={operation:'farm_buy',settlement:'河湾村',item:'燕麦',quantity:10};
     assert.deepEqual(resolveToolCall('world_field',args),{tool:'world_farm',args:{...args,operation:'buy'}});

@@ -3,6 +3,7 @@ import {consumeMagicProtection} from './magic-primitives.mjs';
 import {assertLocationAccess} from './location-access.mjs';
 import {actorPath} from './npc-state.mjs';
 import {validateMonsterSocieties,passageAllows,assertSocietyEntry,infiltrationDetected,infiltrationSucceeded,societyAt} from './monster-society.mjs';
+import {traitsOf} from './traits.mjs';
 
 // A location's optional site contains occupants (actor IDs), manager, owner,
 // entryMechanisms, mechanisms, clues, resources and truths. Local IDs stay stable
@@ -11,7 +12,13 @@ import {validateMonsterSocieties,passageAllows,assertSocietyEntry,infiltrationDe
 // have text, minutes, optional check/mechanisms; resources have item, quantity,
 // minutes, optional owner/mechanisms/requires. Truths require clue IDs and either
 // text or a history ID whose accounts.verified.claim is unlocked by that evidence.
+// Optional: history [{era,text}] is the public account shown once inside;
+// changes [{id,kind:'regrow'|'rearm',everyDays,...}] settle lazily on the site
+// ledger by elapsed time (regrow refills a resource up to max, rearm resets a
+// cleared mechanism); a mechanism's element {feature,tags} names a feature of
+// the same place whose current trait (burning/wet/frozen/hot) clears it.
 const clone=value=>structuredClone(value);
+const DAY=1440,ELEMENT_STATES=['burning','wet','frozen','hot'];
 const siteKey=id=>`site:${id}`;
 const discoveryKey=(site,clue)=>`site_discovery:${site}:${clue}`;
 const observationKey=(site,mechanism)=>`site_observation:${site}:${mechanism}`;
@@ -59,10 +66,26 @@ export function validateSites(world){
                 !Object.values(world.rules.check.difficulties).includes(c.difficulty)||c.skill&&!world.skills.some(x=>x.id===c.skill)||
                 p.damage!==undefined&&(!Number.isSafeInteger(p.damage)||p.damage<0))fail('潜入参数须有1至1440分钟耗时及有效检定');
         }
+        if(s.history!==undefined&&(!Array.isArray(s.history)||!s.history.length||s.history.some(h=>typeof h?.era!=='string'||!h.era.trim()||typeof h.text!=='string'||!h.text.trim())))fail('历史须为含年代与正文的非空列表');
+        if(s.changes!==undefined){
+            if(!Array.isArray(s.changes))fail('changes须为数组');
+            else for(const c of s.changes){
+                if(!c||typeof c.id!=='string'||!/^\w[\w-]{0,99}$/.test(c.id)||ids.has(c.id)){fail('变化编号缺失、重复或无效');continue;}
+                ids.add(c.id);
+                if(!Number.isSafeInteger(c.everyDays)||c.everyDays<1||c.everyDays>3650)fail(`${c.id}变化周期须为1至3650天`);
+                const resource=rows.resources.find(r=>r?.id===c.resource);
+                if(c.kind==='regrow'){if(!resource||!Number.isSafeInteger(c.quantity)||c.quantity<1||!Number.isSafeInteger(c.max)||c.max<1||c.max>resource.quantity)fail(`${c.id}再生须引用资源且上限不超过原有库存`);}
+                else if(c.kind==='rearm'){if(!mechanisms.has(c.mechanism))fail(`${c.id}复位须引用登记机关`);}
+                else fail(`${c.id}变化类型须为regrow或rearm`);
+            }
+        }
         for(const [kind,list]of Object.entries(rows))for(const row of list){
             if(!row||typeof row!=='object')continue;
             if(kind!=='truths'&&(typeof row.name!=='string'||!row.name.trim()||!Number.isSafeInteger(row.minutes)||row.minutes<1||row.minutes>1440))fail(`${row.id}须有名称及1至1440分钟耗时`);
             if(kind==='mechanisms'&&!row.check)fail(`${row.id}缺少机关检定`);
+            if(kind==='mechanisms'&&row.element!==undefined){const e=row.element;
+                if(!e||!(place.features??[]).some(f=>f.id===e.feature)||!Array.isArray(e.tags)||!e.tags.length||e.tags.some(t=>!ELEMENT_STATES.includes(t)))fail(`${row.id}元素解法须引用本地环境对象及有效状态`);
+            }
             if(row.check){const c=row.check;
                 if(!world.rules.attributes.includes(c.attribute)||!Object.values(world.rules.check.difficulties).includes(c.difficulty)||c.skill&&!world.skills.some(x=>x.id===c.skill))fail(`${row.id}检定参数无效`);
             }
@@ -112,10 +135,26 @@ function assertOccupants(d,engine,place,authorization){
     }
 }
 
+// Time-driven changes settle from the stored anchors; nothing refreshes on revisit.
+function settle(place,row,minute){
+    if(!place.site.changes?.length)return row;
+    row.changes??={};
+    for(const c of place.site.changes){
+        const period=c.everyDays*DAY,mark=row.changes[c.id];
+        if(mark===undefined){row.changes[c.id]=minute;continue;}
+        const n=Math.floor((minute-mark)/period);if(n<1)continue;
+        row.changes[c.id]=mark+n*period;
+        if(c.kind==='regrow'){const left=row.remaining[c.resource]??0;row.remaining[c.resource]=Math.max(left,Math.min(c.max,left+n*c.quantity));}
+        else{const m=row.mechanisms[c.mechanism];
+            if(m?.status==='已解除'&&minute-m.minute>=period)row.mechanisms[c.mechanism]={status:'未解除',rearmed:true,minute:m.minute+period,sourceEvent:m.sourceEvent};
+        }
+    }
+    return row;
+}
 function ledger(d,place){
     const old=d.get('state','records',siteKey(place.id)),row=clone(old??{category:'site',site:place.id,remaining:{},mechanisms:{}});
     for(const resource of place.site.resources??[])if(!Object.hasOwn(row.remaining,resource.id))row.remaining[resource.id]=resource.quantity;
-    return row;
+    return settle(place,row,d.get('state','minute'));
 }
 const unblocked=(row,gates)=>{if(gates.some(id=>row.mechanisms[id]?.status!=='已解除'))throw Error('机关尚未解除');};
 const inside=(d,place)=>d.get('state','records','site_presence')?.site===place.id&&d.get('state','records','site_presence')?.actor==='player';
@@ -159,11 +198,12 @@ function infiltrate(d,engine,place,eventId){
 
 export function siteView(engine,document){
     const place=engine.byId.get(document.state.location);if(!place?.site)return null;
-    const row=document.state.records?.[siteKey(place.id)],entered=document.state.records?.site_presence?.site===place.id;
+    const stored=document.state.records?.[siteKey(place.id)],row=stored?settle(place,clone(stored),document.state.minute):stored,entered=document.state.records?.site_presence?.site===place.id;
     const view={site:place.id,name:place.name,owner:ownerOf(place),entered,occupants:(place.site.occupants??[]).filter(id=>{
         const path=actorPath(engine.world,id),actor=document.state[path[1]]?.[path[2]];return actor?.location===place.id&&living(actor);
     }),mechanisms:(place.site.mechanisms??[]).filter(m=>entered||(place.site.entryMechanisms??[]).includes(m.id)).map(m=>({id:m.id,name:m.name,description:m.description??'',status:row?.mechanisms[m.id]?.status??'未解除'}))};
     if(entered){
+        if(place.site.history)view.history=place.site.history.map(h=>`${h.era}：${h.text}`);
         view.clues=(place.site.clues??[]).map(c=>({id:c.id,name:c.name,description:c.description??'',discovered:discovered(document,place.id,c.id)}));
         view.resources=(place.site.resources??[]).filter(r=>(r.requires??[]).every(id=>discovered(document,place.id,id))).map(r=>({id:r.id,name:r.name,item:r.item,owner:ownerOf(place,r),remaining:row?.remaining[r.id]??r.quantity}));
     }
@@ -205,12 +245,21 @@ export function siteAction(d,args,eventId){
         if(d.get('state','records',key))return{target:mechanism.id,duplicate:true};
         advance(mechanism.minutes);
         d.set(['state','records',key],{category:'site_observation',site:place.id,target:mechanism.id,actor:'player',minute:d.get('state','minute'),sourceEvent:eventId});
-        return{target:mechanism.id,description:mechanism.description??'',tool:mechanism.tool??null,materials:mechanism.materials??[]};
+        const element=mechanism.element?{feature:mechanism.element.feature,states:mechanism.element.tags}:undefined;
+        return{target:mechanism.id,description:mechanism.description??'',tool:mechanism.tool??null,materials:mechanism.materials??[],...(element?{element}:{})};
     }
     if(operation==='disarm'){
         if(!mechanism)throw Error('没有这个登记机关');
         if(row.mechanisms[mechanism.id]?.status==='已解除')return{target:mechanism.id,duplicate:true};
         if(!d.get('state','records',observationKey(place.id,mechanism.id)))throw Error('须先调查机关');
+        // A burning, soaked, frozen or heated feature does the work instead of tools and a check.
+        const state=mechanism.element&&traitsOf(this,d.get('state'),mechanism.element.feature)?.tags.find(t=>mechanism.element.tags.includes(t));
+        if(state){
+            advance(mechanism.minutes);
+            row.mechanisms[mechanism.id]={status:'已解除',method:state,sourceEvent:eventId,minute:d.get('state','minute')};
+            d.set(['state','records',siteKey(place.id)],row);
+            return{target:mechanism.id,element:{feature:mechanism.element.feature,state},damage:0,status:'已解除'};
+        }
         if(mechanism.tool){const held=heldUnit(d,this,'player',mechanism.tool);if(!held||held.durability<=0)throw Error('缺少可用机关工具');}
         const costs=new Map();for(const cost of mechanism.materials??[])costs.set(cost.item,(costs.get(cost.item)??0)+cost.quantity);
         for(const[item,quantity]of costs)if(this.quantity(d,'player',item)<quantity)throw Error('机关消耗材料不足');

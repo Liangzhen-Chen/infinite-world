@@ -17,7 +17,14 @@ import {withoutMonsterSociety2} from '../tools/publish-monster-society-2.mjs';
 import {withoutMonsterSociety3} from '../tools/publish-monster-society-3.mjs';
 import {withoutT142} from '../tools/t142-merge.mjs';
 import {withoutClockBatch} from '../tools/w5-clock-publication.mjs';
-const formal=await loadWorld(),source=structuredClone(withoutT142(withoutClockBatch(withoutClockBatch(withoutMonsterSociety2(withoutMonsterSociety(villagesOriginalWorld(withoutMonsterSociety3(formal)))),2),1))),candidate=JSON.parse(await fs.readFile('world/drafts/w1/hewan/candidate.json','utf8')),preserved=JSON.parse(await fs.readFile('world/drafts/w1/hewan/preserved-npcs.json','utf8'));
+import {buildBatch as buildSiteBatch,withoutSites} from '../tools/w5-sites.mjs';
+const formal=await loadWorld();let beforeSites=formal;
+// Site resources and ownership belong to later catalogs absent from the W1 fixture.
+for(const n of [3,2,1]){
+ const design=await import(`../world/design/w5-sites-${n}.mjs`);
+ beforeSites=withoutSites(beforeSites,buildSiteBatch(design.sites,beforeSites),design.priorNoMechanics);
+}
+const source=structuredClone(withoutT142(withoutClockBatch(withoutClockBatch(withoutMonsterSociety2(withoutMonsterSociety(villagesOriginalWorld(withoutMonsterSociety3(beforeSites)))),2),1))),candidate=JSON.parse(await fs.readFile('world/drafts/w1/hewan/candidate.json','utf8')),preserved=JSON.parse(await fs.readFile('world/drafts/w1/hewan/preserved-npcs.json','utf8'));
 // This historical fixture omits four villages, including their dependent rules.
 // Only references to those deliberately removed entities are projected out.
 const removedLocations=new Set(formal.locations.filter(row=>!source.locations.some(location=>location.id===row.id)).map(row=>row.id));
@@ -46,6 +53,9 @@ delete source.festivals;
 delete source.rules.tribalAwakening;// U11族群觉醒动态（挂靠魔物社会议事势力与各村人物）晚于本批，历史世界不含。
 delete source.rules.hazardClock;// U3/D1灾害时钟晚于河湾人口初版，不能倒灌删村的历史夹具。
 delete source.rules.questSources;// U17/D1公告栏主事人和委托公账同属后续系统。
+// U12军务与战争依赖后来的郡府、村镇钱粮账和聚居地势力，早期河湾夹具不含这些系统。
+delete source.rules.military;
+delete source.rules.warDiplomacy;
 // T105/T157首领等引用本夹具已移出的魔物社会人物、营地和野外地点；
 // 各村政体补充、U3疫病传播路线和镇上商店依赖已移出的村镇法典、路线和聚落档案。依赖随之投影掉（求闭包）。
 {
@@ -57,6 +67,13 @@ delete source.rules.questSources;// U17/D1公告栏主事人和委托公账同�
  const kept=new Set(kinds.flatMap(k=>(k==='npcs'?[...preserved,...candidate.npcs]:k==='residents'?candidate.residents:source[k]??[]).map(r=>r.id)));
  const removed=new Set(kinds.flatMap(k=>(formal[k]??[]).map(r=>r.id)).filter(id=>!kept.has(id)));
  const bound=row=>[...JSON.stringify(row).matchAll(/"([a-z]+_[a-z0-9_]+)"/g)].some(m=>m[1]!==row.id&&removed.has(m[1]));
+ // D1 sources attached to omitted villages and their officials leave with them.
+ if(source.rules.hazardClock)source.rules.hazardClock.clocks=source.rules.hazardClock.clocks.filter(row=>registered.has(row.settlement)&&!bound(row));
+ const sources=source.rules.questSources;
+ if(sources){
+  sources.publishers=Object.fromEntries(Object.entries(sources.publishers??{}).filter(([place,npc])=>kept.has(place)&&kept.has(npc)));
+  sources.funds=Object.fromEntries(Object.entries(sources.funds??{}).filter(([place,faction])=>kept.has(place)&&kept.has(faction)));
+ }
  for(let changed=true;changed;){changed=false;for(const key of ['bosses','cultures','factionPeople']){const rows=source[key]??[],next=rows.filter(row=>!bound(row));if(next.length!==rows.length){for(const row of rows)if(!next.includes(row))removed.add(row.id);source[key]=next;changed=true;}}}
  // K6效果表：属主时钟已移出或效果对象（栖地、人物、地点）已移出的挂钩与季节条目一并移出。
  for(const h of formal.rules.wildlife.habitats)if(!source.rules.wildlife.habitats.some(row=>row.id===h.id))removed.add(h.id);
@@ -78,6 +95,8 @@ test('河湾历史候选逐条核对审核，完整深度不足拒绝且重复�
  const root=await fs.mkdtemp(path.join(os.tmpdir(),'fields-population-publish-'));
  t.after(async()=>{const target=path.resolve(root);assert.ok(target.startsWith(path.resolve(os.tmpdir())+path.sep));await fs.rm(target,{recursive:true,force:true});});
  await fs.cp(path.resolve('world'),root,{recursive:true,filter:file=>!file.split(path.sep).includes('drafts')});
+ // The fixture writes loaded locations with biome fields already merged in.
+ await fs.rm(path.join(root,'geo/biomes.json'),{force:true});
  await fs.mkdir(path.join(root,'drafts/w1'),{recursive:true});await fs.cp(path.resolve('world/drafts/w1/hewan'),path.join(root,'drafts/w1/hewan'),{recursive:true});
  // original.locations already contains loadWorld's D1 biome fields. Store them once.
  await fs.writeFile(path.join(root,'geo/biomes.json'),JSON.stringify({locations:{}}));

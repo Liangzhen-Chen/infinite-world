@@ -223,3 +223,45 @@ test('真实HTTP：发现条件限制目录、检索与场景；重复采集、�
     assert.equal((await request('/search',{campaignId:other,query:'记水刻'})).results.some(row=>row.text.includes(truth)),false);
     assert.doesNotMatch((await request('/scene',{campaignId:other,query:'旧记水站'})).scene,/刻痕注明洪水高度|抄本记录迁居/);
 });
+
+test('元素解法、随时间再生与机关复位按实际状态与流逝时间结算，公开历史仅入内可见',async()=>{
+    const {applyInteraction}=await import('../server-plugin/interactions.mjs');
+    const f=fixture((s,world)=>{
+        const place=world.locations.at(-1);
+        place.features=[{id:'feature_test_archive_pool',name:'积水坑',aliases:[],kind:'water',owner:null,access:'public',position:[0,0],
+            state:{capacityMl:200000,waterMl:150000,turbidity:40,saltMg:0,toxinUg:0,pathogenRisk:10,odor:'泥腥味'}}];
+        s.mechanisms.push({id:'pool',name:'门前积水',description:'门槛前积了一坑深水。',check:{attribute:'力量',difficulty:30},minutes:5,failureDamage:2,element:{feature:'feature_test_archive_pool',tags:['frozen']}});
+        s.entryMechanisms=['door','pool'];s.resources[0].mechanisms=[];
+        s.history=[{era:'百年前',text:'沿河人修起水站。'},{era:'如今',text:'水站空置。'}];
+        s.changes=[{id:'bundle_regrow',kind:'regrow',resource:'bundle',quantity:1,everyDays:10,max:2},{id:'pool_refill',kind:'rearm',mechanism:'pool',everyDays:3}];
+    });
+    let c=await arrive(f);
+    const view=await action(f.engine,c,'inspect');assert.equal(view.result.history,undefined);
+    const seen=await action(f.engine,c,'investigate',{target:'pool'},'see_pool');c=seen.document;
+    assert.deepEqual(seen.result.element,{feature:'feature_test_archive_pool',states:['frozen']});
+    c.state.player.attributes['力量']=1;
+    const failed=await action(f.engine,c,'disarm',{target:'pool'},'wade');assert.equal(failed.result.status,'未解除');
+    // A real cold interaction freezes the pool; the frozen state then clears the gate without a check.
+    const d={document:structuredClone(c),get(...p){return p.reduce((v,k)=>v?.[k],this.document);},set(p,v){let o=this.document;for(const k of p.slice(0,-1))o=o[k]??={};o[p.at(-1)]=v;}};
+    assert.deepEqual(applyInteraction(d,f.engine,{agent:'cold',target:'feature_test_archive_pool',minutes:60}).added,['frozen']);
+    const frozen=await action(f.engine,d.document,'disarm',{target:'pool'},'walk_ice');
+    assert.equal(frozen.result.status,'已解除');assert.equal(frozen.result.element.state,'frozen');assert.equal(frozen.result.check,undefined);
+    assert.equal(frozen.document.state.player.hp,d.document.state.player.hp);
+    c=frozen.document;c=await open(f,c);
+    const inside=await action(f.engine,c,'inspect');assert.deepEqual(inside.result.history,['百年前：沿河人修起水站。','如今：水站空置。']);
+    c=(await action(f.engine,c,'investigate',{target:'carving'},'carving')).document;
+    c=(await action(f.engine,c,'gather',{target:'bundle',quantity:2},'take')).document;
+    await assert.rejects(action(f.engine,c,'gather',{target:'bundle'}),/有限资源不足/);
+    // Nine days later nothing has regrown; the gate refilled after three days and must be cleared again to re-enter.
+    c.state.minute+=9*1440;
+    await assert.rejects(action(f.engine,c,'gather',{target:'bundle'}),/有限资源不足/);
+    c.state.minute+=1440+1;
+    let out=await action(f.engine,c,'gather',{target:'bundle'},'regrown');assert.equal(out.result.remaining,0);c=out.document;
+    c.state.minute+=30*1440;
+    assert.equal((await action(f.engine,c,'inspect')).result.resources.find(r=>r.id==='bundle').remaining,2,'再生不超过上限');
+    c=(await run(f.engine,c,'world_move',{destination:'loc_hw'},'leave')).document;
+    c=(await run(f.engine,c,'world_move',{destination:siteId},'back')).document;
+    await assert.rejects(action(f.engine,c,'enter',{},'reenter'),/机关/);
+    const broken=structuredClone(f.world);broken.locations.at(-1).site.changes[0].max=5;assert.throws(()=>new WorldEngine(broken),/site:/);
+    const missing=structuredClone(f.world);missing.locations.at(-1).site.mechanisms.at(-1).element.feature='feature_nowhere';assert.throws(()=>new WorldEngine(missing),/site:/);
+});
