@@ -11,10 +11,11 @@ import {prepareNpcFurnace,prepareThermalWorkstation} from './magic-object.mjs';
 import {kilnWorkResult} from './manufacturing.mjs';
 import {npcProficiency,npcWorkGrowth,switchVocation,npcVocationOptions} from './npc-growth.mjs';
 import {intelligenceOf,intelligenceFresh,goalsWithinHorizon,INTELLIGENCE_LEVELS} from './npc-intelligence.mjs';
+import {personSimulation,personConstraint}from'./entity-view.mjs';
 
 const DAY=1440,clone=x=>structuredClone(x),safe=n=>Number.isSafeInteger(n)&&n>=0;
 const awake=n=>n?.location&&!n.scheduleTravel&&!n.cognitionTravel&&!['死亡','濒死','昏迷','患病'].includes(n.status)&&!/睡眠|睡觉|熟睡/.test(n.activity??'');
-const full=(engine,id)=>engine.byId.get(id)?.tier==='full';
+const full=(engine,id)=>personSimulation(engine,{},id).value;
 const auditGoal=g=>/核清现有(?:铁料|线料)/.test(g.content);
 function draft(document,at){const d={document,patches:[],get(...p){if(at!==undefined&&p.join('.')==='state.minute')return at;return p.reduce((x,k)=>x?.[k],this.document);},set(path,value){const p={op:'set',path,value};this.document=applyPatches(this.document,[p]);this.patches.push(p);},remove(path){const p={op:'delete',path};this.document=applyPatches(this.document,[p]);this.patches.push(p);}};return d;}
 const commit=(target,work)=>{for(const p of work.patches)p.op==='set'?target.set(p.path,p.value):target.remove(p.path);};
@@ -27,9 +28,9 @@ export function assertNpcAutonomyAction(state,actors,{start=state.minute,minutes
 }
 function validateAction(d,engine,id,action,{at=d.get('state','minute'),presence=d.get('state'),ignoreTask=false}={}){
  const state=d.get('state'),actor=presence.npcs[id],base=engine.byId.get(id),minutes=duration(engine,action);let furnace,work;
- if(!full(engine,id)||!awake(actor)||state.player.companions?.includes(id))throw Error('人物不具备独立行动条件');
+ if(!full(engine,id)||!awake(actor)||personConstraint(engine,state,id,at)||state.player.companions?.includes(id))throw Error('人物不具备独立行动条件');
  if(['死亡','濒死','昏迷','患病'].includes(state.npcs[id]?.status))throw Error('人物当前无法完成工作');
- if(ignoreTask)for(const who of [id,action.seller].filter(Boolean))if(!awake(state.npcs[who])||state.npcs[who].location!==presence.npcs[who]?.location)throw Error('工作完成时人物已离开或不能继续行动');
+ if(ignoreTask)for(const who of [id,action.seller].filter(Boolean))if(!awake(state.npcs[who])||personConstraint(engine,state,who,at)||state.npcs[who].location!==presence.npcs[who]?.location)throw Error('工作完成时人物已离开或不能继续行动');
  if(!safe(minutes)||minutes>480)throw Error('行动耗时未登记或超过单日上限');
  if(!ignoreTask)assertNpcAutonomyAction(state,[id,action.seller].filter(Boolean),{start:at,minutes});
  assertNpcObligationAction(d,engine,[id,action.seller].filter(Boolean),{start:at,minutes,location:actor.location,kind:'autonomy'});
@@ -62,7 +63,7 @@ function validateAction(d,engine,id,action,{at=d.get('state','minute'),presence=
   }
  }else if(action.kind==='trade'){
   const seller=presence.npcs[action.seller],sellerBase=engine.byId.get(action.seller),item=engine.byId.get(action.item);
-  if(action.seller===id||!awake(seller)||seller.location!==actor.location||!sellerBase?.serviceCatalog?.some(s=>s.kind==='trade'&&s.price.mode==='engineQuote'))throw Error('没有同地且愿意出售现有库存的卖家');
+  if(action.seller===id||!awake(seller)||personConstraint(engine,state,action.seller,at)||seller.location!==actor.location||!sellerBase?.serviceCatalog?.some(s=>s.kind==='trade'&&s.price.mode==='engineQuote'))throw Error('没有同地且愿意出售现有库存的卖家');
   if(!safe(action.quantity)||action.quantity<1||action.quantity>20||!item?.id.startsWith('item_'))throw Error('交易品种或数量未登记');
   if(engine.quantity(d,action.seller,action.item)<action.quantity||state.npcs[id].coins<tradeQuote(d,engine,id,action,actor.location).cost)throw Error('真实钱款或库存不足');
   for(let cursor=at;cursor<at+minutes;){const s=scheduleAt(engine,action.seller,cursor,state);if(!s||s.location!==actor.location||!s.services.includes('trade'))throw Error('交易没有完整接待窗口');cursor=s.until;}
@@ -75,7 +76,7 @@ function startTask(d,task,checked){
 }
 function advanceFurnace(d,engine,task,until){
  const actor=d.get('state','npcs',task.npc),location=task.presence.npcs[task.npc].location;
- if(!awake(actor)||actor.location!==location||d.get('state','player','companions')?.includes(task.npc))throw Error('照管炉火的人物已离岗或失能');
+ if(!awake(actor)||personConstraint(engine,d.get('state'),task.npc,until)||actor.location!==location||d.get('state','player','companions')?.includes(task.npc))throw Error('照管炉火的人物已离岗或失能');
  const recipe=engine.byId.get(task.action.recipe),station=engine.byId.get(location)?.workstations?.find(s=>s.kind===recipe.workstation);
  if(!station||station.access!=='public'&&station.owner!==task.npc||d.get('state','buildings',location,'condition')===0)throw Error('炉火工坊已不可用');
  const work=draft(d.document,task.furnace.checkedUntil);
@@ -175,7 +176,7 @@ export function advanceNpcAutonomy(d,engine,before,after,eventId,{beforeState}={
 export function npcPlanFingerprint(document){return digest({minute:document.state.minute,npcs:document.state.npcs,location:document.state.location,companions:document.state.player.companions,obligations:document.state.obligations,actions:document.state.npcAutonomy});}
 export function npcPlanningContext(engine,document,{limit=12}={}){
  if(!Number.isInteger(limit)||limit<8||limit>20)throw Error('智能层人数须在8到20之间');
- const ranked=engine.world.npcs.filter(n=>n.tier==='full'&&document.state.npcs[n.id]).sort((a,b)=>{
+ const ranked=Object.keys(document.state.npcs).filter(id=>personSimulation(engine,document.state,id).value&&!personConstraint(engine,document.state,id)).map(id=>document.state.created?.[id]??engine.byId.get(id)).sort((a,b)=>{
   const score=n=>{const s=document.state.npcs[n.id];return Math.abs(s.trust??0)+Math.abs(s.affection??0)+(s.memoryStream??[]).filter(m=>m.participants?.includes('player')).length*5;};return score(b)-score(a)||a.id.localeCompare(b.id);
  }).slice(0,limit);
  const day=Math.floor(document.state.minute/DAY);

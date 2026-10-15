@@ -6,6 +6,7 @@ import {registerWorldEventSubscriber}from'./world-events.mjs';
 // 不向玩家显示数字。精怪的听息、立意两阶就是这张表的第1、2级。
 import {sapient,awakeningTotal,awakeningEligible}from'./wildlife-awakening.mjs';
 import {famineAt}from'./hazard-calendar.mjs';
+import {personSimulation}from'./entity-view.mjs';
 
 const DAY=1440,clone=v=>cloneData(v); // P2: same result as structuredClone, faster
 export const INTELLIGENCE_VERSION=1;
@@ -168,7 +169,7 @@ export function advanceNpcNeeds(d,engine,minute){
  const debts=records.filter(r=>r.category==='debt'&&r.status!=='已还清'&&Number.isFinite(r.deadline));
  for(const id of Object.keys(state.npcs??{}).sort()){
   const npc=state.npcs[id],base=engine.byId.get(id);
-  if(base?.tier!=='full'||['死亡','濒死'].includes(npc.status))continue;
+  if(!personSimulation(engine,state,id).value||['死亡','濒死'].includes(npc.status))continue;
   const {level,maxActions,horizonDays}=intelligenceOf(engine,state,id);if(level<1)continue;
   const needs=detectNeeds(engine,state,id,level,minute,events,debts),goals=clone(npc.goals??base.goals??{});let changed=false;
   for(const g of Object.values(goals).flat())if(g?.source==='need'&&g.status==='进行中'&&!needs.some(n=>n.kind===g.need&&(n.ambition??false)===(g.ambition??false))){

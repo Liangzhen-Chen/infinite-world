@@ -18,6 +18,7 @@ import {transferItems,heldUnit,wearItem}from'./items.mjs';
 import {localWeather}from'./weather.mjs';
 import {agricultureAction}from'./agriculture.mjs';
 import {wildlifeAction,resolveCreature,recordWildlifeDeath}from'./wildlife.mjs';
+import {recordEntityDeath}from'./npc-life.mjs';
 import {lairAction,bossCounter,rememberBossTactic,defeatBoss}from'./bosses.mjs';
 import {civicAction,recordDonationContribution,publicProjectApproval,donationReceipt,saveDonationReceipt}from'./civic.mjs';
 import {governanceAction,assertGovernedProject,playerOffices}from'./governance.mjs';
@@ -119,7 +120,7 @@ export const activities={
         const opponentTouched=nonlethal&&received>0;
         if(nonlethal)received=Math.min(received,Math.max(0,p.hp-1));
         d.set(['state',partition,target,'hp'],remaining);d.set(['state',partition,target,'maxHp'],maxHp);
-        if(!remaining)d.set(['state',partition,target,'status'],'死亡');
+        if(!remaining)recordEntityDeath(d,this,target,d.get('state','minute'),'战斗身亡');
         else if(remaining<maxHp*0.25)d.set(['state',partition,target,'activity'],'退让并呼救');
         if(!isNpc||isBoss)rememberBossTactic(d,this,target,tactic,id);
         if(received)this.health(d,{delta:-received},id);

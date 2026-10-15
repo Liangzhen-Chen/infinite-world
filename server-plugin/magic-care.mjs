@@ -6,6 +6,7 @@ import {assertMagicTargeting}from'./magic-targeting.mjs';
 import {ambientHeatC}from'./magic-object.mjs';
 import {resolveCreature}from'./wildlife.mjs';
 import {derivedStats,monsterStats}from'./combat.mjs';
+import {recordEntityDeath}from'./npc-life.mjs';
 
 // Authoring bounds only. The formal catalog is not changed by these consumers.
 export const careMechanisms=Object.freeze({
@@ -253,7 +254,7 @@ function advanceMedical(d,engine,target,minute){
   else{d.set([...path,'hp'],0);d.set([...path,'status'],'濒死');d.set([...path,'dyingSince'],minute);}
  }
  const latest=d.get(...path);
- if(target!=='player'&&latest.status==='濒死'&&minute+1-latest.dyingSince>=engine.rules.death.dyingMinutes)d.set([...path,'status'],'死亡');
+ if(target!=='player'&&latest.status==='濒死'&&minute+1-latest.dyingSince>=engine.rules.death.dyingMinutes)recordEntityDeath(d,engine,target,minute+1,'伤重身亡');
 }
 function advancePlant(d,engine,row,minute){
  const s=stateOf(d,row);if(s.plant?.alive!==true)return;const p=plantState(s);

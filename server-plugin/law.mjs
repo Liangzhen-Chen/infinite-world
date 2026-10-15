@@ -144,7 +144,7 @@ export function recordViolence(d,engine,{victim,damage,killed,intent,eventId,due
 }
 
 export function enforceLegalRestriction(d,tool,args){
-    const lock=Object.values(d.get('state','records')??{}).find(row=>row?.category==='legal_custody'&&row.status==='生效');
+    const lock=Object.values(d.get('state','records')??{}).find(row=>row?.category==='legal_custody'&&row.status==='生效'&&(row.subject??d.get('state','records',row.case,'offender')??'player')==='player');
     if(!lock)return;
     if(['time','turn','health','revive'].includes(tool)||tool==='law'&&(args.operation??'inspect')==='inspect')return;
     if(tool==='law'&&lock.reason==='到案'&&['confess','bribe'].includes(args.operation))return;
@@ -153,6 +153,10 @@ export function enforceLegalRestriction(d,tool,args){
 }
 
 export function advanceLaw(d,after,engine){
+    for(const [id,hold] of Object.entries(d.get('state','records')??{}))if(hold.category==='legal_detention'&&(!hold.status||hold.status==='生效')){
+        const dead=d.get('state','npcs',hold.subject,'status')==='死亡';
+        if(dead||(hold.expires??Infinity)<=after)d.set(path(id),{...hold,status:dead?'已中止':'已释放',ended:dead?after:hold.expires});
+    }
     for(const[id,r]of Object.entries(d.get('state','records')??{}))if(r.category==='authorization'&&r.sourceType==='magic_permit'&&!r.revoked&&r.expires<=after)d.set(path(id),{...r,revoked:true,status:'已到期',ended:r.expires});
     for(const[id,lock]of Object.entries(d.get('state','records')??{}))if(lock?.category==='legal_custody'&&lock.status==='生效'&&lock.reason!=='到案'&&
         (d.get('state','player','status')==='死亡'||d.get('state','location')!==lock.location)){

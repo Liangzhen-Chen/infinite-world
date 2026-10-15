@@ -7,6 +7,7 @@ import {relationView} from './npc-relations.mjs';
 import {assertNpcObligationAction} from './npc-obligations.mjs';
 import {observeLegalReputation} from './reputation.mjs';
 import {npcRumorSeeds,rumorChainView} from './npc-rumors.mjs';
+import {personSimulation,personConstraint}from'./entity-view.mjs';
 
 const DAY=1440,clone=value=>cloneData(value); // P2: same result as structuredClone, faster
 const awake=n=>n&&n.location&&!n.scheduleTravel&&!n.cognitionTravel&&!['死亡','濒死','昏迷','患病'].includes(n.status)&&!/睡眠|睡觉|熟睡/.test(n.activity??'');
@@ -57,7 +58,7 @@ function occupied(state,id,start,end){return state.player.companions?.includes(i
 export function shareNpcMemory(d,engine,{from,to,memoryId,channel='conversation',eventId}){
  const state=d.get('state'),at=state.minute,a=state.npcs[from],b=state.npcs[to];
  if(working(state,from,at,at+1)||channel==='conversation'&&working(state,to,at,at+1))throw Error('人物正在完成已经开始的自主工作');
- if(from===to||!a||!b||engine.byId.get(to)?.tier!=='full'||!awake(a))throw Error('传话双方须是可行动的已登记人物');
+ if(from===to||!a||!b||!personSimulation(engine,state,to).value||!awake(a)||personConstraint(engine,state,from))throw Error('传话双方须是可行动的已登记人物');
  if(!relation(engine,state,from,to)||(relation(engine,state,from,to).trust??0)<0)throw Error('没有可传话的人物关系渠道');
  const memory=memoryFor(engine,state,from,memoryId,at);if(!permitted(memory,to))throw Error('这条私密记忆没有向收件人披露的渠道');
  if(known(engine,state,to,memory))return {duplicate:true};
@@ -110,7 +111,7 @@ export function advanceNpcCognition(d,engine,before,after,eventId,{beforeState}=
   // fixed quarter-hours, independent of how a player splits wait commands.
   if(message.status==='待交付'&&after%15!==0)continue;
   const carrier=d.get('state','npcs',message.from),trip=carrier?.cognitionTravel;
-  if(trip?.messageId===message.id&&['死亡','濒死','昏迷','患病'].includes(carrier.status)){
+  if(trip?.messageId===message.id&&(['死亡','濒死','昏迷','患病'].includes(carrier.status)||personConstraint(engine,d.get('state'),message.from))){
    d.set(['state','npcCognition','messages',message.id,'status'],'中止');d.set(['state','npcCognition','messages',message.id,'reason'],`携信者${carrier.status}，未抵达`);
    d.set(['state','npcs',message.from,'interruptedTravel'],{...trip,interruptedAt:after});d.remove(['state','npcs',message.from,'cognitionTravel']);continue;
   }
@@ -136,7 +137,7 @@ export function advanceNpcCognition(d,engine,before,after,eventId,{beforeState}=
    }
   }
  }
- for(const id of Object.keys(d.get('state','npcs')))if(engine.byId.get(id)?.tier==='full')settleNpcReflection(d,engine,id,after);
+ for(const id of Object.keys(d.get('state','npcs')))if(personSimulation(engine,d.get('state'),id).value)settleNpcReflection(d,engine,id,after);
  return {delivered,shared};
 }
 export function npcCognitionView(engine,document,id){

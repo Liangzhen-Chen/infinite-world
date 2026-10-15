@@ -7,12 +7,13 @@ import {npcOpinions}from'./public-opinion.mjs';
 import {npcLifeNews}from'./npc-life.mjs';
 import {memoryGuardUntil,mindSleepUntil}from'./magic-mind-space.mjs';
 import {waterEarthHeldUntil}from'./magic-water-earth.mjs';
+import {personSimulation}from'./entity-view.mjs';
 
 export function memoryBlurMinute(d,npcId,memory,ttl,now){
  return Math.max(memory.minute+ttl*1440,memoryGuardUntil(d,npcId,memory.id,now));
 }
 
-const full=(engine,id)=>engine.byId.get(id)?.tier==='full';
+const full=(engine,id)=>personSimulation(engine,{},id).value;
 const awake=npc=>npc&&!['死亡','濒死','昏迷','患病'].includes(npc.status)&&!/(睡眠|熟睡|睡觉)/.test(npc.activity??'');
 const present=(state,location=state.location)=>Object.entries(state.npcs).filter(([,npc])=>npc.location===location&&awake(npc)).map(([id])=>id);
 function witnessedThroughout(engine,before,after,id){
@@ -33,7 +34,7 @@ export function recordNpcMemories(d,engine,before,events,...rest){
     // Direct callers may still pass (tool,args,detail,eventId); it becomes the same event.
     if(typeof events==='string')rest=[{args:rest[0]??{},detail:rest[1]??{},eventId:rest[2]}],events=deriveWorldEvents(engine,before,d.get('state'),{tool:events,...rest[0]});
     const {args={},detail={},eventId}=rest[0];
-    if(!engine.world.npcs.some(npc=>npc.tier==='full'))return;
+    if(!Object.keys(d.get('state','npcs')).some(id=>full(engine,id)))return;
     const event=events[0],verb=event.verb;
     const after=d.get('state'),name=id=>id==='player'?after.player.name:engine.byId.get(id)?.name??id;
     const resolve=value=>{if(!value)return null;try{return engine.resolve(value);}catch{return null;}};
@@ -112,8 +113,8 @@ export function recordNpcMemories(d,engine,before,events,...rest){
 }
 
 export function selectNpcSeedMemories(engine,document,id,query=''){
-    const base=engine.byId.get(id);if(base?.tier!=='full')return [];
-    const seeds=base.memorySeeds.filter(row=>row.knownBy?.includes(id)),index=new MemoryIndex(engineIndexOptions(engine));
+    const base=engine.byId.get(id);if(!personSimulation(engine,document.state,id).value)return [];
+    const seeds=(base.memorySeeds??[]).filter(row=>row.knownBy?.includes(id)),index=new MemoryIndex(engineIndexOptions(engine));
     for(const row of seeds)index.upsert({id:row.id,text:row.event,entities:row.knownBy.filter(other=>other!==id),salience:row.salience,minute:0});
     const near=present(document.state).filter(other=>other!==id);
     const relevant=index.search(query,{present:near,limit:2}).map(row=>row.id);
@@ -121,7 +122,7 @@ export function selectNpcSeedMemories(engine,document,id,query=''){
 }
 
 export function npcContext(engine,document,id,query=''){
-    const base=engine.byId.get(id),npc=document.state.npcs[id];if(base?.tier!=='full'||!npc)return null;
+    const base=engine.byId.get(id),npc=document.state.npcs[id];if(!personSimulation(engine,document.state,id).value||!npc)return null;
     const cognition=npcCognitionView(engine,document,id);
     const memories=cognition.memories.filter(row=>row.participants?.includes('player'));
     const index=new MemoryIndex(engineIndexOptions(engine));
@@ -134,9 +135,9 @@ export function npcContext(engine,document,id,query=''){
     const shared=memories.filter(row=>selected.has(row.id)).sort((a,b)=>a.minute-b.minute);
     const goals=Object.values(npc.goals??base.goals??{}).flat().filter(row=>row.progress<100&&row.status!=='已完成');
     return{appearance:base.appearance,voice:base.voice,values:base.personality.values,flaws:base.personality.flaws,
-        concern:goals[0]?.content??'',known:base.knowledge.known.map(row=>row.fact),unknown:base.knowledge.unknown,rumors:npcRumors(engine,id,document),
+        concern:goals[0]?.content??base.currentConcern??'',known:(base.knowledge.known??[]).map(row=>row.fact),unknown:base.knowledge.unknown,rumors:npcRumors(engine,id,document),
         recentActivities:Object.values(document.state.npcAutonomy?.actions??{}).filter(row=>row.npc===id&&row.minute<=document.state.minute).slice(-2).map(row=>({minute:row.minute,content:row.summary})),
-        memories:shared,lifeNews:npcLifeNews(engine,document,id),opinions:npcOpinions(engine,document,id).slice(0,3),reflections:cognition.reflections.filter(row=>row.about==='player').slice(-1),seeds:selectNpcSeedMemories(engine,document,id,query),behavior:base.behaviorRules,
+        memories:shared,lifeNews:npcLifeNews(engine,document,id),opinions:npcOpinions(engine,document,id).slice(0,3),reflections:cognition.reflections.filter(row=>row.about==='player').slice(-1),seeds:selectNpcSeedMemories(engine,document,id,query),behavior:base.behaviorRules??{},
         relations:base.relationships.map(row=>({with:row.with,type:row.type,note:row.note})),
         background:npcBackground(engine,document,id,query)};
 }

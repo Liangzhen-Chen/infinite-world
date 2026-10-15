@@ -14,7 +14,8 @@ const baseOf=(engine,state,id)=>state.created?.[id]??state.family?.people?.[id]?
 function householdView(engine,state,id){
     const h=npcHousehold(engine,state,id);
     const changed=Object.values(state.family?.households??{}).some(r=>r.members?.includes(id)||r.left?.includes(id));
-    return fact(h,changed?'state.family.households + world.households':'world.households',changed);
+    const generated=state.created?.[id]?.householdId===h?.id;
+    return fact(h,generated?`state.created.${id}.householdId + state.family.households`:changed?'state.family.households + world.households':'world.households',Boolean(changed||generated));
 }
 function socialIdentities(engine,state,id){
     return memberOrganizations(engine,state,id).map(org=>{
@@ -30,9 +31,48 @@ function legalIdentities(engine,state,id){
         if(actorId(engine.world,subject)!==id)return false;
         if(r.category==='legal_wanted')return r.status==='生效';
         if(r.category==='legal_custody')return r.status==='生效'&&(r.expires??Infinity)>state.minute;
-        if(r.category==='legal_detention')return !r.status||r.status==='生效';
+        if(r.category==='legal_detention')return (!r.status||r.status==='生效')&&(r.expires??Infinity)>(state.minute??0);
         return ['legal_dismissal','legal_case'].includes(r.category);
     });
+}
+
+// Small selectors let movement and capability checks avoid constructing a
+// person's social memberships. They read the same authorities as personView.
+export function personAge(engine,state,id,minute=state.minute??0){return fact(npcAgeAt(engine,state,actorId(engine.world,id),minute),'npc-state.npcAgeAt');}
+export function personHousehold(engine,state,id){return householdView(engine,state,actorId(engine.world,id));}
+export function personSimulation(engine,state,id){
+    const base=baseOf(engine,state,id),remote=state.remote?.[base?.county]?.profiles?.[id];
+    const status=remote?.status??base?.profileStatus;
+    return fact(status==='full'||base?.tier==='full',remote?`state.remote.${base.county}.profiles.${id}.status`:`${state.created?.[id]?'state.created':'catalog'}.${id}.${status?'profileStatus':'tier'}`,Boolean(remote||state.created?.[id]));
+}
+// A caller may build this index for a single read-only movement pass. It is
+// never retained on engine/state, so later legal writes are read immediately.
+export function personConstraints(engine,state){
+    const out=new Map();
+    for(const [key,r] of records(state)){
+        if(!['legal_detention','legal_custody'].includes(r.category)||r.status&&r.status!=='生效')continue;
+        const subject=r.subject??state.records?.[r.case]?.offender??(r.category==='legal_custody'?'player':null),id=actorId(engine.world,subject);
+        const entries=out.get(id)??[];entries.push({key,r});out.set(id,entries);
+    }
+    return out;
+}
+export function personConstraint(engine,state,id,minute=state.minute??0,index=null){
+    id=actorId(engine.world,id);
+    for(const {key,r} of (index??personConstraints(engine,state)).get(id)??[]){
+        if((r.minute??r.started??0)>minute||(r.expires??Infinity)<=minute)continue;
+        return fact(r,`state.records.${key}`,true);
+    }
+    return null;
+}
+
+export function homeResidents(engine,state,location){
+    const place=state.created?.[location]??engine.byId.get(location),houses=(engine.world.households??[]).filter(h=>h.homeLocation===location);
+    const members=houses.length?houses.flatMap(h=>[...h.members,...state.family?.households?.[h.id]?.members??[]]).filter(id=>personHousehold(engine,state,id).value?.homeLocation===location):[...place?.access?.residents??[]].filter(id=>{
+        const h=personHousehold(engine,state,id);return !h.override||h.value?.homeLocation===location;
+    });
+    const owner=placeView(engine,state,location)?.owner.value;
+    if(typeof owner==='string'&&(state.npcs?.[owner]||engine.byId.get(owner)?.tier))members.push(owner);
+    return fact([...new Set(members)].filter(id=>at(state,actorPath(engine.world,id).slice(1))?.status!=='死亡'),houses.length?'world.households + state.family.households + place.owner':'place.access.residents + place.owner',Boolean(houses.some(h=>state.family?.households?.[h.id])));
 }
 
 export function personView(engine,state,requested){
@@ -46,6 +86,7 @@ export function personView(engine,state,requested){
         actorPath:fact(path,'npc-state.actorPath'),
         name:fact(actor?.name??base?.name,actor?.name?`${root}.name`:`catalog.${id}.name`,Boolean(actor?.name)),
         age:fact(id==='player'?state.player?.age:npcAgeAt(engine,state,id,state.minute??0),id==='player'?'state.player.age':`npc-life.npcAgeAt:${id}`,Boolean(state.family?.people?.[id])),
+        simulation:personSimulation(engine,state,id),constraint:personConstraint(engine,state,id),
         household,residence:fact(residence??{household:h?.id??base?.householdId,settlement,home:h?.homeLocation??base?.home?.location},residence?`${root}.residence`:household.source,Boolean(residence)),
         settlement:fact(settlement,settlementSource,Boolean(residence||household.override||actor?.settlement)),
         location:fact(location,id==='player'?'state.location':actor&&Object.hasOwn(actor,'location')?`${root}.location`:`catalog.${id}.location`,Boolean(actor)),
@@ -73,6 +114,7 @@ export function placeView(engine,state,id){
     const base=state.created?.[id]??engine.byId.get(id);if(!base)return null;
     const source=state.created?.[id]?`state.created.${id}`:`catalog.${id}`,view={};
     for(const field of ['id','parent','region','owner','features'])view[field]=fact(base[field],`${source}.${field}`,Boolean(state.created?.[id]));
+    if(Object.hasOwn(state.buildings?.[id]??{},'owner'))view.owner=fact(state.buildings[id].owner,`state.buildings.${id}.owner`,true);
     view.settlement= fact(state.settlements?.[id],`state.settlements.${id}`,Boolean(state.settlements?.[id]));
     return view;
 }

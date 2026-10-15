@@ -1,3 +1,4 @@
+import {recordEntityDeath}from'./npc-life.mjs';
 import {registerMagicEffect}from'./magic-effects.mjs';
 import {environmentFeatures,localPlayerPoint,localSightClear} from './environment.mjs';
 import {assertMagicTargeting} from './magic-targeting.mjs';
@@ -273,7 +274,7 @@ export function airEnvironmentAction(d,args,id){
    this.health(d,{delta:-damage},id);d.set(['state','records','local_player_position'],{category:'local_position',subject:target,location:row.location,point:[...row.position],elevationMeters:0,source:id,minute:now});
   }else{
    const definition=this.byId.get(target),stats=target.startsWith('npc_')?derivedStats({level:actor.actor.level??definition.level??1,attributes:definition.attributes},this.rules):monsterStats({level:actor.actor.level??definition.levelRange?.[0]??1,template:definition.template??2},this.rules);
-   const hp=Math.max(0,(actor.actor.hp??stats.maxHp)-damage);d.set([...actor.path,'hp'],hp);d.set([...actor.path,'maxHp'],actor.actor.maxHp??stats.maxHp);d.set([...actor.path,'elevationMeters'],0);if(!hp)d.set([...actor.path,'status'],'死亡');
+   const hp=Math.max(0,(actor.actor.hp??stats.maxHp)-damage);d.set([...actor.path,'hp'],hp);d.set([...actor.path,'maxHp'],actor.actor.maxHp??stats.maxHp);d.set([...actor.path,'elevationMeters'],0);if(!hp)recordEntityDeath(d,this,target,now,'坠落身亡');
    d.remove(['state','records',`local_actor_position:${target}`]);
   }
   this.advance(d,1,id);return{subject:target,damage,descentFactor:factor,elevationMeters:0};

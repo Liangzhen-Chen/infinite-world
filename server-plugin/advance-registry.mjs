@@ -46,7 +46,8 @@ import {advancePromotion,nextPromotionMinute}from'./promotion.mjs';
 import {advancePublicProjects,isPublicProject,advanceHouses,advanceHousing,nextHousingMinute}from'./public-projects.mjs';
 
 const clone=value=>structuredClone(value);
-const fullNpcs=engine=>engine.world.npcs.some(n=>n.tier==='full');
+import {personSimulation}from'./entity-view.mjs';
+const fullNpcs=engine=>(engine.entities??engine.world.npcs).some(n=>n.id?.startsWith('npc_')&&personSimulation(engine,{},n.id).value);
 export const advanceRegistry=[];
 export function registerAdvance(system){
     if(!system||typeof system.id!=='string'||!Number.isFinite(system.order)||typeof system.advance!=='function')throw new Error('推进系统需要 id、order 和 advance');

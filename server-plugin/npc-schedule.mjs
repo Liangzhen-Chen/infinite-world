@@ -3,10 +3,14 @@ import {waterEarthHeldUntil}from'./magic-water-earth.mjs';
 import {mindSleepUntil}from'./magic-mind-space.mjs';
 import {festivalScheduleAt}from'./festival.mjs';
 import {npcSchedule}from'./npc-state.mjs';
+import {personConstraint,personConstraints}from'./entity-view.mjs';
 import {WEATHER_SEQUENCES}from'./weather.mjs';
 // A travelling NPC occupies neither endpoint until the route has finished.
-export function scheduleAt(engine,npcId,minute,state){
-    const schedule=npcSchedule(engine,state,npcId);if(!schedule)return festivalScheduleAt(engine,state,npcId,minute,null);
+export function scheduleAt(engine,npcId,minute,state,constraints=null){
+    constraints??=state?personConstraints(engine,state):null;
+    const hold=state&&personConstraint(engine,state,npcId,minute,constraints)?.value;
+    if(hold)return{location:hold.location,activity:'依法拘留',services:[],until:Math.min(hold.expires??Infinity,(Math.floor(minute/1440)+1)*1440)};
+    const schedule=npcSchedule(engine,state,npcId,minute,constraints);if(!schedule)return festivalScheduleAt(engine,state,npcId,minute,null);
     const calendar=engine.calendar(minute),variant=calendar.market?'market':schedule.restDays?.includes(calendar.day)?'rest':'default';
     const seasonal=schedule.seasonal?.[String(calendar.season)];
     const slots=seasonal?.[variant]??schedule[variant]??seasonal?.default??schedule.default;
@@ -17,8 +21,9 @@ export function scheduleAt(engine,npcId,minute,state){
 
 const incapacitated=npc=>['死亡','濒死','昏迷','患病'].includes(npc.status);
 export function nextNpcService(engine,npcId,minute,service,state){
+    const constraints=state?personConstraints(engine,state):null;
     for(let cursor=minute;cursor<minute+31*1440;){
-        const slot=scheduleAt(engine,npcId,cursor,state);if(!slot)return null;
+        const slot=scheduleAt(engine,npcId,cursor,state,constraints);if(!slot)return null;
         if(slot.services.includes(service))return {minute:cursor,location:slot.location};
         cursor=slot.until;
     }
@@ -28,6 +33,7 @@ export function npcAvailability(engine,state,npcId){
     const npc=state.npcs[npcId],slot=scheduleAt(engine,npcId,state.minute,state);
     if(!npc)return {activity:'不在战役中',services:[]};
     if(incapacitated(npc))return {activity:npc.status,services:[]};
+    if(personConstraint(engine,state,npcId))return {activity:'依法拘留',services:[]};
     if(npc.scheduleTravel||npc.cognitionTravel)return {activity:npc.cognitionTravel?'携信赶路':'赶路',services:[]};
     const work=engine.npcAutonomyBusy?.(state,npcId);
     if(work)return{activity:'正在处理自己的工作',services:[],until:work.finish};
@@ -42,6 +48,7 @@ export function npcAvailability(engine,state,npcId){
 export function assertNpcService(d,engine,npcId,service,minutes){
     const state=d.get('state'),npc=state.npcs[npcId];
     if(!npc||npc.location!==state.location)throw new Error('服务者不在场');
+    if(personConstraint(engine,state,npcId))throw new Error('服务者正在依法拘留，不能提供服务');
     engine.assertNpcObligationAction?.(d,['player',npcId],{minutes,location:state.location,kind:service});
     engine.assertNpcAutonomyAction?.(state,['player',npcId],{minutes});
     if(!engine.byId.get(npcId)?.schedule&&!scheduleAt(engine,npcId,state.minute,state))return; // Archived worlds retain their original service semantics.
@@ -65,7 +72,16 @@ const peekState=d=>typeof d.peek==='function'?d.peek('state'):d.get('state');
 export function advanceNpcSchedules(d,engine,before,after){
     if(after<=before)return;
     const weatherCache=new Map(engine.weatherSequences?[[WEATHER_SEQUENCES,engine.weatherSequences]]:[]),graphCache=new Map(); // One immutable world/seed and time advance only.
+    const constraints=personConstraints(engine,peekState(d));
     for(const npcId of Object.keys(d.get('state','npcs'))){
+        const hold=personConstraint(engine,peekState(d),npcId,after,constraints)?.value;
+        if(hold){
+            if(d.get('state','npcs',npcId,'status')!=='死亡'){
+                d.set(['state','npcs',npcId,'location'],hold.location);d.set(['state','npcs',npcId,'activity'],'依法拘留');
+                if(d.get('state','npcs',npcId,'scheduleTravel'))d.remove(['state','npcs',npcId,'scheduleTravel']);
+            }
+            continue;
+        }
         if(!engine.byId.get(npcId)?.schedule&&!d.get('state','npcs',npcId,'routine'))continue;
         if(engine.npcScheduleReservations?.has(npcId))continue;
         if(d.get('state','npcs',npcId,'cognitionTravel')||engine.npcAutonomyBusy?.(peekState(d),npcId,before))continue;
@@ -82,7 +98,7 @@ export function advanceNpcSchedules(d,engine,before,after){
                 npc.location=trip.to;delete npc.scheduleTravel;
                 continue;
             }
-            const slot=scheduleAt(engine,npcId,cursor,peekState(d));
+            const slot=scheduleAt(engine,npcId,cursor,peekState(d),constraints);
             if(npc.location!==slot.location){
                 let route;
                 try{route=engine.route(npc.location,slot.location,'walk',cursor,d.get('randomSeed'),weatherCache,graphCache);}
