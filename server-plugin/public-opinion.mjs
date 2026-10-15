@@ -84,12 +84,12 @@ export function opinionOf(engine,state,who,topic){
     const actor=tie(engine,state,who,topic.actor);
     if(['self','kin','friend'].includes(actor))return pick(1,actor==='kin'?'与行事者同属一地':'与行事者交好');
     if(actor==='enemy')return pick(-1,'与行事者敌对');
-    for(const faction of reputationFactions(engine)){
+    for(const faction of reputationFactions(engine,state)){
         if(!(faction.members??[]).includes(who))continue;
         const value=reputationOf(engine,state,topic.actor,faction.id);
         if(value)return pick(value,`所属${engine.byId.get(faction.id)?.name??faction.id}对行事者的声望`);
     }
-    for(const org of organizationsOf(state,who)){
+    for(const org of organizationsOf(state,who,engine)){
         const value=standing(engine,state,org,topic.actor);
         if(value)return pick(value,`所属${state.records[`organization:${org}`]?.name??engine.byId.get(org)?.name??org}对行事者的立场`);
     }
