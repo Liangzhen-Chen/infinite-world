@@ -3,10 +3,10 @@
  "version": 1,
  "note": "YG-1 建议的词汇扩展，尚未登记进 world/ontology（登记在 YG-2/YG-4 随规则或数据接入时做，避免未被代码使用的词进入词表）。",
  "复用traits": {
-  "spirit": 304,
-  "humanoid": 214,
+  "spirit": 301,
+  "humanoid": 213,
   "beast": 201,
-  "undead": 155,
+  "undead": 154,
   "fur": 122,
   "aquatic": 107,
   "water": 90,

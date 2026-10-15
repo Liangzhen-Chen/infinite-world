@@ -2,7 +2,9 @@
 // 版权边界：资料“介绍”是现代作者的白话文字，只在内存中读取；本脚本写进仓库的只有事实字段
 // （名称、类别、朝代、古籍出处）与 world/drafts/yaoguai/tagging/ 中的自拟标签。
 //   node tools/yaoguai-index.mjs prep --out <仓库外目录>   清洗合并 → 供标注用的条目（含原文，只写到仓库外）
-//   node tools/yaoguai-index.mjs build                      合并清洗事实与自拟标注 → index.json / motifs.json / stats.json
+//   node tools/yaoguai-index.mjs build [--force]            合并清洗事实与自拟标注 → index.json / motifs.json / stats.json
+// 核验保护（WM-2a）：index.json 已含“核验”字段时 build 拒绝覆盖，须显式 --force；build 总是先套用 world/drafts/yaoguai/overrides.json
+// （排除名单 + 按 id 记录的核正字段与核验结论），使重跑结果与核验后的索引一致。
 // 资料路径默认取下列 SRC，可用 --src 或环境变量 YAOGUAI_SRC 覆盖。
 import fs from 'node:fs';
 import path from 'node:path';
@@ -116,6 +118,13 @@ export function loadTags(){
 }
 
 export async function build(){
+ const idxPath=path.join(OUT_DIR,'index.json');
+ if(fs.existsSync(idxPath)&&!process.argv.includes('--force')){
+  const cur=JSON.parse(fs.readFileSync(idxPath,'utf8'));
+  if((cur.entries||[]).some(e=>e.核验)){console.error('index.json 已含核验结果（核验字段），拒绝覆盖。核验结论记录在 world/drafts/yaoguai/overrides.json，确需重建请加 --force（会先套用 overrides）。');process.exitCode=1;return;}
+ }
+ const ovPath=path.join(OUT_DIR,'overrides.json');
+ const overrides=fs.existsSync(ovPath)?JSON.parse(fs.readFileSync(ovPath,'utf8')):{排除:[],条目:{}};
  const {MOTIFS,ENV_MAP,SYSTEMS,DEDUP}=await import('./yaoguai-defs.mjs');
  const es=loadSource();const tags=loadTags();const pinyin=JSON.parse(fs.readFileSync(path.join(OUT_DIR,'pinyin.json'),'utf8')).map;
  const missing=es.filter(e=>!tags.has('s'+e.src));if(missing.length)throw new Error(`缺标注 ${missing.length} 条：${missing.slice(0,5).map(e=>'s'+e.src).join(',')}`);
@@ -150,6 +159,16 @@ export async function build(){
   if(base==='yg_')base='yg_x'+r.来源序号[0];
   const n=(used.get(base)||0)+1;used.set(base,n);r.id=n===1?base:`${base}_${n}`;
  }
+ // 3b) 套用核验 overrides：排除名单移出；核正字段覆盖（出处为完整新值）
+ const 合并后条目=merged.length;
+ {const byId=new Map(merged.map(r=>[r.id,r]));
+  for(const id of [...overrides.排除.map(x=>x.id),...Object.keys(overrides.条目)])if(!byId.has(id))throw new Error('overrides 引用了不存在的 id '+id);
+  const out=new Set(overrides.排除.map(x=>x.id));
+  for(const [id,o] of Object.entries(overrides.条目)){const r=byId.get(id);
+   for(const [k,v] of Object.entries(o.字段||{}))r[k]=k==='出处'?v.map(c=>({书:c.书,作者:c.作者,朝代:c.朝代,卷:c.卷,转引:c.转引||[]})):v;
+   for(const k of o.删字段||[]){if(k==='名称存疑')r.名称存疑=false;else if(k==='备注')r.备注=[];else r[k]=undefined;}
+   r.核验=o.核验;r.核验说明=o.核验说明;}
+  for(let i=merged.length-1;i>=0;i--)if(out.has(merged[i].id))merged.splice(i,1);}
  const ids=new Map(merged.map(r=>[r.key,r.id]));
  // 4) 输出 index.json
  const index=merged.map(r=>({id:r.id,名称:r.名称,别名:r.别名,成员:r.成员,类别:r.类别,朝代:r.朝代,
@@ -157,12 +176,12 @@ export async function build(){
   特征标签:r.特征标签,traits:r.traits,母题标签:r.母题标签,本质:r.本质,原型动物或物类:{大类:r.原型大类,物类:r.原型},
   栖息或出没环境:r.环境,危害或善恶倾向:{倾向:r.倾向,危害:r.危害},与人互动方式:r.互动,简述:r.简述,
   备注:r.备注.length?r.备注:undefined,来源序号:r.来源序号,合并来源:r.合并来源,名称存疑:r.名称存疑||undefined,无法识别:r.无法识别||undefined,
-  OCR修正:r.OCR修正,作者拟名:r.作者拟名}));
+  OCR修正:r.OCR修正,作者拟名:r.作者拟名,核验:r.核验,核验说明:r.核验说明}));
  const write=(f,v)=>fs.writeFileSync(path.join(OUT_DIR,f),JSON.stringify(v,null,1)+'\n');
  write('index.json',{kind:'yaoguai-index',namespace:'core',version:1,
   note:'妖怪志事实索引（YG-1）。只含事实：名称、类别、朝代、古籍出处与自拟标签；不含整理本（张云《中国妖怪故事》）的文字。traits 复用 server-plugin/traits.mjs 的性状词；母题见 motifs.json；环境与互动词见 vocab-proposal.json。',
-  sourceNote:{整理本:'张云《中国妖怪故事（全集）》条目表，仓库外只读',原始行数:JSON.parse(fs.readFileSync(srcPath(),'utf8')).length,清洗后条目:es.length,合并后条目:index.length},
-  entries:index});
+  sourceNote:{整理本:'张云《中国妖怪故事（全集）》条目表，仓库外只读',原始行数:JSON.parse(fs.readFileSync(srcPath(),'utf8')).length,清洗后条目:es.length,合并后条目,...(overrides.排除.length||Object.keys(overrides.条目).length?{核验后条目:index.length}:{})},
+  entries:index,...(Object.keys(overrides.条目).length?{核验报告:'docs/妖怪志/核验报告.md（WM-2a 出处核验；条目上的 核验/核验说明 字段）'}:{})});
  // 5) 母题目录
  const count={};const reps={};
  for(const r of merged)for(const m of r.母题标签){count[m]=(count[m]||0)+1;(reps[m]??=[]).push(r);}
