@@ -8489,6 +8489,13 @@
    ]
   },
   {
+   "dir": "world/orgs",
+   "files": 0,
+   "keys": [],
+   "readers": [],
+   "tools": []
+  },
+  {
    "dir": "world/people",
    "files": 3,
    "keys": [
@@ -8555,6 +8562,13 @@
     "tools/w3-trades-publish.mjs",
     "tools/w5-content.mjs"
    ]
+  },
+  {
+   "dir": "world/sites",
+   "files": 0,
+   "keys": [],
+   "readers": [],
+   "tools": []
   }
  ],
  "prompt": {
@@ -15692,7 +15706,7 @@
   "extension/index.js": {
    "system": "ui_host",
    "imports": [
-    "../../extensions.js",
+    "../extensions.js",
     "extension/core.js"
    ],
    "stateWrites": [],
@@ -15806,7 +15820,7 @@
   "extension/runtime.js": {
    "system": "ui_host",
    "imports": [
-    "../../extensions.js",
+    "../extensions.js",
     "extension/ambient-audio.mjs",
     "extension/background-view.mjs",
     "extension/history-window.mjs",
