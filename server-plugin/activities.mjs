@@ -23,6 +23,8 @@ import {civicAction,recordDonationContribution,publicProjectApproval,donationRec
 import {governanceAction,assertGovernedProject,playerOffices}from'./governance.mjs';
 import {startPublicProject,abortPublicProject,startHouse}from'./public-projects.mjs';
 import {titleAction}from'./titles.mjs';
+import {militaryAction}from'./military.mjs';
+import {warAction,warCombatResult}from'./war-diplomacy.mjs';
 import {notableAction}from'./notables.mjs';
 import {promotionAction}from'./promotion.mjs';
 import {questBoardAction}from'./quest-board.mjs';
@@ -140,7 +142,8 @@ export const activities={
             const {catalog,id:areaId,source}=bossAbilities[i].pendingArea;
             bossAbilities[i]={ability:bossAbilities[i].ability,...this.applyMagicArea(d,catalog,{target:source},areaId,source)};
         }
-        d.say(`交锋结束，对方受伤${damage}，你受伤${received}`);return {target,damage,received,...(duel?{duel:duel.id,duelRule:duel.rule,duelResult}:{}),...(bossAbilities.length?{abilities:bossAbilities}:{}),...(protection.absorbed||absorbed?{absorption:{target:protection.absorbed,player:absorbed}}:{}),targetHp:d.get('state',partition,target,'hp'),actionScope:{kind:'combat_exchange',clockManaged:true,seconds:this.rules.combat.exchangeSeconds},...experience,...(corpse?{corpse}:{}),...(lair?{lair}:{}),...(counter.adapted?{adaptation:{tactic,guarded:true,note:'对手对已见过的进攻加强防备'}}:{}),...(counter.nature?{affinity:{...counter.nature,note:counter.nature.effect==='weak'?'此种对这类进攻格外怕':'此种对这类进攻抗性高，伤害减半'}}:{}),morale:remaining<maxHp*0.25?'撤退':'交战',...(weather?{weather:{name:weather.name,daylight:weather.daylight,hitModifier:weather.hitModifier,nightModifier:night}}:{}),...(incident?{case:incident}:{})};
+        const war=warCombatResult(d,this,{target,damage,received,killed:!remaining,retreated:remaining>0&&remaining<maxHp*0.25},id);
+        d.say(`交锋结束，对方受伤${damage}，你受伤${received}`);return {target,damage,received,...(duel?{duel:duel.id,duelRule:duel.rule,duelResult}:{}),...(war?{war}:{}),...(bossAbilities.length?{abilities:bossAbilities}:{}),...(protection.absorbed||absorbed?{absorption:{target:protection.absorbed,player:absorbed}}:{}),targetHp:d.get('state',partition,target,'hp'),actionScope:{kind:'combat_exchange',clockManaged:true,seconds:this.rules.combat.exchangeSeconds},...experience,...(corpse?{corpse}:{}),...(lair?{lair}:{}),...(counter.adapted?{adaptation:{tactic,guarded:true,note:'对手对已见过的进攻加强防备'}}:{}),...(counter.nature?{affinity:{...counter.nature,note:counter.nature.effect==='weak'?'此种对这类进攻格外怕':'此种对这类进攻抗性高，伤害减半'}}:{}),morale:remaining<maxHp*0.25?'撤退':'交战',...(weather?{weather:{name:weather.name,daylight:weather.daylight,hitModifier:weather.hitModifier,nightModifier:night}}:{}),...(incident?{case:incident}:{})};
     },
     craft(d,args,id){
         if(args.operation==='repair')return repair.call(this,d,args,id);
@@ -178,6 +181,8 @@ export const activities={
         if(args.operation?.startsWith('governance_'))return governanceAction.call(this,d,args,id);
         if(args.operation?.startsWith('org_'))return organizationAction.call(this,d,args,id);
         if(args.operation?.startsWith('title_'))return titleAction.call(this,d,args,id);
+        if(args.operation==='diplomacy'||args.operation?.startsWith('war_'))return warAction.call(this,d,args,id);
+        if(args.operation?.startsWith('army_'))return militaryAction.call(this,d,args,id);
         if(args.operation?.startsWith('notable_'))return notableAction.call(this,d,args,id);
         if(args.operation?.startsWith('promotion_'))return promotionAction.call(this,d,args,id);
         const settlement=this.resolve(args.settlement,'loc'),row=d.get('state','settlements',settlement);

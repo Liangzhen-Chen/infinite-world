@@ -8,6 +8,16 @@ export async function loadWorld(root = path.resolve(import.meta.dirname, '..', '
         read('meta/rules.json'),read('people/baseline.json'),read('geo/locations.json'),read('geo/routes.json'),read('meta/items.json'),read('meta/professions.json'),read('meta/skills.json'),read('meta/spells.json')]);
     const [recipes,monsters,bosses]=await Promise.all(['recipes','monsters','bosses'].map(name=>optional(`meta/${name}.json`)));
     const [cultures,deities,factions,history,factionPeople,eras,festivals,rumors]=await Promise.all(['cultures','deities','factions','history','factionPeople','eras','festivals','rumors'].map(name=>optional(`lore/${name}.json`)));
+    // W5: reviewed faction rows stay untouched on disk. Explicit reverse
+    // bindings reuse the source relation's score and reason at load time.
+    const reverseRelations=await optional('lore/faction-relations.json');
+    for(const {target,source} of reverseRelations){
+        const f=factions.find(f=>f.id===target),r=factions.find(f=>f.id===source)?.relations?.find(r=>r.faction===target);
+        if(!f||!r)throw new Error(`反向关系缺原条目：${source}->${target}`);
+        if((f.relations??[]).some(r=>r.faction===source))continue;
+        rules.factionRelations??={};
+        (rules.factionRelations[target]??=[]).push({...r,faction:source});
+    }
     const [residents,households,settlementProfiles,regions]=await Promise.all([optional('people/residents.json'),optional('people/households.json'),optional('geo/settlements.json'),optional('geo/regions.json')]);
     const careers=await optional('meta/careers.json');
     // D1: biome tags and areas live in geo/biomes.json (kept apart from the

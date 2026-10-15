@@ -1,0 +1,60 @@
+{
+  "id": "site_ms_hx_store",
+  "fingerprint": "17dc0dc3ac9cebb7fc0709567214f484c1ed89bfbdc1c8328b2ce6bd6ea377d2",
+  "status": "passed",
+  "attempts": 0,
+  "draft": {
+    "id": "site_ms_hx_store",
+    "description": "回汐存芦棚靠着认岸芦门，芦席包住换来的干粮。漪衡看管棚里的储备，棚壁留着空棚去留的芦记。接岸派与静滩派都在这里核过粮份，尚未议定以前，空席仍卷着。绕棚可走公共岸路，进棚取粮要先问漪衡。",
+    "authoredFacts": {
+      "climate": "高脚席架较干",
+      "senses": [
+        "席包边沿扎着芦结",
+        "棚壁留着旧水线",
+        "卷席压在空架上"
+      ],
+      "entryRule": "存粮有主，须看管者许可"
+    }
+  },
+  "review": {
+    "contradictions": []
+  },
+  "errors": [],
+  "warnings": [],
+  "feedback": null,
+  "frozenCandidate": {
+    "entryHash": "8789023ef2e69259e9b5bcfa4650f9e933e11c9550f92f2ce6a082177b6ff754",
+    "draftHash": "d188257893ce0508cd39473403efe9c044e87960939011f98b79edfdb516188e"
+  },
+  "responseEvidence": [
+    {
+      "phase": "review",
+      "attempt": 1,
+      "requestId": "f061bffb-c359-486d-b792-8adfc636ad94",
+      "file": "budget-responses/f061bffb-c359-486d-b792-8adfc636ad94.json",
+      "requestHash": "da16230a7d737000c043da34f95980a02b91c692a2590d76fde747fcb42c580d",
+      "responseHash": "169a58750dcfddbed034693b165cd846f5f6b429e3fc5a791321ef38c9e05e4a"
+    }
+  ],
+  "measurements": [
+    {
+      "label": "content-monster-society-3-site_ms_hx_store-review0",
+      "model": "deepseek-flash",
+      "thinking": "disabled",
+      "usage": {
+        "prompt_tokens": 3106,
+        "completion_tokens": 7,
+        "total_tokens": 3113,
+        "prompt_tokens_details": {
+          "cached_tokens": 1536
+        },
+        "prompt_cache_hit_tokens": 1536,
+        "prompt_cache_miss_tokens": 1570
+      },
+      "costUpperYuan": 0.00325744,
+      "cumulativeUpperYuan": 0.4422684800000001,
+      "latencyMs": 987.6374999999971,
+      "timestamp": "2026-10-15T09:30:43.602Z"
+    }
+  ]
+}

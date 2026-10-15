@@ -1,0 +1,5 @@
+[
+  {"target":"faction_ms_lielu","source":"faction_far_orcmoot"},
+  {"target":"faction_ms_yugen","source":"faction_far_lignum"},
+  {"target":"faction_ms_taideng","source":"faction_far_scentmoot"}
+]

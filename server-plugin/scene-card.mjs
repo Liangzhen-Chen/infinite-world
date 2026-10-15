@@ -18,6 +18,8 @@ import {localOpinion,opinionPlace,STANCE_LABEL}from'./public-opinion.mjs';
 import {wildlifeEncounterView}from'./wildlife.mjs';
 import {spiritScene}from'./wildlife-society.mjs';
 import {tribalScene}from'./tribal-awakening.mjs';
+import {militaryScene}from'./military.mjs';
+import {warScene}from'./war-diplomacy.mjs';
 import {npcLifeLines,npcAgeAt}from'./npc-life.mjs';
 import {standing,standingWords}from'./standing.mjs';
 import {societyAt}from'./monster-society.mjs';
@@ -106,6 +108,8 @@ export function sceneCard(engine,document,query='',index=null){
     const animals=petView(engine,document).presentAnimals;
     const spirits=spiritScene(engine,document);if(spirits)parts.push(spirits);
     const tribes=tribalScene(engine,document);if(tribes)parts.push(tribes);
+    const army=militaryScene(engine,document);if(army)parts.push(army);
+    const war=warScene(engine,document);if(war)parts.push(war);
     const spiritSigns=Object.entries(s.creatures??{}).filter(([id,a])=>a.location===s.location&&a.status!=='死亡'&&intelligenceSign(s,id)).slice(0,3);
     if(spiritSigns.length)parts.push(`【精怪近况】${spiritSigns.map(([id,a])=>`${a.name??name(a.species)}（${id}）${intelligenceSign(s,id)}`).join('；')}`);
     if(animals.length)parts.push(`【在场动物】${animals.slice(0,3).map(row=>`${row.name??row.id}（${row.id}）`).join('；')}`);

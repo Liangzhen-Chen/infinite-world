@@ -192,3 +192,4 @@ test('发布入口只认已过L1/L2/L4的稿件，重发零写入',async()=>{
 
 // T159：榆根里、裂炉营与四处聚居地组织的议题时钟。
 import './monster-society-content-t159.mjs';
+import './monster-society-content-t162.mjs';

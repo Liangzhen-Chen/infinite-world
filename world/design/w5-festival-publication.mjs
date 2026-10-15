@@ -20,8 +20,7 @@ const rows=[
  ['festival_orchardshare','loc_hw_orchard','npc_hw_meiling','ritual',840,1,[
   standing('faction_riverhomes',2,'参加果枝空篮日分果'),
   rumor('orchard_baskets','果枝空篮日，果园树外空地上有人把空篮朝上，邻户自愿切了些自家果子分给他们。',['npc_hw_meiling'])]],
- ['festival_borrowbench','bld_bs_shrine',null,'ritual',600,1,[standing('faction_returnorder',2,'参加借凳归途日')],
-  '须有白石归途殿常驻、能代殿方允许借用门廊的人主持；殿中尚无登记在册的值守人，在此之前不举办。'],
+ ['festival_borrowbench','bld_bs_shrine','npc_bs_076_1','ritual',600,1,[standing('faction_returnorder',2,'参加借凳归途日')]],
  ['festival_steps','loc_capital',null,'ritual',480,1,[standing('faction_thresholdhouse',2,'参加清阶开庭日')],
   '须有王都开放门阶的住户亲自主持；王都尚无登记在册的常住人物，在此之前不举办。'],
  ['festival_lampturn','loc_capital',null,'ritual',1080,1,[standing('faction_civicartisans',2,'参加公灯交值日')],
@@ -65,6 +64,9 @@ const rows=[
 ];
 export const overlays=rows.map(([id,location,host,kind,startMinute,minimumParticipants,effects,hostRequirement])=>({id,location,host,kind,startMinute,minimumParticipants,effects,...(host?{}:{hostRequirement})}));
 export const activeIds=overlays.filter(o=>o.host).map(o=>o.id);
+// A duty binding, not a copied timetable: the current lamp caretaker's work
+// slot supplies departure and return times on the festival date.
+const hostDuties={festival_borrowbench:{occupation:'灯祠照看',settlement:'loc_bs'}};
 
 // The published row: reviewed candidate row + overlay. Participation minutes
 // become the running duration; materials are the joining player's own items.
@@ -75,6 +77,7 @@ export function publishFestival(row,overlay){
   venue:{...base.venue,location:overlay.location,precision:'existing_location'},
   resourceNeeds:base.resourceNeeds.map(n=>({...n,owner:'player',source:'参加者自有且同意提供；正式举办时只扣本人实际持有的物品，借用与交换物不扣除'})),
   runtime:{status:overlay.host?'active':'awaiting_host',...(overlay.host?{host:overlay.host}:{hostRequirement:overlay.hostRequirement}),
+   ...(hostDuties[row.id]?{hostDuty:structuredClone(hostDuties[row.id])}:{}),
    kind:overlay.kind,startMinute:overlay.startMinute,durationMinutes:base.participation.minutes,minimumParticipants:overlay.minimumParticipants,
    effects:structuredClone(overlay.effects),cancellation:base.runtime?.cancellation??row.runtime.cancellation},
   references:[...new Set([...base.references.filter(id=>id!==base.venue.location),overlay.location,...(overlay.host?[overlay.host]:[])])],

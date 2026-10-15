@@ -1,4 +1,5 @@
 import {standingLedger} from './standing.mjs';
+import {factionRelations} from './reputation-registry.mjs';
 import {clockRoll,clockTransaction} from './world-clock.mjs';
 import {registerEffect,assertEffect as assertTableEffect,applyEffect as applyTableEffect,hookedEffects} from './effects.mjs';
 
@@ -68,11 +69,15 @@ export function assertFactionClockRules(engine){
  }
 }
 function ensureAccount(d,engine,id){
- const prior=d.get(...accountPath(id));if(prior){if(prior.category!=='faction_assets')throw Error('势力资产记录冲突');return prior;}
+ const prior=d.get(...accountPath(id));if(prior){
+  if(prior.category!=='faction_assets')throw Error('势力资产记录冲突');
+  const defaults=Object.fromEntries((engine.rules.factionRelations?.[id]??[]).map(r=>[r.faction,r.score]));
+  return {...prior,relations:{...defaults,...prior.relations}};
+ }
  const f=faction(engine,id);assertCost(engine,{coins:f.resources?.treasuryCopper,items:f.resources?.items});
  if(!uint(f.resources?.treasuryCopper))throw Error('势力初始公库未登记');
  const row={category:'faction_assets',faction:id,coins:f.resources.treasuryCopper,items:{...f.resources.items??{}},
-  relations:Object.fromEntries((f.relations??[]).map(r=>[r.faction,r.score])),disputes:{},ledger:[],source:`factions:${id}:resources`};
+  relations:Object.fromEntries(factionRelations(engine,id).map(r=>[r.faction,r.score])),disputes:{},ledger:[],source:`factions:${id}:resources`};
  d.set(accountPath(id),row);return row;
 }
 function affordable(row,cost={}){return row.coins>=(cost.coins??0)&&Object.entries(cost.items??{}).every(([id,n])=>(row.items[id]??0)>=n);}

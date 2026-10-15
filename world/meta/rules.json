@@ -3839,6 +3839,10 @@
       {
         "location": "bld_bs_still_temple",
         "pointsPerDay": 2
+      },
+      {
+        "location": "site_ms_hx_dew",
+        "pointsPerDay": 2
       }
     ],
     "spiritItems": [
@@ -3886,7 +3890,9 @@
       "periodDays": 90,
       "minimumMembers": 2,
       "foragePerMember": 5,
-      "homes": []
+      "homes": [
+        "loc_ms_huixi"
+      ]
     }
   },
   "bossEcology": {
@@ -10115,6 +10121,234 @@
         }
       }
     ]
+  },
+  "military": {
+    "version": 1,
+    "source": "U12a 军队与兵役：指南3.11爵位兵役、4.6势力资源、3.13经济",
+    "weekDays": 7,
+    "monthDays": 30,
+    "levy": {
+      "minAge": 18,
+      "maxAge": 45,
+      "perHousehold": 1,
+      "maxShareBps": 2000,
+      "familyStanding": -4
+    },
+    "soldier": {
+      "rationPerDay": 1,
+      "trainingPerWeek": 4,
+      "trainingCap": 80,
+      "moraleBase": 60
+    },
+    "morale": {
+      "paid": 3,
+      "recover": 2,
+      "unpaid": -12,
+      "hungry": -10,
+      "famine": -5
+    },
+    "desertion": {
+      "below": 30,
+      "bps": 1500
+    },
+    "supply": {
+      "targetDays": 21,
+      "winterForageBps": 5000,
+      "winterPriceFactor": 1.5
+    },
+    "service": {
+      "dutyCopperPerDay": 12,
+      "trainingPerDutyDay": 1
+    },
+    "recruit": {
+      "signOnCopper": 40,
+      "payCopperMonth": 60,
+      "perCall": 10,
+      "maxPrivate": 40,
+      "places": [
+        "loc_bs",
+        "loc_capital",
+        "loc_far_tongji"
+      ]
+    },
+    "polities": [
+      {
+        "id": "county_xichui_longqu",
+        "seat": "loc_bs",
+        "leaderTitle": "垄渠郡守",
+        "treasuryCopper": 60000,
+        "incomeCopperMonth": 3500
+      },
+      {
+        "id": "county_xingwan_xuedeng",
+        "seat": "loc_far_xuedeng",
+        "leaderTitle": "雪灯郡守",
+        "treasuryCopper": 30000,
+        "incomeCopperMonth": 3600
+      }
+    ],
+    "mercenaries": [
+      {
+        "org": "faction_lanternmerc",
+        "location": "loc_capital",
+        "soldiers": 24,
+        "payCopperMonth": 90,
+        "training": 60
+      }
+    ],
+    "armies": [
+      {
+        "id": "army_longqu_garrison",
+        "name": "垄渠郡戍营",
+        "party": "county_xichui_longqu",
+        "base": "loc_bs",
+        "location": "loc_bs",
+        "supply": "purchase",
+        "regular": 24,
+        "training": 50,
+        "morale": 60,
+        "payCopperMonth": 60,
+        "post": true
+      },
+      {
+        "id": "army_xuedeng_watch",
+        "name": "雪灯郡巡哨营",
+        "party": "county_xingwan_xuedeng",
+        "base": "loc_far_xuedeng",
+        "location": "loc_far_xuedeng",
+        "supply": "purchase",
+        "regular": 30,
+        "training": 45,
+        "morale": 60,
+        "payCopperMonth": 60,
+        "post": true
+      },
+      {
+        "id": "army_heilu_band",
+        "name": "黑炉部猎队",
+        "party": "faction_far_orcmoot",
+        "base": "loc_far_duanqi",
+        "location": "loc_far_duanqi",
+        "supply": "forage",
+        "regular": 40,
+        "training": 55,
+        "morale": 65,
+        "payCopperMonth": 0
+      },
+      {
+        "id": "army_liquan_militia",
+        "name": "砾泉民兵",
+        "party": "loc_bs_liquan",
+        "base": "loc_bs_liquan",
+        "location": "loc_bs_liquan",
+        "supply": "granary",
+        "regular": 0,
+        "levy": [
+          "loc_bs_liquan"
+        ],
+        "training": 15,
+        "morale": 55,
+        "payCopperMonth": 20,
+        "post": true
+      },
+      {
+        "id": "army_lielu_guard",
+        "name": "裂炉营炉卫",
+        "party": "faction_ms_lielu",
+        "base": "loc_ms_lielu",
+        "location": "loc_ms_lielu",
+        "supply": "forage",
+        "regular": 6,
+        "training": 40,
+        "morale": 60,
+        "payCopperMonth": 0
+      }
+    ]
+  },
+  "warDiplomacy": {
+    "version": 1,
+    "source": "U12 战役抽象与外交参数；战局在各存档内发生",
+    "intervalDays": 7,
+    "maxRounds": 12,
+    "declareStanding": -50,
+    "allianceStanding": 40,
+    "peaceStanding": 0,
+    "truceStanding": -20,
+    "mediationStanding": 10,
+    "mediationCopper": 40,
+    "truceDays": 30,
+    "peaceScore": 2,
+    "lossBps": 800,
+    "winScore": 4,
+    "victoryMorale": 6,
+    "exchangeMorale": 8,
+    "hungryFactor": 0.4,
+    "defenderTraits": {
+      "earth": 0.15,
+      "stone": 0.25,
+      "wood": 0.2,
+      "frost": 0.15
+    },
+    "seasonFactors": [
+      1,
+      1,
+      0.95,
+      0.7
+    ],
+    "raidFood": 40,
+    "raidStanding": 6,
+    "priceFactor": 1.25,
+    "tributeCopperMonth": 60,
+    "tributeBreachStanding": 5,
+    "tribalTraining": 30,
+    "tribalVillages": [
+      "loc_bs_liquan"
+    ],
+    "tribalRoutes": [
+      "route_bs_lq"
+    ],
+    "sources": [
+      {
+        "id": "zheya_border",
+        "name": "赭牙与雪灯边境战事",
+        "source": "T142 非人郡边境",
+        "aggressor": "faction_far_orcmoot",
+        "defender": "county_xingwan_xuedeng",
+        "initialStanding": -55,
+        "startDay": 28,
+        "front": "loc_far_xuedeng",
+        "armies": [
+          "army_heilu_band",
+          "army_xuedeng_watch"
+        ],
+        "territory": "county_xingwan_xuedeng",
+        "routes": [
+          "route_far_tongji_xuedeng"
+        ],
+        "villages": [
+          "loc_far_xuedeng"
+        ]
+      }
+    ],
+    "quest": {
+      "board": "loc_hw",
+      "publisher": "npc_hw_linsui",
+      "faction": "faction_lamporder",
+      "grade": "D",
+      "reward": 40,
+      "days": 10,
+      "content": "边地战事未止，守芯院联寮请筹集干粮十份，交至河湾告示处转送守备军需",
+      "item": "item_ration",
+      "quantity": 10
+    },
+    "powerTrainingBase": 0.5,
+    "powerMoraleBase": 0.25,
+    "rollMinimum": 0.85,
+    "rollRange": 0.3,
+    "winnerLossFactor": 0.5,
+    "loserLossFactor": 1.5,
+    "tribalMorale": 65,
+    "allianceGain": 10
   },
   "extraction": {
     "fishing": {

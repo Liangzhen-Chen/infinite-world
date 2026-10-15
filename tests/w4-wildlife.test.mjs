@@ -49,6 +49,14 @@ test('world_upgrade把新物种引入已有战役，日结补栖地不改旧账�
     assert.deepEqual(current.document.state.player,original.state.player);assert.deepEqual(current.document.state.inventory,original.state.inventory);
     assert.equal(current.document.state.minute,original.state.minute);assert.deepEqual(current.document.memories,original.memories);
     assert.deepEqual(auditPopulations(current.document,bones),[]);
-    for(const [key,record]of Object.entries(original.state.records).filter(([,r])=>r.category==='ecology'))assert.deepEqual(current.document.state.records[key],record);
+    // Later derived habitats also gain this batch's species. Existing species
+    // retain every ledger field; only the newly introduced IDs may be added.
+    for(const [key,record]of Object.entries(original.state.records).filter(([,r])=>r.category==='ecology')){
+        const updated=current.document.state.records[key],{populations,...metadata}=record;
+        const {populations:nextPopulations,...nextMetadata}=updated;
+        assert.deepEqual(nextMetadata,metadata,key);
+        for(const [id,row]of Object.entries(populations))assert.deepEqual(nextPopulations[id],row,`${key}/${id}`);
+        for(const id of Object.keys(nextPopulations).filter(id=>!Object.hasOwn(populations,id)))assert.ok(ids.has(id),`${key}/${id}`);
+    }
     const replay=await new CampaignStorage(path.join(root,'campaigns'),{reducer}).read('test');assert.deepEqual(replay.document,current.document);
 });

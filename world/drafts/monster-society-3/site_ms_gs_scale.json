@@ -1,0 +1,60 @@
+{
+  "id": "site_ms_gs_scale",
+  "fingerprint": "c6cb9a472f608905aa1ab16d1d7d6ad5a65f5cf19e482db9c652b5a8bf4f330f",
+  "status": "passed",
+  "attempts": 0,
+  "draft": {
+    "id": "site_ms_gs_scale",
+    "description": "灰棚公秤台搭在集路中央，空秤先亮给双方看，货放下以后才递绳签。折签白天守着旧签，怕不会读签的外族误认货主；散钩则想让各族轮值。秤台是公共地方，这些习惯不另收一份称量钱，也不能替任何人承诺货的成色。",
+    "authoredFacts": {
+      "climate": "台面干燥，侧面进风",
+      "senses": [
+        "秤盘底有磨亮的圈",
+        "绳签的毛头朝同一边",
+        "折签把空盘抬给人看"
+      ],
+      "entryRule": "公共设施，公秤不代替当事人同意"
+    }
+  },
+  "review": {
+    "contradictions": []
+  },
+  "errors": [],
+  "warnings": [],
+  "feedback": null,
+  "frozenCandidate": {
+    "entryHash": "3fe59ae53b80a0b2731acc81bb3b4609a3ab47122b39178c8e4abac6651db067",
+    "draftHash": "deee681dbb3259b931019f65d8c4a8de653f2d28103c9dadbc25210e194a9ff9"
+  },
+  "responseEvidence": [
+    {
+      "phase": "review",
+      "attempt": 1,
+      "requestId": "ba75c277-17e5-42a0-991e-34bf211c3735",
+      "file": "budget-responses/ba75c277-17e5-42a0-991e-34bf211c3735.json",
+      "requestHash": "7e04d91cf90880f38900110eb4ce061e967670ca6538c3de4de42aca9b567f80",
+      "responseHash": "562b99d8c69d2ca2553a387808b785e857e29afd42d328aa342ef7f946871d1e"
+    }
+  ],
+  "measurements": [
+    {
+      "label": "content-monster-society-3-site_ms_gs_scale-review0",
+      "model": "deepseek-flash",
+      "thinking": "disabled",
+      "usage": {
+        "prompt_tokens": 2495,
+        "completion_tokens": 7,
+        "total_tokens": 2502,
+        "prompt_tokens_details": {
+          "cached_tokens": 384
+        },
+        "prompt_cache_hit_tokens": 384,
+        "prompt_cache_miss_tokens": 2111
+      },
+      "costUpperYuan": 0.0042933599999999995,
+      "cumulativeUpperYuan": 0.25822784,
+      "latencyMs": 978.9837000000043,
+      "timestamp": "2026-10-15T09:27:08.460Z"
+    }
+  ]
+}

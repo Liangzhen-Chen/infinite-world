@@ -17,15 +17,15 @@
  },
  "counts": {
   "layers": 6,
-  "systems": 37,
-  "modules": 172,
-  "advance": 42,
+  "systems": 38,
+  "modules": 174,
+  "advance": 44,
   "tools": 25,
   "verbs": 16,
   "subscribers": 8,
   "interactionRules": 25,
   "effectKinds": 19,
-  "links": 352
+  "links": 376
  },
  "layers": [
   {
@@ -80,6 +80,7 @@
     "sim_economy",
     "sim_agriculture",
     "sim_society",
+    "sim_military",
     "sim_clock",
     "sim_law",
     "sim_works"
@@ -146,6 +147,7 @@
     "sim_environment",
     "sim_law",
     "sim_magic",
+    "sim_military",
     "sim_npc",
     "sim_society",
     "sim_wildlife",
@@ -187,6 +189,7 @@
     "sim_economy",
     "sim_environment",
     "sim_magic",
+    "sim_military",
     "sim_npc",
     "sim_society",
     "sim_wildlife",
@@ -226,6 +229,7 @@
     "sim_clock",
     "sim_economy",
     "sim_environment",
+    "sim_military",
     "sim_npc",
     "sim_society",
     "ui_scene"
@@ -256,10 +260,12 @@
     "kernel_engine",
     "sim_clock",
     "sim_environment",
+    "sim_military",
     "sim_npc",
-    "sim_society"
+    "sim_society",
+    "ui_scene"
    ],
-   "files": 7
+   "files": 9
   },
   {
    "id": "data_design",
@@ -285,7 +291,7 @@
     "sim_environment",
     "sim_society"
    ],
-   "files": 100
+   "files": 109
   },
   {
    "id": "data_assets",
@@ -327,7 +333,7 @@
    "effects": [],
    "tools": [],
    "readBy": [],
-   "files": 28
+   "files": 35
   },
   {
    "id": "kernel_engine",
@@ -341,7 +347,7 @@
     "server-plugin/campaign-reducer.mjs",
     "server-plugin/archived-reducer.mjs"
    ],
-   "lines": 945,
+   "lines": 954,
    "stateWrites": [
     "combatDisengaged",
     "created",
@@ -381,11 +387,13 @@
     "engineRevision",
     "equipment",
     "magic",
+    "military",
     "petCare",
     "practice",
     "questSources",
     "travel",
     "tribalAwakening",
+    "warDiplomacy",
     "weather"
    ],
    "world": [
@@ -632,7 +640,7 @@
     "server-plugin/standing.mjs",
     "server-plugin/entity-view.mjs"
    ],
-   "lines": 237,
+   "lines": 241,
    "stateWrites": [
     "records"
    ],
@@ -663,7 +671,8 @@
     "bosses",
     "factions",
     "households",
-    "locations"
+    "locations",
+    "regions"
    ],
    "advance": [],
    "subscribes": [
@@ -747,7 +756,7 @@
    "modules": [
     "server-plugin/advance-registry.mjs"
    ],
-   "lines": 164,
+   "lines": 169,
    "stateWrites": [
     "effects",
     "obligations",
@@ -766,6 +775,7 @@
    "rules": [
     "death",
     "hazardClock",
+    "military",
     "settlementTrade",
     "worldClock"
    ],
@@ -815,7 +825,7 @@
     "server-plugin/population-service.mjs",
     "server-plugin/settlement-profile.mjs"
    ],
-   "lines": 2968,
+   "lines": 2973,
    "stateWrites": [
     "created",
     "family",
@@ -846,7 +856,8 @@
     "agriculture",
     "rumor_lie",
     "village-fiscal",
-    "village-trade"
+    "village-trade",
+    "war-danger"
    ],
    "rules": [
     "agriculture",
@@ -1457,7 +1468,7 @@
     "server-plugin/extraction.mjs",
     "server-plugin/smuggling.mjs"
    ],
-   "lines": 1568,
+   "lines": 1578,
    "stateWrites": [
     "crafted",
     "itemInstances",
@@ -1483,6 +1494,7 @@
     "village-fiscal"
    ],
    "recordReads": [
+    "levy",
     "physical_feature"
    ],
    "rules": [
@@ -1538,7 +1550,7 @@
    "modules": [
     "server-plugin/agriculture.mjs"
    ],
-   "lines": 308,
+   "lines": 325,
    "stateWrites": [
     "player",
     "records",
@@ -1552,6 +1564,7 @@
    ],
    "recordWrites": [],
    "recordReads": [
+    "levy",
     "village-fiscal",
     "village-trade"
    ],
@@ -1606,7 +1619,7 @@
     "server-plugin/tribal-awakening.mjs",
     "server-plugin/elections.mjs"
    ],
-   "lines": 3413,
+   "lines": 3434,
    "stateWrites": [
     "buildings",
     "created",
@@ -1630,6 +1643,7 @@
     "works"
    ],
    "recordWrites": [
+    "army",
     "organization",
     "quest_wildlife_claim",
     "tribal_settlement",
@@ -1642,7 +1656,8 @@
     "ecology",
     "society_motion",
     "stance",
-    "village-fiscal"
+    "village-fiscal",
+    "war"
    ],
    "rules": [
     "agriculture",
@@ -1650,6 +1665,7 @@
     "governance",
     "law",
     "levels",
+    "military",
     "questSources",
     "quests",
     "reputation",
@@ -1707,6 +1723,65 @@
    "readBy": []
   },
   {
+   "id": "sim_military",
+   "name": "军队、战争与外交",
+   "layer": "sim",
+   "card": null,
+   "dir": null,
+   "modules": [
+    "server-plugin/military.mjs",
+    "server-plugin/war-diplomacy.mjs"
+   ],
+   "lines": 664,
+   "stateWrites": [
+    "npcs",
+    "player",
+    "quotes",
+    "settlements"
+   ],
+   "stateReads": [
+    "location",
+    "minute",
+    "records"
+   ],
+   "recordWrites": [],
+   "recordReads": [
+    "diplomacy",
+    "faction-assets",
+    "levy",
+    "military_service",
+    "organization",
+    "polity",
+    "war"
+   ],
+   "rules": [
+    "agriculture",
+    "military",
+    "quests",
+    "warDiplomacy"
+   ],
+   "world": [
+    "factions",
+    "households",
+    "locations",
+    "npcs",
+    "regions",
+    "routes",
+    "rules"
+   ],
+   "advance": [
+    "military",
+    "war_diplomacy"
+   ],
+   "subscribes": [],
+   "effects": [],
+   "tools": [
+    "world_combat",
+    "world_settlement"
+   ],
+   "readBy": []
+  },
+  {
    "id": "sim_clock",
    "name": "时钟、节令与灾害",
    "layer": "sim",
@@ -1719,7 +1794,7 @@
     "server-plugin/seasonal-hazards.mjs",
     "server-plugin/hazard-calendar.mjs"
    ],
-   "lines": 996,
+   "lines": 1017,
    "stateWrites": [
     "family",
     "npcs",
@@ -1898,7 +1973,7 @@
    "modules": [
     "extension/tools.mjs"
    ],
-   "lines": 108,
+   "lines": 110,
    "stateWrites": [],
    "stateReads": [],
    "recordWrites": [],
@@ -1922,7 +1997,7 @@
     "server-plugin/state-notices.mjs",
     "server-plugin/return-summary.mjs"
    ],
-   "lines": 409,
+   "lines": 413,
    "stateWrites": [
     "visits"
    ],
@@ -2166,7 +2241,7 @@
     "server-plugin/catalog.mjs",
     "server-plugin/chronicle.mjs"
    ],
-   "lines": 415,
+   "lines": 416,
    "stateWrites": [],
    "stateReads": [
     "careerMetrics",
@@ -2179,7 +2254,8 @@
    "recordReads": [
     "site_discovery",
     "site_fact",
-    "site_truth"
+    "site_truth",
+    "territory"
    ],
    "rules": [
     "repairs"
@@ -2296,6 +2372,15 @@
     "magic_mind_space",
     "magic_objects",
     "magic_water_earth"
+   ]
+  },
+  {
+   "from": "base_advance",
+   "to": "sim_military",
+   "kind": "advance",
+   "labels": [
+    "military",
+    "war_diplomacy"
    ]
   },
   {
@@ -2428,6 +2513,15 @@
     "magic-mind-space.mjs",
     "magic-object.mjs",
     "magic-water-earth.mjs"
+   ]
+  },
+  {
+   "from": "base_advance",
+   "to": "sim_military",
+   "kind": "call",
+   "labels": [
+    "military.mjs",
+    "war-diplomacy.mjs"
    ]
   },
   {
@@ -2698,6 +2792,7 @@
    "labels": [
     "faction-clock.mjs",
     "festival.mjs",
+    "hazard-calendar.mjs",
     "seasonal-hazards.mjs",
     "world-clock.mjs"
    ]
@@ -2773,6 +2868,15 @@
     "magic-status.mjs",
     "magic-water-earth.mjs",
     "magic.mjs"
+   ]
+  },
+  {
+   "from": "kernel_engine",
+   "to": "sim_military",
+   "kind": "call",
+   "labels": [
+    "military.mjs",
+    "war-diplomacy.mjs"
    ]
   },
   {
@@ -3216,6 +3320,14 @@
    ]
   },
   {
+   "from": "sim_clock",
+   "to": "sim_society",
+   "kind": "call",
+   "labels": [
+    "reputation-registry.mjs"
+   ]
+  },
+  {
    "from": "sim_combat",
    "to": "base_standing",
    "kind": "call",
@@ -3289,6 +3401,14 @@
    "kind": "call",
    "labels": [
     "storage.mjs"
+   ]
+  },
+  {
+   "from": "sim_economy",
+   "to": "sim_agriculture",
+   "kind": "call",
+   "labels": [
+    "agriculture.mjs"
    ]
   },
   {
@@ -3641,6 +3761,85 @@
    ]
   },
   {
+   "from": "sim_military",
+   "to": "base_effects",
+   "kind": "call",
+   "labels": [
+    "effects.mjs"
+   ]
+  },
+  {
+   "from": "sim_military",
+   "to": "base_events",
+   "kind": "call",
+   "labels": [
+    "world-events.mjs"
+   ]
+  },
+  {
+   "from": "sim_military",
+   "to": "base_standing",
+   "kind": "call",
+   "labels": [
+    "standing.mjs"
+   ]
+  },
+  {
+   "from": "sim_military",
+   "to": "base_traits",
+   "kind": "call",
+   "labels": [
+    "traits.mjs"
+   ]
+  },
+  {
+   "from": "sim_military",
+   "to": "sim_clock",
+   "kind": "call",
+   "labels": [
+    "faction-clock.mjs",
+    "hazard-calendar.mjs",
+    "world-clock.mjs"
+   ]
+  },
+  {
+   "from": "sim_military",
+   "to": "sim_economy",
+   "kind": "call",
+   "labels": [
+    "credit.mjs",
+    "settlement-trade.mjs"
+   ]
+  },
+  {
+   "from": "sim_military",
+   "to": "sim_environment",
+   "kind": "call",
+   "labels": [
+    "regions.mjs"
+   ]
+  },
+  {
+   "from": "sim_military",
+   "to": "sim_npc",
+   "kind": "call",
+   "labels": [
+    "npc-life.mjs",
+    "population.mjs"
+   ]
+  },
+  {
+   "from": "sim_military",
+   "to": "sim_society",
+   "kind": "call",
+   "labels": [
+    "governance.mjs",
+    "organizations.mjs",
+    "titles.mjs",
+    "tribal-awakening.mjs"
+   ]
+  },
+  {
    "from": "sim_npc",
    "to": "base_events",
    "kind": "call",
@@ -3820,6 +4019,14 @@
    "labels": [
     "bounty.mjs",
     "law.mjs"
+   ]
+  },
+  {
+   "from": "sim_society",
+   "to": "sim_military",
+   "kind": "call",
+   "labels": [
+    "military.mjs"
    ]
   },
   {
@@ -4074,6 +4281,15 @@
     "remote-generation.mjs",
     "sites.mjs",
     "weather.mjs"
+   ]
+  },
+  {
+   "from": "ui_scene",
+   "to": "sim_military",
+   "kind": "call",
+   "labels": [
+    "military.mjs",
+    "war-diplomacy.mjs"
    ]
   },
   {
@@ -4354,6 +4570,14 @@
   },
   {
    "from": "data_geo",
+   "to": "sim_military",
+   "kind": "data",
+   "labels": [
+    "world/geo"
+   ]
+  },
+  {
+   "from": "data_geo",
    "to": "sim_npc",
    "kind": "data",
    "labels": [
@@ -4442,6 +4666,14 @@
   },
   {
    "from": "data_lore",
+   "to": "sim_military",
+   "kind": "data",
+   "labels": [
+    "world/lore"
+   ]
+  },
+  {
+   "from": "data_lore",
    "to": "sim_npc",
    "kind": "data",
    "labels": [
@@ -4451,6 +4683,14 @@
   {
    "from": "data_lore",
    "to": "sim_society",
+   "kind": "data",
+   "labels": [
+    "world/lore"
+   ]
+  },
+  {
+   "from": "data_lore",
+   "to": "ui_scene",
    "kind": "data",
    "labels": [
     "world/lore"
@@ -4602,6 +4842,14 @@
   },
   {
    "from": "data_meta",
+   "to": "sim_military",
+   "kind": "data",
+   "labels": [
+    "world/meta"
+   ]
+  },
+  {
+   "from": "data_meta",
    "to": "sim_npc",
    "kind": "data",
    "labels": [
@@ -4738,6 +4986,14 @@
   },
   {
    "from": "data_people",
+   "to": "sim_military",
+   "kind": "data",
+   "labels": [
+    "world/people"
+   ]
+  },
+  {
+   "from": "data_people",
    "to": "sim_npc",
    "kind": "data",
    "labels": [
@@ -4857,6 +5113,14 @@
   },
   {
    "from": "sim_clock",
+   "to": "base_effects",
+   "kind": "effect",
+   "labels": [
+    "applyEffects"
+   ]
+  },
+  {
+   "from": "sim_military",
    "to": "base_effects",
    "kind": "effect",
    "labels": [
@@ -5108,6 +5372,14 @@
    ]
   },
   {
+   "from": "sim_society",
+   "to": "sim_military",
+   "kind": "record",
+   "labels": [
+    "organization"
+   ]
+  },
+  {
    "from": "ui_tools",
    "to": "base_advance",
    "kind": "tool",
@@ -5272,6 +5544,15 @@
     "world_cast",
     "world_combat",
     "world_move"
+   ]
+  },
+  {
+   "from": "ui_tools",
+   "to": "sim_military",
+   "kind": "tool",
+   "labels": [
+    "world_combat",
+    "world_settlement"
    ]
   },
   {
@@ -5644,12 +5925,34 @@
    "partitions": []
   },
   {
+   "id": "military",
+   "order": 1452,
+   "stepped": false,
+   "nextMinute": false,
+   "modules": [
+    "server-plugin/military.mjs"
+   ],
+   "inline": false,
+   "partitions": []
+  },
+  {
    "id": "tribal_awakening",
    "order": 1455,
    "stepped": false,
    "nextMinute": false,
    "modules": [
     "server-plugin/tribal-awakening.mjs"
+   ],
+   "inline": false,
+   "partitions": []
+  },
+  {
+   "id": "war_diplomacy",
+   "order": 1456,
+   "stepped": false,
+   "nextMinute": false,
+   "modules": [
+    "server-plugin/war-diplomacy.mjs"
    ],
    "inline": false,
    "partitions": []
@@ -5994,12 +6297,14 @@
    ],
    "breach": [
     "server-plugin/law.mjs",
+    "server-plugin/military.mjs",
     "server-plugin/world-events.mjs"
    ],
    "cast": [
     "server-plugin/world-events.mjs"
    ],
    "clash": [
+    "server-plugin/war-diplomacy.mjs",
     "server-plugin/world-events.mjs"
    ],
    "deceive": [
@@ -6027,6 +6332,7 @@
     "server-plugin/world-events.mjs"
    ],
    "organize": [
+    "server-plugin/military.mjs",
     "server-plugin/organizations.mjs",
     "server-plugin/tribal-awakening.mjs"
    ],
@@ -6594,6 +6900,7 @@
    "server-plugin/regions.mjs",
    "server-plugin/settlement-trade.mjs",
    "server-plugin/sites.mjs",
+   "server-plugin/war-diplomacy.mjs",
    "server-plugin/wildlife-habitats.mjs"
   ]
  },
@@ -6951,6 +7258,7 @@
    "server-plugin/festival.mjs",
    "server-plugin/seasonal-hazards.mjs",
    "server-plugin/tribal-awakening.mjs",
+   "server-plugin/war-diplomacy.mjs",
    "server-plugin/world-clock.mjs"
   ],
   "hooks": [
@@ -6973,6 +7281,7 @@
    "npc",
    "organization",
    "player",
+   "polity",
    "settlement",
    "society",
    "spirit_society"
@@ -7017,6 +7326,7 @@
    "server-plugin/faction-clock.mjs",
    "server-plugin/governance.mjs",
    "server-plugin/lies.mjs",
+   "server-plugin/military.mjs",
    "server-plugin/monster-society.mjs",
    "server-plugin/notables.mjs",
    "server-plugin/organizations.mjs",
@@ -7029,6 +7339,7 @@
    "server-plugin/scene-card.mjs",
    "server-plugin/shop.mjs",
    "server-plugin/tribal-awakening.mjs",
+   "server-plugin/war-diplomacy.mjs",
    "server-plugin/works.mjs",
    "server-plugin/world-events.mjs"
   ],
@@ -7515,6 +7826,7 @@
       "server-plugin/magic-water-earth.mjs",
       "server-plugin/professions.mjs",
       "server-plugin/progression.mjs",
+      "server-plugin/war-diplomacy.mjs",
       "server-plugin/weather.mjs",
       "server-plugin/wildlife.mjs"
      ],
@@ -7528,6 +7840,7 @@
       "sim_environment",
       "sim_law",
       "sim_magic",
+      "sim_military",
       "sim_wildlife"
      ]
     }
@@ -7542,6 +7855,7 @@
     "sim_environment",
     "sim_law",
     "sim_magic",
+    "sim_military",
     "sim_wildlife"
    ]
   },
@@ -7658,6 +7972,14 @@
     "org_deposit",
     "org_propose",
     "org_vote",
+    "war_inspect",
+    "war_join",
+    "diplomacy",
+    "army_inspect",
+    "army_enlist",
+    "army_duty",
+    "army_recruit",
+    "army_dismiss",
     "duel_challenge",
     "duel_answer",
     "duel_yield",
@@ -7715,6 +8037,14 @@
       "org_deposit",
       "org_propose",
       "org_vote",
+      "war_inspect",
+      "war_join",
+      "diplomacy",
+      "army_inspect",
+      "army_enlist",
+      "army_duty",
+      "army_recruit",
+      "army_dismiss",
       "duel_challenge",
       "duel_answer",
       "duel_yield",
@@ -7735,18 +8065,21 @@
       "server-plugin/faction-clock.mjs",
       "server-plugin/festival.mjs",
       "server-plugin/governance.mjs",
+      "server-plugin/military.mjs",
       "server-plugin/notables.mjs",
       "server-plugin/organizations.mjs",
       "server-plugin/promotion.mjs",
       "server-plugin/public-projects.mjs",
       "server-plugin/seasonal-hazards.mjs",
-      "server-plugin/titles.mjs"
+      "server-plugin/titles.mjs",
+      "server-plugin/war-diplomacy.mjs"
      ],
      "systems": [
       "kernel_engine",
       "sim_clock",
       "sim_combat",
       "sim_economy",
+      "sim_military",
       "sim_society"
      ]
     }
@@ -7756,6 +8089,7 @@
     "sim_clock",
     "sim_combat",
     "sim_economy",
+    "sim_military",
     "sim_society"
    ]
   },
@@ -8276,7 +8610,7 @@
   },
   {
    "dir": "world/design",
-   "files": 100,
+   "files": 109,
    "keys": [],
    "readers": [
     "server-plugin/civic.mjs",
@@ -8304,6 +8638,7 @@
     "tools/m4-object-content.mjs",
     "tools/m5-authority.mjs",
     "tools/monster-society-2-content.mjs",
+    "tools/monster-society-3-content.mjs",
     "tools/monster-society-content.mjs",
     "tools/npc-depth-content.mjs",
     "tools/npc-depth.mjs",
@@ -8322,6 +8657,7 @@
     "tools/profile-time-advance.mjs",
     "tools/publish-m4-batch2.mjs",
     "tools/publish-monster-society-2.mjs",
+    "tools/publish-monster-society-3.mjs",
     "tools/publish-monster-society.mjs",
     "tools/publish-w1-villages.mjs",
     "tools/publish-w2-reuse.mjs",
@@ -8374,6 +8710,7 @@
     "tools/w5-content.mjs",
     "tools/w5-festival-publication.mjs",
     "tools/w5-festivals.mjs",
+    "tools/w5-rumors.mjs",
     "tools/w5-sites.mjs",
     "tools/w5-social.mjs",
     "tools/wildlife-content.mjs"
@@ -8381,7 +8718,7 @@
   },
   {
    "dir": "world/drafts",
-   "files": 28,
+   "files": 35,
    "keys": [],
    "readers": [],
    "tools": [
@@ -8400,6 +8737,7 @@
     "tools/m4-object-content.mjs",
     "tools/m5-authority.mjs",
     "tools/monster-society-2-content.mjs",
+    "tools/monster-society-3-content.mjs",
     "tools/monster-society-content.mjs",
     "tools/npc-depth-l4.mjs",
     "tools/npc-depth-publication-sources.mjs",
@@ -8466,6 +8804,7 @@
     "tools/w5-content.mjs",
     "tools/w5-festival-publication.mjs",
     "tools/w5-festivals.mjs",
+    "tools/w5-rumors.mjs",
     "tools/w5-sites.mjs",
     "tools/w5-social.mjs"
    ]
@@ -8501,6 +8840,7 @@
     "server-plugin/magic-movement.mjs",
     "server-plugin/magic-object.mjs",
     "server-plugin/manufacturing.mjs",
+    "server-plugin/military.mjs",
     "server-plugin/monster-society.mjs",
     "server-plugin/notables.mjs",
     "server-plugin/npc-growth.mjs",
@@ -8532,6 +8872,7 @@
     "server-plugin/tribal-awakening.mjs",
     "server-plugin/ui-affairs.mjs",
     "server-plugin/ui-map.mjs",
+    "server-plugin/war-diplomacy.mjs",
     "server-plugin/weather.mjs",
     "server-plugin/wildlife-awakening.mjs",
     "server-plugin/wildlife-habitats.mjs",
@@ -8551,6 +8892,7 @@
     "tools/prepare-wildlife-catalog.mjs",
     "tools/publish-creatures-mixed.mjs",
     "tools/publish-monster-society-2.mjs",
+    "tools/publish-monster-society-3.mjs",
     "tools/publish-monster-society.mjs",
     "tools/publish-w1-hewan.mjs",
     "tools/publish-w1-villages.mjs",
@@ -8569,7 +8911,7 @@
   },
   {
    "dir": "world/lore",
-   "files": 7,
+   "files": 9,
    "keys": [
     "cultures",
     "deities",
@@ -8577,7 +8919,8 @@
     "history",
     "factionPeople",
     "eras",
-    "festivals"
+    "festivals",
+    "rumors"
    ],
    "readers": [
     "server-plugin/effects.mjs",
@@ -8585,26 +8928,34 @@
     "server-plugin/entity-view.mjs",
     "server-plugin/faction-clock.mjs",
     "server-plugin/festival.mjs",
+    "server-plugin/military.mjs",
     "server-plugin/monster-society.mjs",
     "server-plugin/notables.mjs",
+    "server-plugin/npc-rumors.mjs",
     "server-plugin/organization-state.mjs",
     "server-plugin/population.mjs",
     "server-plugin/quest-sources.mjs",
     "server-plugin/regions.mjs",
     "server-plugin/remote-generation.mjs",
     "server-plugin/reputation-catalog.mjs",
+    "server-plugin/reputation-registry.mjs",
+    "server-plugin/return-summary.mjs",
     "server-plugin/sites.mjs",
     "server-plugin/tribal-awakening.mjs",
+    "server-plugin/war-diplomacy.mjs",
     "server-plugin/world-clock.mjs"
    ],
    "tools": [
+    "tools/load-world.mjs",
     "tools/publish-monster-society-2.mjs",
+    "tools/publish-monster-society-3.mjs",
     "tools/publish-monster-society.mjs",
     "tools/system-map.mjs",
     "tools/t142-merge.mjs",
     "tools/w5-clock-publication.mjs",
     "tools/w5-content.mjs",
     "tools/w5-festival-publication.mjs",
+    "tools/w5-rumors.mjs",
     "tools/w5-social-publish.mjs"
    ]
   },
@@ -8667,6 +9018,7 @@
     "server-plugin/magic-targeting.mjs",
     "server-plugin/manufacturing.mjs",
     "server-plugin/migrations/r1.mjs",
+    "server-plugin/military.mjs",
     "server-plugin/monster-society.mjs",
     "server-plugin/notables.mjs",
     "server-plugin/npc-autonomy.mjs",
@@ -8707,6 +9059,7 @@
     "server-plugin/ui-history.mjs",
     "server-plugin/ui-overview.mjs",
     "server-plugin/ui-personal.mjs",
+    "server-plugin/war-diplomacy.mjs",
     "server-plugin/weather.mjs",
     "server-plugin/wildlife-awakening.mjs",
     "server-plugin/wildlife-habitats.mjs",
@@ -8736,6 +9089,7 @@
     "tools/m4-object-content.mjs",
     "tools/m5-authority.mjs",
     "tools/monster-society-2-content.mjs",
+    "tools/monster-society-3-content.mjs",
     "tools/monster-society-content.mjs",
     "tools/playtests.mjs",
     "tools/prepare-agriculture-rules.mjs",
@@ -8751,6 +9105,7 @@
     "tools/publish-creatures-mixed.mjs",
     "tools/publish-m4-batch2.mjs",
     "tools/publish-monster-society-2.mjs",
+    "tools/publish-monster-society-3.mjs",
     "tools/publish-monster-society.mjs",
     "tools/publish-w1-villages.mjs",
     "tools/publish-w2-reuse.mjs",
@@ -8787,6 +9142,7 @@
     "tools/w5-content.mjs",
     "tools/w5-festival-publication.mjs",
     "tools/w5-festivals.mjs",
+    "tools/w5-rumors.mjs",
     "tools/w5-sites.mjs",
     "tools/w5-social.mjs"
    ]
@@ -8811,6 +9167,7 @@
     "server-plugin/entity-view.mjs",
     "server-plugin/festival.mjs",
     "server-plugin/governance.mjs",
+    "server-plugin/military.mjs",
     "server-plugin/monster-society.mjs",
     "server-plugin/notables.mjs",
     "server-plugin/npc-autonomy.mjs",
@@ -8835,6 +9192,7 @@
     "server-plugin/sites.mjs",
     "server-plugin/titles.mjs",
     "server-plugin/tribal-awakening.mjs",
+    "server-plugin/war-diplomacy.mjs",
     "server-plugin/world-upgrade.mjs"
    ],
    "tools": [
@@ -8847,6 +9205,7 @@
     "tools/prepare-economy-supply.mjs",
     "tools/publish-m4-batch2.mjs",
     "tools/publish-monster-society-2.mjs",
+    "tools/publish-monster-society-3.mjs",
     "tools/publish-monster-society.mjs",
     "tools/publish-npc-depth.mjs",
     "tools/publish-w1-hewan.mjs",
@@ -8958,7 +9317,8 @@
    "server-plugin/quest-board.mjs",
    "server-plugin/quest-sources.mjs",
    "server-plugin/tribal-awakening.mjs",
-   "server-plugin/ui-affairs.mjs"
+   "server-plugin/ui-affairs.mjs",
+   "server-plugin/war-diplomacy.mjs"
   ],
   "prompt": [
    "server-plugin/compat/v2-phase1-engine.mjs",
@@ -9038,6 +9398,7 @@
    "server-plugin/location-access.mjs",
    "server-plugin/magic-growth.mjs",
    "server-plugin/migrations/r1.mjs",
+   "server-plugin/military.mjs",
    "server-plugin/return-summary.mjs",
    "server-plugin/settlement-profile.mjs",
    "server-plugin/settlement-trade.mjs",
@@ -9139,6 +9500,17 @@
   "tribalAwakening": [
    "server-plugin/engine.mjs",
    "server-plugin/tribal-awakening.mjs"
+  ],
+  "military": [
+   "server-plugin/advance-registry.mjs",
+   "server-plugin/engine.mjs",
+   "server-plugin/military.mjs",
+   "server-plugin/titles.mjs",
+   "server-plugin/war-diplomacy.mjs"
+  ],
+  "warDiplomacy": [
+   "server-plugin/engine.mjs",
+   "server-plugin/war-diplomacy.mjs"
   ],
   "extraction": [
    "server-plugin/extraction.mjs"
@@ -9358,6 +9730,7 @@
     "sim_companion",
     "sim_economy",
     "sim_environment",
+    "sim_military",
     "sim_npc",
     "sim_society",
     "sim_wildlife",
@@ -9388,6 +9761,7 @@
     "sim_economy",
     "sim_environment",
     "sim_law",
+    "sim_military",
     "sim_npc",
     "sim_society",
     "sim_wildlife",
@@ -9440,6 +9814,7 @@
     "sim_environment",
     "sim_law",
     "sim_magic",
+    "sim_military",
     "sim_npc",
     "sim_society",
     "sim_wildlife",
@@ -9491,6 +9866,7 @@
     "sim_economy",
     "sim_law",
     "sim_magic",
+    "sim_military",
     "sim_society",
     "sim_wildlife",
     "sim_works"
@@ -9556,6 +9932,7 @@
     "kernel_engine",
     "kernel_storage",
     "sim_economy",
+    "sim_military",
     "sim_npc"
    ],
    "readers": []
@@ -9588,6 +9965,7 @@
     "sim_character",
     "sim_combat",
     "sim_law",
+    "sim_military",
     "ui_scene"
    ]
   },
@@ -9617,6 +9995,7 @@
     "sim_agriculture",
     "sim_economy",
     "sim_environment",
+    "sim_military",
     "sim_npc",
     "sim_society"
    ],
@@ -9872,7 +10251,7 @@
    "id": "boss",
    "name": "首领 / 巢穴",
    "file": "world/meta/bosses.json",
-   "count": 40,
+   "count": 42,
    "required": [
     "id",
     "name",
@@ -10025,7 +10404,7 @@
    "id": "location",
    "name": "地点",
    "file": "world/geo/locations.json",
-   "count": 428,
+   "count": 455,
    "required": [
     "id",
     "name",
@@ -10059,6 +10438,7 @@
       "server-plugin/remote-generation.mjs",
       "server-plugin/settlement-profile.mjs",
       "server-plugin/traits.mjs",
+      "server-plugin/war-diplomacy.mjs",
       "server-plugin/wildlife-habitats.mjs"
      ],
      "systems": [
@@ -10067,6 +10447,7 @@
       "sim_character",
       "sim_economy",
       "sim_environment",
+      "sim_military",
       "sim_npc",
       "sim_wildlife"
      ]
@@ -10083,6 +10464,7 @@
       "server-plugin/engine.mjs",
       "server-plugin/governance.mjs",
       "server-plugin/hazard-calendar.mjs",
+      "server-plugin/military.mjs",
       "server-plugin/monster-society.mjs",
       "server-plugin/notables.mjs",
       "server-plugin/npc-life.mjs",
@@ -10119,6 +10501,7 @@
       "sim_clock",
       "sim_economy",
       "sim_environment",
+      "sim_military",
       "sim_npc",
       "sim_society",
       "sim_wildlife",
@@ -10331,6 +10714,7 @@
     "sim_economy",
     "sim_environment",
     "sim_magic",
+    "sim_military",
     "sim_npc",
     "sim_society",
     "sim_wildlife",
@@ -10351,7 +10735,7 @@
    "id": "route",
    "name": "路线",
    "file": "world/geo/routes.json",
-   "count": 432,
+   "count": 459,
    "required": [
     "id",
     "from",
@@ -10612,7 +10996,7 @@
    "id": "npc",
    "name": "人物（名册）",
    "file": "world/people/baseline.json",
-   "count": 267,
+   "count": 275,
    "required": [
     "age",
     "aliases",
@@ -10757,6 +11141,7 @@
       "server-plugin/law.mjs",
       "server-plugin/location-access.mjs",
       "server-plugin/magic-growth.mjs",
+      "server-plugin/military.mjs",
       "server-plugin/monster-society.mjs",
       "server-plugin/npc-intelligence.mjs",
       "server-plugin/npc-life.mjs",
@@ -10781,6 +11166,7 @@
       "server-plugin/titles.mjs",
       "server-plugin/tribal-awakening.mjs",
       "server-plugin/ui-affairs.mjs",
+      "server-plugin/war-diplomacy.mjs",
       "server-plugin/wildlife-awakening.mjs",
       "server-plugin/works.mjs",
       "server-plugin/world-clock.mjs",
@@ -10802,6 +11188,7 @@
       "sim_environment",
       "sim_law",
       "sim_magic",
+      "sim_military",
       "sim_npc",
       "sim_society",
       "sim_wildlife",
@@ -10948,6 +11335,7 @@
     "sim_environment",
     "sim_law",
     "sim_magic",
+    "sim_military",
     "sim_npc",
     "sim_society",
     "sim_wildlife",
@@ -10962,7 +11350,7 @@
    "refs": [
     "势力成员：势力的 leader/coreMembers 或人物的 faction 字段即自动成为成员（reputation-registry.mjs 派生）",
     "开店：有交易服务并写 shopType（rules.economy.shops.types 已登记的类型）即自动成为店铺（shop.mjs derivedShops）",
-    "传闻种子在 geo/settlements.json 的 details.rumors（经 settlement-profile 白名单）"
+    "传闻种子在 geo/settlements.json 的 details.rumors 或 lore/rumors.json；world/design/w5-rumors-{1..6}.mjs 经 tools/w5-rumors.mjs 审核发布，w5-rumors-common.mjs 与 w5-rumors-sites.mjs 提供来源登记和据点说法。npc-rumors.mjs 读取；携信路线、人物在场与可交谈时间从当前状态派生"
    ],
    "extend": []
   },
@@ -10970,7 +11358,7 @@
    "id": "resident",
    "name": "居民（按需展开）",
    "file": "world/people/residents.json",
-   "count": 532,
+   "count": 548,
    "required": [
     "id",
     "name",
@@ -11085,6 +11473,7 @@
       "server-plugin/elections.mjs",
       "server-plugin/extraction.mjs",
       "server-plugin/law.mjs",
+      "server-plugin/military.mjs",
       "server-plugin/npc-autonomy.mjs",
       "server-plugin/settlement-trade.mjs",
       "server-plugin/shop.mjs",
@@ -11097,6 +11486,7 @@
       "sim_boss",
       "sim_economy",
       "sim_law",
+      "sim_military",
       "sim_npc",
       "sim_society"
      ]
@@ -11230,6 +11620,7 @@
     "sim_environment",
     "sim_law",
     "sim_magic",
+    "sim_military",
     "sim_npc",
     "sim_society",
     "sim_wildlife",
@@ -11473,7 +11864,7 @@
    "id": "faction",
    "name": "势力",
    "file": "world/lore/factions.json",
-   "count": 47,
+   "count": 49,
    "required": [
     "id",
     "name",
@@ -11516,6 +11907,7 @@
       "server-plugin/seasonal-hazards.mjs",
       "server-plugin/settlement-trade.mjs",
       "server-plugin/tribal-awakening.mjs",
+      "server-plugin/war-diplomacy.mjs",
       "extension/turn.mjs"
      ],
      "systems": [
@@ -11523,6 +11915,7 @@
       "nar_consistency",
       "sim_clock",
       "sim_economy",
+      "sim_military",
       "sim_society",
       "ui_host"
      ]
@@ -11534,6 +11927,7 @@
      "modules": [
       "server-plugin/faction-clock.mjs",
       "server-plugin/reputation-catalog.mjs",
+      "server-plugin/reputation-registry.mjs",
       "server-plugin/scene-card.mjs",
       "server-plugin/standing.mjs"
      ],
@@ -11553,6 +11947,7 @@
     "sim_clock",
     "sim_economy",
     "sim_environment",
+    "sim_military",
     "sim_society",
     "ui_host",
     "ui_scene"
@@ -11582,15 +11977,18 @@
      "pattern": "organization:",
      "modules": [
       "server-plugin/entity-view.mjs",
+      "server-plugin/military.mjs",
       "server-plugin/monster-society.mjs",
       "server-plugin/organization-state.mjs",
       "server-plugin/organizations.mjs",
       "server-plugin/public-opinion.mjs",
       "server-plugin/standing.mjs",
-      "server-plugin/tribal-awakening.mjs"
+      "server-plugin/tribal-awakening.mjs",
+      "server-plugin/war-diplomacy.mjs"
      ],
      "systems": [
       "base_standing",
+      "sim_military",
       "sim_society"
      ]
     },
@@ -11600,6 +11998,7 @@
      "pattern": "'organization'",
      "modules": [
       "server-plugin/consistency-review.mjs",
+      "server-plugin/military.mjs",
       "server-plugin/notables.mjs",
       "server-plugin/organization-state.mjs",
       "server-plugin/organizations.mjs",
@@ -11609,6 +12008,7 @@
      "systems": [
       "base_standing",
       "nar_consistency",
+      "sim_military",
       "sim_society"
      ]
     },
@@ -11617,11 +12017,13 @@
      "means": "产生 organize 世界事件",
      "pattern": "organizationEvent",
      "modules": [
+      "server-plugin/military.mjs",
       "server-plugin/organizations.mjs",
       "server-plugin/world-events.mjs"
      ],
      "systems": [
       "base_events",
+      "sim_military",
       "sim_society"
      ]
     }
@@ -11630,6 +12032,7 @@
     "base_events",
     "base_standing",
     "nar_consistency",
+    "sim_military",
     "sim_society"
    ],
    "manual": [],
@@ -11721,11 +12124,13 @@
       "server-plugin/festival.mjs",
       "server-plugin/seasonal-hazards.mjs",
       "server-plugin/tribal-awakening.mjs",
+      "server-plugin/war-diplomacy.mjs",
       "server-plugin/world-clock.mjs"
      ],
      "systems": [
       "base_effects",
       "sim_clock",
+      "sim_military",
       "sim_society"
      ]
     }
@@ -11733,6 +12138,7 @@
    "autoSystems": [
     "base_effects",
     "sim_clock",
+    "sim_military",
     "sim_society"
    ],
    "manual": [],
@@ -11763,11 +12169,13 @@
      "modules": [
       "server-plugin/catalog.mjs",
       "server-plugin/regions.mjs",
-      "server-plugin/ui-map.mjs"
+      "server-plugin/ui-map.mjs",
+      "server-plugin/war-diplomacy.mjs"
      ],
      "systems": [
       "nar_memory",
       "sim_environment",
+      "sim_military",
       "ui_server"
      ]
     },
@@ -11802,12 +12210,71 @@
    "autoSystems": [
     "nar_memory",
     "sim_environment",
+    "sim_military",
     "ui_server"
    ],
    "manual": [],
    "refs": [
     "biomes 由 traits 地形词派生（terrainBiomes），K8 据此生成栖地",
     "聚落骨架与人物完整档由后续按需生成"
+   ],
+   "extend": []
+  },
+  {
+   "id": "spirit-route",
+   "name": "个体成精路线",
+   "file": "world/meta/rules.json#wildlifeAwakening",
+   "count": null,
+   "required": [
+    "stages",
+    "spiritLands",
+    "spiritItems",
+    "mentor",
+    "borrowForm",
+    "society.homes"
+   ],
+   "hooks": [
+    {
+     "field": "四类积累 / 三阶段",
+     "means": "年岁经历、灵地、灵物、点化；听息、立意、借形",
+     "pattern": "wildlifeAwakening|awakeningTotal",
+     "modules": [
+      "server-plugin/engine.mjs",
+      "server-plugin/npc-intelligence.mjs",
+      "server-plugin/tribal-awakening.mjs",
+      "server-plugin/wildlife-awakening.mjs",
+      "server-plugin/wildlife-society.mjs",
+      "server-plugin/wildlife.mjs"
+     ],
+     "systems": [
+      "kernel_engine",
+      "sim_npc",
+      "sim_society",
+      "sim_wildlife"
+     ]
+    },
+    {
+     "field": "society.homes",
+     "means": "自愿定居与按季结社",
+     "pattern": "checkSpiritSocieties|society.homes",
+     "modules": [
+      "server-plugin/wildlife-society.mjs"
+     ],
+     "systems": [
+      "sim_wildlife"
+     ]
+    }
+   ],
+   "autoSystems": [
+    "kernel_engine",
+    "sim_npc",
+    "sim_society",
+    "sim_wildlife"
+   ],
+   "manual": [],
+   "refs": [
+    "T162 内容：world/design/monster-society-3.mjs；审核 tools/monster-society-3-content.mjs；发布 tools/publish-monster-society-3.mjs",
+    "族群觉醒复用 tribal-awakening.mjs，不由个体路线新建族群"
    ],
    "extend": []
   },
@@ -12096,6 +12563,7 @@
     "server-plugin/magic-status.mjs",
     "server-plugin/magic-water-earth.mjs",
     "server-plugin/manufacturing.mjs",
+    "server-plugin/military.mjs",
     "server-plugin/notables.mjs",
     "server-plugin/organizations.mjs",
     "server-plugin/pets.mjs",
@@ -12109,6 +12577,7 @@
     "server-plugin/sites.mjs",
     "server-plugin/summons.mjs",
     "server-plugin/titles.mjs",
+    "server-plugin/war-diplomacy.mjs",
     "server-plugin/weather.mjs",
     "server-plugin/wildlife.mjs",
     "server-plugin/works.mjs"
@@ -12140,7 +12609,7 @@
    ],
    "world": [],
    "worldDirs": [],
-   "lines": 235
+   "lines": 240
   },
   "server-plugin/advance-registry.mjs": {
    "system": "base_advance",
@@ -12162,6 +12631,7 @@
     "server-plugin/magic-mind-space.mjs",
     "server-plugin/magic-object.mjs",
     "server-plugin/magic-water-earth.mjs",
+    "server-plugin/military.mjs",
     "server-plugin/monster-society.mjs",
     "server-plugin/notables.mjs",
     "server-plugin/npc-autonomy.mjs",
@@ -12180,6 +12650,7 @@
     "server-plugin/summons.mjs",
     "server-plugin/titles.mjs",
     "server-plugin/tribal-awakening.mjs",
+    "server-plugin/war-diplomacy.mjs",
     "server-plugin/weather.mjs",
     "server-plugin/wildlife.mjs",
     "server-plugin/world-clock.mjs"
@@ -12202,6 +12673,7 @@
    "rules": [
     "death",
     "hazardClock",
+    "military",
     "settlementTrade",
     "worldClock"
    ],
@@ -12209,7 +12681,7 @@
     "npcs"
    ],
    "worldDirs": [],
-   "lines": 164
+   "lines": 169
   },
   "server-plugin/agriculture-migration.mjs": {
    "system": "kernel_storage",
@@ -12249,6 +12721,7 @@
    ],
    "recordWrites": [],
    "recordReads": [
+    "levy",
     "village-fiscal",
     "village-trade"
    ],
@@ -12267,7 +12740,7 @@
     "spells"
    ],
    "worldDirs": [],
-   "lines": 308
+   "lines": 325
   },
   "server-plugin/archived-reducer.mjs": {
    "system": "kernel_engine",
@@ -12535,10 +13008,13 @@
    "stateReads": [
     "careerMetrics",
     "professions",
+    "records",
     "spells"
    ],
    "recordWrites": [],
-   "recordReads": [],
+   "recordReads": [
+    "territory"
+   ],
    "rules": [
     "repairs"
    ],
@@ -12547,7 +13023,7 @@
     "routes"
    ],
    "worldDirs": [],
-   "lines": 44
+   "lines": 45
   },
   "server-plugin/character.mjs": {
    "system": "sim_character",
@@ -12935,6 +13411,7 @@
     "server-plugin/environment.mjs",
     "server-plugin/faction-clock.mjs",
     "server-plugin/festival.mjs",
+    "server-plugin/hazard-calendar.mjs",
     "server-plugin/items.mjs",
     "server-plugin/law.mjs",
     "server-plugin/learning.mjs",
@@ -12950,6 +13427,7 @@
     "server-plugin/magic-water-earth.mjs",
     "server-plugin/magic.mjs",
     "server-plugin/migrations/r1.mjs",
+    "server-plugin/military.mjs",
     "server-plugin/monster-society.mjs",
     "server-plugin/npc-autonomy.mjs",
     "server-plugin/npc-intelligence.mjs",
@@ -12978,6 +13456,7 @@
     "server-plugin/storage.mjs",
     "server-plugin/summons.mjs",
     "server-plugin/tribal-awakening.mjs",
+    "server-plugin/war-diplomacy.mjs",
     "server-plugin/weather.mjs",
     "server-plugin/wildlife-awakening.mjs",
     "server-plugin/wildlife-habitats.mjs",
@@ -13017,11 +13496,13 @@
     "economy",
     "engineRevision",
     "magic",
+    "military",
     "petCare",
     "practice",
     "questSources",
     "travel",
     "tribalAwakening",
+    "warDiplomacy",
     "weather"
    ],
    "world": [
@@ -13047,7 +13528,7 @@
     "spells"
    ],
    "worldDirs": [],
-   "lines": 672
+   "lines": 676
   },
   "server-plugin/entity-view.mjs": {
    "system": "base_standing",
@@ -13159,6 +13640,7 @@
    "system": "sim_clock",
    "imports": [
     "server-plugin/effects.mjs",
+    "server-plugin/reputation-registry.mjs",
     "server-plugin/standing.mjs",
     "server-plugin/world-clock.mjs"
    ],
@@ -13189,7 +13671,7 @@
     "locations"
    ],
    "worldDirs": [],
-   "lines": 221
+   "lines": 226
   },
   "server-plugin/farm-pests-migration.mjs": {
    "system": "kernel_storage",
@@ -13269,7 +13751,7 @@
     "geo",
     "lore"
    ],
-   "lines": 222
+   "lines": 234
   },
   "server-plugin/governance.mjs": {
    "system": "sim_society",
@@ -13335,7 +13817,7 @@
    ],
    "world": [],
    "worldDirs": [],
-   "lines": 103
+   "lines": 107
   },
   "server-plugin/index.mjs": {
    "system": "ui_server",
@@ -14153,6 +14635,54 @@
    "worldDirs": [],
    "lines": 73
   },
+  "server-plugin/military.mjs": {
+   "system": "sim_military",
+   "imports": [
+    "server-plugin/credit.mjs",
+    "server-plugin/faction-clock.mjs",
+    "server-plugin/governance.mjs",
+    "server-plugin/hazard-calendar.mjs",
+    "server-plugin/npc-life.mjs",
+    "server-plugin/organizations.mjs",
+    "server-plugin/population.mjs",
+    "server-plugin/settlement-trade.mjs",
+    "server-plugin/standing.mjs",
+    "server-plugin/titles.mjs",
+    "server-plugin/world-clock.mjs"
+   ],
+   "stateWrites": [
+    "npcs",
+    "player",
+    "settlements"
+   ],
+   "stateReads": [
+    "location",
+    "minute",
+    "records"
+   ],
+   "recordWrites": [],
+   "recordReads": [
+    "faction-assets",
+    "levy",
+    "military_service",
+    "organization",
+    "polity",
+    "war"
+   ],
+   "rules": [
+    "agriculture",
+    "military"
+   ],
+   "world": [
+    "factions",
+    "households",
+    "locations",
+    "regions",
+    "rules"
+   ],
+   "worldDirs": [],
+   "lines": 482
+  },
   "server-plugin/monster-society.mjs": {
    "system": "sim_society",
    "imports": [
@@ -14383,7 +14913,9 @@
     "records"
    ],
    "recordWrites": [],
-   "recordReads": [],
+   "recordReads": [
+    "war-danger"
+   ],
    "rules": [
     "npcLife"
    ],
@@ -14393,7 +14925,7 @@
     "rules"
    ],
    "worldDirs": [],
-   "lines": 768
+   "lines": 771
   },
   "server-plugin/npc-memory.mjs": {
    "system": "sim_npc",
@@ -14569,7 +15101,7 @@
     "households"
    ],
    "worldDirs": [],
-   "lines": 54
+   "lines": 56
   },
   "server-plugin/organization-state.mjs": {
    "system": "sim_society",
@@ -14619,7 +15151,7 @@
     "households"
    ],
    "worldDirs": [],
-   "lines": 294
+   "lines": 295
   },
   "server-plugin/pets.mjs": {
    "system": "sim_companion",
@@ -14908,9 +15440,12 @@
     "minute"
    ],
    "recordWrites": [
+    "army",
     "world_event"
    ],
-   "recordReads": [],
+   "recordReads": [
+    "war"
+   ],
    "rules": [
     "questSources",
     "quests",
@@ -14926,7 +15461,7 @@
     "rules"
    ],
    "worldDirs": [],
-   "lines": 366
+   "lines": 377
   },
   "server-plugin/quest-wildlife.mjs": {
    "system": "sim_society",
@@ -15083,9 +15618,11 @@
    "recordWrites": [],
    "recordReads": [],
    "rules": [],
-   "world": [],
+   "world": [
+    "factions"
+   ],
    "worldDirs": [],
-   "lines": 10
+   "lines": 17
   },
   "server-plugin/reputation.mjs": {
    "system": "sim_society",
@@ -15240,6 +15777,7 @@
     "server-plugin/environment.mjs",
     "server-plugin/festival.mjs",
     "server-plugin/lies.mjs",
+    "server-plugin/military.mjs",
     "server-plugin/monster-society.mjs",
     "server-plugin/npc-intelligence.mjs",
     "server-plugin/npc-life.mjs",
@@ -15258,6 +15796,7 @@
     "server-plugin/standing.mjs",
     "server-plugin/summons.mjs",
     "server-plugin/tribal-awakening.mjs",
+    "server-plugin/war-diplomacy.mjs",
     "server-plugin/weather.mjs",
     "server-plugin/wildlife-society.mjs",
     "server-plugin/wildlife.mjs",
@@ -15276,7 +15815,7 @@
     "routes"
    ],
    "worldDirs": [],
-   "lines": 145
+   "lines": 149
   },
   "server-plugin/seasonal-hazards.mjs": {
    "system": "sim_clock",
@@ -15382,6 +15921,7 @@
   "server-plugin/settlement-trade.mjs": {
    "system": "sim_economy",
    "imports": [
+    "server-plugin/agriculture.mjs",
     "server-plugin/hazard-calendar.mjs",
     "server-plugin/traits.mjs",
     "server-plugin/weather.mjs"
@@ -15401,7 +15941,9 @@
     "settlement-trade",
     "village-fiscal"
    ],
-   "recordReads": [],
+   "recordReads": [
+    "levy"
+   ],
    "rules": [
     "agriculture",
     "economy",
@@ -15414,7 +15956,7 @@
     "rules"
    ],
    "worldDirs": [],
-   "lines": 226
+   "lines": 236
   },
   "server-plugin/shop.mjs": {
    "system": "sim_economy",
@@ -15550,10 +16092,11 @@
    ],
    "rules": [],
    "world": [
-    "locations"
+    "locations",
+    "regions"
    ],
    "worldDirs": [],
-   "lines": 143
+   "lines": 147
   },
   "server-plugin/state-notices.mjs": {
    "system": "ui_scene",
@@ -15617,7 +16160,8 @@
   "server-plugin/titles.mjs": {
    "system": "sim_society",
    "imports": [
-    "server-plugin/governance.mjs"
+    "server-plugin/governance.mjs",
+    "server-plugin/military.mjs"
    ],
    "stateWrites": [
     "player",
@@ -15635,13 +16179,14 @@
     "village-fiscal"
    ],
    "rules": [
-    "governance"
+    "governance",
+    "military"
    ],
    "world": [
     "npcs"
    ],
    "worldDirs": [],
-   "lines": 141
+   "lines": 143
   },
   "server-plugin/training.mjs": {
    "system": "sim_character",
@@ -15880,6 +16425,52 @@
    "world": [],
    "worldDirs": [],
    "lines": 21
+  },
+  "server-plugin/war-diplomacy.mjs": {
+   "system": "sim_military",
+   "imports": [
+    "server-plugin/effects.mjs",
+    "server-plugin/military.mjs",
+    "server-plugin/regions.mjs",
+    "server-plugin/settlement-trade.mjs",
+    "server-plugin/standing.mjs",
+    "server-plugin/traits.mjs",
+    "server-plugin/tribal-awakening.mjs",
+    "server-plugin/world-clock.mjs",
+    "server-plugin/world-events.mjs"
+   ],
+   "stateWrites": [
+    "npcs",
+    "quotes"
+   ],
+   "stateReads": [
+    "location",
+    "minute",
+    "records"
+   ],
+   "recordWrites": [],
+   "recordReads": [
+    "diplomacy",
+    "military_service",
+    "organization",
+    "war"
+   ],
+   "rules": [
+    "military",
+    "quests",
+    "warDiplomacy"
+   ],
+   "world": [
+    "factions",
+    "households",
+    "locations",
+    "npcs",
+    "regions",
+    "routes",
+    "rules"
+   ],
+   "worldDirs": [],
+   "lines": 182
   },
   "server-plugin/weather.mjs": {
    "system": "sim_environment",
@@ -16596,7 +17187,7 @@
    "rules": [],
    "world": [],
    "worldDirs": [],
-   "lines": 108
+   "lines": 110
   },
   "extension/topbar.mjs": {
    "system": "ui_client",

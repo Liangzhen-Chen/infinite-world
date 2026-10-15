@@ -200,6 +200,8 @@ test('水绳作用于普通人物，作息实际推迟出发，到期重载与�
  const casted=await cast(s,'bind_water',npc,{source:'feature_pool'}),edge=s.world.routes.find(r=>[r.from,r.to].includes(s.location)&&r.modes.includes('walk'));
  assert.ok(edge);const destination=edge.from===s.location?edge.to:edge.from,definition=s.world.npcs.find(n=>n.id===npc);
  s.world.routes=[{id:'route_bind_test',from:s.location,to:destination,modes:['walk'],lengthKm:.5,speedKmh:3,toll:0,closedSeasons:[]}];
+ // The fixture's only road has no connection to the real disaster network.
+ delete s.world.rules.hazardClock;
  definition.schedule={default:[{start:0,end:1440,location:destination,activity:'工作',services:[]}]};s.doc.state.npcs[npc].coins=10000;
  const saved=reload(s),split=reload(s);await wait(split,1);assert.equal(split.doc.state.npcs[npc].location,s.location);assert.equal(Boolean(split.doc.state.npcs[npc].scheduleTravel),false);
  await wait(split,2);await wait(saved,3);assert.deepEqual(saved.doc.state.npcs[npc],split.doc.state.npcs[npc]);assert.equal(saved.doc.state.npcs[npc].scheduleTravel.depart,casted.expires);
