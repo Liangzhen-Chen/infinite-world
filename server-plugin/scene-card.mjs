@@ -1,4 +1,5 @@
 import {personOccupation,personName} from './entity-view.mjs';
+import {laborNotices} from './labor-market.mjs';
 import {personAge}from'./entity-view.mjs';
 import {environmentCatalog} from './environment.mjs';
 import {petView} from './pets.mjs';
@@ -102,6 +103,8 @@ export function sceneCard(engine,document,query='',index=null){
     parts.push(`【已学法术】共${learned.length}：${learned.slice(0,8).map(row=>`${row.name}（${row.id}，魔力${row.mp}）`).join('；')||'无'}`);
     const obligations=Object.values(s.obligations??{}).filter(o=>[o.promisor,o.promisee].includes('player')&&!['已完成','取消'].includes(o.status));
     const quests=Object.values(s.quests??{}).filter(q=>[q.publisher,q.taker].includes('player')&&!['已完成','取消','失败','超期'].includes(q.status)||q.status==='公开'&&q.location===s.location);
+    const hiring=/招工|打工|雇|工钱|欠薪|谋生/.test(query)?laborNotices(engine,s).slice(0,3):[];
+    if(hiring.length)parts.push('【招工告示】',...hiring.map(o=>`${o.id}｜${o.content}`));
     if(obligations.length||quests.length)parts.push('【进行中】',...[...obligations,...quests].slice(0,8).map(o=>`${o.sourceLabel?`〔${o.sourceLabel}〕`:''}${text(o.content??o.name,180)}｜${o.status??''}${o.deadline?`｜期限${engine.calendar(o.deadline).text}`:''}`));
     const contracts=Object.entries(s.records??{}).filter(([,row])=>row.category==='debt'&&row.debtor==='player'&&row.status!=='已还清'||row.category==='contract'&&row.room&&row.parties?.includes('player'));
     if(contracts.length)parts.push('【住宿与欠款】',...contracts.slice(-6).map(([id,row])=>row.category==='debt'?`${id}｜欠${name(row.creditor)} ${row.amount-row.paid}铜｜${row.status}｜到期${engine.calendar(row.deadline).text}`:`${row.name}｜${row.status}｜期限${engine.calendar(row.expires).text}`));

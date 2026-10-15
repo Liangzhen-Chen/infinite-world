@@ -12,6 +12,7 @@ import {advanceCare}from'./magic-care.mjs';
 import {advanceMindSpace}from'./magic-mind-space.mjs';
 import {advanceShadowContracts,advanceContracts}from'./contracts.mjs';
 import {advanceCredit}from'./credit.mjs';
+import {advanceLaborMarket,nextLaborMinute} from './labor-market.mjs';
 import {settleMagicAreas,nextMagicAreaMinute}from'./magic-area.mjs';
 import {milestone}from'./progression.mjs';
 import {advancePets}from'./pets.mjs';
@@ -81,6 +82,7 @@ const systems=[
   advance:(e,d,{before,after,id})=>advanceNpcObligations(d,e,before,after,id)},
  {id:'contracts',order:200,advance:(e,d,{after})=>advanceContracts(d,e,after)},
  {id:'credit',order:250,advance:(e,d,{after})=>advanceCredit(d,e,after)},
+ {id:'labor_market',order:240,layers:ADVANCE_LAYERS,nextMinute:(e,d,now)=>nextLaborMinute(e,d,now),advance:(e,d,ctx)=>advanceLaborMarket(d,e,ctx)},
  {id:'summons',order:300,advance:(e,d,{after})=>advanceSummons(d,after)},
  {id:'law',order:400,advance:(e,d,{after})=>advanceLaw(d,after,e)},
  {id:'daily',order:500,advance(e,d,{before,after}){
@@ -107,7 +109,8 @@ const systems=[
  {id:'facilities',order:890,nextMinute:(e,d,now)=>nextFacilityMinute(d.get('state'),now),advance:(e,d,ctx)=>advanceFacilities(d,e,ctx)},
  {id:'projects',order:900,advance(e,d,{days,id}){
     if(days)for(const [key,project]of Object.entries(d.get('state','projects')))if(project.type==='工程'&&project.status==='施工中'&&!isPublicProject(project)){
-        const remainingDays=Math.max(0,project.remainingDays-days);d.set(['state','projects',key],{...project,remainingDays,status:remainingDays?'施工中':'已完成'});
+        const hired=Object.values(d.get('state','records')??{}).some(r=>r.laborMarket===1&&r.project===key);
+        const remainingDays=hired?Math.ceil(project.remainingWork??project.remainingDays):Math.max(0,project.remainingDays-days);d.set(['state','projects',key],{...project,remainingDays,status:remainingDays?'施工中':'已完成'});
         if(!remainingDays)d.set(['state','projects',key,'facility'],completeFacilityProject(d,e,project));
         if(!remainingDays&&project.creator==='player')milestone(d,e,'publicContribution',key,id);
     }

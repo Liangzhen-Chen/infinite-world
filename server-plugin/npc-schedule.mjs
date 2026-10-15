@@ -7,6 +7,7 @@ import {npcSchedule}from'./npc-state.mjs';
 import {personConstraint,personConstraints}from'./entity-view.mjs';
 import {WEATHER_SEQUENCES}from'./weather.mjs';
 import {remoteScheduleBatch,regionProgressKey}from'./advance-layers.mjs';
+import {recordEmploymentAttendance,employmentActive} from './employment-state.mjs';
 // A travelling NPC occupies neither endpoint until the route has finished.
 export function scheduleAt(engine,npcId,minute,state,constraints=null){
     constraints??=state?personConstraints(engine,state):null;
@@ -76,6 +77,7 @@ export function advanceNpcSchedules(d,engine,before,after,{promote=false}={}){
     if(after<=before&&!promote)return;
     const weatherCache=new Map(engine.weatherSequences?[[WEATHER_SEQUENCES,engine.weatherSequences]]:[]),graphCache=engine.advanceGraphs??new Map(); // One immutable world/seed and time advance only.
     const constraints=personConstraints(engine,peekState(d)),routes=new Map();
+    const jobs=new Map(Object.values(peekState(d).records??{}).filter(employmentActive).map(r=>[r.worker,r]));
     const batch=Object.keys(d.get('state','remote')??{}).length?remoteScheduleBatch(engine,peekState(d),before,after,{promote}):null;
     for(const npcId of Object.keys(d.get('state','npcs'))){
         const regional=batch?.persons.get(npcId);
@@ -89,7 +91,7 @@ export function advanceNpcSchedules(d,engine,before,after,{promote=false}={}){
             }
             continue;
         }
-        if(!engine.byId.get(npcId)?.schedule&&!d.get('state','npcs',npcId,'routine'))continue;
+        if(!engine.byId.get(npcId)?.schedule&&!d.get('state','npcs',npcId,'routine')&&!jobs.has(npcId))continue;
         if(engine.npcScheduleReservations?.has(npcId))continue;
         if(d.get('state','npcs',npcId,'cognitionTravel')||engine.npcAutonomyBusy?.(peekState(d),npcId,before))continue;
         const original=d.get('state','npcs',npcId),npc={...original},path=['state','npcs',npcId];
@@ -124,7 +126,11 @@ export function advanceNpcSchedules(d,engine,before,after,{promote=false}={}){
                     npc.scheduleTravel={from:npc.location,to:slot.location,depart:cursor,arrive:cursor+route.minutes,edges:route.edges};
                     npc.location=null;activity('赶路');continue;
                 }
-            }else activity(slot.activity);
+            }else{
+                activity(slot.activity);
+                const job=jobs.get(npcId);
+                if(!regional&&job?.laborMarket&&slot.activity===(job.task??'受雇工坊生产'))recordEmploymentAttendance(d,npcId,cursor,Math.min(after,slot.until),npc.location);
+            }
             if(slot.until>after)break;
             cursor=slot.until;
         }

@@ -4,6 +4,7 @@ import {consumeGrowthDay,validateGrowthRules,validateGrowthWorld}from'./magic-gr
 import {weatherAt}from'./weather.mjs';
 import {damageFarmCrops,farmPestProfile}from'./farm-pests.mjs';
 import {preservedSpoilage}from'./magic-economy.mjs';
+import {agriculturalEmployment} from './employment-state.mjs';
 
 const key=id=>`agriculture:${id}`,path=id=>['state','records',key(id)];
 const clone=value=>structuredClone(value);
@@ -92,9 +93,10 @@ export function advanceAgriculture(d,engine,id,source,day){
     if(r.lastDay!==day-1)throw new Error('农事日结顺序不连续，拒绝重复或补算过往收成');
     const weather=weatherAt(engine,d.document.randomSeed,p.fieldLocation,day*1440+720),season=engine.calendar(day*1440).season;
     // U12: able-bodied villagers away on levy (levy:<village>) are not in the fields.
-    const normalWorkers=Math.floor(s.population*p.workerFraction),availableWorkers=Math.max(0,normalWorkers-(d.get('state','records',`levy:${id}`)?.count??0));
+    const hired=agriculturalEmployment(d.get('state'),id,day);
+    const normalWorkers=Math.floor(s.population*p.workerFraction),availableWorkers=Math.max(0,normalWorkers-(d.get('state','records',`levy:${id}`)?.count??0)-hired.unavailable);
     const laborShare=normalWorkers?availableWorkers/normalWorkers:1,processing=Math.min(Math.floor(p.processingWorkers*laborShare),availableWorkers);
-    const freshWorkers=Math.min(Math.floor(p.freshWorkers*laborShare),Math.max(0,availableWorkers-processing)),fieldWorkers=Math.min(Math.floor(p.farmWorkers*laborShare),r.tools.capacity,Math.max(0,availableWorkers-processing-freshWorkers));
+    const freshWorkers=Math.min(Math.floor(p.freshWorkers*laborShare),Math.max(0,availableWorkers-processing)),fieldWorkers=Math.min(Math.floor(p.farmWorkers*laborShare+hired.hired),r.tools.capacity,Math.max(0,availableWorkers-processing-freshWorkers));
     const fresh=Math.floor(p.freshFoodPerDay*p.freshSeasonFactors[season]*(weather?.cropMultiplier??1)*freshWorkers/p.freshWorkers);
     if(day%30===29){
         r.granary.condition=Math.max(0,r.granary.condition-1);

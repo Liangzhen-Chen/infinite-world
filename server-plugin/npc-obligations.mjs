@@ -1,6 +1,7 @@
 import {scheduleAt,advanceNpcSchedules} from './npc-schedule.mjs';
 import {waterEarthHeldUntil}from'./magic-water-earth.mjs';
 import {personConstraint,personConstraints,personSimulation}from'./entity-view.mjs';
+import {employmentReservation} from './employment-state.mjs';
 
 const live=o=>o?.reservationVersion===1&&['待履行','进行中'].includes(o.status);
 const full=(engine,id)=>personSimulation(engine,{},id).value;
@@ -14,8 +15,9 @@ export function npcObligationAt(state,id,minute=state.minute){
  return Object.values(state.obligations??{}).filter(live).filter(o=>reservedActors(o).includes(id)&&!released(o,id)&&(o.departures[id]??o.start)<=minute&&minute<o.deadline).sort((a,b)=>a.start-b.start||a.id.localeCompare(b.id))[0]??null;
 }
 export function assertNpcObligationAction(d,engine,actors,{start=d.get('state','minute'),minutes=0,location,kind='action'}={}){
- if(kind==='wait'||kind==='meeting')return;
  const finish=start+minutes;
+ if(kind!=='employment')for(const actor of actors)if(employmentReservation(d.get('state'),actor,start,minutes,engine.byId.get(actor)?.schedule?.restDays??[]))throw Error('与雇佣合同的实际工时冲突');
+ if(kind==='wait'||kind==='meeting')return;
  for(const o of Object.values(d.get('state','obligations')??{}).filter(live))for(const actor of actors){
   if(!reservedActors(o).includes(actor))continue;
   if(released(o,actor))continue;

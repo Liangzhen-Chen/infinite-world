@@ -3,6 +3,7 @@
 // These projections never persist or cache results. They grant no capabilities.
 import {actorId,actorPath} from './npc-state.mjs';
 import {npcHousehold,npcAgeAt,npcSchedule,npcServices,activeRental,beginHouseholdReads} from './npc-state.mjs';
+import {currentEmployment} from './employment-state.mjs';
 import {organizationState,memberOrganizations} from './organization-state.mjs';
 import {rankedOffice,adminLevel} from './promotion-view.mjs';
 import {faithOf} from './faith-state.mjs';
@@ -109,8 +110,14 @@ export function personTeaching(engine,state,id,entity,{stage=null}={}){
 export function personOccupation(engine,state,id){
     const offices=personOffices(engine,state,id),career=personCareer(engine,state,id);
     if(offices.length)return fact(offices.map(o=>o.value.name).join('、'),offices.map(o=>o.source).join(' + '),offices.some(o=>o.override));
+    const job=personEmployment(engine,state,id)?.value;
+    if(job&&job.status!=='罢工'&&job.starts<=(state.minute??0))return fact(`受雇${groupView(engine,state,job.owner)?.organization.value.name??personName(engine,state,job.owner).value??job.owner}：${job.recipe?engine.byId.get(job.recipe)?.name??'生产':job.task??'做工'}`,`state.records.${job.id}`,false);
     const former=officeRows(state).some(([,r])=>r.holder===id&&(r.since??0)<=(state.minute??0))||dismissed(state,id)||[...(engine.world.settlementProfiles??[])].some(p=>p.details?.governance?.head===id&&settlementHead(engine,state,p.id).value!==id);
     return former&&!career.value.vocation?fact('居民','current office vacancy',true):fact(career.value.occupation,career.source,career.override);
+}
+export function personEmployment(engine,state,id,minute=state.minute){
+    const row=currentEmployment(state,actorId(engine.world,id),minute);
+    return row?fact(row,`state.records.${row.id}`,false):null;
 }
 // Public-facing roles exclude household membership and private associations.
 export function personPublicRole(engine,state,id){
@@ -303,7 +310,7 @@ export function personView(engine,state,requested){
         settlement:fact(settlement,settlementSource,Boolean(residence||household.override||actor?.settlement)),
         location:fact(location,id==='player'?'state.location':actor&&Object.hasOwn(actor,'location')?`${root}.location`:`catalog.${id}.location`,Boolean(actor)),
         organizations:socialIdentities(engine,state,id),faith:faithOf(engine,state,id),
-        offices:personOffices(engine,state,id),career:personCareer(engine,state,id),occupation:personOccupation(engine,state,id),remuneration:personRemuneration(engine,state,id),
+        offices:personOffices(engine,state,id),career:personCareer(engine,state,id),occupation:personOccupation(engine,state,id),employment:personEmployment(engine,state,id),remuneration:personRemuneration(engine,state,id),
         titles:recordFacts(state,r=>r.category==='title'&&actorId(engine.world,r.holder)===id&&r.status!=='已除爵'),
         notables:recordFacts(state,r=>r.category==='notable'&&actorId(engine.world,r.holder)===id&&r.status==='在册'),
         legal:legalIdentities(engine,state,id),
@@ -364,7 +371,7 @@ export function personBusiness(engine,state,id){
         (base.services??[]).includes('trade')||(base.serviceCatalog??[]).some(s=>s.kind==='trade');
     const rental=activeRental(state,id),rentedWork=rental&&rental.use!=='home'?rental.subject:null;
     const location=rentedWork??actor?.workplace?.location??rule?.location??(changed?slots[0]?.location:null)??base.workplace?.location??base.location;
-    const employed=Object.values(state.records??{}).some(r=>r.kind==='workshop'&&r.worker===id&&['有效','要求加薪'].includes(r.status)&&r.starts<=state.minute&&state.minute<r.deadline);
+    const job=personEmployment(engine,state,id)?.value,employed=job&&job.status!=='罢工'&&job.starts<=state.minute;
     const open=Boolean(actor)&&!employed&&!['死亡','濒死','昏迷','患病'].includes(actor.status)&&!personConstraint(engine,state,id)&&!actor.caring&&!actor.levy&&!actor.scheduleTravel&&!actor.cognitionTravel&&trades&&!(actor.residence?.workChanged&&!vocation);
     return {keeper:fact(id,'identity'),location:fact(location,changed?`state.npcs.${id} + npc-state.npcSchedule`:`catalog.${id}.workplace`,changed),
         settlement:placeSettlement(engine,state,location),shopType:fact(actor?.shopType??rule?.shopType??base.shopType,changed?`state.npcs.${id} + rules.npcGrowth.vocations`:`catalog.${id}.shopType`,changed),
