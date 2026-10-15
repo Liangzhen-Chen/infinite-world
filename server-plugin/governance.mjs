@@ -1,6 +1,7 @@
 import {reviewUpperOffice} from './high-nobility.mjs';
 import {domainAuthority} from './noble-state.mjs';
 import {entityTransition} from './entity-transitions.mjs';
+import {qualificationForApplication} from './local-exams.mjs';
 import {personOffices,personRegistrar,settlementHead,personSimulation} from './entity-view.mjs';
 import {digest} from './storage.mjs';
 import {npcPresenceAt} from './npc-cognition.mjs';
@@ -335,6 +336,7 @@ function appraise(engine,state,settlement,office){
     return {reasons,points,head,views};
 }
 function apply(d,engine,args,eventId,settlement){
+    const qualification=args.sourceEvent?qualificationForApplication(engine,d.get('state'),args.sourceEvent,settlement):null;
     const office=findOffice(engine,args.name);
     if(!office.settlements.includes(settlement))throw Error('该官职不辖此村');
     const {charter,registrar:clerk}=registrar(d,engine),now=d.get('state','minute');
@@ -343,7 +345,7 @@ function apply(d,engine,args,eventId,settlement){
     if(Object.values(state.records??{}).some(r=>r.category==='governance_application'&&r.status==='待审定'&&r.settlement===settlement&&r.office===office.id))throw Error('同一官职已有待审定的申请');
     const id=`governance_application:${eventId}`;unique(d,id);
     const row={category:'governance_application',id,applicant:'player',settlement,office:office.id,officeName:office.name,registrar:clerk,institution:charter.institution,
-        filedAt:now,due:now+charter.decisionAfterDays*DAY,status:'待审定',source:office.source,sourceEvent:eventId};
+        filedAt:now,due:now+charter.decisionAfterDays*DAY,status:'待审定',source:office.source,sourceEvent:eventId,...(qualification?{qualification}:{})};
     d.set(path(id),row);
     return {application:id,pending:row,note:`公署按章程于登记满${charter.decisionAfterDays}日后审定；递件人只登记，不当场许诺。`};
 }

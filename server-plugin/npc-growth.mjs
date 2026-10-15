@@ -1,3 +1,4 @@
+import {knowsKnowledge} from './education-state.mjs';
 import {entityTransition,businessSnapshot,businessTransitions} from './entity-transitions.mjs';
 // NPC skill growth comes only from a real lesson by the player or from a
 // finished autonomous work action. Both are bounded per day and per skill, and
@@ -52,16 +53,18 @@ const knowsRecipe=(state,id,recipe)=>recipe.teachers?.includes(id)||Boolean(stat
 // world_learn with student: the player teaches a present NPC a skill or recipe.
 export function teachNpc(d,engine,args,eventId){
  const r=rules(engine).teach,state=d.get('state'),student=engine.resolve(args.student,'npc'),npc=state.npcs[student];
- if(args.source!==undefined&&!['player','玩家'].includes(args.source))throw Error('传授人物时source须为player');
+ const teacherId=args.source===undefined||['player','玩家'].includes(args.source)?'player':engine.resolve(args.source,'npc');
+ if(teacherId===student)throw Error('不能向自己授业');
+ if(teacherId!=='player'&&(!state.npcs[teacherId]||state.npcs[teacherId].location!==state.location||unable.includes(state.npcs[teacherId].status)||personConstraint(engine,state,teacherId)))throw Error('先生须清醒在场');
  const entity=engine.resolve(args.entity,args.kind),kind=entity.split('_')[0],catalog=engine.byId.get(entity);
  if(!['skill','recipe'].includes(kind))throw Error('只能向人物传授技能或配方');
- if(!full(engine,student)||!npc)throw Error('这位人物没有独立成长记录');
+ if(!engine.byId.get(student)||!npc)throw Error('这位人物没有独立成长记录');
  if(npc.location!==state.location)throw Error('学生不在场');
  if(unable.includes(npc.status))throw Error(`学生此刻${npc.status}，不能受教`);
  if(personConstraint(engine,state,student))throw Error('学生正在依法拘留，不能受教');
  const minutes=kind==='recipe'?catalog.learnMinutes??r.minutes:r.minutes,companion=state.player.companions?.includes(student);
- engine.assertNpcObligationAction?.(d,['player',student],{minutes,location:state.location,kind:'teach'});
- engine.assertNpcAutonomyAction?.(state,[student],{minutes});
+ engine.assertNpcObligationAction?.(d,[teacherId,student],{minutes,location:state.location,kind:'teach'});
+ engine.assertNpcAutonomyAction?.(state,[student,...teacherId!=='player'?[teacherId]:[]],{minutes});
  if(!companion)for(let cursor=state.minute;cursor<state.minute+minutes;){
   const slot=scheduleAt(engine,student,cursor,state);if(!slot)break;
   if(slot.location!==npc.location||sleeping.test(slot.activity))throw Error('学生作息没有完整的清醒空闲时段');
@@ -71,23 +74,23 @@ export function teachNpc(d,engine,args,eventId){
  let gain=0,skill;
  if(kind==='skill'){
   skill=entity;
-  if(!state.skills?.[skill])throw Error('你没有掌握这项技能');
-  const teacher=effectiveProficiency(d,engine,skill),current=npcProficiency(engine,state,student,skill);
+  if(!knowsKnowledge(engine,state,teacherId,skill))throw Error('你没有掌握这项技能');
+  const teacher=teacherId==='player'?effectiveProficiency(d,engine,skill):npcProficiency(engine,state,teacherId,skill),current=npcProficiency(engine,state,student,skill);
   gain=Math.min(r.gain,teacher-r.teacherMargin-current,room(engine,state,student,skill));
   if(gain<=0)throw Error('学生已接近你的水平或达到成长上限，再教也不会进步');
  }else{
-  if(!state.recipes?.[entity])throw Error('你没有学会这个配方');
+  if(!knowsKnowledge(engine,state,teacherId,entity))throw Error('你没有学会这个配方');
   if(knowsRecipe(state,student,catalog))throw Error('学生已经会这个配方');
   if(npcProficiency(engine,state,student,catalog.skill)<(catalog.minimumProficiency??0))throw Error('学生的相关技能不足以学这个配方');
  }
- advanceWithNpcParticipants(d,engine,minutes,eventId,[student]);
+ advanceWithNpcParticipants(d,engine,minutes,eventId,[student,...teacherId!=='player'?[teacherId]:[]]);
  if(unable.includes(d.get('state','npcs',student,'status')))throw Error('教学中途学生失去行动能力');
  const at=d.get('state','minute'),mark=today(d.get('state'),student,state.minute);
  if(kind==='skill')gain=grow(d,engine,student,skill,gain,'teach');
- else d.set(['state','npcs',student,'recipes',entity],{source:{type:'player'},learnedAt:at,sourceEvent:eventId});
+ else d.set(['state','npcs',student,'recipes',entity],{source:{type:teacherId==='player'?'player':'teacher',id:teacherId},learnedAt:at,sourceEvent:eventId});
  d.set(['state','npcs',student,'growth','today'],{...mark,teach:mark.teach+1});
- const name=engine.byId.get(student).name,summary=kind==='skill'?`跟玩家学了${minutes}分钟${catalog.name}，熟练度提高${gain}`:`跟玩家学会配方${catalog.name}`;
- remember(d,engine,student,eventId,`${name}${summary}。`,['player',student]);
+ const name=engine.byId.get(student).name,teacherName=teacherId==='player'?'玩家':engine.byId.get(teacherId).name,summary=kind==='skill'?`跟${teacherName}学了${minutes}分钟${catalog.name}，熟练度提高${gain}`:`跟${teacherName}学会配方${catalog.name}`;
+ remember(d,engine,student,eventId,`${name}${summary}。`,[teacherId,student]);
  // 被教导是灵智成长的来源之一；学会新配方算接触新事物，比熟练度增长略多。
  growIntelligence(d,engine,student,kind==='recipe'?GROWTH_POINTS.teachRecipe:GROWTH_POINTS.teachSkill,'教导',eventId);
  d.say(`${name}${summary}`);

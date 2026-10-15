@@ -92,7 +92,7 @@ export function personCareer(engine,state,requested){
     const id=actorId(engine.world,requested),base=baseOf(engine,state,id),actor=at(state,actorPath(engine.world,id).slice(1));
     const vocation=actor?.vocation,def=engine.rules.npcGrowth?.vocations?.find(v=>v.id===vocation?.id);
     const services=id==='player'?[]:vocation?(def?.teaches??vocation.services??[]):base?.services??[];
-    const roles=id==='player'?[state.professions?.combat,...state.professions?.life??[],...state.professions?.hidden??[]].filter(Boolean):[...new Set([...services.filter(s=>s.startsWith('profession_')),...(!vocation?[base?.combatProfession,...base?.lifeProfessions??[]].filter(Boolean):[])])];
+    const roles=id==='player'?[state.professions?.combat,...state.professions?.life??[],...state.professions?.hidden??[]].filter(Boolean):[...new Set([...Object.keys(actor?.certifications??{}),...services.filter(s=>s.startsWith('profession_')),...(!vocation?[base?.combatProfession,...base?.lifeProfessions??[]].filter(Boolean):[])])];
     const apprenticeships=id==='player'?Object.entries(state.careers??{}).filter(([,r])=>r.initiation?.status==='守戒中').map(([r])=>r):[];
     return fact({occupation:vocation?(def?.name??vocation.name):actor?.occupation??base?.occupation??'',roles,apprenticeships,services:[...services],vocation:def??vocation??null},
         id==='player'?'state.professions + state.careers':vocation?`state.npcs.${id}.vocation + rules.npcGrowth.vocations`:`catalog.${id}.services`,Boolean(vocation||id==='player'));

@@ -77,7 +77,7 @@ import {recordFinanceSale}from'./finance-assets.mjs';
 import {assessTradeTax}from'./finance-tax.mjs';
 import {initializeR1,planR1,planPreR1Partitions}from'./migrations/r1.mjs';
 import {materializeWildlifeHabitats}from'./wildlife-habitats.mjs';
-import {unfoldPopulationAt,acceptPopulationProfile,settlePopulationLayers,populationLayersFresh}from'./population.mjs';
+import {unfoldPopulationAt,acceptPopulationProfile,settlePopulationLayers,populationLayersFresh,populationPlan}from'./population.mjs';
 import {remoteEngine,unfoldRemoteAt}from'./remote-generation.mjs';
 import {advanceNeedsSteps,nextAdvanceMinute,runAdvance}from'./advance-registry.mjs';
 import {beginHouseholdReads}from'./npc-state.mjs';
@@ -131,6 +131,7 @@ class Draft {
 }
 export class WorldEngine {
     constructor(world) {
+        this.populationPlan=populationPlan;
         // K8: derived habitats join the authored ones before any consumer reads them.
         materializeWildlifeHabitats(world);
         this.world = world; this.rules = world.rules;
@@ -260,7 +261,7 @@ export class WorldEngine {
         settlePopulationLayers(d,session);
         if(tool==='check')detail.actionScope={kind:'judgement',healthChanged:false,inventoryChanged:false,feePaid:0,
             note:'仅结算判断或对抗，并履行已引用的协助；未伤人、毁物或制造。不得从骰点虚构这些变化。'};
-        return { patches:d.patches,result:{ok:true,...detail,...(remote?{remote}:{}),...(population?{population}:{}),legalProcedureVersion:1,...(!session.replaying||session.replayResult?.npcCrimeVersion===NPC_CRIME_VERSION?{npcCrimeVersion:NPC_CRIME_VERSION}:{}),worldEventVersion:WORLD_EVENT_VERSION,...(intelligenceFresh(session)?{npcIntelligenceVersion:INTELLIGENCE_VERSION}:{}),...(factionClockRules(session).length?{factionClockVersion:1}:{}),...(session.rules.questSources?{questSourcesVersion:QUEST_SOURCES_VERSION}:{}),...(session.rules.tribalAwakening?{tribalAwakeningVersion:TRIBAL_AWAKENING_VERSION}:{}),...(session.rules.military?{militaryVersion:MILITARY_VERSION}:{}),...(session.rules.warDiplomacy?{warVersion:WAR_VERSION}:{}),minute:d.get('state','minute'),messages:d.messages,
+        return { patches:d.patches,result:{ok:true,...detail,...(remote?{remote}:{}),...(population?{population}:{}),legalProcedureVersion:1,...(!session.replaying||session.replayResult?.educationVersion===1?{educationVersion:1}:{}),...(!session.replaying||session.replayResult?.npcCrimeVersion===NPC_CRIME_VERSION?{npcCrimeVersion:NPC_CRIME_VERSION}:{}),worldEventVersion:WORLD_EVENT_VERSION,...(intelligenceFresh(session)?{npcIntelligenceVersion:INTELLIGENCE_VERSION}:{}),...(factionClockRules(session).length?{factionClockVersion:1}:{}),...(session.rules.questSources?{questSourcesVersion:QUEST_SOURCES_VERSION}:{}),...(session.rules.tribalAwakening?{tribalAwakeningVersion:TRIBAL_AWAKENING_VERSION}:{}),...(session.rules.military?{militaryVersion:MILITARY_VERSION}:{}),...(session.rules.warDiplomacy?{warVersion:WAR_VERSION}:{}),minute:d.get('state','minute'),messages:d.messages,
             ...(session.rules.questSources?.wildlife?.length&&villageWildlifeFresh(session)?{villageWildlifeVersion:1}:{}),
             ...(!session.replaying||session.replayResult?.sovereigntyVersion===1?{sovereigntyVersion:1}:{}),
             ...(!session.replaying||session.replayResult?.laborMarketVersion===1?{laborMarketVersion:1}:{}),

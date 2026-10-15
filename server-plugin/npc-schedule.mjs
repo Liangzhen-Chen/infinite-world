@@ -1,3 +1,4 @@
+import {educationSlot,educationCourses,courseWindow} from './education-state.mjs';
 import {facilityView} from './facility-state.mjs';
 // Routine movement is recorded in the same event as elapsed world time.
 import {waterEarthHeldUntil}from'./magic-water-earth.mjs';
@@ -10,16 +11,34 @@ import {remoteScheduleBatch,regionProgressKey}from'./advance-layers.mjs';
 import {recordEmploymentAttendance,employmentActive} from './employment-state.mjs';
 // A travelling NPC occupies neither endpoint until the route has finished.
 export function scheduleAt(engine,npcId,minute,state,constraints=null){
+    const previous=engine.educationCourseContext;
+    if(!previous&&engine.educationScheduleCourses&&state){
+        const day=Math.floor(minute/1440);let courses=engine.educationScheduleCourses.get(day);
+        if(!courses){courses=educationCourses(engine,{...state,minute});engine.educationScheduleCourses.set(day,courses);}
+        engine.educationCourseContext=courses;
+    }
+    try{return scheduledSlot(engine,npcId,minute,state,constraints);}finally{engine.educationCourseContext=previous;}
+}
+function scheduledSlot(engine,npcId,minute,state,constraints=null){
     constraints??=state?personConstraints(engine,state):null;
     const hold=state&&personConstraint(engine,state,npcId,minute,constraints)?.value;
     if(hold)return{location:hold.location,activity:'依法拘留',services:[],until:Math.min(hold.expires??Infinity,(Math.floor(minute/1440)+1)*1440)};
-    const schedule=npcSchedule(engine,state,npcId,minute,constraints);if(!schedule)return festivalScheduleAt(engine,state,npcId,minute,null);
+    const lesson=state&&educationSlot(engine,state,npcId,minute);
+    if(lesson&&!state.npcs[npcId]?.levy&&!state.npcs[npcId]?.caring)return lesson;
+    const schedule=npcSchedule(engine,state,npcId,minute,constraints);if(!schedule){
+        if(state){const next=educationCourses(engine,state).filter(c=>[c.teacher,...c.students].includes(npcId)).map(c=>courseWindow(c,minute)?.start).filter(at=>at>minute);
+        if(next.length)return {location:state.npcs[npcId]?.location,activity:'日常起居',services:[],until:Math.min(...next)};}
+        if(state&&educationCourses(engine,state).some(c=>c.students.includes(npcId))){const home=engine.byId.get(npcId)?.home?.location??state.npcs[npcId]?.location;return {location:home,activity:'日常起居',services:[],until:(Math.floor(minute/1440)+1)*1440};}
+        return festivalScheduleAt(engine,state,npcId,minute,null);
+    }
     const calendar=engine.calendar(minute),variant=calendar.market?'market':schedule.restDays?.includes(calendar.day)?'rest':'default';
     const seasonal=schedule.seasonal?.[String(calendar.season)];
     const slots=seasonal?.[variant]??schedule[variant]??seasonal?.default??schedule.default;
     const offset=minute%1440,slot=slots?.find(row=>row.start<=offset&&offset<row.end);
     if(!slot)throw new Error(`${npcId}的作息没有覆盖当前钟点`);
-    return festivalScheduleAt(engine,state,npcId,minute,{...slot,until:minute-offset+slot.end,variant});
+    let until=minute-offset+slot.end;
+    if(state)for(const c of educationCourses(engine,state))if([c.teacher,...c.students].includes(npcId)){const w=courseWindow(c,minute);if(w&&w.start>minute)until=Math.min(until,w.start);}
+    return festivalScheduleAt(engine,state,npcId,minute,{...slot,until,variant});
 }
 
 const incapacitated=npc=>['死亡','濒死','昏迷','患病'].includes(npc.status);
@@ -74,6 +93,10 @@ export function assertNpcService(d,engine,npcId,service,minutes){
 // it only before this NPC's writes; it does not make the draft recopy state.
 const peekState=d=>typeof d.peek==='function'?d.peek('state'):d.get('state');
 export function advanceNpcSchedules(d,engine,before,after,{promote=false}={}){
+    const previous=engine.educationScheduleCourses;engine.educationScheduleCourses??=new Map();
+    try{return settleSchedules(d,engine,before,after,{promote});}finally{engine.educationScheduleCourses=previous;}
+}
+function settleSchedules(d,engine,before,after,{promote=false}={}){
     if(after<=before&&!promote)return;
     const weatherCache=new Map(engine.weatherSequences?[[WEATHER_SEQUENCES,engine.weatherSequences]]:[]),graphCache=engine.advanceGraphs??new Map(); // One immutable world/seed and time advance only.
     const constraints=personConstraints(engine,peekState(d)),routes=new Map();
@@ -128,6 +151,7 @@ export function advanceNpcSchedules(d,engine,before,after,{promote=false}={}){
                 }
             }else{
                 activity(slot.activity);
+                engine.educationAttendance?.get(npcId)?.push({start:cursor,end:Math.min(after,slot.until),location:npc.location});
                 const job=jobs.get(npcId);
                 if(!regional&&job?.laborMarket&&slot.activity===(job.task??'受雇工坊生产'))recordEmploymentAttendance(d,npcId,cursor,Math.min(after,slot.until),npc.location);
             }

@@ -1,5 +1,6 @@
 import {advanceUpperAppointments,advanceRoyalService} from './high-nobility.mjs';
 import {advanceNations} from './nation-founding.mjs';
+import {advanceEducation,nextEducationMinute,prepareEducation} from './education.mjs';
 import {advanceFacilities,nextFacilityMinute,completeFacilityProject} from './facilities.mjs';
 // Time-advance registry. Every system that reacts to elapsed time registers here:
 //   {id, order, nextMinute?(engine,d,now), active?(engine,d,now), advance(engine,d,ctx)}
@@ -77,11 +78,13 @@ export const advanceNeedsSteps=(engine,d,now)=>advanceRegistry.some(system=>syst
 export function runAdvance(engine,d,ctx){
     const prior=engine.advanceLayerContext;
     engine.advanceLayerContext=Object.keys(d.get('state','remote')??{}).length?advanceLayerPlan(engine,d.get('state')):null;
-    try{for(const system of advanceRegistry)system.advance(engine,d,ctx);}finally{engine.advanceLayerContext=prior;}
+    try{for(const system of advanceRegistry)system.advance(engine,d,ctx);}finally{engine.advanceLayerContext=prior;delete engine.educationCourseContext;delete engine.educationAttendance;}
 }
 
 // Order mirrors the original hand-written WorldEngine.advanceInterval sequence.
 const systems=[
+ {id:'education_enrollment',order:50,advance:(e,d,ctx)=>prepareEducation(d,e,ctx)},
+ {id:'education',order:1090,nextMinute:(e,d,now)=>nextEducationMinute(e,d,now),advance:(e,d,ctx)=>advanceEducation(d,e,ctx)},
  {id:'npc_obligations',order:100,layers:ADVANCE_LAYERS,active:e=>fullNpcs(e),nextMinute:(e,d,now)=>nextNpcObligationMinute(d.get('state'),now),
   advance:(e,d,{before,after,id})=>advanceNpcObligations(d,e,before,after,id)},
  {id:'contracts',order:200,advance:(e,d,{after})=>advanceContracts(d,e,after)},

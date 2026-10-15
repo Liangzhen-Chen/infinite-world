@@ -204,7 +204,7 @@ function settleShift(d,e,row,at){
     financeEvent(d,e,{id:`${row.id}:${at}`,actor:row.worker,target:row.owner,location:row.location,minute:at,value:pay.paid,tags:['employment',pay.arrears?'wage_arrears':'wage']});
     return shift;
 }
-function settleArrears(d,e,row,minute){
+export function settleArrears(d,e,row,minute){
     const debts=outstanding(d.get('state'),row.id);if(!debts.length)return false;
     const earliest=Math.min(...debts.map(r=>r.createdAt));
     for(const debt of debts)if(debt.deadline<=minute&&!debt.defaulted){
@@ -288,7 +288,7 @@ export function laborNotices(e,s,location=s.location){
 export function laborTrade(d,e,args,id){
     const s=d.get('state'),now=s.minute;
     if(args.operation==='labor_inspect')return {notices:laborNotices(e,s),contracts:rows(s).filter(r=>r.laborMarket===1&&placeSettlement(e,s,r.location).value===placeSettlement(e,s,s.location).value)};
-    const row=s.records?.[args.contract];if(row?.laborMarket!==1||row.kind!=='workshop')throw Error('需要已有的NPC雇佣合同');
+    const row=s.records?.[args.contract];if(row?.laborMarket!==1&&row?.education!==1||row.kind!=='workshop')throw Error('需要已有的NPC雇佣合同');
     if(row.location!==s.location)throw Error('须到履约地点介入合同');
     if(args.operation==='labor_guarantee'){
         if(!employmentActive(row))throw Error('雇佣已结束');
@@ -298,7 +298,7 @@ export function laborTrade(d,e,args,id){
     if(args.consent!==true||s.npcs[row.worker]?.location!==s.location||!able(s,row.worker)||/睡眠|睡觉|熟睡/.test(s.npcs[row.worker]?.activity??'')||personConstraint(e,s,row.worker))throw Error('须由清醒在场的雇工同意');
     if(args.operation==='labor_mediate'){
         const representative=s.npcs[row.owner]?row.owner:groupRepresentative(e,s,row.owner);
-        if(!representative||s.npcs[representative]?.location!==s.location||!able(s,representative)||personConstraint(e,s,representative))throw Error('须由当前雇主或代表在场同意');
+        if(!representative||representative!=='player'&&(s.npcs[representative]?.location!==s.location||!able(s,representative))||personConstraint(e,s,representative))throw Error('须由当前雇主或代表在场同意');
         const debts=outstanding(s,row.id),due=debts.reduce((n,r)=>n+r.amount-r.paid,0);
         if(financeBalance(d,e,row.owner)+(row.escrow??0)<due)throw Error('现有款项不足以清偿欠薪');
         let escrow=row.escrow??0;
