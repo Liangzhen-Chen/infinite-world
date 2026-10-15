@@ -33,7 +33,7 @@ function safeFund(d,id,category,extra={}){
 }
 function evidenceScore(d,row){
     const witnesses=new Set();let score=0;
-    let confessed=false,possessed=false,contracted=false;
+    let confessed=false,possessed=false,contracted=false,ledgered=false;
     for(const evidence of row.evidence??[]){
         if(evidence.disproven||evidence.falseStatement||evidence.invalidatedAt!==undefined)continue;
         if(evidence.kind==='eyewitness'){
@@ -45,6 +45,8 @@ function evidenceScore(d,row){
         else if(evidence.kind==='possession'&&evidence.unit===row.stolen?.unit&&!possessed&&d.get('state','itemInstances',evidence.unit,'legalClaims')?.some(claim=>claim.case===row.id)){score++;possessed=true;}
         // A signed loan the debtor left unpaid is documentary proof while the debt stands.
         else if(evidence.kind==='contract'&&!contracted){const debt=d.get(...path(evidence.debt));if(debt?.category==='debt'&&debt.defaulted&&debt.status!=='已还清'){score+=2;contracted=true;}}
+        // U10: the village's magic ledger records the uncovered casts.
+        else if(evidence.kind==='ledger'&&!ledgered&&d.get(...path(evidence.record))?.category==='magic_economy'){score+=2;ledgered=true;}
     }
     return score;
 }
@@ -83,6 +85,18 @@ export function registerCreditDefault(d,engine,{debt,row,value,minute}){
     d.set(path(id),{category:'legal_case',id,law:code.id,procedureVersion:1,settlement:code.settlement??null,faction:code.faction??null,sourceEvent:row.source,witnesses:[],
         offender:'player',victim:row.keeper??row.creditor,...(row.bank?{bank:row.bank}:{}),debt,offense:'debt_default',value,stolen:null,location:row.location,minute,
         status:'已报案',reported:true,receiver,reportedAt:minute,evidence:[{kind:'contract',debt,minute}]});
+    if(d.get('state','npcs',receiver))knowledge(d,receiver,id,minute);
+    return id;
+}
+// U10: a cast past the village's fee, licence or limit (magic-economy.mjs) is
+// filed by the code's officer; the village ledger is the evidence.
+export function registerMagicViolation(d,engine,{location,settlement,offense,value,minute,sourceEvent}){
+    const code=codeFor(engine,location);if(!code)return null;
+    const id=`legal_case:magic:${sourceEvent}`;if(d.get(...path(id)))return id;
+    const receiver=lawAuthorities(engine,d.get('state'),code)[0];if(!receiver)return null;
+    d.set(path(id),{category:'legal_case',id,law:code.id,procedureVersion:1,settlement:code.settlement??settlement,faction:code.faction??null,sourceEvent,witnesses:[],
+        offender:'player',victim:settlement,offense,value,stolen:null,location,minute,status:'已报案',reported:true,receiver,reportedAt:minute,
+        evidence:[{kind:'ledger',record:`magic-economy:${settlement}`,minute}]});
     if(d.get('state','npcs',receiver))knowledge(d,receiver,id,minute);
     return id;
 }
@@ -410,7 +424,7 @@ export function lawAction(d,args,eventId){
         const score=evidenceScore(d,row);this.advance(d,code.hearingMinutes,eventId);
         if(!awake(d.get('state','npcs',judge)))return{success:false,effectFailed:'审理完成前审判者无法履约'};
         if(score<code.evidenceRequired){d.set(path(row.id),{...row,status:'证据不足'});return{case:row.id,convicted:false,evidenceScore:score};}
-        const penalty=code.penalties[row.offense]??this.rules.law.spellConsent?.penalties?.[row.offense]??this.rules.law.bribery?.penalties?.[row.offense]??this.rules.law.activityPenalties?.[row.offense]??(row.offense==='debt_default'?this.rules.economy?.credit?.loan?.defaultPenalty:undefined);if(!penalty)throw new Error('本案罪名没有判罚规则');
+        const penalty=code.penalties[row.offense]??this.rules.law.spellConsent?.penalties?.[row.offense]??this.rules.law.bribery?.penalties?.[row.offense]??this.rules.law.activityPenalties?.[row.offense]??(row.offense==='debt_default'?this.rules.economy?.credit?.loan?.defaultPenalty:undefined)??this.rules.magicEconomy?.penalties?.[row.offense];if(!penalty)throw new Error('本案罪名没有判罚规则');
         const fine=penalty.baseFine+Math.ceil(row.value*penalty.valueMultiplier);
         const judgment={judge,minute:d.get('state','minute'),fine,compensation:row.value,evidenceScore:score,
             communityMinutes:Math.min(code.maximumSentenceMinutes,fine*code.communityMinutesPerCopper),prisonMinutes:Math.min(code.maximumSentenceMinutes,fine*code.prisonMinutesPerCopper)};
