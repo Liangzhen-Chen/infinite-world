@@ -1,6 +1,6 @@
 {
   "id": "site_ice_echo",
-  "fingerprint": "38f7d3fee90fc8427afb7f73433ccfc4245e9f94a4b6c280783b00d03f50e670",
+  "fingerprint": "270f8c0ff08cfd333ead719b4041b2c83ea57ebbd36bb73c2f150e4eb931c461",
   "status": "passed",
   "attempts": 0,
   "draft": {
@@ -38,7 +38,7 @@
     ],
     "resources": [
       "白皮桦的树皮",
-      "窄缝里的凝霜"
+      "窄缝里凿下的冰块"
     ],
     "truths": [
       "裂谷西侧的岩面是在冰户凿冰时塌的，塌岩下的冰镐和冰橇说明当时有人正在窄缝里干活。东侧回声又脆又长，是因为那边的窄缝还空着、冰还在；冰户们后来去白冠高林北坡另找近处的冰，就是因为不敢再进这道裂谷。"
@@ -51,17 +51,17 @@
   "warnings": [],
   "feedback": null,
   "frozenCandidate": {
-    "entryHash": "166b0c9b149099a35355f724c06cff7e48d4e16c968c3d582bf8caab32d62e50",
-    "draftHash": "205eba2a3e47a370888e63e92dd7f5c2292a8dbb453f25d5130fa9fa77273633"
+    "entryHash": "45912d8d5ef5c5f4b2d497d993866eaf4272a793fbb511354fdd3a6ba99f62a6",
+    "draftHash": "e9e92a3a64d8577d648ef65fbfb8bea8171706ef2dd78e81975cbb251f3c165b"
   },
   "responseEvidence": [
     {
       "phase": "review",
       "attempt": 1,
-      "requestId": "ba47328f-9068-4b0c-bdbf-ddcc36d51f62",
-      "file": "budget-responses/ba47328f-9068-4b0c-bdbf-ddcc36d51f62.json",
-      "requestHash": "017bb970bbcfc5d47aba64c4d781a02ff3b8ba9a574cef98e3fd358e5fcd6929",
-      "responseHash": "ad576114d0d73b82f5ea3ffc2d7d716167a9aca03117e7ea5f470de96778112e"
+      "requestId": "555e7d3c-cf61-4229-b0cf-0f297bec48d6",
+      "file": "budget-responses/555e7d3c-cf61-4229-b0cf-0f297bec48d6.json",
+      "requestHash": "b1a07ef0435983a42da85c8272d6104facbe16c1a0f5df7bd5f94a0b415f1b06",
+      "responseHash": "47749ac7933ef4a0a53e22c7efc109ef27d2241bb970641a9542fa07d0c6755a"
     }
   ],
   "measurements": [
@@ -74,15 +74,15 @@
         "completion_tokens": 7,
         "total_tokens": 1800,
         "prompt_tokens_details": {
-          "cached_tokens": 256
+          "cached_tokens": 512
         },
-        "prompt_cache_hit_tokens": 256,
-        "prompt_cache_miss_tokens": 1537
+        "prompt_cache_hit_tokens": 512,
+        "prompt_cache_miss_tokens": 1281
       },
-      "costUpperYuan": 0.00314024,
-      "cumulativeUpperYuan": 0.018755439999999998,
-      "latencyMs": 644.8945,
-      "timestamp": "2026-10-15T05:12:34.066Z"
+      "costUpperYuan": 0.00263848,
+      "cumulativeUpperYuan": 0.07112975999999999,
+      "latencyMs": 946.4952,
+      "timestamp": "2026-10-15T06:28:25.012Z"
     }
   ]
 }

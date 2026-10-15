@@ -1,6 +1,6 @@
 {
   "index": 0,
-  "fingerprint": "bcb5cc57875dd9aa7d343ab44f6ddccc3ba39edd691108218969080886813760",
+  "fingerprint": "410383f8b5a888949f9670ef14cb76f4f16ea540dca9da23bd872066c0960082",
   "count": 20,
   "passed": 20,
   "ids": [
@@ -30,11 +30,11 @@
   "pending": [],
   "flagged": [],
   "sample": [
-    "site_red_fold",
-    "site_peat_islets",
-    "site_w5_scent_watch",
     "site_rainstone_basin",
-    "site_w5_ice_cellar"
+    "site_silt_canyon",
+    "site_peat_islets",
+    "site_w5_ice_cellar",
+    "site_crown_firn"
   ],
   "l4": {
     "approved": true,
@@ -57,8 +57,16 @@
         "note": "樟叶记号与画叉整树说明盆心禁伐来由，与旧绳桥台段首断桥一事相连。"
       },
       {
+        "id": "site_silt_canyon",
+        "note": "井圈埋砂、灌木根下湿土，说明泉没干只是被山洪砂埋，清砂即可找回旧商道取水处，可做的事明确。"
+      },
+      {
+        "id": "site_crown_firn",
+        "note": "巡山差划的放牧界被独角兽自己守着，界石倒向北边的细节与冠雪郡夏季巡山登记一致。"
+      },
+      {
         "id": "site_w5_ice_cellar",
-        "note": "“灯灭人寻”解释雪灯镇口高杆灯的来历，冬季封路，冻住的窖门可用火解。"
+        "note": "复核：冰架存冰改登记为清水（化冰），不再借用雾魂材料；“灯灭人寻”与镇口高杆灯相连。"
       }
     ],
     "wave": [
@@ -185,7 +193,7 @@
     ],
     "waveMean": 4.2
   },
-  "costUpperYuan": 0.06849127999999999,
+  "costUpperYuan": 0.07655071999999999,
   "manualRatio": 0,
   "needsSystemicRepair": false
 }

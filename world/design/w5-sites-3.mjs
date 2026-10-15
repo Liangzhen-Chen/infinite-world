@@ -1,7 +1,7 @@
 // T115 遗迹据点第三组：九省纲要里有道路连接的远处巢区与远方据点，加两处聚居地附件，共20处。
 // 雁渡以南的沙坡、峡谷、湿林与泥洲连成一条旧商道；王都以东的高林、裂谷、台原与山坳连成一条旧冰道。
 export const revision='w5-sites-3-v1';
-export const ENTRY_REVISIONS={site_w5_tj_kiln_shrine:2};
+export const ENTRY_REVISIONS={site_w5_tj_kiln_shrine:2,site_ice_echo:2,site_deep_star_bowl:2,site_w5_ice_cellar:2};
 export const priorNoMechanics={};
 const XD='county_xichui_xiadu',SQ='county_feicui_shuqiao',BG='county_zhonglu_baiguan',CZ='county_zhonglu_chizhe',GX='county_wushan_guanxue',LQ='county_xichui_longqu',
  LE='county_feicui_lieer',HP='county_hupo_hupogang',XDG='county_xingwan_xuedeng',WJ='county_zhonglu_wangji',ZF='county_fengji_zhufeng',LY='county_jingzhao_luyu',SY='county_wushan_shanyi';
@@ -129,7 +129,7 @@ export const sites=[
  ],
  resources:[
   {id:'ie_birch',name:'白皮桦的树皮',item:'item_tannin_bark',quantity:2,minutes:15},
-  {id:'ie_ice',name:'窄缝里的凝霜',item:'item_mist_frost',quantity:1,minutes:20,mechanisms:['ie_fall']},
+  {id:'ie_ice',name:'窄缝里凿下的冰块',item:'item_water',quantity:1,minutes:20,mechanisms:['ie_fall']},
  ],
  truths:[{id:'ie_truth',requires:['ie_echo','ie_pick'],text:'裂谷西侧的岩面是在冰户凿冰时塌的，塌岩下的冰镐和冰橇说明当时有人正在窄缝里干活。东侧回声又脆又长，是因为那边的窄缝还空着、冰还在；冰户们后来去白冠高林北坡另找近处的冰，就是因为不敢再进这道裂谷。'}],
  changes:[{id:'ie_rearm',kind:'rearm',mechanism:'ie_melt',everyDays:3}]},
@@ -170,7 +170,7 @@ export const sites=[
  ],
  resources:[
   {id:'ds_horn',name:'岩槽边的空心角片',item:'item_horn_blank',quantity:1,minutes:15,mechanisms:['ds_gap']},
-  {id:'ds_snow',name:'低处的细雪凝霜',item:'item_mist_frost',quantity:1,minutes:15},
+  {id:'ds_snow',name:'低处的干净细雪',item:'item_water',quantity:1,minutes:15},
  ],
  truths:[{id:'ds_truth',requires:['ds_marks','ds_stones'],text:'缺口岩壁上三道抹了泥的爪痕是守窝兽的边界痕，意思是到此为止。苍螭的岩槽里没有落石，是它每天绕坳时用颌缘把槽清干净的；牧人说的星星掉进坳里，其实是夜里冻裂的坳壁碎石，守窝兽正是借这些落声判断有没有外人进坳。'}],
  changes:[{id:'ds_regrow',kind:'regrow',resource:'ds_snow',quantity:1,everyDays:10,max:1}],
@@ -373,7 +373,7 @@ export const sites=[
   {id:'ic_ledger',name:'窖里的腌肉签',description:'窖里的冰架上挂着一排木签。',text:'冰架上的木签记着各家存的腌肉，有一支签上的肉一直没取，签上刻着一个猎户的名字，名字旁边刻着一盏灯的小画。',minutes:15,mechanisms:['ic_door']},
  ],
  resources:[
-  {id:'ic_frost',name:'冰架上的凝霜',item:'item_mist_frost',quantity:2,minutes:20,mechanisms:['ic_door']},
+  {id:'ic_frost',name:'冰架上的存冰',item:'item_water',quantity:2,minutes:20,mechanisms:['ic_door']},
   {id:'ic_oil',name:'灯座里冻住的灯油',item:'item_s3_lamp_oil',quantity:1,minutes:10},
  ],
  truths:[{id:'ic_truth',requires:['ic_lamp','ic_ledger'],text:'那个迷路没回来的猎户，就是冰架上那支签的主人。窖灯是他出门那夜灭的，镇上的人后来在镇口立起高杆挂灯，照的是“灯灭人寻”这句话；旧窖灯里那根没点过的新灯芯，是有人还在替他换。'}],

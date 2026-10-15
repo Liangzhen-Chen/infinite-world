@@ -2568,8 +2568,8 @@
         },
         {
           "id": "ie_ice",
-          "name": "窄缝里的凝霜",
-          "item": "item_mist_frost",
+          "name": "窄缝里凿下的冰块",
+          "item": "item_water",
           "quantity": 1,
           "minutes": 20,
           "mechanisms": [
@@ -3070,8 +3070,8 @@
         },
         {
           "id": "ds_snow",
-          "name": "低处的细雪凝霜",
-          "item": "item_mist_frost",
+          "name": "低处的干净细雪",
+          "item": "item_water",
           "quantity": 1,
           "minutes": 15
         }
@@ -28468,8 +28468,8 @@
       "resources": [
         {
           "id": "ic_frost",
-          "name": "冰架上的凝霜",
-          "item": "item_mist_frost",
+          "name": "冰架上的存冰",
+          "item": "item_water",
           "quantity": 2,
           "minutes": 20,
           "mechanisms": [

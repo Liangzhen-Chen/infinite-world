@@ -1,12 +1,12 @@
 {
-  "spentYuan": 0.06849127999999999,
+  "spentYuan": 0.07655071999999999,
   "reservedYuan": 0,
   "waveLimitYuan": 25,
   "note": "T115 独立预算账（用户指定）；不与其他卡共用",
   "cards": {
     "T115": {
       "limitYuan": 2,
-      "spentYuan": 0.06849127999999999,
+      "spentYuan": 0.07655071999999999,
       "reservedYuan": 0,
       "maxRequests": 45
     }
@@ -682,6 +682,102 @@
         "cumulativeUpperYuan": 0.06849127999999999,
         "latencyMs": 629.0083000000001,
         "timestamp": "2026-10-15T05:14:19.616Z"
+      }
+    },
+    "555e7d3c-cf61-4229-b0cf-0f297bec48d6": {
+      "card": "T115",
+      "label": "content-w5-sites-3-site_ice_echo-review0",
+      "requestHash": "b1a07ef0435983a42da85c8272d6104facbe16c1a0f5df7bd5f94a0b415f1b06",
+      "reservedYuan": 0.02187,
+      "status": "settled",
+      "responseEvidence": {
+        "file": "budget-responses/555e7d3c-cf61-4229-b0cf-0f297bec48d6.json",
+        "requestHash": "b1a07ef0435983a42da85c8272d6104facbe16c1a0f5df7bd5f94a0b415f1b06",
+        "responseHash": "47749ac7933ef4a0a53e22c7efc109ef27d2241bb970641a9542fa07d0c6755a"
+      },
+      "costUpperYuan": 0.00263848,
+      "measurement": {
+        "label": "content-w5-sites-3-site_ice_echo-review0",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 1793,
+          "completion_tokens": 7,
+          "total_tokens": 1800,
+          "prompt_tokens_details": {
+            "cached_tokens": 512
+          },
+          "prompt_cache_hit_tokens": 512,
+          "prompt_cache_miss_tokens": 1281
+        },
+        "costUpperYuan": 0.00263848,
+        "cumulativeUpperYuan": 0.07112975999999999,
+        "latencyMs": 946.4952,
+        "timestamp": "2026-10-15T06:28:25.012Z"
+      }
+    },
+    "67e83862-e2b1-4b79-8579-30574c28c212": {
+      "card": "T115",
+      "label": "content-w5-sites-3-site_deep_star_bowl-review0",
+      "requestHash": "00a12742f46ba5fe05fa5c661db786e6b9bc938305207c8396fcd4e0f39836eb",
+      "reservedYuan": 0.022292,
+      "status": "settled",
+      "responseEvidence": {
+        "file": "budget-responses/67e83862-e2b1-4b79-8579-30574c28c212.json",
+        "requestHash": "00a12742f46ba5fe05fa5c661db786e6b9bc938305207c8396fcd4e0f39836eb",
+        "responseHash": "72cfe8b66f436823621bf0c6f28696d7e6417a541849414bff654dc5e16f2274"
+      },
+      "costUpperYuan": 0.00272848,
+      "measurement": {
+        "label": "content-w5-sites-3-site_deep_star_bowl-review0",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 1838,
+          "completion_tokens": 7,
+          "total_tokens": 1845,
+          "prompt_tokens_details": {
+            "cached_tokens": 512
+          },
+          "prompt_cache_hit_tokens": 512,
+          "prompt_cache_miss_tokens": 1326
+        },
+        "costUpperYuan": 0.00272848,
+        "cumulativeUpperYuan": 0.07385823999999999,
+        "latencyMs": 740.7489999999999,
+        "timestamp": "2026-10-15T06:28:26.629Z"
+      }
+    },
+    "7be5f31b-5685-4acf-842d-3f1eb0e4d5db": {
+      "card": "T115",
+      "label": "content-w5-sites-3-site_w5_ice_cellar-review0",
+      "requestHash": "b2b0ebd5897729c0379d6970de2b9239093d0cb9028c1dc9d5c9629d95761c72",
+      "reservedYuan": 0.022266,
+      "status": "settled",
+      "responseEvidence": {
+        "file": "budget-responses/7be5f31b-5685-4acf-842d-3f1eb0e4d5db.json",
+        "requestHash": "b2b0ebd5897729c0379d6970de2b9239093d0cb9028c1dc9d5c9629d95761c72",
+        "responseHash": "02dbf003eade18e0bfff8567c8f76d431039b508a281015dfd435f9b72aa221e"
+      },
+      "costUpperYuan": 0.00269248,
+      "measurement": {
+        "label": "content-w5-sites-3-site_w5_ice_cellar-review0",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 1820,
+          "completion_tokens": 7,
+          "total_tokens": 1827,
+          "prompt_tokens_details": {
+            "cached_tokens": 512
+          },
+          "prompt_cache_hit_tokens": 512,
+          "prompt_cache_miss_tokens": 1308
+        },
+        "costUpperYuan": 0.00269248,
+        "cumulativeUpperYuan": 0.07655071999999999,
+        "latencyMs": 895.8820999999999,
+        "timestamp": "2026-10-15T06:28:28.354Z"
       }
     }
   },
