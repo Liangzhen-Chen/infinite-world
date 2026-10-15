@@ -79,7 +79,7 @@ function functionBody(file,name){
 const WORLD_FILES={rules:'meta/rules.json',npcs:'people/baseline.json',locations:'geo/locations.json',routes:'geo/routes.json',items:'meta/items.json',
  professions:'meta/professions.json',skills:'meta/skills.json',spells:'meta/spells.json',recipes:'meta/recipes.json',monsters:'meta/monsters.json',bosses:'meta/bosses.json',
  cultures:'lore/cultures.json',deities:'lore/deities.json',factions:'lore/factions.json',history:'lore/history.json',factionPeople:'lore/factionPeople.json',eras:'lore/eras.json',
- festivals:'lore/festivals.json',rumors:'lore/rumors.json',residents:'people/residents.json',households:'people/households.json',settlementProfiles:'geo/settlements.json',careers:'meta/careers.json'};
+ festivals:'lore/festivals.json',rumors:'lore/rumors.json',residents:'people/residents.json',households:'people/households.json',settlementProfiles:'geo/settlements.json',careers:'meta/careers.json',regions:'geo/regions.json'};
 {const lw=src('tools/load-world.mjs');for(const [k,f]of Object.entries(WORLD_FILES)){const base=f.split('/')[1].replace('.json','');if(!lw.includes(k)||!lw.includes(base))throw Error(`load-world 不再读取 ${f}`);}}
 const readJSON=f=>{try{return JSON.parse(fs.readFileSync(abs(`world/${f}`),'utf8'));}catch(e){if(e.code==='ENOENT')return null;throw e;}};
 const RULES=readJSON('meta/rules.json');
@@ -147,7 +147,7 @@ const SYSTEMS=[
  {id:'sim_boss',layer:'sim',name:'首领',modules:['bosses.mjs','boss-abilities.mjs','boss-cognition.mjs','boss-negotiation.mjs']},
  {id:'sim_wildlife',layer:'sim',name:'生态',modules:['wildlife.mjs','wildlife-awakening.mjs','wildlife-range.mjs','wildlife-society.mjs','wildlife-migration.mjs','creature-nature.mjs','seasonal-migration.mjs','farm-pests.mjs']},
  {id:'sim_companion',layer:'sim',name:'伙伴',modules:['pets.mjs','summons.mjs']},
- {id:'sim_environment',layer:'sim',name:'环境与地点',modules:['environment.mjs','weather.mjs','location-access.mjs','sites.mjs']},
+ {id:'sim_environment',layer:'sim',name:'环境与地点',modules:['environment.mjs','weather.mjs','location-access.mjs','sites.mjs','regions.mjs']},
  {id:'sim_magic',layer:'sim',name:'法术',modules:SERVER.map(f=>f.slice(14)).filter(f=>/^magic(-[\w-]+)?\.mjs$/.test(f))},
  {id:'sim_economy',layer:'sim',name:'经济',modules:['items.mjs','shop.mjs','business.mjs','contracts.mjs','credit.mjs','settlement-trade.mjs','manufacturing.mjs','repair.mjs']},
  {id:'sim_agriculture',layer:'sim',name:'农业',modules:['agriculture.mjs']},
@@ -445,6 +445,9 @@ const CONTENT=[
  {id:'clock',name:'世界时钟 / 阶段',file:'meta/rules.json#worldClock',required:['id','settlement','intervalDays','probability','stages[].effects[].kind'],hooks:[
    ['stages[].effects','applyEffects?\\(','阶段效果交给效果表执行'],
   ],manual:[],refs:['效果 kind 须已在效果表注册且允许 world 来源']},
+ {id:'region',name:'省郡纲要',file:'geo/regions.json',required:['id','name','category（province/county）','terrain','biomes','keyPeople','郡：province / ruler / control / places / ties'],hooks:[
+   ['places','regionOf','地点按挂接与上级链归属省郡'],['ruler / control','rulerOf|mapRegions','统治方与非人统治标记（地图）'],['全文','publicLoreEntries|catalogDefinition','目录查询与检索'],
+  ],manual:[],refs:['biomes 由 traits 地形词派生（terrainBiomes），K8 据此生成栖地','聚落骨架与人物完整档由后续按需生成']},
  {id:'lore',name:'文化 / 神祇 / 历史',file:'lore/*.json',required:uniq([...req('culture'),...req('deity')]),hooks:[
    ['church（神祇）','\\.church\\b','复活点、训练、仪式'],['全文','publicLoreEntries|catalogDefinition','目录查询与检索'],
   ],manual:[]},

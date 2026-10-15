@@ -37,7 +37,7 @@ define('world_quest','托管/接单/履约/退款；NPC按世界钟履约',{oper
 const ingredient=object({item:str,amount:int},['item','amount']);
 define('world_create','人物/组织登记；技能配方须完成研究，产物用已有物品ID',{type:str,name:str,project:str,data:object({age:int,occupation:str,notes:str,skill:str,minimumProficiency:int,materials:{type:'array',items:ingredient},minutes:int,difficulty:int,output:object({item:str,quantity:int},['item','quantity']),tools:{type:'array',items:str},workstation:str,location:str,byproducts:{type:'array',items:ingredient},toolWear:int,failure:object({recoverFraction:{type:'number'},injury:int},[])},[])},['type','name','data']);
 define('world_search','查长期事实/原聊天',{query:str,limit:int},['query']);
-define('world_catalog','规则/文化/势力/历史分页查',{entity:str,kind:{type:'string',enum:['profession','skill','spell','item','recipe','feature','location','culture','deity','faction','history']},offset:int});
+define('world_catalog','规则/文化/势力/历史/地区分页查',{entity:str,kind:{type:'string',enum:['profession','skill','spell','item','recipe','feature','location','culture','deity','faction','history','region']},offset:int});
 define('world_read','查现账/人物库存',{section:{...str,description:'人物/npcs、行囊/inventory、约定/obligations'},npc:{...str,description:'人物ID先查目录；无私密认知'}});
 definitions.find(row=>row.function.name==='world_trade').function.parameters.properties.operation.description='依次交易/租铺/采购/雇盘点/当面履约/同意收购/还债/取消未履约/借款(coins,days,item押)/钱庄存取兑币(buyer=player买)/受雇/合伙(quantity分成%)';
 definitions.find(row=>row.function.name==='world_remember').function.parameters.properties.rumor={...str,description:'编号；玩家/rumor键/在场来源/未核实原文；10分'};

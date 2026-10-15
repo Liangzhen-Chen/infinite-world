@@ -24,10 +24,11 @@ import {validatePopulation}from'./population-validation.mjs';
 import {validateFestivalRuntime}from'../server-plugin/festival.mjs';
 import {validateSites}from'../server-plugin/sites.mjs';
 import {validateShopRules}from'../server-plugin/shop.mjs';
+import {validateRegions}from'../server-plugin/regions.mjs';
 const schema=JSON.parse(await fs.readFile(new URL('../schemas/world.schema.json',import.meta.url),'utf8'));
 const blocklist=JSON.parse(await fs.readFile(new URL('../world/meta/blocklist.json',import.meta.url),'utf8'));
 const validate=new Ajv({allErrors:true,strict:true,allowUnionTypes:true}).compile(schema);
-const categories=['npcs','residents','locations','items','professions','skills','spells','recipes','monsters','bosses',...worldLoreCategories,...socialCategories];
+const categories=['npcs','residents','locations','items','professions','skills','spells','recipes','monsters','bosses',...worldLoreCategories,...socialCategories,'regions'];
 export function validateWorld(world,{stage='engine'}={}){
     if(!['engine','release','rules','final'].includes(stage))throw new Error(`未知构建阶段：${stage}`);
     const errors=[],warnings=[];
@@ -77,6 +78,7 @@ export function validateWorld(world,{stage='engine'}={}){
     const loreCheck=validateWorldLore(world,{reference,blocked:[...blocklist.names,...blocklist.realPeople]});
     errors.push(...loreCheck.errors);warnings.push(...loreCheck.warnings);
     errors.push(...validateSocialWorld(world,{reference,blocked:[...blocklist.names,...blocklist.realPeople]}));
+    errors.push(...validateRegions(world));
     const jurisdictions=new Set(),lawIds=new Set();
     for(const code of world.rules.law?.codes??[]){
         if(lawIds.has(code.id))errors.push(`法典编号重复：${code.id}`);lawIds.add(code.id);

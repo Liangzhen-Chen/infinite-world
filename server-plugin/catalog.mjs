@@ -1,29 +1,32 @@
 import {environmentCatalog}from'./environment.mjs';
 import {publicLore}from'./lore.mjs';
+import {regionOf}from'./regions.mjs';
 import {publicSettlement}from'./settlement-profile.mjs';
 import {siteKnowledge}from'./sites.mjs';
-const publicKinds=new Set(['profession','skill','spell','recipe','item','loc','bld','site','culture','deity','faction','history']);
+const publicKinds=new Set(['profession','skill','spell','recipe','item','loc','bld','site','culture','deity','faction','history','prov','county']);
 export function catalogDefinition(engine,document,{entity,kind,offset=0}={}){
     const selected=engine.scoped(document);
     if(!Number.isSafeInteger(offset)||offset<0)throw new Error('目录 offset 必须为非负整数');
     const locationKinds=new Set(['loc','bld','site']);
     if(kind==='feature'||entity?.startsWith('feature_'))return environmentCatalog(selected,document,{entity});
     if(!entity){
-        if(!publicKinds.has(kind)&&kind!=='location')throw new Error('目录列表需指定profession、skill、spell、recipe、item、location、culture、deity、faction或history');
-        const rows=selected.entities.filter(row=>(kind==='location'?locationKinds.has(row.id.split('_')[0]):row.id.startsWith(`${kind}_`))&&!(kind==='profession'&&row.kind==='hidden'));
+        if(!publicKinds.has(kind)&&kind!=='location'&&kind!=='region')throw new Error('目录列表需指定profession、skill、spell、recipe、item、location、culture、deity、faction、history或region');
+        // T142: region lists the provinces and their counties.
+        const rows=selected.entities.filter(row=>(kind==='location'?locationKinds.has(row.id.split('_')[0]):kind==='region'?/^(prov|county)_/.test(row.id):row.id.startsWith(`${kind}_`))&&!(kind==='profession'&&row.kind==='hidden'));
         const end=offset+40;
         return{kind,count:rows.length,entries:rows.slice(offset,end).map(row=>({id:row.id,name:row.name})),truncated:rows.length>end,nextOffset:rows.length>end?end:null};
     }
-    const id=selected.resolve(entity,kind==='location'?undefined:kind),row=selected.byId.get(id),category=id.split('_')[0];
+    const id=selected.resolve(entity,kind==='location'||kind==='region'?undefined:kind),row=selected.byId.get(id),category=id.split('_')[0];
     if(!publicKinds.has(category))throw new Error('这个实体不属于公开规则目录');
     if(category==='history'){
         const known=siteKnowledge(selected.world,document).filter(truth=>truth.history===id);
         if(known.length)return{...publicLore(row),description:known.map(truth=>truth.text).join('\n'),verified:true,source:'遗迹发现',evidence:known.flatMap(truth=>truth.evidence)};
     }
-    if(['culture','deity','faction','history'].includes(category))return publicLore(row);
+    if(['culture','deity','faction','history','prov','county'].includes(category))return publicLore(row);
     if(kind==='location'&&!locationKinds.has(category))throw new Error('需要地点名称或编号');
     if(locationKinds.has(category))return{id,name:row.name,description:row.description??'',parent:row.parent??null,
         ...(publicSettlement(selected.world,id,document)?{settlement:publicSettlement(selected.world,id,document)}:{}),
+        ...((r=>r?{region:{province:r.province.name,county:r.county.name,ruler:r.county.ruler.title,polity:r.county.ruler.polity}}:{})(regionOf(selected.world,id))),
         routes:engine.world.routes.filter(route=>[route.from,route.to].includes(id)).map(route=>({destination:route.from===id?route.to:route.from,modes:route.modes,lengthKm:route.lengthKm,closedSeasons:route.closedSeasons}))};
     if(category==='profession'&&row.kind==='hidden'&&!document.state.professions.hidden.includes(id))return document.state.careerMetrics?.opportunities?.[id]
         ?{id,name:row.name,available:false,opportunity:true,initiation:row.initiation,note:'已感到契机；完成这段经历（profession certify）才取得'}

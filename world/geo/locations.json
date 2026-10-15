@@ -20633,5 +20633,375 @@
         "damage": 6
       }
     }
+  },
+  {
+    "id": "loc_far_huancheng",
+    "name": "环城",
+    "coordinates": [
+      250,
+      12
+    ],
+    "parent": null,
+    "scope": "loc_far_huancheng",
+    "aliases": [],
+    "terrain": "丘陵与平地",
+    "openHours": [
+      0,
+      1440
+    ],
+    "mapHierarchy": [
+      {
+        "id": "known-continent",
+        "name": "已知大陆片区"
+      },
+      {
+        "id": "prov_xichui",
+        "name": "西陲河谷"
+      },
+      {
+        "id": "county_xichui_huancheng",
+        "name": "环城郡"
+      },
+      {
+        "id": "loc_far_huancheng",
+        "name": "环城"
+      }
+    ],
+    "region": "county_xichui_huancheng",
+    "farNode": "seat",
+    "description": "环城是西陲的省治，城墙绕着旧仓城修成一圈。官道从西边的白石镇过来，在城北的驿站换车，再往东通王都；城里织染坊多，官仓占了城北一大片。"
+  },
+  {
+    "id": "loc_far_tongji",
+    "name": "铜脊城",
+    "coordinates": [
+      60,
+      62
+    ],
+    "parent": null,
+    "scope": "loc_far_tongji",
+    "aliases": [],
+    "terrain": "砾石山地与崖",
+    "openHours": [
+      0,
+      1440
+    ],
+    "mapHierarchy": [
+      {
+        "id": "known-continent",
+        "name": "已知大陆片区"
+      },
+      {
+        "id": "prov_hanlu",
+        "name": "寒炉山地"
+      },
+      {
+        "id": "county_hanlu_tongji",
+        "name": "铜脊郡"
+      },
+      {
+        "id": "loc_far_tongji",
+        "name": "铜脊城"
+      }
+    ],
+    "region": "county_hanlu_tongji",
+    "farNode": "seat",
+    "description": "铜脊城建在两条矿谷的交口，炉烟终日不断。南门外是去白石镇的车道，北门外是上山口的路，东门的路通往断契坡。"
+  },
+  {
+    "id": "loc_far_duanqi",
+    "name": "断契坡",
+    "coordinates": [
+      104,
+      74
+    ],
+    "parent": null,
+    "scope": "loc_far_duanqi",
+    "aliases": [],
+    "terrain": "干旱峡谷与砾坡",
+    "openHours": [
+      0,
+      1440
+    ],
+    "mapHierarchy": [
+      {
+        "id": "known-continent",
+        "name": "已知大陆片区"
+      },
+      {
+        "id": "prov_hanlu",
+        "name": "寒炉山地"
+      },
+      {
+        "id": "county_hanlu_zheya",
+        "name": "赭牙谷"
+      },
+      {
+        "id": "loc_far_duanqi",
+        "name": "断契坡"
+      }
+    ],
+    "region": "county_hanlu_zheya",
+    "farNode": "border_market",
+    "description": "断契坡是铜脊郡与赭牙谷交界的砾坡，坡上一排界石，两边停战后在这里互市，各在界石一侧摆摊。炉契板立在坡顶，停战条款画在上面。这里不是兽人的大营，进谷要先在此报来意。"
+  },
+  {
+    "id": "loc_far_xuedeng",
+    "name": "雪灯镇",
+    "coordinates": [
+      70,
+      140
+    ],
+    "parent": null,
+    "scope": "loc_far_xuedeng",
+    "aliases": [],
+    "terrain": "冰雪台地与岩坳",
+    "openHours": [
+      0,
+      1440
+    ],
+    "mapHierarchy": [
+      {
+        "id": "known-continent",
+        "name": "已知大陆片区"
+      },
+      {
+        "id": "prov_xingwan",
+        "name": "北境星湾"
+      },
+      {
+        "id": "county_xingwan_xuedeng",
+        "name": "雪灯郡"
+      },
+      {
+        "id": "loc_far_xuedeng",
+        "name": "雪灯镇"
+      }
+    ],
+    "region": "county_xingwan_xuedeng",
+    "farNode": "seat",
+    "description": "雪灯镇守着寒炉山口的北端，镇口高杆上挂着雪夜指路的灯。驿站、毛皮行和冰窖沿着一条街排开，冬季山口封了，镇上就只剩本地人。"
+  },
+  {
+    "id": "loc_far_shuqiao",
+    "name": "树桥",
+    "coordinates": [
+      -30,
+      -72
+    ],
+    "parent": null,
+    "scope": "loc_far_shuqiao",
+    "aliases": [],
+    "terrain": "湿林盆地与林冠",
+    "openHours": [
+      0,
+      1440
+    ],
+    "mapHierarchy": [
+      {
+        "id": "known-continent",
+        "name": "已知大陆片区"
+      },
+      {
+        "id": "prov_feicui",
+        "name": "翡翠林盟"
+      },
+      {
+        "id": "county_feicui_shuqiao",
+        "name": "树桥郡"
+      },
+      {
+        "id": "loc_far_shuqiao",
+        "name": "树桥"
+      }
+    ],
+    "region": "county_feicui_shuqiao",
+    "farNode": "seat",
+    "description": "树桥是几棵巨木之间架起的绳桥与木台，林道从雁渡过来，到这里就上了林冠。外人要在桥下的木台请林段向导，才能上林冠通道。"
+  },
+  {
+    "id": "loc_far_xiushi",
+    "name": "嗅石集",
+    "coordinates": [
+      -48,
+      -112
+    ],
+    "parent": null,
+    "scope": "loc_far_xiushi",
+    "aliases": [],
+    "terrain": "林地丘陵与草坡",
+    "openHours": [
+      0,
+      1440
+    ],
+    "mapHierarchy": [
+      {
+        "id": "known-continent",
+        "name": "已知大陆片区"
+      },
+      {
+        "id": "prov_feicui",
+        "name": "翡翠林盟"
+      },
+      {
+        "id": "county_feicui_lieer",
+        "name": "砾耳猎林郡"
+      },
+      {
+        "id": "loc_far_xiushi",
+        "name": "嗅石集"
+      }
+    ],
+    "region": "county_feicui_lieer",
+    "farNode": "border_market",
+    "description": "嗅石集是砾耳猎林边上的一片石坪，兽裔在石上留气味作记号。换市的日子，林民和外来商人在这里用盐、铁针、陶罐换皮毛与熏肉。这里不是共席石台，外人不得自行进猎林。"
+  },
+  {
+    "id": "loc_far_hupo",
+    "name": "琥珀港",
+    "coordinates": [
+      -10,
+      -160
+    ],
+    "parent": null,
+    "scope": "loc_far_hupo",
+    "aliases": [],
+    "terrain": "盐湿滩地与岩岸",
+    "openHours": [
+      0,
+      1440
+    ],
+    "mapHierarchy": [
+      {
+        "id": "known-continent",
+        "name": "已知大陆片区"
+      },
+      {
+        "id": "prov_hupo",
+        "name": "琥珀海岸"
+      },
+      {
+        "id": "county_hupo_hupogang",
+        "name": "琥珀港郡"
+      },
+      {
+        "id": "loc_far_hupo",
+        "name": "琥珀港"
+      }
+    ],
+    "region": "county_hupo_hupogang",
+    "farNode": "seat",
+    "description": "琥珀港在河口，岩岸围出一湾深水港，港务厅的楼立在码头边。沿河下来的货船和出海的帆船都在这里靠泊，滩上晒着盐。"
+  },
+  {
+    "id": "loc_far_zhufeng",
+    "name": "逐风集",
+    "coordinates": [
+      470,
+      -124
+    ],
+    "parent": null,
+    "scope": "loc_far_zhufeng",
+    "aliases": [],
+    "terrain": "草原平地",
+    "openHours": [
+      0,
+      1440
+    ],
+    "mapHierarchy": [
+      {
+        "id": "known-continent",
+        "name": "已知大陆片区"
+      },
+      {
+        "id": "prov_fengji",
+        "name": "风脊草原"
+      },
+      {
+        "id": "county_fengji_zhufeng",
+        "name": "逐风集郡"
+      },
+      {
+        "id": "loc_far_zhufeng",
+        "name": "逐风集"
+      }
+    ],
+    "region": "county_fengji_zhufeng",
+    "farNode": "seat",
+    "description": "逐风集是风脊诸帐聚会的集市，草原上搭着一圈圈帐篷，马市在集东，羊毛和绳索在集西。北边的官道通王都，南边的草路通芦语渡站。"
+  },
+  {
+    "id": "loc_far_luyu",
+    "name": "芦语渡站",
+    "coordinates": [
+      470,
+      -220
+    ],
+    "parent": null,
+    "scope": "loc_far_luyu",
+    "aliases": [],
+    "terrain": "泥沼与芦滩",
+    "openHours": [
+      0,
+      1440
+    ],
+    "mapHierarchy": [
+      {
+        "id": "known-continent",
+        "name": "已知大陆片区"
+      },
+      {
+        "id": "prov_jingzhao",
+        "name": "镜沼灰盐"
+      },
+      {
+        "id": "county_jingzhao_luyu",
+        "name": "芦语渡郡"
+      },
+      {
+        "id": "loc_far_luyu",
+        "name": "芦语渡站"
+      }
+    ],
+    "region": "county_jingzhao_luyu",
+    "farNode": "seat",
+    "description": "芦语渡站建在泥沼中一块高起的芦滩上，栈道和渡船连着四周。站边的晾架上挂满芦纸，堤上的阵界石刻着水位符记。"
+  },
+  {
+    "id": "loc_far_jijie",
+    "name": "季界亭",
+    "coordinates": [
+      560,
+      30
+    ],
+    "parent": null,
+    "scope": "loc_far_jijie",
+    "aliases": [],
+    "terrain": "高地针阔混交林与岩坳",
+    "openHours": [
+      0,
+      1440
+    ],
+    "mapHierarchy": [
+      {
+        "id": "known-continent",
+        "name": "已知大陆片区"
+      },
+      {
+        "id": "prov_wushan",
+        "name": "雾杉高地"
+      },
+      {
+        "id": "county_wushan_shanyi",
+        "name": "杉根联邑"
+      },
+      {
+        "id": "loc_far_jijie",
+        "name": "季界亭"
+      }
+    ],
+    "region": "county_wushan_shanyi",
+    "farNode": "border_market",
+    "description": "季界亭是杉根老林西缘的一座木亭，亭柱上刻着入林的季节。秋冬守界木精在亭里给人发木牌，也在这里换东西；春夏亭里只收留言，不放人入林。这里不是联邑议事的地方。"
   }
 ]

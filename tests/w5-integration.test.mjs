@@ -19,8 +19,8 @@ async function api(t,root,world){
 }
 test('W5正式内容经world_upgrade进入旧战役检索，保持钱袋与NPC个人记忆',async t=>{
  const root=await fs.mkdtemp(path.join(os.tmpdir(),'w5-upgrade-'));t.after(()=>fs.rm(root,{recursive:true,force:true}));
- // T157两座怪物聚居地另登记culture_ms_*，W5本批仍为10种文化。
- const published=await loadWorld();assert.equal(published.cultures.filter(c=>!c.id.startsWith('culture_ms_')).length,10);assert.equal(published.deities.length,12);
+ // T157两座怪物聚居地另登记culture_ms_*，T142远方另登记culture_far_*，W5本批仍为10种文化。
+ const published=await loadWorld();assert.equal(published.cultures.filter(c=>!/^culture_(ms|far)_/.test(c.id)).length,10);assert.equal(published.deities.length,12);
  const original=structuredClone(published);delete original.cultures;delete original.deities;
  const beforeApi=await api(t,root,original),created=await beforeApi('/create',{}),campaignId=created.reference.campaignId;
  const before=await beforeApi('/read',{campaignId});
@@ -45,6 +45,6 @@ test('W5正式内容经world_upgrade进入旧战役检索，保持钱袋与NPC�
  const bundle=await afterApi('/export',{campaignId});
  assert.ok(Object.values(bundle.worlds).some(world=>world.deities?.some(row=>row.id==='deity_bank')));
  const retained=compatibleWorld(published,original);
- assert.equal(retained.world.cultures.filter(c=>!c.id.startsWith('culture_ms_')).length,10);assert.equal(retained.world.deities.length,12);
+ assert.equal(retained.world.cultures.filter(c=>!/^culture_(ms|far)_/.test(c.id)).length,10);assert.equal(retained.world.deities.length,12);
  assert.ok(retained.retained.some(row=>row.id==='deity_bank'));
 });
