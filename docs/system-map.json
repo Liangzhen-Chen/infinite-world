@@ -18,7 +18,7 @@
  "counts": {
   "layers": 6,
   "systems": 39,
-  "modules": 189,
+  "modules": 190,
   "advance": 48,
   "tools": 25,
   "verbs": 28,
@@ -797,9 +797,10 @@
    "card": "K6",
    "dir": null,
    "modules": [
-    "server-plugin/effects.mjs"
+    "server-plugin/effects.mjs",
+    "server-plugin/effect-registry.mjs"
    ],
-   "lines": 195,
+   "lines": 198,
    "stateWrites": [
     "npcs",
     "records"
@@ -13029,6 +13030,7 @@
      "modules": [
       "server-plugin/advance-registry.mjs",
       "server-plugin/catalog.mjs",
+      "server-plugin/effect-registry.mjs",
       "server-plugin/effects.mjs",
       "server-plugin/festival.mjs",
       "server-plugin/lore.mjs",
@@ -14348,9 +14350,22 @@
    "worldDirs": [],
    "lines": 60
   },
+  "server-plugin/effect-registry.mjs": {
+   "system": "base_effects",
+   "imports": [],
+   "stateWrites": [],
+   "stateReads": [],
+   "recordWrites": [],
+   "recordReads": [],
+   "rules": [],
+   "world": [],
+   "worldDirs": [],
+   "lines": 18
+  },
   "server-plugin/effects.mjs": {
    "system": "base_effects",
    "imports": [
+    "server-plugin/effect-registry.mjs",
     "server-plugin/environment.mjs",
     "server-plugin/interactions.mjs",
     "server-plugin/magic-object.mjs",
@@ -14390,7 +14405,7 @@
    "worldDirs": [
     "meta"
    ],
-   "lines": 195
+   "lines": 180
   },
   "server-plugin/elections.mjs": {
    "system": "sim_society",
