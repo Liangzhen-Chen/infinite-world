@@ -7,6 +7,7 @@ import {bountyQuestAction} from './bounty.mjs';
 import {officeQuotaD,spendPublic,refundPublic} from './governance.mjs';
 import {titleQuotaD} from './titles.mjs';
 import {notableCulturalQuotaD} from './notables.mjs';
+import {refundQuestFunding,settleQuestOutcome} from './quest-sources.mjs';
 
 const DAY=1440,active=q=>['公开','进行中'].includes(q.status);
 const integer=(n,min,max,label)=>{if(!Number.isSafeInteger(n)||n<min||n>max)throw Error(`${label}必须在${min}到${max}之间`);return n;};
@@ -30,17 +31,20 @@ function notice(d,engine,q,minute,stage,location=q.location){
    content:`委托“${q.content}”：${q.status}${q.reason?`，${q.reason}`:''}`,sourceType:'亲历',salience:3}]);
  }
  d.set(['state','records',id],{category:'quest_receipt',quest:q.id,parties:participants,minute,location,status:q.status,reason:q.reason??null,
-  escrow:q.escrow,refund:q.refund??0,rewardPaid:q.rewardPaid??0,sourceEvent:id});
+  escrow:q.escrow,refund:q.refund??0,rewardPaid:q.rewardPaid??0,...(q.source?{source:q.source.generator}:{}),sourceEvent:id});
 }
 function close(d,engine,q,status,reason,minute){
  const paid=status==='已完成',amount=q.escrow,who=paid?q.taker:q.publisher;
  // A publicly funded reward goes back to the village treasury, not to the official.
- if(!paid&&q.fundedBy)refundPublic(d,{settlement:q.fundedBy.settlement,copper:amount,month:q.fundedBy.month,purpose:`委托退款 ${q.id}`,sourceEvent:`${q.id}:refund`});
+ // U17: commissions escrowed from a faction treasury or a settlement account go back there.
+ if(!paid&&refundQuestFunding(d,engine,q,amount,minute));
+ else if(!paid&&q.fundedBy)refundPublic(d,{settlement:q.fundedBy.settlement,copper:amount,month:q.fundedBy.month,purpose:`委托退款 ${q.id}`,sourceEvent:`${q.id}:refund`});
  else d.set([...actorPath(who),'coins'],engine.actor(d,who).coins+amount);
  const row={...q,status,reason,escrow:0,resolvedAt:minute,...(paid?{rewardPaid:amount}:{refund:amount})};
  d.set(['state','quests',q.id],row);
  const booking=d.get('state','obligations',q.reservation);
  if(booking&&['待履行','进行中'].includes(booking.status))d.set(['state','obligations',booking.id],{...booking,status:paid?'已完成':status==='取消'?'取消':'违约',reason,resolvedAt:minute});
+ if(paid)settleQuestOutcome(d,engine,row,minute);
  notice(d,engine,row,minute,status);return row;
 }
 function objective(engine,d,args,publisher){
@@ -115,7 +119,7 @@ export function questBoardAction(d,engine,args,eventId){
  if(q.bounty)return bountyQuestAction(d,engine,q,args,eventId);
  if(args.operation==='inspect'){
   if(![q.publisher,q.taker].includes('player')&&q.location!==d.get('state','location'))throw Error('没有获知该委托进度的渠道');
-  return {quest:q.id,...([q.publisher,q.taker].includes('player')?{status:q.status,reason:q.reason??null,escrow:q.escrow,refund:q.refund??0}:{status:'告示',content:q.content,grade:q.grade,reward:q.reward})};
+  return {quest:q.id,...([q.publisher,q.taker].includes('player')?{status:q.status,reason:q.reason??null,escrow:q.escrow,refund:q.refund??0}:{status:'告示',content:q.content,grade:q.grade,reward:q.reward,...(q.sourceLabel?{source:q.sourceLabel}:{})})};
  }
  if(args.operation==='cancel'){
   if(![q.publisher,q.taker].includes('player'))throw Error('只有委托当事人能取消');
@@ -138,6 +142,8 @@ export function questBoardAction(d,engine,args,eventId){
  const o=q.objective;let done=false;
  if(o.type==='visit')done=Boolean(d.get('state','discoveries',engine.resolve(o.location)));
  if(o.type==='build')done=d.get('state','projects',o.project,'status')==='已完成';
+ // U17 generated quests: a world record reaching the stated state (a lair cleared, a motion decided).
+ if(o.type==='record')done=o.equals.includes(d.get('state','records',o.record,o.field));
  if(o.type==='deliver'){
   const target=engine.actor(d,q.publisher);if(['死亡','濒死'].includes(target?.status))throw Error('委托人无法接收交付，需先处理委托变更');
   if(place(d.get('state'),q.publisher)!==d.get('state','location'))throw Error('委托人不在场，不能交付');
@@ -145,7 +151,7 @@ export function questBoardAction(d,engine,args,eventId){
  }
  if(!done)throw Error('没有可验证的完成证据');
  close(d,engine,q,'已完成','已验证目标',now);d.say(`任务完成，获得${q.reward}铜`);
- const experience=awardExperience(d,engine,{kind:'quest',subject:`${q.publisher}:${o.type}:${o.item??o.location??o.project}`,source:`quest:${q.id}`,base:engine.rules.quests.experienceRanges[q.grade][0],repeat:true},eventId);
+ const experience=awardExperience(d,engine,{kind:'quest',subject:`${q.publisher}:${o.type}:${o.item??o.location??o.project??o.record}`,source:`quest:${q.id}`,base:engine.rules.quests.experienceRanges[q.grade][0],repeat:true},eventId);
  return {quest:q.id,reward:q.reward,...experience};
 }
 
