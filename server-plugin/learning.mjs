@@ -59,7 +59,7 @@ export function learn(d,args,id){
     let sourceRecord,fee=0,minutes;
     if(project){
         if(project.type!=='研究'||project.stage!=='打磨'||catalog.source!==source||!d.get('state','created',entity)
-            ||project.result&&project.result!==entity||kind==='spell')throw new Error('研究项目不是这项已登记成果的完成来源');
+            ||project.result!==entity)throw new Error('研究项目不是这项已登记成果的完成来源');
         minutes=integer(catalog.learnMinutes??120,'研习时间',43200);
         sourceRecord={type:'research',id:source};
     }else if(source.startsWith('npc_')){

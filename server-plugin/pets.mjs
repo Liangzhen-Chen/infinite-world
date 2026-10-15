@@ -1,3 +1,4 @@
+import {petTrustGain} from './hidden-passives.mjs';
 import { effectiveProficiency } from './professions.mjs';
 import { xpRequired } from './progression.mjs';
 import {resolveCreature}from'./wildlife.mjs';
@@ -117,7 +118,7 @@ export function petAction(d, args, eventId) {
         if (this.quantity(d, 'player', item) < 1) throw new Error('没有实际持有的食物');
         this.itemDelta(d, 'player', item, -1);
         care.hunger = clamp(care.hunger - food.hungerRelief); care.mood = clamp(care.mood + 2);
-        if (care.feedDay !== day) { care.bond = clamp(care.bond + food.trustGain); care.feedDay = day; }
+        if (care.feedDay !== day) { care.bond = clamp(care.bond + petTrustGain(this,d.get('state'),id,food.trustGain)); care.feedDay = day; }
         writeCare(d, id, care); this.advance(d, rules.feedMinutes, eventId);
         return { target: id, fed: true, consumed: { item, quantity: 1 }, care: d.get('state', 'creatures', id, 'care') };
     }
@@ -149,7 +150,7 @@ export function petAction(d, args, eventId) {
         const expired=operation==='tame'&&row.definition.tier&&(!permission||permission.expires<=d.get('state','minute'));
         const latest = structuredClone(d.get('state', 'creatures', id, 'care'));
         if (result.success && !failed && !expired) {
-            if (operation === 'contact') latest.bond = clamp(latest.bond + rules.contactTrust);
+            if (operation === 'contact') latest.bond = clamp(latest.bond + petTrustGain(this,d.get('state'),id,rules.contactTrust));
             else {
                 d.set(['state', 'creatures', id, 'owner'], 'player');
                 d.set(['state', 'pets', id], { petFormat: 1, creature: id, category: rule.category, status: '活跃', following: true, acquired: d.get('state', 'minute'), source: eventId });

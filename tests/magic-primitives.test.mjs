@@ -39,7 +39,7 @@ test('真实施法写吸收余量并扣魔力，过量伤害不会因低生命�
  assert.deepEqual(await run(document,{spell:'spell_m4_shield',target:'player'},shield.eventId),{result:shield.result,document:shield.document});
 });
 test('治疗同意在耗时期间到期时仍扣施法成本，但不治疗目标',async()=>{
- const {document,run}=await setup();document.state.npcs.npc_hw_linsui.hp=1;document.state.records.consent={category:'authorization',subject:'npc_hw_linsui',action:'healing',expires:document.state.minute+1};
+ const {document,run}=await setup();document.state.npcs.npc_hw_linsui.hp=1;document.state.records.consent={category:'authorization',subject:'npc_hw_linsui',grantor:'npc_hw_linsui',grantee:'player',action:'healing',expires:document.state.minute+1};
  let found;for(let i=0;i<100;i++){const out=await run(document,{spell:'spell_m4_heal',target:'林穗',authorization:'consent'},`m4-expire-${i}`);if(out.result.checkSuccess){found=out;break;}}
  assert.ok(found);assert.equal(found.result.success,false);assert.match(found.result.effectFailed,/同意/);assert.equal(found.document.state.npcs.npc_hw_linsui.hp,1);assert.equal(found.document.state.player.mp,98);
 });

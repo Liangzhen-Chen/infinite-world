@@ -52,7 +52,7 @@ test('防护他人需要同意，恐惧施术留敌意记录并影响命中',asy
     const{document,run}=await setup();const before=structuredClone(document);
     await assert.rejects(run(document,'world_cast',{spell:'spell_test_stone_skin',target:'林穗'},'without-consent'),/本人同意/);
     assert.deepEqual(document,before);
-    document.state.records.support={category:'authorization',subject:'npc_hw_linsui',action:'support_magic',expires:document.state.minute+10};
+    document.state.records.support={category:'authorization',subject:'npc_hw_linsui',grantor:'npc_hw_linsui',grantee:'player',action:'support_magic',expires:document.state.minute+10};
     const protectedNpc=await cast(run,document,{spell:'spell_test_stone_skin',target:'林穗',authorization:'support'});
     assert.equal(protectedNpc.result.status,'stone_skin');
     const feared=await cast(run,document,{spell:'spell_test_fear',target:'林穗'});
