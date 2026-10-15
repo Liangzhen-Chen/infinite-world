@@ -3,6 +3,8 @@ import {recordCreatureResolution}from'./quest-wildlife.mjs';
 import {environmentFeatures,localPlayerPoint,localSightClear,recordLocalContact}from'./environment.mjs';
 import {areaTargetFacts}from'./magic-area.mjs';
 import {assertMagicTargeting}from'./magic-targeting.mjs';
+import {assertSpellConsent,hasSpellConsent,spellConsentActions}from'./magic-consent.mjs';
+import {personMental}from'./entity-view.mjs';
 import {resolveCreature}from'./wildlife.mjs';
 import {applyProtectionPrimitive}from'./magic-primitives.mjs';
 import {magicContractTrace,createBusinessContract}from'./contracts.mjs';
@@ -57,7 +59,11 @@ function life(d,engine,c,args,id,until,action='support_magic'){
  id=resolveCreature(engine,d,id);const a=d.get(...actorPath(id));
  if(!awake(a)||id!=='player'&&a.location!==d.get('state','location'))throw Error('仪式参与者须在场清醒且存活');
  assertMagicTargeting(d,engine,{...c,targeting:{lineOfSight:true}},args,id);
- const permission=id==='player'?null:authorization(d,args,action,id,id,until);
+ let permission=null;
+ if(spellConsentActions.includes(action)){
+  permission=[args.authorization,...args.authorizations??[]].find(key=>hasSpellConsent(d,id,key,action,c,until));
+  assertSpellConsent(d,engine,c,{...args,authorization:permission},id,action,until);
+ }else permission=id==='player'?null:authorization(d,args,action,id,id,until);
  if(id!=='player'&&d.get('state','creatures',id)&&divine(engine,a))throw Error('仪式不能越过神性或未知灵体规则');
  return{id,actor:a,path:actorPath(id),permission};
 }
@@ -215,8 +221,8 @@ export function prepareRitual(d,c,args,{completion=false}={}){
  const action=['ritual_heal','restore'].includes(op)?'healing':op==='spirit_sense'?'mental_magic':op==='witness_oath'?'ritual_oath':'support_magic';
  Object.assign(p,life(d,this,c,args,args.target??'player',until,action));
  if(op==='spirit_sense'){
-  // Stress is eased only where a mental state is actually registered.
-  if(p.actor.mental!==undefined)number(p.actor.mental?.stress,0,100,'悲恸压力');p.spirits=nearbySpirits(d,this,c);return p;
+  p.mental=personMental(this,d.get('state'),p.id).value;
+  number(p.mental.stress,0,100,'悲恸压力');p.spirits=nearbySpirits(d,this,c);return p;
  }
  if(['ritual_heal','restore'].includes(op)){
   faithOf(d,p.id,p.deity);const m=clone(p.actor.medical),w=m?.wounds?.find(w=>w.id===args.source);
@@ -289,7 +295,7 @@ export function applyRitual(d,initial,eventId){
   recordRitualCare(d,p,result,eventId);return{...result,healed,wound:p.wound,depthMm:w.depthMm};
  }
  if(p.op==='spirit_sense'){
-  if(p.actor.mental)d.set([...p.path,'mental','stress'],Math.max(0,p.actor.mental.stress-1));
+  d.set([...p.path,'mental'],{...p.mental,stress:Math.max(0,p.mental.stress-1)});
   return{...result,spirits:p.spirits.map(([id,a])=>({id,lowRank:a.spirit.rank===0,divine:a.spirit.divine,nature:a.spirit.nature??'unknown'}))};
  }
  if(p.op==='ward')return{...result,...put(d,p,eventId,{authorization:p.permission})};
@@ -367,13 +373,14 @@ export function advanceRituals(d,engine,after){
   if(!Number.isSafeInteger(i.settled)||i.settled>after)throw Error('邪秽干扰时间状态损坏');
   number(i.remaining,0,100,'邪秽剩余干扰');number(i.stressPerMinute,.01,1,'邪秽干扰速度');
   const minutes=after-i.settled;d.set([...actorPath(id),'spirit','interference','settled'],after);
-  if(!awake(actor)||!actor.mental||a.location!==location)continue;
+  if(!awake(actor)||a.location!==location)continue;
+  const mental=personMental(engine,d.get('state'),i.target).value;
   let amount=Math.min(i.remaining,minutes*i.stressPerMinute),remaining=amount;
   const wards=Object.entries(d.get('state','effects')??{}).filter(([,w])=>w.kind==='ritual'&&w.operation==='ward'&&w.target===i.target&&w.started<=i.settled&&w.expires>i.settled&&w.remaining>0&&w.location===location).filter(([,w])=>{
-   if(i.target==='player')return true;const r=d.get('state','records',w.authorization);return r?.category==='authorization'&&r.action==='support_magic'&&r.subject===i.target&&r.grantor===i.target&&r.grantee==='player'&&!r.revoked&&r.expires>i.settled;
+   return hasSpellConsent(d,i.target,w.authorization,'support_magic',{id:w.spell,location:w.location},i.settled);
   }).sort((a,b)=>b[1].remaining-a[1].remaining||a[0].localeCompare(b[0]));
   const ward=wards[0];if(ward){const w=ward[1],r=d.get('state','records',w.authorization),until=Math.min(after,w.expires,i.target==='player'?Infinity:r.expires),absorbed=Math.min(w.remaining,amount,Math.max(0,until-i.settled)*i.stressPerMinute);remaining-=absorbed;d.set(['state','effects',ward[0],'remaining'],w.remaining-absorbed);}
-  d.set([...actorPath(i.target),'mental','stress'],Math.min(100,number(actor.mental.stress,0,100,'受术者压力')+remaining));
+  d.set([...actorPath(i.target),'mental'],{...mental,stress:Math.min(100,number(mental.stress,0,100,'受术者压力')+remaining)});
   d.set([...actorPath(id),'spirit','interference','remaining'],i.remaining-amount);
  }
 }

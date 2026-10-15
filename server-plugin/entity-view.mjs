@@ -12,6 +12,12 @@ const records=state=>Object.entries(state.records??{});
 const recordFacts=(state,predicate)=>records(state).filter(([,r])=>predicate(r)).map(([key,r])=>fact(r,`state.records.${key}`,true));
 const baseOf=(engine,state,id)=>state.created?.[id]??state.family?.people?.[id]??engine.byId.get(id);
 
+// Missing vitals mean no accumulated strain. Reading never creates actor state.
+export function personMental(engine,state,id){
+    const a=at(state,actorPath(engine.world,id).slice(1));
+    return fact(a?.mental??{fatigue:0,alertness:50,stress:0,interference:[]},a?.mental?'actor.mental':'unstrained baseline',Boolean(a?.mental));
+}
+
 const living=(engine,state,id)=>at(state,actorPath(engine.world,id).slice(1))?.status!=='死亡';
 const dismissed=(state,id)=>Object.values(state.records??{}).some(r=>r.category==='legal_dismissal'&&(r.subject??r.npc)===id&&r.status!=='撤销');
 const officeRows=state=>Object.entries(state.records??{}).filter(([,r])=>r.category==='governance_office');

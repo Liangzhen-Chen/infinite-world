@@ -166,7 +166,7 @@ const SYSTEMS=[
  {id:'ui_host',layer:'ui',name:'酒馆接入',modules:['ext:index.js','ext:runtime.js','ext:core.js','ext:turn.mjs']},
  // 叙述层
  {id:'nar_prompt',layer:'narr',name:'提示词',dir:'prompt/',modules:['ext:prompt.mjs','ext:generation.mjs']},
- {id:'nar_consistency',layer:'narr',name:'一致性审查',modules:['consistency-review.mjs','consistency-service.mjs','consistency-evidence.mjs']},
+ {id:'nar_consistency',layer:'narr',name:'一致性审查',modules:['consistency-review.mjs','consistency-service.mjs','consistency-evidence.mjs','consistency-outcome.mjs']},
  {id:'nar_memory',layer:'narr',name:'档案与检索',modules:['retrieval.mjs','retrieval-lexicon.mjs','lore.mjs','catalog.mjs','chronicle.mjs']},
 ];
 const fileOf=m=>m.startsWith('ext:')?`extension/${m.slice(4)}`:`server-plugin/${m}`;
@@ -413,7 +413,7 @@ const CONTENT=[
    ['effectSpec.kind','effectSpec','按 kind 分派到 magic-* 模块'],['effectSpec.damageType','damageType','元素进入交互规则；伤害型命中产生 harm 事件'],
    ['targeting','\\.targeting\\b','目标边界与同意'],['law','\\.law\\b','施法许可与违法'],['learnFee / learnMinutes','learnFee','学习'],
   ],manual:[],refs:[],
-  extend:['新的 effectSpec.kind 由所在模块调用 registerMagicEffect 登记校验与结算（magic-effects.mjs），不改 magic.mjs','需要随时间结算的效果在推进注册表登记']},
+  extend:['magic-consent.mjs 从 entity-view、standing 与灵智派生本人决定；rules.law 配置急救例外与强施处罚','新的 effectSpec.kind 由所在模块调用 registerMagicEffect 登记校验与结算（magic-effects.mjs），不改 magic.mjs','需要随时间结算的效果在推进注册表登记']},
  {id:'npc',name:'人物（名册）',file:'people/baseline.json',required:uniq([...req('npc'),...req('npcProfile')]),hooks:[
    ["tier: 'full'","tier==='full'",'完整人物参与认知、自主、生活、承诺推进'],['schedule','\\.schedule\\b','日程移动与服务时段'],
    ['household / householdId','householdId|\\.household\\b','家庭：立场按家庭传导'],['settlement','\\.settlement\\b','所属聚落：立场传导'],

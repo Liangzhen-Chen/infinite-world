@@ -1,4 +1,5 @@
 import {playtestAutonomyEvidence,compactPlaytestTurn} from './playtest-review.mjs';
+import {summarizeConsistency,consistencyThreshold} from '../server-plugin/consistency-outcome.mjs';
 const npcId=id=>/^N(?:[1-9]|1[0-7])$/.test(id);
 const completeTurns=(result,scenario)=>Array.isArray(result.turns)&&result.turns.length>0&&
     (!scenario.turns||result.turns.length===scenario.turns.length)&&result.turns.every((turn,index)=>turn.index===index&&
@@ -123,9 +124,9 @@ export function summarizeNpcAcceptance(results,scenarios,repetitions=1){
     const ledgerEvidence=results.length>0&&results.every(r=>Number.isInteger(r.assertions)&&r.assertions>0&&Number.isInteger(r.passed)&&r.passed>=0&&r.passed<=r.assertions);
     const ledgerPassed=results.reduce((n,r)=>n+(Number.isInteger(r.passed)&&r.passed>=0?r.passed:0),0),ledgerRatio=ledgerEvidence?ledgerPassed/assertions:null;
     const ledgerThresholdReached=ledgerEvidence&&ledgerPassed===assertions;
-    const blindPass=rows.some(r=>r.id==='N12'&&r.pass),consistencyPass=results.length>0&&results.every(r=>r.consistencyPass===true),reviewsComplete=results.length>0&&results.every(r=>r.review?.complete===true);
+    const blindPass=rows.some(r=>r.id==='N12'&&r.pass),consistencyPass=consistencyThreshold(results),reviewsComplete=results.length>0&&results.every(r=>r.review?.complete===true);
     return {scope:'N类逐项叙述证据、账本、一致性及N12盲辨；未测单列，非最终发布验收',declared:ids.length,measured,unmeasured:ids.length-measured,
-        passed,ratio,ratioDenominator:measured,coverageRatio:ids.length?measured/ids.length:null,offscreenPass,blindPass,consistencyPass,reviewsComplete,privacyMeasured,privacyPass,
+        passed,ratio,ratioDenominator:measured,coverageRatio:ids.length?measured/ids.length:null,offscreenPass,blindPass,consistencyPass,consistency:summarizeConsistency(results),reviewsComplete,privacyMeasured,privacyPass,
         privacy:{measurement:privacyMeasured?'measured':'not-measured',failures:privacyFailures,leaks,zeroLeakage:privacyMeasured&&!privacyFailures.length&&!leaks.length},
         ledger:{measurement:ledgerEvidence?'measured':'not-measured',assertions,passed:ledgerPassed,ratio:ledgerRatio,thresholdReached:ledgerThresholdReached},
         thresholdReached:measured>=12&&measured===ids.length&&ratio>=.9&&ledgerThresholdReached&&offscreenPass&&blindPass&&privacyPass&&consistencyPass&&reviewsComplete,rows};
