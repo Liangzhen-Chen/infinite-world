@@ -100,6 +100,7 @@ export function adjustStanding(d,engine,holder,target,delta,{sourceEvent,reason,
 // own stance steps (monster-society), so they are not repeated here.
 export const TRANSMISSION=Object.freeze({household:0.5,settlement:0.3,faction:0.5,ally:0.25,spiritSociety:0.5,organization:0.5,allyMinimum:30});
 export function eventWeight(e){
+    if(e.tags?.includes('npc_crime')&&e.witnesses?.length)return -10;
     if(e.verb==='harm'&&e.tags.includes('hostile'))return -(10+Math.min(20,e.harm??0));
     if(e.verb==='steal'&&e.witnesses?.length)return -10;
     if(e.verb==='gift'&&e.value>0)return Math.min(15,3+Math.floor(e.value/10));

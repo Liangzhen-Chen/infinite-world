@@ -49,11 +49,11 @@ export function observeLegalReputation(d,engine,npc,memory,location=memory.locat
     }
 }
 
-export function recordLegalNotification(d,engine,row,stage,eventId,observers,{fresh=false}={}) {
+export function recordLegalNotification(d,engine,row,stage,eventId,observers,{fresh=false,location=d.get('state','location')}={}) {
     if(engine.replaying&&engine.replayResult?.legalProcedureVersion!==1)return null;
     const minute=d.get('state','minute'),sourceEvent=`${eventId}:law:${stage}`;
     const old=d.get(...path(row.id));
-    const event=(!fresh&&old.reputationEvents?.[stage])||{sourceEvent,stage,minute,location:d.get('state','location'),
+    const event=(!fresh&&old.reputationEvents?.[stage])||{sourceEvent,stage,minute,location,
         ...(stage==='overturned'?{reverses:old.reputationEvents?.conviction?.sourceEvent}:{} )};
     if(fresh||!old.reputationEvents?.[stage])d.set(path(row.id),{...old,procedureVersion:1,reputationEvents:{...old.reputationEvents,[stage]:event},reputationHistory:[...old.reputationHistory??[],event]});
     for(const npc of new Set(observers)) {

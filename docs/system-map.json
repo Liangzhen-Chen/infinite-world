@@ -18,14 +18,14 @@
  "counts": {
   "layers": 6,
   "systems": 39,
-  "modules": 186,
-  "advance": 47,
+  "modules": 189,
+  "advance": 48,
   "tools": 25,
   "verbs": 28,
   "subscribers": 9,
   "interactionRules": 25,
   "effectKinds": 21,
-  "links": 421
+  "links": 428
  },
  "layers": [
   {
@@ -260,6 +260,7 @@
     "sim_economy",
     "sim_environment",
     "sim_faith",
+    "sim_law",
     "sim_magic",
     "sim_military",
     "sim_npc",
@@ -301,6 +302,7 @@
     "sim_clock",
     "sim_economy",
     "sim_environment",
+    "sim_law",
     "sim_military",
     "sim_npc",
     "sim_society",
@@ -365,7 +367,7 @@
     "sim_environment",
     "sim_society"
    ],
-   "files": 111
+   "files": 112
   },
   {
    "id": "data_assets",
@@ -407,7 +409,7 @@
    "effects": [],
    "tools": [],
    "readBy": [],
-   "files": 36
+   "files": 37
   },
   {
    "id": "kernel_engine",
@@ -421,7 +423,7 @@
     "server-plugin/campaign-reducer.mjs",
     "server-plugin/archived-reducer.mjs"
    ],
-   "lines": 992,
+   "lines": 993,
    "stateWrites": [
     "combatDisengaged",
     "created",
@@ -716,7 +718,7 @@
     "server-plugin/standing.mjs",
     "server-plugin/entity-view.mjs"
    ],
-   "lines": 591,
+   "lines": 592,
    "stateWrites": [
     "records"
    ],
@@ -850,7 +852,7 @@
     "server-plugin/advance-registry.mjs",
     "server-plugin/advance-layers.mjs"
    ],
-   "lines": 244,
+   "lines": 246,
    "stateWrites": [
     "effects",
     "obligations",
@@ -923,7 +925,7 @@
     "server-plugin/population-service.mjs",
     "server-plugin/settlement-profile.mjs"
    ],
-   "lines": 3183,
+   "lines": 3187,
    "stateWrites": [
     "created",
     "creatures",
@@ -1004,6 +1006,7 @@
     {
      "fn": "recordNpcMemories",
      "verbs": [
+      "breach",
       "cast",
       "clash",
       "duel",
@@ -1379,7 +1382,7 @@
     "server-plugin/regions.mjs",
     "server-plugin/remote-generation.mjs"
    ],
-   "lines": 1588,
+   "lines": 1608,
    "stateWrites": [
     "npcs",
     "records",
@@ -1476,7 +1479,7 @@
     "server-plugin/magic-water-earth.mjs",
     "server-plugin/magic.mjs"
    ],
-   "lines": 3788,
+   "lines": 3789,
    "stateWrites": [
     "creatures",
     "discoveries",
@@ -1573,7 +1576,7 @@
     "server-plugin/extraction.mjs",
     "server-plugin/smuggling.mjs"
    ],
-   "lines": 1857,
+   "lines": 1858,
    "stateWrites": [
     "crafted",
     "itemInstances",
@@ -1611,7 +1614,6 @@
     "economy",
     "equipment",
     "extraction",
-    "law",
     "magicEconomy",
     "repairs",
     "settlementTrade",
@@ -1663,7 +1665,7 @@
    "modules": [
     "server-plugin/agriculture.mjs"
    ],
-   "lines": 327,
+   "lines": 328,
    "stateWrites": [
     "player",
     "records",
@@ -1683,7 +1685,6 @@
    ],
    "rules": [
     "agriculture",
-    "law",
     "magicGrowth",
     "weather"
    ],
@@ -2005,9 +2006,12 @@
    "dir": null,
    "modules": [
     "server-plugin/law.mjs",
+    "server-plugin/law-codes.mjs",
+    "server-plugin/legal-representation.mjs",
+    "server-plugin/npc-crime.mjs",
     "server-plugin/bounty.mjs"
    ],
-   "lines": 842,
+   "lines": 1132,
    "stateWrites": [
     "itemInstances",
     "location",
@@ -2018,22 +2022,34 @@
    "stateReads": [
     "inventory",
     "minute",
-    "records"
+    "records",
+    "remote"
    ],
    "recordWrites": [],
    "recordReads": [
+    "diplomacy",
+    "legal_case",
     "legal_dismissal"
    ],
    "rules": [
     "economy",
     "law",
     "magicEconomy",
-    "quests"
+    "quests",
+    "smuggling"
    ],
-   "world": [],
+   "world": [
+    "locations",
+    "npcs",
+    "regions",
+    "residents",
+    "rules",
+    "settlementProfiles"
+   ],
    "advance": [
     "law",
-    "bounty"
+    "bounty",
+    "npc_crime"
    ],
    "subscribes": [],
    "effects": [],
@@ -2120,7 +2136,7 @@
     "server-plugin/state-notices.mjs",
     "server-plugin/return-summary.mjs"
    ],
-   "lines": 442,
+   "lines": 449,
    "stateWrites": [
     "visits"
    ],
@@ -2493,7 +2509,8 @@
    "kind": "advance",
    "labels": [
     "bounty",
-    "law"
+    "law",
+    "npc_crime"
    ]
   },
   {
@@ -2652,7 +2669,8 @@
    "kind": "call",
    "labels": [
     "bounty.mjs",
-    "law.mjs"
+    "law.mjs",
+    "npc-crime.mjs"
    ]
   },
   {
@@ -3047,7 +3065,8 @@
    "to": "sim_law",
    "kind": "call",
    "labels": [
-    "law.mjs"
+    "law.mjs",
+    "npc-crime.mjs"
    ]
   },
   {
@@ -3299,6 +3318,14 @@
    "kind": "call",
    "labels": [
     "weather.mjs"
+   ]
+  },
+  {
+   "from": "sim_agriculture",
+   "to": "sim_law",
+   "kind": "call",
+   "labels": [
+    "law-codes.mjs"
    ]
   },
   {
@@ -3697,6 +3724,7 @@
    "kind": "call",
    "labels": [
     "bounty.mjs",
+    "law-codes.mjs",
     "law.mjs"
    ]
   },
@@ -3813,6 +3841,14 @@
   },
   {
    "from": "sim_environment",
+   "to": "sim_law",
+   "kind": "call",
+   "labels": [
+    "law-codes.mjs"
+   ]
+  },
+  {
+   "from": "sim_environment",
    "to": "sim_magic",
    "kind": "call",
    "labels": [
@@ -3905,7 +3941,8 @@
    "to": "base_events",
    "kind": "call",
    "labels": [
-    "entity-transitions.mjs"
+    "entity-transitions.mjs",
+    "world-events.mjs"
    ]
   },
   {
@@ -3936,6 +3973,22 @@
   },
   {
    "from": "sim_law",
+   "to": "sim_clock",
+   "kind": "call",
+   "labels": [
+    "world-clock.mjs"
+   ]
+  },
+  {
+   "from": "sim_law",
+   "to": "sim_combat",
+   "kind": "call",
+   "labels": [
+    "combat.mjs"
+   ]
+  },
+  {
+   "from": "sim_law",
    "to": "sim_economy",
    "kind": "call",
    "labels": [
@@ -3944,11 +3997,21 @@
   },
   {
    "from": "sim_law",
+   "to": "sim_environment",
+   "kind": "call",
+   "labels": [
+    "regions.mjs"
+   ]
+  },
+  {
+   "from": "sim_law",
    "to": "sim_npc",
    "kind": "call",
    "labels": [
     "npc-cognition.mjs",
-    "npc-schedule.mjs"
+    "npc-intelligence.mjs",
+    "npc-schedule.mjs",
+    "npc-state.mjs"
    ]
   },
   {
@@ -3957,6 +4020,7 @@
    "kind": "call",
    "labels": [
     "organizations.mjs",
+    "promotion-view.mjs",
     "reputation.mjs"
    ]
   },
@@ -4051,6 +4115,7 @@
    "to": "sim_law",
    "kind": "call",
    "labels": [
+    "law-codes.mjs",
     "law.mjs"
    ]
   },
@@ -4967,6 +5032,14 @@
   },
   {
    "from": "data_geo",
+   "to": "sim_law",
+   "kind": "data",
+   "labels": [
+    "world/geo"
+   ]
+  },
+  {
+   "from": "data_geo",
    "to": "sim_magic",
    "kind": "data",
    "labels": [
@@ -5400,6 +5473,14 @@
   {
    "from": "data_people",
    "to": "sim_environment",
+   "kind": "data",
+   "labels": [
+    "world/people"
+   ]
+  },
+  {
+   "from": "data_people",
+   "to": "sim_law",
    "kind": "data",
    "labels": [
     "world/people"
@@ -6413,6 +6494,17 @@
    "partitions": []
   },
   {
+   "id": "npc_crime",
+   "order": 1210,
+   "stepped": false,
+   "nextMinute": true,
+   "modules": [
+    "server-plugin/npc-crime.mjs"
+   ],
+   "inline": false,
+   "partitions": []
+  },
+  {
    "id": "world_clock",
    "order": 1300,
    "stepped": true,
@@ -6809,6 +6901,7 @@
     "fn": "recordNpcMemories",
     "module": "server-plugin/npc-memory.mjs",
     "verbs": [
+     "breach",
      "cast",
      "clash",
      "duel",
@@ -6920,7 +7013,8 @@
    ],
    "detain": [
     "server-plugin/bounty.mjs",
-    "server-plugin/law.mjs"
+    "server-plugin/law.mjs",
+    "server-plugin/npc-crime.mjs"
    ],
    "die": [
     "server-plugin/npc-life.mjs"
@@ -6971,7 +7065,8 @@
     "server-plugin/promotion.mjs"
    ],
    "release": [
-    "server-plugin/law.mjs"
+    "server-plugin/law.mjs",
+    "server-plugin/npc-crime.mjs"
    ],
    "rumor": [
     "server-plugin/effects.mjs",
@@ -7999,12 +8094,14 @@
    "server-plugin/faction-clock.mjs",
    "server-plugin/faith.mjs",
    "server-plugin/governance.mjs",
+   "server-plugin/law-codes.mjs",
    "server-plugin/lies.mjs",
    "server-plugin/magic-consent.mjs",
    "server-plugin/magic-economy.mjs",
    "server-plugin/military.mjs",
    "server-plugin/monster-society.mjs",
    "server-plugin/notables.mjs",
+   "server-plugin/npc-crime.mjs",
    "server-plugin/organizations.mjs",
    "server-plugin/promotion.mjs",
    "server-plugin/public-opinion.mjs",
@@ -9237,7 +9334,8 @@
     "compensate",
     "claim",
     "grant_magic_permit",
-    "bribe"
+    "bribe",
+    "hire_advocate"
    ],
    "routes": [
     {
@@ -9273,7 +9371,8 @@
       "compensate",
       "claim",
       "grant_magic_permit",
-      "bribe"
+      "bribe",
+      "hire_advocate"
      ],
      "handler": "activities.law",
      "modules": [
@@ -9314,7 +9413,7 @@
   },
   {
    "dir": "world/design",
-   "files": 111,
+   "files": 112,
    "keys": [],
    "readers": [
     "server-plugin/civic.mjs",
@@ -9333,6 +9432,7 @@
     "tools/draft-economy.mjs",
     "tools/draft-spells.mjs",
     "tools/economy-content.mjs",
+    "tools/l1-law-content.mjs",
     "tools/m2-people-age-repair.mjs",
     "tools/m2-people-content.mjs",
     "tools/m2-people-draft.mjs",
@@ -9424,7 +9524,7 @@
   },
   {
    "dir": "world/drafts",
-   "files": 36,
+   "files": 37,
    "keys": [],
    "readers": [],
    "tools": [
@@ -9433,6 +9533,7 @@
     "tools/draft-economy.mjs",
     "tools/draft-spells.mjs",
     "tools/draft-wildlife.mjs",
+    "tools/l1-law-content.mjs",
     "tools/m2-people-age-repair.mjs",
     "tools/m2-people-draft.mjs",
     "tools/m2-people-publish.mjs",
@@ -9544,6 +9645,7 @@
     "server-plugin/farm-pests.mjs",
     "server-plugin/festival.mjs",
     "server-plugin/governance.mjs",
+    "server-plugin/law-codes.mjs",
     "server-plugin/magic-air.mjs",
     "server-plugin/magic-economy.mjs",
     "server-plugin/magic-light.mjs",
@@ -9726,8 +9828,10 @@
     "server-plugin/governance.mjs",
     "server-plugin/hazard-calendar.mjs",
     "server-plugin/items.mjs",
+    "server-plugin/law-codes.mjs",
     "server-plugin/law.mjs",
     "server-plugin/learning.mjs",
+    "server-plugin/legal-representation.mjs",
     "server-plugin/location-access.mjs",
     "server-plugin/magic-care.mjs",
     "server-plugin/magic-consent.mjs",
@@ -9736,13 +9840,13 @@
     "server-plugin/magic-movement.mjs",
     "server-plugin/magic-object.mjs",
     "server-plugin/magic-ritual.mjs",
-    "server-plugin/magic-targeting.mjs",
     "server-plugin/manufacturing.mjs",
     "server-plugin/migrations/r1.mjs",
     "server-plugin/military.mjs",
     "server-plugin/monster-society.mjs",
     "server-plugin/notables.mjs",
     "server-plugin/npc-autonomy.mjs",
+    "server-plugin/npc-crime.mjs",
     "server-plugin/npc-growth.mjs",
     "server-plugin/npc-intelligence.mjs",
     "server-plugin/npc-life.mjs",
@@ -9805,6 +9909,7 @@
     "tools/design-combat-rules.mjs",
     "tools/design-profession-catalog.mjs",
     "tools/freeze-phase1.mjs",
+    "tools/l1-law-content.mjs",
     "tools/load-world.mjs",
     "tools/m2-people-content.mjs",
     "tools/m4-batch2-content.mjs",
@@ -9891,6 +9996,7 @@
     "server-plugin/entity-view.mjs",
     "server-plugin/festival.mjs",
     "server-plugin/governance.mjs",
+    "server-plugin/law-codes.mjs",
     "server-plugin/military.mjs",
     "server-plugin/monster-society.mjs",
     "server-plugin/notables.mjs",
@@ -10100,16 +10206,16 @@
    "server-plugin/summons.mjs"
   ],
   "law": [
-   "server-plugin/agriculture.mjs",
    "server-plugin/bounty.mjs",
    "server-plugin/faith.mjs",
    "server-plugin/governance.mjs",
+   "server-plugin/law-codes.mjs",
    "server-plugin/law.mjs",
+   "server-plugin/legal-representation.mjs",
    "server-plugin/magic-consent.mjs",
-   "server-plugin/magic-targeting.mjs",
+   "server-plugin/npc-crime.mjs",
    "server-plugin/npc-state.mjs",
-   "server-plugin/regions.mjs",
-   "server-plugin/smuggling.mjs"
+   "server-plugin/regions.mjs"
   ],
   "weather": [
    "server-plugin/agriculture.mjs",
@@ -10253,6 +10359,7 @@
    "server-plugin/elections.mjs"
   ],
   "smuggling": [
+   "server-plugin/npc-crime.mjs",
    "server-plugin/smuggling.mjs"
   ],
   "magicEconomy": [
@@ -10742,6 +10849,7 @@
     "base_advance",
     "base_standing",
     "kernel_engine",
+    "sim_law",
     "sim_npc",
     "sim_society"
    ]
@@ -10966,6 +11074,7 @@
       "server-plugin/boss-migration.mjs",
       "server-plugin/boss-negotiation.mjs",
       "server-plugin/bosses.mjs",
+      "server-plugin/npc-crime.mjs",
       "server-plugin/npc-intelligence.mjs",
       "server-plugin/quest-sources.mjs",
       "server-plugin/tribal-awakening.mjs"
@@ -10973,6 +11082,7 @@
      "systems": [
       "kernel_storage",
       "sim_boss",
+      "sim_law",
       "sim_npc",
       "sim_society"
      ]
@@ -10998,6 +11108,7 @@
     "sim_boss",
     "sim_companion",
     "sim_economy",
+    "sim_law",
     "sim_magic",
     "sim_npc",
     "sim_society",
@@ -11235,6 +11346,7 @@
       "server-plugin/faith-catalog.mjs",
       "server-plugin/governance.mjs",
       "server-plugin/hazard-calendar.mjs",
+      "server-plugin/law-codes.mjs",
       "server-plugin/magic-economy.mjs",
       "server-plugin/military.mjs",
       "server-plugin/monster-society.mjs",
@@ -11275,6 +11387,7 @@
       "sim_economy",
       "sim_environment",
       "sim_faith",
+      "sim_law",
       "sim_military",
       "sim_npc",
       "sim_society",
@@ -11497,6 +11610,7 @@
     "sim_economy",
     "sim_environment",
     "sim_faith",
+    "sim_law",
     "sim_magic",
     "sim_military",
     "sim_npc",
@@ -11729,23 +11843,22 @@
      "means": "施法许可与违法",
      "pattern": "\\.law\\b",
      "modules": [
-      "server-plugin/agriculture.mjs",
       "server-plugin/bounty.mjs",
       "server-plugin/entity-view.mjs",
       "server-plugin/faith.mjs",
       "server-plugin/governance.mjs",
+      "server-plugin/law-codes.mjs",
       "server-plugin/law.mjs",
+      "server-plugin/legal-representation.mjs",
       "server-plugin/magic-consent.mjs",
       "server-plugin/magic-targeting.mjs",
+      "server-plugin/npc-crime.mjs",
       "server-plugin/npc-state.mjs",
       "server-plugin/regions.mjs",
-      "server-plugin/reputation.mjs",
-      "server-plugin/smuggling.mjs"
+      "server-plugin/reputation.mjs"
      ],
      "systems": [
       "base_standing",
-      "sim_agriculture",
-      "sim_economy",
       "sim_environment",
       "sim_faith",
       "sim_law",
@@ -11937,6 +12050,7 @@
       "server-plugin/festival.mjs",
       "server-plugin/governance.mjs",
       "server-plugin/hazard-calendar.mjs",
+      "server-plugin/law-codes.mjs",
       "server-plugin/law.mjs",
       "server-plugin/location-access.mjs",
       "server-plugin/magic-economy.mjs",
@@ -12078,6 +12192,7 @@
       "server-plugin/boss-migration.mjs",
       "server-plugin/boss-negotiation.mjs",
       "server-plugin/bosses.mjs",
+      "server-plugin/npc-crime.mjs",
       "server-plugin/npc-intelligence.mjs",
       "server-plugin/quest-sources.mjs",
       "server-plugin/tribal-awakening.mjs"
@@ -12085,6 +12200,7 @@
      "systems": [
       "kernel_storage",
       "sim_boss",
+      "sim_law",
       "sim_npc",
       "sim_society"
      ]
@@ -12286,6 +12402,7 @@
       "server-plugin/law.mjs",
       "server-plugin/military.mjs",
       "server-plugin/npc-autonomy.mjs",
+      "server-plugin/npc-crime.mjs",
       "server-plugin/settlement-trade.mjs",
       "server-plugin/shop.mjs",
       "server-plugin/smuggling.mjs",
@@ -13013,6 +13130,7 @@
      "pattern": "regionOf",
      "modules": [
       "server-plugin/catalog.mjs",
+      "server-plugin/law-codes.mjs",
       "server-plugin/regions.mjs",
       "server-plugin/ui-map.mjs",
       "server-plugin/war-diplomacy.mjs"
@@ -13020,6 +13138,7 @@
      "systems": [
       "nar_memory",
       "sim_environment",
+      "sim_law",
       "sim_military",
       "ui_server"
      ]
@@ -13055,6 +13174,7 @@
    "autoSystems": [
     "nar_memory",
     "sim_environment",
+    "sim_law",
     "sim_military",
     "ui_server"
    ],
@@ -13528,6 +13648,7 @@
     "server-plugin/notables.mjs",
     "server-plugin/npc-autonomy.mjs",
     "server-plugin/npc-cognition.mjs",
+    "server-plugin/npc-crime.mjs",
     "server-plugin/npc-life.mjs",
     "server-plugin/npc-obligations.mjs",
     "server-plugin/office-salary.mjs",
@@ -13575,7 +13696,7 @@
     "npcs"
    ],
    "worldDirs": [],
-   "lines": 182
+   "lines": 184
   },
   "server-plugin/agriculture-migration.mjs": {
    "system": "kernel_storage",
@@ -13599,6 +13720,7 @@
    "system": "sim_agriculture",
    "imports": [
     "server-plugin/farm-pests.mjs",
+    "server-plugin/law-codes.mjs",
     "server-plugin/magic-economy.mjs",
     "server-plugin/magic-growth.mjs",
     "server-plugin/weather.mjs"
@@ -13622,7 +13744,6 @@
    ],
    "rules": [
     "agriculture",
-    "law",
     "magicGrowth",
     "weather"
    ],
@@ -13635,7 +13756,7 @@
     "spells"
    ],
    "worldDirs": [],
-   "lines": 327
+   "lines": 328
   },
   "server-plugin/archived-reducer.mjs": {
    "system": "kernel_engine",
@@ -13789,6 +13910,7 @@
    "imports": [
     "server-plugin/entity-transitions.mjs",
     "server-plugin/entity-view.mjs",
+    "server-plugin/law-codes.mjs",
     "server-plugin/organizations.mjs",
     "server-plugin/progression.mjs",
     "server-plugin/standing.mjs",
@@ -13815,7 +13937,7 @@
    ],
    "world": [],
    "worldDirs": [],
-   "lines": 347
+   "lines": 351
   },
   "server-plugin/business.mjs": {
    "system": "sim_economy",
@@ -14348,6 +14470,7 @@
     "server-plugin/military.mjs",
     "server-plugin/monster-society.mjs",
     "server-plugin/npc-autonomy.mjs",
+    "server-plugin/npc-crime.mjs",
     "server-plugin/npc-intelligence.mjs",
     "server-plugin/npc-obligations.mjs",
     "server-plugin/npc-relations.mjs",
@@ -14448,7 +14571,7 @@
     "spells"
    ],
    "worldDirs": [],
-   "lines": 711
+   "lines": 712
   },
   "server-plugin/entity-transitions.mjs": {
    "system": "base_events",
@@ -14968,6 +15091,39 @@
    "worldDirs": [],
    "lines": 103
   },
+  "server-plugin/law-codes.mjs": {
+   "system": "sim_law",
+   "imports": [
+    "server-plugin/entity-view.mjs",
+    "server-plugin/promotion-view.mjs",
+    "server-plugin/regions.mjs",
+    "server-plugin/standing.mjs"
+   ],
+   "stateWrites": [],
+   "stateReads": [
+    "npcs",
+    "records",
+    "remote"
+   ],
+   "recordWrites": [],
+   "recordReads": [
+    "diplomacy",
+    "legal_dismissal"
+   ],
+   "rules": [
+    "law"
+   ],
+   "world": [
+    "locations",
+    "npcs",
+    "regions",
+    "residents",
+    "rules",
+    "settlementProfiles"
+   ],
+   "worldDirs": [],
+   "lines": 79
+  },
   "server-plugin/law.mjs": {
    "system": "sim_law",
    "imports": [
@@ -14975,6 +15131,8 @@
     "server-plugin/entity-transitions.mjs",
     "server-plugin/entity-view.mjs",
     "server-plugin/items.mjs",
+    "server-plugin/law-codes.mjs",
+    "server-plugin/legal-representation.mjs",
     "server-plugin/npc-cognition.mjs",
     "server-plugin/npc-schedule.mjs",
     "server-plugin/reputation.mjs",
@@ -15001,7 +15159,7 @@
    ],
    "world": [],
    "worldDirs": [],
-   "lines": 495
+   "lines": 536
   },
   "server-plugin/learning.mjs": {
    "system": "sim_character",
@@ -15037,6 +15195,30 @@
    "world": [],
    "worldDirs": [],
    "lines": 110
+  },
+  "server-plugin/legal-representation.mjs": {
+   "system": "sim_law",
+   "imports": [
+    "server-plugin/entity-view.mjs",
+    "server-plugin/npc-schedule.mjs",
+    "server-plugin/npc-state.mjs"
+   ],
+   "stateWrites": [
+    "npcs",
+    "player"
+   ],
+   "stateReads": [
+    "location",
+    "minute"
+   ],
+   "recordWrites": [],
+   "recordReads": [],
+   "rules": [
+    "law"
+   ],
+   "world": [],
+   "worldDirs": [],
+   "lines": 33
   },
   "server-plugin/lies.mjs": {
    "system": "sim_npc",
@@ -15643,6 +15825,7 @@
   "server-plugin/magic-targeting.mjs": {
    "system": "sim_magic",
    "imports": [
+    "server-plugin/law-codes.mjs",
     "server-plugin/magic-consent.mjs",
     "server-plugin/storage.mjs"
    ],
@@ -15657,12 +15840,10 @@
     "magic_permission",
     "magic_permission_source"
    ],
-   "rules": [
-    "law"
-   ],
+   "rules": [],
    "world": [],
    "worldDirs": [],
-   "lines": 36
+   "lines": 37
   },
   "server-plugin/magic-water-earth.mjs": {
    "system": "sim_magic",
@@ -15988,6 +16169,41 @@
    "worldDirs": [],
    "lines": 148
   },
+  "server-plugin/npc-crime.mjs": {
+   "system": "sim_law",
+   "imports": [
+    "server-plugin/bounty.mjs",
+    "server-plugin/combat.mjs",
+    "server-plugin/entity-transitions.mjs",
+    "server-plugin/entity-view.mjs",
+    "server-plugin/items.mjs",
+    "server-plugin/law-codes.mjs",
+    "server-plugin/law.mjs",
+    "server-plugin/npc-intelligence.mjs",
+    "server-plugin/npc-state.mjs",
+    "server-plugin/standing.mjs",
+    "server-plugin/world-clock.mjs",
+    "server-plugin/world-events.mjs"
+   ],
+   "stateWrites": [
+    "npcs"
+   ],
+   "stateReads": [
+    "location",
+    "records"
+   ],
+   "recordWrites": [],
+   "recordReads": [
+    "legal_case"
+   ],
+   "rules": [
+    "law",
+    "smuggling"
+   ],
+   "world": [],
+   "worldDirs": [],
+   "lines": 133
+  },
   "server-plugin/npc-growth.mjs": {
    "system": "sim_npc",
    "imports": [
@@ -16127,7 +16343,7 @@
    "rules": [],
    "world": [],
    "worldDirs": [],
-   "lines": 187
+   "lines": 191
   },
   "server-plugin/npc-obligations.mjs": {
    "system": "sim_npc",
@@ -16772,6 +16988,7 @@
   "server-plugin/remote-generation.mjs": {
    "system": "sim_environment",
    "imports": [
+    "server-plugin/law-codes.mjs",
     "server-plugin/npc-state.mjs",
     "server-plugin/shop.mjs",
     "server-plugin/storage.mjs",
@@ -16816,7 +17033,7 @@
    "worldDirs": [
     "geo"
    ],
-   "lines": 691
+   "lines": 711
   },
   "server-plugin/repair.mjs": {
    "system": "sim_economy",
@@ -16984,7 +17201,7 @@
     "settlementProfiles"
    ],
    "worldDirs": [],
-   "lines": 164
+   "lines": 171
   },
   "server-plugin/revival.mjs": {
    "system": "sim_character",
@@ -17312,6 +17529,7 @@
    "imports": [
     "server-plugin/bounty.mjs",
     "server-plugin/items.mjs",
+    "server-plugin/law-codes.mjs",
     "server-plugin/law.mjs",
     "server-plugin/organizations.mjs",
     "server-plugin/settlement-trade.mjs"
@@ -17328,14 +17546,13 @@
    "recordWrites": [],
    "recordReads": [],
    "rules": [
-    "law",
     "smuggling"
    ],
    "world": [
     "routes"
    ],
    "worldDirs": [],
-   "lines": 86
+   "lines": 87
   },
   "server-plugin/standing.mjs": {
    "system": "base_standing",
@@ -17371,7 +17588,7 @@
     "regions"
    ],
    "worldDirs": [],
-   "lines": 149
+   "lines": 150
   },
   "server-plugin/state-notices.mjs": {
    "system": "ui_scene",

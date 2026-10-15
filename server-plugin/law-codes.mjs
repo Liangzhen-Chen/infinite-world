@@ -1,0 +1,78 @@
+// Executable jurisdictions are views of current places, rulers and offices.
+import {regionOf} from './regions.mjs';
+import {standing} from './standing.mjs';
+import {personOffices,personCareer,settlementHead} from './entity-view.mjs';
+import {adminLevel} from './promotion-view.mjs';
+
+export const legalTemplate=(world,county)=>world.rules.law?.templates?.find(t=>t.polity===(county.ruler.polity.startsWith('王国')?'王国':county.ruler.polity)&&(!t.province||t.province===county.province));
+export const legalStaffing=level=>level==='村'?1:level==='镇'?2:3;
+const places=world=>new Map(world.locations.map(l=>[l.id,l]));
+function settlementOf(world,id){const byId=places(world),seen=new Set();for(let at=id;at&&!seen.has(at);at=byId.get(at)?.parent){seen.add(at);if(world.settlementProfiles?.some(s=>s.id===at))return at;}return id;}
+function authorities(world,state,settlement,kind){
+ const engine={world,rules:world.rules,byId:new Map([...world.npcs,...world.residents??[],...world.locations].map(n=>[n.id,n]))};
+ const office=Object.values(state?.records??{}).filter(r=>r.category==='governance_office'&&r.settlement===settlement);
+ const current=office.filter(r=>personOffices(engine,state,r.holder,{settlement,power:kind}).length).map(r=>r.holder);
+ const head=settlementHead(engine,state,settlement).value;
+ if(kind==='judge'&&head)current.push(head);
+ const pool=[...world.npcs,...world.residents??[]];
+ const generated=pool.filter(n=>n.generated==='remote'&&n.settlement===settlement&&n.remoteRole==='official'&&
+  (!n.judicialRole||kind==='judge'&&n.judicialRole!=='officer'||kind==='officer'&&n.judicialRole==='officer')&&
+  personCareer(engine,state,n.id).value.occupation===n.occupation&&(!n.office||head===n.id)).map(n=>n.id);
+ return [...new Set([...current,...generated])].filter(id=>!state?.records?.[`legal_dismissal:${id}`]&&!['死亡','濒死'].includes(state?.npcs?.[id]?.status));
+}
+const geometry=new WeakMap();
+export function legalCodes(world,state={}){
+ const original=world.rules.law?.codes??[];
+ if(!world.rules.law?.templates?.length||!world.remoteCounties?.length)return original;
+ let groups=geometry.get(world);
+ if(!groups){groups=new Map();const occupied=new Set(original.flatMap(c=>c.locations));
+ for(const l of world.locations){if(occupied.has(l.id))continue;const region=regionOf(world,l.id),t=region&&world.remoteCounties.includes(region.county.id)&&legalTemplate(world,region.county);if(!t)continue;
+  const own=settlementOf(world,l.id),sid=world.settlementProfiles?.some(s=>s.id===own)?own:world.settlementProfiles?.find(s=>s.county===region.county.id&&s.kind==='seat')?.id??own;
+  const key=`${t.id}:${sid}`;if(!groups.has(key))groups.set(key,{template:t,county:region.county,sid,locations:[]});groups.get(key).locations.push(l.id);
+ }
+ geometry.set(world,groups);}
+ const derived=[];
+ for(const {template:t,county,sid,locations}of groups.values()){
+  const court=world.locations.find(l=>l.scope===sid&&/官署|议事区/.test(l.purpose??''))?.id??(locations.includes(sid)?sid:locations[0]);
+  const level=adminLevel({world,rules:world.rules},state,sid)?.level??world.settlementProfiles?.find(p=>p.id===sid)?.level??'村';
+  derived.push({...t,id:`${t.id}:${sid}`,template:t.id,derived:true,county:county.id,province:county.province,settlement:sid,
+   faction:county.ruler.faction??null,polity:t.polity,locations,court,
+   judges:authorities(world,state,sid,'judge'),officers:authorities(world,state,sid,'officer').slice(0,legalStaffing(level))});
+ }
+ return [...original,...derived];
+}
+export function legalCodeAt(engine,location,state={}){return legalCodes(engine.world,state).find(c=>c.locations.includes(location))??null;}
+export function legalCodeById(engine,id,state={}){return legalCodes(engine.world,state).find(c=>c.id===id)??null;}
+export function courtHierarchy(engine,state,code){
+ const all=legalCodes(engine.world,state),county=engine.world.regions?.find(r=>r.id===(code.county??regionOf(engine.world,code.court)?.county.id));
+ const t=code.template?engine.rules.law.templates.find(t=>t.id===code.template):county&&legalTemplate(engine.world,county);
+ if(!t)return null;
+ // A home county has authored villages and is not regenerated. Its province's
+ // seat accepts their appellate papers through the existing county office there.
+ const province=engine.world.regions?.find(r=>r.id===county?.province);
+ const countySeat=county?.seat?.location??state.remote?.[county?.id]?.skeleton.seat??(t.polity==='王国'?province?.seat?.location:null);
+ const second=all.find(c=>c.locations.includes(countySeat));
+ const final=t.polity==='王国'?all.find(c=>c.locations.includes('loc_capital')):all.find(c=>c.polity===t.polity&&c.county===county?.id&&c.locations.includes(countySeat));
+ return [code,second,final].map((c,index)=>({level:index,name:t.courts[index],court:c?.court??(index===2&&t.polity==='王国'?'loc_capital':countySeat),
+  judges:!c?[]:index===0?c.judges:c.judges.filter(id=>engine.byId.get(id)?.judicialRole===(index===1?'review':'final')),code:c?.id??null}));
+}
+export function courtFacilities(engine,state,settlement){
+ const code=legalCodeAt(engine,settlement,state);if(!code)return null;
+ const level=adminLevel(engine,state,settlement)?.level??engine.world.settlementProfiles?.find(p=>p.id===settlement)?.level??'村';
+ return{court:code.court,name:code.courts?.[0]??'地方初审',level,officers:code.officers,judges:code.judges,law:code.id,
+  staffing:legalStaffing(level),vacancies:Math.max(0,legalStaffing(level)-code.officers.length),source:'当前聚落级别、职业与任职派生'};
+}
+export function legalCooperation(engine,state,from,to){
+ if(from.id===to.id)return{notices:true,extradition:true,reason:'本辖区'};
+ const ar=regionOf(engine.world,from.court)?.county,br=regionOf(engine.world,to.court)?.county;
+ const a=from.faction??ar?.ruler.faction??ar?.id??from.settlement??from.id,b=to.faction??br?.ruler.faction??br?.id??to.settlement??to.id;
+ const pair=[a,b].sort().join(':');
+ const sidesA=[a,ar?.id],sidesB=[b,br?.id];
+ const war=Object.values(state.records??{}).find(w=>w.category==='war'&&['交战','停战'].includes(w.status)&&
+  (sidesA.includes(w.aggressor)&&sidesB.includes(w.defender)||sidesB.includes(w.aggressor)&&sidesA.includes(w.defender)));
+ const score=Math.min(standing(engine,state,a,b),standing(engine,state,b,a));
+ if(war||score<=-30)return{notices:false,extradition:false,reason:war?'交战或停战，司法协作暂停':'敌对立场'};
+ const same=(from.polity??'王国')===(to.polity??'王国'),ally=state.records?.[`diplomacy:${pair}`]?.status==='结盟';
+ const explicit=engine.rules.law?.polities?.find(p=>p.law===from.id)?.cooperates?.includes(to.id);
+ return{notices:same||ally||score>=10||Boolean(explicit),extradition:same||ally||score>=30||Boolean(explicit),reason:same?'同政体司法协作':ally?'结盟司法协作':'双方立场'};
+}

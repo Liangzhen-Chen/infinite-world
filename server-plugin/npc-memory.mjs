@@ -52,7 +52,11 @@ export function recordNpcMemories(d,engine,before,events,...rest){
     if(!Object.keys(d.get('state','npcs')).some(id=>full(engine,id)))return;
     const resolve=value=>{if(!value)return null;try{return engine.resolve(value);}catch{return null;}};
     const facts=[],add=(key,content,participants,options={})=>facts.push({key,content,participants:[...new Set(participants.filter(Boolean))],location:before.location,minute:after.minute,salience:2,emotion:'平静',...options});
-    if(verb==='remember'&&detail.rumor&&!detail.duplicate){
+    if(event.tags?.includes('npc_crime')){
+        const action=event.tags.includes('fraud')?'骗取':event.tags.includes('smuggling')?'暗运受验货物交给':event.verb==='harm'?'斗殴伤及':'偷取';
+        add('crime',`${name(event.actor)}${action}${name(event.target)}${['harm','breach'].includes(event.verb)?'':'的财物'}`,[event.actor,event.target],
+            {location:event.location,minute:event.minute,observers:event.witnesses,onlyObservers:true,salience:4,emotion:'警惕'});
+    }else if(verb==='remember'&&detail.rumor&&!detail.duplicate){
         add(`rumor_${detail.rumor}`,detail.content,['player',detail.source],{observers:[],private:true,reliability:'未核实',rumor:detail.rumor});
     }else if(verb==='trade'){
         const buyer=detail.buyer??resolve(args.buyer??'player'),seller=detail.seller??resolve(args.seller);

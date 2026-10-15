@@ -1,3 +1,4 @@
+import {legalCodeAt} from './law-codes.mjs';
 import {consumeGrowthDay,validateGrowthRules,validateGrowthWorld}from'./magic-growth.mjs';
 import {weatherAt}from'./weather.mjs';
 import {damageFarmCrops,farmPestProfile}from'./farm-pests.mjs';
@@ -203,7 +204,7 @@ function settleVillageTrade(d,engine,p,args,eventId){
  const expected=args.phase==='pickup'?contract.seller:contract.buyer;
  if(p.settlement!==expected)throw Error('必须本人到粮约本阶段的登记柜台，不可隔空交割');
  counter(d,engine,p);
- const official=engine.resolve(args.authority??'','npc'),code=engine.rules.law?.codes.find(c=>c.locations.includes(p.settlement));
+ const official=engine.resolve(args.authority??'','npc'),code=legalCodeAt(engine,p.settlement,d.get('state'));
  if(official!==p.manager||!code?.judges.includes(official))throw Error('此人没有粮约收款及税章权限；普通协调者不能征税');
  const tradeKey=`village-trade:${contract.id}`,old=d.get('state','records',tradeKey);
  if(old&&old.category!=='village_trade')throw Error('粮约账编号冲突，拒绝覆盖');
