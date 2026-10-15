@@ -26,6 +26,8 @@ import {validateSites}from'../server-plugin/sites.mjs';
 import {validateShopRules}from'../server-plugin/shop.mjs';
 import {validateRegions}from'../server-plugin/regions.mjs';
 import {validateHazardRules}from'../server-plugin/seasonal-hazards.mjs';
+import {validateQuestSources}from'../server-plugin/quest-sources.mjs';
+import {validateTribalAwakening}from'../server-plugin/tribal-awakening.mjs';
 const schema=JSON.parse(await fs.readFile(new URL('../schemas/world.schema.json',import.meta.url),'utf8'));
 const blocklist=JSON.parse(await fs.readFile(new URL('../world/meta/blocklist.json',import.meta.url),'utf8'));
 const validate=new Ajv({allErrors:true,strict:true,allowUnionTypes:true}).compile(schema);
@@ -54,6 +56,8 @@ export function validateWorld(world,{stage='engine'}={}){
     errors.push(...validateNpcLifeRules(world));
     errors.push(...validateFestivalRuntime(world));
     errors.push(...validateHazardRules(world));
+    errors.push(...validateQuestSources(world));
+    errors.push(...validateTribalAwakening(world));
     errors.push(...validateNpcProfiles(world));
     if(stage==='release'||stage==='final'){
         const depth=validateNpcDepth(world);

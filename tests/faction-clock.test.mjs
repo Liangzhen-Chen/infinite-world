@@ -41,10 +41,15 @@ function atContact(s,doc=s.doc){
 
 test('旧文字计划不执行；运行参数与未知效果明确拒绝，不以名册生成NPC',()=>{
  // Only factions that publish runtime stages execute; declarative W5 plans never do.
- const published=factionClockRules(new WorldEngine(source));
- assert.ok(published.every(r=>source.factions.find(f=>f.id===r.faction)?.clock?.stages===r.stages));
- assert.deepEqual(published.filter(r=>!source.factions.find(f=>f.id===r.faction)?.clock?.stages),[]);
- assert.ok(!published.some(r=>[owner,peer].includes(r.faction)));
+ // T110/T111 publish runtime stages for the W5 factions (the T142 polities as
+ // separate rules.factionClock data); the meaning is unchanged: only published
+ // stages execute, a clock that is still just the reviewed prose plan never does.
+ const published=factionClockRules(new WorldEngine(source)),configured=source.rules.factionClock?.clocks??[];
+ assert.ok(published.every(r=>source.factions.find(f=>f.id===r.faction)?.clock?.stages===r.stages||configured.some(c=>c.stages===r.stages)));
+ assert.deepEqual(published.filter(r=>!source.factions.find(f=>f.id===r.faction)?.clock?.stages&&!configured.some(c=>c.id===r.id)),[]);
+ const prose=structuredClone(source);
+ for(const f of prose.factions)if([owner,peer].includes(f.id)&&f.clock?.stages){const {settlement,source:from,cycle,stages,contact,interventions,...plan}=f.clock;f.clock=plan;}
+ assert.ok(!factionClockRules(new WorldEngine(prose)).some(r=>[owner,peer].includes(r.faction)));
  const s=setup();assert.doesNotThrow(()=>assertFactionClockRules(s.engine));
  for(const mutate of [r=>r.intervalDays=2,r=>r.stages[0].effect={kind:'made_up'},r=>r.stages[0].cost.items.item_oats=-1,r=>r.stages[0].cost={labor:5},r=>r.stages[0].condition={kind:'made_up'}]){
   const c=setup();mutate(c.rule);assert.throws(()=>assertFactionClockRules(c.engine));

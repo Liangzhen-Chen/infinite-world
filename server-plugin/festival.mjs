@@ -40,14 +40,24 @@ export function validateFestivalRuntime(world){
  }
  return errors;
 }
+// D1: a festival waiting for a host runs once a far county generated on the
+// player's arrival registers a resident host for it at the venue
+// (remote-generation festivalHost); the published row itself is unchanged.
+function generatedHost(engine,f){
+ if(f.runtime?.status!=='awaiting_host')return null;
+ return engine.world.npcs.find(n=>n.generated==='remote'&&n.remoteRole==='festival_host'&&n.festivalHost===f.id&&n.location===f.venue?.location)?.id??null;
+}
 export function festivalCalendar(engine){
- const official=(engine.world.festivals??[]).filter(f=>f.runtime?.status==='active').map(f=>({...f,
+ const hosted=(engine.world.festivals??[]).map(f=>{if(f.runtime?.status==='active')return f;const host=generatedHost(engine,f);return host?{...f,runtime:{...f.runtime,status:'active',host}}:null;}).filter(Boolean);
+ const official=hosted.map(f=>({...f,
   id:f.runtime.sourceCustom??f.id,publishedId:f.id,month:f.calendar.month,day:f.calendar.day,host:f.runtime.host,location:f.venue.location,
   settlement:engine.byId.get(f.venue.location)?.scope,source:`world/lore/festivals.json#${f.id}`,kind:f.runtime.kind,practice:f.custom,formal:true}));
  const linked=new Set(official.map(f=>f.id));return [...localFestivalCalendar(engine).filter(f=>!linked.has(f.id)),...official];
 }
 function custom(engine,id){const f=festivalCalendar(engine).find(f=>f.id===id||f.publishedId===id);if(!f||!f.formal&&f.status!=='custom-only'||!engine.byId.has(f.location)||!engine.world.npcs.some(n=>n.id===f.host))throw Error('节俗没有已发布日期、地点与组织者来源；候选节日不可执行');return f;}
-const needs=f=>(f.resourceNeeds??[]).map(n=>({item:n.item,quantity:n.quantity,owner:n.owner==='host'?f.host:n.owner}));
+// Borrowed or exchanged materials must be held and shown on the day but are
+// not used up; only consume (the default) leaves the owner's stock.
+const needs=f=>(f.resourceNeeds??[]).map(n=>({item:n.item,quantity:n.quantity,owner:n.owner==='host'?f.host:n.owner,...(n.use&&n.use!=='consume'?{use:n.use}:{})}));
 const matches=(f,row)=>row.definition===digest(f)&&row.host===f.host&&row.location===f.location&&row.kind===f.kind&&
  row.due===when(f,row.year)&&row.endsAt===row.due+f.runtime?.durationMinutes&&digest(row.resources)===digest(needs(f));
 const required=(engine,f,row)=>[...new Set([row.host,...(row.cost?[row.supplier]:[]),...needs(f).map(n=>n.owner),engine.byId.get(row.location)?.owner].filter(Boolean))];
@@ -177,7 +187,7 @@ export function advanceFestivals(d,engine,at){
    }
   }
   const consumed=[];
-  if(status==='held'&&row.formal)for(const n of row.resources){const result=changeItems(d,engine,n.owner,n.item,-n.quantity);consumed.push({...n,...result});}
+  if(status==='held'&&row.formal)for(const n of row.resources.filter(n=>!n.use)){const result=changeItems(d,engine,n.owner,n.item,-n.quantity);consumed.push({...n,...result});}
   const done={...row,status,reason,participants:status==='held'?[row.host,...participants]:[],paidCopper:status==='held'?row.cost:0,resolvedAt:at,resultEvent:`festival-result:${id}`,...(row.formal?{consumed}:{})};
   // K6: a held festival applies its published runtime effects and any effect-table
   // hooks as one transaction; festivals without effects keep their exact record.

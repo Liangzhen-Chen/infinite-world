@@ -1632,9 +1632,30 @@
         ]
       },
       "types": {
-        "tavern": {"channels": ["tavern"], "markup": 1, "cycleDays": 1, "firstDay": 1},
-        "smithy": {"channels": ["smithy"], "markup": 1, "cycleDays": 7, "firstDay": 1},
-        "merchant": {"channels": ["merchant"], "markup": 1.2, "cycleDays": 7, "firstDay": 1}
+        "tavern": {
+          "channels": [
+            "tavern"
+          ],
+          "markup": 1,
+          "cycleDays": 1,
+          "firstDay": 1
+        },
+        "smithy": {
+          "channels": [
+            "smithy"
+          ],
+          "markup": 1,
+          "cycleDays": 7,
+          "firstDay": 1
+        },
+        "merchant": {
+          "channels": [
+            "merchant"
+          ],
+          "markup": 1.2,
+          "cycleDays": 7,
+          "firstDay": 1
+        }
       },
       "stores": [
         {
@@ -3995,6 +4016,11 @@
             "faction": "faction_riverhomes",
             "score": -35,
             "reason": "公用岸线与独家泊位之争"
+          },
+          {
+            "faction": "faction_tidebrokers",
+            "score": -12,
+            "reason": "双方争长途河海联运代理但共享航期"
           }
         ],
         "source": "world/lore/factions.json#faction_saltboat"
@@ -4025,6 +4051,11 @@
             "faction": "faction_bankorder",
             "score": 32,
             "reason": "符契与召唤契约共享见证方法"
+          },
+          {
+            "faction": "faction_mossstudy",
+            "score": 10,
+            "reason": "交流生物边界但不同意无观察期的召唤试验"
           }
         ],
         "source": "world/lore/factions.json#faction_reedpact"
@@ -4040,6 +4071,16 @@
             "faction": "faction_scentkin",
             "score": 27,
             "reason": "共同保存猎道见证，但树冠和地面边界有分歧"
+          },
+          {
+            "faction": "faction_seedcourt",
+            "score": 22,
+            "reason": "给入籍贡献提供可查实绩"
+          },
+          {
+            "faction": "faction_far_scentmoot",
+            "score": 20,
+            "reason": "共治猎林，采伐配额与禁猎季常要互相让步"
           }
         ],
         "source": "world/lore/factions.json#faction_forestcouncil"
@@ -4070,6 +4111,11 @@
             "faction": "faction_saltboat",
             "score": -35,
             "reason": "尚未成立，不能代所有住户签独家合同"
+          },
+          {
+            "faction": "faction_furroworder",
+            "score": 17,
+            "reason": "支持公开账目，但未授权住户联盟代所有人决定"
           }
         ],
         "source": "world/lore/factions.json#faction_riverhomes"
@@ -4100,6 +4146,26 @@
             "faction": "faction_oathkeepers",
             "score": 25,
             "reason": "共用见证标准，但宗教证明不代替法庭裁判"
+          },
+          {
+            "faction": "faction_thresholdhouse",
+            "score": 15,
+            "reason": "承认法庭核契但争税款公开程度"
+          },
+          {
+            "faction": "faction_fieldguild",
+            "score": 12,
+            "reason": "严重争议移交既有法庭"
+          },
+          {
+            "faction": "faction_icearchive",
+            "score": 8,
+            "reason": "可提供出处，不能替法庭宣告完整事实"
+          },
+          {
+            "faction": "faction_quietledger",
+            "score": -70,
+            "reason": "卷宗造假破坏公开判例与债务归属"
           }
         ],
         "source": "world/lore/factions.json#faction_civiccourt"
@@ -4145,6 +4211,11 @@
             "faction": "faction_civiccourt",
             "score": 12,
             "reason": "严重争议移交既有法庭"
+          },
+          {
+            "faction": "faction_starpact",
+            "score": -8,
+            "reason": "公所愿记绕行线，但少数冒险者仍误认无主战利品"
           }
         ],
         "source": "world/lore/factions.json#faction_fieldguild"
@@ -4175,6 +4246,11 @@
             "faction": "faction_wellorder",
             "score": 30,
             "reason": "共享水程记录，部族不让祭司独占井水"
+          },
+          {
+            "faction": "faction_hoofguild",
+            "score": 16,
+            "reason": "迁徙帐群可见证动物长期习性"
           }
         ],
         "source": "world/lore/factions.json#faction_wellkin"
@@ -4190,6 +4266,11 @@
             "faction": "faction_wellkin",
             "score": 16,
             "reason": "迁徙帐群可见证动物长期习性"
+          },
+          {
+            "faction": "faction_saltcaravan",
+            "score": 19,
+            "reason": "依赖驯养会识别病畜与超载"
           }
         ],
         "source": "world/lore/factions.json#faction_hoofguild"
@@ -4205,6 +4286,11 @@
             "faction": "faction_forestcouncil",
             "score": 27,
             "reason": "共同维护林路，采伐范围需另议"
+          },
+          {
+            "faction": "faction_far_scentmoot",
+            "score": 45,
+            "reason": "砾耳交证群替共席保管和核对嗅迹证物"
           }
         ],
         "source": "world/lore/factions.json#faction_scentkin"
@@ -4250,6 +4336,11 @@
             "faction": "faction_seaweed",
             "score": -31,
             "reason": "填湾可能占去海草农场"
+          },
+          {
+            "faction": "faction_blackfloat",
+            "score": -48,
+            "reason": "偷换浮标妨碍合法航道检查"
           }
         ],
         "source": "world/lore/factions.json#faction_harboroffice"
@@ -4415,6 +4506,11 @@
             "faction": "faction_wedgeorder",
             "score": 29,
             "reason": "退楔会要求承包人承担已知危险"
+          },
+          {
+            "faction": "faction_far_orcmoot",
+            "score": -25,
+            "reason": "停战互市，旧仇未消"
           }
         ],
         "source": "world/lore/factions.json#faction_kilnkin"
@@ -4430,6 +4526,11 @@
             "faction": "faction_kilnkin",
             "score": 29,
             "reason": "承认炉契分工但不接受掩盖危险"
+          },
+          {
+            "faction": "faction_hollowcircle",
+            "score": 14,
+            "reason": "都要保留事故痕，但对匿名证词分歧明显"
           }
         ],
         "source": "world/lore/factions.json#faction_wedgeorder"
@@ -4460,6 +4561,16 @@
             "faction": "faction_reedpact",
             "score": 32,
             "reason": "共同研究同意与契约边界"
+          },
+          {
+            "faction": "faction_stonethread",
+            "score": 11,
+            "reason": "交换水位记录，拒绝用符契代替地层证据"
+          },
+          {
+            "faction": "faction_reedpaper",
+            "score": 21,
+            "reason": "符纸需求稳定，但拒绝把所有纸都冒称灵符"
           }
         ],
         "source": "world/lore/factions.json#faction_bankorder"
@@ -4490,6 +4601,11 @@
             "faction": "faction_civiccourt",
             "score": 25,
             "reason": "提供见证，不代替法庭断案"
+          },
+          {
+            "faction": "faction_returnorder",
+            "score": 23,
+            "reason": "借助公开契约划清无籍者担保责任"
           }
         ],
         "source": "world/lore/factions.json#faction_oathkeepers"
@@ -4565,6 +4681,11 @@
             "faction": "faction_fieldguild",
             "score": -8,
             "reason": "公所愿记绕行线，但少数冒险者仍误认无主战利品"
+          },
+          {
+            "faction": "faction_far_lignum",
+            "score": 5,
+            "reason": "沉星山坳的守窝群不属联邑，互不打扰"
           }
         ],
         "source": "world/lore/factions.json#faction_starpact"
@@ -4583,6 +4704,456 @@
           }
         ],
         "source": "world/lore/factions.json#faction_wellorder"
+      }
+    ]
+  },
+  "factionClock": {
+    "version": 1,
+    "clocks": [
+      {
+        "id": "clock_far_orcmoot",
+        "faction": "faction_far_orcmoot",
+        "name": "重画炉契",
+        "intervalDays": 30,
+        "probability": 0.3,
+        "settlement": "loc_far_duanqi",
+        "source": "T111 w5-clock-2 far",
+        "cycle": "year",
+        "contact": {
+          "location": "loc_far_duanqi"
+        },
+        "stages": [
+          {
+            "id": "s1",
+            "name": "各部报出本年愿换的矿和皮",
+            "condition": {
+              "kind": "asset",
+              "minimum": {
+                "coins": 620
+              }
+            },
+            "cost": {
+              "coins": 120
+            },
+            "effects": [
+              {
+                "kind": "relation",
+                "target": "faction_kilnkin",
+                "delta": -2
+              }
+            ]
+          },
+          {
+            "id": "s2",
+            "name": "大帐议定是否续约",
+            "condition": {
+              "kind": "always"
+            },
+            "cost": {
+              "coins": 190
+            },
+            "effects": [
+              {
+                "kind": "dispute",
+                "target": "faction_kilnkin",
+                "id": "clock_far_orcmoot",
+                "status": "open"
+              }
+            ]
+          },
+          {
+            "id": "s3",
+            "name": "在断契坡重画炉契或撤摊",
+            "condition": {
+              "kind": "dispute",
+              "target": "faction_kilnkin",
+              "id": "clock_far_orcmoot",
+              "status": "open"
+            },
+            "cost": {
+              "coins": 310
+            },
+            "effects": [
+              {
+                "kind": "rumor",
+                "id": "far_orcmoot_s3",
+                "claim": "寒炉回来的货商说，赭牙部盟在断契坡重画了炉契，停战互市又续了一年。",
+                "carriers": [
+                  "npc_bs_016_2",
+                  "npc_bs_017_2"
+                ],
+                "salience": 2
+              },
+              {
+                "kind": "dispute",
+                "target": "faction_kilnkin",
+                "id": "clock_far_orcmoot",
+                "status": "settled"
+              },
+              {
+                "kind": "relation",
+                "target": "faction_kilnkin",
+                "delta": 3
+              }
+            ]
+          },
+          {
+            "id": "alt",
+            "name": "补足欠盐后续约",
+            "condition": {
+              "kind": "intervention",
+              "id": "redirect"
+            },
+            "cost": {
+              "coins": 250
+            },
+            "effects": [
+              {
+                "kind": "rumor",
+                "id": "far_orcmoot_alt",
+                "claim": "断契坡那边据说有人替双方核实了越界和私掘的指控，欠付的盐补足了，炉契照旧续上。",
+                "carriers": [
+                  "npc_bs_016_2",
+                  "npc_bs_017_2"
+                ],
+                "salience": 2
+              },
+              {
+                "kind": "dispute",
+                "target": "faction_kilnkin",
+                "id": "clock_far_orcmoot",
+                "status": "settled"
+              },
+              {
+                "kind": "relation",
+                "target": "faction_kilnkin",
+                "delta": 5
+              }
+            ]
+          }
+        ],
+        "interventions": [
+          {
+            "id": "pause",
+            "name": "核实越界指控请暂缓议约",
+            "stage": "s2",
+            "location": "loc_far_duanqi",
+            "minutes": 60,
+            "cost": {},
+            "effect": "pause",
+            "attribute": "智力",
+            "difficulty": 14
+          },
+          {
+            "id": "resume",
+            "name": "撤回暂缓请求",
+            "stage": "s2",
+            "location": "loc_far_duanqi",
+            "minutes": 20,
+            "cost": {},
+            "effect": "resume"
+          },
+          {
+            "id": "redirect",
+            "name": "补足欠付的盐",
+            "stage": "s3",
+            "location": "loc_far_duanqi",
+            "minutes": 90,
+            "cost": {
+              "items": {
+                "item_salt": 20
+              }
+            },
+            "effect": "redirect",
+            "nextStage": "alt"
+          }
+        ]
+      },
+      {
+        "id": "clock_far_lignum",
+        "faction": "faction_far_lignum",
+        "name": "清点木牌",
+        "intervalDays": 30,
+        "probability": 0.25,
+        "settlement": "loc_far_jijie",
+        "source": "T111 w5-clock-2 far",
+        "cycle": "year",
+        "contact": {
+          "location": "loc_far_jijie"
+        },
+        "stages": [
+          {
+            "id": "s1",
+            "name": "清点去年收回的木牌",
+            "condition": {
+              "kind": "asset",
+              "minimum": {
+                "coins": 0
+              }
+            },
+            "cost": {
+              "coins": 0
+            },
+            "effects": [
+              {
+                "kind": "relation",
+                "target": "faction_ms_yugen",
+                "delta": 2
+              }
+            ]
+          },
+          {
+            "id": "s2",
+            "name": "查对外林春季的伐痕",
+            "condition": {
+              "kind": "relation",
+              "target": "faction_ms_yugen",
+              "minimum": 20
+            },
+            "cost": {
+              "coins": 0
+            },
+            "effects": [
+              {
+                "kind": "relation",
+                "target": "faction_ms_yugen",
+                "delta": 3
+              }
+            ]
+          },
+          {
+            "id": "s3",
+            "name": "议定今年发多少木牌",
+            "condition": {
+              "kind": "always"
+            },
+            "cost": {
+              "coins": 0
+            },
+            "effects": [
+              {
+                "kind": "rumor",
+                "id": "far_lignum_s3",
+                "claim": "听说杉根联邑的长老议定了今年发出的木牌数目，外林春季的伐痕也查对过了。",
+                "carriers": [
+                  "npc_hw_shendu",
+                  "npc_hw_yanzhe"
+                ],
+                "salience": 2
+              },
+              {
+                "kind": "relation",
+                "target": "faction_ms_yugen",
+                "delta": 2
+              }
+            ]
+          },
+          {
+            "id": "alt",
+            "name": "补种育苗坡后再发牌",
+            "condition": {
+              "kind": "intervention",
+              "id": "redirect"
+            },
+            "cost": {
+              "coins": 0
+            },
+            "effects": [
+              {
+                "kind": "rumor",
+                "id": "far_lignum_alt",
+                "claim": "杉根联邑据说先让人补种了育苗坡，偷伐的人也被找了出来，木牌照往年的数目发。",
+                "carriers": [
+                  "npc_hw_shendu",
+                  "npc_hw_yanzhe"
+                ],
+                "salience": 2
+              },
+              {
+                "kind": "relation",
+                "target": "faction_ms_yugen",
+                "delta": 4
+              }
+            ]
+          }
+        ],
+        "interventions": [
+          {
+            "id": "pause",
+            "name": "请守界者暂缓发牌",
+            "stage": "s2",
+            "location": "loc_far_jijie",
+            "minutes": 60,
+            "cost": {},
+            "effect": "pause",
+            "attribute": "魅力",
+            "difficulty": 13
+          },
+          {
+            "id": "resume",
+            "name": "撤回暂缓请求",
+            "stage": "s2",
+            "location": "loc_far_jijie",
+            "minutes": 20,
+            "cost": {},
+            "effect": "resume"
+          },
+          {
+            "id": "redirect",
+            "name": "替育苗坡补种",
+            "stage": "s3",
+            "location": "loc_far_jijie",
+            "minutes": 90,
+            "cost": {},
+            "effect": "redirect",
+            "nextStage": "alt",
+            "attribute": "体质",
+            "difficulty": 12
+          }
+        ]
+      },
+      {
+        "id": "clock_far_scentmoot",
+        "faction": "faction_far_scentmoot",
+        "name": "划出育幼地",
+        "intervalDays": 30,
+        "probability": 0.25,
+        "settlement": "loc_far_xiushi",
+        "source": "T111 w5-clock-2 far",
+        "cycle": "year",
+        "contact": {
+          "location": "loc_far_xiushi"
+        },
+        "stages": [
+          {
+            "id": "s1",
+            "name": "各养育群报出育幼地的边界",
+            "condition": {
+              "kind": "asset",
+              "minimum": {
+                "coins": 380
+              }
+            },
+            "cost": {
+              "coins": 80
+            },
+            "effects": [
+              {
+                "kind": "relation",
+                "target": "faction_scentkin",
+                "delta": 2
+              }
+            ]
+          },
+          {
+            "id": "s2",
+            "name": "与林民席位核对采伐配额",
+            "condition": {
+              "kind": "relation",
+              "target": "faction_scentkin",
+              "minimum": 35
+            },
+            "cost": {
+              "coins": 110
+            },
+            "effects": [
+              {
+                "kind": "relation",
+                "target": "faction_scentkin",
+                "delta": 3
+              }
+            ]
+          },
+          {
+            "id": "s3",
+            "name": "在共席石台议决是否划出育幼地",
+            "condition": {
+              "kind": "always"
+            },
+            "cost": {
+              "coins": 190
+            },
+            "effects": [
+              {
+                "kind": "rumor",
+                "id": "far_scentmoot_s3",
+                "claim": "听林道商人说，砾耳猎林共席在石台议决划出了今年的育幼地，禁猎季里外人不得进入。",
+                "carriers": [
+                  "npc_hw_shendu",
+                  "npc_hw_yanzhe"
+                ],
+                "salience": 2
+              },
+              {
+                "kind": "relation",
+                "target": "faction_scentkin",
+                "delta": 2
+              }
+            ]
+          },
+          {
+            "id": "alt",
+            "name": "林民让出配额后划地",
+            "condition": {
+              "kind": "intervention",
+              "id": "redirect"
+            },
+            "cost": {
+              "coins": 150
+            },
+            "effects": [
+              {
+                "kind": "rumor",
+                "id": "far_scentmoot_alt",
+                "claim": "猎林共席那次议事据说林民席位让出了一段采伐配额，育幼地划得比原先大。",
+                "carriers": [
+                  "npc_hw_shendu",
+                  "npc_hw_yanzhe"
+                ],
+                "salience": 2
+              },
+              {
+                "kind": "relation",
+                "target": "faction_scentkin",
+                "delta": 4
+              }
+            ]
+          }
+        ],
+        "interventions": [
+          {
+            "id": "pause",
+            "name": "核实越界嗅迹请暂缓议决",
+            "stage": "s2",
+            "location": "loc_far_xiushi",
+            "minutes": 60,
+            "cost": {},
+            "effect": "pause",
+            "attribute": "智力",
+            "difficulty": 13
+          },
+          {
+            "id": "resume",
+            "name": "撤回暂缓请求",
+            "stage": "s2",
+            "location": "loc_far_xiushi",
+            "minutes": 20,
+            "cost": {},
+            "effect": "resume"
+          },
+          {
+            "id": "redirect",
+            "name": "说服林民席位让出配额",
+            "stage": "s3",
+            "location": "loc_far_xiushi",
+            "minutes": 90,
+            "cost": {},
+            "effect": "redirect",
+            "nextStage": "alt",
+            "attribute": "魅力",
+            "difficulty": 14
+          }
+        ]
       }
     ]
   },
@@ -5859,6 +6430,3490 @@
             ]
           }
         ]
+      },
+      {
+        "id": "price:loc_hw",
+        "kind": "price",
+        "name": "青黄不接粮价波动",
+        "settlement": "loc_hw",
+        "seasons": [
+          1
+        ],
+        "intervalDays": 10,
+        "stages": [
+          {
+            "id": "rise",
+            "name": "粮价看涨",
+            "probability": 0.3,
+            "condition": {
+              "kind": "always"
+            },
+            "effects": [
+              {
+                "kind": "price_shift",
+                "settlement": "loc_hw",
+                "items": [
+                  "item_oats",
+                  "item_ration",
+                  "item_oat_flour",
+                  "item_oat_flatbread",
+                  "item_pearl_barley",
+                  "item_rye_flour",
+                  "item_wheat_grain"
+                ],
+                "factor": 1.1,
+                "minutes": 86400,
+                "reason": "青黄不接，陈粮见少"
+              }
+            ]
+          },
+          {
+            "id": "peak",
+            "name": "粮价高企",
+            "probability": 0.2,
+            "condition": {
+              "kind": "always"
+            },
+            "effects": [
+              {
+                "kind": "price_shift",
+                "settlement": "loc_hw",
+                "items": [
+                  "item_oats",
+                  "item_ration",
+                  "item_oat_flour",
+                  "item_oat_flatbread",
+                  "item_pearl_barley",
+                  "item_rye_flour",
+                  "item_wheat_grain"
+                ],
+                "factor": 1.2,
+                "minutes": 86400,
+                "reason": "青黄不接，粮商惜售"
+              }
+            ]
+          },
+          {
+            "id": "ease",
+            "name": "粮价回落",
+            "probability": 0.5,
+            "condition": {
+              "kind": "always"
+            },
+            "effects": [
+              {
+                "kind": "price_shift",
+                "settlement": "loc_hw",
+                "items": [
+                  "item_oats",
+                  "item_ration",
+                  "item_oat_flour",
+                  "item_oat_flatbread",
+                  "item_pearl_barley",
+                  "item_rye_flour",
+                  "item_wheat_grain"
+                ],
+                "factor": 1,
+                "minutes": 1,
+                "reason": "新麦将下，粮价回落"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "flood:loc_bs_yupo",
+        "kind": "flood",
+        "name": "汛期",
+        "settlement": "loc_bs_yupo",
+        "seasons": [
+          1
+        ],
+        "intervalDays": 6,
+        "stages": [
+          {
+            "id": "rise",
+            "name": "水位上涨",
+            "probability": 0.25,
+            "condition": {
+              "kind": "weather",
+              "kinds": [
+                "storm"
+              ]
+            },
+            "effects": [
+              {
+                "kind": "flood",
+                "locations": [
+                  "loc_yp_garden"
+                ],
+                "minutes": 1440
+              }
+            ]
+          },
+          {
+            "id": "crest",
+            "name": "洪峰过境",
+            "probability": 0.3,
+            "condition": {
+              "kind": "weather",
+              "kinds": [
+                "storm"
+              ]
+            },
+            "effects": [
+              {
+                "kind": "route_closure",
+                "routes": [
+                  "route_loc_yp_fields"
+                ],
+                "minutes": 2880,
+                "reason": "洪水漫过道路"
+              },
+              {
+                "kind": "flood",
+                "locations": [
+                  "loc_yp_fields",
+                  "loc_yp_garden"
+                ],
+                "minutes": 2880
+              },
+              {
+                "kind": "crop_damage",
+                "settlement": "loc_bs_yupo",
+                "percent": 15,
+                "minutes": 43200
+              }
+            ]
+          },
+          {
+            "id": "recede",
+            "name": "退水",
+            "probability": 0.6,
+            "condition": {
+              "kind": "always"
+            },
+            "effects": [
+              {
+                "kind": "environment",
+                "state": "dry",
+                "locations": [
+                  "loc_yp_fields",
+                  "loc_yp_garden"
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "epidemic:loc_bs_yupo",
+        "kind": "epidemic",
+        "name": "疫病流行",
+        "settlement": "loc_bs_yupo",
+        "seasons": [
+          3
+        ],
+        "intervalDays": 4,
+        "disease": "disease_cold_cough",
+        "spread": {
+          "routes": [
+            "route_bs_yp"
+          ]
+        },
+        "stages": [
+          {
+            "id": "cases",
+            "name": "零星病例",
+            "probability": 0.1,
+            "condition": {
+              "kind": "weather",
+              "kinds": [
+                "snow",
+                "fog"
+              ]
+            },
+            "effects": [
+              {
+                "kind": "epidemic",
+                "disease": "disease_cold_cough",
+                "settlement": "loc_bs_yupo",
+                "cases": 2
+              }
+            ]
+          },
+          {
+            "id": "spread",
+            "name": "疫病流行",
+            "probability": 1,
+            "condition": {
+              "kind": "epidemic_cases",
+              "minimum": 5
+            },
+            "effects": [
+              {
+                "kind": "price_shift",
+                "settlement": "loc_bs_yupo",
+                "items": [
+                  "item_herb"
+                ],
+                "factor": 1.4,
+                "minutes": 43200,
+                "reason": "疫病流行，药草紧缺"
+              }
+            ]
+          },
+          {
+            "id": "wane",
+            "name": "疫退",
+            "probability": 1,
+            "condition": {
+              "kind": "epidemic_clear"
+            },
+            "effects": [
+              {
+                "kind": "price_shift",
+                "settlement": "loc_bs_yupo",
+                "items": [
+                  "item_herb"
+                ],
+                "factor": 1,
+                "minutes": 1,
+                "reason": "疫退，药价回落"
+              }
+            ]
+          }
+        ],
+        "interventions": [
+          {
+            "id": "quarantine",
+            "name": "劝乡里隔离病家",
+            "measure": "quarantine",
+            "phases": [
+              1,
+              2
+            ],
+            "location": "bld_yp_hall",
+            "representative": "npc_yp_zhaofeng",
+            "cost": {},
+            "minutes": 120,
+            "attribute": "魅力",
+            "difficulty": 12,
+            "effects": [
+              {
+                "kind": "epidemic_measure",
+                "measure": "quarantine",
+                "minutes": 21600
+              },
+              {
+                "kind": "standing",
+                "holder": "loc_bs_yupo",
+                "target": "player",
+                "delta": 2,
+                "reason": "帮乡里安排病家隔离"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "famine:loc_bs_yupo",
+        "kind": "famine",
+        "name": "冬荒",
+        "settlement": "loc_bs_yupo",
+        "seasons": [
+          3
+        ],
+        "intervalDays": 7,
+        "stages": [
+          {
+            "id": "tight",
+            "name": "存粮告紧",
+            "probability": 1,
+            "condition": {
+              "kind": "granary_short",
+              "days": 90
+            },
+            "effects": [
+              {
+                "kind": "price_shift",
+                "settlement": "loc_bs_yupo",
+                "items": [
+                  "item_oats",
+                  "item_ration",
+                  "item_oat_flour",
+                  "item_oat_flatbread",
+                  "item_pearl_barley",
+                  "item_rye_flour",
+                  "item_wheat_grain"
+                ],
+                "factor": 1.2,
+                "minutes": 172800,
+                "reason": "冬季存粮告紧"
+              },
+              {
+                "kind": "rumor",
+                "id": "famine_tight",
+                "claim": "今冬仓里的粮撑不到开春，粮价已经往上走了。",
+                "carriers": [
+                  "npc_yp_zhaofeng",
+                  "npc_yp_lisha"
+                ],
+                "salience": 2
+              }
+            ]
+          },
+          {
+            "id": "famine",
+            "name": "冬荒",
+            "probability": 1,
+            "condition": {
+              "kind": "granary_short",
+              "days": 45
+            },
+            "effects": [
+              {
+                "kind": "price_shift",
+                "settlement": "loc_bs_yupo",
+                "items": [
+                  "item_oats",
+                  "item_ration",
+                  "item_oat_flour",
+                  "item_oat_flatbread",
+                  "item_pearl_barley",
+                  "item_rye_flour",
+                  "item_wheat_grain"
+                ],
+                "factor": 1.6,
+                "minutes": 172800,
+                "reason": "冬荒缺粮"
+              },
+              {
+                "kind": "famine",
+                "settlement": "loc_bs_yupo",
+                "minutes": 172800
+              },
+              {
+                "kind": "rumor",
+                "id": "famine_hunger",
+                "claim": "冬荒了，有人家已经断顿，有人说要去外乡投亲，也有人盯上了别家的粮囤。",
+                "carriers": [
+                  "npc_yp_zhaofeng",
+                  "npc_yp_lisha"
+                ],
+                "salience": 3
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "price:loc_bs_yupo",
+        "kind": "price",
+        "name": "青黄不接粮价波动",
+        "settlement": "loc_bs_yupo",
+        "seasons": [
+          1
+        ],
+        "intervalDays": 10,
+        "stages": [
+          {
+            "id": "rise",
+            "name": "粮价看涨",
+            "probability": 0.35,
+            "condition": {
+              "kind": "always"
+            },
+            "effects": [
+              {
+                "kind": "price_shift",
+                "settlement": "loc_bs_yupo",
+                "items": [
+                  "item_oats",
+                  "item_ration",
+                  "item_oat_flour",
+                  "item_oat_flatbread",
+                  "item_pearl_barley",
+                  "item_rye_flour",
+                  "item_wheat_grain"
+                ],
+                "factor": 1.1,
+                "minutes": 86400,
+                "reason": "青黄不接，陈粮见少"
+              }
+            ]
+          },
+          {
+            "id": "peak",
+            "name": "粮价高企",
+            "probability": 0.25,
+            "condition": {
+              "kind": "always"
+            },
+            "effects": [
+              {
+                "kind": "price_shift",
+                "settlement": "loc_bs_yupo",
+                "items": [
+                  "item_oats",
+                  "item_ration",
+                  "item_oat_flour",
+                  "item_oat_flatbread",
+                  "item_pearl_barley",
+                  "item_rye_flour",
+                  "item_wheat_grain"
+                ],
+                "factor": 1.25,
+                "minutes": 86400,
+                "reason": "青黄不接，粮商惜售"
+              }
+            ]
+          },
+          {
+            "id": "ease",
+            "name": "粮价回落",
+            "probability": 0.5,
+            "condition": {
+              "kind": "always"
+            },
+            "effects": [
+              {
+                "kind": "price_shift",
+                "settlement": "loc_bs_yupo",
+                "items": [
+                  "item_oats",
+                  "item_ration",
+                  "item_oat_flour",
+                  "item_oat_flatbread",
+                  "item_pearl_barley",
+                  "item_rye_flour",
+                  "item_wheat_grain"
+                ],
+                "factor": 1,
+                "minutes": 1,
+                "reason": "新麦将下，粮价回落"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "flood:loc_bs_weiting",
+        "kind": "flood",
+        "name": "汛期",
+        "settlement": "loc_bs_weiting",
+        "seasons": [
+          0,
+          1
+        ],
+        "intervalDays": 4,
+        "stages": [
+          {
+            "id": "rise",
+            "name": "水位上涨",
+            "probability": 0.5,
+            "condition": {
+              "kind": "weather",
+              "kinds": [
+                "rain",
+                "storm"
+              ]
+            },
+            "effects": [
+              {
+                "kind": "flood",
+                "locations": [
+                  "loc_wt_bank"
+                ],
+                "minutes": 1440
+              }
+            ]
+          },
+          {
+            "id": "crest",
+            "name": "洪峰过境",
+            "probability": 0.5,
+            "condition": {
+              "kind": "weather",
+              "kinds": [
+                "rain",
+                "storm"
+              ]
+            },
+            "effects": [
+              {
+                "kind": "route_closure",
+                "routes": [
+                  "route_loc_wt_bank",
+                  "route_loc_wt_reeds",
+                  "route_loc_wild_wt_mist"
+                ],
+                "minutes": 8640,
+                "reason": "洪水漫过道路"
+              },
+              {
+                "kind": "flood",
+                "locations": [
+                  "loc_wt_bank",
+                  "loc_wt_reeds",
+                  "loc_wt_garden"
+                ],
+                "minutes": 8640
+              },
+              {
+                "kind": "crop_damage",
+                "settlement": "loc_bs_weiting",
+                "percent": 35,
+                "minutes": 43200
+              }
+            ]
+          },
+          {
+            "id": "recede",
+            "name": "退水",
+            "probability": 0.6,
+            "condition": {
+              "kind": "always"
+            },
+            "effects": [
+              {
+                "kind": "environment",
+                "state": "dry",
+                "locations": [
+                  "loc_wt_bank",
+                  "loc_wt_reeds",
+                  "loc_wt_garden"
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "epidemic:loc_bs_weiting",
+        "kind": "epidemic",
+        "name": "疫病流行",
+        "settlement": "loc_bs_weiting",
+        "seasons": [
+          1,
+          2
+        ],
+        "intervalDays": 3,
+        "disease": "disease_river_flux",
+        "spread": {
+          "routes": [
+            "route_bs_wt"
+          ]
+        },
+        "stages": [
+          {
+            "id": "cases",
+            "name": "零星病例",
+            "probability": 0.25,
+            "condition": {
+              "kind": "hazard_phase",
+              "clock": "flood:loc_bs_weiting",
+              "minimum": 2
+            },
+            "effects": [
+              {
+                "kind": "epidemic",
+                "disease": "disease_river_flux",
+                "settlement": "loc_bs_weiting",
+                "cases": 2
+              }
+            ]
+          },
+          {
+            "id": "spread",
+            "name": "疫病流行",
+            "probability": 1,
+            "condition": {
+              "kind": "epidemic_cases",
+              "minimum": 5
+            },
+            "effects": [
+              {
+                "kind": "price_shift",
+                "settlement": "loc_bs_weiting",
+                "items": [
+                  "item_herb"
+                ],
+                "factor": 1.4,
+                "minutes": 43200,
+                "reason": "疫病流行，药草紧缺"
+              }
+            ]
+          },
+          {
+            "id": "wane",
+            "name": "疫退",
+            "probability": 1,
+            "condition": {
+              "kind": "epidemic_clear"
+            },
+            "effects": [
+              {
+                "kind": "price_shift",
+                "settlement": "loc_bs_weiting",
+                "items": [
+                  "item_herb"
+                ],
+                "factor": 1,
+                "minutes": 1,
+                "reason": "疫退，药价回落"
+              }
+            ]
+          }
+        ],
+        "interventions": [
+          {
+            "id": "quarantine",
+            "name": "劝乡里隔离病家",
+            "measure": "quarantine",
+            "phases": [
+              1,
+              2
+            ],
+            "location": "bld_wt_hall",
+            "representative": "npc_wt_zhengxi",
+            "cost": {},
+            "minutes": 120,
+            "attribute": "魅力",
+            "difficulty": 12,
+            "effects": [
+              {
+                "kind": "epidemic_measure",
+                "measure": "quarantine",
+                "minutes": 21600
+              },
+              {
+                "kind": "standing",
+                "holder": "loc_bs_weiting",
+                "target": "player",
+                "delta": 2,
+                "reason": "帮乡里安排病家隔离"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "famine:loc_bs_weiting",
+        "kind": "famine",
+        "name": "冬荒",
+        "settlement": "loc_bs_weiting",
+        "seasons": [
+          3
+        ],
+        "intervalDays": 7,
+        "stages": [
+          {
+            "id": "tight",
+            "name": "存粮告紧",
+            "probability": 1,
+            "condition": {
+              "kind": "granary_short",
+              "days": 75
+            },
+            "effects": [
+              {
+                "kind": "price_shift",
+                "settlement": "loc_bs_weiting",
+                "items": [
+                  "item_oats",
+                  "item_ration",
+                  "item_oat_flour",
+                  "item_oat_flatbread",
+                  "item_pearl_barley",
+                  "item_rye_flour",
+                  "item_wheat_grain"
+                ],
+                "factor": 1.2,
+                "minutes": 172800,
+                "reason": "冬季存粮告紧"
+              },
+              {
+                "kind": "rumor",
+                "id": "famine_tight",
+                "claim": "今冬仓里的粮撑不到开春，粮价已经往上走了。",
+                "carriers": [
+                  "npc_wt_zhengxi",
+                  "npc_wt_xiangzhen"
+                ],
+                "salience": 2
+              }
+            ]
+          },
+          {
+            "id": "famine",
+            "name": "冬荒",
+            "probability": 1,
+            "condition": {
+              "kind": "granary_short",
+              "days": 35
+            },
+            "effects": [
+              {
+                "kind": "price_shift",
+                "settlement": "loc_bs_weiting",
+                "items": [
+                  "item_oats",
+                  "item_ration",
+                  "item_oat_flour",
+                  "item_oat_flatbread",
+                  "item_pearl_barley",
+                  "item_rye_flour",
+                  "item_wheat_grain"
+                ],
+                "factor": 1.6,
+                "minutes": 172800,
+                "reason": "冬荒缺粮"
+              },
+              {
+                "kind": "famine",
+                "settlement": "loc_bs_weiting",
+                "minutes": 172800
+              },
+              {
+                "kind": "rumor",
+                "id": "famine_hunger",
+                "claim": "冬荒了，有人家已经断顿，有人说要去外乡投亲，也有人盯上了别家的粮囤。",
+                "carriers": [
+                  "npc_wt_zhengxi",
+                  "npc_wt_xiangzhen"
+                ],
+                "salience": 3
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "price:loc_bs_weiting",
+        "kind": "price",
+        "name": "青黄不接粮价波动",
+        "settlement": "loc_bs_weiting",
+        "seasons": [
+          1
+        ],
+        "intervalDays": 10,
+        "stages": [
+          {
+            "id": "rise",
+            "name": "粮价看涨",
+            "probability": 0.3,
+            "condition": {
+              "kind": "always"
+            },
+            "effects": [
+              {
+                "kind": "price_shift",
+                "settlement": "loc_bs_weiting",
+                "items": [
+                  "item_oats",
+                  "item_ration",
+                  "item_oat_flour",
+                  "item_oat_flatbread",
+                  "item_pearl_barley",
+                  "item_rye_flour",
+                  "item_wheat_grain"
+                ],
+                "factor": 1.08,
+                "minutes": 86400,
+                "reason": "青黄不接，陈粮见少"
+              }
+            ]
+          },
+          {
+            "id": "peak",
+            "name": "粮价高企",
+            "probability": 0.2,
+            "condition": {
+              "kind": "always"
+            },
+            "effects": [
+              {
+                "kind": "price_shift",
+                "settlement": "loc_bs_weiting",
+                "items": [
+                  "item_oats",
+                  "item_ration",
+                  "item_oat_flour",
+                  "item_oat_flatbread",
+                  "item_pearl_barley",
+                  "item_rye_flour",
+                  "item_wheat_grain"
+                ],
+                "factor": 1.15,
+                "minutes": 86400,
+                "reason": "青黄不接，粮商惜售"
+              }
+            ]
+          },
+          {
+            "id": "ease",
+            "name": "粮价回落",
+            "probability": 0.5,
+            "condition": {
+              "kind": "always"
+            },
+            "effects": [
+              {
+                "kind": "price_shift",
+                "settlement": "loc_bs_weiting",
+                "items": [
+                  "item_oats",
+                  "item_ration",
+                  "item_oat_flour",
+                  "item_oat_flatbread",
+                  "item_pearl_barley",
+                  "item_rye_flour",
+                  "item_wheat_grain"
+                ],
+                "factor": 1,
+                "minutes": 1,
+                "reason": "新麦将下，粮价回落"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "flood:loc_bs_liquan",
+        "kind": "flood",
+        "name": "汛期",
+        "settlement": "loc_bs_liquan",
+        "seasons": [
+          1
+        ],
+        "intervalDays": 10,
+        "stages": [
+          {
+            "id": "rise",
+            "name": "水位上涨",
+            "probability": 0.1,
+            "condition": {
+              "kind": "weather",
+              "kinds": [
+                "storm"
+              ]
+            },
+            "effects": [
+              {
+                "kind": "flood",
+                "locations": [
+                  "loc_lq_spring"
+                ],
+                "minutes": 1440
+              }
+            ]
+          },
+          {
+            "id": "crest",
+            "name": "洪峰过境",
+            "probability": 0.15,
+            "condition": {
+              "kind": "weather",
+              "kinds": [
+                "storm"
+              ]
+            },
+            "effects": [
+              {
+                "kind": "route_closure",
+                "routes": [
+                  "route_loc_lq_fields"
+                ],
+                "minutes": 1440,
+                "reason": "洪水漫过道路"
+              },
+              {
+                "kind": "flood",
+                "locations": [
+                  "loc_lq_fields"
+                ],
+                "minutes": 1440
+              },
+              {
+                "kind": "crop_damage",
+                "settlement": "loc_bs_liquan",
+                "percent": 10,
+                "minutes": 43200
+              }
+            ]
+          },
+          {
+            "id": "recede",
+            "name": "退水",
+            "probability": 0.6,
+            "condition": {
+              "kind": "always"
+            },
+            "effects": [
+              {
+                "kind": "environment",
+                "state": "dry",
+                "locations": [
+                  "loc_lq_fields"
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "epidemic:loc_bs_liquan",
+        "kind": "epidemic",
+        "name": "疫病流行",
+        "settlement": "loc_bs_liquan",
+        "seasons": [
+          3
+        ],
+        "intervalDays": 4,
+        "disease": "disease_cold_cough",
+        "spread": {
+          "routes": [
+            "route_bs_lq"
+          ]
+        },
+        "stages": [
+          {
+            "id": "cases",
+            "name": "零星病例",
+            "probability": 0.08,
+            "condition": {
+              "kind": "weather",
+              "kinds": [
+                "snow",
+                "fog"
+              ]
+            },
+            "effects": [
+              {
+                "kind": "epidemic",
+                "disease": "disease_cold_cough",
+                "settlement": "loc_bs_liquan",
+                "cases": 2
+              }
+            ]
+          },
+          {
+            "id": "spread",
+            "name": "疫病流行",
+            "probability": 1,
+            "condition": {
+              "kind": "epidemic_cases",
+              "minimum": 5
+            },
+            "effects": [
+              {
+                "kind": "price_shift",
+                "settlement": "loc_bs_liquan",
+                "items": [
+                  "item_herb"
+                ],
+                "factor": 1.4,
+                "minutes": 43200,
+                "reason": "疫病流行，药草紧缺"
+              }
+            ]
+          },
+          {
+            "id": "wane",
+            "name": "疫退",
+            "probability": 1,
+            "condition": {
+              "kind": "epidemic_clear"
+            },
+            "effects": [
+              {
+                "kind": "price_shift",
+                "settlement": "loc_bs_liquan",
+                "items": [
+                  "item_herb"
+                ],
+                "factor": 1,
+                "minutes": 1,
+                "reason": "疫退，药价回落"
+              }
+            ]
+          }
+        ],
+        "interventions": [
+          {
+            "id": "quarantine",
+            "name": "劝乡里隔离病家",
+            "measure": "quarantine",
+            "phases": [
+              1,
+              2
+            ],
+            "location": "bld_lq_hall",
+            "representative": "npc_lq_luanpei",
+            "cost": {},
+            "minutes": 120,
+            "attribute": "魅力",
+            "difficulty": 12,
+            "effects": [
+              {
+                "kind": "epidemic_measure",
+                "measure": "quarantine",
+                "minutes": 21600
+              },
+              {
+                "kind": "standing",
+                "holder": "loc_bs_liquan",
+                "target": "player",
+                "delta": 2,
+                "reason": "帮乡里安排病家隔离"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "famine:loc_bs_liquan",
+        "kind": "famine",
+        "name": "冬荒",
+        "settlement": "loc_bs_liquan",
+        "seasons": [
+          3
+        ],
+        "intervalDays": 7,
+        "stages": [
+          {
+            "id": "tight",
+            "name": "存粮告紧",
+            "probability": 1,
+            "condition": {
+              "kind": "granary_short",
+              "days": 120
+            },
+            "effects": [
+              {
+                "kind": "price_shift",
+                "settlement": "loc_bs_liquan",
+                "items": [
+                  "item_oats",
+                  "item_ration",
+                  "item_oat_flour",
+                  "item_oat_flatbread",
+                  "item_pearl_barley",
+                  "item_rye_flour",
+                  "item_wheat_grain"
+                ],
+                "factor": 1.2,
+                "minutes": 172800,
+                "reason": "冬季存粮告紧"
+              },
+              {
+                "kind": "rumor",
+                "id": "famine_tight",
+                "claim": "今冬仓里的粮撑不到开春，粮价已经往上走了。",
+                "carriers": [
+                  "npc_lq_luanpei",
+                  "npc_lq_shaluo"
+                ],
+                "salience": 2
+              }
+            ]
+          },
+          {
+            "id": "famine",
+            "name": "冬荒",
+            "probability": 1,
+            "condition": {
+              "kind": "granary_short",
+              "days": 60
+            },
+            "effects": [
+              {
+                "kind": "price_shift",
+                "settlement": "loc_bs_liquan",
+                "items": [
+                  "item_oats",
+                  "item_ration",
+                  "item_oat_flour",
+                  "item_oat_flatbread",
+                  "item_pearl_barley",
+                  "item_rye_flour",
+                  "item_wheat_grain"
+                ],
+                "factor": 1.6,
+                "minutes": 172800,
+                "reason": "冬荒缺粮"
+              },
+              {
+                "kind": "famine",
+                "settlement": "loc_bs_liquan",
+                "minutes": 172800
+              },
+              {
+                "kind": "rumor",
+                "id": "famine_hunger",
+                "claim": "冬荒了，有人家已经断顿，有人说要去外乡投亲，也有人盯上了别家的粮囤。",
+                "carriers": [
+                  "npc_lq_luanpei",
+                  "npc_lq_shaluo"
+                ],
+                "salience": 3
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "price:loc_bs_liquan",
+        "kind": "price",
+        "name": "旱情粮价",
+        "settlement": "loc_bs_liquan",
+        "seasons": [
+          1
+        ],
+        "intervalDays": 8,
+        "stages": [
+          {
+            "id": "dry",
+            "name": "久晴少雨",
+            "probability": 0.35,
+            "condition": {
+              "kind": "weather",
+              "kinds": [
+                "clear"
+              ]
+            },
+            "effects": [
+              {
+                "kind": "crop_damage",
+                "settlement": "loc_bs_liquan",
+                "percent": 15,
+                "minutes": 43200
+              },
+              {
+                "kind": "price_shift",
+                "settlement": "loc_bs_liquan",
+                "items": [
+                  "item_oats",
+                  "item_ration",
+                  "item_oat_flour",
+                  "item_oat_flatbread",
+                  "item_pearl_barley",
+                  "item_rye_flour",
+                  "item_wheat_grain"
+                ],
+                "factor": 1.15,
+                "minutes": 86400,
+                "reason": "久晴少雨，坡田缺水"
+              }
+            ]
+          },
+          {
+            "id": "drought",
+            "name": "旱情",
+            "probability": 0.3,
+            "condition": {
+              "kind": "weather",
+              "kinds": [
+                "clear"
+              ]
+            },
+            "effects": [
+              {
+                "kind": "crop_damage",
+                "settlement": "loc_bs_liquan",
+                "percent": 25,
+                "minutes": 43200
+              },
+              {
+                "kind": "price_shift",
+                "settlement": "loc_bs_liquan",
+                "items": [
+                  "item_oats",
+                  "item_ration",
+                  "item_oat_flour",
+                  "item_oat_flatbread",
+                  "item_pearl_barley",
+                  "item_rye_flour",
+                  "item_wheat_grain"
+                ],
+                "factor": 1.35,
+                "minutes": 86400,
+                "reason": "旱情加重，泉水减量"
+              }
+            ]
+          },
+          {
+            "id": "rain",
+            "name": "雨水回来",
+            "probability": 0.6,
+            "condition": {
+              "kind": "weather",
+              "kinds": [
+                "rain",
+                "storm"
+              ]
+            },
+            "effects": [
+              {
+                "kind": "price_shift",
+                "settlement": "loc_bs_liquan",
+                "items": [
+                  "item_oats",
+                  "item_ration",
+                  "item_oat_flour",
+                  "item_oat_flatbread",
+                  "item_pearl_barley",
+                  "item_rye_flour",
+                  "item_wheat_grain"
+                ],
+                "factor": 1,
+                "minutes": 1,
+                "reason": "下了透雨，粮价回落"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "flood:loc_bs_sangban",
+        "kind": "flood",
+        "name": "汛期",
+        "settlement": "loc_bs_sangban",
+        "seasons": [
+          1
+        ],
+        "intervalDays": 6,
+        "stages": [
+          {
+            "id": "rise",
+            "name": "水位上涨",
+            "probability": 0.25,
+            "condition": {
+              "kind": "weather",
+              "kinds": [
+                "rain",
+                "storm"
+              ]
+            },
+            "effects": [
+              {
+                "kind": "flood",
+                "locations": [
+                  "loc_sb_garden"
+                ],
+                "minutes": 1440
+              }
+            ]
+          },
+          {
+            "id": "crest",
+            "name": "洪峰过境",
+            "probability": 0.3,
+            "condition": {
+              "kind": "weather",
+              "kinds": [
+                "storm"
+              ]
+            },
+            "effects": [
+              {
+                "kind": "route_closure",
+                "routes": [
+                  "route_loc_sb_fields"
+                ],
+                "minutes": 2880,
+                "reason": "洪水漫过道路"
+              },
+              {
+                "kind": "flood",
+                "locations": [
+                  "loc_sb_fields",
+                  "loc_sb_garden"
+                ],
+                "minutes": 2880
+              },
+              {
+                "kind": "crop_damage",
+                "settlement": "loc_bs_sangban",
+                "percent": 20,
+                "minutes": 43200
+              }
+            ]
+          },
+          {
+            "id": "recede",
+            "name": "退水",
+            "probability": 0.6,
+            "condition": {
+              "kind": "always"
+            },
+            "effects": [
+              {
+                "kind": "environment",
+                "state": "dry",
+                "locations": [
+                  "loc_sb_fields",
+                  "loc_sb_garden"
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "epidemic:loc_bs_sangban",
+        "kind": "epidemic",
+        "name": "疫病流行",
+        "settlement": "loc_bs_sangban",
+        "seasons": [
+          3
+        ],
+        "intervalDays": 4,
+        "disease": "disease_cold_cough",
+        "spread": {
+          "routes": [
+            "route_bs_sb"
+          ]
+        },
+        "stages": [
+          {
+            "id": "cases",
+            "name": "零星病例",
+            "probability": 0.1,
+            "condition": {
+              "kind": "weather",
+              "kinds": [
+                "snow",
+                "fog"
+              ]
+            },
+            "effects": [
+              {
+                "kind": "epidemic",
+                "disease": "disease_cold_cough",
+                "settlement": "loc_bs_sangban",
+                "cases": 2
+              }
+            ]
+          },
+          {
+            "id": "spread",
+            "name": "疫病流行",
+            "probability": 1,
+            "condition": {
+              "kind": "epidemic_cases",
+              "minimum": 5
+            },
+            "effects": [
+              {
+                "kind": "price_shift",
+                "settlement": "loc_bs_sangban",
+                "items": [
+                  "item_herb"
+                ],
+                "factor": 1.4,
+                "minutes": 43200,
+                "reason": "疫病流行，药草紧缺"
+              }
+            ]
+          },
+          {
+            "id": "wane",
+            "name": "疫退",
+            "probability": 1,
+            "condition": {
+              "kind": "epidemic_clear"
+            },
+            "effects": [
+              {
+                "kind": "price_shift",
+                "settlement": "loc_bs_sangban",
+                "items": [
+                  "item_herb"
+                ],
+                "factor": 1,
+                "minutes": 1,
+                "reason": "疫退，药价回落"
+              }
+            ]
+          }
+        ],
+        "interventions": [
+          {
+            "id": "quarantine",
+            "name": "劝乡里隔离病家",
+            "measure": "quarantine",
+            "phases": [
+              1,
+              2
+            ],
+            "location": "bld_sb_hall",
+            "representative": "npc_sb_zhangluo",
+            "cost": {},
+            "minutes": 120,
+            "attribute": "魅力",
+            "difficulty": 12,
+            "effects": [
+              {
+                "kind": "epidemic_measure",
+                "measure": "quarantine",
+                "minutes": 21600
+              },
+              {
+                "kind": "standing",
+                "holder": "loc_bs_sangban",
+                "target": "player",
+                "delta": 2,
+                "reason": "帮乡里安排病家隔离"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "famine:loc_bs_sangban",
+        "kind": "famine",
+        "name": "冬荒",
+        "settlement": "loc_bs_sangban",
+        "seasons": [
+          3
+        ],
+        "intervalDays": 7,
+        "stages": [
+          {
+            "id": "tight",
+            "name": "存粮告紧",
+            "probability": 1,
+            "condition": {
+              "kind": "granary_short",
+              "days": 90
+            },
+            "effects": [
+              {
+                "kind": "price_shift",
+                "settlement": "loc_bs_sangban",
+                "items": [
+                  "item_oats",
+                  "item_ration",
+                  "item_oat_flour",
+                  "item_oat_flatbread",
+                  "item_pearl_barley",
+                  "item_rye_flour",
+                  "item_wheat_grain"
+                ],
+                "factor": 1.2,
+                "minutes": 172800,
+                "reason": "冬季存粮告紧"
+              },
+              {
+                "kind": "rumor",
+                "id": "famine_tight",
+                "claim": "今冬仓里的粮撑不到开春，粮价已经往上走了。",
+                "carriers": [
+                  "npc_sb_zhangluo",
+                  "npc_sb_shikui"
+                ],
+                "salience": 2
+              }
+            ]
+          },
+          {
+            "id": "famine",
+            "name": "冬荒",
+            "probability": 1,
+            "condition": {
+              "kind": "granary_short",
+              "days": 45
+            },
+            "effects": [
+              {
+                "kind": "price_shift",
+                "settlement": "loc_bs_sangban",
+                "items": [
+                  "item_oats",
+                  "item_ration",
+                  "item_oat_flour",
+                  "item_oat_flatbread",
+                  "item_pearl_barley",
+                  "item_rye_flour",
+                  "item_wheat_grain"
+                ],
+                "factor": 1.6,
+                "minutes": 172800,
+                "reason": "冬荒缺粮"
+              },
+              {
+                "kind": "famine",
+                "settlement": "loc_bs_sangban",
+                "minutes": 172800
+              },
+              {
+                "kind": "rumor",
+                "id": "famine_hunger",
+                "claim": "冬荒了，有人家已经断顿，有人说要去外乡投亲，也有人盯上了别家的粮囤。",
+                "carriers": [
+                  "npc_sb_zhangluo",
+                  "npc_sb_shikui"
+                ],
+                "salience": 3
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "price:loc_bs_sangban",
+        "kind": "price",
+        "name": "青黄不接粮价波动",
+        "settlement": "loc_bs_sangban",
+        "seasons": [
+          1
+        ],
+        "intervalDays": 10,
+        "stages": [
+          {
+            "id": "rise",
+            "name": "粮价看涨",
+            "probability": 0.3,
+            "condition": {
+              "kind": "always"
+            },
+            "effects": [
+              {
+                "kind": "price_shift",
+                "settlement": "loc_bs_sangban",
+                "items": [
+                  "item_oats",
+                  "item_ration",
+                  "item_oat_flour",
+                  "item_oat_flatbread",
+                  "item_pearl_barley",
+                  "item_rye_flour",
+                  "item_wheat_grain"
+                ],
+                "factor": 1.1,
+                "minutes": 86400,
+                "reason": "青黄不接，陈粮见少"
+              }
+            ]
+          },
+          {
+            "id": "peak",
+            "name": "粮价高企",
+            "probability": 0.2,
+            "condition": {
+              "kind": "always"
+            },
+            "effects": [
+              {
+                "kind": "price_shift",
+                "settlement": "loc_bs_sangban",
+                "items": [
+                  "item_oats",
+                  "item_ration",
+                  "item_oat_flour",
+                  "item_oat_flatbread",
+                  "item_pearl_barley",
+                  "item_rye_flour",
+                  "item_wheat_grain"
+                ],
+                "factor": 1.2,
+                "minutes": 86400,
+                "reason": "青黄不接，粮商惜售"
+              }
+            ]
+          },
+          {
+            "id": "ease",
+            "name": "粮价回落",
+            "probability": 0.5,
+            "condition": {
+              "kind": "always"
+            },
+            "effects": [
+              {
+                "kind": "price_shift",
+                "settlement": "loc_bs_sangban",
+                "items": [
+                  "item_oats",
+                  "item_ration",
+                  "item_oat_flour",
+                  "item_oat_flatbread",
+                  "item_pearl_barley",
+                  "item_rye_flour",
+                  "item_wheat_grain"
+                ],
+                "factor": 1,
+                "minutes": 1,
+                "reason": "新麦将下，粮价回落"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "flood:loc_bs",
+        "kind": "flood",
+        "name": "汛期",
+        "settlement": "loc_bs",
+        "seasons": [
+          1
+        ],
+        "intervalDays": 5,
+        "stages": [
+          {
+            "id": "rise",
+            "name": "水位上涨",
+            "probability": 0.35,
+            "condition": {
+              "kind": "weather",
+              "kinds": [
+                "rain",
+                "storm"
+              ]
+            },
+            "effects": [
+              {
+                "kind": "flood",
+                "locations": [
+                  "bld_bs_dock"
+                ],
+                "minutes": 1440
+              }
+            ]
+          },
+          {
+            "id": "crest",
+            "name": "洪峰过境",
+            "probability": 0.4,
+            "condition": {
+              "kind": "weather",
+              "kinds": [
+                "rain",
+                "storm"
+              ]
+            },
+            "effects": [
+              {
+                "kind": "route_closure",
+                "routes": [
+                  "route_t90_bld_bs_dock_loc_bs_hebu"
+                ],
+                "minutes": 5760,
+                "reason": "洪水漫过道路"
+              },
+              {
+                "kind": "flood",
+                "locations": [
+                  "loc_bs_hebu",
+                  "bld_bs_dock"
+                ],
+                "minutes": 5760
+              },
+              {
+                "kind": "price_shift",
+                "settlement": "loc_bs",
+                "items": [
+                  "item_oats",
+                  "item_ration",
+                  "item_oat_flour",
+                  "item_oat_flatbread",
+                  "item_pearl_barley",
+                  "item_rye_flour",
+                  "item_wheat_grain"
+                ],
+                "factor": 1.1,
+                "minutes": 28800,
+                "reason": "水路车路中断，粮运受阻"
+              }
+            ]
+          },
+          {
+            "id": "recede",
+            "name": "退水",
+            "probability": 0.6,
+            "condition": {
+              "kind": "always"
+            },
+            "effects": [
+              {
+                "kind": "environment",
+                "state": "dry",
+                "locations": [
+                  "loc_bs_hebu",
+                  "bld_bs_dock"
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "epidemic:loc_bs",
+        "kind": "epidemic",
+        "name": "疫病流行",
+        "settlement": "loc_bs",
+        "seasons": [
+          3
+        ],
+        "intervalDays": 3,
+        "disease": "disease_cold_cough",
+        "spread": {
+          "routes": [
+            "route_hw_bs",
+            "route_bs_yp",
+            "route_bs_wt",
+            "route_bs_lq",
+            "route_bs_sb"
+          ]
+        },
+        "stages": [
+          {
+            "id": "cases",
+            "name": "零星病例",
+            "probability": 0.15,
+            "condition": {
+              "kind": "weather",
+              "kinds": [
+                "snow",
+                "fog"
+              ]
+            },
+            "effects": [
+              {
+                "kind": "epidemic",
+                "disease": "disease_cold_cough",
+                "settlement": "loc_bs",
+                "cases": 3
+              }
+            ]
+          },
+          {
+            "id": "spread",
+            "name": "疫病流行",
+            "probability": 1,
+            "condition": {
+              "kind": "epidemic_cases",
+              "minimum": 8
+            },
+            "effects": [
+              {
+                "kind": "price_shift",
+                "settlement": "loc_bs",
+                "items": [
+                  "item_herb"
+                ],
+                "factor": 1.4,
+                "minutes": 43200,
+                "reason": "疫病流行，药草紧缺"
+              }
+            ]
+          },
+          {
+            "id": "wane",
+            "name": "疫退",
+            "probability": 1,
+            "condition": {
+              "kind": "epidemic_clear"
+            },
+            "effects": [
+              {
+                "kind": "price_shift",
+                "settlement": "loc_bs",
+                "items": [
+                  "item_herb"
+                ],
+                "factor": 1,
+                "minutes": 1,
+                "reason": "疫退，药价回落"
+              }
+            ]
+          }
+        ],
+        "interventions": [
+          {
+            "id": "quarantine",
+            "name": "劝乡里隔离病家",
+            "measure": "quarantine",
+            "phases": [
+              1,
+              2
+            ],
+            "location": "bld_bs_office",
+            "representative": "npc_bs_031_1",
+            "cost": {},
+            "minutes": 120,
+            "attribute": "魅力",
+            "difficulty": 12,
+            "effects": [
+              {
+                "kind": "epidemic_measure",
+                "measure": "quarantine",
+                "minutes": 21600
+              },
+              {
+                "kind": "standing",
+                "holder": "loc_bs",
+                "target": "player",
+                "delta": 2,
+                "reason": "帮乡里安排病家隔离"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "famine:loc_bs",
+        "kind": "famine",
+        "name": "冬荒",
+        "settlement": "loc_bs",
+        "seasons": [
+          3
+        ],
+        "intervalDays": 7,
+        "stages": [
+          {
+            "id": "tight",
+            "name": "粮价告紧",
+            "probability": 0.3,
+            "condition": {
+              "kind": "always"
+            },
+            "effects": [
+              {
+                "kind": "price_shift",
+                "settlement": "loc_bs",
+                "items": [
+                  "item_oats",
+                  "item_ration",
+                  "item_oat_flour",
+                  "item_oat_flatbread",
+                  "item_pearl_barley",
+                  "item_rye_flour",
+                  "item_wheat_grain"
+                ],
+                "factor": 1.25,
+                "minutes": 172800,
+                "reason": "冬季粮源见少"
+              }
+            ]
+          },
+          {
+            "id": "famine",
+            "name": "冬荒",
+            "probability": 1,
+            "condition": {
+              "kind": "hazard_phase",
+              "clock": "famine:loc_bs_sangban",
+              "minimum": 1
+            },
+            "effects": [
+              {
+                "kind": "price_shift",
+                "settlement": "loc_bs",
+                "items": [
+                  "item_oats",
+                  "item_ration",
+                  "item_oat_flour",
+                  "item_oat_flatbread",
+                  "item_pearl_barley",
+                  "item_rye_flour",
+                  "item_wheat_grain"
+                ],
+                "factor": 1.6,
+                "minutes": 172800,
+                "reason": "产粮村存粮告紧，镇上断了粮源"
+              },
+              {
+                "kind": "famine",
+                "settlement": "loc_bs",
+                "minutes": 172800
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "famine:loc_ms_tanjie",
+        "kind": "famine",
+        "name": "冬荒",
+        "settlement": "loc_ms_tanjie",
+        "seasons": [
+          3
+        ],
+        "intervalDays": 7,
+        "stages": [
+          {
+            "id": "tight",
+            "name": "存粮告紧",
+            "probability": 1,
+            "condition": {
+              "kind": "hazard_phase",
+              "clock": "famine:loc_bs",
+              "minimum": 1
+            },
+            "effects": [
+              {
+                "kind": "wildlife_stir",
+                "habitat": "habitat_bs_west_kiln",
+                "minutes": 14400,
+                "factor": 1.5
+              },
+              {
+                "kind": "standing",
+                "holder": "faction_ms_tanjie",
+                "target": "loc_bs",
+                "delta": -3,
+                "reason": "冬季口粮告紧，换粮受阻"
+              }
+            ]
+          },
+          {
+            "id": "famine",
+            "name": "冬荒",
+            "probability": 1,
+            "condition": {
+              "kind": "hazard_phase",
+              "clock": "famine:loc_bs",
+              "minimum": 2
+            },
+            "effects": [
+              {
+                "kind": "wildlife_stir",
+                "habitat": "habitat_bs_west_kiln",
+                "minutes": 28800,
+                "factor": 2.5
+              },
+              {
+                "kind": "standing",
+                "holder": "faction_ms_tanjie",
+                "target": "loc_bs",
+                "delta": -6,
+                "reason": "冬荒断粮"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "epidemic:loc_ms_tanjie",
+        "kind": "epidemic",
+        "name": "疫病流行",
+        "settlement": "loc_ms_tanjie",
+        "seasons": [
+          3
+        ],
+        "intervalDays": 4,
+        "disease": "disease_cold_cough",
+        "spread": {
+          "routes": [
+            "route_t157_loc_ms_tanjie"
+          ]
+        },
+        "stages": [
+          {
+            "id": "cases",
+            "name": "零星病例",
+            "probability": 0.15,
+            "condition": {
+              "kind": "weather",
+              "kinds": [
+                "snow",
+                "fog"
+              ],
+              "location": "loc_bs"
+            },
+            "effects": [
+              {
+                "kind": "epidemic",
+                "disease": "disease_cold_cough",
+                "settlement": "loc_ms_tanjie",
+                "cases": 1
+              }
+            ]
+          },
+          {
+            "id": "spread",
+            "name": "疫病流行",
+            "probability": 1,
+            "condition": {
+              "kind": "epidemic_cases",
+              "minimum": 2
+            },
+            "effects": [
+              {
+                "kind": "price_shift",
+                "settlement": "loc_bs",
+                "items": [
+                  "item_herb"
+                ],
+                "factor": 1.4,
+                "minutes": 43200,
+                "reason": "疫病流行，药草紧缺"
+              }
+            ]
+          },
+          {
+            "id": "wane",
+            "name": "疫退",
+            "probability": 1,
+            "condition": {
+              "kind": "epidemic_clear"
+            },
+            "effects": [
+              {
+                "kind": "price_shift",
+                "settlement": "loc_bs",
+                "items": [
+                  "item_herb"
+                ],
+                "factor": 1,
+                "minutes": 1,
+                "reason": "疫退，药价回落"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "famine:loc_ms_taideng",
+        "kind": "famine",
+        "name": "冬荒",
+        "settlement": "loc_ms_taideng",
+        "seasons": [
+          3
+        ],
+        "intervalDays": 7,
+        "stages": [
+          {
+            "id": "tight",
+            "name": "存粮告紧",
+            "probability": 0.3,
+            "condition": {
+              "kind": "weather",
+              "kinds": [
+                "snow"
+              ],
+              "location": "loc_hw"
+            },
+            "effects": [
+              {
+                "kind": "wildlife_stir",
+                "habitat": "habitat_hw_wood",
+                "minutes": 14400,
+                "factor": 1.5
+              },
+              {
+                "kind": "standing",
+                "holder": "faction_ms_taideng",
+                "target": "loc_hw",
+                "delta": -3,
+                "reason": "冬季口粮告紧，换粮受阻"
+              }
+            ]
+          },
+          {
+            "id": "famine",
+            "name": "冬荒",
+            "probability": 1,
+            "condition": {
+              "kind": "hazard_phase",
+              "clock": "famine:loc_hw",
+              "minimum": 1
+            },
+            "effects": [
+              {
+                "kind": "wildlife_stir",
+                "habitat": "habitat_hw_wood",
+                "minutes": 28800,
+                "factor": 2.5
+              },
+              {
+                "kind": "standing",
+                "holder": "faction_ms_taideng",
+                "target": "loc_hw",
+                "delta": -6,
+                "reason": "冬荒断粮"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "epidemic:loc_ms_taideng",
+        "kind": "epidemic",
+        "name": "疫病流行",
+        "settlement": "loc_ms_taideng",
+        "seasons": [
+          3
+        ],
+        "intervalDays": 4,
+        "disease": "disease_cold_cough",
+        "spread": {
+          "routes": [
+            "route_t157_loc_ms_taideng"
+          ]
+        },
+        "stages": [
+          {
+            "id": "cases",
+            "name": "零星病例",
+            "probability": 0.1,
+            "condition": {
+              "kind": "weather",
+              "kinds": [
+                "snow"
+              ],
+              "location": "loc_hw"
+            },
+            "effects": [
+              {
+                "kind": "epidemic",
+                "disease": "disease_cold_cough",
+                "settlement": "loc_ms_taideng",
+                "cases": 1
+              }
+            ]
+          },
+          {
+            "id": "spread",
+            "name": "疫病流行",
+            "probability": 1,
+            "condition": {
+              "kind": "epidemic_cases",
+              "minimum": 2
+            },
+            "effects": [
+              {
+                "kind": "price_shift",
+                "settlement": "loc_hw",
+                "items": [
+                  "item_herb"
+                ],
+                "factor": 1.4,
+                "minutes": 43200,
+                "reason": "疫病流行，药草紧缺"
+              }
+            ]
+          },
+          {
+            "id": "wane",
+            "name": "疫退",
+            "probability": 1,
+            "condition": {
+              "kind": "epidemic_clear"
+            },
+            "effects": [
+              {
+                "kind": "price_shift",
+                "settlement": "loc_hw",
+                "items": [
+                  "item_herb"
+                ],
+                "factor": 1,
+                "minutes": 1,
+                "reason": "疫退，药价回落"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "famine:loc_ms_yugen",
+        "kind": "famine",
+        "name": "冬荒",
+        "settlement": "loc_ms_yugen",
+        "seasons": [
+          3
+        ],
+        "intervalDays": 7,
+        "stages": [
+          {
+            "id": "tight",
+            "name": "存粮告紧",
+            "probability": 0.3,
+            "condition": {
+              "kind": "weather",
+              "kinds": [
+                "snow"
+              ],
+              "location": "loc_bs_yupo"
+            },
+            "effects": [
+              {
+                "kind": "wildlife_stir",
+                "habitat": "habitat_yp_north_grove",
+                "minutes": 14400,
+                "factor": 1.5
+              },
+              {
+                "kind": "standing",
+                "holder": "faction_ms_yugen",
+                "target": "loc_bs_yupo",
+                "delta": -3,
+                "reason": "冬季口粮告紧，换粮受阻"
+              }
+            ]
+          },
+          {
+            "id": "famine",
+            "name": "冬荒",
+            "probability": 1,
+            "condition": {
+              "kind": "hazard_phase",
+              "clock": "famine:loc_bs_yupo",
+              "minimum": 1
+            },
+            "effects": [
+              {
+                "kind": "wildlife_stir",
+                "habitat": "habitat_yp_north_grove",
+                "minutes": 28800,
+                "factor": 2.5
+              },
+              {
+                "kind": "standing",
+                "holder": "faction_ms_yugen",
+                "target": "loc_bs_yupo",
+                "delta": -6,
+                "reason": "冬荒断粮"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "epidemic:loc_ms_yugen",
+        "kind": "epidemic",
+        "name": "疫病流行",
+        "settlement": "loc_ms_yugen",
+        "seasons": [
+          1
+        ],
+        "intervalDays": 4,
+        "disease": "disease_river_flux",
+        "spread": {
+          "routes": [
+            "route_t159_loc_ms_yugen"
+          ]
+        },
+        "stages": [
+          {
+            "id": "cases",
+            "name": "零星病例",
+            "probability": 0.12,
+            "condition": {
+              "kind": "weather",
+              "kinds": [
+                "rain",
+                "storm"
+              ],
+              "location": "loc_bs_yupo"
+            },
+            "effects": [
+              {
+                "kind": "epidemic",
+                "disease": "disease_river_flux",
+                "settlement": "loc_ms_yugen",
+                "cases": 1
+              }
+            ]
+          },
+          {
+            "id": "spread",
+            "name": "疫病流行",
+            "probability": 1,
+            "condition": {
+              "kind": "epidemic_cases",
+              "minimum": 2
+            },
+            "effects": [
+              {
+                "kind": "price_shift",
+                "settlement": "loc_bs_yupo",
+                "items": [
+                  "item_herb"
+                ],
+                "factor": 1.4,
+                "minutes": 43200,
+                "reason": "疫病流行，药草紧缺"
+              }
+            ]
+          },
+          {
+            "id": "wane",
+            "name": "疫退",
+            "probability": 1,
+            "condition": {
+              "kind": "epidemic_clear"
+            },
+            "effects": [
+              {
+                "kind": "price_shift",
+                "settlement": "loc_bs_yupo",
+                "items": [
+                  "item_herb"
+                ],
+                "factor": 1,
+                "minutes": 1,
+                "reason": "疫退，药价回落"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "famine:loc_ms_lielu",
+        "kind": "famine",
+        "name": "冬荒",
+        "settlement": "loc_ms_lielu",
+        "seasons": [
+          3
+        ],
+        "intervalDays": 7,
+        "stages": [
+          {
+            "id": "tight",
+            "name": "存粮告紧",
+            "probability": 1,
+            "condition": {
+              "kind": "hazard_phase",
+              "clock": "famine:loc_bs_liquan",
+              "minimum": 1
+            },
+            "effects": [
+              {
+                "kind": "wildlife_stir",
+                "habitat": "habitat_lq_old_adit",
+                "minutes": 14400,
+                "factor": 1.5
+              },
+              {
+                "kind": "standing",
+                "holder": "faction_ms_lielu",
+                "target": "loc_bs_liquan",
+                "delta": -3,
+                "reason": "冬季口粮告紧，换粮受阻"
+              }
+            ]
+          },
+          {
+            "id": "famine",
+            "name": "冬荒",
+            "probability": 1,
+            "condition": {
+              "kind": "hazard_phase",
+              "clock": "famine:loc_bs_liquan",
+              "minimum": 2
+            },
+            "effects": [
+              {
+                "kind": "wildlife_stir",
+                "habitat": "habitat_lq_old_adit",
+                "minutes": 28800,
+                "factor": 2.5
+              },
+              {
+                "kind": "standing",
+                "holder": "faction_ms_lielu",
+                "target": "loc_bs_liquan",
+                "delta": -6,
+                "reason": "冬荒断粮"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "epidemic:loc_ms_lielu",
+        "kind": "epidemic",
+        "name": "疫病流行",
+        "settlement": "loc_ms_lielu",
+        "seasons": [
+          3
+        ],
+        "intervalDays": 4,
+        "disease": "disease_cold_cough",
+        "spread": {
+          "routes": [
+            "route_t159_loc_ms_lielu"
+          ]
+        },
+        "stages": [
+          {
+            "id": "cases",
+            "name": "零星病例",
+            "probability": 0.12,
+            "condition": {
+              "kind": "weather",
+              "kinds": [
+                "snow"
+              ],
+              "location": "loc_bs_liquan"
+            },
+            "effects": [
+              {
+                "kind": "epidemic",
+                "disease": "disease_cold_cough",
+                "settlement": "loc_ms_lielu",
+                "cases": 1
+              }
+            ]
+          },
+          {
+            "id": "spread",
+            "name": "疫病流行",
+            "probability": 1,
+            "condition": {
+              "kind": "epidemic_cases",
+              "minimum": 2
+            },
+            "effects": [
+              {
+                "kind": "price_shift",
+                "settlement": "loc_bs_liquan",
+                "items": [
+                  "item_herb"
+                ],
+                "factor": 1.4,
+                "minutes": 43200,
+                "reason": "疫病流行，药草紧缺"
+              }
+            ]
+          },
+          {
+            "id": "wane",
+            "name": "疫退",
+            "probability": 1,
+            "condition": {
+              "kind": "epidemic_clear"
+            },
+            "effects": [
+              {
+                "kind": "price_shift",
+                "settlement": "loc_bs_liquan",
+                "items": [
+                  "item_herb"
+                ],
+                "factor": 1,
+                "minutes": 1,
+                "reason": "疫退，药价回落"
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "questSources": {
+    "version": 1,
+    "source": "U17 任务自动来源（指南3.10）：人物需求、世界事件订阅；势力委托走效果表 quest_post",
+    "limits": {
+      "perNpcByLevel": {
+        "0": 0,
+        "1": 1,
+        "2": 1,
+        "3": 2,
+        "4": 2,
+        "5": 3
+      },
+      "minUrgencyByLevel": {
+        "0": 4,
+        "1": 3,
+        "2": 2,
+        "3": 1,
+        "4": 1,
+        "5": 1
+      },
+      "perBoard": 6,
+      "perDay": 3,
+      "cooldownDays": 7,
+      "monthlyUnitsDPerBoard": 40
+    },
+    "publishers": {
+      "loc_hw": "npc_hw_chenbai",
+      "loc_bs_yupo": "npc_yp_zhaofeng",
+      "loc_bs_weiting": "npc_wt_zhengxi",
+      "loc_bs_liquan": "npc_lq_luanpei",
+      "loc_bs_sangban": "npc_sb_zhangluo",
+      "loc_bs": "npc_bs_031_1",
+      "loc_ms_tanjie": "npc_ms_tj_yanzhen",
+      "loc_ms_taideng": "npc_ms_td_liheng",
+      "loc_ms_yugen": "npc_ms_yg_jiecang",
+      "loc_ms_lielu": "npc_ms_ll_yayue"
+    },
+    "npcNeeds": [
+      {
+        "need": "food",
+        "grade": "D",
+        "reward": 40,
+        "days": 7,
+        "content": "{name}家断了口粮，求人送{quantity}份干粮来",
+        "objective": {
+          "type": "deliver",
+          "item": "item_ration",
+          "quantity": 5
+        }
+      },
+      {
+        "need": "medicine",
+        "grade": "D",
+        "reward": 30,
+        "days": 5,
+        "content": "{patient}病倒在床，{name}求人送{quantity}份药草来",
+        "objective": {
+          "type": "deliver",
+          "item": "item_herb",
+          "quantity": 3
+        }
+      },
+      {
+        "need": "repair",
+        "grade": "D",
+        "reward": 50,
+        "days": 10,
+        "below": 50,
+        "content": "{building}年久失修，{name}求人送{quantity}份木料修屋",
+        "objective": {
+          "type": "deliver",
+          "item": "item_wood",
+          "quantity": 6
+        }
+      },
+      {
+        "need": "escort",
+        "grade": "D",
+        "reward": 80,
+        "days": 5,
+        "content": "{name}近来遭了祸事，不敢独行，求人结伴护送去白石镇",
+        "objective": {
+          "type": "visit",
+          "location": "loc_bs"
+        }
+      },
+      {
+        "need": "missing",
+        "grade": "C",
+        "reward": 120,
+        "days": 15,
+        "content": "{person}下落不明，{name}求人去最后见到的地方寻人",
+        "objective": {
+          "type": "visit",
+          "location": "$place"
+        }
+      }
+    ],
+    "events": [
+      {
+        "id": "epidemic_care",
+        "label": "{board}村务·疫病",
+        "match": {
+          "category": "epidemic",
+          "status": "流行"
+        },
+        "board": "$origin",
+        "instance": "id",
+        "grade": "C",
+        "reward": 150,
+        "days": 10,
+        "content": "{board}疫病流行，村务求购药草十份救治病家",
+        "objective": {
+          "type": "deliver",
+          "item": "item_herb",
+          "quantity": 10
+        }
+      },
+      {
+        "id": "flood_levee",
+        "label": "{board}村务·汛情",
+        "match": {
+          "category": "hazard_flood"
+        },
+        "board": "$location",
+        "instance": "since",
+        "grade": "D",
+        "reward": 80,
+        "days": 7,
+        "content": "{place}受淹，村务求人送石料十份修堤",
+        "objective": {
+          "type": "deliver",
+          "item": "item_stone",
+          "quantity": 10
+        }
+      },
+      {
+        "id": "famine_grain",
+        "label": "{board}村务·冬荒",
+        "match": {
+          "category": "hazard_famine"
+        },
+        "board": "$settlement",
+        "instance": "since",
+        "grade": "C",
+        "reward": 200,
+        "days": 15,
+        "content": "{board}冬荒缺粮，村务求人运来干粮三十份",
+        "objective": {
+          "type": "deliver",
+          "item": "item_ration",
+          "quantity": 30
+        }
+      },
+      {
+        "id": "lair_drive",
+        "label": "{board}村务·驱赶",
+        "match": {
+          "category": "lair",
+          "status": "易主"
+        },
+        "board": "$lair",
+        "instance": "occupant.actor",
+        "grade": "C",
+        "reward": 150,
+        "days": 20,
+        "content": "{place}有野物占了旧巢，村务悬赏驱赶，巢穴空出即算办成",
+        "objective": {
+          "type": "record",
+          "record": "$key",
+          "field": "status",
+          "equals": [
+            "空置"
+          ]
+        }
+      },
+      {
+        "id": "motion_mediate",
+        "label": "{board}议事·调停",
+        "match": {
+          "category": "society_motion",
+          "status": "议事中"
+        },
+        "board": "$society",
+        "instance": "minute",
+        "grade": "D",
+        "reward": 60,
+        "days": 10,
+        "content": "{board}的议题久争不下，求人居中调停，议定即算办成",
+        "objective": {
+          "type": "record",
+          "record": "$key",
+          "field": "status",
+          "equals": [
+            "通过",
+            "否决"
+          ]
+        }
+      }
+    ],
+    "funds": {
+      "loc_ms_tanjie": "faction_ms_tanjie",
+      "loc_ms_taideng": "faction_ms_taideng",
+      "loc_ms_yugen": "faction_ms_yugen",
+      "loc_ms_lielu": "faction_ms_lielu"
+    },
+    "ledgers": [
+      {
+        "settlement": "loc_bs",
+        "opening": {
+          "name": "白石镇",
+          "population": 1000,
+          "treasury": 12000,
+          "wood": 0,
+          "iron": 0,
+          "granary": false
+        },
+        "source": "D1：五村村账人均公款×白石镇登记人口；镇上无公仓"
+      }
+    ],
+    "commissions": [
+      {
+        "owner": "clock_saltboat",
+        "stage": "s1",
+        "effects": [
+          {
+            "kind": "quest_post",
+            "id": "saltboat_lease_copy",
+            "grade": "D",
+            "reward": 60,
+            "days": 7,
+            "content": "{faction}委托：把泊位租约抄件送到苇汀岸口给船户过目",
+            "objective": {
+              "type": "visit",
+              "location": "loc_wt_bank"
+            },
+            "board": "loc_bs",
+            "publisher": "npc_bs_031_1"
+          }
+        ]
+      },
+      {
+        "owner": "clock_saltboat",
+        "stage": "s2",
+        "effects": [
+          {
+            "kind": "quest_post",
+            "id": "saltboat_objections",
+            "grade": "D",
+            "reward": 80,
+            "days": 10,
+            "content": "{faction}委托：去河湾旧渡口听取船户对租约的异议",
+            "objective": {
+              "type": "visit",
+              "location": "loc_hw_dock"
+            },
+            "board": "loc_bs",
+            "publisher": "npc_bs_031_1"
+          }
+        ]
+      },
+      {
+        "owner": "clock_saltboat",
+        "stage": "s3",
+        "effects": [
+          {
+            "kind": "quest_post",
+            "id": "saltboat_contract_copy",
+            "grade": "D",
+            "reward": 50,
+            "days": 7,
+            "content": "{faction}委托：把签好的泊位合同抄件送到河湾",
+            "objective": {
+              "type": "visit",
+              "location": "loc_hw"
+            },
+            "board": "loc_bs",
+            "publisher": "npc_bs_031_1"
+          }
+        ]
+      },
+      {
+        "owner": "clock_lampbridge",
+        "stage": "s2",
+        "effects": [
+          {
+            "kind": "quest_post",
+            "id": "lampbridge_trial_fuel",
+            "grade": "C",
+            "reward": 150,
+            "days": 10,
+            "content": "{faction}委托：送十袋木炭来试排炉班",
+            "objective": {
+              "type": "deliver",
+              "item": "item_charcoal",
+              "quantity": 10
+            },
+            "board": "loc_bs",
+            "publisher": "npc_bs_031_1"
+          }
+        ]
+      },
+      {
+        "owner": "clock_lampbridge",
+        "stage": "s3",
+        "effects": [
+          {
+            "kind": "quest_post",
+            "id": "lampbridge_wear_iron",
+            "grade": "C",
+            "reward": 120,
+            "days": 10,
+            "content": "{faction}委托：送五份铁料补炉具损耗",
+            "objective": {
+              "type": "deliver",
+              "item": "item_iron",
+              "quantity": 5
+            },
+            "board": "loc_bs",
+            "publisher": "npc_bs_031_1"
+          }
+        ]
+      },
+      {
+        "owner": "clock_fieldguild",
+        "stage": "s1",
+        "effects": [
+          {
+            "kind": "quest_post",
+            "id": "fieldguild_read_terms",
+            "grade": "D",
+            "reward": 50,
+            "days": 7,
+            "content": "{faction}委托：去榆坡找当事人对读约定原文",
+            "objective": {
+              "type": "visit",
+              "location": "loc_bs_yupo"
+            },
+            "board": "loc_bs",
+            "publisher": "npc_bs_031_1"
+          }
+        ]
+      },
+      {
+        "owner": "clock_fieldguild",
+        "stage": "s3",
+        "effects": [
+          {
+            "kind": "quest_post",
+            "id": "fieldguild_check_work",
+            "grade": "C",
+            "reward": 120,
+            "days": 10,
+            "content": "{faction}委托：去西郊废窑核看约定活计实际做到哪一步",
+            "objective": {
+              "type": "visit",
+              "location": "loc_wild_bs_kiln"
+            },
+            "board": "loc_bs",
+            "publisher": "npc_bs_031_1"
+          }
+        ]
+      },
+      {
+        "owner": "clock_kilnkin",
+        "stage": "s1",
+        "effects": [
+          {
+            "kind": "quest_post",
+            "id": "kilnkin_old_drain",
+            "grade": "D",
+            "reward": 90,
+            "days": 10,
+            "content": "{faction}委托：去砾泉旧矿道口量看旧排水道",
+            "objective": {
+              "type": "visit",
+              "location": "loc_wild_lq_adit"
+            },
+            "board": "loc_bs",
+            "publisher": "npc_bs_031_1"
+          }
+        ]
+      },
+      {
+        "owner": "clock_kilnkin",
+        "stage": "s3",
+        "effects": [
+          {
+            "kind": "quest_post",
+            "id": "kilnkin_restore_stone",
+            "grade": "C",
+            "reward": 150,
+            "days": 15,
+            "content": "{faction}委托：送十份石料来逐段补砌排水道",
+            "objective": {
+              "type": "deliver",
+              "item": "item_stone",
+              "quantity": 10
+            },
+            "board": "loc_bs",
+            "publisher": "npc_bs_031_1"
+          }
+        ]
+      },
+      {
+        "owner": "clock_wedgeorder",
+        "stage": "s2",
+        "effects": [
+          {
+            "kind": "quest_post",
+            "id": "wedgeorder_copy_marks",
+            "grade": "D",
+            "reward": 60,
+            "days": 10,
+            "content": "{faction}委托：送三张羊皮纸来抄录可公开的刻痕",
+            "objective": {
+              "type": "deliver",
+              "item": "item_parchment",
+              "quantity": 3
+            },
+            "board": "loc_bs",
+            "publisher": "npc_bs_031_1"
+          }
+        ]
+      },
+      {
+        "owner": "clock_stonethread",
+        "stage": "s1",
+        "effects": [
+          {
+            "kind": "quest_post",
+            "id": "stonethread_old_marks",
+            "grade": "D",
+            "reward": 60,
+            "days": 10,
+            "content": "{faction}委托：去河湾旧渡口抄下旧水痕",
+            "objective": {
+              "type": "visit",
+              "location": "loc_hw_dock"
+            },
+            "board": "loc_bs",
+            "publisher": "npc_bs_031_1"
+          }
+        ]
+      },
+      {
+        "owner": "clock_stonethread",
+        "stage": "s2",
+        "effects": [
+          {
+            "kind": "quest_post",
+            "id": "stonethread_spring_shift",
+            "grade": "D",
+            "reward": 70,
+            "days": 10,
+            "content": "{faction}委托：去砾泉槽边轮一班实测水位",
+            "objective": {
+              "type": "visit",
+              "location": "loc_lq_spring"
+            },
+            "board": "loc_bs",
+            "publisher": "npc_bs_031_1"
+          }
+        ]
+      },
+      {
+        "owner": "clock_hollowcircle",
+        "stage": "s1",
+        "effects": [
+          {
+            "kind": "quest_post",
+            "id": "hollowcircle_register",
+            "grade": "D",
+            "reward": 50,
+            "days": 7,
+            "content": "{faction}委托：去白石公署核对刻痕登记",
+            "objective": {
+              "type": "visit",
+              "location": "bld_bs_office"
+            },
+            "board": "loc_bs",
+            "publisher": "npc_bs_031_1"
+          }
+        ]
+      },
+      {
+        "owner": "clock_riverhomes",
+        "stage": "s1",
+        "effects": [
+          {
+            "kind": "quest_post",
+            "id": "riverhomes_bank_facts",
+            "grade": "D",
+            "reward": 40,
+            "days": 10,
+            "content": "{faction}委托：去旧渡口记下各家实际用岸的情形",
+            "objective": {
+              "type": "visit",
+              "location": "loc_hw_dock"
+            },
+            "board": "loc_hw",
+            "publisher": "npc_hw_chenbai"
+          }
+        ]
+      },
+      {
+        "owner": "clock_furroworder",
+        "stage": "s1",
+        "effects": [
+          {
+            "kind": "quest_post",
+            "id": "furroworder_ration_gap",
+            "grade": "C",
+            "reward": 150,
+            "days": 10,
+            "content": "{faction}委托：送十份干粮来补核出的口粮缺口",
+            "objective": {
+              "type": "deliver",
+              "item": "item_ration",
+              "quantity": 10
+            },
+            "board": "loc_hw",
+            "publisher": "npc_hw_chenbai"
+          }
+        ]
+      },
+      {
+        "owner": "clock_furroworder",
+        "stage": "alt",
+        "effects": [
+          {
+            "kind": "quest_post",
+            "id": "furroworder_grain_gift",
+            "grade": "C",
+            "reward": 200,
+            "days": 15,
+            "content": "{faction}委托：送二十份燕麦来补足捐粮缺口",
+            "objective": {
+              "type": "deliver",
+              "item": "item_oats",
+              "quantity": 20
+            },
+            "board": "loc_hw",
+            "publisher": "npc_hw_chenbai"
+          }
+        ]
+      },
+      {
+        "owner": "clock_returnorder",
+        "stage": "alt",
+        "effects": [
+          {
+            "kind": "quest_post",
+            "id": "returnorder_new_seats",
+            "grade": "D",
+            "reward": 60,
+            "days": 10,
+            "content": "{faction}委托：送两张三脚凳来补入新坐席",
+            "objective": {
+              "type": "deliver",
+              "item": "item_three_leg_stool",
+              "quantity": 2
+            },
+            "board": "loc_hw",
+            "publisher": "npc_hw_chenbai"
+          }
+        ]
+      },
+      {
+        "owner": "clock_ms_tanjie",
+        "stage": "decide",
+        "effects": [
+          {
+            "kind": "quest_post",
+            "id": "tanjie_grain_road",
+            "grade": "D",
+            "reward": 20,
+            "days": 10,
+            "content": "{faction}委托：替地宫探明经西郊废窑到白石镇的驮路",
+            "objective": {
+              "type": "visit",
+              "location": "loc_wild_bs_kiln"
+            }
+          }
+        ]
+      },
+      {
+        "owner": "clock_ms_lielu",
+        "stage": "settle",
+        "effects": [
+          {
+            "kind": "quest_post",
+            "id": "lielu_first_stone",
+            "grade": "D",
+            "reward": 25,
+            "days": 10,
+            "content": "{faction}委托：护送头一批石料到砾泉",
+            "objective": {
+              "type": "visit",
+              "location": "loc_bs_liquan"
+            }
+          }
+        ]
+      }
+    ]
+  },
+  "tribalAwakening": {
+    "version": 1,
+    "source": "U11 族群觉醒动态；指南3.8.5：怪物族群因吸收魔力、受到教导、遭受不公逐渐获得灵智，提出诉求、内部分化并形成新势力",
+    "quarterDays": 90,
+    "thresholds": {
+      "tingxi": 40,
+      "liyi": 80
+    },
+    "sources": {
+      "magic": {
+        "spiritLand": 4,
+        "spiritSpecies": 2,
+        "lair": 2,
+        "cap": 10
+      },
+      "teach": {
+        "player": 6,
+        "npc": 4,
+        "quest": 6,
+        "cap": 16
+      },
+      "injustice": {
+        "harm": 3,
+        "displaced": 1,
+        "hazard": 4,
+        "enslaved": 4,
+        "cap": 16
+      }
+    },
+    "intelligence": {
+      "teachForPlanning": 24
+    },
+    "clock": {
+      "segments": 6,
+      "probability": 0.35,
+      "injusticeStep": 6,
+      "suppressDecisive": 3,
+      "choiceCap": 2
+    },
+    "standing": {
+      "teach": 5,
+      "trade": 3,
+      "mediate": 4,
+      "suppress": -10
+    },
+    "dynamics": [
+      {
+        "id": "badger_northwood",
+        "name": "北林穴脚林獾",
+        "species": "monster_burrow_badger",
+        "habitat": "habitat_hw_wood",
+        "home": "loc_hw_northwood",
+        "anchor": {
+          "society": "loc_ms_taideng",
+          "faction": "faction_ms_taideng"
+        },
+        "board": "loc_hw",
+        "publisher": "npc_hw_chenbai",
+        "tutors": [
+          "npc_ms_td_qingzhi"
+        ],
+        "brokers": [
+          "npc_ms_td_taimian"
+        ],
+        "carriers": [
+          "npc_hw_wushuo",
+          "npc_ms_td_taimian"
+        ],
+        "servitude": 0,
+        "initialProgress": 30,
+        "drift": {
+          "radical": 0,
+          "accord": 1,
+          "recluse": 0
+        },
+        "accordOutcome": "autonomy",
+        "factions": [
+          {
+            "stance": "radical",
+            "name": "掘界群",
+            "share": 30,
+            "mode": "leader",
+            "creed": "夹子下到哪里，洞就挖到哪里的田埂下"
+          },
+          {
+            "stance": "accord",
+            "name": "灯下群",
+            "share": 50,
+            "mode": "vote",
+            "creed": "跟苔灯坞的狐族学，划界互市"
+          },
+          {
+            "stance": "recluse",
+            "name": "深洞群",
+            "share": 20,
+            "mode": "elders",
+            "creed": "往老林深处搬，不与人来往"
+          }
+        ],
+        "demands": [
+          {
+            "id": "territory",
+            "name": "领地",
+            "claim": "北林边东半片老洞不许下夹子、不许烟熏",
+            "quest": {
+              "choice": "mediate",
+              "grade": "C",
+              "reward": 120,
+              "days": 20,
+              "content": "北林的獾群划了洞界，要人去北林边与它们当面议定猎界",
+              "objective": {
+                "type": "visit",
+                "location": "loc_hw_northwood"
+              }
+            }
+          },
+          {
+            "id": "stop_hunting",
+            "name": "停止猎杀",
+            "claim": "冬里不许再成窝掏獾取皮"
+          },
+          {
+            "id": "trade",
+            "name": "互市",
+            "claim": "拿掘出的块根换盐",
+            "quest": {
+              "choice": "trade",
+              "grade": "D",
+              "reward": 40,
+              "days": 15,
+              "content": "獾群想用块根换盐，送十包粗盐到河湾村议事处转交",
+              "objective": {
+                "type": "deliver",
+                "item": "item_salt",
+                "quantity": 10
+              }
+            }
+          }
+        ],
+        "conflict": {
+          "grade": "C",
+          "reward": 150,
+          "days": 30,
+          "content": "掘界群在田埂下打洞，村里要人平息北林獾群的事，让它们结盟、自立或退回深处"
+        },
+        "settlementNames": [
+          "獾坡",
+          "深洞里",
+          "灯根洼"
+        ],
+        "outcomes": {
+          "ally": {
+            "claim": "北林的獾群跟河湾村立了约，灯下群往后在村里换盐，也帮着看守田埂。"
+          },
+          "autonomy": {
+            "claim": "北林的獾群在老林里自立了窝聚，自己议事，跟河湾村按界往来。"
+          },
+          "war": {
+            "claim": "北林的掘界群咬断了夹子线，在田埂下打洞，河湾村的人不敢夜里进林。"
+          },
+          "latent": {
+            "claim": "北林的獾一下子少见了，听说开了灵的都躲进了老林深处。"
+          }
+        }
+      },
+      {
+        "id": "troll_adit",
+        "name": "砾泉旧矿道苔背巨魔",
+        "species": "monster_moss_back_troll",
+        "habitat": "habitat_lq_old_adit",
+        "home": "loc_wild_lq_adit",
+        "anchor": {
+          "society": "loc_ms_lielu",
+          "faction": "faction_ms_lielu"
+        },
+        "board": "loc_bs_liquan",
+        "publisher": "npc_lq_fushen",
+        "tutors": [
+          "npc_ms_ll_cuozhen"
+        ],
+        "brokers": [
+          "npc_ms_ll_cuozhen"
+        ],
+        "carriers": [
+          "npc_lq_fushen",
+          "npc_ms_ll_yajin"
+        ],
+        "servitude": 4,
+        "initialProgress": 20,
+        "drift": {
+          "radical": 1,
+          "accord": 0,
+          "recluse": 0
+        },
+        "accordOutcome": "ally",
+        "factions": [
+          {
+            "stance": "radical",
+            "name": "断轭众",
+            "share": 45,
+            "mode": "leader",
+            "creed": "不再替裂炉营背矿，谁套轭就砸谁的炉"
+          },
+          {
+            "stance": "accord",
+            "name": "换工众",
+            "share": 35,
+            "mode": "vote",
+            "creed": "背矿可以，要按工换粮，不受鞭子"
+          },
+          {
+            "stance": "recluse",
+            "name": "苔洞众",
+            "share": 20,
+            "mode": "elders",
+            "creed": "回旧矿道最深处，谁也不见"
+          }
+        ],
+        "demands": [
+          {
+            "id": "freedom",
+            "name": "承认身份",
+            "claim": "不再算裂炉营的驮力，算自己的一族"
+          },
+          {
+            "id": "wages",
+            "name": "学艺与换工",
+            "claim": "背矿按工换粮，也要学凿石的手艺",
+            "quest": {
+              "choice": "teach",
+              "grade": "D",
+              "reward": 60,
+              "days": 20,
+              "content": "巨魔要学凿石，送五份木料到砾泉村，给它们做凿柄学手艺",
+              "objective": {
+                "type": "deliver",
+                "item": "item_wood",
+                "quantity": 5
+              }
+            }
+          },
+          {
+            "id": "adit",
+            "name": "领地",
+            "claim": "旧矿道口以内归它们，人与裂炉营不得私挖",
+            "quest": {
+              "choice": "mediate",
+              "grade": "C",
+              "reward": 120,
+              "days": 20,
+              "content": "巨魔守住了旧矿道口，要人去矿道口与它们和裂炉营议定界线",
+              "objective": {
+                "type": "visit",
+                "location": "loc_wild_lq_adit"
+              }
+            }
+          }
+        ],
+        "conflict": {
+          "grade": "C",
+          "reward": 180,
+          "days": 30,
+          "content": "断轭众在矿道口砸了炉具，砾泉村要人平息巨魔的事，让它们结盟、自立或退回深处"
+        },
+        "settlementNames": [
+          "苔洞营",
+          "断轭坡",
+          "旧坑里"
+        ],
+        "outcomes": {
+          "ally": {
+            "claim": "砾泉的巨魔跟村里立了换工约，背石按工换粮，裂炉营也认了。"
+          },
+          "autonomy": {
+            "claim": "旧矿道的巨魔自立了营地，不再替裂炉营背矿，按界与村里往来。"
+          },
+          "war": {
+            "claim": "旧矿道的断轭众起了事，砸了裂炉营的炉具，砾泉的石工都不敢上山。"
+          },
+          "latent": {
+            "claim": "旧矿道口安静下来了，开了灵的巨魔都退进了矿道最深处。"
+          }
+        }
+      },
+      {
+        "id": "deer_yupo",
+        "name": "榆坡北岗衔芝白獐",
+        "species": "monster_white_fungus_deer",
+        "habitat": "habitat_yp_north_grove",
+        "home": "loc_wild_yp_north",
+        "anchor": {
+          "society": "loc_ms_yugen",
+          "faction": "faction_ms_yugen"
+        },
+        "board": "loc_bs_yupo",
+        "publisher": "npc_yp_renbo",
+        "tutors": [
+          "npc_ms_yg_jieyin"
+        ],
+        "brokers": [
+          "npc_ms_yg_jieyin"
+        ],
+        "carriers": [
+          "npc_yp_renbo",
+          "npc_ms_yg_jieyin"
+        ],
+        "servitude": 0,
+        "initialProgress": 10,
+        "drift": {
+          "radical": 0,
+          "accord": 0,
+          "recluse": 1
+        },
+        "accordOutcome": "autonomy",
+        "factions": [
+          {
+            "stance": "radical",
+            "name": "顶角群",
+            "share": 25,
+            "mode": "leader",
+            "creed": "谁进老林采芝就顶翻谁"
+          },
+          {
+            "stance": "accord",
+            "name": "衔芝群",
+            "share": 40,
+            "mode": "vote",
+            "creed": "学木精的规矩，按季让人采一半"
+          },
+          {
+            "stance": "recluse",
+            "name": "雾岗群",
+            "share": 35,
+            "mode": "elders",
+            "creed": "躲进北岗雾里，不叫人看见"
+          }
+        ],
+        "demands": [
+          {
+            "id": "harvest",
+            "name": "停止猎杀",
+            "claim": "不许再套獐取角、连根采芝"
+          },
+          {
+            "id": "learn",
+            "name": "学艺的权利",
+            "claim": "跟榆根里的木精学认药",
+            "quest": {
+              "choice": "teach",
+              "grade": "D",
+              "reward": 50,
+              "days": 20,
+              "content": "白獐想认药，送五份药草到榆坡村，给木精教它们认草",
+              "objective": {
+                "type": "deliver",
+                "item": "item_herb",
+                "quantity": 5
+              }
+            }
+          },
+          {
+            "id": "grove",
+            "name": "领地",
+            "claim": "北岗老林按季封山",
+            "quest": {
+              "choice": "mediate",
+              "grade": "C",
+              "reward": 110,
+              "days": 20,
+              "content": "白獐要北岗按季封山，要人去北岗老林与它们和榆根里议定采季",
+              "objective": {
+                "type": "visit",
+                "location": "loc_wild_yp_north"
+              }
+            }
+          }
+        ],
+        "conflict": {
+          "grade": "C",
+          "reward": 140,
+          "days": 30,
+          "content": "顶角群在北岗顶伤了采药人，榆坡村要人平息白獐的事，让它们结盟、自立或退回雾岗"
+        },
+        "settlementNames": [
+          "芝岗",
+          "雾鹿坪",
+          "白角洼"
+        ],
+        "outcomes": {
+          "ally": {
+            "claim": "北岗的白獐跟榆坡村立了约，按季让人采芝，还帮着认药。"
+          },
+          "autonomy": {
+            "claim": "北岗的白獐自立了鹿坪，自己封山议事，跟榆根里和榆坡按季往来。"
+          },
+          "war": {
+            "claim": "北岗的顶角群见人就顶，榆坡村的采药人都不上山了。"
+          },
+          "latent": {
+            "claim": "北岗老林里的白獐不见了，听说开了灵的都躲进了雾里。"
+          }
+        }
       }
     ]
   }

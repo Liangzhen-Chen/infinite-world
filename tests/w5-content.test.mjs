@@ -11,6 +11,7 @@ import {bigramSimilarity} from '../tools/w5-validation.mjs';
 import {withoutMonsterSociety} from '../tools/publish-monster-society.mjs';
 import {withoutMonsterSociety2} from '../tools/publish-monster-society-2.mjs';
 import {withoutT142} from '../tools/t142-merge.mjs';
+import {buildBatch as buildSiteBatch,withoutSites} from '../tools/w5-sites.mjs';
 
 const fixture=entry=>({id:entry.id,prose:Object.fromEntries(entry.proseFields.map(field=>[field,field==='proverbs'?Array.from({length:10},(_,i)=>`${entry.name}的记事谚语${i}`):`${entry.name} ${field} ${entry.focus??entry.symbol}`]))});
 function addFixtures(world){
@@ -50,11 +51,20 @@ test('旧测试世界没有lore目录时仍能读取，不要求新内容倒灌�
  const temp=await fs.mkdtemp(path.join(os.tmpdir(),'w5-optional-'));
  t.after(()=>fs.rm(temp,{recursive:true,force:true}));
  for(const folder of ['meta','people','geo'])await fs.cp(new URL(`../world/${folder}`,import.meta.url),path.join(temp,folder),{recursive:true});
- const old=withoutMonsterSociety2(withoutMonsterSociety(withoutT142(await loadWorld(temp))));assert.deepEqual(old.cultures,[]);assert.deepEqual(old.deities,[]);
+ // These sites depend on the later lore and societies absent from this fixture.
+ let beforeSites=await loadWorld(temp);
+ for(const n of [3,2,1]){
+  const design=await import(`../world/design/w5-sites-${n}.mjs`);
+  beforeSites=withoutSites(beforeSites,buildSiteBatch(design.sites,beforeSites),design.priorNoMechanics);
+ }
+ const old=withoutMonsterSociety2(withoutMonsterSociety(withoutT142(beforeSites)));assert.deepEqual(old.cultures,[]);assert.deepEqual(old.deities,[]);
  // Current full profiles require their cultural references. Historical worlds
  // predate the full-profile contract, rather than containing broken full rows.
  assert.ok(validateWorld(old).errors.some(error=>error.includes('culture')));
  for(const key of ['residents','households','settlementProfiles'])old[key]=[];
+ // U9固定商店按聚落档案登记，晚于聚落档案；没有聚落档案的旧世界也没有这些商店。
+ old.rules.economy.shops.stores=[];
+ delete old.rules.tribalAwakening;// U11族群觉醒动态（挂靠魔物社会议事势力与各村人物）晚于本批，历史世界不含。
  for(const npc of old.npcs){delete npc.tier;delete npc.householdId;}
  for(const place of old.locations)if(place.access?.mode==='private')delete place.access;
  const historical=validateWorld(old);assert.equal(historical.ok,true,historical.errors.join('\n'));

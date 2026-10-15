@@ -231,6 +231,8 @@ export function projectileAirPenalty(d,target,massMg){
  return -Math.min(.6,power/100)*Math.min(1,50000/massMg);
 }
 export function adjustAirTravel(d,engine,route,mode,{minute=d.get('state','minute'),from=d.get('state','location'),sail=true,segments=[]}={}){
+ // P2: with no air effect at all neither wind nor sail can change the route.
+ if(!Object.values(d.get('state','effects')??{}).some(e=>e.kind==='air'))return route;
  const now=minute;let elapsed=route.minutes,offset=0,cursor=from;
  for(const edgeId of route.edges){
   const effects=Object.values(d.get('state','effects')??{}).filter(e=>e.kind==='air'&&e.route===edgeId&&e.started<=now+offset&&e.expires>now+offset);

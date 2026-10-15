@@ -49,7 +49,10 @@ export function buildRows(spec,world){
   return{id:r.id,from:r.from,to:spec.id,lengthKm:r.km??round(distance(from?.coordinates??spec.coordinates,spec.coordinates)*(r.winding??1.15)),terrainMultiplier:r.terrainMultiplier??0.9,
    modes:r.modes??['walk'],closedSeasons:r.closedSeasons??[],toll:0,risk:r.risk??1};});
  if(spec.existing)return{patch:{id:spec.id,site:buildSite(spec),features,noMechanics:NO_MECHANICS,...(spec.entryRule?{entryRule:spec.entryRule}:{})},routes};
- const location={id:spec.id,name:spec.name,aliases:spec.aliases??[],parent:spec.parent,scope:spec.scope,coordinates:spec.coordinates,terrain:spec.terrain,openHours:[0,1440],
+ // Map levels follow the published place the site hangs under; society interiors follow their settlement.
+ const anchor=[spec.scope,spec.parent].map(id=>world.locations.find(l=>l.id===id)).find(l=>l?.mapHierarchy?.length===4),parentRow=world.locations.find(l=>l.id===spec.parent);
+ const mapHierarchy=/^loc_ms_/.test(spec.scope)?null:anchor?structuredClone(anchor.mapHierarchy):[{id:'known-continent',name:'已知大陆片区'},{id:'known-region',name:'已知地区片区'},{id:'known-county',name:'已知郡级片区'},{id:spec.parent,name:parentRow?.name??spec.parent}];
+ const location={id:spec.id,name:spec.name,aliases:spec.aliases??[],parent:spec.parent,scope:spec.scope,coordinates:spec.coordinates,terrain:spec.terrain,openHours:[0,1440],...(mapHierarchy?{mapHierarchy}:{}),
   owner:spec.owner??null,purpose:spec.purpose,rooms:[],inventory:{},...(spec.access?{access:{mode:spec.access}}:{}),
   authoredFacts:{climate:spec.climate,senses:spec.senses,entryRule:spec.entryRule,noMechanics:NO_MECHANICS},description:spec.description,
   ...(features.length?{features}:{}),site:buildSite(spec)};

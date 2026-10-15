@@ -1,0 +1,203 @@
+{
+  "index": 0,
+  "fingerprint": "c4742b444ca3e6b5a235f11ba39ba2160a74eb24024c1deaf1bb9c8eebc56cd0",
+  "count": 24,
+  "passed": 24,
+  "ids": [
+    "festival_ditchmeal",
+    "festival_threshold",
+    "festival_orchardshare",
+    "festival_borrowbench",
+    "festival_steps",
+    "festival_lampturn",
+    "festival_missingpage",
+    "festival_copies",
+    "festival_wellrope",
+    "festival_hoofsong",
+    "festival_seeds",
+    "festival_bindings",
+    "festival_scentcloth",
+    "festival_oldvoices",
+    "festival_sailpatch",
+    "festival_tidebook",
+    "festival_rescuegear",
+    "festival_wick",
+    "festival_jarfair",
+    "festival_shademeasure",
+    "festival_stretcher",
+    "festival_wrongwedge",
+    "festival_oldseal",
+    "festival_dryrubbing"
+  ],
+  "rewritten": 0,
+  "manual": [],
+  "pending": [],
+  "flagged": [],
+  "sample": [
+    "festival_missingpage",
+    "festival_dryrubbing",
+    "festival_orchardshare",
+    "festival_lampturn",
+    "festival_oldseal"
+  ],
+  "l4": {
+    "approved": true,
+    "reviewer": "T108执行会话（Claude）",
+    "notes": [
+      {
+        "id": "festival_missingpage",
+        "note": "王都小院、上午十点；只展示家属同意公开的部分，留白不入讼卷。"
+      },
+      {
+        "id": "festival_dryrubbing",
+        "note": "芦语渡站纸坊借檐，正文写七十来分钟与时长一致；拓纸不驱邪。"
+      },
+      {
+        "id": "festival_orchardshare",
+        "note": "可正式举办：梅绫在果园作息内主持，玩家自带苹果两枚被扣，河居联盟观感+2，梅绫会传述。"
+      },
+      {
+        "id": "festival_lampturn",
+        "note": "暂不举办：王都尚无常住人物；运行参数与效果已备。"
+      },
+      {
+        "id": "festival_oldseal",
+        "note": "芦语渡站堤外验符席；不抹债、不逼认罪的边界保留。"
+      }
+    ],
+    "wave": [
+      {
+        "id": "festival_ditchmeal",
+        "scores": [
+          5,
+          4,
+          5,
+          5,
+          4,
+          4
+        ],
+        "note": "河湾南田正午开灶，主办罗苇按作息在田，传述与正文一致；需两人以上同意到场，社区感强。"
+      },
+      {
+        "id": "festival_jarfair",
+        "scores": [
+          4,
+          4,
+          4,
+          5,
+          4,
+          4
+        ],
+        "note": "落到芦语渡站，正文无具体地名不冲突；暂不举办原因写清，敲罐不检毒的边界保留。"
+      },
+      {
+        "id": "festival_wrongwedge",
+        "scores": [
+          4,
+          4,
+          4,
+          5,
+          4,
+          4
+        ],
+        "note": "铜脊城与寒炉矿工文化吻合，借用木楔不扣除；等候主办人说明到位。"
+      },
+      {
+        "id": "festival_orchardshare",
+        "scores": [
+          5,
+          4,
+          5,
+          5,
+          4,
+          4
+        ],
+        "note": "梅绫午后在果园主持，自带苹果真实扣除，空篮不创设份额与传述一致。"
+      },
+      {
+        "id": "festival_tidebook",
+        "scores": [
+          4,
+          4,
+          4,
+          4,
+          4,
+          3
+        ],
+        "note": "琥珀港作为港方潮簿席落点自然；陶杯借用不扣除；可玩钩子主要是救助记号登记。"
+      },
+      {
+        "id": "festival_wick",
+        "scores": [
+          5,
+          4,
+          4,
+          5,
+          5,
+          4
+        ],
+        "note": "雪灯镇夜里二十点开内廊，与长夜意象相合；交换蜡烛不扣除，冬储边界清楚。"
+      },
+      {
+        "id": "festival_seeds",
+        "scores": [
+          4,
+          4,
+          4,
+          5,
+          4,
+          4
+        ],
+        "note": "树桥育苗院晒台合理；种子匣借用；成活未验只议照护。"
+      },
+      {
+        "id": "festival_lampturn",
+        "scores": [
+          4,
+          4,
+          4,
+          5,
+          4,
+          4
+        ],
+        "note": "王都工坊傍晚交值，时刻与举灯照看相合；不新增轮值债务。"
+      },
+      {
+        "id": "festival_copies",
+        "scores": [
+          4,
+          4,
+          4,
+          5,
+          4,
+          3
+        ],
+        "note": "证契堂抄写席落王都，练习九十分钟与时长一致；钩子偏教学。"
+      },
+      {
+        "id": "festival_steps",
+        "scores": [
+          4,
+          4,
+          4,
+          5,
+          4,
+          4
+        ],
+        "note": "王都门阶清晨扫阶唱歌，代签边界与衡檐无自动神迹均保留。"
+      }
+    ],
+    "waveMean": 4.216666666666667,
+    "scoreDims": [
+      "事实一致",
+      "原创",
+      "可玩",
+      "规则边界",
+      "文风",
+      "钩子"
+    ]
+  },
+  "costUpperYuan": 0.8834939200000003,
+  "manualRatio": 0,
+  "needsSystemicRepair": false
+}

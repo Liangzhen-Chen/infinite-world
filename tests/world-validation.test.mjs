@@ -6,7 +6,7 @@ import {buildWorld}from'../tools/build-world.mjs';
 import fs from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
-import {catalogProgress}from'../tools/catalog-progress.mjs';
+import {catalogProgress,catalogMinimum}from'../tools/catalog-progress.mjs';
 import {validateNpcDepth} from '../tools/npc-profile-validation.mjs';
 import {pathParts} from '../tools/npc-depth-content.mjs';
 
@@ -30,8 +30,11 @@ function completeDepth(world){
 }
 test('世界校验：兼容种子通过基础结构，全规则数量不足不能标为完成',async()=>{
     const world=await loadWorld();assert.equal(validateWorld(world).ok,true);
-    const rules=validateWorld(world,{stage:'rules'});assert.equal(rules.ok,false);assert.ok(rules.errors.some(error=>error.includes('数量不足')));
-    await assert.rejects(buildWorld({source:world,stage:'rules'}),/构建拒绝/);
+    // T105后正式目录各项已达全规则门槛；用正式目录少一条历史的副本核对数量门槛仍拒绝。
+    assert.deepEqual(validateWorld(world,{stage:'rules'}).errors.filter(error=>error.includes('数量不足')),[]);
+    const short=structuredClone(world);short.history=short.history.slice(0,catalogMinimum.history-1);assert.equal(validateWorld(short).ok,true);
+    const rules=validateWorld(short,{stage:'rules'});assert.equal(rules.ok,false);assert.deepEqual(rules.errors,[`目录数量不足：history ${catalogMinimum.history-1}<${catalogMinimum.history}`]);
+    await assert.rejects(buildWorld({source:short,stage:'rules'}),/构建拒绝/);
 });
 test('世界校验：坏引用、同范围别名、未成年和屏蔽名称都阻止构建',async()=>{
     const world=await loadWorld();
@@ -68,10 +71,15 @@ test('发布构建要求全体人物深度，仍拒绝坏引用、年龄冲突�
     await assert.rejects(buildWorld({source:incomplete,stage:'release',destination}),/完整人物深度/);
     assert.equal((await buildWorld({source:world,stage:'release',destination})).ok,true);
     assert.equal(JSON.parse(await fs.readFile(path.join(destination,'manifest.json'),'utf8')).stage,'release');
+    // 全体深度齐备且目录达标时final通过；任一目录低于门槛时final只因数量不足拒绝，且与rules一致。
     const final=validateWorld(world,{stage:'final'});
-    assert.equal(final.ok,false);
-    assert.ok(final.errors.every(error=>error.includes('数量不足')),final.errors.join('\n'));
+    assert.equal(final.ok,true,final.errors.join('\n'));
     assert.deepEqual(final.errors,validateWorld(world,{stage:'rules'}).errors);
+    const short=structuredClone(world);short.history=short.history.slice(0,catalogMinimum.history-1);
+    const shortFinal=validateWorld(short,{stage:'final'});
+    assert.equal(shortFinal.ok,false);
+    assert.ok(shortFinal.errors.length&&shortFinal.errors.every(error=>error.includes('数量不足')),shortFinal.errors.join('\n'));
+    assert.deepEqual(shortFinal.errors,validateWorld(short,{stage:'rules'}).errors);
     const mutations=[
         value=>{value.spells[0].materials=[{item:'item_missing',amount:1}];},
         value=>{value.npcs[0].age=16;value.npcs[0].flags.romanceable=true;},

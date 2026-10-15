@@ -17,9 +17,9 @@ function fixture({coins=200,inventory={},deposit=0,credit=false}={}){
         npc.schedule={default:[{start:0,end:1440,location:place,activity:npc.id===worker?'休息':'营业',services:npc.id===worker?[]:['trade']}]};
         npc.creditPolicy={limitCopper:100,maximumMinutes:1440,minimumTrust:0};
     }
-    const inputs=[];
-    const act=async(tool,args,eventId)=>{const input={tool,args,eventId};const result=await engine.reduce(document,input);document=applyPatches(document,result.patches);inputs.push(input);return result.result;};
-    return {engine,w,act,inputs,get doc(){return document;},set doc(value){document=value;},
+    const inputs=[],results=[];
+    const act=async(tool,args,eventId)=>{const input={tool,args,eventId};const result=await engine.reduce(document,input);document=applyPatches(document,result.patches);inputs.push(input);results.push(result.result);return result.result;};
+    return {engine,w,act,inputs,results,get doc(){return document;},set doc(value){document=value;},
         lease:()=>act('world_trade',{operation:'lease',seller:landlord,consent:true,days:1,deposit,...(credit?{payment:'credit',creditMinutes:120}:{})},'lease'),
         manage:(operation,business,eventId=operation)=>act('world_settlement',{operation:`business_${operation}`,business},eventId)};
 }
@@ -61,7 +61,8 @@ test('真实工具链租铺、托管进货、到货开店、付盘点报酬、�
         assert.ok(f.inputs.some(i=>i.eventId===receipt.source));
         if(receipt.source==='sale')assert.deepEqual(receipt.counterparties,[{actor:customer,coins:-sold.cost,goods:{item_bread:1}}]);
     }
-    let replay=initial;for(const input of f.inputs){const step=await f.engine.reduce(replay,input,{replay:true});replay=applyPatches(replay,step.patches);}assert.deepEqual(replay,f.doc);
+    // 存档重放随事件带回原回执（storage同法）；U7后灵智成长按回执版本号重放。
+    let replay=initial;for(const [i,input] of f.inputs.entries()){const step=await f.engine.reduce(replay,input,{replay:true,result:f.results[i]});replay=applyPatches(replay,step.patches);}assert.deepEqual(replay,f.doc);
     // A stopped period retains its closing balances when later personal trades occur.
     await f.act('world_trade',{seller:landlord,item:'item_bread',quantity:1},'personal-after');
     const later=await f.manage('report',shop,'report-after');

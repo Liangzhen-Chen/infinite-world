@@ -23443,6 +23443,24 @@
       0,
       1440
     ],
+    "mapHierarchy": [
+      {
+        "id": "known-continent",
+        "name": "已知大陆片区"
+      },
+      {
+        "id": "known-region",
+        "name": "已知地区片区"
+      },
+      {
+        "id": "known-county",
+        "name": "已知郡级片区"
+      },
+      {
+        "id": "loc_bs",
+        "name": "白石镇"
+      }
+    ],
     "owner": null,
     "purpose": "河湾与白石镇之间废弃的旧驿亭",
     "rooms": [],
@@ -23627,6 +23645,24 @@
       0,
       1440
     ],
+    "mapHierarchy": [
+      {
+        "id": "known-continent",
+        "name": "已知大陆片区"
+      },
+      {
+        "id": "known-region",
+        "name": "已知地区片区"
+      },
+      {
+        "id": "known-county",
+        "name": "已知郡级片区"
+      },
+      {
+        "id": "loc_bs",
+        "name": "白石镇"
+      }
+    ],
     "owner": null,
     "purpose": "白石镇得名的旧采石坑，已经积水废弃",
     "rooms": [],
@@ -23789,6 +23825,24 @@
     "openHours": [
       0,
       1440
+    ],
+    "mapHierarchy": [
+      {
+        "id": "known-continent",
+        "name": "已知大陆片区"
+      },
+      {
+        "id": "known-region",
+        "name": "已知地区片区"
+      },
+      {
+        "id": "known-county",
+        "name": "已知郡级片区"
+      },
+      {
+        "id": "loc_bs_sangban",
+        "name": "桑坂村"
+      }
     ],
     "owner": null,
     "purpose": "桑坂西南山坡上废弃的山寺",
@@ -23986,6 +24040,24 @@
       0,
       1440
     ],
+    "mapHierarchy": [
+      {
+        "id": "known-continent",
+        "name": "已知大陆片区"
+      },
+      {
+        "id": "known-region",
+        "name": "已知地区片区"
+      },
+      {
+        "id": "known-county",
+        "name": "已知郡级片区"
+      },
+      {
+        "id": "loc_bs_weiting",
+        "name": "苇汀村"
+      }
+    ],
     "owner": "faction_bankorder",
     "purpose": "苇汀下游河岸上的旧道坛，坛基常被水淹",
     "rooms": [],
@@ -24163,6 +24235,24 @@
     "openHours": [
       0,
       1440
+    ],
+    "mapHierarchy": [
+      {
+        "id": "known-continent",
+        "name": "已知大陆片区"
+      },
+      {
+        "id": "known-region",
+        "name": "已知地区片区"
+      },
+      {
+        "id": "known-county",
+        "name": "已知郡级片区"
+      },
+      {
+        "id": "loc_bs",
+        "name": "白石镇"
+      }
     ],
     "owner": null,
     "purpose": "白石镇东郊烧毁的旧法术工坊",
@@ -24354,6 +24444,24 @@
       0,
       1440
     ],
+    "mapHierarchy": [
+      {
+        "id": "known-continent",
+        "name": "已知大陆片区"
+      },
+      {
+        "id": "known-region",
+        "name": "已知地区片区"
+      },
+      {
+        "id": "known-county",
+        "name": "已知郡级片区"
+      },
+      {
+        "id": "loc_bs",
+        "name": "白石镇"
+      }
+    ],
     "owner": null,
     "purpose": "白石镇西南郊一处废弃的旧交换场",
     "rooms": [],
@@ -24476,6 +24584,24 @@
     "openHours": [
       0,
       1440
+    ],
+    "mapHierarchy": [
+      {
+        "id": "known-continent",
+        "name": "已知大陆片区"
+      },
+      {
+        "id": "known-region",
+        "name": "已知地区片区"
+      },
+      {
+        "id": "known-county",
+        "name": "已知郡级片区"
+      },
+      {
+        "id": "loc_bs_yupo",
+        "name": "榆坡村"
+      }
     ],
     "owner": "npc_yp_renbo",
     "purpose": "榆坡村后山岗上的旧烽台",
@@ -24634,6 +24760,24 @@
     "openHours": [
       0,
       1440
+    ],
+    "mapHierarchy": [
+      {
+        "id": "known-continent",
+        "name": "已知大陆片区"
+      },
+      {
+        "id": "known-region",
+        "name": "已知地区片区"
+      },
+      {
+        "id": "known-county",
+        "name": "已知郡级片区"
+      },
+      {
+        "id": "loc_bs_weiting",
+        "name": "苇汀村"
+      }
     ],
     "owner": "npc_wt_shiqiao",
     "purpose": "苇汀上游河湾里半沉的旧船坞",
@@ -24801,6 +24945,24 @@
       0,
       1440
     ],
+    "mapHierarchy": [
+      {
+        "id": "known-continent",
+        "name": "已知大陆片区"
+      },
+      {
+        "id": "known-region",
+        "name": "已知地区片区"
+      },
+      {
+        "id": "known-county",
+        "name": "已知郡级片区"
+      },
+      {
+        "id": "loc_bs_liquan",
+        "name": "砾泉村"
+      }
+    ],
     "owner": null,
     "purpose": "砾泉村西北一片立着旧石标的坡地",
     "rooms": [],
@@ -24928,6 +25090,24 @@
       0,
       1440
     ],
+    "mapHierarchy": [
+      {
+        "id": "known-continent",
+        "name": "已知大陆片区"
+      },
+      {
+        "id": "known-region",
+        "name": "已知地区片区"
+      },
+      {
+        "id": "known-county",
+        "name": "已知郡级片区"
+      },
+      {
+        "id": "loc_bs_sangban",
+        "name": "桑坂村"
+      }
+    ],
     "owner": "npc_sb_zhenyun",
     "purpose": "桑坂村南坡锁着门的旧蚕神小祠",
     "rooms": [],
@@ -25052,6 +25232,24 @@
     "openHours": [
       0,
       1440
+    ],
+    "mapHierarchy": [
+      {
+        "id": "known-continent",
+        "name": "已知大陆片区"
+      },
+      {
+        "id": "known-region",
+        "name": "已知地区片区"
+      },
+      {
+        "id": "known-county",
+        "name": "已知郡级片区"
+      },
+      {
+        "id": "loc_bs",
+        "name": "白石镇"
+      }
     ],
     "owner": null,
     "purpose": "白石镇南边河岸上废弃的水车磨坊",
@@ -25220,6 +25418,24 @@
     "openHours": [
       0,
       1440
+    ],
+    "mapHierarchy": [
+      {
+        "id": "known-continent",
+        "name": "已知大陆片区"
+      },
+      {
+        "id": "known-region",
+        "name": "已知地区片区"
+      },
+      {
+        "id": "known-county",
+        "name": "已知郡级片区"
+      },
+      {
+        "id": "loc_bs",
+        "name": "白石镇"
+      }
     ],
     "owner": null,
     "purpose": "白石镇东郊废弃的旧兵营",
@@ -25653,6 +25869,24 @@
       0,
       1440
     ],
+    "mapHierarchy": [
+      {
+        "id": "known-continent",
+        "name": "已知大陆片区"
+      },
+      {
+        "id": "known-region",
+        "name": "已知地区片区"
+      },
+      {
+        "id": "known-county",
+        "name": "已知郡级片区"
+      },
+      {
+        "id": "loc_bs",
+        "name": "白石镇"
+      }
+    ],
     "owner": null,
     "purpose": "白石镇往铜脊城车道边废弃的旧税卡",
     "rooms": [],
@@ -25779,6 +26013,24 @@
     "openHours": [
       0,
       1440
+    ],
+    "mapHierarchy": [
+      {
+        "id": "known-continent",
+        "name": "已知大陆片区"
+      },
+      {
+        "id": "known-region",
+        "name": "已知地区片区"
+      },
+      {
+        "id": "known-county",
+        "name": "已知郡级片区"
+      },
+      {
+        "id": "loc_bs",
+        "name": "白石镇"
+      }
     ],
     "owner": null,
     "purpose": "车道跨过深沟的一座断了的石桥",
@@ -25918,6 +26170,24 @@
     "openHours": [
       0,
       1440
+    ],
+    "mapHierarchy": [
+      {
+        "id": "known-continent",
+        "name": "已知大陆片区"
+      },
+      {
+        "id": "known-region",
+        "name": "已知地区片区"
+      },
+      {
+        "id": "known-county",
+        "name": "已知郡级片区"
+      },
+      {
+        "id": "loc_bs",
+        "name": "白石镇"
+      }
     ],
     "owner": null,
     "purpose": "车道北段林坡上废弃的烧炭营地",
@@ -26086,6 +26356,24 @@
       0,
       1440
     ],
+    "mapHierarchy": [
+      {
+        "id": "known-continent",
+        "name": "已知大陆片区"
+      },
+      {
+        "id": "prov_hanlu",
+        "name": "寒炉山地"
+      },
+      {
+        "id": "county_hanlu_tongji",
+        "name": "铜脊郡"
+      },
+      {
+        "id": "loc_far_tongji",
+        "name": "铜脊城"
+      }
+    ],
     "owner": null,
     "purpose": "铜脊城南山坡上楔契氏族早年的冶炉台",
     "rooms": [],
@@ -26212,6 +26500,24 @@
     "openHours": [
       0,
       1440
+    ],
+    "mapHierarchy": [
+      {
+        "id": "known-continent",
+        "name": "已知大陆片区"
+      },
+      {
+        "id": "prov_hanlu",
+        "name": "寒炉山地"
+      },
+      {
+        "id": "county_hanlu_tongji",
+        "name": "铜脊郡"
+      },
+      {
+        "id": "loc_far_tongji",
+        "name": "铜脊城"
+      }
     ],
     "owner": null,
     "purpose": "铜脊城崖下一座淹了水的老矿道",
@@ -26370,6 +26676,24 @@
       0,
       1440
     ],
+    "mapHierarchy": [
+      {
+        "id": "known-continent",
+        "name": "已知大陆片区"
+      },
+      {
+        "id": "prov_hanlu",
+        "name": "寒炉山地"
+      },
+      {
+        "id": "county_hanlu_zheya",
+        "name": "赭牙谷"
+      },
+      {
+        "id": "loc_far_duanqi",
+        "name": "断契坡"
+      }
+    ],
     "owner": null,
     "purpose": "断契坡西侧一座烧毁的旧边堡",
     "rooms": [],
@@ -26497,6 +26821,24 @@
       0,
       1440
     ],
+    "mapHierarchy": [
+      {
+        "id": "known-continent",
+        "name": "已知大陆片区"
+      },
+      {
+        "id": "prov_hanlu",
+        "name": "寒炉山地"
+      },
+      {
+        "id": "county_hanlu_zheya",
+        "name": "赭牙谷"
+      },
+      {
+        "id": "loc_far_duanqi",
+        "name": "断契坡"
+      }
+    ],
     "owner": null,
     "purpose": "赭牙谷口的兽人旧石冢",
     "rooms": [],
@@ -26610,6 +26952,24 @@
     "openHours": [
       0,
       1440
+    ],
+    "mapHierarchy": [
+      {
+        "id": "known-continent",
+        "name": "已知大陆片区"
+      },
+      {
+        "id": "known-region",
+        "name": "已知地区片区"
+      },
+      {
+        "id": "known-county",
+        "name": "已知郡级片区"
+      },
+      {
+        "id": "loc_bs",
+        "name": "白石镇"
+      }
     ],
     "owner": null,
     "purpose": "白石镇往环城官道上废弃的旧客铺",
@@ -26737,6 +27097,24 @@
     "openHours": [
       0,
       1440
+    ],
+    "mapHierarchy": [
+      {
+        "id": "known-continent",
+        "name": "已知大陆片区"
+      },
+      {
+        "id": "known-region",
+        "name": "已知地区片区"
+      },
+      {
+        "id": "known-county",
+        "name": "已知郡级片区"
+      },
+      {
+        "id": "loc_bs",
+        "name": "白石镇"
+      }
     ],
     "owner": "faction_bankorder",
     "purpose": "官道边一座没有道士常住的小道观",
@@ -26871,6 +27249,24 @@
       0,
       1440
     ],
+    "mapHierarchy": [
+      {
+        "id": "known-continent",
+        "name": "已知大陆片区"
+      },
+      {
+        "id": "known-region",
+        "name": "已知地区片区"
+      },
+      {
+        "id": "known-county",
+        "name": "已知郡级片区"
+      },
+      {
+        "id": "loc_bs",
+        "name": "白石镇"
+      }
+    ],
     "owner": null,
     "purpose": "官道上垄渠郡与环城郡交界处的碑亭",
     "rooms": [],
@@ -26985,6 +27381,24 @@
     "openHours": [
       0,
       1440
+    ],
+    "mapHierarchy": [
+      {
+        "id": "known-continent",
+        "name": "已知大陆片区"
+      },
+      {
+        "id": "prov_xichui",
+        "name": "西陲河谷"
+      },
+      {
+        "id": "county_xichui_huancheng",
+        "name": "环城郡"
+      },
+      {
+        "id": "loc_far_huancheng",
+        "name": "环城"
+      }
     ],
     "owner": null,
     "purpose": "环城城墙外旧仓城留下的护仓水门",
@@ -27117,6 +27531,24 @@
       0,
       1440
     ],
+    "mapHierarchy": [
+      {
+        "id": "known-continent",
+        "name": "已知大陆片区"
+      },
+      {
+        "id": "prov_xichui",
+        "name": "西陲河谷"
+      },
+      {
+        "id": "county_xichui_huancheng",
+        "name": "环城郡"
+      },
+      {
+        "id": "loc_far_huancheng",
+        "name": "环城"
+      }
+    ],
     "owner": null,
     "purpose": "环城北郊一条沟边废弃的染坊",
     "rooms": [],
@@ -27239,6 +27671,24 @@
     "openHours": [
       0,
       1440
+    ],
+    "mapHierarchy": [
+      {
+        "id": "known-continent",
+        "name": "已知大陆片区"
+      },
+      {
+        "id": "known-region",
+        "name": "已知地区片区"
+      },
+      {
+        "id": "known-county",
+        "name": "已知郡级片区"
+      },
+      {
+        "id": "loc_yandu",
+        "name": "雁渡"
+      }
     ],
     "owner": null,
     "purpose": "河湾到雁渡之间河边一块供着小龛的大石",
@@ -27365,6 +27815,24 @@
     "openHours": [
       0,
       1440
+    ],
+    "mapHierarchy": [
+      {
+        "id": "known-continent",
+        "name": "已知大陆片区"
+      },
+      {
+        "id": "known-region",
+        "name": "已知地区片区"
+      },
+      {
+        "id": "known-county",
+        "name": "已知郡级片区"
+      },
+      {
+        "id": "loc_yandu",
+        "name": "雁渡"
+      }
     ],
     "owner": null,
     "purpose": "雁渡上游河滩上一条半埋在泥里的旧货驳",
@@ -27518,6 +27986,24 @@
     "openHours": [
       0,
       1440
+    ],
+    "mapHierarchy": [
+      {
+        "id": "known-continent",
+        "name": "已知大陆片区"
+      },
+      {
+        "id": "known-region",
+        "name": "已知地区片区"
+      },
+      {
+        "id": "known-county",
+        "name": "已知郡级片区"
+      },
+      {
+        "id": "loc_yandu",
+        "name": "雁渡"
+      }
     ],
     "owner": null,
     "purpose": "雁渡下游河口芦苇丛里的旧煮盐灶",
@@ -27959,6 +28445,24 @@
       0,
       1440
     ],
+    "mapHierarchy": [
+      {
+        "id": "known-continent",
+        "name": "已知大陆片区"
+      },
+      {
+        "id": "prov_feicui",
+        "name": "翡翠林盟"
+      },
+      {
+        "id": "county_feicui_shuqiao",
+        "name": "树桥郡"
+      },
+      {
+        "id": "loc_far_shuqiao",
+        "name": "树桥"
+      }
+    ],
     "owner": null,
     "purpose": "树桥西边一处断了绳桥的旧木台",
     "rooms": [],
@@ -28085,6 +28589,24 @@
       0,
       1440
     ],
+    "mapHierarchy": [
+      {
+        "id": "known-continent",
+        "name": "已知大陆片区"
+      },
+      {
+        "id": "prov_feicui",
+        "name": "翡翠林盟"
+      },
+      {
+        "id": "county_feicui_lieer",
+        "name": "砾耳猎林郡"
+      },
+      {
+        "id": "loc_far_xiushi",
+        "name": "嗅石集"
+      }
+    ],
     "owner": null,
     "purpose": "嗅石集北边草坡上一座废弃的猎道石台",
     "rooms": [],
@@ -28207,6 +28729,24 @@
     "openHours": [
       0,
       1440
+    ],
+    "mapHierarchy": [
+      {
+        "id": "known-continent",
+        "name": "已知大陆片区"
+      },
+      {
+        "id": "prov_hupo",
+        "name": "琥珀海岸"
+      },
+      {
+        "id": "county_hupo_hupogang",
+        "name": "琥珀港郡"
+      },
+      {
+        "id": "loc_far_hupo",
+        "name": "琥珀港"
+      }
     ],
     "owner": null,
     "purpose": "琥珀港外岩岸上一座熄了的旧灯台",
@@ -28369,6 +28909,24 @@
     "openHours": [
       0,
       1440
+    ],
+    "mapHierarchy": [
+      {
+        "id": "known-continent",
+        "name": "已知大陆片区"
+      },
+      {
+        "id": "prov_xingwan",
+        "name": "北境星湾"
+      },
+      {
+        "id": "county_xingwan_xuedeng",
+        "name": "雪灯郡"
+      },
+      {
+        "id": "loc_far_xuedeng",
+        "name": "雪灯镇"
+      }
     ],
     "owner": null,
     "purpose": "雪灯镇北边岩坳里一座废弃的旧冰窖",
@@ -28539,6 +29097,24 @@
       0,
       1440
     ],
+    "mapHierarchy": [
+      {
+        "id": "known-continent",
+        "name": "已知大陆片区"
+      },
+      {
+        "id": "known-region",
+        "name": "已知地区片区"
+      },
+      {
+        "id": "known-county",
+        "name": "已知郡级片区"
+      },
+      {
+        "id": "loc_capital",
+        "name": "王都"
+      }
+    ],
     "owner": null,
     "purpose": "王都东郊一处废弃的空间术试场",
     "rooms": [],
@@ -28680,6 +29256,24 @@
       0,
       1440
     ],
+    "mapHierarchy": [
+      {
+        "id": "known-continent",
+        "name": "已知大陆片区"
+      },
+      {
+        "id": "prov_fengji",
+        "name": "风脊草原"
+      },
+      {
+        "id": "county_fengji_zhufeng",
+        "name": "逐风集郡"
+      },
+      {
+        "id": "loc_far_zhufeng",
+        "name": "逐风集"
+      }
+    ],
     "owner": null,
     "purpose": "逐风集南边草原上一口废了的旧井和帐场",
     "rooms": [],
@@ -28801,6 +29395,24 @@
     "openHours": [
       0,
       1440
+    ],
+    "mapHierarchy": [
+      {
+        "id": "known-continent",
+        "name": "已知大陆片区"
+      },
+      {
+        "id": "prov_jingzhao",
+        "name": "镜沼灰盐"
+      },
+      {
+        "id": "county_jingzhao_luyu",
+        "name": "芦语渡郡"
+      },
+      {
+        "id": "loc_far_luyu",
+        "name": "芦语渡站"
+      }
     ],
     "owner": null,
     "purpose": "芦语渡站西南泥沼里一处废弃的召唤契坛",
@@ -28959,6 +29571,24 @@
     "openHours": [
       0,
       1440
+    ],
+    "mapHierarchy": [
+      {
+        "id": "known-continent",
+        "name": "已知大陆片区"
+      },
+      {
+        "id": "prov_wushan",
+        "name": "雾杉高地"
+      },
+      {
+        "id": "county_wushan_shanyi",
+        "name": "杉根联邑"
+      },
+      {
+        "id": "loc_far_jijie",
+        "name": "季界亭"
+      }
     ],
     "owner": null,
     "purpose": "季界亭以东林子里一排旧的入林界桩",

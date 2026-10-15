@@ -25,6 +25,47 @@ export async function atomicJSON(file, value) {
     await fs.rename(temporary, file);
 }
 
+// P2: the same result as structuredClone for plain data (objects, arrays,
+// primitives, undefined, -0, NaN and shared references), several times faster
+// for the small records written every simulated minute. Anything else
+// (class instances, Date, Map, holes, functions) goes to structuredClone.
+const UNPLAIN = Symbol('unplain');
+function cloneWalk(value, seen) {
+    if (value === null) return value;
+    const type = typeof value;
+    if (type === 'function' || type === 'symbol') return UNPLAIN;
+    if (type !== 'object') return value;
+    if (seen.has(value)) return seen.get(value);
+    const proto = Object.getPrototypeOf(value);
+    if (Array.isArray(value)) {
+        if (proto !== Array.prototype) return UNPLAIN;
+        const length = value.length;
+        if (Object.keys(value).length !== length) return UNPLAIN;
+        const copy = new Array(length); seen.set(value, copy);
+        for (let i = 0; i < length; i++) {
+            if (!Object.hasOwn(value, i)) return UNPLAIN;
+            const item = cloneWalk(value[i], seen); if (item === UNPLAIN) return UNPLAIN; copy[i] = item;
+        }
+        return copy;
+    }
+    if (proto !== Object.prototype && proto !== null) return UNPLAIN;
+    const copy = {}; seen.set(value, copy);
+    for (const key of Object.keys(value)) {
+        if (key === '__proto__') return UNPLAIN;
+        const item = cloneWalk(value[key], seen); if (item === UNPLAIN) return UNPLAIN; copy[key] = item;
+    }
+    return copy;
+}
+let cloneSeen = null;
+export function cloneData(value) {
+    if (value === null || typeof value !== 'object' && typeof value !== 'function' && typeof value !== 'symbol') return value;
+    const seen = cloneSeen ?? new Map(); cloneSeen = null;
+    try {
+        const copy = cloneWalk(value, seen);
+        return copy === UNPLAIN ? structuredClone(value) : copy;
+    } finally { seen.clear(); cloneSeen = seen; }
+}
+
 // Each path clones only its ancestors. The original document stays untouched
 // even if a later patch is rejected; logs and transaction indexes live elsewhere.
 export function applyPatches(document, patches) {
@@ -38,8 +79,10 @@ export function applyPatches(document, patches) {
         }
         return copies.get(value);
     };
-    const next = writable(document);
+    const next = writable(document), dead = deadPatchValues(patches);
+    let index = -1;
     for (const patch of patches) {
+        index++;
         if (!['set', 'delete'].includes(patch.op) || !Array.isArray(patch.path) || !patch.path.length || patch.path.length > 12) throw new Error('补丁格式无效');
         if (patch.path.some(key => typeof key !== 'string' || unsafe.has(key))) throw new Error('补丁含不安全路径');
         let target = next;
@@ -49,9 +92,102 @@ export function applyPatches(document, patches) {
         }
         const key = patch.path.at(-1);
         if (patch.op === 'delete') delete target[key];
-        else target[key] = structuredClone(patch.value);
+        else target[key] = dead?.[index] ? patch.value : cloneData(patch.value);
     }
     return next;
+}
+// P2: a value is dead when a later patch sets or deletes exactly the same path
+// and nothing in between writes inside it. Such a value is never read, written
+// through or returned, so applyPatches places it without copying; the result
+// is unchanged. Long elapsed-time events rewrite the same records each minute.
+function deadPatchValues(patches) {
+    if (!Array.isArray(patches) || patches.length < 2) return null;
+    const root = { children: null }, dead = new Array(patches.length).fill(false);
+    const child = (node, key) => {
+        if (!node.children) node.children = new Map();
+        let next = node.children.get(key);
+        if (!next) { next = { children: null, later: false, inside: false }; node.children.set(key, next); }
+        return next;
+    };
+    for (let i = patches.length - 1; i >= 0; i--) {
+        const path = patches[i]?.path;
+        if (!Array.isArray(path) || !path.length || path.some(key => typeof key !== 'string')) continue;
+        let node = root;
+        for (let d = 0; d < path.length - 1; d++) { node = child(node, path[d]); node.inside = true; }
+        node = child(node, path[path.length - 1]);
+        dead[i] = node.later && !node.inside;
+        node.later = true; node.inside = false;
+    }
+    return dead;
+}
+
+// P2: one patch at a time over a working document, with the same result as
+// applyPatches. Copies made here stay writable across later patches until a
+// reference to them escapes (expose), so a long simulation does not recopy
+// the document root, state and records on every write. Every reference that
+// escaped, and everything below it, is copied before it would change.
+export class PatchCursor {
+    constructor(document) { this.reset(document); }
+    // marks: 1 = this cursor's own copy, writable in place; 2 = own copy whose
+    // reference escaped. Anything unmarked is never written in place.
+    // chain: the own copies along the last written path. While none of them
+    // has escaped since and each still hangs where it did, they are still
+    // writable, so consecutive writes below them skip the mark lookups.
+    reset(document) { this.root = document; this.marks = new WeakMap(); this.chain = null; }
+    // Only this cursor's own copies are ever written in place, so only they need marking.
+    expose(value) {
+        if (value && typeof value === 'object' && this.marks.get(value) === 1) {
+            this.marks.set(value, 2);
+            if (this.chain?.nodes.includes(value)) this.chain = null;
+        }
+        return value;
+    }
+    take(value) {
+        const mark = this.marks.get(value);
+        if (mark === 1) return value;
+        const copy = Array.isArray(value) ? [...value] : { ...value };
+        // An escaped copy's children are now reachable from the escaped original too.
+        if (mark === 2) { this.chain = null; for (const key in copy) { const child = copy[key]; if (child && typeof child === 'object' && this.marks.get(child) === 1) this.marks.set(child, 2); } }
+        this.marks.set(copy, 1);
+        return copy;
+    }
+    // clone=false only for a value the caller knows a later patch replaces.
+    apply(patch, clone = true) {
+        const root = this.root, path = patch.path;
+        if (!root || typeof root !== 'object') throw new Error('补丁路径无法解析');
+        if ((patch.op !== 'set' && patch.op !== 'delete') || !Array.isArray(path) || !path.length || path.length > 12) throw new Error('补丁格式无效');
+        if (path.some(key => typeof key !== 'string' || unsafe.has(key))) throw new Error('补丁含不安全路径');
+        // Resolve the whole path before writing, so a rejected patch leaves no trace.
+        const last = path.length - 1;
+        let probe = root;
+        for (let i = 0; i < last; i++) {
+            const child = probe[path[i]];
+            if (child === null || child === undefined) break;
+            if (typeof child !== 'object') throw new Error('补丁路径无法解析');
+            probe = child;
+        }
+        const value = patch.op === 'delete' ? undefined : clone ? cloneData(patch.value) : patch.value;
+        const chain = this.chain;
+        let target, reused = 0;
+        if (chain && chain.nodes[0] === root) {
+            target = root;
+            while (reused < last && reused < chain.keys.length && chain.keys[reused] === path[reused] && target[path[reused]] === chain.nodes[reused + 1]) target = chain.nodes[++reused];
+        } else target = this.root = this.take(root);
+        const nodes = reused ? chain.nodes.slice(0, reused + 1) : [target];
+        for (let i = reused; i < last; i++) {
+            const key = path[i], child = target[key];
+            let next;
+            if (child === null || child === undefined) { next = {}; this.marks.set(next, 1); }
+            else next = this.take(child);
+            if (next !== child) target[key] = next;
+            target = next; nodes.push(next);
+        }
+        const key = path[last];
+        if (patch.op === 'delete') delete target[key];
+        else target[key] = value;
+        this.chain = { nodes, keys: path.slice(0, last) };
+        return this.root;
+    }
 }
 
 export class CampaignStorage {

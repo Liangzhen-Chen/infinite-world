@@ -17,14 +17,16 @@ export async function readMixedPublication(root=path.resolve('world/drafts/creat
  if(!Array.isArray(wave)||wave.length!==10||new Set(wave.map(r=>r.id)).size!==10||wave.some(r=>!ids.has(r.id)||!Array.isArray(r.scores)||r.scores.length!==6||r.scores.some(n=>!Number.isInteger(n)||n<3||n>5)||typeof r.note!=='string'||!r.note.trim())||wave.flatMap(r=>r.scores).reduce((a,b)=>a+b,0)/60<4)throw Error('波次随机10条六项评分未达标');
  return publication;
 }
-function upsert(rows,adds,label){
+// K1在本批之后给正式物种补了性状标签tags：正式条目只多出本批没有的这类后补字段时仍视为同一条，其余字段不同照旧冲突。
+const without=(row,keys)=>Object.fromEntries(Object.entries(row).filter(([k])=>!keys.includes(k)));
+function upsert(rows,adds,label,later=[]){
  const out=structuredClone(rows),map=new Map(out.map((r,i)=>[r.id,i]));
- for(const row of adds){if(map.has(row.id)){if(!same(out[map.get(row.id)],row))throw Error(`正式条目冲突：${label} ${row.id}`);}else{out.push(structuredClone(row));map.set(row.id,out.length-1);}}
+ for(const row of adds){if(map.has(row.id)){if(!same(without(out[map.get(row.id)],later.filter(k=>!Object.hasOwn(row,k))),row))throw Error(`正式条目冲突：${label} ${row.id}`);}else{out.push(structuredClone(row));map.set(row.id,out.length-1);}}
  return out;
 }
 export function mergeMixedPublication(world,p){
  const next=structuredClone(world);
- next.monsters=upsert(world.monsters,p.monsters,'monsters');if(p.held.some(id=>next.monsters.some(m=>m.id===id)))throw Error('未过审核的物种已出现在正式目录');next.items=upsert(world.items,p.items,'items');
+ next.monsters=upsert(world.monsters,p.monsters,'monsters',['tags']);if(p.held.some(id=>next.monsters.some(m=>m.id===id)))throw Error('未过审核的物种已出现在正式目录');next.items=upsert(world.items,p.items,'items');
  next.locations=upsert(world.locations,p.locations,'locations');next.routes=upsert(world.routes,p.routes,'routes');
  next.rules.wildlife.habitats=upsert(world.rules.wildlife.habitats,p.habitats,'habitats');
  return next;

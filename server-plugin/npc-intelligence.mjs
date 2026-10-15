@@ -1,3 +1,4 @@
+import {cloneData} from './storage.mjs';
 import {registerWorldEventSubscriber}from'./world-events.mjs';
 // U7 灵智等级（指南5.3）：人物与已开灵的精怪共用一张等级表。等级不决定说话
 // 聪不聪明，只决定主动性、计划几步、看多远、多敢打破惯例、多快识破玩家反复用
@@ -6,7 +7,7 @@ import {registerWorldEventSubscriber}from'./world-events.mjs';
 import {sapient,awakeningTotal,awakeningEligible}from'./wildlife-awakening.mjs';
 import {famineAt}from'./hazard-calendar.mjs';
 
-const DAY=1440,clone=v=>structuredClone(v);
+const DAY=1440,clone=v=>cloneData(v); // P2: same result as structuredClone, faster
 export const INTELLIGENCE_VERSION=1;
 // maxActions：智能层一次计划最多几步；horizonDays：看得见多远的目标；
 // recipeMinutes/dailyMinutes/offSchedule：日常自主工作能多大程度离开惯例；
@@ -95,7 +96,8 @@ export function intelligenceSign(state,id){
 // 分量足够的伤害、偷盗、重礼让当事人和目击者都受震动。
 const majorEvent=e=>e.verb==='harm'&&e.tags?.includes('hostile')||e.verb==='steal'&&e.witnesses?.length||e.verb==='gift'&&(e.value??0)>=70;
 export function recordIntelligenceEvents(d,engine,events,context){
- if(context?.legacy||!intelligenceFresh(engine))return;
+ // 没有改动任何状态的调用（如重复撤销已撤销的许可）不算共同经历或同行。
+ if(context?.legacy||context?.noop||!intelligenceFresh(engine))return;
  for(const e of events){
   if(e.legacy)continue;
   const touched=new Map(),add=(id,points,source)=>{if(id&&id!=='player'&&(touched.get(id)?.points??0)<points)touched.set(id,{points,source});};

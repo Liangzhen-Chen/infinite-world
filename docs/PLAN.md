@@ -2,6 +2,8 @@
 
 ## 规划与执行客户端会话的规则
 
+**派生优先（用户 2026-10-15 定的设计原则）**：凡是由身份、职位、关系、所在地、季节等当前状态决定的东西（任务额度、俸禄、权限、税率、店主身份、可用服务、称呼、可接触的人等），一律在读取时从当前状态派生，不把结果抄进人物或地点数据。手填只作覆盖项，并且要标明是覆盖。人物从村长升为镇长，额度、俸禄、权限必须自动跟着变。新卡若要存这类值，必须说明为什么不能派生。
+
 先遵守 AGENTS.md 的 Stop That Shit 开发规则：完成卡片完整责任，复用直接方案，仅因实际缺口扩展；保留有效保护，修正经证据确认的重复或过宽拒绝。必要调用、数据和测试一起交付。文件清单是分工，跨非锁定文件的必要小接点说明后由主协调，不额外请用户批准已授权工作。
 
 已有效的验收证据复用；新变化或具体失败才补查，不为此 Skill 新增清单、manifest、验证器或审核会话。等价阻碍只处理一次规划，不通过不断拆新卡重复同一修复。摘要报告提交、实际验收、改动和未解问题；验收后主合并、CORE、更新文档、清理干净 worktree，并归档确定不再续用的会话。
@@ -66,6 +68,8 @@ review-002-yp=782a49e阶段审核通过，范围限T06正式发布与c64163d修�
 
 - K9 已完成（发布见PROGRESS）。原文：（用户 2026-10-14 要求）：底座 K1–K7 合入后，产出可视化的游戏系统图：一共几层、每层有哪些系统、系统之间如何串联（读写哪些共享状态、订阅哪些世界事件、受哪些交互规则和效果驱动），并附“新增一种内容要接哪些系统”的查表。按代码实际生成（脚本从注册表、规则表、订阅关系导出数据），发布为 Artifact 给用户，并在 docs/ 留一份。
 
+- A1 写死值排查（主会话加，紧跟Q1）：只读扫描 world/ 数据与 server-plugin，找出所有“本应从当前状态派生却存成静态值”的字段（例：人物数据上的 monthlyQuotaD、俸禄、职务权限、店主与服务、头衔带来的权利、组织职位权利、聚落级别带来的官职与税率、按职业写死的技能上限等），按影响排序列表，给出改为派生的迁移卡草案，交主会话审批。不改代码。规模S。
+- Q1 发任务权限派生（主会话加，用户问“新人物能否自动获得发任务权限”时查出）：现在玩家的额度由官职、爵位、名士派生，但NPC的额度读人物数据里手填的 monthlyQuotaD，公告栏主事人在 rules.questSources.publishers 手登记，名册居民不跑需求单。改为：任何人物（玩家或NPC）的发布额度统一由其实际持有的官职、爵位、名士、组织职位派生；聚落公告栏主事人默认由该聚落现任主官派生，手填作覆盖；名册居民被点名展开为完整档后自动参与需求单。验收CORE+quest-board*/quest-sources/governance*/titles/notables-promotion/organizations/data-coverage/prompt。规模S-M。
 - K10 已完成。原文：（来源：K9 系统地图）：世界事件订阅者改为注册入口（各模块自行登记，engine 不再持私有数组）；新法术 effectSpec.kind 改为效果注册表分派（不再改 magic.mjs 分支）；聚落与势力成员的声望登记由 world 数据派生（不再手填 rules.reputation.settlements/factions）；商店可由聚落与人物服务标签派生。验收 CORE + magic*/reputation*/world-events/standing/shop-restock/system-map/prompt + 重新生成系统地图，“仍需手动接线”清单只剩新工具与K8栖地。规模M。
 
 - P1 已完成（10694）。原文：（主会话 2026-10-14 加，挡住 T124–T127 等改工具的卡）：静态提示已到 11862（硬上限 12000）。把 prompt/ 与工具描述压到 ≤11000，不删规则含义；以现有提示测试、m2/m3 离线回放测试为准。规模M。
@@ -87,9 +91,9 @@ review-002-yp=782a49e阶段审核通过，范围限T06正式发布与c64163d修�
 - U8 已完成。原文：（依赖K3、K5，S）：撒谎时真相与谎言成对记录，可被揭穿。npc-memory.mjs、world_remember 参数、consistency-review.mjs。
 - U10 生活魔法的经济反馈（依赖K2、K4、K6，S-M）：保鲜降损耗与价格、引水改产量，受益方与竞争方立场变化，官府收费或管制。
 - U14 已完成。原文：（依赖K3、K5，S）：回到某地时汇总离开期间当地的变化。
-- U17 任务自动来源（依赖K3、K4、U1，S-M）：NPC按自身需求与短缺自动出任务；势力委托；世界事件任务。quest-board.mjs、npc-life.mjs、faction-clock.mjs。
+- U17 已完成。原文：（依赖K3、K4、U1，S-M）：NPC按自身需求与短缺自动出任务；势力委托；世界事件任务。quest-board.mjs、npc-life.mjs、faction-clock.mjs。
 - U13 已完成。原文：（依赖U1、U6、T124，S-M）。
-- U11 族群觉醒动态（依赖K4、K6、U1、U3，L）：怪物族群按季度与年觉醒、提出诉求、内部分化、生成新势力；玩家可教导、贸易、调停、镇压。
+- U11 已完成。原文：（依赖K4、K6、U1、U3，L）：怪物族群按季度与年觉醒、提出诉求、内部分化、生成新势力；玩家可教导、贸易、调停、镇压。
 - U12 军队、兵役、战争与外交（依赖U1、U2、U3、K4、K6、T127、T142，L，开工前再拆）。
 - U15 余下动词（依赖K8、U1、U5，S-M）：钓鱼、开矿、决斗、走私、竞选。
 - U16 建国（依赖U12、T127，L，最后做）。
@@ -603,13 +607,13 @@ T28-R1修好新回执undefined规范化并保留严格篡改拒绝，相关31/32
 
 ### T107（B1）已完成：正式节日改变作息与生产窗口，举办须有场地、参与者同意和实际物资并真实扣耗；新增10项通过/CORE40，0模型。24条候选的发布归T108。
 
-### T108（B2） 24节日审核发布。结果：24个节日有正式举办地点和运行参数，玩家能参加有成本的活动。可改world/design/w5-festivals.mjs、原节日草稿、tools/w5-festivals.mjs及发布入口、world/lore/festivals.json和必要geo地点映射、tests/w5-festival-publication.test.mjs；接B1，地理发布与T94/遗迹卡串行。复用有效审核，仅修缺项；regional_unmapped须落实举办地再启用，不将远方人员瞬移来现场。验收node --test "tests/w5-*.test.mjs" tests/festival.test.mjs tests/festival-runtime.test.mjs tests/world-clock.test.mjs，CORE。L2预计24–50次，≤1.5元；约2小时。
+### T108 已完成。原 T108（B2） 24节日审核发布。结果：24个节日有正式举办地点和运行参数，玩家能参加有成本的活动。可改world/design/w5-festivals.mjs、原节日草稿、tools/w5-festivals.mjs及发布入口、world/lore/festivals.json和必要geo地点映射、tests/w5-festival-publication.test.mjs；接B1，地理发布与T94/遗迹卡串行。复用有效审核，仅修缺项；regional_unmapped须落实举办地再启用，不将远方人员瞬移来现场。验收node --test "tests/w5-*.test.mjs" tests/festival.test.mjs tests/festival-runtime.test.mjs tests/world-clock.test.mjs，CORE。L2预计24–50次，≤1.5元；约2小时。
 
 ### T109（B3）已完成：势力按日或周推进计划，阶段真实消耗资源，玩家干预改变后续；关系与争端有结算回执；觉醒调用接口已留（未实现的效果明确报错，个体变化归T160）。新增10项通过、相关95/96（余一项为主线旧的节俗数量断言）、CORE40、发布构建ok，0模型。正式参数待T110/T111。
 
-### T110（B4） 势力时钟前20个。结果：前20个势力的资产与各阶段条件、代价和干预办法正式可执行。可改world/design/w5-clock-1.mjs、对应草稿/内容发布入口、world/lore/factions.json、本批tests/w5-clock-1.test.mjs；按现有ID排序分批，不重写合格背景，引用文化/神祇/历史的缺项在本批修正。接B3，与B5同文件串行。验收node --test "tests/w5-*.test.mjs" tests/world-clock.test.mjs tests/faction-clock.test.mjs，CORE。L2预计25–45次，≤1.5元；约2小时。
+### T110 已完成。原 T110（B4） 势力时钟前20个。结果：前20个势力的资产与各阶段条件、代价和干预办法正式可执行。可改world/design/w5-clock-1.mjs、对应草稿/内容发布入口、world/lore/factions.json、本批tests/w5-clock-1.test.mjs；按现有ID排序分批，不重写合格背景，引用文化/神祇/历史的缺项在本批修正。接B3，与B5同文件串行。验收node --test "tests/w5-*.test.mjs" tests/world-clock.test.mjs tests/faction-clock.test.mjs，CORE。L2预计25–45次，≤1.5元；约2小时。
 
-### T111（B5） 势力时钟后20个。结果：剩余20个势力也有资源约束和可干预的阶段，不以文字计划冒充生效。文件同B4，批次换w5-clock-2，接B4发布；与其他factions.json写者串行。验收node --test "tests/w5-*.test.mjs" tests/world-clock.test.mjs tests/faction-clock.test.mjs，CORE。L2预计25–45次，≤1.5元；约2小时。
+### T111 已完成。原 T111（B5） 势力时钟后20个。结果：剩余20个势力也有资源约束和可干预的阶段，不以文字计划冒充生效。文件同B4，批次换w5-clock-2，接B4发布；与其他factions.json写者串行。验收node --test "tests/w5-*.test.mjs" tests/world-clock.test.mjs tests/faction-clock.test.mjs，CORE。L2预计25–45次，≤1.5元；约2小时。
 
 ### T112（B6）已完成：据点进入、机关处理、有限库存（重访不刷新），凭实际发现解锁隐藏历史；提示估算11710 token；相关与CORE通过，0模型。
 
