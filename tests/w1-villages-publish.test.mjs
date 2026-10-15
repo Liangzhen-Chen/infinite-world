@@ -15,11 +15,14 @@ import {applyPatches} from '../server-plugin/storage.mjs';
 import {readPublishedNpcDepth} from '../tools/npc-depth-publication-sources.mjs';
 // T159榆根里、裂炉营以四村为邻地与资源来源；删村的历史投影一并移出这批聚居地。
 import {withoutMonsterSociety2} from '../tools/publish-monster-society-2.mjs';
-const candidate=JSON.parse(await fs.readFile('world/drafts/w1/villages/candidate.json','utf8')),original=withoutMonsterSociety2(villagesOriginalWorld(await loadWorld())),world=mergeVillages(original,candidate);
+import {withoutT142} from '../tools/t142-merge.mjs';
+// T142九省纲要（远方文化、势力、人物）晚于四村，也依赖魔物社会，一并投影掉。
+const candidate=JSON.parse(await fs.readFile('world/drafts/w1/villages/candidate.json','utf8')),original=withoutMonsterSociety2(withoutT142(villagesOriginalWorld(await loadWorld()))),world=mergeVillages(original,candidate);
 // 隔离世界还要写出删去T159聚居地后的首领、文化与势力目录，否则首领引用断开。
-const historical={'meta/bosses.json':'bosses','lore/cultures.json':'cultures','lore/factions.json':'factions'};
+// T142的远方人物与九省区划同样随投影移出（区划整批移出时写空表）。
+const historical={'meta/bosses.json':'bosses','lore/cultures.json':'cultures','lore/factions.json':'factions','lore/factionPeople.json':'factionPeople','geo/regions.json':'regions'};
 const files={'people/baseline.json':'npcs','people/residents.json':'residents','people/households.json':'households','geo/settlements.json':'settlementProfiles','geo/locations.json':'locations','geo/routes.json':'routes'};
-async function temporary(t){const root=await fs.mkdtemp(path.join(os.tmpdir(),'fields-four-villages-'));t.after(async()=>{const resolved=path.resolve(root);assert.ok(resolved.startsWith(path.resolve(os.tmpdir())+path.sep));await fs.rm(resolved,{recursive:true,force:true});});for(const dir of ['meta','people','geo','lore'])await fs.cp(path.resolve('world',dir),path.join(root,dir),{recursive:true});await fs.mkdir(path.join(root,'drafts/w1'),{recursive:true});await fs.cp(path.resolve('world/drafts/w1/villages'),path.join(root,'drafts/w1/villages'),{recursive:true});for(const[file,key]of Object.entries({...files,...historical}))await fs.writeFile(path.join(root,file),JSON.stringify(original[key]));return root;}
+async function temporary(t){const root=await fs.mkdtemp(path.join(os.tmpdir(),'fields-four-villages-'));t.after(async()=>{const resolved=path.resolve(root);assert.ok(resolved.startsWith(path.resolve(os.tmpdir())+path.sep));await fs.rm(resolved,{recursive:true,force:true});});for(const dir of ['meta','people','geo','lore'])await fs.cp(path.resolve('world',dir),path.join(root,dir),{recursive:true});await fs.mkdir(path.join(root,'drafts/w1'),{recursive:true});await fs.cp(path.resolve('world/drafts/w1/villages'),path.join(root,'drafts/w1/villages'),{recursive:true});for(const[file,key]of Object.entries({...files,...historical}))await fs.writeFile(path.join(root,file),JSON.stringify(original[key]??[]));return root;}
 async function hashes(root){return Object.fromEntries(await Promise.all(Object.keys(files).map(async f=>[f,hashContent(await fs.readFile(path.join(root,f),'utf8'))])));}
 
 test('四村补丁预览执行engine结构校验，临时目录发布及重复零写入',async t=>{

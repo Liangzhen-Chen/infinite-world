@@ -95,7 +95,8 @@ export function intelligenceSign(state,id){
 // 分量足够的伤害、偷盗、重礼让当事人和目击者都受震动。
 const majorEvent=e=>e.verb==='harm'&&e.tags?.includes('hostile')||e.verb==='steal'&&e.witnesses?.length||e.verb==='gift'&&(e.value??0)>=70;
 export function recordIntelligenceEvents(d,engine,events,context){
- if(context?.legacy||!intelligenceFresh(engine))return;
+ // 没有改动任何状态的调用（如重复撤销已撤销的许可）不算共同经历或同行。
+ if(context?.legacy||context?.noop||!intelligenceFresh(engine))return;
  for(const e of events){
   if(e.legacy)continue;
   const touched=new Map(),add=(id,points,source)=>{if(id&&id!=='player'&&(touched.get(id)?.points??0)<points)touched.set(id,{points,source});};

@@ -14,9 +14,11 @@ import {applyPatches} from '../server-plugin/storage.mjs';
 import {validateWorld} from '../tools/validate-world.mjs';
 // T159榆根里、裂炉营的库存与资源引用本批物品；回到本批之前的旧版须一并移出这批聚居地。
 import {withoutMonsterSociety2} from '../tools/publish-monster-society-2.mjs';
+import {withoutT142} from '../tools/t142-merge.mjs';
 const world=await loadWorld(),bones=economyW3Journey(world),seed=JSON.parse(await fs.readFile('tests/fixtures/legacy/seed.json','utf8'));
 const lore=[...bones.items.map(x=>({id:x.id,description:x.use,inspection:'检查可见损伤，不能确认的部位交由熟悉该器物者另检。',storage:x.shelfLifeDays===null?'干燥放置并避开重压，取用前检查接缝和受潮痕。':`保存上限${x.shelfLifeDays}天，按制作日核查。`})),...bones.recipes.map(x=>({id:x.id,process:x.processFacts}))];
-const oldWorld=withoutMonsterSociety2(world),waveIds=new Set([...bones.items,...bones.recipes].map(x=>x.id));
+// T142九省纲要的远方文化、势力和人物以魔物社会人物为见证，是更晚的一批，一并投影掉。
+const oldWorld=withoutMonsterSociety2(withoutT142(world)),waveIds=new Set([...bones.items,...bones.recipes].map(x=>x.id));
 oldWorld.items=oldWorld.items.filter(x=>!waveIds.has(x.id));oldWorld.recipes=oldWorld.recipes.filter(x=>!waveIds.has(x.id));for(const npc of oldWorld.npcs)for(const id of Object.keys(npc.inventory??{}))if(waveIds.has(id))delete npc.inventory[id];
 const candidate=assembleTradesCandidate(oldWorld,bones,lore),engine=new WorldEngine(candidate);
 const setup=()=>engine.initialFromLegacy(seed,'w3-journey');

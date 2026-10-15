@@ -55,6 +55,8 @@ test('旧测试世界没有lore目录时仍能读取，不要求新内容倒灌�
  // predate the full-profile contract, rather than containing broken full rows.
  assert.ok(validateWorld(old).errors.some(error=>error.includes('culture')));
  for(const key of ['residents','households','settlementProfiles'])old[key]=[];
+ // U9固定商店按聚落档案登记，晚于聚落档案；没有聚落档案的旧世界也没有这些商店。
+ old.rules.economy.shops.stores=[];
  for(const npc of old.npcs){delete npc.tier;delete npc.householdId;}
  for(const place of old.locations)if(place.access?.mode==='private')delete place.access;
  const historical=validateWorld(old);assert.equal(historical.ok,true,historical.errors.join('\n'));

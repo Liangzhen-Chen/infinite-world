@@ -15,7 +15,9 @@ const budgetRoot=path.resolve('world/drafts/m4-object'),world=await loadWorld();
 export const reviewDraftFor=bossDraft;
 export function contextFor(e){
  const itemIds=[...new Set([...e.drops.map(d=>d.item),...(e.negotiation?.stock??[]).map(d=>d.item),...(e.negotiation?.accepts??[])])];
- return {species:world.monsters.find(m=>m.id===e.monster),location:{id:e.lair,name:world.locations.find(l=>l.id===e.lair)?.name},
+ // K1后物种补了机制性状标签tags；审核时的物种事实不含此字段，指纹只按审核时已有的字段核对，其余字段一改仍拒绝。
+ const species=world.monsters.find(m=>m.id===e.monster),{tags:_traitTags,...reviewedSpecies}=species??{};
+ return {species:species&&reviewedSpecies,location:{id:e.lair,name:world.locations.find(l=>l.id===e.lair)?.name},
   habitat:world.rules.wildlife.habitats.find(h=>h.id===e.residence.habitat),items:itemIds.map(id=>world.items.find(i=>i.id===id)),
   combat:'boss-abilities.mjs: 同类战术自第二次既往使用开始适应，每步减少10%伤害，最高30%；只有实际命中的反击计数。按every与belowHpPercent触发effectSpec指定状态，duration分钟。眩光弱点须睁眼且状态未消耗未过期，更换兵器不清适应。',
   ecology:'bosses.mjs: 巢穴原个体不复生，死亡后空置vacancyDays天才从实际当地种群迁入replacementSpecies。掉落留在尸体，经实际取材才到背包。同类部下按minionCount登记。外貌旧痕不产生额外能力。',
