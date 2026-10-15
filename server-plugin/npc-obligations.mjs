@@ -1,4 +1,5 @@
 import {educationReservation} from './education-state.mjs';
+import {medicineReservation} from './medicine-state.mjs';
 import {scheduleAt,advanceNpcSchedules} from './npc-schedule.mjs';
 import {waterEarthHeldUntil}from'./magic-water-earth.mjs';
 import {personConstraint,personConstraints,personSimulation}from'./entity-view.mjs';
@@ -17,6 +18,7 @@ export function npcObligationAt(state,id,minute=state.minute){
 }
 export function assertNpcObligationAction(d,engine,actors,{start=d.get('state','minute'),minutes=0,location,kind='action'}={}){
  const finish=start+minutes;
+ if(kind!=='medicine'&&kind!=='employment')for(const actor of actors)if(medicineReservation(d.get('state'),actor,start,minutes))throw Error('与诊疗预约冲突');
  if(kind!=='education')for(const actor of actors)if(educationReservation(engine,d.get('state'),actor,start,minutes,{automatic:kind==='autonomy'}))throw Error('与已登记授业课时冲突');
  if(kind!=='employment')for(const actor of actors)if(employmentReservation(d.get('state'),actor,start,minutes,engine.byId.get(actor)?.schedule?.restDays??[]))throw Error('与雇佣合同的实际工时冲突');
  if(kind==='wait'||kind==='meeting')return;

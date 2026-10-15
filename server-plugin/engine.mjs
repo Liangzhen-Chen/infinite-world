@@ -266,6 +266,7 @@ export class WorldEngine {
             ...(session.rules.questSources?.wildlife?.length&&villageWildlifeFresh(session)?{villageWildlifeVersion:1}:{}),
             ...(!session.replaying||session.replayResult?.sovereigntyVersion===1?{sovereigntyVersion:1}:{}),
             ...(!session.replaying||session.replayResult?.laborMarketVersion===1?{laborMarketVersion:1}:{}),
+            ...(!session.replaying||session.replayResult?.medicineVersion===1?{medicineVersion:1}:{}),
             ...(Object.keys(d.get('state','remote')??{}).length&&advanceLayersFresh(session)?{advanceLayerVersion:1}:{}),
             ...(Object.keys(d.get('state','remote')??{}).length&&populationLayersFresh(session)?{populationLayerVersion:1}:{}),
             notices:stateNotices(document.state,d.document.state,id=>session.byId.get(id)?.name)} };

@@ -142,7 +142,7 @@ const SYSTEMS=[
  {id:'base_effects',layer:'base',name:'效果表',card:'K6',modules:['effects.mjs','effect-registry.mjs']},
  {id:'base_advance',layer:'base',name:'推进注册表',card:'K7/P3',modules:['advance-registry.mjs','advance-layers.mjs']},
  // 模拟系统层
- {id:'sim_npc',layer:'sim',name:'人物',modules:['npc-state.mjs','npc-schedule.mjs','npc-cognition.mjs','npc-autonomy.mjs','npc-life.mjs','npc-memory.mjs','npc-relations.mjs','npc-rumors.mjs',
+ {id:'sim_npc',layer:'sim',name:'人物',modules:['npc-state.mjs','npc-schedule.mjs','npc-cognition.mjs','npc-autonomy.mjs','npc-life.mjs','medicine.mjs','medicine-state.mjs','npc-memory.mjs','npc-relations.mjs','npc-rumors.mjs',
    'npc-obligations.mjs','npc-growth.mjs','npc-intelligence.mjs','lies.mjs','npc-planning-service.mjs','population.mjs','population-service.mjs','settlement-profile.mjs']},
  {id:'sim_character',layer:'sim',name:'角色成长',modules:['character.mjs','progression.mjs','professions.mjs','career-metrics.mjs','hidden-passives.mjs','spell-research.mjs','training.mjs','learning.mjs','education.mjs','education-state.mjs','education-cohorts.mjs','local-exams.mjs','checks.mjs','revival.mjs']},
  {id:'sim_combat',layer:'sim',name:'战斗',modules:['combat.mjs','duels.mjs']},

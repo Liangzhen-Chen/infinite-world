@@ -15,7 +15,7 @@ export function facilityKind(base){
  if(base.facilityType)return base.facilityType;
  const purpose=`${base.purpose??''} ${base.name??''}`;
  return /私宅|住宅|居住/.test(purpose)||base.lodging?'house':base.workstations?.length?'workshop':
-  /医馆|药铺/.test(purpose)?'clinic':/学堂|学馆|私塾|书院|义学/.test(purpose)?'school':/仓廪|粮仓/.test(purpose)?'granary':/桥梁/.test(purpose)?'bridge':/道路/.test(purpose)?'road':'public';
+  /医馆|药铺|药草院/.test(purpose)?'clinic':/学堂|学馆|私塾|书院|义学/.test(purpose)?'school':/仓廪|粮仓/.test(purpose)?'granary':/桥梁/.test(purpose)?'bridge':/道路/.test(purpose)?'road':'public';
 }
 export function facilityView(engine,state,id){
  const base=facilityDefinition(engine,state,id);if(!isFacility(base))return null;

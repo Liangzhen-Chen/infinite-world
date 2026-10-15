@@ -116,6 +116,7 @@ function settleSchedules(d,engine,before,after,{promote=false}={}){
         }
         if(!engine.byId.get(npcId)?.schedule&&!d.get('state','npcs',npcId,'routine')&&!jobs.has(npcId))continue;
         if(engine.npcScheduleReservations?.has(npcId))continue;
+        if(engine.medicineParticipants?.has(npcId))continue;
         if(d.get('state','npcs',npcId,'cognitionTravel')||engine.npcAutonomyBusy?.(peekState(d),npcId,before))continue;
         const original=d.get('state','npcs',npcId),npc={...original},path=['state','npcs',npcId];
         const activity=value=>{npc.activity=value;};
