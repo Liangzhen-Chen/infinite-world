@@ -1,12 +1,20 @@
 import fs from 'node:fs/promises';
+import path from 'node:path';
 import {DeepSeekClient} from './deepseek-client.mjs';
 import {parseModelJSON} from './content-pipeline.mjs';
-const root='world/drafts/m4r';
+export async function reviewM4R({root='world/drafts/m4r',client=null}={}){
 const read=async p=>JSON.parse(await fs.readFile(`${root}/${p}`,'utf8'));
 const write=async(p,v)=>fs.writeFile(`${root}/${p}`,JSON.stringify(v,null,2)+'\n');
 const rows=await read('hidden-passives.json');
 const old=await read('budget.json').catch(()=>({limitYuan:1,spentYuan:0}));
-const client=new DeepSeekClient({budgetYuan:old.limitYuan,logFile:`${root}/usage.jsonl`});client.spent=old.spentYuan;
+const authorization='M4R-sol-002-parse-supplement';
+if(!old.authorizations?.some(a=>a.id===authorization)){
+ old.authorizations??=[];
+ old.authorizations.push({id:authorization,previousLimitYuan:old.limitYuan,additionalYuan:0.5,reason:'2026-10-15 主会话授权：解析错误条目各补审一次，旧调用和未知预留保留。'});
+ old.limitYuan+=0.5;
+ await write('budget.json',old);
+}
+client??=new DeepSeekClient({budgetYuan:old.limitYuan,logFile:`${root}/usage.jsonl`});client.spent=old.spentYuan;
 client.reserved=old.unknownReservedYuan??0;
 const reviews=await read('l2.json').catch(()=>({rows:[]}));
 const allowed=new Set(['domain','checkBonus','defenseBonus','trustMultiplier','condition']);
@@ -19,19 +27,27 @@ const extra=[{id:'research_spell_registration',revision:2,ability:'完成三日�
 for(const row of [...rows,...extra]){
  let r=reviews.rows.find(x=>x.id===row.id);
  if(row.revision&&r?.revision!==row.revision&&r?.attempts.length<2)r.passed=false;
- if(r?.passed||r?.attempts?.length>=2)continue;
+ const supplement=r?.attempts?.length===2&&r.attempts.every(a=>a.error==='模型没有返回 JSON 正文');
+ if(r?.passed||r?.attempts?.some(a=>a.supplemental)||r?.attempts?.length>=2&&!supplement)continue;
  if(!r){r={id:row.id,attempts:[]};reviews.rows.push(r);}
- while(r.attempts.length<2&&!r.passed){
+ const attemptLimit=supplement?r.attempts.length+1:2;
+ while(r.attempts.length<attemptLimit&&!r.passed){
+  const attempt={...(supplement?{supplemental:true,authorization}:{})};
   try{
    const response=await client.generate({max_tokens:650,response_format:{type:'json_object'},messages:[{role:'system',content:'你是原创游戏事实审查员。只核对本条既有能力、代价与可执行规则是否矛盾，不扩充游戏设定。domain 为能力的英文标识。所有原有材料、同意、法典、许可检查仍由实际调用者执行。静林保护期为触发条件所需天数，杀生后重新累计；守望补偿引用对违约相对方实际完成的付款承诺，不重复用付款。缺少资料时不发加成。核对一致的句子不输出。返回 JSON {"contradictions":[{"quote":"...","field":"...","severity":"硬事实|软问题|文风","reason":"..."}]}。'},{role:'user',content:JSON.stringify(row)}]},`M4R:L2:${row.id}:${r.attempts.length+1}`);
    await write(`response-${row.id}-${r.attempts.length+1}.json`,response);
    const result=parseModelJSON(response);
    if(!Array.isArray(result.contradictions))throw Error('审核缺少矛盾列表');
-   r.attempts.push({result,usage:response.measurement});r.passed=!result.contradictions.some(c=>c.severity==='硬事实');r.revision=row.revision;
-  }catch(error){r.attempts.push({error:error.message});}
-  await write('budget.json',{limitYuan:1,spentYuan:client.spent,reservedYuan:client.reserved,unknownReservedYuan:old.unknownReservedYuan??0});await write('l2.json',reviews);
-  if(r.attempts.length>=2&&r.attempts.every(a=>a.error))throw Error(`审核执行失败两次，停止整批：${row.id}`);
+   for(const issue of result.contradictions)if(!['硬事实','软问题','文风'].includes(issue.severity)||!['quote','field','reason'].every(k=>typeof issue[k]==='string'&&issue[k].trim()))throw Error('审核矛盾字段无效');
+   Object.assign(attempt,{result,usage:response.measurement});r.passed=!result.contradictions.some(c=>c.severity==='硬事实');r.revision=row.revision;
+  }catch(error){attempt.error=error.message;}
+  r.attempts.push(attempt);
+  await write('budget.json',{...old,spentYuan:client.spent,reservedYuan:client.reserved});await write('l2.json',reviews);
+  if(attempt.error&&(supplement||r.attempts.length>=2))throw Error(`审核执行失败，停止整批：${row.id}：${attempt.error}`);
  }
  console.log(JSON.stringify({id:r.id,passed:r.passed??false,attempts:r.attempts.length}));
 }
 console.log(JSON.stringify({passed:reviews.rows.filter(r=>r.passed).length,total:rows.length+extra.length,spentYuan:client.spent}));
+return reviews;
+}
+if(process.argv[1]&&path.resolve(process.argv[1])===path.resolve(import.meta.filename))await reviewM4R();
