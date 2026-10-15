@@ -6,6 +6,7 @@ import {WorldEngine} from '../server-plugin/engine.mjs';
 import {applyPatches} from '../server-plugin/storage.mjs';
 import {regionalTradePrice,validateSettlementTradeRules} from '../server-plugin/settlement-trade.mjs';
 import {settlementTradeRules} from '../world/design/m5-trade-rules.mjs';
+import {createTransportAsset} from '../server-plugin/transport.mjs';
 
 const world=await loadWorld(),legacy=JSON.parse(await fs.readFile('tests/fixtures/legacy/seed.json','utf8'));
 const DAY=1440,DEPART=7*DAY+540,lanes=world.rules.settlementTrade.lanes;
@@ -57,6 +58,16 @@ test('规则只使用现有四村、原税章与道路，正式配置和设计�
         const bad=structuredClone(world);mutate(bad.rules.settlementTrade);assert.ok(validateSettlementTradeRules(bad).length);
     }
 });
+test('NPC公仓购买真实驮队服务，货批与预付款仍由原账只结算一次',async()=>{
+    const {engine,doc,world:w}=setup(),lane=lanes[0],carrier='npc_hw_zhengshuisheng',origin=w.rules.agriculture.settlements.find(p=>p.settlement===lane.seller).counter;
+    Object.assign(doc.state.npcs[carrier],{location:origin,activity:'营业',status:'正常',coins:1000});
+    doc.state.creatures??={};doc.state.creatures.transport_bull={species:'monster_slate_horn_bull',owner:carrier,location:origin,hp:40,maxHp:40,status:'正常'};
+    const d=draft(doc);createTransportAsset(d,engine,{owner:carrier,kind:'pack',animal:'transport_bull'},'grain-pack');
+    const cash=snapshotCash(d.document),first=await wait(engine,d.document,DEPART),order=first.doc.state.records[key(lane)];assert.ok(order.carriage);
+    const shipment=first.doc.state.records[order.carriage];assert.equal(shipment.externalOrder,key(lane));assert.deepEqual(shipment.cargo,[]);assert.equal(snapshotCash(first.doc),cash);conservation(first.doc);
+    const arrived=(await wait(engine,first.doc,shipment.estimatedArrivalAt+DAY)).doc,o=arrived.state.records[key(lane)];assert.equal(o.status,'delivered');assert.equal(o.deliveredFood,o.quantity);assert.equal(o.escrowCopper,0);assert.equal(arrived.state.records[order.carriage].status,'delivered');assert.equal(snapshotCash(arrived),cash);conservation(arrived);
+});
+
 test('正常world_time周发货→逐路在途→到货税款；双方现金、粮批和玩家合同保持真实',async()=>{
     const {engine,doc}=setup(),cash=snapshotCash(doc),privateAssets=structuredClone({player:doc.state.player.coins,inventory:doc.state.inventory,npcs:Object.fromEntries(Object.entries(doc.state.npcs).map(([id,n])=>[id,{coins:n.coins,inventory:n.inventory}]))});
     const before=structuredClone(doc),first=await wait(engine,doc,DEPART);assert.deepEqual(doc,before);

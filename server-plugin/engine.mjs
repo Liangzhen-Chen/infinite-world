@@ -36,6 +36,8 @@ import {localWeather,weatherEdge}from'./weather.mjs';
 import {initializeAgriculture}from'./agriculture-migration.mjs';
 import {agricultureView,settleAgricultureExpiry}from'./agriculture.mjs';
 import {advanceSettlementTrade,regionalTradePrice}from'./settlement-trade.mjs';
+import {transportAction,transportScene} from './transport.mjs';
+import {postAction} from './post.mjs';
 import {tradeQuote,recordDeal}from'./shop.mjs';
 import {initializeWorldClocks}from'./world-clock.mjs';
 import {initializeFactionClocks,factionClockRules}from'./faction-clock.mjs';
@@ -282,6 +284,8 @@ export class WorldEngine {
         return changeItems(d,this,id,item,delta);
     }
     async trade(d,args,id) {
+        if(args.operation==='transport')return transportAction(d,this,args,id);
+        if(args.operation==='post')return postAction(d,this,args,id);
         if(['smuggle','deliver_smuggled'].includes(args.operation))return smuggleTrade.call(this,d,args,id);
         if(CREDIT_OPERATIONS.has(args.operation))return creditTrade.call(this,d,args,id);
         if(args.operation&&args.operation!=='trade')return businessTrade.call(this,d,args,id);
@@ -459,6 +463,7 @@ export class WorldEngine {
         return adjusted;
     }
     move(d,args,id) {
+        if(Object.values(d.get('state','records')??{}).some(r=>r.category==='transport'&&['booked','moving','delayed','intercepted'].includes(r.status)&&r.passengers?.includes('player')))throw Error('仍在承运班次中，须抵达或处理滞留后再自行移动');
         for(const target of ['player',...d.get('state','player','companions')??[]])assertMindAwake(d,target);
         for(const target of ['player',...d.get('state','player','companions')??[]])assertWaterEarthMovement(d,target);
         for(const target of ['player',...d.get('state','player','companions')??[]])assertLightMovement(d,this,target);
@@ -713,7 +718,7 @@ export class WorldEngine {
         const session=Object.create(this);session.entities=[...this.entities,...hit.created,player];session.resolver=hit.resolver.extend([player]);session.byId=session.resolver.entities;
         return session;
     }
-    scene(document,query,index=null){return sceneCard(this.promptScoped(document),document,query,index);}
+    scene(document,query,index=null){return transportScene(this,document)??sceneCard(this.promptScoped(document),document,query,index);}
 
 }
 Object.assign(WorldEngine.prototype,activities);
