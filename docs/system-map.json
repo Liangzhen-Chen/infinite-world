@@ -1284,7 +1284,7 @@
     "server-plugin/regions.mjs",
     "server-plugin/remote-generation.mjs"
    ],
-   "lines": 1585,
+   "lines": 1586,
    "stateWrites": [
     "npcs",
     "records",
@@ -15762,7 +15762,7 @@
    "worldDirs": [
     "geo"
    ],
-   "lines": 690
+   "lines": 691
   },
   "server-plugin/repair.mjs": {
    "system": "sim_economy",
