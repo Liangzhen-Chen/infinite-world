@@ -22,8 +22,8 @@ function validate(){
 const jsonFiles=dir=>fs.existsSync(dir)?fs.readdirSync(dir).filter(f=>f.endsWith('.json')).sort().map(f=>path.join(dir,f)):[];
 // A pack directory may hold its vocabulary in <pack>/vocabulary/ or directly at the top level.
 export function packVocabularyFiles(packDir){
- const v=path.join(packDir,'vocabulary');
- return jsonFiles(fs.existsSync(v)?v:packDir).filter(f=>{try{const j=JSON.parse(fs.readFileSync(f,'utf8'));return KINDS.includes(j.kind);}catch{return false;}});
+ // 12 §12.2.1 把种类目录放在 <包>/ontology/；词汇条目放在 <包>/vocabulary/（本格式按种类分文件）。
+ return [...jsonFiles(path.join(packDir,'ontology')),...jsonFiles(path.join(packDir,'vocabulary')),...jsonFiles(packDir)].filter(f=>{try{const j=JSON.parse(fs.readFileSync(f,'utf8'));return KINDS.includes(j.kind);}catch{return false;}});
 }
 
 export function qualify(id,namespace,namespaces){
@@ -39,7 +39,7 @@ export function loadOntology({dir=path.join(ROOT,'world/ontology'),packs=[]}={})
  for(const file of files){
   let doc;try{doc=JSON.parse(fs.readFileSync(file,'utf8'));}catch(e){errors.push({file:rel(file),field:'',message:`JSON 解析失败：${e.message}`});continue;}
   const ok=validate()(doc);
-  if(!ok)for(const e of validate().errors.filter(e=>e.keyword!=='if'))errors.push({file:rel(file),field:e.instancePath||'/',message:`${e.message}${e.params?.allowedValues?`（可选：${e.params.allowedValues.join('、')}）`:''}${e.params?.additionalProperty?`：${e.params.additionalProperty}`:''}`});
+  if(!ok)for(const e of validate().errors.filter(e=>e.keyword!=='if'))errors.push({file:rel(file),field:e.instancePath||'/',code:'E-VOCAB-SCHEMA',message:`${e.message}${e.params?.allowedValues?`（可选：${e.params.allowedValues.join('、')}）`:''}${e.params?.additionalProperty?`：${e.params.additionalProperty}`:''}`});
   docs.push({file:rel(file),doc,ok});
  }
  const namespaces=new Set(docs.filter(d=>d.ok).map(d=>d.doc.namespace));
@@ -72,6 +72,23 @@ export function loadOntology({dir=path.join(ROOT,'world/ontology'),packs=[]}={})
   for(const [trigger,cls]of Object.entries(h.handover))if(!extra.handoverClasses.has(cls))errors.push({file:h.file,field:`/entries[id=${h.id}]/handover/${trigger}`,message:`未知交接类 ${cls}`});
  }
  for(const p of entries.primitives.values())if(!has('verbs',p.event,p.namespace))errors.push({file:p.file,field:`/entries[id=${p.id}]/event`,message:`原语事件 ${p.event} 不在动词表`});
+ // 12 §12.3.3：上位词（包词必填，须可解析）、共享/私有区、同义词闸门。
+ for(const kind of KINDS)for(const e of entries[kind].values()){
+  const field=`/entries[id=${e.id}]`;
+  if(e.namespace!==CORE&&!e.broader)errors.push({file:e.file,field:`${field}/broader`,code:'E-VOCAB-BROADER',message:'包词汇必须填写上位词'});
+  if(e.broader){const b=kind==='offenses'?e.broader.replace(/^offense:/,''):e.broader;
+   if(b!==e.id&&!has(kind,b,e.namespace)&&!has(kind,b,CORE)&&!(kind==='tags'&&b.endsWith(':*')&&entries.tags.has(`${CORE}:${b}`)))errors.push({file:e.file,field:`${field}/broader`,code:'E-VOCAB-BROADER',message:`上位词 ${e.broader} 未登记`});}
+  if(kind!=='derived-fields'&&e.namespace===CORE&&e.scope&&e.scope!=='core')errors.push({file:e.file,field:`${field}/scope`,code:'E-VOCAB-NS',message:'core 词汇的 scope 只能是 core'});
+  if(kind!=='derived-fields'&&e.namespace!==CORE&&e.scope==='shared'&&e.id.startsWith(`${e.namespace}:`))errors.push({file:e.file,field:`${field}/scope`,code:'E-VOCAB-NS',message:'共享词不带命名空间前缀'});
+ }
+ for(const kind of KINDS){
+  const names=new Map();
+  for(const e of entries[kind].values())for(const name of[e.label,...(e.aliases??[])].filter(Boolean)){
+   const prev=names.get(name);
+   if(prev&&prev.key!==e.key&&(prev.namespace!==CORE||e.namespace!==CORE))errors.push({file:e.file,field:`/entries[id=${e.id}]/label`,code:'E-VOCAB-SYN',message:`“${name}”已是 ${prev.key} 的名称或别名；请直接用该词，或改用不同的名称并在 distinctFrom 写明区别`});
+   else if(!prev)names.set(name,e);
+  }
+ }
  return {errors,namespaces,entries,files:docs.map(d=>d.file),extra,has,
   resolve:(kind,id,ns=CORE)=>entries[kind].get(qualify(id,ns,namespaces))??null};
 }

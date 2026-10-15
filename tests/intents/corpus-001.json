@@ -1,6 +1,6 @@
 {
  "version": 1,
- "note": "意图语料初版（06 §6.11）。handling：registered 路由到注册动作 / open 通用原语组合 / fallback 兜底“创造带标签的实体”（标出标签与应起反应的系统）/ infeasible 世界内不可行（给原因与降级做法）。signature 为原语签名多重集，元素 op|目标模板|字段或资源；route 为 docs/actions.json 的动作 id（核心命名空间 core:）。creative=true 为刁钻创意意图。",
+ "note": "意图语料初版（06 §6.11）。handling：registered 路由到注册动作 / open 通用原语组合 / fallback 兜底 create(kind: mark)，标出形态、mark:* 与性状标签及应起反应的系统 / infeasible 世界内不可行，给原因与降级做法。signature 为原语签名多重集，元素 原语|目标模板|字段或资源；route 为 docs/actions.json 的动作 id（core: 可省略）。罪名不进签名（由规范层判定，05 §5.2.3），期望的法律后果写在 offense。creative=true 为刁钻创意意图。",
  "items": [
   {
    "id": "I001",
@@ -193,8 +193,10 @@
     "handling": "registered",
     "route": "core:trade.smuggle",
     "signature": [
-     "move|thing|cargo",
-     "emit|place|offense:smuggling"
+     "move|thing|cargo"
+    ],
+    "offense": [
+     "smuggling"
     ]
    }
   },
@@ -223,21 +225,24 @@
     "handling": "fallback",
     "route": "fallback",
     "signature": [
-     "create|artifact|brand",
+     "create|thing|mark",
      "transfer|agent|coin"
     ],
     "fallback": {
-     "kind": "work",
+     "kind": "mark",
+     "form": "brand",
      "tags": [
-      "invention",
-      "trade",
-      "offense:fraud"
+      "mark:invention",
+      "trade"
      ],
      "reactors": [
       "economy",
       "law"
      ]
-    }
+    },
+    "offense": [
+     "fraud"
+    ]
    }
   },
   {
@@ -391,11 +396,13 @@
     "handling": "open",
     "route": "open",
     "signature": [
-     "move|agent|climb",
-     "emit|place|offense:trespass"
+     "move|agent|climb"
     ],
     "nearest": "core:move",
-    "limit": "只能沿存在的边；翻墙按体术检定与耗时"
+    "limit": "只能沿存在的边；翻墙按体术检定与耗时",
+    "offense": [
+     "trespass"
+    ]
    }
   },
   {
@@ -580,14 +587,15 @@
     "handling": "fallback",
     "route": "fallback",
     "signature": [
-     "create|artifact|structure",
+     "create|thing|mark",
      "transfer|agent|item"
     ],
     "fallback": {
-     "kind": "structure",
+     "kind": "mark",
+     "form": "structure",
      "tags": [
       "wood",
-      "marker"
+      "mark:boundary"
      ],
      "reactors": [
       "ecology",
@@ -620,13 +628,14 @@
     "handling": "fallback",
     "route": "fallback",
     "signature": [
-     "create|artifact|figure"
+     "create|thing|mark"
     ],
     "fallback": {
-     "kind": "work",
+     "kind": "mark",
+     "form": "figure",
      "tags": [
-      "art",
-      "satire"
+      "mark:art",
+      "mark:satire"
      ],
      "reactors": [
       "governance",
@@ -644,14 +653,15 @@
     "handling": "fallback",
     "route": "fallback",
     "signature": [
-     "create|artifact|recipe",
+     "create|thing|mark",
      "transfer|agent|item"
     ],
     "fallback": {
-     "kind": "custom",
+     "kind": "mark",
+     "form": "recipe",
      "tags": [
-      "invention",
-      "herb"
+      "mark:invention",
+      "goods:herb"
      ],
      "reactors": [
       "economy",
@@ -684,13 +694,14 @@
     "handling": "fallback",
     "route": "fallback",
     "signature": [
-     "create|artifact|trap"
+     "create|thing|mark"
     ],
     "fallback": {
-     "kind": "structure",
+     "kind": "mark",
+     "form": "trap",
      "tags": [
-      "trap",
-      "marker"
+      "mark:trap",
+      "mark:boundary"
      ],
      "reactors": [
       "law",
@@ -833,12 +844,13 @@
     "handling": "fallback",
     "route": "fallback",
     "signature": [
-     "create|artifact|book"
+     "create|thing|mark"
     ],
     "fallback": {
-     "kind": "work",
+     "kind": "mark",
+     "form": "book",
      "tags": [
-      "art",
+      "mark:art",
       "teach"
      ],
      "reactors": [
@@ -872,13 +884,14 @@
     "handling": "fallback",
     "route": "fallback",
     "signature": [
-     "create|artifact|technique",
+     "create|thing|mark",
      "learn|agent|practice"
     ],
     "fallback": {
-     "kind": "custom",
+     "kind": "mark",
+     "form": "technique",
      "tags": [
-      "invention",
+      "mark:invention",
       "combat"
      ],
      "reactors": [
@@ -936,8 +949,10 @@
     "handling": "registered",
     "route": "core:combat",
     "signature": [
-     "vital|agent|shove",
-     "emit|agent|offense:assault"
+     "vital|agent|shove"
+    ],
+    "offense": [
+     "assault"
     ]
    }
   },
@@ -1092,14 +1107,15 @@
     "handling": "fallback",
     "route": "fallback",
     "signature": [
-     "create|artifact|light_sign",
+     "create|thing|mark",
      "emit|place|impress"
     ],
     "fallback": {
      "kind": "mark",
+     "form": "light_sign",
      "tags": [
-      "public_display",
-      "art",
+      "mark:public_display",
+      "mark:art",
       "magic"
      ],
      "reactors": [
@@ -1276,10 +1292,12 @@
     "handling": "open",
     "route": "open",
     "signature": [
-     "emit|agent|request",
-     "emit|agent|offense:public_nuisance"
+     "emit|agent|request"
     ],
-    "limit": "威胁打标签，立场下降"
+    "limit": "威胁打标签，立场下降",
+    "offense": [
+     "public_nuisance"
+    ]
    }
   },
   {
@@ -1320,23 +1338,25 @@
     "handling": "fallback",
     "route": "fallback",
     "signature": [
-     "create|artifact|mural",
-     "emit|place|offense:defamation"
+     "create|thing|mark"
     ],
     "fallback": {
      "kind": "mark",
+     "form": "mural",
      "tags": [
-      "satire",
-      "public_display",
-      "art",
-      "offense:defamation"
+      "mark:satire",
+      "mark:public_display",
+      "mark:art"
      ],
      "reactors": [
       "law",
       "governance",
       "npc"
      ]
-    }
+    },
+    "offense": [
+     "defamation"
+    ]
    }
   },
   {
@@ -1348,14 +1368,15 @@
     "handling": "fallback",
     "route": "fallback",
     "signature": [
-     "create|artifact|drinking_game",
+     "create|thing|mark",
      "emit|place|tell"
     ],
     "fallback": {
-     "kind": "custom",
+     "kind": "mark",
+     "form": "drinking_game",
      "tags": [
-      "custom",
-      "invention"
+      "mark:custom",
+      "mark:invention"
      ],
      "reactors": [
       "npc",
@@ -1373,21 +1394,24 @@
     "handling": "fallback",
     "route": "fallback",
     "signature": [
-     "create|artifact|petition",
+     "create|thing|mark",
      "emit|place|claim"
     ],
     "fallback": {
-     "kind": "work",
+     "kind": "mark",
+     "form": "petition",
      "tags": [
-      "petition",
-      "sacred",
-      "offense:pollution"
+      "mark:petition",
+      "mark:sacred_symbol"
      ],
      "reactors": [
       "organizations",
       "law"
      ]
-    }
+    },
+    "offense": [
+     "pollution"
+    ]
    }
   },
   {
@@ -1399,14 +1423,15 @@
     "handling": "fallback",
     "route": "fallback",
     "signature": [
-     "create|artifact|song",
+     "create|thing|mark",
      "emit|place|tell"
     ],
     "fallback": {
-     "kind": "work",
+     "kind": "mark",
+     "form": "song",
      "tags": [
-      "art",
-      "public_display"
+      "mark:art",
+      "mark:public_display"
      ],
      "reactors": [
       "npc",
@@ -1440,10 +1465,12 @@
     "route": "open",
     "signature": [
      "create|population|bee_swarm",
-     "status|place|nuisance",
-     "emit|place|offense:public_nuisance"
+     "status|place|nuisance"
     ],
-    "limit": "须真实持有蜂群；扰乱打标签"
+    "limit": "须真实持有蜂群；扰乱打标签",
+    "offense": [
+     "public_nuisance"
+    ]
    }
   },
   {
@@ -1455,11 +1482,13 @@
     "handling": "open",
     "route": "open",
     "signature": [
-     "emit|place|tell",
-     "emit|agent|offense:defamation"
+     "emit|place|tell"
     ],
     "nearest": "core:remember",
-    "limit": "谣言是带 lie 标签的转述"
+    "limit": "谣言是带 lie 标签的转述",
+    "offense": [
+     "defamation"
+    ]
    }
   },
   {
@@ -1471,13 +1500,14 @@
     "handling": "fallback",
     "route": "fallback",
     "signature": [
-     "create|artifact|poem",
+     "create|thing|mark",
      "emit|agent|impress"
     ],
     "fallback": {
-     "kind": "work",
+     "kind": "mark",
+     "form": "poem",
      "tags": [
-      "art",
+      "mark:art",
       "private"
      ],
      "reactors": [
@@ -1525,13 +1555,14 @@
     "handling": "fallback",
     "route": "fallback",
     "signature": [
-     "create|artifact|contest",
+     "create|thing|mark",
      "emit|place|impress"
     ],
     "fallback": {
-     "kind": "custom",
+     "kind": "mark",
+     "form": "contest",
      "tags": [
-      "custom",
+      "mark:custom",
       "public"
      ],
      "reactors": [
@@ -1716,15 +1747,16 @@
     "handling": "fallback",
     "route": "fallback",
     "signature": [
-     "create|artifact|poster",
+     "create|thing|mark",
      "emit|place|tell"
     ],
     "fallback": {
      "kind": "mark",
+     "form": "poster",
      "tags": [
-      "public_display",
-      "satire",
-      "petition"
+      "mark:public_display",
+      "mark:satire",
+      "mark:petition"
      ],
      "reactors": [
       "governance",
@@ -1742,10 +1774,12 @@
     "handling": "open",
     "route": "open",
     "signature": [
-     "move|thing|sedan",
-     "emit|agent|offense:theft"
+     "move|thing|sedan"
     ],
-    "limit": "挪用他人财物打标签"
+    "limit": "挪用他人财物打标签",
+    "offense": [
+     "theft"
+    ]
    }
   },
   {
@@ -1773,13 +1807,14 @@
     "handling": "fallback",
     "route": "fallback",
     "signature": [
-     "create|artifact|patrol_roster",
+     "create|thing|mark",
      "obligation.create|agent|promise"
     ],
     "fallback": {
-     "kind": "custom",
+     "kind": "mark",
+     "form": "patrol_roster",
      "tags": [
-      "custom",
+      "mark:custom",
       "law"
      ],
      "reactors": [
@@ -1813,14 +1848,15 @@
     "handling": "fallback",
     "route": "fallback",
     "signature": [
-     "create|artifact|title_marker",
+     "create|thing|mark",
      "fact.set|thing|tags"
     ],
     "fallback": {
      "kind": "mark",
+     "form": "title_marker",
      "tags": [
-      "sacred",
-      "custom"
+      "mark:sacred_symbol",
+      "mark:custom"
      ],
      "reactors": [
       "organizations",
@@ -1865,8 +1901,10 @@
     "handling": "registered",
     "route": "core:crime.steal",
     "signature": [
-     "transfer|agent|coin",
-     "emit|agent|offense:theft"
+     "transfer|agent|coin"
+    ],
+    "offense": [
+     "theft"
     ]
    }
   },
@@ -1879,8 +1917,10 @@
     "handling": "registered",
     "route": "core:law.bribe",
     "signature": [
-     "transfer|agent|coin",
-     "emit|agent|offense:bribery"
+     "transfer|agent|coin"
+    ],
+    "offense": [
+     "bribery"
     ]
    }
   },
@@ -1933,10 +1973,12 @@
     "handling": "open",
     "route": "open",
     "signature": [
-     "fact.set|thing|locked",
-     "emit|place|offense:break_in"
+     "fact.set|thing|locked"
     ],
-    "limit": "工作量折算：技能×工具×时间；会留痕"
+    "limit": "工作量折算：技能×工具×时间；会留痕",
+    "offense": [
+     "break_in"
+    ]
    }
   },
   {
@@ -1949,10 +1991,12 @@
     "route": "open",
     "signature": [
      "status|thing|burning",
-     "transfer|agent|item",
-     "emit|place|offense:arson"
+     "transfer|agent|item"
     ],
-    "limit": "火势按风与间距蔓延，纵火立案"
+    "limit": "火势按风与间距蔓延，纵火立案",
+    "offense": [
+     "arson"
+    ]
    }
   },
   {
@@ -1964,19 +2008,22 @@
     "handling": "fallback",
     "route": "fallback",
     "signature": [
-     "create|artifact|forged_deed",
-     "emit|agent|offense:fraud"
+     "create|thing|mark"
     ],
     "fallback": {
-     "kind": "work",
+     "kind": "mark",
+     "form": "forged_deed",
      "tags": [
-      "offense:fraud"
+      "mark:art"
      ],
      "reactors": [
       "law",
       "economy"
      ]
-    }
+    },
+    "offense": [
+     "fraud"
+    ]
    }
   },
   {
@@ -1988,10 +2035,12 @@
     "handling": "open",
     "route": "open",
     "signature": [
-     "transfer|agent|item",
-     "emit|place|offense:public_nuisance"
+     "transfer|agent|item"
     ],
-    "limit": "探监须许可；搜查对抗"
+    "limit": "探监须许可；搜查对抗",
+    "offense": [
+     "public_nuisance"
+    ]
    }
   },
   {
@@ -2019,8 +2068,10 @@
     "route": "core:trade.pawn",
     "signature": [
      "transfer|agent|item",
-     "transfer|agent|coin",
-     "emit|agent|offense:receiving_stolen"
+     "transfer|agent|coin"
+    ],
+    "offense": [
+     "receiving_stolen"
     ]
    }
   },
@@ -2033,14 +2084,15 @@
     "handling": "fallback",
     "route": "fallback",
     "signature": [
-     "create|artifact|petition",
+     "create|thing|mark",
      "emit|office|claim"
     ],
     "fallback": {
      "kind": "mark",
+     "form": "petition",
      "tags": [
-      "petition",
-      "public_display"
+      "mark:petition",
+      "mark:public_display"
      ],
      "reactors": [
       "law",
@@ -2125,14 +2177,15 @@
     "handling": "fallback",
     "route": "fallback",
     "signature": [
-     "create|artifact|shrine",
+     "create|thing|mark",
      "transfer|agent|item"
     ],
     "fallback": {
-     "kind": "structure",
+     "kind": "mark",
+     "form": "shrine",
      "tags": [
-      "sacred",
-      "custom"
+      "mark:sacred_symbol",
+      "mark:custom"
      ],
      "reactors": [
       "organizations",
@@ -2150,13 +2203,14 @@
     "handling": "fallback",
     "route": "fallback",
     "signature": [
-     "create|artifact|genealogy"
+     "create|thing|mark"
     ],
     "fallback": {
-     "kind": "work",
+     "kind": "mark",
+     "form": "genealogy",
      "tags": [
-      "art",
-      "custom"
+      "mark:art",
+      "mark:custom"
      ],
      "reactors": [
       "family",
@@ -2174,12 +2228,13 @@
     "handling": "fallback",
     "route": "fallback",
     "signature": [
-     "create|artifact|house_rule"
+     "create|thing|mark"
     ],
     "fallback": {
-     "kind": "custom",
+     "kind": "mark",
+     "form": "house_rule",
      "tags": [
-      "custom"
+      "mark:custom"
      ],
      "reactors": [
       "family",
@@ -2331,11 +2386,13 @@
     "route": "open",
     "signature": [
      "create|thing|charm",
-     "transfer|agent|coin",
-     "emit|place|offense:blasphemy"
+     "transfer|agent|coin"
     ],
     "nearest": "core:trade.sell",
-    "limit": "寺观可视为亵渎，立场下降"
+    "limit": "寺观可视为亵渎，立场下降",
+    "offense": [
+     "blasphemy"
+    ]
    }
   },
   {
@@ -2347,12 +2404,13 @@
     "handling": "fallback",
     "route": "fallback",
     "signature": [
-     "create|artifact|sign"
+     "create|thing|mark"
     ],
     "fallback": {
-     "kind": "custom",
+     "kind": "mark",
+     "form": "sign",
      "tags": [
-      "custom",
+      "mark:custom",
       "private"
      ],
      "reactors": [
@@ -2384,13 +2442,14 @@
     "handling": "fallback",
     "route": "fallback",
     "signature": [
-     "create|artifact|contest",
+     "create|thing|mark",
      "transfer|agent|food"
     ],
     "fallback": {
-     "kind": "custom",
+     "kind": "mark",
+     "form": "contest",
      "tags": [
-      "custom",
+      "mark:custom",
       "public"
      ],
      "reactors": [
@@ -2409,14 +2468,15 @@
     "handling": "fallback",
     "route": "fallback",
     "signature": [
-     "create|artifact|omen_site",
+     "create|thing|mark",
      "emit|place|tell"
     ],
     "fallback": {
      "kind": "mark",
+     "form": "omen_site",
      "tags": [
-      "omen",
-      "sacred",
+      "mark:omen",
+      "mark:sacred_symbol",
       "lie"
      ],
      "reactors": [
@@ -2528,13 +2588,14 @@
     "handling": "fallback",
     "route": "fallback",
     "signature": [
-     "create|artifact|roof_garden",
+     "create|thing|mark",
      "transfer|agent|seed"
     ],
     "fallback": {
-     "kind": "structure",
+     "kind": "mark",
+     "form": "roof_garden",
      "tags": [
-      "custom",
+      "mark:custom",
       "plant"
      ],
      "reactors": [
@@ -2568,12 +2629,13 @@
     "handling": "fallback",
     "route": "fallback",
     "signature": [
-     "create|artifact|scarecrow"
+     "create|thing|mark"
     ],
     "fallback": {
-     "kind": "structure",
+     "kind": "mark",
+     "form": "scarecrow",
      "tags": [
-      "marker",
+      "mark:boundary",
       "plant"
      ],
      "reactors": [
@@ -2591,10 +2653,12 @@
     "handling": "open",
     "route": "open",
     "signature": [
-     "transfer|thing|wood",
-     "emit|place|offense:illegal_logging"
+     "transfer|thing|wood"
     ],
-    "limit": "扣林木存量；越界按当地法典"
+    "limit": "扣林木存量；越界按当地法典",
+    "offense": [
+     "illegal_logging"
+    ]
    }
   },
   {
@@ -2606,10 +2670,12 @@
     "handling": "open",
     "route": "open",
     "signature": [
-     "transfer|agent|item",
-     "emit|place|offense:public_nuisance"
+     "transfer|agent|item"
     ],
-    "limit": "立场下降、可立案"
+    "limit": "立场下降、可立案",
+    "offense": [
+     "public_nuisance"
+    ]
    }
   },
   {
@@ -2772,13 +2838,14 @@
     "handling": "fallback",
     "route": "fallback",
     "signature": [
-     "create|artifact|den",
+     "create|thing|mark",
      "status|agent|sheltered"
     ],
     "fallback": {
-     "kind": "structure",
+     "kind": "mark",
+     "form": "den",
      "tags": [
-      "marker"
+      "mark:boundary"
      ],
      "reactors": [
       "ecology"
@@ -2830,8 +2897,10 @@
      "holding.open|population|owns"
     ],
     "fallback": {
-     "kind": "structure",
+     "kind": "mark",
+     "form": "bee_colony",
      "tags": [
+      "mark:shelter",
       "insect",
       "trade"
      ],
@@ -2976,13 +3045,14 @@
     "handling": "fallback",
     "route": "fallback",
     "signature": [
-     "create|artifact|mutual_fund",
+     "create|thing|mark",
      "obligation.create|agent|promise"
     ],
     "fallback": {
-     "kind": "custom",
+     "kind": "mark",
+     "form": "mutual_fund",
      "tags": [
-      "custom",
+      "mark:custom",
       "finance"
      ],
      "reactors": [
@@ -3017,13 +3087,14 @@
     "handling": "fallback",
     "route": "fallback",
     "signature": [
-     "create|artifact|token",
+     "create|thing|mark",
      "emit|place|tell"
     ],
     "fallback": {
-     "kind": "custom",
+     "kind": "mark",
+     "form": "token",
      "tags": [
-      "invention",
+      "mark:invention",
       "finance",
       "trade"
      ],
@@ -3145,10 +3216,12 @@
     "handling": "open",
     "route": "open",
     "signature": [
-     "move|thing|cargo",
-     "emit|place|offense:smuggling"
+     "move|thing|cargo"
     ],
-    "nearest": "core:trade.smuggle"
+    "nearest": "core:trade.smuggle",
+    "offense": [
+     "smuggling"
+    ]
    }
   },
   {
@@ -3215,14 +3288,15 @@
     "handling": "fallback",
     "route": "fallback",
     "signature": [
-     "create|artifact|smudge_station",
+     "create|thing|mark",
      "transfer|agent|herb"
     ],
     "fallback": {
-     "kind": "structure",
+     "kind": "mark",
+     "form": "smudge_station",
      "tags": [
-      "custom",
-      "herb"
+      "mark:custom",
+      "goods:herb"
      ],
      "reactors": [
       "medicine",
@@ -3323,14 +3397,15 @@
     "handling": "fallback",
     "route": "fallback",
     "signature": [
-     "create|artifact|decoy",
+     "create|thing|mark",
      "emit|place|deceive"
     ],
     "fallback": {
-     "kind": "structure",
+     "kind": "mark",
+     "form": "decoy",
      "tags": [
-      "disguise",
-      "marker"
+      "mark:decoy",
+      "mark:boundary"
      ],
      "reactors": [
       "military"
@@ -3444,13 +3519,14 @@
     "handling": "fallback",
     "route": "fallback",
     "signature": [
-     "create|artifact|tale",
+     "create|thing|mark",
      "emit|place|tell"
     ],
     "fallback": {
-     "kind": "work",
+     "kind": "mark",
+     "form": "tale",
      "tags": [
-      "art",
+      "mark:art",
       "lie",
       "public"
      ],
@@ -3470,15 +3546,16 @@
     "handling": "fallback",
     "route": "fallback",
     "signature": [
-     "create|artifact|pamphlet",
+     "create|thing|mark",
      "emit|place|tell"
     ],
     "fallback": {
-     "kind": "work",
+     "kind": "mark",
+     "form": "pamphlet",
      "tags": [
-      "public_display",
-      "satire",
-      "petition"
+      "mark:public_display",
+      "mark:satire",
+      "mark:petition"
      ],
      "reactors": [
       "law",
@@ -3605,20 +3682,23 @@
     "handling": "fallback",
     "route": "fallback",
     "signature": [
-     "create|artifact|graffiti",
+     "create|thing|mark",
      "fact.set|thing|marks"
     ],
     "fallback": {
      "kind": "mark",
+     "form": "graffiti",
      "tags": [
-      "marker",
-      "offense:vandalism"
+      "mark:boundary"
      ],
      "reactors": [
       "law",
       "governance"
      ]
-    }
+    },
+    "offense": [
+     "vandalism"
+    ]
    }
   },
   {
@@ -3630,13 +3710,14 @@
     "handling": "fallback",
     "route": "fallback",
     "signature": [
-     "create|artifact|snow_figure"
+     "create|thing|mark"
     ],
     "fallback": {
      "kind": "mark",
+     "form": "snow_figure",
      "tags": [
-      "art",
-      "public_display"
+      "mark:art",
+      "mark:public_display"
      ],
      "reactors": [
       "npc"
@@ -3668,10 +3749,12 @@
     "handling": "open",
     "route": "open",
     "signature": [
-     "move|population|chicken",
-     "emit|place|offense:public_nuisance"
+     "move|population|chicken"
     ],
-    "limit": "他人家畜须所有者同意；扰乱打标签"
+    "limit": "他人家畜须所有者同意；扰乱打标签",
+    "offense": [
+     "public_nuisance"
+    ]
    }
   },
   {
@@ -3683,13 +3766,14 @@
     "handling": "fallback",
     "route": "fallback",
     "signature": [
-     "create|artifact|wall_poem"
+     "create|thing|mark"
     ],
     "fallback": {
-     "kind": "work",
+     "kind": "mark",
+     "form": "wall_poem",
      "tags": [
-      "art",
-      "public_display"
+      "mark:art",
+      "mark:public_display"
      ],
      "reactors": [
       "npc",
@@ -3752,14 +3836,15 @@
     "handling": "fallback",
     "route": "fallback",
     "signature": [
-     "create|artifact|memorial",
+     "create|thing|mark",
      "transfer|agent|item"
     ],
     "fallback": {
-     "kind": "structure",
+     "kind": "mark",
+     "form": "memorial",
      "tags": [
-      "sacred",
-      "public_display"
+      "mark:sacred_symbol",
+      "mark:public_display"
      ],
      "reactors": [
       "organizations",

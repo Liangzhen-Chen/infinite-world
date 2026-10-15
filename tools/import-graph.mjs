@@ -32,7 +32,7 @@ export function violationOf(from,to){
 }
 
 export function buildGraph({dir=null}={}){
- const files=dir?walk(path.resolve(ROOT,dir)):[...walk(path.join(ROOT,'server-plugin')),...walk(path.join(ROOT,'extension'))];
+ const files=dir?walk(path.resolve(ROOT,dir)):[...walk(path.join(ROOT,'server-plugin')),...walk(path.join(ROOT,'extension')),...walk(path.join(ROOT,'packs'))];// packs/<名>/ 为内容包（12 §12.9）
  const packName=dir?path.basename(path.resolve(ROOT,dir)):null;
  const info=f=>dir&&f.startsWith(rel(path.resolve(ROOT,dir))+'/')?{layer:'L2',pack:packName}:layerOf(f);
  const modules=[],edges=[],violations=[],unassigned=[];
@@ -41,13 +41,13 @@ export function buildGraph({dir=null}={}){
   if(!from){unassigned.push(file);continue;}
   modules.push({file,...from});
   for(const target of importsOf(abs)){
-   if(!target.startsWith('server-plugin/')&&!target.startsWith('extension/')&&!(dir&&target.startsWith(rel(path.resolve(ROOT,dir))+'/')))continue;// world/ design data, tools
+   if(!target.startsWith('server-plugin/')&&!target.startsWith('extension/')&&!target.startsWith('packs/')&&!(dir&&target.startsWith(rel(path.resolve(ROOT,dir))+'/')))continue;// world/ design data, tools
    const to=info(target);if(!to){unassigned.push(target);continue;}
    const edge={from:file,to:target,fromLayer:from.layer,toLayer:to.layer,fromPack:from.pack,toPack:to.pack};
    edges.push(edge);const kind=violationOf(from,to);if(kind)violations.push({...edge,kind,key:`${file} -> ${target}`});
   }
  }
- return {scope:dir?rel(path.resolve(ROOT,dir)):'server-plugin+extension',modules,edges,violations,unassigned:[...new Set(unassigned)].sort()};
+ return {scope:dir?rel(path.resolve(ROOT,dir)):'server-plugin+extension+packs',modules,edges,violations,unassigned:[...new Set(unassigned)].sort()};
 }
 
 export function readBaseline(){

@@ -130,6 +130,6 @@ export function render(rows){
 
 if(process.argv[1]&&path.resolve(process.argv[1])===path.resolve(import.meta.filename)){
  const rows=buildGapList(),text=render(rows),out=path.join(ROOT,OUTPUT);
- if(process.argv.includes('--check')){const same=fs.existsSync(out)&&fs.readFileSync(out,'utf8')===text;console.log(`gap-list: ${OUTPUT} ${same?'已是最新':'过期'}`);if(!same)process.exitCode=1;}
+ if(process.argv.includes('--check')){const same=fs.existsSync(out)&&fs.readFileSync(out,'utf8').replace(/\r\n/g,'\n')===text;console.log(`gap-list: ${OUTPUT} ${same?'已是最新':'过期'}`);if(!same)process.exitCode=1;}
  else{fs.writeFileSync(out,text);const c=d=>rows.filter(r=>r.disposition===d).length;console.log(`gap-list: ${rows.length} 个函数（保留 ${c('保留')}，改造 ${c('改造')}，替换 ${c('替换')}）→ ${OUTPUT}`);}
 }

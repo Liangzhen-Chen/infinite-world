@@ -2,7 +2,7 @@
  "title": "动作清单（S0 自动导出）",
  "generatedBy": "node tools/export-actions.mjs",
  "namespace": "core",
- "note": "从 extension/tools.mjs 枚举与 resolveToolCall 导出；id = core:<内部工具>.<内部操作>（核心命名空间可省略）。participants 为可指代参与者的参数（player 恒为发起者）；params 为该公开工具的参数（分组工具为组内并集）；handler.dispatch 为子操作分派的首个字面量位置（近似）。前置、同意、可见性、叙述模板由 A1 起逐包补齐。",
+ "note": "从 extension/tools.mjs 枚举与 resolveToolCall 导出；pack 为一方包名（子操作分派所在模块的目标包，见 tools/arch-layers.mjs；仍在内核/接口层分派的为 null）；id = core:<内部工具>.<内部操作>（核心命名空间可省略）。participants 为可指代参与者的参数（player 恒为发起者）；params 为该公开工具的参数（分组工具为组内并集）；handler.dispatch 为子操作分派的首个字面量位置（近似）。前置、同意、可见性、叙述模板由 A1 起逐包补齐。",
  "counts": {
   "actions": 242,
   "tools": 25,
@@ -76,6 +76,7 @@
      "passage"
     ]
    },
+   "pack": null,
    "handler": {
     "file": "server-plugin/engine.mjs",
     "line": 291,
@@ -148,6 +149,7 @@
      "passage"
     ]
    },
+   "pack": "economy",
    "handler": {
     "file": "server-plugin/engine.mjs",
     "line": 291,
@@ -220,6 +222,7 @@
      "passage"
     ]
    },
+   "pack": "economy",
    "handler": {
     "file": "server-plugin/engine.mjs",
     "line": 291,
@@ -292,6 +295,7 @@
      "passage"
     ]
    },
+   "pack": "economy",
    "handler": {
     "file": "server-plugin/engine.mjs",
     "line": 291,
@@ -364,6 +368,7 @@
      "passage"
     ]
    },
+   "pack": "economy",
    "handler": {
     "file": "server-plugin/engine.mjs",
     "line": 291,
@@ -436,6 +441,7 @@
      "passage"
     ]
    },
+   "pack": "economy",
    "handler": {
     "file": "server-plugin/engine.mjs",
     "line": 291,
@@ -508,6 +514,7 @@
      "passage"
     ]
    },
+   "pack": "economy",
    "handler": {
     "file": "server-plugin/engine.mjs",
     "line": 291,
@@ -580,6 +587,7 @@
      "passage"
     ]
    },
+   "pack": "law",
    "handler": {
     "file": "server-plugin/engine.mjs",
     "line": 291,
@@ -652,6 +660,7 @@
      "passage"
     ]
    },
+   "pack": "economy",
    "handler": {
     "file": "server-plugin/engine.mjs",
     "line": 291,
@@ -724,6 +733,7 @@
      "passage"
     ]
    },
+   "pack": "economy",
    "handler": {
     "file": "server-plugin/engine.mjs",
     "line": 291,
@@ -796,6 +806,7 @@
      "passage"
     ]
    },
+   "pack": "economy",
    "handler": {
     "file": "server-plugin/engine.mjs",
     "line": 291,
@@ -868,6 +879,7 @@
      "passage"
     ]
    },
+   "pack": "economy",
    "handler": {
     "file": "server-plugin/engine.mjs",
     "line": 291,
@@ -940,6 +952,7 @@
      "passage"
     ]
    },
+   "pack": "economy",
    "handler": {
     "file": "server-plugin/engine.mjs",
     "line": 291,
@@ -1012,6 +1025,7 @@
      "passage"
     ]
    },
+   "pack": "economy",
    "handler": {
     "file": "server-plugin/engine.mjs",
     "line": 291,
@@ -1084,6 +1098,7 @@
      "passage"
     ]
    },
+   "pack": "economy",
    "handler": {
     "file": "server-plugin/engine.mjs",
     "line": 291,
@@ -1156,6 +1171,7 @@
      "passage"
     ]
    },
+   "pack": null,
    "handler": {
     "file": "server-plugin/engine.mjs",
     "line": 291,
@@ -1228,6 +1244,7 @@
      "passage"
     ]
    },
+   "pack": "economy",
    "handler": {
     "file": "server-plugin/engine.mjs",
     "line": 291,
@@ -1300,6 +1317,7 @@
      "passage"
     ]
    },
+   "pack": "magic",
    "handler": {
     "file": "server-plugin/engine.mjs",
     "line": 291,
@@ -1372,6 +1390,7 @@
      "passage"
     ]
    },
+   "pack": "economy",
    "handler": {
     "file": "server-plugin/engine.mjs",
     "line": 291,
@@ -1444,6 +1463,7 @@
      "passage"
     ]
    },
+   "pack": "economy",
    "handler": {
     "file": "server-plugin/engine.mjs",
     "line": 291,
@@ -1516,6 +1536,7 @@
      "passage"
     ]
    },
+   "pack": "economy",
    "handler": {
     "file": "server-plugin/engine.mjs",
     "line": 291,
@@ -1588,6 +1609,7 @@
      "passage"
     ]
    },
+   "pack": "economy",
    "handler": {
     "file": "server-plugin/engine.mjs",
     "line": 291,
@@ -1660,6 +1682,7 @@
      "passage"
     ]
    },
+   "pack": "economy",
    "handler": {
     "file": "server-plugin/engine.mjs",
     "line": 291,
@@ -1732,6 +1755,7 @@
      "passage"
     ]
    },
+   "pack": "economy",
    "handler": {
     "file": "server-plugin/engine.mjs",
     "line": 291,
@@ -1804,6 +1828,7 @@
      "passage"
     ]
    },
+   "pack": "economy",
    "handler": {
     "file": "server-plugin/engine.mjs",
     "line": 291,
@@ -1876,6 +1901,7 @@
      "passage"
     ]
    },
+   "pack": "economy",
    "handler": {
     "file": "server-plugin/engine.mjs",
     "line": 291,
@@ -1948,6 +1974,7 @@
      "passage"
     ]
    },
+   "pack": "economy",
    "handler": {
     "file": "server-plugin/engine.mjs",
     "line": 291,
@@ -2020,6 +2047,7 @@
      "passage"
     ]
    },
+   "pack": "economy",
    "handler": {
     "file": "server-plugin/engine.mjs",
     "line": 291,
@@ -2092,6 +2120,7 @@
      "passage"
     ]
    },
+   "pack": "economy",
    "handler": {
     "file": "server-plugin/engine.mjs",
     "line": 291,
@@ -2164,6 +2193,7 @@
      "passage"
     ]
    },
+   "pack": "economy",
    "handler": {
     "file": "server-plugin/engine.mjs",
     "line": 291,
@@ -2236,6 +2266,7 @@
      "passage"
     ]
    },
+   "pack": "economy",
    "handler": {
     "file": "server-plugin/engine.mjs",
     "line": 291,
@@ -2308,6 +2339,7 @@
      "passage"
     ]
    },
+   "pack": "economy",
    "handler": {
     "file": "server-plugin/engine.mjs",
     "line": 291,
@@ -2380,6 +2412,7 @@
      "passage"
     ]
    },
+   "pack": "economy",
    "handler": {
     "file": "server-plugin/engine.mjs",
     "line": 291,
@@ -2452,6 +2485,7 @@
      "passage"
     ]
    },
+   "pack": "magic",
    "handler": {
     "file": "server-plugin/engine.mjs",
     "line": 291,
@@ -2524,6 +2558,7 @@
      "passage"
     ]
    },
+   "pack": null,
    "handler": {
     "file": "server-plugin/engine.mjs",
     "line": 291,
@@ -2596,6 +2631,7 @@
      "passage"
     ]
    },
+   "pack": null,
    "handler": {
     "file": "server-plugin/engine.mjs",
     "line": 291,
@@ -2668,6 +2704,7 @@
      "passage"
     ]
    },
+   "pack": "economy",
    "handler": {
     "file": "server-plugin/engine.mjs",
     "line": 291,
@@ -2740,6 +2777,7 @@
      "passage"
     ]
    },
+   "pack": "economy",
    "handler": {
     "file": "server-plugin/engine.mjs",
     "line": 291,
@@ -2812,6 +2850,7 @@
      "passage"
     ]
    },
+   "pack": "economy",
    "handler": {
     "file": "server-plugin/engine.mjs",
     "line": 291,
@@ -2884,6 +2923,7 @@
      "passage"
     ]
    },
+   "pack": "economy",
    "handler": {
     "file": "server-plugin/engine.mjs",
     "line": 291,
@@ -2918,6 +2958,7 @@
     ]
    },
    "operationParam": null,
+   "pack": null,
    "handler": {
     "file": "server-plugin/engine.mjs",
     "line": 470,
@@ -2949,6 +2990,7 @@
     ]
    },
    "operationParam": null,
+   "pack": null,
    "handler": {
     "file": "server-plugin/engine.mjs",
     "line": 379,
@@ -2971,6 +3013,7 @@
    "required": [],
    "variants": {},
    "operationParam": null,
+   "pack": null,
    "handler": {
     "file": "server-plugin/engine.mjs",
     "line": 564,
@@ -3004,6 +3047,7 @@
    "required": [],
    "variants": {},
    "operationParam": null,
+   "pack": null,
    "handler": {
     "file": "server-plugin/engine.mjs",
     "line": 567,
@@ -3039,6 +3083,7 @@
    ],
    "variants": {},
    "operationParam": null,
+   "pack": null,
    "handler": {
     "file": "server-plugin/engine.mjs",
     "line": 607,
@@ -3071,6 +3116,7 @@
     ]
    },
    "operationParam": "free",
+   "pack": null,
    "handler": {
     "file": "server-plugin/engine.mjs",
     "line": 638,
@@ -3099,6 +3145,7 @@
    ],
    "variants": {},
    "operationParam": null,
+   "pack": null,
    "handler": {
     "file": "server-plugin/engine.mjs",
     "line": 570,
@@ -3131,6 +3178,7 @@
     "profession"
    ],
    "variants": {},
+   "pack": "character",
    "handler": {
     "file": "server-plugin/engine.mjs",
     "line": 641,
@@ -3164,6 +3212,7 @@
     "profession"
    ],
    "variants": {},
+   "pack": "character",
    "handler": {
     "file": "server-plugin/engine.mjs",
     "line": 641,
@@ -3197,6 +3246,7 @@
     "profession"
    ],
    "variants": {},
+   "pack": "character",
    "handler": {
     "file": "server-plugin/engine.mjs",
     "line": 641,
@@ -3230,6 +3280,7 @@
     "profession"
    ],
    "variants": {},
+   "pack": "character",
    "handler": {
     "file": "server-plugin/engine.mjs",
     "line": 641,
@@ -3263,6 +3314,7 @@
     "profession"
    ],
    "variants": {},
+   "pack": "character",
    "handler": {
     "file": "server-plugin/engine.mjs",
     "line": 641,
@@ -3296,6 +3348,7 @@
     "profession"
    ],
    "variants": {},
+   "pack": "character",
    "handler": {
     "file": "server-plugin/engine.mjs",
     "line": 641,
@@ -3321,6 +3374,7 @@
    ],
    "variants": {},
    "operationParam": null,
+   "pack": null,
    "handler": {
     "file": "server-plugin/engine.mjs",
     "line": 644,
@@ -3354,6 +3408,7 @@
    ],
    "variants": {},
    "operationParam": null,
+   "pack": null,
    "handler": {
     "file": "server-plugin/engine.mjs",
     "line": 645,
@@ -3409,6 +3464,7 @@
      "site_gather"
     ]
    },
+   "pack": null,
    "handler": {
     "file": "server-plugin/engine.mjs",
     "line": 658,
@@ -3464,6 +3520,7 @@
      "site_gather"
     ]
    },
+   "pack": "law",
    "handler": {
     "file": "server-plugin/engine.mjs",
     "line": 658,
@@ -3520,6 +3577,7 @@
      "site_gather"
     ]
    },
+   "pack": "magic",
    "handler": {
     "file": "server-plugin/engine.mjs",
     "line": 658,
@@ -3576,6 +3634,7 @@
      "site_gather"
     ]
    },
+   "pack": null,
    "handler": {
     "file": "server-plugin/engine.mjs",
     "line": 658,
@@ -3613,6 +3672,7 @@
    ],
    "variants": {},
    "operationParam": null,
+   "pack": null,
    "handler": {
     "file": "server-plugin/engine.mjs",
     "line": 711,
@@ -3647,6 +3707,7 @@
     ]
    },
    "operationParam": null,
+   "pack": null,
    "handler": {
     "file": "server-plugin/activities.mjs",
     "line": 74,
@@ -3676,6 +3737,7 @@
    ],
    "required": [],
    "variants": {},
+   "pack": null,
    "handler": {
     "file": "server-plugin/activities.mjs",
     "line": 162,
@@ -3705,6 +3767,7 @@
    ],
    "required": [],
    "variants": {},
+   "pack": null,
    "handler": {
     "file": "server-plugin/activities.mjs",
     "line": 162,
@@ -3736,6 +3799,7 @@
    ],
    "variants": {},
    "operationParam": "free",
+   "pack": null,
    "handler": {
     "file": "server-plugin/activities.mjs",
     "line": 167,
@@ -3837,6 +3901,7 @@
      "public"
     ]
    },
+   "pack": "economy",
    "handler": {
     "file": "server-plugin/activities.mjs",
     "line": 187,
@@ -3939,6 +4004,7 @@
      "public"
     ]
    },
+   "pack": "economy",
    "handler": {
     "file": "server-plugin/activities.mjs",
     "line": 187,
@@ -4041,6 +4107,7 @@
      "public"
     ]
    },
+   "pack": "economy",
    "handler": {
     "file": "server-plugin/activities.mjs",
     "line": 187,
@@ -4143,6 +4210,7 @@
      "public"
     ]
    },
+   "pack": "economy",
    "handler": {
     "file": "server-plugin/activities.mjs",
     "line": 187,
@@ -4245,6 +4313,7 @@
      "public"
     ]
    },
+   "pack": null,
    "handler": {
     "file": "server-plugin/activities.mjs",
     "line": 187,
@@ -4347,6 +4416,7 @@
      "public"
     ]
    },
+   "pack": "governance",
    "handler": {
     "file": "server-plugin/activities.mjs",
     "line": 187,
@@ -4449,6 +4519,7 @@
      "public"
     ]
    },
+   "pack": "governance",
    "handler": {
     "file": "server-plugin/activities.mjs",
     "line": 187,
@@ -4551,6 +4622,7 @@
      "public"
     ]
    },
+   "pack": "governance",
    "handler": {
     "file": "server-plugin/activities.mjs",
     "line": 187,
@@ -4653,6 +4725,7 @@
      "public"
     ]
    },
+   "pack": "governance",
    "handler": {
     "file": "server-plugin/activities.mjs",
     "line": 187,
@@ -4755,6 +4828,7 @@
      "public"
     ]
    },
+   "pack": "governance",
    "handler": {
     "file": "server-plugin/activities.mjs",
     "line": 187,
@@ -4857,6 +4931,7 @@
      "public"
     ]
    },
+   "pack": "governance",
    "handler": {
     "file": "server-plugin/activities.mjs",
     "line": 187,
@@ -4959,6 +5034,7 @@
      "public"
     ]
    },
+   "pack": "ecology",
    "handler": {
     "file": "server-plugin/activities.mjs",
     "line": 187,
@@ -5061,6 +5137,7 @@
      "public"
     ]
    },
+   "pack": "ecology",
    "handler": {
     "file": "server-plugin/activities.mjs",
     "line": 187,
@@ -5163,6 +5240,7 @@
      "public"
     ]
    },
+   "pack": "ecology",
    "handler": {
     "file": "server-plugin/activities.mjs",
     "line": 187,
@@ -5265,6 +5343,7 @@
      "public"
     ]
    },
+   "pack": "ecology",
    "handler": {
     "file": "server-plugin/activities.mjs",
     "line": 187,
@@ -5367,6 +5446,7 @@
      "public"
     ]
    },
+   "pack": "governance",
    "handler": {
     "file": "server-plugin/activities.mjs",
     "line": 187,
@@ -5469,6 +5549,7 @@
      "public"
     ]
    },
+   "pack": "governance",
    "handler": {
     "file": "server-plugin/activities.mjs",
     "line": 187,
@@ -5571,6 +5652,7 @@
      "public"
     ]
    },
+   "pack": "governance",
    "handler": {
     "file": "server-plugin/activities.mjs",
     "line": 187,
@@ -5673,6 +5755,7 @@
      "public"
     ]
    },
+   "pack": "governance",
    "handler": {
     "file": "server-plugin/activities.mjs",
     "line": 187,
@@ -5775,6 +5858,7 @@
      "public"
     ]
    },
+   "pack": "governance",
    "handler": {
     "file": "server-plugin/activities.mjs",
     "line": 187,
@@ -5877,6 +5961,7 @@
      "public"
     ]
    },
+   "pack": null,
    "handler": {
     "file": "server-plugin/activities.mjs",
     "line": 187,
@@ -5979,6 +6064,7 @@
      "public"
     ]
    },
+   "pack": null,
    "handler": {
     "file": "server-plugin/activities.mjs",
     "line": 187,
@@ -6081,6 +6167,7 @@
      "public"
     ]
    },
+   "pack": "governance",
    "handler": {
     "file": "server-plugin/activities.mjs",
     "line": 187,
@@ -6183,6 +6270,7 @@
      "public"
     ]
    },
+   "pack": "governance",
    "handler": {
     "file": "server-plugin/activities.mjs",
     "line": 187,
@@ -6285,6 +6373,7 @@
      "public"
     ]
    },
+   "pack": "governance",
    "handler": {
     "file": "server-plugin/activities.mjs",
     "line": 187,
@@ -6387,6 +6476,7 @@
      "public"
     ]
    },
+   "pack": "governance",
    "handler": {
     "file": "server-plugin/activities.mjs",
     "line": 187,
@@ -6489,6 +6579,7 @@
      "public"
     ]
    },
+   "pack": "governance",
    "handler": {
     "file": "server-plugin/activities.mjs",
     "line": 187,
@@ -6591,6 +6682,7 @@
      "public"
     ]
    },
+   "pack": "governance",
    "handler": {
     "file": "server-plugin/activities.mjs",
     "line": 187,
@@ -6693,6 +6785,7 @@
      "public"
     ]
    },
+   "pack": "governance",
    "handler": {
     "file": "server-plugin/activities.mjs",
     "line": 187,
@@ -6795,6 +6888,7 @@
      "public"
     ]
    },
+   "pack": "governance",
    "handler": {
     "file": "server-plugin/activities.mjs",
     "line": 187,
@@ -6897,6 +6991,7 @@
      "public"
     ]
    },
+   "pack": "character",
    "handler": {
     "file": "server-plugin/activities.mjs",
     "line": 187,
@@ -6999,6 +7094,7 @@
      "public"
     ]
    },
+   "pack": "character",
    "handler": {
     "file": "server-plugin/activities.mjs",
     "line": 187,
@@ -7101,6 +7197,7 @@
      "public"
     ]
    },
+   "pack": "character",
    "handler": {
     "file": "server-plugin/activities.mjs",
     "line": 187,
@@ -7203,6 +7300,7 @@
      "public"
     ]
    },
+   "pack": "character",
    "handler": {
     "file": "server-plugin/activities.mjs",
     "line": 187,
@@ -7305,6 +7403,7 @@
      "public"
     ]
    },
+   "pack": "medicine",
    "handler": {
     "file": "server-plugin/activities.mjs",
     "line": 187,
@@ -7407,6 +7506,7 @@
      "public"
     ]
    },
+   "pack": "medicine",
    "handler": {
     "file": "server-plugin/activities.mjs",
     "line": 187,
@@ -7509,6 +7609,7 @@
      "public"
     ]
    },
+   "pack": "medicine",
    "handler": {
     "file": "server-plugin/activities.mjs",
     "line": 187,
@@ -7611,6 +7712,7 @@
      "public"
     ]
    },
+   "pack": "medicine",
    "handler": {
     "file": "server-plugin/activities.mjs",
     "line": 187,
@@ -7713,6 +7815,7 @@
      "public"
     ]
    },
+   "pack": "medicine",
    "handler": {
     "file": "server-plugin/activities.mjs",
     "line": 187,
@@ -7815,6 +7918,7 @@
      "public"
     ]
    },
+   "pack": "organizations",
    "handler": {
     "file": "server-plugin/activities.mjs",
     "line": 187,
@@ -7917,6 +8021,7 @@
      "public"
     ]
    },
+   "pack": "organizations",
    "handler": {
     "file": "server-plugin/activities.mjs",
     "line": 187,
@@ -8019,6 +8124,7 @@
      "public"
     ]
    },
+   "pack": "organizations",
    "handler": {
     "file": "server-plugin/activities.mjs",
     "line": 187,
@@ -8121,6 +8227,7 @@
      "public"
     ]
    },
+   "pack": "organizations",
    "handler": {
     "file": "server-plugin/activities.mjs",
     "line": 187,
@@ -8223,6 +8330,7 @@
      "public"
     ]
    },
+   "pack": "organizations",
    "handler": {
     "file": "server-plugin/activities.mjs",
     "line": 187,
@@ -8325,6 +8433,7 @@
      "public"
     ]
    },
+   "pack": "organizations",
    "handler": {
     "file": "server-plugin/activities.mjs",
     "line": 187,
@@ -8427,6 +8536,7 @@
      "public"
     ]
    },
+   "pack": "organizations",
    "handler": {
     "file": "server-plugin/activities.mjs",
     "line": 187,
@@ -8529,6 +8639,7 @@
      "public"
     ]
    },
+   "pack": null,
    "handler": {
     "file": "server-plugin/activities.mjs",
     "line": 187,
@@ -8630,6 +8741,7 @@
      "public"
     ]
    },
+   "pack": "organizations",
    "handler": {
     "file": "server-plugin/activities.mjs",
     "line": 187,
@@ -8732,6 +8844,7 @@
      "public"
     ]
    },
+   "pack": "organizations",
    "handler": {
     "file": "server-plugin/activities.mjs",
     "line": 187,
@@ -8834,6 +8947,7 @@
      "public"
     ]
    },
+   "pack": "organizations",
    "handler": {
     "file": "server-plugin/activities.mjs",
     "line": 187,
@@ -8936,6 +9050,7 @@
      "public"
     ]
    },
+   "pack": "organizations",
    "handler": {
     "file": "server-plugin/activities.mjs",
     "line": 187,
@@ -9038,6 +9153,7 @@
      "public"
     ]
    },
+   "pack": "organizations",
    "handler": {
     "file": "server-plugin/activities.mjs",
     "line": 187,
@@ -9140,6 +9256,7 @@
      "public"
     ]
    },
+   "pack": "organizations",
    "handler": {
     "file": "server-plugin/activities.mjs",
     "line": 187,
@@ -9242,6 +9359,7 @@
      "public"
     ]
    },
+   "pack": "family",
    "handler": {
     "file": "server-plugin/activities.mjs",
     "line": 187,
@@ -9344,6 +9462,7 @@
      "public"
     ]
    },
+   "pack": "family",
    "handler": {
     "file": "server-plugin/activities.mjs",
     "line": 187,
@@ -9446,6 +9565,7 @@
      "public"
     ]
    },
+   "pack": "family",
    "handler": {
     "file": "server-plugin/activities.mjs",
     "line": 187,
@@ -9548,6 +9668,7 @@
      "public"
     ]
    },
+   "pack": "family",
    "handler": {
     "file": "server-plugin/activities.mjs",
     "line": 187,
@@ -9650,6 +9771,7 @@
      "public"
     ]
    },
+   "pack": "family",
    "handler": {
     "file": "server-plugin/activities.mjs",
     "line": 187,
@@ -9752,6 +9874,7 @@
      "public"
     ]
    },
+   "pack": "family",
    "handler": {
     "file": "server-plugin/activities.mjs",
     "line": 187,
@@ -9854,6 +9977,7 @@
      "public"
     ]
    },
+   "pack": "family",
    "handler": {
     "file": "server-plugin/activities.mjs",
     "line": 187,
@@ -9956,6 +10080,7 @@
      "public"
     ]
    },
+   "pack": "family",
    "handler": {
     "file": "server-plugin/activities.mjs",
     "line": 187,
@@ -10058,6 +10183,7 @@
      "public"
     ]
    },
+   "pack": "organizations",
    "handler": {
     "file": "server-plugin/activities.mjs",
     "line": 187,
@@ -10160,6 +10286,7 @@
      "public"
     ]
    },
+   "pack": "organizations",
    "handler": {
     "file": "server-plugin/activities.mjs",
     "line": 187,
@@ -10262,6 +10389,7 @@
      "public"
     ]
    },
+   "pack": "organizations",
    "handler": {
     "file": "server-plugin/activities.mjs",
     "line": 187,
@@ -10364,6 +10492,7 @@
      "public"
     ]
    },
+   "pack": "organizations",
    "handler": {
     "file": "server-plugin/activities.mjs",
     "line": 187,
@@ -10466,6 +10595,7 @@
      "public"
     ]
    },
+   "pack": "organizations",
    "handler": {
     "file": "server-plugin/activities.mjs",
     "line": 187,
@@ -10568,6 +10698,7 @@
      "public"
     ]
    },
+   "pack": "organizations",
    "handler": {
     "file": "server-plugin/activities.mjs",
     "line": 187,
@@ -10670,6 +10801,7 @@
      "public"
     ]
    },
+   "pack": "governance",
    "handler": {
     "file": "server-plugin/activities.mjs",
     "line": 187,
@@ -10772,6 +10904,7 @@
      "public"
     ]
    },
+   "pack": null,
    "handler": {
     "file": "server-plugin/activities.mjs",
     "line": 187,
@@ -10874,6 +11007,7 @@
      "public"
     ]
    },
+   "pack": "governance",
    "handler": {
     "file": "server-plugin/activities.mjs",
     "line": 187,
@@ -10976,6 +11110,7 @@
      "public"
     ]
    },
+   "pack": "governance",
    "handler": {
     "file": "server-plugin/activities.mjs",
     "line": 187,
@@ -11078,6 +11213,7 @@
      "public"
     ]
    },
+   "pack": "governance",
    "handler": {
     "file": "server-plugin/activities.mjs",
     "line": 187,
@@ -11180,6 +11316,7 @@
      "public"
     ]
    },
+   "pack": "governance",
    "handler": {
     "file": "server-plugin/activities.mjs",
     "line": 187,
@@ -11282,6 +11419,7 @@
      "public"
     ]
    },
+   "pack": "military",
    "handler": {
     "file": "server-plugin/activities.mjs",
     "line": 187,
@@ -11384,6 +11522,7 @@
      "public"
     ]
    },
+   "pack": "military",
    "handler": {
     "file": "server-plugin/activities.mjs",
     "line": 187,
@@ -11486,6 +11625,7 @@
      "public"
     ]
    },
+   "pack": null,
    "handler": {
     "file": "server-plugin/activities.mjs",
     "line": 187,
@@ -11588,6 +11728,7 @@
      "public"
     ]
    },
+   "pack": "military",
    "handler": {
     "file": "server-plugin/activities.mjs",
     "line": 187,
@@ -11690,6 +11831,7 @@
      "public"
     ]
    },
+   "pack": "military",
    "handler": {
     "file": "server-plugin/activities.mjs",
     "line": 187,
@@ -11792,6 +11934,7 @@
      "public"
     ]
    },
+   "pack": "military",
    "handler": {
     "file": "server-plugin/activities.mjs",
     "line": 187,
@@ -11894,6 +12037,7 @@
      "public"
     ]
    },
+   "pack": "military",
    "handler": {
     "file": "server-plugin/activities.mjs",
     "line": 187,
@@ -11996,6 +12140,7 @@
      "public"
     ]
    },
+   "pack": "military",
    "handler": {
     "file": "server-plugin/activities.mjs",
     "line": 187,
@@ -12098,6 +12243,7 @@
      "public"
     ]
    },
+   "pack": "law",
    "handler": {
     "file": "server-plugin/activities.mjs",
     "line": 187,
@@ -12200,6 +12346,7 @@
      "public"
     ]
    },
+   "pack": "law",
    "handler": {
     "file": "server-plugin/activities.mjs",
     "line": 187,
@@ -12302,6 +12449,7 @@
      "public"
     ]
    },
+   "pack": "law",
    "handler": {
     "file": "server-plugin/activities.mjs",
     "line": 187,
@@ -12404,6 +12552,7 @@
      "public"
     ]
    },
+   "pack": "governance",
    "handler": {
     "file": "server-plugin/activities.mjs",
     "line": 187,
@@ -12506,6 +12655,7 @@
      "public"
     ]
    },
+   "pack": "governance",
    "handler": {
     "file": "server-plugin/activities.mjs",
     "line": 187,
@@ -12608,6 +12758,7 @@
      "public"
     ]
    },
+   "pack": null,
    "handler": {
     "file": "server-plugin/activities.mjs",
     "line": 187,
@@ -12709,6 +12860,7 @@
      "public"
     ]
    },
+   "pack": "governance",
    "handler": {
     "file": "server-plugin/activities.mjs",
     "line": 187,
@@ -12811,6 +12963,7 @@
      "public"
     ]
    },
+   "pack": null,
    "handler": {
     "file": "server-plugin/activities.mjs",
     "line": 187,
@@ -12846,6 +12999,7 @@
    ],
    "required": [],
    "variants": {},
+   "pack": "law",
    "handler": {
     "file": "server-plugin/activities.mjs",
     "line": 231,
@@ -12881,6 +13035,7 @@
    ],
    "required": [],
    "variants": {},
+   "pack": "law",
    "handler": {
     "file": "server-plugin/activities.mjs",
     "line": 231,
@@ -12916,6 +13071,7 @@
    ],
    "required": [],
    "variants": {},
+   "pack": "quests",
    "handler": {
     "file": "server-plugin/activities.mjs",
     "line": 231,
@@ -12951,6 +13107,7 @@
    ],
    "required": [],
    "variants": {},
+   "pack": "law",
    "handler": {
     "file": "server-plugin/activities.mjs",
     "line": 231,
@@ -12986,6 +13143,7 @@
    ],
    "required": [],
    "variants": {},
+   "pack": "ecology",
    "handler": {
     "file": "server-plugin/activities.mjs",
     "line": 231,
@@ -13016,6 +13174,7 @@
    ],
    "variants": {},
    "operationParam": null,
+   "pack": null,
    "handler": {
     "file": "server-plugin/activities.mjs",
     "line": 232,
@@ -13041,6 +13200,7 @@
    ],
    "variants": {},
    "operationParam": null,
+   "pack": null,
    "handler": {
     "file": "extension/runtime.js",
     "line": 187,
@@ -13080,6 +13240,7 @@
     ]
    },
    "operationParam": null,
+   "pack": null,
    "handler": {
     "file": "extension/runtime.js",
     "line": 188,
@@ -13104,6 +13265,7 @@
    "required": [],
    "variants": {},
    "operationParam": null,
+   "pack": null,
    "handler": {
     "file": "extension/runtime.js",
     "line": 186,
@@ -13165,6 +13327,7 @@
      "deliver"
     ]
    },
+   "pack": "ecology",
    "handler": {
     "file": "server-plugin/activities.mjs",
     "line": 63,
@@ -13227,6 +13390,7 @@
      "deliver"
     ]
    },
+   "pack": "ecology",
    "handler": {
     "file": "server-plugin/activities.mjs",
     "line": 58,
@@ -13289,6 +13453,7 @@
      "deliver"
     ]
    },
+   "pack": "ecology",
    "handler": {
     "file": "server-plugin/activities.mjs",
     "line": 58,
@@ -13351,6 +13516,7 @@
      "deliver"
     ]
    },
+   "pack": "ecology",
    "handler": {
     "file": "server-plugin/activities.mjs",
     "line": 58,
@@ -13413,6 +13579,7 @@
      "deliver"
     ]
    },
+   "pack": "ecology",
    "handler": {
     "file": "server-plugin/activities.mjs",
     "line": 58,
@@ -13475,6 +13642,7 @@
      "deliver"
     ]
    },
+   "pack": null,
    "handler": {
     "file": "server-plugin/activities.mjs",
     "line": 58,
@@ -13537,6 +13705,7 @@
      "deliver"
     ]
    },
+   "pack": "ecology",
    "handler": {
     "file": "server-plugin/activities.mjs",
     "line": 58,
@@ -13599,6 +13768,7 @@
      "deliver"
     ]
    },
+   "pack": "ecology",
    "handler": {
     "file": "server-plugin/activities.mjs",
     "line": 58,
@@ -13661,6 +13831,7 @@
      "deliver"
     ]
    },
+   "pack": "ecology",
    "handler": {
     "file": "server-plugin/activities.mjs",
     "line": 58,
@@ -13723,6 +13894,7 @@
      "deliver"
     ]
    },
+   "pack": "ecology",
    "handler": {
     "file": "server-plugin/activities.mjs",
     "line": 58,
@@ -13785,6 +13957,7 @@
      "deliver"
     ]
    },
+   "pack": "ecology",
    "handler": {
     "file": "server-plugin/activities.mjs",
     "line": 58,
@@ -13847,6 +14020,7 @@
      "deliver"
     ]
    },
+   "pack": "ecology",
    "handler": {
     "file": "server-plugin/activities.mjs",
     "line": 57,
@@ -13909,6 +14083,7 @@
      "deliver"
     ]
    },
+   "pack": "character",
    "handler": {
     "file": "server-plugin/activities.mjs",
     "line": 57,
@@ -13971,6 +14146,7 @@
      "deliver"
     ]
    },
+   "pack": "ecology",
    "handler": {
     "file": "server-plugin/activities.mjs",
     "line": 57,
@@ -14033,6 +14209,7 @@
      "deliver"
     ]
    },
+   "pack": "ecology",
    "handler": {
     "file": "server-plugin/activities.mjs",
     "line": 57,
@@ -14095,6 +14272,7 @@
      "deliver"
     ]
    },
+   "pack": "ecology",
    "handler": {
     "file": "server-plugin/activities.mjs",
     "line": 57,
@@ -14157,6 +14335,7 @@
      "deliver"
     ]
    },
+   "pack": "quests",
    "handler": {
     "file": "server-plugin/activities.mjs",
     "line": 57,
@@ -14219,6 +14398,7 @@
      "deliver"
     ]
    },
+   "pack": "ecology",
    "handler": {
     "file": "server-plugin/activities.mjs",
     "line": 57,
@@ -14281,6 +14461,7 @@
      "deliver"
     ]
    },
+   "pack": "companion",
    "handler": {
     "file": "server-plugin/activities.mjs",
     "line": 57,
@@ -14343,6 +14524,7 @@
      "deliver"
     ]
    },
+   "pack": "companion",
    "handler": {
     "file": "server-plugin/activities.mjs",
     "line": 57,
@@ -14405,6 +14587,7 @@
      "deliver"
     ]
    },
+   "pack": "ecology",
    "handler": {
     "file": "server-plugin/activities.mjs",
     "line": 57,
@@ -14467,6 +14650,7 @@
      "deliver"
     ]
    },
+   "pack": "ecology",
    "handler": {
     "file": "server-plugin/activities.mjs",
     "line": 57,
@@ -14529,6 +14713,7 @@
      "deliver"
     ]
    },
+   "pack": null,
    "handler": {
     "file": "server-plugin/activities.mjs",
     "line": 57,
@@ -14590,6 +14775,7 @@
      "deliver"
     ]
    },
+   "pack": null,
    "handler": {
     "file": "server-plugin/activities.mjs",
     "line": 57,
@@ -14652,6 +14838,7 @@
      "deliver"
     ]
    },
+   "pack": null,
    "handler": {
     "file": "server-plugin/activities.mjs",
     "line": 57,
@@ -14714,6 +14901,7 @@
      "deliver"
     ]
    },
+   "pack": "ecology",
    "handler": {
     "file": "server-plugin/activities.mjs",
     "line": 73,
@@ -14776,6 +14964,7 @@
      "deliver"
     ]
    },
+   "pack": "ecology",
    "handler": {
     "file": "server-plugin/activities.mjs",
     "line": 73,
@@ -14838,6 +15027,7 @@
      "deliver"
     ]
    },
+   "pack": "ecology",
    "handler": {
     "file": "server-plugin/activities.mjs",
     "line": 73,
@@ -14900,6 +15090,7 @@
      "deliver"
     ]
    },
+   "pack": "ecology",
    "handler": {
     "file": "server-plugin/activities.mjs",
     "line": 73,
@@ -14962,6 +15153,7 @@
      "deliver"
     ]
    },
+   "pack": "ecology",
    "handler": {
     "file": "server-plugin/activities.mjs",
     "line": 73,
@@ -15024,6 +15216,7 @@
      "deliver"
     ]
    },
+   "pack": null,
    "handler": {
     "file": "server-plugin/activities.mjs",
     "line": 73,
@@ -15085,6 +15278,7 @@
      "deliver"
     ]
    },
+   "pack": "magic",
    "handler": {
     "file": "server-plugin/activities.mjs",
     "line": 73,
@@ -15147,6 +15341,7 @@
      "deliver"
     ]
    },
+   "pack": "magic",
    "handler": {
     "file": "server-plugin/activities.mjs",
     "line": 73,
@@ -15209,6 +15404,7 @@
      "deliver"
     ]
    },
+   "pack": "magic",
    "handler": {
     "file": "server-plugin/activities.mjs",
     "line": 73,
@@ -15271,6 +15467,7 @@
      "deliver"
     ]
    },
+   "pack": "magic",
    "handler": {
     "file": "server-plugin/activities.mjs",
     "line": 73,
@@ -15333,6 +15530,7 @@
      "deliver"
     ]
    },
+   "pack": "ecology",
    "handler": {
     "file": "server-plugin/activities.mjs",
     "line": 56,
@@ -15395,6 +15593,7 @@
      "deliver"
     ]
    },
+   "pack": "ecology",
    "handler": {
     "file": "server-plugin/activities.mjs",
     "line": 56,
@@ -15457,6 +15656,7 @@
      "deliver"
     ]
    },
+   "pack": "ecology",
    "handler": {
     "file": "server-plugin/activities.mjs",
     "line": 56,
@@ -15519,6 +15719,7 @@
      "deliver"
     ]
    },
+   "pack": "ecology",
    "handler": {
     "file": "server-plugin/activities.mjs",
     "line": 55,
@@ -15581,6 +15782,7 @@
      "deliver"
     ]
    },
+   "pack": "ecology",
    "handler": {
     "file": "server-plugin/activities.mjs",
     "line": 55,
@@ -15643,6 +15845,7 @@
      "deliver"
     ]
    },
+   "pack": "ecology",
    "handler": {
     "file": "server-plugin/activities.mjs",
     "line": 55,
@@ -15705,6 +15908,7 @@
      "deliver"
     ]
    },
+   "pack": "ecology",
    "handler": {
     "file": "server-plugin/activities.mjs",
     "line": 55,
@@ -15767,6 +15971,7 @@
      "deliver"
     ]
    },
+   "pack": "ecology",
    "handler": {
     "file": "server-plugin/activities.mjs",
     "line": 55,
@@ -15829,6 +16034,7 @@
      "deliver"
     ]
    },
+   "pack": "ecology",
    "handler": {
     "file": "server-plugin/activities.mjs",
     "line": 55,
@@ -15891,6 +16097,7 @@
      "deliver"
     ]
    },
+   "pack": null,
    "handler": {
     "file": "server-plugin/activities.mjs",
     "line": 55,
@@ -15923,6 +16130,7 @@
    ],
    "required": [],
    "variants": {},
+   "pack": "ecology",
    "handler": {
     "file": "server-plugin/activities.mjs",
     "line": 72,
@@ -15955,6 +16163,7 @@
    ],
    "required": [],
    "variants": {},
+   "pack": "companion",
    "handler": {
     "file": "server-plugin/activities.mjs",
     "line": 72,
@@ -15987,6 +16196,7 @@
    ],
    "required": [],
    "variants": {},
+   "pack": "companion",
    "handler": {
     "file": "server-plugin/activities.mjs",
     "line": 72,
@@ -16019,6 +16229,7 @@
    ],
    "required": [],
    "variants": {},
+   "pack": "companion",
    "handler": {
     "file": "server-plugin/activities.mjs",
     "line": 72,
@@ -16051,6 +16262,7 @@
    ],
    "required": [],
    "variants": {},
+   "pack": "companion",
    "handler": {
     "file": "server-plugin/activities.mjs",
     "line": 72,
@@ -16083,6 +16295,7 @@
    ],
    "required": [],
    "variants": {},
+   "pack": "companion",
    "handler": {
     "file": "server-plugin/activities.mjs",
     "line": 72,
@@ -16115,6 +16328,7 @@
    ],
    "required": [],
    "variants": {},
+   "pack": "companion",
    "handler": {
     "file": "server-plugin/activities.mjs",
     "line": 72,
@@ -16147,6 +16361,7 @@
    ],
    "required": [],
    "variants": {},
+   "pack": "companion",
    "handler": {
     "file": "server-plugin/activities.mjs",
     "line": 72,
@@ -16179,6 +16394,7 @@
    ],
    "required": [],
    "variants": {},
+   "pack": "companion",
    "handler": {
     "file": "server-plugin/activities.mjs",
     "line": 72,
@@ -16211,6 +16427,7 @@
    ],
    "required": [],
    "variants": {},
+   "pack": "companion",
    "handler": {
     "file": "server-plugin/activities.mjs",
     "line": 72,
@@ -16243,6 +16460,7 @@
    ],
    "required": [],
    "variants": {},
+   "pack": "companion",
    "handler": {
     "file": "server-plugin/activities.mjs",
     "line": 72,
@@ -16275,6 +16493,7 @@
    ],
    "required": [],
    "variants": {},
+   "pack": "companion",
    "handler": {
     "file": "server-plugin/activities.mjs",
     "line": 72,
@@ -16307,6 +16526,7 @@
    ],
    "required": [],
    "variants": {},
+   "pack": "companion",
    "handler": {
     "file": "server-plugin/activities.mjs",
     "line": 72,
@@ -16339,6 +16559,7 @@
    ],
    "required": [],
    "variants": {},
+   "pack": "ecology",
    "handler": {
     "file": "server-plugin/activities.mjs",
     "line": 71,
@@ -16371,6 +16592,7 @@
    ],
    "required": [],
    "variants": {},
+   "pack": "magic",
    "handler": {
     "file": "server-plugin/activities.mjs",
     "line": 71,
@@ -16403,6 +16625,7 @@
    ],
    "required": [],
    "variants": {},
+   "pack": null,
    "handler": {
     "file": "server-plugin/activities.mjs",
     "line": 71,
@@ -16434,6 +16657,7 @@
    ],
    "required": [],
    "variants": {},
+   "pack": "ecology",
    "handler": {
     "file": "server-plugin/activities.mjs",
     "line": 71,
@@ -16486,6 +16710,7 @@
      "carry"
     ]
    },
+   "pack": "ecology",
    "handler": {
     "file": "server-plugin/activities.mjs",
     "line": 69,
@@ -16538,6 +16763,7 @@
      "carry"
     ]
    },
+   "pack": "ecology",
    "handler": {
     "file": "server-plugin/activities.mjs",
     "line": 70,
@@ -16590,6 +16816,7 @@
      "carry"
     ]
    },
+   "pack": "law",
    "handler": {
     "file": "server-plugin/activities.mjs",
     "line": 70,
@@ -16642,6 +16869,7 @@
      "carry"
     ]
    },
+   "pack": "law",
    "handler": {
     "file": "server-plugin/activities.mjs",
     "line": 70,
@@ -16694,6 +16922,7 @@
      "carry"
     ]
    },
+   "pack": "law",
    "handler": {
     "file": "server-plugin/activities.mjs",
     "line": 70,
@@ -16746,6 +16975,7 @@
      "carry"
     ]
    },
+   "pack": "law",
    "handler": {
     "file": "server-plugin/activities.mjs",
     "line": 70,
@@ -16798,6 +17028,7 @@
      "carry"
     ]
    },
+   "pack": "law",
    "handler": {
     "file": "server-plugin/activities.mjs",
     "line": 70,
@@ -16850,6 +17081,7 @@
      "carry"
     ]
    },
+   "pack": "law",
    "handler": {
     "file": "server-plugin/activities.mjs",
     "line": 70,
@@ -16902,6 +17134,7 @@
      "carry"
     ]
    },
+   "pack": "law",
    "handler": {
     "file": "server-plugin/activities.mjs",
     "line": 70,
@@ -16954,6 +17187,7 @@
      "carry"
     ]
    },
+   "pack": "law",
    "handler": {
     "file": "server-plugin/activities.mjs",
     "line": 70,
@@ -17006,6 +17240,7 @@
      "carry"
     ]
    },
+   "pack": "economy",
    "handler": {
     "file": "server-plugin/activities.mjs",
     "line": 70,
@@ -17058,6 +17293,7 @@
      "carry"
     ]
    },
+   "pack": "law",
    "handler": {
     "file": "server-plugin/activities.mjs",
     "line": 70,
@@ -17110,6 +17346,7 @@
      "carry"
     ]
    },
+   "pack": "law",
    "handler": {
     "file": "server-plugin/activities.mjs",
     "line": 70,
@@ -17162,6 +17399,7 @@
      "carry"
     ]
    },
+   "pack": "law",
    "handler": {
     "file": "server-plugin/activities.mjs",
     "line": 70,
@@ -17214,6 +17452,7 @@
      "carry"
     ]
    },
+   "pack": "law",
    "handler": {
     "file": "server-plugin/activities.mjs",
     "line": 70,
@@ -17266,6 +17505,7 @@
      "carry"
     ]
    },
+   "pack": "law",
    "handler": {
     "file": "server-plugin/activities.mjs",
     "line": 70,
@@ -17318,6 +17558,7 @@
      "carry"
     ]
    },
+   "pack": "law",
    "handler": {
     "file": "server-plugin/activities.mjs",
     "line": 70,
@@ -17370,6 +17611,7 @@
      "carry"
     ]
    },
+   "pack": "law",
    "handler": {
     "file": "server-plugin/activities.mjs",
     "line": 70,

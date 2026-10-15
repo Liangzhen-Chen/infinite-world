@@ -5,6 +5,9 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import {toolDefinitions,resolveToolCall,modelToolCall,readOnlyTools} from '../extension/tools.mjs';
+import {layerOf} from './arch-layers.mjs';
+// 一方包名（12 §12.9：导出时每条带 pack 字段）：取子操作分派所在模块的目标包，分派仍在内核/接口层时为 null。
+const packOf=file=>file?layerOf(file)?.pack??null:null;
 
 const ROOT=path.resolve(import.meta.dirname,'..');
 export const OUTPUT='docs/actions.json';
@@ -51,7 +54,7 @@ export function exportActions(){
    const loc=readOnlyTools.has(tool)?readOnlyLocation(tool):methodLocation(tool);
    actions.push({id:`${NAMESPACE}:${tool.slice(6)}`,tool,operation:null,internalTool:tool,internalOperation:null,...base,
     participants,params:Object.keys(props).filter(k=>k!=='operation'),required:schema.required??[],variants,
-    operationParam:props.operation?'free':null,handler:loc?{...loc}:null});
+    operationParam:props.operation?'free':null,pack:packOf(loc?.file),handler:loc?{...loc}:null});
    continue;
   }
   for(const op of ops){
@@ -61,7 +64,7 @@ export function exportActions(){
    const dispatch=operationLocation(internalOperation,method?.file);
    actions.push({id:`${NAMESPACE}:${internalTool.slice(6)}.${internalOperation}`,tool,operation:op,internalTool,internalOperation,...base,
     participants,params:Object.keys(props).filter(k=>k!=='operation'),required:[...new Set([...(schema.required??[]).filter(k=>k!=='operation'),...requiredFor(tool,op)])],variants,
-    handler:method?{...method,...(dispatch?{dispatch:`${dispatch.file}:${dispatch.line}`}:{})}:null});
+    pack:packOf(dispatch?.file)??packOf(method?.file),handler:method?{...method,...(dispatch?{dispatch:`${dispatch.file}:${dispatch.line}`}:{})}:null});
   }
  }
  return actions;
@@ -69,7 +72,7 @@ export function exportActions(){
 export function render(actions){
  const tools=[...new Set(actions.map(a=>a.tool))];
  return JSON.stringify({title:'动作清单（S0 自动导出）',generatedBy:'node tools/export-actions.mjs',namespace:NAMESPACE,
-  note:'从 extension/tools.mjs 枚举与 resolveToolCall 导出；id = core:<内部工具>.<内部操作>（核心命名空间可省略）。participants 为可指代参与者的参数（player 恒为发起者）；params 为该公开工具的参数（分组工具为组内并集）；handler.dispatch 为子操作分派的首个字面量位置（近似）。前置、同意、可见性、叙述模板由 A1 起逐包补齐。',
+  note:'从 extension/tools.mjs 枚举与 resolveToolCall 导出；pack 为一方包名（子操作分派所在模块的目标包，见 tools/arch-layers.mjs；仍在内核/接口层分派的为 null）；id = core:<内部工具>.<内部操作>（核心命名空间可省略）。participants 为可指代参与者的参数（player 恒为发起者）；params 为该公开工具的参数（分组工具为组内并集）；handler.dispatch 为子操作分派的首个字面量位置（近似）。前置、同意、可见性、叙述模板由 A1 起逐包补齐。',
   counts:{actions:actions.length,tools:tools.length,withOperation:actions.filter(a=>a.operation).length,handlerResolved:actions.filter(a=>a.handler).length,dispatchResolved:actions.filter(a=>a.handler?.dispatch).length},
   actions},null,1)+'\n';
 }
@@ -77,7 +80,7 @@ export function render(actions){
 if(process.argv[1]&&path.resolve(process.argv[1])===path.resolve(import.meta.filename)){
  const actions=exportActions(),text=render(actions),out=path.join(ROOT,OUTPUT);
  if(process.argv.includes('--check')){
-  const same=fs.existsSync(out)&&fs.readFileSync(out,'utf8')===text;
+  const same=fs.existsSync(out)&&fs.readFileSync(out,'utf8').replace(/\r\n/g,'\n')===text;
   console.log(`actions: ${actions.length} 个动作；docs/actions.json ${same?'已是最新':'过期，请运行 node tools/export-actions.mjs'}`);
   if(!same)process.exitCode=1;
  }else{

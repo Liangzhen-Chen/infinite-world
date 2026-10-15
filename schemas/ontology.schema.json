@@ -2,49 +2,798 @@
   "$id": "ontology.schema.json",
   "title": "L1 词汇表文件（world/ontology/*.json 与内容包 vocabulary/*.json）",
   "type": "object",
-  "required": ["kind", "namespace", "version", "entries"],
+  "required": [
+    "kind",
+    "namespace",
+    "version",
+    "entries"
+  ],
   "properties": {
-    "$schema": {"type": "string"},
-    "kind": {"enum": ["verbs", "tags", "offenses", "holdings", "obligations", "resources", "entity-templates", "primitives", "derived-fields"]},
-    "namespace": {"$ref": "#/$defs/namespace"},
-    "version": {"type": "integer", "minimum": 1},
-    "note": {"type": "string"},
-    "entries": {"type": "array", "minItems": 1},
-    "handoverClasses": {"type": "array", "items": {"$ref": "#/$defs/labelled"}},
-    "triggers": {"type": "array", "items": {"type": "string"}},
-    "sourcesAndSinks": {"type": "array", "items": {"type": "object", "required": ["id"], "properties": {"id": {"type": "string", "pattern": "^(src|sink):[a-z_]+$"}}, "additionalProperties": false}},
-    "idPrefixes": {"type": "array", "items": {"type": "string", "pattern": "^[a-z]+_$"}}
+    "$schema": {
+      "type": "string"
+    },
+    "kind": {
+      "enum": [
+        "verbs",
+        "tags",
+        "offenses",
+        "holdings",
+        "obligations",
+        "resources",
+        "entity-templates",
+        "primitives",
+        "derived-fields"
+      ]
+    },
+    "namespace": {
+      "$ref": "#/$defs/namespace"
+    },
+    "version": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "note": {
+      "type": "string"
+    },
+    "entries": {
+      "type": "array",
+      "minItems": 1
+    },
+    "handoverClasses": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/labelled"
+      }
+    },
+    "triggers": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "sourcesAndSinks": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "id"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^(src|sink):[a-z_]+$"
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "idPrefixes": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "pattern": "^[a-z]+_$"
+      }
+    }
   },
   "additionalProperties": false,
   "allOf": [
-    {"if": {"properties": {"kind": {"const": "verbs"}}}, "then": {"properties": {"entries": {"items": {"$ref": "#/$defs/verb"}}}}},
-    {"if": {"properties": {"kind": {"const": "tags"}}}, "then": {"properties": {"entries": {"items": {"$ref": "#/$defs/tag"}}}}},
-    {"if": {"properties": {"kind": {"const": "offenses"}}}, "then": {"properties": {"entries": {"items": {"$ref": "#/$defs/offense"}}}}},
-    {"if": {"properties": {"kind": {"const": "holdings"}}}, "then": {"required": ["handoverClasses", "triggers"], "properties": {"entries": {"items": {"$ref": "#/$defs/holding"}}}}},
-    {"if": {"properties": {"kind": {"const": "obligations"}}}, "then": {"properties": {"entries": {"items": {"$ref": "#/$defs/obligation"}}}}},
-    {"if": {"properties": {"kind": {"const": "resources"}}}, "then": {"properties": {"entries": {"items": {"$ref": "#/$defs/resource"}}}}},
-    {"if": {"properties": {"kind": {"const": "entity-templates"}}}, "then": {"properties": {"entries": {"items": {"$ref": "#/$defs/template"}}}}},
-    {"if": {"properties": {"kind": {"const": "derived-fields"}}}, "then": {"properties": {"entries": {"items": {"$ref": "#/$defs/derivedField"}}}}},
-    {"if": {"properties": {"kind": {"const": "primitives"}}}, "then": {"properties": {"entries": {"items": {"$ref": "#/$defs/primitive"}}}}}
+    {
+      "if": {
+        "properties": {
+          "kind": {
+            "const": "verbs"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "entries": {
+            "items": {
+              "$ref": "#/$defs/verb"
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "kind": {
+            "const": "tags"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "entries": {
+            "items": {
+              "$ref": "#/$defs/tag"
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "kind": {
+            "const": "offenses"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "entries": {
+            "items": {
+              "$ref": "#/$defs/offense"
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "kind": {
+            "const": "holdings"
+          }
+        }
+      },
+      "then": {
+        "required": [
+          "handoverClasses",
+          "triggers"
+        ],
+        "properties": {
+          "entries": {
+            "items": {
+              "$ref": "#/$defs/holding"
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "kind": {
+            "const": "obligations"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "entries": {
+            "items": {
+              "$ref": "#/$defs/obligation"
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "kind": {
+            "const": "resources"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "entries": {
+            "items": {
+              "$ref": "#/$defs/resource"
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "kind": {
+            "const": "entity-templates"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "entries": {
+            "items": {
+              "$ref": "#/$defs/template"
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "kind": {
+            "const": "derived-fields"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "entries": {
+            "items": {
+              "$ref": "#/$defs/derivedField"
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "kind": {
+            "const": "primitives"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "entries": {
+            "items": {
+              "$ref": "#/$defs/primitive"
+            }
+          }
+        }
+      }
+    }
   ],
   "$defs": {
-    "namespace": {"type": "string", "pattern": "^[a-z][a-z0-9_-]{1,31}$"},
-    "id": {"type": "string", "minLength": 1, "maxLength": 64, "pattern": "^[^\\s,]+$"},
-    "labelled": {"type": "object", "required": ["id", "label"], "properties": {"id": {"$ref": "#/$defs/id"}, "label": {"type": "string"}}, "additionalProperties": false},
-    "verb": {"type": "object", "required": ["id", "label", "family"], "properties": {"id": {"$ref": "#/$defs/id"}, "label": {"type": "string"}, "family": {"enum": ["social", "code", "tool", "primitive", "design", "pack"]}, "note": {"type": "string"}}, "additionalProperties": false},
-    "tag": {"type": "object", "required": ["id", "family", "source"], "properties": {"id": {"$ref": "#/$defs/id"}, "family": {"type": "string"}, "source": {"enum": ["code", "design", "pack"]}, "pattern": {"type": "boolean"}, "note": {"type": "string"}}, "additionalProperties": false},
-    "offense": {"type": "object", "required": ["id", "label", "source"], "properties": {"id": {"type": "string", "pattern": "^[a-z][a-z0-9_]*$|^[a-z][a-z0-9_-]*:[a-z][a-z0-9_]*$"}, "label": {"type": "string"}, "source": {"enum": ["template", "code", "design", "pack"]}, "note": {"type": "string"}}, "additionalProperties": false},
-    "templates": {"type": "array", "minItems": 1, "items": {"type": "string"}},
-    "handover": {"type": "object", "propertyNames": {"enum": ["gone", "vacated", "moved", "defected", "impaired", "subjectGone"]}, "additionalProperties": {"type": "string"}},
-    "holding": {"type": "object", "required": ["id", "label", "holderKinds", "subjectKinds", "exclusive", "handover", "visibility"],
-      "properties": {"id": {"$ref": "#/$defs/id"}, "label": {"type": "string"}, "holderKinds": {"$ref": "#/$defs/templates"}, "subjectKinds": {"$ref": "#/$defs/templates"}, "exclusive": {"type": "boolean"}, "sum": {"type": "number"},
-        "handover": {"$ref": "#/$defs/handover"}, "visibility": {"enum": ["public", "parties", "members", "private"]}, "note": {"type": "string"}}, "additionalProperties": false},
-    "obligation": {"type": "object", "required": ["id", "label", "schedule", "handover"], "properties": {"id": {"$ref": "#/$defs/id"}, "label": {"type": "string"},
-      "schedule": {"enum": ["single", "installments", "monthly", "periodic", "continuous", "condition"]}, "handover": {"type": "object", "additionalProperties": {"type": "string"}}, "note": {"type": "string"}}, "additionalProperties": false},
-    "resource": {"type": "object", "required": ["id", "label", "family", "unit"], "properties": {"id": {"$ref": "#/$defs/id"}, "label": {"type": "string"}, "family": {"enum": ["currency", "stock", "index", "item"]}, "unit": {"type": "string"}, "pattern": {"type": "boolean"}, "note": {"type": "string"}}, "additionalProperties": false},
-    "template": {"type": "object", "required": ["id", "label", "kinds", "accounts", "holder", "subject", "obligationParty", "located"], "properties": {"id": {"$ref": "#/$defs/id"}, "label": {"type": "string"}, "kinds": {"type": "array", "items": {"type": "string"}},
-      "accounts": {"type": "boolean"}, "holder": {"type": "boolean"}, "subject": {"type": "boolean"}, "obligationParty": {"type": "boolean"}, "located": {"type": "boolean"}, "note": {"type": "string"}}, "additionalProperties": false},
-    "derivedField": {"type": "object", "required": ["id", "label", "scope", "source", "derive"], "properties": {"id": {"type": "string", "pattern": "^[A-Za-z][A-Za-z0-9_]*$", "not": {"pattern": "Override$"}}, "label": {"type": "string"}, "scope": {"enum": ["all", "writes"]}, "source": {"type": "string"}, "derive": {"type": "string"}, "note": {"type": "string"}}, "additionalProperties": false},
-    "primitive": {"type": "object", "required": ["id", "family", "event", "params"], "properties": {"id": {"type": "string", "pattern": "^[a-z]+(\\.[a-z]+)?$"}, "family": {"type": "string"}, "event": {"type": "string"}, "params": {"type": "array", "items": {"type": "string"}}, "note": {"type": "string"}}, "additionalProperties": false}
+    "namespace": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9_-]{1,31}$"
+    },
+    "id": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 64,
+      "pattern": "^[^\\s,]+$"
+    },
+    "labelled": {
+      "type": "object",
+      "required": [
+        "id",
+        "label"
+      ],
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/id"
+        },
+        "label": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false
+    },
+    "verb": {
+      "type": "object",
+      "required": [
+        "id",
+        "label",
+        "family"
+      ],
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/id"
+        },
+        "label": {
+          "type": "string"
+        },
+        "family": {
+          "enum": [
+            "social",
+            "code",
+            "tool",
+            "primitive",
+            "design",
+            "pack"
+          ]
+        },
+        "note": {
+          "type": "string"
+        },
+        "broader": {
+          "type": "string",
+          "description": "上位词（12 §12.3.3）；包词汇必填"
+        },
+        "aliases": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "scope": {
+          "enum": [
+            "core",
+            "shared",
+            "private"
+          ]
+        },
+        "definition": {
+          "type": "string"
+        },
+        "distinctFrom": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "tag": {
+      "type": "object",
+      "required": [
+        "id",
+        "family",
+        "source"
+      ],
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/id"
+        },
+        "family": {
+          "type": "string"
+        },
+        "source": {
+          "enum": [
+            "code",
+            "design",
+            "pack"
+          ]
+        },
+        "pattern": {
+          "type": "boolean"
+        },
+        "note": {
+          "type": "string"
+        },
+        "broader": {
+          "type": "string",
+          "description": "上位词（12 §12.3.3）；包词汇必填"
+        },
+        "aliases": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "scope": {
+          "enum": [
+            "core",
+            "shared",
+            "private"
+          ]
+        },
+        "definition": {
+          "type": "string"
+        },
+        "distinctFrom": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "label": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false
+    },
+    "offense": {
+      "type": "object",
+      "required": [
+        "id",
+        "label",
+        "source"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9_]*$|^[a-z][a-z0-9_-]*:[a-z][a-z0-9_]*$"
+        },
+        "label": {
+          "type": "string"
+        },
+        "source": {
+          "enum": [
+            "template",
+            "code",
+            "design",
+            "pack"
+          ]
+        },
+        "note": {
+          "type": "string"
+        },
+        "broader": {
+          "type": "string",
+          "description": "上位词（12 §12.3.3）；包词汇必填"
+        },
+        "aliases": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "scope": {
+          "enum": [
+            "core",
+            "shared",
+            "private"
+          ]
+        },
+        "definition": {
+          "type": "string"
+        },
+        "distinctFrom": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "templates": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "string"
+      }
+    },
+    "handover": {
+      "type": "object",
+      "propertyNames": {
+        "enum": [
+          "gone",
+          "vacated",
+          "moved",
+          "defected",
+          "impaired",
+          "subjectGone"
+        ]
+      },
+      "additionalProperties": {
+        "type": "string"
+      }
+    },
+    "holding": {
+      "type": "object",
+      "required": [
+        "id",
+        "label",
+        "holderKinds",
+        "subjectKinds",
+        "exclusive",
+        "handover",
+        "visibility"
+      ],
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/id"
+        },
+        "label": {
+          "type": "string"
+        },
+        "holderKinds": {
+          "$ref": "#/$defs/templates"
+        },
+        "subjectKinds": {
+          "$ref": "#/$defs/templates"
+        },
+        "exclusive": {
+          "type": "boolean"
+        },
+        "sum": {
+          "type": "number"
+        },
+        "handover": {
+          "$ref": "#/$defs/handover"
+        },
+        "visibility": {
+          "enum": [
+            "public",
+            "parties",
+            "members",
+            "private"
+          ]
+        },
+        "note": {
+          "type": "string"
+        },
+        "broader": {
+          "type": "string",
+          "description": "上位词（12 §12.3.3）；包词汇必填"
+        },
+        "aliases": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "scope": {
+          "enum": [
+            "core",
+            "shared",
+            "private"
+          ]
+        },
+        "definition": {
+          "type": "string"
+        },
+        "distinctFrom": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "obligation": {
+      "type": "object",
+      "required": [
+        "id",
+        "label",
+        "schedule",
+        "handover"
+      ],
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/id"
+        },
+        "label": {
+          "type": "string"
+        },
+        "schedule": {
+          "enum": [
+            "single",
+            "installments",
+            "monthly",
+            "periodic",
+            "continuous",
+            "condition"
+          ]
+        },
+        "handover": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
+        "note": {
+          "type": "string"
+        },
+        "broader": {
+          "type": "string",
+          "description": "上位词（12 §12.3.3）；包词汇必填"
+        },
+        "aliases": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "scope": {
+          "enum": [
+            "core",
+            "shared",
+            "private"
+          ]
+        },
+        "definition": {
+          "type": "string"
+        },
+        "distinctFrom": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "resource": {
+      "type": "object",
+      "required": [
+        "id",
+        "label",
+        "family",
+        "unit"
+      ],
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/id"
+        },
+        "label": {
+          "type": "string"
+        },
+        "family": {
+          "enum": [
+            "currency",
+            "stock",
+            "index",
+            "item"
+          ]
+        },
+        "unit": {
+          "type": "string"
+        },
+        "pattern": {
+          "type": "boolean"
+        },
+        "note": {
+          "type": "string"
+        },
+        "broader": {
+          "type": "string",
+          "description": "上位词（12 §12.3.3）；包词汇必填"
+        },
+        "aliases": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "scope": {
+          "enum": [
+            "core",
+            "shared",
+            "private"
+          ]
+        },
+        "definition": {
+          "type": "string"
+        },
+        "distinctFrom": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "template": {
+      "type": "object",
+      "required": [
+        "id",
+        "label",
+        "kinds",
+        "accounts",
+        "holder",
+        "subject",
+        "obligationParty",
+        "located"
+      ],
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/id"
+        },
+        "label": {
+          "type": "string"
+        },
+        "kinds": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "accounts": {
+          "type": "boolean"
+        },
+        "holder": {
+          "type": "boolean"
+        },
+        "subject": {
+          "type": "boolean"
+        },
+        "obligationParty": {
+          "type": "boolean"
+        },
+        "located": {
+          "type": "boolean"
+        },
+        "note": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false
+    },
+    "derivedField": {
+      "type": "object",
+      "required": [
+        "id",
+        "label",
+        "scope",
+        "source",
+        "derive"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[A-Za-z][A-Za-z0-9_]*$",
+          "not": {
+            "pattern": "Override$"
+          }
+        },
+        "label": {
+          "type": "string"
+        },
+        "scope": {
+          "enum": [
+            "all",
+            "writes"
+          ]
+        },
+        "source": {
+          "type": "string"
+        },
+        "derive": {
+          "type": "string"
+        },
+        "note": {
+          "type": "string"
+        },
+        "broader": {
+          "type": "string",
+          "description": "上位词（12 §12.3.3）；包词汇必填"
+        },
+        "aliases": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "definition": {
+          "type": "string"
+        },
+        "distinctFrom": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "primitive": {
+      "type": "object",
+      "required": [
+        "id",
+        "family",
+        "event",
+        "params"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[a-z]+(\\.[a-z]+)?$"
+        },
+        "family": {
+          "type": "string"
+        },
+        "event": {
+          "type": "string"
+        },
+        "params": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "note": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false
+    }
   }
 }

@@ -23,7 +23,8 @@ export function validateCorpus(items,{ontology=loadOntology(),actions=actionIds(
  const errors=[],seen=new Set();
  const primitives=new Set([...ontology.entries.primitives.values()].map(p=>p.id));
  const templates=new Map([...ontology.entries['entity-templates'].values()].map(t=>[t.id,t]));
- const artifactKinds=new Set(templates.get('artifact')?.kinds??[]);
+ // 兜底原语 create(kind: mark)（06 §6.9.5）：mark 须是某个实体模板登记的种类。
+ const markKind=[...templates.values()].some(t=>t.kinds.includes('mark'));
  const err=(item,field,message)=>errors.push({file:item.file,field:`/items/${item.index}${field}`,id:item.id,message});
  for(const item of items){
   const e=item.expect??{};
@@ -38,19 +39,22 @@ export function validateCorpus(items,{ontology=loadOntology(),actions=actionIds(
    if(!primitives.has(op))err(item,`/expect/signature/${j}`,`未知原语 ${op}`);
    if(!templates.has(tpl))err(item,`/expect/signature/${j}`,`未知实体模板 ${tpl}`);
    if(!key)err(item,`/expect/signature/${j}`,'缺少字段或资源键');
-   if(op==='emit'&&key?.startsWith('offense:')&&!ontology.has('offenses',key.slice(8)))err(item,`/expect/signature/${j}`,`未登记罪名 ${key}`);
+   if(key?.startsWith('offense:'))err(item,`/expect/signature/${j}`,'罪名不进签名（由规范层判定，05 §5.2.3），写在 expect.offense');
   });
   if(e.handling==='registered'&&!actions.has(qualify(e.route??'')))err(item,'/expect/route',`动作清单中没有 ${e.route}`);
   if(e.handling!=='registered'&&e.route!==e.handling)err(item,'/expect/route',`非注册动作的 route 应为 ${e.handling}`);
   if(e.nearest&&!actions.has(qualify(e.nearest)))err(item,'/expect/nearest',`动作清单中没有 ${e.nearest}`);
   if(e.handling==='fallback'){
    const f=e.fallback??{};
-   if(!artifactKinds.has(f.kind))err(item,'/expect/fallback/kind',`兜底实体种类须为 ${[...artifactKinds].join('/')}`);
+   if(f.kind!=='mark'||!markKind)err(item,'/expect/fallback/kind','兜底实体须为 create(kind: mark)');
+   if(!f.form)err(item,'/expect/fallback/form','兜底实体须写形态');
+   if(!(f.tags??[]).some(t=>t.startsWith('mark:')))err(item,'/expect/fallback/tags','兜底实体须带至少一个 mark:* 标签');
    if(!f.tags?.length)err(item,'/expect/fallback/tags','兜底实体须带标签');
    for(const t of f.tags??[])if(!ontology.has('tags',t))err(item,'/expect/fallback/tags',`未登记标签 ${t}`);
    if(!f.reactors?.length)err(item,'/expect/fallback/reactors','须标出至少一个应起反应的系统');
    for(const r of f.reactors??[])if(!PACK_NAMES.includes(r))err(item,'/expect/fallback/reactors',`未知系统（玩法包）${r}`);
   }
+  for(const o of e.offense??[])if(!ontology.has('offenses',o))err(item,'/expect/offense',`未登记罪名 ${o}`);
   if(e.handling==='infeasible'&&(!e.infeasible?.reason||!e.infeasible?.degrade))err(item,'/expect/infeasible','须给世界内原因与降级做法');
  }
  return errors;
@@ -60,7 +64,7 @@ export function validateCorpus(items,{ontology=loadOntology(),actions=actionIds(
 export function stubTranslate(item){return{handling:item.expect.handling,route:item.expect.route,signature:[...item.expect.signature]};}
 
 // What the current engine can carry out without new primitives: registered actions that exist in the action list.
-// world_propose（open）、兜底 create(artifact)、世界内不可行的原因/降级协议都要到 A3 才有。
+// world_propose（open）、兜底 create(kind: mark)、世界内不可行的原因/降级协议都要到 A3 才有。
 export function currentEngineSupport(item,actions){
  return item.expect.handling==='registered'&&actions.has(qualify(item.expect.route));
 }
@@ -72,8 +76,8 @@ export function score(items,{translate=stubTranslate,actions=actionIds()}={}){
  const signed=out.filter(({item,proposal})=>sameMultiset(proposal.signature,item.expect.signature)).length;
  const unsupported=items.filter(i=>!currentEngineSupport(i,actions));
  const fallback=items.filter(i=>i.expect.handling==='fallback');
- // A fallback entity “reacts” only if the engine can create tagged artifacts and a listed system subscribes to one of its tags.
- // S0：引擎没有 create(artifact,tags) 原语，也没有按标签订阅的反应规则（06 §6.3、A3），兜底实体目前都不会引起系统反应。
+  // A fallback entity “reacts” only if the engine can create marks and some system subscribes to one of its mark:* tags (06 §6.11：7 天内).
+ // S0：引擎没有 create(kind: mark) 兜底原语，也没有按标签订阅的反应规则（06 §6.3、A3），兜底实体目前都不会引起系统反应。
  const canCreateTagged=false;
  const noReaction=fallback.filter(()=>!canCreateTagged);
  const annotationGaps=fallback.filter(i=>!i.expect.fallback?.reactors?.length);

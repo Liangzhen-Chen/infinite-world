@@ -3,7 +3,7 @@
  "kind": "entity-templates",
  "namespace": "core",
  "version": 1,
- "note": "实体模板（01 §1.2）。artifact 为“尊重玩家想象力”兜底原语 create(tagged) 的模板：带标签、可被系统按标签反应的持久实体（壁画、新酒令、陷阱、诉状……）。",
+ "note": "实体模板（01 §1.2）。兜底原语 create(kind: mark) 的痕迹实体属 thing 模板（06 §6.9.5）：带 mark:* 与性状标签、不带资源与数值效果。",
  "entries": [
   {
    "id": "agent",
@@ -37,7 +37,8 @@
    "kinds": [
     "item",
     "building",
-    "node"
+    "node",
+    "mark"
    ],
    "accounts": true,
    "holder": false,
@@ -110,21 +111,6 @@
    "subject": false,
    "obligationParty": true,
    "located": false
-  },
-  {
-   "id": "artifact",
-   "label": "创意实体（兜底）",
-   "kinds": [
-    "mark",
-    "work",
-    "custom",
-    "structure"
-   ],
-   "accounts": false,
-   "holder": false,
-   "subject": true,
-   "obligationParty": false,
-   "located": true
   }
  ],
  "idPrefixes": [
@@ -140,6 +126,6 @@
   "node_",
   "pop_",
   "evt_",
-  "art_"
+  "mark_"
  ]
 }

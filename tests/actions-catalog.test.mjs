@@ -8,7 +8,7 @@ import {toolDefinitions,resolveToolCall,modelToolCall} from '../extension/tools.
 const actions=exportActions();
 
 test('actions.json 是最新导出（改工具枚举后须重新运行 node tools/export-actions.mjs）',()=>{
- assert.equal(fs.readFileSync(OUTPUT,'utf8'),render(actions));
+ assert.equal(fs.readFileSync(OUTPUT,'utf8').replace(/\r\n/g,'\n'),render(actions));// 检出时可能被转成 CRLF
 });
 
 test('动作数 = 全部公开 operation 枚举 + 无子操作工具，id 唯一且带 core 命名空间',()=>{
@@ -37,5 +37,6 @@ test('每个动作都定位到处理器（文件:行存在）',()=>{
   const lines=fs.readFileSync(a.handler.file,'utf8').split('\n');
   assert.ok(a.handler.line>=1&&a.handler.line<=lines.length,a.id);
   assert.ok(a.participants[0]==='player');
+  assert.ok('pack' in a,`${a.id} 缺 pack 字段`);
  }
 });

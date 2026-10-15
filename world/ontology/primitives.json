@@ -3,7 +3,7 @@
  "kind": "primitives",
  "namespace": "core",
  "version": 1,
- "note": "效果原语（06 §6.3），18 个、12 族。event 为该原语产生的事件动词（须在 verbs.json）。create 的 kind=artifact 为兜底“创造带标签的实体”。",
+ "note": "效果原语（06 §6.3），18 个、14 族（文档写“12 族”，按表实为 14）。event 为该原语产生的事件动词（须在 verbs.json）。create 的兜底形式为 kind=mark（06 §6.9.5）。",
  "entries": [
   {
    "id": "transfer",

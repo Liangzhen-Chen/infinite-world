@@ -14,7 +14,8 @@ test('语料 ≥200 条，刁钻创意 ≥30%，四种期望处理都有，覆�
 
 test('语料全部通过校验：动作 id、原语、实体模板、罪名、兜底标签与反应系统都已登记',()=>{
  assert.deepEqual(validateCorpus(items),[]);
- for(const i of items.filter(i=>i.expect.handling==='fallback'))assert.ok(i.expect.fallback.reactors.length,i.id);
+ for(const i of items.filter(i=>i.expect.handling==='fallback')){assert.ok(i.expect.fallback.reactors.length,i.id);assert.equal(i.expect.fallback.kind,'mark',i.id);}
+ assert.ok(items.every(i=>!i.expect.signature.some(s=>s.includes('offense:'))),'罪名不进签名');
 });
 
 test('校验报错指出文件与字段',()=>{
