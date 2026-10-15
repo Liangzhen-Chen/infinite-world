@@ -2748,5 +2748,85 @@
       "npc_ms_ll_panlei"
     ],
     "tenure": "磐家石窝归石窝共营，两名成年巨魔同窝；登记不认定个人产权。"
+  },
+  {
+    "id": "house_t162_1",
+    "settlement": "loc_ms_huixi",
+    "homeLocation": "bld_ms_hx_01",
+    "members": [
+      "npc_ms_hx_yiheng",
+      "npc_ms_hx_yixian",
+      "npc_ms_hx_yimo"
+    ],
+    "tenure": "同住共居，不认定个人产权；进入须成年住户当面许可。"
+  },
+  {
+    "id": "house_t162_2",
+    "settlement": "loc_ms_huixi",
+    "homeLocation": "bld_ms_hx_02",
+    "members": [
+      "npc_ms_hx_qiaosui",
+      "npc_ms_hx_qiaofu",
+      "npc_ms_hx_qiaoyou"
+    ],
+    "tenure": "同住共居，不认定个人产权；进入须成年住户当面许可。"
+  },
+  {
+    "id": "house_t162_3",
+    "settlement": "loc_ms_huixi",
+    "homeLocation": "bld_ms_hx_03",
+    "members": [
+      "npc_ms_hx_xianpu",
+      "npc_ms_hx_xianwen",
+      "npc_ms_hx_xianduan"
+    ],
+    "tenure": "同住共居，不认定个人产权；进入须成年住户当面许可。"
+  },
+  {
+    "id": "house_t162_4",
+    "settlement": "loc_ms_huixi",
+    "homeLocation": "bld_ms_hx_04",
+    "members": [
+      "npc_ms_hx_luchi",
+      "npc_ms_hx_luman",
+      "npc_ms_hx_luya"
+    ],
+    "tenure": "同住共居，不认定个人产权；进入须成年住户当面许可。"
+  },
+  {
+    "id": "house_t162_5",
+    "settlement": "loc_ms_huipeng",
+    "homeLocation": "bld_ms_gs_01",
+    "members": [
+      "npc_ms_gs_shenge",
+      "npc_ms_gs_shengli",
+      "npc_ms_gs_shengya",
+      "npc_ms_gs_sanzhi"
+    ],
+    "tenure": "同住共居，不认定个人产权；进入须成年住户当面许可。"
+  },
+  {
+    "id": "house_t162_6",
+    "settlement": "loc_ms_huipeng",
+    "homeLocation": "bld_ms_gs_02",
+    "members": [
+      "npc_ms_gs_zheqian",
+      "npc_ms_gs_sangou",
+      "npc_ms_gs_zhewang",
+      "npc_ms_gs_zheyou",
+      "npc_ms_gs_sanfu"
+    ],
+    "tenure": "同住共居，不认定个人产权；进入须成年住户当面许可。"
+  },
+  {
+    "id": "house_t162_7",
+    "settlement": "loc_ms_huipeng",
+    "homeLocation": "bld_ms_gs_03",
+    "members": [
+      "npc_ms_gs_zhenhe",
+      "npc_ms_gs_zhenbei",
+      "npc_ms_gs_zhenya"
+    ],
+    "tenure": "同住共居，不认定个人产权；进入须成年住户当面许可。"
   }
 ]

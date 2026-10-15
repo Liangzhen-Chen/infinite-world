@@ -23070,6 +23070,1183 @@
     "description": "季界亭是杉根老林西缘的一座木亭，亭柱上刻着入林的季节。秋冬守界木精在亭里给人发木牌，也在这里换东西；春夏亭里只收留言，不放人入林。这里不是联邑议事的地方。"
   },
   {
+    "id": "loc_ms_huixi",
+    "name": "回汐埠",
+    "aliases": [],
+    "parent": "loc_bs",
+    "scope": "loc_bs_weiting",
+    "coordinates": [
+      31.8,
+      5.5
+    ],
+    "terrain": "湿地",
+    "openHours": [
+      0,
+      1440
+    ],
+    "owner": null,
+    "purpose": "已立意的狐、鼬、獭、龟自愿共居的芦滩精怪之乡",
+    "rooms": [],
+    "inventory": {},
+    "mapHierarchy": [
+      {
+        "id": "known-continent",
+        "name": "已知大陆片区"
+      },
+      {
+        "id": "known-region",
+        "name": "已知地区片区"
+      },
+      {
+        "id": "known-county",
+        "name": "已知郡级片区"
+      },
+      {
+        "id": "loc_bs_weiting",
+        "name": "苇汀村"
+      }
+    ],
+    "monsterSociety": {
+      "leader": "boss_ms_huixi",
+      "neighbors": {
+        "loc_bs_weiting": "中立"
+      },
+      "stances": {
+        "player": "中立"
+      },
+      "meetingPlace": "site_ms_hx_council",
+      "motions": [
+        {
+          "id": "open_bank",
+          "name": "是否将空芦棚留给新来立意者"
+        },
+        {
+          "id": "reed_trade",
+          "name": "是否与苇汀共认芦界并按件换物",
+          "opens": "trade"
+        }
+      ],
+      "positions": [
+        {
+          "id": "receive",
+          "name": "接岸派",
+          "members": [
+            "npc_ms_hx_yiheng",
+            "npc_ms_hx_xianpu",
+            "npc_ms_hx_yixian"
+          ],
+          "claim": "给新来立意者留空棚，先问愿不愿留下，再谈怎样分担口粮。",
+          "stances": {
+            "open_bank": "approve",
+            "reed_trade": "approve"
+          },
+          "persuasion": 15
+        },
+        {
+          "id": "quiet",
+          "name": "静滩派",
+          "members": [
+            "npc_ms_hx_qiaosui",
+            "npc_ms_hx_luchi",
+            "npc_ms_hx_luman"
+          ],
+          "claim": "先认清旧有的芦界与粮份，新来的暂住棚外，免得一场汛水冲散存粮。",
+          "stances": {
+            "open_bank": "reject",
+            "reed_trade": "reject"
+          },
+          "persuasion": 15
+        }
+      ],
+      "supplies": [
+        {
+          "item": "item_herb",
+          "species": "monster_red_ear_fox",
+          "place": "site_ms_hx_dew",
+          "use": "露根圃照看的药草，经纤蒲本人库存交易取得，用于喂灵与借形"
+        },
+        {
+          "item": "item_fish",
+          "species": "monster_grey_otter",
+          "place": "site_ms_hx_landing",
+          "use": "河獭沿旧水道捕来的鲜鱼，只按手头库存交换"
+        },
+        {
+          "item": "item_ration",
+          "from": "loc_bs_weiting",
+          "place": "site_ms_hx_reed",
+          "use": "与苇汀换来的干粮，另在地方组织公账留接岸储备"
+        }
+      ]
+    },
+    "authoredFacts": {
+      "climate": "回水湾潮湿，汛时水位上涨",
+      "senses": [
+        "灰白水痕绕过棚脚",
+        "芦叶互擦",
+        "鱼鳞气混着湿草气"
+      ],
+      "entryRule": "公共岸路可行；私宅与议事棚须当面许可",
+      "noMechanics": "公共林地、窟道与营地只登记通行、作息与有限库存；不新增工作站、产量或收费服务"
+    },
+    "description": "回汐埠在苇汀下游雾滩外的回水湾，水岸与高芦台间架着低棚。这里住着已经立意的狐、鼬、獭、龟，水边留给善水的，干岸留给穴居的。居民仍保留本相，借形只是暂时换个样子。新来的先在认岸芦门招呼，不因会说话就能取走别家的粮。"
+  },
+  {
+    "id": "site_ms_hx_reed",
+    "name": "认岸芦门",
+    "aliases": [],
+    "parent": "loc_ms_huixi",
+    "scope": "loc_ms_huixi",
+    "coordinates": [
+      31.83,
+      5.5
+    ],
+    "terrain": "湿地",
+    "openHours": [
+      0,
+      1440
+    ],
+    "owner": null,
+    "purpose": "公共设施",
+    "rooms": [],
+    "inventory": {},
+    "authoredFacts": {
+      "climate": "干岸略高，雨后仍湿",
+      "senses": [
+        "弯芦上结着旧水草",
+        "芦席卷在门侧",
+        "脚印由泥滩转上干土"
+      ],
+      "entryRule": "公共入口，鲜鱼只能向漪衡交易",
+      "noMechanics": "只登记通行与作息；不新增工作站、产量或收费服务"
+    },
+    "description": "认岸芦门是回汐埠干岸上的两束弯芦，来客把脚上的淤泥蹭去再进。漪衡白天在这里接待外来者，用手边的鲜鱼换盐和干粮。他先问来者想往哪去，再解释哪些是公共岸路。门旁留着空棚的旧芦席，是否给新来者铺开，仍要在议汐棚说定。",
+    "access": {
+      "mode": "public"
+    }
+  },
+  {
+    "id": "site_ms_hx_dew",
+    "name": "露根圃",
+    "aliases": [],
+    "parent": "loc_ms_huixi",
+    "scope": "loc_ms_huixi",
+    "coordinates": [
+      31.826,
+      5.516
+    ],
+    "terrain": "湿地",
+    "openHours": [
+      0,
+      1440
+    ],
+    "owner": null,
+    "purpose": "公共设施",
+    "rooms": [],
+    "inventory": {},
+    "authoredFacts": {
+      "climate": "背风湿润，午后有浅光",
+      "senses": [
+        "草根挂着水珠",
+        "碎芦茎铺在步道",
+        "狐尾扫过叶面"
+      ],
+      "entryRule": "公共小径可行，取草须交易或获许可",
+      "noMechanics": "只登记通行与作息；不新增工作站、产量或收费服务"
+    },
+    "description": "露根圃夹在高芦台与回水湾之间，纤蒲沿湿土种着药草，把能踩的缝隙用碎芦茎标出来。白天她在这里换出自己拣好的药草。听息的野兽留在圃边也会受灵地滋养，觉醒需要逐日积累。圃中的草并非无主，想带走仍须先问她。",
+    "access": {
+      "mode": "public"
+    }
+  },
+  {
+    "id": "site_ms_hx_landing",
+    "name": "回汐拆鱼石",
+    "aliases": [],
+    "parent": "loc_ms_huixi",
+    "scope": "loc_ms_huixi",
+    "coordinates": [
+      31.814,
+      5.527
+    ],
+    "terrain": "湿地",
+    "openHours": [
+      0,
+      1440
+    ],
+    "owner": null,
+    "purpose": "公共设施",
+    "rooms": [],
+    "inventory": {},
+    "authoredFacts": {
+      "climate": "水边湿滑，风从湾口来",
+      "senses": [
+        "平石上留着鱼鳞",
+        "浅水拍着石边",
+        "湿毛气很重"
+      ],
+      "entryRule": "公共岸地，鱼货归各自持有人",
+      "noMechanics": "只登记通行与作息；不新增工作站、产量或收费服务"
+    },
+    "description": "回汐拆鱼石贴着回水湾，平石的边沿被獭爪磨得发亮。漪衡捕回的鱼先在这里清理，再带到认岸芦门交换。漪弦照看石边的杂草，不许鱼骨留在进出水道里。来访者能在石旁歇脚，湿滑的石心通常留给搬鱼的居民。",
+    "access": {
+      "mode": "public"
+    }
+  },
+  {
+    "id": "site_ms_hx_listen",
+    "name": "听潮矮台",
+    "aliases": [],
+    "parent": "loc_ms_huixi",
+    "scope": "loc_ms_huixi",
+    "coordinates": [
+      31.798,
+      5.53
+    ],
+    "terrain": "湿地",
+    "openHours": [
+      0,
+      1440
+    ],
+    "owner": null,
+    "purpose": "公共设施",
+    "rooms": [],
+    "inventory": {},
+    "authoredFacts": {
+      "climate": "芦墙挡风，木板常潮",
+      "senses": [
+        "旧板有浅浅爪印",
+        "龟甲擦过草席",
+        "湾水的声响断续传来"
+      ],
+      "entryRule": "公共矮台，教导须双方同意",
+      "noMechanics": "只登记通行与作息；不新增工作站、产量或收费服务"
+    },
+    "description": "听潮矮台是芦台边的一块旧木板，敲穗白天伏在板后，慢慢听来客把话说完。新立意者在这里练习把愿与不愿说清，年长者会等它们停顿。这里没有一敲即会的捷径，也不颁主持仪式的凭据；要做点化，仍须向白石镇已登记的师承求教。",
+    "access": {
+      "mode": "public"
+    }
+  },
+  {
+    "id": "site_ms_hx_return",
+    "name": "归汐高岸",
+    "aliases": [],
+    "parent": "loc_ms_huixi",
+    "scope": "loc_ms_huixi",
+    "coordinates": [
+      31.782,
+      5.524
+    ],
+    "terrain": "湿地",
+    "openHours": [
+      0,
+      1440
+    ],
+    "owner": null,
+    "purpose": "公共设施",
+    "rooms": [],
+    "inventory": {},
+    "authoredFacts": {
+      "climate": "高岸较干，风大",
+      "senses": [
+        "芦茎向湾口倾斜",
+        "旧席下露出细土",
+        "芦叶拍打席面"
+      ],
+      "entryRule": "公共纪念岸，不能掘土取物",
+      "noMechanics": "只登记通行与作息；不新增工作站、产量或收费服务"
+    },
+    "description": "归汐高岸在回汐埠不易被小汛淹到的岸头。亡者依本相埋在干土里，旧芦席压在土上，亲近者沿席边插芦茎。敲穗记得每一处旧土的位置。居民忌讳把亡者的本相拿来取笑，也不以借形后的容貌替换埋葬时的称呼。",
+    "access": {
+      "mode": "public"
+    }
+  },
+  {
+    "id": "site_ms_hx_water",
+    "name": "回汐水窝岸",
+    "aliases": [],
+    "parent": "loc_ms_huixi",
+    "scope": "loc_ms_huixi",
+    "coordinates": [
+      31.772,
+      5.511
+    ],
+    "terrain": "湿地",
+    "openHours": [
+      0,
+      1440
+    ],
+    "owner": null,
+    "purpose": "住区",
+    "rooms": [],
+    "inventory": {},
+    "authoredFacts": {
+      "climate": "近水潮湿，土台背风",
+      "senses": [
+        "窝口挂着旧苇帘",
+        "龟爪拖出细沟",
+        "水下有断续的气泡"
+      ],
+      "entryRule": "公共岸路可行，各家私窝须成年住户许可",
+      "noMechanics": "只登记通行与作息；不新增工作站、产量或收费服务"
+    },
+    "description": "回汐水窝岸沿浅水弯进去，河獭住在有水口的窝棚，丘龟住在稍高的晒甲土台。漪衡一家与敲穗一家在这里各有私窝。公共岸路绕过窝口，不直穿睡处。夜里水声盖住脚步，来客要在门前出声，不能凭一张通行约钻进窝里。",
+    "access": {
+      "mode": "public"
+    }
+  },
+  {
+    "id": "site_ms_hx_land",
+    "name": "回汐干芦台",
+    "aliases": [],
+    "parent": "loc_ms_huixi",
+    "scope": "loc_ms_huixi",
+    "coordinates": [
+      31.77,
+      5.495
+    ],
+    "terrain": "湿地",
+    "openHours": [
+      0,
+      1440
+    ],
+    "owner": null,
+    "purpose": "住区",
+    "rooms": [],
+    "inventory": {},
+    "authoredFacts": {
+      "climate": "芦根遮阴，土缝干爽",
+      "senses": [
+        "赤耳尖从芦后露出",
+        "须尖沾着细砂",
+        "窝口铺着旧干草"
+      ],
+      "entryRule": "公共台地可行，睡窝另须住户许可",
+      "noMechanics": "只登记通行与作息；不新增工作站、产量或收费服务"
+    },
+    "description": "回汐干芦台比水窝岸高，狐与穴鼬把睡窝藏在芦根间。纤蒲一家住草窝，芦迟一家住石窝，窝外空地相通。幼体在成年居民看得到的地方练认芦记，不替外客跑腿。夜里穴鼬出窝，白天狐窝旁只留轻轻的草叶声。",
+    "access": {
+      "mode": "public"
+    }
+  },
+  {
+    "id": "site_ms_hx_council",
+    "name": "议汐棚",
+    "aliases": [],
+    "parent": "loc_ms_huixi",
+    "scope": "loc_ms_huixi",
+    "coordinates": [
+      31.777,
+      5.48
+    ],
+    "terrain": "湿地",
+    "openHours": [
+      0,
+      1440
+    ],
+    "owner": null,
+    "purpose": "议事区",
+    "rooms": [],
+    "inventory": {},
+    "authoredFacts": {
+      "climate": "棚内背风，地上垫干芦",
+      "senses": [
+        "成束芦记放在地上",
+        "矮顶透着晚光",
+        "说话前先有一阵沉默"
+      ],
+      "entryRule": "议事区，须敲穗当面许可",
+      "noMechanics": "只登记通行与作息；不新增工作站、产量或收费服务"
+    },
+    "description": "议汐棚的矮顶用旧芦席搭成，傍晚漪衡、敲穗、纤蒲和芦迟在这里谈空棚与芦界。接岸派想给新来立意者留住处，静滩派担心存粮和汛水。敲穗听完双方再将芦记放稳，外客想进棚须先在听潮矮台向她取得当面许可。",
+    "access": {
+      "mode": "council",
+      "requiresConsent": true,
+      "authority": "npc_ms_hx_qiaosui"
+    }
+  },
+  {
+    "id": "site_ms_hx_store",
+    "name": "回汐存芦棚",
+    "aliases": [],
+    "parent": "loc_ms_huixi",
+    "scope": "loc_ms_huixi",
+    "coordinates": [
+      31.791,
+      5.471
+    ],
+    "terrain": "湿地",
+    "openHours": [
+      0,
+      1440
+    ],
+    "owner": "npc_ms_hx_yiheng",
+    "purpose": "存放处",
+    "rooms": [],
+    "inventory": {},
+    "authoredFacts": {
+      "climate": "高脚席架较干",
+      "senses": [
+        "席包边沿扎着芦结",
+        "棚壁留着旧水线",
+        "卷席压在空架上"
+      ],
+      "entryRule": "存粮有主，须看管者许可",
+      "noMechanics": "只登记通行与作息；不新增工作站、产量或收费服务"
+    },
+    "description": "回汐存芦棚靠着认岸芦门，芦席包住换来的干粮。漪衡看管棚里的储备，棚壁留着空棚去留的芦记。接岸派与静滩派都在这里核过粮份，尚未议定以前，空席仍卷着。绕棚可走公共岸路，进棚取粮要先问漪衡。",
+    "site": {
+      "owner": "npc_ms_hx_yiheng",
+      "manager": "npc_ms_hx_yiheng",
+      "occupants": [
+        "npc_ms_hx_yiheng"
+      ],
+      "entryMechanisms": [],
+      "mechanisms": [],
+      "resources": [],
+      "clues": [],
+      "truths": [],
+      "infiltration": {
+        "minutes": 30,
+        "check": {
+          "attribute": "敏捷",
+          "difficulty": 15
+        },
+        "damage": 3
+      }
+    }
+  },
+  {
+    "id": "loc_ms_huipeng",
+    "name": "灰棚集",
+    "aliases": [],
+    "parent": "loc_bs",
+    "scope": "loc_bs_sangban",
+    "coordinates": [
+      22,
+      4.2
+    ],
+    "terrain": "平原",
+    "openHours": [
+      0,
+      1440
+    ],
+    "owner": null,
+    "purpose": "灰窟哥布林与裂牙兽人共同经营的地上跨族集市",
+    "rooms": [],
+    "inventory": {},
+    "mapHierarchy": [
+      {
+        "id": "known-continent",
+        "name": "已知大陆片区"
+      },
+      {
+        "id": "known-region",
+        "name": "已知地区片区"
+      },
+      {
+        "id": "known-county",
+        "name": "已知郡级片区"
+      },
+      {
+        "id": "loc_bs_sangban",
+        "name": "桑坂村"
+      }
+    ],
+    "monsterSociety": {
+      "leader": "boss_ms_huipeng",
+      "neighbors": {
+        "loc_bs_sangban": "中立"
+      },
+      "stances": {
+        "player": "中立"
+      },
+      "meetingPlace": "site_ms_gs_council",
+      "motions": [
+        {
+          "id": "open_scale",
+          "name": "是否将公秤与换签交各族轮值"
+        },
+        {
+          "id": "ore_trade",
+          "name": "是否按明签接裂炉矿货而不代收贡粮",
+          "opens": "trade"
+        }
+      ],
+      "positions": [
+        {
+          "id": "old_sign",
+          "name": "守签派",
+          "members": [
+            "npc_ms_gs_shenge",
+            "npc_ms_gs_zheqian",
+            "npc_ms_gs_shengli"
+          ],
+          "claim": "公秤继续由熟识绳签的哥布林掌管，矿货要先认清货主再进集。",
+          "stances": {
+            "open_scale": "reject",
+            "ore_trade": "approve"
+          },
+          "persuasion": 15
+        },
+        {
+          "id": "shared_scale",
+          "name": "共秤派",
+          "members": [
+            "npc_ms_gs_sangou",
+            "npc_ms_gs_zhenhe",
+            "npc_ms_gs_sanfu"
+          ],
+          "claim": "会认刻度的各族都可轮值公秤，每次交接把空秤交给下一位看。",
+          "stances": {
+            "open_scale": "approve",
+            "ore_trade": "approve"
+          },
+          "persuasion": 15
+        }
+      ],
+      "supplies": [
+        {
+          "item": "item_flax_cord",
+          "species": "monster_ash_cave_goblin",
+          "place": "site_ms_gs_repair",
+          "use": "哥布林修补的绳索，经绳额本人有限库存交易"
+        },
+        {
+          "item": "item_tool_handle",
+          "species": "monster_split_tusk_orc",
+          "place": "site_ms_gs_repair",
+          "use": "砧禾削出的木柄，经本人库存交易"
+        },
+        {
+          "item": "item_ration",
+          "from": "loc_bs_sangban",
+          "place": "site_ms_gs_gate",
+          "use": "桑坂换来的干粮，按货换粮，不以通路索贡"
+        }
+      ]
+    },
+    "authoredFacts": {
+      "climate": "平地多风，棚顶雨后转深灰",
+      "senses": [
+        "绳签拍在棚柱上",
+        "空秤轻轻摆动",
+        "修绳的麻屑散在地上"
+      ],
+      "entryRule": "公共集路可行，私棚与议签棚另须许可",
+      "noMechanics": "公共林地、窟道与营地只登记通行、作息与有限库存；不新增工作站、产量或收费服务"
+    },
+    "description": "灰棚集在桑坂园外路口向西的平地上，灰窟哥布林把棚顶涂上炉灰防潮，裂牙兽人把旧车停在外圈。这里是地上集市，白天看空秤、认绳签，再按各自库存换货。哥布林不按炭阶的共灶份额分货，每棚自己负担差错，公秤由谁轮值正闹着分歧。"
+  },
+  {
+    "id": "site_ms_gs_gate",
+    "name": "灰棚迎车口",
+    "aliases": [],
+    "parent": "loc_ms_huipeng",
+    "scope": "loc_ms_huipeng",
+    "coordinates": [
+      22.03,
+      4.2
+    ],
+    "terrain": "平原",
+    "openHours": [
+      0,
+      1440
+    ],
+    "owner": null,
+    "purpose": "公共设施",
+    "rooms": [],
+    "inventory": {},
+    "authoredFacts": {
+      "climate": "无遮拦，风直穿集口",
+      "senses": [
+        "麻绳铺在旧木板上",
+        "车辙积着浅灰",
+        "棚帘下端磨得发毛"
+      ],
+      "entryRule": "公共入口，贸易只动卖方实际库存",
+      "noMechanics": "只登记通行与作息；不新增工作站、产量或收费服务"
+    },
+    "description": "灰棚迎车口在桑坂来路上，地面压着旧车辙。绳额白天在棚口换出自己修好的绳索，先把整根绳铺给客人看。过路不交贡粮，来换矿货的也要先说清货主。傍晚货主收拢棚帘，各家的货跟着持有人收回，不在路口留下任取的公货。",
+    "access": {
+      "mode": "public"
+    }
+  },
+  {
+    "id": "site_ms_gs_scale",
+    "name": "灰棚公秤台",
+    "aliases": [],
+    "parent": "loc_ms_huipeng",
+    "scope": "loc_ms_huipeng",
+    "coordinates": [
+      22.026,
+      4.216
+    ],
+    "terrain": "平原",
+    "openHours": [
+      0,
+      1440
+    ],
+    "owner": null,
+    "purpose": "公共设施",
+    "rooms": [],
+    "inventory": {},
+    "authoredFacts": {
+      "climate": "台面干燥，侧面进风",
+      "senses": [
+        "秤盘底有磨亮的圈",
+        "绳签的毛头朝同一边",
+        "折签把空盘抬给人看"
+      ],
+      "entryRule": "公共设施，公秤不代替当事人同意",
+      "noMechanics": "只登记通行与作息；不新增工作站、产量或收费服务"
+    },
+    "description": "灰棚公秤台搭在集路中央，空秤先亮给双方看，货放下以后才递绳签。折签白天守着旧签，怕不会读签的外族误认货主；散钩则想让各族轮值。秤台是公共地方，这些习惯不另收一份称量钱，也不能替任何人承诺货的成色。",
+    "access": {
+      "mode": "public"
+    }
+  },
+  {
+    "id": "site_ms_gs_repair",
+    "name": "灰棚补具檐",
+    "aliases": [],
+    "parent": "loc_ms_huipeng",
+    "scope": "loc_ms_huipeng",
+    "coordinates": [
+      22.014,
+      4.227
+    ],
+    "terrain": "平原",
+    "openHours": [
+      0,
+      1440
+    ],
+    "owner": null,
+    "purpose": "公共设施",
+    "rooms": [],
+    "inventory": {},
+    "authoredFacts": {
+      "climate": "檐下避雨，午后有侧光",
+      "senses": [
+        "木屑落在麻屑上",
+        "旧柄靠着棚柱",
+        "刀背敲木的声音很闷"
+      ],
+      "entryRule": "公共檐地，工具与成品有主",
+      "noMechanics": "只登记通行与作息；不新增工作站、产量或收费服务"
+    },
+    "description": "灰棚补具檐下堆着修绳与削柄留下的碎料。兽人工匠砧禾白天在这里削小工具木柄，散钩把破绳拆开重新认结。砧禾只换自己库存里的成品，借用工具要另问工具主人。檐下的断签装在一只旧篓里，谁都看得到，谁也不能随手改成自己的货签。",
+    "access": {
+      "mode": "public"
+    }
+  },
+  {
+    "id": "site_ms_gs_kitchen",
+    "name": "灰棚候饭灶",
+    "aliases": [],
+    "parent": "loc_ms_huipeng",
+    "scope": "loc_ms_huipeng",
+    "coordinates": [
+      21.998,
+      4.23
+    ],
+    "terrain": "平原",
+    "openHours": [
+      0,
+      1440
+    ],
+    "owner": null,
+    "purpose": "公共设施",
+    "rooms": [],
+    "inventory": {},
+    "authoredFacts": {
+      "climate": "灶边温暖，棚外多风",
+      "senses": [
+        "锅沿凝着水汽",
+        "粮袋各系不同绳头",
+        "碗勺碰在一起"
+      ],
+      "entryRule": "公共歇脚处，食物须本人同意才能取",
+      "noMechanics": "只登记通行与作息；不新增工作站、产量或收费服务"
+    },
+    "description": "灰棚候饭灶供收摊后歇脚，锅边摆着各棚自己带来的食物。兽人和哥布林各认自己的袋子，愿意分食才推到旁人面前。幼体由同棚成年者照看，不替陌生货主看摊。灶旁谈起炭阶的共灶分份，有人羡慕安稳，有人说自己认货签更踏实。",
+    "access": {
+      "mode": "public"
+    }
+  },
+  {
+    "id": "site_ms_gs_return",
+    "name": "灰棚归签坡",
+    "aliases": [],
+    "parent": "loc_ms_huipeng",
+    "scope": "loc_ms_huipeng",
+    "coordinates": [
+      21.982,
+      4.224
+    ],
+    "terrain": "平原",
+    "openHours": [
+      0,
+      1440
+    ],
+    "owner": null,
+    "purpose": "公共设施",
+    "rooms": [],
+    "inventory": {},
+    "authoredFacts": {
+      "climate": "坡地干燥，风吹草低",
+      "senses": [
+        "细绳系在枝头",
+        "旧签半埋土里",
+        "草根间有淡灰"
+      ],
+      "entryRule": "公共纪念坡，不能挖签冒认债务",
+      "noMechanics": "只登记通行与作息；不新增工作站、产量或收费服务"
+    },
+    "description": "灰棚归签坡在车棚外的缓坡，亡者安葬后，亲近者把他的旧货签拆开，绳留给家人，签埋入土中。兽人也可沿用自己的送葬话，集上不强改。这里忌把亡者的签挂回秤台冒充旧债，折签有时来辨认被风吹出的碎木片。",
+    "access": {
+      "mode": "public"
+    }
+  },
+  {
+    "id": "site_ms_gs_tents",
+    "name": "灰棚矮棚排",
+    "aliases": [],
+    "parent": "loc_ms_huipeng",
+    "scope": "loc_ms_huipeng",
+    "coordinates": [
+      21.972,
+      4.211
+    ],
+    "terrain": "平原",
+    "openHours": [
+      0,
+      1440
+    ],
+    "owner": null,
+    "purpose": "住区",
+    "rooms": [],
+    "inventory": {},
+    "authoredFacts": {
+      "climate": "低棚挡风，雨后有灰味",
+      "senses": [
+        "门帘只到来客膝头",
+        "绳结挂在低处",
+        "过道被小车磨平"
+      ],
+      "entryRule": "公共过道可行，私棚须成年住户许可",
+      "noMechanics": "只登记通行与作息；不新增工作站、产量或收费服务"
+    },
+    "description": "灰棚矮棚排是哥布林住的地方，低棚之间留着能推小车的过道。绳额一家、折签一家和散钩住在这里，睡棚与货摊分开。孩子在棚帘内学认自己的绳结，成年者收摊才带他们出来。过道可走，门帘后的睡处要先问住户。",
+    "access": {
+      "mode": "public"
+    }
+  },
+  {
+    "id": "site_ms_gs_carts",
+    "name": "灰棚卸车圈",
+    "aliases": [],
+    "parent": "loc_ms_huipeng",
+    "scope": "loc_ms_huipeng",
+    "coordinates": [
+      21.97,
+      4.195
+    ],
+    "terrain": "平原",
+    "openHours": [
+      0,
+      1440
+    ],
+    "owner": null,
+    "purpose": "住区",
+    "rooms": [],
+    "inventory": {},
+    "authoredFacts": {
+      "climate": "外圈风大，车底避雨",
+      "senses": [
+        "旧轮辐缠着防滑绳",
+        "长柄靠在车底",
+        "草席压着车棚边缘"
+      ],
+      "entryRule": "公共圈外路可行，车棚内部须住户许可",
+      "noMechanics": "只登记通行与作息；不新增工作站、产量或收费服务"
+    },
+    "description": "灰棚卸车圈围着停用的旧车，砧禾一家住在加高的车棚里。车轮旁留着哥布林搬货时站脚的位置，兽人收回长柄工具才让小车经过。这里不靠体格大小分货，谁修好的柄归谁持有。外客能穿过圈外集路，睡棚与工具箱仍归住户照管。",
+    "access": {
+      "mode": "public"
+    }
+  },
+  {
+    "id": "site_ms_gs_council",
+    "name": "灰棚议签棚",
+    "aliases": [],
+    "parent": "loc_ms_huipeng",
+    "scope": "loc_ms_huipeng",
+    "coordinates": [
+      21.977,
+      4.18
+    ],
+    "terrain": "平原",
+    "openHours": [
+      0,
+      1440
+    ],
+    "owner": null,
+    "purpose": "议事区",
+    "rooms": [],
+    "inventory": {},
+    "authoredFacts": {
+      "climate": "高棚通风，地面铺碎木",
+      "senses": [
+        "断签摆在席边",
+        "长短凳子围成一圈",
+        "散钩说话时拨弄绳头"
+      ],
+      "entryRule": "议事区，须折签当面许可",
+      "noMechanics": "只登记通行与作息；不新增工作站、产量或收费服务"
+    },
+    "description": "灰棚议签棚比别的棚高，傍晚绳额、折签、砧禾和散钩能坐在一起看签。争论的是公秤能否轮值，以及裂炉矿货怎样按明签进入。折签负责看门，外客进棚要先问她。公账备下的修绳与木柄只有议定后才分，不因喊得响就先给一方。",
+    "access": {
+      "mode": "council",
+      "requiresConsent": true,
+      "authority": "npc_ms_gs_zheqian"
+    }
+  },
+  {
+    "id": "site_ms_gs_store",
+    "name": "灰棚公货柜",
+    "aliases": [],
+    "parent": "loc_ms_huipeng",
+    "scope": "loc_ms_huipeng",
+    "coordinates": [
+      21.991,
+      4.171
+    ],
+    "terrain": "平原",
+    "openHours": [
+      0,
+      1440
+    ],
+    "owner": "npc_ms_gs_shenge",
+    "purpose": "存放处",
+    "rooms": [],
+    "inventory": {},
+    "authoredFacts": {
+      "climate": "棚内干燥，灰顶挡雨",
+      "senses": [
+        "柜门绳结收得紧",
+        "断签压在木片下",
+        "柜脚垫着平石"
+      ],
+      "entryRule": "公货有看管者，取货须许可",
+      "noMechanics": "只登记通行与作息；不新增工作站、产量或收费服务"
+    },
+    "description": "灰棚公货柜设在迎车口内侧，绳额保管议签棚留下的修绳与木柄储备。柜门的绳结完整，断下来的旧签收在旁边。守签派与共秤派尚未议定轮值以前，柜里的货不提前分给任何一棚。柜外是公共集路，打开柜门要先问绳额。",
+    "site": {
+      "owner": "npc_ms_gs_shenge",
+      "manager": "npc_ms_gs_shenge",
+      "occupants": [
+        "npc_ms_gs_shenge"
+      ],
+      "entryMechanisms": [],
+      "mechanisms": [],
+      "resources": [],
+      "clues": [],
+      "truths": [],
+      "infiltration": {
+        "minutes": 30,
+        "check": {
+          "attribute": "敏捷",
+          "difficulty": 15
+        },
+        "damage": 3
+      }
+    }
+  },
+  {
+    "id": "bld_ms_hx_01",
+    "name": "漪家水窝",
+    "aliases": [],
+    "parent": "site_ms_hx_water",
+    "scope": "loc_ms_huixi",
+    "coordinates": [
+      31.807,
+      5.471
+    ],
+    "terrain": "湿地",
+    "openHours": [
+      0,
+      1440
+    ],
+    "owner": null,
+    "purpose": "私宅",
+    "rooms": [],
+    "inventory": {},
+    "authoredFacts": {
+      "climate": "席内背风，雨后要晾晒",
+      "senses": [
+        "旧席隔开睡处",
+        "门边留着脚印",
+        "草叶在门口轻响"
+      ],
+      "entryRule": "私宅，须成年住户当面许可",
+      "noMechanics": "只登记通行与作息；不新增工作站、产量或收费服务"
+    },
+    "description": "漪家水窝在回汐埠的芦根间，住着漪衡、漪弦、漪沫。门前的过道留给来往的人，睡处用旧席隔开，换下的席子靠在里侧慢慢晾干。同住的成年者照看幼体，也各自认清带回来的东西。来客可以在门前招呼，进屋仍须成年住户当面许可。",
+    "access": {
+      "mode": "private",
+      "requiresConsent": true,
+      "residents": [
+        "npc_ms_hx_yiheng",
+        "npc_ms_hx_yixian",
+        "npc_ms_hx_yimo"
+      ]
+    }
+  },
+  {
+    "id": "bld_ms_hx_02",
+    "name": "敲家甲窝",
+    "aliases": [],
+    "parent": "site_ms_hx_water",
+    "scope": "loc_ms_huixi",
+    "coordinates": [
+      31.821,
+      5.479
+    ],
+    "terrain": "湿地",
+    "openHours": [
+      0,
+      1440
+    ],
+    "owner": null,
+    "purpose": "私宅",
+    "rooms": [],
+    "inventory": {},
+    "authoredFacts": {
+      "climate": "席内背风，雨后要晾晒",
+      "senses": [
+        "旧席隔开睡处",
+        "门边留着脚印",
+        "草叶在门口轻响"
+      ],
+      "entryRule": "私宅，须成年住户当面许可",
+      "noMechanics": "只登记通行与作息；不新增工作站、产量或收费服务"
+    },
+    "description": "敲家甲窝在回汐埠的芦根间，住着敲穗、敲伏、敲幼。门前的过道留给来往的人，睡处用旧席隔开，换下的席子靠在里侧慢慢晾干。同住的成年者照看幼体，也各自认清带回来的东西。来客可以在门前招呼，进屋仍须成年住户当面许可。",
+    "access": {
+      "mode": "private",
+      "requiresConsent": true,
+      "residents": [
+        "npc_ms_hx_qiaosui",
+        "npc_ms_hx_qiaofu",
+        "npc_ms_hx_qiaoyou"
+      ]
+    }
+  },
+  {
+    "id": "bld_ms_hx_03",
+    "name": "纤家草窝",
+    "aliases": [],
+    "parent": "site_ms_hx_land",
+    "scope": "loc_ms_huixi",
+    "coordinates": [
+      31.829,
+      5.493
+    ],
+    "terrain": "湿地",
+    "openHours": [
+      0,
+      1440
+    ],
+    "owner": null,
+    "purpose": "私宅",
+    "rooms": [],
+    "inventory": {},
+    "authoredFacts": {
+      "climate": "席内背风，雨后要晾晒",
+      "senses": [
+        "旧席隔开睡处",
+        "门边留着脚印",
+        "草叶在门口轻响"
+      ],
+      "entryRule": "私宅，须成年住户当面许可",
+      "noMechanics": "只登记通行与作息；不新增工作站、产量或收费服务"
+    },
+    "description": "纤家草窝在回汐埠的芦根间，住着纤蒲、纤纹、纤短。门前的过道留给来往的人，睡处用旧席隔开，换下的席子靠在里侧慢慢晾干。同住的成年者照看幼体，也各自认清带回来的东西。来客可以在门前招呼，进屋仍须成年住户当面许可。",
+    "access": {
+      "mode": "private",
+      "requiresConsent": true,
+      "residents": [
+        "npc_ms_hx_xianpu",
+        "npc_ms_hx_xianwen",
+        "npc_ms_hx_xianduan"
+      ]
+    }
+  },
+  {
+    "id": "bld_ms_hx_04",
+    "name": "芦家石窝",
+    "aliases": [],
+    "parent": "site_ms_hx_land",
+    "scope": "loc_ms_huixi",
+    "coordinates": [
+      31.829,
+      5.509
+    ],
+    "terrain": "湿地",
+    "openHours": [
+      0,
+      1440
+    ],
+    "owner": null,
+    "purpose": "私宅",
+    "rooms": [],
+    "inventory": {},
+    "authoredFacts": {
+      "climate": "席内背风，雨后要晾晒",
+      "senses": [
+        "旧席隔开睡处",
+        "门边留着脚印",
+        "草叶在门口轻响"
+      ],
+      "entryRule": "私宅，须成年住户当面许可",
+      "noMechanics": "只登记通行与作息；不新增工作站、产量或收费服务"
+    },
+    "description": "芦家石窝在回汐埠的芦根间，住着芦迟、芦慢、芦芽。门前的过道留给来往的人，睡处用旧席隔开，换下的席子靠在里侧慢慢晾干。同住的成年者照看幼体，也各自认清带回来的东西。来客可以在门前招呼，进屋仍须成年住户当面许可。",
+    "access": {
+      "mode": "private",
+      "requiresConsent": true,
+      "residents": [
+        "npc_ms_hx_luchi",
+        "npc_ms_hx_luman",
+        "npc_ms_hx_luya"
+      ]
+    }
+  },
+  {
+    "id": "bld_ms_gs_01",
+    "name": "绳家矮棚",
+    "aliases": [],
+    "parent": "site_ms_gs_tents",
+    "scope": "loc_ms_huipeng",
+    "coordinates": [
+      22.007,
+      4.171
+    ],
+    "terrain": "平原",
+    "openHours": [
+      0,
+      1440
+    ],
+    "owner": null,
+    "purpose": "私宅",
+    "rooms": [],
+    "inventory": {},
+    "authoredFacts": {
+      "climate": "席内背风，雨后要晾晒",
+      "senses": [
+        "旧席隔开睡处",
+        "门边留着脚印",
+        "草叶在门口轻响"
+      ],
+      "entryRule": "私宅，须成年住户当面许可",
+      "noMechanics": "只登记通行与作息；不新增工作站、产量或收费服务"
+    },
+    "description": "绳家矮棚在灰棚集的睡棚一侧，住着绳额、绳砾、绳芽、散枝。门前的过道留给来往的人，睡处用旧席隔开，换下的席子靠在里侧慢慢晾干。同住的成年者照看幼体，也各自认清带回来的东西。来客可以在门前招呼，进屋仍须成年住户当面许可。",
+    "access": {
+      "mode": "private",
+      "requiresConsent": true,
+      "residents": [
+        "npc_ms_gs_shenge",
+        "npc_ms_gs_shengli",
+        "npc_ms_gs_shengya",
+        "npc_ms_gs_sanzhi"
+      ]
+    }
+  },
+  {
+    "id": "bld_ms_gs_02",
+    "name": "折家矮棚",
+    "aliases": [],
+    "parent": "site_ms_gs_tents",
+    "scope": "loc_ms_huipeng",
+    "coordinates": [
+      22.021,
+      4.179
+    ],
+    "terrain": "平原",
+    "openHours": [
+      0,
+      1440
+    ],
+    "owner": null,
+    "purpose": "私宅",
+    "rooms": [],
+    "inventory": {},
+    "authoredFacts": {
+      "climate": "席内背风，雨后要晾晒",
+      "senses": [
+        "旧席隔开睡处",
+        "门边留着脚印",
+        "草叶在门口轻响"
+      ],
+      "entryRule": "私宅，须成年住户当面许可",
+      "noMechanics": "只登记通行与作息；不新增工作站、产量或收费服务"
+    },
+    "description": "折家矮棚在灰棚集的睡棚一侧，住着折签、散钩、折网、折幼、散缚。门前的过道留给来往的人，睡处用旧席隔开，换下的席子靠在里侧慢慢晾干。同住的成年者照看幼体，也各自认清带回来的东西。来客可以在门前招呼，进屋仍须成年住户当面许可。",
+    "access": {
+      "mode": "private",
+      "requiresConsent": true,
+      "residents": [
+        "npc_ms_gs_zheqian",
+        "npc_ms_gs_sangou",
+        "npc_ms_gs_zhewang",
+        "npc_ms_gs_zheyou",
+        "npc_ms_gs_sanfu"
+      ]
+    }
+  },
+  {
+    "id": "bld_ms_gs_03",
+    "name": "砧家车棚",
+    "aliases": [],
+    "parent": "site_ms_gs_carts",
+    "scope": "loc_ms_huipeng",
+    "coordinates": [
+      22.029,
+      4.193
+    ],
+    "terrain": "平原",
+    "openHours": [
+      0,
+      1440
+    ],
+    "owner": null,
+    "purpose": "私宅",
+    "rooms": [],
+    "inventory": {},
+    "authoredFacts": {
+      "climate": "席内背风，雨后要晾晒",
+      "senses": [
+        "旧席隔开睡处",
+        "门边留着脚印",
+        "草叶在门口轻响"
+      ],
+      "entryRule": "私宅，须成年住户当面许可",
+      "noMechanics": "只登记通行与作息；不新增工作站、产量或收费服务"
+    },
+    "description": "砧家车棚在灰棚集的睡棚一侧，住着砧禾、砧背、砧芽。门前的过道留给来往的人，睡处用旧席隔开，换下的席子靠在里侧慢慢晾干。同住的成年者照看幼体，也各自认清带回来的东西。来客可以在门前招呼，进屋仍须成年住户当面许可。",
+    "access": {
+      "mode": "private",
+      "requiresConsent": true,
+      "residents": [
+        "npc_ms_gs_zhenhe",
+        "npc_ms_gs_zhenbei",
+        "npc_ms_gs_zhenya"
+      ]
+    }
+  },
+  {
     "id": "site_w5_tj_old_draft",
     "name": "塌风道",
     "aliases": [],

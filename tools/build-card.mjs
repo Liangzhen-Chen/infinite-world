@@ -8,7 +8,8 @@ import {generationSettings,generationPreset} from '../extension/generation.mjs';
 
 const root=path.resolve(import.meta.dirname,'..');
 function reference(world){
-    const r=world.rules,others=world.locations.filter(row=>row.id!=='loc_hw'&&row.scope!=='loc_hw'),homes=others.filter(row=>/户居处$/.test(row.name));
+    const societies=new Set(world.locations.filter(row=>row.monsterSociety).map(row=>row.id));
+    const r=world.rules,others=world.locations.filter(row=>row.id!=='loc_hw'&&row.scope!=='loc_hw'&&!societies.has(row.scope)),homes=others.filter(row=>/户居处$/.test(row.name));
     return [
         `历法：${r.calendar.epoch}，每年${r.calendar.monthsPerYear}个月，每月${r.calendar.daysPerMonth}日；月份依次为${r.calendar.months.join('、')}。`,
         `币制：${r.currency.copperPerSilver}铜换1银，${r.currency.silverPerGold}银换1金。`,
@@ -18,7 +19,7 @@ function reference(world){
         `生活职业：${world.professions.filter(row=>row.kind==='life').map(row=>row.name).join('、')}。隐藏职业的取得条件不公开。`,
         `起始区域：${world.locations.filter(row=>row.id==='loc_hw'||row.scope==='loc_hw').map(row=>row.name).join('、')}。地点详情用world_catalog按名查询。`,
         // Private residences outside the start area are listed by count only; world_catalog location pages them by name.
-        `其他已登记地点：${others.filter(row=>!homes.includes(row)).map(row=>row.name).join('、')}；另有${homes.length}处“户主名+户居处”私宅。详细地理通过目录与检索查阅。`,
+        `其他已登记地点：${others.filter(row=>!homes.includes(row)).map(row=>row.name).join('、')}；另有${homes.length}处“户主名+户居处”私宅。聚居地内的住区与设施按目录查询。详细地理通过目录与检索查阅。`,
         `起始居民：${world.npcs.filter(row=>row.scope==='loc_hw').map(row=>`${row.name}，${row.occupation}`).join('；')}。`,
         `已登记文化：${(world.cultures??[]).map(row=>row.name).join('、')||'暂无'}。`,
         `已登记神祇：${(world.deities??[]).map(row=>row.name).join('、')||'暂无'}。具体习俗与传说须通过世界检索确认。`,

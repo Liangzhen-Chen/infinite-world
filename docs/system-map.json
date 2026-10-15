@@ -2,7 +2,7 @@
  "title": "无限原野系统地图",
  "card": "K9",
  "generatedFrom": {
-  "commit": "refs/heads/t117",
+  "commit": "refs/heads/t162",
   "method": "运行时导出（注册表、规则表、工具定义、效果表、立场传导表）+ 静态正则扫描（import 图、函数体标识符、state 分区与 records 前缀、rules/world 读取）。静态扫描是近似：经 engine.byId、helper 间接或动态拼接路径的访问不计入。"
  },
  "scanMethods": {
@@ -288,7 +288,7 @@
     "sim_environment",
     "sim_society"
    ],
-   "files": 108
+   "files": 109
   },
   {
    "id": "data_assets",
@@ -330,7 +330,7 @@
    "effects": [],
    "tools": [],
    "readBy": [],
-   "files": 34
+   "files": 35
   },
   {
    "id": "kernel_engine",
@@ -8558,7 +8558,7 @@
   },
   {
    "dir": "world/design",
-   "files": 108,
+   "files": 109,
    "keys": [],
    "readers": [
     "server-plugin/civic.mjs",
@@ -8586,6 +8586,7 @@
     "tools/m4-object-content.mjs",
     "tools/m5-authority.mjs",
     "tools/monster-society-2-content.mjs",
+    "tools/monster-society-3-content.mjs",
     "tools/monster-society-content.mjs",
     "tools/npc-depth-content.mjs",
     "tools/npc-depth.mjs",
@@ -8604,6 +8605,7 @@
     "tools/profile-time-advance.mjs",
     "tools/publish-m4-batch2.mjs",
     "tools/publish-monster-society-2.mjs",
+    "tools/publish-monster-society-3.mjs",
     "tools/publish-monster-society.mjs",
     "tools/publish-w1-villages.mjs",
     "tools/publish-w2-reuse.mjs",
@@ -8664,7 +8666,7 @@
   },
   {
    "dir": "world/drafts",
-   "files": 34,
+   "files": 35,
    "keys": [],
    "readers": [],
    "tools": [
@@ -8683,6 +8685,7 @@
     "tools/m4-object-content.mjs",
     "tools/m5-authority.mjs",
     "tools/monster-society-2-content.mjs",
+    "tools/monster-society-3-content.mjs",
     "tools/monster-society-content.mjs",
     "tools/npc-depth-l4.mjs",
     "tools/npc-depth-publication-sources.mjs",
@@ -8837,6 +8840,7 @@
     "tools/prepare-wildlife-catalog.mjs",
     "tools/publish-creatures-mixed.mjs",
     "tools/publish-monster-society-2.mjs",
+    "tools/publish-monster-society-3.mjs",
     "tools/publish-monster-society.mjs",
     "tools/publish-w1-hewan.mjs",
     "tools/publish-w1-villages.mjs",
@@ -8889,6 +8893,7 @@
    ],
    "tools": [
     "tools/publish-monster-society-2.mjs",
+    "tools/publish-monster-society-3.mjs",
     "tools/publish-monster-society.mjs",
     "tools/system-map.mjs",
     "tools/t142-merge.mjs",
@@ -9028,6 +9033,7 @@
     "tools/m4-object-content.mjs",
     "tools/m5-authority.mjs",
     "tools/monster-society-2-content.mjs",
+    "tools/monster-society-3-content.mjs",
     "tools/monster-society-content.mjs",
     "tools/playtests.mjs",
     "tools/prepare-agriculture-rules.mjs",
@@ -9043,6 +9049,7 @@
     "tools/publish-creatures-mixed.mjs",
     "tools/publish-m4-batch2.mjs",
     "tools/publish-monster-society-2.mjs",
+    "tools/publish-monster-society-3.mjs",
     "tools/publish-monster-society.mjs",
     "tools/publish-w1-villages.mjs",
     "tools/publish-w2-reuse.mjs",
@@ -9139,6 +9146,7 @@
     "tools/prepare-economy-supply.mjs",
     "tools/publish-m4-batch2.mjs",
     "tools/publish-monster-society-2.mjs",
+    "tools/publish-monster-society-3.mjs",
     "tools/publish-monster-society.mjs",
     "tools/publish-npc-depth.mjs",
     "tools/publish-w1-hewan.mjs",
@@ -10175,7 +10183,7 @@
    "id": "boss",
    "name": "首领 / 巢穴",
    "file": "world/meta/bosses.json",
-   "count": 40,
+   "count": 42,
    "required": [
     "id",
     "name",
@@ -10328,7 +10336,7 @@
    "id": "location",
    "name": "地点",
    "file": "world/geo/locations.json",
-   "count": 428,
+   "count": 455,
    "required": [
     "id",
     "name",
@@ -10659,7 +10667,7 @@
    "id": "route",
    "name": "路线",
    "file": "world/geo/routes.json",
-   "count": 432,
+   "count": 459,
    "required": [
     "id",
     "from",
@@ -10920,7 +10928,7 @@
    "id": "npc",
    "name": "人物（名册）",
    "file": "world/people/baseline.json",
-   "count": 267,
+   "count": 275,
    "required": [
     "age",
     "aliases",
@@ -11279,7 +11287,7 @@
    "id": "resident",
    "name": "居民（按需展开）",
    "file": "world/people/residents.json",
-   "count": 532,
+   "count": 548,
    "required": [
     "id",
     "name",
@@ -11782,7 +11790,7 @@
    "id": "faction",
    "name": "势力",
    "file": "world/lore/factions.json",
-   "count": 47,
+   "count": 49,
    "required": [
     "id",
     "name",
@@ -12131,6 +12139,64 @@
    "refs": [
     "biomes 由 traits 地形词派生（terrainBiomes），K8 据此生成栖地",
     "聚落骨架与人物完整档由后续按需生成"
+   ],
+   "extend": []
+  },
+  {
+   "id": "spirit-route",
+   "name": "个体成精路线",
+   "file": "world/meta/rules.json#wildlifeAwakening",
+   "count": null,
+   "required": [
+    "stages",
+    "spiritLands",
+    "spiritItems",
+    "mentor",
+    "borrowForm",
+    "society.homes"
+   ],
+   "hooks": [
+    {
+     "field": "四类积累 / 三阶段",
+     "means": "年岁经历、灵地、灵物、点化；听息、立意、借形",
+     "pattern": "wildlifeAwakening|awakeningTotal",
+     "modules": [
+      "server-plugin/engine.mjs",
+      "server-plugin/npc-intelligence.mjs",
+      "server-plugin/tribal-awakening.mjs",
+      "server-plugin/wildlife-awakening.mjs",
+      "server-plugin/wildlife-society.mjs",
+      "server-plugin/wildlife.mjs"
+     ],
+     "systems": [
+      "kernel_engine",
+      "sim_npc",
+      "sim_society",
+      "sim_wildlife"
+     ]
+    },
+    {
+     "field": "society.homes",
+     "means": "自愿定居与按季结社",
+     "pattern": "checkSpiritSocieties|society.homes",
+     "modules": [
+      "server-plugin/wildlife-society.mjs"
+     ],
+     "systems": [
+      "sim_wildlife"
+     ]
+    }
+   ],
+   "autoSystems": [
+    "kernel_engine",
+    "sim_npc",
+    "sim_society",
+    "sim_wildlife"
+   ],
+   "manual": [],
+   "refs": [
+    "T162 内容：world/design/monster-society-3.mjs；审核 tools/monster-society-3-content.mjs；发布 tools/publish-monster-society-3.mjs",
+    "族群觉醒复用 tribal-awakening.mjs，不由个体路线新建族群"
    ],
    "extend": []
   },

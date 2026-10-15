@@ -3839,6 +3839,10 @@
       {
         "location": "bld_bs_still_temple",
         "pointsPerDay": 2
+      },
+      {
+        "location": "site_ms_hx_dew",
+        "pointsPerDay": 2
       }
     ],
     "spiritItems": [
@@ -3886,7 +3890,9 @@
       "periodDays": 90,
       "minimumMembers": 2,
       "foragePerMember": 5,
-      "homes": []
+      "homes": [
+        "loc_ms_huixi"
+      ]
     }
   },
   "bossEcology": {

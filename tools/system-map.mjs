@@ -451,6 +451,10 @@ const CONTENT=[
  {id:'region',name:'省郡纲要',file:'geo/regions.json',required:['id','name','category（province/county）','terrain','biomes','keyPeople','郡：province / ruler / control / places / ties'],hooks:[
    ['places','regionOf','地点按挂接与上级链归属省郡'],['ruler / control','rulerOf|mapRegions','统治方与非人统治标记（地图）'],['全文','publicLoreEntries|catalogDefinition','目录查询与检索'],
   ],manual:[],refs:['biomes 由 traits 地形词派生（terrainBiomes），K8 据此生成栖地','聚落骨架与人物完整档由后续按需生成']},
+ {id:'spirit-route',name:'个体成精路线',file:'meta/rules.json#wildlifeAwakening',required:['stages','spiritLands','spiritItems','mentor','borrowForm','society.homes'],hooks:[
+   ['四类积累 / 三阶段','wildlifeAwakening|awakeningTotal','年岁经历、灵地、灵物、点化；听息、立意、借形'],
+   ['society.homes','checkSpiritSocieties|society.homes','自愿定居与按季结社'],
+  ],manual:[],refs:['T162 内容：world/design/monster-society-3.mjs；审核 tools/monster-society-3-content.mjs；发布 tools/publish-monster-society-3.mjs','族群觉醒复用 tribal-awakening.mjs，不由个体路线新建族群']},
  {id:'lore',name:'文化 / 神祇 / 历史',file:'lore/*.json',required:uniq([...req('culture'),...req('deity')]),hooks:[
    ['church（神祇）','\\.church\\b','复活点、训练、仪式'],['全文','publicLoreEntries|catalogDefinition','目录查询与检索'],
   ],manual:[]},

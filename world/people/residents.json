@@ -17879,5 +17879,542 @@
     },
     "currentConcern": "上回分粮巨魔又排在最后，她打算下一期交割时先坐到贡粮棚门口。",
     "visibleFeature": "一只手指头比别的粗一圈，是早年被石块压的。"
+  },
+  {
+    "id": "npc_ms_hx_yixian",
+    "name": "漪弦",
+    "aliases": [],
+    "tier": "roster",
+    "age": 32,
+    "sex": "女",
+    "species": "monster_grey_otter",
+    "society": "loc_ms_huixi",
+    "culture": "culture_ms_huixi",
+    "settlement": "loc_ms_huixi",
+    "scope": "loc_ms_huixi",
+    "householdId": "house_t162_1",
+    "household": [
+      "npc_ms_hx_yiheng",
+      "npc_ms_hx_yimo"
+    ],
+    "occupation": "照看水道",
+    "traits": [
+      "踏实"
+    ],
+    "home": {
+      "location": "bld_ms_hx_01",
+      "access": "同住共居；进入私宅须先取得成年住户的有效许可。"
+    },
+    "location": "bld_ms_hx_01",
+    "flags": {
+      "minor": false,
+      "romanceable": false
+    },
+    "currentConcern": "把鱼骨从进出水道里拣净。",
+    "visibleFeature": "颈侧毛里常夹着碎芦叶。"
+  },
+  {
+    "id": "npc_ms_hx_yimo",
+    "name": "漪沫",
+    "aliases": [],
+    "tier": "roster",
+    "age": 12,
+    "sex": "男",
+    "species": "monster_grey_otter",
+    "society": "loc_ms_huixi",
+    "culture": "culture_ms_huixi",
+    "settlement": "loc_ms_huixi",
+    "scope": "loc_ms_huixi",
+    "householdId": "house_t162_1",
+    "household": [
+      "npc_ms_hx_yiheng",
+      "npc_ms_hx_yixian"
+    ],
+    "occupation": "随成年居民认岸",
+    "traits": [
+      "好奇"
+    ],
+    "home": {
+      "location": "bld_ms_hx_01",
+      "access": "同住共居；进入私宅须先取得成年住户的有效许可。"
+    },
+    "location": "bld_ms_hx_01",
+    "flags": {
+      "minor": true,
+      "romanceable": false
+    },
+    "currentConcern": "认清哪一处水口回自己的窝。",
+    "visibleFeature": "灰颈毛还蓬着细绒。"
+  },
+  {
+    "id": "npc_ms_hx_qiaofu",
+    "name": "敲伏",
+    "aliases": [],
+    "tier": "roster",
+    "age": 47,
+    "sex": "男",
+    "species": "monster_plate_back_tortoise",
+    "society": "loc_ms_huixi",
+    "culture": "culture_ms_huixi",
+    "settlement": "loc_ms_huixi",
+    "scope": "loc_ms_huixi",
+    "householdId": "house_t162_2",
+    "household": [
+      "npc_ms_hx_qiaosui",
+      "npc_ms_hx_qiaoyou"
+    ],
+    "occupation": "晒席",
+    "traits": [
+      "踏实"
+    ],
+    "home": {
+      "location": "bld_ms_hx_02",
+      "access": "同住共居；进入私宅须先取得成年住户的有效许可。"
+    },
+    "location": "bld_ms_hx_02",
+    "flags": {
+      "minor": false,
+      "romanceable": false
+    },
+    "currentConcern": "雨后把湿席翻到向阳的一面。",
+    "visibleFeature": "甲缘带着一点干草。"
+  },
+  {
+    "id": "npc_ms_hx_qiaoyou",
+    "name": "敲幼",
+    "aliases": [],
+    "tier": "roster",
+    "age": 14,
+    "sex": "女",
+    "species": "monster_plate_back_tortoise",
+    "society": "loc_ms_huixi",
+    "culture": "culture_ms_huixi",
+    "settlement": "loc_ms_huixi",
+    "scope": "loc_ms_huixi",
+    "householdId": "house_t162_2",
+    "household": [
+      "npc_ms_hx_qiaosui",
+      "npc_ms_hx_qiaofu"
+    ],
+    "occupation": "随成年居民认芦",
+    "traits": [
+      "好奇"
+    ],
+    "home": {
+      "location": "bld_ms_hx_02",
+      "access": "同住共居；进入私宅须先取得成年住户的有效许可。"
+    },
+    "location": "bld_ms_hx_02",
+    "flags": {
+      "minor": true,
+      "romanceable": false
+    },
+    "currentConcern": "别把归汐高岸的芦记认错。",
+    "visibleFeature": "背甲上的浅纹还很清楚。"
+  },
+  {
+    "id": "npc_ms_hx_xianwen",
+    "name": "纤纹",
+    "aliases": [],
+    "tier": "roster",
+    "age": 33,
+    "sex": "男",
+    "species": "monster_red_ear_fox",
+    "society": "loc_ms_huixi",
+    "culture": "culture_ms_huixi",
+    "settlement": "loc_ms_huixi",
+    "scope": "loc_ms_huixi",
+    "householdId": "house_t162_3",
+    "household": [
+      "npc_ms_hx_xianpu",
+      "npc_ms_hx_xianduan"
+    ],
+    "occupation": "看圃道",
+    "traits": [
+      "踏实"
+    ],
+    "home": {
+      "location": "bld_ms_hx_03",
+      "access": "同住共居；进入私宅须先取得成年住户的有效许可。"
+    },
+    "location": "bld_ms_hx_03",
+    "flags": {
+      "minor": false,
+      "romanceable": false
+    },
+    "currentConcern": "补上被踩断的步道芦茎。",
+    "visibleFeature": "赤耳外侧有一撮白毛。"
+  },
+  {
+    "id": "npc_ms_hx_xianduan",
+    "name": "纤短",
+    "aliases": [],
+    "tier": "roster",
+    "age": 10,
+    "sex": "女",
+    "species": "monster_red_ear_fox",
+    "society": "loc_ms_huixi",
+    "culture": "culture_ms_huixi",
+    "settlement": "loc_ms_huixi",
+    "scope": "loc_ms_huixi",
+    "householdId": "house_t162_3",
+    "household": [
+      "npc_ms_hx_xianpu",
+      "npc_ms_hx_xianwen"
+    ],
+    "occupation": "随成年居民认草",
+    "traits": [
+      "好奇"
+    ],
+    "home": {
+      "location": "bld_ms_hx_03",
+      "access": "同住共居；进入私宅须先取得成年住户的有效许可。"
+    },
+    "location": "bld_ms_hx_03",
+    "flags": {
+      "minor": true,
+      "romanceable": false
+    },
+    "currentConcern": "学着只闻叶背，不拔草根。",
+    "visibleFeature": "尾尖沾着草屑。"
+  },
+  {
+    "id": "npc_ms_hx_luman",
+    "name": "芦慢",
+    "aliases": [],
+    "tier": "roster",
+    "age": 42,
+    "sex": "女",
+    "species": "monster_stone_whisker_weasel",
+    "society": "loc_ms_huixi",
+    "culture": "culture_ms_huixi",
+    "settlement": "loc_ms_huixi",
+    "scope": "loc_ms_huixi",
+    "householdId": "house_t162_4",
+    "household": [
+      "npc_ms_hx_luchi",
+      "npc_ms_hx_luya"
+    ],
+    "occupation": "织芦席",
+    "traits": [
+      "踏实"
+    ],
+    "home": {
+      "location": "bld_ms_hx_04",
+      "access": "同住共居；进入私宅须先取得成年住户的有效许可。"
+    },
+    "location": "bld_ms_hx_04",
+    "flags": {
+      "minor": false,
+      "romanceable": false
+    },
+    "currentConcern": "把晒透的芦叶留给补棚。",
+    "visibleFeature": "须尖的砂比芦迟浅一些。"
+  },
+  {
+    "id": "npc_ms_hx_luya",
+    "name": "芦芽",
+    "aliases": [],
+    "tier": "roster",
+    "age": 13,
+    "sex": "男",
+    "species": "monster_stone_whisker_weasel",
+    "society": "loc_ms_huixi",
+    "culture": "culture_ms_huixi",
+    "settlement": "loc_ms_huixi",
+    "scope": "loc_ms_huixi",
+    "householdId": "house_t162_4",
+    "household": [
+      "npc_ms_hx_luchi",
+      "npc_ms_hx_luman"
+    ],
+    "occupation": "随成年居民认窝",
+    "traits": [
+      "好奇"
+    ],
+    "home": {
+      "location": "bld_ms_hx_04",
+      "access": "同住共居；进入私宅须先取得成年住户的有效许可。"
+    },
+    "location": "bld_ms_hx_04",
+    "flags": {
+      "minor": true,
+      "romanceable": false
+    },
+    "currentConcern": "记住干芦台每一家窝口的芦结。",
+    "visibleFeature": "细尾总在草叶后晃动。"
+  },
+  {
+    "id": "npc_ms_gs_shengli",
+    "name": "绳砾",
+    "aliases": [],
+    "tier": "roster",
+    "age": 35,
+    "sex": "女",
+    "species": "monster_ash_cave_goblin",
+    "society": "loc_ms_huipeng",
+    "culture": "culture_ms_huipeng",
+    "settlement": "loc_ms_huipeng",
+    "scope": "loc_ms_huipeng",
+    "householdId": "house_t162_5",
+    "household": [
+      "npc_ms_gs_shenge",
+      "npc_ms_gs_shengya",
+      "npc_ms_gs_sanzhi"
+    ],
+    "occupation": "补棚",
+    "traits": [
+      "踏实"
+    ],
+    "home": {
+      "location": "bld_ms_gs_01",
+      "access": "同住共居；进入私宅须先取得成年住户的有效许可。"
+    },
+    "location": "bld_ms_gs_01",
+    "flags": {
+      "minor": false,
+      "romanceable": false
+    },
+    "currentConcern": "把风掀起的棚角系牢。",
+    "visibleFeature": "左腕缠着一段旧麻绳。"
+  },
+  {
+    "id": "npc_ms_gs_shengya",
+    "name": "绳芽",
+    "aliases": [],
+    "tier": "roster",
+    "age": 11,
+    "sex": "女",
+    "species": "monster_ash_cave_goblin",
+    "society": "loc_ms_huipeng",
+    "culture": "culture_ms_huipeng",
+    "settlement": "loc_ms_huipeng",
+    "scope": "loc_ms_huipeng",
+    "householdId": "house_t162_5",
+    "household": [
+      "npc_ms_gs_shenge",
+      "npc_ms_gs_shengli",
+      "npc_ms_gs_sanzhi"
+    ],
+    "occupation": "随成年居民认签",
+    "traits": [
+      "好奇"
+    ],
+    "home": {
+      "location": "bld_ms_gs_01",
+      "access": "同住共居；进入私宅须先取得成年住户的有效许可。"
+    },
+    "location": "bld_ms_gs_01",
+    "flags": {
+      "minor": true,
+      "romanceable": false
+    },
+    "currentConcern": "认清自己睡棚的绳结。",
+    "visibleFeature": "指尖常沾着棚灰。"
+  },
+  {
+    "id": "npc_ms_gs_zhewang",
+    "name": "折网",
+    "aliases": [],
+    "tier": "roster",
+    "age": 31,
+    "sex": "男",
+    "species": "monster_ash_cave_goblin",
+    "society": "loc_ms_huipeng",
+    "culture": "culture_ms_huipeng",
+    "settlement": "loc_ms_huipeng",
+    "scope": "loc_ms_huipeng",
+    "householdId": "house_t162_6",
+    "household": [
+      "npc_ms_gs_zheqian",
+      "npc_ms_gs_sangou",
+      "npc_ms_gs_zheyou",
+      "npc_ms_gs_sanfu"
+    ],
+    "occupation": "整理断签",
+    "traits": [
+      "踏实"
+    ],
+    "home": {
+      "location": "bld_ms_gs_02",
+      "access": "同住共居；进入私宅须先取得成年住户的有效许可。"
+    },
+    "location": "bld_ms_gs_02",
+    "flags": {
+      "minor": false,
+      "romanceable": false
+    },
+    "currentConcern": "把散落的断签送回旧篓。",
+    "visibleFeature": "鼻梁上有一道浅疤。"
+  },
+  {
+    "id": "npc_ms_gs_zheyou",
+    "name": "折幼",
+    "aliases": [],
+    "tier": "roster",
+    "age": 9,
+    "sex": "男",
+    "species": "monster_ash_cave_goblin",
+    "society": "loc_ms_huipeng",
+    "culture": "culture_ms_huipeng",
+    "settlement": "loc_ms_huipeng",
+    "scope": "loc_ms_huipeng",
+    "householdId": "house_t162_6",
+    "household": [
+      "npc_ms_gs_zheqian",
+      "npc_ms_gs_sangou",
+      "npc_ms_gs_zhewang",
+      "npc_ms_gs_sanfu"
+    ],
+    "occupation": "随成年居民认棚",
+    "traits": [
+      "好奇"
+    ],
+    "home": {
+      "location": "bld_ms_gs_02",
+      "access": "同住共居；进入私宅须先取得成年住户的有效许可。"
+    },
+    "location": "bld_ms_gs_02",
+    "flags": {
+      "minor": true,
+      "romanceable": false
+    },
+    "currentConcern": "收摊后再到公共过道上玩。",
+    "visibleFeature": "护腕大得露出半截指头。"
+  },
+  {
+    "id": "npc_ms_gs_sanfu",
+    "name": "散缚",
+    "aliases": [],
+    "tier": "roster",
+    "age": 28,
+    "sex": "男",
+    "species": "monster_ash_cave_goblin",
+    "society": "loc_ms_huipeng",
+    "culture": "culture_ms_huipeng",
+    "settlement": "loc_ms_huipeng",
+    "scope": "loc_ms_huipeng",
+    "householdId": "house_t162_6",
+    "household": [
+      "npc_ms_gs_zheqian",
+      "npc_ms_gs_sangou",
+      "npc_ms_gs_zhewang",
+      "npc_ms_gs_zheyou"
+    ],
+    "occupation": "拆旧绳",
+    "traits": [
+      "踏实"
+    ],
+    "home": {
+      "location": "bld_ms_gs_02",
+      "access": "同住共居；进入私宅须先取得成年住户的有效许可。"
+    },
+    "location": "bld_ms_gs_02",
+    "flags": {
+      "minor": false,
+      "romanceable": false
+    },
+    "currentConcern": "把还能用的麻股分出来。",
+    "visibleFeature": "掌边挂着细麻屑。"
+  },
+  {
+    "id": "npc_ms_gs_sanzhi",
+    "name": "散枝",
+    "aliases": [],
+    "tier": "roster",
+    "age": 19,
+    "sex": "女",
+    "species": "monster_ash_cave_goblin",
+    "society": "loc_ms_huipeng",
+    "culture": "culture_ms_huipeng",
+    "settlement": "loc_ms_huipeng",
+    "scope": "loc_ms_huipeng",
+    "householdId": "house_t162_5",
+    "household": [
+      "npc_ms_gs_shenge",
+      "npc_ms_gs_shengli",
+      "npc_ms_gs_shengya"
+    ],
+    "occupation": "看摊帘",
+    "traits": [
+      "踏实"
+    ],
+    "home": {
+      "location": "bld_ms_gs_01",
+      "access": "同住共居；进入私宅须先取得成年住户的有效许可。"
+    },
+    "location": "bld_ms_gs_01",
+    "flags": {
+      "minor": false,
+      "romanceable": false
+    },
+    "currentConcern": "在大风前把空棚帘卷起。",
+    "visibleFeature": "一侧耳沿比另一侧薄。"
+  },
+  {
+    "id": "npc_ms_gs_zhenbei",
+    "name": "砧背",
+    "aliases": [],
+    "tier": "roster",
+    "age": 40,
+    "sex": "女",
+    "species": "monster_split_tusk_orc",
+    "society": "loc_ms_huipeng",
+    "culture": "culture_ms_huipeng",
+    "settlement": "loc_ms_huipeng",
+    "scope": "loc_ms_huipeng",
+    "householdId": "house_t162_7",
+    "household": [
+      "npc_ms_gs_zhenhe",
+      "npc_ms_gs_zhenya"
+    ],
+    "occupation": "搬修具",
+    "traits": [
+      "踏实"
+    ],
+    "home": {
+      "location": "bld_ms_gs_03",
+      "access": "同住共居；进入私宅须先取得成年住户的有效许可。"
+    },
+    "location": "bld_ms_gs_03",
+    "flags": {
+      "minor": false,
+      "romanceable": false
+    },
+    "currentConcern": "把修好的柄与坏柄分开放。",
+    "visibleFeature": "肩头的衣布补得很厚。"
+  },
+  {
+    "id": "npc_ms_gs_zhenya",
+    "name": "砧芽",
+    "aliases": [],
+    "tier": "roster",
+    "age": 12,
+    "sex": "男",
+    "species": "monster_split_tusk_orc",
+    "society": "loc_ms_huipeng",
+    "culture": "culture_ms_huipeng",
+    "settlement": "loc_ms_huipeng",
+    "scope": "loc_ms_huipeng",
+    "householdId": "house_t162_7",
+    "household": [
+      "npc_ms_gs_zhenhe",
+      "npc_ms_gs_zhenbei"
+    ],
+    "occupation": "随成年居民认木",
+    "traits": [
+      "好奇"
+    ],
+    "home": {
+      "location": "bld_ms_gs_03",
+      "access": "同住共居；进入私宅须先取得成年住户的有效许可。"
+    },
+    "location": "bld_ms_gs_03",
+    "flags": {
+      "minor": true,
+      "romanceable": false
+    },
+    "currentConcern": "记住哪篓木料不能伸手碰。",
+    "visibleFeature": "短牙刚从唇边露出。"
   }
 ]

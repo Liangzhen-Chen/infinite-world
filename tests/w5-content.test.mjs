@@ -10,6 +10,7 @@ import {validateDraft,materialize} from '../tools/w5-content.mjs';
 import {bigramSimilarity} from '../tools/w5-validation.mjs';
 import {withoutMonsterSociety} from '../tools/publish-monster-society.mjs';
 import {withoutMonsterSociety2} from '../tools/publish-monster-society-2.mjs';
+import {withoutMonsterSociety3} from '../tools/publish-monster-society-3.mjs';
 import {withoutT142} from '../tools/t142-merge.mjs';
 import {buildBatch as buildSiteBatch,withoutSites} from '../tools/w5-sites.mjs';
 
@@ -57,7 +58,7 @@ test('旧测试世界没有lore目录时仍能读取，不要求新内容倒灌�
   const design=await import(`../world/design/w5-sites-${n}.mjs`);
   beforeSites=withoutSites(beforeSites,buildSiteBatch(design.sites,beforeSites),design.priorNoMechanics);
  }
- const old=withoutMonsterSociety2(withoutMonsterSociety(withoutT142(beforeSites)));assert.deepEqual(old.cultures,[]);assert.deepEqual(old.deities,[]);
+ const old=withoutMonsterSociety2(withoutMonsterSociety(withoutT142(withoutMonsterSociety3(beforeSites))));assert.deepEqual(old.cultures,[]);assert.deepEqual(old.deities,[]);
  // Current full profiles require their cultural references. Historical worlds
  // predate the full-profile contract, rather than containing broken full rows.
  assert.ok(validateWorld(old).errors.some(error=>error.includes('culture')));
@@ -65,6 +66,11 @@ test('旧测试世界没有lore目录时仍能读取，不要求新内容倒灌�
  // U9固定商店按聚落档案登记，晚于聚落档案；没有聚落档案的旧世界也没有这些商店。
  old.rules.economy.shops.stores=[];
  delete old.rules.tribalAwakening;// U11族群觉醒动态（挂靠魔物社会议事势力与各村人物）晚于本批，历史世界不含。
+ delete old.rules.hazardClock;// U3/D1为后来的聚居地配置灾害，早于lore的世界没有这些时钟。
+ delete old.rules.questSources;// U17/D1公告栏主事人依赖已投影掉的聚居地完整档。
+ // U12军务与战争依赖已投影掉的郡府和势力；早于lore的世界没有这些系统。
+ delete old.rules.military;
+ delete old.rules.warDiplomacy;
  for(const npc of old.npcs){delete npc.tier;delete npc.householdId;}
  for(const place of old.locations)if(place.access?.mode==='private')delete place.access;
  const historical=validateWorld(old);assert.equal(historical.ok,true,historical.errors.join('\n'));
