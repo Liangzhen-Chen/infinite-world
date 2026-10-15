@@ -70,12 +70,25 @@ review-002-yp=782a49e阶段审核通过，范围限T06正式发布与c64163d修�
 
 - A1 写死值排查（主会话加，紧跟Q1）：只读扫描 world/ 数据与 server-plugin，找出所有“本应从当前状态派生却存成静态值”的字段（例：人物数据上的 monthlyQuotaD、俸禄、职务权限、店主与服务、头衔带来的权利、组织职位权利、聚落级别带来的官职与税率、按职业写死的技能上限等），按影响排序列表，给出改为派生的迁移卡草案，交主会话审批。不改代码。规模S。
 - P3 大世界性能（用户 2026-10-15：“世界比较大了之后游戏的运行是否会受影响 性能优化也是你要考虑的”）：造一个按设计上限的大世界场景（九省31郡全部按需生成展开、全部住区展开到配额、全部势力与族群时钟、灾害、战争在跑），量单回合工具结算、提示组装、场景卡、一天/一月推进、存档读写的耗时与内存和存档体积，定预算（参照指南7.5与现有 performance 测试），把超标的热点（已知：日程寻路约25%、npc-life 家庭日结约15%）优化到预算内，结果逐字节不变；远离玩家的地区按指南5.9分层降频结算（智能层/规则层/统计层），并写进推进注册表。新增 tests/scale.test.mjs 守预算。规模M-L。
-- Q1 发任务权限派生（主会话加，用户问“新人物能否自动获得发任务权限”时查出）：现在玩家的额度由官职、爵位、名士派生，但NPC的额度读人物数据里手填的 monthlyQuotaD，公告栏主事人在 rules.questSources.publishers 手登记，名册居民不跑需求单。改为：任何人物（玩家或NPC）的发布额度统一由其实际持有的官职、爵位、名士、组织职位派生；聚落公告栏主事人默认由该聚落现任主官派生，手填作覆盖；名册居民被点名展开为完整档后自动参与需求单。验收CORE+quest-board*/quest-sources/governance*/titles/notables-promotion/organizations/data-coverage/prompt。规模S-M。
+- Q1 已并入 V3。原文：（主会话加，用户问“新人物能否自动获得发任务权限”时查出）：现在玩家的额度由官职、爵位、名士派生，但NPC的额度读人物数据里手填的 monthlyQuotaD，公告栏主事人在 rules.questSources.publishers 手登记，名册居民不跑需求单。改为：任何人物（玩家或NPC）的发布额度统一由其实际持有的官职、爵位、名士、组织职位派生；聚落公告栏主事人默认由该聚落现任主官派生，手填作覆盖；名册居民被点名展开为完整档后自动参与需求单。验收CORE+quest-board*/quest-sources/governance*/titles/notables-promotion/organizations/data-coverage/prompt。规模S-M。
 - K10 已完成。原文：（来源：K9 系统地图）：世界事件订阅者改为注册入口（各模块自行登记，engine 不再持私有数组）；新法术 effectSpec.kind 改为效果注册表分派（不再改 magic.mjs 分支）；聚落与势力成员的声望登记由 world 数据派生（不再手填 rules.reputation.settlements/factions）；商店可由聚落与人物服务标签派生。验收 CORE + magic*/reputation*/world-events/standing/shop-restock/system-map/prompt + 重新生成系统地图，“仍需手动接线”清单只剩新工具与K8栖地。规模M。
 
 - P1 已完成（10694）。原文：（主会话 2026-10-14 加，挡住 T124–T127 等改工具的卡）：静态提示已到 11862（硬上限 12000）。把 prompt/ 与工具描述压到 ≤11000，不删规则含义；以现有提示测试、m2/m3 离线回放测试为准。规模M。
 
 派工：K1→K2 一个子代理连续做；K3→K4→K5 一个子代理连续做（等T159合入后开）；K7 随时；K6 在K2、K4之后。
+
+## 个体视图与状态贯通（V1–V6，2026-10-15 主会话审定；来源：A1 架构审计 logs/sessions/A1-astra-001.final.txt）
+
+用户要求：所有状态机不得有写死的状态；人物及世界所有个体的行为、状态都要由它在各方面所属的系统决定。A1 结论：需要统一的实体归属解析层（entityView：personView、placeView、groupView、populationView、itemView 薄入口，底层按领域小选择器只读权威状态，每项附来源与覆盖标记，读取不写存档、不跨变更缓存），并在实际转移入口补一次性副作用与事件。已连通、应保留的：聚落升格更新在任官职额度预算、病人与照护者暂停服务、迁居改家户日程、开灵解除宠物占有、玩家弃职降技能。审计列出26处断点（拘留后两分钟又开店；战死不走死亡结算；同一势力两份公库；私宅住户读静态名单；议事主持固定原头人；撤职后仍显示旧官称；退会后仍牵动旧势力；迁居后立场仍传回旧村；换首领后仍找前任；精怪成员绕过组织规则；树木物种居民丢失植物性状；补档重置名册居民钱物；年龄与成年资格读初始值；店铺只按初始经营者；改业后日程沿旧工作地；自治聚居地不可进入；离屏组织与族群变动不发事件；冻结水域仍可钓鱼等）。
+
+审定：六张全部同意，Q1 并入 V3（额度、公告栏主事人、名册居民展开后进需求单都在 V3 做）。俸禄制度由主会话定：官职按职级与所辖聚落级别有月俸，写在 rules.governance 的俸禄表，从所辖聚落公账按月付给本人，公账不足记欠俸并影响士气与舆论；爵位分税收入维持 T127。顺序：V1 → V2 与 V4 并行 → V3 与 V5 并行 → V6。V 系列期间不再新开功能卡，内容卡可继续。每卡五项见审计原文对应段，派工时整段转给执行会话。
+
+- V1 归属解析层：新 sp/entity-view.mjs 与领域选择器；先接 standing 的迁居、退会读取，覆盖 NPC、名册、玩家、精怪、首领。规模M–L。
+- V2 人物生命周期与行动许可：拘留与释放、三种死亡入口共用一次死亡结算、迁居住户与成年资格、补档不重置运行状态。规模L。
+- V3 职位、职业与服务派生（含原 Q1 与俸禄）：任免后办事人与工作地点、改业后教学资格、升格后权利、额度、俸禄。规模L。
+- V4 组织、势力与经济账户贯通：首领更替与空缺、退会、同一账户余额、精怪成员。规模L。
+- V5 地点、经营与非人物实体：店铺按现经营关系、非人居民物种性状、自治聚居地可进入、冻结水域阻止捕鱼。规模L。
+- V6 转移通知与玩家可见投影：称呼、现任关系、年龄、聚落人口与玩法一致；离屏变化只向合法获知者传播。规模M–L。
 
 ## 缺失系统补齐（2026-10-14 主会话审定，来源：规格覆盖审计；用户：“世界公告…不需要，其他需要你继续设计”）
 
@@ -95,7 +108,7 @@ review-002-yp=782a49e阶段审核通过，范围限T06正式发布与c64163d修�
 - U17 已完成。原文：（依赖K3、K4、U1，S-M）：NPC按自身需求与短缺自动出任务；势力委托；世界事件任务。quest-board.mjs、npc-life.mjs、faction-clock.mjs。
 - U13 已完成。原文：（依赖U1、U6、T124，S-M）。
 - U11 已完成。原文：（依赖K4、K6、U1、U3，L）：怪物族群按季度与年觉醒、提出诉求、内部分化、生成新势力；玩家可教导、贸易、调停、镇压。
-- U12 军队、兵役、战争与外交（依赖U1、U2、U3、K4、K6、T127、T142，L，开工前再拆）。
+- U12 已完成。原文：（依赖U1、U2、U3、K4、K6、T127、T142，L，开工前再拆）。
 - U15 已完成。原文：（依赖K8、U1、U5，S-M）：钓鱼、开矿、决斗、走私、竞选。
 - U16 建国（依赖U12、T127，L，最后做）。
 - 小修：5.2 人物分布检查并入 build-world 发布构建（S，零依赖，可随任一卡带上）。
@@ -626,17 +639,17 @@ T28-R1修好新回执undefined规范化并保留严格篡改拒绝，相关31/32
 
 ### T116（B10）已完成：传闻随真实携带者和登记渠道沿路线抵达，逐手版本可追溯源头，按实际获知问询；相关与CORE通过，0模型。
 
-### T117（B11） 传闻第一组45条。结果：新增45条可由实际渠道获知的真、半真或假传闻。可改world/design/w5-rumors-1.mjs、对应草稿/内容发布工具、world/lore/rumors.json、tests/w5-rumors-1.test.mjs；接B10，关联已发布事件、携带者及路线，与B12–B16同目录串行。验收node --test "tests/w5-rumors-*.test.mjs" tests/rumor-route.test.mjs tests/village-rumor-access.test.mjs，CORE。L2预计50–75次，≤1.5元；约1.5小时。
+### 已完成 T117（B11） 传闻第一组45条。结果：新增45条可由实际渠道获知的真、半真或假传闻。可改world/design/w5-rumors-1.mjs、对应草稿/内容发布工具、world/lore/rumors.json、tests/w5-rumors-1.test.mjs；接B10，关联已发布事件、携带者及路线，与B12–B16同目录串行。验收node --test "tests/w5-rumors-*.test.mjs" tests/rumor-route.test.mjs tests/village-rumor-access.test.mjs，CORE。L2预计50–75次，≤1.5元；约1.5小时。
 
-### T118（B12） 传闻第二组45条。结果：新增45条，覆盖第二组已发布势力/地方事件。文件同B11，批次换w5-rumors-2；接B11，同目录串行。验收node --test "tests/w5-rumors-*.test.mjs" tests/rumor-route.test.mjs tests/village-rumor-access.test.mjs，CORE。L2预计50–75次，≤1.5元；约1.5小时。
+### 已完成 T118（B12） 传闻第二组45条。结果：新增45条，覆盖第二组已发布势力/地方事件。文件同B11，批次换w5-rumors-2；接B11，同目录串行。验收node --test "tests/w5-rumors-*.test.mjs" tests/rumor-route.test.mjs tests/village-rumor-access.test.mjs，CORE。L2预计50–75次，≤1.5元；约1.5小时。
 
-### T119（B13） 传闻第三组45条。结果：新增45条，覆盖可调查遗迹和沿路见闻。文件同B11，批次换w5-rumors-3；接B12及B7，同目录串行。验收node --test "tests/w5-rumors-*.test.mjs" tests/rumor-route.test.mjs tests/village-rumor-access.test.mjs，CORE。L2预计50–75次，≤1.5元；约1.5小时。
+### 已完成 T119（B13） 传闻第三组45条。结果：新增45条，覆盖可调查遗迹和沿路见闻。文件同B11，批次换w5-rumors-3；接B12及B7，同目录串行。验收node --test "tests/w5-rumors-*.test.mjs" tests/rumor-route.test.mjs tests/village-rumor-access.test.mjs，CORE。L2预计50–75次，≤1.5元；约1.5小时。
 
-### T120（B14） 传闻第四组45条。结果：新增45条，给节日与势力阶段提供不同立场的消息。文件同B11，批次换w5-rumors-4；接B13及B2/B5，同目录串行。验收node --test "tests/w5-rumors-*.test.mjs" tests/rumor-route.test.mjs tests/village-rumor-access.test.mjs，CORE。L2预计50–75次，≤1.5元；约1.5小时。
+### 已完成 T120（B14） 传闻第四组45条。结果：新增45条，给节日与势力阶段提供不同立场的消息。文件同B11，批次换w5-rumors-4；接B13及B2/B5，同目录串行。验收node --test "tests/w5-rumors-*.test.mjs" tests/rumor-route.test.mjs tests/village-rumor-access.test.mjs，CORE。L2预计50–75次，≤1.5元；约1.5小时。
 
-### T121（B15） 传闻第五组40条。结果：新增40条，把第二组据点接进调查和消息网络。文件同B11，批次换w5-rumors-5；接B14及B8，同目录串行。验收node --test "tests/w5-rumors-*.test.mjs" tests/rumor-route.test.mjs tests/village-rumor-access.test.mjs，CORE。L2预计45–70次，≤1.5元；约1.5小时。
+### 已完成 T121（B15） 传闻第五组40条。结果：新增40条，把第二组据点接进调查和消息网络。文件同B11，批次换w5-rumors-5；接B14及B8，同目录串行。验收node --test "tests/w5-rumors-*.test.mjs" tests/rumor-route.test.mjs tests/village-rumor-access.test.mjs，CORE。L2预计45–70次，≤1.5元；约1.5小时。
 
-### T122（B16） 传闻第六组40条。结果：新增40条，与已有40条去重后至少300条，沿路线确实可获知。文件同B11，批次换w5-rumors-6；接B15及B9，同目录串行，不重做旧40条。验收node --test "tests/w5-rumors-*.test.mjs" tests/rumor-route.test.mjs tests/village-rumor-access.test.mjs，CORE。L2预计45–70次，≤1.5元；约1.5小时。
+### 已完成 T122（B16） 传闻第六组40条。结果：新增40条，与已有40条去重后至少300条，沿路线确实可获知。文件同B11，批次换w5-rumors-6；接B15及B9，同目录串行，不重做旧40条。验收node --test "tests/w5-rumors-*.test.mjs" tests/rumor-route.test.mjs tests/village-rumor-access.test.mjs，CORE。L2预计45–70次，≤1.5元；约1.5小时。
 
 C部分只拆缺口：governance.mjs的任职入口止于“待上级决定”，quest-board.mjs不承认玩家官职来源，公款建房也无审批主体；爵位执行与个人看法聚合尚无消费者。NPC现有关系/战斗死亡继续复用，新增范围是离屏成长与人生事件。
 
