@@ -1,10 +1,11 @@
-import {facilityRouteStates,granaryCapacity} from './facility-state.mjs';
+import {granaryCapacity} from './facility-state.mjs';
 import {drawGranary} from './agriculture.mjs';
-import {weatherTravel} from './weather.mjs';
 import {itemTraits,hasTrait} from './traits.mjs';
-import {hazardPriceFactor,hazardRouteClosed,warRouteClosed} from './hazard-calendar.mjs';
+import {hazardPriceFactor} from './hazard-calendar.mjs';
 import {tradeTax} from './finance-tax.mjs';
 import {magicPriceFactor} from './magic-economy.mjs';
+import {transportSegment} from './transport-route.mjs';
+import {transportServices,quoteTransport,bookTransport} from './transport.mjs';
 
 const DAY=1440, CLOCK='settlement-trade:clock';
 const clone=value=>structuredClone(value);
@@ -110,20 +111,16 @@ function schedule(d,engine,o,minute){
         }
         t.phase='home';t.nextAt=null;o.homeAt=minute;entry(o,'home',minute);return;
     }
-    const edge=routeEdge(engine,o),budget=engine.rules.travel.dailyTravelMinutes;
-    if(t.movingMinutes>0&&t.movingMinutes%budget===0&&t.restedBudgets<t.movingMinutes/budget){
-        t.segment={kind:'rest',minutes:DAY-budget};t.nextAt=minute+DAY-budget;return;
-    }
-    const oriented=edge?{...edge,from:t.location}:null,conditions=edge?weatherTravel(engine,d.document.randomSeed,oriented,o.mode,minute):null;
-    if(facilityRouteStates(engine,d.get('state')).get(edge?.id)?.factor===0||warRouteClosed(d.get('state'),edge?.id,minute)||!edge||!edge.modes.includes(o.mode)||edge.closedSeasons.includes(engine.calendar(minute).season)||conditions?.closed||hazardRouteClosed(engine,d.document.randomSeed,edge.id,minute)){
-        t.segment={kind:'wait',minutes:DAY-minute%DAY};t.nextAt=minute+t.segment.minutes;t.waitReason='道路或天气不通';
+    const segment=transportSegment(engine,d.get('state'),d.document.randomSeed,t,o.mode,minute);
+    if(segment.kind==='rest'){t.segment=segment;t.nextAt=minute+segment.minutes;return;}
+    const edge=routeEdge(engine,o);
+    if(segment.kind==='wait'){
+        t.segment={kind:'wait',minutes:segment.minutes};t.nextAt=minute+t.segment.minutes;t.waitReason=segment.reason;
         entry(o,'blocked',minute,{location:t.location,edge:t.edges[t.edgeIndex]});return;
     }
     t.waitReason=null;
     if(t.remainingKm===null)t.remainingKm=edge.lengthKm;
-    const speed=(edge.speedKmh??engine.rules.travel.walkKmh)*(edge.terrainMultiplier??1),rate=speed/(conditions?.multiplier??1)/60;
-    const duration=Math.min(DAY-minute%DAY,budget-t.movingMinutes%budget,Math.max(1,Math.ceil(t.remainingKm/rate)));
-    t.segment={kind:'move',minutes:duration,distanceKm:Math.min(t.remainingKm,duration*rate),destination:edge.from===t.location?edge.to:edge.from};t.nextAt=minute+duration;
+    t.segment=segment;t.nextAt=minute+segment.minutes;
 }
 function spoil(o,minute){
     const day=Math.floor(minute/DAY),expired=o.batches.filter(b=>b.expiresDay<=day).reduce((n,b)=>n+b.amount,0);
@@ -186,6 +183,15 @@ function dispatch(d,engine,lane,minute){
     putWarehouse(d,lane.seller,a);putWarehouse(d,lane.buyer,b);
     d.set(['state','records',`village-fiscal:${lane.seller}`],sf);d.set(['state','records',`village-fiscal:${lane.buyer}`],bf);
     schedule(d,engine,o,minute);assertOrder(o);d.set(path,o);
+    const origin=profile(engine,lane.seller).counter,destination=profile(engine,lane.buyer).counter;
+    // Gradual adoption: a real available carrier replaces only the outbound
+    // movement; food batches, spoilage and purchase escrow remain this ledger.
+    for(const service of transportServices(engine,d.get('state'),origin)){
+        let quote;try{quote=quoteTransport(d,engine,{asset:service.asset,from:origin,to:destination,cargo:[{item:r.item,quantity}]});}catch{continue;}
+        if(d.get('state','settlements',lane.seller,'treasury')<quote.total)continue;
+        const trip=bookTransport(d,engine,{owner:lane.seller,recipient:lane.buyer,from:origin,to:destination,asset:service.asset,cargo:[{item:r.item,quantity}],externalOrder:`settlement-trade:${id}`},`grain:${id}`);
+        o.carriage=trip.id;o.estimatedArrivalAt=trip.estimatedArrivalAt;d.set(path,o);break;
+    }
 }
 function nextDispatch(engine,minute){
     const r=engine.rules.settlementTrade,first=r.firstDay*DAY+r.dispatchMinute,cycle=r.cycleDays*DAY;
@@ -195,7 +201,7 @@ export function nextSettlementTradeMinute(state,engine,now){
     if(!engine.rules.settlementTrade)return Infinity;
     let next=state.records?.[CLOCK]?.nextDispatchAt??nextDispatch(engine,now);
     if(next<=now)next=nextDispatch(engine,now+1);
-    for(const o of orders(state))if(o.transport?.nextAt>now)next=Math.min(next,o.transport.nextAt);
+    for(const o of orders(state))if(!(o.carriage&&o.transport?.phase==='outbound')&&o.transport?.nextAt>now)next=Math.min(next,o.transport.nextAt);
     return next;
 }
 export function advanceSettlementTrade(d,engine,minute){
@@ -208,6 +214,14 @@ export function advanceSettlementTrade(d,engine,minute){
         assertOrder(old);
         if(!old.transport||old.transport.phase==='home')continue;
         const o=clone(old);if(o.status==='in-transit')spoil(o,minute);
+        if(o.carriage&&o.transport.phase==='outbound'){
+            const trip=d.get('state','records',o.carriage);
+            if(trip?.status==='delivered'){
+                o.transport.location=profile(engine,o.buyer).counter;o.transport.edgeIndex=o.transport.edges.length;
+                schedule(d,engine,o,minute);
+            }
+            assertOrder(o);if(JSON.stringify(o)!==JSON.stringify(old))d.set(['state','records',`settlement-trade:${o.id}`],o);continue;
+        }
         if(o.transport.nextAt<minute)throw Error('周贸易时钟越过未处理的在途节点');
         if(o.transport.nextAt===minute){
             const t=o.transport,s=t.segment;

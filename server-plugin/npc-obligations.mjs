@@ -53,7 +53,7 @@ export function createNpcObligation(d,engine,args,eventId){
  const departures={};
  for(const actor of [promisor,promisee]){
   const row=engine.actor(d,actor);if(!capable(row)||/(睡眠|熟睡|睡觉)/.test(row.activity??''))throw new Error('义务当事人无法清醒履约');
-  if(actor!=='player'&&(row.scheduleTravel||state.player.companions?.includes(actor)))throw new Error('在途或同行人物不能另占会面时段');
+  if(actor!=='player'&&(row.scheduleTravel||row.cognitionTravel||state.player.companions?.includes(actor)))throw new Error('在途或同行人物不能另占会面时段');
   const from=locationOf(state,actor);if(!from)throw new Error('当事人没有可用的出发地点');
   const route=from===location?{minutes:0,cost:0}:engine.route(from,location,'walk',now,d.document.randomSeed);
   if(now+route.minutes>start)throw new Error('剩余时间不足以按真实路线赴约');
