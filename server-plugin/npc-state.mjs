@@ -23,6 +23,8 @@ export function bossCognitionField(actor){return actor?.id?.startsWith('npc_')?'
 export function npcSchedule(engine,state,id){
     const own=state?.npcs?.[id],base=engine.byId.get(id)?.schedule??own?.routine,care=own?.caring;
     if(care&&base)return {default:[{start:0,end:1440,location:care.location,activity:'照护病人',services:[]}]};
+    // U12: a levied villager serves at the army's camp until released.
+    if(own?.levy)return {default:[{start:0,end:1440,location:own.levy.location,activity:'服役',services:[]}]};
     // A move (npc-life) remaps home and work; a later change of livelihood is
     // built from that new home and then takes precedence.
     const residence=own?.residence;

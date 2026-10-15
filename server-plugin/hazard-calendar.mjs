@@ -84,6 +84,7 @@ const ancestors=(engine,location)=>{const out=[],seen=new Set();while(location&&
 // clock; a later stage of the same clock replaces the earlier shift.
 export function hazardPriceFactor(engine,state,item,location,minute=state.minute){
  let factor=1;
+ for(const r of Object.values(state.records??{}))if(r.category==='war_disruption'&&active(r,minute)&&r.locations.some(l=>ancestors(engine,location).includes(l)))factor*=r.factor;
  for(const place of ancestors(engine,location)){
   const r=state.records?.[`hazard-price:${place}`];if(r?.category!=='hazard_price')continue;
   for(const s of Object.values(r.shifts))if(active(s,minute)&&(!s.items||s.items.includes(item)))factor*=s.factor;
@@ -100,3 +101,6 @@ export function famineAt(state,settlement,minute=state.minute){
  const r=state.records?.[`hazard-famine:${settlement}`];
  return r?.category==='hazard_famine'&&active(r,minute)?r:null;
 }
+
+// Campaign closures are stateful and shared by travel, NPC schedules and trade.
+export function warRouteClosed(state,route,minute){return Object.values(state?.records??{}).some(r=>r.category==='war_disruption'&&active(r,minute)&&r.routes.includes(route));}
