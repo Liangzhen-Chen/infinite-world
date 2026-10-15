@@ -66,6 +66,7 @@ review-002-yp=782a49e阶段审核通过，范围限T06正式发布与c64163d修�
 
 - K9 已完成（发布见PROGRESS）。原文：（用户 2026-10-14 要求）：底座 K1–K7 合入后，产出可视化的游戏系统图：一共几层、每层有哪些系统、系统之间如何串联（读写哪些共享状态、订阅哪些世界事件、受哪些交互规则和效果驱动），并附“新增一种内容要接哪些系统”的查表。按代码实际生成（脚本从注册表、规则表、订阅关系导出数据），发布为 Artifact 给用户，并在 docs/ 留一份。
 
+- Q1 发任务权限派生（主会话加，用户问“新人物能否自动获得发任务权限”时查出）：现在玩家的额度由官职、爵位、名士派生，但NPC的额度读人物数据里手填的 monthlyQuotaD，公告栏主事人在 rules.questSources.publishers 手登记，名册居民不跑需求单。改为：任何人物（玩家或NPC）的发布额度统一由其实际持有的官职、爵位、名士、组织职位派生；聚落公告栏主事人默认由该聚落现任主官派生，手填作覆盖；名册居民被点名展开为完整档后自动参与需求单。验收CORE+quest-board*/quest-sources/governance*/titles/notables-promotion/organizations/data-coverage/prompt。规模S-M。
 - K10 已完成。原文：（来源：K9 系统地图）：世界事件订阅者改为注册入口（各模块自行登记，engine 不再持私有数组）；新法术 effectSpec.kind 改为效果注册表分派（不再改 magic.mjs 分支）；聚落与势力成员的声望登记由 world 数据派生（不再手填 rules.reputation.settlements/factions）；商店可由聚落与人物服务标签派生。验收 CORE + magic*/reputation*/world-events/standing/shop-restock/system-map/prompt + 重新生成系统地图，“仍需手动接线”清单只剩新工具与K8栖地。规模M。
 
 - P1 已完成（10694）。原文：（主会话 2026-10-14 加，挡住 T124–T127 等改工具的卡）：静态提示已到 11862（硬上限 12000）。把 prompt/ 与工具描述压到 ≤11000，不删规则含义；以现有提示测试、m2/m3 离线回放测试为准。规模M。
