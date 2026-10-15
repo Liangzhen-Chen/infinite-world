@@ -128,3 +128,18 @@
 - **解契人**：负责解除求财小妖一类异物与人之间的契约。
 - **航路咒师**：给远航者施护航咒，对付海上之鬼阿达罗。
 
+## 八、核验报告（WM-2a，2026-10-15）
+
+- 方法：对照 Internet Archive / Project Gutenberg 上的原书全文（Werner 1933、Sibree 1896、Ellis 1894、Tremearne 1913、Hollis 1909、Codrington 1891、Fox 1924、Malinowski 1922 与 Baloma、Keightley 1850/1870、Rattray 1930、Grey、Gill、Thrum 等）逐条查对；查不到全文的，用可靠的二手目录佐证。
+- 抽样数：36 条（总数 121 条，占 29.8%）。notes 中标为凭记忆的 Mmoatia、Yumboes、Kirimu、Arwe、Kakamora、Chuab 以及 Malinowski 的条目全部核验。Malinowski 名下原有三条：kosi、tauvau，以及已在第四节排除的 mulukwausi，这里只核前两条。
+- 计数：通过 28，已更正 7，删除 0，未能核实 1。
+- 更正清单：
+  - 林间小人 mmoatia：“第4章”改为 pp.25–28；篇名“Ananse and the Fairy”在原书中不存在，改为书中实有的两篇 mmoatia 故事。
+  - 尤姆博 Yumboes：“引Bowdich”改为 Keightley 自注的来源（一位幼年住在戈雷岛的女士）。
+  - 蛇王阿尔韦 Arwe：无法确认《阿克苏姆之书》载有蛇王，出处改为 Dillmann 1853 刊印的王名录，简述同步收窄。
+  - 科西 kosi：主要描述在 Baloma 第1节，不在第2-3节。
+  - 阿达罗 adaro：Codrington 第12章是“Magic”，不是“Ghosts”；另补第15章。
+  - 多多 Dodo、半身族：Tremearne 第8章改为第6章。
+- 删除清单：无。
+- 未能核实：巨童楚阿布 Chuab。Krämer《Palau》全文无法在线检索。传说本身确有，但无法确认它在原书中的卷次与页码。
+- 复查：两份 JSON 均可解析，id 唯一，motifs.json 的代表条目全部存在（本次未删条，motifs 无需改动）。
