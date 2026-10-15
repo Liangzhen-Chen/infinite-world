@@ -5112,5 +5112,213 @@
     ],
     "toll": 0,
     "risk": 1
+  },
+  {
+    "id": "route_w5_tj_old_draft",
+    "from": "loc_ms_tanjie",
+    "to": "site_w5_tj_old_draft",
+    "lengthKm": 0.1,
+    "terrainMultiplier": 1.2,
+    "modes": [
+      "walk"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 0
+  },
+  {
+    "id": "route_w5_td_trap_shrine",
+    "from": "loc_ms_taideng",
+    "to": "site_w5_td_trap_shrine",
+    "lengthKm": 0.25,
+    "terrainMultiplier": 1.2,
+    "modes": [
+      "walk"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 0
+  },
+  {
+    "id": "route_w5_halfway_post_bs",
+    "from": "loc_bs",
+    "to": "site_w5_halfway_post",
+    "lengthKm": 12.01,
+    "terrainMultiplier": 0.6,
+    "modes": [
+      "walk",
+      "horse",
+      "cart"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 1
+  },
+  {
+    "id": "route_w5_halfway_post_hw",
+    "from": "loc_hw",
+    "to": "site_w5_halfway_post",
+    "lengthKm": 12.01,
+    "terrainMultiplier": 0.6,
+    "modes": [
+      "walk",
+      "horse",
+      "cart"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 1
+  },
+  {
+    "id": "route_w5_white_quarry",
+    "from": "loc_bs",
+    "to": "site_w5_white_quarry",
+    "lengthKm": 5.3,
+    "terrainMultiplier": 0.9,
+    "modes": [
+      "walk",
+      "cart"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 1
+  },
+  {
+    "id": "route_w5_broken_bell",
+    "from": "loc_bs_sangban",
+    "to": "site_w5_broken_bell",
+    "lengthKm": 6.11,
+    "terrainMultiplier": 0.9,
+    "modes": [
+      "walk"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 1
+  },
+  {
+    "id": "route_w5_old_bank_altar",
+    "from": "loc_bs_weiting",
+    "to": "site_w5_old_bank_altar",
+    "lengthKm": 4.28,
+    "terrainMultiplier": 0.9,
+    "modes": [
+      "walk"
+    ],
+    "closedSeasons": [
+      0
+    ],
+    "toll": 0,
+    "risk": 1
+  },
+  {
+    "id": "route_w5_light_workshop",
+    "from": "loc_bs",
+    "to": "site_w5_light_workshop",
+    "lengthKm": 3.71,
+    "terrainMultiplier": 0.9,
+    "modes": [
+      "walk",
+      "horse"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 0
+  },
+  {
+    "id": "route_w5_ash_market",
+    "from": "loc_bs",
+    "to": "site_w5_ash_market",
+    "lengthKm": 3.32,
+    "terrainMultiplier": 0.9,
+    "modes": [
+      "walk",
+      "cart"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 1
+  },
+  {
+    "id": "route_w5_yupo_beacon",
+    "from": "loc_bs_yupo",
+    "to": "site_w5_yupo_beacon",
+    "lengthKm": 4.02,
+    "terrainMultiplier": 0.9,
+    "modes": [
+      "walk"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 1
+  },
+  {
+    "id": "route_w5_sunk_dock",
+    "from": "loc_bs_weiting",
+    "to": "site_w5_sunk_dock",
+    "lengthKm": 2.86,
+    "terrainMultiplier": 0.9,
+    "modes": [
+      "walk",
+      "boat"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 1
+  },
+  {
+    "id": "route_w5_stone_markers",
+    "from": "loc_bs_liquan",
+    "to": "site_w5_stone_markers",
+    "lengthKm": 3.7,
+    "terrainMultiplier": 0.9,
+    "modes": [
+      "walk"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 0
+  },
+  {
+    "id": "route_w5_silk_shrine",
+    "from": "loc_bs_sangban",
+    "to": "site_w5_silk_shrine",
+    "lengthKm": 3.13,
+    "terrainMultiplier": 0.9,
+    "modes": [
+      "walk"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 0
+  },
+  {
+    "id": "route_w5_old_mill",
+    "from": "loc_bs",
+    "to": "site_w5_old_mill",
+    "lengthKm": 4.44,
+    "terrainMultiplier": 0.9,
+    "modes": [
+      "walk",
+      "cart"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 1
+  },
+  {
+    "id": "route_w5_east_barracks",
+    "from": "loc_bs",
+    "to": "site_w5_east_barracks",
+    "lengthKm": 6.26,
+    "terrainMultiplier": 0.9,
+    "modes": [
+      "walk",
+      "horse",
+      "cart"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 1
   }
 ]

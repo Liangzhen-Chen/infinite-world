@@ -44,6 +44,10 @@ export function mergeMonsterSociety2(world,batch){
 export function withoutMonsterSociety2(world,batch=buildBatch()){
  const ids=batchIds(batch),next=structuredClone(world);
  for(const [,key] of FILES)next[key]=(next[key]??[]).filter(r=>!ids.has(r.id));
+ // Later content attached inside this batch's places (e.g. T113–T115 site attachments) cannot predate it.
+ next.locations=next.locations.filter(l=>![l.site?.owner,l.site?.manager,...(l.site?.occupants??[]),...(l.site?.resources??[]).map(r=>r.owner)].some(id=>ids.has(id)));
+ for(let size=-1;size!==next.locations.length;){size=next.locations.length;const have=new Set(next.locations.map(l=>l.id));next.locations=next.locations.filter(l=>!l.parent||have.has(l.parent));}
+ const have=new Set(next.locations.map(l=>l.id));next.routes=next.routes.filter(r=>have.has(r.from)&&have.has(r.to));
  return next;
 }
 async function writeLike(target,value){
