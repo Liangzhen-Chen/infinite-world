@@ -9057,7 +9057,7 @@
   },
   {
    "name": "world_revival",
-   "description": "神殿/祭坛付费设复活点",
+   "description": "神殿/祭坛付费定复活点",
    "readOnly": false,
    "operations": null,
    "routes": [
@@ -9143,7 +9143,7 @@
   },
   {
    "name": "world_learn",
-   "description": "师授/读书/研究；student受教；book_give/study",
+   "description": "师授/读书/研究；student受教，book_give/study",
    "readOnly": false,
    "operations": null,
    "routes": [
@@ -9293,7 +9293,7 @@
   },
   {
    "name": "world_promise",
-   "description": "承诺/私宅许可；施法同意location类别、skill法术、consent确认",
+   "description": "承诺/私宅许可/施法同意：location类别，skill法术，consent确认",
    "readOnly": false,
    "operations": [
     "create",
