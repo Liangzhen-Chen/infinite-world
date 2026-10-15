@@ -40,7 +40,7 @@ export function waterDiseaseExposure(s,location){
 }
 export function medicinePriceFactor(e,s,item,location){
  if(item!=='item_herb')return 1;
- const pending=medicineRows(s).filter(r=>r.status==='预约'&&r.location===location).length;
+ const pending=medicineRows(s).filter(r=>r.status==='预约'&&r.clinic===`clinic:${location}`).length;
  if(!pending)return 1;
  const supply=medicineSites(e,s).filter(c=>c.seat===location).reduce((sum,c)=>sum+[c.owner,...c.doctors].filter((id,i,a)=>id&&a.indexOf(id)===i).reduce((n,id)=>{const q=s.npcs?.[id]?.inventory?.[item];return n+(typeof q==='number'?q:q?.quantity??0);},0),0);
  return Math.min(2,1+pending/(supply+pending));

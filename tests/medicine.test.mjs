@@ -27,7 +27,7 @@ const wound=()=>({bloodMl:4500,pain:3,wounds:[{id:'cut',simple:true,depthMm:2,ar
 const herbsOf=(f,id)=>{const q=f.doc.state.npcs[id]?.inventory?.item_herb;return typeof q==='number'?q:q?.quantity??0;};
 const visits=f=>Object.values(f.doc.state.records).filter(r=>r.category==='medicine_visit');
 function sick(f,id=PATIENT,{severity='轻',days=10,coins=0}={}){
- const ill={id:`illness_test_${id}`,patient:id,severity,since:f.doc.state.minute,endsAt:f.doc.state.minute+days*DAY,status:'患病中',previousStatus:null,household:null,caregivers:[],fatality:{cared:.2,alone:.4}};
+ const ill={id:`illness_test_${id}`,patient:id,severity,since:f.doc.state.minute-2*DAY,endsAt:f.doc.state.minute+days*DAY,status:'患病中',previousStatus:null,household:null,caregivers:[],fatality:{cared:.2,alone:.4}};
  f.doc.state.family={...f.doc.state.family,illnesses:{...f.doc.state.family?.illnesses,[ill.id]:ill}};
  if(id==='player')f.doc.state.player.coins=coins;else Object.assign(f.doc.state.npcs[id],{status:'患病',coins});
  return ill.id;

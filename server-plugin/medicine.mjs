@@ -27,35 +27,39 @@ function available(e,s,id,start,end,location){
  const job=currentEmployment(s,id,start);if(employmentReservation(s,id,start,end-start)&&(!job||job.location!==location||!/诊疗|药童/.test(job.task??'')))return false;
  return windows(e,s,id,start).some(w=>w.location===location&&w.start<=start%DAY&&w.end>=start%DAY+end-start&&!/睡|午饭|休息|家务/.test(w.activity??''));
 }
+const SEEK_AFTER=2*DAY;
+const needsCare=(c,now)=>c.kind==='illness'?now-c.record.since>=SEEK_AFTER:c.record.bleedingMlPerMinute>0||c.record.contamination>0||c.record.infected;
 function fundAt(s,location){return Object.values(s.records??{}).find(r=>r.category==='medicine_fund'&&r.location===location&&r.coins>0);}
 function templeSponsor(e,s,location,fee){
  const sid=placeSettlement(e,s,location).value;
  return temples(e).find(t=>placeSettlement(e,s,t.seat).value===sid&&(groupAccountView(e,s,t.id)?.coins??0)>=fee&&(groupAccountView(e,s,t.id)?.items?.item_herb??0)>0);
 }
-function book(d,e,{patient='player',clinic,source=null,credit=false,charity=false,consent=false},id){
+function book(d,e,{patient='player',clinic,source=null,credit=false,charity=false,consent=false,only=()=>true},id){
  let s=d.get('state');const now=s.minute;
  if(!capable(s,patient)||personConstraint(e,s,patient)||pending(s,patient))throw Error('病人不能赴诊或已有预约');
- const conditions=medicalConditions(s,patient);if(!conditions.length)throw Error('没有登记的疾病或未愈创伤');
+ const conditions=medicalConditions(s,patient).filter(only);if(!conditions.length)throw Error('没有登记的疾病或未愈创伤');
  const site=medicineSites(e,s).find(c=>c.id===clinic||c.seat===clinic||c.name===clinic);if(!site||site.factor===0||!site.capacity)throw Error('医馆不存在或已停用');
  if(patient==='player'&&s.location!==site.seat)throw Error('须到医馆求医');
  if(patient!=='player'&&!consent)throw Error('诊疗须病人自愿求医');
+ // A bedridden grave patient is visited at home; everyone else walks to the clinic.
+ const house=patient!=='player'&&actor(s,patient).status==='患病'&&conditions.some(c=>c.severity==='重'),place=house?present(s,patient):site.seat;
  let travel=0;
  if(present(s,patient)!==site.seat){try{travel=e.route(present(s,patient),site.seat,'walk',now,d.document.randomSeed).minutes;}catch{throw Error('病人没有可行赴诊路线');}}
  if(!Number.isFinite(travel)||travel>DAY)throw Error('病人路程过远，需先安排运输');
  let chosen=null;
  for(let day=Math.floor(now/DAY);day<=Math.floor(now/DAY)+7&&!chosen;day++)for(let at=Math.max(day*DAY+480,Math.ceil((now+travel)/30)*30);at+30<=day*DAY+1080;at+=30){
   const end=at+30;
-  if(medicineRows(s).filter(r=>r.status==='预约'&&r.location===site.seat&&r.start<end&&r.end>at).length>=site.capacity)continue;
+  if(medicineRows(s).filter(r=>r.status==='预约'&&r.clinic===site.id&&r.start<end&&r.end>at).length>=site.capacity)continue;
   if(patient!=='player'&&(educationReservation(e,s,patient,at-travel,30+travel)||employmentReservation(s,patient,at-travel,30+travel)||medicineReservation(s,patient,at-travel,30+travel)||e.npcAutonomyBusy?.(s,patient,at)))continue;
-  const doctor=site.doctors.find(who=>who!==patient&&available(e,s,who,at,end,site.seat));if(!doctor)continue;
-  const assistants=site.assistants.filter(who=>available(e,s,who,at,end,site.seat)).slice(0,1);
-  const fee=Math.max(1,Math.ceil((e.rules.economy.wageCopperPerHalfDay?.[0]??10)/2))+Math.round((e.byId.get('item_herb')?.basePrice??3)*(1+medicineRows(s).filter(r=>r.status==='预约'&&r.location===site.seat).length/Math.max(1,site.capacity)));
+  const doctor=site.doctors.find(who=>who!==patient&&(house?available(e,s,who,at-travel,end+travel,site.seat):available(e,s,who,at,end,site.seat)));if(!doctor)continue;
+  const assistants=house?[]:site.assistants.filter(who=>available(e,s,who,at,end,site.seat)).slice(0,1);
+  const fee=Math.max(1,Math.ceil((e.rules.economy.wageCopperPerHalfDay?.[0]??10)/2))+Math.round((e.byId.get('item_herb')?.basePrice??3)*(1+medicineRows(s).filter(r=>r.status==='预约'&&r.clinic===site.id).length/Math.max(1,site.capacity)));
   chosen={doctor,assistants,start:at,end,fee};break;
  }
  if(!chosen)throw Error('医师七日内没有可用排期');
  const fund=charity?fundAt(s,site.seat):null,temple=charity&&!fund?templeSponsor(e,s,site.seat,chosen.fee):null;
  if(financeBalance(d,e,patient)<chosen.fee&&!credit&&!fund&&!temple)throw Error('诊费不足，可求赊欠或义诊');
- const row={id:`medicine:${id}`,category:'medicine_visit',patient,clinic:site.id,location:site.seat,owner:site.owner??chosen.doctor,...chosen,depart:chosen.start-travel,travel,from:present(s,patient),source,conditions:conditions.map(c=>({kind:c.kind,id:c.id})),credit,charity:fund?.id??temple?.id??null,consent:true,status:'预约',createdAt:now};
+ const row={id:`medicine:${id}`,category:'medicine_visit',patient,clinic:site.id,location:place,houseCall:house,owner:site.owner??chosen.doctor,...chosen,depart:chosen.start-travel,travel,from:present(s,patient),source,conditions:conditions.map(c=>({kind:c.kind,id:c.id})),credit,charity:fund?.id??temple?.id??null,consent:true,status:'预约',createdAt:now};
  d.set(rec(row.id),row);return row;
 }
 function stockSource(d,e,r){
@@ -87,7 +91,8 @@ function finish(d,e,r){
  for(const c of medicalConditions(s,r.patient).filter(c=>r.conditions.some(x=>x.id===c.id&&x.kind===c.kind))){
   if(c.kind==='illness'){
    const ill=structuredClone(c.record),history=[...ill.treatments??[],{visit:r.id,minute:r.end,doctor:r.doctor,correct,herb:1}];
-   const reduction=correct?Math.min(DAY,Math.max(0,ill.endsAt-r.end-DAY)):0;
+   // Medicine shortens a light illness; a grave one still runs its course but with better odds.
+   const reduction=correct&&ill.severity!=='重'?Math.min(DAY,Math.max(0,ill.endsAt-r.end-DAY)):0;
    ill.endsAt-=reduction;ill.treatments=history;ill.lastConsultedAt=r.end;
    if(correct){const odds=ill.fatality??e.rules.npcLife?.health?.graveFatality;if(odds)ill.fatality={cared:odds.cared*.75,alone:odds.alone*.75};ill.treated=r.id;}
    else ill.misdiagnosedAt=r.end;
@@ -115,13 +120,14 @@ function autonomous(d,e,now){
  for(const patient of [...patients].sort()){
   if(patient==='player'||pending(d.get('state'),patient)||!capable(s,patient)||s.player.companions?.includes(patient)||s.npcs[patient]?.cognitionTravel||s.npcs[patient]?.scheduleTravel)continue;
   const previous=medicineRows(s).filter(r=>r.patient===patient).sort((a,b)=>b.createdAt-a.createdAt)[0];if(previous&&(previous.followUpAt??previous.createdAt+DAY)>now)continue;
-  const condition=medicalConditions(d.get('state'),patient)[0];if(!condition)continue;
+  // People first rest at home; a sickness that lingers or an acute wound sends them to a doctor.
+  const condition=medicalConditions(d.get('state'),patient).find(c=>needsCare(c,now));if(!condition)continue;
   const sid=placeSettlement(e,s,present(s,patient)).value,site=sites.find(c=>c.capacity&&c.doctors.some(id=>id!==patient)&&placeSettlement(e,s,c.seat).value===sid);if(!site)continue;
   const poor=financeBalance(d,e,patient)<8,charity=poor,credit=poor&&condition.severity==='重';
   if(poor&&!credit&&!fundAt(s,site.seat)&&!templeSponsor(e,s,site.seat,8)){
    d.set(rec(`medicine_delay:${patient}`),{category:'medicine_delay',patient,clinic:site.id,reason:'诊费不足，暂缓求医',minute:now,condition:condition.id});continue;
   }
-  try{book(d,e,{patient,clinic:site.id,source:previous?.id??condition.id,credit,charity,consent:true},`auto:${patient}:${now}`);}catch(error){d.set(rec(`medicine_delay:${patient}`),{category:'medicine_delay',patient,clinic:site.id,reason:error.message,minute:now,condition:condition.id});}
+  try{book(d,e,{patient,clinic:site.id,source:previous?.id??condition.id,credit,charity,consent:true,only:c=>needsCare(c,now)},`auto:${patient}:${now}`);}catch(error){d.set(rec(`medicine_delay:${patient}`),{category:'medicine_delay',patient,clinic:site.id,reason:error.message,minute:now,condition:condition.id});}
  }
 }
 export function prepareMedicine(d,e,{before,after}){
@@ -129,17 +135,18 @@ export function prepareMedicine(d,e,{before,after}){
  if(Math.floor(before/DAY)<Math.floor(after/DAY)||before%DAY===480)autonomous(d,e,before);
  e.medicineParticipants=new Set();
  for(const r of medicineRows(d.get('state')))if(r.status==='预约'&&r.depart<after&&r.end>before){
-  for(const id of [r.doctor,...r.assistants,r.patient])if(id!=='player')e.medicineParticipants.add(id);
+  for(const id of [r.doctor,...r.assistants,...r.houseCall?[]:[r.patient]])if(id!=='player')e.medicineParticipants.add(id);
  }
 }
 export function advanceMedicine(d,e,{before,after}){
  if(!medicineFresh(e)||after<=before)return;
  for(const r of medicineRows(d.get('state')))if(r.status==='预约'){
-  if(r.patient!=='player'&&after>=r.start&&before<r.end&&capable(d.get('state'),r.patient)&&!personConstraint(e,d.get('state'),r.patient)){
+  if(r.houseCall&&after>=r.start&&before<r.end&&capable(d.get('state'),r.doctor)&&!personConstraint(e,d.get('state'),r.doctor)){d.set(['state','npcs',r.doctor,'location'],r.location);d.set(['state','npcs',r.doctor,'activity'],'出诊');}
+  else if(r.patient!=='player'&&after>=r.start&&before<r.end&&capable(d.get('state'),r.patient)&&!personConstraint(e,d.get('state'),r.patient)){
    // The stored route duration is elapsed before arrival; no stock or coins move in transit.
    d.set(['state','npcs',r.patient,'location'],r.location);d.set(['state','npcs',r.patient,'activity'],'求医');
   }
-  if(after>=r.end){finish(d,e,r);const row=d.get(...rec(r.id));if(row?.status==='已诊'&&r.patient!=='player')d.set(['state','npcs',r.patient,'activity'],'复诊休养');}
+  if(after>=r.end){finish(d,e,r);const row=d.get(...rec(r.id));if(row?.status==='已诊'&&r.patient!=='player'&&!r.houseCall)d.set(['state','npcs',r.patient,'activity'],'复诊休养');}
  }
  for(const ill of Object.values(d.get('state','family','illnesses')??{}))if(ill.patient==='player'&&ill.status==='患病中'&&ill.endsAt<=after)recoverIllness(d,e,ill,after);
  // Daily dressing and rest can heal limited uncomplicated wounds; missed

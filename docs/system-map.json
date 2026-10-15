@@ -992,7 +992,7 @@
     "server-plugin/population-service.mjs",
     "server-plugin/settlement-profile.mjs"
    ],
-   "lines": 3537,
+   "lines": 3544,
    "stateWrites": [
     "created",
     "creatures",
@@ -17698,7 +17698,7 @@
    ],
    "world": [],
    "worldDirs": [],
-   "lines": 210
+   "lines": 217
   },
   "server-plugin/migrations.mjs": {
    "system": "kernel_storage",
