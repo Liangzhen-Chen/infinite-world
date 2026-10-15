@@ -1,0 +1,528 @@
+{
+ "$schema": "../../schemas/ontology.schema.json",
+ "kind": "holdings",
+ "namespace": "core",
+ "version": 1,
+ "note": "持有种类目录（01 §1.3）与交接类（04 §4.3）。S0 只建表与校验；holderKinds/subjectKinds 为实体模板（entity-templates.json）。",
+ "handoverClasses": [
+  {
+   "id": "vacate",
+   "label": "标的（职位）进入自己的继任规则"
+  },
+  {
+   "id": "stay",
+   "label": "不动"
+  },
+  {
+   "id": "succeed",
+   "label": "按声明的候补顺序移交"
+  },
+  {
+   "id": "estate",
+   "label": "转入遗产/清算实体"
+  },
+  {
+   "id": "close",
+   "label": "关闭并通知标的"
+  },
+  {
+   "id": "revert",
+   "label": "回到授予者"
+  },
+  {
+   "id": "retain_disputed",
+   "label": "保留实控并立主张"
+  },
+  {
+   "id": "suspend",
+   "label": "暂停"
+  },
+  {
+   "id": "liquidate",
+   "label": "清算按份额分配"
+  }
+ ],
+ "triggers": [
+  "gone",
+  "vacated",
+  "moved",
+  "defected",
+  "impaired",
+  "subjectGone"
+ ],
+ "entries": [
+  {
+   "id": "resides",
+   "label": "居住",
+   "holderKinds": [
+    "agent"
+   ],
+   "subjectKinds": [
+    "place"
+   ],
+   "exclusive": false,
+   "handover": {
+    "gone": "close",
+    "vacated": "close",
+    "moved": "close"
+   },
+   "visibility": "public"
+  },
+  {
+   "id": "household_member",
+   "label": "家户成员",
+   "holderKinds": [
+    "agent"
+   ],
+   "subjectKinds": [
+    "collective"
+   ],
+   "exclusive": false,
+   "handover": {
+    "gone": "close",
+    "vacated": "close"
+   },
+   "visibility": "public"
+  },
+  {
+   "id": "household_head",
+   "label": "户主",
+   "holderKinds": [
+    "agent"
+   ],
+   "subjectKinds": [
+    "collective"
+   ],
+   "exclusive": true,
+   "handover": {
+    "gone": "succeed",
+    "vacated": "succeed"
+   },
+   "visibility": "public"
+  },
+  {
+   "id": "kin",
+   "label": "亲属",
+   "holderKinds": [
+    "agent"
+   ],
+   "subjectKinds": [
+    "agent"
+   ],
+   "exclusive": false,
+   "handover": {
+    "gone": "close"
+   },
+   "visibility": "public"
+  },
+  {
+   "id": "owns",
+   "label": "所有",
+   "holderKinds": [
+    "agent",
+    "collective",
+    "interim"
+   ],
+   "subjectKinds": [
+    "thing",
+    "population"
+   ],
+   "exclusive": true,
+   "handover": {
+    "gone": "estate",
+    "defected": "stay",
+    "subjectGone": "stay"
+   },
+   "visibility": "public"
+  },
+  {
+   "id": "share",
+   "label": "股份",
+   "holderKinds": [
+    "agent",
+    "collective",
+    "interim"
+   ],
+   "subjectKinds": [
+    "collective"
+   ],
+   "exclusive": false,
+   "sum": 1,
+   "handover": {
+    "gone": "estate",
+    "defected": "stay",
+    "subjectGone": "liquidate"
+   },
+   "visibility": "members"
+  },
+  {
+   "id": "leases",
+   "label": "租赁",
+   "holderKinds": [
+    "agent",
+    "collective",
+    "interim"
+   ],
+   "subjectKinds": [
+    "thing",
+    "place"
+   ],
+   "exclusive": true,
+   "handover": {
+    "gone": "estate",
+    "vacated": "close",
+    "subjectGone": "suspend"
+   },
+   "visibility": "parties"
+  },
+  {
+   "id": "operates",
+   "label": "经营",
+   "holderKinds": [
+    "agent",
+    "interim"
+   ],
+   "subjectKinds": [
+    "thing",
+    "collective"
+   ],
+   "exclusive": true,
+   "handover": {
+    "gone": "estate"
+   },
+   "visibility": "public"
+  },
+  {
+   "id": "employed_by",
+   "label": "雇佣",
+   "holderKinds": [
+    "agent"
+   ],
+   "subjectKinds": [
+    "agent",
+    "collective",
+    "interim"
+   ],
+   "exclusive": false,
+   "handover": {
+    "gone": "close",
+    "impaired": "suspend",
+    "subjectGone": "estate"
+   },
+   "visibility": "parties"
+  },
+  {
+   "id": "holds_office",
+   "label": "任职",
+   "holderKinds": [
+    "agent"
+   ],
+   "subjectKinds": [
+    "office"
+   ],
+   "exclusive": true,
+   "handover": {
+    "gone": "vacate",
+    "vacated": "vacate",
+    "defected": "vacate",
+    "impaired": "suspend",
+    "subjectGone": "close"
+   },
+   "visibility": "public"
+  },
+  {
+   "id": "appointed",
+   "label": "任命",
+   "holderKinds": [
+    "office"
+   ],
+   "subjectKinds": [
+    "office",
+    "agent"
+   ],
+   "exclusive": false,
+   "handover": {
+    "gone": "stay",
+    "subjectGone": "close"
+   },
+   "visibility": "public"
+  },
+  {
+   "id": "member_of",
+   "label": "会籍",
+   "holderKinds": [
+    "agent"
+   ],
+   "subjectKinds": [
+    "collective"
+   ],
+   "exclusive": false,
+   "handover": {
+    "gone": "close",
+    "vacated": "close",
+    "defected": "close"
+   },
+   "visibility": "members"
+  },
+  {
+   "id": "citizen_of",
+   "label": "公民籍",
+   "holderKinds": [
+    "agent"
+   ],
+   "subjectKinds": [
+    "collective",
+    "place"
+   ],
+   "exclusive": false,
+   "handover": {
+    "gone": "close",
+    "vacated": "close"
+   },
+   "visibility": "public"
+  },
+  {
+   "id": "resident_of",
+   "label": "居留",
+   "holderKinds": [
+    "agent"
+   ],
+   "subjectKinds": [
+    "collective",
+    "place"
+   ],
+   "exclusive": false,
+   "handover": {
+    "gone": "close",
+    "vacated": "close"
+   },
+   "visibility": "public"
+  },
+  {
+   "id": "certified",
+   "label": "认证",
+   "holderKinds": [
+    "agent"
+   ],
+   "subjectKinds": [
+    "office"
+   ],
+   "exclusive": false,
+   "handover": {
+    "gone": "close",
+    "defected": "stay",
+    "subjectGone": "stay"
+   },
+   "visibility": "public"
+  },
+  {
+   "id": "guardian_of",
+   "label": "监护",
+   "holderKinds": [
+    "agent"
+   ],
+   "subjectKinds": [
+    "agent"
+   ],
+   "exclusive": true,
+   "handover": {
+    "gone": "succeed",
+    "impaired": "succeed"
+   },
+   "visibility": "parties"
+  },
+  {
+   "id": "custody_of",
+   "label": "托养看管",
+   "holderKinds": [
+    "agent"
+   ],
+   "subjectKinds": [
+    "agent",
+    "thing"
+   ],
+   "exclusive": true,
+   "handover": {
+    "gone": "succeed"
+   },
+   "visibility": "parties"
+  },
+  {
+   "id": "tamed_by",
+   "label": "驯服",
+   "holderKinds": [
+    "agent"
+   ],
+   "subjectKinds": [
+    "agent"
+   ],
+   "exclusive": true,
+   "handover": {
+    "gone": "estate",
+    "subjectGone": "close"
+   },
+   "visibility": "public"
+  },
+  {
+   "id": "governs",
+   "label": "统治",
+   "holderKinds": [
+    "collective"
+   ],
+   "subjectKinds": [
+    "place"
+   ],
+   "exclusive": true,
+   "handover": {
+    "gone": "revert"
+   },
+   "visibility": "public"
+  },
+  {
+   "id": "administers",
+   "label": "管理",
+   "holderKinds": [
+    "collective"
+   ],
+   "subjectKinds": [
+    "collective",
+    "place"
+   ],
+   "exclusive": true,
+   "handover": {
+    "gone": "revert"
+   },
+   "visibility": "public"
+  },
+  {
+   "id": "controls",
+   "label": "控制",
+   "holderKinds": [
+    "agent",
+    "collective"
+   ],
+   "subjectKinds": [
+    "place"
+   ],
+   "exclusive": true,
+   "handover": {
+    "gone": "close"
+   },
+   "visibility": "public"
+  },
+  {
+   "id": "fief",
+   "label": "封地",
+   "holderKinds": [
+    "agent"
+   ],
+   "subjectKinds": [
+    "place",
+    "collective"
+   ],
+   "exclusive": true,
+   "handover": {
+    "gone": "revert",
+    "vacated": "revert",
+    "defected": "retain_disputed"
+   },
+   "visibility": "public"
+  },
+  {
+   "id": "registered",
+   "label": "登记",
+   "holderKinds": [
+    "thing",
+    "agent",
+    "collective"
+   ],
+   "subjectKinds": [
+    "office"
+   ],
+   "exclusive": false,
+   "handover": {
+    "gone": "stay"
+   },
+   "visibility": "public"
+  },
+  {
+   "id": "pledged",
+   "label": "质押",
+   "holderKinds": [
+    "instrument"
+   ],
+   "subjectKinds": [
+    "thing"
+   ],
+   "exclusive": true,
+   "handover": {
+    "gone": "close"
+   },
+   "visibility": "parties"
+  },
+  {
+   "id": "frozen",
+   "label": "冻结",
+   "holderKinds": [
+    "interim"
+   ],
+   "subjectKinds": [
+    "instrument",
+    "thing",
+    "collective"
+   ],
+   "exclusive": false,
+   "handover": {
+    "gone": "close"
+   },
+   "visibility": "parties"
+  },
+  {
+   "id": "permit",
+   "label": "许可",
+   "holderKinds": [
+    "office"
+   ],
+   "subjectKinds": [
+    "agent"
+   ],
+   "exclusive": false,
+   "handover": {
+    "gone": "revert"
+   },
+   "visibility": "parties"
+  },
+  {
+   "id": "companion",
+   "label": "同行",
+   "holderKinds": [
+    "agent"
+   ],
+   "subjectKinds": [
+    "agent"
+   ],
+   "exclusive": false,
+   "handover": {
+    "gone": "close",
+    "vacated": "close"
+   },
+   "visibility": "public"
+  },
+  {
+   "id": "located_in",
+   "label": "所在",
+   "holderKinds": [
+    "thing",
+    "population"
+   ],
+   "subjectKinds": [
+    "place"
+   ],
+   "exclusive": true,
+   "handover": {
+    "gone": "stay"
+   },
+   "visibility": "public"
+  }
+ ]
+}

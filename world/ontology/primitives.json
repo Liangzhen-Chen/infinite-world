@@ -1,0 +1,182 @@
+{
+ "$schema": "../../schemas/ontology.schema.json",
+ "kind": "primitives",
+ "namespace": "core",
+ "version": 1,
+ "note": "效果原语（06 §6.3），18 个、14 族（文档写“12 族”，按表实为 14）。event 为该原语产生的事件动词（须在 verbs.json）。create 的兜底形式为 kind=mark（06 §6.9.5）。",
+ "entries": [
+  {
+   "id": "transfer",
+   "family": "transfer",
+   "event": "transfer",
+   "params": [
+    "resource",
+    "from",
+    "to",
+    "qty"
+   ]
+  },
+  {
+   "id": "holding.open",
+   "family": "holding",
+   "event": "holding_opened",
+   "params": [
+    "kind",
+    "holder",
+    "subject",
+    "terms",
+    "grantedBy"
+   ]
+  },
+  {
+   "id": "holding.close",
+   "family": "holding",
+   "event": "holding_closed",
+   "params": [
+    "holding",
+    "reason"
+   ]
+  },
+  {
+   "id": "holding.transfer",
+   "family": "holding",
+   "event": "holding_transferred",
+   "params": [
+    "holding",
+    "newHolder"
+   ]
+  },
+  {
+   "id": "obligation.create",
+   "family": "obligation",
+   "event": "obligation_created",
+   "params": [
+    "kind",
+    "debtor",
+    "creditor",
+    "terms"
+   ]
+  },
+  {
+   "id": "obligation.settle",
+   "family": "obligation",
+   "event": "settled",
+   "params": [
+    "id",
+    "amount"
+   ]
+  },
+  {
+   "id": "obligation.cancel",
+   "family": "obligation",
+   "event": "cancelled",
+   "params": [
+    "id",
+    "reason"
+   ]
+  },
+  {
+   "id": "fact.set",
+   "family": "fact",
+   "event": "fact_changed",
+   "params": [
+    "entity",
+    "field"
+   ]
+  },
+  {
+   "id": "vital",
+   "family": "vital",
+   "event": "harm",
+   "params": [
+    "target",
+    "delta",
+    "type"
+   ]
+  },
+  {
+   "id": "status",
+   "family": "status",
+   "event": "status_applied",
+   "params": [
+    "target",
+    "status",
+    "duration"
+   ]
+  },
+  {
+   "id": "move",
+   "family": "move",
+   "event": "moved",
+   "params": [
+    "entity",
+    "to",
+    "mode"
+   ]
+  },
+  {
+   "id": "create",
+   "family": "create",
+   "event": "created",
+   "params": [
+    "kind",
+    "template"
+   ]
+  },
+  {
+   "id": "destroy",
+   "family": "destroy",
+   "event": "destroyed",
+   "params": [
+    "entity"
+   ]
+  },
+  {
+   "id": "emit",
+   "family": "emit",
+   "event": "tell",
+   "params": [
+    "verb",
+    "actor"
+   ]
+  },
+  {
+   "id": "schedule",
+   "family": "schedule",
+   "event": "scheduled",
+   "params": [
+    "at",
+    "rule"
+   ]
+  },
+  {
+   "id": "transition",
+   "family": "transition",
+   "event": "transition",
+   "params": [
+    "entity",
+    "kind",
+    "cause"
+   ]
+  },
+  {
+   "id": "learn",
+   "family": "learn",
+   "event": "learned",
+   "params": [
+    "entity",
+    "subject",
+    "amount",
+    "source"
+   ]
+  },
+  {
+   "id": "time",
+   "family": "time",
+   "event": "time",
+   "params": [
+    "minutes"
+   ]
+  }
+ ]
+}

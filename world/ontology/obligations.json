@@ -1,0 +1,169 @@
+{
+ "$schema": "../../schemas/ontology.schema.json",
+ "kind": "obligations",
+ "namespace": "core",
+ "version": 1,
+ "note": "义务种类目录（01 §1.4）。schedule 为日程形状；条款、累计闭式与违约规则由包数据声明，S0 只登记种类。",
+ "entries": [
+  {
+   "id": "loan",
+   "label": "借贷",
+   "schedule": "installments",
+   "handover": {
+    "debtorGone": "estate",
+    "creditorGone": "estate",
+    "impaired": "suspend"
+   }
+  },
+  {
+   "id": "deposit",
+   "label": "存款",
+   "schedule": "continuous",
+   "handover": {
+    "debtorGone": "estate",
+    "creditorGone": "estate",
+    "impaired": "suspend"
+   }
+  },
+  {
+   "id": "bill",
+   "label": "汇票",
+   "schedule": "single",
+   "handover": {
+    "debtorGone": "estate",
+    "creditorGone": "estate",
+    "impaired": "suspend"
+   }
+  },
+  {
+   "id": "rent",
+   "label": "租金",
+   "schedule": "monthly",
+   "handover": {
+    "debtorGone": "estate",
+    "creditorGone": "estate",
+    "impaired": "suspend"
+   }
+  },
+  {
+   "id": "wage",
+   "label": "工资",
+   "schedule": "continuous",
+   "handover": {
+    "debtorGone": "estate",
+    "creditorGone": "estate",
+    "impaired": "suspend"
+   }
+  },
+  {
+   "id": "dividend",
+   "label": "分红",
+   "schedule": "periodic",
+   "handover": {
+    "debtorGone": "estate",
+    "creditorGone": "estate",
+    "impaired": "suspend"
+   }
+  },
+  {
+   "id": "salary",
+   "label": "俸禄",
+   "schedule": "monthly",
+   "handover": {
+    "debtorGone": "estate",
+    "creditorGone": "estate",
+    "impaired": "suspend"
+   }
+  },
+  {
+   "id": "tax",
+   "label": "税负",
+   "schedule": "periodic",
+   "handover": {
+    "debtorGone": "estate",
+    "creditorGone": "estate",
+    "impaired": "suspend"
+   }
+  },
+  {
+   "id": "delivery",
+   "label": "送货托运",
+   "schedule": "condition",
+   "handover": {
+    "debtorGone": "estate",
+    "creditorGone": "estate",
+    "impaired": "suspend"
+   }
+  },
+  {
+   "id": "escort",
+   "label": "护送带路",
+   "schedule": "condition",
+   "handover": {
+    "debtorGone": "estate",
+    "creditorGone": "estate",
+    "impaired": "suspend"
+   }
+  },
+  {
+   "id": "promise",
+   "label": "承诺",
+   "schedule": "single",
+   "handover": {
+    "debtorGone": "estate",
+    "creditorGone": "estate",
+    "impaired": "suspend"
+   }
+  },
+  {
+   "id": "service",
+   "label": "服务授课诊疗",
+   "schedule": "periodic",
+   "handover": {
+    "debtorGone": "estate",
+    "creditorGone": "estate",
+    "impaired": "suspend"
+   }
+  },
+  {
+   "id": "judgment",
+   "label": "判决执行",
+   "schedule": "single",
+   "handover": {
+    "debtorGone": "estate",
+    "creditorGone": "estate",
+    "impaired": "suspend"
+   }
+  },
+  {
+   "id": "compensation",
+   "label": "赔偿抚恤",
+   "schedule": "installments",
+   "handover": {
+    "debtorGone": "estate",
+    "creditorGone": "estate",
+    "impaired": "suspend"
+   }
+  },
+  {
+   "id": "upkeep",
+   "label": "维持会费",
+   "schedule": "continuous",
+   "handover": {
+    "debtorGone": "estate",
+    "creditorGone": "estate",
+    "impaired": "suspend"
+   }
+  },
+  {
+   "id": "project",
+   "label": "工程",
+   "schedule": "condition",
+   "handover": {
+    "debtorGone": "estate",
+    "creditorGone": "estate",
+    "impaired": "suspend"
+   }
+  }
+ ]
+}

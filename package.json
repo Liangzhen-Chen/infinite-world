@@ -15,7 +15,17 @@
     "build:release": "node tools/build-world.mjs --release",
     "build:final": "node tools/build-world.mjs --final",
     "build:card": "node tools/build-card.mjs",
-    "progress": "node tools/catalog-progress.mjs"
+    "progress": "node tools/catalog-progress.mjs",
+    "metrics": "node tools/s0-metrics.mjs",
+    "metrics:ontology": "node tools/ontology.mjs",
+    "metrics:imports": "node tools/import-graph.mjs",
+    "metrics:derived": "node tools/derived-scan.mjs",
+    "metrics:actions": "node tools/export-actions.mjs",
+    "metrics:intents": "node tools/intent-score.mjs",
+    "metrics:probes": "node tools/probe-score.mjs",
+    "test:s0": "node --test --test-isolation=none tests/ontology.test.mjs tests/arch-metrics.test.mjs tests/actions-catalog.test.mjs tests/intents.test.mjs",
+    "test:probes": "node --test --test-isolation=none tests/probes/run-001.test.mjs",
+    "docs:gaps": "node tools/gap-list.mjs"
   },
   "devDependencies": {
     "express": "4.22.1",

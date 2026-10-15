@@ -130,6 +130,7 @@ const SYSTEMS=[
  {id:'data_design',layer:'data',name:'设计表',dir:'world/design',modules:[]},
  {id:'data_assets',layer:'data',name:'美术与音频',dir:'world/art + world/audio',modules:[]},
  {id:'data_drafts',layer:'data',name:'内容草稿',dir:'world/drafts',modules:[]},
+ {id:'data_ontology',layer:'data',name:'词汇表（L1，S0）',dir:'world/ontology',modules:[]},
  // 内核层
  {id:'kernel_engine',layer:'kernel',name:'结算引擎',modules:['engine.mjs','activities.mjs','campaign-reducer.mjs','archived-reducer.mjs']},
  {id:'kernel_storage',layer:'kernel',name:'存档与迁移',modules:['storage.mjs','migrations.mjs','migrations/r1.mjs','rule-state-migration.mjs','world-registry.mjs','world-upgrade.mjs',
@@ -342,7 +343,7 @@ const modules=Object.fromEntries(CODE.map(f=>{
   stateWrites:s?[...s.writes].sort():[],stateReads:s?[...s.reads].sort():[],recordWrites:s?[...s.recW].sort():[],recordReads:s?[...s.recR].sort():[],
   rules:u.rules,world:u.world,worldDirs:u.dirs,lines:src(f).split('\n').length}];
 }));
-const dataSystemForDir={meta:'data_meta',geo:'data_geo',people:'data_people',lore:'data_lore',design:'data_design',art:'data_assets',audio:'data_assets',drafts:'data_drafts'};
+const dataSystemForDir={meta:'data_meta',geo:'data_geo',people:'data_people',lore:'data_lore',design:'data_design',art:'data_assets',audio:'data_assets',drafts:'data_drafts',ontology:'data_ontology'};
 const systemFacts=SYSTEMS.map(s=>{
  const ms=s.files.map(f=>modules[f]);
  const agg=k=>uniq(ms.flatMap(m=>m[k]));
@@ -501,6 +502,19 @@ const manualWiring=[
 const structureNotes=[
  {content:'推进',item:'推进注册表里的 daily 项内联了农业、宠物、野物、首领的日结；pets 同时在 daily 与 pets 两处被调用'},
 ];
+// S0 架构度量工具（AR 迁移）：每项一条命令，基线登记在 docs/架构设计/度量基线.md。
+const METRIC_TOOLS=[
+ {tool:'tools/ontology.mjs',script:'metrics:ontology',measures:'词汇表 schema 校验与 I18 词汇封闭（代码用到未登记的动词/标签/罪名）',reads:['world/ontology','schemas/ontology.schema.json'],baseline:null},
+ {tool:'tools/import-graph.mjs',script:'metrics:imports',measures:'I19 import 图：按 tools/arch-layers.mjs 标层，统计向上依赖与包间 import',reads:['server-plugin','extension','tools/arch-layers.mjs'],baseline:'tests/metrics/import-graph.baseline.json'},
+ {tool:'tools/derived-scan.mjs',script:'metrics:derived',measures:'I10 派生黑名单：存档写入点与作者数据中应派生却存储的字段',reads:['world/ontology/derived-fields.json','server-plugin','world'],baseline:'tests/metrics/derived-scan.baseline.json'},
+ {tool:'tools/export-actions.mjs',script:'metrics:actions',measures:'动作清单自动导出（工具 × 子操作 × 处理器）',reads:['extension/tools.mjs','server-plugin'],output:'docs/actions.json'},
+ {tool:'tools/intent-score.mjs',script:'metrics:intents',measures:'意图语料校验与评分骨架（路由、签名、不支持率、兜底实体无系统反应率）',reads:['tests/intents','docs/actions.json','world/ontology'],baseline:null},
+ {tool:'tools/probe-score.mjs',script:'metrics:probes',measures:'run-001 事件推演脚本化合理率',reads:['tests/probes/run-001'],baseline:'tests/probes/run-001/baseline.json'},
+ {tool:'tools/gap-list.mjs',script:'docs:gaps',measures:'函数级差距清单（保留/改造/替换与迁移阶段）',reads:['server-plugin','extension','tools/arch-layers.mjs'],output:'docs/架构设计/差距清单.md'},
+ {tool:'tools/arch-layers.mjs',script:null,measures:'模块 → 目标层与玩法包归组表（第 10 章），供 import 图与差距清单使用',reads:[],baseline:null},
+ {tool:'tools/s0-metrics.mjs',script:'metrics',measures:'以上全部一键产出',reads:[],baseline:null},
+];
+for(const m of METRIC_TOOLS)if(!fs.existsSync(abs(m.tool)))throw Error(`度量工具不存在：${m.tool}`);
 const findings={manualWiring,structureNotes,isolatedSystems,passiveSystems,orphanModules,unusedEffects:unusedEffects.map(k=>({kind:k,note:'已注册，但 rules.json 与 lore 的任何 effects 列表都没有用到'})),deadFields,unassignedModules:unassigned};
 
 // ---------------------------------------------------------------- output
@@ -522,7 +536,7 @@ const data={
  layers:LAYERS.map(l=>({...l,systems:SYSTEMS.filter(s=>s.layer===l.id).map(s=>s.id)})),
  systems:systemFacts,links,advance,worldEvents,interactions,effects:{kinds:effects,sources:[...EFF.EFFECT_SOURCES],callers:effectCallers,hooks:effectHooks.map(h=>({source:h.source,owner:h.owner,stage:h.stage,kinds:(h.effects??[]).map(e=>e.kind)}))},
  standing,tools,worldData,prompt:{dir:'prompt/',files:fs.readdirSync(abs('prompt')).sort(),readers:promptReaders},rulesReaders,stateShare,
- contentTypes,findings,modules,
+ contentTypes,findings,metricTools:METRIC_TOOLS,modules,
 };
 const json=JSON.stringify(data,null,1)+'\n';
 fs.writeFileSync(abs('docs/system-map.json'),json);
