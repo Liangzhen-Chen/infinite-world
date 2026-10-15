@@ -1,3 +1,4 @@
+import {reputationFactions,reputationSettlements}from'./reputation-registry.mjs';
 import {digest} from './storage.mjs';
 import {standing} from './standing.mjs';
 
@@ -6,7 +7,7 @@ const key=(...parts)=>digest(parts).slice(0,24);
 const awake=n=>n&&n.location&&!n.scheduleTravel&&!n.cognitionTravel&&!['死亡','濒死','昏迷','患病'].includes(n.status)&&!/睡眠|睡觉|熟睡/.test(n.activity??'');
 
 export function settlementAt(engine,location) {
-    const allowed=new Set(engine.rules.reputation?.settlements??[]),seen=new Set();
+    const allowed=new Set(reputationSettlements(engine)),seen=new Set();
     while(location&&!seen.has(location)) {
         if(allowed.has(location))return location;
         seen.add(location);location=engine.byId.get(location)?.parent;
@@ -23,7 +24,7 @@ export function observeLegalReputation(d,engine,npc,memory,location=memory.locat
     if(!rules)return;
     const local=settlementAt(engine,location),scopes=[];
     if(local)scopes.push({scope:'settlement',id:local,sign:1,source:rules.source});
-    for(const faction of rules.factions??[]) {
+    for(const faction of reputationFactions(engine)) {
         if(!(faction.members??[]).includes(npc)||!engine.byId.has(faction.id))continue;
         // The member's faction judges a case by how it now regards the case's faction.
         scopes.push({scope:'faction',id:faction.id,sign:row.faction&&standing(engine,d.get('state'),faction.id,row.faction)<0?-1:1,source:faction.source});

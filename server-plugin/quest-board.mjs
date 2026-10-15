@@ -3,6 +3,10 @@ import {transferItems,heldUnit,wearItem,changeItems} from './items.mjs';
 import {awardExperience} from './progression.mjs';
 import {scheduleAt} from './npc-schedule.mjs';
 import {assertNpcObligationAction,assertCourierRouteAccess} from './npc-obligations.mjs';
+import {bountyQuestAction} from './bounty.mjs';
+import {officeQuotaD,spendPublic,refundPublic} from './governance.mjs';
+import {titleQuotaD} from './titles.mjs';
+import {notableCulturalQuotaD} from './notables.mjs';
 
 const DAY=1440,active=q=>['公开','进行中'].includes(q.status);
 const integer=(n,min,max,label)=>{if(!Number.isSafeInteger(n)||n<min||n>max)throw Error(`${label}必须在${min}到${max}之间`);return n;};
@@ -11,10 +15,11 @@ const awake=n=>n&&!['死亡','濒死','昏迷','患病'].includes(n.status)&&!/(
 const place=(s,id)=>id==='player'?s.location:s.npcs[id]?.location;
 const actorPath=id=>id==='player'?['state','player']:['state','npcs',id];
 
-// T42 currently grants account reporting only. It supplies no player office or
-// quest quota; a self-declared office and an unrelated authorization add none.
-export function questPublishingRights(engine,state,publisher='player'){
- const month=Math.floor(state.minute/(DAY*30)),limit=publisher==='player'?0:engine.byId.get(publisher)?.monthlyQuotaD??0;
+// The player's quota comes only from offices actually held (appointed by the
+// Baishi office and still in term) and a granted title, the larger of the two;
+// a self-declared office adds none. A notable's quota covers cultural quests only.
+export function questPublishingRights(engine,state,publisher='player',{cultural=false}={}){
+ const month=Math.floor(state.minute/(DAY*30)),limit=publisher==='player'?Math.max(officeQuotaD(state),titleQuotaD(engine,state),cultural?notableCulturalQuotaD(engine,state):0):engine.byId.get(publisher)?.monthlyQuotaD??0;
  return {month,limitD:limit,usedD:state.questQuota?.[`${month}_${publisher}`]??0,personal:true};
 }
 function notice(d,engine,q,minute,stage,location=q.location){
@@ -29,7 +34,9 @@ function notice(d,engine,q,minute,stage,location=q.location){
 }
 function close(d,engine,q,status,reason,minute){
  const paid=status==='已完成',amount=q.escrow,who=paid?q.taker:q.publisher;
- d.set([...actorPath(who),'coins'],engine.actor(d,who).coins+amount);
+ // A publicly funded reward goes back to the village treasury, not to the official.
+ if(!paid&&q.fundedBy)refundPublic(d,{settlement:q.fundedBy.settlement,copper:amount,month:q.fundedBy.month,purpose:`委托退款 ${q.id}`,sourceEvent:`${q.id}:refund`});
+ else d.set([...actorPath(who),'coins'],engine.actor(d,who).coins+amount);
  const row={...q,status,reason,escrow:0,resolvedAt:minute,...(paid?{rewardPaid:amount}:{refund:amount})};
  d.set(['state','quests',q.id],row);
  const booking=d.get('state','obligations',q.reservation);
@@ -87,20 +94,25 @@ export function questBoardAction(d,engine,args,eventId){
   const publisher=args.publisher==='player'?'player':engine.resolve(args.publisher,'npc'),actor=engine.actor(d,publisher),grade=args.grade;
   if(!awake(actor))throw Error('任务发布者无法清醒履约');
   if(!(grade in engine.rules.quests.quotaUnits))throw Error('任务等级无效');
-  const rights=questPublishingRights(engine,d.get('state'),publisher),personal=args.personal===true||publisher==='player'&&args.personal!==false;
+  const rights=questPublishingRights(engine,d.get('state'),publisher,{cultural:args.cultural===true}),personal=args.personal===true||publisher==='player'&&args.personal!==false;
   if(!personal&&rights.usedD+engine.rules.quests.quotaUnits[grade]>rights.limitD)throw Error('身份或本月任务发布额度不足');
   if(personal&&grade!=='D')throw Error('未登记官职的私人任务只能发布D级，身份额度不足');
-  const reward=integer(args.reward,20,1e6,'报酬');if(actor.coins<reward)throw Error('发布者无法托管报酬');
+  const reward=integer(args.reward,20,1e6,'报酬'),publicFund=publisher==='player'&&!personal&&args.settlement!==undefined;
+  if(!publicFund&&actor.coins<reward)throw Error('发布者无法托管报酬');
   const verified=objective(engine,d,args,publisher),content=text(args.content),location=d.get('state','location');
   if(publisher==='player'&&engine.byId.get(location)?.access?.mode==='private')throw Error('私人发单须在合法公共地点张贴');
   const deadline=integer(args.deadline??now+10*DAY,now+1,now+30*DAY,'期限'),quest=`quest_${eventId}`;
-  d.set([...actorPath(publisher),'coins'],actor.coins-reward);
-  const row={id:quest,boardVersion:1,publisher,personal,grade,reward,escrow:reward,objective:verified,content,location,deadline,createdAt:now,status:'公开',taker:null};
+  let fundedBy=null;
+  if(publicFund){const settlement=engine.resolve(args.settlement,'loc'),spend=spendPublic(d,engine,{settlement,copper:reward,power:'quest_publish',purpose:`委托托管 ${quest}`,sourceEvent:quest});fundedBy={settlement,month:spend.month,spend:spend.id};}
+  else d.set([...actorPath(publisher),'coins'],actor.coins-reward);
+  const row={id:quest,boardVersion:1,publisher,personal,grade,reward,escrow:reward,objective:verified,content,location,deadline,createdAt:now,status:'公开',taker:null,...(fundedBy?{fundedBy}:{}),...(args.cultural===true?{cultural:true}:{})};
   d.set(['state','quests',quest],row);
   if(!personal)d.set(['state','questQuota',`${rights.month}_${publisher}`],rights.usedD+engine.rules.quests.quotaUnits[grade]);
   notice(d,engine,row,now,'publish');return {quest,status:row.status};
  }
  const q=d.get('state','quests',args.quest);if(!q)throw Error('不存在这个任务');
+ // Court bounties: rewards sit in the code treasury; capture goes through world_law arrest.
+ if(q.bounty)return bountyQuestAction(d,engine,q,args,eventId);
  if(args.operation==='inspect'){
   if(![q.publisher,q.taker].includes('player')&&q.location!==d.get('state','location'))throw Error('没有获知该委托进度的渠道');
   return {quest:q.id,...([q.publisher,q.taker].includes('player')?{status:q.status,reason:q.reason??null,escrow:q.escrow,refund:q.refund??0}:{status:'告示',content:q.content,grade:q.grade,reward:q.reward})};

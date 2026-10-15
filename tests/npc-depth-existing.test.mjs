@@ -11,6 +11,7 @@ import {hashContent} from '../tools/content-pipeline.mjs';
 import {depthEntries,patchDraft,validateDraft,validatePatchResults,contextFor,buildReviewRequest,getPath,verifyUnchanged,validateAuthoredBackground,checkIncrementalReview} from '../tools/npc-depth-content.mjs';
 import {prepareDepth} from '../tools/npc-depth.mjs';
 import {publishNpcDepth} from '../tools/publish-npc-depth.mjs';
+import {villageFull,villageResident} from './fixtures/village-cohort.mjs';
 
 const formalWorld=await loadWorld();
 // Original review/source hashes describe the frozen pre-publication catalog.
@@ -34,7 +35,8 @@ test('T11-B正式32人等于已批准的首次审核补丁，原审核快照仍�
 
 test('T10集合差是152 full减四村120，冻结实际32个id与323项缺口',()=>{
  const fourVillages=new Set(['loc_bs_yupo','loc_bs_weiting','loc_bs_liquan','loc_bs_sangban']);
- const full=world.npcs.filter(n=>n.tier==='full');
+ // T10冻结于白石镇升档之前：后续npc_bs_*完整档（正式目录现为251 full）不属于T10集合。
+ const full=world.npcs.filter(villageFull);
  const excluded=full.filter(n=>fourVillages.has(n.settlement??n.scope)).map(n=>n.id);
  const remaining=full.filter(n=>!excluded.includes(n.id)).map(n=>n.id);
  assert.equal(full.length,152);assert.equal(excluded.length,120);assert.equal(remaining.length,32);

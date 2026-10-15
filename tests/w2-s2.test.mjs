@@ -12,6 +12,8 @@ import {WorldEngine} from '../server-plugin/engine.mjs';
 import {applyPatches} from '../server-plugin/storage.mjs';
 import {compatibleWorld,planWorldUpgrade} from '../server-plugin/world-upgrade.mjs';
 import {projectileAirPenalty} from '../server-plugin/magic-air.mjs';
+// 跳日的夹具用skipTo同时把势力时钟移到下一边界（T159新增日钟）。
+import {skipTo} from './fixtures/skip-clock.mjs';
 
 // Later batches (T103 onward) are removed first so this batch is compared on its own edition.
 const formal=withoutS3(withoutS4(await loadWorld())),publication=await readS2Publication();
@@ -177,7 +179,7 @@ test('书铺三册有限库存：购买、阅读学会法师与通用术式，�
  let doc=base();
  for(const b of books){const r=await run(doc,'world_trade',{seller:'npc_hw_luqing',item:b.id,quantity:1});assert.ok(r.result.cost>0);assert.equal(r.doc.state.npcs.npc_hw_luqing.inventory[b.id].quantity??r.doc.state.npcs.npc_hw_luqing.inventory[b.id],1);doc=r.doc;}
  for(const s of spells.filter(s=>['法','通'].includes(routeOf[s.id]))){const book=books.find(b=>b.book.teaches.includes(s.id)),r=await success(doc,'world_learn',{kind:'spell',entity:s.id,source:book.id});assert.equal(r.doc.state.spells[s.id].source.id,book.id);assert.equal(r.doc.state.minute,doc.state.minute+book.book.readingMinutes);doc=r.doc;}
- doc.state.location='bld_bs_school';doc.state.minute=Math.ceil(doc.state.minute/1440)*1440+540;
+ doc.state.location='bld_bs_school';skipTo(engine,doc,Math.ceil(doc.state.minute/1440)*1440+540);
  const lift=await cast(structuredClone(doc),{spell:'spell_s2_lift',target:fid('herb_tray')});assert.equal(lift.result.heightMeters,1);assert.deepEqual(lift.result.scattered,[fid('loose_tags')]);assert.equal(rec(await wait(lift.doc,2),fid('herb_tray')).heightMeters,0);
  const dust=await cast(structuredClone(doc),{spell:'spell_s2_dust_sweep',target:fid('dusty_curtain')});assert.equal(dust.result.removedDustMg,1000);assert.equal(rec(dust.doc,fid('dusty_curtain')).stainMg,300);
  const voice=await cast(structuredClone(doc),{spell:'spell_s2_voice_lane',target:fid('school_hall'),destination:fid('school_yard'),text:'丹房的炉要添炭了'});assert.deepEqual(voice.result.alongPath,[fid('school_hall'),fid('school_yard')]);

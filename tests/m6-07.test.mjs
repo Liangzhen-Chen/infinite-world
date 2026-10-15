@@ -42,8 +42,11 @@ test('M6-07 已发布层级覆盖河湾四村与野外；不新增白石镇和�
     const villages=['loc_hw','loc_bs_yupo','loc_bs_weiting','loc_bs_liquan','loc_bs_sangban'];
     for(const id of villages){const row=engine.byId.get(id);assert.equal(row.mapHierarchy.length,4);assert.equal(row.mapHierarchy[3].id,id);assert.equal(row.mapHierarchy[0].name,'已知大陆片区');}
     // R06 now includes the town skeleton without granting its map hierarchy.
-    const unpublished=row=>row.scope==='loc_bs'||['loc_yandu','loc_capital'].includes(row.id);
-    for(const row of world.locations.filter(row=>!unpublished(row))){
+    // T154/T157后镇郊窑场与潭阶聚居地虽挂在白石镇下也有四级层级；未映射的只是白石镇骨架（loc_bs、街区、bld_bs_*）与远方。
+    // 怪物聚居地内部场所（scope=loc_ms_*）跟随聚居地本身显示，不单独要求层级。
+    const unpublished=row=>(row.scope==='loc_bs'&&/^(loc_bs$|loc_bs_|bld_bs_)/.test(row.id))||['loc_yandu','loc_capital'].includes(row.id);
+    const interior=row=>/^loc_ms_/.test(row.scope??'');
+    for(const row of world.locations.filter(row=>!unpublished(row)&&!interior(row))){
         assert.equal(row.mapHierarchy.length,4,row.id);assert.ok(world.locations.some(place=>place.id===row.mapHierarchy[3].id));
     }
     for(const row of world.locations.filter(unpublished))assert.equal(row.mapHierarchy,undefined,row.id);

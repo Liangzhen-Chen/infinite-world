@@ -11,6 +11,7 @@ import {CampaignStorage,applyPatches} from '../server-plugin/storage.mjs';
 import {initializeAgriculture,planAgricultureMigration} from '../server-plugin/agriculture-migration.mjs';
 import {validateWorld} from '../tools/validate-world.mjs';
 import {weatherAt} from '../server-plugin/weather.mjs';
+import {recordedLifeChange} from './fixtures/life-population.mjs';
 const legacy=JSON.parse(await fs.readFile('tests/fixtures/legacy/seed.json','utf8'));
 const source=withAgricultureRules(await loadWorld());
 const record=c=>c.state.records['agriculture:loc_hw'];
@@ -137,7 +138,8 @@ test('三年实际日结守恒；20个独立天气种子不饥荒，源开局资
     for(let n=0;n<20;n++){
         const{c,run}=setup(`agriculture-year-${n}`);let doc=c;
         for(let month=0;month<36;month++){doc=(await run(doc,'world_time',{minutes:30*1440},`m${month}`)).document;conservation(doc);
-            assert.equal(doc.state.settlements.loc_hw.population,58,`seed ${n}, month ${month}`);assert.equal(doc.state.settlements.loc_hw.unmetMeals??0,0);}
+            // T131/T132的自然死亡、出生、迁居记账改变人口；只容许这些登记变化，饥荒减员仍判失败。
+            assert.equal(doc.state.settlements.loc_hw.population,58+recordedLifeChange(doc.state,'loc_hw'),`seed ${n}, month ${month}`);assert.equal(doc.state.settlements.loc_hw.unmetMeals??0,0);}
         assert.equal(record(doc).ledger.openingFood,8000);assert.equal(record(doc).ledger.openingSeed,1680);
     }
 });

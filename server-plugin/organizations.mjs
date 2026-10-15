@@ -1,6 +1,8 @@
+import {reputationFactions}from'./reputation-registry.mjs';
 import {standing,adjustStanding} from './standing.mjs';
 import {householdMembers,npcAgeAt} from './npc-life.mjs';
 import {opinionAmong} from './public-opinion.mjs';
+import {assertAcademyAdmission} from './notables.mjs';
 
 // Organizations as running entities: members and positions, a treasury whose
 // every movement is a ledger line, a charter (entry, fee, dues, rules) and a
@@ -27,7 +29,7 @@ function factionBase(engine,id){
     const f=engine.world.factions?.find(f=>f.id===id);if(!f)return null;
     const members={},add=(m,position)=>{if(m&&!members[m])members[m]={position,joinedAt:null,arrears:0};};
     add(f.leader,'首领');for(const m of f.coreMembers??[])add(m,ELDER);
-    for(const m of (engine.rules.reputation?.factions??[]).find(r=>r.id===id)?.members??[])add(m,MEMBER);
+    for(const m of reputationFactions(engine).find(r=>r.id===id)?.members??[])add(m,MEMBER);
     for(const n of engine.world.npcs)if(n.faction===id)add(n.id,MEMBER);
     const mode=['地方议会','居民筹备组织'].includes(f.kind)?'vote':['教会','学派','学院'].includes(f.kind)?'elders':'leader';
     return {id,name:f.name,source:'faction',kind:f.kind,seat:f.contactAnchor,leader:f.leader,leaderTitle:'首领',members,treasury:f.resources?.treasuryCopper??0,
@@ -257,6 +259,7 @@ export function organizationAction(d,args,eventId){
         if(org.source==='faction'){
             if(!within(engine,state.location,org.seat))throw Error('须到该组织登记联络处申请');
             if(standing(engine,state,org.id,who)<=-20)throw Error('该组织不接受与其交恶者入会');
+            assertAcademyAdmission(engine,state,org,who);
         }
         if(who==='player'&&org.source==='created'&&!within(engine,state.location,org.seat))throw Error('须到组织所在地申请');
         const fee=org.charter.fee??0;

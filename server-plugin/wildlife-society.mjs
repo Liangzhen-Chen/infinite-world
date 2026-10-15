@@ -1,3 +1,4 @@
+import {registerWorldEventSubscriber}from'./world-events.mjs';
 import {createHash} from 'node:crypto';
 import {assertTrainingRitual} from './training.mjs';
 import {effectiveProficiency} from './professions.mjs';
@@ -301,3 +302,5 @@ export function validateSpiritRules(world){
     if(!s||![90,360].includes(s.periodDays)||!int(s.minimumMembers,2)||!int(s.foragePerMember)||!Array.isArray(s.homes)||s.homes.some(h=>!ids.has(h)))errors.push('结社参数无效：须按季或年检查，至少两名成员，口粮与精怪之乡须登记');
     return errors;
 }
+// World-event subscriber; settlement order is the `order` field.
+registerWorldEventSubscriber({id:'spirit_grudges',order:40,on:(d,engine,events)=>recordSpiritGrudges(d,engine,events)});

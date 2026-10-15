@@ -78,10 +78,11 @@ function writeItem(d,owner,id,outcome){
 // applyInteraction(d,engine,{agent,target}) resolves on current traits and
 // writes burning/wet/frozen onto existing feature/item state. Creatures only
 // receive the combat multiplier, which the caller applies to its own damage.
-export function applyInteraction(d,engine,{agent,target,owner='player',traits=null,moistureMg}){
+export function applyInteraction(d,engine,{agent,target,owner='player',traits=null,moistureMg,minutes}){
  const t=traits??traitsOf(engine,d.get('state'),target);
  const outcome=resolveInteraction(agent,t);
  if(moistureMg!==undefined)outcome.moistureMg=moistureMg;
+ if(minutes!==undefined&&outcome.minutes>0)outcome.minutes=minutes;
  let changed={added:[],removed:[]};
  if(target?.startsWith('feature_')){const row=featureRow(engine,target);if(row)changed=writeFeature(d,row,outcome);}
  else if(target?.startsWith('item_'))changed=writeItem(d,owner,target,outcome);

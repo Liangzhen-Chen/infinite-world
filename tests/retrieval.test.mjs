@@ -72,7 +72,11 @@ test('world_search 真实HTTP入口检索四村公开资料，获知前不返回
     const server=app.listen(0,'127.0.0.1');await once(server,'listening');t.after(()=>{server.closeAllConnections();server.close();});
     const request=async(endpoint,body)=>{const res=await fetch(`http://127.0.0.1:${server.address().port}${endpoint}`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});const result=await res.json();assert.equal(res.status,200,result.error);return result;};
     const created=await request('/create',{character:{name:'未访四村的旅人'}}),campaignId=created.reference.campaignId,before=await request('/read',{campaignId});
-    for(const profile of world.settlementProfiles.filter(p=>p.details)){
+    // T90后白石镇也有details，但经济pending-ledger不设产量；四村逐项核检索，白石镇只核已登记条目且不得冒出产量账。
+    const town=world.settlementProfiles.find(p=>p.id==='loc_bs').details;
+    for(const [query,key]of [[town.problems[0].title,`issue_${town.problems[0].id}`],[town.calendar.festivals[0].name,'festival_0']]){const result=await request('/search',{campaignId,query:`${town.name}${query}`});assert.ok(result.results.some(row=>row.id===`settlement_loc_bs_${key}`),`${town.name}${query}`);}
+    assert.ok((await request('/search',{campaignId,query:`${town.name}公共燕麦田年粮产量`})).results.every(row=>row.id!=='settlement_loc_bs_production_0'));
+    for(const profile of world.settlementProfiles.filter(p=>p.details&&p.id!=='loc_bs')){
         const p=profile.details;
         for(const [query,key]of [['公共燕麦田年粮产量','production_0'],['公共粮仓当前库存','current'],['村级头人执法权限','governance'],[p.problems[0].title,`issue_${p.problems[0].id}`],['集市赶集日','market'],[p.calendar.festivals[0].name,'festival_0']]){
             const result=await request('/search',{campaignId,query:`${p.name}${query}`});

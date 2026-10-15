@@ -1,6 +1,6 @@
-import {MemoryIndex} from './retrieval.mjs';
+import {MemoryIndex,engineIndexOptions} from './retrieval.mjs';
 import {scheduleAt,advanceWithNpcParticipants} from './npc-schedule.mjs';
-import {eventRumorRecorded} from './world-events.mjs';
+import {eventRumorRecorded,lieRumorRecorded} from './world-events.mjs';
 
 const awake=n=>n&&!n.scheduleTravel&&!n.cognitionTravel&&!['死亡','濒死','昏迷','患病'].includes(n.status)&&!/睡眠|睡觉|熟睡/.test(n.activity??'');
 const registered=engine=>[...engine.world.settlementProfiles?.flatMap(p=>p.details?.rumors??[])??[],...engine.world.rumors??[]];
@@ -15,7 +15,9 @@ export function npcRumors(engine,id,document=null){
     for(const memory of npc?.memoryStream??[]){
         if(!memory.rumor||memory.kind!=='rumor'&&!memory.eventRumor||memory.minute>document.state.minute||memory.private||['private','secret'].includes(memory.visibility))continue;
         // Authored seeds, or rumors born of a recorded, witnessed world event.
-        if(!registeredIds.has(memory.rumor)&&!(memory.eventRumor&&eventRumorRecorded(document.state,memory.rumor))||rows.has(memory.rumor))continue;
+        if(!registeredIds.has(memory.rumor)&&!(memory.eventRumor&&eventRumorRecorded(document.state,memory.rumor))&&!lieRumorRecorded(document.state,memory.rumor)||rows.has(memory.rumor))continue;
+        // A holder who saw the lie exposed no longer passes it on as news.
+        if(memory.rumor.startsWith('rumor_lie:')&&document.state.records?.[memory.rumor.slice(6)]?.exposures?.[id])continue;
         if(memory.eventRumor&&npc.cognition?.blurred?.[memory.id])continue;
         rows.set(memory.rumor,{id:memory.rumor,claim:npc.cognition?.blurred?.[memory.id]?.content??memory.content,
             source:memory.rumorSource,reliability:'未核实',memoryId:memory.id,rootMemoryId:memory.rootMemoryId,
@@ -40,7 +42,7 @@ export function npcRumorSeeds(engine,id){
 }
 
 export function selectNpcRumors(engine,id,query='',document=null){
-    const rows=npcRumors(engine,id,document),index=new MemoryIndex({entities:engine.entities});
+    const rows=npcRumors(engine,id,document),index=new MemoryIndex(engineIndexOptions(engine));
     for(const row of rows)index.upsert({id:row.id,text:row.claim,keywords:[row.id,'传闻'],entities:[id]});
     const selected=new Set(index.search(query,{present:[id],limit:2}).map(r=>r.id));
     return rows.filter(r=>selected.has(r.id));

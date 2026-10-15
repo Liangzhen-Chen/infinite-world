@@ -60,11 +60,15 @@ review-002-yp=782a49e阶段审核通过，范围限T06正式发布与c64163d修�
 - K3 已完成。原文：新 world-events.mjs，engine.mjs:178 处每次工具结算生成一次 `{verb,actor,target,harm/gift,witnesses,location,tags}`；npc-memory、npc-relations、monster-society、wildlife-society、boss-cognition 改为按 verb/标签订阅，不再按工具名。验收：CORE + 上述五系统测试。规模M-L。
 - K4 已完成。原文：新 standing.mjs，`standing(holder,target)` 归一到 -100..100，加“成员→势力/族群/聚居地”传导；7个旧存储保留，统一读写入口；public-opinion、reputation、faction-clock、scene-card、quest-board 改读它。依赖K3。验收：CORE + public-opinion/reputation-law/faction-clock/npc-relations/prompt。规模M。
 - K5 已完成。原文：有目击且分量够的世界事件自动成为可传播传闻（不再只传作者预登记的ID）；private/secret 记忆与未成年保护不得成为传闻。依赖K3、K4。验收：CORE + rumor-route/village-rumor-access/npc-memory/public-opinion/monster-society。规模M。
-- K6 统一效果表：新 effects.mjs，合并 world-clock 封闭效果集与 faction-clock 效果消费者；势力时钟可触发野物躁动、传闻、立场变化，季节可冻河。依赖K2、K4。验收：CORE + world-clock/faction-clock/wildlife-awakening/festival/wildlife-society。规模S-M。
+- K6 已完成。原文：新 effects.mjs，合并 world-clock 封闭效果集与 faction-clock 效果消费者；势力时钟可触发野物躁动、传闻、立场变化，季节可冻河。依赖K2、K4。验收：CORE + world-clock/faction-clock/wildlife-awakening/festival/wildlife-society。规模S-M。
 - K7 已完成（推进注册表28系统，逐字节一致）。原文：engine.mjs:254、:265-310 手工列的约25个 advance* 改为注册表，新系统自动参与休息和赶路结算。验收：CORE + world-clock/faction-clock/performance。规模S。
 - K8 按地形产生栖地（最后做，需存档迁移）：新地点按地形标签自动出现生物。验收：CORE + wildlife/w4-wildlife/wildlife-encounters。规模L。
 
-- K9 系统地图（用户 2026-10-14 要求）：底座 K1–K7 合入后，产出可视化的游戏系统图：一共几层、每层有哪些系统、系统之间如何串联（读写哪些共享状态、订阅哪些世界事件、受哪些交互规则和效果驱动），并附“新增一种内容要接哪些系统”的查表。按代码实际生成（脚本从注册表、规则表、订阅关系导出数据），发布为 Artifact 给用户，并在 docs/ 留一份。
+- K9 已完成（发布见PROGRESS）。原文：（用户 2026-10-14 要求）：底座 K1–K7 合入后，产出可视化的游戏系统图：一共几层、每层有哪些系统、系统之间如何串联（读写哪些共享状态、订阅哪些世界事件、受哪些交互规则和效果驱动），并附“新增一种内容要接哪些系统”的查表。按代码实际生成（脚本从注册表、规则表、订阅关系导出数据），发布为 Artifact 给用户，并在 docs/ 留一份。
+
+- K10 已完成。原文：（来源：K9 系统地图）：世界事件订阅者改为注册入口（各模块自行登记，engine 不再持私有数组）；新法术 effectSpec.kind 改为效果注册表分派（不再改 magic.mjs 分支）；聚落与势力成员的声望登记由 world 数据派生（不再手填 rules.reputation.settlements/factions）；商店可由聚落与人物服务标签派生。验收 CORE + magic*/reputation*/world-events/standing/shop-restock/system-map/prompt + 重新生成系统地图，“仍需手动接线”清单只剩新工具与K8栖地。规模M。
+
+- P1 已完成（10694）。原文：（主会话 2026-10-14 加，挡住 T124–T127 等改工具的卡）：静态提示已到 11862（硬上限 12000）。把 prompt/ 与工具描述压到 ≤11000，不删规则含义；以现有提示测试、m2/m3 离线回放测试为准。规模M。
 
 派工：K1→K2 一个子代理连续做；K3→K4→K5 一个子代理连续做（等T159合入后开）；K7 随时；K6 在K2、K4之后。
 
@@ -79,12 +83,12 @@ review-002-yp=782a49e阶段审核通过，范围限T06正式发布与c64163d修�
 - U6 已完成。原文：（依赖K1、K3，M）：写作出版、技能书抄写（需原本与抄写员）、表演、测绘出图，形成有署名作品，带来收入、贡献、名望；技能融合实验。新 works.mjs；learning.mjs、manufacturing.mjs、civic.mjs。
 - U7 已完成。原文：（依赖K3，S-M）：等级决定计划长度与打破惯例程度；教导和共同经历使NPC成长并有可见迹象。npc-planning-service、npc-autonomy、npc-growth、scene-card。
 - U9 已完成。原文：（依赖K4、K7，S）：按周期与产地补货，高品质只在相应渠道；关系、声望、店家加成进报价。engine.mjs 交易段、settlement-trade.mjs、rules.economy。
-- U5 通缉与赏金（依赖K4、K5、U1、U2，M）：通缉范围、逃犯、NPC赏金猎人追捕、玩家接赏金、法典里的贿赂空间。law.mjs、quest-board.mjs、npc-autonomy.mjs。
-- U8 谎言账（依赖K3、K5，S）：撒谎时真相与谎言成对记录，可被揭穿。npc-memory.mjs、world_remember 参数、consistency-review.mjs。
+- U5 已完成。原文：（依赖K4、K5、U1、U2，M）：通缉范围、逃犯、NPC赏金猎人追捕、玩家接赏金、法典里的贿赂空间。law.mjs、quest-board.mjs、npc-autonomy.mjs。
+- U8 已完成。原文：（依赖K3、K5，S）：撒谎时真相与谎言成对记录，可被揭穿。npc-memory.mjs、world_remember 参数、consistency-review.mjs。
 - U10 生活魔法的经济反馈（依赖K2、K4、K6，S-M）：保鲜降损耗与价格、引水改产量，受益方与竞争方立场变化，官府收费或管制。
 - U14 已完成。原文：（依赖K3、K5，S）：回到某地时汇总离开期间当地的变化。
 - U17 任务自动来源（依赖K3、K4、U1，S-M）：NPC按自身需求与短缺自动出任务；势力委托；世界事件任务。quest-board.mjs、npc-life.mjs、faction-clock.mjs。
-- U13 名士与聚落升格（依赖U1、U6、T124，S-M）。
+- U13 已完成。原文：（依赖U1、U6、T124，S-M）。
 - U11 族群觉醒动态（依赖K4、K6、U1、U3，L）：怪物族群按季度与年觉醒、提出诉求、内部分化、生成新势力；玩家可教导、贸易、调停、镇压。
 - U12 军队、兵役、战争与外交（依赖U1、U2、U3、K4、K6、T127、T142，L，开工前再拆）。
 - U15 余下动词（依赖K8、U1、U5，S-M）：钓鱼、开矿、决斗、走私、竞选。
@@ -631,7 +635,7 @@ T28-R1修好新回执undefined规范化并保留严格篡改拒绝，相关31/32
 
 C部分只拆缺口：governance.mjs的任职入口止于“待上级决定”，quest-board.mjs不承认玩家官职来源，公款建房也无审批主体；爵位执行与个人看法聚合尚无消费者。NPC现有关系/战斗死亡继续复用，新增范围是离屏成长与人生事件。
 
-### T123（C1） 治理权责、地块与封爵来源。结果：玩家能向正式登记机构申请任职、工程或封地，审批依据有可查来源。可改world/design/m5-authority.mjs、对应草稿/发布入口、world/geo/settlements.json及本批地块、world/lore/factions.json、world/meta/rules.json、tests/m5-authority-content.test.mjs；依赖T92的官署人物，不另造同职官员。约15–25条来源，包含上级职责、官职/月额度、可建地块/费率、公库来源及九级爵位权利义务。验收node --test "tests/governance*.test.mjs" tests/m5-authority-content.test.mjs tests/quest-board.test.mjs tests/world-validation.test.mjs，CORE。L2预计25–50次，≤2.5元；约2.5小时，正式发布与B4/B5及地理卡串行。
+### T123–T127 已完成（见PROGRESS）。原 T123（C1） 治理权责、地块与封爵来源。结果：玩家能向正式登记机构申请任职、工程或封地，审批依据有可查来源。可改world/design/m5-authority.mjs、对应草稿/发布入口、world/geo/settlements.json及本批地块、world/lore/factions.json、world/meta/rules.json、tests/m5-authority-content.test.mjs；依赖T92的官署人物，不另造同职官员。约15–25条来源，包含上级职责、官职/月额度、可建地块/费率、公库来源及九级爵位权利义务。验收node --test "tests/governance*.test.mjs" tests/m5-authority-content.test.mjs tests/quest-board.test.mjs tests/world-validation.test.mjs，CORE。L2预计25–50次，≤2.5元；约2.5小时，正式发布与B4/B5及地理卡串行。
 
 ### T124（C2） 任命与官职任务额度。结果：上级依据贡献和意见实际任免玩家，生效身份按月提供任务额度并支持公款托管。可改server-plugin/{governance,civic,quest-board}.mjs、activities/extension/tools.mjs接点、tests/governance-office.test.mjs；接C1，拒绝自报官职，按1B=10C=100D折算，免职停止新增用额但不抹既有合同。验收node --test "tests/governance*.test.mjs" tests/civic.test.mjs tests/quest-board.test.mjs tests/activities.test.mjs tests/law.test.mjs tests/reputation-law.test.mjs tests/prompt.test.mjs，CORE。模型0；约2小时，与C3–C5串行，提示≤11900。
 

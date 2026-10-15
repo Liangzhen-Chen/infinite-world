@@ -4,6 +4,10 @@ import {npcObligationAt} from './npc-obligations.mjs';
 import {societyGovernance} from './monster-society.mjs';
 import {opinionAmong} from './public-opinion.mjs';
 import {npcHousehold,householdMembers,npcAgeAt} from './npc-life.mjs';
+import {standing} from './standing.mjs';
+import {contributionTotal} from './civic.mjs';
+import {grantHousingSteward,revokeHousingSteward,fileHousingApplication} from './public-projects.mjs';
+import {rankedOffice} from './promotion.mjs';
 
 const DAY=1440;
 const path=id=>['state','records',id];
@@ -35,7 +39,7 @@ function local(engine,location,settlement){
 // Adult members of the settlement's households as they stand in this
 // campaign: someone who moved away no longer counts, a newcomer who moved in
 // does, the dead do not, and campaign-born children count once grown.
-function eligible(engine,settlement,state){
+export function eligible(engine,settlement,state){
     const {p}=profile(engine,settlement);
     const houses=(engine.world.households??[]).filter(h=>h.settlement===settlement);
     const people=new Set([...p.residentIds,...houses.flatMap(h=>householdMembers(engine,state,h.id))]);
@@ -137,10 +141,12 @@ function action(d,args,eventId){
     const settlement=this.resolve(args.settlement,'loc'),{g,p}=profile(this,settlement),now=d.get('state','minute');
     switch(args.operation){
     case 'governance_inspect':return {settlement,appointment:structuredClone(g.appointment),permissions:structuredClone(g.permissions),
-        eligible:eligible(this,settlement,d.get('state')),referral:structuredClone(g.referral),note:unavailable,publicOpinion:hallOpinion(d,this,settlement),
+        eligible:eligible(this,settlement,d.get('state')),referral:structuredClone(g.referral),note:unavailable,
+        offices:playerOffices(d.get('state'),{settlement}),applyAt:authorityOf(this)?.superiors?.auth_bs_office_charter?.seat??null,publicOpinion:hallOpinion(d,this,settlement),
         records:Object.entries(d.get('state','records')??{}).filter(([,r])=>r.settlement===settlement&&
             (r.category?.startsWith('governance_')||r.category==='authorization'&&r.action==='account_report')).map(([id,row])=>({id,...row})),actionScope:{kind:'instant'}};
     case 'governance_propose':return proposal(d,this,args,eventId,settlement);
+    case 'governance_apply':return apply(d,this,args,eventId,settlement);
     case 'governance_opinion':{
         const row=record(d,args.proposal,'governance_proposal',settlement);
         if(row.status!=='议事中')throw Error('议案已闭合，不能追加或改写意见');
@@ -172,6 +178,8 @@ function action(d,args,eventId){
         d.set(path(id),row);return {referral:id,request:row,granted:false};
     }
     case 'governance_grant':{
+        // T126: a sitting village head (the player) delegates housing review by written rules.
+        if(args.authority==='player'&&args.action==='housing')return grantHousingSteward(d,this,args,eventId,settlement,g.meetingPlace);
         const authority=chair(d,this,settlement,args.authority);
         if(args.action!=='account_report')throw Error(unavailable);
         // A report only copies public balances, within the source head's existing
@@ -187,12 +195,16 @@ function action(d,args,eventId){
         d.set(path(id),a);return {authorization:id,permission:a};
     }
     case 'governance_revoke':{
+        const housing=d.get(...path(args.authorization));
+        if(housing?.category==='housing_steward'&&housing.settlement===settlement)return revokeHousingSteward(d,housing);
         const authority=chair(d,this,settlement,args.authority),a=record(d,args.authorization,'authorization',settlement);
         if(a.grantor!==authority||a.action!=='account_report')throw Error('只有原签发者可撤销该范围的授权');
         if(a.revoked)return {authorization:args.authorization,permission:a,duplicate:true};
         const revoked={...a,revoked:true,revokedAt:now,revokedBy:authority};d.set(path(args.authorization),revoked);return {authorization:args.authorization,permission:revoked};
     }
     case 'governance_queue':{
+        const housing=d.get(...path(args.authorization));
+        if(housing?.category==='housing_steward'&&housing.settlement===settlement)return fileHousingApplication(d,this,args,eventId,settlement,housing);
         const a=permission(d,this,args.authorization,settlement,now);
         chair(d,this,settlement,args.authority);
         if(!['account_report','housing'].includes(args.action))throw Error('待办类型未实现');
@@ -252,4 +264,129 @@ export function assertGovernedProject(d,engine,settlement,args){
     // All four current appointments explicitly lack this power. Do not accept
     // a hand-written authorization as a replacement for a normal source tool.
     throw Error(unavailable);
+}
+
+// ---------------------------------------------------------------- offices (T124)
+// The Baishi office appoints by its published charter (rules.governance.authority):
+// an application filed in person with a registrar is decided after the charter's
+// waiting days from the citizen record, the village contribution ledger, the
+// sitting head's view of the applicant and the adult residents' views. Holders
+// are reviewed on the charter's cycle; removal stops new quota and spending but
+// leaves earlier contracts as they are.
+export const authorityOf=engine=>engine.rules.governance?.authority??null;
+const officeKey=(settlement,office)=>`governance_office:${settlement}:${office}:player`;
+const MONTH=30*DAY;
+export function playerOffices(state,{settlement=null,power=null}={}){
+    return Object.values(state.records??{}).filter(r=>r.category==='governance_office'&&r.holder==='player'&&r.status==='在任'&&r.until>state.minute
+        &&(!settlement||r.settlement===settlement)&&(!power||r.powers.includes(power)));
+}
+// Identity quota is the largest one held, never a sum (一等男爵兼城主 = 120D).
+export function officeQuotaD(state){return Math.max(0,...playerOffices(state).map(r=>r.monthlyQuotaD));}
+function findOffice(engine,name){
+    const offices=authorityOf(engine)?.offices??{};
+    const row=offices[name]??Object.values(offices).find(o=>o.name===name);
+    if(!row||row.appointedBy!=='auth_bs_office_charter')throw Error('没有可向公署申请的这个官职；不受理自报官职');
+    return row;
+}
+function registrar(d,engine){
+    const charter=authorityOf(engine)?.superiors?.auth_bs_office_charter;
+    if(!charter)throw Error('公署任免章未登记');
+    const place=d.get('state','location'),state=d.get('state');
+    if(place!==charter.seat)throw Error('须在白石镇公署前厅递件');
+    const staff=engine.world.npcs.filter(n=>n.workplace?.location===charter.seat&&charter.registrars.occupations.includes(n.occupation)&&awake(state.npcs[n.id])&&state.npcs[n.id].location===place).map(n=>n.id).sort();
+    if(!staff.length)throw Error('前厅没有在岗的递件或抄录人，不能登记');
+    return {charter,registrar:staff[0]};
+}
+const crimeJudged=state=>Object.values(state.records??{}).some(r=>r.category==='legal_case'&&r.offender==='player'&&r.judgment);
+function residentViews(engine,state,settlement){
+    let support=0,oppose=0;
+    for(const id of eligible(engine,settlement,state)){const v=standing(engine,state,id,'player');if(v>0)support++;else if(v<0)oppose++;}
+    return {support,oppose};
+}
+// The same test is used at the decision and at every review.
+function appraise(engine,state,settlement,office){
+    const {g}=profile(engine,settlement),reasons=[],req=office.requires;
+    const citizen=state.records?.[`civic_citizen:${settlement}:player`];
+    if(req.citizen&&citizen?.status!=='已登记')reasons.push('不是本村登记公民');
+    const points=contributionTotal(state,settlement);
+    if(points<req.contribution)reasons.push(`本村贡献${points}，未达${req.contribution}`);
+    const head=standing(engine,state,g.head,'player');
+    if(state.npcs[g.head]?.status==='死亡'||head<req.headRecommendation.minStanding)reasons.push(`原头人不举荐（看法${head}，需${req.headRecommendation.minStanding}）`);
+    const views=residentViews(engine,state,settlement);
+    if(views.oppose>views.support)reasons.push(`成年住户反对${views.oppose}多于支持${views.support}`);
+    if(crimeJudged(state))reasons.push('有犯罪裁定');
+    return {reasons,points,head,views};
+}
+function apply(d,engine,args,eventId,settlement){
+    const office=findOffice(engine,args.name);
+    if(!office.settlements.includes(settlement))throw Error('该官职不辖此村');
+    const {charter,registrar:clerk}=registrar(d,engine),now=d.get('state','minute');
+    const state=d.get('state'),held=state.records?.[officeKey(settlement,office.id)];
+    if(held?.status==='在任'&&held.until>now)throw Error('已在任此职');
+    if(Object.values(state.records??{}).some(r=>r.category==='governance_application'&&r.status==='待审定'&&r.settlement===settlement&&r.office===office.id))throw Error('同一官职已有待审定的申请');
+    const id=`governance_application:${eventId}`;unique(d,id);
+    const row={category:'governance_application',id,applicant:'player',settlement,office:office.id,officeName:office.name,registrar:clerk,institution:charter.institution,
+        filedAt:now,due:now+charter.decisionAfterDays*DAY,status:'待审定',source:office.source,sourceEvent:eventId};
+    d.set(path(id),row);
+    return {application:id,pending:row,note:`公署按章程于登记满${charter.decisionAfterDays}日后审定；递件人只登记，不当场许诺。`};
+}
+function decide(d,engine,row,at){
+    const state=d.get('state'),office=rankedOffice(engine,state,row.settlement,authorityOf(engine).offices[row.office]),{reasons,points,head,views}=appraise(engine,state,row.settlement,office);
+    const basis={contribution:points,headStanding:head,residents:views};
+    if(reasons.length){d.set(path(row.id),{...row,status:'未获任命',decidedAt:at,reasons,basis});return;}
+    const key=officeKey(row.settlement,office.id);
+    d.set(path(key),{category:'governance_office',id:key,holder:'player',settlement:row.settlement,office:office.id,name:office.name,status:'在任',
+        since:at,until:at+office.termDays*DAY,nextReview:at+authorityOf(engine).superiors.auth_bs_office_charter.reviewEveryDays*DAY,
+        monthlyQuotaD:office.monthlyQuotaD,monthlyBudgetCopper:office.monthlyBudgetCopper,powers:[...office.powers],taxBps:office.taxBps??null,
+        appointedBy:office.appointingInstitution,application:row.id,basis,source:office.source,sourceEvent:row.id});
+    d.set(path(row.id),{...row,status:'已任命',decidedAt:at,basis});
+}
+function review(d,engine,row,at){
+    const charter=authorityOf(engine).superiors.auth_bs_office_charter,state=d.get('state');
+    let reason=null;
+    if(at>=row.until)reason='任期届满';
+    else if(crimeJudged(state))reason='犯罪裁定';
+    else{const v=residentViews(engine,state,row.settlement);if(v.oppose>v.support)reason=`成年住户反对${v.oppose}多于支持${v.support}`;}
+    if(reason)d.set(path(row.id),{...row,status:'已免职',removedAt:at,reason});
+    else d.set(path(row.id),{...row,nextReview:row.nextReview+charter.reviewEveryDays*DAY,reviews:[...(row.reviews??[]),at]});
+}
+const dueAt=r=>r.category==='governance_application'?r.due:Math.min(r.nextReview,r.until);
+const scheduled=state=>Object.values(state.records??{}).filter(r=>r.category==='governance_application'&&r.status==='待审定'||r.category==='governance_office'&&r.status==='在任');
+export function nextOfficeMinute(state,now){return Math.min(Infinity,...scheduled(state).map(dueAt).filter(m=>m>now));}
+export function advanceOffices(d,engine,{after}){
+    for(;;){
+        const rows=scheduled(d.get('state')).filter(r=>dueAt(r)<=after).sort((a,b)=>dueAt(a)-dueAt(b)||a.id.localeCompare(b.id));
+        if(!rows.length)return;
+        const r=rows[0];
+        if(r.category==='governance_application')decide(d,engine,r,r.due);else review(d,engine,r,dueAt(r));
+    }
+}
+
+// Public money: each draw is a ledger record under an office's power and
+// monthly cap, and never takes the treasury below the charter reserve.
+export const monthOf=minute=>Math.floor(minute/MONTH);
+export function publicSpent(state,settlement,month){
+    return Object.values(state.records??{}).filter(r=>r.category==='governance_spend'&&r.settlement===settlement&&r.month===month).reduce((n,r)=>n+r.copper,0);
+}
+export function spendPublic(d,engine,{settlement,copper,power,purpose,sourceEvent}){
+    if(!Number.isSafeInteger(copper)||copper<0)throw Error('公款数额无效');
+    const state=d.get('state'),offices=playerOffices(state,{settlement,power});
+    if(!offices.length)throw Error('没有在任官职授予此项公款权限');
+    const cap=Math.max(...offices.map(o=>o.monthlyBudgetCopper)),month=monthOf(state.minute),used=publicSpent(state,settlement,month);
+    if(used+copper>cap)throw Error(`本月公款额度不足（已用${used}/${cap}铜）`);
+    const treasury=d.get('state','settlements',settlement,'treasury'),reserve=authorityOf(engine).treasury.reserveCopper;
+    if(!safe(treasury)||treasury-copper<reserve)throw Error(`公账余额不足：动用后须留底${reserve}铜`);
+    const id=`governance_spend:${sourceEvent}`;
+    if(d.get(...path(id)))throw Error('公款支出编号已占用');
+    d.set(['state','settlements',settlement,'treasury'],treasury-copper);
+    const row={category:'governance_spend',id,settlement,holder:'player',office:offices[0].office,month,copper,purpose,minute:state.minute,sourceEvent};
+    d.set(path(id),row);return row;
+}
+// Money returned to the treasury (refund, unused wages) nets against the month it was drawn in.
+export function refundPublic(d,{settlement,copper,month,purpose,sourceEvent}){
+    const id=`governance_spend:${sourceEvent}`;
+    if(!copper||d.get(...path(id)))return d.get(...path(id))??null;
+    d.set(['state','settlements',settlement,'treasury'],d.get('state','settlements',settlement,'treasury')+copper);
+    const row={category:'governance_spend',id,settlement,holder:'player',month,copper:-copper,purpose,minute:d.get('state','minute'),sourceEvent};
+    d.set(path(id),row);return row;
 }

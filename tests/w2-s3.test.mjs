@@ -14,6 +14,8 @@ import {lightAt,opticalSightClear} from '../server-plugin/magic-light.mjs';
 import {magicStatusStats} from '../server-plugin/magic-status.mjs';
 import {consumeMagicProtection} from '../server-plugin/magic-primitives.mjs';
 import {recordLocalContact} from '../server-plugin/environment.mjs';
+// 跳日的夹具用skipTo同时把势力时钟移到下一边界（T159新增日钟）。
+import {skipTo} from './fixtures/skip-clock.mjs';
 
 // Later batches (T104 onward) are removed first so this batch is compared on its own edition.
 const formal=withoutS4(await loadWorld()),publication=await readS3Publication();
@@ -164,7 +166,7 @@ test('书铺两册有限库存：购买、阅读学会法师与看护术式，�
  let doc=base();
  for(const b of books){const r=await run(doc,'world_trade',{seller:'npc_hw_luqing',item:b.id,quantity:1});assert.ok(r.result.cost>0);const left=r.doc.state.npcs.npc_hw_luqing.inventory[b.id];assert.equal(left.quantity??left,1);doc=r.doc;}
  for(const s of spells.filter(s=>['法','通'].includes(routeOf[s.id]))){const book=books.find(b=>b.book.teaches.includes(s.id)),r=await success(doc,'world_learn',{kind:'spell',entity:s.id,source:book.id});assert.equal(r.doc.state.spells[s.id].source.id,book.id);assert.equal(r.doc.state.minute,doc.state.minute+book.book.readingMinutes);doc=r.doc;}
- doc.state.location='bld_bs_temple';doc.state.minute=Math.ceil(doc.state.minute/1440)*1440+540;
+ doc.state.location='bld_bs_temple';skipTo(engine,doc,Math.ceil(doc.state.minute/1440)*1440+540);
  const color=await cast(structuredClone(doc),{spell:id('color_read'),target:fid('ore_tray')});assert.equal(color.result.observation.spectrum.length,3);
  const shadow=await cast(structuredClone(doc),{spell:id('shadow_rule'),target:fid('screen_wall'),source:fid('porch_lamp'),destination:fid('incense_post')});assert.equal(shadow.result.observation.heightMeters,1);assert.ok(shadow.result.observation.shadowLengthMeters>0);
  const hidden=structuredClone(doc);hidden.state.effects.fixture_camouflage={kind:'status',target:'player',status:'camouflage',power:5,expires:hidden.state.minute+30,source:'fixture_camouflage'};

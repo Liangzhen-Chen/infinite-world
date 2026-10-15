@@ -1,3 +1,4 @@
+import {registerMagicEffect}from'./magic-effects.mjs';
 import {environmentFeatures}from'./environment.mjs';
 import {heldUnit,trackSingleItem}from'./items.mjs';
 import {itemTraits,featureTraits}from'./traits.mjs';
@@ -46,3 +47,5 @@ export function inspectMagicMarks(d,engine,args,context={}){
  const row=targetOf(d,engine,args.target,args),instance=row.held?.instance;
  return Object.entries(d.get('state','records')??{}).filter(([,r])=>r.category==='magic_mark'&&r.target===row.target&&r.expires>d.get('state','minute')&&(!r.targetInstance||r.targetInstance===instance)&&(!r.location||row.held||r.location===row.location)&&(r.visibility==='normal'||context.illumination==='dim')).map(([id,r])=>({id,text:r.text,medium:r.medium,expires:r.expires,note:'可见字迹不等于认证'}));
 }
+// Spell effect family (dispatched by magic.mjs through magic-effects.mjs).
+registerMagicEffect({kinds:['mark'],validate:validateMarkCatalog,prepare(d,c,args){return prepareMark.call(this,d,c,args);},apply(d,p,id){return applyMark.call(this,d,p,id);}});

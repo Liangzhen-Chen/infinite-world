@@ -3,6 +3,7 @@ import {npcObligationAt} from './npc-obligations.mjs';
 import {npcAutonomyBusy} from './npc-autonomy.mjs';
 import {recordFestivalRelations} from './npc-relations.mjs';
 import {changeItems} from './items.mjs';
+import {applyEffects,hookedEffects} from './effects.mjs';
 
 const DAY=1440,path=id=>['state','records',id],safe=n=>Number.isSafeInteger(n)&&n>=0;
 const awake=n=>n&&!['死亡','濒死','昏迷','患病','睡眠'].includes(n.status)&&!n.scheduleTravel&&!n.cognitionTravel&&!/睡眠|睡觉|熟睡/.test(n.activity??'');
@@ -29,6 +30,7 @@ export function validateFestivalRuntime(world){
    v?.precision!=='existing_location'||!location||!world.npcs.some(n=>n.id===r.host)||!['market','ritual'].includes(r.kind)||
    !safe(r.startMinute)||!safe(r.durationMinutes)||r.durationMinutes<1||r.startMinute+r.durationMinutes>DAY||
    !safe(r.minimumParticipants)||r.minimumParticipants<1||!Array.isArray(f.resourceNeeds))errors.push(`${f.id}:正式节日日期、场地或运行参数无效`);
+  if(r.effects!==undefined&&(!Array.isArray(r.effects)||r.effects.some(e=>typeof e?.kind!=='string')))errors.push(`${f.id}:节日效果须为效果表条目`);
   for(const n of f.resourceNeeds??[])if(!world.items.some(i=>i.id===n.item)||!safe(n.quantity)||n.quantity<1||n.quantity>100000||
    !['host','player',...world.npcs.map(p=>p.id)].includes(n.owner))errors.push(`${f.id}:节日材料或物主无效`);
   if(r.sourceCustom){const old=customs.find(x=>x.id===r.sourceCustom);
@@ -177,6 +179,13 @@ export function advanceFestivals(d,engine,at){
   const consumed=[];
   if(status==='held'&&row.formal)for(const n of row.resources){const result=changeItems(d,engine,n.owner,n.item,-n.quantity);consumed.push({...n,...result});}
   const done={...row,status,reason,participants:status==='held'?[row.host,...participants]:[],paidCopper:status==='held'?row.cost:0,resolvedAt:at,resultEvent:`festival-result:${id}`,...(row.formal?{consumed}:{})};
+  // K6: a held festival applies its published runtime effects and any effect-table
+  // hooks as one transaction; festivals without effects keep their exact record.
+  const festivalEffects=status==='held'?[...f.runtime?.effects??[],...hookedEffects(engine,'festival',f.publishedId??f.id)]:[];
+  if(festivalEffects.length){
+   const receipt=applyEffects(d,engine,festivalEffects,{settlement:f.settlement,faction:null,minute:at,sourceEvent:done.resultEvent},'festival');
+   done.effects=receipt.applied?receipt.effects:[];if(!receipt.applied)done.effectsBlocked=receipt.reason??'效果条件未满足';
+  }
   if(done.paidCopper){
    d.set(['state','npcs',row.host,'coins'],state.npcs[row.host].coins-row.cost);
    d.set(['state','npcs',row.supplier,'coins'],state.npcs[row.supplier].coins+row.cost);

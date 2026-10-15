@@ -1,3 +1,4 @@
+import {registerWorldEventSubscriber}from'./world-events.mjs';
 import {transferItems} from './items.mjs';
 import {breakBossAgreement} from './boss-negotiation.mjs';
 import {spendFactionAssets} from './faction-clock.mjs';
@@ -402,3 +403,5 @@ export const societyIssueConsumer={
         return{applied:true,kind:effect.kind,issue:effect.issue,status:effect.status,outcome:row.outcome};
     },
 };
+// World-event subscriber; settlement order is the `order` field.
+registerWorldEventSubscriber({id:'monster_society',order:10,on:(d,engine,events)=>recordSocietyActs(d,engine,events)});

@@ -1,3 +1,4 @@
+import {registerMagicEffect}from'./magic-effects.mjs';
 import {prepareSummonWork,applySummonWork}from'./magic-ritual.mjs';
 import { servantCarryWater,environmentFeatures } from './environment.mjs';
 import {applyProtectionPrimitive}from'./magic-primitives.mjs';
@@ -162,3 +163,5 @@ export function summonAction(d, args, eventId) {
     try { return { summon: args.summon, success: true, ...servantCarryWater.call(this, d, args, effect.terms.maximumWaterMl, false) }; }
     catch (error) { return { summon: args.summon, success: false, effectFailed: error.message }; }
 }
+// Spell effect family (dispatched by magic.mjs through magic-effects.mjs).
+registerMagicEffect({kinds:['summon','summon_contract'],validate:validateSummonCatalog,prepare(d,c,args){return prepareSummon.call(this,d,c,args);},apply(d,p,id){return applySummon.call(this,d,p,id);}});

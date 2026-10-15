@@ -30,7 +30,14 @@ import {advanceNpcAutonomy,nextNpcAutonomyMinute}from'./npc-autonomy.mjs';
 import {advanceNpcLife,nextNpcLifeMinute}from'./npc-life.mjs';
 import {advanceNpcObligations,nextNpcObligationMinute}from'./npc-obligations.mjs';
 import {advanceSocietyNews}from'./monster-society.mjs';
+import {advanceSeasonEffects}from'./effects.mjs';
 import {advanceOrganizations}from'./organizations.mjs';
+import {advanceBounties,nextBountyMinute,bountyActive}from'./bounty.mjs';
+import {advanceOffices,nextOfficeMinute}from'./governance.mjs';
+import {advanceTitles,nextTitleMinute}from'./titles.mjs';
+import {advanceNotables,nextNotableMinute}from'./notables.mjs';
+import {advancePromotion,nextPromotionMinute}from'./promotion.mjs';
+import {advancePublicProjects,isPublicProject,advanceHouses,advanceHousing,nextHousingMinute}from'./public-projects.mjs';
 
 const clone=value=>structuredClone(value);
 const fullNpcs=engine=>engine.world.npcs.some(n=>n.tier==='full');
@@ -80,19 +87,28 @@ const systems=[
   advance:(e,d,{after})=>advanceSettlementTrade(d,e,after)},
  {id:'shop_restock',order:850,advance:(e,d,{before,after})=>advanceShops(d,e,before,after)},
  {id:'projects',order:900,advance(e,d,{days,id}){
-    if(days)for(const [key,project]of Object.entries(d.get('state','projects')))if(project.type==='工程'&&project.status==='施工中'){
+    if(days)for(const [key,project]of Object.entries(d.get('state','projects')))if(project.type==='工程'&&project.status==='施工中'&&!isPublicProject(project)){
         const remainingDays=Math.max(0,project.remainingDays-days);d.set(['state','projects',key],{...project,remainingDays,status:remainingDays?'施工中':'已完成'});
         if(!remainingDays&&project.creator==='player')milestone(d,e,'publicContribution',key,id);
     }
  }},
+ {id:'public_projects',order:910,advance:(e,d,ctx)=>{advancePublicProjects(d,e,ctx);advanceHouses(d,e,ctx);}},
  {id:'npc_cognition',order:1000,active:e=>fullNpcs(e),nextMinute:(e,d,now)=>nextNpcCognitionMinute(d.get('state'),now),
   advance:(e,d,{before,after,id,beforeState})=>{if(fullNpcs(e))advanceNpcCognition(d,e,before,after,id,{beforeState});}},
  {id:'npc_autonomy',order:1100,active:e=>fullNpcs(e),nextMinute:(e,d,now)=>nextNpcAutonomyMinute(d.get('state'),now),
   advance:(e,d,{before,after,id,beforeState})=>{if(fullNpcs(e))advanceNpcAutonomy(d,e,before,after,id,{beforeState});}},
+ {id:'governance_offices',order:1130,nextMinute:(e,d,now)=>nextOfficeMinute(d.get('state'),now),advance:(e,d,ctx)=>advanceOffices(d,e,ctx)},
+ {id:'housing_steward',order:1135,nextMinute:(e,d,now)=>nextHousingMinute(d.get('state'),now),advance:(e,d,ctx)=>advanceHousing(d,e,ctx)},
+ {id:'titles',order:1140,nextMinute:(e,d,now)=>nextTitleMinute(d.get('state'),now),advance:(e,d,ctx)=>advanceTitles(d,e,ctx)},
+ {id:'notables',order:1142,nextMinute:(e,d,now)=>nextNotableMinute(d.get('state'),now),advance:(e,d,ctx)=>advanceNotables(d,e,ctx)},
+ {id:'promotion',order:1144,nextMinute:(e,d,now)=>nextPromotionMinute(d.get('state'),now),advance:(e,d,ctx)=>advancePromotion(d,e,ctx)},
+ {id:'bounty',order:1150,active:(e,d)=>bountyActive(d.get('state')),nextMinute:(e,d,now)=>nextBountyMinute(d.get('state'),now),
+  advance:(e,d,{before,after})=>advanceBounties(d,e,before,after)},
  {id:'npc_life',order:1200,active:e=>fullNpcs(e),nextMinute:(e,d,now)=>nextNpcLifeMinute(d.get('state'),now),
   advance:(e,d,{before,after})=>{if(fullNpcs(e))advanceNpcLife(d,e,before,after);}},
  {id:'world_clock',order:1300,active:e=>!!e.rules.worldClock,nextMinute:(e,d,now)=>nextWorldClockMinute(d.get('state'),now),
   advance:(e,d,{after})=>advanceWorldClocks(d,e,after)},
+ {id:'season_effects',order:1350,advance:(e,d,{before,after})=>advanceSeasonEffects(d,e,before,after)},
  {id:'faction_clock',order:1400,active:e=>factionClockRules(e).length>0,nextMinute:(e,d,now)=>nextFactionClockMinute(d.get('state'),now),
   advance:(e,d,{after})=>advanceFactionClocks(d,e,after)},
  {id:'organizations',order:1450,advance:(e,d,ctx)=>advanceOrganizations(d,e,ctx)},
