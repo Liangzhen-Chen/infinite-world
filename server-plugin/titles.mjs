@@ -1,4 +1,5 @@
-import {personRegistrar} from './entity-view.mjs';
+import {personRegistrar,personOffices} from './entity-view.mjs';
+import {actorPath} from './npc-state.mjs';
 import {authorityOf,playerOffices} from './governance.mjs';
 import {titleMilitaryService,militaryFresh} from './military.mjs';
 
@@ -85,18 +86,18 @@ function receipts(state,fief){
 function income(d,engine,t,at){
     const def=titleDef(engine,t.title),state=d.get('state'),mark=receipts(state,t.fief),next={...t,nextIncome:t.nextIncome+MONTH,incomeMark:mark};
     const month=Math.floor(at/MONTH),row={category:'title_income',holder:'player',title:t.title,fief:t.fief,minute:at,base:mark-t.incomeMark,income:0,tribute:0};
-    if(!t.fief||!def.incomeBps){d.set(rec(KEY),next);return;}
+    if(!t.fief||!def.incomeBps){d.set(rec(t.id??KEY),next);return;}
     if(t.status==='停俸')row.reason='停俸期间不发封地收入';
-    else if(!heads(engine,state,t.fief).length){row.reason='不再任该村村长，封地收入停发';next.status='失封地';}
+    else if(!personOffices(engine,state,t.holder??'player',{settlement:t.fief,power:'housing'}).length){row.reason='不再任该村村长，封地收入停发';next.status='失封地';}
     else{
         const owed=Math.floor(row.base*def.incomeBps/10000),treasury=state.settlements[t.fief].treasury,reserve=authorityOf(engine).treasury.reserveCopper;
         row.income=Math.max(0,Math.min(owed,treasury-reserve));if(row.income<owed)row.shortfall=owed-row.income;
         row.tribute=Math.floor(row.income*def.tributeBps/10000);
         d.set(['state','settlements',t.fief,'treasury'],treasury-row.income);
-        d.set(['state','player','coins'],state.player.coins+row.income-row.tribute);
+        const holderPath=actorPath(engine.world,t.holder??'player');d.set([...holderPath,'coins'],(d.get(...holderPath,'coins')??0)+row.income-row.tribute);
         if(t.status==='失封地')next.status='受封';
     }
-    d.set(rec(`title_income:${month}`),row);d.set(rec(KEY),next);
+    d.set(rec(t.holder&&t.holder!=='player'?`title_income:${t.id}:${month}`:`title_income:${month}`),{...row,holder:t.holder??'player'});d.set(rec(t.id??KEY),next);
 }
 function yearEnd(d,engine,t,at){
     const def=titleDef(engine,t.title),need=(t.levy.men??0)*(t.levy.days??0),kept=t.levy.served>=need&&t.levy.attended;
@@ -108,7 +109,7 @@ function yearEnd(d,engine,t,at){
         const i=def.ranks.indexOf(t.rank);
         next={...next,breaches:1,status:'停俸',rank:def.ranks[Math.max(0,i-1)],reason:'未应兵役或报到：停俸一年并降等'};
     }
-    d.set(rec(KEY),next);
+    d.set(rec(t.id??KEY),next);
 }
 // Service is done in person at the Baishi office (with companions counting as
 // men); a zero-day visit is the yearly report.
