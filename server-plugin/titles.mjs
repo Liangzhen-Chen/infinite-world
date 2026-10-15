@@ -1,4 +1,5 @@
 import {authorityOf,playerOffices} from './governance.mjs';
+import {titleMilitaryService,militaryFresh} from './military.mjs';
 
 // T127 titles. A petition is filed at the Baishi office with a registrar and
 // forwarded to the capital registry, which decides after its published days
@@ -114,6 +115,7 @@ function service(d,engine,args,eventId){
     office(d,engine);
     const t=playerTitle(d.get('state'));if(!t||!t.levy.men)throw Error('没有需要应役的爵位');
     const days=args.days??0;if(!Number.isSafeInteger(days)||days<0||days>60)throw Error('应役日数须在0到60之间');
+    if(engine.rules.military&&militaryFresh(engine))return titleMilitaryService(d,engine,days,eventId);
     const men=t.levy.personal?1:Math.min(t.levy.men,1+(d.get('state','player','companions')?.length??0));
     if(days)engine.advance(d,days*DAY,eventId);
     const now=playerTitle(d.get('state'));if(!now)throw Error('爵位已除');

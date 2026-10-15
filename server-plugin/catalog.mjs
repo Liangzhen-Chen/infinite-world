@@ -22,7 +22,8 @@ export function catalogDefinition(engine,document,{entity,kind,offset=0}={}){
         const known=siteKnowledge(selected.world,document).filter(truth=>truth.history===id);
         if(known.length)return{...publicLore(row),description:known.map(truth=>truth.text).join('\n'),verified:true,source:'遗迹发现',evidence:known.flatMap(truth=>truth.evidence)};
     }
-    if(['culture','deity','faction','history','prov','county','festival'].includes(category))return publicLore(row);
+    if(category==='county'){const occupation=document.state.records?.[`territory:${id}`];return {...publicLore(row),...(occupation?{occupation}:{} )};}
+    if(['culture','deity','faction','history','prov','festival'].includes(category))return publicLore(row);
     if(kind==='location'&&!locationKinds.has(category))throw new Error('需要地点名称或编号');
     if(locationKinds.has(category))return{id,name:row.name,description:row.description??'',parent:row.parent??null,
         ...(publicSettlement(selected.world,id,document)?{settlement:publicSettlement(selected.world,id,document)}:{}),

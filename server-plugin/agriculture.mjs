@@ -87,8 +87,10 @@ export function advanceAgriculture(d,engine,id,source,day){
     const r=clone(original),s=clone(source);balanced(r,s);
     if(r.lastDay!==day-1)throw new Error('农事日结顺序不连续，拒绝重复或补算过往收成');
     const weather=weatherAt(engine,d.document.randomSeed,p.fieldLocation,day*1440+720),season=engine.calendar(day*1440).season;
-    const availableWorkers=Math.floor(s.population*p.workerFraction),processing=Math.min(p.processingWorkers,availableWorkers);
-    const freshWorkers=Math.min(p.freshWorkers,Math.max(0,availableWorkers-processing)),fieldWorkers=Math.min(p.farmWorkers,r.tools.capacity,Math.max(0,availableWorkers-processing-freshWorkers));
+    // U12: able-bodied villagers away on levy (levy:<village>) are not in the fields.
+    const normalWorkers=Math.floor(s.population*p.workerFraction),availableWorkers=Math.max(0,normalWorkers-(d.get('state','records',`levy:${id}`)?.count??0));
+    const laborShare=normalWorkers?availableWorkers/normalWorkers:1,processing=Math.min(Math.floor(p.processingWorkers*laborShare),availableWorkers);
+    const freshWorkers=Math.min(Math.floor(p.freshWorkers*laborShare),Math.max(0,availableWorkers-processing)),fieldWorkers=Math.min(Math.floor(p.farmWorkers*laborShare),r.tools.capacity,Math.max(0,availableWorkers-processing-freshWorkers));
     const fresh=Math.floor(p.freshFoodPerDay*p.freshSeasonFactors[season]*(weather?.cropMultiplier??1)*freshWorkers/p.freshWorkers);
     if(day%30===29){
         r.granary.condition=Math.max(0,r.granary.condition-1);
@@ -109,14 +111,29 @@ export function advanceAgriculture(d,engine,id,source,day){
     for(const row of r.field.cohorts)if(!row.ready&&row.grownDays>=engine.rules.agriculture.crop.growthDays){row.ready=true;row.readyDay=day;}
     const result=weather?.kind!=='storm'&&weather?.kind!=='snow'?harvest(r,s,engine,p,day,capacity,`day_${day}`):{units:0,grain:0,reserved:0,stored:0};
     r.ledger.freshProduced+=fresh;addBatch(r,s,p,fresh,{id:`fresh:${day}`,day,source:'每日农副产',kind:'fresh'});
-    const freshEaten=takeFood(r,s,s.population,'fresh');
-    const grainEaten=takeFood(r,s,Math.min(s.population-freshEaten,processing*p.processingPerWorker),'grain');
+    const mouths=Math.max(0,s.population-(d.get('state','records',`levy:${id}`)?.count??0));
+    const freshEaten=takeFood(r,s,mouths,'fresh');
+    const grainEaten=takeFood(r,s,Math.min(mouths-freshEaten,processing*p.processingPerWorker),'grain');
     const eaten=freshEaten+grainEaten;r.ledger.eaten+=eaten;
-    const missingMeals=s.population-eaten;r.lastDay=day;
+    const missingMeals=mouths-eaten;r.lastDay=day;
     const woodWorkers=Math.min(2,Math.max(0,availableWorkers-processing-freshWorkers-fieldWorkers)),woodProduced=Math.floor(s.woodPerDay*woodWorkers/2);
     r.lastReport={day,workers:{available:availableWorkers,processing,fresh:freshWorkers,field:fieldWorkers,wood:woodWorkers},fresh,wood:woodProduced,planted:planted.units,seedSpent:planted.seed,harvest:result.grain,seedReserved:result.reserved,stored:result.stored,freshEaten,grainEaten,eaten,missingMeals,
         ...(pestDamage?{harvestLostToPests:result.pestLost??0,pestDamageAddedMaxPercent:pestDamage.maximumAddedPercent}:{})};
     balanced(r,s);d.set(path(id),r);return{settlement:s,missingMeals,woodProduced};
+}
+// U12: an army quartermaster draws grain above the winter reserve (the same
+// sellable surplus as a granary sale); raid:true seizes grain regardless of the
+// reserve. Returns the units actually taken.
+export function drawGranary(d,engine,id,quantity,{raid=false}={}){
+    const p=profile(engine,id),s0=d.get('state','settlements',id);if(!p||!s0||!(quantity>0))return 0;
+    const original=d.get(...path(id));
+    if(original?.mode!=='managed'){const take=Math.min(quantity,raid?s0.food:Math.max(0,s0.food-s0.population*p.reserveDays));if(take)d.set(['state','settlements',id,'food'],s0.food-take);return take;}
+    const r=clone(original),s=clone(s0);balanced(r,s);
+    const stock=r.batches.filter(b=>b.kind==='grain').reduce((n,b)=>n+b.amount,0),available=raid?stock:Math.max(0,stock-s.population*p.reserveDays);
+    const taken=takeGrain(r,s,Math.min(quantity,available));if(!taken)return 0;
+    // Leaves the granary like a sale (the conservation outflow); armyDrawn/raided break it down.
+    r.ledger.sold+=taken;r.ledger[raid?'raided':'armyDrawn']=(r.ledger[raid?'raided':'armyDrawn']??0)+taken;
+    balanced(r,s);d.set(path(id),r);d.set(['state','settlements',id],s);return taken;
 }
 export function settleAgricultureExpiry(d,engine){
     const day=Math.floor(d.get('state','minute')/1440);

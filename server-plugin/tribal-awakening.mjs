@@ -382,7 +382,7 @@ export function tribalScene(engine,document){
   if(rec.status==='听息'){lines.push(`${name}的${dyn.name}${SIGN.听息}`);continue;}
   const orgs=rec.factions.map(id=>{const o=s.records?.[`organization:${id}`];return `${o?.name??id}（${id}，${STANCE_NAME[o?.tribal?.stance]??''}，${o?.tribal?.status??''}，${standing(engine,s,id,'player')>=10?'友善':standing(engine,s,id,'player')<=-10?'敌视':'观望'}）`;});
   if(rec.status==='分化')lines.push(`${name}的${dyn.name}已立意，分为${orgs.join('、')}；诉求：${rec.demands.map(x=>`${x.name}${x.status==='已回应'?'（已回应）':''}`).join('、')}`);
-  else lines.push(`${name}的${dyn.name}已${rec.status}${rec.outcome?.settlement?`，自立为${s.records?.[`tribal_settlement:${dyn.id}`]?.skeleton?.name??''}`:''}${rec.outcome?.war?'，正与人对峙':''}`);
+  else lines.push(`${name}的${dyn.name}已${rec.status}${rec.outcome?.settlement?`，自立为${s.records?.[`tribal_settlement:${dyn.id}`]?.skeleton?.name??''}`:''}${rec.outcome?.war?['对峙','交战'].includes(s.records?.[rec.outcome.war]?.status)?'，战事未止':'，战事已停':''}`);
  }
  return lines.length?`【族群】${lines.slice(0,2).join('；')}。`:'';
 }

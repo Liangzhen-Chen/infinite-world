@@ -27,6 +27,7 @@ const factionRules=(engine,id)=>reputationFactions(engine).find(f=>f.id===id);
 export function standingKind(engine,state,id){
     if(id==='player')return 'player';
     if(state.npcs?.[id])return 'npc';
+    if(engine.world.regions?.some(r=>r.id===id&&r.category==='county'))return 'polity';
     if(seat(engine,id))return 'society';
     if(String(id).startsWith('spirit_society:'))return 'spirit_society';
     if(isReputationSettlement(engine,id))return 'settlement';
