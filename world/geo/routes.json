@@ -5320,5 +5320,255 @@
     "closedSeasons": [],
     "toll": 0,
     "risk": 1
+  },
+  {
+    "id": "route_w5_yg_drowned_sett",
+    "from": "loc_ms_yugen",
+    "to": "site_w5_yg_drowned_sett",
+    "lengthKm": 0.15,
+    "terrainMultiplier": 1.2,
+    "modes": [
+      "walk"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 0
+  },
+  {
+    "id": "route_w5_ll_deep_drift",
+    "from": "loc_ms_lielu",
+    "to": "site_w5_ll_deep_drift",
+    "lengthKm": 0.2,
+    "terrainMultiplier": 1.2,
+    "modes": [
+      "walk"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 1
+  },
+  {
+    "id": "route_w5_north_toll",
+    "from": "loc_bs",
+    "to": "site_w5_north_toll",
+    "lengthKm": 14.5,
+    "terrainMultiplier": 0.9,
+    "modes": [
+      "walk",
+      "horse",
+      "cart"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 1
+  },
+  {
+    "id": "route_w5_broken_rut_bridge",
+    "from": "loc_bs",
+    "to": "site_w5_broken_rut_bridge",
+    "lengthKm": 32.5,
+    "terrainMultiplier": 0.9,
+    "modes": [
+      "walk",
+      "horse",
+      "cart"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 1
+  },
+  {
+    "id": "route_w5_charcoal_camp",
+    "from": "loc_bs",
+    "to": "site_w5_charcoal_camp",
+    "lengthKm": 43.5,
+    "terrainMultiplier": 0.9,
+    "modes": [
+      "walk",
+      "horse"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 1
+  },
+  {
+    "id": "route_w5_cold_smelter",
+    "from": "loc_far_tongji",
+    "to": "site_w5_cold_smelter",
+    "lengthKm": 16.5,
+    "terrainMultiplier": 0.9,
+    "modes": [
+      "walk",
+      "horse"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 1
+  },
+  {
+    "id": "route_w5_tongji_flooded_mine",
+    "from": "loc_far_tongji",
+    "to": "site_w5_tongji_flooded_mine",
+    "lengthKm": 5.5,
+    "terrainMultiplier": 0.9,
+    "modes": [
+      "walk"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 2
+  },
+  {
+    "id": "route_w5_raid_fort",
+    "from": "loc_far_duanqi",
+    "to": "site_w5_raid_fort",
+    "lengthKm": 7.5,
+    "terrainMultiplier": 0.9,
+    "modes": [
+      "walk",
+      "horse"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 2
+  },
+  {
+    "id": "route_w5_orc_cairn",
+    "from": "loc_far_duanqi",
+    "to": "site_w5_orc_cairn",
+    "lengthKm": 8.5,
+    "terrainMultiplier": 0.9,
+    "modes": [
+      "walk"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 2
+  },
+  {
+    "id": "route_w5_seventy_li",
+    "from": "loc_bs",
+    "to": "site_w5_seventy_li",
+    "lengthKm": 46,
+    "terrainMultiplier": 0.9,
+    "modes": [
+      "walk",
+      "horse",
+      "cart"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 1
+  },
+  {
+    "id": "route_w5_way_temple",
+    "from": "loc_bs",
+    "to": "site_w5_way_temple",
+    "lengthKm": 72,
+    "terrainMultiplier": 0.9,
+    "modes": [
+      "walk",
+      "horse",
+      "cart"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 1
+  },
+  {
+    "id": "route_w5_boundary_pavilion",
+    "from": "loc_bs",
+    "to": "site_w5_boundary_pavilion",
+    "lengthKm": 104,
+    "terrainMultiplier": 0.9,
+    "modes": [
+      "walk",
+      "horse",
+      "cart"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 1
+  },
+  {
+    "id": "route_w5_granary_watergate",
+    "from": "loc_far_huancheng",
+    "to": "site_w5_granary_watergate",
+    "lengthKm": 3.4,
+    "terrainMultiplier": 0.9,
+    "modes": [
+      "walk"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 0
+  },
+  {
+    "id": "route_w5_indigo_ditch",
+    "from": "loc_far_huancheng",
+    "to": "site_w5_indigo_ditch",
+    "lengthKm": 8,
+    "terrainMultiplier": 0.9,
+    "modes": [
+      "walk",
+      "cart"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 0
+  },
+  {
+    "id": "route_w5_ferry_shrine_yandu",
+    "from": "loc_yandu",
+    "to": "site_w5_ferry_shrine",
+    "lengthKm": 15,
+    "terrainMultiplier": 0.9,
+    "modes": [
+      "walk"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 1
+  },
+  {
+    "id": "route_w5_ferry_shrine_hw",
+    "from": "loc_hw",
+    "to": "site_w5_ferry_shrine",
+    "lengthKm": 17,
+    "terrainMultiplier": 0.9,
+    "modes": [
+      "boat"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 1
+  },
+  {
+    "id": "route_w5_yandu_wreck",
+    "from": "loc_yandu",
+    "to": "site_w5_yandu_wreck",
+    "lengthKm": 3.9,
+    "terrainMultiplier": 0.9,
+    "modes": [
+      "walk",
+      "boat"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 1
+  },
+  {
+    "id": "route_w5_reed_salt",
+    "from": "loc_yandu",
+    "to": "site_w5_reed_salt",
+    "lengthKm": 8.8,
+    "terrainMultiplier": 0.9,
+    "modes": [
+      "walk",
+      "boat"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 1
   }
 ]
