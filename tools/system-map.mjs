@@ -120,6 +120,7 @@ const WORLD_USE=Object.fromEntries(CODE.map(f=>[f,scanWorldUse(f)]));
 // ---------------------------------------------------------------- systems & layers
 // 模块→系统归属（人工归类；脚本会校验 server-plugin 与 extension 的每个模块都有归属）。
 const SYSTEMS=[
+ {id:'sim_faith',layer:'sim',name:'寺观与信仰',modules:['faith-catalog.mjs','faith-state.mjs','faith.mjs']},
  // 数据层（world/ 目录与 prompt/）
  {id:'data_meta',layer:'data',name:'规则与目录',dir:'world/meta',modules:[]},
  {id:'data_geo',layer:'data',name:'地理',dir:'world/geo',modules:[]},
@@ -137,7 +138,7 @@ const SYSTEMS=[
  {id:'base_interactions',layer:'base',name:'交互规则',card:'K2',modules:['interactions.mjs']},
  {id:'base_events',layer:'base',name:'世界事件',card:'K3/V6',modules:['world-events.mjs','entity-transitions.mjs']},
  {id:'base_standing',layer:'base',name:'统一立场',card:'K4/K5',modules:['standing.mjs','entity-view.mjs']},
- {id:'base_effects',layer:'base',name:'效果表',card:'K6',modules:['effects.mjs']},
+ {id:'base_effects',layer:'base',name:'效果表',card:'K6',modules:['effects.mjs','effect-registry.mjs']},
  {id:'base_advance',layer:'base',name:'推进注册表',card:'K7/P3',modules:['advance-registry.mjs','advance-layers.mjs']},
  // 模拟系统层
  {id:'sim_npc',layer:'sim',name:'人物',modules:['npc-state.mjs','npc-schedule.mjs','npc-cognition.mjs','npc-autonomy.mjs','npc-life.mjs','npc-memory.mjs','npc-relations.mjs','npc-rumors.mjs',

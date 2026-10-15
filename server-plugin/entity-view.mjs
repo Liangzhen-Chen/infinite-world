@@ -5,6 +5,7 @@ import {actorId,actorPath} from './npc-state.mjs';
 import {npcHousehold,npcAgeAt,npcSchedule,npcServices,beginHouseholdReads} from './npc-state.mjs';
 import {organizationState,memberOrganizations} from './organization-state.mjs';
 import {rankedOffice,adminLevel} from './promotion-view.mjs';
+import {faithOf} from './faith-state.mjs';
 
 const fact=(value,source,override=false)=>({value:structuredClone(value??null),source,override});
 const at=(state,path)=>path.reduce((o,k)=>o?.[k],state);
@@ -299,7 +300,7 @@ export function personView(engine,state,requested){
         household,residence:fact(residence??{household:h?.id??base?.householdId,settlement,home:h?.homeLocation??base?.home?.location},residence?`${root}.residence`:household.source,Boolean(residence)),
         settlement:fact(settlement,settlementSource,Boolean(residence||household.override||actor?.settlement)),
         location:fact(location,id==='player'?'state.location':actor&&Object.hasOwn(actor,'location')?`${root}.location`:`catalog.${id}.location`,Boolean(actor)),
-        organizations:socialIdentities(engine,state,id),
+        organizations:socialIdentities(engine,state,id),faith:faithOf(engine,state,id),
         offices:personOffices(engine,state,id),career:personCareer(engine,state,id),occupation:personOccupation(engine,state,id),remuneration:personRemuneration(engine,state,id),
         titles:recordFacts(state,r=>r.category==='title'&&actorId(engine.world,r.holder)===id&&r.status!=='已除爵'),
         notables:recordFacts(state,r=>r.category==='notable'&&actorId(engine.world,r.holder)===id&&r.status==='在册'),
@@ -311,13 +312,13 @@ export function personView(engine,state,requested){
 
 export function groupView(engine,state,id){
     const org=organizationState(engine,state,id);if(!org)return null;
-    const row=state.records?.[`organization:${id}`],source=org.source==='created'?`state.records.organization:${id}`:org.source==='household'?'world.households + state.family.households':org.source==='society'?`world.locations.${id}.monsterSociety`:`world.factions.${id} + rules.reputation.factions`;
+    const row=state.records?.[`organization:${id}`],source=org.source==='created'?`state.records.organization:${id}`:org.source==='temple'?'rules.training.institutions':org.source==='household'?'world.households + state.family.households':org.source==='society'?`world.locations.${id}.monsterSociety`:`world.factions.${id} + rules.reputation.factions`;
     return {organization:fact(org,source,Boolean(row)),id:fact(id,'identity'),source:fact(org.source,source),
         members:fact(org.members,row?`${source} + state.records.organization:${id}`:source,Boolean(row||org.source==='household'&&state.family?.households?.[id])),
         leader:fact(org.leader,row&&Object.hasOwn(row,'leader')?`state.records.organization:${id}.leader`:source,Boolean(row&&Object.hasOwn(row,'leader'))),
         seat:fact(org.seat,source),kind:fact(org.kind,source),
         officials:fact(Object.entries(org.members).filter(([m,r])=>m===org.leader||!['成员'].includes(r.position)).map(([m])=>m),row?`${source} + state.records.organization:${id}.members`:source,Boolean(row)),
-        treasury:fact(org.treasury,org.source==='faction'?`state.records.faction-assets:${id} + world.factions.${id}.resources`:`state.records.organization:${id}.treasury`,Boolean(row||state.records?.[`faction-assets:${id}`]))};
+        treasury:fact(org.treasury,['faction','temple'].includes(org.source)?`state.records.faction-assets:${id} + world.factions.${id}.resources`:`state.records.organization:${id}.treasury`,Boolean(row||state.records?.[`faction-assets:${id}`]))};
 }
 
 // A contact names a founding office holder. Resolve that office on every read;

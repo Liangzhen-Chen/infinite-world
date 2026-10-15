@@ -2,7 +2,7 @@
  "title": "无限原野系统地图",
  "card": "K9",
  "generatedFrom": {
-  "commit": "refs/heads/l1",
+  "commit": "refs/heads/rw07",
   "method": "运行时导出（注册表、规则表、工具定义、效果表、立场传导表）+ 静态正则扫描（import 图、函数体标识符、state 分区与 records 前缀、rules/world 读取）。静态扫描是近似：经 engine.byId、helper 间接或动态拼接路径的访问不计入。"
  },
  "scanMethods": {
@@ -17,15 +17,15 @@
  },
  "counts": {
   "layers": 6,
-  "systems": 38,
-  "modules": 186,
-  "advance": 47,
+  "systems": 39,
+  "modules": 190,
+  "advance": 48,
   "tools": 25,
   "verbs": 28,
-  "subscribers": 8,
+  "subscribers": 9,
   "interactionRules": 25,
-  "effectKinds": 19,
-  "links": 409
+  "effectKinds": 21,
+  "links": 428
  },
  "layers": [
   {
@@ -69,6 +69,7 @@
    "name": "模拟系统层",
    "reason": "各自持有 state 分区或 records 前缀的玩法系统。它们由工具分派驱动，或登记在推进表、订阅世界事件、实现效果类型，彼此主要通过底座和共享 records 交互。",
    "systems": [
+    "sim_faith",
     "sim_npc",
     "sim_character",
     "sim_combat",
@@ -111,6 +112,74 @@
  ],
  "systems": [
   {
+   "id": "sim_faith",
+   "name": "寺观与信仰",
+   "layer": "sim",
+   "card": null,
+   "dir": null,
+   "modules": [
+    "server-plugin/faith-catalog.mjs",
+    "server-plugin/faith-state.mjs",
+    "server-plugin/faith.mjs"
+   ],
+   "lines": 308,
+   "stateWrites": [
+    "effects",
+    "obligations"
+   ],
+   "stateReads": [
+    "careers",
+    "family",
+    "inventory",
+    "location",
+    "minute",
+    "npcs",
+    "player",
+    "records"
+   ],
+   "recordWrites": [],
+   "recordReads": [
+    "faction-clock",
+    "faith",
+    "household"
+   ],
+   "rules": [
+    "factionClock",
+    "law",
+    "training"
+   ],
+   "world": [
+    "deities",
+    "factions",
+    "items",
+    "locations",
+    "settlementProfiles"
+   ],
+   "advance": [
+    "faith_experience"
+   ],
+   "subscribes": [
+    {
+     "fn": "faithExperience",
+     "verbs": [
+      "deceive",
+      "harm",
+      "help",
+      "learn",
+      "organize"
+     ]
+    }
+   ],
+   "effects": [
+    "faith_claim",
+    "faith_omen"
+   ],
+   "tools": [
+    "world_settlement"
+   ],
+   "readBy": []
+  },
+  {
    "id": "data_meta",
    "name": "规则与目录",
    "layer": "data",
@@ -145,6 +214,7 @@
     "sim_companion",
     "sim_economy",
     "sim_environment",
+    "sim_faith",
     "sim_law",
     "sim_magic",
     "sim_military",
@@ -189,6 +259,7 @@
     "sim_clock",
     "sim_economy",
     "sim_environment",
+    "sim_faith",
     "sim_law",
     "sim_magic",
     "sim_military",
@@ -263,12 +334,13 @@
     "kernel_engine",
     "sim_clock",
     "sim_environment",
+    "sim_faith",
     "sim_military",
     "sim_npc",
     "sim_society",
     "ui_scene"
    ],
-   "files": 9
+   "files": 10
   },
   {
    "id": "data_design",
@@ -295,7 +367,7 @@
     "sim_environment",
     "sim_society"
    ],
-   "files": 111
+   "files": 112
   },
   {
    "id": "data_assets",
@@ -337,7 +409,7 @@
    "effects": [],
    "tools": [],
    "readBy": [],
-   "files": 36
+   "files": 37
   },
   {
    "id": "kernel_engine",
@@ -351,7 +423,7 @@
     "server-plugin/campaign-reducer.mjs",
     "server-plugin/archived-reducer.mjs"
    ],
-   "lines": 991,
+   "lines": 993,
    "stateWrites": [
     "combatDisengaged",
     "created",
@@ -646,7 +718,7 @@
     "server-plugin/standing.mjs",
     "server-plugin/entity-view.mjs"
    ],
-   "lines": 589,
+   "lines": 592,
    "stateWrites": [
     "records"
    ],
@@ -682,6 +754,7 @@
     "npcGrowth",
     "questSources",
     "reputation",
+    "training",
     "wildlife"
    ],
    "world": [
@@ -724,9 +797,10 @@
    "card": "K6",
    "dir": null,
    "modules": [
-    "server-plugin/effects.mjs"
+    "server-plugin/effects.mjs",
+    "server-plugin/effect-registry.mjs"
    ],
-   "lines": 195,
+   "lines": 198,
    "stateWrites": [
     "npcs",
     "records"
@@ -779,7 +853,7 @@
     "server-plugin/advance-registry.mjs",
     "server-plugin/advance-layers.mjs"
    ],
-   "lines": 244,
+   "lines": 246,
    "stateWrites": [
     "effects",
     "obligations",
@@ -852,7 +926,7 @@
     "server-plugin/population-service.mjs",
     "server-plugin/settlement-profile.mjs"
    ],
-   "lines": 3174,
+   "lines": 3187,
    "stateWrites": [
     "created",
     "creatures",
@@ -984,7 +1058,7 @@
     "server-plugin/checks.mjs",
     "server-plugin/revival.mjs"
    ],
-   "lines": 759,
+   "lines": 765,
    "stateWrites": [
     "careerCooldowns",
     "careerFunds",
@@ -1663,7 +1737,7 @@
     "server-plugin/tribal-awakening.mjs",
     "server-plugin/elections.mjs"
    ],
-   "lines": 3651,
+   "lines": 3655,
    "stateWrites": [
     "buildings",
     "created",
@@ -1703,6 +1777,7 @@
     "faction-assets",
     "society_motion",
     "stance",
+    "temple",
     "village-fiscal",
     "war"
    ],
@@ -1841,7 +1916,7 @@
     "server-plugin/seasonal-hazards.mjs",
     "server-plugin/hazard-calendar.mjs"
    ],
-   "lines": 1021,
+   "lines": 1032,
    "stateWrites": [
     "family",
     "npcs",
@@ -1870,6 +1945,7 @@
     "hazard-yield",
     "quote",
     "society_motion",
+    "temple",
     "world-clock"
    ],
    "rules": [
@@ -2036,7 +2112,7 @@
    "modules": [
     "extension/tools.mjs"
    ],
-   "lines": 110,
+   "lines": 112,
    "stateWrites": [],
    "stateReads": [],
    "recordWrites": [],
@@ -2422,6 +2498,14 @@
   },
   {
    "from": "base_advance",
+   "to": "sim_faith",
+   "kind": "advance",
+   "labels": [
+    "faith_experience"
+   ]
+  },
+  {
+   "from": "base_advance",
    "to": "sim_law",
    "kind": "advance",
    "labels": [
@@ -2570,6 +2654,14 @@
    "kind": "call",
    "labels": [
     "weather.mjs"
+   ]
+  },
+  {
+   "from": "base_advance",
+   "to": "sim_faith",
+   "kind": "call",
+   "labels": [
+    "faith.mjs"
    ]
   },
   {
@@ -2789,6 +2881,14 @@
   },
   {
    "from": "base_standing",
+   "to": "sim_faith",
+   "kind": "call",
+   "labels": [
+    "faith-state.mjs"
+   ]
+  },
+  {
+   "from": "base_standing",
    "to": "sim_npc",
    "kind": "call",
    "labels": [
@@ -2951,6 +3051,14 @@
     "remote-generation.mjs",
     "sites.mjs",
     "weather.mjs"
+   ]
+  },
+  {
+   "from": "kernel_engine",
+   "to": "sim_faith",
+   "kind": "call",
+   "labels": [
+    "faith.mjs"
    ]
   },
   {
@@ -3371,6 +3479,15 @@
   },
   {
    "from": "sim_character",
+   "to": "sim_faith",
+   "kind": "call",
+   "labels": [
+    "faith-catalog.mjs",
+    "faith.mjs"
+   ]
+  },
+  {
+   "from": "sim_character",
    "to": "sim_npc",
    "kind": "call",
    "labels": [
@@ -3445,6 +3562,14 @@
    "labels": [
     "environment.mjs",
     "weather.mjs"
+   ]
+  },
+  {
+   "from": "sim_clock",
+   "to": "sim_faith",
+   "kind": "call",
+   "labels": [
+    "faith-catalog.mjs"
    ]
   },
   {
@@ -3764,6 +3889,52 @@
    "labels": [
     "wildlife-habitats.mjs",
     "wildlife-migration.mjs"
+   ]
+  },
+  {
+   "from": "sim_faith",
+   "to": "base_effects",
+   "kind": "call",
+   "labels": [
+    "effects.mjs"
+   ]
+  },
+  {
+   "from": "sim_faith",
+   "to": "base_events",
+   "kind": "call",
+   "labels": [
+    "entity-transitions.mjs",
+    "world-events.mjs"
+   ]
+  },
+  {
+   "from": "sim_faith",
+   "to": "base_standing",
+   "kind": "call",
+   "labels": [
+    "entity-view.mjs",
+    "standing.mjs"
+   ]
+  },
+  {
+   "from": "sim_faith",
+   "to": "sim_npc",
+   "kind": "call",
+   "labels": [
+    "npc-growth.mjs",
+    "npc-obligations.mjs",
+    "npc-schedule.mjs",
+    "npc-state.mjs"
+   ]
+  },
+  {
+   "from": "sim_faith",
+   "to": "sim_society",
+   "kind": "call",
+   "labels": [
+    "group-account.mjs",
+    "organization-state.mjs"
    ]
   },
   {
@@ -4257,6 +4428,14 @@
    "kind": "call",
    "labels": [
     "remote-generation.mjs"
+   ]
+  },
+  {
+   "from": "sim_society",
+   "to": "sim_faith",
+   "kind": "call",
+   "labels": [
+    "faith-catalog.mjs"
    ]
   },
   {
@@ -4846,6 +5025,14 @@
   },
   {
    "from": "data_geo",
+   "to": "sim_faith",
+   "kind": "data",
+   "labels": [
+    "world/geo"
+   ]
+  },
+  {
+   "from": "data_geo",
    "to": "sim_law",
    "kind": "data",
    "labels": [
@@ -4951,6 +5138,14 @@
   {
    "from": "data_lore",
    "to": "sim_environment",
+   "kind": "data",
+   "labels": [
+    "world/lore"
+   ]
+  },
+  {
+   "from": "data_lore",
+   "to": "sim_faith",
    "kind": "data",
    "labels": [
     "world/lore"
@@ -5111,6 +5306,14 @@
   {
    "from": "data_meta",
    "to": "sim_environment",
+   "kind": "data",
+   "labels": [
+    "world/meta"
+   ]
+  },
+  {
+   "from": "data_meta",
+   "to": "sim_faith",
    "kind": "data",
    "labels": [
     "world/meta"
@@ -5388,6 +5591,15 @@
   },
   {
    "from": "base_effects",
+   "to": "sim_faith",
+   "kind": "effect",
+   "labels": [
+    "faith_claim",
+    "faith_omen"
+   ]
+  },
+  {
+   "from": "base_effects",
    "to": "sim_magic",
    "kind": "effect",
    "labels": [
@@ -5423,6 +5635,14 @@
   },
   {
    "from": "sim_economy",
+   "to": "base_effects",
+   "kind": "effect",
+   "labels": [
+    "applyEffects"
+   ]
+  },
+  {
+   "from": "sim_faith",
    "to": "base_effects",
    "kind": "effect",
    "labels": [
@@ -5467,6 +5687,14 @@
    "kind": "event",
    "labels": [
     "recordCareerMetrics"
+   ]
+  },
+  {
+   "from": "base_events",
+   "to": "sim_faith",
+   "kind": "event",
+   "labels": [
+    "faithExperience"
    ]
   },
   {
@@ -5906,6 +6134,14 @@
   },
   {
    "from": "ui_tools",
+   "to": "sim_faith",
+   "kind": "tool",
+   "labels": [
+    "world_settlement"
+   ]
+  },
+  {
+   "from": "ui_tools",
    "to": "sim_law",
    "kind": "tool",
    "labels": [
@@ -6337,6 +6573,17 @@
    "partitions": []
   },
   {
+   "id": "faith_experience",
+   "order": 1451,
+   "stepped": false,
+   "nextMinute": false,
+   "modules": [
+    "server-plugin/faith.mjs"
+   ],
+   "inline": false,
+   "partitions": []
+  },
+  {
    "id": "military",
    "order": 1452,
    "stepped": false,
@@ -6704,6 +6951,19 @@
    },
    {
     "order": 7,
+    "id": "faith_experience",
+    "fn": "faithExperience",
+    "module": "server-plugin/faith.mjs",
+    "verbs": [
+     "deceive",
+     "harm",
+     "help",
+     "learn",
+     "organize"
+    ]
+   },
+   {
+    "order": 8,
     "id": "npc_intelligence",
     "fn": "recordIntelligenceEvents",
     "module": "server-plugin/npc-intelligence.mjs",
@@ -6717,7 +6977,7 @@
     ]
    },
    {
-    "order": 8,
+    "order": 9,
     "fn": "recordCareerMetrics",
     "module": "server-plugin/career-metrics.mjs",
     "verbs": [
@@ -6773,6 +7033,7 @@
     "server-plugin/world-events.mjs"
    ],
    "harm": [
+    "server-plugin/faith.mjs",
     "server-plugin/world-events.mjs"
    ],
    "hazard": [
@@ -6793,6 +7054,7 @@
     "server-plugin/npc-life.mjs"
    ],
    "organize": [
+    "server-plugin/faith.mjs",
     "server-plugin/military.mjs",
     "server-plugin/organizations.mjs",
     "server-plugin/tribal-awakening.mjs"
@@ -7504,6 +7766,34 @@
     ]
    },
    {
+    "kind": "faith_claim",
+    "sources": [
+     "faction"
+    ],
+    "registeredIn": "server-plugin/faith.mjs",
+    "modules": [
+     "server-plugin/faith-catalog.mjs",
+     "server-plugin/faith.mjs"
+    ],
+    "usedByHooks": [],
+    "usedIn": []
+   },
+   {
+    "kind": "faith_omen",
+    "sources": [
+     "world",
+     "faction",
+     "festival",
+     "season"
+    ],
+    "registeredIn": "server-plugin/faith.mjs",
+    "modules": [
+     "server-plugin/faith.mjs"
+    ],
+    "usedByHooks": [],
+    "usedIn": []
+   },
+   {
     "kind": "famine",
     "sources": [
      "world",
@@ -7732,6 +8022,7 @@
   ],
   "callers": [
    "server-plugin/faction-clock.mjs",
+   "server-plugin/faith.mjs",
    "server-plugin/festival.mjs",
    "server-plugin/magic-economy.mjs",
    "server-plugin/seasonal-hazards.mjs",
@@ -7802,6 +8093,7 @@
    "server-plugin/effects.mjs",
    "server-plugin/elections.mjs",
    "server-plugin/faction-clock.mjs",
+   "server-plugin/faith.mjs",
    "server-plugin/governance.mjs",
    "server-plugin/law-codes.mjs",
    "server-plugin/lies.mjs",
@@ -8467,6 +8759,12 @@
     "org_deposit",
     "org_propose",
     "org_vote",
+    "faith_inspect",
+    "faith_convert",
+    "faith_give",
+    "faith_use",
+    "faith_rite",
+    "faith_pilgrim",
     "war_inspect",
     "war_join",
     "diplomacy",
@@ -8532,6 +8830,12 @@
       "org_deposit",
       "org_propose",
       "org_vote",
+      "faith_inspect",
+      "faith_convert",
+      "faith_give",
+      "faith_use",
+      "faith_rite",
+      "faith_pilgrim",
       "war_inspect",
       "war_join",
       "diplomacy",
@@ -8558,6 +8862,7 @@
       "server-plugin/elections.mjs",
       "server-plugin/extraction.mjs",
       "server-plugin/faction-clock.mjs",
+      "server-plugin/faith.mjs",
       "server-plugin/festival.mjs",
       "server-plugin/governance.mjs",
       "server-plugin/military.mjs",
@@ -8574,6 +8879,7 @@
       "sim_clock",
       "sim_combat",
       "sim_economy",
+      "sim_faith",
       "sim_military",
       "sim_society"
      ]
@@ -8584,6 +8890,7 @@
     "sim_clock",
     "sim_combat",
     "sim_economy",
+    "sim_faith",
     "sim_military",
     "sim_society"
    ]
@@ -9107,7 +9414,7 @@
   },
   {
    "dir": "world/design",
-   "files": 111,
+   "files": 112,
    "keys": [],
    "readers": [
     "server-plugin/civic.mjs",
@@ -9170,6 +9477,7 @@
     "tools/quick-farm-pests-scenarios.mjs",
     "tools/quick-migration-scenarios.mjs",
     "tools/quick-pet-scenarios.mjs",
+    "tools/rw07-faith-content.mjs",
     "tools/system-map.mjs",
     "tools/t142-merge.mjs",
     "tools/t142-provinces-content.mjs",
@@ -9217,7 +9525,7 @@
   },
   {
    "dir": "world/drafts",
-   "files": 36,
+   "files": 37,
    "keys": [],
    "readers": [],
    "tools": [
@@ -9261,6 +9569,7 @@
     "tools/publish-w2-s4.mjs",
     "tools/publish-w4-b1.mjs",
     "tools/record-economy-review.mjs",
+    "tools/rw07-faith-content.mjs",
     "tools/system-map.mjs",
     "tools/t142-provinces-content.mjs",
     "tools/t155-wildlife-content.mjs",
@@ -9333,6 +9642,7 @@
     "server-plugin/entity-view.mjs",
     "server-plugin/environment.mjs",
     "server-plugin/faction-clock.mjs",
+    "server-plugin/faith-catalog.mjs",
     "server-plugin/farm-pests.mjs",
     "server-plugin/festival.mjs",
     "server-plugin/governance.mjs",
@@ -9417,7 +9727,7 @@
   },
   {
    "dir": "world/lore",
-   "files": 9,
+   "files": 10,
    "keys": [
     "cultures",
     "deities",
@@ -9433,6 +9743,8 @@
     "server-plugin/engine.mjs",
     "server-plugin/entity-view.mjs",
     "server-plugin/faction-clock.mjs",
+    "server-plugin/faith-catalog.mjs",
+    "server-plugin/faith-state.mjs",
     "server-plugin/festival.mjs",
     "server-plugin/group-account.mjs",
     "server-plugin/military.mjs",
@@ -9457,6 +9769,7 @@
     "tools/publish-monster-society-2.mjs",
     "tools/publish-monster-society-3.mjs",
     "tools/publish-monster-society.mjs",
+    "tools/rw07-faith-content.mjs",
     "tools/system-map.mjs",
     "tools/t142-merge.mjs",
     "tools/w5-clock-publication.mjs",
@@ -9508,6 +9821,8 @@
     "server-plugin/environment.mjs",
     "server-plugin/extraction.mjs",
     "server-plugin/faction-clock.mjs",
+    "server-plugin/faith-catalog.mjs",
+    "server-plugin/faith.mjs",
     "server-plugin/farm-pests-migration.mjs",
     "server-plugin/farm-pests.mjs",
     "server-plugin/festival.mjs",
@@ -9628,6 +9943,7 @@
     "tools/publish-w2-s3.mjs",
     "tools/publish-w2-s4.mjs",
     "tools/publish-w4-b1.mjs",
+    "tools/rw07-faith-content.mjs",
     "tools/system-map.mjs",
     "tools/t142-provinces-content.mjs",
     "tools/t155-wildlife-content.mjs",
@@ -9892,6 +10208,7 @@
   ],
   "law": [
    "server-plugin/bounty.mjs",
+   "server-plugin/faith.mjs",
    "server-plugin/governance.mjs",
    "server-plugin/law-codes.mjs",
    "server-plugin/law.mjs",
@@ -9976,7 +10293,8 @@
    "server-plugin/reputation.mjs"
   ],
   "factionClock": [
-   "server-plugin/faction-clock.mjs"
+   "server-plugin/faction-clock.mjs",
+   "server-plugin/faith.mjs"
   ],
   "worldClock": [
    "server-plugin/advance-registry.mjs",
@@ -9985,6 +10303,8 @@
    "server-plugin/world-clock.mjs"
   ],
   "training": [
+   "server-plugin/entity-view.mjs",
+   "server-plugin/faith-catalog.mjs",
    "server-plugin/npc-growth.mjs",
    "server-plugin/training.mjs"
   ],
@@ -10087,7 +10407,8 @@
     "sim_character"
    ],
    "readers": [
-    "base_standing"
+    "base_standing",
+    "sim_faith"
    ]
   },
   "checks": {
@@ -10167,6 +10488,7 @@
     "kernel_engine",
     "kernel_storage",
     "sim_companion",
+    "sim_faith",
     "sim_magic"
    ],
    "readers": [
@@ -10196,6 +10518,7 @@
    "readers": [
     "base_events",
     "base_standing",
+    "sim_faith",
     "ui_scene",
     "ui_server"
    ]
@@ -10217,6 +10540,7 @@
     "sim_clock",
     "sim_companion",
     "sim_economy",
+    "sim_faith",
     "sim_law",
     "sim_magic",
     "ui_scene"
@@ -10263,6 +10587,7 @@
     "sim_companion",
     "sim_economy",
     "sim_environment",
+    "sim_faith",
     "sim_military",
     "sim_npc",
     "sim_society",
@@ -10294,6 +10619,7 @@
     "sim_companion",
     "sim_economy",
     "sim_environment",
+    "sim_faith",
     "sim_law",
     "sim_military",
     "sim_npc",
@@ -10361,6 +10687,7 @@
     "nar_consistency",
     "sim_agriculture",
     "sim_combat",
+    "sim_faith",
     "ui_scene",
     "ui_server"
    ]
@@ -10371,6 +10698,7 @@
     "kernel_engine",
     "kernel_storage",
     "sim_character",
+    "sim_faith",
     "sim_npc",
     "sim_society"
    ],
@@ -10412,6 +10740,7 @@
     "base_standing",
     "sim_boss",
     "sim_environment",
+    "sim_faith",
     "ui_scene",
     "ui_server"
    ]
@@ -10501,6 +10830,7 @@
     "nar_memory",
     "sim_character",
     "sim_combat",
+    "sim_faith",
     "sim_law",
     "sim_military",
     "ui_scene"
@@ -11014,6 +11344,7 @@
       "server-plugin/civic.mjs",
       "server-plugin/engine.mjs",
       "server-plugin/entity-view.mjs",
+      "server-plugin/faith-catalog.mjs",
       "server-plugin/governance.mjs",
       "server-plugin/hazard-calendar.mjs",
       "server-plugin/law-codes.mjs",
@@ -11056,6 +11387,7 @@
       "sim_clock",
       "sim_economy",
       "sim_environment",
+      "sim_faith",
       "sim_law",
       "sim_military",
       "sim_npc",
@@ -11278,6 +11610,7 @@
     "sim_companion",
     "sim_economy",
     "sim_environment",
+    "sim_faith",
     "sim_law",
     "sim_magic",
     "sim_military",
@@ -11513,6 +11846,7 @@
      "modules": [
       "server-plugin/bounty.mjs",
       "server-plugin/entity-view.mjs",
+      "server-plugin/faith.mjs",
       "server-plugin/governance.mjs",
       "server-plugin/law-codes.mjs",
       "server-plugin/law.mjs",
@@ -11527,6 +11861,7 @@
      "systems": [
       "base_standing",
       "sim_environment",
+      "sim_faith",
       "sim_law",
       "sim_magic",
       "sim_npc",
@@ -11556,6 +11891,7 @@
     "sim_companion",
     "sim_economy",
     "sim_environment",
+    "sim_faith",
     "sim_law",
     "sim_magic",
     "sim_npc",
@@ -11708,6 +12044,8 @@
       "server-plugin/entity-transitions.mjs",
       "server-plugin/entity-view.mjs",
       "server-plugin/faction-clock.mjs",
+      "server-plugin/faith-state.mjs",
+      "server-plugin/faith.mjs",
       "server-plugin/farm-pests-migration.mjs",
       "server-plugin/farm-pests.mjs",
       "server-plugin/festival.mjs",
@@ -11766,6 +12104,7 @@
       "sim_clock",
       "sim_economy",
       "sim_environment",
+      "sim_faith",
       "sim_law",
       "sim_magic",
       "sim_military",
@@ -11875,6 +12214,7 @@
       "server-plugin/character.mjs",
       "server-plugin/engine.mjs",
       "server-plugin/entity-view.mjs",
+      "server-plugin/faith-state.mjs",
       "server-plugin/npc-autonomy.mjs",
       "server-plugin/npc-cognition.mjs",
       "server-plugin/npc-life.mjs",
@@ -11895,6 +12235,7 @@
       "kernel_storage",
       "sim_character",
       "sim_environment",
+      "sim_faith",
       "sim_npc",
       "ui_client",
       "ui_host",
@@ -11916,6 +12257,7 @@
     "sim_clock",
     "sim_economy",
     "sim_environment",
+    "sim_faith",
     "sim_law",
     "sim_magic",
     "sim_military",
@@ -12473,6 +12815,7 @@
      "pattern": "contactAnchor",
      "modules": [
       "server-plugin/faction-clock.mjs",
+      "server-plugin/faith-catalog.mjs",
       "server-plugin/lore.mjs",
       "server-plugin/monster-society.mjs",
       "server-plugin/notables.mjs",
@@ -12484,6 +12827,7 @@
       "nar_memory",
       "sim_clock",
       "sim_environment",
+      "sim_faith",
       "sim_society"
      ]
     },
@@ -12544,6 +12888,7 @@
     "sim_clock",
     "sim_economy",
     "sim_environment",
+    "sim_faith",
     "sim_military",
     "sim_society",
     "ui_client",
@@ -12576,6 +12921,7 @@
      "modules": [
       "server-plugin/elections.mjs",
       "server-plugin/entity-view.mjs",
+      "server-plugin/faith.mjs",
       "server-plugin/group-account.mjs",
       "server-plugin/military.mjs",
       "server-plugin/monster-society.mjs",
@@ -12583,11 +12929,14 @@
       "server-plugin/organizations.mjs",
       "server-plugin/public-opinion.mjs",
       "server-plugin/standing.mjs",
+      "server-plugin/training.mjs",
       "server-plugin/tribal-awakening.mjs",
       "server-plugin/war-diplomacy.mjs"
      ],
      "systems": [
       "base_standing",
+      "sim_character",
+      "sim_faith",
       "sim_military",
       "sim_society"
      ]
@@ -12600,6 +12949,7 @@
       "server-plugin/advance-layers.mjs",
       "server-plugin/consistency-review.mjs",
       "server-plugin/entity-view.mjs",
+      "server-plugin/faith.mjs",
       "server-plugin/military.mjs",
       "server-plugin/notables.mjs",
       "server-plugin/organization-state.mjs",
@@ -12611,6 +12961,7 @@
       "base_advance",
       "base_standing",
       "nar_consistency",
+      "sim_faith",
       "sim_military",
       "sim_society"
      ]
@@ -12636,6 +12987,8 @@
     "base_events",
     "base_standing",
     "nar_consistency",
+    "sim_character",
+    "sim_faith",
     "sim_military",
     "sim_society"
    ],
@@ -12677,6 +13030,7 @@
      "modules": [
       "server-plugin/advance-registry.mjs",
       "server-plugin/catalog.mjs",
+      "server-plugin/effect-registry.mjs",
       "server-plugin/effects.mjs",
       "server-plugin/festival.mjs",
       "server-plugin/lore.mjs",
@@ -12725,6 +13079,7 @@
      "modules": [
       "server-plugin/effects.mjs",
       "server-plugin/faction-clock.mjs",
+      "server-plugin/faith.mjs",
       "server-plugin/festival.mjs",
       "server-plugin/magic-economy.mjs",
       "server-plugin/seasonal-hazards.mjs",
@@ -12736,6 +13091,7 @@
       "base_effects",
       "sim_clock",
       "sim_economy",
+      "sim_faith",
       "sim_military",
       "sim_society"
      ]
@@ -12745,6 +13101,7 @@
     "base_effects",
     "sim_clock",
     "sim_economy",
+    "sim_faith",
     "sim_military",
     "sim_society"
    ],
@@ -12925,12 +13282,16 @@
      "means": "复活点、训练、仪式",
      "pattern": "\\.church\\b",
      "modules": [
+      "server-plugin/faith-catalog.mjs",
+      "server-plugin/faith-state.mjs",
+      "server-plugin/faith.mjs",
       "server-plugin/magic-ritual.mjs",
       "server-plugin/revival.mjs",
       "server-plugin/training.mjs"
      ],
      "systems": [
       "sim_character",
+      "sim_faith",
       "sim_magic"
      ]
     },
@@ -12952,6 +13313,7 @@
    "autoSystems": [
     "nar_memory",
     "sim_character",
+    "sim_faith",
     "sim_magic",
     "ui_server"
    ],
@@ -13020,6 +13382,14 @@
    },
    {
     "kind": "awakening",
+    "note": "已注册，但 rules.json 与 lore 的任何 effects 列表都没有用到"
+   },
+   {
+    "kind": "faith_claim",
+    "note": "已注册，但 rules.json 与 lore 的任何 effects 列表都没有用到"
+   },
+   {
+    "kind": "faith_omen",
     "note": "已注册，但 rules.json 与 lore 的任何 effects 列表都没有用到"
    },
    {
@@ -13167,6 +13537,7 @@
     "server-plugin/environment.mjs",
     "server-plugin/extraction.mjs",
     "server-plugin/faction-clock.mjs",
+    "server-plugin/faith.mjs",
     "server-plugin/festival.mjs",
     "server-plugin/governance.mjs",
     "server-plugin/items.mjs",
@@ -13225,7 +13596,7 @@
    ],
    "world": [],
    "worldDirs": [],
-   "lines": 241
+   "lines": 243
   },
   "server-plugin/advance-layers.mjs": {
    "system": "base_advance",
@@ -13262,6 +13633,7 @@
     "server-plugin/effects.mjs",
     "server-plugin/entity-view.mjs",
     "server-plugin/faction-clock.mjs",
+    "server-plugin/faith.mjs",
     "server-plugin/festival.mjs",
     "server-plugin/governance.mjs",
     "server-plugin/hazard-calendar.mjs",
@@ -13326,7 +13698,7 @@
     "npcs"
    ],
    "worldDirs": [],
-   "lines": 182
+   "lines": 184
   },
   "server-plugin/agriculture-migration.mjs": {
    "system": "kernel_storage",
@@ -13978,9 +14350,22 @@
    "worldDirs": [],
    "lines": 60
   },
+  "server-plugin/effect-registry.mjs": {
+   "system": "base_effects",
+   "imports": [],
+   "stateWrites": [],
+   "stateReads": [],
+   "recordWrites": [],
+   "recordReads": [],
+   "rules": [],
+   "world": [],
+   "worldDirs": [],
+   "lines": 18
+  },
   "server-plugin/effects.mjs": {
    "system": "base_effects",
    "imports": [
+    "server-plugin/effect-registry.mjs",
     "server-plugin/environment.mjs",
     "server-plugin/interactions.mjs",
     "server-plugin/magic-object.mjs",
@@ -14020,7 +14405,7 @@
    "worldDirs": [
     "meta"
    ],
-   "lines": 195
+   "lines": 180
   },
   "server-plugin/elections.mjs": {
    "system": "sim_society",
@@ -14224,6 +14609,7 @@
   "server-plugin/entity-view.mjs": {
    "system": "base_standing",
    "imports": [
+    "server-plugin/faith-state.mjs",
     "server-plugin/npc-state.mjs",
     "server-plugin/organization-state.mjs",
     "server-plugin/promotion-view.mjs"
@@ -14260,6 +14646,7 @@
     "npcGrowth",
     "questSources",
     "reputation",
+    "training",
     "wildlife"
    ],
    "world": [
@@ -14270,7 +14657,7 @@
     "settlementProfiles"
    ],
    "worldDirs": [],
-   "lines": 441
+   "lines": 442
   },
   "server-plugin/environment.mjs": {
    "system": "sim_environment",
@@ -14347,6 +14734,7 @@
    "imports": [
     "server-plugin/effects.mjs",
     "server-plugin/entity-view.mjs",
+    "server-plugin/faith-catalog.mjs",
     "server-plugin/group-account.mjs",
     "server-plugin/reputation-registry.mjs",
     "server-plugin/standing.mjs",
@@ -14365,7 +14753,8 @@
    "recordReads": [
     "faction-assets",
     "faction-clock",
-    "society_motion"
+    "society_motion",
+    "temple"
    ],
    "rules": [
     "effectTable",
@@ -14378,7 +14767,91 @@
     "locations"
    ],
    "worldDirs": [],
-   "lines": 224
+   "lines": 235
+  },
+  "server-plugin/faith-catalog.mjs": {
+   "system": "sim_faith",
+   "imports": [],
+   "stateWrites": [],
+   "stateReads": [],
+   "recordWrites": [],
+   "recordReads": [],
+   "rules": [
+    "training"
+   ],
+   "world": [
+    "deities",
+    "factions",
+    "locations",
+    "settlementProfiles"
+   ],
+   "worldDirs": [],
+   "lines": 43
+  },
+  "server-plugin/faith-state.mjs": {
+   "system": "sim_faith",
+   "imports": [
+    "server-plugin/faith-catalog.mjs",
+    "server-plugin/npc-state.mjs"
+   ],
+   "stateWrites": [],
+   "stateReads": [
+    "careers"
+   ],
+   "recordWrites": [],
+   "recordReads": [],
+   "rules": [],
+   "world": [
+    "deities"
+   ],
+   "worldDirs": [],
+   "lines": 32
+  },
+  "server-plugin/faith.mjs": {
+   "system": "sim_faith",
+   "imports": [
+    "server-plugin/effects.mjs",
+    "server-plugin/entity-transitions.mjs",
+    "server-plugin/entity-view.mjs",
+    "server-plugin/faith-catalog.mjs",
+    "server-plugin/faith-state.mjs",
+    "server-plugin/group-account.mjs",
+    "server-plugin/npc-growth.mjs",
+    "server-plugin/npc-obligations.mjs",
+    "server-plugin/npc-schedule.mjs",
+    "server-plugin/npc-state.mjs",
+    "server-plugin/organization-state.mjs",
+    "server-plugin/standing.mjs",
+    "server-plugin/world-events.mjs"
+   ],
+   "stateWrites": [
+    "effects",
+    "obligations"
+   ],
+   "stateReads": [
+    "family",
+    "inventory",
+    "location",
+    "minute",
+    "npcs",
+    "player",
+    "records"
+   ],
+   "recordWrites": [],
+   "recordReads": [
+    "faction-clock",
+    "faith",
+    "household"
+   ],
+   "rules": [
+    "factionClock",
+    "law"
+   ],
+   "world": [
+    "items"
+   ],
+   "worldDirs": [],
+   "lines": 233
   },
   "server-plugin/farm-pests-migration.mjs": {
    "system": "kernel_storage",
@@ -14509,7 +14982,9 @@
   },
   "server-plugin/group-account.mjs": {
    "system": "sim_society",
-   "imports": [],
+   "imports": [
+    "server-plugin/faith-catalog.mjs"
+   ],
    "stateWrites": [
     "settlements"
    ],
@@ -14519,14 +14994,15 @@
    "recordWrites": [],
    "recordReads": [
     "faction-assets",
-    "organization"
+    "organization",
+    "temple"
    ],
    "rules": [],
    "world": [
     "factions"
    ],
    "worldDirs": [],
-   "lines": 52
+   "lines": 53
   },
   "server-plugin/hazard-calendar.mjs": {
    "system": "sim_clock",
@@ -15775,7 +16251,7 @@
     "skills"
    ],
    "worldDirs": [],
-   "lines": 135
+   "lines": 148
   },
   "server-plugin/npc-intelligence.mjs": {
    "system": "sim_npc",
@@ -16068,6 +16544,7 @@
   "server-plugin/organization-state.mjs": {
    "system": "sim_society",
    "imports": [
+    "server-plugin/faith-catalog.mjs",
     "server-plugin/group-account.mjs",
     "server-plugin/npc-state.mjs",
     "server-plugin/reputation-catalog.mjs"
@@ -16078,7 +16555,9 @@
     "records"
    ],
    "recordWrites": [],
-   "recordReads": [],
+   "recordReads": [
+    "temple"
+   ],
    "rules": [],
    "world": [
     "factions",
@@ -16088,7 +16567,7 @@
     "residents"
    ],
    "worldDirs": [],
-   "lines": 70
+   "lines": 73
   },
   "server-plugin/organizations.mjs": {
    "system": "sim_society",
@@ -17124,7 +17603,7 @@
     "regions"
    ],
    "worldDirs": [],
-   "lines": 148
+   "lines": 150
   },
   "server-plugin/state-notices.mjs": {
    "system": "ui_scene",
@@ -17221,6 +17700,8 @@
    "system": "sim_character",
    "imports": [
     "server-plugin/entity-view.mjs",
+    "server-plugin/faith-catalog.mjs",
+    "server-plugin/faith.mjs",
     "server-plugin/npc-schedule.mjs",
     "server-plugin/storage.mjs"
    ],
@@ -17242,7 +17723,7 @@
    ],
    "world": [],
    "worldDirs": [],
-   "lines": 84
+   "lines": 90
   },
   "server-plugin/traits.mjs": {
    "system": "base_traits",
@@ -18224,7 +18705,7 @@
    "rules": [],
    "world": [],
    "worldDirs": [],
-   "lines": 110
+   "lines": 112
   },
   "extension/topbar.mjs": {
    "system": "ui_client",
