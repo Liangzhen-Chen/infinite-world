@@ -2,7 +2,7 @@
  "title": "无限原野系统地图",
  "card": "K9",
  "generatedFrom": {
-  "commit": "refs/heads/s0",
+  "commit": "refs/heads/r19",
   "method": "运行时导出（注册表、规则表、工具定义、效果表、立场传导表）+ 静态正则扫描（import 图、函数体标识符、state 分区与 records 前缀、rules/world 读取）。静态扫描是近似：经 engine.byId、helper 间接或动态拼接路径的访问不计入。"
  },
  "scanMethods": {
@@ -469,7 +469,7 @@
    "effects": [],
    "tools": [],
    "readBy": [],
-   "files": 42
+   "files": 43
   },
   {
    "id": "data_ontology",
@@ -1015,7 +1015,7 @@
     "server-plugin/population-service.mjs",
     "server-plugin/settlement-profile.mjs"
    ],
-   "lines": 3544,
+   "lines": 3549,
    "stateWrites": [
     "created",
     "creatures",
@@ -10408,7 +10408,7 @@
   },
   {
    "dir": "world/drafts",
-   "files": 42,
+   "files": 43,
    "keys": [],
    "readers": [],
    "tools": [
@@ -10505,7 +10505,9 @@
     "tools/w5-festivals.mjs",
     "tools/w5-rumors.mjs",
     "tools/w5-sites.mjs",
-    "tools/w5-social.mjs"
+    "tools/w5-social.mjs",
+    "tools/yaoguai-index.mjs",
+    "tools/yaoguai-overlap-check.mjs"
    ]
   },
   {
@@ -10622,7 +10624,8 @@
     "tools/w1-baishi.mjs",
     "tools/w4-publish.mjs",
     "tools/w5-content.mjs",
-    "tools/w5-sites.mjs"
+    "tools/w5-sites.mjs",
+    "tools/yaoguai-defs.mjs"
    ]
   },
   {
@@ -10920,7 +10923,9 @@
    "tools": [
     "tools/derived-scan.mjs",
     "tools/ontology.mjs",
-    "tools/system-map.mjs"
+    "tools/system-map.mjs",
+    "tools/yaoguai-defs.mjs",
+    "tools/yaoguai-index.mjs"
    ]
   },
   {
@@ -18283,7 +18288,7 @@
     "rules"
    ],
    "worldDirs": [],
-   "lines": 811
+   "lines": 816
   },
   "server-plugin/npc-memory.mjs": {
    "system": "sim_npc",

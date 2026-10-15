@@ -558,6 +558,11 @@ function followers(engine,d,id,from,minute){
   if(!(spouses.has(x)&&!minor||minor&&childOf(x)))continue;
   if(!d.get('state','npcs',x)&&!bring(d,engine,x,minute,'随家人迁居'))continue;
   const now=d.get('state');if(!alive(now,x)||incapable.includes(now.npcs[x].status)||now.npcs[x].caring||npcMigration(now,x)||!settled(now,x))continue;
+  // A roster child already in state only for a school bell (or another
+  // earlier event) now lives in state because the family is moving; school
+  // at the new home is re-derived from the new household after arrival.
+  const life=now.npcs[x].life;
+  if(life?.kind==='roster'&&life.reason!=='随家人迁居')d.set(['state','npcs',x,'life'],{...life,since:minute,reason:'随家人迁居',earlier:[...life.earlier??[],{since:life.since,reason:life.reason}]});
   out.push(x);
  }
  return out;
