@@ -18,14 +18,14 @@
  "counts": {
   "layers": 6,
   "systems": 37,
-  "modules": 160,
-  "advance": 39,
+  "modules": 162,
+  "advance": 40,
   "tools": 25,
-  "verbs": 14,
+  "verbs": 15,
   "subscribers": 8,
-  "interactionRules": 24,
-  "effectKinds": 11,
-  "links": 333
+  "interactionRules": 25,
+  "effectKinds": 18,
+  "links": 340
  },
  "layers": [
   {
@@ -277,10 +277,11 @@
    "tools": [],
    "readBy": [
     "base_interactions",
+    "sim_clock",
     "sim_environment",
     "sim_society"
    ],
-   "files": 91
+   "files": 92
   },
   {
    "id": "data_assets",
@@ -336,7 +337,7 @@
     "server-plugin/campaign-reducer.mjs",
     "server-plugin/archived-reducer.mjs"
    ],
-   "lines": 868,
+   "lines": 869,
    "stateWrites": [
     "combatDisengaged",
     "created",
@@ -561,7 +562,7 @@
    "modules": [
     "server-plugin/interactions.mjs"
    ],
-   "lines": 108,
+   "lines": 111,
    "stateWrites": [
     "inventory",
     "records"
@@ -578,7 +579,8 @@
    "advance": [],
    "subscribes": [],
    "effects": [
-    "environment"
+    "environment",
+    "flood"
    ],
    "tools": [],
    "readBy": []
@@ -724,7 +726,7 @@
    "modules": [
     "server-plugin/advance-registry.mjs"
    ],
-   "lines": 153,
+   "lines": 157,
    "stateWrites": [
     "effects",
     "obligations",
@@ -742,6 +744,7 @@
    ],
    "rules": [
     "death",
+    "hazardClock",
     "settlementTrade",
     "worldClock"
    ],
@@ -791,7 +794,7 @@
     "server-plugin/population-service.mjs",
     "server-plugin/settlement-profile.mjs"
    ],
-   "lines": 2924,
+   "lines": 2953,
    "stateWrites": [
     "created",
     "family",
@@ -1234,7 +1237,7 @@
     "server-plugin/regions.mjs",
     "server-plugin/remote-generation.mjs"
    ],
-   "lines": 1396,
+   "lines": 1399,
    "stateWrites": [
     "npcs",
     "records",
@@ -1289,7 +1292,8 @@
    ],
    "subscribes": [],
    "effects": [
-    "environment"
+    "environment",
+    "flood"
    ],
    "tools": [
     "world_move",
@@ -1418,7 +1422,7 @@
     "server-plugin/manufacturing.mjs",
     "server-plugin/repair.mjs"
    ],
-   "lines": 1385,
+   "lines": 1389,
    "stateWrites": [
     "crafted",
     "itemInstances",
@@ -1641,17 +1645,20 @@
   },
   {
    "id": "sim_clock",
-   "name": "时钟与节令",
+   "name": "时钟、节令与灾害",
    "layer": "sim",
    "card": null,
    "dir": null,
    "modules": [
     "server-plugin/world-clock.mjs",
     "server-plugin/faction-clock.mjs",
-    "server-plugin/festival.mjs"
+    "server-plugin/festival.mjs",
+    "server-plugin/seasonal-hazards.mjs",
+    "server-plugin/hazard-calendar.mjs"
    ],
-   "lines": 507,
+   "lines": 973,
    "stateWrites": [
+    "family",
     "npcs",
     "player",
     "records"
@@ -1660,21 +1667,32 @@
     "buildings",
     "inventory",
     "location",
-    "minute"
+    "minute",
+    "settlements",
+    "spells"
    ],
-   "recordWrites": [],
-   "recordReads": [
+   "recordWrites": [
     "agriculture",
+    "hazard-famine",
+    "hazard-flood",
+    "hazard-route"
+   ],
+   "recordReads": [
     "ecology",
     "faction-assets",
     "faction-clock",
+    "hazard-price",
+    "hazard-yield",
     "quote",
     "society_motion",
     "world-clock"
    ],
    "rules": [
     "agriculture",
+    "attributes",
     "effectTable",
+    "hazardClock",
+    "npcLife",
     "settlementTrade",
     "version",
     "worldClock"
@@ -1683,20 +1701,33 @@
     "cultures",
     "factions",
     "festivals",
+    "households",
     "items",
     "locations",
     "npcs",
-    "settlementProfiles"
+    "routes",
+    "rules",
+    "settlementProfiles",
+    "spells"
    ],
    "advance": [
+    "daily",
     "world_clock",
+    "hazard_clock",
     "faction_clock",
     "festival"
    ],
    "subscribes": [],
    "effects": [
+    "crop_damage",
     "dispute",
+    "epidemic",
+    "epidemic_measure",
+    "famine",
+    "flood",
+    "price_shift",
     "relation",
+    "route_closure",
     "trade"
    ],
    "tools": [
@@ -2142,8 +2173,10 @@
    "to": "sim_clock",
    "kind": "advance",
    "labels": [
+    "daily",
     "faction_clock",
     "festival",
+    "hazard_clock",
     "world_clock"
    ]
   },
@@ -2274,6 +2307,8 @@
    "labels": [
     "faction-clock.mjs",
     "festival.mjs",
+    "hazard-calendar.mjs",
+    "seasonal-hazards.mjs",
     "world-clock.mjs"
    ]
   },
@@ -2593,6 +2628,7 @@
    "labels": [
     "faction-clock.mjs",
     "festival.mjs",
+    "seasonal-hazards.mjs",
     "world-clock.mjs"
    ]
   },
@@ -3052,6 +3088,14 @@
   },
   {
    "from": "sim_clock",
+   "to": "base_interactions",
+   "kind": "call",
+   "labels": [
+    "interactions.mjs"
+   ]
+  },
+  {
+   "from": "sim_clock",
    "to": "base_standing",
    "kind": "call",
    "labels": [
@@ -3079,6 +3123,7 @@
    "to": "sim_environment",
    "kind": "call",
    "labels": [
+    "environment.mjs",
     "weather.mjs"
    ]
   },
@@ -3088,6 +3133,7 @@
    "kind": "call",
    "labels": [
     "npc-autonomy.mjs",
+    "npc-life.mjs",
     "npc-obligations.mjs",
     "npc-relations.mjs"
    ]
@@ -3160,6 +3206,14 @@
     "checks.mjs",
     "professions.mjs",
     "progression.mjs"
+   ]
+  },
+  {
+   "from": "sim_economy",
+   "to": "sim_clock",
+   "kind": "call",
+   "labels": [
+    "hazard-calendar.mjs"
    ]
   },
   {
@@ -3252,6 +3306,14 @@
    "kind": "call",
    "labels": [
     "retrieval.mjs"
+   ]
+  },
+  {
+   "from": "sim_environment",
+   "to": "sim_clock",
+   "kind": "call",
+   "labels": [
+    "hazard-calendar.mjs"
    ]
   },
   {
@@ -3521,6 +3583,7 @@
    "kind": "call",
    "labels": [
     "festival.mjs",
+    "hazard-calendar.mjs",
     "world-clock.mjs"
    ]
   },
@@ -4020,6 +4083,14 @@
    "kind": "data",
    "labels": [
     "interaction-rules.mjs",
+    "world/design"
+   ]
+  },
+  {
+   "from": "data_design",
+   "to": "sim_clock",
+   "kind": "data",
+   "labels": [
     "world/design"
    ]
   },
@@ -4534,7 +4605,8 @@
    "to": "base_interactions",
    "kind": "effect",
    "labels": [
-    "environment"
+    "environment",
+    "flood"
    ]
   },
   {
@@ -4558,8 +4630,15 @@
    "to": "sim_clock",
    "kind": "effect",
    "labels": [
+    "crop_damage",
     "dispute",
+    "epidemic",
+    "epidemic_measure",
+    "famine",
+    "flood",
+    "price_shift",
     "relation",
+    "route_closure",
     "trade"
    ]
   },
@@ -4576,7 +4655,8 @@
    "to": "sim_environment",
    "kind": "effect",
    "labels": [
-    "environment"
+    "environment",
+    "flood"
    ]
   },
   {
@@ -4712,6 +4792,30 @@
    ]
   },
   {
+   "from": "sim_clock",
+   "to": "sim_npc",
+   "kind": "record",
+   "labels": [
+    "agriculture"
+   ]
+  },
+  {
+   "from": "sim_clock",
+   "to": "ui_scene",
+   "kind": "record",
+   "labels": [
+    "agriculture"
+   ]
+  },
+  {
+   "from": "sim_clock",
+   "to": "ui_server",
+   "kind": "record",
+   "labels": [
+    "agriculture"
+   ]
+  },
+  {
    "from": "sim_economy",
    "to": "sim_agriculture",
    "kind": "record",
@@ -4724,7 +4828,6 @@
    "to": "sim_clock",
    "kind": "record",
    "labels": [
-    "agriculture",
     "quote"
    ]
   },
@@ -5117,6 +5220,7 @@
    "modules": [
     "server-plugin/agriculture.mjs",
     "server-plugin/bosses.mjs",
+    "server-plugin/hazard-calendar.mjs",
     "server-plugin/pets.mjs",
     "server-plugin/weather.mjs",
     "server-plugin/wildlife.mjs"
@@ -5312,6 +5416,18 @@
    "nextMinute": false,
    "modules": [
     "server-plugin/effects.mjs"
+   ],
+   "inline": false,
+   "partitions": []
+  },
+  {
+   "id": "hazard_clock",
+   "order": 1360,
+   "stepped": true,
+   "nextMinute": false,
+   "modules": [
+    "server-plugin/hazard-calendar.mjs",
+    "server-plugin/seasonal-hazards.mjs"
    ],
    "inline": false,
    "partitions": []
@@ -5529,6 +5645,7 @@
    "deceive",
    "gift",
    "harm",
+   "hazard",
    "help",
    "learn",
    "organize",
@@ -5680,7 +5797,11 @@
    "harm": [
     "server-plugin/world-events.mjs"
    ],
+   "hazard": [
+    "server-plugin/seasonal-hazards.mjs"
+   ],
    "help": [
+    "server-plugin/seasonal-hazards.mjs",
     "server-plugin/world-events.mjs"
    ],
    "learn": [
@@ -6050,6 +6171,26 @@
     }
    },
    {
+    "id": "flood-soak",
+    "agent": "flood",
+    "when": {
+     "none": [
+      "creature",
+      "indoor",
+      "frozen"
+     ]
+    },
+    "effect": {
+     "remove": [
+      "burning"
+     ],
+     "add": [
+      "wet"
+     ],
+     "moistureMg": 5000
+    }
+   },
+   {
     "id": "cold-freeze-water",
     "agent": "cold",
     "when": {
@@ -6104,6 +6245,7 @@
    "cold",
    "earth",
    "fire",
+   "flood",
    "ink",
    "light",
    "lightning",
@@ -6153,7 +6295,8 @@
    "server-plugin/environment.mjs",
    "server-plugin/magic-marks.mjs",
    "server-plugin/magic-object.mjs",
-   "server-plugin/magic-water-earth.mjs"
+   "server-plugin/magic-water-earth.mjs",
+   "server-plugin/seasonal-hazards.mjs"
   ],
   "vocabulary": {
    "elements": [
@@ -6265,6 +6408,23 @@
     "usedIn": []
    },
    {
+    "kind": "crop_damage",
+    "sources": [
+     "world",
+     "faction",
+     "festival",
+     "season"
+    ],
+    "registeredIn": "server-plugin/seasonal-hazards.mjs",
+    "modules": [
+     "server-plugin/seasonal-hazards.mjs"
+    ],
+    "usedByHooks": [],
+    "usedIn": [
+     "rules.hazardClock"
+    ]
+   },
+   {
     "kind": "dispute",
     "sources": [
      "faction"
@@ -6298,6 +6458,94 @@
     ]
    },
    {
+    "kind": "epidemic",
+    "sources": [
+     "world",
+     "faction",
+     "festival",
+     "season"
+    ],
+    "registeredIn": "server-plugin/seasonal-hazards.mjs",
+    "modules": [
+     "server-plugin/hazard-calendar.mjs",
+     "server-plugin/seasonal-hazards.mjs"
+    ],
+    "usedByHooks": [],
+    "usedIn": [
+     "rules.hazardClock"
+    ]
+   },
+   {
+    "kind": "epidemic_measure",
+    "sources": [
+     "world",
+     "faction",
+     "festival",
+     "season"
+    ],
+    "registeredIn": "server-plugin/seasonal-hazards.mjs",
+    "modules": [
+     "server-plugin/seasonal-hazards.mjs"
+    ],
+    "usedByHooks": [],
+    "usedIn": [
+     "rules.hazardClock"
+    ]
+   },
+   {
+    "kind": "famine",
+    "sources": [
+     "world",
+     "faction",
+     "festival",
+     "season"
+    ],
+    "registeredIn": "server-plugin/seasonal-hazards.mjs",
+    "modules": [
+     "server-plugin/seasonal-hazards.mjs"
+    ],
+    "usedByHooks": [],
+    "usedIn": [
+     "rules.hazardClock"
+    ]
+   },
+   {
+    "kind": "flood",
+    "sources": [
+     "world",
+     "faction",
+     "festival",
+     "season"
+    ],
+    "registeredIn": "server-plugin/seasonal-hazards.mjs",
+    "modules": [
+     "server-plugin/environment.mjs",
+     "server-plugin/interactions.mjs",
+     "server-plugin/seasonal-hazards.mjs"
+    ],
+    "usedByHooks": [],
+    "usedIn": [
+     "rules.hazardClock"
+    ]
+   },
+   {
+    "kind": "price_shift",
+    "sources": [
+     "world",
+     "faction",
+     "festival",
+     "season"
+    ],
+    "registeredIn": "server-plugin/seasonal-hazards.mjs",
+    "modules": [
+     "server-plugin/seasonal-hazards.mjs"
+    ],
+    "usedByHooks": [],
+    "usedIn": [
+     "rules.hazardClock"
+    ]
+   },
+   {
     "kind": "regional_quote",
     "sources": [
      "world",
@@ -6328,6 +6576,24 @@
     "usedIn": []
    },
    {
+    "kind": "route_closure",
+    "sources": [
+     "world",
+     "faction",
+     "festival",
+     "season"
+    ],
+    "registeredIn": "server-plugin/seasonal-hazards.mjs",
+    "modules": [
+     "server-plugin/hazard-calendar.mjs",
+     "server-plugin/seasonal-hazards.mjs"
+    ],
+    "usedByHooks": [],
+    "usedIn": [
+     "rules.hazardClock"
+    ]
+   },
+   {
     "kind": "rumor",
     "sources": [
      "world",
@@ -6343,7 +6609,8 @@
      "faction:clock_ms_tanjie"
     ],
     "usedIn": [
-     "rules.effectTable"
+     "rules.effectTable",
+     "rules.hazardClock"
     ]
    },
    {
@@ -6364,7 +6631,8 @@
      "faction:clock_ms_tanjie"
     ],
     "usedIn": [
-     "rules.effectTable"
+     "rules.effectTable",
+     "rules.hazardClock"
     ]
    },
    {
@@ -6424,6 +6692,7 @@
   "callers": [
    "server-plugin/faction-clock.mjs",
    "server-plugin/festival.mjs",
+   "server-plugin/seasonal-hazards.mjs",
    "server-plugin/world-clock.mjs"
   ],
   "hooks": [
@@ -7180,6 +7449,7 @@
       "server-plugin/organizations.mjs",
       "server-plugin/promotion.mjs",
       "server-plugin/public-projects.mjs",
+      "server-plugin/seasonal-hazards.mjs",
       "server-plugin/titles.mjs"
      ],
      "systems": [
@@ -7703,12 +7973,13 @@
   },
   {
    "dir": "world/design",
-   "files": 91,
+   "files": 92,
    "keys": [],
    "readers": [
     "server-plugin/civic.mjs",
     "server-plugin/environment.mjs",
-    "server-plugin/interactions.mjs"
+    "server-plugin/interactions.mjs",
+    "server-plugin/seasonal-hazards.mjs"
    ],
    "tools": [
     "tools/audit-farm-pests-food.mjs",
@@ -7935,6 +8206,7 @@
     "server-plugin/return-summary.mjs",
     "server-plugin/revival.mjs",
     "server-plugin/scene-card.mjs",
+    "server-plugin/seasonal-hazards.mjs",
     "server-plugin/seasonal-migration.mjs",
     "server-plugin/settlement-profile.mjs",
     "server-plugin/settlement-trade.mjs",
@@ -8054,6 +8326,7 @@
     "server-plugin/farm-pests.mjs",
     "server-plugin/festival.mjs",
     "server-plugin/governance.mjs",
+    "server-plugin/hazard-calendar.mjs",
     "server-plugin/items.mjs",
     "server-plugin/law.mjs",
     "server-plugin/learning.mjs",
@@ -8088,6 +8361,7 @@
     "server-plugin/revival.mjs",
     "server-plugin/rule-state-migration.mjs",
     "server-plugin/scene-card.mjs",
+    "server-plugin/seasonal-hazards.mjs",
     "server-plugin/seasonal-migration.mjs",
     "server-plugin/settlement-profile.mjs",
     "server-plugin/settlement-trade.mjs",
@@ -8209,6 +8483,7 @@
     "server-plugin/monster-society.mjs",
     "server-plugin/notables.mjs",
     "server-plugin/npc-autonomy.mjs",
+    "server-plugin/npc-intelligence.mjs",
     "server-plugin/npc-life.mjs",
     "server-plugin/npc-memory.mjs",
     "server-plugin/npc-planning-service.mjs",
@@ -8220,6 +8495,7 @@
     "server-plugin/remote-generation.mjs",
     "server-plugin/reputation-registry.mjs",
     "server-plugin/return-summary.mjs",
+    "server-plugin/seasonal-hazards.mjs",
     "server-plugin/settlement-profile.mjs",
     "server-plugin/shop.mjs",
     "server-plugin/sites.mjs",
@@ -8296,6 +8572,7 @@
    "server-plugin/compat/v2-phase1-engine.mjs",
    "server-plugin/engine.mjs",
    "server-plugin/progression.mjs",
+   "server-plugin/seasonal-hazards.mjs",
    "server-plugin/sites.mjs",
    "server-plugin/ui-personal.mjs"
   ],
@@ -8483,6 +8760,7 @@
   "worldClock": [
    "server-plugin/advance-registry.mjs",
    "server-plugin/return-summary.mjs",
+   "server-plugin/seasonal-hazards.mjs",
    "server-plugin/world-clock.mjs"
   ],
   "training": [
@@ -8497,11 +8775,17 @@
    "server-plugin/npc-life.mjs",
    "server-plugin/npc-relations.mjs",
    "server-plugin/scene-card.mjs",
+   "server-plugin/seasonal-hazards.mjs",
    "server-plugin/ui-history.mjs"
   ],
   "effectTable": [
    "server-plugin/effects.mjs",
    "server-plugin/faction-clock.mjs"
+  ],
+  "hazardClock": [
+   "server-plugin/advance-registry.mjs",
+   "server-plugin/hazard-calendar.mjs",
+   "server-plugin/seasonal-hazards.mjs"
   ]
  },
  "stateShare": {
@@ -8639,6 +8923,7 @@
   },
   "family": {
    "writers": [
+    "sim_clock",
     "sim_npc"
    ],
    "readers": [
@@ -8961,7 +9246,9 @@
     "sim_npc",
     "sim_society"
    ],
-   "readers": []
+   "readers": [
+    "sim_clock"
+   ]
   },
   "shrineTreasuries": {
    "writers": [
@@ -8992,7 +9279,8 @@
    "readers": [
     "kernel_engine",
     "nar_memory",
-    "sim_character"
+    "sim_character",
+    "sim_clock"
    ]
   },
   "subMinuteSeconds": {
@@ -9399,6 +9687,7 @@
       "server-plugin/civic.mjs",
       "server-plugin/engine.mjs",
       "server-plugin/governance.mjs",
+      "server-plugin/hazard-calendar.mjs",
       "server-plugin/monster-society.mjs",
       "server-plugin/notables.mjs",
       "server-plugin/npc-life.mjs",
@@ -9412,6 +9701,7 @@
       "server-plugin/reputation.mjs",
       "server-plugin/return-summary.mjs",
       "server-plugin/scene-card.mjs",
+      "server-plugin/seasonal-hazards.mjs",
       "server-plugin/settlement-profile.mjs",
       "server-plugin/settlement-trade.mjs",
       "server-plugin/shop.mjs",
@@ -9429,6 +9719,7 @@
       "nar_memory",
       "sim_boss",
       "sim_character",
+      "sim_clock",
       "sim_economy",
       "sim_environment",
       "sim_npc",
@@ -9679,6 +9970,7 @@
       "server-plugin/magic-message.mjs",
       "server-plugin/magic-movement.mjs",
       "server-plugin/remote-generation.mjs",
+      "server-plugin/seasonal-hazards.mjs",
       "server-plugin/settlement-trade.mjs",
       "server-plugin/ui-map.mjs",
       "server-plugin/weather.mjs",
@@ -9687,6 +9979,7 @@
      "systems": [
       "kernel_engine",
       "nar_memory",
+      "sim_clock",
       "sim_economy",
       "sim_environment",
       "sim_magic",
@@ -9703,6 +9996,7 @@
       "server-plugin/engine.mjs",
       "server-plugin/farm-pests.mjs",
       "server-plugin/remote-generation.mjs",
+      "server-plugin/seasonal-hazards.mjs",
       "server-plugin/seasonal-migration.mjs",
       "server-plugin/settlement-trade.mjs",
       "server-plugin/ui-map.mjs",
@@ -9711,6 +10005,7 @@
      "systems": [
       "kernel_engine",
       "nar_memory",
+      "sim_clock",
       "sim_economy",
       "sim_environment",
       "sim_wildlife",
@@ -9732,6 +10027,7 @@
    "autoSystems": [
     "kernel_engine",
     "nar_memory",
+    "sim_clock",
     "sim_economy",
     "sim_environment",
     "sim_magic",
@@ -9974,7 +10270,8 @@
       "server-plugin/npc-obligations.mjs",
       "server-plugin/npc-planning-service.mjs",
       "server-plugin/npc-relations.mjs",
-      "server-plugin/scene-card.mjs"
+      "server-plugin/scene-card.mjs",
+      "server-plugin/seasonal-hazards.mjs"
      ],
      "systems": [
       "base_advance",
@@ -10043,10 +10340,12 @@
       "server-plugin/farm-pests.mjs",
       "server-plugin/festival.mjs",
       "server-plugin/governance.mjs",
+      "server-plugin/hazard-calendar.mjs",
       "server-plugin/law.mjs",
       "server-plugin/location-access.mjs",
       "server-plugin/magic-growth.mjs",
       "server-plugin/monster-society.mjs",
+      "server-plugin/npc-intelligence.mjs",
       "server-plugin/npc-life.mjs",
       "server-plugin/population-service.mjs",
       "server-plugin/population.mjs",
@@ -10058,6 +10357,7 @@
       "server-plugin/return-summary.mjs",
       "server-plugin/rule-state-migration.mjs",
       "server-plugin/scene-card.mjs",
+      "server-plugin/seasonal-hazards.mjs",
       "server-plugin/settlement-profile.mjs",
       "server-plugin/settlement-trade.mjs",
       "server-plugin/shop.mjs",
@@ -10338,6 +10638,7 @@
       "server-plugin/magic-marks.mjs",
       "server-plugin/magic-object.mjs",
       "server-plugin/magic.mjs",
+      "server-plugin/seasonal-hazards.mjs",
       "server-plugin/settlement-trade.mjs",
       "server-plugin/traits.mjs"
      ],
@@ -10345,6 +10646,7 @@
       "base_effects",
       "base_interactions",
       "base_traits",
+      "sim_clock",
       "sim_economy",
       "sim_magic"
      ]
@@ -10495,6 +10797,7 @@
     "sim_agriculture",
     "sim_boss",
     "sim_character",
+    "sim_clock",
     "sim_combat",
     "sim_economy",
     "sim_environment",
@@ -10775,14 +11078,17 @@
      "means": "势力时钟阶段",
      "pattern": "\\.clock\\b",
      "modules": [
+      "server-plugin/activities.mjs",
       "server-plugin/consistency-review.mjs",
       "server-plugin/consistency-service.mjs",
       "server-plugin/faction-clock.mjs",
       "server-plugin/monster-society.mjs",
+      "server-plugin/seasonal-hazards.mjs",
       "server-plugin/settlement-trade.mjs",
       "extension/turn.mjs"
      ],
      "systems": [
+      "kernel_engine",
       "nar_consistency",
       "sim_clock",
       "sim_economy",
@@ -10810,6 +11116,7 @@
    ],
    "autoSystems": [
     "base_standing",
+    "kernel_engine",
     "nar_consistency",
     "nar_memory",
     "sim_clock",
@@ -10972,6 +11279,7 @@
       "server-plugin/effects.mjs",
       "server-plugin/faction-clock.mjs",
       "server-plugin/festival.mjs",
+      "server-plugin/seasonal-hazards.mjs",
       "server-plugin/world-clock.mjs"
      ],
      "systems": [
@@ -11349,6 +11657,7 @@
     "server-plugin/public-projects.mjs",
     "server-plugin/quest-board.mjs",
     "server-plugin/repair.mjs",
+    "server-plugin/seasonal-hazards.mjs",
     "server-plugin/sites.mjs",
     "server-plugin/summons.mjs",
     "server-plugin/titles.mjs",
@@ -11383,7 +11692,7 @@
    ],
    "world": [],
    "worldDirs": [],
-   "lines": 223
+   "lines": 224
   },
   "server-plugin/advance-registry.mjs": {
    "system": "base_advance",
@@ -11397,6 +11706,7 @@
     "server-plugin/faction-clock.mjs",
     "server-plugin/festival.mjs",
     "server-plugin/governance.mjs",
+    "server-plugin/hazard-calendar.mjs",
     "server-plugin/law.mjs",
     "server-plugin/magic-air.mjs",
     "server-plugin/magic-area.mjs",
@@ -11415,6 +11725,7 @@
     "server-plugin/progression.mjs",
     "server-plugin/promotion.mjs",
     "server-plugin/public-projects.mjs",
+    "server-plugin/seasonal-hazards.mjs",
     "server-plugin/settlement-trade.mjs",
     "server-plugin/shop.mjs",
     "server-plugin/summons.mjs",
@@ -11440,6 +11751,7 @@
    ],
    "rules": [
     "death",
+    "hazardClock",
     "settlementTrade",
     "worldClock"
    ],
@@ -11447,7 +11759,7 @@
     "npcs"
    ],
    "worldDirs": [],
-   "lines": 153
+   "lines": 157
   },
   "server-plugin/agriculture-migration.mjs": {
    "system": "kernel_storage",
@@ -12424,6 +12736,29 @@
    "worldDirs": [],
    "lines": 393
   },
+  "server-plugin/hazard-calendar.mjs": {
+   "system": "sim_clock",
+   "imports": [
+    "server-plugin/weather.mjs"
+   ],
+   "stateWrites": [],
+   "stateReads": [
+    "minute",
+    "records"
+   ],
+   "recordWrites": [],
+   "recordReads": [
+    "hazard-famine",
+    "hazard-price",
+    "hazard-yield"
+   ],
+   "rules": [
+    "hazardClock"
+   ],
+   "world": [],
+   "worldDirs": [],
+   "lines": 103
+  },
   "server-plugin/index.mjs": {
    "system": "ui_server",
    "imports": [
@@ -12481,7 +12816,7 @@
    "worldDirs": [
     "design"
    ],
-   "lines": 108
+   "lines": 111
   },
   "server-plugin/items.mjs": {
    "system": "sim_economy",
@@ -13413,6 +13748,7 @@
   "server-plugin/npc-intelligence.mjs": {
    "system": "sim_npc",
    "imports": [
+    "server-plugin/hazard-calendar.mjs",
     "server-plugin/wildlife-awakening.mjs",
     "server-plugin/world-events.mjs"
    ],
@@ -13421,6 +13757,7 @@
    ],
    "stateReads": [
     "creatures",
+    "family",
     "minute",
     "player",
     "records"
@@ -13430,13 +13767,16 @@
    "rules": [
     "wildlifeAwakening"
    ],
-   "world": [],
+   "world": [
+    "households"
+   ],
    "worldDirs": [],
-   "lines": 181
+   "lines": 193
   },
   "server-plugin/npc-life.mjs": {
    "system": "sim_npc",
    "imports": [
+    "server-plugin/hazard-calendar.mjs",
     "server-plugin/items.mjs",
     "server-plugin/npc-intelligence.mjs",
     "server-plugin/npc-relations.mjs",
@@ -13470,7 +13810,7 @@
     "rules"
    ],
    "worldDirs": [],
-   "lines": 766
+   "lines": 783
   },
   "server-plugin/npc-memory.mjs": {
    "system": "sim_npc",
@@ -14241,6 +14581,54 @@
    "worldDirs": [],
    "lines": 143
   },
+  "server-plugin/seasonal-hazards.mjs": {
+   "system": "sim_clock",
+   "imports": [
+    "server-plugin/effects.mjs",
+    "server-plugin/environment.mjs",
+    "server-plugin/hazard-calendar.mjs",
+    "server-plugin/interactions.mjs",
+    "server-plugin/npc-life.mjs"
+   ],
+   "stateWrites": [
+    "family",
+    "player",
+    "records"
+   ],
+   "stateReads": [
+    "location",
+    "minute",
+    "npcs",
+    "settlements",
+    "spells"
+   ],
+   "recordWrites": [
+    "agriculture",
+    "hazard-famine",
+    "hazard-flood",
+    "hazard-route"
+   ],
+   "recordReads": [],
+   "rules": [
+    "attributes",
+    "hazardClock",
+    "npcLife",
+    "worldClock"
+   ],
+   "world": [
+    "households",
+    "items",
+    "locations",
+    "npcs",
+    "routes",
+    "rules",
+    "spells"
+   ],
+   "worldDirs": [
+    "design"
+   ],
+   "lines": 363
+  },
   "server-plugin/seasonal-migration.mjs": {
    "system": "sim_wildlife",
    "imports": [
@@ -14297,6 +14685,7 @@
   "server-plugin/settlement-trade.mjs": {
    "system": "sim_economy",
    "imports": [
+    "server-plugin/hazard-calendar.mjs",
     "server-plugin/traits.mjs",
     "server-plugin/weather.mjs"
    ],
@@ -14328,7 +14717,7 @@
     "rules"
    ],
    "worldDirs": [],
-   "lines": 222
+   "lines": 226
   },
   "server-plugin/shop.mjs": {
    "system": "sim_economy",
@@ -14721,6 +15110,7 @@
    "system": "sim_environment",
    "imports": [
     "server-plugin/combat.mjs",
+    "server-plugin/hazard-calendar.mjs",
     "server-plugin/storage.mjs"
    ],
    "stateWrites": [],
@@ -14739,7 +15129,7 @@
     "rules"
    ],
    "worldDirs": [],
-   "lines": 119
+   "lines": 122
   },
   "server-plugin/wildlife-awakening.mjs": {
    "system": "sim_wildlife",
