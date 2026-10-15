@@ -5,7 +5,7 @@ import {actorId,actorPath} from './npc-state.mjs';
 import {groupAccountView} from './group-account.mjs';
 import {temples,templeById} from './faith-catalog.mjs';
 import {familyGroup,natalFamily} from './family-state.mjs';
-const LEADER={行会:'会长',帮派:'帮主',商号:'掌柜',教会:'主祭',会社:'会长',家户:'家长'};
+const LEADER={王国:'国王',行会:'会长',帮派:'帮主',商号:'掌柜',教会:'主祭',会社:'会长',家户:'家长'};
 const ELDER='长老',MEMBER='成员',key=id=>`organization:${id}`;
 const living=(engine,state,id)=>{
     const actor=actorPath(engine.world,id).slice(1).reduce((o,k)=>o?.[k],state);

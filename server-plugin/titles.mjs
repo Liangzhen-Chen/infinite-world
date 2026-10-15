@@ -1,3 +1,6 @@
+import {fiefCandidates,nobleRules,currentDomains,domainPopulation,domainSettlements,highTitle} from './noble-state.mjs';
+import {royalServices} from './high-nobility.mjs';
+import {partyPay} from './military.mjs';
 import {personRegistrar,personOffices} from './entity-view.mjs';
 import {actorPath} from './npc-state.mjs';
 import {authorityOf,playerOffices} from './governance.mjs';
@@ -33,12 +36,14 @@ export function titleBases(engine,state,fief){
     const out={};
     const governed=Object.values(state.records??{}).filter(r=>r.category==='governance_office'&&r.holder==='player'&&
         (r.status==='在任'?state.minute:r.reason==='任期届满'?r.removedAt:r.since)-r.since>=GOVERN_DAYS*DAY);
+    const services=royalServices(state,'player');if(services.length)out['王室服务']=services.map(r=>r.id);
     if(governed.length)out['治理']=governed.map(r=>r.id);
     const military=[...Object.values(state.records??{}).filter(r=>r.category==='legal_detention'&&r.deliveredBy==='player').map(r=>r.wanted),
         ...Object.entries(state.careerMetrics?.evidence??{}).filter(([,e])=>e.kind==='battle').map(([k])=>k)];
     if(military.length)out['军功']=military;
     const ruled=[...new Set(playerOffices(state,{power:'housing'},engine).map(r=>r.settlement))],people=ruled.reduce((n,s)=>n+(state.settlements?.[s]?.population??0),0);
-    if(people>=engine.rules.governance.titleDomainPopulation)out['领地规模']=ruled;
+    const domains=currentDomains(engine,state,'player');
+    if(Math.max(people,domainPopulation(engine,state,domains))>=engine.rules.governance.titleDomainPopulation)out['领地规模']=domains.length?domains:ruled;
     return out;
 }
 function qualifies(engine,state,def,fief){
@@ -47,23 +52,24 @@ function qualifies(engine,state,def,fief){
     if(have.length<def.bases.min)reasons.push(`凭据不足：需${def.bases.min}样（${def.bases.from.join('、')}），现有${have.join('、')||'无'}`);
     if(def.bases.required&&!bases[def.bases.required])reasons.push(`缺少必需的${def.bases.required}凭据`);
     if(def.fief==='一村'&&(!fief||!heads(engine,state,fief).length))reasons.push('封地须是现任村长所辖之村');
+    if(['男爵','子爵','伯爵','侯爵','公爵'].includes(def.name)&&!fiefCandidates(engine,state,def.name).some(c=>c.id===fief&&c.eligible))reasons.push('封地须为有来源且无重封的现任辖区');
     return {reasons,bases:Object.fromEntries(have.map(b=>[b,bases[b]]))};
 }
 function petition(d,engine,args,eventId){
     const def=titleDef(engine,args.name);
     if(!def)throw Error('册上没有这个爵位');
-    if(!def.grantable)throw Error(`封册署眼下不受理${def.name}的请封`);
+    if(!def.grantable&&!fiefCandidates(engine,d.get('state'),def.name).some(c=>c.eligible))throw Error(`封册署眼下不受理${def.name}的请封`);
     const clerk=office(d,engine),state=d.get('state'),current=playerTitle(state);
     const order=authorityOf(engine).titles.map(t=>t.name);
     if(current&&order.indexOf(current.title)>=order.indexOf(def.name))throw Error('已有同级或更高爵位');
     if(Object.values(state.records??{}).some(r=>r.category==='title_petition'&&r.status==='待审定'))throw Error('已有待审定的请封');
-    const fief=def.fief==='一村'?engine.resolve(args.settlement,'loc'):null;
+    const fief=def.fief==='一村'?engine.resolve(args.settlement,'loc'):['男爵','子爵','伯爵','侯爵','公爵'].includes(def.name)?args.settlement:null;
     const {reasons,bases}=qualifies(engine,state,def,fief);
     if(!Object.keys(bases).length)throw Error(reasons.join('；'));
     const id=`title_petition:${eventId}`;
     if(d.get(...rec(id)))throw Error('事务编号已占用');
     const registry=authorityOf(engine).superiors.auth_capital_title_registry;
-    const row={category:'title_petition',id,title:def.name,fief,bases,registrar:clerk,filedAt:state.minute,due:state.minute+registry.decisionDays*DAY,status:'待审定',sourceEvent:eventId};
+    const row={category:'title_petition',id,title:def.name,fief,...(fiefCandidates(engine,state,def.name).find(c=>c.id===fief)?{domains:fiefCandidates(engine,state,def.name).find(c=>c.id===fief).domains}:{}),bases,registrar:clerk,filedAt:state.minute,due:state.minute+registry.decisionDays*DAY,status:'待审定',sourceEvent:eventId};
     d.set(rec(id),row);
     return {petition:id,pending:row,note:`已转呈王都封册署，${registry.decisionDays}日后按凭据审定；贡献度不作凭据。`};
 }
@@ -71,8 +77,8 @@ function decide(d,engine,p){
     const def=titleDef(engine,p.title),state=d.get('state'),{reasons,bases}=qualifies(engine,state,def,p.fief);
     if(reasons.length){d.set(rec(p.id),{...p,status:'未获册封',decidedAt:p.due,reasons});return;}
     const old=playerTitle(state);
-    d.set(rec(KEY),{category:'title',id:KEY,holder:'player',title:def.name,rank:def.ranks[0],fief:p.fief,grantedAt:p.due,status:'受封',petition:p.id,bases,
-        nextIncome:p.due+MONTH,incomeMark:receipts(state,p.fief),levy:{men:def.levy.men,days:def.levy.days,personal:Boolean(def.levy.personal),due:p.due+YEAR,served:0,attended:false},breaches:0,
+    d.set(rec(KEY),{category:'title',id:KEY,holder:'player',title:def.name,rank:def.ranks[0],fief:p.fief,...(p.domains?{domains:p.domains}:{}),grantedAt:p.due,status:'受封',petition:p.id,bases,
+        nextIncome:p.due+MONTH,incomeMark:p.domains?domainReceipts(engine,state,p.domains):receipts(state,p.fief),levy:{men:def.levy.men,days:def.levy.days,personal:Boolean(def.levy.personal),due:p.due+YEAR,served:0,attended:false},breaches:0,
         history:[...(old?.history??[]),...(old?[{title:old.title,until:p.due}]:[])],source:def.source});
     d.set(rec(p.id),{...p,status:'已册封',decidedAt:p.due});
 }
@@ -83,7 +89,9 @@ function receipts(state,fief){
     const fees=Object.values(state.records??{}).filter(r=>r.category==='housing_fee'&&r.settlement===fief).reduce((n,r)=>n+r.copper,0);
     return tax+fees;
 }
+const domainReceipts=(e,s,domains)=>domainSettlements(e,s,domains).reduce((sum,id)=>sum+receipts(s,id)+Object.values(s.records??{}).filter(r=>r.category==='trade_tax'&&r.settlement===id).reduce((n,r)=>n+r.amount,0),0);
 function income(d,engine,t,at){
+    if(t.domains)return upperIncome(d,engine,t,at);
     const def=titleDef(engine,t.title),state=d.get('state'),mark=receipts(state,t.fief),next={...t,nextIncome:t.nextIncome+MONTH,incomeMark:mark};
     const month=Math.floor(at/MONTH),row={category:'title_income',holder:'player',title:t.title,fief:t.fief,minute:at,base:mark-t.incomeMark,income:0,tribute:0};
     if(!t.fief||!def.incomeBps){d.set(rec(t.id??KEY),next);return;}
@@ -98,6 +106,16 @@ function income(d,engine,t,at){
         if(t.status==='失封地')next.status='受封';
     }
     d.set(rec(t.holder&&t.holder!=='player'?`title_income:${t.id}:${month}`:`title_income:${month}`),{...row,holder:t.holder??'player'});d.set(rec(t.id??KEY),next);
+}
+function upperIncome(d,e,t,at){
+ const state=d.get('state'),def=titleDef(e,t.title),mark=domainReceipts(e,state,t.domains),base=Math.max(0,mark-t.incomeMark);
+ let owed=t.status==='停俸'?0:Math.floor(base*def.incomeBps/10000),paid=0;
+ const owned=currentDomains(e,state,t.holder??'player');
+ for(const sid of domainSettlements(e,state,t.domains).filter(sid=>owned.some(id=>id===sid||domainSettlements(e,state,[id]).includes(sid)))){const n=partyPay(d,e,sid,owed,{sourceEvent:`title:${t.id}:${at}`,reason:'封地收入'});paid+=n;owed-=n;if(!owed)break;}
+ const tribute=Math.floor(paid*def.tributeBps/10000),holderPath=actorPath(e.world,t.holder??'player');d.set([...holderPath,'coins'],(d.get(...holderPath,'coins')??0)+paid-tribute);
+ if(tribute){const balance=d.get('state','settlements','loc_capital','treasury')??0;d.set(['state','settlements','loc_capital','treasury'],balance+tribute);}
+ d.set(rec(`title_income:${t.id}:${Math.floor(at/MONTH)}`),{category:'title_income',holder:t.holder,title:t.title,fief:t.fief,base,income:paid,tribute,minute:at});
+ d.set(rec(t.id??KEY),{...t,nextIncome:t.nextIncome+MONTH,incomeMark:mark});
 }
 function yearEnd(d,engine,t,at){
     const def=titleDef(engine,t.title),need=(t.levy.men??0)*(t.levy.days??0),kept=t.levy.served>=need&&t.levy.attended;
@@ -127,11 +145,11 @@ function service(d,engine,args,eventId){
 export function titleAction(d,args,eventId){
     if(args.operation==='title_petition')return petition(d,this,args,eventId);
     if(args.operation==='title_service')return service(d,this,args,eventId);
-    if(args.operation==='title_inspect'){const state=d.get('state');return {title:playerTitle(state),quotaD:titleQuotaD(this,state),petitions:Object.values(state.records??{}).filter(r=>r.category==='title_petition'),actionScope:{kind:'instant'}};}
+    if(args.operation==='title_inspect'){const state=d.get('state');return {title:playerTitle(state),quotaD:titleQuotaD(this,state),candidates:Object.fromEntries(['男爵','子爵','伯爵','侯爵','公爵'].map(name=>[name,fiefCandidates(this,state,name)])),royalServices:royalServices(state,'player'),petitions:Object.values(state.records??{}).filter(r=>r.category==='title_petition'),actionScope:{kind:'instant'}};}
     throw Error('未知爵位事务');
 }
 function dueOf(r){return r.category==='title_petition'?r.due:Math.min(r.nextIncome,r.levy.due);}
-const scheduled=state=>Object.values(state.records??{}).filter(r=>r.category==='title_petition'&&r.status==='待审定'||r.category==='title'&&r.status!=='已除爵');
+const scheduled=state=>Object.values(state.records??{}).filter(r=>r.category==='title_petition'&&r.status==='待审定'||r.category==='title'&&!['已除爵','独立'].includes(r.status));
 export function nextTitleMinute(state,now){return Math.min(Infinity,...scheduled(state).map(dueOf).filter(m=>m>now));}
 export function advanceTitles(d,engine,{after}){
     for(let guard=0;guard<1000;guard++){

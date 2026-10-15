@@ -1,3 +1,4 @@
+import {recognizeIndependence,settleNationWar} from './nation-founding.mjs';
 import {damageFacilities} from './facilities.mjs';
 // U12b: campaigns share military ledgers, K4 standing, K6 effects and U17 commissions.
 import {armies,armyKey,armyStrength,createArmy,ensureArmies,raiseLevy,loseSoldiers,releaseLevy,partyPay,partyCredit,partyName} from './military.mjs';
@@ -85,6 +86,7 @@ export function endWar(d,e,w,{winner=null,tribute=0,at,src,status='议和'}){
  relations(d,e,w.aggressor,w.defender,rules(e).peaceStanding,src,at);
  if(winner===w.aggressor&&w.territory){const previous=e.world.regions.find(c=>c.id===w.territory)?.ruler;d.set(path(`territory:${w.territory}`),{category:'territory',county:w.territory,ruler:winner,previous,war:w.id,minute:at,sourceEvent:src});}
  if(winner&&tribute){const loser=winner===w.aggressor?w.defender:w.aggressor;d.set(path(`tribute:${pair(winner,loser)}`),{category:'tribute',payer:loser,payee:winner,amount:tribute,nextAt:at+30*DAY,arrears:0,war:w.id,sourceEvent:src});}
+ settleNationWar(d,e,w,{winner,at,src});
  save(d,w);announce(d,e,w,`${w.name}已经${status}，战后条件已经议定。`,at,src);return w;
 }
 export function campaignRound(d,e,w,at){
@@ -138,6 +140,7 @@ function controlled(e,s,party){return party==='player'||s.records?.[`organizatio
 export function warAction(d,args,src){
  const e=this,r=rules(e),state=d.get('state');if(!r)throw Error('未登记战争外交规则');
  if(args.operation==='war_inspect')return {wars:wars(state),relations:args.org&&args.member?standing(e,state,args.org,args.member):null,territories:Object.values(state.records??{}).filter(t=>t.category==='territory'),tribute:Object.values(state.records??{}).filter(t=>t.category==='tribute'),choices:['declare','truce','peace','ally','tribute'],actionScope:{kind:'instant'}};
+ if(args.operation==='diplomacy'&&args.choice==='recognize')return recognizeIndependence(d,e,args.org,args.member,src);
  const w=copy(wars(state).find(w=>w.id===args.clock));
  if(args.operation==='war_join'){
   if(!w||w.status!=='交战')throw Error('clock 须指定双方正在交涉的战事');const service=state.records['military_service:player'],a=state.records[armyKey(args.org??service?.army)];if(!a||!controlled(e,state,a.party)&&a.id!==service?.army)throw Error('此项交涉未满足权限、立场或前线条件；用 war_inspect 查看');

@@ -1,3 +1,4 @@
+import {nationAt,nationRows,liveNation} from './noble-state.mjs';
 // Executable jurisdictions are views of current places, rulers and offices.
 import {regionOf} from './regions.mjs';
 import {standing} from './standing.mjs';
@@ -23,7 +24,7 @@ function authorities(world,state,settlement,kind){
 const geometry=new WeakMap();
 export function legalCodes(world,state={}){
  const original=world.rules.law?.codes??[];
- if(!world.rules.law?.templates?.length||!world.remoteCounties?.length)return original;
+ if(!world.rules.law?.templates?.length||!world.remoteCounties?.length)return nationLegalCodes(world,state,original);
  let groups=geometry.get(world);
  if(!groups){groups=new Map();const occupied=new Set(original.flatMap(c=>c.locations));
  for(const l of world.locations){if(occupied.has(l.id))continue;const region=regionOf(world,l.id),t=region&&world.remoteCounties.includes(region.county.id)&&legalTemplate(world,region.county);if(!t)continue;
@@ -39,11 +40,22 @@ export function legalCodes(world,state={}){
    faction:county.ruler.faction??null,polity:t.polity,locations,court,
    judges:authorities(world,state,sid,'judge'),officers:authorities(world,state,sid,'officer').slice(0,legalStaffing(level))});
  }
- return [...original,...derived];
+ return nationLegalCodes(world,state,[...original,...derived]);
+}
+function nationLegalCodes(world,state,codes){
+ if(!nationRows(state).some(n=>liveNation(state,n.id)))return codes;
+ const engine={world,rules:world.rules,byId:new Map([...world.locations,...world.npcs].map(r=>[r.id,r]))},out=[];
+ for(const code of codes){
+  const grouped=new Map();for(const loc of code.locations){const n=nationAt(engine,state,loc),key=n?.id??null;if(!grouped.has(key))grouped.set(key,{n,locations:[]});grouped.get(key).locations.push(loc);}
+  for(const {n,locations}of grouped.values()){if(!n){out.push({...code,locations});continue;}
+   out.push({...code,id:`nationlaw:${n.id}:${code.id}`,nation:n.id,originalCode:code.id,polity:n.id,faction:n.id,locations,penalties:{...code.penalties,...n.amendments},judges:[...new Set([n.ruler,...authorities(world,state,code.settlement??locations[0],'judge')])],officers:code.officers});
+  }
+ }return out;
 }
 export function legalCodeAt(engine,location,state={}){return legalCodes(engine.world,state).find(c=>c.locations.includes(location))??null;}
-export function legalCodeById(engine,id,state={}){return legalCodes(engine.world,state).find(c=>c.id===id)??null;}
+export function legalCodeById(engine,id,state={}){return legalCodes(engine.world,state).find(c=>c.id===id)??engine.rules.law?.codes?.find(c=>c.id===id)??null;}
 export function courtHierarchy(engine,state,code){
+ if(code.nation)return [{level:0,name:'本国初审',court:code.court,judges:code.judges,code:code.id},{level:1,name:'本国复审',court:liveNation(state,code.nation)?.capital,judges:[liveNation(state,code.nation)?.ruler].filter(Boolean),code:code.id}];
  const all=legalCodes(engine.world,state),county=engine.world.regions?.find(r=>r.id===(code.county??regionOf(engine.world,code.court)?.county.id));
  const t=code.template?engine.rules.law.templates.find(t=>t.id===code.template):county&&legalTemplate(engine.world,county);
  if(!t)return null;

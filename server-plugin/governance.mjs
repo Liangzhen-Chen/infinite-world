@@ -1,3 +1,5 @@
+import {reviewUpperOffice} from './high-nobility.mjs';
+import {domainAuthority} from './noble-state.mjs';
 import {entityTransition} from './entity-transitions.mjs';
 import {personOffices,personRegistrar,settlementHead,personSimulation} from './entity-view.mjs';
 import {digest} from './storage.mjs';
@@ -291,7 +293,7 @@ export const authorityOf=engine=>engine.rules.governance?.authority??null;
 const officeKey=(settlement,office)=>`governance_office:${settlement}:${office}:player`;
 const MONTH=30*DAY;
 export function playerOffices(state,{settlement=null,power=null}={},engine=null){
-    if(engine)return personOffices(engine,state,'player',{settlement,power}).map(e=>e.value);
+    if(engine){const own=personOffices(engine,state,'player',{settlement,power}).map(e=>e.value),upper=domainAuthority(engine,state,'player',settlement,power);return upper&&!own.length?[upper]:own;}
     return Object.values(state.records??{}).filter(r=>r.category==='governance_office'&&r.holder==='player'&&r.status==='在任'&&r.until>state.minute
         &&(!settlement||r.settlement===settlement)&&(!power||r.powers.includes(power)));
 }
@@ -358,6 +360,7 @@ function decide(d,engine,row,at){
     entityTransition(d,engine,{id:`${row.id}:appoint`,verb:'appoint',actor:office.appointingInstitution,target:'player',minute:at,location:row.settlement,office:office.id,summary:`${state.player.name}获任${office.name}`});
 }
 function review(d,engine,row,at){
+    if(row.upper)return reviewUpperOffice(d,engine,row,at);
     const charter=authorityOf(engine).superiors.auth_bs_office_charter,state=d.get('state');
     let reason=null;
     if(at>=row.until)reason='任期届满';

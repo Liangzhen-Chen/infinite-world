@@ -192,6 +192,10 @@ function pay(d,who,settlement,copper){
 function handle(d,engine,r,at){
     const state=d.get('state'),a=state.records[r.authorization],plot=authorityOf(engine).plots[r.plot],returned=reason=>{d.set(rec(r.id),{...r,status:'已退回',decidedAt:at,reason});};
     const s=state.npcs[r.steward];
+    if(a?.employment){const job=state.records[a.employment];
+        if(!job?.domainSteward||job.worker!==r.steward||job.owner!==a.grantor||!['有效','要求加薪'].includes(job.status)||job.deadline<=at)return returned('管事雇佣已停止');
+        if(!job.shifts?.some(shift=>shift.minute===at&&shift.paid===shift.earned&&shift.paid>0)){d.set(rec(r.id),{...r,due:at+DAY});return;}
+    }
     // A steward who cannot work today leaves the file for tomorrow.
     if(!s||['死亡','濒死','昏迷','患病'].includes(s.status)){if(s?.status==='死亡')returned('管事已故，申请退回');else d.set(rec(r.id),{...r,due:r.due+DAY,delays:(r.delays??0)+1});return;}
     if(!a||a.revoked||a.expires<=at)return returned('管事授权已撤回或到期');
@@ -209,6 +213,9 @@ function handle(d,engine,r,at){
         feePaid:fee,annualRentCopper:plot.annualRentCopper,rentDue:at+YEAR,arrears:0,materials:plot.materials,buildDays:plot.buildDays,status:'已批准',approvedAt:at,application:r.id});
     d.set(rec(`housing_fee:${r.id}`),{category:'housing_fee',settlement:r.settlement,payer:r.applicant,copper:fee,kind:'宅基费',minute:at,permit,sourceEvent:r.id});
     d.set(rec(r.id),{...r,status:'已批准',decidedAt:at,permit});
+}
+export function processEmployedHousing(d,engine,contract,at){
+ for(const r of Object.values(d.get('state','records')??{}))if(r.category==='housing_application'&&r.status==='待管事办理'&&r.filedAt<=at&&d.get('state','records',r.authorization)?.employment===contract.id)handle(d,engine,r,at);
 }
 function collectRent(d,p,at){
     const state=d.get('state'),due=p.annualRentCopper+p.arrears;

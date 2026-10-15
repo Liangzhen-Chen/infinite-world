@@ -1,3 +1,6 @@
+import {upperGovernanceAction,upperAppointment} from './high-nobility.mjs';
+import {nationAction} from './nation-founding.mjs';
+import {appointmentSource} from './noble-state.mjs';
 import {derivedStats,monsterStats,strike,combatRandom}from'./combat.mjs';
 import {careerEquipment,effectiveProficiency}from'./professions.mjs';
 import {magicStatusStats,withMagicStats,consumeTransientMagic}from'./magic-status.mjs';
@@ -183,6 +186,9 @@ export const activities={
         if(args.operation?.startsWith('festival_'))return festivalAction.call(this,d,args,id);
         if(args.operation?.startsWith('business_'))return businessAction.call(this,d,args,id);
         if(args.operation?.startsWith('civic_'))return civicAction.call(this,d,args,id);
+        if(args.operation==='nation'||args.operation?.startsWith('nation_'))return nationAction.call(this,d,args,id);
+        if(args.operation?.startsWith('domain_'))return upperGovernanceAction.call(this,d,args,id);
+        if(args.operation==='governance_apply'&&!['office_works_deputy','工役协理'].includes(args.name)&&appointmentSource(this,d.get('state'),args.settlement))return upperAppointment(d,this,args,id);
         if(args.operation?.startsWith('governance_'))return governanceAction.call(this,d,args,id);
         if(args.operation?.startsWith('faith_'))return faithAction.call(this,d,args,id);
         if(args.operation?.startsWith('org_'))return organizationAction.call(this,d,args,id);

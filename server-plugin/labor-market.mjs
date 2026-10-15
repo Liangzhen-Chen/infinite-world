@@ -1,3 +1,5 @@
+import {settleStewardRequests} from './high-nobility.mjs';
+import {currentDomains,containsDomain} from './noble-state.mjs';
 import {personOffices,personConstraint,personHousehold,placeSettlement,personAge,groupRepresentative,personBusiness,groupView,personName} from './entity-view.mjs';
 import {currentEmployment,employmentActive,recordEmploymentAttendance} from './employment-state.mjs';
 import {workerSkill,employmentStock,employmentProductionPlan,settleEmploymentProduction} from './finance-assets.mjs';
@@ -32,7 +34,7 @@ function recipeFor(e,s,owner,item){
 // No vacancy, occupation or employer is copied into a person's stored profile.
 export function laborOffers(e,s,minute=s.minute){
     const out=[],add=r=>{
-        if(!ownerCanHire(e,s,r.owner)||!r.location||r.quantity<=0)return;
+        if(r.owner==='player'||!ownerCanHire(e,s,r.owner)||!r.location||r.quantity<=0)return;
         const id=`labor:${r.source}:${r.recipe??r.task}`;
         if(rows(s).some(c=>employmentActive(c)&&c.offer===id&&c.deadline>minute))return;
         const d={...r,id,wage:r.wage??wage(e),workMinutes:480,createdAt:minute,deadline:Math.min(r.deadline??minute+7*DAY,minute+30*DAY)};
@@ -131,7 +133,8 @@ function conflict(d,e,row,start){
     const s=d.get('state'),n=s.npcs[row.worker];
     if(!able(s,row.worker)||personConstraint(e,s,row.worker,start)||n.levy||n.caring||n.scheduleTravel||n.cognitionTravel||personOffices(e,s,row.worker).length||s.player.companions?.includes(row.worker))return '工人受现有义务或健康限制';
     if(standing(e,s,row.worker,row.owner)<=-40)return '工人拒绝敌对雇主';
-    if(!ownerCanHire(e,s,row.owner))return '雇主不能履约';
+    if(row.domainSteward&&!currentDomains(e,s,row.owner).some(id=>containsDomain(e,s,id,row.settlement)))return '领地授权已失效';
+    if(!row.domainSteward&&!ownerCanHire(e,s,row.owner))return '雇主不能履约';
     const finish=start+540;
     for(const p of Object.values(s.projects??{}))if(p.status==='施工中'&&p.public?.workers?.includes(row.worker))return '已有公款工程排班';
     try{e.assertNpcObligationAction(d,[row.worker],{start,minutes:540,kind:'employment'});e.assertNpcAutonomyAction(s,[row.worker],{start,minutes:540});}catch(error){return error.message;}
@@ -192,10 +195,12 @@ function settleShift(d,e,row,at){
             d.set(rec(row.id),{...row,status:'已完成',endedAt:at});return null;
         }
     }
-    const pay=settleEmploymentPay(d,e,row,at,minutes),current=d.get(...rec(row.id)),done=(row.recipe||row.supplier)&&row.produced+quantity>=row.targetQuantity;
+    const pay=settleEmploymentPay(d,e,row,at,minutes);
+    const current=d.get(...rec(row.id)),done=(row.recipe||row.supplier)&&row.produced+quantity>=row.targetQuantity;
     const shift={minute:at,start,minutes,...pay,...(production?{production}:{})};
     d.set(rec(row.id),{...current,nextWork:at+DAY,paid:row.paid+pay.paid,produced:row.produced+quantity,workedMinutes:row.workedMinutes+minutes,
         status:pay.arrears?'罢工':done?'已完成':'有效',...(pay.arrears?{stoppedAt:at,reason:'欠薪停工'}:{}),...(done&&!pay.arrears?{endedAt:at}:{}),shifts:[...row.shifts,shift]});
+    if(row.domainSteward&&!pay.arrears)settleStewardRequests(d,e,d.get(...rec(row.id)),`${row.id}:${at}`);
     financeEvent(d,e,{id:`${row.id}:${at}`,actor:row.worker,target:row.owner,location:row.location,minute:at,value:pay.paid,tags:['employment',pay.arrears?'wage_arrears':'wage']});
     return shift;
 }
@@ -221,6 +226,7 @@ export function advanceLaborMarket(d,e,{before,after,id,beforeState}){
     for(const initial of contracts){
         let row=d.get(...rec(initial.id));
         if(!employmentActive(row)){settleArrears(d,e,row,after);refundGuarantee(d,e,d.get(...rec(row.id)));continue;}
+        if(row.domainSteward){const reason=conflict(d,e,row,Math.max(before,row.starts));if(reason){d.set(rec(row.id),{...row,status:'罢工',reason,nextWork:Math.max(row.nextWork,Math.floor(after/DAY)*DAY+1020)});continue;}}
         if(row.status==='罢工'&&!outstanding(d.get('state'),row.id).length&&!conflict(d,e,row,Math.max(before,row.starts))&&(!row.recipe||!employmentProductionPlan(d,e,row).reason)){
             row={...row,status:'有效',reason:null};d.set(rec(row.id),row);
         }

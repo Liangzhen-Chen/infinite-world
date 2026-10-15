@@ -22,6 +22,7 @@ export async function loadWorld(root = path.resolve(import.meta.dirname, '..', '
     const [residents,households,settlementProfiles,regions]=await Promise.all([optional('people/residents.json'),optional('people/households.json'),optional('geo/settlements.json'),optional('geo/regions.json')]);
     const careers=await optional('meta/careers.json');
     const faith=await optional('lore/faith.json');if(!Array.isArray(faith))rules.faith=faith;
+    const sovereignty=await optional('lore/sovereignty.json');if(!Array.isArray(sovereignty))rules.governance.sovereignty=sovereignty;
     const familyLaw=await optional('lore/family-law.json');if(!Array.isArray(familyLaw))rules.law.family=familyLaw;
     // D1: biome tags and areas live in geo/biomes.json (kept apart from the
     // locations file); they are merged into their locations here for K8.
