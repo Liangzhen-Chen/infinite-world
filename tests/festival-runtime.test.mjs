@@ -39,7 +39,8 @@ const cash=doc=>doc.state.player.coins+Object.values(doc.state.npcs).reduce((sum
 const draft=document=>({document,get(...p){return p.reduce((x,k)=>x?.[k],this.document);},set(path,value){this.document=applyPatches(this.document,[{op:'set',path,value}]);}});
 
 test('正式文件由加载器接入，候选不运行，正式参数经schema及来源检查',async()=>{
- assert.equal(Object.hasOwn(world,'festivals'),false,'未发布目录不新增空字段，不改变冻结世界来源哈希');
+ // T108 published the catalog; the loader still never adds an empty field.
+ assert.ok(!Object.hasOwn(world,'festivals')||world.festivals.length>0,'未发布目录不新增空字段，不改变冻结世界来源哈希');
  const s=setup();assert.deepEqual(validateFestivalRuntime(s.w),[]);
  assert.ok(!validateWorld(s.w).errors.some(e=>e.startsWith('schema')));
  const inspected=await s.run(s.doc,{operation:'festival_inspect'},'inspect');assert.ok(inspected.out.result.calendar.some(f=>f.publishedId===s.f.id));

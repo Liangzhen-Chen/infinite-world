@@ -603,13 +603,13 @@ T28-R1修好新回执undefined规范化并保留严格篡改拒绝，相关31/32
 
 ### T107（B1）已完成：正式节日改变作息与生产窗口，举办须有场地、参与者同意和实际物资并真实扣耗；新增10项通过/CORE40，0模型。24条候选的发布归T108。
 
-### T108（B2） 24节日审核发布。结果：24个节日有正式举办地点和运行参数，玩家能参加有成本的活动。可改world/design/w5-festivals.mjs、原节日草稿、tools/w5-festivals.mjs及发布入口、world/lore/festivals.json和必要geo地点映射、tests/w5-festival-publication.test.mjs；接B1，地理发布与T94/遗迹卡串行。复用有效审核，仅修缺项；regional_unmapped须落实举办地再启用，不将远方人员瞬移来现场。验收node --test "tests/w5-*.test.mjs" tests/festival.test.mjs tests/festival-runtime.test.mjs tests/world-clock.test.mjs，CORE。L2预计24–50次，≤1.5元；约2小时。
+### T108 已完成。原 T108（B2） 24节日审核发布。结果：24个节日有正式举办地点和运行参数，玩家能参加有成本的活动。可改world/design/w5-festivals.mjs、原节日草稿、tools/w5-festivals.mjs及发布入口、world/lore/festivals.json和必要geo地点映射、tests/w5-festival-publication.test.mjs；接B1，地理发布与T94/遗迹卡串行。复用有效审核，仅修缺项；regional_unmapped须落实举办地再启用，不将远方人员瞬移来现场。验收node --test "tests/w5-*.test.mjs" tests/festival.test.mjs tests/festival-runtime.test.mjs tests/world-clock.test.mjs，CORE。L2预计24–50次，≤1.5元；约2小时。
 
 ### T109（B3）已完成：势力按日或周推进计划，阶段真实消耗资源，玩家干预改变后续；关系与争端有结算回执；觉醒调用接口已留（未实现的效果明确报错，个体变化归T160）。新增10项通过、相关95/96（余一项为主线旧的节俗数量断言）、CORE40、发布构建ok，0模型。正式参数待T110/T111。
 
-### T110（B4） 势力时钟前20个。结果：前20个势力的资产与各阶段条件、代价和干预办法正式可执行。可改world/design/w5-clock-1.mjs、对应草稿/内容发布入口、world/lore/factions.json、本批tests/w5-clock-1.test.mjs；按现有ID排序分批，不重写合格背景，引用文化/神祇/历史的缺项在本批修正。接B3，与B5同文件串行。验收node --test "tests/w5-*.test.mjs" tests/world-clock.test.mjs tests/faction-clock.test.mjs，CORE。L2预计25–45次，≤1.5元；约2小时。
+### T110 已完成。原 T110（B4） 势力时钟前20个。结果：前20个势力的资产与各阶段条件、代价和干预办法正式可执行。可改world/design/w5-clock-1.mjs、对应草稿/内容发布入口、world/lore/factions.json、本批tests/w5-clock-1.test.mjs；按现有ID排序分批，不重写合格背景，引用文化/神祇/历史的缺项在本批修正。接B3，与B5同文件串行。验收node --test "tests/w5-*.test.mjs" tests/world-clock.test.mjs tests/faction-clock.test.mjs，CORE。L2预计25–45次，≤1.5元；约2小时。
 
-### T111（B5） 势力时钟后20个。结果：剩余20个势力也有资源约束和可干预的阶段，不以文字计划冒充生效。文件同B4，批次换w5-clock-2，接B4发布；与其他factions.json写者串行。验收node --test "tests/w5-*.test.mjs" tests/world-clock.test.mjs tests/faction-clock.test.mjs，CORE。L2预计25–45次，≤1.5元；约2小时。
+### T111 已完成。原 T111（B5） 势力时钟后20个。结果：剩余20个势力也有资源约束和可干预的阶段，不以文字计划冒充生效。文件同B4，批次换w5-clock-2，接B4发布；与其他factions.json写者串行。验收node --test "tests/w5-*.test.mjs" tests/world-clock.test.mjs tests/faction-clock.test.mjs，CORE。L2预计25–45次，≤1.5元；约2小时。
 
 ### T112（B6）已完成：据点进入、机关处理、有限库存（重访不刷新），凭实际发现解锁隐藏历史；提示估算11710 token；相关与CORE通过，0模型。
 

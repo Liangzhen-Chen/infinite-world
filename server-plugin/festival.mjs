@@ -47,7 +47,9 @@ export function festivalCalendar(engine){
  const linked=new Set(official.map(f=>f.id));return [...localFestivalCalendar(engine).filter(f=>!linked.has(f.id)),...official];
 }
 function custom(engine,id){const f=festivalCalendar(engine).find(f=>f.id===id||f.publishedId===id);if(!f||!f.formal&&f.status!=='custom-only'||!engine.byId.has(f.location)||!engine.world.npcs.some(n=>n.id===f.host))throw Error('节俗没有已发布日期、地点与组织者来源；候选节日不可执行');return f;}
-const needs=f=>(f.resourceNeeds??[]).map(n=>({item:n.item,quantity:n.quantity,owner:n.owner==='host'?f.host:n.owner}));
+// Borrowed or exchanged materials must be held and shown on the day but are
+// not used up; only consume (the default) leaves the owner's stock.
+const needs=f=>(f.resourceNeeds??[]).map(n=>({item:n.item,quantity:n.quantity,owner:n.owner==='host'?f.host:n.owner,...(n.use&&n.use!=='consume'?{use:n.use}:{})}));
 const matches=(f,row)=>row.definition===digest(f)&&row.host===f.host&&row.location===f.location&&row.kind===f.kind&&
  row.due===when(f,row.year)&&row.endsAt===row.due+f.runtime?.durationMinutes&&digest(row.resources)===digest(needs(f));
 const required=(engine,f,row)=>[...new Set([row.host,...(row.cost?[row.supplier]:[]),...needs(f).map(n=>n.owner),engine.byId.get(row.location)?.owner].filter(Boolean))];
@@ -177,7 +179,7 @@ export function advanceFestivals(d,engine,at){
    }
   }
   const consumed=[];
-  if(status==='held'&&row.formal)for(const n of row.resources){const result=changeItems(d,engine,n.owner,n.item,-n.quantity);consumed.push({...n,...result});}
+  if(status==='held'&&row.formal)for(const n of row.resources.filter(n=>!n.use)){const result=changeItems(d,engine,n.owner,n.item,-n.quantity);consumed.push({...n,...result});}
   const done={...row,status,reason,participants:status==='held'?[row.host,...participants]:[],paidCopper:status==='held'?row.cost:0,resolvedAt:at,resultEvent:`festival-result:${id}`,...(row.formal?{consumed}:{})};
   // K6: a held festival applies its published runtime effects and any effect-table
   // hooks as one transaction; festivals without effects keep their exact record.
