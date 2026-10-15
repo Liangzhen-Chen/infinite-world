@@ -1,4 +1,5 @@
 import {registerMagicEffect}from'./magic-effects.mjs';
+import {cloneData}from'./storage.mjs';
 import {recordRitualCare}from'./magic-ritual.mjs';
 import {environmentFeatures,localPlayerPoint,localSightClear}from'./environment.mjs';
 import {assertMagicTargeting}from'./magic-targeting.mjs';
@@ -14,18 +15,22 @@ export const careMechanisms=Object.freeze({
  preserve:[50,60],preserve_food:[50,1440],
 });
 const medicalOps=new Set(['hemostasis','close_wound','clean_wound','disease_sense','pain','stabilize','parasite','restore_tendon']);
-const clone=x=>structuredClone(x),key=id=>`physical_feature:${id}`;
+const clone=x=>cloneData(x),key=id=>`physical_feature:${id}`;
 const number=(v,min,max,label)=>{if(!Number.isFinite(v)||v<min||v>max)throw Error(`${label}无效或未登记`);return v;};
 const distance=(a,b)=>Math.hypot(a[0]-b[0],a[1]-b[1]);
 const actorPath=target=>target==='player'?['state','player']:['state',target.startsWith('npc_')?'npcs':'creatures',target];
 const active=(d,target,op,minute=d.get('state','minute'))=>Object.values(d.get('state','effects')??{}).filter(e=>e.kind==='care'&&e.target===target&&e.operation===op&&e.started<=minute&&e.expires>minute);
 const strongest=(d,target,op,minute)=>active(d,target,op,minute).reduce((n,e)=>Math.max(n,e.power),0);
+// P2: rows are read here only to be copied (peek), and the simulation hands
+// each freshly built row to the draft (adopt) instead of having it copied.
+const peekRecord=(d,id)=>typeof d.peek==='function'?d.peek('state','records',id):d.get('state','records',id);
 function stateOf(d,row){
- const r=d.get('state','records',key(row.id));
+ const r=peekRecord(d,key(row.id));
  if(r&&(r.category!=='physical_feature'||r.id!==row.id||r.location!==row.location))throw Error('照护对象状态键冲突');
  return clone(r?.state??row.state??{});
 }
 const store=(d,row,state)=>d.set(['state','records',key(row.id)],{id:row.id,category:'physical_feature',location:row.location,state});
+const storeFresh=(d,row,state)=>{const path=['state','records',key(row.id)],value={id:row.id,category:'physical_feature',location:row.location,state};if(typeof d.adopt==='function')d.adopt(path,value);else d.set(path,value);};
 function locate(engine,id,location){
  const rows=environmentFeatures(engine).filter(r=>r.location===location&&(r.id===id||r.name===id));
  if(rows.length!==1)throw Error('需要同地登记的真实植物、食物或容器');return rows[0];
@@ -270,7 +275,7 @@ function advancePlant(d,engine,row,minute){
     p.rootLengthMeters=Math.min(1,p.rootLengthMeters+root.power/100/1440);
     if(p.rootLengthMeters>=distance(row.position,water.position)){
      const amount=Math.min(ws.waterMl,p.waterMlPerMinute);ws.waterMl-=amount;s.waterMl+=amount;
-     s.rootDrawnWaterMl=(s.rootDrawnWaterMl??0)+amount;ws.rootRemovedWaterMl=(ws.rootRemovedWaterMl??0)+amount;store(d,water,ws);
+     s.rootDrawnWaterMl=(s.rootDrawnWaterMl??0)+amount;ws.rootRemovedWaterMl=(ws.rootRemovedWaterMl??0)+amount;storeFresh(d,water,ws);
     }
    }
   }
@@ -283,7 +288,7 @@ function advancePlant(d,engine,row,minute){
    }
   }
  }
- if(p.health<=0)p.alive=false;store(d,row,s);
+ if(p.health<=0)p.alive=false;storeFresh(d,row,s);
 }
 function advanceFood(d,engine,row,minute){
  const s=stateOf(d,row);if(!Array.isArray(s.foodLots)||!s.foodLots.length)return;
@@ -304,7 +309,7 @@ function advanceFood(d,engine,row,minute){
   const lost=Math.min(b.amountGrams,number(b.decayGramsPerMinute,0,100000,'腐败速度')*Math.min(factor,1-preserved/100));
   b.amountGrams-=lost;b.spoiledGrams=(b.spoiledGrams??0)+lost;s.spoiledGrams=(s.spoiledGrams??0)+lost;
  }
- store(d,row,s);
+ storeFresh(d,row,s);
 }
 export function advanceCare(d,engine,before,after){
  // A record with nothing that bleeds, festers, heals or is dying stays as it
@@ -321,7 +326,7 @@ export function advanceCare(d,engine,before,after){
   }
  }
  for(const e of Object.values(d.get('state','effects')??{}))if(e.kind==='care'&&e.operation==='preserve'&&e.expires<=after){
-  const row=locate(engine,e.target,e.location),s=stateOf(d,row);s.temperatureC=e.initialTemperatureC;store(d,row,s);
+  const row=locate(engine,e.target,e.location),s=stateOf(d,row);s.temperatureC=e.initialTemperatureC;storeFresh(d,row,s);
  }
 }
 export function inspectCare(d,engine,args){

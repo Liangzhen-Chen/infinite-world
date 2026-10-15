@@ -1,3 +1,4 @@
+import {cloneData} from './storage.mjs';
 import {registerWorldEventSubscriber}from'./world-events.mjs';
 // U7 灵智等级（指南5.3）：人物与已开灵的精怪共用一张等级表。等级不决定说话
 // 聪不聪明，只决定主动性、计划几步、看多远、多敢打破惯例、多快识破玩家反复用
@@ -6,7 +7,7 @@ import {registerWorldEventSubscriber}from'./world-events.mjs';
 import {sapient,awakeningTotal,awakeningEligible}from'./wildlife-awakening.mjs';
 import {famineAt}from'./hazard-calendar.mjs';
 
-const DAY=1440,clone=v=>structuredClone(v);
+const DAY=1440,clone=v=>cloneData(v); // P2: same result as structuredClone, faster
 export const INTELLIGENCE_VERSION=1;
 // maxActions：智能层一次计划最多几步；horizonDays：看得见多远的目标；
 // recipeMinutes/dailyMinutes/offSchedule：日常自主工作能多大程度离开惯例；

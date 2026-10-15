@@ -37,12 +37,25 @@ export function daylightAt(latitude, dayOfYear) {
     const durationMinutes = Math.round(angle*1440/Math.PI);
     return { sunriseMinute: Math.round(720-durationMinutes/2), sunsetMinute: Math.round(720+durationMinutes/2), durationMinutes };
 }
-export function weatherAt(engine, seed, location, minute) {
+// P2: within one elapsed-time event (engine.weatherSequences) or one caller's
+// travel cache, each region's yearly sequence is looked up once instead of
+// re-hashing the whole weather rule set for every edge. Keyed by the rules
+// object, seed, region and year, so it returns exactly what dailySequence does.
+export const WEATHER_SEQUENCES = Symbol('weather sequences');
+const nested = (map, key) => { let next = map.get(key); if (!next) { next = new Map(); map.set(key, next); } return next; };
+function cachedSequence(memo, rules, seed, region, year) {
+    if (!memo) return dailySequence(rules,seed,region,year);
+    const byYear = nested(nested(nested(memo, rules), seed), region);
+    if (!byYear.has(year)) byYear.set(year, dailySequence(rules,seed,region,year));
+    return byYear.get(year);
+}
+export function weatherAt(engine, seed, location, minute, sequenceCache = null) {
     validMinute(minute);
     const rules = engine.rules.weather, region = rules?.regions.find(row => row.locations.includes(location));
     if (!region) return null;
     const day = Math.floor(minute/1440), year = Math.floor(day/360), dayOfYear = day%360;
-    const row = dailySequence(rules,seed,region,year)[dayOfYear], light = daylightAt(region.latitude,dayOfYear);
+    const memo = sequenceCache ? nested(sequenceCache, WEATHER_SEQUENCES) : engine.weatherSequences ?? null;
+    const row = cachedSequence(memo,rules,seed,region,year)[dayOfYear], light = daylightAt(region.latitude,dayOfYear);
     const indoors = region.indoor.includes(location), effect = rules.states[row.kind];
     const clock=value=>`${String(Math.floor(value/60)).padStart(2,'0')}:${String(value%60).padStart(2,'0')}`;
     return { ...row, location, region: region.id, day, indoors, ...light,sunrise:clock(light.sunriseMinute),sunset:clock(light.sunsetMinute),
@@ -69,15 +82,25 @@ export function humidityAt(engine, document, location) {
     if (!current || current.indoors) return engine.byId.get(location)?.microclimate?.humidityPercent;
     return current.humidityPercent;
 }
+// P2: travel conditions depend only on rules, seed, edge start, mode and day.
+// Inside one elapsed-time event they are shared by every caller (read-only
+// rows); otherwise a caller's own cache keeps them, as before.
+const TRAVEL = Symbol('weather travel'), travelScope = {shared:null,rules:null,seed:null,byFrom:null};
 export function weatherTravel(engine, seed, edge, mode, minute,cache=null) {
     if(!edge.lengthKm)return {multiplier:1,closed:false};
-    const key=`${edge.from}:${mode}:${Math.floor(minute/1440)}`;
-    if(cache?.has(key))return cache.get(key);
-    const row = weatherAt(engine,seed,edge.from,minute);
+    const shared=engine.weatherSequences??(cache?nested(cache,WEATHER_SEQUENCES):null),rules=engine.rules.weather;
+    let byFrom=null;
+    if(shared){
+        if(travelScope.shared===shared&&travelScope.rules===rules&&travelScope.seed===seed)byFrom=travelScope.byFrom;
+        else{byFrom=nested(nested(nested(shared,TRAVEL),rules),seed);Object.assign(travelScope,{shared,rules,seed,byFrom});}
+    }
+    const modeDays=byFrom?nested(nested(byFrom,edge.from),mode):null,day=Math.floor(minute/1440);
+    if(modeDays?.has(day))return modeDays.get(day);
+    const row = weatherAt(engine,seed,edge.from,minute,cache);
     if (!row || !edge.lengthKm) return { multiplier: 1, closed: false };
     const result={ multiplier: row.travelFactors[mode], closed: mode === 'boat' && row.boatClosed,
         region: row.region, weather: row.name, day: row.day };
-    cache?.set(key,result);return result;
+    modeDays?.set(day,result);return result;
 }
 export function weatherEdge(engine, seed, edge, mode, departure, elapsedBefore, movingBefore, speed,weatherCache=null) {
     // U3: a seeded flood stage closes the route for its stated span.
@@ -92,7 +115,7 @@ export function weatherEdge(engine, seed, edge, mode, departure, elapsedBefore, 
         const budget=mode==='boat'?1440:engine.rules.travel.dailyTravelMinutes;
         if(mode!=='boat'&&moving>0&&moving%budget===0)elapsed+=1440-budget;
         const now=departure+elapsed,conditions=weatherTravel(engine,seed,edge,mode,now,weatherCache);
-        if(edge.closedSeasons.includes(engine.calendar(now).season))return null;
+        if(edge.closedSeasons.length&&edge.closedSeasons.includes(engine.calendar(now).season))return null;
         if(conditions.closed||hazardRouteClosed(engine,seed,edge.id,now))return null;
         const rate=speed/conditions.multiplier/60;
         const remainingBudget=mode==='boat'?1440:budget-moving%budget;

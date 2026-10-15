@@ -1,4 +1,4 @@
-import { applyPatches, canonical } from './storage.mjs';
+import { applyPatches, canonical, PatchCursor } from './storage.mjs';
 import { EntityResolver, validateMemory, normalize } from './retrieval.mjs';
 import {assertLocationAccess,homePermission}from'./location-access.mjs';
 import {activities}from'./activities.mjs';
@@ -73,10 +73,41 @@ const text = (value, max = 1200) => { if (typeof value !== 'string' || !value.tr
 export{xpRequired};
 export const skillGrade = value => `${['初级','中级','高级','特级','专家级','大师级','宗师级','圣级','神级'][Math.min(8,Math.floor(value/300))]}${Math.floor(value%300/100)+1}等`;
 class Draft {
-    constructor(document) { this.original = document; this.document = document; this.patches = []; this.messages = []; }
-    get(...path) { return path.reduce((object, key) => object?.[key], this.document); }
-    set(path, value) { const patch = { op: 'set', path, value }; this.document = applyPatches(this.document,[patch]); this.patches.push(patch); }
-    remove(path) { const patch = { op: 'delete', path }; this.document=applyPatches(this.document,[patch]); this.patches.push(patch); }
+    constructor(document) { this.original = document; this.cursor = new PatchCursor(document); this.adopted = new Map(); this.patches = []; this.messages = []; }
+    // P2: the cursor keeps its own copies writable until a read lets them escape.
+    get document() { this.release(null); return this.cursor.expose(this.cursor.root); }
+    set document(document) { this.cursor.reset(document); this.adopted.clear(); }
+    get(...path) { if (this.adopted.size) this.release(path); let object = this.cursor.root; for (let i = 0; i < path.length; i++) object = object?.[path[i]]; return this.cursor.expose(object); }
+    // Only for a caller that reads, copies what it keeps and drops the reference before its next write.
+    peek(...path) { let object = this.cursor.root; for (let i = 0; i < path.length; i++) object = object?.[path[i]]; return object; }
+    set(path, value) { this.write({ op: 'set', path, value }); }
+    remove(path) { this.write({ op: 'delete', path }); }
+    // P2: a fresh records row the caller hands over and never touches again.
+    // The draft holds the patch's own object instead of a copy until a read
+    // could reach it (release); then it holds a copy, exactly as set would.
+    adopt(path, value) {
+        if (!Array.isArray(path) || path.length !== 3 || path[0] !== 'state' || path[1] !== 'records' || typeof path[2] !== 'string') return this.set(path, value);
+        const patch = { op: 'set', path, value };
+        this.cursor.apply(patch, false); this.adopted.set(path[2], value); this.patches.push(patch);
+    }
+    write(patch) {
+        const path = patch.path, records = this.adopted.size && Array.isArray(path) && path[0] === 'state' && (path.length < 2 || path[1] === 'records');
+        // Writing inside an adopted row first gives the draft its own copy.
+        if (records && path.length > 3 && this.adopted.has(path[2])) this.materialize(path[2]);
+        this.cursor.apply(patch); this.patches.push(patch);
+        // A write at or above an adopted row replaces it.
+        if (records && path.length <= 3) { if (path.length === 3) this.adopted.delete(path[2]); else this.adopted.clear(); }
+    }
+    release(path) {
+        if (!this.adopted.size) return;
+        if (path && (path.length && path[0] !== 'state' || path.length > 1 && path[1] !== 'records')) return;
+        if (path && path.length > 2) { if (this.adopted.has(path[2])) this.materialize(path[2]); return; }
+        for (const key of [...this.adopted.keys()]) this.materialize(key);
+    }
+    materialize(key) {
+        const value = this.adopted.get(key); this.adopted.delete(key);
+        this.cursor.apply({ op: 'set', path: ['state', 'records', key], value });
+    }
     say(content) { this.messages.push(`【系统】${content}`); }
 }
 export class WorldEngine {
@@ -269,6 +300,14 @@ export class WorldEngine {
         return {buyer,seller,item,quantity,cost,instances:moved.instances,...payment};
     }
     advance(d,minutes,id) {
+        // P2: one elapsed-time event shares each region's yearly weather
+        // sequence (rules and seed cannot change inside it) across schedules.
+        // Route topology (locations, routes) is likewise fixed for its duration.
+        if(this.weatherSequences)return this.advanceElapsed(d,minutes,id);
+        this.weatherSequences=new Map();this.advanceGraphs=new Map();
+        try{return this.advanceElapsed(d,minutes,id);}finally{this.weatherSequences=null;this.advanceGraphs=null;}
+    }
+    advanceElapsed(d,minutes,id) {
         minutes=number(minutes,0,43200,'耗时');
         if(['trade','learn','practice','profession','craft','repair','research','cast','pet','summon','environment','farm','wildlife','site'].includes(this.npcObligationAction?.tool))assertNpcObligationAction(d,this,['player'],{minutes});
         const end=d.get('state','minute')+minutes;
@@ -328,6 +367,7 @@ export class WorldEngine {
         const season=this.calendar(minute).season,key=`${mode}:${season}`;
         // Callers may reuse topology only within one synchronous schedule
         // advance; weather and per-person departure times are never cached here.
+        graphCache=graphCache??this.advanceGraphs??null;
         let graph=graphCache?.get(key);
         if(!graph){
             const order=new Map(this.world.locations.map((place,index)=>[place.id,index])),adjacent=new Map();
@@ -335,22 +375,40 @@ export class WorldEngine {
                 if(!edge.modes.includes(mode)||edge.closedSeasons.includes(season))continue;
                 for(const node of [edge.from,edge.to]){if(!adjacent.has(node))adjacent.set(node,[]);adjacent.get(node).push(edge);}
             }
-            graph={order,adjacent};graphCache?.set(key,graph);
+            graph={order,adjacent,oriented:new Map()};graphCache?.set(key,graph);
         }
-        const {order,adjacent}=graph,pending=new Set(order.has(from)?[from]:[]),settled=new Set();
-        while(pending.size){
-            let current,nearest=Infinity;
-            // Scan only discovered nodes. Equal distances retain the original
-            // world-location order, including its chosen path and toll total.
-            for(const node of pending){const distance=distances.get(node)??Infinity;if(distance<nearest||distance===nearest&&order.get(node)<order.get(current)){current=node;nearest=distance;}}
-            if(current===undefined)break;pending.delete(current);settled.add(current);if(current===to)break;
+        const {order,adjacent}=graph,settled=new Set(),oriented=graph.oriented??new Map();
+        // P2: each edge as seen from one end, built once per topology (read-only).
+        const from_=(edge,node)=>{let ends=oriented.get(edge);if(!ends){ends=new Map();oriented.set(edge,ends);}let row=ends.get(node);if(!row){row={...edge,from:node};ends.set(node,row);}return row;};
+        // P2: a binary heap of discovered nodes ordered by (distance, world
+        // location order). Equal distances retain the original world-location
+        // order, including its chosen path and toll total; an entry whose node
+        // has since been settled or improved is skipped.
+        const heap=[],before=(a,b)=>a[0]<b[0]||a[0]===b[0]&&a[1]<b[1];
+        const push=node=>{
+            const entry=[distances.get(node),order.get(node),node];let i=heap.push(entry)-1;
+            while(i>0){const parent=(i-1)>>1;if(!before(entry,heap[parent]))break;heap[i]=heap[parent];i=parent;}heap[i]=entry;
+        };
+        const pop=()=>{
+            const top=heap[0],last=heap.pop();if(!heap.length)return top;
+            let i=0;for(;;){const l=2*i+1,r=l+1;let next=i,best=last;
+                if(l<heap.length&&before(heap[l],best)){next=l;best=heap[l];}
+                if(r<heap.length&&before(heap[r],best)){next=r;}
+                if(next===i)break;heap[i]=heap[next];i=next;}
+            heap[i]=last;return top;
+        };
+        if(order.has(from))push(from);
+        while(heap.length){
+            const [nearest,,current]=pop();
+            if(settled.has(current)||nearest!==distances.get(current))continue;
+            settled.add(current);if(current===to)break;
             for(const edge of adjacent.get(current)??[]){
                 const next=edge.from===current?edge.to:edge.to===current?edge.from:null;if(!next||!order.has(next)||settled.has(next))continue;
                 const speed=edge.speedKmh??(mode==='cart'?this.rules.travel.cartKmh:this.rules.travel.walkKmh*(mode==='horse'?this.rules.travel.horseMultiplier:1))*(edge.terrainMultiplier??1);
-                const travel=this.rules.weather?weatherEdge(this,seed,{...edge,from:current},mode,minute,distances.get(current),movingTimes.get(current),speed,weatherCache):null;
+                const travel=this.rules.weather?weatherEdge(this,seed,from_(edge,current),mode,minute,distances.get(current),movingTimes.get(current),speed,weatherCache):null;
                 if(this.rules.weather&&!travel)continue;
                 const elapsed=Math.max(1,Math.ceil(edge.lengthKm/speed*60)),candidate=travel?.elapsed??distances.get(current)+elapsed;
-                if(candidate<(distances.get(next)??Infinity)){distances.set(next,candidate);movingTimes.set(next,travel?.moving??movingTimes.get(current)+elapsed);previous.set(next,{node:current,edge});costs.set(next,costs.get(current)+edge.toll);pending.add(next);}
+                if(candidate<(distances.get(next)??Infinity)){distances.set(next,candidate);movingTimes.set(next,travel?.moving??movingTimes.get(current)+elapsed);previous.set(next,{node:current,edge});costs.set(next,costs.get(current)+edge.toll);push(next);}
             }
         }
         if(!distances.has(to))throw new Error('没有当前季节可通行的路线，不能瞬移');
