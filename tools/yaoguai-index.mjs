@@ -198,7 +198,10 @@ export async function build(){
  const BEASTLY=new Set(['兽','禽','水族','鳞虫','虫豸','植物','混合异兽']);
  const SPIRIT_M=new Set(['化形修炼','年久成精','妖怪聚落','论学交谈','人妖婚配','交易往来','报恩']);
  const envProv=r=>uniq(r.环境.flatMap(v=>ENV_MAP[v]?.provinces||[]).filter(p=>p!=='*'));
- const brief=r=>({id:r.id,名称:r.名称,类别:r.类别,原型:r.原型||r.原型大类,环境:r.环境,倾向:r.倾向,省份建议:envProv(r)});
+ // 宗教敏感初筛（PLAN 收录标准：真实宗教受崇拜的神圣存在不收、不改编）：神祇类、佛典饿鬼地狱诸鬼、出自佛道经典者，YG-2 逐条裁定
+ const RELIGIOUS_BOOKS=/法苑珠林|释禅波罗蜜|经$|云笈七签|天妃显圣录|寺庙与神明/;
+ const sensitive=r=>r.原型大类==='神祇'||r.母题标签.includes('饿鬼果报')||r.出处.some(c=>RELIGIOUS_BOOKS.test(c.书)&&!/山海经|神异经|水经/.test(c.书)&&!c.转引.some(b=>/白泽图|搜神/.test(b)));
+ const brief=r=>({id:r.id,名称:r.名称,类别:r.类别,原型:r.原型||r.原型大类,环境:r.环境,倾向:r.倾向,省份建议:envProv(r),宗教敏感待审:sensitive(r)||undefined});
  const cand={野外种群:[],精怪族群:[],亡魂类型:[],器物与宅精:[],具名个体:{首领或聚居地成员:[],亡魂个体:[],神祇或地方神:[],其他:[]},只作书本与传闻:[]};
  for(const r of merged){
   const spirit=r.母题标签.some(m=>SPIRIT_M.has(m))||r.类别==='精';
@@ -220,7 +223,7 @@ export async function build(){
   }
  }
  write('candidates.json',{kind:'yaoguai-candidates',version:1,note:'YG-1 初筛，YG-2 逐条复核；“两可”条目同时列入物种侧与个体侧；省份建议由环境→ENV_MAP 派生，不是定案。',
-  counts:{野外种群:cand.野外种群.length,精怪族群:cand.精怪族群.length,亡魂类型:cand.亡魂类型.length,器物与宅精:cand.器物与宅精.length,
+  宗教敏感待审:merged.filter(sensitive).map(r=>r.id),counts:{宗教敏感待审:merged.filter(sensitive).length,野外种群:cand.野外种群.length,精怪族群:cand.精怪族群.length,亡魂类型:cand.亡魂类型.length,器物与宅精:cand.器物与宅精.length,
    具名个体:Object.fromEntries(Object.entries(cand.具名个体).map(([k,v])=>[k,v.length])),只作书本与传闻:cand.只作书本与传闻.length},...cand});
  // 7) 建议词汇清单
  const {INTERACT_VERBS,HARM_TAGS}=await import('./yaoguai-defs.mjs');

@@ -2,7 +2,115 @@
  "kind": "yaoguai-candidates",
  "version": 1,
  "note": "YG-1 初筛，YG-2 逐条复核；“两可”条目同时列入物种侧与个体侧；省份建议由环境→ENV_MAP 派生，不是定案。",
+ "宗教敏感待审": [
+  "yg_bai_shui_su_nv",
+  "yg_can_nv",
+  "yg_gou_yi_fu_ren",
+  "yg_jiao_tong",
+  "yg_li_yao",
+  "yg_qing_wa_shen",
+  "yg_san_shi",
+  "yg_seng_ying",
+  "yg_wu_an_wang",
+  "yg_wu_zang_shen",
+  "yg_xiu_yue_ren",
+  "yg_yu_ren",
+  "yg_wu_zhi_qi",
+  "yg_zi_tong_shen",
+  "yg_bu_jing_xiang_mo_gui",
+  "yg_chi_ran_gui",
+  "yg_da_li_gui",
+  "yg_dou_hua_po",
+  "yg_gong_yuan_jiang_jun",
+  "yg_gui_mu",
+  "yg_hai_zhu_gui",
+  "yg_hei_an_gui",
+  "yg_hei_shui_jiang_jun",
+  "yg_huang_da_wang",
+  "yg_huang_mo_shen",
+  "yg_huo_shao_shi_gui",
+  "yg_huo_tang_gui",
+  "yg_ji_xing_gui",
+  "yg_jiao_dao_gui",
+  "yg_jing_mei_gui",
+  "yg_ku_lou",
+  "yg_kuang_ye_gui",
+  "yg_lei_gui",
+  "yg_leng_zheng_gui",
+  "yg_lve_sheng_da_fu",
+  "yg_mian_ran",
+  "yg_miao_gui",
+  "yg_mo_luo_shen_gui",
+  "yg_ning_deng_shen",
+  "yg_niu_tou_a_pang",
+  "yg_qi_ye_ba_ye",
+  "yg_qi_xiang",
+  "yg_she_gong",
+  "yg_shi_du_gui",
+  "yg_shi_fa_gui",
+  "yg_shi_feng_gui",
+  "yg_shi_huo_gui",
+  "yg_shi_man_gui",
+  "yg_shi_qi_gui",
+  "yg_shi_jing_qi_gui",
+  "yg_shi_rou_gui",
+  "yg_shi_shui_gui",
+  "yg_shi_tan_gui",
+  "yg_shi_tu_gui",
+  "yg_shi_tuo_gui",
+  "yg_shi_xiang_gui",
+  "yg_shi_xiao_er_gui",
+  "yg_shi_xue_gui",
+  "yg_shu_xia_zhu_gui",
+  "yg_si_bian_gui",
+  "yg_si_ying_er_bian_gui",
+  "yg_su_shuang_zhi_shen",
+  "yg_tu_bo",
+  "yg_wu_fang_gui_di",
+  "yg_wu_tong_da_gui",
+  "yg_xi_wang_gui",
+  "yg_yan_luo_wang_zhi_zhang_gui",
+  "yg_yu_se_gui",
+  "yg_zhen_kou_chou_gui",
+  "yg_zhong_jian_shi_hui_tu_gui",
+  "yg_cheng_huang_zhu",
+  "yg_chi_guo",
+  "yg_chuan_ling",
+  "yg_da_nuo_shi_er_shou",
+  "yg_ding_men_guai",
+  "yg_fei_lian",
+  "yg_fei_yi",
+  "yg_gong_gong",
+  "yg_gu_2",
+  "yg_hai_tong",
+  "yg_he_bo",
+  "yg_ji_meng",
+  "yg_jia_shi_er_guai",
+  "yg_jiao_chong",
+  "yg_jing_quan_tong_zi",
+  "yg_ju_zhong_sou",
+  "yg_kai_ming_shou",
+  "yg_lei_ao",
+  "yg_lei_bu_san_ye",
+  "yg_lei_gong",
+  "yg_long_hu",
+  "yg_lu_wu",
+  "yg_ma_niang_niang",
+  "yg_mao_jiang_jun",
+  "yg_ren_shen",
+  "yg_sang_men",
+  "yg_she_bi_shi",
+  "yg_sheng_2",
+  "yg_shui_di_xiao_er",
+  "yg_si_lao_tai",
+  "yg_sou_shan_da_wang",
+  "yg_tai_she",
+  "yg_tai_feng",
+  "yg_tian_mo",
+  "yg_tian_wu"
+ ],
  "counts": {
+  "宗教敏感待审": 105,
   "野外种群": 240,
   "精怪族群": 105,
   "亡魂类型": 129,
@@ -238,7 +346,8 @@
     "道路"
    ],
    "倾向": "害",
-   "省份建议": []
+   "省份建议": [],
+   "宗教敏感待审": true
   },
   {
    "id": "yg_tian_nv",
@@ -3830,7 +3939,8 @@
     "prov_xichui",
     "prov_zhonglu",
     "prov_fengji"
-   ]
+   ],
+   "宗教敏感待审": true
   },
   {
    "id": "yg_long_nv",
@@ -5345,7 +5455,8 @@
     "道路"
    ],
    "倾向": "中",
-   "省份建议": []
+   "省份建议": [],
+   "宗教敏感待审": true
   },
   {
    "id": "yg_chao_bu_gui",
@@ -5657,7 +5768,8 @@
    "倾向": "中",
    "省份建议": [
     "prov_hupo"
-   ]
+   ],
+   "宗教敏感待审": true
   },
   {
    "id": "yg_he_hun",
@@ -5836,7 +5948,8 @@
     "道路"
    ],
    "倾向": "中",
-   "省份建议": []
+   "省份建议": [],
+   "宗教敏感待审": true
   },
   {
    "id": "yg_jie_shi_gui",
@@ -5862,7 +5975,8 @@
     "寺观"
    ],
    "倾向": "害",
-   "省份建议": []
+   "省份建议": [],
+   "宗教敏感待审": true
   },
   {
    "id": "yg_jiu_gui",
@@ -5907,7 +6021,8 @@
    "省份建议": [
     "prov_fengji",
     "prov_jingzhao"
-   ]
+   ],
+   "宗教敏感待审": true
   },
   {
    "id": "yg_kuang_ye_gui",
@@ -5922,7 +6037,8 @@
    "省份建议": [
     "prov_fengji",
     "prov_jingzhao"
-   ]
+   ],
+   "宗教敏感待审": true
   },
   {
    "id": "yg_lan_gui",
@@ -6298,7 +6414,8 @@
     "寺观"
    ],
    "倾向": "中",
-   "省份建议": []
+   "省份建议": [],
+   "宗教敏感待审": true
   },
   {
    "id": "yg_shi_man_gui",
@@ -6310,7 +6427,8 @@
     "寺观"
    ],
    "倾向": "中",
-   "省份建议": []
+   "省份建议": [],
+   "宗教敏感待审": true
   },
   {
    "id": "yg_shi_jing_qi_gui",
@@ -6322,7 +6440,8 @@
     "战场"
    ],
    "倾向": "害",
-   "省份建议": []
+   "省份建议": [],
+   "宗教敏感待审": true
   },
   {
    "id": "yg_shi_shi_gui",
@@ -6349,7 +6468,8 @@
     "寺观"
    ],
    "倾向": "中",
-   "省份建议": []
+   "省份建议": [],
+   "宗教敏感待审": true
   },
   {
    "id": "yg_shi_xiao_er_gui",
@@ -6361,7 +6481,8 @@
     "宅院"
    ],
    "倾向": "害",
-   "省份建议": []
+   "省份建议": [],
+   "宗教敏感待审": true
   },
   {
    "id": "yg_shou_qiao_gui",
@@ -6391,7 +6512,8 @@
    "省份建议": [
     "prov_feicui",
     "prov_xichui"
-   ]
+   ],
+   "宗教敏感待审": true
   },
   {
    "id": "yg_shui_mang_gui",
@@ -6440,7 +6562,8 @@
     "阴间"
    ],
    "倾向": "害",
-   "省份建议": []
+   "省份建议": [],
+   "宗教敏感待审": true
   },
   {
    "id": "yg_tao_zhai_gui",
@@ -6800,7 +6923,8 @@
     "城镇街市"
    ],
    "倾向": "害",
-   "省份建议": []
+   "省份建议": [],
+   "宗教敏感待审": true
   },
   {
    "id": "yg_yuan_ru",
@@ -6870,7 +6994,8 @@
     "阴间"
    ],
    "倾向": "害",
-   "省份建议": []
+   "省份建议": [],
+   "宗教敏感待审": true
   },
   {
    "id": "yg_zhou_you_ling",
@@ -8752,7 +8877,8 @@
      "道路"
     ],
     "倾向": "害",
-    "省份建议": []
+    "省份建议": [],
+    "宗教敏感待审": true
    },
    {
     "id": "yg_shan_niang_niang",
@@ -10194,7 +10320,8 @@
      "prov_xichui",
      "prov_zhonglu",
      "prov_hanlu"
-    ]
+    ],
+    "宗教敏感待审": true
    },
    {
     "id": "yg_xi_dao",
@@ -12145,7 +12272,8 @@
     "省份建议": [
      "prov_fengji",
      "prov_jingzhao"
-    ]
+    ],
+    "宗教敏感待审": true
    },
    {
     "id": "yg_lan_gui",
@@ -12589,7 +12717,8 @@
      "阴间"
     ],
     "倾向": "害",
-    "省份建议": []
+    "省份建议": [],
+    "宗教敏感待审": true
    },
    {
     "id": "yg_xia_ren_gui",
@@ -12857,7 +12986,8 @@
      "灶"
     ],
     "倾向": "善",
-    "省份建议": []
+    "省份建议": [],
+    "宗教敏感待审": true
    },
    {
     "id": "yg_can_nv",
@@ -12870,7 +13000,8 @@
      "祠庙"
     ],
     "倾向": "善",
-    "省份建议": []
+    "省份建议": [],
+    "宗教敏感待审": true
    },
    {
     "id": "yg_gou_yi_fu_ren",
@@ -12884,7 +13015,8 @@
     "倾向": "善",
     "省份建议": [
      "prov_zhonglu"
-    ]
+    ],
+    "宗教敏感待审": true
    },
    {
     "id": "yg_jiao_tong",
@@ -12900,7 +13032,8 @@
     "省份建议": [
      "prov_xichui",
      "prov_jingzhao"
-    ]
+    ],
+    "宗教敏感待审": true
    },
    {
     "id": "yg_qing_wa_shen",
@@ -12916,7 +13049,8 @@
     "省份建议": [
      "prov_jingzhao",
      "prov_xichui"
-    ]
+    ],
+    "宗教敏感待审": true
    },
    {
     "id": "yg_wu_an_wang",
@@ -12931,7 +13065,8 @@
     "省份建议": [
      "prov_hupo",
      "prov_xingwan"
-    ]
+    ],
+    "宗教敏感待审": true
    },
    {
     "id": "yg_yu_ren",
@@ -12945,7 +13080,8 @@
     "倾向": "善",
     "省份建议": [
      "prov_zhonglu"
-    ]
+    ],
+    "宗教敏感待审": true
    },
    {
     "id": "yg_zi_tong_shen",
@@ -12956,7 +13092,8 @@
      "宅院"
     ],
     "倾向": "善",
-    "省份建议": []
+    "省份建议": [],
+    "宗教敏感待审": true
    },
    {
     "id": "yg_dou_hua_po",
@@ -12968,7 +13105,8 @@
      "宅院"
     ],
     "倾向": "两面",
-    "省份建议": []
+    "省份建议": [],
+    "宗教敏感待审": true
    },
    {
     "id": "yg_gong_yuan_jiang_jun",
@@ -12980,7 +13118,8 @@
      "祠庙"
     ],
     "倾向": "善",
-    "省份建议": []
+    "省份建议": [],
+    "宗教敏感待审": true
    },
    {
     "id": "yg_gui_mu",
@@ -12997,7 +13136,8 @@
      "prov_wushan",
      "prov_zhonglu",
      "prov_hupo"
-    ]
+    ],
+    "宗教敏感待审": true
    },
    {
     "id": "yg_hei_shui_jiang_jun",
@@ -13012,7 +13152,8 @@
     "省份建议": [
      "prov_xichui",
      "prov_zhonglu"
-    ]
+    ],
+    "宗教敏感待审": true
    },
    {
     "id": "yg_huang_da_wang",
@@ -13026,7 +13167,8 @@
     "省份建议": [
      "prov_xichui",
      "prov_zhonglu"
-    ]
+    ],
+    "宗教敏感待审": true
    },
    {
     "id": "yg_huang_mo_shen",
@@ -13043,7 +13185,8 @@
      "prov_xichui",
      "prov_zhonglu",
      "prov_hupo"
-    ]
+    ],
+    "宗教敏感待审": true
    },
    {
     "id": "yg_lve_sheng_da_fu",
@@ -13055,7 +13198,8 @@
      "阴间"
     ],
     "倾向": "中",
-    "省份建议": []
+    "省份建议": [],
+    "宗教敏感待审": true
    },
    {
     "id": "yg_mian_ran",
@@ -13072,7 +13216,8 @@
      "prov_hanlu",
      "prov_wushan",
      "prov_zhonglu"
-    ]
+    ],
+    "宗教敏感待审": true
    },
    {
     "id": "yg_miao_gui",
@@ -13084,7 +13229,8 @@
      "祠庙"
     ],
     "倾向": "害",
-    "省份建议": []
+    "省份建议": [],
+    "宗教敏感待审": true
    },
    {
     "id": "yg_qi_ye_ba_ye",
@@ -13100,7 +13246,8 @@
     "省份建议": [
      "prov_xichui",
      "prov_jingzhao"
-    ]
+    ],
+    "宗教敏感待审": true
    },
    {
     "id": "yg_qi_xiang",
@@ -13116,7 +13263,8 @@
      "prov_jingzhao",
      "prov_xichui",
      "prov_zhonglu"
-    ]
+    ],
+    "宗教敏感待审": true
    },
    {
     "id": "yg_su_shuang_zhi_shen",
@@ -13128,7 +13276,8 @@
      "官署"
     ],
     "倾向": "两面",
-    "省份建议": []
+    "省份建议": [],
+    "宗教敏感待审": true
    },
    {
     "id": "yg_tu_bo",
@@ -13143,7 +13292,8 @@
     "省份建议": [
      "prov_hanlu",
      "prov_xichui"
-    ]
+    ],
+    "宗教敏感待审": true
    },
    {
     "id": "yg_wu_fang_gui_di",
@@ -13159,7 +13309,8 @@
      "prov_hanlu",
      "prov_wushan",
      "prov_zhonglu"
-    ]
+    ],
+    "宗教敏感待审": true
    },
    {
     "id": "yg_cheng_huang_zhu",
@@ -13175,7 +13326,8 @@
     "省份建议": [
      "prov_xichui",
      "prov_zhonglu"
-    ]
+    ],
+    "宗教敏感待审": true
    },
    {
     "id": "yg_chi_guo",
@@ -13186,7 +13338,8 @@
      "异域"
     ],
     "倾向": "善",
-    "省份建议": []
+    "省份建议": [],
+    "宗教敏感待审": true
    },
    {
     "id": "yg_chuan_ling",
@@ -13200,7 +13353,8 @@
     "省份建议": [
      "prov_xichui",
      "prov_hupo"
-    ]
+    ],
+    "宗教敏感待审": true
    },
    {
     "id": "yg_da_nuo_shi_er_shou",
@@ -13214,7 +13368,8 @@
     "倾向": "善",
     "省份建议": [
      "prov_zhonglu"
-    ]
+    ],
+    "宗教敏感待审": true
    },
    {
     "id": "yg_ding_men_guai",
@@ -13226,7 +13381,8 @@
      "宅院"
     ],
     "倾向": "害",
-    "省份建议": []
+    "省份建议": [],
+    "宗教敏感待审": true
    },
    {
     "id": "yg_fei_lian",
@@ -13238,7 +13394,8 @@
      "战场"
     ],
     "倾向": "两面",
-    "省份建议": []
+    "省份建议": [],
+    "宗教敏感待审": true
    },
    {
     "id": "yg_fei_yi",
@@ -13254,7 +13411,8 @@
      "prov_xichui",
      "prov_zhonglu",
      "prov_fengji"
-    ]
+    ],
+    "宗教敏感待审": true
    },
    {
     "id": "yg_gong_gong",
@@ -13269,7 +13427,8 @@
     "省份建议": [
      "prov_fengji",
      "prov_jingzhao"
-    ]
+    ],
+    "宗教敏感待审": true
    },
    {
     "id": "yg_gu_2",
@@ -13284,7 +13443,8 @@
      "prov_hanlu",
      "prov_wushan",
      "prov_zhonglu"
-    ]
+    ],
+    "宗教敏感待审": true
    },
    {
     "id": "yg_hai_tong",
@@ -13298,7 +13458,8 @@
     "省份建议": [
      "prov_hupo",
      "prov_xingwan"
-    ]
+    ],
+    "宗教敏感待审": true
    },
    {
     "id": "yg_he_bo",
@@ -13315,7 +13476,8 @@
      "prov_zhonglu",
      "prov_hupo",
      "prov_xingwan"
-    ]
+    ],
+    "宗教敏感待审": true
    },
    {
     "id": "yg_ji_meng",
@@ -13332,7 +13494,8 @@
      "prov_wushan",
      "prov_zhonglu",
      "prov_xichui"
-    ]
+    ],
+    "宗教敏感待审": true
    },
    {
     "id": "yg_jia_shi_er_guai",
@@ -13346,7 +13509,8 @@
     "省份建议": [
      "prov_hupo",
      "prov_xingwan"
-    ]
+    ],
+    "宗教敏感待审": true
    },
    {
     "id": "yg_jiao_chong",
@@ -13361,7 +13525,8 @@
      "prov_hanlu",
      "prov_wushan",
      "prov_zhonglu"
-    ]
+    ],
+    "宗教敏感待审": true
    },
    {
     "id": "yg_jing_quan_tong_zi",
@@ -13375,7 +13540,8 @@
     "倾向": "两面",
     "省份建议": [
      "prov_fengji"
-    ]
+    ],
+    "宗教敏感待审": true
    },
    {
     "id": "yg_ju_zhong_sou",
@@ -13390,7 +13556,8 @@
      "prov_xichui",
      "prov_zhonglu",
      "prov_fengji"
-    ]
+    ],
+    "宗教敏感待审": true
    },
    {
     "id": "yg_kai_ming_shou",
@@ -13405,7 +13572,8 @@
      "prov_hanlu",
      "prov_wushan",
      "prov_zhonglu"
-    ]
+    ],
+    "宗教敏感待审": true
    },
    {
     "id": "yg_lei_ao",
@@ -13417,7 +13585,8 @@
      "天空"
     ],
     "倾向": "中",
-    "省份建议": []
+    "省份建议": [],
+    "宗教敏感待审": true
    },
    {
     "id": "yg_lei_bu_san_ye",
@@ -13428,7 +13597,8 @@
      "宅院"
     ],
     "倾向": "害",
-    "省份建议": []
+    "省份建议": [],
+    "宗教敏感待审": true
    },
    {
     "id": "yg_lei_gong",
@@ -13447,7 +13617,8 @@
      "prov_xichui",
      "prov_hupo",
      "prov_xingwan"
-    ]
+    ],
+    "宗教敏感待审": true
    },
    {
     "id": "yg_long_hu",
@@ -13463,7 +13634,8 @@
      "prov_jingzhao",
      "prov_xichui",
      "prov_zhonglu"
-    ]
+    ],
+    "宗教敏感待审": true
    },
    {
     "id": "yg_lu_wu",
@@ -13479,7 +13651,8 @@
      "prov_hanlu",
      "prov_wushan",
      "prov_zhonglu"
-    ]
+    ],
+    "宗教敏感待审": true
    },
    {
     "id": "yg_ma_niang_niang",
@@ -13491,7 +13664,8 @@
      "梦境"
     ],
     "倾向": "两面",
-    "省份建议": []
+    "省份建议": [],
+    "宗教敏感待审": true
    },
    {
     "id": "yg_mao_jiang_jun",
@@ -13503,7 +13677,8 @@
      "异域"
     ],
     "倾向": "善",
-    "省份建议": []
+    "省份建议": [],
+    "宗教敏感待审": true
    },
    {
     "id": "yg_sang_men",
@@ -13516,7 +13691,8 @@
      "梦境"
     ],
     "倾向": "害",
-    "省份建议": []
+    "省份建议": [],
+    "宗教敏感待审": true
    },
    {
     "id": "yg_she_bi_shi",
@@ -13527,7 +13703,8 @@
      "异域"
     ],
     "倾向": "中",
-    "省份建议": []
+    "省份建议": [],
+    "宗教敏感待审": true
    },
    {
     "id": "yg_si_lao_tai",
@@ -13542,7 +13719,8 @@
     "省份建议": [
      "prov_jingzhao",
      "prov_feicui"
-    ]
+    ],
+    "宗教敏感待审": true
    },
    {
     "id": "yg_sou_shan_da_wang",
@@ -13558,7 +13736,8 @@
      "prov_hanlu",
      "prov_wushan",
      "prov_zhonglu"
-    ]
+    ],
+    "宗教敏感待审": true
    },
    {
     "id": "yg_tai_she",
@@ -13569,7 +13748,8 @@
      "道路"
     ],
     "倾向": "两面",
-    "省份建议": []
+    "省份建议": [],
+    "宗教敏感待审": true
    },
    {
     "id": "yg_tai_feng",
@@ -13584,7 +13764,8 @@
      "prov_hanlu",
      "prov_wushan",
      "prov_zhonglu"
-    ]
+    ],
+    "宗教敏感待审": true
    },
    {
     "id": "yg_tian_mo",
@@ -13602,7 +13783,8 @@
      "prov_hanlu",
      "prov_wushan",
      "prov_zhonglu"
-    ]
+    ],
+    "宗教敏感待审": true
    },
    {
     "id": "yg_tian_wu",
@@ -13616,7 +13798,8 @@
     "省份建议": [
      "prov_xichui",
      "prov_zhonglu"
-    ]
+    ],
+    "宗教敏感待审": true
    }
   ],
   "其他": [
@@ -14503,7 +14686,8 @@
    "省份建议": [
     "prov_jingzhao",
     "prov_xichui"
-   ]
+   ],
+   "宗教敏感待审": true
   },
   {
    "id": "yg_san_shi",
@@ -14514,7 +14698,8 @@
     "天空"
    ],
    "倾向": "害",
-   "省份建议": []
+   "省份建议": [],
+   "宗教敏感待审": true
   },
   {
    "id": "yg_wu_zang_shen",
@@ -14525,7 +14710,8 @@
     "官署"
    ],
    "倾向": "善",
-   "省份建议": []
+   "省份建议": [],
+   "宗教敏感待审": true
   },
   {
    "id": "yg_xi_luo_guai_shou",
@@ -14552,7 +14738,8 @@
     "prov_hanlu",
     "prov_wushan",
     "prov_zhonglu"
-   ]
+   ],
+   "宗教敏感待审": true
   },
   {
    "id": "yg_ye_xing_zi",
@@ -14652,7 +14839,8 @@
     "阴间"
    ],
    "倾向": "中",
-   "省份建议": []
+   "省份建议": [],
+   "宗教敏感待审": true
   },
   {
    "id": "yg_da_li_gui",
@@ -14663,7 +14851,8 @@
     "阴间"
    ],
    "倾向": "中",
-   "省份建议": []
+   "省份建议": [],
+   "宗教敏感待审": true
   },
   {
    "id": "yg_hei_an_gui",
@@ -14674,7 +14863,8 @@
     "阴间"
    ],
    "倾向": "中",
-   "省份建议": []
+   "省份建议": [],
+   "宗教敏感待审": true
   },
   {
    "id": "yg_huo_shao_shi_gui",
@@ -14685,7 +14875,8 @@
     "阴间"
    ],
    "倾向": "中",
-   "省份建议": []
+   "省份建议": [],
+   "宗教敏感待审": true
   },
   {
    "id": "yg_huo_tang_gui",
@@ -14696,7 +14887,8 @@
     "阴间"
    ],
    "倾向": "中",
-   "省份建议": []
+   "省份建议": [],
+   "宗教敏感待审": true
   },
   {
    "id": "yg_ji_xing_gui",
@@ -14707,7 +14899,8 @@
     "阴间"
    ],
    "倾向": "中",
-   "省份建议": []
+   "省份建议": [],
+   "宗教敏感待审": true
   },
   {
    "id": "yg_lei_gui",
@@ -14724,7 +14917,8 @@
     "prov_xichui",
     "prov_zhonglu",
     "prov_fengji"
-   ]
+   ],
+   "宗教敏感待审": true
   },
   {
    "id": "yg_leng_zheng_gui",
@@ -14742,7 +14936,8 @@
     "prov_xichui",
     "prov_hanlu",
     "prov_zhonglu"
-   ]
+   ],
+   "宗教敏感待审": true
   },
   {
    "id": "yg_mo_luo_shen_gui",
@@ -14753,7 +14948,8 @@
     "阴间"
    ],
    "倾向": "害",
-   "省份建议": []
+   "省份建议": [],
+   "宗教敏感待审": true
   },
   {
    "id": "yg_nian_tai_gui",
@@ -14776,7 +14972,8 @@
     "城镇街市"
    ],
    "倾向": "害",
-   "省份建议": []
+   "省份建议": [],
+   "宗教敏感待审": true
   },
   {
    "id": "yg_niu_tou_a_pang",
@@ -14788,7 +14985,8 @@
     "宅院"
    ],
    "倾向": "害",
-   "省份建议": []
+   "省份建议": [],
+   "宗教敏感待审": true
   },
   {
    "id": "yg_shan_shuang_gui",
@@ -14811,7 +15009,8 @@
     "梦境"
    ],
    "倾向": "善",
-   "省份建议": []
+   "省份建议": [],
+   "宗教敏感待审": true
   },
   {
    "id": "yg_shi_du_gui",
@@ -14822,7 +15021,8 @@
     "阴间"
    ],
    "倾向": "中",
-   "省份建议": []
+   "省份建议": [],
+   "宗教敏感待审": true
   },
   {
    "id": "yg_shi_feng_gui",
@@ -14833,7 +15033,8 @@
     "阴间"
    ],
    "倾向": "中",
-   "省份建议": []
+   "省份建议": [],
+   "宗教敏感待审": true
   },
   {
    "id": "yg_shi_huo_gui",
@@ -14844,7 +15045,8 @@
     "阴间"
    ],
    "倾向": "中",
-   "省份建议": []
+   "省份建议": [],
+   "宗教敏感待审": true
   },
   {
    "id": "yg_shi_qi_gui",
@@ -14855,7 +15057,8 @@
     "阴间"
    ],
    "倾向": "中",
-   "省份建议": []
+   "省份建议": [],
+   "宗教敏感待审": true
   },
   {
    "id": "yg_shi_rou_gui",
@@ -14866,7 +15069,8 @@
     "阴间"
    ],
    "倾向": "中",
-   "省份建议": []
+   "省份建议": [],
+   "宗教敏感待审": true
   },
   {
    "id": "yg_shi_shui_gui",
@@ -14877,7 +15081,8 @@
     "阴间"
    ],
    "倾向": "中",
-   "省份建议": []
+   "省份建议": [],
+   "宗教敏感待审": true
   },
   {
    "id": "yg_shi_tan_gui",
@@ -14888,7 +15093,8 @@
     "阴间"
    ],
    "倾向": "中",
-   "省份建议": []
+   "省份建议": [],
+   "宗教敏感待审": true
   },
   {
    "id": "yg_shi_tu_gui",
@@ -14899,7 +15105,8 @@
     "阴间"
    ],
    "倾向": "中",
-   "省份建议": []
+   "省份建议": [],
+   "宗教敏感待审": true
   },
   {
    "id": "yg_shi_tuo_gui",
@@ -14910,7 +15117,8 @@
     "阴间"
    ],
    "倾向": "中",
-   "省份建议": []
+   "省份建议": [],
+   "宗教敏感待审": true
   },
   {
    "id": "yg_shi_xue_gui",
@@ -14921,7 +15129,8 @@
     "阴间"
    ],
    "倾向": "中",
-   "省份建议": []
+   "省份建议": [],
+   "宗教敏感待审": true
   },
   {
    "id": "yg_si_mu_rou",
@@ -14943,7 +15152,8 @@
     "阴间"
    ],
    "倾向": "中",
-   "省份建议": []
+   "省份建议": [],
+   "宗教敏感待审": true
   },
   {
    "id": "yg_xi_wang_gui",
@@ -14954,7 +15164,8 @@
     "阴间"
    ],
    "倾向": "中",
-   "省份建议": []
+   "省份建议": [],
+   "宗教敏感待审": true
   },
   {
    "id": "yg_yan_luo_wang_zhi_zhang_gui",
@@ -14965,7 +15176,8 @@
     "阴间"
    ],
    "倾向": "中",
-   "省份建议": []
+   "省份建议": [],
+   "宗教敏感待审": true
   },
   {
    "id": "yg_zhen_kou_chou_gui",
@@ -14976,7 +15188,8 @@
     "阴间"
    ],
    "倾向": "中",
-   "省份建议": []
+   "省份建议": [],
+   "宗教敏感待审": true
   },
   {
    "id": "yg_bing_feng",
@@ -15071,7 +15284,8 @@
    "省份建议": [
     "prov_xichui",
     "prov_zhonglu"
-   ]
+   ],
+   "宗教敏感待审": true
   },
   {
    "id": "yg_cheng_huang",
@@ -15096,7 +15310,8 @@
    "省份建议": [
     "prov_xichui",
     "prov_hupo"
-   ]
+   ],
+   "宗教敏感待审": true
   },
   {
    "id": "yg_di_ren",
@@ -15130,7 +15345,8 @@
     "宅院"
    ],
    "倾向": "害",
-   "省份建议": []
+   "省份建议": [],
+   "宗教敏感待审": true
   },
   {
    "id": "yg_fei_yi",
@@ -15146,7 +15362,8 @@
     "prov_xichui",
     "prov_zhonglu",
     "prov_fengji"
-   ]
+   ],
+   "宗教敏感待审": true
   },
   {
    "id": "yg_feng_qi",
@@ -15231,7 +15448,8 @@
    "倾向": "两面",
    "省份建议": [
     "prov_fengji"
-   ]
+   ],
+   "宗教敏感待审": true
   },
   {
    "id": "yg_le_bi_ren",
@@ -15262,7 +15480,8 @@
     "prov_xichui",
     "prov_hupo",
     "prov_xingwan"
-   ]
+   ],
+   "宗教敏感待审": true
   },
   {
    "id": "yg_ma_niang_niang",
@@ -15274,7 +15493,8 @@
     "梦境"
    ],
    "倾向": "两面",
-   "省份建议": []
+   "省份建议": [],
+   "宗教敏感待审": true
   },
   {
    "id": "yg_ma_jian_chou",
@@ -15459,7 +15679,8 @@
     "宅院"
    ],
    "倾向": "两面",
-   "省份建议": []
+   "省份建议": [],
+   "宗教敏感待审": true
   },
   {
    "id": "yg_ri_ji",
@@ -15527,7 +15748,8 @@
     "梦境"
    ],
    "倾向": "害",
-   "省份建议": []
+   "省份建议": [],
+   "宗教敏感待审": true
   },
   {
    "id": "yg_shen_mu_ren",
@@ -15553,7 +15775,8 @@
    "省份建议": [
     "prov_fengji",
     "prov_jingzhao"
-   ]
+   ],
+   "宗教敏感待审": true
   },
   {
    "id": "yg_shi_rou",
@@ -15581,7 +15804,8 @@
    "省份建议": [
     "prov_jingzhao",
     "prov_xichui"
-   ]
+   ],
+   "宗教敏感待审": true
   },
   {
    "id": "yg_tai_sui",
@@ -15625,7 +15849,8 @@
     "prov_hanlu",
     "prov_wushan",
     "prov_zhonglu"
-   ]
+   ],
+   "宗教敏感待审": true
   }
  ]
 }
