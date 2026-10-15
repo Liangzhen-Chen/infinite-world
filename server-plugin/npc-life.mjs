@@ -21,7 +21,8 @@ import {famineAt} from './hazard-calendar.mjs';
 import {personSimulation,personConstraint,personHousehold,personConstraints,personName,personAge,personRelationships} from './entity-view.mjs';
 import {actorId,actorPath,householdDefinition} from './npc-state.mjs';
 import {finishBusinessContract,refundContractEscrow,releaseBusinessLease} from './contracts.mjs';
-import {settleFamilyEstate,advanceGuardianships} from './family-inheritance.mjs';
+import {settleFamilyEstate,advanceGuardianships,reassignGuardianships} from './family-inheritance.mjs';
+import {continueEmployment,continuedOnDeath} from './estate.mjs';
 import {marriagePolitics,advanceFamilyAlliances} from './family-diplomacy.mjs';
 import {familyEdges} from './family-state.mjs';
 
@@ -389,7 +390,7 @@ export function recordEntityDeath(d,engine,id,minute,cause,illness=null){
   d.set(['state','obligations',o.id],{...o,status:'取消',reason:`${name}已${cause}，约定终止`,resolvedAt:minute,endedByDeath:deathId});obligations.push(o.id);
  }
  const contracts=[];
- for(const [cid,row] of Object.entries(state.records??{}))if(row.category==='contract'&&row.parties?.includes(id)&&['有效','待履行'].includes(row.status)){
+ for(const [cid,row] of Object.entries(state.records??{}))if(row.category==='contract'&&row.parties?.includes(id)&&['有效','待履行'].includes(row.status)&&!(npc&&continuedOnDeath(row,id))){
   if(row.version===1&&row.business){
    if(row.kind==='lease')releaseBusinessLease(d,engine,row,{status:'已终止',source:deathId});
    else finishBusinessContract(d,refundContractEscrow(d,row),{status:'已取消',source:deathId});
@@ -399,6 +400,7 @@ export function recordEntityDeath(d,engine,id,minute,cause,illness=null){
   contracts.push(cid);
  }
  const current=d.get(...path),estate=npc?settleFamilyEstate(d,engine,id,minute,deathId,actor.location):{heir:null,coins:current.coins??0,items:{},debts:[]},heir=estate.heir;
+ const employment=npc?continueEmployment(d,engine,id,heir??estate.sealed,deathId,minute):[],guardianships=reassignGuardianships(d,engine,id,minute,deathId);
  const pets=[];
  for(const [pet,body] of Object.entries(state.creatures??{}))if(body.owner===id||pet===id){
   const owner=pet===id?null:heir;d.set(['state','creatures',pet,'owner'],owner);pets.push(pet);
@@ -411,7 +413,7 @@ export function recordEntityDeath(d,engine,id,minute,cause,illness=null){
  const content=`${name}在${engine.calendar(minute).text.slice(0,-6)}${cause}。`;
  const witnesses=witness(d,engine,deathId,[id],house?[house.id]:[],{minute,kind:'health',content,salience:4,...(!npc?{at:[actor.location].filter(Boolean)}:{})});
  const result={id:deathId,person:id,minute,cause,illness:illness?.id??null,household:house?.id??null,settlement:house?.settlement??null,population,estate,obligations,witnesses,
-  ...(contracts.length?{contracts}:{}),...(pets.length?{pets}:{})};
+  ...(contracts.length?{contracts}:{}),...(employment.length?{employment}:{}),...(guardianships.length?{guardianships}:{}),...(pets.length?{pets}:{})};
  d.set(['state','family','deaths',deathId],result);
  entityTransition(d,engine,{id:deathId,verb:'die',actor:id,minute,location:actor.location??house?.settlement,witnesses,cause,summary:content});
  businessTransitions(d,engine,shops,deathId,minute);return result;

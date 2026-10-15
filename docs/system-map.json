@@ -2,7 +2,7 @@
  "title": "无限原野系统地图",
  "card": "K9",
  "generatedFrom": {
-  "commit": "refs/heads/p4",
+  "commit": "refs/heads/pr01",
   "method": "运行时导出（注册表、规则表、工具定义、效果表、立场传导表）+ 静态正则扫描（import 图、函数体标识符、state 分区与 records 前缀、rules/world 读取）。静态扫描是近似：经 engine.byId、helper 间接或动态拼接路径的访问不计入。"
  },
  "scanMethods": {
@@ -18,14 +18,14 @@
  "counts": {
   "layers": 6,
   "systems": 40,
-  "modules": 215,
-  "advance": 57,
+  "modules": 216,
+  "advance": 58,
   "tools": 25,
   "verbs": 28,
   "subscribers": 9,
   "interactionRules": 25,
   "effectKinds": 22,
-  "links": 464
+  "links": 467
  },
  "layers": [
   {
@@ -780,7 +780,7 @@
     "server-plugin/standing.mjs",
     "server-plugin/entity-view.mjs"
    ],
-   "lines": 610,
+   "lines": 620,
    "stateWrites": [
     "records"
    ],
@@ -917,7 +917,7 @@
     "server-plugin/advance-registry.mjs",
     "server-plugin/advance-layers.mjs"
    ],
-   "lines": 264,
+   "lines": 266,
    "stateWrites": [
     "effects",
     "obligations",
@@ -990,7 +990,7 @@
     "server-plugin/population-service.mjs",
     "server-plugin/settlement-profile.mjs"
    ],
-   "lines": 3271,
+   "lines": 3273,
    "stateWrites": [
     "created",
     "creatures",
@@ -1238,7 +1238,7 @@
     "server-plugin/combat.mjs",
     "server-plugin/duels.mjs"
    ],
-   "lines": 123,
+   "lines": 149,
    "stateWrites": [],
    "stateReads": [
     "location",
@@ -1673,7 +1673,7 @@
     "server-plugin/extraction.mjs",
     "server-plugin/smuggling.mjs"
    ],
-   "lines": 2840,
+   "lines": 2844,
    "stateWrites": [
     "crafted",
     "itemInstances",
@@ -1828,6 +1828,7 @@
     "server-plugin/family-state.mjs",
     "server-plugin/family-politics.mjs",
     "server-plugin/family-inheritance.mjs",
+    "server-plugin/estate.mjs",
     "server-plugin/family-law.mjs",
     "server-plugin/family-diplomacy.mjs",
     "server-plugin/monster-society.mjs",
@@ -1857,7 +1858,7 @@
     "server-plugin/tribal-awakening.mjs",
     "server-plugin/elections.mjs"
    ],
-   "lines": 4742,
+   "lines": 4950,
    "stateWrites": [
     "buildings",
     "created",
@@ -1896,6 +1897,7 @@
     "civic_citizen",
     "civic_resident",
     "diplomacy",
+    "estate",
     "facility_region",
     "faction-assets",
     "family",
@@ -1947,6 +1949,7 @@
     "public_projects",
     "office_salaries",
     "governance_offices",
+    "by_elections",
     "housing_steward",
     "upper_appointments",
     "titles",
@@ -2151,7 +2154,7 @@
     "server-plugin/npc-crime.mjs",
     "server-plugin/bounty.mjs"
    ],
-   "lines": 1182,
+   "lines": 1184,
    "stateWrites": [
     "itemInstances",
     "location",
@@ -2694,6 +2697,7 @@
    "to": "sim_society",
    "kind": "advance",
    "labels": [
+    "by_elections",
     "facilities",
     "governance_offices",
     "housing_steward",
@@ -2869,6 +2873,7 @@
    "to": "sim_society",
    "kind": "call",
    "labels": [
+    "elections.mjs",
     "facilities.mjs",
     "governance.mjs",
     "high-nobility.mjs",
@@ -3859,6 +3864,14 @@
   },
   {
    "from": "sim_combat",
+   "to": "base_events",
+   "kind": "call",
+   "labels": [
+    "entity-transitions.mjs"
+   ]
+  },
+  {
+   "from": "sim_combat",
    "to": "base_standing",
    "kind": "call",
    "labels": [
@@ -3867,10 +3880,20 @@
   },
   {
    "from": "sim_combat",
+   "to": "sim_clock",
+   "kind": "call",
+   "labels": [
+    "world-clock.mjs"
+   ]
+  },
+  {
+   "from": "sim_combat",
    "to": "sim_npc",
    "kind": "call",
    "labels": [
-    "npc-intelligence.mjs"
+    "npc-intelligence.mjs",
+    "npc-life.mjs",
+    "npc-state.mjs"
    ]
   },
   {
@@ -4647,6 +4670,7 @@
    "to": "sim_society",
    "kind": "call",
    "labels": [
+    "estate.mjs",
     "facility-state.mjs",
     "family-diplomacy.mjs",
     "family-inheritance.mjs",
@@ -4763,10 +4787,20 @@
   },
   {
    "from": "sim_society",
+   "to": "sim_combat",
+   "kind": "call",
+   "labels": [
+    "duels.mjs"
+   ]
+  },
+  {
+   "from": "sim_society",
    "to": "sim_economy",
    "kind": "call",
    "labels": [
+    "credit.mjs",
     "employment-state.mjs",
+    "finance-bank.mjs",
     "finance-tax.mjs",
     "items.mjs",
     "labor-market.mjs"
@@ -7011,6 +7045,17 @@
    "partitions": []
   },
   {
+   "id": "by_elections",
+   "order": 1131,
+   "stepped": false,
+   "nextMinute": false,
+   "modules": [
+    "server-plugin/elections.mjs"
+   ],
+   "inline": false,
+   "partitions": []
+  },
+  {
    "id": "housing_steward",
    "order": 1135,
    "stepped": false,
@@ -7605,6 +7650,7 @@
   ],
   "producers": {
    "appoint": [
+    "server-plugin/elections.mjs",
     "server-plugin/family-inheritance.mjs",
     "server-plugin/family-politics.mjs",
     "server-plugin/governance.mjs",
@@ -7645,6 +7691,7 @@
     "server-plugin/public-projects.mjs"
    ],
    "duel": [
+    "server-plugin/duels.mjs",
     "server-plugin/world-events.mjs"
    ],
    "gift": [
@@ -7675,6 +7722,7 @@
     "server-plugin/npc-life.mjs"
    ],
    "organize": [
+    "server-plugin/elections.mjs",
     "server-plugin/faith.mjs",
     "server-plugin/military.mjs",
     "server-plugin/organizations.mjs",
@@ -7707,6 +7755,7 @@
     "server-plugin/world-events.mjs"
    ],
    "transfer": [
+    "server-plugin/estate.mjs",
     "server-plugin/family-inheritance.mjs",
     "server-plugin/family-law.mjs",
     "server-plugin/family-politics.mjs"
@@ -10537,6 +10586,7 @@
     "server-plugin/notables.mjs",
     "server-plugin/npc-rumors.mjs",
     "server-plugin/organization-state.mjs",
+    "server-plugin/organizations.mjs",
     "server-plugin/population.mjs",
     "server-plugin/quest-sources.mjs",
     "server-plugin/regions.mjs",
@@ -10609,6 +10659,7 @@
     "server-plugin/engine.mjs",
     "server-plugin/entity-view.mjs",
     "server-plugin/environment.mjs",
+    "server-plugin/estate.mjs",
     "server-plugin/extraction.mjs",
     "server-plugin/facility-state.mjs",
     "server-plugin/faction-clock.mjs",
@@ -11039,6 +11090,7 @@
   ],
   "law": [
    "server-plugin/bounty.mjs",
+   "server-plugin/estate.mjs",
    "server-plugin/faith.mjs",
    "server-plugin/family-diplomacy.mjs",
    "server-plugin/family-inheritance.mjs",
@@ -12754,6 +12806,7 @@
      "modules": [
       "server-plugin/bounty.mjs",
       "server-plugin/entity-view.mjs",
+      "server-plugin/estate.mjs",
       "server-plugin/faith.mjs",
       "server-plugin/family-diplomacy.mjs",
       "server-plugin/family-inheritance.mjs",
@@ -12969,6 +13022,7 @@
       "server-plugin/engine.mjs",
       "server-plugin/entity-transitions.mjs",
       "server-plugin/entity-view.mjs",
+      "server-plugin/estate.mjs",
       "server-plugin/facilities.mjs",
       "server-plugin/faction-clock.mjs",
       "server-plugin/faith-state.mjs",
@@ -14647,6 +14701,7 @@
     "server-plugin/credit.mjs",
     "server-plugin/education.mjs",
     "server-plugin/effects.mjs",
+    "server-plugin/elections.mjs",
     "server-plugin/entity-view.mjs",
     "server-plugin/facilities.mjs",
     "server-plugin/faction-clock.mjs",
@@ -14720,7 +14775,7 @@
     "npcs"
    ],
    "worldDirs": [],
-   "lines": 202
+   "lines": 204
   },
   "server-plugin/agriculture-migration.mjs": {
    "system": "kernel_storage",
@@ -15365,8 +15420,12 @@
   "server-plugin/duels.mjs": {
    "system": "sim_combat",
    "imports": [
+    "server-plugin/entity-transitions.mjs",
     "server-plugin/npc-intelligence.mjs",
-    "server-plugin/standing.mjs"
+    "server-plugin/npc-life.mjs",
+    "server-plugin/npc-state.mjs",
+    "server-plugin/standing.mjs",
+    "server-plugin/world-clock.mjs"
    ],
    "stateWrites": [],
    "stateReads": [
@@ -15380,7 +15439,7 @@
    "rules": [],
    "world": [],
    "worldDirs": [],
-   "lines": 60
+   "lines": 86
   },
   "server-plugin/education-cohorts.mjs": {
    "system": "sim_character",
@@ -15529,6 +15588,7 @@
   "server-plugin/elections.mjs": {
    "system": "sim_society",
    "imports": [
+    "server-plugin/entity-transitions.mjs",
     "server-plugin/entity-view.mjs",
     "server-plugin/governance.mjs",
     "server-plugin/items.mjs",
@@ -15546,6 +15606,7 @@
    "stateReads": [
     "location",
     "minute",
+    "npcs",
     "records"
    ],
    "recordWrites": [],
@@ -15561,7 +15622,7 @@
     "settlementProfiles"
    ],
    "worldDirs": [],
-   "lines": 108
+   "lines": 159
   },
   "server-plugin/employment-state.mjs": {
    "system": "sim_economy",
@@ -15806,7 +15867,7 @@
     "settlementProfiles"
    ],
    "worldDirs": [],
-   "lines": 460
+   "lines": 470
   },
   "server-plugin/environment.mjs": {
    "system": "sim_environment",
@@ -15850,6 +15911,32 @@
     "design"
    ],
    "lines": 247
+  },
+  "server-plugin/estate.mjs": {
+   "system": "sim_society",
+   "imports": [
+    "server-plugin/credit.mjs",
+    "server-plugin/employment-state.mjs",
+    "server-plugin/entity-transitions.mjs",
+    "server-plugin/entity-view.mjs",
+    "server-plugin/finance-bank.mjs",
+    "server-plugin/law.mjs",
+    "server-plugin/npc-state.mjs"
+   ],
+   "stateWrites": [],
+   "stateReads": [
+    "records"
+   ],
+   "recordWrites": [],
+   "recordReads": [
+    "estate"
+   ],
+   "rules": [
+    "law"
+   ],
+   "world": [],
+   "worldDirs": [],
+   "lines": 84
   },
   "server-plugin/extraction.mjs": {
    "system": "sim_economy",
@@ -16081,6 +16168,7 @@
    "system": "sim_society",
    "imports": [
     "server-plugin/entity-transitions.mjs",
+    "server-plugin/estate.mjs",
     "server-plugin/family-state.mjs",
     "server-plugin/items.mjs",
     "server-plugin/law-codes.mjs",
@@ -16102,7 +16190,7 @@
    ],
    "world": [],
    "worldDirs": [],
-   "lines": 105
+   "lines": 136
   },
   "server-plugin/family-law.mjs": {
    "system": "sim_society",
@@ -16322,7 +16410,7 @@
    ],
    "world": [],
    "worldDirs": [],
-   "lines": 246
+   "lines": 248
   },
   "server-plugin/finance-operations.mjs": {
    "system": "sim_economy",
@@ -16419,7 +16507,7 @@
     "settlementProfiles"
    ],
    "worldDirs": [],
-   "lines": 418
+   "lines": 419
   },
   "server-plugin/group-account.mjs": {
    "system": "sim_society",
@@ -16646,7 +16734,7 @@
     "recipes"
    ],
    "worldDirs": [],
-   "lines": 326
+   "lines": 328
   },
   "server-plugin/law-codes.mjs": {
    "system": "sim_law",
@@ -16719,7 +16807,7 @@
    ],
    "world": [],
    "worldDirs": [],
-   "lines": 574
+   "lines": 576
   },
   "server-plugin/learning.mjs": {
    "system": "sim_character",
@@ -17936,6 +18024,7 @@
     "server-plugin/contracts.mjs",
     "server-plugin/entity-transitions.mjs",
     "server-plugin/entity-view.mjs",
+    "server-plugin/estate.mjs",
     "server-plugin/family-diplomacy.mjs",
     "server-plugin/family-inheritance.mjs",
     "server-plugin/family-state.mjs",
@@ -17976,7 +18065,7 @@
     "rules"
    ],
    "worldDirs": [],
-   "lines": 806
+   "lines": 808
   },
   "server-plugin/npc-memory.mjs": {
    "system": "sim_npc",
@@ -18225,11 +18314,12 @@
     "residents"
    ],
    "worldDirs": [],
-   "lines": 78
+   "lines": 80
   },
   "server-plugin/organizations.mjs": {
    "system": "sim_society",
    "imports": [
+    "server-plugin/duels.mjs",
     "server-plugin/entity-transitions.mjs",
     "server-plugin/entity-view.mjs",
     "server-plugin/family-state.mjs",
@@ -18257,10 +18347,11 @@
    ],
    "rules": [],
    "world": [
+    "factions",
     "households"
    ],
    "worldDirs": [],
-   "lines": 329
+   "lines": 366
   },
   "server-plugin/pets.mjs": {
    "system": "sim_companion",
@@ -18444,7 +18535,7 @@
    ],
    "world": [],
    "worldDirs": [],
-   "lines": 27
+   "lines": 29
   },
   "server-plugin/promotion.mjs": {
    "system": "sim_society",

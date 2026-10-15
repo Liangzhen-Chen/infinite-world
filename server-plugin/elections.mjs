@@ -5,7 +5,8 @@ import {recordLie,exposeLieCall} from './lies.mjs';
 import {registerIncident} from './law.mjs';
 import {transferItems} from './items.mjs';
 import {advanceWithNpcParticipants} from './npc-schedule.mjs';
-import {personView} from './entity-view.mjs';
+import {personView,settlementGovernment} from './entity-view.mjs';
+import {entityTransition} from './entity-transitions.mjs';
 import {actorId,actorPath} from './npc-state.mjs';
 import {resolveCreature} from './wildlife.mjs';
 
@@ -36,7 +37,13 @@ export function electionAction(d,args,id){
             if(!g||g.meetingPlace!==d.get('state','location'))throw Error('须在村议事屋登记竞选');incumbent=g.head;
         }
         if(incumbent==='player')throw Error('已在任，无需再次争取本任期');
-        if(Object.values(d.get('state','records')??{}).some(r=>r.category==='election'&&r.status==='竞选中'&&r.org===(org?.id??null)&&r.settlement===settlement))throw Error('已有本职位竞选');
+        const running=Object.values(d.get('state','records')??{}).find(r=>r.category==='election'&&r.status==='竞选中'&&r.org===(org?.id??null)&&r.settlement===settlement);
+        // A by-election opened by residents accepts the player as one more candidate.
+        if(running?.byElection&&!running.candidates.some(c=>c.candidate==='player')){
+            const next={...running,candidates:[...running.candidates,{candidate:'player',nominatedAt:now,by:'player',sourceEvent:id}]};d.set(path(running.id),next);
+            return {election:running.id,status:next.status,due:next.due,electorate:next.electorate,candidates:next.candidates.map(c=>c.candidate)};
+        }
+        if(running)throw Error('已有本职位竞选');
         const key=`election:${id}`,row={category:'election',id:key,org:org?.id??null,settlement,office:office?.id??null,incumbent,candidate:'player',
             status:'竞选中',started:now,due:now+this.rules.elections.campaignDays*1440,campaigns:[],frauds:[],sourceEvent:id};
         row.electorate=voters(this,d.get('state'),row);if(row.electorate.filter(v=>v!=='player').length===0)throw Error('没有实际选民');
@@ -88,6 +95,7 @@ export function electionAction(d,args,id){
         return {election:row.id,targets,gain,success:check.success,spent:{minutes:30,item:gift,coins},worldEvent:{verb:'gift',target:targets[0],value:Math.max(0,gain),witnesses:targets,tags:['election',action]}};
     }
     if(args.operation!=='election_finish')throw Error('未知竞选操作');
+    if(row.byElection)throw Error('补选到期由住户自行开票，不由参选人宣布');
     if(now<row.due)throw Error('尚未到投票日');
     let won=false,proposal=null,appointment=null,votes=[];
     if(!row.disqualified&&row.org){
@@ -104,4 +112,47 @@ export function electionAction(d,args,id){
     }
     d.set(path(row.id),{...row,status:won?'当选':'落选',votes,proposal,appointment,finished:now});
     return {election:row.id,won,proposal,appointment,status:won?'当选':'落选',votes};
+}
+
+// PR-01: a vacant elected headship opens a by-election by the residents' own
+// nominations; the player may join but is not needed. At the due day each adult
+// resident votes by regard and the winner takes office under the same review.
+const DAY=1440,able=n=>n&&!['死亡','濒死','昏迷'].includes(n.status);
+function nominees(engine,state,settlement,electorate){
+    const g=engine.world.settlementProfiles?.find(p=>p.id===settlement)?.details?.governance,gov=settlementGovernment(engine,state,settlement);
+    const offices=Object.values(state.records??{}).filter(r=>r.category==='governance_office'&&r.settlement===settlement&&r.status==='在任'&&r.holder!=='player').map(r=>r.holder);
+    return [...new Set([gov.acting?.value,...offices,...g?.appointment?.officers??[],...g?.coordinators??[],...g?.enforcers??[]].filter(Boolean))]
+        .filter(id=>electorate.includes(id)&&able(state.npcs?.[id])).slice(0,3);
+}
+function finishByElection(d,engine,row,at){
+    const state=d.get('state'),candidates=row.candidates.map(c=>c.candidate).filter(c=>c==='player'||able(state.npcs?.[c]));
+    const support=c=>row.electorate.reduce((n,v)=>n+(v===c?0:standing(engine,state,v,c)),0);
+    const votes=row.electorate.filter(v=>state.npcs?.[v]?.status!=='死亡').map(v=>({voter:v,candidate:candidates.includes(v)?v:[...candidates].sort((a,b)=>standing(engine,state,v,b)-standing(engine,state,v,a)||a.localeCompare(b))[0]})).filter(v=>v.candidate);
+    const count=c=>votes.filter(v=>v.candidate===c).length,winner=[...candidates].sort((a,b)=>count(b)-count(a)||support(b)-support(a)||a.localeCompare(b))[0]??null;
+    if(!winner){d.set(path(row.id),{...row,status:'流选',votes,finished:at});return null;}
+    const office=engine.rules.governance.authority.offices[row.office],review=engine.rules.governance.authority.superiors?.auth_bs_office_charter?.reviewEveryDays??90;
+    const key=`governance_office:${row.settlement}:${row.office}:${winner}`;
+    d.set(path(key),{category:'governance_office',id:key,holder:winner,settlement:row.settlement,office:row.office,status:'在任',since:at,until:at+office.termDays*DAY,nextReview:at+review*DAY,
+        appointedBy:office.appointingInstitution,election:row.id,source:engine.rules.governance.elections[row.office].source,sourceEvent:row.id});
+    d.set(path(row.id),{...row,status:'已选出',winner,votes,appointment:key,finished:at});
+    entityTransition(d,engine,{id:`${row.id}:appoint`,verb:'appoint',actor:office.appointingInstitution,target:winner,minute:at,location:row.settlement,office:row.office,tags:['election','succession'],summary:'补选结束，得票最多者就任'});
+    return key;
+}
+export function advanceByElections(d,engine,{before,after}){
+    const config=engine.rules.governance?.elections??{},days=engine.rules.elections?.campaignDays??3;
+    for(let day=Math.floor(before/DAY)+1;day*DAY<=after;day++){
+        const at=day*DAY;
+        for(const [office,rule]of Object.entries(config))for(const settlement of rule.settlements??[]){
+            const state=d.get('state'),records=Object.values(state.records??{});
+            const open=records.find(r=>r.category==='election'&&r.status==='竞选中'&&!r.org&&r.settlement===settlement);
+            if(open){if(open.byElection&&open.due<=at)finishByElection(d,engine,open,at);continue;}
+            if(settlementGovernment(engine,state,settlement).head.value||records.some(r=>r.category==='governance_application'&&r.status==='待审定'&&r.settlement===settlement&&r.office===office))continue;
+            const electorate=eligible(engine,settlement,state),candidates=nominees(engine,state,settlement,electorate);
+            if(!candidates.length)continue;
+            const key=`election:by:${settlement}:${day}`;
+            d.set(path(key),{category:'election',id:key,org:null,settlement,office,incumbent:null,byElection:true,status:'竞选中',started:at,due:at+days*DAY,electorate,
+                candidates:candidates.map(c=>({candidate:c,nominatedAt:at,by:c})),acting:settlementGovernment(engine,state,settlement).acting?.value??null,campaigns:[],frauds:[],sourceEvent:key});
+            entityTransition(d,engine,{id:`${key}:open`,verb:'organize',actor:candidates[0],target:null,subject:settlement,minute:at,location:settlement,tags:['election','succession'],summary:'头人位置空缺，村里有人自荐，补选开始'});
+        }
+    }
 }

@@ -17,12 +17,14 @@ const base=(e,s,id)=>s.created?.[id]??e.byId.get(id);
 const able=(s,id)=>s.npcs?.[id]&&!['死亡','濒死','昏迷','患病'].includes(s.npcs[id].status);
 const layer=(e,s,location,plan=e.advanceLayerContext??advanceLayerPlan(e,s))=>plan.layers.get(plan.countyOf(location))??'intelligent';
 const wage=e=>Math.max(1,2*(e.rules.economy.wageCopperPerHalfDay?.[0]??10));
-const outstanding=(s,id)=>rows(s).filter(r=>r.category==='debt'&&r.kind==='wage'&&r.contract===id&&r.amount>r.paid);
+const outstanding=(s,id)=>rows(s).filter(r=>r.category==='debt'&&r.kind==='wage'&&r.contract===id&&r.amount>r.paid&&r.status!=='坏账');
 export const laborMarketFresh=e=>!e.replaying||e.replayResult?.laborMarketVersion===1;
 const occupied=(s,id,start,end)=>rows(s).some(r=>r.category==='contract'&&r.kind==='workshop'&&r.worker===id&&employmentActive(r)&&r.starts<end&&r.deadline>start);
 
 function ownerCanHire(e,s,owner){
     if(owner==='player')return false;
+    // A sealed estate only keeps paying contracts it inherited; it never hires.
+    if(s.records?.[owner]?.category==='estate')return s.records[owner].status==='官府封存';
     if(s.npcs?.[owner])return able(s,owner)&&!personConstraint(e,s,owner);
     const representative=groupRepresentative(e,s,owner);
     return Boolean((groupAccountView(e,s,owner)||s.records?.[`organization:${owner}`]?.category==='organization')&&representative&&able(s,representative)&&!personConstraint(e,s,representative));
@@ -34,7 +36,7 @@ function recipeFor(e,s,owner,item){
 // No vacancy, occupation or employer is copied into a person's stored profile.
 export function laborOffers(e,s,minute=s.minute){
     const out=[],add=r=>{
-        if(r.owner==='player'||!ownerCanHire(e,s,r.owner)||!r.location||r.quantity<=0)return;
+        if(r.owner==='player'||s.records?.[r.owner]?.category==='estate'||!ownerCanHire(e,s,r.owner)||!r.location||r.quantity<=0)return;
         const id=`labor:${r.source}:${r.recipe??r.task}`;
         if(rows(s).some(c=>employmentActive(c)&&c.offer===id&&c.deadline>minute))return;
         const d={...r,id,wage:r.wage??wage(e),workMinutes:480,createdAt:minute,deadline:Math.min(r.deadline??minute+7*DAY,minute+30*DAY)};

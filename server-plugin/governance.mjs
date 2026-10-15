@@ -2,7 +2,7 @@ import {reviewUpperOffice} from './high-nobility.mjs';
 import {domainAuthority} from './noble-state.mjs';
 import {entityTransition} from './entity-transitions.mjs';
 import {qualificationForApplication} from './local-exams.mjs';
-import {personOffices,personRegistrar,settlementHead,personSimulation} from './entity-view.mjs';
+import {personOffices,personRegistrar,settlementHead,settlementGovernment,personSimulation,personName} from './entity-view.mjs';
 import {digest} from './storage.mjs';
 import {npcPresenceAt} from './npc-cognition.mjs';
 import {npcObligationAt} from './npc-obligations.mjs';
@@ -66,8 +66,8 @@ function person(d,engine,name){
 function chair(d,engine,settlement,name){
     const {g}=profile(engine,settlement);
     if(d.get('state','location')!==g.meetingPlace)throw Error('须在本村登记议事屋办理');
-    const current=settlementHead(engine,d.get('state'),settlement).value;
-    if(!name||!current||(name==='player'?'player':person(d,engine,name))!==current)throw Error('须指定有来源的本村在场头人');
+    const gov=settlementGovernment(engine,d.get('state'),settlement),current=gov.head.value??gov.acting?.value;
+    if(!name||!current||(name==='player'?'player':person(d,engine,name))!==current)throw Error('须指定有来源的本村在场头人或代理人');
     source(engine,settlement,d.get('state','minute'),d.get('state'));return current;
 }
 function record(d,id,category,settlement){
@@ -213,7 +213,8 @@ function action(d,args,eventId){
     }
     case 'governance_revoke':{
         const housing=d.get(...path(args.authorization));
-        if(housing?.category==='housing_steward'&&housing.settlement===settlement)return revokeHousingSteward(d,housing,this);
+        // The current head (the player, or a successor in the hall) replaces stewards through this same entry.
+        if(housing?.category==='housing_steward'&&housing.settlement===settlement)return revokeHousingSteward(d,housing,this,playerOffices(d.get('state'),{settlement,power:'steward'},this).length?'player':chair(d,this,settlement,args.authority));
         const authority=chair(d,this,settlement,args.authority),a=record(d,args.authorization,'authorization',settlement);
         if(a.grantor!==authority||a.action!=='account_report')throw Error('只有原签发者可撤销该范围的授权');
         if(a.revoked)return {authorization:args.authorization,permission:a,duplicate:true};
@@ -315,10 +316,10 @@ function registrar(d,engine){
     if(!staff.length)throw Error('前厅没有在岗的递件或抄录人，不能登记');
     return {charter,registrar:staff[0]};
 }
-const crimeJudged=state=>Object.values(state.records??{}).some(r=>r.category==='legal_case'&&r.offender==='player'&&r.judgment);
-function residentViews(engine,state,settlement){
+const crimeJudged=(state,who='player')=>Object.values(state.records??{}).some(r=>r.category==='legal_case'&&r.offender===who&&r.judgment);
+function residentViews(engine,state,settlement,who='player'){
     let support=0,oppose=0;
-    for(const id of eligible(engine,settlement,state)){const v=standing(engine,state,id,'player');if(v>0)support++;else if(v<0)oppose++;}
+    for(const id of eligible(engine,settlement,state)){if(id===who)continue;const v=standing(engine,state,id,who);if(v>0)support++;else if(v<0)oppose++;}
     return {support,oppose};
 }
 // The same test is used at the decision and at every review.
@@ -366,12 +367,12 @@ function review(d,engine,row,at){
     const charter=authorityOf(engine).superiors.auth_bs_office_charter,state=d.get('state');
     let reason=null;
     if(at>=row.until)reason='任期届满';
-    else if(crimeJudged(state))reason='犯罪裁定';
-    else{const v=residentViews(engine,state,row.settlement);if(v.oppose>v.support)reason=`成年住户反对${v.oppose}多于支持${v.support}`;}
+    else if(crimeJudged(state,row.holder))reason='犯罪裁定';
+    else{const v=residentViews(engine,state,row.settlement,row.holder);if(v.oppose>v.support)reason=`成年住户反对${v.oppose}多于支持${v.support}`;}
     if(reason){
         const name=personOffices(engine,{...state,minute:Math.min(at,row.until-1)},row.holder,{settlement:row.settlement}).find(o=>o.value.id===row.id)?.value.name??row.name;
         d.set(path(row.id),{...row,status:'已免职',removedAt:at,reason});
-        entityTransition(d,engine,{id:`${row.id}:dismiss:${at}`,verb:'dismiss',actor:row.appointedBy,target:row.holder,minute:at,location:row.settlement,office:row.office,reason,summary:`${state.player.name}卸任${name}：${reason}`});
+        entityTransition(d,engine,{id:`${row.id}:dismiss:${at}`,verb:'dismiss',actor:row.appointedBy,target:row.holder,minute:at,location:row.settlement,office:row.office,reason,summary:`${personName(engine,state,row.holder).value??row.holder}卸任${name}：${reason}`});
     }
     else d.set(path(row.id),{...row,nextReview:row.nextReview+charter.reviewEveryDays*DAY,reviews:[...(row.reviews??[]),at]});
 }

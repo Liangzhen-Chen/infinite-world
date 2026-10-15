@@ -18,7 +18,9 @@ export function rankedOffice(engine,state,settlement,office){
     const e=effectsOf(engine,state,settlement)?.offices?.[office.id];
     if(!e){
         const level=adminLevel(engine,state,settlement)?.level,key={村:'villageHead',镇:'townHead',城:'cityHeadFirstBaron',郡:'countyHead',省:'provinceHead'}[level];
-        return office.id==='office_village_head'&&key?{...office,name:level==='村'?office.name:`${level}长`,monthlyQuotaD:engine.rules.quests.monthlyQuotaD[key]}:office;
+        if(office.id==='office_village_head'&&key)return {...office,name:level==='村'?office.name:`${level}长`,monthlyQuotaD:engine.rules.quests.monthlyQuotaD[key]};
+        // Village-level titles follow the settlement's current level (村管事 → 镇管事).
+        return level&&level!=='村'&&office.name?.startsWith('村')?{...office,name:`${level}${office.name.slice(1)}`}:office;
     }
     return {...office,name:e.name??office.name,monthlyQuotaD:e.quotaKey?engine.rules.quests.monthlyQuotaD[e.quotaKey]:e.monthlyQuotaD??office.monthlyQuotaD,
         monthlyBudgetCopper:e.monthlyBudgetCopper??office.monthlyBudgetCopper,...(e.taxBps?{taxBps:{...e.taxBps}}:{})};

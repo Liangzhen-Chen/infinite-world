@@ -165,11 +165,11 @@ export function grantHousingSteward(d,engine,args,eventId,settlement,hall){
     entityTransition(d,engine,{id:`${id}:appoint`,verb:'appoint',actor:'player',target:steward,location:hall,office:'office_village_steward',summary:`${engine.byId.get(steward)?.name??steward}受任宅基管事`});
     return {authorization:id,steward:row};
 }
-export function revokeHousingSteward(d,a,engine){
+export function revokeHousingSteward(d,a,engine,by='player'){
     if(a.revoked)return {authorization:a.id,steward:a,duplicate:true};
-    if(!playerOffices(d.get('state'),{settlement:a.settlement,power:'steward'},engine).length)throw Error('只有在任村长可撤回管事');
-    const row={...a,revoked:true,revokedAt:d.get('state','minute')};d.set(rec(a.id),row);
-    entityTransition(d,engine,{id:`${a.id}:dismiss`,verb:'dismiss',actor:'player',target:a.steward,location:a.hall,office:'office_village_steward',summary:`${engine.byId.get(a.steward)?.name??a.steward}不再担任宅基管事`});
+    if(by==='player'&&!playerOffices(d.get('state'),{settlement:a.settlement,power:'steward'},engine).length)throw Error('只有在任村长可撤回管事');
+    const row={...a,revoked:true,revokedAt:d.get('state','minute'),revokedBy:by};d.set(rec(a.id),row);
+    entityTransition(d,engine,{id:`${a.id}:dismiss`,verb:'dismiss',actor:by,target:a.steward,location:a.hall,office:'office_village_steward',summary:`${engine.byId.get(a.steward)?.name??a.steward}不再担任宅基管事`});
     return {authorization:a.id,steward:row};
 }
 export function fileHousingApplication(d,engine,args,eventId,settlement,a){
@@ -199,7 +199,7 @@ function handle(d,engine,r,at){
     // A steward who cannot work today leaves the file for tomorrow.
     if(!s||['死亡','濒死','昏迷','患病'].includes(s.status)){if(s?.status==='死亡')returned('管事已故，申请退回');else d.set(rec(r.id),{...r,due:r.due+DAY,delays:(r.delays??0)+1});return;}
     if(!a||a.revoked||a.expires<=at)return returned('管事授权已撤回或到期');
-    if(!playerOffices(state,{settlement:r.settlement,power:'housing'},engine).length)return returned('授权的村长已不在任，管事无权批准');
+    // The steward keeps the written rules after the grantor leaves office until the successor revokes them.
     if(!a.rules.plots.includes(r.plot))return returned('所申地块不在村长写定的范围内');
     const resident=r.applicant==='player'?state.records[`civic_resident:${r.settlement}:player`]?.category==='civic_resident':adultResident(engine,state,r.applicant,r.settlement);
     if(!resident)return returned('申请人不是本村登记居民');

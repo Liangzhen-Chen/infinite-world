@@ -71,7 +71,9 @@ for(const cause of ['战斗身亡','法术致死','寿终','处决','战死'])te
  assert.equal(d.get('state','obligations','v2_obl','status'),'取消');assert.equal(groupView(e,d.get('state'),'v2_org').leader.value,null);
  assert.equal(d.get('state','creatures','monster_v2_pet','owner'),B);
  assert.equal(d.get('state','records',contract.id,'status'),'已取消');assert.deepEqual(d.get('state','records',contract.id,'signedTerms'),contract.signedTerms);
- assert.equal(d.get('state','player','coins'),playerCoins+11);assert.deepEqual(d.get('state','records','v2_debt'),debt);
+ assert.equal(d.get('state','player','coins'),playerCoins+11);
+ // PR-01: the estate repays the dead person's debt before the remainder is inherited.
+ assert.deepEqual(d.get('state','records','v2_debt'),{...debt,paid:12,status:'已还清',paidAt:600,settledBy:death.id});
  const frozen=structuredClone(d.document),patches=d.patches.length;
  assert.deepEqual(recordEntityDeath(d,e,A,900,'重复死因'),death);assert.equal(d.patches.length,patches);assert.deepEqual(d.document,frozen);
 });

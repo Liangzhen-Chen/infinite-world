@@ -246,7 +246,7 @@ export function advanceFinanceAssets(d,e,minute){
             if(minute>=initial.deadline&&['有效','要求加薪','罢工'].includes(d.get(...rec(initial.id),'status')))d.set(rec(initial.id),{...d.get(...rec(initial.id)),status:'已到期'});
         }
     }
-    for(const [id,row]of Object.entries(d.get('state','records')??{}))if(row.kind==='rent'&&row.category==='debt'&&row.amount>row.paid&&row.deadline<=minute&&!row.defaulted){
+    for(const [id,row]of Object.entries(d.get('state','records')??{}))if(row.kind==='rent'&&row.category==='debt'&&row.amount>row.paid&&row.deadline<=minute&&!row.defaulted&&row.status!=='坏账'){
         const legalCase=registerCreditDefault(d,e,{debt:id,row,value:row.amount-row.paid,minute:row.deadline});d.set(rec(id),{...row,status:'逾期',defaulted:{case:legalCase,remaining:row.amount-row.paid,minute:row.deadline}});
     }
 }

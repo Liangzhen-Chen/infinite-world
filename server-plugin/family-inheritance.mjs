@@ -4,6 +4,7 @@ import {rosterLifeState} from './population.mjs';
 import {transferItems} from './items.mjs';
 import {legalCodeAt} from './law-codes.mjs';
 import {entityTransition} from './entity-transitions.mjs';
+import {settleEstateDebts,sealEstate,debtClosed} from './estate.mjs';
 
 const DAY=1440,YEAR=360*DAY,rec=id=>['state','records',id];
 export function inheritanceRule(e,s,id,location){
@@ -26,10 +27,19 @@ function materialize(d,e,id,at){
  const row=rosterLifeState(e,d.get('state'),id,at,'继承',{minor:!familyAdult(e,d.get('state'),id,at)});
  if(row)d.set(['state','npcs',id],row);
 }
+// Genealogical order: parents, then grandparents and adult siblings, then the
+// adults of the ward's household, then parents' siblings and other recorded kin.
+export function guardianOrder(e,s,ward,exclude=[],minute=s.minute){
+ const edges=familyEdges(e,s),parentsOf=x=>edges.filter(r=>r.kind==='parent'&&r.to===x).map(r=>r.from),childrenOf=x=>edges.filter(r=>r.kind==='parent'&&r.from===x).map(r=>r.to);
+ const siblingsOf=x=>[...edges.filter(r=>r.kind==='sibling'&&(r.from===x||r.to===x)).map(r=>r.from===x?r.to:r.from),...parentsOf(x).flatMap(childrenOf)].filter(y=>y!==x);
+ const parents=parentsOf(ward),grand=parents.flatMap(parentsOf),kin=edges.filter(r=>r.kind==='kin'&&!r.affinal&&(r.from===ward||r.to===ward)).map(r=>r.from===ward?r.to:r.from);
+ const tiers=[parents,[...grand,...siblingsOf(ward)],npcHousehold(e,s,ward)?.members??[],[...parents.flatMap(siblingsOf),...kin]],seen=new Set([ward,...exclude]),out=[];
+ for(const tier of tiers)for(const id of [...new Set(tier)].sort())if(!seen.has(id)){seen.add(id);if(familyAdult(e,s,id,minute))out.push(id);}
+ return out;
+}
 function guardianship(d,e,ward,from,deathId,minute,coins){
- const s=d.get('state'),family=natalFamily(e,s,ward),parents=familyEdges(e,s).filter(r=>r.kind==='parent'&&r.to===ward).map(r=>r.from);
- const pool=[...new Set([...parents,...npcHousehold(e,s,ward)?.members??[]])].filter(id=>id!==from&&familyAdult(e,s,id,minute)).sort((a,b)=>Number(parents.includes(b))-Number(parents.includes(a))||a.localeCompare(b));
- const guardian=pool[0]??null,id=`guardianship:${deathId}:${ward}`,age=npcAgeAt(e,s,ward,minute);
+ const s=d.get('state'),family=natalFamily(e,s,ward);
+ const guardian=guardianOrder(e,s,ward,[from],minute)[0]??null,id=`guardianship:${deathId}:${ward}`,age=npcAgeAt(e,s,ward,minute);
  const profile=s.family?.people?.[ward]??s.created?.[ward]??e.byId.get(ward),adult=e.rules.npcLife?.adultAge??18;
  const expires=profile?.birth?((profile.birth.year-1+adult)*360+(profile.birth.month-1)*30+profile.birth.day-1)*DAY:age===null?null:Math.max(minute,(adult-(profile?.age??age))*YEAR);
  d.set(rec(id),{category:'guardianship',id,ward,guardian,family,estate:deathId,since:minute,expires,status:guardian?'代管中':'待指定',responsibilities:['保全本人财产','逐笔记账','成年交还管理权'],receivedCoins:coins,ledger:[],sourceEvent:deathId});
@@ -42,9 +52,14 @@ export function settleFamilyEstate(d,e,id,minute,deathId,location){
  const s=d.get('state'),rule=inheritanceRule(e,s,id,location),selection=candidates(e,s,id,rule,minute);
  for(const heir of [...selection.heirs,...selection.children])materialize(d,e,heir,minute);
  const heirs=selection.heirs.filter(x=>d.get('state','npcs',x)),current=d.get(...actorPath(e.world,id));
- const estate={heir:heirs[0]??null,heirs,rule,coins:current.coins??0,items:{},allocations:heirs.map(heir=>({heir,coins:0,items:{},assets:[]})),debts:Object.entries(s.records??{}).filter(([,r])=>r.category==='debt'&&[r.debtor,r.creditor].includes(id)&&r.amount>(r.paid??0)).map(([key])=>key).sort(),guardianships:[]};
+ const debts=Object.entries(s.records??{}).filter(([,r])=>r.category==='debt'&&[r.debtor,r.creditor].includes(id)&&r.amount>(r.paid??0)).map(([key])=>key).sort();
+ // Liabilities are paid before any allocation; claims pass to the heir.
+ const settlements=settleEstateDebts(d,e,id,minute,deathId),gross=current.coins??0;
+ const estate={heir:heirs[0]??null,heirs,rule,grossCoins:gross,coins:d.get(...actorPath(e.world,id),'coins')??0,items:{},allocations:heirs.map(heir=>({heir,coins:0,items:{},assets:[]})),debts,settlements,guardianships:[]};
+ for(const [key,row]of Object.entries(d.get('state','records')??{}))if(heirs.length&&row.category==='debt'&&row.creditor===id&&!debtClosed(row))d.set(rec(key),{...row,creditor:heirs[0],previousCreditor:id,inheritance:deathId});
  if(!heirs.length){
   for(const [key,row]of Object.entries(s.records??{}))if(row.holder===id&&(row.category==='title'&&row.status!=='已除爵'||row.category==='governance_office'&&row.status==='在任'))d.set(rec(key),{...row,status:row.category==='title'?'已除爵':'已免职',removedAt:minute,reason:'持有人死亡，无可继承人'});
+  estate.sealed=sealEstate(d,e,id,minute,deathId,location);
   return estate;
  }
  const rowFor=who=>estate.allocations.find(r=>r.heir===who);
@@ -61,7 +76,8 @@ export function settleFamilyEstate(d,e,id,minute,deathId,location){
   for(const heir of heirs){owners[heir]=(owners[heir]??0)+owned/heirs.length;rowFor(heir).assets.push(asset);rowFor(heir).propertyShares={...rowFor(heir).propertyShares,[asset]:owned/heirs.length};}
   d.set(['state','buildings',asset],{...row,owner:Object.keys(owners).length===1?heirs[0]:natalFamily(e,s,id),owners,inheritedAt:minute,inheritance:deathId});
  }
- for(const [key,row]of Object.entries(s.records??{})){
+ for(const [key,original]of Object.entries(s.records??{})){
+  const row=d.get(...rec(key))??original;
   if(row.category==='title'&&row.holder===id&&row.status!=='已除爵'||row.category==='governance_office'&&row.holder===id&&row.status==='在任'){
    const title=row.category==='title',successor=title?selection.children[0]??heirs[0]:row.hereditary===true&&rule.office==='hereditary'?selection.children[0]??heirs[0]:null;
    d.set(rec(key),{...row,...(successor?{holder:successor,previousHolder:id,inheritedAt:minute,inheritance:deathId,...(!familyAdult(e,s,successor,minute)?{heldInMinority:true}:{})}:{status:title?'已除爵':'已免职',removedAt:minute,reason:'持有人死亡，职位不世袭'})});
@@ -99,6 +115,21 @@ export function advanceGuardianships(d,e,minute){
   if(familyAdult(e,s,r.ward,minute)||!familyLiving(s,r.ward)){
    d.set(rec(r.id),{...r,status:'已结束',endedAt:minute,reason:familyLiving(s,r.ward)?'继承人已成年':'继承人死亡'});
    entityTransition(d,e,{id:`${r.id}:end`,verb:'transfer',actor:r.guardian,target:r.ward,minute,location:npcHousehold(e,s,r.ward)?.homeLocation,visibility:'members',tags:['family','guardianship'],summary:'监护任期结束，结束财产代管'});
-  }else if(r.guardian&&!familyAdult(e,s,r.guardian,minute))d.set(rec(r.id),{...r,guardian:null,status:'待指定',previousGuardian:r.guardian});
+  }else if(r.guardian&&!familyAdult(e,s,r.guardian,minute))reassignGuardian(d,e,r,minute,`${r.id}:reassign:${minute}`);
  }
+}
+// A guardian who dies (or can no longer serve) is replaced by the next person
+// in genealogical order; only without qualified kin does the court appoint.
+export function reassignGuardian(d,e,r,minute,eventId){
+ const s=d.get('state'),previous=[...r.previousGuardians??[],r.guardian].filter(Boolean),next=guardianOrder(e,s,r.ward,previous,minute)[0]??null;
+ const row={...r,guardian:next,status:next?'代管中':'待指定',previousGuardian:r.guardian,previousGuardians:previous,reassignedAt:minute,...(next?{}:{custodian:'官府'})};
+ d.set(rec(r.id),row);
+ entityTransition(d,e,{id:eventId,verb:'appoint',actor:next??natalFamily(e,s,r.ward),target:r.ward,minute,location:npcHousehold(e,s,r.ward)?.homeLocation,visibility:'members',tags:['family','guardianship'],
+  summary:next?'原监护人不能继续代管，按族谱顺位改由下一位亲属监护':'原监护人不能继续代管且无合格亲属，交官府待指定监护人'});
+ return row;
+}
+export function reassignGuardianships(d,e,dead,minute,deathId){
+ const out=[];
+ for(const r of Object.values(d.get('state','records')??{}))if(r.category==='guardianship'&&r.guardian===dead&&r.status==='代管中')out.push(reassignGuardian(d,e,r,minute,`${deathId}:guardian:${r.id}`).id);
+ return out;
 }

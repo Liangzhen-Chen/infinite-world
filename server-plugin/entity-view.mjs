@@ -65,9 +65,10 @@ export function personOffices(engine,state,requested,{settlement=null,power=null
         const entry=officeFact(engine,state,key,row);if(entry)out.push(entry);
     }
     for(const [key,row] of records(state)){
-        if(row.category!=='housing_steward'||row.steward!==id||row.revoked||row.expires<=(state.minute??0)||row.createdAt>(state.minute??0))continue;
-        const grantor=rows.find(([,r])=>r.holder===row.grantor&&r.settlement===row.settlement&&r.office==='office_village_head'&&r.status==='在任'&&(r.until??Infinity)>(state.minute??0));
-        if(!grantor||settlementHead(engine,state,row.settlement).value!==row.grantor)continue;
+        // An appointee stays in post after the grantor leaves office; only the
+        // current head's revocation or the term itself ends the appointment.
+        // A lord's hired steward (employment) is a job, not an office.
+        if(row.category!=='housing_steward'||row.employment||row.steward!==id||row.revoked||row.expires<=(state.minute??0)||row.createdAt>(state.minute??0))continue;
         out.push(officeFact(engine,state,key,{...row,office:'office_village_steward',holder:id,status:'在任',since:row.createdAt,until:row.expires,workplace:row.hall}));
     }
     const settlements=new Set([...(engine.world.settlementProfiles??[]).map(p=>p.id),...(engine.rules.agriculture?.settlements??[]).map(p=>p.settlement),...Object.values(state.remote??{}).flatMap(r=>(r.skeleton?.offices??[]).map(o=>o.settlement))]);
@@ -422,11 +423,20 @@ export function settlementGovernment(engine,state,id){
     }
     const seat=row?.workplace??g?.meetingPlace??ag?.counter??baseOf(engine,state,remote?.holder)?.location??id;
     const seatSource=row?.workplace?`state.records.${current[0]}.workplace`:g?.meetingPlace?`catalog.${id}.details.governance.meetingPlace`:ag?.counter?`rules.agriculture.${id}.counter`:generated?.source??`catalog.${id}`;
-    return {head,
+    return {head,acting:head.value?fact(null,'current head'):actingHead(engine,state,id,g,eligible),
         powers:fact(active?office?.powers??[]:head.value?g?.permissions?.head??[]:[],active?'rules.governance.authority.offices':`catalog.${id}.details.governance.permissions`,Boolean(current)),
         appointment:fact(row??g?.appointment,current?`state.records.${current[0]}`:`catalog.${id}.details.governance.appointment`,Boolean(current)),
         enforcers:fact((g?.enforcers??[]).filter(eligible),`catalog.${id}.details.governance + legal dismissals`),
         seat:fact(seat,seatSource,Boolean(row?.workplace)),source:fact(row?.source??g?.appointment?.source??generated?.source??head.source,head.source,Boolean(current))};
+}
+// A vacant headship is chaired by a sitting deputy, else by an officer named
+// in the founding appointment. Acting confers chairing, not the head's pay.
+function actingHead(engine,state,id,g,eligible){
+    const offices=engine.rules.governance?.succession?.actingOffices??[];
+    const deputy=officeRows(state).filter(([,r])=>r.settlement===id&&offices.includes(r.office)&&r.status==='在任'&&(r.since??0)<=(state.minute??0)&&(r.until??Infinity)>(state.minute??0)&&eligible(r.holder)).sort(([a],[b])=>a.localeCompare(b))[0];
+    if(deputy)return fact(actorId(engine.world,deputy[1].holder),`state.records.${deputy[0]}`,true);
+    const officer=(g?.appointment?.officers??[]).find(eligible);
+    return fact(officer??null,`catalog.${id}.details.governance.appointment.officers`);
 }
 import {facilityView,facilityServices} from './facility-state.mjs';
 export function placeView(engine,state,id){

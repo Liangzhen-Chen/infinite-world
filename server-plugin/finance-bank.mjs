@@ -21,6 +21,7 @@ export function financeBalance(d,e,id){
     if(group)return group.coins;
     const org=d.get(...financePath(`organization:${id}`));
     if(org?.category==='organization')return org.treasury??0;
+    const estate=d.get(...financePath(id));if(estate?.category==='estate')return estate.coins??0;
     const actor=d.get(...e.actorPath(id));if(!actor)throw Error('资金当事人不存在');return actor.coins??0;
 }
 export function financeChange(d,e,id,delta,sourceEvent){
@@ -29,6 +30,7 @@ export function financeChange(d,e,id,delta,sourceEvent){
     if(groupAccountView(e,d.get('state'),id))return changeGroupCoins(d,e,id,delta,{kind:'金融契约',sourceEvent,minute:d.get('state','minute')});
     const org=d.get(...financePath(`organization:${id}`));
     if(org?.category==='organization'){d.set(financePath(`organization:${id}`),{...org,treasury:balance,ledger:[...org.ledger??[],{coins:delta,sourceEvent}]});return balance;}
+    const estate=d.get(...financePath(id));if(estate?.category==='estate'){d.set(financePath(id),{...estate,coins:balance,ledger:[...estate.ledger??[],{coins:delta,sourceEvent}]});return balance;}
     d.set([...e.actorPath(id),'coins'],balance);return balance;
 }
 export function financeTransfer(d,e,from,to,n,id){financeInt(n,1,1e9,'支付金额');financeChange(d,e,from,-n,id);financeChange(d,e,to,n,id);}
@@ -222,7 +224,7 @@ export function advanceBankFinance(d,e,minute){
             d.set(financePath(id),row);
         }
         if(original.kind==='pawn'&&original.status!=='已还清'&&original.auctionAt<=minute){d.set(financePath(id),{...original,status:'流当'});continue;}
-        if(original.category==='debt'&&original.kind==='player_loan'&&original.status!=='已还清'){
+        if(original.category==='debt'&&original.kind==='player_loan'&&!['已还清','坏账'].includes(original.status)){
             let row=original;
             for(let at=row.nextPayment;at<=minute&&row.status!=='已还清';at+=DAY){
                 const actor=d.get('state','npcs',row.debtor),unable=actor&&(['死亡','濒死','昏迷'].includes(actor.status)||personConstraint(e,d.get('state'),row.debtor,at));

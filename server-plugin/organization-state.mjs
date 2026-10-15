@@ -61,7 +61,9 @@ export function organizationState(engine,state,id){
         if(m===current)entry.position=b.leaderTitle;
         else if(entry.position===b.leaderTitle)entry.position=MEMBER;
     }
-    return {...b,leader:current,members,charter:{...b.charter,...row?.charter},treasury:groupAccountView(engine,state,id)?.coins??b.treasury+(row?.treasury??0),
+    // While the head is vacant a sitting deputy (副…) acts; this is read, never stored.
+    const acting=current?null:Object.keys(members).sort().find(m=>m!=='player'&&/^副/.test(members[m].position??''))??null;
+    return {...b,leader:current,acting,members,charter:{...b.charter,...row?.charter},treasury:groupAccountView(engine,state,id)?.coins??b.treasury+(row?.treasury??0),
         ledger:row?.ledger??[],founder:row?.founder??null,nextDues:row?.nextDues??null};
 }
 

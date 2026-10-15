@@ -65,18 +65,18 @@ test('管事离屏按规矩办：合规者交宅基费进公账得批文，非�
  assert.equal(rec['housing_fee:housing_application:mine'].copper,30);
 });
 
-test('宅基满额、撤回管事、村长去职后越权申请一律退回；地租按年到期从持有人收进公账',async()=>{
+test('宅基满额、撤回管事后越权申请一律退回；村长去职后管事留任照章办理；地租按年到期从持有人收进公账',async()=>{
  const s=await setup();let c=(await s.grant(s.doc)).document;const auth='housing_steward:steward';
  c=structuredClone(c);for(let i=0;i<plot.slots;i++)c.state.records[`housing_permit:seed${i}`]={category:'housing_permit',id:`housing_permit:seed${i}`,plot:plot.id,settlement:village.id,holder:'npc_yp_shile',status:'已建成',rentDue:1e9,annualRentCopper:12,arrears:0};
  c=(await s.file(c,{authorization:auth},'full')).document;
  let done=await s.away(c);assert.match(done.state.records['housing_application:full'].reason,/空余/);
- // A revoked steward and a removed head both stop approvals.
+ // A revoked steward stops approvals; a removed head does not (PR-01: the appointee stays until the successor revokes).
  let r=(await s.grant(s.doc)).document;r=(await s.file(r,{authorization:auth},'late')).document;
  r=(await s.settle(r,{operation:'governance_revoke',authorization:auth},'revoke')).document;
  r=await s.away(r);assert.match(r.state.records['housing_application:late'].reason,/撤回/);
  let h=(await s.grant(s.doc)).document;h=structuredClone((await s.file(h,{authorization:auth},'removed')).document);
  for(const x of Object.values(h.state.records))if(x.category==='governance_office')x.status='已免职';
- h=await s.away(h);assert.match(h.state.records['housing_application:removed'].reason,/不在任/);
+ h=await s.away(h);assert.equal(h.state.records['housing_application:removed'].status,'已批准');
  // Rent: the permit's yearly due date is collected on the steward's round.
  let p=(await s.grant(s.doc)).document;p=(await s.file(p,{authorization:auth},'rent')).document;p=await s.away(p);
  p=structuredClone(p);const permit=p.state.records['housing_permit:rent'];p.state.records['housing_permit:rent']={...permit,rentDue:p.state.minute+60};

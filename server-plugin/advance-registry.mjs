@@ -50,6 +50,7 @@ import {hazardClocks,hazardYieldFactor}from'./hazard-calendar.mjs';
 import {advanceMagicEconomy,magicYieldFactor}from'./magic-economy.mjs';
 import {advanceBounties,nextBountyMinute,bountyActive}from'./bounty.mjs';
 import {advanceOffices,nextOfficeMinute}from'./governance.mjs';
+import {advanceByElections}from'./elections.mjs';
 import {advanceOfficeSalaries,nextSalaryMinute}from'./office-salary.mjs';
 import {advanceTitles,nextTitleMinute}from'./titles.mjs';
 import {advanceNotables,nextNotableMinute}from'./notables.mjs';
@@ -130,6 +131,7 @@ const systems=[
  {id:'npc_autonomy',order:1100,active:e=>fullNpcs(e),nextMinute:(e,d,now)=>nextNpcAutonomyMinute(d.get('state'),now),
   advance:(e,d,{before,after,id,beforeState})=>{if(fullNpcs(e))advanceNpcAutonomy(d,e,before,after,id,{beforeState});}},
  {id:'office_salaries',order:1129,nextMinute:(e,d,now)=>nextSalaryMinute(e,now),advance:(e,d,ctx)=>advanceOfficeSalaries(d,e,ctx)},
+ {id:'by_elections',order:1131,advance:(e,d,ctx)=>advanceByElections(d,e,ctx)},
  {id:'governance_offices',order:1130,nextMinute:(e,d,now)=>nextOfficeMinute(d.get('state'),now),advance:(e,d,ctx)=>advanceOffices(d,e,ctx)},
  {id:'housing_steward',order:1135,nextMinute:(e,d,now)=>nextHousingMinute(d.get('state'),now),advance:(e,d,ctx)=>advanceHousing(d,e,ctx)},
  {id:'upper_appointments',order:1138,advance:(e,d,ctx)=>advanceUpperAppointments(d,e,ctx)},

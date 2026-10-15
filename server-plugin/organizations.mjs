@@ -9,6 +9,7 @@ import {standing,adjustStanding} from './standing.mjs';
 import {opinionAmong} from './public-opinion.mjs';
 import {assertAcademyAdmission} from './notables.mjs';
 import {familyOrganizationProjection,familyAdult} from './family-state.mjs';
+import {npcDuel} from './duels.mjs';
 
 // Organizations as running entities: members and positions, a treasury whose
 // every movement is a ledger line, a charter (entry, fee, dues, rules) and a
@@ -207,6 +208,7 @@ export function advanceOrganizations(d,engine,{before,after}){
             }
         }
     }
+    for(let day=Math.floor(before/DAY)+1;day*DAY<=after;day++)leaderSuccession(d,engine,day*DAY);
     for(const [,r]of records()){
         if(r.category!=='organization'||!r.nextDues||r.nextDues>after)continue;
         let row=structuredClone(r);
@@ -324,5 +326,40 @@ export function organizationAction(d,args,eventId){
         return {proposal:id,status:closed.status,outcome:closed.outcome??null,organizationEvent:event(org,'vote',{...(closed.status!=='议事中'?{decided:closed.status,motion:closed.motion.action}:{})})};
     }
     default:throw Error('未知组织操作');
+    }
+}
+
+// PR-01: when a head dies the members do not wait for the player. A deputy or
+// elder nominates themself under the existing charter vote; when every
+// candidate has been voted down, the two strongest may settle it by a duel whose
+// loser concedes (death only if the charter says so).
+const usable=n=>n&&!['死亡','濒死','昏迷'].includes(n.status);
+function successionMotion(d,engine,org,member,at,eventId,conceded=[]){
+    const id=`organization_proposal:${eventId}`;if(d.get('state','records',id))return null;
+    const {mode,people}=deciders(d.get('state'),org);
+    const votes=[member,...conceded].filter((v,i,a)=>people.includes(v)&&a.indexOf(v)===i).map(voter=>({voter,opinion:'approve',minute:at,sourceEvent:eventId,...(voter!==member?{basis:'决斗约定认输'}:{})}));
+    d.set(['state','records',id],{category:'organization_proposal',id,org:org.id,motion:{action:'appoint',member,name:org.leaderTitle},proposer:member,mode,deciders:people,votes,escrow:0,
+        content:'首脑身故，按章程补选',status:'议事中',minute:at,sourceEvent:eventId,succession:true});
+    return settle(d,engine,id,at,eventId);
+}
+function leaderSuccession(d,engine,at){
+    const ids=[...new Set([...Object.values(d.get('state','records')??{}).filter(r=>r.category==='organization').map(r=>r.id),...(engine.world.factions??[]).filter(f=>f.leader).map(f=>f.id)])].sort();
+    for(const id of ids){
+        const state=d.get('state'),row=state.records?.[key(id)],raw=Object.hasOwn(row??{},'leader')?row.leader:engine.world.factions?.find(f=>f.id===id)?.leader;
+        const dead=raw&&raw!=='player'?actor(d,engine,raw):null;if(dead?.status!=='死亡')continue;
+        const org=organization(engine,state,id);if(!org||org.leader||['family','household'].includes(org.source))continue;
+        const since=dead.diedAt??0,motions=Object.values(state.records).filter(p=>p.category==='organization_proposal'&&p.org===id&&p.succession&&p.minute>=since);
+        if(motions.some(p=>p.status==='议事中'))continue;
+        const people=deciders(state,org).people,support=m=>people.reduce((n,v)=>n+(v===m?0:standing(engine,state,v,m)),0);
+        const rank=m=>m===org.acting?0:org.members[m].position===ELDER?1:2;
+        const pool=Object.keys(org.members).filter(m=>m!=='player'&&usable(actor(d,engine,m))).sort((a,b)=>rank(a)-rank(b)||support(b)-support(a)||a.localeCompare(b));
+        const tried=new Set(motions.map(p=>p.motion.member)),next=pool.find(m=>!tried.has(m));
+        if(next){successionMotion(d,engine,org,next,at,`succession:${id}:${next}:${at}`);continue;}
+        if(motions.some(p=>p.duel)||Object.values(state.records).some(r=>r.category==='duel'&&r.stakes?.org===id&&r.minute>=since))continue;
+        const [a,b]=pool.filter(m=>tried.has(m)),witness=Object.keys(org.members).sort().find(m=>m!==a&&m!==b&&(m==='player'||usable(actor(d,engine,m))));if(!a||!b||!witness)continue;
+        const duel=npcDuel(d,engine,{challenger:a,target:b,witness,rule:/生死/.test((org.charter.rules??[]).join(''))?'death':'touch',eventId:`succession:${id}:duel:${at}`,minute:at,location:org.seat,stakes:{org:id,office:org.leaderTitle}});
+        if(duel.status!=='已结束')continue;
+        const p=successionMotion(d,engine,organization(engine,d.get('state'),id),duel.winner,at,`succession:${id}:${duel.winner}:duel:${at}`,[duel.loser]);
+        if(p)d.set(['state','records',p.id],{...d.get('state','records',p.id),duel:duel.id});
     }
 }

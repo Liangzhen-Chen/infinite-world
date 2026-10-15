@@ -84,6 +84,8 @@ export function registerIncident(d,engine,{victim,offender='player',offense,valu
 import {financeBalance,financeChange,financeTransfer} from './finance-bank.mjs';
 export function registerCreditDefault(d,engine,{debt,row,value,minute}){
     const code=codeFor(engine,row.location);if(!code)return null;
+    // The dead and sealed estates are not sued; the estate settles in legal order.
+    const debtor=row.debtor??'player';if(d.get('state','records',debtor)?.category==='estate'||d.get('state','npcs',debtor)?.status==='死亡')return null;
     const id=`legal_case:default:${debt}`;if(d.get(...path(id)))return id;
     const receiver=code.officers[0];
     d.set(path(id),{category:'legal_case',id,law:code.id,procedureVersion:1,settlement:code.settlement??null,faction:code.faction??null,sourceEvent:row.source,witnesses:[],
