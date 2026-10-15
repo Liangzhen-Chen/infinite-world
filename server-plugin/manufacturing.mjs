@@ -6,6 +6,7 @@ import {prepareThermalWorkstation}from'./magic-object.mjs';
 import {createHash}from'node:crypto';
 import {spiritManufacture}from'./wildlife-society.mjs';
 import {recordArtWork}from'./works.mjs';
+import {facilityView}from'./facility-state.mjs';
 const integer=(value,min,max,label)=>{if(!Number.isSafeInteger(value)||value<min||value>max)throw new Error(`${label}无效`);return value;};
 export function registerRecipe(d,engine,data,project,maximumStage){
     if(!data||typeof data!=='object')throw new Error('配方数据无效');
@@ -55,9 +56,9 @@ export function kilnWorkResult(d,plan,outcome,quantity,eventId,{endStress}={}){
 export function workstation(d,engine,recipe,args){
     if(!recipe.workstation)return null;
     const location=d.get('state','location'),definition=engine.byId.get(location);
-    const station=definition?.workstations?.find(row=>row.kind===recipe.workstation);
+    const station=(facilityView(engine,d.get('state'),location)?.workstations??definition?.workstations)?.find(row=>row.kind===recipe.workstation);
     if(!station)throw new Error('当前位置没有所需工作台');
-    if(d.get('state','buildings',location,'condition')===0)throw new Error('工坊已损毁');
+    if(facilityView(engine,d.get('state'),location)?.factor===0)throw new Error('工坊已损毁或停用');
     if(station.access!=='public'){
         const permission=d.get('state','records',args.authorization);
         if(!permission||permission.category!=='authorization'||permission.subject!==station.id||permission.action!=='workshop_use'||permission.expires!==undefined&&permission.expires<=d.get('state','minute'))throw new Error('工作台需要有效使用许可');
@@ -67,8 +68,9 @@ export function workstation(d,engine,recipe,args){
     if(station.owner?.startsWith('npc_')){
         const owner=d.get('state','npcs',station.owner);if(!owner||['死亡','濒死'].includes(owner.status))throw new Error('工坊主人无法履约');
     }
-    const thermalPlan=prepareThermalWorkstation(d,engine,station,recipe.minutes);
-    return{...station,fee,...(thermalPlan?{thermalPlan}:{})};
+    const workMinutes=Math.ceil(recipe.minutes/(facilityView(engine,d.get('state'),location)?.factor??1));
+    const thermalPlan=prepareThermalWorkstation(d,engine,station,workMinutes);
+    return{...station,fee,workMinutes,...(thermalPlan?{thermalPlan}:{})};
 }
 export function manufacture(d,args,eventId){
     if(args.maker!==undefined)return spiritManufacture.call(this,d,args,eventId,{workstation,kilnWorkResult});
@@ -78,7 +80,7 @@ export function manufacture(d,args,eventId){
     if(recipe.location&&recipe.location!==d.get('state','location'))throw new Error('不在所需工坊');
     const proficiency=effectiveProficiency(d,this,recipe.skill);
     if(proficiency<recipe.minimumProficiency)throw new Error('技能不足以使用这个配方');
-    const attribute=recipe.attribute??this.byId.get(recipe.skill).attribute??'智力',station=workstation(d,this,recipe,args);
+    const attribute=recipe.attribute??this.byId.get(recipe.skill).attribute??'智力',station=workstation(d,this,recipe,args),workMinutes=station?.workMinutes??recipe.minutes;
     // Check real required tools before spending material, rent or time.
     toolBonuses(d,this,recipe.tools??[],attribute,recipe.skill);
     const materials=new Map();for(const row of recipe.materials)materials.set(row.item,(materials.get(row.item)??0)+integer(row.amount,1,100000,'材料数量'));
@@ -99,7 +101,8 @@ export function manufacture(d,args,eventId){
         if(station.owner?.startsWith('npc_'))d.set(['state','npcs',station.owner,'coins'],d.get('state','npcs',station.owner,'coins')+station.fee);
         else d.set(['state','workshopFunds',station.id],(d.get('state','workshopFunds',station.id)??0)+station.fee);
     }
-    this.advance(d,recipe.minutes,eventId);
+    this.advance(d,workMinutes,eventId);
+    if(facilityView(this,d.get('state'),d.get('state','location'))?.factor===0){outcome.success=false;outcome.degree='工坊停用，未能完成';}
     const thermal=kilnWorkResult(d,station?.thermalPlan,outcome,recipe.output.quantity,eventId);
     if(thermal)products[0].amount-=thermal.crackedQuantity;
     const toolWear=[];
@@ -116,15 +119,15 @@ export function manufacture(d,args,eventId){
     }else{
         for(const[item,amount]of materials){const returned=thermal?.crackedQuantity?0:Math.floor(amount*recover);if(returned){this.itemDelta(d,'player',item,returned);salvage.push({item,amount:returned});}}
         if(outcome.degree==='大失败'&&injury)this.health(d,{delta:-injury},eventId);
-        d.say(`制造${outcome.degree}，耗时${recipe.minutes}分钟，按配方回收${salvage.reduce((sum,row)=>sum+row.amount,0)}份材料`);
+        d.say(`制造${outcome.degree}，耗时${workMinutes}分钟，按配方回收${salvage.reduce((sum,row)=>sum+row.amount,0)}份材料`);
     }
     const receipt={id:`crafted_${eventId}`,recipe:recipe.id,item:recipe.output.item,quantity:outcome.success?products[0].amount:0,...(thermal?{thermal}:{}),
         maker:'player',name:d.get('state','player','name'),minute:d.get('state','minute'),station:station?.id??null,fee:station?.fee??0,
         degree:outcome.degree,workmanship,instances:ids,byproducts:outcome.success?recipe.byproducts??[]:[],salvage};
     d.set(['state','crafted',receipt.id],receipt);
     return{recipe:recipe.id,...outcome,receipt:receipt.id,instances:ids,workmanship,...(work?{work}:{}),salvage,...(thermal?{thermal}:{}),
-        spent:{feePaid:station?.fee??0,minutes:recipe.minutes,materials:[...materials].map(([item,quantity])=>({item,name:this.byId.get(item).name,quantity})),toolWear},
+        spent:{feePaid:station?.fee??0,minutes:workMinutes,materials:[...materials].map(([item,quantity])=>({item,name:this.byId.get(item).name,quantity})),toolWear},
         healthDelta:d.get('state','player','hp')-hpBefore,produced:outcome.success?products.filter(row=>row.amount).map(row=>({...row,name:this.byId.get(row.item).name})):[],
-        factSummary:`${outcome.success?`制成${this.byId.get(recipe.output.item).name}${products[0].amount}件`:'未得到任何成品'}；${salvage.length?`实际回收${salvage.map(row=>`${this.byId.get(row.item).name}${row.amount}份`).join('、')}`:'没有回收到任何可用材料'}；工坊费${station?.fee??0}铜已支付，耗时${recipe.minutes}分钟。`,
+        factSummary:`${outcome.success?`制成${this.byId.get(recipe.output.item).name}${products[0].amount}件`:'未得到任何成品'}；${salvage.length?`实际回收${salvage.map(row=>`${this.byId.get(row.item).name}${row.amount}份`).join('、')}`:'没有回收到任何可用材料'}；工坊费${station?.fee??0}铜已支付，耗时${workMinutes}分钟。`,
         note:'spent已实际支付及消耗，salvage是实际回收物，produced是实际成品。失败不退款；没有回收时只能描写弃置的废料，不能写回收到刨花或碎屑。'};
 }

@@ -413,6 +413,7 @@ export function settlementGovernment(engine,state,id){
         enforcers:fact((g?.enforcers??[]).filter(eligible),`catalog.${id}.details.governance + legal dismissals`),
         seat:fact(seat,seatSource,Boolean(row?.workplace)),source:fact(row?.source??g?.appointment?.source??generated?.source??head.source,head.source,Boolean(current))};
 }
+import {facilityView,facilityServices} from './facility-state.mjs';
 export function placeView(engine,state,id){
     const base=state.created?.[id]??engine.byId.get(id);if(!base)return null;
     const source=state.created?.[id]?`state.created.${id}`:`catalog.${id}`,view={};
@@ -421,6 +422,9 @@ export function placeView(engine,state,id){
     view.settlement= fact(state.settlements?.[id],`state.settlements.${id}`,Boolean(state.settlements?.[id]));
     view.population=settlementPopulation(engine,state,id);view.government=settlementGovernment(engine,state,id);
     view.physical= (base.features??[]).map(f=>physicalFeature(engine,state,f.id));
+    const facility=facilityView(engine,state,id);
+    if(facility)for(const field of ['condition','material','status','services','capacity','workstations'])view[field]=fact(facility[field],'current construction + condition',false);
+    view.serviceCapacity=fact(facility?Object.fromEntries(facility.services.map(s=>[s,facility.capacity])):facilityServices(engine,state,id),'current facilities + condition');
     return view;
 }
 export function populationView(engine,state,habitat,species){

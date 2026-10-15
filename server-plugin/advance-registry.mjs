@@ -1,3 +1,4 @@
+import {advanceFacilities,nextFacilityMinute,completeFacilityProject} from './facilities.mjs';
 // Time-advance registry. Every system that reacts to elapsed time registers here:
 //   {id, order, nextMinute?(engine,d,now), active?(engine,d,now), advance(engine,d,ctx)}
 // nextMinute: the next minute this system needs an interval boundary (Infinity when none).
@@ -100,9 +101,11 @@ const systems=[
  {id:'settlement_trade',order:800,active:e=>!!e.rules.settlementTrade,nextMinute:(e,d,now)=>nextSettlementTradeMinute(d.get('state'),e,now),
   advance:(e,d,{after})=>advanceSettlementTrade(d,e,after)},
  {id:'shop_restock',order:850,advance:(e,d,{before,after})=>advanceShops(d,e,before,after)},
+ {id:'facilities',order:890,nextMinute:(e,d,now)=>nextFacilityMinute(d.get('state'),now),advance:(e,d,ctx)=>advanceFacilities(d,e,ctx)},
  {id:'projects',order:900,advance(e,d,{days,id}){
     if(days)for(const [key,project]of Object.entries(d.get('state','projects')))if(project.type==='工程'&&project.status==='施工中'&&!isPublicProject(project)){
         const remainingDays=Math.max(0,project.remainingDays-days);d.set(['state','projects',key],{...project,remainingDays,status:remainingDays?'施工中':'已完成'});
+        if(!remainingDays)d.set(['state','projects',key,'facility'],completeFacilityProject(d,e,project));
         if(!remainingDays&&project.creator==='player')milestone(d,e,'publicContribution',key,id);
     }
  }},

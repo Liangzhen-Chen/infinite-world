@@ -53,6 +53,8 @@ festivalParameters.operation.enum.push('army_inspect','army_enlist','army_duty',
 festivalParameters.action.enum.push('expel','appoint','withdraw','charter');
 Object.assign(festivalParameters,{org:{...str,description:'组织名/ID；world_create org创立，occupation填行会/帮派/商号/教会'},member:str});
 Object.assign(festivalParameters,{clock:{...str,description:'时钟ID；choice为干预ID'},choice:str,item:str,quantity:int,coins:int});
+Object.assign(festivalParameters,{facilityType:{enum:['house','workshop','bridge','road','clinic','school','granary','public']},route:str,funding:str});
+festivalParameters.action.enum.push('repair','expand');
 const routes=new Map();
 definitions.find(r=>r.function.name==='world_wildlife').function.parameters.properties.operation.enum.push('fish','eat');
 definitions.find(r=>r.function.name==='world_site').function.parameters.properties.operation.enum.push('mine');

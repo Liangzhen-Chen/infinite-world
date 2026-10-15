@@ -2,7 +2,7 @@
  "title": "无限原野系统地图",
  "card": "K9",
  "generatedFrom": {
-  "commit": "refs/heads/p3",
+  "commit": "refs/heads/rw03",
   "method": "运行时导出（注册表、规则表、工具定义、效果表、立场传导表）+ 静态正则扫描（import 图、函数体标识符、state 分区与 records 前缀、rules/world 读取）。静态扫描是近似：经 engine.byId、helper 间接或动态拼接路径的访问不计入。"
  },
  "scanMethods": {
@@ -18,14 +18,14 @@
  "counts": {
   "layers": 6,
   "systems": 38,
-  "modules": 182,
-  "advance": 45,
+  "modules": 184,
+  "advance": 46,
   "tools": 25,
   "verbs": 28,
   "subscribers": 8,
   "interactionRules": 25,
-  "effectKinds": 19,
-  "links": 398
+  "effectKinds": 20,
+  "links": 404
  },
  "layers": [
   {
@@ -348,7 +348,7 @@
     "server-plugin/campaign-reducer.mjs",
     "server-plugin/archived-reducer.mjs"
    ],
-   "lines": 987,
+   "lines": 993,
    "stateWrites": [
     "combatDisengaged",
     "created",
@@ -543,9 +543,11 @@
    "modules": [
     "server-plugin/traits.mjs"
    ],
-   "lines": 151,
+   "lines": 156,
    "stateWrites": [],
    "stateReads": [
+    "buildings",
+    "created",
     "creatures",
     "inventory",
     "itemInstances",
@@ -576,7 +578,7 @@
    "modules": [
     "server-plugin/interactions.mjs"
    ],
-   "lines": 111,
+   "lines": 114,
    "stateWrites": [
     "inventory",
     "records"
@@ -594,6 +596,7 @@
    "subscribes": [],
    "effects": [
     "environment",
+    "facility",
     "flood"
    ],
    "tools": [],
@@ -609,7 +612,7 @@
     "server-plugin/world-events.mjs",
     "server-plugin/entity-transitions.mjs"
    ],
-   "lines": 182,
+   "lines": 183,
    "stateWrites": [
     "records"
    ],
@@ -643,7 +646,7 @@
     "server-plugin/standing.mjs",
     "server-plugin/entity-view.mjs"
    ],
-   "lines": 588,
+   "lines": 592,
    "stateWrites": [
     "records"
    ],
@@ -723,7 +726,7 @@
    "modules": [
     "server-plugin/effects.mjs"
    ],
-   "lines": 195,
+   "lines": 208,
    "stateWrites": [
     "npcs",
     "records"
@@ -757,6 +760,7 @@
     "awaken",
     "awakening",
     "environment",
+    "facility",
     "regional_quote",
     "rumor",
     "standing",
@@ -776,7 +780,7 @@
     "server-plugin/advance-registry.mjs",
     "server-plugin/advance-layers.mjs"
    ],
-   "lines": 239,
+   "lines": 242,
    "stateWrites": [
     "effects",
     "obligations",
@@ -849,7 +853,7 @@
     "server-plugin/population-service.mjs",
     "server-plugin/settlement-profile.mjs"
    ],
-   "lines": 3170,
+   "lines": 3173,
    "stateWrites": [
     "created",
     "creatures",
@@ -870,7 +874,6 @@
     "workshopFunds"
    ],
    "stateReads": [
-    "buildings",
     "location",
     "minute",
     "npcPlanning",
@@ -1305,7 +1308,7 @@
     "server-plugin/regions.mjs",
     "server-plugin/remote-generation.mjs"
    ],
-   "lines": 1588,
+   "lines": 1602,
    "stateWrites": [
     "npcs",
     "records",
@@ -1313,6 +1316,7 @@
     "settlements"
    ],
    "stateReads": [
+    "created",
     "effects",
     "location",
     "minute",
@@ -1498,7 +1502,7 @@
     "server-plugin/extraction.mjs",
     "server-plugin/smuggling.mjs"
    ],
-   "lines": 1600,
+   "lines": 1604,
    "stateWrites": [
     "crafted",
     "itemInstances",
@@ -1581,7 +1585,7 @@
    "modules": [
     "server-plugin/agriculture.mjs"
    ],
-   "lines": 325,
+   "lines": 326,
    "stateWrites": [
     "player",
     "records",
@@ -1643,6 +1647,8 @@
     "server-plugin/civic.mjs",
     "server-plugin/governance.mjs",
     "server-plugin/public-projects.mjs",
+    "server-plugin/facilities.mjs",
+    "server-plugin/facility-state.mjs",
     "server-plugin/titles.mjs",
     "server-plugin/notables.mjs",
     "server-plugin/promotion.mjs",
@@ -1653,7 +1659,7 @@
     "server-plugin/tribal-awakening.mjs",
     "server-plugin/elections.mjs"
    ],
-   "lines": 3647,
+   "lines": 3883,
    "stateWrites": [
     "buildings",
     "created",
@@ -1690,6 +1696,7 @@
    "recordReads": [
     "civic_citizen",
     "civic_resident",
+    "facility_region",
     "faction-assets",
     "society_motion",
     "stance",
@@ -1720,10 +1727,12 @@
     "monsters",
     "npcs",
     "residents",
+    "routes",
     "rules",
     "settlementProfiles"
    ],
    "advance": [
+    "facilities",
     "projects",
     "public_projects",
     "office_salaries",
@@ -1748,6 +1757,8 @@
     }
    ],
    "effects": [
+    "facility",
+    "flood",
     "quest_post",
     "standing"
    ],
@@ -1770,7 +1781,7 @@
     "server-plugin/military.mjs",
     "server-plugin/war-diplomacy.mjs"
    ],
-   "lines": 664,
+   "lines": 666,
    "stateWrites": [
     "npcs",
     "player",
@@ -1831,7 +1842,7 @@
     "server-plugin/seasonal-hazards.mjs",
     "server-plugin/hazard-calendar.mjs"
    ],
-   "lines": 1016,
+   "lines": 1018,
    "stateWrites": [
     "family",
     "npcs",
@@ -2010,7 +2021,7 @@
    "modules": [
     "extension/tools.mjs"
    ],
-   "lines": 110,
+   "lines": 112,
    "stateWrites": [],
    "stateReads": [],
    "recordWrites": [],
@@ -2035,7 +2046,7 @@
     "server-plugin/state-notices.mjs",
     "server-plugin/return-summary.mjs"
    ],
-   "lines": 442,
+   "lines": 443,
    "stateWrites": [
     "visits"
    ],
@@ -2439,6 +2450,7 @@
    "to": "sim_society",
    "kind": "advance",
    "labels": [
+    "facilities",
     "governance_offices",
     "housing_steward",
     "notables",
@@ -2589,6 +2601,7 @@
    "to": "sim_society",
    "kind": "call",
    "labels": [
+    "facilities.mjs",
     "governance.mjs",
     "monster-society.mjs",
     "notables.mjs",
@@ -2670,6 +2683,8 @@
    "to": "sim_society",
    "kind": "call",
    "labels": [
+    "facilities.mjs",
+    "facility-state.mjs",
     "reputation-registry.mjs"
    ]
   },
@@ -2732,6 +2747,15 @@
    ]
   },
   {
+   "from": "base_interactions",
+   "to": "sim_society",
+   "kind": "call",
+   "labels": [
+    "facilities.mjs",
+    "facility-state.mjs"
+   ]
+  },
+  {
    "from": "base_standing",
    "to": "base_events",
    "kind": "call",
@@ -2770,6 +2794,7 @@
    "to": "sim_society",
    "kind": "call",
    "labels": [
+    "facility-state.mjs",
     "monster-society.mjs",
     "organization-state.mjs",
     "promotion-view.mjs",
@@ -2782,6 +2807,14 @@
    "kind": "call",
    "labels": [
     "entity-view.mjs"
+   ]
+  },
+  {
+   "from": "base_traits",
+   "to": "sim_society",
+   "kind": "call",
+   "labels": [
+    "facility-state.mjs"
    ]
   },
   {
@@ -2981,6 +3014,7 @@
    "labels": [
     "civic.mjs",
     "elections.mjs",
+    "facility-state.mjs",
     "governance.mjs",
     "monster-society.mjs",
     "notables.mjs",
@@ -3178,6 +3212,14 @@
    "kind": "call",
    "labels": [
     "magic-growth.mjs"
+   ]
+  },
+  {
+   "from": "sim_agriculture",
+   "to": "sim_society",
+   "kind": "call",
+   "labels": [
+    "facility-state.mjs"
    ]
   },
   {
@@ -3413,6 +3455,7 @@
    "to": "sim_society",
    "kind": "call",
    "labels": [
+    "facility-state.mjs",
     "group-account.mjs",
     "reputation-registry.mjs"
    ]
@@ -3568,6 +3611,7 @@
    "to": "sim_society",
    "kind": "call",
    "labels": [
+    "facility-state.mjs",
     "organizations.mjs",
     "promotion.mjs",
     "reputation-registry.mjs"
@@ -3686,6 +3730,7 @@
    "to": "sim_society",
    "kind": "call",
    "labels": [
+    "facility-state.mjs",
     "monster-society.mjs"
    ]
   },
@@ -3962,6 +4007,7 @@
    "to": "sim_society",
    "kind": "call",
    "labels": [
+    "facilities.mjs",
     "governance.mjs",
     "organizations.mjs",
     "titles.mjs",
@@ -4071,6 +4117,7 @@
    "to": "sim_society",
    "kind": "call",
    "labels": [
+    "facility-state.mjs",
     "governance.mjs",
     "public-opinion.mjs",
     "quest-board.mjs",
@@ -4084,6 +4131,14 @@
    "labels": [
     "wildlife-awakening.mjs",
     "wildlife.mjs"
+   ]
+  },
+  {
+   "from": "sim_society",
+   "to": "base_advance",
+   "kind": "call",
+   "labels": [
+    "advance-layers.mjs"
    ]
   },
   {
@@ -4105,11 +4160,27 @@
   },
   {
    "from": "sim_society",
+   "to": "base_interactions",
+   "kind": "call",
+   "labels": [
+    "interactions.mjs"
+   ]
+  },
+  {
+   "from": "sim_society",
    "to": "base_standing",
    "kind": "call",
    "labels": [
     "entity-view.mjs",
     "standing.mjs"
+   ]
+  },
+  {
+   "from": "sim_society",
+   "to": "base_traits",
+   "kind": "call",
+   "labels": [
+    "traits.mjs"
    ]
   },
   {
@@ -4159,7 +4230,8 @@
    "to": "sim_environment",
    "kind": "call",
    "labels": [
-    "remote-generation.mjs"
+    "remote-generation.mjs",
+    "weather.mjs"
    ]
   },
   {
@@ -5209,6 +5281,7 @@
    "kind": "effect",
    "labels": [
     "environment",
+    "facility",
     "flood"
    ]
   },
@@ -5277,6 +5350,8 @@
    "to": "sim_society",
    "kind": "effect",
    "labels": [
+    "facility",
+    "flood",
     "quest_post",
     "standing"
    ]
@@ -5992,11 +6067,23 @@
    "partitions": []
   },
   {
+   "id": "facilities",
+   "order": 890,
+   "stepped": false,
+   "nextMinute": true,
+   "modules": [
+    "server-plugin/facilities.mjs"
+   ],
+   "inline": false,
+   "partitions": []
+  },
+  {
    "id": "projects",
    "order": 900,
    "stepped": false,
    "nextMinute": false,
    "modules": [
+    "server-plugin/facilities.mjs",
     "server-plugin/progression.mjs",
     "server-plugin/public-projects.mjs"
    ],
@@ -7139,6 +7226,7 @@
    "server-plugin/creature-nature.mjs",
    "server-plugin/effects.mjs",
    "server-plugin/environment.mjs",
+   "server-plugin/facilities.mjs",
    "server-plugin/magic-marks.mjs",
    "server-plugin/magic-object.mjs",
    "server-plugin/magic-water-earth.mjs",
@@ -7210,6 +7298,7 @@
    "server-plugin/creature-nature.mjs",
    "server-plugin/effects.mjs",
    "server-plugin/extraction.mjs",
+   "server-plugin/facilities.mjs",
    "server-plugin/interactions.mjs",
    "server-plugin/magic-marks.mjs",
    "server-plugin/magic-object.mjs",
@@ -7346,6 +7435,24 @@
     ]
    },
    {
+    "kind": "facility",
+    "sources": [
+     "world",
+     "faction",
+     "festival",
+     "season"
+    ],
+    "registeredIn": "server-plugin/effects.mjs",
+    "modules": [
+     "server-plugin/effects.mjs",
+     "server-plugin/facilities.mjs",
+     "server-plugin/facility-state.mjs",
+     "server-plugin/interactions.mjs"
+    ],
+    "usedByHooks": [],
+    "usedIn": []
+   },
+   {
     "kind": "famine",
     "sources": [
      "world",
@@ -7373,6 +7480,7 @@
     "registeredIn": "server-plugin/seasonal-hazards.mjs",
     "modules": [
      "server-plugin/environment.mjs",
+     "server-plugin/facility-state.mjs",
      "server-plugin/interactions.mjs",
      "server-plugin/seasonal-hazards.mjs"
     ],
@@ -7716,6 +7824,7 @@
       "server-plugin/contracts.mjs",
       "server-plugin/credit.mjs",
       "server-plugin/engine.mjs",
+      "server-plugin/facility-state.mjs",
       "server-plugin/items.mjs",
       "server-plugin/monster-society.mjs",
       "server-plugin/npc-schedule.mjs",
@@ -8392,6 +8501,7 @@
       "server-plugin/duels.mjs",
       "server-plugin/elections.mjs",
       "server-plugin/extraction.mjs",
+      "server-plugin/facility-state.mjs",
       "server-plugin/faction-clock.mjs",
       "server-plugin/festival.mjs",
       "server-plugin/governance.mjs",
@@ -9162,6 +9272,7 @@
     "server-plugin/engine.mjs",
     "server-plugin/entity-view.mjs",
     "server-plugin/environment.mjs",
+    "server-plugin/facility-state.mjs",
     "server-plugin/faction-clock.mjs",
     "server-plugin/farm-pests.mjs",
     "server-plugin/festival.mjs",
@@ -9873,10 +9984,10 @@
    ],
    "readers": [
     "base_standing",
+    "base_traits",
     "sim_character",
     "sim_clock",
-    "sim_economy",
-    "sim_npc"
+    "sim_economy"
    ]
   },
   "careerCooldowns": {
@@ -9944,7 +10055,9 @@
    "readers": [
     "base_events",
     "base_standing",
+    "base_traits",
     "sim_character",
+    "sim_environment",
     "ui_scene",
     "ui_server"
    ]
@@ -10828,6 +10941,9 @@
       "server-plugin/civic.mjs",
       "server-plugin/engine.mjs",
       "server-plugin/entity-view.mjs",
+      "server-plugin/environment.mjs",
+      "server-plugin/facilities.mjs",
+      "server-plugin/facility-state.mjs",
       "server-plugin/governance.mjs",
       "server-plugin/hazard-calendar.mjs",
       "server-plugin/military.mjs",
@@ -10887,6 +11003,7 @@
       "server-plugin/entity-view.mjs",
       "server-plugin/environment.mjs",
       "server-plugin/extraction.mjs",
+      "server-plugin/facilities.mjs",
       "server-plugin/interactions.mjs",
       "server-plugin/magic-object.mjs",
       "server-plugin/npc-autonomy.mjs",
@@ -10904,7 +11021,8 @@
       "sim_economy",
       "sim_environment",
       "sim_magic",
-      "sim_npc"
+      "sim_npc",
+      "sim_society"
      ]
     },
     {
@@ -10912,15 +11030,19 @@
      "means": "制造工位",
      "pattern": "workstations",
      "modules": [
+      "server-plugin/entity-view.mjs",
+      "server-plugin/facility-state.mjs",
       "server-plugin/magic-object.mjs",
       "server-plugin/manufacturing.mjs",
       "server-plugin/npc-autonomy.mjs",
       "server-plugin/wildlife-habitats.mjs"
      ],
      "systems": [
+      "base_standing",
       "sim_economy",
       "sim_magic",
       "sim_npc",
+      "sim_society",
       "sim_wildlife"
      ]
     },
@@ -10931,11 +11053,13 @@
      "modules": [
       "server-plugin/credit.mjs",
       "server-plugin/engine.mjs",
+      "server-plugin/facility-state.mjs",
       "server-plugin/wildlife-habitats.mjs"
      ],
      "systems": [
       "kernel_engine",
       "sim_economy",
+      "sim_society",
       "sim_wildlife"
      ]
     },
@@ -10989,6 +11113,7 @@
       "server-plugin/credit.mjs",
       "server-plugin/entity-view.mjs",
       "server-plugin/environment.mjs",
+      "server-plugin/facility-state.mjs",
       "server-plugin/festival.mjs",
       "server-plugin/lies.mjs",
       "server-plugin/location-access.mjs",
@@ -11026,8 +11151,8 @@
      "pattern": "openHours",
      "modules": [
       "server-plugin/agriculture.mjs",
+      "server-plugin/facilities.mjs",
       "server-plugin/festival.mjs",
-      "server-plugin/public-projects.mjs",
       "server-plugin/remote-generation.mjs",
       "server-plugin/training.mjs"
      ],
@@ -11044,6 +11169,7 @@
      "means": "地图与距离、法术范围",
      "pattern": "coordinates",
      "modules": [
+      "server-plugin/facilities.mjs",
       "server-plugin/magic-area.mjs",
       "server-plugin/magic-context.mjs",
       "server-plugin/magic-targeting.mjs",
@@ -11516,6 +11642,7 @@
       "server-plugin/engine.mjs",
       "server-plugin/entity-transitions.mjs",
       "server-plugin/entity-view.mjs",
+      "server-plugin/facilities.mjs",
       "server-plugin/faction-clock.mjs",
       "server-plugin/farm-pests-migration.mjs",
       "server-plugin/farm-pests.mjs",
@@ -11595,6 +11722,7 @@
       "server-plugin/activities.mjs",
       "server-plugin/business.mjs",
       "server-plugin/entity-view.mjs",
+      "server-plugin/facility-state.mjs",
       "server-plugin/festival.mjs",
       "server-plugin/npc-autonomy.mjs",
       "server-plugin/npc-schedule.mjs",
@@ -11608,6 +11736,7 @@
       "sim_clock",
       "sim_economy",
       "sim_npc",
+      "sim_society",
       "ui_scene"
      ]
     },
@@ -11835,6 +11964,7 @@
      "pattern": "itemTraits|applyInteraction",
      "modules": [
       "server-plugin/effects.mjs",
+      "server-plugin/environment.mjs",
       "server-plugin/interactions.mjs",
       "server-plugin/magic-marks.mjs",
       "server-plugin/magic-object.mjs",
@@ -11849,6 +11979,7 @@
       "base_traits",
       "sim_clock",
       "sim_economy",
+      "sim_environment",
       "sim_magic"
      ]
     },
@@ -12821,6 +12952,10 @@
     "note": "已注册，但 rules.json 与 lore 的任何 effects 列表都没有用到"
    },
    {
+    "kind": "facility",
+    "note": "已注册，但 rules.json 与 lore 的任何 effects 列表都没有用到"
+   },
+   {
     "kind": "trade",
     "note": "已注册，但 rules.json 与 lore 的任何 effects 列表都没有用到"
    },
@@ -12895,8 +13030,7 @@
     "fields": [
      "acquisition",
      "inspection",
-     "seasonality",
-     "storage"
+     "seasonality"
     ]
    },
    {
@@ -12926,8 +13060,7 @@
      "styles",
      "trainingRule",
      "upstream",
-     "weapons",
-     "workshop"
+     "weapons"
     ]
    },
    {
@@ -12964,6 +13097,7 @@
     "server-plugin/elections.mjs",
     "server-plugin/environment.mjs",
     "server-plugin/extraction.mjs",
+    "server-plugin/facility-state.mjs",
     "server-plugin/faction-clock.mjs",
     "server-plugin/festival.mjs",
     "server-plugin/governance.mjs",
@@ -13023,7 +13157,7 @@
    ],
    "world": [],
    "worldDirs": [],
-   "lines": 241
+   "lines": 244
   },
   "server-plugin/advance-layers.mjs": {
    "system": "base_advance",
@@ -13059,6 +13193,7 @@
     "server-plugin/credit.mjs",
     "server-plugin/effects.mjs",
     "server-plugin/entity-view.mjs",
+    "server-plugin/facilities.mjs",
     "server-plugin/faction-clock.mjs",
     "server-plugin/festival.mjs",
     "server-plugin/governance.mjs",
@@ -13122,7 +13257,7 @@
     "npcs"
    ],
    "worldDirs": [],
-   "lines": 177
+   "lines": 180
   },
   "server-plugin/agriculture-migration.mjs": {
    "system": "kernel_storage",
@@ -13145,6 +13280,7 @@
   "server-plugin/agriculture.mjs": {
    "system": "sim_agriculture",
    "imports": [
+    "server-plugin/facility-state.mjs",
     "server-plugin/farm-pests.mjs",
     "server-plugin/magic-growth.mjs",
     "server-plugin/weather.mjs"
@@ -13181,7 +13317,7 @@
     "spells"
    ],
    "worldDirs": [],
-   "lines": 325
+   "lines": 326
   },
   "server-plugin/archived-reducer.mjs": {
    "system": "kernel_engine",
@@ -13776,6 +13912,8 @@
    "system": "base_effects",
    "imports": [
     "server-plugin/environment.mjs",
+    "server-plugin/facilities.mjs",
+    "server-plugin/facility-state.mjs",
     "server-plugin/interactions.mjs",
     "server-plugin/magic-object.mjs",
     "server-plugin/reputation-registry.mjs",
@@ -13814,7 +13952,7 @@
    "worldDirs": [
     "meta"
    ],
-   "lines": 195
+   "lines": 208
   },
   "server-plugin/elections.mjs": {
    "system": "sim_society",
@@ -13871,6 +14009,7 @@
     "server-plugin/credit.mjs",
     "server-plugin/entity-view.mjs",
     "server-plugin/environment.mjs",
+    "server-plugin/facility-state.mjs",
     "server-plugin/faction-clock.mjs",
     "server-plugin/festival.mjs",
     "server-plugin/hazard-calendar.mjs",
@@ -13993,7 +14132,7 @@
     "spells"
    ],
    "worldDirs": [],
-   "lines": 708
+   "lines": 711
   },
   "server-plugin/entity-transitions.mjs": {
    "system": "base_events",
@@ -14016,6 +14155,7 @@
   "server-plugin/entity-view.mjs": {
    "system": "base_standing",
    "imports": [
+    "server-plugin/facility-state.mjs",
     "server-plugin/npc-state.mjs",
     "server-plugin/organization-state.mjs",
     "server-plugin/promotion-view.mjs"
@@ -14062,11 +14202,12 @@
     "settlementProfiles"
    ],
    "worldDirs": [],
-   "lines": 441
+   "lines": 445
   },
   "server-plugin/environment.mjs": {
    "system": "sim_environment",
    "imports": [
+    "server-plugin/facility-state.mjs",
     "server-plugin/interactions.mjs",
     "server-plugin/magic-air.mjs",
     "server-plugin/magic-care.mjs",
@@ -14084,6 +14225,7 @@
     "records"
    ],
    "stateReads": [
+    "created",
     "effects",
     "location",
     "minute",
@@ -14103,7 +14245,7 @@
    "worldDirs": [
     "design"
    ],
-   "lines": 235
+   "lines": 247
   },
   "server-plugin/extraction.mjs": {
    "system": "sim_economy",
@@ -14133,6 +14275,57 @@
    ],
    "worldDirs": [],
    "lines": 94
+  },
+  "server-plugin/facilities.mjs": {
+   "system": "sim_society",
+   "imports": [
+    "server-plugin/advance-layers.mjs",
+    "server-plugin/facility-state.mjs",
+    "server-plugin/interactions.mjs",
+    "server-plugin/traits.mjs",
+    "server-plugin/weather.mjs",
+    "server-plugin/world-events.mjs"
+   ],
+   "stateWrites": [
+    "buildings",
+    "created",
+    "records"
+   ],
+   "stateReads": [
+    "location",
+    "minute",
+    "npcs"
+   ],
+   "recordWrites": [],
+   "recordReads": [
+    "world_event"
+   ],
+   "rules": [],
+   "world": [],
+   "worldDirs": [],
+   "lines": 129
+  },
+  "server-plugin/facility-state.mjs": {
+   "system": "sim_society",
+   "imports": [],
+   "stateWrites": [],
+   "stateReads": [
+    "buildings",
+    "created",
+    "projects",
+    "records"
+   ],
+   "recordWrites": [],
+   "recordReads": [
+    "facility_region"
+   ],
+   "rules": [],
+   "world": [
+    "locations",
+    "routes"
+   ],
+   "worldDirs": [],
+   "lines": 90
   },
   "server-plugin/faction-clock.mjs": {
    "system": "sim_clock",
@@ -14381,6 +14574,8 @@
    "system": "base_interactions",
    "imports": [
     "server-plugin/environment.mjs",
+    "server-plugin/facilities.mjs",
+    "server-plugin/facility-state.mjs",
     "server-plugin/magic-object.mjs",
     "server-plugin/traits.mjs",
     "world/design/interaction-rules.mjs"
@@ -14401,7 +14596,7 @@
    "worldDirs": [
     "design"
    ],
-   "lines": 111
+   "lines": 114
   },
   "server-plugin/items.mjs": {
    "system": "sim_economy",
@@ -14522,6 +14717,7 @@
    "imports": [
     "server-plugin/entity-view.mjs",
     "server-plugin/environment.mjs",
+    "server-plugin/facility-state.mjs",
     "server-plugin/magic-consent.mjs",
     "server-plugin/magic-message.mjs",
     "server-plugin/sites.mjs"
@@ -14542,7 +14738,7 @@
    ],
    "world": [],
    "worldDirs": [],
-   "lines": 113
+   "lines": 115
   },
   "server-plugin/lore.mjs": {
    "system": "nar_memory",
@@ -15153,6 +15349,7 @@
    "system": "sim_economy",
    "imports": [
     "server-plugin/checks.mjs",
+    "server-plugin/facility-state.mjs",
     "server-plugin/items.mjs",
     "server-plugin/magic-object.mjs",
     "server-plugin/professions.mjs",
@@ -15167,7 +15364,6 @@
     "workshopFunds"
    ],
    "stateReads": [
-    "buildings",
     "itemInstances",
     "location",
     "minute",
@@ -15186,7 +15382,7 @@
     "locations"
    ],
    "worldDirs": [],
-   "lines": 131
+   "lines": 134
   },
   "server-plugin/migrations.mjs": {
    "system": "kernel_storage",
@@ -15329,6 +15525,7 @@
    "imports": [
     "server-plugin/combat.mjs",
     "server-plugin/entity-view.mjs",
+    "server-plugin/facility-state.mjs",
     "server-plugin/governance.mjs",
     "server-plugin/items.mjs",
     "server-plugin/magic-object.mjs",
@@ -15350,7 +15547,6 @@
     "workshopFunds"
    ],
    "stateReads": [
-    "buildings",
     "created",
     "location",
     "minute",
@@ -15367,7 +15563,7 @@
     "recipes"
    ],
    "worldDirs": [],
-   "lines": 210
+   "lines": 211
   },
   "server-plugin/npc-cognition.mjs": {
    "system": "sim_npc",
@@ -15646,6 +15842,7 @@
    "imports": [
     "server-plugin/advance-layers.mjs",
     "server-plugin/entity-view.mjs",
+    "server-plugin/facility-state.mjs",
     "server-plugin/festival.mjs",
     "server-plugin/magic-mind-space.mjs",
     "server-plugin/magic-water-earth.mjs",
@@ -15670,7 +15867,7 @@
     "npcs"
    ],
    "worldDirs": [],
-   "lines": 173
+   "lines": 175
   },
   "server-plugin/npc-state.mjs": {
    "system": "sim_npc",
@@ -16018,6 +16215,8 @@
    "system": "sim_society",
    "imports": [
     "server-plugin/entity-transitions.mjs",
+    "server-plugin/facilities.mjs",
+    "server-plugin/facility-state.mjs",
     "server-plugin/governance.mjs",
     "server-plugin/items.mjs",
     "server-plugin/npc-life.mjs",
@@ -16025,16 +16224,16 @@
    ],
    "stateWrites": [
     "buildings",
-    "created",
     "npcs",
+    "player",
     "projects",
     "records",
     "settlements"
    ],
    "stateReads": [
+    "created",
     "location",
-    "minute",
-    "player"
+    "minute"
    ],
    "recordWrites": [],
    "recordReads": [
@@ -16043,7 +16242,7 @@
    "rules": [],
    "world": [],
    "worldDirs": [],
-   "lines": 242
+   "lines": 259
   },
   "server-plugin/quest-board.mjs": {
    "system": "sim_society",
@@ -16394,7 +16593,7 @@
     "settlementProfiles"
    ],
    "worldDirs": [],
-   "lines": 164
+   "lines": 165
   },
   "server-plugin/revival.mjs": {
    "system": "sim_character",
@@ -16497,6 +16696,7 @@
    "imports": [
     "server-plugin/effects.mjs",
     "server-plugin/environment.mjs",
+    "server-plugin/facility-state.mjs",
     "server-plugin/hazard-calendar.mjs",
     "server-plugin/interactions.mjs",
     "server-plugin/npc-life.mjs"
@@ -16538,7 +16738,7 @@
    "worldDirs": [
     "design"
    ],
-   "lines": 363
+   "lines": 365
   },
   "server-plugin/seasonal-migration.mjs": {
    "system": "sim_wildlife",
@@ -16601,6 +16801,7 @@
    "system": "sim_economy",
    "imports": [
     "server-plugin/agriculture.mjs",
+    "server-plugin/facility-state.mjs",
     "server-plugin/hazard-calendar.mjs",
     "server-plugin/traits.mjs",
     "server-plugin/weather.mjs"
@@ -16635,7 +16836,7 @@
     "rules"
    ],
    "worldDirs": [],
-   "lines": 236
+   "lines": 237
   },
   "server-plugin/shop.mjs": {
    "system": "sim_economy",
@@ -16902,10 +17103,13 @@
   "server-plugin/traits.mjs": {
    "system": "base_traits",
    "imports": [
-    "server-plugin/entity-view.mjs"
+    "server-plugin/entity-view.mjs",
+    "server-plugin/facility-state.mjs"
    ],
    "stateWrites": [],
    "stateReads": [
+    "buildings",
+    "created",
     "creatures",
     "inventory",
     "itemInstances",
@@ -16922,7 +17126,7 @@
    "worldDirs": [
     "meta"
    ],
-   "lines": 151
+   "lines": 156
   },
   "server-plugin/tribal-awakening.mjs": {
    "system": "sim_society",
@@ -17119,6 +17323,7 @@
    "system": "sim_military",
    "imports": [
     "server-plugin/effects.mjs",
+    "server-plugin/facilities.mjs",
     "server-plugin/military.mjs",
     "server-plugin/regions.mjs",
     "server-plugin/settlement-trade.mjs",
@@ -17159,7 +17364,7 @@
     "rules"
    ],
    "worldDirs": [],
-   "lines": 182
+   "lines": 184
   },
   "server-plugin/weather.mjs": {
    "system": "sim_environment",
@@ -17462,7 +17667,7 @@
    "rules": [],
    "world": [],
    "worldDirs": [],
-   "lines": 156
+   "lines": 157
   },
   "server-plugin/world-registry.mjs": {
    "system": "kernel_storage",
@@ -17879,7 +18084,7 @@
    "rules": [],
    "world": [],
    "worldDirs": [],
-   "lines": 110
+   "lines": 112
   },
   "extension/topbar.mjs": {
    "system": "ui_client",

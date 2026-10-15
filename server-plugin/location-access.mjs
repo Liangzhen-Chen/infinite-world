@@ -1,10 +1,12 @@
 import {magicMessagePermission}from'./magic-message.mjs';
+import {facilityView}from'./facility-state.mjs';
 import {spellConsentPermission}from'./magic-consent.mjs';
 import {environmentFeatures}from'./environment.mjs';
 import {sitePermission}from'./sites.mjs';
 import {personAge,personSimulation,personConstraint,homeResidents}from'./entity-view.mjs';
 // Existing authorization records govern entry; the route alone is not consent.
 export function assertLocationAccess(d,engine,destination,{authorization,companions=[],arrivalMinute=d.get('state','minute')}={}){
+ if(facilityView(engine,d.get('state'),destination)?.factor===0)throw Error('建筑已停用，不能居住或进入服务区');
  const place=engine.byId.get(destination),access=place?.access;
  if(!['private','council'].includes(access?.mode)||access.requiresConsent!==true)return;
  const permission=authorization?d.get('state','records',authorization):null;

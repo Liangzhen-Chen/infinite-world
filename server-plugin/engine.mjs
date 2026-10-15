@@ -1,3 +1,4 @@
+import {facilityView,facilityRouteStates} from './facility-state.mjs';
 import {personTeaching} from './entity-view.mjs';
 import { applyPatches, canonical, PatchCursor } from './storage.mjs';
 import { EntityResolver, validateMemory, normalize } from './retrieval.mjs';
@@ -294,6 +295,7 @@ export class WorldEngine {
         if(args.service==='住宿'&&!place)throw new Error('这个人没有登记住宿服务');
         for(const actor of [buyer,seller])if(actor!=='player'&&!place)assertNpcService(d,this,actor,'trade',5);
         if(place){
+            if(facilityView(this,d.get('state'),place.id)?.factor===0)throw Error('住宿建筑已停用');
             assertLodgingHost(d,this,seller,place,args.consent);
             const economy=this.rules.economy,host=this.byId.get(seller).name;
             const days=number(args.days??1,1,7,'住宿天数'),cost=days===7?place.lodging.weeklyCopper??economy.rentalCopperPerWeek:days*(place.lodging.nightlyCopper??economy.rentalCopperPerNight);
@@ -401,7 +403,7 @@ export class WorldEngine {
             }
             graph={order,adjacent,oriented:new Map()};graphCache?.set(key,graph);
         }
-        const {order,adjacent}=graph,settled=new Set(),oriented=graph.oriented??new Map(),closedRoutes=warClosedRoutes(this.airDraft?.get('state'),minute);
+        const {order,adjacent}=graph,settled=new Set(),oriented=graph.oriented??new Map(),closedRoutes=warClosedRoutes(this.airDraft?.get('state'),minute),facilities=facilityRouteStates(this,this.airDraft?.get('state'));
         // P2: each edge as seen from one end, built once per topology (read-only).
         const from_=(edge,node)=>{let ends=oriented.get(edge);if(!ends){ends=new Map();oriented.set(edge,ends);}let row=ends.get(node);if(!row){row={...edge,from:node};ends.set(node,row);}return row;};
         // P2: a binary heap of discovered nodes ordered by (distance, world
@@ -428,8 +430,9 @@ export class WorldEngine {
             settled.add(current);if(current===to)break;
             for(const edge of adjacent.get(current)??[]){
                 if(closedRoutes.has(edge.id))continue;
+                if(facilities.get(edge.id)?.factor===0)continue;
                 const next=edge.from===current?edge.to:edge.to===current?edge.from:null;if(!next||!order.has(next)||settled.has(next))continue;
-                const speed=edge.speedKmh??(mode==='cart'?this.rules.travel.cartKmh:this.rules.travel.walkKmh*(mode==='horse'?this.rules.travel.horseMultiplier:1))*(edge.terrainMultiplier??1);
+                const speed=(edge.speedKmh??(mode==='cart'?this.rules.travel.cartKmh:this.rules.travel.walkKmh*(mode==='horse'?this.rules.travel.horseMultiplier:1))*(edge.terrainMultiplier??1))*(facilities.has(edge.id)?1.25*facilities.get(edge.id).factor:1);
                 const travel=this.rules.weather?weatherEdge(this,seed,from_(edge,current),mode,minute,distances.get(current),movingTimes.get(current),speed,weatherCache):null;
                 if(this.rules.weather&&!travel)continue;
                 const elapsed=Math.max(1,Math.ceil(edge.lengthKm/speed*60)),candidate=travel?.elapsed??distances.get(current)+elapsed;

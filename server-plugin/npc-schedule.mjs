@@ -1,3 +1,4 @@
+import {facilityView} from './facility-state.mjs';
 // Routine movement is recorded in the same event as elapsed world time.
 import {waterEarthHeldUntil}from'./magic-water-earth.mjs';
 import {mindSleepUntil}from'./magic-mind-space.mjs';
@@ -48,6 +49,7 @@ export function npcAvailability(engine,state,npcId){
 
 export function assertNpcService(d,engine,npcId,service,minutes){
     const state=d.get('state'),npc=state.npcs[npcId];
+    if(facilityView(engine,state,npc?.location)?.factor===0)throw Error('服务场所已停用');
     if(!npc||npc.location!==state.location)throw new Error('服务者不在场');
     if(personConstraint(engine,state,npcId))throw new Error('服务者正在依法拘留，不能提供服务');
     engine.assertNpcObligationAction?.(d,['player',npcId],{minutes,location:state.location,kind:service});

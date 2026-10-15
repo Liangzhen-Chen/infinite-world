@@ -14,6 +14,8 @@ function fixture(){
  const world=structuredClone(source);
  // 健康随机关掉，等待期间只有测试放进去的变化。
  world.rules.npcLife.health={...world.rules.npcLife.health,bands:[{fromAge:0,illnessPerYear:0,graveShare:0,suddenDeathPerYear:0}]};
+ // 本夹具只注入返场事实；T155自动告示另有专项，不能混入唯一丧事的断言。
+ world.rules.questSources.wildlife=[];
  const engine=new WorldEngine(world),doc=engine.createCharacter(seed,{name:'试'},'return-summary');
  doc.state.location=hall;
  return {engine,doc};

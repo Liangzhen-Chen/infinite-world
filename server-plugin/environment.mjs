@@ -1,3 +1,5 @@
+import {facilityView,isFacility} from './facility-state.mjs';
+import {applyInteraction} from './interactions.mjs';
 import {registerMagicEffect}from'./magic-effects.mjs';
 import {inspectCare}from'./magic-care.mjs';
 import {inspectMindSpace,inspectMindCarrier,assertMindSpacePath,unlockMindSpaceDoor,assertMindAwake}from'./magic-mind-space.mjs';
@@ -169,6 +171,16 @@ export function applyEnvironmentMagic(d,prepared,eventId){
 
 export function interactEnvironment(d,args,eventId){
     const location=d.get('state','location'),operation=args.operation??'inspect';
+    const building=args.target&&(d.get('state','created',args.target)??this.byId.get(args.target));
+    if(isFacility(building)){
+        if(building.id!==location&&building.parent!==location)throw Error('建筑不在近旁');
+        if(operation==='inspect')return {facility:facilityView(this,d.get('state'),building.id),actionScope:{kind:'instant',instantaneous:true}};
+        if(operation==='douse_fire'){
+            if(this.quantity(d,'player','item_water')<1)throw Error('没有可用来灭火的水');
+            this.itemDelta(d,'player','item_water',-1);
+            const changed=applyInteraction(d,this,{agent:'water',target:building.id});this.advance(d,1,eventId);return {target:building.id,...changed,minutes:1};
+        }
+    }
     const lightAction=normalLightAction.call(this,d,args);if(lightAction)return lightAction;
     if(['turn_grain','sound','fall','breathe'].includes(operation))return airEnvironmentAction.call(this,d,args,eventId);
     if(operation==='inspect'){
