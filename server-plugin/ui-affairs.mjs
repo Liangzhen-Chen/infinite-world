@@ -1,4 +1,5 @@
 import {questPublishingRights} from './quest-board.mjs';
+import {placeView,personName} from './entity-view.mjs';
 const closed=new Set(['已完成','取消','已取消','已还清','已终止','已到期','已否决','违约','失败','超期']);
 const finite=value=>Number.isFinite(value)?value:null;
 const pick=(row,keys)=>Object.fromEntries(keys.map(key=>[key,row?.[key]??null]));
@@ -9,7 +10,7 @@ const byDeadline=(a,b)=>(a.deadline??Infinity)-(b.deadline??Infinity)||a.id.loca
 // do not supply ownership, and an entry/home authorization cannot open a ledger.
 export function affairs(engine,document){
     const s=document.state,records=s.records??{},now=s.minute??0;
-    const name=id=>id==='player'?s.player?.name??'本人':engine.byId.get(id)?.name??s.created?.[id]?.name??'未识别对象';
+    const name=id=>personName(engine,s,id).value??engine.byId.get(id)?.name??s.created?.[id]?.name??'未识别对象';
     const date=minute=>Number.isFinite(minute)?engine.calendar(minute).text:null;
     const commitment=(id,row,kind,from,to,deadline,details)=>{
         const due=finite(deadline),active=!closed.has(row.status);
@@ -35,7 +36,7 @@ export function affairs(engine,document){
     const holdings=Object.entries(s.buildings??{}).filter(([,r])=>r?.owner==='player')
         .map(([id,r])=>({id,name:name(id),condition:r.condition??null}));
     const settlements=Object.entries(s.settlements??{}).filter(([id,r])=>r&&(r.owner==='player'||local.has(id))).map(([id,r])=>{
-        const profile=engine.world.settlementProfiles?.find(row=>row.id===id),farm=records[`agriculture:${id}`];
+        const current=placeView(engine,s,id),farm=records[`agriculture:${id}`];
         const pending=Object.entries(records).filter(([,row])=>row?.settlement===id&&
             (row.category==='governance_request'&&['待办理','待权限决定'].includes(row.status)||
              row.category==='governance_proposal'&&['议事中','意见已确认'].includes(row.status)||
@@ -49,8 +50,9 @@ export function affairs(engine,document){
             .sort((a,b)=>(b.minute??-Infinity)-(a.minute??-Infinity));
         const projects=Object.entries(s.projects??{}).filter(([,row])=>row?.type==='工程'&&row.settlement===id)
             .map(([key,row])=>({id:key,...pick(row,['name','status','remainingDays','wood','stone'])}));
-        return {id,name:name(id),scope:r.owner==='player'?'owned':'public',population:r.population??profile?.population??null,
-            households:profile?.householdCount??null,stock:{...pick(r,['food','treasury','wood','stone','iron']),seed:farm?.field?.seedBank??null},
+        return {id,name:name(id),scope:r.owner==='player'?'owned':'public',population:current?.population.population.value??null,
+            head:current?.government.head.value?name(current.government.head.value):null,
+            households:current?.population.householdCount.value??null,stock:{...pick(r,['food','treasury','wood','stone','iron']),seed:farm?.field?.seedBank??null},
             fiscal:fiscal(records[`village-fiscal:${id}`]),projects,pending,reports};
     });
     return {minute:now,time:date(now),tasks,obligations,quota,holdings,settlements};

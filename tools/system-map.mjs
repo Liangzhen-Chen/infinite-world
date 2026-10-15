@@ -135,7 +135,7 @@ const SYSTEMS=[
  // 底座层 K1–K7
  {id:'base_traits',layer:'base',name:'性状标签',card:'K1',modules:['traits.mjs']},
  {id:'base_interactions',layer:'base',name:'交互规则',card:'K2',modules:['interactions.mjs']},
- {id:'base_events',layer:'base',name:'世界事件',card:'K3',modules:['world-events.mjs']},
+ {id:'base_events',layer:'base',name:'世界事件',card:'K3/V6',modules:['world-events.mjs','entity-transitions.mjs']},
  {id:'base_standing',layer:'base',name:'统一立场',card:'K4/K5',modules:['standing.mjs','entity-view.mjs']},
  {id:'base_effects',layer:'base',name:'效果表',card:'K6',modules:['effects.mjs']},
  {id:'base_advance',layer:'base',name:'推进注册表',card:'K7',modules:['advance-registry.mjs']},

@@ -1,4 +1,5 @@
-import {lawAuthorities} from './entity-view.mjs';
+import {entityTransition,businessSnapshot,businessTransitions} from './entity-transitions.mjs';
+import {lawAuthorities,personName} from './entity-view.mjs';
 import { trackTransferUnit, transferItems, changeItems } from './items.mjs';
 import {advanceWithNpcParticipants,assertNpcService}from'./npc-schedule.mjs';
 import {shareNpcMemory}from'./npc-cognition.mjs';
@@ -157,7 +158,12 @@ export function enforceLegalRestriction(d,tool,args){
 export function advanceLaw(d,after,engine){
     for(const [id,hold] of Object.entries(d.get('state','records')??{}))if(hold.category==='legal_detention'&&(!hold.status||hold.status==='生效')){
         const dead=d.get('state','npcs',hold.subject,'status')==='死亡';
-        if(dead||(hold.expires??Infinity)<=after)d.set(path(id),{...hold,status:dead?'已中止':'已释放',ended:dead?after:hold.expires});
+        if(dead||(hold.expires??Infinity)<=after){
+            const shops=engine&&!dead?businessSnapshot(engine,{...d.get('state'),minute:hold.expires-1}):null;
+            d.set(path(id),{...hold,status:dead?'已中止':'已释放',ended:dead?after:hold.expires});
+            if(engine&&!dead)entityTransition(d,engine,{id:`${id}:release`,verb:'release',actor:hold.deliveredBy??hold.location,target:hold.subject,minute:hold.expires,location:hold.location,visibility:hold.private?'private':hold.visibility??'public',summary:`${personName(engine,d.get('state'),hold.subject).value??hold.subject}拘留期满释放`});
+            if(shops)businessTransitions(d,engine,shops,`${id}:release`,hold.expires);
+        }
     }
     for(const[id,r]of Object.entries(d.get('state','records')??{}))if(r.category==='authorization'&&r.sourceType==='magic_permit'&&!r.revoked&&r.expires<=after)d.set(path(id),{...r,revoked:true,status:'已到期',ended:r.expires});
     for(const[id,lock]of Object.entries(d.get('state','records')??{}))if(lock?.category==='legal_custody'&&lock.status==='生效'&&lock.reason!=='到案'&&
@@ -171,6 +177,7 @@ export function advanceLaw(d,after,engine){
     for(const[id,lock]of Object.entries(d.get('state','records')??{}))if(lock?.category==='legal_custody'&&lock.status==='生效'&&lock.reason!=='到案'&&lock.expires<=after){
         d.set(path(id),{...lock,status:'已结束',ended:lock.expires});
         const row=d.get(...path(lock.case));
+        if(engine)entityTransition(d,engine,{id:`${id}:release`,verb:'release',actor:lock.location,target:'player',minute:lock.expires,location:lock.location,visibility:row?.private?'private':row?.visibility??lock.visibility??'public',summary:`${d.get('state','player','name')}羁押或服役期满释放`});
         if(row?.category==='legal_case'&&lock.reason!=='待审'){
             d.set(path(lock.case),{...row,status:row.compensationPaid?'已结案':'待赔偿',sentenceCompleted:lock.expires,finePaid:0,fineDischarged:true});
             if(engine&&row.compensationPaid)recordLegalNotification(d,engine,d.get(...path(lock.case)),'fulfilled',`${row.id}:sentence:${lock.expires}`,localObservers(d));
@@ -214,6 +221,7 @@ export function recordExposedCorruption(d,engine,{target,law,offer,witnesses,eve
     const fund=safeFund(d,`legal_treasury:${law}`,'legal_treasury',{law}),seized=Math.min(offer,d.get('state','npcs',target,'coins'));
     d.set(['state','npcs',target,'coins'],d.get('state','npcs',target,'coins')-seized);d.set(path(`legal_treasury:${law}`),{...fund,coins:fund.coins+seized});
     d.set(path(`legal_dismissal:${target}`),{category:'legal_dismissal',npc:target,law,case:corruption,minute:now,sourceEvent:eventId});
+    entityTransition(d,engine,{id:`${corruption}:dismiss`,verb:'dismiss',actor:law,target,minute:now,location,witnesses,summary:`${personName(engine,d.get('state'),target).value??target}因受贿被撤职`});
     wanted=issueWanted(d,engine,d.get(...path(corruption)),WANTED_REASONS.flight,now);
     if(wanted)d.set(['state','npcs',target,'fugitive'],wanted.id);
     return {corruption,wanted};
@@ -259,7 +267,8 @@ function bribe(d,engine,args,eventId,row){
     }
     const effects=[];
     if(captor){const key=Object.entries(d.get('state','records')).find(([,r])=>r===hold||r?.category==='legal_custody'&&r.reason==='到案'&&r.status==='生效')?.[0];
-        if(key){d.set(path(key),{...d.get(...path(key)),status:'已放行',ended:now,releasedBy:target});effects.push('放行');}}
+        if(key){d.set(path(key),{...d.get(...path(key)),status:'已放行',ended:now,releasedBy:target});
+            entityTransition(d,engine,{id:`${key}:release`,verb:'release',actor:target,target:'player',minute:now,location:d.get('state','location'),visibility:'private',summary:`${personName(engine,d.get('state'),'player').value}获准离开羁押`});effects.push('放行');}}
     const latest=d.get(...path(row.id));
     if(enforcer&&['未报案','已报案','证据不足'].includes(latest.status)){d.set(path(row.id),{...latest,status:'已撤案',suppressedBy:target,closed:now});effects.push('撤案');}
     else if(w&&engine.rules.law.codes.find(c=>c.id===w.law)?.judges.includes(target)){closeWanted(d,engine,d.get(...path(w.id)),'已销案','审判者收钱销案',now);effects.push('销案');}
@@ -353,7 +362,10 @@ export function lawAction(d,args,eventId){
         else{
             const next={...row,status:'证据不足',appeal};delete next.judgment;d.set(path(row.id),next);
             const custody=d.get(...path(`legal_custody:${row.id}`));
-            if(custody?.status==='生效')d.set(path(`legal_custody:${row.id}`),{...custody,status:'已结束',ended:d.get('state','minute')});
+            if(custody?.status==='生效'){
+                d.set(path(`legal_custody:${row.id}`),{...custody,status:'已结束',ended:d.get('state','minute')});
+                entityTransition(d,this,{id:`legal_custody:${row.id}:release`,verb:'release',actor:judge,target:'player',location:code.court,visibility:row.private?'private':row.visibility??'public',summary:`${personName(this,d.get('state'),'player').value}复核后解除羁押`});
+            }
             recordLegalNotification(d,this,next,'overturned',eventId,localObservers(d));
         }
         return{case:row.id,upheld,appeal,note:'复核不重新收费或重新计算刑期'};
@@ -389,6 +401,7 @@ export function lawAction(d,args,eventId){
         advanceWithNpcParticipants(d,this,route.minutes,eventId,[officer]);d.set(['state','location'],code.court);d.set(['state','npcs',officer,'location'],code.court);
         if(d.get('state','player','mount'))d.remove(['state','player','mount']);
         d.set(path(custodyKey),{category:'legal_custody',case:row.id,reason:'待审',location:code.court,status:'生效',started:d.get('state','minute'),expires:d.get('state','minute')+code.maximumDetentionMinutes});
+        entityTransition(d,this,{id:`${custodyKey}:detain`,verb:'detain',actor:officer,target:'player',location:code.court,visibility:row.private?'private':row.visibility??'public',summary:`${d.get('state','player','name')}已依法羁押待审`});
         return{case:row.id,arrested:true,destination:code.court,route,custody:code.maximumDetentionMinutes};
     }
     if(operation==='hear'){
@@ -403,7 +416,10 @@ export function lawAction(d,args,eventId){
             communityMinutes:Math.min(code.maximumSentenceMinutes,fine*code.communityMinutesPerCopper),prisonMinutes:Math.min(code.maximumSentenceMinutes,fine*code.prisonMinutesPerCopper)};
         d.set(path(row.id),{...row,status:'已裁定',judgment});
         recordLegalNotification(d,this,d.get(...path(row.id)),'conviction',eventId,localObservers(d),{fresh:true});
-        for(const[lockKey,lock]of Object.entries(d.get('state','records')))if(lock?.category==='legal_custody'&&lock.case===row.id&&lock.reason==='待审'&&lock.status==='生效')d.set(path(lockKey),{...lock,status:'已结束',ended:d.get('state','minute')});
+        for(const[lockKey,lock]of Object.entries(d.get('state','records')))if(lock?.category==='legal_custody'&&lock.case===row.id&&lock.reason==='待审'&&lock.status==='生效'){
+            d.set(path(lockKey),{...lock,status:'已结束',ended:d.get('state','minute')});
+            entityTransition(d,this,{id:`${lockKey}:release`,verb:'release',actor:judge,target:'player',location:code.court,visibility:row.private?'private':row.visibility??'public',summary:`${personName(this,d.get('state'),'player').value}审结后解除待审羁押`});
+        }
         const victim={id:row.victim,name:this.byId.get(row.victim)?.name??row.victim};
         return{case:row.id,convicted:true,victim,judgment,fineCalculation:{base:penalty.baseFine,value:row.value,multiplier:penalty.valueMultiplier,total:fine},
             factSummary:`受害人为${victim.name}。罚款=${penalty.baseFine}铜+${row.value}铜×${penalty.valueMultiplier}=${fine}铜；赔偿${row.value}铜另付。社区服役${judgment.communityMinutes}分钟，监禁${judgment.prisonMinutes}分钟。当前没有付款，也没有开始服役。`,
@@ -426,6 +442,7 @@ export function lawAction(d,args,eventId){
         if(prior&&!(prior.category==='legal_custody'&&prior.case===row.id&&prior.status==='已中止'))throw new Error('服役记录已占用，不能重置或覆盖');
         const minutes=row.remainingSentence?.type===operation?row.remainingSentence.minutes:operation==='labor'?row.judgment.communityMinutes:row.judgment.prisonMinutes;
         d.set(path(key),{category:'legal_custody',case:row.id,reason:operation==='labor'?'劳役':'监禁',location:code.court,status:'生效',started:now,expires:now+minutes});
+        entityTransition(d,this,{id:`${eventId}:detain`,verb:'detain',actor:code.id,target:'player',location:code.court,visibility:row.private?'private':row.visibility??'public',summary:`${personName(this,d.get('state'),'player').value}开始${operation==='labor'?'劳役':'监禁'}`});
         d.set(path(row.id),{...row,status:'服役中',sentence:{type:operation,minutes},compensationPaid:row.value===0||Boolean(row.debt&&row.compensationPaid)});
         return{case:row.id,sentenceMinutes:minutes,compensationDebt:row.value,note:'刑期由真实世界时间推进，罚款折役；赔偿债务仍保留，不自动造钱或已经完成服役'};
     }

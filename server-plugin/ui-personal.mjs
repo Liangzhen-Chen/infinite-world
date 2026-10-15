@@ -1,6 +1,7 @@
 import {xpRequired} from './progression.mjs';
 import {skillGrade} from './engine.mjs';
 import {effectiveProficiency} from './professions.mjs';
+import {personName,personAge,personOccupation,personRelationships,personOffices,personView,groupView} from './entity-view.mjs';
 
 // Project only the player's holdings and learned content, using the saved world.
 export function personal(engine,document){
@@ -60,7 +61,11 @@ export function personal(engine,document){
             description:definition.use??'',...details(row),instances,untrackedQuantity:quantity-instances.length}];
     });
     const level=p.level??1,levelMaximum=engine.rules.levels.maximum;
-    return {minute:s.minute,player:{name:p.name??'旅人',level,xp:p.xp??0,nextLevelXp:level<levelMaximum?xpRequired(level+1):null,
+    const identity={occupation:personOccupation(engine,s,'player').value,age:personAge(engine,s,'player').value,
+        offices:personOffices(engine,s,'player').map(r=>({name:r.value.name,settlement:r.value.settlement})),
+        relations:personRelationships(engine,s,'player').value.map(r=>({with:r.with,name:personName(engine,s,r.with).value??r.with,type:r.type})),
+        positions:personView(engine,s,'player').organizations.filter(r=>r.value.source!=='household').map(r=>({org:r.value.id,name:groupView(engine,s,r.value.id)?.organization.value.name??r.value.id,position:r.value.position}))};
+    return {minute:s.minute,player:{name:personName(engine,s,'player').value??'旅人',...identity,level,xp:p.xp??0,nextLevelXp:level<levelMaximum?xpRequired(level+1):null,
         levelMaximum,freeAttributePoints:p.freeAttributePoints??0,hp:p.hp??null,maxHp:p.maxHp??null,mp:p.mp??null,maxMp:p.maxMp??null,
         coins:p.coins??0,status:p.status??'未记录',attributes:Object.fromEntries(engine.rules.attributes.map(key=>[key,p.attributes?.[key]??null]))},
         professions:careers,skills,spells,inventory,

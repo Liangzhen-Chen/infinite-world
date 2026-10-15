@@ -49,6 +49,7 @@ export function renderAffairsPanel(container,data,kind){
         for(const row of data.settlements){
             const area=section(`${row.name} · ${row.scope==='owned'?'本人领地':'本地公共事务'}`);
             if(row.scope==='public')note(area,'此处为所在地的公共账目，未登记为本人领地。');
+            if(row.head)note(area,`主官：${row.head}`);
             stats(area,[['人口',row.population],['户数',row.households],['公库',row.stock.treasury===null?'未登记':`${row.stock.treasury}铜`],['粮食',row.stock.food===null?'未登记':`${row.stock.food}粮单位`],['种粮',row.stock.seed===null?'未登记':`${row.stock.seed}粮单位`],['木料',row.stock.wood],['石料',row.stock.stone],['铁料',row.stock.iron]]);
             const finance=section('累计实际收支',area);
             if(!row.fiscal)note(finance,'尚无已登记收支明细。');

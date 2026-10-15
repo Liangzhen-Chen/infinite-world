@@ -41,6 +41,7 @@ export function renderHistoryPanel(container,data,kind,{query='',page=1,level='s
         const card=node('article',undefined,'fields-history-card');list.append(card);
         if(kind==='people'){
             const avatar=node('span',row.identity.slice(0,1),'fields-history-avatar');avatar.setAttribute('aria-hidden','true');card.append(avatar,node('h3',row.name),node('p',row.identity));
+            if(row.age!==null&&row.age!==undefined)card.append(node('p',`${row.age}岁`));
             card.append(node('p',`最后获知位置：${row.location} · ${row.locationTime}`,'fields-note'),node('p',row.description));
             card.append(node('p',`信任 ${row.relationship.trust} · 亲近 ${row.relationship.affection} · 敬重 ${row.relationship.respect} · 畏惧 ${row.relationship.fear}`));
             if(row.life?.length){card.append(node('h4','家况（截至你最后获知）'));for(const line of row.life)card.append(node('p',line));}

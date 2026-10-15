@@ -1,3 +1,4 @@
+import {entityTransition} from './entity-transitions.mjs';
 import {settlementHead,personRegistrar} from './entity-view.mjs';
 import {authorityOf,playerOffices,eligible} from './governance.mjs';
 import {standing} from './standing.mjs';
@@ -98,6 +99,7 @@ function decide(d,engine,p,at){
     const key=rankKey(p.settlement),old=adminLevel(engine,state,p.settlement);
     d.set(rec(key),{category:'settlement_rank',id:key,settlement:p.settlement,level:c.to,superior:cap.superior,since:at,previous:{level:old.level,superior:old.superior},petition:p.id,approvedBy:promotionRules(engine).approver.name,source:promotionRules(engine).source});
     d.set(rec(p.id),{...p,status:'已批准',decidedAt:at,checks:c.checks});
+    entityTransition(d,engine,{id:`${p.id}:promote`,verb:'promote',actor:promotionRules(engine).approver.name,target:p.settlement,minute:at,location:p.settlement,previousLevel:old.level,level:c.to,summary:`${engine.byId.get(p.settlement)?.name??p.settlement}升为${c.to}`});
 
 }
 // Off screen, on the registry's cycle: a village that meets the conditions is

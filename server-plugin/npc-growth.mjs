@@ -1,3 +1,4 @@
+import {entityTransition,businessSnapshot,businessTransitions} from './entity-transitions.mjs';
 // NPC skill growth comes only from a real lesson by the player or from a
 // finished autonomous work action. Both are bounded per day and per skill, and
 // a changed livelihood is stored in campaign state (never in world/ people).
@@ -108,10 +109,13 @@ export function switchVocation(d,engine,id,vocationId,eventId){
  const vocation=engine.rules.npcGrowth?.vocations?.find(v=>v.id===vocationId);if(!vocation)throw Error('营生未登记');
  const state=d.get('state'),blocker=vocationBlocker(engine,state,id,vocation);if(blocker)throw Error(`不能改行：${blocker}`);
  const npc=state.npcs[id],home=npcHousehold(engine,state,id)?.homeLocation??npcSchedule(engine,state,id)?.default?.[0]?.location??npc.location,minute=state.minute;
+ const shops=businessSnapshot(engine,state);
  d.set(['state','npcs',id,'vocation'],{id:vocation.id,name:vocation.name,skill:vocation.skill,since:minute,sourceEvent:eventId,home,
   previous:{id:npc.vocation?.id??null,occupation:npc.occupation??engine.byId.get(id).occupation??''}});
  d.set(['state','npcs',id,'occupation'],vocation.name);
  remember(d,engine,id,eventId,`${engine.byId.get(id).name}改行做${vocation.name}，此后按新作息在${engine.byId.get(vocation.location)?.name??vocation.location}做事。`,[id]);
+ entityTransition(d,engine,{id:`${eventId}:vocation`,verb:'vocation',actor:id,minute,location:npc.location,summary:`${engine.byId.get(id).name}改行做${vocation.name}`});
+ businessTransitions(d,engine,shops,eventId,minute);
  return{npc:id,vocation:vocation.id,name:vocation.name,since:minute};
 }
 
