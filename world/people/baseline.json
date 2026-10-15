@@ -150159,5 +150159,3327 @@
     "portraitPrompt": "原创年轻灰窟哥布林工匠，灰绿皮肤，耳挂两枚小铁环，右手背有半个手印形烫疤，蹲在抹满炉灰的石契板前",
     "notes": "裂炉营年轻工匠，灰窟哥布林，工匠派里最激进的一个；抹掉契板手印，主张改贡为贸易、轮点首火。",
     "description": "锉芒是裂炉营的年轻工匠，二十六岁的灰窟哥布林，右手背上有一片像半个手印的烫疤。他傍晚在修具棚修矿具，入夜后进矿道补撑木。上一期分粮时他当众抹掉了契板上自己的手印，要工匠们都不认这份分法，还要议事棚议按轮次点首火。他说话又快又冲，讲义气。"
+  },
+  {
+    "id": "npc_ms_hx_yiheng",
+    "name": "漪衡",
+    "aliases": [],
+    "tier": "full",
+    "age": 46,
+    "sex": "男",
+    "species": "monster_grey_otter",
+    "society": "loc_ms_huixi",
+    "culture": "culture_ms_huixi",
+    "settlement": "loc_ms_huixi",
+    "scope": "loc_ms_huixi",
+    "householdId": "house_t162_1",
+    "household": [
+      "npc_ms_hx_yixian",
+      "npc_ms_hx_yimo"
+    ],
+    "occupation": "接待换鱼",
+    "traits": [
+      "耐心",
+      "爱留余地"
+    ],
+    "home": {
+      "location": "bld_ms_hx_01",
+      "access": "同住共居；进入私宅须先取得成年住户的有效许可。",
+      "ownership": "unspecified"
+    },
+    "location": "bld_ms_hx_01",
+    "flags": {
+      "minor": false,
+      "romanceable": false
+    },
+    "currentConcern": "空芦棚该不该给新来的立意者，他想先把粮份讲明。",
+    "visibleFeature": "把湿爪先在芦席上抹干，才指给来客看路。",
+    "trust": 0,
+    "affection": 0,
+    "coins": 12,
+    "birth": {
+      "year": -46,
+      "month": 11,
+      "day": 16
+    },
+    "inventory": {
+      "item_fish": 12,
+      "item_ration": 4
+    },
+    "skills": [],
+    "services": [
+      "trade"
+    ],
+    "intelligence": {
+      "level": 2,
+      "growth": 0
+    },
+    "role": "埠头",
+    "familyNotes": "漪衡与漪弦、漪沫同住漪家水窝；回去时会先看门边的席子是否淋湿。",
+    "appearance": [
+      "把湿爪先在芦席上抹干，才指给来客看路。",
+      "脚边常带着芦叶。",
+      "常把前爪或双手收在身前。"
+    ],
+    "voice": {
+      "register": "声音不高，先等对方收声",
+      "accent": "尾音像隔着一层芦叶",
+      "habits": [
+        "先看看对方手里的东西"
+      ],
+      "samples": [
+        "先认岸，再认话。",
+        "空芦棚该不该给新来的立意者，他想先把粮份讲明。",
+        "敲穗的话也听完。"
+      ]
+    },
+    "personality": {
+      "traits": [
+        "耐心",
+        "爱留余地"
+      ],
+      "values": [
+        "把空棚留给新来者",
+        "答应的事先做完"
+      ],
+      "flaws": [
+        "熟人的反对更难听进去"
+      ]
+    },
+    "proficiencies": {},
+    "professions": [],
+    "level": 1,
+    "combat": null,
+    "wealth": {
+      "cashRange": [
+        12,
+        12
+      ],
+      "property": [],
+      "valuables": [],
+      "debts": []
+    },
+    "workplace": {
+      "location": "site_ms_hx_reed",
+      "access": "公共林地、窟道或营地可当面招呼；工具和存物另问看管者。"
+    },
+    "schedule": {
+      "default": [
+        {
+          "start": 0,
+          "end": 360,
+          "location": "bld_ms_hx_01",
+          "activity": "休息",
+          "services": []
+        },
+        {
+          "start": 360,
+          "end": 1080,
+          "location": "site_ms_hx_reed",
+          "activity": "接待换鱼",
+          "services": [
+            "trade"
+          ]
+        },
+        {
+          "start": 1080,
+          "end": 1140,
+          "location": "site_ms_hx_council",
+          "activity": "议事",
+          "services": []
+        },
+        {
+          "start": 1140,
+          "end": 1440,
+          "location": "bld_ms_hx_01",
+          "activity": "休息",
+          "services": []
+        }
+      ],
+      "market": [
+        {
+          "start": 0,
+          "end": 360,
+          "location": "bld_ms_hx_01",
+          "activity": "休息",
+          "services": []
+        },
+        {
+          "start": 360,
+          "end": 1080,
+          "location": "site_ms_hx_reed",
+          "activity": "接待换鱼",
+          "services": [
+            "trade"
+          ]
+        },
+        {
+          "start": 1080,
+          "end": 1140,
+          "location": "site_ms_hx_council",
+          "activity": "议事",
+          "services": []
+        },
+        {
+          "start": 1140,
+          "end": 1440,
+          "location": "bld_ms_hx_01",
+          "activity": "休息",
+          "services": []
+        }
+      ],
+      "rest": [
+        {
+          "start": 0,
+          "end": 360,
+          "location": "bld_ms_hx_01",
+          "activity": "休息",
+          "services": []
+        },
+        {
+          "start": 360,
+          "end": 1080,
+          "location": "site_ms_hx_reed",
+          "activity": "接待换鱼",
+          "services": [
+            "trade"
+          ]
+        },
+        {
+          "start": 1080,
+          "end": 1140,
+          "location": "site_ms_hx_council",
+          "activity": "议事",
+          "services": []
+        },
+        {
+          "start": 1140,
+          "end": 1440,
+          "location": "bld_ms_hx_01",
+          "activity": "休息",
+          "services": []
+        }
+      ],
+      "restDays": [],
+      "seasonal": {}
+    },
+    "relationships": [
+      {
+        "with": "npc_ms_hx_qiaosui",
+        "type": "共同议事",
+        "trust": 10,
+        "affection": 4,
+        "note": "敲穗与他一同看过空棚和旧水痕，分歧一直留到现在。"
+      },
+      {
+        "with": "npc_ms_hx_xianpu",
+        "type": "同地往来",
+        "trust": 8,
+        "affection": 5,
+        "note": "纤蒲记得上回的争论，漪衡愿意等对方把打算说完。"
+      },
+      {
+        "with": "npc_ms_hx_luchi",
+        "type": "同地议事",
+        "trust": 6,
+        "affection": 3,
+        "note": "芦迟在议事处听过他的主张，两人仍会在公共地方招呼。"
+      }
+    ],
+    "memorySeeds": [
+      {
+        "id": "memory_t162_loc_ms_huixi_meeting",
+        "event": "上次在认岸芦门，漪衡、敲穗、纤蒲、芦迟把空席铺开又卷回，最后约好在议汐棚再谈空棚。",
+        "location": "site_ms_hx_reed",
+        "salience": 5,
+        "knownBy": [
+          "npc_ms_hx_yiheng",
+          "npc_ms_hx_qiaosui",
+          "npc_ms_hx_xianpu",
+          "npc_ms_hx_luchi"
+        ],
+        "reliability": "亲历"
+      },
+      {
+        "id": "memory_t162_npc_ms_hx_yiheng",
+        "event": "漪衡曾在下雨的夜里守着漪家水窝的破席，天亮才发现雨水只从一处旧折痕漏下。",
+        "location": "bld_ms_hx_01",
+        "salience": 3,
+        "knownBy": [
+          "npc_ms_hx_yiheng"
+        ],
+        "reliability": "个人回忆"
+      }
+    ],
+    "goals": {
+      "short": [
+        {
+          "id": "goal_t162_hx_yiheng_short",
+          "content": "把空棚留给新来者",
+          "progress": 0,
+          "deadlineDay": 30,
+          "resources": [
+            {
+              "kind": "协商",
+              "description": "须当事人另行同意的空闲时辰",
+              "availability": "unverified",
+              "grantsInventory": false
+            }
+          ],
+          "steps": [
+            {
+              "content": "与敲穗再谈一次",
+              "status": "pending"
+            },
+            {
+              "content": "到岸边核对旧芦记",
+              "status": "pending"
+            }
+          ]
+        }
+      ],
+      "mid": [
+        {
+          "id": "goal_t162_hx_yiheng_mid",
+          "content": "空芦棚该不该给新来的立意者，他想先把粮份讲明。",
+          "progress": 0,
+          "deadlineDay": 180,
+          "resources": [
+            {
+              "kind": "协商",
+              "description": "须当事人另行同意的空闲时辰",
+              "availability": "unverified",
+              "grantsInventory": false
+            }
+          ],
+          "steps": [
+            {
+              "content": "听听纤蒲的打算",
+              "status": "pending"
+            },
+            {
+              "content": "在议事时讲清自己的理由",
+              "status": "pending"
+            }
+          ]
+        }
+      ],
+      "long": [
+        {
+          "id": "goal_t162_hx_yiheng_long",
+          "content": "让回汐埠的幼体认得回家的路",
+          "progress": 0,
+          "deadlineDay": 720,
+          "resources": [
+            {
+              "kind": "协商",
+              "description": "须当事人另行同意的空闲时辰",
+              "availability": "unverified",
+              "grantsInventory": false
+            }
+          ],
+          "steps": [
+            {
+              "content": "带同住者看门前的记号",
+              "status": "pending"
+            },
+            {
+              "content": "把受潮的旧席换到干处",
+              "status": "pending"
+            }
+          ]
+        }
+      ]
+    },
+    "fears": [
+      "汛水把住处和存粮一起泡坏"
+    ],
+    "redLines": [
+      "不能替立意者答应归属",
+      "幼体不替外客做工"
+    ],
+    "secrets": [
+      {
+        "content": "漪衡私下怕敲穗会把分歧当成不再往来的理由，因而一直没提自己昨晚的犹豫。",
+        "knownBy": [
+          "npc_ms_hx_yiheng"
+        ]
+      }
+    ],
+    "knowledge": {
+      "known": [
+        {
+          "fact": "回汐埠的私宅须成年住户当面许可。",
+          "source": "bld_ms_hx_01",
+          "reliability": "长居亲历"
+        },
+        {
+          "fact": "空芦棚该不该给新来的立意者，他想先把粮份讲明。",
+          "source": "site_ms_hx_reed",
+          "reliability": "本人打算"
+        },
+        {
+          "fact": "他补过的棚脚还留水痕，想在接人以前先留足干粮。",
+          "source": "npc_ms_hx_luchi",
+          "reliability": "议事时听本人说过"
+        }
+      ],
+      "unknown": [
+        "敲穗是否愿意让一步？",
+        "苇汀哪位愿意来议汐棚谈清芦界？"
+      ]
+    },
+    "opinions": {
+      "factions": "苇汀来客应逐个听过，不能把一村人算成一种心思。",
+      "magic": "借个形貌不等于换了一个人。",
+      "adventurers": "肯停步听话的人，可以把事情谈清。",
+      "neighbors": [
+        {
+          "with": "npc_ms_hx_qiaosui",
+          "view": "敲穗记事的方法与我不同。"
+        },
+        {
+          "with": "npc_ms_hx_xianpu",
+          "view": "纤蒲会把该做的事留下记号。"
+        }
+      ]
+    },
+    "towardPlayer": {
+      "baseline": {
+        "trust": 0,
+        "affection": 0
+      },
+      "raises": [
+        "先问物主再伸手",
+        "耐心听完分歧"
+      ],
+      "lowers": [
+        "闯进私宅",
+        "替别人答应条件"
+      ],
+      "attitude": "愿在公共地方听来意。"
+    },
+    "behaviorRules": {
+      "bargaining": "只换本人手头的货，卖完就停。",
+      "honesty": "不清楚的就说没看见。",
+      "risk": "遇险先护住同住幼体。",
+      "threatResponse": "呼叫成年邻居，留出退路。",
+      "bribeResponse": "不能靠送礼替别人改议事的说法。"
+    },
+    "serviceCatalog": [
+      {
+        "kind": "trade",
+        "what": "本人有限库存中的物品",
+        "price": {
+          "mode": "engineQuote"
+        },
+        "unlocksService": false
+      }
+    ],
+    "hooks": [
+      "空芦棚该不该给新来的立意者，他想先把粮份讲明。",
+      "把空棚留给新来者"
+    ],
+    "ttsVoice": "zh_male_low_01",
+    "portraitPrompt": "原创幻想非人居民漪衡，保留monster_grey_otter本相，把湿爪先在芦席上抹干，才指给来客看路。芦湾湿岸背景，无文字。",
+    "notes": "回汐埠的埠头，白天在认岸芦门，傍晚到议事处。",
+    "description": "漪衡是回汐埠的埠头。把湿爪先在芦席上抹干，才指给来客看路。空芦棚该不该给新来的立意者，他想先把粮份讲明。白天可以在认岸芦门找到本人，傍晚转到议事处。先认岸，再认话。"
+  },
+  {
+    "id": "npc_ms_hx_qiaosui",
+    "name": "敲穗",
+    "aliases": [],
+    "tier": "full",
+    "age": 91,
+    "sex": "女",
+    "species": "monster_plate_back_tortoise",
+    "society": "loc_ms_huixi",
+    "culture": "culture_ms_huixi",
+    "settlement": "loc_ms_huixi",
+    "scope": "loc_ms_huixi",
+    "householdId": "house_t162_2",
+    "household": [
+      "npc_ms_hx_qiaofu",
+      "npc_ms_hx_qiaoyou"
+    ],
+    "occupation": "记芦界",
+    "traits": [
+      "沉稳",
+      "固执"
+    ],
+    "home": {
+      "location": "bld_ms_hx_02",
+      "access": "同住共居；进入私宅须先取得成年住户的有效许可。",
+      "ownership": "unspecified"
+    },
+    "location": "bld_ms_hx_02",
+    "flags": {
+      "minor": false,
+      "romanceable": false
+    },
+    "currentConcern": "上回涨水的位置仍在，她怕大家只记得空棚不记得水。",
+    "visibleFeature": "甲背的旧水痕很浅，说话前会把下颌放稳。",
+    "trust": 0,
+    "affection": 0,
+    "coins": 12,
+    "birth": {
+      "year": -91,
+      "month": 8,
+      "day": 23
+    },
+    "inventory": {},
+    "skills": [],
+    "services": [],
+    "intelligence": {
+      "level": 2,
+      "growth": 0
+    },
+    "role": "长老",
+    "familyNotes": "敲穗与敲伏、敲幼同住敲家甲窝；回去时会先看门边的席子是否淋湿。",
+    "appearance": [
+      "甲背的旧水痕很浅，说话前会把下颌放稳。",
+      "脚边常带着芦叶。",
+      "停步时先侧头听声音。"
+    ],
+    "voice": {
+      "register": "话慢，停顿很长",
+      "accent": "尾音像隔着一层芦叶",
+      "habits": [
+        "先看看对方手里的东西"
+      ],
+      "samples": [
+        "这道水痕还在。",
+        "上回涨水的位置仍在，她怕大家只记得空棚不记得水。",
+        "漪衡的话也听完。"
+      ]
+    },
+    "personality": {
+      "traits": [
+        "沉稳",
+        "固执"
+      ],
+      "values": [
+        "先守旧芦界",
+        "答应的事先做完"
+      ],
+      "flaws": [
+        "把旧汛水的担心带进每次议事"
+      ]
+    },
+    "proficiencies": {},
+    "professions": [],
+    "level": 1,
+    "combat": null,
+    "wealth": {
+      "cashRange": [
+        12,
+        12
+      ],
+      "property": [],
+      "valuables": [],
+      "debts": []
+    },
+    "workplace": {
+      "location": "site_ms_hx_listen",
+      "access": "公共林地、窟道或营地可当面招呼；工具和存物另问看管者。"
+    },
+    "schedule": {
+      "default": [
+        {
+          "start": 0,
+          "end": 360,
+          "location": "bld_ms_hx_02",
+          "activity": "休息",
+          "services": []
+        },
+        {
+          "start": 360,
+          "end": 1080,
+          "location": "site_ms_hx_listen",
+          "activity": "记芦界",
+          "services": []
+        },
+        {
+          "start": 1080,
+          "end": 1140,
+          "location": "site_ms_hx_council",
+          "activity": "议事",
+          "services": []
+        },
+        {
+          "start": 1140,
+          "end": 1440,
+          "location": "bld_ms_hx_02",
+          "activity": "休息",
+          "services": []
+        }
+      ],
+      "market": [
+        {
+          "start": 0,
+          "end": 360,
+          "location": "bld_ms_hx_02",
+          "activity": "休息",
+          "services": []
+        },
+        {
+          "start": 360,
+          "end": 1080,
+          "location": "site_ms_hx_listen",
+          "activity": "记芦界",
+          "services": []
+        },
+        {
+          "start": 1080,
+          "end": 1140,
+          "location": "site_ms_hx_council",
+          "activity": "议事",
+          "services": []
+        },
+        {
+          "start": 1140,
+          "end": 1440,
+          "location": "bld_ms_hx_02",
+          "activity": "休息",
+          "services": []
+        }
+      ],
+      "rest": [
+        {
+          "start": 0,
+          "end": 360,
+          "location": "bld_ms_hx_02",
+          "activity": "休息",
+          "services": []
+        },
+        {
+          "start": 360,
+          "end": 1080,
+          "location": "site_ms_hx_listen",
+          "activity": "记芦界",
+          "services": []
+        },
+        {
+          "start": 1080,
+          "end": 1140,
+          "location": "site_ms_hx_council",
+          "activity": "议事",
+          "services": []
+        },
+        {
+          "start": 1140,
+          "end": 1440,
+          "location": "bld_ms_hx_02",
+          "activity": "休息",
+          "services": []
+        }
+      ],
+      "restDays": [],
+      "seasonal": {}
+    },
+    "relationships": [
+      {
+        "with": "npc_ms_hx_yiheng",
+        "type": "共同议事",
+        "trust": 10,
+        "affection": 4,
+        "note": "漪衡与他一同看过空棚和旧水痕，分歧一直留到现在。"
+      },
+      {
+        "with": "npc_ms_hx_xianpu",
+        "type": "同地往来",
+        "trust": 8,
+        "affection": 5,
+        "note": "纤蒲记得上回的争论，敲穗愿意等对方把打算说完。"
+      },
+      {
+        "with": "npc_ms_hx_luchi",
+        "type": "同地议事",
+        "trust": 6,
+        "affection": 3,
+        "note": "芦迟在议事处听过他的主张，两人仍会在公共地方招呼。"
+      }
+    ],
+    "memorySeeds": [
+      {
+        "id": "memory_t162_loc_ms_huixi_meeting",
+        "event": "上次在认岸芦门，漪衡、敲穗、纤蒲、芦迟把空席铺开又卷回，最后约好在议汐棚再谈空棚。",
+        "location": "site_ms_hx_reed",
+        "salience": 5,
+        "knownBy": [
+          "npc_ms_hx_yiheng",
+          "npc_ms_hx_qiaosui",
+          "npc_ms_hx_xianpu",
+          "npc_ms_hx_luchi"
+        ],
+        "reliability": "亲历"
+      },
+      {
+        "id": "memory_t162_npc_ms_hx_qiaosui",
+        "event": "敲穗曾在下雨的夜里守着敲家甲窝的破席，天亮才发现雨水只从一处旧折痕漏下。",
+        "location": "bld_ms_hx_02",
+        "salience": 3,
+        "knownBy": [
+          "npc_ms_hx_qiaosui"
+        ],
+        "reliability": "个人回忆"
+      }
+    ],
+    "goals": {
+      "short": [
+        {
+          "id": "goal_t162_hx_qiaosui_short",
+          "content": "先守旧芦界",
+          "progress": 0,
+          "deadlineDay": 30,
+          "resources": [
+            {
+              "kind": "协商",
+              "description": "须当事人另行同意的空闲时辰",
+              "availability": "unverified",
+              "grantsInventory": false
+            }
+          ],
+          "steps": [
+            {
+              "content": "与漪衡再谈一次",
+              "status": "pending"
+            },
+            {
+              "content": "到岸边核对旧芦记",
+              "status": "pending"
+            }
+          ]
+        }
+      ],
+      "mid": [
+        {
+          "id": "goal_t162_hx_qiaosui_mid",
+          "content": "上回涨水的位置仍在，她怕大家只记得空棚不记得水。",
+          "progress": 0,
+          "deadlineDay": 180,
+          "resources": [
+            {
+              "kind": "协商",
+              "description": "须当事人另行同意的空闲时辰",
+              "availability": "unverified",
+              "grantsInventory": false
+            }
+          ],
+          "steps": [
+            {
+              "content": "听听纤蒲的打算",
+              "status": "pending"
+            },
+            {
+              "content": "在议事时讲清自己的理由",
+              "status": "pending"
+            }
+          ]
+        }
+      ],
+      "long": [
+        {
+          "id": "goal_t162_hx_qiaosui_long",
+          "content": "让回汐埠的幼体认得回家的路",
+          "progress": 0,
+          "deadlineDay": 720,
+          "resources": [
+            {
+              "kind": "协商",
+              "description": "须当事人另行同意的空闲时辰",
+              "availability": "unverified",
+              "grantsInventory": false
+            }
+          ],
+          "steps": [
+            {
+              "content": "带同住者看门前的记号",
+              "status": "pending"
+            },
+            {
+              "content": "把受潮的旧席换到干处",
+              "status": "pending"
+            }
+          ]
+        }
+      ]
+    },
+    "fears": [
+      "汛水把住处和存粮一起泡坏"
+    ],
+    "redLines": [
+      "不能替立意者答应归属",
+      "幼体不替外客做工"
+    ],
+    "secrets": [
+      {
+        "content": "敲穗私下怕漪衡会把分歧当成不再往来的理由，因而一直没提自己昨晚的犹豫。",
+        "knownBy": [
+          "npc_ms_hx_qiaosui"
+        ]
+      }
+    ],
+    "knowledge": {
+      "known": [
+        {
+          "fact": "回汐埠的私宅须成年住户当面许可。",
+          "source": "bld_ms_hx_02",
+          "reliability": "长居亲历"
+        },
+        {
+          "fact": "上回涨水的位置仍在，她怕大家只记得空棚不记得水。",
+          "source": "site_ms_hx_listen",
+          "reliability": "本人打算"
+        },
+        {
+          "fact": "他补过的棚脚还留水痕，想在接人以前先留足干粮。",
+          "source": "npc_ms_hx_luchi",
+          "reliability": "议事时听本人说过"
+        }
+      ],
+      "unknown": [
+        "漪衡是否愿意让一步？",
+        "苇汀哪位愿意来议汐棚谈清芦界？"
+      ]
+    },
+    "opinions": {
+      "factions": "苇汀来客应逐个听过，不能把一村人算成一种心思。",
+      "magic": "借个形貌不等于换了一个人。",
+      "adventurers": "肯停步听话的人，可以把事情谈清。",
+      "neighbors": [
+        {
+          "with": "npc_ms_hx_yiheng",
+          "view": "漪衡记事的方法与我不同。"
+        },
+        {
+          "with": "npc_ms_hx_xianpu",
+          "view": "纤蒲会把该做的事留下记号。"
+        }
+      ]
+    },
+    "towardPlayer": {
+      "baseline": {
+        "trust": 0,
+        "affection": 0
+      },
+      "raises": [
+        "先问物主再伸手",
+        "耐心听完分歧"
+      ],
+      "lowers": [
+        "闯进私宅",
+        "替别人答应条件"
+      ],
+      "attitude": "愿在公共地方听来意。"
+    },
+    "behaviorRules": {
+      "bargaining": "手头没有可售货，不代别人许诺。",
+      "honesty": "不清楚的就说没看见。",
+      "risk": "遇险先护住同住幼体。",
+      "threatResponse": "呼叫成年邻居，留出退路。",
+      "bribeResponse": "不能靠送礼替别人改议事的说法。"
+    },
+    "serviceCatalog": [],
+    "hooks": [
+      "上回涨水的位置仍在，她怕大家只记得空棚不记得水。",
+      "先守旧芦界"
+    ],
+    "ttsVoice": "zh_female_mature_01",
+    "portraitPrompt": "原创幻想非人居民敲穗，保留monster_plate_back_tortoise本相，甲背的旧水痕很浅，说话前会把下颌放稳。芦湾湿岸背景，无文字。",
+    "notes": "回汐埠的长老，白天在听潮矮台，傍晚到议事处。",
+    "description": "敲穗是回汐埠的长老。甲背的旧水痕很浅，说话前会把下颌放稳。上回涨水的位置仍在，她怕大家只记得空棚不记得水。白天可以在听潮矮台找到本人，傍晚转到议事处。这道水痕还在。"
+  },
+  {
+    "id": "npc_ms_hx_xianpu",
+    "name": "纤蒲",
+    "aliases": [],
+    "tier": "full",
+    "age": 29,
+    "sex": "女",
+    "species": "monster_red_ear_fox",
+    "society": "loc_ms_huixi",
+    "culture": "culture_ms_huixi",
+    "settlement": "loc_ms_huixi",
+    "scope": "loc_ms_huixi",
+    "householdId": "house_t162_3",
+    "household": [
+      "npc_ms_hx_xianwen",
+      "npc_ms_hx_xianduan"
+    ],
+    "occupation": "照看药圃",
+    "traits": [
+      "细心",
+      "急于帮忙"
+    ],
+    "home": {
+      "location": "bld_ms_hx_03",
+      "access": "同住共居；进入私宅须先取得成年住户的有效许可。",
+      "ownership": "unspecified"
+    },
+    "location": "bld_ms_hx_03",
+    "flags": {
+      "minor": false,
+      "romanceable": false
+    },
+    "currentConcern": "露根圃的步道被踩宽了，她想让新来者学会认草根。",
+    "visibleFeature": "左耳尖有一道旧缺口，分草时总先闻叶背。",
+    "trust": 0,
+    "affection": 0,
+    "coins": 12,
+    "birth": {
+      "year": -29,
+      "month": 6,
+      "day": 9
+    },
+    "inventory": {
+      "item_herb": 30
+    },
+    "skills": [],
+    "services": [
+      "trade"
+    ],
+    "intelligence": {
+      "level": 2,
+      "growth": 0
+    },
+    "role": "药圃管事",
+    "familyNotes": "纤蒲与纤纹、纤短同住纤家草窝；回去时会先看门边的席子是否淋湿。",
+    "appearance": [
+      "左耳尖有一道旧缺口，分草时总先闻叶背。",
+      "脚边常带着芦叶。",
+      "停步时先侧头听声音。"
+    ],
+    "voice": {
+      "register": "声音不高，先等对方收声",
+      "accent": "尾音像隔着一层芦叶",
+      "habits": [
+        "说话时轻捻叶背"
+      ],
+      "samples": [
+        "别拔根，先看叶。",
+        "露根圃的步道被踩宽了，她想让新来者学会认草根。",
+        "漪衡的话也听完。"
+      ]
+    },
+    "personality": {
+      "traits": [
+        "细心",
+        "急于帮忙"
+      ],
+      "values": [
+        "把灵地照看好",
+        "答应的事先做完"
+      ],
+      "flaws": [
+        "熟人的反对更难听进去"
+      ]
+    },
+    "proficiencies": {},
+    "professions": [],
+    "level": 1,
+    "combat": null,
+    "wealth": {
+      "cashRange": [
+        12,
+        12
+      ],
+      "property": [],
+      "valuables": [],
+      "debts": []
+    },
+    "workplace": {
+      "location": "site_ms_hx_dew",
+      "access": "公共林地、窟道或营地可当面招呼；工具和存物另问看管者。"
+    },
+    "schedule": {
+      "default": [
+        {
+          "start": 0,
+          "end": 360,
+          "location": "bld_ms_hx_03",
+          "activity": "休息",
+          "services": []
+        },
+        {
+          "start": 360,
+          "end": 1080,
+          "location": "site_ms_hx_dew",
+          "activity": "照看药圃",
+          "services": [
+            "trade"
+          ]
+        },
+        {
+          "start": 1080,
+          "end": 1140,
+          "location": "site_ms_hx_council",
+          "activity": "议事",
+          "services": []
+        },
+        {
+          "start": 1140,
+          "end": 1440,
+          "location": "bld_ms_hx_03",
+          "activity": "休息",
+          "services": []
+        }
+      ],
+      "market": [
+        {
+          "start": 0,
+          "end": 360,
+          "location": "bld_ms_hx_03",
+          "activity": "休息",
+          "services": []
+        },
+        {
+          "start": 360,
+          "end": 1080,
+          "location": "site_ms_hx_dew",
+          "activity": "照看药圃",
+          "services": [
+            "trade"
+          ]
+        },
+        {
+          "start": 1080,
+          "end": 1140,
+          "location": "site_ms_hx_council",
+          "activity": "议事",
+          "services": []
+        },
+        {
+          "start": 1140,
+          "end": 1440,
+          "location": "bld_ms_hx_03",
+          "activity": "休息",
+          "services": []
+        }
+      ],
+      "rest": [
+        {
+          "start": 0,
+          "end": 360,
+          "location": "bld_ms_hx_03",
+          "activity": "休息",
+          "services": []
+        },
+        {
+          "start": 360,
+          "end": 1080,
+          "location": "site_ms_hx_dew",
+          "activity": "照看药圃",
+          "services": [
+            "trade"
+          ]
+        },
+        {
+          "start": 1080,
+          "end": 1140,
+          "location": "site_ms_hx_council",
+          "activity": "议事",
+          "services": []
+        },
+        {
+          "start": 1140,
+          "end": 1440,
+          "location": "bld_ms_hx_03",
+          "activity": "休息",
+          "services": []
+        }
+      ],
+      "restDays": [],
+      "seasonal": {}
+    },
+    "relationships": [
+      {
+        "with": "npc_ms_hx_yiheng",
+        "type": "共同议事",
+        "trust": 10,
+        "affection": 4,
+        "note": "漪衡与他一同看过空棚和旧水痕，分歧一直留到现在。"
+      },
+      {
+        "with": "npc_ms_hx_qiaosui",
+        "type": "同地往来",
+        "trust": 8,
+        "affection": 5,
+        "note": "敲穗记得上回的争论，纤蒲愿意等对方把打算说完。"
+      },
+      {
+        "with": "npc_ms_hx_luchi",
+        "type": "同地议事",
+        "trust": 6,
+        "affection": 3,
+        "note": "芦迟在议事处听过他的主张，两人仍会在公共地方招呼。"
+      }
+    ],
+    "memorySeeds": [
+      {
+        "id": "memory_t162_loc_ms_huixi_meeting",
+        "event": "上次在认岸芦门，漪衡、敲穗、纤蒲、芦迟把空席铺开又卷回，最后约好在议汐棚再谈空棚。",
+        "location": "site_ms_hx_reed",
+        "salience": 5,
+        "knownBy": [
+          "npc_ms_hx_yiheng",
+          "npc_ms_hx_qiaosui",
+          "npc_ms_hx_xianpu",
+          "npc_ms_hx_luchi"
+        ],
+        "reliability": "亲历"
+      },
+      {
+        "id": "memory_t162_npc_ms_hx_xianpu",
+        "event": "纤蒲曾在下雨的夜里守着纤家草窝的破席，天亮才发现雨水只从一处旧折痕漏下。",
+        "location": "bld_ms_hx_03",
+        "salience": 3,
+        "knownBy": [
+          "npc_ms_hx_xianpu"
+        ],
+        "reliability": "个人回忆"
+      }
+    ],
+    "goals": {
+      "short": [
+        {
+          "id": "goal_t162_hx_xianpu_short",
+          "content": "把灵地照看好",
+          "progress": 0,
+          "deadlineDay": 30,
+          "resources": [
+            {
+              "kind": "协商",
+              "description": "须当事人另行同意的空闲时辰",
+              "availability": "unverified",
+              "grantsInventory": false
+            }
+          ],
+          "steps": [
+            {
+              "content": "与漪衡再谈一次",
+              "status": "pending"
+            },
+            {
+              "content": "到岸边核对旧芦记",
+              "status": "pending"
+            }
+          ]
+        }
+      ],
+      "mid": [
+        {
+          "id": "goal_t162_hx_xianpu_mid",
+          "content": "露根圃的步道被踩宽了，她想让新来者学会认草根。",
+          "progress": 0,
+          "deadlineDay": 180,
+          "resources": [
+            {
+              "kind": "协商",
+              "description": "须当事人另行同意的空闲时辰",
+              "availability": "unverified",
+              "grantsInventory": false
+            }
+          ],
+          "steps": [
+            {
+              "content": "听听敲穗的打算",
+              "status": "pending"
+            },
+            {
+              "content": "在议事时讲清自己的理由",
+              "status": "pending"
+            }
+          ]
+        }
+      ],
+      "long": [
+        {
+          "id": "goal_t162_hx_xianpu_long",
+          "content": "让回汐埠的幼体认得回家的路",
+          "progress": 0,
+          "deadlineDay": 720,
+          "resources": [
+            {
+              "kind": "协商",
+              "description": "须当事人另行同意的空闲时辰",
+              "availability": "unverified",
+              "grantsInventory": false
+            }
+          ],
+          "steps": [
+            {
+              "content": "带同住者看门前的记号",
+              "status": "pending"
+            },
+            {
+              "content": "把受潮的旧席换到干处",
+              "status": "pending"
+            }
+          ]
+        }
+      ]
+    },
+    "fears": [
+      "汛水把住处和存粮一起泡坏"
+    ],
+    "redLines": [
+      "不能替立意者答应归属",
+      "幼体不替外客做工"
+    ],
+    "secrets": [
+      {
+        "content": "纤蒲私下怕漪衡会把分歧当成不再往来的理由，因而一直没提自己昨晚的犹豫。",
+        "knownBy": [
+          "npc_ms_hx_xianpu"
+        ]
+      }
+    ],
+    "knowledge": {
+      "known": [
+        {
+          "fact": "回汐埠的私宅须成年住户当面许可。",
+          "source": "bld_ms_hx_03",
+          "reliability": "长居亲历"
+        },
+        {
+          "fact": "露根圃的步道被踩宽了，她想让新来者学会认草根。",
+          "source": "site_ms_hx_dew",
+          "reliability": "本人打算"
+        },
+        {
+          "fact": "他补过的棚脚还留水痕，想在接人以前先留足干粮。",
+          "source": "npc_ms_hx_luchi",
+          "reliability": "议事时听本人说过"
+        }
+      ],
+      "unknown": [
+        "漪衡是否愿意让一步？",
+        "苇汀哪位愿意来议汐棚谈清芦界？"
+      ]
+    },
+    "opinions": {
+      "factions": "苇汀来客应逐个听过，不能把一村人算成一种心思。",
+      "magic": "借个形貌不等于换了一个人。",
+      "adventurers": "肯停步听话的人，可以把事情谈清。",
+      "neighbors": [
+        {
+          "with": "npc_ms_hx_yiheng",
+          "view": "漪衡记事的方法与我不同。"
+        },
+        {
+          "with": "npc_ms_hx_qiaosui",
+          "view": "敲穗会把该做的事留下记号。"
+        }
+      ]
+    },
+    "towardPlayer": {
+      "baseline": {
+        "trust": 0,
+        "affection": 0
+      },
+      "raises": [
+        "先问物主再伸手",
+        "耐心听完分歧"
+      ],
+      "lowers": [
+        "闯进私宅",
+        "替别人答应条件"
+      ],
+      "attitude": "愿在公共地方听来意。"
+    },
+    "behaviorRules": {
+      "bargaining": "只换本人手头的货，卖完就停。",
+      "honesty": "不清楚的就说没看见。",
+      "risk": "遇险先护住同住幼体。",
+      "threatResponse": "呼叫成年邻居，留出退路。",
+      "bribeResponse": "不能靠送礼替别人改议事的说法。"
+    },
+    "serviceCatalog": [
+      {
+        "kind": "trade",
+        "what": "本人有限库存中的物品",
+        "price": {
+          "mode": "engineQuote"
+        },
+        "unlocksService": false
+      }
+    ],
+    "hooks": [
+      "露根圃的步道被踩宽了，她想让新来者学会认草根。",
+      "把灵地照看好"
+    ],
+    "ttsVoice": "zh_female_mature_01",
+    "portraitPrompt": "原创幻想非人居民纤蒲，保留monster_red_ear_fox本相，左耳尖有一道旧缺口，分草时总先闻叶背。芦湾湿岸背景，无文字。",
+    "notes": "回汐埠的药圃管事，白天在露根圃，傍晚到议事处。",
+    "description": "纤蒲是回汐埠的药圃管事。左耳尖有一道旧缺口，分草时总先闻叶背。露根圃的步道被踩宽了，她想让新来者学会认草根。白天可以在露根圃找到本人，傍晚转到议事处。别拔根，先看叶。"
+  },
+  {
+    "id": "npc_ms_hx_luchi",
+    "name": "芦迟",
+    "aliases": [],
+    "tier": "full",
+    "age": 38,
+    "sex": "男",
+    "species": "monster_stone_whisker_weasel",
+    "society": "loc_ms_huixi",
+    "culture": "culture_ms_huixi",
+    "settlement": "loc_ms_huixi",
+    "scope": "loc_ms_huixi",
+    "householdId": "house_t162_4",
+    "household": [
+      "npc_ms_hx_luman",
+      "npc_ms_hx_luya"
+    ],
+    "occupation": "补芦棚",
+    "traits": [
+      "谨慎",
+      "记旧账"
+    ],
+    "home": {
+      "location": "bld_ms_hx_04",
+      "access": "同住共居；进入私宅须先取得成年住户的有效许可。",
+      "ownership": "unspecified"
+    },
+    "location": "bld_ms_hx_04",
+    "flags": {
+      "minor": false,
+      "romanceable": false
+    },
+    "currentConcern": "他补过的棚脚还留水痕，想在接人以前先留足干粮。",
+    "visibleFeature": "须尖夹着干砂，说到粮份时尾巴绷得很直。",
+    "trust": 0,
+    "affection": 0,
+    "coins": 12,
+    "birth": {
+      "year": -38,
+      "month": 3,
+      "day": 16
+    },
+    "inventory": {},
+    "skills": [],
+    "services": [],
+    "intelligence": {
+      "level": 2,
+      "growth": 0
+    },
+    "role": "持不同主张者",
+    "familyNotes": "芦迟与芦慢、芦芽同住芦家石窝；回去时会先看门边的席子是否淋湿。",
+    "appearance": [
+      "须尖夹着干砂，说到粮份时尾巴绷得很直。",
+      "脚边常带着芦叶。",
+      "常把前爪或双手收在身前。"
+    ],
+    "voice": {
+      "register": "声音不高，先等对方收声",
+      "accent": "尾音像隔着一层芦叶",
+      "habits": [
+        "先看看对方手里的东西"
+      ],
+      "samples": [
+        "棚能补，湿粮难救。",
+        "他补过的棚脚还留水痕，想在接人以前先留足干粮。",
+        "漪衡的话也听完。"
+      ]
+    },
+    "personality": {
+      "traits": [
+        "谨慎",
+        "记旧账"
+      ],
+      "values": [
+        "先查棚脚和存粮",
+        "答应的事先做完"
+      ],
+      "flaws": [
+        "熟人的反对更难听进去"
+      ]
+    },
+    "proficiencies": {},
+    "professions": [],
+    "level": 1,
+    "combat": null,
+    "wealth": {
+      "cashRange": [
+        12,
+        12
+      ],
+      "property": [],
+      "valuables": [],
+      "debts": []
+    },
+    "workplace": {
+      "location": "site_ms_hx_store",
+      "access": "公共林地、窟道或营地可当面招呼；工具和存物另问看管者。"
+    },
+    "schedule": {
+      "default": [
+        {
+          "start": 0,
+          "end": 360,
+          "location": "bld_ms_hx_04",
+          "activity": "休息",
+          "services": []
+        },
+        {
+          "start": 360,
+          "end": 1080,
+          "location": "site_ms_hx_store",
+          "activity": "补芦棚",
+          "services": []
+        },
+        {
+          "start": 1080,
+          "end": 1140,
+          "location": "site_ms_hx_council",
+          "activity": "议事",
+          "services": []
+        },
+        {
+          "start": 1140,
+          "end": 1440,
+          "location": "bld_ms_hx_04",
+          "activity": "休息",
+          "services": []
+        }
+      ],
+      "market": [
+        {
+          "start": 0,
+          "end": 360,
+          "location": "bld_ms_hx_04",
+          "activity": "休息",
+          "services": []
+        },
+        {
+          "start": 360,
+          "end": 1080,
+          "location": "site_ms_hx_store",
+          "activity": "补芦棚",
+          "services": []
+        },
+        {
+          "start": 1080,
+          "end": 1140,
+          "location": "site_ms_hx_council",
+          "activity": "议事",
+          "services": []
+        },
+        {
+          "start": 1140,
+          "end": 1440,
+          "location": "bld_ms_hx_04",
+          "activity": "休息",
+          "services": []
+        }
+      ],
+      "rest": [
+        {
+          "start": 0,
+          "end": 360,
+          "location": "bld_ms_hx_04",
+          "activity": "休息",
+          "services": []
+        },
+        {
+          "start": 360,
+          "end": 1080,
+          "location": "site_ms_hx_store",
+          "activity": "补芦棚",
+          "services": []
+        },
+        {
+          "start": 1080,
+          "end": 1140,
+          "location": "site_ms_hx_council",
+          "activity": "议事",
+          "services": []
+        },
+        {
+          "start": 1140,
+          "end": 1440,
+          "location": "bld_ms_hx_04",
+          "activity": "休息",
+          "services": []
+        }
+      ],
+      "restDays": [],
+      "seasonal": {}
+    },
+    "relationships": [
+      {
+        "with": "npc_ms_hx_yiheng",
+        "type": "共同议事",
+        "trust": 10,
+        "affection": 4,
+        "note": "漪衡与他一同看过空棚和旧水痕，分歧一直留到现在。"
+      },
+      {
+        "with": "npc_ms_hx_qiaosui",
+        "type": "同地往来",
+        "trust": 8,
+        "affection": 5,
+        "note": "敲穗记得上回的争论，芦迟愿意等对方把打算说完。"
+      },
+      {
+        "with": "npc_ms_hx_xianpu",
+        "type": "同地议事",
+        "trust": 6,
+        "affection": 3,
+        "note": "纤蒲在议事处听过他的主张，两人仍会在公共地方招呼。"
+      }
+    ],
+    "memorySeeds": [
+      {
+        "id": "memory_t162_loc_ms_huixi_meeting",
+        "event": "上次在认岸芦门，漪衡、敲穗、纤蒲、芦迟把空席铺开又卷回，最后约好在议汐棚再谈空棚。",
+        "location": "site_ms_hx_reed",
+        "salience": 5,
+        "knownBy": [
+          "npc_ms_hx_yiheng",
+          "npc_ms_hx_qiaosui",
+          "npc_ms_hx_xianpu",
+          "npc_ms_hx_luchi"
+        ],
+        "reliability": "亲历"
+      },
+      {
+        "id": "memory_t162_npc_ms_hx_luchi",
+        "event": "芦迟曾在下雨的夜里守着芦家石窝的破席，天亮才发现雨水只从一处旧折痕漏下。",
+        "location": "bld_ms_hx_04",
+        "salience": 3,
+        "knownBy": [
+          "npc_ms_hx_luchi"
+        ],
+        "reliability": "个人回忆"
+      }
+    ],
+    "goals": {
+      "short": [
+        {
+          "id": "goal_t162_hx_luchi_short",
+          "content": "先查棚脚和存粮",
+          "progress": 0,
+          "deadlineDay": 30,
+          "resources": [
+            {
+              "kind": "协商",
+              "description": "须当事人另行同意的空闲时辰",
+              "availability": "unverified",
+              "grantsInventory": false
+            }
+          ],
+          "steps": [
+            {
+              "content": "与漪衡再谈一次",
+              "status": "pending"
+            },
+            {
+              "content": "到岸边核对旧芦记",
+              "status": "pending"
+            }
+          ]
+        }
+      ],
+      "mid": [
+        {
+          "id": "goal_t162_hx_luchi_mid",
+          "content": "他补过的棚脚还留水痕，想在接人以前先留足干粮。",
+          "progress": 0,
+          "deadlineDay": 180,
+          "resources": [
+            {
+              "kind": "协商",
+              "description": "须当事人另行同意的空闲时辰",
+              "availability": "unverified",
+              "grantsInventory": false
+            }
+          ],
+          "steps": [
+            {
+              "content": "听听敲穗的打算",
+              "status": "pending"
+            },
+            {
+              "content": "在议事时讲清自己的理由",
+              "status": "pending"
+            }
+          ]
+        }
+      ],
+      "long": [
+        {
+          "id": "goal_t162_hx_luchi_long",
+          "content": "让回汐埠的幼体认得回家的路",
+          "progress": 0,
+          "deadlineDay": 720,
+          "resources": [
+            {
+              "kind": "协商",
+              "description": "须当事人另行同意的空闲时辰",
+              "availability": "unverified",
+              "grantsInventory": false
+            }
+          ],
+          "steps": [
+            {
+              "content": "带同住者看门前的记号",
+              "status": "pending"
+            },
+            {
+              "content": "把受潮的旧席换到干处",
+              "status": "pending"
+            }
+          ]
+        }
+      ]
+    },
+    "fears": [
+      "汛水把住处和存粮一起泡坏"
+    ],
+    "redLines": [
+      "不能替立意者答应归属",
+      "幼体不替外客做工"
+    ],
+    "secrets": [
+      {
+        "content": "芦迟私下怕漪衡会把分歧当成不再往来的理由，因而一直没提自己昨晚的犹豫。",
+        "knownBy": [
+          "npc_ms_hx_luchi"
+        ]
+      }
+    ],
+    "knowledge": {
+      "known": [
+        {
+          "fact": "回汐埠的私宅须成年住户当面许可。",
+          "source": "bld_ms_hx_04",
+          "reliability": "长居亲历"
+        },
+        {
+          "fact": "他补过的棚脚还留水痕，想在接人以前先留足干粮。",
+          "source": "site_ms_hx_store",
+          "reliability": "本人打算"
+        },
+        {
+          "fact": "露根圃的步道被踩宽了，她想让新来者学会认草根。",
+          "source": "npc_ms_hx_xianpu",
+          "reliability": "议事时听本人说过"
+        }
+      ],
+      "unknown": [
+        "漪衡是否愿意让一步？",
+        "苇汀哪位愿意来议汐棚谈清芦界？"
+      ]
+    },
+    "opinions": {
+      "factions": "苇汀来客应逐个听过，不能把一村人算成一种心思。",
+      "magic": "借个形貌不等于换了一个人。",
+      "adventurers": "肯停步听话的人，可以把事情谈清。",
+      "neighbors": [
+        {
+          "with": "npc_ms_hx_yiheng",
+          "view": "漪衡记事的方法与我不同。"
+        },
+        {
+          "with": "npc_ms_hx_qiaosui",
+          "view": "敲穗会把该做的事留下记号。"
+        }
+      ]
+    },
+    "towardPlayer": {
+      "baseline": {
+        "trust": 0,
+        "affection": 0
+      },
+      "raises": [
+        "先问物主再伸手",
+        "耐心听完分歧"
+      ],
+      "lowers": [
+        "闯进私宅",
+        "替别人答应条件"
+      ],
+      "attitude": "愿在公共地方听来意。"
+    },
+    "behaviorRules": {
+      "bargaining": "手头没有可售货，不代别人许诺。",
+      "honesty": "不清楚的就说没看见。",
+      "risk": "遇险先护住同住幼体。",
+      "threatResponse": "呼叫成年邻居，留出退路。",
+      "bribeResponse": "不能靠送礼替别人改议事的说法。"
+    },
+    "serviceCatalog": [],
+    "hooks": [
+      "他补过的棚脚还留水痕，想在接人以前先留足干粮。",
+      "先查棚脚和存粮"
+    ],
+    "ttsVoice": "zh_male_low_01",
+    "portraitPrompt": "原创幻想非人居民芦迟，保留monster_stone_whisker_weasel本相，须尖夹着干砂，说到粮份时尾巴绷得很直。芦湾湿岸背景，无文字。",
+    "notes": "回汐埠的持不同主张者，白天在回汐存芦棚，傍晚到议事处。",
+    "description": "芦迟是回汐埠的持不同主张者。须尖夹着干砂，说到粮份时尾巴绷得很直。他补过的棚脚还留水痕，想在接人以前先留足干粮。白天可以在回汐存芦棚找到本人，傍晚转到议事处。棚能补，湿粮难救。"
+  },
+  {
+    "id": "npc_ms_gs_shenge",
+    "name": "绳额",
+    "aliases": [],
+    "tier": "full",
+    "age": 44,
+    "sex": "男",
+    "species": "monster_ash_cave_goblin",
+    "society": "loc_ms_huipeng",
+    "culture": "culture_ms_huipeng",
+    "settlement": "loc_ms_huipeng",
+    "scope": "loc_ms_huipeng",
+    "householdId": "house_t162_5",
+    "household": [
+      "npc_ms_gs_shengli",
+      "npc_ms_gs_shengya",
+      "npc_ms_gs_sanzhi"
+    ],
+    "occupation": "修绳换货",
+    "traits": [
+      "讲信用",
+      "恋旧"
+    ],
+    "home": {
+      "location": "bld_ms_gs_01",
+      "access": "同住共居；进入私宅须先取得成年住户的有效许可。",
+      "ownership": "unspecified"
+    },
+    "location": "bld_ms_gs_01",
+    "flags": {
+      "minor": false,
+      "romanceable": false
+    },
+    "currentConcern": "散钩要改公秤轮值，他担心错签会砸掉集市的名声。",
+    "visibleFeature": "额头勒着退色绳圈，讲价前会把绳头解开给人看。",
+    "trust": 0,
+    "affection": 0,
+    "coins": 40,
+    "birth": {
+      "year": -44,
+      "month": 9,
+      "day": 2
+    },
+    "inventory": {
+      "item_flax_cord": 16
+    },
+    "skills": [],
+    "services": [
+      "trade"
+    ],
+    "intelligence": {
+      "level": 2,
+      "growth": 0
+    },
+    "role": "集头",
+    "familyNotes": "绳额与绳砾、绳芽、散枝同住绳家矮棚；回去时会先看门边的席子是否淋湿。",
+    "appearance": [
+      "额头勒着退色绳圈，讲价前会把绳头解开给人看。",
+      "衣边沾着棚灰。",
+      "常把前爪或双手收在身前。"
+    ],
+    "voice": {
+      "register": "声音不高，先等对方收声",
+      "accent": "末字收得短",
+      "habits": [
+        "开口前先解绳头"
+      ],
+      "samples": [
+        "空手看秤，带货认签。",
+        "散钩要改公秤轮值，他担心错签会砸掉集市的名声。",
+        "折签的话也听完。"
+      ]
+    },
+    "personality": {
+      "traits": [
+        "讲信用",
+        "恋旧"
+      ],
+      "values": [
+        "让来客认清每一张货签",
+        "答应的事先做完"
+      ],
+      "flaws": [
+        "熟人的反对更难听进去"
+      ]
+    },
+    "proficiencies": {},
+    "professions": [],
+    "level": 1,
+    "combat": null,
+    "wealth": {
+      "cashRange": [
+        40,
+        40
+      ],
+      "property": [],
+      "valuables": [],
+      "debts": []
+    },
+    "workplace": {
+      "location": "site_ms_gs_gate",
+      "access": "公共林地、窟道或营地可当面招呼；工具和存物另问看管者。"
+    },
+    "schedule": {
+      "default": [
+        {
+          "start": 0,
+          "end": 360,
+          "location": "bld_ms_gs_01",
+          "activity": "休息",
+          "services": []
+        },
+        {
+          "start": 360,
+          "end": 1080,
+          "location": "site_ms_gs_gate",
+          "activity": "修绳换货",
+          "services": [
+            "trade"
+          ]
+        },
+        {
+          "start": 1080,
+          "end": 1140,
+          "location": "site_ms_gs_council",
+          "activity": "议事",
+          "services": []
+        },
+        {
+          "start": 1140,
+          "end": 1440,
+          "location": "bld_ms_gs_01",
+          "activity": "休息",
+          "services": []
+        }
+      ],
+      "market": [
+        {
+          "start": 0,
+          "end": 360,
+          "location": "bld_ms_gs_01",
+          "activity": "休息",
+          "services": []
+        },
+        {
+          "start": 360,
+          "end": 1080,
+          "location": "site_ms_gs_gate",
+          "activity": "修绳换货",
+          "services": [
+            "trade"
+          ]
+        },
+        {
+          "start": 1080,
+          "end": 1140,
+          "location": "site_ms_gs_council",
+          "activity": "议事",
+          "services": []
+        },
+        {
+          "start": 1140,
+          "end": 1440,
+          "location": "bld_ms_gs_01",
+          "activity": "休息",
+          "services": []
+        }
+      ],
+      "rest": [
+        {
+          "start": 0,
+          "end": 360,
+          "location": "bld_ms_gs_01",
+          "activity": "休息",
+          "services": []
+        },
+        {
+          "start": 360,
+          "end": 1080,
+          "location": "site_ms_gs_gate",
+          "activity": "修绳换货",
+          "services": [
+            "trade"
+          ]
+        },
+        {
+          "start": 1080,
+          "end": 1140,
+          "location": "site_ms_gs_council",
+          "activity": "议事",
+          "services": []
+        },
+        {
+          "start": 1140,
+          "end": 1440,
+          "location": "bld_ms_gs_01",
+          "activity": "休息",
+          "services": []
+        }
+      ],
+      "restDays": [],
+      "seasonal": {}
+    },
+    "relationships": [
+      {
+        "with": "npc_ms_gs_zheqian",
+        "type": "共同议事",
+        "trust": 10,
+        "affection": 4,
+        "note": "折签与他一同看过空秤与断签，分歧一直留到现在。"
+      },
+      {
+        "with": "npc_ms_gs_zhenhe",
+        "type": "同地往来",
+        "trust": 8,
+        "affection": 5,
+        "note": "砧禾记得上回的争论，绳额愿意等对方把打算说完。"
+      },
+      {
+        "with": "npc_ms_gs_sangou",
+        "type": "同地议事",
+        "trust": 6,
+        "affection": 3,
+        "note": "散钩在议事处听过他的主张，两人仍会在公共地方招呼。"
+      }
+    ],
+    "memorySeeds": [
+      {
+        "id": "memory_t162_loc_ms_huipeng_meeting",
+        "event": "上次在灰棚公秤台，绳额、折签、砧禾、散钩把空秤亮给彼此看，最后约好在议签棚再谈轮值。",
+        "location": "site_ms_gs_scale",
+        "salience": 5,
+        "knownBy": [
+          "npc_ms_gs_shenge",
+          "npc_ms_gs_zheqian",
+          "npc_ms_gs_zhenhe",
+          "npc_ms_gs_sangou"
+        ],
+        "reliability": "亲历"
+      },
+      {
+        "id": "memory_t162_npc_ms_gs_shenge",
+        "event": "绳额曾在下雨的夜里守着绳家矮棚的破席，天亮才发现雨水只从一处旧折痕漏下。",
+        "location": "bld_ms_gs_01",
+        "salience": 3,
+        "knownBy": [
+          "npc_ms_gs_shenge"
+        ],
+        "reliability": "个人回忆"
+      }
+    ],
+    "goals": {
+      "short": [
+        {
+          "id": "goal_t162_gs_shenge_short",
+          "content": "让来客认清每一张货签",
+          "progress": 0,
+          "deadlineDay": 30,
+          "resources": [
+            {
+              "kind": "协商",
+              "description": "须当事人另行同意的空闲时辰",
+              "availability": "unverified",
+              "grantsInventory": false
+            }
+          ],
+          "steps": [
+            {
+              "content": "与折签再谈一次",
+              "status": "pending"
+            },
+            {
+              "content": "把旧签摆在空秤旁逐张核对",
+              "status": "pending"
+            }
+          ]
+        }
+      ],
+      "mid": [
+        {
+          "id": "goal_t162_gs_shenge_mid",
+          "content": "散钩要改公秤轮值，他担心错签会砸掉集市的名声。",
+          "progress": 0,
+          "deadlineDay": 180,
+          "resources": [
+            {
+              "kind": "协商",
+              "description": "须当事人另行同意的空闲时辰",
+              "availability": "unverified",
+              "grantsInventory": false
+            }
+          ],
+          "steps": [
+            {
+              "content": "听听砧禾的打算",
+              "status": "pending"
+            },
+            {
+              "content": "在议事时讲清自己的理由",
+              "status": "pending"
+            }
+          ]
+        }
+      ],
+      "long": [
+        {
+          "id": "goal_t162_gs_shenge_long",
+          "content": "让灰棚集的幼体认得回家的路",
+          "progress": 0,
+          "deadlineDay": 720,
+          "resources": [
+            {
+              "kind": "协商",
+              "description": "须当事人另行同意的空闲时辰",
+              "availability": "unverified",
+              "grantsInventory": false
+            }
+          ],
+          "steps": [
+            {
+              "content": "带同住者看门前的记号",
+              "status": "pending"
+            },
+            {
+              "content": "把受潮的旧席换到干处",
+              "status": "pending"
+            }
+          ]
+        }
+      ]
+    },
+    "fears": [
+      "一张错签让来客再也不信集上的话"
+    ],
+    "redLines": [
+      "不能替货主改签",
+      "幼体不替外客做工"
+    ],
+    "secrets": [
+      {
+        "content": "绳额私下怕折签会把分歧当成不再往来的理由，因而一直没提自己昨晚的犹豫。",
+        "knownBy": [
+          "npc_ms_gs_shenge"
+        ]
+      }
+    ],
+    "knowledge": {
+      "known": [
+        {
+          "fact": "灰棚集的私宅须成年住户当面许可。",
+          "source": "bld_ms_gs_01",
+          "reliability": "长居亲历"
+        },
+        {
+          "fact": "散钩要改公秤轮值，他担心错签会砸掉集市的名声。",
+          "source": "site_ms_gs_gate",
+          "reliability": "本人打算"
+        },
+        {
+          "fact": "公秤轮值总轮不到砧禾，她要在议签棚把这件事说完。",
+          "source": "npc_ms_gs_sangou",
+          "reliability": "议事时听本人说过"
+        }
+      ],
+      "unknown": [
+        "折签是否愿意让一步？",
+        "桑坂哪位肯把自己认货签的办法带来公秤台？"
+      ]
+    },
+    "opinions": {
+      "factions": "裂炉有自己的分粮办法，灰棚仍按各自的货签认货。",
+      "magic": "法术不能替物主认签。",
+      "adventurers": "肯停步听话的人，可以把事情谈清。",
+      "neighbors": [
+        {
+          "with": "npc_ms_gs_zheqian",
+          "view": "折签记事的方法与我不同。"
+        },
+        {
+          "with": "npc_ms_gs_zhenhe",
+          "view": "砧禾会把该做的事留下记号。"
+        }
+      ]
+    },
+    "towardPlayer": {
+      "baseline": {
+        "trust": 0,
+        "affection": 0
+      },
+      "raises": [
+        "先问物主再伸手",
+        "耐心听完分歧"
+      ],
+      "lowers": [
+        "闯进私宅",
+        "替别人答应条件"
+      ],
+      "attitude": "愿在公共地方听来意。"
+    },
+    "behaviorRules": {
+      "bargaining": "只换本人手头的货，卖完就停。",
+      "honesty": "不清楚的就说没看见。",
+      "risk": "遇险先护住同住幼体。",
+      "threatResponse": "呼叫成年邻居，留出退路。",
+      "bribeResponse": "不能靠送礼替别人改议事的说法。"
+    },
+    "serviceCatalog": [
+      {
+        "kind": "trade",
+        "what": "本人有限库存中的物品",
+        "price": {
+          "mode": "engineQuote"
+        },
+        "unlocksService": false
+      }
+    ],
+    "hooks": [
+      "散钩要改公秤轮值，他担心错签会砸掉集市的名声。",
+      "让来客认清每一张货签"
+    ],
+    "ttsVoice": "zh_male_low_01",
+    "portraitPrompt": "原创幻想非人居民绳额，保留monster_ash_cave_goblin本相，额头勒着退色绳圈，讲价前会把绳头解开给人看。灰顶地上市集背景，无文字。",
+    "notes": "灰棚集的集头，白天在灰棚迎车口，傍晚到议事处。",
+    "description": "绳额是灰棚集的集头。额头勒着退色绳圈，讲价前会把绳头解开给人看。散钩要改公秤轮值，他担心错签会砸掉集市的名声。白天可以在灰棚迎车口找到本人，傍晚转到议事处。空手看秤，带货认签。"
+  },
+  {
+    "id": "npc_ms_gs_zheqian",
+    "name": "折签",
+    "aliases": [],
+    "tier": "full",
+    "age": 73,
+    "sex": "女",
+    "species": "monster_ash_cave_goblin",
+    "society": "loc_ms_huipeng",
+    "culture": "culture_ms_huipeng",
+    "settlement": "loc_ms_huipeng",
+    "scope": "loc_ms_huipeng",
+    "householdId": "house_t162_6",
+    "household": [
+      "npc_ms_gs_sangou",
+      "npc_ms_gs_zhewang",
+      "npc_ms_gs_zheyou",
+      "npc_ms_gs_sanfu"
+    ],
+    "occupation": "看秤存签",
+    "traits": [
+      "认真",
+      "不肯认输"
+    ],
+    "home": {
+      "location": "bld_ms_gs_02",
+      "access": "同住共居；进入私宅须先取得成年住户的有效许可。",
+      "ownership": "unspecified"
+    },
+    "location": "bld_ms_gs_02",
+    "flags": {
+      "minor": false,
+      "romanceable": false
+    },
+    "currentConcern": "有些旧签磨得认不出结尾，她不肯凭印象说是谁的。",
+    "visibleFeature": "右手只戴一只旧护腕，折断的签也收得整齐。",
+    "trust": 0,
+    "affection": 0,
+    "coins": 40,
+    "birth": {
+      "year": -73,
+      "month": 2,
+      "day": 9
+    },
+    "inventory": {},
+    "skills": [],
+    "services": [],
+    "intelligence": {
+      "level": 2,
+      "growth": 0
+    },
+    "role": "长老",
+    "familyNotes": "折签与散钩、折网、折幼、散缚同住折家矮棚；回去时会先看门边的席子是否淋湿。",
+    "appearance": [
+      "右手只戴一只旧护腕，折断的签也收得整齐。",
+      "衣边沾着棚灰。",
+      "停步时先侧头听声音。"
+    ],
+    "voice": {
+      "register": "声音不高，先等对方收声",
+      "accent": "末字收得短",
+      "habits": [
+        "先看看对方手里的东西"
+      ],
+      "samples": [
+        "我记不清，就先搁着。",
+        "有些旧签磨得认不出结尾，她不肯凭印象说是谁的。",
+        "绳额的话也听完。"
+      ]
+    },
+    "personality": {
+      "traits": [
+        "认真",
+        "不肯认输"
+      ],
+      "values": [
+        "把旧签的来路认清",
+        "答应的事先做完"
+      ],
+      "flaws": [
+        "熟人的反对更难听进去"
+      ]
+    },
+    "proficiencies": {},
+    "professions": [],
+    "level": 1,
+    "combat": null,
+    "wealth": {
+      "cashRange": [
+        40,
+        40
+      ],
+      "property": [],
+      "valuables": [],
+      "debts": []
+    },
+    "workplace": {
+      "location": "site_ms_gs_scale",
+      "access": "公共林地、窟道或营地可当面招呼；工具和存物另问看管者。"
+    },
+    "schedule": {
+      "default": [
+        {
+          "start": 0,
+          "end": 360,
+          "location": "bld_ms_gs_02",
+          "activity": "休息",
+          "services": []
+        },
+        {
+          "start": 360,
+          "end": 1080,
+          "location": "site_ms_gs_scale",
+          "activity": "看秤存签",
+          "services": []
+        },
+        {
+          "start": 1080,
+          "end": 1140,
+          "location": "site_ms_gs_council",
+          "activity": "议事",
+          "services": []
+        },
+        {
+          "start": 1140,
+          "end": 1440,
+          "location": "bld_ms_gs_02",
+          "activity": "休息",
+          "services": []
+        }
+      ],
+      "market": [
+        {
+          "start": 0,
+          "end": 360,
+          "location": "bld_ms_gs_02",
+          "activity": "休息",
+          "services": []
+        },
+        {
+          "start": 360,
+          "end": 1080,
+          "location": "site_ms_gs_scale",
+          "activity": "看秤存签",
+          "services": []
+        },
+        {
+          "start": 1080,
+          "end": 1140,
+          "location": "site_ms_gs_council",
+          "activity": "议事",
+          "services": []
+        },
+        {
+          "start": 1140,
+          "end": 1440,
+          "location": "bld_ms_gs_02",
+          "activity": "休息",
+          "services": []
+        }
+      ],
+      "rest": [
+        {
+          "start": 0,
+          "end": 360,
+          "location": "bld_ms_gs_02",
+          "activity": "休息",
+          "services": []
+        },
+        {
+          "start": 360,
+          "end": 1080,
+          "location": "site_ms_gs_scale",
+          "activity": "看秤存签",
+          "services": []
+        },
+        {
+          "start": 1080,
+          "end": 1140,
+          "location": "site_ms_gs_council",
+          "activity": "议事",
+          "services": []
+        },
+        {
+          "start": 1140,
+          "end": 1440,
+          "location": "bld_ms_gs_02",
+          "activity": "休息",
+          "services": []
+        }
+      ],
+      "restDays": [],
+      "seasonal": {}
+    },
+    "relationships": [
+      {
+        "with": "npc_ms_gs_shenge",
+        "type": "共同议事",
+        "trust": 10,
+        "affection": 4,
+        "note": "绳额与他一同看过空秤与断签，分歧一直留到现在。"
+      },
+      {
+        "with": "npc_ms_gs_zhenhe",
+        "type": "同地往来",
+        "trust": 8,
+        "affection": 5,
+        "note": "砧禾记得上回的争论，折签愿意等对方把打算说完。"
+      },
+      {
+        "with": "npc_ms_gs_sangou",
+        "type": "同地议事",
+        "trust": 6,
+        "affection": 3,
+        "note": "散钩在议事处听过他的主张，两人仍会在公共地方招呼。"
+      }
+    ],
+    "memorySeeds": [
+      {
+        "id": "memory_t162_loc_ms_huipeng_meeting",
+        "event": "上次在灰棚公秤台，绳额、折签、砧禾、散钩把空秤亮给彼此看，最后约好在议签棚再谈轮值。",
+        "location": "site_ms_gs_scale",
+        "salience": 5,
+        "knownBy": [
+          "npc_ms_gs_shenge",
+          "npc_ms_gs_zheqian",
+          "npc_ms_gs_zhenhe",
+          "npc_ms_gs_sangou"
+        ],
+        "reliability": "亲历"
+      },
+      {
+        "id": "memory_t162_npc_ms_gs_zheqian",
+        "event": "折签曾在下雨的夜里守着折家矮棚的破席，天亮才发现雨水只从一处旧折痕漏下。",
+        "location": "bld_ms_gs_02",
+        "salience": 3,
+        "knownBy": [
+          "npc_ms_gs_zheqian"
+        ],
+        "reliability": "个人回忆"
+      }
+    ],
+    "goals": {
+      "short": [
+        {
+          "id": "goal_t162_gs_zheqian_short",
+          "content": "把旧签的来路认清",
+          "progress": 0,
+          "deadlineDay": 30,
+          "resources": [
+            {
+              "kind": "协商",
+              "description": "须当事人另行同意的空闲时辰",
+              "availability": "unverified",
+              "grantsInventory": false
+            }
+          ],
+          "steps": [
+            {
+              "content": "与绳额再谈一次",
+              "status": "pending"
+            },
+            {
+              "content": "把旧签摆在空秤旁逐张核对",
+              "status": "pending"
+            }
+          ]
+        }
+      ],
+      "mid": [
+        {
+          "id": "goal_t162_gs_zheqian_mid",
+          "content": "有些旧签磨得认不出结尾，她不肯凭印象说是谁的。",
+          "progress": 0,
+          "deadlineDay": 180,
+          "resources": [
+            {
+              "kind": "协商",
+              "description": "须当事人另行同意的空闲时辰",
+              "availability": "unverified",
+              "grantsInventory": false
+            }
+          ],
+          "steps": [
+            {
+              "content": "听听砧禾的打算",
+              "status": "pending"
+            },
+            {
+              "content": "在议事时讲清自己的理由",
+              "status": "pending"
+            }
+          ]
+        }
+      ],
+      "long": [
+        {
+          "id": "goal_t162_gs_zheqian_long",
+          "content": "让灰棚集的幼体认得回家的路",
+          "progress": 0,
+          "deadlineDay": 720,
+          "resources": [
+            {
+              "kind": "协商",
+              "description": "须当事人另行同意的空闲时辰",
+              "availability": "unverified",
+              "grantsInventory": false
+            }
+          ],
+          "steps": [
+            {
+              "content": "带同住者看门前的记号",
+              "status": "pending"
+            },
+            {
+              "content": "把受潮的旧席换到干处",
+              "status": "pending"
+            }
+          ]
+        }
+      ]
+    },
+    "fears": [
+      "一张错签让来客再也不信集上的话"
+    ],
+    "redLines": [
+      "不能替货主改签",
+      "幼体不替外客做工"
+    ],
+    "secrets": [
+      {
+        "content": "折签私下怕绳额会把分歧当成不再往来的理由，因而一直没提自己昨晚的犹豫。",
+        "knownBy": [
+          "npc_ms_gs_zheqian"
+        ]
+      }
+    ],
+    "knowledge": {
+      "known": [
+        {
+          "fact": "灰棚集的私宅须成年住户当面许可。",
+          "source": "bld_ms_gs_02",
+          "reliability": "长居亲历"
+        },
+        {
+          "fact": "有些旧签磨得认不出结尾，她不肯凭印象说是谁的。",
+          "source": "site_ms_gs_scale",
+          "reliability": "本人打算"
+        },
+        {
+          "fact": "公秤轮值总轮不到砧禾，她要在议签棚把这件事说完。",
+          "source": "npc_ms_gs_sangou",
+          "reliability": "议事时听本人说过"
+        }
+      ],
+      "unknown": [
+        "绳额是否愿意让一步？",
+        "桑坂哪位肯把自己认货签的办法带来公秤台？"
+      ]
+    },
+    "opinions": {
+      "factions": "裂炉有自己的分粮办法，灰棚仍按各自的货签认货。",
+      "magic": "法术不能替物主认签。",
+      "adventurers": "肯停步听话的人，可以把事情谈清。",
+      "neighbors": [
+        {
+          "with": "npc_ms_gs_shenge",
+          "view": "绳额记事的方法与我不同。"
+        },
+        {
+          "with": "npc_ms_gs_zhenhe",
+          "view": "砧禾会把该做的事留下记号。"
+        }
+      ]
+    },
+    "towardPlayer": {
+      "baseline": {
+        "trust": 0,
+        "affection": 0
+      },
+      "raises": [
+        "先问物主再伸手",
+        "耐心听完分歧"
+      ],
+      "lowers": [
+        "闯进私宅",
+        "替别人答应条件"
+      ],
+      "attitude": "愿在公共地方听来意。"
+    },
+    "behaviorRules": {
+      "bargaining": "手头没有可售货，不代别人许诺。",
+      "honesty": "不清楚的就说没看见。",
+      "risk": "遇险先护住同住幼体。",
+      "threatResponse": "呼叫成年邻居，留出退路。",
+      "bribeResponse": "不能靠送礼替别人改议事的说法。"
+    },
+    "serviceCatalog": [],
+    "hooks": [
+      "有些旧签磨得认不出结尾，她不肯凭印象说是谁的。",
+      "把旧签的来路认清"
+    ],
+    "ttsVoice": "zh_female_mature_01",
+    "portraitPrompt": "原创幻想非人居民折签，保留monster_ash_cave_goblin本相，右手只戴一只旧护腕，折断的签也收得整齐。灰顶地上市集背景，无文字。",
+    "notes": "灰棚集的长老，白天在灰棚公秤台，傍晚到议事处。",
+    "description": "折签是灰棚集的长老。右手只戴一只旧护腕，折断的签也收得整齐。有些旧签磨得认不出结尾，她不肯凭印象说是谁的。白天可以在灰棚公秤台找到本人，傍晚转到议事处。我记不清，就先搁着。"
+  },
+  {
+    "id": "npc_ms_gs_zhenhe",
+    "name": "砧禾",
+    "aliases": [],
+    "tier": "full",
+    "age": 36,
+    "sex": "男",
+    "species": "monster_split_tusk_orc",
+    "society": "loc_ms_huipeng",
+    "culture": "culture_ms_huipeng",
+    "settlement": "loc_ms_huipeng",
+    "scope": "loc_ms_huipeng",
+    "householdId": "house_t162_7",
+    "household": [
+      "npc_ms_gs_zhenbei",
+      "npc_ms_gs_zhenya"
+    ],
+    "occupation": "削柄修具",
+    "traits": [
+      "手稳",
+      "拘谨"
+    ],
+    "home": {
+      "location": "bld_ms_gs_03",
+      "access": "同住共居；进入私宅须先取得成年住户的有效许可。",
+      "ownership": "unspecified"
+    },
+    "location": "bld_ms_gs_03",
+    "flags": {
+      "minor": false,
+      "romanceable": false
+    },
+    "currentConcern": "他想试值公秤，却怕旁人只见他的个头不听他读签。",
+    "visibleFeature": "掌心有厚茧，拿起小木柄时却只用指尖。",
+    "trust": 0,
+    "affection": 0,
+    "coins": 40,
+    "birth": {
+      "year": -36,
+      "month": 1,
+      "day": 2
+    },
+    "inventory": {
+      "item_tool_handle": 18
+    },
+    "skills": [],
+    "services": [
+      "trade"
+    ],
+    "intelligence": {
+      "level": 2,
+      "growth": 0
+    },
+    "role": "生产管事",
+    "familyNotes": "砧禾与砧背、砧芽同住砧家车棚；回去时会先看门边的席子是否淋湿。",
+    "appearance": [
+      "掌心有厚茧，拿起小木柄时却只用指尖。",
+      "衣边沾着棚灰。",
+      "常把前爪或双手收在身前。"
+    ],
+    "voice": {
+      "register": "声音不高，先等对方收声",
+      "accent": "末字收得短",
+      "habits": [
+        "先看看对方手里的东西"
+      ],
+      "samples": [
+        "柄长短，手知道。",
+        "他想试值公秤，却怕旁人只见他的个头不听他读签。",
+        "绳额的话也听完。"
+      ]
+    },
+    "personality": {
+      "traits": [
+        "手稳",
+        "拘谨"
+      ],
+      "values": [
+        "让各族按手艺轮值",
+        "答应的事先做完"
+      ],
+      "flaws": [
+        "熟人的反对更难听进去"
+      ]
+    },
+    "proficiencies": {},
+    "professions": [],
+    "level": 1,
+    "combat": null,
+    "wealth": {
+      "cashRange": [
+        40,
+        40
+      ],
+      "property": [],
+      "valuables": [],
+      "debts": []
+    },
+    "workplace": {
+      "location": "site_ms_gs_repair",
+      "access": "公共林地、窟道或营地可当面招呼；工具和存物另问看管者。"
+    },
+    "schedule": {
+      "default": [
+        {
+          "start": 0,
+          "end": 360,
+          "location": "bld_ms_gs_03",
+          "activity": "休息",
+          "services": []
+        },
+        {
+          "start": 360,
+          "end": 1080,
+          "location": "site_ms_gs_repair",
+          "activity": "削柄修具",
+          "services": [
+            "trade"
+          ]
+        },
+        {
+          "start": 1080,
+          "end": 1140,
+          "location": "site_ms_gs_council",
+          "activity": "议事",
+          "services": []
+        },
+        {
+          "start": 1140,
+          "end": 1440,
+          "location": "bld_ms_gs_03",
+          "activity": "休息",
+          "services": []
+        }
+      ],
+      "market": [
+        {
+          "start": 0,
+          "end": 360,
+          "location": "bld_ms_gs_03",
+          "activity": "休息",
+          "services": []
+        },
+        {
+          "start": 360,
+          "end": 1080,
+          "location": "site_ms_gs_repair",
+          "activity": "削柄修具",
+          "services": [
+            "trade"
+          ]
+        },
+        {
+          "start": 1080,
+          "end": 1140,
+          "location": "site_ms_gs_council",
+          "activity": "议事",
+          "services": []
+        },
+        {
+          "start": 1140,
+          "end": 1440,
+          "location": "bld_ms_gs_03",
+          "activity": "休息",
+          "services": []
+        }
+      ],
+      "rest": [
+        {
+          "start": 0,
+          "end": 360,
+          "location": "bld_ms_gs_03",
+          "activity": "休息",
+          "services": []
+        },
+        {
+          "start": 360,
+          "end": 1080,
+          "location": "site_ms_gs_repair",
+          "activity": "削柄修具",
+          "services": [
+            "trade"
+          ]
+        },
+        {
+          "start": 1080,
+          "end": 1140,
+          "location": "site_ms_gs_council",
+          "activity": "议事",
+          "services": []
+        },
+        {
+          "start": 1140,
+          "end": 1440,
+          "location": "bld_ms_gs_03",
+          "activity": "休息",
+          "services": []
+        }
+      ],
+      "restDays": [],
+      "seasonal": {}
+    },
+    "relationships": [
+      {
+        "with": "npc_ms_gs_shenge",
+        "type": "共同议事",
+        "trust": 10,
+        "affection": 4,
+        "note": "绳额与他一同看过空秤与断签，分歧一直留到现在。"
+      },
+      {
+        "with": "npc_ms_gs_zheqian",
+        "type": "同地往来",
+        "trust": 8,
+        "affection": 5,
+        "note": "折签记得上回的争论，砧禾愿意等对方把打算说完。"
+      },
+      {
+        "with": "npc_ms_gs_sangou",
+        "type": "同地议事",
+        "trust": 6,
+        "affection": 3,
+        "note": "散钩在议事处听过他的主张，两人仍会在公共地方招呼。"
+      }
+    ],
+    "memorySeeds": [
+      {
+        "id": "memory_t162_loc_ms_huipeng_meeting",
+        "event": "上次在灰棚公秤台，绳额、折签、砧禾、散钩把空秤亮给彼此看，最后约好在议签棚再谈轮值。",
+        "location": "site_ms_gs_scale",
+        "salience": 5,
+        "knownBy": [
+          "npc_ms_gs_shenge",
+          "npc_ms_gs_zheqian",
+          "npc_ms_gs_zhenhe",
+          "npc_ms_gs_sangou"
+        ],
+        "reliability": "亲历"
+      },
+      {
+        "id": "memory_t162_npc_ms_gs_zhenhe",
+        "event": "砧禾曾在下雨的夜里守着砧家车棚的破席，天亮才发现雨水只从一处旧折痕漏下。",
+        "location": "bld_ms_gs_03",
+        "salience": 3,
+        "knownBy": [
+          "npc_ms_gs_zhenhe"
+        ],
+        "reliability": "个人回忆"
+      }
+    ],
+    "goals": {
+      "short": [
+        {
+          "id": "goal_t162_gs_zhenhe_short",
+          "content": "让各族按手艺轮值",
+          "progress": 0,
+          "deadlineDay": 30,
+          "resources": [
+            {
+              "kind": "协商",
+              "description": "须当事人另行同意的空闲时辰",
+              "availability": "unverified",
+              "grantsInventory": false
+            }
+          ],
+          "steps": [
+            {
+              "content": "与绳额再谈一次",
+              "status": "pending"
+            },
+            {
+              "content": "把旧签摆在空秤旁逐张核对",
+              "status": "pending"
+            }
+          ]
+        }
+      ],
+      "mid": [
+        {
+          "id": "goal_t162_gs_zhenhe_mid",
+          "content": "他想试值公秤，却怕旁人只见他的个头不听他读签。",
+          "progress": 0,
+          "deadlineDay": 180,
+          "resources": [
+            {
+              "kind": "协商",
+              "description": "须当事人另行同意的空闲时辰",
+              "availability": "unverified",
+              "grantsInventory": false
+            }
+          ],
+          "steps": [
+            {
+              "content": "听听折签的打算",
+              "status": "pending"
+            },
+            {
+              "content": "在议事时讲清自己的理由",
+              "status": "pending"
+            }
+          ]
+        }
+      ],
+      "long": [
+        {
+          "id": "goal_t162_gs_zhenhe_long",
+          "content": "让灰棚集的幼体认得回家的路",
+          "progress": 0,
+          "deadlineDay": 720,
+          "resources": [
+            {
+              "kind": "协商",
+              "description": "须当事人另行同意的空闲时辰",
+              "availability": "unverified",
+              "grantsInventory": false
+            }
+          ],
+          "steps": [
+            {
+              "content": "带同住者看门前的记号",
+              "status": "pending"
+            },
+            {
+              "content": "把受潮的旧席换到干处",
+              "status": "pending"
+            }
+          ]
+        }
+      ]
+    },
+    "fears": [
+      "一张错签让来客再也不信集上的话"
+    ],
+    "redLines": [
+      "不能替货主改签",
+      "幼体不替外客做工"
+    ],
+    "secrets": [
+      {
+        "content": "砧禾私下怕绳额会把分歧当成不再往来的理由，因而一直没提自己昨晚的犹豫。",
+        "knownBy": [
+          "npc_ms_gs_zhenhe"
+        ]
+      }
+    ],
+    "knowledge": {
+      "known": [
+        {
+          "fact": "灰棚集的私宅须成年住户当面许可。",
+          "source": "bld_ms_gs_03",
+          "reliability": "长居亲历"
+        },
+        {
+          "fact": "他想试值公秤，却怕旁人只见他的个头不听他读签。",
+          "source": "site_ms_gs_repair",
+          "reliability": "本人打算"
+        },
+        {
+          "fact": "公秤轮值总轮不到砧禾，她要在议签棚把这件事说完。",
+          "source": "npc_ms_gs_sangou",
+          "reliability": "议事时听本人说过"
+        }
+      ],
+      "unknown": [
+        "绳额是否愿意让一步？",
+        "桑坂哪位肯把自己认货签的办法带来公秤台？"
+      ]
+    },
+    "opinions": {
+      "factions": "裂炉有自己的分粮办法，灰棚仍按各自的货签认货。",
+      "magic": "法术不能替物主认签。",
+      "adventurers": "肯停步听话的人，可以把事情谈清。",
+      "neighbors": [
+        {
+          "with": "npc_ms_gs_shenge",
+          "view": "绳额记事的方法与我不同。"
+        },
+        {
+          "with": "npc_ms_gs_zheqian",
+          "view": "折签会把该做的事留下记号。"
+        }
+      ]
+    },
+    "towardPlayer": {
+      "baseline": {
+        "trust": 0,
+        "affection": 0
+      },
+      "raises": [
+        "先问物主再伸手",
+        "耐心听完分歧"
+      ],
+      "lowers": [
+        "闯进私宅",
+        "替别人答应条件"
+      ],
+      "attitude": "愿在公共地方听来意。"
+    },
+    "behaviorRules": {
+      "bargaining": "只换本人手头的货，卖完就停。",
+      "honesty": "不清楚的就说没看见。",
+      "risk": "遇险先护住同住幼体。",
+      "threatResponse": "呼叫成年邻居，留出退路。",
+      "bribeResponse": "不能靠送礼替别人改议事的说法。"
+    },
+    "serviceCatalog": [
+      {
+        "kind": "trade",
+        "what": "本人有限库存中的物品",
+        "price": {
+          "mode": "engineQuote"
+        },
+        "unlocksService": false
+      }
+    ],
+    "hooks": [
+      "他想试值公秤，却怕旁人只见他的个头不听他读签。",
+      "让各族按手艺轮值"
+    ],
+    "ttsVoice": "zh_male_low_01",
+    "portraitPrompt": "原创幻想非人居民砧禾，保留monster_split_tusk_orc本相，掌心有厚茧，拿起小木柄时却只用指尖。灰顶地上市集背景，无文字。",
+    "notes": "灰棚集的生产管事，白天在灰棚补具檐，傍晚到议事处。",
+    "description": "砧禾是灰棚集的生产管事。掌心有厚茧，拿起小木柄时却只用指尖。他想试值公秤，却怕旁人只见他的个头不听他读签。白天可以在灰棚补具檐找到本人，傍晚转到议事处。柄长短，手知道。"
+  },
+  {
+    "id": "npc_ms_gs_sangou",
+    "name": "散钩",
+    "aliases": [],
+    "tier": "full",
+    "age": 26,
+    "sex": "女",
+    "species": "monster_ash_cave_goblin",
+    "society": "loc_ms_huipeng",
+    "culture": "culture_ms_huipeng",
+    "settlement": "loc_ms_huipeng",
+    "scope": "loc_ms_huipeng",
+    "householdId": "house_t162_6",
+    "household": [
+      "npc_ms_gs_zheqian",
+      "npc_ms_gs_zhewang",
+      "npc_ms_gs_zheyou",
+      "npc_ms_gs_sanfu"
+    ],
+    "occupation": "拆绳认结",
+    "traits": [
+      "直率",
+      "性急"
+    ],
+    "home": {
+      "location": "bld_ms_gs_02",
+      "access": "同住共居；进入私宅须先取得成年住户的有效许可。",
+      "ownership": "unspecified"
+    },
+    "location": "bld_ms_gs_02",
+    "flags": {
+      "minor": false,
+      "romanceable": false
+    },
+    "currentConcern": "公秤轮值总轮不到砧禾，她要在议签棚把这件事说完。",
+    "visibleFeature": "腰侧挂着弯钩，说到不平处就把绳结一拉一松。",
+    "trust": 0,
+    "affection": 0,
+    "coins": 40,
+    "birth": {
+      "year": -26,
+      "month": 3,
+      "day": 16
+    },
+    "inventory": {},
+    "skills": [],
+    "services": [],
+    "intelligence": {
+      "level": 2,
+      "growth": 0
+    },
+    "role": "持不同主张者",
+    "familyNotes": "散钩与折签、折网、折幼、散缚同住折家矮棚；回去时会先看门边的席子是否淋湿。",
+    "appearance": [
+      "腰侧挂着弯钩，说到不平处就把绳结一拉一松。",
+      "衣边沾着棚灰。",
+      "停步时先侧头听声音。"
+    ],
+    "voice": {
+      "register": "短句多，着急时字跟着绳头跳",
+      "accent": "末字收得短",
+      "habits": [
+        "先看看对方手里的东西"
+      ],
+      "samples": [
+        "先给他看空秤。",
+        "公秤轮值总轮不到砧禾，她要在议签棚把这件事说完。",
+        "绳额的话也听完。"
+      ]
+    },
+    "personality": {
+      "traits": [
+        "直率",
+        "性急"
+      ],
+      "values": [
+        "把公秤交给会认刻度的人",
+        "答应的事先做完"
+      ],
+      "flaws": [
+        "有时抢在别人把话说完以前开口"
+      ]
+    },
+    "proficiencies": {},
+    "professions": [],
+    "level": 1,
+    "combat": null,
+    "wealth": {
+      "cashRange": [
+        40,
+        40
+      ],
+      "property": [],
+      "valuables": [],
+      "debts": []
+    },
+    "workplace": {
+      "location": "site_ms_gs_repair",
+      "access": "公共林地、窟道或营地可当面招呼；工具和存物另问看管者。"
+    },
+    "schedule": {
+      "default": [
+        {
+          "start": 0,
+          "end": 360,
+          "location": "bld_ms_gs_02",
+          "activity": "休息",
+          "services": []
+        },
+        {
+          "start": 360,
+          "end": 1080,
+          "location": "site_ms_gs_repair",
+          "activity": "拆绳认结",
+          "services": []
+        },
+        {
+          "start": 1080,
+          "end": 1140,
+          "location": "site_ms_gs_council",
+          "activity": "议事",
+          "services": []
+        },
+        {
+          "start": 1140,
+          "end": 1440,
+          "location": "bld_ms_gs_02",
+          "activity": "休息",
+          "services": []
+        }
+      ],
+      "market": [
+        {
+          "start": 0,
+          "end": 360,
+          "location": "bld_ms_gs_02",
+          "activity": "休息",
+          "services": []
+        },
+        {
+          "start": 360,
+          "end": 1080,
+          "location": "site_ms_gs_repair",
+          "activity": "拆绳认结",
+          "services": []
+        },
+        {
+          "start": 1080,
+          "end": 1140,
+          "location": "site_ms_gs_council",
+          "activity": "议事",
+          "services": []
+        },
+        {
+          "start": 1140,
+          "end": 1440,
+          "location": "bld_ms_gs_02",
+          "activity": "休息",
+          "services": []
+        }
+      ],
+      "rest": [
+        {
+          "start": 0,
+          "end": 360,
+          "location": "bld_ms_gs_02",
+          "activity": "休息",
+          "services": []
+        },
+        {
+          "start": 360,
+          "end": 1080,
+          "location": "site_ms_gs_repair",
+          "activity": "拆绳认结",
+          "services": []
+        },
+        {
+          "start": 1080,
+          "end": 1140,
+          "location": "site_ms_gs_council",
+          "activity": "议事",
+          "services": []
+        },
+        {
+          "start": 1140,
+          "end": 1440,
+          "location": "bld_ms_gs_02",
+          "activity": "休息",
+          "services": []
+        }
+      ],
+      "restDays": [],
+      "seasonal": {}
+    },
+    "relationships": [
+      {
+        "with": "npc_ms_gs_shenge",
+        "type": "共同议事",
+        "trust": 10,
+        "affection": 4,
+        "note": "绳额与他一同看过空秤与断签，分歧一直留到现在。"
+      },
+      {
+        "with": "npc_ms_gs_zheqian",
+        "type": "同地往来",
+        "trust": 8,
+        "affection": 5,
+        "note": "折签记得上回的争论，散钩愿意等对方把打算说完。"
+      },
+      {
+        "with": "npc_ms_gs_zhenhe",
+        "type": "同地议事",
+        "trust": 6,
+        "affection": 3,
+        "note": "砧禾在议事处听过他的主张，两人仍会在公共地方招呼。"
+      }
+    ],
+    "memorySeeds": [
+      {
+        "id": "memory_t162_loc_ms_huipeng_meeting",
+        "event": "上次在灰棚公秤台，绳额、折签、砧禾、散钩把空秤亮给彼此看，最后约好在议签棚再谈轮值。",
+        "location": "site_ms_gs_scale",
+        "salience": 5,
+        "knownBy": [
+          "npc_ms_gs_shenge",
+          "npc_ms_gs_zheqian",
+          "npc_ms_gs_zhenhe",
+          "npc_ms_gs_sangou"
+        ],
+        "reliability": "亲历"
+      },
+      {
+        "id": "memory_t162_npc_ms_gs_sangou",
+        "event": "散钩曾在下雨的夜里守着折家矮棚的破席，天亮才发现雨水只从一处旧折痕漏下。",
+        "location": "bld_ms_gs_02",
+        "salience": 3,
+        "knownBy": [
+          "npc_ms_gs_sangou"
+        ],
+        "reliability": "个人回忆"
+      }
+    ],
+    "goals": {
+      "short": [
+        {
+          "id": "goal_t162_gs_sangou_short",
+          "content": "把公秤交给会认刻度的人",
+          "progress": 0,
+          "deadlineDay": 30,
+          "resources": [
+            {
+              "kind": "协商",
+              "description": "须当事人另行同意的空闲时辰",
+              "availability": "unverified",
+              "grantsInventory": false
+            }
+          ],
+          "steps": [
+            {
+              "content": "与绳额再谈一次",
+              "status": "pending"
+            },
+            {
+              "content": "把旧签摆在空秤旁逐张核对",
+              "status": "pending"
+            }
+          ]
+        }
+      ],
+      "mid": [
+        {
+          "id": "goal_t162_gs_sangou_mid",
+          "content": "公秤轮值总轮不到砧禾，她要在议签棚把这件事说完。",
+          "progress": 0,
+          "deadlineDay": 180,
+          "resources": [
+            {
+              "kind": "协商",
+              "description": "须当事人另行同意的空闲时辰",
+              "availability": "unverified",
+              "grantsInventory": false
+            }
+          ],
+          "steps": [
+            {
+              "content": "听听折签的打算",
+              "status": "pending"
+            },
+            {
+              "content": "在议事时讲清自己的理由",
+              "status": "pending"
+            }
+          ]
+        }
+      ],
+      "long": [
+        {
+          "id": "goal_t162_gs_sangou_long",
+          "content": "让灰棚集的幼体认得回家的路",
+          "progress": 0,
+          "deadlineDay": 720,
+          "resources": [
+            {
+              "kind": "协商",
+              "description": "须当事人另行同意的空闲时辰",
+              "availability": "unverified",
+              "grantsInventory": false
+            }
+          ],
+          "steps": [
+            {
+              "content": "带同住者看门前的记号",
+              "status": "pending"
+            },
+            {
+              "content": "把受潮的旧席换到干处",
+              "status": "pending"
+            }
+          ]
+        }
+      ]
+    },
+    "fears": [
+      "一张错签让来客再也不信集上的话"
+    ],
+    "redLines": [
+      "不能替货主改签",
+      "幼体不替外客做工"
+    ],
+    "secrets": [
+      {
+        "content": "散钩私下怕绳额会把分歧当成不再往来的理由，因而一直没提自己昨晚的犹豫。",
+        "knownBy": [
+          "npc_ms_gs_sangou"
+        ]
+      }
+    ],
+    "knowledge": {
+      "known": [
+        {
+          "fact": "灰棚集的私宅须成年住户当面许可。",
+          "source": "bld_ms_gs_02",
+          "reliability": "长居亲历"
+        },
+        {
+          "fact": "公秤轮值总轮不到砧禾，她要在议签棚把这件事说完。",
+          "source": "site_ms_gs_repair",
+          "reliability": "本人打算"
+        },
+        {
+          "fact": "他想试值公秤，却怕旁人只见他的个头不听他读签。",
+          "source": "npc_ms_gs_zhenhe",
+          "reliability": "议事时听本人说过"
+        }
+      ],
+      "unknown": [
+        "绳额是否愿意让一步？",
+        "桑坂哪位肯把自己认货签的办法带来公秤台？"
+      ]
+    },
+    "opinions": {
+      "factions": "裂炉有自己的分粮办法，灰棚仍按各自的货签认货。",
+      "magic": "法术不能替物主认签。",
+      "adventurers": "肯停步听话的人，可以把事情谈清。",
+      "neighbors": [
+        {
+          "with": "npc_ms_gs_shenge",
+          "view": "绳额记事的方法与我不同。"
+        },
+        {
+          "with": "npc_ms_gs_zheqian",
+          "view": "折签会把该做的事留下记号。"
+        }
+      ]
+    },
+    "towardPlayer": {
+      "baseline": {
+        "trust": 0,
+        "affection": 0
+      },
+      "raises": [
+        "先问物主再伸手",
+        "耐心听完分歧"
+      ],
+      "lowers": [
+        "闯进私宅",
+        "替别人答应条件"
+      ],
+      "attitude": "愿在公共地方听来意。"
+    },
+    "behaviorRules": {
+      "bargaining": "手头没有可售货，不代别人许诺。",
+      "honesty": "不清楚的就说没看见。",
+      "risk": "遇险先护住同住幼体。",
+      "threatResponse": "呼叫成年邻居，留出退路。",
+      "bribeResponse": "不能靠送礼替别人改议事的说法。"
+    },
+    "serviceCatalog": [],
+    "hooks": [
+      "公秤轮值总轮不到砧禾，她要在议签棚把这件事说完。",
+      "把公秤交给会认刻度的人"
+    ],
+    "ttsVoice": "zh_female_mature_01",
+    "portraitPrompt": "原创幻想非人居民散钩，保留monster_ash_cave_goblin本相，腰侧挂着弯钩，说到不平处就把绳结一拉一松。灰顶地上市集背景，无文字。",
+    "notes": "灰棚集的持不同主张者，白天在灰棚补具檐，傍晚到议事处。",
+    "description": "散钩是灰棚集的持不同主张者。腰侧挂着弯钩，说到不平处就把绳结一拉一松。公秤轮值总轮不到砧禾，她要在议签棚把这件事说完。白天可以在灰棚补具檐找到本人，傍晚转到议事处。先给他看空秤。"
   }
 ]

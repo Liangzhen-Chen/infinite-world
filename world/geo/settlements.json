@@ -6276,5 +6276,240 @@
         ]
       }
     }
+  },
+  {
+    "id": "loc_ms_huixi",
+    "parent": "loc_bs",
+    "population": 48,
+    "householdCount": 12,
+    "residentIds": [
+      "npc_ms_hx_yiheng",
+      "npc_ms_hx_qiaosui",
+      "npc_ms_hx_xianpu",
+      "npc_ms_hx_luchi",
+      "npc_ms_hx_yixian",
+      "npc_ms_hx_yimo",
+      "npc_ms_hx_qiaofu",
+      "npc_ms_hx_qiaoyou",
+      "npc_ms_hx_xianwen",
+      "npc_ms_hx_xianduan",
+      "npc_ms_hx_luman",
+      "npc_ms_hx_luya"
+    ],
+    "visitors": [],
+    "commuters": [],
+    "externalRelatives": [],
+    "facts": [
+      "回汐埠共48名成员、12户；登记具名成员12名4户，另有36名8户按稳定种子待生成，不计入当前名册。",
+      "分物种配额：赤耳林狐12名（具名3名，待生成9名2户，住回汐干芦台）；石须穴鼬12名（具名3名，待生成9名2户，住回汐干芦台）；灰颈河獭12名（具名3名，待生成9名2户，住回汐水窝岸）；叠甲丘龟12名（具名3名，待生成9名2户，住回汐水窝岸）。",
+      "住区：回汐水窝岸、回汐干芦台；公共设施：认岸芦门、露根圃、回汐拆鱼石、听潮矮台、归汐高岸。",
+      "内部立场“接岸派”：给新来立意者留空棚，先问愿不愿留下，再谈怎样分担口粮。",
+      "内部立场“静滩派”：先认清旧有的芦界与粮份，新来的暂住棚外，免得一场汛水冲散存粮。",
+      "常住居民与野外种群分开；幼体不替外客做工。"
+    ],
+    "kinship": [],
+    "coordinates": [
+      31.8,
+      5.5
+    ],
+    "terrain": "湿地",
+    "climate": "回水湾潮湿，汛时水位上涨",
+    "buildingIds": [
+      "site_ms_hx_reed",
+      "site_ms_hx_dew",
+      "site_ms_hx_landing",
+      "site_ms_hx_listen",
+      "site_ms_hx_return",
+      "site_ms_hx_water",
+      "site_ms_hx_land",
+      "site_ms_hx_council",
+      "site_ms_hx_store",
+      "bld_ms_hx_01",
+      "bld_ms_hx_02",
+      "bld_ms_hx_03",
+      "bld_ms_hx_04"
+    ],
+    "ageStructure": {
+      "children": 12,
+      "youngAdults": 11,
+      "adults": 20,
+      "elders": 5
+    },
+    "registrationMode": "seeded-on-demand",
+    "populationSeed": "t162-huixi-1",
+    "registeredPopulation": 12,
+    "pendingPopulation": 36,
+    "registeredHouseholdCount": 4,
+    "pendingHouseholdCount": 8,
+    "registeredAgeStructure": {
+      "children": 4,
+      "youngAdults": 3,
+      "adults": 4,
+      "elders": 1
+    },
+    "pendingAgeStructure": {
+      "children": 8,
+      "youngAdults": 8,
+      "adults": 16,
+      "elders": 4
+    },
+    "pendingSpeciesStructure": {
+      "monster_red_ear_fox": {
+        "population": 9,
+        "households": 2,
+        "ageStructure": {
+          "children": 2,
+          "youngAdults": 2,
+          "adults": 4,
+          "elders": 1
+        },
+        "districts": [
+          "site_ms_hx_land"
+        ]
+      },
+      "monster_stone_whisker_weasel": {
+        "population": 9,
+        "households": 2,
+        "ageStructure": {
+          "children": 2,
+          "youngAdults": 2,
+          "adults": 4,
+          "elders": 1
+        },
+        "districts": [
+          "site_ms_hx_land"
+        ]
+      },
+      "monster_grey_otter": {
+        "population": 9,
+        "households": 2,
+        "ageStructure": {
+          "children": 2,
+          "youngAdults": 2,
+          "adults": 4,
+          "elders": 1
+        },
+        "districts": [
+          "site_ms_hx_water"
+        ]
+      },
+      "monster_plate_back_tortoise": {
+        "population": 9,
+        "households": 2,
+        "ageStructure": {
+          "children": 2,
+          "youngAdults": 2,
+          "adults": 4,
+          "elders": 1
+        },
+        "districts": [
+          "site_ms_hx_water"
+        ]
+      }
+    }
+  },
+  {
+    "id": "loc_ms_huipeng",
+    "parent": "loc_bs",
+    "population": 72,
+    "householdCount": 18,
+    "residentIds": [
+      "npc_ms_gs_shenge",
+      "npc_ms_gs_zheqian",
+      "npc_ms_gs_zhenhe",
+      "npc_ms_gs_sangou",
+      "npc_ms_gs_shengli",
+      "npc_ms_gs_shengya",
+      "npc_ms_gs_zhewang",
+      "npc_ms_gs_zheyou",
+      "npc_ms_gs_sanfu",
+      "npc_ms_gs_sanzhi",
+      "npc_ms_gs_zhenbei",
+      "npc_ms_gs_zhenya"
+    ],
+    "visitors": [],
+    "commuters": [],
+    "externalRelatives": [],
+    "facts": [
+      "灰棚集共72名成员、18户；登记具名成员12名3户，另有60名15户按稳定种子待生成，不计入当前名册。",
+      "分物种配额：灰窟哥布林54名（具名9名，待生成45名11户，住灰棚矮棚排）；裂牙兽人18名（具名3名，待生成15名4户，住灰棚卸车圈）。",
+      "住区：灰棚矮棚排、灰棚卸车圈；公共设施：灰棚迎车口、灰棚公秤台、灰棚补具檐、灰棚候饭灶、灰棚归签坡。",
+      "内部立场“守签派”：公秤继续由熟识绳签的哥布林掌管，矿货要先认清货主再进集。",
+      "内部立场“共秤派”：会认刻度的各族都可轮值公秤，每次交接把空秤交给下一位看。",
+      "常住居民与野外种群分开；幼体不替外客做工。"
+    ],
+    "kinship": [],
+    "coordinates": [
+      22,
+      4.2
+    ],
+    "terrain": "平原",
+    "climate": "平地多风，棚顶雨后转深灰",
+    "buildingIds": [
+      "site_ms_gs_gate",
+      "site_ms_gs_scale",
+      "site_ms_gs_repair",
+      "site_ms_gs_kitchen",
+      "site_ms_gs_return",
+      "site_ms_gs_tents",
+      "site_ms_gs_carts",
+      "site_ms_gs_council",
+      "site_ms_gs_store",
+      "bld_ms_gs_01",
+      "bld_ms_gs_02",
+      "bld_ms_gs_03"
+    ],
+    "ageStructure": {
+      "children": 15,
+      "youngAdults": 22,
+      "adults": 28,
+      "elders": 7
+    },
+    "registrationMode": "seeded-on-demand",
+    "populationSeed": "t162-huipeng-1",
+    "registeredPopulation": 12,
+    "pendingPopulation": 60,
+    "registeredHouseholdCount": 3,
+    "pendingHouseholdCount": 15,
+    "registeredAgeStructure": {
+      "children": 3,
+      "youngAdults": 4,
+      "adults": 4,
+      "elders": 1
+    },
+    "pendingAgeStructure": {
+      "children": 12,
+      "youngAdults": 18,
+      "adults": 24,
+      "elders": 6
+    },
+    "pendingSpeciesStructure": {
+      "monster_ash_cave_goblin": {
+        "population": 45,
+        "households": 11,
+        "ageStructure": {
+          "children": 9,
+          "youngAdults": 14,
+          "adults": 18,
+          "elders": 4
+        },
+        "districts": [
+          "site_ms_gs_tents"
+        ]
+      },
+      "monster_split_tusk_orc": {
+        "population": 15,
+        "households": 4,
+        "ageStructure": {
+          "children": 3,
+          "youngAdults": 4,
+          "adults": 6,
+          "elders": 2
+        },
+        "districts": [
+          "site_ms_gs_carts"
+        ]
+      }
+    }
   }
 ]

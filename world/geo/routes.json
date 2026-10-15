@@ -5112,5 +5112,356 @@
     ],
     "toll": 0,
     "risk": 1
+  },
+  {
+    "id": "route_t162_loc_ms_huixi",
+    "from": "loc_wild_wt_mist",
+    "to": "loc_ms_huixi",
+    "lengthKm": 1.8,
+    "terrainMultiplier": 1.2,
+    "modes": [
+      "walk"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 0
+  },
+  {
+    "id": "route_t162_loc_ms_huipeng",
+    "from": "loc_sb_path",
+    "to": "loc_ms_huipeng",
+    "lengthKm": 2.4,
+    "terrainMultiplier": 1.2,
+    "modes": [
+      "walk"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 0
+  },
+  {
+    "id": "route_t162_site_ms_hx_reed",
+    "from": "loc_ms_huixi",
+    "to": "site_ms_hx_reed",
+    "lengthKm": 0.08,
+    "terrainMultiplier": 1.2,
+    "modes": [
+      "walk"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 0
+  },
+  {
+    "id": "route_t162_site_ms_hx_dew",
+    "from": "loc_ms_huixi",
+    "to": "site_ms_hx_dew",
+    "lengthKm": 0.08,
+    "terrainMultiplier": 1.2,
+    "modes": [
+      "walk"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 0
+  },
+  {
+    "id": "route_t162_site_ms_hx_landing",
+    "from": "loc_ms_huixi",
+    "to": "site_ms_hx_landing",
+    "lengthKm": 0.08,
+    "terrainMultiplier": 1.2,
+    "modes": [
+      "walk"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 0
+  },
+  {
+    "id": "route_t162_site_ms_hx_listen",
+    "from": "loc_ms_huixi",
+    "to": "site_ms_hx_listen",
+    "lengthKm": 0.08,
+    "terrainMultiplier": 1.2,
+    "modes": [
+      "walk"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 0
+  },
+  {
+    "id": "route_t162_site_ms_hx_return",
+    "from": "loc_ms_huixi",
+    "to": "site_ms_hx_return",
+    "lengthKm": 0.08,
+    "terrainMultiplier": 1.2,
+    "modes": [
+      "walk"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 0
+  },
+  {
+    "id": "route_t162_site_ms_hx_water",
+    "from": "loc_ms_huixi",
+    "to": "site_ms_hx_water",
+    "lengthKm": 0.08,
+    "terrainMultiplier": 1.2,
+    "modes": [
+      "walk"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 0
+  },
+  {
+    "id": "route_t162_site_ms_hx_land",
+    "from": "loc_ms_huixi",
+    "to": "site_ms_hx_land",
+    "lengthKm": 0.08,
+    "terrainMultiplier": 1.2,
+    "modes": [
+      "walk"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 0
+  },
+  {
+    "id": "route_t162_site_ms_hx_council",
+    "from": "loc_ms_huixi",
+    "to": "site_ms_hx_council",
+    "lengthKm": 0.08,
+    "terrainMultiplier": 1.2,
+    "modes": [
+      "walk"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 0
+  },
+  {
+    "id": "route_t162_site_ms_hx_store",
+    "from": "loc_ms_huixi",
+    "to": "site_ms_hx_store",
+    "lengthKm": 0.08,
+    "terrainMultiplier": 1.2,
+    "modes": [
+      "walk"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 0
+  },
+  {
+    "id": "route_t162_site_ms_gs_gate",
+    "from": "loc_ms_huipeng",
+    "to": "site_ms_gs_gate",
+    "lengthKm": 0.08,
+    "terrainMultiplier": 1.2,
+    "modes": [
+      "walk"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 0
+  },
+  {
+    "id": "route_t162_site_ms_gs_scale",
+    "from": "loc_ms_huipeng",
+    "to": "site_ms_gs_scale",
+    "lengthKm": 0.08,
+    "terrainMultiplier": 1.2,
+    "modes": [
+      "walk"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 0
+  },
+  {
+    "id": "route_t162_site_ms_gs_repair",
+    "from": "loc_ms_huipeng",
+    "to": "site_ms_gs_repair",
+    "lengthKm": 0.08,
+    "terrainMultiplier": 1.2,
+    "modes": [
+      "walk"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 0
+  },
+  {
+    "id": "route_t162_site_ms_gs_kitchen",
+    "from": "loc_ms_huipeng",
+    "to": "site_ms_gs_kitchen",
+    "lengthKm": 0.08,
+    "terrainMultiplier": 1.2,
+    "modes": [
+      "walk"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 0
+  },
+  {
+    "id": "route_t162_site_ms_gs_return",
+    "from": "loc_ms_huipeng",
+    "to": "site_ms_gs_return",
+    "lengthKm": 0.08,
+    "terrainMultiplier": 1.2,
+    "modes": [
+      "walk"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 0
+  },
+  {
+    "id": "route_t162_site_ms_gs_tents",
+    "from": "loc_ms_huipeng",
+    "to": "site_ms_gs_tents",
+    "lengthKm": 0.08,
+    "terrainMultiplier": 1.2,
+    "modes": [
+      "walk"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 0
+  },
+  {
+    "id": "route_t162_site_ms_gs_carts",
+    "from": "loc_ms_huipeng",
+    "to": "site_ms_gs_carts",
+    "lengthKm": 0.08,
+    "terrainMultiplier": 1.2,
+    "modes": [
+      "walk"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 0
+  },
+  {
+    "id": "route_t162_site_ms_gs_council",
+    "from": "loc_ms_huipeng",
+    "to": "site_ms_gs_council",
+    "lengthKm": 0.08,
+    "terrainMultiplier": 1.2,
+    "modes": [
+      "walk"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 0
+  },
+  {
+    "id": "route_t162_site_ms_gs_store",
+    "from": "loc_ms_huipeng",
+    "to": "site_ms_gs_store",
+    "lengthKm": 0.08,
+    "terrainMultiplier": 1.2,
+    "modes": [
+      "walk"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 0
+  },
+  {
+    "id": "route_t162_bld_ms_hx_01",
+    "from": "site_ms_hx_water",
+    "to": "bld_ms_hx_01",
+    "lengthKm": 0.02,
+    "terrainMultiplier": 1.2,
+    "modes": [
+      "walk"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 0
+  },
+  {
+    "id": "route_t162_bld_ms_hx_02",
+    "from": "site_ms_hx_water",
+    "to": "bld_ms_hx_02",
+    "lengthKm": 0.02,
+    "terrainMultiplier": 1.2,
+    "modes": [
+      "walk"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 0
+  },
+  {
+    "id": "route_t162_bld_ms_hx_03",
+    "from": "site_ms_hx_land",
+    "to": "bld_ms_hx_03",
+    "lengthKm": 0.02,
+    "terrainMultiplier": 1.2,
+    "modes": [
+      "walk"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 0
+  },
+  {
+    "id": "route_t162_bld_ms_hx_04",
+    "from": "site_ms_hx_land",
+    "to": "bld_ms_hx_04",
+    "lengthKm": 0.02,
+    "terrainMultiplier": 1.2,
+    "modes": [
+      "walk"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 0
+  },
+  {
+    "id": "route_t162_bld_ms_gs_01",
+    "from": "site_ms_gs_tents",
+    "to": "bld_ms_gs_01",
+    "lengthKm": 0.02,
+    "terrainMultiplier": 1.2,
+    "modes": [
+      "walk"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 0
+  },
+  {
+    "id": "route_t162_bld_ms_gs_02",
+    "from": "site_ms_gs_tents",
+    "to": "bld_ms_gs_02",
+    "lengthKm": 0.02,
+    "terrainMultiplier": 1.2,
+    "modes": [
+      "walk"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 0
+  },
+  {
+    "id": "route_t162_bld_ms_gs_03",
+    "from": "site_ms_gs_carts",
+    "to": "bld_ms_gs_03",
+    "lengthKm": 0.02,
+    "terrainMultiplier": 1.2,
+    "modes": [
+      "walk"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 0
   }
 ]

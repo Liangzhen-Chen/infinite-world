@@ -14,9 +14,10 @@ import {villagesOriginalWorld} from '../tools/publish-w1-villages.mjs';
 import {withoutMonsterSociety} from '../tools/publish-monster-society.mjs';
 import {pruneCatalog} from './fixtures/pre-baishi-world.mjs';
 import {withoutMonsterSociety2} from '../tools/publish-monster-society-2.mjs';
+import {withoutMonsterSociety3} from '../tools/publish-monster-society-3.mjs';
 import {withoutT142} from '../tools/t142-merge.mjs';
 import {withoutClockBatch} from '../tools/w5-clock-publication.mjs';
-const formal=await loadWorld(),source=structuredClone(withoutT142(withoutClockBatch(withoutClockBatch(withoutMonsterSociety2(withoutMonsterSociety(villagesOriginalWorld(formal))),2),1))),candidate=JSON.parse(await fs.readFile('world/drafts/w1/hewan/candidate.json','utf8')),preserved=JSON.parse(await fs.readFile('world/drafts/w1/hewan/preserved-npcs.json','utf8'));
+const formal=await loadWorld(),source=structuredClone(withoutT142(withoutClockBatch(withoutClockBatch(withoutMonsterSociety2(withoutMonsterSociety(villagesOriginalWorld(withoutMonsterSociety3(formal)))),2),1))),candidate=JSON.parse(await fs.readFile('world/drafts/w1/hewan/candidate.json','utf8')),preserved=JSON.parse(await fs.readFile('world/drafts/w1/hewan/preserved-npcs.json','utf8'));
 // This historical fixture omits four villages, including their dependent rules.
 // Only references to those deliberately removed entities are projected out.
 const removedLocations=new Set(formal.locations.filter(row=>!source.locations.some(location=>location.id===row.id)).map(row=>row.id));
@@ -43,6 +44,8 @@ if(source.rules.npcGrowth?.vocations)source.rules.npcGrowth.vocations=source.rul
 // T108节日目录、T110/T111可执行势力时钟与T142九省纲要都晚于本批，分别移出（节日目录整表移出，时钟回到声明式计划）。
 delete source.festivals;
 delete source.rules.tribalAwakening;// U11族群觉醒动态（挂靠魔物社会议事势力与各村人物）晚于本批，历史世界不含。
+delete source.rules.hazardClock;// U3/D1灾害时钟晚于河湾人口初版，不能倒灌删村的历史夹具。
+delete source.rules.questSources;// U17/D1公告栏主事人和委托公账同属后续系统。
 // T105/T157首领等引用本夹具已移出的魔物社会人物、营地和野外地点；
 // 各村政体补充、U3疫病传播路线和镇上商店依赖已移出的村镇法典、路线和聚落档案。依赖随之投影掉（求闭包）。
 {
@@ -76,6 +79,8 @@ test('河湾历史候选逐条核对审核，完整深度不足拒绝且重复�
  t.after(async()=>{const target=path.resolve(root);assert.ok(target.startsWith(path.resolve(os.tmpdir())+path.sep));await fs.rm(target,{recursive:true,force:true});});
  await fs.cp(path.resolve('world'),root,{recursive:true,filter:file=>!file.split(path.sep).includes('drafts')});
  await fs.mkdir(path.join(root,'drafts/w1'),{recursive:true});await fs.cp(path.resolve('world/drafts/w1/hewan'),path.join(root,'drafts/w1/hewan'),{recursive:true});
+ // original.locations already contains loadWorld's D1 biome fields. Store them once.
+ await fs.writeFile(path.join(root,'geo/biomes.json'),JSON.stringify({locations:{}}));
  for(const [file,value]of Object.entries({'meta/rules.json':original.rules,'people/baseline.json':original.npcs,'people/residents.json':[],'people/households.json':[],'geo/settlements.json':[],'geo/locations.json':original.locations,'geo/routes.json':original.routes}))await fs.writeFile(path.join(root,file),JSON.stringify(value));
  const saved=await fs.readFile(path.join(root,'people/baseline.json'),'utf8');
  for(const publish of [false,true]){await assert.rejects(publishHewan({root,publish}),/完整人物深度/);assert.equal(await fs.readFile(path.join(root,'people/baseline.json'),'utf8'),saved);assert.equal((await loadWorld(root)).npcs.length,18);}

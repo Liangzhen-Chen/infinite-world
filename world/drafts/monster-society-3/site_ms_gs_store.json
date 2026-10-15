@@ -1,0 +1,60 @@
+{
+  "id": "site_ms_gs_store",
+  "fingerprint": "61e4e01f2b664400224ca79467b0c6a10842bd64a28b3450e1b7bb01e56c9485",
+  "status": "passed",
+  "attempts": 0,
+  "draft": {
+    "id": "site_ms_gs_store",
+    "description": "灰棚公货柜设在迎车口内侧，绳额保管议签棚留下的修绳与木柄储备。柜门的绳结完整，断下来的旧签收在旁边。守签派与共秤派尚未议定轮值以前，柜里的货不提前分给任何一棚。柜外是公共集路，打开柜门要先问绳额。",
+    "authoredFacts": {
+      "climate": "棚内干燥，灰顶挡雨",
+      "senses": [
+        "柜门绳结收得紧",
+        "断签压在木片下",
+        "柜脚垫着平石"
+      ],
+      "entryRule": "公货有看管者，取货须许可"
+    }
+  },
+  "review": {
+    "contradictions": []
+  },
+  "errors": [],
+  "warnings": [],
+  "feedback": null,
+  "frozenCandidate": {
+    "entryHash": "f55dcc1713c78bb2a4e3d916e86075b367b05672f8bdb83b2936a709c22b3ed0",
+    "draftHash": "7ea3e098ebe568f2c9b8b36ec294cf884dee10a7881664f24c0ca5666be5ba57"
+  },
+  "responseEvidence": [
+    {
+      "phase": "review",
+      "attempt": 1,
+      "requestId": "760ef4c3-d7b5-4c4c-b05d-c3a3483fc101",
+      "file": "budget-responses/760ef4c3-d7b5-4c4c-b05d-c3a3483fc101.json",
+      "requestHash": "0acbbf05df00a9861e0e0281fb20c6b9385314f9f9beb2ebe6bc4f2200fe05c1",
+      "responseHash": "b2cc2fc6a27275ae4b4a591ee445431928307bdbf842c1ec6d8a4e794d6c20b3"
+    }
+  ],
+  "measurements": [
+    {
+      "label": "content-monster-society-3-site_ms_gs_store-review0",
+      "model": "deepseek-flash",
+      "thinking": "disabled",
+      "usage": {
+        "prompt_tokens": 2514,
+        "completion_tokens": 7,
+        "total_tokens": 2521,
+        "prompt_tokens_details": {
+          "cached_tokens": 384
+        },
+        "prompt_cache_hit_tokens": 384,
+        "prompt_cache_miss_tokens": 2130
+      },
+      "costUpperYuan": 0.004331359999999999,
+      "cumulativeUpperYuan": 0.28834336000000005,
+      "latencyMs": 1012.5650999999998,
+      "timestamp": "2026-10-15T09:27:14.943Z"
+    }
+  ]
+}
