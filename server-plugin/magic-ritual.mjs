@@ -1,4 +1,5 @@
 import {registerMagicEffect}from'./magic-effects.mjs';
+import {recordCreatureResolution}from'./quest-wildlife.mjs';
 import {environmentFeatures,localPlayerPoint,localSightClear,recordLocalContact}from'./environment.mjs';
 import {areaTargetFacts}from'./magic-area.mjs';
 import {assertMagicTargeting}from'./magic-targeting.mjs';
@@ -306,12 +307,13 @@ export function applyRitual(d,initial,eventId){
   if(row)d.set(['state','records',ecology,'populations',p.actor.species,'ferried'],(row.ferried??0)+1);
   const t=stateOf(d,p.tablet);t.names=[...(Array.isArray(t.names)?t.names:[]),{subject:p.id,name:p.actor.name,species:p.actor.species,minute:now,record}];store(d,p.tablet,t);
   d.set(['state','records',record],{category:'spirit_ferry',subject:p.id,species:p.actor.species,habitat:p.actor.ecology,from:p.location,destination:p.tablet.id,minute:now,revivable:false,source:eventId});
+  recordCreatureResolution(d,this,{target:p.id,outcome:'ferried',eventId,location:p.location});
   return{...result,ferried:true,record,destination:p.tablet.id,revived:false};
  }
  if(['exorcise','purify_area'].includes(p.op)){
   const rows=p.op==='exorcise'?[[p.id,p.actor]]:p.spirits.slice(0,p.spec.power),expelled=[];
   for(const[id,a]of rows){
-   if(a.spirit?.nature==='malevolent'){d.set([...actorPath(id),'location'],null);d.set([...actorPath(id),'activity'],'已驱离');d.remove(['state','records',`local_actor_position:${id}`]);expelled.push(id);}
+   if(a.spirit?.nature==='malevolent'){d.set([...actorPath(id),'location'],null);d.set([...actorPath(id),'activity'],'已驱离');d.remove(['state','records',`local_actor_position:${id}`]);expelled.push(id);recordCreatureResolution(d,this,{target:id,outcome:'expelled',eventId,location:p.location});}
    else{d.set([...actorPath(id),'hp'],Math.max(1,a.hp-1));d.set(['state','records',`ritual_harm:${eventId}`],{category:'ritual_harm',subject:id,damage:Math.min(1,a.hp-1),minute:d.get('state','minute'),source:eventId});return{...result,misidentified:true,harmed:id};}
   }return{...result,expelled};
  }

@@ -5,11 +5,14 @@ import {DeepSeekClient} from './deepseek-client.mjs';
 import {runContentPipeline,defaultReviewRequest,readApprovedContent,hashContent} from './content-pipeline.mjs';
 import {villageProfileCandidates,villageLedgerRules,villageLawCodes,validateVillageLedger,ledgerRevision} from '../world/design/w1-village-profiles.mjs';
 import {w1VillagesFoundation} from '../world/design/w1-villages.mjs';
+import {localFacts as wildlifeFacts} from '../world/design/t155-village-wildlife.mjs';
 
 export const revision=ledgerRevision;
 export function contextFor(entry,world){
  const people=[...world.npcs,...world.residents].filter(p=>p.settlement===entry.id);
  const {details,...population}=world.settlementProfiles.find(p=>p.id===entry.id);
+ // These later notices have their own T155 L2/L4; the original facts stay frozen.
+ population.facts=population.facts.filter(text=>!wildlifeFacts.some(f=>f.board===entry.id&&f.text===text));
  // The dossier must not become its own audit evidence on repeat publication.
  if(details)population.pendingProfileSections=w1VillagesFoundation().settlements.find(p=>p.id===entry.id).pendingProfileSections;
  return {population,

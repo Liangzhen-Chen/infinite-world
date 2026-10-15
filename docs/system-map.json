@@ -2,7 +2,7 @@
  "title": "无限原野系统地图",
  "card": "K9",
  "generatedFrom": {
-  "commit": null,
+  "commit": "refs/heads/t155",
   "method": "运行时导出（注册表、规则表、工具定义、效果表、立场传导表）+ 静态正则扫描（import 图、函数体标识符、state 分区与 records 前缀、rules/world 读取）。静态扫描是近似：经 engine.byId、helper 间接或动态拼接路径的访问不计入。"
  },
  "scanMethods": {
@@ -18,14 +18,14 @@
  "counts": {
   "layers": 6,
   "systems": 37,
-  "modules": 164,
+  "modules": 165,
   "advance": 42,
   "tools": 25,
   "verbs": 15,
   "subscribers": 8,
   "interactionRules": 25,
   "effectKinds": 19,
-  "links": 345
+  "links": 347
  },
  "layers": [
   {
@@ -282,7 +282,7 @@
     "sim_environment",
     "sim_society"
    ],
-   "files": 96
+   "files": 97
   },
   {
    "id": "data_assets",
@@ -324,7 +324,7 @@
    "effects": [],
    "tools": [],
    "readBy": [],
-   "files": 24
+   "files": 37
   },
   {
    "id": "kernel_engine",
@@ -338,7 +338,7 @@
     "server-plugin/campaign-reducer.mjs",
     "server-plugin/archived-reducer.mjs"
    ],
-   "lines": 929,
+   "lines": 931,
    "stateWrites": [
     "combatDisengaged",
     "created",
@@ -1112,7 +1112,7 @@
     "server-plugin/seasonal-migration.mjs",
     "server-plugin/farm-pests.mjs"
    ],
-   "lines": 1013,
+   "lines": 1015,
    "stateWrites": [
     "crafted",
     "created",
@@ -1337,7 +1337,7 @@
     "server-plugin/magic-water-earth.mjs",
     "server-plugin/magic.mjs"
    ],
-   "lines": 3690,
+   "lines": 3692,
    "stateWrites": [
     "creatures",
     "discoveries",
@@ -1566,9 +1566,10 @@
     "server-plugin/promotion.mjs",
     "server-plugin/quest-board.mjs",
     "server-plugin/quest-sources.mjs",
+    "server-plugin/quest-wildlife.mjs",
     "server-plugin/tribal-awakening.mjs"
    ],
-   "lines": 3174,
+   "lines": 3260,
    "stateWrites": [
     "buildings",
     "created",
@@ -1593,6 +1594,7 @@
    ],
    "recordWrites": [
     "organization",
+    "quest_wildlife_claim",
     "tribal_settlement",
     "tribal_war",
     "world_event"
@@ -2762,6 +2764,7 @@
     "public-projects.mjs",
     "quest-board.mjs",
     "quest-sources.mjs",
+    "quest-wildlife.mjs",
     "titles.mjs",
     "tribal-awakening.mjs"
    ]
@@ -3554,6 +3557,14 @@
   },
   {
    "from": "sim_magic",
+   "to": "sim_society",
+   "kind": "call",
+   "labels": [
+    "quest-wildlife.mjs"
+   ]
+  },
+  {
+   "from": "sim_magic",
    "to": "sim_wildlife",
    "kind": "call",
    "labels": [
@@ -3842,6 +3853,14 @@
    "kind": "call",
    "labels": [
     "environment.mjs"
+   ]
+  },
+  {
+   "from": "sim_wildlife",
+   "to": "sim_society",
+   "kind": "call",
+   "labels": [
+    "quest-wildlife.mjs"
    ]
   },
   {
@@ -8114,7 +8133,7 @@
   },
   {
    "dir": "world/design",
-   "files": 96,
+   "files": 97,
    "keys": [],
    "readers": [
     "server-plugin/civic.mjs",
@@ -8176,6 +8195,7 @@
     "tools/system-map.mjs",
     "tools/t142-merge.mjs",
     "tools/t142-provinces-content.mjs",
+    "tools/t155-wildlife-content.mjs",
     "tools/w1-baishi.mjs",
     "tools/w1-hewan.mjs",
     "tools/w1-village-profiles-content.mjs",
@@ -8217,7 +8237,7 @@
   },
   {
    "dir": "world/drafts",
-   "files": 24,
+   "files": 37,
    "keys": [],
    "readers": [],
    "tools": [
@@ -8261,6 +8281,7 @@
     "tools/record-economy-review.mjs",
     "tools/system-map.mjs",
     "tools/t142-provinces-content.mjs",
+    "tools/t155-wildlife-content.mjs",
     "tools/w1-baishi.mjs",
     "tools/w1-hewan-l4.mjs",
     "tools/w1-hewan-review.mjs",
@@ -8392,6 +8413,7 @@
     "tools/publish-w2-s4.mjs",
     "tools/system-map.mjs",
     "tools/t142-merge.mjs",
+    "tools/t155-wildlife-content.mjs",
     "tools/w1-baishi.mjs",
     "tools/w4-publish.mjs",
     "tools/w5-content.mjs"
@@ -8507,6 +8529,7 @@
     "server-plugin/promotion.mjs",
     "server-plugin/quest-board.mjs",
     "server-plugin/quest-sources.mjs",
+    "server-plugin/quest-wildlife.mjs",
     "server-plugin/regions.mjs",
     "server-plugin/remote-generation.mjs",
     "server-plugin/repair.mjs",
@@ -8585,6 +8608,7 @@
     "tools/publish-w4-b1.mjs",
     "tools/system-map.mjs",
     "tools/t142-provinces-content.mjs",
+    "tools/t155-wildlife-content.mjs",
     "tools/validate-world.mjs",
     "tools/w1-baishi.mjs",
     "tools/w1-hewan-content.mjs",
@@ -8612,13 +8636,6 @@
     "tools/w5-festivals.mjs",
     "tools/w5-social.mjs"
    ]
-  },
-  {
-   "dir": "world/orgs",
-   "files": 0,
-   "keys": [],
-   "readers": [],
-   "tools": []
   },
   {
    "dir": "world/people",
@@ -8689,13 +8706,6 @@
     "tools/w3-trades-publish.mjs",
     "tools/w5-content.mjs"
    ]
-  },
-  {
-   "dir": "world/sites",
-   "files": 0,
-   "keys": [],
-   "readers": [],
-   "tools": []
   }
  ],
  "prompt": {
@@ -8883,6 +8893,7 @@
    "server-plugin/farm-pests-migration.mjs",
    "server-plugin/farm-pests.mjs",
    "server-plugin/magic-ritual.mjs",
+   "server-plugin/quest-sources.mjs",
    "server-plugin/remote-generation.mjs",
    "server-plugin/seasonal-migration.mjs",
    "server-plugin/tribal-awakening.mjs",
@@ -8960,6 +8971,7 @@
    "server-plugin/engine.mjs",
    "server-plugin/faction-clock.mjs",
    "server-plugin/quest-sources.mjs",
+   "server-plugin/quest-wildlife.mjs",
    "server-plugin/remote-generation.mjs"
   ],
   "tribalAwakening": [
@@ -9545,6 +9557,7 @@
       "server-plugin/bosses.mjs",
       "server-plugin/creature-nature.mjs",
       "server-plugin/magic-ritual.mjs",
+      "server-plugin/quest-sources.mjs",
       "server-plugin/traits.mjs",
       "server-plugin/tribal-awakening.mjs",
       "server-plugin/wildlife.mjs"
@@ -9566,6 +9579,7 @@
       "server-plugin/effects.mjs",
       "server-plugin/farm-pests.mjs",
       "server-plugin/magic-ritual.mjs",
+      "server-plugin/quest-sources.mjs",
       "server-plugin/tribal-awakening.mjs",
       "server-plugin/wildlife-migration.mjs",
       "server-plugin/wildlife-range.mjs",
@@ -9625,6 +9639,7 @@
       "server-plugin/boss-negotiation.mjs",
       "server-plugin/bosses.mjs",
       "server-plugin/npc-intelligence.mjs",
+      "server-plugin/quest-sources.mjs",
       "server-plugin/tribal-awakening.mjs"
      ],
      "systems": [
@@ -9788,11 +9803,14 @@
      "pattern": "\\.negotiation\\b",
      "modules": [
       "server-plugin/boss-migration.mjs",
-      "server-plugin/boss-negotiation.mjs"
+      "server-plugin/boss-negotiation.mjs",
+      "server-plugin/quest-sources.mjs",
+      "server-plugin/quest-wildlife.mjs"
      ],
      "systems": [
       "kernel_storage",
-      "sim_boss"
+      "sim_boss",
+      "sim_society"
      ]
     }
    ],
@@ -10672,6 +10690,7 @@
       "server-plugin/boss-negotiation.mjs",
       "server-plugin/bosses.mjs",
       "server-plugin/npc-intelligence.mjs",
+      "server-plugin/quest-sources.mjs",
       "server-plugin/tribal-awakening.mjs"
      ],
      "systems": [
@@ -12675,6 +12694,7 @@
     "server-plugin/professions.mjs",
     "server-plugin/progression.mjs",
     "server-plugin/quest-sources.mjs",
+    "server-plugin/quest-wildlife.mjs",
     "server-plugin/remote-generation.mjs",
     "server-plugin/retrieval.mjs",
     "server-plugin/return-summary.mjs",
@@ -12757,7 +12777,7 @@
     "spells"
    ],
    "worldDirs": [],
-   "lines": 667
+   "lines": 669
   },
   "server-plugin/environment.mjs": {
    "system": "sim_environment",
@@ -13591,6 +13611,7 @@
     "server-plugin/magic-effects.mjs",
     "server-plugin/magic-primitives.mjs",
     "server-plugin/magic-targeting.mjs",
+    "server-plugin/quest-wildlife.mjs",
     "server-plugin/revival.mjs",
     "server-plugin/training.mjs",
     "server-plugin/wildlife-range.mjs",
@@ -13623,7 +13644,7 @@
     "monsters"
    ],
    "worldDirs": [],
-   "lines": 380
+   "lines": 382
   },
   "server-plugin/magic-status.mjs": {
    "system": "sim_magic",
@@ -14475,6 +14496,7 @@
     "server-plugin/npc-schedule.mjs",
     "server-plugin/progression.mjs",
     "server-plugin/quest-sources.mjs",
+    "server-plugin/quest-wildlife.mjs",
     "server-plugin/standing.mjs",
     "server-plugin/titles.mjs"
    ],
@@ -14501,7 +14523,7 @@
     "locations"
    ],
    "worldDirs": [],
-   "lines": 208
+   "lines": 214
   },
   "server-plugin/quest-sources.mjs": {
    "system": "sim_society",
@@ -14512,7 +14534,9 @@
     "server-plugin/hazard-calendar.mjs",
     "server-plugin/npc-intelligence.mjs",
     "server-plugin/npc-life.mjs",
+    "server-plugin/quest-wildlife.mjs",
     "server-plugin/standing.mjs",
+    "server-plugin/wildlife-range.mjs",
     "server-plugin/world-events.mjs"
    ],
    "stateWrites": [
@@ -14523,6 +14547,7 @@
    ],
    "stateReads": [
     "buildings",
+    "creatures",
     "minute"
    ],
    "recordWrites": [
@@ -14531,18 +14556,42 @@
    "recordReads": [],
    "rules": [
     "questSources",
-    "quests"
+    "quests",
+    "wildlife"
    ],
    "world": [
     "bosses",
     "factions",
     "items",
     "locations",
+    "monsters",
     "npcs",
     "rules"
    ],
    "worldDirs": [],
-   "lines": 324
+   "lines": 366
+  },
+  "server-plugin/quest-wildlife.mjs": {
+   "system": "sim_society",
+   "imports": [],
+   "stateWrites": [
+    "records"
+   ],
+   "stateReads": [
+    "creatures",
+    "minute",
+    "npcs"
+   ],
+   "recordWrites": [
+    "quest_wildlife_claim"
+   ],
+   "recordReads": [],
+   "rules": [
+    "questSources"
+   ],
+   "world": [],
+   "worldDirs": [],
+   "lines": 38
   },
   "server-plugin/regions.mjs": {
    "system": "sim_environment",
@@ -15595,6 +15644,7 @@
     "server-plugin/environment.mjs",
     "server-plugin/farm-pests.mjs",
     "server-plugin/items.mjs",
+    "server-plugin/quest-wildlife.mjs",
     "server-plugin/seasonal-migration.mjs",
     "server-plugin/storage.mjs",
     "server-plugin/wildlife-awakening.mjs",
@@ -15631,7 +15681,7 @@
     "rules"
    ],
    "worldDirs": [],
-   "lines": 235
+   "lines": 237
   },
   "server-plugin/works.mjs": {
    "system": "sim_works",
@@ -15984,7 +16034,7 @@
   "extension/index.js": {
    "system": "ui_host",
    "imports": [
-    "../extensions.js",
+    "../../extensions.js",
     "extension/core.js"
    ],
    "stateWrites": [],
@@ -16098,7 +16148,7 @@
   "extension/runtime.js": {
    "system": "ui_host",
    "imports": [
-    "../extensions.js",
+    "../../extensions.js",
     "extension/ambient-audio.mjs",
     "extension/background-view.mjs",
     "extension/history-window.mjs",
