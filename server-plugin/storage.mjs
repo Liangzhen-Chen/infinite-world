@@ -230,13 +230,14 @@ export class PatchCursor {
 export class CampaignStorage {
     constructor(root, { snapshotEvery = 200, segmentSize = 1000, reducer = null } = {}) {
         this.root = path.resolve(root); this.snapshotEvery = snapshotEvery; this.segmentSize = segmentSize;
-        this.cache = new Map(); this.queues = new Map(); this.reducer = reducer;
+        this.cache = new Map(); this.queues = new Map(); this.snapshots = new Map(); this.reducer = reducer;
     }
     directory(id) { return path.join(this.root, validId(id)); }
     async exclusive(id, task) {
         validId(id);
         const previous = this.queues.get(id) ?? Promise.resolve();
-        const next = previous.catch(() => {}).then(task);
+        // A scheduled snapshot (see transact) finishes before the next operation on this campaign.
+        const next = previous.catch(() => {}).then(() => this.snapshots.get(id)).catch(() => {}).then(task);
         this.queues.set(id, next);
         try { return await next; } finally { if (this.queues.get(id) === next) this.queues.delete(id); }
     }
@@ -309,6 +310,16 @@ export class CampaignStorage {
             projection.sequence=state.sequence;state.feedbackProjection=projection;
             return {reference:this.reference(state),events:structuredClone(projection.events)};
         });
+    }
+    // The snapshot is a replay accelerator: the event that triggered it is already durable.
+    // Capture the immutable state now and build/write the file after the commit returns;
+    // the next operation on the campaign waits for it (exclusive). A failed write only
+    // costs a longer replay, so it does not fail the committed action.
+    scheduleSnapshot(id, state) {
+        const frozen = { document: state.document, sequence: state.sequence, revision: state.revision, head: state.head, active: new Set(state.active) };
+        const job = new Promise(resolve => setImmediate(resolve)).then(() => this.snapshot(id, frozen)).catch(() => {});
+        this.snapshots.set(id, job);
+        job.then(() => { if (this.snapshots.get(id) === job) this.snapshots.delete(id); });
     }
     async snapshot(id, state) {
         // Reuse serialization only within this snapshot. Both hashes retain
@@ -391,7 +402,7 @@ export class CampaignStorage {
             const event = await this.write(id, state, prepared);
             state.document = document; state.active.add(event.sequence);
             state.transactions.set(request.id, { signature, sequence: event.sequence });
-            if (state.sequence % this.snapshotEvery === 0) await this.snapshot(id, state);
+            if (state.sequence % this.snapshotEvery === 0) this.scheduleSnapshot(id, state);
             return { ok: true, result: structuredClone(event.result), reference: this.reference(state) };
         });
     }
