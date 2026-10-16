@@ -404,3 +404,11 @@ M2修复批审定写入PLAN（T61–T64）：Astra草案F4工具机会标注并�
 - 2026-10-16 R23 已合入：修实现 5 项（ontology I18 补登 RW-04 事件标签；R22 319edb29 editionFestival 判断取反致 festival-runtime/w1-hewan 失败；重新导出 actions.json；重建 m6-08 美术映射；RW-05 学堂派生重复致提示组装 110–176ms→60–100ms）；改断言/夹具 5 项（依据在提交信息：K10 新订阅者、公告栏主事人派生、学堂出勤不计等待不变式、W3 物品被后续据点引用、w1 发布投影顺序）；monster-society-content、magic-status、progression 等复跑即过。金快照不变，基线 23 项不变。遗留：performance 万事件用例并行跑时快照提交 14ms>10ms（单跑过）。0 模型。
 
 - 2026-10-16 A1 已合入（架构迁移，常规档）：world/actions/core.json 250 注册动作（243 为 S0 动作别名 + 7 模板）、tools/build-action-registry.mjs；新工具 world_actions（只读）、world_act（经 /execute 翻译为旧调用，回放不变），工具面 25→27（旧名全保留，17 个测试的工具数断言随之改）；/actions 路由；界面“可做之事”面板（方位场景文字、交易/移动/等待/制作/账目/休息/观察快捷、此处可做、对象菜单与表单），Playwright 390×844 无脚本错误；事件流模板 world/actions/locale/zh-CN；一致性审查读 applied、付款数核对。需对方同意的动作不可执行，提示“需要对方答应（对话功能完成后开放）”，不接受玩家自填 consent。L/T 场景 12 项通过，日常题可执行 16 测试/18 题（22 题 todo 附原因）。静态提示 10593→10571，度量不变。发现存档缺陷（activity:undefined）→ R25。0 模型。
+
+- 2026-10-16 R25 已合入：根因 npc-autonomy presence 快照写 activity:undefined（957d7f4f 引入），内存哈希含该键而 JSON 落盘丢键，导致导出/导入与重启读盘“事件校验失败”。修：不写未定义值；storage 事件哈希、快照与重放统一按 JSON 保存形式计算；旧存档哈希不符时只补救一次（补回缺失空键再验，原文件不改写，篡改仍拒绝）。新增 tests/save-roundtrip.test.mjs 6 项（长场景导出/导入、写盘/新进程读盘后继续推进逐字段一致；修前 5 项失败）。金快照不变。0 模型。
+
+- 2026-10-16 NUMT 已合入（Sonnet high 试用）：world/rules/tables/balance/ 22 张参数表（params/rows/curves 三区，每条带来源类别、出处、上下界、待标定标记）；tools/balance-tables.mjs 随 loadWorld 校验（越界、必填、来源、玩法决定须有决定记录、硬设定封闭、可推算重算；包只能界内覆盖），schema 两份；targets.json 90 条（NUM 49、BAL 41）；tools/balance-metrics.mjs（npm run balance:metrics）已实现货币总量与源汇、技能阶与等级分布，部分实现价格指数、基尼、名额、物种存量，其余登记待做。不改任何结算，金快照与提示不变。0 模型。
+
+- 2026-10-16 R26 已合入（Sonnet medium 试用）：性能测试“快照提交≤10ms”并行超时的根因是实现慢（快照序列化+哈希约5ms、同步落盘约5ms）；storage 改为事件落盘返回后异步构建快照（scheduleSnapshot，同战役下一操作先等完成，快照写失败只让回放变慢、不丢数据），基准取5次中位数、阈值10ms不变；快照提交约3ms，单跑与20进程并行各3次通过。遗留：“5000消息≤150ms”重负载下偶发超时。0 模型。
+
+- 2026-10-16 DAILY 已合入（Sonnet xhigh 试用）：日常题集 199 条中 106 条可执行通过、4 条补数据后表级通过、89 条需机制（S3 23、A3 22、S1 19、A2 18、S5 13、S6 10…），清单 docs/probes/daily/executable-status.md；balance 表补缺省（action-costs 11 行、event-weights 7 行、yields 3 行等，均界内、标待标定）。发现：world_act 拒绝一切 consent 槽（连本人同意求医也拒）、战斗回执 applied 为空——开 A1b 修；A1 的 D27/D28 dayOffset 90 被拒；D06 题面步速与写实界冲突（待用户）；引擎尚不读 balance 表（属 A3/S5）。0 模型。

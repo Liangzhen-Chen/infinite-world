@@ -1,0 +1,81 @@
+{
+  "$id": "balance-table.schema.json",
+  "title": "数值参数表（world/rules/tables/balance/*.json，targets.json 除外）",
+  "description": "数值方案 §2.0 的通用形状：params 标量/复合参数、rows 领域行、curves 曲线与饱和。形状在此检查；界内、重复、重算等语义由 tools/balance-tables.mjs 检查。",
+  "type": "object",
+  "required": ["schema", "params", "rows", "curves"],
+  "additionalProperties": false,
+  "properties": {
+    "schema": {"type": "string", "pattern": "^balance/[a-z][a-z-]*@[0-9]+$"},
+    "title": {"type": "string"},
+    "note": {"type": "string"},
+    "params": {"type": "array", "items": {"$ref": "#/$defs/param"}},
+    "rows": {"type": "array", "items": {"$ref": "#/$defs/row"}},
+    "curves": {"type": "array", "items": {"$ref": "#/$defs/curve"}}
+  },
+  "$defs": {
+    "basis": {"enum": ["play", "derived", "calibrate", "hard"]},
+    "calibration": {"enum": ["pending", "calibrated", "fixed", "derived"]},
+    "interval": {"type": "array", "items": {"type": "number"}, "minItems": 2, "maxItems": 2},
+    "common": {
+      "type": "object",
+      "required": ["basis", "source", "playDecision", "calibration"],
+      "properties": {
+        "basis": {"$ref": "#/$defs/basis"},
+        "source": {"type": "string", "minLength": 1},
+        "note": {"type": "string"},
+        "playDecision": {"type": "boolean"},
+        "decisionRef": {"type": "string", "minLength": 1},
+        "calibration": {"$ref": "#/$defs/calibration"},
+        "closed": {"type": "boolean"},
+        "closedFields": {"type": "array", "items": {"type": "string"}},
+        "from": {"type": "array", "items": {"type": "string", "minLength": 1}},
+        "formula": {"type": "string"},
+        "output": {"type": "string"},
+        "tolerance": {"type": "number", "exclusiveMinimum": 0},
+        "unit": {"type": "string"}
+      }
+    },
+    "param": {
+      "allOf": [{"$ref": "#/$defs/common"}],
+      "type": "object",
+      "required": ["id", "value"],
+      "properties": {
+        "id": {"type": "string", "pattern": "^[a-z][A-Za-z0-9_.:>=*-]*$"},
+        "value": {},
+        "bounds": {"anyOf": [{"$ref": "#/$defs/interval"}, {"type": "object", "additionalProperties": {"$ref": "#/$defs/interval"}}]}
+      }
+    },
+    "row": {
+      "allOf": [{"$ref": "#/$defs/common"}],
+      "type": "object",
+      "required": ["key"],
+      "properties": {
+        "key": {"type": "string", "minLength": 1},
+        "bounds": {"type": "object", "additionalProperties": {"$ref": "#/$defs/interval"}}
+      }
+    },
+    "curve": {
+      "allOf": [{"$ref": "#/$defs/common"}],
+      "type": "object",
+      "required": ["id", "bounds"],
+      "properties": {
+        "id": {"type": "string", "pattern": "^[a-z][A-Za-z0-9_.:>=*-]*$"},
+        "points": {"type": "array", "minItems": 2, "items": {"type": "array", "items": {"type": "number"}, "minItems": 2, "maxItems": 2}},
+        "interp": {"enum": ["linear", "log"]},
+        "saturation": {
+          "type": "object",
+          "required": ["kind", "window"],
+          "properties": {
+            "kind": {"enum": ["geometric", "hyperbolic"]},
+            "q": {"type": "number", "exclusiveMinimum": 0, "exclusiveMaximum": 1},
+            "n0": {"type": "number", "exclusiveMinimum": 0},
+            "window": {"type": ["string", "number"]}
+          },
+          "additionalProperties": false
+        },
+        "bounds": {"type": "object", "additionalProperties": {"$ref": "#/$defs/interval"}}
+      }
+    }
+  }
+}

@@ -218,7 +218,7 @@
 ## A.10 空间与节奏
 
 **感知通道（3）**：视觉、听觉、触觉（01 §1.5）。
-**节奏档位（5，14 §14.8）**：极慢 ×0.25、慢 ×0.5、适中 ×1（缺省）、快 ×2、很快 ×4——作用于声明 `paceable` 的速率槽。
+**节奏档位（5，14 §14.8）**：极慢 ×0.25、慢 ×0.5、适中 ×1（缺省）、快 ×2、很快 ×4——只作用于声明 `paceable` 的**延迟类**槽（计划推进、传闻延迟、预兆间隔、社交起意）；灾害、疫病暴发、婚育、迁居、商队、犯罪等**均衡类**槽一律 `paceable: false`、不随档缩放（数值方案 §2.21 登记）。离开时可选"按最慢进度"或单独选本次离开的档位（`pace_set{level, scope}`，14 §14.8）。
 **降级等级（4，07 §7.5）**：D0 全量 → D1 **计算时机**分级（低显著度事件的见证按需展开、状态类罪名按月求值、主观视图截断为可重算摘要；**不改变见证语义**，I30 不受影响）→ D2 规则层自治降频、传闻只传显著事件 → D3 注意距离缩小一跳（带滞回：至少保持 N 天再恢复）；等级变化是输入事件 `budget_set`。调度配置（反应深度上限、每刻提案上限、每事件谓词预算）同样是输入事件 `config_set`，进存档（14 §14.2）。
 
 ## A.11 超自然相关枚举（13 章；approval、bounty 来自 05 §5.2.5 / 01 §1.4）
@@ -461,5 +461,7 @@ person 与 creature 的慢变事实 `body: {stamina, satiety, hydration, fatigue
 | 暴露状态 | `ontology/statuses.json` + core 反应规则 `weather_exposure`（`rules/reactions/core.json`） | 反应 `{when: 在户外或在途 ∧ derived('weather:precipitation', place) ≥ 阈 ∧ ¬sheltered(actor)（车厢、蓑衣、屋檐是设施 / 物品性状）, do: status(wet{until: 干燥条件 rx})}`；同形 `cold` / `heatstroke` 读 `weather:temperature`；状态行声明对 `body:drain`、`health:infectionRate`、`transport:speed` 的修正项 | `{status: wet, modifiers: [{target: 'body:drain', stage: mul, value: 1.2}, {target: 'health:infectionRate', stage: mul, value: 1.5}], until: 'sheltered ≥ 2h ∨ 晴 ≥ 4h'}` | 05 §5.5 天气；06 §6.3 K2 交互表只管元素 × 材质，天气 × 人体走本规则 |
 | 失真表 core 行 | `rules/distortion.json` | 每条 `{id, when, op, p, fields?}`（05 §5.4）；`replace_detail` 的 `fields` 白名单 `[{field, p}]`：**`date` 行 p = 0**（二手转述不换日期，只可 `drop_clause` 省略）、`amount` 走 `scale_quantity`、`cause_of_death` / `actor` 可按同类替换 | `{id: 'core.detail', op: replace_detail, fields: [{field: cause_of_death, p: 0.3}, {field: date, p: 0}]}` | 05 §5.4 tell 版本生成；"回村各人都说初三"由 `date` 行保证 |
 | 借贷利率区间 | `ontology/obligations.json` loan 条目 `terms.rate: [0, 0.05]` | 下限 0 = 无息借款，条款快照记 `rate: 0` 并显示"无息"（03 §3.3） | — | `obligation.create` 的条款范围校验（06 §6.3） |
+
+**数值方案新增的参数表**（只登记名称与形状，数值与示例行见数值方案 §2）：均在 `rules/tables/balance/` 下，文件通用形状为 `{schema: "balance/<表名>@1", params: [{id, value, bounds, unit, basis, playDecision, source}], rows: [{key, …, bounds}], curves: [{id, points, interp, bounds}]}`（三区皆可空；`basis` ∈ play / derived / calibrate / hard）。`learning.json`、`yields.json` 在上表形状上扩列（`tierFactor`、`difficultyGate`、`breakthrough`、`milestone`、`workDaysPerYear` 等）。新增 17 个：`progression.json`、`attributes.json`、`combat.json`、`economy.json`、`credit.json`、`tax.json`、`loot.json`、`crafting.json`、`ecology.json`、`population.json`（§A.16 已引用）、`social.json`、`health.json`、`transport.json`（与 `carriers.json` 分工，发车表不动）、`law.json`（行键 `polity:type`）、`magic.json`、`pace.json`（行 = 槽 × 延迟类 / 均衡类登记）、`targets.json`（行 = `{metric, target, hardFloor?, tolerance?, grade, suite, fixture, seeds, years, pace, stage}`）。
 
 **不进本节的**：价格基准、税率、俸禄表、法典程序期限——它们各有唯一定义处（15 §15.3、§A.7 `schedule`）。本节各表的 `key` 字段使表行主键重复在加载期报冲突（§A.9 合并语义）。

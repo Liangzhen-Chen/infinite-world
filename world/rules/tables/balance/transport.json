@@ -1,0 +1,26 @@
+{
+  "schema": "balance/transport@1",
+  "title": "运输耗时（数值方案 §2.18；carriers.json 的发车表不动）",
+  "params": [
+    {"id":"speed.walk","value":15,"bounds":[12,18],"basis":"calibrate","source":"数值方案 §2.18（方案标【知/标】）","playDecision":false,"calibration":"pending","unit":"里/时辰","note":"日行约 60 里，即 30 公里（里 ≈ 0.5 公里，时辰 = 2 小时）"},
+    {"id":"speed.cart","value":12,"bounds":[8,15],"basis":"calibrate","source":"数值方案 §2.18（方案标【知/标】）","playDecision":false,"calibration":"pending","unit":"里/时辰","note":"日行约 50 里"},
+    {"id":"speed.ride","value":20,"bounds":[16,30],"basis":"calibrate","source":"数值方案 §2.18（方案标【知/标】）","playDecision":false,"calibration":"pending","unit":"里/时辰","note":"日行约 100 里"},
+    {"id":"speed.post","value":50,"bounds":[35,70],"basis":"calibrate","source":"数值方案 §2.18（方案标【知/标】）","playDecision":false,"calibration":"pending","unit":"里/时辰","note":"换马不停、可夜行；驿传日行数百里"},
+    {"id":"speed.boat.down","value":25,"bounds":[15,40],"basis":"calibrate","source":"数值方案 §2.18（方案标【知/标】）","playDecision":false,"calibration":"pending","unit":"里/时辰","note":"顺流日行百余里"},
+    {"id":"speed.boat.up","value":6,"bounds":[4,10],"basis":"calibrate","source":"数值方案 §2.18（方案标【知/标】）","playDecision":false,"calibration":"pending","unit":"里/时辰","note":"逆流二三十里"},
+    {"id":"day.shichen","value":{"walkAndCart":4,"ride":5},"bounds":{"walkAndCart":[4,4],"ride":[5,5]},"basis":"derived","source":"数值方案 §2.18","playDecision":false,"calibration":"derived","from":["doc:数值方案 §2.18"],"unit":"时辰/日","note":"日行时辰数：步行、车队默认 4，骑行 5"},
+    {"id":"cost.landOverWater","value":10,"bounds":[5,20],"basis":"calibrate","source":"数值方案 §2.18（方案标【知/标】）","playDecision":false,"calibration":"pending","note":"陆运每吨里成本 ÷ 水运"},
+    {"id":"risk.lossBand","value":{"min":0.005,"max":0.05},"bounds":{"min":[0.005,0.005],"max":[0.05,0.05]},"basis":"derived","source":"数值方案 §2.18；BAL-V2","playDecision":false,"calibration":"derived","from":["doc:BAL-V2"],"note":"常态劫掠损失 ÷ 货值 ∈ [0.5%, 5%]"},
+    {"id":"speed.rain","value":0.83,"bounds":[0.5,1],"basis":"calibrate","source":"待仿真标定（日常题缺省值；数值方案 §2；附录 A §A.18）","playDecision":false,"calibration":"pending","unit":"× 速度","note":"日常题 D09②：雨天 transport:speed 修正项（步行雨天耗时约 ×1.2，与现行 weather.states.rain.walk 同口径）"},
+    {"id":"post.feePerLi","value":0.4,"bounds":[0.2,0.8],"basis":"calibrate","source":"待仿真标定（日常题缺省值；数值方案 §2；附录 A §A.18）","playDecision":false,"calibration":"pending","unit":"文/里","note":"日常题 D25①：驿传费，20 里 8 文（carriers.json 驿站行读本值）"},
+    {"id":"freight.cart.perShiLi","value":0.75,"bounds":[0.4,1.5],"basis":"calibrate","source":"待仿真标定（日常题缺省值；数值方案 §2；附录 A §A.18）","playDecision":false,"calibration":"pending","unit":"文/(石·里)","note":"日常题 D26①：车行托运运费，2 石 × 20 里 = 30 文"}
+  ],
+  "rows": [
+    {"key":"terrain:official_road","name":"官道","factor":1,"bounds":{"factor":[0.7,1.2]},"basis":"calibrate","source":"数值方案 §2.18","playDecision":false,"calibration":"pending","unit":"× 速度","note":"官道地形系数 1，界 ×[0.7, 1.2]；雨雪由 transport:speed 修正项进入（[0.25, 2]×）"},
+    {"key":"terrain:path","name":"小路","factor":0.8,"bounds":{"factor":[0.56,0.96]},"basis":"calibrate","source":"数值方案 §2.18","playDecision":false,"calibration":"pending","unit":"× 速度","note":"小路地形系数 0.8，界 ×[0.7, 1.2]；雨雪由 transport:speed 修正项进入（[0.25, 2]×）"},
+    {"key":"terrain:hills","name":"丘陵","factor":0.6,"bounds":{"factor":[0.42,0.72]},"basis":"calibrate","source":"数值方案 §2.18","playDecision":false,"calibration":"pending","unit":"× 速度","note":"丘陵地形系数 0.6，界 ×[0.7, 1.2]；雨雪由 transport:speed 修正项进入（[0.25, 2]×）"},
+    {"key":"terrain:mountain","name":"山地","factor":0.4,"bounds":{"factor":[0.28,0.48]},"basis":"calibrate","source":"数值方案 §2.18","playDecision":false,"calibration":"pending","unit":"× 速度","note":"山地地形系数 0.4，界 ×[0.7, 1.2]；雨雪由 transport:speed 修正项进入（[0.25, 2]×）"},
+    {"key":"terrain:marsh","name":"沼泽","factor":0.5,"bounds":{"factor":[0.35,0.6]},"basis":"calibrate","source":"数值方案 §2.18","playDecision":false,"calibration":"pending","unit":"× 速度","note":"沼泽地形系数 0.5，界 ×[0.7, 1.2]；雨雪由 transport:speed 修正项进入（[0.25, 2]×）"}
+  ],
+  "curves": []
+}

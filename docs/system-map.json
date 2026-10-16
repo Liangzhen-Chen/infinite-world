@@ -17,7 +17,7 @@
  },
  "counts": {
   "layers": 6,
-  "systems": 44,
+  "systems": 45,
   "modules": 229,
   "advance": 59,
   "tools": 27,
@@ -41,7 +41,8 @@
     "data_assets",
     "data_drafts",
     "data_ontology",
-    "data_actions"
+    "data_actions",
+    "data_rules"
    ]
   },
   {
@@ -523,6 +524,27 @@
    "files": 0
   },
   {
+   "id": "data_rules",
+   "name": "数值参数表与目标表（S1，rules/tables/balance）",
+   "layer": "data",
+   "card": null,
+   "dir": "world/rules",
+   "modules": [],
+   "lines": 0,
+   "stateWrites": [],
+   "stateReads": [],
+   "recordWrites": [],
+   "recordReads": [],
+   "rules": [],
+   "world": [],
+   "advance": [],
+   "subscribes": [],
+   "effects": [],
+   "tools": [],
+   "readBy": [],
+   "files": 1
+  },
+  {
    "id": "kernel_engine",
    "name": "结算引擎",
    "layer": "kernel",
@@ -656,7 +678,7 @@
     "server-plugin/compat/v2-phase1-engine.mjs",
     "server-plugin/legacy/core.js"
    ],
-   "lines": 1537,
+   "lines": 1599,
    "stateWrites": [
     "checks",
     "crafted",
@@ -1103,7 +1125,7 @@
     "server-plugin/population-service.mjs",
     "server-plugin/settlement-profile.mjs"
    ],
-   "lines": 3606,
+   "lines": 3611,
    "stateWrites": [
     "created",
     "creatures",
@@ -1909,7 +1931,7 @@
    "modules": [
     "server-plugin/agriculture.mjs"
    ],
-   "lines": 399,
+   "lines": 397,
    "stateWrites": [
     "player",
     "records",
@@ -11655,6 +11677,16 @@
     "tools/w3-trades-publish.mjs",
     "tools/w5-content.mjs"
    ]
+  },
+  {
+   "dir": "world/rules",
+   "files": 1,
+   "keys": [],
+   "readers": [],
+   "tools": [
+    "tools/balance-tables.mjs",
+    "tools/system-map.mjs"
+   ]
   }
  ],
  "prompt": {
@@ -15514,6 +15546,27 @@
    "output": "docs/架构设计/差距清单.md"
   },
   {
+   "tool": "tools/balance-tables.mjs",
+   "script": "balance:tables",
+   "measures": "S1 数值参数表（22 张，数值方案 §2）：随 world 加载的界内、必填、来源类别、可推算重算校验；包只能在界内覆盖；目标表 targets.json",
+   "reads": [
+    "world/rules/tables/balance",
+    "schemas/balance-table.schema.json",
+    "schemas/balance-targets.schema.json"
+   ],
+   "baseline": null
+  },
+  {
+   "tool": "tools/balance-metrics.mjs",
+   "script": "balance:metrics",
+   "measures": "S1 指标库骨架：对存档文档计算货币总量与源汇分项、价格指数、家户基尼、技能阶与等级分布、名额计数、物种存量（其余登记为 todo）；登记 tools/balance-combat.mjs 为竞技场第一版",
+   "reads": [
+    "world/rules/tables/balance",
+    "tools/balance-combat.mjs"
+   ],
+   "baseline": null
+  },
+  {
    "tool": "tools/arch-layers.mjs",
    "script": null,
    "measures": "模块 → 目标层与玩法包归组表（第 10 章），供 import 图与差距清单使用",
@@ -15864,7 +15917,7 @@
     "spells"
    ],
    "worldDirs": [],
-   "lines": 399
+   "lines": 397
   },
   "server-plugin/applied-effects.mjs": {
    "system": "ui_actions",
@@ -19133,7 +19186,7 @@
     "recipes"
    ],
    "worldDirs": [],
-   "lines": 218
+   "lines": 223
   },
   "server-plugin/npc-cognition.mjs": {
    "system": "sim_npc",
@@ -20782,7 +20835,7 @@
    "rules": [],
    "world": [],
    "worldDirs": [],
-   "lines": 406
+   "lines": 468
   },
   "server-plugin/summons.mjs": {
    "system": "sim_companion",

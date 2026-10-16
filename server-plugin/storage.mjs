@@ -17,6 +17,43 @@ const validId = id => {
     if (typeof id !== 'string' || !/^[a-zA-Z0-9_-]{1,100}$/.test(id)) throw new Error('无效战役编号');
     return id;
 };
+// The value JSON persists: what a reload, export or import sees.
+export const persistable = value => value === undefined ? undefined : JSON.parse(JSON.stringify(value));
+// R25 legacy saves: before the fix, NPC autonomy wrote task presence snapshots as
+// {location, activity: undefined, status} and hashed them with the undefined key,
+// which JSON then dropped. Re-adding activity:undefined to presence entries that lack
+// it reproduces exactly the hashed form; undefined holds no data, so nothing is lost.
+// Only this known shape is restored; any other mismatch still fails verification.
+const presenceEntry = path => path.length >= 3 && path.at(-3) === 'presence' && path.at(-2) === 'npcs';
+function restoreActivity(value, path, state) {
+    if (!value || typeof value !== 'object') return value;
+    if (Array.isArray(value)) return value.map((item, i) => restoreActivity(item, [...path, String(i)], state));
+    const copy = {};
+    for (const key of Object.keys(value)) copy[key] = restoreActivity(value[key], [...path, key], state);
+    if (presenceEntry(path) && path.includes('tasks') && !Object.hasOwn(copy, 'activity')) { copy.activity = undefined; state.changed = true; }
+    return copy;
+}
+export function withLegacyUndefinedActivity(value, path = []) {
+    const state = { changed: false }, restored = restoreActivity(value, path, state);
+    return state.changed ? restored : null;
+}
+function legacyEventForm(payload) {
+    if (!Array.isArray(payload?.patches)) return null;
+    let changed = false;
+    const patches = payload.patches.map(patch => {
+        if (!patch || patch.op !== 'set' || !Array.isArray(patch.path)) return patch;
+        if (!Object.hasOwn(patch, 'value') && patch.path.at(-1) === 'activity' && presenceEntry(patch.path.slice(0, -1)) && patch.path.includes('tasks')) { changed = true; return { ...patch, value: undefined }; }
+        const value = withLegacyUndefinedActivity(patch.value, patch.path);
+        if (!value) return patch;
+        changed = true; return { ...patch, value };
+    });
+    return changed ? { ...payload, patches } : null;
+}
+function eventHashMatches(payload, hash) {
+    if (digest(payload) === hash) return true;
+    const legacy = legacyEventForm(payload);
+    return Boolean(legacy) && digest(legacy) === hash;
+}
 export async function atomicJSON(file, value) {
     const temporary = `${file}.${randomUUID()}.tmp`;
     const handle = await fs.open(temporary, 'wx');
@@ -193,13 +230,14 @@ export class PatchCursor {
 export class CampaignStorage {
     constructor(root, { snapshotEvery = 200, segmentSize = 1000, reducer = null } = {}) {
         this.root = path.resolve(root); this.snapshotEvery = snapshotEvery; this.segmentSize = segmentSize;
-        this.cache = new Map(); this.queues = new Map(); this.reducer = reducer;
+        this.cache = new Map(); this.queues = new Map(); this.snapshots = new Map(); this.reducer = reducer;
     }
     directory(id) { return path.join(this.root, validId(id)); }
     async exclusive(id, task) {
         validId(id);
         const previous = this.queues.get(id) ?? Promise.resolve();
-        const next = previous.catch(() => {}).then(task);
+        // A scheduled snapshot (see transact) finishes before the next operation on this campaign.
+        const next = previous.catch(() => {}).then(() => this.snapshots.get(id)).catch(() => {}).then(task);
         this.queues.set(id, next);
         try { return await next; } finally { if (this.queues.get(id) === next) this.queues.delete(id); }
     }
@@ -237,7 +275,7 @@ export class CampaignStorage {
             if (raw && !raw.endsWith('\n')) throw new Error(`事件日志不完整：${name}，已停止加载，原文件保留`);
             for (const line of raw.split('\n').filter(Boolean)) {
                 const event = JSON.parse(line), { hash, ...payload } = event;
-                if (event.sequence !== events.length + 1 || event.previous !== head || digest(payload) !== hash) throw new Error(`事件${event.sequence}校验失败`);
+                if (event.sequence !== events.length + 1 || event.previous !== head || !eventHashMatches(payload, hash)) throw new Error(`事件${event.sequence}校验失败`);
                 head = hash; events.push(event);
             }
         }
@@ -273,12 +311,23 @@ export class CampaignStorage {
             return {reference:this.reference(state),events:structuredClone(projection.events)};
         });
     }
+    // The snapshot is a replay accelerator: the event that triggered it is already durable.
+    // Capture the immutable state now and build/write the file after the commit returns;
+    // the next operation on the campaign waits for it (exclusive). A failed write only
+    // costs a longer replay, so it does not fail the committed action.
+    scheduleSnapshot(id, state) {
+        const frozen = { document: state.document, sequence: state.sequence, revision: state.revision, head: state.head, active: new Set(state.active) };
+        const job = new Promise(resolve => setImmediate(resolve)).then(() => this.snapshot(id, frozen)).catch(() => {});
+        this.snapshots.set(id, job);
+        job.then(() => { if (this.snapshots.get(id) === job) this.snapshots.delete(id); });
+    }
     async snapshot(id, state) {
         // Reuse serialization only within this snapshot. Both hashes retain
         // their existing canonical format, with no cache across mutations.
-        const documentText = canonical(state.document);
-        const data = { sequence: state.sequence, revision: state.revision, document: state.document, checksum: digest(documentText), head: state.head, activeSequences: [...state.active] };
-        data.envelopeHash = digest(canonicalValue(data, new Map([[state.document, documentText]])));
+        // Hash the form written to disk (R25: a set-to-undefined key does not survive JSON).
+        const document = persistable(state.document), documentText = canonical(document);
+        const data = { sequence: state.sequence, revision: state.revision, document, checksum: digest(documentText), head: state.head, activeSequences: [...state.active] };
+        data.envelopeHash = digest(canonicalValue(data, new Map([[document, documentText]])));
         await atomicJSON(path.join(this.directory(id), 'snapshots', `${String(state.sequence).padStart(10, '0')}-${state.revision}.json`), data);
     }
     async replay(id, state, before) {
@@ -290,7 +339,9 @@ export class CampaignStorage {
             // A snapshot is usable only if no event included in it has since been removed.
             const data = JSON.parse(await fs.readFile(path.join(this.directory(id), 'snapshots', name), 'utf8'));
             const { envelopeHash, ...envelope } = data;
-            if (envelopeHash && digest(envelope) !== envelopeHash) throw new Error('快照元数据校验失败');
+            // R25: a snapshot written before the fix hashed task presence with activity:undefined.
+            const legacy = envelopeHash && digest(envelope) !== envelopeHash || data.checksum !== digest(data.document) ? withLegacyUndefinedActivity(data.document) : null;
+            if (envelopeHash && digest(envelope) !== envelopeHash && !(legacy && digest({ ...envelope, document: legacy }) === envelopeHash)) throw new Error('快照元数据校验失败');
             if (data.sequence !== seq || data.revision !== rev || !Array.isArray(data.activeSequences)) throw new Error('快照编号或格式校验失败');
             const atSnapshot = new Set(); let expectedRevision = 0;
             for (const event of state.events) {
@@ -301,20 +352,27 @@ export class CampaignStorage {
             if (rev !== expectedRevision || canonical([...atSnapshot]) !== canonical(data.activeSequences)) throw new Error('快照分支校验失败');
             if (data.activeSequences.some(sequence => !state.active.has(sequence))) continue;
             const expectedHead = seq === 0 ? state.metadata.initialHash : state.events[seq - 1]?.hash;
-            if (data.checksum !== digest(data.document) || data.head !== expectedHead) throw new Error('快照校验失败');
+            if (data.checksum !== digest(data.document) && !(legacy && data.checksum === digest(legacy)) || data.head !== expectedHead) throw new Error('快照校验失败');
             document = data.document; after = seq; break;
         }
         document ??= JSON.parse(await fs.readFile(path.join(this.directory(id), 'initial.json'), 'utf8'));
         for (const event of state.events) if (event.sequence > after && state.active.has(event.sequence)) {
             if (before !== Infinity && !this.reducer) throw new Error('缺少事件重放处理器，不能只重放旧的绝对数值补丁');
-            const patches = this.reducer ? (await this.reducer(document, event.input, { replay: true, result: event.result })).patches : event.patches;
+            const patches = this.reducer ? persistable((await this.reducer(document, event.input, { replay: true, result: event.result })).patches) : event.patches;
             document = applyPatches(document, patches);
         }
         return document;
     }
-    async append(id, state, payload) {
-        const event = { ...payload, sequence: state.sequence + 1, previous: state.head };
+    // R25: the event is hashed in the form JSON persists (undefined keys dropped,
+    // undefined array items null), so the disk log, exports and replays verify.
+    prepare(state, payload) {
+        const event = persistable({ ...payload, sequence: state.sequence + 1, previous: state.head });
         event.hash = digest(event);
+        return event;
+    }
+    async append(id, state, payload) { return this.write(id, state, this.prepare(state, payload)); }
+    async write(id, state, event) {
+        if (event.sequence !== state.sequence + 1 || event.previous !== state.head) throw new Error('事件链已变化，请重新提交');
         const segment = String(Math.floor(state.sequence / this.segmentSize)).padStart(8, '0');
         const handle = await fs.open(path.join(this.directory(id), 'events', `${segment}.jsonl`), 'a');
         try { await handle.writeFile(`${JSON.stringify(event)}\n`); await handle.sync(); }
@@ -336,13 +394,15 @@ export class CampaignStorage {
             if (request.expectedSequence !== undefined && request.expectedSequence !== state.sequence) throw new Error('存档已被另一页面更新，请重新读取后操作');
             const { patches, result: receipt } = await reducer(state.document, request.input);
             // Hash and retain the same receipt that JSON can persist and return.
-            const result = JSON.parse(JSON.stringify(receipt));
-            const document = applyPatches(state.document, patches);
-            const event = await this.append(id, state, { kind: 'action', id: request.id, signature, input: request.input,
-                anchor: request.anchor ?? null, patches, result });
+            // Patches likewise: the live document is built from the persisted form, so a
+            // restart or import replays to the same fields.
+            const prepared = this.prepare(state, { kind: 'action', id: request.id, signature, input: request.input,
+                anchor: request.anchor ?? null, patches, result: receipt });
+            const document = applyPatches(state.document, prepared.patches);
+            const event = await this.write(id, state, prepared);
             state.document = document; state.active.add(event.sequence);
             state.transactions.set(request.id, { signature, sequence: event.sequence });
-            if (state.sequence % this.snapshotEvery === 0) await this.snapshot(id, state);
+            if (state.sequence % this.snapshotEvery === 0) this.scheduleSnapshot(id, state);
             return { ok: true, result: structuredClone(event.result), reference: this.reference(state) };
         });
     }
@@ -381,7 +441,7 @@ export class CampaignStorage {
         let head = bundle.metadata.initialHash, document = structuredClone(bundle.initial); const active = new Set();
         for (const [i, event] of bundle.events.entries()) {
             const { hash, ...body } = event;
-            if (event.sequence !== i + 1 || event.previous !== head || digest(body) !== hash) throw new Error('导入事件校验失败');
+            if (event.sequence !== i + 1 || event.previous !== head || !eventHashMatches(body, hash)) throw new Error('导入事件校验失败');
             head = hash;
             if (event.kind === 'reconcile') for (const seq of event.removed) active.delete(seq);
             else active.add(event.sequence);
@@ -389,10 +449,12 @@ export class CampaignStorage {
         const branched = bundle.events.some(event => event.kind === 'reconcile');
         if (branched && !this.reducer) throw new Error('导入分支存档需要事件重放处理器');
         for (const event of bundle.events) if (active.has(event.sequence)) {
-            const patches = this.reducer ? (await this.reducer(document, event.input, { replay: true, result: event.result })).patches : event.patches;
+            const patches = this.reducer ? persistable((await this.reducer(document, event.input, { replay: true, result: event.result })).patches) : event.patches;
             document = applyPatches(document, patches);
         }
-        if (head !== bundle.checksum || digest(document) !== bundle.documentHash) throw new Error('导入重放结果不一致');
+        const legacyDocument = digest(document) === bundle.documentHash ? null : withLegacyUndefinedActivity(document);
+        if (head !== bundle.checksum || digest(document) !== bundle.documentHash && !(legacyDocument && digest(legacyDocument) === bundle.documentHash)) throw new Error('导入重放结果不一致');
+        // Imported events are rehashed in the persisted form, so a legacy chain becomes a current one.
         await this.create({ id, worldVersion: bundle.metadata.worldVersion, document: bundle.initial, provenance: { importedFrom: bundle.metadata.id } });
         const state = this.cache.get(id);
         for (const event of bundle.events) {
