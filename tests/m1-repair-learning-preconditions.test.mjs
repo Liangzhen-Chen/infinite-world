@@ -146,8 +146,10 @@ test('制造真实磨损小刀；实际交锋磨损正式木杖后经公共repai
     const waited=await s.turn(17,async()=>[await s.call('world_time',{minutes:2010-s.document.state.minute,activity:'休息'})]);
     // 登记的实体（果实、渗漏缸、积淤堤岸、药柜等）会随时间自然腐败渗漏，各法术批次陆续增加；它们由各自测试核对。
     // 这里核对其余记录不变、记录键集合不变，果实的总量守恒在下面单独核对。
-    const nonPerishable=records=>Object.fromEntries(Object.entries(records).filter(([id])=>!id.startsWith('physical_feature:')));
-    assert.deepEqual(Object.keys(waited.after.state.records).sort(),Object.keys(waited.before.state.records).sort());
+    // RW-05 起学堂按课表自动开课，等待期间在校学生的出勤记录（education_study/education_cohort）是世界自主活动，由 education 测试核对。
+    const schooling=id=>id.startsWith('education_study:')||id.startsWith('education_cohort:');
+    const nonPerishable=records=>Object.fromEntries(Object.entries(records).filter(([id])=>!id.startsWith('physical_feature:')&&!schooling(id)));
+    assert.deepEqual(Object.keys(waited.after.state.records).filter(id=>!schooling(id)).sort(),Object.keys(waited.before.state.records).filter(id=>!schooling(id)).sort());
     assert.deepEqual(nonPerishable(waited.after.state.records),nonPerishable(waited.before.state.records));
     const oldFruit=waited.before.state.records['physical_feature:feature_s1_fruit'].state.foodLots[0],newFruit=waited.after.state.records['physical_feature:feature_s1_fruit'].state.foodLots[0];
     assert.ok(Math.abs(oldFruit.amountGrams+oldFruit.spoiledGrams-newFruit.amountGrams-newFruit.spoiledGrams)<1e-8);
