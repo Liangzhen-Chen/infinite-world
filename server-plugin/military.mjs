@@ -20,7 +20,7 @@ import {rosterLifeState} from './population.mjs';
 import {clockRoll} from './world-clock.mjs';
 import {creditRules} from './credit.mjs';
 import {spendFactionAssets,creditFactionAssets} from './faction-clock.mjs';
-import {purse,treasury,vault,polityTreasury,transit,source,sink,bookSide,moveCoins,BOOKED} from './money.mjs';
+import {purse,treasury,vault,polityTreasury,transit,source,sink,bookSide,moveCoins,BOOKED,coinRead} from './money.mjs';
 import {declareLedgerWriter,balance} from './ledger.mjs';
 import {armyRations,moveStock} from './stock.mjs';
 // S1b 军粮：粮仓提粮由 agriculture.drawGranary 记入 army:<id>|item_oats|ration；买口粮来自模拟范围外（src:import），
@@ -101,14 +101,17 @@ function polityRow(d,engine,id){
 }
 const reserveOf=engine=>authorityOf(engine)?.treasury?.reserveCopper??0;
 function playerBanks(engine,state){return (creditRules(engine)?.banks??[]).map(b=>state.records?.[b.id]).filter(r=>r?.category==='bank'&&(r.accounts?.player??0)>0);}
-export function partyCoins(engine,state,id){
+// books（草稿或文档）给出时，现钱读账本账户（S1c 价格输入，供补给报价用）；没有时读旧字段。
+export function partyCoins(engine,state,id,books=null){
+ const cash=(account,legacy)=>coinRead(books,{point:'army.cash',account,legacy});
  switch(partyKind(engine,state,id)){
- case 'npc':return Math.max(0,state.npcs[id].coins??0);
- case 'player':return (state.player?.coins??0)+playerBanks(engine,state).reduce((n,b)=>n+Math.min(b.accounts.player,b.coins),0);
- case 'faction':return organization(engine,state,id)?.treasury??0;
- case 'polity':return state.records?.[`polity:${id}`]?.coins??polityRule(engine,id)?.treasuryCopper??0;
- case 'settlement':return Math.max(0,(state.settlements[id].treasury??0)-reserveOf(engine));
- case 'organization':return Math.max(0,organization(engine,state,id)?.treasury??0);
+ case 'npc':return Math.max(0,cash(purse(engine,id),()=>state.npcs[id].coins??0));
+ case 'player':return cash(purse(engine,'player'),()=>state.player?.coins??0)+(creditRules(engine)?.banks??[]).reduce((n,b)=>{
+  const r=state.records?.[b.id];return r?.category==='bank'&&(r.accounts?.player??0)>0?n+Math.min(r.accounts.player,cash(vault(b.id),()=>r.coins)):n;},0);
+ case 'faction':return cash(treasury(id),()=>organization(engine,state,id)?.treasury??0);
+ case 'polity':return cash(polityTreasury(id),()=>state.records?.[`polity:${id}`]?.coins??polityRule(engine,id)?.treasuryCopper??0);
+ case 'settlement':return Math.max(0,cash(treasury(id),()=>state.settlements[id].treasury??0)-reserveOf(engine));
+ case 'organization':return Math.max(0,cash(treasury(id),()=>organization(engine,state,id)?.treasury??0));
  default:return 0;
  }
 }
@@ -276,11 +279,11 @@ function supplyWeek(d,engine,a,at,src,blocked){
   if(a.supply==='granary'&&!famine){
    const quote=armySupplyQuote(d,engine,a.base,a.location,at);
    const price=quote.price;
-   const quantity=a.party===a.base?want:Math.min(want,Math.floor(partyCoins(engine,state,a.party)/price));
+   const quantity=a.party===a.base?want:Math.min(want,Math.floor(partyCoins(engine,state,a.party,d)/price));
    got=quote.closed?0:drawArmyRations(d,engine,a.base,quantity,{to:{account:armyRations(engine,a.id)},eventId:src}); 
    if(got&&a.party!==a.base){paid=partyPay(d,engine,a.party,got*price,{sourceEvent:`${src}:grain`,reason:`${a.name}提粮`,books:{account:partyAccount(engine,d.get('state'),a.base),writer:'military',eventId:src}});partyCredit(d,engine,a.base,paid,{sourceEvent:`${src}:grain`,reason:`${a.name}提粮`,books:BOOKED});}
   }else if(a.supply==='purchase'){
-   const quote=armySupplyQuote(d,engine,a.base,a.location,at),price=Math.ceil(quote.price*(season===3?m.supply.winterPriceFactor:1)*(famine?2:1)),afford=quote.closed||famine?0:Math.floor(partyCoins(engine,state,a.party)/price);
+   const quote=armySupplyQuote(d,engine,a.base,a.location,at),price=Math.ceil(quote.price*(season===3?m.supply.winterPriceFactor:1)*(famine?2:1)),afford=quote.closed||famine?0:Math.floor(partyCoins(engine,state,a.party,d)/price);
    got=Math.min(want,afford);if(got)paid=partyPay(d,engine,a.party,got*price,{sourceEvent:`${src}:ration`,reason:`${a.name}买口粮`,books:{account:sink('export','army_ration'),writer:'military',eventId:src}});
    if(got)moveStock(d,{from:`src:import|${armyRations(engine,a.id).split('|')[1]}|ration`,to:armyRations(engine,a.id),amount:got,writer:'military',eventId:src});
   }else if(a.supply==='forage'&&!famine){got=Math.floor(want*(season===3?m.supply.winterForageBps:10000)/10000);moveStock(d,{from:`src:regrowth|${armyRations(engine,a.id).split('|')[1]}|forage`,to:armyRations(engine,a.id),amount:got,writer:'military',eventId:src});}

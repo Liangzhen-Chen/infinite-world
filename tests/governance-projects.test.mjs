@@ -4,6 +4,7 @@ import fs from 'node:fs/promises';
 import {loadWorld} from '../tools/load-world.mjs';
 import {WorldEngine} from '../server-plugin/engine.mjs';
 import {applyPatches} from '../server-plugin/storage.mjs';
+import {resyncBooks} from './helpers/ledger-sync.mjs';
 
 const world=await loadWorld(),seed=JSON.parse(await fs.readFile('tests/fixtures/legacy/seed.json','utf8')),DAY=1440;
 const village=world.settlementProfiles.find(p=>p.id==='loc_bs_yupo'),head=village.details.governance.head;
@@ -38,9 +39,9 @@ test('没有在任官职不能动公款开工；官职、做工人与受益人�
  await assert.rejects(s.start(plain),/授权/);
  for(const [extra,error]of [[{consent:false},/同意/],[{beneficiaries:['player']},/受益人/],[{workers:[head,'npc_wt_zhengxi']},/在场|住户/],[{wood:999999},/材料|木料/],[{plot:'loc_wt_path'},/不在本村/]])
   await assert.rejects(s.start(s.doc,extra),error);
- const poor=structuredClone(s.doc);poor.state.settlements[village.id].treasury=400;
+ const poor=structuredClone(s.doc);poor.state.settlements[village.id].treasury=400;resyncBooks(s.engine,poor);
  await assert.rejects(s.start(poor),/留底/);
- const big=structuredClone(s.doc);big.state.settlements[village.id].treasury=100000;
+ const big=structuredClone(s.doc);big.state.settlements[village.id].treasury=100000;resyncBooks(s.engine,big);
  await assert.rejects(s.start(big,{days:30}),/本月公款额度不足/);
 });
 

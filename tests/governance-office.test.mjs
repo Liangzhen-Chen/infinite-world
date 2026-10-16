@@ -4,6 +4,7 @@ import fs from 'node:fs/promises';
 import {loadWorld} from '../tools/load-world.mjs';
 import {WorldEngine} from '../server-plugin/engine.mjs';
 import {applyPatches} from '../server-plugin/storage.mjs';
+import {resyncBooks} from './helpers/ledger-sync.mjs';
 import {questPublishingRights} from '../server-plugin/quest-board.mjs';
 import {toolDefinitions} from '../extension/tools.mjs';
 
@@ -73,7 +74,7 @@ test('任命生效后按月给任务额度，公款托管从村公库按月度�
  // Monthly public budget and the treasury reserve are both enforced.
  const rich=structuredClone(c);rich.state.questQuota={};
  await assert.rejects(s.publish(rich,{reward:1800},'big'),/本月公款额度不足/);
- const poor=structuredClone(c);poor.state.questQuota={};poor.state.settlements[village.id].treasury=350;
+ const poor=structuredClone(c);poor.state.questQuota={};poor.state.settlements[village.id].treasury=350;resyncBooks(s.engine,poor);
  await assert.rejects(s.publish(poor,{reward:100},'poor'),/留底/);
  // Personal escrow still works for an office holder.
  const own=structuredClone(rich);const mine=await s.publish(own,{settlement:undefined,reward:200},'own');

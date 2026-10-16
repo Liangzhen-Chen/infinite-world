@@ -1,4 +1,5 @@
-import {purse,moveCoins} from './money.mjs';
+import {purse,moveCoins,coinRead} from './money.mjs';
+import {bagStock} from './stock.mjs';
 import {declareLedgerWriter} from './ledger.mjs';
 declareLedgerWriter('smuggling');
 import {legalCodeAt} from './law-codes.mjs';
@@ -40,10 +41,10 @@ export function smuggleTrade(d,args,id){
     if(row.destination!==d.get('state','location'))throw Error('未到约定目的地');
     const buyer=d.get('state','npcs',row.buyer);
     if(!awake(buyer)||buyer.location!==row.destination)throw Error('买方不在场或不能履约');
-    if(this.quantity(d,'player',row.item)<row.quantity)throw Error('实际货物不足');
+    if(bagStock(d,this,{point:'smuggling.stock',id:'player',item:row.item,legacy:()=>this.quantity(d,'player',row.item)})<row.quantity)throw Error('实际货物不足');
     if(!row.checks.length)throw Error('未实际经过本批货物检查点');
     const price=Math.ceil(regionalTradePrice(d,this,row.item,row.destination)*(row.contraband?this.rules.smuggling.contrabandPremium:1)),cost=price*row.quantity;
-    if(buyer.coins<cost)throw Error('买方货款不足');
+    if(coinRead(d,{point:'smuggling.cash',account:purse(this,row.buyer),legacy:()=>buyer.coins})<cost)throw Error('买方货款不足');
     transferItems(d,this,'player',row.buyer,row.item,row.quantity);
     moveCoins(d,{from:purse(this,row.buyer),to:purse(this,'player'),amount:cost,writer:'smuggling',eventId:id});d.set(['state','npcs',row.buyer,'coins'],buyer.coins-cost);d.set(['state','player','coins'],d.get('state','player','coins')+cost);
     d.set(path(row.id),{...row,status:'已交付',paid:cost,price,deliveredAt:d.get('state','minute'),deliveredBy:id});

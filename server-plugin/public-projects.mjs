@@ -1,6 +1,6 @@
-import {purse,escrow as escrowAccount,treasury as treasuryAccount,moveCoins} from './money.mjs';
+import {purse,escrow as escrowAccount,treasury as treasuryAccount,moveCoins,coinRead} from './money.mjs';
 import {declareLedgerWriter} from './ledger.mjs';
-import {holdWorks,settleWorks,BOOKED as STOCK_BOOKED} from './stock.mjs';
+import {holdWorks,settleWorks,BOOKED as STOCK_BOOKED,priceRead,bagStock,settlementStock} from './stock.mjs';
 declareLedgerWriter('public-projects',{sinks:['sink:consume']});
 // S1b: 工程备料的账本入口，供工具分派（activities）与推进注册表的旧工程路径使用。
 export const holdProjectWorks=(d,engine,project,amounts,from,eventId)=>holdWorks(d,engine,project,amounts,{from,writer:'public-projects',eventId});
@@ -53,13 +53,13 @@ export function startPublicProject(d,engine,args,eventId,settlement){
     }
     if(args.consent!==true)throw Error('做工的人须当面同意工期与工钱');
     const row=state.settlements[settlement];
-    if(privateFunding){for(const [item,n]of [['item_wood',wood],['item_stone',stone]])if(n&&engine.quantity(d,'player',item)<n)throw Error('自备工程材料不足');}
-    else if((row.wood??0)<wood||(row.stone??0)<stone)throw Error('公共工程材料不足');
+    if(privateFunding){for(const [item,n]of [['item_wood',wood],['item_stone',stone]])if(n&&bagStock(d,engine,{point:'projects.stock',id:'player',item,legacy:()=>engine.quantity(d,'player',item)})<n)throw Error('自备工程材料不足');}
+    else if(priceRead(d,{point:'projects.supply',account:settlementStock(engine,settlement,'wood'),legacy:()=>row.wood??0})<wood||priceRead(d,{point:'projects.supply',account:settlementStock(engine,settlement,'stone'),legacy:()=>row.stone??0})<stone)throw Error('公共工程材料不足');
     const wage=authorityOf(engine).treasury.wagePerWorkerDayCopper,bill=wage*workers.length*days;
     const project=`project_${eventId}`;
     let spend;
     if(privateFunding){
-        if(state.player.coins<bill)throw Error('私人工程工钱不足');
+        if(coinRead(d,{point:'projects.cash',account:purse(engine,'player'),legacy:()=>state.player.coins})<bill)throw Error('私人工程工钱不足');
         for(const [item,n]of [['item_wood',wood],['item_stone',stone]])if(n)changeItems(d,engine,'player',item,-n,{books:STOCK_BOOKED});
         holdWorks(d,engine,project,{wood,stone},{from:{party:'player'},writer:'public-projects',eventId:project});
         moveCoins(d,{from:purse(engine,'player'),to:escrowAccount(project),amount:bill,writer:'public-projects',eventId:project});d.set(['state','player','coins'],state.player.coins-bill);

@@ -1,7 +1,7 @@
 import {personOffices} from './entity-view.mjs';
 import {entityTransition} from './entity-transitions.mjs';
 import {groupAccountView,changeGroupCoins} from './group-account.mjs';
-import {purse} from './money.mjs';
+import {purse,treasury,coinRead} from './money.mjs';
 import {declareLedgerWriter} from './ledger.mjs';
 declareLedgerWriter('office-salary');
 import {actorPath} from './npc-state.mjs';
@@ -27,7 +27,7 @@ export function advanceOfficeSalaries(d,engine,{before,after}){
         const debts=Object.values(d.get('state','records')??{}).filter(r=>r.category==='office_salary'&&r.arrears>0).sort((a,b)=>a.assessedAt-b.assessedAt||a.id.localeCompare(b.id));
         for(const debt of debts){
             if(debt.payments.some(p=>p.minute===at))continue;
-            const balance=groupAccountView(engine,d.get('state'),debt.settlement)?.coins??0;
+            const balance=coinRead(d,{point:'salary.treasury',account:treasury(debt.settlement),legacy:()=>groupAccountView(engine,d.get('state'),debt.settlement)?.coins??0});
             const paid=Math.min(debt.arrears,Math.max(0,balance-(engine.rules.governance?.authority?.treasury?.reserveCopper??0)));
             const actor=actorPath(engine.world,debt.holder),person=d.get(...actor);
             if(!person||person.status==='死亡')continue;

@@ -1,6 +1,6 @@
-import {purse,treasury as treasuryAccount,moveCoins} from './money.mjs';
+import {purse,treasury as treasuryAccount,moveCoins,coinRead} from './money.mjs';
 import {declareLedgerWriter} from './ledger.mjs';
-import {settlementStock} from './stock.mjs';
+import {settlementStock,priceRead,bagStock} from './stock.mjs';
 // S1b 补货：本地产出与外路到货来自模拟范围外（src:import，按货价付给来源聚落公账）；聚落库存补货从聚落库存转入店主行囊。
 declareLedgerWriter('shop',{sources:{'src:import':{'*':100000}}});
 import {isReputationSettlement}from'./reputation-registry.mjs';
@@ -149,7 +149,7 @@ function assertRules(engine){
     const errors=validateShopRules(engine.world,{stock:false});if(errors.length)throw Error(errors.join('；'));checked.add(engine.world);
 }
 
-const shelf=(engine,d,id,item)=>engine.quantity(d,id,item);
+const shelf=(engine,d,id,item)=>bagStock(d,engine,{point:'shop.shelf',id,item,legacy:()=>engine.quantity(d,id,item)});
 function managed(d,sid){return d.get('state','records',`agriculture:${sid}`)?.mode==='managed';}
 // One restock row at one boundary. Returns the ledger entry, or null when the
 // shelf was already full (nothing to record).
@@ -158,7 +158,7 @@ function restockRow(d,engine,shop,row,minute){
     const market=marketFactor(engine,d.get('state'),shop.settlement),want=Math.min(row.amount*market,row.maximum*market-shelf(engine,d,shop.keeper,row.item));
     if(want<=0)return null;
     const base=engine.byId.get(row.item).basePrice,entry={day:Math.floor(minute/DAY),minute,item:row.item,source:row.source,wanted:want,added:0,paidCopper:0};
-    const keeperPath=actorPath(engine.world,shop.keeper),keeper=d.get(...keeperPath),afford=n=>Math.min(n,Math.floor(keeper.coins/base));
+    const keeperPath=actorPath(engine.world,shop.keeper),keeper=d.get(...keeperPath),afford=n=>Math.min(n,Math.floor(coinRead(d,{point:'shop.cash',account:purse(engine,shop.keeper),legacy:()=>keeper.coins})/base));
     let books={flow:'src:import',purpose:row.source==='local'?'local_supply':'route_supply',writer:'shop',eventId:`shop:${shop.id}:${minute}`};
     if(row.source==='local'){entry.added=want;}
     else{
@@ -167,7 +167,7 @@ function restockRow(d,engine,shop,row,minute){
         if(row.source==='route'){
             try{engine.route(from,shop.settlement,'walk',minute,d.document.randomSeed);}catch(error){if(!error.message.startsWith('没有当前季节'))throw error;return{...entry,reason:'封路或天气不通，货未到'};}
         }else if(row.stock==='food'&&managed(d,from))return{...entry,reason:'托管聚落粮仓只走周贸易账'};
-        const spare=row.source==='settlement'?Math.max(0,(s[row.stock]??0)-row.reserve):want,quantity=afford(Math.min(want,spare));
+        const spare=row.source==='settlement'?Math.max(0,priceRead(d,{point:'shop.supply',account:settlementStock(engine,from,row.stock),legacy:()=>s[row.stock]??0})-row.reserve):want,quantity=afford(Math.min(want,spare));
         if(!quantity)return{...entry,reason:spare?'店主现钱不足':'聚落库存已到保留量'};
         if(row.source==='settlement'){s[row.stock]-=quantity;books={account:settlementStock(engine,from,row.stock),writer:'shop',eventId:books.eventId};}
         const cost=quantity*base;moveCoins(d,{from:purse(engine,shop.keeper),to:treasuryAccount(from),amount:cost,writer:'shop',eventId:null});s.treasury+=cost;d.set(['state','settlements',from],s);
@@ -210,7 +210,7 @@ export function tradeQuote(d,engine,{buyer,seller,item,location,base}){
         const regard=rules.relation.keeper*keeperRegard+rules.relation.settlement*settlementRegard;
         relation=clamp(1+(npc===seller?-1:1)*rules.relation.span*regard/100,limits.relation);
     }
-    const markup=shop?clamp(shop.markup,limits.shop):1,listPrice=Math.max(1,Math.round(price*markup*relation*medicinePriceFactor(engine,d.get('state'),item,location)));
+    const markup=shop?clamp(shop.markup,limits.shop):1,listPrice=Math.max(1,Math.round(price*markup*relation*medicinePriceFactor(engine,d.get('state'),item,location,d)));
     const row={category:'trade_quote',day,buyer,seller,item,shop:shop?.id??null,settlement:place,basePrice:engine.byId.get(item).basePrice,regionalPrice:price,
         shopFactor:markup,relationFactor:relation,keeperRegard,settlementRegard,listPrice,quotedAt:minute};
     d.set(['state','records',key],row);
