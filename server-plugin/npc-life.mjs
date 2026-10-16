@@ -1,3 +1,6 @@
+import {purse,sink,moveCoins} from './money.mjs';
+import {declareLedgerWriter} from './ledger.mjs';
+declareLedgerWriter('npc-life',{sinks:['sink:export']});
 import {npcAgeAt,npcHousehold,householdMembers} from './npc-state.mjs';
 import {entityTransition,businessSnapshot,businessTransitions} from './entity-transitions.mjs';
 export {npcAgeAt,npcHousehold,householdMembers} from './npc-state.mjs';
@@ -638,7 +641,7 @@ function depart(d,engine,m,at){
  const early=endObligations(d,engine,m.person,o=>(o.start??o.due??0)<arriveAt,`${name}迁居途中，无法赴约`,m.id,at);
  const shops=businessSnapshot(engine,d.get('state'));
  d.set(['state','npcs',m.person,'residence'],{household:m.to.household,settlement:m.to.settlement,home:m.to.home,since:at,migration:m.id,schedule,workChanged:changed});
- d.set(['state','npcs',m.person,'coins'],(npc.coins??0)-route.cost);
+ moveCoins(d,{from:purse(null,m.person),to:sink('export','travel'),amount:route.cost,writer:'npc-life',eventId:m.id});d.set(['state','npcs',m.person,'coins'],(npc.coins??0)-route.cost);
  d.set(['state','npcs',m.person,'scheduleTravel'],{from:npc.location,to:m.to.home,depart:at,arrive:arriveAt,edges:route.edges,migration:m.id});
  d.set(['state','npcs',m.person,'location'],null);d.set(['state','npcs',m.person,'activity'],'迁居赶路');
  const content=`${name}${reasonText(m)}，${engine.calendar(at).text.slice(0,-6)}从${placeName(engine,npc.location)}动身，迁往${placeName(engine,m.to.settlement)}${nameOf(engine,state,m.host)}家。`;

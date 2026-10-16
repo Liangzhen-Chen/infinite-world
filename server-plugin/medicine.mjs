@@ -4,6 +4,9 @@ import {personConstraint,placeSettlement} from './entity-view.mjs';
 import {educationReservation} from './education-state.mjs';
 import {employmentReservation,currentEmployment} from './employment-state.mjs';
 import {financeBalance,financeTransfer,financeChange,financeInt} from './finance-bank.mjs';
+import {fund as fundAccount} from './money.mjs';
+import {declareLedgerWriter} from './ledger.mjs';
+declareLedgerWriter('medicine');
 import {transferItems} from './items.mjs';
 import {clockRoll} from './world-clock.mjs';
 import {recoverIllness,contractIllness} from './npc-life.mjs';
@@ -71,7 +74,7 @@ function stockSource(d,e,r){
  return null;
 }
 function pay(d,e,r,stock){
- if(stock.fund){financeChange(d,e,r.owner,r.fee,r.id);d.set(rec(stock.fund.id),{...stock.fund,coins:stock.fund.coins-r.fee,spent:stock.fund.spent+r.fee});return {paid:r.fee,sponsor:stock.fund.id};}
+ if(stock.fund){financeChange(d,e,r.owner,r.fee,r.id,{account:fundAccount(stock.fund.id),writer:'medicine',eventId:r.id});d.set(rec(stock.fund.id),{...stock.fund,coins:stock.fund.coins-r.fee,spent:stock.fund.spent+r.fee});return {paid:r.fee,sponsor:stock.fund.id};}
  if(stock.temple){financeTransfer(d,e,stock.temple,r.owner,r.fee,r.id);return {paid:r.fee,sponsor:stock.temple};}
  const paid=Math.min(financeBalance(d,e,r.patient),r.fee);if(paid<r.fee&&!r.credit)return null;
  if(paid&&r.patient!==r.owner)financeTransfer(d,e,r.patient,r.owner,paid,r.id);
@@ -183,7 +186,7 @@ export function medicineAction(d,args,id){
   const coins=financeInt(args.budget??0,0,1e8,'义诊资助'),quantity=financeInt(args.quantity??args.wood??0,0,100000,'施药数量');if(!coins&&!quantity)throw Error('须提供实际钱或药材');
   const key=`medicine_fund:${site.seat}`,old=d.get(...rec(key));
   // Escrow is counted here once and paid out only for an actual consultation.
-  if(coins)financeChange(d,e,'player',-coins,id);
+  if(coins)financeChange(d,e,'player',-coins,id,{account:fundAccount(key),writer:'medicine',eventId:id});
   const holder=old?.holder??site.owner;if(!holder)throw Error('医馆没有接收药材的经营者');
   if(quantity)transferItems(d,e,'player',holder,'item_herb',quantity);
   const row={id:key,category:'medicine_fund',location:site.seat,holder,coins:(old?.coins??0)+coins,spent:old?.spent??0,herbsDonated:(old?.herbsDonated??0)+quantity,donations:[...old?.donations??[],{source:id,coins,quantity,minute:s.minute}]};d.set(rec(key),row);return row;

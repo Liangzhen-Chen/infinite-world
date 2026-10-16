@@ -1,5 +1,8 @@
 import {transportSegment,stepTransport} from './transport-route.mjs';
 import {financeBalance,financeTransfer,financeChange} from './finance-bank.mjs';
+import {escrow as escrowAccount} from './money.mjs';
+import {declareLedgerWriter} from './ledger.mjs';
+declareLedgerWriter('transport');
 import {assessTradeTax,tradeTax} from './finance-tax.mjs';
 import {changeItems} from './items.mjs';
 import {personOccupation,personConstraint,personAge,groupView,groupRepresentative} from './entity-view.mjs';
@@ -177,7 +180,7 @@ export function advanceTransport(d,e,minute){
    row.history.push({minute,location:t.location,kind:'delivered'});setPosition(d,row,t.location);
    if(!handover)row.status='arrived';
    if(row.escortQuest){const q=d.get('state','quests',row.escortQuest);if(q?.escrow&&q.status==='进行中'){
-    financeChange(d,e,row.escort,q.escrow,`${row.id}:escort`);d.set(['state','quests',q.id],{...q,status:'已完成',escrow:0,rewardPaid:q.escrow,resolvedAt:minute});
+    financeChange(d,e,row.escort,q.escrow,`${row.id}:escort`,{account:escrowAccount(q.id),writer:'transport',eventId:`${row.id}:escort`});d.set(['state','quests',q.id],{...q,status:'已完成',escrow:0,rewardPaid:q.escrow,resolvedAt:minute});
     d.set(path(`${q.id}:已完成`),{category:'quest_receipt',quest:q.id,parties:[q.publisher,q.taker],minute,location:t.location,status:'已完成',escrow:0,rewardPaid:q.escrow,refund:0,source:'npc_needs'});
    }}
    publishTransitionEvent(d,e,{id:`${row.id}:arrival`,verb:'trade',actor:row.carrier,target:row.recipient,location:t.location,minute,tags:['transport'],witnesses:[]});

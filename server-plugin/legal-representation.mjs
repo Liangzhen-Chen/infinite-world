@@ -1,3 +1,6 @@
+import {purse,moveCoins} from './money.mjs';
+import {declareLedgerWriter} from './ledger.mjs';
+declareLedgerWriter('legal-representation');
 import {personCareer,personConstraint} from './entity-view.mjs';
 import {npcAgeAt} from './npc-state.mjs';
 import {assertNpcService,advanceWithNpcParticipants} from './npc-schedule.mjs';
@@ -21,7 +24,7 @@ export function hireAdvocate(d,engine,row,args,eventId){
  const current=advocateService(engine,d.get('state'),id);
  if(!current||d.get('state','npcs',id,'location')!==d.get('state','location')||/睡/.test(d.get('state','npcs',id,'activity')??''))throw Error('代理人办理期间无法履约');
  if(d.get('state','player','coins')<service.fee)throw Error('办理期间余额不足');
- d.set(['state','player','coins'],d.get('state','player','coins')-service.fee);d.set(['state','npcs',id,'coins'],(d.get('state','npcs',id,'coins')??0)+service.fee);
+ moveCoins(d,{from:purse(null,'player'),to:purse(null,id),amount:service.fee,writer:'legal-representation',eventId:eventId});d.set(['state','player','coins'],d.get('state','player','coins')-service.fee);d.set(['state','npcs',id,'coins'],(d.get('state','npcs',id,'coins')??0)+service.fee);
  const representation={npc:id,paid:service.fee,skill:service.skill,minute:d.get('state','minute'),sourceEvent:eventId,subject:row.offender};
  d.set(path(row.id),{...d.get(...path(row.id)),representation});return{case:row.id,representation,minutes:service.minutes,note:'代理费已实付；代理人可核查证词并提出量罚意见，不能制造证据或保证胜诉'};
 }

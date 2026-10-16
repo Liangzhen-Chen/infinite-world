@@ -1,4 +1,7 @@
 import {ensureGroupAccount} from './group-account.mjs';
+import {purse,treasury,sink,bookSide,BOOKED} from './money.mjs';
+import {declareLedgerWriter} from './ledger.mjs';
+declareLedgerWriter('faction-clock',{sinks:['sink:export']});
 import {groupRepresentative,personView} from './entity-view.mjs';
 import {standingLedger} from './standing.mjs';
 import {templeById,faithConflictClocks} from './faith-catalog.mjs';
@@ -102,19 +105,21 @@ function ensureAccount(d,engine,id){
  return ensureGroupAccount(d,engine,id);
 }
 function affordable(row,cost={}){return row.coins>=(cost.coins??0)&&Object.entries(cost.items??{}).every(([id,n])=>(row.items[id]??0)>=n);}
-function changeAssets(d,engine,id,cost,sign,event){
+// S1a: books = 账本对方账户（money.bookSide）；只动实物时不需要。
+function changeAssets(d,engine,id,cost,sign,event,books){
  const row=ensureAccount(d,engine,id),items={...row.items};
+ bookSide(d,treasury(id),sign*(cost.coins??0),books);
  for(const [item,n]of Object.entries(cost.items??{}))items[item]=(items[item]??0)+sign*n;
  const coins=row.coins+sign*(cost.coins??0);if(!uint(coins)||Object.values(items).some(n=>!uint(n)))throw Error('势力资源不足或溢出');
  d.set(accountPath(id),{...row,coins,items,ledger:[...row.ledger,{...event,coins:sign*(cost.coins??0),items:Object.fromEntries(Object.entries(cost.items??{}).map(([id,n])=>[id,sign*n]))}]});
 }
 // Used by effect consumers that carry their own outcome price.
-export function spendFactionAssets(d,engine,id,cost,event){
+export function spendFactionAssets(d,engine,id,cost,event,books){
  assertCost(engine,cost);const row=ensureAccount(d,engine,id);if(!affordable(row,cost))return false;
- changeAssets(d,engine,id,cost,-1,event);return true;
+ changeAssets(d,engine,id,cost,-1,event,books);return true;
 }
 // U17: an unpaid commission's escrow goes back to the faction treasury.
-export function creditFactionAssets(d,engine,id,cost,event){assertCost(engine,cost);changeAssets(d,engine,id,cost,1,event);}
+export function creditFactionAssets(d,engine,id,cost,event,books){assertCost(engine,cost);changeAssets(d,engine,id,cost,1,event,books);}
 export function initializeFactionClocks(d,engine,minute,end=minute){
  assertFactionClockRules(engine);
  for(const rule of factionClockRules(engine))if(!d.get(...clockPath(rule.id))){
@@ -152,7 +157,7 @@ registerEffect('trade',{sources:['faction'],
   if(!affordable(seller,{items:{[effect.item]:effect.quantity}})||!affordable(buyer,{coins:payment}))return {applied:false,reason:'交易对手资金或卖方库存不足'};
   const event={sourceEvent,minute,kind:'trade',counterparty:effect.target};
   changeAssets(d,engine,owner,{items:{[effect.item]:effect.quantity}},-1,event);changeAssets(d,engine,effect.target,{items:{[effect.item]:effect.quantity}},1,{...event,counterparty:owner});
-  changeAssets(d,engine,effect.target,{coins:payment},-1,{...event,counterparty:owner});changeAssets(d,engine,owner,{coins:payment},1,event);
+  changeAssets(d,engine,effect.target,{coins:payment},-1,{...event,counterparty:owner},{account:treasury(owner),writer:'faction-clock',eventId:sourceEvent});changeAssets(d,engine,owner,{coins:payment},1,event,BOOKED);
   const location=faction(engine,owner).contactAnchor;
   if(location)assessTradeTax(d,engine,{seller:owner,cost:payment,location,sourceEvent});
   return {applied:true,...effect,payment};
@@ -184,7 +189,7 @@ export function advanceFactionClocks(d,engine,at){
     const sourceEvent=`faction-clock:${rule.id}:${at}`,context={faction:rule.faction,settlement:rule.settlement,minute:at,sourceEvent,scope:'regional',stage:stage.id};
     const receipt=clockTransaction(d,tx=>{
      if(!affordable(assets,stage.cost))return {applied:false,reason:'阶段资源不足'};
-     changeAssets(tx,engine,rule.faction,stage.cost??{},-1,{sourceEvent,minute:at,kind:'stage_cost',stage:stage.id});
+     changeAssets(tx,engine,rule.faction,stage.cost??{},-1,{sourceEvent,minute:at,kind:'stage_cost',stage:stage.id},{account:sink('export','faction_stage'),writer:'faction-clock',eventId:sourceEvent});
      const results=[];
      for(const effect of stageEffects(engine,rule,stage)){const result=applyEffect(tx,engine,effect,context);if(!result.applied)return result;results.push(result);}
      return {applied:true,effects:results};
@@ -232,13 +237,13 @@ export function factionClockAction(d,args,eventId){
   const cost={coins,items:item?{[item]:quantity}:{}};assertCost(this,cost);
   if(!coins&&!quantity||quantity&&!item)throw Error('供资必须有实际钱物');
   if(item&&d.get('state','inventory',item,'instances')?.length)throw Error('势力区域物资账不接收具单件身份的物品');
-  payPlayer(d,this,cost);changeAssets(d,this,rule.faction,cost,1,{sourceEvent:eventId,minute:before,kind:'player_contribution'});
+  payPlayer(d,this,cost,BOOKED);changeAssets(d,this,rule.faction,cost,1,{sourceEvent:eventId,minute:before,kind:'player_contribution'},{account:purse(this,'player'),writer:'faction-clock',eventId});
   this.advance(d,5,eventId);return {faction:rule.faction,clock:rule.id,cost};
  }
  if(args.operation!=='faction_intervene')throw Error('未知势力操作');
  const action=rule.interventions?.find(a=>a.id===args.choice&&a.stage===stage?.id);
  if(!action)throw Error('当前阶段没有该干预办法');
- requireContact(d,this,action,rule.faction);payPlayer(d,this,action.cost??{});
+ requireContact(d,this,action,rule.faction);payPlayer(d,this,action.cost??{},{account:sink('export','faction_intervention'),writer:'faction-clock',eventId});
  const check=action.difficulty===undefined?{success:true}:this.check(d,{attribute:action.attribute,difficulty:action.difficulty},eventId);
  const entry={choice:action.id,stage:stage.id,sourceEvent:eventId,minute:before,cost:action.cost??{},success:check.success};
  const updated={...row,interventions:[...row.interventions,entry]};
@@ -249,8 +254,9 @@ export function factionClockAction(d,args,eventId){
  d.set(clockPath(rule.id),updated);this.advance(d,action.minutes,eventId);
  return {faction:rule.faction,clock:rule.id,...entry,phase:d.get(...clockPath(rule.id),'phase'),...check};
 }
-function payPlayer(d,engine,cost){
+function payPlayer(d,engine,cost,books){
  if(d.get('state','player','coins')<(cost.coins??0)||Object.entries(cost.items??{}).some(([id,n])=>engine.quantity(d,'player',id)<n))throw Error('玩家干预或供资资源不足');
+ bookSide(d,purse(engine,'player'),-(cost.coins??0),books);
  d.set(['state','player','coins'],d.get('state','player','coins')-(cost.coins??0));
  for(const [item,n]of Object.entries(cost.items??{}))if(n)engine.itemDelta(d,'player',item,-n);
 }

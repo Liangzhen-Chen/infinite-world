@@ -4,6 +4,9 @@ import {personOffices,personConstraint,personHousehold,placeSettlement,personAge
 import {currentEmployment,employmentActive,recordEmploymentAttendance} from './employment-state.mjs';
 import {workerSkill,employmentStock,employmentProductionPlan,settleEmploymentProduction} from './finance-assets.mjs';
 import {financeBalance,financeTransfer,financeChange,financeEvent,financeInt} from './finance-bank.mjs';
+import {escrow as escrowAccount} from './money.mjs';
+import {declareLedgerWriter} from './ledger.mjs';
+declareLedgerWriter('labor-market');
 import {groupAccountView} from './group-account.mjs';
 import {currentShops} from './shop.mjs';
 import {npcNeedGoals} from './npc-intelligence.mjs';
@@ -157,7 +160,7 @@ export function settleEmploymentPay(d,e,row,at,minutes){
     const earned=Math.ceil(row.wage*minutes/480),available=financeBalance(d,e,row.owner),cash=Math.min(earned,available),eventId=`${row.id}:${at}`;
     if(cash)financeTransfer(d,e,row.owner,row.worker,cash,eventId);
     const guaranteed=Math.min(earned-cash,row.escrow??0);
-    if(guaranteed){financeChange(d,e,row.worker,guaranteed,eventId);d.set(rec(row.id),{...d.get(...rec(row.id)),escrow:row.escrow-guaranteed});}
+    if(guaranteed){financeChange(d,e,row.worker,guaranteed,eventId,{account:escrowAccount(row.id),writer:'labor-market',eventId});d.set(rec(row.id),{...d.get(...rec(row.id)),escrow:row.escrow-guaranteed});}
     const paid=cash+guaranteed;
     if(paid<earned){const id=`debt_wage:${row.id}:${at}`;d.set(rec(id),{id,category:'debt',kind:'wage',debtor:row.owner,creditor:row.worker,amount:earned,paid,status:'待偿还',
         createdAt:at,deadline:at+DAY,location:row.location,source:row.source,contract:row.id});}
@@ -228,7 +231,7 @@ export function settleArrears(d,e,row,minute){
     }
     return true;
 }
-function refundGuarantee(d,e,row){if(row.escrow>0){financeChange(d,e,'player',row.escrow,`${row.id}:refund`);d.set(rec(row.id),{...row,escrow:0});}}
+function refundGuarantee(d,e,row){if(row.escrow>0){financeChange(d,e,'player',row.escrow,`${row.id}:refund`,{account:escrowAccount(row.id),writer:'labor-market'});d.set(rec(row.id),{...row,escrow:0});}}
 export function advanceLaborMarket(d,e,{before,after,id,beforeState}){
     if(!laborMarketFresh(e))return;
     const contracts=rows(d.get('state')).filter(r=>r.laborMarket===1&&r.kind==='workshop');
@@ -303,7 +306,7 @@ export function laborTrade(d,e,args,id){
     if(row.location!==s.location)throw Error('须到履约地点介入合同');
     if(args.operation==='labor_guarantee'){
         if(!employmentActive(row))throw Error('雇佣已结束');
-        const coins=financeInt(args.coins,1,1e6,'担保款');financeChange(d,e,'player',-coins,id);
+        const coins=financeInt(args.coins,1,1e6,'担保款');financeChange(d,e,'player',-coins,id,{account:escrowAccount(row.id),writer:'labor-market',eventId:id});
         d.set(rec(row.id),{...row,guarantor:'player',escrow:(row.escrow??0)+coins});return {contract:row.id,escrow:(row.escrow??0)+coins};
     }
     if(args.consent!==true||s.npcs[row.worker]?.location!==s.location||!able(s,row.worker)||/睡眠|睡觉|熟睡/.test(s.npcs[row.worker]?.activity??'')||personConstraint(e,s,row.worker))throw Error('须由清醒在场的雇工同意');
@@ -313,7 +316,7 @@ export function laborTrade(d,e,args,id){
         const debts=outstanding(s,row.id),due=debts.reduce((n,r)=>n+r.amount-r.paid,0);
         if(financeBalance(d,e,row.owner)+(row.escrow??0)<due)throw Error('现有款项不足以清偿欠薪');
         let escrow=row.escrow??0;
-        for(const debt of debts){const amount=debt.amount-debt.paid,cash=Math.min(amount,financeBalance(d,e,row.owner));if(cash)financeTransfer(d,e,row.owner,row.worker,cash,id);if(amount>cash){financeChange(d,e,row.worker,amount-cash,id);escrow-=amount-cash;}
+        for(const debt of debts){const amount=debt.amount-debt.paid,cash=Math.min(amount,financeBalance(d,e,row.owner));if(cash)financeTransfer(d,e,row.owner,row.worker,cash,id);if(amount>cash){financeChange(d,e,row.worker,amount-cash,id,{account:escrowAccount(row.id),writer:'labor-market',eventId:id});escrow-=amount-cash;}
             const paid={...debt,paid:debt.amount,status:'已还清',settledAt:now};d.set(rec(debt.id),paid);settleCreditCase(d,e,debt.id,paid,{minute:now});}
         const nextWage=financeInt(args.coins??row.wage,wage(e),1e6,'调解日薪');
         const other=currentEmployment(s,row.worker,now);

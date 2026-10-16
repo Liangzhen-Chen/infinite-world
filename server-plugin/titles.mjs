@@ -1,3 +1,6 @@
+import {purse,treasury as treasuryAccount,transit,sink,moveCoins} from './money.mjs';
+import {declareLedgerWriter} from './ledger.mjs';
+declareLedgerWriter('titles',{sinks:['sink:export']});
 import {fiefCandidates,nobleRules,currentDomains,domainPopulation,domainSettlements,highTitle} from './noble-state.mjs';
 import {royalServices} from './high-nobility.mjs';
 import {partyPay} from './military.mjs';
@@ -101,6 +104,8 @@ function income(d,engine,t,at){
         const owed=Math.floor(row.base*def.incomeBps/10000),treasury=state.settlements[t.fief].treasury,reserve=authorityOf(engine).treasury.reserveCopper;
         row.income=Math.max(0,Math.min(owed,treasury-reserve));if(row.income<owed)row.shortfall=owed-row.income;
         row.tribute=Math.floor(row.income*def.tributeBps/10000);
+        moveCoins(d,{from:treasuryAccount(t.fief),to:purse(engine,t.holder??'player'),amount:row.income-row.tribute,writer:'titles',eventId:`title:${t.id??KEY}:${month}`});
+        moveCoins(d,{from:treasuryAccount(t.fief),to:sink('export','tribute'),amount:row.tribute,writer:'titles',eventId:`title:${t.id??KEY}:${month}`});
         d.set(['state','settlements',t.fief,'treasury'],treasury-row.income);
         const holderPath=actorPath(engine.world,t.holder??'player');d.set([...holderPath,'coins'],(d.get(...holderPath,'coins')??0)+row.income-row.tribute);
         if(t.status==='失封地')next.status='受封';
@@ -111,8 +116,11 @@ function upperIncome(d,e,t,at){
  const state=d.get('state'),def=titleDef(e,t.title),mark=domainReceipts(e,state,t.domains),base=Math.max(0,mark-t.incomeMark);
  let owed=t.status==='停俸'?0:Math.floor(base*def.incomeBps/10000),paid=0;
  const owned=currentDomains(e,state,t.holder??'player');
- for(const sid of domainSettlements(e,state,t.domains).filter(sid=>owned.some(id=>id===sid||domainSettlements(e,state,[id]).includes(sid)))){const n=partyPay(d,e,sid,owed,{sourceEvent:`title:${t.id}:${at}`,reason:'封地收入'});paid+=n;owed-=n;if(!owed)break;}
- const tribute=Math.floor(paid*def.tributeBps/10000),holderPath=actorPath(e.world,t.holder??'player');d.set([...holderPath,'coins'],(d.get(...holderPath,'coins')??0)+paid-tribute);
+ for(const sid of domainSettlements(e,state,t.domains).filter(sid=>owned.some(id=>id===sid||domainSettlements(e,state,[id]).includes(sid)))){const n=partyPay(d,e,sid,owed,{sourceEvent:`title:${t.id}:${at}`,reason:'封地收入',books:{account:transit(`title:${t.id}`),writer:'titles',eventId:`title:${t.id}:${at}`}});paid+=n;owed-=n;if(!owed)break;}
+ const tribute=Math.floor(paid*def.tributeBps/10000),holderPath=actorPath(e.world,t.holder??'player');
+ moveCoins(d,{from:transit(`title:${t.id}`),to:purse(e,t.holder??'player'),amount:paid-tribute,writer:'titles',eventId:`title:${t.id}:${at}`});
+ moveCoins(d,{from:transit(`title:${t.id}`),to:treasuryAccount('loc_capital'),amount:tribute,writer:'titles',eventId:`title:${t.id}:${at}`});
+ d.set([...holderPath,'coins'],(d.get(...holderPath,'coins')??0)+paid-tribute);
  if(tribute){const balance=d.get('state','settlements','loc_capital','treasury')??0;d.set(['state','settlements','loc_capital','treasury'],balance+tribute);}
  d.set(rec(`title_income:${t.id}:${Math.floor(at/MONTH)}`),{category:'title_income',holder:t.holder,title:t.title,fief:t.fief,base,income:paid,tribute,minute:at});
  d.set(rec(t.id??KEY),{...t,nextIncome:t.nextIncome+MONTH,incomeMark:mark});

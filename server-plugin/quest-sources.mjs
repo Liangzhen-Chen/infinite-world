@@ -1,3 +1,6 @@
+import {purse,escrow as escrowAccount,treasury as treasuryAccount,moveCoins} from './money.mjs';
+import {declareLedgerWriter} from './ledger.mjs';
+declareLedgerWriter('quest-sources');
 import {personSimulation,questPublisher,questBoards} from './entity-view.mjs';
 // U17 任务自动来源（指南3.10）。任务公告栏的来源除玩家与官员手发外，还有：
 //   npc_needs     人物按自身短缺与需求目标（口粮、找药、修屋、护送、寻人）出私人委托，
@@ -130,19 +133,19 @@ function boardOf(engine,place,boards){
 const generated=state=>Object.values(state.quests??{}).filter(q=>q.boardVersion===1&&q.source);
 // 托管：人物从自己钱里出，势力从势力公库出，聚落从公账出（不得动用留底）。
 function escrow(d,engine,funding,reward,quest){
- if(funding.npc){const account=funding.npc==='player'?['state','player']:['state','npcs',funding.npc],coins=d.get(...account,'coins')??0;if(coins<reward)return false;d.set([...account,'coins'],coins-reward);return true;}
- if(funding.faction)return spendFactionAssets(d,engine,funding.faction,{coins:reward},{sourceEvent:quest,minute:d.get('state','minute'),kind:'quest_escrow'});
+ if(funding.npc){const account=funding.npc==='player'?['state','player']:['state','npcs',funding.npc],coins=d.get(...account,'coins')??0;if(coins<reward)return false;moveCoins(d,{from:purse(engine,funding.npc),to:escrowAccount(quest),amount:reward,writer:'quest-sources',eventId:quest});d.set([...account,'coins'],coins-reward);return true;}
+ if(funding.faction)return spendFactionAssets(d,engine,funding.faction,{coins:reward},{sourceEvent:quest,minute:d.get('state','minute'),kind:'quest_escrow'},{account:escrowAccount(quest),writer:'quest-sources',eventId:quest});
  if(funding.treasury){
   const treasury=d.get('state','settlements',funding.treasury,'treasury'),reserve=authorityOf(engine)?.treasury?.reserveCopper??0;
   if(!Number.isSafeInteger(treasury)||treasury-reward<reserve)return false;
-  d.set(['state','settlements',funding.treasury,'treasury'],treasury-reward);return true;
+  moveCoins(d,{from:treasuryAccount(funding.treasury),to:escrowAccount(quest),amount:reward,writer:'quest-sources',eventId:quest});d.set(['state','settlements',funding.treasury,'treasury'],treasury-reward);return true;
  }
  return false;
 }
 // quest-board 关闭未付报酬时调用：势力与公账出资退回原处。返回是否已处理。
 export function refundQuestFunding(d,engine,q,amount,minute){
- if(q.fundedBy?.faction){creditFactionAssets(d,engine,q.fundedBy.faction,{coins:amount},{sourceEvent:`${q.id}:refund`,minute,kind:'quest_refund'});return true;}
- if(q.fundedBy?.treasury){d.set(['state','settlements',q.fundedBy.treasury,'treasury'],(d.get('state','settlements',q.fundedBy.treasury,'treasury')??0)+amount);return true;}
+ if(q.fundedBy?.faction){creditFactionAssets(d,engine,q.fundedBy.faction,{coins:amount},{sourceEvent:`${q.id}:refund`,minute,kind:'quest_refund'},{account:escrowAccount(q.id),writer:'quest-sources',eventId:`${q.id}:refund`});return true;}
+ if(q.fundedBy?.treasury){moveCoins(d,{from:escrowAccount(q.id),to:treasuryAccount(q.fundedBy.treasury),amount,writer:'quest-sources',eventId:`${q.id}:refund`});d.set(['state','settlements',q.fundedBy.treasury,'treasury'],(d.get('state','settlements',q.fundedBy.treasury,'treasury')??0)+amount);return true;}
  return false;
 }
 /**

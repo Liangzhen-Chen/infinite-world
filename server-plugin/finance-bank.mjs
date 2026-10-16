@@ -8,6 +8,9 @@ import {hazardPriceFactor} from './hazard-calendar.mjs';
 import {registerCreditDefault,settleCreditCase} from './law.mjs';
 import {publishTransitionEvent} from './world-events.mjs';
 import {changeItems} from './items.mjs';
+import {partyAccount,moveCoins,bookSide,BOOKED,vault,source,sink} from './money.mjs';
+import {declareLedgerWriter} from './ledger.mjs';
+declareLedgerWriter('finance-bank');
 
 import {BANK_OPERATIONS} from './finance-operations.mjs';
 export {BANK_OPERATIONS};
@@ -23,15 +26,21 @@ export function financeBalance(d,e,id){
     if(org?.category==='organization')return org.treasury??0;
     const actor=d.get(...e.actorPath(id));if(!actor)throw Error('资金当事人不存在');return actor.coins??0;
 }
-export function financeChange(d,e,id,delta,sourceEvent){
+// S1a: books = 账本对方账户（money.bookSide），成对的另一边已记账时传 BOOKED。
+export function financeChange(d,e,id,delta,sourceEvent,books){
     if(!Number.isSafeInteger(delta))throw Error('资金变化无效');
     const balance=financeBalance(d,e,id)+delta;if(!Number.isSafeInteger(balance)||balance<0)throw Error('当事人资金不足');
-    if(groupAccountView(e,d.get('state'),id))return changeGroupCoins(d,e,id,delta,{kind:'金融契约',sourceEvent,minute:d.get('state','minute')});
+    if(groupAccountView(e,d.get('state'),id))return changeGroupCoins(d,e,id,delta,{kind:'金融契约',sourceEvent,minute:d.get('state','minute')},books);
+    bookSide(d,partyAccount(e,d.get('state'),id),delta,books);
     const org=d.get(...financePath(`organization:${id}`));
     if(org?.category==='organization'){d.set(financePath(`organization:${id}`),{...org,treasury:balance,ledger:[...org.ledger??[],{coins:delta,sourceEvent}]});return balance;}
     d.set([...e.actorPath(id),'coins'],balance);return balance;
 }
-export function financeTransfer(d,e,from,to,n,id){financeInt(n,1,1e9,'支付金额');financeChange(d,e,from,-n,id);financeChange(d,e,to,n,id);}
+export function financeTransfer(d,e,from,to,n,id,writer='finance-bank'){
+    financeInt(n,1,1e9,'支付金额');const state=d.get('state');
+    moveCoins(d,{from:partyAccount(e,state,from),to:partyAccount(e,state,to),amount:n,writer,eventId:id});
+    financeChange(d,e,from,-n,id,BOOKED);financeChange(d,e,to,n,id,BOOKED);
+}
 export function financeEvent(d,e,{id,actor,target,location,minute,value=0,verb='trade',tags=[]}){
     publishTransitionEvent(d,e,{id:`finance:${id}`,verb,actor,target,value,location,minute,witnesses:[],tags:['finance',...tags]});
 }
@@ -174,8 +183,11 @@ export function bankTrade(d,e,args,id){
         const debt=d.get(...financePath(args.contract));if(debt?.kind!=='pawn'||debt.bank!==b.id||debt.status!=='流当')throw Error('当物尚不可拍卖');
         const p=d.get(...financePath(debt.pledgeRecord)),price=financeInt(args.coins,p.value,Math.max(p.value,1e9),'拍卖价');
         const buyer=counterpart(d,e,args.buyer,{consent:args.consent});if(financeBalance(d,e,buyer)<price)throw Error('买方资金不足');
-        financeChange(d,e,buyer,-price,id);row.coins+=Math.min(price,debt.amount-debt.paid);d.set(financePath(b.id),row);
-        const surplus=Math.max(0,price-(debt.amount-debt.paid));if(surplus)financeChange(d,e,'player',surplus,id);
+        const toBank=Math.min(price,debt.amount-debt.paid),surplus=Math.max(0,price-(debt.amount-debt.paid)),state=d.get('state');
+        moveCoins(d,{from:partyAccount(e,state,buyer),to:vault(b.id),amount:toBank,writer:'finance-bank',eventId:id});
+        moveCoins(d,{from:partyAccount(e,state,buyer),to:partyAccount(e,state,'player'),amount:surplus,writer:'finance-bank',eventId:id});
+        financeChange(d,e,buyer,-price,id,BOOKED);row.coins+=toBank;d.set(financePath(b.id),row);
+        if(surplus)financeChange(d,e,'player',surplus,id,BOOKED);
         releasePledge(d,e,debt.pledgeRecord,buyer);
         d.set(financePath(debt.pledgeRecord),{...d.get(...financePath(debt.pledgeRecord)),status:'已拍卖',holder:buyer});
         const paid=Math.min(debt.amount,debt.paid+price);d.set(financePath(args.contract),{...debt,paid,status:paid===debt.amount?'已还清':'逾期',auction:{buyer,price,surplus,source:id}});
@@ -184,7 +196,7 @@ export function bankTrade(d,e,args,id){
     if(op==='remit'){
         const dest=derivedBankAt(e,d.get('state'),e.resolve(args.location));if(!dest||dest.id===b.id)throw Error('汇票须指定异地的真实钱庄柜面');
         const amount=financeInt(args.coins,1,1e7,'汇票金额'),fee=Math.max(1,Math.ceil(amount*cfg(e).remittance.feeRate));
-        financeChange(d,e,'player',-amount-fee,id);row.coins+=amount+fee;d.set(financePath(b.id),row);
+        financeChange(d,e,'player',-amount-fee,id,{account:vault(b.id),writer:'finance-bank',eventId:id});row.coins+=amount+fee;d.set(financePath(b.id),row);
         const key=`bill:${id}`;d.set(financePath(key),{category:'bank_bill',owner:'player',bank:b.id,destination:dest.id,amount,fee,status:'未兑付',createdAt:now,source:id});
         return {contract:key,bank:b.id,destination:dest.id,amount,fee};
     }
@@ -193,7 +205,7 @@ export function bankTrade(d,e,args,id){
         const source=bankById(e,bill.bank,d.get('state'));if(blocked(e,d.get('state'),source,now))throw Error('出票钱庄倒闭或战乱，汇票暂不能兑付');
         const origin=bankRow(d,source);if(row.coins<bill.amount||origin.coins<bill.amount)throw Error('两地准备金不足，暂不能兑付');
         // Destination pays cash, then receives the same reserve from the issuer.
-        row.coins-=bill.amount;financeChange(d,e,'player',bill.amount,id);origin.coins-=bill.amount;row.coins+=bill.amount;
+        row.coins-=bill.amount;financeChange(d,e,'player',bill.amount,id,{account:vault(source.id),writer:'finance-bank',eventId:id});origin.coins-=bill.amount;row.coins+=bill.amount;
         d.set(financePath(source.id),origin);d.set(financePath(b.id),row);d.set(financePath(args.contract),{...bill,status:'已兑付',paidAt:now,settledBy:id});
         return {contract:args.contract,received:bill.amount};
     }

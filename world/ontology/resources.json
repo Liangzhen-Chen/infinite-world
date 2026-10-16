@@ -3,13 +3,59 @@
  "kind": "resources",
  "namespace": "core",
  "version": 1,
- "note": "资源种类（01 §1.6）。账户 = (实体, 资源, 用途)。item:* 表示 world/meta/items.json 中可计量模板按 item:<模板ID> 计；生命/魔力不是资源。",
+ "note": "资源种类（01 §1.6）。账户 = (实体, 资源, 用途)。item:* 表示 world/meta/items.json 中可计量模板按 item:<模板ID> 计；生命/魔力不是资源。 源汇账户的写入权与每日预算由写入者在 server-plugin/ledger.mjs 的 declareLedgerWriter 声明（S1a）；用途是流量类别（wage、tax、fee、travel……）。",
  "entries": [
   {
    "id": "coin",
    "label": "货币（按政体铸币分种）",
    "family": "currency",
-   "unit": "铜"
+   "unit": "铜",
+   "note": "铸币族的上位词：各政体、各金属的铸币各是一种资源（money 事实：metal、fineness、issuer、coinage），没有固定换算（15 §15.3）。"
+  },
+  {
+   "id": "coin_river",
+   "label": "西陲铜钱（本地记账铜钱，S1a 起入账本）",
+   "family": "currency",
+   "unit": "文",
+   "broader": "coin",
+   "money": {
+    "metal": "copper",
+    "fineness": 1,
+    "issuer": "西陲河谷",
+    "coinage": "coinage_river"
+   },
+   "ledger": true,
+   "note": "rules.economy.credit.coinages 的 coinage_river；角色钱袋、公账、公库、托管里的铜钱都是它。账户键 <实体>|coin_river|<用途>。"
+  },
+  {
+   "id": "coin_civic",
+   "label": "阶庭方孔钱",
+   "family": "currency",
+   "unit": "枚",
+   "broader": "coin",
+   "money": {
+    "metal": "copper",
+    "fineness": 0.9,
+    "issuer": "中陆诸邦",
+    "coinage": "coinage_civic",
+    "item": "item_coin_civic"
+   },
+   "note": "仍按物品 item_coin_civic 记在行囊与钱庄库存，S1b 随物品迁入账本。"
+  },
+  {
+   "id": "coin_coast",
+   "label": "泊绳银片",
+   "family": "currency",
+   "unit": "枚",
+   "broader": "coin",
+   "money": {
+    "metal": "silver",
+    "fineness": 0.85,
+    "issuer": "琥珀海岸",
+    "coinage": "coinage_coast",
+    "item": "item_coin_coast"
+   },
+   "note": "仍按物品 item_coin_coast 记在行囊与钱庄库存，S1b 随物品迁入账本。"
   },
   {
    "id": "food",
@@ -93,31 +139,56 @@
  ],
  "sourcesAndSinks": [
   {
-   "id": "src:regrowth"
+   "id": "src:regrowth",
+   "label": "再生"
   },
   {
-   "id": "src:birth"
+   "id": "src:birth",
+   "label": "生育繁殖"
   },
   {
-   "id": "src:weather"
+   "id": "src:weather",
+   "label": "降水"
   },
   {
-   "id": "src:mint"
+   "id": "src:mint",
+   "label": "铸币（使用者由法典认可条目给出）"
   },
   {
-   "id": "sink:consume"
+   "id": "sink:consume",
+   "label": "消耗"
   },
   {
-   "id": "sink:decay"
+   "id": "sink:decay",
+   "label": "损耗腐烂"
   },
   {
-   "id": "sink:destroy"
+   "id": "sink:destroy",
+   "label": "损毁"
   },
   {
-   "id": "sink:death"
+   "id": "sink:death",
+   "label": "死亡（无人承接的遗留）"
   },
   {
-   "id": "sink:export"
+   "id": "sink:export",
+   "label": "离开模拟范围（付给未模拟的承运人、行会、市场、兵丁等）"
+  },
+  {
+   "id": "src:genesis",
+   "label": "开局与生成的初始存量（开账、远方生成的人物与公账）"
+  },
+  {
+   "id": "src:import",
+   "label": "从模拟范围外流入（书坊卖书、郡府月入等未模拟的付款方）"
+  },
+  {
+   "id": "src:drift",
+   "label": "双写漂移（内部源：新账不足以覆盖旧字段的支出时记差额；对账要求为零）"
+  },
+  {
+   "id": "sink:melt",
+   "label": "回炉退出流通的铸币（与 src:mint 构成改铸守恒对）"
   }
  ]
 }

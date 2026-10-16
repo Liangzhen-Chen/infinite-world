@@ -1,4 +1,5 @@
 import {counterpart} from './credit.mjs';
+import {workshopFund} from './money.mjs';
 import {financePath as rec,financeInt as int,financeBalance,financeChange,financeTransfer,financeEvent} from './finance-bank.mjs';
 import {groupRepresentative,personHousehold,personOccupation,personBusiness,personConstraint,personOffices,placeSettlement} from './entity-view.mjs';
 import {groupAccountView,ensureGroupAccount,groupAccountPath} from './group-account.mjs';
@@ -125,7 +126,7 @@ export function employmentProductionPlan(d,e,row,{minutes=480,maximum=Infinity}=
 }
 export function settleEmploymentProduction(d,e,row,at,plan){
     const {recipe,owner,toolsOwner,skill,batches,fee,station,quality}=plan,eventId=`${row.id}:${at}`;
-    if(fee){if(station.owner)financeTransfer(d,e,owner,station.owner,fee,`${eventId}:station`);else{financeChange(d,e,owner,-fee,`${eventId}:station`);d.set(['state','workshopFunds',station.id],(d.get('state','workshopFunds',station.id)??0)+fee);}}
+    if(fee){if(station.owner)financeTransfer(d,e,owner,station.owner,fee,`${eventId}:station`);else{financeChange(d,e,owner,-fee,`${eventId}:station`,{account:workshopFund(station.id),writer:'finance-bank',eventId});d.set(['state','workshopFunds',station.id],(d.get('state','workshopFunds',station.id)??0)+fee);}}
     for(const m of recipe.materials)changeEmploymentStock(d,e,owner,m.item,-m.amount*batches,eventId);
     for(const tool of recipe.tools??[])wearItem(d,e,toolsOwner,tool,(recipe.toolWear??1)*batches);
     const instances=[],products=[recipe.output,...(recipe.byproducts??[]).map(p=>({item:p.item,quantity:p.amount}))];

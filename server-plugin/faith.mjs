@@ -1,3 +1,6 @@
+import {purse,sink} from './money.mjs';
+import {declareLedgerWriter} from './ledger.mjs';
+declareLedgerWriter('faith',{sinks:['sink:export']});
 import {temples,templeById,placeAncestors,faithConflictClocks} from './faith-catalog.mjs';
 export {faithConflictClocks} from './faith-catalog.mjs';
 import {faithOf,faithCulture} from './faith-state.mjs';
@@ -41,14 +44,15 @@ function pay(d,e,t,who,coins,items,event){
  coins=int(coins);if((actor(d,e,who)?.coins??0)<coins)throw Error('香火或仪式钱不足');
  for(const [id,n]of Object.entries(items))if(e.quantity(d,who,id)<int(n))throw Error('供品不足');
  for(const id of Object.keys(items))if(d.get('state','inventory',id,'instances')?.length)throw Error('寺观钱粮账不接收具单件身份的物品');
- d.set(coinPath(e,who),actor(d,e,who).coins-coins);changeGroupCoins(d,e,t.id,coins,event);
+ d.set(coinPath(e,who),actor(d,e,who).coins-coins);changeGroupCoins(d,e,t.id,coins,event,{account:purse(e,who),writer:'faith',eventId:event.sourceEvent});
  for(const [id,n]of Object.entries(items))e.itemDelta(d,who,id,-n);
  if(Object.keys(items).length)moveItems(d,e,t,items,1,event);
 }
-function spend(d,e,t,coins,items,event){
+// S1a: books = 钱的去处（受助者、主持或汇）。
+function spend(d,e,t,coins,items,event,books){
  const a=groupAccountView(e,d.get('state'),t.id);
  if(a.coins<coins||Object.entries(items).some(([id,n])=>(a.items[id]??0)<n))throw Error('寺观公库钱粮不足');
- changeGroupCoins(d,e,t.id,-coins,event);if(Object.keys(items).length)moveItems(d,e,t,items,-1,event);
+ changeGroupCoins(d,e,t.id,-coins,event,books);if(Object.keys(items).length)moveItems(d,e,t,items,-1,event);
 }
 export function conversionPolicy(engine,state,who,location){
  const culture=faithCulture(engine,state,who),places=placeAncestors(engine,location);
@@ -133,13 +137,13 @@ function use(d,e,t,args,eventId){
  const who=args.member??'player',minute=d.get('state','minute'),event={kind:args.choice,party:who,minute,sourceEvent:eventId};let lesson=null;
  if(args.choice==='repair'){
   if(typeof e.repairFaithFacility!=='function')throw Error('修缮等待设施接口，不扣钱粮');
-  return clockTransaction(d,tx=>{spend(tx,e,t,s.coins,s.items,event);return e.repairFaithFacility(tx,{temple:t.id,location:t.seat,eventId});});
+  return clockTransaction(d,tx=>{spend(tx,e,t,s.coins,s.items,event,{account:sink('export','facility_repair'),writer:'faith',eventId});return e.repairFaithFacility(tx,{temple:t.id,location:t.seat,eventId});});
  }
  subject(d,e,who,{recipient:['relief','medicine'].includes(args.choice)});if(who!=='player'&&args.consent!==true)throw Error('受助者须当面同意');
  e.assertNpcObligationAction?.(d,[host,who],{minutes:s.minutes,location:d.get('state','location')});
  e.assertNpcAutonomyAction?.(d.get('state'),[host,who],{minutes:s.minutes});
  if(args.choice==='school'&&who==='player')throw Error('义学面向在场居民；玩家沿原授课入口');
- spend(d,e,t,s.coins,s.items,event);
+ spend(d,e,t,s.coins,s.items,event,{account:args.choice==='relief'?purse(e,who):['medicine','school','assembly'].includes(args.choice)?purse(e,host):sink('export','faith_service'),writer:'faith',eventId});
  if(args.choice==='relief'){
   d.set(coinPath(e,who),(actor(d,e,who).coins??0)+s.coins);for(const [id,n]of Object.entries(s.items))e.itemDelta(d,who,id,n);
  }else if(args.choice==='medicine'){

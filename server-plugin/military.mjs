@@ -20,6 +20,9 @@ import {rosterLifeState} from './population.mjs';
 import {clockRoll} from './world-clock.mjs';
 import {creditRules} from './credit.mjs';
 import {spendFactionAssets,creditFactionAssets} from './faction-clock.mjs';
+import {purse,treasury,vault,polityTreasury,transit,source,sink,bookSide,moveCoins,BOOKED} from './money.mjs';
+import {declareLedgerWriter,balance} from './ledger.mjs';
+declareLedgerWriter('military',{sources:{'src:import':{coin_river:1000000}},sinks:['sink:export']});
 
 const DAY=1440,clone=v=>structuredClone(v);
 export const MILITARY_VERSION=1;
@@ -107,40 +110,51 @@ export function partyCoins(engine,state,id){
  }
 }
 // 付出至多 coins（partial 时付得起多少付多少），返回实付；每笔留来源事件。
-export function partyPay(d,engine,id,coins,{sourceEvent,reason,partial=true}){
+// S1a: 每个所属方的账本账户（与 partyCoins 的取数一致）。
+export function partyAccount(engine,state,id){
+ switch(partyKind(engine,state,id)){
+ case 'npc':case 'player':return purse(engine,id);
+ case 'polity':return polityTreasury(id);
+ case 'faction':case 'settlement':case 'organization':return treasury(id);
+ default:return null;
+ }
+}
+// 付出至多 coins（partial 时付得起多少付多少），返回实付；每笔留来源事件。
+// S1a: books = 账本对方账户（收款方或汇），成对的 partyCredit 传 BOOKED。
+export function partyPay(d,engine,id,coins,{sourceEvent,reason,partial=true,books}){
  const state=d.get('state'),have=partyCoins(engine,state,id),amount=Math.min(coins,have);
  if(amount<=0||!partial&&amount<coins)return 0;
  const minute=state.minute;
  switch(partyKind(engine,state,id)){
- case 'npc':d.set(['state','npcs',id,'coins'],have-amount);break;
+ case 'npc':bookSide(d,purse(engine,id),-amount,books);d.set(['state','npcs',id,'coins'],have-amount);break;
  case 'player':{
-  let left=amount;const cash=Math.min(left,state.player.coins);d.set(['state','player','coins'],state.player.coins-cash);left-=cash;
+  let left=amount;const cash=Math.min(left,state.player.coins);bookSide(d,purse(engine,'player'),-cash,books);d.set(['state','player','coins'],state.player.coins-cash);left-=cash;
   // U2：本人现钱不够时由钱庄存款代付。
-  for(const b of playerBanks(engine,state)){if(!left)break;const row=clone(b),take=Math.min(left,row.accounts.player,row.coins);row.accounts.player-=take;row.coins-=take;left-=take;d.set(rec(b.id),row);}
+  for(const b of playerBanks(engine,state)){if(!left)break;const row=clone(b),take=Math.min(left,row.accounts.player,row.coins);bookSide(d,vault(b.id),-take,books);row.accounts.player-=take;row.coins-=take;left-=take;d.set(rec(b.id),row);}
   break;}
- case 'faction':if(!spendFactionAssets(d,engine,id,{coins:amount},{sourceEvent,minute,kind:'military'}))return 0;break;
- case 'polity':{const row=polityRow(d,engine,id);row.coins-=amount;row.ledger=[...row.ledger,{amount:-amount,reason,sourceEvent,minute}].slice(-40);d.set(rec(`polity:${id}`),row);break;}
- case 'settlement':d.set(['state','settlements',id,'treasury'],state.settlements[id].treasury-amount);break;
+ case 'faction':if(!spendFactionAssets(d,engine,id,{coins:amount},{sourceEvent,minute,kind:'military'},books))return 0;break;
+ case 'polity':{const row=polityRow(d,engine,id);bookSide(d,polityTreasury(id),-amount,books);row.coins-=amount;row.ledger=[...row.ledger,{amount:-amount,reason,sourceEvent,minute}].slice(-40);d.set(rec(`polity:${id}`),row);break;}
+ case 'settlement':bookSide(d,treasury(id),-amount,books);d.set(['state','settlements',id,'treasury'],state.settlements[id].treasury-amount);break;
  case 'organization':{
-  if(groupAccountView(engine,state,id)){changeGroupCoins(d,engine,id,-amount,{sourceEvent,reason,minute});break;}
-  const row=clone(d.get(...rec(`organization:${id}`))),org=organization(engine,state,id);row.treasury-=amount;
+  if(groupAccountView(engine,state,id)){changeGroupCoins(d,engine,id,-amount,{sourceEvent,reason,minute},books);break;}
+  const row=clone(d.get(...rec(`organization:${id}`))),org=organization(engine,state,id);bookSide(d,treasury(id),-amount,books);row.treasury-=amount;
   row.ledger=[...row.ledger??[],{kind:'军需',amount:-amount,party:null,minute,sourceEvent,reason,balance:org.treasury-amount}];d.set(rec(`organization:${id}`),row);break;}
  default:return 0;
  }
  return amount;
 }
-export function partyCredit(d,engine,id,coins,{sourceEvent,reason}){
+export function partyCredit(d,engine,id,coins,{sourceEvent,reason,books}){
  if(coins<=0)return;
  const state=d.get('state'),minute=state.minute;
  switch(partyKind(engine,state,id)){
- case 'npc':d.set(['state','npcs',id,'coins'],(state.npcs[id].coins??0)+coins);break;
- case 'player':d.set(['state','player','coins'],state.player.coins+coins);break;
- case 'faction':creditFactionAssets(d,engine,id,{coins},{sourceEvent,minute,kind:'military'});break;
- case 'polity':{const row=polityRow(d,engine,id);row.coins+=coins;row.ledger=[...row.ledger,{amount:coins,reason,sourceEvent,minute}].slice(-40);d.set(rec(`polity:${id}`),row);break;}
- case 'settlement':d.set(['state','settlements',id,'treasury'],state.settlements[id].treasury+coins);break;
+ case 'npc':bookSide(d,purse(engine,id),coins,books);d.set(['state','npcs',id,'coins'],(state.npcs[id].coins??0)+coins);break;
+ case 'player':bookSide(d,purse(engine,'player'),coins,books);d.set(['state','player','coins'],state.player.coins+coins);break;
+ case 'faction':creditFactionAssets(d,engine,id,{coins},{sourceEvent,minute,kind:'military'},books);break;
+ case 'polity':{const row=polityRow(d,engine,id);bookSide(d,polityTreasury(id),coins,books);row.coins+=coins;row.ledger=[...row.ledger,{amount:coins,reason,sourceEvent,minute}].slice(-40);d.set(rec(`polity:${id}`),row);break;}
+ case 'settlement':bookSide(d,treasury(id),coins,books);d.set(['state','settlements',id,'treasury'],state.settlements[id].treasury+coins);break;
  case 'organization':{
-  if(groupAccountView(engine,state,id)){changeGroupCoins(d,engine,id,coins,{sourceEvent,reason,minute});break;}
-  const row=clone(d.get(...rec(`organization:${id}`))),org=organization(engine,state,id);row.treasury+=coins;
+  if(groupAccountView(engine,state,id)){changeGroupCoins(d,engine,id,coins,{sourceEvent,reason,minute},books);break;}
+  const row=clone(d.get(...rec(`organization:${id}`))),org=organization(engine,state,id);bookSide(d,treasury(id),coins,books);row.treasury+=coins;
   row.ledger=[...row.ledger??[],{kind:'进项',amount:coins,party:null,minute,sourceEvent,reason,balance:org.treasury+coins}];d.set(rec(`organization:${id}`),row);break;}
  }
 }
@@ -261,10 +275,10 @@ function supplyWeek(d,engine,a,at,src,blocked){
    const price=quote.price;
    const quantity=a.party===a.base?want:Math.min(want,Math.floor(partyCoins(engine,state,a.party)/price));
    got=quote.closed?0:drawArmyRations(d,engine,a.base,quantity); 
-   if(got&&a.party!==a.base){paid=partyPay(d,engine,a.party,got*price,{sourceEvent:`${src}:grain`,reason:`${a.name}提粮`});partyCredit(d,engine,a.base,paid,{sourceEvent:`${src}:grain`,reason:`${a.name}提粮`});}
+   if(got&&a.party!==a.base){paid=partyPay(d,engine,a.party,got*price,{sourceEvent:`${src}:grain`,reason:`${a.name}提粮`,books:{account:partyAccount(engine,d.get('state'),a.base),writer:'military',eventId:src}});partyCredit(d,engine,a.base,paid,{sourceEvent:`${src}:grain`,reason:`${a.name}提粮`,books:BOOKED});}
   }else if(a.supply==='purchase'){
    const quote=armySupplyQuote(d,engine,a.base,a.location,at),price=Math.ceil(quote.price*(season===3?m.supply.winterPriceFactor:1)*(famine?2:1)),afford=quote.closed||famine?0:Math.floor(partyCoins(engine,state,a.party)/price);
-   got=Math.min(want,afford);if(got)paid=partyPay(d,engine,a.party,got*price,{sourceEvent:`${src}:ration`,reason:`${a.name}买口粮`});
+   got=Math.min(want,afford);if(got)paid=partyPay(d,engine,a.party,got*price,{sourceEvent:`${src}:ration`,reason:`${a.name}买口粮`,books:{account:sink('export','army_ration'),writer:'military',eventId:src}});
   }else if(a.supply==='forage'&&!famine)got=Math.floor(want*(season===3?m.supply.winterForageBps:10000)/10000);
  }
  a.food+=got;const eaten=Math.min(a.food,need);a.food-=eaten;
@@ -292,19 +306,21 @@ export function armyWeek(d,engine,a,at,src,{blocked=false}={}){
 // 每月发饷：常备、征丁、私兵按月饷；佣兵按合同付给佣兵团，欠饷即散伙。
 export function armyPayday(d,engine,a,at,src){
  const m=rules(engine),paidSoldiers=a.regular+a.levy.count+a.private,owed=paidSoldiers*a.payCopperMonth+a.arrears;
- const paid=owed?partyPay(d,engine,a.party,owed,{sourceEvent:`${src}:pay`,reason:`${a.name}月饷`}):0;
+ const chest=transit(armyKey(a.id)),paid=owed?partyPay(d,engine,a.party,owed,{sourceEvent:`${src}:pay`,reason:`${a.name}月饷`,books:{account:chest,writer:'military',eventId:src}}):0;
  a.arrears=owed-paid;
  if(owed){
   a.morale=Math.max(0,Math.min(100,a.morale+(a.arrears?m.morale.unpaid:m.morale.paid)));
   // 被征的人物按人头领到自己那份；其余发给未登记的兵丁。
   const share=paidSoldiers?Math.floor(paid/paidSoldiers):0;
-  for(const p of a.levy.people){const n=d.get('state','npcs',p.id);if(n&&share)d.set(['state','npcs',p.id,'coins'],(n.coins??0)+share);}
+  for(const p of a.levy.people){const n=d.get('state','npcs',p.id);if(n&&share){moveCoins(d,{from:chest,to:purse(engine,p.id),amount:share,writer:'military',eventId:src});d.set(['state','npcs',p.id,'coins'],(n.coins??0)+share);}}
+  // 其余饷钱发给未登记的兵丁，离开模拟范围。
+  moveCoins(d,{from:chest,to:sink('export','army_pay'),amount:balance(d,chest),writer:'military',eventId:src});
   log(a,{kind:'月饷',owed,paid,arrears:a.arrears,minute:at,sourceEvent:src});
   const org=clone(d.get(...rec(`organization:${a.id}`)));if(org){org.ledger=[...org.ledger??[],{kind:'拨饷',amount:paid,party:a.party,minute:at,sourceEvent:src},{kind:'发饷',amount:-paid,party:null,minute:at,sourceEvent:src}].slice(-40);d.set(rec(`organization:${a.id}`),org);}
  }
  if(a.mercenary){
-  const merc=a.mercenary,cost=merc.count*merc.payCopperMonth,got=partyPay(d,engine,a.party,cost,{sourceEvent:`${src}:merc`,reason:`${a.name}佣兵合同`,partial:false});
-  if(got){partyCredit(d,engine,merc.org,got,{sourceEvent:`${src}:merc`,reason:`${a.name}佣金`});log(a,{kind:'佣金',org:merc.org,paid:got,minute:at,sourceEvent:src});}
+  const merc=a.mercenary,cost=merc.count*merc.payCopperMonth,got=partyPay(d,engine,a.party,cost,{sourceEvent:`${src}:merc`,reason:`${a.name}佣兵合同`,partial:false,books:{account:partyAccount(engine,d.get('state'),merc.org),writer:'military',eventId:src}});
+  if(got){partyCredit(d,engine,merc.org,got,{sourceEvent:`${src}:merc`,reason:`${a.name}佣金`,books:BOOKED});log(a,{kind:'佣金',org:merc.org,paid:got,minute:at,sourceEvent:src});}
   else{
    log(a,{kind:'佣兵散伙',org:merc.org,count:merc.count,minute:at,sourceEvent:src});
    if(partyKind(engine,d.get('state'),a.party))adjustStanding(d,engine,merc.org,a.party==='player'?'player':a.party,-10,{sourceEvent:`${src}:merc`,reason:'欠付佣金',minute:at});
@@ -324,7 +340,7 @@ export function advanceMilitary(d,engine,{before,after}){
   const at=day*DAY,week=day%m.weekDays===0,month=day%m.monthDays===0;if(!week&&!month)continue;
   if(week)ensureArmies(d,engine,at);
   // 郡府每月的税入进郡府公库（贡赋另由战事结算记入）。
-  if(month)for(const p of m.polities??[])if(p.incomeCopperMonth)partyCredit(d,engine,p.id,p.incomeCopperMonth,{sourceEvent:`military:polity:${p.id}:${day}`,reason:'郡府月入'});
+  if(month)for(const p of m.polities??[])if(p.incomeCopperMonth)partyCredit(d,engine,p.id,p.incomeCopperMonth,{sourceEvent:`military:polity:${p.id}:${day}`,reason:'郡府月入',books:{account:source('import','tax'),writer:'military',eventId:`military:polity:${p.id}:${day}`}});
   for(const row of armies(d.get('state'))){
    if(['溃散','待征'].includes(row.status)&&!armyStrength(row))continue;
    const a=clone(row),src=`military:${a.id}:${day}`;
@@ -389,7 +405,7 @@ function duty(engine,d,args,eventId){
  }
  const campaign=campaignDays>0;
  a=armyOf(d,s.army);
- const wage=partyPay(d,engine,a.party,m.service.dutyCopperPerDay*days,{sourceEvent:`${eventId}:duty`,reason:`${a.name}执勤饷`});
+ const wage=partyPay(d,engine,a.party,m.service.dutyCopperPerDay*days,{sourceEvent:`${eventId}:duty`,reason:`${a.name}执勤饷`,books:{account:purse(engine,'player'),writer:'military',eventId}});
  if(wage)d.set(['state','player','coins'],d.get('state','player','coins')+wage);
  a.training=Math.min(m.soldier.trainingCap,a.training+m.service.trainingPerDutyDay*days);saveArmy(d,a);
  const now=clone(service(d.get('state')));now.days+=days;now.campaignDays+=campaignDays;now.paid+=wage;now.lastDuty={minute:d.get('state','minute'),days,location:a.location,war:a.war,sourceEvent:eventId};
@@ -427,13 +443,13 @@ function recruit(engine,d,args,eventId){
   if(hired+quantity>company.soldiers)throw Error(`${nameOf(engine,company.org)}眼下只剩${company.soldiers-hired}人可雇`);
   if(a.mercenary&&a.mercenary.org!==company.org)throw Error('一支队伍只与一家佣兵团订约');
   const cost=quantity*company.payCopperMonth;
-  if(partyPay(d,engine,party,cost,{sourceEvent:eventId,reason:'佣兵首月佣金',partial:false})!==cost)throw Error(`首月佣金${cost}铜付不出；可先存入组织公库或向钱庄借款`);
-  partyCredit(d,engine,company.org,cost,{sourceEvent:eventId,reason:'佣兵首月佣金'});
+  if(partyPay(d,engine,party,cost,{sourceEvent:eventId,reason:'佣兵首月佣金',partial:false,books:{account:partyAccount(engine,d.get('state'),company.org),writer:'military',eventId}})!==cost)throw Error(`首月佣金${cost}铜付不出；可先存入组织公库或向钱庄借款`);
+  partyCredit(d,engine,company.org,cost,{sourceEvent:eventId,reason:'佣兵首月佣金',books:BOOKED});
   a.mercenary={org:company.org,count:(a.mercenary?.count??0)+quantity,payCopperMonth:company.payCopperMonth};
   a.training=Math.round((a.training*(armyStrength(a)-quantity)+company.training*quantity)/armyStrength(a));
  }else{
   const cost=quantity*m.recruit.signOnCopper;
-  if(cost&&partyPay(d,engine,party,cost,{sourceEvent:eventId,reason:'募兵安家钱',partial:false})!==cost)throw Error(`安家钱${cost}铜付不出；可先存入组织公库或向钱庄借款`);
+  if(cost&&partyPay(d,engine,party,cost,{sourceEvent:eventId,reason:'募兵安家钱',partial:false,books:{account:sink('export','recruit'),writer:'military',eventId}})!==cost)throw Error(`安家钱${cost}铜付不出；可先存入组织公库或向钱庄借款`);
   a.private+=quantity;
  }
  log(a,{kind:merc?'雇佣':'招募',quantity,minute,sourceEvent:eventId});saveArmy(d,a);

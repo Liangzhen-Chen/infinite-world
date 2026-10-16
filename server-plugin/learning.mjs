@@ -1,3 +1,6 @@
+import {purse,moveCoins} from './money.mjs';
+import {declareLedgerWriter} from './ledger.mjs';
+declareLedgerWriter('learning');
 import {educationAction} from './education.mjs';
 import {personTeaching} from './entity-view.mjs';
 import {effectiveProficiency,certifiedForSkill}from'./professions.mjs';
@@ -95,6 +98,7 @@ export function learn(d,args,id){
     if(minutes<1)throw new Error('学习必须花费实际时间');
     const start=d.get('state','minute');
     if(fee){
+        moveCoins(d,{from:purse(null,'player'),to:purse(null,source),amount:fee,writer:'learning',eventId:id});
         d.set(['state','player','coins'],d.get('state','player','coins')-fee);
         d.set(['state','npcs',source,'coins'],d.get('state','npcs',source,'coins')+fee);
     }

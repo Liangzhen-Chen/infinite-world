@@ -1,3 +1,6 @@
+import {purse,escrow as escrowAccount,moveCoins} from './money.mjs';
+import {declareLedgerWriter} from './ledger.mjs';
+declareLedgerWriter('quest-board');
 import {standing,HOSTILE} from './standing.mjs';
 import {transferItems,heldUnit,wearItem,changeItems} from './items.mjs';
 import {awardExperience} from './progression.mjs';
@@ -38,8 +41,8 @@ function close(d,engine,q,status,reason,minute){
  // A publicly funded reward goes back to the village treasury, not to the official.
  // U17: commissions escrowed from a faction treasury or a settlement account go back there.
  if(!paid&&refundQuestFunding(d,engine,q,amount,minute));
- else if(!paid&&q.fundedBy)refundPublic(d,{settlement:q.fundedBy.settlement,copper:amount,month:q.fundedBy.month,purpose:`委托退款 ${q.id}`,sourceEvent:`${q.id}:refund`});
- else d.set([...actorPath(who),'coins'],engine.actor(d,who).coins+amount);
+ else if(!paid&&q.fundedBy)refundPublic(d,{settlement:q.fundedBy.settlement,copper:amount,month:q.fundedBy.month,purpose:`委托退款 ${q.id}`,sourceEvent:`${q.id}:refund`,books:{account:escrowAccount(q.id),writer:'quest-board',eventId:`${q.id}:refund`}});
+ else{moveCoins(d,{from:escrowAccount(q.id),to:purse(engine,who),amount,writer:'quest-board',eventId:`${q.id}:${status}`});d.set([...actorPath(who),'coins'],engine.actor(d,who).coins+amount);}
  const row={...q,status,reason,escrow:0,resolvedAt:minute,...(paid?{rewardPaid:amount}:{refund:amount})};
  d.set(['state','quests',q.id],row);
  const booking=d.get('state','obligations',q.reservation);
@@ -108,8 +111,8 @@ export function questBoardAction(d,engine,args,eventId){
   if(publisher==='player'&&engine.byId.get(location)?.access?.mode==='private')throw Error('私人发单须在合法公共地点张贴');
   const deadline=integer(args.deadline??now+10*DAY,now+1,now+30*DAY,'期限'),quest=`quest_${eventId}`;
   let fundedBy=null;
-  if(publicFund){const settlement=engine.resolve(args.settlement,'loc'),spend=spendPublic(d,engine,{settlement,copper:reward,power:'quest_publish',purpose:`委托托管 ${quest}`,sourceEvent:quest});fundedBy={settlement,month:spend.month,spend:spend.id};}
-  else d.set([...actorPath(publisher),'coins'],actor.coins-reward);
+  if(publicFund){const settlement=engine.resolve(args.settlement,'loc'),spend=spendPublic(d,engine,{settlement,copper:reward,power:'quest_publish',purpose:`委托托管 ${quest}`,sourceEvent:quest,books:{account:escrowAccount(quest),writer:'quest-board',eventId:quest}});fundedBy={settlement,month:spend.month,spend:spend.id};}
+  else{moveCoins(d,{from:purse(engine,publisher),to:escrowAccount(quest),amount:reward,writer:'quest-board',eventId:quest});d.set([...actorPath(publisher),'coins'],actor.coins-reward);}
   const row={id:quest,boardVersion:1,publisher,personal,grade,reward,escrow:reward,objective:verified,content,location,deadline,createdAt:now,status:'公开',taker:null,...(fundedBy?{fundedBy}:{}),...(args.cultural===true?{cultural:true}:{})};
   d.set(['state','quests',quest],row);
   if(!personal)d.set(['state','questQuota',`${rights.month}_${publisher}`],rights.usedD+engine.rules.quests.quotaUnits[grade]);

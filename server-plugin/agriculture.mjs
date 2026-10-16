@@ -1,3 +1,6 @@
+import {purse,treasury as treasuryAccount,moveCoins} from './money.mjs';
+import {declareLedgerWriter} from './ledger.mjs';
+declareLedgerWriter('agriculture');
 import {granaryCapacity}from'./facility-state.mjs';
 import {legalCodeAt} from './law-codes.mjs';
 import {consumeGrowthDay,validateGrowthRules,validateGrowthWorld}from'./magic-growth.mjs';
@@ -230,7 +233,7 @@ function settleVillageTrade(d,engine,p,args,eventId){
   if(d.get('state','player','coins')<cost)throw Error('提粮须实际支付货款；未经同意不得扣取NPC铜钱');
   const goods=takeGrain(r,stock,contract.quantity,true);
   engine.itemDelta(d,'player',contract.item,contract.quantity);
-  d.set(['state','player','coins'],d.get('state','player','coins')-cost);stock.treasury+=cost;r.ledger.sold+=contract.quantity;
+  moveCoins(d,{from:purse(engine,'player'),to:treasuryAccount(p.settlement),amount:cost,writer:'agriculture',eventId});d.set(['state','player','coins'],d.get('state','player','coins')-cost);stock.treasury+=cost;r.ledger.sold+=contract.quantity;
   fiscal.advanceCopper+=cost;fiscal.exportedFood+=contract.quantity;
   fiscal.entries.push({eventId,contract:contract.id,phase:'pickup',other:'player',food:-contract.quantity,copper:cost,advanceCopper:cost,taxCopper:0});
   d.set(['state','records',tradeKey],{category:'village_trade',contract:contract.id,seller:contract.seller,buyer:contract.buyer,carrier:'player',item:contract.item,quantity:contract.quantity,prepaidCopper:cost,paidCopper:0,receivedCopper:0,taxCopper:0,expectedTaxCopper:tax,status:'in-transit',pickupDay:day,dueDay:day+contract.deliveryDays,batches:goods.parts,pickupEvent:eventId});
@@ -242,7 +245,7 @@ function settleVillageTrade(d,engine,p,args,eventId){
   if(stock.food+r.field.seedBank+contract.quantity>granaryCapacity(engine,d.get('state'),p.settlement,r.granary.capacity))throw Error('收货仓容不足，不能确认未入仓粮物');
   engine.itemDelta(d,'player',contract.item,-contract.quantity);
   for(const [i,b] of old.batches.entries())addBatch(r,stock,p,b.amount,{id:`trade:${eventId}:${i}`,day:b.harvestDay,expiresDay:b.expiresDay,source:`粮约${contract.id}实际送达`,capacity:granaryCapacity(engine,d.get('state'),p.settlement,r.granary.capacity)});
-  r.ledger.donated+=contract.quantity;stock.treasury-=cost;d.set(['state','player','coins'],d.get('state','player','coins')+cost);
+  moveCoins(d,{from:treasuryAccount(p.settlement),to:purse(engine,'player'),amount:cost,writer:'agriculture',eventId});r.ledger.donated+=contract.quantity;stock.treasury-=cost;d.set(['state','player','coins'],d.get('state','player','coins')+cost);
   fiscal.purchasesCopper+=cost;fiscal.importedFood+=contract.quantity;
   fiscal.entries.push({eventId,contract:contract.id,phase:'deliver',other:'player',food:contract.quantity,copper:-cost});
   const sourceFiscalKey=`village-fiscal:${contract.seller}`,sourceFiscal=clone(d.get('state','records',sourceFiscalKey));
@@ -282,7 +285,7 @@ export function agricultureAction(d,args,eventId){
             const reserve=s.population*p.reserveDays,available=Math.max(0,r.batches.filter(b=>b.kind==='grain').reduce((n,b)=>n+b.amount,0)-reserve),price=this.byId.get(item).basePrice,cost=quantity*price;
             if(quantity>available)throw new Error('粮仓没有这份可售余粮，过冬储粮和种粮不出售');if(d.get('state','player','coins')<cost)throw new Error('买粮余额不足');
             const paid=takeGrain(r,s,quantity);if(paid!==quantity)throw new Error('粮仓实际库存不足');
-            this.itemDelta(d,'player',item,quantity);d.set(['state','player','coins'],d.get('state','player','coins')-cost);s.treasury+=cost;r.ledger.sold+=quantity;
+            moveCoins(d,{from:purse(this,'player'),to:treasuryAccount(id),amount:cost,writer:'agriculture',eventId});this.itemDelta(d,'player',item,quantity);d.set(['state','player','coins'],d.get('state','player','coins')-cost);s.treasury+=cost;r.ledger.sold+=quantity;
         }else if(operation==='donate'){
             if(this.quantity(d,'player',item)<quantity)throw new Error('行囊谷物不足');this.itemDelta(d,'player',item,-quantity);
             r.ledger.donated+=quantity;addBatch(r,s,p,quantity,{id:`donation:${eventId}`,day:Math.floor(d.get('state','minute')/1440),source:'玩家实际交粮',capacity:granaryCapacity(this,d.get('state'),p.settlement,r.granary.capacity),expiresDay:Math.floor(d.get('state','minute')/1440)+this.byId.get(item).shelfLifeDays});

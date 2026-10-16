@@ -1,3 +1,6 @@
+import {purse,moveCoins} from './money.mjs';
+import {declareLedgerWriter} from './ledger.mjs';
+declareLedgerWriter('elections');
 import {eligible,governanceAction} from './governance.mjs';
 import {organization,electOrganizationLeader} from './organizations.mjs';
 import {standing,adjustStanding} from './standing.mjs';
@@ -74,7 +77,7 @@ export function electionAction(d,args,id){
         if(gift)transferItems(d,this,'player',targets[0],gift,1);
         const frauds=[...row.frauds];let disqualified=row.disqualified??false;
         if(coins){
-            d.set(['state','player','coins'],d.get('state','player','coins')-coins);d.set([...actorPath(this.world,targets[0]),'coins'],d.get(...actorPath(this.world,targets[0]),'coins')+coins);
+            moveCoins(d,{from:purse(this,'player'),to:purse(this,targets[0]),amount:coins,writer:'elections',eventId:id});d.set(['state','player','coins'],d.get('state','player','coins')-coins);d.set([...actorPath(this.world,targets[0]),'coins'],d.get(...actorPath(this.world,targets[0]),'coins')+coins);
             const key=`vote_gift:${id}`,lie=recordLie(d,this,{source:'player',subject:observer,key,content:'这笔赠礼与选票无关。',truth:'这笔钱是要求对方投我一票的贿选款。',motive:'掩盖贿选',knowers:[targets[0]]},id);
             const exposed=Boolean(lie.exposed?.length);
             const incident=exposed?registerIncident(d,this,{victim:targets[0],offense:'vote_buying',value:coins,witnesses:[targets[0],observer],eventId:`${id}_exposed`,optional:true}):null;

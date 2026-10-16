@@ -15,7 +15,9 @@ async function trace({quiet=false,seed='advance-registry',steps}){
  const engine=new WorldEngine(w);let doc=engine.createCharacter(legacy,{},seed);const out=[];
  for(const [i,[tool,args]]of steps.entries()){
   const r=await engine.reduce(doc,{tool,args,eventId:`step_${i}`});doc=applyPatches(doc,r.patches);
-  out.push(hash({state:doc.state,patches:r.patches,messages:r.messages}));
+  // S1a: the books (document.ledger, a sibling of state) are checked by tests/ledger-reconcile.test.mjs;
+  // the golden hashes cover the game state and its patches, which the ledger must leave unchanged.
+  out.push(hash({state:doc.state,patches:r.patches.filter(p=>p.path[0]!=='ledger'),messages:r.messages}));
  }
  return out;
 }

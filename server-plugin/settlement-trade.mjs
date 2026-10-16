@@ -1,3 +1,6 @@
+import {escrow as escrowAccount,treasury as treasuryAccount,moveCoins} from './money.mjs';
+import {declareLedgerWriter} from './ledger.mjs';
+declareLedgerWriter('settlement-trade');
 import {granaryCapacity} from './facility-state.mjs';
 import {drawGranary,forestWaterPriceFactor} from './agriculture.mjs';
 import {itemTraits,hasTrait} from './traits.mjs';
@@ -137,6 +140,7 @@ function arrive(d,engine,o,minute){
     for(const [i,batch]of o.batches.entries()){
         const amount=Math.min(remaining,batch.amount);if(amount)b.r.batches.push({...batch,amount,id:`${o.id}:${i}`,source:`周贸易${o.id}原批${batch.id}`});remaining-=amount;
     }
+    moveCoins(d,{from:escrowAccount(`settlement-trade:${o.id}`),to:treasuryAccount(o.seller),amount:gross,writer:'settlement-trade',eventId:o.id});moveCoins(d,{from:escrowAccount(`settlement-trade:${o.id}`),to:treasuryAccount(o.buyer),amount:refund,writer:'settlement-trade',eventId:o.id});
     b.s.food+=accepted;b.r.ledger.donated+=accepted;b.s.treasury+=refund;a.s.treasury+=gross;
     const sf=fiscal(d,o.seller),bf=fiscal(d,o.buyer);
     sf.salesGrossCopper+=gross;sf.salesNetCopper+=gross-tax;sf.taxReceiptsCopper+=tax;
@@ -173,7 +177,7 @@ function dispatch(d,engine,lane,minute){
     a.r.batches.sort((x,y)=>x.expiresDay-y.expiresDay||x.id.localeCompare(y.id));
     for(const batch of a.r.batches){if(batch.kind!=='grain'||batch.expiresDay<=day)continue;const amount=Math.min(remaining,batch.amount);if(amount)parts.push({...batch,amount});batch.amount-=amount;remaining-=amount;if(!remaining)break;}
     a.r.batches=a.r.batches.filter(b=>b.amount>0);a.s.food-=quantity;a.r.ledger.sold+=quantity;
-    const cost=quantity*price;b.s.treasury-=cost;
+    const cost=quantity*price;moveCoins(d,{from:treasuryAccount(lane.buyer),to:escrowAccount(`settlement-trade:${id}`),amount:cost,writer:'settlement-trade',eventId:id});b.s.treasury-=cost;
     const sf=fiscal(d,lane.seller),bf=fiscal(d,lane.buyer);
     sf.exportedFood+=quantity;sf.entries.push({eventId:id,contract:id,phase:'pickup',other:lane.buyer,minute,food:-quantity,copper:0,advanceCopper:0,taxCopper:0});
     bf.entries.push({eventId:id,contract:id,phase:'reserve',other:lane.seller,minute,food:0,copper:-cost,escrowCopper:cost});

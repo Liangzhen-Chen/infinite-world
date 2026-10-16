@@ -1,3 +1,4 @@
+import {treasury as treasuryAccount,bookSide} from './money.mjs';
 import {reviewUpperOffice} from './high-nobility.mjs';
 import {domainAuthority} from './noble-state.mjs';
 import {entityTransition} from './entity-transitions.mjs';
@@ -393,7 +394,8 @@ export const monthOf=minute=>Math.floor(minute/MONTH);
 export function publicSpent(state,settlement,month){
     return Object.values(state.records??{}).filter(r=>r.category==='governance_spend'&&r.settlement===settlement&&r.month===month).reduce((n,r)=>n+r.copper,0);
 }
-export function spendPublic(d,engine,{settlement,copper,power,purpose,sourceEvent}){
+// S1a: books = 账本对方账户（工程或委托托管）。
+export function spendPublic(d,engine,{settlement,copper,power,purpose,sourceEvent,books}){
     if(!Number.isSafeInteger(copper)||copper<0)throw Error('公款数额无效');
     const state=d.get('state'),offices=playerOffices(state,{settlement,power},engine);
     if(!offices.length)throw Error('没有在任官职授予此项公款权限');
@@ -403,14 +405,16 @@ export function spendPublic(d,engine,{settlement,copper,power,purpose,sourceEven
     if(!safe(treasury)||treasury-copper<reserve)throw Error(`公账余额不足：动用后须留底${reserve}铜`);
     const id=`governance_spend:${sourceEvent}`;
     if(d.get(...path(id)))throw Error('公款支出编号已占用');
+    bookSide(d,treasuryAccount(settlement),-copper,books);
     d.set(['state','settlements',settlement,'treasury'],treasury-copper);
     const row={category:'governance_spend',id,settlement,holder:'player',office:offices[0].office,month,copper,purpose,minute:state.minute,sourceEvent};
     d.set(path(id),row);return row;
 }
 // Money returned to the treasury (refund, unused wages) nets against the month it was drawn in.
-export function refundPublic(d,{settlement,copper,month,purpose,sourceEvent}){
+export function refundPublic(d,{settlement,copper,month,purpose,sourceEvent,books}){
     const id=`governance_spend:${sourceEvent}`;
     if(!copper||d.get(...path(id)))return d.get(...path(id))??null;
+    bookSide(d,treasuryAccount(settlement),copper,books);
     d.set(['state','settlements',settlement,'treasury'],d.get('state','settlements',settlement,'treasury')+copper);
     const row={category:'governance_spend',id,settlement,holder:'player',month,copper:-copper,purpose,minute:d.get('state','minute'),sourceEvent};
     d.set(path(id),row);return row;

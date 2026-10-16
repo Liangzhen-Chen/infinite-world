@@ -19,6 +19,9 @@ import {isReputationSettlement} from './reputation-registry.mjs';
 import {registerMagicViolation} from './law.mjs';
 import {personView,personOffices,settlementGovernment,settlementPopulation} from './entity-view.mjs';
 import {groupAccountView,changeGroupCoins} from './group-account.mjs';
+import {purse} from './money.mjs';
+import {declareLedgerWriter} from './ledger.mjs';
+declareLedgerWriter('magic-economy');
 
 const DAY=1440,MONTH=30*DAY,SEASON=90*DAY,KINDS=['preserve','irrigate','growth','purify'],MODES=['fee','license','restrict'];
 const key=sid=>`magic-economy:${sid}`;
@@ -128,7 +131,7 @@ function regulate(d,engine,row,sid,r,minute,eventId,location){
   const coins=d.get('state','player','coins'),account=groupAccountView(engine,d.get('state'),sid);
   if(coins<copper||!account)return false;
   d.set(['state','player','coins'],coins-copper);
-  changeGroupCoins(d,engine,sid,copper,{kind:'生活魔法收费',levy:kind,collector:government.head.value,minute,sourceEvent:eventId});
+  changeGroupCoins(d,engine,sid,copper,{kind:'生活魔法收费',levy:kind,collector:government.head.value,minute,sourceEvent:eventId},{account:purse(engine,'player'),writer:'magic-economy',eventId});
   d.set(['state','records',`magic-levy:${eventId}`],{category:'magic_levy',settlement:sid,collector:government.head.value,kind,copper,month,minute,sourceEvent:eventId});
   row.ledger.feesCopper+=copper;return true;
  };

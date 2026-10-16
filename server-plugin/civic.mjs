@@ -1,3 +1,6 @@
+import {purse,treasury as treasuryAccount,moveCoins} from './money.mjs';
+import {declareLedgerWriter} from './ledger.mjs';
+declareLedgerWriter('civic');
 import {settlementHead,personSimulation} from './entity-view.mjs';
 import {civicRules} from '../world/design/m5-civic-rules.mjs';
 import {npcHousehold} from './npc-life.mjs';
@@ -169,6 +172,7 @@ export function civicAction(d,args,eventId){
     const treasury=d.get('state','settlements',settlement,'treasury');
     if(!integer(treasury))throw Error('公库余额未知或非法，不能收费');
     const row={category:`civic_${kind}`,subject:'player',settlement,status:'已登记',since:proof.since,sources:proof.sources,sponsor:sponsor.sponsor,authority,fee:gate.fee,minute:d.get('state','minute'),sourceEvent:eventId,crimeReview:'已核验案件状态'};
+    moveCoins(d,{from:purse(null,'player'),to:treasuryAccount(settlement),amount:gate.fee,writer:'civic',eventId:eventId});
     d.set(['state','player','coins'],d.get('state','player','coins')-gate.fee);
     d.set(['state','settlements',settlement,'treasury'],treasury+gate.fee);
     d.set(recordPath(id),row);return {application:row,note:'身份登记不授予土地、官职或公共物资权限。'};

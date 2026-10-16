@@ -1,3 +1,6 @@
+import {purse,sink,moveCoins} from './money.mjs';
+import {declareLedgerWriter} from './ledger.mjs';
+declareLedgerWriter('npc-schedule',{sinks:['sink:export']});
 import {educationSlot,educationCourses,courseWindow} from './education-state.mjs';
 import {facilityView} from './facility-state.mjs';
 // Routine movement is recorded in the same event as elapsed world time.
@@ -148,6 +151,7 @@ function settleSchedules(d,engine,before,after,{promote=false}={}){
                 catch{activity('行程受阻');}
                 if(route&&npc.coins<route.cost){route=null;activity('路费不足，暂留原处');}
                 if(route){
+                    moveCoins(d,{from:purse(null,npcId),to:sink('export','travel'),amount:route.cost,writer:'npc-schedule',eventId:null});
                     npc.coins-=route.cost;
                     npc.scheduleTravel={from:npc.location,to:slot.location,depart:cursor,arrive:cursor+route.minutes,edges:route.edges};
                     npc.location=null;activity('赶路');continue;

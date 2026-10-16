@@ -142,6 +142,7 @@ const SYSTEMS=[
  {id:'base_standing',layer:'base',name:'统一立场',card:'K4/K5',modules:['standing.mjs','entity-view.mjs']},
  {id:'base_effects',layer:'base',name:'效果表',card:'K6',modules:['effects.mjs','effect-registry.mjs']},
  {id:'base_advance',layer:'base',name:'推进注册表',card:'K7/P3',modules:['advance-registry.mjs','advance-layers.mjs']},
+ {id:'base_ledger',layer:'base',name:'账本',card:'S1a',modules:['ledger.mjs','money.mjs']},
  // 模拟系统层
  {id:'sim_npc',layer:'sim',name:'人物',modules:['npc-state.mjs','npc-schedule.mjs','npc-cognition.mjs','npc-autonomy.mjs','npc-life.mjs','medicine.mjs','medicine-state.mjs','npc-memory.mjs','npc-relations.mjs','npc-rumors.mjs',
    'npc-obligations.mjs','npc-growth.mjs','npc-intelligence.mjs','lies.mjs','npc-planning-service.mjs','population.mjs','population-service.mjs','settlement-profile.mjs']},
@@ -181,7 +182,7 @@ for(const s of SYSTEMS)for(const f of s.files)if(!fs.existsSync(abs(f)))throw Er
 const LAYERS=[
  {id:'data',name:'数据层',reason:'world/ 下的 JSON 与设计表只描述内容，不含行为。tools/load-world.mjs 读入后成为 engine.world 与 engine.rules，各系统只经由这两者读取。'},
  {id:'kernel',name:'内核层',reason:'engine.mjs 的 reduce() 是唯一结算入口：工具调用先经它分派到各系统，结算后再发布世界事件、推进时间。storage.mjs 与迁移负责存档补丁和版本升级。所有系统都依赖它们，它们不属于任何玩法系统。'},
- {id:'base',name:'底座层',reason:'K1–K7 的共享协议：性状（K1）是读出的标签视图，交互（K2）、事件（K3）、立场（K4/K5）、效果（K6）、推进（K7）是带注册入口的表。模拟系统通过“登记一行”参与，不需要逐个改引擎。'},
+ {id:'base',name:'底座层',reason:'K1–K7 的共享协议：性状（K1）是读出的标签视图，交互（K2）、事件（K3）、立场（K4/K5）、效果（K6）、推进（K7）是带注册入口的表；账本（S1a）的转移是货币存量的唯一写入点，旧字段经适配器双写。模拟系统通过“登记一行”参与，不需要逐个改引擎。'},
  {id:'sim',name:'模拟系统层',reason:'各自持有 state 分区或 records 前缀的玩法系统。它们由工具分派驱动，或登记在推进表、订阅世界事件、实现效果类型，彼此主要通过底座和共享 records 交互。'},
  {id:'ui',name:'玩家接口层',reason:'模型能调用的 25 个工具（extension/tools.mjs），以及把状态投影给模型和玩家的场景卡、状态提示、界面接口和浏览器面板。这一层只读状态或转交引擎，不自己结算。'},
  {id:'narr',name:'叙述层',reason:'提示词、长期检索和一致性审查，把账本事实交给模型写成文字，并核对回复有没有虚构结果。它读取引擎结果，不写游戏状态。'},

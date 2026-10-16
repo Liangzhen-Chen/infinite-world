@@ -1,3 +1,6 @@
+import {purse,escrow as escrowAccount,moveCoins} from './money.mjs';
+import {declareLedgerWriter} from './ledger.mjs';
+declareLedgerWriter('contracts');
 import {advanceRituals}from'./magic-ritual.mjs';
 import {recordFinanceSale}from'./finance-assets.mjs';
 import {assessTradeTax,taxableSale}from'./finance-tax.mjs';
@@ -42,7 +45,7 @@ export function finishBusinessContract(d,row,{status,fulfilled=row.fulfilled,pai
     d.set(contractPath(row.id),next);return next;
 }
 export function refundContractEscrow(d,row){
-    if(row.escrow){d.set(['state','player','coins'],d.get('state','player','coins')+row.escrow);row={...row,escrow:0};d.set(contractPath(row.id),row);}
+    if(row.escrow){moveCoins(d,{from:escrowAccount(row.id),to:purse(null,'player'),amount:row.escrow,writer:'contracts'});d.set(['state','player','coins'],d.get('state','player','coins')+row.escrow);row={...row,escrow:0};d.set(contractPath(row.id),row);}
     return row;
 }
 export function releaseBusinessLease(d,engine,row,{status='已终止',reason,source}={}){
@@ -51,6 +54,7 @@ export function releaseBusinessLease(d,engine,row,{status='已终止',reason,sou
     if(debt&&debt.status!=='已还清'){
         used=Math.min(row.escrow,debt.amount-debt.paid);
         if(used){const paid=debt.paid+used;
+            moveCoins(d,{from:escrowAccount(row.id),to:purse(engine,debt.creditor),amount:used,writer:'contracts'});
             d.set([...engine.actorPath(debt.creditor),'coins'],engine.actor(d,debt.creditor).coins+used);
             d.set(contractPath(row.debt),{...debt,paid,status:paid===debt.amount?'已还清':debt.status,...(paid===debt.amount?{paidAt:d.get('state','minute')}:{})});
         }
@@ -63,6 +67,7 @@ export function chargeTrade(d,engine,{buyer,seller,cost,payment='cash',creditMin
     if(payment==='cash'){
         const source=engine.actor(d,buyer),target=engine.actor(d,seller);
         if(source.coins<cost)throw new Error('买方余额不足');
+        moveCoins(d,{from:purse(engine,buyer),to:purse(engine,seller),amount:cost,writer:'contracts',eventId});
         d.set([...engine.actorPath(buyer),'coins'],source.coins-cost);
         d.set([...engine.actorPath(seller),'coins'],target.coins+cost);
         return{};

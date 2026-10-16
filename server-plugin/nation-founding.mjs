@@ -1,5 +1,8 @@
 import {nobleRules,nationRows,liveNation,rulerNation,nationAt,currentDomains,domainSettlements,domainPopulation,containsDomain,titlesOf,highTitle,nobleLords} from './noble-state.mjs';
-import {armies,armyKey,armyStrength,ensureArmies,partyCoins,partyPay,partyCredit} from './military.mjs';
+import {armies,armyKey,armyStrength,ensureArmies,partyCoins,partyPay,partyCredit,partyAccount} from './military.mjs';
+import {treasury,BOOKED} from './money.mjs';
+import {declareLedgerWriter} from './ledger.mjs';
+declareLedgerWriter('nation-founding');
 import {startWar,wars} from './war-diplomacy.mjs';
 import {standing,adjustStanding} from './standing.mjs';
 import {groupAccountView,changeGroupCoins} from './group-account.mjs';
@@ -67,10 +70,10 @@ export function foundNation(d,e,{who='player',name,capital,coins},src,at=d.get('
  const amount=coins??nobleRules(e).founding.treasury;if(!Number.isSafeInteger(amount)||amount<nobleRules(e).founding.treasury||amount>ready.treasury)throw Error('须将足额真实财产转入国库');
  const id=`nation_${src}`.replace(/[^a-zA-Z0-9_]/g,'_');if(s.records?.[`nation:${id}`])throw Error('国家编号已占用');
  const originalSuzerain=suzerain(e,s,ready.domains[0]);if(!originalSuzerain)throw Error('原宗主来源缺失');
- if(partyPay(d,e,who,amount,{sourceEvent:src,reason:'独立国库',partial:false})!==amount)throw Error('国库款项不足');
+ if(partyPay(d,e,who,amount,{sourceEvent:src,reason:'独立国库',partial:false,books:{account:treasury(id),writer:'nation-founding',eventId:src}})!==amount)throw Error('国库款项不足');
  d.set(rec(`organization:${id}`),{category:'organization',id,source:'created',kind:'王国',name:name.trim(),seat:capital,leader:who,founder:who,foundedAt:at,members:{[who]:{position:'国王',joinedAt:at,arrears:0}},removed:{},charter:{mode:'leader',approval:true,fee:0,dues:0,rules:['独立国库与本国法典']},treasury:0,ledger:[]});
  let n={category:'nation',id,name:name.trim(),ruler:who,capital,domains:ready.domains,suzerain:originalSuzerain,status:'独立待定',foundedAt:at,lawSource:baseLaw.id,amendments:{},taxes:{},nextReview:at+nobleRules(e).founding.reviewDays*DAY,breaches:0,sourceEvent:src};
- d.set(rec(`nation:${id}`),n);changeGroupCoins(d,e,id,amount,{kind:'建国入库',sourceEvent:src,minute:at});
+ d.set(rec(`nation:${id}`),n);changeGroupCoins(d,e,id,amount,{kind:'建国入库',sourceEvent:src,minute:at},BOOKED);
  for(const a of armies(d.get('state')).filter(a=>a.party===who))d.set(rec(armyKey(a.id)),{...a,party:id,partyName:n.name});
  for(const domain of n.domains)d.set(rec(`territory:${domain}`),{category:'territory',county:domain,ruler:id,previous:n.suzerain,minute:at,sourceEvent:src});
  for(const recognizer of ready.recognized){const value=standing(e,s,recognizer,who);adjustStanding(d,e,recognizer,id,value,{sourceEvent:src,reason:'独立承认',minute:at});}
@@ -81,7 +84,7 @@ export function foundNation(d,e,{who='player',name,capital,coins},src,at=d.get('
 function collapse(d,e,n,status,winner,at,src){
  const next={...n,status,endedAt:at,annexedBy:winner};d.set(rec(`nation:${n.id}`),next);
  for(const domain of n.domains)d.set(rec(`territory:${domain}`),{category:'territory',county:domain,ruler:winner,previous:n.id,minute:at,sourceEvent:src});
- const coins=groupAccountView(e,d.get('state'),n.id)?.coins??0;if(coins){changeGroupCoins(d,e,n.id,-coins,{kind:'吞并转出',sourceEvent:src,minute:at});partyCredit(d,e,winner,coins,{sourceEvent:src,reason:'吞并接收'});}
+ const coins=groupAccountView(e,d.get('state'),n.id)?.coins??0;if(coins){changeGroupCoins(d,e,n.id,-coins,{kind:'吞并转出',sourceEvent:src,minute:at},{account:partyAccount(e,d.get('state'),winner),writer:'nation-founding',eventId:src});partyCredit(d,e,winner,coins,{sourceEvent:src,reason:'吞并接收',books:BOOKED});}
  for(const a of armies(d.get('state')).filter(a=>a.party===n.id))d.set(rec(armyKey(a.id)),{...a,party:winner,partyName:winner});
  for(const o of rows(d.get('state')).filter(o=>o.category==='governance_office'&&o.status==='在任'&&n.domains.some(id=>containsDomain(e,d.get('state'),id,o.settlement))))d.set(rec(o.id),{...o,status:'已免职',removedAt:at,reason:status});
  const t=d.get('state','records',`title:${n.ruler}`);if(t?.independentNation===n.id)d.set(rec(`title:${n.ruler}`),{...t,status:'已除爵',strippedAt:at,reason:status});
@@ -126,7 +129,7 @@ export function advanceNations(d,e,{before,after}){
    // Existing local receipts move to the national account, never credited a second time.
    for(const sid of domainSettlements(e,s,current.domains).filter(id=>nationAt(e,s,id)?.id===n.id)){
     const all=rows(d.get('state')).filter(t=>t.category==='trade_tax'&&t.settlement===sid&&t.minute<at&&t.minute>=(current.taxThrough??current.foundedAt)),amount=all.reduce((sum,t)=>sum+t.amount,0),available=d.get('state','settlements',sid,'treasury')??0,paid=Math.min(amount,Math.max(0,available-(e.rules.governance.authority.treasury.reserveCopper??0)));
-    if(paid){changeGroupCoins(d,e,sid,-paid,{kind:'国税上解',sourceEvent:`${n.id}:${at}:${sid}`,minute:at});changeGroupCoins(d,e,n.id,paid,{kind:'国税入库',sourceEvent:`${n.id}:${at}:${sid}`,minute:at});}
+    if(paid){changeGroupCoins(d,e,sid,-paid,{kind:'国税上解',sourceEvent:`${n.id}:${at}:${sid}`,minute:at},{account:treasury(n.id),writer:'nation-founding',eventId:`${n.id}:${at}:${sid}`});changeGroupCoins(d,e,n.id,paid,{kind:'国税入库',sourceEvent:`${n.id}:${at}:${sid}`,minute:at},BOOKED);}
    }
    s=d.get('state');const ready=nationReadiness(e,s,n.ruler),bad=ready.reasons.length;
    current={...current,nextReview:at+r.founding.reviewDays*DAY,taxThrough:at,breaches:bad?current.breaches+1:0,lastReview:{minute:at,reasons:ready.reasons}};

@@ -1,7 +1,10 @@
+import {sink,BOOKED} from './money.mjs';
+import {declareLedgerWriter} from './ledger.mjs';
+declareLedgerWriter('war-diplomacy',{sinks:['sink:export']});
 import {recognizeIndependence,settleNationWar} from './nation-founding.mjs';
 import {damageFacilities} from './facilities.mjs';
 // U12b: campaigns share military ledgers, K4 standing, K6 effects and U17 commissions.
-import {armies,armyKey,armyStrength,createArmy,ensureArmies,raiseLevy,loseSoldiers,releaseLevy,partyPay,partyCredit,partyName} from './military.mjs';
+import {armies,armyKey,armyStrength,createArmy,ensureArmies,raiseLevy,loseSoldiers,releaseLevy,partyPay,partyCredit,partyName,partyAccount} from './military.mjs';
 import {standing,adjustStanding,standingKind} from './standing.mjs';
 import {traitsOf} from './traits.mjs';
 import {clockRoll} from './world-clock.mjs';
@@ -131,7 +134,7 @@ export function advanceWarDiplomacy(d,e,{before,after}){
   for(const old of wars(d.get('state'))){const w=copy(old);if(w.status==='交战'&&w.nextAt<=at)campaignRound(d,e,w,at);else if(w.status==='停战'&&w.truceUntil<=at){w.status='交战';w.nextAt=at+r.intervalDays*DAY;save(d,w);}}
   postWarQuests(d,e,at);
   for(const old of Object.values(d.get('state','records')??{}).filter(t=>t.category==='tribute'&&t.nextAt<=at)){
-   const t=copy(old),owed=t.amount+t.arrears,paid=partyPay(d,e,t.payer,owed,{sourceEvent:`tribute:${t.war}:${at}`,reason:'战事结算'});partyCredit(d,e,t.payee,paid,{sourceEvent:`tribute:${t.war}:${at}`,reason:'战事结算'});t.arrears=owed-paid;t.nextAt+=30*DAY;t.lastPaid=paid;d.set(path(`tribute:${pair(t.payer,t.payee)}`),t);
+   const t=copy(old),owed=t.amount+t.arrears,paid=partyPay(d,e,t.payer,owed,{sourceEvent:`tribute:${t.war}:${at}`,reason:'战事结算',books:{account:partyAccount(e,d.get('state'),t.payee),writer:'war-diplomacy',eventId:`tribute:${t.war}:${at}`}});partyCredit(d,e,t.payee,paid,{sourceEvent:`tribute:${t.war}:${at}`,reason:'战事结算',books:BOOKED});t.arrears=owed-paid;t.nextAt+=30*DAY;t.lastPaid=paid;d.set(path(`tribute:${pair(t.payer,t.payee)}`),t);
    if(t.arrears)adjustStanding(d,e,t.payee,t.payer,-r.tributeBreachStanding,{sourceEvent:`tribute:${t.war}:${at}`,reason:'战事结算',minute:at});
   }
  }
@@ -161,7 +164,7 @@ export function warAction(d,args,src){
   d.set(path(`diplomacy:${pair(a,b)}`),{category:'diplomacy',parties:[a,b],status:'结盟',minute:at,sourceEvent:src});relations(d,e,a,b,r.allianceStanding+r.allianceGain,src,at);return {status:'结盟'};
  }
  if(!w||!active(w)||pair(a,b)!==pair(w.aggressor,w.defender))throw Error('clock 须指定双方正在交涉的战事');
- if(!own&&partyPay(d,e,'player',r.mediationCopper,{sourceEvent:src,reason:'战事结算',partial:false})!==r.mediationCopper)throw Error('此项交涉未满足权限、立场或前线条件；用 war_inspect 查看');
+ if(!own&&partyPay(d,e,'player',r.mediationCopper,{sourceEvent:src,reason:'战事结算',partial:false,books:{account:sink('export','mediation'),writer:'war-diplomacy',eventId:src}})!==r.mediationCopper)throw Error('此项交涉未满足权限、立场或前线条件；用 war_inspect 查看');
  if(choice==='truce'&&own&&score<r.truceStanding&&Math.abs(w.score)<r.peaceScore)throw Error('对方尚不愿停战，须改善立场或打出战果');
  if(choice==='truce'){w.status='停战';w.truceUntil=Math.ceil((at+r.truceDays*DAY)/DAY)*DAY;save(d,w);d.remove(path(`war-disruption:${w.id}`));relations(d,e,a,b,r.truceStanding,src,at);return {war:w.id,status:w.status,until:w.truceUntil};}
  if(!['peace','tribute'].includes(choice))throw Error('此项交涉未满足权限、立场或前线条件；用 war_inspect 查看');
