@@ -2,6 +2,8 @@
 // 全部走 /execute 的 world_act（与界面同一条路），不调用模型。
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import {monsterStats} from '../server-plugin/combat.mjs';
+import {appliedEffects} from '../server-plugin/applied-effects.mjs';
 import {MEDICAL_SKILL} from '../server-plugin/medicine-state.mjs';
 import {translateCall} from '../server-plugin/action-gateway.mjs';
 import {uiSession} from './helpers/ui-script.mjs';
@@ -59,4 +61,48 @@ test('NPC 为受作用方、同意要等 A2：受雇、借钱拒绝并给世界�
   const r=await ui.choose(action,slots,{search:true});assert.equal(r.ok,false,action);assert.equal(r.error,PENDING,`${action} 拒绝并说明原因`);
  }
  assert.deepEqual((await ui.read()).state,before.state);
+});
+
+// ---- 2. 战斗回执：applied 与事件流带上引擎实际应用的效果 ----
+const WOOD='loc_hw_northwood',HABITAT='habitat_hw_wood',WOLF='monster_instance_a1b',SPECIES='monster_grey_ridge_wolf',SWORD='item_steel_arming_sword';
+const fightSession=async t=>{
+ const stats=monsterStats({level:7,template:1},baseWorld.rules);
+ return uiSession(t,{mutate:scene(WOOD,monthDayMinute(9,18,16,0),s=>{
+  Object.assign(s.player,{level:1,hp:80,maxHp:80});s.inventory[SWORD]={quantity:1,quality:'铁',durability:100,weight:1.5};
+  const p=s.records[`ecology:${HABITAT}`].populations[SPECIES];p.count--;p.withdrawn++;
+  s.created={...s.created,[WOLF]:{id:WOLF,name:'灰脊林狼',aliases:[],monster:SPECIES,template:1,scope:WOOD}};
+  s.creatures={...s.creatures,[WOLF]:{name:'灰脊林狼',species:SPECIES,location:WOOD,hp:stats.maxHp,maxHp:stats.maxHp,level:7,status:'正常',ecology:HABITAT,owner:null}};
+ })});
+};
+const delta=(applied,holder,need)=>applied.filter(e=>e.op==='vital'&&e.holder===holder&&e.need===need).reduce((n,e)=>n+e.delta,0);
+const lost=(applied,holder)=>0-delta(applied,holder,'hp');
+
+test('战斗经 world_act：回执 applied 列出对方受伤、己方受伤、武器磨损；事件流据此显示，不再写“什么也没有改变”',async t=>{
+ const ui=await fightSession(t);await primed(ui);
+ let hit=null;
+ for(let i=0;i<300&&!hit;i++){
+  const b=await ui.read(),r=await ui.choose('combat',{target:WOLF,weapon:SWORD},{search:true});assert.ok(r.ok,r.error);const a=await ui.read();
+  assert.ok(r.applied.length>0,'每一回合至少有武器磨损，applied 不为空');assert.ok(!r.lines.includes('什么也没有改变。'),r.lines.join('|'));
+  assert.equal(delta(r.applied,'player','hp'),a.state.player.hp-b.state.player.hp,'己方受伤 = 状态差');assert.equal(lost(r.applied,'player'),r.result.received);
+  assert.equal(lost(r.applied,WOLF),b.state.creatures[WOLF].hp-a.state.creatures[WOLF].hp,'对方受伤 = 状态差');assert.equal(a.state.creatures[WOLF].hp,r.result.targetHp);
+  const wear=r.applied.find(e=>e.op==='durability');assert.deepEqual([wear.item,wear.from-wear.to],[SWORD,1]);assert.ok(r.lines.some(l=>l.includes('耐久')));
+  if(lost(r.applied,WOLF)>0)assert.ok(r.lines.some(l=>l.includes('灰脊林狼受了伤')&&l.includes(String(lost(r.applied,WOLF)))),r.lines.join('|'));
+  if(r.result.received>0)assert.ok(r.lines.some(l=>l.includes('你受了伤')));
+  if(r.result.targetHp===0)hit={r,b,a};
+ }
+ assert.ok(hit,'打到野狼毙命');
+ const {r,a}=hit;
+ assert.deepEqual(r.applied.filter(e=>e.op==='status'),[{op:'status',holder:WOLF,from:'正常',to:'死亡'}]);assert.ok(r.lines.includes('灰脊林狼死了。'));
+ const xp=r.applied.find(e=>e.op==='xp');assert.equal(xp.delta,r.result.experience);assert.ok(xp.delta>0);assert.ok(r.lines.some(l=>l.includes(`获得了${xp.delta}点经验`)));
+ const corpse=r.applied.find(e=>e.op==='corpse');assert.deepEqual(corpse.items,a.state.creatures[WOLF].corpse.items.map(i=>({item:i.item,amount:i.amount})));assert.ok(r.lines.some(l=>l.includes('留下了尸体')&&l.includes('×')));
+ assert.deepEqual(r.applied,appliedEffects(hit.b,a,{result:r.result}),'回执 = 同一对前后状态的已应用效果（可复算）');
+});
+
+test('已应用效果只列被作用者的身体：时间流逝里别的生物伤愈不算，没有 target 的回执不带对方的血量',()=>{
+ const base={minute:0,location:'x',player:{hp:10,xp:0,level:1},inventory:{},creatures:{wolf:{hp:5,status:'正常'},deer:{hp:3,status:'正常'}},npcs:{}};
+ const later={...base,minute:60,creatures:{wolf:{hp:9,status:'正常'},deer:{hp:1,status:'死亡'}}};
+ assert.deepEqual(appliedEffects(base,later),[{op:'time',minutes:60,minute:60}]);
+ assert.deepEqual(appliedEffects(base,later,{result:{target:'wolf'}}),[{op:'time',minutes:60,minute:60},{op:'vital',holder:'wolf',need:'hp',delta:4}]);
+ const up={...later,player:{hp:10,xp:3,level:2}};
+ assert.deepEqual(appliedEffects(base,up,{result:{experience:42}}).filter(e=>e.op==='xp'||e.op==='level'),[{op:'xp',holder:'player',delta:42},{op:'level',holder:'player',from:1,to:2}],'升级时经验从余数重算，取回执里的获得量');
 });

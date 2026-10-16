@@ -35,7 +35,6 @@ test('D31 普通打斗 ②③⑤：落单野狼被打死，留下可剥取的尸
  const next=await ui.read();assert.equal(next.state.creatures[WOLF].status,'死亡','次日不复活');assert.equal(Object.values(next.state.creatures).filter(c=>c.species===SPECIES&&c.status!=='死亡').length,0,'原地没有新狼');
 });
 test.todo('D31 ④时间过去几分钟到一刻钟——引擎一回合 10 秒（combat.exchangeSeconds），一只普通野狼几回合不到 1 分钟；设计缺省 combat.bout = 1 分钟/回合（balance/action-costs.json）：缺 combat.bout 读表（A3 cost.time = rounds × minutesPerBout）');
-test.todo('D31 ①叙述与结算一致——引擎交锋事件流写“什么也没有改变”、applied 为空，不带对方受伤/死亡与己方受伤（结算结果只在 result.damage/received/targetHp）：缺战斗 vital 事件进 applied 投影（A1 applied-effects 补战斗；S2 受伤/死亡走 vital）');
 
 // ---- D32 受伤求医 ----
 test('D32 受伤求医 ①②④⑤：诊金加药 30 文（70→40，林大夫 +30），咬伤止血留下医治记录，医师药材 −1，生命不会瞬间回满而是逐夜回升',async t=>{
