@@ -122,7 +122,7 @@ function surface(c,mode){
     return inMode(mode,()=>{
         const d=draft(structuredClone(c.doc)),state=c.doc.state,settlements=Object.keys(state.settlements??{}),out={};
         // 非托管聚落的粮价系数只在聚落有日耗粮时才用到公仓粮（forest.food）；日耗只在克隆上补，粮仓存量不动。
-        for(const row of Object.values(d.document.state.settlements??{}))if(!(row.foodPerDay>0))row.foodPerDay=5;
+        for(const row of Object.values(d.document.state.settlements??{})){if(!(row.foodPerDay>0))row.foodPerDay=5;if(row.granary===false)delete row.granary;}
         const items=['item_oats','item_wood','item_stone','item_iron','item_water','item_herb','item_bread','item_fish','item_rawhide'];
         for(const sid of settlements)for(const item of items)if(c.engine.byId.get(item))out[`${sid}/${item}`]=regionalTradePrice(d,c.engine,item,sid);
         for(const sid of settlements)for(const item of ['item_oats','item_wood'])out[`factor/${sid}/${item}`]=forestWaterPriceFactor(c.engine,d.document.state,item,sid,d);
@@ -143,6 +143,7 @@ test('价格双读对照：交易、借贷商税、受雇、钱庄、离屏推�
     await step(c,'world_trade',{seller:host,item:'item_bread',quantity:2},'buy');
     assert.ok(c.doc.ledger,'第一次归约开账');
     assertSurface(c,'交易之后');
+    await step(c,'world_trade',{seller:'player',buyer:host,item:'item_bread',quantity:1},'sell-bread');// 玩家卖给店主：成交前库存进成本基准
     await step(c,'world_trade',{seller:host,item:'item_ration',quantity:40},'buy-ration');
     assert.ok(Object.values(c.doc.state.records).some(r=>r.category==='trade_tax'&&r.amount>0),'商税照常收取');
     const loan=await step(c,'world_trade',{operation:'borrow',seller:host,consent:true,coins:40,days:10},'loan');
