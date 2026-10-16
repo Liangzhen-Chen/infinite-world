@@ -54,7 +54,7 @@ test.todo('D05 ②饥饿度明显下降、不再饥饿——引擎没有玩家�
 test.todo('D05 ③当场吃完、背包无新增食物——引擎买到的熟食直接进背包，没有“当场进食 → sink:consume”：缺进食动作（A3；守恒对 S1）');
 test.todo('D05 ⑤时间过去 20–30 分钟——引擎两笔交易各 5 分钟共 10 分钟；缺点菜 + 进食的动作耗时（A3：action-costs 增 eat/meal 行，cost.time 读表）');
 
-test('D35 参加节庆 ①②：摊位月饼 6 文/个买 2 个：铜钱 50→38，背包 +2 个月饼',async t=>{
+test('D35 参加节庆 ①④：摊位月饼 6 文/个买 2 个：铜钱 50→38，买到 2 个月饼，村民好感不降',async t=>{
  // 月饼→燕麦薄饼（item_oat_flatbread）6 文；秋季八月十五（中秋）晒谷场摊位 → 青灯酒馆掌柜代摊；玩家 50 文。
  const world=variant(w=>setPrice(w,'item_oat_flatbread',6));
  const ui=await uiSession(t,{world,mutate:scene(INN,monthDayMinute(8,15,19,0),s=>{s.player.coins=50;})});
@@ -62,7 +62,8 @@ test('D35 参加节庆 ①②：摊位月饼 6 文/个买 2 个：铜钱 50→38
  const after=await ui.read();
  assert.equal(r.result.cost,12);assert.equal(before.state.player.coins,50);assert.equal(after.state.player.coins,38,'①50→38');
  assert.equal(held(after.state.inventory,'item_oat_flatbread')-held(before.state.inventory,'item_oat_flatbread'),2,'②背包 +2 个月饼');
- conserved(before,after,'D35',new WorldEngine(world));
+ const engine=new WorldEngine(world);assert.ok(standing(engine,after.state,LINSUI,'player')>=standing(engine,before.state,LINSUI,'player'),'④在场村民对玩家的好感没有下降（题面“可小幅上升”，不变也符合）');
+ conserved(before,after,'D35',engine);
 });
 test.todo('D35 ②猜灯谜答对奖 1 盏花灯——引擎没有“答对即奖”的动作 outcomes（谜面判定属对话 A2，奖品转移属动作 outcomes A3）');
 test.todo('D35 ③节庆只在八月十五当晚出现，次日恢复平常——引擎有按历法日期运行的节庆（festival-runtime.test.mjs），但没有中秋灯会与摊位的节庆数据（C1 内容接入；摊位随节庆开闭属 S4 营业时间 schedule 表）');
