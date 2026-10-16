@@ -17,7 +17,7 @@ import {getChronicle,syncChronicleIndex}from'./chronicle.mjs';
 import {groupHistory}from'../extension/history-window.mjs';
 import {registerUIRoutes} from './ui-routes.mjs';
 import {translateCall,narrateExecution,CLIENT_READS} from './action-gateway.mjs';
-import {loadActionRegistry,actionCall,catalogRow,searchActions,CONSENT_PENDING} from './action-registry.mjs';
+import {loadActionRegistry,actionCall,catalogRow,searchActions,consentIsOwn,CONSENT_PENDING} from './action-registry.mjs';
 import {worldActions} from './action-affordances.mjs';
 import {ensurePopulationProfiles,modelProfileGenerator}from'./population-service.mjs';
 import {beginConsistencyTurn,captureConsistencySearch,captureConsistencyFailure,reconcileConsistencyTurn,reviewConsistencyReply,assertConsistencyCommit,sharedModelClient}from'./consistency-service.mjs';
@@ -146,8 +146,9 @@ export async function init(router,{ world=null, baseRoot=null, newCampaignSeed=r
         try{saved=await store.transact(campaignId,{id:eventId,input:{tool,args,eventId},anchor,expectedSequence},store.reducer);}
         catch(error){
             await captureConsistencyFailure(store,campaignId,{anchor,expectedSequence,tool,args,eventId},error);
-            // world_act never carries consent: when the legacy judgement asks for the other party's agreement, say so in-world.
-            if(translated.action&&/同意/.test(error.message))throw new Error(CONSENT_PENDING);
+            // world_act never carries someone else's consent: when the legacy judgement asks for the other party's agreement, say so in-world.
+            // (An action acting on the player themself keeps its own refusal reason.)
+            if(translated.action&&!consentIsOwn(translated.action,req.body.args?.slots??{})&&/同意/.test(error.message))throw new Error(CONSENT_PENDING);
             throw error;
         }
         const after=saved.document??(await store.read(campaignId)).document;

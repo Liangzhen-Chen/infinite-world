@@ -1,5 +1,5 @@
 // 日常题集第二批（DAILY 卡）：普通打斗、求医、入会、过关卡、离开几天再回来。
-// 夹具与口径同 daily-b2-trade.test.mjs；求医界面动作暂不可达（A1 对 consent 槽一律拒绝），走同一条 /execute 通道的旧工具。
+// 夹具与口径同 daily-b2-trade.test.mjs；求医经 world_act（A1b：本人同意由动作派生）。
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {WorldEngine} from '../server-plugin/engine.mjs';
@@ -7,7 +7,7 @@ import {standing} from '../server-plugin/standing.mjs';
 import {monsterStats} from '../server-plugin/combat.mjs';
 import {MEDICAL_SKILL} from '../server-plugin/medicine-state.mjs';
 import {uiSession} from './helpers/ui-script.mjs';
-import {variant,item,setPrice,scene,stack,monthDayMinute,conserved,primed,held,legacy,baseEngine,baseWorld} from './helpers/daily-b2.mjs';
+import {variant,item,setPrice,scene,stack,monthDayMinute,conserved,primed,held,baseEngine,baseWorld} from './helpers/daily-b2.mjs';
 
 const ZHENG='npc_hw_zhengshuisheng',LINSUI='npc_hw_linsui';
 
@@ -50,7 +50,7 @@ test('D32 受伤求医 ①②④⑤：诊金加药 30 文（70→40，林大夫 
   Object.assign(s.player,{coins:70,hp:60,maxHp:80,medical:structuredClone(bite)});
   Object.assign(s.npcs[DOCTOR],{location:CLINIC,status:'正常',activity:'坐诊配药',coins:20});s.npcs[DOCTOR].inventory={...s.npcs[DOCTOR].inventory,item_herb:5};
  })});
- const before=await primed(ui),seek=await legacy(ui,'world_settlement',{operation:'medicine_seek',consent:true},'seek-d32'),visit=seek.result;
+ const before=await primed(ui),seek=await ui.choose('settlement.medicine_seek',{},{search:true,eventId:'seek-d32'});assert.ok(seek.ok,seek.error);const visit=seek.result;
  assert.equal(visit.fee,30);assert.equal(visit.doctor,DOCTOR);
  await ui.choose('time',{minutes:visit.end-(await ui.read()).state.minute});
  const treated=await ui.read(),done=treated.state.records[visit.id];
@@ -68,7 +68,6 @@ test('D32 受伤求医 ①②④⑤：诊金加药 30 文（70→40，林大夫 
  assert.equal((await ui.read()).state.player.medical.wounds[0].healed,true,'复诊期满伤口愈合');
 });
 test.todo('D32 ③背包 +外敷药（3 天份）——引擎医治只从医师药材里扣 1 份、写处方记录，不给病人药物品：缺“服务 outcomes 产出处方物品”（A3 动作 outcomes；S1 transfer）');
-test.todo('D32 ①经界面求医——world_act 对 consent 槽一律拒绝（A1 把“本人同意”也当作对方同意），菜单也不列求医；本测试走旧工具 world_settlement medicine_seek：缺同意来源区分（A2：本人同意 vs 对方同意）');
 test.todo('D32 ⑤生命“几天逐步回升”的速率——引擎睡眠/休息每 30 分钟 +1 生命（engine.time），伤愈时钟 health.json wound:light 的病程未被消费：缺 health:recoveryRate 闭式（S5 health.json；缺省值见表）');
 
 // ---- D36 加入组织 ----
