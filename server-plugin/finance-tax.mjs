@@ -4,7 +4,19 @@ import {adminLevel} from './promotion-view.mjs';
 import {rulerOf,regionOf} from './regions.mjs';
 import {changeGroupCoins,groupAccountView} from './group-account.mjs';
 import {itemTraits} from './traits.mjs';
+import {shopOfKeeper} from './shop.mjs';
 
+// Commercial tax falls on trade, not on property changing hands: a spot sale owes
+// it when the seller is an organization account (faction, temple, settlement), or
+// a shopkeeper selling stock the shop buys in for resale (a restock row sourced
+// from the settlement's stores or a trade route). A smith's own forgings, a
+// tavern's own baking and a resident's spare belongings are not trade; the
+// player's own shop sales are assessed by business.mjs.
+export function taxableSale(e,state,seller,item){
+    if(groupAccountView(e,state,seller))return true;
+    const row=shopOfKeeper(e,seller,state)?.restock.find(r=>r.item===item);
+    return Boolean(row&&row.source!=='local');
+}
 // Dispatched orders retain the tax rate agreed at dispatch. New orders and
 // spot trades read the current regime and settlement level at assessment.
 export function tradeTax(e,state,location,kind='commercial'){
