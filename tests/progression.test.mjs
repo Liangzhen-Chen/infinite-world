@@ -1,7 +1,7 @@
 import test from'node:test';
 import assert from'node:assert/strict';
 import fs from'node:fs/promises';
-import os from'node:os';
+import{tmpRoot}from'../tools/tmp-root.mjs';
 import path from'node:path';
 import {loadWorld}from'../tools/load-world.mjs';
 import {WorldEngine,xpRequired}from'../server-plugin/engine.mjs';
@@ -87,7 +87,7 @@ test('死亡扣当前等级的前次门槛，200级封顶；累积门槛符合0�
     assert.equal(applyPatches(document,death.patches).state.player.xp,1000);
 });
 test('成长日志可重启、编辑回滚和导出导入，新增分区不改旧原件',async t=>{
-    const{engine,document}=await setup(),directory=await fs.mkdtemp(path.join(os.tmpdir(),'growth-replay-'));
+    const{engine,document}=await setup(),directory=await fs.mkdtemp(path.join(tmpRoot(),'growth-replay-'));
     t.after(()=>fs.rm(directory,{recursive:true,force:true}));
     document.state.player.xp=175;const before=structuredClone(document);
     const store=new CampaignStorage(directory,{reducer:(c,input)=>engine.reduce(c,input)});

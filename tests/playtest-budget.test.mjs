@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
-import os from 'node:os';
+import{tmpRoot}from'../tools/tmp-root.mjs';
 import path from 'node:path';
 import {spawn} from 'node:child_process';
 import {once} from 'node:events';
@@ -16,7 +16,7 @@ function response(id='response',usage={prompt_tokens:100,completion_tokens:10,pr
  return {id,usage,measurement:{usage,costUpperYuan:(60*.04+40*2+10*8)/1e6},choices:[{finish_reason:'stop',message:{content:'已核对。'}}]};
 }
 async function setup(t,client,increment=30){
- const directory=await fs.mkdtemp(path.join(os.tmpdir(),'fields-budget-'));t.after(()=>fs.rm(directory,{recursive:true,force:true}));
+ const directory=await fs.mkdtemp(path.join(tmpRoot(),'fields-budget-'));t.after(()=>fs.rm(directory,{recursive:true,force:true}));
  const options={registryDir:path.join(directory,'registry'),runDir:path.join(directory,'reports'),runId:'T17-wave',cardId:'T17',increment,identity,client};
  const budget=await openPlaytestBudget(options);t.after(()=>budget.close());return {directory,options,budget};
 }
@@ -93,7 +93,7 @@ test('run-id跨报告目录接同账，身份和额度改变拒绝，同run并�
 });
 
 test('真实强杀时预留落盘，死锁恢复后未知请求仍占原额度',async t=>{
- const directory=await fs.mkdtemp(path.join(os.tmpdir(),'fields-killed-budget-'));t.after(()=>fs.rm(directory,{recursive:true,force:true}));
+ const directory=await fs.mkdtemp(path.join(tmpRoot(),'fields-killed-budget-'));t.after(()=>fs.rm(directory,{recursive:true,force:true}));
  const moduleUrl=new URL('../tools/playtest-budget.mjs',import.meta.url).href;
  const script=`import {openPlaytestBudget} from ${JSON.stringify(moduleUrl)}; const budget=await openPlaytestBudget({registryDir:process.argv[1],runId:'kill-wave',cardId:'T17',increment:30,identity:{},client:{async generate(){setInterval(()=>{},1000);process.stdout.write('reserved\\n');await new Promise(()=>{});}}});await budget.generate({max_tokens:1800,messages:[{role:'user',content:'hello'}]},'host','killed');`;
  const child=spawn(process.execPath,['--input-type=module','-e',script,directory],{stdio:['ignore','pipe','pipe']});t.after(()=>child.kill());
@@ -138,7 +138,7 @@ test('格式错误审稿保留已花费及原response，仅失败部分允许重
 });
 
 test('真实CLI明确身份，换报告目录同预算、原失败保留及最多一次resume；不足额度零provider调用',async t=>{
- const directory=await fs.mkdtemp(path.join(os.tmpdir(),'fields-budget-cli-'));t.after(()=>fs.rm(directory,{recursive:true,force:true}));
+ const directory=await fs.mkdtemp(path.join(tmpRoot(),'fields-budget-cli-'));t.after(()=>fs.rm(directory,{recursive:true,force:true}));
  const preload=path.join(directory,'mock.mjs'),moduleUrl=new URL('../tools/deepseek-client.mjs',import.meta.url).href;
  // Redirect only git common-dir discovery into this isolated fixture. The
  // production CLI has no alternate registry switch that could reset a run.

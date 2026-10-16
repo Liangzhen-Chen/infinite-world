@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
-import os from 'node:os';
+import{tmpRoot}from'../tools/tmp-root.mjs';
 import path from 'node:path';
 import {once} from 'node:events';
 import express from 'express';
@@ -19,7 +19,7 @@ const initial=()=>engine.createCharacter(legacy,{},'m6-04');
 const fact=(id,overrides={})=>({id,sourceEvent:`event-${id}`,sequence:1,minute:500,location:'bld_hw_qingdeng',participants:['player','npc_hw_linsui'],entities:['player','npc_hw_linsui'],visibleTo:['player'],kind:'trade',salience:3,text:'旅人向林穗买了面包。',...overrides});
 const chronicle=facts=>buildChronicle(facts,{now:900,viewer:'omniscient'});
 async function fixture(t,{rumor=null}={}){
-    const root=await fs.mkdtemp(path.join(os.tmpdir(),'fields-m6-04-'));t.after(()=>fs.rm(root,{recursive:true,force:true}));
+    const root=await fs.mkdtemp(path.join(tmpRoot(),'fields-m6-04-'));t.after(()=>fs.rm(root,{recursive:true,force:true}));
     const app=express();app.use(express.json());const router=express.Router();
     const world=structuredClone(engine.world);
     if(rumor)world.settlementProfiles.find(row=>row.details).details.rumors.push(rumor);

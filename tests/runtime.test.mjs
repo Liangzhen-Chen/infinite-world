@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
-import os from 'node:os';
+import{tmpRoot}from'../tools/tmp-root.mjs';
 import path from 'node:path';
 import {once}from'node:events';
 import express from 'express';
@@ -11,7 +11,7 @@ import {loadWorld}from'../tools/load-world.mjs';
 import {WorldEngine}from'../server-plugin/engine.mjs';
 import {applyPatches}from'../server-plugin/storage.mjs';
 test('E2/E19 浏览器：失败对账阻止出站生成，编辑撤销刷新玩家账本，元数据只留引用',{timeout:60000},async t=>{
-    const directory=await fs.mkdtemp(path.join(os.tmpdir(),'infinite-fields-browser-'));
+    const directory=await fs.mkdtemp(path.join(tmpRoot(),'infinite-fields-browser-'));
     t.after(()=>fs.rm(directory,{recursive:true,force:true}));
     const app=express();app.use(express.json());const router=express.Router();await init(router,{baseRoot:directory});app.use('/api/plugins/infinite-fields',router);
     const server=app.listen(0,'127.0.0.1');await once(server,'listening');t.after(()=>server.close());

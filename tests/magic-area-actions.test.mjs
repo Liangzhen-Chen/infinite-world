@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
-import os from 'node:os';
+import{tmpRoot}from'../tools/tmp-root.mjs';
 import path from 'node:path';
 import {once} from 'node:events';
 import express from 'express';
@@ -30,7 +30,7 @@ async function fixture(t,{effect=damage,bossArea=false,blocked=false}={}){
  for(const id of actors)Object.assign(c.state.npcs[id],{hp:10000,maxHp:10000});
  c.state.player.companions=[actors[0]];
  assert.equal(Object.keys(c.state.records).some(k=>k.startsWith('local_actor_position:')),false);
- const root=await fs.mkdtemp(path.join(os.tmpdir(),'dnd-area-actions-'));t.after(()=>fs.rm(root,{recursive:true,force:true}));
+ const root=await fs.mkdtemp(path.join(tmpRoot(),'dnd-area-actions-'));t.after(()=>fs.rm(root,{recursive:true,force:true}));
  c.worldHash=digest(world);
  const initial=new CampaignStorage(path.join(root,'seed'),{reducer:engine.reduce.bind(engine)});await initial.create({id:'seed',worldVersion:world.version,document:c});
  const bundle={...await initial.export('seed'),worlds:{[c.worldHash]:world}};

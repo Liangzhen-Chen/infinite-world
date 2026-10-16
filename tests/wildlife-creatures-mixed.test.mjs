@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
-import os from 'node:os';
+import{tmpRoot}from'../tools/tmp-root.mjs';
 import path from 'node:path';
 import {loadWorld} from '../tools/load-world.mjs';
 import {validateWorld} from '../tools/validate-world.mjs';
@@ -169,7 +169,7 @@ test('L1拒绝写繁殖的亡灵、漏写弱点和把文明族群写成猎物材
 });
 
 test('隔离正式发布与重发零写；候选与L4篡改在写入前拒绝',async t=>{
- const root=await fs.mkdtemp(path.join(os.tmpdir(),'dnd-t154-'));t.after(()=>fs.rm(root,{recursive:true,force:true}));
+ const root=await fs.mkdtemp(path.join(tmpRoot(),'dnd-t154-'));t.after(()=>fs.rm(root,{recursive:true,force:true}));
  for(const folder of ['meta','people','geo','lore'])await fs.cp(path.resolve('world',folder),path.join(root,folder),{recursive:true});
  await fs.mkdir(path.join(root,'drafts'));await fs.cp(path.resolve('world/drafts/creatures-mixed'),path.join(root,'drafts/creatures-mixed'),{recursive:true});
  const write=async(file,value)=>fs.writeFile(path.join(root,file),JSON.stringify(value));

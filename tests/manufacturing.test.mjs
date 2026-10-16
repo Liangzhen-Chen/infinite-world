@@ -1,7 +1,7 @@
 import test from'node:test';
 import assert from'node:assert/strict';
 import fs from'node:fs/promises';
-import os from'node:os';
+import{tmpRoot}from'../tools/tmp-root.mjs';
 import path from'node:path';
 import {loadWorld}from'../tools/load-world.mjs';
 import {WorldEngine}from'../server-plugin/engine.mjs';
@@ -82,7 +82,7 @@ test('制造单件可存储重启、导入和删消息回滚，规则分区1升2
     const{engine,document}=await setup();document.state.runtimeRuleVersion=1;document.state.revivalPoints={bld_hw_altar:{fee:0,source:'旧登记'}};
     const before=structuredClone(document),patches=planRuleStateMigration(document,engine.rules),migrated=applyPatches(document,patches);
     assert.equal(migrated.state.runtimeRuleVersion,2);assert.deepEqual(migrated.state.inventory,document.state.inventory);assert.deepEqual(migrated.state.revivalPoints,document.state.revivalPoints);assert.deepEqual(document,before);
-    const dir=await fs.mkdtemp(path.join(os.tmpdir(),'infinite-fields-craft-'));t.after(()=>fs.rm(dir,{recursive:true,force:true}));
+    const dir=await fs.mkdtemp(path.join(tmpRoot(),'infinite-fields-craft-'));t.after(()=>fs.rm(dir,{recursive:true,force:true}));
     const reducer=(c,input)=>engine.reduce(c,input),store=new CampaignStorage(dir,{reducer});await store.create({id:'craft',worldVersion:engine.world.version,document:migrated});
     await store.transact('craft',{id:'make',anchor:'made',input:{tool:'world_craft',args:{recipe:'recipe_wooden_pegs'},eventId:'manufacture_5'}},reducer);
     const view=await store.read('craft');

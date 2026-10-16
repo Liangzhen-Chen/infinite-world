@@ -678,7 +678,7 @@
     "server-plugin/compat/v2-phase1-engine.mjs",
     "server-plugin/legacy/core.js"
    ],
-   "lines": 1599,
+   "lines": 1606,
    "stateWrites": [
     "checks",
     "crafted",
@@ -2012,7 +2012,7 @@
     "server-plugin/tribal-awakening.mjs",
     "server-plugin/elections.mjs"
    ],
-   "lines": 4843,
+   "lines": 4854,
    "stateWrites": [
     "buildings",
     "created",
@@ -2494,7 +2494,7 @@
     "server-plugin/ui-overview.mjs",
     "server-plugin/ui-personal.mjs"
    ],
-   "lines": 684,
+   "lines": 699,
    "stateWrites": [],
    "stateReads": [
     "created",
@@ -2592,7 +2592,7 @@
     "extension/ui-actions.mjs",
     "extension/actions-view.mjs"
    ],
-   "lines": 522,
+   "lines": 593,
    "stateWrites": [],
    "stateReads": [
     "created",
@@ -5225,6 +5225,7 @@
    "to": "sim_wildlife",
    "kind": "call",
    "labels": [
+    "forest-water.mjs",
     "wildlife-awakening.mjs",
     "wildlife-habitats.mjs",
     "wildlife-migration.mjs",
@@ -14352,7 +14353,9 @@
      "means": "耐久与维修",
      "pattern": "\\.durability\\b",
      "modules": [
+      "server-plugin/action-text.mjs",
       "server-plugin/activities.mjs",
+      "server-plugin/applied-effects.mjs",
       "server-plugin/boss-negotiation.mjs",
       "server-plugin/checks.mjs",
       "server-plugin/consistency-review.mjs",
@@ -14399,6 +14402,7 @@
       "sim_transport",
       "sim_wildlife",
       "sim_works",
+      "ui_actions",
       "ui_client",
       "ui_scene",
       "ui_server"
@@ -14459,6 +14463,7 @@
     "sim_transport",
     "sim_wildlife",
     "sim_works",
+    "ui_actions",
     "ui_client",
     "ui_host",
     "ui_scene",
@@ -15602,7 +15607,7 @@
     "routes"
    ],
    "worldDirs": [],
-   "lines": 111
+   "lines": 113
   },
   "server-plugin/action-gateway.mjs": {
    "system": "ui_actions",
@@ -15617,7 +15622,7 @@
    "rules": [],
    "world": [],
    "worldDirs": [],
-   "lines": 23
+   "lines": 44
   },
   "server-plugin/action-registry.mjs": {
    "system": "ui_actions",
@@ -15631,7 +15636,7 @@
    "worldDirs": [
     "actions"
    ],
-   "lines": 93
+   "lines": 107
   },
   "server-plugin/action-text.mjs": {
    "system": "ui_actions",
@@ -15655,7 +15660,7 @@
    "worldDirs": [
     "actions"
    ],
-   "lines": 122
+   "lines": 126
   },
   "server-plugin/activities.mjs": {
    "system": "kernel_engine",
@@ -15929,7 +15934,7 @@
    "rules": [],
    "world": [],
    "worldDirs": [],
-   "lines": 36
+   "lines": 66
   },
   "server-plugin/archived-reducer.mjs": {
    "system": "kernel_engine",
@@ -17802,7 +17807,7 @@
    "rules": [],
    "world": [],
    "worldDirs": [],
-   "lines": 281
+   "lines": 296
   },
   "server-plugin/interactions.mjs": {
    "system": "base_interactions",
@@ -20840,7 +20845,7 @@
    "rules": [],
    "world": [],
    "worldDirs": [],
-   "lines": 468
+   "lines": 475
   },
   "server-plugin/summons.mjs": {
    "system": "sim_companion",
@@ -21045,6 +21050,7 @@
    "imports": [
     "server-plugin/effects.mjs",
     "server-plugin/entity-view.mjs",
+    "server-plugin/forest-water.mjs",
     "server-plugin/npc-intelligence.mjs",
     "server-plugin/quest-sources.mjs",
     "server-plugin/remote-generation.mjs",
@@ -21090,7 +21096,7 @@
     "rules"
    ],
    "worldDirs": [],
-   "lines": 423
+   "lines": 434
   },
   "server-plugin/ui-affairs.mjs": {
    "system": "ui_server",

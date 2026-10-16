@@ -178,7 +178,7 @@ export async function reviewConsistencyReply(store,campaignId,{token,draft,expec
    const output=await store.reducer(projection,event.input,{replay:true,result:event.result}),previous=projection;
    projection=applyPatches(projection,output.patches);
    // A1: each receipt carries the effects the engine actually applied (08 §8.4); review reads these, not a whole-turn diff.
-   if(event.input?.tool)receipts.push({tool:event.input.tool,args:event.input.args,result:output.result,applied:appliedEffects(previous,projection)});
+   if(event.input?.tool)receipts.push({tool:event.input.tool,args:event.input.args,result:output.result,applied:appliedEffects(previous,projection,{result:output.result})});
   }
   for(const row of failures)receipts.push({tool:row.tool,args:row.args,result:row.result});
   if(digest(projection)!==digest(state.document))throw Error('本轮证据无法重建当前账本');

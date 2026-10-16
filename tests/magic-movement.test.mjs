@@ -1,7 +1,7 @@
 import test from'node:test';
 import assert from'node:assert/strict';
 import fs from'node:fs/promises';
-import os from'node:os';
+import{tmpRoot}from'../tools/tmp-root.mjs';
 import path from'node:path';
 import {loadWorld}from'../tools/load-world.mjs';
 import {WorldEngine}from'../server-plugin/engine.mjs';
@@ -112,7 +112,7 @@ test('完成时同行接触过期导致整个施法回滚，未制造远距坐�
 test('同一施法事件去重，重启导入重放与删除回合恢复位移、许可和消耗',async t=>{
  const s=await fixture(),p=await s.prepared();let chosen;
  for(let i=0;i<100;i++){const input={tool:'world_cast',args:p.args,eventId:`stored-${i}`},out=await s.engine.reduce(p.doc,input);if(out.result.success){chosen={id:input.eventId,anchor:'jump',input};break;}}assert.ok(chosen);
- const directory=await fs.mkdtemp(path.join(os.tmpdir(),'dnd-movement-'));t.after(()=>fs.rm(directory,{recursive:true,force:true}));
+ const directory=await fs.mkdtemp(path.join(tmpRoot(),'dnd-movement-'));t.after(()=>fs.rm(directory,{recursive:true,force:true}));
  const reducer=s.engine.reduce.bind(s.engine),store=new CampaignStorage(directory,{reducer});await store.create({id:'movement',worldVersion:p.doc.worldVersion,document:p.doc});
  const spell=s.world.spells.find(r=>r.id==='spell_move_teleport');spell.minutes=10;
  await assert.rejects(store.transact('movement',chosen,reducer),/实际近端位置/);assert.deepEqual((await store.read('movement')).document,p.doc);assert.equal((await store.export('movement')).events.length,0);spell.minutes=1;

@@ -414,3 +414,11 @@ M2修复批审定写入PLAN（T61–T64）：Astra草案F4工具机会标注并�
 - 2026-10-16 DAILY 已合入（Sonnet xhigh 试用）：日常题集 199 条中 106 条可执行通过、4 条补数据后表级通过、89 条需机制（S3 23、A3 22、S1 19、A2 18、S5 13、S6 10…），清单 docs/probes/daily/executable-status.md；balance 表补缺省（action-costs 11 行、event-weights 7 行、yields 3 行等，均界内、标待标定）。发现：world_act 拒绝一切 consent 槽（连本人同意求医也拒）、战斗回执 applied 为空——开 A1b 修；A1 的 D27/D28 dayOffset 90 被拒；D06 题面步速与写实界冲突（待用户）；引擎尚不读 balance 表（属 A3/S5）。0 模型。
 
 - 2026-10-16 S1b 已合入（架构迁移，Opus 默认）：server-plugin/stock.mjs（L1）+ ledger 分范围开账（旧存档补开库存账）、源通配预算、批次（粮仓/种粮/在途粮）；41 模块约 150 处可计量物写入点双写（行囊 104 处 + 组织/钱庄/质押/在途/军粮/粮仓种粮/矿脉林木）；源汇 src:genesis/regrowth/craft/harvest/husbandry/import/pack_converted、sink:consume/decay/destroy/export/pack_removed，均有每日预算。tests/ledger-stock.test.mjs 6 项（交易、制作、钓鱼、农业一季 215 天逐日、24 天离屏；旧库存=新账户、批次一致、漂移 0、每资源守恒）；合并后相关 165 项全过，度量不变。农业三年失败实为缺餐（加工人手按比例取整致在仓粮吃不上）→ R27。既有：weather 19569≠19571。0 模型。
+
+- 2026-10-16 A1b 已合入（Sonnet high 试用）：动作 consent.from（self/party）声明同意来源，本人被作用的动作（求医等）经 world_act 成功，替 NPC 填同意一律拒绝，NPC 待 A2，店主出租/钱庄放贷走旧判定；战斗回执 applied 补伤害、倒下、经验升级、尸体掉落、武器磨损；单次推进 30 天为引擎设计上限，world_act 把长等待自动拆为多段（一年封顶，与逐段等价）。tests/a1b-fixes.test.mjs 7 项。发现 S1b 合入后主线新失败：actions.json 行号过期、日常 D04/D37 铜钱守恒 → R28。0 模型。
+
+- 2026-10-16 R28 已合入（Sonnet medium）：docs/actions.json 重导出（S1b 改 credit.mjs 致行号过期）；D04/D37 铜钱守恒失败根因在测试辅助 conserved 的 flowDelta 未限定资源，S1b 后物品流水被当成铜钱源汇，改为按 coin_river 统计（实现与对账标准不变）。观察：a1-lt-scenarios T2 批量跑偶发失败、单跑通过。0 模型。
+
+- 2026-10-17 R29 已合入（Sonnet medium）：124 个测试/工具文件 191 处 os.tmpdir() 改为 tools/tmp-root.mjs 的 tmpRoot()（FIELDS_TMP 可覆盖，缺省仓库 .tmp/，按进程 p<pid>- 子目录，退出递归删除，FIELDS_TMP_KEEP=1 保留调试），.gitignore 加 .tmp/。CORE+存档往返等 58 项过；用户要求先合，118 个改动测试文件全量复跑在 R29 工作区后台继续，若有失败另开 R 卡。起因：测试临时目录落 C 盘不清理，堆 9GB 撑满 C 盘。0 模型。
+
+- 2026-10-17 R24 已合入（Opus 默认）：根因 tribal-awakening 的 autonomy 分支把栖地全部未见野生存量记 withdrawn 收进聚居地名册（badger_northwood 一次取走 23），原生种群归零；引入 da32bea2（V5）。修：自治只收编可持续余量（栖地保留随林木派生容量的一半且不少于一对；名册=余量+已开灵个体），entity-world U11 断言按新规则改写。合并前生态审计 2 种子×36 月 ok:true、相关 148/148、farm-pests+entity-world 16/16；合并后 CORE 40/40，审计复跑因机器内存耗尽中断，待空闲时在主线补跑。金快照不变。0 模型。

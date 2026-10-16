@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
-import os from 'node:os';
+import{tmpRoot}from'../tools/tmp-root.mjs';
 import path from 'node:path';
 import {loadWorld} from '../tools/load-world.mjs';
 import {WorldEngine} from '../server-plugin/engine.mjs';
@@ -98,7 +98,7 @@ test('推进注册表触发离屏来源，当前现场不结算，旧回执不�
  const crimes=Object.values(after.state.records).filter(r=>r.category==='legal_case'&&r.npcCrime);assert.ok(crimes.some(r=>r.offender===actor));assert.equal(result.result.npcCrimeVersion,1);
  assert.deepEqual((await engine.reduce(document,{tool:'world_time',args:{minutes:2},eventId:'crime-tick'},{replay:true,result:result.result})).patches,result.patches);
  const old={...result.result};delete old.npcCrimeVersion;const replay=await engine.reduce(document,{tool:'world_time',args:{minutes:2},eventId:'crime-tick'},{replay:true,result:old});assert.ok(!Object.values(applyPatches(document,replay.patches).state.records).some(r=>r.npcCrime));
- const dir=await fs.mkdtemp(path.join(os.tmpdir(),'l1-npc-crime-'));t.after(()=>{const target=path.resolve(dir);if(!target.startsWith(path.resolve(os.tmpdir())+path.sep+'l1-npc-crime-'))throw Error('临时目录边界错误');return fs.rm(target,{recursive:true,force:true});});
+ const dir=await fs.mkdtemp(path.join(tmpRoot(),'l1-npc-crime-'));t.after(()=>{const target=path.resolve(dir);if(!target.startsWith(path.resolve(tmpRoot())+path.sep+'l1-npc-crime-'))throw Error('临时目录边界错误');return fs.rm(target,{recursive:true,force:true});});
  const reducer=(doc,input,options)=>engine.reduce(doc,input,options),store=new CampaignStorage(dir,{reducer});await store.create({id:'npc-crime',worldVersion:engine.world.version,document});
  await store.transact('npc-crime',{id:'crime-tick',anchor:'crime-tick',input:{tool:'world_time',args:{minutes:2},eventId:'crime-tick'}},reducer);
  assert.deepEqual((await store.read('npc-crime')).document,after);assert.deepEqual((await new CampaignStorage(dir,{reducer}).read('npc-crime')).document,after);

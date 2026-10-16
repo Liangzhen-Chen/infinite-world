@@ -1,5 +1,5 @@
 import fs from'node:fs/promises';
-import os from'node:os';
+import{tmpRoot}from'./tmp-root.mjs';
 import path from'node:path';
 import {pathToFileURL}from'node:url';
 import {CampaignStorage,digest}from'../server-plugin/storage.mjs';
@@ -14,7 +14,7 @@ export async function migrateR1Export(input,output){
     try{await fs.access(destination);throw new Error('输出已存在，拒绝覆盖');}catch(error){if(error.code!=='ENOENT')throw error;}
     const bytes=await fs.readFile(source),bundle=JSON.parse(bytes);
     if(bundle.format!=='infinite-fields-server-v2'||!bundle.initial?.worldHash)throw new Error('需要含世界归档的服务器导出；旧聊天请使用副本启用入口');
-    const scratch=await fs.mkdtemp(path.join(os.tmpdir(),'fields-r1-export-'));
+    const scratch=await fs.mkdtemp(path.join(tmpRoot(),'fields-r1-export-'));
     try{
         const registry=new WorldRegistry(path.join(scratch,'worlds'));
         for(const[hash,world]of Object.entries(bundle.worlds??{})){
@@ -31,7 +31,7 @@ export async function migrateR1Export(input,output){
         await fs.writeFile(destination,JSON.stringify(exported,null,2)+'\n',{flag:'wx'});
         return exported.r1MigrationReport;
     }finally{
-        const resolved=await fs.realpath(scratch),temp=await fs.realpath(os.tmpdir());
+        const resolved=await fs.realpath(scratch),temp=await fs.realpath(tmpRoot());
         if(path.dirname(resolved).toLowerCase()!==temp.toLowerCase()||!path.basename(resolved).startsWith('fields-r1-export-'))throw new Error('临时路径校验失败');
         await fs.rm(resolved,{recursive:true,force:true});
     }

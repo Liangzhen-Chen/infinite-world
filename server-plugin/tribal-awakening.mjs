@@ -21,6 +21,7 @@ import {groupView} from './entity-view.mjs';
 import {remoteWorld} from './remote-generation.mjs';
 import {materializeWildlifeHabitats} from './wildlife-habitats.mjs';
 import {planWildlifeMigration} from './wildlife-migration.mjs';
+import {forestHabitatCapacity} from './forest-water.mjs';
 import {clockRoll} from './world-clock.mjs';
 import {registerQuestGenerator,postGeneratedQuest} from './quest-sources.mjs';
 import {growIntelligence,levelProfile,GROWTH_POINTS} from './npc-intelligence.mjs';
@@ -115,6 +116,12 @@ function membersOf(d,engine,dyn,rec){
  return [...out].sort();
 }
 const ecologyCount=(d,dyn)=>d.get('state','records',`ecology:${dyn.habitat}`)?.populations?.[dyn.species]?.count??0;
+function sustainableJoiners(d,engine,dyn){
+ const h=habitatOf(engine,dyn),species=engine.byId.get(dyn.species),count=ecologyCount(d,dyn);
+ if(!h||!species?.wildlife)return count;
+ const keep=Math.max(2,Math.ceil(forestHabitatCapacity(engine,d.get('state'),h,species)/2));
+ return Math.max(0,count-keep);
+}
 
 // ---- 一季的来源与玩家选择 ------------------------------------------------------------
 function tribalQuests(state,dyn,from,at){
@@ -281,13 +288,17 @@ function resolveOutcome(d,engine,t,dyn,rec,{stance,kind},at,sourceEvent){
  }else if(kind==='autonomy'){
   const resourceAware=Boolean(engine.rules.forestWater);
   const inhabitants=rec.awakened.filter(id=>alive(d.get('state','creatures',id)));
-  const skeleton=tribalSettlementSkeleton(d.document.randomSeed,dyn,{population:ecologyCount(d,dyn)+inhabitants.length,leader:groupView(engine,d.get('state'),accord)?.leader.value??null,council:accord,minute:at,home:engine.byId.get(dyn.home)});
+  // R24: only the sustainable surplus of unseen wild stock joins the census.
+  // The range keeps half its current (forest-derived) capacity, never below a
+  // breeding pair, so weekly births can refill it instead of the species dying out.
+  const joining=sustainableJoiners(d,engine,dyn);
+  const skeleton=tribalSettlementSkeleton(d.document.randomSeed,dyn,{population:joining+inhabitants.length,leader:groupView(engine,d.get('state'),accord)?.leader.value??null,council:accord,minute:at,home:engine.byId.get(dyn.home)});
   d.set(['state','records',`tribal_settlement:${dyn.id}`],{category:'tribal_settlement',dynamic:dyn.id,minute:at,sourceEvent:ev,hash:createHash('sha256').update(JSON.stringify(skeleton)).digest('hex').slice(0,24),skeleton,inhabitants});
   d.set(['state','settlements',skeleton.id],{name:skeleton.name,population:skeleton.population,food:0,wood:0,stone:0,iron:0,treasury:0,...(resourceAware?{granary:false}:{})});
   for(const id of inhabitants)d.set(['state','creatures',id,'location'],skeleton.id);
   // Unseen members now belong to the settlement census, not wild stock.
   const ecology=d.get('state','records',`ecology:${dyn.habitat}`)?.populations?.[dyn.species];
-  if(ecology){const moved=Math.min(ecology.count,Math.max(0,skeleton.population-inhabitants.length));d.set(['state','records',`ecology:${dyn.habitat}`,'populations',dyn.species],{...ecology,count:ecology.count-moved,withdrawn:ecology.withdrawn+moved});}
+  if(ecology){const moved=Math.min(ecology.count,joining);d.set(['state','records',`ecology:${dyn.habitat}`,'populations',dyn.species],{...ecology,count:ecology.count-moved,withdrawn:ecology.withdrawn+moved});}
   // Always derive from the authored base, including a second autonomy in this
   // same advance; using the previous overlay would append its households twice.
   if(resourceAware)engine.tribalBaseWorld??=engine.remoteBase?.world??engine.world;

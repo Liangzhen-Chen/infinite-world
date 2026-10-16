@@ -77,14 +77,18 @@ function effectLines(engine,before,after,effects,templates,counterparties=new Se
    if(b.relation==='out'||b.relation==='in'||b.relation==='here'){lines.push(fill(b.relation==='out'?t.moveOut:t.moveIn,names));continue;}
    lines.push(fill(t.move,{place:nameOf(engine,s,e.to),from:nameOf(engine,s,e.from),direction:b.word,distance:b.relation==='route'?distanceText(b.km,templates):''})??fill(t.move.replace('{distance}',''),{place:nameOf(engine,s,e.to),from:nameOf(engine,s,e.from),direction:b.word}));}
   else if(e.op==='time')lines.push(fill(t.time,{duration:durationText(e.minutes,templates),clock:clockText(e.minute)}));
-  else if(e.op==='vital')lines.push(fill(t[`${e.need}${e.delta>0?'Up':'Down'}`],{amount:Math.abs(e.delta)}));
-  else if(e.op==='status')lines.push(fill(t.status,{to:e.to}));
+  else if(e.op==='vital')lines.push(e.holder==='player'?fill(t[`${e.need}${e.delta>0?'Up':'Down'}`],{amount:Math.abs(e.delta)}):fill(t[`other${e.need==='hp'?'Hp':'Mp'}${e.delta>0?'Up':'Down'}`],{holder:nameOf(engine,s,e.holder),amount:Math.abs(e.delta)}));
+  else if(e.op==='status')lines.push(e.holder==='player'?fill(t.status,{to:e.to}):fill(e.to==='死亡'?t.otherDead:t.otherStatus,{holder:nameOf(engine,s,e.holder),to:e.to}));
+  else if(e.op==='xp')lines.push(fill(e.delta>0?t.xpUp:t.xpDown,{amount:Math.abs(e.delta)}));
+  else if(e.op==='level')lines.push(fill(e.to>e.from?t.levelUp:t.levelDown,{level:e.to}));
+  else if(e.op==='durability')lines.push(fill(t.durability,{item:nameOf(engine,s,e.item),from:e.from,to:e.to}));
+  else if(e.op==='corpse')lines.push(fill(e.items.length?t.corpseItems:t.corpse,{holder:nameOf(engine,s,e.holder),items:e.items.map(row=>`${nameOf(engine,s,row.item)}×${row.amount}`).join('、')}));
   else if(e.op==='obligation.create')lines.push(fill(t.obligation,{category:templates.categories[e.category]??e.category}));
  }
  return lines.filter(Boolean);
 }
 // Event-stream text for one settled action: one verb line, then one line per applied effect.
-export function actionLines({engine,action,before,after,args,result,effects=appliedEffects(before,after),locale=BASE_LOCALE}){
+export function actionLines({engine,action,before,after,args,result,effects=appliedEffects(before,after,{result}),locale=BASE_LOCALE}){
  const templates=loadTemplates(locale),vars=variables(engine,action,before,after,args,result,templates);
  const chain=[templates.events[action?.narration],templates.events[action?.verb],templates.groups[action?.group],templates.groups.default];
  const head=chain.map(t=>fill(t,vars)).find(Boolean)??action?.label??'';

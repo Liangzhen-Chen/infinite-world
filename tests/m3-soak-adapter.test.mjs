@@ -2,14 +2,14 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
 import path from 'node:path';
-import os from 'node:os';
+import{tmpRoot}from'../tools/tmp-root.mjs';
 import {execFile} from 'node:child_process';
 import {promisify} from 'node:util';
 import {fileURLToPath} from 'node:url';
 import {createSoakAdapter,assessSoakTiming} from '../tools/m3-soak-adapter.mjs';
 import {runSoak} from '../tools/m3-soak-runner.mjs';
 import {openSoakRun,nextSoakTask,summarizeSoak} from '../tools/m3-soak.mjs';
-async function temporary(t){const dir=await fs.mkdtemp(path.join(os.tmpdir(),'fields-soak-adapter-'));t.after(()=>fs.rm(dir,{recursive:true,force:true}));return dir;}
+async function temporary(t){const dir=await fs.mkdtemp(path.join(tmpRoot(),'fields-soak-adapter-'));t.after(()=>fs.rm(dir,{recursive:true,force:true}));return dir;}
 function fake({warning=false,waitMinutes,tailMinutes=0}={}){return {async generate(body,label){let message,finish_reason='stop';
  // This warning tests persistence, not a private-knowledge claim. Knowledge
  // findings require an identified subject and its actual cognition evidence.

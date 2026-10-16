@@ -9,8 +9,11 @@ function bagDelta(before={},after={}){
  for(const id of new Set([...Object.keys(before),...Object.keys(after)])){const delta=qty(after[id])-qty(before[id]);if(delta)out.push([id,delta]);}
  return out.sort(([a],[b])=>a.localeCompare(b));
 }
-// Effects on the player and on every NPC whose purse or bag changed. Order: transfers, move, time, body, obligations.
-export function appliedEffects(beforeDocument,afterDocument){
+// Effects on the player and on every NPC whose purse or bag changed. Order: transfers, move, time, body, obligations,
+// then growth (experience, level), wear on carried gear, and what happened to the one the action was aimed at.
+// `result` is the engine's receipt for the action: its `target` names who was acted on (a fight's opponent, a spell's subject),
+// whose hit points, status and corpse are listed too; nobody else's body is, so time passing never floods the list.
+export function appliedEffects(beforeDocument,afterDocument,{result=null}={}){
  const b=stateOf(beforeDocument),a=stateOf(afterDocument),effects=[];
  const coin=(holder,delta)=>{if(delta)effects.push({op:'transfer',resource:'coin',holder,delta});};
  const items=(holder,rows)=>{for(const [item,delta]of rows)effects.push({op:'transfer',resource:'item',holder,item,delta});};
@@ -25,7 +28,34 @@ export function appliedEffects(beforeDocument,afterDocument){
  if(a.player?.status!==b.player?.status)effects.push({op:'status',holder:'player',from:b.player?.status,to:a.player?.status});
  for(const [id,row]of Object.entries(a.records??{}).sort(([x],[y])=>x.localeCompare(y)))
   if(!b.records?.[id]&&['contract','debt','loan'].includes(row?.category??row?.kind))effects.push({op:'obligation.create',id,category:row.category??row.kind,...(row.amount!==undefined?{amount:row.amount}:{}),...(row.expires!==undefined?{expires:row.expires}:{})});
+ growthEffects(b,a,effects,result);
+ wearEffects(b,a,effects);
+ targetEffects(b,a,effects,result);
  return effects;
+}
+function growthEffects(b,a,effects,result){
+ const level=[b.player?.level,a.player?.level];
+ let xp=(a.player?.xp??0)-(b.player?.xp??0);
+ // Experience restarts from the remainder at a level-up, so the receipt's own gain is the amount applied then.
+ if(level[0]!==level[1]&&Number.isFinite(result?.experience))xp=result.experience;
+ if(xp)effects.push({op:'xp',holder:'player',delta:xp});
+ if(level[0]!==undefined&&level[1]!==undefined&&level[0]!==level[1])effects.push({op:'level',holder:'player',from:level[0],to:level[1]});
+}
+// Durability of gear the player carries, before and after (a blade dulls by the stroke).
+function wearEffects(b,a,effects){
+ for(const id of Object.keys(a.inventory??{}).sort()){
+  const was=b.inventory?.[id]?.durability,now=a.inventory[id]?.durability;
+  if(Number.isFinite(was)&&Number.isFinite(now)&&was!==now)effects.push({op:'durability',holder:'player',item:id,from:was,to:now});
+ }
+}
+function targetEffects(b,a,effects,result){
+ const id=typeof result?.target==='string'?result.target:null;
+ if(!id)return;
+ const before=b.creatures?.[id]??b.npcs?.[id],after=a.creatures?.[id]??a.npcs?.[id];
+ if(!before||!after||before===after)return;
+ const hp=(after.hp??0)-(before.hp??0);if(hp)effects.push({op:'vital',holder:id,need:'hp',delta:hp});
+ if(after.status!==before.status)effects.push({op:'status',holder:id,from:before.status,to:after.status});
+ if(after.corpse&&!before.corpse)effects.push({op:'corpse',holder:id,items:(after.corpse.items??[]).map(row=>({item:row.item,amount:row.amount??1}))});
 }
 // The player's own net money and goods in a list of effects (what a narration may claim the player paid or got).
 export function playerLedger(effects){

@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
-import os from 'node:os';
+import{tmpRoot}from'../tools/tmp-root.mjs';
 import path from 'node:path';
 import {loadWorld} from '../tools/load-world.mjs';
 import {WorldEngine} from '../server-plugin/engine.mjs';
@@ -130,7 +130,7 @@ test('灵地停留自然累积：长短步一致，旧宠物身份解除，存�
     for(const key of ['hp','maxHp','level','species','ecology'])assert.deepEqual(actor[key],a[key]);
     assert.equal(ecology(long).withdrawn,ecology(start).withdrawn);
     const stopped=await s.wait(long,10*DAY,'after');assert.deepEqual(stopped.state.creatures[id].mind,actor.mind);
-    const directory=await fs.mkdtemp(path.join(os.tmpdir(),'awaken-store-'));t.after(()=>fs.rm(directory,{recursive:true,force:true}));
+    const directory=await fs.mkdtemp(path.join(tmpRoot(),'awaken-store-'));t.after(()=>fs.rm(directory,{recursive:true,force:true}));
     const reducer=(c,input,options)=>s.engine.reduce(c,input,options),store=new CampaignStorage(directory,{reducer});
     await store.create({id:'awaken',worldVersion:s.engine.world.version,document:start});
     for(let i=0;i<3;i++)await store.transact('awaken',{id:`w${i}`,anchor:'a1',input:{tool:'world_time',args:{minutes:20*DAY},eventId:`w${i}`}},reducer);

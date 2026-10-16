@@ -5,7 +5,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
-import os from 'node:os';
+import{tmpRoot}from'../tools/tmp-root.mjs';
 import path from 'node:path';
 import {loadWorld} from '../tools/load-world.mjs';
 import {createPlaytestServer} from '../tools/playtest-runner.mjs';
@@ -29,7 +29,7 @@ CampaignStorage.prototype.prepare=function(state,payload){
  return prepare.call(this,state,payload);
 };
 
-async function tempDir(t){const dir=await fs.mkdtemp(path.join(os.tmpdir(),'r25-roundtrip-'));t.after(()=>fs.rm(dir,{recursive:true,force:true}));return dir;}
+async function tempDir(t){const dir=await fs.mkdtemp(path.join(tmpRoot(),'r25-roundtrip-'));t.after(()=>fs.rm(dir,{recursive:true,force:true}));return dir;}
 async function open(t,directory){const server=await createPlaytestServer({world,seed:SEED,consistencyEnabled:false,directory});let closed=false;const close=async()=>{if(!closed){closed=true;await server.close();}};t.after(close);return {...server,close};}
 function session(server,campaignId){
  const read=async()=>(await server.api('read',{campaignId})).document;

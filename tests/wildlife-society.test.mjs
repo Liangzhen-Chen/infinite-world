@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
-import os from 'node:os';
+import{tmpRoot}from'../tools/tmp-root.mjs';
 import path from 'node:path';
 import {loadWorld} from '../tools/load-world.mjs';
 import {WorldEngine} from '../server-plugin/engine.mjs';
@@ -153,7 +153,7 @@ test('结社：季度检查成社，重复推进无重复人口与库存；离�
     c=(await s.run(c,'world_wildlife',{operation:'settle',target:id},'settle')).doc;
     assert.deepEqual(c.state.creatures[id].mind.settle.location,wood);
     const start=structuredClone(c),until=(Math.floor(c.state.minute/DAY/90)+1)*90*DAY+5-c.state.minute;
-    const directory=await fs.mkdtemp(path.join(os.tmpdir(),'spirit-store-'));t.after(()=>fs.rm(directory,{recursive:true,force:true}));
+    const directory=await fs.mkdtemp(path.join(tmpRoot(),'spirit-store-'));t.after(()=>fs.rm(directory,{recursive:true,force:true}));
     const reducer=(x,input,options)=>s.engine.reduce(x,input,options),store=new CampaignStorage(directory,{reducer});
     await store.create({id:'spirit',worldVersion:s.engine.world.version,document:start});
     for(let left=until,i=0;left>0;left-=30*DAY,i++)await store.transact('spirit',{id:`q1-${i}`,anchor:'a1',input:{tool:'world_time',args:{minutes:Math.min(30*DAY,left)},eventId:`q1-${i}`}},reducer);

@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
-import os from 'node:os';
+import{tmpRoot}from'../tools/tmp-root.mjs';
 import path from 'node:path';
 import fc from 'fast-check';
 import { loadWorld } from '../tools/load-world.mjs';
@@ -115,8 +115,8 @@ test('召唤名额、假目标和法术契约越界保持存档不变，失去�
 
 test('召唤契约、维持费用和水量在存档重启、导入导出与删除消息回滚中守恒', async t => {
     const { engine, document, spell, run } = await setup(), sampleCast = await sample(run, document, spell, true);
-    const directory = await fs.mkdtemp(path.join(os.tmpdir(), 'fields-summon-test-'));
-    t.after(async () => { const target = path.resolve(directory); if (!target.startsWith(path.resolve(os.tmpdir()) + path.sep + 'fields-summon-test-')) throw new Error('临时目录边界错误'); await fs.rm(target, { recursive: true, force: true }); });
+    const directory = await fs.mkdtemp(path.join(tmpRoot(), 'fields-summon-test-'));
+    t.after(async () => { const target = path.resolve(directory); if (!target.startsWith(path.resolve(tmpRoot()) + path.sep + 'fields-summon-test-')) throw new Error('临时目录边界错误'); await fs.rm(target, { recursive: true, force: true }); });
     const reducer = (c, input) => engine.reduce(c, input), store = new CampaignStorage(directory, { reducer });
     await store.create({ id: 'summons', worldVersion: worldVersion(engine), document });
     const request = { id: sampleCast.eventId, anchor: 'summoned', input: { tool: 'world_cast', args: { spell: spell.id, target: 'player' }, eventId: sampleCast.eventId } };

@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
-import os from 'node:os';
+import{tmpRoot}from'../tools/tmp-root.mjs';
 import path from 'node:path';
 import {spawnSync} from 'node:child_process';
 import {loadWorld} from '../tools/load-world.mjs';
@@ -144,7 +144,7 @@ test('三年实际日结守恒；20个独立天气种子不饥荒，源开局资
     }
 });
 test('农事库存随服务器重启、导出导入和删消息回滚保存，不再次发开局粮',async t=>{
-    const{engine,c}=setup(),directory=await fs.mkdtemp(path.join(os.tmpdir(),'agriculture-store-'));
+    const{engine,c}=setup(),directory=await fs.mkdtemp(path.join(tmpRoot(),'agriculture-store-'));
     t.after(()=>fs.rm(directory,{recursive:true,force:true}));const reducer=(doc,input)=>engine.reduce(doc,input),store=new CampaignStorage(directory,{reducer});
     await store.create({id:'farm',worldVersion:engine.world.version,document:c});
     await store.transact('farm',{id:'spring',anchor:'a1',input:{tool:'world_time',args:{minutes:30*1440},eventId:'spring'}},reducer);
@@ -170,7 +170,7 @@ test('加工劳力不足时先吃鲜食，谷物食用不得超过实际加工�
     assert.equal(report.eaten,report.freshEaten+report.grainEaten);conservation(doc);
 });
 test('独立迁移CLI保留原文件，仅写新副本，拒绝已有目标和密钥文件路径',async t=>{
-    const{engine}=setup(),directory=await fs.mkdtemp(path.join(os.tmpdir(),'agriculture-migration-'));
+    const{engine}=setup(),directory=await fs.mkdtemp(path.join(tmpRoot(),'agriculture-migration-'));
     t.after(()=>fs.rm(directory,{recursive:true,force:true}));const input=path.join(directory,'original.json'),output=path.join(directory,'migrated.json');
     const doc=engine.initialFromLegacy(legacy,'migration-cli',{prepare:false}),bytes=JSON.stringify(doc);await fs.writeFile(input,bytes);
     const command=(a,b)=>spawnSync(process.execPath,['tools/migrate-agriculture.mjs',a,b],{encoding:'utf8'});

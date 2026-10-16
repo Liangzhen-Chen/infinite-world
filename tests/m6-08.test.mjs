@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
-import os from 'node:os';
+import{tmpRoot}from'../tools/tmp-root.mjs';
 import path from 'node:path';
 import {once} from 'node:events';
 import {createHash} from 'node:crypto';
@@ -51,7 +51,7 @@ test('M6-08 80张实际原创场景覆盖10×2×4、全部已发布人物和地�
 });
 
 test('M6-08 生成器在临时目录复现全部素材，不改变世界输入',async t=>{
-    const temp=await fs.mkdtemp(path.join(os.tmpdir(),'fields-art-'));t.after(()=>fs.rm(temp,{recursive:true,force:true}));
+    const temp=await fs.mkdtemp(path.join(tmpRoot(),'fields-art-'));t.after(()=>fs.rm(temp,{recursive:true,force:true}));
     const before=structuredClone(world),visual=path.join(temp,'visual'),source=path.join(temp,'art');
     assert.deepEqual(await buildArt({world,destination:visual,artDestination:source}),{backgrounds:80,portraits:people.length,locations:world.locations.length});
     assert.deepEqual(world,before);
@@ -103,7 +103,7 @@ test('M6-08 快速切景不被旧图片覆盖，未加载和失败保留前景�
 });
 
 async function fixture(t){
-    const root=await fs.mkdtemp(path.join(os.tmpdir(),'fields-m6-08-'));t.after(()=>fs.rm(root,{recursive:true,force:true}));
+    const root=await fs.mkdtemp(path.join(tmpRoot(),'fields-m6-08-'));t.after(()=>fs.rm(root,{recursive:true,force:true}));
     const app=express();app.use(express.json());app.use('/assets',express.static('assets'));
     const router=express.Router();await init(router,{baseRoot:root,npcPlanningEnabled:false,consistencyEnabled:false});app.use('/api/plugins/infinite-fields',router);
     const server=app.listen(0,'127.0.0.1');await once(server,'listening');t.after(()=>server.close());

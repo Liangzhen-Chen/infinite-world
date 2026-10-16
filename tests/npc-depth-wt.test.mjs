@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
-import os from 'node:os';
+import{tmpRoot}from'../tools/tmp-root.mjs';
 import path from 'node:path';
 import {loadWorld} from '../tools/load-world.mjs';
 import {auditNpcDepth} from '../tools/audit-npc-depth.mjs';
@@ -38,7 +38,7 @@ test('苇汀正式30人等于已审批完整档，其他人、旧记忆和钱物
 });
 
 test('冻结原档首次预演不写入，正式发布闭合7事件30人且仅更新苇汀',async t=>{
- const temp=await fs.mkdtemp(path.join(os.tmpdir(),'t73-publication-'));t.after(()=>fs.rm(temp,{recursive:true,force:true}));
+ const temp=await fs.mkdtemp(path.join(tmpRoot(),'t73-publication-'));t.after(()=>fs.rm(temp,{recursive:true,force:true}));
  const worldRoot=path.join(temp,'world');
  for(const dir of ['meta','geo','people','lore','design'])await fs.cp(path.resolve('world',dir),path.join(worldRoot,dir),{recursive:true});
  await fs.cp(path.resolve('world/drafts/w1/wt-depth'),path.join(worldRoot,'drafts/w1/wt-depth'),{recursive:true});
@@ -177,7 +177,7 @@ test('真实首批存在失败且未完成L4，发布读取必须拒绝',async t
  assert.equal(summary.total,30);
  assert.ok(summary.manual>0);
  assert.ok(summary.batches.every(batch=>!batch.l4.approved));
- const frozen=await fs.mkdtemp(path.join(os.tmpdir(),'wt-first-summary-'));t.after(()=>fs.rm(frozen,{recursive:true,force:true}));
+ const frozen=await fs.mkdtemp(path.join(tmpRoot(),'wt-first-summary-'));t.after(()=>fs.rm(frozen,{recursive:true,force:true}));
  await fs.writeFile(path.join(frozen,'summary.json'),JSON.stringify(summary));for(const batch of summary.batches)await fs.writeFile(path.join(frozen,`batch-${batch.index}.json`),JSON.stringify(batch));
  await assert.rejects(()=>readApprovedContent(frozen,entries(),{revision:design.revision,contextFor:entry=>contextFor(entry,world)}),/尚未完成 L4|人工队列/);
 });
@@ -265,7 +265,7 @@ test('钉死T07来源仅接受完整LF或原CRLF，字段篡改、混合换行�
 });
 
 test('换行凭证贯穿官方准备、mock复审收据及发布重放，不授予真实审核或发布',async t=>{
- const temp=await fs.mkdtemp(path.join(os.tmpdir(),'wt-checkout-'));t.after(()=>fs.rm(temp,{recursive:true,force:true}));
+ const temp=await fs.mkdtemp(path.join(tmpRoot(),'wt-checkout-'));t.after(()=>fs.rm(temp,{recursive:true,force:true}));
  const worldRoot=path.join(temp,'world');
  for(const dir of ['meta','geo','people','lore'])await fs.cp(path.resolve('world',dir),path.join(worldRoot,dir),{recursive:true});
  await fs.writeFile(path.join(worldRoot,'people/baseline.json'),JSON.stringify(world.npcs));

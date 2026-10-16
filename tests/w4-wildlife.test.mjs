@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
-import os from 'node:os';
+import{tmpRoot}from'../tools/tmp-root.mjs';
 import path from 'node:path';
 import {loadWorld} from '../tools/load-world.mjs';
 import {highWildlifeFoundation,withHighWildlife} from '../world/design/high-wildlife-foundation.mjs';
@@ -37,7 +37,7 @@ test('world_upgrade把新物种引入已有战役，日结补栖地不改旧账�
     const old=structuredClone(world);old.monsters=old.monsters.filter(s=>!ids.has(s.id));old.locations=old.locations.filter(l=>!locations.has(l.id));
     old.routes=old.routes.filter(r=>!locations.has(r.to)&&!locations.has(r.from));old.rules.wildlife.habitats=old.rules.wildlife.habitats.filter(h=>!locations.has(h.location));
     old.rules.weather.regions=old.rules.weather.regions.filter(r=>!r.locations.some(l=>locations.has(l)));
-    const next=withHighWildlife(old),root=await fs.mkdtemp(path.join(os.tmpdir(),'w4-upgrade-'));
+    const next=withHighWildlife(old),root=await fs.mkdtemp(path.join(tmpRoot(),'w4-upgrade-'));
     t.after(()=>fs.rm(root,{recursive:true,force:true}));
     const registry=new WorldRegistry(path.join(root,'worlds')),reducer=archivedReducer(registry),store=new CampaignStorage(path.join(root,'campaigns'),{reducer});
     const oldHash=await registry.put(old),newHash=await registry.put(next),doc=new WorldEngine(old).createCharacter(seed,{},'w4-upgrade');

@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
 import path from 'node:path';
-import os from 'node:os';
+import{tmpRoot}from'../tools/tmp-root.mjs';
 import {loadWorld} from '../tools/load-world.mjs';
 import {prepareNpcPublication,publishNpcProfiles,mergeNpcProfiles,protectedNpcFields} from '../tools/m2-people-publish.mjs';
 import {readPublishedNpcIncrements} from '../tools/npc-publication-sources.mjs';
@@ -16,8 +16,8 @@ const read=async file=>JSON.parse(await fs.readFile(file,'utf8'));
 const [baseline,candidate]=await Promise.all(['baseline.json','candidate.json'].map(file=>read(path.join(root,file))));
 const teacher=w=>w.npcs.find(n=>n.id==='npc_hw_xuling');
 async function temporary(t){
- const dir=await fs.mkdtemp(path.join(os.tmpdir(),'npc-increments-'));
- t.after(async()=>{assert.ok(path.resolve(dir).startsWith(path.resolve(os.tmpdir())+path.sep));await fs.rm(dir,{recursive:true,force:true});});
+ const dir=await fs.mkdtemp(path.join(tmpRoot(),'npc-increments-'));
+ t.after(async()=>{assert.ok(path.resolve(dir).startsWith(path.resolve(tmpRoot())+path.sep));await fs.rm(dir,{recursive:true,force:true});});
  return dir;
 }
 async function sourceCopy(t){const dir=await temporary(t);await fs.cp(path.resolve('world/drafts/m4-batch2'),path.join(dir,'drafts/m4-batch2'),{recursive:true});return dir;}

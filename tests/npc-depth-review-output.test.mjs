@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
-import os from 'node:os';
+import{tmpRoot}from'../tools/tmp-root.mjs';
 import path from 'node:path';
 import {openContentBudget} from '../tools/content-budget.mjs';
 import {hashContent,parseModelJSON} from '../tools/content-pipeline.mjs';
@@ -73,7 +73,7 @@ test('精简拒绝不能等价重建的draft或来源，同时保留所有背景
 });
 
 test('paid provider在覆盖包装及JSON解析前独立落盘，普通hard/坏JSON/无附件均保留原文',async t=>{
- const root=await fs.mkdtemp(path.join(os.tmpdir(),'review-provider-'));t.after(()=>fs.rm(root,{recursive:true,force:true}));
+ const root=await fs.mkdtemp(path.join(tmpRoot(),'review-provider-'));t.after(()=>fs.rm(root,{recursive:true,force:true}));
  const p=fixture({author:true}),responses=[structuredClone(luoweiResponse),{choices:[{message:{content:'{坏JSON'}}],usage:{completion_tokens:3}},{choices:[{message:{content:JSON.stringify({contradictions:[{quote:'秘密',field:'notes',severity:'hard',reason:'不得公开'}]})}}],usage:{completion_tokens:5}}];
  responses.forEach(r=>r.measurement={costUpperYuan:.01});
  let index=0,checked=0;

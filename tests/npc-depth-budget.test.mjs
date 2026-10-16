@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
-import os from 'node:os';
+import{tmpRoot}from'../tools/tmp-root.mjs';
 import path from 'node:path';
 import {execFile} from 'node:child_process';
 import {promisify} from 'node:util';
@@ -20,7 +20,7 @@ test('T90次数与金额在同一历史账守恒，未发预留退款，换revis
  client=mock(.001);budget=await openContentBudget({file,client,cardId:'T90',allocation:a});await assert.rejects(budget.request({},'new-revision'),/次数上限/);assert.equal(client.calls,0);await budget.close();
  await assert.rejects(openContentBudget({file,client,cardId:'T90',allocation:{...a,maxRequests:3}}),/额度已改变/);
 });
-async function temporary(t,ledger=legacy){const dir=await fs.mkdtemp(path.join(os.tmpdir(),'depth-budget-')),file=path.join(dir,'budget.json');t.after(()=>fs.rm(dir,{recursive:true,force:true}));await fs.writeFile(file,JSON.stringify(ledger));return{dir,file};}
+async function temporary(t,ledger=legacy){const dir=await fs.mkdtemp(path.join(tmpRoot(),'depth-budget-')),file=path.join(dir,'budget.json');t.after(()=>fs.rm(dir,{recursive:true,force:true}));await fs.writeFile(file,JSON.stringify(ledger));return{dir,file};}
 function mock(ceiling,cost=ceiling){return{calls:0,estimateCostYuan:()=>ceiling,spent:0,reserved:0,budgetYuan:20,async generate(){this.calls++;this.spent+=cost;return{measurement:{costUpperYuan:cost}};}};}
 test('25元波次仍按完整上界拒发，保留未知预留及原单卡费用',async t=>{
  const ledger={spentYuan:24.8,reservedYuan:.083736,waveLimitYuan:25,limitYuan:25,cards:{T07:{spentYuan:4.2,reservedYuan:0,limitYuan:7}},requests:{unknown:{status:'unknown',reservedYuan:.083736}}},allocation25={cardId:'T07',waveLimitYuan:25,incrementLimitYuan:7,startingSpentYuan:ledger.spentYuan,startingReservedYuan:ledger.reservedYuan};

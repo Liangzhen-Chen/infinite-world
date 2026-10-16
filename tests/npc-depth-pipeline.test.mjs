@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
-import os from 'node:os';
+import{tmpRoot}from'../tools/tmp-root.mjs';
 import path from 'node:path';
 import {execFile} from 'node:child_process';
 import {promisify} from 'node:util';
@@ -17,7 +17,7 @@ function fixtureWorld(){const w=structuredClone(world),n=w.npcs.find(n=>n.id===p
 function designFor(w,changes){const before=w.npcs.find(n=>n.id===personId),issues=auditNpcDepth(w).issues.filter(i=>i.id===personId&&changes.some(p=>p.path===i.field));return{revision:'test-patch-v1',incrementLimitYuan:.2,patchRows:[{id:personId,before:structuredClone(before),baseHash:hashContent(before),issues:issues.map(({id,field,code})=>({id,field,code})),patches:changes}]};}
 const notesPatch={path:'notes',value:'秦砺在工坊与高忻核对过桌位，未曾问陶咨家中的衣物归属。'},opinionPatch={path:'opinions.neighbors[0].view',value:'高忻曾与秦砺在工坊核对桌位，先后尚未商定。'};
 function entriesFor(w,design){return depthEntries(design.patchRows.map(r=>r.before),design,w);}
-async function temporary(t){const dir=await fs.mkdtemp(path.join(os.tmpdir(),'npc-depth-pipeline-'));t.after(async()=>{assert.ok(path.resolve(dir).startsWith(path.resolve(os.tmpdir())+path.sep));await fs.rm(dir,{recursive:true,force:true});});return dir;}
+async function temporary(t){const dir=await fs.mkdtemp(path.join(tmpRoot(),'npc-depth-pipeline-'));t.after(async()=>{assert.ok(path.resolve(dir).startsWith(path.resolve(tmpRoot())+path.sep));await fs.rm(dir,{recursive:true,force:true});});return dir;}
 async function prepared(t,patches=[notesPatch,opinionPatch]){const dir=await temporary(t),worldRoot=path.join(dir,'world'),w=fixtureWorld();for(const sub of ['meta','people','geo','lore'])await fs.cp(path.resolve('world',sub),path.join(worldRoot,sub),{recursive:true});await fs.writeFile(path.join(worldRoot,'people/baseline.json'),JSON.stringify(w.npcs));const root=path.join(worldRoot,'drafts/test'),design=path.join(worldRoot,'test-design.mjs'),config=designFor(w,patches);await fs.writeFile(design,'export const revision='+JSON.stringify(config.revision)+';\nexport const incrementLimitYuan=.2;\nexport const patchRows='+JSON.stringify(config.patchRows)+';\n');const result=await prepareDepth({design,root,worldRoot,batch:'test'});return{dir,worldRoot,root,design,config,...result};}
 async function approve(p){const reviewRequests=[],client={spent:0,reserved:0,budgetYuan:0,estimateCostYuan:()=>0,generate:async request=>{const value=JSON.parse(request.messages[1].content);if(value.candidate)return{choices:[{message:{content:JSON.stringify(value.candidate)}}]};reviewRequests.push(value);return{choices:[{message:{content:JSON.stringify({contradictions:[],reviewedPaths:value.draft.patches.map(p=>p.path),backgroundReviews:[]})}}]};}};const result=await runContentPipeline({entries:p.entries,root:p.root,budgetRoot:p.root,client,revision:p.config.revision,contextFor:e=>contextFor(e,p.world),buildDraftRequest,buildReviewRequest,extractDraft,validateDraft,concurrency:1,batchSize:25});assert.equal(result.summary.passed,p.entries.length,JSON.stringify(result.results.map(r=>({id:r.id,status:r.status,errors:r.errors}))));const notes=result.results.map(r=>({id:r.id,note:'测试替身逐条核对所列叶子，与冻结原档比较。',draftHash:hashContent(r.draft),reviewHash:hashContent(r.review)})),file=path.join(p.root,'human-notes.json');await fs.writeFile(file,JSON.stringify(notes));await exec(process.execPath,[tool('npc-depth-l4'),'--design',p.design,'--root',p.root,'--notes',file]);return reviewRequests;}
 

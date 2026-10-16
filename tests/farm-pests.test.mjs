@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
-import os from 'node:os';
+import{tmpRoot}from'../tools/tmp-root.mjs';
 import path from 'node:path';
 import {spawnSync} from 'node:child_process';
 import {loadWorld} from '../tools/load-world.mjs';
@@ -137,7 +137,7 @@ test('两年长等待和逐日等待的农事与生态结果一致；旧规则�
     const old=setup('no-pest',source),next=await wait(old.run,old.c,1440,'old');assert.equal(farm(next).field.pestFormat,undefined);assert.equal(farm(next).ledger.pestLost,undefined);
 });
 test('田害与实际巡守在重启/导入/回滚中保留，CLI仅写独立副本',async t=>{
-    const base=path.resolve(os.tmpdir()),dir=await fs.mkdtemp(path.join(base,'farm-pest-store-'));assert.ok(path.resolve(dir).startsWith(base+path.sep));t.after(()=>fs.rm(dir,{recursive:true,force:true}));
+    const base=path.resolve(tmpRoot()),dir=await fs.mkdtemp(path.join(base,'farm-pest-store-'));assert.ok(path.resolve(dir).startsWith(base+path.sep));t.after(()=>fs.rm(dir,{recursive:true,force:true}));
     const set=setup(),c=await growing(set);c.state.minute=10*1440+1080;
     const reduce=(doc,input)=>set.engine.reduce(doc,input),store=new CampaignStorage(dir,{reducer:reduce});await store.create({id:'farm',worldVersion:set.world.version,document:c});
     let successId;for(let i=0;i<60;i++){const id=`persist-guard${i}`,out=await set.run(c,'world_farm',{operation:'guard'},id);if(out.result.success){successId=id;break;}}assert.ok(successId);

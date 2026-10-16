@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
-import os from 'node:os';
+import{tmpRoot}from'../tools/tmp-root.mjs';
 import path from 'node:path';
 import {loadWorld} from '../tools/load-world.mjs';
 import {validateWorld} from '../tools/validate-world.mjs';
@@ -104,7 +104,7 @@ test('两名智能存在按目标说明拒绝，实际交换库存并记住和�
 
 test('正式智能存在的记忆、库存和关系重启保留，幂等与回滚不复制物资',async t=>{
  for(const b of bosses.filter(b=>b.cognition))await t.test(b.id,async()=>{
-  const {engine,doc}=setup(b),directory=await fs.mkdtemp(path.join(os.tmpdir(),'dnd-b1-save-'));t.after(()=>fs.rm(directory,{recursive:true,force:true}));
+  const {engine,doc}=setup(b),directory=await fs.mkdtemp(path.join(tmpRoot(),'dnd-b1-save-'));t.after(()=>fs.rm(directory,{recursive:true,force:true}));
   const reducer=(d,i)=>engine.reduce(d,i),store=new CampaignStorage(directory,{reducer});await store.create({id:'b1',worldVersion:world.version,document:doc});
   await store.transact('b1',{id:'enter',anchor:'a1',input:{tool:'world_field',args:{operation:'lair_approach',lair:b.residence.id},eventId:'enter'}},reducer);
   const entered=(await store.read('b1')).document;
@@ -128,7 +128,7 @@ test('旧战役升级只追加本批巢穴，钱物与旧首领伤势记忆保�
 });
 
 test('隔离正式发布与重发零写；候选、审核及L4篡改均在写入前拒绝',async t=>{
- const root=await fs.mkdtemp(path.join(os.tmpdir(),'dnd-b1-publish-'));t.after(()=>fs.rm(root,{recursive:true,force:true}));
+ const root=await fs.mkdtemp(path.join(tmpRoot(),'dnd-b1-publish-'));t.after(()=>fs.rm(root,{recursive:true,force:true}));
  for(const folder of ['meta','people','geo','lore'])await fs.cp(path.resolve('world',folder),path.join(root,folder),{recursive:true});
  await fs.mkdir(path.join(root,'drafts'));await fs.cp(path.resolve('world/drafts/w4-b1'),path.join(root,'drafts/w4-b1'),{recursive:true});
  const file=path.join(root,'meta/bosses.json');await fs.writeFile(file,JSON.stringify(before.bosses));const bytes=await fs.readFile(file,'utf8');

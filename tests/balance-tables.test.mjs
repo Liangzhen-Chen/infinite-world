@@ -2,7 +2,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
-import os from 'node:os';
+import{tmpRoot}from'../tools/tmp-root.mjs';
 import path from 'node:path';
 import {loadWorld} from '../tools/load-world.mjs';
 import {TABLE_NAMES,BASES,loadBalanceTablesSync,validateBalanceTables,applyBalanceOverrides,recomputeDerived,indexBalanceTables,balanceValue,parameterHash,summarizeBalanceTables,BALANCE_DIR} from '../tools/balance-tables.mjs';
@@ -122,7 +122,7 @@ test('校验：缺上下界、界对不上字段、曲线 x 不递增或 y 越�
 });
 
 test('随 world 加载：坏表让加载失败并指出文件与字段；不带参数表的世界照常加载',async()=>{
- const dir=fs.mkdtempSync(path.join(os.tmpdir(),'balance-'));
+ const dir=fs.mkdtempSync(path.join(tmpRoot(),'balance-'));
  try{
   const root=path.join(dir,'world');
   fs.cpSync(path.resolve(import.meta.dirname,'..','world','rules'),path.join(root,'rules'),{recursive:true});

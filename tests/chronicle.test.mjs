@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
-import os from 'node:os';
+import{tmpRoot}from'../tools/tmp-root.mjs';
 import path from 'node:path';
 import {loadWorld} from '../tools/load-world.mjs';
 import {WorldEngine} from '../server-plugin/engine.mjs';
@@ -12,7 +12,7 @@ const seed=JSON.parse(await fs.readFile('tests/fixtures/legacy/seed.json','utf8'
 async function setup(t){
  const world=await loadWorld(),engine=new WorldEngine(world),document=engine.initialFromLegacy(seed,'chronicle-test');document.state.minute=540;
  for(const id of ['npc_hw_linsui','npc_hw_hezhou']){world.npcs.find(n=>n.id===id).schedule={default:[{start:0,end:1440,location:document.state.location,activity:'营业',services:['trade']}]};document.state.npcs[id].location=document.state.location;document.state.npcs[id].activity='营业';}
- const directory=await fs.mkdtemp(path.join(os.tmpdir(),'dnd-chronicle-'));t.after(async()=>{const resolved=path.resolve(directory);assert.ok(resolved.startsWith(path.resolve(os.tmpdir())+path.sep));await fs.rm(resolved,{recursive:true,force:true});});
+ const directory=await fs.mkdtemp(path.join(tmpRoot(),'dnd-chronicle-'));t.after(async()=>{const resolved=path.resolve(directory);assert.ok(resolved.startsWith(path.resolve(tmpRoot())+path.sep));await fs.rm(resolved,{recursive:true,force:true});});
  const reducer=engine.reduce.bind(engine),store=new CampaignStorage(directory,{reducer});await store.create({id:'chronicle',worldVersion:world.version,document});
  const run=(tool,args,id,anchor=id)=>store.transact('chronicle',{id,anchor,input:{tool,args,eventId:id}},reducer);
  return {world,engine,document,store,directory,reducer,run};
