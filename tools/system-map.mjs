@@ -132,6 +132,7 @@ const SYSTEMS=[
  {id:'data_drafts',layer:'data',name:'内容草稿',dir:'world/drafts',modules:[]},
  {id:'data_ontology',layer:'data',name:'词汇表（L1，S0）',dir:'world/ontology',modules:[]},
  {id:'data_actions',layer:'data',name:'动作注册表与事件模板（A1）',dir:'world/actions',modules:[]},
+ {id:'data_rules',layer:'data',name:'数值参数表与目标表（S1，rules/tables/balance）',dir:'world/rules',modules:[]},
  // 内核层
  {id:'kernel_engine',layer:'kernel',name:'结算引擎',modules:['engine.mjs','activities.mjs','campaign-reducer.mjs','archived-reducer.mjs']},
  {id:'kernel_storage',layer:'kernel',name:'存档与迁移',modules:['storage.mjs','migrations.mjs','migrations/r1.mjs','rule-state-migration.mjs','world-registry.mjs','world-upgrade.mjs',
@@ -347,7 +348,7 @@ const modules=Object.fromEntries(CODE.map(f=>{
   stateWrites:s?[...s.writes].sort():[],stateReads:s?[...s.reads].sort():[],recordWrites:s?[...s.recW].sort():[],recordReads:s?[...s.recR].sort():[],
   rules:u.rules,world:u.world,worldDirs:u.dirs,lines:src(f).split('\n').length}];
 }));
-const dataSystemForDir={meta:'data_meta',geo:'data_geo',people:'data_people',lore:'data_lore',design:'data_design',art:'data_assets',audio:'data_assets',drafts:'data_drafts',ontology:'data_ontology'};
+const dataSystemForDir={meta:'data_meta',geo:'data_geo',people:'data_people',lore:'data_lore',design:'data_design',art:'data_assets',audio:'data_assets',drafts:'data_drafts',ontology:'data_ontology',rules:'data_rules'};
 const systemFacts=SYSTEMS.map(s=>{
  const ms=s.files.map(f=>modules[f]);
  const agg=k=>uniq(ms.flatMap(m=>m[k]));
@@ -515,6 +516,8 @@ const METRIC_TOOLS=[
  {tool:'tools/intent-score.mjs',script:'metrics:intents',measures:'意图语料校验与评分骨架（路由、签名、不支持率、兜底实体无系统反应率）',reads:['tests/intents','docs/actions.json','world/ontology'],baseline:null},
  {tool:'tools/probe-score.mjs',script:'metrics:probes',measures:'run-001 事件推演脚本化合理率',reads:['tests/probes/run-001'],baseline:'tests/probes/run-001/baseline.json'},
  {tool:'tools/gap-list.mjs',script:'docs:gaps',measures:'函数级差距清单（保留/改造/替换与迁移阶段）',reads:['server-plugin','extension','tools/arch-layers.mjs'],output:'docs/架构设计/差距清单.md'},
+ {tool:'tools/balance-tables.mjs',script:'balance:tables',measures:'S1 数值参数表（22 张，数值方案 §2）：随 world 加载的界内、必填、来源类别、可推算重算校验；包只能在界内覆盖；目标表 targets.json',reads:['world/rules/tables/balance','schemas/balance-table.schema.json','schemas/balance-targets.schema.json'],baseline:null},
+ {tool:'tools/balance-metrics.mjs',script:'balance:metrics',measures:'S1 指标库骨架：对存档文档计算货币总量与源汇分项、价格指数、家户基尼、技能阶与等级分布、名额计数、物种存量（其余登记为 todo）；登记 tools/balance-combat.mjs 为竞技场第一版',reads:['world/rules/tables/balance','tools/balance-combat.mjs'],baseline:null},
  {tool:'tools/arch-layers.mjs',script:null,measures:'模块 → 目标层与玩法包归组表（第 10 章），供 import 图与差距清单使用',reads:[],baseline:null},
  {tool:'tools/s0-metrics.mjs',script:'metrics',measures:'以上全部一键产出',reads:[],baseline:null},
 ];

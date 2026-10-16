@@ -108,13 +108,16 @@ function wealthGini({document,world}){
  need(Array.isArray(world?.npcs),'需要世界数据（world.npcs）');
  const purses=new Map();
  for(const [key,n] of Object.entries(ledger.accounts)){const owner=purseOwner(key);if(owner!==null)purses.set(owner,(purses.get(owner)??0)+n);}
- const housed=new Set(),units=[];
- for(const h of world.households??[]){let sum=0;for(const m of h.members??[]){housed.add(m);sum+=purses.get(m)??0;}units.push(sum);}
+ // 人物首次动用钱款前不在账本里（旧字段 state.npcs[id].coins 未建），其钱款取世界数据 npc.coins；动过的以账本为准。
+ const touched=stateOf(document).npcs??{};
+ const cash=npc=>touched[npc.id]?(purses.get(npc.id)??0):(npc.coins??0);
+ const housed=new Set(),units=[],byId=new Map(world.npcs.map(n=>[n.id,n]));
+ for(const h of world.households??[]){let sum=0;for(const m of h.members??[]){housed.add(m);const npc=byId.get(m);if(npc)sum+=cash(npc);}units.push(sum);}
  let single=0;
- for(const npc of world.npcs)if(!housed.has(npc.id)){units.push(purses.get(npc.id)??0);single++;}
+ for(const npc of world.npcs)if(!housed.has(npc.id)){units.push(cash(npc));single++;}
  const player=purses.get('player')??null;
  return {households:units.length-single,singles:single,unitCount:units.length,gini:round(gini(units)),top1pct:topShare(units,0.01),lorenz:lorenz(units),playerPurse:player,
-  basis:'不含玩家；家户财富 = 成员钱袋铜钱之和（财富 = 账户 + 持有的 value：todo，待 S2 持有与统一估值）'};
+  basis:'不含玩家；家户财富 = 成员钱袋铜钱之和（动过钱款的取账本，没动过的取世界数据 coins；财富 = 账户 + 持有的 value：todo，待 S2 持有与统一估值）'};
 }
 function skillTiers({document,world}){
  need(Array.isArray(world?.npcs),'需要世界数据（world.npcs）');

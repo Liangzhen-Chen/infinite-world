@@ -2,7 +2,7 @@
  "title": "无限原野系统地图",
  "card": "K9",
  "generatedFrom": {
-  "commit": "refs/heads/r25",
+  "commit": "refs/heads/numt",
   "method": "运行时导出（注册表、规则表、工具定义、效果表、立场传导表）+ 静态正则扫描（import 图、函数体标识符、state 分区与 records 前缀、rules/world 读取）。静态扫描是近似：经 engine.byId、helper 间接或动态拼接路径的访问不计入。"
  },
  "scanMethods": {
@@ -17,7 +17,7 @@
  },
  "counts": {
   "layers": 6,
-  "systems": 44,
+  "systems": 45,
   "modules": 228,
   "advance": 59,
   "tools": 27,
@@ -41,7 +41,8 @@
     "data_assets",
     "data_drafts",
     "data_ontology",
-    "data_actions"
+    "data_actions",
+    "data_rules"
    ]
   },
   {
@@ -521,6 +522,27 @@
    "tools": [],
    "readBy": [],
    "files": 0
+  },
+  {
+   "id": "data_rules",
+   "name": "数值参数表与目标表（S1，rules/tables/balance）",
+   "layer": "data",
+   "card": null,
+   "dir": "world/rules",
+   "modules": [],
+   "lines": 0,
+   "stateWrites": [],
+   "stateReads": [],
+   "recordWrites": [],
+   "recordReads": [],
+   "rules": [],
+   "world": [],
+   "advance": [],
+   "subscribes": [],
+   "effects": [],
+   "tools": [],
+   "readBy": [],
+   "files": 1
   },
   {
    "id": "kernel_engine",
@@ -11590,6 +11612,16 @@
     "tools/w3-trades-publish.mjs",
     "tools/w5-content.mjs"
    ]
+  },
+  {
+   "dir": "world/rules",
+   "files": 1,
+   "keys": [],
+   "readers": [],
+   "tools": [
+    "tools/balance-tables.mjs",
+    "tools/system-map.mjs"
+   ]
   }
  ],
  "prompt": {
@@ -15435,6 +15467,27 @@
     "tools/arch-layers.mjs"
    ],
    "output": "docs/架构设计/差距清单.md"
+  },
+  {
+   "tool": "tools/balance-tables.mjs",
+   "script": "balance:tables",
+   "measures": "S1 数值参数表（22 张，数值方案 §2）：随 world 加载的界内、必填、来源类别、可推算重算校验；包只能在界内覆盖；目标表 targets.json",
+   "reads": [
+    "world/rules/tables/balance",
+    "schemas/balance-table.schema.json",
+    "schemas/balance-targets.schema.json"
+   ],
+   "baseline": null
+  },
+  {
+   "tool": "tools/balance-metrics.mjs",
+   "script": "balance:metrics",
+   "measures": "S1 指标库骨架：对存档文档计算货币总量与源汇分项、价格指数、家户基尼、技能阶与等级分布、名额计数、物种存量（其余登记为 todo）；登记 tools/balance-combat.mjs 为竞技场第一版",
+   "reads": [
+    "world/rules/tables/balance",
+    "tools/balance-combat.mjs"
+   ],
+   "baseline": null
   },
   {
    "tool": "tools/arch-layers.mjs",

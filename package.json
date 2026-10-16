@@ -11,6 +11,8 @@
     "test:settings": "node tools/compare-settings.mjs",
     "build-world": "node tools/build-world.mjs",
     "test:balance": "node tools/balance-combat.mjs",
+    "balance:tables": "node tools/balance-tables.mjs",
+    "balance:metrics": "node tools/balance-metrics.mjs",
     "backup": "node tools/backup.mjs",
     "build:release": "node tools/build-world.mjs --release",
     "build:final": "node tools/build-world.mjs --final",
