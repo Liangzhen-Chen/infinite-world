@@ -408,3 +408,5 @@ M2修复批审定写入PLAN（T61–T64）：Astra草案F4工具机会标注并�
 - 2026-10-16 R25 已合入：根因 npc-autonomy presence 快照写 activity:undefined（957d7f4f 引入），内存哈希含该键而 JSON 落盘丢键，导致导出/导入与重启读盘“事件校验失败”。修：不写未定义值；storage 事件哈希、快照与重放统一按 JSON 保存形式计算；旧存档哈希不符时只补救一次（补回缺失空键再验，原文件不改写，篡改仍拒绝）。新增 tests/save-roundtrip.test.mjs 6 项（长场景导出/导入、写盘/新进程读盘后继续推进逐字段一致；修前 5 项失败）。金快照不变。0 模型。
 
 - 2026-10-16 NUMT 已合入（Sonnet high 试用）：world/rules/tables/balance/ 22 张参数表（params/rows/curves 三区，每条带来源类别、出处、上下界、待标定标记）；tools/balance-tables.mjs 随 loadWorld 校验（越界、必填、来源、玩法决定须有决定记录、硬设定封闭、可推算重算；包只能界内覆盖），schema 两份；targets.json 90 条（NUM 49、BAL 41）；tools/balance-metrics.mjs（npm run balance:metrics）已实现货币总量与源汇、技能阶与等级分布，部分实现价格指数、基尼、名额、物种存量，其余登记待做。不改任何结算，金快照与提示不变。0 模型。
+
+- 2026-10-16 R26 已合入（Sonnet medium 试用）：性能测试“快照提交≤10ms”并行超时的根因是实现慢（快照序列化+哈希约5ms、同步落盘约5ms）；storage 改为事件落盘返回后异步构建快照（scheduleSnapshot，同战役下一操作先等完成，快照写失败只让回放变慢、不丢数据），基准取5次中位数、阈值10ms不变；快照提交约3ms，单跑与20进程并行各3次通过。遗留：“5000消息≤150ms”重负载下偶发超时。0 模型。
