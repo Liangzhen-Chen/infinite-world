@@ -146,7 +146,7 @@ test('负例：无人目击、私密或秘密记忆、未成年当事人都不�
 
 test('K10：订阅者由各模块自行登记，按原结算顺序执行，可登记新订阅者',async()=>{
  const {worldEventSubscribers,registerWorldEventSubscriber,publishWorldEvents}=await import('../server-plugin/world-events.mjs');
- assert.deepEqual(worldEventSubscribers().map(s=>s.id),['monster_society','npc_relations','npc_memory','spirit_grudges','boss_cognition','standing','npc_intelligence']);
+ assert.deepEqual(worldEventSubscribers().map(s=>s.id),['monster_society','npc_relations','npc_memory','spirit_grudges','boss_cognition','standing','faith_experience','npc_intelligence']);
  assert.throws(()=>registerWorldEventSubscriber({id:'standing',order:1,on(){}}),/重复登记/);
  assert.throws(()=>registerWorldEventSubscriber({id:'k10_bad',order:1}),/须有/);
  const seen=[],first=registerWorldEventSubscriber({id:'k10_first',order:-1,on:(d,e,events)=>seen.push(['first',events.length])});
