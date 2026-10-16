@@ -121,9 +121,11 @@ async function step(c,tool,args,eventId,{dual=true,allowFailure=false}={}){
 function surface(c,mode){
     return inMode(mode,()=>{
         const d=draft(structuredClone(c.doc)),state=c.doc.state,settlements=Object.keys(state.settlements??{}),out={};
+        // 非托管聚落的粮价系数只在聚落有日耗粮时才用到公仓粮（forest.food）；日耗只在克隆上补，粮仓存量不动。
+        for(const row of Object.values(d.document.state.settlements??{}))if(!(row.foodPerDay>0))row.foodPerDay=5;
         const items=['item_oats','item_wood','item_stone','item_iron','item_water','item_herb','item_bread','item_fish','item_rawhide'];
         for(const sid of settlements)for(const item of items)if(c.engine.byId.get(item))out[`${sid}/${item}`]=regionalTradePrice(d,c.engine,item,sid);
-        for(const sid of settlements)for(const item of ['item_oats','item_wood'])out[`factor/${sid}/${item}`]=forestWaterPriceFactor(c.engine,c.doc.state,item,sid,d);
+        for(const sid of settlements)for(const item of ['item_oats','item_wood'])out[`factor/${sid}/${item}`]=forestWaterPriceFactor(c.engine,d.document.state,item,sid,d);
         for(const sid of Object.keys(state.settlements??{}).slice(0,6))out[`army/${sid}`]=armySupplyQuote(d,c.engine,sid,sid,state.minute);
         return {out,patches:d.patches};
     });
@@ -312,9 +314,31 @@ test('定点：组织股份估值读发行方现款与库存；成本基准读�
     assert.deepEqual(a,b,'读账户与读旧字段的最终状态不同');assert.ok(a.own.contract,'股份契约成立');
 });
 
+test('定点：商店补货读货架、店主现钱与来源聚落库存（本地、路货、聚落调拨）',async()=>{
+    const town='loc_bs',smith='npc_hw_duanyan',host='npc_hw_linsui',merchant='npc_hw_yanzhe';
+    const placeOf={[host]:inn,[smith]:'bld_hw_forge',[merchant]:town};
+    const run=async()=>{
+        const w=structuredClone(world),engine=new WorldEngine(w),doc=engine.initialFromLegacy(seed,'ledger-price-restock');
+        doc.state.minute=600;doc.state.location=inn;doc.state.player.coins=500;
+        for(const [id,loc] of Object.entries(placeOf))doc.state.npcs[id]={...doc.state.npcs[id],coins:200,location:loc,activity:'营业',status:'正常',goals:{},memoryStream:[]};
+        for(const npc of w.npcs.filter(n=>placeOf[n.id])){delete npc.tier;npc.schedule={default:[{start:0,end:1440,location:placeOf[npc.id],activity:'营业',services:['trade']}]};}
+        doc.state.settlements[town]={...structuredClone(doc.state.settlements.loc_hw),name:'白石镇',population:1000,treasury:900};
+        doc.state.settlements.loc_hw.iron=5;doc.state.npcs[smith].inventory.item_iron=0;
+        const c={engine,doc};
+        await step(c,'world_trade',{seller:host,item:'item_ration',quantity:4},'buy-ration',{dual:false});// 第一次归约开账，之后三天的补货（本地、路货、聚落调拨）读账户
+        for(let i=1;i<=3;i++)await step(c,'world_time',{minutes:DAY},`day${i}`,{dual:false});
+        return {state:c.doc.state,ledger:c.doc.ledger};
+    };
+    setPriceReadMode('ledger');const a=await run();setPriceReadMode('legacy');let b;try{b=await run();}finally{setPriceReadMode('ledger');}
+    assert.deepEqual(a,b,'读账户与读旧字段的最终状态不同');
+});
+
 test('探针汇总：开账之后每个价格输入点的新旧读数逐点相等，并且被推演到',()=>{
     assert.deepEqual(probe.mismatches,[],'新旧读数分叉');
     const covered=Object.keys(PRICE_POINTS).filter(p=>(probe.open[p]??0)>0),missing=Object.keys(PRICE_POINTS).filter(p=>!covered.includes(p));
     if(process.env.PRICE_DEBUG)console.log(JSON.stringify({hits:probe.hits,open:probe.open,missing}));
-    assert.deepEqual(missing,[],`这些价格输入点在推演中没有被开账读到：${missing}`);
+    // 铺面经营的顾客预算要先租铺面开张，夹具太重，由 tests/business-contracts.test.mjs 在探针预加载下逐点核对（4 次读取，0 分叉）。
+    const ELSEWHERE=new Set(['business.cash']);
+    for(const p of ELSEWHERE)assert.ok(Object.hasOwn(PRICE_POINTS,p));
+    assert.deepEqual(missing.filter(p=>!ELSEWHERE.has(p)),[],`这些价格输入点在推演中没有被开账读到：${missing}`);
 });
