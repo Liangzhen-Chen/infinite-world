@@ -2,7 +2,7 @@ import {purse,workshopFund,moveCoins} from './money.mjs';
 import {declareLedgerWriter} from './ledger.mjs';
 declareLedgerWriter('npc-autonomy');
 import {facilityView} from './facility-state.mjs';
-import {applyPatches,digest} from './storage.mjs';
+import {applyPatches,digest,withLegacyUndefinedActivity} from './storage.mjs';
 import {scheduleAt} from './npc-schedule.mjs';
 import {npcPresenceAt,shareNpcMemory,npcCognitionView} from './npc-cognition.mjs';
 import {assertNpcObligationAction,npcObligationAt} from './npc-obligations.mjs';
@@ -74,6 +74,9 @@ function validateAction(d,engine,id,action,{at=d.get('state','minute'),presence=
  }else throw Error('自主行动类型未实现');
  return {minutes,location:actor.location,furnace,work};
 }
+// R25: a person whose state has no current activity yet (e.g. a fresh save before the first
+// schedule step) has no activity key; never write activity:undefined into the save.
+function presenceOf(n){return {location:n.location,...(n.activity===undefined?{}:{activity:n.activity}),status:n.status??'正常'};}
 function startTask(d,task,checked){
  if(checked.furnace){commit(d,checked.work);task.furnace={...checked.furnace,checkedUntil:task.start};}
  d.set(['state','npcAutonomy','tasks',task.id],task);
@@ -169,7 +172,7 @@ export function advanceNpcAutonomy(d,engine,before,after,eventId,{beforeState}={
    const choices=goal?[{kind:'audit_inventory',goal:goal.id}]:recipes.map(r=>({kind:'craft',recipe:r.id}));
    for(const action of choices){try{
     const checked=validateAction(d,engine,id,action,{at:start,presence});
-    const actorPresence={npcs:{[id]:{location:actor.location,activity:actor.activity,status:actor.status??'正常'}}};
+    const actorPresence={npcs:{[id]:presenceOf(actor)}};
     startTask(d,{id:actionId,npc:id,action:clone(action),start,finish:start+checked.minutes,presence:actorPresence,status:'进行中',rule:true},checked);break;
    }catch{/* Missing resources or occupied time is a skipped action, never success. */}}
   }
@@ -178,6 +181,8 @@ export function advanceNpcAutonomy(d,engine,before,after,eventId,{beforeState}={
  return results;
 }
 export function npcPlanFingerprint(document){return digest({minute:document.state.minute,npcs:document.state.npcs,location:document.state.location,companions:document.state.player.companions,obligations:document.state.obligations,actions:document.state.npcAutonomy});}
+// R25: a plan frozen before the fix fingerprinted task presence with activity:undefined.
+function legacyPlanFingerprint(document){const actions=withLegacyUndefinedActivity(document.state.npcAutonomy,['state','npcAutonomy']);return actions?digest({minute:document.state.minute,npcs:document.state.npcs,location:document.state.location,companions:document.state.player.companions,obligations:document.state.obligations,actions}):null;}
 export function npcPlanningContext(engine,document,{limit=12}={}){
  if(!Number.isInteger(limit)||limit<8||limit>20)throw Error('智能层人数须在8到20之间');
  const ranked=Object.keys(document.state.npcs).filter(id=>personSimulation(engine,document.state,id).value&&!personConstraint(engine,document.state,id)).map(id=>document.state.created?.[id]??engine.byId.get(id)).sort((a,b)=>{
@@ -188,7 +193,7 @@ export function npcPlanningContext(engine,document,{limit=12}={}){
   intelligence:{maxActions:mind.maxActions,horizonDays:mind.horizonDays,breaksRoutine:mind.offSchedule},goals:clone(goalsWithinHorizon(document.state.npcs[n.id].goals??n.goals,mind.horizonDays,day)),memories:npcCognitionView(engine,document,n.id).memories.slice(-5),knownRecipes:engine.world.recipes.filter(r=>r.teachers?.includes(n.id)||document.state.npcs[n.id].recipes?.[r.id]).map(r=>({id:r.id,minutes:r.minutes,materials:r.materials})),relations:n.relationships.map(r=>({with:r.with,type:r.type,trust:r.trust})),vocations:npcVocationOptions(engine,document.state,n.id)};})};
 }
 export function applyNpcPlan(d,engine,input,eventId){
- if(input.kind!=='npc-plan'||input.version!==1||input.minute!==d.get('state','minute')||input.stateFingerprint!==npcPlanFingerprint(d.document))throw Error('智能层计划不是当前状态的冻结输入');
+ if(input.kind!=='npc-plan'||input.version!==1||input.minute!==d.get('state','minute')||input.stateFingerprint!==npcPlanFingerprint(d.document)&&input.stateFingerprint!==legacyPlanFingerprint(d.document))throw Error('智能层计划不是当前状态的冻结输入');
  if(!Array.isArray(input.proposals)||input.proposals.length>20)throw Error('计划人数超限');
  const ids=new Set(),results=[];
  // 计划长度由灵智决定：超出本人谋算的后续步骤逐条拒绝；旧事件重放仍按每人两步。
@@ -203,7 +208,7 @@ export function applyNpcPlan(d,engine,input,eventId){
    if(action.kind==='switch_vocation'){results.push({id,status:'已完成',detail:switchVocation(d,engine,proposal.npc,action.vocation,id)});continue;}
    if(action.kind==='share'){const detail=shareNpcMemory(d,engine,{from:proposal.npc,to:action.to,memoryId:action.memoryId,channel:action.channel,eventId:id});results.push({id,status:detail.delivered?'已完成':'进行中',detail});continue;}
    const checked=validateAction(d,engine,proposal.npc,action),start=d.get('state','minute');
-   const task={id,npc:proposal.npc,action:clone(action),start,finish:start+checked.minutes,presence:{npcs:Object.fromEntries([proposal.npc,action.seller].filter(Boolean).map(who=>{const n=d.get('state','npcs',who);return [who,{location:n.location,activity:n.activity,status:n.status??'正常'}];}))},status:'进行中',planEvent:eventId};
+   const task={id,npc:proposal.npc,action:clone(action),start,finish:start+checked.minutes,presence:{npcs:Object.fromEntries([proposal.npc,action.seller].filter(Boolean).map(who=>{const n=d.get('state','npcs',who);return [who,presenceOf(n)];}))},status:'进行中',planEvent:eventId};
    startTask(d,task,checked);results.push({id,status:'进行中',finish:task.finish});
   }catch(error){results.push({id,status:'拒绝',reason:error.message});}
  }}
