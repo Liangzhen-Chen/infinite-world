@@ -1,7 +1,7 @@
 import {isReputationSettlement}from'./reputation-registry.mjs';
 import {standing} from './standing.mjs';
 import {marketFactor}from'./promotion.mjs';
-import {personBusiness,placeSettlement,settlementPopulationCount} from './entity-view.mjs';
+import {personBusinesses,placeSettlement,settlementPopulationCount} from './entity-view.mjs';
 import {actorPath} from './npc-state.mjs';
 
 // Shops (guide 3.7, 3.13): each registered shop restocks on its own cycle from
@@ -48,7 +48,8 @@ export function shopStores(world){
 }
 export function currentShops(engine,state){
     const rules=shopRules(engine);if(!rules)return[];
-    const businesses=new Map([...new Set([...engine.world.npcs.map(n=>n.id),...Object.keys(state.npcs??{})])].map(id=>[id,personBusiness(engine,state,id)]));
+    // One legal index for the whole pass; people who can never be open are skipped (entity-view.mjs personBusinesses).
+    const businesses=personBusinesses(engine,state,(rules.stores??[]).map(s=>s.keeper));
     const projected=[...businesses].map(([id,b])=>b?{...engine.byId.get(id),shopType:b.shopType.value,settlement:b.settlement.value,workplace:{location:b.location.value},services:b.open.value?['trade']:[],serviceCatalog:[]}:null).filter(Boolean);
     const stores=[...rules.stores??[],...derivedShops({...engine.world,npcs:projected},rules).filter(s=>s.trades&&s.restock.length)],used=new Set(),out=[];
     for(const store of stores){

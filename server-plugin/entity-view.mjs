@@ -3,7 +3,7 @@
 // These projections never persist or cache results. They grant no capabilities.
 import {actorId,actorPath} from './npc-state.mjs';
 import {npcHousehold,npcAgeAt,npcSchedule,npcServices,activeRental,beginHouseholdReads} from './npc-state.mjs';
-import {currentEmployment} from './employment-state.mjs';
+import {currentEmployment,employmentActive} from './employment-state.mjs';
 import {organizationState,memberOrganizations} from './organization-state.mjs';
 import {rankedOffice,adminLevel} from './promotion-view.mjs';
 import {upperOffice} from './noble-state.mjs';
@@ -118,8 +118,9 @@ export function personOccupation(engine,state,id){
     const former=officeRows(state).some(([,r])=>r.holder===id&&(r.since??0)<=(state.minute??0))||dismissed(state,id)||[...(engine.world.settlementProfiles??[])].some(p=>p.details?.governance?.head===id&&settlementHead(engine,state,p.id).value!==id);
     return former&&!career.value.vocation?fact('居民','current office vacancy',true):fact(career.value.occupation,career.source,career.override);
 }
-export function personEmployment(engine,state,id,minute=state.minute){
-    const row=currentEmployment(state,actorId(engine.world,id),minute);
+export function personEmployment(engine,state,id,minute=state.minute,constraints=null){
+    // The shared pass index (personConstraints) holds the same active rows in record order.
+    const worker=actorId(engine.world,id),row=constraints?.employment?(constraints.employment.get(worker)??[]).find(r=>r.createdAt<=minute&&minute<r.deadline)??null:currentEmployment(state,worker,minute);
     return row?fact(row,`state.records.${row.id}`,false):null;
 }
 // Public-facing roles exclude household membership and private associations.
@@ -188,7 +189,7 @@ export function personRoutine(engine,state,id,constraints=null){
     const offices=personOffices(engine,state,id).filter(e=>e.override),office=offices.sort((a,b)=>(b.value.since??0)-(a.value.since??0))[0]?.value;
     const job=career.vocation,changed=Boolean(office||job||ownRows||displaced||removed||orgRow||delegated),residence=actor?.residence;
     if(!changed)return null;
-    const home=residence?.home??npcHousehold(engine,state,id)?.homeLocation??actor?.vocation?.home??base?.schedule?.default?.find(s=>s.start===0)?.location??actor?.location;
+    const home=residence?.home??npcHousehold(engine,state,id,constraints)?.homeLocation??actor?.vocation?.home??base?.schedule?.default?.find(s=>s.start===0)?.location??actor?.location;
     const orgJob=orgRow?groupView(engine,state,orgRow.id)?.organization.value:null;
     const location=office?.workplace??job?.location??orgJob?.seat??home,hours=office?(engine.rules.governance?.officeHours??[480,1020]):job?.hours??[480,1020];
     const services=office?['governance','register']:job?.slotServices??[];
@@ -267,11 +268,18 @@ export function personSimulation(engine,state,id){
 export function personConstraints(engine,state){
     const out=new Map();
     out.offices=[];out.organizations=[];out.dismissals=new Set();out.stewards=[];
+    // Active employment and leases by person and the festival occurrence rows, in
+    // record order, so one pass (schedules, shop derivation, migration) reads them
+    // without rescanning the records per person.
+    out.employment=new Map();out.leases=new Map();out.festivals=[];
     for(const [key,r] of records(state)){
         if(r.category==='governance_office')out.offices.push([key,r]);
         if(r.category==='organization')out.organizations.push(r);
         if(r.category==='housing_steward')out.stewards.push(r);
         if(r.category==='legal_dismissal')out.dismissals.add(r.npc??r.subject);
+        if(r.category==='festival')out.festivals.push(r);
+        if(employmentActive(r)){const rows=out.employment.get(r.worker)??[];rows.push(r);out.employment.set(r.worker,rows);}
+        if(r.kind==='asset_lease'&&r.status==='有效'){const rows=out.leases.get(r.tenant)??[];rows.push(r);out.leases.set(r.tenant,rows);}
         if(!['legal_detention','legal_custody'].includes(r.category)||r.status&&r.status!=='生效')continue;
         const subject=r.subject??state.records?.[r.case]?.offender??(r.category==='legal_custody'?'player':null),id=actorId(engine.world,subject);
         const entries=out.get(id)??[];entries.push({key,r});out.set(id,entries);
@@ -366,19 +374,36 @@ export function placeSettlement(engine,state,location){
     while(location&&!seen.has(location)){if(ids.has(location))return fact(location,'current place ancestry');seen.add(location);location=(state.created?.[location]??engine.byId.get(location))?.parent;}
     return fact(null,'current place ancestry');
 }
-export function personBusiness(engine,state,id){
+// A read-only pass over many people (shop derivation) hands in one legal index
+// (personConstraints) instead of rebuilding it per person.
+export function personBusiness(engine,state,id,constraints=null){
     const base=baseOf(engine,state,id),actor=state.npcs?.[id]??state.creatures?.[id];if(!base)return null;
-    const vocation=actor?.vocation,rule=engine.rules.npcGrowth?.vocations?.find(v=>v.id===vocation?.id),schedule=npcSchedule(engine,state,id)??actor?.residence?.schedule;
+    const vocation=actor?.vocation,rule=engine.rules.npcGrowth?.vocations?.find(v=>v.id===vocation?.id),schedule=npcSchedule(engine,state,id,undefined,constraints)??actor?.residence?.schedule;
     const slots=Object.values(schedule??{}).filter(Array.isArray).flat().filter(s=>s.services?.includes('trade'));
     const changed=Boolean(vocation||actor?.residence||actor?.workplace),trades=vocation?npcServices(engine,state,id).includes('trade')||slots.length>0:
         (base.services??[]).includes('trade')||(base.serviceCatalog??[]).some(s=>s.kind==='trade');
     const rental=activeRental(state,id),rentedWork=rental&&rental.use!=='home'?rental.subject:null;
     const location=rentedWork??actor?.workplace?.location??rule?.location??(changed?slots[0]?.location:null)??base.workplace?.location??base.location;
     const job=personEmployment(engine,state,id)?.value,employed=job&&job.status!=='罢工'&&job.starts<=state.minute;
-    const open=Boolean(actor)&&!employed&&!['死亡','濒死','昏迷','患病'].includes(actor.status)&&!personConstraint(engine,state,id)&&!actor.caring&&!actor.levy&&!actor.scheduleTravel&&!actor.cognitionTravel&&trades&&!(actor.residence?.workChanged&&!vocation);
+    const held=personConstraint(engine,state,id,undefined,constraints);
+    const open=Boolean(actor)&&!employed&&!['死亡','濒死','昏迷','患病'].includes(actor.status)&&!held&&!actor.caring&&!actor.levy&&!actor.scheduleTravel&&!actor.cognitionTravel&&trades&&!(actor.residence?.workChanged&&!vocation);
     return {keeper:fact(id,'identity'),location:fact(location,changed?`state.npcs.${id} + npc-state.npcSchedule`:`catalog.${id}.workplace`,changed),
         settlement:placeSettlement(engine,state,location),shopType:fact(actor?.shopType??rule?.shopType??base.shopType,changed?`state.npcs.${id} + rules.npcGrowth.vocations`:`catalog.${id}.shopType`,changed),
-        open:fact(open,'current services + health + legal constraints',changed||Boolean(personConstraint(engine,state,id)))};
+        open:fact(open,'current services + health + legal constraints',changed||Boolean(held))};
+}
+// Every person whose business could be open now, read with one shared legal
+// index. Someone with neither a trading catalogue nor a changed livelihood
+// (vocation) can never be open, so the pass skips them: the same result as
+// computing their view, without the per-person record scans.
+export function personBusinesses(engine,state,keepers=[]){
+    const constraints=personConstraints(engine,state),out=new Map(),always=new Set(keepers);
+    for(const id of new Set([...engine.world.npcs.map(n=>n.id),...Object.keys(state.npcs??{}),...keepers])){
+        const base=baseOf(engine,state,id);if(!base)continue;
+        const actor=state.npcs?.[id]??state.creatures?.[id];
+        if(!actor?.vocation&&!always.has(id)&&!(base.services??[]).includes('trade')&&!(base.serviceCatalog??[]).some(s=>s.kind==='trade'))continue;
+        out.set(id,personBusiness(engine,state,id,constraints));
+    }
+    return out;
 }
 export function settlementPopulationCount(engine,state,id){
     const population=state.settlements?.[id]?.population;

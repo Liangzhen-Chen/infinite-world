@@ -103,10 +103,12 @@ function enrollment(d,row,who){
  const a=row.enrollments?.find(a=>a.person===who),source=a&&d.get(...path(`festival-source:${a.sourceEvent}`));
  return a&&source?.category==='festival_consent'&&source.festival===row.id&&digest(source.agreement)===digest(a)&&a.definition===row.definition&&a.createdAt<row.due;
 }
-export function festivalScheduleAt(engine,state,npcId,minute,slot){
+export function festivalScheduleAt(engine,state,npcId,minute,slot,constraints=null){
  // W5: a resident host's festival duty follows their current occupation and
  // residence. Only the existing work slot containing the whole ceremony moves;
  // sleep, care, military service and changed livelihoods keep their routines.
+ // A schedule pass hands in its record index (personConstraints.festivals), so
+ // the occurrence rows are read once instead of rescanning the records per person.
  const npc=engine.byId.get(npcId),own=state?.npcs?.[npcId];
  for(const f of engine.world.festivals??[]){
   const r=f.runtime,duty=r?.hostDuty;if(r?.status!=='active'||r.host!==npcId||!duty||!slot)continue;
@@ -118,7 +120,7 @@ export function festivalScheduleAt(engine,state,npcId,minute,slot){
  }
  if(!state||!engine.world.festivals?.length)return slot;
  const d={get:(...p)=>p.slice(1).reduce((x,k)=>x?.[k],state)};
- for(const row of Object.values(state.records??{})){
+ for(const row of constraints?.festivals??Object.values(state.records??{})){
   if(row.category!=='festival'||!row.formal||!['planned','held'].includes(row.status)||minute>=row.endsAt)continue;
   if(row.status==='planned'){const f=festivalCalendar(engine).find(f=>f.id===row.custom);if(!f?.formal||!matches(f,row))continue;}
   const attending=row.status==='held'?row.participants.includes(npcId)||row.supplier===npcId:

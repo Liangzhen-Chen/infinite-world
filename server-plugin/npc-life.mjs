@@ -468,11 +468,13 @@ const placeName=(engine,id)=>engine.byId.get(id)?.name??id;
 // U3: a declared winter famine (hazard clock) counts as going hungry too.
 const hungry=(engine,state,settlement,minute)=>(state.settlements?.[settlement]?.starvation??0)>=migrationRules(engine).livelihood.starvationDays||Boolean(famineAt(state,settlement,minute));
 const present=(engine,state,x)=>state.npcs[x]?alive(state,x):Boolean(engine.byId.get(x));
-function mobile(engine,state,id){
- if(personConstraint(engine,state,id))return false;
+// The daily migration pass hands in one shared record index (personConstraints)
+// so each person's legal, employment and lease reads do not rescan the records.
+function mobile(engine,state,id,constraints=null){
+ if(personConstraint(engine,state,id,undefined,constraints))return false;
  if(state.npcs[id]?.levy)return false;
  const n=state.npcs[id];
- return lifeActor(engine,state,id)&&Boolean(npcSchedule(engine,state,id))&&settled(state,id)&&!incapable.includes(n.status)&&!n.caring&&!npcMigration(state,id);
+ return lifeActor(engine,state,id)&&Boolean(npcSchedule(engine,state,id,undefined,constraints))&&settled(state,id)&&!incapable.includes(n.status)&&!n.caring&&!npcMigration(state,id);
 }
 // With no relative or friend to take them, a household elsewhere may still
 // take in someone fleeing hunger or harm: the settlement is not short of food
@@ -569,10 +571,13 @@ function followers(engine,d,id,from,minute){
 }
 function migrationDay(d,engine,minute){
  const r=migrationRules(engine);if(!r)return;
+ // Migration plans are written under state.family, never records, so the
+ // record index built once here stays exact for the whole pass.
+ const constraints=personConstraints(engine,d.get('state'));
  for(const id of Object.keys(d.get('state','npcs')).sort()){
-  const state=d.get('state');if(!mobile(engine,state,id))continue;
+  const state=d.get('state');if(!mobile(engine,state,id,constraints))continue;
   const why=migrationReason(engine,state,id,minute,d.document.randomSeed);if(!why)continue;
-  const from=npcHousehold(engine,state,id),mid=`migration_${key(id,minute)}`;
+  const from=npcHousehold(engine,state,id,constraints),mid=`migration_${key(id,minute)}`;
   const row={id:mid,person:id,reason:why.reason,cause:why.cause,...(why.fleeing?{fleeing:why.fleeing}:{}),...(why.stranger?{stranger:true}:{}),host:why.host,
    from:{household:from.id,settlement:from.settlement,home:from.homeLocation},to:{household:why.house.id,settlement:why.house.settlement,home:why.house.homeLocation},
    decidedAt:minute,departAt:minute+r.noticeDays*DAY+r.departMinute,postponed:0,status:'待出发'};
