@@ -16,8 +16,8 @@ import {settleNpcPlanning}from'./npc-planning-service.mjs';
 import {getChronicle,syncChronicleIndex}from'./chronicle.mjs';
 import {groupHistory}from'../extension/history-window.mjs';
 import {registerUIRoutes} from './ui-routes.mjs';
-import {translateCall,narrateExecution,CLIENT_READS} from './action-gateway.mjs';
-import {loadActionRegistry,actionCall,catalogRow,searchActions,CONSENT_PENDING} from './action-registry.mjs';
+import {translateCall,narrateExecution,timeSegments,CLIENT_READS} from './action-gateway.mjs';
+import {loadActionRegistry,actionCall,catalogRow,searchActions,consentIsOwn,CONSENT_PENDING} from './action-registry.mjs';
 import {worldActions} from './action-affordances.mjs';
 import {ensurePopulationProfiles,modelProfileGenerator}from'./population-service.mjs';
 import {beginConsistencyTurn,captureConsistencySearch,captureConsistencyFailure,reconcileConsistencyTurn,reviewConsistencyReply,assertConsistencyCommit,sharedModelClient}from'./consistency-service.mjs';
@@ -142,14 +142,29 @@ export async function init(router,{ world=null, baseRoot=null, newCampaignSeed=r
         const store=getStore(req),view=await store.read(campaignId);
         if(view.document.schemaVersion!==2)throw new Error('存档尚未升级到新引擎');
         if(tool==='world_turn'&&req.body.reviewId)await assertConsistencyCommit(store,campaignId,{reviewId:req.body.reviewId,anchor,args,expectedSequence});
-        let saved;
-        try{saved=await store.transact(campaignId,{id:eventId,input:{tool,args,eventId},anchor,expectedSequence},store.reducer);}
-        catch(error){
-            await captureConsistencyFailure(store,campaignId,{anchor,expectedSequence,tool,args,eventId},error);
-            // world_act never carries consent: when the legacy judgement asks for the other party's agreement, say so in-world.
-            if(translated.action&&/同意/.test(error.message))throw new Error(CONSENT_PENDING);
-            throw error;
+        // A wait longer than one event may span (engine cap, see action-gateway) runs as several world_time events, one per segment,
+        // the same events the player would have made by waiting in stages. A retry of the whole request finds segment 1 recorded.
+        const segments=req.body.tool==='world_act'?timeSegments(tool,args,view.document.state.minute):null;
+        if(segments){
+            const prior=await store.recorded(campaignId,`${eventId}#1`);
+            if(prior)return {ok:true,duplicate:true,result:{...prior.result,segments:segments.length},reference:view.reference};
         }
+        const runs=segments?segments.map((segment,i)=>({args:segment,eventId:`${eventId}#${i+1}`})):[{args,eventId}];
+        let saved,interrupted=null;const saves=[];
+        for(const [i,run] of runs.entries()){
+            try{
+                saved=await store.transact(campaignId,{id:run.eventId,input:{tool,args:run.args,eventId:run.eventId},anchor,expectedSequence:i?saved.reference.sequence:expectedSequence},store.reducer);
+                saves.push(saved);
+            }catch(error){
+                if(i){interrupted=error.message;break;}// earlier segments stand, exactly as if the player had stopped waiting there
+                await captureConsistencyFailure(store,campaignId,{anchor,expectedSequence,tool,args,eventId},error);
+                // world_act never carries someone else's consent: when the legacy judgement asks for the other party's agreement, say so in-world.
+                // (An action acting on the player themself keeps its own refusal reason.)
+                if(translated.action&&!consentIsOwn(translated.action,req.body.args?.slots??{})&&/同意/.test(error.message))throw new Error(CONSENT_PENDING);
+                throw error;
+            }
+        }
+        if(segments)saved={...saved,duplicate:saves.every(row=>row.duplicate),result:{...saved.result,elapsed:saves.reduce((n,row)=>n+(row.result?.elapsed??0),0),segments:saves.length,...(interrupted?{interrupted}:{})}};
         const after=saved.document??(await store.read(campaignId)).document;
         // Event-stream text from the effects the engine applied (display only; a failure here never undoes the action).
         let narration;

@@ -77,7 +77,7 @@ test('D27 存钱 + D28 取钱（含利息）：存 1000（1200→200，账户 10
  const dep=await ui.choose('trade.deposit',{coins:1000});assert.ok(dep.ok,dep.error);const mid=await ui.read();
  assert.equal(mid.state.player.coins,200,'D27①1200→200');assert.equal(account(mid),1000,'D27②账户余额 1000');assert.equal(vault(mid)-vault(before),1000,'D27④钱庄库银 +1000');
  conserved(before,mid,'D27',new WorldEngine(world));
- for(let i=0;i<3;i++){const wait=await ui.choose('time',{minutes:30*DAY});assert.ok(wait.ok,wait.error);}
+ const wait=await ui.choose('time',{minutes:90*DAY});assert.ok(wait.ok,wait.error);assert.equal(wait.result.segments,3,'三个月：A1b 起 world_act 自动拆成 3 段 30 天');
 
  const look=await ui.choose('trade.bank_inspect',{});assert.ok(look.ok,look.error);
  const pre=await ui.read();assert.equal(account(pre),1015,'D28①利息 = 1000 × 0.5% × 3 = 15');

@@ -115,7 +115,8 @@ test('D27 存钱 / D28 三个月后取钱：存入进钱庄账户，利息出自
  const menu=await ui.menu();assert.ok(menu.actions.some(a=>a.id==='core:trade.deposit'),'驿站钱庄柜面可存钱');
  const dep=await ui.choose('trade.deposit',{coins:1000});assert.ok(dep.ok,dep.error);const mid=await ui.read();
  assert.equal(before.state.player.coins-mid.state.player.coins,1000);assert.ok(dep.result.balance>0&&dep.result.balance<=1000,'账户余额（扣存入手续费）');conserved(before,mid,'D27');
- await ui.choose('time',{until:{dayOffset:90,hour:10}});
+ const wait=await ui.choose('time',{until:{dayOffset:90,hour:10}});assert.ok(wait.ok,wait.error);// 单次上限 30 天：A1b 起 world_act 自动拆成三段
+ assert.equal((await ui.read()).state.minute,(Math.floor(mid.state.minute/DAY)+90)*DAY+10*60,'真的过了三个月');
  const look=await ui.choose('trade.bank_inspect',{});assert.ok(look.ok,look.error);
  const balance=look.result.balance;assert.ok(balance>=dep.result.balance,'三个月后余额不少于存入时');
  const pre=await ui.read(),out=await ui.choose('trade.withdraw',{coins:balance});assert.ok(out.ok,out.error);const after=await ui.read();

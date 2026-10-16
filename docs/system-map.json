@@ -2,7 +2,7 @@
  "title": "无限原野系统地图",
  "card": "K9",
  "generatedFrom": {
-  "commit": "refs/heads/s1b",
+  "commit": "refs/heads/a1b",
   "method": "运行时导出（注册表、规则表、工具定义、效果表、立场传导表）+ 静态正则扫描（import 图、函数体标识符、state 分区与 records 前缀、rules/world 读取）。静态扫描是近似：经 engine.byId、helper 间接或动态拼接路径的访问不计入。"
  },
  "scanMethods": {
@@ -678,7 +678,7 @@
     "server-plugin/compat/v2-phase1-engine.mjs",
     "server-plugin/legacy/core.js"
    ],
-   "lines": 1599,
+   "lines": 1606,
    "stateWrites": [
     "checks",
     "crafted",
@@ -2494,7 +2494,7 @@
     "server-plugin/ui-overview.mjs",
     "server-plugin/ui-personal.mjs"
    ],
-   "lines": 684,
+   "lines": 699,
    "stateWrites": [],
    "stateReads": [
     "created",
@@ -2592,7 +2592,7 @@
     "extension/ui-actions.mjs",
     "extension/actions-view.mjs"
    ],
-   "lines": 522,
+   "lines": 593,
    "stateWrites": [],
    "stateReads": [
     "created",
@@ -14352,7 +14352,9 @@
      "means": "耐久与维修",
      "pattern": "\\.durability\\b",
      "modules": [
+      "server-plugin/action-text.mjs",
       "server-plugin/activities.mjs",
+      "server-plugin/applied-effects.mjs",
       "server-plugin/boss-negotiation.mjs",
       "server-plugin/checks.mjs",
       "server-plugin/consistency-review.mjs",
@@ -14399,6 +14401,7 @@
       "sim_transport",
       "sim_wildlife",
       "sim_works",
+      "ui_actions",
       "ui_client",
       "ui_scene",
       "ui_server"
@@ -14459,6 +14462,7 @@
     "sim_transport",
     "sim_wildlife",
     "sim_works",
+    "ui_actions",
     "ui_client",
     "ui_host",
     "ui_scene",
@@ -15602,7 +15606,7 @@
     "routes"
    ],
    "worldDirs": [],
-   "lines": 111
+   "lines": 113
   },
   "server-plugin/action-gateway.mjs": {
    "system": "ui_actions",
@@ -15617,7 +15621,7 @@
    "rules": [],
    "world": [],
    "worldDirs": [],
-   "lines": 23
+   "lines": 44
   },
   "server-plugin/action-registry.mjs": {
    "system": "ui_actions",
@@ -15631,7 +15635,7 @@
    "worldDirs": [
     "actions"
    ],
-   "lines": 93
+   "lines": 107
   },
   "server-plugin/action-text.mjs": {
    "system": "ui_actions",
@@ -15655,7 +15659,7 @@
    "worldDirs": [
     "actions"
    ],
-   "lines": 122
+   "lines": 126
   },
   "server-plugin/activities.mjs": {
    "system": "kernel_engine",
@@ -15929,7 +15933,7 @@
    "rules": [],
    "world": [],
    "worldDirs": [],
-   "lines": 36
+   "lines": 66
   },
   "server-plugin/archived-reducer.mjs": {
    "system": "kernel_engine",
@@ -17801,7 +17805,7 @@
    "rules": [],
    "world": [],
    "worldDirs": [],
-   "lines": 281
+   "lines": 296
   },
   "server-plugin/interactions.mjs": {
    "system": "base_interactions",
@@ -20835,7 +20839,7 @@
    "rules": [],
    "world": [],
    "worldDirs": [],
-   "lines": 468
+   "lines": 475
   },
   "server-plugin/summons.mjs": {
    "system": "sim_companion",

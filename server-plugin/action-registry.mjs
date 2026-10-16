@@ -39,6 +39,16 @@ export function findAction(registry,id){
  return registry.byId.get(id)??(id.includes(':')?null:registry.byId.get(`core:${id}`))??null;
 }
 export const CONSENT_PENDING='需要对方答应（对话功能完成后开放）';
+// Is the party whose consent the action needs the player? `consent.from`: 'self' (the player is always the one acted on,
+// e.g. seeking care), 'party' (the person named in slot `consent.slot` is, and it is the player when that slot says so);
+// any other source ('target', a slot name) is somebody else's decision.
+export function consentIsOwn(action,slots={}){
+ const rule=action?.consent;
+ if(!rule)return false;
+ if(rule.from==='self')return true;
+ if(rule.from==='party')return slots?.[rule.slot]==='player';
+ return false;
+}
 // world_act → the legacy public tool call it aliases. Slot names are the legacy parameter names;
 // a template's fixed parameters win over slots of the same name.
 export function actionCall(registry,id,slots={}){
@@ -46,9 +56,12 @@ export function actionCall(registry,id,slots={}){
  if(!action)throw Error(`没有这个动作：${String(id).slice(0,80)}；先用 world_actions 查此处可做之事`);
  if(slots===null||typeof slots!=='object'||Array.isArray(slots))throw Error('slots 须是对象');
  if(action.projection)return {action,projection:action.projection};
- // Consent is the other party's decision (05 §5.7), never a slot the caller fills; until A2's NPC decision exists
- // a call that would need it is refused, and the legacy path's own judgement (e.g. an innkeeper on trade duty) still applies.
- if('consent' in slots)throw Error(CONSENT_PENDING);
+ // Consent comes from the party the action acts on (05 §5.7, 06 §6.5), never from the caller on someone else's behalf.
+ // An action that declares the player as that party takes it from the player (or derives it from the act itself);
+ // for anyone else a caller-filled consent is refused, and until A2's NPC decision exists the legacy path's own judgement
+ // (e.g. an innkeeper on trade duty) is all that applies.
+ const own=consentIsOwn(action,slots);
+ if('consent' in slots&&(!own||typeof slots.consent!=='boolean'))throw Error(own?'同意只能填是或否':CONSENT_PENDING);
  const allowed=new Set(action.slots.map(s=>s.name)),extra=Object.keys(slots).filter(k=>!allowed.has(k)&&k!=='operation');
  if(extra.length)throw Error(`${action.label}没有这些槽位：${extra.join('、')}；可填：${[...allowed].join('、')||'无'}`);
  const missing=action.slots.filter(s=>s.required&&s.consent!==true&&slots[s.name]===undefined&&action.call.fixed?.[s.name]===undefined).map(s=>s.name);
@@ -56,6 +69,7 @@ export function actionCall(registry,id,slots={}){
  // A tool with a free-form operation (world_learn, world_research) takes it as a slot; a fixed sub-operation always wins.
  const args={...slots,...action.call.fixed??{}};
  if(action.call.operation)args.operation=action.call.operation;
+ if(own&&action.consent.derive===true&&!('consent' in slots))args.consent=true;
  return {action,tool:action.call.tool,args,readOnly:Boolean(action.readOnly)};
 }
 // Reverse: which registered action a stored legacy call was. A template whose fixed parameters all match wins over its base.

@@ -63,6 +63,8 @@ function options(ctx,source,target){
 // unless the legacy path decides by itself: a host on trade duty rents rooms, a bank desk lends against a pledge.
 function consentPending(ctx,action,fill){
  if(!action.consent)return false;
+ if(action.consent.from==='self')return false;// the player is the one acted on: their own consent, nobody else's
+ if(action.consent.from==='party')return fill[action.consent.slot]!==undefined&&fill[action.consent.slot]!=='player';
  if(action.id==='core:trade.lodge'&&fill.seller){let schedule=null;try{schedule=npcSchedule(ctx.engine,ctx.s,fill.seller);}catch{schedule=null;}return Boolean(schedule)&&!JSON.stringify(schedule).includes('"trade"');}
  if(action.id==='core:trade.borrow'&&ctx.bank&&fill.seller===ctx.bank.keepers?.[0])return false;
  return true;
