@@ -136,9 +136,10 @@ export function validateWildlife(world){
 }
 export function advanceWildlife(d,engine,day){
     if(!engine.rules.wildlife)return;
-    for(const habitat of engine.rules.wildlife.habitats){
+    // Ranges founded during this advance (tribal-awakening.mjs) join the day's settlement at once.
+    for(const habitat of [...engine.rules.wildlife.habitats,...(engine.runtimeHabitats??[])]){
         const r=clone(d.get(...path(habitat.id)));if(!r)throw new Error('生态记录未迁移');
-        if(r.lastDay!==day-1)throw new Error(`生态日结不连续，拒绝重算过往种群：${habitat.id} 上次${r.lastDay}，本次${day}`);
+        if(r.lastDay!==day-1)throw new Error(`生态日结不连续，拒绝重算过往种群：${habitat.id} 上次 ${r.lastDay} 本次 ${day}`);
         const species=speciesAt(engine,habitat),forest=forestView(engine,d.get('state'),habitat.location);
         if(day%7===6){
             const rng=random(engine,d.document.randomSeed,`${habitat.id}:${day}`),season=engine.calendar(day*1440).season;

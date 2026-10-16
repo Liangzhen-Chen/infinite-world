@@ -63,7 +63,8 @@ export function recordNpcRelationEvidence(d,engine,before,events,...rest){
   for(const who of breached){const observer=people.find(x=>x!==who);add(`obligation:${id}:breached:${who}`,id,'违约',observer,who,minute,{trust:-5,affection:-1,respect:-1},{reason:o.reason??'未履行约定'});}
  }
  for(const [id,debt]of Object.entries(after.records??{})){
-  const old=before.records?.[id];if(debt.category!=='debt'||!old||debt.status===old.status)continue;
+  // A debt both opened and overdue within one elapsed span is still a breach.
+  const old=before.records?.[id]??(debt.category==='debt'&&debt.status==='逾期'?{status:'待偿还'}:null);if(debt.category!=='debt'||!old||debt.status===old.status)continue;
   if(debt.status==='逾期'&&old.status==='待偿还'&&debt.amount>debt.paid&&debt.deadline<=after.minute)add(`debt:${id}:overdue`,id,'违约',debt.creditor,debt.debtor,debt.overdueAt??debt.deadline,{trust:-5,affection:-1});
   if(debt.status==='已还清'&&old.paid<old.amount&&debt.paid===debt.amount){
    const paid=debt.paid-old.paid,debtorBefore=actor(before,debt.debtor),debtorAfter=actor(after,debt.debtor),creditorBefore=actor(before,debt.creditor),creditorAfter=actor(after,debt.creditor);

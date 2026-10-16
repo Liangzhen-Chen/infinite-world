@@ -29,7 +29,7 @@ function scheduledSlot(engine,npcId,minute,state,constraints=null){
         if(state){const next=educationCourses(engine,state).filter(c=>[c.teacher,...c.students].includes(npcId)).map(c=>courseWindow(c,minute)?.start).filter(at=>at>minute);
         if(next.length)return {location:state.npcs[npcId]?.location,activity:'日常起居',services:[],until:Math.min(...next)};}
         if(state&&educationCourses(engine,state).some(c=>c.students.includes(npcId))){const home=engine.byId.get(npcId)?.home?.location??state.npcs[npcId]?.location;return {location:home,activity:'日常起居',services:[],until:(Math.floor(minute/1440)+1)*1440};}
-        return festivalScheduleAt(engine,state,npcId,minute,null);
+        return festivalScheduleAt(engine,state,npcId,minute,null,constraints);
     }
     const calendar=engine.calendar(minute),variant=calendar.market?'market':schedule.restDays?.includes(calendar.day)?'rest':'default';
     const seasonal=schedule.seasonal?.[String(calendar.season)];
@@ -38,7 +38,7 @@ function scheduledSlot(engine,npcId,minute,state,constraints=null){
     if(!slot)throw new Error(`${npcId}的作息没有覆盖当前钟点`);
     let until=minute-offset+slot.end;
     if(state)for(const c of educationCourses(engine,state))if([c.teacher,...c.students].includes(npcId)){const w=courseWindow(c,minute);if(w&&w.start>minute)until=Math.min(until,w.start);}
-    return festivalScheduleAt(engine,state,npcId,minute,{...slot,until,variant});
+    return festivalScheduleAt(engine,state,npcId,minute,{...slot,until,variant},constraints);
 }
 
 const incapacitated=npc=>['死亡','濒死','昏迷','患病'].includes(npc.status);
@@ -136,6 +136,8 @@ function settleSchedules(d,engine,before,after,{promote=false}={}){
                 continue;
             }
             const slot=scheduleAt(engine,npcId,cursor,peekState(d),constraints);
+            // No derivable routine (e.g. a contract past its term awaiting settlement): stay put.
+            if(!slot)break;
             if(npc.location!==slot.location){
                 let route;
                 try{

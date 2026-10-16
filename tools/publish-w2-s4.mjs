@@ -1,17 +1,21 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import {randomUUID} from 'node:crypto';
-import {loadWorld} from './load-world.mjs';
+import {loadWorld,authoredRules} from './load-world.mjs';
 import {validateWorld} from './validate-world.mjs';
+import {siteItemReferences} from '../server-plugin/sites.mjs';
+import {formalOrder} from './catalogue-order.mjs';
 import {hashContent,readApprovedContent} from './content-pipeline.mjs';
 import {entries,contextFor,revision,validateDraft,reviewDraftFor,buildCandidate} from './w2-s4-content.mjs';
 import {spells,books,items,recipes,mentors,placements,stations,ritualScopes} from '../world/design/w2-s4.mjs';
 const read=async file=>JSON.parse(await fs.readFile(file,'utf8'));
 const same=(a,b)=>hashContent(a)===hashContent(b);
-function mergeRows(old,added,label){
+// Merged rows keep the formal catalogue order (tools/catalogue-order.mjs), so a
+// batch merged back into an edition holding later publications returns to its slot.
+function mergeRows(old,added,label,key){
  const map=new Map(old.map(r=>[r.id,r]));
  for(const r of added){const prior=map.get(r.id);if(prior&&!same(prior,r))throw Error(`正式条目冲突：${label}${r.id}`);map.set(r.id,structuredClone(r));}
- return [...map.values()];
+ return formalOrder(key,[...map.values()]);
 }
 // Design prose before review; used by tests that exercise the mechanics only.
 export function designPublication(){return buildCandidate(entries.map(e=>reviewDraftFor(e)));}
@@ -32,10 +36,10 @@ const scopeRows=scopes=>Object.entries(scopes??{}).flatMap(([institution,v])=>Ob
 export function mergeS4Publication(world,publication){
  const next=structuredClone(world);
  if(next.rules.npcStockUpdateVersion!==1)throw Error('已有逐键库存升级机制未启用');
- next.spells=mergeRows(next.spells,publication.spells,'法术');
- next.skills=mergeRows(next.skills,publication.sources.mappings.map(m=>m.skill),'技能');
- next.items=mergeRows(next.items,[...publication.books,...publication.items],'物品');
- next.recipes=mergeRows(next.recipes,publication.recipes,'配方');
+ next.spells=mergeRows(next.spells,publication.spells,'法术','spells');
+ next.skills=mergeRows(next.skills,publication.sources.mappings.map(m=>m.skill),'技能','skills');
+ next.items=mergeRows(next.items,[...publication.books,...publication.items],'物品','items');
+ next.recipes=mergeRows(next.recipes,publication.recipes,'配方','recipes');
  for(const {item,stock} of publication.sources.books){const seller=next.npcs.find(n=>n.id===stock.owner);if(!seller)throw Error('书商不存在');seller.inventory??={};if(!Object.hasOwn(seller.inventory,item.id))seller.inventory[item.id]=stock.quantity;}
  for(const [id,{teach,inventory}] of Object.entries(publication.mentors)){
   const p=next.npcs.find(n=>n.id===id);if(!p)throw Error(`导师不存在：${id}`);
@@ -49,9 +53,9 @@ export function mergeS4Publication(world,publication){
   }
   for(const [item,quantity] of Object.entries(inventory))if(!Object.hasOwn(p.inventory,item))p.inventory[item]=quantity;
  }
- for(const [location,rows] of Object.entries(publication.placements)){const place=next.locations.find(l=>l.id===location);if(!place)throw Error(`地点不存在：${location}`);place.features=mergeRows(place.features??[],rows,'环境对象');}
+ for(const [location,rows] of Object.entries(publication.placements)){const place=next.locations.find(l=>l.id===location);if(!place)throw Error(`地点不存在：${location}`);place.features=mergeRows(place.features??[],rows,'环境对象',`features:${location}`);}
  for(const [institution,profession,ops] of scopeRows(publication.ritualScopes)){const e=next.rules.training?.institutions?.find(e=>e.institution===institution&&e.profession===profession&&e.ritual);if(!e)throw Error(`仪式机构不存在：${institution}`);for(const op of ops)if(!e.ritualOperations.includes(op))e.ritualOperations.push(op);}
- for(const [location,rows] of Object.entries(publication.stations)){const place=next.locations.find(l=>l.id===location);if(!place)throw Error(`地点不存在：${location}`);place.workstations=mergeRows(place.workstations??[],rows,'工作台');}
+ for(const [location,rows] of Object.entries(publication.stations)){const place=next.locations.find(l=>l.id===location);if(!place)throw Error(`地点不存在：${location}`);place.workstations=mergeRows(place.workstations??[],rows,'工作台',`workstations:${location}`);}
  return next;
 }
 // The edition before this batch (T104), rebuilt from any world that may contain it.
@@ -59,6 +63,8 @@ export function mergeS4Publication(world,publication){
 export function withoutS4(source){
  const ids={spells:new Set(spells.map(s=>s.id)),skills:new Set(spells.map(s=>s.skill)),items:new Set([...books,...items].map(i=>i.id)),recipes:new Set(recipes.map(r=>r.id))};
  const w=structuredClone(source);
+ // Items that later sites still hold or use stay in the catalogue (server-plugin/sites.mjs).
+ for(const id of siteItemReferences(w.locations))ids.items.delete(id);
  for(const k of Object.keys(ids))w[k]=w[k].filter(r=>!ids[k].has(r.id));
  const seller=w.npcs.find(n=>n.id==='npc_hw_luqing');for(const b of books)if(seller?.inventory)delete seller.inventory[b.id];
  for(const [id,{teach,inventory}] of Object.entries(mentors)){
@@ -76,10 +82,12 @@ const key={'meta/spells.json':'spells','meta/skills.json':'skills','meta/items.j
 export async function publishS4({root=path.resolve('world'),draftRoot=path.join(root,'drafts/w2-s4'),publish=false}={}){
  const world=await loadWorld(root),publication=await readS4Publication(draftRoot),next=mergeS4Publication(world,publication),validation=validateWorld(next);
  if(!validation.ok)throw Error(validation.errors.join('\n'));
+ // rules.json is compared and written in its on-disk shape (load-world.mjs authoredRules).
+ const output=file=>file==='meta/rules.json'?authoredRules(next.rules):next[key[file]];
  const changed=[];
- for(const file of files)if(!same(await read(path.join(root,file)),next[key[file]]))changed.push(file);
+ for(const file of files)if(!same(await read(path.join(root,file)),output(file)))changed.push(file);
  // All approvals/conflicts/reference checks precede any file replacement.
- if(publish)for(const file of changed){const target=path.join(root,file),old=await fs.readFile(target,'utf8'),newline=old.includes('\r\n')?'\r\n':'\n',indent=old.trimEnd().includes('\n')?2:undefined,temp=`${target}.${randomUUID()}.tmp`,handle=await fs.open(temp,'wx');try{await handle.writeFile((JSON.stringify(next[key[file]],null,indent)+'\n').replaceAll('\n',newline));await handle.sync();}finally{await handle.close();}await fs.rename(temp,target);}
+ if(publish)for(const file of changed){const target=path.join(root,file),old=await fs.readFile(target,'utf8'),newline=old.includes('\r\n')?'\r\n':'\n',indent=old.trimEnd().includes('\n')?2:undefined,temp=`${target}.${randomUUID()}.tmp`,handle=await fs.open(temp,'wx');try{await handle.writeFile((JSON.stringify(output(file),null,indent)+'\n').replaceAll('\n',newline));await handle.sync();}finally{await handle.close();}await fs.rename(temp,target);}
  return {published:publish,changed,formalSpellCount:next.spells.length,contentCounts:{spells:spells.length,books:books.length,items:items.length,recipes:recipes.length},validation:{ok:validation.ok,errors:validation.errors}};
 }
 if(process.argv[1]&&path.resolve(process.argv[1])===path.resolve(import.meta.filename)){const i=process.argv.indexOf('--root');console.log(JSON.stringify(await publishS4({root:i<0?undefined:path.resolve(process.argv[i+1]),publish:process.argv.includes('--publish')})));}

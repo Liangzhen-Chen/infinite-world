@@ -59,15 +59,21 @@ function compatible(e,s,student,entity){
  const sk=definition(e,s,skill);
  return [...b.prerequisites??[],...sk?.prerequisites??[]].every(r=>knowledgeProficiency(e,s,student,typeof r==='string'?r:r.skill)>=(typeof r==='string'?1:r.minimum));
 }
-function lesson(d,e,c,student,minutes,at){
+// A session is credited when the class is dismissed (window end), so the
+// result never depends on how the elapsed time was split into events.
+function lesson(d,e,c,student,attended,factor,at,dismissed,day){
  const s=d.get('state'),b=definition(e,s,c.entity),skill=c.entity.startsWith('skill_')?c.entity:b.skill,source=c.book?c.source:c.teacher;
  if(!compatible(e,s,student,c.entity))return;
  let ceiling=knowledgeProficiency(e,s,source,skill),required=c.entity.startsWith('skill_')?e.rules.npcGrowth.teach.minutes:b.learnMinutes??e.rules.npcGrowth.teach.minutes;
  if(c.book){try{const book=studyBook(d,e,student,c.source,c.entity);required=Math.max(required,book.minutes);ceiling=book.ceiling;}catch{return;}}
  else if(!teaching(e,s,c.teacher,c.entity))return;
  const key=`education_study:${c.id}:${student}`,old=s.records?.[key]??{category:'education_study',course:c.id,student,entity:c.entity,minutes:0,completedMinutes:0,sessions:0};
+ // Effective minutes carry a degraded facility's fractional remainder (factor
+ // 0.5) across settlements, so split time advances credit exactly one advance's total.
+ const scaled=attended*factor+(old.carry??0),minutes=Math.floor(scaled),carry=scaled-minutes;
+ const attendedDay=minutes>0?day:old.attendedDay;
  const total=old.minutes+minutes;let completed=old.completedMinutes,sessions=old.sessions,gain=0;
- if(total-completed>=required){
+ if(dismissed&&attendedDay===day&&total-completed>=required){
   if(c.entity.startsWith('skill_')){
    try{gain=npcLessonGain(e,s,student,skill,ceiling,e.rules.npcGrowth.teach.gain);settleNpcLesson(d,e,student,skill,gain,`${key}:${at}`);completed+=required;sessions++;}catch{/* Daily allowance or proficiency ceiling: no free growth. */}
   }else if(!knowsKnowledge(e,s,student,c.entity)){
@@ -76,8 +82,15 @@ function lesson(d,e,c,student,minutes,at){
   }
  }
  // Keep at most one uncompleted lesson; unavailable daily allowance cannot be
- // stockpiled to turn an instant visit into many days of teaching.
- d.set(path(key),{...old,minutes:Math.min(total,completed+required),completedMinutes:completed,sessions,lastAt:at,source,gained:(old.gained??0)+gain});
+ // stockpiled to turn an instant visit into many days of teaching. The trim is
+ // applied when the class is dismissed, not at every clock settlement inside
+ // it, so a class advanced in several steps credits what one advance would.
+ // Less than one effective minute does not open a lesson record; once a record
+ // exists, its remainder is kept so later settlements credit the exact total.
+ if(!minutes&&!gain&&sessions===old.sessions&&(carry===(old.carry??0)||!s.records?.[key]))return gain;
+ const row={...old,minutes:dismissed?Math.min(total,completed+required):total,completedMinutes:completed,sessions,...(minutes?{lastAt:at}:{}),...(attendedDay===undefined?{}:{attendedDay}),source,gained:(old.gained??0)+gain};
+ if(carry)row.carry=carry;else delete row.carry;
+ d.set(path(key),row);
  return gain;
 }
 export function nextEducationMinute(e,d,now){
@@ -100,15 +113,19 @@ export function advanceEducation(d,e,{before,after,beforeState}){
    const minutes=attendance(teacher).filter(a=>a.location===c.location).reduce((n,a)=>n+Math.max(0,Math.min(end,a.end)-Math.max(start,a.start)),0);
    if(minutes){
     const key=`education_cohort:${c.id}:${Math.floor(start/DAY)}`,old=d.get(...path(key));
-    d.set(path(key),{category:'education_cohort',course:c.id,...c.cohort,skill:c.entity,teacher,start:old?.start??start,end,minutes:(old?.minutes??0)+Math.floor(minutes*(view?.factor??1)),ceiling:knowledgeProficiency(e,state,teacher,c.entity)});taughtMinutes=minutes;
+    // A degraded facility (factor 0.5) credits half minutes; the remainder is
+    // carried so split time advances credit exactly what one advance would.
+    const scaled=minutes*(view?.factor??1)+(old?.carry??0),credited=Math.floor(scaled),carry=scaled-credited;
+    d.set(path(key),{category:'education_cohort',course:c.id,...c.cohort,skill:c.entity,teacher,start:old?.start??start,end,minutes:(old?.minutes??0)+credited,ceiling:knowledgeProficiency(e,state,teacher,c.entity),...(carry?{carry}:{})});taughtMinutes=minutes;
    }
   }
   for(const student of c.students.slice(0,cap)){
    const s=d.get('state');if(student==='player'||!capable(s,student)||personConstraint(e,s,student))continue;
    const minutes=attendance(student).filter(a=>a.location===c.location).reduce((n,a)=>n+(teacher?attendance(teacher):[{start,end,location:c.location}]).filter(b=>b.location===c.location).reduce((m,b)=>m+Math.max(0,Math.min(end,a.end,b.end)-Math.max(start,a.start,b.start)),0),0);
-   if(!minutes)continue;
-   try{e.assertNpcObligationAction?.(d,[student],{start,minutes:end-start,kind:'education'});if(teacher)e.assertNpcObligationAction?.(d,[teacher],{start,minutes:end-start,kind:c.employment?'employment':'education'});e.assertNpcAutonomyAction?.(s,[student,...teacher?[teacher]:[]],{start,minutes:end-start});}catch{continue;}
-   lesson(d,e,c,student,Math.floor(minutes*(view?.factor??1)),end);taughtMinutes=Math.max(taughtMinutes,minutes);
+   const dismissed=end===w.end;
+   if(!minutes&&!(dismissed&&d.get(...path(`education_study:${c.id}:${student}`))?.attendedDay===Math.floor(w.start/DAY)))continue;
+   if(minutes)try{e.assertNpcObligationAction?.(d,[student],{start,minutes:end-start,kind:'education'});if(teacher)e.assertNpcObligationAction?.(d,[teacher],{start,minutes:end-start,kind:c.employment?'employment':'education'});e.assertNpcAutonomyAction?.(s,[student,...teacher?[teacher]:[]],{start,minutes:end-start});}catch{continue;}
+   lesson(d,e,c,student,minutes,view?.factor??1,end,dismissed,Math.floor(w.start/DAY));taughtMinutes=Math.max(taughtMinutes,minutes);
   }
   if(taughtMinutes&&job){
    const key=`education_pay:${c.id}:${Math.floor(start/DAY)}`,old=d.get(...path(key))??{category:'education_pay',minutes:0,paid:0};

@@ -295,15 +295,18 @@ function resolveOutcome(d,engine,t,dyn,rec,{stance,kind},at,sourceEvent){
   const habitats=overlay.rules.wildlife?.habitats.filter(h=>h.location===`${skeleton.id}_wild`)??[];
   const ecologyDocument=resourceAware?{...d.document,state:{...d.get('state'),minute:at}}:d.document;
   for(const patch of planWildlifeMigration(ecologyDocument,{...overlay.rules,wildlife:{...overlay.rules.wildlife,habitats}},overlay.monsters))d.set(patch.path,patch.value);
-  // The new range starts today. Keep this same long advance on the new
-  // geographic view, so tomorrow's ecology/resources cannot skip it until
-  // the next player action or try to reset its already-created population.
-  // Archived worlds without RW04 keep their original payload/catalog timing.
+  // RW04: forest/water stocks and settlement lookups read the geographic view
+  // (engine.world locations, byId), so a resource-aware world moves this same
+  // advance onto the new view; archived worlds keep their original catalog.
   if(resourceAware){
    const locations=overlay.locations.filter(l=>!engine.byId.has(l.id));
    engine.world=overlay;engine.rules=overlay.rules;
    engine.entities=[...engine.entities,...locations];engine.resolver=engine.resolver.extend(locations);engine.byId=engine.resolver.entities;
   }
+  // The new wild range is settled day by day from now on within this very
+  // advance (wildlife.mjs reads engine.runtimeHabitats), exactly as the next
+  // advance's overlay will carry it; ranges already in the catalog are skipped.
+  engine.runtimeHabitats=[...(engine.runtimeHabitats??[]),...habitats.filter(h=>!(engine.rules.wildlife?.habitats??[]).some(x=>x.id===h.id))];
   setOrg(accord,{status:'自治',settlement:skeleton.id});outcome.settlement=skeleton.id;
   adjustStanding(d,engine,dyn.board,accord,5,{sourceEvent:ev,reason:`${dyn.name}自立聚居地`,minute:at});
   event('organize',accord,null,['organization','org:found','autonomy']);

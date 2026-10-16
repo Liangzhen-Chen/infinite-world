@@ -1,7 +1,10 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import {materializeWildlifeHabitats} from '../server-plugin/wildlife-habitats.mjs';
-import {faithConflictClocks} from '../server-plugin/faith-catalog.mjs';
+import {materializeFaithClocks} from '../server-plugin/faction-clock.mjs';
+// Everything this loader derives (reverse relations, biome tags, habitats, faith
+// competition clocks) is idempotent: files written back from a loaded world
+// (publication previews, upgrade fixtures) reload to the same world.
 export async function loadWorld(root = path.resolve(import.meta.dirname, '..', 'world')) {
     const read = async file => JSON.parse(await fs.readFile(path.join(root, file), 'utf8'));
     const optional=async file=>{try{return await read(file);}catch(error){if(error.code==='ENOENT')return [];throw error;}};
@@ -13,11 +16,18 @@ export async function loadWorld(root = path.resolve(import.meta.dirname, '..', '
     // bindings reuse the source relation's score and reason at load time.
     const reverseRelations=await optional('lore/faction-relations.json');
     for(const {target,source} of reverseRelations){
-        const f=factions.find(f=>f.id===target),r=factions.find(f=>f.id===source)?.relations?.find(r=>r.faction===target);
-        if(!f||!r)throw new Error(`反向关系缺原条目：${source}->${target}`);
+        const f=factions.find(f=>f.id===target),s=factions.find(f=>f.id===source),r=s?.relations?.find(r=>r.faction===target);
+        // A binding whose faction is not in this world edition (a fixture rebuilt
+        // without a later batch) is not part of it; two present factions without
+        // the source relation are a real data fault.
+        if(!f||!s)continue;
+        if(!r)throw new Error(`反向关系缺原条目：${source}->${target}`);
         if((f.relations??[]).some(r=>r.faction===source))continue;
         rules.factionRelations??={};
-        (rules.factionRelations[target]??=[]).push({...r,faction:source});
+        // A rules file written from a loaded world already carries the binding;
+        // the current source relation still wins over that saved copy.
+        const rows=rules.factionRelations[target]??=[],at=rows.findIndex(x=>x.faction===source),row={...r,faction:source};
+        if(at<0)rows.push(row);else rows[at]=row;
     }
     const [residents,households,settlementProfiles,regions]=await Promise.all([optional('people/residents.json'),optional('people/households.json'),optional('geo/settlements.json'),optional('geo/regions.json')]);
     const careers=await optional('meta/careers.json');
@@ -28,14 +38,39 @@ export async function loadWorld(root = path.resolve(import.meta.dirname, '..', '
     // locations file); they are merged into their locations here for K8.
     const biomes=await optional('geo/biomes.json');
     for(const [id,row] of Object.entries(biomes.locations??{})){
-        const place=locations.find(l=>l.id===id);if(!place)throw new Error(`群落数据指向未登记地点：${id}`);
-        if(place.biome!==undefined||place.areaKm2!==undefined)throw new Error(`群落数据与地点自带字段重复：${id}`);
+        // A row for a location this world edition does not carry (a fixture rebuilt
+        // without a later batch) is not part of it; the formal catalogue's tags
+        // are checked against its locations by the publication tools' release run.
+        const place=locations.find(l=>l.id===id);if(!place)continue;
+        // A locations file written from a loaded world carries exactly these
+        // merged values; only a differing authored copy is a second source.
+        for(const key of Object.keys(row))if(place[key]!==undefined&&JSON.stringify(place[key])!==JSON.stringify(row[key]))throw new Error(`群落数据与地点自带字段重复：${id}`);
         Object.assign(place,row);
     }
     // K8 habitats derived from those tags are part of the loaded world, so an
     // engine built on it re-derives the same rows and leaves the world unchanged.
     const world=materializeWildlifeHabitats({version:rules.version,rules,npcs,locations,routes,items,professions,skills,spells,recipes,monsters,bosses,cultures,deities,factions,history,factionPeople,eras,...(festivals.length?{festivals}:{}),...(rumors.length===0?{}:{rumors}),residents,households,settlementProfiles,...(regions.length?{regions}:{}),...(Array.isArray(careers)?{}:{careers})});
-    const faithClocks=faithConflictClocks({world,rules,byId:new Map([...locations,...deities].map(e=>[e.id,e]))});
-    if(faithClocks.length){rules.factionClock??={version:1,clocks:[]};rules.factionClock.clocks.push(...faithClocks);}
+    // RW-07 faith competition clocks likewise: derived from the church seats, replacing any saved faith:* rows.
+    materializeFaithClocks({world,rules,byId:new Map([...locations,...deities].map(e=>[e.id,e]))});
     return world;
+}
+
+// The on-disk shape of meta/rules.json: without what loadWorld attaches from the
+// lore files (faith, sovereignty, family law, reverse faction relations) or
+// derives (K8 habitats, faith competition clocks). A publication tool that
+// rewrites the whole rules file compares and writes this projection, never the
+// attachments.
+export function authoredRules(rules){
+    const out={...rules};
+    delete out.faith;delete out.factionRelations;
+    if(out.wildlife?.habitats?.some(h=>h.derived))out.wildlife={...out.wildlife,habitats:out.wildlife.habitats.filter(h=>!h.derived)};
+    if(out.governance?.sovereignty!==undefined){out.governance={...out.governance};delete out.governance.sovereignty;}
+    if(out.law?.family!==undefined){out.law={...out.law};delete out.law.family;}
+    if(out.factionClock){
+        const clocks=out.factionClock.clocks.filter(c=>!String(c.id).startsWith('faith:'));
+        if(clocks.length===out.factionClock.clocks.length){/* no derived rows */}
+        else if(clocks.length)out.factionClock={...out.factionClock,clocks};
+        else delete out.factionClock;
+    }
+    return out;
 }

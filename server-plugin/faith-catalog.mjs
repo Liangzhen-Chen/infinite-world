@@ -2,13 +2,16 @@
 // This selector has no actor/state dependency, so account and identity readers
 // can share it without persisting another catalog or copying a leader.
 export function temples(engine){
- const out=(engine.world.factions??[]).filter(f=>f.kind==='教会').map(f=>({id:f.id,name:f.name,seat:f.contactAnchor,
+ // name is the temple as a place of worship; church is the sect (教派) a
+ // believer's faith record and the ritual rules refer to.
+ const out=(engine.world.factions??[]).filter(f=>f.kind==='教会').map(f=>({id:f.id,name:f.name,church:f.name,seat:f.contactAnchor,
   deity:engine.world.deities?.find(g=>g.church.name===f.name)?.id??null,teacher:f.leader,source:'faction'}));
- for(const e of engine.rules.training?.institutions??[]){
+ for(const e of engine.rules?.training?.institutions??[]){
   if(!e.ritual)continue;
   const id=`temple:${e.institution}:${e.deity??e.profession}`;
   if(out.some(t=>t.id===id))continue;
-  out.push({id,name:`${engine.byId.get(e.institution)?.name??e.institution}·${e.deity?engine.byId.get(e.deity)?.church.name:e.church}`,
+  const church=e.deity?engine.byId.get(e.deity)?.church.name:e.church;
+  out.push({id,name:`${engine.byId.get(e.institution)?.name??e.institution}·${church}`,church,
    seat:e.institution,deity:e.deity??null,teacher:e.teacher,profession:e.profession,rule:e.rule,source:'temple'});
  }
  return out;

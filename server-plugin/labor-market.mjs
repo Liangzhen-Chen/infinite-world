@@ -34,10 +34,12 @@ function recipeFor(e,s,owner,item){
 // Offers are projections of outstanding orders, empty shelves and seasonal work.
 // No vacancy, occupation or employer is copied into a person's stored profile.
 export function laborOffers(e,s,minute=s.minute){
+    // Offers already taken by a live contract, read once for the whole listing.
+    const taken=new Set(rows(s).filter(c=>employmentActive(c)&&c.deadline>minute).map(c=>c.offer));
     const out=[],add=r=>{
         if(r.owner==='player'||!ownerCanHire(e,s,r.owner)||!r.location||r.quantity<=0)return;
         const id=`labor:${r.source}:${r.recipe??r.task}`;
-        if(rows(s).some(c=>employmentActive(c)&&c.offer===id&&c.deadline>minute))return;
+        if(taken.has(id))return;
         const d={...r,id,wage:r.wage??wage(e),workMinutes:480,createdAt:minute,deadline:Math.min(r.deadline??minute+7*DAY,minute+30*DAY)};
         if(d.deadline<=Math.floor(minute/DAY)*DAY+1020)return;
         const account=groupAccountView(e,s,r.owner),balance=account?.coins??s.records?.[`organization:${r.owner}`]?.treasury??s.npcs[r.owner]?.coins??0;
@@ -277,7 +279,7 @@ export function advanceLaborMarket(d,e,{before,after,id,beforeState}){
         if(layer(e,d.get('state'),offer.location,plan)==='statistics'&&Math.floor(before/(7*DAY))===Math.floor(after/(7*DAY)))continue;
         const s=d.get('state'),pool=pools.get(placeSettlement(e,s,offer.location).value)??[];
         const apps=pool.map(worker=>laborApplication(e,s,worker,offer,{minute:after,changing:Boolean(currentEmployment(s,worker,after))})).filter(Boolean).sort((a,b)=>b.score-a.score||a.worker.localeCompare(b.worker));
-        for(const app of apps){const old=currentEmployment(d.get('state'),app.worker,after),trial={...offer,worker:app.worker,id:old?.id};if(conflict(d,e,trial,Math.floor(after/DAY)*DAY+480))continue;sign(d,e,offer,app,after,`${id}:labor:${offer.id}:${after}`);break;}
+        for(const app of apps){const old=currentEmployment(d.get('state'),app.worker,after),trial={...offer,worker:app.worker,id:old?.id};if(conflict(d,e,trial,Math.floor(after/DAY)*DAY+480))continue;sign(d,e,offer,app,after,`labor:${offer.id}:${after}`);break;}
     }
 }
 export function nextLaborMinute(e,d,now){

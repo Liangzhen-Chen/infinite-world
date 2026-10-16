@@ -60,6 +60,11 @@ export function withoutClockBatch(world,batch){
   const manual=next.rules.reputation?.factions?.find(r=>r.id===target);if(manual)manual.relations=structuredClone(f.relations);
  }
  if(batch===2&&next.rules.factionClock){next.rules.factionClock.clocks=next.rules.factionClock.clocks.filter(c=>!farIds.includes(c.faction));if(!next.rules.factionClock.clocks.length)delete next.rules.factionClock;}
+ // RW-07 faith competition (rules.faith.competition) was published after both
+ // clock batches; the pre-batch edition derives no faith:* clocks for its
+ // churches, so the materialised rows leave with the switch.
+ if(next.rules.faith?.competition!==undefined)delete next.rules.faith.competition;
+ if(next.rules.factionClock){next.rules.factionClock.clocks=next.rules.factionClock.clocks.filter(c=>!String(c.id).startsWith('faith:'));if(!next.rules.factionClock.clocks.length)delete next.rules.factionClock;}
  return next;
 }
 
@@ -168,9 +173,11 @@ export async function publishClockBatch(batch,{publish=false}={}){
   // factionClock sits before worldClock so later sections stay untouched.
   const file=path.join(ROOT,'world/meta/rules.json'),rules=JSON.parse(await fs.readFile(file,'utf8'));
   rules.reputation.factions=current.rules.reputation.factions;
+  // Only authored clocks are written; the faith:* rows are derived at load (materializeFaithClocks).
+  const authored=current.rules.factionClock&&{...current.rules.factionClock,clocks:current.rules.factionClock.clocks.filter(c=>!String(c.id).startsWith('faith:'))};
   let out=rules;
-  if(current.rules.factionClock&&!rules.factionClock){out={};for(const [k,v] of Object.entries(rules)){if(k==='worldClock')out.factionClock=current.rules.factionClock;out[k]=v;}}
-  else if(current.rules.factionClock)out.factionClock=current.rules.factionClock;
+  if(authored&&!rules.factionClock){out={};for(const [k,v] of Object.entries(rules)){if(k==='worldClock')out.factionClock=authored;out[k]=v;}}
+  else if(authored)out.factionClock=authored;
   await writeJSONLike(file,out);
  }
  return {published:publish,batch,clocks:ctx.entries.length,reverse:ctx.reverse.length};

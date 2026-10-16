@@ -102,8 +102,10 @@ export function recordNpcMemories(d,engine,before,events,...rest){
     }
     // Debt parties know the state of their agreement; bystanders do not learn
     // a debt or its amount from a later, off-screen deadline calculation.
-    for(const [id,debt]of Object.entries(after.records??{}))if(debt.category==='debt'&&before.records?.[id]&&before.records[id].status!==debt.status){
-        add(`debt_${id}`,`${name(debt.debtor)}对${name(debt.creditor)}的欠款${debt.amount}铜现为${debt.status}`,[debt.debtor,debt.creditor],{observers:[],partyNotice:true,location:null,minute:debt.status==='逾期'?debt.overdueAt:debt.paidAt??after.minute,salience:4,emotion:debt.status==='逾期'?'失望':'平静'});
+    // A debt opened and already overdue inside one elapsed span still went
+    // overdue; the memory is keyed by the record so event splits agree.
+    for(const [id,debt]of Object.entries(after.records??{}))if(debt.category==='debt'&&(before.records?.[id]?.status??(debt.status==='逾期'?'待偿还':debt.status))!==debt.status){
+        add(`debt_${id}`,`${name(debt.debtor)}对${name(debt.creditor)}的欠款${debt.amount}铜现为${debt.status}`,[debt.debtor,debt.creditor],{observers:[],partyNotice:true,location:null,minute:debt.status==='逾期'?debt.overdueAt:debt.paidAt??after.minute,salience:4,emotion:debt.status==='逾期'?'失望':'平静',...(debt.status==='逾期'?{memoryId:`debt_${id}:逾期`,sourceEvent:id}:{})});
     }
     // The primary social fact of a witnessed, weighty event carries its rumor id.
     const rumorId=eventRumorId(engine,after,event);
@@ -120,8 +122,8 @@ export function recordNpcMemories(d,engine,before,events,...rest){
             // Remote actors only receive their own contract/quest facts, never
             // a public observation of a room they did not occupy.
             const existing=streams.get(npcId)??[...after.npcs[npcId].memoryStream??[]];
-            const id=`${eventId}:${fact.key}`;if(existing.some(row=>row.id===id))continue;
-            existing.push({id,sourceEvent:eventId,kind:fact.key.split('_')[0],minute:fact.minute,location:fact.location,participants:fact.participants,
+            const id=fact.memoryId??`${eventId}:${fact.key}`;if(existing.some(row=>row.id===id))continue;
+            existing.push({id,sourceEvent:fact.sourceEvent??eventId,kind:fact.key.split('_')[0],minute:fact.minute,location:fact.location,participants:fact.participants,
                 content:fact.content,...(fact.private?{private:true}:{}),...(fact.rumor?{rumor:fact.rumor,reliability:fact.reliability,permittedRecipients:['player']}:{}),...(fact.entities?.length?{entities:fact.entities}:{}),...(fact.eventRumor?{rumor:fact.eventRumor,rumorSource:npcId,eventRumor:true}:{}),sourceType:fact.partyNotice?'约定核对':fact.participants.includes(npcId)&&!fact.onlyObservers?'亲历':'目击',salience:fact.salience,emotion:fact.emotion});
             streams.set(npcId,existing);
         }

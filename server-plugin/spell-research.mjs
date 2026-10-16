@@ -4,7 +4,10 @@ import {validateMagicCatalog} from './magic.mjs';
 // envelope. Target consent, law, materials and family-specific bounds travel
 // with the prototype; naming a new formula cannot remove them.
 export function registerResearchSpell(d,engine,data,project,maximumStage){
-    const prototype=engine.resolve(data?.template,'spell'),base=engine.byId.get(prototype);
+    // A formula is always researched out of a working prototype; a free-standing
+    // spell effect cannot be written straight into the catalogue.
+    if(typeof data?.template!=='string'||!data.template.trim())throw Error('研究法术须给出原型法术template；自创法术效果还需按规则目录审查，不能直接登记');
+    const prototype=engine.resolve(data.template,'spell'),base=engine.byId.get(prototype);
     if(!project.skills.includes(base.skill))throw Error('研究项目须包含原型法术的关联技能');
     if(!base.effectSpec)throw Error('原型法术没有已实现的效果原语');
     if(base.stage>maximumStage)throw Error('研究法术阶段不得超过相关技能最高阶段减一');
