@@ -58,7 +58,7 @@ export function validateMonsterSocieties(world,{edition=false}={}){
 }
 // Registered internal positions: who holds which stance on a motion.
 const positionsOf=(engine,society)=>seat(engine,society)?.monsterSociety.positions??[];
-export function positionOf(engine,society,member,state){return state&&!societyGroup(engine,state,society)?.members.value[member]?null:positionsOf(engine,society).find(p=>p.members.includes(member))??null;}
+export function positionOf(engine,society,member,state){return state&&!societyMember(engine,state,society,member)?null:positionsOf(engine,society).find(p=>p.members.includes(member))??null;}
 function motionStatus(state,society,motion){return state.records?.[`society_motion:${society}:${motion}`]?.status??'未提出';}
 // A term a motion opens is refused while the leader's own position rejects that
 // motion and the council has not passed it; a term a passed motion closes is refused.
@@ -70,7 +70,7 @@ export function termPositions(state,engine,society,term){
         if(m.opens!==term&&m.closes!==term||passed&&m.opens===term)continue;
         for(const p of c.positions??[]){
             const v=p.stances?.[m.id];if(!v)continue;
-            if(!p.members.some(id=>societyGroup(engine,state,society)?.members.value[id]))continue;
+            if(!p.members.some(id=>societyMember(engine,state,society,id)))continue;
             const favors=m.opens===term?v==='approve':v==='reject';
             (favors?support:oppose).add(p.id);
             if(!favors&&m.opens===term&&p.members.includes(leader))refused??=`首领所属“${p.name}”反对“${m.name}”，须先在议事处通过此议`;
@@ -92,13 +92,18 @@ export function societyAt(engine,location){
 export function societyOfActor(engine,id,state){
     id=actorId(engine.world,id);
     const society=state?personView(engine,state,id)?.society.value:engine.world.npcs.find(n=>n.id===id)?.society;
-    if(state&&society&&!societyGroup(engine,state,society)?.members.value[id])return null;
+    if(state&&society&&!societyMember(engine,state,society,id))return null;
     return society&&engine.world.locations.find(l=>l.id===society)?.monsterSociety?society:null;
 }
 const seat=(engine,id)=>engine.world.locations.find(l=>l.id===id&&l.monsterSociety);
 const societyGroup=(engine,state,society)=>{const f=engine.world.factions?.find(f=>f.contactAnchor===society);return groupView(engine,state,f?.id??society);};
+// Who is "of the settlement" at its council: the seat's own roster (residents whose
+// society is this seat, less those removed) plus whoever its council organization
+// (a T159 faction fronting the seat) seats. The council is a small subset that
+// keeps the public account and names the authority; the residents are the members.
+const societyMember=(engine,state,society,id)=>Boolean(groupView(engine,state,society)?.members.value[id]||societyGroup(engine,state,society)?.members.value[id]);
 const leaderOf=(engine,state,society)=>societyGroup(engine,state,society)?.leader.value??null;
-const members=(engine,state,society)=>Object.keys(societyGroup(engine,state,society)?.members.value??{}).sort();
+const members=(engine,state,society)=>[...new Set([...Object.keys(groupView(engine,state,society)?.members.value??{}),...Object.keys(societyGroup(engine,state,society)?.members.value??{})])].sort();
 
 function initial(engine,holder,target){
     const own=seat(engine,holder)?.monsterSociety;
@@ -320,14 +325,14 @@ export function societyGovernance(d,engine,args,eventId,society){
         const inside=d.get('state','location')===meeting,org=(engine.world.factions??[]).find(f=>f.contactAnchor===society&&f.clock?.settlement===society);
         return{settlement:society,stance:stanceOf(d.get('state'),engine,society,'player'),
         motions:(c.motions??[]).map(m=>({...m,...d.get(...rec(key(m.id)))??{status:'未提出'}})),
-        positions:(c.positions??[]).map(p=>({id:p.id,name:p.name,claim:p.claim,members:p.members.filter(id=>societyGroup(engine,d.get('state'),society)?.members.value[id]),stances:p.stances??{}})),
+        positions:(c.positions??[]).map(p=>({id:p.id,name:p.name,claim:p.claim,members:p.members.filter(id=>societyMember(engine,d.get('state'),society,id)),stances:p.stances??{}})),
         ...(org?{organization:{id:org.id,name:org.name,publicGoal:org.publicGoal,...(inside?{privateGoal:org.privateGoal,divisions:org.divisions}:{}),
             issues:Object.entries(d.get('state','records')??{}).filter(([,r])=>r.category==='society_issue'&&r.settlement===society).map(([id,r])=>({id,issue:r.issue,status:r.status,outcome:r.outcome??null}))}}:{}),
         actionScope:{kind:'instant'}};
     }
     if(d.get('state','location')!==meeting)throw Error('须在聚居地议事处办理');
     const present=name=>{const id=actorId(engine.world,resolveCreature(engine,d,name)),view=personView(engine,d.get('state'),id),n=view&&d.get(...view.actorPath.value);
-        if(!societyGroup(engine,d.get('state'),society)?.members.value[id]||!(view?.age.value>=18)||!awake(n)||n.location!==meeting)throw Error('需要本聚居地清醒在场的成年成员');return id;};
+        if(!societyMember(engine,d.get('state'),society,id)||!(view?.age.value>=18)||!awake(n)||n.location!==meeting)throw Error('需要本聚居地清醒在场的成年成员');return id;};
     if(args.operation==='governance_propose'){
         const m=motion(args.issue),old=d.get(...rec(key(m.id)));
         if(old?.status==='议事中')throw Error('该议题正在议事');
