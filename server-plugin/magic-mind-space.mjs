@@ -4,6 +4,10 @@ import {environmentFeatures,localPlayerPoint,localSightClear}from'./environment.
 import {assertMagicTargeting}from'./magic-targeting.mjs';
 import {resolveCreature}from'./wildlife.mjs';
 import {trackSingleItem,changeItems,heldUnit}from'./items.mjs';
+import {placed as placedStock,moveStock} from './stock.mjs';
+import {declareLedgerWriter} from './ledger.mjs';
+// S1b: 封存与落地的单件记在所在地点的 placed 账户，取回再转回行囊。
+declareLedgerWriter('magic-mind-space');
 import {magicContractTrace}from'./contracts.mjs';
 import {prepareAnchorCargo}from'./magic-movement.mjs';
 import {monsterStats}from'./combat.mjs';
@@ -183,11 +187,11 @@ function putEffect(d,p,eventId,extra={}){
 }
 function detach(d,engine,item,eventId,status,extra={}){
  const id=trackSingleItem(d,engine,'player',item,eventId);
- changeItems(d,engine,'player',item,-1,{preserve:true,selection:[id]});
+ changeItems(d,engine,'player',item,-1,{preserve:true,selection:[id],books:{account:placedStock(engine,extra.location,item),writer:'magic-mind-space',eventId}});
  d.set(['state','itemInstances',id],{...d.get('state','itemInstances',id),status,...extra});return id;
 }
 function pickup(d,engine,u){
- changeItems(d,engine,'player',u.item,1);
+ changeItems(d,engine,'player',u.item,1,{books:{account:placedStock(engine,u.location,u.item),writer:'magic-mind-space',eventId:u.id}});
  const bag=engine.bagPath('player');
  d.set([...bag,u.item,'instances'],[...d.get(...bag,u.item,'instances')??[],u.id]);
  const next={...u,status:'持有'};for(const k of ['container','location','position','weight'])delete next[k];
@@ -289,7 +293,7 @@ export function advanceMindSpace(d,engine,before,after){
   const minutes=Math.max(0,end-start);
   if(e.operation==='store'&&e.expires<=after){
    const u=d.get('state','itemInstances',e.instance);
-   if(u?.status==='封存')d.set(['state','itemInstances',e.instance],{...u,status:'落地',location:e.location,position:e.point,droppedAt:e.expires});
+   if(u?.status==='封存'){moveStock(d,{from:placedStock(engine,u.location,u.item),to:placedStock(engine,e.location,u.item),amount:1,writer:'magic-mind-space',eventId:e.sourceEvent});d.set(['state','itemInstances',e.instance],{...u,status:'落地',location:e.location,position:e.point,droppedAt:e.expires});}
   }
   if(mental.has(e.operation)){
    const a=d.get(...path(e.target));if(!a)continue;

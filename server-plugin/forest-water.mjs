@@ -4,6 +4,17 @@ import {locationTraits,itemTraits,featureTraits} from './traits.mjs';
 import {entityTransition} from './entity-transitions.mjs';
 import {advanceWaterCycle,waterResourceFactor} from './water-cycle.mjs';
 import {reservedMigrationCapacity} from './seasonal-migration.mjs';
+import {declareLedgerWriter} from './ledger.mjs';
+import {reserve as reserveAccount,settlementStock,moveStock} from './stock.mjs';
+// S1b: 林木存量是资源点账户 forest:<地点>|item_wood|reserve：首次触及时按世界数据（site.capacity）经 src:genesis 开户，
+// 生长来自 src:regrowth，采伐转入聚落木料或采伐者行囊；聚落烧柴进 sink:consume。没有林木规则时聚落日产木料来自 src:regrowth。
+declareLedgerWriter('forest-water',{sources:{'src:genesis':{item_wood:10000000},'src:regrowth':{item_wood:10000000}},sinks:['sink:consume']});
+const forestAccount=(engine,location)=>reserveAccount(engine,`forest:${location}`,'item_wood');
+function bookForest(d,engine,location,old,row,eventId){
+ const account=forestAccount(engine,location);
+ if(!old)moveStock(d,{from:'src:genesis|item_wood|forest',to:account,amount:row.initial,writer:'forest-water',eventId});
+ moveStock(d,{from:'src:regrowth|item_wood|forest',to:account,amount:row.grown-(old?.grown??0),writer:'forest-water',eventId});
+}
 
 const DAY=1440,clone=v=>structuredClone(v),path=id=>['state','records',`forest:${id}`];
 // Absolute growth quanta telescope across intervals, including non-integral
@@ -49,11 +60,13 @@ export function forestHabitatCapacity(engine,state,habitat,species,forest=forest
  const capacity=rangeSpec(habitat,species).capacity;
  return forest?Math.floor(capacity*(engine.rules.forestWater.forest.minimumHabitatShare+(1-engine.rules.forestWater.forest.minimumHabitatShare)*forest.cover)):capacity;
 }
-export function harvestForest(d,engine,location,quantity,minute=d.get('state','minute')){
+// S1b: to = 采得木料的去处（聚落木料或采伐者行囊的账户键）。
+export function harvestForest(d,engine,location,quantity,minute=d.get('state','minute'),{to,eventId=null}={}){
  if(!Number.isSafeInteger(quantity)||quantity<0)throw Error('采伐量须为非负整数');
  const site=forestSites(engine).find(s=>s.location===location);if(!site)return 0;
- const row=stock(d,engine,site,minute),taken=Math.min(quantity,row.reserve),before=row.reserve;
- row.reserve-=taken;row.harvested+=taken;d.set(path(location),row);
+ if(!to)throw Error('采伐须指明木料去处（账本对方）');
+ const old=d.get(...path(location)),row=stock(d,engine,site,minute),taken=Math.min(quantity,row.reserve),before=row.reserve;
+ row.reserve-=taken;row.harvested+=taken;bookForest(d,engine,location,old,row,eventId);moveStock(d,{from:forestAccount(engine,location),to,amount:taken,writer:'forest-water',eventId});d.set(path(location),row);
  if(before>=site.capacity*engine.rules.forestWater.forest.shortageCover&&row.reserve<site.capacity*engine.rules.forestWater.forest.shortageCover)event(d,engine,location,Math.floor(minute/DAY),'forest_depleted',{reserve:row.reserve},minute);
  return taken;
 }
@@ -76,9 +89,10 @@ export function settlementForests(engine,state,settlement){
  });
 }
 export function harvestSettlementWood(d,engine,settlement,quantity,minute){
- if(!engine.rules.forestWater)return quantity;
+ const to=settlementStock(engine,settlement,'wood'),eventId=`day_${Math.floor(minute/DAY)-1}`;
+ if(!engine.rules.forestWater){moveStock(d,{from:'src:regrowth|item_wood|wood',to,amount:quantity,writer:'forest-water',eventId});return quantity;}
  if(quantity===0)return 0;
- let left=quantity;for(const site of settlementForests(engine,d.get('state'),settlement)){left-=harvestForest(d,engine,site.location,left,minute);if(!left)break;}
+ let left=quantity;for(const site of settlementForests(engine,d.get('state'),settlement)){left-=harvestForest(d,engine,site.location,left,minute,{to,eventId});if(!left)break;}
  return quantity-left;
 }
 function event(d,engine,location,day,kind,detail,minute=(day+1)*DAY){
@@ -91,7 +105,7 @@ export function settleFuel(d,engine,id,s,produced,day){
  if(!engine.rules.forestWater){s.wood+=produced;return;}
  s.wood+=produced;
  const demand=Math.ceil(s.population/engine.rules.forestWater.forest.peoplePerFuel),used=Math.min(s.wood,demand),shortage=demand-used;
- s.wood-=used;
+ s.wood-=used;moveStock(d,{from:settlementStock(engine,id,'wood'),to:'sink:consume|item_wood|fuel',amount:used,writer:'forest-water',eventId:`day_${day}`});
  const key=`forest-supply:${id}`,old=d.get('state','records',key);
  d.set(['state','records',key],{category:'forest_supply',settlement:id,day,produced,demand,used,shortage,consumed:(old?.consumed??0)+used});
  if(Boolean(shortage)!==Boolean(old?.shortage))event(d,engine,id,day,shortage?'fuel_shortage':'fuel_recovered',{shortage,produced});
@@ -131,7 +145,7 @@ export function advanceForestWater(d,engine,day){
   // P3 distant stocks settle in weekly aggregates. Actual harvests still bring
   // that one location current before deducting, so promotion never refreshes stock.
   if(layer==='statistics'&&minute-old.updatedAt<7*DAY)continue;
-  const row=stock(d,engine,site,minute);if(row.updatedAt!==old.updatedAt)d.set(path(site.location),row);
+  const row=stock(d,engine,site,minute);if(row.updatedAt!==old.updatedAt){bookForest(d,engine,site.location,old,row,`day_${day}`);d.set(path(site.location),row);}
   const threshold=site.capacity*engine.rules.forestWater.forest.shortageCover;
   if(old.reserve<threshold&&row.reserve>=threshold)event(d,engine,site.location,day,'forest_recovered',{reserve:row.reserve});
  }

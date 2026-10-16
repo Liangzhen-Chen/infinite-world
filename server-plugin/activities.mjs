@@ -27,7 +27,7 @@ import {recordEntityDeath}from'./npc-life.mjs';
 import {lairAction,bossCounter,rememberBossTactic,defeatBoss}from'./bosses.mjs';
 import {civicAction,recordDonationContribution,publicProjectApproval,donationReceipt,saveDonationReceipt}from'./civic.mjs';
 import {governanceAction,assertGovernedProject,playerOffices}from'./governance.mjs';
-import {startPublicProject,abortPublicProject,startHouse}from'./public-projects.mjs';
+import {startPublicProject,abortPublicProject,startHouse,holdProjectWorks}from'./public-projects.mjs';
 import {prepareFacilityProject}from'./facility-state.mjs';
 import {titleAction}from'./titles.mjs';
 import {militaryAction}from'./military.mjs';
@@ -224,6 +224,7 @@ export const activities={
             const wood=integer(args.wood,1,10000),stone=integer(args.stone??0,0,10000),days=integer(args.days,1,365);
             if(row.wood<wood||row.stone<stone)throw new Error('公共工程材料不足');
             d.set(['state','settlements',settlement,'wood'],row.wood-wood);d.set(['state','settlements',settlement,'stone'],row.stone-stone);
+            holdProjectWorks(d,this,`project_${id}`,{wood,stone},{settlement},id);
             const civicApproval=publicProjectApproval(d,this,settlement,args.authorization,args.beneficiaries);
             const project=`project_${id}`;d.set(['state','projects',project],{id:project,type:'工程',creator:'player',name:requiredText(args.name),settlement,remainingDays:days,wood,stone,status:'施工中',beneficiaries:args.beneficiaries??[],sourceEvent:id,...plan,...(civicApproval?{civicApproval}:{})});
             return {project};

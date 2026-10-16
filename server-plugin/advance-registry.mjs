@@ -24,7 +24,7 @@ import {advanceSummons}from'./summons.mjs';
 import {advanceLaw}from'./law.mjs';
 import {advanceNpcCrime,nextNpcCrimeMinute}from'./npc-crime.mjs';
 import {cropProduction}from'./weather.mjs';
-import {advanceAgriculture,settleAgricultureExpiry,advanceForestWater,harvestSettlementWood,settleFuel,farmWaterFactor}from'./agriculture.mjs';
+import {advanceAgriculture,settleAgricultureExpiry,advanceForestWater,harvestSettlementWood,settleFuel,farmWaterFactor,bookLegacyFood}from'./agriculture.mjs';
 import {advanceSettlementTrade,nextSettlementTradeMinute}from'./settlement-trade.mjs';
 import {advanceTransport,nextTransportMinute} from './transport.mjs';
 import {advancePost,nextPostMinute} from './post.mjs';
@@ -55,7 +55,7 @@ import {advanceOfficeSalaries,nextSalaryMinute}from'./office-salary.mjs';
 import {advanceTitles,nextTitleMinute}from'./titles.mjs';
 import {advanceNotables,nextNotableMinute}from'./notables.mjs';
 import {advancePromotion,nextPromotionMinute}from'./promotion.mjs';
-import {advancePublicProjects,isPublicProject,advanceHouses,advanceHousing,nextHousingMinute}from'./public-projects.mjs';
+import {advancePublicProjects,isPublicProject,advanceHouses,advanceHousing,nextHousingMinute,settleProjectWorks}from'./public-projects.mjs';
 
 const clone=value=>structuredClone(value);
 import {personSimulation}from'./entity-view.mjs';
@@ -103,7 +103,7 @@ const systems=[
         const farming=advanceAgriculture(d,e,sid,source,day),s=farming?.settlement??clone(source);
         const production=farming?0:Math.floor(cropProduction(e,d.document.randomSeed,sid,day*1440,s.foodPerDay)*hazardYieldFactor(d.get('state'),sid,day*1440+720)*magicYieldFactor(d.get('state'),sid,day*1440+720)*farmWaterFactor(e,d.get('state'),sid,day)),available=s.food+production;
         const missing=farming?.missingMeals??Math.max(0,s.population-available);
-        if(!farming)s.food=Math.max(0,available-s.population);s.unmetMeals=(s.unmetMeals??0)+missing;
+        if(!farming){bookLegacyFood(d,e,sid,production,Math.min(available,s.population),day);s.food=Math.max(0,available-s.population);}s.unmetMeals=(s.unmetMeals??0)+missing;
         s.starvation=missing ? (s.starvation??0)+1 : Math.max(0,(s.starvation??0)-1);
         if(s.starvation>=7){s.population=Math.max(0,s.population-1);s.starvation=0;d.say(`${s.name}发生饥荒死亡`);}
         const wood=farming?.woodProduced??harvestSettlementWood(d,e,sid,s.woodPerDay??0,(day+1)*1440);
@@ -125,6 +125,7 @@ const systems=[
     if(days)for(const [key,project]of Object.entries(d.get('state','projects')))if(project.type==='工程'&&project.status==='施工中'&&!isPublicProject(project)){
         const hired=Object.values(d.get('state','records')??{}).some(r=>r.laborMarket===1&&r.project===key);
         const remainingDays=hired?Math.ceil(project.remainingWork??project.remainingDays):Math.max(0,project.remainingDays-days);d.set(['state','projects',key],{...project,remainingDays,status:remainingDays?'施工中':'已完成'});
+        if(!remainingDays)settleProjectWorks(d,e,project,`${key}:works`);
         if(!remainingDays)d.set(['state','projects',key,'facility'],completeFacilityProject(d,e,project));
         if(!remainingDays&&project.creator==='player')milestone(d,e,'publicContribution',key,id);
     }

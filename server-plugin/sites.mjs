@@ -5,7 +5,36 @@ import {actorPath} from './npc-state.mjs';
 import {validateMonsterSocieties,passageAllows,assertSocietyEntry,infiltrationDetected,infiltrationSucceeded,societyAt} from './monster-society.mjs';
 import {traitsOf} from './traits.mjs';
 import {personAge,personConstraint}from'./entity-view.mjs';
-import {forestView,harvestForest}from'./forest-water.mjs';
+import {forestView,harvestForest,forestSites}from'./forest-water.mjs';
+import {declareLedgerWriter} from './ledger.mjs';
+import {reserve as reserveAccount,bag,moveStock,registerLegacyStock,BOOKED as STOCK_BOOKED} from './stock.mjs';
+// S1b: 据点的有限资源是资源点账户 site:<据点>:<资源>|<物品>|reserve：首次建账按世界数据（resource.quantity）经 src:genesis 开户，
+// 定期再生来自 src:regrowth，采集转入采集者行囊；机关消耗材料、续约供品进 sink:consume。
+// 林木据点的木料以林木存量（forest-water）为唯一账户，据点 remaining 只是采集上限，不另记账。
+declareLedgerWriter('sites',{sources:{'src:genesis':{'*':1000000},'src:regrowth':{'*':100000}},sinks:['sink:consume']});
+const siteResourceAccount=(engine,place,r)=>reserveAccount(engine,`site:${place.id}:${r.id}`,r.item);
+const forestBacked=(engine,place,r)=>r.item==='item_wood'&&forestSites(engine).some(s=>s.location===place.id);
+registerLegacyStock('sites',(engine,state,add)=>{
+    for(const row of Object.values(state.records??{}))if(row?.category==='site'){
+        const place=engine.byId.get(row.site);
+        for(const r of place?.site?.resources??[])if(!forestBacked(engine,place,r))add(siteResourceAccount(engine,place,r),row.remaining?.[r.id]);
+    }
+});
+// 写回据点账的唯一入口：新开的资源按世界数据开户，再生与采集按 remaining 的变化记账（to = 采得物的去处）。
+function putSite(d,engine,place,row,{to=null,eventId=null}={}){
+    const old=d.get('state','records',siteKey(place.id));
+    for(const r of place.site.resources??[]){
+        if(forestBacked(engine,place,r))continue;
+        const acct=siteResourceAccount(engine,place,r),resource=acct.split('|')[1];
+        const before=old?.remaining&&Object.hasOwn(old.remaining,r.id)?old.remaining[r.id]:null,after=row.remaining[r.id]??0;
+        if(before===null)moveStock(d,{from:`src:genesis|${resource}|site`,to:acct,amount:r.quantity,writer:'sites',eventId});
+        const base=before??r.quantity,taken=to?.taken?.[r.id]??0,grown=after+taken-base;
+        if(grown>0)moveStock(d,{from:`src:regrowth|${resource}|site`,to:acct,amount:grown,writer:'sites',eventId});
+        if(taken)moveStock(d,{from:acct,to:to.account,amount:taken,writer:'sites',eventId});
+        if(grown<0)throw Error('据点资源减少却没有去处');
+    }
+    d.set(['state','records',siteKey(place.id)],row);
+}
 
 // A location's optional site contains occupants (actor IDs), manager, owner,
 // entryMechanisms, mechanisms, clues, resources and truths. Local IDs stay stable
@@ -208,7 +237,7 @@ function infiltrate(d,engine,place,eventId){
     const watcher=watchers(d,engine,place)[0],{difficulty,...rest}=plan.check;
     const check=engine.check(d,watcher?{...rest,opponent:{npc:watcher,attribute:'精神'}}:plan.check,eventId);
     if(check.success){
-        d.set(['state','records',siteKey(place.id)],ledger(d,place));
+        putSite(d,engine,place,ledger(d,place),{eventId});
         d.set(['state','records','site_presence'],{category:'site_presence',site:place.id,actor:'player',covert:true,minute:d.get('state','minute'),sourceEvent:eventId});
         infiltrationSucceeded(d,engine,place,eventId);
         return{...siteView(engine,d.document),covert:true,detected:false,check,minutes:plan.minutes};
@@ -266,7 +295,7 @@ export function siteAction(d,args,eventId){
     const row=ledger(d,place);
     if(operation==='enter'){
         unblocked(row,s.entryMechanisms??[]);
-        d.set(['state','records',siteKey(place.id)],row);
+        putSite(d,this,place,row,{eventId});
         d.set(['state','records','site_presence'],{category:'site_presence',site:place.id,actor:'player',minute:d.get('state','minute'),sourceEvent:eventId});
         return{...siteView(this,d.document),truths:siteKnowledge(this.world,d.document).filter(t=>t.site===place.id)};
     }
@@ -289,17 +318,17 @@ export function siteAction(d,args,eventId){
         if(state){
             advance(mechanism.minutes);
             row.mechanisms[mechanism.id]={status:'已解除',method:state,sourceEvent:eventId,minute:d.get('state','minute')};
-            d.set(['state','records',siteKey(place.id)],row);
+            putSite(d,this,place,row,{eventId});
             return{target:mechanism.id,element:{feature:mechanism.element.feature,state},damage:0,status:'已解除'};
         }
         if(mechanism.tool){const held=heldUnit(d,this,'player',mechanism.tool);if(!held||held.durability<=0)throw Error('缺少可用机关工具');}
         const costs=new Map();for(const cost of mechanism.materials??[])costs.set(cost.item,(costs.get(cost.item)??0)+cost.quantity);
         for(const[item,quantity]of costs)if(this.quantity(d,'player',item)<quantity)throw Error('机关消耗材料不足');
-        for(const[item,quantity]of costs)this.itemDelta(d,'player',item,-quantity);
+        for(const[item,quantity]of costs)this.itemDelta(d,'player',item,-quantity,{flow:'sink:consume',purpose:'mechanism',writer:'sites',eventId});
         const check=this.check(d,{...mechanism.check,...(mechanism.tool?{tools:[mechanism.tool]}:{})},eventId);
         advance(mechanism.minutes);
         row.mechanisms[mechanism.id]={status:check.success?'已解除':'未解除',sourceEvent:eventId,minute:d.get('state','minute')};
-        d.set(['state','records',siteKey(place.id)],row);
+        putSite(d,this,place,row,{eventId});
         const damage=check.success?0:consumeMagicProtection(d,'player',mechanism.failureDamage??0,'physical').damage;
         if(damage)this.health(d,{delta:-damage},eventId);
         return{target:mechanism.id,check,damage,status:row.mechanisms[mechanism.id].status};
@@ -315,9 +344,10 @@ export function siteAction(d,args,eventId){
         if(row.remaining[target.id]<quantity)throw Error('有限资源不足，不会因重访刷新');
         advance(target.minutes);
         if(!allowed(d.document,place,ownerOf(place,target),authorizations,'gather'))throw Error('资源许可已到期');
-        if(target.item==='item_wood'&&forestView(this,d.get('state'),place.id)&&harvestForest(d,this,place.id,quantity)!==quantity)throw Error('林木存量不足');
-        row.remaining[target.id]-=quantity;d.set(['state','records',siteKey(place.id)],row);
-        this.itemDelta(d,'player',target.item,quantity);
+        const wood=target.item==='item_wood'&&forestView(this,d.get('state'),place.id);
+        if(wood&&harvestForest(d,this,place.id,quantity,d.get('state','minute'),{to:bag(this,'player','item_wood'),eventId})!==quantity)throw Error('林木存量不足');
+        row.remaining[target.id]-=quantity;putSite(d,this,place,row,{eventId,to:wood?null:{account:bag(this,'player',target.item),taken:{[target.id]:quantity}}});
+        this.itemDelta(d,'player',target.item,quantity,STOCK_BOOKED);
         return{target:target.id,item:target.item,quantity,remaining:row.remaining[target.id],owner:'player'};
     }
     if(discovered(d.document,place.id,target.id))return{target:target.id,duplicate:true,text:target.text};
@@ -377,8 +407,8 @@ export function woodcut(d,args,id){
  const check=this.check(d,{attribute:'力量',difficulty:rules.difficulty,tools:[rules.tool]},id);
  wearItem(d,this,'player',rules.tool,rules.wear);this.advance(d,rules.minutes*quantity,id);
  access();
- const taken=check.success&&d.get('state','player','status')==='正常'&&d.get('state','location')===location?harvestForest(d,this,location,quantity):0;
- if(taken)this.itemDelta(d,'player','item_wood',taken);
+ const taken=check.success&&d.get('state','player','status')==='正常'&&d.get('state','location')===location?harvestForest(d,this,location,quantity,d.get('state','minute'),{to:bag(this,'player','item_wood'),eventId:id}):0;
+ if(taken)this.itemDelta(d,'player','item_wood',taken,STOCK_BOOKED);
  return {success:taken>0,check,obtained:taken?[{item:'item_wood',quantity:taken}]:[],reserve:forestView(this,d.get('state'),location).reserve,
   reason:taken<quantity?'林木不足或采伐未成':null,actionScope:{kind:'woodcut',clockManaged:true,minutes:rules.minutes*quantity}};
 }

@@ -102,7 +102,7 @@ async function step(c,tool,args,eventId,log){
     assert.deepEqual(r.mismatches,[],`${eventId}：旧余额 ≠ 新账户余额`);
     assert.deepEqual(r.drift,[],`${eventId}：双写漂移`);assert.deepEqual(r.audit,[],`${eventId}：账本不守恒`);
     // 守恒：全局货币总量变化 = 源净流入 − 汇流出（开账事件的开账额计入源）。
-    const flows=flowDelta(before.ledger?before:{ledger:{flows:{}}},after),delta=legacyTotal(c.engine,after.state)-(before.ledger?legacyTotal(c.engine,before.state):0);
+    const flows=flowDelta(before.ledger?before:{ledger:{flows:{}}},after,LEDGER_COIN),delta=legacyTotal(c.engine,after.state)-(before.ledger?legacyTotal(c.engine,before.state):0);
     assert.equal(delta,flows.sources-flows.sinks,`${eventId}：Δ总量 ${delta} ≠ 源 ${flows.sources} − 汇 ${flows.sinks}`);
     for(const [k,n] of Object.entries(flows.byFlow))log.set(k,(log.get(k)??0)+n);
     c.doc=after;return out.result;

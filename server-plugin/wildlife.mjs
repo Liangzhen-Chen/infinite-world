@@ -3,6 +3,9 @@ import {forestHabitatCapacity,forestView} from './forest-water.mjs';
 export {displaceForestWildlife} from './forest-water.mjs';
 import {monsterStats,seededRandom} from './combat.mjs';
 import {heldUnit,wearItem} from './items.mjs';
+import {declareLedgerWriter} from './ledger.mjs';
+// S1b: 尸体取材是死亡转化的产物（src:harvest，按物种掉落表），取材耗材进 sink:consume。
+declareLedgerWriter('wildlife',{sources:{'src:harvest':{'*':10000}},sinks:['sink:consume']});
 import {canonical} from './storage.mjs';
 import {speciesInHabitat} from './wildlife-range.mjs';
 import {rangeSpec,initialIn,wildlifeHabitats,validateHabitatDerivation} from './wildlife-habitats.mjs';
@@ -229,11 +232,11 @@ export function wildlifeAction(d,args,eventId){
     const recipe=s.wildlife.gather;if(!corpse.items.length)throw new Error('这个物种没有登记可加工材料');
     if(recipe.tool&&(!this.quantity(d,'player',recipe.tool)||heldUnit(d,this,'player',recipe.tool).durability<=0))throw new Error('需要实际完好的取材刀具');
     for(const m of recipe.consumes)if(this.quantity(d,'player',m.item)<m.amount)throw new Error('取材实际耗材不足');
-    for(const m of recipe.consumes)this.itemDelta(d,'player',m.item,-m.amount);
+    for(const m of recipe.consumes)this.itemDelta(d,'player',m.item,-m.amount,{flow:'sink:consume',purpose:'butcher',writer:'wildlife',eventId});
     const known=d.get('state','skills','skill_life_1_core'),check=this.check(d,{attribute:'敏捷',...(known?{skill:'skill_life_1_core'}:{}),difficulty:10},eventId);
     if(recipe.tool)wearItem(d,this,'player',recipe.tool,1);this.advance(d,recipe.minutes,eventId);
     const current=d.get('state','creatures',target,'corpse'),success=check.success&&current.status==='未取材'&&current.expires>d.get('state','minute')&&d.get('state','player','status')==='正常'&&d.get('state','location')===habitat.location;
     d.set(['state','creatures',target,'corpse'],{...current,status:success?'已取材':'已损坏',processedBy:'player',processedAt:d.get('state','minute'),processingEvent:eventId});
-    if(success)for(const drop of current.items)this.itemDelta(d,'player',drop.item,drop.amount);
+    if(success)for(const drop of current.items)this.itemDelta(d,'player',drop.item,drop.amount,{flow:'src:harvest',purpose:'butcher',writer:'wildlife',eventId});
     return{success,obtained:success?current.items:[],spent:{minutes:recipe.minutes,materials:recipe.consumes,tool:recipe.tool,toolWear:recipe.tool?1:0},note:'失败仍耗时耗材；仅obtained实际进入行囊，尸体不可反复刷取'};
 }

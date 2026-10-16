@@ -1,0 +1,175 @@
+// S1b 物品、粮与库存适配器（L1）：把旧状态里存放可计量物品的字段映射为账本账户，
+// 并给旧写入点一个同时写新账本的入口（绞杀式双写：旧字段照写，读取暂不改）。
+// 资源键 = 物品模板 id（world/meta/items.json，按 world 现有命名空间；core 省略）；登记为铸币的物品
+// （rules.economy.credit.coinages 的 item）记为对应铸币资源（coin_civic、coin_coast，15 §15.3）。
+// 账户键 = <所属实体>|<资源>|<用途>：
+//   人（玩家、名册人物、生灵）的行囊   <id>|<物品>|inventory    state.inventory / state.npcs.<id>.inventory / state.creatures.<id>.inventory
+//   势力/神殿/国家/自建组织库存        <id>|<物品>|store        faction-assets:<id>.items（未开户为世界数据 resources.items）/ organization:<id>.items
+//   聚落公仓（粮）                    <聚落>|item_oats|granary  state.settlements.<id>.food（托管农事的聚落按 agriculture:<id>.batches 分批次）
+//   聚落种粮                          <聚落>|item_oats|seed     agriculture:<id>.field.seedBank（seedBatches 分批次）
+//   聚落木石铁                        <聚落>|<物品>|stock      state.settlements.<id>.wood/stone/iron（rules.economy.shops.stockItems 的对应物品）
+//   军粮                              army:<id>|item_oats|ration records.army:<id>.food
+//   周贸易在途粮                      settlement-trade:<id>|item_oats|cargo  records.settlement-trade:<id>.batches（分批次）
+//   托运在途货物                      transport:<id>|<物品>|freight  records.transport:<id>.cargo
+//   质押物                            pledge:<键>|<物品>|pledge  records.pledge:*（质押中）
+//   钱庄库存铸币                      <钱庄>|<铸币>|vault       records.<钱庄>.goods（未开户为 rules.economy.credit.banks.reserveCoins）
+//   工程备料                          <工程>|<物品>|works       state.projects.<id>.wood/stone（施工中且已备料）
+//   矿脉储量                          mineral:<地点>:<物品>|<物品>|reserve  records.mineral:*.reserve（首次开采时按世界数据开户）
+//   林木存量                          forest:<地点>|item_wood|reserve  records.forest:*.reserve（首次采伐时按世界数据开户）
+//   落地/封存/法院保管的单件          <地点或保管者>|<物品>|placed  state.itemInstances.<id>（status 落地、封存的按 location，保管的按 owner）
+// 源汇（world/ontology/resources.json 的 sourcesAndSinks）的用途即流量类别（gather、harvest、meal、craft、decay……）。
+// 批次（lots）只在仓储类用途（granary、seed、cargo）上启用：粮食需要保质期，其余物品暂按数量计。
+import {accountKey,transfer,registerLedgerOpening,registerLotPolicy,ledgerActive,reviseLots} from './ledger.mjs';
+import {actorId} from './npc-state.mjs';
+import {groupAccountView} from './group-account.mjs';
+
+export const LOT_PURPOSES=Object.freeze(new Set(['granary','seed','cargo']));
+registerLotPolicy(({purpose})=>LOT_PURPOSES.has(purpose));
+export const GRAIN='item_oats';// rules.agriculture.grainItem 与 rules.economy.shops.stockItems.food 的缺省
+
+const coinItems=new WeakMap();
+// 物品 → 资源键：铸币物品记为铸币资源（coinage_civic → coin_civic），其余即物品 id。
+export function itemResource(engine,item){
+    const world=engine?.world;let map=world&&coinItems.get(world);
+    if(world&&!map){map=new Map((world.rules?.economy?.credit?.coinages??[]).filter(c=>c.item).map(c=>[c.item,c.id.replace(/^coinage_/,'coin_')]));coinItems.set(world,map);}
+    return map?.get(item)??item;
+}
+const res=(engine,item)=>itemResource(engine,item);
+export const bag=(engine,id,item)=>accountKey(engine?actorId(engine.world,id):id,res(engine,item),'inventory');
+export const store=(engine,id,item)=>accountKey(id,res(engine,item),'store');
+export const stockItem=(engine,stock)=>engine?.rules?.economy?.shops?.stockItems?.[stock]??({food:GRAIN,wood:'item_wood',stone:'item_stone',iron:'item_iron'})[stock];
+export const granary=(engine,sid)=>accountKey(sid,res(engine,stockItem(engine,'food')),'granary');
+export const seedBank=(engine,sid)=>accountKey(sid,res(engine,stockItem(engine,'food')),'seed');
+export const settlementStock=(engine,sid,stock)=>stock==='food'?granary(engine,sid):accountKey(sid,res(engine,stockItem(engine,stock)),'stock');
+export const armyRations=(engine,id)=>accountKey(String(id).startsWith('army:')?id:`army:${id}`,res(engine,stockItem(engine,'food')),'ration');
+export const cargo=(engine,key,item)=>accountKey(key,res(engine,item),'cargo');
+export const freight=(engine,key,item)=>accountKey(key,res(engine,item),'freight');
+export const pledged=(engine,key,item)=>accountKey(key,res(engine,item),'pledge');
+export const vaultGoods=(engine,bank,item)=>accountKey(bank,res(engine,item),'vault');
+export const works=(engine,project,item)=>accountKey(project,res(engine,item),'works');
+export const reserve=(engine,node,item)=>accountKey(node,res(engine,item),'reserve');
+// 没有登记地点的单件（旧记录缺 location）记在 unplaced 名下，旧账与新账同口径。
+export const placed=(engine,holder,item)=>accountKey(String(holder||'unplaced').replace(/[|\s]/g,'_'),res(engine,item),'placed');
+export const transit=(engine,key,item)=>accountKey(key,res(engine,item),'transit');
+export const stockSource=(engine,kind,item,purpose)=>accountKey(`src:${kind}`,res(engine,item),purpose);
+export const stockSink=(engine,kind,item,purpose)=>accountKey(`sink:${kind}`,res(engine,item),purpose);
+
+// 唯一的双写入口：旧写入点在改旧字段的同一处调用它。lot/pick 见 ledger.transfer。
+export function moveStock(d,{from,to,amount,writer,eventId=null,lot=null,pick=null}){
+    if(!amount||from===to)return 0;
+    return transfer(d,{from,to,amount,writer,eventId,lot,pick});
+}
+export {reviseLots};
+export const BOOKED=Object.freeze({booked:true});
+// 单边旧写入（某个账户加减）的双写：books 给出对方——
+//   {account}                  对方账户键（资源须相同）
+//   {party, purpose='inventory'} 对方实体（行囊缺省）：账户 = <party>|<本资源>|<purpose>
+//   {flow:'src:x'|'sink:x', purpose}  源汇：账户 = <flow>|<本资源>|<purpose>
+// 以及 writer、eventId、lot、pick。成对旧写入中已由另一处记过账的一边传 BOOKED。
+// 缺对方账户的调用（漏改的写入点、测试直接调用的辅助函数）不拦旧结算，记一条未入账漂移，对账测试见到即失败。
+export function counterAccount(engine,account,books){
+    if(books.account)return books.account;
+    const resource=account.split('|')[1];
+    if(books.flow)return accountKey(books.flow,resource,books.purpose??'other');
+    if(books.party)return accountKey(engine?actorId(engine.world,books.party):books.party,resource,books.purpose??'inventory');
+    return null;
+}
+export function bookStock(d,engine,account,delta,books){
+    if(books===BOOKED||!delta)return 0;
+    const other=books?.writer?counterAccount(engine,account,books):null;
+    if(!other){
+        if(ledgerActive(d))d.set(['ledger','drift'],[...(d.get('ledger','drift')??[]),{account,unbooked:delta,minute:d.get('state','minute')??null}].slice(-50));
+        return 0;
+    }
+    const common={writer:books.writer,eventId:books.eventId??null,lot:books.lot??null,pick:books.pick??null};
+    return delta>0?moveStock(d,{from:other,to:account,amount:delta,...common}):moveStock(d,{from:account,to:other,amount:-delta,...common});
+}
+export const booksOpen=ledgerActive;
+
+// ---- 旧字段里的全部库存（开账与对账的唯一取数处） --------------------------------
+const qty=v=>typeof v==='number'?v:v?.quantity??0;
+const num=n=>Number.isSafeInteger(n)&&n>0?n:0;
+const batchLots=(batches,kind=null)=>batches.filter(b=>b.amount>0).map(b=>({id:String(b.id??`${b.harvestDay}:${b.expiresDay}`),qty:b.amount,day:b.harvestDay??null,expiresDay:b.expiresDay??null,kind:b.kind??kind}));
+// 钱庄没收（status 没收）的单件已计入钱庄库存 goods，不另计。
+// 玩法包登记自己的旧库存字段（依赖倒置：本体层不 import 玩法包）。fn(engine, state, add(key, n, lots?))。
+const enumerators=new Map();
+export function registerLegacyStock(name,fn){enumerators.set(name,fn);}
+export const UNIT_PLACED=Object.freeze({'落地':'location','封存':'location','保管':'owner'});
+export function legacyStock(engine,state){
+    const out=new Map(),lots=new Map();
+    const add=(key,n,l)=>{n=num(n);if(!n)return;out.set(key,(out.get(key)??0)+n);if(l?.length)lots.set(key,[...(lots.get(key)??[]),...l]);};
+    const bagOf=(id,inventory)=>{for(const [item,v] of Object.entries(inventory??{}))add(bag(engine,id,item),qty(v));};
+    bagOf('player',state.inventory);
+    for(const [id,n] of Object.entries(state.npcs??{}))bagOf(id,n?.inventory);
+    // 非居民的生灵首领把谈判库存记在 negotiation.inventory（boss-negotiation 的行囊路径），同一行囊账户。
+    for(const [id,c] of Object.entries(state.creatures??{})){bagOf(id,c?.inventory);bagOf(id,c?.negotiation?.inventory);}
+    // 势力、神殿、国家库存（与 money.legacyMoney 的公库同一取数）；没有势力公库的自建组织用组织记录。
+    const records=state.records??{},groups=new Set((engine.world.factions??[]).map(f=>f.id));
+    for(const key of Object.keys(records))if(key.startsWith('faction-assets:'))groups.add(key.slice('faction-assets:'.length));
+    for(const id of [...groups].sort())if(!state.settlements?.[id])for(const [item,n] of Object.entries(groupAccountView(engine,state,id)?.items??{}))add(store(engine,id,item),n);
+    for(const [key,row] of Object.entries(records)){
+        if(!row||typeof row!=='object')continue;
+        const c=row.category;
+        if(c==='organization'){const id=key.slice('organization:'.length);if(!groupAccountView(engine,state,id)&&!state.settlements?.[id])for(const [item,n] of Object.entries(row.items??{}))add(store(engine,id,item),n);}
+        else if(c==='army')add(armyRations(engine,key),row.food);
+        else if(c==='settlement_trade'&&row.status==='in-transit')add(cargo(engine,key,row.item),(row.batches??[]).reduce((n,b)=>n+b.amount,0),batchLots(row.batches??[]));
+        else if(c==='transport')for(const g of row.cargo??[])add(freight(engine,key,g.item),g.quantity);
+        else if(c==='pledge'&&row.status==='质押中')add(pledged(engine,key,row.item),row.quantity);
+        else if(c==='bank')for(const [item,n] of Object.entries(row.goods??{}))add(vaultGoods(engine,key,item),n);
+        else if(c==='mineral')add(reserve(engine,key,row.item),row.reserve);
+        else if(c==='forest')add(reserve(engine,key,'item_wood'),row.reserve);
+    }
+    for(const b of engine.rules.economy?.credit?.banks??[])if(!records[b.id])for(const [item,n] of Object.entries(b.reserveCoins??{}))add(vaultGoods(engine,b.id,item),n);
+    // 聚落公仓：托管农事的聚落按粮仓批次（grain / fresh）与种粮批次计，其余聚落是一个不分批的数。
+    for(const [sid,s] of Object.entries(state.settlements??{})){
+        const farm=records[`agriculture:${sid}`];
+        if(farm?.mode==='managed'){add(granary(engine,sid),s.food,batchLots(farm.batches??[]));add(seedBank(engine,sid),farm.field?.seedBank,batchLots(farm.field?.seedBatches??[],'seed'));}
+        else add(granary(engine,sid),s.food,num(s.food)?[{id:'stock',qty:s.food,day:null,expiresDay:null,kind:null}]:null);
+        for(const stock of ['wood','stone','iron'])add(settlementStock(engine,sid,stock),s[stock]);
+    }
+    for(const [id,p] of Object.entries(state.projects??{}))if(p?.status==='施工中')for(const stock of ['wood','stone'])add(works(engine,id,stockItem(engine,stock)),p[stock]);
+    for(const u of Object.values(state.itemInstances??{})){const field=UNIT_PLACED[u?.status];if(field)add(placed(engine,u[field],u.item),1);}
+    for(const fn of enumerators.values())fn(engine,state,add);
+    return {balances:out,lots};
+}
+registerLedgerOpening((engine,state)=>{
+    const {balances,lots}=legacyStock(engine,state);
+    return [...balances].sort(([a],[b])=>a<b?-1:a>b?1:0).map(([key,n])=>[key,n,lots.get(key)??null]);
+},'stock');
+
+// ---- 生成即开户（远方生成的人物与聚落，src:genesis） --------------------------------
+export function genesisBag(d,engine,id,inventory,{writer,eventId=null}){
+    for(const [item,v] of Object.entries(inventory??{}))moveStock(d,{from:stockSource(engine,'genesis',item,'remote'),to:bag(engine,id,item),amount:qty(v),writer,eventId});
+}
+export function genesisSettlement(d,engine,sid,s,{writer,eventId=null}){
+    moveStock(d,{from:stockSource(engine,'genesis',stockItem(engine,'food'),'remote'),to:granary(engine,sid),amount:num(s.food),writer,eventId,lot:{id:'stock',day:null,expiresDay:null,kind:null}});
+    for(const stock of ['wood','stone','iron'])moveStock(d,{from:stockSource(engine,'genesis',stockItem(engine,stock),'remote'),to:settlementStock(engine,sid,stock),amount:num(s[stock]),writer,eventId});
+}
+
+// ---- 工程备料 ----------------------------------------------------------------
+// 开工时木石从出料方（自备者行囊或聚落库存）转入工程账户 <工程>|<物品>|works；完工即消耗（sink:consume|build），
+// 中止时按已做工的比例消耗，余下退回出料方。
+const MATERIALS=[['wood','item_wood'],['stone','item_stone']];
+export function holdWorks(d,engine,project,amounts,{from,writer,eventId=null}){
+    for(const [k,item] of MATERIALS){const n=amounts[k]??0;if(!n)continue;
+        const src=from.settlement?settlementStock(engine,from.settlement,k):bag(engine,from.party,item);
+        moveStock(d,{from:src,to:works(engine,project,item),amount:n,writer,eventId});}
+}
+export function settleWorks(d,engine,p,{returned={},to,writer,eventId=null}){
+    for(const [k,item] of MATERIALS){const held=p[k]??0,back=returned[k]??0;if(!held)continue;
+        const acct=works(engine,p.id,item);
+        if(back){const dst=to.settlement?settlementStock(engine,to.settlement,k):bag(engine,to.party,item);moveStock(d,{from:acct,to:dst,amount:back,writer,eventId});}
+        moveStock(d,{from:acct,to:stockSink(engine,'consume',item,'build'),amount:held-back,writer,eventId});}
+}
+
+// ---- 制造守恒对（src:craft，01 §1.6） ------------------------------------------
+// 配方投入经 sink:consume|<物品>|craft 消耗，产出（含失败时按配方回收的残料）经 src:craft|<物品>|craft 流入；
+// 同一事务内记一条制造凭据（ledger.crafts：配方、批数、投入与产出），审计按配方核对产出不超过投入的函数。
+export const CRAFT_PURPOSE='craft';
+export const craftInput=(writer,eventId)=>({flow:'sink:consume',purpose:CRAFT_PURPOSE,writer,eventId});
+export const craftOutput=(writer,eventId)=>({flow:'src:craft',purpose:CRAFT_PURPOSE,writer,eventId});
+export function recordCraft(d,{recipe,batches=1,inputs={},outputs={},writer,eventId=null}){
+    if(!ledgerActive(d))return;
+    if(!recipe)throw Error('制造产出必须指明配方（src:craft 守恒对）');
+    d.set(['ledger','crafts'],[...(d.get('ledger','crafts')??[]),{recipe,batches,inputs,outputs,writer,eventId,minute:d.get('state','minute')??null}].slice(-50));
+}

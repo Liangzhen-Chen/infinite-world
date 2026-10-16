@@ -9,6 +9,7 @@
 import {changeItems}from'./items.mjs';
 import {purse,vault,escrow as escrowAccount,moveCoins}from'./money.mjs';
 import {declareLedgerWriter}from'./ledger.mjs';
+import {bag,store,pledged,vaultGoods,moveStock,BOOKED as STOCK_BOOKED} from './stock.mjs';
 declareLedgerWriter('credit');
 import {scheduleAt,assertNpcService,advanceWithNpcParticipants}from'./npc-schedule.mjs';
 import {npcSchedule}from'./npc-state.mjs';
@@ -64,11 +65,12 @@ const coinRate=c=>c.faceCopper*c.fineness;
 export function pledge(d,engine,key,item,quantity,owner='player'){
     if(groupAccountView(engine,d.get('state'),owner)){
         const account=ensureGroupAccount(d,engine,owner);if((account.items[item]??0)<quantity)throw Error('组织公库没有足够抵押实物');
+        moveStock(d,{from:store(engine,owner,item),to:pledged(engine,key,item),amount:quantity,writer:'credit',eventId:key});
         d.set(groupAccountPath(owner),{...account,items:{...account.items,[item]:account.items[item]-quantity},ledger:[...account.ledger,{kind:'pledge',sourceEvent:key,items:{[item]:-quantity},minute:d.get('state','minute')}]});
         const row={category:'pledge',owner,item,quantity,instances:[],value:valueOf(engine,item,quantity),status:'质押中',createdAt:d.get('state','minute')};d.set(rec(key),row);return row;
     }
     if(engine.quantity(d,owner,item)<quantity)throw Error('抵押物不在当事人的行囊中');
-    const moved=changeItems(d,engine,owner,item,-quantity,{preserve:true});
+    const moved=changeItems(d,engine,owner,item,-quantity,{preserve:true,books:{account:pledged(engine,key,item),writer:'credit',eventId:key}});
     for(const unit of moved.instances)d.set(['state','itemInstances',unit],{...d.get('state','itemInstances',unit),owner:key,status:'质押'});
     const row={category:'pledge',owner,item,quantity,instances:moved.instances,value:valueOf(engine,item,quantity),status:'质押中',createdAt:d.get('state','minute')};
     d.set(rec(key),row);return row;
@@ -77,11 +79,12 @@ export function releasePledge(d,engine,key,to,bank=null){
     const p=d.get(...rec(key));if(p?.category!=='pledge'||p.status!=='质押中')return null;
     if(bank){
         const row=bankRow(d,bank);row.goods[p.item]=(row.goods[p.item]??0)+p.quantity;d.set(rec(bank.id),row);
+        moveStock(d,{from:pledged(engine,key,p.item),to:vaultGoods(engine,bank.id,p.item),amount:p.quantity,writer:'credit',eventId:key});
         for(const unit of p.instances)d.set(['state','itemInstances',unit],{...d.get('state','itemInstances',unit),owner:bank.id,status:'没收'});
     }else if(groupAccountView(engine,d.get('state'),to)){
-        const account=ensureGroupAccount(d,engine,to);d.set(groupAccountPath(to),{...account,items:{...account.items,[p.item]:(account.items[p.item]??0)+p.quantity},ledger:[...account.ledger,{kind:'pledge_return',sourceEvent:key,items:{[p.item]:p.quantity},minute:d.get('state','minute')}]});
+        const account=ensureGroupAccount(d,engine,to);moveStock(d,{from:pledged(engine,key,p.item),to:store(engine,to,p.item),amount:p.quantity,writer:'credit',eventId:key});d.set(groupAccountPath(to),{...account,items:{...account.items,[p.item]:(account.items[p.item]??0)+p.quantity},ledger:[...account.ledger,{kind:'pledge_return',sourceEvent:key,items:{[p.item]:p.quantity},minute:d.get('state','minute')}]});
     }else{
-        changeItems(d,engine,to,p.item,p.quantity);
+        changeItems(d,engine,to,p.item,p.quantity,{books:{account:pledged(engine,key,p.item),writer:'credit',eventId:key}});
         if(p.instances.length){
             const bag=[...engine.bagPath(to),p.item,'instances'];d.set(bag,[...d.get(...bag)??[],...p.instances]);
             for(const unit of p.instances)d.set(['state','itemInstances',unit],{...d.get('state','itemInstances',unit),owner:to,status:'持有'});
@@ -236,12 +239,12 @@ export async function creditTrade(d,args,eventId){
             if(buy){
                 const cost=Math.ceil(gross*(1+b.exchangeFeeRate));
                 if((row.goods[item]??0)<quantity)throw Error(`${b.name}库存${c.name}不足`);if(coins<cost)throw Error('现钱不足');
-                moveCoins(d,{from:purse(engine,'player'),to:vault(b.id),amount:cost,writer:'credit',eventId});row.goods[item]-=quantity;row.coins+=cost;d.set(['state','player','coins'],coins-cost);changeItems(d,engine,'player',item,quantity);
+                moveCoins(d,{from:purse(engine,'player'),to:vault(b.id),amount:cost,writer:'credit',eventId});row.goods[item]-=quantity;row.coins+=cost;d.set(['state','player','coins'],coins-cost);changeItems(d,engine,'player',item,quantity,{books:{account:vaultGoods(engine,b.id,item),writer:'credit',eventId}});
                 detail={item,quantity,paid:cost,fineness:c.fineness,polity:c.polity};
             }else{
                 const paid=Math.floor(gross*(1-b.exchangeFeeRate));
                 if(engine.quantity(d,'player',item)<quantity)throw Error(`你没有这么多${c.name}`);if(row.coins<paid)throw Error(`${b.name}现钱不足`);
-                changeItems(d,engine,'player',item,-quantity);row.goods[item]=(row.goods[item]??0)+quantity;row.coins-=paid;
+                changeItems(d,engine,'player',item,-quantity,{books:{account:vaultGoods(engine,b.id,item),writer:'credit',eventId}});row.goods[item]=(row.goods[item]??0)+quantity;row.coins-=paid;
                 moveCoins(d,{from:vault(b.id),to:purse(engine,'player'),amount:paid,writer:'credit',eventId});d.set(['state','player','coins'],coins+paid);detail={item,quantity,received:paid,fineness:c.fineness,polity:c.polity};
             }
         }

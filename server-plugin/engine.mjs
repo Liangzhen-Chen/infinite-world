@@ -85,7 +85,7 @@ import {beginHouseholdReads}from'./npc-state.mjs';
 import {advanceLayersFresh}from'./advance-layers.mjs';
 import {smuggleTrade,inspectSmuggling}from'./smuggling.mjs';
 import {withLedger,finishLedger,transfer,accountKey,declareLedgerWriter,LEDGER_COIN}from'./ledger.mjs';
-declareLedgerWriter('engine',{sinks:['sink:export']});
+declareLedgerWriter('engine',{sinks:['sink:export','sink:consume']});
 const clone = value => structuredClone(value);
 const number = (value, min = 0, max = 1e9, label = '数值') => {
     if (!Number.isSafeInteger(value) || value < min || value > max) throw new Error(`${label}必须在${min}到${max}之间`);
@@ -306,8 +306,8 @@ export class WorldEngine {
     actorPath(id) { return actorPath(this.world,id); }
     bagPath(id) { return id==='player' ? ['state','inventory'] : [...this.actorPath(id),'inventory']; }
     quantity(d,id,item) { const value=d.get(...this.bagPath(id),item); return typeof value==='number'?value:value?.quantity ?? 0; }
-    itemDelta(d,id,item,delta) {
-        return changeItems(d,this,id,item,delta);
+    itemDelta(d,id,item,delta,books) {
+        return changeItems(d,this,id,item,delta,{books});
     }
     async trade(d,args,id) {
         if(args.operation==='transport')return transportAction(d,this,args,id);
@@ -633,7 +633,7 @@ export class WorldEngine {
         if(d.get('state','player','mp')<catalog.mp)throw new Error('魔力不足');
         for(const material of catalog.materials)if(this.quantity(d,'player',material.item)<material.amount)throw new Error(`缺少材料${this.byId.get(material.item).name}`);
         d.set(['state','player','mp'],d.get('state','player','mp')-catalog.mp);
-        for(const material of catalog.materials)this.itemDelta(d,'player',material.item,-material.amount);
+        for(const material of catalog.materials)this.itemDelta(d,'player',material.item,-material.amount,{flow:'sink:consume',purpose:'spell',writer:'engine',eventId:id});
         const result=this.check(d,{attribute:'精神',skill:catalog.skill,difficulty:catalog.difficulty},id);
         const legalCase=recordSpellViolation(d,this,catalog,args,prepared?.target??prepared?.id,id);
         this.advance(d,catalog.minutes,id);this.practice(d,{skill:catalog.skill,gain:3,target:args.target??'施法'},id);

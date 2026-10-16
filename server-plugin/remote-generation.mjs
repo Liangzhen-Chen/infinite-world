@@ -1,6 +1,8 @@
 import {purse,treasury as treasuryAccount,source,moveCoins} from './money.mjs';
 import {declareLedgerWriter} from './ledger.mjs';
-declareLedgerWriter('remote-generation',{sources:{'src:genesis':{coin_river:1000000}}});
+import {genesisBag,genesisSettlement} from './stock.mjs';
+// S1b: 远方生成的聚落库存与人物行囊同样从 src:genesis 入账。
+declareLedgerWriter('remote-generation',{sources:{'src:genesis':{coin_river:1000000,'*':10000000}}});
 import {createHash} from 'node:crypto';
 import {digest} from './storage.mjs';
 import {initialNpcState} from './npc-state.mjs';
@@ -579,12 +581,13 @@ export function unfoldRemoteAt(d,engine,location){
     if(fresh.length)for(const patch of planWildlifeMigration(d.document,{...overlay.rules,wildlife:{...overlay.rules.wildlife,habitats:fresh}},overlay.monsters??[]))d.set(patch.path,patch.value);
     // D1: every generated settlement opens its public ledger (notice board money, stores).
     // S1a: money the skeleton opens with enters the books from src:genesis.
-    for(const [sid,ledger] of Object.entries(skeleton.ledgers??{}))if(!d.get('state','settlements',sid)){moveCoins(d,{from:source('genesis','remote'),to:treasuryAccount(sid),amount:ledger.treasury??0,writer:'remote-generation',eventId:`remote:${county}`});d.set(['state','settlements',sid],structuredClone(ledger));}
+    for(const [sid,ledger] of Object.entries(skeleton.ledgers??{}))if(!d.get('state','settlements',sid)){moveCoins(d,{from:source('genesis','remote'),to:treasuryAccount(sid),amount:ledger.treasury??0,writer:'remote-generation',eventId:`remote:${county}`});genesisSettlement(d,engine,sid,ledger,{writer:'remote-generation',eventId:`remote:${county}`});d.set(['state','settlements',sid],structuredClone(ledger));}
     // Shopkeepers, officials (notice board) and festival hosts act from the day
     // they are registered; others act after a full profile.
     for(const p of skeleton.people)if(active(p,skeleton)){
         if(d.get('state','npcs',p.id))throw Error(`远方人物编号已被占用：${p.id}`);
         moveCoins(d,{from:source('genesis','remote'),to:purse(null,p.id),amount:p.coins??0,writer:'remote-generation',eventId:`remote:${county}`});
+        genesisBag(d,engine,p.id,p.inventory,{writer:'remote-generation',eventId:`remote:${county}`});
         d.set(['state','npcs',p.id],{...initialNpcState(p),occupation:p.occupation});
     }
     return {version:REMOTE_VERSION,county,name:skeleton.name,kind:skeleton.kind,settlements:skeleton.settlements.length,places:skeleton.locations.length,people:skeleton.people.length,habitats:fresh.map(h=>h.id),

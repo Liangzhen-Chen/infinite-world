@@ -1,6 +1,8 @@
 import {purse,workshopFund,moveCoins} from './money.mjs';
 import {declareLedgerWriter} from './ledger.mjs';
-declareLedgerWriter('wildlife-society');
+import {craftInput,craftOutput,recordCraft} from './stock.mjs';
+// S1b: 灵物制作是 src:craft 制造守恒对；借形取用与施用的物品进 sink:consume。
+declareLedgerWriter('wildlife-society',{sources:{'src:craft':{'*':100000}},sinks:['sink:consume']});
 import {registerWorldEventSubscriber}from'./world-events.mjs';
 import {createHash} from 'node:crypto';
 import {assertTrainingRitual} from './training.mjs';
@@ -33,9 +35,9 @@ function presentSpirit(d,engine,id,{label='它'}={}){
     return actor;
 }
 const stillHere=(d,id)=>{const a=d.get('state','creatures',id);return alive(a)&&a.location===d.get('state','location')&&d.get('state','player','status')==='正常';};
-function spend(d,engine,rows){
+function spend(d,engine,rows,eventId){
     for(const row of rows)if(engine.quantity(d,'player',row.item)<row.amount)throw Error(`缺少${engine.byId.get(row.item)?.name??row.item}${row.amount}份`);
-    for(const row of rows)engine.itemDelta(d,'player',row.item,-row.amount);
+    for(const row of rows)engine.itemDelta(d,'player',row.item,-row.amount,{flow:'sink:consume',purpose:'form',writer:'wildlife-society',eventId});
     return clone(rows);
 }
 export function activeForm(actor,minute){return actor?.form&&actor.form.until>minute?actor.form:null;}
@@ -127,7 +129,7 @@ export function spiritManufacture(d,args,eventId,{workstation,kilnWorkResult}){
     const modifier=Math.floor(proficiency/(this.rules.check.skillDivisor??150)),total=die+modifier,diff=recipe.difficulty;
     const degree=die===1||total<=diff-10?'大失败':die===20||total>=diff+10?'大成功':total<diff?'失败':total<diff+5?'勉强成功':'成功';
     const outcome={die,modifier,total,degree,difficulty:diff,success:['勉强成功','成功','大成功'].includes(degree)};
-    for(const[item,amount]of materials)this.itemDelta(d,'player',item,-amount);
+    for(const[item,amount]of materials)this.itemDelta(d,'player',item,-amount,craftInput('wildlife-society',eventId));
     if(station?.fee){
         moveCoins(d,{from:purse(null,'player'),to:station.owner?.startsWith('npc_')?purse(null,station.owner):workshopFund(station.id),amount:station.fee,writer:'wildlife-society',eventId:eventId});
         d.set(['state','player','coins'],d.get('state','player','coins')-station.fee);
@@ -142,9 +144,10 @@ export function spiritManufacture(d,args,eventId,{workstation,kilnWorkResult}){
     const ids=[],salvage=[],name=nameOf(this,id,actor);let workmanship=null;
     if(outcome.success){
         workmanship=degree==='勉强成功'?'粗糙':degree==='大成功'?(proficiency>=1500?'优秀':'精良'):'普通';
-        for(const row of products)if(row.amount)ids.push(...produceItems(d,this,row.item,row.amount,{eventId,recipe:recipe.id,workmanship}));
+        for(const row of products)if(row.amount)ids.push(...produceItems(d,this,row.item,row.amount,{eventId,recipe:recipe.id,workmanship,books:craftOutput('wildlife-society',eventId)}));
         for(const unit of ids)d.set(['state','itemInstances',unit],{...d.get('state','itemInstances',unit),maker:id,makerName:name});
-    }else for(const[item,amount]of materials){const back=thermal?.crackedQuantity?0:Math.floor(amount*(recipe.failure?.recoverFraction??0));if(back){this.itemDelta(d,'player',item,back);salvage.push({item,amount:back});}}
+    }else for(const[item,amount]of materials){const back=thermal?.crackedQuantity?0:Math.floor(amount*(recipe.failure?.recoverFraction??0));if(back){this.itemDelta(d,'player',item,back,craftOutput('wildlife-society',eventId));salvage.push({item,amount:back});}}
+    recordCraft(d,{recipe:recipe.id,batches:1,inputs:Object.fromEntries(materials),outputs:Object.fromEntries((outcome.success?products.filter(row=>row.amount):salvage).map(row=>[row.item,row.amount])),writer:'wildlife-society',eventId});
     const at=d.get('state','minute'),receipt={id:`crafted_${eventId}`,recipe:recipe.id,item:recipe.output.item,quantity:outcome.success?products[0].amount:0,
         maker:id,name,minute:at,station:station?.id??null,fee:station?.fee??0,degree,workmanship,instances:ids,salvage,...(thermal?{thermal}:{})};
     d.set(['state','crafted',receipt.id],receipt);
@@ -201,7 +204,7 @@ export function spiritAction(d,args,eventId,target){
         if(!args.permit)throw Error('求取借形需要有效的仪式主持资格');
         const {entry}=assertTrainingRitual(d,this,args.permit,minute+bf.acquireMinutes);
         if(!entry.ritualOperations.includes(rules.mentor.operation))throw Error('师承没有登记灵觉一类的主持范围');
-        const spent=spend(d,this,bf.acquireItems);this.advance(d,bf.acquireMinutes,eventId);
+        const spent=spend(d,this,bf.acquireItems,eventId);this.advance(d,bf.acquireMinutes,eventId);
         if(!stillHere(d,target))return{success:false,spent:{items:spent,minutes:bf.acquireMinutes},note:'仪式未完成，灵物已耗'};
         const at=d.get('state','minute');
         d.set(['state','creatures',target,'cultivation'],{...clone(c),borrowForm:{acquired:at,event:eventId,permit:args.permit,institution:entry.institution,by:'player'}});
@@ -219,7 +222,7 @@ export function spiritAction(d,args,eventId,target){
     let form=bf.forms.includes(args.species)?{id:args.species,name:args.species}:null;
     if(!form){const s=this.resolve(args.species,'monster'),def=this.byId.get(s);if(!def?.wildlife)throw Error('只能借登记的形貌或已登记的野生物种之形');form={id:s,name:def.name};}
     if(form.id===actor.species)throw Error('那是它的本相；散形请不带species');
-    const spent=spend(d,this,bf.useItems);this.advance(d,bf.useMinutes,eventId);
+    const spent=spend(d,this,bf.useItems,eventId);this.advance(d,bf.useMinutes,eventId);
     if(!stillHere(d,target))return{success:false,spent:{items:spent,minutes:bf.useMinutes},note:'施术未成，灵物已耗'};
     const at=d.get('state','minute'),row={as:form.id,name:form.name,since:at,until:at+bf.durationMinutes,event:eventId};
     d.set(['state','creatures',target,'form'],row);

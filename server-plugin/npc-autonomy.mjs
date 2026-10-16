@@ -1,6 +1,8 @@
 import {purse,workshopFund,moveCoins} from './money.mjs';
 import {declareLedgerWriter} from './ledger.mjs';
-declareLedgerWriter('npc-autonomy');
+import {craftInput,craftOutput,recordCraft} from './stock.mjs';
+// S1b: 人物自治制作是 src:craft 制造守恒对；交易经 items.transferItems 记行囊之间的转移。
+declareLedgerWriter('npc-autonomy',{sources:{'src:craft':{'*':100000}},sinks:['sink:consume']});
 import {facilityView} from './facility-state.mjs';
 import {applyPatches,digest} from './storage.mjs';
 import {scheduleAt} from './npc-schedule.mjs';
@@ -105,7 +107,7 @@ function produce(d,engine,id,item,quantity,actionId,recipe,at,workmanship){
   const factor=engine.rules.equipment.workmanship?.find(row=>row.name===workmanship)?.multiplier??1,maxDurability=Math.max(1,Math.round(definition.durability*factor));
   d.set(['state','itemInstances',unit],{id:unit,item,owner:id,status:'持有',maker:id,makerName:engine.byId.get(id).name,recipe,source:actionId,minute:at,quality:definition.quality,durability:maxDurability,maxDurability,workmanship});
  }
- changeItems(d,engine,id,item,quantity);d.set(['state','npcs',id,'inventory',item,'instances'],[...d.get('state','npcs',id,'inventory',item,'instances')??[],...instances]);return instances;
+ changeItems(d,engine,id,item,quantity,{books:craftOutput('npc-autonomy',actionId)});d.set(['state','npcs',id,'inventory',item,'instances'],[...d.get('state','npcs',id,'inventory',item,'instances')??[],...instances]);return instances;
 }
 function executeAction(target,engine,id,action,{at,presence,actionId,start,ignoreTask=false,furnace}){
  const d=draft(target.document,at),checked=validateAction(d,engine,id,action,{at:start,presence,ignoreTask}),base=engine.byId.get(id),minutes=checked.minutes;
@@ -129,12 +131,14 @@ function executeAction(target,engine,id,action,{at,presence,actionId,start,ignor
   const station=engine.byId.get(checked.location)?.workstations?.find(s=>s.kind===r.workstation),fee=station?.owner===id?0:station?.fee??0;
   if(fee){moveCoins(d,{from:purse(null,id),to:station.owner?.startsWith('npc_')?purse(null,station.owner):workshopFund(station.id),amount:fee,writer:'npc-autonomy',eventId:actionId});d.set(['state','npcs',id,'coins'],d.get('state','npcs',id,'coins')-fee);if(station.owner?.startsWith('npc_'))d.set(['state','npcs',station.owner,'coins'],d.get('state','npcs',station.owner,'coins')+fee);else d.set(['state','workshopFunds',station.id],(d.get('state','workshopFunds',station.id)??0)+fee);}
   spent.fee=fee;spent.materials=clone(r.materials);if(furnace)spent.fuel=clone(furnace.fuel);
-  for(const m of r.materials)changeItems(d,engine,id,m.item,-m.amount);
+  for(const m of r.materials)changeItems(d,engine,id,m.item,-m.amount,{books:craftInput('npc-autonomy',actionId)});
+  const crafted={recipe:r.id,batches:1,inputs:Object.fromEntries(r.materials.map(m=>[m.item,m.amount])),outputs:{},writer:'npc-autonomy',eventId:actionId};
   for(const item of r.tools??[]){changeItems(d,engine,id,item,0);wearItem(d,engine,id,item,r.toolWear??1);}
-  if(outcome.success){outcome.workmanship=degree==='勉强成功'?'粗糙':degree==='大成功'?(skill>=2100?'杰作':skill>=1500?'优秀':'精良'):'普通';produced=[{item:r.output.item,amount:r.output.quantity-(thermal?.crackedQuantity??0)},...r.byproducts??[]];for(const p of produced)produce(d,engine,id,p.item,p.amount,actionId,r.id,at,outcome.workmanship);}
-  else{for(const m of r.materials){const recovered=thermal?.crackedQuantity?0:Math.floor(m.amount*(r.failure?.recoverFraction??0));if(recovered)changeItems(d,engine,id,m.item,recovered);}
+  if(outcome.success){outcome.workmanship=degree==='勉强成功'?'粗糙':degree==='大成功'?(skill>=2100?'杰作':skill>=1500?'优秀':'精良'):'普通';produced=[{item:r.output.item,amount:r.output.quantity-(thermal?.crackedQuantity??0)},...r.byproducts??[]];for(const p of produced){produce(d,engine,id,p.item,p.amount,actionId,r.id,at,outcome.workmanship);crafted.outputs[p.item]=(crafted.outputs[p.item]??0)+p.amount;}}
+  else{for(const m of r.materials){const recovered=thermal?.crackedQuantity?0:Math.floor(m.amount*(r.failure?.recoverFraction??0));if(recovered){changeItems(d,engine,id,m.item,recovered,{books:craftOutput('npc-autonomy',actionId)});crafted.outputs[m.item]=(crafted.outputs[m.item]??0)+recovered;}}
    if((die===1||die+modifier<=r.difficulty-10)&&r.failure?.injury){const max=d.get('state','npcs',id,'maxHp')??derivedStats({level:base.level??1,attributes:base.attributes,profession:Boolean(base.combatProfession)},engine.rules).maxHp;const hp=Math.max(0,(d.get('state','npcs',id,'hp')??max)-r.failure.injury);d.set(['state','npcs',id,'maxHp'],max);d.set(['state','npcs',id,'hp'],hp);if(!hp)d.set(['state','npcs',id,'status'],'濒死');}
   }
+  recordCraft(d,crafted);
   const gained=npcWorkGrowth(d,engine,id,r.skill,outcome.success,start);if(gained)outcome.growth={skill:r.skill,gained};
   summary=`尝试${r.name}，耗时${minutes}分钟，${outcome.success?`制成${engine.byId.get(r.output.item).name}${produced[0].amount}份`:'没有得到成品'}，工坊费${fee}铜${gained?`，手艺熟练度提高${gained}`:''}。`;
  }

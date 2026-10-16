@@ -1,6 +1,7 @@
 import {purse,sink} from './money.mjs';
 import {declareLedgerWriter} from './ledger.mjs';
-declareLedgerWriter('faith',{sinks:['sink:export']});
+import {store,bookStock,BOOKED as STOCK_BOOKED} from './stock.mjs';
+declareLedgerWriter('faith',{sinks:['sink:export','sink:consume']});
 import {temples,templeById,placeAncestors,faithConflictClocks} from './faith-catalog.mjs';
 export {faithConflictClocks} from './faith-catalog.mjs';
 import {faithOf,faithCulture} from './faith-state.mjs';
@@ -34,9 +35,10 @@ function steward(d,e,t,minutes){
  if(id==='player')return id;
  subject(d,e,id);assertNpcService(d,e,id,'teach',minutes);return id;
 }
-function moveItems(d,e,t,items,sign,event){
+// S1b: books = 实物的对方（stock.bookStock 形式：party 为供奉人或受助人行囊，flow 为汇）。
+function moveItems(d,e,t,items,sign,event,books){
  const a=ensureGroupAccount(d,e,t.id),next={...a.items};
- for(const [id,n]of Object.entries(items)){int(n);if(!e.world.items.some(i=>i.id===id))throw Error('钱粮物品未登记');next[id]=int((next[id]??0)+sign*n);}
+ for(const [id,n]of Object.entries(items)){int(n);if(!e.world.items.some(i=>i.id===id))throw Error('钱粮物品未登记');next[id]=int((next[id]??0)+sign*n);bookStock(d,e,store(e,t.id,id),sign*n,books);}
  d.set(groupAccountPath(t.id),{...a,items:next,ledger:[...a.ledger,{...event,coins:0,items:Object.fromEntries(Object.entries(items).map(([id,n])=>[id,sign*n]))}]});
 }
 const coinPath=(e,id)=>[...actorPath(e.world,id),'coins'];
@@ -45,14 +47,14 @@ function pay(d,e,t,who,coins,items,event){
  for(const [id,n]of Object.entries(items))if(e.quantity(d,who,id)<int(n))throw Error('供品不足');
  for(const id of Object.keys(items))if(d.get('state','inventory',id,'instances')?.length)throw Error('寺观钱粮账不接收具单件身份的物品');
  d.set(coinPath(e,who),actor(d,e,who).coins-coins);changeGroupCoins(d,e,t.id,coins,event,{account:purse(e,who),writer:'faith',eventId:event.sourceEvent});
- for(const [id,n]of Object.entries(items))e.itemDelta(d,who,id,-n);
- if(Object.keys(items).length)moveItems(d,e,t,items,1,event);
+ for(const [id,n]of Object.entries(items))e.itemDelta(d,who,id,-n,STOCK_BOOKED);
+ if(Object.keys(items).length)moveItems(d,e,t,items,1,event,{party:who,writer:'faith',eventId:event.sourceEvent});
 }
 // S1a: books = 钱的去处（受助者、主持或汇）。
-function spend(d,e,t,coins,items,event,books){
+function spend(d,e,t,coins,items,event,books,itemBooks){
  const a=groupAccountView(e,d.get('state'),t.id);
  if(a.coins<coins||Object.entries(items).some(([id,n])=>(a.items[id]??0)<n))throw Error('寺观公库钱粮不足');
- changeGroupCoins(d,e,t.id,-coins,event,books);if(Object.keys(items).length)moveItems(d,e,t,items,-1,event);
+ changeGroupCoins(d,e,t.id,-coins,event,books);if(Object.keys(items).length)moveItems(d,e,t,items,-1,event,itemBooks);
 }
 export function conversionPolicy(engine,state,who,location){
  const culture=faithCulture(engine,state,who),places=placeAncestors(engine,location);
@@ -125,7 +127,7 @@ function ritual(d,e,t,args,eventId){
  const cooldown=d.get(...path(`faith_cooldown:${t.id}:${t.deity}`))?.until??0;
  const eligible=Boolean(r&&e.calendar(at).season===r.season&&cooldown<=at&&members.length>=r.collective&&all.every(f=>f?.deity===t.deity&&Number.isSafeInteger(f.observedSince)&&at-f.observedSince>=r.devotionDays*DAY&&(f.lastBreach??-1)<f.observedSince));
  pay(d,e,t,who,spec.coins,spec.offerings,{kind:'祭仪供献',sourceEvent:eventId,minute:at,party:who});
- spend(d,e,t,0,spec.offerings,{kind:'祭仪耗用',sourceEvent:eventId,minute:at,party:who});advanceWithNpcParticipants(d,e,spec.minutes,eventId,[host,...members].filter(id=>id!=='player'));
+ spend(d,e,t,0,spec.offerings,{kind:'祭仪耗用',sourceEvent:eventId,minute:at,party:who},undefined,{flow:'sink:consume',purpose:'ritual',writer:'faith',eventId});advanceWithNpcParticipants(d,e,spec.minutes,eventId,[host,...members].filter(id=>id!=='player'));
  let response={applied:false,reason:'普通祭仪'};
  if(eligible){response=applyEffects(d,e,[{kind:'faith_omen',deity:t.deity,rite:r.id,minutes:r.responseMinutes}],{minute:now,sourceEvent:eventId,settlement:t.seat},'world');
   if(response.applied)d.set(path(`faith_cooldown:${t.id}:${t.deity}`),{category:'faith_cooldown',until:now+r.cooldownDays*DAY,sourceEvent:eventId});}
@@ -137,25 +139,25 @@ function use(d,e,t,args,eventId){
  const who=args.member??'player',minute=d.get('state','minute'),event={kind:args.choice,party:who,minute,sourceEvent:eventId};let lesson=null;
  if(args.choice==='repair'){
   if(typeof e.repairFaithFacility!=='function')throw Error('修缮等待设施接口，不扣钱粮');
-  return clockTransaction(d,tx=>{spend(tx,e,t,s.coins,s.items,event,{account:sink('export','facility_repair'),writer:'faith',eventId});return e.repairFaithFacility(tx,{temple:t.id,location:t.seat,eventId});});
+  return clockTransaction(d,tx=>{spend(tx,e,t,s.coins,s.items,event,{account:sink('export','facility_repair'),writer:'faith',eventId},{flow:'sink:consume',purpose:'facility_repair',writer:'faith',eventId});return e.repairFaithFacility(tx,{temple:t.id,location:t.seat,eventId});});
  }
  subject(d,e,who,{recipient:['relief','medicine'].includes(args.choice)});if(who!=='player'&&args.consent!==true)throw Error('受助者须当面同意');
  e.assertNpcObligationAction?.(d,[host,who],{minutes:s.minutes,location:d.get('state','location')});
  e.assertNpcAutonomyAction?.(d.get('state'),[host,who],{minutes:s.minutes});
  if(args.choice==='school'&&who==='player')throw Error('义学面向在场居民；玩家沿原授课入口');
- spend(d,e,t,s.coins,s.items,event,{account:args.choice==='relief'?purse(e,who):['medicine','school','assembly'].includes(args.choice)?purse(e,host):sink('export','faith_service'),writer:'faith',eventId});
+ spend(d,e,t,s.coins,s.items,event,{account:args.choice==='relief'?purse(e,who):['medicine','school','assembly'].includes(args.choice)?purse(e,host):sink('export','faith_service'),writer:'faith',eventId},['relief','medicine','assembly'].includes(args.choice)?{party:who,writer:'faith',eventId}:{flow:'sink:consume',purpose:'faith_service',writer:'faith',eventId});
  if(args.choice==='relief'){
-  d.set(coinPath(e,who),(actor(d,e,who).coins??0)+s.coins);for(const [id,n]of Object.entries(s.items))e.itemDelta(d,who,id,n);
+  d.set(coinPath(e,who),(actor(d,e,who).coins??0)+s.coins);for(const [id,n]of Object.entries(s.items))e.itemDelta(d,who,id,n,STOCK_BOOKED);
  }else if(args.choice==='medicine'){
   // Dispensing transfers real medicine; diagnosis and treatment retain C1 and
   // the existing medical entry. A donation does not silently cure disease.
-  for(const [id,n]of Object.entries(s.items))e.itemDelta(d,who,id,n);
+  for(const [id,n]of Object.entries(s.items))e.itemDelta(d,who,id,n,STOCK_BOOKED);
  }else if(args.choice==='school'){
   const skill=s.skill,known=npcProficiency(e,d.get('state'),host,skill),current=npcProficiency(e,d.get('state'),who,skill);
   if(known<=current)throw Error('主持未掌握可授识字程度');
   lesson={skill,gain:npcLessonGain(e,d.get('state'),who,skill,known,s.gain)};
  }else if(args.choice==='assembly'){
-  for(const [id,n]of Object.entries(s.items))e.itemDelta(d,who,id,n);
+  for(const [id,n]of Object.entries(s.items))e.itemDelta(d,who,id,n,STOCK_BOOKED);
   adjustStanding(d,e,t.id,who,2,{sourceEvent:eventId,reason:'参加法会'});
  }
  if(['medicine','school','assembly'].includes(args.choice))d.set(coinPath(e,host),(actor(d,e,host).coins??0)+s.coins);

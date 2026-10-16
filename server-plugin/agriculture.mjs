@@ -1,6 +1,11 @@
 import {purse,treasury as treasuryAccount,moveCoins} from './money.mjs';
-import {declareLedgerWriter} from './ledger.mjs';
-declareLedgerWriter('agriculture');
+import {BOOKED} from './stock.mjs';
+import {declareLedgerWriter,reviseLots} from './ledger.mjs';
+import {granary as granaryAccount,seedBank as seedAccount,settlementStock,bag,armyRations,transit as transitAccount,moveStock} from './stock.mjs';
+// S1b: 农事是粮仓与种粮的唯一写入者：收成与农副产来自 src:regrowth（田地按积温生长，05 §5.5），
+// 吃掉的进 sink:consume，过期与月损进 sink:decay，仓满挤出与掠夺无主的进 sink:destroy；
+// 播种的种粮进 sink:consume（作物此后在田里再生，收获时再从 src:regrowth 流入）。
+declareLedgerWriter('agriculture',{sources:{'src:regrowth':{'*':1000000}},sinks:['sink:consume','sink:decay','sink:destroy']});
 import {granaryCapacity}from'./facility-state.mjs';
 import {legalCodeAt} from './law-codes.mjs';
 import {consumeGrowthDay,validateGrowthRules,validateGrowthWorld}from'./magic-growth.mjs';
@@ -23,32 +28,68 @@ function balanced(r,s){
     if(r.batches.reduce((n,b)=>n+b.amount,0)!==s.food||r.field.seedBatches.reduce((n,b)=>n+b.amount,0)!==r.field.seedBank)throw new Error('粮仓批次与聚落库存或种粮不一致，拒绝凭空补齐');
 }
 function storageDays(r,p){return r.granary.condition>=50?p.protectedStorageDays:p.normalStorageDays;}
-function addBatch(r,s,p,amount,{id,day,source,kind='grain',expiresDay,growthSources,capacity=r.granary.capacity}={}){
-    const space=Math.max(0,capacity-s.food-r.field.seedBank),stored=Math.min(amount,space);
-    if(stored){r.batches.push({id,amount:stored,harvestDay:day,expiresDay:expiresDay??day+(kind==='fresh'?1:storageDays(r,p)),source,kind,...(growthSources?.length?{growthSources}: {})});s.food+=stored;}
+// ---- S1b 双写：粮仓与种粮的流水 ------------------------------------------------
+// 农事在克隆的记录 r 上计算，整条写回；每个改动粮批的原语在 r 的流水里记下"哪些批次、多少、去向或来处"，
+// 写回同一处（commit）把流水逐条记入账本：转出按旧批次编号指定账本批次，转入带旧批次的元数据。
+const journals=new WeakMap();
+const note=(r,entry)=>{let j=journals.get(r);if(!j)journals.set(r,j=[]);j.push(entry);};
+const seedLotId=b=>`${b.harvestDay}:${b.expiresDay}`;
+export const REGROWTH=purpose=>({flow:'src:regrowth',purpose});
+const flowAccount=(engine,spec,resource)=>spec.account??`${spec.flow}|${resource}|${spec.purpose}`;
+function commit(d,engine,sid,r,eventId=null){
+    const entries=journals.get(r)??[];journals.delete(r);
+    const g=granaryAccount(engine,sid),seed=seedAccount(engine,sid),resource=g.split('|')[1],at=w=>w==='seed'?seed:g;
+    for(const e of entries){
+        if(e.in){
+            const from=flowAccount(engine,e.from,resource);
+            moveStock(d,{from,to:at(e.in),amount:e.qty,writer:'agriculture',eventId,lot:e.lot});
+            // 来自实体（交粮、送达）的部分若仓容不够，挤出的在交割处损毁（旧账 overflow）。
+            if(e.overflow&&!e.from.flow)moveStock(d,{from,to:`sink:destroy|${resource}|overflow`,amount:e.overflow,writer:'agriculture',eventId});
+        }else if(e.out){
+            const to=flowAccount(engine,e.to,resource);
+            if(e.parts)for(const part of e.parts)moveStock(d,{from:at(e.out),to,amount:part.amount,writer:'agriculture',eventId,pick:part.id!==undefined?[String(part.id)]:null,lot:e.lot?e.lot(part):null});
+            else moveStock(d,{from:at(e.out),to,amount:e.qty,writer:'agriculture',eventId});
+        }else if(e.revise)reviseLots(d,at(e.revise),e.fn);
+    }
+}
+function addBatch(r,s,p,amount,{id,day,source,kind='grain',expiresDay,growthSources,capacity=r.granary.capacity,from}={}){
+    const space=Math.max(0,capacity-s.food-r.field.seedBank),stored=Math.min(amount,space),expires=expiresDay??day+(kind==='fresh'?1:storageDays(r,p));
+    if(stored){r.batches.push({id,amount:stored,harvestDay:day,expiresDay:expires,source,kind,...(growthSources?.length?{growthSources}: {})});s.food+=stored;}
+    if(!from)throw Error('入仓须指明来处（账本对方）');
+    if(stored||amount-stored)note(r,{in:'granary',qty:stored,overflow:amount-stored,from,lot:{id:String(id),day,expiresDay:expires,kind}});
     r.ledger.overflow+=amount-stored;return stored;
 }
-function takeFood(r,s,amount,kind=null){
-    let remaining=amount;
+function takeFood(r,s,amount,kind=null,to){
+    let remaining=amount;const parts=[];
     r.batches.sort((a,b)=>a.expiresDay-b.expiresDay||a.id.localeCompare(b.id));
-    for(const batch of r.batches){if(kind&&batch.kind!==kind)continue;const used=Math.min(remaining,batch.amount);batch.amount-=used;remaining-=used;if(!remaining)break;}
+    for(const batch of r.batches){if(kind&&batch.kind!==kind)continue;const used=Math.min(remaining,batch.amount);if(used)parts.push({id:batch.id,amount:used});batch.amount-=used;remaining-=used;if(!remaining)break;}
+    if(!to)throw Error('出仓须指明去向（账本对方）');
+    if(parts.length)note(r,{out:'granary',parts,to});
     r.batches=r.batches.filter(b=>b.amount>0);s.food-=amount-remaining;return amount-remaining;
 }
-function takeGrain(r,s,amount,trace=false){
+function takeGrain(r,s,amount,trace=false,to,lot=null){
     let remaining=amount;const parts=[];
     r.batches.sort((a,b)=>a.expiresDay-b.expiresDay||a.id.localeCompare(b.id));
     for(const batch of r.batches.filter(b=>b.kind==='grain')){const used=Math.min(remaining,batch.amount);if(used)parts.push({...batch,amount:used});batch.amount-=used;remaining-=used;if(!remaining)break;}
+    if(!to)throw Error('出仓须指明去向（账本对方）');
+    if(parts.length)note(r,{out:'granary',parts,to,lot});
     r.batches=r.batches.filter(b=>b.amount>0);s.food-=amount-remaining;return trace?{taken:amount-remaining,parts}:amount-remaining;
 }
+const DECAY={flow:'sink:decay',purpose:'spoil'};
 function expire(r,s,day,p,monthly=false,preserved=()=>0){
+    // 仓况变差：粮与种粮的保质期缩回常温上限（批次元数据的白名单改写，账本同规则改）。
+    const shorten=b=>({...b,expiresDay:Math.min(b.expiresDay,b.day+p.normalStorageDays)});
+    if(r.granary.condition<50){note(r,{revise:'granary',fn:l=>l.kind==='grain'?shorten(l):l});note(r,{revise:'seed',fn:shorten});}
     for(const b of r.batches){if(b.kind==='grain'&&r.granary.condition<50)b.expiresDay=Math.min(b.expiresDay,b.harvestDay+p.normalStorageDays);}
-    const expired=r.batches.filter(b=>b.expiresDay<=day).reduce((n,b)=>n+b.amount,0);
+    const gone=r.batches.filter(b=>b.expiresDay<=day),expired=gone.reduce((n,b)=>n+b.amount,0);
+    if(gone.length)note(r,{out:'granary',parts:gone.map(b=>({id:b.id,amount:b.amount})),to:DECAY});
     r.batches=r.batches.filter(b=>b.expiresDay>day);s.food-=expired;r.ledger.spoiled+=expired;
     for(const b of r.field.seedBatches)if(r.granary.condition<50)b.expiresDay=Math.min(b.expiresDay,b.harvestDay+p.normalStorageDays);
-    const spoiledSeed=r.field.seedBatches.filter(b=>b.expiresDay<=day).reduce((n,b)=>n+b.amount,0);
+    const seedGone=r.field.seedBatches.filter(b=>b.expiresDay<=day),spoiledSeed=seedGone.reduce((n,b)=>n+b.amount,0);
+    if(seedGone.length)note(r,{out:'seed',parts:seedGone.map(b=>({id:seedLotId(b),amount:b.amount})),to:DECAY});
     r.field.seedBatches=r.field.seedBatches.filter(b=>b.expiresDay>day);r.field.seedBank-=spoiledSeed;r.ledger.spoiled+=spoiledSeed;
     // U10: preservation casts covering the stock this month cut the spoilage.
-    if(monthly&&day%30===29&&s.food){let spoil=Math.min(s.food,Math.ceil(s.food*p.spoilagePerMonth*(2-r.granary.condition/100)));spoil-=preserved(spoil,s.food);r.ledger.spoiled+=takeFood(r,s,spoil);}
+    if(monthly&&day%30===29&&s.food){let spoil=Math.min(s.food,Math.ceil(s.food*p.spoilagePerMonth*(2-r.granary.condition/100)));spoil-=preserved(spoil,s.food);r.ledger.spoiled+=takeFood(r,s,spoil,null,{flow:'sink:decay',purpose:'loss'});}
 }
 function sow(r,engine,p,day,units){
     const c=engine.rules.agriculture.crop,f=r.field,year=Math.floor(day/360);
@@ -60,6 +101,7 @@ function sow(r,engine,p,day,units){
         if(seed<=f.seedBank){
             let remaining=seed;const seedSources=[];f.seedBatches.sort((a,b)=>a.expiresDay-b.expiresDay);
             for(const b of f.seedBatches){const used=Math.min(remaining,b.amount);if(used)seedSources.push({...b,amount:used});b.amount-=used;remaining-=used;if(!remaining)break;}
+            if(seedSources.length)note(r,{out:'seed',parts:seedSources.map(b=>({id:seedLotId(b),amount:b.amount})),to:{flow:'sink:consume',purpose:'sow'}});
             f.seedBatches=f.seedBatches.filter(b=>b.amount>0);f.seedBank-=seed;r.ledger.seedSpent+=seed;f.sownUnits+=units;
             f.cohorts.push({id:`${year}:${day}:${f.sownUnits}`,sownDay:day,areaUnits:units,grownDays:0,qualitySum:0,qualityDays:0,ready:false,harvestedUnits:0,harvestedFood:0,seedSpent:seed,seedSources,
                 ...(farmPestProfile(engine,p.settlement)?{pestDamageBps:0,potentialHarvestedFood:0}:{})});
@@ -85,14 +127,15 @@ function harvest(r,s,engine,p,day,units,eventId,storageCapacity=r.granary.capaci
     }
     r.field.cohorts=r.field.cohorts.filter(row=>row.harvestedUnits<row.areaUnits);
     const reserved=Math.min(grain,Math.max(0,seedTarget-r.field.seedBank));r.field.seedBank+=reserved;
-    if(reserved)r.field.seedBatches.push({amount:reserved,harvestDay:day,expiresDay:day+storageDays(r,p),...(growthSources.size?{growthSources:[...growthSources]}:{})});
+    if(reserved){const b={amount:reserved,harvestDay:day,expiresDay:day+storageDays(r,p)};r.field.seedBatches.push({...b,...(growthSources.size?{growthSources:[...growthSources]}:{})});
+        note(r,{in:'seed',qty:reserved,from:REGROWTH('harvest'),lot:{id:seedLotId(b),day,expiresDay:b.expiresDay,kind:'seed'}});}
     // Seed and edible grain share the actual warehouse. Seed gets priority;
     // any displaced edible stock is recorded as overflow, never extra capacity.
     const displaced=Math.max(0,s.food+r.field.seedBank-storageCapacity);
-    if(displaced)r.ledger.overflow+=takeFood(r,s,displaced);
+    if(displaced)r.ledger.overflow+=takeFood(r,s,displaced,null,{flow:'sink:destroy',purpose:'overflow'});
     r.ledger.harvested+=grain;r.tools.condition=Math.max(0,r.tools.condition-worked*p.toolWearPerArea);
     if(farmPestProfile(engine,p.settlement)){r.ledger.pestLost+=pestLost;r.ledger.potentialHarvested+=potential;}
-    const stored=addBatch(r,s,p,grain-reserved,{id:`harvest:${eventId}`,day,source:'本田实际收获',growthSources:[...growthSources],capacity:storageCapacity});
+    const stored=addBatch(r,s,p,grain-reserved,{id:`harvest:${eventId}`,day,source:'本田实际收获',growthSources:[...growthSources],capacity:storageCapacity,from:REGROWTH('harvest')});
     return{units:worked,grain,reserved,stored,...(farmPestProfile(engine,p.settlement)?{pestLost,potential}:{})};
 }
 export function advanceAgriculture(d,engine,id,source,day){
@@ -103,14 +146,17 @@ export function advanceAgriculture(d,engine,id,source,day){
     // U12: able-bodied villagers away on levy (levy:<village>) are not in the fields.
     const hired=agriculturalEmployment(d.get('state'),id,day);
     const normalWorkers=Math.floor(s.population*p.workerFraction),availableWorkers=Math.max(0,normalWorkers-(d.get('state','records',`levy:${id}`)?.count??0)-hired.unavailable);
-    const laborShare=normalWorkers?availableWorkers/normalWorkers:1,processing=Math.min(Math.floor(p.processingWorkers*laborShare),availableWorkers);
+    // S1b: 加工口粮是可用劳力的第一顺位（人先要吃上饭）：只要在村的整劳力够，加工人手不随出工比例缩减。
+    // 按比例缩减时 floor 会让一个村民外出做半天工就砍掉一半加工量，仓里有粮也吃不上（农业三年断言的缺餐 76 即此）。
+    const laborShare=normalWorkers?availableWorkers/normalWorkers:1,processing=Math.min(p.processingWorkers,Math.floor(availableWorkers));
     const freshWorkers=Math.min(Math.floor(p.freshWorkers*laborShare),Math.max(0,availableWorkers-processing)),fieldWorkers=Math.min(Math.floor(p.farmWorkers*laborShare+hired.hired),r.tools.capacity,Math.max(0,availableWorkers-processing-freshWorkers));
     const fresh=Math.floor(p.freshFoodPerDay*p.freshSeasonFactors[season]*(weather?.cropMultiplier??1)*freshWorkers/p.freshWorkers);
     if(day%30===29){
         r.granary.condition=Math.max(0,r.granary.condition-1);
         const maintenanceWorkers=availableWorkers-processing-freshWorkers-fieldWorkers;
-        if(r.granary.condition<=70&&maintenanceWorkers>0&&s.wood>=p.repairWood){s.wood-=p.repairWood;r.granary.condition=Math.min(100,r.granary.condition+p.repairCondition);}
-        if(r.tools.condition<50&&maintenanceWorkers>0&&s.wood>=p.repairWood&&s.iron>=p.repairIron){s.wood-=p.repairWood;s.iron-=p.repairIron;r.tools.condition=Math.min(100,r.tools.condition+p.repairCondition);}
+        const repair=(stock,n)=>{s[stock]-=n;moveStock(d,{from:settlementStock(engine,id,stock),to:`sink:consume|${settlementStock(engine,id,stock).split('|')[1]}|repair`,amount:n,writer:'agriculture',eventId:`day_${day}`});};
+        if(r.granary.condition<=70&&maintenanceWorkers>0&&s.wood>=p.repairWood){repair('wood',p.repairWood);r.granary.condition=Math.min(100,r.granary.condition+p.repairCondition);}
+        if(r.tools.condition<50&&maintenanceWorkers>0&&s.wood>=p.repairWood&&s.iron>=p.repairIron){repair('wood',p.repairWood);repair('iron',p.repairIron);r.tools.condition=Math.min(100,r.tools.condition+p.repairCondition);}
     }
     expire(r,s,day,p,true,(spoil,food)=>preservedSpoilage(d,engine,id,day,spoil,food));
     let capacity=r.tools.condition>0?Math.floor(fieldWorkers*p.areaPerWorkerDay*r.tools.condition/100):0;
@@ -124,30 +170,39 @@ export function advanceAgriculture(d,engine,id,source,day){
     consumeGrowthDay(d,engine,r,p,day,weather);
     for(const row of r.field.cohorts)if(!row.ready&&row.grownDays>=engine.rules.agriculture.crop.growthDays){row.ready=true;row.readyDay=day;}
     const result=weather?.kind!=='storm'&&weather?.kind!=='snow'?harvest(r,s,engine,p,day,capacity,`day_${day}`,granaryCapacity(engine,d.get('state'),id,r.granary.capacity)):{units:0,grain:0,reserved:0,stored:0};
-    r.ledger.freshProduced+=fresh;addBatch(r,s,p,fresh,{id:`fresh:${day}`,day,source:'每日农副产',kind:'fresh',capacity:granaryCapacity(engine,d.get('state'),id,r.granary.capacity)});
+    r.ledger.freshProduced+=fresh;addBatch(r,s,p,fresh,{id:`fresh:${day}`,day,source:'每日农副产',kind:'fresh',capacity:granaryCapacity(engine,d.get('state'),id,r.granary.capacity),from:REGROWTH('fresh')});
     const mouths=Math.max(0,s.population-(d.get('state','records',`levy:${id}`)?.count??0));
-    const freshEaten=takeFood(r,s,mouths,'fresh');
-    const grainEaten=takeFood(r,s,Math.min(mouths-freshEaten,processing*p.processingPerWorker),'grain');
+    const MEAL={flow:'sink:consume',purpose:'meal'};
+    const freshEaten=takeFood(r,s,mouths,'fresh',MEAL);
+    const grainEaten=takeFood(r,s,Math.min(mouths-freshEaten,processing*p.processingPerWorker),'grain',MEAL);
     const eaten=freshEaten+grainEaten;r.ledger.eaten+=eaten;
     const missingMeals=mouths-eaten;r.lastDay=day;
     const woodWorkers=Math.min(2,Math.max(0,availableWorkers-processing-freshWorkers-fieldWorkers)),woodProduced=harvestSettlementWood(d,engine,id,Math.floor(s.woodPerDay*woodWorkers/2),(day+1)*1440);
     r.lastReport={day,workers:{available:availableWorkers,processing,fresh:freshWorkers,field:fieldWorkers,wood:woodWorkers},fresh,wood:woodProduced,planted:planted.units,seedSpent:planted.seed,harvest:result.grain,seedReserved:result.reserved,stored:result.stored,freshEaten,grainEaten,eaten,missingMeals,
         ...(pestDamage?{harvestLostToPests:result.pestLost??0,pestDamageAddedMaxPercent:pestDamage.maximumAddedPercent}:{})};
-    balanced(r,s);d.set(path(id),r);return{settlement:s,missingMeals,woodProduced};
+    balanced(r,s);commit(d,engine,id,r,`day_${day}`);d.set(path(id),r);return{settlement:s,missingMeals,woodProduced};
 }
 // U12: an army quartermaster draws grain above the winter reserve (the same
 // sellable surplus as a granary sale); raid:true seizes grain regardless of the
 // reserve. Returns the units actually taken.
-export function drawGranary(d,engine,id,quantity,{raid=false}={}){
+// S1b: 未托管农事的聚落按旧日产账结算（推进注册表的 daily）：当日产粮来自 src:regrowth，吃掉的进 sink:consume。
+export function bookLegacyFood(d,engine,sid,produced,eaten,day){
+    const g=granaryAccount(engine,sid),resource=g.split('|')[1],eventId=`day_${day}`;
+    moveStock(d,{from:`src:regrowth|${resource}|harvest`,to:g,amount:produced,writer:'agriculture',eventId,lot:{id:'stock',day:null,expiresDay:null,kind:null}});
+    moveStock(d,{from:g,to:`sink:consume|${resource}|meal`,amount:eaten,writer:'agriculture',eventId});
+}
+// S1b: to = 粮的去处（军队的军粮账户；掠夺而无本方队伍接收时为 sink:destroy）。
+export function drawGranary(d,engine,id,quantity,{raid=false,to,eventId=null}={}){
     const p=profile(engine,id),s0=d.get('state','settlements',id);if(!p||!s0||!(quantity>0))return 0;
+    if(!to)throw Error('提粮须指明去向（账本对方）');
     const original=d.get(...path(id));
-    if(original?.mode!=='managed'){const take=Math.min(quantity,raid?s0.food:Math.max(0,s0.food-s0.population*p.reserveDays));if(take)d.set(['state','settlements',id,'food'],s0.food-take);return take;}
+    if(original?.mode!=='managed'){const take=Math.min(quantity,raid?s0.food:Math.max(0,s0.food-s0.population*p.reserveDays));if(take){moveStock(d,{from:granaryAccount(engine,id),to:flowAccount(engine,to,granaryAccount(engine,id).split('|')[1]),amount:take,writer:'agriculture',eventId});d.set(['state','settlements',id,'food'],s0.food-take);}return take;}
     const r=clone(original),s=clone(s0);balanced(r,s);
     const stock=r.batches.filter(b=>b.kind==='grain').reduce((n,b)=>n+b.amount,0),available=raid?stock:Math.max(0,stock-s.population*p.reserveDays);
-    const taken=takeGrain(r,s,Math.min(quantity,available));if(!taken)return 0;
+    const taken=takeGrain(r,s,Math.min(quantity,available),false,to);if(!taken)return 0;
     // Leaves the granary like a sale (the conservation outflow); armyDrawn/raided break it down.
     r.ledger.sold+=taken;r.ledger[raid?'raided':'armyDrawn']=(r.ledger[raid?'raided':'armyDrawn']??0)+taken;
-    balanced(r,s);d.set(path(id),r);d.set(['state','settlements',id],s);return taken;
+    balanced(r,s);commit(d,engine,id,r,eventId);d.set(path(id),r);d.set(['state','settlements',id],s);return taken;
 }
 export function settleAgricultureExpiry(d,engine){
     const day=Math.floor(d.get('state','minute')/1440);
@@ -156,7 +211,7 @@ export function settleAgricultureExpiry(d,engine){
         const batches=[...original.batches,...original.field.seedBatches];
         if(!batches.some(b=>b.expiresDay<=day||(original.granary.condition<50&&b.kind!=='fresh'&&b.expiresDay>b.harvestDay+p.normalStorageDays)))continue;
         const r=clone(original),s=clone(d.get('state','settlements',p.settlement));balanced(r,s);expire(r,s,day,p);
-        balanced(r,s);d.set(path(p.settlement),r);d.set(['state','settlements',p.settlement],s);
+        balanced(r,s);commit(d,engine,p.settlement,r,`expiry:${day}`);d.set(path(p.settlement),r);d.set(['state','settlements',p.settlement],s);
     }
 }
 export function agricultureView(engine,document){
@@ -231,8 +286,8 @@ function settleVillageTrade(d,engine,p,args,eventId){
   const surplus=r.batches.filter(b=>b.kind==='grain').reduce((n,b)=>n+b.amount,0)-stock.population*p.reserveDays;
   if(surplus<contract.quantity)throw Error('没有实际可出口余粮，口头预计产量不能履约');
   if(d.get('state','player','coins')<cost)throw Error('提粮须实际支付货款；未经同意不得扣取NPC铜钱');
-  const goods=takeGrain(r,stock,contract.quantity,true);
-  engine.itemDelta(d,'player',contract.item,contract.quantity);
+  const goods=takeGrain(r,stock,contract.quantity,true,{account:bag(engine,'player',contract.item)});
+  engine.itemDelta(d,'player',contract.item,contract.quantity,BOOKED);
   moveCoins(d,{from:purse(engine,'player'),to:treasuryAccount(p.settlement),amount:cost,writer:'agriculture',eventId});d.set(['state','player','coins'],d.get('state','player','coins')-cost);stock.treasury+=cost;r.ledger.sold+=contract.quantity;
   fiscal.advanceCopper+=cost;fiscal.exportedFood+=contract.quantity;
   fiscal.entries.push({eventId,contract:contract.id,phase:'pickup',other:'player',food:-contract.quantity,copper:cost,advanceCopper:cost,taxCopper:0});
@@ -243,8 +298,8 @@ function settleVillageTrade(d,engine,p,args,eventId){
   if(engine.quantity(d,'player',contract.item)<contract.quantity)throw Error('携带粮物不足；登记提粮不是已完成送达');
   if(stock.treasury<cost)throw Error('收货村没有实际铜钱，不能凭空付款');
   if(stock.food+r.field.seedBank+contract.quantity>granaryCapacity(engine,d.get('state'),p.settlement,r.granary.capacity))throw Error('收货仓容不足，不能确认未入仓粮物');
-  engine.itemDelta(d,'player',contract.item,-contract.quantity);
-  for(const [i,b] of old.batches.entries())addBatch(r,stock,p,b.amount,{id:`trade:${eventId}:${i}`,day:b.harvestDay,expiresDay:b.expiresDay,source:`粮约${contract.id}实际送达`,capacity:granaryCapacity(engine,d.get('state'),p.settlement,r.granary.capacity)});
+  engine.itemDelta(d,'player',contract.item,-contract.quantity,BOOKED);
+  for(const [i,b] of old.batches.entries())addBatch(r,stock,p,b.amount,{id:`trade:${eventId}:${i}`,day:b.harvestDay,expiresDay:b.expiresDay,source:`粮约${contract.id}实际送达`,capacity:granaryCapacity(engine,d.get('state'),p.settlement,r.granary.capacity),from:{account:bag(engine,'player',contract.item)}});
   moveCoins(d,{from:treasuryAccount(p.settlement),to:purse(engine,'player'),amount:cost,writer:'agriculture',eventId});r.ledger.donated+=contract.quantity;stock.treasury-=cost;d.set(['state','player','coins'],d.get('state','player','coins')+cost);
   fiscal.purchasesCopper+=cost;fiscal.importedFood+=contract.quantity;
   fiscal.entries.push({eventId,contract:contract.id,phase:'deliver',other:'player',food:contract.quantity,copper:-cost});
@@ -256,7 +311,7 @@ function settleVillageTrade(d,engine,p,args,eventId){
   balancedFiscal(sourceFiscal);d.set(['state','records',sourceFiscalKey],sourceFiscal);
   d.set(['state','records',tradeKey],{...old,prepaidCopper:0,paidCopper:cost,receivedCopper:cost,taxCopper:tax,status:'delivered',deliveryDay:day,deliveryEvent:eventId});
  }
- balanced(r,stock);balancedFiscal(fiscal);d.set(path(p.settlement),r);d.set(['state','settlements',p.settlement],stock);d.set(['state','records',fiscalKey],fiscal);
+ balanced(r,stock);balancedFiscal(fiscal);commit(d,engine,p.settlement,r,eventId);d.set(path(p.settlement),r);d.set(['state','settlements',p.settlement],stock);d.set(['state','records',fiscalKey],fiscal);
  return{contract:contract.id,status:args.phase==='pickup'?'in-transit':'delivered',quantity:contract.quantity,paidCopper:args.phase==='pickup'?0:cost,prepaidCopper:args.phase==='pickup'?cost:0,taxCopper:args.phase==='pickup'?0:tax,note:'提粮记预付款和在途；本人携货沿路线到收货村验收入仓后确认货款和税，不另扣私人铜钱。',actionScope:{kind:'instant'}};
 }
 export function agricultureAction(d,args,eventId){
@@ -272,6 +327,9 @@ export function agricultureAction(d,args,eventId){
     if(operation==='adopt'){
         counter(d,this,p);if(r.mode!=='legacy')throw new Error('已经采用农事账，不能重复初始化');
         r.mode='managed';r.lastDay=Math.floor(d.get('state','minute')/1440)-1;r.ledger.openingFood=s.food;r.batches=s.food?[{id:`legacy:${eventId}`,amount:s.food,harvestDay:Math.floor(d.get('state','minute')/1440),expiresDay:Math.floor(d.get('state','minute')/1440)+p.normalStorageDays,source:'迁移保留的旧库存',kind:'grain'}]:[];
+        // 旧库存不分批次；采用农事账时整仓改记为一个批次（经过路账户转出再转入，数量不变）。
+        if(s.food){const g=granaryAccount(this,id),via=transitAccount(this,`agriculture:${id}`,this.rules.agriculture.grainItem),b=r.batches[0];
+            moveStock(d,{from:g,to:via,amount:s.food,writer:'agriculture',eventId});moveStock(d,{from:via,to:g,amount:s.food,writer:'agriculture',eventId,lot:{id:b.id,day:b.harvestDay,expiresDay:b.expiresDay,kind:'grain'}});}
         d.set(path(id),r);return{settlement:id,adopted:true,food:s.food,seed:r.field.seedBank,note:'旧粮数量保持，未发新粮、种子或过去收成；播种前须实际预留种粮',actionScope:{kind:'instant'}};
     }
     if(r.mode!=='managed')throw new Error('这是旧日产账；到柜台明确adopt才能切换，不自动给旧存档添粮');
@@ -284,19 +342,20 @@ export function agricultureAction(d,args,eventId){
         if(operation==='buy'){
             const reserve=s.population*p.reserveDays,available=Math.max(0,r.batches.filter(b=>b.kind==='grain').reduce((n,b)=>n+b.amount,0)-reserve),price=this.byId.get(item).basePrice,cost=quantity*price;
             if(quantity>available)throw new Error('粮仓没有这份可售余粮，过冬储粮和种粮不出售');if(d.get('state','player','coins')<cost)throw new Error('买粮余额不足');
-            const paid=takeGrain(r,s,quantity);if(paid!==quantity)throw new Error('粮仓实际库存不足');
-            moveCoins(d,{from:purse(this,'player'),to:treasuryAccount(id),amount:cost,writer:'agriculture',eventId});this.itemDelta(d,'player',item,quantity);d.set(['state','player','coins'],d.get('state','player','coins')-cost);s.treasury+=cost;r.ledger.sold+=quantity;
+            const paid=takeGrain(r,s,quantity,false,{account:bag(this,'player',item)});if(paid!==quantity)throw new Error('粮仓实际库存不足');
+            moveCoins(d,{from:purse(this,'player'),to:treasuryAccount(id),amount:cost,writer:'agriculture',eventId});this.itemDelta(d,'player',item,quantity,BOOKED);d.set(['state','player','coins'],d.get('state','player','coins')-cost);s.treasury+=cost;r.ledger.sold+=quantity;
         }else if(operation==='donate'){
-            if(this.quantity(d,'player',item)<quantity)throw new Error('行囊谷物不足');this.itemDelta(d,'player',item,-quantity);
-            r.ledger.donated+=quantity;addBatch(r,s,p,quantity,{id:`donation:${eventId}`,day:Math.floor(d.get('state','minute')/1440),source:'玩家实际交粮',capacity:granaryCapacity(this,d.get('state'),p.settlement,r.granary.capacity),expiresDay:Math.floor(d.get('state','minute')/1440)+this.byId.get(item).shelfLifeDays});
+            if(this.quantity(d,'player',item)<quantity)throw new Error('行囊谷物不足');this.itemDelta(d,'player',item,-quantity,BOOKED);
+            r.ledger.donated+=quantity;addBatch(r,s,p,quantity,{id:`donation:${eventId}`,day:Math.floor(d.get('state','minute')/1440),source:'玩家实际交粮',capacity:granaryCapacity(this,d.get('state'),p.settlement,r.granary.capacity),expiresDay:Math.floor(d.get('state','minute')/1440)+this.byId.get(item).shelfLifeDays,from:{account:bag(this,'player',item)}});
         }else if(operation==='reserve_seed'){
             if(r.batches.filter(b=>b.kind==='grain').reduce((n,b)=>n+b.amount,0)<quantity)throw new Error('实际谷物不足，不能把蔬果或未来收成当种粮');
-            const moved=takeGrain(r,s,quantity,true);r.field.seedBank+=quantity;r.field.seedBatches.push(...moved.parts.map(({amount,harvestDay,expiresDay})=>({amount,harvestDay,expiresDay})));
+            const moved=takeGrain(r,s,quantity,true,{account:seedAccount(this,id)},b=>({id:seedLotId(b),kind:'seed'}));r.field.seedBank+=quantity;r.field.seedBatches.push(...moved.parts.map(({amount,harvestDay,expiresDay})=>({amount,harvestDay,expiresDay})));
         }else{
             if(s.wood<p.repairWood||s.iron<p.repairIron)throw new Error('修理需要实际公共木料和铁料');
+            for(const [stock,n] of [['wood',p.repairWood],['iron',p.repairIron]])moveStock(d,{from:settlementStock(this,id,stock),to:`sink:consume|${settlementStock(this,id,stock).split('|')[1]}|repair`,amount:n,writer:'agriculture',eventId});
             s.wood-=p.repairWood;s.iron-=p.repairIron;r.tools.condition=Math.min(100,r.tools.condition+p.repairCondition);r.granary.condition=Math.min(100,r.granary.condition+p.repairCondition);
         }
-        balanced(r,s);d.set(path(id),r);d.set(['state','settlements',id],s);
+        balanced(r,s);commit(d,this,id,r,eventId);d.set(path(id),r);d.set(['state','settlements',id],s);
         this.advance(d,operation==='repair'?90:10,eventId);return{settlement:id,operation,quantity,food:d.get('state','settlements',id,'food'),seed:d.get(...path(id),'field','seedBank'),note:'只结算实际粮物、材料及款项，不代表额外NPC承诺'};
     }
     if(operation==='guard'){
@@ -332,7 +391,7 @@ export function agricultureAction(d,args,eventId){
     if(['storm','snow'].includes(nowWeather?.kind)||latest.tools.condition<=0)return{success:false,effectFailed:'工作完成前天气或农具条件已不合适'};
     if(operation==='sow'&&(nowDay%360<this.rules.agriculture.crop.sowDays[0]||nowDay%360>this.rules.agriculture.crop.sowDays[1]))return{success:false,effectFailed:'工作完成时已错过播种窗口，种粮未投入'};
     const result=operation==='sow'?sow(latest,this,p,nowDay,cap):harvest(latest,stock,this,p,nowDay,cap,eventId,granaryCapacity(this,d.get('state'),p.settlement,latest.granary.capacity));
-    balanced(latest,stock);d.set(path(id),latest);d.set(['state','settlements',id],stock);
+    balanced(latest,stock);commit(d,this,id,latest,eventId);d.set(path(id),latest);d.set(['state','settlements',id],stock);
     if(known&&(result.units??0)>0)this.practice(d,{skill,gain:3,target:p.fieldId},eventId);
     return{success:(result.units??0)>0,...result,field:p.fieldId,note:'这是公共田的志愿工作；产物进入公共粮仓，不自动送入玩家行囊'};
 }
