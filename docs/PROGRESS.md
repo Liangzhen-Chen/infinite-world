@@ -418,3 +418,5 @@ M2修复批审定写入PLAN（T61–T64）：Astra草案F4工具机会标注并�
 - 2026-10-16 A1b 已合入（Sonnet high 试用）：动作 consent.from（self/party）声明同意来源，本人被作用的动作（求医等）经 world_act 成功，替 NPC 填同意一律拒绝，NPC 待 A2，店主出租/钱庄放贷走旧判定；战斗回执 applied 补伤害、倒下、经验升级、尸体掉落、武器磨损；单次推进 30 天为引擎设计上限，world_act 把长等待自动拆为多段（一年封顶，与逐段等价）。tests/a1b-fixes.test.mjs 7 项。发现 S1b 合入后主线新失败：actions.json 行号过期、日常 D04/D37 铜钱守恒 → R28。0 模型。
 
 - 2026-10-16 R28 已合入（Sonnet medium）：docs/actions.json 重导出（S1b 改 credit.mjs 致行号过期）；D04/D37 铜钱守恒失败根因在测试辅助 conserved 的 flowDelta 未限定资源，S1b 后物品流水被当成铜钱源汇，改为按 coin_river 统计（实现与对账标准不变）。观察：a1-lt-scenarios T2 批量跑偶发失败、单跑通过。0 模型。
+
+- 2026-10-17 R29 已合入（Sonnet medium）：124 个测试/工具文件 191 处 os.tmpdir() 改为 tools/tmp-root.mjs 的 tmpRoot()（FIELDS_TMP 可覆盖，缺省仓库 .tmp/，按进程 p<pid>- 子目录，退出递归删除，FIELDS_TMP_KEEP=1 保留调试），.gitignore 加 .tmp/。CORE+存档往返等 58 项过；用户要求先合，118 个改动测试文件全量复跑在 R29 工作区后台继续，若有失败另开 R 卡。起因：测试临时目录落 C 盘不清理，堆 9GB 撑满 C 盘。0 模型。
