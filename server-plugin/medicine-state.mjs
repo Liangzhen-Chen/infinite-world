@@ -1,5 +1,5 @@
 import {allFacilities,facilityView,facilityKind} from './facility-state.mjs';
-import {currentEmployment} from './employment-state.mjs';
+import {currentEmployment,employmentActive} from './employment-state.mjs';
 // Consultations, stock use and appointments are facts; staff and capacity are views.
 export const MEDICAL_SKILL='skill_life_19_core';
 export const medicineFresh=e=>!e.replaying||e.replayResult?.medicineVersion===1;
@@ -9,17 +9,22 @@ export function medicalSkill(e,s,id){
  const n=s.npcs?.[id],b=s.created?.[id]??e.byId.get(id),v=id==='player'?s.skills?.[MEDICAL_SKILL]:n?.skills?.[MEDICAL_SKILL]??b?.proficiencies?.[MEDICAL_SKILL];
  return typeof v==='number'?v:v?.proficiency??0;
 }
-export function medicalRole(e,s,id){
- const n=s.npcs?.[id],b=s.created?.[id]??e.byId.get(id),job=currentEmployment(s,id),v=n?.vocation,def=e.rules.npcGrowth?.vocations?.find(r=>r.id===v?.id);
+export function medicalRole(e,s,id,job=currentEmployment(s,id)){
+ const n=s.npcs?.[id],b=s.created?.[id]??e.byId.get(id),v=n?.vocation,def=e.rules.npcGrowth?.vocations?.find(r=>r.id===v?.id);
  return job?job.task??'':v?def?.name??v.name??'':n?.occupation??b?.occupation??'';
 }
 export function medicineSites(e,s){
  const out=[];
+ // One pass over the records gives each person's current job (the first active
+ // row, as currentEmployment reads it); the facility loop reads it per person
+ // instead of rescanning the records per facility and person.
+ const minute=s.minute??0,jobs=new Map();
+ for(const r of Object.values(s.records??{}))if(employmentActive(r)&&r.createdAt<=minute&&minute<r.deadline&&!jobs.has(r.worker))jobs.set(r.worker,r);
  for(const p of allFacilities(e,s)){
   if(facilityKind(p)!=='clinic'&&!/药草院/.test(p.name??''))continue;
   const view=facilityView(e,s,p.id),asset=s.buildings?.[p.id],members={};
   for(const id of Object.keys(s.npcs??{})){
-   const n=s.npcs[id],b=s.created?.[id]??e.byId.get(id),job=currentEmployment(s,id),role=medicalRole(e,s,id);
+   const n=s.npcs[id],b=s.created?.[id]??e.byId.get(id),job=jobs.get(id)??null,role=medicalRole(e,s,id,job);
    const workplace=job?.location??n.workplace?.location??n.residence?.workplace??b?.workplace?.location;
    if(workplace!==p.id||['死亡','濒死','昏迷','患病'].includes(n.status)||job?.status==='罢工')continue;
    if(/医师|药师/.test(role)&&medicalSkill(e,s,id)>0)members[id]={position:'医师',joinedAt:job?.createdAt??null,arrears:0};

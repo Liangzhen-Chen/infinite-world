@@ -11,7 +11,7 @@ export function faithOf(engine,state,requested){
  const id=actorId(engine.world,requested),own=actor(engine,state,id)?.faith??base(engine,state,id)?.faith;
  if(own)return fact(own,`actor.${id}.faith`,true);
  const all=temples(engine),b=base(engine,state,id),n=actor(engine,state,id),h=npcHousehold(engine,state,id);
- const result=(t,source)=>fact(t?{deity:t.deity,institution:t.seat,temple:t.id,church:t.name,observedSince:null,lastBreach:-1}:null,source);
+ const result=(t,source)=>fact(t?{deity:t.deity,institution:t.seat,temple:t.id,church:t.church,observedSince:null,lastBreach:-1}:null,source);
  // Only current teachers/disciples retain a teaching affiliation after a job change.
  const careers=id==='player'?Object.values(state.careers??{}).map(c=>c.initiation).filter(c=>c?.status==='守戒中'):[];
  const teacher=n?.relationships?Object.entries(n.relationships).find(([,r])=>r.type==='师父')?.[0]:null;

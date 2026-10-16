@@ -373,14 +373,17 @@ export function recordMilitaryDeath(d,engine,id,minute){return recordEntityDeath
 export function recordEntityDeath(d,engine,id,minute,cause,illness=null){
  id=actorId(engine.world,id);const path=actorPath(engine.world,id),actor=d.get(...path);
  if(!actor||id==='player')return null;
- const previous=Object.values(d.get('state','family','deaths')??{}).find(r=>r.person===id);
+ // A death row belongs to one life: a wild body's id comes back as a new
+ // incarnation (state.creatures[id].incarnation) once its corpse is gone, and
+ // that body dies once more; the registry keeps each life's row.
+ const life=actor.incarnation??0,previous=Object.values(d.get('state','family','deaths')??{}).find(r=>r.person===id&&(r.incarnation??0)===life);
  if(previous||actor.diedAt!==undefined)return previous??null;
  const shops=businessSnapshot(engine,d.get('state'));
  const npc=path[1]==='npcs',household=personHousehold(engine,d.get('state'),id).value;
  // Roster housemates are the ones who inherit, mourn and may later have to
  // move to kin; they enter campaign state now.
  for(const x of household?.members??[])if(x!==id&&!d.get('state','npcs',x))bring(d,engine,x,minute,'家中有人去世');
- const state=d.get('state'),house=household,deathId=`death_${key(id,minute)}`,name=nameOf(engine,state,id);
+ const state=d.get('state'),house=household,deathId=`death_${key(id,minute)}${life?`_${life}`:''}`,name=nameOf(engine,state,id);
  d.set([...path,'status'],'死亡');d.set([...path,'activity'],'已故');d.set([...path,'diedAt'],minute);
  if(actor.hp!==undefined)d.set([...path,'hp'],0);
  for(const field of ['caring','scheduleTravel','cognitionTravel'])if(actor[field])d.remove([...path,field]);
@@ -414,7 +417,7 @@ export function recordEntityDeath(d,engine,id,minute,cause,illness=null){
  if(population)d.set(['state','settlements',house.settlement,'population'],population.after);
  const content=`${name}在${engine.calendar(minute).text.slice(0,-6)}${cause}。`;
  const witnesses=witness(d,engine,deathId,[id],house?[house.id]:[],{minute,kind:'health',content,salience:4,...(!npc?{at:[actor.location].filter(Boolean)}:{})});
- const result={id:deathId,person:id,minute,cause,illness:illness?.id??null,household:house?.id??null,settlement:house?.settlement??null,population,estate,obligations,witnesses,
+ const result={id:deathId,person:id,...(life?{incarnation:life}:{}),minute,cause,illness:illness?.id??null,household:house?.id??null,settlement:house?.settlement??null,population,estate,obligations,witnesses,
   ...(contracts.length?{contracts}:{}),...(pets.length?{pets}:{})};
  d.set(['state','family','deaths',deathId],result);
  entityTransition(d,engine,{id:deathId,verb:'die',actor:id,minute,location:actor.location??house?.settlement,witnesses,cause,summary:content});
@@ -468,11 +471,13 @@ const placeName=(engine,id)=>engine.byId.get(id)?.name??id;
 // U3: a declared winter famine (hazard clock) counts as going hungry too.
 const hungry=(engine,state,settlement,minute)=>(state.settlements?.[settlement]?.starvation??0)>=migrationRules(engine).livelihood.starvationDays||Boolean(famineAt(state,settlement,minute));
 const present=(engine,state,x)=>state.npcs[x]?alive(state,x):Boolean(engine.byId.get(x));
-function mobile(engine,state,id){
- if(personConstraint(engine,state,id))return false;
+// The daily migration pass hands in one shared record index (personConstraints)
+// so each person's legal, employment and lease reads do not rescan the records.
+function mobile(engine,state,id,constraints=null){
+ if(personConstraint(engine,state,id,undefined,constraints))return false;
  if(state.npcs[id]?.levy)return false;
  const n=state.npcs[id];
- return lifeActor(engine,state,id)&&Boolean(npcSchedule(engine,state,id))&&settled(state,id)&&!incapable.includes(n.status)&&!n.caring&&!npcMigration(state,id);
+ return lifeActor(engine,state,id)&&Boolean(npcSchedule(engine,state,id,undefined,constraints))&&settled(state,id)&&!incapable.includes(n.status)&&!n.caring&&!npcMigration(state,id);
 }
 // With no relative or friend to take them, a household elsewhere may still
 // take in someone fleeing hunger or harm: the settlement is not short of food
@@ -569,10 +574,13 @@ function followers(engine,d,id,from,minute){
 }
 function migrationDay(d,engine,minute){
  const r=migrationRules(engine);if(!r)return;
+ // Migration plans are written under state.family, never records, so the
+ // record index built once here stays exact for the whole pass.
+ const constraints=personConstraints(engine,d.get('state'));
  for(const id of Object.keys(d.get('state','npcs')).sort()){
-  const state=d.get('state');if(!mobile(engine,state,id))continue;
+  const state=d.get('state');if(!mobile(engine,state,id,constraints))continue;
   const why=migrationReason(engine,state,id,minute,d.document.randomSeed);if(!why)continue;
-  const from=npcHousehold(engine,state,id),mid=`migration_${key(id,minute)}`;
+  const from=npcHousehold(engine,state,id,constraints),mid=`migration_${key(id,minute)}`;
   const row={id:mid,person:id,reason:why.reason,cause:why.cause,...(why.fleeing?{fleeing:why.fleeing}:{}),...(why.stranger?{stranger:true}:{}),host:why.host,
    from:{household:from.id,settlement:from.settlement,home:from.homeLocation},to:{household:why.house.id,settlement:why.house.settlement,home:why.house.homeLocation},
    decidedAt:minute,departAt:minute+r.noticeDays*DAY+r.departMinute,postponed:0,status:'待出发'};

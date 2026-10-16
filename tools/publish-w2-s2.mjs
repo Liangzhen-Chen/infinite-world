@@ -3,15 +3,19 @@ import path from 'node:path';
 import {randomUUID} from 'node:crypto';
 import {loadWorld} from './load-world.mjs';
 import {validateWorld} from './validate-world.mjs';
+import {siteItemReferences} from '../server-plugin/sites.mjs';
+import {formalOrder} from './catalogue-order.mjs';
 import {hashContent,readApprovedContent} from './content-pipeline.mjs';
 import {entries,contextFor,revision,validateDraft,reviewDraftFor,buildCandidate} from './w2-s2-content.mjs';
 import {spells,books,items,recipes,mentors,placements,stations} from '../world/design/w2-s2.mjs';
 const read=async file=>JSON.parse(await fs.readFile(file,'utf8'));
 const same=(a,b)=>hashContent(a)===hashContent(b);
-function mergeRows(old,added,label){
+// Merged rows keep the formal catalogue order (tools/catalogue-order.mjs), so a
+// batch merged back into an edition holding later publications returns to its slot.
+function mergeRows(old,added,label,key){
  const map=new Map(old.map(r=>[r.id,r]));
  for(const r of added){const prior=map.get(r.id);if(prior&&!same(prior,r))throw Error(`正式条目冲突：${label}${r.id}`);map.set(r.id,structuredClone(r));}
- return [...map.values()];
+ return formalOrder(key,[...map.values()]);
 }
 // Design prose before review; used by tests that exercise the mechanics only.
 export function designPublication(){return buildCandidate(entries.map(e=>reviewDraftFor(e)));}
@@ -30,10 +34,10 @@ const teachEntry=what=>({kind:'teach',what,price:{mode:'catalog',source:what},un
 export function mergeS2Publication(world,publication){
  const next=structuredClone(world);
  if(next.rules.npcStockUpdateVersion!==1)throw Error('已有逐键库存升级机制未启用');
- next.spells=mergeRows(next.spells,publication.spells,'法术');
- next.skills=mergeRows(next.skills,publication.sources.mappings.map(m=>m.skill),'技能');
- next.items=mergeRows(next.items,[...publication.books,...publication.items],'物品');
- next.recipes=mergeRows(next.recipes,publication.recipes,'配方');
+ next.spells=mergeRows(next.spells,publication.spells,'法术','spells');
+ next.skills=mergeRows(next.skills,publication.sources.mappings.map(m=>m.skill),'技能','skills');
+ next.items=mergeRows(next.items,[...publication.books,...publication.items],'物品','items');
+ next.recipes=mergeRows(next.recipes,publication.recipes,'配方','recipes');
  for(const {item,stock} of publication.sources.books){const seller=next.npcs.find(n=>n.id===stock.owner);if(!seller)throw Error('书商不存在');seller.inventory??={};if(!Object.hasOwn(seller.inventory,item.id))seller.inventory[item.id]=stock.quantity;}
  for(const [id,{teach,inventory}] of Object.entries(publication.mentors)){
   const p=next.npcs.find(n=>n.id===id);if(!p)throw Error(`导师不存在：${id}`);
@@ -47,8 +51,8 @@ export function mergeS2Publication(world,publication){
   }
   for(const [item,quantity] of Object.entries(inventory))if(!Object.hasOwn(p.inventory,item))p.inventory[item]=quantity;
  }
- for(const [location,rows] of Object.entries(publication.placements)){const place=next.locations.find(l=>l.id===location);if(!place)throw Error(`地点不存在：${location}`);place.features=mergeRows(place.features??[],rows,'环境对象');}
- for(const [location,rows] of Object.entries(publication.stations)){const place=next.locations.find(l=>l.id===location);if(!place)throw Error(`地点不存在：${location}`);place.workstations=mergeRows(place.workstations??[],rows,'工作台');}
+ for(const [location,rows] of Object.entries(publication.placements)){const place=next.locations.find(l=>l.id===location);if(!place)throw Error(`地点不存在：${location}`);place.features=mergeRows(place.features??[],rows,'环境对象',`features:${location}`);}
+ for(const [location,rows] of Object.entries(publication.stations)){const place=next.locations.find(l=>l.id===location);if(!place)throw Error(`地点不存在：${location}`);place.workstations=mergeRows(place.workstations??[],rows,'工作台',`workstations:${location}`);}
  return next;
 }
 // The edition before this batch, rebuilt from any world that may contain it.
@@ -56,6 +60,8 @@ export function mergeS2Publication(world,publication){
 export function withoutS2(source){
  const ids={spells:new Set(spells.map(s=>s.id)),skills:new Set(spells.map(s=>s.skill)),items:new Set([...books,...items].map(i=>i.id)),recipes:new Set(recipes.map(r=>r.id))};
  const w=structuredClone(source);
+ // Items that later sites still hold or use stay in the catalogue (server-plugin/sites.mjs).
+ for(const id of siteItemReferences(w.locations))ids.items.delete(id);
  for(const k of Object.keys(ids))w[k]=w[k].filter(r=>!ids[k].has(r.id));
  const seller=w.npcs.find(n=>n.id==='npc_hw_luqing');for(const b of books)if(seller?.inventory)delete seller.inventory[b.id];
  for(const [id,{teach,inventory}] of Object.entries(mentors)){

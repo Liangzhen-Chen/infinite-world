@@ -1,6 +1,7 @@
 // T142 merge helpers shared by the content and publication tools (kept apart to avoid an import cycle).
 import {hashContent} from './content-pipeline.mjs';
 import {buildBatch} from '../world/design/t142-provinces.mjs';
+import {pruneRuleDependents} from './edition-rules.mjs';
 
 export const same=(a,b)=>hashContent(a)===hashContent(b);
 export const FILES=[['geo/regions.json','regions'],['geo/locations.json','locations'],['geo/routes.json','routes'],['lore/cultures.json','cultures'],['lore/factions.json','factions'],['lore/factionPeople.json','factionPeople']];
@@ -28,5 +29,8 @@ export function withoutT142(world,batch=buildBatch()){
  }
  for(const r of next.rules?.reputation?.factions??[])if(r.relations?.some(x=>ids.has(x.faction)))r.relations=r.relations.filter(x=>!ids.has(x.faction));
  if(next.rules?.factionClock){next.rules.factionClock.clocks=next.rules.factionClock.clocks.filter(c=>!ids.has(c.faction));if(!next.rules.factionClock.clocks.length)delete next.rules.factionClock;}
+ // U12 military polities/armies of these polities, war fronts and quest offers at
+ // these places are later rows about this batch's entities (tools/edition-rules.mjs).
+ pruneRuleDependents(next.rules,ids);
  return next;
 }

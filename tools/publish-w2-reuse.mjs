@@ -1,7 +1,7 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import {randomUUID} from 'node:crypto';
-import {loadWorld} from './load-world.mjs';
+import {loadWorld,authoredRules} from './load-world.mjs';
 import {validateWorld} from './validate-world.mjs';
 import {hashContent,readApprovedContent} from './content-pipeline.mjs';
 import {entries as spellEntries,contextFor as spellContext,revision as spellRevision} from './w2-reuse-content.mjs';
@@ -75,7 +75,8 @@ export async function publishReuse({root=path.resolve('world'),draftRoot=path.jo
  for(const spell of next.spells)validation.errors.push(...validateMagicCatalog(spell,{requireHandler:true}).map(error=>`${spell.id}: ${error}`));
  validation.ok=!validation.errors.length;
  if(!validation.ok)throw Error(validation.errors.join('\n'));
- const files={'meta/spells.json':next.spells,'meta/skills.json':next.skills,'meta/items.json':next.items,'meta/rules.json':next.rules,'people/baseline.json':next.npcs};
+ // rules.json is compared and written in its on-disk shape (load-world.mjs authoredRules).
+ const files={'meta/spells.json':next.spells,'meta/skills.json':next.skills,'meta/items.json':next.items,'meta/rules.json':authoredRules(next.rules),'people/baseline.json':next.npcs};
  const changed=[];
  for(const [file,value]of Object.entries(files)){
   if(same(await read(path.join(root,file)),value))continue;

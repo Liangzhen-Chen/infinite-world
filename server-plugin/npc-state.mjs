@@ -28,10 +28,10 @@ export function npcSchedule(engine,state,id,minute=state?.minute,constraints=nul
     if(care&&base)return {default:[{start:0,end:1440,location:care.location,activity:'照护病人',services:[]}]};
     // U12: a levied villager serves at the army's camp until released.
     if(own?.levy)return {default:[{start:0,end:1440,location:own.levy.location,activity:'服役',services:[]}]};
-    const employed=state&&personEmployment(engine,state,id,minute)?.value;
+    const employed=state&&personEmployment(engine,state,id,minute,constraints)?.value;
     const job=employed&&!employed.education&&['有效','要求加薪'].includes(employed.status)&&Math.floor(employed.starts/1440)<=Math.floor(minute/1440)?employed:null;
     if(job){
-        const home=npcHousehold(engine,state,id)?.homeLocation??engine.byId.get(id)?.home?.location??job.location;
+        const home=npcHousehold(engine,state,id,constraints)?.homeLocation??engine.byId.get(id)?.home?.location??job.location;
         const slot=(start,end,location,activity)=>({start,end,location,activity,services:[]});
         const activity=job.task??'受雇工坊生产',work=job.workMinutes??480,end=480+work+60;
         return {default:[slot(0,480,home,'睡眠与休息'),slot(480,720,job.location,activity),slot(720,780,job.location,'午间休息'),slot(780,end+1,job.location,activity),slot(end+1,1440,home,'家务与休息')],
@@ -46,16 +46,18 @@ export function npcSchedule(engine,state,id,minute=state?.minute,constraints=nul
     // work today (strike/stoppage, not yet started) stays at home: derived from
     // the contract's current status, never left without a whereabouts.
     if(!schedule&&employed){
-        const home=npcHousehold(engine,state,id)?.homeLocation??engine.byId.get(id)?.home?.location??own?.location??employed.location;
+        const home=npcHousehold(engine,state,id,constraints)?.homeLocation??engine.byId.get(id)?.home?.location??own?.location??employed.location;
         schedule={default:[{start:0,end:1440,location:home,activity:employed.status==='罢工'?'停工在家':'日常起居',services:[]}]};
     }
-    const lease=activeRental(state,id,minute);
+    const lease=activeRental(state,id,minute,constraints);
     if(!lease||!schedule)return schedule;
     const prior=lease.use==='home'?lease.oldHome:engine.byId.get(id)?.workplace?.location;
     const remap=value=>Array.isArray(value)?value.map(remap):value&&typeof value==='object'?Object.fromEntries(Object.entries(value).map(([k,v])=>[k,k==='location'&&v===prior?lease.subject:remap(v)])):value;
     return remap(schedule);
 }
-export const activeRental=(state,id,minute=state?.minute)=>Object.values(state?.records??{}).find(r=>r.kind==='asset_lease'&&r.tenant===id&&r.status==='有效'&&r.createdAt<=minute&&minute<r.deadline);
+// A pass over many people may hand in the shared index (entity-view.mjs
+// personConstraints) instead of rescanning every record per person.
+export const activeRental=(state,id,minute=state?.minute,constraints=null)=>(constraints?.leases?constraints.leases.get(id)??[]:Object.values(state?.records??{})).find(r=>r.kind==='asset_lease'&&r.tenant===id&&r.status==='有效'&&r.createdAt<=minute&&minute<r.deadline);
 export function npcServices(engine,state,id){
     if(state&&personConstraint(engine,state,id))return [];
     return personCareer(engine,state??{},id).value.services.filter(service=>{
@@ -94,8 +96,8 @@ export function householdDefinition(engine,state,houseId){
  if(!people.length)return null;
  return {id:houseId,settlement:people[0].settlement,homeLocation:people[0].home?.location??people[0].home?.district,members:people.map(p=>p.id)};
 }
-export function npcHousehold(engine,state,id){
- const rental=activeRental(state,id);if(rental?.use==='home')return {id:rental.id,settlement:rental.settlement,homeLocation:rental.subject,members:[id]};
+export function npcHousehold(engine,state,id,constraints=null){
+ const rental=activeRental(state,id,undefined,constraints);if(rental?.use==='home')return {id:rental.id,settlement:rental.settlement,homeLocation:rental.subject,members:[id]};
  const entered=Object.entries(state.family?.households??{}).find(([,r])=>r.members?.includes(id))?.[0];
  const entity=state.created?.[id]??engine.byId.get(id);
  const homes=engine.advanceHouseholds?engine.advanceHouseholds.byMember.get(id)??[]:engine.world.households??[];

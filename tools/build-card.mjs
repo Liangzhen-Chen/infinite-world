@@ -20,6 +20,8 @@ function reference(world){
         `起始区域：${world.locations.filter(row=>row.id==='loc_hw'||row.scope==='loc_hw').map(row=>row.name).join('、')}。地点详情用world_catalog按名查询。`,
         // Non-start locations and lore use counts; their names remain in the paged public catalog.
         `起始区外：${others.length-homes.length}处地点、${homes.length}处“户主名+户居处”私宅；world_catalog location分页/按名查名称详情及聚居地住区设施；地理亦可检索。`,
+        // Monster settlements are the one group named here (their quarters stay in the catalog): the GM must know who lives where before anyone walks in.
+        ...(societies.size?[`魔物聚居地：${world.locations.filter(row=>societies.has(row.id)).map(row=>row.name).join('、')}。`]:[]),
         `起始居民：${world.npcs.filter(row=>row.scope==='loc_hw').map(row=>`${row.name}，${row.occupation}`).join('；')}。`,
         `文化${(world.cultures??[]).length}种、神祇${(world.deities??[]).length}位；world_catalog culture/deity分页查名，习俗传说须世界检索核实。`,
     ].join('\n\n');

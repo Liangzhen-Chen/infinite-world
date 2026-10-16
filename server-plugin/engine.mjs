@@ -41,7 +41,7 @@ import {transportAction,transportScene} from './transport.mjs';
 import {postAction} from './post.mjs';
 import {tradeQuote,recordDeal}from'./shop.mjs';
 import {initializeWorldClocks}from'./world-clock.mjs';
-import {initializeFactionClocks,factionClockRules}from'./faction-clock.mjs';
+import {initializeFactionClocks,factionClockRules,materializeFaithClocks}from'./faction-clock.mjs';
 import {QUEST_SOURCES_VERSION,openSettlementLedgers}from'./quest-sources.mjs';
 import {villageWildlifeFresh}from'./quest-wildlife.mjs';
 import {TRIBAL_AWAKENING_VERSION}from'./tribal-awakening.mjs';
@@ -75,7 +75,7 @@ import {chargeTrade,repayDebt}from'./contracts.mjs';
 import {businessTrade,recordBusinessReceipt}from'./business.mjs';
 import {CREDIT_OPERATIONS,creditTrade,isCreditDebt,repayCredit,lodgingOf,assertLodgingHost,grantLodgingAccess}from'./credit.mjs';
 import {recordFinanceSale}from'./finance-assets.mjs';
-import {assessTradeTax}from'./finance-tax.mjs';
+import {assessTradeTax,taxableSale}from'./finance-tax.mjs';
 import {initializeR1,planR1,planPreR1Partitions}from'./migrations/r1.mjs';
 import {materializeWildlifeHabitats}from'./wildlife-habitats.mjs';
 import {unfoldPopulationAt,acceptPopulationProfile,settlePopulationLayers,populationLayersFresh,populationPlan}from'./population.mjs';
@@ -148,12 +148,15 @@ export class WorldEngine {
         // K8: derived habitats join the authored ones before any consumer reads them.
         materializeWildlifeHabitats(world);
         this.world = world; this.rules = world.rules;
-        const siteErrors=validateSites(world);if(siteErrors.length)throw Error(siteErrors.join('；'));
+        // An edition may lack people or venues that sites and festivals name; those rows stay idle instead of stopping the load (tools/validate-world reports them).
+        const siteErrors=validateSites(world,{edition:true});if(siteErrors.length)throw Error(siteErrors.join('；'));
         if(![1,2].includes(this.rules.engineRevision??1))throw new Error('此世界使用尚不支持的引擎版本，停止加载');
         this.entities = [...world.npcs,...world.residents??[],...world.locations,...world.items,...world.professions,...world.skills,...world.spells,...world.recipes??[],...world.monsters??[],...world.bosses??[],...world.cultures??[],...world.deities??[],...world.factions??[],...world.history??[],...world.factionPeople??[],...world.eras??[],...world.regions??[],...world.festivals??[]];
         this.resolver = new EntityResolver(this.entities);
         this.byId = this.resolver.entities;
-        const festivalErrors=validateFestivalRuntime(world);if(festivalErrors.length)throw Error(festivalErrors.join('；'));
+        // RW-07: faith competition clocks are derived from the current church seats and join rules.factionClock here.
+        materializeFaithClocks(this);
+        const festivalErrors=validateFestivalRuntime(world,{edition:true});if(festivalErrors.length)throw Error(festivalErrors.join('；'));
         if((this.rules.engineRevision??1)===1)this.compat=new Phase1Engine(world);
         this.factionEffectConsumers={society_news:societyNewsConsumer,society_issue:societyIssueConsumer,spirit_society:spiritSocietyConsumer};this.wildlifeAwakening=wildlifeAwakeningConsumer;
     }
@@ -348,7 +351,8 @@ export class WorldEngine {
         if(this.quantity(d,seller,item)<quantity) throw new Error(`对方库存不足：${catalog.name}只剩${this.quantity(d,seller,item)}`);
         const payment=chargeTrade(d,this,{buyer,seller,cost,payment:args.payment,creditMinutes:args.creditMinutes,description:`${catalog.name}货款`},id);
         const moved=transferItems(d,this,seller,buyer,item,quantity,args.instances??null);
-        const tax=payment.debt?{amount:0}:assessTradeTax(d,this,{seller,cost,location:playerLocation,sourceEvent:id});
+        // Only trade owes commercial tax: resale stock or an organization's goods (finance-tax.mjs taxableSale).
+        const tax=payment.debt||!taxableSale(this,d.get('state'),seller,item)?{amount:0}:assessTradeTax(d,this,{seller,cost,location:playerLocation,sourceEvent:id});
         const basis=recordFinanceSale(d,this,{buyer,seller,item,quantity,cost,tax:tax.amount,eventId:id,paid:!payment.debt});
         if(payment.debt)d.set(['state','records',payment.debt],{...d.get('state','records',payment.debt),sale:{buyer,seller,item,quantity,cost,basis,location:playerLocation}});
         d.set(['state','quotes',quoteKey],price);recordDeal(d,quote,price,quantity,id);this.advance(d,5,id);d.say(`${catalog.name}×${quantity}，${payment.debt?'赊账':'成交'}${cost}铜`);
@@ -359,10 +363,10 @@ export class WorldEngine {
         // sequence (rules and seed cannot change inside it) across schedules.
         // Route topology (locations, routes) is likewise fixed for its duration.
         if(this.weatherSequences)return this.advanceElapsed(d,minutes,id);
-        this.weatherSequences=new Map();this.advanceGraphs=new Map();
+        this.weatherSequences=new Map();this.advanceGraphs=new Map();this.runtimeHabitats=[];
         this.advanceHouseholds=beginHouseholdReads(this);
         this.advanceFeatures=this.world.locations.flatMap(place=>(place.features??[]).map(feature=>({...feature,location:place.id})));
-        try{return this.advanceElapsed(d,minutes,id);}finally{this.weatherSequences=null;this.advanceGraphs=null;this.advanceHouseholds=null;this.advanceFeatures=null;}
+        try{return this.advanceElapsed(d,minutes,id);}finally{this.weatherSequences=null;this.advanceGraphs=null;this.advanceHouseholds=null;this.advanceFeatures=null;this.runtimeHabitats=null;}
     }
     advanceElapsed(d,minutes,id) {
         minutes=number(minutes,0,43200,'耗时');

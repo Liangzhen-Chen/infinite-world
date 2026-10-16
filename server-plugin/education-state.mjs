@@ -3,6 +3,7 @@ import {temples} from './faith-catalog.mjs';
 // skill distributions are projections of the current campaign.
 import {facilityView} from './facility-state.mjs';
 import {npcSchedule,npcAgeAt} from './npc-state.mjs';
+import {personConstraints} from './entity-view.mjs';
 import {advanceLayerPlan} from './advance-layers.mjs';
 import {cohortSeats,expandedEducation} from './education-cohorts.mjs';
 const DAY=1440;
@@ -40,13 +41,21 @@ export function educationCourses(e,s){
  const people=[...new Map([...e.world.residents??[],...e.world.npcs,...Object.values(s.created??{})].filter(p=>p.id?.startsWith('npc_')).map(p=>[p.id,p])).values()];
  const layers=Object.keys(s.population??{}).length?(e.advanceLayerContext??advanceLayerPlan(e,s)):null;
  const settlements=new Set((e.world.settlementProfiles??[]).map(p=>p.id));
+ // Teachers, their routines and teaching contracts do not depend on the site:
+ // one legal index (personConstraints) serves every routine read, and each
+ // person's settlement, age and literacy are read once for the whole derivation.
+ const constraints=personConstraints(e,s),calendar=e.calendar(s.minute);
+ const teachers=Object.keys(s.npcs??{}).filter(id=>knowledgeProficiency(e,s,id,'skill_literacy')>100).sort();
+ const routines=new Map(teachers.map(id=>[id,npcSchedule(e,s,id,undefined,constraints)]));
+ const jobs=Object.values(s.records??{}).filter(r=>r.category==='contract'&&['有效','要求加薪'].includes(r.status)&&r.starts<=s.minute&&r.deadline>s.minute&&/授业|先生|教学/.test(r.task??''));
+ const memo=(f)=>{const m=new Map();return id=>{if(!m.has(id))m.set(id,f(id));return m.get(id);};};
+ const homeOf=memo(id=>settlement(e,s,id)),ageOf=memo(id=>npcAgeAt(e,s,id)),literacyOf=memo(id=>knowledgeProficiency(e,s,id,'skill_literacy'));
  for(const site of educationSites(e,s)){
   if(!site.capacity)continue;
-  const teachers=Object.keys(s.npcs??{}).filter(id=>knowledgeProficiency(e,s,id,'skill_literacy')>100).sort();
   for(const teacher of teachers){
-   const routine=npcSchedule(e,s,teacher),calendar=e.calendar(s.minute),variant=calendar.market?'market':routine?.restDays?.includes(calendar.day)?'rest':'default';
+   const routine=routines.get(teacher),variant=calendar.market?'market':routine?.restDays?.includes(calendar.day)?'rest':'default';
    const seasonal=routine?.seasonal?.[String(calendar.season)],slots=seasonal?.[variant]??routine?.[variant]??seasonal?.default??routine?.default??[];
-   const job=Object.values(s.records??{}).find(r=>r.category==='contract'&&r.worker===teacher&&r.location===site.seat&&['有效','要求加薪'].includes(r.status)&&r.starts<=s.minute&&r.deadline>s.minute&&/授业|先生|教学/.test(r.task??''));
+   const job=jobs.find(r=>r.worker===teacher&&r.location===site.seat);
    const teaching=slots.filter(w=>w.location===site.seat&&(w.services?.includes('teach')||job&&w.activity===job.task));
    for(const slot of teaching){
     const occupied=out.filter(c=>c.location===site.seat&&c.start<slot.end&&c.end>slot.start).reduce((n,c)=>n+c.students.length+(c.cohort?.roster.length??0),0),seats=Math.max(0,site.capacity-occupied);
@@ -54,11 +63,11 @@ export function educationCourses(e,s){
     const available=id=>!out.some(c=>[c.teacher,...c.students].includes(id)&&c.start<slot.end&&c.end>slot.start);
     if(!available(teacher))continue;
     let town=site.seat;const seen=new Set();while(town&&!settlements.has(town)&&!seen.has(town)){seen.add(town);const place=s.created?.[town]??e.byId.get(town);town=place?.parent??place?.scope;}
-    town??=settlement(e,s,teacher);
-    const statistical=layers?.layers.get(layers.countyOf(town))==='statistics';
-    const students=people.filter(p=>p.id!==teacher&&available(p.id)&&settlement(e,s,p.id)===town&&
-     !(statistical&&p.generated==='population'&&!s.npcs?.[p.id])&&(npcAgeAt(e,s,p.id)??0)>=(e.rules.education?.minimumAge??6)&&(npcAgeAt(e,s,p.id)??99)<=(e.rules.education?.maximumAge??17)&&s.npcs?.[p.id]?.status!=='死亡'&&
-     knowledgeProficiency(e,s,p.id,'skill_literacy')<knowledgeProficiency(e,s,teacher,'skill_literacy')-e.rules.npcGrowth.teach.teacherMargin)
+    town??=homeOf(teacher);
+    const statistical=layers?.layers.get(layers.countyOf(town))==='statistics',ceiling=literacyOf(teacher)-e.rules.npcGrowth.teach.teacherMargin;
+    const students=people.filter(p=>p.id!==teacher&&available(p.id)&&homeOf(p.id)===town&&
+     !(statistical&&p.generated==='population'&&!s.npcs?.[p.id])&&(ageOf(p.id)??0)>=(e.rules.education?.minimumAge??6)&&(ageOf(p.id)??99)<=(e.rules.education?.maximumAge??17)&&s.npcs?.[p.id]?.status!=='死亡'&&
+     literacyOf(p.id)<ceiling)
      .map(p=>p.id).sort().slice(0,seats);
     const previous=s.records?.[`education_cohort:education:auto:${site.id}:${teacher}:${slot.start}:${Math.floor(s.minute/DAY)}`];
     const roster=statistical?(previous?.roster??cohortSeats(e,s,town,'skill_literacy',knowledgeProficiency(e,s,teacher,'skill_literacy'),seats-students.length,s.minute)):[];
