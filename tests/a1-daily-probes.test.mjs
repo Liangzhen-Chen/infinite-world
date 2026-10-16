@@ -154,13 +154,24 @@ test('D34 喂宠物：食物从行囊扣一份，宠物饥饿下降',async t=>{
 });
 
 test('D39 存档读档后继续：导出再导入，状态逐字相同，继续买卖结果一致',async t=>{
- // 开局场景（09:00 酒馆）：导出再导入。10:00 起的同一操作见文末 todo（人物自治任务快照带 undefined 字段，导出后事件校验失败）。
+ // 开局场景（09:00 酒馆）：导出再导入。10:00 人物自治开工当刻的同一操作见下一题（R25）。
  const ui=await uiSession(t);
  await ui.choose('trade.buy',{item:'item_bread',quantity:1},{target:LINSUI});
  const bundle=await ui.server.api('export',{campaignId:ui.campaignId}),copy=await ui.server.api('import',{bundle});
  assert.deepEqual(copy.document,(await ui.server.api('read',{campaignId:ui.campaignId})).document);
  const run=async campaignId=>{const v=await ui.server.api('read',{campaignId});return ui.server.api('execute',{campaignId,tool:'world_act',args:{action:'trade.buy',slots:{seller:LINSUI,item:'item_bread',quantity:2}},eventId:'after-load',anchor:null,expectedSequence:v.reference.sequence});};
  const a=await run(ui.campaignId),b=await run(copy.reference.campaignId);assert.deepEqual(a.result,b.result);assert.deepEqual(a.narration.lines,b.narration.lines);
+});
+
+test('D39 存档读档后继续（10:00）：人物自治开工当刻导出再导入，时间、钱物与人物逐字段不变，继续推进与原档一致（重启读盘见 save-roundtrip）',async t=>{
+ const ui=await uiSession(t,{mutate:at(INN,10*60)});
+ const r=await ui.choose('trade.buy',{item:'item_bread',quantity:1},{target:LINSUI});assert.ok(r.ok,r.error);const saved=await ui.read();
+ assert.ok(Object.keys(saved.state.npcAutonomy.tasks).length>0,'存档里有当刻开工的人物自治任务');
+ const bundle=await ui.server.api('export',{campaignId:ui.campaignId}),{reference}=await ui.server.api('import',{bundle});
+ const loaded=(await ui.server.api('read',{campaignId:reference.campaignId})).document;assert.deepEqual(loaded,saved,'读档后一切照旧');
+ const step=async(campaignId,eventId)=>{const view=await ui.server.api('read',{campaignId});await ui.server.api('execute',{campaignId,tool:'world_act',args:{action:'core:time',slots:{minutes:120}},eventId,anchor:null,expectedSequence:view.reference.sequence});return (await ui.server.api('read',{campaignId})).document;};
+ const after=await step(ui.campaignId,'later');assert.ok(after.state.minute>saved.state.minute);
+ assert.deepEqual(await step(reference.campaignId,'later'),after,'读档后继续推进与原档一致');
 });
 
 // 未写成可执行测试的日常题（原因）
@@ -170,5 +181,5 @@ for(const [id,reason]of [
  ['D12 春播 / D13 秋收','农事按聚落公田结算，没有玩家自家田地'],['D14 采草药','没有野生草药存量与采集动作（采集只对猎物尸体与据点）'],['D16 做饭','烹饪配方需另备燕麦粉等材料与作台主许可，留待配方数据标定'],
  ['D21–D25 寒暄、打听、接交委托、送信','对话与委托交付（A2）'],['D26 托运货物','托运走承运合同多步流程（订、交接、到货），留待 A3 原语'],
  ['D31 普通打斗 / D32 受伤求医','战斗与诊疗非本卡范围（有专门测试）'],['D35 节庆 / D36 加入组织','需要组织者同意（A2）'],['D37 交税过关卡','没有路上关卡与过境货物税'],
- ['D38 看告示听传闻','对话与告示投影（A2）'],['D39（10:00 后的存档）','人物自治日常任务的 presence 快照写入 activity:undefined，事件哈希经 JSON 往返后对不上，导出再导入（及重启后读盘）报“事件校验失败”；见 docs/问题.md'],['D40 离开几天再回来','回程见闻（A2/S6）'],
+ ['D38 看告示听传闻','对话与告示投影（A2）'],['D40 离开几天再回来','回程见闻（A2/S6）'],
 ])test.todo(`${id}：${reason}`);

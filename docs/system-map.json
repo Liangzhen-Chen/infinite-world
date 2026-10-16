@@ -2,7 +2,7 @@
  "title": "无限原野系统地图",
  "card": "K9",
  "generatedFrom": {
-  "commit": "refs/heads/a1",
+  "commit": "refs/heads/r25",
   "method": "运行时导出（注册表、规则表、工具定义、效果表、立场传导表）+ 静态正则扫描（import 图、函数体标识符、state 分区与 records 前缀、rules/world 读取）。静态扫描是近似：经 engine.byId、helper 间接或动态拼接路径的访问不计入。"
  },
  "scanMethods": {
@@ -656,7 +656,7 @@
     "server-plugin/compat/v2-phase1-engine.mjs",
     "server-plugin/legacy/core.js"
    ],
-   "lines": 1534,
+   "lines": 1585,
    "stateWrites": [
     "checks",
     "crafted",
@@ -1096,7 +1096,7 @@
     "server-plugin/population-service.mjs",
     "server-plugin/settlement-profile.mjs"
    ],
-   "lines": 3599,
+   "lines": 3604,
    "stateWrites": [
     "created",
     "creatures",
@@ -19028,7 +19028,7 @@
     "recipes"
    ],
    "worldDirs": [],
-   "lines": 214
+   "lines": 219
   },
   "server-plugin/npc-cognition.mjs": {
    "system": "sim_npc",
@@ -20631,7 +20631,7 @@
    "rules": [],
    "world": [],
    "worldDirs": [],
-   "lines": 406
+   "lines": 457
   },
   "server-plugin/summons.mjs": {
    "system": "sim_companion",
