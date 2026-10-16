@@ -1,7 +1,9 @@
 {
   "schema": "balance/body@1",
   "title": "身体需求速率（数值方案 §2.14）",
-  "params": [],
+  "params": [
+    {"id":"wet.drainMul","value":1.2,"bounds":[1,1.5],"basis":"calibrate","source":"待仿真标定（日常题缺省值；数值方案 §2；附录 A §A.18）","playDecision":false,"calibration":"pending","unit":"×","note":"日常题 D09③：暴露状态 wet 对 body:drain 的修正项（附录 A §A.18 暴露状态行）；冒雨赶路体力消耗比晴天多"}
+  ],
   "rows": [
     {"key":"person/stamina","selector":"person","need":"stamina","max":100,"drainPerHour":{"rest":0,"light":3,"heavy":8,"travel":5},"sleepRecoverPerHour":12,"lodgingFactor":{"hostel":0.8,"room":1,"camp":0.6},"thresholds":{"exhausted":10},"bounds":{"drainPerHour.rest":[0,0],"drainPerHour.light":[1.5,6],"drainPerHour.heavy":[4,16],"drainPerHour.travel":[2.5,10],"sleepRecoverPerHour":[6,24],"max":[100,100],"lodgingFactor.hostel":[0.8,0.8],"lodgingFactor.room":[1,1],"lodgingFactor.camp":[0.6,0.6],"thresholds.exhausted":[10,10]},"basis":"calibrate","source":"数值方案 §2.14；附录 A §A.15.7","playDecision":false,"calibration":"pending","unit":"点/小时","note":"体力：睡眠恢复 12 × 小时 × lodging 系数（通铺 0.8、单间 1.0、露宿 0.6）。drain 项界 ×[0.5, 2]；恢复量界方案未给，取同界"},
     {"key":"person/satiety","selector":"person","need":"satiety","max":100,"drainPerHour":{"rest":1,"light":2.5,"heavy":4,"travel":3.5},"mealGainLow":30,"mealGainHigh":40,"thresholds":{"hungry":30,"starving":10},"bounds":{"drainPerHour.rest":[0.5,2],"drainPerHour.light":[1.25,5],"drainPerHour.heavy":[2,8],"drainPerHour.travel":[1.75,7],"max":[100,100],"mealGainLow":[30,30],"mealGainHigh":[40,40],"thresholds.hungry":[30,30],"thresholds.starving":[10,10]},"basis":"calibrate","source":"数值方案 §2.14；附录 A §A.15.7","playDecision":false,"calibration":"pending","unit":"点/小时","note":"饱食：一餐 nutrition.satiety 30–40；一日两到三餐"},
