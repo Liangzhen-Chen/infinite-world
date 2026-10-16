@@ -25,7 +25,7 @@
   "subscribers": 9,
   "interactionRules": 25,
   "effectKinds": 22,
-  "links": 507
+  "links": 509
  },
  "layers": [
   {
@@ -2563,7 +2563,7 @@
     "extension/ui-actions.mjs",
     "extension/actions-view.mjs"
    ],
-   "lines": 480,
+   "lines": 506,
    "stateWrites": [],
    "stateReads": [
     "created",
@@ -2655,7 +2655,7 @@
     "server-plugin/consistency-evidence.mjs",
     "server-plugin/consistency-outcome.mjs"
    ],
-   "lines": 722,
+   "lines": 742,
    "stateWrites": [],
    "stateReads": [
     "location",
@@ -3678,6 +3678,14 @@
     "lies.mjs",
     "npc-cognition.mjs",
     "npc-memory.mjs"
+   ]
+  },
+  {
+   "from": "nar_consistency",
+   "to": "ui_actions",
+   "kind": "call",
+   "labels": [
+    "applied-effects.mjs"
    ]
   },
   {
@@ -5396,7 +5404,16 @@
    "to": "sim_economy",
    "kind": "call",
    "labels": [
-    "finance-bank.mjs"
+    "finance-bank.mjs",
+    "shop.mjs"
+   ]
+  },
+  {
+   "from": "ui_actions",
+   "to": "sim_environment",
+   "kind": "call",
+   "labels": [
+    "weather.mjs"
    ]
   },
   {
@@ -11071,6 +11088,7 @@
     "regions"
    ],
    "readers": [
+    "server-plugin/action-affordances.mjs",
     "server-plugin/action-text.mjs",
     "server-plugin/advance-layers.mjs",
     "server-plugin/agriculture.mjs",
@@ -13321,6 +13339,7 @@
      "means": "移动耗时、地区价差、传讯",
      "pattern": "lengthKm",
      "modules": [
+      "server-plugin/action-affordances.mjs",
       "server-plugin/action-text.mjs",
       "server-plugin/catalog.mjs",
       "server-plugin/engine.mjs",
@@ -13355,6 +13374,7 @@
      "means": "封路季节、迁徙",
      "pattern": "closedSeasons",
      "modules": [
+      "server-plugin/action-affordances.mjs",
       "server-plugin/catalog.mjs",
       "server-plugin/engine.mjs",
       "server-plugin/farm-pests.mjs",
@@ -13373,6 +13393,7 @@
       "sim_environment",
       "sim_transport",
       "sim_wildlife",
+      "ui_actions",
       "ui_server"
      ]
     },
@@ -15435,7 +15456,9 @@
    "imports": [
     "server-plugin/action-registry.mjs",
     "server-plugin/action-text.mjs",
-    "server-plugin/finance-bank.mjs"
+    "server-plugin/finance-bank.mjs",
+    "server-plugin/shop.mjs",
+    "server-plugin/weather.mjs"
    ],
    "stateWrites": [],
    "stateReads": [],
@@ -15443,10 +15466,11 @@
    "recordReads": [],
    "rules": [],
    "world": [
-    "recipes"
+    "recipes",
+    "routes"
    ],
    "worldDirs": [],
-   "lines": 87
+   "lines": 102
   },
   "server-plugin/action-gateway.mjs": {
    "system": "ui_actions",
@@ -15475,7 +15499,7 @@
    "worldDirs": [
     "actions"
    ],
-   "lines": 87
+   "lines": 89
   },
   "server-plugin/action-text.mjs": {
    "system": "ui_actions",
@@ -15499,7 +15523,7 @@
    "worldDirs": [
     "actions"
    ],
-   "lines": 114
+   "lines": 122
   },
   "server-plugin/activities.mjs": {
    "system": "kernel_engine",
@@ -16245,6 +16269,7 @@
     "extension/message-view.mjs",
     "extension/prompt.mjs",
     "extension/turn.mjs",
+    "server-plugin/applied-effects.mjs",
     "server-plugin/consistency-evidence.mjs",
     "server-plugin/retrieval.mjs",
     "server-plugin/storage.mjs",
@@ -16257,13 +16282,14 @@
    "rules": [],
    "world": [],
    "worldDirs": [],
-   "lines": 344
+   "lines": 362
   },
   "server-plugin/consistency-service.mjs": {
    "system": "nar_consistency",
    "imports": [
     "extension/prompt.mjs",
     "extension/turn.mjs",
+    "server-plugin/applied-effects.mjs",
     "server-plugin/consistency-evidence.mjs",
     "server-plugin/consistency-review.mjs",
     "server-plugin/storage.mjs",
@@ -16282,7 +16308,7 @@
    "worldDirs": [
     "meta"
    ],
-   "lines": 242
+   "lines": 244
   },
   "server-plugin/contracts.mjs": {
    "system": "sim_economy",
@@ -21572,7 +21598,7 @@
    "rules": [],
    "world": [],
    "worldDirs": [],
-   "lines": 122
+   "lines": 123
   },
   "extension/affairs-panels.mjs": {
    "system": "ui_client",
