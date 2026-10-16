@@ -38,6 +38,7 @@ export function findAction(registry,id){
  if(typeof id!=='string'||!id)return null;
  return registry.byId.get(id)??(id.includes(':')?null:registry.byId.get(`core:${id}`))??null;
 }
+export const CONSENT_PENDING='需要对方答应（对话功能完成后开放）';
 // world_act → the legacy public tool call it aliases. Slot names are the legacy parameter names;
 // a template's fixed parameters win over slots of the same name.
 export function actionCall(registry,id,slots={}){
@@ -45,6 +46,9 @@ export function actionCall(registry,id,slots={}){
  if(!action)throw Error(`没有这个动作：${String(id).slice(0,80)}；先用 world_actions 查此处可做之事`);
  if(slots===null||typeof slots!=='object'||Array.isArray(slots))throw Error('slots 须是对象');
  if(action.projection)return {action,projection:action.projection};
+ // Consent is the other party's decision (05 §5.7), never a slot the caller fills; until A2's NPC decision exists
+ // a call that would need it is refused, and the legacy path's own judgement (e.g. an innkeeper on trade duty) still applies.
+ if('consent' in slots)throw Error(CONSENT_PENDING);
  const allowed=new Set(action.slots.map(s=>s.name)),extra=Object.keys(slots).filter(k=>!allowed.has(k)&&k!=='operation');
  if(extra.length)throw Error(`${action.label}没有这些槽位：${extra.join('、')}；可填：${[...allowed].join('、')||'无'}`);
  const missing=action.slots.filter(s=>s.required&&s.consent!==true&&slots[s.name]===undefined&&action.call.fixed?.[s.name]===undefined).map(s=>s.name);

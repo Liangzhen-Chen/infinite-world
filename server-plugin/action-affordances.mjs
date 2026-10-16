@@ -1,7 +1,8 @@
 // A1 可做之事（06 §6.9.1、08 §8.2【可做之事】，L3 投影）：由注册表与玩家此刻能感知的场景派生
 // “此处可做”、对象菜单（人/物/地点）与快捷栏，并把槽位的可选项（出路、对方存货、行囊、配方、欠账）填好。
 // 这里的前置只决定菜单里出不出现；做得成做不成仍由引擎结算，拒绝时引擎给世界内原因。
-import {loadActionRegistry,findAction,catalogRow,searchActions} from './action-registry.mjs';
+import {loadActionRegistry,findAction,catalogRow,searchActions,CONSENT_PENDING} from './action-registry.mjs';
+import {npcSchedule} from './npc-state.mjs';
 import {exitsFrom,presentPeople,sceneLines,distanceText,loadTemplates} from './action-text.mjs';
 import {derivedBankAt} from './finance-bank.mjs';
 import {weatherTravel} from './weather.mjs';
@@ -25,7 +26,7 @@ function context(engine,document){
  const exits=exitsFrom(engine,s,templates).map(e=>{const edge=engine.world.routes.find(r=>r.id===e.route);if(!edge?.lengthKm)return e;
   let w={};try{w=weatherTravel(engine,document.randomSeed,edge,'walk',s.minute)??{};}catch{w={};}
   return {...e,condition:edge.closedSeasons?.includes(season)?'本季封路':w.closed?'天气封路':w.weather??null};});
- return {s,place,name,people,present,recipes,debts,bank,lodging,exits,templates,
+ return {engine,s,place,name,people,present,recipes,debts,bank,lodging,exits,templates,
   inventory:Object.entries(s.inventory??{}).filter(([,v])=>qty(v)>0).map(([id,v])=>({id,name:name(id),quantity:qty(v)})),
   skills:Object.keys(s.skills??{}).map(id=>({id,name:name(id)}))};
 }
@@ -58,6 +59,14 @@ function options(ctx,source,target){
  }
 }
 // A catalog row for the interface: slot choices resolved here, the target slot pre-filled.
+// An action that needs the other party's agreement is shown but not executable until A2's NPC decision,
+// unless the legacy path decides by itself: a host on trade duty rents rooms, a bank desk lends against a pledge.
+function consentPending(ctx,action,fill){
+ if(!action.consent)return false;
+ if(action.id==='core:trade.lodge'&&fill.seller){let schedule=null;try{schedule=npcSchedule(ctx.engine,ctx.s,fill.seller);}catch{schedule=null;}return Boolean(schedule)&&!JSON.stringify(schedule).includes('"trade"');}
+ if(action.id==='core:trade.borrow'&&ctx.bank&&fill.seller===ctx.bank.keepers?.[0])return false;
+ return true;
+}
 function offer(ctx,action,target){
  const fill={};
  const slots=action.slots.map(slot=>{
@@ -69,7 +78,7 @@ function offer(ctx,action,target){
   if(choices)row.options=choices;
   return row;
  });
- return {...catalogRow(action),slots,fill,...(action.ui?.quick?{quick:action.ui.quick}:{})};
+ return {...catalogRow(action),slots,fill,...(action.ui?.quick?{quick:action.ui.quick}:{}),...(consentPending(ctx,action,fill)?{blocked:CONSENT_PENDING}:{})};
 }
 // A keeper's sold-out restock goods and the day the next delivery comes (shop cycle data; L4 何时到货).
 function restockNotes(engine,ctx,keeper){

@@ -59,11 +59,13 @@ test('D08 天黑：铁匠铺打烊不能交易，次日开门后可以；钱物�
  const day=await ui.choose('trade.buy',{item:'item_iron_nail',quantity:2},{target:SMITH});assert.ok(day.ok,day.error);
 });
 
-test('D10 打工日结：雇主付工钱给玩家，做满工时',async t=>{
+test('D10 打工日结：受雇须对方答应——界面列出但不可执行，world_act 拒绝且钱物时间不变（A2 接入人物决策后开放）',async t=>{
  const ui=await uiSession(t,{mutate:at(MILL,8*60)}),before=await primed(ui);
- const r=await ui.choose('trade.work',{minutes:240,consent:true},{target:AYAN});assert.ok(r.ok,r.error);const after=await ui.read();
- assert.equal(after.state.player.coins-before.state.player.coins,r.result.wage);assert.equal(before.state.npcs[AYAN].coins-after.state.npcs[AYAN].coins,r.result.wage,'工钱出自雇主');
- assert.equal(after.state.minute-before.state.minute,240);assert.equal(after.state.records[r.result.contract].status,'已完成');conserved(before,after,'D10');
+ const row=(await ui.menu(AYAN)).actions.find(a=>a.id==='core:trade.work');
+ assert.equal(row.blocked,'需要对方答应（对话功能完成后开放）');assert.ok(!row.slots.some(s=>s.name==='consent'),'没有替对方答应的槽位');
+ const r=await ui.choose('trade.work',{minutes:240},{target:AYAN});assert.equal(r.ok,false);assert.equal(r.error,'需要对方答应（对话功能完成后开放）');
+ const forged=await ui.choose('trade.work',{minutes:240,consent:true},{target:AYAN});assert.equal(forged.ok,false);assert.equal(forged.error,'需要对方答应（对话功能完成后开放）');
+ assert.deepEqual((await ui.read()).state,before.state,'未经对方同意不会执行');
 });
 
 test('D15 钓鱼：渔获来自河滩真实鱼群，种群扣减与背包增加相等，花去时间',async t=>{
@@ -120,15 +122,18 @@ test('D27 存钱 / D28 三个月后取钱：存入进钱庄账户，利息出自
  assert.equal(after.state.player.coins-pre.state.player.coins,balance);conserved(pre,after,'D28');
 });
 
-test('D29 借小额钱款 / D30 按时还钱：钱从放贷人到玩家，记一笔借据；到期前还清，无逾期',async t=>{
+test('D29 借小额钱款 / D30 按时还钱：向邻居借须对方答应（未开放）；钱庄柜面按抵押放贷照旧判定，到期前还清无逾期',async t=>{
  const ui=await uiSession(t,{mutate:at(INN,10*60,s=>{s.inventory.item_bread={quantity:4,quality:'木',durability:100,weight:0.2};})}),before=await primed(ui);
- const loan=await ui.choose('trade.borrow',{seller:LINSUI,coins:40,days:10,item:'item_bread',quantity:2,consent:true},{search:true});assert.ok(loan.ok,loan.error);const mid=await ui.read();
- assert.equal(mid.state.player.coins-before.state.player.coins,40);assert.equal(before.state.npcs[LINSUI].coins-mid.state.npcs[LINSUI].coins,40,'钱出自放贷人');
- const debt=mid.state.records[loan.result.debt];assert.equal(debt.debtor,'player');assert.equal(debt.creditor,LINSUI);assert.ok(debt.deadline>mid.state.minute);conserved(before,mid,'D29');
- await ui.choose('time',{minutes:2*DAY});
- const pre=await ui.read(),repay=await ui.choose('trade.repay',{debt:loan.result.debt,seller:LINSUI});assert.ok(repay.ok,repay.error);const after=await ui.read();
- const row=after.state.records[loan.result.debt];assert.equal(row.status,'已还清');assert.equal(row.overdueAt,undefined,'按时还清没有逾期');
- assert.equal(pre.state.player.coins-after.state.player.coins,after.state.npcs[LINSUI].coins-pre.state.npcs[LINSUI].coins,'还的钱到放贷人手里');conserved(pre,after,'D30');
+ const asked=await ui.choose('trade.borrow',{seller:LINSUI,coins:40,days:10,item:'item_bread',quantity:2},{search:true});
+ assert.equal(asked.ok,false);assert.equal(asked.error,'需要对方答应（对话功能完成后开放）');assert.deepEqual((await ui.read()).state,before.state,'未经对方同意不会借出');
+ const bank=await uiSession(t,{mutate:at(POST,10*60,s=>{s.player.coins=300;s.inventory.item_coin_coast={quantity:2,quality:'铜',durability:100,weight:0.005};})}),b0=await primed(bank);
+ const row=(await bank.menu()).actions.find(a=>a.id==='core:trade.borrow');assert.ok(row&&!row.blocked,'钱庄借款由柜面规则判定，不等人物决策');
+ const loan=await bank.choose('trade.borrow',{coins:100,days:30,item:'item_coin_coast',quantity:2});assert.ok(loan.ok,loan.error);const mid=await bank.read();
+ assert.equal(mid.state.player.coins-b0.state.player.coins,100);const debt=mid.state.records[loan.result.debt];assert.equal(debt.debtor,'player');assert.ok(debt.deadline>mid.state.minute);conserved(b0,mid,'D29');
+ await bank.choose('time',{minutes:2*DAY});
+ const pre=await bank.read(),repay=await bank.choose('trade.repay',{debt:loan.result.debt,seller:CLERK});assert.ok(repay.ok,repay.error);const after=await bank.read();
+ const done=after.state.records[loan.result.debt];assert.equal(done.status,'已还清');assert.equal(done.overdueAt,undefined,'按时还清没有逾期');
+ assert.ok(pre.state.player.coins>after.state.player.coins);conserved(pre,after,'D30');
 });
 
 test('D33 休息睡觉：睡到次日卯时，生命恢复，钱物不变',async t=>{

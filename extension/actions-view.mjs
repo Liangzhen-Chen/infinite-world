@@ -24,7 +24,9 @@ export async function renderActionsPanel(container,data){
         if(q.label==='观察'){state.quick=null;run({id:q.action,label:'观察四周'},{});return;}rerender();},{pressed:state.quick===q.label}));
     fragment.append(bar);
     const rows=here.actions,byQuick=label=>rows.find(a=>a.quick===label);
-    const openForm=action=>{state.form=action;rerender();};
+    const openForm=action=>{if(action.blocked){state.last={ok:false,label:action.label,error:action.blocked};state.form=null;rerender();return;}state.form=action;rerender();};
+    // 需要对方答应的动作照样列出，但按钮不可用并注明原因（A2 接入人物决策后开放）。
+    const actionButton=a=>{const b=button(a.blocked?`${a.label}（${a.blocked}）`:a.label,()=>openForm(a),{disabled:Boolean(a.blocked)});return b;};
     async function run(action,slots){
         const result=await data.act(action.id,slots);
         state.last={label:action.label,...result};state.form=null;
@@ -60,11 +62,11 @@ export async function renderActionsPanel(container,data){
         box.append(button('返回此处',()=>{state.target=null;state.form=null;rerender();},{className:'fields-actions-back'}));
         for(const s of here.target.soldOut??[])box.append(node('p',`${s.name}已经卖完，下次进货在${s.next}。`,'fields-note'));
         if(!rows.length)box.append(node('p','此刻对这个对象做不了什么。','fields-note'));
-        for(const a of rows)box.append(button(a.label,()=>openForm(a)));
+        for(const a of rows)box.append(actionButton(a));
         if(state.pendingAction){const a=rows.find(r=>r.id===state.pendingAction);state.pendingAction=null;if(a)state.form=a;}
     }else if(!state.quick){
         const box=section('此处可做',fragment);
-        for(const a of rows.filter(r=>!r.quick))box.append(button(a.label,()=>openForm(a)));
+        for(const a of rows.filter(r=>!r.quick))box.append(actionButton(a));
         const people=section('在场的人',fragment);
         if(!here.objects.people.length)people.append(node('p','此处没有旁人。','fields-note'));
         for(const p of here.objects.people)people.append(button(p.activity?`${p.name}（${p.activity}）`:p.name,()=>{state.target=p.id;state.form=null;rerender();}));
@@ -80,6 +82,7 @@ export async function renderActionsPanel(container,data){
         form.append(node('h3',action.label));if(action.hint)form.append(node('p',action.hint,'fields-note'));
         const inputs=[];
         for(const slot of action.slots){
+            if(slot.name==='consent')continue;// 同意由对方决定，不是玩家能填的槽位
             const filled=action.fill?.[slot.name];
             if(slot.kind==='object'&&slot.default!=='dawn')continue;
             if(slot.kind==='object'){inputs.push({slot,read:()=>sleepUntil(data.view.document.state.minute)});continue;}
@@ -118,5 +121,5 @@ export async function renderActionsPanel(container,data){
     container.replaceChildren(fragment);
 }
 const NAMES={seller:'对方',buyer:'买主',target:'对象',item:'物品',quantity:'数量',coins:'钱数（文）',minutes:'时长（分钟）',days:'天数',destination:'去处',mode:'走法',recipe:'配方',skill:'技能',
-    activity:'做什么',debt:'哪一笔账',consent:'对方已当面答应',payment:'付款方式',creditMinutes:'赊账期限（分钟）',intent:'怎么出手',weapon:'用什么',section:'看哪一项',helpers:'帮手',instance:'哪一件',repairPlan:'修法'};
+    activity:'做什么',debt:'哪一笔账',payment:'付款方式',creditMinutes:'赊账期限（分钟）',intent:'怎么出手',weapon:'用什么',section:'看哪一项',helpers:'帮手',instance:'哪一件',repairPlan:'修法'};
 function slotLabel(slot){return `${NAMES[slot.name]??slot.name}${slot.required?'':'（可不填）'}`;}
