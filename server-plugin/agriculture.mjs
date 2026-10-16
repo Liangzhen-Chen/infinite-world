@@ -147,9 +147,7 @@ export function advanceAgriculture(d,engine,id,source,day){
     // U12: able-bodied villagers away on levy (levy:<village>) are not in the fields.
     const hired=agriculturalEmployment(d.get('state'),id,day);
     const normalWorkers=Math.floor(s.population*p.workerFraction),availableWorkers=Math.max(0,normalWorkers-(d.get('state','records',`levy:${id}`)?.count??0)-hired.unavailable);
-    // S1b: 加工口粮是可用劳力的第一顺位（人先要吃上饭）：只要在村的整劳力够，加工人手不随出工比例缩减。
-    // 按比例缩减时 floor 会让一个村民外出做半天工就砍掉一半加工量，仓里有粮也吃不上（农业三年断言的缺餐 76 即此）。
-    const laborShare=normalWorkers?availableWorkers/normalWorkers:1,processing=Math.min(p.processingWorkers,Math.floor(availableWorkers));
+    const laborShare=normalWorkers?availableWorkers/normalWorkers:1,processing=Math.min(Math.floor(p.processingWorkers*laborShare),availableWorkers);
     const freshWorkers=Math.min(Math.floor(p.freshWorkers*laborShare),Math.max(0,availableWorkers-processing)),fieldWorkers=Math.min(Math.floor(p.farmWorkers*laborShare+hired.hired),r.tools.capacity,Math.max(0,availableWorkers-processing-freshWorkers));
     const fresh=Math.floor(p.freshFoodPerDay*p.freshSeasonFactors[season]*(weather?.cropMultiplier??1)*freshWorkers/p.freshWorkers);
     if(day%30===29){
