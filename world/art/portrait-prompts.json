@@ -2403,6 +2403,78 @@
     "prompt": "原创河谷日常职业纹章；锉芒，26岁，修矿具。以household工具图形置于圆角盾牌，松绿底与麦金轮廓，无文字，无肖像，无亲密或恋爱元素。仅采用已登记日常职业，不绘制人物私事。"
   },
   {
+    "id": "npc_ms_hx_yiheng",
+    "name": "漪衡",
+    "occupation": "接待换鱼",
+    "age": 46,
+    "minor": false,
+    "crest": "crests/boatman.svg",
+    "prompt": "原创河谷日常职业纹章；漪衡，46岁，接待换鱼。以boatman工具图形置于圆角盾牌，松绿底与麦金轮廓，无文字，无肖像，无亲密或恋爱元素。仅采用已登记日常职业，不绘制人物私事。"
+  },
+  {
+    "id": "npc_ms_hx_qiaosui",
+    "name": "敲穗",
+    "occupation": "记芦界",
+    "age": 91,
+    "minor": false,
+    "crest": "crests/scribe.svg",
+    "prompt": "原创河谷日常职业纹章；敲穗，91岁，记芦界。以scribe工具图形置于圆角盾牌，松绿底与麦金轮廓，无文字，无肖像，无亲密或恋爱元素。仅采用已登记日常职业，不绘制人物私事。"
+  },
+  {
+    "id": "npc_ms_hx_xianpu",
+    "name": "纤蒲",
+    "occupation": "照看药圃",
+    "age": 29,
+    "minor": false,
+    "crest": "crests/healer.svg",
+    "prompt": "原创河谷日常职业纹章；纤蒲，29岁，照看药圃。以healer工具图形置于圆角盾牌，松绿底与麦金轮廓，无文字，无肖像，无亲密或恋爱元素。仅采用已登记日常职业，不绘制人物私事。"
+  },
+  {
+    "id": "npc_ms_hx_luchi",
+    "name": "芦迟",
+    "occupation": "补芦棚",
+    "age": 38,
+    "minor": false,
+    "crest": "crests/household.svg",
+    "prompt": "原创河谷日常职业纹章；芦迟，38岁，补芦棚。以household工具图形置于圆角盾牌，松绿底与麦金轮廓，无文字，无肖像，无亲密或恋爱元素。仅采用已登记日常职业，不绘制人物私事。"
+  },
+  {
+    "id": "npc_ms_gs_shenge",
+    "name": "绳额",
+    "occupation": "修绳换货",
+    "age": 44,
+    "minor": false,
+    "crest": "crests/woodworker.svg",
+    "prompt": "原创河谷日常职业纹章；绳额，44岁，修绳换货。以woodworker工具图形置于圆角盾牌，松绿底与麦金轮廓，无文字，无肖像，无亲密或恋爱元素。仅采用已登记日常职业，不绘制人物私事。"
+  },
+  {
+    "id": "npc_ms_gs_zheqian",
+    "name": "折签",
+    "occupation": "看秤存签",
+    "age": 73,
+    "minor": false,
+    "crest": "crests/scribe.svg",
+    "prompt": "原创河谷日常职业纹章；折签，73岁，看秤存签。以scribe工具图形置于圆角盾牌，松绿底与麦金轮廓，无文字，无肖像，无亲密或恋爱元素。仅采用已登记日常职业，不绘制人物私事。"
+  },
+  {
+    "id": "npc_ms_gs_zhenhe",
+    "name": "砧禾",
+    "occupation": "削柄修具",
+    "age": 36,
+    "minor": false,
+    "crest": "crests/woodworker.svg",
+    "prompt": "原创河谷日常职业纹章；砧禾，36岁，削柄修具。以woodworker工具图形置于圆角盾牌，松绿底与麦金轮廓，无文字，无肖像，无亲密或恋爱元素。仅采用已登记日常职业，不绘制人物私事。"
+  },
+  {
+    "id": "npc_ms_gs_sangou",
+    "name": "散钩",
+    "occupation": "拆绳认结",
+    "age": 26,
+    "minor": false,
+    "crest": "crests/woodworker.svg",
+    "prompt": "原创河谷日常职业纹章；散钩，26岁，拆绳认结。以woodworker工具图形置于圆角盾牌，松绿底与麦金轮廓，无文字，无肖像，无亲密或恋爱元素。仅采用已登记日常职业，不绘制人物私事。"
+  },
+  {
     "id": "npc_hw_fangqin",
     "name": "方芩",
     "occupation": "家务与旧账抄录",
@@ -7189,5 +7261,149 @@
     "minor": false,
     "crest": "crests/household.svg",
     "prompt": "原创河谷日常职业纹章；磐垒，47岁，搬运。以household工具图形置于圆角盾牌，松绿底与麦金轮廓，无文字，无肖像，无亲密或恋爱元素。仅采用已登记日常职业，不绘制人物私事。"
+  },
+  {
+    "id": "npc_ms_hx_yixian",
+    "name": "漪弦",
+    "occupation": "照看水道",
+    "age": 32,
+    "minor": false,
+    "crest": "crests/household.svg",
+    "prompt": "原创河谷日常职业纹章；漪弦，32岁，照看水道。以household工具图形置于圆角盾牌，松绿底与麦金轮廓，无文字，无肖像，无亲密或恋爱元素。仅采用已登记日常职业，不绘制人物私事。"
+  },
+  {
+    "id": "npc_ms_hx_yimo",
+    "name": "漪沫",
+    "occupation": "随成年居民认岸",
+    "age": 12,
+    "minor": true,
+    "crest": "crests/student.svg",
+    "prompt": "原创河谷日常职业纹章；漪沫，12岁，随成年居民认岸。以student工具图形置于圆角盾牌，松绿底与麦金轮廓，无文字，无肖像，无亲密或恋爱元素。仅采用已登记日常职业，不绘制人物私事。"
+  },
+  {
+    "id": "npc_ms_hx_qiaofu",
+    "name": "敲伏",
+    "occupation": "晒席",
+    "age": 47,
+    "minor": false,
+    "crest": "crests/weaver.svg",
+    "prompt": "原创河谷日常职业纹章；敲伏，47岁，晒席。以weaver工具图形置于圆角盾牌，松绿底与麦金轮廓，无文字，无肖像，无亲密或恋爱元素。仅采用已登记日常职业，不绘制人物私事。"
+  },
+  {
+    "id": "npc_ms_hx_qiaoyou",
+    "name": "敲幼",
+    "occupation": "随成年居民认芦",
+    "age": 14,
+    "minor": true,
+    "crest": "crests/student.svg",
+    "prompt": "原创河谷日常职业纹章；敲幼，14岁，随成年居民认芦。以student工具图形置于圆角盾牌，松绿底与麦金轮廓，无文字，无肖像，无亲密或恋爱元素。仅采用已登记日常职业，不绘制人物私事。"
+  },
+  {
+    "id": "npc_ms_hx_xianwen",
+    "name": "纤纹",
+    "occupation": "看圃道",
+    "age": 33,
+    "minor": false,
+    "crest": "crests/household.svg",
+    "prompt": "原创河谷日常职业纹章；纤纹，33岁，看圃道。以household工具图形置于圆角盾牌，松绿底与麦金轮廓，无文字，无肖像，无亲密或恋爱元素。仅采用已登记日常职业，不绘制人物私事。"
+  },
+  {
+    "id": "npc_ms_hx_xianduan",
+    "name": "纤短",
+    "occupation": "随成年居民认草",
+    "age": 10,
+    "minor": true,
+    "crest": "crests/student.svg",
+    "prompt": "原创河谷日常职业纹章；纤短，10岁，随成年居民认草。以student工具图形置于圆角盾牌，松绿底与麦金轮廓，无文字，无肖像，无亲密或恋爱元素。仅采用已登记日常职业，不绘制人物私事。"
+  },
+  {
+    "id": "npc_ms_hx_luman",
+    "name": "芦慢",
+    "occupation": "织芦席",
+    "age": 42,
+    "minor": false,
+    "crest": "crests/weaver.svg",
+    "prompt": "原创河谷日常职业纹章；芦慢，42岁，织芦席。以weaver工具图形置于圆角盾牌，松绿底与麦金轮廓，无文字，无肖像，无亲密或恋爱元素。仅采用已登记日常职业，不绘制人物私事。"
+  },
+  {
+    "id": "npc_ms_hx_luya",
+    "name": "芦芽",
+    "occupation": "随成年居民认窝",
+    "age": 13,
+    "minor": true,
+    "crest": "crests/student.svg",
+    "prompt": "原创河谷日常职业纹章；芦芽，13岁，随成年居民认窝。以student工具图形置于圆角盾牌，松绿底与麦金轮廓，无文字，无肖像，无亲密或恋爱元素。仅采用已登记日常职业，不绘制人物私事。"
+  },
+  {
+    "id": "npc_ms_gs_shengli",
+    "name": "绳砾",
+    "occupation": "补棚",
+    "age": 35,
+    "minor": false,
+    "crest": "crests/household.svg",
+    "prompt": "原创河谷日常职业纹章；绳砾，35岁，补棚。以household工具图形置于圆角盾牌，松绿底与麦金轮廓，无文字，无肖像，无亲密或恋爱元素。仅采用已登记日常职业，不绘制人物私事。"
+  },
+  {
+    "id": "npc_ms_gs_shengya",
+    "name": "绳芽",
+    "occupation": "随成年居民认签",
+    "age": 11,
+    "minor": true,
+    "crest": "crests/student.svg",
+    "prompt": "原创河谷日常职业纹章；绳芽，11岁，随成年居民认签。以student工具图形置于圆角盾牌，松绿底与麦金轮廓，无文字，无肖像，无亲密或恋爱元素。仅采用已登记日常职业，不绘制人物私事。"
+  },
+  {
+    "id": "npc_ms_gs_zhewang",
+    "name": "折网",
+    "occupation": "整理断签",
+    "age": 31,
+    "minor": false,
+    "crest": "crests/scribe.svg",
+    "prompt": "原创河谷日常职业纹章；折网，31岁，整理断签。以scribe工具图形置于圆角盾牌，松绿底与麦金轮廓，无文字，无肖像，无亲密或恋爱元素。仅采用已登记日常职业，不绘制人物私事。"
+  },
+  {
+    "id": "npc_ms_gs_zheyou",
+    "name": "折幼",
+    "occupation": "随成年居民认棚",
+    "age": 9,
+    "minor": true,
+    "crest": "crests/student.svg",
+    "prompt": "原创河谷日常职业纹章；折幼，9岁，随成年居民认棚。以student工具图形置于圆角盾牌，松绿底与麦金轮廓，无文字，无肖像，无亲密或恋爱元素。仅采用已登记日常职业，不绘制人物私事。"
+  },
+  {
+    "id": "npc_ms_gs_sanfu",
+    "name": "散缚",
+    "occupation": "拆旧绳",
+    "age": 28,
+    "minor": false,
+    "crest": "crests/woodworker.svg",
+    "prompt": "原创河谷日常职业纹章；散缚，28岁，拆旧绳。以woodworker工具图形置于圆角盾牌，松绿底与麦金轮廓，无文字，无肖像，无亲密或恋爱元素。仅采用已登记日常职业，不绘制人物私事。"
+  },
+  {
+    "id": "npc_ms_gs_sanzhi",
+    "name": "散枝",
+    "occupation": "看摊帘",
+    "age": 19,
+    "minor": false,
+    "crest": "crests/household.svg",
+    "prompt": "原创河谷日常职业纹章；散枝，19岁，看摊帘。以household工具图形置于圆角盾牌，松绿底与麦金轮廓，无文字，无肖像，无亲密或恋爱元素。仅采用已登记日常职业，不绘制人物私事。"
+  },
+  {
+    "id": "npc_ms_gs_zhenbei",
+    "name": "砧背",
+    "occupation": "搬修具",
+    "age": 40,
+    "minor": false,
+    "crest": "crests/household.svg",
+    "prompt": "原创河谷日常职业纹章；砧背，40岁，搬修具。以household工具图形置于圆角盾牌，松绿底与麦金轮廓，无文字，无肖像，无亲密或恋爱元素。仅采用已登记日常职业，不绘制人物私事。"
+  },
+  {
+    "id": "npc_ms_gs_zhenya",
+    "name": "砧芽",
+    "occupation": "随成年居民认木",
+    "age": 12,
+    "minor": true,
+    "crest": "crests/student.svg",
+    "prompt": "原创河谷日常职业纹章；砧芽，12岁，随成年居民认木。以student工具图形置于圆角盾牌，松绿底与麦金轮廓，无文字，无肖像，无亲密或恋爱元素。仅采用已登记日常职业，不绘制人物私事。"
   }
 ]
