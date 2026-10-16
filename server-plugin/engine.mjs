@@ -363,10 +363,10 @@ export class WorldEngine {
         // sequence (rules and seed cannot change inside it) across schedules.
         // Route topology (locations, routes) is likewise fixed for its duration.
         if(this.weatherSequences)return this.advanceElapsed(d,minutes,id);
-        this.weatherSequences=new Map();this.advanceGraphs=new Map();
+        this.weatherSequences=new Map();this.advanceGraphs=new Map();this.runtimeHabitats=[];
         this.advanceHouseholds=beginHouseholdReads(this);
         this.advanceFeatures=this.world.locations.flatMap(place=>(place.features??[]).map(feature=>({...feature,location:place.id})));
-        try{return this.advanceElapsed(d,minutes,id);}finally{this.weatherSequences=null;this.advanceGraphs=null;this.advanceHouseholds=null;this.advanceFeatures=null;}
+        try{return this.advanceElapsed(d,minutes,id);}finally{this.weatherSequences=null;this.advanceGraphs=null;this.advanceHouseholds=null;this.advanceFeatures=null;this.runtimeHabitats=null;}
     }
     advanceElapsed(d,minutes,id) {
         minutes=number(minutes,0,43200,'耗时');

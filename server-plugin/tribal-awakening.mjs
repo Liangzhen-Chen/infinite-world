@@ -290,6 +290,10 @@ function resolveOutcome(d,engine,t,dyn,rec,{stance,kind},at,sourceEvent){
   const overlay=materializeWildlifeHabitats(remoteWorld(engine.remoteBase?.world??engine.world,d.get('state')));
   const habitats=overlay.rules.wildlife?.habitats.filter(h=>h.location===`${skeleton.id}_wild`)??[];
   for(const patch of planWildlifeMigration(d.document,{...overlay.rules,wildlife:{...overlay.rules.wildlife,habitats}},overlay.monsters))d.set(patch.path,patch.value);
+  // The session's overlay was built before this founding; the new wild range is
+  // settled day by day from now on within this very advance (wildlife.mjs reads
+  // engine.runtimeHabitats), exactly as the next advance's overlay will carry it.
+  engine.runtimeHabitats=[...(engine.runtimeHabitats??[]),...habitats.filter(h=>!(engine.rules.wildlife?.habitats??[]).some(x=>x.id===h.id))];
   setOrg(accord,{status:'自治',settlement:skeleton.id});outcome.settlement=skeleton.id;
   adjustStanding(d,engine,dyn.board,accord,5,{sourceEvent:ev,reason:`${dyn.name}自立聚居地`,minute:at});
   event('organize',accord,null,['organization','org:found','autonomy']);
