@@ -111,5 +111,5 @@ test('商税及关税随政体与聚落级别派生，缴入公账，走私数�
     const beforeHidden=f.doc.state.player.coins;f.doc.state.records.cargo={category:'smuggling',status:'运输中',item:'item_wood',quantity:100};
     f.doc.state.inventory={item_wood:{quantity:100}};const hidden=f.draft();collectRouteTariffs(hidden,f.e,{edges:[edge.id]},'hidden');hidden.done();assert.equal(f.doc.state.player.coins,beforeHidden);
     f.doc.state.player.coins=0;const poor=f.draft();assert.throws(()=>assessTradeTax(poor,f.e,{seller:'player',cost:1000,location:post,sourceEvent:'poor'}),/不足/);
-    assert.equal(toolDefinitions().length,25);
+    assert.equal(toolDefinitions().length,27);
 });

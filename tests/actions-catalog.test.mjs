@@ -3,7 +3,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import {exportActions,render,OUTPUT} from '../tools/export-actions.mjs';
-import {toolDefinitions,resolveToolCall,modelToolCall} from '../extension/tools.mjs';
+import {toolDefinitions,resolveToolCall,modelToolCall,catalogTools} from '../extension/tools.mjs';
 
 const actions=exportActions();
 
@@ -12,7 +12,7 @@ test('actions.json 是最新导出（改工具枚举后须重新运行 node tool
 });
 
 test('动作数 = 全部公开 operation 枚举 + 无子操作工具，id 唯一且带 core 命名空间',()=>{
- const defs=toolDefinitions();
+ const defs=toolDefinitions().filter(d=>!catalogTools.has(d.function.name));// A1 的目录工具是动作入口，不是动作
  const expected=defs.reduce((n,d)=>n+(d.function.parameters.properties.operation?.enum?.length??1),0);
  assert.equal(actions.length,expected);
  assert.equal(new Set(actions.map(a=>a.id)).size,actions.length);

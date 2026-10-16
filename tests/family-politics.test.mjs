@@ -175,5 +175,5 @@ test('分家只在本人新居另立户，保留族亲和现有财产，重放�
 test('家族入口沿既有工具开放，族谱查询无派生写入且工具数保持25',async()=>{
  const f=setup();f.setKin(A,C);const before=structuredClone(f.d.document);
  const result=await f.e.reduce(f.d.document,{tool:'world_settlement',args:{operation:'family_inspect',member:A},eventId:'inspect'});
- assert.ok(result.result.genealogy.people.some(p=>p.id===C));assert.deepEqual(f.d.document,before);assert.equal(toolDefinitions().length,25);
+ assert.ok(result.result.genealogy.people.some(p=>p.id===C));assert.deepEqual(f.d.document,before);assert.equal(toolDefinitions().length,27);
 });

@@ -42,7 +42,7 @@ test('正式发布逐本批ID保留八条目标与两条地方说明，L1/L2/L4�
 });
 test('本批八单及两条说明覆盖六处，登记生成器共享托管且不造生物、不接管种族敌意',()=>{
  const s=setup();assert.equal(offers.length,8);assert.equal(localFacts.length,2);assert.equal(new Set(offers.map(r=>r.board)).size,6);
- assert.deepEqual(validateQuestSources(s.w),[]);assert.equal(toolDefinitions().length,25);
+ assert.deepEqual(validateQuestSources(s.w),[]);assert.equal(toolDefinitions().length,27);
  const before=structuredClone(s.doc.state.creatures);scan(writer(s.doc),s.engine,s.doc.state.minute);
  assert.deepEqual(s.doc.state.creatures,before);assert.equal(qs(s).filter(q=>q.objective.type==='creature').length,0);
  creatures(s);const treasuries=Object.fromEntries(Object.entries(s.doc.state.settlements).map(([id,a])=>[id,a.treasury]));

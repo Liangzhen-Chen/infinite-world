@@ -16,6 +16,9 @@ import {settleNpcPlanning}from'./npc-planning-service.mjs';
 import {getChronicle,syncChronicleIndex}from'./chronicle.mjs';
 import {groupHistory}from'../extension/history-window.mjs';
 import {registerUIRoutes} from './ui-routes.mjs';
+import {translateCall,narrateExecution,CLIENT_READS} from './action-gateway.mjs';
+import {loadActionRegistry,actionCall,catalogRow,searchActions,CONSENT_PENDING} from './action-registry.mjs';
+import {worldActions} from './action-affordances.mjs';
 import {ensurePopulationProfiles,modelProfileGenerator}from'./population-service.mjs';
 import {beginConsistencyTurn,captureConsistencySearch,captureConsistencyFailure,reconcileConsistencyTurn,reviewConsistencyReply,assertConsistencyCommit,sharedModelClient}from'./consistency-service.mjs';
 
@@ -131,7 +134,9 @@ export async function init(router,{ world=null, baseRoot=null, newCampaignSeed=r
         return reviewConsistencyReply(store,campaignId,{token,draft,expectedSequence,scene,chat:index.chatMessages,sceneSequence:view.reference.sequence,client:getModelClient(store)});
     }));
     router.post('/execute',handle(async req=>{
-        const {campaignId,tool,args,eventId,anchor,expectedSequence}=req.body;
+        const {campaignId,eventId,anchor,expectedSequence}=req.body;
+        // A1: world_act is stored as the legacy call it aliases, so replay and review see the old tool.
+        const translated=translateCall(req.body.tool,req.body.args),{tool,args}=translated;
         // Health is an internal combat primitive, not a model-controlled tool.
         if(['world_health','world_revive'].includes(tool))throw new Error('生命变化只能由交锋、治疗或死亡结算产生');
         const store=getStore(req),view=await store.read(campaignId);
@@ -139,16 +144,42 @@ export async function init(router,{ world=null, baseRoot=null, newCampaignSeed=r
         if(tool==='world_turn'&&req.body.reviewId)await assertConsistencyCommit(store,campaignId,{reviewId:req.body.reviewId,anchor,args,expectedSequence});
         let saved;
         try{saved=await store.transact(campaignId,{id:eventId,input:{tool,args,eventId},anchor,expectedSequence},store.reducer);}
-        catch(error){await captureConsistencyFailure(store,campaignId,{anchor,expectedSequence,tool,args,eventId},error);throw error;}
+        catch(error){
+            await captureConsistencyFailure(store,campaignId,{anchor,expectedSequence,tool,args,eventId},error);
+            // world_act never carries consent: when the legacy judgement asks for the other party's agreement, say so in-world.
+            if(translated.action&&/同意/.test(error.message))throw new Error(CONSENT_PENDING);
+            throw error;
+        }
         const after=saved.document??(await store.read(campaignId)).document;
+        // Event-stream text from the effects the engine applied (display only; a failure here never undoes the action).
+        let narration;
+        if(!saved.duplicate&&tool!=='world_turn')try{
+            const scoped=(await store.worldRegistry.get(after.worldHash)).scoped(after);
+            narration=narrateExecution({engine:scoped,before:view.document,after,tool,args,result:saved.result,action:translated.action});
+        }catch{narration=undefined;}
         const crossedDay=Math.floor(after.state.minute/1440)>Math.floor(view.document.state.minute/1440);
         if(!saved.duplicate&&npcPlanningEnabled&&(crossedDay||after.state.location!==view.document.state.location)){
             let planning;
             try{planning=await settleNpcPlanning(store,campaignId,{anchor,enabled:true,...(npcPlanner?{planner:npcPlanner}:{}),options:{...npcPlanningOptions,client:getModelClient(store)??npcPlanningOptions.client}});}
             catch(error){planning={status:'failed',reason:'本次人物规划未能保存，已完成的玩家行动仍保留'};}
-            const current=await store.read(campaignId);return{...saved,document:current.document,reference:current.reference,npcPlanning:planning};
+            const current=await store.read(campaignId);return{...saved,document:current.document,reference:current.reference,npcPlanning:planning,...(narration?{narration}:{})};
         }
-        return saved;
+        return narration?{...saved,narration}:saved;
+    }));
+    // A1 动作目录（只读）：不带 campaignId 时列注册表；带 campaignId 时按此处与对象派生可做之事；resolve 只翻译不执行。
+    router.post('/actions',handle(async req=>{
+        const registry=loadActionRegistry(),{campaignId,target,query,resolve}=req.body??{};
+        if(resolve){
+            const call=actionCall(registry,resolve.action,resolve.slots??{});
+            return call.projection?{action:call.action.id,projection:call.projection}:{action:call.action.id,tool:call.tool,args:call.args,clientRead:CLIENT_READS.has(call.tool)};
+        }
+        const limit=Number.isSafeInteger(req.body?.limit)&&req.body.limit>0&&req.body.limit<=100?req.body.limit:24;
+        if(!campaignId){
+            const rows=(query?searchActions(registry,query,{limit}):registry.actions.filter(a=>a.visibility.catalog!=='llm')).map(catalogRow);
+            return {namespaces:registry.namespaces,count:registry.actions.length,actions:rows};
+        }
+        const store=getStore(req),view=await store.read(campaignId),scoped=(await store.worldRegistry.get(view.document.worldHash)).scoped(view.document);
+        return {...worldActions(scoped,view.document,{target:target??null,query:query??null,limit,registry}),reference:view.reference};
     }));
     router.post('/reconcile',handle(async req=>{
         const store=getStore(req),{campaignId,excludeAnchor}=req.body,validAnchors=req.body.validAnchors??[];

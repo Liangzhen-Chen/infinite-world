@@ -144,7 +144,7 @@ test('模板校验真实物资，公开工具保持25入口和12000 token估算�
         b=>b.negotiation.accepts.push(b.negotiation.accepts[0]),b=>b.negotiation.stock.push(b.negotiation.stock[0]),b=>b.intelligence=0]){
         const bad=structuredClone(world);mutate(bad.bosses.find(b=>b.id===target));assert.ok(validateWorld(bad).errors.some(e=>e.includes('谈判')));
     }
-    const tools=toolDefinitions();assert.equal(tools.length,25);
+    const tools=toolDefinitions();assert.equal(tools.length,27);
     const field=tools.find(t=>t.function.name==='world_field').function.parameters;
     assert.ok(field.properties.operation.enum.includes('lair_negotiate'));assert.ok(field.properties.pact.enum.includes('respect_territory'));
     const budget=(await loadPromptBundle()).budget;assert.ok(budget.estimatedTokens<=budget.limit,JSON.stringify(budget));

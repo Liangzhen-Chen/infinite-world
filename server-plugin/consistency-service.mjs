@@ -6,6 +6,7 @@ import {DeepSeekClient} from '../tools/deepseek-client.mjs';
 import {parseTurn,normalizeReplyProtocol} from '../extension/turn.mjs';
 import {isOutOfCharacter} from '../extension/prompt.mjs';
 import {reviewNpcKnowledge,reviewHistoricalEvidence} from './consistency-evidence.mjs';
+import {appliedEffects} from './applied-effects.mjs';
 
 const safeError=error=>String(error.message).replaceAll(process.env.DEEPSEEK_API_KEY??'__no_key__','[凭据已屏蔽]').slice(0,1200);
 const readJSON=async file=>JSON.parse(await fs.readFile(file,'utf8'));
@@ -174,9 +175,10 @@ export async function reviewConsistencyReply(store,campaignId,{token,draft,expec
   let projection=structuredClone(record.before);const receipts=[],failures=[...record.failedActions??[]];
   for(const event of events){
    while(failures.length&&failures[0].sequence<event.sequence){const row=failures.shift();receipts.push({tool:row.tool,args:row.args,result:row.result});}
-   const output=await store.reducer(projection,event.input,{replay:true,result:event.result});
+   const output=await store.reducer(projection,event.input,{replay:true,result:event.result}),previous=projection;
    projection=applyPatches(projection,output.patches);
-   if(event.input?.tool)receipts.push({tool:event.input.tool,args:event.input.args,result:output.result});
+   // A1: each receipt carries the effects the engine actually applied (08 §8.4); review reads these, not a whole-turn diff.
+   if(event.input?.tool)receipts.push({tool:event.input.tool,args:event.input.args,result:output.result,applied:appliedEffects(previous,projection)});
   }
   for(const row of failures)receipts.push({tool:row.tool,args:row.args,result:row.result});
   if(digest(projection)!==digest(state.document))throw Error('本轮证据无法重建当前账本');

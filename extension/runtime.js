@@ -52,7 +52,7 @@ function fail(error){
     document.querySelector('#fields-status')?.replaceChildren(document.createTextNode(`存档对账失败，生成已停止：${blocked}`));
 }
 function render(){
-    setPanelContext({view,labels,feedback,ledgerTime,getChatContext:ctx,api:(endpoint,body={})=>api(endpoint,{...body,campaignId:view?.reference.campaignId})});
+    setPanelContext({view,labels,feedback,ledgerTime,getChatContext:ctx,act,api:(endpoint,body={})=>api(endpoint,{...body,campaignId:view?.reference.campaignId})});
     const pending=renderMessages(ctx(),labels,feedback);
     const box=document.querySelector('#fields-pending');if(!box)return;
     box.replaceChildren();box.hidden=!pending.length;
@@ -177,6 +177,46 @@ async function execute(tool,args,eventId=crypto.randomUUID(),reviewId=null){
         }
     });
 }
+// A1 界面动作（06 §6.9）：不经模型，直接按动作 id 交 /execute 的 world_act 确定性结算；不挂在任何聊天消息上（anchor 为空），
+// 删改消息的对账不会撤销它。主持人正在回应或审查本回合时先不动手，免得混进那一回合的证据。
+let generating=false,reviewsPending=0;
+const FEED='fields_event_feed',FEED_LIMIT=40;
+function recordFeed(lines,kind='action'){
+    const metadata=ctx().chatMetadata,rows=Array.isArray(metadata[FEED])?metadata[FEED]:[];
+    metadata[FEED]=[...rows,{minute:view?.document.state.minute??null,kind,lines:lines.slice(0,12)}].slice(-FEED_LIMIT);
+}
+async function act(action,slots={}){
+    if(generating||reviewsPending)return {ok:false,error:'主持人正在回应这一轮，等这一轮结束再动手',lines:[]};
+    return queue(async()=>{
+        try{
+            await load();if(blocked)throw new Error(blocked);if(!view)throw new Error('请先在副本上启用新版');
+            const campaignId=view.reference.campaignId,resolved=await api('actions',{resolve:{action,slots}});
+            if(resolved.projection){const here=await api('actions',{campaignId});recordFeed(here.scene,'look');await ctx().saveChat();return {ok:true,lines:here.scene};}
+            if(resolved.clientRead)return {ok:true,read:readStateSection(view.document.state,resolved.args.section,resolved.args.npc),lines:[]};
+            const result=await api('execute',{campaignId,tool:'world_act',args:{action,slots},eventId:`ui_${crypto.randomUUID()}`,anchor:null,expectedSequence:view.reference.sequence});
+            view=await api('read',{campaignId});
+            const lines=result.narration?.lines??[];recordFeed(lines);
+            ambientAudio.noteAction(result.result,view.document.state.player,resolved.tool);
+            await persist();await refresh();return {ok:true,lines,result:result.result};
+        }catch(error){return {ok:false,error:error.message,lines:[]};}
+    });
+}
+async function modelActions(args){
+    const result=await api('actions',{campaignId:view.reference.campaignId,target:args.target,query:args.query,limit:12});
+    // Compact for the model: ids, slots and filled choices; no internals, at most 8 choices per slot.
+    return JSON.stringify({here:result.scene,actions:result.actions.map(a=>({id:a.id,label:a.label,...(a.hint?{hint:a.hint}:{}),...(Object.keys(a.fill??{}).length?{fill:a.fill}:{}),
+        slots:a.slots.map(s=>({name:s.name,kind:s.kind,...(s.required?{required:true}:{}),...(s.options?{options:s.options.slice(0,8).map(o=>o.value)}:{})}))}))});
+}
+async function modelAct(args){
+    const resolved=await api('actions',{resolve:{action:args.action,slots:args.slots??{}}});
+    if(resolved.projection)return JSON.stringify({ok:true,here:(await api('actions',{campaignId:view.reference.campaignId})).scene});
+    if(resolved.clientRead){
+        if(resolved.tool==='world_read')return JSON.stringify(readStateSection(view.document.state,resolved.args.section,resolved.args.npc));
+        if(resolved.tool==='world_catalog')return lookupToolResult(()=>api('catalog',{campaignId:view.reference.campaignId,...resolved.args}));
+        return lookupToolResult(()=>api('search',{...resolved.args,campaignId:view.reference.campaignId,token:reviewTurn?.token,anchor:anchor(),expectedSequence:view.reference.sequence}));
+    }
+    return execute('world_act',{action:args.action,slots:args.slots??{}});
+}
 for(const definition of toolDefinitions()){
  const {name,description,parameters}=definition.function;
  ctx().registerFunctionTool({name,displayName:name,description,parameters,formatMessage:()=>'',
@@ -186,6 +226,8 @@ for(const definition of toolDefinitions()){
    if(name==='world_read')return JSON.stringify(readStateSection(view.document.state,args.section,args.npc));
    if(name==='world_search')return lookupToolResult(()=>api('search',{...args,campaignId:view.reference.campaignId,token:reviewTurn?.token,anchor:anchor(),expectedSequence:view.reference.sequence}));
    if(name==='world_catalog')return lookupToolResult(()=>api('catalog',{campaignId:view.reference.campaignId,...args}));
+   if(name==='world_actions')return lookupToolResult(()=>modelActions(args));
+   if(name==='world_act')return modelAct(args);
    return execute(name,args);
   }});
 }
@@ -230,7 +272,7 @@ async function historyInterceptor(coreChat,contextSize,abort,type){
 }
 globalThis.infiniteFieldsHistoryInterceptor=historyInterceptor;
 async function reconcile(type,_options,dryRun){
-    if(!active()||dryRun)return;mode=type;
+    if(!active()||dryRun)return;mode=type;if(type!=='quiet')generating=true;
     return queue(async()=>{
         try{
             await load();if(!view)throw new Error('请先在副本上启用新版');if(blocked)throw new Error(blocked);
@@ -267,6 +309,7 @@ async function afterReply(index){
     if(!message||message.is_user||message.is_system||message.extra?.tool_invocations||turnStart===null)return;
     if(message.extra?.fields_turn)return;
     if(reviewing.has(message))return reviewing.get(message);
+    reviewsPending++;
     const pending=(async()=>{
         const user=[...ctx().chat].reverse().find(message=>message.is_user),session=reviewTurn,chatId=ctx().chatId;
         let reviewedText=message.mes;const editVersion=reviewEdits.get(message)??0;
@@ -294,7 +337,7 @@ async function afterReply(index){
             await ctx().saveChat();render();
         }catch(error){if(!replyUnchanged())return;message.extra.fields_consistency={status:'unverified',verified:false,canCommit:false,original:message.mes,feedback:error.message};if(chatId===ctx().chatId){actionError(`回复未验证：${error.message}。已完成的行动保留。`);await ctx().saveChat();render();}}
         finally{if(prose)prose.hidden=false;}
-    })();reviewing.set(message,pending);return pending;
+    })().finally(()=>{reviewsPending=Math.max(0,reviewsPending-1);});reviewing.set(message,pending);return pending;
 }
 const context=ctx();
 context.eventSource.on(context.eventTypes.CHAT_COMPLETION_PROMPT_READY,({chat})=>{
@@ -310,7 +353,8 @@ context.eventSource.on(context.eventTypes.MESSAGE_DELETED,onDeleted);
 context.eventSource.on(context.eventTypes.MESSAGE_EDITED,onEdited);
 context.eventSource.on(context.eventTypes.MESSAGE_RECEIVED,afterReply);
 for(const event of [context.eventTypes.CHARACTER_MESSAGE_RENDERED,context.eventTypes.MESSAGE_UPDATED])if(event)context.eventSource.on(event,()=>{if(active()&&view)render();});
-context.eventSource.on(context.eventTypes.GENERATION_ENDED,()=>{mode='normal';});
+context.eventSource.on(context.eventTypes.GENERATION_ENDED,()=>{mode='normal';generating=false;});
+if(context.eventTypes.GENERATION_STOPPED)context.eventSource.on(context.eventTypes.GENERATION_STOPPED,()=>{generating=false;});
 async function startSnapshot(){
     await load();if(!view)return null;
     view=await api('read',{campaignId:view.reference.campaignId});await persist();
@@ -368,5 +412,5 @@ window.addEventListener('message',event=>{
     // Do not put that transition inside the queue those callbacks normally use.
     if(action==='enter')handleStart();else queue(handleStart);
 });
-window.infiniteFieldsV2={load,refresh,execute,reconcile,onEdited,onDeleted,historyInterceptor,startSnapshot,enterFromStart,unlockAudio,stopAudio:()=>ambientAudio.stop(),get view(){return view;},get blocked(){return blocked;}};
+window.infiniteFieldsV2={load,refresh,execute,act,reconcile,onEdited,onDeleted,historyInterceptor,startSnapshot,enterFromStart,unlockAudio,stopAudio:()=>ambientAudio.stop(),get view(){return view;},get blocked(){return blocked;}};
 if(window.parent!==window)window.parent.postMessage({type:'fields-start-ready'},location.origin);

@@ -1,0 +1,126 @@
+// A1 动作注册表、world_act / world_actions 与 /actions 路由（06 §6.4、§6.10.1）。
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import fs from 'node:fs';
+import os from 'node:os';
+import path from 'node:path';
+import {once} from 'node:events';
+import express from 'express';
+import {loadWorld} from '../tools/load-world.mjs';
+import {WorldEngine} from '../server-plugin/engine.mjs';
+import {applyPatches} from '../server-plugin/storage.mjs';
+import {toolDefinitions,resolveToolCall,catalogTools} from '../extension/tools.mjs';
+import {loadActionRegistry,actionCall,findAction,actionOfCall,searchActions} from '../server-plugin/action-registry.mjs';
+import {translateCall} from '../server-plugin/action-gateway.mjs';
+import {worldActions,QUICK} from '../server-plugin/action-affordances.mjs';
+import {syncRegistry,render,REGISTRY} from '../tools/build-action-registry.mjs';
+import {loadPromptBundle} from '../tools/build-card.mjs';
+import {init} from '../server-plugin/index.mjs';
+
+const registry=loadActionRegistry(),catalog=JSON.parse(fs.readFileSync('docs/actions.json','utf8')).actions;
+const world=await loadWorld(),engine=new WorldEngine(world),seed=JSON.parse(fs.readFileSync('tests/fixtures/legacy/seed.json','utf8'));
+const fresh=()=>engine.initialFromLegacy(seed,'a1-registry');
+
+test('注册表：数据声明、带命名空间、与 S0 动作清单一一对应且为最新同步',()=>{
+ assert.deepEqual(registry.errors,[]);assert.deepEqual(registry.namespaces,['core']);
+ const s0=registry.actions.filter(a=>a.source==='s0');
+ assert.deepEqual(s0.map(a=>a.id).sort(),catalog.map(a=>a.id).sort());
+ assert.ok(registry.actions.length>catalog.length,'注册表在 S0 别名之外还有模板动作');
+ const doc=JSON.parse(fs.readFileSync(REGISTRY,'utf8'));
+ assert.equal(fs.readFileSync(REGISTRY,'utf8').replace(/\r\n/g,'\n'),render(syncRegistry(doc,catalog).doc),'world/actions/core.json 须用 node tools/build-action-registry.mjs 同步');
+ for(const a of registry.actions){
+  assert.match(a.id,/^core:[a-z]/,a.id);assert.ok(a.label&&a.group&&a.narration,a.id);assert.ok(Array.isArray(a.synonyms)&&Array.isArray(a.slots)&&Array.isArray(a.preconditions),a.id);
+  assert.ok(a.visibility&&a.cost&&'check' in a&&a.participants?.actor==='player',a.id);
+ }
+});
+
+test('每个注册动作都别名到一个公开旧工具与子操作，经 resolveToolCall 落到 S0 登记的处理器',()=>{
+ const tools=new Map(toolDefinitions().map(d=>[d.function.name,d.function.parameters]));const byId=new Map(catalog.map(a=>[a.id,a]));
+ for(const a of registry.actions){
+  if(a.projection){assert.equal(a.call,null);continue;}
+  const schema=tools.get(a.call.tool);assert.ok(schema&&!catalogTools.has(a.call.tool),a.id);
+  if(a.call.operation)assert.ok(schema.properties.operation.enum.includes(a.call.operation),a.id);
+  for(const s of a.slots)assert.ok(s.name in schema.properties,`${a.id} 槽位 ${s.name} 不是旧参数`);
+  const r=resolveToolCall(a.call.tool,{...Object.fromEntries(a.slots.map(s=>[s.name,'x'])),...a.call.fixed,...(a.call.operation?{operation:a.call.operation}:{})});
+  const s0=a.source==='s0'?byId.get(a.id):catalog.find(x=>x.tool===a.call.tool&&x.operation===(a.call.operation??null));
+  assert.equal(r.tool,s0.internalTool,a.id);if(s0.internalOperation)assert.equal(r.args.operation,s0.internalOperation,a.id);
+ }
+});
+
+test('world_act 与 world_actions 进入工具面但不算动作，静态提示不增加（≤ A1 前 10593 token）',async()=>{
+ const names=toolDefinitions().map(d=>d.function.name);
+ assert.ok(names.includes('world_act')&&names.includes('world_actions'));assert.equal(names.length,27);
+ const bundle=await loadPromptBundle();assert.ok(bundle.budget.estimatedTokens<=10593,`静态提示 ${bundle.budget.estimatedTokens} token`);
+ for(const d of toolDefinitions().filter(d=>catalogTools.has(d.function.name)))assert.ok(JSON.stringify(d).length<260,'目录工具定义只有一句话，动作说明在检索结果里');
+ assert.ok(findAction(registry,'core:settlement.festival_plan').hint.includes('custom'),'从静态区移出的长说明进入动作目录');
+});
+
+test('world_act 翻译成旧调用：id 可省 core:，模板固定参数生效，未知动作与槽位给出可纠正的原因',()=>{
+ assert.equal(findAction(registry,'trade.buy'),findAction(registry,'core:trade.buy'));assert.equal(findAction(registry,'other:trade.buy'),null);
+ assert.deepEqual(translateCall('world_act',{action:'trade.lodge',slots:{seller:'林穗',days:2}}).args,{seller:'林穗',days:2,service:'住宿',operation:'trade'});
+ assert.deepEqual(translateCall('world_act',{action:'time.rest',slots:{minutes:30}}),{tool:'world_time',args:{minutes:30,activity:'休息'},action:findAction(registry,'core:time.rest')});
+ assert.deepEqual(translateCall('world_act',{action:'farm.buy',slots:{quantity:2}}).args,{quantity:2,operation:'farm_buy'});
+ assert.deepEqual(translateCall('world_trade',{seller:'林穗'}),{tool:'world_trade',args:{seller:'林穗'},action:null});
+ assert.throws(()=>translateCall('world_act',{action:'trade.fly'}),/没有这个动作.*world_actions/);
+ assert.throws(()=>translateCall('world_act',{action:'trade.buy',slots:{seller:'林穗',item:'面包',quantity:1,price:1}}),/没有这些槽位：price/);
+ assert.throws(()=>translateCall('world_act',{action:'trade.buy',slots:{seller:'林穗'}}),/还缺：item、quantity/);
+ assert.throws(()=>translateCall('world_act',{action:'core:look'}),/不写进账本/);
+ assert.throws(()=>translateCall('world_act',{action:'trade.trade',slots:{seller:'林穗',service:'住宿',consent:true}}),/需要对方答应（对话功能完成后开放）/,'任何动作都不接受调用方替对方答应');
+ assert.throws(()=>translateCall('world_act',{action:'core:read',slots:{section:'行囊'}}),/只读查询/);
+ assert.equal(actionOfCall(registry,'world_trade',{operation:'trade',service:'住宿'}).id,'core:trade.lodge');
+ assert.equal(actionOfCall(registry,'world_trade',{seller:'林穗',item:'x'}).id,'core:trade.trade','模型常用的无 operation 交易调用归到同名子操作');
+ assert.equal(actionOfCall(registry,'world_time',{minutes:5}).id,'core:time');
+ assert.deepEqual(searchActions(registry,'存钱').map(a=>a.id).slice(0,1),['core:trade.deposit']);
+});
+
+test('同一存档上 world_act 与对应旧调用得到完全相同的补丁与回执（结算不变）',async()=>{
+ const cases=[['trade.buy',{seller:'林穗',item:'面包',quantity:2},'world_trade',{seller:'林穗',item:'面包',quantity:2}],
+  ['trade.lodge',{seller:'林穗',days:1},'world_trade',{seller:'林穗',service:'住宿',days:1}],
+  ['time.rest',{minutes:60},'world_time',{minutes:60,activity:'休息'}],['move',{destination:'河湾村'},'world_move',{destination:'河湾村'}],
+  ['core:trade.sell_to',{buyer:'林穗',item:'干粮',quantity:1},'world_trade',{seller:'player',buyer:'林穗',item:'干粮',quantity:1}]];
+ for(const [action,slots,tool,args]of cases){
+  const doc=fresh(),t=translateCall('world_act',{action,slots});
+  const a=await engine.reduce(doc,{tool:t.tool,args:t.args,eventId:'same'}),b=await engine.reduce(doc,{tool,args,eventId:'same'});
+  assert.deepEqual(a.patches,b.patches,action);assert.deepEqual(a.result,b.result,action);
+ }
+});
+
+test('world_actions：此处可做、对人可做、快捷栏七项；槽位可选项来自玩家能感知的场景',()=>{
+ const doc=fresh(),s=engine.scoped(doc),here=worldActions(s,doc);
+ assert.deepEqual(here.quick.map(q=>q.label),QUICK);
+ assert.match(here.scene[0],/青灯酒馆/);assert.match(here.scene[1],/林穗/);assert.match(here.scene[2],/出门是河湾村/);
+ const lodge=here.actions.find(a=>a.id==='core:trade.lodge');assert.equal(lodge.fill.seller,'npc_hw_linsui');
+ assert.ok(!here.actions.some(a=>a.id==='core:trade.deposit'),'酒馆里没有钱庄');
+ const linsui=worldActions(s,doc,{target:'林穗'});assert.equal(linsui.target.kind,'npc');
+ const buy=linsui.actions.find(a=>a.id==='core:trade.buy');assert.equal(buy.fill.seller,'npc_hw_linsui');
+ assert.deepEqual(buy.slots.find(x=>x.name==='item').options.map(o=>o.value).sort(),Object.keys(doc.state.npcs.npc_hw_linsui.inventory).filter(k=>(doc.state.npcs.npc_hw_linsui.inventory[k].quantity??doc.state.npcs.npc_hw_linsui.inventory[k])>0).sort());
+ const post={...doc,state:{...doc.state,location:'bld_hw_post'}},atPost=worldActions(engine.scoped(post),post);
+ assert.ok(atPost.actions.some(a=>a.id==='core:trade.deposit'&&a.fill.seller),'驿站钱庄柜面可存钱，柜员预填');
+ const lodge2=worldActions(s,doc).actions.find(a=>a.id==='core:trade.lodge');assert.equal(lodge2.blocked,undefined,'当班店主出租客房由旧判定决定');
+ const home={...doc,state:{...doc.state,location:'bld_hw_riverhome',npcs:{...doc.state.npcs,npc_hw_xuling:{...doc.state.npcs.npc_hw_xuling,location:'bld_hw_riverhome'}}}};
+ assert.equal(worldActions(engine.scoped(home),home).actions.find(a=>a.id==='core:trade.lodge').blocked,'需要对方答应（对话功能完成后开放）','私宅借住要房东答应，暂不开放');
+ const search=worldActions(s,doc,{query:'钓鱼'});assert.equal(search.actions[0].id,'core:wildlife.fish');
+ assert.deepEqual(doc,fresh(),'只读投影');
+});
+
+test('/actions 只读目录与 /execute 的 world_act：事件存旧调用、回执带事件流文字、幂等与只读动作拒绝',async t=>{
+ const root=fs.mkdtempSync(path.join(os.tmpdir(),'a1-actions-'));t.after(()=>fs.rmSync(root,{recursive:true,force:true}));
+ const app=express();app.use(express.json({limit:'50mb'}));const router=express.Router();await init(router,{baseRoot:root,world,npcPlanningEnabled:false});app.use(router);
+ const server=app.listen(0,'127.0.0.1');await once(server,'listening');t.after(()=>server.close());
+ const request=async(endpoint,body)=>{const r=await fetch(`http://127.0.0.1:${server.address().port}${endpoint}`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});return {status:r.status,body:await r.json()};};
+ const listed=await request('/actions',{});assert.equal(listed.status,200);assert.equal(listed.body.count,registry.actions.length);assert.ok(listed.body.actions.every(a=>a.id&&a.label&&!('call' in a)));
+ const created=await request('/create',{name:'界面旅人'}),campaignId=created.body.reference.campaignId;
+ const here=await request('/actions',{campaignId});assert.equal(here.status,200);assert.ok(here.body.quick.length===7&&here.body.scene.length>=3);
+ assert.deepEqual((await request('/actions',{resolve:{action:'trade.lodge',slots:{seller:'林穗'}}})).body,{action:'core:trade.lodge',tool:'world_trade',args:{seller:'林穗',service:'住宿',operation:'trade'},clientRead:false});
+ const bought=await request('/execute',{campaignId,tool:'world_act',args:{action:'trade.buy',slots:{seller:'林穗',item:'面包',quantity:1}},eventId:'ui-buy',anchor:null});
+ assert.equal(bought.status,200);assert.equal(bought.body.narration.action,'core:trade.buy');assert.match(bought.body.narration.lines[0],/林穗.*面包.*文/);
+ assert.ok(bought.body.narration.applied.some(e=>e.op==='transfer'&&e.holder==='player'&&e.resource==='coin'&&e.delta<0));
+ assert.equal((await request('/execute',{campaignId,tool:'world_act',args:{action:'trade.buy',slots:{seller:'林穗',item:'面包',quantity:1}},eventId:'ui-buy',anchor:null})).body.duplicate,true);
+ const legacy=await request('/execute',{campaignId,tool:'world_time',args:{minutes:10},eventId:'legacy-wait'});assert.equal(legacy.body.narration.action,'core:time');
+ const exported=(await request('/export',{campaignId})).body,event=exported.events.find(e=>e.id==='ui-buy');
+ assert.deepEqual(event.input,{tool:'world_trade',args:{seller:'林穗',item:'面包',quantity:1,operation:'trade'},eventId:'ui-buy'});assert.equal(event.anchor,null);
+ assert.equal((await request('/execute',{campaignId,tool:'world_act',args:{action:'core:look'},eventId:'look'})).status,400);
+ const refused=await request('/execute',{campaignId,tool:'world_act',args:{action:'trade.buy',slots:{seller:'林穗',item:'面包',quantity:99999}},eventId:'too-many'});
+ assert.equal(refused.status,400);assert.match(refused.body.error,/库存不足|只剩/);
+ assert.equal((await request('/read',{campaignId})).body.reference.sequence,exported.events.length);
+});

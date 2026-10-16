@@ -189,5 +189,5 @@ test('朝圣复用真实移动和NPC会面行程，不迁户籍；工具数及�
  assert.equal(p.doc.state.obligations[booked.obligation.id].purpose,'pilgrimage');
  await p.run({minutes:90,activity:'等待'},{tool:'world_time'});
  assert.equal(p.doc.state.obligations[booked.obligation.id].status,'已完成');
- assert.equal(toolDefinitions().length,25);assert.equal(faithRules.rites.length,2);
+ assert.equal(toolDefinitions().length,27);assert.equal(faithRules.rites.length,2);
 });

@@ -4,7 +4,7 @@
 // 用法：node tools/export-actions.mjs [--check] [--json]
 import fs from 'node:fs';
 import path from 'node:path';
-import {toolDefinitions,resolveToolCall,modelToolCall,readOnlyTools} from '../extension/tools.mjs';
+import {toolDefinitions,resolveToolCall,modelToolCall,readOnlyTools,catalogTools} from '../extension/tools.mjs';
 import {layerOf} from './arch-layers.mjs';
 // 一方包名（12 §12.9：导出时每条带 pack 字段）：取子操作分派所在模块的目标包，分派仍在内核/接口层时为 null。
 const packOf=file=>file?layerOf(file)?.pack??null:null;
@@ -45,7 +45,7 @@ function requiredFor(tool,op){
 
 export function exportActions(){
  const actions=[];
- for(const def of toolDefinitions()){
+ for(const def of toolDefinitions().filter(d=>!catalogTools.has(d.function.name))){// world_actions/world_act 是动作入口（A1），不是动作
   const tool=def.function.name,schema=def.function.parameters,props=schema.properties,ops=props.operation?.enum??null;
   const variants=Object.fromEntries(VARIANT_PARAMS.filter(k=>props[k]?.enum).map(k=>[k,[...props[k].enum]]));
   const participants=['player',...AGENT_PARAMS.filter(k=>props[k])];

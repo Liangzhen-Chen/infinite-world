@@ -33,7 +33,7 @@ test('正式军务数据通过校验，坏数据被拒；推进与五个操作�
   const bad=structuredClone(source);change(bad);assert.ok(validateMilitary(bad).length);
  }
  assert.ok(advanceRegistry.some(s=>s.id==='military'));
- const tools=toolDefinitions();assert.equal(tools.length,25);
+ const tools=toolDefinitions();assert.equal(tools.length,27);
  const ops=tools.find(t=>t.function.name==='world_settlement').function.parameters.properties.operation.enum;
  for(const op of ['army_inspect','army_enlist','army_duty','army_recruit','army_dismiss'])assert.ok(ops.includes(op),op);
 });

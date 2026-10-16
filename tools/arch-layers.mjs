@@ -9,7 +9,7 @@ const L0=['storage','archived-reducer','campaign-reducer','migrations','migratio
  'engine','activities'/* 工具分派适配器，随 engine */,'ledger'/* S1a 账本：账户与转移 */,'advance-registry','advance-layers','effect-registry','effects','magic-effects','magic-primitives','checks','world-events',
  'compat/v2-phase1-activities','compat/v2-phase1-engine','legacy/core'];
 const L1=['entity-view','organization-state','employment-state','facility-state','noble-state','faith-state','education-state','family-state','npc-state','medicine-state'/* *-state 选择器 */,
- 'entity-transitions','group-account','money'/* S1a 货币适配器：旧字段 → 账户 */,'items','finance-operations','law-codes','traits','interactions','location-access','regions','catalog','retrieval','retrieval-lexicon','lore','character','progression'];
+ 'entity-transitions','group-account','money'/* S1a 货币适配器：旧字段 → 账户 */,'items','finance-operations','law-codes','traits','interactions','location-access','regions','catalog','retrieval','retrieval-lexicon','lore','character','progression','action-registry'/* A1 动作注册表（数据） */];
 const PACKS={
  economy:['business','shop','settlement-trade','finance-bank','finance-assets','finance-tax','credit','contracts','labor-market','transport','transport-route','post','smuggling','extraction','manufacturing','repair','works','magic-economy'],
  law:['law','bounty','npc-crime','legal-representation','duels'],
@@ -29,8 +29,9 @@ const PACKS={
  facilities:['facilities'/* * 03 §3.4 设施包（火灾） */],
 };
 const L3=['scene-card','prompt-scope','chronicle','state-notices','return-summary','consistency-review','consistency-service','consistency-evidence','consistency-outcome',
- 'standing','reputation','reputation-registry','reputation-catalog','public-opinion','ui-affairs','ui-history','ui-map','ui-messages','ui-overview','ui-personal'];
-const L4=['index','ui-routes'];
+ 'standing','reputation','reputation-registry','reputation-catalog','public-opinion','ui-affairs','ui-history','ui-map','ui-messages','ui-overview','ui-personal',
+ 'applied-effects','action-text','action-affordances'/* A1 已应用效果、事件流模板、可做之事 */];
+const L4=['index','ui-routes','action-gateway'/* A1 world_act 翻译 */];
 
 const TABLE=new Map();
 const put=(names,layer,pack=null)=>{for(const n of names){const f=`server-plugin/${n}.${n.startsWith('legacy/')?'js':'mjs'}`;if(TABLE.has(f))throw Error(`重复归层：${f}`);TABLE.set(f,{layer,pack});}};

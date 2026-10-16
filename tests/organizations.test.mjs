@@ -40,7 +40,7 @@ test('创立行会：玩家任会长，章程与公库可查；存入记账并�
     const inspect=await s.org(dep.document,{operation:'org_inspect',org:id},'look');
     assert.equal(inspect.result.mode,'会长定');assert.equal(inspect.result.members.length,1);
     // Only org operations exist on the existing settlement tool; no new tool.
-    assert.equal(toolDefinitions().length,25);
+    assert.equal(toolDefinitions().length,27);
     assert.equal(resolveToolCall('world_settlement',{operation:'org_vote'}).tool,'world_settlement');
 });
 
