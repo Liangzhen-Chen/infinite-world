@@ -392,3 +392,5 @@ M2修复批审定写入PLAN（T61–T64）：Astra草案F4工具机会标注并�
 - 2026-10-16 R20 已合入：修三项主线回归——RW-01 引入的罢工雇工无作息致义务推进空指针（按合同状态派生在家作息）、RW-05 起的整月推进≠逐日（合同与记忆 id 去掉推进事件 id、下课时结算、同段推进新开逾期欠款记违约、时间事件社会记忆补丁并入最终状态）、RW-07 faith-catalog 读 rules.training 未判空；推进金快照重生成（6 行，原因同上）。验收 249/250，余 world-social:56（未登记势力 faction_seedcourt，主线既有）待 R21。
 
 - 2026-10-16 R21 已合入：修 world-social:56 回归——RW-07 起 load-world 把按教会派生的 faith:* 时钟写死进 rules.factionClock（改为按当前世界派生并缓存）；世界变大后试玩导入超 10mb（上限对齐酒馆 500mb）。
+
+- 2026-10-16 R22 已合入（分叉会话发起，主会话落地）：修 12 处主线回归——商税扣到非贸易卖方、同寺再入门续守戒、据点引用被剥离物品、信仰竞争时钟写死、发布/剥离工具与加载器幂等、授课计时与推进切分无关、冬季长推进热点（共享记录索引）等；推进金快照重生成（原因：授课课时结算口径修正）。合后 CORE+推进 44/44，抽查已修 15 个测试文件全过。仍未修（下轮回归卡）：agriculture 三年守恒 76≠0、quest-wildlife、m1-repair、monster-society-content、actions-catalog、m6-08、magic-status、progression、world-events、performance、w1/w3 发布类、farm-pests 超时（修前全量结果 logs/sessions/R22-sweep-a/b.tsv）。0 模型。
