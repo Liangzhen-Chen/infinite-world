@@ -1,0 +1,14 @@
+{
+  "schema": "balance/action-costs@1",
+  "title": "动作耗时与活动类（数值方案 §2.15；附录 A §A.18）",
+  "params": [],
+  "rows": [
+    {"key":"trade.retail","selector":"trade.retail","timeMin":5,"activity":"light","bounds":{"timeMin":[2,15]},"basis":"calibrate","source":"数值方案 §2.15","playDecision":false,"calibration":"pending","unit":"分钟"},
+    {"key":"talk.greet","selector":"talk.greet","timeMin":15,"activity":"light","bounds":{"timeMin":[5,30]},"basis":"calibrate","source":"数值方案 §2.15","playDecision":false,"calibration":"pending","unit":"分钟"},
+    {"key":"talk.haggle","selector":"talk.haggle","timeMin":20,"activity":"light","bounds":{"timeMin":[10,60]},"basis":"calibrate","source":"数值方案 §2.15","playDecision":false,"calibration":"pending","unit":"分钟"},
+    {"key":"gather.*","selector":"gather.*","durationMin":30,"durationMax":480,"activity":"light","bounds":{"durationMin":[30,30],"durationMax":[480,480]},"basis":"derived","source":"数值方案 §2.15","playDecision":false,"calibration":"derived","from":["doc:附录 A §A.18 玩家可指定时长的持续动作"],"unit":"分钟","note":"durationSlot{min: 30, max: 480}；玩家可指定时长"},
+    {"key":"combat.bout","selector":"combat.bout","minutesPerBout":1,"activity":"heavy","bounds":{"minutesPerBout":[0.5,2]},"basis":"calibrate","source":"数值方案 §2.15","playDecision":false,"calibration":"pending","unit":"分钟/交锋"},
+    {"key":"sleep","selector":"sleep","durationMin":120,"durationMax":720,"activity":"rest","bounds":{"durationMin":[120,120],"durationMax":[720,720]},"basis":"derived","source":"数值方案 §2.15","playDecision":false,"calibration":"derived","from":["doc:附录 A §A.18 玩家可指定时长的持续动作"],"unit":"分钟","note":"durationSlot{min: 120, max: 720}"}
+  ],
+  "curves": []
+}

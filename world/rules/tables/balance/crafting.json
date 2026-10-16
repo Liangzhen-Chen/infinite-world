@@ -1,0 +1,21 @@
+{
+  "schema": "balance/crafting@1",
+  "title": "制作与配方（数值方案 §2.11）",
+  "params": [
+    {"id":"recipe.valueAdd","value":{"min":-0.1,"max":0.4},"bounds":{"min":[-0.1,-0.1],"max":[0.4,0.4]},"basis":"derived","source":"数值方案 §2.11；BAL-C1","playDecision":false,"calibration":"derived","from":["doc:数值方案 §2.11；BAL-C1"],"note":"基准状态下单条配方增值率区间；任何环上增值因子之积 > 1 即报错（配方超图无正增值环，G 类）"},
+    {"id":"quality.adjacent","value":{"price":2,"perf":1.15},"bounds":{"price":[1.6,2.5],"perf":[1.1,1.25]},"basis":"calibrate","source":"数值方案 §2.11","playDecision":false,"calibration":"pending","unit":"倍","note":"相邻品质（16 级）价格与性能倍率；高档性价比下降，买高档是为绝对性能"},
+    {"id":"quality.gamble","value":1.2,"bounds":[1,1.4],"basis":"derived","source":"数值方案 §2.11","playDecision":false,"calibration":"derived","from":["doc:数值方案 §2.11"],"note":"同阶内“赌高档”的期望收益 ≤ 稳做普通品 × 1.2"},
+    {"id":"chain.cap","value":{"daily":10,"luxury":100},"bounds":{"daily":[10,10],"luxury":[100,100]},"basis":"derived","source":"数值方案 §2.11；BAL-C5","playDecision":false,"calibration":"derived","from":["doc:BAL-C5"],"note":"链末端基准价 ÷ 一次原料基准价：日用品 ≤ 10、奢侈品 ≤ 100"},
+    {"id":"durability.lifeYears","value":5,"bounds":[2,10],"basis":"calibrate","source":"数值方案 §2.11","playDecision":false,"calibration":"pending","unit":"年","note":"普通做工工具与兵器常用寿命"},
+    {"id":"repair.capDecay","value":0.9,"bounds":[0.8,0.95],"basis":"calibrate","source":"数值方案 §2.11","playDecision":false,"calibration":"pending","unit":"倍/次修理","note":"每次修理耐久上限 × 0.9"},
+    {"id":"repair.costShare","value":0.3,"bounds":[0.15,0.6],"basis":"calibrate","source":"数值方案 §2.11；方案未给界处取缺省修正项界 ×[0.5, 2]（附录 A §A.9 第 3 条）","playDecision":false,"calibration":"pending","note":"修理费 = value × 损耗比例 × 0.3（比例制，不累退）"}
+  ],
+  "rows": [
+    {"key":"workmanship:rough","name":"粗糙","price":0.6,"perf":0.85,"bounds":{"price":[0.42,0.84],"perf":[0.85,0.85]},"basis":"calibrate","source":"数值方案 §2.11；开发指南 3.7","playDecision":false,"calibration":"pending","unit":"倍","note":"粗糙：价格倍率 0.6，性能倍率 0.85；价格界 ×[0.7, 1.4]"},
+    {"key":"workmanship:plain","name":"普通","price":1,"perf":1,"bounds":{"price":[0.7,1.4],"perf":[1,1]},"basis":"calibrate","source":"数值方案 §2.11；开发指南 3.7","playDecision":false,"calibration":"pending","unit":"倍","note":"普通：价格倍率 1，性能倍率 1；价格界 ×[0.7, 1.4]"},
+    {"key":"workmanship:fine","name":"精良","price":1.5,"perf":1.08,"bounds":{"price":[1.05,2.1],"perf":[1.08,1.08]},"basis":"calibrate","source":"数值方案 §2.11；开发指南 3.7","playDecision":false,"calibration":"pending","unit":"倍","note":"精良：价格倍率 1.5，性能倍率 1.08；价格界 ×[0.7, 1.4]"},
+    {"key":"workmanship:excellent","name":"优秀","price":2.2,"perf":1.15,"bounds":{"price":[1.54,3.08],"perf":[1.15,1.15]},"basis":"calibrate","source":"数值方案 §2.11；开发指南 3.7","playDecision":false,"calibration":"pending","unit":"倍","note":"优秀：价格倍率 2.2，性能倍率 1.15；价格界 ×[0.7, 1.4]"},
+    {"key":"workmanship:masterwork","name":"杰作","price":3.5,"perf":1.25,"bounds":{"price":[2.45,4.9],"perf":[1.25,1.25]},"basis":"calibrate","source":"数值方案 §2.11；开发指南 3.7","playDecision":false,"calibration":"pending","unit":"倍","note":"杰作：价格倍率 3.5，性能倍率 1.25；价格界 ×[0.7, 1.4]"}
+  ],
+  "curves": []
+}
