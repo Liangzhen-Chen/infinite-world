@@ -183,7 +183,7 @@ export const METRICS=Object.freeze([
  {id:'combat.winRate',title:'开发指南 3.3 胜率表（竞技场第一版）',status:'registered',targets:['BAL-F1','BAL-P1'],provider:{module:'tools/balance-combat.mjs',export:'balanceReport'},note:'tools/balance-combat.mjs 在 S1 登记为竞技场第一版，行为不变；--combat 时调用，不读 combat.json（收编为直接读该表：S1 后续）'},
  {id:'money.velocity',title:'货币流通速度 V = 期间成交额 ÷ 平均 M',status:'todo',targets:['BAL-M2'],needs:['成交额的时间序列（市场成交埋点）']},
  {id:'price.inflation',title:'通胀率 π = ppi 的年对数变化',status:'todo',targets:['BAL-M2'],needs:['价格指数的按月采样序列（BalSim 浸泡）'],note:'纯函数 inflationRate(series) 已实现并有测试，等序列'},
- {id:'household.incomeExpenseRatio',title:'家户收支比（按阶层 × 地区分组）',status:'todo',targets:['NUM-W6','NUM-W8'],needs:['家户收入与支出流水','阶层 × 地区分组（用户 2026-10-16 回复：佃户紧、地主宽、城市平民中、官员好）']},
+ {id:'household.incomeExpenseRatio',title:'家户收支比（按阶层 × 地区分组）',status:'todo',targets:['NUM-W6','NUM-W8','NUM-W10'],needs:['家户收入与支出流水','阶层 × 地区分组（用户 2026-10-16 回复：佃户紧、地主宽、城市平民中、官员好）']},
  {id:'wage.incomeVsTable',title:'实际收入 ÷ 收入表（各职业各阶中位数）',status:'todo',targets:['NUM-W1','NUM-W2','NUM-W3','BAL-W1'],needs:['职业收入流水（S5 劳务与浸泡）']},
  {id:'hunger.personDays',title:'缺餐人日',status:'todo',targets:['NUM-W7','BAL-W2'],needs:['口粮保障天数与缺餐事件']},
  {id:'population.rates',title:'粗出生率、粗死亡率、净迁移、抚养比',status:'todo',targets:['BAL-N1','BAL-N2'],needs:['出生与死亡事件计数（npcLife，S5）']},

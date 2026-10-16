@@ -78,7 +78,7 @@ test('技能阶分布、名额计数（读 learning.json 的 seats.*）、等级
  assert.deepEqual(t.counts,[1,2,0,0,0,0,0,4,2]);
  assert.deepEqual(t.bySkill.s_b,[1,0,0,0,0,0,0,0,2]);
  const s=metric(doc,world,'seats.holders').value;
- assert.deepEqual(s.cap,{saintPerSkill:3,divinePerSkill:1,level180:3});
+ assert.deepEqual(s.cap,{saintPerSkill:2,divinePerSkill:1,level180:3});
  assert.deepEqual(s.holders.s_a,{saint:4,divine:0});assert.deepEqual(s.holders.s_b,{saint:0,divine:2});
  assert.equal(s.level180,4);
  assert.deepEqual(s.violations.map(v=>`${v.kind}:${v.skill??''}:${v.holders}`).sort(),['divine:s_b:2','level180::4','saint:s_a:4']);

@@ -157,9 +157,9 @@ test('包只能在上下界内覆盖：界内可改并刷新可推算值；越�
 
 test('目标表：全部 NUM-* 与 BAL-*，带目标区间、容差、标杆编号、检验方法，附 schema',()=>{
  const rows=tables.targets.rows,ids=rows.map(r=>r.metric);
- const expected=[...['G1','G2','G3','G4','G5','G6'],...['S1','S2','S3','S4'],...['P1','P2','P3','P4','P5'],...['W1','W2','W3','W4','W5','W6','W7','W8','W9'],...['Q1','Q2','Q3','Q4','Q5','Q6'],...['D1','D2','D3','D4'],...['Z1','Z2','Z3','Z4','Z5','Z6'],...['J1','J2','J3','J4','J5','J6']].map(s=>`NUM-${s}`);
+ const expected=[...['G1','G2','G3','G4','G5','G6'],...['S1','S2','S3','S4'],...['P1','P2','P3','P4','P5'],...['W1','W2','W3','W4','W5','W6','W7','W8','W9','W10'],...['Q1','Q2','Q3','Q4','Q5','Q6'],...['D1','D2','D3','D4','D5'],...['Z1','Z2','Z3','Z4','Z5','Z6','Z7'],...['J1','J2','J3','J4','J5','J6']].map(s=>`NUM-${s}`);
  for(const id of expected)assert.ok(ids.includes(id),`缺 ${id}`);
- assert.equal(ids.filter(i=>i.startsWith('NUM-')).length,46);
+ assert.equal(ids.filter(i=>i.startsWith('NUM-')).length,49);
  assert.equal(new Set(ids).size,ids.length);
  for(const r of rows){
   assert.ok(['G','T'].includes(r.grade));assert.ok(r.method.length>=3);assert.ok(r.source&&r.basis);
@@ -172,6 +172,9 @@ test('目标表：全部 NUM-* 与 BAL-*，带目标区间、容差、标杆编�
  assert.deepEqual(byId['NUM-G1'].tolerance,{kind:'rel',value:0.3});
  assert.equal(byId['NUM-Z1'].pace.length,5);
  assert.equal(byId['NUM-P1'].grade,'G');
+ assert.deepEqual(byId['NUM-D5'].target,[0.25,0.4]);
+ assert.equal(byId['NUM-W10'].bands.length,11);
+ assert.equal(find(tables,'learning','seats.saint.perSkill').value,2);assert.deepEqual(find(tables,'learning','seats.saint.perSkill').bounds,[2,3]);
  // 越界/缺字段的目标行被拒绝
  const t=copy();t.targets.rows[0].grade='X';
  assert.ok(errorsOf(t).some(x=>/targets\.json: rows\[NUM-G1\]/.test(x)));

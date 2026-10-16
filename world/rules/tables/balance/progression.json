@@ -14,7 +14,7 @@
     {"id":"xp.dailyRef.lowLevel","value":500,"bounds":[200,1000],"basis":"calibrate","source":"数值方案 §1.1；数值方案 §2.2","playDecision":false,"calibration":"pending","unit":"经验/全职日","note":"L < 10 时按此值（方案给 500，占位界）"},
     {"id":"xp.kill.c","value":0.2,"bounds":[0.1,0.4],"basis":"calibrate","source":"数值方案 §2.2","playDecision":false,"calibration":"pending","note":"击杀经验 = c × M^2.5 × f(M − L) × 贡献份额；约 6 场同级战斗 = 一日参照；贡献份额读伤害与承伤事件，不读等级"},
     {"id":"xp.kill.lowMul","value":50,"bounds":[25,100],"basis":"calibrate","source":"数值方案 §2.2","playDecision":false,"calibration":"pending","unit":"经验/怪物等级","note":"M < 10 时击杀经验 = 50 × M（方案给 50，占位界）"},
-    {"id":"death.dyingWindow","value":60,"bounds":[10,240],"basis":"calibrate","source":"数值方案 §2.2；口味题 1","playDecision":false,"calibration":"pending","unit":"游戏分钟","note":"濒死可救治时限"},
+    {"id":"death.dyingWindow","value":60,"bounds":[10,240],"basis":"calibrate","source":"数值方案 §2.2；NUM-D5","playDecision":false,"calibration":"pending","unit":"游戏分钟","note":"濒死可救治时限；致死由战斗结算派生（伤害、生命上限、等级差、救援时限），NUM-D5 只作统计检验，不设独立死亡判定"},
     {"id":"death.overkill","value":0.5,"bounds":[0.3,1],"basis":"calibrate","source":"数值方案 §2.2","playDecision":false,"calibration":"pending","unit":"× 生命上限","note":"单次伤害超过“0 以下该比例”直接判死"},
     {"id":"death.xpLoss.lowMul","value":10,"bounds":[10,10],"basis":"hard","source":"开发指南 3.3；数值方案 §1.6","playDecision":false,"calibration":"fixed","closed":true,"unit":"经验/级","note":"死亡扣经验：等级 < 10：10 × 等级；等级 ≥ 10：升到当前等级所需的经验，扣到当前级内进度为 0 为止，不降级"},
     {"id":"death.revive.restore","value":{"hp":0.3,"mana":0.3},"bounds":{"*":[0.1,0.6]},"basis":"calibrate","source":"数值方案 §2.2","playDecision":false,"calibration":"pending","unit":"× 上限","note":"复活醒来时的生命与魔力比例"},

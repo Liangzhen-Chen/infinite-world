@@ -10,7 +10,8 @@
   ],
   "rows": [
     {"key":"part:wolf.pelt","qty":1,"notDeathBy":"fire","stripDifficulty":12,"bounds":{"stripDifficulty":[8,18],"qty":[1,1]},"basis":"calibrate","source":"数值方案 §2.10","playDecision":false,"calibration":"pending","note":"狼皮：火焚无皮；剥取难度 12"},
-    {"key":"part:tier>=6.spiritBone","qty":1,"requires":{"break":"skeleton","deathBy":"blunt"},"chance":0.3,"bounds":{"chance":[0.1,0.6],"qty":[1,1]},"basis":"calibrate","source":"数值方案 §2.10；口味题 2（稀有物分阶，建议值采纳）","playDecision":false,"calibration":"pending","note":"妖兽及以上的“灵骨”类：满足条件后取得概率 0.3；稀有物的稀有程度"}
+    {"key":"part:tier>=6.spiritBone","qty":1,"requires":{"break":"skeleton","deathBy":"blunt"},"chance":0.3,"bounds":{"chance":[0.1,0.6],"qty":[1,1]},"basis":"play","source":"数值方案 §2.10；用户口味题回复（稀有物分阶，采纳建议值）","playDecision":true,"calibration":"pending","decisionRef":"docs/待用户确认.md 2026-10-16 数值方案口味题回复","note":"妖兽（6 阶）的“灵骨”类：满足条件后取得概率 0.3"},
+    {"key":"part:tier>=7.spiritBone","qty":1,"requires":{"break":"skeleton","deathBy":"blunt"},"chance":0.1,"bounds":{"chance":[0.1,0.6],"qty":[1,1]},"basis":"play","source":"数值方案 §2.10；用户口味题回复（稀有物分阶，采纳建议值）","playDecision":true,"calibration":"pending","decisionRef":"docs/待用户确认.md 2026-10-16 数值方案口味题回复","note":"灵兽及以上（7 阶起）的“灵骨”类：取得概率 0.1；比 >=6 行更具体，优先"}
   ],
   "curves": []
 }
