@@ -8,6 +8,7 @@ import {randomUUID} from 'node:crypto';
 import {loadWorld} from './load-world.mjs';
 import {validateWorld} from './validate-world.mjs';
 import {hashContent} from './content-pipeline.mjs';
+import {pruneRuleDependents} from './edition-rules.mjs';
 import {buildBatch} from '../world/design/monster-society-2.mjs';
 import {buildBatch as buildT157} from '../world/design/monster-society-1.mjs';
 
@@ -62,6 +63,8 @@ export function withoutMonsterSociety2(world,batch=buildBatch()){
   sources.publishers=Object.fromEntries(Object.entries(sources.publishers??{}).filter(([place,npc])=>!gone.has(place)&&!gone.has(npc)));
   sources.funds=Object.fromEntries(Object.entries(sources.funds??{}).filter(([place,faction])=>!gone.has(place)&&!gone.has(faction)));
  }
+ // U12 armies, war fronts and T155 quest offers at these sites are later rows too (tools/edition-rules.mjs).
+ pruneRuleDependents(next.rules,gone);
  return next;
 }
 async function writeLike(target,value){
