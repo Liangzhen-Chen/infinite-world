@@ -290,6 +290,13 @@ export class CampaignStorage {
         this.cache.set(id, state); return state;
     }
     async read(id) { return this.exclusive(id, async () => this.view(await this.load(id))); }
+    // The receipt a given event id already produced, or null (lets a caller that split one request into several events tell a retry).
+    async recorded(id, eventId) {
+        return this.exclusive(id, async () => {
+            const state = await this.load(id), old = state.transactions.get(eventId);
+            return old ? { sequence: old.sequence, result: structuredClone(state.events[old.sequence - 1].result) } : null;
+        });
+    }
     async feedback(id) {
         return this.exclusive(id, async () => {
             const state = await this.load(id);

@@ -7,7 +7,7 @@ import {appliedEffects} from '../server-plugin/applied-effects.mjs';
 import {MEDICAL_SKILL} from '../server-plugin/medicine-state.mjs';
 import {translateCall} from '../server-plugin/action-gateway.mjs';
 import {uiSession} from './helpers/ui-script.mjs';
-import {variant,setPrice,scene,monthDayMinute,primed,held,baseWorld} from './helpers/daily-b2.mjs';
+import {variant,setPrice,scene,monthDayMinute,primed,held,legacy,baseWorld} from './helpers/daily-b2.mjs';
 
 const PENDING='需要对方答应（对话功能完成后开放）';
 const INN='bld_hw_qingdeng',LINSUI='npc_hw_linsui',AYAN='npc_hw_ayan';
@@ -105,4 +105,41 @@ test('已应用效果只列被作用者的身体：时间流逝里别的生物�
  assert.deepEqual(appliedEffects(base,later,{result:{target:'wolf'}}),[{op:'time',minutes:60,minute:60},{op:'vital',holder:'wolf',need:'hp',delta:4}]);
  const up={...later,player:{hp:10,xp:3,level:2}};
  assert.deepEqual(appliedEffects(base,up,{result:{experience:42}}).filter(e=>e.op==='xp'||e.op==='level'),[{op:'xp',holder:'player',delta:42},{op:'level',holder:'player',from:1,to:2}],'升级时经验从余数重算，取回执里的获得量');
+});
+
+// ---- 3. 长等待：单次推进上限 30 天是引擎的界（最初版本的约定），world_act 层自动分段 ----
+const DAY=1440;
+const events=async ui=>(await ui.server.api('export',{campaignId:ui.campaignId})).events.filter(e=>e.input?.tool==='world_time');
+
+test('一次等三个月（dayOffset 90）：world_act 拆成 3 条 30 天的 world_time 事件，到点钟、时间照实走过，与玩家自己分三次等完全一致',async t=>{
+ const start=monthDayMinute(3,5,9,0),mutate=scene('loc_hw',start);
+ const split=await uiSession(t,{mutate}),manual=await uiSession(t,{mutate});
+ await primed(split);await primed(manual);
+ const a=await split.choose('time',{until:{dayOffset:90,hour:9,minute:1}});assert.ok(a.ok,a.error);
+ const sa=await split.read();
+ assert.equal(sa.state.minute,(Math.floor((start+1)/DAY)+90)*DAY+9*60+1,'到第 90 天同一钟点');assert.equal(a.result.segments,3);
+ assert.equal(a.result.elapsed,sa.state.minute-(start+1),'回执的耗时是三段之和');
+ const waits=(await events(split)).slice(1);
+ const total=sa.state.minute-(start+1);
+ assert.deepEqual(waits.map(e=>e.input.args),[{minutes:43200},{minutes:43200},{minutes:total-2*43200}],'每段不超过一界，余下的归最后一段');
+ assert.ok(waits.every(e=>e.input.args.minutes<=43200&&/^ui-\d+#\d$/.test(e.id)),'事件编号带段号，旧调用原样存账');
+ // 对照：同样的三段由玩家自己（旧工具）一段一段等。
+ const sizes=waits.map(e=>e.input.args.minutes);
+ for(const [i,minutes] of sizes.entries())await legacy(manual,'world_time',{minutes},`ui-2#${i+1}`);
+ const sm=await manual.read();
+ assert.equal(sm.state.minute,sa.state.minute);assert.deepEqual(sm.state,sa.state,'分段结算的世界与逐段结算完全相同');
+});
+
+test('一次等的分钟数超过一界也自动分段；一年封顶（360 天）；重试同一请求不再多等；不超一界的等待仍是一条事件',async t=>{
+ const ui=await uiSession(t,{mutate:scene('loc_hw',monthDayMinute(3,5,9,0))});await primed(ui);
+ const t0=(await ui.read()).state.minute;
+ const small=await ui.choose('time',{minutes:60});assert.ok(small.ok);assert.equal(small.result.segments,undefined);
+ const first=await ui.choose('time',{minutes:43200+100},{eventId:'long-wait'});assert.ok(first.ok,first.error);assert.equal(first.result.segments,2);
+ const mid=await ui.read();assert.equal(mid.state.minute,t0+60+43200+100);
+ const again=await ui.retry('time',{minutes:43200+100},'long-wait');assert.equal(again.duplicate,true);
+ assert.equal((await ui.read()).state.minute,mid.state.minute,'重试同一请求不会再等一遍');
+ const before=await ui.read(),n=(await events(ui)).length;
+ const tooLong=await ui.choose('time',{until:{dayOffset:400,hour:6}});assert.equal(tooLong.ok,false);assert.match(tooLong.error,/一次最多等一年/);
+ assert.deepEqual((await ui.read()).state,before.state);assert.equal((await events(ui)).length,n,'被拒的长等待不留事件');
+ const edge=await ui.choose('time',{minutes:360*DAY+1});assert.equal(edge.ok,false);assert.match(edge.error,/一次最多等一年/,'封顶是 360 天整');
 });
