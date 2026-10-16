@@ -38,9 +38,12 @@ export function initiation(d,engine,args,id){
  d.set(record(key),row);d.set(record(`training_source:${id}`),{initiation:structuredClone(row)});
  d.set(['state','careers',role,'initiation'],{...row,record:key});
  if(entry.ritual&&engine.rules.faith){
-  const t=temples(engine).find(t=>t.seat===institution&&t.teacher===teacher);
-  convertFaith(d,engine,{...t,organization:{leader:teacher}},'player',id,{paid:true});
-  d.set(['state','player','faith'],{...d.get('state','player','faith'),initiation:key});
+  const t=temples(engine).find(t=>t.seat===institution&&t.teacher===teacher),current=d.get('state','player','faith');
+  // Re-entering one's own temple (after a breach) renews the observance from
+  // today and keeps the breach on record; only a first entry or a change of
+  // temple is a conversion with its membership and standing effects.
+  if(current?.temple===t?.id&&Number.isSafeInteger(current.observedSince))d.set(['state','player','faith'],{...current,observedSince:now,initiation:key});
+  else{convertFaith(d,engine,{...t,organization:{leader:teacher}},'player',id,{paid:true});d.set(['state','player','faith'],{...d.get('state','player','faith'),initiation:key});}
  }else if(entry.ritual){const deity=entry.deity&&engine.byId.get(entry.deity);
   d.set(['state','player','faith'],{deity:deity?.id??null,institution,church:deity?.church.name??entry.church,taboo:deity?.taboo??entry.rule,observedSince:now,lastBreach:row.lastBreach,initiation:key});
  }
