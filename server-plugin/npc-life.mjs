@@ -373,14 +373,17 @@ export function recordMilitaryDeath(d,engine,id,minute){return recordEntityDeath
 export function recordEntityDeath(d,engine,id,minute,cause,illness=null){
  id=actorId(engine.world,id);const path=actorPath(engine.world,id),actor=d.get(...path);
  if(!actor||id==='player')return null;
- const previous=Object.values(d.get('state','family','deaths')??{}).find(r=>r.person===id);
+ // A death row belongs to one life: a wild body's id comes back as a new
+ // incarnation (state.creatures[id].incarnation) once its corpse is gone, and
+ // that body dies once more; the registry keeps each life's row.
+ const life=actor.incarnation??0,previous=Object.values(d.get('state','family','deaths')??{}).find(r=>r.person===id&&(r.incarnation??0)===life);
  if(previous||actor.diedAt!==undefined)return previous??null;
  const shops=businessSnapshot(engine,d.get('state'));
  const npc=path[1]==='npcs',household=personHousehold(engine,d.get('state'),id).value;
  // Roster housemates are the ones who inherit, mourn and may later have to
  // move to kin; they enter campaign state now.
  for(const x of household?.members??[])if(x!==id&&!d.get('state','npcs',x))bring(d,engine,x,minute,'家中有人去世');
- const state=d.get('state'),house=household,deathId=`death_${key(id,minute)}`,name=nameOf(engine,state,id);
+ const state=d.get('state'),house=household,deathId=`death_${key(id,minute)}${life?`_${life}`:''}`,name=nameOf(engine,state,id);
  d.set([...path,'status'],'死亡');d.set([...path,'activity'],'已故');d.set([...path,'diedAt'],minute);
  if(actor.hp!==undefined)d.set([...path,'hp'],0);
  for(const field of ['caring','scheduleTravel','cognitionTravel'])if(actor[field])d.remove([...path,field]);
@@ -414,7 +417,7 @@ export function recordEntityDeath(d,engine,id,minute,cause,illness=null){
  if(population)d.set(['state','settlements',house.settlement,'population'],population.after);
  const content=`${name}在${engine.calendar(minute).text.slice(0,-6)}${cause}。`;
  const witnesses=witness(d,engine,deathId,[id],house?[house.id]:[],{minute,kind:'health',content,salience:4,...(!npc?{at:[actor.location].filter(Boolean)}:{})});
- const result={id:deathId,person:id,minute,cause,illness:illness?.id??null,household:house?.id??null,settlement:house?.settlement??null,population,estate,obligations,witnesses,
+ const result={id:deathId,person:id,...(life?{incarnation:life}:{}),minute,cause,illness:illness?.id??null,household:house?.id??null,settlement:house?.settlement??null,population,estate,obligations,witnesses,
   ...(contracts.length?{contracts}:{}),...(pets.length?{pets}:{})};
  d.set(['state','family','deaths',deathId],result);
  entityTransition(d,engine,{id:deathId,verb:'die',actor:id,minute,location:actor.location??house?.settlement,witnesses,cause,summary:content});

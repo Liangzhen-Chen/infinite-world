@@ -5,12 +5,17 @@ import {DeepSeekClient}from'./deepseek-client.mjs';
 import {runContentPipeline,defaultReviewRequest,readApprovedContent,hashContent}from'./content-pipeline.mjs';
 import {validateWorld}from'./validate-world.mjs';
 import {entries,offers,localFacts,revision,draftFor,applyBatch}from'../world/design/t155-village-wildlife.mjs';
+import {WorldEngine}from'../server-plugin/engine.mjs';
+import {questPublisher}from'../server-plugin/entity-view.mjs';
 export {entries,draftFor};
 export const draftRoot=path.resolve('world/drafts/t155-wildlife');
-const world=await loadWorld(),blocklist=JSON.parse(await fs.readFile('world/meta/blocklist.json','utf8'));
+const world=await loadWorld(),engine=new WorldEngine(world),blocklist=JSON.parse(await fs.readFile('world/meta/blocklist.json','utf8'));
+// V3 derives a board's publisher from the settlement's head instead of the old
+// rules.questSources.publishers entry; the reviewed context names that person.
+const publisher=board=>questPublisher(engine,{},board).value;
 export function contextFor(e){
  const row=offers.find(o=>o.id===e.id),o=(row??(e.id==='t155_wt_rites'?offers.find(o=>o.id==='t155_wt_soul'):null))?.objective;
- const ids=[e.board,world.rules.questSources.publishers[e.board],o?.location,o?.target,o?.species,o?.item,...(o?.offer??[]).map(r=>r.item),...(o?.request??[]).map(r=>r.item)];
+ const ids=[e.board,publisher(e.board),o?.location,o?.target,o?.species,o?.item,...(o?.offer??[]).map(r=>r.item),...(o?.request??[]).map(r=>r.item)];
  const catalogs=[...world.locations,...world.npcs,...world.monsters,...world.items];
  return {references:ids.filter(Boolean).map(id=>{const x=catalogs.find(x=>x.id===id);return x?{id,name:x.name,...(x.nature?{nature:x.nature}:{}),...(x.basePrice?{basePrice:x.basePrice}:{})}:null;}),
   bosses:world.bosses.filter(b=>(b.actor??b.id)===o?.target).map(b=>({id:b.id,name:b.name,cognition:b.cognition,negotiation:b.negotiation})),

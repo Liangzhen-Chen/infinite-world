@@ -10,4 +10,12 @@ export const agricultureFoundation={
         normalStorageDays:180,spoilagePerMonth:0.002,reserveDays:90,
         repairWood:2,repairIron:1,repairCondition:20,toolWearPerArea:0.0005}],
 };
-export function withAgricultureRules(source){const world=structuredClone(source);world.rules.agriculture=structuredClone(agricultureFoundation);return world;}
+// The foundation rows define (and override) their settlements; ledgers the world
+// already keeps for other settlements stay, since later rows (U12 village
+// militias supplied from their granaries) depend on them.
+export function withAgricultureRules(source){
+    const world=structuredClone(source),current=world.rules.agriculture?.settlements??[];
+    world.rules.agriculture=structuredClone(agricultureFoundation);
+    for(const row of current)if(!world.rules.agriculture.settlements.some(s=>s.settlement===row.settlement))world.rules.agriculture.settlements.push(structuredClone(row));
+    return world;
+}
