@@ -410,3 +410,5 @@ M2修复批审定写入PLAN（T61–T64）：Astra草案F4工具机会标注并�
 - 2026-10-16 NUMT 已合入（Sonnet high 试用）：world/rules/tables/balance/ 22 张参数表（params/rows/curves 三区，每条带来源类别、出处、上下界、待标定标记）；tools/balance-tables.mjs 随 loadWorld 校验（越界、必填、来源、玩法决定须有决定记录、硬设定封闭、可推算重算；包只能界内覆盖），schema 两份；targets.json 90 条（NUM 49、BAL 41）；tools/balance-metrics.mjs（npm run balance:metrics）已实现货币总量与源汇、技能阶与等级分布，部分实现价格指数、基尼、名额、物种存量，其余登记待做。不改任何结算，金快照与提示不变。0 模型。
 
 - 2026-10-16 R26 已合入（Sonnet medium 试用）：性能测试“快照提交≤10ms”并行超时的根因是实现慢（快照序列化+哈希约5ms、同步落盘约5ms）；storage 改为事件落盘返回后异步构建快照（scheduleSnapshot，同战役下一操作先等完成，快照写失败只让回放变慢、不丢数据），基准取5次中位数、阈值10ms不变；快照提交约3ms，单跑与20进程并行各3次通过。遗留：“5000消息≤150ms”重负载下偶发超时。0 模型。
+
+- 2026-10-16 DAILY 已合入（Sonnet xhigh 试用）：日常题集 199 条中 106 条可执行通过、4 条补数据后表级通过、89 条需机制（S3 23、A3 22、S1 19、A2 18、S5 13、S6 10…），清单 docs/probes/daily/executable-status.md；balance 表补缺省（action-costs 11 行、event-weights 7 行、yields 3 行等，均界内、标待标定）。发现：world_act 拒绝一切 consent 槽（连本人同意求医也拒）、战斗回执 applied 为空——开 A1b 修；A1 的 D27/D28 dayOffset 90 被拒；D06 题面步速与写实界冲突（待用户）；引擎尚不读 balance 表（属 A3/S5）。0 模型。
