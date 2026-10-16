@@ -398,3 +398,5 @@ M2修复批审定写入PLAN（T61–T64）：Astra草案F4工具机会标注并�
 - 2026-10-16 RW-04 已合入（Codex 起头、两位 Claude 子代理补完与解冲突）：林木存量与再生（按林型）、过伐缺柴涨价与栖地缩减、水源流量与上游取水/污染影响下游饮用与灌溉、林水系数进报价（resourceFactor）、林地站点按目录缓存；与 master 觉醒新栖地机制合成（全世界 runtimeHabitats，林水世界另保留建立时刻视图）。验收：forest-water 等 125/125、tribal-awakening 8/8、wildlife 一批 114/115（失败 quest-wildlife:42 为 master 既有，见 R22 未修清单）；合后 CORE+林水+推进+度量 60/60；金快照重生成（R22 授课计时与林水存量折算叠加）。静态提示 10593（+71 相对 P4 后）。farm-pests 与生态审计（2 种子×36 月）合后后台补跑。0 模型。
 
 - 2026-10-16 v10 合并修订已提交（bd15ae05）；设计关口通过后开始迁移：S1a 货币账本派出。farm-pests 主线全过（10/10，81 分钟，此前旧主线超时 8 小时）。
+
+- 2026-10-16 S1a 已合入（架构迁移，常规档 Claude 子代理）：server-plugin/ledger.mjs（L0：账户、唯一写入点 transfer、源汇写入权、每日预算熔断、审计）+ money.mjs（L1 适配器）；43 模块约 130 处写钱处改双写，62 个相关测试挂审计漏记 0；铸币按政体与金属分种（coin_river）；新增 src:genesis/import/drift、sink:melt。对账与守恒 5/5（旧余额逐账户=新账户、漂移 0、每事件 Δ总量=源−汇）。度量前后不变（import 513、黑名单 394、提示 10593、run-001 合理 28），金快照未动。偏离：src:import/src:drift 为设计外新名，drift 仅过渡期记漏写、验收要求恒为 0。已知主线既有失败（非本卡）：festival-runtime、quest-wildlife、agriculture 三年守恒、ontology I18，待 R23。0 模型。
