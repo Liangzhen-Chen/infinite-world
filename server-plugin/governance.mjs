@@ -1,4 +1,4 @@
-import {treasury as treasuryAccount,bookSide} from './money.mjs';
+import {treasury as treasuryAccount,bookSide,coinRead} from './money.mjs';
 import {reviewUpperOffice} from './high-nobility.mjs';
 import {domainAuthority} from './noble-state.mjs';
 import {entityTransition} from './entity-transitions.mjs';
@@ -402,7 +402,8 @@ export function spendPublic(d,engine,{settlement,copper,power,purpose,sourceEven
     const cap=Math.max(...offices.map(o=>o.monthlyBudgetCopper)),month=monthOf(state.minute),used=publicSpent(state,settlement,month);
     if(used+copper>cap)throw Error(`本月公款额度不足（已用${used}/${cap}铜）`);
     const treasury=d.get('state','settlements',settlement,'treasury'),reserve=authorityOf(engine).treasury.reserveCopper;
-    if(!safe(treasury)||treasury-copper<reserve)throw Error(`公账余额不足：动用后须留底${reserve}铜`);
+    const held=coinRead(d,{point:'public.treasury',account:treasuryAccount(settlement),legacy:()=>treasury});
+    if(!safe(treasury)||held-copper<reserve)throw Error(`公账余额不足：动用后须留底${reserve}铜`);
     const id=`governance_spend:${sourceEvent}`;
     if(d.get(...path(id)))throw Error('公款支出编号已占用');
     bookSide(d,treasuryAccount(settlement),-copper,books);

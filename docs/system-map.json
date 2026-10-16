@@ -2,7 +2,7 @@
  "title": "无限原野系统地图",
  "card": "K9",
  "generatedFrom": {
-  "commit": "refs/heads/s1b",
+  "commit": "refs/heads/s1c",
   "method": "运行时导出（注册表、规则表、工具定义、效果表、立场传导表）+ 静态正则扫描（import 图、函数体标识符、state 分区与 records 前缀、rules/world 读取）。静态扫描是近似：经 engine.byId、helper 间接或动态拼接路径的访问不计入。"
  },
  "scanMethods": {
@@ -1054,7 +1054,7 @@
     "server-plugin/money.mjs",
     "server-plugin/stock.mjs"
    ],
-   "lines": 546,
+   "lines": 606,
    "stateWrites": [],
    "stateReads": [
     "creatures",
@@ -1125,7 +1125,7 @@
     "server-plugin/population-service.mjs",
     "server-plugin/settlement-profile.mjs"
    ],
-   "lines": 3611,
+   "lines": 3612,
    "stateWrites": [
     "created",
     "creatures",
@@ -1485,7 +1485,7 @@
     "server-plugin/forest-water.mjs",
     "server-plugin/water-cycle.mjs"
    ],
-   "lines": 1360,
+   "lines": 1362,
    "stateWrites": [
     "crafted",
     "created",
@@ -1828,7 +1828,7 @@
     "server-plugin/extraction.mjs",
     "server-plugin/smuggling.mjs"
    ],
-   "lines": 2973,
+   "lines": 2981,
    "stateWrites": [
     "crafted",
     "itemInstances",
@@ -2012,7 +2012,7 @@
     "server-plugin/tribal-awakening.mjs",
     "server-plugin/elections.mjs"
    ],
-   "lines": 4842,
+   "lines": 4843,
    "stateWrites": [
     "buildings",
     "created",
@@ -2151,7 +2151,7 @@
     "server-plugin/military.mjs",
     "server-plugin/war-diplomacy.mjs"
    ],
-   "lines": 703,
+   "lines": 706,
    "stateWrites": [
     "npcs",
     "player",
@@ -17480,7 +17480,7 @@
     "factions"
    ],
    "worldDirs": [],
-   "lines": 261
+   "lines": 264
   },
   "server-plugin/finance-bank.mjs": {
    "system": "sim_economy",
@@ -17542,6 +17542,7 @@
     "server-plugin/promotion-view.mjs",
     "server-plugin/regions.mjs",
     "server-plugin/shop.mjs",
+    "server-plugin/stock.mjs",
     "server-plugin/traits.mjs"
    ],
    "stateWrites": [
@@ -17567,7 +17568,7 @@
     "settlementProfiles"
    ],
    "worldDirs": [],
-   "lines": 74
+   "lines": 75
   },
   "server-plugin/forest-water.mjs": {
    "system": "sim_wildlife",
@@ -17608,7 +17609,7 @@
     "routes"
    ],
    "worldDirs": [],
-   "lines": 170
+   "lines": 172
   },
   "server-plugin/governance.mjs": {
    "system": "sim_society",
@@ -17659,7 +17660,7 @@
     "settlementProfiles"
    ],
    "worldDirs": [],
-   "lines": 422
+   "lines": 423
   },
   "server-plugin/group-account.mjs": {
    "system": "sim_society",
@@ -17871,7 +17872,8 @@
     "server-plugin/noble-state.mjs",
     "server-plugin/npc-intelligence.mjs",
     "server-plugin/shop.mjs",
-    "server-plugin/standing.mjs"
+    "server-plugin/standing.mjs",
+    "server-plugin/stock.mjs"
    ],
    "stateWrites": [
     "projects"
@@ -17896,7 +17898,7 @@
     "recipes"
    ],
    "worldDirs": [],
-   "lines": 340
+   "lines": 343
   },
   "server-plugin/law-codes.mjs": {
    "system": "sim_law",
@@ -18844,7 +18846,8 @@
    "system": "sim_npc",
    "imports": [
     "server-plugin/employment-state.mjs",
-    "server-plugin/facility-state.mjs"
+    "server-plugin/facility-state.mjs",
+    "server-plugin/stock.mjs"
    ],
    "stateWrites": [],
    "stateReads": [],
@@ -18855,7 +18858,7 @@
    ],
    "world": [],
    "worldDirs": [],
-   "lines": 53
+   "lines": 54
   },
   "server-plugin/medicine.mjs": {
    "system": "sim_npc",
@@ -18964,14 +18967,15 @@
     "rules"
    ],
    "worldDirs": [],
-   "lines": 510
+   "lines": 513
   },
   "server-plugin/money.mjs": {
    "system": "base_ledger",
    "imports": [
     "server-plugin/group-account.mjs",
     "server-plugin/ledger.mjs",
-    "server-plugin/npc-state.mjs"
+    "server-plugin/npc-state.mjs",
+    "server-plugin/stock.mjs"
    ],
    "stateWrites": [],
    "stateReads": [
@@ -19001,7 +19005,7 @@
    "worldDirs": [
     "ontology"
    ],
-   "lines": 112
+   "lines": 117
   },
   "server-plugin/monster-society.mjs": {
    "system": "sim_society",
@@ -20692,7 +20696,8 @@
     "server-plugin/ledger.mjs",
     "server-plugin/money.mjs",
     "server-plugin/organizations.mjs",
-    "server-plugin/settlement-trade.mjs"
+    "server-plugin/settlement-trade.mjs",
+    "server-plugin/stock.mjs"
    ],
    "stateWrites": [
     "npcs",
@@ -20712,7 +20717,7 @@
     "routes"
    ],
    "worldDirs": [],
-   "lines": 92
+   "lines": 93
   },
   "server-plugin/spell-research.mjs": {
    "system": "sim_character",
@@ -20823,7 +20828,7 @@
     "meta",
     "ontology"
    ],
-   "lines": 187
+   "lines": 242
   },
   "server-plugin/storage.mjs": {
    "system": "kernel_storage",

@@ -4,7 +4,8 @@ import {personOffices,personConstraint,personHousehold,placeSettlement,personAge
 import {currentEmployment,employmentActive,recordEmploymentAttendance} from './employment-state.mjs';
 import {workerSkill,employmentStock,employmentProductionPlan,settleEmploymentProduction} from './finance-assets.mjs';
 import {financeBalance,financeTransfer,financeChange,financeEvent,financeInt} from './finance-bank.mjs';
-import {escrow as escrowAccount} from './money.mjs';
+import {escrow as escrowAccount,coinRead,partyAccount} from './money.mjs';
+import {bagStock} from './stock.mjs';
 import {declareLedgerWriter} from './ledger.mjs';
 declareLedgerWriter('labor-market');
 import {groupAccountView} from './group-account.mjs';
@@ -191,8 +192,10 @@ function settleShift(d,e,row,at){
         const supplier=d.get('state','npcs',row.supplier),business=personBusiness(e,s,row.supplier);
         let trip;
         try{trip=supplier?.location===row.location?0:e.route(row.location,supplier?.location,'walk',start,d.document.randomSeed).minutes*2;}catch{trip=Infinity;}
-        const price=e.byId.get(row.item)?.basePrice??0,held=supplier?.inventory?.[row.item],stock=typeof held==='number'?held:held?.quantity??0;
-        quantity=Math.min(needed,stock,Math.floor((minutes-trip)/5),price?Math.floor(financeBalance(d,e,row.owner)/price):0);
+        const price=e.byId.get(row.item)?.basePrice??0;
+        // S1c: 供货人的库存与雇主现款读账户。
+        const stock=supplier?bagStock(d,e,{point:'labor.stock',id:row.supplier,item:row.item,legacy:()=>{const held=supplier.inventory?.[row.item];return typeof held==='number'?held:held?.quantity??0;}}):0;
+        quantity=Math.min(needed,stock,Math.floor((minutes-trip)/5),price?Math.floor(coinRead(d,{point:'labor.cash',account:partyAccount(e,d.get('state'),row.owner),legacy:()=>financeBalance(d,e,row.owner)})/price):0);
         if(!business?.open.value||quantity<=0||!Number.isFinite(trip)||trip>120){d.set(rec(row.id),{...row,status:'罢工',nextWork:at+DAY,reason:'补货来源或实际路程不可用'});return null;}
         minutes=trip+quantity*5;const cost=price*quantity;
         financeTransfer(d,e,row.owner,row.supplier,cost,`${row.id}:${at}:stock`);transferItems(d,e,row.supplier,row.owner,row.item,quantity);

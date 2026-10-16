@@ -1,5 +1,5 @@
 import {counterpart} from './credit.mjs';
-import {workshopFund} from './money.mjs';
+import {workshopFund,coinRead,partyAccount} from './money.mjs';
 import {financePath as rec,financeInt as int,financeBalance,financeChange,financeTransfer,financeEvent} from './finance-bank.mjs';
 import {groupRepresentative,personHousehold,personOccupation,personBusiness,personConstraint,personOffices,placeSettlement} from './entity-view.mjs';
 import {groupAccountView,ensureGroupAccount,groupAccountPath} from './group-account.mjs';
@@ -7,7 +7,7 @@ import {facilityView} from './facility-state.mjs';
 import {laborTrade} from './labor-market.mjs';
 import {standing} from './standing.mjs';
 import {changeItems,produceItems,heldUnit,wearItem} from './items.mjs';
-import {store,bookStock,craftInput,craftOutput,recordCraft} from './stock.mjs';
+import {store,bag,bookStock,craftInput,craftOutput,recordCraft,priceRead,bagStock} from './stock.mjs';
 import {declareLedgerWriter} from './ledger.mjs';
 // S1b: 受雇制作（组织或个人库存）是 src:craft 制造守恒对：配方投入进 sink:consume，产出来自 src:craft。
 declareLedgerWriter('finance-assets',{sources:{'src:craft':{'*':100000}},sinks:['sink:consume']});
@@ -45,9 +45,12 @@ const allState=s=>Object.values(s.records??{});
 function netAssets(d,e,id){
     const actor=d.get(...e.actorPath(id)),account=groupAccountView(e,d.get('state'),id);
     const goods=account?.items??actor?.inventory??{};
-    const stock=Object.entries(goods).reduce((n,[item,v])=>n+(typeof v==='number'?v:v.quantity??0)*(e.byId.get(item)?.basePrice??0),0);
+    // S1c: 现款与库存读账户（势力库存在 store，个人行囊在 bag），公式不变。
+    const stock=Object.entries(goods).reduce((n,[item,v])=>n+priceRead(d,{point:'assets.goods',account:account?.items?store(e,id,item):bag(e,id,item),legacy:()=>typeof v==='number'?v:v.quantity??0})*(e.byId.get(item)?.basePrice??0),0);
+    if(!account&&!actor&&d.get(...rec(`organization:${id}`))?.category!=='organization')throw Error('资金当事人不存在');
+    const cash=coinRead(d,{point:'assets.cash',account:partyAccount(e,d.get('state'),id),legacy:()=>financeBalance(d,e,id)});
     const debt=all(d).filter(r=>r.category==='debt'&&r.debtor===id).reduce((n,r)=>n+Math.max(0,r.amount-r.paid),0);
-    return Math.max(1,financeBalance(d,e,id)+stock-debt);
+    return Math.max(1,cash+stock-debt);
 }
 export function operatingProfit(d,e,issuer){
     const recorded=d.get(...rec(`finance_profit:${issuer}`))?.net??0;
@@ -76,7 +79,7 @@ export function operatingProfit(d,e,issuer){
 export function recordFinanceSale(d,e,{buyer,seller,item,quantity,cost,tax=0,eventId,paid=true,settledBasis}){
     if(settledBasis===undefined&&buyer!=='player'&&d.get('state','npcs',buyer)){
         const key=`finance_profit:${buyer}`,old=d.get(...rec(key))??{category:'finance_profit',issuer:buyer,net:0,lots:{},entries:[]};
-        const opening=e.quantity(d,buyer,item)-quantity,prior=old.lots[item]??(opening>0?[{quantity:opening,price:e.byId.get(item)?.basePrice??0}]:[]);
+        const opening=bagStock(d,e,{point:'assets.basis',id:buyer,item,legacy:()=>e.quantity(d,buyer,item)})-quantity,prior=old.lots[item]??(opening>0?[{quantity:opening,price:e.byId.get(item)?.basePrice??0}]:[]);
         d.set(rec(key),{...old,lots:{...old.lots,[item]:[...prior,{quantity,price:cost/quantity}]}});
     }
     if(seller==='player'||!d.get('state','npcs',seller))return;

@@ -4,6 +4,7 @@ import fs from 'node:fs/promises';
 import {loadWorld} from '../tools/load-world.mjs';
 import {WorldEngine} from '../server-plugin/engine.mjs';
 import {applyPatches} from '../server-plugin/storage.mjs';
+import {resyncBooks} from './helpers/ledger-sync.mjs';
 import {toolDefinitions} from '../extension/tools.mjs';
 
 const world=await loadWorld(),seed=JSON.parse(await fs.readFile(new URL('fixtures/legacy/seed.json',import.meta.url),'utf8'));
@@ -82,7 +83,7 @@ test('租金复用原赊账和还款去重，押金仅抵真实欠款，偿还�
 
 test('采购缺货不算到货，雇工缺库存或未付报酬不完成，到期退款只发生一次',async()=>{
     const f=fixture(),lease=await f.lease(),shop=lease.business,total=coinTotal(f.doc),order=await procurement(f,shop);
-    f.doc=applyPatches(f.doc,[{op:'set',path:['state','npcs',landlord,'inventory','item_bread','quantity'],value:0}]);
+    f.doc=applyPatches(f.doc,[{op:'set',path:['state','npcs',landlord,'inventory','item_bread','quantity'],value:0}]);resyncBooks(f.engine,f.doc);
     await assert.rejects(fulfill(f,shop,order.contract),/库存不足/);assert.equal(amount(f.doc,'player','item_bread'),0);
     assert.equal(f.doc.state.records[order.contract].status,'待履行');
     await assert.rejects(f.act('world_trade',{operation:'hire',business:shop,seller:worker,consent:true,task:'stocktake',item:'item_bread',quantity:1},'no-stock'),/没有已到货库存/);

@@ -1,4 +1,4 @@
-import {purse,escrow as escrowAccount,moveCoins} from './money.mjs';
+import {purse,escrow as escrowAccount,moveCoins,coinRead} from './money.mjs';
 import {declareLedgerWriter} from './ledger.mjs';
 declareLedgerWriter('business');
 import {chargeTrade,repayDebt,createBusinessContract,finishBusinessContract,refundContractEscrow,releaseBusinessLease} from './contracts.mjs';
@@ -122,7 +122,7 @@ export async function businessTrade(d,args,eventId){
         const q=quote(d,this,'player',buyer,item,args.unitPrice),cost=q.price*quantity;
         const day=Math.floor(d.get('state','minute')/1440);
         const purchases=Object.values(d.get('state','records')??{}).filter(row=>row.kind==='sale'&&row.parties?.[1]===buyer&&Math.floor(row.createdAt/1440)===day);
-        const capacity=purchases[0]?.customerBudget??Math.floor(this.actor(d,buyer).coins/4);
+        const capacity=purchases[0]?.customerBudget??Math.floor(coinRead(d,{point:'business.cash',account:purse(this,buyer),legacy:()=>this.actor(d,buyer).coins})/4);
         const spent=purchases.reduce((sum,row)=>sum+row.cost,0);
         if(spent+cost>capacity)throw Error(`顾客当日店铺消费上限${capacity}铜，不无限消费`);
         const incomeBefore=this.actor(d,buyer).coins;
