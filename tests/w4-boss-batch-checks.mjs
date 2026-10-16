@@ -3,7 +3,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
-import os from 'node:os';
+import{tmpRoot}from'../tools/tmp-root.mjs';
 import path from 'node:path';
 import {loadWorld} from '../tools/load-world.mjs';
 import {validateWorld} from '../tools/validate-world.mjs';
@@ -150,7 +150,7 @@ export async function defineBatchTests(batch,{balanceFile,tiers}){
  });
 
  test(`${batch} 隔离发布重发零写；候选与L4篡改在写入前拒绝`,async t=>{
-  const root=await fs.mkdtemp(path.join(os.tmpdir(),`dnd-${batch}-publish-`));t.after(()=>fs.rm(root,{recursive:true,force:true}));
+  const root=await fs.mkdtemp(path.join(tmpRoot(),`dnd-${batch}-publish-`));t.after(()=>fs.rm(root,{recursive:true,force:true}));
   for(const folder of ['meta','people','geo','lore'])await fs.cp(path.resolve('world',folder),path.join(root,folder),{recursive:true});
   await fs.mkdir(path.join(root,'drafts'));await fs.cp(path.resolve(`world/drafts/${batch}`),path.join(root,`drafts/${batch}`),{recursive:true});
   const file=path.join(root,'meta/bosses.json');await fs.writeFile(file,JSON.stringify(before.bosses)+'\n');

@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
-import os from 'node:os';
+import{tmpRoot}from'../tools/tmp-root.mjs';
 import path from 'node:path';
 import {once} from 'node:events';
 import express from 'express';
@@ -155,7 +155,7 @@ async function server(t,root,{generator}={}){
         const json=await response.json();if(response.status!==200)throw Error(`${endpoint} ${response.status} ${json.error}`);return json;
     };
 }
-const tempRoot=async t=>{const root=await fs.mkdtemp(path.join(os.tmpdir(),'remote-generation-'));t.after(()=>fs.rm(root,{recursive:true,force:true}));return root;};
+const tempRoot=async t=>{const root=await fs.mkdtemp(path.join(tmpRoot(),'remote-generation-'));t.after(()=>fs.rm(root,{recursive:true,force:true}));return root;};
 function generator({bad=null}={}){
     const calls=[];
     const generate=async brief=>{

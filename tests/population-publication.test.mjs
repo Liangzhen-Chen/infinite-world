@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
-import os from 'node:os';
+import{tmpRoot}from'../tools/tmp-root.mjs';
 import path from 'node:path';
 import {loadWorld} from '../tools/load-world.mjs';
 import {mergeHewan,publishHewan} from '../tools/publish-w1-hewan.mjs';
@@ -92,8 +92,8 @@ test('正式源engine校验零错，历史夹具依赖闭合且正式release深�
 });
 
 test('河湾历史候选逐条核对审核，完整深度不足拒绝且重复零写入',async t=>{
- const root=await fs.mkdtemp(path.join(os.tmpdir(),'fields-population-publish-'));
- t.after(async()=>{const target=path.resolve(root);assert.ok(target.startsWith(path.resolve(os.tmpdir())+path.sep));await fs.rm(target,{recursive:true,force:true});});
+ const root=await fs.mkdtemp(path.join(tmpRoot(),'fields-population-publish-'));
+ t.after(async()=>{const target=path.resolve(root);assert.ok(target.startsWith(path.resolve(tmpRoot())+path.sep));await fs.rm(target,{recursive:true,force:true});});
  await fs.cp(path.resolve('world'),root,{recursive:true,filter:file=>!file.split(path.sep).includes('drafts')});
  // The fixture writes loaded locations with biome fields already merged in.
  await fs.rm(path.join(root,'geo/biomes.json'),{force:true});

@@ -2,10 +2,10 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
 import path from 'node:path';
-import os from 'node:os';
+import{tmpRoot}from'../tools/tmp-root.mjs';
 import {openSoakRun,nextSoakTask,performSoakTask,selectRecallQuestions,scoreRecallAnswers,summarizeSoak} from '../tools/m3-soak.mjs';
 const facts=Array.from({length:30},(_,i)=>({id:`fact-${i}`,sourceTurn:i+1,sourceEvent:`event-${i}`,authority:'event-derived',category:i%2?'detail':'structured',question:`第${i+1}件旧事的数量？`,expected:i+1}));
-async function directory(t){const root=await fs.mkdtemp(path.join(os.tmpdir(),'fields-soak-'));t.after(async()=>{assert.ok(path.resolve(root).startsWith(path.resolve(os.tmpdir())+path.sep));await fs.rm(root,{recursive:true,force:true});});return root;}
+async function directory(t){const root=await fs.mkdtemp(path.join(tmpRoot(),'fields-soak-'));t.after(async()=>{assert.ok(path.resolve(root).startsWith(path.resolve(tmpRoot())+path.sep));await fs.rm(root,{recursive:true,force:true});});return root;}
 const result={completed:true,costUpperYuan:.01,checkpoint:{campaignId:'isolated',sequence:1},consistency:{verified:true,originalErrors:0,residualErrors:0},timing:{source:'action-rules',covered:true,expectedMinutes:5,elapsedMinutes:5},measurements:[{usage:{prompt_cache_hit_tokens:90,prompt_cache_miss_tokens:10}}]};
 
 test('初始化不调用模型，续跑保留固定配置与同一个任务编号',async t=>{

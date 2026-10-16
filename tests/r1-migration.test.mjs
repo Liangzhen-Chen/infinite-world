@@ -1,7 +1,7 @@
 import test from'node:test';
 import assert from'node:assert/strict';
 import fs from'node:fs/promises';
-import os from'node:os';
+import{tmpRoot}from'../tools/tmp-root.mjs';
 import path from'node:path';
 import {WorldEngine}from'../server-plugin/engine.mjs';
 import {loadWorld}from'../tools/load-world.mjs';
@@ -15,7 +15,7 @@ const world=await loadWorld(),engine=new WorldEngine(world),seed=JSON.parse(awai
 const old=()=>engine.initialFromLegacy(seed,'r1-old',{prepare:false});
 
 test('R1 导出迁移验证历史并往返，拒绝覆盖源或已有文件',async t=>{
-    const root=await fs.mkdtemp(path.join(os.tmpdir(),'fields-r1-cli-test-'));t.after(()=>fs.rm(root,{recursive:true,force:true}));
+    const root=await fs.mkdtemp(path.join(tmpRoot(),'fields-r1-cli-test-'));t.after(()=>fs.rm(root,{recursive:true,force:true}));
     const registry=new WorldRegistry(path.join(root,'worlds')),document=old();document.worldHash=await registry.put(world);
     const store=new CampaignStorage(path.join(root,'store'),{reducer:archivedReducer(registry)});
     await store.create({id:'old',worldVersion:world.version,document});
@@ -44,7 +44,7 @@ test('R1 一次初始化保留角色、财物和粮食，只改精确旧身份�
 });
 
 test('旧战役普通写入拒绝隐式迁移，旧事件可核实重放，R1 后撤销与重启仍一致',async t=>{
-    const root=await fs.mkdtemp(path.join(os.tmpdir(),'fields-r1-'));t.after(()=>fs.rm(root,{recursive:true,force:true}));
+    const root=await fs.mkdtemp(path.join(tmpRoot(),'fields-r1-'));t.after(()=>fs.rm(root,{recursive:true,force:true}));
     const reducer=campaignReducer(engine),store=new CampaignStorage(root,{reducer}),document=old();
     const action={tool:'world_trade',args:{seller:'林穗',service:'住宿'},eventId:'old-rent'};
     await assert.rejects(engine.reduce(document,action),/显式迁移/);

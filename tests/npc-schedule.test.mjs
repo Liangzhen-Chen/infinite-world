@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
-import os from 'node:os';
+import{tmpRoot}from'../tools/tmp-root.mjs';
 import path from 'node:path';
 import {loadWorld}from'../tools/load-world.mjs';
 import {WorldEngine}from'../server-plugin/engine.mjs';
@@ -145,8 +145,8 @@ test('患病人员停工，远处人物移动不暴露给玩家',async()=>{
 
 test('在途存档重启、导出和撤销均保持位置与提示一致',async t=>{
     const {engine,document,school}=await setup();document.state.minute=1019;document.state.location=school;
-    const root=await fs.mkdtemp(path.join(os.tmpdir(),'dnd-npc-schedule-'));
-    t.after(async()=>{assert.ok(path.resolve(root).startsWith(path.resolve(os.tmpdir())+path.sep+'dnd-npc-schedule-'));await fs.rm(root,{recursive:true,force:true});});
+    const root=await fs.mkdtemp(path.join(tmpRoot(),'dnd-npc-schedule-'));
+    t.after(async()=>{assert.ok(path.resolve(root).startsWith(path.resolve(tmpRoot())+path.sep+'dnd-npc-schedule-'));await fs.rm(root,{recursive:true,force:true});});
     const reducer=(doc,input,options)=>engine.reduce(doc,input,options),store=new CampaignStorage(root,{reducer});
     await store.create({id:'schedule',worldVersion:document.worldVersion,document});
     await store.transact('schedule',{id:'depart',anchor:'first',input:{tool:'world_time',args:{minutes:1},eventId:'depart'}},reducer);

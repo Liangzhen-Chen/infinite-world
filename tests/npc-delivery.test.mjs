@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
-import os from 'node:os';
+import{tmpRoot}from'../tools/tmp-root.mjs';
 import path from 'node:path';
 import {loadWorld} from '../tools/load-world.mjs';
 import {WorldEngine} from '../server-plugin/engine.mjs';
@@ -93,8 +93,8 @@ test('延后送货提前取消不扣费，已承诺后路费不足或道路变�
 });
 
 test('在途存档重启、重复事件、导出导入和撤销保留一次扣费与一次交物，旧记录回放不增行程',async t=>{
- const {engine,document,promise,run}=await setup(),directory=await fs.mkdtemp(path.join(os.tmpdir(),'fields-courier-'));
- t.after(async()=>{assert.ok(path.resolve(directory).startsWith(path.resolve(os.tmpdir())+path.sep+'fields-courier-'));await fs.rm(directory,{recursive:true,force:true});});
+ const {engine,document,promise,run}=await setup(),directory=await fs.mkdtemp(path.join(tmpRoot(),'fields-courier-'));
+ t.after(async()=>{assert.ok(path.resolve(directory).startsWith(path.resolve(tmpRoot())+path.sep+'fields-courier-'));await fs.rm(directory,{recursive:true,force:true});});
  const reducer=(doc,input,options)=>engine.reduce(doc,input,options);let store=new CampaignStorage(directory,{reducer});await store.create({id:'courier',worldVersion:document.worldVersion,document});
  const transact=(id,tool,args)=>store.transact('courier',{id,anchor:id,input:{tool,args,eventId:id}},reducer);
  await transact('delivery','world_promise',promise);await transact('start','world_time',{minutes:1});const travelling=(await store.read('courier')).document;assert.equal(travelling.state.npcs[sender].location,null);

@@ -2,7 +2,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
-import os from 'node:os';
+import{tmpRoot}from'../tools/tmp-root.mjs';
 import path from 'node:path';
 import {execFileSync} from 'node:child_process';
 import {loadWorld} from '../tools/load-world.mjs';
@@ -147,7 +147,7 @@ test('真实世界冒烟：开账后货币总量等于旧字段余额之和，�
 });
 
 test('命令行：--list 列登记表；读存档文档输出 JSON',()=>{
- const dir=fs.mkdtempSync(path.join(os.tmpdir(),'metrics-'));
+ const dir=fs.mkdtempSync(path.join(tmpRoot(),'metrics-'));
  try{
   const list=JSON.parse(execFileSync(process.execPath,['tools/balance-metrics.mjs','--list'],{encoding:'utf8'}));
   assert.equal(list.length,METRICS.length);

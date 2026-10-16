@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
-import os from 'node:os';
+import{tmpRoot}from'../tools/tmp-root.mjs';
 import path from 'node:path';
 import {spawnSync} from 'node:child_process';
 import {loadWorld} from '../tools/load-world.mjs';
@@ -134,7 +134,7 @@ test('损坏的途中账与个体身份拒绝结算，原存档不被部分修�
     }
 });
 test('途中行程与到达可重启/导入/回滚；独立迁移CLI不会覆盖旧存档或密钥路径',async t=>{
-    const base=path.resolve(os.tmpdir()),dir=await fs.mkdtemp(path.join(base,'seasonal-migration-'));
+    const base=path.resolve(tmpRoot()),dir=await fs.mkdtemp(path.join(base,'seasonal-migration-'));
     assert.ok(path.resolve(dir).startsWith(base+path.sep));t.after(()=>fs.rm(dir,{recursive:true,force:true}));
     const{engine,world,c,old}=setup(),reduce=(doc,input)=>engine.reduce(doc,input),store=new CampaignStorage(dir,{reducer:reduce});
     await store.create({id:'migration',worldVersion:world.version,document:c});

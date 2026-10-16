@@ -2,14 +2,14 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
 import path from 'node:path';
-import os from 'node:os';
+import{tmpRoot}from'../tools/tmp-root.mjs';
 import {once}from'node:events';
 import express from 'express';
 import {init}from'../server-plugin/index.mjs';
 import {npcPlanFingerprint}from'../server-plugin/npc-autonomy.mjs';
 
 test('智能规划在动作后冻结入账；同日、重复请求和导入回放不再调用模型，撤销同锚点一起回滚',async t=>{
-    const root=await fs.mkdtemp(path.join(os.tmpdir(),'fields-npc-plan-'));t.after(()=>fs.rm(root,{recursive:true,force:true}));
+    const root=await fs.mkdtemp(path.join(tmpRoot(),'fields-npc-plan-'));t.after(()=>fs.rm(root,{recursive:true,force:true}));
     let calls=0;
     const planner=async(engine,document)=>{calls++;return{status:'ready',input:{type:'npc_plan',plan:{kind:'npc-plan',version:1,minute:document.state.minute,stateFingerprint:npcPlanFingerprint(document),proposals:[]}}};};
     const app=express();app.use(express.json({limit:'50mb'}));const router=express.Router();await init(router,{baseRoot:root,npcPlanner:planner,npcPlanningEnabled:true});app.use(router);

@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
-import os from 'node:os';
+import{tmpRoot}from'../tools/tmp-root.mjs';
 import path from 'node:path';
 import {execFile} from 'node:child_process';
 import {promisify} from 'node:util';
@@ -16,7 +16,7 @@ const hard={quote:'旧文字',field:'notes',severity:'hard',reason:'旧事实审
 const allocation={cardId:'T06',waveLimitYuan:20,incrementLimitYuan:2,startingSpentYuan:.94801504,startingReservedYuan:0,limitYuan:2.94801504};
 function entryFor(id){const before={id,name:'测试人物',notes:'主持人不要让玩家凭空知道另一人的秘密。',relationships:[],memorySeeds:[{id:'old',event:'旧事',knownBy:[id]}],coins:3},patches=[{path:'notes',value:'她在院内与邻人核对过桌位，仍未商定先后。'}];return{id,contract:'audit-patch-v1',before,baseHash:hashContent(before),issues:[{id,field:'notes',code:'rule-wording'}],patches,facts:{...before,notes:patches[0].value}};}
 async function fixture(t,{pending=false,ids,manualCount=1}={}){
- const dir=await fs.mkdtemp(path.join(os.tmpdir(),'npc-depth-review-'));t.after(()=>fs.rm(dir,{recursive:true,force:true}));const root=path.join(dir,'candidate'),budgetRoot=path.join(dir,'shared');await fs.mkdir(root);await fs.mkdir(budgetRoot);
+ const dir=await fs.mkdtemp(path.join(tmpRoot(),'npc-depth-review-'));t.after(()=>fs.rm(dir,{recursive:true,force:true}));const root=path.join(dir,'candidate'),budgetRoot=path.join(dir,'shared');await fs.mkdir(root);await fs.mkdir(budgetRoot);
  const entries=(ids??['npc_review_bad','npc_review_other']).map(entryFor);if(pending){Object.assign(entries[0].before,{sex:'女',workplace:{location:'loc_review'},goals:{mid:[{content:'当面请物主核对',progress:0,steps:[{content:'询问何时能一起看',status:'pending'}]}]}});entries[0].facts=applyDepthDraft(entries[0].before,patchDraft(entries[0]));}const world={npcs:entries.map(e=>e.before),residents:[],locations:[],settlementProfiles:[]},config={revision:'same-review-v1'},foundation=depthFoundation(entries,world,config.revision);
  const records=entries.map((entry,i)=>({id:entry.id,fingerprint:hashContent({entry,context:contextFor(entry,world),revision:config.revision}),status:i>=manualCount?'passed':'manual',attempts:3,draft:patchDraft(entry),review:{contradictions:i>=manualCount?[]:[hard]},errors:i>=manualCount?[]:[hard],warnings:[],feedback:i>=manualCount?null:[hard],measurements:[{costUpperYuan:.123}]}));
  const fingerprint=hashContent(records.map(({id,draft,review,status})=>({id,draft,review,status}))),batch={index:0,fingerprint,ids:records.map(r=>r.id),count:records.length,passed:records.length-manualCount,manual:records.slice(0,manualCount).map(r=>r.id),pending:[],flagged:[],sample:[records[manualCount].id],needsSystemicRepair:true,l4:{approved:false,notes:[{id:records[manualCount].id,note:'原阅读证据'}]}};

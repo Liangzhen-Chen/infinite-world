@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
-import os from 'node:os';
+import{tmpRoot}from'../tools/tmp-root.mjs';
 import path from 'node:path';
 import {once} from 'node:events';
 import express from 'express';
@@ -18,7 +18,7 @@ async function api(t,root,world){
  };
 }
 test('W5正式内容经world_upgrade进入旧战役检索，保持钱袋与NPC个人记忆',async t=>{
- const root=await fs.mkdtemp(path.join(os.tmpdir(),'w5-upgrade-'));t.after(()=>fs.rm(root,{recursive:true,force:true}));
+ const root=await fs.mkdtemp(path.join(tmpRoot(),'w5-upgrade-'));t.after(()=>fs.rm(root,{recursive:true,force:true}));
  // T157两座怪物聚居地另登记culture_ms_*，T142远方另登记culture_far_*，W5本批仍为10种文化。
  const published=await loadWorld();assert.equal(published.cultures.filter(c=>!/^culture_(ms|far)_/.test(c.id)).length,10);assert.equal(published.deities.length,12);
  const original=structuredClone(published);delete original.cultures;delete original.deities;

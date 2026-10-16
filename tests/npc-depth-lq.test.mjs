@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
 import path from 'node:path';
-import os from 'node:os';
+import{tmpRoot}from'../tools/tmp-root.mjs';
 import {execFile} from 'node:child_process';
 import {promisify} from 'node:util';
 import {createHash} from 'node:crypto';
@@ -62,7 +62,7 @@ test('砾泉正式30人等于已审批完整档，全体152个full深度及规�
 });
 
 test('砾泉冻结原档首次预演零写入，正式发布闭合6事件30人且仅更新砾泉',async t=>{
- const temp=await fs.mkdtemp(path.join(os.tmpdir(),'t86-publication-'));t.after(()=>fs.rm(temp,{recursive:true,force:true}));
+ const temp=await fs.mkdtemp(path.join(tmpRoot(),'t86-publication-'));t.after(()=>fs.rm(temp,{recursive:true,force:true}));
  const worldRoot=path.join(temp,'world');
  for(const dir of ['meta','geo','people','lore','design'])await fs.cp(path.resolve('world',dir),path.join(worldRoot,dir),{recursive:true});
  await fs.mkdir(path.join(temp,'tools'));
@@ -610,7 +610,7 @@ test('真实背景hard使五人来源不闭合，未发的邻居修订保持提�
 });
 
 test('T08实际continuation父proof加四叶提议经官方prepare，full和compact只携当前after且保留原证据',async t=>{
- const temp=await fs.mkdtemp(path.join(os.tmpdir(),'lq-neighbor-parent-'));t.after(()=>fs.rm(temp,{recursive:true,force:true}));
+ const temp=await fs.mkdtemp(path.join(tmpRoot(),'lq-neighbor-parent-'));t.after(()=>fs.rm(temp,{recursive:true,force:true}));
  const worldRoot=path.join(temp,'world');
  for(const folder of ['meta','people','geo','lore'])await fs.cp(path.resolve('world',folder),path.join(worldRoot,folder),{recursive:true});
  await fs.cp(legacyRoot,path.join(worldRoot,'drafts/w1/lq-depth'),{recursive:true});await fs.cp(path.resolve('world/drafts/w1/baishi-skeleton'),path.join(worldRoot,'drafts/w1/baishi-skeleton'),{recursive:true});

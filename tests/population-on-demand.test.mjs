@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
-import os from 'node:os';
+import{tmpRoot}from'../tools/tmp-root.mjs';
 import path from 'node:path';
 import {once} from 'node:events';
 import express from 'express';
@@ -45,7 +45,7 @@ async function server(t,root,{world=baseline,generator}={}){
         const json=await response.json();if(response.status!==200)throw Error(`${endpoint} ${response.status} ${json.error}`);return json;
     };
 }
-const tempRoot=async t=>{const root=await fs.mkdtemp(path.join(os.tmpdir(),'population-on-demand-'));t.after(()=>fs.rm(root,{recursive:true,force:true}));return root;};
+const tempRoot=async t=>{const root=await fs.mkdtemp(path.join(tmpRoot(),'population-on-demand-'));t.after(()=>fs.rm(root,{recursive:true,force:true}));return root;};
 const seeded=(document,district)=>Object.values(document.state.created).filter(e=>e.generated==='population'&&e.home.district===district);
 const identity=e=>({id:e.id,name:e.name,age:e.age,sex:e.sex,species:e.species,householdId:e.householdId,household:e.household,home:e.home,occupation:e.occupation,kin:e.kin});
 

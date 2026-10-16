@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
-import os from 'node:os';
+import{tmpRoot}from'../tools/tmp-root.mjs';
 import path from 'node:path';
 import {CampaignStorage} from '../server-plugin/storage.mjs';
 import {WorldRegistry} from '../server-plugin/world-registry.mjs';
@@ -60,7 +60,7 @@ test('白金刺剑低于40级不能交锋，高阶器械不附未实现参数',a
 
 
 test('world_upgrade引入末批装备和配方且保留已变化的钱物关系',async t=>{
- const root=await fs.mkdtemp(path.join(os.tmpdir(),'w3-journey-upgrade-'));t.after(()=>fs.rm(root,{recursive:true,force:true}));
+ const root=await fs.mkdtemp(path.join(tmpRoot(),'w3-journey-upgrade-'));t.after(()=>fs.rm(root,{recursive:true,force:true}));
  // T113/T114/W5 遗迹据点晚于本批且引用本批物品：与 w2-s* 剥离器同口径，旧版保留据点仍引用的物品（siteItemReferences）。
  const siteKept=siteItemReferences(oldWorld.locations),upgradeOld=structuredClone(oldWorld);upgradeOld.items.push(...world.items.filter(x=>siteKept.has(x.id)&&!upgradeOld.items.some(y=>y.id===x.id)));
  const registry=new WorldRegistry(path.join(root,'worlds')),store=new CampaignStorage(path.join(root,'saves'),{reducer:archivedReducer(registry)}),oldEngine=new WorldEngine(upgradeOld),doc=oldEngine.initialFromLegacy(seed,'journey-upgrade');

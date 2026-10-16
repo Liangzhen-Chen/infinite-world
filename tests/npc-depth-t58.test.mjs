@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
-import os from 'node:os';
+import{tmpRoot}from'../tools/tmp-root.mjs';
 import path from 'node:path';
 import {completeOptions} from '../world/drafts/w1/wt-depth/reopen/prepare-complete.mjs';
 import {sourceRepairOptions} from '../world/drafts/w1/wt-depth/reopen/complete-003/prepare-source-repair.mjs';
@@ -52,7 +52,7 @@ test('T58真实父record basis补全15人23兄弟，四方子plan持久/prepare/
 });
 
 test('T58真实source凭证缺失/hash/祖先/越权/兄弟/单侧均在prepare、review与publish模型前拒绝',async t=>{
- const temp=await fs.mkdtemp(path.join(os.tmpdir(),'t58-proof-'));t.after(()=>fs.rm(temp,{recursive:true,force:true}));
+ const temp=await fs.mkdtemp(path.join(tmpRoot(),'t58-proof-'));t.after(()=>fs.rm(temp,{recursive:true,force:true}));
  const worldRoot=path.join(temp,'world');
  for(const dir of ['meta','geo','people','lore'])await fs.cp(path.resolve('world',dir),path.join(worldRoot,dir),{recursive:true});
  await fs.mkdir(path.join(worldRoot,'design'),{recursive:true});

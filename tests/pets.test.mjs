@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
-import os from 'node:os';
+import{tmpRoot}from'../tools/tmp-root.mjs';
 import path from 'node:path';
 import fc from 'fast-check';
 import { loadWorld } from '../tools/load-world.mjs';
@@ -169,8 +169,8 @@ test('查看宠物保持只读，旧宠物记录不补造，规则坏引用与�
 });
 
 test('宠物归属、照料和世界时钟在重启、导入导出及删除回合重放中保持一致', async t => {
-    const { engine, document, id } = await setup('support', true), directory = await fs.mkdtemp(path.join(os.tmpdir(), 'fields-pet-test-'));
-    t.after(async () => { const target = path.resolve(directory); if (!target.startsWith(path.resolve(os.tmpdir()) + path.sep + 'fields-pet-test-')) throw new Error('临时目录边界错误'); await fs.rm(target, { recursive: true, force: true }); });
+    const { engine, document, id } = await setup('support', true), directory = await fs.mkdtemp(path.join(tmpRoot(), 'fields-pet-test-'));
+    t.after(async () => { const target = path.resolve(directory); if (!target.startsWith(path.resolve(tmpRoot()) + path.sep + 'fields-pet-test-')) throw new Error('临时目录边界错误'); await fs.rm(target, { recursive: true, force: true }); });
     const reducer = (c, input) => engine.reduce(c, input), store = new CampaignStorage(directory, { reducer });
     await store.create({ id: 'pets', worldVersion: engine.world.version, document });
     await store.transact('pets', { id: 'feed_event', anchor: 'feeding', input: { tool: 'world_pet', args: { operation: 'feed', target: id, item: 'item_ration' }, eventId: 'feed_event' } }, reducer);

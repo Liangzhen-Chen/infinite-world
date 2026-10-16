@@ -1,12 +1,12 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
-import os from 'node:os';
+import{tmpRoot}from'../tools/tmp-root.mjs';
 import path from 'node:path';
 import {reviewM4R} from '../tools/m4r-review.mjs';
 
 async function fixture(t){
- const root=await fs.mkdtemp(path.join(os.tmpdir(),'m4r-review-'));
+ const root=await fs.mkdtemp(path.join(tmpRoot(),'m4r-review-'));
  t.after(()=>fs.rm(root,{recursive:true,force:true}));
  const write=(name,value)=>fs.writeFile(path.join(root,name),JSON.stringify(value));
  await write('hidden-passives.json',[{id:'profession_hidden_01',ability:'观察检定加1',cost:'杀生停用',passive:{domain:'wildlife_observe',checkBonus:1}}]);

@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
-import os from 'node:os';
+import{tmpRoot}from'../tools/tmp-root.mjs';
 import path from 'node:path';
 import {loadWorld} from '../tools/load-world.mjs';
 import {readS3Publication,mergeS3Publication,publishS3,withoutS3,files as publishedFiles} from '../tools/publish-w2-s3.mjs';
@@ -212,7 +212,7 @@ test('隔离发布只追加本批，保留其他条目，重复发布零写入�
  assert.deepEqual(mergeS3Publication(world,publication),world);
  const zero=structuredClone(world);zero.npcs.find(n=>n.id==='npc_hw_luqing').inventory[books[0].id]=0;zero.npcs.find(n=>n.id===SHU).inventory.item_s3_rice=0;assert.deepEqual(mergeS3Publication(zero,publication).npcs,zero.npcs);
  const conflict=structuredClone(world);conflict.spells.find(s=>s.id===spells[0].id).name+='异文';assert.throws(()=>mergeS3Publication(conflict,publication),/冲突/);
- const root=await fs.mkdtemp(path.join(os.tmpdir(),'dnd-s3-'));t.after(()=>fs.rm(root,{recursive:true,force:true}));
+ const root=await fs.mkdtemp(path.join(tmpRoot(),'dnd-s3-'));t.after(()=>fs.rm(root,{recursive:true,force:true}));
  for(const folder of ['meta','people','geo','lore'])await fs.cp(path.resolve('world',folder),path.join(root,folder),{recursive:true});
  await fs.mkdir(path.join(root,'drafts'));await fs.cp(path.resolve('world/drafts/w2-s3'),path.join(root,'drafts/w2-s3'),{recursive:true});
  const key={'meta/spells.json':'spells','meta/skills.json':'skills','meta/items.json':'items','meta/recipes.json':'recipes','people/baseline.json':'npcs','geo/locations.json':'locations'};

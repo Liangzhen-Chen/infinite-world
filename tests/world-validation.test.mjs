@@ -4,7 +4,7 @@ import {loadWorld}from'../tools/load-world.mjs';
 import {validateWorld}from'../tools/validate-world.mjs';
 import {buildWorld}from'../tools/build-world.mjs';
 import fs from 'node:fs/promises';
-import os from 'node:os';
+import{tmpRoot}from'../tools/tmp-root.mjs';
 import path from 'node:path';
 import {catalogProgress,catalogMinimum}from'../tools/catalog-progress.mjs';
 import {validateNpcDepth} from '../tools/npc-profile-validation.mjs';
@@ -63,7 +63,7 @@ test('世界校验拒绝未接入法术与越界防护，不能用文字和数�
 });
 
 test('发布构建要求全体人物深度，仍拒绝坏引用、年龄冲突、屏蔽名称和未实现法术',async t=>{
-    const current=await loadWorld(),world=completeDepth(structuredClone(current)),destination=await fs.mkdtemp(path.join(os.tmpdir(),'infinite-fields-build-'));
+    const current=await loadWorld(),world=completeDepth(structuredClone(current)),destination=await fs.mkdtemp(path.join(tmpRoot(),'infinite-fields-build-'));
     t.after(()=>fs.rm(destination,{recursive:true,force:true}));
     assert.equal(validateWorld(current,{stage:'release'}).ok,true,'五村深度发布后正式世界通过 release');
     const incomplete=structuredClone(current);incomplete.npcs[0].voice.register=incomplete.npcs[0].voice.habits[0];

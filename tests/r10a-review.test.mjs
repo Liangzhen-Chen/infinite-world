@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
-import os from 'node:os';
+import{tmpRoot}from'../tools/tmp-root.mjs';
 import path from 'node:path';
 import {loadWorld} from '../tools/load-world.mjs';
 import {publishR10A,reviewR10A} from '../tools/r10a-review.mjs';
@@ -20,7 +20,7 @@ test('正式世界只含L2通过的审核原文；L2两次仍有硬事实的条�
 });
 
 test('临时目录重发零改动；审核后改正文或L4不达标在写入前拒绝',async t=>{
- const root=await fs.mkdtemp(path.join(os.tmpdir(),'r10a-publish-'));
+ const root=await fs.mkdtemp(path.join(tmpRoot(),'r10a-publish-'));
  t.after(()=>fs.rm(root,{recursive:true,force:true}));
  for(const folder of ['meta','people','geo','lore','drafts/r10a'])await fs.cp(path.resolve('world',folder),path.join(root,folder),{recursive:true});
  const out=await publishR10A({root,publish:true});
@@ -35,7 +35,7 @@ test('临时目录重发零改动；审核后改正文或L4不达标在写入前
 });
 
 test('L2续跑不重复调用已通过条目，被否决条目最多重跑一次',async t=>{
- const root=await fs.mkdtemp(path.join(os.tmpdir(),'r10a-l2-'));
+ const root=await fs.mkdtemp(path.join(tmpRoot(),'r10a-l2-'));
  t.after(()=>fs.rm(root,{recursive:true,force:true}));
  const write=(name,v)=>fs.writeFile(path.join(root,name),JSON.stringify(v));
  await write('entries.json',{entries:[{id:'a',target:['rules','x'],value:{text:'甲'}}]});

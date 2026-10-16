@@ -1,7 +1,7 @@
 import test from'node:test';
 import assert from'node:assert/strict';
 import fs from'node:fs/promises';
-import os from'node:os';
+import{tmpRoot}from'../tools/tmp-root.mjs';
 import path from'node:path';
 import {loadWorld}from'../tools/load-world.mjs';
 import {WorldEngine}from'../server-plugin/engine.mjs';
@@ -249,7 +249,7 @@ test('小型异常修补解除实际空间阻断，神性及大型裂隙不能�
  change(s,'feature_anomaly',{spaceAnomaly:{divine:false,radiusMeters:1,intensity:1}});await denied(s,'repair_space','feature_anomaly',/小型/);
 });
 test('消费者状态能经正式存储恢复；同一事件重放不会复制封存单件',async()=>{
- const s=fixture(),root=await fs.mkdtemp(path.join(os.tmpdir(),'mind-space-'));
+ const s=fixture(),root=await fs.mkdtemp(path.join(tmpRoot(),'mind-space-'));
  try{
   const reducer=(doc,event)=>s.engine.reduce(doc,event),storage=new CampaignStorage(root,{reducer}),initial=structuredClone(s.doc);await storage.create({id:'test',worldVersion:s.world.version,document:initial});
   let chosen;

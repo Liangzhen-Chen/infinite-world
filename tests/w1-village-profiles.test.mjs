@@ -1,5 +1,5 @@
 import {copyWorldFixture} from './fixtures/w1-depth-editions.mjs';
-import test from 'node:test';import assert from 'node:assert/strict';import fs from 'node:fs/promises';import os from 'node:os';import path from 'node:path';
+import test from 'node:test';import assert from 'node:assert/strict';import fs from 'node:fs/promises';import{tmpRoot}from'../tools/tmp-root.mjs';import path from 'node:path';
 import {loadWorld} from '../tools/load-world.mjs';import {validateWorld} from '../tools/validate-world.mjs';
 import {villageProfileCandidates} from '../world/design/w1-village-profiles.mjs';
 import {approvedProfiles,validateDraft,contextFor} from '../tools/w1-village-profiles-content.mjs';
@@ -29,7 +29,7 @@ test('公开目录和现场提示可取得当地问题，但不泄漏真伪、�
 test('重复发布的审核上下文不引用自身档案，任意改稿不能复用通过状态',async()=>{
  for(const p of profiles)assert.deepEqual(contextFor(p,withProfiles),contextFor(p,world));
  assert.deepEqual(await approvedProfiles({world:withProfiles}),profiles);
- const tmp=await fs.mkdtemp(path.join(os.tmpdir(),'village-profile-review-'));
+ const tmp=await fs.mkdtemp(path.join(tmpRoot(),'village-profile-review-'));
  try{await fs.cp('world/drafts/w1/village-ledgers',tmp,{recursive:true});const file=path.join(tmp,'loc_bs_yupo.json'),r=JSON.parse(await fs.readFile(file,'utf8'));r.draft.rumors[0].truth='false';await fs.writeFile(file,JSON.stringify(r));await assert.rejects(approvedProfiles({world,root:tmp}),/审查后内容已改变/);}finally{await fs.rm(tmp,{recursive:true,force:true});}
 });
 
@@ -55,7 +55,7 @@ test('四村自然中文搜索命中公开数值、治理、问题和日历，�
  index.syncSettlements({...withProfiles,settlementProfiles:[]},doc);assert.equal([...index.documents.keys()].some(id=>id.startsWith('settlement_')),false);
 });
 test('聚落档案出版保留人物补充，重复零写入，篡改 details 被拒绝',async()=>{
- const parent=await fs.mkdtemp(path.join(os.tmpdir(),'village-profile-publish-')),tmp=await copyWorldFixture(parent);
+ const parent=await fs.mkdtemp(path.join(tmpRoot(),'village-profile-publish-')),tmp=await copyWorldFixture(parent);
  try{const first=await publishVillages({root:tmp,publish:true});assert.deepEqual(first.amendedProfileIds,profiles.map(p=>p.id));assert.deepEqual([...first.amendedNpcIds].sort(),Object.values(depthBatches).flatMap(b=>b.depthRows.map(r=>r.id)).sort());
   const next=await loadWorld(tmp);assert.deepEqual(next.npcs,world.npcs);assert.deepEqual(next.items,world.items);assert.deepEqual(next.households,world.households);assert.deepEqual(next.locations,world.locations);
   assert.deepEqual((await publishVillages({root:tmp,publish:true})).changed,[]);

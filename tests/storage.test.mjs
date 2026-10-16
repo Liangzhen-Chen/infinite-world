@@ -1,13 +1,13 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
-import os from 'node:os';
+import{tmpRoot}from'../tools/tmp-root.mjs';
 import path from 'node:path';
 import fc from 'fast-check';
 import { CampaignStorage, applyPatches, digest } from '../server-plugin/storage.mjs';
 
 const fixture = async t => {
-    const directory = await fs.mkdtemp(path.join(os.tmpdir(), 'infinite-fields-test-'));
+    const directory = await fs.mkdtemp(path.join(tmpRoot(), 'infinite-fields-test-'));
     t.after(() => fs.rm(directory, { recursive: true, force: true }));
     const store = new CampaignStorage(directory, { snapshotEvery: 3, segmentSize: 4, reducer: deduct });
     await store.create({ id: 'test', worldVersion: 'baseline-1', document: { state: { coins: 180 }, memories: {} } });
@@ -65,7 +65,7 @@ test('result/patches/previous/sequence/checksum/documentHash篡改导入均零�
 });
 
 test('反馈：拒绝与重复不生成卡片，撤销后重算后续余额，重启保持一致',async t=>{
-    const directory=await fs.mkdtemp(path.join(os.tmpdir(),'fields-feedback-'));t.after(()=>fs.rm(directory,{recursive:true,force:true}));
+    const directory=await fs.mkdtemp(path.join(tmpRoot(),'fields-feedback-'));t.after(()=>fs.rm(directory,{recursive:true,force:true}));
     const reducer=(doc,input)=>{const value=deduct(doc,input);value.result.notices=[{type:'coins',text:`剩余${value.result.balance}`}];return value;};
     const store=new CampaignStorage(directory,{reducer});await store.create({id:'feedback',worldVersion:'test',document:{state:{coins:180}}});
     const first={id:'a',anchor:'a',input:{cost:6}},second={id:'b',anchor:'b',input:{cost:6}};

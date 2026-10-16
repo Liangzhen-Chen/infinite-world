@@ -1,7 +1,7 @@
 import test from'node:test';
 import assert from'node:assert/strict';
 import fs from'node:fs/promises';
-import os from'node:os';
+import{tmpRoot}from'../tools/tmp-root.mjs';
 import path from'node:path';
 import {loadWorld}from'../tools/load-world.mjs';
 import {loadPromptBundle}from'../tools/build-card.mjs';
@@ -152,7 +152,7 @@ test('模板校验真实物资，公开工具保持25入口和12000 token估算�
 });
 
 test('持久交易可重启导入、幂等和回滚；回滚后再次成交不多发物资',async t=>{
-    const{engine,document}=setup(),directory=await fs.mkdtemp(path.join(os.tmpdir(),'boss-negotiation-'));
+    const{engine,document}=setup(),directory=await fs.mkdtemp(path.join(tmpRoot(),'boss-negotiation-'));
     t.after(()=>fs.rm(directory,{recursive:true,force:true}));const reducer=(doc,input)=>engine.reduce(doc,input),store=new CampaignStorage(directory,{reducer});
     await store.create({id:'boss',worldVersion:engine.world.version,document});
     const enter={id:'enter',anchor:'a1',input:{tool:'world_field',args:{operation:'lair_approach',lair},eventId:'enter'}};

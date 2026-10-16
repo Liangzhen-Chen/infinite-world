@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
-import os from 'node:os';
+import{tmpRoot}from'../tools/tmp-root.mjs';
 import path from 'node:path';
 import {once} from 'node:events';
 import express from 'express';
@@ -20,7 +20,7 @@ const seed=JSON.parse(await fs.readFile('tests/fixtures/legacy/seed.json','utf8'
 const world=await loadWorld(),profiles=world.settlementProfiles.filter(p=>p.details),all=profiles.flatMap(p=>p.details.rumors);
 const argsFor=(r,speaker=r.source)=>({subject:'player',key:r.id,rumor:r.id,source:speaker,content:r.claim});
 const isPublic=(engine,id)=>engine.byId.get(id)?.access?.mode!=='private'&&!id.includes('home');
-async function temporary(t){const root=await fs.mkdtemp(path.join(os.tmpdir(),'fields-rumor-'));t.after(()=>fs.rm(root,{recursive:true,force:true}));return root;}
+async function temporary(t){const root=await fs.mkdtemp(path.join(tmpRoot(),'fields-rumor-'));t.after(()=>fs.rm(root,{recursive:true,force:true}));return root;}
 const reduce=async(engine,doc,tool,args,eventId)=>{const out=await engine.reduce(doc,{...resolveToolCall(tool,args),eventId});return{document:applyPatches(doc,out.patches),result:out.result};};
 
 // Approach actual routine locations with ordinary player moves/waits. Never

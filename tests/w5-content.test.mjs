@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
-import os from 'node:os';
+import{tmpRoot}from'../tools/tmp-root.mjs';
 import path from 'node:path';
 import seeds from '../world/design/w5-cultures.mjs';
 import {loadWorld} from '../tools/load-world.mjs';
@@ -49,7 +49,7 @@ test('W5名称与正文都查屏蔽，文化不得靠重复谚语充数',async()
  assert.equal(bigramSimilarity('同一段说明','同一段说明'),1);
 });
 test('旧测试世界没有lore目录时仍能读取，不要求新内容倒灌夹具',async t=>{
- const temp=await fs.mkdtemp(path.join(os.tmpdir(),'w5-optional-'));
+ const temp=await fs.mkdtemp(path.join(tmpRoot(),'w5-optional-'));
  t.after(()=>fs.rm(temp,{recursive:true,force:true}));
  for(const folder of ['meta','people','geo'])await fs.cp(new URL(`../world/${folder}`,import.meta.url),path.join(temp,folder),{recursive:true});
  // These sites depend on the later lore and societies absent from this fixture.

@@ -9,7 +9,7 @@ import {npcCognitionView} from '../server-plugin/npc-cognition.mjs';
 import {affairs} from '../server-plugin/ui-affairs.mjs';
 import {loadPromptBundle} from '../tools/build-card.mjs';
 import {sceneCard} from '../server-plugin/scene-card.mjs';
-import os from 'node:os';
+import{tmpRoot}from'../tools/tmp-root.mjs';
 import path from 'node:path';
 
 const world=await loadWorld(),seed=JSON.parse(await fs.readFile('tests/fixtures/legacy/seed.json','utf8'));
@@ -142,7 +142,7 @@ test('一段与分段推进相同，补丁复演保留托管、路线及履约�
 });
 test('真实存储并发争单仅一个承接者成功',async t=>{
  const {engine,document,publish}=setup();const posted=(await publish(document,{objective:{type:'visit',location:destination}})).document;
- const root=await fs.mkdtemp(path.join(os.tmpdir(),'quests-'));t.after(()=>fs.rm(root,{recursive:true,force:true}));const store=new CampaignStorage(root);await store.create({id:'quest-race',worldVersion:world.version,document:posted});
+ const root=await fs.mkdtemp(path.join(tmpRoot(),'quests-'));t.after(()=>fs.rm(root,{recursive:true,force:true}));const store=new CampaignStorage(root);await store.create({id:'quest-race',worldVersion:world.version,document:posted});
  const reducer=(d,input)=>engine.reduce(d,input);
  const outputs=await Promise.allSettled([npc,other].map((taker,i)=>store.transact('quest-race',{id:`claim-${i}`,anchor:`claim-${i}`,input:{tool:'world_quest',args:{operation:'accept',quest:'quest_offer',taker,consent:true},eventId:`claim-${i}`}},reducer)));
  assert.equal(outputs.filter(o=>o.status==='fulfilled').length,1);assert.equal(outputs.filter(o=>o.status==='rejected').length,1);

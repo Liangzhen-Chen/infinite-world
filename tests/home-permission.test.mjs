@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
-import os from 'node:os';
+import{tmpRoot}from'../tools/tmp-root.mjs';
 import path from 'node:path';
 import {loadWorld} from '../tools/load-world.mjs';
 import {WorldEngine} from '../server-plugin/engine.mjs';
@@ -55,8 +55,8 @@ test('旁人、未成年、未实例化名册与不清醒者不能签发；同�
  assert.equal(entered.doc.state.npcs.npc_hw_wushuo.location,house);
 });
 test('许可随同一事件去重、重启和导出保存，删回合同时撤销许可与可见反馈',async t=>{
- const{engine,doc}=await setup(),directory=await fs.mkdtemp(path.join(os.tmpdir(),'fields-home-permit-'));
- t.after(async()=>{const target=path.resolve(directory);assert.ok(target.startsWith(path.resolve(os.tmpdir())+path.sep+'fields-home-permit-'));await fs.rm(target,{recursive:true,force:true});});
+ const{engine,doc}=await setup(),directory=await fs.mkdtemp(path.join(tmpRoot(),'fields-home-permit-'));
+ t.after(async()=>{const target=path.resolve(directory);assert.ok(target.startsWith(path.resolve(tmpRoot())+path.sep+'fields-home-permit-'));await fs.rm(target,{recursive:true,force:true});});
  const reducer=(document,input,options)=>engine.reduce(document,input,options),store=new CampaignStorage(directory,{reducer});
  await store.create({id:'home',worldVersion:doc.worldVersion,document:doc});
  const event={id:'permission',anchor:'visit',input:{tool:'world_promise',args:grant,eventId:'permission'}};

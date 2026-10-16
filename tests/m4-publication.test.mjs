@@ -1,4 +1,4 @@
-import test from'node:test';import assert from'node:assert/strict';import fs from'node:fs/promises';import os from'node:os';import path from'node:path';
+import test from'node:test';import assert from'node:assert/strict';import fs from'node:fs/promises';import{tmpRoot}from'../tools/tmp-root.mjs';import path from'node:path';
 import{loadWorld}from'../tools/load-world.mjs';import{readM4Publication,mergeM4Batch2,publishM4Batch2}from'../tools/publish-m4-batch2.mjs';
 import{WorldEngine}from'../server-plugin/engine.mjs';import{applyPatches}from'../server-plugin/storage.mjs';import{compatibleWorld,planWorldUpgrade}from'../server-plugin/world-upgrade.mjs';
 const publication=await readM4Publication(),source=await loadWorld();
@@ -17,7 +17,7 @@ function position(d,npc){d.state.location=world.npcs.find(n=>n.id===npc).locatio
 async function succeed(run,d,tool,args,prefix){for(let i=0;i<60;i++){const result=await run(d,tool,args,`${prefix}_${i}`);if(result.result.success||result.result.certified)return result;}throw Error('未找到成功骰点');}
 
 test('M4隔离发布校验30条审查与来源，重复发布零写入，篡改正文先拒绝',async t=>{
- const root=await fs.mkdtemp(path.join(os.tmpdir(),'fields-m4-publish-'));t.after(async()=>{const target=path.resolve(root);assert.ok(target.startsWith(path.resolve(os.tmpdir())+path.sep));await fs.rm(target,{recursive:true,force:true});});
+ const root=await fs.mkdtemp(path.join(tmpRoot(),'fields-m4-publish-'));t.after(async()=>{const target=path.resolve(root);assert.ok(target.startsWith(path.resolve(tmpRoot())+path.sep));await fs.rm(target,{recursive:true,force:true});});
  for(const folder of['meta','people','geo','lore'])await fs.cp(path.resolve('world',folder),path.join(root,folder),{recursive:true});
  for(const[file,value]of Object.entries({'meta/spells.json':source.spells,'meta/skills.json':source.skills,'meta/items.json':source.items,'meta/bosses.json':source.bosses,'meta/rules.json':source.rules,'meta/professions.json':source.professions,'people/baseline.json':source.npcs}))await fs.writeFile(path.join(root,file),JSON.stringify(value));
  await fs.mkdir(path.join(root,'drafts'),{recursive:true});await fs.cp(path.resolve('world/drafts/m4-batch2'),path.join(root,'drafts/m4-batch2'),{recursive:true});

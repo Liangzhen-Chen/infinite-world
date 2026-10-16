@@ -11,7 +11,7 @@ import {prepareMagic,applyMagic}from'../server-plugin/magic.mjs';
 import {advanceRituals}from'../server-plugin/magic-ritual.mjs';
 import {reviewPlayerFacts}from'../server-plugin/consistency-evidence.mjs';
 import {modelToolCall,toolDefinitions}from'../extension/tools.mjs';
-import os from'node:os';
+import{tmpRoot}from'../tools/tmp-root.mjs';
 import path from'node:path';
 
 const original=await loadWorld(),seed=JSON.parse(await fs.readFile('tests/fixtures/legacy/seed.json','utf8'));
@@ -69,7 +69,7 @@ test('公开工具登记三类本人同意；请求不自动签发，保存与�
   assert.deepEqual(row.scope,{location:s.doc.state.location,spell});assert.equal(row.expires-row.createdAt,30);
   assert.deepEqual(reviewPlayerFacts(s.doc.state).authorizations[agreed.authorization].scope,row.scope);
  }
- const root=await fs.mkdtemp(path.join(os.tmpdir(),'c1-consent-'));t.after(()=>fs.rm(root,{recursive:true,force:true}));
+ const root=await fs.mkdtemp(path.join(tmpRoot(),'c1-consent-'));t.after(()=>fs.rm(root,{recursive:true,force:true}));
  const reducer=(doc,event)=>s.engine.reduce(doc,event),storage=new CampaignStorage(root,{reducer});
  await storage.create({id:'consent',worldVersion:s.world.version,document:s.doc});
  const input={...modelToolCall('world_promise',{operation:'grant_access',promisor:npc,location:'healing',content:'恢复生命',minutes:20,consent:true}),eventId:'persist-consent'};

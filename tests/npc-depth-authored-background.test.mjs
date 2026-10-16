@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
-import os from 'node:os';
+import{tmpRoot}from'../tools/tmp-root.mjs';
 import path from 'node:path';
 import {execFile} from 'node:child_process';
 import {promisify} from 'node:util';
@@ -22,7 +22,7 @@ function fixture(actorIds=ids){
  const issues=auditNpcDepth(w).issues,config={revision:'authored-test-v1',incrementLimitYuan:3,patchRows:ids.map(id=>{const before=structuredClone(w.npcs.find(n=>n.id===id));return{id,before,baseHash:hashContent(before),issues:issues.filter(i=>i.id===id&&i.code==='memory-shared'&&i.field==='memorySeeds'),patches:[{path:event.associations.find(a=>a.id===id).path,value:{id:event.id,event:narrative,location:event.location,knownBy:[...ids]}}]};})},bundle={kind:'authored-background',revision:'bundle-1',events:[event]};
  return{w,config,bundle,entries:()=>depthEntries(config.patchRows.map(r=>r.before),config,w)};
 }
-async function temp(t){const dir=await fs.mkdtemp(path.join(os.tmpdir(),'npc-authored-'));t.after(()=>fs.rm(dir,{recursive:true,force:true}));return dir;}
+async function temp(t){const dir=await fs.mkdtemp(path.join(tmpRoot(),'npc-authored-'));t.after(()=>fs.rm(dir,{recursive:true,force:true}));return dir;}
 async function makePrepared(t,{background=true,notes=false,split=false}={}){
  const dir=await temp(t),worldRoot=path.join(dir,'world'),p=fixture(split?[...ids,'npc_yp_wenxu','npc_yp_jiangmi']:ids);
  if(split){

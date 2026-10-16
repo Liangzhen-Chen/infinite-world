@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
-import os from 'node:os';
+import{tmpRoot}from'../tools/tmp-root.mjs';
 import path from 'node:path';
 import {buildCard,loadPromptBundle,presetFor,encodeCardPNG}from'../tools/build-card.mjs';
 import {assembleMessages,isOutOfCharacter,injectToolExamples,staticMessages}from'../extension/prompt.mjs';
@@ -53,7 +53,7 @@ test('酒馆事件注入与试玩共用相同调用示例，重复事件不重�
 });
 
 test('生成PNG可读回完整角色卡，重新嵌入不保留旧卡元数据',async t=>{
-    const destination=await fs.mkdtemp(path.join(os.tmpdir(),'fields-card-'));t.after(()=>fs.rm(destination,{recursive:true,force:true}));
+    const destination=await fs.mkdtemp(path.join(tmpRoot(),'fields-card-'));t.after(()=>fs.rm(destination,{recursive:true,force:true}));
     await buildCard({destination});const card=JSON.parse(await fs.readFile(path.join(destination,'host.json'),'utf8'));
     const png=encodeCardPNG(card,await fs.readFile(path.join(destination,'host.png'))),chunks=[];
     for(let offset=8;offset<png.length;){const length=png.readUInt32BE(offset),kind=png.toString('ascii',offset+4,offset+8);if(kind==='tEXt')chunks.push(png.subarray(offset+8,offset+8+length).toString());offset+=12+length;}

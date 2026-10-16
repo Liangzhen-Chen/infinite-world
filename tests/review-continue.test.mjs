@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
-import os from 'node:os';
+import{tmpRoot}from'../tools/tmp-root.mjs';
 import path from 'node:path';
 import {createPlaytestServer,runPlaytest} from '../tools/playtest-runner.mjs';
 import {loadPromptBundle} from '../tools/build-card.mjs';
@@ -69,7 +69,7 @@ test('有证据的误报及真实矛盾单列，未判定不猜测；误报仍�
 });
 
 test('M3浸泡拒绝仍完成两人格整场，检查点和失败样本持久保存，续跑不重发',async t=>{
- const directory=await fs.mkdtemp(path.join(os.tmpdir(),'fields-review-continue-'));t.after(()=>fs.rm(directory,{recursive:true,force:true}));
+ const directory=await fs.mkdtemp(path.join(tmpRoot(),'fields-review-continue-'));t.after(()=>fs.rm(directory,{recursive:true,force:true}));
  let calls=0;
  const client={async generate(body,label){calls++;
   const message=label.startsWith('consistency:')?{tool_calls:[{id:'review',type:'function',function:{name:'report_consistency_issues',arguments:JSON.stringify({issues:[{...issue,evidence:[{id:'player',quote:'只核对'}]}]})}}]}:{content:'已核对。'};
