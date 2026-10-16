@@ -20,17 +20,20 @@ const plain=v=>v&&typeof v==='object'&&!Array.isArray(v);
 const awake=n=>n&&n.status!=='死亡'&&(n.hp===undefined||n.hp>0)&&!n.scheduleTravel&&!n.cognitionTravel&&!['濒死','昏迷'].includes(n.status)&&!/睡眠|睡觉|熟睡/.test(n.activity??'');
 const shift=(stance,delta)=>STANCES[Math.max(0,Math.min(2,STANCES.indexOf(stance)+delta))];
 
-export function validateMonsterSocieties(world){
-    const errors=[],ids=new Set(world.locations.map(l=>l.id));
+// edition=true (engine construction, via validateSites) lets a society name places
+// and people this world edition lacks (removed villages, their residents); items
+// stay required. Release validation (tools/validate-world) reports them all.
+export function validateMonsterSocieties(world,{edition=false}={}){
+    const errors=[],ids=new Set(world.locations.map(l=>l.id)),known=id=>edition||ids.has(id);
     for(const place of world.locations.filter(l=>l.monsterSociety!==undefined)){
         const c=place.monsterSociety,fail=m=>errors.push(`${place.id}.monsterSociety: ${m}`);
         if(!plain(c)){fail('参数无效');continue;}
         const boss=world.bosses?.find(b=>b.id===c.leader),npc=world.npcs.find(n=>n.id===boss?.actor);
-        if(!boss||npc?.society!==place.id)fail('首领须为本聚居地居民身体的智能首领');
+        if(!edition&&(!boss||npc?.society!==place.id))fail('首领须为本聚居地居民身体的智能首领');
         for(const [target,stance]of Object.entries({...c.neighbors??{},...c.stances??{}}))
-            if(!STANCES.includes(stance)||target!=='player'&&!ids.has(target)||target===place.id)fail(`初始态度无效：${target}`);
+            if(!STANCES.includes(stance)||target!=='player'&&!known(target)||target===place.id)fail(`初始态度无效：${target}`);
         if(c.stances&&Object.keys(c.stances).some(k=>k!=='player'))fail('stances只登记对玩家的初始态度');
-        if(c.meetingPlace!==undefined&&!ids.has(c.meetingPlace))fail('议事地点不存在');
+        if(c.meetingPlace!==undefined&&!known(c.meetingPlace))fail('议事地点不存在');
         if(c.motions!==undefined&&(!Array.isArray(c.motions)||c.motions.some(m=>!plain(m)||!/^\w{1,60}$/.test(m.id??'')||typeof m.name!=='string'||!m.name.trim())||
             new Set(c.motions.map(m=>m.id)).size!==c.motions.length))fail('议题编号或名称无效');
         else for(const m of c.motions??[])for(const k of ['opens','closes'])if(m[k]!==undefined&&!KINDS.has(m[k]))fail(`议题${m.id}.${k}须为trade、tribute或passage`);
@@ -38,15 +41,15 @@ export function validateMonsterSocieties(world){
         if(c.positions!==undefined&&!Array.isArray(c.positions))fail('内部立场须为列表');
         for(const p of Array.isArray(c.positions)?c.positions:[]){
             if(!plain(p)||!/^\w{1,60}$/.test(p.id??'')||typeof p.name!=='string'||!p.name.trim()||!Array.isArray(p.members)||!p.members.length){fail('内部立场编号、名称或成员无效');continue;}
-            for(const id of p.members){if(bodies.find(n=>n.id===id)?.society!==place.id)fail(`立场${p.id}成员不属本聚居地：${id}`);if(seen.has(id))fail(`成员分属两组立场：${id}`);seen.add(id);}
+            for(const id of p.members){if(!edition&&bodies.find(n=>n.id===id)?.society!==place.id)fail(`立场${p.id}成员不属本聚居地：${id}`);if(seen.has(id))fail(`成员分属两组立场：${id}`);seen.add(id);}
             for(const [m,v]of Object.entries(p.stances??{}))if(!motionIds.has(m)||!['approve','reject'].includes(v))fail(`立场${p.id}对议题的态度无效：${m}`);
             if(p.persuasion!==undefined&&![10,15,20,25,30].includes(p.persuasion))fail(`立场${p.id}说服难度无效`);
         }
         if(c.supplies!==undefined){
             // Resource sources: produced by a member species at a place, or obtained from a registered neighbour.
             const items=new Set(world.items.map(i=>i.id)),species=new Set(bodies.filter(n=>n.society===place.id).map(n=>n.species));
-            if(!Array.isArray(c.supplies)||!c.supplies.length||c.supplies.some(r=>!plain(r)||!items.has(r.item)||!ids.has(r.place)||(r.species===undefined)===(r.from===undefined)||
-                r.species!==undefined&&!species.has(r.species)||r.from!==undefined&&!ids.has(r.from)||typeof r.use!=='string'||!r.use.trim()))fail('资源来源须登记物品、产地、本聚居地物种或来往邻地及用途');
+            if(!Array.isArray(c.supplies)||!c.supplies.length||c.supplies.some(r=>!plain(r)||!items.has(r.item)||!known(r.place)||(r.species===undefined)===(r.from===undefined)||
+                !edition&&r.species!==undefined&&!species.has(r.species)||r.from!==undefined&&!known(r.from)||typeof r.use!=='string'||!r.use.trim()))fail('资源来源须登记物品、产地、本聚居地物种或来往邻地及用途');
             else for(const n of world.npcs.filter(n=>n.society===place.id))for(const item of Object.keys(n.inventory??{}))
                 if(!c.supplies.some(r=>r.item===item))fail(`成员库存缺少登记来源：${n.id}/${item}`);
         }

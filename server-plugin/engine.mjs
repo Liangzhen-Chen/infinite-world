@@ -41,7 +41,7 @@ import {transportAction,transportScene} from './transport.mjs';
 import {postAction} from './post.mjs';
 import {tradeQuote,recordDeal}from'./shop.mjs';
 import {initializeWorldClocks}from'./world-clock.mjs';
-import {initializeFactionClocks,factionClockRules}from'./faction-clock.mjs';
+import {initializeFactionClocks,factionClockRules,materializeFaithClocks}from'./faction-clock.mjs';
 import {QUEST_SOURCES_VERSION,openSettlementLedgers}from'./quest-sources.mjs';
 import {villageWildlifeFresh}from'./quest-wildlife.mjs';
 import {TRIBAL_AWAKENING_VERSION}from'./tribal-awakening.mjs';
@@ -148,12 +148,15 @@ export class WorldEngine {
         // K8: derived habitats join the authored ones before any consumer reads them.
         materializeWildlifeHabitats(world);
         this.world = world; this.rules = world.rules;
-        const siteErrors=validateSites(world);if(siteErrors.length)throw Error(siteErrors.join('；'));
+        // An edition may lack people or venues that sites and festivals name; those rows stay idle instead of stopping the load (tools/validate-world reports them).
+        const siteErrors=validateSites(world,{edition:true});if(siteErrors.length)throw Error(siteErrors.join('；'));
         if(![1,2].includes(this.rules.engineRevision??1))throw new Error('此世界使用尚不支持的引擎版本，停止加载');
         this.entities = [...world.npcs,...world.residents??[],...world.locations,...world.items,...world.professions,...world.skills,...world.spells,...world.recipes??[],...world.monsters??[],...world.bosses??[],...world.cultures??[],...world.deities??[],...world.factions??[],...world.history??[],...world.factionPeople??[],...world.eras??[],...world.regions??[],...world.festivals??[]];
         this.resolver = new EntityResolver(this.entities);
         this.byId = this.resolver.entities;
-        const festivalErrors=validateFestivalRuntime(world);if(festivalErrors.length)throw Error(festivalErrors.join('；'));
+        // RW-07: faith competition clocks are derived from the current church seats and join rules.factionClock here.
+        materializeFaithClocks(this);
+        const festivalErrors=validateFestivalRuntime(world,{edition:true});if(festivalErrors.length)throw Error(festivalErrors.join('；'));
         if((this.rules.engineRevision??1)===1)this.compat=new Phase1Engine(world);
         this.factionEffectConsumers={society_news:societyNewsConsumer,society_issue:societyIssueConsumer,spirit_society:spiritSocietyConsumer};this.wildlifeAwakening=wildlifeAwakeningConsumer;
     }

@@ -20,14 +20,35 @@ const occurrence=(f,year)=>`festival:${f.id}:${year}`;
 // durationMinutes, minimumParticipants; resourceNeeds use owner='host' or an
 // actual actor ID. sourceCustom links the same published local custom. Drafts
 // and regional_unmapped venues never enter this executable calendar.
-export function validateFestivalRuntime(world){
+// Registered person of a world: a full NPC, a roster resident, or someone a
+// settlement census (settlementProfiles.residentIds) lists although this edition
+// does not carry their record (the occurrence then waits until they are present).
+const registeredPerson=(world,id)=>world.npcs.some(n=>n.id===id)||(world.residents??[]).some(n=>n.id===id)||(world.settlementProfiles??[]).some(p=>p.residentIds?.includes(id));
+// Whether a published festival belongs to this world edition (engine construction
+// builds fixtures of earlier editions from the formal catalogue): its venue is one
+// of the edition's locations, and a named host is a registered person — or the
+// venue's settlement has no census here at all (an edition from before that
+// settlement's roster), so nobody can vouch for the host and the festival is
+// simply not held. A missing host in a settlement whose census is here is a data
+// fault. Release validation (tools/validate-world) reports every dangling reference.
+export function editionFestival(world,f){
+ const location=world.locations.find(l=>l.id===f.venue?.location);if(!location)return false;
+ const host=f.runtime?.host;if(host==null||registeredPerson(world,host))return true;
+ return !(world.settlementProfiles??[]).some(p=>p.id===(location.scope??location.id));
+}
+// edition=true (engine construction): festivals outside this edition (editionFestival)
+// are left out of festivalCalendar and nothing of them is checked here. A festival
+// of the edition must be fully valid, its host a registered person.
+export function validateFestivalRuntime(world,{edition=false}={}){
  const errors=[],ids=new Set(),customs=localFestivalCalendar({world}),linked=new Set();
  for(const f of world.festivals??[]){
   if(!f.id||ids.has(f.id))errors.push(`${f.id}:节日编号重复或缺失`);ids.add(f.id);
   if(f.runtime?.status!=='active')continue;
   const r=f.runtime,c=f.calendar,v=f.venue,location=world.locations.find(l=>l.id===v?.location);
+  if(edition&&!editionFestival(world,f))continue;
+  const registered=id=>registeredPerson(world,id);
   if(!f.id?.startsWith('festival_')||!f.name||!c||!safe(c.month)||c.month<1||c.month>12||!safe(c.day)||c.day<1||c.day>30||
-   v?.precision!=='existing_location'||!location||!world.npcs.some(n=>n.id===r.host)||!['market','ritual'].includes(r.kind)||
+   v?.precision!=='existing_location'||!location||!registered(r.host)||!['market','ritual'].includes(r.kind)||
    !safe(r.startMinute)||!safe(r.durationMinutes)||r.durationMinutes<1||r.startMinute+r.durationMinutes>DAY||
    !safe(r.minimumParticipants)||r.minimumParticipants<1||!Array.isArray(f.resourceNeeds))errors.push(`${f.id}:正式节日日期、场地或运行参数无效`);
   if(r.effects!==undefined&&(!Array.isArray(r.effects)||r.effects.some(e=>typeof e?.kind!=='string')))errors.push(`${f.id}:节日效果须为效果表条目`);
@@ -48,7 +69,8 @@ function generatedHost(engine,f){
  return engine.world.npcs.find(n=>n.generated==='remote'&&n.remoteRole==='festival_host'&&n.festivalHost===f.id&&n.location===f.venue?.location)?.id??null;
 }
 export function festivalCalendar(engine){
- const hosted=(engine.world.festivals??[]).map(f=>{if(f.runtime?.status==='active')return f;const host=generatedHost(engine,f);return host?{...f,runtime:{...f.runtime,status:'active',host}}:null;}).filter(Boolean);
+ // A festival outside this world edition (editionFestival) is never held.
+ const hosted=(engine.world.festivals??[]).filter(f=>editionFestival(engine.world,f)).map(f=>{if(f.runtime?.status==='active')return f;const host=generatedHost(engine,f);return host?{...f,runtime:{...f.runtime,status:'active',host}}:null;}).filter(Boolean);
  const official=hosted.map(f=>({...f,
   id:f.runtime.sourceCustom??f.id,publishedId:f.id,month:f.calendar.month,day:f.calendar.day,host:f.runtime.host,location:f.venue.location,
   settlement:engine.byId.get(f.venue.location)?.scope,source:`world/lore/festivals.json#${f.id}`,kind:f.runtime.kind,practice:f.custom,formal:true}));

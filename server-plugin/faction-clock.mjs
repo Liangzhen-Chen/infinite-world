@@ -14,19 +14,26 @@ export function factionClockRules(engine){
  if(engine.replaying&&engine.replayResult?.factionClockVersion!==1)return [];
  const configured=engine.rules.factionClock;
  if(configured&&(configured.version!==1||!Array.isArray(configured.clocks)))throw Error('势力时钟规则版本无效');
- // RW-07 faith competition clocks are derived from the current church seats
- // (tools/load-world saves them into rules.factionClock); a saved copy stays live
- // only while this world still derives it, so dropping the churches drops the clock.
- const listed=configured?.clocks??[],derived=listed.some(r=>String(r.id).startsWith('faith:'))?derivedFaithClockIds(engine):null;
- return [...listed.filter(r=>!String(r.id).startsWith('faith:')||derived.has(r.id)),...(engine.world.factions??[]).filter(f=>f.clock?.stages).map(f=>({...f.clock,faction:f.id}))];
+ // Authored clocks first (configured rules, then each faction's own plan), so a
+ // faction's primary clock is the first rule carrying its id; the RW-07 faith
+ // competition rows that materializeFaithClocks derived into rules come last.
+ const listed=configured?.clocks??[],faith=r=>String(r.id).startsWith('faith:');
+ return [...listed.filter(r=>!faith(r)),...(engine.world.factions??[]).filter(f=>f.clock?.stages).map(f=>({...f.clock,faction:f.id})),...listed.filter(faith)];
 }
-// Seats change only with the world's factions/institutions, so the derived id
-// set is memoised per engine against exactly those inputs.
-const faithMemo=new WeakMap();
-function derivedFaithClockIds(engine){
- const key=[engine.world,engine.world.factions,engine.world.settlementProfiles,engine.rules.faith,engine.rules.faith?.competition,engine.rules.training?.institutions];
- const hit=faithMemo.get(engine);if(hit&&hit.key.every((v,i)=>v===key[i]))return hit.ids;
- const ids=new Set(faithConflictClocks(engine).map(r=>r.id));faithMemo.set(engine,{key,ids});return ids;
+// RW-07 faith competition clocks are derived from the current church seats
+// (rules.faith.competition + temples) and materialised into rules.factionClock
+// the way K8 habitats are: the loader and every engine built on a world replace
+// whatever faith:* rows its rules carry with what the world derives now, so a
+// copy saved by an older loader, or a world that dropped its churches, never
+// keeps a stale clock, and an unchanged derivation leaves the rules untouched.
+export function materializeFaithClocks(engine){
+ const rules=engine.rules,isFaith=r=>String(r.id).startsWith('faith:');
+ const listed=rules.factionClock?.clocks??[],kept=listed.filter(r=>!isFaith(r)),previous=listed.filter(isFaith);
+ const derived=rules.faith?.competition?faithConflictClocks(engine):[];
+ if(JSON.stringify(previous)===JSON.stringify(derived))return rules.factionClock;
+ if(!derived.length&&!kept.length){delete rules.factionClock;return undefined;}
+ rules.factionClock={version:1,...rules.factionClock,clocks:[...kept,...derived]};
+ return rules.factionClock;
 }
 function faction(engine,id){
  const t=String(id).startsWith('temple:')?templeById(engine,id):null;

@@ -39,7 +39,11 @@ const discovered=(document,site,clue)=>{
     return row?.category==='site_discovery'&&row.actor==='player'&&row.site===site&&row.clue===clue&&Boolean(row.sourceEvent);
 };
 
-export function validateSites(world){
+// edition=true (engine construction) lets a site name people this world edition
+// lacks (owner, manager, occupants moved, dropped or still on the roster): the
+// site is then simply unmanaged, while release validation (tools/validate-world)
+// still reports them. Catalogue items, skills and history stay required.
+export function validateSites(world,{edition=false}={}){
     const errors=[],entities=new Map([...world.locations,...world.npcs,...world.items,...world.skills,...world.bosses??[],...world.monsters??[],...world.factions??[],...world.history??[]].map(row=>[row.id,row]));
     for(const place of world.locations.filter(row=>row.site)){
         const s=place.site,fail=message=>errors.push(`${place.id}.site: ${message}`);
@@ -56,10 +60,10 @@ export function validateSites(world){
         }
         const mechanisms=new Set(rows.mechanisms.map(row=>row?.id)),clues=new Set(rows.clues.map(row=>row?.id));
         const references=(list,valid,label)=>{if(!Array.isArray(list)||list.some(id=>!valid.has(id)))fail(`${label}引用无效`);};
-        const ownership=owner=>{if(owner&&owner!=='player'&&!entities.has(owner))fail(`物权引用不存在：${owner}`);};
+        const ownership=owner=>{if(!edition&&owner&&owner!=='player'&&!entities.has(owner))fail(`物权引用不存在：${owner}`);};
         ownership(ownerOf(place));
-        if(s.manager&&!world.npcs.some(row=>row.id===s.manager&&row.age>=18))fail('管理人须为登记成年NPC');
-        if(s.occupants!==undefined){references(s.occupants,entities,'occupants');if(Array.isArray(s.occupants)&&s.occupants.some(id=>! /^(npc|boss|monster)_/.test(id)))fail('占据者须为实际人物或生物');}
+        if(!edition&&s.manager&&!world.npcs.some(row=>row.id===s.manager&&row.age>=18))fail('管理人须为登记成年NPC');
+        if(s.occupants!==undefined){if(!edition)references(s.occupants,entities,'occupants');if(Array.isArray(s.occupants)&&s.occupants.some(id=>! /^(npc|boss|monster)_/.test(id)))fail('占据者须为实际人物或生物');}
         references(s.entryMechanisms??[],mechanisms,'entryMechanisms');
         if(s.infiltration!==undefined){const p=s.infiltration,c=p?.check;
             if(['private','council'].includes(place.access?.mode))fail('私宅与议事区不能登记为可潜入');
@@ -107,9 +111,23 @@ export function validateSites(world){
             }
         }
     }
-    return [...errors,...validateMonsterSocieties(world)];
+    return [...errors,...validateMonsterSocieties(world,{edition})];
 }
 
+// Catalogue items that site rows hold or use (resources, tools, materials). An
+// edition rebuilt without an item batch (tools/publish-w2-s*.mjs withoutS*) keeps
+// these items because later sites depend on them: removing the batch leaves no
+// site row dangling, and merging it back restores the formal world exactly.
+export function siteItemReferences(locations){
+    const out=new Set();
+    for(const place of locations){
+        const s=place.site;if(!s||typeof s!=='object')continue;
+        for(const key of ['mechanisms','clues','resources','truths'])for(const row of Array.isArray(s[key])?s[key]:[]){
+            if(row?.item)out.add(row.item);if(row?.tool)out.add(row.tool);for(const m of row?.materials??[])if(m?.item)out.add(m.item);
+        }
+    }
+    return out;
+}
 export function siteKnowledge(world,document){
     if(!document)return [];
     return world.locations.filter(place=>place.site).flatMap(place=>(place.site.truths??[])
