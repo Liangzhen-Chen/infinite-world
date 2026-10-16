@@ -1,6 +1,10 @@
 import {purse,escrow as escrowAccount,treasury as treasuryAccount,moveCoins} from './money.mjs';
 import {declareLedgerWriter} from './ledger.mjs';
-declareLedgerWriter('public-projects');
+import {holdWorks,settleWorks,BOOKED as STOCK_BOOKED} from './stock.mjs';
+declareLedgerWriter('public-projects',{sinks:['sink:consume']});
+// S1b: 工程备料的账本入口，供工具分派（activities）与推进注册表的旧工程路径使用。
+export const holdProjectWorks=(d,engine,project,amounts,from,eventId)=>holdWorks(d,engine,project,amounts,{from,writer:'public-projects',eventId});
+export const settleProjectWorks=(d,engine,p,eventId)=>settleWorks(d,engine,p,{writer:'public-projects',eventId});
 import {entityTransition} from './entity-transitions.mjs';
 import {playerOffices,spendPublic,refundPublic,authorityOf} from './governance.mjs';
 import {milestone} from './progression.mjs';
@@ -56,11 +60,13 @@ export function startPublicProject(d,engine,args,eventId,settlement){
     let spend;
     if(privateFunding){
         if(state.player.coins<bill)throw Error('私人工程工钱不足');
-        for(const [item,n]of [['item_wood',wood],['item_stone',stone]])if(n)changeItems(d,engine,'player',item,-n);
+        for(const [item,n]of [['item_wood',wood],['item_stone',stone]])if(n)changeItems(d,engine,'player',item,-n,{books:STOCK_BOOKED});
+        holdWorks(d,engine,project,{wood,stone},{from:{party:'player'},writer:'public-projects',eventId:project});
         moveCoins(d,{from:purse(engine,'player'),to:escrowAccount(project),amount:bill,writer:'public-projects',eventId:project});d.set(['state','player','coins'],state.player.coins-bill);
     }else{
         spend=spendPublic(d,engine,{settlement,copper:bill,power:'public_project',purpose:`工程工钱 ${name}`,sourceEvent:project,books:{account:escrowAccount(project),writer:'public-projects',eventId:project}});
         d.set(['state','settlements',settlement,'wood'],row.wood-wood);if(stone)d.set(['state','settlements',settlement,'stone'],row.stone-stone);
+        holdWorks(d,engine,project,{wood,stone},{from:{settlement},writer:'public-projects',eventId:project});
     }
     const office=offices[0];
     const p={id:project,type:'工程',creator:'player',name,settlement,location,remainingDays:days,days,wood,stone,status:'施工中',beneficiaries,sourceEvent:eventId,...plan,
@@ -81,13 +87,14 @@ function finish(d,engine,p,status,minute,eventId){
     const next={...p,status,remainingDays:status==='已完成'?0:p.remainingDays,public:{...p.public,escrow:0},closedAt:minute};
     if(escrow){if(p.public.payer){moveCoins(d,{from:escrowAccount(p.id),to:purse(engine,'player'),amount:escrow,writer:'public-projects',eventId:`${p.id}:refund`});d.set(['state','player','coins'],d.get('state','player','coins')+escrow);}
     else refundPublic(d,{settlement:p.settlement,copper:escrow,month:p.public.month,purpose:`工程结余退回 ${p.name}`,sourceEvent:`${p.id}:refund`,books:{account:escrowAccount(p.id),writer:'public-projects',eventId:`${p.id}:refund`}});}
-    if(status==='已完成'){next.facility=completeFacilityProject(d,engine,p,minute);}
+    if(status==='已完成'){next.facility=completeFacilityProject(d,engine,p,minute);settleWorks(d,engine,p,{writer:'public-projects',eventId:`${p.id}:works`});}
     else{
         // Materials go in evenly over the planned days; the unused share returns.
         const fraction=p.remainingWork===undefined?p.public.workedDays/p.days:1-p.remainingWork/(p.days*p.public.workers.length);
         const used=k=>Math.floor(p[k]*fraction),back={wood:p.wood-used('wood'),stone:p.stone-used('stone')};
         const s=d.get('state','settlements',p.settlement);
-        if(p.public.payer){for(const [item,n]of [['item_wood',back.wood],['item_stone',back.stone]])if(n)changeItems(d,engine,'player',item,n);}
+        settleWorks(d,engine,p,{returned:back,to:p.public.payer?{party:p.public.payer}:{settlement:p.settlement},writer:'public-projects',eventId:`${p.id}:works`});
+        if(p.public.payer){for(const [item,n]of [['item_wood',back.wood],['item_stone',back.stone]])if(n)changeItems(d,engine,'player',item,n,{books:STOCK_BOOKED});}
         else{d.set(['state','settlements',p.settlement,'wood'],s.wood+back.wood);if(back.stone)d.set(['state','settlements',p.settlement,'stone'],(s.stone??0)+back.stone);}
         next.returned={...back,copper:escrow};
     }
@@ -249,8 +256,8 @@ export function startHouse(d,engine,args,eventId,permitId){
     if(p.status!=='已批准')throw Error('这块宅基已开工或已收回');
     if(state.location!==p.location)throw Error('须到宅基所在地开工');
     for(const [item,n]of [['item_wood',p.materials.wood],['item_stone',p.materials.stone]])if(n&&engine.quantity(d,holder,item)<n)throw Error('自备建房材料不足');
-    for(const [item,n]of [['item_wood',p.materials.wood],['item_stone',p.materials.stone]])if(n)changeItems(d,engine,holder,item,-n);
-    const project=`project_${eventId}`;
+    for(const [item,n]of [['item_wood',p.materials.wood],['item_stone',p.materials.stone]])if(n)changeItems(d,engine,holder,item,-n,{books:STOCK_BOOKED});
+    const project=`project_${eventId}`;holdWorks(d,engine,project,p.materials,{from:{party:holder},writer:'public-projects',eventId});
     d.set(['state','projects',project],{id:project,type:'建房',creator:holder,name:text(args.name??'自家宅屋'),settlement:p.settlement,location:p.location,permit:p.id,facilityType:'house',material:p.materials.stone>p.materials.wood?'stone':'wood',
         remainingDays:p.buildDays,days:p.buildDays,wood:p.materials.wood,stone:p.materials.stone,status:'施工中',sourceEvent:eventId});
     d.set(rec(p.id),{...p,status:'施工中',project});
@@ -266,7 +273,7 @@ export function advanceHouses(d,engine,{before,after}){
         if(remainingDays){d.set(['state','projects',key],{...p,remainingDays});continue;}
         const id=completeFacilityProject(d,engine,p);
         d.set(['state','buildings',id,'permit'],p.permit);
-        d.set(['state','projects',key],{...p,remainingDays:0,status:'已完成',facility:id});
+        d.set(['state','projects',key],{...p,remainingDays:0,status:'已完成',facility:id});settleWorks(d,engine,p,{writer:'public-projects',eventId:`${key}:works`});
         d.set(rec(p.permit),{...d.get(...rec(p.permit)),status:'已建成',building:id});
     }
 }

@@ -84,6 +84,7 @@ export function registerIncident(d,engine,{victim,offender='player',offense,valu
 import {financeBalance,financeChange,financeTransfer} from './finance-bank.mjs';
 import {purse,fund as fundAccount,vault,moveCoins} from './money.mjs';
 import {declareLedgerWriter} from './ledger.mjs';
+import {placed as placedStock} from './stock.mjs';
 declareLedgerWriter('law');
 const books=(d,from,to,amount,eventId)=>moveCoins(d,{from,to,amount,writer:'law',eventId});
 export function registerCreditDefault(d,engine,{debt,row,value,minute}){
@@ -232,7 +233,7 @@ function deposit(d,engine,row,{fine=0,compensate=true}={}){
     if(compensate){
         const units=[...escrow.units];
         if(returnUnit){
-            changeItems(d,engine,'player',record.item,-1,{preserve:true,selection:[unit]});
+            changeItems(d,engine,'player',record.item,-1,{preserve:true,selection:[unit],books:{account:placedStock(engine,escrowKey,record.item),writer:'law',eventId:row.id}});
             d.set(['state','itemInstances',unit],{...record,owner:escrowKey,status:'保管'});units.push(unit);
         }
         d.set(path(escrowKey),{...escrow,coins:escrow.coins+compensation,units});
@@ -552,7 +553,7 @@ export function lawAction(d,args,eventId){
         if(escrow?.category!=='legal_deposit'||escrow.claimed)throw new Error('赔偿没有交存或已经领取');
         for(const unit of escrow.units){
             const record=d.get('state','itemInstances',unit);if(record?.owner!==key||record.status!=='保管')throw new Error('返还物单件不在法院保管，拒绝复制');
-            this.itemDelta(d,recipient,record.item,1);const bag=[...this.bagPath(recipient),record.item,'instances'];
+            this.itemDelta(d,recipient,record.item,1,{account:placedStock(this,key,record.item),writer:'law',eventId});const bag=[...this.bagPath(recipient),record.item,'instances'];
             d.set(bag,[...d.get(...bag)??[],unit]);d.set(['state','itemInstances',unit],{...record,owner:recipient,status:'持有',legalClaims:(record.legalClaims??[]).filter(claim=>claim.case!==row.id)});
         }
         const bank=row.bank&&d.get(...path(row.bank));

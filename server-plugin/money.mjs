@@ -14,7 +14,7 @@
 //                                 <记录键>|coin_river|escrow      records.<id>.escrow / state.quests.<id>.escrow / state.projects.<id>.public.escrow /
 //                                                                 records.organization_proposal.escrow / records.settlement_trade.escrowCopper
 // 源汇（world/ontology/resources.json 的 sourcesAndSinks）带用途，用途即流量类别（wage、tax、trade、interest、bounty、fee……）。
-import {accountKey,transfer,declareLedgerWriter,registerLedgerOpening,ledgerActive,LEDGER_COIN} from './ledger.mjs';
+import {accountKey,transfer,declareLedgerWriter,registerLedgerOpening,ledgerActive,registerUpgradeBooking,LEDGER_COIN} from './ledger.mjs';
 import {actorId} from './npc-state.mjs';
 import {groupAccountView} from './group-account.mjs';
 
@@ -84,6 +84,16 @@ export function legacyMoney(engine,state){
     return out;
 }
 registerLedgerOpening((engine,state)=>[...legacyMoney(engine,state)].sort(([a],[b])=>a<b?-1:a>b?1:0));
+// S1b: 世界版本更新补发或改写的钱同样经 src:pack_converted / sink:pack_removed 入账（ledger.bookUpgrade）。
+declareLedgerWriter('world-upgrade',{sources:{'src:pack_converted':{[COIN]:Infinity}},sinks:['sink:pack_removed']});
+registerUpgradeBooking('coin',(d,engine,before,after)=>{
+    const a=legacyMoney(engine,before.state),b=legacyMoney(engine,after.state);
+    for(const key of new Set([...a.keys(),...b.keys()])){
+        const delta=(b.get(key)??0)-(a.get(key)??0);if(!delta)continue;
+        if(delta>0)transfer(d,{from:accountKey('src:pack_converted',COIN,'upgrade'),to:key,amount:delta,writer:'world-upgrade'});
+        else transfer(d,{from:key,to:accountKey('sink:pack_removed',COIN,'upgrade'),amount:-delta,writer:'world-upgrade'});
+    }
+});
 
 // 单边旧写入（某个账户加减）的双写：books = {account: 对方账户键, writer, eventId?}；
 // 成对旧写入中已由另一处 moveCoins 记过账的一边传 BOOKED。

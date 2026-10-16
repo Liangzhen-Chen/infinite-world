@@ -1,6 +1,8 @@
 import {escrow as escrowAccount,treasury as treasuryAccount,moveCoins} from './money.mjs';
 import {declareLedgerWriter} from './ledger.mjs';
-declareLedgerWriter('settlement-trade');
+import {granary as granaryAccount,cargo as cargoAccount,moveStock} from './stock.mjs';
+// S1b: 周贸易在途粮记在 settlement-trade:<id>|item_oats|cargo（带原粮批次）；途中过期进 sink:decay，仓容不足拒收的进 sink:destroy。
+declareLedgerWriter('settlement-trade',{sinks:['sink:decay','sink:destroy']});
 import {granaryCapacity} from './facility-state.mjs';
 import {drawGranary,forestWaterPriceFactor} from './agriculture.mjs';
 import {itemTraits,hasTrait} from './traits.mjs';
@@ -125,20 +127,25 @@ function schedule(d,engine,o,minute){
     if(t.remainingKm===null)t.remainingKm=edge.lengthKm;
     t.segment=segment;t.nextAt=minute+segment.minutes;
 }
-function spoil(o,minute){
-    const day=Math.floor(minute/DAY),expired=o.batches.filter(b=>b.expiresDay<=day).reduce((n,b)=>n+b.amount,0);
+function spoil(d,engine,o,minute){
+    const day=Math.floor(minute/DAY),gone=o.batches.filter(b=>b.expiresDay<=day),expired=gone.reduce((n,b)=>n+b.amount,0);
+    for(const b of gone)moveStock(d,{from:cargoAccount(engine,`settlement-trade:${o.id}`,o.item),to:`sink:decay|${cargoAccount(engine,`settlement-trade:${o.id}`,o.item).split('|')[1]}|spoil`,amount:b.amount,writer:'settlement-trade',eventId:o.id,pick:[String(b.id)]});
     if(expired){o.batches=o.batches.filter(b=>b.expiresDay>day);o.spoiledFood+=expired;entry(o,'spoil',minute,{food:expired});}
 }
 function arrive(d,engine,o,minute){
     const a=warehouse(d,o.seller),b=warehouse(d,o.buyer);
     if(!a||!b)throw Error('周贸易到货两端真实账缺失；不能生成公仓');
-    spoil(o,minute);
+    spoil(d,engine,o,minute);
     const space=Math.max(0,granaryCapacity(engine,d.get('state'),o.buyer,b.r.granary.capacity)-b.s.food-b.r.field.seedBank),accepted=Math.min(cargo(o),space);
     const gross=accepted*o.unitPriceCopper,refund=o.escrowCopper-gross,tax=Math.floor(gross*o.taxBps/10000);
     if(!integer(refund))throw Error('周贸易预付资金不守恒');
     let remaining=accepted;
     for(const [i,batch]of o.batches.entries()){
         const amount=Math.min(remaining,batch.amount);if(amount)b.r.batches.push({...batch,amount,id:`${o.id}:${i}`,source:`周贸易${o.id}原批${batch.id}`});remaining-=amount;
+        const from=cargoAccount(engine,`settlement-trade:${o.id}`,o.item);
+        moveStock(d,{from,to:granaryAccount(engine,o.buyer),amount,writer:'settlement-trade',eventId:o.id,pick:[String(batch.id)],lot:{id:`${o.id}:${i}`}});
+        // 仓容不足拒收的部分不回原仓（旧账 rejectedFood），在交割处毁弃。
+        moveStock(d,{from,to:`sink:destroy|${from.split('|')[1]}|rejected`,amount:batch.amount-amount,writer:'settlement-trade',eventId:o.id,pick:[String(batch.id)]});
     }
     moveCoins(d,{from:escrowAccount(`settlement-trade:${o.id}`),to:treasuryAccount(o.seller),amount:gross,writer:'settlement-trade',eventId:o.id});moveCoins(d,{from:escrowAccount(`settlement-trade:${o.id}`),to:treasuryAccount(o.buyer),amount:refund,writer:'settlement-trade',eventId:o.id});
     b.s.food+=accepted;b.r.ledger.donated+=accepted;b.s.treasury+=refund;a.s.treasury+=gross;
@@ -175,7 +182,7 @@ function dispatch(d,engine,lane,minute){
     if(!quantity)return reject('买方无足额实际现金');
     const parts=[];let remaining=quantity;
     a.r.batches.sort((x,y)=>x.expiresDay-y.expiresDay||x.id.localeCompare(y.id));
-    for(const batch of a.r.batches){if(batch.kind!=='grain'||batch.expiresDay<=day)continue;const amount=Math.min(remaining,batch.amount);if(amount)parts.push({...batch,amount});batch.amount-=amount;remaining-=amount;if(!remaining)break;}
+    for(const batch of a.r.batches){if(batch.kind!=='grain'||batch.expiresDay<=day)continue;const amount=Math.min(remaining,batch.amount);if(amount){parts.push({...batch,amount});moveStock(d,{from:granaryAccount(engine,lane.seller),to:cargoAccount(engine,`settlement-trade:${id}`,r.item),amount,writer:'settlement-trade',eventId:id,pick:[String(batch.id)]});}batch.amount-=amount;remaining-=amount;if(!remaining)break;}
     a.r.batches=a.r.batches.filter(b=>b.amount>0);a.s.food-=quantity;a.r.ledger.sold+=quantity;
     const cost=quantity*price;moveCoins(d,{from:treasuryAccount(lane.buyer),to:escrowAccount(`settlement-trade:${id}`),amount:cost,writer:'settlement-trade',eventId:id});b.s.treasury-=cost;
     const sf=fiscal(d,lane.seller),bf=fiscal(d,lane.buyer);
@@ -217,7 +224,7 @@ export function advanceSettlementTrade(d,engine,minute){
     for(const old of orders(state)){
         assertOrder(old);
         if(!old.transport||old.transport.phase==='home')continue;
-        const o=clone(old);if(o.status==='in-transit')spoil(o,minute);
+        const o=clone(old);if(o.status==='in-transit')spoil(d,engine,o,minute);
         if(o.carriage&&o.transport.phase==='outbound'){
             const trip=d.get('state','records',o.carriage);
             if(trip?.status==='delivered'){

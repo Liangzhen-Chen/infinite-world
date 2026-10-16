@@ -22,7 +22,10 @@ import {creditRules} from './credit.mjs';
 import {spendFactionAssets,creditFactionAssets} from './faction-clock.mjs';
 import {purse,treasury,vault,polityTreasury,transit,source,sink,bookSide,moveCoins,BOOKED} from './money.mjs';
 import {declareLedgerWriter,balance} from './ledger.mjs';
-declareLedgerWriter('military',{sources:{'src:import':{coin_river:1000000}},sinks:['sink:export']});
+import {armyRations,moveStock} from './stock.mjs';
+// S1b 军粮：粮仓提粮由 agriculture.drawGranary 记入 army:<id>|item_oats|ration；买口粮来自模拟范围外（src:import），
+// 就地觅食来自 src:regrowth，吃掉的进 sink:consume。
+declareLedgerWriter('military',{sources:{'src:import':{coin_river:1000000,item_oats:1000000},'src:regrowth':{item_oats:1000000}},sinks:['sink:export','sink:consume']});
 
 const DAY=1440,clone=v=>structuredClone(v);
 export const MILITARY_VERSION=1;
@@ -274,14 +277,16 @@ function supplyWeek(d,engine,a,at,src,blocked){
    const quote=armySupplyQuote(d,engine,a.base,a.location,at);
    const price=quote.price;
    const quantity=a.party===a.base?want:Math.min(want,Math.floor(partyCoins(engine,state,a.party)/price));
-   got=quote.closed?0:drawArmyRations(d,engine,a.base,quantity); 
+   got=quote.closed?0:drawArmyRations(d,engine,a.base,quantity,{to:{account:armyRations(engine,a.id)},eventId:src}); 
    if(got&&a.party!==a.base){paid=partyPay(d,engine,a.party,got*price,{sourceEvent:`${src}:grain`,reason:`${a.name}提粮`,books:{account:partyAccount(engine,d.get('state'),a.base),writer:'military',eventId:src}});partyCredit(d,engine,a.base,paid,{sourceEvent:`${src}:grain`,reason:`${a.name}提粮`,books:BOOKED});}
   }else if(a.supply==='purchase'){
    const quote=armySupplyQuote(d,engine,a.base,a.location,at),price=Math.ceil(quote.price*(season===3?m.supply.winterPriceFactor:1)*(famine?2:1)),afford=quote.closed||famine?0:Math.floor(partyCoins(engine,state,a.party)/price);
    got=Math.min(want,afford);if(got)paid=partyPay(d,engine,a.party,got*price,{sourceEvent:`${src}:ration`,reason:`${a.name}买口粮`,books:{account:sink('export','army_ration'),writer:'military',eventId:src}});
-  }else if(a.supply==='forage'&&!famine)got=Math.floor(want*(season===3?m.supply.winterForageBps:10000)/10000);
+   if(got)moveStock(d,{from:`src:import|${armyRations(engine,a.id).split('|')[1]}|ration`,to:armyRations(engine,a.id),amount:got,writer:'military',eventId:src});
+  }else if(a.supply==='forage'&&!famine){got=Math.floor(want*(season===3?m.supply.winterForageBps:10000)/10000);moveStock(d,{from:`src:regrowth|${armyRations(engine,a.id).split('|')[1]}|forage`,to:armyRations(engine,a.id),amount:got,writer:'military',eventId:src});}
  }
  a.food+=got;const eaten=Math.min(a.food,need);a.food-=eaten;
+ moveStock(d,{from:armyRations(engine,a.id),to:`sink:consume|${armyRations(engine,a.id).split('|')[1]}|ration`,amount:eaten,writer:'military',eventId:src});
  return {got,paid,need,eaten,hungry:eaten<need,famine,blocked:Boolean(blocked)};
 }
 export function armyWeek(d,engine,a,at,src,{blocked=false}={}){

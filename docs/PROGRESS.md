@@ -412,3 +412,5 @@ M2修复批审定写入PLAN（T61–T64）：Astra草案F4工具机会标注并�
 - 2026-10-16 R26 已合入（Sonnet medium 试用）：性能测试“快照提交≤10ms”并行超时的根因是实现慢（快照序列化+哈希约5ms、同步落盘约5ms）；storage 改为事件落盘返回后异步构建快照（scheduleSnapshot，同战役下一操作先等完成，快照写失败只让回放变慢、不丢数据），基准取5次中位数、阈值10ms不变；快照提交约3ms，单跑与20进程并行各3次通过。遗留：“5000消息≤150ms”重负载下偶发超时。0 模型。
 
 - 2026-10-16 DAILY 已合入（Sonnet xhigh 试用）：日常题集 199 条中 106 条可执行通过、4 条补数据后表级通过、89 条需机制（S3 23、A3 22、S1 19、A2 18、S5 13、S6 10…），清单 docs/probes/daily/executable-status.md；balance 表补缺省（action-costs 11 行、event-weights 7 行、yields 3 行等，均界内、标待标定）。发现：world_act 拒绝一切 consent 槽（连本人同意求医也拒）、战斗回执 applied 为空——开 A1b 修；A1 的 D27/D28 dayOffset 90 被拒；D06 题面步速与写实界冲突（待用户）；引擎尚不读 balance 表（属 A3/S5）。0 模型。
+
+- 2026-10-16 S1b 已合入（架构迁移，Opus 默认）：server-plugin/stock.mjs（L1）+ ledger 分范围开账（旧存档补开库存账）、源通配预算、批次（粮仓/种粮/在途粮）；41 模块约 150 处可计量物写入点双写（行囊 104 处 + 组织/钱庄/质押/在途/军粮/粮仓种粮/矿脉林木）；源汇 src:genesis/regrowth/craft/harvest/husbandry/import/pack_converted、sink:consume/decay/destroy/export/pack_removed，均有每日预算。tests/ledger-stock.test.mjs 6 项（交易、制作、钓鱼、农业一季 215 天逐日、24 天离屏；旧库存=新账户、批次一致、漂移 0、每资源守恒）；合并后相关 165 项全过，度量不变。农业三年失败实为缺餐（加工人手按比例取整致在仓粮吃不上）→ R27。既有：weather 19569≠19571。0 模型。

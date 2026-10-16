@@ -1,6 +1,6 @@
 import {purse,workshopFund,moveCoins} from './money.mjs';
 import {declareLedgerWriter} from './ledger.mjs';
-declareLedgerWriter('repair');
+declareLedgerWriter('repair',{sinks:['sink:consume']});
 import {effectiveProficiency}from'./professions.mjs';
 import {toolBonuses}from'./checks.mjs';
 import {heldUnit,wearItem,trackSingleItem}from'./items.mjs';
@@ -44,7 +44,7 @@ export function repair(d,args,eventId){
     const minutes=integer(plan.minutes,1,43200,'维修耗时'),wear=integer(plan.toolWear,0,10,'维修工具损耗');
     const outcome=this.check(d,{attribute,skill:plan.skill,difficulty:plan.difficulty,tools:plan.tools,helpers:args.helpers??[]},eventId);
     const target=instance??trackSingleItem(d,this,'player',item,eventId);
-    for(const[material,amount]of materials)this.itemDelta(d,'player',material,-amount);
+    for(const[material,amount]of materials)this.itemDelta(d,'player',material,-amount,{flow:'sink:consume',purpose:'repair',writer:'repair',eventId});
     if(station?.fee){
         moveCoins(d,{from:purse(null,'player'),to:station.owner?.startsWith('npc_')?purse(null,station.owner):workshopFund(station.id),amount:station.fee,writer:'repair',eventId:eventId});
         d.set(['state','player','coins'],d.get('state','player','coins')-station.fee);
