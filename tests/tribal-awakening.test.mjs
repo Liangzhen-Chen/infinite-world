@@ -15,8 +15,9 @@ import {validateTribalAwakening,advanceTribalAwakening,tribalKey,tribalOrgId,tri
 const source=await loadWorld(),legacy=JSON.parse(await fs.readFile('tests/fixtures/legacy/seed.json','utf8')),DAY=1440,Q=90*DAY;
 const badger='badger_northwood',troll='troll_adit';
 const dynOf=(engine,id)=>engine.rules.tribalAwakening.dynamics.find(x=>x.id===id);
-function setup(seed='tribal-test'){
+function setup(seed='tribal-test',legacyResources=false){
  const world=structuredClone(source);for(const n of world.npcs){delete n.tier;delete n.schedule;}
+ if(legacyResources)delete world.rules.forestWater;
  const engine=new WorldEngine(world),doc=engine.createCharacter(legacy,{},seed);
  return{world,engine,doc};
 }
@@ -136,9 +137,16 @@ test('立意后提出诉求、分成三派组织并各带派别时钟；诉求�
  assert.equal(next.demands.find(x=>x.id==='territory').status,'已回应');
 });
 
+test('未启用RW04的旧归档世界保留自治公账形状与原目录时序',async()=>{
+ const {engine,d,rec}=await play('mediate',badger,true),id=rec.outcome.settlement;
+ assert.equal(d.get('state','settlements',id,'granary'),undefined);
+ assert.equal(engine.byId.has(`${id}_wild`),false);
+ assert.ok(Object.values(d.get('state','records')).some(r=>r.category==='ecology'&&r.habitat.includes(`${id}_wild`)));
+});
+
 // 每季注入一次玩家的同一种作为，直到出结局。
-async function play(choice,dynId=badger){
- const {engine,doc}=setup(`tribal-${choice}-${dynId}`),{d,ids}=splitAt(engine,doc,dynId,Q,3),dyn=dynOf(engine,dynId);
+async function play(choice,dynId=badger,legacyResources=false){
+ const {engine,doc}=setup(`tribal-${choice}-${dynId}`,legacyResources),{d,ids}=splitAt(engine,doc,dynId,Q,3),dyn=dynOf(engine,dynId);
  const orgs=d.get('state','records',tribalKey(dynId)).factions;
  for(let q=2;q<=12;q++){
   const at=q*Q,m=at-20*DAY;
@@ -163,6 +171,10 @@ test('五种玩家选择各自改变走向：教导与贸易结盟、调停自�
  const settlement=mediate.d.get('state','records',`tribal_settlement:${badger}`);
  assert.equal(settlement.skeleton.id,mediate.rec.outcome.settlement);assert.equal(settlement.skeleton.council,mediate.orgs[1]);
  assert.ok(mediate.dyn.settlementNames.includes(settlement.skeleton.name));
+ const wild=mediate.engine.rules.wildlife.habitats.find(h=>h.location===`${settlement.skeleton.id}_wild`);
+ assert.ok(wild,'新栖地在同一次推进中立即进入目录');assert.ok(mediate.engine.byId.has(wild.location));
+ assert.equal(mediate.d.get('state','records',`ecology:${wild.id}`).lastDay,Math.floor(settlement.minute/DAY)-1);
+ assert.equal(mediate.d.get('state','settlements',settlement.skeleton.id,'granary'),false,'自治建立不凭空生成公共粮仓');
  // 骨架是种子与数据的纯函数：同种子同结果。
  const again=tribalSettlementSkeleton(mediate.d.document.randomSeed,mediate.dyn,{population:settlement.skeleton.population,leader:settlement.skeleton.leader,council:mediate.orgs[1],minute:settlement.minute,home:mediate.engine.byId.get(mediate.dyn.home)});
  assert.deepEqual(again,settlement.skeleton);
@@ -173,6 +185,9 @@ test('五种玩家选择各自改变走向：教导与贸易结盟、调停自�
  const ignoreBadger=await play('ignore');
  assert.equal(ignoreBadger.rec.status,TRIBAL_OUTCOMES[ignoreBadger.dyn.accordOutcome]);
  const ignoreTroll=await play('ignore',troll);
+ for(const result of [teach,trade,mediate,suppress,ignoreBadger,ignoreTroll]){
+  const ids=result.engine.world.locations.map(l=>l.id);assert.equal(new Set(ids).size,ids.length,'自治刷新不会重复追加此前目录');
+ }
  assert.equal(ignoreTroll.rec.status,'战争');
  const war=tribalWars(ignoreTroll.d.document.state)[0];
  assert.equal(war.aggressor,tribalOrgId(troll,'radical'));assert.equal(war.handler,'U12');assert.deepEqual(war.defenders,['loc_bs_liquan','faction_ms_lielu']);

@@ -1,5 +1,5 @@
 import {granaryCapacity} from './facility-state.mjs';
-import {drawGranary} from './agriculture.mjs';
+import {drawGranary,forestWaterPriceFactor} from './agriculture.mjs';
 import {itemTraits,hasTrait} from './traits.mjs';
 import {hazardPriceFactor} from './hazard-calendar.mjs';
 import {tradeTax} from './finance-tax.mjs';
@@ -74,7 +74,7 @@ export function regionalTradePrice(d,engine,item,location,minute=d.get('state','
     // U3 price swings (hazard clocks) scale the seasonal coefficient here, so
     // shop quotes, business and village lanes all read one figure.
     // U10: life-magic price cuts settled at midnight (magic-economy.mjs).
-    const swing=hazardPriceFactor(engine,d.get('state'),item,location,minute),magic=magicPriceFactor(engine,d.get('state'),item,location),hazard=swing*magic;
+    const swing=hazardPriceFactor(engine,d.get('state'),item,location,minute),magic=magicPriceFactor(engine,d.get('state'),item,location),resource=forestWaterPriceFactor(engine,d.get('state'),item,location),hazard=swing*magic*resource;
     if(!r||item!==r.item||!sid||!managed(d.get('state'),sid))return hazard===1?base:base*hazard;
     assertRules(engine);
     const day=Math.floor(minute/DAY),key=`region:${day}:${sid}:${item}`,existing=d.get('state','quotes',key);
@@ -88,7 +88,7 @@ export function regionalTradePrice(d,engine,item,location,minute=d.get('state','
     const transport=clamp((1+distanceKm*r.distanceFactorPerKm)*travelRisk,...engine.rules.economy.priceFactorLimits.transport),season=r.seasonFactors[engine.calendar(minute).season]*hazard;
     const price=Math.max(1,Math.ceil(base*demand*transport*season));
     d.set(['state','quotes',key],price);
-    d.set(['state','records',`quote:${key}`],{category:'regional_quote',day,settlement:sid,item,price,basePrice:base,grain:actual,targetFood:target,regionFactor:demand,transportFactor:transport,seasonFactor:season,...(swing!==1?{hazardFactor:swing}:{}),...(magic!==1?{magicFactor:magic}:{}),distanceKm,routeMinutes:route?.minutes??null,closed,source:r.source});
+    d.set(['state','records',`quote:${key}`],{category:'regional_quote',day,settlement:sid,item,price,basePrice:base,grain:actual,targetFood:target,regionFactor:demand,transportFactor:transport,seasonFactor:season,...(swing!==1?{hazardFactor:swing}:{}),...(magic!==1?{magicFactor:magic}:{}),...(resource!==1?{resourceFactor:resource}:{}),distanceKm,routeMinutes:route?.minutes??null,closed,source:r.source});
     return price;
 }
 function spareWorkers(state,engine,sid){

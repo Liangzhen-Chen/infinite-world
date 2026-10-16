@@ -17,7 +17,7 @@ const PACKS={
  family:['npc-life','family-inheritance','family-law','family-politics','family-diplomacy'],
  organizations:['organizations','faction-clock','faith','faith-catalog','festival','world-clock'/* * 时钟阶段，与势力时钟同组 */],
  ecology:['weather','hazard-calendar','seasonal-hazards','agriculture','wildlife','wildlife-habitats','wildlife-range','wildlife-migration','wildlife-awakening','wildlife-society','seasonal-migration','farm-pests',
-  'bosses','boss-abilities','boss-cognition','boss-negotiation','creature-nature','environment','monster-society','tribal-awakening','sites'],
+  'bosses','boss-abilities','boss-cognition','boss-negotiation','creature-nature','environment','monster-society','tribal-awakening','sites','forest-water','water-cycle'/* RW-04 林水 */],
  magic:['magic','magic-air','magic-area','magic-care','magic-consent','magic-context','magic-growth','magic-light','magic-marks','magic-message','magic-mind-space','magic-movement','magic-object','magic-ritual','magic-status','magic-targeting','magic-water-earth','spell-research','summons'],
  character:['combat','revival','professions','career-metrics','hidden-passives','training','local-exams','learning','education','education-cohorts'],
  npc:['npc-autonomy','npc-planning-service','npc-schedule','npc-memory','npc-cognition','npc-relations','npc-intelligence','npc-growth','npc-obligations','npc-rumors','lies'],

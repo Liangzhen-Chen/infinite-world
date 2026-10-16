@@ -279,20 +279,33 @@ function resolveOutcome(d,engine,t,dyn,rec,{stance,kind},at,sourceEvent){
   setOrg(accord,{status:'结盟',affiliation:dyn.board});setOrg(radical,{status:'散入'});
   event('pact',accord,dyn.board,['pact','alliance']);
  }else if(kind==='autonomy'){
+  const resourceAware=Boolean(engine.rules.forestWater);
   const inhabitants=rec.awakened.filter(id=>alive(d.get('state','creatures',id)));
   const skeleton=tribalSettlementSkeleton(d.document.randomSeed,dyn,{population:ecologyCount(d,dyn)+inhabitants.length,leader:groupView(engine,d.get('state'),accord)?.leader.value??null,council:accord,minute:at,home:engine.byId.get(dyn.home)});
   d.set(['state','records',`tribal_settlement:${dyn.id}`],{category:'tribal_settlement',dynamic:dyn.id,minute:at,sourceEvent:ev,hash:createHash('sha256').update(JSON.stringify(skeleton)).digest('hex').slice(0,24),skeleton,inhabitants});
-  d.set(['state','settlements',skeleton.id],{name:skeleton.name,population:skeleton.population,food:0,wood:0,stone:0,iron:0,treasury:0});
+  d.set(['state','settlements',skeleton.id],{name:skeleton.name,population:skeleton.population,food:0,wood:0,stone:0,iron:0,treasury:0,...(resourceAware?{granary:false}:{})});
   for(const id of inhabitants)d.set(['state','creatures',id,'location'],skeleton.id);
   // Unseen members now belong to the settlement census, not wild stock.
   const ecology=d.get('state','records',`ecology:${dyn.habitat}`)?.populations?.[dyn.species];
   if(ecology){const moved=Math.min(ecology.count,Math.max(0,skeleton.population-inhabitants.length));d.set(['state','records',`ecology:${dyn.habitat}`,'populations',dyn.species],{...ecology,count:ecology.count-moved,withdrawn:ecology.withdrawn+moved});}
-  const overlay=materializeWildlifeHabitats(remoteWorld(engine.remoteBase?.world??engine.world,d.get('state')));
+  // Always derive from the authored base, including a second autonomy in this
+  // same advance; using the previous overlay would append its households twice.
+  if(resourceAware)engine.tribalBaseWorld??=engine.remoteBase?.world??engine.world;
+  const overlay=materializeWildlifeHabitats(remoteWorld(engine.tribalBaseWorld??engine.remoteBase?.world??engine.world,d.get('state')));
   const habitats=overlay.rules.wildlife?.habitats.filter(h=>h.location===`${skeleton.id}_wild`)??[];
-  for(const patch of planWildlifeMigration(d.document,{...overlay.rules,wildlife:{...overlay.rules.wildlife,habitats}},overlay.monsters))d.set(patch.path,patch.value);
-  // The session's overlay was built before this founding; the new wild range is
-  // settled day by day from now on within this very advance (wildlife.mjs reads
-  // engine.runtimeHabitats), exactly as the next advance's overlay will carry it.
+  const ecologyDocument=resourceAware?{...d.document,state:{...d.get('state'),minute:at}}:d.document;
+  for(const patch of planWildlifeMigration(ecologyDocument,{...overlay.rules,wildlife:{...overlay.rules.wildlife,habitats}},overlay.monsters))d.set(patch.path,patch.value);
+  // RW04: forest/water stocks and settlement lookups read the geographic view
+  // (engine.world locations, byId), so a resource-aware world moves this same
+  // advance onto the new view; archived worlds keep their original catalog.
+  if(resourceAware){
+   const locations=overlay.locations.filter(l=>!engine.byId.has(l.id));
+   engine.world=overlay;engine.rules=overlay.rules;
+   engine.entities=[...engine.entities,...locations];engine.resolver=engine.resolver.extend(locations);engine.byId=engine.resolver.entities;
+  }
+  // The new wild range is settled day by day from now on within this very
+  // advance (wildlife.mjs reads engine.runtimeHabitats), exactly as the next
+  // advance's overlay will carry it; ranges already in the catalog are skipped.
   engine.runtimeHabitats=[...(engine.runtimeHabitats??[]),...habitats.filter(h=>!(engine.rules.wildlife?.habitats??[]).some(x=>x.id===h.id))];
   setOrg(accord,{status:'自治',settlement:skeleton.id});outcome.settlement=skeleton.id;
   adjustStanding(d,engine,dyn.board,accord,5,{sourceEvent:ev,reason:`${dyn.name}自立聚居地`,minute:at});

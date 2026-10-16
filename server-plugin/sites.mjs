@@ -1,10 +1,11 @@
-import {heldUnit} from './items.mjs';
+import {heldUnit,wearItem} from './items.mjs';
 import {consumeMagicProtection} from './magic-primitives.mjs';
 import {assertLocationAccess} from './location-access.mjs';
 import {actorPath} from './npc-state.mjs';
 import {validateMonsterSocieties,passageAllows,assertSocietyEntry,infiltrationDetected,infiltrationSucceeded,societyAt} from './monster-society.mjs';
 import {traitsOf} from './traits.mjs';
 import {personAge,personConstraint}from'./entity-view.mjs';
+import {forestView,harvestForest}from'./forest-water.mjs';
 
 // A location's optional site contains occupants (actor IDs), manager, owner,
 // entryMechanisms, mechanisms, clues, resources and truths. Local IDs stay stable
@@ -178,6 +179,18 @@ function ledger(d,place){
 const unblocked=(row,gates)=>{if(gates.some(id=>row.mechanisms[id]?.status!=='已解除'))throw Error('机关尚未解除');};
 const inside=(d,place)=>d.get('state','records','site_presence')?.site===place.id&&d.get('state','records','site_presence')?.actor==='player';
 const covert=(d,place)=>inside(d,place)&&d.get('state','records','site_presence').covert===true;
+export function assertSiteHarvest(d,engine,place,args){
+ const authorizations=[args.authorization,...args.authorizations??[]];
+ assertSocietyEntry(d,engine,place);
+ if(['private','council'].includes(place.access?.mode)&&place.access.requiresConsent){
+  const authorization=authorizations.find(id=>d.get('state','records',id)?.subject===place.id&&['site_use','enter_home','enter_council'].includes(d.get('state','records',id)?.action));
+  assertLocationAccess(d,engine,place.id,{authorization,companions:d.get('state','player','companions')??[]});
+ }
+ if(!allowed(d.document,place,ownerOf(place),authorizations,'enter')||!allowed(d.document,place,ownerOf(place),authorizations,'gather'))throw Error('采伐需所有者的采集许可');
+ assertOccupants(d,engine,place,authorizations);
+ if(!inside(d,place))throw Error('须先进入据点再采伐');
+ unblocked(ledger(d,place),place.site.entryMechanisms??[]);
+}
 function watchers(d,engine,place){
     const society=societyAt(engine,place.id)?.id,occupants=new Set(place.site.occupants??[]);
     return engine.world.npcs.filter(n=>(occupants.has(n.id)||society&&n.society===society||[place.site.manager,ownerOf(place)].includes(n.id))&&(personAge(engine,d.get('state'),n.id).value??0)>=18).map(n=>n.id).sort().filter(id=>{
@@ -302,6 +315,7 @@ export function siteAction(d,args,eventId){
         if(row.remaining[target.id]<quantity)throw Error('有限资源不足，不会因重访刷新');
         advance(target.minutes);
         if(!allowed(d.document,place,ownerOf(place,target),authorizations,'gather'))throw Error('资源许可已到期');
+        if(target.item==='item_wood'&&forestView(this,d.get('state'),place.id)&&harvestForest(d,this,place.id,quantity)!==quantity)throw Error('林木存量不足');
         row.remaining[target.id]-=quantity;d.set(['state','records',siteKey(place.id)],row);
         this.itemDelta(d,'player',target.item,quantity);
         return{target:target.id,item:target.item,quantity,remaining:row.remaining[target.id],owner:'player'};
@@ -343,4 +357,28 @@ export function sitePermission(d,engine,args,eventId){
     if(new Set(guests).size!==guests.length||guests.some(id=>d.get('state','npcs',id,'location')!==actor.location||!d.get('state','player','companions')?.includes(id)))throw Error('获准同行者须为实际在场且不重复的同行人');
     const permission={category:'authorization',action:'site_use',subject:place.id,owner,owners:owned,grantor,grantee:'player',operations,guests,expires:now+minutes,revoked:false,content:args.content.trim(),sourceEvent:eventId};
     d.set(['state','records',authorization],permission);return{authorization,permission};
+}
+
+// RW-04 woodcutting lives with site harvest boundaries in the ecology pack.
+function usableTool(d,engine,tool){
+    const held=heldUnit(d,engine,'player',tool),definition=engine.byId.get(tool);
+    if(!engine.quantity(d,'player',tool)||(held?.durability??definition?.durability??0)<=0)throw Error('需要实际完好的工具');
+    if(typeof held==='number')d.set([...engine.bagPath('player'),tool],{quantity:held,quality:definition.quality,durability:definition.durability,weight:definition.weight});
+}
+export function woodcut(d,args,id){
+ const location=d.get('state','location'),rules=this.rules.forestWater?.forest,forest=forestView(this,d.get('state'),location);
+ if(!forest||!rules)throw Error('此地没有可采林木');
+ const quantity=args.quantity??1;if(!Number.isSafeInteger(quantity)||quantity<1||quantity>rules.maximumCut)throw Error('单次采伐量越界');
+ const place=this.byId.get(location);
+ // A new harvesting entry cannot bypass a site's property or consent boundary.
+ const access=()=>{if(place.site)assertSiteHarvest(d,this,place,args);else if(place.owner&&place.owner!=='player')throw Error('采伐需所有者的采集许可');};
+ access();
+ usableTool(d,this,rules.tool);
+ const check=this.check(d,{attribute:'力量',difficulty:rules.difficulty,tools:[rules.tool]},id);
+ wearItem(d,this,'player',rules.tool,rules.wear);this.advance(d,rules.minutes*quantity,id);
+ access();
+ const taken=check.success&&d.get('state','player','status')==='正常'&&d.get('state','location')===location?harvestForest(d,this,location,quantity):0;
+ if(taken)this.itemDelta(d,'player','item_wood',taken);
+ return {success:taken>0,check,obtained:taken?[{item:'item_wood',quantity:taken}]:[],reserve:forestView(this,d.get('state'),location).reserve,
+  reason:taken<quantity?'林木不足或采伐未成':null,actionScope:{kind:'woodcut',clockManaged:true,minutes:rules.minutes*quantity}};
 }
