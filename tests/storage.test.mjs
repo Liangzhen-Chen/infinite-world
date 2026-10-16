@@ -169,6 +169,7 @@ test('补丁：替换、删除父分区后的嵌套写入按顺序保留，原�
 test('快照：分支元数据损坏被拒绝，不使用遗漏事件的快照',async t=>{
     const {directory,store}=await fixture(t);
     for(let i=0;i<3;i++)await store.transact('test',{id:`e${i}`,input:{cost:6},anchor:`a${i}`},deduct);
+    await store.read('test'); // the scheduled snapshot is written before the next operation returns
     const file=path.join(directory,'test','snapshots','0000000003-0.json');
     const snapshot=JSON.parse(await fs.readFile(file,'utf8'));
     snapshot.activeSequences=[];
