@@ -10,7 +10,10 @@
     {"id":"speed.boat.up","value":6,"bounds":[4,10],"basis":"calibrate","source":"数值方案 §2.18（方案标【知/标】）","playDecision":false,"calibration":"pending","unit":"里/时辰","note":"逆流二三十里"},
     {"id":"day.shichen","value":{"walkAndCart":4,"ride":5},"bounds":{"walkAndCart":[4,4],"ride":[5,5]},"basis":"derived","source":"数值方案 §2.18","playDecision":false,"calibration":"derived","from":["doc:数值方案 §2.18"],"unit":"时辰/日","note":"日行时辰数：步行、车队默认 4，骑行 5"},
     {"id":"cost.landOverWater","value":10,"bounds":[5,20],"basis":"calibrate","source":"数值方案 §2.18（方案标【知/标】）","playDecision":false,"calibration":"pending","note":"陆运每吨里成本 ÷ 水运"},
-    {"id":"risk.lossBand","value":{"min":0.005,"max":0.05},"bounds":{"min":[0.005,0.005],"max":[0.05,0.05]},"basis":"derived","source":"数值方案 §2.18；BAL-V2","playDecision":false,"calibration":"derived","from":["doc:BAL-V2"],"note":"常态劫掠损失 ÷ 货值 ∈ [0.5%, 5%]"}
+    {"id":"risk.lossBand","value":{"min":0.005,"max":0.05},"bounds":{"min":[0.005,0.005],"max":[0.05,0.05]},"basis":"derived","source":"数值方案 §2.18；BAL-V2","playDecision":false,"calibration":"derived","from":["doc:BAL-V2"],"note":"常态劫掠损失 ÷ 货值 ∈ [0.5%, 5%]"},
+    {"id":"speed.rain","value":0.83,"bounds":[0.5,1],"basis":"calibrate","source":"待仿真标定（日常题缺省值；数值方案 §2；附录 A §A.18）","playDecision":false,"calibration":"pending","unit":"× 速度","note":"日常题 D09②：雨天 transport:speed 修正项（步行雨天耗时约 ×1.2，与现行 weather.states.rain.walk 同口径）"},
+    {"id":"post.feePerLi","value":0.4,"bounds":[0.2,0.8],"basis":"calibrate","source":"待仿真标定（日常题缺省值；数值方案 §2；附录 A §A.18）","playDecision":false,"calibration":"pending","unit":"文/里","note":"日常题 D25①：驿传费，20 里 8 文（carriers.json 驿站行读本值）"},
+    {"id":"freight.cart.perShiLi","value":0.75,"bounds":[0.4,1.5],"basis":"calibrate","source":"待仿真标定（日常题缺省值；数值方案 §2；附录 A §A.18）","playDecision":false,"calibration":"pending","unit":"文/(石·里)","note":"日常题 D26①：车行托运运费，2 石 × 20 里 = 30 文"}
   ],
   "rows": [
     {"key":"terrain:official_road","name":"官道","factor":1,"bounds":{"factor":[0.7,1.2]},"basis":"calibrate","source":"数值方案 §2.18","playDecision":false,"calibration":"pending","unit":"× 速度","note":"官道地形系数 1，界 ×[0.7, 1.2]；雨雪由 transport:speed 修正项进入（[0.25, 2]×）"},
