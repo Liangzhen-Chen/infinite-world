@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
-import os from 'node:os';
+import{tmpRoot}from'../tools/tmp-root.mjs';
 import path from 'node:path';
 import {loadWorld} from '../tools/load-world.mjs';
 import {validateNpcDepth} from '../tools/npc-profile-validation.mjs';
@@ -13,8 +13,8 @@ import {compactReviewRequest,prepareFirstSourceEvidence} from '../tools/npc-dept
 const source=await loadWorld(),ids=['npc_yp_qinli','npc_yp_gaoxin'];
 const read=file=>fs.readFile(file,'utf8').then(JSON.parse),write=(file,data)=>fs.writeFile(file,JSON.stringify(data,null,2)+'\n');
 async function fixture(t,{compact=false,noEvidence=false}={}){
- const temp=await fs.mkdtemp(path.join(os.tmpdir(),'npc-depth-batch-')),worldRoot=path.join(temp,'world');
- t.after(async()=>{assert.ok(path.resolve(temp).startsWith(path.resolve(os.tmpdir())+path.sep));await fs.rm(temp,{recursive:true,force:true});});
+ const temp=await fs.mkdtemp(path.join(tmpRoot(),'npc-depth-batch-')),worldRoot=path.join(temp,'world');
+ t.after(async()=>{assert.ok(path.resolve(temp).startsWith(path.resolve(tmpRoot())+path.sep));await fs.rm(temp,{recursive:true,force:true});});
  for(const folder of ['meta','people','geo','lore'])await fs.cp(path.resolve('world',folder),path.join(worldRoot,folder),{recursive:true});
  const world=structuredClone(source);
  for(const id of ids){const n=world.npcs.find(n=>n.id===id);n.notes='主持人不要让玩家查看旧账页。';}

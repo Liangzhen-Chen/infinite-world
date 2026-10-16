@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
-import os from 'node:os';
+import{tmpRoot}from'../tools/tmp-root.mjs';
 import path from 'node:path';
 import {loadWorld}from'../tools/load-world.mjs';
 import {WorldEngine}from'../server-plugin/engine.mjs';
@@ -115,7 +115,7 @@ test('首领来源复用相同区域消费者，敌方伤害不记为玩家施�
 test('失败事务不改原状态，损坏游标拒绝补算；保存重放与重复请求保持一次结算',async()=>{
  const s=await setup(),c=s.create(),before=structuredClone(c),broken=structuredClone(c);broken.state.effects.area.nextPulse=broken.state.minute-1;
  await assert.rejects(s.run(broken,'world_time',{minutes:2},'broken'),/游标/);assert.deepEqual(c,before);
- const directory=await fs.mkdtemp(path.join(os.tmpdir(),'dnd-area-'));
+ const directory=await fs.mkdtemp(path.join(tmpRoot(),'dnd-area-'));
  try{
   const storage=new CampaignStorage(directory,{reducer:s.engine.reduce.bind(s.engine)});await storage.create({id:'area-save',worldVersion:s.world.version,document:c});
   const state=await storage.read('area-save');const input={tool:'world_time',args:{minutes:2},eventId:'persist-tick'};

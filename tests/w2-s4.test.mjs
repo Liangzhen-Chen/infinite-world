@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
-import os from 'node:os';
+import{tmpRoot}from'../tools/tmp-root.mjs';
 import path from 'node:path';
 import {loadWorld} from '../tools/load-world.mjs';
 import {readS4Publication,mergeS4Publication,publishS4,withoutS4,designPublication,files as publishedFiles} from '../tools/publish-w2-s4.mjs';
@@ -277,7 +277,7 @@ test('隔离发布只追加本批，保留其他条目，重复发布零写入�
  const zero=structuredClone(world);zero.npcs.find(n=>n.id===LU).inventory[books[0].id]=0;assert.deepEqual(mergeS4Publication(zero,publication).npcs,zero.npcs);
  const conflict=structuredClone(world);conflict.spells.find(s=>s.id===spells[0].id).name+='异文';assert.throws(()=>mergeS4Publication(conflict,publication),/冲突/);
  if(process.env.W2S4_DESIGN)return;
- const root=await fs.mkdtemp(path.join(os.tmpdir(),'dnd-s4-'));t.after(()=>fs.rm(root,{recursive:true,force:true}));
+ const root=await fs.mkdtemp(path.join(tmpRoot(),'dnd-s4-'));t.after(()=>fs.rm(root,{recursive:true,force:true}));
  for(const folder of ['meta','people','geo','lore'])await fs.cp(path.resolve('world',folder),path.join(root,folder),{recursive:true});
  await fs.mkdir(path.join(root,'drafts'));await fs.cp(path.resolve('world/drafts/w2-s4'),path.join(root,'drafts/w2-s4'),{recursive:true});
  const key={'meta/spells.json':'spells','meta/skills.json':'skills','meta/items.json':'items','meta/recipes.json':'recipes','people/baseline.json':'npcs','geo/locations.json':'locations','meta/rules.json':'rules'};

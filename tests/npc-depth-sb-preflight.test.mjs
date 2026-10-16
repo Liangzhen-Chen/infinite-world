@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
-import os from 'node:os';
+import{tmpRoot}from'../tools/tmp-root.mjs';
 import path from 'node:path';
 import {createHash} from 'node:crypto';
 import {preflightT09,requestMeasure} from '../world/drafts/w1/sb-depth/request-preflight.mjs';
@@ -12,8 +12,8 @@ const digest=raw=>createHash('sha256').update(raw).digest('hex');
 const near=(a,b)=>assert.ok(Math.abs(a-b)<1e-10,`${a} != ${b}`);
 
 test('T48正式全/compact逐ID整轮拒发、准确预留退款及原未知预算保留',async t=>{
- const outputRoot=await fs.mkdtemp(path.join(os.tmpdir(),'t48-preflight-test-'));
- t.after(async()=>{assert.ok(outputRoot.startsWith(path.resolve(os.tmpdir())+path.sep));await fs.rm(outputRoot,{recursive:true,force:true});});
+ const outputRoot=await fs.mkdtemp(path.join(tmpRoot(),'t48-preflight-test-'));
+ t.after(async()=>{assert.ok(outputRoot.startsWith(path.resolve(tmpRoot())+path.sep));await fs.rm(outputRoot,{recursive:true,force:true});});
  const sharedFile='F:/dnd/world/drafts/m4-object/budget.json',before=await fs.readFile(sharedFile);
  // A supplied amount is used only in the report arithmetic, never to change
  // allocation or obtain a model slot. Here the test uses the original 3 yuan.

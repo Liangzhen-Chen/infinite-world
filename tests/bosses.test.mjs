@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
-import os from 'node:os';
+import{tmpRoot}from'../tools/tmp-root.mjs';
 import path from 'node:path';
 import {spawnSync} from 'node:child_process';
 import {loadWorld} from '../tools/load-world.mjs';
@@ -111,7 +111,7 @@ test('实际法术杀死野生动物也留下可取材尸体，不能只给经�
     assert.equal(cast.document.state.creatures.boss_mud_tusk.battleMemory.tactics.magic_fire,1);assert.equal(cast.document.state.inventory.item_rawhide,undefined);
 });
 test('首领战术、败亡与巢穴更替在存储重启/导入/删除回合中一致',async t=>{
-    const{c,engine}=setup(),base=path.resolve(os.tmpdir()),directory=await fs.mkdtemp(path.join(base,'boss-store-'));assert.ok(directory.startsWith(base+path.sep));
+    const{c,engine}=setup(),base=path.resolve(tmpRoot()),directory=await fs.mkdtemp(path.join(base,'boss-store-'));assert.ok(directory.startsWith(base+path.sep));
     t.after(()=>fs.rm(directory,{recursive:true,force:true}));const reducer=(doc,input)=>engine.reduce(doc,input),store=new CampaignStorage(directory,{reducer});
     await store.create({id:'boss',worldVersion:engine.world.version,document:c});
     await store.transact('boss',{id:'enter',anchor:'a1',input:{tool:'world_lair',args:{operation:'approach',lair:'lair_mud_tusk'},eventId:'enter'}},reducer);
@@ -130,7 +130,7 @@ test('首领战术、败亡与巢穴更替在存储重启/导入/删除回合中
     assert.deepEqual((await store.reconcile('boss',[],null)).document,c);
 });
 test('独立巢穴迁移CLI使用配套世界归档，不改原档，拒绝覆盖和密钥路径',async t=>{
-    const{engine}=setup(),base=path.resolve(os.tmpdir()),directory=await fs.mkdtemp(path.join(base,'boss-cli-'));assert.ok(directory.startsWith(base+path.sep));t.after(()=>fs.rm(directory,{recursive:true,force:true}));
+    const{engine}=setup(),base=path.resolve(tmpRoot()),directory=await fs.mkdtemp(path.join(base,'boss-cli-'));assert.ok(directory.startsWith(base+path.sep));t.after(()=>fs.rm(directory,{recursive:true,force:true}));
     const input=path.join(directory,'old.json'),output=path.join(directory,'new.json'),archive=path.join(directory,'world.json');
     const old=engine.initialFromLegacy(legacy,'boss-cli',{prepare:false});old.state.minute=50*1440;old.state.creatures={boss_mud_tusk:{name:'泥鬃裂牙',hp:0,maxHp:90,status:'死亡',location:'loc_hw_northwood'}};
     const bytes=JSON.stringify(old);await fs.writeFile(input,bytes);await fs.writeFile(archive,JSON.stringify(engine.world));

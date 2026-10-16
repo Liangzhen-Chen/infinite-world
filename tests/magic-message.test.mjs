@@ -1,7 +1,7 @@
 import test from'node:test';
 import assert from'node:assert/strict';
 import fs from'node:fs/promises';
-import os from'node:os';
+import{tmpRoot}from'../tools/tmp-root.mjs';
 import path from'node:path';
 import {loadWorld}from'../tools/load-world.mjs';
 import {WorldEngine}from'../server-plugin/engine.mjs';
@@ -104,7 +104,7 @@ test('目录拒绝全知/人格参数、无延迟、无限维持和超字数',as
 test('同事件去重、存储重启及删除回合恢复队列、记忆与魔力守恒',async t=>{
  const s=await fixture(),g=await s.ready(),args={spell:'spell_message_message',target,authorization:g.result.authorization,text:'这条只送一次。'};let input;
  for(let i=0;i<100;i++){const candidate={tool:'world_cast',args,eventId:`stored-${i}`},out=await s.engine.reduce(g.doc,candidate);if(out.result.success){input=candidate;break;}}assert.ok(input);
- const dir=await fs.mkdtemp(path.join(os.tmpdir(),'dnd-magic-message-'));t.after(()=>fs.rm(dir,{recursive:true,force:true}));const reducer=s.engine.reduce.bind(s.engine),store=new CampaignStorage(dir,{reducer});await store.create({id:'message',worldVersion:g.doc.worldVersion,document:g.doc});
+ const dir=await fs.mkdtemp(path.join(tmpRoot(),'dnd-magic-message-'));t.after(()=>fs.rm(dir,{recursive:true,force:true}));const reducer=s.engine.reduce.bind(s.engine),store=new CampaignStorage(dir,{reducer});await store.create({id:'message',worldVersion:g.doc.worldVersion,document:g.doc});
  const event={id:input.eventId,anchor:'sent',input};await store.transact('message',event,reducer);const sent=await store.read('message');await store.transact('message',event,reducer);assert.deepEqual((await store.read('message')).document,sent.document);
  await store.transact('message',{id:'arrival',anchor:'arrival',input:{eventId:'arrival',tool:'world_time',args:{minutes:2}}},reducer);const arrived=await store.read('message');assert.equal(heard(arrived.document).length,1);
  const fresh=new CampaignStorage(dir,{reducer:new WorldEngine(s.world).reduce.bind(new WorldEngine(s.world))});assert.deepEqual((await fresh.read('message')).document,arrived.document);
@@ -201,7 +201,7 @@ test('多人长短步费用一致，费用不足不部分扣费且中止全部�
 });
 test('正常签发、多人施法、NPC反向消息和到达在事件存储重启导入与撤销中守恒',async t=>{
  const s=await fixture();let doc=await s.contact(s.doc);doc=await s.contact(doc,third);
- const dir=await fs.mkdtemp(path.join(os.tmpdir(),'dnd-team-message-'));t.after(()=>fs.rm(dir,{recursive:true,force:true}));const reducer=s.engine.reduce.bind(s.engine),store=new CampaignStorage(dir,{reducer});await store.create({id:'team',worldVersion:doc.worldVersion,document:doc});
+ const dir=await fs.mkdtemp(path.join(tmpRoot(),'dnd-team-message-'));t.after(()=>fs.rm(dir,{recursive:true,force:true}));const reducer=s.engine.reduce.bind(s.engine),store=new CampaignStorage(dir,{reducer});await store.create({id:'team',worldVersion:doc.worldVersion,document:doc});
  const transact=async(id,tool,args)=>{const result=await store.transact('team',{id,anchor:id,input:{eventId:id,tool,args}},reducer);return result;};
  for(const [id,who,other]of[['grant-one',target,third],['grant-two',third,target]])await transact(id,'world_promise',{operation:'grant_access',promisor:who,location:'team_link',guests:[other],content:'本人主动参与限定节奏连接',minutes:60});
  let before=(await store.read('team')).document;const args={spell:'spell_message_team_link',target,authorization:'permission_grant-one',authorizations:['permission_grant-two']},cast=await s.cast(before,'team_link',args);

@@ -1,5 +1,5 @@
 import fs from 'node:fs/promises';
-import os from 'node:os';
+import{tmpRoot}from'./tmp-root.mjs';
 import path from 'node:path';
 import { performance } from 'node:perf_hooks';
 import { CampaignStorage } from '../server-plugin/storage.mjs';
@@ -14,7 +14,7 @@ async function directoryBytes(folder) {
 }
 
 export async function benchmarkStorage({ events = 10000 } = {}) {
-    const directory = await fs.mkdtemp(path.join(os.tmpdir(), 'infinite-fields-perf-'));
+    const directory = await fs.mkdtemp(path.join(tmpRoot(), 'infinite-fields-perf-'));
     const document = { state: { player: { coins: 1000000 }, npcs: {}, inventory: {}, records: {} }, memories: {} };
     for (let i = 0; i < 800; i++) document.state.npcs[`npc_${i}`] = { name: `居民${i}`, trust: 0, location: '河湾村', notes: '种田、缴税、照顾家人，担心粮食收成。'.repeat(5) };
     for (let i = 0; i < 400; i++) document.state.inventory[`item_${i}`] = { quantity: 1, quality: '木', durability: 100, weight: 0.5 };

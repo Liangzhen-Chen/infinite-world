@@ -1,14 +1,14 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
-import os from 'node:os';
+import{tmpRoot}from'../tools/tmp-root.mjs';
 import path from 'node:path';
 import { createCampaign, commit, addMemory } from './fixtures/legacy/core.js';
 import { CampaignStorage, digest } from '../server-plugin/storage.mjs';
 import { legacyReplayReducer, migrateLegacyChat, reconstructLegacyInitial, migrateWorldVersion } from '../server-plugin/migrations.mjs';
 const seed = JSON.parse(await fs.readFile(new URL('fixtures/legacy/seed.json', import.meta.url), 'utf8'));
 test('迁移：保留钱、物品、人物、固定记忆、历史，并可删旧支线', async t => {
-    const directory = await fs.mkdtemp(path.join(os.tmpdir(), 'infinite-fields-migrate-'));
+    const directory = await fs.mkdtemp(path.join(tmpRoot(), 'infinite-fields-migrate-'));
     t.after(() => fs.rm(directory, { recursive: true, force: true }));
     const campaign = createCampaign(seed);
     addMemory(campaign, { subject: '林穗', key: '承诺', content: '允许借厨房', pinned: true }, null);
@@ -36,7 +36,7 @@ test('迁移：无法证明种子正确时拒绝，不用当前世界覆盖玩�
     assert.equal(campaign.state.player.coins, 174);
 });
 test('世界迁移：冲突字段保留，备份可回退，重启与导入保留新版本', async t => {
-    const directory = await fs.mkdtemp(path.join(os.tmpdir(), 'infinite-fields-world-'));
+    const directory = await fs.mkdtemp(path.join(tmpRoot(), 'infinite-fields-world-'));
     t.after(() => fs.rm(directory, { recursive: true, force: true }));
     const store = new CampaignStorage(directory, { reducer: legacyReplayReducer });
     await store.create({ id: 'world', worldVersion: 'v1', document: { state: { coins: 174, untouched: 'old' } } });

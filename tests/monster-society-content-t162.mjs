@@ -14,7 +14,7 @@ import {catalogDefinition} from '../server-plugin/catalog.mjs';
 import {skipTo} from './fixtures/skip-clock.mjs';
 import {buildBatch,people,places,settlements,organizations,ids} from '../world/design/monster-society-3.mjs';
 import {FILES,mergeMonsterSociety3,withoutMonsterSociety3} from '../tools/publish-monster-society-3.mjs';
-import os from 'node:os';
+import{tmpRoot}from'../tools/tmp-root.mjs';
 import path from 'node:path';
 import {loadPromptBundle} from '../tools/build-card.mjs';
 const {HX,GS,hx,gs,P}=ids,DAY=1440,batch=buildBatch(),formal=await loadWorld();
@@ -118,7 +118,7 @@ test('T162 正式取得路线：导师入门认证、药草、听息立意、逐
  while(s.doc.state.minute<quarter+5)await s.call('world_time',{minutes:Math.min(30*DAY,quarter+5-s.doc.state.minute)});
  const actor=s.doc.state.creatures[target];assert.equal(actor.society.location,HX);assert.deepEqual(actor.ecology,original.ecology);assert.ok(s.doc.state.records[`spirit_society:${HX}`].members[target]);
  assert.equal(world.settlementProfiles.find(p=>p.id===HX).population,48);
- const directory=await fs.mkdtemp(path.join(os.tmpdir(),'t162-save-'));t.after(()=>fs.rm(directory,{recursive:true,force:true}));
+ const directory=await fs.mkdtemp(path.join(tmpRoot(),'t162-save-'));t.after(()=>fs.rm(directory,{recursive:true,force:true}));
  const reducer=(d,input,opts)=>s.engine.reduce(d,input,opts),store=new CampaignStorage(directory,{reducer});
  await store.create({id:'path',worldVersion:world.version,document:s.doc});const exported=await store.export('path'),reloaded=await store.import(exported,'copy');assert.equal(digest(reloaded.document.state),digest(s.doc.state));
 });
@@ -148,7 +148,7 @@ test('T162 world_upgrade 加入两地，旧账与野生身体不补发；发布�
  const again=planWorldUpgrade(s.doc,world,world,{worldHash:'t162',eventId:'again'});assert.equal(Object.keys(applyPatches(s.doc,again.patches).state.creatures??{}).length,count);
  const {publishMonsterSociety3,batchIds}=await import('../tools/publish-monster-society-3.mjs');assert.deepEqual((await publishMonsterSociety3()).changed,[]);
  // A first publication must remain reloadable with D1's separate biome catalog and K8 derivation.
- const root=await fs.mkdtemp(path.join(os.tmpdir(),'t162-publish-'));t.after(()=>fs.rm(root,{recursive:true,force:true}));
+ const root=await fs.mkdtemp(path.join(tmpRoot(),'t162-publish-'));t.after(()=>fs.rm(root,{recursive:true,force:true}));
  for(const folder of ['geo','meta','people','lore'])await fs.cp(path.resolve('world',folder),path.join(root,folder),{recursive:true});
  const mine=batchIds();for(const[file]of FILES){const target=path.join(root,file),rows=JSON.parse(await fs.readFile(target,'utf8'));await fs.writeFile(target,JSON.stringify(rows.filter(r=>!mine.has(r.id))));}
  const rf=path.join(root,'meta/rules.json'),rawRules=JSON.parse(await fs.readFile(rf,'utf8'));rawRules.wildlifeAwakening.society.homes=rawRules.wildlifeAwakening.society.homes.filter(x=>x!==HX);rawRules.wildlifeAwakening.spiritLands=rawRules.wildlifeAwakening.spiritLands.filter(x=>x.location!==hx.garden);await fs.writeFile(rf,JSON.stringify(rawRules));

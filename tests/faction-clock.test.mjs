@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
-import os from 'node:os';
+import{tmpRoot}from'../tools/tmp-root.mjs';
 import path from 'node:path';
 import {loadWorld} from '../tools/load-world.mjs';
 import {WorldEngine} from '../server-plugin/engine.mjs';
@@ -177,7 +177,7 @@ test('后续社会消费者取得有代价的阶段上下文与可追溯回执',
 });
 
 test('存档重复事务与回放不重复阶段扣耗或干预代价',async t=>{
- const s=setup(),root=await fs.mkdtemp(path.join(os.tmpdir(),'faction-clock-'));t.after(()=>fs.rm(root,{recursive:true,force:true}));
+ const s=setup(),root=await fs.mkdtemp(path.join(tmpRoot(),'faction-clock-'));t.after(()=>fs.rm(root,{recursive:true,force:true}));
  const storage=new CampaignStorage(root,{reducer:s.engine.reduce.bind(s.engine)});
  const document=atContact(s);await storage.create({id:'clock',worldVersion:s.doc.worldVersion,document});
  const input={tool:'world_settlement',args:{operation:'faction_intervene',clock:s.rule.id,choice:'stop'},eventId:'stop'};

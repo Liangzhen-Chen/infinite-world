@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { EntityResolver, MemoryIndex, validateMemory } from '../server-plugin/retrieval.mjs';
 import fs from 'node:fs/promises';
-import os from 'node:os';
+import{tmpRoot}from'../tools/tmp-root.mjs';
 import path from 'node:path';
 import {once} from 'node:events';
 import express from 'express';
@@ -65,7 +65,7 @@ test('不精确物品名只推荐同类候选，短实物名称不被工序册�
 });
 
 test('world_search 真实HTTP入口检索四村公开资料，获知前不返回传闻，查询不改世界',async t=>{
-    const world=await loadWorld(),original=structuredClone(world),root=await fs.mkdtemp(path.join(os.tmpdir(),'fields-village-search-'));
+    const world=await loadWorld(),original=structuredClone(world),root=await fs.mkdtemp(path.join(tmpRoot(),'fields-village-search-'));
     t.after(()=>fs.rm(root,{recursive:true,force:true}));
     const app=express();app.use(express.json());const router=express.Router();
     await init(router,{baseRoot:root,world,npcPlanningEnabled:false,consistencyEnabled:false});app.use(router);

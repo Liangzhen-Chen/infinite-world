@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
-import os from 'node:os';
+import{tmpRoot}from'../tools/tmp-root.mjs';
 import path from 'node:path';
 import {execFile} from 'node:child_process';
 import {promisify} from 'node:util';
@@ -15,8 +15,8 @@ const execute=promisify(execFile),source=await loadWorld(),ids=['npc_yp_qinli','
 const read=async file=>JSON.parse(await fs.readFile(file,'utf8'));
 const write=(file,value)=>fs.writeFile(file,JSON.stringify(value,null,2)+'\n');
 async function fixture(t,{shared=false,oneSided=false,firstSource=false}={}){
- const temp=await fs.mkdtemp(path.join(os.tmpdir(),'npc-depth-batch-')),worldRoot=path.join(temp,'world');
- t.after(async()=>{assert.ok(path.resolve(temp).startsWith(path.resolve(os.tmpdir())+path.sep));await fs.rm(temp,{recursive:true,force:true});});
+ const temp=await fs.mkdtemp(path.join(tmpRoot(),'npc-depth-batch-')),worldRoot=path.join(temp,'world');
+ t.after(async()=>{assert.ok(path.resolve(temp).startsWith(path.resolve(tmpRoot())+path.sep));await fs.rm(temp,{recursive:true,force:true});});
  for(const folder of ['meta','people','geo','lore'])await fs.cp(path.resolve('world',folder),path.join(worldRoot,folder),{recursive:true});
  const world=structuredClone(source);
  // Keep an explicit unselected gap now that every formal full profile is complete.

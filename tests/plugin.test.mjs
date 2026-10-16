@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
-import os from 'node:os';
+import{tmpRoot}from'../tools/tmp-root.mjs';
 import path from 'node:path';
 import {once}from'node:events';
 import express from 'express';
@@ -10,7 +10,7 @@ import {loadWorld}from'../tools/load-world.mjs';
 import {createCampaign}from'./fixtures/legacy/core.js';
 import {digest}from'../server-plugin/storage.mjs';
 test('服务器 API：创建、执行、幂等、拒绝瞬移、检索与路径边界',async t=>{
-    const root=await fs.mkdtemp(path.join(os.tmpdir(),'infinite-fields-http-'));
+    const root=await fs.mkdtemp(path.join(tmpRoot(),'infinite-fields-http-'));
     t.after(()=>fs.rm(root,{recursive:true,force:true}));
     const app=express();app.use(express.json({limit:'500mb'}));const router=express.Router();await init(router,{baseRoot:root});app.use(router);
     const server=app.listen(0,'127.0.0.1');await once(server,'listening');t.after(()=>server.close());
@@ -44,7 +44,7 @@ async function serverFixture(t,{baseRoot=null,world=null,userRoots=null}={}){
 }
 
 test('公开搜索与场景复用真实事件编年史，撤销及导入不保留已删除经历',async t=>{
-    const root=await fs.mkdtemp(path.join(os.tmpdir(),'fields-chronicle-http-'));
+    const root=await fs.mkdtemp(path.join(tmpRoot(),'fields-chronicle-http-'));
     t.after(()=>fs.rm(root,{recursive:true,force:true}));
     const request=await serverFixture(t,{baseRoot:root});
     const created=await request('/create',{}),campaignId=created.body.reference.campaignId;
@@ -66,7 +66,7 @@ test('公开搜索与场景复用真实事件编年史，撤销及导入不保�
 });
 
 test('副本启用：新旧聊天均只写新文件，保留原文、钱袋和聊天锚点，拒绝路径穿越',async t=>{
-    const root=await fs.mkdtemp(path.join(os.tmpdir(),'fields-copy-'));t.after(()=>fs.rm(root,{recursive:true,force:true}));
+    const root=await fs.mkdtemp(path.join(tmpRoot(),'fields-copy-'));t.after(()=>fs.rm(root,{recursive:true,force:true}));
     const directory=path.join(root,'chats','host');await fs.mkdir(directory,{recursive:true});
     const seed=JSON.parse(await fs.readFile(new URL('fixtures/legacy/seed.json',import.meta.url),'utf8'));
     const campaign=createCampaign(seed);campaign.state.player.coins=123;
@@ -87,7 +87,7 @@ test('副本启用：新旧聊天均只写新文件，保留原文、钱袋和�
 });
 
 test('原生格式2旧档只在副本执行R1，读取不迁移，原聊天与历史导出保持不变',async t=>{
-    const root=await fs.mkdtemp(path.join(os.tmpdir(),'fields-native-copy-'));t.after(()=>fs.rm(root,{recursive:true,force:true}));
+    const root=await fs.mkdtemp(path.join(tmpRoot(),'fields-native-copy-'));t.after(()=>fs.rm(root,{recursive:true,force:true}));
     const directory=path.join(root,'chats','host');await fs.mkdir(directory,{recursive:true});
     const request=await serverFixture(t,{userRoots:{a:root}});
     const created=await request('/create',{}),bundle=(await request('/export',{campaignId:created.body.reference.campaignId})).body;
@@ -109,7 +109,7 @@ test('原生格式2旧档只在副本执行R1，读取不迁移，原聊天与�
 });
 
 test('服务器角色创建校验属性与开放出生地，不允许请求指定幸运或等级',async t=>{
-    const root=await fs.mkdtemp(path.join(os.tmpdir(),'infinite-fields-character-'));t.after(()=>fs.rm(root,{recursive:true,force:true}));
+    const root=await fs.mkdtemp(path.join(tmpRoot(),'infinite-fields-character-'));t.after(()=>fs.rm(root,{recursive:true,force:true}));
     const request=await serverFixture(t,{baseRoot:root});
     const created=await request('/create',{character:{name:'创建旅人',gender:'女',appearance:'左手戴旧皮手套。'}});
     assert.equal(created.status,200,created.body.error);assert.equal(created.body.document.state.player.level,0);
@@ -126,7 +126,7 @@ test('服务器角色创建校验属性与开放出生地，不允许请求指�
 });
 
 test('服务器：两个用户的存档、原文索引和导出互相隔离，同分钟记忆更新可检索',async t=>{
-    const root=await fs.mkdtemp(path.join(os.tmpdir(),'infinite-fields-users-'));t.after(()=>fs.rm(root,{recursive:true,force:true}));
+    const root=await fs.mkdtemp(path.join(tmpRoot(),'infinite-fields-users-'));t.after(()=>fs.rm(root,{recursive:true,force:true}));
     const request=await serverFixture(t,{userRoots:{a:path.join(root,'a'),b:path.join(root,'b')}});
     const a=(await request('/create',{})).body.reference.campaignId,b=(await request('/create',{},'b')).body.reference.campaignId;
     assert.equal((await request('/read',{campaignId:a},'b')).status,404);
@@ -148,7 +148,7 @@ test('服务器：两个用户的存档、原文索引和导出互相隔离，�
 });
 
 test('世界自动迁移：保留已改变的居民资金，加入新居民，重放与便携回退一致',async t=>{
-    const root=await fs.mkdtemp(path.join(os.tmpdir(),'infinite-fields-upgrade-'));t.after(()=>fs.rm(root,{recursive:true,force:true}));
+    const root=await fs.mkdtemp(path.join(tmpRoot(),'infinite-fields-upgrade-'));t.after(()=>fs.rm(root,{recursive:true,force:true}));
     const original=await loadWorld(),oldApi=await serverFixture(t,{baseRoot:root,world:original});
     const created=(await oldApi('/create',{})).body,campaignId=created.reference.campaignId;
     await oldApi('/execute',{campaignId,tool:'world_trade',args:{seller:'林穗',service:'住宿'},eventId:'rent',anchor:'a'});

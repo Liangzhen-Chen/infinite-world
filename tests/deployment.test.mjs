@@ -2,12 +2,12 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
 import path from 'node:path';
-import os from 'node:os';
+import{tmpRoot}from'../tools/tmp-root.mjs';
 import {pathToFileURL}from'node:url';
 import YAML from 'yaml';
 import {prepareDeployment,activateDeployment}from'../tools/deploy-engine.mjs';
 test('部署：冻结包校验在写入前执行，先备份，聊天和旧扩展保留',async t=>{
-    const root=await fs.mkdtemp(path.join(os.tmpdir(),'infinite-fields-deploy-'));t.after(()=>fs.rm(root,{recursive:true,force:true}));
+    const root=await fs.mkdtemp(path.join(tmpRoot(),'infinite-fields-deploy-'));t.after(()=>fs.rm(root,{recursive:true,force:true}));
     const bundle=await prepareDeployment(path.join(root,'bundle')),installation=path.join(root,'install');
     assert.equal(bundle.files.some(file=>file.path.includes('tests/fixtures')),false);
     assert.equal(bundle.files.some(file=>file.path.includes('world/drafts/')),false);

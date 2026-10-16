@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
-import os from 'node:os';
+import{tmpRoot}from'../tools/tmp-root.mjs';
 import path from 'node:path';
 import {once} from 'node:events';
 import express from 'express';
@@ -18,7 +18,7 @@ const script=async id=>JSON.parse(await fs.readFile(new URL(`playtests/${id}.jso
 const qty=value=>typeof value==='number'?value:value?.quantity??0;
 
 async function http(t,edition=world){
-    const root=await fs.mkdtemp(path.join(os.tmpdir(),'fields-t28-http-'));
+    const root=await fs.mkdtemp(path.join(tmpRoot(),'fields-t28-http-'));
     t.after(()=>fs.rm(root,{recursive:true,force:true}));
     const app=express();app.use(express.json({limit:'500mb'}));const router=express.Router();
     let providerCalls=0;const forbidden=()=>{providerCalls++;throw Error('T28预算为0，禁止模型请求');};

@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
-import os from 'node:os';
+import{tmpRoot}from'../tools/tmp-root.mjs';
 import path from 'node:path';
 import {loadWorld}from'../tools/load-world.mjs';
 import {withM5LawRules}from'../world/design/m5-law-rules.mjs';
@@ -71,7 +71,7 @@ test('同一裁判经真实携信传到两地，形成不同支持/反对比例�
 test('撤判消息实际抵达后看法才改变；重放与存档恢复得到同一舆论',async t=>{
     const f=lawSetup();let{c,id,topic}=await judged(f);
     const notice=c.state.npcs[victim].memoryStream.find(m=>m.legalCase===id);
-    const directory=await fs.mkdtemp(path.join(os.tmpdir(),'public-opinion-'));t.after(()=>fs.rm(directory,{recursive:true,force:true}));
+    const directory=await fs.mkdtemp(path.join(tmpRoot(),'public-opinion-'));t.after(()=>fs.rm(directory,{recursive:true,force:true}));
     const reducer=(doc,input)=>f.engine.reduce(doc,input),store=new CampaignStorage(directory,{reducer});
     await store.create({id:'opinion',worldVersion:f.engine.world.version,document:c});
     let receipt=await store.transact('opinion',{id:'carry',input:{tool:'world_law',args:{operation:'notify',case:id,from:victim,to:carrier,memory:notice.id,channel:'carry'},eventId:'carry'}},reducer);

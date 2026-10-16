@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
-import os from 'node:os';
+import{tmpRoot}from'../tools/tmp-root.mjs';
 import path from 'node:path';
 import {execFile} from 'node:child_process';
 import {promisify} from 'node:util';
@@ -45,7 +45,7 @@ test('桑坂正式30人等于已审批完整档，其他人、旧记忆和钱物
 });
 
 test('冻结原档首次预演不写入，正式发布闭合15事件30人且仅更新桑坂',async t=>{
- const temp=await fs.mkdtemp(path.join(os.tmpdir(),'t85-publication-'));t.after(()=>fs.rm(temp,{recursive:true,force:true}));
+ const temp=await fs.mkdtemp(path.join(tmpRoot(),'t85-publication-'));t.after(()=>fs.rm(temp,{recursive:true,force:true}));
  const worldRoot=path.join(temp,'world');
  for(const dir of ['meta','geo','people','lore','design'])await fs.cp(path.resolve('world',dir),path.join(worldRoot,dir),{recursive:true});
  await fs.cp(root,path.join(worldRoot,'drafts/w1/sb-depth'),{recursive:true});
