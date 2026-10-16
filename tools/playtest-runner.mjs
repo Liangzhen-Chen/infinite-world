@@ -99,6 +99,7 @@ export async function runPlaytest({scenario,api,client,bundle,attempt=1,processM
                         if(tool==='world_read')result=readStateSection(view.document.state,args.section,args.npc);
                         else if(tool==='world_search')result=await api('search',{...args,campaignId,token:reviewTurn.token,anchor,expectedSequence:view.reference.sequence});
                         else if(tool==='world_catalog')result=await api('catalog',{...args,campaignId});
+                        else if(tool==='world_actions')result=await api('actions',{target:args.target,query:args.query,campaignId,limit:12});
                         else{
                             const eventId=`${anchor}-${report.calls.length}`;
                             const request={campaignId,tool,args,eventId,anchor,expectedSequence:view.reference.sequence};
