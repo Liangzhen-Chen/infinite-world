@@ -46,11 +46,11 @@ export function organizationState(engine,state,id){
     const row=state.records?.[key(id)];
     const t=String(id).startsWith('temple:')?templeById(engine,id):null;
     const temple=t?.source==='temple'?{...t,kind:'教会',leader:t.teacher,leaderTitle:'主祭',members:{[t.teacher]:{position:'主祭',joinedAt:null,arrears:0}},treasury:0,charter:{mode:'leader',approval:true,fee:0,dues:0,rules:[t.rule]}}:null;
-    const school=educationSites(engine,state).find(o=>o.id===id);
     const clinic=String(id).startsWith('clinic:')?medicineSites(engine,state).find(o=>o.id===id):null;
     const medical=clinic?{...clinic,source:'medicine',leaderTitle:'医师',treasury:0,charter:{mode:'leader',fee:0,dues:0,rules:[]}}:null;
-    const education=school?{...school,source:'education',leaderTitle:'先生',members:school.leader?{[school.leader]:{position:'先生',joinedAt:null,arrears:0}}:{},treasury:0,charter:{mode:'leader',fee:0,dues:0,rules:[]}}:null;
-    const base=row?.source==='created'?null:(String(id).startsWith('family:')?familyGroup(engine,state,id.slice(7)):null)??factionBase(engine,id)??householdBase(engine,state,id)??societyBase(engine,id)??temple??education??medical;
+    // Schools are the last catalogue fallback but one: scan education sites only when nothing earlier matched.
+    const education=()=>{const school=educationSites(engine,state).find(o=>o.id===id);return school?{...school,source:'education',leaderTitle:'先生',members:school.leader?{[school.leader]:{position:'先生',joinedAt:null,arrears:0}}:{},treasury:0,charter:{mode:'leader',fee:0,dues:0,rules:[]}}:null;};
+    const base=row?.source==='created'?null:(String(id).startsWith('family:')?familyGroup(engine,state,id.slice(7)):null)??factionBase(engine,id)??householdBase(engine,state,id)??societyBase(engine,id)??temple??education()??medical;
     if(!base&&row?.source!=='created')return null;
     const b=base??{id,name:row.name,source:'created',kind:row.kind,seat:row.seat,leader:null,leaderTitle:LEADER[row.kind]??'会长',members:{},treasury:0,charter:{}};
     const members={};
