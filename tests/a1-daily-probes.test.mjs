@@ -11,7 +11,7 @@ import {uiSession,qty} from './helpers/ui-script.mjs';
 const world=await loadWorld(),engine=new WorldEngine(world);
 const DAY=1440,INN='bld_hw_qingdeng',LINSUI='npc_hw_linsui',AYAN='npc_hw_ayan',MILL='bld_hw_mill',FORGE='bld_hw_forge',SMITH='npc_hw_duanyan',POST='bld_hw_post',CLERK='npc_hw_shendu';
 function conserved(before,after,label){
- const flows=before.ledger?flowDelta(before,after):{sources:0,sinks:0};
+ const flows=before.ledger?flowDelta(before,after,'coin_river'):{sources:0,sinks:0};
  assert.equal(legacyTotal(engine,after.state)-legacyTotal(engine,before.state),flows.sources-flows.sinks,`${label}：铜钱守恒（差额只来自登记的源汇）`);
  assert.deepEqual(reconcile(engine,after).mismatches,[],`${label}：旧字段与账本一致`);
 }
