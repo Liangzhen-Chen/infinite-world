@@ -9,6 +9,10 @@ function settlementReader(world,document){
 const pick=(row,keys)=>Object.fromEntries(keys.filter(key=>row?.[key]!==undefined).map(key=>[key,structuredClone(row[key])]));
 export function publicSettlement(world,id,document=null,reader=null){
  const p=world.settlementProfiles?.find(p=>p.id===id),d=p?.details;if(!p)return null;
+ // An authored settlement publishes a public entry only with its reviewed
+ // details; a settlement generated at runtime (remote county, tribal site) has
+ // no authored prose and shows its derived population and governance instead.
+ if(!d&&!p.generated)return null;
  const engine=reader??settlementReader(world,document);
  const name=id=>personName(engine,document?.state??{},id).value??engine.byId.get(id)?.name??id;
  const currentView=document?placeView(engine,document.state,id):null;
