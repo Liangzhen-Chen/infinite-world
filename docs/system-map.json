@@ -2,7 +2,7 @@
  "title": "无限原野系统地图",
  "card": "K9",
  "generatedFrom": {
-  "commit": "refs/heads/r20",
+  "commit": "refs/heads/r21",
   "method": "运行时导出（注册表、规则表、工具定义、效果表、立场传导表）+ 静态正则扫描（import 图、函数体标识符、state 分区与 records 前缀、rules/world 读取）。静态扫描是近似：经 engine.byId、helper 间接或动态拼接路径的访问不计入。"
  },
  "scanMethods": {
@@ -2087,7 +2087,7 @@
     "server-plugin/seasonal-hazards.mjs",
     "server-plugin/hazard-calendar.mjs"
    ],
-   "lines": 1037,
+   "lines": 1049,
    "stateWrites": [
     "family",
     "npcs",
@@ -2112,6 +2112,7 @@
     "ecology",
     "faction-assets",
     "faction-clock",
+    "faith",
     "hazard-price",
     "hazard-yield",
     "quote",
@@ -2128,6 +2129,7 @@
     "npcLife",
     "questSources",
     "settlementTrade",
+    "training",
     "version",
     "worldClock"
    ],
@@ -11286,6 +11288,7 @@
   "training": [
    "server-plugin/entity-view.mjs",
    "server-plugin/facility-state.mjs",
+   "server-plugin/faction-clock.mjs",
    "server-plugin/faith-catalog.mjs",
    "server-plugin/local-exams.mjs",
    "server-plugin/npc-growth.mjs",
@@ -16213,21 +16216,24 @@
    "recordReads": [
     "faction-assets",
     "faction-clock",
+    "faith",
     "society_motion",
     "temple"
    ],
    "rules": [
     "effectTable",
     "factionClock",
-    "questSources"
+    "questSources",
+    "training"
    ],
    "world": [
     "factions",
     "items",
-    "locations"
+    "locations",
+    "settlementProfiles"
    ],
    "worldDirs": [],
-   "lines": 238
+   "lines": 250
   },
   "server-plugin/faith-catalog.mjs": {
    "system": "sim_faith",
