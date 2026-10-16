@@ -59,7 +59,7 @@ export function conversionPolicy(engine,state,who,location){
 function changeFaith(d,e,who,t,eventId,{kind='conversion',devotion=true}={}){
  const now=d.get('state','minute'),previous=faithOf(e,d.get('state'),who).value;
  if(!devotion&&previous?.temple===t.id&&Number.isSafeInteger(previous.observedSince))return {previous,next:previous};
- const god=e.byId.get(t.deity),next={deity:t.deity,temple:t.id,institution:t.seat,church:god?.church.name??t.name,taboo:god?.taboo??t.rule,
+ const god=e.byId.get(t.deity),next={deity:t.deity,temple:t.id,institution:t.seat,church:god?.church.name??t.church,taboo:god?.taboo??t.rule,
   observedSince:devotion?now:null,lastBreach:-1,sourceEvent:eventId,override:true};
  d.set([...actorPath(e.world,who),'faith'],next);
  const key=`faith_change:${eventId}:${who}`;d.set(path(key),{category:'faith_change',subject:who,previous,next,kind,minute:now,sourceEvent:eventId});
