@@ -1,7 +1,7 @@
 import {ensureGroupAccount} from './group-account.mjs';
 import {groupRepresentative,personView} from './entity-view.mjs';
 import {standingLedger} from './standing.mjs';
-import {templeById} from './faith-catalog.mjs';
+import {templeById,faithConflictClocks} from './faith-catalog.mjs';
 import {factionRelations} from './reputation-registry.mjs';
 import {clockRoll,clockTransaction} from './world-clock.mjs';
 import {registerEffect,assertEffect as assertTableEffect,applyEffect as applyTableEffect,hookedEffects} from './effects.mjs';
@@ -14,7 +14,19 @@ export function factionClockRules(engine){
  if(engine.replaying&&engine.replayResult?.factionClockVersion!==1)return [];
  const configured=engine.rules.factionClock;
  if(configured&&(configured.version!==1||!Array.isArray(configured.clocks)))throw Error('势力时钟规则版本无效');
- return [...configured?.clocks??[],...(engine.world.factions??[]).filter(f=>f.clock?.stages).map(f=>({...f.clock,faction:f.id}))];
+ // RW-07 faith competition clocks are derived from the current church seats
+ // (tools/load-world saves them into rules.factionClock); a saved copy stays live
+ // only while this world still derives it, so dropping the churches drops the clock.
+ const listed=configured?.clocks??[],derived=listed.some(r=>String(r.id).startsWith('faith:'))?derivedFaithClockIds(engine):null;
+ return [...listed.filter(r=>!String(r.id).startsWith('faith:')||derived.has(r.id)),...(engine.world.factions??[]).filter(f=>f.clock?.stages).map(f=>({...f.clock,faction:f.id}))];
+}
+// Seats change only with the world's factions/institutions, so the derived id
+// set is memoised per engine against exactly those inputs.
+const faithMemo=new WeakMap();
+function derivedFaithClockIds(engine){
+ const key=[engine.world,engine.world.factions,engine.world.settlementProfiles,engine.rules.faith,engine.rules.faith?.competition,engine.rules.training?.institutions];
+ const hit=faithMemo.get(engine);if(hit&&hit.key.every((v,i)=>v===key[i]))return hit.ids;
+ const ids=new Set(faithConflictClocks(engine).map(r=>r.id));faithMemo.set(engine,{key,ids});return ids;
 }
 function faction(engine,id){
  const t=String(id).startsWith('temple:')?templeById(engine,id):null;
