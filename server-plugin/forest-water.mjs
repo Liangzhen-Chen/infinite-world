@@ -15,14 +15,19 @@ export function resourceSettlement(engine,location,state={}){
  while(location&&!seen.has(location)){if(settlements.has(location))return location;seen.add(location);location=engine.byId.get(location)?.parent;}
  return null;
 }
+// Sites derive only from the catalog; memoize per catalog array (not persisted).
+const siteCache=new WeakMap();
 export function forestSites(engine){
  const r=engine.rules.forestWater;if(!r)return[];
- return engine.world.locations.filter(l=>locationHabitatTypes(l).includes('forest')||
+ const list=engine.world.locations,hit=siteCache.get(list);
+ if(hit?.rules===r&&hit.length===list.length)return hit.rows;
+ const rows=list.filter(l=>locationHabitatTypes(l).includes('forest')||
   (l.features??[]).some(f=>featureTraits(f).tags.includes('wood'))&&(l.site?.resources??[]).some(resource=>resource.item==='item_wood'&&l.site.changes?.some(c=>c.kind==='regrow'&&c.resource===resource.id))).map(l=>{
   const tags=locationTraits(l).tags,kind=tags.includes('frost')||/针|松|杉/.test(l.terrain)?'conifer':tags.includes('wet')?'wetwood':'broadleaf';
   const species=r.forest.species[kind],area=l.areaKm2??r.forest.defaultAreaKm2;
   return {location:l.id,kind,capacity:Math.max(1,Math.floor(area*r.forest.stockPerKm2)),growthPerDay:species.growthPerDay};
- });
+ }).map(Object.freeze);
+ siteCache.set(list,{rules:r,length:list.length,rows});return rows;
 }
 function stock(d,engine,site,minute){
  const old=d.get(...path(site.location));

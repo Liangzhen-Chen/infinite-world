@@ -1375,7 +1375,7 @@
     "server-plugin/forest-water.mjs",
     "server-plugin/water-cycle.mjs"
    ],
-   "lines": 1327,
+   "lines": 1332,
    "stateWrites": [
     "crafted",
     "created",
@@ -16811,7 +16811,7 @@
     "routes"
    ],
    "worldDirs": [],
-   "lines": 150
+   "lines": 155
   },
   "server-plugin/governance.mjs": {
    "system": "sim_society",
