@@ -1,4 +1,7 @@
 import {registerMagicEffect}from'./magic-effects.mjs';
+import {declareLedgerWriter} from './ledger.mjs';
+import {placed as placedStock,moveStock} from './stock.mjs';
+declareLedgerWriter('magic-ritual');
 import {recordCreatureResolution}from'./quest-wildlife.mjs';
 import {environmentFeatures,localPlayerPoint,localSightClear,recordLocalContact}from'./environment.mjs';
 import {areaTargetFacts}from'./magic-area.mjs';
@@ -143,6 +146,7 @@ export function applySummonWork(d,e,eventId,power=e.power){
   const grams=Math.min(power,s.rubbleGrams);s.rubbleGrams-=grams;t.rubbleGrams+=grams;store(d,source,s);store(d,dest,t);return{carriedGrams:grams};
  }
  s.contents=s.contents.filter(id=>id!==args.source);t.contents.push(args.source);store(d,source,s);store(d,dest,t);
+ const unit=d.get('state','itemInstances',args.source);moveStock(d,{from:placedStock(this,unit.container,unit.item),to:placedStock(this,dest.id,unit.item),amount:1,writer:'magic-ritual',eventId});
  d.set(['state','itemInstances',args.source,'container'],dest.id);return{paper:args.source,destination:dest.id,sourceEvent:eventId};
 }
 function nearbySpirits(d,engine,c){

@@ -2,9 +2,9 @@ import {transportSegment,stepTransport} from './transport-route.mjs';
 import {financeBalance,financeTransfer,financeChange} from './finance-bank.mjs';
 import {escrow as escrowAccount} from './money.mjs';
 import {declareLedgerWriter} from './ledger.mjs';
-import {store,bag,freight,moveStock} from './stock.mjs';
+import {store,freight,bookStock} from './stock.mjs';
 // S1b: 托运期间货物记在 transport:<id>|<物品>|freight，交付时转给收货人（组织公库或行囊）。
-declareLedgerWriter('transport');
+declareLedgerWriter('transport',{sinks:['sink:consume']});
 import {assessTradeTax,tradeTax} from './finance-tax.mjs';
 import {changeItems} from './items.mjs';
 import {personOccupation,personConstraint,personAge,groupView,groupRepresentative} from './entity-view.mjs';
@@ -54,7 +54,8 @@ export function createTransportAsset(d,e,{owner='player',kind='cart',animal,id},
  }else{
   const stock=groupAccountView(e,s,owner)?.items;
   if((stock?.item_wood??e.quantity(d,owner,'item_wood'))<spec.wood||(stock?.item_iron??e.quantity(d,owner,'item_iron'))<spec.metal)throw Error('制造车船的木料或铁料不足');
-  moveGoods(d,e,owner,'item_wood',spec.wood,{take:true});moveGoods(d,e,owner,'item_iron',spec.metal,{take:true});
+  const build={flow:'sink:consume',purpose:'build',writer:'transport',eventId};
+  moveGoods(d,e,owner,'item_wood',spec.wood,{take:true,books:build});moveGoods(d,e,owner,'item_iron',spec.metal,{take:true,books:build});
  }
  const asset={category:'transport_asset',id:key,kind,owner,location,durability:100,maxDurability:100,animal:animal??null,createdAt:s.minute,sourceEvent:eventId};
  d.set(path(key),asset);return transportAssetView(e,d.get('state'),key);
@@ -90,11 +91,12 @@ export function leaseTransportAsset(d,e,{asset,tenant='player',minutes,coins},ev
  const row={category:'transport_lease',asset:a.id,tenant,owner:a.owner,starts:now,ends:now+minutes,coins};d.set(path(`transport_lease:${eventId}`),row);return row;
 }
 // S1b: trip = 托运记录键（货物在途账户的所属实体）。
-function moveGoods(d,e,owner,item,quantity,{take=false,instances=[],trip}={}){
- const group=groupView(e,d.get('state'),owner),books={account:freight(e,trip,item),writer:'transport',eventId:trip};
+// books = 不经托运时的对方（造车船消耗的木铁）。
+function moveGoods(d,e,owner,item,quantity,{take=false,instances=[],trip,books=null}={}){
+ const group=groupView(e,d.get('state'),owner);books??={account:freight(e,trip,item),writer:'transport',eventId:trip};
  // Group storage and treasury use the same authoritative account as F1.
  if(group){const account=ensureGroupAccount(d,e,owner),amount=(account.items[item]??0)+(take?-quantity:quantity);if(amount<0)throw Error('组织公库实物不足');
-  if(take)moveStock(d,{from:store(e,owner,item),to:books.account,amount:quantity,writer:'transport',eventId:trip});else moveStock(d,{from:books.account,to:store(e,owner,item),amount:quantity,writer:'transport',eventId:trip});
+  bookStock(d,e,store(e,owner,item),take?-quantity:quantity,books);
   d.set(groupAccountPath(owner),{...account,items:{...account.items,[item]:amount}});return {instances:[]};}
  const moved=changeItems(d,e,owner,item,take?-quantity:quantity,{preserve:take,selection:take?null:undefined,books});
  if(!take&&instances.length){
@@ -238,7 +240,7 @@ export function transportAction(d,e,args,eventId){
  if(task==='intercept'||task==='recover')return transportIncident(d,e,{shipment:args.business??asset,recover:task==='recover',consent:args.consent},eventId);
  const cargo=args.item?[{item:e.resolve(args.item),quantity:args.quantity??1}]:[],passengers=[];
  if(task==='inspect'||!asset)return {services:transportServices(e,d.get('state'),d.get('state','location')),usage:'transport: contract资产, location目的地, item/quantity货物, service=passage乘客; post: buyer收件人,item记忆ID'};
- if(task==='repair'){const a=transportAssetView(e,d.get('state'),asset);if(!a||a.owner!=='player'||a.busy||a.location!==d.get('state','location'))throw Error('资产不在本人可修缮范围');const n=Math.ceil((100-a.durability)/10);if(!n)throw Error('资产无需修缮');if(e.quantity(d,'player','item_wood')<n)throw Error('修缮木料不足');changeItems(d,e,'player','item_wood',-n);d.set([...path(a.id),'durability'],100);return transportAssetView(e,d.get('state'),a.id);}
+ if(task==='repair'){const a=transportAssetView(e,d.get('state'),asset);if(!a||a.owner!=='player'||a.busy||a.location!==d.get('state','location'))throw Error('资产不在本人可修缮范围');const n=Math.ceil((100-a.durability)/10);if(!n)throw Error('资产无需修缮');if(e.quantity(d,'player','item_wood')<n)throw Error('修缮木料不足');changeItems(d,e,'player','item_wood',-n,{books:{flow:'sink:consume',purpose:'repair',writer:'transport',eventId}});d.set([...path(a.id),'durability'],100);return transportAssetView(e,d.get('state'),a.id);}
  const options={asset,to:e.resolve(args.location),cargo,passengers:args.service==='passage'?['player']:passengers,escort:args.escort?e.resolve(args.escort):null,authorization:args.authorization};
  if(task==='book')return bookTransport(d,e,options,eventId);
  return quoteTransport(d,e,{...options,from:d.get('state','location')});

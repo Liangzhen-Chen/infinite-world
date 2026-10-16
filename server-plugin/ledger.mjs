@@ -206,6 +206,25 @@ export function transfer(d,{from,to,amount,writer,eventId=null,lot=null,pick=nul
     return amount;
 }
 
+// ---- 世界版本更新（包升级）的折算 ------------------------------------------------
+// 世界更新（world-upgrade）按新版目录给居民补发钱物或改写旧字段，不经工具归约。适配器登记折算函数：
+// 比较更新前后的旧字段余额，增加的从 src:pack_converted 流入、减少的流入 sink:pack_removed（12 §12.5），
+// 账本补丁随更新补丁一并写入，更新后旧字段与账户仍逐账户相等。
+const upgradeBookings=new Map();
+export function registerUpgradeBooking(name,fn){upgradeBookings.set(name,fn);}
+export function bookUpgrade(before,after,world){
+    if(before?.ledger?.version!==LEDGER_VERSION)return [];
+    const ledger=structuredClone(before.ledger),patches=[];
+    const d={peek:(...p)=>p[0]==='ledger'?p.slice(1).reduce((v,k)=>v?.[k],ledger):p.reduce((v,k)=>v?.[k],after),
+        get(...p){return this.peek(...p);},
+        set(path,value){if(path[0]!=='ledger')throw Error('折算只写账本分区');let t=ledger;for(const k of path.slice(1,-1))t=t[k]??={};t[path.at(-1)]=structuredClone(value);patches.push({op:'set',path,value});},
+        remove(path){let t=ledger;for(const k of path.slice(1,-1))t=t?.[k];if(t)delete t[path.at(-1)];patches.push({op:'delete',path});}};
+    // 折算函数只读世界目录：给一个只含 world / rules / byId 的引擎视图。
+    const engine={world,rules:world.rules,byId:new Map(Object.values(world).filter(Array.isArray).flat().filter(r=>r&&typeof r.id==='string').map(r=>[r.id,r]))};
+    for(const fn of upgradeBookings.values())fn(d,engine,before,after);
+    return patches;
+}
+
 // ---- 审计 ----------------------------------------------------------------
 // Σ实体账户 = Σ源流出 − Σ汇流入（逐资源）。
 export function ledgerTotals(ledger){

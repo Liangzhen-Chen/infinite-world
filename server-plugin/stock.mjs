@@ -16,10 +16,10 @@
 //   工程备料                          <工程>|<物品>|works       state.projects.<id>.wood/stone（施工中且已备料）
 //   矿脉储量                          mineral:<地点>:<物品>|<物品>|reserve  records.mineral:*.reserve（首次开采时按世界数据开户）
 //   林木存量                          forest:<地点>|item_wood|reserve  records.forest:*.reserve（首次采伐时按世界数据开户）
-//   落地/封存/法院保管的单件          <地点或保管者>|<物品>|placed  state.itemInstances.<id>（status 落地、封存的按 location，保管的按 owner）
+//   落地/封存/袋内/法院保管的单件     <地点、容器或保管者>|<物品>|placed  state.itemInstances.<id>（落地、封存按 location，袋内按 container，保管按 owner）
 // 源汇（world/ontology/resources.json 的 sourcesAndSinks）的用途即流量类别（gather、harvest、meal、craft、decay……）。
 // 批次（lots）只在仓储类用途（granary、seed、cargo）上启用：粮食需要保质期，其余物品暂按数量计。
-import {accountKey,transfer,registerLedgerOpening,registerLotPolicy,ledgerActive,reviseLots} from './ledger.mjs';
+import {accountKey,transfer,registerLedgerOpening,registerLotPolicy,ledgerActive,reviseLots,declareLedgerWriter,registerUpgradeBooking} from './ledger.mjs';
 import {actorId} from './npc-state.mjs';
 import {groupAccountView} from './group-account.mjs';
 
@@ -94,7 +94,7 @@ const batchLots=(batches,kind=null)=>batches.filter(b=>b.amount>0).map(b=>({id:S
 // 玩法包登记自己的旧库存字段（依赖倒置：本体层不 import 玩法包）。fn(engine, state, add(key, n, lots?))。
 const enumerators=new Map();
 export function registerLegacyStock(name,fn){enumerators.set(name,fn);}
-export const UNIT_PLACED=Object.freeze({'落地':'location','封存':'location','保管':'owner'});
+export const UNIT_PLACED=Object.freeze({'落地':'location','封存':'location','保管':'owner','袋内':'container'});
 export function legacyStock(engine,state){
     const out=new Map(),lots=new Map();
     const add=(key,n,l)=>{n=num(n);if(!n)return;out.set(key,(out.get(key)??0)+n);if(l?.length)lots.set(key,[...(lots.get(key)??[]),...l]);};
@@ -132,6 +132,17 @@ export function legacyStock(engine,state){
     for(const fn of enumerators.values())fn(engine,state,add);
     return {balances:out,lots};
 }
+// 世界版本更新的折算（ledger.bookUpgrade）：更新前后旧库存的差额经 src:pack_converted / sink:pack_removed 入账。
+declareLedgerWriter('world-upgrade',{sources:{'src:pack_converted':{'*':Infinity}},sinks:['sink:pack_removed']});
+export function bookBalanceChanges(d,beforeBalances,afterBalances,purpose='upgrade'){
+    for(const key of new Set([...beforeBalances.keys(),...afterBalances.keys()])){
+        const delta=(afterBalances.get(key)??0)-(beforeBalances.get(key)??0);if(!delta)continue;
+        const resource=key.split('|')[1];
+        if(delta>0)transfer(d,{from:`src:pack_converted|${resource}|${purpose}`,to:key,amount:delta,writer:'world-upgrade'});
+        else transfer(d,{from:key,to:`sink:pack_removed|${resource}|${purpose}`,amount:-delta,writer:'world-upgrade'});
+    }
+}
+registerUpgradeBooking('stock',(d,engine,before,after)=>bookBalanceChanges(d,legacyStock(engine,before.state).balances,legacyStock(engine,after.state).balances));
 registerLedgerOpening((engine,state)=>{
     const {balances,lots}=legacyStock(engine,state);
     return [...balances].sort(([a],[b])=>a<b?-1:a>b?1:0).map(([key,n])=>[key,n,lots.get(key)??null]);

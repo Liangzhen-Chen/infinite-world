@@ -191,7 +191,7 @@ function detach(d,engine,item,eventId,status,extra={}){
  d.set(['state','itemInstances',id],{...d.get('state','itemInstances',id),status,...extra});return id;
 }
 function pickup(d,engine,u){
- changeItems(d,engine,'player',u.item,1,{books:{account:placedStock(engine,u.location,u.item),writer:'magic-mind-space',eventId:u.id}});
+ changeItems(d,engine,'player',u.item,1,{books:{account:placedStock(engine,u.status==='袋内'?u.container:u.location,u.item),writer:'magic-mind-space',eventId:u.id}});
  const bag=engine.bagPath('player');
  d.set([...bag,u.item,'instances'],[...d.get(...bag,u.item,'instances')??[],u.id]);
  const next={...u,status:'持有'};for(const k of ['container','location','position','weight'])delete next[k];

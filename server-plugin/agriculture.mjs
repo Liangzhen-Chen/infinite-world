@@ -1,7 +1,7 @@
 import {purse,treasury as treasuryAccount,moveCoins} from './money.mjs';
 import {BOOKED} from './stock.mjs';
 import {declareLedgerWriter,reviseLots} from './ledger.mjs';
-import {granary as granaryAccount,seedBank as seedAccount,settlementStock,bag,armyRations,transit as transitAccount,moveStock} from './stock.mjs';
+import {granary as granaryAccount,seedBank as seedAccount,settlementStock,bag,armyRations,transit as transitAccount,moveStock,bookStock} from './stock.mjs';
 // S1b: 农事是粮仓与种粮的唯一写入者：收成与农副产来自 src:regrowth（田地按积温生长，05 §5.5），
 // 吃掉的进 sink:consume，过期与月损进 sink:decay，仓满挤出与掠夺无主的进 sink:destroy；
 // 播种的种粮进 sink:consume（作物此后在田里再生，收获时再从 src:regrowth 流入）。
@@ -35,7 +35,7 @@ const journals=new WeakMap();
 const note=(r,entry)=>{let j=journals.get(r);if(!j)journals.set(r,j=[]);j.push(entry);};
 const seedLotId=b=>`${b.harvestDay}:${b.expiresDay}`;
 export const REGROWTH=purpose=>({flow:'src:regrowth',purpose});
-const flowAccount=(engine,spec,resource)=>spec.account??`${spec.flow}|${resource}|${spec.purpose}`;
+const flowAccount=(engine,spec,resource)=>spec.unbooked?null:spec.account??`${spec.flow}|${resource}|${spec.purpose}`;
 function commit(d,engine,sid,r,eventId=null){
     const entries=journals.get(r)??[];journals.delete(r);
     const g=granaryAccount(engine,sid),seed=seedAccount(engine,sid),resource=g.split('|')[1],at=w=>w==='seed'?seed:g;
@@ -47,6 +47,7 @@ function commit(d,engine,sid,r,eventId=null){
             if(e.overflow&&!e.from.flow)moveStock(d,{from,to:`sink:destroy|${resource}|overflow`,amount:e.overflow,writer:'agriculture',eventId});
         }else if(e.out){
             const to=flowAccount(engine,e.to,resource);
+            if(!to){bookStock(d,engine,at(e.out),-(e.parts?e.parts.reduce((n,p)=>n+p.amount,0):e.qty),undefined);continue;}
             if(e.parts)for(const part of e.parts)moveStock(d,{from:at(e.out),to,amount:part.amount,writer:'agriculture',eventId,pick:part.id!==undefined?[String(part.id)]:null,lot:e.lot?e.lot(part):null});
             else moveStock(d,{from:at(e.out),to,amount:e.qty,writer:'agriculture',eventId});
         }else if(e.revise)reviseLots(d,at(e.revise),e.fn);
@@ -194,9 +195,9 @@ export function bookLegacyFood(d,engine,sid,produced,eaten,day){
 // S1b: to = 粮的去处（军队的军粮账户；掠夺而无本方队伍接收时为 sink:destroy）。
 export function drawGranary(d,engine,id,quantity,{raid=false,to,eventId=null}={}){
     const p=profile(engine,id),s0=d.get('state','settlements',id);if(!p||!s0||!(quantity>0))return 0;
-    if(!to)throw Error('提粮须指明去向（账本对方）');
+    to??={unbooked:true};// 未给去向的直接调用（测试夹具）记未入账漂移
     const original=d.get(...path(id));
-    if(original?.mode!=='managed'){const take=Math.min(quantity,raid?s0.food:Math.max(0,s0.food-s0.population*p.reserveDays));if(take){moveStock(d,{from:granaryAccount(engine,id),to:flowAccount(engine,to,granaryAccount(engine,id).split('|')[1]),amount:take,writer:'agriculture',eventId});d.set(['state','settlements',id,'food'],s0.food-take);}return take;}
+    if(original?.mode!=='managed'){const take=Math.min(quantity,raid?s0.food:Math.max(0,s0.food-s0.population*p.reserveDays));if(take){const dst=flowAccount(engine,to,granaryAccount(engine,id).split('|')[1]);if(dst)moveStock(d,{from:granaryAccount(engine,id),to:dst,amount:take,writer:'agriculture',eventId});else bookStock(d,engine,granaryAccount(engine,id),-take,undefined);d.set(['state','settlements',id,'food'],s0.food-take);}return take;}
     const r=clone(original),s=clone(s0);balanced(r,s);
     const stock=r.batches.filter(b=>b.kind==='grain').reduce((n,b)=>n+b.amount,0),available=raid?stock:Math.max(0,stock-s.population*p.reserveDays);
     const taken=takeGrain(r,s,Math.min(quantity,available),false,to);if(!taken)return 0;

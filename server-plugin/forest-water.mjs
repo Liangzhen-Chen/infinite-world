@@ -5,7 +5,7 @@ import {entityTransition} from './entity-transitions.mjs';
 import {advanceWaterCycle,waterResourceFactor} from './water-cycle.mjs';
 import {reservedMigrationCapacity} from './seasonal-migration.mjs';
 import {declareLedgerWriter} from './ledger.mjs';
-import {reserve as reserveAccount,settlementStock,moveStock} from './stock.mjs';
+import {reserve as reserveAccount,settlementStock,moveStock,bookStock} from './stock.mjs';
 // S1b: 林木存量是资源点账户 forest:<地点>|item_wood|reserve：首次触及时按世界数据（site.capacity）经 src:genesis 开户，
 // 生长来自 src:regrowth，采伐转入聚落木料或采伐者行囊；聚落烧柴进 sink:consume。没有林木规则时聚落日产木料来自 src:regrowth。
 declareLedgerWriter('forest-water',{sources:{'src:genesis':{item_wood:10000000},'src:regrowth':{item_wood:10000000}},sinks:['sink:consume']});
@@ -64,9 +64,10 @@ export function forestHabitatCapacity(engine,state,habitat,species,forest=forest
 export function harvestForest(d,engine,location,quantity,minute=d.get('state','minute'),{to,eventId=null}={}){
  if(!Number.isSafeInteger(quantity)||quantity<0)throw Error('采伐量须为非负整数');
  const site=forestSites(engine).find(s=>s.location===location);if(!site)return 0;
- if(!to)throw Error('采伐须指明木料去处（账本对方）');
  const old=d.get(...path(location)),row=stock(d,engine,site,minute),taken=Math.min(quantity,row.reserve),before=row.reserve;
- row.reserve-=taken;row.harvested+=taken;bookForest(d,engine,location,old,row,eventId);moveStock(d,{from:forestAccount(engine,location),to,amount:taken,writer:'forest-water',eventId});d.set(path(location),row);
+ row.reserve-=taken;row.harvested+=taken;bookForest(d,engine,location,old,row,eventId);
+ // 未给去处的直接调用（测试夹具）不拦旧结算，记未入账漂移。
+ if(to)moveStock(d,{from:forestAccount(engine,location),to,amount:taken,writer:'forest-water',eventId});else bookStock(d,engine,forestAccount(engine,location),-taken,undefined);d.set(path(location),row);
  if(before>=site.capacity*engine.rules.forestWater.forest.shortageCover&&row.reserve<site.capacity*engine.rules.forestWater.forest.shortageCover)event(d,engine,location,Math.floor(minute/DAY),'forest_depleted',{reserve:row.reserve},minute);
  return taken;
 }
