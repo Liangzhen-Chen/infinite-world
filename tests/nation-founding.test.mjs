@@ -38,7 +38,7 @@ test('宣布独立真实转入V4公库并接入法律、税率与U12军队，没
  const code=legalCodeAt(e,village,d.get('state')),crime=Object.keys(code.penalties)[0];nationAction.call(e,d,{operation:'nation',choice:'law',name:crime,coins:37,minutes:600},'law');
  const amended=legalCodeAt(e,village,d.get('state'));assert.equal(amended.penalties[crime].baseFine,37);assert.equal(amended.penalties[crime].detentionMinutes,600);assert.deepEqual(amended.evidenceRequired,code.evidenceRequired);
  const paid=partyPay(d,e,n.id,123,{sourceEvent:'cost',reason:'军饷'});assert.equal(paid,123);assert.equal(organizationState(e,d.get('state'),n.id).treasury,24877);
- assert.throws(()=>found(e,d,'twice'),/已经/);assert.equal(toolDefinitions().length,25);
+ assert.throws(()=>found(e,d,'twice'),/已经/);assert.equal(toolDefinitions().length,27);
 });
 test('承认来自愿意且独立的外部势力，战争或敌意使现有承认失效',()=>{
  const {e,d,factions}=ready();adjustStanding(d,e,factions[0],'player',-100,{sourceEvent:'hostile',minute:d.get('state','minute')});

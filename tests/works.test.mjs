@@ -136,6 +136,6 @@ test('技能融合：两项相关技能均至少高级1等，投材料与时间�
 });
 
 test('作品系统复用 world_research，不新增工具',()=>{
-    const tools=toolDefinitions();assert.equal(tools.length,25);
+    const tools=toolDefinitions();assert.equal(tools.length,27);
     assert.match(tools.find(t=>t.function.name==='world_research').function.description,/fuse/);
 });

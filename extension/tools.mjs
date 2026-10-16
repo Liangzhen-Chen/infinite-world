@@ -33,34 +33,33 @@ define('world_site','本地据点进入/调查/解机关/有限采集。',{opera
 define('world_craft','配方制造/工序维修',{operation:{enum:['manufacture','repair']},recipe:str,item:{...str,description:'维修名/类型ID'},instance:{...str,description:'instances单件ID'},repairPlan:str,authorization:str,helpers:{type:'array',items:str},maker:{...str,description:'结缘精怪代工'}},[]);
 define('world_research','立项/投钱续研；write/publish/copy/perform/survey(project稿或书)，fuse融合',{operation:str,name:str,concept:str,skills:{type:'array',items:str},entities:{type:'array',items:str},project:str,coins:int,minutes:int},['operation']);
 define('world_settlement','经营/户籍/议事；意见、公账委托须同意',{operation:{...str,enum:['business_open','business_close','business_bankrupt','business_report','start_project','civic_inspect','civic_residence','civic_sponsor','civic_apply_resident','civic_apply_citizen','civic_contribution','governance_inspect','governance_propose','governance_opinion','governance_close','governance_appointment','governance_grant','governance_revoke','governance_queue','governance_process','governance_apply','project_abort','title_petition','title_service','title_inspect','notable_petition','notable_audience','notable_inspect','promotion_petition','promotion_inspect','school_open','school_fund','school_inspect','school_close']},business:str,project:str,workers:{type:'array',items:str},settlement:str,authorization:str,authority:str,sponsor:str,sourceEvent:str,name:str,wood:int,stone:int,days:int,beneficiaries:{type:'array',items:str},plot:str,issue:str,proposal:str,speaker:str,opinion:{enum:['approve','reject','abstain']},content:str,steward:str,consent:bool,action:{enum:['account_report','housing','public_project']},minutes:int,budget:int,proposedFee:{...int,description:'拟费，非批准/实收'},taxBps:int,due:int,request:str},['operation']);
-define('world_quest','托管/接单/履约/退款；NPC按世界钟履约',{operation:{...str,enum:['publish','accept','complete','cancel','inspect'],description:'publish仅发布托管；player私人D；另调accept；当面complete；NPC在场同意/离屏看告示；cancel退款/inspect进度'},publisher:{...str,description:'player/付报酬NPC'},personal:bool,cultural:{...bool,description:'名士文化委托'},settlement:{...str,description:'官职公款托管村'},taker:{...str,description:'默认player；NPC在场同意'},consent:bool,deadline:{...int,description:'绝对分，默认十日；到期退余款不退路费'},grade:{...str,enum:['D','C','B','A','S']},reward:{...int,minimum:20,maximum:1000000,description:'报酬，铜币'},content:str,quest:{...str,description:'回执ID；未知world_read quests'},objective:object({type:{...str,enum:['deliver','visit','build']},item:{...str,description:'deliver必填名/ID；燕麦非干粮'},quantity:{...int,minimum:1,description:'deliver必填份数'},location:{...str,description:'deliver默认发单处/visit目的地'},project:{...str,description:'build已授权投料工程ID'}},['type'])},['operation']);
+define('world_quest','托管/接单/履约/退款；NPC按世界钟履约',{operation:{...str,enum:['publish','accept','complete','cancel','inspect'],description:'publish仅发布托管；player私人D；另调accept；当面complete；NPC在场同意/离屏看告示；cancel退款/inspect进度'},publisher:{...str,description:'player/付报酬NPC'},personal:bool,cultural:{...bool,description:'名士文化委托'},settlement:{...str,description:'官职公款托管村'},taker:str,consent:bool,deadline:int,grade:{...str,enum:['D','C','B','A','S']},reward:{...int,minimum:20,maximum:1000000,description:'报酬，铜币'},content:str,quest:{...str,description:'回执ID；未知world_read quests'},objective:object({type:{...str,enum:['deliver','visit','build']},item:{...str,description:'deliver必填名/ID；燕麦非干粮'},quantity:{...int,minimum:1,description:'deliver必填份数'},location:{...str,description:'deliver默认发单处/visit目的地'},project:{...str,description:'build已授权投料工程ID'}},['type'])},['operation']);
 const ingredient=object({item:str,amount:int},['item','amount']);
 define('world_create','登记；研究法术template原型、spec规则JSON；产物用已有ID',{type:str,name:str,project:str,data:object({template:str,power:int,spec:str,age:int,occupation:str,notes:str,skill:str,minimumProficiency:int,materials:{type:'array',items:ingredient},minutes:int,difficulty:int,output:object({item:str,quantity:int},['item','quantity']),tools:{type:'array',items:str},workstation:str,location:str,byproducts:{type:'array',items:ingredient},toolWear:int,failure:object({recoverFraction:{type:'number'},injury:int},[])},[])},['type','name','data']);
 define('world_search','查长期事实/原聊天',{query:str,limit:int},['query']);
 define('world_catalog','规则/文化/势力/历史/地区分页查',{entity:str,kind:{type:'string',enum:['profession','skill','spell','item','recipe','feature','location','culture','deity','faction','history','region']},offset:int});
 define('world_read','查现账/人物库存',{section:{...str,description:'人物/npcs、行囊/inventory、约定/obligations'},npc:{...str,description:'人物ID先查目录；无私密认知'}});
+// A1 动作目录（06 §6.10.1）：目录检索与按 id 执行；动作说明放检索结果，不进静态区。
+define('world_actions','查此处或对某人某物可做之事',{target:str,query:str},[]);
+define('world_act','按动作id执行，id与槽位先用world_actions查',{action:str,slots:{type:'object'}},['action']);
 definitions.find(row=>row.function.name==='world_trade').function.parameters.properties.operation.description='依次交易/租铺/采购/雇盘点/当面履约/同意收购/还债/取消未履约/借款(coins,days,item押)/钱庄存取兑币(buyer=player买)/受雇/合伙(quantity分成%)';
 definitions.find(row=>row.function.name==='world_remember').function.parameters.properties.rumor={...str,description:'编号；玩家/rumor键/在场来源/未核实原文；10分'};
-definitions.find(row=>row.function.name==='world_settlement').function.parameters.properties.operation.description='business编号办开店、停业、现金破产、期末盈亏。';
 const festivalParameters=definitions.find(row=>row.function.name==='world_settlement').function.parameters.properties;
 festivalParameters.operation.enum.push('medicine_inspect','medicine_seek','medicine_fund','medicine_hire','medicine_health');
 festivalParameters.action.enum.push('credit','charity');
 festivalParameters.operation.enum.push('festival_inspect','festival_plan','festival_authorize','festival_join','festival_cancel');
-Object.assign(festivalParameters,{festival:{...str,description:'plan=custom，后续festival ID'},year:{...int,minimum:1},cost:{...int,minimum:0,description:'同意自费，非公款'},supplier:str});
-festivalParameters.operation.description='business经营；festival_依次查现场/约日期/各speaker准自费收费/各speaker同意参加/组织者述因取消';
+Object.assign(festivalParameters,{festival:str,year:{...int,minimum:1},cost:{...int,minimum:0,description:'同意自费，非公款'},supplier:str});
 festivalParameters.operation.enum.push('faction_inspect','faction_contribute','faction_intervene');
 festivalParameters.operation.enum.push('org_inspect','org_join','org_leave','org_deposit','org_propose','org_vote');
 festivalParameters.operation.enum.push('family_inspect','family_marry','family_adopt','family_foster','family_split','family_manage','family_dispute','family_alliance');
 festivalParameters.operation.enum.push('faith_inspect','faith_convert','faith_give','faith_use','faith_rite','faith_pilgrim');
-festivalParameters.operation.description+='；faith_用org寺观，choice用途/祭仪';
 festivalParameters.operation.enum.push('nation_inspect','nation','domain_inspect','domain_appoint','domain_steward','domain_request');
-festivalParameters.operation.description+=';nation:found/negotiate/law/tax';
 festivalParameters.action.enum.push('commercial','customs');
 festivalParameters.operation.enum.push('war_inspect','war_join','diplomacy');
 festivalParameters.operation.enum.push('army_inspect','army_enlist','army_duty','army_recruit','army_dismiss');
 festivalParameters.action.enum.push('expel','appoint','withdraw','charter');
-Object.assign(festivalParameters,{org:{...str,description:'组织名/ID；world_create org创立，occupation填行会/帮派/商号/教会'},member:str});
-Object.assign(festivalParameters,{clock:{...str,description:'时钟ID，choice干预ID'},choice:str,item:str,quantity:int,coins:int});
+Object.assign(festivalParameters,{org:str,member:str});
+Object.assign(festivalParameters,{clock:str,choice:str,item:str,quantity:int,coins:int});
 Object.assign(festivalParameters,{facilityType:{enum:['house','workshop','bridge','road','clinic','school','granary','public']},route:str,funding:str});
 festivalParameters.action.enum.push('repair','expand');
 const routes=new Map();
@@ -70,7 +69,6 @@ definitions.find(r=>r.function.name==='world_site').function.parameters.properti
 const transport=definitions.find(r=>r.function.name==='world_trade').function.parameters.properties;
 transport.operation.enum.push('smuggle','deliver_smuggled','bank_inspect','extend','prepay','lend','collect','pawn','redeem','auction','remit','cash_bill','asset_inspect','invest','dividend','share_transfer','rent_out','workshop','workshop_terms','dismiss');transport.mode=str;
 festivalParameters.operation.enum.push('duel_challenge','duel_answer','duel_yield','election_start','election_campaign','election_finish','election_expose','mining_permit');
-festivalParameters.choice={...str,description:'touch/death；gift/speech/promise/buy_votes'};
 transport.operation.description='trade/business/bank/asset/transport/post';
 transport.operation.enum.push('transport','post');
 transport.task.enum.push('register','book','trace','lease','repair','intercept','recover','open','lose','collect');
@@ -123,4 +121,9 @@ export function modelToolCall(tool,args={}){
     }
     return{tool,args};
 }
-export const readOnlyTools=new Set(['world_search','world_catalog','world_read']);
+export const readOnlyTools=new Set(['world_search','world_catalog','world_read','world_actions']);
+// The two catalog tools are the gateway to the registered actions, not actions themselves.
+export const catalogTools=new Set(['world_actions','world_act']);
+// Per-tool schemas before grouping (world_farm, world_pet …): the action registry
+// reads a grouped operation's own parameters from here instead of the group union.
+export function memberDefinitions(){return structuredClone(definitions);}

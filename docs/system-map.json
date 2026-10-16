@@ -2,7 +2,7 @@
  "title": "无限原野系统地图",
  "card": "K9",
  "generatedFrom": {
-  "commit": "refs/heads/r23",
+  "commit": "refs/heads/a1",
   "method": "运行时导出（注册表、规则表、工具定义、效果表、立场传导表）+ 静态正则扫描（import 图、函数体标识符、state 分区与 records 前缀、rules/world 读取）。静态扫描是近似：经 engine.byId、helper 间接或动态拼接路径的访问不计入。"
  },
  "scanMethods": {
@@ -17,15 +17,15 @@
  },
  "counts": {
   "layers": 6,
-  "systems": 42,
-  "modules": 221,
+  "systems": 44,
+  "modules": 228,
   "advance": 59,
-  "tools": 25,
+  "tools": 27,
   "verbs": 28,
   "subscribers": 9,
   "interactionRules": 25,
   "effectKinds": 22,
-  "links": 500
+  "links": 507
  },
  "layers": [
   {
@@ -40,7 +40,8 @@
     "data_design",
     "data_assets",
     "data_drafts",
-    "data_ontology"
+    "data_ontology",
+    "data_actions"
    ]
   },
   {
@@ -93,12 +94,13 @@
   {
    "id": "ui",
    "name": "玩家接口层",
-   "reason": "模型能调用的 25 个工具（extension/tools.mjs），以及把状态投影给模型和玩家的场景卡、状态提示、界面接口和浏览器面板。这一层只读状态或转交引擎，不自己结算。",
+   "reason": "模型能调用的 27 个工具（extension/tools.mjs，含 A1 动作目录 world_actions/world_act），以及把状态投影给模型和玩家的场景卡、状态提示、界面接口和浏览器面板。这一层只读状态或转交引擎，不自己结算。",
    "systems": [
     "ui_tools",
     "ui_scene",
     "ui_server",
     "ui_client",
+    "ui_actions",
     "ui_host"
    ]
   },
@@ -278,6 +280,7 @@
     "sim_transport",
     "sim_wildlife",
     "sim_works",
+    "ui_actions",
     "ui_scene",
     "ui_server"
    ],
@@ -324,6 +327,7 @@
     "sim_transport",
     "sim_wildlife",
     "sim_works",
+    "ui_actions",
     "ui_scene",
     "ui_server"
    ],
@@ -496,6 +500,27 @@
     "base_ledger"
    ],
    "files": 9
+  },
+  {
+   "id": "data_actions",
+   "name": "动作注册表与事件模板（A1）",
+   "layer": "data",
+   "card": null,
+   "dir": "world/actions",
+   "modules": [],
+   "lines": 0,
+   "stateWrites": [],
+   "stateReads": [],
+   "recordWrites": [],
+   "recordReads": [],
+   "rules": [],
+   "world": [],
+   "advance": [],
+   "subscribes": [],
+   "effects": [],
+   "tools": [],
+   "readBy": [],
+   "files": 0
   },
   {
    "id": "kernel_engine",
@@ -2358,7 +2383,7 @@
    "modules": [
     "extension/tools.mjs"
    ],
-   "lines": 127,
+   "lines": 130,
    "stateWrites": [],
    "stateReads": [],
    "recordWrites": [],
@@ -2440,7 +2465,7 @@
     "server-plugin/ui-overview.mjs",
     "server-plugin/ui-personal.mjs"
    ],
-   "lines": 653,
+   "lines": 679,
    "stateWrites": [],
    "stateReads": [
     "created",
@@ -2474,7 +2499,8 @@
    "effects": [],
    "tools": [
     "world_search",
-    "world_catalog"
+    "world_catalog",
+    "world_act"
    ],
    "readBy": []
   },
@@ -2523,6 +2549,44 @@
    "readBy": []
   },
   {
+   "id": "ui_actions",
+   "name": "动作目录与界面可操作（A1）",
+   "layer": "ui",
+   "card": null,
+   "dir": null,
+   "modules": [
+    "server-plugin/action-registry.mjs",
+    "server-plugin/action-gateway.mjs",
+    "server-plugin/action-affordances.mjs",
+    "server-plugin/action-text.mjs",
+    "server-plugin/applied-effects.mjs",
+    "extension/ui-actions.mjs",
+    "extension/actions-view.mjs"
+   ],
+   "lines": 480,
+   "stateWrites": [],
+   "stateReads": [
+    "created",
+    "location",
+    "minute",
+    "npcs"
+   ],
+   "recordWrites": [],
+   "recordReads": [],
+   "rules": [],
+   "world": [
+    "recipes",
+    "routes"
+   ],
+   "advance": [],
+   "subscribes": [],
+   "effects": [],
+   "tools": [
+    "world_act"
+   ],
+   "readBy": []
+  },
+  {
    "id": "ui_host",
    "name": "酒馆接入",
    "layer": "ui",
@@ -2534,7 +2598,7 @@
     "extension/core.js",
     "extension/turn.mjs"
    ],
-   "lines": 929,
+   "lines": 973,
    "stateWrites": [],
    "stateReads": [],
    "recordWrites": [],
@@ -2545,7 +2609,8 @@
    "subscribes": [],
    "effects": [],
    "tools": [
-    "world_read"
+    "world_read",
+    "world_actions"
    ],
    "readBy": []
   },
@@ -5327,6 +5392,30 @@
    ]
   },
   {
+   "from": "ui_actions",
+   "to": "sim_economy",
+   "kind": "call",
+   "labels": [
+    "finance-bank.mjs"
+   ]
+  },
+  {
+   "from": "ui_actions",
+   "to": "sim_npc",
+   "kind": "call",
+   "labels": [
+    "npc-schedule.mjs"
+   ]
+  },
+  {
+   "from": "ui_client",
+   "to": "ui_actions",
+   "kind": "call",
+   "labels": [
+    "ui-actions.mjs"
+   ]
+  },
+  {
    "from": "ui_client",
    "to": "ui_host",
    "kind": "call",
@@ -5584,6 +5673,16 @@
   },
   {
    "from": "ui_server",
+   "to": "ui_actions",
+   "kind": "call",
+   "labels": [
+    "action-affordances.mjs",
+    "action-gateway.mjs",
+    "action-registry.mjs"
+   ]
+  },
+  {
+   "from": "ui_server",
    "to": "ui_client",
    "kind": "call",
    "labels": [
@@ -5831,6 +5930,14 @@
   {
    "from": "data_geo",
    "to": "sim_works",
+   "kind": "data",
+   "labels": [
+    "world/geo"
+   ]
+  },
+  {
+   "from": "data_geo",
+   "to": "ui_actions",
    "kind": "data",
    "labels": [
     "world/geo"
@@ -6167,6 +6274,14 @@
   {
    "from": "data_meta",
    "to": "sim_works",
+   "kind": "data",
+   "labels": [
+    "world/meta"
+   ]
+  },
+  {
+   "from": "data_meta",
+   "to": "ui_actions",
    "kind": "data",
    "labels": [
     "world/meta"
@@ -7157,6 +7272,14 @@
   },
   {
    "from": "ui_tools",
+   "to": "ui_actions",
+   "kind": "tool",
+   "labels": [
+    "world_act"
+   ]
+  },
+  {
+   "from": "ui_tools",
    "to": "ui_client",
    "kind": "tool",
    "labels": [
@@ -7168,6 +7291,7 @@
    "to": "ui_host",
    "kind": "tool",
    "labels": [
+    "world_actions",
     "world_read"
    ]
   },
@@ -7176,6 +7300,7 @@
    "to": "ui_server",
    "kind": "tool",
    "labels": [
+    "world_act",
     "world_catalog",
     "world_search"
    ]
@@ -10278,6 +10403,55 @@
    ]
   },
   {
+   "name": "world_actions",
+   "description": "查此处或对某人某物可做之事",
+   "readOnly": true,
+   "operations": null,
+   "routes": [
+    {
+     "tool": "world_actions",
+     "operations": [],
+     "handler": "extension/runtime.js（浏览器本地）",
+     "modules": [
+      "extension/runtime.js",
+      "extension/turn.mjs"
+     ],
+     "systems": [
+      "ui_host"
+     ]
+    }
+   ],
+   "systems": [
+    "ui_host"
+   ]
+  },
+  {
+   "name": "world_act",
+   "description": "按动作id执行，id与槽位先用world_actions查",
+   "readOnly": false,
+   "operations": null,
+   "routes": [
+    {
+     "tool": "world_act",
+     "operations": [],
+     "handler": "POST /execute → action-gateway.translateCall → 旧工具",
+     "modules": [
+      "server-plugin/action-gateway.mjs",
+      "server-plugin/action-registry.mjs",
+      "server-plugin/index.mjs"
+     ],
+     "systems": [
+      "ui_actions",
+      "ui_server"
+     ]
+    }
+   ],
+   "systems": [
+    "ui_actions",
+    "ui_server"
+   ]
+  },
+  {
    "name": "world_field",
    "description": "粮仓farm_buy燕麦；农事/环境/采集及天气动物巢穴",
    "readOnly": false,
@@ -10632,6 +10806,19 @@
  ],
  "worldData": [
   {
+   "dir": "world/actions",
+   "files": 2,
+   "keys": [],
+   "readers": [
+    "server-plugin/action-registry.mjs",
+    "server-plugin/action-text.mjs"
+   ],
+   "tools": [
+    "tools/build-action-registry.mjs",
+    "tools/system-map.mjs"
+   ]
+  },
+  {
    "dir": "world/art",
    "files": 3,
    "keys": [],
@@ -10884,6 +11071,7 @@
     "regions"
    ],
    "readers": [
+    "server-plugin/action-text.mjs",
     "server-plugin/advance-layers.mjs",
     "server-plugin/agriculture.mjs",
     "server-plugin/boss-negotiation.mjs",
@@ -11073,6 +11261,7 @@
     "careers"
    ],
    "readers": [
+    "server-plugin/action-affordances.mjs",
     "server-plugin/activities.mjs",
     "server-plugin/advance-registry.mjs",
     "server-plugin/agriculture-migration.mjs",
@@ -11842,6 +12031,7 @@
     "sim_character",
     "sim_economy",
     "sim_environment",
+    "ui_actions",
     "ui_scene",
     "ui_server"
    ]
@@ -11993,6 +12183,7 @@
     "sim_society",
     "sim_wildlife",
     "sim_works",
+    "ui_actions",
     "ui_scene",
     "ui_server"
    ]
@@ -12028,6 +12219,7 @@
     "sim_transport",
     "sim_wildlife",
     "sim_works",
+    "ui_actions",
     "ui_scene",
     "ui_server"
    ]
@@ -12093,6 +12285,7 @@
     "sim_agriculture",
     "sim_combat",
     "sim_faith",
+    "ui_actions",
     "ui_scene",
     "ui_server"
    ]
@@ -12767,6 +12960,7 @@
      "means": "聚落归属：立场传导沿 parent 找聚落",
      "pattern": "\\.parent\\b",
      "modules": [
+      "server-plugin/action-text.mjs",
       "server-plugin/advance-layers.mjs",
       "server-plugin/bosses.mjs",
       "server-plugin/career-metrics.mjs",
@@ -12833,6 +13027,7 @@
       "sim_npc",
       "sim_society",
       "sim_wildlife",
+      "ui_actions",
       "ui_host",
       "ui_scene",
       "ui_server"
@@ -12878,6 +13073,7 @@
      "means": "制造工位",
      "pattern": "workstations",
      "modules": [
+      "server-plugin/action-affordances.mjs",
       "server-plugin/entity-view.mjs",
       "server-plugin/facility-state.mjs",
       "server-plugin/finance-assets.mjs",
@@ -12893,7 +13089,8 @@
       "sim_magic",
       "sim_npc",
       "sim_society",
-      "sim_wildlife"
+      "sim_wildlife",
+      "ui_actions"
      ]
     },
     {
@@ -12901,6 +13098,7 @@
      "means": "住宿出租",
      "pattern": "lodging",
      "modules": [
+      "server-plugin/action-affordances.mjs",
       "server-plugin/credit.mjs",
       "server-plugin/engine.mjs",
       "server-plugin/facility-state.mjs",
@@ -12911,7 +13109,8 @@
       "kernel_engine",
       "sim_economy",
       "sim_society",
-      "sim_wildlife"
+      "sim_wildlife",
+      "ui_actions"
      ]
     },
     {
@@ -13030,6 +13229,7 @@
      "means": "地图与距离、法术范围",
      "pattern": "coordinates",
      "modules": [
+      "server-plugin/action-text.mjs",
       "server-plugin/facilities.mjs",
       "server-plugin/magic-area.mjs",
       "server-plugin/magic-context.mjs",
@@ -13045,6 +13245,7 @@
       "sim_magic",
       "sim_society",
       "sim_wildlife",
+      "ui_actions",
       "ui_client",
       "ui_server"
      ]
@@ -13085,6 +13286,7 @@
     "sim_npc",
     "sim_society",
     "sim_wildlife",
+    "ui_actions",
     "ui_client",
     "ui_host",
     "ui_scene",
@@ -13119,6 +13321,7 @@
      "means": "移动耗时、地区价差、传讯",
      "pattern": "lengthKm",
      "modules": [
+      "server-plugin/action-text.mjs",
       "server-plugin/catalog.mjs",
       "server-plugin/engine.mjs",
       "server-plugin/forest-water.mjs",
@@ -13142,6 +13345,7 @@
       "sim_magic",
       "sim_transport",
       "sim_wildlife",
+      "ui_actions",
       "ui_client",
       "ui_server"
      ]
@@ -13198,6 +13402,7 @@
     "sim_magic",
     "sim_transport",
     "sim_wildlife",
+    "ui_actions",
     "ui_client",
     "ui_server"
    ],
@@ -14159,6 +14364,7 @@
      "means": "须在有工位的地点",
      "pattern": "\\.workstation\\b",
      "modules": [
+      "server-plugin/action-affordances.mjs",
       "server-plugin/finance-assets.mjs",
       "server-plugin/labor-market.mjs",
       "server-plugin/manufacturing.mjs",
@@ -14166,7 +14372,8 @@
      ],
      "systems": [
       "sim_economy",
-      "sim_npc"
+      "sim_npc",
+      "ui_actions"
      ]
     },
     {
@@ -14234,6 +14441,7 @@
     "sim_npc",
     "sim_wildlife",
     "sim_works",
+    "ui_actions",
     "ui_tools"
    ],
    "manual": [],
@@ -14414,6 +14622,7 @@
      "means": "势力时钟阶段",
      "pattern": "\\.clock\\b",
      "modules": [
+      "server-plugin/action-text.mjs",
       "server-plugin/activities.mjs",
       "server-plugin/consistency-review.mjs",
       "server-plugin/consistency-service.mjs",
@@ -14433,6 +14642,7 @@
       "sim_economy",
       "sim_military",
       "sim_society",
+      "ui_actions",
       "ui_host"
      ]
     },
@@ -14472,6 +14682,7 @@
     "sim_law",
     "sim_military",
     "sim_society",
+    "ui_actions",
     "ui_client",
     "ui_host",
     "ui_scene"
@@ -15219,6 +15430,77 @@
   }
  ],
  "modules": {
+  "server-plugin/action-affordances.mjs": {
+   "system": "ui_actions",
+   "imports": [
+    "server-plugin/action-registry.mjs",
+    "server-plugin/action-text.mjs",
+    "server-plugin/finance-bank.mjs"
+   ],
+   "stateWrites": [],
+   "stateReads": [],
+   "recordWrites": [],
+   "recordReads": [],
+   "rules": [],
+   "world": [
+    "recipes"
+   ],
+   "worldDirs": [],
+   "lines": 87
+  },
+  "server-plugin/action-gateway.mjs": {
+   "system": "ui_actions",
+   "imports": [
+    "server-plugin/action-registry.mjs",
+    "server-plugin/action-text.mjs"
+   ],
+   "stateWrites": [],
+   "stateReads": [],
+   "recordWrites": [],
+   "recordReads": [],
+   "rules": [],
+   "world": [],
+   "worldDirs": [],
+   "lines": 23
+  },
+  "server-plugin/action-registry.mjs": {
+   "system": "ui_actions",
+   "imports": [],
+   "stateWrites": [],
+   "stateReads": [],
+   "recordWrites": [],
+   "recordReads": [],
+   "rules": [],
+   "world": [],
+   "worldDirs": [
+    "actions"
+   ],
+   "lines": 87
+  },
+  "server-plugin/action-text.mjs": {
+   "system": "ui_actions",
+   "imports": [
+    "server-plugin/applied-effects.mjs",
+    "server-plugin/npc-schedule.mjs"
+   ],
+   "stateWrites": [],
+   "stateReads": [
+    "created",
+    "location",
+    "minute",
+    "npcs"
+   ],
+   "recordWrites": [],
+   "recordReads": [],
+   "rules": [],
+   "world": [
+    "routes"
+   ],
+   "worldDirs": [
+    "actions"
+   ],
+   "lines": 114
+  },
   "server-plugin/activities.mjs": {
    "system": "kernel_engine",
    "imports": [
@@ -15479,6 +15761,18 @@
    ],
    "worldDirs": [],
    "lines": 339
+  },
+  "server-plugin/applied-effects.mjs": {
+   "system": "ui_actions",
+   "imports": [],
+   "stateWrites": [],
+   "stateReads": [],
+   "recordWrites": [],
+   "recordReads": [],
+   "rules": [],
+   "world": [],
+   "worldDirs": [],
+   "lines": 36
   },
   "server-plugin/archived-reducer.mjs": {
    "system": "kernel_engine",
@@ -17307,6 +17601,9 @@
    "system": "ui_server",
    "imports": [
     "extension/history-window.mjs",
+    "server-plugin/action-affordances.mjs",
+    "server-plugin/action-gateway.mjs",
+    "server-plugin/action-registry.mjs",
     "server-plugin/archived-reducer.mjs",
     "server-plugin/catalog.mjs",
     "server-plugin/chronicle.mjs",
@@ -17335,7 +17632,7 @@
    "rules": [],
    "world": [],
    "worldDirs": [],
-   "lines": 250
+   "lines": 276
   },
   "server-plugin/interactions.mjs": {
    "system": "base_interactions",
@@ -21265,6 +21562,18 @@
    "worldDirs": [],
    "lines": 274
   },
+  "extension/actions-view.mjs": {
+   "system": "ui_actions",
+   "imports": [],
+   "stateWrites": [],
+   "stateReads": [],
+   "recordWrites": [],
+   "recordReads": [],
+   "rules": [],
+   "world": [],
+   "worldDirs": [],
+   "lines": 122
+  },
   "extension/affairs-panels.mjs": {
    "system": "ui_client",
    "imports": [],
@@ -21478,7 +21787,7 @@
    "rules": [],
    "world": [],
    "worldDirs": [],
-   "lines": 373
+   "lines": 417
   },
   "extension/state-read.mjs": {
    "system": "ui_client",
@@ -21502,7 +21811,7 @@
    "rules": [],
    "world": [],
    "worldDirs": [],
-   "lines": 127
+   "lines": 130
   },
   "extension/topbar.mjs": {
    "system": "ui_client",
@@ -21527,6 +21836,20 @@
    "world": [],
    "worldDirs": [],
    "lines": 52
+  },
+  "extension/ui-actions.mjs": {
+   "system": "ui_actions",
+   "imports": [
+    "extension/actions-view.mjs"
+   ],
+   "stateWrites": [],
+   "stateReads": [],
+   "recordWrites": [],
+   "recordReads": [],
+   "rules": [],
+   "world": [],
+   "worldDirs": [],
+   "lines": 11
   },
   "extension/ui-affairs.mjs": {
    "system": "ui_client",
@@ -21631,6 +21954,7 @@
   "extension/ui-shell.mjs": {
    "system": "ui_client",
    "imports": [
+    "extension/ui-actions.mjs",
     "extension/ui-affairs.mjs",
     "extension/ui-art.mjs",
     "extension/ui-history.mjs",

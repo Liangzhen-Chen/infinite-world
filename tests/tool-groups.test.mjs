@@ -25,8 +25,8 @@ test('委托三步操作与公共粮仓购买参数可直接用于公开工具',
     assert.equal(engine.resolve('干粮','item'),'item_ration');
 });
 
-test('25个工具入口；合并操作保留真实执行、幂等与回滚，原工具仍可回放',async t=>{
-    const tools=toolDefinitions();assert.equal(tools.length,25);assert.ok(tools.every(row=>row.function.description.length<=60));
+test('27个工具入口（含 A1 动作目录两个）；合并操作保留真实执行、幂等与回滚，原工具仍可回放',async t=>{
+    const tools=toolDefinitions();assert.equal(tools.length,27);assert.ok(tools.every(row=>row.function.description.length<=60));
     assert.ok(!tools.some(row=>['world_turn','world_pet','world_farm','world_crime'].includes(row.function.name)));
     assert.throws(()=>resolveToolCall('world_field',{operation:'make_gold'}),/未知操作/);
     const server=await createPlaytestServer();t.after(()=>server.close());

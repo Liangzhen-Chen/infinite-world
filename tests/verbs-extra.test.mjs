@@ -197,6 +197,6 @@ test('村长竞选按成年住户立场投票，当选后仍经现有公署资�
 });
 
 test('工具仍为25个，静态提示不超过硬上限',async()=>{
-    assert.equal(toolDefinitions().length,25);assert.equal(resolveToolCall('world_field',{operation:'wildlife_fish'}).args.operation,'fish');
+    assert.equal(toolDefinitions().length,27);assert.equal(resolveToolCall('world_field',{operation:'wildlife_fish'}).args.operation,'fish');
     const bundle=await loadPromptBundle();assert.ok(bundle.budget.estimatedTokens<=bundle.budget.limit,`提示${bundle.budget.estimatedTokens}，上限${bundle.budget.limit}`);
 });

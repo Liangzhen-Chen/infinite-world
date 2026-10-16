@@ -39,9 +39,9 @@ test('导出覆盖全部推进注册项（id 与 order）',()=>{
  for(const a of data.advance)assert.ok(a.modules.length,`${a.id} 没有归属模块`);
 });
 
-test('导出覆盖全部 25 个工具，且每个工具都分派到处理模块',()=>{
+test('导出覆盖全部 27 个工具（25 个旧工具 + A1 动作目录两个），且每个工具都分派到处理模块',()=>{
  const names=toolDefinitions().map(d=>d.function.name);
- assert.equal(names.length,25);
+ assert.equal(names.length,27);
  assert.deepEqual(data.tools.map(t=>t.name),names);
  for(const t of data.tools){
   assert.ok(t.routes.length,`${t.name} 无分派`);
@@ -96,6 +96,6 @@ test('HTML 自包含：内嵌数据，无外部脚本，带深色配色',()=>{
  assert.match(html,/<script id="data" type="application\/json">/);
  assert.match(html,/prefers-color-scheme: dark/);
  const embedded=JSON.parse(/<script id="data" type="application\/json">([\s\S]*?)<\/script>/.exec(html)[1]);
- assert.equal(embedded.tools.length,25);
+ assert.equal(embedded.tools.length,27);
  assert.equal(embedded.advance.length,advanceRegistry.length);
 });

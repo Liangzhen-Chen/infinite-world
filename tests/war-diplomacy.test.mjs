@@ -32,7 +32,7 @@ test('战争数据、注册表和现有工具入口可用，坏来源被拒',()=
   const w=structuredClone(source);change(w.rules.warDiplomacy);assert.ok(validateWarDiplomacy(w).length);
  }
  assert.ok(advanceRegistry.some(s=>s.id==='war_diplomacy'));
- const t=toolDefinitions();assert.equal(t.length,25);
+ const t=toolDefinitions();assert.equal(t.length,27);
  for(const op of ['war_inspect','war_join','diplomacy'])assert.ok(t.find(t=>t.function.name==='world_settlement').function.parameters.properties.operation.enum.includes(op));
 });
 
