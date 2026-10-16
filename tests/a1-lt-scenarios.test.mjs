@@ -14,7 +14,7 @@ const DAY=1440,INN='bld_hw_qingdeng',LINSUI='npc_hw_linsui',FORGE='bld_hw_forge'
 // Money only moves between holders or through declared sources/sinks; the two books agree.
 function conserved(before,after,label){
  // The first event of a campaign opens the books; flows count from then on.
- const flows=before.ledger?flowDelta(before,after):{sources:0,sinks:0};
+ const flows=before.ledger?flowDelta(before,after,'coin_river'):{sources:0,sinks:0};
  assert.equal(legacyTotal(engine,after.state)-legacyTotal(engine,before.state),flows.sources-flows.sinks,`${label}：铜钱守恒`);
  assert.deepEqual(reconcile(engine,after).mismatches,[],`${label}：账本与旧字段一致`);
 }

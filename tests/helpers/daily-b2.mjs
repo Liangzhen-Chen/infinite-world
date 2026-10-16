@@ -37,7 +37,7 @@ export function safeEventId(prefix,seed=SEED){for(let i=0;i<200;i++){const id=`$
 
 // 铜钱守恒：差额只来自登记的源汇；旧字段与账本一致。
 export function conserved(before,after,label,engine=baseEngine){
- const flows=before.ledger?flowDelta(before,after):{sources:0,sinks:0};
+ const flows=before.ledger?flowDelta(before,after,'coin_river'):{sources:0,sinks:0};
  assert.equal(legacyTotal(engine,after.state)-legacyTotal(engine,before.state),flows.sources-flows.sinks,`${label}：铜钱守恒（差额只来自登记的源汇）`);
  assert.deepEqual(reconcile(engine,after).mismatches,[],`${label}：旧字段与账本一致`);
 }
