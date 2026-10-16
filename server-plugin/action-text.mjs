@@ -26,14 +26,16 @@ export function fill(template,vars){
 }
 const placeOf=(engine,id)=>engine.byId.get(id)??null;
 // Compass word from one location to another, or out/in along the containment tree.
+const LOCAL_KM=1;
 export function bearing(engine,from,to,templates=loadTemplates()){
  const a=placeOf(engine,from),b=placeOf(engine,to),d=templates.directions;
  if(!a||!b)return {word:'',km:null};
- if(a.parent===b.id)return {word:d.out,km:0,relation:'out'};
  const [ax,ay]=a.coordinates??[0,0],[bx,by]=b.coordinates??[0,0],dx=bx-ax,dy=by-ay,km=Math.hypot(dx,dy);
+ // Containment reads as stepping out/in only within a settlement; a far place filed under a village is still a journey.
+ if(a.parent===b.id&&km<LOCAL_KM)return {word:d.out,km,relation:'out'};
  if(km<1e-9)return {word:b.parent===a.id?d.in:d.here,km:0,relation:b.parent===a.id?'in':'here'};
  const sector=['e','ne','n','nw','w','sw','s','se'][Math.round(((Math.atan2(dy,dx)*180/Math.PI+360)%360)/45)%8];
- return {word:d[sector],km,relation:b.parent===a.id?'in':'route'};
+ return {word:d[sector],km,relation:b.parent===a.id&&km<LOCAL_KM?'in':'route'};
 }
 // Distances are 里 (0.5 km) rounded for reading; under 0.1 km is "a few steps".
 export function distanceText(km,templates=loadTemplates()){
@@ -99,7 +101,7 @@ export function exitsFrom(engine,state,templates=loadTemplates()){
  const here=state.location,seen=new Set(),rows=[];
  for(const r of engine.world.routes){
   if(r.from!==here&&r.to!==here)continue;const to=r.from===here?r.to:r.from;if(seen.has(to)||!engine.byId.get(to))continue;seen.add(to);
-  const b=bearing(engine,here,to,templates);rows.push({id:to,name:nameOf(engine,state,to),direction:b.word,relation:b.relation,km:r.lengthKm??b.km,modes:r.modes??['walk']});
+  const b=bearing(engine,here,to,templates);rows.push({id:to,route:r.id,name:nameOf(engine,state,to),direction:b.word,relation:b.relation,km:r.lengthKm??b.km,modes:r.modes??['walk']});
  }
  return rows.sort((x,y)=>(x.km??0)-(y.km??0)||x.id.localeCompare(y.id));
 }

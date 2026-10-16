@@ -41,7 +41,7 @@ export async function renderActionsPanel(container,data){
         }else if(state.quick==='移动'){
             if(!here.objects.exits.length)box.append(node('p','看不出有别的路。','fields-note'));
             const move=byQuick('移动');
-            for(const e of here.objects.exits)box.append(button(`${e.direction}${e.distance}：${e.name}`,()=>openForm({...move,fill:{...move.fill,destination:e.id}})));
+            for(const e of here.objects.exits)box.append(button(`${e.direction}${e.distance}：${e.name}${e.condition?`（${e.condition}）`:''}`,()=>openForm({...move,fill:{...move.fill,destination:e.id}})));
         }else if(state.quick==='账目'){
             const s=data.view.document.state;
             box.append(node('p',`钱袋：${s.player.coins}文`));
@@ -58,6 +58,7 @@ export async function renderActionsPanel(container,data){
     if(state.target&&here.target){
         const box=section(`对${here.target.name}可做`,fragment);
         box.append(button('返回此处',()=>{state.target=null;state.form=null;rerender();},{className:'fields-actions-back'}));
+        for(const s of here.target.soldOut??[])box.append(node('p',`${s.name}已经卖完，下次进货在${s.next}。`,'fields-note'));
         if(!rows.length)box.append(node('p','此刻对这个对象做不了什么。','fields-note'));
         for(const a of rows)box.append(button(a.label,()=>openForm(a)));
         if(state.pendingAction){const a=rows.find(r=>r.id===state.pendingAction);state.pendingAction=null;if(a)state.form=a;}
@@ -68,7 +69,7 @@ export async function renderActionsPanel(container,data){
         if(!here.objects.people.length)people.append(node('p','此处没有旁人。','fields-note'));
         for(const p of here.objects.people)people.append(button(p.activity?`${p.name}（${p.activity}）`:p.name,()=>{state.target=p.id;state.form=null;rerender();}));
         const exits=section('出路',fragment);
-        for(const e of here.objects.exits)exits.append(button(`${e.direction}${e.distance}：${e.name}`,()=>openForm({...rows.find(r=>r.id==='core:move'),fill:{destination:e.id}})));
+        for(const e of here.objects.exits)exits.append(button(`${e.direction}${e.distance}：${e.name}${e.condition?`（${e.condition}）`:''}`,()=>openForm({...rows.find(r=>r.id==='core:move'),fill:{destination:e.id}})));
         const items=section('行囊',fragment);
         if(!here.objects.items.length)items.append(node('p','行囊是空的。','fields-note'));
         for(const i of here.objects.items)items.append(button(`${i.name}×${i.quantity}`,()=>{state.target=i.id;state.form=null;rerender();}));
