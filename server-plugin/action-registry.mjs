@@ -49,8 +49,8 @@ export function actionCall(registry,id,slots={}){
  if(extra.length)throw Error(`${action.label}没有这些槽位：${extra.join('、')}；可填：${[...allowed].join('、')||'无'}`);
  const missing=action.slots.filter(s=>s.required&&s.consent!==true&&slots[s.name]===undefined&&action.call.fixed?.[s.name]===undefined).map(s=>s.name);
  if(missing.length)throw Error(`${action.label}还缺：${missing.join('、')}`);
+ // A tool with a free-form operation (world_learn, world_research) takes it as a slot; a fixed sub-operation always wins.
  const args={...slots,...action.call.fixed??{}};
- delete args.operation;
  if(action.call.operation)args.operation=action.call.operation;
  return {action,tool:action.call.tool,args,readOnly:Boolean(action.readOnly)};
 }
