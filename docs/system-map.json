@@ -509,7 +509,7 @@
     "server-plugin/campaign-reducer.mjs",
     "server-plugin/archived-reducer.mjs"
    ],
-   "lines": 1062,
+   "lines": 1061,
    "stateWrites": [
     "combatDisengaged",
     "created",
@@ -1006,7 +1006,7 @@
     "server-plugin/ledger.mjs",
     "server-plugin/money.mjs"
    ],
-   "lines": 246,
+   "lines": 250,
    "stateWrites": [],
    "stateReads": [
     "creatures",
@@ -3269,8 +3269,7 @@
    "to": "base_ledger",
    "kind": "call",
    "labels": [
-    "ledger.mjs",
-    "money.mjs"
+    "ledger.mjs"
    ]
   },
   {
@@ -9867,7 +9866,7 @@
      "modules": [
       "server-plugin/activities.mjs",
       "server-plugin/advance-registry.mjs",
-      "server-plugin/money.mjs",
+      "server-plugin/ledger.mjs",
       "server-plugin/professions.mjs",
       "server-plugin/progression.mjs",
       "server-plugin/works.mjs"
@@ -15254,7 +15253,6 @@
     "server-plugin/manufacturing.mjs",
     "server-plugin/medicine.mjs",
     "server-plugin/military.mjs",
-    "server-plugin/money.mjs",
     "server-plugin/nation-founding.mjs",
     "server-plugin/noble-state.mjs",
     "server-plugin/notables.mjs",
@@ -15304,7 +15302,7 @@
    ],
    "world": [],
    "worldDirs": [],
-   "lines": 266
+   "lines": 265
   },
   "server-plugin/advance-layers.mjs": {
    "system": "base_advance",
@@ -17563,7 +17561,7 @@
    "worldDirs": [
     "ontology"
    ],
-   "lines": 144
+   "lines": 148
   },
   "server-plugin/legal-representation.mjs": {
    "system": "sim_law",
