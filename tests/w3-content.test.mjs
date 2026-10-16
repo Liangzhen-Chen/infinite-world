@@ -4,6 +4,7 @@ import fs from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
 import {loadWorld} from '../tools/load-world.mjs';
+import {siteItemReferences} from '../server-plugin/sites.mjs';
 import {economyW3} from '../world/design/economy-w3.mjs';
 import {assembleW3,validateW3Draft,w3Context,chineseNumber} from '../tools/w3-content.mjs';
 import {WorldEngine} from '../server-plugin/engine.mjs';
@@ -59,7 +60,8 @@ test('world_upgrade引入W3目录且既有财物保留，升级后新工序可�
   const root=await fs.mkdtemp(path.join(os.tmpdir(),'w3-upgrade-'));t.after(()=>fs.rm(root,{recursive:true,force:true}));
   // Remove only this wave from the fixture world so the test remains a genuine
   // addition after the source catalogue itself has been published.
-  const oldWorld=structuredClone(world),ids=new Set([...bones.items,...bones.recipes].map(row=>row.id));
+  const oldWorld=structuredClone(world),siteKept=siteItemReferences(world.locations),ids=new Set([...bones.items,...bones.recipes].map(row=>row.id).filter(id=>!siteKept.has(id)));
+  // T113/T114/W5 遗迹据点晚于本批且引用本批物品：与 w2-s* 剥离器同口径，旧版保留据点仍引用的物品（siteItemReferences）。
   oldWorld.items=oldWorld.items.filter(row=>!ids.has(row.id));oldWorld.recipes=oldWorld.recipes.filter(row=>!ids.has(row.id));
   for(const npc of oldWorld.npcs)for(const id of ids)delete npc.inventory?.[id];
   const registry=new WorldRegistry(path.join(root,'worlds')),store=new CampaignStorage(path.join(root,'saves'),{reducer:archivedReducer(registry)});
