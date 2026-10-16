@@ -1,0 +1,49 @@
+{
+  "$id": "balance-targets.schema.json",
+  "title": "数值目标表（world/rules/tables/balance/targets.json）",
+  "description": "数值方案 §2.22：NUM-* 与 BAL-* 目标区间。BalSim 与测试都读它；改目标先在修订记录写理由（标杆标准 §0 第 5 条）。",
+  "type": "object",
+  "required": ["schema", "params", "rows", "curves"],
+  "additionalProperties": false,
+  "properties": {
+    "schema": {"const": "balance/targets@1"},
+    "title": {"type": "string"},
+    "note": {"type": "string"},
+    "params": {"type": "array", "maxItems": 0},
+    "curves": {"type": "array", "maxItems": 0},
+    "rows": {"type": "array", "items": {"$ref": "#/$defs/target"}}
+  },
+  "$defs": {
+    "bound": {"type": ["number", "null"]},
+    "target": {
+      "type": "object",
+      "required": ["metric", "title", "kind", "grade", "benchmarks", "method", "suite", "fixture", "stage", "basis", "source", "calibration"],
+      "additionalProperties": false,
+      "properties": {
+        "metric": {"type": "string", "pattern": "^(NUM|BAL)-[A-Za-z0-9.]+(-[A-Za-z0-9.]+)?$"},
+        "title": {"type": "string", "minLength": 1},
+        "kind": {"enum": ["range", "bands", "derived", "report", "exact", "property"], "description": "range 单个数值区间；bands 分组区间（见 bands）；derived 区间由参数表派生（见 derivedFrom）；report 只报告不设门槛；exact 逐字节/逐项一致；property 性质（0 违例类）"},
+        "unit": {"type": "string"},
+        "derivedFrom": {"type": "string", "description": "kind=derived 时目标取自哪张参数表的哪些行"},
+        "bands": {"type": "array", "minItems": 1, "items": {"type": "object", "required": ["label"], "additionalProperties": false, "properties": {"label": {"type": "string", "minLength": 1}, "target": {"type": ["array", "null"], "items": {"type": ["number", "null"]}, "minItems": 2, "maxItems": 2}, "report": {"type": "boolean"}, "note": {"type": "string"}}}},
+        "target": {"type": ["array", "null"], "items": {"$ref": "#/$defs/bound"}, "minItems": 2, "maxItems": 2, "description": "[下界, 上界]，null 表示该侧无界"},
+        "hardFloor": {"type": "number"},
+        "tolerance": {"type": ["object", "null"], "required": ["kind"], "additionalProperties": false, "properties": {"kind": {"enum": ["rel", "abs", "kl", "ratio", "none"]}, "value": {"type": "number"}}},
+        "toleranceNote": {"type": "string"},
+        "grade": {"enum": ["G", "T"]},
+        "benchmarks": {"type": "array", "items": {"type": "string", "minLength": 1}, "description": "对应标杆编号（B04.4、B17.8……）或 BAL-* 指标"},
+        "method": {"type": "string", "minLength": 1, "description": "检验方法"},
+        "suite": {"enum": ["arena", "paths", "soak", "shock", "sweep", "exploit", "static", "property", "offline", "loe"]},
+        "fixture": {"enum": ["none", "medium", "full", "any"]},
+        "seeds": {"type": ["integer", "null"], "minimum": 1},
+        "years": {"type": ["number", "null"], "minimum": 0},
+        "pace": {"type": "array", "items": {"enum": ["极慢", "慢", "适中", "快", "很快"]}},
+        "stage": {"enum": ["S1", "A3", "S4", "S5", "S6", "S7", "C1", "S8"]},
+        "basis": {"type": "string", "minLength": 1},
+        "source": {"type": "string", "minLength": 1},
+        "note": {"type": "string"},
+        "calibration": {"enum": ["pending", "calibrated", "fixed"]}
+      }
+    }
+  }
+}

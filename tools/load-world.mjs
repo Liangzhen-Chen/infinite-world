@@ -2,6 +2,7 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 import {materializeWildlifeHabitats} from '../server-plugin/wildlife-habitats.mjs';
 import {materializeFaithClocks} from '../server-plugin/faction-clock.mjs';
+import {requireBalanceTables} from './balance-tables.mjs';
 // Everything this loader derives (reverse relations, biome tags, habitats, faith
 // competition clocks) is idempotent: files written back from a loaded world
 // (publication previews, upgrade fixtures) reload to the same world.
@@ -52,6 +53,10 @@ export async function loadWorld(root = path.resolve(import.meta.dirname, '..', '
     const world=materializeWildlifeHabitats({version:rules.version,rules,npcs,locations,routes,items,professions,skills,spells,recipes,monsters,bosses,cultures,deities,factions,history,factionPeople,eras,...(festivals.length?{festivals}:{}),...(rumors.length===0?{}:{rumors}),residents,households,settlementProfiles,...(regions.length?{regions}:{}),...(Array.isArray(careers)?{}:{careers})});
     // RW-07 faith competition clocks likewise: derived from the church seats, replacing any saved faith:* rows.
     materializeFaithClocks({world,rules,byId:new Map([...locations,...deities].map(e=>[e.id,e]))});
+    // S1 numeric parameter tables (rules/tables/balance): validated on every load (bounds, required fields,
+    // basis); a bad table stops the load and names file and field. Attached as a non-enumerable property so the
+    // world's serialized form, hash and clones are unchanged; consumers read world.balance (tables by name).
+    Object.defineProperty(world,'balance',{value:requireBalanceTables(root),enumerable:false,writable:true,configurable:true});
     return world;
 }
 
