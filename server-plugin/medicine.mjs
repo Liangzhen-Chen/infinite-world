@@ -6,7 +6,10 @@ import {employmentReservation,currentEmployment} from './employment-state.mjs';
 import {financeBalance,financeTransfer,financeChange,financeInt} from './finance-bank.mjs';
 import {fund as fundAccount} from './money.mjs';
 import {declareLedgerWriter} from './ledger.mjs';
-declareLedgerWriter('medicine');
+import {store,moveStock} from './stock.mjs';
+// S1b: 诊疗与防疫用掉的药材进 sink:consume。
+declareLedgerWriter('medicine',{sinks:['sink:consume']});
+const HERB_USE=(purpose,eventId)=>({flow:'sink:consume',purpose,writer:'medicine',eventId});
 import {transferItems} from './items.mjs';
 import {clockRoll} from './world-clock.mjs';
 import {recoverIllness,contractIllness} from './npc-life.mjs';
@@ -87,8 +90,8 @@ function finish(d,e,r){
  if(!site?.capacity||!site.doctors.includes(r.doctor)||!capable(s,r.patient)||personConstraint(e,s,r.doctor)||personConstraint(e,s,r.patient)||present(s,r.patient)!==r.location||present(s,r.doctor)!==r.location)return cancel('场所、人员或到诊条件变化');
  const stock=stockSource(d,e,r);if(!stock)return cancel('药材短缺');
  const payment=pay(d,e,r,stock);if(!payment)return cancel('诊费不足');
- if(stock.temple){const a=ensureGroupAccount(d,e,stock.temple);d.set(groupAccountPath(stock.temple),{...a,items:{...a.items,item_herb:a.items.item_herb-1},ledger:[...a.ledger,{kind:'义诊耗药',coins:0,items:{item_herb:-1},sourceEvent:r.id}]});}
- else e.itemDelta(d,stock.holder,'item_herb',-1);
+ if(stock.temple){const a=ensureGroupAccount(d,e,stock.temple);moveStock(d,{from:store(e,stock.temple,'item_herb'),to:'sink:consume|item_herb|treatment',amount:1,writer:'medicine',eventId:r.id});d.set(groupAccountPath(stock.temple),{...a,items:{...a.items,item_herb:a.items.item_herb-1},ledger:[...a.ledger,{kind:'义诊耗药',coins:0,items:{item_herb:-1},sourceEvent:r.id}]});}
+ else e.itemDelta(d,stock.holder,'item_herb',-1,HERB_USE('treatment',r.id));
  const score=Math.min(.95,.35+medicalSkill(e,s,r.doctor)/1500+(r.assistants.length?.05:0)),roll=clockRoll(d.document.randomSeed,`medicine-diagnosis:${r.id}`,r.start),correct=roll<score;
  const outcome=[];
  for(const c of medicalConditions(s,r.patient).filter(c=>r.conditions.some(x=>x.id===c.id&&x.kind===c.kind))){
@@ -212,7 +215,7 @@ export function medicineAction(d,args,id){
   const clock=ep.id.slice(9,ep.id.lastIndexOf(':')),minutes=financeInt(args.days??7,1,90,'防疫天数')*DAY;
   const receipt=applyEffects(d,e,[{kind:'epidemic_measure',measure,minutes,settlement}],{settlement,minute:s.minute,sourceEvent:id,clock},'world');
   if(!receipt.applied)throw Error(receipt.reason??'防疫没有作用对象');
-  if(need)e.itemDelta(d,holder,'item_herb',-need);
+  if(need)e.itemDelta(d,holder,'item_herb',-need,HERB_USE('epidemic',id));
   return {epidemic:ep.id,measure,doctor,herbs:need,consumedFrom:holder??null};
  }
  throw Error('未知诊疗操作');

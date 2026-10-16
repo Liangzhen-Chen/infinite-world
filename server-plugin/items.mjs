@@ -1,4 +1,7 @@
 import {createHash}from'node:crypto';
+import {bag,bookStock,moveStock,BOOKED} from './stock.mjs';
+import {declareLedgerWriter} from './ledger.mjs';
+declareLedgerWriter('items');
 const count=value=>{if(!Number.isSafeInteger(value)||value<0||value>100000)throw new Error('物品数量无效');return value;};
 export function heldUnit(d,engine,owner,item){
     const held=d.get(...engine.bagPath(owner),item),units=typeof held==='object'?held.instances??[]:[];
@@ -13,7 +16,8 @@ export function wearItem(d,engine,owner,item,amount){
     if(!selected.instance||engine.quantity(d,owner,item)===1)d.set([...engine.bagPath(owner),item,'durability'],durability);
     return durability;
 }
-export function changeItems(d,engine,owner,item,delta,{preserve=false,selection=null}={}){
+// S1b: books = 对方账户（stock.bookStock）；成对写入中已记过账的一边传 BOOKED。
+export function changeItems(d,engine,owner,item,delta,{preserve=false,selection=null,books}={}){
     if(!Number.isSafeInteger(delta))throw new Error('物品数量变化无效');
     const current=engine.quantity(d,owner,item),amount=current+delta;
     if(amount<0)throw new Error(`${engine.byId.get(owner)?.name??'你'}缺少${engine.byId.get(item)?.name}`);
@@ -32,6 +36,7 @@ export function changeItems(d,engine,owner,item,delta,{preserve=false,selection=
         if(units.length)next.instances=units.filter(unit=>!removed.includes(unit));
         d.set(path,next);
     }
+    bookStock(d,engine,bag(engine,owner,item),delta,books);
     return{instances:removed};
 }
 export function transferItems(d,engine,from,to,item,quantity,selection=null){
@@ -43,8 +48,9 @@ export function transferItems(d,engine,from,to,item,quantity,selection=null){
     if(selection&&new Set(selection).size!==selection.length)throw new Error('单件编号重复');
     if(selection&&selection.length>quantity)throw new Error('单件数超过转移数量');
     const chosen=selection?[...selection,...units.filter(unit=>!selection.includes(unit)).slice(0,Math.max(0,quantity-selection.length))]:units.slice(0,quantity);
-    const moved=changeItems(d,engine,from,item,-quantity,{preserve:true,selection:chosen});
-    changeItems(d,engine,to,item,quantity);
+    const moved=changeItems(d,engine,from,item,-quantity,{preserve:true,selection:chosen,books:BOOKED});
+    changeItems(d,engine,to,item,quantity,{books:BOOKED});
+    moveStock(d,{from:bag(engine,from,item),to:bag(engine,to,item),amount:quantity,writer:'items'});
     if(moved.instances.length){
         const path=[...engine.bagPath(to),item,'instances'];
         d.set(path,[...d.get(...path)??[],...moved.instances]);
@@ -52,7 +58,8 @@ export function transferItems(d,engine,from,to,item,quantity,selection=null){
     }
     return moved;
 }
-export function produceItems(d,engine,item,quantity,{eventId,recipe,workmanship,owner='player',maker=owner}){
+// S1b: books = 产出的来源（制造为 stock.craftOutput，作品誊抄等同）；缺省未入账。
+export function produceItems(d,engine,item,quantity,{eventId,recipe,workmanship,owner='player',maker=owner,books}){
     count(quantity);if(quantity>200)throw new Error('单次制造产物超过处理上限，应拆分工序');
     const definition=engine.byId.get(item),ids=[];
     if(!definition)throw new Error('产物未登记');
@@ -64,7 +71,7 @@ export function produceItems(d,engine,item,quantity,{eventId,recipe,workmanship,
         d.set(['state','itemInstances',id],{id,item,owner,status:'持有',maker,makerName:maker==='player'?d.get('state','player','name'):engine.byId.get(maker)?.name??maker,
             recipe,source:eventId,minute:d.get('state','minute'),quality:definition.quality,durability:maxDurability,maxDurability,workmanship});
     }
-    engine.itemDelta(d,owner,item,quantity);
+    engine.itemDelta(d,owner,item,quantity,books);
     const path=[...engine.bagPath(owner),item,'instances'];d.set(path,[...d.get(...path)??[],...ids]);
     return ids;
 }

@@ -11,6 +11,7 @@ import {clockRoll} from './world-clock.mjs';
 import {applyEffect} from './effects.mjs';
 import {tribalWars} from './tribal-awakening.mjs';
 import {drawArmyRations} from './settlement-trade.mjs';
+import {armyRations} from './stock.mjs';
 import {regionOf} from './regions.mjs';
 import {presentWitnesses} from './world-events.mjs';
 const DAY=1440,copy=x=>structuredClone(x),path=id=>['state','records',id];
@@ -70,7 +71,9 @@ function sidePower(d,e,w,party,at){
 function raid(d,e,w,winner,at,src){
  const village=w.villages[w.rounds%Math.max(1,w.villages.length)];if(!village)return null;
  damageFacilities(d,e,[village],15,{cause:'战事',minute:at,sourceEvent:src,actor:winner});
- const food=drawArmyRations(d,e,village,rules(e).raidFood,{raid:true}),unit=w.armyIds.map(id=>d.get(...path(armyKey(id)))).find(a=>a&&sideOf(w,a)===winner);
+ // S1b: 掠得的粮记入胜方队伍的军粮；没有本方队伍接收则就地毁弃。
+ const unit=w.armyIds.map(id=>d.get(...path(armyKey(id)))).find(a=>a&&sideOf(w,a)===winner);
+ const food=drawArmyRations(d,e,village,rules(e).raidFood,{raid:true,to:unit?{account:armyRations(e,unit.id)}:{flow:'sink:destroy',purpose:'raid'},eventId:src});
  if(unit&&food)d.set(path(armyKey(unit.id)),{...unit,food:unit.food+food});
  // Ordinary family migration chooses a host and route; the war supplies the danger.
  d.set(path(`war-danger:${village}`),{category:'war_danger',war:w.id,settlement:village,actor:winner,since:at,until:at+rules(e).intervalDays*DAY,sourceEvent:src});

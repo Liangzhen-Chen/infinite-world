@@ -2,7 +2,7 @@
  "title": "无限原野系统地图",
  "card": "K9",
  "generatedFrom": {
-  "commit": "refs/heads/daily",
+  "commit": "refs/heads/r28",
   "method": "运行时导出（注册表、规则表、工具定义、效果表、立场传导表）+ 静态正则扫描（import 图、函数体标识符、state 分区与 records 前缀、rules/world 读取）。静态扫描是近似：经 engine.byId、helper 间接或动态拼接路径的访问不计入。"
  },
  "scanMethods": {
@@ -18,14 +18,14 @@
  "counts": {
   "layers": 6,
   "systems": 45,
-  "modules": 228,
+  "modules": 229,
   "advance": 59,
   "tools": 27,
   "verbs": 28,
   "subscribers": 9,
   "interactionRules": 25,
   "effectKinds": 22,
-  "links": 509
+  "links": 514
  },
  "layers": [
   {
@@ -128,7 +128,7 @@
     "server-plugin/transport-route.mjs",
     "server-plugin/post.mjs"
    ],
-   "lines": 363,
+   "lines": 370,
    "stateWrites": [
     "creatures",
     "itemInstances",
@@ -179,7 +179,7 @@
     "server-plugin/faith-state.mjs",
     "server-plugin/faith.mjs"
    ],
-   "lines": 315,
+   "lines": 317,
    "stateWrites": [
     "effects",
     "obligations"
@@ -556,7 +556,7 @@
     "server-plugin/campaign-reducer.mjs",
     "server-plugin/archived-reducer.mjs"
    ],
-   "lines": 1066,
+   "lines": 1067,
    "stateWrites": [
     "combatDisengaged",
     "created",
@@ -678,7 +678,7 @@
     "server-plugin/compat/v2-phase1-engine.mjs",
     "server-plugin/legacy/core.js"
    ],
-   "lines": 1596,
+   "lines": 1606,
    "stateWrites": [
     "checks",
     "crafted",
@@ -994,7 +994,7 @@
     "server-plugin/advance-registry.mjs",
     "server-plugin/advance-layers.mjs"
    ],
-   "lines": 269,
+   "lines": 270,
    "stateWrites": [
     "effects",
     "obligations",
@@ -1047,16 +1047,19 @@
    "id": "base_ledger",
    "name": "账本",
    "layer": "base",
-   "card": "S1a",
+   "card": "S1a/S1b",
    "dir": null,
    "modules": [
     "server-plugin/ledger.mjs",
-    "server-plugin/money.mjs"
+    "server-plugin/money.mjs",
+    "server-plugin/stock.mjs"
    ],
-   "lines": 250,
+   "lines": 546,
    "stateWrites": [],
    "stateReads": [
     "creatures",
+    "inventory",
+    "itemInstances",
     "minute",
     "npcs",
     "player",
@@ -1069,17 +1072,21 @@
    ],
    "recordWrites": [],
    "recordReads": [
+    "agriculture",
+    "army",
     "faction-assets",
     "organization",
     "sink",
     "src"
    ],
    "rules": [
+    "agriculture",
     "economy",
     "military"
    ],
    "world": [
-    "factions"
+    "factions",
+    "rules"
    ],
    "advance": [],
    "subscribes": [],
@@ -1118,7 +1125,7 @@
     "server-plugin/population-service.mjs",
     "server-plugin/settlement-profile.mjs"
    ],
-   "lines": 3604,
+   "lines": 3611,
    "stateWrites": [
     "created",
     "creatures",
@@ -1478,7 +1485,7 @@
     "server-plugin/forest-water.mjs",
     "server-plugin/water-cycle.mjs"
    ],
-   "lines": 1337,
+   "lines": 1360,
    "stateWrites": [
     "crafted",
     "created",
@@ -1567,7 +1574,7 @@
     "server-plugin/pets.mjs",
     "server-plugin/summons.mjs"
    ],
-   "lines": 448,
+   "lines": 452,
    "stateWrites": [
     "creatures",
     "effects",
@@ -1618,7 +1625,7 @@
     "server-plugin/regions.mjs",
     "server-plugin/remote-generation.mjs"
    ],
-   "lines": 1687,
+   "lines": 1722,
    "stateWrites": [
     "npcs",
     "records",
@@ -1717,7 +1724,7 @@
     "server-plugin/magic-water-earth.mjs",
     "server-plugin/magic.mjs"
    ],
-   "lines": 3793,
+   "lines": 3804,
    "stateWrites": [
     "creatures",
     "discoveries",
@@ -1821,7 +1828,7 @@
     "server-plugin/extraction.mjs",
     "server-plugin/smuggling.mjs"
    ],
-   "lines": 2933,
+   "lines": 2973,
    "stateWrites": [
     "crafted",
     "itemInstances",
@@ -1924,7 +1931,7 @@
    "modules": [
     "server-plugin/agriculture.mjs"
    ],
-   "lines": 339,
+   "lines": 397,
    "stateWrites": [
     "player",
     "records",
@@ -2005,7 +2012,7 @@
     "server-plugin/tribal-awakening.mjs",
     "server-plugin/elections.mjs"
    ],
-   "lines": 4820,
+   "lines": 4842,
    "stateWrites": [
     "buildings",
     "created",
@@ -2144,7 +2151,7 @@
     "server-plugin/military.mjs",
     "server-plugin/war-diplomacy.mjs"
    ],
-   "lines": 695,
+   "lines": 703,
    "stateWrites": [
     "npcs",
     "player",
@@ -2205,7 +2212,7 @@
     "server-plugin/seasonal-hazards.mjs",
     "server-plugin/hazard-calendar.mjs"
    ],
-   "lines": 1111,
+   "lines": 1114,
    "stateWrites": [
     "family",
     "npcs",
@@ -2304,7 +2311,7 @@
     "server-plugin/npc-crime.mjs",
     "server-plugin/bounty.mjs"
    ],
-   "lines": 1240,
+   "lines": 1241,
    "stateWrites": [
     "itemInstances",
     "location",
@@ -2362,7 +2369,7 @@
    "modules": [
     "server-plugin/works.mjs"
    ],
-   "lines": 274,
+   "lines": 284,
    "stateWrites": [
     "created",
     "fusionAttempts",
@@ -2487,7 +2494,7 @@
     "server-plugin/ui-overview.mjs",
     "server-plugin/ui-personal.mjs"
    ],
-   "lines": 684,
+   "lines": 699,
    "stateWrites": [],
    "stateReads": [
     "created",
@@ -2585,7 +2592,7 @@
     "extension/ui-actions.mjs",
     "extension/actions-view.mjs"
    ],
-   "lines": 522,
+   "lines": 593,
    "stateWrites": [],
    "stateReads": [
     "created",
@@ -3622,6 +3629,14 @@
   },
   {
    "from": "kernel_storage",
+   "to": "base_ledger",
+   "kind": "call",
+   "labels": [
+    "ledger.mjs"
+   ]
+  },
+  {
+   "from": "kernel_storage",
    "to": "kernel_engine",
    "kind": "call",
    "labels": [
@@ -3766,7 +3781,8 @@
    "kind": "call",
    "labels": [
     "ledger.mjs",
-    "money.mjs"
+    "money.mjs",
+    "stock.mjs"
    ]
   },
   {
@@ -4048,7 +4064,8 @@
    "kind": "call",
    "labels": [
     "ledger.mjs",
-    "money.mjs"
+    "money.mjs",
+    "stock.mjs"
    ]
   },
   {
@@ -4142,6 +4159,14 @@
   },
   {
    "from": "sim_companion",
+   "to": "base_ledger",
+   "kind": "call",
+   "labels": [
+    "ledger.mjs"
+   ]
+  },
+  {
+   "from": "sim_companion",
    "to": "sim_character",
    "kind": "call",
    "labels": [
@@ -4215,7 +4240,8 @@
    "kind": "call",
    "labels": [
     "ledger.mjs",
-    "money.mjs"
+    "money.mjs",
+    "stock.mjs"
    ]
   },
   {
@@ -4362,7 +4388,8 @@
    "kind": "call",
    "labels": [
     "ledger.mjs",
-    "money.mjs"
+    "money.mjs",
+    "stock.mjs"
    ]
   },
   {
@@ -4499,7 +4526,8 @@
    "kind": "call",
    "labels": [
     "ledger.mjs",
-    "money.mjs"
+    "money.mjs",
+    "stock.mjs"
    ]
   },
   {
@@ -4546,7 +4574,8 @@
    "kind": "call",
    "labels": [
     "ledger.mjs",
-    "money.mjs"
+    "money.mjs",
+    "stock.mjs"
    ]
   },
   {
@@ -4637,6 +4666,15 @@
    "kind": "call",
    "labels": [
     "interactions.mjs"
+   ]
+  },
+  {
+   "from": "sim_magic",
+   "to": "base_ledger",
+   "kind": "call",
+   "labels": [
+    "ledger.mjs",
+    "stock.mjs"
    ]
   },
   {
@@ -4786,7 +4824,8 @@
    "kind": "call",
    "labels": [
     "ledger.mjs",
-    "money.mjs"
+    "money.mjs",
+    "stock.mjs"
    ]
   },
   {
@@ -4886,7 +4925,8 @@
    "kind": "call",
    "labels": [
     "ledger.mjs",
-    "money.mjs"
+    "money.mjs",
+    "stock.mjs"
    ]
   },
   {
@@ -5058,7 +5098,8 @@
    "kind": "call",
    "labels": [
     "ledger.mjs",
-    "money.mjs"
+    "money.mjs",
+    "stock.mjs"
    ]
   },
   {
@@ -5213,7 +5254,8 @@
    "kind": "call",
    "labels": [
     "ledger.mjs",
-    "money.mjs"
+    "money.mjs",
+    "stock.mjs"
    ]
   },
   {
@@ -5301,7 +5343,8 @@
    "kind": "call",
    "labels": [
     "ledger.mjs",
-    "money.mjs"
+    "money.mjs",
+    "stock.mjs"
    ]
   },
   {
@@ -5376,7 +5419,8 @@
    "kind": "call",
    "labels": [
     "ledger.mjs",
-    "money.mjs"
+    "money.mjs",
+    "stock.mjs"
    ]
   },
   {
@@ -6761,6 +6805,14 @@
   },
   {
    "from": "sim_clock",
+   "to": "base_ledger",
+   "kind": "record",
+   "labels": [
+    "agriculture"
+   ]
+  },
+  {
+   "from": "sim_clock",
    "to": "sim_npc",
    "kind": "record",
    "labels": [
@@ -6786,6 +6838,14 @@
   {
    "from": "sim_clock",
    "to": "ui_server",
+   "kind": "record",
+   "labels": [
+    "agriculture"
+   ]
+  },
+  {
+   "from": "sim_economy",
+   "to": "base_ledger",
    "kind": "record",
    "labels": [
     "agriculture"
@@ -6918,6 +6978,7 @@
    "to": "base_ledger",
    "kind": "record",
    "labels": [
+    "army",
     "organization"
    ]
   },
@@ -9241,7 +9302,8 @@
     "modules": [
      "server-plugin/faction-clock.mjs",
      "server-plugin/finance-tax.mjs",
-     "server-plugin/money.mjs"
+     "server-plugin/money.mjs",
+     "server-plugin/stock.mjs"
     ],
     "usedByHooks": [],
     "usedIn": []
@@ -11265,6 +11327,7 @@
     "server-plugin/reputation-registry.mjs",
     "server-plugin/return-summary.mjs",
     "server-plugin/sites.mjs",
+    "server-plugin/stock.mjs",
     "server-plugin/tribal-awakening.mjs",
     "server-plugin/war-diplomacy.mjs",
     "server-plugin/world-clock.mjs"
@@ -11409,6 +11472,7 @@
     "server-plugin/sites.mjs",
     "server-plugin/smuggling.mjs",
     "server-plugin/spell-research.mjs",
+    "server-plugin/stock.mjs",
     "server-plugin/summons.mjs",
     "server-plugin/titles.mjs",
     "server-plugin/training.mjs",
@@ -11524,7 +11588,8 @@
    "keys": [],
    "readers": [
     "server-plugin/ledger.mjs",
-    "server-plugin/money.mjs"
+    "server-plugin/money.mjs",
+    "server-plugin/stock.mjs"
    ],
    "tools": [
     "tools/derived-scan.mjs",
@@ -11791,7 +11856,8 @@
    "server-plugin/money.mjs",
    "server-plugin/remote-generation.mjs",
    "server-plugin/settlement-trade.mjs",
-   "server-plugin/shop.mjs"
+   "server-plugin/shop.mjs",
+   "server-plugin/stock.mjs"
   ],
   "repairs": [
    "server-plugin/catalog.mjs",
@@ -11845,6 +11911,7 @@
    "server-plugin/return-summary.mjs",
    "server-plugin/settlement-profile.mjs",
    "server-plugin/settlement-trade.mjs",
+   "server-plugin/stock.mjs",
    "server-plugin/water-cycle.mjs",
    "server-plugin/world-clock.mjs"
   ],
@@ -12173,6 +12240,7 @@
     "kernel_storage"
    ],
    "readers": [
+    "base_ledger",
     "base_traits",
     "sim_character",
     "sim_clock",
@@ -12195,6 +12263,7 @@
     "sim_works"
    ],
    "readers": [
+    "base_ledger",
     "base_standing",
     "base_traits",
     "sim_character"
@@ -12918,9 +12987,11 @@
       "server-plugin/boss-migration.mjs",
       "server-plugin/boss-negotiation.mjs",
       "server-plugin/quest-sources.mjs",
-      "server-plugin/quest-wildlife.mjs"
+      "server-plugin/quest-wildlife.mjs",
+      "server-plugin/stock.mjs"
      ],
      "systems": [
+      "base_ledger",
       "kernel_storage",
       "sim_boss",
       "sim_society"
@@ -12928,6 +12999,7 @@
     }
    ],
    "autoSystems": [
+    "base_ledger",
     "base_standing",
     "base_traits",
     "kernel_engine",
@@ -13855,6 +13927,7 @@
       "server-plugin/shop.mjs",
       "server-plugin/standing.mjs",
       "server-plugin/state-notices.mjs",
+      "server-plugin/stock.mjs",
       "server-plugin/titles.mjs",
       "server-plugin/transport.mjs",
       "server-plugin/tribal-awakening.mjs",
@@ -13875,6 +13948,7 @@
       "base_advance",
       "base_effects",
       "base_events",
+      "base_ledger",
       "base_standing",
       "kernel_engine",
       "kernel_storage",
@@ -14038,6 +14112,7 @@
     "base_advance",
     "base_effects",
     "base_events",
+    "base_ledger",
     "base_standing",
     "kernel_engine",
     "kernel_storage",
@@ -14277,7 +14352,9 @@
      "means": "耐久与维修",
      "pattern": "\\.durability\\b",
      "modules": [
+      "server-plugin/action-text.mjs",
       "server-plugin/activities.mjs",
+      "server-plugin/applied-effects.mjs",
       "server-plugin/boss-negotiation.mjs",
       "server-plugin/checks.mjs",
       "server-plugin/consistency-review.mjs",
@@ -14324,6 +14401,7 @@
       "sim_transport",
       "sim_wildlife",
       "sim_works",
+      "ui_actions",
       "ui_client",
       "ui_scene",
       "ui_server"
@@ -14384,6 +14462,7 @@
     "sim_transport",
     "sim_wildlife",
     "sim_works",
+    "ui_actions",
     "ui_client",
     "ui_host",
     "ui_scene",
@@ -14782,6 +14861,7 @@
       "server-plugin/organizations.mjs",
       "server-plugin/public-opinion.mjs",
       "server-plugin/standing.mjs",
+      "server-plugin/stock.mjs",
       "server-plugin/training.mjs",
       "server-plugin/tribal-awakening.mjs",
       "server-plugin/war-diplomacy.mjs"
@@ -14816,6 +14896,7 @@
       "server-plugin/organization-state.mjs",
       "server-plugin/organizations.mjs",
       "server-plugin/standing.mjs",
+      "server-plugin/stock.mjs",
       "server-plugin/tribal-awakening.mjs"
      ],
      "systems": [
@@ -15525,7 +15606,7 @@
     "routes"
    ],
    "worldDirs": [],
-   "lines": 111
+   "lines": 113
   },
   "server-plugin/action-gateway.mjs": {
    "system": "ui_actions",
@@ -15540,7 +15621,7 @@
    "rules": [],
    "world": [],
    "worldDirs": [],
-   "lines": 23
+   "lines": 44
   },
   "server-plugin/action-registry.mjs": {
    "system": "ui_actions",
@@ -15554,7 +15635,7 @@
    "worldDirs": [
     "actions"
    ],
-   "lines": 93
+   "lines": 107
   },
   "server-plugin/action-text.mjs": {
    "system": "ui_actions",
@@ -15578,7 +15659,7 @@
    "worldDirs": [
     "actions"
    ],
-   "lines": 122
+   "lines": 126
   },
   "server-plugin/activities.mjs": {
    "system": "kernel_engine",
@@ -15663,7 +15744,7 @@
    ],
    "world": [],
    "worldDirs": [],
-   "lines": 265
+   "lines": 266
   },
   "server-plugin/advance-layers.mjs": {
    "system": "base_advance",
@@ -15773,7 +15854,7 @@
     "npcs"
    ],
    "worldDirs": [],
-   "lines": 207
+   "lines": 208
   },
   "server-plugin/agriculture-migration.mjs": {
    "system": "kernel_storage",
@@ -15805,6 +15886,7 @@
     "server-plugin/magic-economy.mjs",
     "server-plugin/magic-growth.mjs",
     "server-plugin/money.mjs",
+    "server-plugin/stock.mjs",
     "server-plugin/water-cycle.mjs",
     "server-plugin/weather.mjs"
    ],
@@ -15839,7 +15921,7 @@
     "spells"
    ],
    "worldDirs": [],
-   "lines": 339
+   "lines": 397
   },
   "server-plugin/applied-effects.mjs": {
    "system": "ui_actions",
@@ -15851,7 +15933,7 @@
    "rules": [],
    "world": [],
    "worldDirs": [],
-   "lines": 36
+   "lines": 66
   },
   "server-plugin/archived-reducer.mjs": {
    "system": "kernel_engine",
@@ -16422,7 +16504,8 @@
     "server-plugin/money.mjs",
     "server-plugin/npc-schedule.mjs",
     "server-plugin/npc-state.mjs",
-    "server-plugin/standing.mjs"
+    "server-plugin/standing.mjs",
+    "server-plugin/stock.mjs"
    ],
    "stateWrites": [
     "itemInstances",
@@ -16443,7 +16526,7 @@
     "locations"
    ],
    "worldDirs": [],
-   "lines": 307
+   "lines": 310
   },
   "server-plugin/duels.mjs": {
    "system": "sim_combat",
@@ -16903,6 +16986,7 @@
     "server-plugin/facility-state.mjs",
     "server-plugin/forest-water.mjs",
     "server-plugin/interactions.mjs",
+    "server-plugin/ledger.mjs",
     "server-plugin/magic-air.mjs",
     "server-plugin/magic-care.mjs",
     "server-plugin/magic-effects.mjs",
@@ -16940,7 +17024,7 @@
    "worldDirs": [
     "design"
    ],
-   "lines": 251
+   "lines": 253
   },
   "server-plugin/extraction.mjs": {
    "system": "sim_economy",
@@ -16949,7 +17033,9 @@
     "server-plugin/items.mjs",
     "server-plugin/law-codes.mjs",
     "server-plugin/law.mjs",
+    "server-plugin/ledger.mjs",
     "server-plugin/standing.mjs",
+    "server-plugin/stock.mjs",
     "server-plugin/traits.mjs"
    ],
    "stateWrites": [
@@ -16972,7 +17058,7 @@
     "monsters"
    ],
    "worldDirs": [],
-   "lines": 104
+   "lines": 114
   },
   "server-plugin/facilities.mjs": {
    "system": "sim_society",
@@ -17039,6 +17125,7 @@
     "server-plugin/money.mjs",
     "server-plugin/reputation-registry.mjs",
     "server-plugin/standing.mjs",
+    "server-plugin/stock.mjs",
     "server-plugin/world-clock.mjs"
    ],
    "stateWrites": [
@@ -17069,7 +17156,7 @@
     "locations"
    ],
    "worldDirs": [],
-   "lines": 263
+   "lines": 266
   },
   "server-plugin/faith-catalog.mjs": {
    "system": "sim_faith",
@@ -17126,6 +17213,7 @@
     "server-plugin/npc-state.mjs",
     "server-plugin/organization-state.mjs",
     "server-plugin/standing.mjs",
+    "server-plugin/stock.mjs",
     "server-plugin/world-events.mjs"
    ],
    "stateWrites": [
@@ -17155,7 +17243,7 @@
     "items"
    ],
    "worldDirs": [],
-   "lines": 237
+   "lines": 239
   },
   "server-plugin/family-diplomacy.mjs": {
    "system": "sim_society",
@@ -17371,8 +17459,10 @@
     "server-plugin/items.mjs",
     "server-plugin/labor-market.mjs",
     "server-plugin/law.mjs",
+    "server-plugin/ledger.mjs",
     "server-plugin/money.mjs",
-    "server-plugin/standing.mjs"
+    "server-plugin/standing.mjs",
+    "server-plugin/stock.mjs"
    ],
    "stateWrites": [
     "workshopFunds"
@@ -17394,7 +17484,7 @@
     "factions"
    ],
    "worldDirs": [],
-   "lines": 254
+   "lines": 261
   },
   "server-plugin/finance-bank.mjs": {
    "system": "sim_economy",
@@ -17487,7 +17577,9 @@
    "system": "sim_wildlife",
    "imports": [
     "server-plugin/entity-transitions.mjs",
+    "server-plugin/ledger.mjs",
     "server-plugin/seasonal-migration.mjs",
+    "server-plugin/stock.mjs",
     "server-plugin/traits.mjs",
     "server-plugin/water-cycle.mjs",
     "server-plugin/wildlife-habitats.mjs"
@@ -17520,7 +17612,7 @@
     "routes"
    ],
    "worldDirs": [],
-   "lines": 155
+   "lines": 170
   },
   "server-plugin/governance.mjs": {
    "system": "sim_society",
@@ -17713,7 +17805,7 @@
    "rules": [],
    "world": [],
    "worldDirs": [],
-   "lines": 281
+   "lines": 296
   },
   "server-plugin/interactions.mjs": {
    "system": "base_interactions",
@@ -17745,7 +17837,10 @@
   },
   "server-plugin/items.mjs": {
    "system": "sim_economy",
-   "imports": [],
+   "imports": [
+    "server-plugin/ledger.mjs",
+    "server-plugin/stock.mjs"
+   ],
    "stateWrites": [
     "itemInstances"
    ],
@@ -17760,7 +17855,7 @@
    ],
    "world": [],
    "worldDirs": [],
-   "lines": 103
+   "lines": 110
   },
   "server-plugin/labor-market.mjs": {
    "system": "sim_economy",
@@ -17858,6 +17953,7 @@
     "server-plugin/npc-cognition.mjs",
     "server-plugin/npc-schedule.mjs",
     "server-plugin/reputation.mjs",
+    "server-plugin/stock.mjs",
     "server-plugin/training.mjs"
    ],
    "stateWrites": [
@@ -17881,7 +17977,7 @@
    ],
    "world": [],
    "worldDirs": [],
-   "lines": 581
+   "lines": 582
   },
   "server-plugin/learning.mjs": {
    "system": "sim_character",
@@ -17935,11 +18031,13 @@
    "rules": [
     "economy"
    ],
-   "world": [],
+   "world": [
+    "rules"
+   ],
    "worldDirs": [
     "ontology"
    ],
-   "lines": 148
+   "lines": 247
   },
   "server-plugin/legal-representation.mjs": {
    "system": "sim_law",
@@ -18404,10 +18502,12 @@
     "server-plugin/entity-view.mjs",
     "server-plugin/environment.mjs",
     "server-plugin/items.mjs",
+    "server-plugin/ledger.mjs",
     "server-plugin/magic-consent.mjs",
     "server-plugin/magic-effects.mjs",
     "server-plugin/magic-movement.mjs",
     "server-plugin/magic-targeting.mjs",
+    "server-plugin/stock.mjs",
     "server-plugin/storage.mjs",
     "server-plugin/wildlife.mjs"
    ],
@@ -18430,7 +18530,7 @@
    "rules": [],
    "world": [],
    "worldDirs": [],
-   "lines": 384
+   "lines": 388
   },
   "server-plugin/magic-movement.mjs": {
    "system": "sim_magic",
@@ -18479,6 +18579,7 @@
    "imports": [
     "server-plugin/environment.mjs",
     "server-plugin/interactions.mjs",
+    "server-plugin/ledger.mjs",
     "server-plugin/magic-air.mjs",
     "server-plugin/magic-area.mjs",
     "server-plugin/magic-consent.mjs",
@@ -18507,7 +18608,7 @@
     "routes"
    ],
    "worldDirs": [],
-   "lines": 477
+   "lines": 480
   },
   "server-plugin/magic-primitives.mjs": {
    "system": "sim_magic",
@@ -18540,6 +18641,7 @@
     "server-plugin/contracts.mjs",
     "server-plugin/entity-view.mjs",
     "server-plugin/environment.mjs",
+    "server-plugin/ledger.mjs",
     "server-plugin/magic-area.mjs",
     "server-plugin/magic-consent.mjs",
     "server-plugin/magic-effects.mjs",
@@ -18547,6 +18649,7 @@
     "server-plugin/magic-targeting.mjs",
     "server-plugin/quest-wildlife.mjs",
     "server-plugin/revival.mjs",
+    "server-plugin/stock.mjs",
     "server-plugin/training.mjs",
     "server-plugin/wildlife-range.mjs",
     "server-plugin/wildlife.mjs"
@@ -18578,7 +18681,7 @@
     "monsters"
    ],
    "worldDirs": [],
-   "lines": 389
+   "lines": 393
   },
   "server-plugin/magic-status.mjs": {
    "system": "sim_magic",
@@ -18710,6 +18813,7 @@
     "server-plugin/money.mjs",
     "server-plugin/professions.mjs",
     "server-plugin/progression.mjs",
+    "server-plugin/stock.mjs",
     "server-plugin/wildlife-society.mjs",
     "server-plugin/works.mjs"
    ],
@@ -18738,7 +18842,7 @@
     "locations"
    ],
    "worldDirs": [],
-   "lines": 138
+   "lines": 141
   },
   "server-plugin/medicine-state.mjs": {
    "system": "sim_npc",
@@ -18775,6 +18879,7 @@
     "server-plugin/money.mjs",
     "server-plugin/npc-life.mjs",
     "server-plugin/npc-state.mjs",
+    "server-plugin/stock.mjs",
     "server-plugin/world-clock.mjs"
    ],
    "stateWrites": [
@@ -18795,7 +18900,7 @@
    ],
    "world": [],
    "worldDirs": [],
-   "lines": 220
+   "lines": 223
   },
   "server-plugin/migrations.mjs": {
    "system": "kernel_storage",
@@ -18829,6 +18934,7 @@
     "server-plugin/population.mjs",
     "server-plugin/settlement-trade.mjs",
     "server-plugin/standing.mjs",
+    "server-plugin/stock.mjs",
     "server-plugin/titles.mjs",
     "server-plugin/world-clock.mjs"
    ],
@@ -18862,7 +18968,7 @@
     "rules"
    ],
    "worldDirs": [],
-   "lines": 505
+   "lines": 510
   },
   "server-plugin/money.mjs": {
    "system": "base_ledger",
@@ -18899,7 +19005,7 @@
    "worldDirs": [
     "ontology"
    ],
-   "lines": 102
+   "lines": 112
   },
   "server-plugin/monster-society.mjs": {
    "system": "sim_society",
@@ -18908,8 +19014,10 @@
     "server-plugin/entity-view.mjs",
     "server-plugin/faction-clock.mjs",
     "server-plugin/items.mjs",
+    "server-plugin/ledger.mjs",
     "server-plugin/npc-state.mjs",
     "server-plugin/standing.mjs",
+    "server-plugin/stock.mjs",
     "server-plugin/wildlife.mjs",
     "server-plugin/world-events.mjs"
    ],
@@ -18934,7 +19042,7 @@
     "residents"
    ],
    "worldDirs": [],
-   "lines": 428
+   "lines": 434
   },
   "server-plugin/nation-founding.mjs": {
    "system": "sim_society",
@@ -19054,6 +19162,7 @@
     "server-plugin/npc-obligations.mjs",
     "server-plugin/npc-schedule.mjs",
     "server-plugin/quest-board.mjs",
+    "server-plugin/stock.mjs",
     "server-plugin/storage.mjs",
     "server-plugin/wildlife.mjs"
    ],
@@ -19081,7 +19190,7 @@
     "recipes"
    ],
    "worldDirs": [],
-   "lines": 219
+   "lines": 223
   },
   "server-plugin/npc-cognition.mjs": {
    "system": "sim_npc",
@@ -19572,6 +19681,7 @@
    "system": "sim_companion",
    "imports": [
     "server-plugin/hidden-passives.mjs",
+    "server-plugin/ledger.mjs",
     "server-plugin/npc-life.mjs",
     "server-plugin/professions.mjs",
     "server-plugin/progression.mjs",
@@ -19599,7 +19709,7 @@
    ],
    "world": [],
    "worldDirs": [],
-   "lines": 280
+   "lines": 282
   },
   "server-plugin/population-service.mjs": {
    "system": "sim_npc",
@@ -19843,7 +19953,8 @@
     "server-plugin/ledger.mjs",
     "server-plugin/money.mjs",
     "server-plugin/npc-life.mjs",
-    "server-plugin/progression.mjs"
+    "server-plugin/progression.mjs",
+    "server-plugin/stock.mjs"
    ],
    "stateWrites": [
     "buildings",
@@ -19865,7 +19976,7 @@
    "rules": [],
    "world": [],
    "worldDirs": [],
-   "lines": 273
+   "lines": 280
   },
   "server-plugin/quest-board.mjs": {
    "system": "sim_society",
@@ -19923,6 +20034,7 @@
     "server-plugin/npc-life.mjs",
     "server-plugin/quest-wildlife.mjs",
     "server-plugin/standing.mjs",
+    "server-plugin/stock.mjs",
     "server-plugin/wildlife-range.mjs",
     "server-plugin/world-events.mjs"
    ],
@@ -19960,7 +20072,7 @@
     "rules"
    ],
    "worldDirs": [],
-   "lines": 389
+   "lines": 398
   },
   "server-plugin/quest-wildlife.mjs": {
    "system": "sim_society",
@@ -20015,6 +20127,7 @@
     "server-plugin/money.mjs",
     "server-plugin/npc-state.mjs",
     "server-plugin/shop.mjs",
+    "server-plugin/stock.mjs",
     "server-plugin/storage.mjs",
     "server-plugin/wildlife-habitats.mjs",
     "server-plugin/wildlife-migration.mjs"
@@ -20057,7 +20170,7 @@
    "worldDirs": [
     "geo"
    ],
-   "lines": 716
+   "lines": 719
   },
   "server-plugin/repair.mjs": {
    "system": "sim_economy",
@@ -20449,6 +20562,7 @@
     "server-plugin/ledger.mjs",
     "server-plugin/magic-economy.mjs",
     "server-plugin/money.mjs",
+    "server-plugin/stock.mjs",
     "server-plugin/traits.mjs",
     "server-plugin/transport-route.mjs",
     "server-plugin/transport.mjs"
@@ -20483,7 +20597,7 @@
     "rules"
    ],
    "worldDirs": [],
-   "lines": 258
+   "lines": 265
   },
   "server-plugin/shop.mjs": {
    "system": "sim_economy",
@@ -20495,7 +20609,8 @@
     "server-plugin/npc-state.mjs",
     "server-plugin/promotion.mjs",
     "server-plugin/reputation-registry.mjs",
-    "server-plugin/standing.mjs"
+    "server-plugin/standing.mjs",
+    "server-plugin/stock.mjs"
    ],
    "stateWrites": [
     "records",
@@ -20522,7 +20637,7 @@
     "settlementProfiles"
    ],
    "worldDirs": [],
-   "lines": 221
+   "lines": 224
   },
   "server-plugin/sites.mjs": {
    "system": "sim_environment",
@@ -20530,10 +20645,12 @@
     "server-plugin/entity-view.mjs",
     "server-plugin/forest-water.mjs",
     "server-plugin/items.mjs",
+    "server-plugin/ledger.mjs",
     "server-plugin/location-access.mjs",
     "server-plugin/magic-primitives.mjs",
     "server-plugin/monster-society.mjs",
     "server-plugin/npc-state.mjs",
+    "server-plugin/stock.mjs",
     "server-plugin/traits.mjs"
    ],
    "stateWrites": [
@@ -20566,7 +20683,7 @@
     "skills"
    ],
    "worldDirs": [],
-   "lines": 385
+   "lines": 415
   },
   "server-plugin/smuggling.mjs": {
    "system": "sim_economy",
@@ -20674,6 +20791,44 @@
    "worldDirs": [],
    "lines": 113
   },
+  "server-plugin/stock.mjs": {
+   "system": "base_ledger",
+   "imports": [
+    "server-plugin/group-account.mjs",
+    "server-plugin/ledger.mjs",
+    "server-plugin/npc-state.mjs"
+   ],
+   "stateWrites": [],
+   "stateReads": [
+    "creatures",
+    "inventory",
+    "itemInstances",
+    "minute",
+    "npcs",
+    "projects",
+    "records",
+    "settlements"
+   ],
+   "recordWrites": [],
+   "recordReads": [
+    "agriculture",
+    "army",
+    "faction-assets"
+   ],
+   "rules": [
+    "agriculture",
+    "economy"
+   ],
+   "world": [
+    "factions",
+    "rules"
+   ],
+   "worldDirs": [
+    "meta",
+    "ontology"
+   ],
+   "lines": 187
+  },
   "server-plugin/storage.mjs": {
    "system": "kernel_storage",
    "imports": [],
@@ -20684,12 +20839,13 @@
    "rules": [],
    "world": [],
    "worldDirs": [],
-   "lines": 468
+   "lines": 475
   },
   "server-plugin/summons.mjs": {
    "system": "sim_companion",
    "imports": [
     "server-plugin/environment.mjs",
+    "server-plugin/ledger.mjs",
     "server-plugin/magic-effects.mjs",
     "server-plugin/magic-primitives.mjs",
     "server-plugin/magic-ritual.mjs",
@@ -20714,7 +20870,7 @@
    ],
    "world": [],
    "worldDirs": [],
-   "lines": 168
+   "lines": 170
   },
   "server-plugin/titles.mjs": {
    "system": "sim_society",
@@ -20849,6 +21005,7 @@
     "server-plugin/money.mjs",
     "server-plugin/npc-obligations.mjs",
     "server-plugin/quest-sources.mjs",
+    "server-plugin/stock.mjs",
     "server-plugin/transport-route.mjs",
     "server-plugin/world-events.mjs",
     "world/design/transport-rules.mjs"
@@ -20880,7 +21037,7 @@
    "worldDirs": [
     "design"
    ],
-   "lines": 241
+   "lines": 248
   },
   "server-plugin/tribal-awakening.mjs": {
    "system": "sim_society",
@@ -21086,6 +21243,7 @@
     "server-plugin/regions.mjs",
     "server-plugin/settlement-trade.mjs",
     "server-plugin/standing.mjs",
+    "server-plugin/stock.mjs",
     "server-plugin/traits.mjs",
     "server-plugin/tribal-awakening.mjs",
     "server-plugin/world-clock.mjs",
@@ -21122,7 +21280,7 @@
     "rules"
    ],
    "worldDirs": [],
-   "lines": 190
+   "lines": 193
   },
   "server-plugin/water-cycle.mjs": {
    "system": "sim_wildlife",
@@ -21184,6 +21342,7 @@
   "server-plugin/wildlife-awakening.mjs": {
    "system": "sim_wildlife",
    "imports": [
+    "server-plugin/ledger.mjs",
     "server-plugin/training.mjs",
     "server-plugin/wildlife-society.mjs"
    ],
@@ -21207,7 +21366,7 @@
     "rules"
    ],
    "worldDirs": [],
-   "lines": 150
+   "lines": 152
   },
   "server-plugin/wildlife-habitats.mjs": {
    "system": "sim_wildlife",
@@ -21277,6 +21436,7 @@
     "server-plugin/ledger.mjs",
     "server-plugin/money.mjs",
     "server-plugin/professions.mjs",
+    "server-plugin/stock.mjs",
     "server-plugin/training.mjs",
     "server-plugin/wildlife-habitats.mjs",
     "server-plugin/wildlife-range.mjs",
@@ -21314,7 +21474,7 @@
     "rules"
    ],
    "worldDirs": [],
-   "lines": 312
+   "lines": 315
   },
   "server-plugin/wildlife.mjs": {
    "system": "sim_wildlife",
@@ -21325,6 +21485,7 @@
     "server-plugin/farm-pests.mjs",
     "server-plugin/forest-water.mjs",
     "server-plugin/items.mjs",
+    "server-plugin/ledger.mjs",
     "server-plugin/quest-wildlife.mjs",
     "server-plugin/seasonal-migration.mjs",
     "server-plugin/storage.mjs",
@@ -21362,7 +21523,7 @@
     "rules"
    ],
    "worldDirs": [],
-   "lines": 240
+   "lines": 243
   },
   "server-plugin/works.mjs": {
    "system": "sim_works",
@@ -21375,6 +21536,7 @@
     "server-plugin/professions.mjs",
     "server-plugin/reputation.mjs",
     "server-plugin/standing.mjs",
+    "server-plugin/stock.mjs",
     "server-plugin/storage.mjs",
     "server-plugin/world-events.mjs"
    ],
@@ -21404,7 +21566,7 @@
     "spells"
    ],
    "worldDirs": [],
-   "lines": 274
+   "lines": 284
   },
   "server-plugin/world-clock.mjs": {
    "system": "sim_clock",
@@ -21484,6 +21646,7 @@
    "system": "kernel_storage",
    "imports": [
     "server-plugin/boss-migration.mjs",
+    "server-plugin/ledger.mjs",
     "server-plugin/npc-state.mjs",
     "server-plugin/storage.mjs",
     "server-plugin/wildlife-migration.mjs"
@@ -21504,7 +21667,7 @@
     "routes"
    ],
    "worldDirs": [],
-   "lines": 73
+   "lines": 76
   },
   "server-plugin/migrations/r1.mjs": {
    "system": "kernel_storage",

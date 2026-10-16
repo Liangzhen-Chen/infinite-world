@@ -1,4 +1,7 @@
 import {registerMagicEffect}from'./magic-effects.mjs';
+import {declareLedgerWriter} from './ledger.mjs';
+// S1b: 添进炉具的燃料物品折成炉内燃料质量（热工状态），在账本上即消耗。
+declareLedgerWriter('magic-object',{sinks:['sink:consume']});
 import {environmentFeatures,localPlayerPoint,localSightClear} from './environment.mjs';
 import {localWeather} from './weather.mjs';
 import {areaTargetFacts} from './magic-area.mjs';
@@ -228,7 +231,7 @@ export function addObjectFuel(d,engine,args,eventId){
  const quantity=integer(args.quantity,1,100,'添料份数'),mass=quantity*fuel.milligramsPerUnit;
  integer(mass,1,100000000,'添料质量');if(engine.quantity(d,'player',fuel.item)<quantity)throw new Error('缺少实际燃料');
  const state=read(d,row),s=state.thermal;s.fuelMg+=mass;s.fuelAddedMg+=mass;validateThermalState(s,row.thermalModel);
- engine.itemDelta(d,'player',fuel.item,-quantity);store(d,row,state);return{target:row.id,fuelMgAdded:mass,item:fuel.item,quantity,source:eventId};
+ engine.itemDelta(d,'player',fuel.item,-quantity,{flow:'sink:consume',purpose:'fuel',writer:'magic-object',eventId});store(d,row,state);return{target:row.id,fuelMgAdded:mass,item:fuel.item,quantity,source:eventId};
 }
 // Called after the normal workstation ownership/fee check, before any payment.
 // No requirement means exact legacy behavior; no implicit free furnace is created.
@@ -266,7 +269,7 @@ export function prepareNpcFurnace(d,engine,station,minutes,npc,reserved=new Map(
  const mass=integer(fuel.quantity*fuel.milligramsPerUnit,1,100000000,'添料质量');
  s.fuelMg+=mass;s.fuelAddedMg+=mass;validateThermalState(s,m);store(d,row,state);
  const plan=prepareThermalWorkstation(d,engine,station,minutes,options);
- engine.itemDelta(d,npc,fuel.item,-fuel.quantity);
+ engine.itemDelta(d,npc,fuel.item,-fuel.quantity,{flow:'sink:consume',purpose:'fuel',writer:'magic-object',eventId:`furnace:${station.id}:${d.get('state','minute')}`});
  return {plan,fuel:[{item:fuel.item,quantity:fuel.quantity,milligrams:mass}]};
 }
 

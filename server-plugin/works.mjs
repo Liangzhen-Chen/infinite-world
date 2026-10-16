@@ -7,7 +7,10 @@
 // becomes breakthrough evidence through career-metrics, never a second path.
 import {purse,purse as purseAccount,source,sink,moveCoins} from './money.mjs';
 import {declareLedgerWriter} from './ledger.mjs';
-declareLedgerWriter('works',{sources:{'src:import':{coin_river:200000}},sinks:['sink:export']});
+import {craftInput,craftOutput,recordCraft} from './stock.mjs';
+// S1b: 写作、抄书、测绘按作品规则（WORK_RULES，等同配方 works:<操作>）是 src:craft 制造守恒对：纸墨进 sink:consume，
+// 成品来自 src:craft；印坊代印留存的书来自模拟范围外（src:import，印刷费已付 sink:export）。
+declareLedgerWriter('works',{sources:{'src:import':{coin_river:200000,'*':10000},'src:craft':{'*':10000}},sinks:['sink:export','sink:consume']});
 import {knowsKnowledge} from './education-state.mjs';
 import {digest}from'./storage.mjs';
 import {settlementAt}from'./reputation.mjs';
@@ -42,9 +45,16 @@ function learned(d,engine,name,label){
 function literate(d,engine){
     if((d.get('state','skills',WORK_RULES.literacySkill,'proficiency')??0)<engine.rules.books.minimumLiteracy)throw new Error('识字熟练度不足');
 }
-function spend(d,engine,rows){
+function spend(d,engine,rows,eventId,recipe){
     for(const[item,amount]of rows)if(engine.quantity(d,'player',item)<amount)throw new Error(`缺少${engine.byId.get(item)?.name??item}`);
-    for(const[item,amount]of rows)engine.itemDelta(d,'player',item,-amount);
+    for(const[item,amount]of rows)engine.itemDelta(d,'player',item,-amount,craftInput('works',eventId));
+    recordCraft(d,{recipe,batches:1,inputs:Object.fromEntries(rows),outputs:{},writer:'works',eventId});
+}
+// 成品入账并补全本次制造凭据的产出。
+function crafted(d,engine,item,quantity,{eventId,workmanship}){
+    const ids=produceItems(d,engine,item,quantity,{eventId,workmanship,books:craftOutput('works',eventId)});
+    const log=d.get('ledger','crafts');if(log?.length&&log.at(-1).eventId===eventId)d.set(['ledger','crafts',String(log.length-1),'outputs'],{...log.at(-1).outputs,[item]:quantity});
+    return ids;
 }
 function placeOf(d,engine){
     const location=d.get('state','location');
@@ -75,11 +85,11 @@ function write(d,engine,args,id){
     const teaches=[...new Set((args.entities??[skill]).map(x=>engine.resolve(x)))];
     for(const entity of teaches)if(!['skill','recipe','spell'].includes(entity.split('_')[0])||!knowsKnowledge(engine,d.get('state'),'player',entity))throw Error('只能写入本人已掌握的已登记技能、配方或法术');
     const minutes=integer(args.minutes??240,120,480,'写作时间');
-    spend(d,engine,[[WORK_RULES.paper,1]]);
+    spend(d,engine,[[WORK_RULES.paper,1]],id,'works:write');
     engine.advance(d,minutes,id);
     const proficiency=effectiveProficiency(d,engine,skill),outcome=engine.check(d,{attribute:'智力',skill,difficulty:15},id),quality=workQuality(outcome,proficiency);
     if(!outcome.success){d.say(`《${title}》未能成稿，耗时${minutes}分钟`);return{operation:'write',minutes,...outcome};}
-    const [instance]=produceItems(d,engine,WORK_RULES.manuscript,1,{eventId:id,workmanship:quality});
+    const [instance]=crafted(d,engine,WORK_RULES.manuscript,1,{eventId:id,workmanship:quality});
     const masterpiece=quality==='杰作',{location,settlement}=placeOf(d,engine);
     const work=save(d,{id:`work_${id}`,kind:'manuscript',title,concept,author:'player',authorName:d.get('state','player','name'),skill,quality,masterpiece,
         teaches,knowledge:{grade:engine.rules.books.grades[Math.min(4,Math.floor(effectiveProficiency(d,engine,skill)/300))],teaches,
@@ -106,7 +116,7 @@ function publish(d,engine,args,id){
     const sold=Math.min(printed,Math.max(1,Math.round(WORK_RULES.demand*multiplier))),price=Math.max(1,Math.round(WORK_RULES.bookPrice*multiplier)),income=sold*price;
     moveCoins(d,{from:source('import','book_sales'),to:purse(engine,'player'),amount:income,writer:'works',eventId:id});
     d.set(['state','player','coins'],d.get('state','player','coins')+income);
-    const kept=printed-sold,instances=kept?produceItems(d,engine,WORK_RULES.book,kept,{eventId:id,workmanship:work.quality}):[];
+    const kept=printed-sold,instances=kept?produceItems(d,engine,WORK_RULES.book,kept,{eventId:id,workmanship:work.quality,books:{flow:'src:import',purpose:'printing',writer:'works',eventId:id}}):[];
     for(const unitId of instances){d.set(['state','itemInstances',unitId,'work'],work.id);if(work.knowledge)d.set(['state','itemInstances',unitId,'book'],{...work.knowledge,edition});}
     const row={edition,eventId:id,settlement,location,printed,sold,kept,price,income,cost:coins,minute:d.get('state','minute'),points:WORK_RULES.points.publish+(work.masterpiece?WORK_RULES.points.masterpiece:0)};
     save(d,{...work,editions:[...work.editions,row]});
@@ -135,12 +145,12 @@ function copy(d,engine,args,id){
     const source=selected?.book&&selected.owner==='player'&&selected.status==='持有'&&selected.durability!==0?{unit:selected,index:engine.rules.books.grades.indexOf(selected.book.grade)}:heldBookGrade(d,engine,item);if(!source||source.index<0)throw new Error('原本已损坏，不能作为抄写底本');
     const grades=engine.rules.books.grades,scribe=effectiveProficiency(d,engine,WORK_RULES.scribeSkill);
     const index=Math.min(source.index,Math.floor(scribe/300),grades.length-1),minutes=engine.rules.books.readingMinutes[source.index];
-    spend(d,engine,[[WORK_RULES.paper,source.index+1],[WORK_RULES.ink,1]]);
+    spend(d,engine,[[WORK_RULES.paper,source.index+1],[WORK_RULES.ink,1]],id,'works:copy');
     engine.advance(d,minutes,id);
     const outcome=engine.check(d,{attribute:'智力',skill:WORK_RULES.scribeSkill,difficulty:[10,15,20,25,30][source.index]??30},id);
     if(!outcome.success){d.say(`抄写《${definition.name}》失败，纸墨已耗`);return{operation:'copy',item,minutes,...outcome};}
     const origin=source.unit?.book??null,chain=[...origin?.chain??[],source.unit?.book?source.unit.id:`catalog:${item}`];
-    const edition=(origin?.edition??0)+1,[instance]=produceItems(d,engine,item,1,{eventId:id,workmanship:workQuality(outcome,scribe)});
+    const edition=(origin?.edition??0)+1,[instance]=crafted(d,engine,item,1,{eventId:id,workmanship:workQuality(outcome,scribe)});
     const author=origin?.author??definition.book?.author,recordAuthor=Boolean(author)&&(!engine.replaying||engine.replayResult?.bookAuthor!==undefined);
     const book={...origin,...(recordAuthor?{author}:{}),teaches:origin?.teaches??definition.book?.teaches??[],grade:grades[index],edition,chain,source:source.unit?.id??null,scribe:'player',scribeName:d.get('state','player','name'),copiedAt:d.get('state','minute')};
     d.set(['state','itemInstances',instance,'book'],book);
@@ -184,11 +194,11 @@ function survey(d,engine,args,id){
     const routes=engine.world.routes.filter(row=>[row.from,row.to].includes(location)&&known(row.from)&&known(row.to));
     const locations=[...new Set([location,...routes.flatMap(row=>[row.from,row.to])])].sort();
     const minutes=integer(args.minutes??180,120,480,'测绘时间');
-    spend(d,engine,[[WORK_RULES.paper,1],[WORK_RULES.ink,1]]);
+    spend(d,engine,[[WORK_RULES.paper,1],[WORK_RULES.ink,1]],id,'works:survey');
     engine.advance(d,minutes,id);
     const proficiency=effectiveProficiency(d,engine,skill),outcome=engine.check(d,{attribute:'智力',skill,difficulty:15},id),quality=workQuality(outcome,proficiency);
     if(!outcome.success){d.say(`《${title}》测绘失败，纸墨已耗`);return{operation:'survey',minutes,...outcome};}
-    const [instance]=produceItems(d,engine,WORK_RULES.map,1,{eventId:id,workmanship:quality}),masterpiece=quality==='杰作';
+    const [instance]=crafted(d,engine,WORK_RULES.map,1,{eventId:id,workmanship:quality}),masterpiece=quality==='杰作';
     const work=save(d,{id:`work_${id}`,kind:'map',title,author:'player',authorName:d.get('state','player','name'),skill,quality,masterpiece,minute:d.get('state','minute'),
         location,settlement,sourceEvent:id,item:WORK_RULES.map,instance,locations,routes:routes.map(row=>row.id).sort(),points:settlement?WORK_RULES.points.survey:0});
     d.set(['state','itemInstances',instance,'work'],work.id);

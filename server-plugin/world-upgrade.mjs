@@ -2,6 +2,7 @@ import {digest,applyPatches} from './storage.mjs';
 import {planWildlifeMigration}from'./wildlife-migration.mjs';
 import {planBossMigration}from'./boss-migration.mjs';
 import {initialNpcState}from'./npc-state.mjs';
+import {bookUpgrade} from './ledger.mjs';
 
 const catalogs=['npcs','residents','locations','items','professions','skills','spells','recipes','monsters','bosses','cultures','deities','factions','history','factionPeople','eras','households','settlementProfiles','festivals','regions'];
 const same=(a,b)=>digest(a??null)===digest(b??null);
@@ -64,6 +65,8 @@ export function planWorldUpgrade(document,oldWorld,newWorld,{worldHash,eventId,r
     const updated=applyPatches(document,patches);
     patches.push(...planWildlifeMigration(updated,newWorld.rules,newWorld.monsters??[]));
     patches.push(...planBossMigration(updated,newWorld.rules,newWorld.bosses??[],newWorld));
+    // S1b: 已开账的存档，更新补发与改写的钱物经 src:pack_converted / sink:pack_removed 记入账本。
+    patches.push(...bookUpgrade(document,applyPatches(document,patches),newWorld));
     patches.push({op:'set',path:['worldHash'],value:worldHash},{op:'set',path:['worldVersion'],value:newWorld.version},
         {op:'set',path:['state','records',`world_update_${eventId}`],value:{category:'world_update',name:'世界更新记录',
             from:document.worldVersion,to:newWorld.version,minute:document.state.minute,added,conflicts,retained,...(newWorld.rules.npcStockUpdateVersion===1?{stockAdded}:{})}});

@@ -1,4 +1,6 @@
 import {createHash} from 'node:crypto';
+import {declareLedgerWriter} from './ledger.mjs';
+declareLedgerWriter('wildlife-awakening',{sinks:['sink:consume']});
 import {assertTrainingRitual} from './training.mjs';
 import {spiritOperations,spiritAction,advanceSpiritSocieties,validateSpiritRules,activeForm} from './wildlife-society.mjs';
 
@@ -130,7 +132,7 @@ export function awakeningAction(d,args,eventId,target){
         if(!spec)throw Error('这不是登记的灵物');
         if(actor.mind?.lastItemDay===day)throw Error('今天已喂过灵物，灵气不能叠加');
         if(this.quantity(d,'player',item)<1)throw Error('身上没有实际的灵物');
-        this.itemDelta(d,'player',item,-1);this.advance(d,rules.nurtureMinutes,eventId);
+        this.itemDelta(d,'player',item,-1,{flow:'sink:consume',purpose:'nurture',writer:'wildlife-awakening',eventId});this.advance(d,rules.nurtureMinutes,eventId);
         if(!present())return{success:false,spent:{item,quantity:1},note:'灵物已耗去，但动物在喂食完成前离开或你失去行动能力'};
         addSource(d,target,day,'item',spec.points,{minute:d.get('state','minute'),event:eventId,item,by:'player'});
     }else if(op==='enlighten'){

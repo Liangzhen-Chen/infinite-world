@@ -1,6 +1,8 @@
 import {purse,treasury as treasuryAccount,moveCoins} from './money.mjs';
 import {declareLedgerWriter} from './ledger.mjs';
-declareLedgerWriter('shop');
+import {settlementStock} from './stock.mjs';
+// S1b 补货：本地产出与外路到货来自模拟范围外（src:import，按货价付给来源聚落公账）；聚落库存补货从聚落库存转入店主行囊。
+declareLedgerWriter('shop',{sources:{'src:import':{'*':100000}}});
 import {isReputationSettlement}from'./reputation-registry.mjs';
 import {standing} from './standing.mjs';
 import {marketFactor}from'./promotion.mjs';
@@ -157,6 +159,7 @@ function restockRow(d,engine,shop,row,minute){
     if(want<=0)return null;
     const base=engine.byId.get(row.item).basePrice,entry={day:Math.floor(minute/DAY),minute,item:row.item,source:row.source,wanted:want,added:0,paidCopper:0};
     const keeperPath=actorPath(engine.world,shop.keeper),keeper=d.get(...keeperPath),afford=n=>Math.min(n,Math.floor(keeper.coins/base));
+    let books={flow:'src:import',purpose:row.source==='local'?'local_supply':'route_supply',writer:'shop',eventId:`shop:${shop.id}:${minute}`};
     if(row.source==='local'){entry.added=want;}
     else{
         const from=row.source==='route'?row.from:shop.settlement,s=structuredClone(d.get('state','settlements',from));
@@ -166,12 +169,12 @@ function restockRow(d,engine,shop,row,minute){
         }else if(row.stock==='food'&&managed(d,from))return{...entry,reason:'托管聚落粮仓只走周贸易账'};
         const spare=row.source==='settlement'?Math.max(0,(s[row.stock]??0)-row.reserve):want,quantity=afford(Math.min(want,spare));
         if(!quantity)return{...entry,reason:spare?'店主现钱不足':'聚落库存已到保留量'};
-        if(row.source==='settlement')s[row.stock]-=quantity;
+        if(row.source==='settlement'){s[row.stock]-=quantity;books={account:settlementStock(engine,from,row.stock),writer:'shop',eventId:books.eventId};}
         const cost=quantity*base;moveCoins(d,{from:purse(engine,shop.keeper),to:treasuryAccount(from),amount:cost,writer:'shop',eventId:null});s.treasury+=cost;d.set(['state','settlements',from],s);
         d.set([...keeperPath,'coins'],keeper.coins-cost);
         entry.added=quantity;entry.paidCopper=cost;entry.from=from;
     }
-    engine.itemDelta(d,shop.keeper,row.item,entry.added);
+    engine.itemDelta(d,shop.keeper,row.item,entry.added,books);
     return entry;
 }
 function restockShop(d,engine,shop,minute){

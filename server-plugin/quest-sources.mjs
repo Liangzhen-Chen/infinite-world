@@ -1,6 +1,15 @@
 import {purse,escrow as escrowAccount,treasury as treasuryAccount,moveCoins} from './money.mjs';
 import {declareLedgerWriter} from './ledger.mjs';
-declareLedgerWriter('quest-sources');
+import {bag,settlementStock,armyRations,moveStock,BOOKED as BOOKED_STOCK} from './stock.mjs';
+// S1b: 委托交付的实物转入受领方（王都木料入聚落库存、军需入军粮）。交付物与受领账户不是同一物品时
+// （旧规则把任意交付物折作军粮），交付物在交割处消耗、受领方的增量来自模拟范围外——这是旧结算的折算，账本如实记两笔。
+declareLedgerWriter('quest-sources',{sources:{'src:import':{'*':100000}},sinks:['sink:consume']});
+function deliverStock(d,engine,from,item,to,n,eventId){
+ const src=bag(engine,from,item);
+ if(src.split('|')[1]===to.split('|')[1])return moveStock(d,{from:src,to,amount:n,writer:'quest-sources',eventId});
+ moveStock(d,{from:src,to:`sink:consume|${src.split('|')[1]}|supply`,amount:n,writer:'quest-sources',eventId});
+ moveStock(d,{from:`src:import|${to.split('|')[1]}|supply`,to,amount:n,writer:'quest-sources',eventId});
+}
 import {personSimulation,questPublisher,questBoards} from './entity-view.mjs';
 // U17 任务自动来源（指南3.10）。任务公告栏的来源除玩家与官员手发外，还有：
 //   npc_needs     人物按自身短缺与需求目标（口粮、找药、修屋、护送、寻人）出私人委托，
@@ -184,7 +193,7 @@ export function settleQuestOutcome(d,engine,q,minute){
   const prior=d.get('state','records',`${q.id}:outcome`);if(prior)return prior;
   const n=q.objective.quantity,board=q.fundedBy.treasury;
   if(engine.quantity(d,q.publisher,q.objective.item)<n)throw Error('王都委托未收到实际物资');
-  engine.itemDelta(d,q.publisher,q.objective.item,-n);
+  engine.itemDelta(d,q.publisher,q.objective.item,-n,BOOKED_STOCK);deliverStock(d,engine,q.publisher,q.objective.item,settlementStock(engine,board,'wood'),n,`${q.id}:outcome`);
   d.set(['state','settlements',board,'wood'],(d.get('state','settlements',board,'wood')??0)+n);
   const result={category:'quest_outcome',quest:q.id,royal:true,settlement:board,supplied:n,minute};d.set(['state','records',`${q.id}:outcome`],result);return result;
  }
@@ -193,7 +202,7 @@ export function settleQuestOutcome(d,engine,q,minute){
   const war=d.get('state','records',q.source.cause),unit=war?.armyIds.map(id=>d.get('state','records',`army:${id}`)).find(a=>(a?.warSide??a?.party)===war.defender&&(a.regular+a.private+a.levy.count+(a.mercenary?.count??0)>0));
   const n=q.objective.quantity;
   if(war?.status==='交战'&&unit&&engine.quantity(d,q.publisher,q.objective.item)>=n){
-   engine.itemDelta(d,q.publisher,q.objective.item,-n);
+   engine.itemDelta(d,q.publisher,q.objective.item,-n,BOOKED_STOCK);deliverStock(d,engine,q.publisher,q.objective.item,armyRations(engine,unit.id),n,`${q.id}:outcome`);
    d.set(['state','records',`army:${unit.id}`],{...unit,food:unit.food+n});
    const result={category:'quest_outcome',quest:q.id,war:war.id,army:unit.id,supplied:n,minute};d.set(['state','records',`${q.id}:outcome`],result);return result;
   }

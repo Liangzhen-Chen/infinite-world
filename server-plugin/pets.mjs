@@ -1,4 +1,6 @@
 import {petTrustGain} from './hidden-passives.mjs';
+import {declareLedgerWriter} from './ledger.mjs';
+declareLedgerWriter('pets',{sinks:['sink:consume']});
 import { effectiveProficiency } from './professions.mjs';
 import { xpRequired } from './progression.mjs';
 import {resolveCreature}from'./wildlife.mjs';
@@ -116,7 +118,7 @@ export function petAction(d, args, eventId) {
         if (!food) throw new Error('这种食物不符合已登记食性');
         if (care.hunger === 0) throw new Error('动物已经吃饱');
         if (this.quantity(d, 'player', item) < 1) throw new Error('没有实际持有的食物');
-        this.itemDelta(d, 'player', item, -1);
+        this.itemDelta(d, 'player', item, -1, {flow:'sink:consume',purpose:'feed',writer:'pets',eventId});
         care.hunger = clamp(care.hunger - food.hungerRelief); care.mood = clamp(care.mood + 2);
         if (care.feedDay !== day) { care.bond = clamp(care.bond + petTrustGain(this,d.get('state'),id,food.trustGain)); care.feedDay = day; }
         writeCare(d, id, care); this.advance(d, rules.feedMinutes, eventId);
@@ -206,7 +208,7 @@ export function petAction(d, args, eventId) {
         if (operation === 'treat') {
             if (!care.sickness && actor.hp >= actor.maxHp) throw new Error('动物没有可治疗的病伤');
             if (this.quantity(d, 'player', rules.treatmentItem) < 1) throw new Error('缺少实际药材');
-            this.itemDelta(d, 'player', rules.treatmentItem, -1);
+            this.itemDelta(d, 'player', rules.treatmentItem, -1, {flow:'sink:consume',purpose:'treat',writer:'pets',eventId});
         } else {
             if (!rule.skills.includes(args.skill)) throw new Error('训练目标不在这种动物的技能目录');
             if (care.trainDay === day) throw new Error('今天已训练，不能重复刷成长');

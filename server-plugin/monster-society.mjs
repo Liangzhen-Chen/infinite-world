@@ -1,5 +1,8 @@
 import {registerWorldEventSubscriber}from'./world-events.mjs';
 import {transferItems} from './items.mjs';
+import {transit as transitStock,stockSink,moveStock} from './stock.mjs';
+import {declareLedgerWriter} from './ledger.mjs';
+declareLedgerWriter('monster-society',{sinks:['sink:consume']});
 import {breakBossAgreement} from './boss-negotiation.mjs';
 import {spendFactionAssets} from './faction-clock.mjs';
 import {standing,HOSTILE} from './standing.mjs';
@@ -413,9 +416,12 @@ export const societyIssueConsumer={
             if(!o)return{applied:false,reason:'议题尚未在议事处闭合'};
             const items={};for(const [id,n]of Object.entries(o.cost?.items??{}))items[id]=(items[id]??0)+n;
             for(const r of o.shares??[])items[r.item]=(items[r.item]??0)+r.quantity;
-            if(!spendFactionAssets(d,engine,context.faction,{items},{sourceEvent:context.sourceEvent,minute:context.minute,kind:'issue_outcome',issue:effect.issue,outcome:o.result}))
+            // S1b: 议定的实物先拨入议题的过路账户，分给受益人，余下的（议定代价）消耗掉。
+            const via={party:key,purpose:'transit',writer:'monster-society',eventId:context.sourceEvent};
+            if(!spendFactionAssets(d,engine,context.faction,{items},{sourceEvent:context.sourceEvent,minute:context.minute,kind:'issue_outcome',issue:effect.issue,outcome:o.result},undefined,via))
                 return{applied:false,reason:'组织公账不足以兑现议定结果'};
-            for(const r of o.shares??[])engine.itemDelta(d,r.to,r.item,r.quantity);
+            for(const r of o.shares??[])engine.itemDelta(d,r.to,r.item,r.quantity,via);
+            for(const [id,n]of Object.entries(o.cost?.items??{}))moveStock(d,{from:transitStock(engine,key,id),to:stockSink(engine,'consume',id,'issue_outcome'),amount:n,writer:'monster-society',eventId:context.sourceEvent});
             for(const n of o.news??[])sendNews(d,engine,{from:effect.settlement,to:n.target,actor:effect.settlement,victim:n.target,act:n.act,sourceEvent:context.sourceEvent,minute:context.minute});
             row={...row,outcome:o.result,motion:effect.motion,decidedBy:`society_motion:${effect.settlement}:${effect.motion}`,motionStatus:status,shares:structuredClone(o.shares??[]),news:structuredClone(o.news??[])};
         }
