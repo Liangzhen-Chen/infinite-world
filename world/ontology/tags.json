@@ -496,6 +496,26 @@
    "source": "design"
   },
   {
+   "id": "resource",
+   "family": "event",
+   "source": "code"
+  },
+  {
+   "id": "water_pollution",
+   "family": "event",
+   "source": "code"
+  },
+  {
+   "id": "water_recovered",
+   "family": "event",
+   "source": "code"
+  },
+  {
+   "id": "water_shortage",
+   "family": "event",
+   "source": "code"
+  },
+  {
    "id": "burning",
    "family": "status",
    "source": "design"
