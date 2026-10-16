@@ -396,3 +396,5 @@ M2修复批审定写入PLAN（T61–T64）：Astra草案F4工具机会标注并�
 - 2026-10-16 R22 已合入（分叉会话发起，主会话落地）：修 12 处主线回归——商税扣到非贸易卖方、同寺再入门续守戒、据点引用被剥离物品、信仰竞争时钟写死、发布/剥离工具与加载器幂等、授课计时与推进切分无关、冬季长推进热点（共享记录索引）等；推进金快照重生成（原因：授课课时结算口径修正）。合后 CORE+推进 44/44，抽查已修 15 个测试文件全过。仍未修（下轮回归卡）：agriculture 三年守恒 76≠0、quest-wildlife、m1-repair、monster-society-content、actions-catalog、m6-08、magic-status、progression、world-events、performance、w1/w3 发布类、farm-pests 超时（修前全量结果 logs/sessions/R22-sweep-a/b.tsv）。0 模型。
 
 - 2026-10-16 RW-04 已合入（Codex 起头、两位 Claude 子代理补完与解冲突）：林木存量与再生（按林型）、过伐缺柴涨价与栖地缩减、水源流量与上游取水/污染影响下游饮用与灌溉、林水系数进报价（resourceFactor）、林地站点按目录缓存；与 master 觉醒新栖地机制合成（全世界 runtimeHabitats，林水世界另保留建立时刻视图）。验收：forest-water 等 125/125、tribal-awakening 8/8、wildlife 一批 114/115（失败 quest-wildlife:42 为 master 既有，见 R22 未修清单）；合后 CORE+林水+推进+度量 60/60；金快照重生成（R22 授课计时与林水存量折算叠加）。静态提示 10593（+71 相对 P4 后）。farm-pests 与生态审计（2 种子×36 月）合后后台补跑。0 模型。
+
+- 2026-10-16 v10 合并修订已提交（bd15ae05）；设计关口通过后开始迁移：S1a 货币账本派出。farm-pests 主线全过（10/10，81 分钟，此前旧主线超时 8 小时）。
