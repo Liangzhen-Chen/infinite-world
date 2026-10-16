@@ -32,8 +32,15 @@ function settlement(e,s,id){
  const hid=n?.residence?.household??n?.householdId??b?.householdId;
  const h=e.world.households?.find(h=>h.id===hid);return h?.settlement??b?.settlement??b?.scope;
 }
+// A read-only pass over one fixed state (engine.scene) may set e.educationCourseMemo
+// (WeakMap state→courses): the same state object derives the same courses.
 export function educationCourses(e,s){
  if(e.educationCourseContext)return e.educationCourseContext;
+ const memo=e.educationCourseMemo;if(!memo||!s||typeof s!=='object')return deriveEducationCourses(e,s);
+ let hit=memo.get(s);if(!hit){hit=deriveEducationCourses(e,s);memo.set(s,hit);}
+ return hit;
+}
+function deriveEducationCourses(e,s){
  if(!educationFresh(e))return [];
  const rows=educationRows(s),out=[...rows];
  // Derive classes from the teacher's current work, not just the authored

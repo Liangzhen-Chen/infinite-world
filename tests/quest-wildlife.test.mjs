@@ -11,6 +11,7 @@ import {recordWildlifeDeath}from'../server-plugin/wildlife.mjs';
 import {compatibleWorld,planWorldUpgrade}from'../server-plugin/world-upgrade.mjs';
 import {applyBatch,offers,localFacts}from'../world/design/t155-village-wildlife.mjs';
 import {toolDefinitions}from'../extension/tools.mjs';
+import {questPublisher}from'../server-plugin/entity-view.mjs';
 const formal=await loadWorld(),seed=JSON.parse(await fs.readFile('tests/fixtures/legacy/seed.json','utf8'));
 const DAY=1440,scan=questGenerators().find(g=>g.id==='village_wildlife').scan;
 const writer=doc=>({document:doc,get:(...p)=>p.reduce((v,k)=>v?.[k],doc),set:(p,value)=>{let n=doc;for(const k of p.slice(0,-1))n=n[k]??={};n[p.at(-1)]=structuredClone(value);},say:()=>{}});
@@ -48,7 +49,7 @@ test('本批八单及两条说明覆盖六处，登记生成器共享托管且�
  const actors=structuredClone(s.doc.state.creatures);scan(writer(s.doc),s.engine,s.doc.state.minute);
  assert.equal(qs(s).length,8);assert.deepEqual(s.doc.state.creatures,actors);
  for(const [board,before] of Object.entries(treasuries))assert.equal(s.doc.state.settlements[board].treasury,before-qs(s).filter(q=>q.location===board&&q.objective.type==='creature').reduce((n,q)=>n+q.escrow,0));
- for(const q of qs(s)){assert.equal(q.escrow,60);assert.equal(q.fundedBy.treasury,q.location);assert.equal(q.publisher,s.w.rules.questSources.publishers[q.location]);}
+ for(const q of qs(s)){assert.equal(q.escrow,60);assert.equal(q.fundedBy.treasury,q.location);assert.equal(q.publisher,questPublisher(s.engine,s.doc.state,q.location).value);}
  scan(writer(s.doc),s.engine,s.doc.state.minute+DAY);assert.equal(qs(s).length,8);
 });
 test('指定目标死亡：到访、另一个体死亡及只改状态不能领酬，实际交锋后一次支付',async()=>{

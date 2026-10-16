@@ -37,7 +37,7 @@ const registeredPerson=(world,id)=>world.npcs.some(n=>n.id===id)||(world.residen
 export function editionFestival(world,f){
  const location=world.locations.find(l=>l.id===f.venue?.location);if(!location)return false;
  const host=f.runtime?.host;if(host==null||registeredPerson(world,host))return true;
- return !(world.settlementProfiles??[]).some(p=>p.id===(location.scope??location.id));
+ return (world.settlementProfiles??[]).some(p=>p.id===(location.scope??location.id));
 }
 // edition=true (engine construction): festivals outside this edition (editionFestival)
 // are left out of festivalCalendar and nothing of them is checked here. A festival
