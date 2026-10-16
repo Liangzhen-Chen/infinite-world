@@ -19,7 +19,8 @@ import {summarizeConsistency,consistencyTurnFailed}from'../server-plugin/consist
 
 export async function createPlaytestServer({world,seed,plannerClient,consistencyClient=plannerClient??null,consistencyEnabled=true,directory:persistentDirectory=null}={}){
     const directory=persistentDirectory?path.resolve(persistentDirectory):await fs.mkdtemp(path.join(os.tmpdir(),'fields-playtests-'));await fs.mkdir(directory,{recursive:true});
-    const app=express();app.use(express.json({limit:'10mb'}));const router=express.Router();
+    // Same body limit as the SillyTavern host (src/server-main.js): exported bundles carry every world version they replay on.
+    const app=express();app.use(express.json({limit:'500mb'}));const router=express.Router();
     const npcPlanner=plannerClient?(engine,document,options)=>planNpcAutonomy(engine,document,{...options,client:options.client??{generate:plannerClient.generate.bind(plannerClient)}}):undefined;
     await init(router,{world,baseRoot:directory,newCampaignSeed:seed===undefined?undefined:()=>seed,npcPlanningEnabled:Boolean(plannerClient),npcPlanner,consistencyClient,consistencyEnabled});app.use(router);
     const server=app.listen(0,'127.0.0.1');await once(server,'listening');
