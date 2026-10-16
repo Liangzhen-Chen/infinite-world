@@ -1,3 +1,6 @@
+import {purse,treasury as treasuryAccount,moveCoins} from './money.mjs';
+import {declareLedgerWriter} from './ledger.mjs';
+declareLedgerWriter('shop');
 import {isReputationSettlement}from'./reputation-registry.mjs';
 import {standing} from './standing.mjs';
 import {marketFactor}from'./promotion.mjs';
@@ -164,7 +167,7 @@ function restockRow(d,engine,shop,row,minute){
         const spare=row.source==='settlement'?Math.max(0,(s[row.stock]??0)-row.reserve):want,quantity=afford(Math.min(want,spare));
         if(!quantity)return{...entry,reason:spare?'店主现钱不足':'聚落库存已到保留量'};
         if(row.source==='settlement')s[row.stock]-=quantity;
-        const cost=quantity*base;s.treasury+=cost;d.set(['state','settlements',from],s);
+        const cost=quantity*base;moveCoins(d,{from:purse(engine,shop.keeper),to:treasuryAccount(from),amount:cost,writer:'shop',eventId:null});s.treasury+=cost;d.set(['state','settlements',from],s);
         d.set([...keeperPath,'coins'],keeper.coins-cost);
         entry.added=quantity;entry.paidCopper=cost;entry.from=from;
     }

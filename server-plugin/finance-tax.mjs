@@ -3,6 +3,9 @@ import {placeSettlement,settlementGovernment} from './entity-view.mjs';
 import {adminLevel} from './promotion-view.mjs';
 import {rulerOf,regionOf} from './regions.mjs';
 import {changeGroupCoins,groupAccountView} from './group-account.mjs';
+import {moveCoins,purse,treasury,BOOKED} from './money.mjs';
+import {declareLedgerWriter} from './ledger.mjs';
+declareLedgerWriter('finance-tax');
 import {itemTraits} from './traits.mjs';
 import {shopOfKeeper} from './shop.mjs';
 
@@ -40,9 +43,10 @@ export function assessTradeTax(d,e,{seller,cost,location,sourceEvent,kind='comme
         if(!e.world.settlementProfiles?.some(p=>p.id===tax.settlement))throw Error('聚落未登记公账，不能收取商税');
         d.set(['state','settlements',tax.settlement],{treasury:0,treasuryLedger:[],granary:false,population:0});
     }
-    if(group)changeGroupCoins(d,e,seller,-amount,{kind:'商税',sourceEvent,minute:d.get('state','minute')});
+    moveCoins(d,{from:group?treasury(seller):purse(e,seller),to:treasury(tax.settlement),amount,writer:'finance-tax',eventId:sourceEvent});
+    if(group)changeGroupCoins(d,e,seller,-amount,{kind:'商税',sourceEvent,minute:d.get('state','minute')},BOOKED);
     else d.set([...actor,'coins'],balance-amount);
-    changeGroupCoins(d,e,tax.settlement,amount,{kind:'商税',taxKind:kind,payer:seller,bps:tax.bps,sourceEvent,minute:d.get('state','minute')});
+    changeGroupCoins(d,e,tax.settlement,amount,{kind:'商税',taxKind:kind,payer:seller,bps:tax.bps,sourceEvent,minute:d.get('state','minute')},BOOKED);
     const key=`trade_tax:${sourceEvent}:${kind}`;d.set(['state','records',key],{category:'trade_tax',id:key,payer:seller,gross:cost,...tax,amount,sourceEvent,minute:d.get('state','minute')});
     return {...tax,amount};
 }

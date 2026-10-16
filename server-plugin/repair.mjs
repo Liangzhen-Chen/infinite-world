@@ -1,3 +1,6 @@
+import {purse,workshopFund,moveCoins} from './money.mjs';
+import {declareLedgerWriter} from './ledger.mjs';
+declareLedgerWriter('repair');
 import {effectiveProficiency}from'./professions.mjs';
 import {toolBonuses}from'./checks.mjs';
 import {heldUnit,wearItem,trackSingleItem}from'./items.mjs';
@@ -43,6 +46,7 @@ export function repair(d,args,eventId){
     const target=instance??trackSingleItem(d,this,'player',item,eventId);
     for(const[material,amount]of materials)this.itemDelta(d,'player',material,-amount);
     if(station?.fee){
+        moveCoins(d,{from:purse(null,'player'),to:station.owner?.startsWith('npc_')?purse(null,station.owner):workshopFund(station.id),amount:station.fee,writer:'repair',eventId:eventId});
         d.set(['state','player','coins'],d.get('state','player','coins')-station.fee);
         if(station.owner?.startsWith('npc_'))d.set(['state','npcs',station.owner,'coins'],d.get('state','npcs',station.owner,'coins')+station.fee);
         else d.set(['state','workshopFunds',station.id],(d.get('state','workshopFunds',station.id)??0)+station.fee);

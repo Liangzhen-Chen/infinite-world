@@ -1,3 +1,6 @@
+import {purse,workshopFund,moveCoins} from './money.mjs';
+import {declareLedgerWriter} from './ledger.mjs';
+declareLedgerWriter('npc-autonomy');
 import {facilityView} from './facility-state.mjs';
 import {applyPatches,digest} from './storage.mjs';
 import {scheduleAt} from './npc-schedule.mjs';
@@ -114,7 +117,7 @@ function executeAction(target,engine,id,action,{at,presence,actionId,start,ignor
   d.set(['state','npcs',id,'goals'],goals);d.set(['state','npcs',id,'autonomy','inventoryAudit'],{minute:at,inventory,sourceEvent:actionId});summary=`盘点了本人现有库存，完成“${goal.content}”。`;
  }else if(action.kind==='trade'){
   const {key,price,cost}=tradeQuote(d,engine,id,action,checked.location);transferItems(d,engine,action.seller,id,action.item,action.quantity);d.set(['state','quotes',key],price);
-  d.set(['state','npcs',id,'coins'],d.get('state','npcs',id,'coins')-cost);d.set(['state','npcs',action.seller,'coins'],d.get('state','npcs',action.seller,'coins')+cost);spent.coins=cost;
+  moveCoins(d,{from:purse(null,id),to:purse(null,action.seller),amount:cost,writer:'npc-autonomy',eventId:actionId});d.set(['state','npcs',id,'coins'],d.get('state','npcs',id,'coins')-cost);d.set(['state','npcs',action.seller,'coins'],d.get('state','npcs',action.seller,'coins')+cost);spent.coins=cost;
   summary=`向${engine.byId.get(action.seller).name}支付${cost}铜，购得${engine.byId.get(action.item).name}${action.quantity}份。`;
  }else{
   const r=engine.byId.get(action.recipe),skill=proficiency(engine,d.get('state'),id,r.skill),die=parseInt(digest([d.document.randomSeed,actionId,'npc-craft']).slice(0,8),16)%20+1;
@@ -124,7 +127,7 @@ function executeAction(target,engine,id,action,{at,presence,actionId,start,ignor
   outcome={die,modifier,total,degree,difficulty:r.difficulty,success:['勉强成功','成功','大成功'].includes(degree)};
   const thermal=kilnWorkResult(d,furnace?.plan,outcome,r.output.quantity,actionId,{endStress:furnace?.endStress});if(thermal)outcome.thermal=thermal;
   const station=engine.byId.get(checked.location)?.workstations?.find(s=>s.kind===r.workstation),fee=station?.owner===id?0:station?.fee??0;
-  if(fee){d.set(['state','npcs',id,'coins'],d.get('state','npcs',id,'coins')-fee);if(station.owner?.startsWith('npc_'))d.set(['state','npcs',station.owner,'coins'],d.get('state','npcs',station.owner,'coins')+fee);else d.set(['state','workshopFunds',station.id],(d.get('state','workshopFunds',station.id)??0)+fee);}
+  if(fee){moveCoins(d,{from:purse(null,id),to:station.owner?.startsWith('npc_')?purse(null,station.owner):workshopFund(station.id),amount:fee,writer:'npc-autonomy',eventId:actionId});d.set(['state','npcs',id,'coins'],d.get('state','npcs',id,'coins')-fee);if(station.owner?.startsWith('npc_'))d.set(['state','npcs',station.owner,'coins'],d.get('state','npcs',station.owner,'coins')+fee);else d.set(['state','workshopFunds',station.id],(d.get('state','workshopFunds',station.id)??0)+fee);}
   spent.fee=fee;spent.materials=clone(r.materials);if(furnace)spent.fuel=clone(furnace.fuel);
   for(const m of r.materials)changeItems(d,engine,id,m.item,-m.amount);
   for(const item of r.tools??[]){changeItems(d,engine,id,item,0);wearItem(d,engine,id,item,r.toolWear??1);}

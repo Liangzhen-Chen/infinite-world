@@ -1,3 +1,6 @@
+import {purse,workshopFund,moveCoins} from './money.mjs';
+import {declareLedgerWriter} from './ledger.mjs';
+declareLedgerWriter('wildlife-society');
 import {registerWorldEventSubscriber}from'./world-events.mjs';
 import {createHash} from 'node:crypto';
 import {assertTrainingRitual} from './training.mjs';
@@ -126,6 +129,7 @@ export function spiritManufacture(d,args,eventId,{workstation,kilnWorkResult}){
     const outcome={die,modifier,total,degree,difficulty:diff,success:['勉强成功','成功','大成功'].includes(degree)};
     for(const[item,amount]of materials)this.itemDelta(d,'player',item,-amount);
     if(station?.fee){
+        moveCoins(d,{from:purse(null,'player'),to:station.owner?.startsWith('npc_')?purse(null,station.owner):workshopFund(station.id),amount:station.fee,writer:'wildlife-society',eventId:eventId});
         d.set(['state','player','coins'],d.get('state','player','coins')-station.fee);
         if(station.owner?.startsWith('npc_'))d.set(['state','npcs',station.owner,'coins'],d.get('state','npcs',station.owner,'coins')+station.fee);
         else d.set(['state','workshopFunds',station.id],(d.get('state','workshopFunds',station.id)??0)+station.fee);

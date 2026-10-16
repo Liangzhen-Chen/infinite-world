@@ -82,6 +82,10 @@ export function registerIncident(d,engine,{victim,offender='player',offense,valu
 // A credit default (credit.mjs) is filed by the creditor under the code where the
 // contract was signed; the contract is the evidence. No code there, no case.
 import {financeBalance,financeChange,financeTransfer} from './finance-bank.mjs';
+import {purse,fund as fundAccount,vault,moveCoins} from './money.mjs';
+import {declareLedgerWriter} from './ledger.mjs';
+declareLedgerWriter('law');
+const books=(d,from,to,amount,eventId)=>moveCoins(d,{from,to,amount,writer:'law',eventId});
 export function registerCreditDefault(d,engine,{debt,row,value,minute}){
     const code=codeFor(engine,row.location);if(!code)return null;
     const id=`legal_case:default:${debt}`;if(d.get(...path(id)))return id;
@@ -145,7 +149,7 @@ export function crimeAction(d,args,eventId){
             d.set(['state','itemInstances',unit,'legalClaims'],[...record.legalClaims??[],{case:key,victim,minute:d.get('state','minute')}]);
             stolen={item,quantity:1,unit};
         }else{
-            d.set(['state','npcs',victim,'coins'],latest.coins-amount);d.set(['state','player','coins'],d.get('state','player','coins')+amount);stolen={coins:amount};
+            books(d,purse(this,victim),purse(this,'player'),amount,eventId);d.set(['state','npcs',victim,'coins'],latest.coins-amount);d.set(['state','player','coins'],d.get('state','player','coins')+amount);stolen={coins:amount};
         }
     }
     const incident=registerIncident(d,this,{victim,offense:success?'theft':'theft_attempt',value:success?value:0,stolen,witnesses,eventId});
@@ -222,6 +226,7 @@ function deposit(d,engine,row,{fine=0,compensate=true}={}){
     if(d.get('state','player','coins')<total)throw new Error('余额不足支付罚款和赔偿；可以选择劳役或服刑处理罚款，赔偿债务仍保留');
     const treasuryKey=`legal_treasury:${row.law}`,escrowKey=`legal_deposit:${row.id}`;
     const treasury=safeFund(d,treasuryKey,'legal_treasury',{law:row.law}),escrow=safeFund(d,escrowKey,'legal_deposit',{case:row.id,beneficiary:row.victim,units:[]});
+    books(d,purse(engine,'player'),fundAccount(treasuryKey),fine,row.id);if(compensate)books(d,purse(engine,'player'),fundAccount(escrowKey),compensation,row.id);
     d.set(['state','player','coins'],d.get('state','player','coins')-total);
     if(fine)d.set(path(treasuryKey),{...treasury,coins:treasury.coins+fine});
     if(compensate){
@@ -245,7 +250,7 @@ export function recordExposedCorruption(d,engine,{target,law,offer,witnesses,eve
     for(const witness of witnesses)knowledge(d,witness,corruption,now);
     // The bribe is seized for the public purse; the exposed taker is dismissed and flees.
     const fund=safeFund(d,`legal_treasury:${law}`,'legal_treasury',{law}),seized=Math.min(offer,d.get('state','npcs',target,'coins'));
-    d.set(['state','npcs',target,'coins'],d.get('state','npcs',target,'coins')-seized);d.set(path(`legal_treasury:${law}`),{...fund,coins:fund.coins+seized});
+    books(d,purse(engine,target),fundAccount(`legal_treasury:${law}`),seized,null);d.set(['state','npcs',target,'coins'],d.get('state','npcs',target,'coins')-seized);d.set(path(`legal_treasury:${law}`),{...fund,coins:fund.coins+seized});
     d.set(path(`legal_dismissal:${target}`),{category:'legal_dismissal',npc:target,law,case:corruption,minute:now,sourceEvent:eventId});
     entityTransition(d,engine,{id:`${corruption}:dismiss`,verb:'dismiss',actor:law,target,minute:now,location,witnesses,summary:`${personName(engine,d.get('state'),target).value??target}因受贿被撤职`});
     wanted=issueWanted(d,engine,d.get(...path(corruption)),WANTED_REASONS.flight,now);
@@ -279,7 +284,7 @@ function bribe(d,engine,args,eventId,row){
         return{case:row.id,accepted:false,offer,witnesses,...(incident?{bribeCase:incident}:{}),
             note:enforcer?'对方拒收并记下行贿未遂，钱仍在你手里':'对方不肯收这笔钱，钱仍在你手里'};
     }
-    d.set(['state','player','coins'],d.get('state','player','coins')-offer);d.set(['state','npcs',target,'coins'],d.get('state','npcs',target,'coins')+offer);
+    books(d,purse(engine,'player'),purse(engine,target),offer,eventId);d.set(['state','player','coins'],d.get('state','player','coins')-offer);d.set(['state','npcs',target,'coins'],d.get('state','npcs',target,'coins')+offer);
     if(witnesses.length){
         const incident=local?registerIncident(d,engine,{victim:target,offense:'bribery',witnesses,eventId,relationshipApplied:true}):null;
         let corruption=null,wanted=null;
@@ -369,6 +374,7 @@ export function lawAction(d,args,eventId){
         if(['昏迷','患病'].includes(d.get('state','npcs',issuer,'status')))throw Error('许可颁发者不能清醒办理');
         advanceWithNpcParticipants(d,this,5,eventId,[issuer]);
         if(d.get('state','player','coins')<fee)throw Error('办理期间余额不足支付施法许可费用');
+        books(d,purse(this,'player'),purse(this,issuer),fee,eventId);
         d.set(['state','player','coins'],d.get('state','player','coins')-fee);
         d.set(['state','npcs',issuer,'coins'],d.get('state','npcs',issuer,'coins')+fee);
         const key=`magic_permission:${eventId}`,now=d.get('state','minute'),permission={category:'authorization',action:args.action,subject:'player',grantee:'player',grantor:issuer,location,law:code.id,createdAt:now,expires:now+duration,revoked:false,sourceType:'magic_permit',sourceEvent:eventId};
@@ -410,7 +416,7 @@ export function lawAction(d,args,eventId){
             const fine=Math.min(balance-amount,Math.max(0,row.judgment.fine-(row.finePaid??0)));
             if(amount+fine<=0)throw Error('债务人没有可执行资金，欠款保留');
             if(amount)financeTransfer(d,this,debt.debtor,'player',amount,eventId);
-            if(fine){financeChange(d,this,debt.debtor,-fine,eventId);const key=`legal_treasury:${row.law}`,fund=safeFund(d,key,'legal_treasury',{law:row.law});d.set(path(key),{...fund,coins:fund.coins+fine});}
+            if(fine){financeChange(d,this,debt.debtor,-fine,eventId,{account:fundAccount(`legal_treasury:${row.law}`),writer:'law',eventId});const key=`legal_treasury:${row.law}`,fund=safeFund(d,key,'legal_treasury',{law:row.law});d.set(path(key),{...fund,coins:fund.coins+fine});}
             const paid=debt.paid+amount,remaining=debt.amount-paid;
             d.set(path(row.debt),{...debt,paid,status:remaining?'逾期':'已还清',settledBy:row.id});
             const finePaid=(row.finePaid??0)+fine,closed=!remaining&&finePaid===row.judgment.fine;
@@ -550,6 +556,7 @@ export function lawAction(d,args,eventId){
             d.set(bag,[...d.get(...bag)??[],unit]);d.set(['state','itemInstances',unit],{...record,owner:recipient,status:'持有',legalClaims:(record.legalClaims??[]).filter(claim=>claim.case!==row.id)});
         }
         const bank=row.bank&&d.get(...path(row.bank));
+        books(d,fundAccount(key),bank?.category==='bank'?vault(row.bank):purse(this,recipient),escrow.coins,eventId);
         if(bank?.category==='bank')d.set(path(row.bank),{...bank,coins:bank.coins+escrow.coins});
         else d.set(['state','npcs',recipient,'coins'],d.get('state','npcs',recipient,'coins')+escrow.coins);
         d.set(path(key),{...escrow,coins:0,units:[],claimed:true,claimedAt:now});knowledge(d,recipient,row.id,now);

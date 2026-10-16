@@ -1,3 +1,5 @@
+import {declareLedgerWriter,transfer,accountKey,LEDGER_COIN} from './ledger.mjs';
+declareLedgerWriter('activities',{sinks:['sink:export']});
 import {upperGovernanceAction,upperAppointment} from './high-nobility.mjs';
 import {nationAction} from './nation-founding.mjs';
 import {appointmentSource} from './noble-state.mjs';
@@ -175,7 +177,7 @@ export const activities={
         const key=args.project,project=d.get('state','projects',key);if(!project||project.type!=='研究')throw new Error('没有这个研究项目');
         const cost=integer(args.coins??5,1,1000),minutes=integer(args.minutes??120,30,480);
         if(d.get('state','player','coins')<cost)throw new Error('研究资金不足');
-        d.set(['state','player','coins'],d.get('state','player','coins')-cost);this.advance(d,minutes,id);
+        transfer(d,{from:accountKey('player',LEDGER_COIN,'purse'),to:accountKey('sink:export',LEDGER_COIN,'research'),amount:cost,writer:'activities',eventId:id});d.set(['state','player','coins'],d.get('state','player','coins')-cost);this.advance(d,minutes,id);
         const outcome=this.check(d,{attribute:'智力',skill:project.skills[0],difficulty:20},id);
         const progress=project.progress+(outcome.success?1:0),days=[...new Set([...project.days,Math.floor(d.get('state','minute')/1440)])];
         const maximum=Math.max(...project.skills.map(skill=>effectiveProficiency(d,this,skill)));

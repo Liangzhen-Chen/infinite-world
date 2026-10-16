@@ -7,6 +7,9 @@
 // grace period is a default: the pledge is forfeited, a legal case opens under
 // the code where it was signed, and a `breach` world event reaches standing.
 import {changeItems}from'./items.mjs';
+import {purse,vault,escrow as escrowAccount,moveCoins}from'./money.mjs';
+import {declareLedgerWriter}from'./ledger.mjs';
+declareLedgerWriter('credit');
 import {scheduleAt,assertNpcService,advanceWithNpcParticipants}from'./npc-schedule.mjs';
 import {npcSchedule}from'./npc-state.mjs';
 import {standing}from'./standing.mjs';
@@ -109,13 +112,16 @@ export function loanTerms(d,engine,{lender,bank,principal,days,collateralValue})
     return {rate,interest:Math.ceil(principal*rate*days/30)};
 }
 // Creates the debt; the principal goes to the player or into a contract's escrow.
-export function openLoan(d,engine,{lender,bank=null,keeper=null,principal,days,collateral=null,eventId,purpose,toPlayer=true}){
+// S1a: escrowTo = 本金不给玩家时转入的托管账户（合同托管）。
+export function openLoan(d,engine,{lender,bank=null,keeper=null,principal,days,collateral=null,eventId,purpose,toPlayer=true,escrowTo=null}){
     principal=int(principal,1,1e7,'借款本金');
     const collateralValue=collateral?valueOf(engine,collateral.item,collateral.quantity):0;
     const {rate,interest}=loanTerms(d,engine,{lender,bank,principal,days,collateralValue});
     const id=`debt_loan_${eventId}`;if(d.get(...rec(id)))throw Error('借据编号已存在');
     const now=d.get('state','minute'),pledgeKey=collateral?`pledge:${id}`:null;
     if(collateral)pledge(d,engine,pledgeKey,collateral.item,collateral.quantity);
+    if(!toPlayer&&!escrowTo)throw Error('借款本金须有去处');
+    moveCoins(d,{from:bank?vault(bank.id):purse(engine,lender),to:toPlayer?purse(engine,'player'):escrowTo,amount:principal,writer:'credit',eventId});
     if(bank){const row=bankRow(d,bank);row.coins-=principal;d.set(rec(bank.id),row);}
     else d.set([...engine.actorPath(lender),'coins'],engine.actor(d,lender).coins-principal);
     if(toPlayer)d.set(['state','player','coins'],d.get('state','player','coins')+principal);
@@ -136,6 +142,7 @@ export function repayCredit(d,engine,{seller,debt:id,coins:partial},eventId){
     counterpart(d,engine,seller,{consent:true});
     const amount=partial===undefined?row.amount-row.paid:int(partial,1,row.amount-row.paid,'还款金额'),coins=d.get('state','player','coins');
     if(coins<amount)throw Error(`还款${amount}铜，现钱不足`);
+    moveCoins(d,{from:purse(engine,'player'),to:bank?vault(bank.id):purse(engine,row.creditor),amount,writer:'credit',eventId});
     d.set(['state','player','coins'],coins-amount);
     if(bank){const b=bankRow(d,bank);b.coins+=amount;d.set(rec(bank.id),b);}
     else d.set([...engine.actorPath(row.creditor),'coins'],engine.actor(d,row.creditor).coins+amount);
@@ -218,10 +225,10 @@ export async function creditTrade(d,args,eventId){
             const amount=int(args.coins,b.depositFeeCopper+1,1e7,'存入铜钱');if(coins<amount)throw Error('现钱不足');
             row.coins+=amount;row.accounts.player=(row.accounts.player??0)+amount-b.depositFeeCopper;
             row.interestAt??=d.get('state','minute');
-            d.set(['state','player','coins'],coins-amount);detail={deposited:amount-b.depositFeeCopper,fee:b.depositFeeCopper};
+            moveCoins(d,{from:purse(engine,'player'),to:vault(b.id),amount,writer:'credit',eventId});d.set(['state','player','coins'],coins-amount);detail={deposited:amount-b.depositFeeCopper,fee:b.depositFeeCopper};
         }else if(op==='withdraw'){
             const amount=int(args.coins,1,row.accounts.player??0,'支取铜钱');if(row.coins<amount)throw Error(`${b.name}现银不足，暂不能兑付`);
-            row.coins-=amount;row.accounts.player-=amount;d.set(['state','player','coins'],coins+amount);detail={withdrawn:amount};
+            moveCoins(d,{from:vault(b.id),to:purse(engine,'player'),amount,writer:'credit',eventId});row.coins-=amount;row.accounts.player-=amount;d.set(['state','player','coins'],coins+amount);detail={withdrawn:amount};
         }else{
             const item=engine.resolve(args.item,'item'),c=coinage(engine,item),quantity=int(args.quantity,1,100000,'兑换枚数');
             if(!c)throw Error('这不是登记的铸币');
@@ -229,13 +236,13 @@ export async function creditTrade(d,args,eventId){
             if(buy){
                 const cost=Math.ceil(gross*(1+b.exchangeFeeRate));
                 if((row.goods[item]??0)<quantity)throw Error(`${b.name}库存${c.name}不足`);if(coins<cost)throw Error('现钱不足');
-                row.goods[item]-=quantity;row.coins+=cost;d.set(['state','player','coins'],coins-cost);changeItems(d,engine,'player',item,quantity);
+                moveCoins(d,{from:purse(engine,'player'),to:vault(b.id),amount:cost,writer:'credit',eventId});row.goods[item]-=quantity;row.coins+=cost;d.set(['state','player','coins'],coins-cost);changeItems(d,engine,'player',item,quantity);
                 detail={item,quantity,paid:cost,fineness:c.fineness,polity:c.polity};
             }else{
                 const paid=Math.floor(gross*(1-b.exchangeFeeRate));
                 if(engine.quantity(d,'player',item)<quantity)throw Error(`你没有这么多${c.name}`);if(row.coins<paid)throw Error(`${b.name}现钱不足`);
                 changeItems(d,engine,'player',item,-quantity);row.goods[item]=(row.goods[item]??0)+quantity;row.coins-=paid;
-                d.set(['state','player','coins'],coins+paid);detail={item,quantity,received:paid,fineness:c.fineness,polity:c.polity};
+                moveCoins(d,{from:vault(b.id),to:purse(engine,'player'),amount:paid,writer:'credit',eventId});d.set(['state','player','coins'],coins+paid);detail={item,quantity,received:paid,fineness:c.fineness,polity:c.polity};
             }
         }
         d.set(rec(b.id),row);engine.advance(d,5,eventId);
@@ -248,14 +255,14 @@ export async function creditTrade(d,args,eventId){
         if(boss.coins<wage)throw Error('雇主现钱不足以支付工钱');
         const skills=engine.byId.get(employer)?.skills,skill=(Array.isArray(skills)?skills:Object.keys(skills??{})).find(s=>String(s).startsWith('skill_'))??null;
         const id=`contract_work_${eventId}`,location=d.get('state','location');if(d.get(...rec(id)))throw Error('雇佣契约编号已存在');
-        d.set([...engine.actorPath(employer),'coins'],boss.coins-wage);
+        moveCoins(d,{from:purse(engine,employer),to:escrowAccount(id),amount:wage,writer:'credit',eventId});d.set([...engine.actorPath(employer),'coins'],boss.coins-wage);
         const terms={parties:['player',employer],minutes,wage,skill,location};
         d.set(rec(id),{category:'contract',kind:'employment',name:`受雇于${nameOf(engine,employer)}`,...terms,escrow:wage,status:'履行中',createdAt:d.get('state','minute'),source:eventId,signedTerms:structuredClone(terms)});
         advanceWithNpcParticipants(d,engine,minutes,eventId,[employer]);
         const finished=d.get('state','location')===location&&d.get('state','player','status')==='正常';
         const row=d.get(...rec(id));
-        if(!finished){d.set([...engine.actorPath(employer),'coins'],engine.actor(d,employer).coins+wage);d.set(rec(id),{...row,escrow:0,status:'中止',endedAt:d.get('state','minute')});return {contract:id,employer,status:'中止'};}
-        d.set(['state','player','coins'],d.get('state','player','coins')+wage);
+        if(!finished){moveCoins(d,{from:escrowAccount(id),to:purse(engine,employer),amount:wage,writer:'credit',eventId});d.set([...engine.actorPath(employer),'coins'],engine.actor(d,employer).coins+wage);d.set(rec(id),{...row,escrow:0,status:'中止',endedAt:d.get('state','minute')});return {contract:id,employer,status:'中止'};}
+        moveCoins(d,{from:escrowAccount(id),to:purse(engine,'player'),amount:wage,writer:'credit',eventId});d.set(['state','player','coins'],d.get('state','player','coins')+wage);
         d.set(rec(id),{...row,escrow:0,paid:wage,status:'已完成',endedAt:d.get('state','minute')});
         const practiced=skill&&d.get('state','skills',skill)?engine.practice(d,{skill,gain:Math.max(1,Math.floor(minutes/80)),target:`受雇:${employer}`},eventId):null;
         d.say(`为${nameOf(engine,employer)}做工${minutes}分钟，得工钱${wage}铜`);
@@ -278,7 +285,7 @@ export async function creditTrade(d,args,eventId){
         const stake=int(args.coins,1,engine.actor(d,partner).coins,'合伙出资'),share=int(args.quantity,p.minimumShare,p.maximumShare,'分成百分比'),days=int(args.days??30,1,p.maximumDays,'合伙天数');
         const id=`contract_partner_${eventId}`;if(d.get(...rec(id)))throw Error('合伙契约编号已存在');
         const now=d.get('state','minute'),baselineNet=businessReport(d,engine,shop).profit.net;
-        d.set([...engine.actorPath(partner),'coins'],engine.actor(d,partner).coins-stake);d.set(['state','player','coins'],d.get('state','player','coins')+stake);
+        moveCoins(d,{from:purse(engine,partner),to:purse(engine,'player'),amount:stake,writer:'credit',eventId});d.set([...engine.actorPath(partner),'coins'],engine.actor(d,partner).coins-stake);d.set(['state','player','coins'],d.get('state','player','coins')+stake);
         const terms={parties:['player',partner],partner,business:shop.id,stake,share,deadline:now+days*1440};
         d.set(rec(id),{category:'contract',kind:'partnership',version:2,name:`与${nameOf(engine,partner)}合伙经营`,...terms,baselineNet,location:shop.location,status:'有效',createdAt:now,source:eventId,signedTerms:structuredClone(terms)});
         engine.advance(d,5,eventId);d.say(`${nameOf(engine,partner)}出资${stake}铜入伙，期满按${share}%分成并退股`);

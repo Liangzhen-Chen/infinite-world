@@ -8,6 +8,9 @@
 //   - breakthrough evidence: masterpiece crafts, completed research and key
 //     battles, each usable once for one skill at the stage it was earned.
 // Legacy replays are not counted, so old ledgers settle exactly as before.
+import {purse,moveCoins} from './money.mjs';
+import {declareLedgerWriter} from './ledger.mjs';
+declareLedgerWriter('career-metrics');
 import {spellTraits}from'./traits.mjs';
 import {certifiedForSkill}from'./professions.mjs';
 
@@ -181,7 +184,7 @@ export function professionUltimate(d,engine,role,teacher,mentor,id){
 }
 export function completeProfessionUltimate(d,engine,role,teacher,rule,outcome,id){
     if(!outcome.success){d.say(`职业任务「${rule.task.name}」未能完成`);return null;}
-    d.set(['state','player','coins'],d.get('state','player','coins')-rule.fee);d.set(['state','npcs',teacher,'coins'],d.get('state','npcs',teacher,'coins')+rule.fee);
+    moveCoins(d,{from:purse(engine,'player'),to:purse(engine,teacher),amount:rule.fee,writer:'career-metrics',eventId:id});d.set(['state','player','coins'],d.get('state','player','coins')-rule.fee);d.set(['state','npcs',teacher,'coins'],d.get('state','npcs',teacher,'coins')+rule.fee);
     d.set(['state','careers',role,'ultimate'],{skill:rule.skill,task:rule.task.name,teacher,minute:d.get('state','minute'),source:id});
     d.say(`完成职业任务「${rule.task.name}」`);
     return grantUltimate(d,engine,rule.skill,{type:'profession_task',id:role,teacher});

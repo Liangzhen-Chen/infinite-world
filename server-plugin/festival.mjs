@@ -1,3 +1,6 @@
+import {purse,moveCoins} from './money.mjs';
+import {declareLedgerWriter} from './ledger.mjs';
+declareLedgerWriter('festival');
 import {digest} from './storage.mjs';
 import {npcObligationAt} from './npc-obligations.mjs';
 import {npcAutonomyBusy} from './npc-autonomy.mjs';
@@ -233,6 +236,7 @@ export function advanceFestivals(d,engine,at){
    done.effects=receipt.applied?receipt.effects:[];if(!receipt.applied)done.effectsBlocked=receipt.reason??'效果条件未满足';
   }
   if(done.paidCopper){
+   moveCoins(d,{from:purse(null,row.host),to:purse(null,row.supplier),amount:row.cost,writer:'festival',eventId:null});
    d.set(['state','npcs',row.host,'coins'],state.npcs[row.host].coins-row.cost);
    d.set(['state','npcs',row.supplier,'coins'],state.npcs[row.supplier].coins+row.cost);
   }

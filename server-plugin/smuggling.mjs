@@ -1,3 +1,6 @@
+import {purse,moveCoins} from './money.mjs';
+import {declareLedgerWriter} from './ledger.mjs';
+declareLedgerWriter('smuggling');
 import {legalCodeAt} from './law-codes.mjs';
 import {transferItems} from './items.mjs';
 import {integrityOf,bribePrice,dismissed} from './bounty.mjs';
@@ -42,7 +45,7 @@ export function smuggleTrade(d,args,id){
     const price=Math.ceil(regionalTradePrice(d,this,row.item,row.destination)*(row.contraband?this.rules.smuggling.contrabandPremium:1)),cost=price*row.quantity;
     if(buyer.coins<cost)throw Error('买方货款不足');
     transferItems(d,this,'player',row.buyer,row.item,row.quantity);
-    d.set(['state','npcs',row.buyer,'coins'],buyer.coins-cost);d.set(['state','player','coins'],d.get('state','player','coins')+cost);
+    moveCoins(d,{from:purse(this,row.buyer),to:purse(this,'player'),amount:cost,writer:'smuggling',eventId:id});d.set(['state','npcs',row.buyer,'coins'],buyer.coins-cost);d.set(['state','player','coins'],d.get('state','player','coins')+cost);
     d.set(path(row.id),{...row,status:'已交付',paid:cost,price,deliveredAt:d.get('state','minute'),deliveredBy:id});
     return {shipment:row.id,success:true,paid:cost,price,spread:(price-row.originPrice)*row.quantity};
 }
@@ -63,7 +66,7 @@ export function inspectSmuggling(d,engine,route,eventId){
                 const stake=Math.max(1,engine.byId.get(row.item).basePrice*row.quantity),price=bribePrice(engine,d.get('state'),guard,stake);
                 bribed=row.bribe>=price&&d.get('state','player','coins')>=row.bribe;
                 if(bribed){
-                    d.set(['state','player','coins'],d.get('state','player','coins')-row.bribe);d.set(['state','npcs',guard,'coins'],d.get('state','npcs',guard,'coins')+row.bribe);
+                    moveCoins(d,{from:purse(engine,'player'),to:purse(engine,guard),amount:row.bribe,writer:'smuggling',eventId:tag});d.set(['state','player','coins'],d.get('state','player','coins')-row.bribe);d.set(['state','npcs',guard,'coins'],d.get('state','npcs',guard,'coins')+row.bribe);
                     const observers=Object.entries(d.get('state','npcs')).filter(([id,n])=>id!==guard&&awake(n)&&n.location===cp.location).map(([id])=>id);
                     exposed=observers.length>0&&!engine.check(d,{attribute:'魅力',difficulty:15},`${tag}_bribe`).success;
                     d.set(path(`legal_bribe:${tag}`),{category:'legal_bribe',briber:'player',recipient:guard,coins:row.bribe,shipment:row.id,minute:d.get('state','minute'),location:cp.location,effects:exposed?[]:['放行'],discovered:exposed});

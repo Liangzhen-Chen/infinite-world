@@ -1,3 +1,6 @@
+import {purse,sink,moveCoins} from './money.mjs';
+import {declareLedgerWriter} from './ledger.mjs';
+declareLedgerWriter('npc-cognition',{sinks:['sink:export']});
 import {advanceMagicMessages,nextMagicMessageMinute}from'./magic-message.mjs';
 import {memoryBlurMinute}from'./npc-memory.mjs';
 import {PatchCursor,cloneData,digest} from './storage.mjs';
@@ -91,7 +94,7 @@ export function shareNpcMemory(d,engine,{from,to,memoryId,channel='conversation'
  if(a.coins<route.cost)throw Error('携信者路费不足');
  if(occupied(state,from,at,at+route.minutes+1))throw Error('携信路线与既有义务冲突');
  const trip={from:a.location,to:b.location,depart:at,arrive:at+route.minutes,edges:route.edges,messageId};
- d.set(['state','npcs',from,'coins'],a.coins-route.cost);d.set(['state','npcs',from,'cognitionTravel'],trip);d.set(['state','npcs',from,'location'],null);d.set(['state','npcs',from,'activity'],'携信赶路');
+ moveCoins(d,{from:purse(null,from),to:sink('export','travel'),amount:route.cost,writer:'npc-cognition',eventId:eventId});d.set(['state','npcs',from,'coins'],a.coins-route.cost);d.set(['state','npcs',from,'cognitionTravel'],trip);d.set(['state','npcs',from,'location'],null);d.set(['state','npcs',from,'activity'],'携信赶路');
  d.set(['state','npcCognition','messages',messageId],{id:messageId,from,to,memoryId,rootMemoryId:originalId(memory),channel,depart:at,arrive:trip.arrive,destination:b.location,status:'在途',sourceEvent:eventId,routeCost:route.cost,
   memory:clone(memory),version:retell(engine,state,from,memory),routeEdges:clone(route.edges),origin:a.location});
  return {messageId,delivered:false,arrive:trip.arrive,routeCost:route.cost};

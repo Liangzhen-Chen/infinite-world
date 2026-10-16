@@ -1,3 +1,6 @@
+import {purse,sink,moveCoins} from './money.mjs';
+import {declareLedgerWriter} from './ledger.mjs';
+declareLedgerWriter('seasonal-hazards',{sinks:['sink:export']});
 import {allFacilities,within as facilityWithin} from './facility-state.mjs';
 // U3 seasonal and disaster world clocks (rules.hazardClock; data in
 // world/design/seasonal-hazards.mjs). A separate table and record category
@@ -367,7 +370,7 @@ export function hazardClockAction(d,args,eventId){
  if(action.spell&&!d.get('state','spells',action.spell))throw Error(`尚未学会${this.byId.get(action.spell)?.name??action.spell}`);
  const cost=action.cost??{},p=d.get('state','player');
  if((p.coins??0)<(cost.coins??0)||(p.mp??0)<(cost.mp??0))throw Error('干预所需钱或魔力不足');
- if(cost.coins)d.set(['state','player','coins'],p.coins-cost.coins);
+ if(cost.coins){moveCoins(d,{from:purse(this,'player'),to:sink('export','hazard_intervention'),amount:cost.coins,writer:'seasonal-hazards',eventId:eventId});d.set(['state','player','coins'],p.coins-cost.coins);}
  if(cost.mp)d.set(['state','player','mp'],p.mp-cost.mp);
  const check=action.difficulty===undefined?{success:true}:this.check(d,{attribute:action.attribute,difficulty:action.difficulty},eventId);
  let receipt=null;

@@ -1,3 +1,6 @@
+import {purse,moveCoins} from './money.mjs';
+import {declareLedgerWriter} from './ledger.mjs';
+declareLedgerWriter('family-inheritance');
 import {familyEdges,legalChildren,familyLiving,familyAdult,natalFamily} from './family-state.mjs';
 import {npcAgeAt,npcHousehold,actorPath} from './npc-state.mjs';
 import {rosterLifeState} from './population.mjs';
@@ -48,7 +51,7 @@ export function settleFamilyEstate(d,e,id,minute,deathId,location){
   return estate;
  }
  const rowFor=who=>estate.allocations.find(r=>r.heir===who);
- for(const {id:to,amount}of portions(estate.coins,heirs))if(amount){d.set(['state','npcs',to,'coins'],(d.get('state','npcs',to,'coins')??0)+amount);rowFor(to).coins=amount;}
+ for(const {id:to,amount}of portions(estate.coins,heirs))if(amount){moveCoins(d,{from:purse(e,id),to:purse(e,to),amount:amount,writer:'family-inheritance',eventId:deathId});d.set(['state','npcs',to,'coins'],(d.get('state','npcs',to,'coins')??0)+amount);rowFor(to).coins=amount;}
  if(estate.coins)d.set([...actorPath(e.world,id),'coins'],0);
  for(const item of Object.keys(current.inventory??{}).sort()){
   const quantity=e.quantity(d,id,item);if(!quantity)continue;estate.items[item]=quantity;

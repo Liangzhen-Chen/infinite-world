@@ -1,3 +1,6 @@
+import {purse,fund as fundAccount,moveCoins} from './money.mjs';
+import {declareLedgerWriter} from './ledger.mjs';
+declareLedgerWriter('bounty');
 import {entityTransition,businessSnapshot,businessTransitions} from './entity-transitions.mjs';
 import {lawAuthorities,personName} from './entity-view.mjs';
 import {legalCodes,legalCodeAt,legalCodeById,legalCooperation,codePenalty} from './law-codes.mjs';
@@ -63,6 +66,7 @@ function releaseReward(d,w){
 }
 function payReward(d,w,to,minute){
     if(!w.bounty||!to)return 0;const {key,row}=treasury(d,w.law),amount=Math.min(w.bounty,row.coins);
+    moveCoins(d,{from:fundAccount(key),to:purse(null,to),amount:amount,writer:'bounty',eventId:w.id});
     d.set(rec(key),{...row,coins:row.coins-amount,reserved:Math.max(0,(row.reserved??0)-w.bounty)});
     const path=to==='player'?['state','player','coins']:['state','npcs',to,'coins'];d.set(path,(d.get(...path)??0)+amount);
     w.rewardPaid=amount;w.history=[...w.history,{kind:'领赏',by:to,coins:amount,minute}];return amount;
@@ -86,7 +90,7 @@ export function issueWanted(d,engine,row,reason,minute){
     const fund=treasury(d,code.id),free=Math.max(0,fund.row.coins-(fund.row.reserved??0));
     const victim=row.victim&&row.victim!=='player'?d.get('state','npcs',row.victim):null;let pledge=0;
     if(free<declared&&victim&&!dead(victim))pledge=Math.max(0,Math.min(declared-free,Math.floor((victim.coins??0)*(b.victimPledgeShare??0.5))));
-    if(pledge)d.set(['state','npcs',row.victim,'coins'],victim.coins-pledge);
+    if(pledge){moveCoins(d,{from:purse(null,row.victim),to:fundAccount(fund.key),amount:pledge,writer:'bounty',eventId:row.id});d.set(['state','npcs',row.victim,'coins'],victim.coins-pledge);}
     const bounty=Math.min(declared,free+pledge);
     if(bounty||pledge)d.set(rec(fund.key),{...fund.row,coins:fund.row.coins+pledge,reserved:(fund.row.reserved??0)+bounty});
     const state=d.get('state'),who=nameOf(engine,state,row.offender);
@@ -111,7 +115,7 @@ export function closeWanted(d,engine,w,status,reason,minute){
     if(next.rewardPaid===undefined){
         releaseReward(d,next);
         if(next.pledge){const {key,row}=treasury(d,w.law),back=Math.min(next.pledge.coins,row.coins);
-            if(back&&d.get('state','npcs',next.pledge.from)){d.set(rec(key),{...d.get(...rec(key)),coins:row.coins-back});d.set(['state','npcs',next.pledge.from,'coins'],d.get('state','npcs',next.pledge.from,'coins')+back);}}
+            if(back&&d.get('state','npcs',next.pledge.from)){moveCoins(d,{from:fundAccount(key),to:purse(null,next.pledge.from),amount:back,writer:'bounty',eventId:w.id});d.set(rec(key),{...d.get(...rec(key)),coins:row.coins-back});d.set(['state','npcs',next.pledge.from,'coins'],d.get('state','npcs',next.pledge.from,'coins')+back);}}
     }
     if(status!=='已到案')closeQuest(d,next,'撤销',reason,minute);
     if(next.captive?.by==='player'){d.set(['state','player','companions'],(d.get('state','player','companions')??[]).filter(n=>n!==w.subject));}

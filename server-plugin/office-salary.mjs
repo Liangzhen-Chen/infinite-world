@@ -1,6 +1,9 @@
 import {personOffices} from './entity-view.mjs';
 import {entityTransition} from './entity-transitions.mjs';
 import {groupAccountView,changeGroupCoins} from './group-account.mjs';
+import {purse} from './money.mjs';
+import {declareLedgerWriter} from './ledger.mjs';
+declareLedgerWriter('office-salary');
 import {actorPath} from './npc-state.mjs';
 
 const MONTH=30*1440,rec=id=>['state','records',id];
@@ -29,7 +32,7 @@ export function advanceOfficeSalaries(d,engine,{before,after}){
             const actor=actorPath(engine.world,debt.holder),person=d.get(...actor);
             if(!person||person.status==='死亡')continue;
             if(paid){
-                changeGroupCoins(d,engine,debt.settlement,-paid,{kind:'官职月俸',holder:debt.holder,office:debt.office,minute:at,sourceEvent:`${debt.id}:${at}`});
+                changeGroupCoins(d,engine,debt.settlement,-paid,{kind:'官职月俸',holder:debt.holder,office:debt.office,minute:at,sourceEvent:`${debt.id}:${at}`},{account:purse(engine,debt.holder),writer:'office-salary',eventId:`${debt.id}:${at}`});
                 d.set([...actor,'coins'],(person.coins??0)+paid);
             }
             const arrears=debt.arrears-paid;

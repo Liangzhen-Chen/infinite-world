@@ -6,10 +6,10 @@ export const LAYER_NAMES={L0:'内核',L1:'本体',L2:'玩法包',L3:'投影',L4:
 
 const L0=['storage','archived-reducer','campaign-reducer','migrations','migrations/r1','rule-state-migration','world-upgrade','world-registry',
  'agriculture-migration','boss-migration','farm-pests-migration',/* 迁移归存档 */
- 'engine','activities'/* 工具分派适配器，随 engine */,'advance-registry','advance-layers','effect-registry','effects','magic-effects','magic-primitives','checks','world-events',
+ 'engine','activities'/* 工具分派适配器，随 engine */,'ledger'/* S1a 账本：账户与转移 */,'advance-registry','advance-layers','effect-registry','effects','magic-effects','magic-primitives','checks','world-events',
  'compat/v2-phase1-activities','compat/v2-phase1-engine','legacy/core'];
 const L1=['entity-view','organization-state','employment-state','facility-state','noble-state','faith-state','education-state','family-state','npc-state','medicine-state'/* *-state 选择器 */,
- 'entity-transitions','group-account','items','finance-operations','law-codes','traits','interactions','location-access','regions','catalog','retrieval','retrieval-lexicon','lore','character','progression'];
+ 'entity-transitions','group-account','money'/* S1a 货币适配器：旧字段 → 账户 */,'items','finance-operations','law-codes','traits','interactions','location-access','regions','catalog','retrieval','retrieval-lexicon','lore','character','progression'];
 const PACKS={
  economy:['business','shop','settlement-trade','finance-bank','finance-assets','finance-tax','credit','contracts','labor-market','transport','transport-route','post','smuggling','extraction','manufacturing','repair','works','magic-economy'],
  law:['law','bounty','npc-crime','legal-representation','duels'],

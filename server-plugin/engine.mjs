@@ -84,6 +84,8 @@ import {advanceNeedsSteps,nextAdvanceMinute,runAdvance}from'./advance-registry.m
 import {beginHouseholdReads}from'./npc-state.mjs';
 import {advanceLayersFresh}from'./advance-layers.mjs';
 import {smuggleTrade,inspectSmuggling}from'./smuggling.mjs';
+import {withLedger,finishLedger,transfer,accountKey,declareLedgerWriter,LEDGER_COIN}from'./ledger.mjs';
+declareLedgerWriter('engine',{sinks:['sink:export']});
 const clone = value => structuredClone(value);
 const number = (value, min = 0, max = 1e9, label = '数值') => {
     if (!Number.isSafeInteger(value) || value < min || value > max) throw new Error(`${label}必须在${min}到${max}之间`);
@@ -215,25 +217,26 @@ export class WorldEngine {
         if(input.type==='rules_state_migration')return{patches:planRuleStateMigration(document,this.rules),result:{migration:true,runtimeRuleVersion}};
         if(input.type==='population_profile'){
             if(document.releaseVersion!==1)throw new Error('按需人物需要完成战役初始化');
-            const d=new Draft(document),detail=acceptPopulationProfile(d,this.scoped(document),input);
-            return{patches:d.patches,result:{ok:true,...detail,minute:d.get('state','minute'),notices:[]}};
+            const books=withLedger(this,document),d=new Draft(books.document),detail=acceptPopulationProfile(d,this.scoped(document),input);
+            return{patches:finishLedger(d.patches,books.opening),result:{ok:true,...detail,minute:d.get('state','minute'),notices:[]}};
         }
         if(input.type==='npc_plan'){
             if(document.releaseVersion!==1)throw new Error('人物计划需要完成战役初始化');
-            const d=new Draft(document),session=this.scoped(document),id=text(input.eventId,120);
+            const books=withLedger(this,document),d=new Draft(books.document),session=this.scoped(document),id=text(input.eventId,120);
             session.replaying=Boolean(options.replay);session.replayResult=options.result;
             const detail=applyNpcPlan(d,session,input.plan,id);
             d.set(['state','npcPlanning'],{day:Math.floor(document.state.minute/1440),minute:document.state.minute,location:document.state.location,sourceEvent:id});
-            return{patches:d.patches,result:{ok:true,...detail,...(intelligenceFresh(session)?{npcIntelligenceVersion:INTELLIGENCE_VERSION}:{}),minute:d.get('state','minute'),notices:stateNotices(document.state,d.get('state'),key=>session.byId.get(key)?.name)}};
+            return{patches:finishLedger(d.patches,books.opening),result:{ok:true,...detail,...(intelligenceFresh(session)?{npcIntelligenceVersion:INTELLIGENCE_VERSION}:{}),minute:d.get('state','minute'),notices:stateNotices(document.state,d.get('state'),key=>session.byId.get(key)?.name)}};
         }
         const resolved=resolveToolCall(input.tool,input.args??{});
-        const d = new Draft(document), args=resolved.args, id=text(input.eventId,120);
+        // S1a: a document without books opens them on the draft's own copy (ledger.withLedger).
+        const books=withLedger(this,document),d = new Draft(books.document), args=resolved.args, id=text(input.eventId,120);
         const tool=resolved.tool.replace(/^world_/, '');
         const readOperations={weather:'inspect',environment:'inspect',pet:'inspect',summon:'inspect',farm:'inspect',wildlife:'observe',lair:'observe',site:'inspect'};
         const noTimeTurn=tool==='turn'&&(args.outOfCharacter||args.extraMinutes===0);
         if(noTimeTurn||(readOperations[tool]&&(args.operation??readOperations[tool])===readOperations[tool])){
             const detail=await this.scoped(document)[tool](d,args,id);
-            return {patches:d.patches,result:{ok:true,...detail,minute:d.get('state','minute'),messages:d.messages,notices:[]}};
+            return {patches:finishLedger(d.patches,books.opening),result:{ok:true,...detail,minute:d.get('state','minute'),messages:d.messages,notices:[]}};
         }
         if(document.releaseVersion!==1){
             if(!options.replay)throw new Error('此战役尚未完成 R1 初始化，请先在副本上显式迁移');
@@ -280,7 +283,7 @@ export class WorldEngine {
         if(tool==='time')compactNpcPatches(d,0,document.state.npcs);
         if(tool==='check')detail.actionScope={kind:'judgement',healthChanged:false,inventoryChanged:false,feePaid:0,
             note:'仅结算判断或对抗，并履行已引用的协助；未伤人、毁物或制造。不得从骰点虚构这些变化。'};
-        return { patches:d.patches,result:{ok:true,...detail,...(remote?{remote}:{}),...(population?{population}:{}),legalProcedureVersion:1,...(!session.replaying||session.replayResult?.educationVersion===1?{educationVersion:1}:{}),...(!session.replaying||session.replayResult?.npcCrimeVersion===NPC_CRIME_VERSION?{npcCrimeVersion:NPC_CRIME_VERSION}:{}),worldEventVersion:WORLD_EVENT_VERSION,...(intelligenceFresh(session)?{npcIntelligenceVersion:INTELLIGENCE_VERSION}:{}),...(factionClockRules(session).length?{factionClockVersion:1}:{}),...(session.rules.questSources?{questSourcesVersion:QUEST_SOURCES_VERSION}:{}),...(session.rules.tribalAwakening?{tribalAwakeningVersion:TRIBAL_AWAKENING_VERSION}:{}),...(session.rules.military?{militaryVersion:MILITARY_VERSION}:{}),...(session.rules.warDiplomacy?{warVersion:WAR_VERSION}:{}),minute:d.get('state','minute'),messages:d.messages,
+        return { patches:finishLedger(d.patches,books.opening),result:{ok:true,...detail,...(remote?{remote}:{}),...(population?{population}:{}),legalProcedureVersion:1,...(!session.replaying||session.replayResult?.educationVersion===1?{educationVersion:1}:{}),...(!session.replaying||session.replayResult?.npcCrimeVersion===NPC_CRIME_VERSION?{npcCrimeVersion:NPC_CRIME_VERSION}:{}),worldEventVersion:WORLD_EVENT_VERSION,...(intelligenceFresh(session)?{npcIntelligenceVersion:INTELLIGENCE_VERSION}:{}),...(factionClockRules(session).length?{factionClockVersion:1}:{}),...(session.rules.questSources?{questSourcesVersion:QUEST_SOURCES_VERSION}:{}),...(session.rules.tribalAwakening?{tribalAwakeningVersion:TRIBAL_AWAKENING_VERSION}:{}),...(session.rules.military?{militaryVersion:MILITARY_VERSION}:{}),...(session.rules.warDiplomacy?{warVersion:WAR_VERSION}:{}),minute:d.get('state','minute'),messages:d.messages,
             ...(session.rules.questSources?.wildlife?.length&&villageWildlifeFresh(session)?{villageWildlifeVersion:1}:{}),
             ...(!session.replaying||session.replayResult?.sovereigntyVersion===1?{sovereigntyVersion:1}:{}),
             ...(!session.replaying||session.replayResult?.laborMarketVersion===1?{laborMarketVersion:1}:{}),
@@ -505,6 +508,7 @@ export class WorldEngine {
         assertNpcObligationAction(d,this,['player',...d.get('state','player','companions')??[]],{minutes:route.minutes,location:destination,kind:'move'});
         if(this.rules.petCare)preparePetTravel(d,this,args.mode??'walk',route.movingMinutes);
         if(d.get('state','player','coins')<route.cost)throw new Error('路费不足');
+        transfer(d,{from:accountKey('player',LEDGER_COIN,'purse'),to:accountKey('sink:export',LEDGER_COIN,'travel'),amount:route.cost,writer:'engine',eventId:id});
         d.set(['state','player','coins'],d.get('state','player','coins')-route.cost);
         d.set(['state','location'],destination);
         if(d.get('state','records','local_player_position'))d.remove(['state','records','local_player_position']);
@@ -720,7 +724,7 @@ export class WorldEngine {
             if([source,target].some(actor=>['昏迷','患病'].includes(actor.status)||/(睡眠|熟睡|睡觉)/.test(actor.activity??'')))throw new Error('义务当事人尚不能清醒交付');
         }
         if(o.type==='送货'){if(this.quantity(d,o.promisor,o.item)<o.quantity)throw new Error('承诺者缺少货物');transferItems(d,this,o.promisor,o.promisee,o.item,o.quantity);}
-        if(o.type==='付款'){if(source.coins<o.coins)throw new Error('承诺者资金不足');d.set([...this.actorPath(o.promisor),'coins'],source.coins-o.coins);d.set([...this.actorPath(o.promisee),'coins'],target.coins+o.coins);}
+        if(o.type==='付款'){if(source.coins<o.coins)throw new Error('承诺者资金不足');transfer(d,{from:accountKey(this.actorPath(o.promisor).at(-1)==='player'?'player':this.actorPath(o.promisor).at(-1),LEDGER_COIN,'purse'),to:accountKey(this.actorPath(o.promisee).at(-1)==='player'?'player':this.actorPath(o.promisee).at(-1),LEDGER_COIN,'purse'),amount:o.coins,writer:'engine'});d.set([...this.actorPath(o.promisor),'coins'],source.coins-o.coins);d.set([...this.actorPath(o.promisee),'coins'],target.coins+o.coins);}
         d.set(['state','obligations',key,'status'],'已完成');if(o.deliveryVersion===1||o.recordCompletionTime)d.set(['state','obligations',key,'resolvedAt'],d.get('state','minute'));d.say(`${o.content}已履行`);
     }
     remember(d,args,id) {

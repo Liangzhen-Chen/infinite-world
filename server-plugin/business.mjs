@@ -1,3 +1,6 @@
+import {purse,escrow as escrowAccount,moveCoins} from './money.mjs';
+import {declareLedgerWriter} from './ledger.mjs';
+declareLedgerWriter('business');
 import {chargeTrade,repayDebt,createBusinessContract,finishBusinessContract,refundContractEscrow,releaseBusinessLease} from './contracts.mjs';
 import {openLoan} from './credit.mjs';
 import {transferItems} from './items.mjs';
@@ -28,7 +31,8 @@ function party(d,engine,name,{consent=false,minutes=0,service=false}={}){
     }
     return id;
 }
-function hold(d,amount){if(d.get('state','player','coins')<amount)throw Error('资金不足以托管');d.set(['state','player','coins'],d.get('state','player','coins')-amount);}
+// S1a: 托管款转入将要订立的合同（contracts.createBusinessContract 的编号 contract_<kind>_<事件>）。
+function hold(d,amount,contract){if(d.get('state','player','coins')<amount)throw Error('资金不足以托管');moveCoins(d,{from:purse(null,'player'),to:escrowAccount(contract),amount,writer:'business'});d.set(['state','player','coins'],d.get('state','player','coins')-amount);}
 function quote(d,engine,seller,buyer,item,unitPrice){
     const key=`${Math.floor(d.get('state','minute')/1440)}_${seller}_${buyer}_${item}`;
     const base=Math.ceil(regionalTradePrice(d,engine,item,d.get('state','location'))*wildlifePriceFactor(engine,d.document,item,d.get('state','location')));
@@ -69,7 +73,7 @@ export async function businessTrade(d,args,eventId){
         const deposit=int(args.deposit??0,0,1e9,'押金'),shopId=`business_${eventId}`;
         if(d.get(...path(shopId)))throw Error('店铺编号已存在');
         const opening=assets(d.original?.state??d.get('state'));
-        hold(d,deposit);
+        hold(d,deposit,`contract_lease_${eventId}`);
         const payment=chargeTrade(d,this,{buyer:'player',seller,cost,payment:args.payment,creditMinutes:args.creditMinutes,description:'铺面租金'},eventId);
         const row=createBusinessContract(d,{kind:'lease',parties:['player',seller],subject:location,quantity:days,
             deadline:d.get('state','minute')+days*1440,business:shopId,cost,escrow:deposit,quote:key,...(payment.debt?{debt:payment.debt}:{})},eventId);
@@ -104,8 +108,8 @@ export async function businessTrade(d,args,eventId){
             terms={minutes,task:'stocktake'};
         }
         const loan=args.payment==='credit'?openLoan(d,this,{lender:seller,principal:cost,days:Math.max(1,Math.ceil((args.creditMinutes??7*1440)/1440)),eventId,
-            purpose:`${operation==='hire'?'雇工报酬':'货款'}向${this.byId.get(seller)?.name}借款`,toPlayer:false}):null;
-        if(!loan)hold(d,cost);
+            purpose:`${operation==='hire'?'雇工报酬':'货款'}向${this.byId.get(seller)?.name}借款`,toPlayer:false,escrowTo:escrowAccount(`contract_${operation==='hire'?'hire':'procurement'}_${eventId}`)}):null;
+        if(!loan)hold(d,cost,`contract_${operation==='hire'?'hire':'procurement'}_${eventId}`);
         const row=createBusinessContract(d,{kind:operation==='hire'?'hire':'procurement',parties:['player',seller],subject:item,quantity,deadline,business:shop.id,cost,escrow:cost,location:d.get('state','location'),consentEvent:eventId,...terms,...(loan?{loan:loan.debt}:{})},eventId);
         return {business:shop.id,contract:row.id,cost,escrow:cost,status:row.status,...(loan?{debt:loan.debt,loanAmount:loan.amount,loanDeadline:loan.deadline}:{})};
     }
@@ -166,7 +170,7 @@ export async function businessTrade(d,args,eventId){
         }
         audit.finish=d.get('state','minute');
     }else throw Error('此类合同不能用 fulfill 履行');
-    d.set([...this.actorPath(seller),'coins'],this.actor(d,seller).coins+row.escrow);
+    moveCoins(d,{from:escrowAccount(row.id),to:purse(this,seller),amount:row.escrow,writer:'business',eventId});d.set([...this.actorPath(seller),'coins'],this.actor(d,seller).coins+row.escrow);
     const next=finishBusinessContract(d,{...row,escrow:0,...(audit?{audit}:{})},{status:'已完成',fulfilled:row.quantity,paid:row.cost,source:eventId});
     if(row.kind==='procurement')this.advance(d,5,eventId);
     return {business:shop.id,contract:row.id,status:next.status,...(row.kind==='procurement'?{buyer:'player',seller,item:row.subject,quantity:row.quantity,cost:row.cost,instances:moved.instances}:{audit,cost:row.cost})};

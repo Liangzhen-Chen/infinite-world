@@ -1,3 +1,6 @@
+import {purse,sink,moveCoins} from './money.mjs';
+import {declareLedgerWriter} from './ledger.mjs';
+declareLedgerWriter('npc-obligations',{sinks:['sink:export']});
 import {educationReservation} from './education-state.mjs';
 import {medicineReservation} from './medicine-state.mjs';
 import {scheduleAt,advanceNpcSchedules} from './npc-schedule.mjs';
@@ -146,7 +149,7 @@ function simulateNpc(d,engine,id,before,after,bookings){
    if(active?.deliveryVersion===1&&t>=active.deadline){npc.activity='未能按时送达';break;}
    let route;try{route=engine.route(npc.location,slot.location,'walk',t,d.document.randomSeed);if(active?.deliveryVersion===1)assertCourierRouteAccess(engine,id,npc.location,slot.location,route);}catch{route=null;npc.activity='行程受阻';}
    if(route&&npc.coins<route.cost){route=null;npc.activity='路费不足，暂留原处';}
-   if(route){npc.coins-=route.cost;npc.scheduleTravel={from:npc.location,to:slot.location,depart:t,arrive:t+route.minutes,edges:route.edges};npc.location=null;npc.activity='赶路';continue;}
+   if(route){moveCoins(d,{from:purse(null,id),to:sink('export','travel'),amount:route.cost,writer:'npc-obligations',eventId:null});npc.coins-=route.cost;npc.scheduleTravel={from:npc.location,to:slot.location,depart:t,arrive:t+route.minutes,edges:route.edges};npc.location=null;npc.activity='赶路';continue;}
    if(end<=t)break;add(end,false);
   }else{npc.activity=slot.activity;if(end<=t)break;add(end,!/(睡眠|熟睡|睡觉)/.test(npc.activity));}
  }

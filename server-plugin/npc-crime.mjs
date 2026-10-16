@@ -1,4 +1,7 @@
 // U7 needs choose a bounded offscreen act. All acts use the ordinary legal case ledger.
+import {purse,fund as fundAccount,moveCoins} from './money.mjs';
+import {declareLedgerWriter} from './ledger.mjs';
+declareLedgerWriter('npc-crime');
 import {npcNeedGoals,intelligenceOf} from './npc-intelligence.mjs';
 import {personConstraint,personSimulation,lawAuthorities} from './entity-view.mjs';
 import {npcAgeAt} from './npc-state.mjs';
@@ -46,7 +49,7 @@ export function commitNpcCrime(d,e,plan,minute){
  const location=n.location,witnesses=presentWitnesses(state,location,[actor]);let value=0,stolen=null,harm=0;
  if(offense==='theft'||offense==='fraud'){
   value=Math.min(v.coins??0,e.rules.law.npcCrime.maximumCoins);if(value<1)return null;
-  d.set(['state','npcs',victim,'coins'],v.coins-value);d.set(['state','npcs',actor,'coins'],(n.coins??0)+value);stolen={coins:value};
+  moveCoins(d,{from:purse(null,victim),to:purse(null,actor),amount:value,writer:'npc-crime',eventId:caseId});d.set(['state','npcs',victim,'coins'],v.coins-value);d.set(['state','npcs',actor,'coins'],(n.coins??0)+value);stolen={coins:value};
  }else if(offense==='assault'){
   if(!awake(v))return null;const maxHp=v.maxHp??monsterStats({level:v.level??e.byId.get(victim)?.level??1,template:2},e.rules).maxHp,hp=v.hp??maxHp;
   harm=Math.min(e.rules.law.npcCrime.assaultDamage,Math.max(0,hp-1));if(!harm)return null;
@@ -70,6 +73,7 @@ function settleNpcSentence(d,e,row,code,minute){
  const n=d.get('state','npcs',row.offender);if(!alive(n)||n.location!==code.court)return;
  const fine=row.fineDischarged?0:row.judgment.fine,compensation=row.compensationPaid?0:row.judgment.compensation;
  if((n.coins??0)>=fine+compensation){
+  moveCoins(d,{from:purse(null,row.offender),to:fundAccount(`legal_treasury:${row.law}`),amount:fine,writer:'npc-crime',eventId:row.id});moveCoins(d,{from:purse(null,row.offender),to:fundAccount(`legal_deposit:${row.id}`),amount:compensation,writer:'npc-crime',eventId:row.id});
   d.set(['state','npcs',row.offender,'coins'],n.coins-fine-compensation);
   const treasury=`legal_treasury:${row.law}`,fund=d.get(...path(treasury))??{category:'legal_treasury',law:row.law,coins:0};if(fund.category!=='legal_treasury')throw Error('法律资金登记键冲突');d.set(path(treasury),{...fund,coins:fund.coins+fine});
   if(compensation){const key=`legal_deposit:${row.id}`,escrow=d.get(...path(key));if(escrow?.category&&escrow.category!=='legal_deposit')throw Error('法律资金登记键冲突');d.set(path(key),{category:'legal_deposit',case:row.id,beneficiary:row.victim,coins:(escrow?.coins??0)+compensation,units:[]});}
@@ -107,7 +111,7 @@ export function advanceNpcJustice(d,e,after){
   }
   if(row.judgment&&['已裁定','已到案','待赔偿'].includes(row.status))settleNpcSentence(d,e,row,code,after);
   row=d.get(...path(row.id));const escrow=d.get(...path(`legal_deposit:${row.id}`));
-  if(escrow?.coins>0&&awake(d.get('state','npcs',row.victim))&&d.get('state','npcs',row.victim,'location')===code.court){d.set(['state','npcs',row.victim,'coins'],d.get('state','npcs',row.victim,'coins')+escrow.coins);d.set(path(`legal_deposit:${row.id}`),{...escrow,coins:0,claimed:true,claimedAt:after});}
+  if(escrow?.coins>0&&awake(d.get('state','npcs',row.victim))&&d.get('state','npcs',row.victim,'location')===code.court){moveCoins(d,{from:fundAccount(`legal_deposit:${row.id}`),to:purse(null,row.victim),amount:escrow.coins,writer:'npc-crime',eventId:row.id});d.set(['state','npcs',row.victim,'coins'],d.get('state','npcs',row.victim,'coins')+escrow.coins);d.set(path(`legal_deposit:${row.id}`),{...escrow,coins:0,claimed:true,claimedAt:after});}
  }
 }
 export function nextNpcCrimeMinute(e,d,now){

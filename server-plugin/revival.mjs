@@ -1,3 +1,6 @@
+import {purse,shrineFund,moveCoins} from './money.mjs';
+import {declareLedgerWriter} from './ledger.mjs';
+declareLedgerWriter('revival');
 import {revivalPoint}from'./rule-state-migration.mjs';
 const validInteger=(value,min,max,label)=>{if(!Number.isSafeInteger(value)||value<min||value>max)throw new Error(`${label}无效`);return value;};
 export function prepareRevivalMark(d,location){
@@ -24,6 +27,7 @@ export function registerRevival(d,args,id){
     if(player.level<point.minimumLevel)throw new Error(`登记要求达到${point.minimumLevel}级`);
     const fee=validInteger(point.fee,0,100000,'登记费'),minutes=validInteger(point.minutes,1,120,'登记耗时');
     if(player.coins<fee)throw new Error('复活点登记费用不足');
+    moveCoins(d,{from:purse(this,'player'),to:shrineFund(location),amount:fee,writer:'revival',eventId:id});
     d.set(['state','player','coins'],player.coins-fee);
     d.set(['state','shrineTreasuries',location],(d.get('state','shrineTreasuries',location)??0)+fee);
     this.advance(d,minutes,id);

@@ -1,3 +1,6 @@
+import {purse,moveCoins} from './money.mjs';
+import {declareLedgerWriter} from './ledger.mjs';
+declareLedgerWriter('training');
 import {personCareer} from './entity-view.mjs';
 import {assertNpcService} from './npc-schedule.mjs';
 import {digest} from './storage.mjs';
@@ -21,6 +24,7 @@ function present(d,engine,entry,minutes){
 function pay(d,engine,entry,fee,minutes,id){
  if(!Number.isSafeInteger(fee)||fee<0||!Number.isSafeInteger(minutes)||minutes<1)throw Error('登记的学费或考核时间无效');
  if(d.get('state','player','coins')<fee)throw Error('入门或仪式考核费用不足');
+ moveCoins(d,{from:purse(engine,'player'),to:purse(engine,entry.teacher),amount:fee,writer:'training',eventId:id});
  d.set(['state','player','coins'],d.get('state','player','coins')-fee);
  d.set(['state','npcs',entry.teacher,'coins'],d.get('state','npcs',entry.teacher,'coins')+fee);
  engine.advance(d,minutes,id);

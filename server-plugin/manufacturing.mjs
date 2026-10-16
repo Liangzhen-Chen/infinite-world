@@ -1,3 +1,6 @@
+import {purse,workshopFund,moveCoins} from './money.mjs';
+import {declareLedgerWriter} from './ledger.mjs';
+declareLedgerWriter('manufacturing');
 import {effectiveProficiency}from'./professions.mjs';
 import {toolBonuses}from'./checks.mjs';
 import {produceItems,wearItem,heldUnit}from'./items.mjs';
@@ -97,6 +100,7 @@ export function manufacture(d,args,eventId){
     const outcome=this.check(d,{attribute,skill:recipe.skill,difficulty:recipe.difficulty,tools:recipe.tools??[],helpers:args.helpers??[]},eventId);
     for(const[item,amount]of materials)this.itemDelta(d,'player',item,-amount);
     if(station?.fee){
+        moveCoins(d,{from:purse(null,'player'),to:station.owner?.startsWith('npc_')?purse(null,station.owner):workshopFund(station.id),amount:station.fee,writer:'manufacturing',eventId:eventId});
         d.set(['state','player','coins'],d.get('state','player','coins')-station.fee);
         if(station.owner?.startsWith('npc_'))d.set(['state','npcs',station.owner,'coins'],d.get('state','npcs',station.owner,'coins')+station.fee);
         else d.set(['state','workshopFunds',station.id],(d.get('state','workshopFunds',station.id)??0)+station.fee);

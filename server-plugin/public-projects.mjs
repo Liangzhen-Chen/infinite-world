@@ -1,3 +1,6 @@
+import {purse,escrow as escrowAccount,treasury as treasuryAccount,moveCoins} from './money.mjs';
+import {declareLedgerWriter} from './ledger.mjs';
+declareLedgerWriter('public-projects');
 import {entityTransition} from './entity-transitions.mjs';
 import {playerOffices,spendPublic,refundPublic,authorityOf} from './governance.mjs';
 import {milestone} from './progression.mjs';
@@ -54,9 +57,9 @@ export function startPublicProject(d,engine,args,eventId,settlement){
     if(privateFunding){
         if(state.player.coins<bill)throw Error('私人工程工钱不足');
         for(const [item,n]of [['item_wood',wood],['item_stone',stone]])if(n)changeItems(d,engine,'player',item,-n);
-        d.set(['state','player','coins'],state.player.coins-bill);
+        moveCoins(d,{from:purse(engine,'player'),to:escrowAccount(project),amount:bill,writer:'public-projects',eventId:project});d.set(['state','player','coins'],state.player.coins-bill);
     }else{
-        spend=spendPublic(d,engine,{settlement,copper:bill,power:'public_project',purpose:`工程工钱 ${name}`,sourceEvent:project});
+        spend=spendPublic(d,engine,{settlement,copper:bill,power:'public_project',purpose:`工程工钱 ${name}`,sourceEvent:project,books:{account:escrowAccount(project),writer:'public-projects',eventId:project}});
         d.set(['state','settlements',settlement,'wood'],row.wood-wood);if(stone)d.set(['state','settlements',settlement,'stone'],row.stone-stone);
     }
     const office=offices[0];
@@ -76,8 +79,8 @@ function settleLabor(d,p,minute){
 function finish(d,engine,p,status,minute,eventId){
     const escrow=p.public.escrow;
     const next={...p,status,remainingDays:status==='已完成'?0:p.remainingDays,public:{...p.public,escrow:0},closedAt:minute};
-    if(escrow){if(p.public.payer)d.set(['state','player','coins'],d.get('state','player','coins')+escrow);
-    else refundPublic(d,{settlement:p.settlement,copper:escrow,month:p.public.month,purpose:`工程结余退回 ${p.name}`,sourceEvent:`${p.id}:refund`});}
+    if(escrow){if(p.public.payer){moveCoins(d,{from:escrowAccount(p.id),to:purse(engine,'player'),amount:escrow,writer:'public-projects',eventId:`${p.id}:refund`});d.set(['state','player','coins'],d.get('state','player','coins')+escrow);}
+    else refundPublic(d,{settlement:p.settlement,copper:escrow,month:p.public.month,purpose:`工程结余退回 ${p.name}`,sourceEvent:`${p.id}:refund`,books:{account:escrowAccount(p.id),writer:'public-projects',eventId:`${p.id}:refund`}});}
     if(status==='已完成'){next.facility=completeFacilityProject(d,engine,p,minute);}
     else{
         // Materials go in evenly over the planned days; the unused share returns.
@@ -111,7 +114,7 @@ export function advancePublicProjects(d,engine,{before,after,id}){
             const pub=structuredClone(p.public);
             if(!present.length){pub.lostDays++;d.set(['state','projects',key],{...p,public:pub});continue;}
             for(const w of present){
-                d.set(['state','npcs',w,'coins'],(state.npcs[w].coins??0)+pub.wage);
+                moveCoins(d,{from:escrowAccount(key),to:purse(engine,w),amount:pub.wage,writer:'public-projects',eventId:`${key}:${day}`});d.set(['state','npcs',w,'coins'],(state.npcs[w].coins??0)+pub.wage);
                 pub.escrow-=pub.wage;pub.paid[w]=(pub.paid[w]??0)+pub.wage;pub.labor[w]=(pub.labor[w]??0)+1;
                 (pub.lastPaidDay??={})[w]=day;worked.add(w);
             }
@@ -186,6 +189,7 @@ export function fileHousingApplication(d,engine,args,eventId,settlement,a){
 const permits=(state,plot)=>Object.values(state.records??{}).filter(r=>r.category==='housing_permit'&&r.plot===plot&&r.status!=='已收回');
 const coinsOf=(state,who)=>who==='player'?state.player.coins:state.npcs[who]?.coins??0;
 function pay(d,who,settlement,copper){
+    moveCoins(d,{from:purse(null,who),to:treasuryAccount(settlement),amount:copper,writer:'public-projects'});
     const p=who==='player'?['state','player','coins']:['state','npcs',who,'coins'];
     d.set(p,d.get(...p)-copper);d.set(['state','settlements',settlement,'treasury'],d.get('state','settlements',settlement,'treasury')+copper);
 }

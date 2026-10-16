@@ -5,6 +5,9 @@
 // earn income, settlement contribution (civic.mjs) and fame (reputation account
 // plus settlement standing), and each yields a world event. A masterpiece
 // becomes breakthrough evidence through career-metrics, never a second path.
+import {purse,purse as purseAccount,source,sink,moveCoins} from './money.mjs';
+import {declareLedgerWriter} from './ledger.mjs';
+declareLedgerWriter('works',{sources:{'src:import':{coin_river:200000}},sinks:['sink:export']});
 import {knowsKnowledge} from './education-state.mjs';
 import {digest}from'./storage.mjs';
 import {settlementAt}from'./reputation.mjs';
@@ -96,10 +99,12 @@ function publish(d,engine,args,id){
     const{location,settlement}=placeOf(d,engine);if(!settlement)throw new Error('出版需要在有印坊书肆的聚落');
     const coins=integer(args.coins,WORK_RULES.printCost,WORK_RULES.printCost*200,'印刷费'),printed=Math.floor(coins/WORK_RULES.printCost);
     if(d.get('state','player','coins')<coins)throw new Error('印刷费不足');
+    moveCoins(d,{from:purse(engine,'player'),to:sink('export','printing'),amount:coins,writer:'works',eventId:id});
     d.set(['state','player','coins'],d.get('state','player','coins')-coins);
     engine.advance(d,60,id);
     const multiplier=factor(engine,work.quality),edition=work.editions.length+1;
     const sold=Math.min(printed,Math.max(1,Math.round(WORK_RULES.demand*multiplier))),price=Math.max(1,Math.round(WORK_RULES.bookPrice*multiplier)),income=sold*price;
+    moveCoins(d,{from:source('import','book_sales'),to:purse(engine,'player'),amount:income,writer:'works',eventId:id});
     d.set(['state','player','coins'],d.get('state','player','coins')+income);
     const kept=printed-sold,instances=kept?produceItems(d,engine,WORK_RULES.book,kept,{eventId:id,workmanship:work.quality}):[];
     for(const unitId of instances){d.set(['state','itemInstances',unitId,'work'],work.id);if(work.knowledge)d.set(['state','itemInstances',unitId,'book'],{...work.knowledge,edition});}
@@ -159,7 +164,7 @@ function perform(d,engine,args,id){
     if(outcome.success)for(const npc of audience){
         const purse=d.get('state','npcs',npc,'coins')??0,tip=Math.min(purse,WORK_RULES.performanceTip[outcome.degree]??0);
         if(!tip)continue;
-        d.set(['state','npcs',npc,'coins'],purse-tip);income+=tip;tips.push({npc,coins:tip});
+        moveCoins(d,{from:purseAccount(engine,npc),to:purseAccount(engine,'player'),amount:tip,writer:'works',eventId:id});d.set(['state','npcs',npc,'coins'],purse-tip);income+=tip;tips.push({npc,coins:tip});
     }
     if(income)d.set(['state','player','coins'],d.get('state','player','coins')+income);
     const masterpiece=quality==='杰作',counted=outcome.success&&audience.length>=WORK_RULES.minimumAudience;
@@ -218,6 +223,7 @@ function fuse(d,engine,args,id){
     try{engine.resolve(name);throw new Error('名称已存在');}catch(error){if(!error.message.includes('未登记'))throw error;}
     const coins=integer(args.coins??rule.minimumCoins,rule.minimumCoins,10000,'实验材料费'),minutes=integer(args.minutes??rule.minimumMinutes,rule.minimumMinutes,480,'实验时间');
     if(d.get('state','player','coins')<coins)throw new Error('实验材料费不足');
+    moveCoins(d,{from:purse(engine,'player'),to:sink('export','research'),amount:coins,writer:'works',eventId:id});
     d.set(['state','player','coins'],d.get('state','player','coins')-coins);
     engine.advance(d,minutes,id);
     const lower=values[0]<=values[1]?0:1,outcome=engine.check(d,{attribute:engine.byId.get(skills[lower])?.attribute??'智力',skill:skills[lower],difficulty:rule.difficulty},id);

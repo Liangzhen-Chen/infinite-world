@@ -62,6 +62,9 @@
           "id": {
             "type": "string",
             "pattern": "^(src|sink):[a-z_]+$"
+          },
+          "label": {
+            "type": "string"
           }
         },
         "additionalProperties": false
@@ -628,6 +631,25 @@
         },
         "pattern": {
           "type": "boolean"
+        },
+        "money": {
+          "type": "object",
+          "description": "铸币事实（01 §1.6、15 §15.3）：金属、成色、发行者；item 为尚按物品记账的铸币模板",
+          "required": ["metal", "fineness", "issuer"],
+          "properties": {
+            "metal": {"enum": ["copper", "silver", "gold", "none"]},
+            "fineness": {"type": "number", "exclusiveMinimum": 0, "maximum": 1},
+            "weight": {"type": "number", "exclusiveMinimum": 0},
+            "issuer": {"type": "string"},
+            "coinage": {"type": "string"},
+            "item": {"type": "string"},
+            "backedBy": {"type": "object", "required": ["coin", "ratio"], "properties": {"coin": {"type": "string"}, "ratio": {"type": "number", "minimum": 0}}, "additionalProperties": false}
+          },
+          "additionalProperties": false
+        },
+        "ledger": {
+          "type": "boolean",
+          "description": "S1a：已经入账本（账户与转移）的资源"
         },
         "note": {
           "type": "string"
