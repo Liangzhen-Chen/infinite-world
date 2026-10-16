@@ -751,7 +751,12 @@ export class WorldEngine {
         const session=Object.create(this);session.entities=[...this.entities,...hit.created,player];session.resolver=hit.resolver.extend([player]);session.byId=session.resolver.entities;
         return session;
     }
-    scene(document,query,index=null){return transportScene(this,document)??sceneCard(this.promptScoped(document),document,query,index);}
+    // A scene reads one fixed state: per-person schedule reads share one course derivation.
+    scene(document,query,index=null){
+        const transport=transportScene(this,document);if(transport!=null)return transport;
+        const session=this.promptScoped(document);session.educationCourseMemo=new WeakMap();
+        return sceneCard(session,document,query,index);
+    }
 
 }
 Object.assign(WorldEngine.prototype,activities);

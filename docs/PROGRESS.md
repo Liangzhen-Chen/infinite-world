@@ -400,3 +400,7 @@ M2修复批审定写入PLAN（T61–T64）：Astra草案F4工具机会标注并�
 - 2026-10-16 v10 合并修订已提交（bd15ae05）；设计关口通过后开始迁移：S1a 货币账本派出。farm-pests 主线全过（10/10，81 分钟，此前旧主线超时 8 小时）。
 
 - 2026-10-16 S1a 已合入（架构迁移，常规档 Claude 子代理）：server-plugin/ledger.mjs（L0：账户、唯一写入点 transfer、源汇写入权、每日预算熔断、审计）+ money.mjs（L1 适配器）；43 模块约 130 处写钱处改双写，62 个相关测试挂审计漏记 0；铸币按政体与金属分种（coin_river）；新增 src:genesis/import/drift、sink:melt。对账与守恒 5/5（旧余额逐账户=新账户、漂移 0、每事件 Δ总量=源−汇）。度量前后不变（import 513、黑名单 394、提示 10593、run-001 合理 28），金快照未动。偏离：src:import/src:drift 为设计外新名，drift 仅过渡期记漏写、验收要求恒为 0。已知主线既有失败（非本卡）：festival-runtime、quest-wildlife、agriculture 三年守恒、ontology I18，待 R23。0 模型。
+
+- 2026-10-16 R23 已合入：修实现 5 项（ontology I18 补登 RW-04 事件标签；R22 319edb29 editionFestival 判断取反致 festival-runtime/w1-hewan 失败；重新导出 actions.json；重建 m6-08 美术映射；RW-05 学堂派生重复致提示组装 110–176ms→60–100ms）；改断言/夹具 5 项（依据在提交信息：K10 新订阅者、公告栏主事人派生、学堂出勤不计等待不变式、W3 物品被后续据点引用、w1 发布投影顺序）；monster-society-content、magic-status、progression 等复跑即过。金快照不变，基线 23 项不变。遗留：performance 万事件用例并行跑时快照提交 14ms>10ms（单跑过）。0 模型。
+
+- 2026-10-16 A1 已合入（架构迁移，常规档）：world/actions/core.json 250 注册动作（243 为 S0 动作别名 + 7 模板）、tools/build-action-registry.mjs；新工具 world_actions（只读）、world_act（经 /execute 翻译为旧调用，回放不变），工具面 25→27（旧名全保留，17 个测试的工具数断言随之改）；/actions 路由；界面“可做之事”面板（方位场景文字、交易/移动/等待/制作/账目/休息/观察快捷、此处可做、对象菜单与表单），Playwright 390×844 无脚本错误；事件流模板 world/actions/locale/zh-CN；一致性审查读 applied、付款数核对。需对方同意的动作不可执行，提示“需要对方答应（对话功能完成后开放）”，不接受玩家自填 consent。L/T 场景 12 项通过，日常题可执行 16 测试/18 题（22 题 todo 附原因）。静态提示 10593→10571，度量不变。发现存档缺陷（activity:undefined）→ R25。0 模型。

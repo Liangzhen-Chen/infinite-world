@@ -161,7 +161,7 @@ test('现有公共工具枚举公开全部经营操作，无新增公共工具',
     const settlement=definitions.find(r=>r.function.name==='world_settlement').function.parameters;
     for(const op of ['lease','procure','hire','fulfill','sell','pay','cancel'])assert.ok(trade.properties.operation.enum.includes(op));
     for(const op of ['business_open','business_close','business_bankrupt','business_report'])assert.ok(settlement.properties.operation.enum.includes(op));
-    assert.equal(definitions.length,25);assert.ok(trade.properties.consent);assert.ok(settlement.properties.business);
+    assert.equal(definitions.length,27);assert.ok(trade.properties.consent);assert.ok(settlement.properties.business);
 });
 
 test('恰在合同截止分钟完成雇工仍只支付一次，未到截止的履约窗口不能越过租期',async()=>{

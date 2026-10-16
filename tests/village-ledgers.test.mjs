@@ -96,5 +96,5 @@ test('严格schema和L1拒绝null账、无期末来源、错单位、错税率�
   const bad=structuredClone(world);mutate(bad.settlementProfiles.find(p=>p.details).details);assert.equal(validateWorld(bad,{stage:'release'}).ok,false);
  }
  const bad=structuredClone(world);bad.rules.agriculture.settlements.find(p=>p.opening).initialFood++;assert.equal(validateWorld(bad,{stage:'release'}).ok,false);
- const tools=toolDefinitions();assert.equal(tools.length,25);assert.equal(modelToolCall('world_farm',{operation:'settle_trade'}).args.operation,'farm_settle_trade');
+ const tools=toolDefinitions();assert.equal(tools.length,27);assert.equal(modelToolCall('world_farm',{operation:'settle_trade'}).args.operation,'farm_settle_trade');
 });

@@ -48,7 +48,7 @@ test('护送使用现有委托托管，护送者存活时不能跳过守卫劫�
 test('现有工具可下承运单、推进并重放，不增加工具数',async()=>{
  const {e,d}=fixture(),id=asset(d,e);const before=structuredClone(d.document),event={tool:'world_trade',args:{operation:'transport',task:'book',seller:DRIVER,contract:id,location:'loc_bs',service:'passage'},eventId:'tool-book'};
  const result=await e.reduce(before,event);const got=applyPatches(before,result.patches);assert.ok(Object.values(got.state.records).some(r=>r.category==='transport'));
- assert.deepEqual((await e.reduce(before,event)).patches,result.patches);assert.equal(toolDefinitions().length,25);
+ assert.deepEqual((await e.reduce(before,event)).patches,result.patches);assert.equal(toolDefinitions().length,27);
  assert.match(e.scene(got),/乘车船/);assert.throws(()=>e.move({...d,document:got},{destination:'loc_bs'},'jump'),/承运班次/);
  const waited=await e.reduce(got,{tool:'world_time',args:{minutes:600},eventId:'travel'});assert.equal(applyPatches(got,waited.patches).state.location,'loc_bs');
 });
