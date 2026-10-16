@@ -40,7 +40,7 @@ export function declareLedgerWriter(writer,{sources={},sinks=[]}={}){
         const per=row.sources.get(source)??new Map();
         for(const [resource,budget] of Object.entries(budgets)){
             if(!(budget===Infinity||Number.isSafeInteger(budget)&&budget>0))throw Error(`${writer} 对 ${source} 的每日预算无效`);
-            per.set(resourceKey(resource),budget);
+            per.set(resource==='*'?'*':resourceKey(resource),budget);
         }
         row.sources.set(source,per);
     }
@@ -55,28 +55,45 @@ export function ledgerWriters(){
 // ---- 开账（genesis） ------------------------------------------------------
 // 没有 ledger 分区的文档（新开局或迁移前的存档）在第一次归约时开账：由本体层登记的
 // 开账函数列出旧字段里的全部余额，全部从 src:genesis 转入。开账只依赖文档与世界数据，确定性。
-let opener=null;
-export function registerLedgerOpening(fn){opener=fn;}
-export function emptyLedger(){return {version:LEDGER_VERSION,accounts:{},flows:{},budget:{day:null,used:{}},transfers:0};}
-export function openLedger(engine,document){
-    if(!opener)throw Error('账本开账函数未登记');
-    const ledger=emptyLedger();
-    for(const [key,amount] of opener(engine,document.state)){
-        if(!amount)continue;
-        const {owner,resource}=parseAccount(key);
-        if(isFlow(owner)||!Number.isSafeInteger(amount)||amount<0)throw Error(`开账余额无效：${key}=${amount}`);
-        ledger.accounts[key]=(ledger.accounts[key]??0)+amount;
-        const flow=accountKey('src:genesis',resource,'opening');ledger.flows[flow]=(ledger.flows[flow]??0)+amount;
-        ledger.transfers++;
+// 开账按范围（scope）登记：S1a 的 coin（货币），S1b 的 stock（物品、粮与库存）。已有账本缺某个范围
+// （S1a 存档）时只补开该范围，已开范围不重开。
+const openers=new Map();
+export const LEDGER_SCOPES=['coin','stock'];
+export function registerLedgerOpening(fn,scope='coin'){
+    if(!LEDGER_SCOPES.includes(scope))throw Error(`未登记的开账范围：${scope}`);
+    openers.set(scope,fn);
+}
+export function emptyLedger(){return {version:LEDGER_VERSION,scopes:[...LEDGER_SCOPES],accounts:{},flows:{},lots:{},budget:{day:null,used:{}},transfers:0};}
+const openedScopes=ledger=>ledger?.scopes??['coin'];// S1a 存档的账本没有 scopes 字段，只开过货币
+function openScopes(engine,document,ledger,scopes){
+    for(const scope of scopes){
+        const opener=openers.get(scope);if(!opener)throw Error(`账本开账函数未登记：${scope}`);
+        for(const [key,amount,lots] of opener(engine,document.state)){
+            if(!amount)continue;
+            const {owner,resource}=parseAccount(key);
+            if(isFlow(owner)||!Number.isSafeInteger(amount)||amount<0)throw Error(`开账余额无效：${key}=${amount}`);
+            ledger.accounts[key]=(ledger.accounts[key]??0)+amount;
+            if(lots?.length)ledger.lots[key]=[...(ledger.lots[key]??[]),...lots.map(l=>({...l}))];
+            const flow=accountKey('src:genesis',resource,'opening');ledger.flows[flow]=(ledger.flows[flow]??0)+amount;
+            ledger.transfers++;
+        }
     }
+    ledger.scopes=LEDGER_SCOPES.filter(s=>openedScopes(ledger).includes(s)||scopes.includes(s));
     return ledger;
 }
+export function openLedger(engine,document){return openScopes(engine,document,emptyLedger(),LEDGER_SCOPES);}
 // The reducer opens the ledger on its own copy of the document so the opening
 // never counts as a change of the event; the opening is prepended to the
 // event's patches only when the event actually books a transfer. An event that
-// moves no money (an instant look, a zero-length turn) leaves the save as it was.
+// moves nothing (an instant look, a zero-length turn) leaves the save as it was.
 export function withLedger(engine,document){
-    if(document?.ledger||!document?.state)return {document,opening:null};
+    if(!document?.state)return {document,opening:null};
+    if(document.ledger){
+        const missing=LEDGER_SCOPES.filter(s=>!openedScopes(document.ledger).includes(s));
+        if(!missing.length||document.ledger.version!==LEDGER_VERSION)return {document,opening:null};
+        const old=document.ledger,ledger=openScopes(engine,document,{...old,accounts:{...old.accounts},flows:{...old.flows},lots:{...old.lots??{}}},missing);
+        return {document:{...document,ledger},opening:{op:'set',path:['ledger'],value:ledger}};
+    }
     const ledger=openLedger(engine,document);
     return {document:{...document,ledger},opening:{op:'set',path:['ledger'],value:ledger}};
 }
@@ -85,6 +102,44 @@ export function finishLedger(patches,opening){
     return patches.some(p=>p.path[0]==='ledger')?[opening,...patches]:patches;
 }
 
+// ---- 批次（lots，01 §1.6） ------------------------------------------------
+// 批次不是实体，是账户的一个维度：声明了批次的账户（由适配器登记的策略判定：资源种类声明 lots
+// 且用途是仓储类）在 ledger.lots[账户] 里按批次记数量与元数据——入库日 day、品质 quality、
+// 来源 origin（产地、来源事件）、保质到期日 expiresDay、类别 kind。Σ批次 = 账户余额。
+// 转出缺省先进先出（按到期日、编号），也可由调用方指定批次；转入批次账户时携带转出的批次，
+// 来自源或非批次账户时由调用方给出元数据。批次元数据只能经 reviseLots（白名单字段）改写。
+let lotPolicy=()=>false;
+export function registerLotPolicy(fn){lotPolicy=fn;}
+export const lotAccount=key=>{const {owner,resource,purpose}=parseAccount(key);return !isFlow(owner)&&lotPolicy({owner,resource,purpose});};
+const LOT_FIELDS=new Set(['id','qty','day','quality','origin','expiresDay','kind']);
+const byExpiry=(a,b)=>(a.expiresDay??Infinity)-(b.expiresDay??Infinity)||String(a.id).localeCompare(String(b.id));
+// 从批次列表取出 amount；pick = 批次编号列表，或 {kind} 过滤。返回 [剩余, 取出]。
+function takeLots(list,amount,pick){
+    const rest=list.map(l=>({...l})),out=[];let left=amount;
+    const order=[...rest].sort(byExpiry),ids=Array.isArray(pick)?pick:null;
+    const eligible=ids?ids.map(id=>order.find(l=>l.id===id)).filter(Boolean):order.filter(l=>!pick?.kind||l.kind===pick.kind);
+    for(const lot of eligible){if(!left)break;const n=Math.min(left,lot.qty);if(!n)continue;lot.qty-=n;left-=n;out.push({...lot,qty:n});}
+    // 指定批次不够（账本批次与旧批次已分叉）时其余按先进先出补足，保证 Σ批次 = 余额；分叉由批次对账报出。
+    for(const lot of order){if(!left)break;const n=Math.min(left,lot.qty);if(!n)continue;lot.qty-=n;left-=n;out.push({...lot,qty:n});}
+    return [rest.filter(l=>l.qty>0),out];
+}
+function mergeLots(list,add){
+    const out=list.map(l=>({...l}));
+    for(const lot of add){
+        for(const k of Object.keys(lot))if(!LOT_FIELDS.has(k))throw Error(`批次字段未登记：${k}`);
+        if(!lot.qty)continue;
+        const same=out.find(l=>l.id===lot.id&&l.day===lot.day&&l.expiresDay===lot.expiresDay&&l.kind===lot.kind&&l.quality===lot.quality&&l.origin===lot.origin);
+        if(same)same.qty+=lot.qty;else out.push({...lot});
+    }
+    return out;
+}
+export function lotsOf(d,key){return read(d,'ledger','lots',key)??[];}
+// fact.set 的批次白名单：只改 expiresDay / quality / kind（如仓况变差缩短保质）。
+export function reviseLots(d,key,fn){
+    if(!ledgerActive(d))return;
+    const list=lotsOf(d,key),next=list.map(l=>{const r=fn({...l});for(const k of new Set([...Object.keys(l),...Object.keys(r)]))if(!['expiresDay','quality','kind'].includes(k)&&r[k]!==l[k])throw Error(`批次元数据只能改保质期、品质、类别：${k}`);return r;});
+    if(JSON.stringify(next)!==JSON.stringify(list))d.set(['ledger','lots',key],next);
+}
 // ---- 转移 ----------------------------------------------------------------
 const read=(d,...p)=>typeof d.peek==='function'?d.peek(...p):d.get(...p);
 export const ledgerActive=d=>read(d,'ledger','version')===LEDGER_VERSION;
@@ -92,7 +147,7 @@ export function balance(d,key){return read(d,'ledger','accounts',key)??0;}
 // from / to: account keys. A source or sink side is `src:<kind>|<resource>|<purpose>`.
 // Returns the amount moved (0 when the document has no ledger: forecasts and
 // bare unit-test drafts are not campaigns and carry no books).
-export function transfer(d,{from,to,amount,writer,eventId=null}){
+export function transfer(d,{from,to,amount,writer,eventId=null,lot=null,pick=null}){
     if(amount===0)return 0;
     if(!Number.isSafeInteger(amount)||amount<0)throw Error(`转移数量无效：${amount}`);
     const a=parseAccount(from),b=parseAccount(to);
@@ -102,10 +157,12 @@ export function transfer(d,{from,to,amount,writer,eventId=null}){
     if(isSource(a.owner)&&isSink(b.owner))throw Error('源不能直接流入汇');
     const w=writers.get(writer);if(!w)throw Error(`未登记的账本写入者：${writer}`);
     if(isSink(b.owner)&&!w.sinks.has(b.owner))throw Error(`${writer} 没有 ${b.owner} 的写入权`);
-    if(isSource(a.owner)&&w.sources.get(a.owner)?.get(a.resource)===undefined)throw Error(`${writer} 没有 ${a.owner} 的写入权`);
+    // 每日预算按 (写入者, 源, 资源) 声明；资源 '*' 是该源对其余资源的统一预算（物品种类多，逐种声明不可行）。
+    const budgets=isSource(a.owner)?w.sources.get(a.owner):null,budget=budgets?.get(a.resource)??budgets?.get('*');
+    if(isSource(a.owner)&&budget===undefined)throw Error(`${writer} 没有 ${a.owner} 的写入权`);
     if(!ledgerActive(d))return 0;
+    let moved=null;
     if(isSource(a.owner)){
-        const budget=w.sources.get(a.owner).get(a.resource);
         const day=Math.floor((read(d,'state','minute')??0)/DAY),current=read(d,'ledger','budget')??{day:null,used:{}};
         const used={...(current.day===day?current.used:{})},slot=`${writer}|${a.owner}|${a.resource}`;
         used[slot]=(used[slot]??0)+amount;
@@ -123,12 +180,49 @@ export function transfer(d,{from,to,amount,writer,eventId=null}){
             d.set(['ledger','drift'],[...(read(d,'ledger','drift')??[]),{account:from,gap,writer,eventId,minute:read(d,'state','minute')??null}].slice(-50));
         }
         d.set(['ledger','accounts',from],Math.max(0,have-amount));
+        if(lotAccount(from)){
+            const [rest,out]=takeLots(lotsOf(d,from),Math.min(have,amount),pick);moved=out;
+            if(rest.length)d.set(['ledger','lots',from],rest);else if(read(d,'ledger','lots',from))d.remove(['ledger','lots',from]);
+        }
     }
     if(isSink(b.owner))d.set(['ledger','flows',to],(read(d,'ledger','flows',to)??0)+amount);
-    else d.set(['ledger','accounts',to],balance(d,to)+amount);
+    else{
+        d.set(['ledger','accounts',to],balance(d,to)+amount);
+        if(lotAccount(to)){
+            // 携带转出的批次（lot 为对象时覆盖其元数据，如改换来源）；lot 为数组时即转入的全部批次；
+            // 来自源或非批次账户的部分按 lot 元数据新开批次。
+            const day=Math.floor((read(d,'state','minute')??0)/DAY);
+            let add;
+            if(Array.isArray(lot)){add=lot;if(lot.reduce((n,l)=>n+l.qty,0)!==amount)throw Error('指定批次的数量与转移数量不符');}
+            else{
+                const carried=(moved??[]).map(l=>({...l,...(lot??{}),qty:l.qty})),rest=amount-carried.reduce((n,l)=>n+l.qty,0);
+                add=[...carried,...(rest>0?[{id:eventId??`lot:${day}`,day,...(lot??{}),qty:rest}]:[])];
+            }
+            d.set(['ledger','lots',to],mergeLots(lotsOf(d,to),add));
+        }
+    }
     d.set(['ledger','transfers'],(read(d,'ledger','transfers')??0)+1);
     globalThis.__LEDGER_TRACE__?.push({from,to,amount,writer,eventId});// 调试：对账定位用
     return amount;
+}
+
+// ---- 世界版本更新（包升级）的折算 ------------------------------------------------
+// 世界更新（world-upgrade）按新版目录给居民补发钱物或改写旧字段，不经工具归约。适配器登记折算函数：
+// 比较更新前后的旧字段余额，增加的从 src:pack_converted 流入、减少的流入 sink:pack_removed（12 §12.5），
+// 账本补丁随更新补丁一并写入，更新后旧字段与账户仍逐账户相等。
+const upgradeBookings=new Map();
+export function registerUpgradeBooking(name,fn){upgradeBookings.set(name,fn);}
+export function bookUpgrade(before,after,world){
+    if(before?.ledger?.version!==LEDGER_VERSION)return [];
+    const ledger=structuredClone(before.ledger),patches=[];
+    const d={peek:(...p)=>p[0]==='ledger'?p.slice(1).reduce((v,k)=>v?.[k],ledger):p.reduce((v,k)=>v?.[k],after),
+        get(...p){return this.peek(...p);},
+        set(path,value){if(path[0]!=='ledger')throw Error('折算只写账本分区');let t=ledger;for(const k of path.slice(1,-1))t=t[k]??={};t[path.at(-1)]=structuredClone(value);patches.push({op:'set',path,value});},
+        remove(path){let t=ledger;for(const k of path.slice(1,-1))t=t?.[k];if(t)delete t[path.at(-1)];patches.push({op:'delete',path});}};
+    // 折算函数只读世界目录：给一个只含 world / rules / byId 的引擎视图。
+    const engine={world,rules:world.rules,byId:new Map(Object.values(world).filter(Array.isArray).flat().filter(r=>r&&typeof r.id==='string').map(r=>[r.id,r]))};
+    for(const fn of upgradeBookings.values())fn(d,engine,before,after);
+    return patches;
 }
 
 // ---- 审计 ----------------------------------------------------------------
@@ -143,5 +237,10 @@ export function auditLedger(ledger){
     const errors=[];
     for(const [key,n] of Object.entries(ledger?.accounts??{}))if(!Number.isSafeInteger(n)||n<0)errors.push(`账户为负或非整数：${key}=${n}`);
     for(const [r,t] of Object.entries(ledgerTotals(ledger)))if(t.accounts!==t.sources-t.sinks)errors.push(`${r} 不守恒：账户 ${t.accounts} ≠ 源 ${t.sources} − 汇 ${t.sinks}`);
+    for(const [key,list] of Object.entries(ledger?.lots??{})){
+        if(list.some(l=>!Number.isSafeInteger(l.qty)||l.qty<=0))errors.push(`批次数量无效：${key}`);
+        const n=list.reduce((a,l)=>a+l.qty,0);
+        if(n!==(ledger.accounts?.[key]??0))errors.push(`批次合计 ≠ 账户余额：${key} ${n} ≠ ${ledger.accounts?.[key]??0}`);
+    }
     return errors;
 }

@@ -1,3 +1,5 @@
+import {declareLedgerWriter} from './ledger.mjs';
+declareLedgerWriter('environment',{sinks:['sink:consume']});
 import {facilityView,isFacility} from './facility-state.mjs';
 import {applyInteraction} from './interactions.mjs';
 import {registerMagicEffect}from'./magic-effects.mjs';
@@ -181,7 +183,7 @@ export function interactEnvironment(d,args,eventId){
         if(operation==='inspect')return {facility:facilityView(this,d.get('state'),building.id),actionScope:{kind:'instant',instantaneous:true}};
         if(operation==='douse_fire'){
             if(this.quantity(d,'player','item_water')<1)throw Error('没有可用来灭火的水');
-            this.itemDelta(d,'player','item_water',-1);
+            this.itemDelta(d,'player','item_water',-1,{flow:'sink:consume',purpose:'douse',writer:'environment',eventId});
             const changed=applyInteraction(d,this,{agent:'water',target:building.id});this.advance(d,1,eventId);return {target:building.id,...changed,minutes:1};
         }
     }

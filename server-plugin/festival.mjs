@@ -1,6 +1,6 @@
 import {purse,moveCoins} from './money.mjs';
 import {declareLedgerWriter} from './ledger.mjs';
-declareLedgerWriter('festival');
+declareLedgerWriter('festival',{sinks:['sink:consume']});
 import {digest} from './storage.mjs';
 import {npcObligationAt} from './npc-obligations.mjs';
 import {npcAutonomyBusy} from './npc-autonomy.mjs';
@@ -226,7 +226,7 @@ export function advanceFestivals(d,engine,at){
    }
   }
   const consumed=[];
-  if(status==='held'&&row.formal)for(const n of row.resources.filter(n=>!n.use)){const result=changeItems(d,engine,n.owner,n.item,-n.quantity);consumed.push({...n,...result});}
+  if(status==='held'&&row.formal)for(const n of row.resources.filter(n=>!n.use)){const result=changeItems(d,engine,n.owner,n.item,-n.quantity,{books:{flow:'sink:consume',purpose:'festival',writer:'festival',eventId:`festival-result:${id}`}});consumed.push({...n,...result});}
   const done={...row,status,reason,participants:status==='held'?[row.host,...participants]:[],paidCopper:status==='held'?row.cost:0,resolvedAt:at,resultEvent:`festival-result:${id}`,...(row.formal?{consumed}:{})};
   // K6: a held festival applies its published runtime effects and any effect-table
   // hooks as one transaction; festivals without effects keep their exact record.

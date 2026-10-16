@@ -7,6 +7,10 @@ import {facilityView} from './facility-state.mjs';
 import {laborTrade} from './labor-market.mjs';
 import {standing} from './standing.mjs';
 import {changeItems,produceItems,heldUnit,wearItem} from './items.mjs';
+import {store,bookStock,craftInput,craftOutput,recordCraft} from './stock.mjs';
+import {declareLedgerWriter} from './ledger.mjs';
+// S1b: 受雇制作（组织或个人库存）是 src:craft 制造守恒对：配方投入进 sink:consume，产出来自 src:craft。
+declareLedgerWriter('finance-assets',{sources:{'src:craft':{'*':100000}},sinks:['sink:consume']});
 import {registerCreditDefault,settleCreditCase} from './law.mjs';
 import {assessTradeTax,tradeTax} from './finance-tax.mjs';
 
@@ -95,13 +99,15 @@ function payDividend(d,e,row,at){
 export function workerSkill(e,s,id,recipe){const n=s.npcs[id],p=base(e,s,id);return Math.max(n?.proficiencies?.[recipe.skill]??0,p?.proficiencies?.[recipe.skill]??0,n?.skills?.[recipe.skill]?.proficiency??0);}
 function employmentAccount(d,e,owner){const g=groupAccountView(e,d.get('state'),owner);if(g)return g;const r=d.get(...rec(`organization:${owner}`));return r?.category==='organization'?r:null;}
 export function employmentStock(d,e,owner,item){const g=employmentAccount(d,e,owner);return g?g.items?.[item]??0:e.quantity(d,owner,item);}
-export function changeEmploymentStock(d,e,owner,item,delta,eventId){
+export function changeEmploymentStock(d,e,owner,item,delta,eventId,books){
     const g=groupAccountView(e,d.get('state'),owner);
     if(!g){const org=d.get(...rec(`organization:${owner}`));if(org?.category==='organization'){
         const quantity=(org.items?.[item]??0)+delta;if(quantity<0)throw Error('组织实际库存不足');
+        bookStock(d,e,store(e,owner,item),delta,books);
         d.set(rec(`organization:${owner}`),{...org,items:{...org.items,[item]:quantity},ledger:[...org.ledger??[],{kind:'employment_production',items:{[item]:delta},sourceEvent:eventId}]});return;
-    }return changeItems(d,e,owner,item,delta);}
+    }return changeItems(d,e,owner,item,delta,{books});}
     const row=ensureGroupAccount(d,e,owner),quantity=(row.items[item]??0)+delta;if(quantity<0)throw Error('组织实际库存不足');
+    bookStock(d,e,store(e,owner,item),delta,books);
     d.set(groupAccountPath(owner),{...row,items:{...row.items,[item]:quantity},ledger:[...row.ledger,{kind:'employment_production',items:{[item]:delta},sourceEvent:eventId}]});
 }
 // Shared F1 production: validate the complete batch before consuming anything.
@@ -127,13 +133,14 @@ export function employmentProductionPlan(d,e,row,{minutes=480,maximum=Infinity}=
 export function settleEmploymentProduction(d,e,row,at,plan){
     const {recipe,owner,toolsOwner,skill,batches,fee,station,quality}=plan,eventId=`${row.id}:${at}`;
     if(fee){if(station.owner)financeTransfer(d,e,owner,station.owner,fee,`${eventId}:station`);else{financeChange(d,e,owner,-fee,`${eventId}:station`,{account:workshopFund(station.id),writer:'finance-bank',eventId});d.set(['state','workshopFunds',station.id],(d.get('state','workshopFunds',station.id)??0)+fee);}}
-    for(const m of recipe.materials)changeEmploymentStock(d,e,owner,m.item,-m.amount*batches,eventId);
+    for(const m of recipe.materials)changeEmploymentStock(d,e,owner,m.item,-m.amount*batches,eventId,craftInput('finance-assets',eventId));
     for(const tool of recipe.tools??[])wearItem(d,e,toolsOwner,tool,(recipe.toolWear??1)*batches);
     const instances=[],products=[recipe.output,...(recipe.byproducts??[]).map(p=>({item:p.item,quantity:p.amount}))];
     for(const p of products){
-        if(employmentAccount(d,e,owner))changeEmploymentStock(d,e,owner,p.item,p.quantity*batches,eventId);
-        else instances.push(...produceItems(d,e,p.item,p.quantity*batches,{eventId,recipe:recipe.id,workmanship:quality,owner,maker:row.worker}));
+        if(employmentAccount(d,e,owner))changeEmploymentStock(d,e,owner,p.item,p.quantity*batches,eventId,craftOutput('finance-assets',eventId));
+        else instances.push(...produceItems(d,e,p.item,p.quantity*batches,{eventId,recipe:recipe.id,workmanship:quality,owner,maker:row.worker,books:craftOutput('finance-assets',eventId)}));
     }
+    recordCraft(d,{recipe:recipe.id,batches,inputs:Object.fromEntries(recipe.materials.map(m=>[m.item,m.amount*batches])),outputs:Object.fromEntries(products.map(p=>[p.item,p.quantity*batches])),writer:'finance-assets',eventId});
     return {minute:at,fee,batches,quality,skill,instances,quantity:recipe.output.quantity*batches};
 }
 function fairWage(e,s,worker,recipe){const skill=workerSkill(e,s,worker,recipe),regard=standing(e,s,worker,'player');return Math.ceil(e.rules.economy.wageCopperPerHalfDay[0]*2*(1+skill/3000)*(regard<0?1.2:1));}

@@ -4,6 +4,13 @@ import {heldUnit,wearItem} from './items.mjs';
 import {registerIncident} from './law.mjs';
 import {miningJurisdiction} from './law-codes.mjs';
 import {adjustStanding} from './standing.mjs';
+import {declareLedgerWriter} from './ledger.mjs';
+import {reserve as reserveAccount,moveStock} from './stock.mjs';
+// S1b: 钓到的鱼是死亡转化的产物（src:harvest，种群账另记 withdrawn）；剖洗用水、煮食耗材进 sink:consume；
+// 矿脉是资源点账户 mineral:<地点>:<矿产>|<矿产>|reserve，首次开采按世界数据（spec.reserve）经 src:genesis 开户，
+// 恢复来自 src:regrowth，采得的转入开采者行囊。
+declareLedgerWriter('extraction',{sources:{'src:harvest':{item_fish:10000},'src:genesis':{'*':1000000},'src:regrowth':{'*':100000}},sinks:['sink:consume']});
+const USE=(purpose,eventId)=>({flow:'sink:consume',purpose,writer:'extraction',eventId});
 
 const path=id=>['state','records',id];
 const active=(hours,minute)=>hours[0]<=hours[1]?minute>=hours[0]&&minute<hours[1]:minute>=hours[0]||minute<hours[1];
@@ -33,7 +40,7 @@ export function fish(d,args,id){
     const minutes=this.rules.extraction.fishing.minutes,season=this.calendar(d.get('state','minute')).season;
     const difficulty=this.rules.extraction.fishing.difficultyBySeason[season];
     const check=this.check(d,{attribute:'敏捷',skill:'skill_life_2_core',difficulty},id);
-    wearItem(d,this,'player',tool,1);this.itemDelta(d,'player','item_water',-1);this.advance(d,minutes,id);
+    wearItem(d,this,'player',tool,1);this.itemDelta(d,'player','item_water',-1,USE('fishing',id));this.advance(d,minutes,id);
     const now=d.get('state','minute'),latest=d.get(...path(`ecology:${habitat.id}`));
     const frozen=features.some(f=>f.kind==='water'&&traitsOf(this,d.get('state'),f.id)?.tags.includes('frozen'));
     const eligible=species.filter(s=>(!requested||s.id===requested)&&latest.populations[s.id].count>0&&active(s.wildlife.activeHours,now%1440));
@@ -42,7 +49,7 @@ export function fish(d,args,id){
         const p=latest.populations[selected.id];
         // withdrawn is the existing ecological sink, also used for actual individuals.
         d.set([...path(`ecology:${habitat.id}`),'populations',selected.id],{...p,count:p.count-1,withdrawn:p.withdrawn+1});
-        this.itemDelta(d,'player','item_fish',1);
+        this.itemDelta(d,'player','item_fish',1,{flow:'src:harvest',purpose:'fishing',writer:'extraction',eventId:id});
         d.set(path(`fishing:${id}`),{category:'fishing',habitat:habitat.id,species:selected.id,item:'item_fish',quantity:1,minute:now,sourceEvent:id});
     }
     const training=able(d)?practice(d,this,'skill_life_2_core',`钓鱼:${habitat.id}`):null;
@@ -53,7 +60,7 @@ export function fish(d,args,id){
 export function eatFish(d,args,id){
     if(this.quantity(d,'player','item_fish')<1||this.quantity(d,'player','item_water')<1||this.quantity(d,'player','item_charcoal')<1)throw Error('煮食渔获需要鲜鱼、一份水和一袋自有木炭');
     const before=d.get('state','player','hp');
-    for(const item of ['item_fish','item_water','item_charcoal'])this.itemDelta(d,'player',item,-1);
+    for(const item of ['item_fish','item_water','item_charcoal'])this.itemDelta(d,'player',item,-1,USE('meal',id));
     this.advance(d,20,id);if(able(d))this.health(d,{delta:2},id);
     return {eaten:1,item:'item_fish',healed:Math.max(0,d.get('state','player','hp')-before),spent:{minutes:20,water:1,charcoal:1},actionScope:{kind:'meal',clockManaged:true,minutes:20}};
 }
@@ -83,7 +90,10 @@ export function mine(d,args,id){
     const check=this.check(d,{attribute:rules.check.attribute,skill:rules.check.skill,difficulty:rules.difficulty,tools:[rules.tool]},id);
     wearItem(d,this,'player',rules.tool,rules.wear);this.advance(d,rules.minutes,id);
     const success=check.success&&able(d)&&d.get('state','location')===location;
-    if(success){row.reserve--;row.extracted++;this.itemDelta(d,'player',item,1);}
+    const vein=reserveAccount(this,key,item);
+    if(!d.get(...path(key)))moveStock(d,{from:`src:genesis|${vein.split('|')[1]}|mineral`,to:vein,amount:old.reserve,writer:'extraction',eventId:id});
+    moveStock(d,{from:`src:regrowth|${vein.split('|')[1]}|mineral`,to:vein,amount:recovered,writer:'extraction',eventId:id});
+    if(success){row.reserve--;row.extracted++;this.itemDelta(d,'player',item,1,{account:vein,writer:'extraction',eventId:id});}
     d.set(path(key),row);
     const witnesses=[...new Set([...atStart,...present()])];
     const value=success?this.byId.get(item).basePrice:0;

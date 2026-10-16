@@ -1,4 +1,6 @@
 import {registerMagicEffect}from'./magic-effects.mjs';
+import {declareLedgerWriter} from './ledger.mjs';
+declareLedgerWriter('summons',{sinks:['sink:consume']});
 import {prepareSummonWork,applySummonWork}from'./magic-ritual.mjs';
 import { servantCarryWater,environmentFeatures } from './environment.mjs';
 import {applyProtectionPrimitive}from'./magic-primitives.mjs';
@@ -72,7 +74,7 @@ export function applySummon(d, prepared, eventId) {
       if(spec.operation!=='extend')return summonAction.call(this,d,{operation:spec.operation,summon:prepared.target},eventId);
       const effect=d.get('state','effects',prepared.target),record=d.get('state','records',effect.contract);
       if(record?.category!=='summon_contract'||record.effect!==prepared.target)throw Error('续约记录不一致');
-      this.itemDelta(d,'player',spec.offering.item,-spec.offering.amount);
+      this.itemDelta(d,'player',spec.offering.item,-spec.offering.amount,{flow:'sink:consume',purpose:'offering',writer:'summons',eventId});
       const expires=effect.expires+spec.power;
       d.set(['state','effects',prepared.target,'expires'],expires);
       d.set(['state','records',effect.contract],{...record,expires,extensions:[...record.extensions??[],{source:eventId,minutes:spec.power,offering:{...spec.offering}}]});
