@@ -28,3 +28,17 @@ test('部署：冻结包校验在写入前执行，先备份，聊天和旧扩�
     await fs.appendFile(path.join(bundle.destination,'extension','runtime.js'),'\n// corrupt');
     backedUp=false;await assert.rejects(activateDeployment(bundle.destination,{installation,makeBackup}),/校验失败/);assert.equal(backedUp,false);
 });
+test('部署：包内每个运行时模块的相对 import 都能在包里找到（清单不再漏依赖）',async t=>{
+    const root=await fs.mkdtemp(path.join(tmpRoot(),'infinite-fields-deploy-'));t.after(()=>fs.rm(root,{recursive:true,force:true}));
+    const bundle=await prepareDeployment(path.join(root,'bundle')),inPack=new Set(bundle.files.map(f=>f.path)),missing=[];
+    const spec=/\b(?:import|export)\s*(?:[^'"();]*?\bfrom\s*)?['"](\.{1,2}\/[^'"]+)['"]|\bimport\s*\(\s*['"](\.{1,2}\/[^'"]+)['"]\s*\)/g;
+    for(const f of inPack){
+        if(!/^plugin\/(?:tools|server-plugin)\/.*\.m?js$/.test(f))continue;
+        const text=await fs.readFile(path.join(bundle.destination,f),'utf8');
+        for(const m of text.matchAll(spec)){
+            const target=path.posix.normalize(path.posix.join(path.posix.dirname(f),m[1]??m[2]));
+            if(!inPack.has(target))missing.push(`${f} -> ${target}`);
+        }
+    }
+    assert.deepEqual(missing,[]);
+});
