@@ -76,6 +76,31 @@
         "type": "string",
         "pattern": "^[a-z]+_$"
       }
+    },
+    "subjectTemplates": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/labelled"
+      }
+    },
+    "reasons": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "id"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^[a-z_]+$"
+          },
+          "label": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      }
     }
   },
   "additionalProperties": false,
@@ -145,7 +170,9 @@
       "then": {
         "required": [
           "handoverClasses",
-          "triggers"
+          "subjectTemplates",
+          "triggers",
+          "reasons"
         ],
         "properties": {
           "entries": {
@@ -453,19 +480,54 @@
     },
     "handover": {
       "type": "object",
-      "propertyNames": {
-        "enum": [
-          "gone",
-          "vacated",
-          "moved",
-          "defected",
-          "impaired",
-          "subjectGone"
-        ]
+      "required": [
+        "gone",
+        "vacated",
+        "defected"
+      ],
+      "properties": {
+        "gone": {
+          "enum": [
+            "vacate",
+            "stay",
+            "succeed",
+            "estate",
+            "close",
+            "revert",
+            "retain_disputed",
+            "suspend",
+            null
+          ]
+        },
+        "vacated": {
+          "enum": [
+            "vacate",
+            "stay",
+            "succeed",
+            "estate",
+            "close",
+            "revert",
+            "retain_disputed",
+            "suspend",
+            null
+          ]
+        },
+        "defected": {
+          "enum": [
+            "vacate",
+            "stay",
+            "succeed",
+            "estate",
+            "close",
+            "revert",
+            "retain_disputed",
+            "suspend",
+            null
+          ]
+        }
       },
-      "additionalProperties": {
-        "type": "string"
-      }
+      "additionalProperties": false,
+      "description": "必填三项（I5）：holder.gone、self.closed(vacated)、holder.holdingClosed(member_of, defected) 的钩子模板；null 即附录 A 的“—”"
     },
     "holding": {
       "type": "object",
@@ -476,7 +538,15 @@
         "subjectKinds",
         "exclusive",
         "handover",
-        "visibility"
+        "onSubjectGone",
+        "hooks",
+        "concluded",
+        "functional",
+        "derives",
+        "visibility",
+        "pins",
+        "contest",
+        "incompatibleWith"
       ],
       "properties": {
         "id": {
@@ -532,6 +602,255 @@
           "type": "string"
         },
         "distinctFrom": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "capacity": {
+          "type": "string",
+          "description": "受标的事实约束的容量（lodges：节点 capacity）"
+        },
+        "grantedBy": {
+          "$ref": "#/$defs/templates"
+        },
+        "onSubjectGone": {
+          "enum": [
+            "close",
+            "stay",
+            "estate",
+            "reparent"
+          ]
+        },
+        "hooks": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "on",
+              "do"
+            ],
+            "properties": {
+              "on": {
+                "type": "string",
+                "pattern": "^(holder\\.gone|self\\.closed|holder\\.holdingClosed|subject\\.gone|subject\\.transferred|event)(\\(.*\\))?$"
+              },
+              "when": {
+                "type": "string"
+              },
+              "do": {
+                "anyOf": [
+                  {
+                    "enum": [
+                      "vacate",
+                      "stay",
+                      "succeed",
+                      "estate",
+                      "close",
+                      "revert",
+                      "retain_disputed",
+                      "reparent"
+                    ]
+                  },
+                  {
+                    "type": "array",
+                    "minItems": 1,
+                    "items": {
+                      "type": "object",
+                      "required": [
+                        "op"
+                      ],
+                      "properties": {
+                        "op": {
+                          "type": "string"
+                        }
+                      }
+                    }
+                  }
+                ]
+              },
+              "note": {
+                "type": "string"
+              }
+            },
+            "additionalProperties": false
+          }
+        },
+        "concluded": {
+          "type": "boolean",
+          "description": "开立时由内核写缔结快照 {place, lawVersion, time, form, inName?}"
+        },
+        "functional": {
+          "type": "boolean",
+          "description": "职能读 effective(holding)（附录 A §A.15.25）"
+        },
+        "derives": {
+          "type": "object",
+          "properties": {
+            "authority": {
+              "type": "boolean"
+            },
+            "title": {
+              "type": "boolean"
+            },
+            "quota": {
+              "type": "boolean"
+            },
+            "salary": {
+              "type": "boolean"
+            },
+            "schedule": {
+              "type": "boolean"
+            },
+            "services": {
+              "type": "boolean"
+            },
+            "conduction": {
+              "type": "boolean"
+            },
+            "voting": {
+              "type": "boolean"
+            },
+            "presence": {
+              "type": "boolean"
+            },
+            "access": {
+              "type": "boolean"
+            }
+          },
+          "additionalProperties": false
+        },
+        "pins": {
+          "enum": [
+            "none",
+            "holder",
+            "subject",
+            "both"
+          ]
+        },
+        "contest": {
+          "enum": [
+            "lottery",
+            "price",
+            "arrival",
+            "rank",
+            null
+          ]
+        },
+        "incompatibleWith": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "kind",
+              "policy"
+            ],
+            "properties": {
+              "kind": {
+                "type": "string"
+              },
+              "variant": {
+                "type": "string"
+              },
+              "subjectFilter": {
+                "type": "string"
+              },
+              "policy": {
+                "enum": [
+                  "forbid",
+                  "auto_vacate",
+                  "needs_permission",
+                  "flag"
+                ]
+              },
+              "permit": {
+                "type": "string"
+              },
+              "note": {
+                "type": "string"
+              }
+            },
+            "additionalProperties": false
+          }
+        },
+        "parent": {
+          "type": "string"
+        },
+        "variants": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "object",
+            "required": [
+              "label"
+            ],
+            "properties": {
+              "label": {
+                "type": "string"
+              },
+              "pins": {
+                "enum": [
+                  "none",
+                  "holder",
+                  "subject",
+                  "both"
+                ]
+              },
+              "contest": {
+                "enum": [
+                  "lottery",
+                  "price",
+                  "arrival",
+                  "rank",
+                  null
+                ]
+              },
+              "concluded": {
+                "type": "boolean"
+              },
+              "incompatibleWith": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "required": [
+                    "kind",
+                    "policy"
+                  ],
+                  "properties": {
+                    "kind": {
+                      "type": "string"
+                    },
+                    "variant": {
+                      "type": "string"
+                    },
+                    "subjectFilter": {
+                      "type": "string"
+                    },
+                    "policy": {
+                      "enum": [
+                        "forbid",
+                        "auto_vacate",
+                        "needs_permission",
+                        "flag"
+                      ]
+                    },
+                    "permit": {
+                      "type": "string"
+                    },
+                    "note": {
+                      "type": "string"
+                    }
+                  },
+                  "additionalProperties": false
+                }
+              },
+              "note": {
+                "type": "string"
+              }
+            },
+            "additionalProperties": false
+          }
+        },
+        "terms": {
           "type": "array",
           "items": {
             "type": "string"
@@ -635,15 +954,55 @@
         "money": {
           "type": "object",
           "description": "铸币事实（01 §1.6、15 §15.3）：金属、成色、发行者；item 为尚按物品记账的铸币模板",
-          "required": ["metal", "fineness", "issuer"],
+          "required": [
+            "metal",
+            "fineness",
+            "issuer"
+          ],
           "properties": {
-            "metal": {"enum": ["copper", "silver", "gold", "none"]},
-            "fineness": {"type": "number", "exclusiveMinimum": 0, "maximum": 1},
-            "weight": {"type": "number", "exclusiveMinimum": 0},
-            "issuer": {"type": "string"},
-            "coinage": {"type": "string"},
-            "item": {"type": "string"},
-            "backedBy": {"type": "object", "required": ["coin", "ratio"], "properties": {"coin": {"type": "string"}, "ratio": {"type": "number", "minimum": 0}}, "additionalProperties": false}
+            "metal": {
+              "enum": [
+                "copper",
+                "silver",
+                "gold",
+                "none"
+              ]
+            },
+            "fineness": {
+              "type": "number",
+              "exclusiveMinimum": 0,
+              "maximum": 1
+            },
+            "weight": {
+              "type": "number",
+              "exclusiveMinimum": 0
+            },
+            "issuer": {
+              "type": "string"
+            },
+            "coinage": {
+              "type": "string"
+            },
+            "item": {
+              "type": "string"
+            },
+            "backedBy": {
+              "type": "object",
+              "required": [
+                "coin",
+                "ratio"
+              ],
+              "properties": {
+                "coin": {
+                  "type": "string"
+                },
+                "ratio": {
+                  "type": "number",
+                  "minimum": 0
+                }
+              },
+              "additionalProperties": false
+            }
           },
           "additionalProperties": false
         },

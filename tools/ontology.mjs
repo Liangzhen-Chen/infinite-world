@@ -7,6 +7,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import Ajv from 'ajv';
 import {ELEMENTS,CREATURE_TAGS,FLAMMABLE} from '../server-plugin/traits.mjs';
+import {validateHoldingKinds} from '../server-plugin/holding-kinds.mjs';
 // K1 性状词（元素、生物身体标签、可燃材质）作为 trait 族标签并入词汇表，不在 tags.json 重复。
 export const TRAIT_TAGS=new Set([...ELEMENTS,...CREATURE_TAGS,...FLAMMABLE]);
 
@@ -44,7 +45,7 @@ export function loadOntology({dir=path.join(ROOT,'world/ontology'),packs=[]}={})
  }
  const namespaces=new Set(docs.filter(d=>d.ok).map(d=>d.doc.namespace));
  const entries=Object.fromEntries(KINDS.map(k=>[k,new Map()]));
- const extra={handoverClasses:new Set(),triggers:new Set(),sourcesAndSinks:new Set()};
+ const extra={handoverClasses:new Set(),subjectTemplates:new Set(),triggers:new Set(),reasons:new Set(),sourcesAndSinks:new Set()};
  for(const {file,doc,ok}of docs){if(!ok)continue;
   doc.entries.forEach((entry,i)=>{
    const prefix=entry.id.includes(':')?entry.id.slice(0,entry.id.indexOf(':')):null;
@@ -67,10 +68,11 @@ export function loadOntology({dir=path.join(ROOT,'world/ontology'),packs=[]}={})
  };
  // Cross references.
  const templates=new Set([...entries['entity-templates'].values()].map(t=>t.id));
- for(const h of entries.holdings.values()){
-  for(const t of[...h.holderKinds,...h.subjectKinds])if(!templates.has(t))errors.push({file:h.file,field:`/entries[id=${h.id}]/holderKinds|subjectKinds`,message:`未知实体模板 ${t}`});
-  for(const [trigger,cls]of Object.entries(h.handover))if(!extra.handoverClasses.has(cls))errors.push({file:h.file,field:`/entries[id=${h.id}]/handover/${trigger}`,message:`未知交接类 ${cls}`});
- }
+ // S2a：持有种类的注册形状与交叉引用（I5）由 L1 注册表的同一校验函数检查。
+ const holdingList=[...entries.holdings.values()];
+ for(const e of validateHoldingKinds(holdingList,{templates})){const h=holdingList.find(x=>x.id===e.kind);errors.push({file:h?.file??'',field:`/entries[id=${e.kind}]/${e.field}`,code:'E-HOLDING-SHAPE',message:e.message});}
+ for(const h of holdingList)for(const [trigger,cls]of Object.entries(h.handover??{}))if(cls!==null&&!extra.handoverClasses.has(cls))errors.push({file:h.file,field:`/entries[id=${h.id}]/handover/${trigger}`,message:`未知交接类 ${cls}`});
+ for(const h of holdingList)if(!extra.subjectTemplates.has(h.onSubjectGone))errors.push({file:h.file,field:`/entries[id=${h.id}]/onSubjectGone`,message:`未知标的侧模板 ${h.onSubjectGone}`});
  for(const p of entries.primitives.values())if(!has('verbs',p.event,p.namespace))errors.push({file:p.file,field:`/entries[id=${p.id}]/event`,message:`原语事件 ${p.event} 不在动词表`});
  // 12 §12.3.3：上位词（包词必填，须可解析）、共享/私有区、同义词闸门。
  for(const kind of KINDS)for(const e of entries[kind].values()){

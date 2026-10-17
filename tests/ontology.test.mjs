@@ -10,7 +10,7 @@ test('词汇表全部文件通过 schema 与跨表引用校验，九类齐全',(
  assert.deepEqual(core.errors,[]);
  for(const k of KINDS)assert.ok(core.entries[k].size>0,k);
  assert.deepEqual([...core.namespaces],['core']);
- assert.equal(core.entries.primitives.size,18);
+ assert.equal(core.entries.primitives.size,19,'19 个原语（含 S2a 的 holding.rescale，目标架构 §0.3）');
  assert.ok(core.has('tags','mark:satire')&&core.has('tags','goods:salt')&&core.has('tags','mark:anything'),'mark:* 与 goods:* 族已登记');
  assert.ok(core.entries['entity-templates'].get('core:thing').kinds.includes('mark'),'兜底 create(kind: mark)');
 });

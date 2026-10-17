@@ -38,7 +38,8 @@
     "item",
     "building",
     "node",
-    "mark"
+    "mark",
+    "wreck"
    ],
    "accounts": true,
    "holder": false,
@@ -104,7 +105,8 @@
     "estate",
     "liquidation",
     "case",
-    "project"
+    "project",
+    "motion"
    ],
    "accounts": true,
    "holder": true,
@@ -126,6 +128,9 @@
   "node_",
   "pop_",
   "evt_",
-  "mark_"
+  "mark_",
+  "motion_",
+  "wreck_",
+  "liq_"
  ]
 }
