@@ -2,6 +2,9 @@ import {natalFamily,familyAdult,familyEdges} from './family-state.mjs';
 import {standing,adjustStanding} from './standing.mjs';
 import {organizationState} from './organization-state.mjs';
 import {entityTransition} from './entity-transitions.mjs';
+import {declareHoldingWriter} from './holdings.mjs';
+import {holdingSet} from './holding-sources.mjs';
+declareHoldingWriter('family-diplomacy',{kinds:['allied_with']});
 
 const key=(a,b)=>[a,b].sort().join(':'),rec=id=>['state','records',id];
 function marriages(e,s){
@@ -33,7 +36,7 @@ export function familyAlliance(d,e,args,eventId){
  const id=`diplomacy:${key(a.id,b.id)}`,old=s.records?.[id];if(old?.marriage===link.id&&old.status==='结盟')return {alliance:id,status:old.status};
  const row={category:'diplomacy',id,parties:[a.id,b.id],status:condition&&condition.status!=='已完成'?'待条件':'结盟',condition:condition?.id??args.sourceEvent??null,
   marriage:link.id,representatives:[a.leader,b.leader],minute:s.minute,sourceEvent:eventId};
- d.set(rec(id),row);
+ holdingSet(d,e,rec(id),row,'family-diplomacy');
  entityTransition(d,e,{id:`${eventId}:alliance`,verb:'pact',actor:a.leader,target:b.leader,location:s.location,tags:['family','diplomacy'],summary:row.status==='结盟'?'双方首脑同意依联姻结盟':'双方首脑同意在义务履行后结盟'});
  return {alliance:id,status:row.status,condition:row.condition};
 }
@@ -45,7 +48,7 @@ export function advanceFamilyAlliances(d,e,minute){
   const breached=condition&&['违约','取消','失败'].includes(condition.status);
   const next=!valid||breached?'已解除':row.status==='待条件'&&condition?.status==='已完成'?'结盟':row.status;
   if(next===row.status)continue;
-  d.set(rec(row.id),{...row,status:next,changedAt:minute});
+  holdingSet(d,e,rec(row.id),{...row,status:next,changedAt:minute},'family-diplomacy');
   entityTransition(d,e,{id:`${row.id}:${next}:${minute}`,verb:'pact',actor:row.parties[0],target:row.parties[1],minute,tags:['family','diplomacy'],summary:next==='结盟'?'联姻联盟条件已履行，联盟生效':'联姻或约定义务终止，联盟解除'});
  }
 }

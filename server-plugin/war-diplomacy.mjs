@@ -14,6 +14,9 @@ import {drawArmyRations} from './settlement-trade.mjs';
 import {armyRations} from './stock.mjs';
 import {regionOf} from './regions.mjs';
 import {presentWitnesses} from './world-events.mjs';
+import {declareHoldingWriter} from './holdings.mjs';
+import {holdingSet} from './holding-sources.mjs';
+declareHoldingWriter('war-diplomacy',{kinds:['governs','controls','allied_with']});
 const DAY=1440,copy=x=>structuredClone(x),path=id=>['state','records',id];
 export const WAR_VERSION=1;
 const rules=e=>e.rules.warDiplomacy;
@@ -86,12 +89,12 @@ function raid(d,e,w,winner,at,src){
 }
 export function endWar(d,e,w,{winner=null,tribute=0,at,src,status='议和'}){
  w.status=status;w.endedAt=at;w.winner=winner;w.nextAt=null;
- for(const t of tribalWars(d.get('state')))if(t.war===w.id)d.set(path(`tribal_war:${t.dynamic}`),{...t,status,endedAt:at,winner});
- for(const id of w.armyIds){const row=d.get(...path(armyKey(id)));if(!row)continue;const a=copy(row);releaseLevy(d,e,a,a.levy.count,{at,reason:'战事结算'});a.war=null;delete a.warSide;a.location=a.home;a.status=armyStrength(a)?'驻守':'待征';d.set(path(armyKey(id)),a);}
+ for(const t of tribalWars(d.get('state')))if(t.war===w.id)holdingSet(d,e,path(`tribal_war:${t.dynamic}`),{...t,status,endedAt:at,winner},'war-diplomacy');
+ for(const id of w.armyIds){const row=d.get(...path(armyKey(id)));if(!row)continue;const a=copy(row);releaseLevy(d,e,a,a.levy.count,{at,reason:'战事结算'});a.war=null;delete a.warSide;a.location=a.home;a.status=armyStrength(a)?'驻守':'待征';holdingSet(d,e,path(armyKey(id)),a,'war-diplomacy');}
  d.remove(path(`war-disruption:${w.id}`));for(const v of w.villages)if(d.get(...path(`war-danger:${v}`))?.war===w.id)d.remove(path(`war-danger:${v}`));
  relations(d,e,w.aggressor,w.defender,rules(e).peaceStanding,src,at);
- if(winner===w.aggressor&&w.territory){const previous=e.world.regions.find(c=>c.id===w.territory)?.ruler;d.set(path(`territory:${w.territory}`),{category:'territory',county:w.territory,ruler:winner,previous,war:w.id,minute:at,sourceEvent:src});}
- if(winner&&tribute){const loser=winner===w.aggressor?w.defender:w.aggressor;d.set(path(`tribute:${pair(winner,loser)}`),{category:'tribute',payer:loser,payee:winner,amount:tribute,nextAt:at+30*DAY,arrears:0,war:w.id,sourceEvent:src});}
+ if(winner===w.aggressor&&w.territory){const previous=e.world.regions.find(c=>c.id===w.territory)?.ruler;holdingSet(d,e,path(`territory:${w.territory}`),{category:'territory',county:w.territory,ruler:winner,previous,war:w.id,minute:at,sourceEvent:src},'war-diplomacy');}
+ if(winner&&tribute){const loser=winner===w.aggressor?w.defender:w.aggressor;holdingSet(d,e,path(`tribute:${pair(winner,loser)}`),{category:'tribute',payer:loser,payee:winner,amount:tribute,nextAt:at+30*DAY,arrears:0,war:w.id,sourceEvent:src},'war-diplomacy');}
  settleNationWar(d,e,w,{winner,at,src});
  save(d,w);announce(d,e,w,`${w.name}已经${status}，战后条件已经议定。`,at,src);return w;
 }
@@ -151,7 +154,7 @@ export function warAction(d,args,src){
  if(args.operation==='war_join'){
   if(!w||w.status!=='交战')throw Error('clock 须指定双方正在交涉的战事');const service=state.records['military_service:player'],a=state.records[armyKey(args.org??service?.army)];if(!a||!controlled(e,state,a.party)&&a.id!==service?.army)throw Error('此项交涉未满足权限、立场或前线条件；用 war_inspect 查看');
   if(state.location!==w.front||a.location!==state.location)throw Error('此项交涉未满足权限、立场或前线条件；用 war_inspect 查看');const side=[w.aggressor,w.defender].find(p=>p===a.party||state.records[`diplomacy:${pair(p,a.party)}`]?.status==='结盟');if(!side)throw Error('须先以外交结盟参战方');if(a.war&&a.war!==w.id)throw Error('队伍已在别处出征');
-  d.set(path(armyKey(a.id)),{...a,war:w.id,warSide:side,status:'出征'});if(!w.armyIds.includes(a.id))w.armyIds.push(a.id);save(d,w);return {war:w.id,army:a.id,note:'前线交锋用 world_combat；击溃参战人物回写战役'};
+  holdingSet(d,e,path(armyKey(a.id)),{...a,war:w.id,warSide:side,status:'出征'},'war-diplomacy');if(!w.armyIds.includes(a.id))w.armyIds.push(a.id);save(d,w);return {war:w.id,army:a.id,note:'前线交锋用 world_combat；击溃参战人物回写战役'};
  }
  const a=args.org,b=args.member,choice=args.choice;
  if(!standingKind(e,state,a)||!standingKind(e,state,b)||a===b)throw Error('org 与 member 须为不同的已登记交涉方');
@@ -164,7 +167,7 @@ export function warAction(d,args,src){
  }
  if(choice==='ally'){
   if(score<r.allianceStanding||wars(state).some(w=>active(w)&&pair(w.aggressor,w.defender)===pair(a,b)))throw Error('此项交涉未满足权限、立场或前线条件；用 war_inspect 查看');
-  d.set(path(`diplomacy:${pair(a,b)}`),{category:'diplomacy',parties:[a,b],status:'结盟',minute:at,sourceEvent:src});relations(d,e,a,b,r.allianceStanding+r.allianceGain,src,at);return {status:'结盟'};
+  holdingSet(d,e,path(`diplomacy:${pair(a,b)}`),{category:'diplomacy',parties:[a,b],status:'结盟',minute:at,sourceEvent:src},'war-diplomacy');relations(d,e,a,b,r.allianceStanding+r.allianceGain,src,at);return {status:'结盟'};
  }
  if(!w||!active(w)||pair(a,b)!==pair(w.aggressor,w.defender))throw Error('clock 须指定双方正在交涉的战事');
  if(!own&&partyPay(d,e,'player',r.mediationCopper,{sourceEvent:src,reason:'战事结算',partial:false,books:{account:sink('export','mediation'),writer:'war-diplomacy',eventId:src}})!==r.mediationCopper)throw Error('此项交涉未满足权限、立场或前线条件；用 war_inspect 查看');

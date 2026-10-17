@@ -103,7 +103,7 @@ export function syncHoldingRecord(d,engine,key,opts){
     const state=read(d,'state'),units=new Set();
     for(const [state0,row] of [[state,state?.records?.[key]],[d.original?.state,d.original?.state?.records?.[key]]]){
         if(!row?.category)continue;
-        for(const [name,spec] of sources)if(spec.recordCategories?.includes(row.category)){const u=spec.unitOfRecord(state0,key,row);if(u!=null)units.add(`${name}#${u}`);}
+        for(const [name,spec] of sources)if(spec.recordCategories?.includes(row.category))for(const u of [].concat(spec.unitOfRecord(state0,key,row)??[]))units.add(`${name}#${u}`);
     }
     for(const x of [...units].sort()){const i=x.indexOf('#');applyUnit(d,engine,x.slice(0,i),x.slice(i+1),opts);}
     return units.size>0;
@@ -233,3 +233,71 @@ defineHoldingSource('steward',{
             holdings:[{kind:'appointed',holder:head,subject:actorId(engine.world,r.steward),terms:{role:'housing_steward'}}]};
     },
 });
+
+// ---- title：爵位（title 记录）= 爵位职位实体 office_title:<记录键> 的任职 + 封地 fief（持有人 → 每个封域） ----
+// 记录除爵（已除爵）即两者关闭；继承时记录换持有人。作者数据推出的远方郡爵（noble-state.nobleLords 的 T142 行）
+// 依赖本局有无除爵与领地记录，是读取派生，不在此列。
+const titleAlive=r=>r?.category==='title'&&r.holder&&r.status!=='已除爵';
+defineHoldingSource('title',{
+    recordCategories:['title'],unitOfRecord:(state,key)=>key,
+    units:(engine,state)=>Object.entries(state.records??{}).filter(([,r])=>r?.category==='title').map(([k])=>k),
+    extract(engine,state,key){
+        const r=state.records?.[key];if(r?.category!=='title')return null;
+        const office=`office_title:${key}`,holder=r.holder?actorId(engine.world,r.holder):null;
+        return {entities:[{id:office,kind:'office',facts:{title:r.title??null,rank:r.rank??null}}],
+            holdings:titleAlive(r)?[{kind:'holds_office',holder,subject:office},
+                ...[...new Set(r.domains??[r.fief].filter(Boolean))].map(domain=>({kind:'fief',holder,subject:domain,grantedBy:office}))]:[]};
+    },
+});
+
+// ---- sovereignty：本局建国与领地记录（nation / territory）→ 统治 governs（政体 → 封域）或实控 controls（个人 → 封域） ----
+// 一个单元 = 一个封域：有领地记录时按最晚一条的统治者，否则按存续中的、封域列表含它的国家（最晚建国者）。
+// 作者数据的主权（regions.polity 只是名称，没有政体实体）不在此列，见 S2a 报告。
+const LIVE_NATION=['独立待定','独立','谈判中','内乱'];
+defineHoldingSource('sovereignty',{
+    recordCategories:['nation','territory'],
+    unitOfRecord:(state,key,row)=>row.category==='nation'?(row.domains??[]):row.county,
+    units(engine,state){
+        const out=new Set();
+        for(const r of Object.values(state.records??{})){if(r?.category==='nation')for(const x of r.domains??[])out.add(x);if(r?.category==='territory'&&r.county)out.add(r.county);}
+        return out;
+    },
+    extract(engine,state,domain){
+        const rows=Object.values(state.records??{});
+        let territory=null;for(const r of rows)if(r?.category==='territory'&&r.county===domain&&(!territory||(r.minute??0)>=(territory.minute??0)))territory=r;
+        let nation=null;for(const r of rows)if(r?.category==='nation'&&LIVE_NATION.includes(r.status)&&(r.domains??[]).includes(domain)&&(!nation||(r.foundedAt??0)>=(nation.foundedAt??0)))nation=r;
+        const ruler=territory?territory.ruler:nation?.id;if(!ruler)return null;
+        const id=actorId(engine.world,ruler),t=entityTemplates(engine,state,id)??[];
+        return {holdings:[{kind:t.includes('collective')?'governs':'controls',holder:id,subject:domain}]};
+    },
+});
+
+// ---- diplomacy：结盟记录 → allied_with 双向两条（条款记盟约记录键）；“待条件 / 已解除 / 承认独立”都不是同盟 ----
+// 设计上两端都是群体；旧数据里个人与势力的盟约（无群体一端）不能表达为持有，不进存储（见 S2a 报告）。
+defineHoldingSource('diplomacy',{
+    recordCategories:['diplomacy'],unitOfRecord:(state,key)=>key,
+    units:(engine,state)=>Object.entries(state.records??{}).filter(([,r])=>r?.category==='diplomacy').map(([k])=>k),
+    extract(engine,state,key){
+        const r=state.records?.[key];if(r?.category!=='diplomacy'||r.status!=='结盟'||(r.parties?.length??0)!==2)return null;
+        const [a,b]=r.parties.map(p=>actorId(engine.world,p));
+        if(a===b||![a,b].every(p=>(entityTemplates(engine,state,p)??[]).includes('collective')))return null;
+        return {holdings:[{kind:'allied_with',holder:a,subject:b,terms:{treaty:key}},{kind:'allied_with',holder:b,subject:a,terms:{treaty:key}}]};
+    },
+});
+
+// ---- 旧记录写入的包装：d.set 之后按记录类别双写（写入点用它代替 d.set，见 tests/holdings-writers.test.mjs） ----
+const recordCategories=()=>{const out=new Set();for(const spec of sources.values())for(const c of spec.recordCategories??[])out.add(c);return out;};
+let categoryCache=null;
+export function holdingRecordCategories(){return categoryCache??=recordCategories();}
+export function holdingSet(d,engine,path,value,writer,eventId=null){
+    d.set(path,value);
+    if(path[0]==='state'&&path[1]==='records'&&path.length>=3){
+        const key=path[2],cats=holdingRecordCategories();
+        if(cats.has(read(d,'state','records',key)?.category)||cats.has(d.original?.state?.records?.[key]?.category))syncHoldingRecord(d,engine,key,{writer,eventId});
+    }
+    return value;
+}
+export function holdingRemove(d,engine,path,writer,eventId=null){
+    d.remove(path);
+    if(path[0]==='state'&&path[1]==='records'&&path.length>=3&&holdingRecordCategories().has(d.original?.state?.records?.[path[2]]?.category))syncHoldingRecord(d,engine,path[2],{writer,eventId});
+}

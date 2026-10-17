@@ -24,8 +24,8 @@ import {purse,treasury,vault,polityTreasury,transit,source,sink,bookSide,moveCoi
 import {declareLedgerWriter,balance} from './ledger.mjs';
 import {armyRations,moveStock} from './stock.mjs';
 import {declareHoldingWriter} from './holdings.mjs';
-import {syncHoldings} from './holding-sources.mjs';
-declareHoldingWriter('military',{kinds:['member_of','holds_office'],entities:['office']});
+import {syncHoldings,holdingSet} from './holding-sources.mjs';
+declareHoldingWriter('military',{kinds:['member_of','holds_office','fief'],entities:['office']});
 // S1b 军粮：粮仓提粮由 agriculture.drawGranary 记入 army:<id>|item_oats|ration；买口粮来自模拟范围外（src:import），
 // 就地觅食来自 src:regrowth，吃掉的进 sink:consume。
 declareLedgerWriter('military',{sources:{'src:import':{coin_river:1000000,item_oats:1000000},'src:regrowth':{item_oats:1000000}},sinks:['sink:export','sink:consume']});
@@ -412,7 +412,7 @@ function duty(engine,d,args,eventId){
   if(a.status==='出征')campaignDays++;
   const t=playerTitle(d.get('state'));
   // Credit each actual day before its annual inspection, including a duty crossing the due date.
-  if(t?.levy?.men&&a.post){men=t.levy.personal?1:Math.min(t.levy.men,1+(d.get('state','player','companions')?.length??0));d.set(rec('title:player'),{...t,levy:{...t.levy,served:t.levy.served+men,attended:true}});}
+  if(t?.levy?.men&&a.post){men=t.levy.personal?1:Math.min(t.levy.men,1+(d.get('state','player','companions')?.length??0));holdingSet(d,engine,rec('title:player'),{...t,levy:{...t.levy,served:t.levy.served+men,attended:true}},'military');}
   engine.advance(d,DAY,eventId);
  }
  const campaign=campaignDays>0;
@@ -501,7 +501,7 @@ export function titleMilitaryService(d,engine,days,eventId){
  if(service(state)?.army!==post.id||!state.records[`organization:${post.id}`]?.members?.player)enlist(engine,d,{org:post.id},`${eventId}:enlist`);
  for(let left=days;left>0;left-=30)duty(engine,d,{days:Math.min(30,left)},`${eventId}:duty:${left}`);
  const t=playerTitle(d.get('state'));if(!t)throw Error('爵位已除');
- if(!days)d.set(rec('title:player'),{...t,levy:{...t.levy,attended:true}});
+ if(!days)holdingSet(d,engine,rec('title:player'),{...t,levy:{...t.levy,attended:true}},'military');
  return {title:t.title,army:post.id,served:t.levy.served,required:t.levy.men*t.levy.days,men:t.levy.personal?1:Math.min(t.levy.men,1+(d.get('state','player','companions')?.length??0))};
 }
 

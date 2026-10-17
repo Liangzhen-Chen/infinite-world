@@ -8,6 +8,9 @@ import {personRegistrar,personOffices} from './entity-view.mjs';
 import {actorPath} from './npc-state.mjs';
 import {authorityOf,playerOffices} from './governance.mjs';
 import {titleMilitaryService,militaryFresh} from './military.mjs';
+import {declareHoldingWriter} from './holdings.mjs';
+import {holdingSet} from './holding-sources.mjs';
+declareHoldingWriter('titles',{kinds:['holds_office','fief'],entities:['office']});
 
 // T127 titles. A petition is filed at the Baishi office with a registrar and
 // forwarded to the capital registry, which decides after its published days
@@ -78,12 +81,12 @@ function petition(d,engine,args,eventId){
 }
 function decide(d,engine,p){
     const def=titleDef(engine,p.title),state=d.get('state'),{reasons,bases}=qualifies(engine,state,def,p.fief);
-    if(reasons.length){d.set(rec(p.id),{...p,status:'未获册封',decidedAt:p.due,reasons});return;}
+    if(reasons.length){holdingSet(d,engine,rec(p.id),{...p,status:'未获册封',decidedAt:p.due,reasons},'titles');return;}
     const old=playerTitle(state);
-    d.set(rec(KEY),{category:'title',id:KEY,holder:'player',title:def.name,rank:def.ranks[0],fief:p.fief,...(p.domains?{domains:p.domains}:{}),grantedAt:p.due,status:'受封',petition:p.id,bases,
+    holdingSet(d,engine,rec(KEY),{category:'title',id:KEY,holder:'player',title:def.name,rank:def.ranks[0],fief:p.fief,...(p.domains?{domains:p.domains}:{}),grantedAt:p.due,status:'受封',petition:p.id,bases,
         nextIncome:p.due+MONTH,incomeMark:p.domains?domainReceipts(engine,state,p.domains):receipts(state,p.fief),levy:{men:def.levy.men,days:def.levy.days,personal:Boolean(def.levy.personal),due:p.due+YEAR,served:0,attended:false},breaches:0,
-        history:[...(old?.history??[]),...(old?[{title:old.title,until:p.due}]:[])],source:def.source});
-    d.set(rec(p.id),{...p,status:'已册封',decidedAt:p.due});
+        history:[...(old?.history??[]),...(old?[{title:old.title,until:p.due}]:[])],source:def.source},'titles');
+    holdingSet(d,engine,rec(p.id),{...p,status:'已册封',decidedAt:p.due},'titles');
 }
 // What the fief has actually taken in: tax receipts from its ledger plus housing fees.
 function receipts(state,fief){
@@ -97,7 +100,7 @@ function income(d,engine,t,at){
     if(t.domains)return upperIncome(d,engine,t,at);
     const def=titleDef(engine,t.title),state=d.get('state'),mark=receipts(state,t.fief),next={...t,nextIncome:t.nextIncome+MONTH,incomeMark:mark};
     const month=Math.floor(at/MONTH),row={category:'title_income',holder:'player',title:t.title,fief:t.fief,minute:at,base:mark-t.incomeMark,income:0,tribute:0};
-    if(!t.fief||!def.incomeBps){d.set(rec(t.id??KEY),next);return;}
+    if(!t.fief||!def.incomeBps){holdingSet(d,engine,rec(t.id??KEY),next,'titles');return;}
     if(t.status==='停俸')row.reason='停俸期间不发封地收入';
     else if(!personOffices(engine,state,t.holder??'player',{settlement:t.fief,power:'housing'}).length){row.reason='不再任该村村长，封地收入停发';next.status='失封地';}
     else{
@@ -110,7 +113,7 @@ function income(d,engine,t,at){
         const holderPath=actorPath(engine.world,t.holder??'player');d.set([...holderPath,'coins'],(d.get(...holderPath,'coins')??0)+row.income-row.tribute);
         if(t.status==='失封地')next.status='受封';
     }
-    d.set(rec(t.holder&&t.holder!=='player'?`title_income:${t.id}:${month}`:`title_income:${month}`),{...row,holder:t.holder??'player'});d.set(rec(t.id??KEY),next);
+    holdingSet(d,engine,rec(t.holder&&t.holder!=='player'?`title_income:${t.id}:${month}`:`title_income:${month}`),{...row,holder:t.holder??'player'},'titles');holdingSet(d,engine,rec(t.id??KEY),next,'titles');
 }
 function upperIncome(d,e,t,at){
  const state=d.get('state'),def=titleDef(e,t.title),mark=domainReceipts(e,state,t.domains),base=Math.max(0,mark-t.incomeMark);
@@ -122,8 +125,8 @@ function upperIncome(d,e,t,at){
  moveCoins(d,{from:transit(`title:${t.id}`),to:treasuryAccount('loc_capital'),amount:tribute,writer:'titles',eventId:`title:${t.id}:${at}`});
  d.set([...holderPath,'coins'],(d.get(...holderPath,'coins')??0)+paid-tribute);
  if(tribute){const balance=d.get('state','settlements','loc_capital','treasury')??0;d.set(['state','settlements','loc_capital','treasury'],balance+tribute);}
- d.set(rec(`title_income:${t.id}:${Math.floor(at/MONTH)}`),{category:'title_income',holder:t.holder,title:t.title,fief:t.fief,base,income:paid,tribute,minute:at});
- d.set(rec(t.id??KEY),{...t,nextIncome:t.nextIncome+MONTH,incomeMark:mark});
+ holdingSet(d,e,rec(`title_income:${t.id}:${Math.floor(at/MONTH)}`),{category:'title_income',holder:t.holder,title:t.title,fief:t.fief,base,income:paid,tribute,minute:at},'titles');
+ holdingSet(d,e,rec(t.id??KEY),{...t,nextIncome:t.nextIncome+MONTH,incomeMark:mark},'titles');
 }
 function yearEnd(d,engine,t,at){
     const def=titleDef(engine,t.title),need=(t.levy.men??0)*(t.levy.days??0),kept=t.levy.served>=need&&t.levy.attended;
@@ -135,7 +138,7 @@ function yearEnd(d,engine,t,at){
         const i=def.ranks.indexOf(t.rank);
         next={...next,breaches:1,status:'停俸',rank:def.ranks[Math.max(0,i-1)],reason:'未应兵役或报到：停俸一年并降等'};
     }
-    d.set(rec(t.id??KEY),next);
+    holdingSet(d,engine,rec(t.id??KEY),next,'titles');
 }
 // Service is done in person at the Baishi office (with companions counting as
 // men); a zero-day visit is the yearly report.
@@ -147,7 +150,7 @@ function service(d,engine,args,eventId){
     const men=t.levy.personal?1:Math.min(t.levy.men,1+(d.get('state','player','companions')?.length??0));
     if(days)engine.advance(d,days*DAY,eventId);
     const now=playerTitle(d.get('state'));if(!now)throw Error('爵位已除');
-    d.set(rec(KEY),{...now,levy:{...now.levy,served:now.levy.served+men*days,attended:true}});
+    holdingSet(d,engine,rec(KEY),{...now,levy:{...now.levy,served:now.levy.served+men*days,attended:true}},'titles');
     return {title:now.title,served:now.levy.served+men*days,required:now.levy.men*now.levy.days,men};
 }
 export function titleAction(d,args,eventId){
