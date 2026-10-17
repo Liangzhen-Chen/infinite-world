@@ -93,7 +93,10 @@ export function opinionOf(engine,state,who,topic){
         const value=reputationOf(engine,state,topic.actor,faction.id);
         if(value)return pick(value,`所属${engine.byId.get(faction.id)?.name??faction.id}对行事者的声望`);
     }
+    const own=societyOfActor(engine,who);
     for(const org of organizationsOf(state,who,engine)){
+        // 聚居地对行事者的敌意已在 tie() 里按 HOSTILE 计入；它对玩家的缺省戒备只是姿态，不是对本事件的立场。
+        if(org===own)continue;
         const value=standing(engine,state,org,topic.actor);
         if(value)return pick(value,`所属${state.records[`organization:${org}`]?.name??engine.byId.get(org)?.name??org}对行事者的立场`);
     }
