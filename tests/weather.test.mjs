@@ -7,6 +7,9 @@ import { withWeatherRules } from '../world/design/weather-foundation.mjs';
 import { WorldEngine } from '../server-plugin/engine.mjs';
 import { applyPatches } from '../server-plugin/storage.mjs';
 import { weatherAt, daylightAt, localWeather, humidityAt, cropProduction,weatherEdge } from '../server-plugin/weather.mjs';
+import { farmWaterFactor } from '../server-plugin/water-cycle.mjs';
+import { hazardYieldFactor } from '../server-plugin/hazard-calendar.mjs';
+import { magicYieldFactor } from '../server-plugin/magic-economy.mjs';
 import { validateWorld } from '../tools/validate-world.mjs';
 import {planRuleStateMigration}from'../server-plugin/rule-state-migration.mjs';
 import {planAgricultureMigration}from'../server-plugin/agriculture-migration.mjs';
@@ -79,10 +82,17 @@ test('季节与天气改变真实粮食入库，长等待与分日结算守恒',
     const{engine}=await setup(),c=engine.initialFromLegacy(seed,'weather-test',{prepare:false});c.state.settlements.loc_hw.food=20000;
     const run=async(doc,tool,args,eventId)=>({document:applyPatches(doc,(await engine.reduce(doc,{tool,args,eventId},{replay:true})).patches)});
     const long=(await run(c,'world_time',{minutes:20*1440},'long')).document;let split=c;
-    for(let i=0;i<20;i++)split=(await run(split,'world_time',{minutes:1440},`day_${i}`)).document;
-    assert.deepEqual(long.state.settlements,split.state.settlements);
+    // The daily legacy food rule multiplies cropProduction by hazard, magic and RW-04 basin-water factors.
     let expected=c.state.settlements.loc_hw.food;
-    for(let day=0;day<20;day++)expected+=cropProduction(engine,c.randomSeed,'loc_hw',day*1440,c.state.settlements.loc_hw.foodPerDay)-c.state.settlements.loc_hw.population;
+    for(let day=0;day<20;day++){
+        split=(await run(split,'world_time',{minutes:1440},`day_${day}`)).document;
+        const production=Math.floor(cropProduction(engine,c.randomSeed,'loc_hw',day*1440,c.state.settlements.loc_hw.foodPerDay)
+            *hazardYieldFactor(split.state,'loc_hw',day*1440+720)
+            *magicYieldFactor(split.state,'loc_hw',day*1440+720)
+            *farmWaterFactor(engine,split.state,'loc_hw',day));
+        expected+=production-c.state.settlements.loc_hw.population;
+    }
+    assert.deepEqual(long.state.settlements,split.state.settlements);
     assert.equal(long.state.settlements.loc_hw.food,expected);
     assert.ok(cropProduction(engine,c.randomSeed,'loc_hw',270*1440,100)<cropProduction(engine,c.randomSeed,'loc_hw',180*1440,100));
 });
