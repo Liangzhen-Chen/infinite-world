@@ -563,7 +563,7 @@
     "server-plugin/campaign-reducer.mjs",
     "server-plugin/archived-reducer.mjs"
    ],
-   "lines": 1078,
+   "lines": 1080,
    "stateWrites": [
     "combatDisengaged",
     "discoveries",
@@ -1112,7 +1112,7 @@
     "server-plugin/holding-kinds.mjs",
     "server-plugin/holding-sources.mjs"
    ],
-   "lines": 1162,
+   "lines": 1165,
    "stateWrites": [],
    "stateReads": [
     "created",
@@ -17238,7 +17238,7 @@
     "spells"
    ],
    "worldDirs": [],
-   "lines": 772
+   "lines": 774
   },
   "server-plugin/entity-transitions.mjs": {
    "system": "base_events",
@@ -18199,7 +18199,7 @@
     "rules"
    ],
    "worldDirs": [],
-   "lines": 338
+   "lines": 341
   },
   "server-plugin/index.mjs": {
    "system": "ui_server",
