@@ -95,7 +95,8 @@ const text = (value, max = 1200) => { if (typeof value !== 'string' || !value.tr
 export{xpRequired};
 export const skillGrade = value => `${['初级','中级','高级','特级','专家级','大师级','宗师级','圣级','神级'][Math.min(8,Math.floor(value/300))]}${Math.floor(value%300/100)+1}等`;
 class Draft {
-    constructor(document) { this.original = document; this.cursor = new PatchCursor(document); this.adopted = new Map(); this.patches = []; this.messages = []; }
+    // S2a: the engine rides along so legacy write points without an engine argument can dual-write holdings (holding-sources.holdingSet).
+    constructor(document, engine = null) { this.original = document; this.engine = engine; this.cursor = new PatchCursor(document); this.adopted = new Map(); this.patches = []; this.messages = []; }
     // P2: the cursor keeps its own copies writable until a read lets them escape.
     get document() { this.release(null); return this.cursor.expose(this.cursor.root); }
     set document(document) { this.cursor.reset(document); this.adopted.clear(); }
@@ -217,12 +218,12 @@ export class WorldEngine {
         if(input.type==='rules_state_migration')return{patches:planRuleStateMigration(document,this.rules),result:{migration:true,runtimeRuleVersion}};
         if(input.type==='population_profile'){
             if(document.releaseVersion!==1)throw new Error('按需人物需要完成战役初始化');
-            const books=withLedger(this,document),d=new Draft(books.document),detail=acceptPopulationProfile(d,this.scoped(document),input);
+            const books=withLedger(this,document),d=new Draft(books.document,this),detail=acceptPopulationProfile(d,this.scoped(document),input);
             return{patches:finishLedger(d.patches,books.opening),result:{ok:true,...detail,minute:d.get('state','minute'),notices:[]}};
         }
         if(input.type==='npc_plan'){
             if(document.releaseVersion!==1)throw new Error('人物计划需要完成战役初始化');
-            const books=withLedger(this,document),d=new Draft(books.document),session=this.scoped(document),id=text(input.eventId,120);
+            const books=withLedger(this,document),d=new Draft(books.document,this),session=this.scoped(document),id=text(input.eventId,120);
             session.replaying=Boolean(options.replay);session.replayResult=options.result;
             const detail=applyNpcPlan(d,session,input.plan,id);
             d.set(['state','npcPlanning'],{day:Math.floor(document.state.minute/1440),minute:document.state.minute,location:document.state.location,sourceEvent:id});
@@ -230,7 +231,7 @@ export class WorldEngine {
         }
         const resolved=resolveToolCall(input.tool,input.args??{});
         // S1a: a document without books opens them on the draft's own copy (ledger.withLedger).
-        const books=withLedger(this,document),d = new Draft(books.document), args=resolved.args, id=text(input.eventId,120);
+        const books=withLedger(this,document),d = new Draft(books.document,this), args=resolved.args, id=text(input.eventId,120);
         const tool=resolved.tool.replace(/^world_/, '');
         const readOperations={weather:'inspect',environment:'inspect',pet:'inspect',summon:'inspect',farm:'inspect',wildlife:'observe',lair:'observe',site:'inspect'};
         const noTimeTurn=tool==='turn'&&(args.outOfCharacter||args.extraMinutes===0);

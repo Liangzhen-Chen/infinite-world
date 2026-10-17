@@ -90,6 +90,7 @@ registerHoldingsOpening(legacyHoldings);
 declareHoldingWriter('holding-sources',{kinds:['*'],entities:['*'],locations:true});
 // 双写入口：writer 为旧写入点所在模块（须声明持有写入者），reason 为关闭旧边的原因。
 export function syncHoldings(d,engine,name,unit,{writer,reason='vacated',eventId=null}={}){
+    engine??=d.engine;
     if(!sources.has(name))throw Error(`未登记的持有来源：${name}`);
     if(!writer)throw Error('双写须给出写入者');
     if(!ensureHoldings(d,engine))return false;
@@ -99,6 +100,7 @@ export function syncHoldings(d,engine,name,unit,{writer,reason='vacated',eventId
 // 旧记录（state.records 的一行）的双写：按记录类别找到受影响的来源与单元（写入前后两版记录都算，
 // 改了持有人、换了聚落或删掉记录都能找回原单元）。来源以 recordCategories / unitOfRecord 声明它读哪些记录。
 export function syncHoldingRecord(d,engine,key,opts){
+    engine??=d.engine;
     if(!ensureHoldings(d,engine))return false;
     const state=read(d,'state'),units=new Set();
     for(const [state0,row] of [[state,state?.records?.[key]],[d.original?.state,d.original?.state?.records?.[key]]]){
@@ -110,6 +112,7 @@ export function syncHoldingRecord(d,engine,key,opts){
 }
 // 同一来源的全部单元（写入点一次改动多条旧记录、或不便算出单元时）。
 export function syncHoldingSource(d,engine,name,opts){
+    engine??=d.engine;
     if(!sources.has(name))throw Error(`未登记的持有来源：${name}`);
     if(!ensureHoldings(d,engine))return false;
     const state=read(d,'state'),units=new Set([...sources.get(name).units(engine,state)].map(String));
@@ -301,3 +304,42 @@ export function holdingRemove(d,engine,path,writer,eventId=null){
     d.remove(path);
     if(path[0]==='state'&&path[1]==='records'&&path.length>=3&&holdingRecordCategories().has(d.original?.state?.records?.[path[2]]?.category))syncHoldingRecord(d,engine,path[2],{writer,eventId});
 }
+
+// ---- legal：案件实体、羁押 / 收押 / 服刑（legal_custody、legal_detention）与通缉（legal_wanted） ----
+// 案件 = interim 实体 case_<旧记录键>，慢变事实 phase 取旧状态；被羁押者对东道开 guest_of{detained}（受限），
+// 东道是案件所属的政体或聚落治理（官府组织，不是某个狱吏，01 §1.3）；通缉 = wanted（发出通缉的政体 → 被通缉者）。
+export const caseEntity=key=>`case_${key}`;
+const collectiveOr=(engine,state,...ids)=>ids.find(id=>id&&(entityTemplates(engine,state,id)??[]).includes('collective'))??null;
+function caseHost(engine,state,caseKey){
+    const c=state.records?.[caseKey];if(!c)return null;
+    return collectiveOr(engine,state,c.faction,c.settlement);
+}
+defineHoldingSource('case',{
+    recordCategories:['legal_case'],unitOfRecord:(state,key)=>key,goneBasis:'dissolution',
+    units:(engine,state)=>Object.entries(state.records??{}).filter(([,r])=>r?.category==='legal_case').map(([k])=>k),
+    extract(engine,state,key){
+        const r=state.records?.[key];if(r?.category!=='legal_case')return null;
+        return {entities:[{id:caseEntity(key),kind:'case',facts:{law:r.law??null,offense:r.offense??null,offender:r.offender??null,phase:r.status??null}}]};
+    },
+});
+const CUSTODY=['legal_custody','legal_detention'];
+defineHoldingSource('custody',{
+    recordCategories:CUSTODY,unitOfRecord:(state,key)=>key,
+    units:(engine,state)=>Object.entries(state.records??{}).filter(([,r])=>CUSTODY.includes(r?.category)).map(([k])=>k),
+    extract(engine,state,key){
+        const r=state.records?.[key];if(!CUSTODY.includes(r?.category)||r.status!=='生效')return null;
+        const wanted=r.wanted?state.records?.[r.wanted]:null,caseKey=r.case??wanted?.case;
+        const subject=r.subject??wanted?.subject??state.records?.[caseKey]?.offender??'player';
+        const host=caseHost(engine,state,caseKey);if(!host)return null;
+        return {holdings:[{kind:'guest_of',variant:'detained',holder:actorId(engine.world,subject),subject:host,terms:{mode:'detained',reason:r.reason??'收押',case:caseKey?caseEntity(caseKey):null}}]};
+    },
+});
+defineHoldingSource('wanted',{
+    recordCategories:['legal_wanted'],unitOfRecord:(state,key)=>key,
+    units:(engine,state)=>Object.entries(state.records??{}).filter(([,r])=>r?.category==='legal_wanted').map(([k])=>k),
+    extract(engine,state,key){
+        const r=state.records?.[key];if(r?.category!=='legal_wanted'||r.status!=='生效'||!r.subject)return null;
+        const host=caseHost(engine,state,r.case);if(!host)return null;
+        return {holdings:[{kind:'wanted',holder:host,subject:actorId(engine.world,r.subject),terms:{case:r.case?caseEntity(r.case):null}}]};
+    },
+});
